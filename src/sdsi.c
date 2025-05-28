@@ -83,6 +83,8 @@ and the following external variables:
    This is what the "defined(sun)" is for.
 */
 
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>
@@ -289,9 +291,10 @@ extern void get_date(char dest[])
 extern void open_file(void)
 {
    int this_file_position;
-#if defined(MSDOS) || defined(__i386)
-   int i;
+#if defined(WIN32) || (!defined(MSDOS) && !defined(__i386))
+   struct stat statbuf;
 #endif
+   int i;
 
    file_error = FALSE;
 
@@ -313,29 +316,94 @@ extern void open_file(void)
    }
 
 
-/* If not on a PC, things are fairly simple.  We open the file in "append"
-   mode, thankful that we have escaped one of the most monumentally stupid
+/* If not on a DJGPP or PC/GCC, things are fairly simple.  We open the file in
+   "append" mode, thankful that we have escaped one of the most monumentally stupid
    pieces of OS system design ever to plague the universe, and only need to
    deal with Un*x, which is merely one of the most monumentally stupid
-   pieces of OS system design ever to plague this galaxy. */
+   pieces of OS system design ever to plague this galaxy.  Or maybe we're running
+   on Windows or NT, operating systems that have sometimes been observed to do
+   the right thing. */
 
-#if !defined(MSDOS) && !defined(__i386)
+#if defined(WIN32) || (!defined(MSDOS) && !defined(__i386))
 
-   if (!(fildes = fopen(outfile_string, "a"))) {
+   if (stat(outfile_string, &statbuf))
+      this_file_position = 0;   /* File doesn't exist. */
+   else
+      this_file_position = statbuf.st_size;
+
+   /* First, open it in "create/append/read-write" mode.  This allows
+      reading or writing, but always writes at the end of the file --
+      seeks will not affect the write position.  Since we want to
+      remove control-Z's by seeking to the spot before them, that
+      isn't good enough.  But "r" mode won't create the file if it
+      didn't exist, and "w" mode won't let us write.  So we just have
+      to do this. */
+
+   if (!(fildes = fopen(outfile_string, "ab+"))) {
       (void) strncpy(fail_errstring, get_errstring(), MAX_ERR_LENGTH);
       (void) strncpy(fail_message, "open", MAX_ERR_LENGTH);
       file_error = TRUE;
       return;
    }
 
-   /* We are positioned at the end, because that's what "a" mode does. */
-
-   this_file_position = ftell(fildes);
-
    if ((last_file_position != -1) && (last_file_position != this_file_position)) {
       writestuff("Warning -- file has been modified since last sequence.");
       newline();
       newline();
+   }
+
+   /* Now that we know that the file exists, open it in binary read-write mode. */
+
+   (void) fclose(fildes);
+
+   if (!(fildes = fopen(outfile_string, "rb+"))) {
+      (void) strncpy(fail_errstring, get_errstring(), MAX_ERR_LENGTH);
+      (void) strncpy(fail_message, "open", MAX_ERR_LENGTH);
+      file_error = TRUE;
+      return;
+   }
+
+   if (this_file_position != 0) {
+      /* The file exists, and we have opened it in "rb+" mode.  Look at its end. */
+
+      if (fseek(fildes, -4, SEEK_END)) {
+         /* It isn't 4 characters long -- forget it.  But first, position at the end. */
+         if (fseek(fildes, 0, SEEK_END)) {
+            (void) fclose(fildes);     /* What happened????? */
+            (void) strncpy(fail_errstring, get_errstring(), MAX_ERR_LENGTH);
+            (void) strncpy(fail_message, "seek", MAX_ERR_LENGTH);
+            file_error = TRUE;
+            return;
+         }
+         goto really_just_append;
+      }
+
+      /* We are now 4 before the end.  Look at those last 4 characters. */
+
+      for (i=0 ; i<4 ; i++) {
+         if (fgetc(fildes) == 0x1A) {
+            writestuff("Warning -- file contains spurious control character -- removing same.");
+            newline();
+            newline();
+            last_file_position = -1;   /* Suppress the other error. */
+            break;
+         }
+      }
+
+      /* Now seek to the end, or to the point just before the offending character. */
+
+      if (fseek(fildes, i-4, SEEK_END)) {
+         (void) fclose(fildes);     /* What happened????? */
+         (void) strncpy(fail_errstring, get_errstring(), MAX_ERR_LENGTH);
+         (void) strncpy(fail_message, "seek", MAX_ERR_LENGTH);
+         file_error = TRUE;
+         return;
+      }
+
+
+
+
+      goto really_just_append;
    }
 
 #else
@@ -490,9 +558,9 @@ extern void open_file(void)
 
       No.  It actually seems to work.  Aren't computers wonderful? */
 
-   really_just_append:
-
 #endif
+
+   really_just_append:
 
    if (this_file_position == 0) {
       writestuff("File does not exist, creating it.");
@@ -542,22 +610,28 @@ extern void write_file(char line[])
 
 extern void close_file(void)
 {
+   struct stat statbuf;
    char foo[MAX_ERR_LENGTH*10];
 
    if (file_error) goto fail;
 
+   if (fclose(fildes)) goto error;
+
    if (!outfile_special) {
-      (void) fflush(fildes);     /* Shouldn't need this, but PC library seems
-                     to get wrong value on the next ftell if we don't do it. */
-      last_file_position = ftell(fildes);
+      if (stat(outfile_string, &statbuf))
+         goto error;
+
+      last_file_position = statbuf.st_size;
    }
 
-   if (!fclose(fildes)) return;
+   return;
+
+ error:
 
    (void) strncpy(fail_errstring, get_errstring(), MAX_ERR_LENGTH);
    (void) strncpy(fail_message, "close", MAX_ERR_LENGTH);
 
-   fail:
+ fail:
 
    (void) strncpy(foo, "WARNING!!!  Sequence has not been written!  File ", MAX_ERR_LENGTH);
    (void) strncat(foo, fail_message, MAX_ERR_LENGTH);
@@ -773,12 +847,15 @@ extern long_boolean install_outfile_string(char newstring[])
 
 
 
+static FILE *init_file;
+
+
+
 extern long_boolean open_session(int argc, char **argv)
 {
    int session_linenum = 0;
    int i, j;
    int argno;
-   FILE *session;
    char line[MAX_FILENAME_LENGTH];
    char *new_outfile_string = (char *) 0;
    char **args;
@@ -792,22 +869,22 @@ extern long_boolean open_session(int argc, char **argv)
 
    /* Read the initialization file, looking for options. */
 
-   session = fopen(SESSION_FILENAME, "r");
+   init_file = fopen(SESSION_FILENAME, "r");
 
-   if (session) {
+   if (init_file) {
       int insert_pos = 1;
 
       /* Search for the "[Options]" indicator. */
 
       for (;;) {
-         if (!fgets(line, MAX_FILENAME_LENGTH, session)) goto no_options;
+         if (!fgets(line, MAX_FILENAME_LENGTH, init_file)) goto no_options;
          if (!strncmp(line, "[Options]", 9)) break;
       }
 
       for (;;) {
-         int ccount = 0;
+         char *lineptr = line;
 
-         if (!fgets(&line[1], MAX_FILENAME_LENGTH, session) || line[1] == '\n') break;
+         if (!fgets(&line[1], MAX_FILENAME_LENGTH, init_file) || line[1] == '\n') break;
 
          j = strlen(&line[1]);
          if (j>0) line[j] = '\0';   /* Strip off the <NEWLINE> -- we don't want it. */
@@ -819,8 +896,14 @@ extern long_boolean open_session(int argc, char **argv)
 
             /* Break the line into tokens, and insert each as a command-line argument. */
 
-            if (sscanf(&line[ccount], "%s %n", token, &newpos) != 1) break;
-            ccount += newpos;
+            /* We need to put a blank at the end, so that the "%s %n" spec won't get confused. */
+
+            j = strlen(lineptr);
+            if (j > 0 && lineptr[j-1] != ' ') {
+               lineptr[j] = ' ';
+               lineptr[j+1] = '\0';
+            }
+            if (sscanf(lineptr, "%s%n ", token, &newpos) != 1) break;
 
             j = strlen(token)+1;
             nargs++;
@@ -829,6 +912,7 @@ extern long_boolean open_session(int argc, char **argv)
             args[insert_pos] = (char *) get_mem(j);
             (void) memcpy(args[insert_pos], token, j);
             insert_pos++;
+            lineptr += newpos;
          }
       }
 
@@ -878,8 +962,6 @@ extern long_boolean open_session(int argc, char **argv)
             { retain_after_error = FALSE; continue; }
          else if (strcmp(&args[argno][1], "retain_after_error") == 0)
             { retain_after_error = TRUE; continue; }
-         else if (strcmp(&args[argno][1], "alternate_glyphs_1") == 0)
-            { alternate_person_glyphs = 1; continue; }
          else if (strcmp(&args[argno][1], "sequence") == 0) {
 	     if (argno+1 < nargs) new_outfile_string = args[argno+1];  /* We'll install it later. */
 	}
@@ -922,15 +1004,15 @@ extern long_boolean open_session(int argc, char **argv)
       goto no_session;
 
    /* Or if the file didn't exist, or we are in diagnostic mode. */
-   if (!session || diagnostic_mode) goto no_session;
+   if (!init_file || diagnostic_mode) goto no_session;
 
    /* Search for the "[Sessions]" indicator. */
 
-   if (fseek(session, 0, SEEK_SET))
+   if (fseek(init_file, 0, SEEK_SET))
       goto no_session;
 
    for (;;) {
-      if (!fgets(line, MAX_FILENAME_LENGTH, session)) goto no_session;
+      if (!fgets(line, MAX_FILENAME_LENGTH, init_file)) goto no_session;
       if (!strncmp(line, "[Sessions]", 10)) break;
    }
 
@@ -938,7 +1020,7 @@ extern long_boolean open_session(int argc, char **argv)
    printf("  0     (no session)\n");
 
    for (;;) {
-      if (!fgets(line, MAX_FILENAME_LENGTH, session) || line[0] == '\n') break;
+      if (!fgets(line, MAX_FILENAME_LENGTH, init_file) || line[0] == '\n') break;
       printf("%3d  %s", ++session_linenum, line);
    }
 
@@ -951,7 +1033,7 @@ extern long_boolean open_session(int argc, char **argv)
 
    if (!sscanf(line, "%d", &session_index)) {
       session_index = 0;         /* User typed garbage -- exit the program immediately. */
-      (void) fclose(session);
+      (void) fclose(init_file);
       return TRUE;
    }
 
@@ -959,24 +1041,26 @@ extern long_boolean open_session(int argc, char **argv)
       goto no_session;
 
    if (session_index < 0) {
-      (void) fclose(session);
+      (void) fclose(init_file);
       return TRUE;    /* Exit the program immediately. */
    }
 
    if (session_index <= session_linenum) {
       int ccount;
+      int num_fields_parsed;
+      char junk_name[MAX_FILENAME_LENGTH];
       char filename_string[MAX_FILENAME_LENGTH];
       char session_levelstring[50];
 
       /* Find the "[Sessions]" indicator again. */
 
-      if (fseek(session, 0, SEEK_SET)) {
+      if (fseek(init_file, 0, SEEK_SET)) {
          printf("Can't find correct position in session file.\n");
          goto no_session;
       }
 
       for (;;) {
-         if (!fgets(line, MAX_FILENAME_LENGTH, session)) {
+         if (!fgets(line, MAX_FILENAME_LENGTH, init_file)) {
             printf("Can't find correct indicator in session file.\n");
             goto no_session;
          }
@@ -986,13 +1070,25 @@ extern long_boolean open_session(int argc, char **argv)
       /* Skip over the lines before the one we want. */
 
       for (i=0 ; i<session_index ; i++) {
-         if (!fgets(line, MAX_FILENAME_LENGTH, session)) break;
+         if (!fgets(line, MAX_FILENAME_LENGTH, init_file)) break;
       }
 
       if (i != session_index)
          goto no_session;
 
-      if (sscanf(line, "%s %s %d %n", filename_string, session_levelstring, &sequence_number, &ccount) != 3) {
+      j = strlen(line);
+      if (j>0) line[j-1] = '\0';   /* Strip off the <NEWLINE> -- we don't want it. */
+
+      num_fields_parsed = sscanf(
+                                 line,
+                                 "%s %s %d %n%s",
+                                 filename_string,
+                                 session_levelstring,
+                                 &sequence_number,
+                                 &ccount,
+                                 junk_name);
+
+      if (num_fields_parsed < 3) {
          printf("Bad format in session file.\n");
          goto no_session;
       }
@@ -1006,9 +1102,10 @@ extern long_boolean open_session(int argc, char **argv)
          printf("Bad file name in session file, using default instead.\n");
       }
 
-      strncpy(header_comment, &line[ccount], MAX_TEXT_LINE_LENGTH);
-      j = strlen(header_comment);
-      if (j>0) header_comment[j-1] = '\0';   /* Strip off the <NEWLINE> -- we don't want it. */
+      if (num_fields_parsed == 4)
+         strncpy(header_comment, &line[ccount], MAX_TEXT_LINE_LENGTH);
+      else
+         header_comment[0] = '\0';
    }
    else {
       sequence_number = 1;       /* We are creating a new session to be appended to the file. */
@@ -1042,20 +1139,67 @@ extern long_boolean open_session(int argc, char **argv)
    if (new_outfile_string)
       (void) install_outfile_string(new_outfile_string);
 
-   if (session) (void) fclose(session);
-
    return FALSE;
 }
 
 
+extern long_boolean open_accelerator_region(void)
+{
+   char line[MAX_FILENAME_LENGTH];
+
+   if (!init_file) return FALSE;
+
+   if (fseek(init_file, 0, SEEK_SET))
+      return FALSE;
+
+   /* Search for the "[Accelerators]" indicator. */
+
+   for (;;) {
+      if (!fgets(line, MAX_FILENAME_LENGTH, init_file)) return FALSE;
+      if (!strncmp(line, "[Accelerators]", 14)) return TRUE;
+   }
+}
+
+extern long_boolean get_accelerator_line(char line[])
+{
+   if (!init_file) return FALSE;
+
+   for ( ;; ) {
+      int j;
+
+      if (!fgets(line, MAX_FILENAME_LENGTH, init_file) || line[0] == '\n') return FALSE;
+
+      j = strlen(line);
+      if (j>0) line[j-1] = '\0';   /* Strip off the <NEWLINE> -- we don't want it. */
+
+      if (line[0] != '#') return TRUE;
+   }
+}
+
+
+extern void close_init_file(void)
+{
+   if (init_file) (void) fclose(init_file);
+}
+
 
 Private int write_back_session_line(FILE *wfile)
 {
-   return fprintf(wfile, "%-20s %-11s %6d      %s\n",
-         rewrite_filename_as_star[0] ? rewrite_filename_as_star : outfile_string,
-         getout_strings[calling_level],
-         sequence_number,
-         header_comment);
+   char *filename = rewrite_filename_as_star[0] ? rewrite_filename_as_star : outfile_string;
+
+   if (header_comment[0])
+      return
+         fprintf(wfile, "%-20s %-11s %6d      %s\n",
+                 filename,
+                 getout_strings[calling_level],
+                 sequence_number,
+                 header_comment);
+   else
+      return
+         fprintf(wfile, "%-20s %-11s %6d\n",
+                 filename,
+                 getout_strings[calling_level],
+                 sequence_number);
 }
 
 
@@ -1068,8 +1212,11 @@ extern void final_exit(int code)
       FILE *wfile;
       int i;
 
+      remove(SESSION2_FILENAME);
+
       if (rename(SESSION_FILENAME, SESSION2_FILENAME)) {
          printf("Failed to save file '" SESSION_FILENAME "' in '" SESSION2_FILENAME "'\n");
+         printf("%s\n", get_errstring());
       }
       else {
          if (!(rfile = fopen(SESSION2_FILENAME, "r"))) {
@@ -1176,7 +1323,7 @@ extern void open_database(void)
    }
 
    for (j=0; j<n; j++)
-      database_version[j] = read_8_from_database();
+      database_version[j] = (unsigned char) read_8_from_database();
 
    database_version[j] = '\0';
 }

@@ -714,9 +714,9 @@ hyperbone   |_____| 14  | 15           7  |  6  |_____|
             |     |     |     |     |     |
             |  0  |  1  |  2  |  3  |  4  |
             |_____|_____|_____|_____|_____|
-            |     |  |     |     |  |     |
-h545        | 12  |  | 13  |  6  |  |  5  |
-            |_____|__|_____|_____|__|_____|
+            |     |//|     |     |//|     |
+h545        | 12  |//| 13  |  6  |//|  5  |
+            |_____|//|_____|_____|//|_____|
             |     |     |     |     |     |
             | 11  | 10  |  9  |  8  |  7  |
             |_____|_____|_____|_____|_____|
@@ -1828,17 +1828,22 @@ select_near_select
       of "select" above.
 
 select_near_select_or_phantom
-      As above, but is satisfied if this person is selected and (other person is phantom or is selected).
-
-
+      As above, but is satisfied if this person is selected and the other person
+      is a phantom or is selected.  This predicate also handles 2x6 and 2x8
+      setups.  It returns TRUE only if all 3 or 4 people in the same quadrant as the
+      person under test are selected or nonexistent.
 
 select_near_unselect
 unselect_near_select
 unselect_near_unselect
-      apply to 1x2, 1x4, 1x8, and 2x4 setups only.  These return TRUE if the
-      person under test and the "near" person have the indicated combination
-      of selectness and non-selectness.  See the descriptions of "select"
-      and "select_near_select" above.
+      apply to 1x2, 1x4, 1x8, and 2x4 setups only, except as noted below.
+      These return TRUE if the person under test and the "near" person have
+      the indicated combination of selectness and non-selectness.  See the
+      descriptions of "select" and "select_near_select" above.
+
+      The predicate "unselect_near_unselect" can handle 2x6 and 2x8 setups also.
+      It returns TRUE only if all 3 or 4 people in the same quadrant as the
+      person under test are unselected or nonexistent.
 
 select_once_rem_from_select
       applies to 1x4, 1x8, or 2x4 only.  Returns TRUE if the test person and the
@@ -2684,9 +2689,9 @@ There are a number of internal ones not shown here.  See the file ~/sd/restricti
    trade_by,                        4x2/4x1/2x1 - [single] trade by
    qtag_mwv,                        qtag only -- EVERYONE is in a miniwave of consistent
                                     handedness.
-   qtag_mag_mwv,                    qtag only -- EVERYONE is in a miniwave of opposite
-                                    handedness.  "Right/left" applies to centers; outsides
-                                    are the other handedness.
+   qtag_mag_mwv,                    qtag only -- EVERYONE is in a miniwave, but the centers
+                                    have opposite handedness to the ends.  "Right/left"
+                                    applies to the ends.
    dmd_ctrs_mwv,                    dmd, trngl, qtag, ptpd, short6, bone6, spindle, 1x4, 2x3 -
                                     the centers or base (2, 4, or 6 of them) are consistently
                                     in consistent-handed miniwaves; other people not checked

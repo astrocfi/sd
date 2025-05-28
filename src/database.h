@@ -23,7 +23,7 @@
    database format version. */
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 135
+#define DATABASE_FORMAT_VERSION 138
 
 /* BEWARE!!  These must track the items in "tagtabinit" in dbcomp.c . */
 typedef enum {
@@ -106,6 +106,7 @@ static Const uint32 INHERITFLAG_YOYO       = 0x01000000UL;
 static Const uint32 INHERITFLAG_STRAIGHT   = 0x02000000UL;
 static Const uint32 INHERITFLAG_TWISTED    = 0x04000000UL;
 static Const uint32 INHERITFLAG_LASTHALF   = 0x08000000UL;
+static Const uint32 INHERITFLAG_FRACTAL    = 0x10000000UL;
 
 #define MXN_BITS (INHERITFLAG_1X2 | INHERITFLAG_2X1 | INHERITFLAG_2X2 | INHERITFLAG_1X3 | INHERITFLAG_3X1 | \
             INHERITFLAG_3X3 | INHERITFLAG_4X4 | INHERITFLAG_5X5 | INHERITFLAG_6X6 | INHERITFLAG_7X7 | INHERITFLAG_8X8)
@@ -644,6 +645,7 @@ typedef enum {
    schema_in_out_triple_squash,
    schema_in_out_triple,
    schema_in_out_quad,
+   schema_in_out_12mquad,
    schema_in_out_triple_zcom,
    schema_select_leads,
    schema_select_headliners,
@@ -709,6 +711,7 @@ typedef enum {
                                                                and "single_is_inherited" was set
 
    DFM1_NUM_INSERT_MASK              --  if nonzero, shift that 3-bit number into the number fields
+   DFM1_FRACTAL_INSERT               --  if on, any number insertion is to have 1<->3 switched.
    DFM1_NO_CHECK_MOD_LEVEL           --  don't check the level of a modifier like "interlocked" -- if the subcall
                                              says it is only legal at C3, accept it anyway.
 
@@ -755,9 +758,10 @@ static Const uint32 DFM1_SEQ_DO_HALF_MORE             = 0x00000002;
    "patch the <anyone>" or "rims trade back", says that we *never* re-evaluate,
    even if the call is broken up. */
 static Const uint32 DFM1_SEQ_NO_RE_EVALUATE           = 0x00000004;
-static Const uint32 DFM1_SEQ_REPEAT_N                 = 0x00000008;
-static Const uint32 DFM1_SEQ_REPEAT_N_ALTERNATE       = 0x00000010;
-static Const uint32 DFM1_SEQ_REPEAT_NM1               = 0x00000020;
+static Const uint32 DFM1_SEQ_REENABLE_ELONG_CHK       = 0x00000008;
+static Const uint32 DFM1_SEQ_REPEAT_N                 = 0x00000010;
+static Const uint32 DFM1_SEQ_REPEAT_N_ALTERNATE       = 0x00000020;
+static Const uint32 DFM1_SEQ_REPEAT_NM1               = 0x00000040;
 
 /* BEWARE!!  This list must track the table "defmodtab1" in dbcomp.c . */
 /* Start of miscellaneous flags.  These go in the "modifiers1" word of a by_def_item. */
@@ -779,6 +783,7 @@ static Const uint32 DFM1_NUM_SHIFT_BIT                = 0x00040000;
 static Const uint32 DFM1_NUM_INSERT_MASK              = 0x00700000;
 static Const uint32 DFM1_NUM_INSERT_BIT               = 0x00100000;
 static Const uint32 DFM1_NO_CHECK_MOD_LEVEL           = 0x00800000;
+static Const uint32 DFM1_FRACTAL_INSERT               = 0x01000000;
 
 
 typedef enum {

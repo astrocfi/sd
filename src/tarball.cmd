@@ -1,4 +1,4 @@
-del /q tar\*
+md tar
 for %%f in (*.c) do crunfix %%f tar\%%f
 for %%f in (*.h) do crunfix %%f tar\%%f
 for %%f in (*.cmd) do crunfix %%f tar\%%f
@@ -11,3 +11,5 @@ del *~
 tar cvf ..\tr%1 *
 popd
 gzip tr%1
+del /q tar\*
+rd tar

@@ -12,7 +12,7 @@
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-    This is for version 31. */
+    This is for version 32. */
 
 /* This defines the following function:
    selectp
@@ -422,16 +422,40 @@ Private long_boolean select_near_select(setup *real_people, int real_index,
                selectp(real_people, real_index ^ 1);
 }
 
+static int base_table[12] = {0, 0, 0, 3, 3, 3, 6, 6, 6, 9, 9, 9};
+
 /* ARGSUSED */
 Private long_boolean select_near_select_or_phantom(setup *real_people, int real_index,
    int real_direction, int northified_index, Const long int *extra_stuff)
 {
-   if (!selectp(real_people, real_index)) return FALSE;
-   if (current_options.who == selector_all || current_options.who == selector_everyone)
+   int lim, base_person;
+
+   if (!selectp(real_people, real_index))
+      return FALSE;
+   else if (current_options.who == selector_all || current_options.who == selector_everyone)
       return TRUE;
 
-   return      !(real_people->people[real_index ^ 1].id1 & BIT_PERSON) ||
-               selectp(real_people, real_index ^ 1);
+   if (setup_attrs[real_people->kind].setup_limits == 11) {
+      base_person = base_table[real_index];
+      lim = 2;
+   }
+   if (setup_attrs[real_people->kind].setup_limits == 15) {
+      base_person = real_index & 4;
+      lim = 3;
+   }
+   else {
+      return
+         !(real_people->people[real_index ^ 1].id1 & BIT_PERSON) ||
+         selectp(real_people, real_index ^ 1);
+   }
+
+   for ( ; lim >= 0 ; lim--) {
+      if ((real_people->people[base_person+lim].id1 & BIT_PERSON) &&
+          !selectp(real_people, base_person+lim))
+         return FALSE;
+   }
+
+   return TRUE;
 }
 
 /* ARGSUSED */
@@ -461,11 +485,34 @@ Private long_boolean unselect_near_select(setup *real_people, int real_index,
 Private long_boolean unselect_near_unselect(setup *real_people, int real_index,
    int real_direction, int northified_index, Const long int *extra_stuff)
 {
-   if (selectp(real_people, real_index)) return FALSE;
-   if (current_options.who == selector_none) return TRUE;
+   int lim, base_person;
 
-   return      !(real_people->people[real_index ^ 1].id1 & BIT_PERSON) ||
-               !selectp(real_people, real_index ^ 1);
+   if (selectp(real_people, real_index))
+      return FALSE;
+   else if (current_options.who == selector_none)
+      return TRUE;
+
+   if (setup_attrs[real_people->kind].setup_limits == 11) {
+      base_person = base_table[real_index];
+      lim = 2;
+   }
+   if (setup_attrs[real_people->kind].setup_limits == 15) {
+      base_person = real_index & 4;
+      lim = 3;
+   }
+   else {
+      return
+         !(real_people->people[real_index ^ 1].id1 & BIT_PERSON) ||
+         !selectp(real_people, real_index ^ 1);
+   }
+
+   for ( ; lim >= 0 ; lim--) {
+      if ((real_people->people[base_person+lim].id1 & BIT_PERSON) &&
+          selectp(real_people, base_person+lim))
+         return FALSE;
+   }
+
+   return TRUE;
 }
 
 /* ARGSUSED */
@@ -1487,6 +1534,8 @@ Private long_boolean outposter_is_cw(setup *real_people, int real_index,
       return ((northified_index ^ (northified_index >> 2)) & 1) != 0;
    else if (real_people->cmd.cmd_assume.assumption == cr_2fl_only)
       return ((northified_index ^ (northified_index >> 1)) & 2) != 0;
+   else if (real_people->cmd.cmd_assume.assumption == cr_1fl_only)
+      return (northified_index & 4) == 0;
    else if (real_people->cmd.cmd_assume.assumption == cr_li_lo &&
             real_people->cmd.cmd_assume.assump_both == 2)
       return TRUE;
@@ -1512,6 +1561,8 @@ Private long_boolean outposter_is_ccw(setup *real_people, int real_index,
       return ((northified_index ^ (northified_index >> 2)) & 1) == 0;
    else if (real_people->cmd.cmd_assume.assumption == cr_2fl_only)
       return ((northified_index ^ (northified_index >> 1)) & 2) == 0;
+   else if (real_people->cmd.cmd_assume.assumption == cr_1fl_only)
+      return FALSE;
    else if (real_people->cmd.cmd_assume.assumption == cr_li_lo &&
             real_people->cmd.cmd_assume.assump_both == 2)
       return FALSE;
@@ -1563,14 +1614,17 @@ Private long_boolean check_tbone(setup *real_people, int real_index,
          return (zz ^ real_people->people[real_index].id1) & 1;
       else if (real_people->kind == s_short6) {
          switch (real_people->cmd.cmd_assume.assumption) {
-            case cr_diamond_like: return TRUE;
-            case cr_qtag_like:
-            case cr_gen_1_4_tag:
-            case cr_gen_3_4_tag: return FALSE;
-            case cr_jleft:
-            case cr_jright:
-            case cr_ijleft:
-            case cr_ijright: return real_people->cmd.cmd_assume.assump_col != 0;
+         case cr_diamond_like:
+            return TRUE;
+         case cr_qtag_like:
+         case cr_gen_1_4_tag:
+         case cr_gen_3_4_tag:
+            return FALSE;
+         case cr_jleft:
+         case cr_jright:
+         case cr_ijleft:
+         case cr_ijright:
+            return real_people->cmd.cmd_assume.assump_col != 0;
          }
       }
    }
@@ -1712,6 +1766,19 @@ Private long_boolean dmd_ctrs_rh(setup *real_people, int real_index,
    uint32 z = 0;
    long_boolean b1 = TRUE;
    long_boolean b2 = TRUE;
+
+   if (real_people->cmd.cmd_assume.assump_col == 0) {
+      switch (real_people->cmd.cmd_assume.assumption) {
+      case cr_jleft:
+         if (real_people->cmd.cmd_assume.assump_both == 2) return !(*extra_stuff);
+         else if (real_people->cmd.cmd_assume.assump_both == 1) return (*extra_stuff);
+         break;
+      case cr_jright:
+         if (real_people->cmd.cmd_assume.assump_both == 2) return (*extra_stuff);
+         else if (real_people->cmd.cmd_assume.assump_both == 1) return !(*extra_stuff);
+         break;
+      }
+   }
 
    tt.assumption = cr_dmd_ctrs_mwv;
    tt.assump_col = 0;
@@ -1940,9 +2007,9 @@ predicate_descriptor pred_table[] = {
       {sum_mod_selected,               &iden_tab[8]},            /* "person_select_sum8" */
       {sum_mod_selected,              &iden_tab[11]},            /* "person_select_sum11" */
       {sum_mod_selected,              &iden_tab[15]},            /* "person_select_sum15" */
-      {plus_mod_selected,             &iden_tab[4]},            /* "person_select_plus4" */
-      {plus_mod_selected,             &iden_tab[8]},            /* "person_select_plus8" */
-      {plus_mod_selected,             &iden_tab[12]},           /* "person_select_plus12" */
+      {plus_mod_selected,             &iden_tab[4]},             /* "person_select_plus4" */
+      {plus_mod_selected,             &iden_tab[8]},             /* "person_select_plus8" */
+      {plus_mod_selected,             &iden_tab[12]},            /* "person_select_plus12" */
       {semi_squeezer_select,       semi_squeeze_tab},            /* "semi_squeezer_select" */
       {select_once_rem_from_unselect,(Const long int *) 0},      /* "select_once_rem_from_unselect" */
       {unselect_once_rem_from_select,(Const long int *) 0},      /* "unselect_once_rem_from_select" */

@@ -13,7 +13,7 @@
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-    This is for version 31. */
+    This is for version 32. */
 
 /*
  * Copyright (C) 1993 Alan Snyder
@@ -106,28 +106,7 @@ static match_result *current_result;
 static match_result everyones_real_result;
 
 
-/* The following arrays must be coordinated with the Sd program */
-
-/* BEWARE!!  This list is keyed to the definition of "start_select_kind" in sd.h . */
-static Cstring startup_commands[] = {
-   "exit from the program",
-   "heads 1p2p",
-   "sides 1p2p",
-   "heads start",
-   "sides start",
-   "just as they are",
-   "toggle concept levels",
-   "toggle active phantoms",
-   "toggle retain after error",
-   "toggle nowarn mode",
-   "toggle singing call",
-   "toggle reverse singing call",
-   "initialize session file",
-   "change output file",
-   "change title",
-   (Cstring) 0
-};
-
+/* The following array must be coordinated with the Sd program */
 
 static Cstring n_4_patterns[] = {
    "0/4",
@@ -213,11 +192,6 @@ extern void matcher_initialize(void)
       else if (p->kind == concept_comment || (p->concparseflags & CONCPARSE_MENU_DUP)) {
          continue;
       }
-
-      /* Pick out concepts that will be produced when certain function keys are pressed. */
-      if (p->kind == concept_twice) twice_concept_ptr = p;
-      if (p->kind == concept_centers_or_ends && p->value.arg1 == selector_centers) centers_concept_ptr = p;
-      if (p->kind == concept_sequential) two_calls_concept_ptr = p;
 
       concept_list_length++;
 
@@ -740,7 +714,6 @@ Private void copy_sublist(Const match_result *outbar, modifier_block *tails)
       tails->packed_secondary_subcall = out;
       copy_sublist(newoutbar, out);
    }
-
 }
 
 
@@ -1742,14 +1715,8 @@ Private void search_menu(uims_reply kind)
       int menu_length;
 
       if (kind == ui_command_select) {
-         if (static_call_menu == match_resolve_extra_commands) {
-            menu = extra_resolve_commands;
-            menu_length = num_extra_resolve_commands;
-         }
-         else {
-            menu = command_commands;
-            menu_length = num_command_commands;
-         }
+         menu = command_commands;
+         menu_length = num_command_commands;
       }
       else if (static_call_menu == match_directions) {
          menu = &direction_names[1];
@@ -1774,19 +1741,7 @@ Private void search_menu(uims_reply kind)
 
       for (i = 0; i < menu_length; i++) {
          everyones_real_result.match.index = i;
-
-         if (kind == ui_command_select &&
-             static_call_menu != match_resolve_extra_commands &&
-             command_command_values[i] == command_help)
-            everyones_real_result.yield_depth = 1;
-#ifdef THIS_MESSES_UP_HEADS_START
-         else if (kind == ui_start_select &&
-             i == (int) start_select_help)
-            everyones_real_result.yield_depth = 1;
-#endif
-         else
-            everyones_real_result.yield_depth = 0;
-
+         everyones_real_result.yield_depth = 0;
          match_pattern(menu[i], (concept_descriptor *) 0);
       }
    }
@@ -1889,14 +1844,8 @@ extern int match_user_input(
       search_menu(ui_concept_select);
       search_menu(ui_command_select);
    }  
-   else {
+   else
       search_menu(ui_special_concept);
-      /* During a resolve, we allow various other commands. */
-      if (static_call_menu == match_resolve_commands) {
-         static_call_menu = match_resolve_extra_commands;
-         search_menu(ui_command_select);
-      }
-   }
 
 #ifdef TIMING
     timer = clock() - timer;

@@ -120,6 +120,8 @@ static expand_thing exp_3x4_3x8_stuff     = {
    {2, 3, 4, 5, 10, 11, 14, 15, 16, 17, 22, 23}, 12, s3x4, s3x8, 0};
 static expand_thing exp_3x4_3x6_stuff     = {
    {1, 2, 3, 4, 7, 8, 10, 11, 12, 13, 16, 17}, 12, s3x4, s3x6, 0};
+static expand_thing exp_1x6_3x6_stuff     = {
+   {15, 16, 17, 6, 7, 8}, 6, s1x6, s3x6, 0};
 static expand_thing exp_4dmd_3x6_stuff    = {
    {-1, 2, 3, -1, -1, 6, 7, 8, -1, 11, 12, -1, -1, 15, 16, 17}, 16, s4dmd, s3x6, 0};
 static expand_thing exp_3x6_3x8_stuff     = {
@@ -198,6 +200,14 @@ static expand_thing exp_2x4_c1phan_stuff2 = {{12, 14, 3, 1, 4, 6, 11, 9}, 8, s2x
            {-1, 13, -1, 15, -1, 1, -1, 3, -1, 5, -1, 7, -1, 9, -1, 11}, 16, s_c1phan, s4x4, 0};
         expand_thing exp_c1phan_4x4_stuff2 = {
            {10, -1, 15, -1, 14, -1, 3, -1, 2, -1, 7, -1, 6, -1, 11, -1}, 16, s_c1phan, s4x4, 0};
+static expand_thing exp_c1phan_4x4_stuff3 = {
+           {10, 13, 15, -1, 14, 1, 3, -1, 2, 5, 7, -1, 6, 9, 11, -1}, 16, s_c1phan, s4x4, 0};
+static expand_thing exp_c1phan_4x4_stuff4 = {
+           {10, 13, -1, 15, 14, 1, -1, 3, 2, 5, -1, 7, 6, 9, -1, 11}, 16, s_c1phan, s4x4, 0};
+static expand_thing exp_c1phan_4x4_stuff5 = {
+           {10, 13, 15, -1, 14, 1, -1, 3, 2, 5, 7, -1, 6, 9, -1, 11}, 16, s_c1phan, s4x4, 0};
+static expand_thing exp_c1phan_4x4_stuff6 = {
+           {10, 13, -1, 15, 14, 1, 3, -1, 2, 5, -1, 7, 6, 9, 11, -1}, 16, s_c1phan, s4x4, 0};
 static expand_thing exp_4x4_blob_stuff    = {
    {3, 4, 8, 5, 9, 10, 14, 11, 15, 16, 20, 17, 21, 22, 2, 23}, 16, nothing, s_bigblob, 0};
 static expand_thing exp_4x6_blob_stuffa   = {
@@ -355,8 +365,13 @@ extern void update_id_bits(setup *ss)
          ptr = id_bit_table_2x6_pg;
       break;
    case s1x10:
-      /* We recognize center 4 and center 6 if this has center 6 filled, then a gap, then isolated people. */
+      /* We recognize center 4 and center 6 if this has center 6 filled, then a gap,
+         then isolated people. */
       if (livemask != 0x3BDUL) ptr = (id_bit_table *) 0;
+      break;
+   case s3x6:
+      /* We only recognize this if the center 1x6 is fully occupied. */
+      if ((livemask & 0700700UL) != 0700700UL) ptr = (id_bit_table *) 0;
       break;
    case sbigdmd:
       /* If this is populated appropriately, we can identify "outer pairs". */
@@ -954,13 +969,21 @@ extern void do_matrix_expansion(
             eptr = &exp_2x4_4x4_stuff1; goto expand_me;
          }
          else if (ss->kind == s_c1phan) {
-            if (!(ss->people[0].id1 | ss->people[2].id1 | ss->people[4].id1 | ss->people[6].id1 |
-                     ss->people[8].id1 | ss->people[10].id1 | ss->people[12].id1 | ss->people[14].id1)) {
-               eptr = &exp_c1phan_4x4_stuff1; warn(warn__check_4x4_start); goto expand_me;
+            if (!(ss->people[2].id1 | ss->people[6].id1 |
+                  ss->people[10].id1 | ss->people[14].id1)) {
+               eptr = &exp_c1phan_4x4_stuff4; warn(warn__check_4x4_start); goto expand_me;
             }
-            else if (!(ss->people[1].id1 | ss->people[3].id1 | ss->people[5].id1 | ss->people[7].id1 |
-                     ss->people[9].id1 | ss->people[11].id1 | ss->people[13].id1 | ss->people[15].id1)) {
-               eptr = &exp_c1phan_4x4_stuff2; warn(warn__check_4x4_start); goto expand_me;
+            else if (!(ss->people[3].id1 | ss->people[7].id1 |
+                     ss->people[11].id1 | ss->people[15].id1)) {
+               eptr = &exp_c1phan_4x4_stuff3; warn(warn__check_4x4_start); goto expand_me;
+            }
+            else if (!(ss->people[3].id1 | ss->people[6].id1 |
+                     ss->people[11].id1 | ss->people[14].id1)) {
+               eptr = &exp_c1phan_4x4_stuff5; warn(warn__check_4x4_start); goto expand_me;
+            }
+            else if (!(ss->people[2].id1 | ss->people[7].id1 |
+                  ss->people[10].id1 | ss->people[15].id1)) {
+               eptr = &exp_c1phan_4x4_stuff6; warn(warn__check_4x4_start); goto expand_me;
             }
          }
 /* ***** This is a kludge to make threesome work!!!! */
@@ -1540,6 +1563,11 @@ extern void normalize_setup(setup *ss, normalize_action action)
    if (ss->kind == s3x6 && !(ss->people[0].id1 | ss->people[5].id1 | ss->people[6].id1 |
                              ss->people[9].id1 | ss->people[14].id1 | ss->people[15].id1))
       compress_setup(&exp_3x4_3x6_stuff, ss);
+   else if (ss->kind == s3x6 && !(ss->people[0].id1 | ss->people[1].id1 | ss->people[2].id1 |
+                                  ss->people[3].id1 | ss->people[4].id1 | ss->people[5].id1 |
+                                  ss->people[9].id1 | ss->people[10].id1 | ss->people[11].id1 |
+                                  ss->people[12].id1 | ss->people[13].id1 | ss->people[14].id1))
+      compress_setup(&exp_1x6_3x6_stuff, ss);
 
    if (ss->kind == s_qtag && (!(ss->people[0].id1 | ss->people[1].id1 |
                                 ss->people[4].id1 | ss->people[5].id1))) {
@@ -1786,7 +1814,8 @@ extern void toplevelmove(void)
    starting_setup.cmd.prior_elongation_bits = 0;
    starting_setup.cmd.prior_expire_bits = 0;
    starting_setup.cmd.skippable_concept = (parse_block *) 0;
-   starting_setup.cmd.restrained_concept = (parse_block *)0;
+   starting_setup.cmd.restrained_concept = (parse_block *) 0;
+   starting_setup.cmd.restrained_superflags = 0;
 
    for (i=0 ; i<WARNING_WORDS ; i++) newhist->warnings.bits[i] = 0;
 

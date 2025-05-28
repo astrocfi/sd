@@ -12,7 +12,7 @@
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-    This is for version 31. */
+    This is for version 32. */
 
 /* This defines the following external variables:
    special_magic
@@ -21,6 +21,7 @@
    marker_decline
    marker_concept_mod
    marker_concept_comment
+   marker_concept_supercall
    main_call_lists
    number_of_calls
    calling_level
@@ -75,6 +76,9 @@ concept_descriptor mark_end_of_list       = {"????",                 marker_end_
 concept_descriptor marker_decline         = {"decline???",           concept_mod_declined,          U, l_dontshow};
 concept_descriptor marker_concept_mod     = {">>MODIFIED BY<<",      concept_another_call_next_mod, U, l_dontshow, {0, 0, 0}};
 concept_descriptor marker_concept_comment = {">>COMMENT<<",          concept_comment,               U, l_dontshow};
+concept_descriptor marker_concept_supercall = {">>SUPER<<",          concept_supercall,             U, l_dontshow};
+
+
 
 callspec_block **main_call_lists[NUM_CALL_LIST_KINDS];
 int number_of_calls[NUM_CALL_LIST_KINDS];
@@ -88,7 +92,7 @@ concept_descriptor concept_descriptor_table[] = {
 
 /* phantom concepts */
 
-#define pl__1_size 65
+#define pl__1_size 67
 #define pl__1_spl 0
 #define pl__1_ipl 1
 #define pl__1_pl 2
@@ -100,10 +104,10 @@ concept_descriptor concept_descriptor_table[] = {
 #define pl__1_tlwf 32
 #define pl__1_tlwb 33
 #define pl__1_trtl 43
-#define pl__1_qlwt 49
-#define pl__1_qlwa 50
-#define pl__1_qlwf 51
-#define pl__1_qlwb 52
+#define pl__1_qlwt 51
+#define pl__1_qlwa 52
+#define pl__1_qlwf 53
+#define pl__1_qlwb 54
    {"SPLIT PHANTOM LINES",                   concept_do_phantom_2x4,            D, l_c3a, {0, phantest_impossible,    1, MPKIND__SPLIT}},
    {"INTERLOCKED PHANTOM LINES",             concept_do_phantom_2x4,            D, l_c4a, {0, phantest_impossible,    1, MPKIND__INTLK}},
    {"PHANTOM LINES",                         concept_do_phantom_2x4,            D, l_c3,  {0, phantest_first_or_both, 1, MPKIND__CONCPHAN}},
@@ -153,6 +157,8 @@ concept_descriptor concept_descriptor_table[] = {
    {"QUADRUPLE LINES OF 6",                  concept_triple_twin,               D, l_c3x, {0, 1, CONCPROP__NEEDK_4X6, 2}},
    {"CENTER PHANTOM LINES",                  concept_in_out_std,                D, l_c3,  {0, 16+1, CONCPROP__NEEDK_QUAD_1X4, 0}},
    {"OUTSIDE PHANTOM LINES",                 concept_in_out_std,                D, l_c3,  {0, 16+8+1, CONCPROP__NEEDK_QUAD_1X4, 0}},
+   {"12 MATRIX CENTER PHANTOM LINES",        concept_in_out_std,                D, l_c3x, {0, 64+1, 0, 0}},
+   {"12 MATRIX OUTSIDE PHANTOM LINES",       concept_in_out_std,                D, l_c3x, {0, 64+8+1, 0, 0}},
    {"QUADRUPLE LINES WORKING TOGETHER",      concept_multiple_lines_tog_std,    D, l_c4a, {0, 10, CONCPROP__NEEDK_QUAD_1X4, 1, 4}},
    {"QUADRUPLE LINES WORKING APART",         concept_multiple_lines_tog_std,    D, l_c4a, {0, 11, CONCPROP__NEEDK_QUAD_1X4, 1, 4}},
    {"QUADRUPLE LINES WORKING FORWARD",       concept_multiple_lines_tog,        D, l_c4a, {0, 0,  CONCPROP__NEEDK_QUAD_1X4, 1, 4}},
@@ -170,7 +176,7 @@ concept_descriptor concept_descriptor_table[] = {
    {"SEXTUPLE LINES WORKING CLOCKWISE",      concept_multiple_lines_tog_std,    D, l_c4,  {0, 8,  CONCPROP__NEEDK_4X6,      1, 6}},
    {"SEXTUPLE LINES WORKING COUNTERCLOCKWISE",concept_multiple_lines_tog_std,   D, l_c4,  {0, 9,  CONCPROP__NEEDK_4X6,      1, 6}},
 /* -------- column break -------- */
-#define pl__2_size 65
+#define pl__2_size 67
 #define pl__2_spw 0
 #define pl__2_ipw 1
 #define pl__2_pw 2
@@ -223,6 +229,8 @@ concept_descriptor concept_descriptor_table[] = {
    {"QUADRUPLE WAVES OF 6",                  concept_triple_twin,               D, l_c3x, {0, 3, CONCPROP__NEEDK_4X6, 2}},
    {"CENTER PHANTOM WAVES",                  concept_in_out_std,                D, l_c3,  {0, 16+3, CONCPROP__NEEDK_QUAD_1X4, 0}},
    {"OUTSIDE PHANTOM WAVES",                 concept_in_out_std,                D, l_c3,  {0, 16+8+3, CONCPROP__NEEDK_QUAD_1X4, 0}},
+         {"", concept_comment, 0, l_nonexistent_concept},
+         {"", concept_comment, 0, l_nonexistent_concept},
    {"QUADRUPLE WAVES WORKING TOGETHER",      concept_multiple_lines_tog_std,    D, l_c4a, {0, 10, CONCPROP__NEEDK_QUAD_1X4, 3, 4}},
    {"QUADRUPLE WAVES WORKING APART",         concept_multiple_lines_tog_std,    D, l_c4a, {0, 11, CONCPROP__NEEDK_QUAD_1X4, 3, 4}},
    {"QUADRUPLE WAVES WORKING FORWARD",       concept_multiple_lines_tog,        D, l_c4a, {0, 0,  CONCPROP__NEEDK_QUAD_1X4, 3, 4}},
@@ -240,7 +248,7 @@ concept_descriptor concept_descriptor_table[] = {
    {"SEXTUPLE WAVES WORKING CLOCKWISE",      concept_multiple_lines_tog_std,    D, l_c4,  {0, 8,  CONCPROP__NEEDK_4X6,      3, 6}},
    {"SEXTUPLE WAVES WORKING COUNTERCLOCKWISE",concept_multiple_lines_tog_std,   D, l_c4,  {0, 9,  CONCPROP__NEEDK_4X6,      3, 6}},
 /* -------- column break -------- */
-#define pl__3_size 65
+#define pl__3_size 67
 #define pl__3_spc 0
 #define pl__3_ipc 1
 #define pl__3_pc 2
@@ -252,10 +260,10 @@ concept_descriptor concept_descriptor_table[] = {
 #define pl__3_tcwr 32
 #define pl__3_tcwl 33
 #define pl__3_trtc 43
-#define pl__3_qcwt 49
-#define pl__3_qcwa 50
-#define pl__3_qcwr 51
-#define pl__3_qcwl 52
+#define pl__3_qcwt 51
+#define pl__3_qcwa 52
+#define pl__3_qcwr 53
+#define pl__3_qcwl 54
    {"SPLIT PHANTOM COLUMNS",                 concept_do_phantom_2x4,            D, l_c3a, {0, phantest_impossible,    0, MPKIND__SPLIT}},
    {"INTERLOCKED PHANTOM COLUMNS",           concept_do_phantom_2x4,            D, l_c4a, {0, phantest_impossible,    0, MPKIND__INTLK}},
    {"PHANTOM COLUMNS",                       concept_do_phantom_2x4,            D, l_c3,  {0, phantest_first_or_both, 0, MPKIND__CONCPHAN}},
@@ -305,6 +313,8 @@ concept_descriptor concept_descriptor_table[] = {
    {"QUADRUPLE COLUMNS OF 6",                concept_triple_twin,               D, l_c3x, {0, 0, CONCPROP__NEEDK_4X6, 2}},
    {"CENTER PHANTOM COLUMNS",                concept_in_out_std,                D, l_c3a, {0, 16+0,   CONCPROP__NEEDK_QUAD_1X4, 0}},
    {"OUTSIDE PHANTOM COLUMNS",               concept_in_out_std,                D, l_c3a, {0, 16+8+0, CONCPROP__NEEDK_QUAD_1X4, 0}},
+   {"12 MATRIX CENTER PHANTOM COLUMNS",      concept_in_out_std,                D, l_c3x, {0, 64+0,   0, 0}},
+   {"12 MATRIX OUTSIDE PHANTOM COLUMNS",     concept_in_out_std,                D, l_c3x, {0, 64+8+0, 0, 0}},
    {"QUADRUPLE COLUMNS WORKING TOGETHER",    concept_multiple_lines_tog_std,    D, l_c4a, {0, 10, CONCPROP__NEEDK_QUAD_1X4, 0, 4}},
    {"QUADRUPLE COLUMNS WORKING APART",       concept_multiple_lines_tog_std,    D, l_c4a, {0, 11, CONCPROP__NEEDK_QUAD_1X4, 0, 4}},
    {"QUADRUPLE COLUMNS WORKING RIGHT",       concept_multiple_lines_tog,        D, l_c4a, {0, 2,  CONCPROP__NEEDK_QUAD_1X4, 0, 4}},
@@ -527,7 +537,7 @@ concept_descriptor concept_descriptor_table[] = {
    {"SIAMESE OF FOUR",                       concept_tandem,                    D, l_c1,         {0, 0, 0,                    0x000, 10}},
    {"BOXES ARE SOLID",                       concept_tandem,                  F+D, l_c2,         {0, 0, 0,                    0x000, 16}},
    {"DIAMONDS ARE SOLID",                    concept_tandem,                  F+D, l_c2,         {0, 0, 0,                    0x000, 17}},
-   {"SKEW",                                  concept_tandem,                    D, l_c4a,        {0, 0, 0,                    0x000, 18}},
+   {"SKEW",                                  concept_tandem,                    D, l_c4a,        {0, 0, 0,                    0x000, tandem_key_skew}},
    {"GRUESOME AS COUPLES",                   concept_gruesome_tandem,           D, l_c4a,        {0, 0, CONCPROP__NEEDK_2X8,  0x002, 1}},
    {"GRUESOME TANDEM",                       concept_gruesome_tandem,           D, l_c4a,        {0, 0, CONCPROP__NEEDK_2X8,  0x002, 0}},
    {"AS COUPLES IN A 1/4 TAG",               concept_tandem,                    D, l_c3,         {0, CMD_MISC__VERIFY_REAL_1_4_TAG,  CONCPROP__NEEDK_4DMD, 0x000, 1}},
@@ -542,15 +552,15 @@ concept_descriptor concept_descriptor_table[] = {
    {"@6 ARE TANDEM",                         concept_some_are_tandem,         F+D, l_c1,         {0, 0, 0,                    0x100, 0}},
    {"@6 ARE COUPLES OF THREE",               concept_some_are_tandem,         F+D, l_c1,         {0, 0, 0,                    0x100, 5}},
    {"@6 ARE TANDEMS OF THREE",               concept_some_are_tandem,         F+D, l_c1,         {0, 0, 0,                    0x100, 4}},
-   {"INSIDE TRIANGLES ARE SOLID",            concept_tandem,                  F+D, l_c2,         {0, 0, 0,                    0x000, 22}},
-   {"OUTSIDE TRIANGLES ARE SOLID",           concept_tandem,                  F+D, l_c2,         {0, 0, 0,                    0x000, 23}},
-   {"IN POINT TRIANGLES ARE SOLID",          concept_tandem,                  F+D, l_c2,         {0, 0, 0,                    0x000, 21}},
-   {"OUT POINT TRIANGLES ARE SOLID",         concept_tandem,                  F+D, l_c2,         {0, 0, 0,                    0x000, 20}},
-   {"WAVE-BASED TRIANGLES ARE SOLID",        concept_tandem,                  F+D, l_c2,         {0, 0, 0,                    0x000, 26}},
-   {"TANDEM-BASED TRIANGLES ARE SOLID",      concept_tandem,                  F+D, l_c2,         {0, 0, 0,                    0x000, 27}},
-   {"@k-BASED TRIANGLES ARE SOLID",          concept_some_are_tandem,         F+D, l_c2,         {0, 0, 0,                    0x100, 30}},
-   {"3X1 TRIANGLES ARE SOLID",               concept_tandem,                  F+D, l_c2,         {0, 0, 0,                    0x000, 31}},
-   {"Y's ARE SOLID",                         concept_tandem,                  F+D, l_c4,         {0, 0, 0,                    0x000, 32}},
+   {"INSIDE TRIANGLES ARE SOLID",            concept_tandem,                  F+D, l_c2,         {0, 0, 0,                    0x000, tandem_key_inside_tgls}},
+   {"OUTSIDE TRIANGLES ARE SOLID",           concept_tandem,                  F+D, l_c2,         {0, 0, 0,                    0x000, tandem_key_outside_tgls}},
+   {"IN POINT TRIANGLES ARE SOLID",          concept_tandem,                  F+D, l_c2,         {0, 0, 0,                    0x000, tandem_key_inpoint_tgls}},
+   {"OUT POINT TRIANGLES ARE SOLID",         concept_tandem,                  F+D, l_c2,         {0, 0, 0,                    0x000, tandem_key_outpoint_tgls}},
+   {"WAVE-BASED TRIANGLES ARE SOLID",        concept_tandem,                  F+D, l_c2,         {0, 0, 0,                    0x000, tandem_key_wave_tgls}},
+   {"TANDEM-BASED TRIANGLES ARE SOLID",      concept_tandem,                  F+D, l_c2,         {0, 0, 0,                    0x000, tandem_key_tand_tgls}},
+   {"@k-BASED TRIANGLES ARE SOLID",          concept_some_are_tandem,         F+D, l_c2,         {0, 0, 0,                    0x100, tandem_key_anyone_tgls}},
+   {"3X1 TRIANGLES ARE SOLID",               concept_tandem,                  F+D, l_c2,         {0, 0, 0,                    0x000, tandem_key_3x1tgls}},
+   {"Y's ARE SOLID",                         concept_tandem,                  F+D, l_c4,         {0, 0, 0,                    0x000, tandem_key_ys}},
          {"", concept_comment, 0, l_nonexistent_concept},
    {"COUPLES @b TWOSOME",                    concept_frac_tandem,               D, l_c4,         {0, 0, 0,                    0x020, 1}},
    {"TANDEM @b TWOSOME",                     concept_frac_tandem,               D, l_c4,         {0, 0, 0,                    0x020, 0}},
@@ -563,7 +573,7 @@ concept_descriptor concept_descriptor_table[] = {
    {"SIAMESE OF FOUR @b FOURSOME",           concept_frac_tandem,               D, l_c4,         {0, 0, 0,                    0x020, 10}},
    {"BOXES ARE SOLID @b BOXSOME",            concept_frac_tandem,             F+D, l_c4,         {0, 0, 0,                    0x020, 16}},
    {"DIAMONDS ARE SOLID @b DIAMONDSOME",     concept_frac_tandem,             F+D, l_c4,         {0, 0, 0,                    0x020, 17}},
-   {"SKEW @b TWOSOME",                       concept_frac_tandem,               D, l_c4,         {0, 0, 0,                    0x020, 18}},
+   {"SKEW @b TWOSOME",                       concept_frac_tandem,               D, l_c4,         {0, 0, 0,                    0x020, tandem_key_skew}},
    {"GRUESOME AS COUPLES @b TWOSOME",        concept_gruesome_frac_tandem,      D, l_c4,         {0, 0, CONCPROP__NEEDK_2X8,  0x022, 1}},
    {"GRUESOME TANDEM @b TWOSOME",            concept_gruesome_frac_tandem,      D, l_c4,         {0, 0, CONCPROP__NEEDK_2X8,  0x022, 0}},
    {"COUPLES @b TWOSOME IN A 1/4 TAG",       concept_frac_tandem,               D, l_c4,         {0, CMD_MISC__VERIFY_REAL_1_4_TAG,  CONCPROP__NEEDK_4DMD, 0x020, 1}},
@@ -578,15 +588,15 @@ concept_descriptor concept_descriptor_table[] = {
    {"@6 ARE TANDEM @b TWOSOME",              concept_some_are_frac_tandem,    F+D, l_c4,         {0, 0, 0,                    0x120, 0}},
    {"@6 ARE COUPLES OF THREE @b THREESOME",  concept_some_are_frac_tandem,    F+D, l_c4,         {0, 0, 0,                    0x120, 5}},
    {"@6 ARE TANDEMS OF THREE @b THREESOME",  concept_some_are_frac_tandem,    F+D, l_c4,         {0, 0, 0,                    0x120, 4}},
-   {"INSIDE TRIANGLES ARE SOLID @b THREESOME",       concept_frac_tandem,     F+D, l_c4,         {0, 0, 0,                    0x020, 22}},
-   {"OUTSIDE TRIANGLES ARE SOLID @b THREESOME",      concept_frac_tandem,     F+D, l_c4,         {0, 0, 0,                    0x020, 23}},
-   {"IN POINT TRIANGLES ARE SOLID @b THREESOME",     concept_frac_tandem,     F+D, l_c4,         {0, 0, 0,                    0x020, 21}},
-   {"OUT POINT TRIANGLES ARE SOLID @b THREESOME",    concept_frac_tandem,     F+D, l_c4,         {0, 0, 0,                    0x020, 20}},
-   {"WAVE-BASED TRIANGLES ARE SOLID @b THREESOME",   concept_frac_tandem,     F+D, l_c4,         {0, 0, 0,                    0x020, 26}},
-   {"TANDEM-BASED TRIANGLES ARE SOLID @b THREESOME", concept_frac_tandem,     F+D, l_c4,         {0, 0, 0,                    0x020, 27}},
-   {"@k-BASED TRIANGLES ARE SOLID @b THREESOME", concept_some_are_frac_tandem,F+D, l_c4,         {0, 0, 0,                    0x120, 30}},
-   {"3X1 TRIANGLES ARE SOLID @b TRIANGLESOME",       concept_frac_tandem,     F+D, l_c4,         {0, 0, 0,                    0x020, 31}},
-   {"Y's ARE SOLID @b Y-SOME",                       concept_frac_tandem,     F+D, l_c4,         {0, 0, 0,                    0x020, 32}},
+   {"INSIDE TRIANGLES ARE SOLID @b THREESOME",       concept_frac_tandem,     F+D, l_c4,         {0, 0, 0,                    0x020, tandem_key_inside_tgls}},
+   {"OUTSIDE TRIANGLES ARE SOLID @b THREESOME",      concept_frac_tandem,     F+D, l_c4,         {0, 0, 0,                    0x020, tandem_key_outside_tgls}},
+   {"IN POINT TRIANGLES ARE SOLID @b THREESOME",     concept_frac_tandem,     F+D, l_c4,         {0, 0, 0,                    0x020, tandem_key_inpoint_tgls}},
+   {"OUT POINT TRIANGLES ARE SOLID @b THREESOME",    concept_frac_tandem,     F+D, l_c4,         {0, 0, 0,                    0x020, tandem_key_outpoint_tgls}},
+   {"WAVE-BASED TRIANGLES ARE SOLID @b THREESOME",   concept_frac_tandem,     F+D, l_c4,         {0, 0, 0,                    0x020, tandem_key_wave_tgls}},
+   {"TANDEM-BASED TRIANGLES ARE SOLID @b THREESOME", concept_frac_tandem,     F+D, l_c4,         {0, 0, 0,                    0x020, tandem_key_tand_tgls}},
+   {"@k-BASED TRIANGLES ARE SOLID @b THREESOME", concept_some_are_frac_tandem,F+D, l_c4,         {0, 0, 0,                    0x120, tandem_key_anyone_tgls}},
+   {"3X1 TRIANGLES ARE SOLID @b TRIANGLESOME",       concept_frac_tandem,     F+D, l_c4,         {0, 0, 0,                    0x020, tandem_key_3x1tgls}},
+   {"Y's ARE SOLID @b Y-SOME",                       concept_frac_tandem,     F+D, l_c4,         {0, 0, 0,                    0x020, tandem_key_ys}},
 /* -------- column break -------- */
 #define tt__2_size 73
 #define tt__2_cpl2s 2
@@ -604,7 +614,7 @@ concept_descriptor concept_descriptor_table[] = {
    {"SIAMESE FOURSOME",                      concept_tandem,                    D, l_c3,         {0, 0, 0,                    0x010, 10}},
    {"BOXSOME",                               concept_tandem,                  F+D, l_c4a,        {0, 0, 0,                    0x010, 16}},
    {"DIAMONDSOME",                           concept_tandem,                  F+D, l_c4a,        {0, 0, 0,                    0x010, 17}},
-   {"SKEWSOME",                              concept_tandem,                    D, l_c4a,        {0, 0, 0,                    0x010, 18}},
+   {"SKEWSOME",                              concept_tandem,                    D, l_c4a,        {0, 0, 0,                    0x010, tandem_key_skew}},
    {"GRUESOME COUPLES TWOSOME",              concept_gruesome_tandem,           D, l_c4a,        {0, 0, CONCPROP__NEEDK_2X8,  0x012, 1}},
    {"GRUESOME TANDEM TWOSOME",               concept_gruesome_tandem,           D, l_c4a,        {0, 0, CONCPROP__NEEDK_2X8,  0x012, 0}},
    {"COUPLES TWOSOME IN A 1/4 TAG",          concept_tandem,                    D, l_c3,         {0, CMD_MISC__VERIFY_REAL_1_4_TAG,  CONCPROP__NEEDK_4DMD, 0x010, 1}},
@@ -619,15 +629,15 @@ concept_descriptor concept_descriptor_table[] = {
    {"@6 ARE TANDEM TWOSOME",                 concept_some_are_tandem,         F+D, l_c3,         {0, 0, 0,                    0x110, 0}},
    {"@6 ARE COUPLES THREESOME",              concept_some_are_tandem,         F+D, l_c3,         {0, 0, 0,                    0x110, 5}},
    {"@6 ARE TANDEM THREESOME",               concept_some_are_tandem,         F+D, l_c3,         {0, 0, 0,                    0x110, 4}},
-   {"INSIDE TRIANGLES ARE THREESOME",        concept_tandem,                  F+D, l_c4a,        {0, 0, 0,                    0x010, 22}},
-   {"OUTSIDE TRIANGLES ARE THREESOME",       concept_tandem,                  F+D, l_c4a,        {0, 0, 0,                    0x010, 23}},
-   {"IN POINT TRIANGLES ARE THREESOME",      concept_tandem,                  F+D, l_c4a,        {0, 0, 0,                    0x010, 21}},
-   {"OUT POINT TRIANGLES ARE THREESOME",     concept_tandem,                  F+D, l_c4a,        {0, 0, 0,                    0x010, 20}},
-   {"WAVE-BASED TRIANGLES ARE THREESOME",    concept_tandem,                  F+D, l_c4a,        {0, 0, 0,                    0x010, 26}},
-   {"TANDEM-BASED TRIANGLES ARE THREESOME",  concept_tandem,                  F+D, l_c4a,        {0, 0, 0,                    0x010, 27}},
-   {"@k-BASED TRIANGLES ARE THREESOME",      concept_some_are_tandem,         F+D, l_c4a,        {0, 0, 0,                    0x110, 30}},
-   {"3X1 TRIANGLES ARE TRIANGLESOME",        concept_tandem,                  F+D, l_c4a,        {0, 0, 0,                    0x010, 31}},
-   {"Y-SOME",                                concept_tandem,                  F+D, l_c4,         {0, 0, 0,                    0x010, 32}},
+   {"INSIDE TRIANGLES ARE THREESOME",        concept_tandem,                  F+D, l_c4a,        {0, 0, 0,                    0x010, tandem_key_inside_tgls}},
+   {"OUTSIDE TRIANGLES ARE THREESOME",       concept_tandem,                  F+D, l_c4a,        {0, 0, 0,                    0x010, tandem_key_outside_tgls}},
+   {"IN POINT TRIANGLES ARE THREESOME",      concept_tandem,                  F+D, l_c4a,        {0, 0, 0,                    0x010, tandem_key_inpoint_tgls}},
+   {"OUT POINT TRIANGLES ARE THREESOME",     concept_tandem,                  F+D, l_c4a,        {0, 0, 0,                    0x010, tandem_key_outpoint_tgls}},
+   {"WAVE-BASED TRIANGLES ARE THREESOME",    concept_tandem,                  F+D, l_c4a,        {0, 0, 0,                    0x010, tandem_key_wave_tgls}},
+   {"TANDEM-BASED TRIANGLES ARE THREESOME",  concept_tandem,                  F+D, l_c4a,        {0, 0, 0,                    0x010, tandem_key_tand_tgls}},
+   {"@k-BASED TRIANGLES ARE THREESOME",      concept_some_are_tandem,         F+D, l_c4a,        {0, 0, 0,                    0x110, tandem_key_anyone_tgls}},
+   {"3X1 TRIANGLES ARE TRIANGLESOME",        concept_tandem,                  F+D, l_c4a,        {0, 0, 0,                    0x010, tandem_key_3x1tgls}},
+   {"Y-SOME",                                concept_tandem,                  F+D, l_c4,         {0, 0, 0,                    0x010, tandem_key_ys}},
          {"", concept_comment, 0, l_nonexistent_concept},
    {"COUPLES TWOSOME @b SOLID",              concept_frac_tandem,               D, l_c4,         {0, 0, 0,                    0x030, 1}},
    {"TANDEM TWOSOME @b SOLID",               concept_frac_tandem,               D, l_c4,         {0, 0, 0,                    0x030, 0}},
@@ -640,7 +650,7 @@ concept_descriptor concept_descriptor_table[] = {
    {"SIAMESE FOURSOME @b SOLID",             concept_frac_tandem,               D, l_c4,         {0, 0, 0,                    0x030, 10}},
    {"BOXSOME @b SOLID",                      concept_frac_tandem,             F+D, l_c4,         {0, 0, 0,                    0x030, 16}},
    {"DIAMONDSOME @b SOLID",                  concept_frac_tandem,             F+D, l_c4,         {0, 0, 0,                    0x030, 17}},
-   {"SKEWSOME @b SOLID",                     concept_frac_tandem,               D, l_c4,         {0, 0, 0,                    0x030, 18}},
+   {"SKEWSOME @b SOLID",                     concept_frac_tandem,               D, l_c4,         {0, 0, 0,                    0x030, tandem_key_skew}},
    {"GRUESOME TWOSOME @b SOLID",             concept_gruesome_frac_tandem,      D, l_c4,         {0, 0, CONCPROP__NEEDK_2X8,  0x032, 1}},
    {"GRUESOME TANDEM TWOSOME @b SOLID",      concept_gruesome_frac_tandem,      D, l_c4,         {0, 0, CONCPROP__NEEDK_2X8,  0x032, 0}},
    {"COUPLES TWOSOME @b SOLID IN A 1/4 TAG", concept_frac_tandem,               D, l_c4,         {0, CMD_MISC__VERIFY_REAL_1_4_TAG,  CONCPROP__NEEDK_4DMD, 0x030, 1}},
@@ -655,15 +665,15 @@ concept_descriptor concept_descriptor_table[] = {
    {"@6 ARE TANDEM TWOSOME @b SOLID",        concept_some_are_frac_tandem,    F+D, l_c4,         {0, 0, 0,                    0x130, 0}},
    {"@6 ARE COUPLES THREESOME @b SOLID",     concept_some_are_frac_tandem,    F+D, l_c4,         {0, 0, 0,                    0x130, 5}},
    {"@6 ARE TANDEM THREESOME @b SOLID",      concept_some_are_frac_tandem,    F+D, l_c4,         {0, 0, 0,                    0x130, 4}},
-   {"INSIDE TRIANGLES ARE THREESOME @b SOLID",       concept_frac_tandem,     F+D, l_c4,         {0, 0, 0,                    0x030, 22}},
-   {"OUTSIDE TRIANGLES ARE THREESOME @b SOLID",      concept_frac_tandem,     F+D, l_c4,         {0, 0, 0,                    0x030, 23}},
-   {"IN POINT TRIANGLES ARE THREESOME @b SOLID",     concept_frac_tandem,     F+D, l_c4,         {0, 0, 0,                    0x030, 21}},
-   {"OUT POINT TRIANGLES ARE THREESOME @b SOLID",    concept_frac_tandem,     F+D, l_c4,         {0, 0, 0,                    0x030, 20}},
-   {"WAVE-BASED TRIANGLES ARE THREESOME @b SOLID",   concept_frac_tandem,     F+D, l_c4,         {0, 0, 0,                    0x030, 26}},
-   {"TANDEM-BASED TRIANGLES ARE THREESOME @b SOLID", concept_frac_tandem,     F+D, l_c4,         {0, 0, 0,                    0x030, 27}},
-   {"@k-BASED TRIANGLES ARE THREESOME @b SOLID", concept_some_are_frac_tandem,F+D, l_c4,         {0, 0, 0,                    0x130, 30}},
-   {"3X1 TRIANGLES ARE TRIANGLESOME @b SOLID",       concept_frac_tandem,     F+D, l_c4,         {0, 0, 0,                    0x030, 31}},
-   {"Y-SOME @b SOLID",                               concept_frac_tandem,     F+D, l_c4,         {0, 0, 0,                    0x030, 32}},
+   {"INSIDE TRIANGLES ARE THREESOME @b SOLID",       concept_frac_tandem,     F+D, l_c4,         {0, 0, 0,                    0x030, tandem_key_inside_tgls}},
+   {"OUTSIDE TRIANGLES ARE THREESOME @b SOLID",      concept_frac_tandem,     F+D, l_c4,         {0, 0, 0,                    0x030, tandem_key_outside_tgls}},
+   {"IN POINT TRIANGLES ARE THREESOME @b SOLID",     concept_frac_tandem,     F+D, l_c4,         {0, 0, 0,                    0x030, tandem_key_inpoint_tgls}},
+   {"OUT POINT TRIANGLES ARE THREESOME @b SOLID",    concept_frac_tandem,     F+D, l_c4,         {0, 0, 0,                    0x030, tandem_key_outpoint_tgls}},
+   {"WAVE-BASED TRIANGLES ARE THREESOME @b SOLID",   concept_frac_tandem,     F+D, l_c4,         {0, 0, 0,                    0x030, tandem_key_wave_tgls}},
+   {"TANDEM-BASED TRIANGLES ARE THREESOME @b SOLID", concept_frac_tandem,     F+D, l_c4,         {0, 0, 0,                    0x030, tandem_key_tand_tgls}},
+   {"@k-BASED TRIANGLES ARE THREESOME @b SOLID", concept_some_are_frac_tandem,F+D, l_c4,         {0, 0, 0,                    0x130, tandem_key_anyone_tgls}},
+   {"3X1 TRIANGLES ARE TRIANGLESOME @b SOLID",       concept_frac_tandem,     F+D, l_c4,         {0, 0, 0,                    0x030, tandem_key_3x1tgls}},
+   {"Y-SOME @b SOLID",                               concept_frac_tandem,     F+D, l_c4,         {0, 0, 0,                    0x030, tandem_key_ys}},
 
 /* distorted concepts */
 
@@ -823,7 +833,7 @@ and whether we want "distorted" 1/4 tags in 4x4 of more general population,
 
 /* Miscellaneous concepts */
 
-#define mm__1_size 80
+#define mm__1_size 81
 #define mm__1_left 0
 #define mm__1_cross 2
 #define mm__1_grand 5
@@ -880,16 +890,17 @@ and whether we want "distorted" 1/4 tags in 4x4 of more general population,
    {"ASSUME FACING INTERLOCKED DIAMONDS",    concept_assume_waves,              D, l_c3a,        {0, cr_ijleft,     4, 0}},
    {"ASSUME NORMAL CASTS",                   concept_assume_waves,              D, l_c3a,        {0, cr_alwaysfail, 0, 0}},
    {"WITH ACTIVE PHANTOMS",                  concept_active_phantoms,           D, l_c3a},
-   {"INVERT",                                concept_snag_mystic,             L+D, l_c4,         {0, CMD_MISC2__CTR_END_INVERT}},
-   {"CENTRAL",                               concept_central,                   D, l_c3,         {0, CMD_MISC2__CENTRAL_PLAIN}},
-   {"INVERT CENTRAL",                        concept_central,                   D, l_c4,         {0, CMD_MISC2__CENTRAL_PLAIN | CMD_MISC2__CTR_END_INV_CONC}},
+   {"INVERT",                                concept_snag_mystic,             L+D, l_c4,         {0, CMD_MISC2__SAID_INVERT}},
+   {"CENTRAL",                               concept_central,                   D, l_c3,         {0, CMD_MISC2__DO_CENTRAL}},
+   {"INVERT CENTRAL",                        concept_central,                   D, l_c4,         {0, CMD_MISC2__DO_CENTRAL | CMD_MISC2__INVERT_CENTRAL}},
    {"SNAG",                                  concept_snag_mystic,               D, l_c4,         {0, CMD_MISC2__CENTRAL_SNAG}},
-   {"INVERT SNAG",                           concept_snag_mystic,             F+D, l_c4,         {0, CMD_MISC2__CENTRAL_SNAG | CMD_MISC2__CTR_END_INV_CONC}},
+   {"INVERT SNAG",                           concept_snag_mystic,             F+D, l_c4,         {0, CMD_MISC2__CENTRAL_SNAG | CMD_MISC2__INVERT_SNAG}},
    {"SNAG THE @6",                           concept_so_and_so_only,          L+D, l_c4,         {0, selective_key_snag_anyone, 1, 0}},
    {"MYSTIC",                                concept_snag_mystic,               D, l_c4,         {0, CMD_MISC2__CENTRAL_MYSTIC}},
-   {"INVERT MYSTIC",                         concept_snag_mystic,             F+D, l_c4,         {0, CMD_MISC2__CENTRAL_MYSTIC | CMD_MISC2__CTR_END_INV_CONC}},
+   {"INVERT MYSTIC",                         concept_snag_mystic,             F+D, l_c4,         {0, CMD_MISC2__CENTRAL_MYSTIC | CMD_MISC2__INVERT_MYSTIC}},
    {"FAN",                                   concept_fan,                     L+D, l_c3},
    {"YOYO",                                  concept_yoyo,                    L+D, l_c4},
+   {"FRACTAL",                               concept_fractal,                 L+D, l_c4},
    {"STRAIGHT",                              concept_straight,                L+D, l_c4},
    {"TWISTED",                               concept_twisted,                 L+D, l_c4},
    {"@6 ARE STANDARD IN",                    concept_standard,                L+D, l_c4a,        {0, 0}},
@@ -910,13 +921,7 @@ and whether we want "distorted" 1/4 tags in 4x4 of more general population,
    {"FERRIS",                                concept_ferris,                    D, l_c3x,        {0, 0}},
    {"RELEASE",                               concept_ferris,                    D, l_c3a,        {0, 1}},
 /* -------- column break -------- */
-
-   /* ********* Try this with a few things patched out.  In particular, 6 things.
-used to be:
-#define mm__2_size 80
-   */
-
-#define mm__2_size 75
+#define mm__2_size 78
    {"CENTERS AND ENDS",                      concept_centers_and_ends,          0, l_mainstream, {0, selector_centers, FALSE}},
    {"CENTER 6/OUTER 2",                      concept_centers_and_ends,          0, l_mainstream, {0, selector_center6, FALSE}},
    {"CENTER 2/OUTER 6",                      concept_centers_and_ends,          0, l_mainstream, {0, selector_center2, FALSE}},
@@ -963,28 +968,31 @@ used to be:
    {"REVERSE CRAZY",                         concept_crazy,                     D, l_c2,         {0, 1, FALSE}},
    {"@a CRAZY",                              concept_frac_crazy,                D, l_c2,         {0, 0, TRUE}},
    {"@a REVERSE CRAZY",                      concept_frac_crazy,                D, l_c2,         {0, 1, TRUE}},
-   {"RANDOM",                                concept_meta,                    G+D, l_c3,         {0, 0}},
-   {"REVERSE RANDOM",                        concept_meta,                    G+D, l_c3x,        {0, 1}},
-   {"PIECEWISE",                             concept_meta,                    G+D, l_c3x,        {0, 2}},
+   {"RANDOM",                                concept_meta,                    G+D, l_c3,         {0, meta_key_random}},
+   {"REVERSE RANDOM",                        concept_meta,                    G+D, l_c3x,        {0, meta_key_rev_random}},
+   {"PIECEWISE",                             concept_meta,                    G+D, l_c3x,        {0, meta_key_piecewise}},
    {"@9/@9",                                 concept_fractional,              F+D, l_mainstream, {0, 0}},
    {"1-@9/@9",                               concept_fractional,              F+D, l_mainstream, {0, 2}},
    {"TWICE",                                 concept_twice,                   F+D, l_mainstream, {0, 0, 2}},
    {"THRICE",                                concept_twice,                   F+D, l_mainstream, {0, 0, 3}},
    {"@9 TIMES",                              concept_n_times,                 F+D, l_mainstream, {0, 1}},
    {"DO THE LAST @9/@9",                     concept_fractional,              F+D, l_c1,         {0, 1}},
-   {"REVERSE ORDER",                         concept_meta,                      D, l_mainstream, {0, 5}},
-   {"INTERLACE",                             concept_interlace,                 0, l_c3x},
-   {"INITIALLY",                             concept_meta,                    G+D, l_c3a,        {0, 3}},
-   {"FINALLY",                               concept_meta,                    G+D, l_c4,         {0, 7}},
-   {"FINISH",                                concept_meta,                      D, l_c2,         {0, 4}},
-   {"LIKE A",                                concept_meta,                      D, l_c2,         {0, 6}},
-   {"LIKE AN",                               concept_meta,                      D, l_c2,         {0, 6}},
-   {"ECHO",                                  concept_meta,                    G+D, l_c4,         {0, 12}},
-   {"SHIFTY",                                concept_meta,                      D, l_c4,         {0, 11}},
-   {"SHIFT @9",                              concept_nth_part,                F+D, l_c4,         {0, 10}},
-   {"@6 START",                              concept_so_and_so_begin,         F+D, l_c1,         {0, 0}},
-   {"SKIP THE @u PART",                      concept_nth_part,                F+D, l_c1,         {0, 9}},
-   {"DO THE @u PART",                        concept_nth_part,                L+D, l_c1,         {0, 8}},
+   {"REVERSE ORDER",      concept_meta,       D, l_mainstream, {0, meta_key_revorder}},
+   {"INTERLACE",          concept_interlace,  0, l_c3x},
+   {"INITIALLY",          concept_meta,     G+D, l_c3a,     {0, meta_key_initially}},
+   {"FINALLY",            concept_meta,     G+D, l_c4,      {0, meta_key_finally}},
+   {"FINISH",             concept_meta,       D, l_c2,      {0, meta_key_finish}},
+   {"LIKE A",             concept_meta,       D, l_c2,      {0, meta_key_like_a}},
+   {"LIKE AN",            concept_meta,       D, l_c2,      {0, meta_key_like_a}},
+   {"ECHO",               concept_meta,     G+D, l_c4,      {0, meta_key_echo}},
+   {"REVERSE ECHO",       concept_meta,     G+D, l_c4,      {0, meta_key_rev_echo}},
+   {"SHIFTY",             concept_meta,       D, l_c4,      {0, meta_key_shifty}},
+   {"SHIFT @9",           concept_meta_one_arg,F+D,l_c4,    {0, meta_key_shift_n}},
+   {"SHIFT 1/2",          concept_meta,     F+D, l_c4,      {0, meta_key_shift_half}},
+   {"SHIFT @9-1/2",       concept_meta_one_arg,F+D,l_c4,    {0, meta_key_shift_n_half}},
+   {"@6 START",           concept_so_and_so_begin,F+D,l_c1, {0, 0}},
+   {"SKIP THE @u PART",   concept_meta_one_arg,F+D,l_c1,    {0, meta_key_skip_nth_part}},
+   {"DO THE @u PART",     concept_meta_one_arg,L+D,l_c1,    {0, meta_key_nth_part_work}},
    {"REPLACE THE @u PART",                   concept_replace_nth_part,          0, l_c1,         {0, 8}},
    {"REPLACE THE LAST PART",                 concept_replace_last_part,         0, l_c1,         {0, 0}},
    {"START WITH",                            concept_special_sequential,        0, l_c2,         {0, 2}},
@@ -993,9 +1001,9 @@ used to be:
    {"INTERRUPT AFTER @9/@9",                 concept_interrupt_at_fraction,     0, l_c1,         {0, 2}},
    {"SANDWICH",                              concept_sandwich,                  0, l_c3,         {0, 3}},
 /* -------- column break -------- */
-#define mm__3_size 70
-#define mm__3_3x3 60
-#define mm__3_4x4 61
+#define mm__3_size 72
+#define mm__3_3x3 62
+#define mm__3_4x4 63
    {"INSIDE TRIANGLES",                      concept_randomtrngl,               D, l_c1,         {0, 2}},
    {"INSIDE INTERLOCKED TRIANGLES",          concept_randomtrngl,               D, l_c2,         {0, 0102}},
    {"OUTSIDE TRIANGLES",                     concept_randomtrngl,               D, l_c1,         {0, 3}},
@@ -1007,9 +1015,9 @@ used to be:
    {"TANDEM-BASED TRIANGLES",                concept_randomtrngl,               D, l_c1,         {0, 7}},
    {"@k-BASED TRIANGLES",                    concept_selbasedtrngl,             D, l_c1,         {0, 20}},
          {"", concept_comment, 0, l_nonexistent_concept},
-   {"CONCENTRIC",                            concept_concentric,                D, l_c1,         {0, schema_concentric}},
-   {"CROSS CONCENTRIC",                      concept_concentric,                D, l_c2,         {0, schema_cross_concentric}},
-   {"SINGLE CONCENTRIC",                     concept_concentric,                D, l_c4,         {0, schema_single_concentric}},
+   {"CONCENTRIC",         concept_concentric, D, l_c1,      {0, schema_concentric}},
+   {"CROSS CONCENTRIC",   concept_concentric, D, l_c2,      {0, schema_cross_concentric}},
+   {"SINGLE CONCENTRIC",  concept_concentric, D, l_c4,      {0, schema_single_concentric}},
    {"SINGLE CROSS CONCENTRIC",               concept_concentric,                D, l_c4,         {0, schema_single_cross_concentric}},
    {"GRAND SINGLE CONCENTRIC",               concept_concentric,                D, l_c4,         {0, schema_grand_single_concentric}},
    {"GRAND SINGLE CROSS CONCENTRIC",         concept_concentric,                D, l_c4,         {0, schema_grand_single_cross_concentric}},
@@ -1030,26 +1038,28 @@ used to be:
    {"@6 ARE CENTERS OF DOUBLE-OFFSET DIAMONDS",concept_double_offset,           D, l_c4,         {0, 3}},
    {"@6 ARE CENTERS OF DOUBLE-OFFSET DIAMOND SPOTS",concept_double_offset,      D, l_c4,         {0, 2}},
          {"", concept_comment, 0, l_nonexistent_concept},
-   {"INRIGGER",                              concept_rigger,                    D, l_c3x,        {0, 2}},
-   {"OUTRIGGER",                             concept_rigger,                    D, l_c3x,        {0, 0}},
-   {"LEFTRIGGER",                            concept_rigger,                    D, l_c3x,        {0, 1}},
-   {"RIGHTRIGGER",                           concept_rigger,                    D, l_c3x,        {0, 3}},
-   {"BACKRIGGER",                            concept_rigger,                    D, l_c3x,        {0, 16}},
-   {"FRONTRIGGER",                           concept_rigger,                    D, l_c3x,        {0, 18}},
+   {"INRIGGER",                   concept_rigger, D, l_c3x, {0, 2}},
+   {"OUTRIGGER",                  concept_rigger, D, l_c3x, {0, 0}},
+   {"LEFTRIGGER",                 concept_rigger, D, l_c3x, {0, 1}},
+   {"RIGHTRIGGER",                concept_rigger, D, l_c3x, {0, 3}},
+   {"BACKRIGGER",                 concept_rigger, D, l_c3x, {0, 16}},
+   {"FRONTRIGGER",                concept_rigger, D, l_c3x, {0, 18}},
          {"", concept_comment, 0, l_nonexistent_concept},
-   {"COMMON POINT GALAXY",                   concept_common_spot,               D, l_c4,         {0, 1,    0}},
-   {"COMMON SPOT COLUMNS",                   concept_common_spot,               D, l_c4,         {0, 2,    0}},
-   {"COMMON POINT DIAMONDS",                 concept_common_spot,               D, l_c4,         {0, 4,    0}},
-   {"COMMON SPOT DIAMONDS",                  concept_common_spot,               D, l_c4,         {0, 4,    0}},
-   {"COMMON POINT HOURGLASS",                concept_common_spot,               D, l_c4,         {0, 0x80, 0}},
-   {"COMMON SPOT HOURGLASS",                 concept_common_spot,               D, l_c4,         {0, 0x80, 0}},
-   {"COMMON END LINES",                      concept_common_spot,               D, l_c4,         {0, 0x10, 0}},
-   {"COMMON END WAVES",                      concept_common_spot,               D, l_c4,         {0, 0x10, CMD_MISC__VERIFY_WAVES}},
-   {"COMMON CENTER LINES",                   concept_common_spot,               D, l_c4,         {0, 0x20, 0}},
-   {"COMMON CENTER WAVES",                   concept_common_spot,               D, l_c4,         {0, 0x20, CMD_MISC__VERIFY_WAVES}},
-   {"COMMON SPOT LINES",                     concept_common_spot,               D, l_c4,         {0, 0x78, 0}},
-   {"COMMON SPOT WAVES",                     concept_common_spot,               D, l_c4,         {0, 0x70, CMD_MISC__VERIFY_WAVES}},
-   {"COMMON SPOT TWO-FACED LINES",           concept_common_spot,               D, l_c4,         {0, 8,    CMD_MISC__VERIFY_2FL}},
+   {"COMMON POINT GALAXY",   concept_common_spot, D, l_c4,  {0,    1, 0}},
+   {"COMMON SPOT COLUMNS",   concept_common_spot, D, l_c4,  {0,    2, 0}},
+   {"COMMON POINT DIAMONDS", concept_common_spot, D, l_c4,  {0,    4, 0}},
+   {"COMMON SPOT DIAMONDS",  concept_common_spot, D, l_c4,  {0,    4, 0}},
+   {"COMMON POINT HOURGLASS",concept_common_spot, D, l_c4,  {0, 0x80, 0}},
+   {"COMMON SPOT HOURGLASS", concept_common_spot, D, l_c4,  {0, 0x80, 0}},
+   {"COMMON END LINES",      concept_common_spot, D, l_c4,  {0, 0x10, 0}},
+   {"COMMON END WAVES",      concept_common_spot, D, l_c4,  {0, 0x10, CMD_MISC__VERIFY_WAVES}},
+   {"COMMON CENTER LINES",   concept_common_spot, D, l_c4,  {0, 0x20, 0}},
+   {"COMMON CENTER WAVES",   concept_common_spot, D, l_c4,  {0, 0x20, CMD_MISC__VERIFY_WAVES}},
+   {"COMMON SPOT LINES",     concept_common_spot, D, l_c4,  {0, 0x78, 0}},
+   {"COMMON SPOT WAVES",     concept_common_spot, D, l_c4,  {0, 0x70, CMD_MISC__VERIFY_WAVES}},
+   {"COMMON SPOT TWO-FACED LINES",concept_common_spot,D,l_c4,{0,8,    CMD_MISC__VERIFY_2FL}},
+   {"COMMON SPOT 1/4 TAGS",  concept_common_spot, D, l_c4,  {0, 0x200, 0}},
+   {"COMMON SPOT 1/4 LINES", concept_common_spot, D, l_c4,  {0, 0x100, 0}},
          {"", concept_comment, 0, l_nonexistent_concept},
    {"1X2",                                   concept_1x2,                     L+D, l_c3},
    {"2X1",                                   concept_2x1,                     L+D, l_c3},

@@ -266,9 +266,12 @@ static collision_map collision_map_table[] = {
    {2, 0x044044, 0x44, 0x44, {2, 6},               {0, 5},                {1, 4},                 s_crosswave, s1x8,        1, warn__none, 0},   /* from lines in, only ends exist */
    {2, 0x088088, 0x88, 0x88, {3, 7},               {3, 6},                {2, 7},                 s_crosswave, s1x8,        1, warn__none, 2},   /* from lines in, only centers exist */
    {4, 0x000000, 0x0F, 0x0F, {0, 1, 2, 3},         {0, 3, 5, 6},          {1, 2, 4, 7},           s1x4,        s1x8,        0, warn__none, 0},   /* more of same */
+
    {4, 0x022022, 0xAA, 0xAA, {1, 3, 5, 7},         {2, 5, 7, 0},          {3, 4, 6, 1},           s_spindle,   s_crosswave, 0, warn__none, 0},   /* from trade by */
    {2, 0x022022, 0x22, 0x22, {1, 5},               {2, 7},                {3, 6},                 s_spindle,   s_crosswave, 0, warn__none, 1},   /* from trade by with no ends */
    {2, 0x000000, 0x88, 0x88, {3, 7},               {5, 0},                {4, 1},                 s_spindle,   s_crosswave, 0, warn__none, 0},   /* from trade by with no centers */
+   {3, 0x000022, 0x2A, 0x08, {1, 3, 5},            {3, 5, 7},             {3, 4, 7},              s_spindle,   s_crosswave, 0, warn__none, 0},   /* from trade by with no left half */
+   {3, 0x000022, 0xA2, 0x80, {1, 5, 7},            {3, 7, 0},             {3, 7, 1},              s_spindle,   s_crosswave, 0, warn__none, 0},   /* from trade by with no right half */
 
    {6, 0x0880CC, 0xDD, 0x88, {0, 2, 3, 4, 6, 7},   {7, 0, 1, 3, 4, 6},    {7, 0, 2, 3, 4, 5},     s_crosswave, s3x1dmd,     1, warn__none, 0},   /* from 3&1 lines w/ centers in */
    {6, 0x000044, 0x77, 0x22, {0, 1, 2, 4, 5, 6},   {0, 1, 3, 4, 6, 7},    {0, 2, 3, 4, 5, 7},     s_crosswave, s3x1dmd,     0, warn__none, 0},   /* from 3&1 lines w/ centers out */
@@ -1733,14 +1736,19 @@ Private int divide_the_setup(
 
          /* Otherwise, the only way this can be legal is if we can identify
             smaller setups of all real people and can do the call on them.  For
-            example, we will look for 1x2 setups, so we could trade in individual couples scattered around. */
+            example, we will look for 1x2 setups, so we could trade in
+            individual couples scattered around. */
 
          switch (livemask) {
             case 0505505:
+            case 0702702:
+            case 0207207:
                division_code = MAPCODE(s2x3,2,MPKIND__OFFS_R_HALF,0);
                warn(warn__each1x2);
                break;
             case 0550550:
+            case 0720720:
+            case 0270270:
                division_code = MAPCODE(s2x3,2,MPKIND__OFFS_L_HALF,0);
                warn(warn__each1x2);
                break;
@@ -2331,18 +2339,28 @@ Private int divide_the_setup(
 
          break;
       case s_bone:
+         division_code = MAPCODE(s_trngl4,2,MPKIND__NONISOTROP1,1);
+         temp_for_2x2 = assoc(b_trngl4, ss, calldeflist) ||
+            assoc(b_ptrngl4, ss, calldeflist);
+
+         if (((ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_HORIZ) && !(ss->rotation & 1)) ||
+             ((ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_VERT) && (ss->rotation & 1))) {
+
+            if (temp_for_2x2)
+               goto divide_us_no_recompute;
+         }
+
          if (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK)
             fail("Can't split the setup.");
+
+         if (temp_for_2x2) goto divide_us_no_recompute;
 
          /* See if this call is being done "split" as in "split square thru" or
             "split dixie style", in which case split into triangles.
             (Presumably there is a "twisted" somewhere.) */
 
          if ((final_concepts.final &
-              (FINAL__SPLIT_SQUARE_APPROVED | FINAL__SPLIT_DIXIE_APPROVED)) ||
-             assoc(b_trngl4, ss, calldeflist) ||
-             assoc(b_ptrngl4, ss, calldeflist)) {
-            division_code = MAPCODE(s_trngl4,2,MPKIND__NONISOTROP1,1);
+              (FINAL__SPLIT_SQUARE_APPROVED | FINAL__SPLIT_DIXIE_APPROVED))) {
             goto divide_us_no_recompute;
          }
 
@@ -2681,53 +2699,58 @@ Private int divide_the_setup(
       case s2x4:
          division_code = MAPCODE(s2x2,2,MPKIND__SPLIT,0);    /* The map we will probably use. */
 
-         /* See if this call is being done "split" as in "split square thru" or "split dixie style",
-            in which case split into boxes. */
+         /* See if this call is being done "split" as in "split square thru" or
+            "split dixie style", in which case split into boxes. */
 
          if (final_concepts.final & (FINAL__SPLIT_SQUARE_APPROVED | FINAL__SPLIT_DIXIE_APPROVED))
             goto divide_us_no_recompute;
 
-         /* If this is "run", always split it into boxes.  If they are T-boned, they will figure it out, we hope. */
+         /* If this is "run", always split it into boxes.  If they are T-boned,
+            they will figure it out, we hope. */
 
          if (calldeflist->callarray_flags & CAF__LATERAL_TO_SELECTEES)
             goto divide_us_no_recompute;
 
-         /* See if this call has applicable 2x6 or 2x8 definitions and matrix expansion is permitted.
-            If so, that is what we must do.  But if it has a 4x4 definition also, it is ambiguous,
-            so we can't do it. */
+         /* See if this call has applicable 2x6 or 2x8 definitions and matrix expansion
+            is permitted.  If so, that is what we must do.  But if it has a 4x4 definition
+            also, it is ambiguous, so we can't do it. */
 
-         if (  !(ss->cmd.cmd_misc_flags & CMD_MISC__NO_EXPAND_MATRIX) &&
-               !assoc(b_4x4, ss, calldeflist) &&
-               (!(newtb & 010) || assoc(b_2x6, ss, calldeflist) || assoc(b_2x8, ss, calldeflist)) &&
-               (!(newtb & 1) || assoc(b_6x2, ss, calldeflist) || assoc(b_8x2, ss, calldeflist))) {
+         if (!(ss->cmd.cmd_misc_flags & CMD_MISC__NO_EXPAND_MATRIX) &&
+             !assoc(b_4x4, ss, calldeflist) &&
+             (!(newtb & 010) ||
+              assoc(b_2x6, ss, calldeflist) ||
+              assoc(b_2x8, ss, calldeflist)) &&
+             (!(newtb & 1) ||
+              assoc(b_6x2, ss, calldeflist) ||
+              assoc(b_8x2, ss, calldeflist))) {
 
             if (must_do_mystic)
                fail("Can't do \"snag/mystic\" with this call.");
 
             do_matrix_expansion(ss, CONCPROP__NEEDK_2X6, TRUE);
-            if (ss->kind != s2x6) fail("Failed to expand to 2X6.");  /* Should never fail, but we don't want a loop. */
+
+            /* Should never fail, but we don't want a loop. */
+            if (ss->kind != s2x6) fail("Failed to expand to 2X6.");
+
             return 2;                        /* And try again. */
          }
 
-         /* If we are splitting for "central", "crazy", or "splitseq", give preference to 2x2 splitting.
-            Also give preference if the "split_to_box" flag was given. */
+         /* If we are splitting for "central", "crazy", or "splitseq",
+            give preference to 2x2 splitting.  Also give preference
+            if the "split_to_box" flag was given. */
 
          temp_for_2x2 = TRUE;
-         if (     ((ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_HORIZ) && !(ss->rotation & 1)) ||
-                  ((ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_VERT) && (ss->rotation & 1)) ||
-                  (calldeflist->callarray_flags & CAF__SPLIT_TO_BOX)) {
+
+         if (((ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_HORIZ) && !(ss->rotation & 1)) ||
+             ((ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_VERT) && (ss->rotation & 1)) ||
+             (calldeflist->callarray_flags & CAF__SPLIT_TO_BOX)) {
             if (assoc(b_2x2, ss, calldeflist))
                goto divide_us_no_recompute;
             temp_for_2x2 = FALSE;    /* So we don't waste time computing it again. */
-/*
-            if (assoc(b_1x2, ss, calldeflist))
-               goto divide_us_no_recompute;
-            if (assoc(b_2x1, ss, calldeflist))
-               goto divide_us_no_recompute;
-*/
          }
 
-         /* See if this call has applicable 1x4 or 4x1 definitions, in which case split it that way. */
+         /* See if this call has applicable 1x4 or 4x1 definitions,
+            in which case split it that way. */
 
          if ((!(newtb & 010) || assoc(b_1x4, ss, calldeflist)) &&
                (!(newtb & 1) || assoc(b_4x1, ss, calldeflist))) {
@@ -3169,12 +3192,9 @@ extern void basic_move(
    long_boolean check_peeloff_migration = FALSE;
 
    /* We don't allow "central" or "invert" with array-defined calls.  We might allow "snag" or "mystic". */
-   if (ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_MASK) {
-      switch (ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_KMASK) {
-         case 0: case CMD_MISC2__CENTRAL_PLAIN:
-            fail("Can't do \"central\" or \"invert\" with this call.");
-      }
-   }
+
+   if (ss->cmd.cmd_misc2_flags & (CMD_MISC2__SAID_INVERT | CMD_MISC2__DO_CENTRAL))
+      fail("Can't do \"central\" or \"invert\" with this call.");
 
    result->result_flags = 0;   /* Do this now, in case we bail out.  Note also that
       this means the RESULTFLAG__SPLIT_AXIS_MASK stuff will be clear for the normal case.

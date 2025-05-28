@@ -12,13 +12,14 @@
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-    This is for version 31. */
+    This is for version 32. */
 
 /* This defines the following external variables:
    getout_strings
    filename_strings
    level_threshholds
    higher_acceptable_level
+   concept_key_table
    menu_names
    id_bit_table_2x6_pg
    id_bit_table_bigdmd_wings
@@ -933,6 +934,72 @@ dance_level higher_acceptable_level[] = {
    l_dontshow,
    l_nonexistent_concept};
 
+/* e1 = page up
+   e2 = page down
+   e3 = end
+   e4 = home
+   e5 = left arrow
+   e6 = up arrow
+   e7 = right arrow
+   e8 = down arrow
+   e13 = insert
+   e14 = delete */
+
+Cstring concept_key_table[] = {
+   /* These are the standard bindings. */
+   "+f1    heads start",
+   "+sf1   sides start",
+   "+cf1   just as they are",
+   "f2     two calls in succession",
+   "sf2    twice",
+   "f3     pick random call",
+   "sf3    pick concept call",
+   "cf3    pick simple call",
+   "f4     resolve",
+   "e4     resolve",            /* home */
+   "sf4    reconcile",
+   "cf4    normalize",
+   "af4    exit the program",
+   "+af4   exit from the program",
+   "f5     refresh display",
+   "sf5    keep picture",
+   "cf5    insert a comment",
+   "e13    insert a comment",   /* insert */
+   "f6     simple modifications",
+   "sf6    allow modifications",
+   "cf6    centers",
+   "f7     toggle concept levels",
+   "+f7    toggle concept levels",
+   "sf7    toggle active phantoms",
+   "+sf7   toggle active phantoms",
+   "sf8    cut to clipboard",
+   "cf8    paste one call",
+   "f9     undo last call",
+   "+f9    exit from the program",
+   "*f9    abort the search",
+   "sf9    undo last call",
+   "+sf9   exit from the program",
+   "*sf9   abort the search",
+   "f10    write this sequence",
+   "*f10   write this sequence",
+   "e3     write this sequence",    /* end */
+   "*e3    write this sequence",    /* end */
+   "sf10   change output file",
+   "+sf10  change output file",
+   "f11    pick level call",
+   "sf11   pick 8 person level call",
+   "*f12   find another",
+   "*e7    find another",           /* right arrow */
+   "*sf12  accept current choice",
+   "*cf12  previous",
+   "*e6    previous",               /* up arrow */
+   "*se6   raise reconcile point",  /* shift up arrow */
+   "*e5    previous",               /* left arrow */
+   "*af12  next",
+   "*e8    next",                   /* down arrow */
+   "*se8   lower reconcile point",  /* shift down arrow */
+   (char *) 0};
+
 /* BEWARE!!  This list is keyed to the definition of "call_list_kind" in sd.h . */
 Cstring menu_names[] = {
    "???",
@@ -956,15 +1023,32 @@ Cstring menu_names[] = {
    "diamond/qtag"};
 
 
-#define WESTBIT(otherbits) { ID2_BEAU | otherbits, ID2_TRAILER | otherbits, ID2_BELLE | otherbits, ID2_LEAD | otherbits }
-#define EASTBIT(otherbits) { ID2_BELLE | otherbits, ID2_LEAD | otherbits, ID2_BEAU | otherbits, ID2_TRAILER | otherbits }
-#define NORTHBIT(otherbits) { ID2_LEAD | otherbits, ID2_BEAU | otherbits, ID2_TRAILER | otherbits, ID2_BELLE | otherbits }
-#define SOUTHBIT(otherbits) { ID2_TRAILER | otherbits, ID2_BELLE | otherbits, ID2_LEAD | otherbits, ID2_BEAU | otherbits }
 #define NOBIT(otherbits) { otherbits, otherbits, otherbits, otherbits }
+
+#define WESTBIT(otherbits) { ID2_BEAU | otherbits, ID2_TRAILER | otherbits, ID2_BELLE | otherbits, ID2_LEAD | otherbits }
+
+#define EASTBIT(otherbits) { ID2_BELLE | otherbits, ID2_LEAD | otherbits, ID2_BEAU | otherbits, ID2_TRAILER | otherbits }
+
+#define NORTHBIT(otherbits) { ID2_LEAD | otherbits, ID2_BEAU | otherbits, ID2_TRAILER | otherbits, ID2_BELLE | otherbits }
+
+#define SOUTHBIT(otherbits) { ID2_TRAILER | otherbits, ID2_BELLE | otherbits, ID2_LEAD | otherbits, ID2_BEAU | otherbits }
+
 #define NWBITS(otherbits) { ID2_LEAD   |ID2_BEAU  | otherbits, ID2_TRAILER|ID2_BEAU  | otherbits, ID2_TRAILER|ID2_BELLE | otherbits, ID2_LEAD   |ID2_BELLE | otherbits }
+
 #define SWBITS(otherbits) { ID2_TRAILER|ID2_BEAU  | otherbits, ID2_TRAILER|ID2_BELLE | otherbits, ID2_LEAD   |ID2_BELLE | otherbits, ID2_LEAD   |ID2_BEAU  | otherbits }
+
 #define SEBITS(otherbits) { ID2_TRAILER|ID2_BELLE | otherbits, ID2_LEAD   |ID2_BELLE | otherbits, ID2_LEAD   |ID2_BEAU  | otherbits, ID2_TRAILER|ID2_BEAU  | otherbits }
+
 #define NEBITS(otherbits) { ID2_LEAD   |ID2_BELLE | otherbits, ID2_LEAD   |ID2_BEAU  | otherbits, ID2_TRAILER|ID2_BEAU  | otherbits, ID2_TRAILER|ID2_BELLE | otherbits }
+
+#define NWBITS12(otherbits) { ID2_LEAD  | otherbits, ID2_BEAU  | otherbits, ID2_TRAILER | otherbits, ID2_BELLE | otherbits }
+
+#define SWBITS12(otherbits) { ID2_TRAILER|otherbits, ID2_BELLE|otherbits, ID2_LEAD|otherbits, ID2_BEAU|otherbits }
+
+#define SEBITS12(otherbits) { ID2_TRAILER|otherbits, ID2_BELLE|otherbits, ID2_LEAD|otherbits, ID2_BEAU|otherbits }
+
+#define NEBITS12(otherbits) { ID2_LEAD|otherbits, ID2_BEAU|otherbits, ID2_TRAILER|otherbits, ID2_BELLE|otherbits }
+
 
 
 static id_bit_table id_bit_table_1x2[] = {
@@ -999,22 +1083,23 @@ static id_bit_table id_bit_table_2x5[] = {
    SOUTHBIT(0),
    SOUTHBIT(0)};
 
+
 /* This table is accepted in any circumstances. */
 /* Note that the people marked "ID2_END" won't actually identify
    themselves as ends.  That is just to make "center 4" work. */
 static id_bit_table id_bit_table_2x6[] = {  
-   NOBIT(ID2_END),
-   NOBIT(ID2_END),
-   NOBIT(ID2_CTR4),
-   NOBIT(ID2_CTR4),
-   NOBIT(ID2_END),
-   NOBIT(ID2_END),
-   NOBIT(ID2_END),
-   NOBIT(ID2_END),
-   NOBIT(ID2_CTR4),
-   NOBIT(ID2_CTR4),
-   NOBIT(ID2_END),
-   NOBIT(ID2_END)};
+   NWBITS12(ID2_END),
+   NEBITS12(ID2_END),
+   NWBITS12(ID2_CTR4),
+   NEBITS12(ID2_CTR4),
+   NWBITS12(ID2_END),
+   NEBITS12(ID2_END),
+   SEBITS12(ID2_END),
+   SWBITS12(ID2_END),
+   SEBITS12(ID2_CTR4),
+   SWBITS12(ID2_CTR4),
+   SEBITS12(ID2_END),
+   SWBITS12(ID2_END)};
 
 /* This table is only accepted if the population is a parallelogram. */
 id_bit_table id_bit_table_2x6_pg[] = {
@@ -1032,22 +1117,22 @@ id_bit_table id_bit_table_2x6_pg[] = {
    SWBITS(ID2_OUTRPAIRS)};
 
 static id_bit_table id_bit_table_2x8[] = {  
-   NOBIT(ID2_END),
-   NOBIT(ID2_END),
-   NOBIT(ID2_END),
-   NOBIT(ID2_CTR4),
-   NOBIT(ID2_CTR4),
-   NOBIT(ID2_END),
-   NOBIT(ID2_END),
-   NOBIT(ID2_END),
-   NOBIT(ID2_END),
-   NOBIT(ID2_END),
-   NOBIT(ID2_END),
-   NOBIT(ID2_CTR4),
-   NOBIT(ID2_CTR4),
-   NOBIT(ID2_END),
-   NOBIT(ID2_END),
-   NOBIT(ID2_END)};
+   NWBITS12(ID2_END),
+   NEBITS12(ID2_END),
+   NWBITS12(ID2_END),
+   NEBITS12(ID2_CTR4),
+   NWBITS12(ID2_CTR4),
+   NEBITS12(ID2_END),
+   NWBITS12(ID2_END),
+   NEBITS12(ID2_END),
+   SEBITS12(ID2_END),
+   SWBITS12(ID2_END),
+   SEBITS12(ID2_END),
+   SWBITS12(ID2_CTR4),
+   SEBITS12(ID2_CTR4),
+   SWBITS12(ID2_END),
+   SEBITS12(ID2_END),
+   SWBITS12(ID2_END)};
 
 static id_bit_table id_bit_table_1x4[] = {
    WESTBIT(ID2_END),
@@ -1655,8 +1740,26 @@ static id_bit_table id_bit_table_bone[] = {
    WESTBIT(ID2_CENTER|ID2_CTR4     |ID2_OUTR6),
    EASTBIT(ID2_CENTER|ID2_CTR4     |ID2_CTR2)};
 
-
-
+/* Use this only if center 1x6 is fully occupied. */
+static id_bit_table id_bit_table_3x6[] = {
+   NOBIT(ID2_NCTR1X6 | ID2_NCTR1X4),
+   NOBIT(ID2_NCTR1X6 | ID2_NCTR1X4),
+   NOBIT(ID2_NCTR1X6 | ID2_NCTR1X4),
+   NOBIT(ID2_NCTR1X6 | ID2_NCTR1X4),
+   NOBIT(ID2_NCTR1X6 | ID2_NCTR1X4),
+   NOBIT(ID2_NCTR1X6 | ID2_NCTR1X4),
+   NOBIT(ID2_CTR1X6  | ID2_NCTR1X4),
+   NOBIT(ID2_CTR1X6  | ID2_CTR1X4),
+   NOBIT(ID2_CTR1X6  | ID2_CTR1X4),
+   NOBIT(ID2_NCTR1X6 | ID2_NCTR1X4),
+   NOBIT(ID2_NCTR1X6 | ID2_NCTR1X4),
+   NOBIT(ID2_NCTR1X6 | ID2_NCTR1X4),
+   NOBIT(ID2_NCTR1X6 | ID2_NCTR1X4),
+   NOBIT(ID2_NCTR1X6 | ID2_NCTR1X4),
+   NOBIT(ID2_NCTR1X6 | ID2_NCTR1X4),
+   NOBIT(ID2_CTR1X6  | ID2_NCTR1X4),
+   NOBIT(ID2_CTR1X6  | ID2_CTR1X4),
+   NOBIT(ID2_CTR1X6  | ID2_CTR1X4)};
 
 
 
@@ -1670,6 +1773,7 @@ static id_bit_table id_bit_table_bone[] = {
 #define L6 schema_lateral_6
 #define V6 schema_vertical_6
 #define QL schema_in_out_quad
+#define Q2 schema_in_out_12mquad
 #define TL schema_in_out_triple
 #define GS schema_grand_single_concentric
 #define SI schema_single_concentric
@@ -1931,6 +2035,15 @@ cm_thing conc_init_table[] = {
              4, 8, s2x2,     s2x4,     16, 0, 0, 1, 2,  0x0FE, QL},
    {s4x4,          QL, {8, 6, 4, 5, 12, 13, 0, 14,      10, 15, 3, 1, 2, 7, 11, 9},
              4, 8, s1x4,     s2x4,     16, 0, 0, 2, 2,  0x0FB, QL},
+
+   {s3x4,          Q2, {9, 10, 0, 6, 4, 3,              8, 11, 1, 2, 5, 7},
+             3, 6, s1x3,     s2x3,     12, 1, 1, 1, 2,  0x0FB, Q2},
+   {s_d3x4,        Q2, {10, 11, 0, 4, 5, 6,             1, 2, 3, 7, 8, 9},
+             3, 6, s1x3,     s2x3,     12, 1, 0, 1, 2,  0x0FD, Q2},
+   {s3dmd,         Q2, {8, 7, 6, 0, 1, 2,               9, 10, 11, 3, 4, 5},
+             3, 6, s1x3,     s1x6,     12, 0, 0, 2, 2,  0x0FB, Q2},
+
+
    {s_hrglass,     TL, {5, 4, -1, -1, -1, -1, 1, 0,     6, 3, 2, 7},
              4, 4, s2x2,     sdmd,     12, 0, 0, 2, 2,  0x100, XXX},
    {s_dhrglass,    TL, {-1, -1, 0, 5, 4, 1, -1, -1,     6, 3, 2, 7},
@@ -2130,6 +2243,8 @@ static Const fixer distrig1;
 static Const fixer distrig2;
 static Const fixer distrig5;
 static Const fixer distrig6;
+static Const fixer distptp7;
+static Const fixer distptp8;
 static Const fixer dgald1;
 static Const fixer dgald2;
 static Const fixer dgald3;
@@ -2180,6 +2295,9 @@ static Const fixer fo6zz     = {s1x2, s_bone6,     1, 0, 2,       &fo6zz,     &f
 static Const fixer foozz     = {s1x2, s_ptpd,      1, 0, 2,       &foozz,     &f1x8aa,    0,          0, 0,          0,    0,          0,          {1, 3, 7, 5}};
 static Const fixer fo6zzd    = {s2x2, s_bone6,     0, 1, 1,       0,          0,          &f1x6aad,   0, 0,          0,    &fo6zzd,    0,          {0, 1, 3, 4}};
 static Const fixer foozzd    = {s2x2, s_ptpd,      0, 1, 1,       0,          0,          &f1x8aad,   0, 0,          0,    &foozzd,    &fqtgend,   {1, 7, 5, 3}};
+
+static Const fixer f3x4east  = {s1x2, s3x4,        1, 0, 2,       0,         &f3x4east,   0,          0, 0,          0,    0,          0,          {10, 9, 3, 4}};
+static Const fixer f3x4west  = {s1x2, s3x4,        1, 0, 2,       0,         &f3x4west,   0,          0, 0,          0,    0,          0,          {0, 10, 4, 6}};
 static Const fixer f3x4left  = {s1x2, s3x4,        0, 0, 2,       &f3x4left,  &f3x4rzz,   0,          0, 0,          0,    0,          0,          {0, 1, 7, 6}};
 static Const fixer f3x4right = {s1x2, s3x4,        0, 0, 0x100+2, &f3x4right, &f3x4lzz,   0,          0, 0,          0,    0,          0,          {2, 3, 9, 8}};
 static Const fixer f3x4lzz   = {s1x2, s2x6,        0, 0, 2,       &f3x4lzz,   &f3x4right, 0,          0, 0,          0,    0,          0,          {0, 1, 7, 6}};
@@ -2299,6 +2417,9 @@ static Const fixer distbone1 = {s1x4, s_bone,      0, 0, 1,       0,          0,
 static Const fixer distbone2 = {s1x4, s_bone,      0, 0, 1,       0,          0,          &distbone2, 0, 0,          0,    0,          0,          {0, 7, 4, 3}};
 static Const fixer distbone5 = {s1x4, s_bone,      0, 0, 1,       0,          0,          &distbone5, 0, 0,          0,    0,          0,          {5, 6, 1, 2}};
 static Const fixer distbone6 = {s1x4, s_bone,      0, 0, 1,       0,          0,          &distbone6, 0, 0,          0,    0,          0,          {5, 7, 1, 3}};
+
+/*                              ink   outk       rot  el numsetup 1x2         1x2rot      1x4    1x4rot dmd         dmdrot 2x2      2x2v             nonrot  */
+
 static Const fixer distrig3  = {sdmd, s_rigger,    0, 0, 1,       0,          0,          &distrig1,  0, &distrig3,  0,    0,          0,          {7, 0, 3, 4}};
 static Const fixer distrig1  = {s1x4, s_rigger,    0, 0, 1,       0,          0,          &distrig1,  0, &distrig3,  0,    0,          0,          {7, 0, 3, 4}};
 static Const fixer distrig4  = {sdmd, s_rigger,    0, 0, 1,       0,          0,          &distrig2,  0, &distrig4,  0,    0,          0,          {6, 1, 2, 5}};
@@ -2307,6 +2428,16 @@ static Const fixer distrig7  = {sdmd, s_rigger,    0, 0, 1,       0,          0,
 static Const fixer distrig5  = {s1x4, s_rigger,    0, 0, 1,       0,          0,          &distrig5,  0, &distrig7,  0,    0,          0,          {6, 0, 2, 4}};
 static Const fixer distrig8  = {sdmd, s_rigger,    0, 0, 1,       0,          0,          &distrig6,  0, &distrig8,  0,    0,          0,          {7, 1, 3, 5}};
 static Const fixer distrig6  = {s1x4, s_rigger,    0, 0, 1,       0,          0,          &distrig6,  0, &distrig8,  0,    0,          0,          {7, 5, 3, 1}};
+
+
+static Const fixer distptp1  = {s1x4, s_ptpd,      0, 0, 1,       0,          0,          &distptp1,  0, 0,          0,    0,          0,          {3, 2, 7, 6}};
+static Const fixer distptp2  = {s1x4, s_ptpd,      0, 0, 1,       0,          0,          &distptp2,  0, 0,          0,    0,          0,          {1, 2, 5, 6}};
+static Const fixer distptp3  = {s1x4, s_ptpd,      0, 0, 1,       0,          0,          &distptp3,  0, &distptp7,  0,    0,          0,          {0, 1, 4, 5}};
+static Const fixer distptp4  = {s1x4, s_ptpd,      0, 0, 1,       0,          0,          &distptp4,  0, &distptp8,  0,    0,          0,          {0, 3, 4, 7}};
+static Const fixer distptp7  = {sdmd, s_ptpd,      0, 0, 1,       0,          0,          &distptp3,  0, &distptp7,  0,    0,          0,          {0, 1, 4, 5}};
+static Const fixer distptp8  = {sdmd, s_ptpd,      0, 0, 1,       0,          0,          &distptp4,  0, &distptp8,  0,    0,          0,          {0, 7, 4, 3}};
+
+
 static Const fixer disthrg1  = {s1x4, s_hrglass,   1, 0, 1,       0,          0,          &disthrg1,  0, 0,          0,    0,          0,          {1, 3, 5, 7}};
 static Const fixer disthrg2  = {s1x4, s_hrglass,   1, 0, 1,       0,          0,          &disthrg2,  0, 0,          0,    0,          0,          {0, 3, 4, 7}};
 
@@ -2442,6 +2573,8 @@ sel_item sel_init_table[] = {
    {LOOKUP_DIST_DMD,           s_rigger,    0x66,   &distrig4,   (fixer *) 0, -1},
    {LOOKUP_DIST_DMD,           s_rigger,    0x55,   &distrig7,   (fixer *) 0, -1},
    {LOOKUP_DIST_DMD,           s_rigger,    0xAA,   &distrig8,   (fixer *) 0, -1},
+   {LOOKUP_DIST_DMD,           s_ptpd,      0x33,   &distptp7,   (fixer *) 0, -1},
+   {LOOKUP_DIST_DMD,           s_ptpd,      0x99,   &distptp8,   (fixer *) 0, -1},
    {LOOKUP_DIST_DMD,           s_galaxy,    0x66,   &dgald1,     (fixer *) 0, -1},
    {LOOKUP_DIST_DMD,           s_galaxy,    0xCC,   &dgald2,     (fixer *) 0, -1},
    {LOOKUP_DIST_DMD,           s_galaxy,    0x33,   &dgald3,     (fixer *) 0, -1},
@@ -2466,6 +2599,10 @@ sel_item sel_init_table[] = {
    {LOOKUP_DIST_CLW,           s_rigger,    0x66,   &distrig2,   (fixer *) 0, -1},
    {LOOKUP_DIST_CLW,           s_rigger,    0x55,   &distrig5,   (fixer *) 0, -1},
    {LOOKUP_DIST_CLW,           s_rigger,    0xAA,   &distrig6,   (fixer *) 0, -1},
+   {LOOKUP_DIST_CLW,           s_ptpd,      0xCC,   &distptp1,   (fixer *) 0, -1},
+   {LOOKUP_DIST_CLW,           s_ptpd,      0x66,   &distptp2,   (fixer *) 0, -1},
+   {LOOKUP_DIST_CLW,           s_ptpd,      0x33,   &distptp3,   (fixer *) 0, -1},
+   {LOOKUP_DIST_CLW,           s_ptpd,      0x99,   &distptp4,   (fixer *) 0, -1},
    {LOOKUP_DIST_CLW,           s_bone,      0x55,   &distbone1,  (fixer *) 0, -1},
    {LOOKUP_DIST_CLW,           s_bone,      0x99,   &distbone2,  (fixer *) 0, -1},
    {LOOKUP_DIST_CLW,           s_bone,      0x66,   &distbone5,  (fixer *) 0, -1},
@@ -2607,8 +2744,10 @@ sel_item sel_init_table[] = {
    {LOOKUP_NONE,               sdeepxwv,    00303,  &fdpxwve,    (fixer *) 0, -1},
    {LOOKUP_NONE,               s1x3dmd,      0x77,  &f1x3d6,     (fixer *) 0, -1},
    {LOOKUP_NONE,               s1x12,       00707,  &f1x12outer, (fixer *) 0, -1},
-   {LOOKUP_NONE,               s3x4,        0x0C3,  &f3x4left,   (fixer *) 0, -1},
-   {LOOKUP_NONE,               s3x4,        0x30C,  &f3x4right,  (fixer *) 0, -1},
+   {LOOKUP_NONE,               s3x4,        00303,  &f3x4left,   (fixer *) 0, -1},
+   {LOOKUP_NONE,               s3x4,        01414,  &f3x4right,  (fixer *) 0, -1},
+   {LOOKUP_NONE,               s3x4,        03030,  &f3x4east,   (fixer *) 0, -1},
+   {LOOKUP_NONE,               s3x4,        02121,  &f3x4west,   (fixer *) 0, -1},
    {LOOKUP_NONE,               s4x4,       0x3030,  &f4x4left,   (fixer *) 0, -1},
    {LOOKUP_NONE,               s4x4,       0x4141,  &f4x4right,  (fixer *) 0, -1},
    {LOOKUP_NONE,               s2x6,        0x0C3,  &f3x4lzz,    (fixer *) 0, -1},
@@ -3283,7 +3422,7 @@ setup_attr setup_attrs[] = {
       {b_3x6,       b_6x3},
       { 6, 3},
       FALSE,
-      (id_bit_table *) 0,
+      id_bit_table_3x6,
       {  "a  b  c  d  e  f@@p  q  r  i  h  g@@o  n  m  l  k  j",
          "o  p  a@@n  q  b@@m  r  c@@l  i  d@@k  h  e@@j  g  f"}},
    /* s3x8 */
@@ -4020,6 +4159,12 @@ Private map_thing map_par_rig           = {{-1, -1, 6, 7, -1, -1, 11, 10,
                                                                    -1, -1, 5, 4, -1, -1, 0, 1},                      MPKIND__SPLIT,       6, 2,  s2x6,   s_rigger,      0x000, 1};
 Private map_thing map_4x6_2x6           = {{18, 19, 20, 21, 22, 23, 12, 13, 14, 15, 16, 17,
                                                                    0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11},            MPKIND__SPLIT,       0, 2,  s4x6,   s2x6,      0x000, 1};
+
+Private map_thing map_2x12_2x6          = {{0, 1, 2, 3, 4, 5, 18, 19, 20, 21, 22, 23,
+                                                                   6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17},      MPKIND__SPLIT,       0, 2,  s2x12,   s2x6,      0x000, 0};
+
+
+
 Private map_thing map_3dmd_dmd          = {{0, 10, 8, 9,           1, 5, 7, 11,           2, 3, 6, 4},               MPKIND__SPLIT,       0, 3,  s3dmd,  sdmd,      0x015, 0};
 Private map_thing map_3ptp_dmd          = {{9, 0, 10, 8,           11, 1, 5, 7,           4, 2, 3, 6},               MPKIND__SPLIT,       0, 3,  s3ptpd, sdmd,      0x000, 0};
 
@@ -4032,7 +4177,9 @@ Private map_thing map_2x12_2x4  = {{0, 1, 2, 3, 20, 21, 22, 23,    4, 5, 6, 7, 1
 Private map_thing map_hv_qtg_2          = {{0, 1, 15, 14, 10, 11, 12, 13,     2, 3, 4, 5, 8, 9, 7, 6},               MPKIND__SPLIT,       0, 2,  s4dmd,  s_qtag,    0x000, 0};
 Private map_thing map_vv_qtg_2          = {{9, 20, 16, 19, 18, 11, 1, 10,     6, 23, 13, 22, 21, 8, 4, 7},           MPKIND__SPLIT,       0, 2,  s4x6,   s_qtag,    0x005, 0};
 Private map_thing map_spin_3x4          = {{1, 11, 8, -1, 9, 10, 0, -1,       3, 4, 6, -1, 7, 5, 2, -1},             MPKIND__SPLIT,       0, 2,  s3x4,   s_spindle, 0x005, 0};
-Private map_thing map_hrgl_ptp          = {{-1, -1, 2, 1, -1, -1, 0, 3,       -1, -1, 4, 7, -1, -1, 6, 5},           MPKIND__SPLIT,       0, 2,  s_ptpd, s_hrglass, 0x000, 0};
+static map_thing map_hrgl_ptp           = {{-1, -1, 2, 1, -1, -1, 0, 3,       -1, -1, 4, 7, -1, -1, 6, 5},           MPKIND__SPLIT,       0, 2,  s_ptpd, s_hrglass, 0x000, 0};
+static map_thing map_xwv_bone           = {{-1, -1, -1, 0, 7, 6, -1, 5,       3, 2, -1, 1, -1, -1, -1, 4},           MPKIND__SPLIT,       0, 2,  s_bone, s_crosswave, 0x000, 0};
+
         map_thing map_ov_hrg_1          = {{-1, -1, 5, 7, -1, -1, 0, 6,       -1, -1, 4, 2, -1, -1, 1, 3},           MPKIND__OVERLAP,     0, 2,  s_qtag, s_hrglass, 0x005, 0};
         map_thing map_ov_gal_1          = {{-1, 0, -1, 1, -1, 6, -1, 7,       -1, 2, -1, 3, -1, 4, -1, 5},           MPKIND__OVERLAP,     0, 2,  s2x4,   s_galaxy,  0x000, 0};
 
@@ -4421,9 +4568,9 @@ map_thing *split_lists[][6] = {
    {&map_hrgl_ptp, 0,             0,             0,             0,             0},          /* s_hrglass */
    {0,             0,             0,             0,             0,             0},          /* s_dhrglass */
    {0,             0,             0,             0,             0,             0},          /* s_hyperglass */
-   {0,             0,             0,             0,             0,             0},          /* s_crosswave */
+   {&map_xwv_bone, 0,             0,             0,             0,             0},          /* s_crosswave */
    {&map_hv_2x4_2, &map_split_f,  &map_2x12_2x4, &map_4x6_2x4,  0,             0},          /* s2x4 */
    {0,             0,             0,             0,             0,             0},          /* s2x5 */
    {0,             &map_par_rig,  0,             0,             0,             0},          /* s_rigger */
    {&map_3x8_3x4,  &map_4x6_3x4,  0,             0,             0,             0},          /* s3x4 */
-   {0,             &map_4x6_2x6,  0,             0,             0,             0}};         /* s2x6 */
+   {&map_2x12_2x6, &map_4x6_2x6,  0,             0,             0,             0}};         /* s2x6 */

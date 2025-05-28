@@ -30,7 +30,7 @@
 
 typedef struct glozk {
    uims_reply kind;
-   int index;
+   long int index;
    call_conc_option_state call_conc_options;  /* Has numbers, selectors, etc. */
    callspec_block *call_ptr;
    concept_descriptor *concept_ptr;
@@ -68,11 +68,10 @@ typedef struct {
 enum {
     match_startup_commands = -1,
     match_resolve_commands = -2,
-    match_resolve_extra_commands = -3,
-    match_selectors = -4,
-    match_directions = -5,
-    match_taggers = -9,      /* This is the lowest of 4 numbers. */
-    match_circcer = -10
+    match_selectors = -3,
+    match_directions = -4,
+    match_taggers = -8,      /* This is the lowest of 4 numbers. */
+    match_circcer = -9
 };
 
 
@@ -85,16 +84,12 @@ extern long_boolean verify_has_stopped;
 /* The following items are PROVIDED by the main program (that is, the user
    interface part of it) and IMPORTED by sdmatch.c */
 
-extern concept_descriptor *twice_concept_ptr;
-extern concept_descriptor *centers_concept_ptr;
-extern concept_descriptor *two_calls_concept_ptr;
 extern int num_command_commands;
-extern Cstring command_commands[];
-extern command_kind command_command_values[];
+extern Cstring *command_commands;
+extern command_kind *command_command_values;
 extern int number_of_resolve_commands;
-extern Cstring resolve_command_strings[];
-extern int num_extra_resolve_commands;
-extern Cstring extra_resolve_commands[];
+extern Cstring* resolve_command_strings;
+extern Cstring startup_commands[];
 
 
 extern void show_match(void);

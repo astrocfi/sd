@@ -76,8 +76,10 @@ and the following external variables:
    direction_names
    last_direction_kind
    warning_strings
-and the following external variable that is declared only in sdui-ttu.h:
-   ui_directions
+   use_escapes_for_drawing_people
+   pn1
+   pn2
+   direc
 */
 
 /* For "sprintf" */
@@ -909,8 +911,10 @@ Private long_boolean check_for_concept_group(Const parse_block *parseptrcopy,
       uint64 junk_concepts;
       uint32 subkey = parseptrcopy->concept->value.arg1;
 
-      if (subkey == 0 || subkey == 1 || subkey == 2 || subkey == 3 ||
-          subkey == 7 || subkey == 8 || subkey == 12) {
+      if (subkey == meta_key_random || subkey == meta_key_rev_random ||
+          subkey == meta_key_piecewise || subkey == meta_key_nth_part_work ||
+          subkey == meta_key_initially || subkey == meta_key_finally ||
+          subkey == meta_key_echo || subkey == meta_key_rev_echo) {
          *next_parseptr_p =
             process_final_concepts(parseptr_skip, FALSE, &junk_concepts);
          return TRUE;
@@ -942,7 +946,7 @@ static char current_line[MAX_TEXT_LINE_LENGTH];
 static int text_line_count = 0;
 
 static long_boolean usurping_writechar = FALSE;
-
+static long_boolean no_auto_line_breaks = FALSE;
 
 
 
@@ -971,7 +975,7 @@ Private void writechar(char src)
    *destcurr = (lastchar = src);
    if (src == ' ' && destcurr != current_line) lastblank = destcurr;
 
-   if (destcurr < &current_line[MAX_PRINT_LENGTH] || usurping_writechar)
+   if (destcurr < &current_line[MAX_PRINT_LENGTH] || usurping_writechar || no_auto_line_breaks)
       destcurr++;
    else {
       /* Line overflow.  Try to write everything up to the last
@@ -1043,17 +1047,18 @@ extern void newline(void)
 
 extern void writestuff(Const char s[])
 {
-   Const char *f = s;
-   while (*f) writechar(*f++);
+   while (*s) writechar(*s++);
 }
 
 
 
-Private void write_nice_number(char indicator, uint32 num)
+Private void write_nice_number(char indicator, int num)
 {
-   num &= 0xF;
-
-   switch (indicator) {
+   if (num < 0) {
+      writestuff(get_escape_string(indicator));
+   }
+   else {
+      switch (indicator) {
       case '9': case 'a': case 'b': case 'B': case 'D':
          if (indicator == '9')
             writestuff(cardinals[num]);
@@ -1083,61 +1088,45 @@ Private void write_nice_number(char indicator, uint32 num)
       case 'u':     /* Need to plug in an ordinal number. */
          writestuff(ordinals[num]);
          break;
+      }
    }
 }
 
 
-Private void writestuff_with_decorations(parse_block *cptr, Const char *s)
+Private void writestuff_with_decorations(call_conc_option_state *cptr, Cstring f)
 {
-   uint32 index = cptr->options.number_fields;
-   Const char *f;
+   uint32 index = cptr->number_fields;
+   int howmany = cptr->howmanynumbers;
 
-   f = s;     /* Argument "s", if non-null, overrides the concept name in the table. */
-   if (!f) f = cptr->concept->name;
-
-   while (*f) {
+   while (f[0]) {
       if (f[0] == '@') {
          switch (f[1]) {
-            case 'a': case 'b': case 'B': case 'D': case 'u': case '9':
-               write_nice_number(f[1], index);
-               f += 2;
-               index >>= 4;
-               continue;
-            case '6':
-               writestuff(selector_list[cptr->options.who].name_uc);
-               f += 2;
-               continue;
-            case 'k':
-               writestuff(selector_list[cptr->options.who].sing_name_uc);
-               f += 2;
-               continue;
-            default:   /**** maybe we should really fo what "translate_menu_name"
-                           does, using call to "get_escape_string". */
-               f += 2;
-               continue;
+         case 'a': case 'b': case 'B': case 'D': case 'u': case '9':
+            write_nice_number(f[1], (howmany <= 0) ? -1 : (index & 0xF));
+            index >>= 4;
+            howmany--;
+            break;
+         case '6':
+            writestuff(selector_list[cptr->who].name_uc);
+            break;
+         case 'k':
+            writestuff(selector_list[cptr->who].sing_name_uc);
+            break;
+         default:   /**** maybe we should really do what "translate_menu_name"
+                          does, using call to "get_escape_string". */
+            break;
          }
+         
+         f += 2;
       }
-
-      writechar(*f++);
+      else
+         writechar(*f++);
    }
 }
 
 
 
-Private void print_call_name(callspec_block *call, parse_block *pb)
-{
-   if (     (call->callflags1 & CFLAG1_NUMBER_MASK) &&
-            pb->options.howmanynumbers) {
-      writestuff_with_decorations(pb, call->name);
-   }
-   else {
-      writestuff(call->menu_name);
-   }
-}
-
-
-
-extern void unparse_call_name(callspec_block *call, char *s, parse_block *pb)
+extern void unparse_call_name(Cstring name, char *s, call_conc_option_state *options)
 {
    char saved_lastchar = lastchar;
    char saved_lastlastchar = lastlastchar;
@@ -1146,7 +1135,7 @@ extern void unparse_call_name(callspec_block *call, char *s, parse_block *pb)
    destcurr = s;
    usurping_writechar = TRUE;
 
-   print_call_name(call, pb);
+   writestuff_with_decorations(options, name);
    writechar('\0');
 
    lastchar = saved_lastchar;
@@ -1365,13 +1354,13 @@ extern void print_recurse(parse_block *thing, int print_recurse_arg)
                selective_key sk = (selective_key) item->value.arg1;
 
                if (sk == selective_key_dyp)
-                  writestuff_with_decorations(local_cptr, "DO YOUR PART, @6 ");
+                  writestuff_with_decorations(&local_cptr->options, "DO YOUR PART, @6 ");
                else if (sk == selective_key_own)
-                  writestuff_with_decorations(local_cptr, "OWN THE @6, ");
+                  writestuff_with_decorations(&local_cptr->options, "OWN THE @6, ");
                else if (sk == selective_key_plain)
-                  writestuff_with_decorations(local_cptr, "@6 ");
+                  writestuff_with_decorations(&local_cptr->options, "@6 ");
                else
-                  writestuff_with_decorations(local_cptr, "@6 DISCONNECTED ");
+                  writestuff_with_decorations(&local_cptr->options, "@6 DISCONNECTED ");
             }
             else if (k == concept_sequential) {
                writestuff("(");
@@ -1435,11 +1424,14 @@ extern void print_recurse(parse_block *thing, int print_recurse_arg)
             }
             else if (k == concept_on_your_own)
                writestuff(" AND");
-            else if (k == concept_interlace || k == concept_sandwich)
+            else if (k == concept_interlace ||
+                     k == concept_sandwich)
                writestuff(" WITH");
-            else if (k == concept_replace_nth_part || k == concept_replace_last_part || k == concept_interrupt_at_fraction) {
+            else if (k == concept_replace_nth_part ||
+                     k == concept_replace_last_part ||
+                     k == concept_interrupt_at_fraction) {
                writestuff(" BUT ");
-               writestuff_with_decorations(local_cptr, (Const char *) 0);
+               writestuff_with_decorations(&local_cptr->options, local_cptr->concept->name);
                writestuff(" WITH A [");
                request_final_space = FALSE;
             }
@@ -1500,9 +1492,9 @@ extern void print_recurse(parse_block *thing, int print_recurse_arg)
             }
             else if (allow_deferred_concept &&
                      next_cptr &&
-                     (     k == concept_twice ||
-                           k == concept_n_times ||
-                           (k == concept_fractional && item->value.arg1 == 2))) {
+                     (k == concept_twice ||
+                      k == concept_n_times ||
+                      (k == concept_fractional && item->value.arg1 == 2))) {
                deferred_concept = local_cptr;
                comma_after_next_concept = 0;
                did_concept = FALSE;
@@ -1514,11 +1506,15 @@ extern void print_recurse(parse_block *thing, int print_recurse_arg)
                if (deferred_concept_paren) writestuff("("/*)*/);
             }
             else {
-               if (     (k == concept_nth_part && item->value.arg1 == 8) ||                /* "DO THE <Nth> PART" */
-                        (k == concept_snag_mystic && item->value.arg1 == CMD_MISC2__CTR_END_INVERT) ||    /* If INVERT is followed by another concept,
-                                                                                                                it must be SNAG or MYSTIC. */
-                        (k == concept_meta && (item->value.arg1 == 3 || item->value.arg1 == 7))) {   /* INITIALLY/FINALLY. */
-                  request_comma_after_next_concept = 1;     /* These concepts require a comma after the following concept. */
+               if ((k == concept_meta_one_arg && item->value.arg1 == meta_key_nth_part_work) ||
+                   (k == concept_snag_mystic && item->value.arg1 == CMD_MISC2__SAID_INVERT) ||
+                   (k == concept_meta && (item->value.arg1 == meta_key_initially ||
+                                          item->value.arg1 == meta_key_finally))) {
+                  /* This is "DO THE <Nth> PART",
+                     or INVERT followed by another concept, which must be SNAG or MYSTIC,
+                     or INITIALLY/FINALLY.
+                     These concepts require a comma after the following concept. */
+                  request_comma_after_next_concept = 1;
                }
                else if (k == concept_so_and_so_only &&
                         ((selective_key) item->value.arg1) == selective_key_work_concept) {
@@ -1527,7 +1523,7 @@ extern void print_recurse(parse_block *thing, int print_recurse_arg)
                   request_comma_after_next_concept = 2;
                }
 
-               writestuff_with_decorations(local_cptr, (Const char *) 0);
+               writestuff_with_decorations(&local_cptr->options, local_cptr->concept->name);
                request_final_space = TRUE;
             }
 
@@ -1738,7 +1734,7 @@ extern void print_recurse(parse_block *thing, int print_recurse_arg)
                   case '9': case 'a': case 'b': case 'B': case 'D': case 'u':
                      /* Need to plug in a number. */
                      write_blank_if_needed();
-                     write_nice_number(savec, number_list);
+                     write_nice_number(savec, number_list & 0xF);
                      number_list >>= 4;    /* Get ready for next number. */
                      break;
                   case 'e':
@@ -1767,7 +1763,7 @@ extern void print_recurse(parse_block *thing, int print_recurse_arg)
                      }
                      else if (save_cptr->options.star_turn_option != 0) {
                         writestuff(", turn the star ");
-                        write_nice_number('b', save_cptr->options.star_turn_option);
+                        write_nice_number('b', save_cptr->options.star_turn_option & 0xF);
                      }
                      break;
                   case 'J':
@@ -1959,7 +1955,7 @@ extern void print_recurse(parse_block *thing, int print_recurse_arg)
                         else
                            writestuff("AND REPLACE ");
 
-                        print_call_name(replaced_call, search);
+                        writestuff_with_decorations(&search->options, replaced_call->name);
                         writestuff(" WITH [");
                         print_recurse(subsidiary_ptr, PRINT_RECURSE_STAR);
                         writestuff("]");
@@ -1982,7 +1978,7 @@ extern void print_recurse(parse_block *thing, int print_recurse_arg)
           deferred_concept->concept->value.arg2 == 3)
          writestuff("3 TIMES");
       else
-         writestuff_with_decorations(deferred_concept, (Const char *) 0);
+         writestuff_with_decorations(&deferred_concept->options, deferred_concept->concept->name);
       if (deferred_concept_paren & 2) writestuff(/*(*/")");
    }
 
@@ -1994,27 +1990,39 @@ extern void print_recurse(parse_block *thing, int print_recurse_arg)
 
 static char peoplenames1[] = "11223344";
 static char peoplenames2[] = "BGBGBGBG";
-static char alt1_names1[] = "        ";
-static char alt1_names2[] = "1P2R3O4C";
 static char directions[] = "?>?<????^?V?????";
 
-/* This could get changed if a user interface for Sdtty wishes to use pretty graphics characters. */
-char *ui_directions = directions;
+/* This gets set if a user interface (e.g. sdui-tty/sdui-win) wants escape sequences
+   for drawing people, so that it can fill in funny characters, or draw in color. */
+long_boolean use_escapes_for_drawing_people = FALSE;
 
-/* These could get changed if the user requests special naming. */
-static char *pn1 = peoplenames1;
-static char *pn2 = peoplenames2;
+/* These could get changed if the user requests special naming.  See "alternate_glyphs_1"
+   in the command-line switch parser in sdsi.c. */
+char *pn1 = peoplenames1;
+char *pn2 = peoplenames2;
+char *direc = directions;
 
 
 Private void printperson(uint32 x)
 {
    if (x & BIT_PERSON) {
-      static char personbuffer[] = " ZZZ";
-      personbuffer[1] = pn1[(x >> 6) & 7];
-      personbuffer[2] = pn2[(x >> 6) & 7];
-      /* But we never write anything other than standard ASCII to the transcript file. */
-      personbuffer[3] = (enable_file_writing ? directions : ui_directions)[x & 017];
-      writestuff(personbuffer);
+      if (enable_file_writing || !use_escapes_for_drawing_people) {
+         /* We never write anything other than standard ASCII to the transcript file. */
+         writechar(' ');
+         writechar(pn1[(x >> 6) & 7]);
+         writechar(pn2[(x >> 6) & 7]);
+         if (enable_file_writing)
+            writechar(directions[x & 017]);
+         else
+            writechar(direc[x & 017]);
+      }
+      else {
+         /* Write an escape sequence, so that the user interface can display
+            the person in color. */
+         writechar('\013');
+         writechar((char) (((x >> 6) & 7) | 040));
+         writechar((char) ((x & 017) | 040));
+      }
    }
    else
       writestuff("  . ");
@@ -2082,6 +2090,7 @@ Private void printsetup(setup *x)
 {
    Cstring str;
 
+   no_auto_line_breaks = TRUE;
    printarg = x;
    modulus = setup_attrs[x->kind].setup_limits+1;
    roti = x->rotation & 3;
@@ -2148,6 +2157,7 @@ Private void printsetup(setup *x)
 
    newline();
    newline();
+   no_auto_line_breaks = FALSE;
 }
 
 
@@ -2291,14 +2301,8 @@ extern void write_history_line(int history_index, Const char *header, long_boole
       }
    }
 
-   if (picture || this_item->draw_pic) {
-      if (alternate_person_glyphs == 1) {
-         pn1 = alt1_names1;
-         pn2 = alt1_names2;
-      }
-
+   if (picture || this_item->draw_pic)
       printsetup(&this_item->state);
-   }
 
    /* Record that this history item has been written to the UI. */
    this_item->text_line = text_line_count;
@@ -3018,6 +3022,13 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
             goto bad;
          }
 
+         /* If we are not looking at the whole setup (that is, we are deciding
+            whether to split the setup into smaller ones), let it pass. */
+
+         if (setup_attrs[ss->kind].keytab[0] != key &&
+             setup_attrs[ss->kind].keytab[1] != key)
+            goto good;
+
          goto fix_col_line_stuff;
       case cr_1fl_only:        /* 1x3/1x4/1x6/1x8 - a 1FL, that is, all 3/4/6/8 facing same;
                                   2x3/2x4 - individual 1FL's */
@@ -3524,12 +3535,11 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
       case cr_none_sel:
          /* FELL THROUGH!!!!!! */
 
-         /* If we are not looking at the whole setup (that is, we
-               are deciding whether to split the setup into smaller
-               ones), let it pass. */
+         /* If we are not looking at the whole setup (that is, we are deciding
+            whether to split the setup into smaller ones), let it pass. */
 
-         if (     setup_attrs[ss->kind].keytab[0] != key &&
-                  setup_attrs[ss->kind].keytab[1] != key)
+         if (setup_attrs[ss->kind].keytab[0] != key &&
+             setup_attrs[ss->kind].keytab[1] != key)
             goto good;
 
          if (k == 1) goto bad;
@@ -3835,7 +3845,7 @@ extern parse_block *process_final_concepts(
 
       switch (cptr->concept->kind) {
       case concept_comment:
-         goto get_next;               /* Need to skip these. */
+         goto get_next;               /* Skip comments. */
       case concept_triangle: bit_to_set.final = FINAL__TRIANGLE; break;
       case concept_magic:
          last_magic_diamond = cptr;
@@ -3851,8 +3861,16 @@ extern parse_block *process_final_concepts(
          bit_to_set.herit = INHERITFLAG_GRAND;
          bit_to_forbid.herit = INHERITFLAG_SINGLE;
          break;
-      case concept_cross: bit_to_set.herit = INHERITFLAG_CROSS; break;
-      case concept_yoyo: bit_to_set.herit = INHERITFLAG_YOYO; break;
+      case concept_cross:
+         bit_to_set.herit = INHERITFLAG_CROSS; break;
+      case concept_yoyo:
+         bit_to_set.herit = INHERITFLAG_YOYO;
+         bit_to_forbid.herit = INHERITFLAG_FRACTAL;
+         break;
+      case concept_fractal:
+         bit_to_set.herit = INHERITFLAG_FRACTAL;
+         bit_to_forbid.herit = INHERITFLAG_YOYO;
+         break;
       case concept_straight: bit_to_set.herit = INHERITFLAG_STRAIGHT; break;
       case concept_twisted: bit_to_set.herit = INHERITFLAG_TWISTED; break;
       case concept_single:
@@ -3980,8 +3998,20 @@ extern parse_block *really_skip_one_concept(
    else if (parseptrcopy->concept) {
       concept_kind kk = parseptrcopy->concept->kind;
 
-      if (kk <= marker_end_of_list)
-         fail("A concept is required.");
+      if (kk <= marker_end_of_list) {
+         /* Look for "supercalls". */
+         if (kk == concept_another_call_next_mod &&
+             parseptrcopy->next &&
+             parseptrcopy->next->call == base_calls[base_call_null] &&
+             !parseptrcopy->next->next &&
+             parseptrcopy->next->subsidiary_root) {
+            *parseptr_skip_p = parseptrcopy->next->subsidiary_root;
+            *k_p = concept_supercall;
+            return parseptrcopy;
+         }
+         else
+            fail("A concept is required.");
+      }
 
       if (concept_table[kk].concept_action == 0)
          fail("Sorry, can't do this with this concept.");

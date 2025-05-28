@@ -1308,46 +1308,53 @@ extern uims_reply full_resolve(command_kind goal)
 
       if (reply == ui_resolve_select) {
          switch ((resolve_command_kind) uims_menu_index) {
-            case resolve_command_find_another:
-               if (resolve_allocation <= max_resolve_index) {   /* Increase allocation if necessary. */
-                  int new_allocation = resolve_allocation << 1;
-                  resolve_rec *t = (resolve_rec *) get_more_mem_gracefully(all_resolves, new_allocation * sizeof(resolve_rec));
-                  if (!t) break;   /* By not turning on "find_another_resolve", we will take no action. */
-                  resolve_allocation = new_allocation;
-                  all_resolves = t;
-               }
+         case resolve_command_find_another:
+            if (resolve_allocation <= max_resolve_index) {
+               /* Increase allocation if necessary. */
+               int new_allocation = resolve_allocation << 1;
+               resolve_rec *t = (resolve_rec *)
+                  get_more_mem_gracefully(all_resolves, new_allocation * sizeof(resolve_rec));
+               if (!t) break;               /* By not turning on "find_another_resolve",
+                                               we will take no action. */
+               resolve_allocation = new_allocation;
+               all_resolves = t;
+            }
 
-               find_another_resolve = TRUE;             /* will get it next time around */
-               break;
-            case resolve_command_goto_next:
-               if (current_resolve_index < max_resolve_index)
-                  current_resolve_index++;
-               break;
-            case resolve_command_goto_previous:
-               if (current_resolve_index > 1)
-                  current_resolve_index--;
-               break;
-            case resolve_command_raise_rec_point:
-               if (current_depth < huge_history_ptr-2)
-                  current_depth++;
-               show_resolve = FALSE;
-               break;
-            case resolve_command_lower_rec_point:
-               if (current_depth > 0)
-                  current_depth--;
-               show_resolve = FALSE;
-               break;
-            case resolve_command_abort:
-               written_history_items = -1;
-               history_ptr = huge_history_ptr;
+            find_another_resolve = TRUE;             /* will get it next time around */
+            break;
+         case resolve_command_goto_next:
+            if (current_resolve_index < max_resolve_index)
+               current_resolve_index++;
+            break;
+         case resolve_command_goto_previous:
+            if (current_resolve_index > 1)
+               current_resolve_index--;
+            break;
+         case resolve_command_raise_rec_point:
+            if (current_depth < huge_history_ptr-2)
+               current_depth++;
+            show_resolve = FALSE;
+            break;
+         case resolve_command_lower_rec_point:
+            if (current_depth > 0)
+               current_depth--;
+            show_resolve = FALSE;
+            break;
+         case resolve_command_abort:
+            written_history_items = -1;
+            history_ptr = huge_history_ptr;
 
-               for (j=0; j<=history_ptr+1; j++)
-                  history[j] = huge_history_save[j];
+            for (j=0; j<=history_ptr+1; j++)
+               history[j] = huge_history_save[j];
 
-               goto getout;
-            default:
-               /* Clicked on "accept choice", or something not on this submenu. */
-               goto getout;
+            goto getout;
+         case resolve_command_write_this:
+            reply = ui_command_select;
+            uims_menu_index = command_getout;
+            goto getout;
+         default:
+            /* Clicked on "accept choice", or something not on this submenu. */
+            goto getout;
          }
       }
       else if ((reply == ui_command_select) && (uims_menu_index == command_refresh)) {

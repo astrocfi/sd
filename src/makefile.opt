@@ -100,13 +100,15 @@ sdui-x11.o: sdui-x11.c
 sdui-ttu.o: sdui-ttu.c
 	$(CC) $(CFLAGS) $(TTY_FLAGS) -c $(srcdir)/$*.c
 
+sdui-tty.o sdmatch.o: sdmatch.h
+
+sdui-tty.o sdui-ttu.o sdui-tpc.o: sdui-tty.h
+
 dbcomp.o sdmain.o sdsi.o sdui-x11.o: paths.h
 
 dbcomp.o: database.h
 
 $(SD_OBJS) $(SDX11_OBJ) $(SDTTY_OBJ): sd.h database.h
-
-$(SDTTY_OBJ): sdmatch.h
 
 configure: configure.in
 	-cd "$(srcdir)" && autoconf

@@ -25,24 +25,19 @@
 #include "keys.h"
 #include "gppconio.h"
 #else
-#ifndef WIN32
 #include <termios.h>   /* We use this stuff if "-no_cursor" was specified. */
 #include <unistd.h>    /* This too. */
 #endif
-#endif
 extern int diagnostic_mode;    /* We need this. */
-#include "sdui-ttu.h"
+#include "sdui-tty.h"
 
 
-
-static int screen_height = 25;
-static int no_cursor = 0;
 static char *text_ptr;           /* End of text buffer; where we are packing. */
 static char text_buffer[10000];  /* This is *NOT* normally padded with a null.
                                     It only gets padded when we need to display it. */
 static int lines_in_buffer;  /* Number of "newline" characters in the buffer. */
 
-#if !defined(DJGPP) && !defined(WIN32)
+#if !defined(DJGPP)
 static int current_tty_mode = 0;
 
 static void csetmode(int mode)             /* 1 means raw, no echo, one character at a time;
@@ -72,55 +67,20 @@ static void csetmode(int mode)             /* 1 means raw, no echo, one characte
 #endif
 
 
-extern int ttu_process_command_line(int *argcp, char **argv)
+extern int ttu_process_command_line(int *argcp,
+                                    char **argv,
+                                    int *use_escapes_for_drawing_people_p,
+                                    char *pn1,
+                                    char *pn2,
+                                    char **direc_p)
 {
-   int i;
-   int argno = 1;
-   int triangles = 1;
-
-   while (argno < (*argcp)) {
-      if (strcmp(argv[argno], "-no_line_delete") == 0) ;   /* ignore this */
-      else if (strcmp(argv[argno], "-no_cursor") == 0)
-         no_cursor = 1;
-      else if (strcmp(argv[argno], "-no_graphics") == 0)
-         triangles = 0;
-      else if (strcmp(argv[argno], "-lines") == 0 && argno+1 < (*argcp)) {
-         screen_height = atoi(argv[argno+1]);
-         goto remove_two;
-      }
-      else if (strcmp(argv[argno], "-journal") == 0 && argno+1 < (*argcp)) {
-         journal_file = fopen(argv[argno+1], "w");
-
-         if (!journal_file) {
-            printf("Can't open journal file\n");
-            perror(argv[argno+1]);
-            return 1;
-         }
-
-         goto remove_two;
-      }
-      else {
-         argno++;
-         continue;
-      }
-
-      (*argcp)--;      /* Remove this argument from the list. */
-      for (i=argno+1; i<=(*argcp); i++) argv[i-1] = argv[i];
-      continue;
-
-      remove_two:
-
-      (*argcp) -= 2;      /* Remove two arguments from the list. */
-      for (i=argno+1; i<=(*argcp); i++) argv[i-1] = argv[i+1];
-      continue;
-   }
-
    /* If no "-no_graphics" switch was not given, and our run-time
       system supports it, switch over to the "pointy triangles"
-      for drawing pictures. */
-#if defined(WIN32) || defined(DJGPP)
-   if (triangles)
-      ui_directions = "?\020?\021????\036?\037?????";
+      for drawing pictures.  This only works on DJGPP. */
+
+#if defined(DJGPP)
+   if (!no_graphics)
+      *direc_p = "?\020?\021????\036?\037?????";
 #endif
 
    return 0;
@@ -134,11 +94,22 @@ extern void ttu_display_help(void)
    printf("-journal <filename>         echo input commands to journal file\n");
 }
 
+extern void ttu_set_window_title(char s[])
+{
+}
+
+
 extern void ttu_initialize(void)
 {
 #ifdef DJGPP
    gppconio_init();
 #endif
+
+   /* This code uses "no_cursor" rather than "no_console"
+      to direct what it does.  So, if "no_console" is on,
+      we take appropriate action. */
+
+   no_cursor |= no_console;
 
    text_ptr = text_buffer;
    lines_in_buffer = 0;
@@ -147,7 +118,7 @@ extern void ttu_initialize(void)
 extern void ttu_terminate(void)
 {
    if (journal_file) (void) fclose(journal_file);
-#if !defined(DJGPP) && !defined(WIN32)
+#if !defined(DJGPP)
    csetmode(0);   /* Restore normal input mode. */
 #endif
 }
@@ -233,10 +204,10 @@ static void pack_in_buffer(char c)
    }
 }
 
-extern void put_line(char the_line[])
+extern void put_line(const char the_line[])
 {
    if (!no_cursor) {
-      char *p = the_line;
+      const char *p = the_line;
       char c;
       while ((c = *p++))
          pack_in_buffer(c);
@@ -254,12 +225,109 @@ extern void put_char(int c)
 }
 
 
+static short int altletter_translate[] = {
+   ALTLET+'Q',     /* 110 */
+   ALTLET+'W',
+   ALTLET+'E',
+   ALTLET+'R',
+   ALTLET+'T',
+   ALTLET+'Y',
+   ALTLET+'U',
+   ALTLET+'I',
+   ALTLET+'O',
+   ALTLET+'P',
+   ' ',
+   ' ',
+   ' ',
+   ' ',
+   ALTLET+'A',
+   ALTLET+'S',
+   ALTLET+'D',     /* 120 */
+   ALTLET+'F',
+   ALTLET+'G',
+   ALTLET+'H',
+   ALTLET+'J',
+   ALTLET+'K',
+   ALTLET+'L',
+   ' ',
+   ' ',
+   ' ',
+   ' ',
+   ' ',
+   ALTLET+'Z',
+   ALTLET+'X',
+   ALTLET+'C',
+   ALTLET+'V',
+   ALTLET+'B',     /* 130 */
+   ALTLET+'N',
+   ALTLET+'M',
+   ' ',
+   ' ',
+   ' ',
+   ' ',
+   ' ',
+   ' ',
+   ' ',
+   ' ',
+   FKEY+1,
+   FKEY+2,
+   FKEY+3,
+   FKEY+4,
+   FKEY+5,
+   FKEY+6,     /* 140 */
+   FKEY+7,
+   FKEY+8,
+   FKEY+9,
+   FKEY+10,
+   ' ',
+   ' ',
+   EKEY+4, /* K_Home */
+   EKEY+6, /* K_Up */
+   EKEY+1, /* K_PageUp */
+   ' ',
+   EKEY+5, /* K_Left */
+   ' ',
+   EKEY+7, /* K_Right */
+   ' ',
+   EKEY+3, /* K_End */
+   EKEY+8, /* K_Down   150 */
+   EKEY+2, /* K_PageDown */
+   EKEY+13,/* K_Insert */
+   EKEY+14,/* K_Delete */
+   SFKEY+1,
+   SFKEY+2,
+   SFKEY+3,
+   SFKEY+4,
+   SFKEY+5,
+   SFKEY+6,
+   SFKEY+7,
+   SFKEY+8,
+   SFKEY+9,
+   SFKEY+10,
+   CFKEY+1,
+   CFKEY+2,
+   CFKEY+3,  /* 160 */
+   CFKEY+4,
+   CFKEY+5,
+   CFKEY+6,
+   CFKEY+7,
+   CFKEY+8,
+   CFKEY+9,
+   CFKEY+10,
+   AFKEY+1,
+   AFKEY+2,
+   AFKEY+3,
+   AFKEY+4,
+   AFKEY+5,
+   AFKEY+6,
+   AFKEY+7,
+   AFKEY+8,
+   AFKEY+9,  /* 170 */
+   AFKEY+10};
+
+
 extern int get_char(void)
-#if defined(WIN32)
-{
-   return getchar();
-}
-#elif defined(DJGPP)
+#if defined(DJGPP)
 {
    int n;
 
@@ -276,49 +344,39 @@ extern int get_char(void)
          n = getxkey();
       } while (n == EOF);
 
-      if (n == 83)
-         n = '\177';        /* delete */
-      else if (n >= 59 && n <= 68)
-         n += 128+1-59;     /* f1..f10 */
-      else if (n >= 133 && n <= 134)
-         n += 128+11-133;     /* f11..f12 */
-      else if (n >= 84 && n <= 93)
-         n += 144+1-84;     /* shift f1..f10 */
-      else if (n >= 135 && n <= 136)
-         n += 144+11-135;     /* shift f11..f12 */
-      else if (n >= 94 && n <= 103)
-         n += 160+1-94;     /* control f1..f10 */
-      else if (n >= 137 && n <= 138)
-         n += 160+11-137;     /* control f11..f12 */
-      else if (n >= 104 && n <= 113)
-         n += 176+1-104;     /* alt f1..f10 */
-      else if (n >= 139 && n <= 140)
-         n += 176+11-139;     /* alt f11..f12 */
-      else
-         n = ' ';
+      n += 0x100;
+      goto translate_special;
    }
-   else if (n == K_Delete)           /* Delete */
-      n = '\177';
-   else if (n == K_EDelete)          /* The real delete key */
-      n = '\177';
-   else if (n >= K_F1 && n <= K_F10)
-      n += 128+1-K_F1;               /* F1..F10 */
-   else if (n >= K_F11 && n <= K_F12)
-      n += 128+11-K_F11;             /* F11..F12 */
-   else if (n >= K_Shift_F1 && n <= K_Shift_F10)
-      n += 144+1-K_Shift_F1;         /* shift F1..F10 */
-   else if (n >= K_Shift_F11 && n <= K_Shift_F12)
-      n += 144+11-K_Shift_F11;       /* shift F11..F12 */
-   else if (n >= K_Control_F1 && n <= K_Control_F10)
-      n += 160+1-K_Control_F1;       /* control F1..F10 */
-   else if (n >= K_Control_F11 && n <= K_Control_F12)
-      n += 160+11-K_Control_F11;     /* control F11..F12 */
-   else if (n >= K_Alt_F1 && n <= K_Alt_F10)
-      n += 176+1-K_Alt_F1;           /* alt F1..F10 */
-   else if (n >= K_Alt_F11 && n <= K_Alt_F12)
-      n += 176+11-K_Alt_F11;         /* alt F11..F12 */
    else if (n >= 128)
-      n = ' ';
+      goto translate_special;
+
+   return n;
+
+ translate_special:
+
+   if (n == K_Delete)           /* Delete */
+      n = '\177';
+   else if (n >= K_Alt_Q && n <= K_Alt_F10)
+      n = altletter_translate[n-K_Alt_Q];
+   else if (n >= K_F11 && n <= K_F12)
+      n += FKEY+11-K_F11;                             /* F11..F12 */
+   else if (n >= K_Shift_F11 && n <= K_Shift_F12)
+      n += SFKEY+11-K_Shift_F11;                      /* shift F11..F12 */
+   else if (n >= K_Control_F11 && n <= K_Control_F12)
+      n += CFKEY+11-K_Control_F11;                    /* control F11..F12 */
+   else if (n >= K_Alt_F11 && n <= K_Alt_F12)
+      n += AFKEY+11-K_Alt_F11;                        /* alt F11..F12 */
+   else if (n == K_EPageUp)   n = EKEY+1;
+   else if (n == K_EPageDown) n = EKEY+2;
+   else if (n == K_EEnd)      n = EKEY+3;
+   else if (n == K_EHome)     n = EKEY+4;
+   else if (n == K_ELeft)     n = EKEY+5;
+   else if (n == K_EUp)       n = EKEY+6;
+   else if (n == K_ERight)    n = EKEY+7;
+   else if (n == K_EDown)     n = EKEY+8;
+   else if (n == K_EInsert)   n = EKEY+13;
+   else if (n == K_EDelete)   n = EKEY+14;
+   else n = ' ';
 
    return n;
 }
@@ -338,7 +396,7 @@ extern int get_char(void)
 extern void get_string(char *dest)
 {
    int size;
-#if !defined(DJGPP) && !defined(WIN32)
+#if !defined(DJGPP)
    csetmode(0);         /* Regular full-line mode with system echo. */
 #endif
    (void) gets(dest);
@@ -349,14 +407,14 @@ extern void get_string(char *dest)
    }
 
    /* Some libraries (Cygnus GCC) have been observed putting a
-      control-M at the ends (although it does remove the control-J.) */
+      control-M at the end (although it does remove the control-J.) */
    if (size > 0 && dest[size-1] == '\r') {
       size--;
       dest[size] = '\000';
    }
 }
 
-extern void bell(void)
+extern void ttu_bell(void)
 {
    (void) putchar('\007');
 }

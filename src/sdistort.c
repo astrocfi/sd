@@ -2478,25 +2478,43 @@ common_spot_map cmaps[] = {
          {       0,       0, d_north,       0,       0,       0, d_south,       0}},
    /* 'Z' columns, centers are normal */
    {2, s4x4, s2x4, 0, 1,
-         {      -1,       3,       7,      -1,      -1,      11,      15,      -1},
-         {       0,      -1,      -1,      -1,       8,      -1,      -1,      -1},
-         { d_south,       0,       0,       0, d_north,       0,       0,       0},
-         {      14,      -1,      -1,      -1,       6,      -1,      -1,      -1},
-         { d_north,       0,       0,       0, d_south,       0,       0,       0}},
+    {      -1,       3,       7,      -1,      -1,      11,      15,      -1},
+    {       0,      -1,      -1,      -1,       8,      -1,      -1,      -1},
+    { d_south,       0,       0,       0, d_north,       0,       0,       0},
+    {      14,      -1,      -1,      -1,       6,      -1,      -1,      -1},
+    { d_north,       0,       0,       0, d_south,       0,       0,       0}},
    {2, s4x4, s2x4, 0, 1,
-         {      -1,       3,       7,      -1,      -1,      11,      15,      -1},
-         {      -1,      -1,      -1,       4,      -1,      -1,      -1,      12},
-         {       0,       0,       0, d_south,       0,       0,       0, d_north},
-         {      -1,      -1,      -1,       5,      -1,      -1,      -1,      13},
-         {       0,       0,       0, d_north,       0,       0,       0, d_south}},
+    {      -1,       3,       7,      -1,      -1,      11,      15,      -1},
+    {      -1,      -1,      -1,       4,      -1,      -1,      -1,      12},
+    {       0,       0,       0, d_south,       0,       0,       0, d_north},
+    {      -1,      -1,      -1,       5,      -1,      -1,      -1,      13},
+    {       0,       0,       0, d_north,       0,       0,       0, d_south}},
 
    /* Common spot columns out of waves, just centers of virtual columns will be occupied.  */
    {2, s2x4, s2x4, 0, 1,
-         {      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1},
-         {      -1,       3,       4,      -1,      -1,       7,       0,      -1},
-         {       0, d_south, d_south,       0,       0, d_north, d_north,       0},
-         {      -1,       2,       5,      -1,      -1,       6,       1,      -1},
-         {       0, d_north, d_north,       0,       0, d_south, d_south,       0}},
+    {      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1},
+    {      -1,       3,       4,      -1,      -1,       7,       0,      -1},
+    {       0, d_south, d_south,       0,       0, d_north, d_north,       0},
+    {      -1,       2,       5,      -1,      -1,       6,       1,      -1},
+    {       0, d_north, d_north,       0,       0, d_south, d_south,       0}},
+
+   /* Common spot 1/4 tags from a tidal wave (just center line) */
+
+   {0x200, s1x8, s_qtag, 0, 0,
+    {      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1},
+    {      -1,      -1,       4,       6,      -1,      -1,       0,       2},
+    {       0,       0, d_south, d_north,       0,       0, d_north, d_south},
+    {      -1,      -1,       5,       7,      -1,      -1,       1,       3},
+    {       0,       0, d_north, d_south,       0,       0, d_south, d_north}},
+
+   /* Common spot 1/4 lines from a tidal wave (just center line) */
+
+   {0x100, s1x8, s_qtag, 0, 0,
+    {      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1},
+    {      -1,      -1,       4,       7,      -1,      -1,       0,       3},
+    {       0,       0, d_south, d_south,       0,       0, d_north, d_north},
+    {      -1,      -1,       5,       6,      -1,      -1,       1,       2},
+    {       0,       0, d_north, d_north,       0,       0, d_south, d_south}},
 
    {0, nothing, nothing, 0, 0, {0}, {0}, {0}, {0}, {0}},
 };
@@ -2527,7 +2545,9 @@ extern void common_spot_move(
       common center lines/waves (from 2x4)     : 0x20
       common spot 2-faced lines (from 2x8)     : 0x8
       common spot lines                        : 0x78
-      common spot waves                        : 0x70 */
+      common spot waves                        : 0x70
+      common spot 1/4 lines                    : 0x100
+      common spot 1/4 tags                     : 0x200 */
 
    if (ss->kind == s_c1phan) {
       do_matrix_expansion(ss, CONCPROP__NEEDK_4X4, FALSE);

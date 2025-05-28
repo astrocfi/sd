@@ -25,7 +25,7 @@
  * Type TAB to complete as much as possible.
  * Type Control-U to clear the line.
  *
- * For use with version 31 of the Sd program.
+ * For use with version 32 of the Sd program.
  * Based on sdui-x11.c 1.10
  *
  * The version of this file is as shown immediately below.  This string
@@ -33,8 +33,8 @@
  * version.
  */
 
-#define UI_VERSION_STRING "1.9"
-#define UI_TIME_STAMP "wba@an.hp.com  18 Apr 98 $"
+#define UI_VERSION_STRING "1.10"
+#define UI_TIME_STAMP "wba@an.hp.com  29 Sept 98 $"
 
 /* This file defines the following functions:
    uims_version_string
@@ -44,6 +44,7 @@
    uims_preinitialize
    uims_create_menu
    uims_postinitialize
+   uims_set_window_title
    show_match
    uims_get_startup_command
    uims_get_call_command
@@ -78,24 +79,26 @@
 
 and the following data that are used by sdmatch.c :
 
-   twice_concept_ptr
-   centers_concept_ptr
-   two_calls_concept_ptr
    num_command_commands
    command_commands
    number_of_resolve_commands
    resolve_command_strings
-   num_extra_resolve_commands
-   extra_resolve_commands
+   startup_commands
 
-and the following other variable:
+and the following other variables:
 
    journal_file
+   no_graphics
+   screen_height
+   no_cursor
+   no_console
+   no_intensify
+   no_color
+   no_sound
+   no_line_delete
+   concept_key_table
 */
 
-#ifndef THINK_C
-#define UNIX_STYLE
-#endif
 
 /* For "sprintf" and some IO stuff (fflush, printf, stdout) that we use
    during the "database tick" printing before the actual IO package is started.
@@ -115,7 +118,7 @@ and the following other variable:
 static Const char id[] = "@(#)$He" "ader: Sd: sdui-tty.c " UI_VERSION_STRING "  " UI_TIME_STAMP;
 
 
-#include "sdui-ttu.h"
+#include "sdui-tty.h"
 
 #define DEL 0x7F
 
@@ -126,6 +129,14 @@ static Const char id[] = "@(#)$He" "ader: Sd: sdui-tty.c " UI_VERSION_STRING "  
  */
 
 FILE *journal_file = (FILE *) 0;
+int no_graphics = 0;
+int screen_height = 25;
+int no_cursor = 0;
+int no_console = 0;
+int no_intensify = 0;
+int no_color = 0;
+int no_sound = 0;
+int no_line_delete = 0;
 
 static char version_mem[12];
 
@@ -135,7 +146,140 @@ extern char *uims_version_string(void)
     return version_mem;
 }
 
+static match_result user_match;
+
 static resolver_display_state resolver_happiness = resolver_display_failed;
+
+
+typedef struct {
+   modifier_block value;
+} fcn_key_thing;
+
+
+
+static fcn_key_thing *fcn_key_table_normal[FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1];
+static fcn_key_thing *fcn_key_table_start[FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1];
+static fcn_key_thing *fcn_key_table_resolve[FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1];
+
+
+/* BEWARE!!  This list is keyed to the definition of "start_select_kind" in sd.h . */
+Cstring startup_commands[] = {
+   "exit from the program",
+   "heads 1p2p",
+   "sides 1p2p",
+   "heads start",
+   "sides start",
+   "just as they are",
+   "toggle concept levels",
+   "toggle active phantoms",
+   "toggle retain after error",
+   "toggle nowarn mode",
+   "toggle singing call",
+   "toggle reverse singing call",
+   "initialize session file",
+   "change output file",
+   "change title",
+   (Cstring) 0
+};
+
+
+typedef struct {
+   Cstring command_name;
+   command_kind action;
+} command_list_menu_item;
+
+typedef struct {
+   Cstring command_name;
+   resolve_command_kind action;
+} resolve_list_menu_item;
+
+
+static command_list_menu_item command_menu[] = {
+   {"exit the program",               command_quit},
+   {"quit the program",               command_quit},
+   {"simple modifications",           command_simple_mods},
+   {"allow modifications",            command_all_mods},
+   {"toggle concept levels",          command_toggle_conc_levels},
+   {"toggle active phantoms",         command_toggle_act_phan},
+   {"toggle retain after error",      command_toggle_retain_after_error},
+   {"toggle nowarn mode",             command_toggle_nowarn_mode},
+   {"undo last call",                 command_undo},
+   {"discard entered concepts",       command_erase},
+   {"abort this sequence",            command_abort},
+   {"insert a comment",               command_create_comment},
+   {"change output file",             command_change_outfile},
+   {"change title",                   command_change_header},
+   {"write this sequence",            command_getout},
+   {"end this sequence",              command_getout},
+   {"cut to clipboard",               command_cut_to_clipboard},
+   {"clipboard cut",                  command_cut_to_clipboard},
+   {"delete entire clipboard",        command_delete_entire_clipboard},
+   {"clipboard delete all",           command_delete_entire_clipboard},
+   {"delete one call from clipboard", command_delete_one_call_from_clipboard},
+   {"clipboard delete one",           command_delete_one_call_from_clipboard},
+   {"paste one call",                 command_paste_one_call},
+   {"clipboard paste one",            command_paste_one_call},
+   {"paste all calls",                command_paste_all_calls},
+   {"clipboard paste all",            command_paste_all_calls},
+   {"keep picture",                   command_save_pic},
+   {"refresh display",                command_refresh},
+   {"resolve",                        command_resolve},
+   {"normalize",                      command_normalize},
+   {"standardize",                    command_standardize},
+   {"reconcile",                      command_reconcile},
+   {"pick random call",               command_random_call},
+   {"pick simple call",               command_simple_call},
+   {"pick concept call",              command_concept_call},
+   {"pick level call",                command_level_call},
+   {"pick 8 person level call",       command_8person_level_call},
+   {"create any lines",               command_create_any_lines},
+   {"create waves",                   command_create_waves},
+   {"create 2fl",                     command_create_2fl},
+   {"create lines in",                command_create_li},
+   {"create lines out",               command_create_lo},
+   {"create inverted lines",          command_create_inv_lines},
+   {"create 3x1 lines",               command_create_3and1_lines},
+   {"create any columns",             command_create_any_col},
+   {"create columns",                 command_create_col},
+   {"create magic columns",           command_create_magic_col},
+   {"create dpt",                     command_create_dpt},
+   {"create cdpt",                    command_create_cdpt},
+   {"create trade by",                command_create_tby},
+   {"create 8 chain",                 command_create_8ch},
+   {"create any 1/4 tag",             command_create_any_qtag},
+   {"create 1/4 tag",                 command_create_qtag},
+   {"create 3/4 tag",                 command_create_3qtag},
+   {"create 1/4 line",                command_create_qline},
+   {"create 3/4 line",                command_create_3qline},
+   {"create diamonds",                command_create_dmd},
+   {"create any tidal setup",         command_create_any_tidal},
+   {"create tidal wave",              command_create_tidal_wave},
+   {(Cstring) 0}};
+
+
+int num_command_commands;   /* Size of the command menu. */
+Cstring *command_commands;
+command_kind *command_command_values;
+
+int number_of_resolve_commands;
+Cstring *resolve_command_strings;
+static resolve_command_kind *resolve_command_values;
+
+
+static resolve_list_menu_item resolve_menu[] = {
+   {"abort the search",       resolve_command_abort},
+   {"exit the search",        resolve_command_abort},
+   {"quit the search",        resolve_command_abort},
+   {"undo the search",        resolve_command_abort},
+   {"find another",           resolve_command_find_another},
+   {"next",                   resolve_command_goto_next},
+   {"previous",               resolve_command_goto_previous},
+   {"accept current choice",  resolve_command_accept},
+   {"raise reconcile point",  resolve_command_raise_rec_point},
+   {"lower reconcile point",  resolve_command_lower_rec_point},
+   {"write this sequence",    resolve_command_write_this},
+   {(Cstring) 0}};
+
 
 /*
  * User Input functions
@@ -144,12 +288,11 @@ static resolver_display_state resolver_happiness = resolver_display_failed;
 /* This array is the same as static_ss.full_input, but has the original capitalization
    as typed by the user.  Static_ss.full_input is converted to all lower case for
    ease of searching. */
-Private char user_input[INPUT_TEXTLINE_SIZE+1];
-Private char *user_input_prompt;
-Private char *function_key_expansion;
+static char user_input[INPUT_TEXTLINE_SIZE+1];
+static char *user_input_prompt;
+static char *function_key_expansion;
 
-void
-refresh_input(void)
+void refresh_input(void)
 {
    user_input[0] = '\0';
    static_ss.full_input[0] = '\0';
@@ -189,24 +332,13 @@ get_string_input(char prompt[], char dest[])
 
 static int current_text_line;
 
-/*
- * Throw away all but the first n lines of the text output.
- * n = 0 means to erase the entire buffer.
- */
-
-Private void text_output_trim(int n)
-{
-    if (current_text_line > n)
-        erase_last_n(current_text_line-n);
-
-    current_text_line = n;
-}
-
-/*
- * end of text output stuff
- */
-
 static char *call_menu_prompts[NUM_CALL_LIST_KINDS];
+
+/* For the "alternate_glyphs_1" command-line switch. */
+static char alt1_names1[] = "        ";
+static char alt1_names2[] = "1P2R3O4C";
+
+
 
 /*
  * The main program calls this before doing anything else, so we can
@@ -218,21 +350,69 @@ static char *call_menu_prompts[NUM_CALL_LIST_KINDS];
  
 extern void uims_process_command_line(int *argcp, char ***argvp)
 {
-#ifdef UNIX_STYLE
-   if (ttu_process_command_line(argcp, *argvp))
+   int argno = 1;
+   char **argv = *argvp;
+
+   while (argno < (*argcp)) {
+      int i;
+
+      if (strcmp(argv[argno], "-no_line_delete") == 0)
+         no_line_delete = 1;
+      else if (strcmp(argv[argno], "-no_cursor") == 0)
+         no_cursor = 1;
+      else if (strcmp(argv[argno], "-no_console") == 0)
+         no_console = 1;
+      else if (strcmp(argv[argno], "-no_intensify") == 0)
+         no_intensify = 1;
+      else if (strcmp(argv[argno], "-no_color") == 0)
+         no_color = 1;
+      else if (strcmp(argv[argno], "-no_sound") == 0)
+         no_sound = 1;
+      else if (strcmp(argv[argno], "-no_graphics") == 0)
+         no_graphics = 1;
+      else if (strcmp(argv[argno], "-alternate_glyphs_1") == 0) {
+         pn1 = alt1_names1;
+         pn2 = alt1_names2;
+      }
+      else if (strcmp(argv[argno], "-lines") == 0 && argno+1 < (*argcp)) {
+         screen_height = atoi(argv[argno+1]);
+         goto remove_two;
+      }
+      else if (strcmp(argv[argno], "-journal") == 0 && argno+1 < (*argcp)) {
+         journal_file = fopen(argv[argno+1], "w");
+
+         if (!journal_file) {
+            printf("Can't open journal file\n");
+            perror(argv[argno+1]);
+            exit_program(1);
+         }
+
+         goto remove_two;
+      }
+      else {
+         argno++;
+         continue;
+      }
+
+      (*argcp)--;      /* Remove this argument from the list. */
+      for (i=argno+1; i<=(*argcp); i++) argv[i-1] = argv[i];
+      continue;
+
+      remove_two:
+
+      (*argcp) -= 2;      /* Remove two arguments from the list. */
+      for (i=argno+1; i<=(*argcp); i++) argv[i-1] = argv[i+1];
+      continue;
+   }
+
+   if (ttu_process_command_line(argcp, *argvp, &use_escapes_for_drawing_people,
+                                pn1, pn2, &direc))
       exit_program(1);
-#else
-   *argcp = ccommand(argvp); /* pop up window to get command line arguments */
-#endif
 }
 
 extern void uims_display_help(void)
 {
-#ifdef UNIX_STYLE
    ttu_display_help();
-#else
-   printf("\nIn addition, the usual X window system flags are supported.\n");
-#endif
 }
 
 extern void uims_display_ui_intro_text(void)
@@ -253,8 +433,47 @@ extern void uims_display_ui_intro_text(void)
  
 extern void uims_preinitialize(void)
 {
-    current_text_line = 0;
-    ttu_initialize();
+   int i;
+
+   current_text_line = 0;
+   ttu_initialize();
+
+   (void) memset(fcn_key_table_normal, 0,
+                 sizeof(fcn_key_thing *) * (FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1));
+   (void) memset(fcn_key_table_start, 0,
+                 sizeof(fcn_key_thing *) * (FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1));
+   (void) memset(fcn_key_table_resolve, 0,
+                 sizeof(fcn_key_thing *) * (FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1));
+
+   /* Find out how big the command menu needs to be. */
+
+   for (num_command_commands = 0 ;
+        command_menu[num_command_commands].command_name ;
+        num_command_commands++) ;
+
+   command_commands = (Cstring *) get_mem(sizeof(Cstring) * num_command_commands);
+   command_command_values =
+      (command_kind *) get_mem(sizeof(command_kind) * num_command_commands);
+
+   for (i = 0 ; i < num_command_commands; i++) {
+      command_commands[i] = command_menu[i].command_name;
+      command_command_values[i] = command_menu[i].action;
+   }
+
+   /* Find out how big the resolve menu needs to be. */
+
+   for (number_of_resolve_commands = 0 ;
+        resolve_menu[number_of_resolve_commands].command_name ;
+        number_of_resolve_commands++) ;
+
+   resolve_command_strings = (Cstring *) get_mem(sizeof(Cstring) * number_of_resolve_commands);
+   resolve_command_values = (resolve_command_kind *)
+      get_mem(sizeof(resolve_command_kind) * number_of_resolve_commands);
+
+   for (i = 0 ; i < number_of_resolve_commands; i++) {
+      resolve_command_strings[i] = resolve_menu[i].command_name;
+      resolve_command_values[i] = resolve_menu[i].action;
+   }
 }
 
 /*
@@ -292,15 +511,224 @@ extern void uims_create_menu(call_list_kind cl)
    should display for the user.
 */
 
-extern void
-uims_postinitialize(void)
+
+Private int translate_keybind_spec(char key_name[])
 {
-    call_menu_prompts[call_list_empty] = "--> ";   /* This prompt should never be used. */
-    matcher_initialize();
-#if defined(UNIX_STYLE) && !defined(MSDOS)
-    initialize_signal_handlers();
+   int key_length;
+   int d1, d2, digits;
+
+   key_length = strlen(key_name);
+
+   if (key_length < 2) return -1;
+
+   d2 = key_name[key_length-1] - '0';
+   if (d2 >= 0 && d2 <= 9) {
+      digits = d2;
+      d1 = key_name[key_length-2] - '0';
+      if (d1 >= 0 && d1 <= 9) {
+         digits += d1*10;
+         key_length--;
+      }
+
+      if (key_name[key_length-2] == 'f') {
+         if (digits < 1 || digits > 12)
+            return -1;
+
+         if (key_length == 2) {
+            return FKEY+digits;
+         }
+         else if (key_length == 3 && key_name[0] == 's') {
+            return SFKEY+digits;
+         }
+         else if (key_length == 3 && key_name[0] == 'c') {
+            return CFKEY+digits;
+         }
+         else if (key_length == 3 && key_name[0] == 'a') {
+            return AFKEY+digits;
+         }
+         else if (key_length == 4 && key_name[0] == 'c' && key_name[1] == 'a') {
+            return CAFKEY+digits;
+         }
+         else {
+            return -1;
+         }
+      }
+      if (key_name[key_length-2] == 'e') {
+         if (digits > 15)
+            return -1;
+
+         if (key_length == 2) {
+            return EKEY+digits;
+         }
+         else if (key_length == 3 && key_name[0] == 's') {
+            return SEKEY+digits;
+         }
+         else if (key_length == 3 && key_name[0] == 'c') {
+            return CEKEY+digits;
+         }
+         else if (key_length == 3 && key_name[0] == 'a') {
+            return AEKEY+digits;
+         }
+         else if (key_length == 4 && key_name[0] == 'c' && key_name[1] == 'a') {
+            return CAEKEY+digits;
+         }
+         else {
+            return -1;
+         }
+      }
+      else if (key_length == 2 && key_name[0] == 'c') {
+         return CTLDIG+digits;
+      }
+      else if (key_length == 2 && key_name[0] == 'a') {
+         return ALTDIG+digits;
+      }
+      else if (key_length == 3 && key_name[0] == 'c' && key_name[1] == 'a') {
+         return CTLALTDIG+digits;
+      }
+      else { 
+         return -1;
+      }
+   }
+   else if (key_name[key_length-1] >= 'a' && key_name[key_length-1] <= 'z') {
+      if (key_length == 2 && key_name[0] == 'c') {
+         return CTLLET+key_name[key_length-1]+'A'-'a';
+      }
+      else if (key_length == 2 && key_name[0] == 'a') {
+         return ALTLET+key_name[key_length-1]+'A'-'a';
+      }
+      else if (key_length == 3 && key_name[0] == 'c' && key_name[1] == 'a') {
+         return CTLALTLET+key_name[key_length-1]+'A'-'a';
+      }
+      else {
+         return -1;
+      }
+   }
+   else
+      return -1;
+}
+
+
+static void do_accelerator_spec(Cstring qq)
+{
+   char key_name[MAX_FILENAME_LENGTH];
+   char junk_name[MAX_FILENAME_LENGTH];
+   int ccount;
+   int matches;
+   int menu_type = call_list_any;
+   int keybindcode = -1;
+
+   if (!qq[0] || qq[0] == '#') return;   /* This is a blank line or a comment. */
+
+   if (sscanf(qq, "%s %n%s", key_name, &ccount, junk_name) == 2) {
+      if (key_name[0] == '+') {
+         menu_type = match_startup_commands;
+         keybindcode = translate_keybind_spec(&key_name[1]);
+      }
+      else if (key_name[0] == '*') {
+         menu_type = match_resolve_commands;
+         keybindcode = translate_keybind_spec(&key_name[1]);
+      }
+      else
+         keybindcode = translate_keybind_spec(key_name);
+   }
+
+   if (keybindcode < 0) {
+      printf("Bad format in key binding \"%s\".\n", qq);
+      return;
+   }
+
+   strcpy(static_ss.full_input, &qq[ccount]);
+   matches = match_user_input(menu_type, FALSE, FALSE);
+   user_match = static_ss.result;
+
+   if ((matches != 1 && matches - static_ss.yielding_matches != 1 && !user_match.exact)) {
+      /* Didn't find the target of the key binding.  Below C4X, failure to find
+         something could just mean that it was a call off the list.  At C4X, we
+         take it seriously.  So the initialization file should always be tested at C4X. */
+      if (calling_level >= l_c4x) {
+         printf("Didn't find target of key binding \"%s\".\n", qq);
+         return;
+      }
+   }
+   else {
+      fcn_key_thing **table_thing;
+      fcn_key_thing *newthing;
+
+      if (user_match.match.packed_next_conc_or_subcall ||
+          user_match.match.packed_secondary_subcall) {
+         printf("Target of key binding \"%s\" is too complicated.\n", qq);
+         return;
+      }
+
+      newthing = (fcn_key_thing *) get_mem(sizeof(fcn_key_thing));
+      newthing->value = user_match.match;
+
+      if (user_match.match.kind == ui_concept_select ||
+          user_match.match.kind == ui_call_select ||
+          user_match.match.kind == ui_command_select) {
+         table_thing = &fcn_key_table_normal[keybindcode-FCN_KEY_TAB_LOW];
+      }
+      else if (user_match.match.kind == ui_start_select) {
+         table_thing = &fcn_key_table_start[keybindcode-FCN_KEY_TAB_LOW];
+      }
+      else if (user_match.match.kind == ui_resolve_select) {
+         table_thing = &fcn_key_table_resolve[keybindcode-FCN_KEY_TAB_LOW];
+      }
+      else {
+         printf("Anomalous key binding \"%s\".\n", qq);
+         return;
+      }
+
+      if (*table_thing) {
+         printf("Redundant key binding \"%s\".\n", qq);
+         return;
+      }
+
+      *table_thing = newthing;
+   }
+}
+
+
+extern void uims_postinitialize(void)
+{
+   long_boolean save_allow = allowing_all_concepts;
+   allowing_all_concepts = TRUE;
+
+   call_menu_prompts[call_list_empty] = "--> ";   /* This prompt should never be used. */
+   matcher_initialize();
+
+   /* Process the keybindings for user-definable calls, concepts, and commands. */
+
+   if (open_accelerator_region()) {
+      char q[INPUT_TEXTLINE_SIZE];
+      while (get_accelerator_line(q))
+         do_accelerator_spec(q);
+   }
+   else {
+      Cstring *q;
+      for (q = concept_key_table ; *q ; q++)
+         do_accelerator_spec(*q);
+   }
+
+   allowing_all_concepts = save_allow;
+
+#if !defined(MSDOS)
+   initialize_signal_handlers();
 #endif
 }
+
+
+extern void uims_set_window_title(char s[])
+{
+   ttu_set_window_title(s);   
+}
+
+
+extern void uims_bell(void)
+{
+   if (!no_sound) ttu_bell();   
+}
+
 
 Private void pack_and_echo_character(char c)
 {
@@ -400,257 +828,6 @@ extern void show_match(void)
 }
 
 
-concept_descriptor *twice_concept_ptr = (concept_descriptor *) 0;
-concept_descriptor *centers_concept_ptr = (concept_descriptor *) 0;
-concept_descriptor *two_calls_concept_ptr = (concept_descriptor *) 0;
-
-
-/* BEWARE!!  These two lists must stay in step. */
-int num_command_commands = 59;          /* The number of items in these 2 tables,
-                                           independent of NUM_COMMAND_KINDS. */
-
-
-Cstring command_commands[] = {
-   "exit the program",
-   "quit the program",
-   "simple modifications",
-   "allow modifications",
-   "toggle concept levels",
-   "toggle active phantoms",
-   "toggle retain after error",
-   "toggle nowarn mode",
-   "undo last call",
-   "discard entered concepts",
-   "abort this sequence",
-   "insert a comment",
-   "change output file",
-   "change title",
-   "write this sequence",
-   "end this sequence",
-   "cut to clipboard",
-   "clipboard cut",
-   "delete entire clipboard",
-   "clipboard delete all",
-   "delete one call from clipboard",
-   "clipboard delete one",
-   "paste one call",
-   "clipboard paste one",
-   "paste all calls",
-   "clipboard paste all",
-   "keep picture",
-   "refresh display",
-   "resolve",
-   "normalize",
-   "standardize",
-   "reconcile",
-   "pick random call",
-   "pick simple call",
-   "pick concept call",
-   "pick level call",
-   "pick 8 person level call",
-   "create any lines",
-   "create waves",
-   "create 2fl",
-   "create lines in",
-   "create lines out",
-   "create inverted lines",
-   "create 3x1 lines",
-   "create any columns",
-   "create columns",
-   "create magic columns",
-   "create dpt",
-   "create cdpt",
-   "create trade by",
-   "create 8 chain",
-   "create any 1/4 tag",
-   "create 1/4 tag",
-   "create 3/4 tag",
-   "create 1/4 line",
-   "create 3/4 line",
-   "create diamonds",
-   "create any tidal setup",
-   "create tidal wave"
-};
-
-command_kind command_command_values[] = {
-   command_quit,
-   command_quit,
-   command_simple_mods,
-   command_all_mods,
-   command_toggle_conc_levels,
-   command_toggle_act_phan,
-   command_toggle_retain_after_error,
-   command_toggle_nowarn_mode,
-   command_undo,
-   command_erase,
-   command_abort,
-   command_create_comment,
-   command_change_outfile,
-   command_change_header,
-   command_getout,
-   command_getout,
-   command_cut_to_clipboard,
-   command_cut_to_clipboard,
-   command_delete_entire_clipboard,
-   command_delete_entire_clipboard,
-   command_delete_one_call_from_clipboard,
-   command_delete_one_call_from_clipboard,
-   command_paste_one_call,
-   command_paste_one_call,
-   command_paste_all_calls,
-   command_paste_all_calls,
-   command_save_pic,
-   command_refresh,
-   command_resolve,
-   command_normalize,
-   command_standardize,
-   command_reconcile,
-   command_random_call,
-   command_simple_call,
-   command_concept_call,
-   command_level_call,
-   command_8person_level_call,
-   command_create_any_lines,
-   command_create_waves,
-   command_create_2fl,
-   command_create_li,
-   command_create_lo,
-   command_create_inv_lines,
-   command_create_3and1_lines,
-   command_create_any_col,
-   command_create_col,
-   command_create_magic_col,
-   command_create_dpt,
-   command_create_cdpt,
-   command_create_tby,
-   command_create_8ch,
-   command_create_any_qtag,
-   command_create_qtag,
-   command_create_3qtag,
-   command_create_qline,
-   command_create_3qline,
-   command_create_dmd,
-   command_create_any_tidal,
-   command_create_tidal_wave
-};
-
-
-/* BEWARE!!  These two lists must stay in step. */
-
-int number_of_resolve_commands = 10;    /* The number of items in the tables, independent of NUM_RESOLVE_COMMAND_KINDS. */
-
-Cstring resolve_command_strings[] = {
-    "abort the search",
-    "exit the search",
-    "quit the search",
-    "undo the search",
-    "find another",
-    "next",
-    "previous",
-    "accept current choice",
-    "raise reconcile point",
-    "lower reconcile point"
-};
-
-static resolve_command_kind resolve_command_values[] = {
-   resolve_command_abort,
-   resolve_command_abort,
-   resolve_command_abort,
-   resolve_command_abort,
-   resolve_command_find_another,
-   resolve_command_goto_next,
-   resolve_command_goto_previous,
-   resolve_command_accept,
-   resolve_command_raise_rec_point,
-   resolve_command_lower_rec_point
-};
-
-
-/* BEWARE!!  These two lists must stay in step. */
-
-int num_extra_resolve_commands = 1;     /* The short list of extra things we present during a resolve. */
-
-Cstring extra_resolve_commands[] = {
-   "write this sequence"
-};
-
-static command_kind extra_resolve_command_values[] = {
-   command_getout
-};
-
-
-
-typedef struct {
-   int which_test;      /* 0 to test for >= 0, negative to test for that value exactly. */
-   char *line_to_put;
-   uims_reply match_kind;
-   long int match_index;
-} fcn_key_thing;
-
-
-#define FCN_KEY_TAB_LOW 129
-#define FCN_KEY_TAB_LAST 172
-
-static fcn_key_thing fcn_key_table[] = {
-   {match_startup_commands,  "heads start\n",              ui_start_select,   start_select_heads_start},         /* F1 = 129 = heads start */
-   {0,                       "two calls in succession\n",  ui_concept_select, (long int) &two_calls_concept_ptr},/* F2 = 130 = two calls in succession */
-   {0,                       "pick random call\n",         ui_command_select, -1-command_random_call},           /* F3 = 131 = pick random call */
-   {0,                       "resolve\n",                  ui_command_select, -1-command_resolve},               /* F4 = 132 = resolve */
-   {0,                       "refresh display\n",          ui_command_select, -1-command_refresh},               /* F5 */
-   {0,                       "simple modifications\n",     ui_command_select, -1-command_simple_mods},           /* F6 */
-
-
-
-
-
-   {99,                      (char *) 0,                   ui_command_select, 0},                                     /* F7 = 135 */
-
-
-
-   {99,                      (char *) 0,                   ui_command_select, 0},                                     /* 136 */
-   {99,                      (char *) 0,                   ui_command_select, 0},                                     /* 137 */
-   {99,                      (char *) 0,                   ui_command_select, 0},                                     /* 138 */
-   {0,                       "pick level call\n",          ui_command_select, -1-command_level_call},           /* F11 = 139 = pick level call */
-   {match_resolve_commands,  "find another\n",             ui_resolve_select, -1-resolve_command_find_another}, /* F12 = 140 = find another */
-   {99,                      (char *) 0,                   ui_command_select, 0},                                     /* 141 */
-   {99,                      (char *) 0,                   ui_command_select, 0},                                     /* 142 */
-   {99,                      (char *) 0,                   ui_command_select, 0},                                     /* 143 */
-   {99,                      (char *) 0,                   ui_command_select, 0},                                     /* 144 */
-   {match_startup_commands,  "sides start\n",              ui_start_select,   start_select_sides_start},        /* sF1 = 145 = sides start */
-   {0,                       "twice\n",                    ui_concept_select, (long int) &twice_concept_ptr},   /* sF2 = 146 = twice */
-   {0,                       "pick concept call\n",        ui_command_select, -1-command_concept_call},         /* sF3 = 147 = pick concept call */
-   {0,                       "reconcile\n",                ui_command_select, -1-command_reconcile},            /* sF4 = 148 = reconcile */
-   {0,                       "keep picture\n",             ui_command_select, -1-command_save_pic},             /* sF5 = 149 = keep picture */
-   {0,                       "allow modifications\n",      ui_command_select, -1-command_all_mods},             /* sF6 = 150 */
-   {99,                      (char *) 0,                   ui_command_select, 0},                                     /* 151 */
-   {0,                      "cut to clipboard\n",          ui_command_select, -1-command_cut_to_clipboard},     /* sF8 = 152 */
-   {99,                      (char *) 0,                   ui_command_select, 0},                                     /* 153 */
-   {99,                      (char *) 0,                   ui_command_select, 0},                                     /* 154 */
-   {0,                       "pick 8 person level call\n", ui_command_select, -1-command_8person_level_call},  /* sF11 = 155 = pick 8 person level call */
-   {match_resolve_commands,  "accept current choice\n",    ui_resolve_select, -1-resolve_command_accept},      /* sF12 = 156 = accept current choice */
-   {99,                      (char *) 0,                   ui_command_select, 0},                                     /* 157 */
-   {99,                      (char *) 0,                   ui_command_select, 0},                                     /* 158 */
-   {99,                      (char *) 0,                   ui_command_select, 0},                                     /* 159 */
-   {99,                      (char *) 0,                   ui_command_select, 0},                                     /* 160 */
-   {match_startup_commands,  "just as they are\n",         ui_start_select, start_select_as_they_are},          /* cF1 = 161 = just as they are */
-   {99,                      (char *) 0,                   ui_command_select, 0},                                     /* 162 */
-   {0,                       "pick simple call\n",         ui_command_select, -1-command_simple_call},          /* cF3 = 163 = pick simple call */
-   {0,                       "normalize\n",                ui_command_select, -1-command_normalize},            /* cF4 = 164 = normalize */
-   {0,                       "insert a comment\n",         ui_command_select, -1-command_create_comment},       /* cF5 = 165 = insert a comment */
-   {0,                       "centers\n",                  ui_concept_select, (long int) &centers_concept_ptr}, /* cF6 = 166 = centers */
-   {99,                      (char *) 0,                   ui_command_select, 0},                                     /* 167 */
-   {0,                      "paste one call\n",            ui_command_select, -1-command_paste_one_call},         /* cF8 = 168 */
-   {99,                      (char *) 0,                   ui_command_select, 0},                                     /* 169 */
-   {99,                      (char *) 0,                   ui_command_select, 0},                                     /* 170 */
-   {99,                      (char *) 0,                   ui_command_select, 0},                                     /* 171 */
-   {match_resolve_commands,  "previous\n",                 ui_resolve_select, -1-resolve_command_goto_previous}/* cF12 = 172 = previous */
-};
-
-
-static match_result user_match;
-
-
-
 Private long_boolean get_user_input(char *prompt, int which)
 {
    char *p;
@@ -680,118 +857,91 @@ Private long_boolean get_user_input(char *prompt, int which)
 
       nc = get_char();
 
-      if (nc >= 128) {
-         if (nc == 135) {            /* F7 = 135 = toggle concept levels */
-            if (which >= 0) {
-               put_line("toggle concept levels\n");
-               current_text_line++;
-               user_match.match.kind = ui_command_select;
-               user_match.match.index = -1-command_toggle_conc_levels;
-               user_match.valid = TRUE;
-               return FALSE;
-            }
-            else if (which == match_startup_commands) {
-               put_line("toggle concept levels\n");
-               current_text_line++;
-               user_match.match.kind = ui_start_select;
-               user_match.match.index = (int) start_select_toggle_conc;
-               user_match.valid = TRUE;
-               return FALSE;
-            }
-         }
-         else if (nc == 136)
-            function_key_expansion = "<anything>";    /* F8 */
-         else if (nc == 137 || nc == 153) {           /* F9 or sF9 = undo or abort the search,
-                                                         as appropriate. */
-            if (which >= 0) {
-               put_line("undo last call\n");
-               current_text_line++;
-               user_match.match.kind = ui_command_select;
-               user_match.match.index = -1-command_undo;
-               user_match.valid = TRUE;
-               return FALSE;
-            }
-            else if (which == match_resolve_commands) {
-               put_line("abort the search\n");
-               current_text_line++;
-               user_match.match.kind = ui_resolve_select;
-               user_match.match.index = -1-resolve_command_abort;
-               user_match.valid = TRUE;
-               return FALSE;
-            }
-            else if (which == match_startup_commands) {
-               put_line("exit from the program\n");
-               current_text_line++;
-               user_match.match.kind = ui_start_select;
-               user_match.match.index = (int) start_select_exit;
-               user_match.valid = TRUE;
-               return FALSE;
-            }
-         }
-         else if (nc == 138)
-            function_key_expansion = "write this sequence\n";        /* F10 */
-         else if (nc == 151) {                                       /* sF7 = toggle active phantoms */
-            if (which >= 0) {
-               put_line("toggle active phantoms\n");
-               current_text_line++;
-               user_match.match.kind = ui_command_select;
-               user_match.match.index = -1-command_toggle_act_phan;
-               user_match.valid = TRUE;
-               return FALSE;
-            }
-            else if (which == match_startup_commands) {
-               put_line("toggle active phantoms\n");
-               current_text_line++;
-               user_match.match.kind = ui_start_select;
-               user_match.match.index = (int) start_select_toggle_act;
-               user_match.valid = TRUE;
-               return FALSE;
-            }
-         }
-         else if (nc == 154) {                                       /* sF10 = change output file */
-            if (which >= 0) {
-               put_line("change output file\n");
-               current_text_line++;
-               user_match.match.kind = ui_command_select;
-               user_match.match.index = -1-command_change_outfile;
-               user_match.valid = TRUE;
-               return FALSE;
-            }
-            else if (which == match_startup_commands) {
-               put_line("change output file\n");
-               current_text_line++;
-               user_match.match.kind = ui_start_select;
-               user_match.match.index = (int) start_select_change_outfile;
-               user_match.valid = TRUE;
-               return FALSE;
-            }
-         }
-         else if (nc >= FCN_KEY_TAB_LOW && nc <= FCN_KEY_TAB_LAST &&
-                  ((fcn_key_table[nc-FCN_KEY_TAB_LOW].which_test == 0 && which >= 0) ||
-                   (fcn_key_table[nc-FCN_KEY_TAB_LOW].which_test <= 0 && which == fcn_key_table[nc-FCN_KEY_TAB_LOW].which_test))) {
-            put_line(fcn_key_table[nc-FCN_KEY_TAB_LOW].line_to_put);
-            current_text_line++;
-            user_match.match.kind = fcn_key_table[nc-FCN_KEY_TAB_LOW].match_kind;
-            user_match.match.index = fcn_key_table[nc-FCN_KEY_TAB_LOW].match_index;
+      /* Control-U can come in either of two forms.  Either way, kill the line */
 
-            if (user_match.match.kind == ui_concept_select) {
-               user_match.match.concept_ptr = *((concept_descriptor **) fcn_key_table[nc-FCN_KEY_TAB_LOW].match_index);
-               if (!user_match.match.concept_ptr) continue;
-               user_match.match.packed_next_conc_or_subcall = (modifier_block *) 0;
-               user_match.match.packed_secondary_subcall = (modifier_block *) 0;
-               user_match.match.call_conc_options = null_options;
-               user_match.indent = FALSE;
-               user_match.real_next_subcall = (match_result *) 0;
-               user_match.real_secondary_subcall = (match_result *) 0;
-            }
-            else
-               user_match.match.index = fcn_key_table[nc-FCN_KEY_TAB_LOW].match_index;
-
-            user_match.valid = TRUE;
-            return FALSE;
-         }
-         else continue;      /* Ignore the function key. */
+      if (nc == CTLLET+'U' || nc == ('U'&'\037')) {
+         user_input[0] = '\0';
+         static_ss.full_input[0] = '\0';
+         static_ss.full_input_size = 0;
+         function_key_expansion = (char *) 0;
+         clear_line();           /* Clear the current line */
+         put_line(user_input_prompt);    /* Redisplay the prompt. */
+         continue;
       }
+
+      if (nc >= 128) {
+         char linebuff[MAX_TEXT_LINE_LENGTH];
+         fcn_key_thing *keyptr;
+         int which_target = which;
+
+         if (which_target > 0) which_target = 0;
+
+         if (nc < FCN_KEY_TAB_LOW || nc > FCN_KEY_TAB_LAST)
+            continue;      /* Ignore this key. */
+
+         /* This one is hard-wired. */
+
+         if (nc == FKEY+8) {
+            function_key_expansion = "<anything>";    /* F8 */
+            goto do_character;
+         }
+
+         if (which_target == match_startup_commands)
+            keyptr = fcn_key_table_start[nc-FCN_KEY_TAB_LOW];
+         else if (which_target == match_resolve_commands)
+            keyptr = fcn_key_table_resolve[nc-FCN_KEY_TAB_LOW];
+         else if (which_target == 0)
+            keyptr = fcn_key_table_normal[nc-FCN_KEY_TAB_LOW];
+         else
+            continue;
+
+         if (!keyptr) continue;
+
+         /* If we get here, we have a function key to process from the table. */
+
+         user_match.match = keyptr->value;
+         user_match.indent = FALSE;
+         user_match.real_next_subcall = (match_result *) 0;
+         user_match.real_secondary_subcall = (match_result *) 0;
+
+         switch (user_match.match.kind) {
+         case ui_command_select:
+            put_line(command_commands[user_match.match.index]);
+            user_match.match.index = -1-command_command_values[user_match.match.index];
+            break;
+         case ui_resolve_select:
+            put_line(resolve_menu[user_match.match.index].command_name);
+            user_match.match.index = -1-resolve_menu[user_match.match.index].action;
+            break;
+         case ui_start_select:
+            put_line(startup_commands[user_match.match.index]);
+            break;
+         case ui_concept_select:
+            unparse_call_name(user_match.match.concept_ptr->name,
+                              linebuff,
+                              &user_match.match.call_conc_options);
+            put_line(linebuff);
+            user_match.match.index = 0;
+            break;
+         case ui_call_select:
+            unparse_call_name(user_match.match.call_ptr->name,
+                              linebuff,
+                              &user_match.match.call_conc_options);
+            put_line(linebuff);
+            user_match.match.index = 0;
+            break;
+         default:
+            continue;
+         }
+
+         put_line("\n");
+         current_text_line++;
+
+         user_match.valid = TRUE;
+         return FALSE;
+      }
+
+   do_character:
 
       c = nc;
 
@@ -822,8 +972,7 @@ Private long_boolean get_user_input(char *prompt, int which)
          put_line(user_input);
          continue;
       }
-
-      if (c == ' ' || c == '-') {
+      else if (c == ' ' || c == '-') {
          /* extend only to one space or hyphen, inclusive */
          matches = match_user_input(which, FALSE, FALSE);
          user_match = static_ss.result;
@@ -846,7 +995,7 @@ Private long_boolean get_user_input(char *prompt, int which)
          else if (diagnostic_mode)
             goto diagnostic_error;
          else
-            bell();
+            uims_bell();
       }
       else if ((c == '\n') || (c == '\r')) {
          matches = match_user_input(which, FALSE, FALSE);
@@ -915,22 +1064,14 @@ Private long_boolean get_user_input(char *prompt, int which)
          else if (diagnostic_mode)
             goto diagnostic_error;
          else
-            bell();
-      }
-      else if (c == ('U'&'\037')) { /* C-u: kill line */
-         user_input[0] = '\0';
-         static_ss.full_input[0] = '\0';
-         static_ss.full_input_size = 0;
-         function_key_expansion = (char *) 0;
-         clear_line();           /* Clear the current line */
-         put_line(user_input_prompt);    /* Redisplay the prompt. */
+            uims_bell();
       }
       else if (isprint(c))
          pack_and_echo_character(c);
       else if (diagnostic_mode)
          goto diagnostic_error;
       else
-         bell();
+         uims_bell();
    }
 
    diagnostic_error:
@@ -1115,14 +1256,12 @@ extern long_boolean uims_get_call_command(uims_reply *reply_p)
 
    uims_menu_index = user_match.match.index;
 
-   if (user_match.match.kind == ui_command_select) {
+   if (user_match.match.index < 0)
+      /* Special encoding from a function key. */
+      uims_menu_index = -1-user_match.match.index;
+   else if (user_match.match.kind == ui_command_select) {
       /* Translate the command. */
-
-      if (user_match.match.index < 0)
-         /* Special encoding from a function key. */
-         uims_menu_index = -1-user_match.match.index;
-      else
-         uims_menu_index = (int) command_command_values[user_match.match.index];
+      uims_menu_index = (int) command_command_values[user_match.match.index];
    }
    else {
       call_conc_option_state save_stuff = user_match.match.call_conc_options;
@@ -1156,15 +1295,10 @@ extern uims_reply uims_get_resolve_command(void)
       newline();
    }
 
-   if (user_match.match.kind == ui_command_select) {
-      uims_menu_index = extra_resolve_command_values[user_match.match.index];
-   }
-   else {
-      if (user_match.match.index < 0)
-         uims_menu_index = -1-user_match.match.index;   /* Special encoding from a function key. */
-      else
-         uims_menu_index = (int) resolve_command_values[user_match.match.index];
-   }
+   if (user_match.match.index < 0)
+      uims_menu_index = -1-user_match.match.index;   /* Special encoding from a function key. */
+   else
+      uims_menu_index = (int) resolve_command_values[user_match.match.index];
 
    return user_match.match.kind;
 }
@@ -1252,7 +1386,7 @@ Private int confirm(char *question)
       put_line("\n");
       put_line("Answer y or n\n");
       current_text_line += 2;
-      bell();
+      uims_bell();
    }
 }
 
@@ -1541,14 +1675,15 @@ uims_add_new_line(char the_line[])
     put_line("\n");
 }
 
-/*
- * Throw away all but the first n lines of the text output.
- * n = 0 means to erase the entire buffer.
- */
+/* Throw away all but the first n lines of the text output.
+   n = 0 means to erase the entire buffer. */
 
 extern void uims_reduce_line_count(int n)
 {
-   text_output_trim(n);
+   if (current_text_line > n)
+      erase_last_n(current_text_line-n);
+
+   current_text_line = n;
 }
 
 extern void uims_terminate(void)

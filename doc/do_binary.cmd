@@ -7,12 +7,15 @@ REM           in directory \wba\sd .
 REM
 REM This uses the files sdtty.exe, mkcalls.exe,
 REM         sd_calls.txt, and sd_calls.dat, readme
-REM         cwsdpmi.exe, sdtty.pif, sd.ico, sample1.ini, sample2.ini
+REM         cwsdpmi.exe, sdtty.lnk, sdtty.pif, sdtty.ico,
+REM         sample1.ini, sample2.ini, sample3.ini
+REM         and the shortcut setup command files
 del install.lzh
 lha a install ..\sd\sdtty.exe ..\sd\mkcalls.exe
 lha a install ..\sd\sd_calls.txt ..\sd\sd_calls.dat
-lha a install ..\sd\cwsdpmi.exe ..\sd\sdtty.pif ..\sd\sdtty.ico
-lha a install sample1.ini sample2.ini readme
+lha a install ..\sd\SDTTY.lnk ..\sd\SDTTY.pif ..\sd\SDTTY.ico
+lha a install Do_desk.cmd Do_prog.cmd Do_start.cmd
+lha a install sample1.ini sample2.ini sample3.ini readme
 lha s install
 del bin.msg bin.txt bin.zip
 echo cd sd> bin.msg

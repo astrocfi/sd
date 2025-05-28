@@ -435,10 +435,6 @@ static Const uint32 CMD_MISC__MUST_SPLIT_MASK    = (CMD_MISC__MUST_SPLIT_HORIZ|C
     mechanism is used for the "invert" (centers and ends) concept, as well as
     "central", "snag", and "mystic" and inverts thereof.
 
-      CMD_MISC2__CTR_END_INV_CONC is only meaningful if the CMD_MISC2__CTR_END_KMASK is
-      nonzero.  It means that the "inverted" version of the concept is in use, that is,
-      "invert central", "invert snag", or "invert mystic".
-
       CMD_MISC2__CTR_END_KMASK, when nonzero, says that one of the "central", "snag",
       or "mystic" concepts is in use.  They are all closely related.
 
@@ -451,37 +447,41 @@ static Const uint32 CMD_MISC__MUST_SPLIT_MASK    = (CMD_MISC__MUST_SPLIT_HORIZ|C
       CMD_MISC2__CTR_END_MASK embraces all of the bits of the "center/end" mechanism.
 */
 
-/*     The low 16 bits are used for encoding the schema if
-       CMD_MISC2__ANY_WORK or CMD_MISC2__ANY_SNAG is on
-                                     0x0000FFFFUL */
+/*     The low 12 bits are used for encoding the schema if
+       CMD_MISC2__ANY_WORK or CMD_MISC2__ANY_SNAG is on */
 
-static Const uint32 CMD_MISC2__IN_Z_CW           = 0x00010000UL;
-static Const uint32 CMD_MISC2__IN_Z_CCW          = 0x00020000UL;
-static Const uint32 CMD_MISC2__IN_AZ_CW          = 0x00040000UL;
-static Const uint32 CMD_MISC2__IN_AZ_CCW         = 0x00080000UL;
-static Const uint32 CMD_MISC2__IN_Z_MASK         = 0x000F0000UL;
-static Const uint32 CMD_MISC2__DID_Z_COMPRESSION = 0x00100000UL;
+static Const uint32 CMD_MISC2__IN_Z_CW           = 0x00001000UL;
+static Const uint32 CMD_MISC2__IN_Z_CCW          = 0x00002000UL;
+static Const uint32 CMD_MISC2__IN_AZ_CW          = 0x00004000UL;
+static Const uint32 CMD_MISC2__IN_AZ_CCW         = 0x00008000UL;
+static Const uint32 CMD_MISC2__IN_Z_MASK         = 0x0000F000UL;
+static Const uint32 CMD_MISC2__DID_Z_COMPRESSION = 0x00010000UL;
 
-static Const uint32 CMD_MISC2__MYSTIFY_SPLIT     = 0x00200000UL;
-static Const uint32 CMD_MISC2__MYSTIFY_INVERT    = 0x00400000UL;
+static Const uint32 CMD_MISC2__MYSTIFY_SPLIT     = 0x00020000UL;
+static Const uint32 CMD_MISC2__MYSTIFY_INVERT    = 0x00040000UL;
 
-static Const uint32 CMD_MISC2__ANY_WORK          = 0x10000000UL;
-static Const uint32 CMD_MISC2__ANY_SNAG          = 0x20000000UL;
-static Const uint32 CMD_MISC2__ANY_WORK_INVERT   = 0x40000000UL;
+static Const uint32 CMD_MISC2__ANY_WORK          = 0x00080000UL;
+static Const uint32 CMD_MISC2__ANY_SNAG          = 0x00100000UL;
+static Const uint32 CMD_MISC2__ANY_WORK_INVERT   = 0x00200000UL;
 
 
-#define             CMD_MISC2__CTR_END_INV_CONC    0x01000000UL
-/* This is a 2 bit field.  For codes inside same, see "CMD_MISC2__CENTRAL_PLAIN" below. */
-#define             CMD_MISC2__CTR_END_KMASK       0x06000000UL
-#define             CMD_MISC2__CTR_END_INVERT      0x08000000UL
-#define             CMD_MISC2__CTR_END_MASK        0x0F000000UL
-
-/* Here are the encodings that can go into the CMD_MISC2__CTR_END_KMASK field.
-   Zero means none of these concepts is in use. */
-#define             CMD_MISC2__CENTRAL_PLAIN       0x02000000UL
+/* Here are the inversion bits for the basic operations. */
+#define             CMD_MISC2__INVERT_CENTRAL      0x00400000UL
+#define             CMD_MISC2__INVERT_SNAG         0x00800000UL
+#define             CMD_MISC2__INVERT_MYSTIC       0x01000000UL
+/* Here are the basic operations we can do. */
+#define             CMD_MISC2__DO_CENTRAL          0x02000000UL
 #define             CMD_MISC2__CENTRAL_SNAG        0x04000000UL
-#define             CMD_MISC2__CENTRAL_MYSTIC      0x06000000UL
+#define             CMD_MISC2__CENTRAL_MYSTIC      0x08000000UL
+/* This field embraces the above 3 bits. */
+#define             CMD_MISC2__CTR_END_KMASK       0x0E000000UL
 
+/* This says the the operator said "invert".  It might later cause
+   a "central" to be turned into an "invert central". */
+#define             CMD_MISC2__SAID_INVERT         0x10000000UL
+/* This mask embraces this whole mechanism, including the "invert" bit. */
+#define             CMD_MISC2__CTR_END_MASK        0x1FC00000UL
+static Const uint32 CMD_MISC2_RESTRAINED_SUPER   = 0x20000000UL;
 
 
 /* Flags that reside in the "result_flags" word of a setup AFTER a call is executed.
@@ -579,6 +579,8 @@ static Const uint32 RESULTFLAG__TWISTED_FINISHED    = 0x00020000UL;
 static Const uint32 RESULTFLAG__SPLIT_FINISHED      = 0x00040000UL;
 static Const uint32 RESULTFLAG__NO_REEVALUATE       = 0x00080000UL;
 static Const uint32 RESULTFLAG__DID_Z_COMPRESSION   = 0x00100000UL;
+static Const uint32 RESULTFLAG__VERY_ENDS_ODD       = 0x00200000UL;
+static Const uint32 RESULTFLAG__VERY_CTRS_ODD       = 0x00400000UL;
 
 #define EXPIRATION_STATE_BITS (RESULTFLAG__YOYO_FINISHED|RESULTFLAG__TWISTED_FINISHED|RESULTFLAG__SPLIT_FINISHED)
 
@@ -645,7 +647,7 @@ typedef struct {
       } arr;            /* if schema = schema_by_array */
       struct {
          uint32 flags;
-         short stuff[8];
+         uint16 stuff[8];
       } matrix;         /* if schema = schema_matrix or schema_partner_matrix */
       struct {
          int howmanyparts;
@@ -742,6 +744,25 @@ typedef struct gfwzqg {
 } cm_thing;
 
 
+typedef enum {
+   meta_key_random,
+   meta_key_rev_random,   /* Must follow meta_key_random. */
+   meta_key_piecewise,
+   meta_key_initially,
+   meta_key_finish,
+   meta_key_revorder,
+   meta_key_like_a,
+   meta_key_finally,
+   meta_key_nth_part_work,
+   meta_key_skip_nth_part,
+   meta_key_shift_n,
+   meta_key_shifty,
+   meta_key_echo,
+   meta_key_rev_echo,   /* Must follow meta_key_echo. */
+   meta_key_shift_half,
+   meta_key_shift_n_half
+} meta_key_kind;
+
 /* BEWARE!!  This list must track the array "concept_table" in sdconcpt.c . */
 typedef enum {
 
@@ -776,6 +797,7 @@ typedef enum {
    concept_singlefile,
    concept_interlocked,
    concept_yoyo,
+   concept_fractal,
    concept_straight,
    concept_twisted,
    concept_12_matrix,
@@ -876,8 +898,8 @@ typedef enum {
    concept_sequential,
    concept_special_sequential,
    concept_meta,
+   concept_meta_one_arg,
    concept_so_and_so_begin,
-   concept_nth_part,
    concept_replace_nth_part,
    concept_replace_last_part,
    concept_interrupt_at_fraction,
@@ -887,6 +909,7 @@ typedef enum {
    concept_rigger,
    concept_common_spot,
    concept_dblbent,
+   concept_supercall,
    concept_diagnose
 } concept_kind;
 
@@ -1150,21 +1173,31 @@ typedef struct {
 #define CMD_FRAC_REVERSE         0x00100000
 /* This is a 3 bit field. */
 #define CMD_FRAC_CODE_MASK       0x00E00000
-/* Here are the codes that can be inside.  We require that CMD_FRAC_CODE_ONLY be zero. */
+
+/* Here are the codes that can be inside.  We require that CMD_FRAC_CODE_ONLY be zero.
+   We require that the PART_MASK field be nonzero (we use 1-based part numbering)
+   when these are in use.  If the PART_MASK field is zero, the code must be zero
+   (that is, CMD_FRAC_CODE_ONLY), and this stuff is not in use.
+
+   The PART2_MASK is unused (and zero) except for codes FROMTO and FROMTOPOST. */
+
 #define CMD_FRAC_CODE_ONLY       0x00000000
 #define CMD_FRAC_CODE_ONLYREV    0x00200000
-#define CMD_FRAC_CODE_UPTO       0x00400000
+#define CMD_FRAC_CODE_FROMTOMOST 0x00400000
 #define CMD_FRAC_CODE_UPTOREV    0x00600000
 #define CMD_FRAC_CODE_FINUPTOREV 0x00800000
 #define CMD_FRAC_CODE_BEYOND     0x00A00000
 #define CMD_FRAC_CODE_FROMTO     0x00C00000
+#define CMD_FRAC_CODE_PREBEYOND  0x00E00000
 
 #define CMD_FRAC_PART2_BIT       0x01000000
-#define CMD_FRAC_PART2_MASK      0x0F000000
-
+#define CMD_FRAC_PART2_MASK      0x07000000
+#define CMD_FRAC_IMPROPER_BIT    0x08000000
 #define CMD_FRAC_BREAKING_UP     0x10000000
 #define CMD_FRAC_FORCE_VIS       0x20000000
-#define CMD_FRAC_IMPROPER_BIT    0x40000000
+#define CMD_FRAC_LASTHALF_ALL    0x40000000
+#define CMD_FRAC_SNAG_EVERYTHING 0x80000000
+
 
 
 typedef struct {
@@ -1179,6 +1212,7 @@ typedef struct {
    assumption_thing cmd_assume;
    uint32 prior_elongation_bits;
    uint32 prior_expire_bits;
+   uint32 restrained_superflags;
    parse_block *skippable_concept;
 } setup_command;
 
@@ -1464,7 +1498,6 @@ typedef enum {
 #define NUM_COMMAND_KINDS (((int) command_create_tidal_wave)+1)
 
 /* For ui_resolve_select: */
-/* BEWARE!!  This list must track the array "resolve_commands" in sdmatch.c . */
 /* BEWARE!!  This list must track the array "resolve_resources" in sdui-x11.c . */
 typedef enum {
    resolve_command_abort,
@@ -1473,9 +1506,10 @@ typedef enum {
    resolve_command_goto_previous,
    resolve_command_accept,
    resolve_command_raise_rec_point,
-   resolve_command_lower_rec_point
+   resolve_command_lower_rec_point,
+   resolve_command_write_this
 } resolve_command_kind;
-#define NUM_RESOLVE_COMMAND_KINDS (((int) resolve_command_lower_rec_point)+1)
+#define NUM_RESOLVE_COMMAND_KINDS (((int) resolve_command_write_this)+1)
 
 /* BEWARE!!  There may be tables in the user interface file keyed to this enumeration.
    In particular, this list must track the array "menu_names" in sdtables.c . */
@@ -1517,7 +1551,9 @@ typedef enum {
 #define CFLAGHSPARE_3                     0x00000200UL
 #define CFLAGHSPARE_4                     0x00000400UL
 #define CFLAGHSPARE_5                     0x00000800UL
-
+/* These are the continuation of the "CFLAG1" bits, that have to overflow into this word.
+   They must lie in the top 8 bits for now. */
+#define CFLAG2_FRACTAL_NUM                0x01000000UL
 
 
 /* These flags go along for the ride, in some parts of the code (BUT NOT
@@ -2005,6 +2041,11 @@ extern selector_item selector_list[];                               /* in SDUTIL
 extern Cstring direction_names[];                                   /* in SDUTIL */
 extern int last_direction_kind;                                     /* in SDUTIL */
 extern Cstring warning_strings[];                                   /* in SDUTIL */
+extern long_boolean use_escapes_for_drawing_people;                 /* in SDUTIL */
+extern char *pn1;                                                   /* in SDUTIL */
+extern char *pn2;                                                   /* in SDUTIL */
+extern char *direc;                                                 /* in SDUTIL */
+
 
 extern uint32 global_tbonetest;                                     /* in SDCONCPT */
 extern uint32 global_livemask;                                      /* in SDCONCPT */
@@ -2018,6 +2059,7 @@ extern concept_descriptor mark_end_of_list;                         /* in SDCTAB
 extern concept_descriptor marker_decline;                           /* in SDCTABLE */
 extern concept_descriptor marker_concept_mod;                       /* in SDCTABLE */
 extern concept_descriptor marker_concept_comment;                   /* in SDCTABLE */
+extern concept_descriptor marker_concept_supercall;                 /* in SDCTABLE */
 extern callspec_block **main_call_lists[NUM_CALL_LIST_KINDS];       /* in SDCTABLE */
 extern int number_of_calls[NUM_CALL_LIST_KINDS];                    /* in SDCTABLE */
 extern dance_level calling_level;                                   /* in SDCTABLE */
@@ -2048,6 +2090,7 @@ extern Cstring getout_strings[];                                    /* in SDTABL
 extern Cstring filename_strings[];                                  /* in SDTABLES */
 extern dance_level level_threshholds[];                             /* in SDTABLES */
 extern dance_level higher_acceptable_level[];                       /* in SDTABLES */
+extern Cstring concept_key_table[];                                 /* in SDTABLES */
 extern Cstring menu_names[];                                        /* in SDTABLES */
 extern id_bit_table id_bit_table_2x6_pg[];                          /* in SDTABLES */
 extern id_bit_table id_bit_table_bigdmd_wings[];                    /* in SDTABLES */
@@ -2203,7 +2246,6 @@ extern long_boolean using_active_phantoms;                          /* in SDMAIN
 extern long_boolean elide_blanks;                                   /* in SDMAIN */
 #endif
 extern long_boolean retain_after_error;                             /* in SDMAIN */
-extern int alternate_person_glyphs;                                 /* in SDMAIN */
 extern int singing_call_mode;                                       /* in SDMAIN */
 extern long_boolean diagnostic_mode;                                /* in SDMAIN */
 extern call_conc_option_state current_options;                      /* in SDMAIN */
@@ -2284,6 +2326,9 @@ extern void write_to_call_list_file(Const char name[]);
 extern long_boolean close_call_list_file(void);
 extern long_boolean install_outfile_string(char newstring[]);
 extern long_boolean open_session(int argc, char **argv);
+extern long_boolean open_accelerator_region(void);
+extern long_boolean get_accelerator_line(char line[]);
+extern void close_init_file(void);
 extern void final_exit(int code) nonreturning;
 extern void open_database(void);
 extern uint32 read_8_from_database(void);
@@ -2301,9 +2346,11 @@ extern void uims_display_ui_intro_text(void);
 extern void uims_preinitialize(void);
 extern void uims_create_menu(call_list_kind cl);
 extern void uims_postinitialize(void);
+extern void uims_set_window_title(char s[]);
+extern void uims_bell(void);
+extern int uims_do_comment_popup(char dest[]);
 extern int uims_do_outfile_popup(char dest[]);
 extern int uims_do_header_popup(char dest[]);
-extern int uims_do_comment_popup(char dest[]);
 extern int uims_do_getout_popup(char dest[]);
 extern int uims_do_write_anyway_popup(void);
 extern int uims_do_delete_clipboard_popup(void);
@@ -2340,7 +2387,7 @@ extern restriction_thing *get_restriction_thing(setup_kind k, assumption_thing t
 extern void clear_screen(void);
 extern void newline(void);
 extern void writestuff(Const char s[]);
-extern void unparse_call_name(callspec_block *call, char *s, parse_block *pb);
+extern void unparse_call_name(Cstring name, char *s, call_conc_option_state *options);
 extern void doublespace_file(void);
 extern void exit_program(int code) nonreturning;
 extern void fail(Const char s[]) nonreturning;
@@ -2576,6 +2623,20 @@ extern long_boolean do_big_concept(
 
 /* In SDTAND */
 
+#define tandem_key_box 10
+/* Is this right?   There is some evidence that it is 17. */
+#define tandem_key_diamond 11
+#define tandem_key_skew 18
+#define tandem_key_outpoint_tgls 20
+#define tandem_key_inpoint_tgls 21
+#define tandem_key_inside_tgls 22
+#define tandem_key_outside_tgls 23
+#define tandem_key_wave_tgls 26
+#define tandem_key_tand_tgls 27
+#define tandem_key_anyone_tgls 30
+#define tandem_key_3x1tgls 31
+#define tandem_key_ys 32
+
 extern void tandem_couples_move(
    setup *ss,
    selector_kind selector,
@@ -2587,16 +2648,6 @@ extern void tandem_couples_move(
                              tandem of 4 = 8 / couples of 4 = 9 / siamese of 4 = 10
                              10: box
                              11: diamond
-                             18: skew
-                             20: out point triangles
-                             21: in point triangles
-                             22: inside triangles
-                             23: outside triangles
-                             26: wave-based triangles triangles
-                             27: tandem-based triangles
-                             30: <anyone>-based triangles
-                             31: 3x1 triangles
-                             32: Y's
                           */
    uint32 mxn_bits,
    long_boolean phantom_pairing_ok,

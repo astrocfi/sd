@@ -33,6 +33,7 @@ static const char time_stamp[] = "sdui-x11.c Time-stamp: <1997-10-14 17:51:42 gi
    uims_preinitialize
    uims_create_menu
    uims_postinitialize
+   uims_set_window_title
    uims_get_startup_command
    uims_get_call_command
    uims_get_resolve_command
@@ -41,6 +42,7 @@ static const char time_stamp[] = "sdui-x11.c Time-stamp: <1997-10-14 17:51:42 gi
    uims_do_header_popup
    uims_do_getout_popup
    uims_do_write_anyway_popup
+   uims_do_delete_clipboard_popup
    uims_do_abort_popup
    uims_do_session_init_popup
    uims_do_neglect_popup
@@ -577,6 +579,7 @@ typedef struct _SdResources {
     String sequence;		/* -sequence */
     String database;		/* -db */
     String write_anyway_query;
+    String delete_clip_query;
     String abort_query;
     String sess_init_query;
     String modify_format;
@@ -657,7 +660,8 @@ Private XtResource resolve_resources[] = {
     MENU("previous", resolve_list[resolve_command_goto_previous], "go to previous"),
     MENU("accept", resolve_list[resolve_command_accept], "ACCEPT current choice"),
     MENU("raiseRec", resolve_list[resolve_command_raise_rec_point], "raise reconcile point"),
-    MENU("lowerRec", resolve_list[resolve_command_lower_rec_point], "lower reconcile point")
+    MENU("lowerRec", resolve_list[resolve_command_lower_rec_point], "lower reconcile point"),
+    MENU("writethis", resolve_list[resolve_command_write_this], "write this sequence")
 };
 
 Private XtResource enabledmods_resources[] = {
@@ -677,6 +681,7 @@ Private XtResource enabledmods_resources[] = {
 
 Private XtResource confirm_resources[] = {
     MENU("writeAnyway", write_anyway_query, "Do you want to write this sequence anyway?"),
+    MENU("deleteClipboard", delete_clip_query, "Do you want to delete the entire clipboard?"),
     MENU("abort", abort_query, "Do you really want to abort this sequence?"),
     MENU("sessInit", sess_init_query, "Do you really want to re-initialize your session file?"),
     MENU("modifyFormat", modify_format, "The \"%s\" can be replaced."),
@@ -1222,8 +1227,7 @@ Private Cstring empty_menu[] = {NULL};
    should display for the user.
 */
 
-extern void
-uims_postinitialize(void)
+extern void uims_postinitialize(void)
 {
    int i, k;
 
@@ -1290,8 +1294,12 @@ uims_postinitialize(void)
 }
 
 
-Private void
-switch_from_startup_mode(void)
+extern void uims_set_window_title(char s[])
+{
+}
+
+
+Private void switch_from_startup_mode(void)
 {
     XawListChange(cmdmenu, sd_resources.cmd_list, NUM_CMD_BUTTON_KINDS, 0, FALSE);
     XtRemoveAllCallbacks(cmdmenu, XtNcallback);
@@ -1634,6 +1642,12 @@ Private int confirm(String question)
 extern int uims_do_write_anyway_popup(void)
 {
     return confirm(sd_resources.write_anyway_query);
+}
+
+
+extern int uims_do_delete_clipboard_popup(void)
+{
+    return confirm(sd_resources.delete_clip_query);
 }
 
 

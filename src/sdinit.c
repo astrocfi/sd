@@ -4,21 +4,15 @@
 
     Copyright (C) 1990-1998  William B. Ackerman.
 
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 1, or (at your option)
-    any later version.
+    This file is unpublished and contains trade secrets.  It is
+    to be used by permission only and not to be disclosed to third
+    parties without the express permission of the copyright holders.
 
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-    You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-
-    This is for version 31. */
+    This is for version 32. */
 
 /* This defines the following functions:
    initialize_menus
@@ -672,7 +666,7 @@ Private void read_level_3_groups(calldef_block *where_to_put)
       this_start_size = begin_sizes[this_start_setup];
 
       read_halfword();       /* Get qualifier stuff. */
-      this_qualifierstuff = last_datum;
+      this_qualifierstuff = (uint16) last_datum;
       read_halfword();       /* Get restriction and end setup. */
       this_restriction = (call_restriction) ((last_datum & 0xFF00) >> 8);
       end_setup = (setup_kind) (last_datum & 0xFF);
@@ -726,8 +720,8 @@ Private void read_level_3_groups(calldef_block *where_to_put)
 
          for (j=1; j <= ((char_count+1) >> 1); j++) {
             read_halfword();
-            tp->stuff.prd.errmsg[(j << 1)-2] = (last_datum >> 8) & 0xFF;
-            if ((j << 1) != char_count+1) tp->stuff.prd.errmsg[(j << 1)-1] = last_datum & 0xFF;
+            tp->stuff.prd.errmsg[(j << 1)-2] = (char) ((last_datum >> 8) & 0xFF);
+            if ((j << 1) != char_count+1) tp->stuff.prd.errmsg[(j << 1)-1] = (char) (last_datum & 0xFF);
          }
 
          tp->stuff.prd.errmsg[char_count] = '\0';
@@ -753,7 +747,7 @@ Private void read_level_3_groups(calldef_block *where_to_put)
 
             for (j=0; j < this_start_size; j++) {
                read_halfword();
-               temp_predlist->arr[j] = last_datum;
+               temp_predlist->arr[j] = (uint16) last_datum;
             }
 
             temp_predlist->next = this_predlist;
@@ -775,7 +769,7 @@ Private void read_level_3_groups(calldef_block *where_to_put)
       else {
          for (j=0; j < this_start_size; j++) {
             read_halfword();
-            tp->stuff.def[j] = last_datum;
+            tp->stuff.def[j] = (uint16) last_datum;
          }
          read_halfword();
       }
@@ -817,7 +811,7 @@ Private void read_in_call_definition(void)
          read_halfword();
 
          for (j=0; j<lim; j++) {
-            call_root->stuff.matrix.stuff[j] = last_datum & 0xFFFF;
+            call_root->stuff.matrix.stuff[j] = (uint16) (last_datum & 0xFFFF);
             read_halfword();
          }
          break;
@@ -860,7 +854,7 @@ Private void read_in_call_definition(void)
 
             while ((last_datum & 0xE000) == 0x4000) {
                check_tag(last_12);
-               templist[next_definition_index].call_id = last_12;
+               templist[next_definition_index].call_id = (uint16) last_12;
                read_fullword();
                templist[next_definition_index].modifiers1 = (defmodset) last_datum;
                read_fullword();
@@ -881,14 +875,14 @@ Private void read_in_call_definition(void)
             database_error("database phase error 7");
 
          check_tag(last_12);
-         call_root->stuff.conc.innerdef.call_id = last_12;
+         call_root->stuff.conc.innerdef.call_id = (uint16) last_12;
          read_fullword();
          call_root->stuff.conc.innerdef.modifiers1 = (defmodset) last_datum;
          read_fullword();
          call_root->stuff.conc.innerdef.modifiersh = (defmodset) last_datum;
          read_halfword();
          check_tag(last_12);
-         call_root->stuff.conc.outerdef.call_id = last_12;
+         call_root->stuff.conc.outerdef.call_id = (uint16) last_12;
          read_fullword();
          call_root->stuff.conc.outerdef.modifiers1 = (defmodset) last_datum;
          read_fullword();
@@ -950,7 +944,7 @@ Private void build_database(call_list_mode_t call_list_mode)
 
    for (;;) {
       int savetag;
-      uint32 saveflags1, saveflagsh;
+      uint32 saveflags1, saveflags2, saveflagsh;
 
       if ((last_datum & 0xE000) == 0) break;
 
@@ -960,13 +954,16 @@ Private void build_database(call_list_mode_t call_list_mode)
 
       savetag = last_12;     /* Get tag, if any. */
 
-      read_halfword();       /* Get level. */
-      this_level = (dance_level) last_datum;
+      read_halfword();       /* Get level and 8 bits of "callflags2" stuff. */
+      this_level = (dance_level) (last_datum & 0xFF);
+      saveflags2 = last_datum >> 8;
 
-      read_fullword();       /* Get top level flags, first word.  This is the "callflags1" stuff. */
+      read_fullword();       /* Get top level flags, first word.
+                                This is the "callflags1" stuff. */
       saveflags1 = last_datum;
 
-      read_fullword();       /* Get top level flags, second word.  This is the "heritflags" stuff. */
+      read_fullword();       /* Get top level flags, second word.
+                                This is the "heritflags" stuff. */
       saveflagsh = last_datum;
 
       read_halfword();       /* Get char count and schema. */
@@ -992,7 +989,8 @@ Private void build_database(call_list_mode_t call_list_mode)
       call_root->level = (int) this_level;
       call_root->schema = call_schema;
       call_root->callflags1 = saveflags1;
-      call_root->callflagsf = 0;
+      call_root->callflagsf = saveflags2 << 24;    /* Will get "CFLAGH" and "ESCAPE_WORD"
+                                                      bits later. */
       call_root->callflagsh = saveflagsh;
       /* If we are operating at the "all" level, make fractions visible everywhere, to aid in debugging. */
       if (calling_level == l_dontshow) call_root->callflags1 |= 3*CFLAG1_VISIBLE_FRACTION_BIT;
@@ -1000,7 +998,7 @@ Private void build_database(call_list_mode_t call_list_mode)
       /* Now read in the name itself. */
 
       for (j=0; j<char_count; j++)
-         *np++ = read_8_from_database();
+         *np++ = (char) read_8_from_database();
 
       *np = '\0';
 

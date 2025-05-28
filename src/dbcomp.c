@@ -554,6 +554,7 @@ char *schematab[] = {
    "in_out_triple_squash",
    "in_out_triple",
    "in_out_quad",
+   "in_out_12mquad",
    "???",
    "select_leads",
    "select_headliners",
@@ -702,13 +703,15 @@ char *seqmodtab1[] = {
    "seq_re_evaluate",
    "do_half_more",
    "seq_never_re_evaluate",
+   "seq_re_enable_elongation_check",
    "repeat_n",
    "repeat_n_alternate",
    "repeat_nm1",
    ""};
 
-/* This table is keyed to the constants "CFLAG1_***".  These are the
-   general top-level call flags.  They go into the "callflags1" word. */
+/* This table is keyed to the constants "CFLAG1_***" (first 32) and "CFLAG2_***" (next 8).
+   These are the general top-level call flags.  They go into the "callflags1" word and
+   part of the "callflagsh" word. */
 
 char *flagtab1[] = {
    "first_part_visible",
@@ -743,6 +746,7 @@ char *flagtab1[] = {
    "funny_means_those_facing",
    "one_person_call",
    "preserve_z_stuff",
+   "fractal_numbers",
    ""};
 
 /* The next three tables are all in step with each other, and with the "heritable" flags. */
@@ -778,6 +782,7 @@ char *flagtabh[] = {
    "straight_is_inherited",
    "twisted_is_inherited",
    "lasthalf_is_inherited",
+   "fractal_is_inherited",
    ""};
 
 /* This table is keyed to the constants "cflag__???".
@@ -811,6 +816,7 @@ char *altdeftabh[] = {
    "straight",
    "twisted",
    "lasthalf",
+   "fractal",
    ""};
 
 /* This table is keyed to the constants "dfm_***".  These are the heritable
@@ -845,6 +851,7 @@ char *defmodtabh[] = {
    "inherit_straight",
    "inherit_twisted",
    "inherit_lasthalf",
+   "inherit_fractal",
    ""};
 
 /* This table is keyed to the constants "dfm_***".  These are the heritable
@@ -881,6 +888,7 @@ char *forcetabh[] = {
    "force_yoyo",
    "force_straight",
    "force_twisted",
+   "force_fractal",
    ""};
 
 
@@ -1121,6 +1129,7 @@ int filecount;
 int dumbflag;
 uint32 call_flagsh;
 uint32 call_flags1;
+uint32 call_flags2;
 uint32 call_tag;
 char call_name[100];
 int call_namelen;
@@ -1409,6 +1418,13 @@ static void write_defmod_flags(int is_seq)
             if (nnn <= 0 || nnn >= 8) errexit("bad number");
             rr1 |= nnn*DFM1_NUM_INSERT_BIT;
          }
+         else if (!strcmp(tok_str, "insert_fractal")) {
+            int nnn;
+            if (rr1 & DFM1_NUM_INSERT_MASK) errexit("Only one number insertion is allowed");
+            nnn = get_num("Need a number here");
+            if (nnn <= 0 || nnn >= 8) errexit("bad number");
+            rr1 |= (nnn*DFM1_NUM_INSERT_BIT) | DFM1_FRACTAL_INSERT;
+         }
          else if ((i = search(defmodtabh)) >= 0) {
             uint32 bit = 1 << i;
 
@@ -1562,8 +1578,8 @@ static void write_call_header(calldef_schema schema)
 {
    int j;
 
-   write_halfword(0x2000 | call_tag);
-   write_halfword(call_level);
+   write_halfword(0x2000 | call_tag );
+   write_halfword(call_level | (call_flags2 << 8));
    write_fullword(call_flags1);
    write_fullword(call_flagsh);
    write_halfword((call_namelen << 8) | (uint32) schema);
@@ -1965,6 +1981,7 @@ extern void dbcompile(void)
          call_namelen = char_ct;
          call_flagsh = 0;
          call_flags1 = 0;
+         call_flags2 = 0;
          call_tag = 0;
 
          get_tok();
@@ -1982,8 +1999,12 @@ extern void dbcompile(void)
                call_tag = tagsearch(1);
             }
             else {
-               if ((iii = search(flagtab1)) >= 0)
-                  call_flags1 |= (1 << iii);
+               if ((iii = search(flagtab1)) >= 0) {
+                  if (iii >= 32)
+                     call_flags2 |= (1 << (iii-32));
+                  else
+                     call_flags1 |= (1 << iii);
+               }
                else if (strcmp(tok_str, "step_to_nonphantom_box") == 0)
                   call_flags1 |= (CFLAG1_STEP_TO_WAVE|CFLAG1_REAR_BACK_FROM_R_WAVE);
                else if (strcmp(tok_str, "visible_fractions") == 0)

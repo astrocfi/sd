@@ -35,9 +35,6 @@
 #include "sd.h"
 
 
-static long_boolean debug_popup = FALSE;   /* Helps debug popups under Domain/OS. */
-
-
 extern void canonicalize_rotation(setup *result)
 {
    result->rotation &= 3;
@@ -469,9 +466,11 @@ divide_us:
    else if (result->kind == s1x12) {
       if (livemask == 02727) {
          compress_setup(&expg27, result);
+         result->result_flags |= RESULTFLAG__VERY_ENDS_ODD;
       }
       else if (livemask == 07272) {
          compress_setup(&expg72, result);
+         result->result_flags |= RESULTFLAG__VERY_CTRS_ODD;
       }
       else if (livemask == 03535) {
          compress_setup(&expg35, result);
@@ -549,6 +548,7 @@ extern void do_call_in_series(
    setup qqqq = *sss;
    uint32 current_elongation = 0;
    uint32 saved_result_flags = sss->result_flags;
+   uint32 save_expire;
 
    qqqq.cmd.prior_expire_bits |= saved_result_flags & (RESULTFLAG__YOYO_FINISHED |
                                                        RESULTFLAG__TWISTED_FINISHED |
@@ -668,7 +668,9 @@ extern void do_call_in_series(
       }
    }
 
+   save_expire = sss->cmd.prior_expire_bits;
    *sss = tempsetup;
+   sss->cmd.prior_expire_bits = save_expire;
    sss->cmd.cmd_misc_flags = qqqq.cmd.cmd_misc_flags;   /* But pick these up from the call. */
 
    /* Remove outboard phantoms.
@@ -1069,6 +1071,26 @@ Private void finish_matrix_call(
       }
 
       checkptr = setup_attrs[s3x6].setup_coords;
+      goto doit;
+   }
+   else if (((ypar == 0x00630055) && ((signature & (~0x01420421)) == 0))) {
+      /* Fudge this to a qtag.  The points did a 1/2 press ahead from triple diamonds. */
+
+      for (i=0; i<nump; i++) {
+         if (matrix_info[i].y != 0) {
+            if (matrix_info[i].x == -2)
+               { matrix_info[i].x = -5; }
+            else if (matrix_info[i].x == 2)
+               { matrix_info[i].x = 5; }
+
+            if (matrix_info[i].x == -5 && matrix_info[i].y > 0)
+               { matrix_info[i].x = -4; }
+            else if (matrix_info[i].x == 5 && matrix_info[i].y < 0)
+               { matrix_info[i].x = 4; }
+         }
+      }
+
+      checkptr = setup_attrs[s_qtag].setup_coords;
       goto doit;
    }
    else if (((ypar == 0x00A20026) && ((signature & (~0x09080002)) == 0))) {
@@ -2219,8 +2241,13 @@ Private void do_inheritance(setup_command *cmd, Const callspec_block *parent_cal
 extern void process_number_insertion(uint32 mod_word)
 {
    if (mod_word & DFM1_NUM_INSERT_MASK) {
+      uint32 insertion_num = (mod_word & DFM1_NUM_INSERT_MASK) / DFM1_NUM_INSERT_BIT;
+
+      if ((mod_word & DFM1_FRACTAL_INSERT) && (insertion_num & ~2) == 1)
+         insertion_num ^= 2;
+
       current_options.number_fields <<= 4;
-      current_options.number_fields += (mod_word & DFM1_NUM_INSERT_MASK) / DFM1_NUM_INSERT_BIT;
+      current_options.number_fields += insertion_num;
       current_options.howmanynumbers++;
    }
 
@@ -2233,25 +2260,28 @@ extern void process_number_insertion(uint32 mod_word)
 Private long_boolean get_real_subcall(
    parse_block *parseptr,
    Const by_def_item *item,
-   uint64 new_final_concepts,      /* The flags, heritable and otherwise, with which the parent call was invoked.
-                                       Some of these may be inherited to the subcall. */
+   setup_command *cmd_in,
    Const callspec_block *parent_call,
-   setup_command *cmd_out)         /* We fill in just the parseptr, callspec, cmd_final_flags fields. */
-
-/* ****** Comment from long ago:  "Need to send out alternate_concept!!!"  I wonder what that meant? */
-
+   setup_command *cmd_out)         /* We fill in just the parseptr, callspec,
+                                      cmd_final_flags fields. */
 {
    char tempstring_text[MAX_TEXT_LINE_LENGTH];
    parse_block *search;
    parse_block **newsearch;
    int snumber;
    int item_id = item->call_id;
+   /* The flags, heritable and otherwise, with which the parent call was invoked.
+      Some of these may be inherited to the subcall. */
+   uint64 new_final_concepts = cmd_in->cmd_final_flags;
    uint32 mods1 = item->modifiers1;
    callspec_block *orig_call = base_calls[item_id];
    long_boolean this_is_tagger =
       item_id >= base_call_tagger0 && item_id < base_call_tagger0+NUM_TAGGER_CLASSES;
    long_boolean this_is_tagger_circcer = this_is_tagger || item_id == base_call_circcer;
    call_conc_option_state save_state = current_options;
+
+   if (!(new_final_concepts.herit & INHERITFLAG_FRACTAL))
+      mods1 &= ~DFM1_FRACTAL_INSERT;
 
    process_number_insertion(mods1);
 
@@ -2317,6 +2347,8 @@ Private long_boolean get_real_subcall(
       We accomplish this by keeping a subcall list showing what modifications the user
       supplied when we queried. */
 
+   snumber = (mods1 & DFM1_CALL_MOD_MASK) / DFM1_CALL_MOD_BIT;
+
    /* We ALWAYS search this list, if such exists.  Even if modifications are disabled.
       Why?  Because the reconciler re-executes calls after the point of insertion to test
       their fidelity with the new setup that results from the inserted calls.  If those
@@ -2343,9 +2375,23 @@ Private long_boolean get_real_subcall(
             if (this_is_tagger_circcer)
                cmd_out->callspec = subsidiary_ptr->call;
             else {
-               cmd_out->callspec = (callspec_block *) 0;  /* ****** not right????. */
-               cmd_out->cmd_final_flags.herit = 0;        /* ****** not right????. */
-               cmd_out->cmd_final_flags.final = 0;        /* ****** not right????. */
+               /* This makes it pick up the substituted call. */
+               cmd_out->callspec = (callspec_block *) 0;
+
+               /* Substitutions are normal, and hence we clear the modifier bits,
+                  unless this was a "mandatory_anycall" or "mandatory_secondary_call",
+                  in which case we assume that the database tells just what bits
+                  to inherit. */
+               if (snumber == 2 || snumber == 6) {
+                  if (search->concept->kind == concept_supercall) {
+                     cmd_out->cmd_final_flags.herit = cmd_in->restrained_superflags;
+                     cmd_out->cmd_misc2_flags &= ~CMD_MISC2_RESTRAINED_SUPER;
+                  }
+               }
+               else {
+                  cmd_out->cmd_final_flags.herit = 0;        /* ****** not right????. */
+                  cmd_out->cmd_final_flags.final = 0;        /* ****** not right????. */
+               }
             }
 
             goto ret_true;
@@ -2354,8 +2400,6 @@ Private long_boolean get_real_subcall(
          newsearch = &search->next;
       }
    }
-
-   snumber = (mods1 & DFM1_CALL_MOD_MASK) / DFM1_CALL_MOD_BIT;
 
    /* Note whether we are using any mandatory substitutions, so that the menu
       initialization will always accept this call.  Also, if we are in one of the
@@ -2451,16 +2495,14 @@ Private long_boolean get_real_subcall(
 
       modify_popup_kind kind;
       char pretty_call_name[MAX_TEXT_LINE_LENGTH];
-      parse_block pb;
 
-      pb.options = current_options;
-      unparse_call_name(orig_call, pretty_call_name, &pb);
+      unparse_call_name(orig_call->name, pretty_call_name, &current_options);
 
       if (this_is_tagger) kind = modify_popup_only_tag;
       else if (this_is_tagger_circcer) kind = modify_popup_only_circ;
       else kind = modify_popup_any;
 
-      if (debug_popup || uims_do_modifier_popup(pretty_call_name, kind)) {
+      if (uims_do_modifier_popup(pretty_call_name, kind)) {
          /* User accepted the modification.
             Set up the prompt and get the concepts and call. */
 
@@ -2644,17 +2686,15 @@ extern int gcd(int a, int b)
                   ONLYREV(1) means do E
                   ONLYREV(4) means do B
 
-      CMD_FRAC_CODE_UPTO
-               Do parts from the beginning of the region up through N, inclusive.
-               Do N parts.  For a 5-part call ABCDE:
-                  UPTO(1) means do A
-                  UPTO(4) means do ABCD
-
       CMD_FRAC_CODE_FROMTO
                   do parts from K+1 up through N, inclusive,
-                  that is, K+1, K+2, K+3, .... N.
-                  where K is the "secondary part number".  If K=0, this
-                  is the same as CMD_FRAC_CODE_UPTO.
+                  that is, K+1, K+2, K+3, .... N.  Relative to the region.
+                  K is the "secondary part number".  If K=0, this does N parts:
+                  from the beginning of the region up through N, inclusive.                  
+                  For a 5-part call ABCDE:
+                  FROMTO(0,1) means do A
+                  FROMTO(0,4) means do ABCD
+                  FROMTO(1,4) means do BCD  (K=1, N=4)
 
       CMD_FRAC_CODE_UPTOREV
                Do parts from the beginning of the region up through size-N, inclusive.
@@ -2835,10 +2875,13 @@ extern void get_fraction_info(
    }
 
    if (this_part != 0) {
+      int highdel, lowdel;
+
       /* In addition to everything else, we are picking out a specific part
          of whatever series we have decided upon. */
 
-      if (zzz->do_half_of_last_part | zzz->do_last_half_of_first_part) fail("This call can't be fractionalized with this fraction.");
+      if (zzz->do_half_of_last_part | zzz->do_last_half_of_first_part)
+         fail("This call can't be fractionalized with this fraction.");
 
       switch (frac_flags & CMD_FRAC_CODE_MASK) {
       case CMD_FRAC_CODE_ONLY:
@@ -2863,41 +2906,90 @@ extern void get_fraction_info(
             fail("This call can't be fractionalized.");
          if (subcall_index >= total) fail("The indicated part number doesn't exist.");
          break;
-      case CMD_FRAC_CODE_UPTO:
-         /* We are not just doing part N, we are doing parts up through N. */
-
-         if (zzz->reverse_order) {
-            if (highlimit > subcall_index-this_part+1) fail("This call can't be fractionalized this way.");
-            highlimit = subcall_index-this_part+1;
-            if (subcall_index > available_fractions) fail("This call can't be fractionalized.");
-            if (subcall_index > total) fail("The indicated part number doesn't exist.");
-         }
-         else {
-            if (highlimit < subcall_index+this_part) fail("This call can't be fractionalized this way.");
-            highlimit = subcall_index+this_part;
-            if (highlimit > available_fractions) fail("This call can't be fractionalized.");
-            if (highlimit > total) fail("The indicated part number doesn't exist.");
-         }
-
-         break;
       case CMD_FRAC_CODE_FROMTO:
+
          /* We are doing parts from (part2+1) through N. */
 
          if (zzz->reverse_order) {
-            fail("This call can't be fractionalized this way.");
+            highdel = highlimit-(subcall_index-this_part+1);
+            lowdel = 0-((frac_flags & CMD_FRAC_PART2_MASK) / CMD_FRAC_PART2_BIT);
+
+            if (highdel > 0   )
+               fail("This call can't be fractionalized this way.");
+
+            highlimit -= highdel;
+            subcall_index += lowdel;
          }
          else {
-            if (highlimit < subcall_index+this_part) fail("This call can't be fractionalized this way.");
-            highlimit = subcall_index+this_part;
-            if (highlimit > available_fractions) fail("This call can't be fractionalized.");
-            if (highlimit > total) fail("The indicated part number doesn't exist.");
+            highdel = highlimit-subcall_index-this_part;
+            lowdel = (frac_flags & CMD_FRAC_PART2_MASK) / CMD_FRAC_PART2_BIT;
+            if (highdel < 0)
+               fail("This call can't be fractionalized this way.");
+
+            highlimit -= highdel;
+            subcall_index += lowdel;
          }
 
-         subcall_index += (frac_flags & CMD_FRAC_PART2_MASK) / CMD_FRAC_PART2_BIT;
-         /* Be sure that enough parts are visible. */
-         if (subcall_index > available_fractions)
-            fail("This call can't be fractionalized.");
-         if (subcall_index > total) fail("The indicated part number doesn't exist.");
+         /* Be sure that enough parts are visible, and that we are within bounds. */
+
+         if (zzz->reverse_order) {
+            if (subcall_index > available_fractions)
+               fail("This call can't be fractionalized.");
+            if (subcall_index > total)
+               fail("The indicated part number doesn't exist.");
+         }
+         else {
+            if (highlimit > available_fractions || subcall_index > available_fractions)
+               fail("This call can't be fractionalized.");
+            if (highlimit > total || subcall_index > total)
+               fail("The indicated part number doesn't exist.");
+         }
+
+         break;
+      case CMD_FRAC_CODE_FROMTOMOST:
+
+         /* We are doing parts from (part2+1) through N, but only doing half of part N. */
+
+         if (zzz->reverse_order) {
+            highdel = highlimit-(subcall_index-this_part+1);
+            lowdel = 0-((frac_flags & CMD_FRAC_PART2_MASK) / CMD_FRAC_PART2_BIT);
+
+            if (highdel > 0   )
+               fail("This call can't be fractionalized this way.");
+
+            highlimit -= highdel;
+            subcall_index += lowdel;
+            fail("Sorry, no reverse-order fromtomost.");
+         }
+         else {
+            highdel = highlimit-subcall_index-this_part;
+            lowdel = (frac_flags & CMD_FRAC_PART2_MASK) / CMD_FRAC_PART2_BIT;
+            if (highdel < 0)
+               fail("This call can't be fractionalized this way.");
+
+            highlimit -= highdel;
+            subcall_index += lowdel;
+            zzz->do_half_of_last_part = CMD_FRAC_HALF_VALUE;
+            /* Be sure that we actually do the part that we take half of. */
+            if (subcall_index >= highlimit)
+               fail("This call can't be fractionalized this way.");
+         }
+
+         /* Be sure that enough parts are visible, and that we are within bounds. */
+
+         if (zzz->reverse_order) {
+            if (subcall_index > available_fractions)
+               fail("This call can't be fractionalized.");
+            if (subcall_index > total)
+               fail("The indicated part number doesn't exist.");
+         }
+         else {
+            if (highlimit > available_fractions || subcall_index > available_fractions)
+               fail("This call can't be fractionalized.");
+            if (highlimit > total || subcall_index > total)
+               fail("The indicated part number doesn't exist.");
+         }
+
          break;
       case CMD_FRAC_CODE_BEYOND:
          /* We are not just doing part N, we are doing parts strictly after N. */
@@ -2906,6 +2998,24 @@ extern void get_fraction_info(
          if (subcall_index > available_fractions)
             fail("This call can't be fractionalized.");
          if (subcall_index > total) fail("The indicated part number doesn't exist.");
+         break;
+      case CMD_FRAC_CODE_PREBEYOND:
+         /* We are doing the last half of part N, and all parts strictly after N. */
+         subcall_index += zzz->reverse_order ? (1-this_part) : (this_part-1);
+
+         if (zzz->reverse_order) {
+            zzz->do_half_of_last_part = CMD_FRAC_HALF_VALUE;
+            fail("This call can't be fractionalized with this fraction.");  /* **** for now. */
+         }
+         else {
+            zzz->do_last_half_of_first_part = CMD_FRAC_LASTHALF_VALUE;
+            /* Be sure that enough parts are visible. */
+            if (subcall_index > available_fractions)
+               fail("This call can't be fractionalized.");
+            if (subcall_index > total) fail("The indicated part number doesn't exist.");
+            if (subcall_index >= highlimit)
+               fail("This call can't be fractionalized with this fraction.");
+         }
          break;
       case CMD_FRAC_CODE_UPTOREV:
          highlimit += zzz->reverse_order ? (this_part) : (-this_part);
@@ -2932,6 +3042,27 @@ extern void get_fraction_info(
       /* Unless all parts are visible, this is illegal. */
       if (available_fractions != 1000)
          fail("This call can't be fractionalized.");
+   }
+
+   if (frac_flags & CMD_FRAC_SNAG_EVERYTHING) {
+      int diff = highlimit - subcall_index;
+
+      if (zzz->reverse_order | zzz->do_half_of_last_part | zzz->do_last_half_of_first_part)
+         fail("Can't do this fractional \"snag\".");
+
+      if (zzz->instant_stop || diff <= 0 || (diff & 1))
+         fail("Can't do this fractional \"snag\".");
+      highlimit -= diff >> 1;
+   }
+   else if (frac_flags & CMD_FRAC_LASTHALF_ALL) {
+      int diff = highlimit - subcall_index;
+
+      if (zzz->reverse_order | zzz->do_half_of_last_part | zzz->do_last_half_of_first_part)
+         fail("Can't do this fractional \"snag\".");
+
+      if (zzz->instant_stop || diff <= 0 || (diff & 1))
+         fail("Can't do this fractional \"snag\".");
+      subcall_index += diff >> 1;
    }
 
    zzz->subcall_index = subcall_index;
@@ -3265,7 +3396,8 @@ Private void do_sequential_call(
       this_item = &callspec->stuff.def.defarray[fetch_index];
       this_mod1 = this_item->modifiers1;
 
-      if (this_mod1 & DFM1_SEQ_NO_RE_EVALUATE)
+      if ((this_mod1 & DFM1_SEQ_NO_RE_EVALUATE) &&
+          !(result->cmd.cmd_misc2_flags & CMD_MISC2_RESTRAINED_SUPER))
          result->result_flags |= RESULTFLAG__NO_REEVALUATE;
 
       fetch_index += zzz.subcall_incr;
@@ -3310,19 +3442,28 @@ Private void do_sequential_call(
          But if the user does something like "circle by 1/4 x [leads run]", we
          want to re-evaluate who the leads are. */
 
-      recompute_id = get_real_subcall(parseptr, this_item, new_final_concepts, callspec, &foo1);
+      { 
+         setup_command foobar = ss->cmd;
 
-      if (this_mod1 & DFM1_PERMIT_TOUCH_OR_REAR_BACK)
-         ss->cmd.cmd_misc_flags &= ~CMD_MISC__ALREADY_STEPPED;   /* We allow stepping (or rearing back) again. */
+         foobar.cmd_final_flags = new_final_concepts;
 
-      if (this_mod1 & DFM1_SEQ_REPEAT_N_ALTERNATE)
-         (void) get_real_subcall(parseptr, alt_item, new_final_concepts, callspec, &foo2);
+         recompute_id = get_real_subcall(parseptr, this_item, &foobar, callspec, &foo1);
+
+         if (this_mod1 & DFM1_PERMIT_TOUCH_OR_REAR_BACK)
+            ss->cmd.cmd_misc_flags &= ~CMD_MISC__ALREADY_STEPPED;   /* We allow stepping (or rearing back) again. */
+
+         if (this_mod1 & DFM1_SEQ_REPEAT_N_ALTERNATE)
+            (void) get_real_subcall(parseptr, alt_item, &foobar, callspec, &foo2);
+      }
 
       /* We also re-evaluate if the invocation flag "seq_re_evaluate" is on. */
 
       if (recompute_id || (this_mod1 & DFM1_SEQ_RE_EVALUATE)) update_id_bits(result);
 
       /* If this subcall invocation involves inserting or shifting the numbers, do so. */
+
+      if (!(new_final_concepts.herit & INHERITFLAG_FRACTAL))
+         this_mod1 &= ~DFM1_FRACTAL_INSERT;
 
       process_number_insertion(this_mod1);
 
@@ -3600,6 +3741,9 @@ done_with_big_cycle:
 
       ss->cmd.cmd_misc_flags |= result->cmd.cmd_misc_flags & ~DFM1_CONCENTRICITY_FLAG_MASK;
 
+      if (DFM1_SEQ_REENABLE_ELONG_CHK & this_mod1)
+         ss->cmd.cmd_misc_flags &= ~CMD_MISC__NO_CHK_ELONG;
+
       current_options.number_fields = saved_number_fields;
       current_options.howmanynumbers = saved_num_numbers;
 
@@ -3843,6 +3987,13 @@ Private void move_with_real_call(
       return;
    }
 
+   if ((callspec->callflagsf & CFLAG2_FRACTAL_NUM) &&
+       (ss->cmd.cmd_final_flags.herit & INHERITFLAG_FRACTAL)) {
+      if ((current_options.number_fields & 0xD) == 1)
+         current_options.number_fields ^= 2;
+      ss->cmd.cmd_final_flags.herit &= ~INHERITFLAG_FRACTAL;
+   }
+
 
 /* ***** Beware!!!!  There are still some checks for
    if (ss->cmd.cmd_misc_flags & CMD_MISC__MATRIX_CONCEPT)
@@ -3860,12 +4011,12 @@ that probably need to be put in. */
          This allows horrible "ends trade" on "invert acey deucey", for example,
          since "acey deucey" has that flag set for the trade that the centers do. */
 
-      if (     (ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_INVERT) &&
-               (the_schema == schema_concentric ||
-                the_schema == schema_concentric_6p ||
-                the_schema == schema_concentric_6p_or_normal ||
-                the_schema == schema_conc_o) &&
-               (DFM1_SUPPRESS_ELONGATION_WARNINGS & callspec->stuff.conc.innerdef.modifiers1))
+      if ((ss->cmd.cmd_misc2_flags & CMD_MISC2__SAID_INVERT) &&
+          (the_schema == schema_concentric ||
+           the_schema == schema_concentric_6p ||
+           the_schema == schema_concentric_6p_or_normal ||
+           the_schema == schema_conc_o) &&
+          (DFM1_SUPPRESS_ELONGATION_WARNINGS & callspec->stuff.conc.innerdef.modifiers1))
          ss->cmd.cmd_misc_flags |= CMD_MISC__NO_CHK_ELONG;
 
       /* We shut off the "doing ends" stuff.  If we say "ends detour" we mean "ends do the
@@ -3877,32 +4028,37 @@ that probably need to be put in. */
          set saying that the concept is legal and will be inherited to the children.
          Unless it is defined by array. */
 
-      if (the_schema != schema_by_array && (ss->cmd.cmd_final_flags.herit & (~(callspec->callflagsh|INHERITFLAG_HALF|INHERITFLAG_LASTHALF))))
+      if (the_schema != schema_by_array &&
+          (ss->cmd.cmd_final_flags.herit &
+           (~(callspec->callflagsh|INHERITFLAG_HALF|INHERITFLAG_LASTHALF))))
          fail("Can't do this call with this concept.");
 
-      switch (ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_KMASK) {
-      case CMD_MISC2__CENTRAL_PLAIN:
+      if (ss->cmd.cmd_misc2_flags & CMD_MISC2__DO_CENTRAL) {
          /* If it is sequential, we just pass it through.  Otherwise, we handle it here. */
          if (the_schema != schema_sequential &&
              the_schema != schema_sequential_with_fraction &&
              the_schema != schema_sequential_with_split_1x8_id) {
             Const by_def_item *defptr;
-            uint32 inv_bits = ss->cmd.cmd_misc2_flags & (CMD_MISC2__CTR_END_INV_CONC | CMD_MISC2__CTR_END_INVERT);
-
-            /* Normally, we get the centers' part of the definition.  But if the user said
-               either "invert central" (the concept that means to get the ends' part)
-               or "central invert" (the concept that says to get the centers' part
-               of the inverted call) we get the ends' part.  If BOTH inversion bits are on,
-               the user said "invert central invert", meaning to get the ends' part of the
-               inverted call, so we just get the centers' part as usual. */
+            uint32 inv_bits;
 
             switch (the_schema) {
             case schema_concentric:
             case schema_conc_o:
             case schema_concentric_6p:
             case schema_concentric_6p_or_normal:
-               if (inv_bits == CMD_MISC2__CTR_END_INV_CONC ||
-                   inv_bits == CMD_MISC2__CTR_END_INVERT)
+
+               /* Normally, we get the centers' part of the definition.  But if the user said
+                  either "invert central" (the concept that means to get the ends' part)
+                  or "central invert" (the concept that says to get the centers' part
+                  of the inverted call) we get the ends' part.  If BOTH inversion bits are on,
+                  the user said "invert central invert", meaning to get the ends' part of the
+                  inverted call, so we just get the centers' part as usual. */
+
+               inv_bits = ss->cmd.cmd_misc2_flags &
+                  (CMD_MISC2__INVERT_CENTRAL | CMD_MISC2__SAID_INVERT);
+
+               if (inv_bits == CMD_MISC2__INVERT_CENTRAL ||
+                   inv_bits == CMD_MISC2__SAID_INVERT)
                   defptr = &callspec->stuff.conc.outerdef;
                else
                   defptr = &callspec->stuff.conc.innerdef;
@@ -3937,13 +4093,15 @@ that probably need to be put in. */
             default:
                fail("Can't do \"central\" with this call.");
             }
-            ss->cmd.cmd_misc2_flags &= ~CMD_MISC2__CTR_END_MASK;   /* We are done. */
-         }
 
-         break;
-      case 0: case CMD_MISC2__CENTRAL_SNAG: case CMD_MISC2__CENTRAL_MYSTIC:
+            /* We are done. */
+            ss->cmd.cmd_misc2_flags &=
+               ~(CMD_MISC2__DO_CENTRAL | CMD_MISC2__INVERT_CENTRAL | CMD_MISC2__SAID_INVERT);
+         }
+      }
+      else {
+         /* Snag or mystic, or maybe just plain invert, was on. */
          if (ss->cmd.cmd_final_flags.final) fail("This concept not allowed here.");
-         break;
       }
    }
 
@@ -4085,12 +4243,13 @@ that probably need to be put in. */
       we will do it later.  We also can't do it yet if we are going
       to split the setup for "central" or "crazy", or if we are doing the call "mystic". */
 
-   if (  (  (ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_KMASK) != CMD_MISC2__CENTRAL_MYSTIC ||
-            the_schema != schema_by_array)
-                              &&
-         (callflags1 & (CFLAG1_STEP_REAR_MASK | CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK))) {
-      if (  ss->cmd.cmd_frac_flags == CMD_FRAC_NULL_VALUE ||
-            (ss->cmd.cmd_frac_flags & ~CMD_FRAC_PART_MASK) == (CMD_FRAC_NULL_VALUE | CMD_FRAC_CODE_UPTO)) {
+   if ((!(ss->cmd.cmd_misc2_flags & CMD_MISC2__CENTRAL_MYSTIC) ||
+        the_schema != schema_by_array) &&
+       (callflags1 & (CFLAG1_STEP_REAR_MASK | CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK))) {
+      if (ss->cmd.cmd_frac_flags == CMD_FRAC_NULL_VALUE ||
+          (ss->cmd.cmd_frac_flags & ~CMD_FRAC_PART_MASK) ==
+          (CMD_FRAC_NULL_VALUE | CMD_FRAC_CODE_FROMTO)) {
+
          if (!(ss->cmd.cmd_misc_flags & (CMD_MISC__NO_STEP_TO_WAVE | CMD_MISC__ALREADY_STEPPED | CMD_MISC__MUST_SPLIT_MASK))) {
             if (ss->cmd.cmd_final_flags.herit & INHERITFLAG_LEFT) {
                mirror_this(ss);
@@ -4284,7 +4443,7 @@ that probably need to be put in. */
          int i, j;
          uint32 mask = 0;
 
-         for (i=0, j=1; i< 16; i++, j<<=1) {
+         for (i=0,j=1 ; i<16 ; i++,j<<=1) {
             if (ss->people[i].id1) mask |= j;
          }
 
@@ -4546,14 +4705,17 @@ that probably need to be put in. */
       if (the_schema >= schema_sequential) {
          uint32 misc2 = ss->cmd.cmd_misc2_flags;
 
-         if ((misc2 & CMD_MISC2__CTR_END_KMASK) == CMD_MISC2__CENTRAL_SNAG) {
+
+         if ((misc2 & CMD_MISC2__CENTRAL_SNAG) &&
+             ((ss->cmd.cmd_frac_flags & CMD_FRAC_PART_MASK) == 0 ||
+              (((ss->cmd.cmd_frac_flags & CMD_FRAC_CODE_MASK) != CMD_FRAC_CODE_ONLY) &&
+               ((ss->cmd.cmd_frac_flags & CMD_FRAC_CODE_MASK) != CMD_FRAC_CODE_ONLYREV)))) {
             if (ss->cmd.cmd_frac_flags != CMD_FRAC_NULL_VALUE)
                fail("Can't fractionalize a call and use \"snag\" at the same time.");
 
             ss->cmd.cmd_misc2_flags &=
-               ~(CMD_MISC2__CTR_END_KMASK | CMD_MISC2__CTR_END_INV_CONC);
+               ~(CMD_MISC2__CENTRAL_SNAG | CMD_MISC2__INVERT_SNAG);
             ss->cmd.cmd_frac_flags = CMD_FRAC_HALF_VALUE;
-
 
             /* Note the uncanny similarity between the following and
                "punt_centers_use_concept". */
@@ -4564,7 +4726,7 @@ that probably need to be put in. */
                warning_info saved_warnings;
                setup the_setups[2], the_results[2], orig_people;
                int sizem1 = setup_attrs[ss->kind].setup_limits;
-               int crossconc = (misc2 & CMD_MISC2__CTR_END_INV_CONC) ? 0 : 1;
+               int crossconc = (misc2 & CMD_MISC2__INVERT_SNAG) ? 0 : 1;
 
                ssmask = setup_attrs[ss->kind].mask_normal;
 
@@ -4682,10 +4844,10 @@ that probably need to be put in. */
          }
 
          (void) get_real_subcall(parseptr, innerdef,
-                                 ss->cmd.cmd_final_flags, callspec, &foo1);
+                                 &ss->cmd, callspec, &foo1);
 
          (void) get_real_subcall(parseptr, outerdef,
-                                 ss->cmd.cmd_final_flags, callspec, &foo2);
+                                 &ss->cmd, callspec, &foo2);
 
          foo1.cmd_frac_flags = ss->cmd.cmd_frac_flags;
          foo2.cmd_frac_flags = ss->cmd.cmd_frac_flags;
@@ -4984,6 +5146,7 @@ that probably need to be put in. */
 */
 
 
+
 extern void move(
    setup *ss,
    long_boolean qtfudged,
@@ -5012,15 +5175,40 @@ extern void move(
       if (ss->cmd.cmd_misc2_flags & CMD_MISC2__IN_Z_MASK)
          remove_z_distortion(ss);
 
-      if (
-               (ss->cmd.cmd_final_flags.herit & (INHERITFLAG_REVERSE|INHERITFLAG_LEFT|INHERITFLAG_GRAND|INHERITFLAG_CROSS|INHERITFLAG_SINGLE|INHERITFLAG_INTLK))
-                  ||
-               (ss->cmd.cmd_final_flags.final & FINAL__SPLIT)) {
+      if ((ss->cmd.cmd_final_flags.herit &
+           (INHERITFLAG_REVERSE|INHERITFLAG_LEFT|INHERITFLAG_GRAND|
+            INHERITFLAG_CROSS|INHERITFLAG_SINGLE|INHERITFLAG_INTLK)) ||
+          (ss->cmd.cmd_final_flags.final & FINAL__SPLIT)) {
          if (concept_table[t->concept->kind].concept_prop & CONCPROP__PERMIT_REVERSE)
             ss->cmd.cmd_misc_flags |= CMD_MISC__RESTRAIN_MODIFIERS;
       }
 
-      (concept_table[t->concept->kind].concept_action)(ss, t, result);
+      if (ss->cmd.cmd_misc2_flags & CMD_MISC2_RESTRAINED_SUPER)
+         fail("Can't nest meta-concepts and supercalls.");
+
+      if (t->concept->kind == concept_another_call_next_mod) {
+         /* This is a "supercall". */
+         parse_block p1 = *t;
+         parse_block p2 = *p1.next;
+         parse_block p3 = *(p2.subsidiary_root);
+
+         p1.next = &p2;
+         p2.concept = &marker_concept_supercall;
+         p2.subsidiary_root = &p3;
+         p3.call = ss->cmd.callspec;
+         p3.concept = &mark_end_of_list;
+         p3.no_check_call_level = 1;
+         p3.options = current_options;
+         ss->cmd.parseptr = &p1;
+         ss->cmd.callspec = (callspec_block *) 0;
+         ss->cmd.cmd_misc2_flags |= CMD_MISC2_RESTRAINED_SUPER;
+         ss->cmd.restrained_superflags = ss->cmd.cmd_final_flags.herit;
+         ss->cmd.cmd_final_flags.herit = 0;
+         move(ss, FALSE, result);
+      }
+      else
+         (concept_table[t->concept->kind].concept_action)(ss, t, result);
+
       return;
    }
 
@@ -5072,6 +5260,8 @@ extern void move(
       concept_kind kjunk;
 
       (void) really_skip_one_concept(ss->cmd.parseptr, &kjunk, &parseptrcopy);
+      if (kjunk == concept_supercall)
+         fail("A concept is required.");
    }
    else
       parseptrcopy = parseptr;
@@ -5104,20 +5294,25 @@ extern void move(
             return;
          }
       }
-      else if ((ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_KMASK) == CMD_MISC2__CENTRAL_SNAG) {
+      else if (ss->cmd.cmd_misc2_flags & CMD_MISC2__CENTRAL_SNAG) {
          /* Doing plain snag -- we are tolerant of calls like 6x2 acey deucey. */
-         switch (this_call->schema) {
-         case schema_concentric:
-         case schema_concentric_6_2:
-         case schema_concentric_2_6:
-         case schema_concentric_6p:
-         case schema_concentric_6p_or_sgltogether:
-         case schema_concentric_6p_or_normal:
-         case schema_conc_o:
-            break;
-         default:
-            punt_centers_use_concept(ss, result);
-            return;
+         /* But if we are doing something like "initially snag" or "finally snag", don't. */
+         if ((ss->cmd.cmd_frac_flags & CMD_FRAC_PART_MASK) == 0 ||
+             (((ss->cmd.cmd_frac_flags & CMD_FRAC_CODE_MASK) != CMD_FRAC_CODE_ONLY) &&
+              ((ss->cmd.cmd_frac_flags & CMD_FRAC_CODE_MASK) != CMD_FRAC_CODE_ONLYREV))) {
+            switch (this_call->schema) {
+            case schema_concentric:
+            case schema_concentric_6_2:
+            case schema_concentric_2_6:
+            case schema_concentric_6p:
+            case schema_concentric_6p_or_sgltogether:
+            case schema_concentric_6p_or_normal:
+            case schema_conc_o:
+               break;
+            default:
+               punt_centers_use_concept(ss, result);
+               return;
+            }
          }
       }
 
@@ -5166,22 +5361,9 @@ extern void move(
       /* ***** We used to have FINAL__SPLIT in the list below, but it caused "matrix split, tandem step thru" to fail.
          This needs to be reworked. */
 
-      if (             (check_concepts.herit & ~(
-                              INHERITFLAG_REVERSE |
-                              INHERITFLAG_LEFT |
-                              INHERITFLAG_INTLK |
-                              INHERITFLAG_MAGIC |
-                              INHERITFLAG_GRAND |
-                              INHERITFLAG_CROSS |
-                              INHERITFLAG_SINGLE |
-                              INHERITFLAG_FUNNY |
-                              MXN_BITS |
-                              INHERITFLAG_12_MATRIX |
-                              INHERITFLAG_16_MATRIX |
-                              INHERITFLAG_SINGLEFILE |
-                              INHERITFLAG_YOYO |
-                              INHERITFLAG_STRAIGHT)) == 0 &&
-                        check_concepts.final == 0) {
+      if (((check_concepts.herit &
+            (INHERITFLAG_DIAMOND | INHERITFLAG_HALF | INHERITFLAG_LASTHALF)) |
+           check_concepts.final) == 0) {
          /* Look for virtual setup concept that can be done by dispatch from table, with no
             intervening final concepts. */
 

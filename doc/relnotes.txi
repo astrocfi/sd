@@ -10,9 +10,9 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR SD VERSION 32.0c
-@set title2 Database version = 32.0c format = 134
-@set title3 X11 UI version 1.17, SDTTY UI version 1.9
+@set title1 RELEASE NOTES FOR SD VERSION 32.2
+@set title2 Database version = 32.2 format = 138
+@set title3 X11 UI version 1.17, SDTTY UI version 1.10
 
 @node Top, Intro, (dir), (dir)
 
@@ -23,7 +23,8 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
-* 32.0c::
+* 32.2::
+* 32.0::
 * 31.98::
 * 31.97::
 * 31.96::
@@ -54,7 +55,7 @@ Changes as of the following versions:
 The file @file{oldnotes} has notes relating to still older versions.
 @end menu
 
-@node Intro, 32.0c, Top, (dir)
+@node Intro, 32.2, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -65,12 +66,84 @@ The file @file{oldnotes} has notes relating to still older versions.
 @noindent Copyright @copyright{} 1996, 1997, 1998 William B. Ackerman
 @sp 3
 @menu
-* 32.0c::               Changes in the current version
+* 32.2::               Changes in the current version
 @end menu
 
 @c ************
-@node 32.0c, 31.98, Intro, Top
-@unnumberedsec Version 32.0c changes
+@node 32.2, 32.0, Intro, Top
+@unnumberedsec Version 32.2 changes
+
+Sdtty's interface with the Windows operating system has been rewritten.  The program
+should be much more ``system friendly'' (and, we hope, ``user-friendly'') than before.
+It no longer sets itself up in ``full screen'' mode.  It operates in an ordinary
+window, that can be maximized, minimized, moved, and resized in the usual way.  It
+also has scroll bars.  It can also sense special key presses in a more flexible way.
+
+Sdtty can respond to many more special key presses than before.  In addition to the
+function keys, it can respond to letters and digits with the control and/or alt keys
+held down.  It can also respond to ``enhanced'' keys such as the cursor arrow keys,
+``insert'', ``delete'' etc.
+
+Sdtty now permits you to customize your special key presses in your initialization
+file.  The file @file{sample3.ini} in the distribution has an example of this.  It
+has an ``[accelerators]'' section followed by lines of the form
+@example
+@group
+   key-specification     action
+@end group
+@end example
+@noindent
+For example:
+@example
+@group
+al     split phantom lines
+cl     interlocked phantom lines
+cal    phantom lines
+@end group
+@end example
+@noindent These three entries mean that alt-l will be a short cut for
+@code{split phantom lines}, control-l will be a short cut for
+@code{interlocked phantom lines}, and control-alt-l will be a short cut for
+@code{phantom lines}.  A plus sign in front of a key specification means that
+it is to be used when starting, as in ``+f1 heads start'', and an asterisk
+means that it is to be used when resolving, as in ``*f12 find another''.
+
+If you do not have an @file{sd.ini} file (for example, you have not copied
+@file{sample3.ini} to @file{sd.ini}), or if the file does not have an
+``[accelerators]'' section, all of the standard key bindings will be used.
+If there is an ``[accelerators]'' section, whatever follows will replace
+@emph{all} key bindings.
+
+Refer to the manual for more details.
+
+The following new options were added, to disable the various new features of the
+Sdtty user interface.  You can place these in the ``[options]'' section of
+the initialization file.
+@example
+@group
+   no_intensify
+   no_sound
+   no_color
+   no_console
+@end group
+@end example
+
+Refer to the manual for more details.
+
+Sd has limited support for the @samp{fractal} concept.
+
+Sd can handle supercalls, as in @samp{finally clover and [right and left thru]}
+or @samp{initially busy [finish turn the key]}.
+
+There is a call @samp{<anyone> tie (parts)} that can be used when the parts are
+required (for fractionalization, @samp{piecewise}, @samp{initially}, and so on.)
+It is like @samp{recycle (parts)} or @samp{scoot and weave (parts)} in that it
+doesn't have all that power of the base call, and should only be used when
+fractionalization is required.
+
+@c ************
+@node 32.0, 31.98, 32.2, Top
+@unnumberedsec Version 32.0 changes
 
 There is a major new feature.  It is now possible to ``edit'' sequences at any point.
 The way this is accomplished is through a ``clipboard''.  If you want to change your
@@ -118,7 +191,7 @@ Many other minor improvements.  We thank the callers at the
 2nd USA West Convention for bringing up several interesting issues.
 
 @c ************
-@node 31.98, 31.97, 32.0c, Top
+@node 31.98, 31.97, 32.0, Top
 @unnumberedsec Version 31.98 changes
 
 Many minor improvements.  We thank the callers in the C2 hall at the

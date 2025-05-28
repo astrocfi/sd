@@ -12,7 +12,7 @@
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-    This is for version 31. */
+    This is for version 32. */
 
 /* This file contains stuff for tandem and as-couples moves. */
 
@@ -663,16 +663,6 @@ extern void tandem_couples_move(
                              tandem of 4 = 8 / couples of 4 = 9 / siamese of 4 = 10
                              10: box
                              11: diamond
-                             18: skew
-                             20: out point triangles
-                             21: in point triangles
-                             22: inside triangles
-                             23: outside triangles
-                             26: wave-based triangles triangles
-                             27: tandem-based triangles
-                             30: <anyone>-based triangles
-                             31: 3x1 triangles
-                             32: Y's
                           */
    uint32 mxn_bits,
    long_boolean phantom_pairing_ok,
@@ -827,29 +817,51 @@ extern void tandem_couples_move(
          for swapping masks, but won't trip the assumption transformation stuff. */
       key |= 64;
    }
-   else if (key == 32) {
+   else if (key == tandem_key_ys) {
       np = 4;
       our_map_table = maps_isearch_ysome;
       tandstuff.no_unit_symmetry = TRUE;
    }
-   else if (key == 31) {
+   else if (key == tandem_key_3x1tgls) {
       np = 4;
       our_map_table = maps_isearch_3x1tglsome;
       tandstuff.no_unit_symmetry = TRUE;
    }
-   else if (key >= 20) {
+   else if (key >= tandem_key_outpoint_tgls) {
       np = 3;
       our_map_table = maps_isearch_tglsome;
       tandstuff.no_unit_symmetry = TRUE;
-      if (key == 23)
+      if (key == tandem_key_outside_tgls)
          selector = selector_outer6;
-      else if (key == 22)
+      else if (key == tandem_key_inside_tgls)
          selector = selector_center6;
-      else if (key == 26 || key == 27) {
+      else if (key == tandem_key_wave_tgls || key == tandem_key_tand_tgls) {
          if (ss->kind == s_hrglass) {
-            uint32 tbonetest = ss->people[0].id1 | ss->people[1].id1 | ss->people[4].id1 | ss->people[5].id1;
+            uint32 tbonetest =
+               ss->people[0].id1 | ss->people[1].id1 |
+               ss->people[4].id1 | ss->people[5].id1;
 
             if ((tbonetest & 011) == 011 || ((key ^ tbonetest) & 1))
+               fail("Can't find the indicated triangles.");
+
+            special_mask = 0x44;   /* The triangles have to be these. */
+         }
+         else if (ss->kind == s_bone) {
+            uint32 tbonetest =
+               ss->people[0].id1 | ss->people[1].id1 |
+               ss->people[4].id1 | ss->people[5].id1;
+
+            if ((tbonetest & 011) == 011 || !((key ^ tbonetest) & 1))
+               fail("Can't find the indicated triangles.");
+
+            special_mask = 0x88;   /* The triangles have to be these. */
+         }
+         else if (ss->kind == s_rigger) {
+            uint32 tbonetest =
+               ss->people[0].id1 | ss->people[1].id1 |
+               ss->people[4].id1 | ss->people[5].id1;
+
+            if ((tbonetest & 011) == 011 || !((key ^ tbonetest) & 1))
                fail("Can't find the indicated triangles.");
 
             special_mask = 0x44;   /* The triangles have to be these. */
@@ -889,8 +901,9 @@ extern void tandem_couples_move(
          else
             fail("Can't find these triangles.");
       }
-      else if ((key == 20 || key == 21) && ss->kind == s_qtag) {
-         if (key == 21) {
+      else if ((key == tandem_key_outpoint_tgls || key == tandem_key_inpoint_tgls) &&
+               ss->kind == s_qtag) {
+         if (key == tandem_key_inpoint_tgls) {
             if (     (ss->people[0].id1 & d_mask) == d_east &&
                      (ss->people[1].id1 & d_mask) != d_west &&
                      (ss->people[4].id1 & d_mask) == d_west &&
@@ -918,8 +931,9 @@ extern void tandem_couples_move(
          if (special_mask == 0)
             fail("Can't find designated point.");
       }
-      else if (key != 30 || ss->kind != s_c1phan)
-         /* For <anyone>-based triangles in C1-phantom, we just use whatever selector was given. */
+      else if (key != tandem_key_anyone_tgls || ss->kind != s_c1phan)
+         /* For <anyone>-based triangles in C1-phantom,
+            we just use whatever selector was given. */
          fail("Can't find these triangles.");
    }
    else if (key == 17) {
@@ -1007,7 +1021,7 @@ extern void tandem_couples_move(
       }
    }
    else if (tandstuff.no_unit_symmetry) {
-      if (key == 30) {
+      if (key == tandem_key_anyone_tgls) {
          /* This was <anyone>-based triangles.  The setup must have been a C1-phantom.
             The current mask shows just the base.  Expand it to include the apex. */
          ewmask |= nsmask;     /* Get the base bits regardless of facing direction. */
@@ -1042,7 +1056,7 @@ extern void tandem_couples_move(
          else
             fail("Can't find these triangles.");
       }
-      else if (key == 31) {
+      else if (key == tandem_key_3x1tgls) {
          if (ss->kind == s2x6) {
             ewmask = 0;
             nsmask = allmask;
@@ -1052,7 +1066,7 @@ extern void tandem_couples_move(
             nsmask = 0;
          }
       }
-      else if (key == 32) {
+      else if (key == tandem_key_ys) {
          if (ss->kind == s_c1phan) {
             if (!((ss->people[0].id1 ^ ss->people[1].id1 ^ ss->people[4].id1 ^ ss->people[5].id1) & 2)) {
                ss->rotation++;

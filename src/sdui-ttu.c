@@ -1,3 +1,5 @@
+/* -*- mode:C; c-basic-offset:3; indent-tabs-mode:nil; -*- */
+
 /*
  * sdui-ttu.c - helper functions for sdui-tty interface to use the Unix
  * "curses" mechanism.
@@ -33,16 +35,8 @@
 #include <string.h>
 
 extern int diagnostic_mode;    /* We need this. */
-#include "sdui-ttu.h"
+#include "sdui-tty.h"
 
-
-static int no_line_delete = 0;
-
-#ifdef NO_CURSES
-static int no_cursor = 1;
-#else
-static int no_cursor = 0;
-#endif
 
 static int curses_initialized = 0;
 
@@ -83,47 +77,13 @@ static void csetmode(int mode)             /* 1 means raw, no echo, one characte
  */   
 
 
-extern int ttu_process_command_line(int *argcp, char **argv)
+extern int ttu_process_command_line(int *argcp,
+                                    char **argv,
+                                    int *use_escapes_for_drawing_people_p,
+                                    char *pn1,
+                                    char *pn2,
+                                    char **direc_p)
 {
-   int i;
-   int argno = 1;
-
-   while (argno < (*argcp)) {
-      if (strcmp(argv[argno], "-no_line_delete") == 0)
-         no_line_delete = 1;
-      else if (strcmp(argv[argno], "-no_cursor") == 0)
-         no_cursor = 1;
-      else if (strcmp(argv[argno], "-no_graphics") == 0) ;   /* ignore this */
-      else if (strcmp(argv[argno], "-lines") == 0 && argno+1 < (*argcp)) {   /* ignore this */
-         goto remove_two;
-      }
-      else if (strcmp(argv[argno], "-journal") == 0 && argno+1 < (*argcp)) {
-         journal_file = fopen(argv[argno+1], "w");
-
-         if (!journal_file) {
-            printf("Can't open journal file\n");
-            perror(argv[argno+1]);
-            return 1;
-         }
-
-         goto remove_two;
-      }
-      else {
-         argno++;
-         continue;
-      }
-
-      (*argcp)--;      /* Remove this argument from the list. */
-      for (i=argno+1; i<=(*argcp); i++) argv[i-1] = argv[i];
-      continue;
-
-      remove_two:
-
-      (*argcp) -= 2;      /* Remove two arguments from the list. */
-      for (i=argno+1; i<=(*argcp); i++) argv[i-1] = argv[i+1];
-      continue;
-   }
-
    return 0;
 }
 
@@ -135,9 +95,22 @@ extern void ttu_display_help(void)
    printf("-journal <filename>         echo input commands to journal file\n");
 }
 
+extern void ttu_set_window_title(char s[])
+{
+}
+
+
 extern void ttu_initialize(void)
 {
-#ifndef NO_CURSES
+   /* This code uses "no_cursor" rather than "no_console"
+      to direct what it does.  So, if "no_console" is on,
+      we take appropriate action. */
+
+   no_cursor |= no_console;
+
+#ifdef NO_CURSES
+   no_cursor = 1;
+#else
    if (!no_cursor) {
       initscr();    /* Initialize "curses". */
       noecho();     /* Don't echo; we will do it ourselves. */
@@ -400,7 +373,7 @@ extern void erase_last_n(int n)
 #endif
 }
 
-extern void put_line(char the_line[])
+extern void put_line(const char the_line[])
 {
 #ifndef NO_CURSES
    if (!no_cursor) {
@@ -437,7 +410,7 @@ extern int get_char(void)
    if (!no_cursor) {
       int c = getch();      /* A "curses" call. */
       /* Handle function keys. */
-      return c >= 0410 ? c-0410+128 : c;
+      return c >= 0410 ? c-0410+FKEY : c;
    }
    else {
       csetmode(1);         /* Raw, no echo, single-character mode. */
@@ -469,7 +442,7 @@ extern void get_string(char *dest)
 }
 
 
-extern void bell(void)
+extern void ttu_bell(void)
 {
 #ifndef NO_CURSES
    if (!no_cursor) {

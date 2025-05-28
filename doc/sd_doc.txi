@@ -5,8 +5,8 @@
 @settitle Sd
 @c @subtitle A Square Dance Caller's Helper
 @c
-@set Time-stamp: September 20, 1998
-@set sd-version 32.0c
+@set Time-stamp: October 31, 1998
+@set sd-version 32.2
 @set full-manual
 @c %**end of header
 @iftex
@@ -121,6 +121,7 @@ The Initialization File
 
 * Session Control::             Session Control
 * Option Control::              Option Control
+* Accelerator Key Control::     Accelerator Key Control
 * Sample Initialization Files:: Sample Initialization Files
 
 Calling
@@ -134,6 +135,7 @@ Calling
 * Call Menus::                    call menus
 * Scrolling::                     the call menu scroll bar
 * Entering Concepts::           Entering Concepts
+* Supercalls::                  Supercalls
 * Call Modifications::          Call Modifications
 * Retaining Concepts After an Error:: Retaining Concepts After an Error
 * Asymmetric Selectors::        Asymmetric Selectors
@@ -195,7 +197,7 @@ Call Notes
 * Hocus Pocus::                 Hocus Pocus
 * Funny Square Thru::           Funny Square Thru
 * Rotate from Columns::         Rotate from Columns
-* Recycle/Cross Cycle/Scoot and Weave/Couple Up:: Recycle has two forms in the Database
+* Recycle/Cross Cycle/Scoot and Weave/Couple Up/<ANYONE> tie:: These have two forms in the Database
 * Adjust Alamo to Other Pairing:: Adjust Alamo to Other Pairing
 * Going Through Impossible Situations:: Going Through Impossible Situations
 * Matrix Calls in 1/4 Tags::    Matrix Calls in 1/4 Tags
@@ -605,19 +607,32 @@ The following options are specific to the terminal-based version,
 
 @table @code
 @item -no_cursor
-dumb terminal mode: do not use cursor motion commands to keep the screen
+Dumb terminal mode: do not use cursor motion commands to keep the screen
 up-to-date efficiently.  Use this if the cursor motion and screen manipulation
 operations of your terminal or operating system are not available or are not
 working satisfactorily.  @xref{Sdtty}.
-@item -lines @var{nlines}
-the number of lines on the screen.  Default is 25.
-@item -no_line_delete
-do not use the insert line or delete line cursor control commands.  Use this
-if these commands are not working satisfactorily on your terminal.
+@item -no_console
+Extremely dumb terminal mode: turn off all special input/output processing completely.
+This allows input or output to be redirected from files.
+@item -no_color
+On Windows and other systems that support it, @code{Sdtty} color-codes the dancers
+shown on the screen.  This option disables the use of color.
+Pictures drawn in the output file will never be in color.
+@item -no_intensify
+On Windows, @code{Sdtty} displays text at
+full brightness, rather than the 3/4 brightness that is the default for command
+prompt windows.  This option leaves the brightness at its default value.
 @item -no_graphics
 Suppress the use of special PC graphics characters when drawing pictures
 on the screen.  These characters are not standard on all PC's.  Pictures
 drawn in the output file will never use the special graphics characters.
+@item -no_sound
+Do not ring the bell or make any other sound when reporting errors.
+@item -lines @var{nlines}
+The number of lines on the screen.  Default is 25.
+@item -no_line_delete
+Do not use the insert line or delete line cursor control commands.  Use this
+if these commands are not working satisfactorily on your terminal.
 @end table
 
 @node Abridgement,  , Command-Line Options, Invoking Sd
@@ -702,6 +717,7 @@ workshop          C1           75     My Wednesday group
 @menu
 * Session Control::             Session Control
 * Option Control::              Option Control
+* Accelerator Key Control::     Accelerator Key Control
 * Sample Initialization Files:: Sample Initialization Files
 @end menu
 
@@ -769,6 +785,10 @@ workshop          C1           87     My Wednesday group
 
 so that the next session for that group would start with sequence number 87.
 
+On the PC and other systems that support it, the title bar displays the
+sequence number at which this run of the program started, and the current
+sequence number.
+
 If, at any time during the session, you changed the output file
 (with the @code{Change Output File} operation) or the
 title (with the @code{Change Title} operation),
@@ -805,7 +825,7 @@ You can also edit the file with an editor.  Simple editors, such as
 this file, since word processors often insert specialized control information
 into the file.
 
-@node Option Control, Sample Initialization Files, Session Control, The Initialization File
+@node Option Control, Accelerator Key Control, Session Control, The Initialization File
 @section Option Control
 
 Each line after the line @code{[Options]}, up until a blank line
@@ -859,15 +879,120 @@ you had typed when an error occurs.  @xref{Retaining Concepts After an Error}.
 
 @noindent You can edit the file with an editor such as @samp{notepad}.
 
-@node Sample Initialization Files, , Option Control, The Initialization File
+@node Accelerator Key Control, Sample Initialization Files, Option Control, The Initialization File
+@section Accelerator Key Control
+
+The text of the @file{sd.ini} initialization file, from the line
+@code{[Accelerators]} up to the next blank line or the end of the
+file, consists of key definitions, one per line, or comments.
+A comment is any line starting with a ``pound sign'' (@code{#}).
+The first item on a non-comment line is a description of the key,
+and the remaining items are the meaning, exactly as you would type
+it to @code{Sdtty}.  The meaning may be any single call, concept,
+or special command.  (To see what special commands are available,
+type a question mark during a resolve, during program startup, or
+during normal program operation.)
+
+Keys may have different definitions during program startup, during
+resolves, and during normal operation.
+
+If the first character of
+the key description is a plus sign (@code{+}), that key definition
+line is meaningful during program startup.  For example, the standard
+definition contains the line
+@example
+@group
+   +f1    heads start
+@end group
+@end example
+@noindent to indicate that function key @key{F1} means @code{heads start}
+during program startup.
+
+If the first character of
+the key description is an asterisk (@code{*}), that key definition
+line is meaningful during resolve searches.  For example, the standard
+definition contains the line
+@example
+@group
+   *f12   find another
+@end group
+@end example
+@noindent to indicate that function key @key{F12} means @code{find another}
+during resolves.
+
+It is perfectly legal to have the same keystroke mean three different
+things during startup, during resolves, and during normal operation.
+
+After the optional plus sign or asterisk, there may be an optional
+@code{s} to mean shift, @code{c} to mean control, @code{a} to mean alt,
+or @code{ca} to mean control-alt (hold both the control and alt keys
+while pressing the indicated key).
+
+@noindent What follows must be
+@table @code
+@item @r{a letter}
+Usable only with @code{c}, @code{a}, or @code{ca}.  (Plain and
+capital letters always have their normal meaning.)
+@item @r{a digit}
+Usable only with @code{c}, @code{a}, or @code{ca}.  (Plain digits
+always have their normal meaning, and shift digits are punctuation.)
+@item @r{a function key: f1 through f12}
+These may be plain, shifted, control, alt, or control-alt.
+@item @r{an ``enhanced'' key: e1 through e14}
+These may be plain, shifted, control, alt, or control-alt.
+@end table
+
+@noindent The ``enhanced'' keys are encoded as follows:
+@example
+@group
+   e1     page up
+   e2     page down
+   e3     end
+   e4     home
+   e5     left arrow
+   e6     up arrow
+   e7     right arrow
+   e8     down arrow
+   e13    insert
+   e14    delete
+@end group
+@end example
+@noindent So, for example, the line:
+@example
+@group
+   +cae8  u-turn back
+@end group
+@end example
+@noindent would define @code{control-alt-<down-arrow>} to do a
+@samp{U-turn back}.
+
+If a key is defined to mean a concept, and that concept is not legal at
+the level at which the program is invoked, the key will still mean that
+concept.  If the key is pressed, the concept will be used, but it will be
+considered an off-level concept, and a warning will be printed.
+@xref{Using Off-Level Concepts}.
+
+If a key is defined to mean a call, and that call is not legal at the
+level at which the program is invoked, that key definition in the
+initialization file will simply be ignored, unless the level is C4X.
+Therefore, whenever you change your initialization file, it is a good
+idea to test it by starting the program at C4X to find out if any warning
+messages are printed.
+
+@node Sample Initialization Files, , Accelerator Key Control, The Initialization File
 @section Sample Initialization Files
 
 When @code{Sd} or @code{Sdtty} is installed, no initialization file exists,
-but the files @file{sample1.ini} and @file{sample2.ini} are provided for you
+but the files @file{sample1.ini}, @file{sample2.ini} and @file{sample3.ini}
+are provided for you
 in the working directory.  The @file{sample1.ini} file shows an example of
-the ``session'' mechanism only, and @file{sample2.ini} show both mechanisms.
+the ``session'' mechanism only, and @file{sample2.ini} show both the
+''session'' and ``option'' mechanisms.
 The @file{sample2.ini} file is the same as the example shown previously.
-You can copy either file to @file{sd.ini} and edit it if you wish.
+The @file{sample3.ini} file is the same as @file{sample1.ini}, but it
+has an @code{[Accelerators]} section containing all of the standard key
+bindings, plus a number of other helpful suggested bindings.
+You can copy any of these files to @file{sd.ini} and edit it if you wish.
 
 @node Calling, Resolving and Searching, The Initialization File, Top
 @chapter Calling
@@ -879,6 +1004,7 @@ generate a sequence of calls of your choosing.
 * Startup Menu::                The Startup Menu
 * Entering Calls::              Entering Calls
 * Entering Concepts::           Entering Concepts
+* Supercalls::                  Supercalls
 * Call Modifications::          Call Modifications
 * Retaining Concepts After an Error:: Retaining Concepts After an Error
 * Asymmetric Selectors::        Asymmetric Selectors
@@ -1343,7 +1469,7 @@ percentage down the menu that is equal to the percentage that the cursor
 is down from the top of the scroll bar.  If the mouse is moved while the
 middle mouse button is held down, the menu will scroll in real time.
 
-@node Entering Concepts, Call Modifications, Entering Calls, Calling
+@node Entering Concepts, Supercalls, Entering Calls, Calling
 @section Entering Concepts
 
 A call may be preceded by concepts, which modify the action of the call.
@@ -1485,7 +1611,58 @@ When you select any concept, the universal call menu replaces whatever
 special call menu may have been presented, since the set of legal calls
 becomes highly unpredictable.
 
-@node Call Modifications, Retaining Concepts After an Error, Entering Concepts, Calling
+@node Supercalls, Call Modifications, Entering Concepts, Calling
+@section Supercalls
+
+Thinking in mathematical or computer terms, a concept is a ``function'' that
+operates on an ``argument''.  That argument is a call, or perhaps another
+application of a concept to another argument.  For example, in @samp{tandem lockit},
+the function @samp{tandem} applies to the argument @samp{lockit}.
+
+Calls of the @samp{clover and [anything]} variety behave the same way.  This call takes
+an ``argument'' call, and has the centers do that while the outsides cloverleaf.
+Such a thing is called a ``supercall''.  It could just as easily have been considered
+a concept.
+
+The significance of this is that some concepts, called ``meta-concepts'', operate
+on @emph{concepts} rather than on calls or concept-call combinations.  Examples
+of meta-concepts are @samp{random}, @samp{initially}, @samp{finally}, and @samp{echo}.
+Since supercalls are like concepts, meta-concepts can operate on them.
+
+What would happen if we applied the @samp{finally} concept to the supercall
+combination @samp{clover and [right and left thru]}?  We do the @samp{right and left thru}
+without the ``concept'' up until the last part.  The ``concept'' is
+@samp{clover and [anything]}.  If we skip the concept, we just do the
+@samp{right and left thru} up to the last part.  That is, we do a right pull by.
+Then, for the last part, which is a courtesy turn, we apply the supercall.
+That is, we do a @samp{clover and [courtesy turn]}.  So @samp{finally clover and
+[right and left thru]} is danced as:
+@example
+@group
+   right pull by
+   clover and [courtesy turn]
+@end group
+@end example
+@code{Sd} can handle straightforward cases of supercalls with meta-concepts.
+You must enter the supercall in the square bracket notation.  That is, you
+may not use the method of typing @code{<anything>} and expecting to type in the
+second call later.
+
+Because the search mechanism (@code{pick random call}, etc.) does not fill in
+subcalls, it will not find applications of meta-concepts and supercalls.  Sorry.
+
+Some supercalls take their ``argument'' call at the beginning of the phrase
+rather than the end, as in @samp{[anything] and roll}.  Such supercalls don't
+scan very tastefully.  For example, @samp{echo [hinge] and roll} means that
+the ``and roll'' is applied first, even though it is at the end of the phrase.
+We do a @samp{[hinge] and roll} first, and then just a @samp{hinge}.  The word
+order doesn't make that clear.
+
+Supercalls in which the @samp{[anything]} call is at the end, like @samp{busy
+[anything]}, @samp{transfer and [anything]}, @samp{eight by [anything]}, and
+@samp{dodge [anything]} are much more likely to be executed successfully.
+
+@node Call Modifications, Retaining Concepts After an Error, Supercalls, Calling
 @section Call Modifications
 
 Some calls can be modified in a natural way, such as @samp{catch [fan the top] 3},
@@ -2171,8 +2348,7 @@ Type @key{TAB} or @key{ESC} to complete as much as possible.
 Type @kbd{C-u} (that is, Control U) to clear a partially-typed line.
 
 @code{Sdtty} has a special command @code{refresh display}
-that has no counterpart in
-the window-based version.  It causes a complete clean transcript
+that has no counterpart in @code{Sd}.  It causes a complete clean transcript
 of the current sequence to be displayed.  This can be used if the screen got
 messed up due to such things as unreliable terminal or modem behavior.
 
@@ -2180,23 +2356,33 @@ messed up due to such things as unreliable terminal or modem behavior.
 maintaining a clean transcript of the current sequence on the screen
 at all times, by using whatever Operating System facilities it thinks are
 appropriate.  If, for any reason, this doesn't work properly for you,
-you can give the @code{-no_cursor} switch at program startup to disable
-that.  @xref{Command-Line Options}.
+you can place the @code{no_cursor} option in your initialization file, or the
+@code{-no_cursor} command-line switch at program startup.
+@xref{Option Control} and @ref{Command-Line Options}.
 This will cause @code{Sdtty} to treat the computer's display as
 if it were a dumb typewriter.  When started in this way, the part of
 the transcript that has changed with each command is simply redisplayed.
 This will inevitably lead to a choppy appearance on the screen or
 printing device.  The @code{refresh display} command cleans that up.
 
+You can totally disable all special input/output processing by placing
+the @code{no_console} option in your initialization file, or using the
+@code{-no_console} command-line switch at program startup.
+This should even make it possible to use the program from a printing device,
+or to redirect input or output to files.
+
 To deal with different types of display hardware with various screen sizes,
 the @code{-lines @var{n}} switch can be given at program startup, as in
 @code{sdtty -lines 36 a2}.  The default size is 25.
 
 @node Function Keys in Sdtty, Sdtty on Unix, Sdtty, Terminal Interface
-@section Function Keys in Sdtty
+@section Function Keys
 
-On the PC, @code{Sdtty} recognizes a number of function keys.  These
-perform the following commands:
+On Windows and other systems that allow it,
+@code{Sdtty} recognizes a number of function keys and other
+special keystrokes.  They can be programmed to your personal preferences
+through the initialization file.  The default key interpretations are as
+follows:
 
 @example
 @group
@@ -2210,25 +2396,64 @@ F5   refresh display          keep picture             insert a comment
 F6   simple modifications     allow modifications      centers
 F7   toggle concept levels    toggle active phantoms
 F8   <anything>               cut to clipboard         paste one call
-F9   undo last call           abort the search
+F9   undo last call/exit search/exit program
 F10  write this sequence      change output file
 F11  pick level call          pick 8 person level call
 F12  find another             accept current choice    previous
 @end group
 @end example
 
-All of these except @samp{<anything>} execute the command
-directly, that is, pressing the function key is equivalent to typing the indicated
-text and then pressing
-@key{ENTER}.
-The key for @samp{<anything>} is simply equivalent to entering that text without pressing
-@key{ENTER}.
+@noindent Additionally, @key{alt-F4} exits from the program, @key{alt-F12}
+means ``next'' inside a search, and the
+following special keys are defined:
+@example
+@group
+<home>             resolve
+<end>              write this sequence
+<insert>           insert a comment
+<up-arrow>         previous
+<down arrow>       next
+shift-<up-arrow>   raise reconcile point
+shift-<down arrow> lower reconcile point
+<left-arrow>       previous     (same as <left-arrow>)
+<right-arrow>      find another
+@end group
+@end example
+All of these except @key{F8} execute the command directly, that is,
+pressing the function key is equivalent to typing the indicated
+text and then pressing @key{ENTER}.  Furthermore, these keys erase
+any text that you may have typed in on the present line.  Therefore,
+if you define, for example, @key{alt-S} to mean ``swing thru'', do not type
+@example
+@group
+   left @key{alt-S}
+@end group
+@end example
+@noindent Instead, type in the @samp{left} concept by itself:
+@example
+@group
+   left @key{ENTER}
+   @key{alt-S}
 
-The function key
-@key{F8}
-is present only for compatibility with past usage.  It is almost never necessary
+@end group
+@end example
+The key @key{F8} for @samp{<anything>} is simply equivalent to
+entering that text without pressing @key{ENTER}.
+This key is present only for compatibility with past usage.
+It is almost never necessary
 to type ``<anything>''.  Instead, type the substituted call in
 brackets.  @xref{Call Variations}.
+
+You can program the function keys to your own preference by placing
+an @code{[Accelerators]} section in your @file{sd.ini} initialization
+file.  If you do not have an initialization file, or you have one
+but there is no @code{[Accelerators]} section in it, the key bindings
+will be set to the default bindings shown above.  If you have in
+initialization file with an @code{[Accelerators]} section, the default
+bindings will @emph{not} be used.  The contents of the @code{[Accelerators]}
+section will be used instead.   @xref{Accelerator Key Control} for information
+about setting up an @code{[Accelerators]} section in your initialization
+file.
 
 @node Sdtty on Unix,  , Function Keys in Sdtty, Terminal Interface
 @section Sdtty on Unix
@@ -2240,9 +2465,14 @@ However, this requires that all of the system facilities for dealing with
 terminals (@code{TERM} environment variable, @code{terminfo} database,
 @code{stty} behavior, etc.) be working properly.
 If, for any reason, this doesn't
-work for you, you can turn the @i{curses} mechanism off completely by using the
-@code{-no_cursor} command-line switch at program startup.  This should even
-make it possible to use the program from a printing device.
+work for you, you can turn the @i{curses} mechanism off completely by placing the
+@code{no_cursor} option in your initialization file, or using the
+@code{-no_cursor} command-line switch at program startup.
+You can also place the @code{no_console} option in your initialization file, or use the
+@code{-no_console} command-line switch at program startup, to disable all
+special input/output processing completely.  This should even
+make it possible to use the program from a printing device, or to redirect
+input or output to files.
 
 When using @i{curses}, it normally tries to use the insert/delete line
 capabilities of your terminal device to update the screen more efficiently.
@@ -2379,7 +2609,7 @@ This section documents these calls.
 * Hocus Pocus::                 Hocus Pocus
 * Funny Square Thru::           Funny Square Thru
 * Rotate from Columns::         Rotate from Columns
-* Recycle/Cross Cycle/Scoot and Weave/Couple Up:: Recycle has two forms in the Database
+* Recycle/Cross Cycle/Scoot and Weave/Couple Up/<ANYONE> tie:: These have two forms in the Database
 * Adjust Alamo to Other Pairing:: Adjust Alamo to Other Pairing
 * Going Through Impossible Situations:: Going Through Impossible Situations
 * Matrix Calls in 1/4 Tags::    Matrix Calls in 1/4 Tags
@@ -2764,7 +2994,7 @@ on one line, rather than pressing
 after the word @code{funny}.
 In @code{Sd}, the call menu will have @code{funny square thru <n>}.
 
-@node Rotate from Columns, Recycle/Cross Cycle/Scoot and Weave/Couple Up, Funny Square Thru, Call Notes
+@node Rotate from Columns, Recycle/Cross Cycle/Scoot and Weave/Couple Up/<ANYONE> tie, Funny Square Thru, Call Notes
 @section Rotate from Columns
 
 Remember that @i{rotate} and @i{single rotate} from columns are legal only
@@ -2772,8 +3002,8 @@ at C3, but from lines they are legal at C2.  Since the program has no
 knowledge of different starting setups implying different levels, the call
 is in the database at C2.  Don't use it from columns at that level.
 
-@node Recycle/Cross Cycle/Scoot and Weave/Couple Up, Adjust Alamo to Other Pairing, Rotate from Columns, Call Notes
-@section Recycle, Cross Cycle, Scoot and Weave, and Couple Up
+@node Recycle/Cross Cycle/Scoot and Weave/Couple Up/<ANYONE> tie, Adjust Alamo to Other Pairing, Rotate from Columns, Call Notes
+@section Recycle, Cross Cycle, Scoot and Weave, Couple Up, Anyone Tie
 
 There are two @i{recycle} calls in the database: @samp{recycle} can be done
 from waves, facing couples, right-handed boxes, or a couple facing a
@@ -2790,13 +3020,14 @@ To permit fractional use of recycle, as with
 @samp{recycle (parts)}, which can be done only from waves.  Use this call
 (but don't read the ``parts'' word) when fractions are required.
 
-The calls @samp{cross cycle}, @samp{scoot and weave}, and @samp{couple up}
+The calls @samp{cross cycle}, @samp{scoot and weave}, @samp{couple up}, and @samp{<anyone> tie}
 have similar problems.  When you want to perform some concept that requires
 dividing them into parts, you must use the version of the call that has the
 word ``(parts)'' after it.  When you do this, certain other aspects of the
 call (such as the ability to to it from all positions) are compromised.
+Hence they should only be used when fractionalization is required.
 
-@node Adjust Alamo to Other Pairing, Going Through Impossible Situations, Recycle/Cross Cycle/Scoot and Weave/Couple Up, Call Notes
+@node Adjust Alamo to Other Pairing, Going Through Impossible Situations, Recycle/Cross Cycle/Scoot and Weave/Couple Up/<ANYONE> tie, Call Notes
 @section Adjust Alamo to Other Pairing
 
 The program's notion of where people are in an alamo ring is rather imprecise.
@@ -3099,6 +3330,12 @@ shape-changers are allowed.
 A common case of this is a 4x4.  The center phantom lines or columns
 can do an 8-person call.  The outer phantom lines or columns can do
 independent 4-person calls.
+@item 12 matrix center phantom C/L
+@item 12 matrix outside phantom C/L
+These are done from a setup that can be construed as having a center
+6-person setup with two other 3-person setups on the outside.  The center
+setup can be different from the outside setups, and reasonable independent
+shape-changers are allowed.
 @item center triple twin C/L/W
 @item outside triple twin C/L/W
 These are done from a 4x6 setup.  The center 2x4, or the outside 2x4's
@@ -3500,6 +3737,7 @@ See @ref{Assume Waves} and @ref{Assuming a Quarter-Tag}.
 This inverts the centers' and ends' parts of the call.
 @item fan
 @item yoyo
+@item fractal
 @item straight
 @item twisted
 @item central
@@ -3680,8 +3918,12 @@ These are followed by the concept to which they apply.
 @xref{Anyone Start}, for more on the @code{initially} concept.
 @item shifty
 @item shift <N>
+@item shift 1/2
+@item shift <N>-1/2
 @item interlace@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
 @item reverse order
+@item echo
+@item reverse echo
 These are straightforward.
 @item finish
 @item like a

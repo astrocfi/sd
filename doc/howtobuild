@@ -1,7 +1,7 @@
           HOW TO RELEASE A NEW VERSION OF SD
 
      This file is \wba\sddoc\howtobuild.
-        Last modified 20 Sept 1998.
+        Last modified 27 Sept 1998.
 
 -----------------------------------------------------------------
 
@@ -54,8 +54,8 @@ Go to sddoc directory and do:
     do_pdf
     do_html
     do_download-pc
-    do_download-unix   (at MPG, if HP-UX release is desired)
-    do_hpux            (at MPG, if HP-UX release is desired)
+    do_download-unix   (at MPG, if HP-UX release is desired, see below)
+    do_hpux            (at MPG, if HP-UX release is desired, see below)
 
 This creates these files, all in the sddoc directory:
 
@@ -65,7 +65,6 @@ This creates these files, all in the sddoc directory:
     pdf.zip    /  pdf.txt       |   These files get mailed
     html.zip   /  html.txt      |   to update the web page.
     dnp.zip    /  dnp.txt       |
-    dlu.zip    /  dlu.txt       |
     dnu.zip    /  dnu.txt       |   (HP-UX only)
     hpux.zip   /  hpux.txt      /   (HP-UX only)
 
@@ -95,7 +94,7 @@ To mail files for web update:
 
   * Start cc:Mail
 
-  * Alt-MM    double click "Any Name or Post Office"  <RET>
+  * Alt-MM    double click "Any Name or Post Office"
 
   * <TAB>  downarrow to "ftp-update@gildea.com"  <RET>
 
@@ -118,12 +117,63 @@ To mail files for web update:
 
 Local files:
 
-Copy all but psdoc.exe to a new release directory named "vnnnn".
+Copy all but psdoc.exe to a new release directory "\wba\vnnnn".
 Copy the "label" file there also.
 
 (Psdoc.exe would overflow the disk.)
 
 To prepare a diskette, copy the entire contents of that directory.
+
+-----------------------------------------------------------------
+
+                  MAKING HP-UX VERSION
+
+Delete .tmp files from regress directory -- they just waste time
+sending to HP-UX.
+
+telnet to hpanee1:
+   cd sd
+   rm *
+   cd regress
+   rm *
+
+ftp to hpanr0:
+   cd sd
+   lcd sd
+   prompt
+   mput *.c
+   mput *.h
+   mput makefile*
+   put sd_calls.txt
+   cd regress
+   lcd regress
+   mput *
+
+telnet to hpanee1:
+   cd sd
+   make -f makefile.hpux
+   cd regress
+   chmod 777 *
+   hdoit.cmd > log
+Examine log when finished.
+
+ftp to hpanr0:
+   cd sd
+   lcd sd
+   binary
+   get sdtty
+   get mkcalls
+
+on hpansdx:
+   Be sure version number is updated in download-unix.html
+   cd sddoc
+   do_hpux
+   do_download-unix
+Then mail these:
+    dnu.zip    /  dnu.txt
+    hpux.zip   /  hpux.txt
+
+
 
 -----------------------------------------------------------------
 

@@ -377,34 +377,19 @@ Explorer (or Windows 95 Explorer, or Windows NT Explorer) is typically in the
 @code{Programs} sub-menu of the @code{Start} menu.
 
 Navigate to the @code{C:\SD} folder.  This typically
-requires double-clicking that folder in the left window pane.  Now find the
-``shortcut'' in the right window pane.  It is the file @code{sdtty.pif}.
-Depending on personal options you may
-have set in the Explorer, this might be displayed in different ways.  The one thing
-that will always identify it is that its icon will be red and blue interlocking
-squares with a small arrow-like thing in the lower left corner.  Drag-and-drop
-it to the Desktop.  That is, move the mouse to it and press and hold the left
-mouse button.  Now move the mouse to any unused area on the screen (``desktop'').
-Release the mouse button.  That's all there is to it.  @code{Sdtty} may now be
-started by double-clicking the icon on the Desktop.
+requires double-clicking that folder in the left window pane.
+You will see 3 command files (``batch files'') called @code{Do_desk.cmd},
+@code{Do_start.cmd}, and @code{Do_prog.cmd}.  Depending on how you want
+to access @code{Sdtty}, execute one of them by double-clicking it:
 
-@unnumberedsubsec If you want it in the Start Menu
-
-If you want it in the Start Menu instead of the Desktop, first install
-it to the desktop as described above.  Then navigate in the Windows Explorer
-to the Start Menu folder.  This can be tricky.  Navigate first to the main system folder.
-This may be called
-``windows'' or ``Winnt''.  Then double-click ``Profiles'', then ``All Users'',
-and then ``Start Menu''.  Placing the program here will put it in the ``top level''
-Start Menu.  That is, it will be one of the choices offered when you click @code{Start}.
-If you want it instead in one of the submenus (say, @code{Programs}), double-click
-that subfolder.
-
-Once you have the correct folder open, go to the place where you left the @code{Sdtty}
-shortcut on the Desktop.  Drag-and-drop it from the Desktop to the chosen folder.  That is,
-position the mouse over the @code{Sdtty} icon on the desktop, and press and hold the
-left mouse button.  Now move the mouse to the right pane of the Windows Explorer,
-and release the mouse button.
+@table @code
+@item Do_desk.cmd
+This will place the @code{Sdtty} icon on the desktop.
+@item Do_start.cmd
+This will place the @code{Sdtty} icon in the main @code{Start} menu.
+@item Do_prog.cmd
+This will place the @code{Sdtty} icon in the @code{Programs} submenu.
+@end table
 
 @unnumberedsubsec Under Windows 3.1 or early versions of Windows NT
 From the Program Manager, double-click the program group you want to place it in,

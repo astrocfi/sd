@@ -9,7 +9,7 @@ srcdir = .
 # it operate the way we want (ANSI language, standards conformance,
 # target hardware, etc.)
 # To get gcc on Athena, "add outland" before running "configure".
-CC = cc -Aa -z +DA1.1 -D_AES_SOURCE +w1
+CC = /opt/ansic/bin/cc -Aa -z +DA1.1 -D_AES_SOURCE +w1
 
 # This gives any "-D" switches that we always need to send to the compiler.
 DEFS = 
@@ -28,7 +28,7 @@ CFLAGS = $(DEFS) $(CDEBUGFLAGS)
 
 # These are the "-I"  and "-D" flags that we must use for the compilation
 # of the X11 user interface (sdui-x11.c).
-X11_FLAGS = 
+X11_FLAGS = -I.
 
 # These are the "-I"  and "-D" flags that we must use for the compilation
 # of the system-dependent part of the TTY user interface (sdui-ttu.c).
@@ -36,7 +36,7 @@ TTY_FLAGS =
 
 # These are the library flags that we must use for the final bind of
 # the X11 version of "sd".
-X11_LIBS = -L/usr/lib/X11R5 -lXaw -lXmu -lXt  -lXext -lX11 
+X11_LIBS = -L. -lXaw -lXmu -lXt -lXext -lX11 
 
 # These are the library flags that we must use for the final bind of
 # "sdtty".
@@ -57,12 +57,11 @@ SDX11_OBJ = sdui-x11.o
 
 # This has all special source files for sdtty,
 # for making the distribution and running lint.
-SDTTY_SRC = sdui-tty.c sdmatch.c sdui-ttu.c sdui-tpc.c
+SDTTY_SRC = sdui-tty.c sdmatch.c sdui-ttu.c
 SDTTY_OBJ_UNIX = sdui-tty.o sdmatch.o sdui-ttu.o
 SDTTY_OBJ_PC   = sdui-tty.o sdmatch.o sdui-tpc.o
 # This has the special object files used for building this version of sdtty.
 SDTTY_OBJ = $(SDTTY_OBJ_UNIX)
-
 SDTTY_OBJS = $(SD_OBJS) $(SDTTY_OBJ)
 
 MKCALLS_SRCS = mkcalls.c dbcomp.c
@@ -76,8 +75,9 @@ allx11: sd sd_calls.dat
 alltty: sdtty sd_calls.dat
 everything: allx11 sdtty
 
-LDPRELIBS = 
-LDPOSTLIBS = 
+LDPRELIBS = -Wl,+b:
+LDPOSTLIBS =
+
 
 sd: $(SD_OBJS) $(SDX11_OBJ)
 	$(CC) $(CFLAGS) -o $@ $(SD_OBJS) $(SDX11_OBJ) $(LDPRELIBS) $(X11_LIBS) $(LDPOSTLIBS)
@@ -107,6 +107,10 @@ sdui-x11.o: sdui-x11.c
 
 sdui-ttu.o: sdui-ttu.c
 	$(CC) $(CFLAGS) $(TTY_FLAGS) -c $(srcdir)/$*.c
+
+sdui-tty.o sdmatch.o: sdmatch.h
+
+sdui-tty.o sdui-ttu.o sdui-tpc.o: sdui-tty.h
 
 dbcomp.o sdmain.o sdsi.o sdui-x11.o: paths.h
 
@@ -202,13 +206,7 @@ DISTTXT = README INSTALL Relnotes oldnotes COPYING sample1.ini sample2.ini demo.
             Imakefile Makefile.in configure.in configure Sd.res sd_calls.txt \
             db_doc.txt sd_doc.PS sd_doc.txt
 DISTSRCS = sd.h database.h paths.h sdui-ttu.h sdmatch.h
-MACFILES = MacSd.p.Hqx MacSd.p.rsrc.Hqx Macwdef.p.Hqx \
-            macalert.c maccomp.c macdlog.c macevent.c macguts.h maclabel.c \
-            macmatch.c macmenu.c macpref.c macrec.c macsel.c macstart.c \
-            macstuff.c mactext.c macutil.c macwdef.c macwin.c macwmgr.c \
-            sdsi-mac.c sdui-mac.c
-PCFILES = pcfiles.lnk makefile.pc
-DISTFILES = $(DISTTXT) $(DOCSRCS) $(SRCS) $(DISTSRCS) $(PCFILES)
+DISTFILES = $(DISTTXT) $(DOCSRCS) $(SRCS) $(DISTSRCS)
 
 TAR = tar
 TARFLAGS = cvfh
@@ -220,24 +218,12 @@ dist: dist-files
 	$(RM) $(DIST_TARFILE).Z
 	$(COMPRESS) $(DIST_TARFILE)
 
-dist-files: configure Makefile INSTALL README sd_doc.txt sd_doc.PS pc-files
+dist-files: configure Makefile INSTALL README sd_doc.txt sd_doc.PS
 
 ls:
 	@echo $(DISTFILES)
 
-pcdist: sd3166bn
-
-sd3166bn: sdtty.exe mkcalls.exe sd_calls.dat
-	lha a $@ readme relnotes oldnotes
-	lha a $@ sdtty.exe mkcalls.exe cwsdpmi.exe sdtty.pif
-	lha a $@ sample1.ini sample2.ini demo.txt demo.ps sessions.txt sessions.ps
-	lha a $@ sd_calls.txt sd_calls.dat db_doc.txt
-	lha a $@ sd_doc.txt sd_doc.ps
-	lha s $@
-
 BIN_TARFILE = sd-31.66-unknown.tar
-
-
 
 TARFILES1 = README Relnotes oldnotes
 TARFILES2 = sd sdtty mkcalls \
@@ -249,19 +235,3 @@ $(BIN_TARFILE).Z: Makefile $(TARFILES2) $(TARFILES1)
 	$(TAR) $(TARFLAGS) $(BIN_TARFILE) $(TARFILES1) $(TARFILES2)
 	$(RM) $@
 	-$(COMPRESS) $(BIN_TARFILE)
-
-pc-files: $(PCFILES)
-
-pcfiles.lnk: Makefile.in
-	rm -f $@
-	for obj in $(SD_OBJS) $(SDTTY_OBJ_PC); do echo $$obj; done >> $@
-
-LN = ln -s
-
-makefile.pc: configure Makefile.in
-	-rm -f config.cache
-	-mv config.status config.status.save
-	-$(LN) Makefile.in makefile.pc.in
-	$(srcdir)/configure --with-pc
-	-mv config.status.save config.status
-	-rm makefile.pc.in

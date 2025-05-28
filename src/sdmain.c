@@ -23,8 +23,8 @@
     General Public License if you distribute the file.
 */
 
-#define VERSION_STRING "32.0c"
-#define TIME_STAMP "wba@an.hp.com  13 September 98 $"
+#define VERSION_STRING "32.2"
+#define TIME_STAMP "wba@an.hp.com  30 October 98 $"
 
 /* This defines the following functions:
    sd_version_string
@@ -73,7 +73,6 @@ and the following external variables:
    using_active_phantoms
    elide_blanks
    retain_after_error
-   alternate_person_glyphs
    singing_call_mode
    diagnostic_mode
    current_options
@@ -183,7 +182,6 @@ long_boolean using_active_phantoms = FALSE;
 long_boolean elide_blanks = FALSE;
 #endif
 long_boolean retain_after_error = FALSE;
-int alternate_person_glyphs = 0;
 int singing_call_mode = 0;
 long_boolean diagnostic_mode = FALSE;
 call_conc_option_state current_options;
@@ -1797,6 +1795,7 @@ Private uint32 translate_selector_fields(parse_block *xx, uint32 mask)
 int main(int argc, char *argv[])
 {
    int i;
+   int starting_sequence_number;
 
    enable_file_writing = FALSE;
    singlespace_mode = FALSE;
@@ -1821,6 +1820,8 @@ int main(int argc, char *argv[])
       This will return TRUE if we are to cease execution immediately. */
 
    if (open_session(argc, argv)) goto normal_exit;
+
+   starting_sequence_number = sequence_number;
 
    /* We need to take away the "zig-zag" directions if the level is below A2. */
 
@@ -1850,12 +1851,15 @@ int main(int argc, char *argv[])
    initialize_menus(glob_call_list_mode);    /* This sets up max_base_calls. */
 
    /* If we wrote a call list file, that's all we do. */
-   if (glob_call_list_mode == call_list_mode_writing || glob_call_list_mode == call_list_mode_writing_full)
+   if (glob_call_list_mode == call_list_mode_writing || glob_call_list_mode == call_list_mode_writing_full) {
+      close_init_file();
       goto normal_exit;
+   }
 
    initialize_concept_sublists();
 
    uims_postinitialize();
+   close_init_file();
 
    for (i=0 ; i<NUM_WARNINGS ; i++) {
       char c = warning_strings[i][0];
@@ -1992,8 +1996,27 @@ int main(int argc, char *argv[])
       But if we have stuff in the clipboard, we save everything. */
    if (clipboard_size == 0) release_parse_blocks_to_mark((parse_block *) 0);
    
+   /* Update the console window title. */
+
+   {
+      char numstuff[50];
+      char title[200];
+
+      if (sequence_number >= 0)
+         (void) sprintf(numstuff, " (%d:%d)", starting_sequence_number, sequence_number);
+      else
+         numstuff[0] = '\0';
+
+      if (header_comment[0])
+            (void) sprintf(title, "Sdtty %s  %s%s", &filename_strings[calling_level][1], header_comment, numstuff);
+      else
+            (void) sprintf(title, "Sdtty %s%s", &filename_strings[calling_level][1], numstuff);
+
+      uims_set_window_title(title);
+   }
+
    /* Query for the starting setup. */
-   
+
    reply = uims_get_startup_command();
 
    if (reply == ui_command_select && uims_menu_index == command_quit) goto normal_exit;
@@ -2026,7 +2049,9 @@ int main(int argc, char *argv[])
       goto new_sequence;
    case start_select_init_session_file:
       {
+         Cstring *q;
          FILE *session = fopen(SESSION_FILENAME, "r");
+
          if (session) {
             (void) fclose(session);
             if (uims_do_session_init_popup() != POPUP_ACCEPT) {
@@ -2052,6 +2077,14 @@ int main(int argc, char *argv[])
          if (fputs("[Sessions]\n", session) == EOF) goto copy_failed;
          if (fputs("sequence.C1          C1               1      Sample\n",
                    session) == EOF) goto copy_failed;
+         if (fputs("\n", session) == EOF) goto copy_failed;
+         if (fputs("[Accelerators]\n", session) == EOF) goto copy_failed;
+
+         for (q = concept_key_table ; *q ; q++) {
+            if (fputs(*q, session) == EOF) goto copy_failed;
+            if (fputs("\n", session) == EOF) goto copy_failed;
+         }
+
          if (fputs("\n", session) == EOF) goto copy_failed;
          (void) fclose(session);
          writestuff("The file has been initialized, and will take effect the next time the program is started.");
@@ -2612,6 +2645,7 @@ int main(int argc, char *argv[])
    
    exit_program(0);
    /* NOTREACHED */
+   return 0;
 }
 
 
