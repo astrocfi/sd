@@ -27,7 +27,7 @@
    database format version. */
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 45
+#define DATABASE_FORMAT_VERSION 46
 
 
 
@@ -156,6 +156,7 @@ typedef enum {
    s1x2,
    s1x3,
    s2x2,
+   s1x4,
    sdmd,
    s_star,
    s_trngl,
@@ -169,7 +170,6 @@ typedef enum {
    s_hrglass,
    s_hyperglass,
    s_crosswave,
-   s1x4,
    s1x8,
    s2x4,
    s2x3,
@@ -199,6 +199,8 @@ typedef enum {
    s8x8,     /* we don't let them out of their cage. */
    sfat2x8,  /* Same here.  These are big setups that are the size of 4x8's, */
    swide4x4, /* but only have 16 people.  The reason is to prevent loss of phantoms. */
+   sbigdmd,
+   sminirigger,  /* Used internally by concentric stuff. */
    s_normal_concentric
 } setup_kind;
 
@@ -275,7 +277,9 @@ typedef enum {
    b_3dmd,
    b_p3dmd,
    b_4dmd,
-   b_p4dmd
+   b_p4dmd,
+   b_bigdmd,
+   b_pbigdmd
 } begin_kind;
 
 /* These bits are used in the "callarray_flags" field of a "callarray". */
@@ -322,7 +326,9 @@ typedef enum {
    sq_n_is_1,                       /* any - given number is 1 */
    sq_n_is_2,                       /* any - given number is 2 */
    sq_n_is_3,                       /* any - given number is 3 */
-   sq_n_is_4                        /* any - given number is 4 */
+   sq_n_is_4,                       /* any - given number is 4 */
+   sq_split_dixie,                  /* 2x2 - invoked with "split" for dixie style */
+   sq_not_split_dixie               /* 2x2 - invoked without "split" for dixie style */
 } search_qualifier;
 
 /* These restrictions are "overloaded" -- their meaning depends on the starting setup. */

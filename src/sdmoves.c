@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990, 1991, 1992, 1993, 1994  William B. Ackerman.
+    Copyright (C) 1990-1994  William B. Ackerman.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -149,12 +149,12 @@ extern void reinstate_rotation(setup *ss, setup *result)
 
 extern long_boolean divide_for_magic(
    setup *ss,
-   unsigned int flags_to_use,
-   unsigned int flags_to_check,
+   uint32 flags_to_use,
+   uint32 flags_to_check,
    setup *result)
 {
    map_thing *division_maps;
-   unsigned int resflags = 0;
+   uint32 resflags = 0;
 
    if (ss->kind == s2x4) {
       if (flags_to_check == INHERITFLAG_MAGIC) {
@@ -241,8 +241,8 @@ extern void do_call_in_series(
 {
    setup tempsetup;
    setup qqqq = *sss;
-   unsigned int current_elongation = 0;
-   unsigned int saved_result_flags = sss->result_flags;
+   uint32 current_elongation = 0;
+   uint32 saved_result_flags = sss->result_flags;
 
    /* If we are forcing a split, and an earlier call in the series has responded to that split
       by returning an unequivocal splitting axis, we continue to split along the same axis. */
@@ -456,7 +456,7 @@ Private void finish_matrix_call(
 {
    int i, place;
    int xmax, xpar, ymax, ypar, x, y, k;
-   unsigned int signature;
+   uint32 signature;
    coordrec *checkptr;
 
    xmax = xpar = ymax = ypar = signature = 0;
@@ -475,8 +475,10 @@ Private void finish_matrix_call(
          own miniwave, but it requires odd numbers.  Perhaps we need to double the resolution
          of things in matrix_info[i].x or y, but that should wait until after version 28 is released. */
 
+/* So this is patched out.  The same problem holds for bigdmds.
       if (((matrix_info[i].x | matrix_info[i].y) & 1) && (matrix_info[i].deltax | matrix_info[i].deltay))
          fail("Someone's ending position is not well defined.");
+*/
 
       switch (matrix_info[i].dir) {
          case 0:
@@ -526,6 +528,10 @@ Private void finish_matrix_call(
       checkptr = setup_attrs[s_galaxy].setup_coords;
       goto doit;
    }
+   else if ((ypar == 0x00630095) && ((signature & (~0x01C00430)) == 0)) {
+      checkptr = setup_attrs[sbigdmd].setup_coords;
+      goto doit;
+   }
    else if ((ypar == 0x00950095) && ((signature & (~0x22008080)) == 0)) {
       checkptr = setup_attrs[s_thar].setup_coords;
       goto doit;
@@ -560,8 +566,9 @@ Private void finish_matrix_call(
    }
    /* Depending on how the setup is actually occupied, xmax and ymax may vary.
       ***** We need to work this out carefully.  Maybe parity should be high
-      and max low so that range checking will suffice. */
-   else if (((ypar == 0x00A300A3) || (ypar == 0x00B300B3)) && ((signature & (~0x38003B87)) == 0)) {
+      and max low so that range checking will suffice.
+      For now, we just mask out max, and look at par. */
+   else if (((ypar & 0x00070007) == 0x00070007) && ((signature & (~0x278198CC)) == 0)) {
       checkptr = setup_attrs[s_c1phan].setup_coords;
       goto doit;
    }
@@ -826,7 +833,8 @@ Private void do_matrix_chains(
    int filter)                        /* 1 for E/W chains, 0 for N/S chains. */
 {
    long_boolean another_round;
-   int i, j, flags;
+   int i, j;
+   uint32 flags;
 
    flags = callspec->stuff.matrix.flags;
 
@@ -951,7 +959,7 @@ Private void partner_matrixmove(
    callspec_block *callspec,
    setup *result)
 {
-   int flags;
+   uint32 flags;
    setup people;
    matrix_rec matrix_info[9];
    int i, nump;
@@ -1006,7 +1014,8 @@ Private void rollmove(
    setup *result)
 {
    int i;
-   unsigned int rot, st;
+   int rot;
+   uint32 st;
 
    if (setup_attrs[ss->kind].setup_limits < 0) fail("Can't roll in this setup.");
    
@@ -1016,12 +1025,12 @@ Private void rollmove(
    for (i=0; i<=setup_attrs[ss->kind].setup_limits; i++) {
       if (ss->people[i].id1) {
          rot = 0;
-         st = ((unsigned int) stb_z)*DBSTAB_BIT; 
+         st = ((uint32) stb_z)*DBSTAB_BIT; 
          if (!(callspec->callflags1 & CFLAG1_REQUIRES_SELECTOR) || selectp(ss, i)) {
             switch (ss->people[i].id1 & ROLL_MASK) {
-               case ROLLBITL: rot = 033, st = ((unsigned int) stb_a)*DBSTAB_BIT; break;
+               case ROLLBITL: rot = 033, st = ((uint32) stb_a)*DBSTAB_BIT; break;
                case ROLLBITM: break;
-               case ROLLBITR: rot = 011; st = ((unsigned int) stb_c)*DBSTAB_BIT; break;
+               case ROLLBITR: rot = 011; st = ((uint32) stb_c)*DBSTAB_BIT; break;
                default: fail("Roll not supported after previous call.");
             }
          }
@@ -1042,9 +1051,9 @@ Private void rollmove(
    both "INHERITFLAG_REVERSE" and "INHERITFLAG_LEFT", turning the former into the latter.  This makes reverse
    circle by, touch by, and clean sweep work. */
 
-Private unsigned int get_mods_for_subcall(unsigned int new_final_concepts, defmodset this_modh, int callflagsh)
+Private uint32 get_mods_for_subcall(uint32 new_final_concepts, defmodset this_modh, uint32 callflagsh)
 {
-   unsigned int retval;
+   uint32 retval;
 
    retval = new_final_concepts;
 
@@ -1084,22 +1093,22 @@ Private void move_with_real_call(
    long_boolean qtfudged,
    setup *result)
 {
-   unsigned int temp_concepts, conc1, conc2;
+   uint32 temp_concepts, conc1, conc2;
    long_boolean qtf;
    parse_block *cp1;
    parse_block *cp2;
    warning_info saved_warnings;
-   int tbonetest;
-   unsigned int imprecise_rotation_result_flag = 0;
-   unsigned int unaccepted_flags;
+   uint32 tbonetest;
+   uint32 imprecise_rotation_result_flag = 0;
+   uint32 unaccepted_flags;
    setup tempsetup;
-   unsigned int new_final_concepts;
+   uint32 new_final_concepts;
    callspec_block *call1, *call2;
    calldef_schema the_schema;
    long_boolean mirror;
    parse_block *parseptr = ss->cmd.parseptr;
    callspec_block *callspec = ss->cmd.callspec;
-   unsigned int final_concepts = ss->cmd.cmd_final_flags;
+   uint32 final_concepts = ss->cmd.cmd_final_flags;
 
    clear_people(result);
    result->result_flags = 0;   /* In case we bail out. */
@@ -1120,7 +1129,7 @@ that probably need to be put in. */
    /* Check for "central" concept, and pick up correct definition. */
 
    if (ss->cmd.cmd_misc_flags & CMD_MISC__CENTRAL) {
-      unsigned int temp_concepts;
+      uint32 temp_concepts;
    
       if (callspec->schema != schema_concentric)
          fail("Can't do \"central\" with this call.");
@@ -1728,7 +1737,7 @@ that probably need to be put in. */
                int j;
                by_def_item *this_item;
                defmodset this_mod1, this_modh;
-               int saved_number_fields = current_number_fields;
+               uint32 saved_number_fields = current_number_fields;
                int count_to_use;
 
                if (subcall_index*subcall_incr >= highlimit) break;
@@ -1749,7 +1758,7 @@ that probably need to be put in. */
                count_to_use = current_number_fields & 0xF;
 
                if ((DFM1_REPEAT_N | DFM1_REPEAT_NM1) & this_mod1) {
-                  unsigned int remember_elongation = result->cmd.prior_elongation_bits;
+                  uint32 remember_elongation = result->cmd.prior_elongation_bits;
 
                   if (DFM1_REPEAT_NM1 & this_mod1) count_to_use--;
 
@@ -1778,7 +1787,7 @@ that probably need to be put in. */
 
                }
                else if (DFM1_REPEAT_N_ALTERNATE & this_mod1) {
-                  unsigned int remember_elongation = result->cmd.prior_elongation_bits;
+                  uint32 remember_elongation = result->cmd.prior_elongation_bits;
 
                   /* Read the call after this one -- we will alternate between the two. */
                   get_real_subcall(parseptr, &callspec->stuff.def.defarray[subcall_index+subcall_incr], temp_concepts, &cp2, &call2, &conc2);
@@ -1816,7 +1825,7 @@ that probably need to be put in. */
                   subcall_index += subcall_incr;     /* Skip over the second call. */
                }
                else {
-                  unsigned int remember_elongation = result->cmd.prior_elongation_bits;
+                  uint32 remember_elongation = result->cmd.prior_elongation_bits;
 
                   result->cmd = ss->cmd;
                   result->cmd.cmd_frac_flags = 0;
@@ -2010,8 +2019,8 @@ extern void move(
    setup *result)
 {
    parse_block *saved_magic_diamond;
-   unsigned int new_final_concepts;
-   unsigned int check_concepts;
+   uint32 new_final_concepts;
+   uint32 check_concepts;
    parse_block *parseptrcopy;
    parse_block *parseptr = ss->cmd.parseptr;
 
@@ -2050,7 +2059,7 @@ extern void move(
    check_concepts = new_final_concepts & ~(FINAL__MUST_BE_TAG | FINAL__MUST_BE_SCOOT);
 
    if (parseptrcopy->concept->kind <= marker_end_of_list) {
-      int saved_number_fields = current_number_fields;
+      uint32 saved_number_fields = current_number_fields;
       selector_kind saved_selector = current_selector;
       direction_kind saved_direction = current_direction;
 

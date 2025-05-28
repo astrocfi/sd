@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990, 1991, 1992, 1993, 1994  William B. Ackerman.
+    Copyright (C) 1990-1994  William B. Ackerman.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -132,7 +132,9 @@ Private cm_thing oddmap2x2_2x2h = {{1, 2, 5, 6}, {7, 0, 3, 4},           4, 4, s
 Private cm_thing oddmap2x2_2x2v = {{6, 1, 2, 5}, {0, 3, 4, 7},           4, 4, s2x4,           s2x2,     s2x2,     8,  1, 0, 9};
 Private cm_thing map2x2_2x2h = {{6, 1, 2, 5}, {7, 0, 3, 4},              4, 4, s2x4,           s2x2,     s2x2,     8,  1, 1, 9};
 Private cm_thing maplatgal = {{7, 0, 1, 3, 4, 5}, {6, 2},                6, 2, s_galaxy,       s_short6, s1x2,     8,  1, 1, 0};
-Private cm_thing oddmap1x4_dmd = {{7, 2, 3, 6}, {0, 1, 4, 5},            4, 4, s3x1dmd,        sdmd,     s1x4,     12, 1, 0, 0};
+Private cm_thing oddmap1x4_dmd = {{7, 2, 3, 6}, {0, 1, 4, 5},            4, 4, s3x1dmd,        sdmd,     s1x4,     8,  1, 0, 0};
+Private cm_thing mapminrig_1x2 = {{2, 6}, {0, 1, 3, 4, 5, 7},            2, 6, s3x1dmd,        s1x2,   sminirigger,8,  0, 0, 0};
+Private cm_thing oddmapminrig_1x2 = {{7, 3}, {0, 1, 2, 4, 5, 6},         2, 6, s_crosswave,    s1x2,   sminirigger,8,  1, 0, 0};
 Private cm_thing oddmap1x2_bone6 = {{5, 0, 3, 1, 4, 7}, {6, 2},          6, 2, s_hrglass,      s_bone6,  s1x2,     8,  1, 0, 0};
 Private cm_thing oddmap1x2_2x3 = {{5, 7, 0, 1, 3, 4}, {6, 2},            6, 2, s_qtag,         s2x3,     s1x2,     8,  1, 0, 0};
 Private cm_thing oddmap1x2_short6 = {{5, 7, 0, 1, 3, 4}, {6, 2},         6, 2, s_rigger,       s_short6, s1x2,     8,  1, 0, 0};
@@ -160,6 +162,7 @@ Private cm_thing *concmap2x2_2x2[4]       = {&map2x2_2x2v,         &oddmap2x2_2x
 Private cm_thing *concmap2x2_1x4[4]       = {&map2x2_1x4v,         &oddmap2x2_1x4v,      &map2x2_1x4h,     &oddmap2x2_1x4h};
 Private cm_thing *concmap2x2_dmd[4]       = {0,                    &oddmap2x2_dmd,       &map2x2_dmd,      0};
 Private cm_thing *concmapshort6_1x2[4]    = {&mapshort6_1x2v,      &oddmapshort6_1x2v,   &mapshort6_1x2h,  &oddmapshort6_1x2h};
+Private cm_thing *concmapminrig_1x2[4]    = {&mapminrig_1x2,       &oddmapminrig_1x2,    &mapminrig_1x2,   &oddmapminrig_1x2};
 Private cm_thing *concmap1x2_1x6[4]       = {&map1x2_1x6,          &oddmap1x2_1x6,       &map1x2_1x6,      &oddmap1x2_1x6};
 Private cm_thing *concmap1x2_bone6[4]     = {&map1x2_bone6,        &oddmap1x2_bone6,     &map1x2_bone6,    &oddmap1x2_bone6};
 Private cm_thing *concmap1x2_2x3[4]       = {&map1x2_2x3,          &oddmap1x2_2x3,       &map1x2_2x3,      &oddmap1x2_2x3};
@@ -184,10 +187,10 @@ Private cm_thing *concmap2x2_1x4_rc[4]    = {&map2x2_1x4_rc,       &oddmap2x2_1x
 Private cm_thing *concmapspecintgl[4]     = {&map1x2_intgl,        0,                    &map1x2_intgl,    0};
 
 
-extern unsigned int get_multiple_parallel_resultflags(setup outer_inners[], int number)
+extern uint32 get_multiple_parallel_resultflags(setup outer_inners[], int number)
 {
    int i;
-   unsigned int result_flags = 0;
+   uint32 result_flags = 0;
 
    /* If a call was being done "piecewise" or "random", we demand that both
       calls run out of parts at the same time, and, when that happens, we
@@ -544,6 +547,11 @@ extern void normalize_concentric(
                case s1x2: map_ptr = concmapshort6_1x2; break;
             }
             break;
+         case sminirigger:
+            switch (inners[0].kind) {
+               case s1x2: map_ptr = concmapminrig_1x2; break;
+            }
+            break;
          case s2x2:
             switch (inners[0].kind) {
                case s2x2: map_ptr = concmap2x2_2x2; break;
@@ -700,7 +708,7 @@ gotit:
 
 /* BEWARE!!  This list is keyed to the definition of "setup_kind" in database.h . */
 /* BEWARE!!  The horizontal structure is keyed to the enumeration "analyzer_kind" :
-   normal      checkpt                   2x6                 6x2                 6x2_tgl           star12            star16             single       vertical6          lateral6     diamond_line */
+analyzer_NORMAL  analyzer_CHECKPT    analyzer_2X6        analyzer_6X2    analyzer_6X2_TGL    analyzer_STAR12   analyzer_STAR16 analyzer_SINGLE analyzer_VERTICAL6 analyzer_LATERAL6 analyzer_DIAMOND_LINE */
                                                                                                                      
 Private cm_thing *bigconctab[][11] = {
    {0,              0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* nothing */
@@ -708,6 +716,7 @@ Private cm_thing *bigconctab[][11] = {
    {0,              0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* s1x2 */
    {0,              0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* s_1x3 */
    {0,              0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* s2x2 */
+   {0,              0,                    0,                  0,                 0,                0,                0,                &map1x2_1x2,    0,                0,          0},               /* s1x4 */
    {0,              0,                    0,                  0,                 0,                0,                0,                &oddmap1x2_1x2, 0,                0,          0},               /* sdmd */
    {0,              0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* s_star */
    {0,              0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* s_trngl */
@@ -720,8 +729,7 @@ Private cm_thing *bigconctab[][11] = {
    {0,              &map2x2_dmd_rc,       &mapshort6_1x2h,    &map1x2_2x3,       0,                0,                0,                0,              0,                0,          0},               /* s_spindle */
    {&map2x2_dmd,    0,                    &mapshort6_1x2v,    0,                 0,                0,                0,                0,              &oddmap1x2_bone6, 0,          0},               /* s_hrglass */
    {0,              0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* s_hyperglass */
-   {&oddmap1x4_1x4, 0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* s_crosswave */
-   {0,              0,                    0,                  0,                 0,                0,                0,                &map1x2_1x2,    0,                0,          0},               /* s1x4 */
+   {&oddmap1x4_1x4, 0,                    &oddmapminrig_1x2,  0,                 0,                0,                0,                0,              0,                0,          0},               /* s_crosswave */
    {&map1x4_1x4,    &map1x4_1x4_rc,       &map1x6_1x2,        &map1x2_1x6,       0,                0,                0,                0,              0,                0,          0},               /* s1x8 */
    {&map2x2_2x2v,   0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* s2x4 */
    {0,              0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* s2x3 */
@@ -738,7 +746,7 @@ Private cm_thing *bigconctab[][11] = {
    {0,              0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* s_c1phan */
    {0,              0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* s_bigblob */
    {0,              &map2x2_1x4_rc,       &oddmapshort6_1x2h, &map1x2_bone6,     0,                0,                0,                0,              0,                0,          0},               /* s_ptpd */
-   {&oddmap1x4_dmd, 0,                    0,                  &oddmap1x2_1x6,    0,                0,                0,                0,              0,                0,          &mapdmd_line},    /* s3x1dmd */
+   {&oddmap1x4_dmd, 0,                    &mapminrig_1x2,     &oddmap1x2_1x6,    0,                0,                0,                0,              0,                0,          &mapdmd_line},    /* s3x1dmd */
    {0,              0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* s3dmd */
    {0,              0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* s_4dmd */
    {&map1x4_star,   0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          &map_s_dmd_line}, /* s_wingedstar */
@@ -751,6 +759,8 @@ Private cm_thing *bigconctab[][11] = {
    {0,              0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* s_8x8 */
    {0,              0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* sfat2x8 */
    {0,              0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* swide4x4 */
+   {0,              0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* sbigdiamonds */
+   {0,              0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* sminirigger */
    {0,              0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0}};              /* s_normal_concentric */
 
 
@@ -1131,20 +1141,20 @@ extern void concentric_move(
    int i, k;
 
    setup_kind orig_inners_start_kind;    /* The original info about the people who STARTED on the inside. */
-   int orig_inners_start_dirs;           /* We don't need rotation, since we will only use this if 2x2. */
-   unsigned int orig_inners_start_directions[32];
+   uint32 orig_inners_start_dirs;        /* We don't need rotation, since we will only use this if 2x2. */
+   uint32 orig_inners_start_directions[32];
 
    setup_kind orig_outers_start_kind;    /* The original info about the people who STARTED on the outside. */
-   unsigned int orig_outers_start_dirs;           /* We don't need rotation, since we will only use this if 2x2. */
-   unsigned int orig_outers_start_directions[32];
+   uint32 orig_outers_start_dirs;        /* We don't need rotation, since we will only use this if 2x2. */
+   uint32 orig_outers_start_directions[32];
 
    setup_kind final_outers_start_kind;   /* The original info about the people who will FINISH on the outside. */
-   unsigned int *final_outers_start_directions;
+   uint32 *final_outers_start_directions;
 
    int final_outers_finish_dirs;         /* The final info about the people who FINISHED on the outside. */
-   unsigned int final_outers_finish_directions[32];
+   uint32 final_outers_finish_directions[32];
 
-   int saved_number_fields = current_number_fields;
+   uint32 saved_number_fields = current_number_fields;
 
    /* It is clearly too late to expand the matrix -- that can't be what is wanted. */
    ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX | CMD_MISC__DISTORTED;
@@ -1168,7 +1178,7 @@ extern void concentric_move(
    /* Get initial info for the original ends. */
    orig_outers_start_dirs = 0;
    for (i=0; i<=setup_attrs[begin_outer.kind].setup_limits; i++) {
-      unsigned int q = begin_outer.people[i].id1;
+      uint32 q = begin_outer.people[i].id1;
       orig_outers_start_dirs |= q;
       if (q) orig_outers_start_directions[(q >> 6) & 037] = q;
    }
@@ -1177,7 +1187,7 @@ extern void concentric_move(
    /* Get initial info for the original centers. */
    orig_inners_start_dirs = 0;
    for (i=0; i<=setup_attrs[begin_inner[0].kind].setup_limits; i++) {
-      unsigned int q = begin_inner[0].people[i].id1;
+      uint32 q = begin_inner[0].people[i].id1;
       orig_inners_start_dirs |= q;
       if (q) orig_inners_start_directions[(q >> 6) & 037] = q;
    }
@@ -1838,7 +1848,7 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
          install_rot(result, 11, res1, 7^offs, rot);
       }
       else {
-         unsigned int t1, t2;
+         uint32 t1, t2;
 
          result->kind = s_c1phan;
          t1  = copy_person(result, 0,  res2, 0);
@@ -1891,6 +1901,14 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
          install_rot(result, 6, res1, 7^offs, rot);
          return;
       }
+   }
+   else if ((res1->kind == s1x4) && (res2->kind == s_crosswave) && (r&1)) {
+     *result = *res2;
+      install_rot(result, 2, res1, 1^r, rot);
+      install_rot(result, 3, res1, 0^r, rot);
+      install_rot(result, 6, res1, 3^r, rot);
+      install_rot(result, 7, res1, 2^r, rot);
+      return;
    }
    else if (res2->kind == s_c1phan && res1->kind == s2x4) {
       result->kind = s_c1phan;
@@ -2043,13 +2061,58 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
       install_person(result, 6, res1, 6);
       return;
    }
-   else if (res2->kind == s1x4 && res1->kind == s_bone && r == 0) {
-      *result = *res1;
+   else if (res2->kind == s_crosswave && res1->kind == s1x2 && r == 0) {
+      *result = *res2;
+      result->kind = s3x1dmd;
+      install_person(result, 3, res2, 2);
+      install_person(result, 7, res2, 6);
+      (void) copy_person(result, 2, res1, 0);
+      (void) copy_person(result, 6, res1, 1);
+      return;
+   }
+   else if (res2->kind == s_crosswave && res1->kind == s1x2 && (r&1)) {
+      *result = *res2;
+      offs = r >> 1;
+      install_rot(result, 3, res1, 0^offs, rot);
+      install_rot(result, 7, res1, 1^offs, rot);
+      return;
+   }
+   else if (res2->kind == s3x1dmd && res1->kind == s1x2 && (r&1)) {
+      *result = *res2;
+      result->kind = s_crosswave;
+      install_person(result, 2, res2, 3);
+      install_person(result, 6, res2, 7);
+      offs = r >> 1;
+      (void) copy_rot(result, 3, res1, 0^offs, rot);
+      (void) copy_rot(result, 7, res1, 1^offs, rot);
+      return;
+   }
+   else if (res2->kind == s3x1dmd && res1->kind == s1x2 && r == 0) {
+      *result = *res2;
+      install_person(result, 2, res1, 0);
+      install_person(result, 6, res1, 1);
+      return;
+   }
+   else if (res2->kind == s_bone && res1->kind == s1x4 && r == 0) {
+      *result = *res2;
 
-      install_person(result, 6, res2, 0);
-      install_person(result, 7, res2, 1);
-      install_person(result, 2, res2, 2);
-      install_person(result, 3, res2, 3);
+      install_person(result, 6, res1, 0);
+      install_person(result, 7, res1, 1);
+      install_person(result, 2, res1, 2);
+      install_person(result, 3, res1, 3);
+      return;
+   }
+   else if (res2->kind == s3x4 && res1->kind == s_qtag && r == 0) {
+      *result = *res2;
+
+      install_person(result, 1, res1, 0);
+      install_person(result, 2, res1, 1);
+      install_person(result, 4, res1, 2);
+      install_person(result, 5, res1, 3);
+      install_person(result, 7, res1, 4);
+      install_person(result, 8, res1, 5);
+      install_person(result, 10, res1, 6);
+      install_person(result, 11, res1, 7);
       return;
    }
    else if (res2->kind == s1x8 && res1->kind == s_bone && r == 0 &&
@@ -2604,12 +2667,13 @@ extern void so_and_so_only_move(
 {
    selector_kind saved_selector;
    int i, k, setupcount;
-   unsigned int livemask, j;
+   uint32 livemask, j;
+   warning_info saved_warnings;
    setup the_setups[2], the_results[2];
 
    int indicator = parseptr->concept->value.arg1;
    long_boolean others = indicator & 1;
-   indicator &= -2;
+   indicator &= ~1;
 
 /* arg1 = 0 - <> do your part
           1 - <> do your part while the others ....
@@ -2655,8 +2719,9 @@ extern void so_and_so_only_move(
 
    current_selector = saved_selector;
 
-   normalize_setup(&the_setups[0], normalize_before_isolated_call);
-   normalize_setup(&the_setups[1], normalize_before_isolated_call);
+   normalize_setup(&the_setups[0], (indicator == 4) ? normalize_before_merge : normalize_before_isolated_call);
+   normalize_setup(&the_setups[1], (indicator == 4) ? normalize_before_merge : normalize_before_isolated_call);
+   saved_warnings = history[history_ptr+1].warnings;
 
    /* Iterate 1 or 2 times, depending on whether the "other" people do a call. */
 
@@ -2833,6 +2898,13 @@ extern void so_and_so_only_move(
          This is important for the "did last part" check. */
       the_results[1].result_flags = the_results[0].result_flags;
    }
+
+   /* Shut off "each 1x4" types of warnings -- they will arise spuriously while
+      the people do the calls in isolation. */
+   history[history_ptr+1].warnings.bits[0] &= ~dyp_each_warnings.bits[0];
+   history[history_ptr+1].warnings.bits[1] &= ~dyp_each_warnings.bits[1];
+   history[history_ptr+1].warnings.bits[0] |= saved_warnings.bits[0];
+   history[history_ptr+1].warnings.bits[1] |= saved_warnings.bits[1];
 
    *result = the_results[1];
    result->result_flags = get_multiple_parallel_resultflags(the_results, 2);

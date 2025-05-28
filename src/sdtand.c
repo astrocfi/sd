@@ -209,6 +209,8 @@ siamese_item siamese_table[] = {
    {s2x4,        0x00660099, 0x66,   warn__ctrscpls_endstand},
    {s2x4,        0x003300CC, 0xCC,   warn__none},
    {s2x4,        0x00CC0033, 0x33,   warn__none},
+   {s_trngl4,    0x000F0000, 0x03,   warn__none},
+   {s_trngl4,    0x0000000F, 0x0C,   warn__none},
    {s_c1phan,    0x0000AAAA, 0xA0A0, warn__none},
    {s_c1phan,    0x00005555, 0x0505, warn__none},
    {s_c1phan,    0xAAAA0000, 0x0A0A, warn__none},

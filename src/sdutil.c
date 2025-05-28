@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990, 1991, 1992, 1993, 1994  William B. Ackerman.
+    Copyright (C) 1990-1994  William B. Ackerman.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -105,8 +105,8 @@ int written_history_nopic;
 parse_block *last_magic_diamond;
 char error_message1[MAX_ERR_LENGTH];
 char error_message2[MAX_ERR_LENGTH];
-unsigned int collision_person1;
-unsigned int collision_person2;
+uint32 collision_person1;
+uint32 collision_person2;
 long_boolean enable_file_writing;
 
 Private char *ordinals[] = {"1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th"};
@@ -346,6 +346,10 @@ char *selector_names[] = {
    "center 6",
    "outer 2",
    "outer 6",
+   "center 4",
+   "outer pairs",
+   "headliners",
+   "sideliners",
    "near line",
    "far line",
    "near column",
@@ -378,6 +382,10 @@ Private char *selector_singular[] = {
    "center 6",
    "outer 2",
    "outer 6",
+   "center 4",
+   "outer pair",
+   "headliner",
+   "sideliner",
    "near line",
    "far line",
    "near column",
@@ -408,6 +416,8 @@ char *direction_names[] = {
 /* A "*" as the first character means that this warning precludes acceptance while searching. */
 /* A "+" as the first character means that this warning is cleared if a concentric call was done
    and the "suppress_elongation_warnings" flag was on. */
+/* A "=" as the first character means that this warning is cleared if it arises during some kind of
+   "do your part" call. */
 char *warning_strings[] = {
    /*  warn__none                */   " Unknown warning????",
    /*  warn__do_your_part        */   "*Do your part.",
@@ -428,9 +438,9 @@ char *warning_strings[] = {
    /*  warn__xcdmdconc_perp      */   "+New ends should opt for setup perpendicular to their original (center) diamond points.",
    /*  warn__ctrstand_endscpls   */   " Centers work in tandem, ends as couples.",
    /*  warn__ctrscpls_endstand   */   " Centers work as couples, ends in tandem.",
-   /*  warn__each2x2             */   " Each 2x2.",
-   /*  warn__each1x4             */   " Each 1x4.",
-   /*  warn__each1x2             */   " Each 1x2.",
+   /*  warn__each2x2             */   "=Each 2x2.",
+   /*  warn__each1x4             */   "=Each 1x4.",
+   /*  warn__each1x2             */   "=Each 1x2.",
    /*  warn__take_right_hands    */   " Take right hands.",
    /*  warn__ctrs_are_dmd        */   " The centers are the diamond.",
    /*  warn__full_pgram          */   " Completely offset parallelogram.",
@@ -1072,10 +1082,11 @@ Private void do_write(char s[])
 /* BEWARE!!  This list is keyed to the definition of "setup_kind" in database.h . */
 static char *printing_tables[][2] = {
    {(char *) 0,                                                               (char *) 0},                                                                                                       /* nothing */
-   {(char *) 0,                                                               (char *) 0},                                                                                                       /* s_1x1 */
-   {"a  b@",                                                                  "a@b@"},                                                                                                           /* s_1x2 */
-   {(char *) 0,                                                               (char *) 0},                                                                                                       /* s_1x3 */
+   {(char *) 0,                                                               (char *) 0},                                                                                                       /* s1x1 */
+   {"a  b@",                                                                  "a@b@"},                                                                                                           /* s1x2 */
+   {(char *) 0,                                                               (char *) 0},                                                                                                       /* s1x3 */
    {(char *) 0,                                                               (char *) 0},                                                                                                       /* s2x2 */
+   {"a  b  d  c@",                                                            "a@b@d@c@"},                                                                                                       /* s1x4 */
    {"     b@a      c@     d@",                                                "   a@@d  b@@   c@"},                                                                                              /* sdmd */
    {(char *) 0,                                                               (char *) 0},                                                                                                       /* s_star */
    {(char *) 0,                                                               (char *) 0},                                                                                                       /* s_trngl */
@@ -1089,26 +1100,25 @@ static char *printing_tables[][2] = {
    {"   a  b@      d@g        c@      h@   f  e",                             "     g@f      a@   hd@e      b@     c"},                                                                          /* s_hrglass */
    {(char *) 0,                                                               (char *) 0},                                                                                                       /* s_hyperglass */
    {"          c@          d@ab        fe@          h@          g",           "      a@      b@@ghdc@@      f@      e"},                                                                         /* s_crosswave */
-   {"a  b  d  c@",                                                            "a@b@d@c@"},                                                                                                       /* s1x4 */
    {"a b d c g h f e",                                                        "a@b@d@c@g@h@f@e"},                                                                                                /* s1x8 */
    {"a  b  c  d@@h  g  f  e",                                                 "h  a@@g  b@@f  c@@e  d"},                                                                                         /* s2x4 */
-   {"a  b  c@f  e  d@",                                                       "f  a@e  b@d  c@"},                                                                                                /* s_2x3 */
-   {"a  b  c  f  e  d@",                                                      "a@b@c@f@e@d@"},                                                                                                   /* s_1x6 */
+   {"a  b  c@f  e  d@",                                                       "f  a@e  b@d  c@"},                                                                                                /* s2x3 */
+   {"a  b  c  f  e  d@",                                                      "a@b@c@f@e@d@"},                                                                                                   /* s1x6 */
    {"a  b  c  d@@k  l  f  e@@j  i  h  g",                                     "j  k  a@@i  l  b@@h  f  c@@g  e  d"},                                                                             /* s3x4 */
    {"a  b  c  d  e  f@@l  k  j  i  h  g",                                     "l  a@@k  b@@j  c@@i  d@@h  e@@g  f"},                                                                             /* s2x6 */
    {"a  b  c  d  e  f  g  h@@p  o  n  m  l  k  j  i",                         "p  a@@o  b@@n  c@@m  d@@l  e@@k  f@@j  g@@i  h"},                                                                 /* s2x8 */
    {"m  n  o  a@@k  p  d  b@@j  l  h  c@@i  g  f  e",                         (char *) 0},                                                                                                       /* s4x4 */
-   {(char *) 0,                                                               (char *) 0},                                                                                                       /* s_x1x6 */
-   {"a b c d e j i h g f",                                                    "a@b@c@d@e@j@i@h@g@f"},                                                                                            /* s_1x10 */
-   {"a b c d e f l k j i h g",                                                "a@b@c@d@e@f@l@k@j@i@h@g"},                                                                                        /* s_1x12 */
-   {"abcdefgnmlkjih",                                                         "a@b@c@d@e@f@g@n@m@l@k@j@i@h"},                                                                                    /* s_1x14 */
-   {"abcdefghponmlkji",                                                       "a@b@c@d@e@f@g@h@p@o@n@m@l@k@j@i"},                                                                                /* s_1x16 */
+   {(char *) 0,                                                               (char *) 0},                                                                                                       /* sx1x6 */
+   {"a b c d e j i h g f",                                                    "a@b@c@d@e@j@i@h@g@f"},                                                                                            /* s1x10 */
+   {"a b c d e f l k j i h g",                                                "a@b@c@d@e@f@l@k@j@i@h@g"},                                                                                        /* s1x12 */
+   {"abcdefgnmlkjih",                                                         "a@b@c@d@e@f@g@n@m@l@k@j@i@h"},                                                                                    /* s1x14 */
+   {"abcdefghponmlkji",                                                       "a@b@c@d@e@f@g@h@p@o@n@m@l@k@j@i"},                                                                                /* s1x16 */
    {"   b        e@a  c  h  f@   d        g@@   o        l@n  p  k  i@   m        j",                                       (char *) 0},                                                         /* s_c1phan */
    {"            a  b@@      v  w  c  d@@t  u  x  f  e  g@@s  q  r  l  i  h@@      p  o  k  j@@            n  m",           (char *) 0},                                                         /* s_bigblob */
    {"    b           h@a    c   g    e@    d           f",                    "  a@@db@@  c@@  g@@fh@@  e"},                                                                                     /* s_ptpd */
-   {"             d@@a b c g f e@@             h",                            "      a@@      b@@      c@h        d@      g@@      f@@      e"},                                                 /* s_3x1dmd */
-   {"   a      b      c@@j k l f e d@@   i      h      g",                    "      j@i        a@      k@@      l@h        b@      f@@      e@g        c@      d"},                             /* s_3dmd */
-   {"   a      b      c      d@@m n o p h g f e@@   l      k      j      i",  "      m@l        a@      n@@      o@k        b@      p@@      h@j        c@      g@@      f@i        d@      e"}, /* s_4dmd */
+   {"             d@@a b c g f e@@             h",                            "      a@@      b@@      c@h        d@      g@@      f@@      e"},                                                 /* s3x1dmd */
+   {"   a      b      c@@j k l f e d@@   i      h      g",                    "      j@i        a@      k@@      l@h        b@      f@@      e@g        c@      d"},                             /* s3dmd */
+   {"   a      b      c      d@@m n o p h g f e@@   l      k      j      i",  "      m@l        a@      n@@      o@k        b@      p@@      h@j        c@      g@@      f@i        d@      e"}, /* s4dmd */
    {"             d@a b c  g f e@             h",                             "   a@@   b@@   c@h  d@   g@@   f@@   e"},                                                                         /* s_wingedstar */
    {"             d       f@a b c  e k  i h g@             l       j",        "   a@@   b@@   c@l  d@   e@   k@j  f@   i@@   h@@   g"},                                                          /* s_wingedstar12 */
    {"             d       h       m@a b c  f g  o n  k j i@             e       p       l",  "   a@@   b@@   c@e  d@   f@   g@p  h@   o@   n@l  m@   k@@   j@@   i"},                            /* s_wingedstar16 */
@@ -1119,6 +1129,8 @@ static char *printing_tables[][2] = {
    {(char *) 0,                                                               (char *) 0},                                                                                                       /* s_8x8 */
    {(char *) 0,                                                               (char *) 0},                                                                                                       /* sfat2x8 */
    {(char *) 0,                                                               (char *) 0},                                                                                                       /* swide4x4 */
+   {"   b      e@   c      f@a j d g@   l      i@   k      h",                "          a@k l        c b@          j@@          d@h i        f e@          g"},                                 /* sbigdmd */
+   {(char *) 0,                                                               (char *) 0},                                                                                                       /* sminirigger */
    {(char *) 0,                                                               (char *) 0}};                                                                                                      /* s_normal_concentric */
 
 
@@ -1309,17 +1321,23 @@ extern void write_history_line(int history_index, Const char *header, long_boole
 
    index = history[history_index].centersp;
 
+   /* Do not put index numbers into output file -- user may edit it later. */
+
+   if (!enable_file_writing) {
+
 #ifndef OLD_WAY
-   i = history_index-whole_sequence_low_lim+1;
-   if (header) writestuff(header);   /* Be sure we get it for partially entered concepts -- this line will go away. */
-   else if (i > 0 && !diagnostic_mode) {   /* For now, don't do this if diagnostic, until we decide whether it is permanent. */
-      char indexbuf[200];
-      sprintf(indexbuf, "%2d:   ", i);
-      writestuff(indexbuf);
-   }
+      i = history_index-whole_sequence_low_lim+1;
+      if (header) writestuff(header);   /* Be sure we get it for partially entered concepts -- this line will go away. */
+      else if (i > 0 && !diagnostic_mode) {   /* For now, don't do this if diagnostic, until we decide whether it is permanent. */
+         char indexbuf[200];
+         sprintf(indexbuf, "%2d:   ", i);
+         writestuff(indexbuf);
+      }
 #else
-   if (header) writestuff(header);
+      if (header) writestuff(header);
 #endif
+
+   }
 
    if (index != 0) {
       if (startinfolist[index].into_the_middle) goto morefinal;
@@ -1534,8 +1552,10 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
       if (p == 0) goto good;
       if (p->start_setup == key) {
          if (p->qualifier == sq_none) goto good;
+
          /* Can't be bothered to figure out what setup to create when
-            calling this during initialization, so we send nil. */
+            calling this during initialization, so it sends nil.
+            Therefore, we always accept such a thing. */
          if (!ss) goto good;
 
          /* Note that we have to examine setups larger than the setup the
@@ -1960,6 +1980,12 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
             case sq_n_is_2: if ((current_number_fields & 0xF) == 2) goto good; goto bad;
             case sq_n_is_3: if ((current_number_fields & 0xF) == 3) goto good; goto bad;
             case sq_n_is_4: if ((current_number_fields & 0xF) == 4) goto good; goto bad;
+            case sq_split_dixie:
+               if (ss->cmd.cmd_final_flags & FINAL__SPLIT_DIXIE_APPROVED) goto good;
+               goto bad;
+            case sq_not_split_dixie:
+               if (ss->cmd.cmd_final_flags & FINAL__SPLIT_DIXIE_APPROVED) goto bad;
+               goto good;
          }
       }
       bad:
@@ -1971,7 +1997,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
 }
 
 
-extern unsigned int find_calldef(
+extern uint32 find_calldef(
    callarray *tdef,
    setup *scopy,
    int real_index,
@@ -2021,19 +2047,19 @@ extern void clear_people(setup *z)
 }
 
 
-extern unsigned int rotperson(unsigned int n, int amount)
+extern uint32 rotperson(uint32 n, int amount)
 {
    if (n == 0) return(0); else return((n + amount) & ~064);
 }
 
 
-extern unsigned int rotcw(unsigned int n)
+extern uint32 rotcw(uint32 n)
 {
    if (n == 0) return(0); else return((n + 011) & ~064);
 }
 
 
-extern unsigned int rotccw(unsigned int n)
+extern uint32 rotccw(uint32 n)
 {
    if (n == 0) return(0); else return((n + 033) & ~064);
 }
@@ -2046,14 +2072,14 @@ extern void clear_person(setup *resultpeople, int resultplace)
 }
 
 
-extern unsigned int copy_person(setup *resultpeople, int resultplace, setup *sourcepeople, int sourceplace)
+extern uint32 copy_person(setup *resultpeople, int resultplace, setup *sourcepeople, int sourceplace)
 {
    resultpeople->people[resultplace] = sourcepeople->people[sourceplace];
    return(resultpeople->people[resultplace].id1);
 }
 
 
-extern unsigned int copy_rot(setup *resultpeople, int resultplace, setup *sourcepeople, int sourceplace, int rotamount)
+extern uint32 copy_rot(setup *resultpeople, int resultplace, setup *sourcepeople, int sourceplace, int rotamount)
 {
    unsigned int newperson = sourcepeople->people[sourceplace].id1;
 

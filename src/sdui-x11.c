@@ -1,3 +1,4 @@
+static char *time_stamp = "sdui-x11.c Time-stamp: <94/07/27 23:52:37 gildea>";
 /* 
  * sdui-x11.c - Sd User Interface for X11
  * Copyright 1990,1991,1992,1993 Stephen Gildea and William B. Ackerman
@@ -22,8 +23,7 @@
 #define UI_VERSION_STRING "1.15"
 
 /* See comments in sdmain.c regarding this string. */
-static char *id="@(#)$He" "ader: Sd: sdui-x11.c " UI_VERSION_STRING "  gildea@lcs.mit.edu  18 Mar 93 $";
-static char *time_stamp = "sdui-x11.c Time-stamp: <93/12/04 18:39:21 gildea>";
+static char *id="@(#)$He" "ader: Sd: sdui-x11.c  " UI_VERSION_STRING "    gildea@lcs.mit.edu  27 Jul 94 $";
 
 /* This file defines the following functions:
    uims_process_command_line
@@ -120,7 +120,9 @@ Private char version_mem[12];
 extern char *
 uims_version_string(void)
 {
-    return UI_VERSION_STRING;
+    strcpy(version_mem, UI_VERSION_STRING);
+    strcat(version_mem, "X11");
+    return version_mem;
 }
 
 
@@ -210,8 +212,9 @@ position_near_mouse(Widget popupshell)
     int winx, winy;
     Dimension width, height, border;
     unsigned int mask;
+    int gravity;
 
-    /* much of this is copied from CenterWidgetOnPoint in Xaw/TextPop.c,
+    /* some of this is copied from CenterWidgetOnPoint in Xaw/TextPop.c,
        which should be a publicly-callable function anyway. */
 
     XtVaGetValues(popupshell,
@@ -225,11 +228,22 @@ position_near_mouse(Widget popupshell)
 
     XQueryPointer(XtDisplay(popupshell), XtWindow(popupshell),
 		  &root, &child, &x, &y, &winx, &winy, &mask);
-    max_x = WidthOfScreen(XtScreen(popupshell)) - width;
-    max_y = HeightOfScreen(XtScreen(popupshell)) - height;
 
     width += 2 * border;
     height += 2 * border;
+
+    max_x = WidthOfScreen(XtScreen(popupshell));
+    max_y = HeightOfScreen(XtScreen(popupshell));
+
+    /* set gravity hint based on position on screen */
+    gravity = 1;
+    if (x > max_x/3) gravity += 1;
+    if (x > max_x*2/3) gravity += 1;
+    if (y > max_y/3) gravity += 3;
+    if (y > max_y*2/3) gravity += 3;
+
+    max_x -= width;
+    max_y -= height;
 
     x -= ( (Position) width/2 );
     if (x < 0) x = 0;
@@ -242,6 +256,7 @@ position_near_mouse(Widget popupshell)
     XtVaSetValues(popupshell,
 		  XtNx, (Position)x,
 		  XtNy, (Position)y,
+		  XtNwinGravity, gravity,
 		  NULL);
 }
 
@@ -1468,7 +1483,7 @@ uims_do_direction_popup(void)
 Private String quantifier_names[] = {
     " 1 ", " 2 ", " 3 ", " 4 ", " 5 ", NULL};
 
-extern unsigned int uims_get_number_fields(int nnumbers)
+extern uint32 uims_get_number_fields(int nnumbers)
 {
    int i;
    unsigned int number_list = 0;
@@ -1579,8 +1594,11 @@ extern void
 uims_terminate(void)
 {
     /* if uims_preinitialize was called, close down the window system */
-    if (program_name)
+    if (program_name) {
+	XtUnmapWidget(toplevel); 	/* make it disappear neatly */
+	XtDestroyWidget(toplevel);
 	XtDestroyApplicationContext(xtcontext);
+    }
 }
 
 /*

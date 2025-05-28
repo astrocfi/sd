@@ -251,7 +251,8 @@ void dialog_setmsg(int task, dp_$string_desc_t *msg)
 }
 
 
-int phantom_tasks[] = {task$phantom_concept_menu_1, task$phantom_concept_menu_2, task$phantom_concept_menu_3, task$phantom_concept_menu_4, -1};
+int phantoml_tasks[] = {task$phantoml_concept_menu_1, task$phantoml_concept_menu_2, task$phantoml_concept_menu_3, -1};
+int phantomb_tasks[] = {task$phantomb_concept_menu_1, task$phantomb_concept_menu_2, -1};
 int tandem_tasks[] = {task$tandem_concept_menu_1, task$tandem_concept_menu_2, task$tandem_concept_menu_3, task$tandem_concept_menu_4, -1};
 int distort_tasks[] = {task$distort_concept_menu_1, task$distort_concept_menu_2, task$distort_concept_menu_3, task$distort_concept_menu_4, -1};
 int dist4_tasks[] = {task$dist4_concept_menu_1, task$dist4_concept_menu_2, task$dist4_concept_menu_3, task$dist4_concept_menu_4, -1};
@@ -260,21 +261,24 @@ int misc_tasks[] = {task$misc_concept_menu_1, task$misc_concept_menu_2, task$mis
 /* BEWARE!!  These five tables are keyed to the tables "concept_offset_tables" etc. in sd.h . */
 
 int enablers[] = {
-   phantom_concepts_enabler,
+   phantoml_concepts_enabler,
+   phantomb_concepts_enabler,
    tandem_concepts_enabler,
    distort_concepts_enabler,
    dist4_concepts_enabler,
    misc_concepts_enabler};
 
 int disablers[] = {
-   phantom_concepts_disabler,
+   phantoml_concepts_disabler,
+   phantomb_concepts_disabler,
    tandem_concepts_disabler,
    distort_concepts_disabler,
    dist4_concepts_disabler,
    misc_concepts_disabler};
 
 int *tasklists[] = {
-   phantom_tasks,
+   phantoml_tasks,
+   phantomb_tasks,
    tandem_tasks,
    distort_tasks,
    dist4_tasks,
@@ -1042,7 +1046,7 @@ extern int uims_do_direction_popup(void)
 
 
 
-extern unsigned int uims_get_number_fields(int nnumbers)
+extern uint32 uims_get_number_fields(int nnumbers)
 {
    int i;
    unsigned int number_list = 0;

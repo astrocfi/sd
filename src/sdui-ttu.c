@@ -144,6 +144,7 @@ extern void ttu_initialize(void)
          Right? */
    
       idlok(stdscr, no_line_delete ? FALSE : TRUE);
+      keypad(stdscr, TRUE);
       curses_initialized = 1;
    }
 #endif
@@ -402,7 +403,9 @@ extern int get_char(void)
 {
 #ifndef NO_CURSES
    if (!no_cursor) {
-      return getch();      /* A "curses" call. */
+      int c = getch();      /* A "curses" call. */
+      /* Handle function keys. */
+      return c >= 0410 ? c-0410+128 : c;
    }
    else {
       csetmode(1);         /* Raw, no echo, single-character mode. */

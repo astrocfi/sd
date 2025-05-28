@@ -1,5 +1,5 @@
 #!/bin/sh
-# From configure.in Time-stamp: 93/12/01 16:33:31 gildea
+# From configure.in Time-stamp: 94/07/28 01:12:58 gildea
 # configure script for Sd (square dance caller's helper)
 #
 # options:
@@ -355,7 +355,7 @@ else
   
 # ****** Beginning of Unix section ******
 echo "making ${CONFIG_FILES} for Unix"
-echo "checking for compiler type"
+test -n "$silent" || echo "checking for compiler type"
 
 if test -z "$CC"; then
   # Extract the first word of `gcc', so it can be a program name with args.
@@ -468,7 +468,6 @@ CDEBUGFLAGS=-O
 # In any case, deal with the "with-warnings" switch.
 
 if test -n "$GCC"; then
-  echo "using gcc"
   # check whether --with-warnings or --without-warnings was given.
 withval="$with_warnings"
 if test -n "$withval"; then
@@ -476,8 +475,8 @@ if test -n "$withval"; then
 fi
 
 else
-  echo "not using gcc, looking for other compilers"
-  echo "checking for HP compiler"
+  test -n "$verbose" && echo "	not using gcc: looking for other compilers"
+  test -n "$silent" || echo "checking for HP compiler"
   cat > conftest.${ac_ext} <<EOF
 #include "confdefs.h"
 #ifdef __hpux
@@ -506,9 +505,9 @@ fi
 # Now CC should contain compiler invocation string, with switches.
 # CDEBUGFLAGS should contain optimization/debug switches.
 
-echo "got compiler type"
+test -n "$verbose" && echo "	got compiler type"
 
-echo "checking whether -I$srcdir is needed"
+test -n "$silent" || echo "checking whether -I$srcdir is needed"
 cat > conftest.${ac_ext} <<EOF
 #include "confdefs.h"
 #include "sd.h"
@@ -760,7 +759,7 @@ fi
 X11_LIBS="$x_flags -lXaw -lXmu -lXt -lXext -lX11 $LIBS"
 
 if test -n "$x_libraries"; then
-    echo "checking whether -R$x_libraries is needed"
+    test -n "$silent" || echo "checking whether -R$x_libraries is needed"
   LIBS="$X11_LIBS"
   cat > conftest.${ac_ext} <<EOF
 #include "confdefs.h"
@@ -790,7 +789,7 @@ fi
 
 # End of X11 investigation, begin curses investigation.
 
-echo "checking for curses include files and libraries ..."
+test -n "$silent" || echo "checking for curses include files and libraries ..."
 
 # We do NOT simply search for the existence of directories /usr/5include
 # or /usr/5lib.  The standards (OSF and SysV) simply say that the curses

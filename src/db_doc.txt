@@ -434,6 +434,27 @@ thar        |  0  |  1           5  |  4  |      (4 way symmetry)
 
 
 
+                _____       _____
+               |     |     |     |
+               |  1  |     |  4  |
+               |__ __|     |__ __|
+               |     |     |     |
+               |  2  |     |  5  |
+             __|__ __|__ __|__ __|__
+            |     |     |     |     |
+bigdmd      |  0  |  9  |  3  |  6  |
+            |_____|_____|_____|_____|
+               |     |     |     |
+               | 11  |     |  8  |
+               |_____|     |_____|
+               |     |     |     |
+               | 10  |     |  7  |
+               |_____|     |_____|
+
+
+
+
+
 normal_concentric  ??????
 
 
@@ -1373,13 +1394,13 @@ x14_once_rem_couple
       opposite way or is T-boned.
 
 lines_miniwave
-      applies to 1x2, 1x4, 1x6, 2x4, 3x4, 2x6, or 2x8 lines only.
+      applies to 1x2, 1x4, 1x6, 1x8, 2x4, 3x4, 2x6, or 2x8 lines only.
       Returns TRUE if the lateral partner of the person under test is alive
       and facing the opposite direction.  Returns FALSE if the partner is
       a phantom or faces the same way or is T-boned.
 
 lines_couple
-      applies to 1x2, 1x4, 1x6, 2x4, 3x4, 2x6, or 2x8 lines only.
+      applies to 1x2, 1x4, 1x6, 1x8, 2x4, 3x4, 2x6, or 2x8 lines only.
       Returns TRUE if the lateral partner of the person under test is alive
       and facing the same direction.  Returns FALSE if the partner is
       a phantom or faces the opposite way or is T-boned.

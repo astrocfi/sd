@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990, 1991, 1992, 1993, 1994  William B. Ackerman.
+    Copyright (C) 1990-1994  William B. Ackerman.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -64,6 +64,18 @@
 /* The IBM AIX compiler, for example, considers char to be unsigned. */
 typedef short veryshort;
 
+/* We would like to think that we will always be able to count on compilers to do the
+   right thing with "int" and "long int" and so on.  What we would really like is
+   for compilers to be counted on to make "int" at least 32 bits, because we need
+   32 bits in many places.  However, some compilers don't, so we have to use
+   "long int" or "unsigned long int".  We think that all compilers we deal with
+   will do the right thing with that, but, just in case, we use a typedef.
+
+   The type "uint32" must be an unsigned (shifts don't propagate sign bits)
+   datum on which we can do bitwise operations for at least the lowest 32 bits. */
+
+typedef unsigned long int uint32;
+
 #include <setjmp.h>
 #include "database.h"
 
@@ -91,8 +103,8 @@ typedef int long_boolean;
 
 /* This defines a person in a setup.  Unfortunately, there is too much data to fit into 32 bits. */
 typedef struct {
-   unsigned int id1;       /* Frequently used bits go here. */
-   unsigned int id2;       /* Bits used for evaluating predicates. */
+   uint32 id1;       /* Frequently used bits go here. */
+   uint32 id2;       /* Bits used for evaluating predicates. */
 } personrec;
 
 /* Person bits for "id1" field are:
@@ -160,8 +172,8 @@ typedef struct {
 #define d_west  04003
 
 /* Person bits for "id2" field are:
- 20 000 000 000 -
- 10 000 000 000 - 
+ 20 000 000 000 - headliner
+ 10 000 000 000 - sideliner
   4 000 000 000 - center 2
   2 000 000 000 - belle
   1 000 000 000 - beau
@@ -188,38 +200,42 @@ typedef struct {
             100 - far column
              40 - far line
              20 - far box
-             10 -
-              4 -
+             10 - center 4
+              4 - outside pairs
               2 -
               1 -
 */
 
-#define ID2_CTR2    04000000000
-#define ID2_BELLE   02000000000
-#define ID2_BEAU    01000000000
-#define ID2_CTR6     0400000000
-#define ID2_OUTR2    0200000000
-#define ID2_OUTR6    0100000000
-#define ID2_TRAILER   040000000
-#define ID2_LEAD      020000000
-#define ID2_NSG       010000000
-#define ID2_NSB        04000000
-#define ID2_NHG        02000000
-#define ID2_NHB        01000000
-#define ID2_HCOR        0400000
-#define ID2_SCOR        0200000
-#define ID2_HEAD        0100000
-#define ID2_SIDE         040000
-#define ID2_BOY          020000
-#define ID2_GIRL         010000
-#define ID2_CENTER        04000
-#define ID2_END           02000
-#define ID2_NEARCOL       01000
-#define ID2_NEARLINE       0400
-#define ID2_NEARBOX        0200
-#define ID2_FARCOL         0100
-#define ID2_FARLINE         040
-#define ID2_FARBOX          020
+#define ID2_HEADLINE 020000000000
+#define ID2_SIDELINE 010000000000
+#define ID2_CTR2      04000000000
+#define ID2_BELLE     02000000000
+#define ID2_BEAU      01000000000
+#define ID2_CTR6       0400000000
+#define ID2_OUTR2      0200000000
+#define ID2_OUTR6      0100000000
+#define ID2_TRAILER     040000000
+#define ID2_LEAD        020000000
+#define ID2_NSG         010000000
+#define ID2_NSB          04000000
+#define ID2_NHG          02000000
+#define ID2_NHB          01000000
+#define ID2_HCOR          0400000
+#define ID2_SCOR          0200000
+#define ID2_HEAD          0100000
+#define ID2_SIDE           040000
+#define ID2_BOY            020000
+#define ID2_GIRL           010000
+#define ID2_CENTER          04000
+#define ID2_END             02000
+#define ID2_NEARCOL         01000
+#define ID2_NEARLINE         0400
+#define ID2_NEARBOX          0200
+#define ID2_FARCOL           0100
+#define ID2_FARLINE           040
+#define ID2_FARBOX            020
+#define ID2_CTR4              010
+#define ID2_OUTRPAIRS         004
 
 
 typedef struct {
@@ -234,6 +250,31 @@ typedef struct {
    DFM1_CONCENTRICITY_FLAG_MASK.  Those flags, and that mask, are defined
    in database.h .  We define these flags at the extreme left end of the
    word in order to keep them away from the concentricity flags.
+
+   CMD_MISC__EXPLICIT_MIRROR means that the setup has been mirrored by the "mirror"
+   concept, separately from anything done by "left" or "reverse".  Such a mirroring
+   does NOT cause the "take right hands" stuff to compensate by going to left hands,
+   so it has the effect of making the people physically take left hands.
+
+   CMD_MISC__MATRIX_CONCEPT means that the "matrix" concept has been given, and we have
+   to be very careful about what we can do.  Specifically, this will make everything illegal
+   except calls to suitable "split phantom" concepts.
+
+   CMD_MISC__VERIFY_WAVES means that, before doing the call, we have to act as though the
+   "assume waves" concept had been given.  That is, we have to verify that the setup is in fact
+   waves, and we have to set the assumption stuff, so that a "with active phantoms" concept
+   can be handled.  This flag is used only through "divided_setup_move", to propagate
+   information from a concept like "split phantom waves" through the division, and then
+   cause the assumption to be acted upon in each resulting setup.
+
+   CMD_MISC__EXPLICIT_MATRIX means that the caller said "4x4 matrix" or "2x6 matrix" or whatever,
+   so we got to this matrix explicitly.  This enables natural splitting of the setup, e.g. form
+   a parallelogram, "2x6 matrix 1x2 checkmate" is legal -- the 2x6 gets divided naturally
+   into 2x3's.
+
+   CMD_MISC__NO_EXPAND_MATRIX means that we are at a level of recursion that no longer permits us to do the
+   implicit expansion of the matrix (e.g. add outboard phantoms to turn a 2x4 into a 2x6
+   if the concept "triple box" is used) that some concepts perform at the top level.
 
    CMD_MISC__DISTORTED means that we are at a level of recursion in which some
    distorted-setup concept has been used.  When this is set, "matrix" (a.k.a.
@@ -294,30 +335,15 @@ typedef struct {
    CMD_MISC__NO_STEP_TO_WAVE means that we are at a level of recursion that no longer permits us to do the
    implicit step to a wave or rear back from one that some calls permit at the top level.
 
-   CMD_MISC__EXPLICIT_MIRROR means that the setup has been mirrored by the "mirror"
-   concept, separately from anything done by "left" or "reverse".  Such a mirroring
-   does NOT cause the "take right hands" stuff to compensate by going to left hands,
-   so it has the effect of making the people physically take left hands.
-
-   CMD_MISC__EXPLICIT_MATRIX means that the caller said "4x4 matrix" or "2x6 matrix" or whatever,
-   so we got to this matrix explicitly.  This enables natural splitting of the setup, e.g. form
-   a parallelogram, "2x6 matrix 1x2 checkmate" is legal -- the 2x6 gets divided naturally
-   into 2x3's.
-
-   CMD_MISC__NO_EXPAND_MATRIX means that we are at a level of recursion that no longer permits us to do the
-   implicit expansion of the matrix (e.g. add outboard phantoms to turn a 2x4 into a 2x6
-   if the concept "triple box" is used) that some concepts perform at the top level.
-
    CMD_MISC__DOING_ENDS means that this call is directed only to the ends (and the setup is the ends
    of the original setup.  If the call turns out to be an 8-person call with distinct
    centers and ends parts, we may want to just apply the ends part.  This is what
    makes "ends detour" work.
 */
 
-/* We are getting dangerously low on bits!!!  In fact, they are all gone!!!! */
 #define CMD_MISC__EXPLICIT_MIRROR    0x00000100
 #define CMD_MISC__MATRIX_CONCEPT     0x00000200
-/*    available:                     0x00000400 */
+#define CMD_MISC__VERIFY_WAVES       0x00000400
 #define CMD_MISC__EXPLICIT_MATRIX    0x00000800
 #define CMD_MISC__NO_EXPAND_MATRIX   0x00001000
 #define CMD_MISC__DISTORTED          0x00002000
@@ -425,7 +451,7 @@ typedef struct {
 
 typedef struct glork {
    struct glork *next;
-   unsigned int callarray_flags;
+   uint32 callarray_flags;
    call_restriction restriction;
    search_qualifier qualifier;
    begin_kind start_setup;
@@ -445,20 +471,20 @@ typedef struct glork {
 
 typedef struct {
    short call_id;
-   unsigned int modifiers1;
-   unsigned int modifiersh;
+   uint32 modifiers1;
+   uint32 modifiersh;
 } by_def_item;
 
 typedef struct glowk {
-   unsigned int modifier_seth;
+   uint32 modifier_seth;
    callarray *callarray_list;
    struct glowk *next;
    dance_level modifier_level;
 } calldef_block;
 
 typedef struct {
-   unsigned int callflags1;
-   unsigned int callflagsh;
+   uint32 callflags1;
+   uint32 callflagsh;
    int age;
    calldef_schema schema;
    union {
@@ -648,6 +674,7 @@ typedef enum {
 typedef struct {
    Const char *name;
    Const concept_kind kind;
+   Const long_boolean dup;
    Const dance_level level;
    Const struct {
       Const map_thing *maps;
@@ -686,6 +713,10 @@ typedef enum {
    selector_center6,
    selector_outer2,
    selector_outer6,
+   selector_center4,
+   selector_outerpairs,
+   selector_headliners,
+   selector_sideliners,
    selector_nearline,
    selector_farline,
    selector_nearcolumn,
@@ -724,7 +755,7 @@ typedef struct glock {
    struct glock *gc_ptr;          /* used for reclaiming dead blocks */
    selector_kind selector;        /* selector, if any, used by concept or call */
    direction_kind direction;      /* direction, if any, used by concept or call */
-   int number;                    /* number, if any, used by concept or call */
+   uint32 number;                 /* number, if any, used by concept or call */
 } parse_block;
 
 /* The following items are not actually part of the setup description,
@@ -734,11 +765,11 @@ typedef struct glock {
    in a history array, this stuff is meaningless. */
 
 typedef struct {
-   unsigned int assump_col: 8;       /* Stuff to go with assumption -- col vs. line. */
-   unsigned int assump_both: 4;      /* Stuff to go with assumption -- "handedness" enforcement --
+   unsigned int assump_col: 16;  /* Stuff to go with assumption -- col vs. line. */
+   unsigned int assump_both: 8;  /* Stuff to go with assumption -- "handedness" enforcement --
                                                 0/1/2 = either/1st/2nd. */
-   unsigned int assump_cast: 4;      /* Nonzero means there is an "assume normal casts" assumption. */
-   call_restriction assumption: 16;  /* Any "assume waves" type command. */
+   unsigned int assump_cast: 8;  /* Nonzero means there is an "assume normal casts" assumption. */
+   call_restriction assumption;  /* Any "assume waves" type command. */
 } assumption_thing;
 
 
@@ -750,13 +781,13 @@ typedef struct {
                                     the remaining "small" (or "final") concepts and the call name out of
                                     the end of the concept parse tree. */
    callspec_block *callspec;     /* The call, after we reach the end of the parse tree. */
-   unsigned int cmd_final_flags; /* The various "final concept" flags with names INHERITFLAG_??? and FINAL__???.
+   uint32 cmd_final_flags;       /* The various "final concept" flags with names INHERITFLAG_??? and FINAL__???.
                                     The INHERITFLAG_??? bits contain the final concepts like "single" that
                                     can be inherited from one part of a call definition to another.  The
                                     FINAL__??? bits contain other miscellaneous final concepts. */
-   unsigned int cmd_misc_flags;  /* Other miscellaneous info controlling the execution of the call,
+   uint32 cmd_misc_flags;        /* Other miscellaneous info controlling the execution of the call,
                                     with names like CMD_MISC__???. */
-   unsigned int cmd_frac_flags;  /* Fractionalization info controlling the execution of the call. */
+   uint32 cmd_frac_flags;        /* Fractionalization info controlling the execution of the call. */
    assumption_thing cmd_assume;  /* Any "assume waves" type command. */
 /*
    This field tells, for a 2x2 setup prior to having a call executed, how that
@@ -767,7 +798,7 @@ typedef struct {
    A zero means the elongation is unknown.
 */
 
-   unsigned int prior_elongation_bits;
+   uint32 prior_elongation_bits;
 } setup_command;
 
 
@@ -783,7 +814,7 @@ typedef struct {
    /* The following item is not actually part of the setup description, but contains
       miscellaneous information left by "move" and similar procedures, for the
       convenience of whatever called same. */
-   unsigned int result_flags;           /* Miscellaneous info, with names like RESULTFLAG__???. */
+   uint32 result_flags;           /* Miscellaneous info, with names like RESULTFLAG__???. */
 
    /* The following three items are only used if the setup kind is "s_normal_concentric".  Note in particular that
       "outer_elongation" is thus underutilized, and that a lot of complexity goes into storing similar information
@@ -1001,7 +1032,7 @@ typedef enum {
 #define FINAL__MUST_BE_SCOOT              INHERITSPARE_5
 #define FINAL__TRIANGLE                   INHERITSPARE_6
 
-typedef unsigned int final_set;
+typedef uint32 final_set;
 
 typedef struct glonk {
    char txt[80];
@@ -1013,7 +1044,7 @@ typedef struct flonk {
    struct flonk *nxt;
 } outfile_block;
 
-typedef unsigned int defmodset;
+typedef uint32 defmodset;
 
 typedef map_thing *map_hunk[][2];
 
@@ -1115,8 +1146,28 @@ typedef enum {
    merge_without_gaps
 } merge_action;
 
+typedef enum {
+   chk_none,
+   chk_wave,
+   chk_1_group,
+   chk_2_groups,
+   chk_4_groups,
+   chk_box,
+   chk_peelable
+} chk_type;
+
 typedef struct {
-   unsigned int bits[2];
+   int size;
+   int map1[8];
+   int map2[8];
+   int map3[8];
+   int map4[8];
+   long_boolean ok_for_assume;
+   chk_type check;
+} restriction_thing;
+
+typedef struct {
+   uint32 bits[2];
 } warning_info;
 
 typedef struct {           /* This record is one state in the evolving sequence. */
@@ -1146,7 +1197,7 @@ typedef struct {
 } parse_state_type;
 
 typedef struct {
-   unsigned int concept_prop;      /* Takes bits of the form CONCPROP__??? */
+   uint32 concept_prop;      /* Takes bits of the form CONCPROP__??? */
    void (*concept_action)(setup *, parse_block *, setup *);
 } concept_table_item;
 
@@ -1263,17 +1314,17 @@ extern int written_history_nopic;                                   /* in SDUTIL
 extern parse_block *last_magic_diamond;                             /* in SDUTIL */
 extern char error_message1[MAX_ERR_LENGTH];                         /* in SDUTIL */
 extern char error_message2[MAX_ERR_LENGTH];                         /* in SDUTIL */
-extern unsigned int collision_person1;                              /* in SDUTIL */
-extern unsigned int collision_person2;                              /* in SDUTIL */
+extern uint32 collision_person1;                                    /* in SDUTIL */
+extern uint32 collision_person2;                                    /* in SDUTIL */
 extern long_boolean enable_file_writing;                            /* in SDUTIL */
 extern char *selector_names[];                                      /* in SDUTIL */
 extern char *direction_names[];                                     /* in SDUTIL */
 extern char *warning_strings[];                                     /* in SDUTIL */
 
-extern unsigned int global_tbonetest;                               /* in SDCONCPT */
-extern unsigned int global_livemask;                                /* in SDCONCPT */
-extern unsigned int global_selectmask;                              /* in SDCONCPT */
-extern unsigned int global_tboneselect;                             /* in SDCONCPT */
+extern uint32 global_tbonetest;                                     /* in SDCONCPT */
+extern uint32 global_livemask;                                      /* in SDCONCPT */
+extern uint32 global_selectmask;                                    /* in SDCONCPT */
+extern uint32 global_tboneselect;                                   /* in SDCONCPT */
 extern concept_table_item concept_table[];                          /* in SDCONCPT */
 
 extern concept_descriptor special_magic;                            /* in SDCTABLE */
@@ -1409,9 +1460,10 @@ extern long_boolean resolver_is_unwieldy;                           /* in SDMAIN
 extern long_boolean diagnostic_mode;                                /* in SDMAIN */
 extern selector_kind current_selector;                              /* in SDMAIN */
 extern direction_kind current_direction;                            /* in SDMAIN */
-extern int current_number_fields;                                   /* in SDMAIN */
+extern uint32 current_number_fields;                                /* in SDMAIN */
 extern warning_info no_search_warnings;                             /* in SDMAIN */
 extern warning_info conc_elong_warnings;                            /* in SDMAIN */
+extern warning_info dyp_each_warnings;                              /* in SDMAIN */
 
 extern int random_number;                                           /* in SDSI */
 extern int hashed_randoms;                                          /* in SDSI */
@@ -1434,7 +1486,7 @@ extern parse_block *copy_parse_tree(parse_block *original_tree);
 extern void save_parse_state(void);
 extern long_boolean restore_parse_state(void);
 extern long_boolean deposit_call(callspec_block *call);
-extern long_boolean deposit_concept(concept_descriptor *conc, unsigned int number_fields);
+extern long_boolean deposit_concept(concept_descriptor *conc, uint32 number_fields);
 extern long_boolean query_for_call(void);
 extern void write_header_stuff(long_boolean with_ui_version);
 extern void get_real_subcall(
@@ -1502,7 +1554,7 @@ extern int uims_do_neglect_popup(char dest[]);
 extern int uims_do_selector_popup(void);
 extern int uims_do_direction_popup(void);
 extern int uims_do_modifier_popup(char callname[], modify_popup_kind kind);
-extern unsigned int uims_get_number_fields(int nnumbers);
+extern uint32 uims_get_number_fields(int nnumbers);
 extern void uims_reduce_line_count(int n);
 extern void uims_add_new_line(char the_line[]);
 extern uims_reply uims_get_command(mode_kind mode, call_list_kind *call_menu);
@@ -1535,19 +1587,19 @@ extern void write_history_line(int history_index, Const char *header, long_boole
 extern void warn(warning_index w);
 extern call_list_kind find_proper_call_list(setup *s);
 extern callarray *assoc(begin_kind key, setup *ss, callarray *spec);
-extern unsigned int find_calldef(
+extern uint32 find_calldef(
    callarray *tdef,
    setup *scopy,
    int real_index,
    int real_direction,
    int northified_index);
 extern void clear_people(setup *z);
-extern unsigned int rotperson(unsigned int n, int amount);
-extern unsigned int rotcw(unsigned int n);
-extern unsigned int rotccw(unsigned int n);
+extern uint32 rotperson(uint32 n, int amount);
+extern uint32 rotcw(uint32 n);
+extern uint32 rotccw(uint32 n);
 extern void clear_person(setup *resultpeople, int resultplace);
-extern unsigned int copy_person(setup *resultpeople, int resultplace, setup *sourcepeople, int sourceplace);
-extern unsigned int copy_rot(setup *resultpeople, int resultplace, setup *sourcepeople, int sourceplace, int rotamount);
+extern uint32 copy_person(setup *resultpeople, int resultplace, setup *sourcepeople, int sourceplace);
+extern uint32 copy_rot(setup *resultpeople, int resultplace, setup *sourcepeople, int sourceplace, int rotamount);
 extern void swap_people(setup *ss, int oneplace, int otherplace);
 extern void install_person(setup *resultpeople, int resultplace, setup *sourcepeople, int sourceplace);
 extern void install_rot(setup *resultpeople, int resultplace, setup *sourcepeople, int sourceplace, int rotamount);
@@ -1572,7 +1624,7 @@ extern void initialize_getout_tables(void);
 /* In SDBASIC */
 
 extern void mirror_this(setup *s);
-extern void do_stability(unsigned int *personp, stability stab, int turning);
+extern void do_stability(uint32 *personp, stability stab, int turning);
 extern void check_restriction(setup *ss, assumption_thing restr, unsigned int flags);
 extern void basic_move(
    setup *ss,
@@ -1588,8 +1640,8 @@ extern void reinstate_rotation(setup *ss, setup *result);
 
 extern long_boolean divide_for_magic(
    setup *ss,
-   unsigned int flags_to_use,
-   unsigned int flags_to_check,
+   uint32 flags_to_use,
+   uint32 flags_to_check,
    setup *result);
 
 extern void do_call_in_series(
@@ -1653,7 +1705,9 @@ extern void triangle_move(
    parse_block *parseptr,
    setup *result);
 
-/* In SD */
+/* In SDCONCPT */
+
+extern restriction_thing *get_restriction_thing(setup_kind k, assumption_thing t);
 
 extern long_boolean do_big_concept(
    setup *ss,
@@ -1685,7 +1739,7 @@ extern void concentric_move(
    defmodset modifiersout1,
    setup *result);
 
-extern unsigned int get_multiple_parallel_resultflags(setup outer_inners[], int number);
+extern uint32 get_multiple_parallel_resultflags(setup outer_inners[], int number);
 
 extern void normalize_concentric(
    calldef_schema synthesizer,
@@ -1717,7 +1771,7 @@ extern void touch_or_rear_back(
 
 extern void do_matrix_expansion(
    setup *ss,
-   unsigned int concprops,
+   uint32 concprops,
    long_boolean recompute_id);
 
 extern void normalize_setup(setup *ss, normalize_action action);

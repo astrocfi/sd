@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990, 1991, 1992, 1993, 1994  William B. Ackerman.
+    Copyright (C) 1990-1994  William B. Ackerman.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -62,6 +62,24 @@ Private void innards(
          x[i].cmd.cmd_misc_flags = (x[i].cmd.cmd_misc_flags & ~(CMD_MISC__OFFSET_Z | CMD_MISC__MATRIX_CONCEPT)) | CMD_MISC__DISTORTED | CMD_MISC__NO_EXPAND_MATRIX;
          x[i].cmd.cmd_assume = new_assume;
          if (recompute_id) update_id_bits(&x[i]);
+
+         if (x[i].cmd.cmd_misc_flags & CMD_MISC__VERIFY_WAVES) {
+            assumption_thing t;
+
+            x[i].cmd.cmd_misc_flags &= ~CMD_MISC__VERIFY_WAVES;
+
+            /* **** actually, we want to allow the case of "assume waves" already in place. */
+            if (x[i].cmd.cmd_assume.assumption != cr_none)
+               fail("Redundant or conflicting assumptions.");
+
+            t.assumption = cr_wave_only;
+            t.assump_col = 0;
+            t.assump_both = 0;
+            t.assump_cast = x[i].cmd.cmd_assume.assump_cast;
+            x[i].cmd.cmd_assume = t;
+            check_restriction(&x[i], t, 99);
+         }
+
          move(&x[i], FALSE, &z[i]);
       }
       else {
@@ -549,7 +567,7 @@ extern void do_phantom_2x4_concept(
       and global_livemask, but may not look at anyone's facing direction other
       than through global_tbonetest. */
 
-   int linesp = parseptr->concept->value.arg2;
+   int linesp = parseptr->concept->value.arg2 & 1;
    int rot = (global_tbonetest ^ linesp ^ 1) & 1;
    Const map_thing *maps = parseptr->concept->value.maps;
 
@@ -625,6 +643,7 @@ extern void do_phantom_2x4_concept(
             /* Change the setup to a 4x6. */
 
             stemp = *ss;
+            ss->kind = s4x6;
             clear_people(ss);
             for (i=0; i<12; i++) copy_person(ss, indices_for_2x6_4x6[i], &stemp, i);
             break;              /* Note that rot is zero. */
@@ -636,6 +655,8 @@ extern void do_phantom_2x4_concept(
 
    ss->rotation += rot;   /* Just flip the setup around and recanonicalize. */
    canonicalize_rotation(ss);
+   if (parseptr->concept->value.arg2 == 3)
+      ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
 
    divided_setup_move(ss, maps,
          (phantest_kind) parseptr->concept->value.arg1, TRUE, result);
@@ -985,16 +1006,17 @@ extern void distorted_move(
 
 /*
    Args from the concept are as follows:
-   arg1 =
-      0 - user claims this is some kind of columns
-      1 - user claims this is some kind of lines
-   disttest (usually just the arg2 field from the concept,
+   disttest (usually just the arg1 field from the concept,
             but may get fudged for random bigblock/stagger) =
       disttest_offset - user claims this is offset lines/columns
       disttest_z      - user claims this is Z lines/columns
       disttest_any    - user claims this is distorted lines/columns
+   arg2 =
+      0 - user claims this is some kind of columns
+      1 - user claims this is some kind of lines
+      3 - user claims this is waves
 
-   Tbonetest has the OR of all the people, or all the standard people if
+   Global_tbonetest has the OR of all the people, or all the standard people if
       this is "standard", so it is what we look at to interpret the
       lines vs. columns nature of the concept.
 */
@@ -1012,7 +1034,7 @@ extern void distorted_move(
    map_thing *map_ptr;
    int rotate_back = 0;
    int livemask = global_livemask;
-   int linesp = parseptr->concept->value.arg1;
+   int linesp = parseptr->concept->value.arg2;
    long_boolean zlines = TRUE;
 
    if (ss->kind == s4x4) {
@@ -1027,7 +1049,7 @@ extern void distorted_move(
          if (disttest != disttest_offset)
             fail("Sorry, can't apply this concept when people are T-boned.");
    
-         phantom_2x4_move(ss, linesp, phantest_only_one, &(map_offset), result);
+         phantom_2x4_move(ss, linesp & 1, phantest_only_one, &(map_offset), result);
          return;
       }
    
@@ -1144,11 +1166,11 @@ extern void triple_twin_move(
    parse_block *parseptr,
    setup *result)
 {
-   int tbonetest;
+   uint32 tbonetest;
    int i;
    static short source_indices[16]  = {4, 7, 22, 8, 13, 14, 15, 21, 16, 19, 10, 20, 1, 2, 3, 9};
 
-   /* Arg1 = 1 for triple twin columns, 0 for triple twin lines. */
+   /* Arg1 = 0 for triple twin columns, 1 for triple twin lines, 3 for triple twin waves. */
 
    /* The setup has not necessarily been expanded to a 4x6.  It has only been
       expanded to a 4x4.  Why?  Because the stuff in toplevelmove that does
@@ -1186,21 +1208,24 @@ extern void triple_twin_move(
       clear_people(ss);
 
       if (tbonetest & 1) {
-         for (i=0; i<16; i++) copy_person(ss, source_indices[i], &stemp, i);
-      }
-      else {
          for (i=0; i<16; i++) (void) copy_rot(ss, source_indices[i], &stemp, (i+4) & 0xF, 033);
          ss->rotation++;
          tbonetest ^= 1;    /* Fix it. */
+      }
+      else {
+         for (i=0; i<16; i++) copy_person(ss, source_indices[i], &stemp, i);
       }
    
       ss->kind = s4x6;
 
    }
    else if (ss->kind != s4x6) fail("Must have a 4x6 setup for this concept.");
+
+   if (parseptr->concept->value.arg1 == 3)
+      ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
    
-   if (!(tbonetest & 1)) {
-      if (parseptr->concept->value.arg1) fail("Can't find triple twin columns.");
+   if (tbonetest & 1) {
+      if (parseptr->concept->value.arg1 == 0) fail("Can't find triple twin columns.");
       else fail("Can't find triple twin lines.");
    }
    

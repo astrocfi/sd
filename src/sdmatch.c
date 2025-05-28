@@ -176,11 +176,11 @@ matcher_initialize(long_boolean show_commands_last)
     level_concept_list_length = 0;
     for (concept_number=0;;concept_number++) {
         p = &concept_descriptor_table[concept_number];
-        if (p->kind == concept_comment) {
-            continue;
-        }
         if (p->kind == end_marker) {
             break;
+        }
+        if (p->kind == concept_comment || p->dup) {
+            continue;
         }
         concept_list_length++;
         if (p->level <= calling_level) {
@@ -199,11 +199,11 @@ matcher_initialize(long_boolean show_commands_last)
     level_item = level_concept_list;
     for (concept_number=0;;concept_number++) {
         p = &concept_descriptor_table[concept_number];
-        if (p->kind == concept_comment) {
-            continue;
-        }
         if (p->kind == end_marker) {
             break;
+        }
+        if (p->kind == concept_comment || p->dup) {
+            continue;
         }
         item->number = concept_number;
         item->name = strdup_lower(p->name);
@@ -689,6 +689,11 @@ match_wildcard(match_state *sp, char *user, char *pat, char *patxp, Const match_
         /* special case: allow 1/2 for 2/4 */
         new_result.number_fields = result->number_fields + (2 << ((new_result.howmanynumbers-1)*4));
         match_suffix_2(sp, user, "1/2", suffix, patxp, &new_result);
+
+        /* special case: allow "full" for 4/4 */
+        new_result.number_fields = result->number_fields + (4 << ((new_result.howmanynumbers-1)*4));
+        match_suffix_2(sp, user, "full", suffix, patxp, &new_result);
+
         return FALSE;
     }
     else return FALSE;

@@ -27,7 +27,7 @@
     General Public License if you distribute the file.
 */
 
-#define VERSION_STRING "30.74"
+#define VERSION_STRING "30.76"
 
 /* We cause this string (that is, the concatentaion of these strings) to appear
    in the binary image of the program, so that the "what" and "ident" utilities
@@ -88,6 +88,7 @@ and the following external variables:
    current_number_fields
    no_search_warnings
    conc_elong_warnings
+   dyp_each_warnings
 */
 
 
@@ -141,9 +142,10 @@ long_boolean resolver_is_unwieldy = FALSE;
 long_boolean diagnostic_mode = FALSE;
 selector_kind current_selector;
 direction_kind current_direction;
-int current_number_fields;
+uint32 current_number_fields;
 warning_info no_search_warnings = {0, 0};
 warning_info conc_elong_warnings = {0, 0};
+warning_info dyp_each_warnings = {0, 0};
 
 /* These variables are are global to this file. */
 
@@ -165,7 +167,7 @@ Private parse_block *saved_command_root;
 
 /* This static variable is used by main. */
 
-Private concept_descriptor centers_concept = {"centers????", concept_centers_or_ends, l_mainstream, {0, 0}};
+Private concept_descriptor centers_concept = {"centers????", concept_centers_or_ends, TRUE, l_mainstream, {0, 0}};
 
 
 /* This fills in concept_sublist_sizes and concept_sublists. */
@@ -188,7 +190,7 @@ Private concept_descriptor centers_concept = {"centers????", concept_centers_or_
 
 Private void initialize_concept_sublists(void)
 {
-   int number_of_concepts;
+   int concept_index;
    int concepts_at_level;
    call_list_kind test_call_list_kind;
    unsigned long int setup_mask;
@@ -198,14 +200,14 @@ Private void initialize_concept_sublists(void)
       when we will stop the concept list scan. */
    if (diagnostic_mode) end_marker = marker_end_of_list;
 
-   for (       number_of_concepts = 0, concepts_at_level = 0;
-               concept_descriptor_table[number_of_concepts].kind != end_marker;
-               number_of_concepts++) {
-      if (concept_descriptor_table[number_of_concepts].level <= calling_level)
+   for (       concept_index = 0, concepts_at_level = 0;
+               concept_descriptor_table[concept_index].kind != end_marker;
+               concept_index++) {
+      if (!concept_descriptor_table[concept_index].dup && concept_descriptor_table[concept_index].level <= calling_level)
          concepts_at_level++;
    }
 
-   general_concept_size = number_of_concepts - general_concept_offset;  /* Our friends in the UI will need this. */
+   general_concept_size = concept_index - general_concept_offset;  /* Our friends in the UI will need this. */
 
    concept_sublists[call_list_any] = (short int *) get_mem(concepts_at_level*sizeof(short int));
 
@@ -213,12 +215,12 @@ Private void initialize_concept_sublists(void)
    /* Note that the "assume_waves" concept is very dangerous.  We never allow it. */
 
    for (test_call_list_kind = call_list_qtag; test_call_list_kind > call_list_any; test_call_list_kind--) {
-      for (       number_of_concepts = 0, concepts_at_level = 0;
-                  concept_descriptor_table[number_of_concepts].kind != end_marker;
-                  number_of_concepts++) {
-         concept_descriptor *p = &concept_descriptor_table[number_of_concepts];
+      for (       concept_index = 0, concepts_at_level = 0;
+                  concept_descriptor_table[concept_index].kind != end_marker;
+                  concept_index++) {
+         concept_descriptor *p = &concept_descriptor_table[concept_index];
 
-         if (p->level <= calling_level && p->kind != concept_assume_waves) {
+         if (!p->dup && p->level <= calling_level && p->kind != concept_assume_waves) {
             setup_mask = ~0;
             /* This concept is legal at this level.  see if it is appropriate for this setup.
                If we don't know, the default value of setup_mask will make it legal. */
@@ -246,7 +248,7 @@ Private void initialize_concept_sublists(void)
             }
 
             if ((1 << ((int) test_call_list_kind)) & setup_mask)
-               concept_sublists[call_list_any][concepts_at_level++] = number_of_concepts;
+               concept_sublists[call_list_any][concepts_at_level++] = concept_index;
          }
       }
 
@@ -255,12 +257,13 @@ Private void initialize_concept_sublists(void)
       (void) memcpy(concept_sublists[test_call_list_kind], concept_sublists[call_list_any], concepts_at_level*sizeof(short int));
    }
 
-   for (       number_of_concepts = 0, concepts_at_level = 0;
-               concept_descriptor_table[number_of_concepts].kind != end_marker;
-               number_of_concepts++) {
-      if (     concept_descriptor_table[number_of_concepts].level <= calling_level &&
-               concept_descriptor_table[number_of_concepts].kind != concept_assume_waves)
-         concept_sublists[call_list_any][concepts_at_level++] = number_of_concepts;
+   for (       concept_index = 0, concepts_at_level = 0;
+               concept_descriptor_table[concept_index].kind != end_marker;
+               concept_index++) {
+      concept_descriptor *p = &concept_descriptor_table[concept_index];
+
+      if (!p->dup && p->level <= calling_level && p->kind != concept_assume_waves)
+         concept_sublists[call_list_any][concepts_at_level++] = concept_index;
    }
 
    concept_sublist_sizes[call_list_any] = concepts_at_level;
@@ -529,7 +532,7 @@ extern long_boolean deposit_call(callspec_block *call)
    necessary stuff will be chosen by random number.  If it is off, the appropriate
    numbers (as indicated by the "CONCPROP__USE_NUMBER" stuff) must be provided. */
 
-extern long_boolean deposit_concept(concept_descriptor *conc, unsigned int number_fields)
+extern long_boolean deposit_concept(concept_descriptor *conc, uint32 number_fields)
 {
    parse_block *new_block;
    selector_kind sel = selector_uninitialized;
@@ -1133,6 +1136,8 @@ void main(int argc, char *argv[])
          no_search_warnings.bits[i>>5] |= 1 << (i & 0x1F);
       if (warning_strings[i][0] == '+')
          conc_elong_warnings.bits[i>>5] |= 1 << (i & 0x1F);
+      if (warning_strings[i][0] == '=')
+         dyp_each_warnings.bits[i>>5] |= 1 << (i & 0x1F);
    }
 
    global_age = 1;

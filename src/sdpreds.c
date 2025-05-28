@@ -55,9 +55,9 @@ extern long_boolean selectp(setup *ss, int place)
 
    switch (current_selector) {
       case selector_all:
-         return(TRUE);
+         return TRUE;
       case selector_none:
-         return(FALSE);
+         return FALSE;
    }
 
    /* Demand that the subject be real. */
@@ -69,108 +69,124 @@ extern long_boolean selectp(setup *ss, int place)
 
    switch (current_selector) {
       case selector_boys:
-         if      ((pid2 & (ID2_BOY|ID2_GIRL)) == ID2_BOY) return(TRUE);
-         else if ((pid2 & (ID2_BOY|ID2_GIRL)) == ID2_GIRL) return(FALSE);
+         if      ((pid2 & (ID2_BOY|ID2_GIRL)) == ID2_BOY) return TRUE;
+         else if ((pid2 & (ID2_BOY|ID2_GIRL)) == ID2_GIRL) return FALSE;
          break;
       case selector_girls:
-         if      ((pid2 & (ID2_BOY|ID2_GIRL)) == ID2_GIRL) return(TRUE);
-         else if ((pid2 & (ID2_BOY|ID2_GIRL)) == ID2_BOY) return(FALSE);
+         if      ((pid2 & (ID2_BOY|ID2_GIRL)) == ID2_GIRL) return TRUE;
+         else if ((pid2 & (ID2_BOY|ID2_GIRL)) == ID2_BOY) return FALSE;
          break;
       case selector_heads:
-         if      ((pid2 & (ID2_HEAD|ID2_SIDE)) == ID2_HEAD) return(TRUE);
-         else if ((pid2 & (ID2_HEAD|ID2_SIDE)) == ID2_SIDE) return(FALSE);
+         if      ((pid2 & (ID2_HEAD|ID2_SIDE)) == ID2_HEAD) return TRUE;
+         else if ((pid2 & (ID2_HEAD|ID2_SIDE)) == ID2_SIDE) return FALSE;
          break;
       case selector_sides:
-         if      ((pid2 & (ID2_HEAD|ID2_SIDE)) == ID2_SIDE) return(TRUE);
-         else if ((pid2 & (ID2_HEAD|ID2_SIDE)) == ID2_HEAD) return(FALSE);
+         if      ((pid2 & (ID2_HEAD|ID2_SIDE)) == ID2_SIDE) return TRUE;
+         else if ((pid2 & (ID2_HEAD|ID2_SIDE)) == ID2_HEAD) return FALSE;
          break;
       case selector_headcorners:
-         if      ((pid2 & (ID2_HCOR|ID2_SCOR)) == ID2_HCOR) return(TRUE);
-         else if ((pid2 & (ID2_HCOR|ID2_SCOR)) == ID2_SCOR) return(FALSE);
+         if      ((pid2 & (ID2_HCOR|ID2_SCOR)) == ID2_HCOR) return TRUE;
+         else if ((pid2 & (ID2_HCOR|ID2_SCOR)) == ID2_SCOR) return FALSE;
          break;
       case selector_sidecorners:
-         if      ((pid2 & (ID2_HCOR|ID2_SCOR)) == ID2_SCOR) return(TRUE);
-         else if ((pid2 & (ID2_HCOR|ID2_SCOR)) == ID2_HCOR) return(FALSE);
+         if      ((pid2 & (ID2_HCOR|ID2_SCOR)) == ID2_SCOR) return TRUE;
+         else if ((pid2 & (ID2_HCOR|ID2_SCOR)) == ID2_HCOR) return FALSE;
          break;
       case selector_headboys:
-         if      ((pid2 & (ID2_ALL_ID|ID2_NHB)) == (ID2_HEAD|ID2_BOY)) return(TRUE);
-         else if ((pid2 & ID2_NHB) == ID2_NHB) return(FALSE);
+         if      ((pid2 & (ID2_ALL_ID|ID2_NHB)) == (ID2_HEAD|ID2_BOY)) return TRUE;
+         else if ((pid2 & ID2_NHB) == ID2_NHB) return FALSE;
          break;
       case selector_headgirls:
-         if      ((pid2 & (ID2_ALL_ID|ID2_NHG)) == (ID2_HEAD|ID2_GIRL)) return(TRUE);
-         else if ((pid2 & ID2_NHG) == ID2_NHG) return(FALSE);
+         if      ((pid2 & (ID2_ALL_ID|ID2_NHG)) == (ID2_HEAD|ID2_GIRL)) return TRUE;
+         else if ((pid2 & ID2_NHG) == ID2_NHG) return FALSE;
          break;
       case selector_sideboys:
-         if      ((pid2 & (ID2_ALL_ID|ID2_NSB)) == (ID2_SIDE|ID2_BOY)) return(TRUE);
-         else if ((pid2 & ID2_NSB) == ID2_NSB) return(FALSE);
+         if      ((pid2 & (ID2_ALL_ID|ID2_NSB)) == (ID2_SIDE|ID2_BOY)) return TRUE;
+         else if ((pid2 & ID2_NSB) == ID2_NSB) return FALSE;
          break;
       case selector_sidegirls:
-         if      ((pid2 & (ID2_ALL_ID|ID2_NSG)) == (ID2_SIDE|ID2_GIRL)) return(TRUE);
-         else if ((pid2 & ID2_NSG) == ID2_NSG) return(FALSE);
+         if      ((pid2 & (ID2_ALL_ID|ID2_NSG)) == (ID2_SIDE|ID2_GIRL)) return TRUE;
+         else if ((pid2 & ID2_NSG) == ID2_NSG) return FALSE;
          break;
       case selector_centers:
-         if      ((pid2 & (ID2_CENTER|ID2_END)) == ID2_CENTER) return(TRUE);
-         else if ((pid2 & (ID2_CENTER|ID2_END)) == ID2_END) return(FALSE);
+         if      ((pid2 & (ID2_CENTER|ID2_END)) == ID2_CENTER) return TRUE;
+         else if ((pid2 & (ID2_CENTER|ID2_END)) == ID2_END) return FALSE;
          break;
       case selector_ends:
-         if      ((pid2 & (ID2_CENTER|ID2_END)) == ID2_END) return(TRUE);
-         else if ((pid2 & (ID2_CENTER|ID2_END)) == ID2_CENTER) return(FALSE);
+         if      ((pid2 & (ID2_CENTER|ID2_END)) == ID2_END) return TRUE;
+         else if ((pid2 & (ID2_CENTER|ID2_END)) == ID2_CENTER) return FALSE;
          break;
       case selector_leads:
-         if      ((pid2 & (ID2_LEAD|ID2_TRAILER)) == ID2_LEAD) return(TRUE);
-         else if ((pid2 & (ID2_LEAD|ID2_TRAILER)) == ID2_TRAILER) return(FALSE);
+         if      ((pid2 & (ID2_LEAD|ID2_TRAILER)) == ID2_LEAD) return TRUE;
+         else if ((pid2 & (ID2_LEAD|ID2_TRAILER)) == ID2_TRAILER) return FALSE;
          break;
       case selector_trailers:
-         if      ((pid2 & (ID2_LEAD|ID2_TRAILER)) == ID2_TRAILER) return(TRUE);
-         else if ((pid2 & (ID2_LEAD|ID2_TRAILER)) == ID2_LEAD) return(FALSE);
+         if      ((pid2 & (ID2_LEAD|ID2_TRAILER)) == ID2_TRAILER) return TRUE;
+         else if ((pid2 & (ID2_LEAD|ID2_TRAILER)) == ID2_LEAD) return FALSE;
          break;
       case selector_beaus:
-         if      ((pid2 & (ID2_BEAU|ID2_BELLE)) == ID2_BEAU) return(TRUE);
-         else if ((pid2 & (ID2_BEAU|ID2_BELLE)) == ID2_BELLE) return(FALSE);
+         if      ((pid2 & (ID2_BEAU|ID2_BELLE)) == ID2_BEAU) return TRUE;
+         else if ((pid2 & (ID2_BEAU|ID2_BELLE)) == ID2_BELLE) return FALSE;
          break;
       case selector_belles:
-         if      ((pid2 & (ID2_BEAU|ID2_BELLE)) == ID2_BELLE) return(TRUE);
-         else if ((pid2 & (ID2_BEAU|ID2_BELLE)) == ID2_BEAU) return(FALSE);
+         if      ((pid2 & (ID2_BEAU|ID2_BELLE)) == ID2_BELLE) return TRUE;
+         else if ((pid2 & (ID2_BEAU|ID2_BELLE)) == ID2_BEAU) return FALSE;
          break;
       case selector_center2:
-         if      ((pid2 & (ID2_CTR2|ID2_OUTR6)) == ID2_CTR2) return(TRUE);
-         else if ((pid2 & (ID2_CTR2|ID2_OUTR6)) == ID2_OUTR6) return(FALSE);
+         if      ((pid2 & (ID2_CTR2|ID2_OUTR6)) == ID2_CTR2) return TRUE;
+         else if ((pid2 & (ID2_CTR2|ID2_OUTR6)) == ID2_OUTR6) return FALSE;
          break;
       case selector_center6:
-         if      ((pid2 & (ID2_CTR6|ID2_OUTR2)) == ID2_CTR6) return(TRUE);
-         else if ((pid2 & (ID2_CTR6|ID2_OUTR2)) == ID2_OUTR2) return(FALSE);
+         if      ((pid2 & (ID2_CTR6|ID2_OUTR2)) == ID2_CTR6) return TRUE;
+         else if ((pid2 & (ID2_CTR6|ID2_OUTR2)) == ID2_OUTR2) return FALSE;
          break;
       case selector_outer2:
-         if      ((pid2 & (ID2_CTR6|ID2_OUTR2)) == ID2_OUTR2) return(TRUE);
-         else if ((pid2 & (ID2_CTR6|ID2_OUTR2)) == ID2_CTR6) return(FALSE);
+         if      ((pid2 & (ID2_CTR6|ID2_OUTR2)) == ID2_OUTR2) return TRUE;
+         else if ((pid2 & (ID2_CTR6|ID2_OUTR2)) == ID2_CTR6) return FALSE;
          break;
       case selector_outer6:
-         if      ((pid2 & (ID2_CTR2|ID2_OUTR6)) == ID2_OUTR6) return(TRUE);
-         else if ((pid2 & (ID2_CTR2|ID2_OUTR6)) == ID2_CTR2) return(FALSE);
+         if      ((pid2 & (ID2_CTR2|ID2_OUTR6)) == ID2_OUTR6) return TRUE;
+         else if ((pid2 & (ID2_CTR2|ID2_OUTR6)) == ID2_CTR2) return FALSE;
+         break;
+      case selector_center4:
+         if      ((pid2 & (ID2_CTR4|ID2_OUTRPAIRS)) == ID2_CTR4) return TRUE;
+         else if ((pid2 & (ID2_CTR4|ID2_OUTRPAIRS)) == ID2_OUTRPAIRS) return FALSE;
+         break;
+      case selector_outerpairs:
+         if      ((pid2 & (ID2_CTR4|ID2_OUTRPAIRS)) == ID2_OUTRPAIRS) return TRUE;
+         else if ((pid2 & (ID2_CTR4|ID2_OUTRPAIRS)) == ID2_CTR4) return FALSE;
+         break;
+      case selector_headliners:
+         if      ((pid2 & (ID2_HEADLINE|ID2_SIDELINE)) == ID2_HEADLINE) return TRUE;
+         else if ((pid2 & (ID2_HEADLINE|ID2_SIDELINE)) == ID2_SIDELINE) return FALSE;
+         break;
+      case selector_sideliners:
+         if      ((pid2 & (ID2_HEADLINE|ID2_SIDELINE)) == ID2_SIDELINE) return TRUE;
+         else if ((pid2 & (ID2_HEADLINE|ID2_SIDELINE)) == ID2_HEADLINE) return FALSE;
          break;
       case selector_nearline:
-         if      ((pid2 & (ID2_NEARLINE|ID2_FARLINE)) == ID2_NEARLINE) return(TRUE);
-         else if ((pid2 & (ID2_NEARLINE|ID2_FARLINE)) == ID2_FARLINE) return(FALSE);
+         if      (pid2 & ID2_NEARLINE) return TRUE;
+         else if (pid2 & (ID2_FARLINE|ID2_FARCOL|ID2_FARBOX)) return FALSE;
          break;
       case selector_farline:
-         if      ((pid2 & (ID2_NEARLINE|ID2_FARLINE)) == ID2_FARLINE) return(TRUE);
-         else if ((pid2 & (ID2_NEARLINE|ID2_FARLINE)) == ID2_NEARLINE) return(FALSE);
+         if      (pid2 & ID2_FARLINE) return TRUE;
+         else if (pid2 & (ID2_NEARLINE|ID2_NEARCOL|ID2_NEARBOX)) return FALSE;
          break;
       case selector_nearcolumn:
-         if      ((pid2 & (ID2_NEARCOL|ID2_FARCOL)) == ID2_NEARCOL) return(TRUE);
-         else if ((pid2 & (ID2_NEARCOL|ID2_FARCOL)) == ID2_FARCOL) return(FALSE);
+         if      (pid2 & ID2_NEARCOL) return TRUE;
+         else if (pid2 & (ID2_FARLINE|ID2_FARCOL|ID2_FARBOX)) return FALSE;
          break;
       case selector_farcolumn:
-         if      ((pid2 & (ID2_NEARCOL|ID2_FARCOL)) == ID2_FARCOL) return(TRUE);
-         else if ((pid2 & (ID2_NEARCOL|ID2_FARCOL)) == ID2_NEARCOL) return(FALSE);
+         if      (pid2 & ID2_FARCOL) return TRUE;
+         else if (pid2 & (ID2_NEARLINE|ID2_NEARCOL|ID2_NEARBOX)) return FALSE;
          break;
       case selector_nearbox:
-         if      ((pid2 & (ID2_NEARBOX|ID2_FARBOX)) == ID2_NEARBOX) return(TRUE);
-         else if ((pid2 & (ID2_NEARBOX|ID2_FARBOX)) == ID2_FARBOX) return(FALSE);
+         if      (pid2 & ID2_NEARBOX) return TRUE;
+         else if (pid2 & (ID2_FARLINE|ID2_FARCOL|ID2_FARBOX)) return FALSE;
          break;
       case selector_farbox:
-         if      ((pid2 & (ID2_NEARBOX|ID2_FARBOX)) == ID2_FARBOX) return(TRUE);
-         else if ((pid2 & (ID2_NEARBOX|ID2_FARBOX)) == ID2_NEARBOX) return(FALSE);
+         if      (pid2 & ID2_FARBOX) return TRUE;
+         else if (pid2 & (ID2_NEARLINE|ID2_NEARCOL|ID2_NEARBOX)) return FALSE;
          break;
       default:
          fail("ERROR - selector failed to get initialized.");
@@ -326,6 +342,8 @@ Private long_boolean lines_couple(setup *real_people, int real_index,
 {
    if (real_people->cmd.cmd_assume.assumption == cr_wave_only)
       return FALSE;
+   else if (real_people->cmd.cmd_assume.assumption == cr_2fl_only)
+      return TRUE;
    else {
       int this_person = real_people->people[real_index].id1;
       int other_person = real_people->people[real_index ^ 1].id1;
@@ -368,6 +386,8 @@ Private long_boolean lines_miniwave(setup *real_people, int real_index,
 {
    if (real_people->cmd.cmd_assume.assumption == cr_wave_only)
       return TRUE;
+   else if (real_people->cmd.cmd_assume.assumption == cr_2fl_only)
+      return FALSE;
    else {
       int this_person = real_people->people[real_index].id1;
       int other_person = real_people->people[real_index ^ 1].id1;

@@ -1,4 +1,4 @@
-AC_REVISION(Time-stamp: "93/12/01 16:33:31 gildea")dnl
+AC_REVISION(Time-stamp: "94/07/28 01:12:58 gildea")dnl
 # configure script for Sd (square dance caller's helper)
 #
 # options:
@@ -39,7 +39,7 @@ dnl This rule is for dmake on DOS, in case not installed for djgpp
 [
 [#] ****** Beginning of Unix section ******
 echo "making ${CONFIG_FILES} for Unix"
-echo "checking for compiler type"
+AC_CHECKING(for compiler type)
 
 AC_GCC_TRADITIONAL
 CDEBUGFLAGS=-O
@@ -48,11 +48,10 @@ CDEBUGFLAGS=-O
 [#] In any case, deal with the "with-warnings" switch.
 
 if test -n "$GCC"; then
-  echo "using gcc"
   AC_WITH(warnings, CC="$CC -Wall -Wno-switch -Wno-implicit -Wno-parentheses -Wshadow -Wpointer-arith")
 else
-  echo "not using gcc, looking for other compilers"
-  echo "checking for HP compiler"
+  AC_VERBOSE(not using gcc: looking for other compilers)
+  AC_CHECKING(for HP compiler)
   AC_PROGRAM_EGREP(yes,
 [#ifdef __hpux
 yes
@@ -66,9 +65,9 @@ fi
 [#] Now CC should contain compiler invocation string, with switches.
 [#] CDEBUGFLAGS should contain optimization/debug switches.
 
-echo "got compiler type"
+AC_VERBOSE(got compiler type)
 
-echo "checking whether -I$srcdir is needed"
+AC_CHECKING(whether -I$srcdir is needed)
 AC_TEST_CPP([#include "sd.h"], , DEFS="$DEFS -I$srcdir")
 
 [#] Begin X11 investigation.
@@ -91,7 +90,7 @@ X11_LIBS="$x_flags -lXaw -lXmu -lXt -lXext -lX11 $LIBS"
 
 if test -n "$x_libraries"; then
   dnl SunOS 5 needs -R with shared libraries
-  echo "checking whether -R$x_libraries is needed"
+  AC_CHECKING(whether -R$x_libraries is needed)
   LIBS="$X11_LIBS"
   AC_TEST_PROGRAM([main(){XDisplayName(0); exit(0);}],
     ,[# losing, try adding -R
@@ -103,7 +102,7 @@ fi
 
 [#] End of X11 investigation, begin curses investigation.
 
-echo "checking for curses include files and libraries ..."
+AC_CHECKING(for curses include files and libraries ...)
 
 [#] We do NOT simply search for the existence of directories /usr/5include
 [#] or /usr/5lib.  The standards (OSF and SysV) simply say that the curses

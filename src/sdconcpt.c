@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990, 1991, 1992, 1993, 1994  William B. Ackerman.
+    Copyright (C) 1990-1994  William B. Ackerman.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -18,7 +18,8 @@
 
     This is for version 31. */
 
-/* This defines the following function:
+/* This defines the following functions:
+   get_restriction_thing
    do_big_concept
 
 and the following external variables:
@@ -33,34 +34,6 @@ and the following external variables:
 #include <stdio.h>
 
 #include "sd.h"
-
-
-/* ================================================= */
-/* Shared between sdconcpt and sdbasic */
-/* ================================================= */
-typedef enum {
-   chk_none,
-   chk_wave,
-   chk_1_group,
-   chk_2_groups,
-   chk_4_groups,
-   chk_box,
-   chk_peelable
-} chk_type;
-
-typedef struct {
-   int size;
-   int map1[8];
-   int map2[8];
-   int map3[8];
-   int map4[8];
-   long_boolean ok_for_assume;
-   chk_type check;
-} restriction_thing;
-
-extern restriction_thing *get_restriction_thing(setup_kind k, assumption_thing t);
-/* ================================================= */
-
 
 Private restriction_thing wave_2x4      = {4, {0, 2, 5, 7},                {1, 3, 4, 6},                   {0}, {0}, TRUE, chk_wave};            /* check for two parallel consistent waves */
 Private restriction_thing two_faced_2x4 = {4, {0, 1, 6, 7},                {3, 2, 5, 4},                   {0}, {0}, TRUE, chk_wave};            /* check for two parallel consistent two-faced lines */
@@ -117,6 +90,10 @@ Private restriction_thing two_faced_4x4_2x8 = {8, {0, 1, 2, 3, 12, 13, 14, 15}, 
 Private restriction_thing box_wave      = {4, {2, 0, 0, 2},                {0, 0, 2, 2},                   {0}, {0}, FALSE, chk_box};            /* check for a "real" (walk-and-dodge type) box */
 Private restriction_thing box_1face     = {4, {2, 2, 2, 2},                {0, 0, 0, 0},                   {0}, {0}, FALSE, chk_box};            /* check for a "one-faced" (reverse-the-pass type) box */
 Private restriction_thing box_magic     = {4, {2, 0, 2, 0},                {0, 2, 0, 2},                   {0}, {0}, TRUE, chk_box};             /* check for a "magic" (split-trade-circulate type) box */
+
+Private restriction_thing cwave_qtg     = {2, {2, 7},                      {3, 6},                         {0}, {0}, FALSE, chk_wave};           /* check for wave across the center */
+Private restriction_thing wave_qtag     = {2, {2, 7},                      {3, 6},                         {0}, {0}, FALSE, chk_wave};           /* check for wave across the center */
+Private restriction_thing two_faced_qtag= {2, {6, 7},                      {2, 3},                         {0}, {0}, FALSE, chk_wave};           /* check for two-faced line across the center */
 
 
 
@@ -267,8 +244,13 @@ extern restriction_thing *get_restriction_thing(setup_kind k, assumption_thing t
          else if (t.assumption == cr_4x4couples_only && t.assump_col == 0)
             restr_thing_ptr = &cpls_2x8;
          break;
-      default:
-         break;
+      case s_qtag:
+         if (t.assumption == cr_wave_only && t.assump_col == 1)
+            restr_thing_ptr = &cwave_qtg;
+         else if (t.assumption == cr_wave_only && t.assump_col == 0)
+            restr_thing_ptr = &wave_qtag;
+         else if (t.assumption == cr_2fl_only && t.assump_col == 0)
+            restr_thing_ptr = &two_faced_qtag;
    }
 
    return restr_thing_ptr;
@@ -277,10 +259,10 @@ extern restriction_thing *get_restriction_thing(setup_kind k, assumption_thing t
 
 
 
-unsigned int global_tbonetest;
-unsigned int global_livemask;
-unsigned int global_selectmask;
-unsigned int global_tboneselect;
+uint32 global_tbonetest;
+uint32 global_livemask;
+uint32 global_selectmask;
+uint32 global_tboneselect;
 
 
 
@@ -758,6 +740,9 @@ Private void do_concept_quad_lines(
    if (parseptr->concept->value.arg1 & 1)
       ss->cmd.cmd_misc_flags |= CMD_MISC__NO_STEP_TO_WAVE;
 
+   if (parseptr->concept->value.arg1 == 3)
+      ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
+
    if ((global_tbonetest & 011) == 011) fail("Can't do this from T-bone setup.");
 
    if (ss->kind == s4x4) {
@@ -806,15 +791,18 @@ Private void do_concept_quad_lines_tog(
       is a single 8 chain and another is a single DPT.  But if it was quadruple
       lines, we forbid it. */
 
-   if (linesp)
+   if (linesp & 1)
       ss->cmd.cmd_misc_flags |= CMD_MISC__NO_STEP_TO_WAVE;
+
+   if (linesp == 3)
+      ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
 
    if (cstuff >= 10) {
       if (ss->kind != s1x16) fail("Must have a 1x16 setup for this concept.");
    
       if ((global_tbonetest & 011) == 011) fail("Can't do this from T-bone setup.");
    
-      if (linesp) {
+      if (linesp & 1) {
          if (global_tbonetest & 1) fail("There are no lines of 4 here.");
       }
       else {
@@ -1094,6 +1082,9 @@ Private void do_concept_triple_lines(
    if (parseptr->concept->value.arg1 & 1)
       ss->cmd.cmd_misc_flags |= CMD_MISC__NO_STEP_TO_WAVE;
 
+   if (parseptr->concept->value.arg1 == 3)
+      ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
+
    if ((global_tbonetest & 011) == 011) fail("Can't do this from T-bone setup.");
 
    if (!((parseptr->concept->value.arg1 ^ global_tbonetest) & 1)) {
@@ -1134,15 +1125,18 @@ Private void do_concept_triple_lines_tog(
       is a single 8 chain and another is a single DPT.  But if it was triple
       lines, we forbid it. */
 
-   if (linesp)
+   if (linesp & 1)
       ss->cmd.cmd_misc_flags |= CMD_MISC__NO_STEP_TO_WAVE;
+
+   if (linesp == 3)
+      ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
 
    if (cstuff >= 10) {
       if (ss->kind != s1x12) fail("Must have a 1x12 setup for this concept.");
    
       if ((global_tbonetest & 011) == 011) fail("Can't do this from T-bone setup.");
    
-      if (linesp) {
+      if (linesp & 1) {
          if (global_tbonetest & 1) fail("There are no lines of 4 here.");
       }
       else {
@@ -1173,7 +1167,7 @@ Private void do_concept_triple_lines_tog(
    
       if ((tbonetest & 011) == 011) fail("Can't do this from T-bone setup.");
    
-      if (linesp) {
+      if (linesp & 1) {
          if (tbonetest & 1) fail("There are no lines of 4 here.");
       }
       else {
@@ -1220,6 +1214,9 @@ Private void do_concept_triple_diag(
 
    if ((global_tbonetest & 011) == 011) fail("Can't do this from T-bone setup.");
 
+   if (parseptr->concept->value.arg1 == 3)
+      ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
+
    if ((global_livemask & ~0x56A56A) == 0) q = 0;
    else if ((global_livemask & ~0xA95A95) == 0) q = 2;
    else fail("Can't identify triple diagonal setup.");
@@ -1249,6 +1246,9 @@ Private void do_concept_triple_diag_tog(
    if (ss->kind != s_bigblob) fail("Must have a rather large setup for this concept.");
 
    if ((global_tbonetest & 011) == 011) fail("Can't do this from T-bone setup.");
+
+   if (parseptr->concept->value.arg2 == 3)
+      ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
 
    /* Initially assign the centers to the right or upper (m2) group. */
    m1 = 0xF0; m2 = 0xFF;
@@ -1425,7 +1425,7 @@ Private void do_concept_distorted(
    parse_block *parseptr,
    setup *result)
 {
-   distorted_move(ss, parseptr, (disttest_kind) parseptr->concept->value.arg2, result);
+   distorted_move(ss, parseptr, (disttest_kind) parseptr->concept->value.arg1, result);
 }
 
 
@@ -1464,6 +1464,9 @@ Private void do_concept_divided_2x4(
 {
    if (ss->kind != s2x8) fail("Must have a 2x8 setup for this concept.");
 
+   if (parseptr->concept->value.arg2 == 3)
+      ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
+
    if ((((parseptr->concept->value.arg2 ^ global_tbonetest) & 1) == 0) || ((global_tbonetest & 011) == 011)) {
       if (parseptr->concept->value.arg2 & 1) fail("There are no divided lines here.");
       else                                   fail("There are no divided columns here.");
@@ -1485,9 +1488,12 @@ Private void do_concept_divided_2x3(
 {
    if (ss->kind != s2x6) fail("Must have a 2x6 setup for this concept.");
 
+   if (parseptr->concept->value.arg2 == 3)
+      ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
+
    if ((((parseptr->concept->value.arg2 ^ global_tbonetest) & 1) == 0) || ((global_tbonetest & 011) == 011)) {
       if (parseptr->concept->value.arg2 & 1) fail("There are no 12-matrix divided lines here.");
-      else                                       fail("There are no 12-matrix divided columns here.");
+      else                                   fail("There are no 12-matrix divided columns here.");
    }
 
    divided_setup_move(ss, parseptr->concept->value.maps, (phantest_kind) parseptr->concept->value.arg1, TRUE, result);
@@ -1507,6 +1513,9 @@ Private void do_concept_do_phantom_1x6(
    if (ss->kind != s2x6) fail("Must have a 2x6 setup for this concept.");
 
    if ((global_tbonetest & 011) == 011) fail("Can't do this from T-bone setup.");
+
+   if (parseptr->concept->value.arg3 == 3)
+      ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
 
    if (!((parseptr->concept->value.arg3 ^ global_tbonetest) & 1)) {
       if (global_tbonetest & 1) fail("There are no lines of 6 here.");
@@ -1530,6 +1539,9 @@ Private void do_concept_do_phantom_1x8(
    if (ss->kind != s2x8) fail("Must have a 2x8 setup for this concept.");
 
    if ((global_tbonetest & 011) == 011) fail("Can't do this from T-bone setup.");
+
+   if (parseptr->concept->value.arg3 == 3)
+      ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
 
    if (!((parseptr->concept->value.arg3 ^ global_tbonetest) & 1)) {
       if (global_tbonetest & 1) fail("There are no grand lines here.");
@@ -2152,7 +2164,7 @@ Private void do_concept_fan_or_yoyo(
    if (parseptr->concept->value.arg1 != 0) {
       selector_kind saved_selector = current_selector;
       direction_kind saved_direction = current_direction;
-      int saved_number_fields = current_number_fields;
+      uint32 saved_number_fields = current_number_fields;
 
       current_selector = parseptrcopy->selector;
       current_direction = parseptrcopy->direction;
@@ -4070,7 +4082,7 @@ concept_table_item concept_table[] = {
    /* concept_frac_crazy */               {CONCPROP__USE_NUMBER,                                                                   do_concept_crazy},
    /* concept_fan_or_yoyo */              {0,                                                                                      do_concept_fan_or_yoyo},
    /* concept_c1_phantom */               {CONCPROP__NO_STEP | CONCPROP__GET_MASK,                                                 do_c1_phantom_move},
-   /* concept_grand_working */            {CONCPROP__NO_STEP | CONCPROP__PERMIT_MATRIX,                                            do_concept_grand_working},
+   /* concept_grand_working */            {CONCPROP__NO_STEP | CONCPROP__PERMIT_MATRIX | CONCPROP__SET_PHANTOMS,                   do_concept_grand_working},
    /* concept_centers_or_ends */          {0,                                                                                      do_concept_centers_or_ends},
    /* concept_so_and_so_only */           {CONCPROP__USE_SELECTOR | CONCPROP__NO_STEP,                                             so_and_so_only_move},
    /* concept_some_vs_others */           {CONCPROP__USE_SELECTOR | CONCPROP__SECOND_CALL | CONCPROP__NO_STEP,                     so_and_so_only_move},

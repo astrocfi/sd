@@ -1,6 +1,24 @@
-		   RELEASE NOTES FOR SD VERSION 30.74
-		 Database version = 30.74 format = 45,
+		   RELEASE NOTES FOR SD VERSION 30.76
+		 Database version = 30.74 format = 46,
     X11 UI version 1.15, SDTTY UI version 1.6, MAC UI version 2.2.
+
+New person designators: "headliners" (the people currently facing the head walls)
+and "sideliners" (the people currently facing the side walls).  These are not
+used below C4, but if anyone succeeds in introducing their use at lower levels,
+that will be fine with me.
+
+Split dixie style (and similar things) are now done correctly much more
+generally than before.
+
+Exchange the diamonds 1/4 and 1/2, with people colliding, is now supported.
+
+The wording of some calls has been changed.  "<N/4> exchange the diamonds/boxes"
+is now "exchange the diamonds/boxes <N/4>".
+
+An obscure bug in "quadruple boxes working together swing the fractions" was
+fixed.  We thank Ross Howell for finding this, and apologize to the dancers.
+
+****** Changes as of version 30.74 ******
 
 Took out the words "end-to-end" for those versions of concepts like
 triple lines or split phantom columns that place the setups end-to-end.
@@ -38,11 +56,8 @@ minor improvements.
 "Bigblock" and "stagger" are now applicable to any kind of distorted
 lines or columns respectively.  So "bigblock" is legal in a butterfly or "O".
 
-It now prints a "line" number next to each call, both in the displayed
-sequence and the transcript file.  Users are commonly quick to condemn
-any change in a program's appearance.  Please give this version a try.
-Some users have asked for this feature.  If people really dislike it,
-I will take it out.
+It now prints a "line" number next to each call in the displayed sequence.
+They will not appear in the printed transcript file.
 
 It now prints the "1/2" correctly in things like "reflected [1/2 tag]" and
 "[revert [1/2 flip]] motivate".  It used to take the "1/2" out, with

@@ -1,7 +1,7 @@
 /* 
  * sdui-tty.c - SD TTY User Interface
  * Originally for Macintosh.  Unix version by gildea.
- * Time-stamp: <93/12/04 18:39:11 gildea>
+ * Time-stamp: <94/07/28 00:41:53 gildea>
  * Copyright (c) 1990,1991,1992,1993 Stephen Gildea, William B. Ackerman, and
  *   Alan Snyder
  *
@@ -100,7 +100,8 @@ Private char version_mem[12];
 extern char *
 uims_version_string(void)
 {
-    return UI_VERSION_STRING;
+    (void) sprintf(version_mem, "%stty", UI_VERSION_STRING);
+    return version_mem;
 }
 
 /*
@@ -820,7 +821,7 @@ uims_do_direction_popup(void)
 }    
 
 
-extern unsigned int uims_get_number_fields(int nnumbers)
+extern uint32 uims_get_number_fields(int nnumbers)
 {
    int i;
    char buffer[200];

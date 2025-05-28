@@ -1,5 +1,5 @@
 # Makefile for Sd (square dance caller's helper)
-# Time-stamp: <94/01/20 10:59:00 gildea>
+# Time-stamp: <94/07/27 17:14:02 gildea>
 
 srcdir = @srcdir@
 # VPATH is for GNU make
@@ -123,8 +123,11 @@ Makefile:: Makefile.in config.status
 info: sd_doc.info
 dvi: sd_doc.dvi
 ps: sd_doc.ps
+html: sd_doc_toc.html
 
-sd_doc.dvi sd_doc.info sd_doc.txt: sd_doc.txinfo readme.txinfo install.txinfo gpl.txinfo
+DOCSRCS = sd_doc.txinfo readme.txinfo install.txinfo gpl.txinfo
+
+sd_doc.dvi sd_doc.info sd_doc.txt sd_doc_toc.html: $(DOCSRCS)
 
 # additional suffixes used for the documentation
 .SUFFIXES: .dvi .info .txt .txinfo
@@ -135,6 +138,8 @@ MAKEINFO = makeinfo --no-split
 MAKE_ASCII = makeinfo --no-split --no-headers
 TXI2DVI = tex
 DVIPS = dvips
+TXI2HTML = texi2html
+MAKE = make
 
 # We do it twice, so cross references will be reconciled.
 .txinfo.dvi:
@@ -150,11 +155,14 @@ DVIPS = dvips
 sd_doc.ps: sd_doc.dvi
 	$(DVIPS) -o $@ $?
 
+sd_doc_toc.html:
+	$(TXI2HTML) -split_node -menu sd_doc.txinfo
+
 # Stephen's fancy way of producing a pretty, compact PostScript file.
 # You don't want to know.
-sd_doc.PS: sd_doc.txinfo readme.txinfo install.txinfo gpl.txinfo
-	if [ -r make-ps ]; then make-ps; \
-	else make sd_doc.ps && mv sd_doc.ps sd_doc.PS; fi
+sd_doc.PS: $(DOCSRCS)
+	if [ -r make-ps ]; then make-ps $@ $(DOCSRCS); \
+	else $(MAKE) sd_doc.ps && mv sd_doc.ps sd_doc.PS; fi
 
 INSTALL: install.txinfo
 	$(MAKE_ASCII) -o $@ --no-validate $(srcdir)/install.txinfo
@@ -178,7 +186,7 @@ distclean: clean
 	-$(RM) *~ core
 
 realclean: distclean
-	-$(RM) *.info *.PS sd_doc.txt sd_doc.ps
+	-$(RM) *.info *.PS *.html sd_doc.txt sd_doc.ps
 
 LINT = /usr/lang/alint
 
@@ -187,8 +195,7 @@ lint:
 
 DISTTXT = README INSTALL Relnotes oldnotes COPYING \
             Imakefile Makefile.in configure configure.in Sd.res sd_calls.txt \
-            db_doc.txt sd_doc.txinfo readme.txinfo install.txinfo gpl.txinfo \
-            sd_doc.PS sd_doc.txt
+            db_doc.txt sd_doc.PS sd_doc.txt
 DISTSRCS = sd.h database.h paths.h sdui-ttu.h sdmatch.h
 MACFILES = MacSd.p.Hqx MacSd.p.rsrc.Hqx Macwdef.p.Hqx \
             macalert.c maccomp.c macdlog.c macevent.c macguts.h maclabel.c \
@@ -196,20 +203,21 @@ MACFILES = MacSd.p.Hqx MacSd.p.rsrc.Hqx Macwdef.p.Hqx \
             macstuff.c mactext.c macutil.c macwdef.c macwin.c macwmgr.c \
             sdsi-mac.c sdui-mac.c
 PCFILES = pcfiles.lnk makefile.pc
-DISTFILES = $(DISTTXT) $(SRCS) $(DISTSRCS) $(MACFILES) $(PCFILES)
+DISTFILES = $(DISTTXT) $(DOCSRCS) $(SRCS) $(DISTSRCS) $(MACFILES) $(PCFILES)
 
 TAR = tar cvf sd.tar
+COMPRESS = compress
 
 dist: dist-files
 	$(TAR) $(DISTFILES)
-	compress sd.tar
+	$(COMPRESS) sd.tar
 
 dist-files: configure INSTALL README sd_doc.txt sd_doc.PS pc-files
 
 ls:
 	@echo $(DISTFILES)
 
-sd300bn: sdtty.exe mkcalls.exe sd_calls.dat
+sd300bn: sdtty mkcalls sd_calls.dat
 	lha a $@ readme relnotes oldnotes copying
 	lha a $@ sd_calls.txt sd_calls.dat db_doc.txt
 	lha a $@ sdtty.exe mkcalls.exe go32.exe sd_doc.txt sd_doc.ps

@@ -301,6 +301,8 @@ char *sstab[] = {
    "p3dmd",
    "4dmd",
    "p4dmd",
+   "bigdmd",
+   "pbigdmd",
    ""};
 
 /* This table is keyed to "setup_kind". */
@@ -310,6 +312,7 @@ char *estab[] = {
    "1x2",
    "1x3",
    "2x2",
+   "1x4",
    "dmd",
    "star",
    "trngl",
@@ -323,7 +326,6 @@ char *estab[] = {
    "hrglass",
    "hyperglass",
    "crosswave",
-   "1x4",
    "1x8",
    "2x4",
    "2x3",
@@ -352,6 +354,8 @@ char *estab[] = {
    "???",
    "???",
    "???",
+   "???",
+   "bigdmd",
    "???",
    "normal_concentric",
    ""};
@@ -407,6 +411,8 @@ char *qualtab[] = {
    "n_is_2",
    "n_is_3",
    "n_is_4",
+   "split_dixie",
+   "not_split_dixie",
    ""};
 
 /* This table is keyed to "call_restriction". */
@@ -433,7 +439,6 @@ char *crtab[] = {
    "opposite_sex",
    "quarterbox_or_col",
    "quarterbox_or_magic_col",
-   "???",
    "???",
    ""};
 

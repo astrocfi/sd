@@ -195,6 +195,10 @@ APPLICATION_INTERFACE sd_dialog
          selector_menu$center6
          selector_menu$outer2
          selector_menu$outer6
+         selector_menu$center4
+         selector_menu$outerpair
+         selector_menu$headliners
+         selector_menu$sideliners
          selector_menu$nearline
          selector_menu$farline
          selector_menu$nearcolumn
@@ -305,22 +309,27 @@ APPLICATION_INTERFACE sd_dialog
       CHANGES_ONLY = false ;
       END
 
-   task$phantom_concept_menu_1 := ENUM:
+   task$phantoml_concept_menu_1 := ENUM:
       COMP => <RETURN> ;
       CHANGES_ONLY = false ;
       END
 
-   task$phantom_concept_menu_2 := ENUM:
+   task$phantoml_concept_menu_2 := ENUM:
       COMP => <RETURN> ;
       CHANGES_ONLY = false ;
       END
 
-   task$phantom_concept_menu_3 := ENUM:
+   task$phantoml_concept_menu_3 := ENUM:
       COMP => <RETURN> ;
       CHANGES_ONLY = false ;
       END
 
-   task$phantom_concept_menu_4 := ENUM:
+   task$phantomb_concept_menu_1 := ENUM:
+      COMP => <RETURN> ;
+      CHANGES_ONLY = false ;
+      END
+
+   task$phantomb_concept_menu_2 := ENUM:
       COMP => <RETURN> ;
       CHANGES_ONLY = false ;
       END
@@ -404,8 +413,11 @@ APPLICATION_INTERFACE sd_dialog
    quantifier_enabler := task_group: END
    quantifier_disabler := task_group: END
 
-   phantom_concepts_enabler := task_group: END
-   phantom_concepts_disabler := task_group: END
+   phantoml_concepts_enabler := task_group: END
+   phantoml_concepts_disabler := task_group: END
+
+   phantomb_concepts_enabler := task_group: END
+   phantomb_concepts_disabler := task_group: END
 
    tandem_concepts_enabler := task_group: END
    tandem_concepts_disabler := task_group: END
@@ -515,8 +527,11 @@ USER_INTERFACE sd_dialog
    quantifier_enabler activate => <quantifier_popup show>
    quantifier_disabler activate => <quantifier_popup popdown>
 
-   phantom_concepts_enabler activate => <phantom_concepts_popup show>
-   phantom_concepts_disabler activate => <phantom_concepts_popup popdown>
+   phantoml_concepts_enabler activate => <phantoml_concepts_popup show>
+   phantoml_concepts_disabler activate => <phantoml_concepts_popup popdown>
+
+   phantomb_concepts_enabler activate => <phantomb_concepts_popup show>
+   phantomb_concepts_disabler activate => <phantomb_concepts_popup popdown>
 
    tandem_concepts_enabler activate => <tandem_concepts_popup show>
    tandem_concepts_disabler activate => <tandem_concepts_popup popdown>
@@ -748,7 +763,7 @@ USER_INTERFACE sd_dialog
                CALL_MENU:
                   TASK = task$special_concept_menu ;
                   TITLE_BAR = off ;
-                  SIZE = ((20 5) (35 5) (35 5)) chars ;
+                  SIZE = ((20 6) (36 6) (36 6)) chars ;
                   HELP_TEXT = "Select a general concept type."
                               &"A popup menu for those concepts will appear." ;
                   END
@@ -956,6 +971,10 @@ USER_INTERFACE sd_dialog
                "center 6"      => selector_menu$center6
                "outer 2"       => selector_menu$outer2
                "outer 6"       => selector_menu$outer6
+               "center 4"      => selector_menu$center4
+               "outer pairs"   => selector_menu$outerpair
+               "headliners"    => selector_menu$headliners
+               "sideliners"    => selector_menu$sideliners
                "near line"     => selector_menu$nearline
                "far line"      => selector_menu$farline
                "near column"   => selector_menu$nearcolumn
@@ -1011,7 +1030,7 @@ USER_INTERFACE sd_dialog
             END
       END
 
-   phantom_concepts_popup := POPUP:
+   phantoml_concepts_popup := POPUP:
       [m1] => <popup_abort_task comp> ;
       leave => <popup_abort_task comp> ;
       HELP_TEXT = "Select one of the concepts shown here."
@@ -1025,8 +1044,19 @@ USER_INTERFACE sd_dialog
                   NICE_HEADER: TEXT = "(lines)"; END
                   NICE_MENU:
                      [m1] => <* select> ;
-                     TASK = task$phantom_concept_menu_1 ;
-                     SIZE = ((5 44) (44 44) (100 44)) chars ;
+                     TASK = task$phantoml_concept_menu_1 ;
+                     SIZE = ((5 34) (41 34) (100 34)) chars ;
+                     END )
+               END
+            ROW:
+               SHAPE = square ;
+               ORIENTATION = vertical ;
+               CONTENTS = (
+                  NICE_HEADER: TEXT = "(waves)"; END
+                  NICE_MENU:
+                     [m1] => <* select> ;
+                     TASK = task$phantoml_concept_menu_2 ;
+                     SIZE = ((5 34) (41 34) (100 34)) chars ;
                      END )
                END
             ROW:
@@ -1036,10 +1066,20 @@ USER_INTERFACE sd_dialog
                   NICE_HEADER: TEXT = "(columns)"; END
                   NICE_MENU:
                      [m1] => <* select> ;
-                     TASK = task$phantom_concept_menu_2 ;
-                     SIZE = ((5 44) (46 44) (100 44)) chars ;
+                     TASK = task$phantoml_concept_menu_3 ;
+                     SIZE = ((5 34) (42 34) (100 34)) chars ;
                      END )
-               END
+               END )
+         END
+      END
+
+   phantomb_concepts_popup := POPUP:
+      [m1] => <popup_abort_task comp> ;
+      leave => <popup_abort_task comp> ;
+      HELP_TEXT = "Select one of the concepts shown here."
+                 &"Move the mouse away if you don't wish to." ;
+      CONTENTS = NICE_ROW:
+         CONTENTS = (
             ROW:
                SHAPE = square ;
                ORIENTATION = vertical ;
@@ -1047,8 +1087,8 @@ USER_INTERFACE sd_dialog
                   NICE_HEADER: TEXT = "(boxes)"; END
                   NICE_MENU:
                      [m1] => <* select> ;
-                     TASK = task$phantom_concept_menu_3 ;
-                     SIZE = ((5 44) (41 44) (100 44)) chars ;
+                     TASK = task$phantomb_concept_menu_1 ;
+                     SIZE = ((5 34) (41 34) (100 34)) chars ;
                      END )
                END
             ROW:
@@ -1058,8 +1098,8 @@ USER_INTERFACE sd_dialog
                   NICE_HEADER: TEXT = "(diamonds)"; END
                   NICE_MENU:
                      [m1] => <* select> ;
-                     TASK = task$phantom_concept_menu_4 ;
-                     SIZE = ((5 44) (35 44) (100 44)) chars ;
+                     TASK = task$phantomb_concept_menu_2 ;
+                     SIZE = ((5 34) (41 34) (100 34)) chars ;
                      END )
                END )
          END
