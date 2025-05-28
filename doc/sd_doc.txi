@@ -1,8 +1,8 @@
 \input texinfo
 @c user documentation for Sd (square dance caller's helper)
 @c
-@set sd-version 36.62
-@set Time-stamp: September 17, 2005
+@set sd-version 36.63
+@set Time-stamp: Novemebr 20, 2005
 @c
 @setfilename sd_doc.info
 @c We want the version number to show in the html file.
@@ -2852,10 +2852,10 @@ This suppresses the use of special PC graphics characters
 are not standard on all PC's.  Pictures drawn in the output file will
 never use the special graphics characters.  This overrides @code{no_checkers}.
 @item no_color
-@code{Sdtty} and @code{Sd} normally color-code
-the dancers shown on the screen, according to various color schemes that
-are controlled by options listed below.  This option disables the use of color.
-Pictures drawn in the
+@code{Sdtty} and @code{Sd} normally color-code the dancers shown on the
+screen, according to various color schemes that are controlled by
+options listed below.  This option disables the use of color.  These
+options affect only the display on the screen.  Pictures drawn in the
 output file will never be in color, and will never use ``checkers'' or
 triangles.
 @item color_by_couple
@@ -2889,13 +2889,20 @@ This causes the colors for the usual girls-are-red and boys-are-blue
 scheme to use lighter shades.  This may be preferable if
 @code{reverse_video} is used.  It has no effect when using the
 @code{color_by_couple}, @code{color_by_couple_rgyb},
-@code{color_by_couple_ygrb}, or @code{color_by_corner} schemes.  This is
-the default for @code{Sdtty}, so you only need this option for
-@code{Sd}.
+@code{color_by_couple_ygrb}, or @code{color_by_corner} schemes (but see
+@code{use_magenta} and @code{use_cyan}, below.)  This is the default for
+@code{Sdtty}, so you only need this option for @code{Sd}.
 @item bold_color
 This is the opposite of @code{pastel_color}---it uses darker shades.
 This is the default for @code{Sd},
 so you only need this option for @code{Sdtty}.
+@item use_magenta
+This lightens the shade of red in all color schemes.  (@code{Pastel_color}
+does not apply in any of the @code{colr_by_couple} schemes.)  It substitutes
+magenta for red.
+@item use_cyan
+This lightens the shade of blue in all color schemes.  It substitutes
+cyan for blue.
 @item no_sound
 Do not ring the bell or make any other sound when reporting errors.
 @item new_style_filename

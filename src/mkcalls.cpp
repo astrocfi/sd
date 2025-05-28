@@ -732,6 +732,8 @@ char *estab[] = {
    "???",
    "???",
    "???",
+   "???",
+   "???",
    "3x23",
    "3x43",
    "5x25",
@@ -879,6 +881,7 @@ char *schematab[] = {
    "splitseq",
    "seq_with_fraction",
    "seq_with_split_1x8_id",
+   "alias",
    ""};
 
 // This table is keyed to "call_restriction".
@@ -1048,7 +1051,7 @@ char *seqmodtab1[] = {
    "normalize",
    ""};
 
-/* This table is keyed to the constants "CFLAG1_***" (first 32) and "CFLAG2_***" (next 8).
+/* This table is keyed to the constants "CFLAG1_***" (first 32) and "CFLAG2_***" (next 12).
    These are the general top-level call flags.  They go into the "callflags1" word and
    part of the "callflagsh" word. */
 
@@ -1085,8 +1088,9 @@ char *flagtab1[] = {
    "ends_take_right_hands",
    "funny_means_those_facing",
    "split_like_square_thru",
-   "no_elongation_allowed",    // The overflow (into CFLAG2_) items start here.
-   "imprecise_rotation",       //    There is space for 8 of them.  We are full.
+   "can_be_one_side_lateral",  // The overflow (into CFLAG2_) items start here.
+   "no_elongation_allowed",    //    There is space for 12 of them.
+   "imprecise_rotation",
    "can_be_fan",
    "equalize",
    "one_person_call",
@@ -1478,7 +1482,7 @@ tagtabitem tagtabinit[num_base_call_indices] = {
       {0, "backemup"},       /* This is used for remembering the handedness. */
       {0, "circulate"},
       {0, "trade"},
-      {0, "remake"},
+      {0, "any_hand_remake_start_with_n"},
       {0, "passthru"},       /* To tell how to do "12_16_matrix_means_split". */
       {0, "check_cross_counter"},
       {0, "lockit"},
@@ -2023,46 +2027,48 @@ static void write_callarray(int num, int doing_matrix)
          write_halfword(0);
       else if (tok_kind == tok_symbol) {
          int p;
-         stability stab = stb_none;
+         uint32 stab = STB_NONE;
          int repetition = 0;
 
          for (p=0; letcount-p >= 2; p++) {
             switch (tok_str[p]) {
             case 'Z': case 'z':
-               if (stab == stb_none) stab = stb_z;
+               // "Z" is "none" with reversal on.
+               if (stab == STB_NONE) stab = STB_NONE+STB_REVERSE;
                else errexit("Improper callarray specifier");
                break;
             case 'A': case 'a':
                switch (stab) {
-               case stb_none: stab = stb_a; break;
-               case stb_c: stab = stb_ca; break;
-               case stb_a: stab = stb_aa; break;
-               case stb_aa: repetition++; break;
-               case stb_cc:
+               case STB_NONE: stab = STB_A; break;
+               case STB_A: stab = STB_AA; break;
+               case STB_AA: repetition++; break;
+               case STB_A+STB_REVERSE: stab = STB_AC+STB_REVERSE; break;
+               case STB_AA+STB_REVERSE:
                   if (repetition == 0)
-                     stab = stb_cca;
+                     stab = STB_AAC+STB_REVERSE;
                   else if (repetition == 1)
-                     { stab = stb_ccca; repetition = 0; }
+                     { stab = STB_AAAC+STB_REVERSE; repetition = 0; }
                   else if (repetition == 2)
-                     { stab = stb_cccca; repetition = 0; }
+                     { stab = STB_AAAAC+STB_REVERSE; repetition = 0; }
                   break;
                default: errexit("Improper callarray specifier");
                }
                break;
             case 'C': case 'c':
                switch (stab) {
-               case stb_none: stab = stb_c; break;
-               case stb_a: stab = stb_ac; break;
-               case stb_c: stab = stb_cc; break;
-               case stb_cc: repetition++; break;
-               case stb_aa:
+               case STB_NONE: stab = STB_A+STB_REVERSE; break;
+               case STB_A: stab = STB_AC; break;
+               case STB_AA:
                   if (repetition == 0)
-                     stab = stb_aac;
+                     stab = STB_AAC;
                   else if (repetition == 1)
-                     { stab = stb_aaac; repetition = 0; }
+                     { stab = STB_AAAC; repetition = 0; }
                   else if (repetition == 2)
-                     { stab = stb_aaaac; repetition = 0; }
+                     { stab = STB_AAAAC; repetition = 0; }
                   break;
+
+                  case STB_A+STB_REVERSE: stab = STB_AA+STB_REVERSE; break;
+                  case STB_AA+STB_REVERSE: repetition++; break;
                default: errexit("Improper callarray specifier");
                }
                break;
@@ -2089,7 +2095,7 @@ static void write_callarray(int num, int doing_matrix)
          else if (letcount-p != 1)
             errexit("Improper callarray specifier");
 
-         dat = (dat * NDBROLL_BIT) | (tok_value << 4) | (((uint32) stab) * DBSTAB_BIT);
+         dat = (dat * NDBROLL_BIT) | (tok_value << 4) | (stab * DBSTAB_BIT);
 
          // We now have roll indicator and position, need to get direction.
          switch (tok_str[char_ct-1]) {
@@ -2125,11 +2131,11 @@ static void write_call_header(calldef_schema schema)
 
    if (!call_namelen) {
       write_halfword(0x3FFF);
-      write_halfword((call_flags2 << 8));
+      write_halfword((call_flags2 << 4));
    }
    else {
       write_halfword(0x2000 | call_tag );
-      write_halfword(call_level | (call_flags2 << 8));
+      write_halfword(call_level | (call_flags2 << 4));
    }
 
    write_fullword(call_flags1);
@@ -2242,8 +2248,9 @@ static void process_alt_def_header()
 
    get_tok();
    if (tok_kind != tok_symbol) errexit("Improper alternate_definition level");
-   int alt_level;
-   if ((alt_level = search(leveltab)) < 0) errexit("Unknown alternate_definition level");
+   int alt_level = search(leveltab);
+   if (alt_level < 0) errexit("Unknown alternate_definition level");
+   if (alt_level >= 16) errexit("Too many levels");
 
    write_halfword(0x4000 | alt_level);
    write_fullword(rrr);
@@ -2573,7 +2580,9 @@ int main(int argc, char *argv[])
 
       get_tok();
       if (tok_kind != tok_symbol) errexit("Improper level");
-      if ((call_level = search(leveltab)) < 0) errexit("Unknown level");
+      call_level = search(leveltab);
+      if (call_level < 0) errexit("Unknown level");
+      if (call_level >= 16) errexit("Too many levels");
 
       call_tag = 0;
 
@@ -2602,7 +2611,8 @@ int main(int argc, char *argv[])
          if ((iii = search(flagtab1)) >= 0) {
             if (iii >= 32) {
                call_flags2 |= (1 << (iii-32));
-               if (call_flags2 & ~0xFF)
+               // We only have room for 12 overflow call flags.
+               if (call_flags2 & ~0xFFF)
                   errexit("Too many secondary flags");
             }
             else {
@@ -2725,24 +2735,33 @@ int main(int argc, char *argv[])
          }
 
          break;
+      case schema_alias:
+         if (call_flagsh|call_flags1|call_flags2|call_tag)
+            errexit("Flags not allowed with alias");
+         get_tok();
+         if (tok_kind != tok_symbol) errexit("Improper alias symbol");
+         write_halfword(0x4000 | tagsearch(0));
+         get_tok();
+         break;
       default:
          write_conc_stuff(ccc);
          get_tok_or_eof();
          break;
       }
 
-      /* End of call definition.  See if there is another definition for this call. */
+      // End of call definition.  See if there is another definition for this call.
 
       if ((tok_kind == tok_symbol) && (strcmp(tok_str, "call"))) {
-         /* Yes.  Process the next definition. */
+         // Yes.  Process the next definition.
+         if (ccc == schema_alias) errexit("Compound definitions not allowed on alias");
          call_namelen = 0;
          goto restart_compound_call;
       }
       else
-         goto startagain;       /* Must have seen next 'call' indicator. */
+         goto startagain;       // Must have seen next 'call' indicator.
    }
 
-   write_halfword(0);         /* final end mark */
+   write_halfword(0);           // Final end mark.
 
    dumbflag = 0;
 
@@ -2776,8 +2795,6 @@ int main(int argc, char *argv[])
       db_output_error();
 
    free(tagtab);
-
-
 
    return 0;
 }

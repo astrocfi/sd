@@ -71,18 +71,6 @@ static int global_callcount;     /* Index into the above. */
 #define NORT (d_north|PERSON_MOVED|ROLL_IS_L)
 #define SOUT (d_south|PERSON_MOVED|ROLL_IS_L)
 
-// The following 8 definitions are taken verbatim from sdtables.c
-enum {
-   B1A = 0000|ID1_PERM_NSG|ID1_PERM_NSB|ID1_PERM_NHG|ID1_PERM_HCOR|ID1_PERM_HEAD|ID1_PERM_BOY,
-   G1A = 0100|ID1_PERM_NSG|ID1_PERM_NSB|ID1_PERM_NHB|ID1_PERM_SCOR|ID1_PERM_HEAD|ID1_PERM_GIRL,
-   B2A = 0200|ID1_PERM_NSG|ID1_PERM_NHG|ID1_PERM_NHB|ID1_PERM_SCOR|ID1_PERM_SIDE|ID1_PERM_BOY,
-   G2A = 0300|ID1_PERM_NSB|ID1_PERM_NHG|ID1_PERM_NHB|ID1_PERM_HCOR|ID1_PERM_SIDE|ID1_PERM_GIRL,
-   B3A = 0400|ID1_PERM_NSG|ID1_PERM_NSB|ID1_PERM_NHG|ID1_PERM_HCOR|ID1_PERM_HEAD|ID1_PERM_BOY,
-   G3A = 0500|ID1_PERM_NSG|ID1_PERM_NSB|ID1_PERM_NHB|ID1_PERM_SCOR|ID1_PERM_HEAD|ID1_PERM_GIRL,
-   B4A = 0600|ID1_PERM_NSG|ID1_PERM_NHG|ID1_PERM_NHB|ID1_PERM_SCOR|ID1_PERM_SIDE|ID1_PERM_BOY,
-   G4A = 0700|ID1_PERM_NSB|ID1_PERM_NHG|ID1_PERM_NHB|ID1_PERM_HCOR|ID1_PERM_SIDE|ID1_PERM_GIRL
-};
-
 // In all of these setups in which people are facing, they are normal couples.
 // In general, we use the "Callerlab #0" arrangement for things like lines and waves.
 // This makes initialization work for things like star thru, ladies chain, curlique,
@@ -91,47 +79,75 @@ enum {
 // But the setup for starting DPT has the appropriate sex for triple star thru.
 
 static setup test_setup_1x8 = {
-   s1x8, 0, {0}, {{NORT|B4A, 0}, {SOUT|G3A, 0}, {SOUT|B3A, 0}, {NORT|G4A, 0},
-                  {SOUT|B2A, 0}, {NORT|G1A, 0}, {NORT|B1A, 0}, {SOUT|G2A, 0}}, {{0, 0}, 0}};
+   s1x8, 0, {0}, {{0600|NORT,0,ID3_B4}, {0500|SOUT,0,ID3_G3},
+                  {0400|SOUT,0,ID3_B3}, {0700|NORT,0,ID3_G4},
+                  {0200|SOUT,0,ID3_B2}, {0100|NORT,0,ID3_G1},
+                  {0000|NORT,0,ID3_B1}, {0300|SOUT,0,ID3_G2}}, {{0, 0}, 0}};
 static setup test_setup_l1x8 = {
-   s1x8, 0, {0}, {{SOUT|B4A, 0}, {NORT|G3A, 0}, {NORT|B3A, 0}, {SOUT|G4A, 0},
-                  {NORT|B2A, 0}, {SOUT|G1A, 0}, {SOUT|B1A, 0}, {NORT|G2A, 0}}, {{0, 0}, 0}};
+   s1x8, 0, {0}, {{0600|SOUT,0,ID3_B4}, {0500|NORT,0,ID3_G3},
+                  {0400|NORT,0,ID3_B3}, {0700|SOUT,0,ID3_G4},
+                  {0200|NORT,0,ID3_B2}, {0100|SOUT,0,ID3_G1},
+                  {0000|SOUT,0,ID3_B1}, {0300|NORT,0,ID3_G2}}, {{0, 0}, 0}};
 static setup test_setup_dpt = {
-   s2x4, 0, {0}, {{EAST|G2A, 0}, {EAST|B3A, 0}, {WEST|G3A, 0}, {WEST|B2A, 0},
-                  {WEST|G4A, 0}, {WEST|B1A, 0}, {EAST|G1A, 0}, {EAST|B4A, 0}}, {{0, 0}, 0}};
+   s2x4, 0, {0}, {{0300|EAST,0,ID3_G2}, {0400|EAST,0,ID3_B3},
+                  {0500|WEST,0,ID3_G3}, {0200|WEST,0,ID3_B2},
+                  {0700|WEST,0,ID3_G4}, {0000|WEST,0,ID3_B1},
+                  {0100|EAST,0,ID3_G1}, {0600|EAST,0,ID3_B4}}, {{0, 0}, 0}};
 static setup test_setup_cdpt = {
-   s2x4, 0, {0}, {{WEST|G4A, 0}, {WEST|G3A, 0}, {EAST|B3A, 0}, {EAST|B4A, 0},
-                  {EAST|G2A, 0}, {EAST|G1A, 0}, {WEST|B1A, 0}, {WEST|B2A, 0}}, {{0, 0}, 0}};
+   s2x4, 0, {0}, {{0700|WEST,0,ID3_G4}, {0500|WEST,0,ID3_G3},
+                  {0400|EAST,0,ID3_B3}, {0600|EAST,0,ID3_B4},
+                  {0300|EAST,0,ID3_G2}, {0100|EAST,0,ID3_G1},
+                  {0000|WEST,0,ID3_B1}, {0200|WEST,0,ID3_B2}}, {{0, 0}, 0}};
 static setup test_setup_rcol = {
-   s2x4, 0, {0}, {{EAST|B4A, 0}, {EAST|G3A, 0}, {EAST|B3A, 0}, {EAST|G4A, 0},
-                  {WEST|B2A, 0}, {WEST|G1A, 0}, {WEST|B1A, 0}, {WEST|G2A, 0}}, {{0, 0}, 0}};
+   s2x4, 0, {0}, {{0600|EAST,0,ID3_B4}, {0500|EAST,0,ID3_G3},
+                  {0400|EAST,0,ID3_B3}, {0700|EAST,0,ID3_G4},
+                  {0200|WEST,0,ID3_B2}, {0100|WEST,0,ID3_G1},
+                  {0000|WEST,0,ID3_B1}, {0300|WEST,0,ID3_G2}}, {{0, 0}, 0}};
 static setup test_setup_lcol = {
-   s2x4, 0, {0}, {{WEST|G2A, 0}, {WEST|B1A, 0}, {WEST|G1A, 0}, {WEST|B2A, 0},
-                  {EAST|G4A, 0}, {EAST|B3A, 0}, {EAST|G3A, 0}, {EAST|B4A, 0}}, {{0, 0}, 0}};
+   s2x4, 0, {0}, {{0300|WEST,0,ID3_G2}, {0000|WEST,0,ID3_B1},
+                  {0100|WEST,0,ID3_G1}, {0200|WEST,0,ID3_B2},
+                  {0700|EAST,0,ID3_G4}, {0400|EAST,0,ID3_B3},
+                  {0500|EAST,0,ID3_G3}, {0600|EAST,0,ID3_B4}}, {{0, 0}, 0}};
 static setup test_setup_8ch = {
-   s2x4, 0, {0}, {{EAST|B4A, 0}, {WEST|G3A, 0}, {EAST|B3A, 0}, {WEST|G4A, 0},
-                  {WEST|B2A, 0}, {EAST|G1A, 0}, {WEST|B1A, 0}, {EAST|G2A, 0}}, {{0, 0}, 0}};
+   s2x4, 0, {0}, {{0600|EAST,0,ID3_B4}, {0500|WEST,0,ID3_G3},
+                  {0400|EAST,0,ID3_B3}, {0700|WEST,0,ID3_G4},
+                  {0200|WEST,0,ID3_B2}, {0100|EAST,0,ID3_G1},
+                  {0000|WEST,0,ID3_B1}, {0300|EAST,0,ID3_G2}}, {{0, 0}, 0}};
 static setup test_setup_tby = {
-   s2x4, 0, {0}, {{WEST|G3A, 0}, {EAST|B4A, 0}, {WEST|G4A, 0}, {EAST|B3A, 0},
-                  {EAST|G1A, 0}, {WEST|B2A, 0}, {EAST|G2A, 0}, {WEST|B1A, 0}}, {{0, 0}, 0}};
+   s2x4, 0, {0}, {{0500|WEST,0,ID3_G3}, {0600|EAST,0,ID3_B4},
+                  {0700|WEST,0,ID3_G4}, {0400|EAST,0,ID3_B3},
+                  {0100|EAST,0,ID3_G1}, {0200|WEST,0,ID3_B2},
+                  {0300|EAST,0,ID3_G2}, {0000|WEST,0,ID3_B1}}, {{0, 0}, 0}};
 static setup test_setup_lin = {
-   s2x4, 0, {0}, {{SOUT|G2A, 0}, {SOUT|B1A, 0}, {SOUT|G1A, 0}, {SOUT|B2A, 0},
-                  {NORT|G4A, 0}, {NORT|B3A, 0}, {NORT|G3A, 0}, {NORT|B4A, 0}}, {{0, 0}, 0}};
+   s2x4, 0, {0}, {{0300|SOUT,0,ID3_G2}, {0000|SOUT,0,ID3_B1},
+                  {0100|SOUT,0,ID3_G1}, {0200|SOUT,0,ID3_B2},
+                  {0700|NORT,0,ID3_G4}, {0400|NORT,0,ID3_B3},
+                  {0500|NORT,0,ID3_G3}, {0600|NORT,0,ID3_B4}}, {{0, 0}, 0}};
 static setup test_setup_lout = {
-   s2x4, 0, {0}, {{NORT|B4A, 0}, {NORT|G3A, 0}, {NORT|B3A, 0}, {NORT|G4A, 0},
-                  {SOUT|B2A, 0}, {SOUT|G1A, 0}, {SOUT|B1A, 0}, {SOUT|G2A, 0}}, {{0, 0}, 0}};
+   s2x4, 0, {0}, {{0600|NORT,0,ID3_B4}, {0500|NORT,0,ID3_G3},
+                  {0400|NORT,0,ID3_B3}, {0700|NORT,0,ID3_G4},
+                  {0200|SOUT,0,ID3_B2}, {0100|SOUT,0,ID3_G1},
+                  {0000|SOUT,0,ID3_B1}, {0300|SOUT,0,ID3_G2}}, {{0, 0}, 0}};
 static setup test_setup_rwv = {
-   s2x4, 0, {0}, {{NORT|B4A, 0}, {SOUT|G3A, 0}, {NORT|G4A, 0}, {SOUT|B3A, 0},
-                  {SOUT|B2A, 0}, {NORT|G1A, 0}, {SOUT|G2A, 0}, {NORT|B1A, 0}}, {{0, 0}, 0}};
+   s2x4, 0, {0}, {{0600|NORT,0,ID3_B4}, {0500|SOUT,0,ID3_G3},
+                  {0700|NORT,0,ID3_G4}, {0400|SOUT,0,ID3_B3},
+                  {0200|SOUT,0,ID3_B2}, {0100|NORT,0,ID3_G1},
+                  {0300|SOUT,0,ID3_G2}, {0000|NORT,0,ID3_B1}}, {{0, 0}, 0}};
 static setup test_setup_lwv = {
-   s2x4, 0, {0}, {{SOUT|B4A, 0}, {NORT|G3A, 0}, {SOUT|G4A, 0}, {NORT|B3A, 0},
-                  {NORT|B2A, 0}, {SOUT|G1A, 0}, {NORT|G2A, 0}, {SOUT|B1A, 0}}, {{0, 0}, 0}};
+   s2x4, 0, {0}, {{0600|SOUT,0,ID3_B4}, {0500|NORT,0,ID3_G3},
+                  {0700|SOUT,0,ID3_G4}, {0400|NORT,0,ID3_B3},
+                  {0200|NORT,0,ID3_B2}, {0100|SOUT,0,ID3_G1},
+                  {0300|NORT,0,ID3_G2}, {0000|SOUT,0,ID3_B1}}, {{0, 0}, 0}};
 static setup test_setup_r2fl = {
-   s2x4, 0, {0}, {{NORT|B4A, 0}, {NORT|G3A, 0}, {SOUT|G4A, 0}, {SOUT|B3A, 0},
-                  {SOUT|B2A, 0}, {SOUT|G1A, 0}, {NORT|G2A, 0}, {NORT|B1A, 0}}, {{0, 0}, 0}};
+   s2x4, 0, {0}, {{0600|NORT,0,ID3_B4}, {0500|NORT,0,ID3_G3},
+                  {0700|SOUT,0,ID3_G4}, {0400|SOUT,0,ID3_B3},
+                  {0200|SOUT,0,ID3_B2}, {0100|SOUT,0,ID3_G1},
+                  {0300|NORT,0,ID3_G2}, {0000|NORT,0,ID3_B1}}, {{0, 0}, 0}};
 static setup test_setup_l2fl = {
-   s2x4, 0, {0}, {{SOUT|G3A, 0}, {SOUT|B4A, 0}, {NORT|B3A, 0}, {NORT|G4A, 0},
-                  {NORT|G1A, 0}, {NORT|B2A, 0}, {SOUT|B1A, 0}, {SOUT|G2A, 0}}, {{0, 0}, 0}};
+   s2x4, 0, {0}, {{0500|SOUT,0,ID3_G3}, {0600|SOUT,0,ID3_B4},
+                  {0400|NORT,0,ID3_B3}, {0700|NORT,0,ID3_G4},
+                  {0100|NORT,0,ID3_G1}, {0200|NORT,0,ID3_B2},
+                  {0000|SOUT,0,ID3_B1}, {0300|SOUT,0,ID3_G2}}, {{0, 0}, 0}};
 
 
 /* These variables are actually local to test_starting_setup, but they are
@@ -894,6 +910,11 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
    read_halfword();
 
    switch (root_to_use->schema) {
+   case schema_alias:
+      check_tag(last_12);
+      root_to_use->stuff.conc.innerdef.call_id = (uint16) last_12;
+      read_halfword();
+      break;
    case schema_nothing:
    case schema_nothing_noroll:
    case schema_roll:
@@ -1040,20 +1061,19 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
    root_to_use->compound_part = (calldefn *) 0;
 
    if (last_datum == 0x3FFF) {
-      uint32 saveflags1, saveflags2, saveflagsh;
       calldef_schema call_schema;
 
       calldefn *recursed_call_root = (calldefn *)
          get_mem(sizeof(calldefn));
 
-      read_halfword();       // Get level and 8 bits of "callflags2" stuff.
-      saveflags2 = last_datum >> 8;
+      read_halfword();       // Get level (not really) and 12 bits of "callflags2" stuff.
+      uint32 saveflags2 = last_datum >> 4;
       read_fullword();       // Get top level flags, first word.
                              // This is the "callflags1" stuff.
-      saveflags1 = last_datum;
+      uint32 saveflags1 = last_datum;
       read_fullword();       // Get top level flags, second word.
                              // This is the "heritflags" stuff.
-      saveflagsh = last_datum;
+      uint32 saveflagsh = last_datum;
       read_halfword();       // Get char count (ignore same) and schema.
       call_schema = (calldef_schema) (last_datum & 0xFF);
       recursed_call_root->age = 0;
@@ -1061,7 +1081,7 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
       recursed_call_root->schema = call_schema;
       recursed_call_root->callflags1 = saveflags1;
       // Will get "CFLAGH" and "ESCAPE_WORD" bits later.
-      recursed_call_root->callflagsf = saveflags2 << 24;
+      recursed_call_root->callflagsf = saveflags2 << 20;
       recursed_call_root->callflagsh = saveflagsh;
       read_in_call_definition(recursed_call_root, 0);    // Recurse.
       root_to_use->compound_part = recursed_call_root;
@@ -1225,6 +1245,9 @@ extern void prepare_to_read_menus()
                            "program has been compiled incorrectly.");
    else if ((508205 << 12) != arithtest)
       gg->fatal_error_exit(1, "Arithmetic is less than 32 bits",
+                           "program has been compiled incorrectly.");
+   else if (l_nonexistent_concept > 15)
+      gg->fatal_error_exit(1, "Too many levels",
                            "program has been compiled incorrectly.");
    else if (NUM_QUALIFIERS > 125)
       gg->fatal_error_exit(1, "Insufficient qualifier space",
@@ -1598,7 +1621,6 @@ static void build_database(abridge_mode_t abridge_mode)
    int i, char_count;
    int local_callcount;
    dance_level this_level;
-   call_with_name **local_call_list;
    dance_level acceptable_level = calling_level;
 
    if (abridge_mode <= abridge_mode_deleting_abridge)
@@ -1618,7 +1640,8 @@ static void build_database(abridge_mode_t abridge_mode)
    // These two will be temporary.  The first lasts through the entire initialization
    // process.  The second one only in this procedure.
    global_temp_call_indices = (int *) get_mem(abs_max_calls * sizeof(call_with_name *));
-   local_call_list = (call_with_name **) get_mem(abs_max_calls * sizeof(call_with_name *));
+   call_with_name **local_call_list =
+      (call_with_name **) get_mem(abs_max_calls * sizeof(call_with_name *));
 
    // Clear the tag list.  Calls will fill this in as they announce themselves.
    for (i=0; i < max_base_calls; i++) base_calls[i] = (call_with_name *) 0;
@@ -1631,7 +1654,6 @@ static void build_database(abridge_mode_t abridge_mode)
 
    for (;;) {
       int savetag;
-      uint32 saveflags1, saveflags2, saveflagsh;
       calldef_schema call_schema;
 
       if ((last_datum & 0xE000) == 0) break;
@@ -1642,19 +1664,19 @@ static void build_database(abridge_mode_t abridge_mode)
 
       savetag = last_12;     /* Get tag, if any. */
 
-      read_halfword();       /* Get level and 8 bits of "callflags2" stuff. */
-      this_level = (dance_level) (last_datum & 0xFF);
-      saveflags2 = last_datum >> 8;
+      read_halfword();       // Get level and 12 bits of "callflags2" stuff.
+      this_level = (dance_level) (last_datum & 0xF);
+      uint32 saveflags2 = last_datum >> 4;
 
-      read_fullword();       /* Get top level flags, first word.
-                                This is the "callflags1" stuff. */
-      saveflags1 = last_datum;
+      read_fullword();       // Get top level flags, first word.
+                             // This is the "callflags1" stuff.
+      uint32 saveflags1 = last_datum;
 
-      read_fullword();       /* Get top level flags, second word.
-                                This is the "heritflags" stuff. */
-      saveflagsh = last_datum;
+      read_fullword();       // Get top level flags, second word.
+                             // This is the "heritflags" stuff.
+      uint32 saveflagsh = last_datum;
 
-      read_halfword();       /* Get char count and schema. */
+      read_halfword();       // Get char count and schema.
       call_schema = (calldef_schema) (last_datum & 0xFF);
       char_count = (last_datum >> 8) & 0xFF;
 
@@ -1676,7 +1698,7 @@ static void build_database(abridge_mode_t abridge_mode)
       call_root->the_defn.level = (int) this_level;
       call_root->the_defn.schema = call_schema;
       call_root->the_defn.callflags1 = saveflags1;
-      call_root->the_defn.callflagsf = saveflags2 << 24;
+      call_root->the_defn.callflagsf = saveflags2 << 20;
       // Will get "CFLAGH" and "ESCAPE_WORD" bits later.
       call_root->the_defn.callflagsh = saveflagsh;
       read_in_call_definition(&call_root->the_defn, char_count);
@@ -1735,13 +1757,6 @@ static void build_database(abridge_mode_t abridge_mode)
             }
          }
          else {
-            /* But circ calls are treated normally, as well as being put on the special list. */
-            if (call_root->the_defn.callflags1 & CFLAG1_BASE_CIRC_CALL) {
-               number_of_circcers++;
-               circcer_calls = (call_with_name **)
-                  get_more_mem(circcer_calls, number_of_circcers*sizeof(call_with_name *));
-               circcer_calls[number_of_circcers-1] = call_root;
-            }
             if (local_callcount >= abs_max_calls)
                database_error_exit("Too many base calls -- mkcalls made an error");
             local_call_list[local_callcount++] = call_root;
@@ -1749,14 +1764,7 @@ static void build_database(abridge_mode_t abridge_mode)
       }
    }
 
-   number_of_calls[call_list_any] = local_callcount;
-   main_call_lists[call_list_any] = (call_with_name **) get_mem(local_callcount * sizeof(call_with_name *));
-
-   memcpy(main_call_lists[call_list_any],
-          local_call_list,
-          local_callcount*sizeof(call_with_name *));
-
-   free(local_call_list);
+   // Check that all tagged calls have been filled in.
 
    for (i=1; i <= highest_base_call; i++) {
       if (!base_calls[i]) {
@@ -1765,6 +1773,37 @@ static void build_database(abridge_mode_t abridge_mode)
          gg->fatal_error_exit(1, "Call didn't identify self", msg);
       }
    }
+
+   // Translate the aliases.
+
+   for (i=0 ; i<local_callcount ; i++) {
+      while (local_call_list[i]->the_defn.schema == schema_alias) {
+         local_call_list[i]->the_defn =
+            base_calls[local_call_list[i]->the_defn.stuff.conc.innerdef.call_id]->the_defn;
+      }
+   }
+
+   // Process the circulate calls.
+
+   for (i=0 ; i<local_callcount ; i++) {
+      call_with_name *t = local_call_list[i];
+      if (t->the_defn.callflags1 & CFLAG1_BASE_CIRC_CALL) {
+         number_of_circcers++;
+         circcer_calls = (call_with_name **)
+            get_more_mem(circcer_calls, number_of_circcers*sizeof(call_with_name *));
+         circcer_calls[number_of_circcers-1] = t;
+      }
+   }
+
+   number_of_calls[call_list_any] = local_callcount;
+   main_call_lists[call_list_any] =
+      (call_with_name **) get_mem(local_callcount * sizeof(call_with_name *));
+
+   memcpy(main_call_lists[call_list_any],
+          local_call_list,
+          local_callcount*sizeof(call_with_name *));
+
+   free(local_call_list);
 
    fclose(database_file);
 }
@@ -1888,26 +1927,14 @@ void conzept::translate_concept_names()
 // Alternating blue and red.
 static int bold_person_colors[8] = {5, 2, 5, 2, 5, 2, 5, 2};
 
-// Alternating bletcherous blue and putrid pink.
-static int pastel_person_colors[8] = {7, 6, 7, 6, 7, 6, 7, 6};
-
 // Red, green, blue, yellow, red for wraparound if coloring by corner.
 static int couple_colors_rgby[9] = {2, 2, 3, 3, 5, 5, 4, 4, 2};
-
-// Red, green, blue, substitute yellow, red for wraparound if coloring by corner.
-static int couple_colors_rgbk[9] = {2, 2, 3, 3, 5, 5, 1, 1, 2};
 
 // Red, green, yellow, blue.
 static int couple_colors_rgyb[8] = {2, 2, 3, 3, 4, 4, 5, 5};
 
-// Red, green, substitute yellow, blue.
-static int couple_colors_rgkb[8] = {2, 2, 3, 3, 1, 1, 5, 5};
-
 // Yellow, green, red, blue.
 static int couple_colors_ygrb[8] = {4, 4, 3, 3, 2, 2, 5, 5};
-
-// Substitute yellow, green, red, blue.
-static int couple_colors_kgrb[8] = {1, 1, 3, 3, 2, 2, 5, 5};
 
 
 int useful_concept_indices[UC_extent];
@@ -2041,6 +2068,10 @@ extern bool open_session(int argc, char **argv)
             { ui_options.pastel_color = false; continue; }
          else if (strcmp(&args[argno][1], "no_color") == 0)
             { ui_options.color_scheme = no_color; continue; }
+         else if (strcmp(&args[argno][1], "use_magenta") == 0)
+            { ui_options.use_magenta = true; continue; }
+         else if (strcmp(&args[argno][1], "use_cyan") == 0)
+            { ui_options.use_cyan = true; continue; }
          else if (strcmp(&args[argno][1], "color_by_couple") == 0)
             { ui_options.color_scheme = color_by_couple; continue; }
          else if (strcmp(&args[argno][1], "color_by_couple_rgyb") == 0)
@@ -2128,37 +2159,53 @@ extern bool open_session(int argc, char **argv)
 
    // Set up the color translations based on the user's options.
 
-   if (ui_options.color_scheme == color_by_gender ||
-       ui_options.color_scheme == no_color) {
+   color_index_list = couple_colors_rgby;   // Default = color_by_couple.
+
+   switch (ui_options.color_scheme) {
+   case color_by_gender: case no_color:
       // It doesn't really matter if "no_color" is selected,
       // as long as we put in something.  The Windows interface
       // code simply sets the palette so that all colors are
       // monochrome, and then uses color_index_list.
-      if (ui_options.pastel_color)
-         color_index_list = pastel_person_colors;
-      else
-         color_index_list = bold_person_colors;
+      color_index_list = bold_person_colors;
+      break;
+   case color_by_corner:
+      color_index_list = couple_colors_rgby+1;
+      break;
+   case color_by_couple_rgyb:
+      color_index_list = couple_colors_rgyb;
+      break;
+   case color_by_couple_ygrb:
+      color_index_list = couple_colors_ygrb;
+      break;
    }
-   else {
-      if (ui_options.reverse_video || ui_options.no_intensify) {
-         if (ui_options.color_scheme == color_by_corner)
-            color_index_list = couple_colors_rgby+1;
-         else if (ui_options.color_scheme == color_by_couple_rgyb)
-            color_index_list = couple_colors_rgyb;
-         else if (ui_options.color_scheme == color_by_couple_ygrb)
-            color_index_list = couple_colors_ygrb;
-         else                      // color_by_couple
-            color_index_list = couple_colors_rgby;
+
+   // Make necessary changes.  This is something of a kludge, since we are
+   // writing over what should have been a constant array.
+
+   // If the background is white, bright yellow won't be visible.  Change it to
+   // dark yellow.  (If reverse_video or no_intensify, the background is black
+   // or grey, and bright yellow is OK.)
+   if (!ui_options.reverse_video && !ui_options.no_intensify) {
+      for (i=0 ; i<8 ; i++) {
+         if (color_index_list[i] == 4) color_index_list[i] = 1;
       }
-      else {
-         if (ui_options.color_scheme == color_by_corner)
-            color_index_list = couple_colors_rgbk+1;
-         else if (ui_options.color_scheme == color_by_couple_rgyb)
-            color_index_list = couple_colors_rgkb;
-         else if (ui_options.color_scheme == color_by_couple_ygrb)
-            color_index_list = couple_colors_kgrb;
-         else                      // color_by_couple
-            color_index_list = couple_colors_rgbk;
+   }
+
+   // If color_by_gender, pastel applies to both red and blue.
+   // Otherwise, we need the flags "use_cyan" or "use_magenta".
+
+   if (ui_options.use_cyan ||
+       (ui_options.pastel_color && ui_options.color_scheme == color_by_gender)) {
+      for (i=0 ; i<8 ; i++) {
+         if (color_index_list[i] == 5) color_index_list[i] = 7;
+      }
+   }
+
+   if (ui_options.use_magenta ||
+       (ui_options.pastel_color && ui_options.color_scheme == color_by_gender)) {
+      for (i=0 ; i<8 ; i++) {
+         if (color_index_list[i] == 2) color_index_list[i] = 6;
       }
    }
 
@@ -2178,7 +2225,7 @@ extern bool open_session(int argc, char **argv)
    // Scan for "useful" concepts, that is, concepts that will help with
    // functions like "normalize".
 
-   for (i = 0 ; i < UC_extent ; i++)
+   for (i=0 ; i<UC_extent ; i++)
       useful_concept_indices[i] = -1;
 
    for (i=0; concept_descriptor_table[i].kind != marker_end_of_list; i++) {

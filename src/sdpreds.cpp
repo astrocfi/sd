@@ -1,6 +1,6 @@
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2004  William B. Ackerman.
+//    Copyright (C) 1990-2005  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -51,14 +51,14 @@ enum {
    // (result = 0), the opposite direction (result == 2), or whatever.
    DIR_MASK = (BIT_PERSON | 3),
    // These are the bits that never change.
-   ID1_PERM_ALL_ID = ID1_PERM_HEAD|ID1_PERM_SIDE|ID1_PERM_BOY|ID1_PERM_GIRL
+   ID3_PERM_ALL_ID = ID3_PERM_HEAD|ID3_PERM_SIDE|ID3_PERM_BOY|ID3_PERM_GIRL
 };
 
 
 
 extern bool selectp(setup *ss, int place) THROW_DECL
 {
-   uint32 permpid1, pid2, p1, p2;
+   uint32 p1, p2, p3;
    selector_kind s;
    int thing_to_test;
 
@@ -74,13 +74,14 @@ extern bool selectp(setup *ss, int place) THROW_DECL
          return false;
    }
 
-   permpid1 = ss->people[place].id1;
-   pid2 = ss->people[place].id2;
+   uint32 pid1 = ss->people[place].id1;
+   uint32 pid2 = ss->people[place].id2;
+   uint32 pid3 = ss->people[place].id3;
 
    // Demand that the subject be real, or that
    // we can evaluate based on position alone.
 
-   if (!(permpid1 & BIT_PERSON)) {
+   if (!(pid1 & BIT_PERSON)) {
       // We can still do it for some selectors.  However, this violates
       // the rules about using the *original* centers in calls like
       // "rims trade back".  But, if the person isn't real, this is the best
@@ -132,51 +133,51 @@ extern bool selectp(setup *ss, int place) THROW_DECL
 
    switch (current_options.who) {
    case selector_boys:
-      if      ((permpid1 & (ID1_PERM_BOY|ID1_PERM_GIRL)) == ID1_PERM_BOY) return true;
-      else if ((permpid1 & (ID1_PERM_BOY|ID1_PERM_GIRL)) == ID1_PERM_GIRL) return false;
+      if      ((pid3 & (ID3_PERM_BOY|ID3_PERM_GIRL)) == ID3_PERM_BOY) return true;
+      else if ((pid3 & (ID3_PERM_BOY|ID3_PERM_GIRL)) == ID3_PERM_GIRL) return false;
       break;
    case selector_girls:
-      if      ((permpid1 & (ID1_PERM_BOY|ID1_PERM_GIRL)) == ID1_PERM_GIRL) return true;
-      else if ((permpid1 & (ID1_PERM_BOY|ID1_PERM_GIRL)) == ID1_PERM_BOY) return false;
+      if      ((pid3 & (ID3_PERM_BOY|ID3_PERM_GIRL)) == ID3_PERM_GIRL) return true;
+      else if ((pid3 & (ID3_PERM_BOY|ID3_PERM_GIRL)) == ID3_PERM_BOY) return false;
       break;
    case selector_heads:
-      if      ((permpid1 & (ID1_PERM_HEAD|ID1_PERM_SIDE)) == ID1_PERM_HEAD) return true;
-      else if ((permpid1 & (ID1_PERM_HEAD|ID1_PERM_SIDE)) == ID1_PERM_SIDE) return false;
+      if      ((pid3 & (ID3_PERM_HEAD|ID3_PERM_SIDE)) == ID3_PERM_HEAD) return true;
+      else if ((pid3 & (ID3_PERM_HEAD|ID3_PERM_SIDE)) == ID3_PERM_SIDE) return false;
       break;
    case selector_sides:
-      if      ((permpid1 & (ID1_PERM_HEAD|ID1_PERM_SIDE)) == ID1_PERM_SIDE) return true;
-      else if ((permpid1 & (ID1_PERM_HEAD|ID1_PERM_SIDE)) == ID1_PERM_HEAD) return false;
+      if      ((pid3 & (ID3_PERM_HEAD|ID3_PERM_SIDE)) == ID3_PERM_SIDE) return true;
+      else if ((pid3 & (ID3_PERM_HEAD|ID3_PERM_SIDE)) == ID3_PERM_HEAD) return false;
       break;
    case selector_headcorners:
-      if      ((permpid1 & (ID1_PERM_HCOR|ID1_PERM_SCOR)) == ID1_PERM_HCOR) return true;
-      else if ((permpid1 & (ID1_PERM_HCOR|ID1_PERM_SCOR)) == ID1_PERM_SCOR) return false;
+      if      ((pid3 & (ID3_PERM_HCOR|ID3_PERM_SCOR)) == ID3_PERM_HCOR) return true;
+      else if ((pid3 & (ID3_PERM_HCOR|ID3_PERM_SCOR)) == ID3_PERM_SCOR) return false;
       break;
    case selector_sidecorners:
-      if      ((permpid1 & (ID1_PERM_HCOR|ID1_PERM_SCOR)) == ID1_PERM_SCOR) return true;
-      else if ((permpid1 & (ID1_PERM_HCOR|ID1_PERM_SCOR)) == ID1_PERM_HCOR) return false;
+      if      ((pid3 & (ID3_PERM_HCOR|ID3_PERM_SCOR)) == ID3_PERM_SCOR) return true;
+      else if ((pid3 & (ID3_PERM_HCOR|ID3_PERM_SCOR)) == ID3_PERM_HCOR) return false;
       break;
    case selector_headboys:
-      if      ((permpid1 & (ID1_PERM_ALL_ID|ID1_PERM_NHB)) == (ID1_PERM_HEAD|ID1_PERM_BOY))
+      if      ((pid3 & (ID3_PERM_ALL_ID|ID3_PERM_NHB)) == (ID3_PERM_HEAD|ID3_PERM_BOY))
          return true;
-      else if ((permpid1 & ID1_PERM_NHB) == ID1_PERM_NHB)
+      else if ((pid3 & ID3_PERM_NHB) == ID3_PERM_NHB)
          return false;
       break;
    case selector_headgirls:
-      if      ((permpid1 & (ID1_PERM_ALL_ID|ID1_PERM_NHG)) == (ID1_PERM_HEAD|ID1_PERM_GIRL))
+      if      ((pid3 & (ID3_PERM_ALL_ID|ID3_PERM_NHG)) == (ID3_PERM_HEAD|ID3_PERM_GIRL))
          return true;
-      else if ((permpid1 & ID1_PERM_NHG) == ID1_PERM_NHG)
+      else if ((pid3 & ID3_PERM_NHG) == ID3_PERM_NHG)
          return false;
       break;
    case selector_sideboys:
-      if      ((permpid1 & (ID1_PERM_ALL_ID|ID1_PERM_NSB)) == (ID1_PERM_SIDE|ID1_PERM_BOY))
+      if      ((pid3 & (ID3_PERM_ALL_ID|ID3_PERM_NSB)) == (ID3_PERM_SIDE|ID3_PERM_BOY))
          return true;
-      else if ((permpid1 & ID1_PERM_NSB) == ID1_PERM_NSB)
+      else if ((pid3 & ID3_PERM_NSB) == ID3_PERM_NSB)
          return false;
       break;
    case selector_sidegirls:
-      if      ((permpid1 & (ID1_PERM_ALL_ID|ID1_PERM_NSG)) == (ID1_PERM_SIDE|ID1_PERM_GIRL))
+      if      ((pid3 & (ID3_PERM_ALL_ID|ID3_PERM_NSG)) == (ID3_PERM_SIDE|ID3_PERM_GIRL))
          return true;
-      else if ((permpid1 & ID1_PERM_NSG) == ID1_PERM_NSG)
+      else if ((pid3 & ID3_PERM_NSG) == ID3_PERM_NSG)
          return false;
       break;
    case selector_centers:
@@ -208,12 +209,12 @@ extern bool selectp(setup *ss, int place) THROW_DECL
    case selector_end_girls:
    case selector_center_boys:
    case selector_center_girls:
-      p1 = permpid1 & (ID1_PERM_BOY|ID1_PERM_GIRL);
+      p3 = pid3 & (ID3_PERM_BOY|ID3_PERM_GIRL);
       p2 = pid2 & (ID2_CENTER|ID2_END);
-      if      (p2 == ID2_END && p1 == ID1_PERM_BOY)     s = selector_end_boys;
-      else if (p2 == ID2_END && p1 == ID1_PERM_GIRL)    s = selector_end_girls;
-      else if (p2 == ID2_CENTER && p1 == ID1_PERM_BOY)  s = selector_center_boys;
-      else if (p2 == ID2_CENTER && p1 == ID1_PERM_GIRL) s = selector_center_girls;
+      if      (p2 == ID2_END && p3 == ID3_PERM_BOY)     s = selector_end_boys;
+      else if (p2 == ID2_END && p3 == ID3_PERM_GIRL)    s = selector_end_girls;
+      else if (p2 == ID2_CENTER && p3 == ID3_PERM_BOY)  s = selector_center_boys;
+      else if (p2 == ID2_CENTER && p3 == ID3_PERM_GIRL) s = selector_center_girls;
       else break;
       goto eq_return;
    case selector_beaus:
@@ -410,56 +411,56 @@ extern bool selectp(setup *ss, int place) THROW_DECL
       // us to lose a few extremely rare cases, but it isn't worth using up zillions of bits.
 
    case selector_boy1:
-      if (!(permpid1 & (XPID_MASK & ~PID_MASK))) return (permpid1 & PID_MASK) == 0000;
+      if (!(pid1 & (XPID_MASK & ~PID_MASK))) return (pid1 & PID_MASK) == 0000;
       break;
    case selector_girl1:
-      if (!(permpid1 & (XPID_MASK & ~PID_MASK))) return (permpid1 & PID_MASK) == 0100;
+      if (!(pid1 & (XPID_MASK & ~PID_MASK))) return (pid1 & PID_MASK) == 0100;
       break;
    case selector_cpl1:
-      if (!(permpid1 & (XPID_MASK & ~PID_MASK))) return (permpid1 & PID_MASK & ~0100) == 0000;
+      if (!(pid1 & (XPID_MASK & ~PID_MASK))) return (pid1 & PID_MASK & ~0100) == 0000;
       break;
    case selector_boy2:
-      if (!(permpid1 & (XPID_MASK & ~PID_MASK))) return (permpid1 & PID_MASK) == 0200;
+      if (!(pid1 & (XPID_MASK & ~PID_MASK))) return (pid1 & PID_MASK) == 0200;
       break;
    case selector_girl2:
-      if (!(permpid1 & (XPID_MASK & ~PID_MASK))) return (permpid1 & PID_MASK) == 0300;
+      if (!(pid1 & (XPID_MASK & ~PID_MASK))) return (pid1 & PID_MASK) == 0300;
       break;
    case selector_cpl2:
-      if (!(permpid1 & (XPID_MASK & ~PID_MASK))) return (permpid1 & PID_MASK & ~0100) == 0200;
+      if (!(pid1 & (XPID_MASK & ~PID_MASK))) return (pid1 & PID_MASK & ~0100) == 0200;
       break;
    case selector_boy3:
-      if (!(permpid1 & (XPID_MASK & ~PID_MASK))) return (permpid1 & PID_MASK) == 0400;
+      if (!(pid1 & (XPID_MASK & ~PID_MASK))) return (pid1 & PID_MASK) == 0400;
       break;
    case selector_girl3:
-      if (!(permpid1 & (XPID_MASK & ~PID_MASK))) return (permpid1 & PID_MASK) == 0500;
+      if (!(pid1 & (XPID_MASK & ~PID_MASK))) return (pid1 & PID_MASK) == 0500;
       break;
    case selector_cpl3:
-      if (!(permpid1 & (XPID_MASK & ~PID_MASK))) return (permpid1 & PID_MASK & ~0100) == 0400;
+      if (!(pid1 & (XPID_MASK & ~PID_MASK))) return (pid1 & PID_MASK & ~0100) == 0400;
       break;
    case selector_boy4:
-      if (!(permpid1 & (XPID_MASK & ~PID_MASK))) return (permpid1 & PID_MASK) == 0600;
+      if (!(pid1 & (XPID_MASK & ~PID_MASK))) return (pid1 & PID_MASK) == 0600;
       break;
    case selector_girl4:
-      if (!(permpid1 & (XPID_MASK & ~PID_MASK))) return (permpid1 & PID_MASK) == 0700;
+      if (!(pid1 & (XPID_MASK & ~PID_MASK))) return (pid1 & PID_MASK) == 0700;
       break;
    case selector_cpl4:
-      if (!(permpid1 & (XPID_MASK & ~PID_MASK))) return (permpid1 & PID_MASK & ~0100) == 0600;
+      if (!(pid1 & (XPID_MASK & ~PID_MASK))) return (pid1 & PID_MASK & ~0100) == 0600;
       break;
    case selector_cpls1_2:
-      if (!(permpid1 & (XPID_MASK & ~PID_MASK)))
-         return (permpid1 & PID_MASK & ~0300) == 0000;
+      if (!(pid1 & (XPID_MASK & ~PID_MASK)))
+         return (pid1 & PID_MASK & ~0300) == 0000;
       break;
    case selector_cpls2_3:
-      if (!(permpid1 & (XPID_MASK & ~PID_MASK)))
-         return ((permpid1+0200) & PID_MASK & ~0300) == 0400;
+      if (!(pid1 & (XPID_MASK & ~PID_MASK)))
+         return ((pid1+0200) & PID_MASK & ~0300) == 0400;
       break;
    case selector_cpls3_4:
-      if (!(permpid1 & (XPID_MASK & ~PID_MASK)))
-         return (permpid1 & PID_MASK & ~0300) == 0400;
+      if (!(pid1 & (XPID_MASK & ~PID_MASK)))
+         return (pid1 & PID_MASK & ~0300) == 0400;
       break;
    case selector_cpls4_1:
-      if (!(permpid1 & (XPID_MASK & ~PID_MASK)))
-         return ((permpid1+0200) & PID_MASK & ~0300) == 0000;
+      if (!(pid1 & (XPID_MASK & ~PID_MASK)))
+         return ((pid1+0200) & PID_MASK & ~0300) == 0000;
       break;
 
    case selector_firstone:
@@ -545,10 +546,10 @@ static const long int x24tabtandem[4]     = {7, 0, 1, 0};
 static const long int x24tabantitandem[4] = {7, 2, 1, 0};
 static const long int x24tabfacing[4]     = {7, 2, 1, 0x1B1B};
 
-static const long int boystuff_no_rh[3]  = {ID1_PERM_BOY,  ID1_PERM_GIRL, 0};
-static const long int girlstuff_no_rh[3] = {ID1_PERM_GIRL, ID1_PERM_BOY,  0};
-static const long int boystuff_rh[3]     = {ID1_PERM_BOY,  ID1_PERM_GIRL, 1};
-static const long int girlstuff_rh[3]    = {ID1_PERM_GIRL, ID1_PERM_BOY,  1};
+static const long int boystuff_no_rh[3]  = {ID3_PERM_BOY,  ID3_PERM_GIRL, 0};
+static const long int girlstuff_no_rh[3] = {ID3_PERM_GIRL, ID3_PERM_BOY,  0};
+static const long int boystuff_rh[3]     = {ID3_PERM_BOY,  ID3_PERM_GIRL, 1};
+static const long int girlstuff_rh[3]    = {ID3_PERM_GIRL, ID3_PERM_BOY,  1};
 static const long int semi_squeeze_tab[8] = {0xD, 0xE, 0x9, 0x9, 0x2, 0xD, 0x2, 0xE};
 
 
@@ -2078,7 +2079,7 @@ static bool boygirlp(setup *real_people, int real_index,
    if (extra_stuff[2] && northified_index != 0)
       warn(warn__tasteless_slide_thru);
 
-   return (real_people->people[real_index].id1 & extra_stuff[0]) != 0;
+   return (real_people->people[real_index].id3 & extra_stuff[0]) != 0;
 }
 
 /* ARGSUSED */
@@ -2099,18 +2100,18 @@ static bool roll_is_ccw(setup *real_people, int real_index,
 static bool x12_with_other_sex(setup *real_people, int real_index,
    int real_direction, int northified_index, const long int *extra_stuff)
 {
-   int this_person = real_people->people[real_index].id1;
-   int other_person = real_people->people[real_index ^ 1].id1;
-   return (this_person & extra_stuff[0]) && (other_person & extra_stuff[1]);
+   int this_person3 = real_people->people[real_index].id3;
+   int other_person3 = real_people->people[real_index ^ 1].id3;
+   return (this_person3 & extra_stuff[0]) && (other_person3 & extra_stuff[1]);
 }
 
 /* ARGSUSED */
 static bool x22_facing_other_sex(setup *real_people, int real_index,
    int real_direction, int northified_index, const long int *extra_stuff)
 {
-   int this_person = real_people->people[real_index].id1;
-   int other_person = real_people->people[real_index ^ (((real_direction << 1) & 2) ^ 3)].id1;
-   return (this_person & extra_stuff[0]) && (other_person & extra_stuff[1]);
+   int this_person3 = real_people->people[real_index].id3;
+   int other_person3 = real_people->people[real_index ^ (((real_direction<<1) & 2) ^ 3)].id3;
+   return (this_person3 & extra_stuff[0]) && (other_person3 & extra_stuff[1]);
 }
 
 

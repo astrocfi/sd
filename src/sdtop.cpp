@@ -57,6 +57,8 @@
    configuration::calculate_resolve
    warnings_are_unacceptable
    normalize_setup
+   check_concept_parse_tree
+   check_for_centers_concept
    toplevelmove
    finish_toplevelmove
    deposit_call_tree
@@ -75,6 +77,7 @@ and the following external variables:
    configuration::whole_sequence_low_lim
    history_allocation
    written_history_items
+   no_erase_before_this
    written_history_nopic
    higher_acceptable_level
    the_topcallflags
@@ -163,6 +166,12 @@ int history_allocation;
    -1 when none of the history is safe or the state of the text in the UI
    is unknown. */
 int written_history_items;
+
+// Normally zero.  When this becomes nonzero, the next clear_screen will
+// consider the "screen" to go back only that many lines, so that anything
+// before that will never be subject to being erased.
+int no_erase_before_this;
+
 /* When written_history_items is positive, this tells how many of the initial lines
    did not have pictures forced on (other than having been drawn as a natural consequence
    of the "draw_pic" flag being on.)  If this number ever becomes greater than
@@ -238,8 +247,14 @@ ui_option_type ui_options;
 int configuration::whole_sequence_low_lim;
 bool enable_file_writing;
 
-Cstring cardinals[] = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", (Cstring) 0};
-Cstring ordinals[] = {"0th", "1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th", "9th", "10th", "11th", "12th", "13th", "14th", "15th", (Cstring) 0};
+Cstring cardinals[] = {"0", "1", "2", "3",
+                       "4", "5", "6", "7",
+                       "8", "9", "10", "11",
+                       "12", "13", "14", "15", (Cstring) 0};
+Cstring ordinals[] = {"0th", "1st", "2nd", "3rd",
+                      "4th", "5th", "6th", "7th",
+                      "8th", "9th", "10th", "11th",
+                      "12th", "13th", "14th", "15th", (Cstring) 0};
 
 
 
@@ -1265,7 +1280,7 @@ extern void do_matrix_expansion(
       /* Most global selectors are disabled if we expanded the matrix. */
 
       for (i=0; i<MAX_PEOPLE; i++)
-         ss->people[i].id2 &= (~GLOB_BITS_TO_CLEAR | (ID2_FACEFRONT|ID2_FACEBACK|ID2_HEADLINE|ID2_SIDELINE));
+         ss->people[i].id2 &= ~ID2_LESS_BITS_TO_CLEAR;
 
       /* Put in position-identification bits (leads/trailers/beaus/belles/centers/ends etc.) */
       if (recompute_id) update_id_bits(ss);
@@ -1421,8 +1436,6 @@ restriction_tester::restr_initializer restriction_tester::restr_init_table0[] = 
     {1, 3, 0}, {0}, {0}, false, chk_spec_directions},
    {s1x3dmd, cr_spd_base_mwv, 4, {1, 2, 6, 5, -1},
     {0, 2, 0}, {0}, {0}, false, chk_spec_directions},
-   {s_short6,  cr_dmd_ctrs_mwv, 4, {0, 2, 5, 3, -1},
-    {0, 2, 0}, {0}, {0}, false, chk_spec_directions},
    {sdmd,      cr_dmd_ctrs_mwv, 2, {1, 3, -1},
     {1, 3, 0}, {0}, {0}, false, chk_spec_directions},
    {sdmd,      cr_dmd_pts_mwv, 2, {0, 2, -1},
@@ -1431,12 +1444,33 @@ restriction_tester::restr_initializer restriction_tester::restr_init_table0[] = 
     {1, 0}, {1, 2},              false, chk_star},
    {s_2stars,  cr_dmd_ctrs_mwv, 2, {2, 0, 1}, {2, 4, 5},
     {2, 3, 6}, {2, 2, 7},         false, chk_star},
+
+   {s_short6,  cr_dmd_ctrs_mwv, 4, {0, 2, 5, 3, -1},
+    {0, 2, 0}, {0}, {0}, false, chk_spec_directions},
    {s_trngl,   cr_dmd_ctrs_mwv, 2, {1, 2, -1},
     {0, 2, 0}, {0}, {0}, false, chk_spec_directions},
    {s_trngl4,  cr_dmd_ctrs_mwv, 6, {2, 3, -1},
     {0, 2, 0}, {0}, {0}, false, chk_spec_directions},
    {s_bone6,   cr_dmd_ctrs_mwv, 4, {0, 4, 1, 3, -1},
     {1, 3, 0}, {0}, {0}, false, chk_spec_directions},
+   {s_bone,    cr_dmd_ctrs_mwv, 4, {0, 5, 1, 4, -1},
+    {1, 3, 0}, {0}, {0}, false, chk_spec_directions},
+   {s_rigger,  cr_dmd_ctrs_mwv, 4, {0, 5, 1, 4, -1},
+    {1, 3, 0}, {0}, {0}, false, chk_spec_directions},
+
+   {s_short6,  cr_dmd_ctrs_1f, 4, {0, 2, 5, 3, -1},
+    {0, 2, 1}, {0}, {0}, false, chk_spec_directions},
+   {s_trngl,   cr_dmd_ctrs_1f, 2, {1, 2, -1},
+    {0, 2, 1}, {0}, {0}, false, chk_spec_directions},
+   {s_trngl4,  cr_dmd_ctrs_1f, 6, {2, 3, -1},
+    {0, 2, 1}, {0}, {0}, false, chk_spec_directions},
+   {s_bone6,   cr_dmd_ctrs_1f, 4, {0, 4, 1, 3, -1},
+    {1, 3, 1}, {0}, {0}, false, chk_spec_directions},
+   {s_bone,    cr_dmd_ctrs_1f, 4, {0, 5, 1, 4, -1},
+    {1, 3, 1}, {0}, {0}, false, chk_spec_directions},
+   {s_rigger,  cr_dmd_ctrs_1f, 4, {0, 5, 1, 4, -1},
+    {1, 3, 1}, {0}, {0}, false, chk_spec_directions},
+
    {s1x4,      cr_dmd_ctrs_mwv, 2, {1, 3, -1},
     {0, 2, 0}, {0}, {0}, false, chk_spec_directions},
    {s1x8,      cr_dmd_ctrs_mwv, 4, {1, 3, 7, 5, -1},
@@ -2014,6 +2048,19 @@ restriction_tester::restr_initializer *restriction_tester::get_restriction_thing
 }
 
 
+void create_active_phantom(personrec *person_p, uint32 dir, int *phantom_count_p)
+{
+   if (!person_p->id1) {
+      if (*phantom_count_p >= 16) fail("Too many phantoms.");
+      person_p->id1 = dir | BIT_ACT_PHAN | (((*phantom_count_p)++) << 6);
+      person_p->id2 = 0UL;
+      person_p->id3 = 0UL;
+   }
+   else if (person_p->id1 & BIT_ACT_PHAN)
+      fail("Active phantoms may only be used once.");
+}
+
+
 restriction_test_result verify_restriction(
    setup *ss,
    assumption_thing tt,
@@ -2025,7 +2072,8 @@ restriction_test_result verify_restriction(
    uint32 qa0, qa1, qa2, qa3;
    uint32 qaa[4];
    uint32 pdir, qdir, pdirodd, qdirodd;
-   uint32 dirtest[2];
+   uint32 dirtest1[2];
+   uint32 dirtest3[2];
    const veryshort *p, *q;
    int phantom_count = 0;
    unsigned int live_test = tt.assump_live;  // We might clear this later.
@@ -2158,8 +2206,10 @@ restriction_test_result verify_restriction(
    rr = restriction_tester::get_restriction_thing(ss->kind, tt);
    if (!rr) return restriction_no_item;
 
-   dirtest[0] = 0;
-   dirtest[1] = 0;
+   dirtest1[0] = 0;
+   dirtest1[1] = 0;
+   dirtest3[0] = 0;
+   dirtest3[1] = 0;
 
    *failed_to_instantiate = true;
 
@@ -2258,20 +2308,8 @@ restriction_test_result verify_restriction(
             }
 
             for (i=0; i<rr->size; i++) {
-               int p = rr->map1[i];
-
-               if (!ss->people[p].id1) {
-                  if (phantom_count >= 16) fail("Too many phantoms.");
-
-                  ss->people[p].id1 =           (i&1) ?
-                     ((i&2) ? qdirodd : qdir) :
-                     ((i&2) ? pdirodd : pdir);
-
-                  ss->people[p].id1 |= BIT_ACT_PHAN | ((phantom_count++) << 6);
-                  ss->people[p].id2 = 0;
-               }
-               else if (ss->people[p].id1 & BIT_ACT_PHAN)
-                  fail("Active phantoms may only be used once.");
+               uint32 dir = (i&1) ? ((i&2) ? qdirodd : qdir) : ((i&2) ? pdirodd : pdir);
+               create_active_phantom(&ss->people[rr->map1[i]], dir, &phantom_count);
             }
          }
       }
@@ -2313,19 +2351,10 @@ restriction_test_result verify_restriction(
                fail("Need live person to determine handedness.");
 
             for (i=0 ; i<=attr::slimit(ss) ; i++) {
-               if (!ss->people[i].id1) {
-                  if (phantom_count >= 16)
-                     fail("Too many phantoms.");
-
-                  pdir = (qa0&1) ?
-                     (d_east ^ ((rr->map2[i] ^ qa2) & 2)) :
-                     (d_north ^ ((rr->map1[i] ^ qa0) & 2));
-
-                  ss->people[i].id1 = pdir | BIT_ACT_PHAN | ((phantom_count++) << 6);
-                  ss->people[i].id2 = 0;
-               }
-               else if (ss->people[i].id1 & BIT_ACT_PHAN)
-                  fail("Active phantoms may only be used once.");
+               pdir = (qa0&1) ?
+                  (d_east ^ ((rr->map2[i] ^ qa2) & 2)) :
+                  (d_north ^ ((rr->map1[i] ^ qa0) & 2));
+               create_active_phantom(&ss->people[i], pdir, &phantom_count);
             }
 
             *failed_to_instantiate = false;
@@ -2400,18 +2429,7 @@ restriction_test_result verify_restriction(
                if (qa0 == 0) fail("Need live person to determine handedness.");
 
                for (i=0,k=0 ; k<rr->size ; i+=limit,k++) {
-                  int p = rr->map1[idx+i];
-
-                  personrec *pq = &ss->people[p];
-                  t = pq->id1;
-
-                  if (!t) {
-                     if (phantom_count >= 16) fail("Too many phantoms.");
-                     pq->id1 = pdir | BIT_ACT_PHAN | ((phantom_count++) << 6);
-                     pq->id2 = 0UL;
-                  }
-                  else if (t & BIT_ACT_PHAN)
-                     fail("Active phantoms may only be used once.");
+                  create_active_phantom(&ss->people[rr->map1[idx+i]], pdir, &phantom_count);
                }
 
                *failed_to_instantiate = false;
@@ -2457,20 +2475,8 @@ restriction_test_result verify_restriction(
                if (qa0 == 0)
                   fail("Need live person to determine handedness.");
 
-               for (i=0 ; i<=limit ; i += limit) {
-                  int p = rr->map1[idx+i];
-                  personrec *pq = &ss->people[p];
-                  t = pq->id1;
-
-                  if (!t) {
-                     if (phantom_count >= 16) fail("Too many phantoms.");
-                     pq->id1 = (i ? qdir : pdir) | BIT_ACT_PHAN | ((phantom_count++) << 6);
-                     pq->id2 = 0UL;
-                  }
-                  else if (t & BIT_ACT_PHAN)
-                     fail("Active phantoms may only be used once.");
-               }
-
+               create_active_phantom(&ss->people[rr->map1[idx]], pdir, &phantom_count);
+               create_active_phantom(&ss->people[rr->map1[idx+limit]], qdir, &phantom_count);
                *failed_to_instantiate = false;
             }
          }
@@ -2635,33 +2641,15 @@ restriction_test_result verify_restriction(
             }
 
             for (i=0; i<rr->size; i++) {
-               int p = rr->map1[i];
-
-               if (!ss->people[p].id1) {
-                  if (phantom_count >= 16) fail("Too many phantoms.");
-
-                  ss->people[p].id1 =           (i&1) ?
-                     ((i&2) ? qdirodd : qdir) :
-                     ((i&2) ? pdirodd : pdir);
-
-                  ss->people[p].id1 |= BIT_ACT_PHAN | ((phantom_count++) << 6);
-                  ss->people[p].id2 = 0;
-               }
-               else if (ss->people[p].id1 & BIT_ACT_PHAN)
-                  fail("Active phantoms may only be used once.");
+               uint32 dir = (i&1) ?
+                  ((i&2) ? qdirodd : qdir) :
+                  ((i&2) ? pdirodd : pdir);
+               create_active_phantom(&ss->people[rr->map1[i]], dir, &phantom_count);
             }
 
             for (i=0; i<rr->map2[0]; i++) {
-               int p = rr->map2[i+1];
-
-               if (!ss->people[p].id1) {
-                  if (phantom_count >= 16) fail("Too many phantoms.");
-                  ss->people[p].id1 = (i&1) ? d_south : d_north;
-                  ss->people[p].id1 |= BIT_ACT_PHAN | ((phantom_count++) << 6);
-                  ss->people[p].id2 = 0;
-               }
-               else if (ss->people[p].id1 & BIT_ACT_PHAN)
-                  fail("Active phantoms may only be used once.");
+               uint32 dir = (i&1) ? d_south : d_north;
+               create_active_phantom(&ss->people[rr->map2[i+1]], dir, &phantom_count);
             }
          }
       }
@@ -2674,15 +2662,17 @@ restriction_test_result verify_restriction(
 
       for (i=0; i<2; i++) {
          if ((t = ss->people[i].id1)) {
+            uint32 t3 = ss->people[i].id3;
             uint32 northified = (i ^ (t>>1)) & 1;
-            dirtest[i] = t;
-            if (t & ID1_PERM_BOY) qaa[northified] |= 2;
-            else if (t & ID1_PERM_GIRL) qaa[northified^1] |= 2;
+            dirtest1[i] = t;
+            dirtest3[i] = t3;
+            if (t3 & ID3_PERM_BOY) qaa[northified] |= 2;
+            else if (t3 & ID3_PERM_GIRL) qaa[northified^1] |= 2;
             else goto bad;
          }
       }
 
-      if ((dirtest[0] & dirtest[1]) & (ID1_PERM_BOY | ID1_PERM_GIRL))
+      if ((dirtest3[0] & dirtest3[1]) & (ID3_PERM_BOY | ID3_PERM_GIRL))
          goto bad;
 
       // If this is a couple, check the "left" or "right" bits.
@@ -3113,7 +3103,7 @@ bool check_for_concept_group(
    if (!retval) {
       retstuff.skipped_concept = kk;
 
-      if (k == concept_crazy || k == concept_frac_crazy)
+      if (k == concept_crazy || k == concept_frac_crazy || k == concept_dbl_frac_crazy)
          retstuff.need_to_restrain |= 1;
       else if (k == concept_n_times_const || k == concept_n_times)
          retstuff.need_to_restrain |= 2;
@@ -3136,7 +3126,7 @@ bool check_for_concept_group(
       junk_concepts.clear_all_herit_and_final_bits();
 
       next_parseptr =
-         process_final_concepts(parseptr_skip, false, &junk_concepts, true, __FILE__, __LINE__);
+         process_final_concepts(parseptr_skip, false, &junk_concepts, true, false);
 
       if ((next_parseptr->concept->kind == concept_tandem ||
            next_parseptr->concept->kind == concept_frac_tandem) &&
@@ -3156,7 +3146,7 @@ bool check_for_concept_group(
       junk_concepts.clear_all_herit_and_final_bits();
 
       next_parseptr =
-         process_final_concepts(parseptr_skip, false, &junk_concepts, true, __FILE__, __LINE__);
+         process_final_concepts(parseptr_skip, false, &junk_concepts, true, false);
 
       if ((next_parseptr->concept->kind == concept_do_phantom_2x4 ||
            next_parseptr->concept->kind == concept_do_phantom_boxes) &&
@@ -4254,6 +4244,7 @@ extern uint32 copy_rot(setup *resultpeople, int resultplace, const setup *source
 
    if (newperson) newperson = (newperson + rotamount) & ~064;
    resultpeople->people[resultplace].id2 = sourcepeople->people[sourceplace].id2;
+   resultpeople->people[resultplace].id3 = sourcepeople->people[sourceplace].id3;
    return resultpeople->people[resultplace].id1 = newperson;
 }
 
@@ -4284,6 +4275,7 @@ extern void install_rot(setup *resultpeople, int resultplace, const setup *sourc
       if (resultpeople->people[resultplace].id1 == 0) {
          resultpeople->people[resultplace].id1 = (newperson + rotamount) & ~064;
          resultpeople->people[resultplace].id2 = sourcepeople->people[sourceplace].id2;
+         resultpeople->people[resultplace].id3 = sourcepeople->people[sourceplace].id3;
       }
       else {
          collision_person1 = resultpeople->people[resultplace].id1;
@@ -4435,11 +4427,10 @@ extern parse_block *process_final_concepts(
    bool check_errors,
    final_and_herit_flags *final_concepts,
    bool forbid_unfinished_parse,
-   const char *filename,
-   int linenum) THROW_DECL
+   bool only_one) THROW_DECL
 {
    for ( ; cptr ; cptr=cptr->next) {
-      finalflags the_final_bit;
+      finalflags the_final_bit = (finalflags) 0;
       uint32 forbidfinalbit = 0;
       heritflags heritsetbit = (heritflags) 0;
       uint32 forbidheritbit = 0;
@@ -4535,7 +4526,7 @@ extern parse_block *process_final_concepts(
       case concept_funny:
          heritsetbit = INHERITFLAG_FUNNY; break;
       default:
-         goto exit5;
+         return cptr;
       }
 
       // At this point we have a "herit" concept.
@@ -4579,11 +4570,12 @@ extern parse_block *process_final_concepts(
 
       if (check_errors && cptr->concept->level > calling_level)
          warn(warn__bad_concept_level);
+
+      // Stop now if we have been asked to process only one concept.
+      if (only_one && (the_final_bit | heritsetbit)) return cptr->next;
    }
 
    if (forbid_unfinished_parse) fail_no_retry("Incomplete parse.");
-
-   exit5:
 
    return cptr;
 }
@@ -4601,12 +4593,24 @@ void really_skip_one_concept(
 
    junk_concepts.clear_all_herit_and_final_bits();
 
-   parseptrcopy = process_final_concepts(incoming, false, &junk_concepts, true, __FILE__, __LINE__);
+   // We tell it to process only one concept.
+   parseptrcopy = process_final_concepts(incoming, false, &junk_concepts, true, true);
 
    // Find out whether the next concept (the one that will be "random" or whatever)
    // is a modifier or a "real" concept.
 
-   if (junk_concepts.test_herit_and_final_bits()) {
+   retstuff.heritflag = 0;
+
+   if (junk_concepts.final == 0 &&
+       (junk_concepts.herit & (INHERITFLAG_YOYO | INHERITFLAG_LEFT | INHERITFLAG_FRACTAL)) != 0) {
+      retstuff.heritflag = junk_concepts.herit;
+      retstuff.old_retval = incoming;
+      retstuff.skipped_concept = incoming;
+      retstuff.concept_with_root = parseptrcopy;
+      retstuff.need_to_restrain = 0;
+      goto getout;
+   }
+   else if (junk_concepts.test_herit_and_final_bits() != 0) {
       parseptrcopy = incoming;
    }
    else if (parseptrcopy->concept) {
@@ -4623,7 +4627,7 @@ void really_skip_one_concept(
 
          retstuff.need_to_restrain = 1;
          retstuff.old_retval = parseptrcopy;
-         return;
+         goto getout;
       }
 
       if (concept_table[kk].concept_action == 0)
@@ -4642,7 +4646,11 @@ void really_skip_one_concept(
    check_for_concept_group(parseptrcopy, retstuff, true);
 
    retstuff.old_retval = parseptrcopy;
-   return;
+
+ getout:
+
+   retstuff.result_of_skip = (retstuff.heritflag != 0) ?
+      retstuff.skipped_concept->next : *retstuff.root_of_result_of_skip;
 }
 
 
@@ -5639,7 +5647,7 @@ extern void normalize_setup(setup *ss, normalize_action action, bool noqtagcompr
 
 
 
-static void check_concept_parse_tree(parse_block *conceptptr) THROW_DECL
+void check_concept_parse_tree(parse_block *conceptptr, bool strict) THROW_DECL
 {
    for (;;) {
 
@@ -5649,11 +5657,54 @@ static void check_concept_parse_tree(parse_block *conceptptr) THROW_DECL
       if (conceptptr->concept->kind <= marker_end_of_list) {
          if (!conceptptr->call)
             fail("Incomplete parse.");
+
+         // If it is "strict" (that is, we are checking the result of a random search),
+         // we check that all subcalls have been filled in.
+         if (strict &&
+             (conceptptr->call->the_defn.callflagsf &
+              (CFLAGH__HAS_AT_ZERO | CFLAGH__HAS_AT_M))) {
+
+            // This call requires subcalls.
+            if (conceptptr->concept->kind != concept_another_call_next_mod)
+               fail("Incomplete parse.");
+
+            bool subst1_in_use = false;
+            bool subst2_in_use = false;
+
+            parse_block *search = conceptptr->next;
+            while (search) {
+               parse_block *subsidiary_ptr = search->subsidiary_root;
+               if (!subsidiary_ptr)
+                  fail("Incomplete parse.");
+
+               check_concept_parse_tree(subsidiary_ptr, strict);
+
+               switch (search->replacement_key) {
+               case DFM1_CALL_MOD_ANYCALL/DFM1_CALL_MOD_BIT:
+               case DFM1_CALL_MOD_MAND_ANYCALL/DFM1_CALL_MOD_BIT:
+                  subst1_in_use = true;
+                  break;
+               case DFM1_CALL_MOD_OR_SECONDARY/DFM1_CALL_MOD_BIT:
+               case DFM1_CALL_MOD_MAND_SECONDARY/DFM1_CALL_MOD_BIT:
+                  subst2_in_use = true;
+                  break;
+               }
+
+               search = search->next;
+            }
+
+            if ((!subst1_in_use &&
+                 (conceptptr->call->the_defn.callflagsf & CFLAGH__HAS_AT_ZERO)) ||
+                (!subst2_in_use &&
+                 (conceptptr->call->the_defn.callflagsf & CFLAGH__HAS_AT_M)))
+               fail("Incomplete parse.");
+         }
+
          break;
       }
       else {
          if (concept_table[conceptptr->concept->kind].concept_prop & CONCPROP__SECOND_CALL) {
-            check_concept_parse_tree(conceptptr->subsidiary_root);
+            check_concept_parse_tree(conceptptr->subsidiary_root, strict);
          }
 
          conceptptr = conceptptr->next;
@@ -5733,7 +5784,7 @@ bool check_for_centers_concept(uint32 callflags1_to_examine,
       // Skip all simple modifiers.  If we pass a "split" modifier, remember same.
       finaljunk.clear_all_herit_and_final_bits();
       parse_block *new_parse_scan =
-         process_final_concepts(parse_scan, false, &finaljunk, true, __FILE__, __LINE__);
+         process_final_concepts(parse_scan, false, &finaljunk, true, false);
 
       if (parse_scan != new_parse_scan) {
          parse_scan = new_parse_scan;
@@ -5798,7 +5849,7 @@ void toplevelmove() THROW_DECL
    // something like "make a pass but [?".  There's just no way to make sure
    // that the parse tree is complete.
 
-   check_concept_parse_tree(conceptptr);
+   check_concept_parse_tree(conceptptr, false);
 
    /* Be sure that the amount of written history that we consider to be safely
       written is less than the item we are about to change. */
@@ -5814,6 +5865,7 @@ void toplevelmove() THROW_DECL
    starting_setup.cmd.prior_elongation_bits = 0;
    starting_setup.cmd.prior_expire_bits = 0;
    starting_setup.cmd.skippable_concept = (parse_block *) 0;
+   starting_setup.cmd.skippable_heritflags = 0;
    starting_setup.cmd.restrained_concept = (parse_block *) 0;
    starting_setup.cmd.restrained_super8flags = 0;
    starting_setup.cmd.restrained_do_as_couples = false;
@@ -5848,7 +5900,7 @@ void toplevelmove() THROW_DECL
    current_options = null_options;
 
    // Put in identification bits for global/unsymmetrical stuff, if possible.
-   for (i=0; i<MAX_PEOPLE; i++) starting_setup.people[i].id2 &= ~GLOB_BITS_TO_CLEAR;
+   for (i=0; i<MAX_PEOPLE; i++) starting_setup.people[i].id2 &= ~ID2_GLOB_BITS_TO_CLEAR;
 
    if (!(starting_setup.result_flags.misc & RESULTFLAG__IMPRECISE_ROT)) {
       // Can't do it if rotation is not known.
@@ -6001,7 +6053,7 @@ void finish_toplevelmove() THROW_DECL
    // Remove outboard phantoms from the resulting setup.
    normalize_setup(&newhist.state, simple_normalize, false);
 
-   for (int i=0; i<MAX_PEOPLE; i++) newhist.state.people[i].id2 &= ~GLOB_BITS_TO_CLEAR;
+   for (int i=0; i<MAX_PEOPLE; i++) newhist.state.people[i].id2 &= ~ID2_GLOB_BITS_TO_CLEAR;
    newhist.calculate_resolve();
 }
 

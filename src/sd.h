@@ -240,6 +240,8 @@ class ui_option_type {
    bool pastel_color;     // T = use pastel red/blue for color by gender.
                           // F = bold colors.  Color by couple or color by corner
                           // are always done with bold colors.
+   bool use_magenta;      // These two override the above on a case-by-case basis.
+   bool use_cyan;
    bool singlespace_mode;
    bool nowarn_mode;
    bool keep_all_pictures;
@@ -411,6 +413,7 @@ enum concept_kind {
    concept_snag_mystic,
    concept_crazy,
    concept_frac_crazy,
+   concept_dbl_frac_crazy,
    concept_phan_crazy,
    concept_frac_phan_crazy,
    concept_fan,
@@ -1031,89 +1034,87 @@ struct resolve_list_menu_item {
 };
 
 
-/* This defines a person in a setup.  Unfortunately, there is too much data
-   to fit into 32 bits. */
+// This defines a person in a setup.
 struct personrec {
-   uint32 id1;       /* Frequently used bits go here. */
-   uint32 id2;       /* Bits used for evaluating predicates. */
+   uint32 id1;       // Frequently used bits go here.
+   uint32 id2;       // Bits used for evaluating predicates.
+   uint32 id3;       // The "permanent ID" bits.
 };
 
-/* Person bits for "id1" field are:
-     0x80000000 -
-     0x40000000 - not side girl    **** these 10 bits are "permanent" -- they never change in a person
-     0x20000000 - not side boy
-     0x10000000 - not head girl
-     0x08000000 - not head boy
-     0x04000000 - head corner
-     0x02000000 - side corner
-     0x01000000 - head
-     0x00800000 - side
-     0x00400000 - boy
-     0x00200000 - girl             **** end of permanent bits
-*/
+// Bits that go into the "id1" field.
+//
+// This field comprises the important part of the state of this person.
+// It changes frequently as the person moves around.
 
 enum {
-   ID1_PERM_NSG         = 0x40000000UL,
-   ID1_PERM_NSB         = 0x20000000UL,
-   ID1_PERM_NHG         = 0x10000000UL,
-   ID1_PERM_NHB         = 0x08000000UL,
-   ID1_PERM_HCOR        = 0x04000000UL,
-   ID1_PERM_SCOR        = 0x02000000UL,
-   ID1_PERM_HEAD        = 0x01000000UL,
-   ID1_PERM_SIDE        = 0x00800000UL,
-   ID1_PERM_BOY         = 0x00400000UL,
-   ID1_PERM_GIRL        = 0x00200000UL,
-
-   ID1_PERM_ALLBITS     = 0x7FE00000UL
-};
-
-enum {
-   // These are a 3 bit field for roll info.
+   // These comprise a 3 bit field for roll info.
    // High bit says person moved.
    // Low 2 bits are: 1=R; 2=L; 3=M; 0=roll unknown/unsupported.
-   NROLL_MASK    = 0x001C0000UL,  // mask of the field
-   PERSON_MOVED  = 0x00100000UL,
-   NROLL_BIT     = 0x00040000UL,  // low bit of the field
-   ROLL_DIRMASK  = 0x000C0000UL,  // the low 2 bits, that control roll direction
-   ROLL_IS_L     = 0x00080000UL,
-   ROLL_IS_R     = 0x00040000UL,
-   ROLL_IS_M     = 0x000C0000UL,
+   NROLL_MASK       = 0x00700000UL,  // mask of the field
+   PERSON_MOVED     = 0x00400000UL,
+   ROLL_DIRMASK     = 0x00300000UL,  // the low 2 bits, that control roll direction
+   NROLL_BIT        = 0x00100000UL,  // low bit of the field
+   ROLL_IS_R        = 0x00100000UL,
+   ROLL_IS_L        = 0x00200000UL,
+   ROLL_IS_M        = 0x00300000UL,
 
-   // These are a 6 bit field.
-   STABLE_MASK  = 0x0003F000UL,  // mask of the field
-   STABLE_ENAB  = 0x00020000UL,  // fractional stability enabled
-   STABLE_VBIT  = 0x00008000UL,  // stability "v" field, 2 bits, this is low bit
-   STABLE_RBIT  = 0x00001000UL,  // stability "r" field, 3 bits, this is low bit
+   // These comprise an 8 bit field for fractional stability info.  STABLE_ENAB
+   // means some fractional stable (or fractional twosome) is in effect.  The
+   // "R" field has the amount of fraction left to go.  It is initialized to the
+   // number given (in eighths) in the fractional stable command, and counts
+   // down to zero.  The "V" field is zero while the "R" field still has some
+   // turning left.  Once the turning exceeds the specified amount, and the "R"
+   // field is zero, the "V" field tells how this person is turned relative the
+   // limit.  For example, V=6 says this person is now 2 positions (one
+   // quadrant) counter-clockwise from where she was when the limit was reached,
+   // and therefore needs to be turned 1 quadrant clockwise at the end of the
+   // fractional stable call to compensate.
+   //
+   // As of version 36.63, all counting is done in eighths, not quarters.
+   STABLE_MASK      = 0x000FF000UL,  // mask of the field
+   STABLE_ENAB      = 0x00080000UL,  // fractional stability enabled
+   STABLE_VBIT      = 0x00010000UL,  // stability "v" field, 3 bits, this is low bit
+   STABLE_RBIT      = 0x00001000UL,  // stability "r" field, 4 bits, this is low bit
 
-   BIT_PERSON   = 0x00000800UL,  // live person (just so at least one bit is always set)
-   BIT_ACT_PHAN = 0x00000400UL,  // active phantom (see below, under XPID_MASK)
-   BIT_TANDVIRT = 0x00000200UL,  // virtual person (see below, under XPID_MASK)
-
+   BIT_PERSON       = 0x00000800UL,  // live person (just so at least one bit is always set)
+   BIT_ACT_PHAN     = 0x00000400UL,  // active phantom (see below, under XPID_MASK)
+   BIT_TANDVIRT     = 0x00000200UL,  // virtual person (see below, under XPID_MASK)
 
    // Person ID.  These bit positions are extremely hard wired into, among other
    // things, the resolver and the printer.
-   PID_MASK     = 0x000001C0UL,  // these 3 bits identify actual person
+   PID_MASK         = 0x000001C0UL,  // these 3 bits identify actual person
 
    // Extended person ID.  These 5 bits identify who the person is for the purpose
    // of most manipulations.  0 to 7 are normal live people (the ones who squared up).
    // 8 to 15 are virtual people assembled for tandem or couples.  16 to 31 are
    // active (but nevertheless identifiable) phantoms.  This means that, when
    // BIT_ACT_PHAN is on, it usurps the meaning of BIT_TANDVIRT.
-   XPID_MASK    = 0x000007C0UL,
+   XPID_MASK        = 0x000007C0UL,
 
-   // remaining bits:
-   //     0x00000030 - these 2 bits must be clear for rotation
-   //     0x00000008 - part of rotation (facing north/south)
-   //     0x00000004 - bit must be clear for rotation
-   //     0x00000002 - part of rotation
-   //     0x00000001 - part of rotation (facing east/west)
-
-   d_mask  = 04013UL,
-   d_north = 04010UL,
-   d_south = 04012UL,
-   d_east  = 04001UL,
-   d_west  = 04003UL
+   // Remaining bits:
+   // For various historical reasons, we count these in octal.
+   //     0x00000030 (060) - these 2 bits must be clear for rotation
+   //     0x00000008 (010) - part of rotation (facing north/south)
+   //     0x00000004 (004) - bit must be clear for rotation
+   //     0x00000002 (002) - part of rotation
+   //     0x00000001 (001) - part of rotation (facing east/west)
+   d_mask  = BIT_PERSON | 013UL,
+   d_north = BIT_PERSON | 010UL,
+   d_south = BIT_PERSON | 012UL,
+   d_east  = BIT_PERSON | 001UL,
+   d_west  = BIT_PERSON | 003UL
 };
+
+// Bits that go into the "id2" field.
+//
+// This field contains information to respond to queries like
+// "Is this person a center?" that are used in doing various operations
+// like "centers run".  Such operations are usually based on this field,
+// rather than on the actual geometry.  This is what makes it possible
+// to do things like "bounce the centers".  This field is updated, from
+// the geometry, by "update_id_bits", at strategic times, such as at
+// the beginning of a call.  It is not updated between the parts of
+// "bounce".
 
 enum {
    ID2_HEADLINE   = 0x80000000UL,
@@ -1147,24 +1148,74 @@ enum {
    ID2_CTR4       = 0x00000008UL,
    ID2_OUTRPAIRS  = 0x00000004UL,
    ID2_FACEFRONT  = 0x00000002UL,
-   ID2_FACEBACK   = 0x00000001UL
+   ID2_FACEBACK   = 0x00000001UL,
+
+   // Various useful combinations.
+
+   BITS_TO_CLEAR =
+   ID2_LEAD|ID2_TRAILER|ID2_BEAU|ID2_BELLE|
+   ID2_FACING|ID2_NOTFACING|ID2_CENTER|ID2_END|
+   ID2_CTR2|ID2_CTR6|ID2_OUTR2|ID2_OUTR6|ID2_CTRDMD|ID2_NCTRDMD|
+   ID2_CTR1X4|ID2_NCTR1X4|ID2_CTR1X6|ID2_NCTR1X6|
+   ID2_OUTR1X3|ID2_NOUTR1X3|ID2_CTR4|ID2_OUTRPAIRS,
+
+   ID2_GLOB_BITS_TO_CLEAR =
+   ID2_NEARCOL|ID2_NEARLINE|ID2_NEARBOX|ID2_FARCOL|ID2_FARLINE|ID2_FARBOX|
+   ID2_FACEFRONT|ID2_FACEBACK|ID2_HEADLINE|ID2_SIDELINE,
+
+   ID2_LESS_BITS_TO_CLEAR =
+   ID2_NEARCOL|ID2_NEARLINE|ID2_NEARBOX|ID2_FARCOL|ID2_FARLINE|ID2_FARBOX
 };
 
 
-/* The following items are not actually part of the setup description,
-   but are placed here for the convenience of "move" and similar procedures.
-   They contain information about the call to be executed in this setup.
-   Once the call is complete, that is, when printing the setup or storing it
-   in a history array, this stuff is meaningless. */
+// Bits that go into the "id3" field.
+//
+// This field contains "permanent" information related to the identity
+// of this person.  For real people, this never changes.  The reason
+// this field is needed is that the bits get cobbled together (by ANDing)
+// when combining people for tandem, etc.  For active phantoms, these
+// bits are all zero.
+
+enum {
+   ID3_PERM_NSG     = 0x00040000UL,  // Not side girl
+   ID3_PERM_NSB     = 0x00020000UL,  // Not side boy
+   ID3_PERM_NHG     = 0x00010000UL,  // Not head girl
+   ID3_PERM_NHB     = 0x00008000UL,  // Not head boy
+   ID3_PERM_HCOR    = 0x00004000UL,  // Head corner
+   ID3_PERM_SCOR    = 0x00002000UL,  // Side corner
+   ID3_PERM_HEAD    = 0x00001000UL,  // Head
+   ID3_PERM_SIDE    = 0x00000800UL,  // Side
+   ID3_PERM_BOY     = 0x00000400UL,  // Boy
+   ID3_PERM_GIRL    = 0x00000200UL,  // Girl
+   ID3_PERM_ALLBITS = 0x0007FE00UL,  // We no longer need this, since we own the whole word.
+
+   // These are the standard definitions for the 8 people in the square.
+
+   ID3_B1 = ID3_PERM_NSG|ID3_PERM_NSB|ID3_PERM_NHG|ID3_PERM_HCOR|ID3_PERM_HEAD|ID3_PERM_BOY,
+   ID3_G1 = ID3_PERM_NSG|ID3_PERM_NSB|ID3_PERM_NHB|ID3_PERM_SCOR|ID3_PERM_HEAD|ID3_PERM_GIRL,
+   ID3_B2 = ID3_PERM_NSG|ID3_PERM_NHG|ID3_PERM_NHB|ID3_PERM_SCOR|ID3_PERM_SIDE|ID3_PERM_BOY,
+   ID3_G2 = ID3_PERM_NSB|ID3_PERM_NHG|ID3_PERM_NHB|ID3_PERM_HCOR|ID3_PERM_SIDE|ID3_PERM_GIRL,
+   ID3_B3 = ID3_PERM_NSG|ID3_PERM_NSB|ID3_PERM_NHG|ID3_PERM_HCOR|ID3_PERM_HEAD|ID3_PERM_BOY,
+   ID3_G3 = ID3_PERM_NSG|ID3_PERM_NSB|ID3_PERM_NHB|ID3_PERM_SCOR|ID3_PERM_HEAD|ID3_PERM_GIRL,
+   ID3_B4 = ID3_PERM_NSG|ID3_PERM_NHG|ID3_PERM_NHB|ID3_PERM_SCOR|ID3_PERM_SIDE|ID3_PERM_BOY,
+   ID3_G4 = ID3_PERM_NSB|ID3_PERM_NHG|ID3_PERM_NHB|ID3_PERM_HCOR|ID3_PERM_SIDE|ID3_PERM_GIRL
+};
+
+// The following items are not actually part of the setup description,
+// but are placed here for the convenience of "move" and similar procedures.
+// They contain information about the call to be executed in this setup.
+// Once the call is complete, that is, when printing the setup or storing it
+// in a history array, this stuff is meaningless.
 
 struct assumption_thing {
-   unsigned int assump_col:  16;  /* Stuff to go with assumption -- col vs. line. */
-   unsigned int assump_both:  8;  /* Stuff to go with assumption -- "handedness" enforcement --
-                                                0/1/2 = either/1st/2nd. */
-   unsigned int assump_cast:  6;  /* Nonzero means there is an "assume normal casts" assumption. */
-   unsigned int assump_live:  1;  /* One means to accept only if everyone is live. */
-   unsigned int assump_negate:1;  /* One means to invert the sense of everything. */
-   call_restriction assumption;   /* Any "assume waves" type command. */
+   unsigned int assump_col:  16;  // Stuff to go with assumption -- col vs. line.
+   unsigned int assump_both:  8;  // Stuff to go with assumption -- "handedness" enforcement
+                                  // 0/1/2 = either/1st/2nd.
+   unsigned int assump_cast:  6;  // Nonzero means there is an "assume normal casts"
+                                  // assumption.
+   unsigned int assump_live:  1;  // One means to accept only if everyone is live.
+   unsigned int assump_negate:1;  // One means to invert the sense of everything.
+   call_restriction assumption;   // Any "assume waves" type command.
 };
 
 struct small_setup {
@@ -1194,7 +1245,7 @@ enum {
    CFLAGHSPARE_4                   = 0x00001000UL,
    CFLAGHSPARE_5                   = 0x00002000UL,
    CFLAGHSPARE_6                   = 0x00004000UL
-   // We need to leave the top 8 bits free in order to accomodate the "CFLAG2" bits.
+   // We need to leave the top 12 bits free in order to accomodate the "CFLAG2" bits.
 };
 
 /* These flags, and "CFLAGH__???" flags, go along for the ride, in the callflagsf
@@ -1300,6 +1351,7 @@ struct setup_command {
    bool restrained_do_as_couples;
    uint32 restrained_super9flags;
    parse_block *skippable_concept;
+   uint32 skippable_heritflags;
 };
 
 
@@ -1515,6 +1567,10 @@ class select {
       fx_f3x4outer,
       fx_f3dmouter,
       fx_f3ptpdin,
+      fx_fpgdmdcw,
+      fx_fpgdmdccw,
+      fx_f2x6cw,
+      fx_f2x6ccw,
       fx_fdhrgl,
       fx_specspindle,
       fx_specfix3x40,
@@ -2049,6 +2105,7 @@ enum warning_index {
    warn__bad_interlace_match,
    warn__not_on_block_spots,
    warn__stupid_phantom_clw,
+   warn__should_say_Z,
    warn__bad_modifier_level,
    warn__bad_call_level,
    warn__did_not_interact,
@@ -2221,7 +2278,7 @@ struct setup_attr {
    // canonicalized so that their rotation field will be zero.
    bool four_way_symmetry;
 
-      // This is the bit table for filling in the "ID2" bits.
+   // This is the bit table for filling in the "ID2" bits.
    const id_bit_table *id_bit_table_ptr;
 
    // These are the tables that show how to print out the setup.
@@ -2599,21 +2656,6 @@ enum popup_return {
    POPUP_ACCEPT_WITH_STRING = 2
 };
 
-
-enum {
-   // These are the bits that get filled in by "update_id_bits".
-   BITS_TO_CLEAR =
-   ID2_LEAD|ID2_TRAILER|ID2_BEAU|ID2_BELLE|
-   ID2_FACING|ID2_NOTFACING|ID2_CENTER|ID2_END|
-   ID2_CTR2|ID2_CTR6|ID2_OUTR2|ID2_OUTR6|ID2_CTRDMD|ID2_NCTRDMD|
-   ID2_CTR1X4|ID2_NCTR1X4|ID2_CTR1X6|ID2_NCTR1X6|
-   ID2_OUTR1X3|ID2_NOUTR1X3|ID2_CTR4|ID2_OUTRPAIRS,
-
-   // These are the really global position bits.  They get filled in only at the top level.
-   GLOB_BITS_TO_CLEAR =
-   ID2_NEARCOL|ID2_NEARLINE|ID2_NEARBOX|ID2_FARCOL|ID2_FARLINE|ID2_FARBOX|
-   ID2_FACEFRONT|ID2_FACEBACK|ID2_HEADLINE|ID2_SIDELINE
-};
 
 
 
@@ -3098,6 +3140,7 @@ static const dance_level cross_by_level = l_c1;
 static const dance_level intlk_triangle_level = l_c2;
 static const dance_level general_magic_level = l_c3;
 static const dance_level phantom_tandem_level = l_c4a;
+static const dance_level Z_CLW_level = l_c4a;
 
 
 /* It should be noted that the CMD_MISC__??? and RESULTFLAG__XXX bits have
@@ -3152,6 +3195,9 @@ static const dance_level phantom_tandem_level = l_c4a;
 
    skippable_concept
       For "<so-and-so> work <concept>", this is the concept to be skipped by some people.
+
+   skippable_heritflags
+      As above, when it's a simple modifier.
 
    prior_elongation_bits;
       This tells, for a 2x2 setup prior to having a call executed, how that
@@ -3762,6 +3808,7 @@ class iobase {
    virtual uims_reply get_startup_command() = 0;
    virtual void set_window_title(char s[]) = 0;
    virtual void add_new_line(const char the_line[], uint32 drawing_picture) = 0;
+   virtual void no_erase_before_n(int n) = 0;
    virtual void reduce_line_count(int n) = 0;
    virtual void update_resolve_menu(command_kind goal, int cur, int max,
                                     resolver_display_state state) = 0;
@@ -3802,6 +3849,7 @@ class iofull : public iobase {
    uims_reply get_startup_command();
    void set_window_title(char s[]);
    void add_new_line(const char the_line[], uint32 drawing_picture);
+   void no_erase_before_n(int n);
    void reduce_line_count(int n);
    void update_resolve_menu(command_kind goal, int cur, int max,
                             resolver_display_state state);
@@ -3847,6 +3895,7 @@ extern SDLIB_API uint32 collision_person1;                          /* in SDTOP 
 extern SDLIB_API uint32 collision_person2;                          /* in SDTOP */
 extern SDLIB_API int history_allocation;                            /* in SDTOP */
 extern SDLIB_API int written_history_items;                         /* in SDTOP */
+extern SDLIB_API int no_erase_before_this;                          /* in SDTOP */
 extern SDLIB_API int written_history_nopic;                         /* in SDTOP */
 extern SDLIB_API dance_level higher_acceptable_level[];             /* in SDTOP */
 extern SDLIB_API uint32 the_topcallflags;                           /* in SDTOP */
@@ -3911,7 +3960,6 @@ extern SDLIB_API bool global_cache_failed_flag;                     /* in SDUTIL
 extern SDLIB_API int global_cache_miss_reason[3];                   /* in SDUTIL */
 extern SDLIB_API uims_reply global_reply;                           /* in SDUTIL */
 extern SDLIB_API int global_age;                                    /* in SDUTIL */
-extern bool global_leave_missing_calls_blank;                       /* in SDUTIL */
 extern configuration *clipboard;                                    /* in SDUTIL */
 extern int clipboard_size;                                          /* in SDUTIL */
 extern SDLIB_API bool wrote_a_sequence;                             /* in SDUTIL */
@@ -4048,6 +4096,7 @@ inline uint32 get_meta_key_props(const conzept::concept_descriptor *this_concept
 enum mpkind {
    MPKIND__NONE,
    MPKIND__SPLIT,
+   MPKIND__SPLIT_OTHERWAY_TOO,
    MPKIND__REMOVED,
    MPKIND__TWICE_REMOVED,
    MPKIND__THRICE_REMOVED,
@@ -4404,7 +4453,10 @@ private:
 
 extern void mirror_this(setup *s) THROW_DECL;
 
-extern void do_stability(uint32 *personp, stability stab, int turning) THROW_DECL;
+extern void do_stability(uint32 *personp,
+                         int field,
+                         int turning,
+                         bool mirror) THROW_DECL;
 
 extern bool check_restriction(
    setup *ss,
@@ -4436,7 +4488,7 @@ extern bool do_simple_split(
    split_command_kind split_command,
    setup *result) THROW_DECL;
 
-extern void do_call_in_series(
+extern uint32 do_call_in_series(
    setup *sss,
    bool dont_enforce_consistent_split,
    bool roll_transparent,
@@ -4460,6 +4512,8 @@ extern bool get_real_subcall(
    bool forbid_flip,
    uint32 extra_heritmask_bits,
    setup_command *cmd_out) THROW_DECL;
+
+extern int gcd(int a, int b);
 
 // These control inversion of the start and end args.  That is, the position
 // fraction F is turned into 1-F.
@@ -4587,7 +4641,7 @@ extern void tandem_couples_move(
    setup *ss,
    selector_kind selector,
    int twosome,           // solid=0 / twosome=1 / solid-to-twosome=2 / twosome-to-solid=3
-   int fraction,          // number, if doing fractional twosome/solid
+   int fraction_fields,   // number fields, if doing fractional twosome/solid
    int phantom,           // normal=0 phantom=1 general-gruesome=2 gruesome-with-wave-check=3
    tandem_key key,
    uint32 mxn_bits,
@@ -4689,7 +4743,9 @@ struct skipped_concept_info {
    parse_block *old_retval;
    parse_block *skipped_concept;
    uint32 need_to_restrain;   // 1=(if not doing echo), 2=(yes, always)
+   uint32 heritflag;
    parse_block *concept_with_root;
+   parse_block *result_of_skip;
    parse_block **root_of_result_of_skip;
 };
 
@@ -4763,6 +4819,7 @@ inline void setup::clear_person(int place)
 {
    people[place].id1 = 0;
    people[place].id2 = 0;
+   people[place].id3 = 0;
 }
 
 inline void setup::suppress_roll(int place)
@@ -4809,8 +4866,7 @@ extern parse_block *process_final_concepts(
    bool check_errors,
    final_and_herit_flags *final_concepts,
    bool forbid_unfinished_parse,
-   const char *filename,
-   int linenum) THROW_DECL;
+   bool only_one) THROW_DECL;
 
 extern void really_skip_one_concept(
    parse_block *incoming,
@@ -4824,6 +4880,8 @@ extern bool warnings_are_unacceptable(bool strict);
 
 extern void normalize_setup(setup *ss, normalize_action action, bool noqtagcompress)
      THROW_DECL;
+
+void check_concept_parse_tree(parse_block *conceptptr, bool strict) THROW_DECL;
 
 bool check_for_centers_concept(uint32 callflags1_to_examine,
                                parse_block *parse_scan,

@@ -3365,18 +3365,21 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
                                     have opposite handedness to the ends.  "Right/left"
                                     applies to the ends.
 
-   dmd_ctrs_mwv            Q        dmd, trngl, qtag, wqtag, 3dmd, 4dmd, deep2x1dmd,
-                                    ptpd, short6, bone6, spindle, 1x4, 2x3, 2x4, 1x8 -
-                                    the centers or base (2, 4, 6, or 8 of them)
-                                    are consistently in consistent-handed miniwaves;
+   dmd_ctrs_mwv            Q        dmd, trngl, trngl4, qtag, wqtag, 3dmd, 4dmd,
+                                    deep2x1dmd, ptpd, short6, rigger, bone, bone6, spindle,
+                                    1x4, 2x3, 2x4, 1x8 - the centers or base
+                                    (2, 4, 6, or 8 of them) are consistently in
+                                    consistent-handed miniwaves;
                                     other people not checked at all.
                                     If any of the base people are tandem-based, this fails.
-                                    For bone6, it checks triangle base, i.e. outsides.
-                                    For short6, it checks the center 4 as bases of triangles.
+                                    For bone or bone6, it checks triangle base, i.e. outsides.
+                                    For short6 or rigger, it checks the center 4 as bases
+                                    of triangles.
                                     For spindle, it checks the center 6.
                                     For 2x3, it checks the center 2, who are of course in
                                     column-like orientation.
-                                    For 2x4, the center 4 must be in line-like orientation.
+                                    For 2x4, it checks the center 4, who must be
+                                    in line-like orientation.
                                     For 1x8, it checks the centers of each side.  They must
                                     be in line-like orientation.
                                     This may be used this with the "right/left" keyword.
@@ -3387,11 +3390,11 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
                                     is some form of generalized 1/4 tag of the indicated
                                     handedness.
 
-                  ** We don't list trngl4 in the above, because it doesn't obey the
-                  all-larger-setups rule, that is, it hasn't been implemented for bone
-                  and rigger.  (and how about c1phantoms?)  There is another potential
-                  problem -- these are used to examine the base of individual triangles,
-                  but the bone6 and short6 versions demand consistent handedness.
+                  **** There are still some problems.  When in setups that have
+                  two bases to check (rigger, bone, short6, etc.) it demands
+                  symmetry, but shouldn't.  Also, the all-larger-setups rule isn't
+                  obeyed for c1phantoms, so the division code is somewhat hokey.
+
                   We would like to have tests specifically aimed at individual triangles,
                   even if they are unsymmetrical.  (The way "miniwaves" works -- when it
                   tests larger setups like boxes, it passes if the boxes are inverted,
@@ -3402,11 +3405,13 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
                   bone6, both the RH and LH versions will pass, so that splitting will
                   take place.
 
-   dmd_ctrs_1f             Q        dmd, 1x4, 1x8 - the centers (2 or 4 of them) are
-                                    in a couple.  For 1x8, it checks the centers of
+   dmd_ctrs_1f             Q        dmd, trngl, trngl4, bone, bone6, short6, rigger,
+                                    1x4, 1x8 - the centers or base (2 or 4 of them)
+                                    are in a couple.  For 1x8, it checks the centers of
                                     each side, and they must be symmetrical, that is,
                                     one couple facing north and the other south.
                                     Or something like that.  It may not be correct.
+                                    This is intended to be like "dmd_ctrs_mwv".
 
    dmd_pts_mwv             Q        qtag, dmd - the points are facing opposite directions.
                                     The "right" or "left" modifiers may be used.
@@ -3469,7 +3474,6 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
    line_ends_looking_out            2x4 T-bone - the ends must be line-like and must be leads,
                                     and at least one center must be column-like.
    col_ends_looking_in              2x4 columns - the ends are #4
-   ripple stuff .......
    people_1_and_5_real              1x8 (or any applicable setup) people #1 and #5 are real.
    centers_sel                      1x4/2x4/qtag/bone - the centers are selected
                                     and the ends are not.

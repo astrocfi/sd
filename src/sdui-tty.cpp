@@ -1277,9 +1277,16 @@ void iofull::add_new_line(const char the_line[], uint32 drawing_picture)
     current_text_line++;
 }
 
-/* Throw away all but the first n lines of the text output.
-   n = 0 means to erase the entire buffer. */
+// Make everything before the most recent n lines
+// not subject to erasure.  Used to protect the
+// display of the transcript of preceding sequences.
+void iofull::no_erase_before_n(int n)
+{
+   current_text_line = n;
+}
 
+// Throw away all but the first n lines of the text output.
+// N = 0 means to erase the entire buffer.
 void iofull::reduce_line_count(int n)
 {
    if (current_text_line > n)

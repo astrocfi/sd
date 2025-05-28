@@ -64,7 +64,7 @@ sdttyres.o: sdtty.rc
 	windres sdtty.rc sdttyres.o
 
 mkcalls.exe: $(MKCALLS_OBJS)
-	$(CC) -o $@ $(MKCALLS_OBJS)
+	$(CC) -mconsole -o $@ $(MKCALLS_OBJS)
 	strip mkcalls.exe
 
 sdtty.exe: libsdlib.a sdlib.dll $(SDTTY_OBJS) sdttyres.o

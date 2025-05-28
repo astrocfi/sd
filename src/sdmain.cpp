@@ -31,8 +31,8 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-#define VERSION_STRING "36.62"
-#define TIME_STAMP "wba@alum.mit.edu  17 Sep 2005 $"
+#define VERSION_STRING "36.63"
+#define TIME_STAMP "wba@alum.mit.edu  20 Nov 2005 $"
 
 /* This defines the following functions:
    sd_version_string
@@ -725,16 +725,27 @@ extern bool query_for_call()
 
       try_again:
 
-      /* Display the call index number, and the partially entered call and/or prompt, as appropriate. */
+      // Display the call index number, and the partially entered call and/or
+      // prompt, as appropriate.
 
-      /* See if there are partially entered concepts.  If so, print the index number
-         and those concepts on a separate line. */
+      // See if there are partially entered concepts.  If so, print the index
+      // number and those concepts on a separate line.
 
       if (parse_state.concept_write_ptr != &configuration::next_config().command_root) {
 
          // This prints the concepts entered so far, with a "header"
          // consisting of the index number.  This partial concept tree
          // is incomplete, so write_history_line has to be (and is) very careful.
+         // By giving a third argument ("leave_missing_calls_blank") of true,
+         // subcalls that haven't yet been filled in will be left blank
+         // rather than showing as "***".  So, after typing in
+         // "tally ho but <anything>", it will echo as just "tally ho but"
+         // while it is prompting us for the subcall.
+         //
+         // If we get through the whole call without ever filling in the
+         // subcall, as in "no one do your part, tally ho but <anything>",
+         // the final result will show the missing subcall as
+         // "no one do your part, tally ho but [???]"
 
          write_history_line(configuration::history_ptr+1, false, true, file_write_no);
       }
@@ -743,7 +754,8 @@ extern bool query_for_call()
 
          if (!ui_options.diagnostic_mode) {
             char indexbuf[200];
-            (void) sprintf (indexbuf, "%2d: ", configuration::history_ptr-configuration::whole_sequence_low_lim+2);
+            sprintf (indexbuf, "%2d:",
+                     configuration::history_ptr-configuration::whole_sequence_low_lim+2);
             writestuff(indexbuf);
             newline();
          }
@@ -923,6 +935,8 @@ ui_option_type::ui_option_type() :
    no_intensify(false),
    reverse_video(false),
    pastel_color(false),
+   use_magenta(false),
+   use_cyan(false),
    singlespace_mode(false),
    nowarn_mode(false),
    keep_all_pictures(false),
@@ -963,6 +977,8 @@ extern int sdmain(int argc, char *argv[])
       printf("-no_color                   do not display people in color\n");
       printf("-bold_color                 use bold colors when not coloring by couple or corner\n");
       printf("-pastel_color               use pastel colors when not coloring by couple or corner\n");
+      printf("-use_magenta                use magenta instead of red in all modes\n");
+      printf("-use_cyan                   use cyan instead of blue in all modes\n");
       printf("-color_by_couple            display color according to couple number, rgby\n");
       printf("-color_by_couple_rgyb       similar to color_by_couple, but with rgyb\n");
       printf("-color_by_couple_ygrb       similar to color_by_couple, but with ygrb\n");

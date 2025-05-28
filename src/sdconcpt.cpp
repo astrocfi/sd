@@ -1,6 +1,6 @@
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2004  William B. Ackerman.
+//    Copyright (C) 1990-2005  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -205,7 +205,8 @@ static void do_c1_phantom_move(
    // so we check that there weren't any.
 
    junk_concepts.clear_all_herit_and_final_bits();
-   next_parseptr = process_final_concepts(parseptr->next, false, &junk_concepts, true, __FILE__, __LINE__);
+   next_parseptr = process_final_concepts(parseptr->next, false, &junk_concepts,
+                                          true, false);
 
    if (next_parseptr->concept->kind == concept_tandem ||
        next_parseptr->concept->kind == concept_frac_tandem) {
@@ -996,7 +997,7 @@ static void do_concept_parallelogram(
    junk_concepts.clear_all_herit_and_final_bits();
 
    next_parseptr = process_final_concepts(parseptr->next, false, &junk_concepts,
-                                          true, __FILE__, __LINE__);
+                                          true, false);
 
    const parse_block *standard_concept = (parse_block *) 0;
 
@@ -1006,7 +1007,7 @@ static void do_concept_parallelogram(
       standard_concept = next_parseptr;
       junk_concepts.clear_all_herit_and_final_bits();
       next_parseptr = process_final_concepts(next_parseptr->next, false, &junk_concepts,
-                                             true, __FILE__, __LINE__);
+                                             true, false);
    }
 
    // We are only interested in a few concepts, and only if there
@@ -2687,7 +2688,7 @@ static void do_concept_new_stretch(
       final_and_herit_flags junk_concepts;
       junk_concepts.clear_all_herit_and_final_bits();
       parse_block *next_parseptr = process_final_concepts(parseptr->next, false,
-                                                          &junk_concepts, true, __FILE__, __LINE__);
+                                                          &junk_concepts, true, false);
 
       if ((next_parseptr->concept->kind == concept_randomtrngl ||
           next_parseptr->concept->kind == concept_selbasedtrngl) &&
@@ -3169,11 +3170,33 @@ static void do_concept_crazy(
    // we need to rematerialize them at each step.
    setup_command cmd = tempsetup.cmd;
 
-   int craziness = (parseptr->concept->arg2) ? parseptr->options.number_fields : 4;
+   int craziness = 4;
+   int fractional_craziness_part_num = 0;
+   int fractional_craziness_part_den = 1;
+
+   if (parseptr->concept->arg2 == 2) {
+      int num = (parseptr->options.number_fields & 0xF) << 2;
+      fractional_craziness_part_den = parseptr->options.number_fields >> 4;
+      craziness = num/fractional_craziness_part_den;
+      fractional_craziness_part_num = num - craziness*fractional_craziness_part_den;
+      int fracgcd = gcd(fractional_craziness_part_num, fractional_craziness_part_den);
+      fractional_craziness_part_num /= fracgcd;
+      fractional_craziness_part_den /= fracgcd;
+   }
+   else if (parseptr->concept->arg2)
+      craziness = parseptr->options.number_fields;
+
    uint32 incomingfracs = cmd.cmd_frac_flags & ~CMD_FRAC_THISISLAST;
 
    if (incomingfracs & CMD_FRAC_REVERSE)
       reverseness ^= (craziness ^ 1);    // That's all it takes!
+
+   // Craziness that isn't integral multiple of 1/4 isn't allowed if reverse crazy.
+   if (fractional_craziness_part_num != 0 && reverseness != 0)
+      fail("Illegal fraction for \"crazy\".");
+
+   // If craziness isn't an integral multiple of 1/4, bump the count.
+   if (fractional_craziness_part_num != 0) craziness++;
 
    int s_numer = (incomingfracs & 0xF000) >> 12;
    int s_denom = (incomingfracs & 0xF00) >> 8;
@@ -3243,6 +3266,15 @@ static void do_concept_crazy(
 
       update_id_bits(&tempsetup);
 
+      // If craziness isn't an integral multiple of 1/4 and this is the last time,
+      // put in the fraction.
+      if (i == highlimit-1 && fractional_craziness_part_num != 0) {
+         tempsetup.cmd.cmd_frac_flags =
+            (fractional_craziness_part_num << 4) +
+            fractional_craziness_part_den +
+            0x0100;
+      }
+
       if ((i ^ reverseness) & 1) {
          // Do it in the center.  The -1 for arg 4 makes it
          // preserve roll information for the inactives.
@@ -3251,10 +3283,10 @@ static void do_concept_crazy(
       }
       else {
          // Do it on each side.
-         if (tempsetup.rotation & 1)
-            tempsetup.cmd.cmd_misc_flags |= CMD_MISC__MUST_SPLIT_VERT;
-         else
-            tempsetup.cmd.cmd_misc_flags |= CMD_MISC__MUST_SPLIT_HORIZ;
+         tempsetup.cmd.cmd_misc_flags |= 
+            (tempsetup.rotation & 1) ?
+            CMD_MISC__MUST_SPLIT_VERT :
+            CMD_MISC__MUST_SPLIT_HORIZ;
          move(&tempsetup, false, result);
       }
 
@@ -3454,7 +3486,7 @@ static void do_concept_fan(
    const parse_block *parseptrcopy;
    call_with_name *callspec;
 
-   parseptrcopy = process_final_concepts(parseptr->next, true, &new_final_concepts, true, __FILE__, __LINE__);
+   parseptrcopy = process_final_concepts(parseptr->next, true, &new_final_concepts, true, false);
 
    if (new_final_concepts.test_herit_and_final_bits() ||
        parseptrcopy->concept->kind > marker_end_of_list)
@@ -3509,6 +3541,8 @@ void stable_move(
    if (fractional && howfar > 4)
       fail("Can't do fractional stable more than 4/4.");
 
+   howfar <<= 1;    // Calibrated in eighths.
+
    selector_kind saved_selector = current_options.who;
    current_options.who = who;
 
@@ -3552,14 +3586,16 @@ void stable_move(
          if (selected[(p >> 6) & 037]) {
             uint32 stop_amount;
             if (fractional) {
-               stop_amount = (p & (STABLE_VBIT*3)) / STABLE_VBIT;
+               stop_amount = (p & (STABLE_VBIT*7)) / STABLE_VBIT;
+               if (stop_amount & 1)
+                  fail("Sorry, can't do 1/8 stable.");
 
                if (!(p & STABLE_ENAB))
                   fail("fractional stable not supported for this call.");
-               p = rotperson(p, ((0 - stop_amount) & 3) * 011);
+               p = rotperson(p, ((0 - stop_amount/2) & 3) * 011);
             }
             else {
-               stop_amount = 1;   // So that roll will be turned off.
+               stop_amount = 2;   // So that roll will be turned off.
 
                p = rotperson(
                   (p & ~(d_mask | STABLE_MASK)) |
@@ -5748,7 +5784,6 @@ static void do_concept_meta(
 {
    parse_block *result_of_skip;
    parse_block fudgyblock;
-   setup_command nocmd, yescmd;
    uint32 expirations_to_clearmisc = 0;
    uint32 finalresultflagsmisc = 0;
    meta_key_kind key = (meta_key_kind) parseptr->concept->arg1;
@@ -5771,8 +5806,8 @@ static void do_concept_meta(
    if (ss->cmd.cmd_final_flags.final)
       fail("Illegal modifier for this concept.");
 
-   nocmd = ss->cmd;
-   yescmd = ss->cmd;
+   setup_command nocmd = ss->cmd;
+   setup_command yescmd = ss->cmd;
 
    // The CMD_MISC__PUT_FRAC_ON_FIRST bit tells the "special_sequential" concept
    // (if that is the subject concept) that fractions are allowed, and they
@@ -5876,18 +5911,28 @@ static void do_concept_meta(
 
       really_skip_one_concept(parseptr->next, foo);
 
-      result_of_skip = *foo.root_of_result_of_skip;
-      yescmd.parseptr = foo.old_retval;
-      nocmd.parseptr = result_of_skip;
-
-      if ((foo.need_to_restrain & 2) ||
-          ((foo.need_to_restrain & 1) &&
-           (key != meta_key_rev_echo && key != meta_key_echo))) {
-         fudgyblock = *foo.old_retval;
-         yescmd.restrained_concept = &fudgyblock;
-         yescmd.cmd_misc_flags |= CMD_MISC__RESTRAIN_CRAZINESS;
-         yescmd.restrained_final = foo.root_of_result_of_skip;
+      if (foo.heritflag != 0) {
+         result_of_skip = foo.concept_with_root;
          yescmd.parseptr = result_of_skip;
+         nocmd.parseptr = result_of_skip;
+         yescmd.cmd_misc_flags |= CMD_MISC__RESTRAIN_MODIFIERS;
+         yescmd.restrained_final = 0;
+         yescmd.restrained_super8flags = foo.heritflag;
+      }
+      else {
+         result_of_skip = foo.result_of_skip;
+         yescmd.parseptr = foo.old_retval;
+         nocmd.parseptr = result_of_skip;
+
+         if ((foo.need_to_restrain & 2) ||
+             ((foo.need_to_restrain & 1) &&
+              (key != meta_key_rev_echo && key != meta_key_echo))) {
+            fudgyblock = *foo.old_retval;
+            yescmd.restrained_concept = &fudgyblock;
+            yescmd.cmd_misc_flags |= CMD_MISC__RESTRAIN_CRAZINESS;
+            yescmd.restrained_final = foo.root_of_result_of_skip;
+            yescmd.parseptr = result_of_skip;
+         }
       }
 
       // If the skipped concept is "twisted" or "yoyo", get ready to clear
@@ -6958,7 +7003,7 @@ static void do_concept_fractional(
       int dd = nn >> 4;
       nn &= 0xF;
       FOO = (parseptr->concept->arg1 & 1) ?
-         ((dd-nn) << 12)+(dd << 8)+0x0011 : (nn << 4)+(dd << 0)+0x0100;
+         ((dd-nn) << 12)+(dd << 8)+0x0011 : (nn << 4)+dd+0x0100;
    }
 
    // What a crock!!!!!  Cmd_frac_flags and restrained_fraction need to be reversed!
@@ -7387,7 +7432,7 @@ extern bool do_big_concept(
       junk_concepts.clear_all_herit_and_final_bits();
       substandard_concptptr = process_final_concepts(orig_concept_parse_block->next,
                                                      true, &junk_concepts,
-                                                     true, __FILE__, __LINE__);
+                                                     true, false);
 
       // If we hit "matrix", do a little extra stuff and continue.
 
@@ -7396,7 +7441,7 @@ extern bool do_big_concept(
          ss->cmd.cmd_misc_flags |= CMD_MISC__MATRIX_CONCEPT;
          substandard_concptptr = process_final_concepts(substandard_concptptr->next,
                                                         true, &junk_concepts,
-                                                        true, __FILE__, __LINE__);
+                                                        true, false);
       }
 
       if (junk_concepts.test_herit_and_final_bits() != 0 ||
@@ -7554,17 +7599,17 @@ const concept_table_item concept_table[] = {
     CONCPROP__SHOW_SPLIT | CONCPROP__USE_SELECTOR,
     do_concept_tandem},                                     // concept_some_are_tandem
    {CONCPROP__NEED_ARG2_MATRIX | CONCPROP__MATRIX_OBLIVIOUS |
-    CONCPROP__SHOW_SPLIT | CONCPROP__USE_NUMBER,
+    CONCPROP__SHOW_SPLIT | CONCPROP__USE_TWO_NUMBERS,
     do_concept_tandem},                                     // concept_frac_tandem
    {CONCPROP__NEED_ARG2_MATRIX | CONCPROP__MATRIX_OBLIVIOUS |
-    CONCPROP__SHOW_SPLIT | CONCPROP__USE_NUMBER |
+    CONCPROP__SHOW_SPLIT | CONCPROP__USE_TWO_NUMBERS |
     CONCPROP__USE_SELECTOR,
     do_concept_tandem},                                     // concept_some_are_frac_tandem
    {CONCPROP__NEED_ARG2_MATRIX | CONCPROP__MATRIX_OBLIVIOUS |
     CONCPROP__SHOW_SPLIT | CONCPROP__SET_PHANTOMS,
     do_concept_tandem},                                     // concept_gruesome_tandem
    {CONCPROP__NEED_ARG2_MATRIX | CONCPROP__MATRIX_OBLIVIOUS |
-    CONCPROP__SHOW_SPLIT | CONCPROP__USE_NUMBER |
+    CONCPROP__SHOW_SPLIT | CONCPROP__USE_TWO_NUMBERS |
     CONCPROP__SET_PHANTOMS,
     do_concept_tandem},                                     // concept_gruesome_frac_tandem
    {CONCPROP__NEED_ARG2_MATRIX | CONCPROP__SHOW_SPLIT,
@@ -7698,6 +7743,8 @@ const concept_table_item concept_table[] = {
    {CONCPROP__PERMIT_MODIFIERS, do_concept_crazy},          // concept_crazy
    {CONCPROP__USE_NUMBER | CONCPROP__PERMIT_MODIFIERS,
     do_concept_crazy},                                      // concept_frac_crazy
+   {CONCPROP__USE_TWO_NUMBERS | CONCPROP__PERMIT_MODIFIERS,
+    do_concept_crazy},                                      // concept_dbl_frac_crazy
    {CONCPROP__PERMIT_MODIFIERS | CONCPROP__NEED_ARG2_MATRIX |
     CONCPROP__SET_PHANTOMS | CONCPROP__STANDARD,
     do_concept_phan_crazy},                                 // concept_phan_crazy

@@ -29,8 +29,12 @@
    drag_someone_and_move
    anchor_someone_and_move
    process_number_insertion
+   get_real_subcall
    gcd
-   get_fraction_info
+   process_stupendously_new_fractions
+   fraction_info::get_fraction_info
+   fraction_info::get_fracs_for_this_part
+   fraction_info::query_instant_stop
    fill_active_phantoms_and_move
    move_perhaps_with_active_phantoms
    impose_assumption_and_move
@@ -124,12 +128,16 @@ extern void canonicalize_rotation(setup *result) THROW_DECL
          x3 = result->people[i3];
          result->people[j0].id1 = rotperson(x0.id1, rot11);
          result->people[j0].id2 = x0.id2;
+         result->people[j0].id3 = x0.id3;
          result->people[j1].id1 = rotperson(x1.id1, rot11);
          result->people[j1].id2 = x1.id2;
+         result->people[j1].id3 = x1.id3;
          result->people[j2].id1 = rotperson(x2.id1, rot11);
          result->people[j2].id2 = x2.id2;
+         result->people[j2].id3 = x2.id3;
          result->people[j3].id1 = rotperson(x3.id1, rot11);
          result->people[j3].id2 = x3.id2;
+         result->people[j3].id3 = x3.id3;
       }
 
       result->rotation = 0;
@@ -747,13 +755,16 @@ extern bool do_simple_split(
    for each call in the series (in order to do different calls) this will typically
    require specific action by the client. */
 
-extern void do_call_in_series(
+// This returns the "force" flags that it extracted from the call.
+
+extern uint32 do_call_in_series(
    setup *sss,
    bool dont_enforce_consistent_split,
    bool roll_transparent,
    bool normalize,
    bool qtfudged) THROW_DECL
 {
+   uint32 retval = 0;
    uint32 current_elongation = 0;
    resultflag_rec saved_result_flags = sss->result_flags;
 
@@ -858,8 +869,9 @@ extern void do_call_in_series(
                      current_elongation = sss->cmd.prior_elongation_bits & 3;
                }
 
-               qqqq.cmd.cmd_misc_flags &= ~(DFM1_CONC_FORCE_SPOTS|DFM1_CONC_FORCE_OTHERWAY|
-                                            DFM1_CONC_FORCE_LINES | DFM1_CONC_FORCE_COLUMNS|
+               retval = qqqq.cmd.cmd_misc_flags;
+               qqqq.cmd.cmd_misc_flags &= ~(DFM1_CONC_FORCE_SPOTS | DFM1_CONC_FORCE_OTHERWAY |
+                                            DFM1_CONC_FORCE_LINES | DFM1_CONC_FORCE_COLUMNS |
                                             DFM1_CONC_DEMAND_LINES | DFM1_CONC_DEMAND_COLUMNS);
             }
 
@@ -1026,6 +1038,8 @@ extern void do_call_in_series(
 
    canonicalize_rotation(sss);
    minimize_splitting_info(sss, saved_result_flags);
+
+   return retval;
 }
 
 // For each person, we remember the 3 best candidates with whom that person might Jaywalk.
@@ -1048,6 +1062,7 @@ struct matrix_rec {
    bool sel;           // True if this person is selected.  (False if selectors not in use.)
    bool done;          // Used for loop control on each pass.
    bool realdone;      // Used for loop control on each pass.
+   bool mirror_this_op;// On when a "press in" type of thing requires mirroring.
    // This list is sorted from best (smallest jp_eucdist) to worst.
    jaywalkpersonstruct jpersons[NUMBER_OF_JAYWALK_CANDIDATES];
    unsigned int jaywalktargetmask;   // Bits for jaywalkers point back at this person.
@@ -1117,6 +1132,7 @@ static int start_matrix_call(
 
          matrix_info[nump].done = false;
          matrix_info[nump].realdone = false;
+         matrix_info[nump].mirror_this_op = false;
 
          if (flags & MTX_USE_SELECTOR)
             matrix_info[nump].sel = selectp(people, nump);
@@ -1132,8 +1148,8 @@ static int start_matrix_call(
             matrix_info[nump].boybit = (rollbits == ROLL_IS_R) ? 1 : 0;
          }
          else {
-            matrix_info[nump].girlbit = (people->people[nump].id1 & ID1_PERM_GIRL) ? 1 : 0;
-            matrix_info[nump].boybit = (people->people[nump].id1 & ID1_PERM_BOY) ? 1 : 0;
+            matrix_info[nump].girlbit = (people->people[nump].id3 & ID3_PERM_GIRL) ? 1 : 0;
+            matrix_info[nump].boybit = (people->people[nump].id3 & ID3_PERM_BOY) ? 1 : 0;
          }
 
          matrix_info[nump].nextse = 0;
@@ -1142,9 +1158,10 @@ static int start_matrix_call(
          matrix_info[nump].deltay = 0;
          matrix_info[nump].nearestdrag = 100000;
          matrix_info[nump].deltarot = 0;
+         // Set it to "roll is 'M'" and "stability is 'Z'".
+         // "Z" is set with "stb_none" and "REV".
          matrix_info[nump].roll_stability_info =
-            (NDBROLL_BIT * 3) |
-            (((unsigned int) stb_z) * DBSTAB_BIT);
+            (NDBROLL_BIT * 3) | ((STB_NONE|STB_REVERSE) * DBSTAB_BIT);
          matrix_info[nump].orig_source_idx = i;
          matrix_info[nump].tbstopse = false;
          matrix_info[nump].tbstopnw = false;
@@ -1575,16 +1592,15 @@ static void finish_matrix_call(
       CC.install_with_collision(result, place, people, i, rot);
 
       if (do_roll_stability) {
-         result->people[place].id1 &= ~NROLL_MASK;
          uint32 rollstuff = (mp->roll_stability_info * (NROLL_BIT/NDBROLL_BIT)) & NROLL_MASK;
          if ((rollstuff+NROLL_BIT) & (NROLL_BIT*2)) rollstuff |= PERSON_MOVED;
+         result->people[place].id1 &= ~NROLL_MASK;
          result->people[place].id1 |= rollstuff;
 
          if (result->people[place].id1 & STABLE_ENAB)
-            do_stability(
-               &result->people[place].id1,
-               (stability) ((mp->roll_stability_info/DBSTAB_BIT) & 0xF),
-               mp->deltarot);
+            do_stability(&result->people[place].id1,
+                         mp->roll_stability_info/DBSTAB_BIT,
+                         mp->deltarot, mp->mirror_this_op);
       }
    }
 
@@ -1634,8 +1650,14 @@ static void matrixmove(
             if ((thisrec->dir+1) & 2) relative_delta_x = -relative_delta_x;
 
             if (relative_delta_x > 0) {
+               thisrec->mirror_this_op = true;
                thisrec->deltarot = (-thisrec->deltarot) & 3;
                thisrec->deltax = -thisrec->deltax;
+               // Switch the roll direction.
+               thisrec->roll_stability_info ^=
+                  (((thisrec->roll_stability_info+NDBROLL_BIT) >> 1) & NDBROLL_BIT) * 3;
+               // The stability info is too hard to fix at this point.
+               // It will be handled later.
             }
             else if (relative_delta_x == 0)
                fail("Person is on a center line.");
@@ -1663,6 +1685,7 @@ static void matrixmove(
       result->result_flags.maximize_split_info();
 
    finish_matrix_call(matrix_info, nump, true, false, &people, result);
+
    reinstate_rotation(ss, result);
    clear_result_flags(result);
 
@@ -2045,19 +2068,17 @@ static void process_matrix_chains(
                               // This person went "around the corner" due to facing
                               // direction of other dancer.
                               if (mi->deltarot ||
-                                  (stability) ((mi->roll_stability_info/DBSTAB_BIT) & 0xF) !=
-                                  stb_z) {
-
+                                  ((mi->roll_stability_info/DBSTAB_BIT) & STB_MASK) !=
+                                  STB_NONE+STB_REVERSE) {   // Looking for "Z".
                                  // Call definition also had turning, as in "jay slide thru".
                                  // Just erase the stability info.
-                                 mi->roll_stability_info &= ~(DBSTAB_BIT * 0xF);
+                                 mi->roll_stability_info &= ~(DBSTAB_BIT * STB_MASK);
                               }
                               else {
-                                 mi->roll_stability_info &= ~(DBSTAB_BIT * 0xF);
+                                 mi->roll_stability_info &= ~(DBSTAB_BIT * STB_MASK);
+                                 mi->roll_stability_info |= DBSTAB_BIT * STB_A;
                                  if ((deltarot & 3) == 1)
-                                    mi->roll_stability_info |= (DBSTAB_BIT * stb_c);
-                                 else
-                                    mi->roll_stability_info |= (DBSTAB_BIT * stb_a);
+                                    mi->roll_stability_info |= DBSTAB_BIT * STB_REVERSE;
                               }
                            }
 
@@ -2199,7 +2220,7 @@ static void partner_matrixmove(
 
    // If jaywalking, don't do it again.
 
-   if (!(flags & MTX_FIND_JAYWALKERS)){
+   if (!(flags & MTX_FIND_JAYWALKERS)) {
       // Now clean off the pointers in preparation for the second pass.
 
       for (i=0; i<nump; i++) {
@@ -2413,8 +2434,7 @@ extern void drag_someone_and_move(setup *ss, parse_block *parseptr, setup *resul
          }
          // Now origdx/dy has offset of draggee from dragger in new space.
          // This is new info for draggee.
-         second_people.people[final_2nd_nump].id1 =
-            rotperson(people.people[i].id1, dragger_turn*011);
+         copy_rot(&second_people, final_2nd_nump, &people, i, dragger_turn*011);
          second_matrix_info[final_2nd_nump] = matrix_info[i];
          second_matrix_info[final_2nd_nump].x = second_matrix_info[kk].x + origdx;
          second_matrix_info[final_2nd_nump++].y = second_matrix_info[kk].y + origdy;
@@ -2658,20 +2678,27 @@ static void rollmove(
    for (i=0; i<=attr::slimit(ss); i++) {
       if (ss->people[i].id1) {
          int rot = 0;
-         uint32 st = ((uint32) stb_z)*DBSTAB_BIT;
+         uint32 st = STB_NONE+STB_REVERSE;
 
          if (!(callspec->callflagsf & CFLAGH__REQUIRES_SELECTOR) || selectp(ss, i)) {
             switch (ss->people[i].id1 & ROLL_DIRMASK) {
-            case ROLL_IS_R: rot = 011; st = ((uint32) stb_c)*DBSTAB_BIT; break;
-            case ROLL_IS_L: rot = 033, st = ((uint32) stb_a)*DBSTAB_BIT; break;
+            case ROLL_IS_R:
+               rot = 011;
+               st = STB_A+STB_REVERSE;
+               break;
+            case ROLL_IS_L:
+               rot = 033;
+               st = STB_A;
+               break;
             case ROLL_DIRMASK: break;
             default: fail("Roll not permitted after previous call.");
             }
          }
+
          install_rot(result, i, ss, i, rot);
 
          if (result->people[i].id1 & STABLE_ENAB) {
-            do_stability(&result->people[i].id1, (stability) ((st/DBSTAB_BIT) & 0xF), rot);
+            do_stability(&result->people[i].id1, st, rot, false);
          }
       }
       else
@@ -2868,16 +2895,15 @@ extern bool get_real_subcall(
 
             cmd_out->parseptr = subsidiary_ptr;
 
+            // This makes it pick up the substituted call.
+            cmd_out->callspec = (call_with_name *) 0;
+
             if (this_is_tagger_circcer) {
-               cmd_out->callspec = subsidiary_ptr->call;
                if (forbid_flip && subsidiary_ptr->call == base_calls[base_call_flip])
                   fail_no_retry("Don't say 'flip back to a wave' -- put a comma"
                        " after the 'back' if that's what you want.");
             }
             else {
-               // This makes it pick up the substituted call.
-               cmd_out->callspec = (call_with_name *) 0;
-
                // Substitutions are normal, and hence we clear the modifier bits,
                // unless this was a "mandatory_anycall" or "mandatory_secondary_call",
                // in which case we assume that the database tells just what bits
@@ -2937,7 +2963,7 @@ static void divide_diamonds(setup *ss, setup *result) THROW_DECL
 
 
 // a <= b
-static int gcd(int a, int b)
+extern int gcd(int a, int b)
 {
    for (;;) {
       int rem;
@@ -4019,14 +4045,19 @@ static void do_stuff_inside_sequential_call(
       result->cmd.do_couples_her8itflags = new_final_concepts.herit;
    }
 
-   do_call_in_series(
-      result,
-      reverse_order,
-      (DFM1_ROLL_TRANSPARENT & this_mod1) != 0,
-      ((cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX) == 0 &&
-       (new_final_concepts.test_heritbits(INHERITFLAG_12_MATRIX|INHERITFLAG_16_MATRIX)) == 0 &&
-       (recompute_id || (this_mod1 & DFM1_SEQ_NORMALIZE) != 0)),
-      qtfudged);
+   uint32 stuff = do_call_in_series(
+                     result,
+                     reverse_order,
+                     (DFM1_ROLL_TRANSPARENT & this_mod1) != 0,
+                     ((cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX) == 0 &&
+                      (new_final_concepts.test_heritbits(INHERITFLAG_12_MATRIX|INHERITFLAG_16_MATRIX)) == 0 &&
+                      (recompute_id || (this_mod1 & DFM1_SEQ_NORMALIZE) != 0)),
+                     qtfudged);
+
+   if (stuff & (DFM1_CONC_FORCE_SPOTS | DFM1_CONC_FORCE_OTHERWAY |
+                DFM1_CONC_FORCE_LINES | DFM1_CONC_FORCE_COLUMNS)) {
+      *remembered_2x2_elongation_p = result->result_flags.misc & 3;
+   }
 
    if (oldk != s2x2 && result->kind == s2x2 && *remembered_2x2_elongation_p != 0) {
       result->result_flags.misc = (result->result_flags.misc & ~3) | *remembered_2x2_elongation_p;
@@ -5458,7 +5489,7 @@ static void really_inner_move(setup *ss,
                int i;
                int m, j;
                uint32 ssmask;
-               setup the_setups[2], the_results[2], orig_people;
+               setup the_setups[2], the_results[2];
                int sizem1 = attr::slimit(ss);
                int crossconc = (misc2 & CMD_MISC2__INVERT_SNAG) ? 0 : 1;
 
@@ -5468,7 +5499,7 @@ static void really_inner_move(setup *ss,
 
                if (sizem1 < 0 || ssmask == 0) fail("Can't identify centers and ends.");
 
-               orig_people = *ss;
+               setup orig_people = *ss;
 
                for (i=sizem1; i>=0; i--) {
                   orig_people.people[i].id2 = (ssmask ^ crossconc) & 1;
@@ -6342,6 +6373,8 @@ static void move_with_real_call(
 
       throw foo;
    }
+
+   current_options = saved_options;
 }
 
 
@@ -6417,7 +6450,7 @@ extern void move(
 
          if (ss->cmd.callspec == 0) {
             // We need to fill in the call.  This requires that things be nice.
-            parseptrcopy = process_final_concepts(parseptr, true, &ss->cmd.cmd_final_flags, true, __FILE__, __LINE__);
+            parseptrcopy = process_final_concepts(parseptr, true, &ss->cmd.cmd_final_flags, true, false);
 
             if (parseptrcopy->concept->kind > marker_end_of_list)
                fail("Incomplete supercall.");
@@ -6466,6 +6499,7 @@ extern void move(
          for ( ; ; z0=&((*z0)->next)) {
             if ((*z0)->concept->kind == concept_crazy ||
                 (*z0)->concept->kind == concept_frac_crazy ||
+                (*z0)->concept->kind == concept_dbl_frac_crazy ||
                 (*z0)->concept->kind == concept_sandwich) {
                doing_crazy_concept = z0;
                break;
@@ -6511,7 +6545,8 @@ extern void move(
             ss->cmd.parseptr = *z0;
          }
 
-         error_flag_type maybe_throw_this = error_flag_none;
+         // Preserved across a throw; must be volatile.
+         volatile error_flag_type maybe_throw_this = error_flag_none;
 
          try {
             (concept_table[t->concept->kind].concept_action)(ss, t, result);
@@ -6598,10 +6633,17 @@ extern void move(
       skipped_concept_info foo;
 
       really_skip_one_concept(ss->cmd.parseptr, foo);
-      parseptrcopy = *foo.root_of_result_of_skip;
 
-      if (foo.skipped_concept->concept->kind == concept_supercall)
-         fail("A concept is required.");
+      if (foo.heritflag != 0) {
+         parseptrcopy = foo.concept_with_root;
+         ss->cmd.skippable_heritflags = foo.heritflag;
+      }
+      else {
+         parseptrcopy = *foo.root_of_result_of_skip;
+
+         if (foo.skipped_concept->concept->kind == concept_supercall)
+            fail("A concept is required.");
+      }
    }
    else
       parseptrcopy = parseptr;
@@ -6609,7 +6651,7 @@ extern void move(
    // We will merge the new concepts with whatever we already had.
 
    save_incoming_final = ss->cmd.cmd_final_flags;   // In case we need to punt.
-   parseptrcopy = process_final_concepts(parseptrcopy, true, &ss->cmd.cmd_final_flags, true, __FILE__, __LINE__);
+   parseptrcopy = process_final_concepts(parseptrcopy, true, &ss->cmd.cmd_final_flags, true, false);
    saved_magic_diamond = last_magic_diamond;
 
    // Handle expired concepts.
@@ -6712,7 +6754,7 @@ extern void move(
       }
 
       /* The "anyone work" stuff will need this. */
-      if (ss->cmd.cmd_misc2_flags & CMD_MISC2__ANY_WORK)
+      if ((ss->cmd.cmd_misc2_flags & CMD_MISC2__ANY_WORK) && (ss->cmd.skippable_heritflags == 0))
          ss->cmd.skippable_concept = ss->cmd.parseptr;
 
       /* We must read the selector, direction, and number out of the concept list and use them

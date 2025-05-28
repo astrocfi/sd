@@ -47,7 +47,6 @@ and the following external variables:
    global_cache_miss_reason
    global_reply
    global_age
-   global_leave_missing_calls_blank
    clipboard
    clipboard_size
    wrote_a_sequence
@@ -81,7 +80,6 @@ bool global_cache_failed_flag;
 int global_cache_miss_reason[3];
 uims_reply global_reply;
 int global_age;
-bool global_leave_missing_calls_blank;
 configuration *clipboard = (configuration *) 0;
 int clipboard_size = 0;
 bool wrote_a_sequence = false;
@@ -91,6 +89,8 @@ char header_comment[MAX_TEXT_LINE_LENGTH];
 bool creating_new_session = false;
 int sequence_number = -1;
 int starting_sequence_number;
+
+static bool global_leave_missing_calls_blank;
 
 // Under DJGPP, the default is always old-style filenames, because
 // the underlying system (DOS or Windows 3.1) presumably can only
@@ -1007,7 +1007,7 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
                // Skip all final concepts, then demand that what remains is a marker
                // (as opposed to a serious concept), and that a real call
                // has been entered, and that its name starts with "@g".
-               tptr = process_final_concepts(next_cptr, false, &junk_concepts, false, __FILE__, __LINE__);
+               tptr = process_final_concepts(next_cptr, false, &junk_concepts, false, false);
 
                if (tptr && tptr->concept->kind <= marker_end_of_list) target_call = tptr->call_to_print;
             }
@@ -1584,10 +1584,13 @@ static void open_text_line()
    writechar_block.lastblank = (char *) 0;
 }
 
+// Nonzero arg means to clear only that many lines.
+// Otherwise, clear everything.
 void clear_screen()
 {
    written_history_items = -1;
    text_line_count = 0;
+
    gg->reduce_line_count(0);
    open_text_line();
 }
@@ -1928,6 +1931,9 @@ void display_initial_history(int upper_limit, int num_pics)
    }
    else {
       // We lose, there is nothing we can use.
+      if (no_erase_before_this != 0)
+         gg->no_erase_before_n(no_erase_before_this);
+
       clear_screen();
       write_header_stuff(true, 0);
       newline();
@@ -1946,6 +1952,7 @@ void display_initial_history(int upper_limit, int num_pics)
 
    written_history_items = upper_limit;   // This stuff is now safe.
    written_history_nopic = written_history_items-num_pics;
+   no_erase_before_this = 0;
 }
 
 
@@ -2281,6 +2288,7 @@ void run_program()
    int i;
 
    global_age = 1;
+   no_erase_before_this = 0;
    global_error_flag = (error_flag_type) 0;
    interactivity = interactivity_normal;
    clear_screen();
@@ -2630,6 +2638,7 @@ void run_program()
       configuration::history[1].state_is_valid = true;
 
       written_history_items = -1;
+      no_erase_before_this = 1;
 
       global_error_flag = (error_flag_type) 0;
 

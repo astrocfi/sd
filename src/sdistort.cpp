@@ -1,6 +1,6 @@
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2004  William B. Ackerman.
+//    Copyright (C) 1990-2005  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -362,7 +362,8 @@ static void innards(
          x[i].cmd.cmd_misc_flags = (x[i].cmd.cmd_misc_flags &
                                     ~(CMD_MISC__OFFSET_Z | CMD_MISC__MATRIX_CONCEPT)) |
             CMD_MISC__NO_EXPAND_MATRIX;
-         if (map_kind != MPKIND__SPLIT) x[i].cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
+         if (map_kind != MPKIND__SPLIT && map_kind != MPKIND__SPLIT_OTHERWAY_TOO)
+            x[i].cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
          x[i].cmd.cmd_assume = new_assume;
          if (recompute_id) update_id_bits(&x[i]);
 
@@ -2737,7 +2738,7 @@ extern void distorted_move(
 
          // This line taken from do_matrix_expansion.  Would like to do it right.
          for (int i=0; i<MAX_PEOPLE; i++)
-            ss->people[i].id2 &= (~GLOB_BITS_TO_CLEAR | (ID2_FACEFRONT|ID2_FACEBACK|ID2_HEADLINE|ID2_SIDELINE));
+            ss->people[i].id2 &= ~ID2_LESS_BITS_TO_CLEAR;
       }
 
       // Now we have the setup we want.
@@ -2885,28 +2886,34 @@ extern void distorted_move(
             goto do_offset_call;
          }
          else if (ss->kind == s2x5) {
-            (void) full_search(2, 5, false, 4, the_map, list_2x4_in, list_2x5_out, ss);
+            full_search(2, 5, false, 4, the_map, list_2x4_in, list_2x5_out, ss);
             warn(warn_real_people_spots);
+            zlines = false;
          }
          else if (ss->kind == s2x6) {
-            (void) full_search(2, 6, false, 4, the_map, list_2x4_in, list_2x6_out, ss);
+            full_search(2, 6, false, 4, the_map, list_2x4_in, list_2x6_out, ss);
             warn(warn_real_people_spots);
+            zlines = false;
          }
          else if (ss->kind == s2x7) {
-            (void) full_search(2, 7, false, 4, the_map, list_2x4_in, list_2x7_out, ss);
+            full_search(2, 7, false, 4, the_map, list_2x4_in, list_2x7_out, ss);
             warn(warn_real_people_spots);
+            zlines = false;
          }
          else if (ss->kind == s2x8) {
-            (void) full_search(2, 8, false, 4, the_map, list_2x4_in, list_2x8_out, ss);
+            full_search(2, 8, false, 4, the_map, list_2x4_in, list_2x8_out, ss);
             warn(warn_real_people_spots);
+            zlines = false;
          }
          else if (ss->kind == s2x10) {
-            (void) full_search(2, 10, false, 4, the_map, list_2x4_in, list_2x10_out, ss);
+            full_search(2, 10, false, 4, the_map, list_2x4_in, list_2x10_out, ss);
             warn(warn_real_people_spots);
+            zlines = false;
          }
          else if (ss->kind == s2x12) {
-            (void) full_search(2, 12, false, 4, the_map, list_2x4_in, list_2x12_out, ss);
+            full_search(2, 12, false, 4, the_map, list_2x4_in, list_2x12_out, ss);
             warn(warn_real_people_spots);
+            zlines = false;
          }
          else
             fail("Can't do this concept in this setup.");
@@ -2923,14 +2930,14 @@ extern void distorted_move(
             fail("Can't find offset lines/columns, perhaps you mean distorted.");
       }
    }
-   /* We used to have this also, which would raise an error if you said "distorted lines"
-      when the setup is in fact Z lines.  Unfortunately, "distorted lines" are legal at C3,
-      but "Z lines" are not, so the error is not helpful.
    else {
-      if (disttest != disttest_z)
-         fail("You must specify Z lines/columns when in this setup.");
+      // We give a warning if the user said "distorted" or "offset"
+      // when it should have been "Z".  But only if the level is high enough.
+      // It seems that one can say "offset CLW" at C2 and "distorted CLW"
+      // at C3, but can't say "Z CLW" until C4a.  Too bad.
+      if (disttest != disttest_z && calling_level >= Z_CLW_level)
+         warn(warn__should_say_Z);
    }
-   */
 
    gather(&a1, ss, the_map, 7, rot);
    a1.kind = k;
@@ -2960,7 +2967,7 @@ extern void distorted_move(
 
    junk_concepts.clear_all_herit_and_final_bits();
 
-   next_parseptr = process_final_concepts(parseptr->next, false, &junk_concepts, true, __FILE__, __LINE__);
+   next_parseptr = process_final_concepts(parseptr->next, false, &junk_concepts, true, false);
 
    map_code = MAPCODE(s2x4,1,mk,1);
 
@@ -2996,7 +3003,7 @@ extern void distorted_move(
       // ***** What's this for????
       // Taken from do_matrix_expansion?  Then we *don't* need to do it?  At least, if did 3x4 -> 4x5?
       for (int i=0; i<MAX_PEOPLE; i++)
-         ss->people[i].id2 &= (~GLOB_BITS_TO_CLEAR | (ID2_FACEFRONT|ID2_FACEBACK|ID2_HEADLINE|ID2_SIDELINE));
+         ss->people[i].id2 &= ~ID2_LESS_BITS_TO_CLEAR;
    }
    else if (next_parseptr->concept->kind == concept_do_phantom_boxes &&
             ss->kind == s3x4 &&     // Only allow 50% offset.
@@ -4011,9 +4018,9 @@ extern void common_spot_move(
                    ((the_results[0].people[k].id1 ^ ss->people[t].id1) & PID_MASK) == 0) {
                   int setup_to_clear = 0;
                   int spot_to_clear = k;
-                  if (((the_results[0].people[k].id1 ^ the_results[1].people[k].id1) |
+                  if ((the_results[0].people[k].id1 ^ the_results[1].people[k].id1) |
                        ((the_results[0].people[k].id2 ^ the_results[1].people[k].id2) &
-                        !ID2_BITS_NOT_INTRINSIC))) {
+                        !ID2_BITS_NOT_INTRINSIC)) {
                      // They didn't match.  Maybe some people had collided in one setup
                      // but not the other.  Find where they might have gone.
                      if (the_results[0].kind == s4x4) {
@@ -4021,9 +4028,9 @@ extern void common_spot_move(
                            (partner_tab_4x4[(k+4) & 15] + 12) & 15 :
                            partner_tab_4x4[k];
 
-                        if (((the_results[0].people[k].id1 ^ the_results[1].people[j].id1) |
+                        if ((the_results[0].people[k].id1 ^ the_results[1].people[j].id1) |
                              ((the_results[0].people[k].id2 ^ the_results[1].people[j].id2) &
-                              !ID2_BITS_NOT_INTRINSIC))) {
+                              !ID2_BITS_NOT_INTRINSIC)) {
                            fail("People moved inconsistently during common-spot call.");
                         }
 

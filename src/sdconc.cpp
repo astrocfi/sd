@@ -1,6 +1,6 @@
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2004  William B. Ackerman.
+//    Copyright (C) 1990-2005  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -1861,8 +1861,8 @@ static bool fix_empty_outers(
                           the_call->the_defn.schema == schema_nothing_noroll))
             ;        // It's OK, the call was "nothing".
          else if (the_call == base_calls[base_call_trade] ||
-                  the_call == base_calls[base_call_remake])
-            ;        // It's OK, the call was "trade" or "remake".
+                  the_call == base_calls[base_call_any_hand_remake])
+            ;        // It's OK, the call was "trade" or "any hand remake".
          else if (the_call == base_calls[base_call_circulate] &&
                   cmdout && cmdout->cmd_final_flags.test_heritbit(INHERITFLAG_HALF) &&
                   cmdout->cmd_frac_flags == CMD_FRAC_NULL_VALUE) {
@@ -2273,13 +2273,17 @@ extern void concentric_move(
 
    const call_conc_option_state save_state = current_options;
    uint32 save_cmd_misc2_flags = ss->cmd.cmd_misc2_flags;
-   parse_block *save_skippable = ss->cmd.skippable_concept;
+
+   parse_block *save_skippable_concept = ss->cmd.skippable_concept;
+   ss->cmd.skippable_concept = (parse_block *) 0;
+   uint32 save_skippable_heritflags = ss->cmd.skippable_heritflags;
+   ss->cmd.skippable_heritflags = 0;
+
    const uint32 scnxn =
       ss->cmd.cmd_final_flags.test_heritbits(INHERITFLAG_NXNMASK | INHERITFLAG_MXNMASK);
 
    ss->cmd.cmd_misc2_flags &= ~(0xFFF | CMD_MISC2__ANY_WORK_INVERT |
                                 CMD_MISC2__ANY_WORK | CMD_MISC2__ANY_SNAG);
-   ss->cmd.skippable_concept = (parse_block *) 0;
 
    // It is clearly too late to expand the matrix -- that can't be what is wanted.
    ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
@@ -2539,7 +2543,7 @@ extern void concentric_move(
                const parse_block *next_parseptr;
 
                next_parseptr = process_final_concepts(begin_ptr->cmd.parseptr,
-                                                      false, &junk_concepts, true, __FILE__, __LINE__);
+                                                      false, &junk_concepts, true, false);
 
                if (junk_concepts.test_herit_and_final_bits() == 0 &&
                    next_parseptr->concept->kind == concept_concentric) {
@@ -2696,48 +2700,55 @@ extern void concentric_move(
          if ((save_cmd_misc2_flags &
               (CMD_MISC2__ANY_WORK|CMD_MISC2__ANY_WORK_INVERT)) == ctr_use_flag) {
 
-            if (!save_skippable)
-               fail("Internal error in centers/ends work, please report this.");
-
-            if (!begin_ptr->cmd.callspec)
-               fail("No callspec, centers/ends!!!!!!");
-
-            // We are going to alter the list structure while executing
-            // the subject call, and then restore same when finished.
-
-            parse_block *z1 = save_skippable;
-            while (z1->concept->kind > marker_end_of_list) z1 = z1->next;
-
-            call_with_name *savecall = z1->call;
-            call_with_name *savecall_to_print = z1->call_to_print;
-            bool savelevelcheck = z1->no_check_call_level;
-            parse_block *savebeginparse = begin_ptr->cmd.parseptr;
-
-            z1->call = begin_ptr->cmd.callspec;
-            z1->call_to_print = begin_ptr->cmd.callspec;
-            z1->no_check_call_level = true;
-            begin_ptr->cmd.callspec = (call_with_name *) 0;
-            begin_ptr->cmd.parseptr = save_skippable;
-
-            try {
+            if (save_skippable_heritflags != 0) {
+               begin_ptr->cmd.cmd_final_flags.set_heritbits(save_skippable_heritflags);
                impose_assumption_and_move(begin_ptr, result_ptr);
             }
-            catch(error_flag_type foo) {
-               // An error occurred.  We need to restore stuff.
+            else {
+               if (!save_skippable_concept)
+                  fail("Internal error in centers/ends work, please report this.");
+
+               if (!begin_ptr->cmd.callspec)
+                  fail("No callspec, centers/ends!!!!!!");
+
+               // We are going to alter the list structure while executing
+               // the subject call, and then restore same when finished.
+
+               parse_block *z1 = save_skippable_concept;
+               while (z1->concept->kind > marker_end_of_list) z1 = z1->next;
+
+               call_with_name *savecall = z1->call;
+               call_with_name *savecall_to_print = z1->call_to_print;
+               bool savelevelcheck = z1->no_check_call_level;
+               parse_block *savebeginparse = begin_ptr->cmd.parseptr;
+
+               z1->call = begin_ptr->cmd.callspec;
+               z1->call_to_print = begin_ptr->cmd.callspec;
+               z1->no_check_call_level = true;
+               begin_ptr->cmd.callspec = (call_with_name *) 0;
+               begin_ptr->cmd.parseptr = save_skippable_concept;
+
+               // Preserved across a throw; must be volatile.
+               volatile error_flag_type maybe_throw_this = error_flag_none;
+
+               try {
+                  impose_assumption_and_move(begin_ptr, result_ptr);
+               }
+               catch(error_flag_type foo) {
+                  // An error occurred.  We need to restore stuff.
+                  maybe_throw_this = foo;
+               }
+
+               // Restore.
+
                begin_ptr->cmd.callspec = z1->call;
                begin_ptr->cmd.parseptr = savebeginparse;
                z1->call = savecall;
                z1->call_to_print = savecall_to_print;
                z1->no_check_call_level = savelevelcheck;
-               throw(foo);
+               if (maybe_throw_this != error_flag_none)
+                  throw maybe_throw_this;
             }
-
-            // Restore.
-            begin_ptr->cmd.callspec = z1->call;
-            begin_ptr->cmd.parseptr = savebeginparse;
-            z1->call = savecall;
-            z1->call_to_print = savecall_to_print;
-            z1->no_check_call_level = savelevelcheck;
          }
          else {
             if (specialoffsetmapcode != ~0UL) {
@@ -4028,8 +4039,8 @@ extern void punt_centers_use_concept(setup *ss, setup *result) THROW_DECL
          skipped_concept_info foo;
 
          really_skip_one_concept(ss->cmd.parseptr, foo);
+         this_one->cmd.parseptr = foo.result_of_skip;
          parseptrcopy = foo.old_retval;
-         this_one->cmd.parseptr = *foo.root_of_result_of_skip;
 
          if (foo.skipped_concept->concept->kind == concept_supercall)
             fail("A concept is required.");
@@ -4235,9 +4246,11 @@ extern void selective_move(
       skipped_concept_info foo;
 
       really_skip_one_concept(parseptr->next, foo);
-      cmd2thing.parseptr = *foo.root_of_result_of_skip;
+      cmd2thing.parseptr = foo.result_of_skip;
 
-      concept_kind k = foo.skipped_concept->concept->kind;
+      const parse_block *kkk = foo.skipped_concept;
+      const conzept::concept_descriptor *kk = kkk->concept;
+      concept_kind k = kk->kind;
 
       if (k == concept_supercall)
          fail("A concept is required.");
@@ -4253,15 +4266,14 @@ extern void selective_move(
       // Check for special case of "<anyone> work tandem", and change it to
       // "<anyone> are tandem".
 
-      if ((foo.skipped_concept->concept->kind == concept_tandem ||
-           foo.skipped_concept->concept->kind == concept_frac_tandem) &&
-          foo.skipped_concept->concept->arg1 == 0 &&
-          foo.skipped_concept->concept->arg2 == 0 &&
-          (foo.skipped_concept->concept->arg3 & ~0xF0) == 0 &&
-          (foo.skipped_concept->concept->arg4 == tandem_key_cpls ||
-           foo.skipped_concept->concept->arg4 == tandem_key_tand ||
-           foo.skipped_concept->concept->arg4 == tandem_key_cpls3 ||
-           foo.skipped_concept->concept->arg4 == tandem_key_tand3) &&
+      if ((k == concept_tandem || k == concept_frac_tandem) &&
+          kk->arg1 == 0 &&
+          kk->arg2 == 0 &&
+          (kk->arg3 & ~0xF0) == 0 &&
+          (kk->arg4 == tandem_key_cpls ||
+           kk->arg4 == tandem_key_tand ||
+           kk->arg4 == tandem_key_cpls3 ||
+           kk->arg4 == tandem_key_tand3) &&
           ss->cmd.cmd_final_flags.test_heritbits(INHERITFLAG_SINGLE |
                                                  INHERITFLAG_MXNMASK |
                                                  INHERITFLAG_NXNMASK |
@@ -4270,23 +4282,21 @@ extern void selective_move(
          ss->cmd.parseptr = cmd2thing.parseptr;  // Skip the tandem concept.
          tandem_couples_move(ss, 
                              parseptr->options.who,
-                             foo.skipped_concept->concept->arg3 >> 4,
-                             foo.skipped_concept->options.number_fields,
+                             kk->arg3 >> 4,
+                             kkk->options.number_fields,
                              0,
-                             (tandem_key) foo.skipped_concept->concept->arg4,
+                             (tandem_key) kk->arg4,
                              0,
                              false,
                              result);
          return;
       }
-      else if ((foo.skipped_concept->concept->kind == concept_stable ||
-                foo.skipped_concept->concept->kind == concept_frac_stable) &&
-               foo.skipped_concept->concept->arg1 == 0) {
+      else if ((k == concept_stable || k == concept_frac_stable) && kk->arg1 == 0) {
          ss->cmd.parseptr = cmd2thing.parseptr;  // Skip the stable concept.
          stable_move(ss,
-                     foo.skipped_concept->concept->arg2 != 0,
+                     kk->arg2 != 0,
                      false,
-                     foo.skipped_concept->options.number_fields,
+                     kkk->options.number_fields,
                      parseptr->options.who,
                      result);
          return;
@@ -4397,7 +4407,7 @@ extern void inner_selective_move(
          // We allow the designators "centers" and "ends" while in a 1x8, which
          // would otherwise not be allowed.  The reason we don't allow it in
          // general is that people would carelessly say "centers kickoff" in a
-         // 1x8 when they should realy say "each 1x4, centers kickoff".  But we
+         // 1x8 when they should really say "each 1x4, centers kickoff".  But we
          // assume that they will not misuse the term here.
 
          if (ss->kind == s1x8 && current_options.who == selector_centers) {
@@ -4924,6 +4934,27 @@ back_here:
       this_one->cmd.cmd_final_flags = cmdp->cmd_final_flags;
 
       this_one->cmd.cmd_misc_flags |= CMD_MISC__PHANTOMS;
+
+      // If the call is something like "girls zoom" (indicated with the "one_side_lateral"
+      // flag), from a normal starting DPT, we treat it as if we had said
+      // "girls do your part zoom".  This effectively fills in the rest of the setup
+      // so that they know how to do the call.  Similarly for things like "zing"
+      // and "peel off".  Also, "spread" is marked this way, so we can say
+      // "boys spread" from a BBGG wave.
+
+      if (indicator == selective_key_plain &&
+          kk == s2x4 &&
+          (thislivemask == 0xCC || thislivemask == 0x33)) {
+         const call_with_name *callspec = this_one->cmd.callspec;
+         if (!callspec &&
+             this_one->cmd.parseptr &&
+             this_one->cmd.parseptr->concept &&
+             this_one->cmd.parseptr->concept->kind <= marker_end_of_list)
+            callspec = this_one->cmd.parseptr->call;
+         if (callspec && (callspec->the_defn.callflagsf & CFLAG2_CAN_BE_ONE_SIDE_LATERAL)) {
+            indicator = selective_key_dyp;
+         }
+      }
 
       if (indicator == selective_key_snag_anyone) {
          // Snag the <anyone>.

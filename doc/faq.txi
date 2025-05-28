@@ -315,6 +315,14 @@ p       pass thru
 Sorry, but doing so would make it impossible to process session descriptors
 in the initialization file.
 
+@unnumberedsec I use ``color_by_couple'', but the blue people are too dark.  Can I do anything about that?
+
+As of version 36.63, there are two new startup options, that can be put in your
+initialization file (sd.ini), startup icons, startup scripts, or on the command line.
+They are ``use_magenta'' and ``use_cyan''.  These lighten the red and blue checker
+colors, respectively.  Remember to put a hypen in front of an option in an icon or
+on the command line, but not in the initialization file.
+
 @unnumberedsec How can I abort a sequence in progress?
 
 If you select the @strong{abort} command, the program will abort the sequence
@@ -339,6 +347,11 @@ No.  The Callerlab definitions say that, unless in a thar or alamo, this
 is a 4-person call.  It is not @strong{grand} unless you say so.  If you
 believe that just saying @strong{remake the column} might confuse the
 dancers, don't do it.
+
+@unnumberedsec Now that the right-hand rule is enforced for @strong{remake}, how can I do a @strong{crazy remake}?
+
+You can say @strong{crazy any hand remake}, or @strong{reverse random mirror crazy remake},
+or @strong{reverse random left crazy remake}.
 
 @unnumberedsec How can I identify the center wave of 6 in a 3x1 diamond?
 
@@ -492,7 +505,7 @@ concept is stable or fractional stable, there is also an
 @strong{<anyone> are <concept>} version of it.  As with the previous question,
 ``are'' is preferable to ``work''.
 
-@unnumberedsec How can I call @strong{split phantom lines in roll circulate}?
+@unnumberedsec How can I call @strong{Split Phantom Lines In Roll Circulate}?
 
 In all concepts that can specify either lines or waves, the ``waves''
 version has an implicit @strong{assume waves} operation in it.  Under
@@ -711,25 +724,30 @@ legal or appropriate.  You should not use @code{Sd}, or any other choreography
 program, if you do not understand the level that you are calling.  If you
 call beyond your knowledge and ability, the dancers will notice.
 
+@unnumberedsec Sd allows @strong{scoot back} from facing lines.  Isn't that bogus?
+
+It sure is.  That is in the database to catch people who use the program carelessly.
+If you call it, get embarrassed, and complain to me, I will point you at this FAQ.
+
 @unnumberedsec Why is @code{Sd} so fussy with apostrophes?  Why can't I just type @strong{lockers choice}?
 
 You can.  You never need to type apostrophes or hyphens.  You can type
 either @strong{lockers choice} or @strong{locker's choice}.  You can type either
 @strong{tandem based triangles} or @strong{tandem-based triangles}.
 
-@unnumberedsec Why is @code{Sd} so fussy with spaces in call names?  Why can't I just type @strong{inroll circulate}?
+@unnumberedsec Why is @code{Sd} so fussy with spaces in call names?  Can I just type @strong{inroll circulate}?
 
-Sorry.  The parser (the part of the program that interprets your keystrokes as
+As of version 36.63, you can type @strong{inroll circulate} or @strong{outroll circulate},
+because they are in the database as special alternate spellings.
+
+But in general, the parser (the part of the program that interprets your keystrokes as
 call and concept names) has a very hard job to do when it completes your
 input.  That is, it lets you type @strong{fe w} at Mainstream, and figures out that
 you meant @strong{ferris wheel}.  In order to do this, it must take clues from
 the spaces that you typed.  Unlike apostrophes and hyphens, it can't make
 spaces optional.
 
-We are aware that there are programs that spell some calls with shorter names,
-such as @strong{inroll circulate}.  We believe that spelling the calls the way they
-are spelled in the Callerlab lists and other commonly accepted literature is
-more important.  You can always define your own ``hot keys'' (accelerator keys)
+You can always define your own ``hot keys'' (accelerator keys)
 or abbreviations for any calls.
 
 @unnumberedsec Why is @strong{leftrigger} spelled as one word?

@@ -1,7 +1,7 @@
 \input texinfo @c %**start of header -*-texinfo-*-
 @setfilename relnotes.info
 @settitle Sd Release Notes
-@c Time-stamp: <17 Sep 2005 wba>
+@c Time-stamp: <20 Nov 2005 wba>
 @iftex
 @headings off
 @oddheading @| @| @thispage
@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 36.62
-@set title2 Database version = 36.62 format = 236
+@set title1 RELEASE NOTES FOR VERSION 36.63
+@set title2 Database version = 36.63 format = 240
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 36.63::
 * 36.62::
 * 36.61::
 * 36.60::
@@ -65,7 +66,7 @@ The files @file{relnotes98.txi} and @file{oldnotes} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 36.62, Top, (dir)
+@node Intro, 36.63, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -76,11 +77,86 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2005 William B. Ackerman
 @sp 3
 @menu
-* 36.62::               Changes in the current version
+* 36.63::               Changes in the current version
 @end menu
 
 @c ************
-@node 36.62, 36.61, Intro, Top
+@node 36.63, 36.62, Intro, Top
+@unnumberedsec Version 36.63 changes
+
+The @strong{solid <fractional> twosome} and @strong{twosome <fractional>
+solid} types of concepts can now take fractions that are in eighths.
+
+The @strong{skew <fractional> twosome} concept can be given as
+@strong{skew <fractional> skewsome}.  In the other direction the
+concept name is still @strong{skewsome <fractional> solid}.
+
+Sdtty no longer erases the part of the display window containing the
+previously written sequence when it starts a new sequence.
+
+The call @strong{remake} finally obeys the current definition.  Except
+for @strong{remake the thar}, all forms of this call obey a right-hand
+rule.  You may say @strong{left remake}, of course.  There is no call
+@strong{remake the column} unless @strong{grand} is used.  Otherwise,
+it would be a 4-person call, and the phrase @strong{remake the column}
+would be misleading.
+
+There are now calls @strong{3X2 reshape} and @strong{3X2 convert}.
+It is not necessary to use the ``allow mofications'' mechanism to
+get these.
+
+Two new startup options have been added: ``use_magenta'' and
+``use_cyan''.  These change the red and blue checker colors to magenta
+and cyan, respectively.  This effectively lightens them, so that they
+may show up better against a black background.  (The ``pastel_color''
+option does the same thing to both colors, but only if the default
+girls-are-red and boys-are-blue coloring is in use.)  These two new
+options take effect in all cases, and control the colors individually.
+
+At levels C4A and above, a warning will be issued if the
+@strong{distorted C/L/W} or @strong{offset C/L/W} concepts are used when
+the more specific @strong{Z C/L/W} concepts could be used instead.
+Unfortunately, the @strong{Z C/L/W} concepts are not available at lower
+levels, so the other, less helpful, concepts need to be used instead.
+
+The fraction given to the @strong{crazy} concept is not required to be
+a multiple of 1/4.  One can say, for example, @strong{1/3 crazy the difference}.
+
+An embarrassing bug in the interaction of @strong{crazy} and @strong{fractal}
+was fixed.
+
+The calls @strong{<anyone> peel off}, @strong{<anyone> zoom}, and
+@strong{<anyone> zing} can be done, without the use of a @strong{do your
+part} concept, from setups such as columns.  For example, one can do
+@strong{heads star thru; girls peel off}.
+
+A bug in @strong{roll} after @strong{curve in} or @strong{curve out} was fixed.
+
+It is now possible to say @strong{<anyone> start vertical tag} without
+the use of a @strong{do your part} concept.
+
+It is now possible to say @strong{<anyone> spread} without the use of a
+@strong{do your part} concept, as in @strong{[motivate] and the boys
+spread}.  The call @strong{... and spread} has been removed.  Use
+@strong{<anything> and spread}.
+
+Alternate spellings @strong{jaywalk}, @strong{inroll circulate}, and
+@strong{outroll circulate} have been provided.
+
+A bug in the @strong{reconcile} command, looking for Left Allemande getouts,
+has been fixed.  It will demand a promenade distance of zero.
+
+A bug in @strong{twisted centers run} and @strong{twisted ends run} has
+been fixed.
+
+A bug in @strong{ends percolate} has been fixed.
+
+The program should do a better job of not showing things like
+@strong{detract [ignore everyone, line to line but [???]]} when doing
+"pick random call" and similar searches.
+
+@c ************
+@node 36.62, 36.61, 36.63, Top
 @unnumberedsec Version 36.62 changes
 
 The calls @strong{cast back} and @strong{cross cast back} can be done

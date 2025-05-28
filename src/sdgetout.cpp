@@ -41,7 +41,7 @@ typedef struct {
    int size;
    int insertion_point;
    int permute1[8];
-   int permute2[8];
+   int permute3[8];
    int rotchange;
 } resolve_rec;
 
@@ -54,15 +54,15 @@ typedef struct {
 
 
 
-static reconcile_descriptor promperm =  {{1, 0, 6, 7, 5, 4, 2, 3}, false};
-static reconcile_descriptor rpromperm = {{0, 1, 7, 6, 4, 5, 3, 2}, false};
-static reconcile_descriptor rlgperm =   {{1, 0, 6, 7, 5, 4, 2, 3}, false};
-static reconcile_descriptor qtagperm =  {{1, 0, 7, 6, 5, 4, 3, 2}, false};
-static reconcile_descriptor homeperm =  {{6, 5, 4, 3, 2, 1, 0, 7}, true};
-static reconcile_descriptor sglperm =   {{7, 6, 5, 4, 3, 2, 1, 0}, true};
-static reconcile_descriptor crossperm = {{5, 4, 3, 2, 1, 0, 7, 6}, false};
-static reconcile_descriptor crossplus = {{5, 4, 3, 2, 1, 0, 7, 6}, false};
-static reconcile_descriptor laperm =    {{1, 3, 6, 0, 5, 7, 2, 4}, false};
+static const reconcile_descriptor promperm =  {{1, 0, 6, 7, 5, 4, 2, 3}, false};
+static const reconcile_descriptor rpromperm = {{0, 1, 7, 6, 4, 5, 3, 2}, false};
+static const reconcile_descriptor rlgperm =   {{1, 0, 6, 7, 5, 4, 2, 3}, false};
+static const reconcile_descriptor qtagperm =  {{1, 0, 7, 6, 5, 4, 3, 2}, false};
+static const reconcile_descriptor homeperm =  {{6, 5, 4, 3, 2, 1, 0, 7}, true};
+static const reconcile_descriptor sglperm =   {{7, 6, 5, 4, 3, 2, 1, 0}, true};
+static const reconcile_descriptor crossperm = {{5, 4, 3, 2, 1, 0, 7, 6}, false};
+static const reconcile_descriptor crossplus = {{5, 4, 3, 2, 1, 0, 7, 6}, false};
+static const reconcile_descriptor laperm =    {{1, 7, 6, 4, 5, 3, 2, 0}, false};
 
 
 static configuration *huge_history_save = (configuration *) 0;
@@ -78,7 +78,7 @@ static int avoid_list_allocation = 0;
 static uint32 perm_array[8];
 static setup_kind goal_kind;
 static uint32 goal_directions[8];
-static reconcile_descriptor *current_reconciler;
+static const reconcile_descriptor *current_reconciler;
 
 // BEWARE!!  This must be keyed to the enumeration "command_kind" in sd.h .
 static Cstring title_string[] = {
@@ -176,7 +176,7 @@ struct resolve_descriptor {
 };
 
 // BEWARE!!  This list is keyed to the definition of "resolve_kind" in sd.h .
-static resolve_descriptor resolve_table[] = {
+static const resolve_descriptor resolve_table[] = {
    {2,  first_part_none,  main_part_none},     /* resolve_none */
    {0,  first_part_none,  main_part_rlg},      /* resolve_rlg */
    {0,  first_part_none,  main_part_la},       /* resolve_la */
@@ -448,6 +448,14 @@ static bool inner_search(command_kind goal,
       toplevelmove();
       finish_toplevelmove();
 
+      // Check that there are no unfilled parts of the parse tree, as in
+      // "detract [ignore everyone line to line but [***]]".
+      // We make the check strict, so that all subcalls have been filled in.
+      // Since filling in is done lazily, when the subcall is actually
+      // executed, things like the above example will never get filled in,
+      // and the test will fail.
+      check_concept_parse_tree(configuration::next_config().command_root, true);
+
       // We don't like certain warnings either.
       if (warnings_are_unacceptable(goal != command_standardize)) goto try_again;
 
@@ -589,7 +597,7 @@ static bool inner_search(command_kind goal,
             }
 
             // We demand zero promenade distance for reconciles.
-            if ((p2 >>= 7) & 3) goto what_a_loss;
+            if ((p2 >> 7) & 3) goto what_a_loss;
          }
 
          break;
@@ -709,7 +717,7 @@ static bool inner_search(command_kind goal,
       if (goal == command_reconcile) {
          for (j=0; j<8; j++) {
             new_resolve->permute1[perm_array[j] >> 6] = ns->people[perm_indices[j]].id1 & PID_MASK;
-            new_resolve->permute2[perm_array[j] >> 6] = ns->people[perm_indices[j]].id1 & ID1_PERM_ALLBITS;
+            new_resolve->permute3[perm_array[j] >> 6] = ns->people[perm_indices[j]].id3 & ID3_PERM_ALLBITS;
          }
 
          new_resolve->rotchange = ns->rotation - configuration::history[history_insertion_point].state.rotation;
@@ -756,11 +764,14 @@ static bool inner_search(command_kind goal,
 
             if (t.id1) {
                if (this_state.state.people[k].id1 !=
-                   ((t.id1 & ~(PID_MASK | ID1_PERM_ALLBITS)) |
-                    new_resolve->permute1[(t.id1 & PID_MASK) >> 6] |
-                    new_resolve->permute2[(t.id1 & PID_MASK) >> 6]))
+                   ((t.id1 & ~PID_MASK) |
+                    new_resolve->permute1[(t.id1 & PID_MASK) >> 6]))
                   goto try_again;
                if (this_state.state.people[k].id2 != t.id2)
+                  goto try_again;
+               if (this_state.state.people[k].id3 !=
+                   ((t.id3 & ~ID3_PERM_ALLBITS) |
+                    new_resolve->permute3[(t.id1 & PID_MASK) >> 6]))
                   goto try_again;
             }
             else {
@@ -871,37 +882,37 @@ static bool reconcile_command_ok()
 
    if (current_kind == s2x4) {
       if (dirmask == 0xA00A)
-         current_reconciler = &promperm;         /* L2FL, looking for promenade. */
+         current_reconciler = &promperm;   // L2FL, looking for promenade.
       else if (dirmask == 0x0AA0)
-         current_reconciler = &rpromperm;        /* R2FL, looking for reverse promenade. */
+         current_reconciler = &rpromperm;  // R2FL, looking for reverse promenade.
       else if (dirmask == 0x6BC1)
-         current_reconciler = &homeperm;         /* pseudo-squared-set, looking for circle left/right. */
+         current_reconciler = &homeperm;   // pseudo-squared-set, looking for circle left/right.
       else if (dirmask == 0xFF55)
-         current_reconciler = &sglperm;          /* Lcol, looking for single file promenade. */
+         current_reconciler = &sglperm;    // Lcol, looking for single file promenade.
       else if (dirmask == 0x55FF)
-         current_reconciler = &sglperm;          /* Rcol, looking for reverse single file promenade. */
+         current_reconciler = &sglperm;    // Rcol, looking for reverse single file promenade.
       else if (dirmask == 0xBC16)
-         current_reconciler = &sglperm;          /* L Tbone, looking for single file promenade. */
+         current_reconciler = &sglperm;    // L Tbone, looking for single file promenade.
       else if (dirmask == 0x16BC)
-         current_reconciler = &sglperm;          /* R Tbone, looking for reverse single file promenade. */
+         current_reconciler = &sglperm;    // R Tbone, looking for reverse single file promenade.
       else if (dirmask == 0x2288)
-         current_reconciler = &rlgperm;          /* Rwave, looking for RLG (with possible extend or circulate). */
+         current_reconciler = &rlgperm;    // Rwave, looking for RLG.
       else if (dirmask == 0x8822)
-         current_reconciler = &laperm;           /* Lwave, looking for LA (with possible extend or circulate). */
+         current_reconciler = &laperm;     // Lwave, looking for LA.
    }
    else if (current_kind == s_qtag) {
       if (dirmask == 0x08A2)
-         current_reconciler = &qtagperm;         /* Rqtag, looking for RLG. */
+         current_reconciler = &qtagperm;   // Rqtag, looking for RLG.
       else if (dirmask == 0x78D2)
-         current_reconciler = &qtagperm;         /* diamonds with points facing, looking for RLG. */
+         current_reconciler = &qtagperm;   // diamonds with points facing, looking for RLG.
    }
    else if (current_kind == s_crosswave || current_kind == s_thar) {
       if (dirmask == 0x278D)
-         current_reconciler = &crossplus;        /* crossed waves or thar, looking for RLG, allow slip the clutch. */
+         current_reconciler = &crossplus;  // crossed waves or thar, looking for RLG, allow slip the clutch.
       else if (dirmask == 0x8D27)
-         current_reconciler = &crossplus;        /* crossed waves or thar, looking for LA, allow slip the clutch. */
+         current_reconciler = &crossplus;  // crossed waves or thar, looking for LA, allow slip the clutch.
       else if (dirmask == 0xAF05)
-         current_reconciler = &crossperm;        /* crossed waves or thar, looking for promenade. */
+         current_reconciler = &crossperm;  // crossed waves or thar, looking for promenade.
    }
 
    if (current_reconciler)
@@ -1092,8 +1103,11 @@ uims_reply full_resolve()
 
                if (t.id1) {
                   t.id1 =
-                     (t.id1 & ~(PID_MASK | ID1_PERM_ALLBITS)) | this_resolve->permute1[(t.id1 & PID_MASK) >> 6]
-                                                              | this_resolve->permute2[(t.id1 & PID_MASK) >> 6];
+                     (t.id1 & ~PID_MASK) |
+                     this_resolve->permute1[(t.id1 & PID_MASK) >> 6];
+                  t.id3 =
+                     (t.id3 & ~ID3_PERM_ALLBITS) |
+                     this_resolve->permute3[(t.id1 & PID_MASK) >> 6];
                }
             }
 

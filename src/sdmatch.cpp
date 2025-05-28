@@ -427,12 +427,12 @@ void do_accelerator_spec(Cstring inputline, bool is_accelerator)
 
 
 
-/* This returns zero if the name was clearly not able to be hashed
-   (contains NUL, comma, atsign, or single quote).  It returns 1
-   if it could clearly be hashed (no blanks).  It returns 2 if it
-   had blanks, and might be questionable.  Patterns to match
-   (call or concept names, etc. can have blanks in them and still
-   be hashed.  Strings the user types can't be hashed if they have blanks. */
+// This returns zero if the name was clearly not able to be hashed
+// (contains NUL, comma, atsign, or single quote).  It returns 1
+// if it could clearly be hashed (no blanks).  It returns 2 if it
+// had blanks, and might be questionable.  Patterns to match
+// (call or concept names, etc. can have blanks in them and still
+// be hashed.  Strings the user types can't be hashed if they have blanks.
 static int get_hash(Cstring string, int *bucket_p)
 {
    char c1 = string[0];
@@ -444,11 +444,10 @@ static int get_hash(Cstring string, int *bucket_p)
       *bucket_p = BRACKET_HASH;
       return 1;
    }
-   else if (
-               (c1 && c1 != ',' && c1 != '@' && c1 != '\'') &&
-               (c2 && c2 != ',' && c2 != '@' && c2 != '\'') &&
-               (c3 && c3 != ',' && c3 != '@' && c3 != '\'')) {
-      /* We use a hash function that ignores the "32" bit, so it is insensitive to case. */
+   else if ((c1 && c1 != ',' && c1 != '@' && c1 != '\'') &&
+            (c2 && c2 != ',' && c2 != '@' && c2 != '\'') &&
+            (c3 && c3 != ',' && c3 != '@' && c3 != '\'')) {
+      // We use a hash function that ignores the "32" bit, so it is insensitive to case.
       bucket = (((((int) c1 & ~32) << 3) + ((int) c2 & ~32)) << 3) + ((int) c3 & ~32);
       bucket += bucket * 20;
       bucket += bucket >> 7;
@@ -672,10 +671,14 @@ void matcher_initialize()
 
       for (i=0; i<NUM_TAGGER_CLASSES; i++) {
          for (ku=0; ku<number_of_taggers[i]; ku++) {
-            if (!get_hash(tagger_calls[i][ku]->name, &bucket)) {
-               char errbuf[255];
-               sprintf(errbuf, "Can't hash tagger %d %d!", i, (int) ku);
-               gg->fatal_error_exit(2, errbuf);
+            // Some taggers ("@6 start vertical tag") can't be hashed because
+            // of the at sign.  That's OK.
+            if (tagger_calls[i][ku]->name[0] != '@') {
+               if (!get_hash(tagger_calls[i][ku]->name, &bucket)) {
+                  char errbuf[255];
+                  sprintf(errbuf, "Can't hash tagger %d %d!", i, (int) ku);
+                  gg->fatal_error_exit(2, errbuf);
+               }
             }
 
             for (j=0; j<tagger_hash_list_size; j++) {

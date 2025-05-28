@@ -1,6 +1,6 @@
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2004  William B. Ackerman.
+//    Copyright (C) 1990-2005  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -321,6 +321,7 @@ Cstring warning_strings[] = {
    /*  warn__bad_interlace_match */   "*The interlaced calls have mismatched lengths.",
    /*  warn__not_on_block_spots  */   " Generalized bigblock/stagger -- people are not on block spots.",
    /*  warn__stupid_phantom_clw  */   "#This use of phantom setups seems superfluous.",
+   /*  warn__should_say_Z        */   "*You probably should say 'Z' lines/waves/columns.",
    /*  warn__bad_modifier_level  */   "*Use of this modifier on this call is not allowed at this level.",
    /*  warn__bad_call_level      */   "*This call is not really legal at this level.",
    /*  warn__did_not_interact    */   "*The setups did not interact with each other.",
@@ -1656,6 +1657,11 @@ map::map_thing map::map_init_table[] = {
    {{-1, 2, 3, 1, 0, -1, -1, -1,       4, -1, -1, -1, -1, 6, 7, 5},
     s_qtag,2,MPKIND__OFFS_R_HALF,1, 1,  s_ptpd,    0x005, 0},
 
+   {{-1, 0, 7, 6, 5, -1, -1, -1,       1, -1, -1, -1, -1, 4, 3, 2},
+    s_qtag,2,MPKIND__OFFS_L_HALF,0, 0,  spgdmdccw, 0x000, 0},
+   {{-1, 0, 7, 6, 5, -1, -1, -1,       1, -1, -1, -1, -1, 4, 3, 2},
+    s_qtag,2,MPKIND__OFFS_R_HALF,0, 0,  spgdmdcw,  0x000, 0},
+
    {{13, 12, 10, 11, -1, -1, 9, 8,     -1, -1, 1, 0, 5, 4, 2, 3},
     s1x8,2,MPKIND__OFFS_L_HALF,1, 0,  s2x8,      0x000, 0},
    {{-1, -1, 14, 15, 10, 11, 13, 12,   2, 3, 5, 4, -1, -1, 6, 7},
@@ -2090,6 +2096,21 @@ map::map_thing map::map_init_table[] = {
    {{1, 22, 23, 0,         3, 20, 21, 2,        5, 18, 19, 4,
      7, 16, 17, 6,         9, 14, 15, 8,        11, 12, 13, 10},
     s2x2,6,MPKIND__SPLIT,1,       0,  s2x12,     0x555, 0},
+
+
+   {{18, 19, 16, 17,       20, 21, 14, 15,      22, 23, 12, 13,
+     0, 1, 10, 11,         2, 3, 8, 9,          4, 5, 6, 7},
+    s2x2,6,MPKIND__SPLIT_OTHERWAY_TOO,0, 0,  s4x6,      0x000, 0},
+   {{1, 10, 11, 0,         3, 8, 9, 2,          5, 6, 7, 4,
+     19, 16, 17, 18,       21, 14, 15, 20,      23, 12, 13, 22},
+    s2x2,6,MPKIND__SPLIT_OTHERWAY_TOO,1, 0,  s4x6,      0x555, 0},
+
+   {{23, 22, 20, 21,       19, 18, 16, 17,      15, 14, 12, 13,
+     0, 1, 3, 2,           4, 5, 7, 6,          8, 9, 11, 10},
+    s1x4,6,MPKIND__SPLIT_OTHERWAY_TOO,0, 0,  s2x12,     0x000, 0},
+   {{15, 14, 12, 13,       11, 10, 8, 9,        4, 5, 7, 6,
+     19, 18, 16, 17,       20, 21, 23, 22,      0, 1, 3, 2},
+    s1x4,6,MPKIND__SPLIT_OTHERWAY_TOO,1, 0,  s3x8,      0x000, 0},
 
    {{0, 1, 2,                          5, 4, 3},
     s1x3,2,MPKIND__SPLIT,0,       0,  s1x6,      0x000, 0},
@@ -3479,8 +3500,14 @@ merge_table::concmerge_thing merge_table::merge_init_table[] = {
    {s2x6,          s4x6, 0,        0, 0x0E, 0x0, schema_nothing,        s4x6,        nothing,  warn__none, 0, 0, {11, 10, 9, 8, 7, 6, 23, 22, 21, 20, 19, 18}, {0}},
    {s2x6,          s4x4, 0,        0, 0x0D, 0x0, schema_matrix,         s4x6,        nothing,  warn__none, 0, 1, {11, 10, 9, 8, 7, 6, 23, 22, 21, 20, 19, 18}, {1, 2, 3, 9, 4, 7, 22, 8, 13, 14, 15, 21, 16, 19, 10, 20}},
    {s2x6,          s4x4, 0,        0, 0x0E, 0x0, schema_matrix,         s4x6,        nothing,  warn__none, 0, 0, {11, 10, 9, 8, 7, 6, 23, 22, 21, 20, 19, 18}, {4, 7, 22, 8, 13, 14, 15, 21, 16, 19, 10, 20, 1, 2, 3, 9}},
-   {s2x4,          s2x6, 0,        0, 0x0D, 0x0, schema_matrix,         s4x6,        nothing,  warn__none, 0, 0, {3, 8, 21, 14, 15, 20, 9, 2}, {11, 10, 9, 8, 7, 6, 23, 22, 21, 20, 19, 18}},
-   {s2x4,          s2x6, 0,        0, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {1, 2, 3, 4, 7, 8, 9, 10},  {0}},
+
+   // These five must be in this order.
+   {s2x4,          s2x6, 0,        0, 0x0D, 0x0, schema_matrix,         s4x6,        nothing, warn__none, 0, 0, {3, 8, 21, 14, 15, 20, 9, 2}, {11, 10, 9, 8, 7, 6, 23, 22, 21, 20, 19, 18}},
+   {s2x4,          s2x6, 0,        0, 0x0E, 0x0, schema_nothing,        nothing,     nothing, warn__none, 0, 0, {1, 2, 3, 4, 7, 8, 9, 10},  {0}},
+   {s2x4,          s2x6, 0x99,     0, 0x0D, 0x0, schema_nothing,        nothing,     nothing, warn__none, 0, 0, {-1, 3, 8, -1, -1, 9, 2, -1}, {0}},
+   {s2x4,          s2x6, 0x33, 06666, 0x2D, 0x0, schema_matrix,         spgdmdccw,   nothing, warn__none, 0, 1, {-1, -1, 3, 2, -1, -1, 7, 6}, {5, -1, -1, 0, -1, -1, 1, -1, -1, 4, -1, -1}},
+   {s2x4,          s2x6, 0xCC, 03333, 0x2D, 0x0, schema_matrix,         spgdmdcw,    nothing, warn__none, 0, 1, {6, 7, -1, -1, 2, 3, -1, -1},{-1, -1, 5, -1, -1, 0, -1, -1, 1, -1, -1, 4}},
+
    {sdmd,          s2x6, 0,    0x30C, 0x0E, 0x0, schema_matrix,         sbigdhrgl,   nothing,  warn__none, 0, 0, {9, 2, 3, 8},               {0, 1, -1, -1, 4, 5, 6, 7, -1, -1, 10, 11}},
    {sdmd,          s2x6, 0,    0x30C, 0x0D, 0x0, schema_matrix,         sbighrgl,    nothing,  warn__none, 0, 0, {2, 3, 8, 9},               {0, 1, -1, -1, 4, 5, 6, 7, -1, -1, 10, 11}},
 
@@ -3579,10 +3606,13 @@ merge_table::concmerge_thing merge_table::merge_init_table[] = {
    {s1x6,         s3dmd, 0,        0, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {9, 10, 11, 3, 4, 5},       {0}},
    {s1x4,         s3dmd, 0,        0, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {10, 11, 4, 5},             {0}},
    {s1x2,         s3dmd, 0,        0, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {11, 5},                    {0}},
-   {s1x4,         s3dmd, 0,    07272, 0x0D, 0x0, schema_matrix,         s3dmd,      nothing,   warn__none, 0, 1, {10, 11, 4, 5},{8, -1, 0, -1, -1, -1, 2, -1, 6, -1, -1, -1}},
-   {s1x4,         sbigh, 0,    06060, 0x0D, 0x0, schema_matrix,         s3x4,       nothing,   warn__none, 0, 1, {10, 11, 4, 5},{9, 8, 7, 6, -1, -1, 3, 2, 1, 0, -1, -1}},
-   {s1x4,          s3x4, 0,    06060, 0x0D, 0x0, schema_matrix,         sbigh,      nothing,   warn__none, 0, 1, {4, 5, 10, 11},{3, 2, 1, 0, -1, -1, 9, 8, 7, 6, -1, -1}},
-   {s2x2,         sbigh, 0,    06060, 0x0E, 0x0, schema_matrix,         s4x4,       nothing,   warn__none, 0, 0, {15, 3, 7, 11},{12, 10, 9, 8, -1, -1, 4, 2, 1, 0, -1, -1}},
+   {s1x4,         s3dmd, 0,    07272, 0x0D, 0x0, schema_matrix,         s3dmd,       nothing,  warn__none, 0, 1, {10, 11, 4, 5},{8, -1, 0, -1, -1, -1, 2, -1, 6, -1, -1, -1}},
+   {s1x4,         sbigh, 0,    06060, 0x0D, 0x0, schema_matrix,         s3x4,        nothing,  warn__none, 0, 1, {10, 11, 4, 5},{9, 8, 7, 6, -1, -1, 3, 2, 1, 0, -1, -1}},
+   {s1x4,          s3x4, 0,    06060, 0x0D, 0x0, schema_matrix,         sbigh,       nothing,  warn__none, 0, 1, {4, 5, 10, 11},{3, 2, 1, 0, -1, -1, 9, 8, 7, 6, -1, -1}},
+   {s2x2,         sbigh, 0,    06060, 0x0E, 0x0, schema_matrix,         s4x4,        nothing,  warn__none, 0, 0, {15, 3, 7, 11},{12, 10, 9, 8, -1, -1, 4, 2, 1, 0, -1, -1}},
+
+   {s2x4,          spgdmdcw, 0, 0xCC, 0x2D, 0x0, schema_matrix,         s2x6,        nothing,  warn__none, 0, 1, {1, 2, 3, 4, 7, 8, 9, 10}, {11, 2, -1, -1, 5, 8, -1, -1}},
+   {s2x4,         spgdmdccw, 0, 0xCC, 0x2D, 0x0, schema_matrix,         s2x6,        nothing,  warn__none, 0, 1, {1, 2, 3, 4, 7, 8, 9, 10}, {9, 0, -1, -1, 3, 6, -1, -1}},
 
    {s1x4,          s4x4, 0,   0x8E8E, 0x0E, 0x0, schema_matrix,         s3x4,        nothing,  warn__none, 0, 0, {10, 11, 4, 5},{3, -1, -1, -1, 6, 7, 8, -1, 9, -1, -1, -1, 0, 1, 2, -1}},
    {s1x4,          s4x4, 0,   0xE8E8, 0x0D, 0x0, schema_matrix,         s3x4,        nothing,  warn__none, 0, 1, {10, 11, 4, 5},{0, 1, 2, -1, 3, -1, -1, -1, 6, 7, 8, -1, 9, -1, -1, -1}},
@@ -3693,7 +3723,6 @@ merge_table::concmerge_thing merge_table::merge_init_table[] = {
    {s1x4,       s1x3dmd, 0,     0xAA, 0x1E, 0x0, schema_matrix,         s1x8,        nothing,  warn__none, 0, 0, {3, 2, 7, 6},               {0, -1, 1, -1, 4, -1, 5, -1}},
    {s1x2,       s1x3dmd, 0,     0x88, 0x0D, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 1, 0, {3, 7},               {0}},
    {s2x2,          s4x4, 0,        0, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {15, 3, 7, 11},             {0}},
-   {s2x4,          s2x6, 0x99,     0, 0x0D, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {-1, 3, 8, -1, -1, 9, 2, -1}, {0}},
    {s2x2,          s2x8, 0,        0, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {3, 4, 11, 12},             {0}},
    {s2x2,          s2x6, 0,        0, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {2, 3, 8, 9},               {0}},
 
@@ -7221,7 +7250,7 @@ const setup_attr setup_attrs[] = {
     (const id_bit_table *) 0,
     {(Cstring) 0,
      (Cstring) 0}},
-   {15,                     // shyper4x8
+   {-1,                     // shyper4x8a
     (const coordrec *) 0,
     (const coordrec *) 0,
     {0, 0, 0, 0},
@@ -7231,7 +7260,27 @@ const setup_attr setup_attrs[] = {
     (const id_bit_table *) 0,
     {(Cstring) 0,
      (Cstring) 0}},
-   {15,                     // shyper2x16
+   {-1,                     // shyper4x8b
+    (const coordrec *) 0,
+    (const coordrec *) 0,
+    {0, 0, 0, 0},
+    {b_nothing, b_nothing},
+    {8, 4},
+    false,
+    (const id_bit_table *) 0,
+    {(Cstring) 0,
+     (Cstring) 0}},
+   {-1,                     // shyper3x8
+    (const coordrec *) 0,
+    (const coordrec *) 0,
+    {0, 0, 0, 0},
+    {b_nothing, b_nothing},
+    {8, 3},
+    false,
+    (const id_bit_table *) 0,
+    {(Cstring) 0,
+     (Cstring) 0}},
+   {-1,                     // shyper2x16
     (const coordrec *) 0,
     (const coordrec *) 0,
     {0, 0, 0, 0},
@@ -8001,18 +8050,6 @@ int begin_sizes[] = {
    16};        /* b_pdblrig */
 
 
-// The following 8 definitions are taken verbatim from sdinit.c
-enum {
-   B1A = 0000|ID1_PERM_NSG|ID1_PERM_NSB|ID1_PERM_NHG|ID1_PERM_HCOR|ID1_PERM_HEAD|ID1_PERM_BOY,
-   G1A = 0100|ID1_PERM_NSG|ID1_PERM_NSB|ID1_PERM_NHB|ID1_PERM_SCOR|ID1_PERM_HEAD|ID1_PERM_GIRL,
-   B2A = 0200|ID1_PERM_NSG|ID1_PERM_NHG|ID1_PERM_NHB|ID1_PERM_SCOR|ID1_PERM_SIDE|ID1_PERM_BOY,
-   G2A = 0300|ID1_PERM_NSB|ID1_PERM_NHG|ID1_PERM_NHB|ID1_PERM_HCOR|ID1_PERM_SIDE|ID1_PERM_GIRL,
-   B3A = 0400|ID1_PERM_NSG|ID1_PERM_NSB|ID1_PERM_NHG|ID1_PERM_HCOR|ID1_PERM_HEAD|ID1_PERM_BOY,
-   G3A = 0500|ID1_PERM_NSG|ID1_PERM_NSB|ID1_PERM_NHB|ID1_PERM_SCOR|ID1_PERM_HEAD|ID1_PERM_GIRL,
-   B4A = 0600|ID1_PERM_NSG|ID1_PERM_NHG|ID1_PERM_NHB|ID1_PERM_SCOR|ID1_PERM_SIDE|ID1_PERM_BOY,
-   G4A = 0700|ID1_PERM_NSB|ID1_PERM_NHG|ID1_PERM_NHB|ID1_PERM_HCOR|ID1_PERM_SIDE|ID1_PERM_GIRL
-};
-
 /* BEWARE!!  This list is keyed to the definition of "start_select_kind" in sd.h. */
 startinfo configuration::startinfolist[] = {
    {
@@ -8022,7 +8059,7 @@ startinfo configuration::startinfolist[] = {
          nothing,                    /* kind */
          1,                          /* rotation */
          {0},                        /* cmd */
-         {{0,0}},                    /* people */
+         {{0,0,0}},                  /* people */
          {{0, 0}, 0}                 /* result_flags (imprecise_rotation is off) */
       }
    },
@@ -8033,20 +8070,24 @@ startinfo configuration::startinfolist[] = {
          s2x4,                       /* kind */
          1,                          /* rotation */
          {0},                        /* cmd */
-         {{G2A|d_south,0}, {B2A|d_south,0}, {G1A|d_south,0}, {B1A|d_south,0},
-            {G4A|d_north,0}, {B4A|d_north,0}, {G3A|d_north,0}, {B3A|d_north,0}},
+         {{0300|d_south,0,ID3_G2}, {0200|d_south,0,ID3_B2},
+          {0100|d_south,0,ID3_G1}, {0000|d_south,0,ID3_B1},
+          {0700|d_north,0,ID3_G4}, {0600|d_north,0,ID3_B4},
+          {0500|d_north,0,ID3_G3}, {0400|d_north,0,ID3_B3}},
          {{0, 0}, 0}                 /* result_flags (imprecise_rotation is off) */
       }
    },
    {
       "Sides 1P2P",
       false,                         /* into_the_middle */
-      {
+     {
          s2x4,                       /* kind */
          0,                          /* rotation */
          {0},                        /* cmd */
-         {{G3A|d_south,0}, {B3A|d_south,0}, {G2A|d_south,0}, {B2A|d_south,0},
-            {G1A|d_north,0}, {B1A|d_north,0}, {G4A|d_north,0}, {B4A|d_north,0}},
+         {{0500|d_south,0,ID3_G3}, {0400|d_south,0,ID3_B3},
+          {0300|d_south,0,ID3_G2}, {0200|d_south,0,ID3_B2},
+          {0100|d_north,0,ID3_G1}, {0000|d_north,0,ID3_B1},
+          {0700|d_north,0,ID3_G4}, {0600|d_north,0,ID3_B4}},
          {{0, 0}, 0}                 /* result_flags (imprecise_rotation is off) */
       }
    },
@@ -8057,8 +8098,10 @@ startinfo configuration::startinfolist[] = {
          s2x4,                       /* kind */
          0,                          /* rotation */
          {0},                        /* cmd */
-         {{B4A|d_east,0}, {G3A|d_south,0}, {B3A|d_south,0}, {G2A|d_west,0},
-            {B2A|d_west,0}, {G1A|d_north,0}, {B1A|d_north,0}, {G4A|d_east,0}},
+         {{0600|d_east,0,ID3_B4},  {0500|d_south,0,ID3_G3},
+          {0400|d_south,0,ID3_B3}, {0300|d_west,0,ID3_G2},
+          {0200|d_west,0,ID3_B2},  {0100|d_north,0,ID3_G1},
+          {0000|d_north,0,ID3_B1}, {0700|d_east,0,ID3_G4}},
          {{0, 0}, 0}                 /* result_flags (imprecise_rotation is off) */
       }
    },
@@ -8069,8 +8112,10 @@ startinfo configuration::startinfolist[] = {
          s2x4,                       /* kind */
          1,                          /* rotation */
          {0},                        /* cmd */
-         {{B3A|d_east,0}, {G2A|d_south,0}, {B2A|d_south,0}, {G1A|d_west,0},
-            {B1A|d_west,0}, {G4A|d_north,0}, {B4A|d_north,0}, {G3A|d_east,0}},
+         {{0400|d_east,0,ID3_B3},  {0300|d_south,0,ID3_G2},
+          {0200|d_south,0,ID3_B2}, {0100|d_west,0,ID3_G1},
+          {0000|d_west,0,ID3_B1},  {0700|d_north,0,ID3_G4},
+          {0600|d_north,0,ID3_B4}, {0500|d_east,0,ID3_G3}},
          {{0, 0}, 0}                 /* result_flags (imprecise_rotation is off) */
       }
    },
@@ -8081,9 +8126,10 @@ startinfo configuration::startinfolist[] = {
          s4x4,                       /* kind */
          0,                          /* rotation */
          {0},                        /* cmd */
-         {{0,0}, {G2A|d_west,0}, {B2A|d_west,0}, {0,0}, {0,0}, {G1A|d_north,0},
-            {B1A|d_north,0}, {0,0}, {0,0}, {G4A|d_east,0}, {B4A|d_east,0}, {0,0},
-            {0,0}, {G3A|d_south,0}, {B3A|d_south,0}, {0,0}},
+         {{0,0,0}, {0300|d_west,0,ID3_G2},  {0200|d_west,0,ID3_B2},  {0,0,0},
+          {0,0,0}, {0100|d_north,0,ID3_G1}, {0000|d_north,0,ID3_B1}, {0,0,0},
+          {0,0,0}, {0700|d_east,0,ID3_G4},  {0600|d_east,0,ID3_B4},  {0,0,0},
+          {0,0,0}, {0500|d_south,0,ID3_G3}, {0400|d_south,0,ID3_B3}, {0,0,0}},
          {{0, 0}, 0}                 /* result_flags (imprecise_rotation is off) */
       }
    }
@@ -8150,11 +8196,11 @@ select::fixer select::fixer_init_table[] = {
    {fx_foozz, s1x2, s_ptpd,      1, 0, 2,       fx_foozz,     fx_f1x8aa,    fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {1, 3, 7, 5}},
    {fx_fo6zzd, s2x2, s_bone6,     0, 1, 1,       fx0,          fx0,          fx_f1x6aad,   fx0, fx0,          fx0,    fx_fo6zzd,    fx0,          {0, 1, 3, 4}},
    {fx_foozzd, s2x2, s_ptpd,      0, 1, 1,       fx0,          fx0,          fx_f1x8aad,   fx0, fx0,          fx0,    fx_foozzd,    fx_fqtgend,   {1, 7, 5, 3}},
-   {fx_f3x4east, s1x2, s3x4,        1, 0, 2,       fx0,         fx_f3x4east,   fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {10, 9, 3, 4}},
-   {fx_f3x4west, s1x2, s3x4,        1, 0, 2,       fx0,         fx_f3x4west,   fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {0, 10, 4, 6}},
-   {fx_f3x4left, s1x2, s3x4,        0, 0, 2,       fx_f3x4left,  fx_f3x4rzz,   fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {0, 1, 7, 6}},
+   {fx_f3x4east, s1x2, s3x4,        1, 0, 2,       fx0,         fx_f3x4east,    fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {10, 9, 3, 4}},
+   {fx_f3x4west, s1x2, s3x4,        1, 0, 2,       fx0,         fx_f3x4west,    fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {0, 10, 4, 6}},
+   {fx_f3x4left, s1x2, s3x4,        0, 0, 2,       fx_f3x4left,  fx_f3x4rzz,    fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {0, 1, 7, 6}},
    {fx_f3x4right, s1x2, s3x4,        0, 0, 0x100+2, fx_f3x4right, fx_f3x4lzz,   fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {2, 3, 9, 8}},
-   {fx_f3x4lzz, s1x2, s2x6,        0, 0, 2,       fx_f3x4lzz,   fx_f3x4right, fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {0, 1, 7, 6}},
+   {fx_f3x4lzz, s1x2, s2x6,        0, 0, 2,       fx_f3x4lzz,   fx_f3x4right,   fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {0, 1, 7, 6}},
    {fx_f3x4rzz, s1x2, s2x6,        0, 0, 0x100+2, fx_f3x4rzz,   fx_f3x4left,  fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {4, 5, 11, 10}},
    {fx_f4x4nw, s1x2, s4x4,        0, 0, 2,          fx0,       fx_f4x4rzza,     fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {12, 13, 5, 4}},
    {fx_f4x4ne, s1x2, s4x4,        0, 0, 0x100+2,    fx0,       fx_f4x4lzza,     fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {14, 0, 8, 6}},
@@ -8167,6 +8213,12 @@ select::fixer select::fixer_init_table[] = {
    {fx_f3x4outer, s1x3, s3x4,        1, 0, 2,       fx_f3x4outer, fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {0, 10, 9, 3, 4, 6}},
    {fx_f3dmouter, s1x3, s3dmd,       0, 0, 2,       fx_f3dmouter, fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {8, 7, 6, 0, 1, 2}},
    {fx_f3ptpdin,  s1x2, s3ptpd,      0, 0, 2,       fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {10, 11, 5, 4}},
+
+   {fx_fpgdmdcw,  s1x2, spgdmdcw,    0, 0, 2,       fx0,    fx_f2x6cw,          fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {6, 7, 3, 2}},
+   {fx_fpgdmdccw, s1x2, spgdmdccw,   0, 0, 2,       fx0,   fx_f2x6ccw,          fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {6, 7, 3, 2}},
+   {fx_f2x6cw,    s1x2, s2x6,        0, 0, 2,       fx0,  fx_fpgdmdcw,          fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {3, 4, 10, 9}},
+   {fx_f2x6ccw,   s1x2, s2x6,        0, 0, 2,       fx0,  fx_fpgdmdccw,         fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {1, 2, 8, 7}},
+
    {fx_fdhrgl, s_trngl,s_dhrglass,0x2A03,0, 2,       fx_f323,      fx0,          fx0,          fx0, fx0,  fx_specspindle, fx0,          fx0,          {6, 5, 0, 2, 1, 4}},
    {fx_specspindle, s_trngl,s_spindle,0x2A01, 0, 2, fx_specspindle,fx0,          fx0,          fx0, fx0,    fx_fdhrgl,    fx0,          fx0,          {7, 0, 6, 3, 4, 2}},
    {fx_specfix3x40, s_trngl,s_ptpd,0x00AB,0,2,  fx_specfix3x40,    fx0,          fx0,          fx0, fx0,  fx_specfix3x41, fx0,          fx0,          {0, 1, 3, 4, 5, 7}},
@@ -8786,9 +8838,9 @@ select::sel_item select::sel_init_table[] = {
    {LOOKUP_NONE,               s1x8,        0x55,   fx_f1x855,     fx0, -1},
    {LOOKUP_NONE,               s3x4,        03131,  fx_f3x4outer,  fx0, -1},
    {LOOKUP_NONE,               s3dmd,       00707,  fx_f3dmouter,  fx0, -1},
-
    {LOOKUP_NONE,               s3ptpd,      06060,  fx_f3ptpdin,   fx0, -1},
-
+   {LOOKUP_NONE,               spgdmdcw,    0xCC,   fx_fpgdmdcw,   fx0, -1},
+   {LOOKUP_NONE,               spgdmdccw,   0xCC,   fx_fpgdmdccw,  fx0, -1},
    {LOOKUP_NONE,               s_dhrglass,   0x77,  fx_fdhrgl,     fx0, -1},
    {LOOKUP_NONE,               s_ptpd,       0xBB,  fx_specfix3x40,fx0, -1},
    {LOOKUP_NONE,               s_bone,       0x77,  fx_specfix3x41,fx0, -1},

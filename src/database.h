@@ -29,7 +29,7 @@
 // database format version.
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 236
+#define DATABASE_FORMAT_VERSION 240
 
 // BEWARE!!  These must track the items in "tagtabinit" in mkcalls.cpp .
 enum base_call_index {
@@ -49,7 +49,7 @@ enum base_call_index {
    base_call_backemup,
    base_call_circulate,
    base_call_trade,
-   base_call_remake,
+   base_call_any_hand_remake,
    base_call_passthru,
    base_call_check_cross_counter,
    base_call_lockit,
@@ -200,16 +200,17 @@ enum {
 };
 
 // These are the continuation of the "CFLAG1" bits, that have to overflow into this word.
-// They must lie in the top 8 bits for now.
+// They must lie in the top 12 bits for now.
 enum {
-   CFLAG2_NO_ELONGATION_ALLOWED     = 0x01000000UL,
-   CFLAG2_IMPRECISE_ROTATION        = 0x02000000UL,
-   CFLAG2_CAN_BE_FAN                = 0x04000000UL,
-   CFLAG2_EQUALIZE                  = 0x08000000UL,
-   CFLAG2_ONE_PERSON_CALL           = 0x10000000UL,
-   CFLAG2_YIELD_IF_AMBIGUOUS        = 0x20000000UL,
-   CFLAG2_DO_EXCHANGE_COMPRESS      = 0x40000000UL,
-   CFLAG2_IF_MOVE_CANT_ROLL         = 0x80000000UL
+   CFLAG2_CAN_BE_ONE_SIDE_LATERAL   = 0x00100000UL,
+   CFLAG2_NO_ELONGATION_ALLOWED     = 0x00200000UL,
+   CFLAG2_IMPRECISE_ROTATION        = 0x00400000UL,
+   CFLAG2_CAN_BE_FAN                = 0x00800000UL,
+   CFLAG2_EQUALIZE                  = 0x01000000UL,
+   CFLAG2_ONE_PERSON_CALL           = 0x02000000UL,
+   CFLAG2_YIELD_IF_AMBIGUOUS        = 0x04000000UL,
+   CFLAG2_DO_EXCHANGE_COMPRESS      = 0x08000000UL,
+   CFLAG2_IF_MOVE_CANT_ROLL         = 0x10000000UL,
 };
 
 // Beware!!  This list must track the table "matrixcallflagtab" in mkcalls.cpp .
@@ -270,7 +271,7 @@ enum dance_level {
    l_c4,
    l_c4x,
    l_dontshow,
-   l_nonexistent_concept
+   l_nonexistent_concept   // We can't have more than 16 levels.
 };
 
 /* These are the states that people can be in, and the "ending setups" that can appear
@@ -377,7 +378,9 @@ enum setup_kind {
    s8x8,      // we don't let them out of their cage.
    sx1x16,    // Ditto.
    shypergal, // Ditto.
-   shyper4x8, // Ditto.
+   shyper4x8a,// Ditto.
+   shyper4x8b,// Ditto.
+   shyper3x8, // Ditto.
    shyper2x16,// Ditto.
    sfat2x8,   // Ditto.  These are big setups that are the size of 4x8's,
    swide4x4,  // but only have 16 people.  The reason is to prevent loss of phantoms.
@@ -891,7 +894,8 @@ enum calldef_schema {
    schema_sequential,            // All after this point are sequential.
    schema_split_sequential,
    schema_sequential_with_fraction,
-   schema_sequential_with_split_1x8_id
+   schema_sequential_with_split_1x8_id,
+   schema_alias                  // Not a schema once the program is running.
 };
 
 
@@ -1021,29 +1025,25 @@ enum {
    DFM1_FRACTAL_INSERT               = 0x01000000UL
 };
 
-enum stability {
-   stb_none,      // unknown
-   stb_z,         // "Z" - person does not turn
-   stb_a,         // "A" - person turns anticlockwise from 1 to 4 quadrants
-   stb_c,         // "C" - person turns clockwise from 1 to 4 quadrants
-   stb_ac,        // "AC" - person turns anticlockwise once,
+enum  {
+   // These are the individual codes.  They must fit in 3 bits.
+   STB_NONE,      // Unknown if REVERSE off, "Z" if REVERSE on.
+   STB_A,         // "A" - person turns anticlockwise from 1 to 4 quadrants
+   STB_AC,        // "AC" - person turns anticlockwise once,
                   //     then clockwise 1 to 4 quadrants
-   stb_ca,        // "CA" - person turns clockwise once,
-                  //     then anticlockwise 1 to 4 quadrants
-   stb_aac,       // "AAC" - person turns anticlockwise twice,
+   STB_AAC,       // "AAC" - person turns anticlockwise twice,
                   //     then clockwise 1 to 4 quadrants
-   stb_cca,       // "CCA" - person turns clockwise twice,
-                  //     then anticlockwise 1 to 4 quadrants
-   stb_aaac,      // "AAAC" - person turns anticlockwise 3 times,
+   STB_AAAC,      // "AAAC" - person turns anticlockwise 3 times,
                   //     then clockwise 1 to 4 quadrants
-   stb_ccca,      // "CCCA" - person turns clockwise 3 times,
-                  //     then anticlockwise 1 to 4 quadrants
-   stb_aaaac,     // "AAAAC" - person turns anticlockwise 4 times,
+   STB_AAAAC,     // "AAAAC" - person turns anticlockwise 4 times,
                   //     then clockwise 1 to 4 quadrants
-   stb_cccca,     // "CCCCA" - person turns clockwise 4 times,
-                  //     then anticlockwise 1 to 4 quadrants
-   stb_aa,        // "AA" - person turns anticlockwise from 5 to 8 quadrants
-   stb_cc         // "CC" - person turns clockwise from 5 to 8 quadrants
+   STB_AA,        // "AA" - person turns anticlockwise from 5 to 8 quadrants
+
+   // This is the entire field in which it fits.
+   STB_MASK = 15,
+
+   // This bit reverses everything (or changes "none" to "Z".)
+   STB_REVERSE = 8
 };
 
 /* These define the format of the short int (16 bits, presumably) items emitted
@@ -1051,9 +1051,8 @@ enum stability {
    "arr" array of a predptr_pair or the "stuff.def" array of a callarray.
 
    The format of this item is:
-       stability     roll     where     direction
-         info        info     to go      to face
-        4 bits      3 bits    5 bits      4 bits
+       stability info     roll info     where to go     direction to face
+           4 bits           3 bits        5 bits            4 bits
 
    The direction is in the special format
             north   10 octal
@@ -1065,6 +1064,6 @@ enum stability {
    with the 1000 (octal) bit, which is BIT_PERSON, added. */
 
 enum {
-   NDBROLL_BIT = 0x0200,
-   DBSTAB_BIT  = 0x1000
+   NDBROLL_BIT    = 0x0200,
+   DBSTAB_BIT     = 0x1000
 };
