@@ -3154,6 +3154,7 @@ class select {
       fx_linefbox2,
       fx_linefbox3,
       fx_linefbox4,
+      fx_linefbox5,
       fx_l2b1,
       fx_l2b2,
       fx_l2b3,
@@ -5026,7 +5027,7 @@ class map {
       // Rotation, 2 bits per inner setup, in low 16 bits.
       // For the heterogeneous maps this has the secondary inner_kind in the high 8 bits.
       // The other bits have a few things:
-      //   0x30000 -- add to final rotation
+      //   0x30000 -- add these 2 bits to final rotation
       //   0x40000 -- get out immediately; don't use getout map
       uint32_t rot;
       uint32_t per_person_rot;
@@ -6285,7 +6286,6 @@ struct pat2_block {
    {}
 };
 
-// ***** For matcher stuff.  Does everyone need it?
 #include "sdmatch.h"
 
 extern SDLIB_API parse_state_type parse_state;                      /* in SDTOP */

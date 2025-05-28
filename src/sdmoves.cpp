@@ -3191,7 +3191,6 @@ static int jaywalk_recurse(
    int i, j, k;
    matrix_rec best_info[matrix_info_capacity+1];
    int best_cost;
-   bool ambiguous;
 
    // Pre-clean: Clear out any links that aren't bidirectional.
    // First, mark all targets.
@@ -3247,6 +3246,7 @@ static int jaywalk_recurse(
       if (choice_count >= 2) {
          int cost_or_error_code;
          bool found_a_solution = false;
+         bool ambiguous = false;
 
          for (k=0 ; k<NUMBER_OF_JAYWALK_CANDIDATES ; k++) {
             int target = mi->jpersons[k].jp;

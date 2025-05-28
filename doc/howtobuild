@@ -7,8 +7,13 @@ Doing so might cause it to be included in the "do_pack" script.
      This file is \wba\sddoc\howtobuild.
 
 -----------------------------------------------------------------
+            MAINTAIN ALL SOURCE FILES ON WINDOWS 10,
+            AND DO THIS PART OF THE PROCESS ON WINDOWS 10
+-----------------------------------------------------------------
 
                     UPDATING VERSION NUMBERS
+                    AND MAINTAINING THE PROGRAM
+                    ON WINDOWS 10
 
 Be sure the version numbers and dates are correct in:
     [sd]    sdmain.cpp   (version # and date are visible)
@@ -29,7 +34,20 @@ Be sure the version numbers and dates are correct in:
 
 -----------------------------------------------------------------
 
+                        SAVING SOURCES
+                        ON WINDOWS 10
+
+BE SURE TO DELETE *~ and funny .h, .cpp, .cmd, and makefile files
+BEFORE DOING THIS.
+
+In \wba\sd:          save _vnnnn    (e.g.  save _v3201 -- Underscore, but no periods)
+In \wba\sd\regress:  save _vnnnn
+In \wba\sddoc:       save _vnnnn
+
+-----------------------------------------------------------------
                BUILDING THE DOCUMENTATION
+                   STILL ON WINDOWS 10
+-----------------------------------------------------------------
 
 It is important that this be done before "new_binary" is run, because
 the manual and faq files are now wrapped into the binary distribution file.
@@ -38,8 +56,6 @@ WARNING!!!!!  These scripts require "tar".  I have put tar.exe,
 cygwin1.dll, and cygwinB19.dll into the \bin directory.
 
 Go to sddoc directory and do:
-
-THIS STILL NEEDS MORE WORK BEFORE IT CAN BE DONE ON WINDOWS 10.
 
     setmingw64
     clean clean
@@ -109,7 +125,8 @@ THIS STILL NEEDS MORE WORK BEFORE IT CAN BE DONE ON WINDOWS 10.
 14 Aug 20  -  26 Dec 20  #63  // hairy interrupted scoot and plenty
 26 Dec 20  -   8 Apr 21  #69  // initially as couples regroup
  8 Apr 21  -  20 Jul 21  #70  // triangles
-20 Jul 21                #65  // middle half tandem, slide thru
+20 Jul 21  -  28 Sep 21  #65  // middle half tandem, slide thru
+28 Sep 21                #71  // once removed hinge in linebox
                          #64  // hairy [boys trade] and circle 1/2
                          #66  // twisted split grand chain 8
                          #60  // really hairy fly the coop with interruption
@@ -175,17 +192,6 @@ Stress tests to try:
 
 -----------------------------------------------------------------
 
-                        SAVING SOURCES
-
-BE SURE TO DELETE *~ and funny .h, .cpp, .cmd, and makefile files
-BEFORE DOING THIS.
-
-In \wba\sd:          save _vnnnn    (e.g.  save _v3201 -- Underscore, but no periods)
-In \wba\sd\regress:  save _vnnnn
-In \wba\sddoc:       save _vnnnn
-
------------------------------------------------------------------
-
                         FINAL PREPARATION
 
    THE DOCUMENTATION MUST HAVE BEEN PREPARED, AND THE SOURCES SAVED,
@@ -233,10 +239,31 @@ cd ~/sd/regress
 chmod 775 *.sh
 ./doit.sh
 
------------------------------------------------------------------
 
+-----------------------------------------------------------------
              UPLOADING TO LYNETTE'S WEB SITE
-             THIS NO LONGER WORKS ON WINDOZE.
+             NEW WINDOWS 10
+
+Start WinSCP.  Choose host www.challengedance.org and
+user name USERNAME  (P=PASSWORD)
+On right pane, choose public_html/sd
+On left pane, navigate to C:\Users\wba\sdfullarchiv\vnnnn
+   or wherever the pack.zip file is.
+Drag left to right.  Exit from WinSCP.
+
+Start PuTTY.  Choose host www.challengedance.org .
+Login as USERNAME  (P=PASSWORD)
+  challengedance.org> cd public_html/sd
+  challengedance.org> ls -lt
+     to check that pack.zip is there.
+  challengedance.org> unzip pack.zip
+  challengedance.org> rm pack.zip
+  challengedance.org> exit
+
+
+-----------------------------------------------------------------
+             UPLOADING TO LYNETTE'S WEB SITE
+             UBUNTU -- THIS NO LONGER WORKS ON WINDOZE.
     BRING THE FILE (and sd_source too) OVER TO UBUNTU, as shown above.
 -----------------------------------------------------------------
 Now, in directory ~/vNNNN, do:

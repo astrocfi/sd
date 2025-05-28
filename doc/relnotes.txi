@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 39.38
-@set title2 Database version = 39.38 format = 396
+@set title1 RELEASE NOTES FOR VERSION 39.39
+@set title2 Database version = 39.39 format = 396
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 39.39::
 * 39.38::
 * 39.37::
 * 39.36::
@@ -138,7 +139,7 @@ and @file{relnotes98.txi} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 39.38, Top, (dir)
+@node Intro, 39.39, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -149,11 +150,25 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2021 William B. Ackerman
 @sp 3
 @menu
-* 39.38::               Changes in the current version
+* 39.39::               Changes in the current version
 @end menu
 
 @c ************
-@node 39.38, 39.37, Intro, Top
+@node 39.39, 39.38, Intro, Top
+@unnumberedsec Version 39.39 changes
+
+Some call levels were changed in accordance with recent Callerlab list changes:
+
+@strong{triple scoot} was moved from A2 to Plus.
+
+@strong{split dixie sashay} has been at C1 for years, and is staying that way.
+
+The @strong{central concept} was moved from C3 to C3A.
+
+A few extremely obscure user requests were implemented.
+
+@c ************
+@node 39.38, 39.37, 39.39, Top
 @unnumberedsec Version 39.38 changes
 
 A small improvement was made in the handling of 1/4-tag formations in two-couple mode.

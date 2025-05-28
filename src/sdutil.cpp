@@ -2317,7 +2317,7 @@ void ui_utils::writestuff(const char *s)
    while (*s) writechar(*s++);
 }
 
-__declspec(dllexport) void ui_utils::show_match_item()
+void ui_utils::show_match_item()
 {
    if (matcher_p->m_final_result.indent) writestuff("   ");
    writestuff(matcher_p->m_user_input);

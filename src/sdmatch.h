@@ -36,18 +36,6 @@
 //
 //    ===================================================================
 
-// Figure out how to do dll linkage.  If the source file that includes this
-// had "SDLIB_EXPORTS" set (which it will if it's a file for sdlib.dll),
-// make symbols "export" type.  Otherwise, make them "import" type.
-// Unless this isn't for the WIN32 API at all, in which case make the
-// "SDLIB_API" symbol do nothing.
-
-#if defined(SDLIB_EXPORTS)
-#define SDLIB_API __declspec(dllexport)
-#else
-#define SDLIB_API __declspec(dllimport)
-#endif
-
 
 // This class is a singleton object.  It gets "cleaned", but not reconstructed, for every parse,
 // by initialize_for_parse, except for s_modifier_active_list and s_modifier_inactive_list,

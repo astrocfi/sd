@@ -1,8 +1,8 @@
 \input texinfo
 @c user documentation for Sd (square dance caller's helper)
 @c
-@set sd-version 39.39
-@set Time-stamp: September 28, 2021
+@set sd-version 38.41
+@set Time-stamp: May 6, 2011
 @c
 @setfilename sd_doc.info
 @c We want the version number to show in the html file.
@@ -42,7 +42,7 @@
 @vskip 0pt plus 1fill
 @end iftex
 
-@noindent Copyright @copyright{} 1992-2021 William B. Ackerman and Stephen Gildea
+@noindent Copyright @copyright{} 1992-2006 William B. Ackerman and Stephen Gildea
 
 @noindent Permission is granted to make and distribute verbatim copies of this manual.
 
@@ -425,15 +425,14 @@ and the program name is different for these types.
 @code{Sdtty} is the name of the program that uses a character-oriented keyboard
 interface.  Calls are selected by typing their names.
 @code{Sdtty} runs on Unix-like systems and under
-DOS, Windows 3.1, Windows 95, Windows 98, Windows NT, Windows XP, and Windows 7 on PC's.
+DOS, Windows 3.1, Windows 95, Windows 98, and NT on PC's.
 
 @code{Sd} is the name of the program that uses menus and a @dfn{graphical user
 interface}.  Calls may be selected by clicking with the mouse on the chosen
 menu item.  You may also type calls in from the keyboard.  In fact, @code{Sd}
 is keyboard-compatible with @code{Sdtty}---you can use it almost exactly the
-same way.  @code{Sd} runs on Windows 95, Windows 98, Windows NT, Windows XP, and Windows 7 on PC's.
-A somewhat different version ran on Unix systems running the raw X Window System interface, though
-this has not been maintained in recent years.
+same way.  @code{Sd} runs on Windows 95, Windows 98, and NT on PC's.
+A somewhat different version runs on Unix systems running the X Window System interface.
 
 @menu
 * Getting Sd or Sdtty::         Getting Sd or Sdtty
@@ -2367,26 +2366,15 @@ Just resolving isn't enough.
 @node Change Output File, Change Title, Save Sequence, Miscellaneous Commands
 @section Changing the Output File
 
-You can change the name of the transcript file to which the program writes its
+You can change the name of the file to which the program writes its
 output by selecting the @code{change output file} command.  A popup
 will appear, prompting you for a new file name, or @code{Sdtty} will
 ask you to type in the new name.  This action will become
 effective the next time a sequence is written out.  Sequences previously
 written will stay under their old name.
 
-The output transcript file name typically does not have any directory
-information, and the output is written to the current directory for
-@code{Sd} or @code{Sdtty}.  Sometimes the operating system does not
-allow one to control the current directory, but one wishes to write
-output files to a different directory.  The directory can be changed
-with the @code{change output prefix} command.  The given directory argument will be prepended to the transcript
-filename (e.g. 01mar15_c2.txt).  The given directory argument should be
-a fully qualified pathname, followed by the appropriate separator
-character: "/" or "\".  So an argument of "/home/wba/sd/"
-will cause the transcript file to be "/home/wba/sd/01mar15_c2.txt".
-
 When the initialization file is used (@pxref{The Initialization File}),
-any change in the output file name (but not the prefix) for a session will
+any change in the output file name will
 be written back to the init file at the end of the session.
 
 @node Change Title, Change File Name Style, Change Output File, Miscellaneous Commands
@@ -2829,8 +2817,8 @@ command while the program is running.
 This tells @code{Sd} to ``maximize'' its window, that is, to use the full
 screen.  It is the same thing that would happen if you clicked the open
 box button in the upper right corner.  This has no effect on @code{Sdtty}.
-@code{Sdtty} runs as a ``command prompt'' program, and its
-window size is set by, and can be manipulated by, the operating system.
+@code{Sdtty} runs as a ``command prompt'' program and cannot set its
+window size.
 @item window_size @var{size-designator}
 This argument is followed by a designator like ``750x450''.  It will set
 the window size to the indicated number of pixels.  There is enormous
@@ -2933,14 +2921,6 @@ base name of the file to write sequences to.  The calling level will be
 used as the extension of the file name.
 The default base name is @file{sequence}, so a complete
 file name might be @file{sequence.C1}.
-@item output_prefix @var{filename}
-This facilitates running on operating systems in which
-one does not have control over the program's current directory.  The output files are normally written to
-the current directory.  This can be changed with the "-output_prefix @var{directory}" switch when
-invoking Sd or Sdtty.  The given directory argument will be prepended to the transcript filename
-(e.g. 01mar15_c2.txt).  The given directory argument should be a fully qualified pathname, followed
-by the appropriate separator character: "/" or "\".  So an argument of "-output_prefix /home/wba/sd/"
-will cause the transcript file to be "/home/wba/sd/01mar15_c2.txt".
 @item sequence_num @var{number}
 Initial sequence number.  This overrides any sequence number given in a
 session from the initialization file.
@@ -4150,9 +4130,6 @@ These concepts are the same.  The setups are end-to-end.
 @item as couples@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ couples twosome
 @item tandem@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ tandem twosome
 @item siamese@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ siamese twosome
-@item melded as couples@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ melded couples twosome
-@item melded tandem@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ melded tandem twosome
-@item melded siamese@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ melded siamese twosome
 @item couples of 3@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ couples threesome
 @item tandems of 3@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ tandem threesome
 @item siamese of 3@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ siamese threesome
@@ -4259,9 +4236,6 @@ difference---you can just type
 @example
    @kbd{phantom tandem swing thru @key{ENTER}}
 @end example
-
-When using a @i{melded} concept, it comes before the word @i{phantom};
-for all others the word @i{phantom} is first.
 
 The @i{phantom tandem} and @i{phantom as couples} concepts expand the
 people into a 4x4 matrix whenever possible.  When that is not possible,
@@ -4419,7 +4393,6 @@ These are straightforward.
 This is done from a 1x4.
 @item overlapped lines
 @item overlapped waves
-@item overlapped columns
 These are done from a diamond.
 @item interlocked parallelogram
 This is done from either a 2x4 or a 3x4.  In the latter case,
@@ -4570,7 +4543,7 @@ This is used in front of concepts like @samp{split phantom lines}.
 @item release
 @item stretch
 @item stretched setup
-@item stretched C/L/W/B/D/1T/3T
+@item stretched C/L/W/B/D/1T
 @item stretched <any triangle concept>
 These are (reasonably) straightforward.
 @item overlapped siamese
@@ -4637,9 +4610,6 @@ to dictate where the ends should finish.
 @item shadow line
 @item shadow box
 @item shadow diamond
-@item paranoid
-@item <ANYONE> are paranoid
-The designated people (or everyone) turns back at the conclusion of the call.  If a designator such as @code{centers} is used, it is evaluated after the call.
 @item anchor the <ANYONE>
 These are straightforward.
 @item <ANYONE> work
@@ -4770,12 +4740,6 @@ The @code{double echo} meta-concept is followed by two concepts.  It applies bot
 concepts first, then skips the first concept and applies the second only, and finally
 skips both concepts and just does the call.  @code{triple echo} and @code{quadruple echo} are
 similar.
-@item randomize between
-This is followed by two concepts, and then a call.  The parts of the
-call are performed alternately with the first concept and the second concept.
-@item triple randomize among
-As above but three concepts are given.   The parts of the
-call are performed with the first, second, and third concept, in repeating sequence.
 @item roundtrip
 The @code{roundtrip} concept is most simply explained by example:  @code{swing the fractions}
 is the same as @code{roundtrip remake}.  The @code{roundtrip} of a call is the call followed by the reverse
@@ -5068,8 +5032,6 @@ program will issue a warning.  Using the @code{each wave} concept will prevent
 the warning.  In either case, the exact words you would use whan calling the card
 are up to you.
 
-@item 1x6 matrix
-@item 1x8 matrix
 @item 1x10 matrix
 @item 1x12 matrix
 @item 1x16 matrix
@@ -5189,10 +5151,6 @@ phantoms are facing.  They are
    assume facing diamonds
    assume normal interlocked diamonds
    assume facing interlocked diamonds
-   assume split square thru setup
-   assume I setup
-   assume galaxy
-   assume hourglass
 @end example
 
 Additionally, there are two related concepts, @code{assume normal casts} and
@@ -5818,11 +5776,6 @@ When used with two calls, this must be entered by itself, like this:
 @end group
 @end example
 
-This will come out as:
-@example
-   @code{boys hinge while the girls switch to a diamond}
-@end example
-
 If the designated people are centers or ends, the program will do
 the call(s) according to its best judgement of what the calls mean.
 Otherwise, it will find the maximal connected undistorted subsets, and
@@ -5889,11 +5842,6 @@ When used with two calls, this concept and its designator must be entered by its
 @end group
 @end example
 
-This will come out as:
-@example
-   @code{boys disconnected swing thru while the girls switch to a diamond}
-@end example
-
 @subsection @code{ANYONE in your Distorted Setup}
 
 The concepts are
@@ -5943,11 +5891,6 @@ When used with two calls, this concept and its designator must be entered by its
    switch to a diamond @key{ENTER}}
 
 @end group
-@end example
-
-This will come out as:
-@example
-   @code{boys do your part swing thru while the girls switch to a diamond}
 @end example
 
 This means that the non-designated dancers leave the room and re-form their own

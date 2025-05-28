@@ -32,10 +32,9 @@
 #include <stdio.h>  /* for sprintf */
 #include <ctype.h>  /* for tolower */
 
-// The definition of "matcher_class" is in sdmatch.h.
+// The definition of "matcher_class" is in sdmatch.h, called from sd.h.
 
 #include "sd.h"
-#include "sdmatch.h"
 
 
 // Constructor.

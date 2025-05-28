@@ -2980,6 +2980,9 @@ static void do_concept_once_removed(
       case s_qtag:
          map_code = MAPCODE(sdmd,2,MPKIND__REMOVED,1);
          break;
+      case slinebox:
+         map_code = HETERO_MAPCODE(s_trngl4,2,MPKIND__HET_ONCEREM,0,s_trngl4,0x5);
+         break;
       case sdbltrngl4:
          map_code = HETERO_MAPCODE(sdmd,2,MPKIND__HET_ONCEREM,0,s_trngl4,0x4);
          break;
@@ -7435,7 +7438,7 @@ static void do_concept_meta(
       }
 
       if (key != meta_key_echo && foo1.m_nocmd_misc3_bits != 0)
-         fail("Can't use \"anythinger's\" as a concept here.");
+         fail("Can't perform this substitution.");
 
       nocmd.parseptr = result_of_skip;
       nocmd.cmd_misc3_flags |= foo1.m_nocmd_misc3_bits;

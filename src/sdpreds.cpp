@@ -398,6 +398,9 @@ extern bool selectp(const setup *ss, int place, int allow_some /*= 0*/) THROW_DE
       case s_trngl4:
          selected_person_mask = 0xE;
          break;
+      case slinebox:
+         selected_person_mask = 0x98;
+         break;
       }
 
       break;

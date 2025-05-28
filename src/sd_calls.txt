@@ -55,7 +55,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "39.38"
+version "39.39"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve dont_raise_overcast
@@ -5048,7 +5048,7 @@ call "_rightable left spin the top" dontshow tag rightable_left_spinthetop
 
 /* This is here explicitly so that we don't need to give a direction.
    The parser gives it precedence over the use of the "central" concept, of course. */
-call "central spin the windmill" c3 tag ctrwindmill
+call "central spin the windmill" c3a tag ctrwindmill
             left_means_touch_or_check step_to_wave visible_fractions
             yoyo_is_inherited gen_sting_is_inherited grand_is_inherited fractal_is_inherited
    seq trade_or_swing_half [inherit_yoyo inherit_gensting]
@@ -21699,7 +21699,7 @@ call "countershake" c4
    seq countershake_2 [inherit_left inherit_single inherit_nxn inherit_mxn inherit_bigmatrix]
    seq countershake_3 [inherit_left inherit_single inherit_nxn inherit_mxn inherit_bigmatrix]
 
-call "triple scoot" a1 tag triple_scoot
+call "triple scoot" plus tag triple_scoot
    setup 4x2 2x4 restriction forbidden wave_only
       array [CM7S CM6S CM5S CR4S AL3S AM2S AM1S AM0S]
             alternate_definition [3x3] c4

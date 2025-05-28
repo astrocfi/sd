@@ -1670,7 +1670,7 @@ concept_descriptor conzept::unsealed_concept_descriptor_table[] = {
     UC_none},
    {"INVERT",                                concept_snag_mystic,           L+D, l_c4,
     UC_none, CMD_MISC2__SAID_INVERT},
-   {"CENTRAL",                               concept_central,                 D, l_c3,
+   {"CENTRAL",                               concept_central,                 D, l_c3a,
     UC_none, CMD_MISC2__DO_CENTRAL},
    {"INVERT CENTRAL",                        concept_central,                 D, l_c4,
     UC_none, CMD_MISC2__DO_CENTRAL | CMD_MISC2__INVERT_CENTRAL},

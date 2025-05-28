@@ -2791,6 +2791,10 @@ map::map_thing map::map_init_table[] = {
     s_trngl4,2,MPKIND__HET_ONCEREM,1, warn__none, s_bone, (((int8_t) s_trngl4) << 24) | 0x107, 0},
    {{0, 2, 7, 5,                       4, 6, 3, 1},
     s_trngl4,2,MPKIND__HET_ONCEREM,1, warn__none, s_ptpd, (((int8_t) s_trngl4) << 24) | 0x10D, 0},
+   {{0, 2, 4, 7,                       1, 3, 5, 6},
+    s_trngl4,2,MPKIND__HET_ONCEREM,0, warn__none, slinebox, (((int8_t) s_trngl4) << 24) | 0x5, 0},
+   {{1, 3, 5, 6,                       0, 2, 4, 7},
+    s_trngl4,2,MPKIND__HET_ONCEREM,0, warn__none, slinebox, (((int8_t) s_trngl4) << 24) | 0x02000F, 0xAAAA},
 
    {{2, 4, 0,                          5, 1, 3},
     s_trngl,2,MPKIND__REMOVED,1,  warn__none,  s_bone6,   0x107, 0},
@@ -11762,6 +11766,8 @@ select::fixer select::fixer_init_table[] = {
     fx0, fx_l6b10,              fx0, fx0,                   fx0, fx0,                   fx0, fx0},
    {fx_linefbox4, s1x2, slinebox,      1, 0, 1, {4, 7},
     fx0, fx_l6b14,              fx0, fx0,                   fx0, fx0,                   fx0, fx0},
+   {fx_linefbox5, s_trngl, slinebox,   1, 0, 1, {3, 4, 7},
+    fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
 
    // In a line2box, doing something to the box of 6.
    {fx_l2b1,   s2x3, slinejbox,     0, 0, 1, {2, 3, 4, 5, 6, 7},
@@ -12532,6 +12538,7 @@ select::sel_item select::sel_init_table[] = {
    {LOOKUP_NONE,                      s_trngl4,    0x0C,   fx_ftgl4c,     fx0, -1},
    {LOOKUP_NONE,                      sdmd,        0x0E,   fx_fudmd1,     fx0, -1},
    {LOOKUP_NONE,                      sdmd,        0x0B,   fx_fudmd2,     fx0, -1},
+   {LOOKUP_NONE,                      slinebox,    0x98,   fx_linefbox5,  fx0, -1},  // Pick out a triangle
    {LOOKUP_NONE,                      slinebox,    0x03,   fx_1x5p1g,     fx0, -1},  // Goes to "Y"
    {LOOKUP_NONE,                      slinebox,    0x60,   fx_linefbox0,  fx0, -1},  // Goes to "F"
    {LOOKUP_NONE,                      slinebox,    0x9C,   fx_1x5p1h,     fx0, -1},  // Goes to sdbltrngl4

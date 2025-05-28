@@ -29,7 +29,6 @@
 
 #include <signal.h>
 #include <string.h>
-#include "sdchars.h"
 #include "sd.h"
 
 
