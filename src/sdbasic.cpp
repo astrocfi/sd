@@ -2439,6 +2439,7 @@ static int divide_the_setup(
          (callflags1 & CFLAG1_12_16_MATRIX_MEANS_SPLIT) &&
          (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX);
    int finalrot = 0;
+   bool maybe_horrible_hinge = false;
 
    uint32 nxnbits =
       ss->cmd.cmd_final_flags.test_heritbits(INHERITFLAG_NXNMASK|INHERITFLAG_MXNMASK);
@@ -3149,9 +3150,25 @@ static int divide_the_setup(
                   // illegally separated.  Since they could have done it in 1x1's,
                   // we allow it.  And, incidentally, we allow a roll afterwards.
 
-                  if (!(ss->cmd.cmd_misc_flags & CMD_MISC__NO_CHK_ELONG) &&
-                      !assoc(b_1x1, ss, calldeflist))
-                     fail("People are too far apart to work with each other on this call.");
+                  if (!assoc(b_1x1, ss, calldeflist)) {
+                     if (!(ss->cmd.cmd_misc_flags & CMD_MISC__NO_CHK_ELONG))
+                        fail("People are too far apart to work with each other on this call.");
+                     else if (ss->cmd.prior_elongation_bits & PRIOR_ELONG_CONC_RULES_CHECK_HORRIBLE) {
+                        // Only complain if anyone is line-like and facing in.
+
+                        if ((((ss->cmd.prior_elongation_bits & 3) == 1) &&
+                             ((ss->people[0].id1 & 0xF) == 0xA ||
+                              (ss->people[1].id1 & 0xF) == 0xA ||
+                              (ss->people[2].id1 & 0xF) == 0x8 ||
+                              (ss->people[3].id1 & 0xF) == 0x8)) ||
+                            (((ss->cmd.prior_elongation_bits & 3) == 2) &&
+                             ((ss->people[0].id1 & 0xF) == 0x1 ||
+                              (ss->people[1].id1 & 0xF) == 0x3 ||
+                              (ss->people[2].id1 & 0xF) == 0x3 ||
+                              (ss->people[3].id1 & 0xF) == 0x1)))
+                           maybe_horrible_hinge = true;  // If result is 1x4, will raise the warning.
+                     }
+                  }
 
                   foo ^= elong;
                }
@@ -4036,6 +4053,10 @@ static int divide_the_setup(
 
    // Flip the setup back if necessary.  It will get canonicalized.
    result->rotation -= finalrot;
+
+   // If a "horrible hinge" went to a 1x4, it's horrible.
+   if (maybe_horrible_hinge && result->kind == s1x4)
+      warn(warn__horrible_conc_hinge);
 
    // If expansion to a 2x3 occurred (because the call was, for example, a "pair the line"),
    // and the two 2x3's are end-to-end in a 2x6, see if we can squash phantoms.  We squash both

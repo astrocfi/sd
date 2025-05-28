@@ -3419,6 +3419,14 @@ extern void concentric_move(
                       crossing ||
                       analyzer == schema_checkpoint)
                      begin_ptr->cmd.cmd_misc_flags |= CMD_MISC__NO_CHK_ELONG;
+
+                  // Let later code see that this is under explicit "concentric"; watch for
+                  // extremely unesthetic things for ends, like "concentric hinge" from waves;
+                  // will raise horrible warning if so.
+
+                  if ((ss->kind == s2x4 || ss->kind == s_qtag) && !crossing && analyzer == schema_concentric &&
+                      (localmodsout1 & DFM1_CONC_CONCENTRIC_RULES))
+                     begin_ptr->cmd.prior_elongation_bits |= PRIOR_ELONG_CONC_RULES_CHECK_HORRIBLE;
                }
                else if (begin_ptr->kind == s1x2 || begin_ptr->kind == s1x4 || begin_ptr->kind == s1x6) {
                   // Indicate that these people are working around the outside.

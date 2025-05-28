@@ -442,7 +442,7 @@ enum {
 // BEWARE!!  This list must track the table "getout_strings" in sdtables.cpp .
 // BEWARE!!  This list must track the table "old_filename_strings" in sdtables.cpp .
 // BEWARE!!  This list must track the table "filename_strings" in sdtables.cpp .
-// BEWARE!!  This list must track the table "level_threshholds" in sdtop.cpp .
+// BEWARE!!  This list must track the table "level_threshholds_for_pick" in sdtop.cpp .
 
 enum dance_level {
    l_mainstream,

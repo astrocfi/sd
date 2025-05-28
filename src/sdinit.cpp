@@ -1119,7 +1119,7 @@ extern bool get_first_session_line()
 
    // If we are writing a call list file, that's all we do.
 
-   if (glob_abridge_mode >= abridge_mode_writing)
+   if (glob_abridge_mode >= abridge_mode_writing_only)  // Includes abridge_mode_writing_full.
       return true;
 
    // Or if the file didn't exist, or we are in diagnostic mode.
@@ -1202,7 +1202,7 @@ extern void prepare_to_read_menus()
       direction_names[direction_the_music].name_uc = (Cstring) 0;
    }
 
-   if (glob_abridge_mode < abridge_mode_writing) {
+   if (glob_abridge_mode < abridge_mode_writing_only) {   // Not writing out a list, actually running the program.
       int i;
 
       // Find out how big the command menu needs to be.
@@ -1579,7 +1579,7 @@ extern void general_final_exit(int code)
    // "sdtty -help".  In that case, "rewrite_init_file", will do nothing,
    // so it won't matter that "ttu_initialize" wasn't called.
 
-   if (glob_abridge_mode < abridge_mode_writing)
+   if (glob_abridge_mode < abridge_mode_writing_only)   // Not writing out a list, actually running the program.
       rewrite_init_file();
 
    // If this is Sdtty, this next procedure will call "ttu_terminate".
@@ -1667,7 +1667,7 @@ static void build_database_1(abridge_mode_t abridge_mode)
 
       savetag = last_12;     // Get tag, if any.
 
-      dance_level this_level = (dance_level) (read_8_from_database() & 0xFF);
+      dance_level this_calls_level = (dance_level) (read_8_from_database() & 0xFF);
 
       read_halfword();       // Get 16 bits of "callflags1"  overflow stuff.
       uint32 saveflags1overflow = last_datum;
@@ -1699,7 +1699,7 @@ static void build_database_1(abridge_mode_t abridge_mode)
       }
 
       call_root->the_defn.frequency = 0;
-      call_root->the_defn.level = (int) this_level;
+      call_root->the_defn.level = (int) this_calls_level;
       call_root->the_defn.schema = call_schema;
       call_root->the_defn.callflags1 = saveflags1;
       call_root->the_defn.callflagsf = saveflags1overflow << 16;
@@ -1708,20 +1708,16 @@ static void build_database_1(abridge_mode_t abridge_mode)
       read_in_call_definition(&call_root->the_defn, char_count);
 
       // We accept a call if:
-      // (1) we are writing out just this list, and the call matches the desired level exactly,
+      // (1) we are writing out just this list, and the call matches the indicated level exactly,
       //          or
-      // (2) we are writing out this list and those below, and the call is <= the desired level,
-      //          or
-      // (3) we are running, and the call is <= the desired level or the
-      //    "higher acceptable level".
-      //    The latter is c3x if the desired level is c3, or c4x if the desired level is c4.
-      //    That way, c3x calls will be included.  We will print a warning if they are used.
+      // (2) we are either writing out this list and those below, or we are running,
+      //     and the call is <= the indicated level,
+      //     EXCEPT THAT: if the "-no_c3x" switch has been given, C3X calls will not be accepted
+      //     even if the indicated level is higher than that.
 
-      dance_level acceptable_level = calling_level;
-      if (calling_level == l_c4) acceptable_level = l_c4a;
-
-      if (this_level <= calling_level &&
-          (abridge_mode != abridge_mode_writing || this_level >= acceptable_level)) {
+      if (this_calls_level <= calling_level &&
+          (!ui_options.no_c3x || this_calls_level != l_c3x) &&
+          (abridge_mode != abridge_mode_writing_only || this_calls_level == calling_level)) {
 
          // Process tag base calls specially.
          if (call_root->the_defn.callflags1 & CFLAG1_BASE_TAG_CALL_MASK) {
@@ -2043,7 +2039,7 @@ bool open_session(int argc, char **argv)
    for (argno=1; argno < nargs; argno++) {
       if (args[argno][0] == '-') {
          if (strcmp(&args[argno][1], "write_list") == 0) {
-            glob_abridge_mode = abridge_mode_writing;
+            glob_abridge_mode = abridge_mode_writing_only;
             if (argno+1 < nargs)
                strncpy(abridge_filename, args[argno+1], MAX_TEXT_LINE_LENGTH);
          }
@@ -2089,6 +2085,8 @@ bool open_session(int argc, char **argv)
          }
          else if (strcmp(&args[argno][1], "delete_abridge") == 0)
             { glob_abridge_mode = abridge_mode_deleting_abridge; continue; }
+         else if (strcmp(&args[argno][1], "no_c3x") == 0)
+            { ui_options.no_c3x = true; continue; }
          else if (strcmp(&args[argno][1], "no_intensify") == 0)
             { ui_options.no_intensify = true; continue; }
          else if (strcmp(&args[argno][1], "reverse_video") == 0)
@@ -2295,7 +2293,7 @@ bool open_session(int argc, char **argv)
    bool binaryfileflags[2] = {true, false};
    FILE *database_input_files[2];
 
-   if (glob_abridge_mode >= abridge_mode_writing) {
+   if (glob_abridge_mode >= abridge_mode_writing_only) {  // Includes abridge_mode_writing_full.
       database_input_files[1] = fopen(abridge_filename, "w");
 
       if (!database_input_files[1])

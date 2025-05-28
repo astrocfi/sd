@@ -581,6 +581,7 @@ enum warning_index {
    warn__tasteless_junk,
    warn__tasteless_slide_thru,
    warn__went_to_other_side,
+   warn__horrible_conc_hinge,
    warn__this_is_tight,
    warn__compress_carefully,
    warn__brute_force_mxn,

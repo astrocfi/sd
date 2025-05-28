@@ -190,7 +190,7 @@ BEGIN
                     IDC_STATIC,53,19,144,8
     CTEXT           "conditions; for details see the file COPYING.txt.",
                     IDC_STATIC,53,29,148,8
-    CTEXT           "SD Version 38.59:   Copyright © 1990-2014 All rights reserved.",
+    CTEXT           "SD Version 38.60:   Copyright © 1990-2014 All rights reserved.",
                     IDC_STATIC,13,42,199,8
     CTEXT           "William B. Ackerman and Stephen Gildea",IDC_STATIC,47,
                     52,130,8
@@ -200,8 +200,7 @@ BEGIN
     CTEXT           "GUI Version 4.10:    Copyright © 1995 All rights reserved.",
                     IDC_STATIC,24,82,180,8
     CTEXT           "Robert E. Cays",IDC_STATIC,88,92,48,8
-    CTEXT           "Copyright © 1996 Charles Petzold",IDC_STATIC,59,102,107,
-                    8
+    CTEXT           "Copyright © 1996 Charles Petzold",IDC_STATIC,59,102,107,8
     DEFPUSHBUTTON   "OK",IDOK,97,118,32,14,WS_GROUP
 END
 

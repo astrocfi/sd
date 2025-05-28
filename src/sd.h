@@ -611,7 +611,8 @@ struct small_setup {
 
 
 enum {
-   PRIOR_ELONG_BASE_FOR_TANDEM = 0x00010000
+   PRIOR_ELONG_BASE_FOR_TANDEM = 0x00010000,
+   PRIOR_ELONG_CONC_RULES_CHECK_HORRIBLE = 0x00020000
 };
 
 struct setup_command {
@@ -2659,13 +2660,13 @@ extern SDLIB_API int history_allocation;                            /* in SDTOP 
 extern SDLIB_API int written_history_items;                         /* in SDTOP */
 
 extern SDLIB_API call_with_name **base_calls;                       /* in SDTOP */
-extern SDLIB_API dance_level level_threshholds[];                   /* in SDTOP */
+extern SDLIB_API dance_level level_threshholds_for_pick[];          /* in SDTOP */
 extern SDLIB_API int hashed_randoms;                                /* in SDTOP */
 
 extern SDLIB_API error_flag_type global_error_flag;                 /* in SDUTIL */
 extern SDLIB_API bool global_cache_failed_flag;                     /* in SDUTIL */
 extern SDLIB_API int global_cache_miss_reason[3];                   /* in SDUTIL */
-extern SDLIB_API uims_reply_thing global_reply;                           /* in SDUTIL */
+extern SDLIB_API uims_reply_thing global_reply;                     /* in SDUTIL */
 extern configuration *clipboard;                                    /* in SDUTIL */
 extern int clipboard_size;                                          /* in SDUTIL */
 extern bool retain_after_error;                                     /* in SDUTIL */

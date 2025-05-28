@@ -431,6 +431,12 @@ The words you use are up to you.  You are responsible for making clear to the da
 Below about C3A, you don't need to type the "(intermediate)".  Just type "middle" followed by <enter> or <tab>,
 and command completion will finish it for you.
 
+@unnumberedsec Why can't @code{Sd} do @code{all 8} calls involving diamonds, from a thar?
+For example, @code{diamond circulate} or @code{flip the diamond}?
+
+Because your dancers are smarter than @code{Sd}.  You need to give the @code{all 8 (diamonds)} concept, to tell
+the program what you want.  You probably don't need to say that to the dancers.
+
 @unnumberedsec How can I identify the center wave of 6 in a 3x1 diamond?
 
 This is the setup that you would get after, for example, @strong{1/2
@@ -448,7 +454,7 @@ Use the designator @strong{center column of 6}.
 
 @unnumberedsec How can I do @strong{plenty} from diamonds?
 
-Notwithstanding the Callerlab definitions, the program considers @strong{plenty}
+The program considers @strong{plenty}
 @emph{always} to have the outsides quarter right.  There is a call @strong{plenty,
 ends go as you are} that gets the action that you probably want.
 
@@ -487,8 +493,6 @@ question mark, and @code{Sd} will remind you of what to do.
 
 Just type it.  But there is no call @strong{press ahead and trade}.  You must say
 @strong{girls press ahead} followed by @strong{girls trade}.
-
-Previous versions of the program required you to say @strong{in your blocks girls trade}.
 
 @unnumberedsec How can I do @strong{pinwheel}?
 

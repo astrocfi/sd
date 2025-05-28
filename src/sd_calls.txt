@@ -57,7 +57,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "38.59"
+version "38.60"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve dont_raise_overcast
@@ -20802,6 +20802,12 @@ call "circulate" mainstream tag circulate
    // Otherwise, use the usual interpretation.
    setup 2x4 crosswave rotate
       array [CR0N CR1N AL1S AL0S ZM2W ZM3W ZM7W ZM6W]
+   // Handle similar things for 2x2 facing in or out.
+   setup 2x2 1x4 qualifier explicit in in_or_out no_cutting_through
+      array [0 0 ZM3N ZM0N]
+   setup 2x2 1x4 rotate qualifier explicit out in_or_out
+      array [CR0N AL1S 0 0]
+   // Otherwise, use the usual interpretation.
    setup 2x2 dmd rotate no_cutting_through
       array [CR0N AL0S ZM1W ZM3W]
    setup 2x1 1x2 rotate

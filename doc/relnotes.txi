@@ -1,7 +1,7 @@
 \input texinfo @c %**start of header -*-texinfo-*-
 @setfilename relnotes.info
 @settitle Sd Release Notes
-@c Time-stamp: <31 Jan 2014 wba>
+@c Time-stamp: <8 Feb 2014 wba>
 @iftex
 @headings off
 @oddheading @| @| @thispage
@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 38.59
-@set title2 Database version = 38.59 format = 317
+@set title1 RELEASE NOTES FOR VERSION 38.60
+@set title2 Database version = 38.60 format = 317
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 38.60::
 * 38.59::
 * 38.58::
 * 38.57::
@@ -98,7 +99,7 @@ The files @file{relnotes03.txi} and @file{relnotes98.txi} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 38.59, Top, (dir)
+@node Intro, 38.60, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -109,11 +110,21 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2014 William B. Ackerman
 @sp 3
 @menu
-* 38.59::               Changes in the current version
+* 38.60::               Changes in the current version
 @end menu
 
 @c ************
-@node 38.59, 38.58, Intro, Top
+@node 38.60, 38.59, Intro, Top
+@unnumberedsec Version 38.60 changes
+
+A failure to read command-line arguments correctly in Sd, leading to such things as wrong icon colors, was fixed.
+Sdtty was not affected.
+
+Ability to handle things like @strong{team up}, with phantom directions dictated by @strong{assume}
+commands, was improved.
+
+@c ************
+@node 38.59, 38.58, 38.60, Top
 @unnumberedsec Version 38.59 changes
 
 The @strong{melded as couples} and @strong{melded tandem}, along with the twosome variants of same, are now

@@ -544,7 +544,7 @@ call_with_name *do_pick()
    // which would make the uniquefication fail, so we could see the same thing twice.
 
    if ((search_goal == command_level_call || search_goal == command_8person_level_call) &&
-       ((dance_level) result->the_defn.level) < level_threshholds[calling_level])
+       ((dance_level) result->the_defn.level) < level_threshholds_for_pick[calling_level])
       fail_no_retry("Level reject.");
 
    rejectflag = pick_type_table[current_pick_type].exhaustive_search ?

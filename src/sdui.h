@@ -196,7 +196,7 @@ enum abridge_mode_t {
                                   // requested that the abridgement specified for
                                   // the current session be removed.
    abridge_mode_abridging,        // Running, with abridgement list.
-   abridge_mode_writing,          // Just writing the list; don't run the program itself.
+   abridge_mode_writing_only,     // Just writing the list; don't run the program itself.
    abridge_mode_writing_full      // Same, but write all lower lists as well.
 };
 
@@ -244,6 +244,7 @@ class ui_option_type {
    int force_session;
    int sequence_num_override;
    int no_graphics;       // 1 = "no_checkers"; 2 = "no_graphics"
+   bool no_c3x;
    bool no_intensify;
    bool reverse_video;    // T = white-on-black; F = black-on-white.
    bool pastel_color;     // T = use pastel red/blue for color by gender.

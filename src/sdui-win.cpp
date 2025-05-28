@@ -1182,11 +1182,14 @@ int WINAPI WinMain(
    // Initialize all the callbacks that sdlib will need.
    iofull ggg;
 
-   // Run the Sd program.  The system-supplied variables "__argc"
-   // and "__argv" provide the predigested-as-in-traditional-C-programs
+   // Run the Sd program.  The system-supplied variables "_argc"
+   // and "_argv" provide the predigested-as-in-traditional-C-programs
    // command-line arguments.
+   //
+   // January, 2014:  An upgrade to MinGW changed the names of these.
+   // They had previously had two initial underscores.
 
-   return sdmain(__argc, __argv, ggg);
+   return sdmain(_argc, _argv, ggg);
 }
 
 
@@ -1990,7 +1993,7 @@ static void Startup_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
          if (IsDlgButtonChecked(hwnd, IDC_ABRIDGE))
             glob_abridge_mode = abridge_mode_abridging;
          else if (IsDlgButtonChecked(hwnd, IDC_WRITE_LIST))
-            glob_abridge_mode = abridge_mode_writing;
+            glob_abridge_mode = abridge_mode_writing_only;
          else if (IsDlgButtonChecked(hwnd, IDC_WRITE_FULL_LIST))
             glob_abridge_mode = abridge_mode_writing_full;
          else if (IsDlgButtonChecked(hwnd, IDC_NORMAL))
@@ -2068,7 +2071,7 @@ static BOOL Startup_OnInitDialog(HWND hwnd, HWND hwndFocus, LPARAM lParam)
    // Select the default radio buttons.
 
    switch (glob_abridge_mode) {
-   case abridge_mode_writing:
+   case abridge_mode_writing_only:
       CheckRadioButton(hwnd, IDC_NORMAL, IDC_ABRIDGE, IDC_WRITE_LIST);
       EnableWindow(GetDlgItem(hwnd, IDC_ABRIDGE_NAME), TRUE);
       if (abridge_filename[0]) SetDlgItemText(hwnd, IDC_ABRIDGE_NAME, abridge_filename);

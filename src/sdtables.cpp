@@ -435,6 +435,7 @@ Cstring warning_strings[] = {
    /*  warn__tasteless_junk      */   "*The algorithmic nondeterminism of this usage is truly extraordinary.",
    /*  warn__tasteless_slide_thru*/   "*Slide thru from left-handed miniwave may be controversial.",
    /*  warn__went_to_other_side  */   "*People went to the other side; is this really what you want?",
+   /*  warn__horrible_conc_hinge */   "*Extremely awkward for outsides; is this really what you want?",
    /*  warn__this_is_tight       */   "*This is tight; it may not be a good combination.",
    /*  warn__compress_carefully  */   "*Preserve the phantom spots internal to the outer setups.",
    /*  warn__brute_force_mxn     */   "*Check that you are satisfied, and that the dancers will be satisfied, that this usage is correct, effective, and unambiguous.",

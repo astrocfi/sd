@@ -139,7 +139,7 @@ and the following external variables:
    interactivity
    database_version
    testing_fidelity
-   level_threshholds
+   level_threshholds_for_pick
    allowing_modifications
    hashed_randoms
    concept_sublist_sizes
@@ -187,11 +187,11 @@ int written_history_items;
 // before that will never be subject to being erased.
 int no_erase_before_this;
 
-/* When written_history_items is positive, this tells how many of the initial lines
-   did not have pictures forced on (other than having been drawn as a natural consequence
-   of the "draw_pic" flag being on.)  If this number ever becomes greater than
-   written_history_items, that's OK.  It just means that none of the lines had
-   forced pictures. */
+// When written_history_items is positive, this tells how many of the initial lines
+// did not have pictures forced on (other than having been drawn as a natural consequence
+// of the "draw_pic" flag being on.)  If this number ever becomes greater than
+// written_history_items, that's OK.  It just means that none of the lines had
+// forced pictures.
 int written_history_nopic;
 
 // This list tells what level calls will be accepted for the "pick level call"
@@ -199,7 +199,7 @@ int written_history_nopic;
 // to be exactly on the indicated level, as long as it's plausibly close.
 //
 // BEWARE!!  This list is keyed to the definition of "dance_level" in database.h .
-dance_level level_threshholds[] = {
+dance_level level_threshholds_for_pick[] = {
    l_mainstream,
    l_plus,
    l_a1,
@@ -209,9 +209,9 @@ dance_level level_threshholds[] = {
    l_c3a,
    l_c3a,     // If c3 is given, a c3a call is OK.
    l_c3a,     // If c3x is given, a c3a call is OK.
-   l_c3x,     // If c4a is given, a c3x call is OK.
-   l_c3x,     // If c4 is given, a c3x call is OK.
-   l_c3x,     // If c4x is given, a c3x call is OK.
+   l_c3x,     // If c4a is given, a c3x call is OK (unless the "no_c3x" switch has been given.)
+   l_c3x,     // Same.
+   l_c3x,     // Same.
    l_dontshow,
    l_nonexistent_concept};
 
@@ -3689,20 +3689,20 @@ extern callarray *assoc(
 
       tt.assump_negate = 0;
 
-      /* During initialization, we will be called with a null pointer for ss.
-         We need to be careful, and err on the side of acceptance. */
+      // During initialization, we will be called with a null pointer for ss.
+      // We need to be careful, and err on the side of acceptance.
 
       if (!ss) return p;
 
-      /* The bits of the "qualifierstuff" field have the following meaning
-                  (see definitions in database.h):
-         8000  left/out only (put 2 into assump_both)
-         4000  right/in only (put 1 into assump_both)
-         2000  must be live
-         1000  must be T-boned
-         0800  must not be T-boned (both together means explicit assumption)
-         0780  if these 4 bits are nonzero, they must match the number plus 1
-         007F  the qualifier itself (we allow 127 qualifiers) */
+      // The bits of the "qualifierstuff" field have the following meaning
+      //          (see definitions in database.h):
+      // 8000  left/out only (put 2 into assump_both)
+      // 4000  right/in only (put 1 into assump_both)
+      // 2000  must be live
+      // 1000  must be T-boned
+      // 0800  must not be T-boned (both together means explicit assumption)
+      // 0780  if these 4 bits are nonzero, they must match the number plus 1
+      // 007F  the qualifier itself (we allow 127 qualifiers)
 
       if ((p->qualifierstuff & QUALBIT__NUM_MASK) != 0) {
          number_used = true;
