@@ -1035,9 +1035,10 @@ extern void divided_setup_move(
    int i, j;
    int vflags[8];
    setup x[8];
-   setup_kind kn2;
+   setup_kind kn_twicerem;
 
-   if (!maps) fail("Can't do this concept in this setup.");
+   if (!maps || ss->kind != maps->outer_kind)
+      fail("Can't do this concept in this setup.");
 
    assumption_thing t = ss->cmd.cmd_assume;
    setup_kind kn = maps->inner_kind;
@@ -1052,8 +1053,8 @@ extern void divided_setup_move(
       vflags[j] = 0;
 
       if (j == 1 && maps->map_kind == MPKIND__SPEC_TWICEREM) {
-         kn2 = (setup_kind) *getptr++;
-         insize = setup_attrs[kn2].setup_limits+1;
+         kn_twicerem = (setup_kind) *getptr++;
+         insize = setup_attrs[kn_twicerem].setup_limits+1;
       }
 
       for (i=0; i<insize; i++) {
@@ -1071,8 +1072,7 @@ extern void divided_setup_move(
    switch (phancontrol) {
       case phantest_both:
          if (!(vflags[0] && vflags[1]))
-            /* Only one of the two setups is occupied. */
-            warn(warn__stupid_phantom_clw);
+            warn(warn__stupid_phantom_clw);   // Only one of the two setups is occupied.
          break;
       case phantest_only_one:
          if (vflags[0] && vflags[1]) fail("Can't find the setup to work in.");
@@ -1092,7 +1092,7 @@ extern void divided_setup_move(
             warn(warn__stupid_phantom_clw);
          break;
       case phantest_2x2_both:
-         /* Test for "C1" blocks. */
+         // Test for "C1" blocks.
          if (!((vflags[0] | vflags[2]) && (vflags[1] | vflags[3])))
             warn(warn__stupid_phantom_clw);
          break;
@@ -1101,7 +1101,7 @@ extern void divided_setup_move(
             warn(warn__stupid_phantom_clw);
          break;
       case phantest_2x2_only_two:
-         /* Test for NOT "C1" blocks. */
+         // Test for NOT "C1" blocks.
          if ((vflags[0] | vflags[2]) && (vflags[1] | vflags[3])) fail("Not in blocks.");
          break;
    }
@@ -1112,8 +1112,8 @@ extern void divided_setup_move(
    if (maps->map_kind == MPKIND__SPEC_ONCEREM)
       x[1].kind = (setup_kind) maps->maps[insize*2];
    else if (maps->map_kind == MPKIND__SPEC_TWICEREM) {
-      x[1].kind = kn2;
-      x[2].kind = kn2;
+      x[1].kind = kn_twicerem;
+      x[2].kind = kn_twicerem;
    }
 
    if (t.assumption == cr_couples_only || t.assumption == cr_miniwaves) {
@@ -1204,7 +1204,8 @@ extern void overlapped_setup_move(setup *ss, Const map_thing *maps,
    setup x[8];
    assumption_thing t = ss->cmd.cmd_assume;
 
-   if (!maps) fail("Can't do this concept in this setup.");
+   if (!maps || ss->kind != maps->outer_kind)
+      fail("Can't do this concept in this setup.");
 
    setup_kind kn = maps->inner_kind;
    int insize = setup_attrs[kn].setup_limits+1;
@@ -2167,13 +2168,15 @@ extern void distorted_move(
       1 - user claims this is some kind of lines
       3 - user claims this is waves
    linesp & 8 != 0:
-      user claims this is a single tidal (grand) setup
+      this is a single tidal (grand) setup
    linesp & 16 != 0:
-      user claims this is distorted 1/4 tags or diamonds or whatever
+      this is distorted 1/4 tags or diamonds or whatever
    linesp & 32 != 0:
-      user claims this is C/L/W of 3 (not distorted)
+      this is C/L/W of 3 (not distorted)
    linesp & 64 != 0:
-      user claims this is staggered C/L/W of 3
+      this is staggered C/L/W of 3
+   linesp & 128 != 0:
+      this is offset split phantom boxes
 
    Global_tbonetest has the OR of all the people, or all the standard people if
       this is "standard", so it is what we look at to interpret the
@@ -2193,7 +2196,7 @@ extern void distorted_move(
    map_thing *map_ptr;
    uint32 mapcode = ~0UL;
    int rotate_back = 0;
-   int livemask = global_livemask;
+   uint32 livemask = global_livemask;
    uint32 linesp = parseptr->concept->value.arg2;
    long_boolean zlines = TRUE;
 
@@ -2357,6 +2360,29 @@ extern void distorted_move(
       }
 
       fail("Can't do this concept in this setup.");
+   }
+   else if (linesp & 128) {
+      // Offset split phantom boxes.
+      static const uint32 map_code_table[4] = {0, MAPCODE(s2x4,2,MPKIND__OFFS_L_HALF,0),
+                                               MAPCODE(s2x4,2,MPKIND__OFFS_R_HALF,0), 0};
+      int i, j;
+
+      do_matrix_expansion(ss, CONCPROP__NEEDK_3X8, FALSE);
+      if (ss->kind != s3x8) fail("Can't do this concept in this setup.");
+
+      // Need to recompute this, darn it.
+      global_livemask = 0;
+      for (i=0, j=1; i<=setup_attrs[ss->kind].setup_limits; i++, j<<=1) {
+         if (ss->people[i].id1) global_livemask |= j;
+      }
+
+      int key = 0;
+      if ((global_livemask & 0x00F00F) == 0) key |= 1;
+      if ((global_livemask & 0x0F00F0) == 0) key |= 2;
+
+      mapcode = map_code_table[key];
+      if (mapcode == 0) fail("Can't find offset 2x4's.");
+      goto do_divided_call;
    }
    else {
       // Look for singular "offset C/L/W" in a 2x4.
@@ -3230,12 +3256,10 @@ extern void common_spot_move(
 
    if (ss->kind == s_c1phan) {
       do_matrix_expansion(ss, CONCPROP__NEEDK_4X4, FALSE);
-      /* Shut off the "check a 4x4 matrix" warning that this will raise. */
-      history[history_ptr+1].warnings.bits[warn__check_4x4_start>>5] &=
-         ~(1 << (warn__check_4x4_start & 0x1F));
-      /* Unless, of course, we already had that warning. */
-      history[history_ptr+1].warnings.bits[warn__check_4x4_start>>5] |=
-         saved_warnings.bits[warn__check_4x4_start>>5];
+      // Shut off any "check a 4x4 matrix" warning that this raised.
+      history[history_ptr+1].warnings.clearbit(warn__check_4x4_start);
+      // Unless, of course, we already had that warning.
+      history[history_ptr+1].warnings.setmultiple(saved_warnings);
    }
 
    for (i=0, jbit=1, livemask = 0; i<=setup_attrs[ss->kind].setup_limits; i++, jbit<<=1) {
@@ -3383,13 +3407,11 @@ extern void common_spot_move(
       *result = the_results[0];
    }
 
-   /* Turn of any "do your part" warnings that arose during execution
-      of the subject call.  The dancers already know. */
-
-   history[history_ptr+1].warnings.bits[warn__do_your_part>>5] &= ~(1 << (warn__do_your_part & 0x1F));
-
-   for (i=0 ; i<WARNING_WORDS ; i++)
-      history[history_ptr+1].warnings.bits[i] |= saved_warnings.bits[i];
+   // Turn off any "do your part" warnings that arose during execution
+   // of the subject call.  The dancers already know.
+   history[history_ptr+1].warnings.clearbit(warn__do_your_part);
+   // Restore any warnings from before.
+   history[history_ptr+1].warnings.setmultiple(saved_warnings);
 }
 
 

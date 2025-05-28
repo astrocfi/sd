@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-2000  William B. Ackerman.
+    Copyright (C) 1990-2001  William B. Ackerman.
     Copyright (C) 1993  Stephen Gildea
     Copyright (C) 1993  Alan Snyder
 
@@ -784,24 +784,24 @@ typedef struct {
      0x00800000 - side
      0x00400000 - boy
      0x00200000 - girl             **** end of permanent bits
-      4 000 000 - roll direction is CCW
-      2 000 000 - roll direction is neutral
-      1 000 000 - roll direction is CW
-        400 000 - fractional stability enabled
-        200 000 - stability "v" field -- 2 bits
-        100 000 -     "
-         40 000 - stability "r" field -- 3 bits
-         20 000 -     "
-         10 000 -     "
-          4 000 - live person (just so at least one bit is always set)
-          2 000 - active phantom (see below, under XPID_MASK)
-          1 000 - virtual person (see below, under XPID_MASK)
-            700 - these 3 bits identify actual person
-             60 - these 2 bits must be clear for rotation
-             10 - part of rotation (facing north/south)
-              4 - bit must be clear for rotation
-              2 - part of rotation
-              1 - part of rotation (facing east/west)
+     0x00100000 - roll direction is CCW
+     0x00080000 - roll direction is neutral
+     0x00040000 - roll direction is CW
+     0x00020000 - fractional stability enabled
+     0x00010000 - stability "v" field -- 2 bits
+     0x00008000 -     "
+     0x00004000 - stability "r" field -- 3 bits
+     0x00002000 -     "
+     0x00001000 -     "
+     0x00000800 - live person (just so at least one bit is always set)
+     0x00000400 - active phantom (see below, under XPID_MASK)
+     0x00000200 - virtual person (see below, under XPID_MASK)
+     0x000001C0 - these 3 bits identify actual person
+     0x00000030 - these 2 bits must be clear for rotation
+     0x00000008 - part of rotation (facing north/south)
+     0x00000004 - bit must be clear for rotation
+     0x00000002 - part of rotation
+     0x00000001 - part of rotation (facing east/west)
 */
 
 #define ID1_PERM_NSG           0x40000000UL
@@ -1637,6 +1637,7 @@ typedef enum {
    warn__check_c1_phan,
    warn__check_dmd_qtag,
    warn__check_quad_dmds,
+   warn__may_be_fudgy,
    warn__check_3x4,
    warn__check_2x4,
    warn__check_hokey_2x4,
@@ -1865,25 +1866,66 @@ typedef struct {
 #define CONCPROP__PERMIT_REVERSE   0x20000000UL
 #define CONCPROP__PERMIT_MODIFIERS 0x40000000UL
 
-/* This allows 128 warnings. */
-/* BEWARE!!  If this is changed, this initializers for things like "no_search_warnings"
-   in sdtop.cpp will need to be updated. */
-#define WARNING_WORDS 4
+#ifdef __cplusplus
 
-typedef struct {
+class warning_info {
+ public:
+
+   // Zero-arg constructor, clears the words.
+   warning_info()
+      { for (int i=0 ; i<WARNING_WORDS ; i++) bits[i] = 0; }
+
+   bool operator != (const warning_info & rhs)
+      {
+         for (int i=0 ; i<WARNING_WORDS ; i++) { if ((bits[i] != rhs.bits[i])) return true; }
+         return false;
+      }
+
+   bool operator == (const warning_info & rhs)
+      {
+         for (int i=0 ; i<WARNING_WORDS ; i++) { if ((bits[i] != rhs.bits[i])) return false; }
+         return true;
+      }
+
+   void setbit(warning_index i)
+      { bits[i>>5] |= 1 << (i & 0x1F); }
+
+   void clearbit(warning_index i)
+      { bits[i>>5] &= ~(1 << (i & 0x1F)); }
+
+   bool testbit(warning_index i) const
+      { return (bits[i>>5] & (1 << (i & 0x1F))) != 0; }
+
+   bool testmultiple(const warning_info & rhs) const
+      {
+         for (int i=0 ; i<WARNING_WORDS ; i++) { if ((bits[i] & rhs.bits[i])) return true; }
+         return false;
+      }
+
+   void setmultiple(const warning_info & rhs)
+      { for (int i=0 ; i<WARNING_WORDS ; i++) bits[i] |= rhs.bits[i]; }
+
+   void clearmultiple(const warning_info & rhs)
+      { for (int i=0 ; i<WARNING_WORDS ; i++) bits[i] &= ~rhs.bits[i]; }
+
+ private:
+   enum { WARNING_WORDS = (warn__NUM_WARNINGS+31)>>5 };
+
    uint32 bits[WARNING_WORDS];
-} warning_info;
+};
 
-typedef struct {           /* This record is one state in the evolving sequence. */
+struct configuration {           // This record is one state in the evolving sequence.
    parse_block *command_root;
    setup state;
    resolve_indicator resolve_flag;
    long_boolean draw_pic;
    warning_info warnings;
-   int centersp;           /* only nonzero for history[1] */
-   int text_line;          /* how many lines of text existed after this item was written,
-                              only meaningful if "written_history_items" is >= this index */
-} configuration;
+   int centersp;           // Only nonzero for history[1].
+   int text_line;          // How many lines of text existed after this item was written,
+                           // only meaningful if "written_history_items" is >= this index.
+};
+
+#endif
 
 typedef struct {
    uint32 concept_prop;      /* Takes bits of the form CONCPROP__??? */
@@ -2363,6 +2405,7 @@ enum chk_type {
    chk_indep_box,
    chk_star,
    chk_dmd_qtag,
+   chk_dmd_qtag_new,
    chk_qtag,
    chk_qbox,
    chk_peelable,
@@ -2447,11 +2490,9 @@ enum meta_key_kind {
    meta_key_nth_part_work,
    meta_key_skip_nth_part,
    meta_key_shift_n,
-   meta_key_shifty,
    meta_key_echo,
    meta_key_rev_echo,   // Must follow meta_key_echo.
-   meta_key_shift_half,
-   meta_key_shift_n_half
+   meta_key_shift_half
 };
 
 enum revert_weirdness_type {
@@ -2462,21 +2503,21 @@ enum revert_weirdness_type {
 
 
 
-extern int session_index;                                           /* in SDSI */
-extern int random_number;                                           /* in SDSI */
-extern char *database_filename;                                     /* in SDSI */
-extern char *new_outfile_string;                                    /* in SDSI */
-extern char *call_list_string;                                      /* in SDSI */
-extern FILE *call_list_file;                                        /* in SDSI */
+extern int session_index;                                     // in SDSI
+extern int random_number;                                     // in SDSI
+extern char *database_filename;                               // in SDSI
+extern char *new_outfile_string;                              // in SDSI
+extern char *call_list_string;                                // in SDSI
+extern FILE *call_list_file;                                  // in SDSI
 
-extern SDLIB_API long_boolean showing_has_stopped;                  /* in SDMATCH */
-extern SDLIB_API match_result GLOB_match;                           /* in SDMATCH */
-extern SDLIB_API int GLOB_space_ok;                                 /* in SDMATCH */
-extern SDLIB_API int GLOB_yielding_matches;                         /* in SDMATCH */
-extern SDLIB_API char GLOB_full_input    [];                        /* in SDMATCH */
-extern SDLIB_API char GLOB_extension     [];                        /* in SDMATCH */
-extern SDLIB_API char GLOB_extended_input[];                        /* in SDMATCH */
-extern SDLIB_API int GLOB_full_input_size;                          /* in SDMATCH */
+extern SDLIB_API long_boolean showing_has_stopped;            // in SDMATCH
+extern SDLIB_API match_result GLOB_match;                     // in SDMATCH
+extern SDLIB_API int GLOB_space_ok;                           // in SDMATCH
+extern SDLIB_API int GLOB_yielding_matches;                   // in SDMATCH
+extern SDLIB_API char GLOB_user_input[];                      // in SDMATCH
+extern SDLIB_API char GLOB_full_extension[];                  // in SDMATCH
+extern SDLIB_API char GLOB_echo_stuff[];                      // in SDMATCH
+extern SDLIB_API int GLOB_user_input_size;                    // in SDMATCH
 
 extern SDLIB_API short int *concept_list;        /* indices of all concepts */
 extern SDLIB_API int concept_list_length;
@@ -2674,10 +2715,12 @@ extern uint32 global_selectmask;                                    /* in SDCONC
 extern uint32 global_tboneselect;                                   /* in SDCONCPT */
 
 extern parse_block *last_magic_diamond;                             /* in SDTOP */
+#ifdef __cplusplus
 extern warning_info no_search_warnings;                             /* in SDTOP */
 extern warning_info conc_elong_warnings;                            /* in SDTOP */
 extern warning_info dyp_each_warnings;                              /* in SDTOP */
 extern warning_info useless_phan_clw_warnings;                      /* in SDTOP */
+#endif
 extern int concept_sublist_sizes[NUM_CALL_LIST_KINDS];              /* in SDTOP */
 extern short int *concept_sublists[NUM_CALL_LIST_KINDS];            /* in SDTOP */
 extern int good_concept_sublist_sizes[NUM_CALL_LIST_KINDS];         /* in SDTOP */
@@ -2819,7 +2862,6 @@ extern map_thing map_2x4_int_pgram;                                 /* in SDTABL
 extern map_thing map_2x4_trapezoid;                                 /* in SDTABLES */
 extern map_thing map_4x4_ns;                                        /* in SDTABLES */
 extern map_thing map_4x4_ew;                                        /* in SDTABLES */
-extern map_thing map_vsplit_f;                                      /* in SDTABLES */
 extern map_thing map_stairst;                                       /* in SDTABLES */
 extern map_thing map_ladder;                                        /* in SDTABLES */
 extern map_thing map_but_o;                                         /* in SDTABLES */
@@ -3365,7 +3407,7 @@ extern long_boolean fix_n_results(int arity, setup_kind goal, setup z[], uint32 
 
 extern resolve_indicator resolve_p(setup *s);
 
-extern long_boolean warnings_are_unacceptable(long_boolean strict);
+extern bool warnings_are_unacceptable(bool strict);
 
 extern void normalize_setup(setup *ss, normalize_action action) THROW_DECL;
 

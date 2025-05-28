@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-1999  William B. Ackerman.
+    Copyright (C) 1990-2001  William B. Ackerman.
 
     This file is unpublished and contains trade secrets.  It is
     to be used by permission only and not to be disclosed to third
@@ -233,7 +233,10 @@ SDLIB_API void write_resolve_text(long_boolean doing_file)
       /* In a singer, "pass thru, allemande left", "trade by, allemande left", or
          "cross by, allemande left" can be just "swing and promenade". */
 
-      if (singing_call_mode != 0 && (index == resolve_pth_la || index == resolve_tby_la || index == resolve_xby_la)) {
+      if (singing_call_mode != 0 &&
+          (index == resolve_pth_la ||
+           index == resolve_tby_la ||
+           index == resolve_xby_la)) {
          first = first_part_none;
          mainpart = main_part_swing;
       }
@@ -503,42 +506,45 @@ static long_boolean inner_search(command_kind goal,
          for (j=0; j<8; j++)
             if ((ns->people[j].id1 & d_mask) != goal_directions[j]) goto what_a_loss;
 
-         {
-            int p0 = ns->people[perm_indices[0]].id1 & PID_MASK;
-            int p1 = ns->people[perm_indices[1]].id1 & PID_MASK;
-            int p2 = ns->people[perm_indices[2]].id1 & PID_MASK;
-            int p3 = ns->people[perm_indices[3]].id1 & PID_MASK;
-            int p4 = ns->people[perm_indices[4]].id1 & PID_MASK;
-            int p5 = ns->people[perm_indices[5]].id1 & PID_MASK;
-            int p6 = ns->people[perm_indices[6]].id1 & PID_MASK;
-            int p7 = ns->people[perm_indices[7]].id1 & PID_MASK;
+         int p0 = ns->people[perm_indices[0]].id1 & PID_MASK;
+         int p1 = ns->people[perm_indices[1]].id1 & PID_MASK;
+         int p2 = ns->people[perm_indices[2]].id1 & PID_MASK;
+         int p3 = ns->people[perm_indices[3]].id1 & PID_MASK;
+         int p4 = ns->people[perm_indices[4]].id1 & PID_MASK;
+         int p5 = ns->people[perm_indices[5]].id1 & PID_MASK;
+         int p6 = ns->people[perm_indices[6]].id1 & PID_MASK;
+         int p7 = ns->people[perm_indices[7]].id1 & PID_MASK;
 
-            /* Test for absolute sex correctness if required. */
-            if (!current_reconciler->allow_eighth_rotation && (p0 & 0100)) goto what_a_loss;
+         // Test for absolute sex correctness if required.
+         if (!current_reconciler->allow_eighth_rotation && (p0 & 0100)) goto what_a_loss;
 
-            p7 = (p7 - p6) & PID_MASK;
-            p6 = (p6 - p5) & PID_MASK;
-            p5 = (p5 - p4) & PID_MASK;
-            p4 = (p4 - p3) & PID_MASK;
-            p3 = (p3 - p2) & PID_MASK;
-            p2 = (p2 - p1) & PID_MASK;
-            p1 = (p1 - p0) & PID_MASK;
+         p7 = (p7 - p6) & PID_MASK;
+         p6 = (p6 - p5) & PID_MASK;
+         p5 = (p5 - p4) & PID_MASK;
+         p4 = (p4 - p3) & PID_MASK;
+         p3 = (p3 - p2) & PID_MASK;
+         p2 = (p2 - p1) & PID_MASK;
+         p1 = (p1 - p0) & PID_MASK;
 
-            /* Test each sex individually for uniformity of offset around the ring. */
-            if (p1 != p3 || p3 != p5 || p5 != p7 || p2 != p4 || p4 != p6)
-               goto what_a_loss;
+         // Test each sex individually for uniformity of offset around the ring.
+         if (p1 != p3 || p3 != p5 || p5 != p7 || p2 != p4 || p4 != p6)
+            goto what_a_loss;
 
-            if (((p1 + p2) & PID_MASK) != 0200)   /* Test for each sex in sequence. */
-               goto what_a_loss;
+         if (((p1 + p2) & PID_MASK) != 0200) // Test for each sex in sequence.
+            goto what_a_loss;
 
-            if ((p2 & 0100) == 0)         /* Test for alternating sex. */
-               goto what_a_loss;
+         if ((p2 & 0100) == 0)               // Test for alternating sex.
+            goto what_a_loss;
 
-         /* Test for relative phase of boys and girls. */
-         /* "accept_extend" tells how accurate the placement must be. */
-            if ((p2 >> 7) > current_reconciler->accept_extend)
-               goto what_a_loss;
+         // Test for relative phase of boys and girls.
+         // "accept_extend" tells how accurate the placement must be.
+         switch (singing_call_mode) {
+         case 1: p2 -= 0200; break;
+         case 2: p2 -= 0600; break;
          }
+
+         if (((p2 >>= 7) & 3) > current_reconciler->accept_extend)
+            goto what_a_loss;
       }
       else if (goal >= command_create_any_lines) {
          directions = 0;
@@ -688,10 +694,9 @@ static long_boolean inner_search(command_kind goal,
          if (this_state.state.rotation != huge_history_save[j+huge_history_ptr+1-new_resolve->insertion_point].state.rotation)
             goto try_again;
 
-         for (k=0 ; k<WARNING_WORDS ; k++) {
-            if (this_state.warnings.bits[k] != huge_history_save[j+huge_history_ptr+1-new_resolve->insertion_point].warnings.bits[k])
-               goto try_again;
-         }
+         if (this_state.warnings !=
+             huge_history_save[j+huge_history_ptr+1-new_resolve->insertion_point].warnings)
+            goto try_again;
 
          for (k=0; k<=setup_attrs[this_state.state.kind].setup_limits; k++) {
             personrec t = huge_history_save[j+huge_history_ptr+1-new_resolve->insertion_point].state.people[k];

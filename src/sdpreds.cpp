@@ -917,13 +917,18 @@ static long_boolean columns_tandem(setup *real_people, int real_index,
    uint32 this_person;
    int other_index;
 
-   if (real_people->kind != s_qtag) {
+   if (real_people->kind == s_qtag) {
+      if (real_index == 2 || real_index == 6) return FALSE;  // Wings of qtag always fail.
+   }
+   else if (real_people->kind == s_spindle) {
+      if (real_index == 3 || real_index == 7) return FALSE; // Or points of spindle.
+   }
+   else {
       switch (real_people->cmd.cmd_assume.assumption) {
       case cr_wave_only: case cr_2fl_only: return extra_stuff[0] ^ 1;
       case cr_magic_only: case cr_li_lo: return extra_stuff[0];
       }
    }
-   else if (real_index == 2 || real_index == 6) return FALSE;  /* Wings of qtag always fail. */
 
    this_person = real_people->people[real_index].id1;
    other_index = real_index ^ 1;
@@ -952,6 +957,16 @@ static long_boolean columns_tandem(setup *real_people, int real_index,
           (((real_index & 3) == 3) && ((real_direction ^ (real_index >> 1)) & 2)))
          other_index = real_index ^ 7;
    }
+   else if (real_people->kind == s_spindle) {
+      switch (real_index) {
+      case 0: other_index = 1; break;
+      case 1: other_index = (real_direction & 2) ? 0: 2; break;
+      case 2: other_index = 1; break;
+      case 4: other_index = 5; break;
+      case 5: other_index = (real_direction & 2) ? 6: 4; break;
+      case 6: other_index = 5; break;
+      }
+   }
 
    return ((this_person ^ real_people->people[other_index].id1) & DIR_MASK) ==
       ((uint32) extra_stuff[0] << 1);
@@ -964,16 +979,24 @@ static long_boolean same_in_pair(setup *real_people, int real_index,
    int this_person;
    int other_person;
 
-   if (real_people->cmd.cmd_assume.assump_col == 1) {
-      switch (real_people->cmd.cmd_assume.assumption) {
+   if (real_people->kind == s_bone) {
+      // This is only valid for the ends; the documentation says so.
+      other_person = real_people->people[real_index ^ 5].id1;
+   }
+   else {
+      if (real_people->cmd.cmd_assume.assump_col == 1) {
+         switch (real_people->cmd.cmd_assume.assumption) {
          case cr_2fl_only: case cr_li_lo: return TRUE;
          case cr_wave_only: case cr_magic_only: return FALSE;
+         }
       }
+
+      other_person = real_people->people[real_index ^ 7].id1;
    }
 
    this_person = real_people->people[real_index].id1;
-   other_person = real_people->people[real_index ^ 7].id1;
-   return(((this_person ^ other_person) & DIR_MASK) == 0);
+
+   return ((this_person ^ other_person) & DIR_MASK) == 0;
 }
 
 /* ARGSUSED */
@@ -983,16 +1006,24 @@ static long_boolean opp_in_pair(setup *real_people, int real_index,
    int this_person;
    int other_person;
 
-   if (real_people->cmd.cmd_assume.assump_col == 1) {
-      switch (real_people->cmd.cmd_assume.assumption) {
+   if (real_people->kind == s_bone) {
+      // This is only valid for the ends; the documentation says so.
+      other_person = real_people->people[real_index ^ 5].id1;
+   }
+   else {
+      if (real_people->cmd.cmd_assume.assump_col == 1) {
+         switch (real_people->cmd.cmd_assume.assumption) {
          case cr_wave_only: case cr_magic_only: return TRUE;
          case cr_2fl_only: case cr_li_lo: return FALSE;
+         }
       }
+
+      other_person = real_people->people[real_index ^ 7].id1;
    }
 
    this_person = real_people->people[real_index].id1;
-   other_person = real_people->people[real_index ^ 7].id1;
-   return(((this_person ^ other_person) & DIR_MASK) == 2);
+
+   return ((this_person ^ other_person) & DIR_MASK) == 2;
 }
 
 /* ARGSUSED */
@@ -1101,6 +1132,7 @@ static long_boolean x12_beau_or_miniwave(setup *real_people, int real_index,
 }
 
 static const long int swingleft_1x3dmd[8] = {-1, 0, 1, -1, 5, 6, -1, 3};
+static const long int swingleft_1x4[4] = {-1, 0, 3, 1};
 static const long int swingleft_deep2x1dmd[10] = {-1, 0, -1, 1, 3, 6, 8, -1, 9, -1};
 static const long int swingleft_wqtag[10] = {-1, -1, 3, 4, 9, -1, -1, -1, 7, 8};
 
@@ -1110,6 +1142,9 @@ static long_boolean can_swing_left(setup *real_people, int real_index,
    int t;
 
    switch (real_people->kind) {
+   case s1x4:
+      t = swingleft_1x4[northified_index];
+      break;
    case s1x3dmd:
       t = swingleft_1x3dmd[northified_index];
       break;
@@ -2198,9 +2233,7 @@ predicate_descriptor pred_table[] = {
       {cast_normal_or_whatever,        &iden_tab[1]},            /* "cast_normal" */
       {cast_normal_or_whatever,        &iden_tab[0]},            /* "cast_pushy" */
       {cast_normal_or_whatever,        &iden_tab[3]},            /* "cast_normal_or_warn" */
-
       {x14_once_rem_miniwave,          &iden_tab[3]},            /* "intlk_cast_normal_or_warn" */
-
       {opp_in_magic,                 (const long int *) 0},      /* "lines_magic_miniwave" */
       {same_in_magic,                (const long int *) 0},      /* "lines_magic_couple" */
       {once_rem_test,                  &iden_tab[2]},            /* "lines_once_rem_miniwave" */

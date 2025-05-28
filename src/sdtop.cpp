@@ -261,10 +261,10 @@ int singing_call_mode = 0;
 parse_state_type parse_state;
 call_conc_option_state current_options;
 int uims_menu_index;
-warning_info no_search_warnings = {{0, 0, 0, 0}};
-warning_info conc_elong_warnings = {{0, 0, 0, 0}};
-warning_info dyp_each_warnings = {{0, 0, 0, 0}};
-warning_info useless_phan_clw_warnings = {{0, 0, 0, 0}};
+warning_info no_search_warnings;
+warning_info conc_elong_warnings;
+warning_info dyp_each_warnings;
+warning_info useless_phan_clw_warnings;
 long_boolean allowing_all_concepts = FALSE;
 long_boolean allowing_minigrand = FALSE;
 long_boolean using_active_phantoms = FALSE;
@@ -363,6 +363,16 @@ extern void update_id_bits(setup *ss)
       3, d_south, 4, d_north,
       0, d_south, 7, d_north,
       7, d_south, 5, d_north,
+      ~0};
+
+   static unsigned short int face_spindle[] = {
+      0, d_south, 6, d_north,
+      1, d_south, 5, d_north,
+      2, d_south, 4, d_north,
+      0, d_east, 1, d_west,
+      1, d_east, 2, d_west,
+      6, d_east, 5, d_west,
+      5, d_east, 7, d_west,
       ~0};
 
    static unsigned short int face_2x4[] = {
@@ -481,6 +491,8 @@ extern void update_id_bits(setup *ss)
    switch (ss->kind) {
    case s_qtag:
       face_list = face_qtg; break;
+   case s_spindle:
+      face_list = face_spindle; break;
    case s2x4:
       face_list = face_2x4; break;
    case s1x8:
@@ -1186,47 +1198,100 @@ static restr_initializer restr_init_table0[] = {
    {s_bone, cr_miniwaves, 1, {6, 2, 7, 3},                                        {2}, {0}, {0}, TRUE,  chk_anti_groups},
    {s_bone, cr_couples_only, 2, {6, 2, 7, 3},                                     {2}, {0}, {0}, TRUE,  chk_groups},
    {s_bone6, cr_wave_only, 6, {0, 1, 2, 3, 4, 5},                                     {0}, {0}, {0}, TRUE, chk_wave},
-   {s2x8, cr_wave_only, 16, {0, 1, 2, 3, 4, 5, 6, 7, 9, 8, 11, 10, 13, 12, 15, 14},{0}, {0}, {0}, TRUE, chk_wave},
-   {s2x8, cr_4x4_2fl_only, 16, {0, 4, 1, 5, 2, 6, 3, 7, 12, 8, 13, 9, 14, 10, 15, 11},{0},{0},{0},FALSE,chk_wave},
-   {s1x16, cr_4x4couples_only, 4, {0, 4, 8, 12, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15}, {4}, {0}, {0}, TRUE, chk_groups},
-   {s2x8, cr_4x4couples_only, 4, {0, 4, 8, 12, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15}, {4}, {0}, {0}, TRUE,  chk_groups},
-   {s2x8, cr_couples_only, 2, {0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15}, {8}, {0}, {0}, TRUE,  chk_groups},
-   {s2x8, cr_miniwaves, 1, {0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15}, {8}, {0}, {0}, FALSE, chk_anti_groups},
-   {s2x6, cr_wave_only, 12, {0, 1, 2, 3, 4, 5, 7, 6, 9, 8, 11, 10},               {0}, {0}, {0}, TRUE,  chk_wave},
-   {s2x6, cr_3x3_2fl_only, 12, {0, 3, 1, 4, 2, 5, 9, 6, 10, 7, 11, 8},            {0}, {0}, {0}, FALSE, chk_wave},
-   {s2x6, cr_3x3couples_only, 3, {0, 3, 6, 9, 1, 4, 7, 10, 2, 5, 8, 11},          {4}, {0}, {0}, TRUE,  chk_groups},
-   {s1x12, cr_3x3couples_only, 3, {0, 3, 6, 9, 1, 4, 7, 10, 2, 5, 8, 11},         {4}, {0}, {0}, TRUE,  chk_groups},
-   {s1x2, cr_wave_only, 2, {0, 1},                                                {0}, {0}, {0}, TRUE,  chk_wave},
-   {s1x2, cr_2fl_only, 2, {0, 1},                                                 {1}, {0}, {0}, TRUE,  chk_groups},
-   {s1x2, cr_couples_only, 2, {0, 1},                                             {1}, {0}, {0}, TRUE,  chk_groups},
-   {s1x2, cr_all_facing_same, 2, {0, 1},                                          {1}, {0}, {0}, TRUE,  chk_groups},
-   {s1x2, cr_miniwaves, 1, {0, 1},                                                {1}, {0}, {0}, TRUE,  chk_anti_groups},
-   {s2x2, cr_couples_only, 0, {1, 0, 3, 2},                              {3, 2, 1, 0}, {0}, {0}, FALSE, chk_box_dbl},
-   {s2x2, cr_miniwaves, 2, {1, 0, 3, 2, 3, 0, 0, 3},         {3, 2, 1, 0, 3, 3, 0, 0}, {0}, {0}, FALSE, chk_box_dbl},
-   {s2x2, cr_peelable_box, 0, {3, 2, 1, 0},                              {1, 0, 3, 2}, {0}, {0}, FALSE, chk_box_dbl},
-   {s2x4, cr_peelable_box, 2, {0, 1, 2, 3, 7, 6, 5, 4},                           {4}, {0}, {0}, FALSE, chk_groups},
-   {s2x4, cr_reg_tbone, 1, { 3, 2, 0, 1, 1, 0, 2, 3},        {0, 3, 1, 2, 2, 1, 3, 0}, {0}, {0}, FALSE, chk_box},
-   {s2x2, cr_reg_tbone, 1, {2, 1, 0, 3},                                 {2, 3, 0, 1}, {0}, {0}, FALSE, chk_box},
-   {s1x4, cr_reg_tbone, 1, {3, 2, 1, 0},                                 {0, 3, 2, 1}, {0}, {0}, FALSE, chk_box},
-   {s3x4, cr_wave_only, 12, {0, 1, 2, 3, 5, 4, 7, 6, 9, 8, 10, 11},               {0}, {0}, {0}, TRUE,  chk_wave},
-   {s3x4, cr_2fl_only, 12, {0, 2, 1, 3, 8, 4, 9, 5, 10, 6, 11, 7},                {0}, {0}, {0}, TRUE,  chk_wave},
-   {s_thar, cr_wave_only, 8, {0, 1, 2, 3, 5, 4, 7, 6},        /* NOTE THE 4 --> */{4}, {0}, {0}, TRUE,  chk_wave},
-   {s_thar, cr_1fl_only, 8, {0, 3, 1, 2, 6, 5, 7, 4},                             {0}, {0}, {0}, FALSE, chk_wave},
-   {s_thar, cr_magic_only, 8, {0, 1, 3, 2, 5, 4, 6, 7},       /* NOTE THE 4 --> */{4}, {0}, {0}, TRUE,  chk_wave},
-   {s_crosswave, cr_wave_only, 8, {0, 1, 2, 3, 5, 4, 7, 6},   /* NOTE THE 4 --> */{4}, {0}, {0}, TRUE,  chk_wave},
-   {s_crosswave, cr_1fl_only, 8, {0, 3, 1, 2, 6, 5, 7, 4},                        {0}, {0}, {0}, FALSE, chk_wave},
-   {s_crosswave, cr_magic_only, 8, {0, 1, 3, 2, 5, 4, 6, 7},  /* NOTE THE 4 --> */{4}, {0}, {0}, TRUE,  chk_wave},
-   {s3x1dmd, cr_wave_only, 6, {0, 1, 2, 6, 5, 4},                                 {0}, {0}, {0}, TRUE,  chk_wave},
-   {s_2x1dmd, cr_wave_only, 4, {0, 1, 4, 3},                                      {0}, {0}, {0}, TRUE,  chk_wave},
-   {s_qtag, cr_real_1_4_tag, 4, {6, 7, 3, 2},                         {4, 4, 0, 5, 1}, {0}, {0}, TRUE,  chk_qtag},
-   {s_qtag, cr_real_3_4_tag, 4, {6, 7, 3, 2},                         {4, 0, 4, 1, 5}, {0}, {0}, TRUE,  chk_qtag},
-   {s_qtag, cr_real_1_4_line, 4, {6, 3, 7, 2},                        {4, 4, 0, 5, 1}, {0}, {0}, TRUE,  chk_qtag},
-   {s_qtag, cr_real_3_4_line, 4, {6, 3, 7, 2},                        {4, 0, 4, 1, 5}, {0}, {0}, TRUE,  chk_qtag},
-   {s_trngl, cr_wave_only, 2, {1, 2},                                             {0}, {0}, {0}, TRUE,  chk_wave},
-   {s_trngl, cr_miniwaves, 2, {1, 2},                                             {0}, {0}, {0}, TRUE,  chk_wave},
-   {s_trngl, cr_couples_only, 2, {1, 2},                                          {1}, {0}, {0}, TRUE,  chk_groups},
-   {s_trngl, cr_2fl_only, 3, {0, 1, 2},                                           {1}, {0}, {0}, TRUE,  chk_groups},
-   {s_trngl, cr_tgl_tandbase, 0, {0}, {2, 1, 2}, {2, 1, 2}, {0},                                 TRUE,  chk_dmd_qtag},
+   {s2x8, cr_wave_only, 16, {0, 1, 2, 3, 4, 5, 6, 7, 9, 8, 11, 10, 13, 12, 15, 14},
+    {0}, {0}, {0}, TRUE, chk_wave},
+   {s2x8, cr_4x4_2fl_only, 16, {0, 4, 1, 5, 2, 6, 3, 7, 12, 8, 13, 9, 14, 10, 15, 11},
+    {0},{0},{0}, FALSE,chk_wave},
+   {s1x16, cr_4x4couples_only, 4, {0, 4, 8, 12, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15},
+    {4}, {0}, {0}, TRUE, chk_groups},
+   {s2x8, cr_4x4couples_only, 4, {0, 4, 8, 12, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15},
+    {4}, {0}, {0}, TRUE,  chk_groups},
+   {s2x8, cr_couples_only, 2, {0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15},
+    {8}, {0}, {0}, TRUE,  chk_groups},
+   {s2x8, cr_miniwaves, 1, {0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15},
+    {8}, {0}, {0}, FALSE, chk_anti_groups},
+   {s2x6, cr_wave_only, 12, {0, 1, 2, 3, 4, 5, 7, 6, 9, 8, 11, 10},
+    {0}, {0}, {0}, TRUE,  chk_wave},
+   {s2x6, cr_3x3_2fl_only, 12, {0, 3, 1, 4, 2, 5, 9, 6, 10, 7, 11, 8},
+    {0}, {0}, {0}, FALSE, chk_wave},
+   {s2x6, cr_3x3couples_only, 3, {0, 3, 6, 9, 1, 4, 7, 10, 2, 5, 8, 11},
+    {4}, {0}, {0}, TRUE,  chk_groups},
+   {s1x12, cr_3x3couples_only, 3, {0, 3, 6, 9, 1, 4, 7, 10, 2, 5, 8, 11},
+    {4}, {0}, {0}, TRUE,  chk_groups},
+   {s1x2, cr_wave_only, 2, {0, 1},
+    {0}, {0}, {0}, TRUE,  chk_wave},
+   {s1x2, cr_2fl_only, 2, {0, 1},
+    {1}, {0}, {0}, TRUE,  chk_groups},
+   {s1x2, cr_couples_only, 2, {0, 1},
+    {1}, {0}, {0}, TRUE,  chk_groups},
+   {s1x2, cr_all_facing_same, 2, {0, 1},
+    {1}, {0}, {0}, TRUE,  chk_groups},
+   {s1x2, cr_miniwaves, 1, {0, 1},
+    {1}, {0}, {0}, TRUE,  chk_anti_groups},
+   {s2x2, cr_couples_only, 0, {1, 0, 3, 2},
+    {3, 2, 1, 0}, {0}, {0}, FALSE, chk_box_dbl},
+   {s2x2, cr_miniwaves, 2, {1, 0, 3, 2, 3, 0, 0, 3},
+    {3, 2, 1, 0, 3, 3, 0, 0}, {0}, {0}, FALSE, chk_box_dbl},
+   {s2x2, cr_peelable_box, 0, {3, 2, 1, 0},
+    {1, 0, 3, 2}, {0}, {0}, FALSE, chk_box_dbl},
+   {s2x4, cr_peelable_box, 2, {0, 1, 2, 3, 7, 6, 5, 4},
+    {4}, {0}, {0}, FALSE, chk_groups},
+   {s2x4, cr_reg_tbone, 1, { 3, 2, 0, 1, 1, 0, 2, 3},
+    {0, 3, 1, 2, 2, 1, 3, 0}, {0}, {0}, FALSE, chk_box},
+   {s2x2, cr_reg_tbone, 1, {2, 1, 0, 3},
+    {2, 3, 0, 1}, {0}, {0}, FALSE, chk_box},
+   {s1x4, cr_reg_tbone, 1, {3, 2, 1, 0},
+    {0, 3, 2, 1}, {0}, {0}, FALSE, chk_box},
+   {s3x4, cr_wave_only, 12, {0, 1, 2, 3, 5, 4, 7, 6, 9, 8, 10, 11},
+    {0}, {0}, {0}, TRUE,  chk_wave},
+   {s3x4, cr_2fl_only, 12, {0, 2, 1, 3, 8, 4, 9, 5, 10, 6, 11, 7},
+    {0}, {0}, {0}, TRUE,  chk_wave},
+   {s_thar, cr_wave_only, 8, {0, 1, 2, 3, 5, 4, 7, 6},
+    /* NOTE THE 4 --> */{4}, {0}, {0}, TRUE,  chk_wave},
+   {s_thar, cr_1fl_only, 8, {0, 3, 1, 2, 6, 5, 7, 4},
+    {0}, {0}, {0}, FALSE, chk_wave},
+   {s_thar, cr_magic_only, 8, {0, 1, 3, 2, 5, 4, 6, 7},
+    /* NOTE THE 4 --> */{4}, {0}, {0}, TRUE,  chk_wave},
+   {s_crosswave, cr_wave_only, 8, {0, 1, 2, 3, 5, 4, 7, 6},
+    /* NOTE THE 4 --> */{4}, {0}, {0}, TRUE,  chk_wave},
+   {s_crosswave, cr_1fl_only, 8, {0, 3, 1, 2, 6, 5, 7, 4},
+    {0}, {0}, {0}, FALSE, chk_wave},
+   {s_crosswave, cr_magic_only, 8, {0, 1, 3, 2, 5, 4, 6, 7},
+    /* NOTE THE 4 --> */{4}, {0}, {0}, TRUE,  chk_wave},
+   {s3x1dmd, cr_wave_only, 6, {0, 1, 2, 6, 5, 4},
+    {0}, {0}, {0}, TRUE,  chk_wave},
+   {s_2x1dmd, cr_wave_only, 4, {0, 1, 4, 3},
+    {0}, {0}, {0}, TRUE,  chk_wave},
+   {s_qtag, cr_real_1_4_tag, 4, {6, 7, 3, 2},
+    {4, 4, 0, 5, 1}, {0}, {0}, TRUE,  chk_qtag},
+   {s_qtag, cr_real_3_4_tag, 4, {6, 7, 3, 2},
+    {4, 0, 4, 1, 5}, {0}, {0}, TRUE,  chk_qtag},
+   {s_qtag, cr_real_1_4_line, 4, {6, 3, 7, 2},
+    {4, 4, 0, 5, 1}, {0}, {0}, TRUE,  chk_qtag},
+   {s_qtag, cr_real_3_4_line, 4, {6, 3, 7, 2},
+    {4, 0, 4, 1, 5}, {0}, {0}, TRUE,  chk_qtag},
+   {s_trngl, cr_wave_only, 2, {1, 2},
+    {0}, {0}, {0}, TRUE,  chk_wave},
+   {s_trngl, cr_miniwaves, 2, {1, 2},
+    {0}, {0}, {0}, TRUE,  chk_wave},
+   {s_trngl, cr_couples_only, 2, {1, 2},
+    {1}, {0}, {0}, TRUE,  chk_groups},
+   {s_trngl, cr_2fl_only, 3, {0, 1, 2},
+    {1}, {0}, {0}, TRUE,  chk_groups},
+   {s_trngl, cr_tgl_tandbase, 0, {0},
+    {2, 1, 2}, {2, 1, 2}, {0}, TRUE,  chk_dmd_qtag},
+   {s_short6, cr_nice_wv_triangles, 0, {4, 0, 2, 3, 5},
+    {2, 1, 4}, {3, 0, 1, 5}, {3, 2, 3, 4}, FALSE,  chk_dmd_qtag_new},
+   {s_bone6, cr_nice_wv_triangles, 0, {2, 2, 5},
+    {4, 0, 1, 3, 4}, {3, 0, 1, 2}, {3, 3, 4, 5}, FALSE,  chk_dmd_qtag_new},
+   {s_trngl, cr_nice_wv_triangles, 0, {2, 1, 2},
+    {1, 0}, {1, 1}, {2, 0, 2}, FALSE,  chk_dmd_qtag_new},
+   {s_short6, cr_nice_tnd_triangles, 0, {0},
+    {6, 0, 1, 2, 3, 4, 5}, {3, 1, 3, 5}, {3, 0, 2, 4}, FALSE,  chk_dmd_qtag_new},
+   {s_bone6, cr_nice_tnd_triangles, 0, {6, 0, 1, 2, 3, 4, 5},
+    {0}, {3, 0, 2, 4}, {3, 1, 3, 5}, FALSE,  chk_dmd_qtag_new},
+   {s_trngl, cr_nice_tnd_triangles, 0, {0},
+    {3, 0, 1, 2}, {2, 1, 2}, {1, 0}, FALSE,  chk_dmd_qtag_new},
    {nothing}};
 
 static restr_initializer restr_init_table1[] = {
@@ -1587,18 +1652,19 @@ extern void initialize_sdlib(void)
 
    writechar_block.usurping_writechar = FALSE;
 
-   int i;
-
-   for (i=0 ; i<warn__NUM_WARNINGS ; i++) {
-      char c = warning_strings[i][0];
-      if (c == '*' || c == '#')
-         no_search_warnings.bits[i>>5] |= 1 << (i & 0x1F);
-      if (c == '+')
-         conc_elong_warnings.bits[i>>5] |= 1 << (i & 0x1F);
-      if (c == '=')
-         dyp_each_warnings.bits[i>>5] |= 1 << (i & 0x1F);
-      if (c == '#')
-         useless_phan_clw_warnings.bits[i>>5] |= 1 << (i & 0x1F);
+   for (int i=0 ; i<warn__NUM_WARNINGS ; i++) {
+      switch (warning_strings[i][0]) {
+      case '#':
+         useless_phan_clw_warnings.setbit((warning_index) i);
+         // FALL THROUGH!!!!
+      case '*':
+         // FELL THROUGH!!!!
+         no_search_warnings.setbit((warning_index) i); break;
+      case '+':
+         conc_elong_warnings.setbit((warning_index) i); break;
+      case '=':
+         dyp_each_warnings.setbit((warning_index) i); break;
+      }
    }
 }
 
@@ -1864,19 +1930,14 @@ extern void warn(warning_index w)
 {
    if (w == warn__none) return;
 
-   /* If this is an "each 1x4" type of warning, and we already have
-      such a warning, don't enter the new one.  The first one takes precedence. */
+   // If this is an "each 1x4" type of warning, and we already have
+   // such a warning, don't enter the new one.  The first one takes precedence.
 
-   if (dyp_each_warnings.bits[w>>5] & (1 << (w & 0x1F))) {
-      int i;
+   if (dyp_each_warnings.testbit(w) &&
+       history[history_ptr+1].warnings.testmultiple(dyp_each_warnings))
+         return;
 
-      for (i=0 ; i<WARNING_WORDS ; i++) {
-         if (dyp_each_warnings.bits[i] & history[history_ptr+1].warnings.bits[i])
-            return;
-      }
-   }
-
-   if (w != warn__none) history[history_ptr+1].warnings.bits[w>>5] |= 1 << (w & 0x1F);
+   history[history_ptr+1].warnings.setbit(w);
 }
 
            
@@ -2338,10 +2399,8 @@ extern restriction_test_result verify_restriction(
 
       goto good;
    case chk_dmd_qtag:
-      qa0 = 0;
-      qa1 = 0;
-      qa2 = 0;
-      qa3 = 0;
+   case chk_dmd_qtag_new:
+      qa0 = qa1 = qa2 = qa3 = 0;
 
       for (idx=0; idx<rr->map1[0]; idx++)
          qa1 |= ss->people[rr->map1[idx+1]].id1;
@@ -2350,31 +2409,46 @@ extern restriction_test_result verify_restriction(
          qa0 |= ss->people[rr->map2[idx+1]].id1;
 
       for (idx=0; idx<rr->map3[0]; idx++) {
-         if ((t = ss->people[rr->map3[idx+1]].id1) != 0) {
-            qa2 |= t;
-            qa3 |= ~t;
-         }
+         if ((t = ss->people[rr->map3[idx+1]].id1) != 0)
+            { qa2 |= t; qa3 |= ~t; }
       }
 
       for (idx=0; idx<rr->map4[0]; idx++) {
-         if ((t = ss->people[rr->map4[idx+1]].id1) != 0) {
-            qa2 |= ~t;
-            qa3 |= t;
-         }
+         if ((t = ss->people[rr->map4[idx+1]].id1) != 0)
+            { qa2 |= ~t; qa3 |= t; }
       }
 
       if ((qa1 & 001) != 0 || (qa0 & 010) != 0)
          goto bad;
 
-      if (tt.assump_both) {
-         /* The "live" modifier means that we need a definitive person
-            to distinguish "in" or "out". */
-         if (tt.assump_live && !(qa2 | qa3))
-            goto bad;
+      if (rr->check == chk_dmd_qtag) {
+         if (tt.assump_both) {
+            // The "live" modifier means that we need a definitive person
+            // to distinguish "in" or "out".
+            if (tt.assump_live && !(qa2 | qa3))
+               goto bad;
 
-         if ((qa2 & (tt.assump_both << 1) & 2) != 0 ||
-             (qa3 & tt.assump_both & 2) != 0)
-            goto bad;
+            if ((qa2 & (tt.assump_both << 1) & 2) != 0 ||
+                (qa3 & tt.assump_both & 2) != 0)
+               goto bad;
+         }
+      }
+      else {
+         // The "live" flag means exactly what it says.
+         if (tt.assump_live) {
+            for (idx=0 ; idx<=setup_attrs[ss->kind].setup_limits ; idx++) {
+               if (ss->people[idx].id1 == 0) goto bad;
+            }
+         }
+
+         // If "both" is off, we demand either consistent handedness.
+         // If it's on, we demand that handedness.
+         if (tt.assump_both) {
+            if ((qa2 & (tt.assump_both << 1) & 2) != 0 ||
+                (qa3 & tt.assump_both & 2) != 0)
+               goto bad;
+         }
+         else if ((qa2 & qa3 & 2) != 0) goto bad;
       }
 
       goto good;
@@ -2523,7 +2597,8 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
 
       if ((p->qualifierstuff & QUALBIT__NUM_MASK) != 0) {
          number_used = TRUE;
-         if (((p->qualifierstuff & QUALBIT__NUM_MASK) / QUALBIT__NUM_BIT) != (current_options.number_fields & 0xF)+1)
+         if (((p->qualifierstuff & QUALBIT__NUM_MASK) / QUALBIT__NUM_BIT) !=
+             (current_options.number_fields & 0xF)+1)
             continue;
       }
 
@@ -2753,8 +2828,10 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
          if (ss->kind == s_crosswave) {
             if (((ss->people[0].id1 ^ ss->people[1].id1) & d_mask) == 0 &&
                 ((ss->people[4].id1 ^ ss->people[5].id1) & d_mask) == 0 &&
-                ((ss->people[2].id1 | ss->people[3].id1) == 0 || ((ss->people[2].id1 ^ ss->people[3].id1) & d_mask) == 2) &&
-                ((ss->people[6].id1 | ss->people[7].id1) == 0 || ((ss->people[6].id1 ^ ss->people[7].id1) & d_mask) == 2))
+                ((ss->people[2].id1 | ss->people[3].id1) == 0 ||
+                 ((ss->people[2].id1 ^ ss->people[3].id1) & d_mask) == 2) &&
+                ((ss->people[6].id1 | ss->people[7].id1) == 0 ||
+                 ((ss->people[6].id1 ^ ss->people[7].id1) & d_mask) == 2))
                goto good;
             goto bad;
          }
@@ -2873,6 +2950,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
          goto bad;
       case cr_nice_diamonds:
       case cr_dmd_facing:
+      case cr_nice_wv_triangles:
          goto check_tt;
       case cr_dmd_ctrs_mwv:
          switch (ss->cmd.cmd_assume.assumption) {
@@ -4199,6 +4277,8 @@ static resolve_tester test_spindle_stuff[] = {
    {resolve_rlg,            l_mainstream, 3, 0,   {4, 3, 2, 1, 0, 7, 6, 5},     0x1A313813},
    {resolve_la,             l_mainstream, 7, 0,   {4, 3, 2, 1, 0, 7, 6, 5},     0x33131131},
    {resolve_la,             l_mainstream, 7, 0,   {4, 3, 2, 1, 0, 7, 6, 5},     0x38131A31},
+   {resolve_circle,         l_mainstream, 7, 0,   {4, 3, 2, 1, 0, 7, 6, 5},     0x83AAA188},
+   {resolve_circle,         l_mainstream, 5, 0,   {3, 2, 1, 0, 7, 6, 5, 4},     0x3AAA1888},
    {resolve_none,           l_mainstream, 64}};
 
 static resolve_tester test_2x4_stuff[] = {
@@ -4376,31 +4456,26 @@ extern resolve_indicator resolve_p(setup *s)
 }
 
 
-extern long_boolean warnings_are_unacceptable(long_boolean strict)
+extern bool warnings_are_unacceptable(bool strict)
 {
-   int i;
-   uint32 w = 0;     // Will become nonzero if any bad warning
-                     // other than "warn__bad_concept_level" appears.
-   uint32 ww = 0;    // Will become nonzero if any bad warning appears.
+   // If we are doing a "standardize", we let ALL warnings pass.
+   // We particularly want weird T-bones and other unusual sort of things.
 
-   for (i=0 ; i<WARNING_WORDS ; i++) {
-      uint32 warn_word = history[history_ptr+1].warnings.bits[i] & no_search_warnings.bits[i];
-      ww |= warn_word;
-      if (i == (warn__bad_concept_level > 5))
-         w |= warn_word & ~(1 << (warn__bad_concept_level & 0x1F));
-      else
-         w |= warn_word;
-   }
+   if (!strict) return false;
 
-   // But if we are doing a "standardize", we let ALL warnings pass.
-   // We particularly want weird T-bone and other unusual sort of things.
+   // We only care about "bad" warnings.
+   if (!history[history_ptr+1].warnings.testmultiple(no_search_warnings)) return false;
 
-   if (strict && ww) {
-      // But if "allow all concepts" was given, and that's the only bad warning, we let it pass.
-      if (!allowing_all_concepts || w != 0) return TRUE;
-   }
+   // If the "allow all concepts" switch isn't on, we lose.
+   if (!allowing_all_concepts) return true;
 
-   return FALSE;
+   // But if "allow all concepts" was given, and the only bad warning is
+   // "bad_concept_level", we let it pass.
+
+   // So we test for any bad warnings other than "warn__bad_concept_level".
+   warning_info otherthanbadconc = history[history_ptr+1].warnings;
+   otherthanbadconc.clearbit(warn__bad_concept_level);
+   return otherthanbadconc.testmultiple(no_search_warnings);
 }
 
 
@@ -4562,7 +4637,7 @@ SDLIB_API void toplevelmove(void) THROW_DECL
    starting_setup.cmd.restrained_super8flags = 0;
    starting_setup.cmd.restrained_fraction = 0;
 
-   for (i=0 ; i<WARNING_WORDS ; i++) newhist->warnings.bits[i] = 0;
+   newhist->warnings = warning_info();
 
    /* If we are starting a sequence with the "so-and-so into the center and do whatever"
       flag on, and this call is a "sequence starter", take special action. */

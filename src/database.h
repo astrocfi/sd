@@ -82,7 +82,7 @@ typedef const char *Cstring;
    database format version. */
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 176
+#define DATABASE_FORMAT_VERSION 181
 
 /* BEWARE!!  These must track the items in "tagtabinit" in dbcomp.c . */
 typedef enum {
@@ -348,6 +348,8 @@ typedef enum {
    s_ntrglccw,
    s_nptrglcw,
    s_nptrglccw,
+   s_nxtrglcw,
+   s_nxtrglccw,
    spgdmdcw,
    spgdmdccw,
    swqtag,
@@ -641,13 +643,15 @@ typedef enum {
    cr_ctr_couples,         /* Restriction only. */
    cr_awkward_centers,     /* Restriction only. */
    cr_dmd_same_pt,         /* Qualifier only. */
-   cr_dmd_facing,          /* Qualifier only. */
+   cr_dmd_facing,
    cr_diamond_like,
    cr_qtag_like,
    cr_pu_qtag_like,
    cr_reg_tbone,
    cr_gen_qbox,            /* Qualifier only. */
-   cr_nice_diamonds,       /* Restriction only. */
+   cr_nice_diamonds,
+   cr_nice_wv_triangles,
+   cr_nice_tnd_triangles,
    cr_magic_only,
    cr_li_lo,               /* Qualifier only. */
    cr_ctrs_in_out,         /* Qualifier only. */
@@ -734,6 +738,8 @@ typedef enum {
    schema_maybe_grand_single_concentric,
    schema_maybe_grand_single_cross_concentric,
    schema_maybe_special_single_concentric,
+   schema_maybe_special_single_concentric_or_2_4,
+   schema_grand_single_or_matrix_concentric,
    schema_3x3_concentric,
    schema_4x4_lines_concentric,
    schema_4x4_cols_concentric,
@@ -758,6 +764,7 @@ typedef enum {
    schema_concentric_4_2,
    schema_cross_concentric_4_2,
    schema_concentric_4_2_or_normal,
+   schema_concentric_8_4,        // Not for public use!
    schema_concentric_big2_6,     // Not for public use!
    schema_concentric_2_6_or_2_4,
    schema_cross_concentric_2_6_or_2_4,

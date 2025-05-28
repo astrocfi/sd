@@ -957,8 +957,6 @@ extern void prepare_to_read_menus(void)
       init_error("constants not consistent -- program has been compiled incorrectly.");
    else if ((508205 << 12) != arithtest)
       init_error("arithmetic is less than 32 bits -- program has been compiled incorrectly.");
-   else if (warn__NUM_WARNINGS > (WARNING_WORDS << 5))
-      init_error("insufficient warning bit space -- program has been compiled incorrectly.");
    else if (NUM_QUALIFIERS > 125)
       init_error("insufficient qualifier space -- program has been compiled incorrectly.");
 

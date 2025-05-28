@@ -1,6 +1,6 @@
               FORMAT OF THE SD/SDTTY DATABASE
 
-    Copyright (C) 1990-2000  William B. Ackerman.
+    Copyright (C) 1990-2001  William B. Ackerman.
 
     This file is unpublished and contains trade secrets.  It is
     to be used by permission only and not to be disclosed to third
@@ -1151,6 +1151,109 @@ whrglass    |  7  |  8  |_____|  3  |  2  |
 
 
 
+                   _____    _____ _____
+                  |     |  |     |     |
+                  |  0  |  |  1  |  2  |
+ntrgl6cw        __|__ __|__|_____|_____|
+               |     |     |  |     |
+               |  5  |  4  |  |  3  |
+               |_____|_____|  |_____|
+
+                _____ _____    _____
+               |     |     |  |     |
+               |  0  |  1  |  |  2  |
+ntrgl6ccw      |_____|_____|__|__ __|__
+                  |     |  |     |     |
+                  |  5  |  |  4  |  3  |
+                  |_____|  |_____|_____|
+
+
+                   _____    _____ _____ _____
+                  |     |  |     |     |     |
+                  |  0  |  |  1  |  2  |  3  |
+ntrglcw         __|__ __|__|_____|_____|_____|
+               |     |     |     |  |     |
+               |  7  |  6  |  5  |  |  4  |
+               |_____|_____|_____|  |_____|
+
+                _____ _____ _____    _____
+               |     |     |     |  |     |
+               |  0  |  1  |  2  |  |  3  |
+ntrglccw       |_____|_____|_____|__|__ __|__
+                  |     |  |     |     |     |
+                  |  7  |  |  6  |  5  |  4  |
+                  |_____|  |_____|_____|_____|
+
+
+                   _____                _____ _____
+                  |     |   _____ _____|     |     |
+                  |  0  |  |     |     |  2  |  3  |
+nptrglcw        __|__ __|__|  2  |  6  |_____|_____|
+               |     |     |_____|_____|  |     |
+               |  7  |  6  |              |  4  |
+               |_____|_____|              |_____|
+
+
+                _____ _____                _____
+               |     |     |_____ _____   |     |
+               |  0  |  1  |     |     |  |  3  |
+nptrglccw      |_____|_____|  2  |  6  |__|__ __|__
+                  |     |  |_____|_____|     |     |
+                  |  7  |              |  5  |  4  |
+                  |_____|              |_____|_____|
+
+
+
+                         _____    _____ _____
+                _____   |     |  |     |     |_____
+               |     |  |  0  |  |  1  |  2  |     |
+nxtrglcw       |  7  |__|__ __|__|_____|_____|  3  |
+               |_____|     |     |  |     |  |_____|
+                     |  6  |  5  |  |  4  |
+                     |_____|_____|  |_____|
+
+
+                      _____ _____    _____
+                _____|     |     |  |     |   _____
+               |     |  0  |  1  |  |  2  |  |     |
+nxtrglccw      |  7  |_____|_____|__|__ __|__|  3  |
+               |_____|  |     |  |     |     |_____|
+                        |  6  |  |  5  |  4  |
+                        |_____|  |_____|_____|
+
+
+                _____
+               |     |
+               |  0  |
+             __|__ __|__    _____
+            |     |     |  |     |
+pgdmdcw     |  6  |  7  |  |  1  |
+            |_____|_____|__|__ __|__
+               |     |  |     |     |
+               |  5  |  |  3  |  2  |
+               |_____|  |_____|_____|
+                           |     |
+                           |  4  |
+                           |_____|
+
+
+                            _____
+                           |     |
+                           |  1  |
+                _____    __|__ __|__
+               |     |  |     |     |
+               |  0  |  |  3  |  2  |
+             __|__ __|__|_____|_____|
+            |     |     |  |     |
+pgdmdccw    |  6  |  7  |  |  4  |
+            |_____|_____|  |_____|
+               |     |
+               |  5  |
+               |_____|
+
+
+
+
 
 normal_concentric  ??????
 
@@ -2111,7 +2214,7 @@ x14_once_rem_couple
 
 lines_miniwave
       applies to 1x2, 1x4, 1x6, 1x8, 2x4, 3x4, 2x6, or 2x8 lines only.
-      (Or thar in which only line-like people have legal move.)
+      (Or thar in which only line-like people have a legal move.)
       Returns TRUE if the lateral partner of the person under test is alive
       and facing the opposite direction.  Returns FALSE if the partner is
       a phantom or faces the same way or is T-boned.
@@ -2213,16 +2316,16 @@ lines_once_rem_couple
       "x14_once_rem_couple", but used in a 2x4 setup.
 
 lines_tandem
-      applies to 2x4 lines only.  Returns TRUE if the vertical partner
-      of the person under test is alive and facing the same direction.
-      Returns FALSE if the vertical partner is a phantom or faces the
-      opposite way or is T-boned.
+      applies to 2x4 lines, or the ends of a bone, only.
+      Returns TRUE if the vertical partner of the person under test is
+      alive and facing the same direction.  Returns FALSE if the
+      vertical partner is a phantom or faces the opposite way or is T-boned.
 
 lines_antitandem
-      applies to 2x4 lines only.  Returns TRUE if the vertical partner
-      of the person under test is alive and facing the opposite direction.
-      Returns FALSE if the vertical partner is a phantom or faces the
-      same way or is T-boned.
+      applies to 2x4 lines, or the ends of a bone, only.
+      Returns TRUE if the vertical partner of the person under test is
+      alive and facing the opposite direction.  Returns FALSE if the
+      vertical partner is a phantom or faces the same way or is T-boned.
 
 columns_tandem
       applies to 2x1, 3x1, 4x1, 6x1, 3x2, 4x2, 6x2, or 8x2 columns only.  Returns TRUE
@@ -2231,8 +2334,8 @@ columns_tandem
       opposite way or is T-boned.  When interrogating the center of a 3x1 or
       3x2 column, uses the person in front.
 
-      Applies to 1/4 tag also.  Treats the center column of 6 as a 2x3 and
-      handles it as above.  Returns FALSE for the ends of the center line.
+      Applies to 1/4 tag or spindle also.  Treats the center column of 6 as a
+      2x3 and handles it as above.  Returns FALSE for the other 2.
 
 columns_antitandem
       applies to 2x1, 3x1, 4x1, 6x1, 3x2, 4x2, 6x2, or 8x2 columns only.  Returns TRUE
@@ -2241,8 +2344,8 @@ columns_antitandem
       the same way or is T-boned.  When interrogating the center of a 3x1 or
       3x2 column, uses the person in front.
 
-      Applies to 1/4 tag also.  Treats the center column of 6 as a 2x3 and
-      handles it as above.  Returns FALSE for the ends of the center line.
+      Applies to 1/4 tag or spindle also.  Treats the center column of 6 as a
+      2x3 and handles it as above.  Returns FALSE for the other 2.
 
 columns_magic_tandem
       applies to 4x2 columns only.  Returns TRUE if the magic tandem
@@ -2277,16 +2380,16 @@ columns_once_rem_antitandem
       phantom or faces the same way or is T-boned.
 
 columns_couple
-      applies to 4x2 columns only.  Returns TRUE if the lateral partner
-      of the person under test is alive and facing the same direction.
-      Returns FALSE if that person is a phantom or faces the opposite
-      way or is T-boned.
+      applies to 4x2 columns, or the ends of a pbone, only.
+      Returns TRUE if the lateral partner of the person under test is alive
+      and facing the same direction.  Returns FALSE if that person is
+      a phantom or faces the opposite way or is T-boned.
 
 columns_miniwave
-      applies to 4x2 columns only.  Returns TRUE if the lateral partner
-      of the person under test is alive and facing the opposite direction.
-      Returns FALSE if that person is a phantom or faces the same way
-      or is T-boned.
+      applies to 4x2 columns, or the ends of a pbone, only.
+      Returns TRUE if the lateral partner of the person under test is alive
+      and facing the opposite direction.  Returns FALSE if that person
+      is a phantom or faces the same way or is T-boned.
 
 1x2_beau_or_miniwave
       applies to 1x2 lines or 2x2 non-T-boned boxes only.  Returns TRUE
@@ -2695,15 +2798,15 @@ restriction is violated, as follows:
                that this may not be an appropriate use of the call, but that
                telling the dancers to do their own part isn't the right fix.
    "controversial" --     the warning "This may be controversial" is given.
-   "serious_violation" -- the warning "This appears to be a serious violation of the definition" is given.
+   "serious_violation" -- the warning "This appears to be a serious violation
+                          of the definition" is given.
    "forbidden" -- an error is given.  The call is simply not permitted.
 
 These restrictions are "overloaded" -- their meaning depends on the starting setup.
-There are a number of internal ones not shown here.  See the file ~/sd/restrictions.txt for details.
 
    alwaysfail,                      any setup - this always fails (presumably to give
                                     some warning)
-   wave_only,                       1x2 - a miniwave; 1x3-1x16 - [grand] wave;
+   wave_only      R/Q               1x2 - a miniwave; 1x3-1x16 - [grand] wave;
                                     2x3 - two "waves" -- people not in tandem with each other;
                                     2x4/3x4/2x6/2x8 - consistent waves the long way;
                                     4x4 - consistent waves either way, but not T-boned;
@@ -2719,32 +2822,83 @@ There are a number of internal ones not shown here.  See the file ~/sd/restricti
                                        For diamonds, this applies just to the centers.
                                        For triangles, it applies just to the base.
                                     thar/crosswave - same handedness waves
+
+                                    As a qualifier, this can take the "live" and/or
+                                    "left" or "right" modifiers.  If "right" or "left",
+                                    it means this:
+
+                                    1x2-1x16 - R/L means handedness
+                                    2x4/3x4/2x6/2x8 - R/L means handedness
+                                    2x3 - "right" means centers looking in; "left"
+                                       means centers loking out.
+                                    2x2 - real R/L box;
+                                    4x4 - consistent R/L waves either way, but not T-boned;
+                                    3x2/4x2/5x2/6x2/8x2 - R/L columns;
+                                    qtag/pqtag - right wave in center
+                                    2x1dmd/3x1dmd - right wave (of 6) in center
+                                    ptpd/pptpd - right miniwaves in centers of each diamond
+                                    dmd, trngl - people are paired in right miniwaves.
+                                       For diamonds, this applies just to the centers.
+                                       For triangles, it applies just to the base.
+                                    thar/crosswave - R/L waves
+
+                                    pshort6 (note that this means the short6 is
+                                       laterally oriented) - centers tandem in wave
+                                       of OPPOSITE handedness (sorry)
+                                    bone6 - ends tandem in wave of correct handedness
+
+
+
    wave_unless_say_2faced           not implemented
-   all_facing_same                  1x2/2x1/2x2/2x3/3x2/2x4/4x2/1x4/4x1/1x6/6x1/1x8/8x1
-                                    all people in the setup facing the same way
+
+   all_facing_same R/Q              1x2/2x1/2x2/2x3/3x2/2x4/4x2/1x4/4x1/1x6/6x1/1x8/8x1
+                                    all people in the setup facing the same way.
+                                    As a qualifier, this can take the "live" modifier.
+
    1fl_only                         1x3/1x4/1x6/1x8 - a 1FL, that is, all 3/4/6/8 facing same;
-
-
                                     NO!!!!  Changed the above to
-
-   1fl_only                         1x3/1x4/1x6/1x8 - a 1FL of 3 or 4 people.  In a 1x6 or
+   1fl_only        R/Q              1x3/1x4/1x6/1x8 - a 1FL of 3 or 4 people.  In a 1x6 or
                                     1x8, this is two of same.  That is, in a 1x8, it is
                                     4 people facing consistently, and another 4 facing
                                     consistently.
 
-
                                     2x3/2x4 - individual 1FL's
                                     thar or xwv - crossed 2FL's of opposite handedness,
                                        ready to move along
-   2fl_only                         1x2 - a couple; 1x4 - a 2FL; 2x4/3x4 - 2FL's;
+
+                                    As a qualifier, this can take the "live" modifier.
+
+   2fl_only        R/Q              1x2 - a couple; 1x4 - a 2FL; 2x4/3x4 - 2FL's;
                                     1x8 - a grand 2FL; 4x1 - single DPT or single CDPT;
                                     qtag - 2FL in center; 2x2 - "1-faced" box;
                                     4x4 - consistent 2FL's; 4x2 columns - a DPT or CDPT;
                                     trngl - all 3 facing the same way.
-   3x3_2fl_only,                 /* 1x6/2x6 - "2-faced lines" of 3 facing one way, 3 the other */
-   4x4_2fl_only,                 /* 1x8/2x8 - "2-faced lines" of 4 facing one way, 4 the other */
-   leads_only,                   /* 2x2 - all people are leads, and not T-boned */
-   trailers_only,                /* 2x2 - all people are trailers, and not T-boned */
+
+                                    As a qualifier, this can take the "live" and/or
+                                    "left/right/in/out" mofifiers:
+
+                                    1x4/2x4/3x4 - R/L gives handedness of 2FL
+                                    qtag - applies to center 2FL
+                                    4x2 - I/O means starting/completed DPT
+
+   3x3_2fl_only    R/Q              1x6/2x6 - "2-faced lines" of 3 facing one way, 3 the other.
+                                    As a qualifier, this can take the "live" modifier.
+
+   4x4_2fl_only    R/Q              1x8/2x8 - "2-faced lines" of 4 facing one way, 4 the other.
+                                    As a qualifier, this can take the "live" modifier.
+
+   3x3couples_only R/Q              1x3/1x6/2x3/2x6/1x12 lines - each group of 3 people are
+                                       facing the same way and are line-like.
+                                    As a qualifier, this can take the "live" modifier.
+
+   4x4couples_only R/Q              1x4/1x8/2x4/2x8/1x16 lines - each group of 4 people are
+                                       facing the same way and are line-like.
+                                    As a qualifier, this can take the "live" modifier.
+
+   leads_only      R/Q              2x2 - all people are leads, and not T-boned
+                                    As a qualifier, this can take the "live" modifier.
+   trailers_only   R/Q              as above, people are trailers.
+
    couples_only,                    1x2/1x4/1x8, 2x4 (lines/cols), 2x2,
                                        qtag, bone, trngl - people are paired
                                        in genuine couples, not miniwaves.
@@ -2759,14 +2913,13 @@ There are a number of internal ones not shown here.  See the file ~/sd/restricti
                                        just to the base.
                                        So this includes waves, inverted lines, columns,
                                        magic columns, diamonds, wave-based triangles...
-   3x3couples_only,                 1x3/1x6/2x3/2x6/1x12 lines - each group of 3 people are
-                                       facing the same way and are line-like,
-   4x4couples_only,                 1x4/1x8/2x4/2x8/1x16 lines - each group of 4 people are
-                                       facing the same way and are line-like,
+
    awkward_centers,                 1x2, 1x4, 1x6, 2x4, or 1x8 - centers must not have
                                        left hands with each other
-   diamond_like,                    dmd, qtag or ptpd - points look sideways, and centers
-                                       are line-like
+
+   diamond_like                     dmd, qtag or ptpd - points look sideways, and centers
+                                       are line-like.  Restriction or qualifier.
+
    qtag_like,                       dmd/qtag/ptpd/3dmd/4dmd - points look in or out,
                                        and centers are line-like
    pu_qtag_like,                    dmd/qtag/ptpd/3dmd/4dmd - points look sideways,
@@ -2781,10 +2934,25 @@ There are a number of internal ones not shown here.  See the file ~/sd/restricti
                                        and T-boned to the centers, who must be symmetric.
                                        Also, the ends must be column-like and the centers
                                        must be line-like.
-   nice_diamonds,                   dmd, qtag or ptpd - diamond(s) are actual diamonds, and
-                                       have consistent handedness.
-   dmd_facing,                      dmd, qtag or ptpd - diamond(s) are actual diamonds, are
+
+   nice_diamonds                    dmd, qtag or ptpd - diamond(s) are actual diamonds, and
+                                       have consistent handedness.  Restriction or qualifier.
+                                       "Right/left" and "live" may be used when it is a
+                                       qualifier -- right/left demands that handedness.
+
+   dmd_facing                       dmd, qtag or ptpd - diamond(s) are actual diamonds, are
                                        facing, and have consistent handedness.
+                                       Restriction or qualifier.  "Right/left" and "live"
+                                       may be used when it is a qualifier --
+                                       right/left demands that handedness for the ends;
+                                       the centers will be the opposite.
+
+   nice_wv_triangles                short6, bone6, trngl - triangle(s) are wave-based and
+                                       of consistent handedness.  Restriction or qualifier.
+                                       "Right/left" and "live" may be used when it
+                                       is a qualifier.
+   nice_tnd_triangles               as above, triangles are tandem-based.
+
    in_or_out,                       2x2/2x4 - all facing in or all facing out of box of 4.
                                        2x3 - facing lines or back-to-back lines
                                        4x2/4x1/2x1 - [single] 8 chain or trade by
@@ -2793,19 +2961,32 @@ There are a number of internal ones not shown here.  See the file ~/sd/restricti
                                        not be T-boned -- they must face in or out as couples.
                                        To allow each person to be independent, use the qualifier
                                        (but not restriction) "independent_in_or_out".
+
    magic_only,                      3x2 or 4x2 - magic column; 2x4 - inverted lines;
                                        1x4 - single inverted line; 2x2 - inverted box
-                                       thar/crosswave - two waves of opposite handedness
+                                       thar/crosswave - two waves of opposite handedness.
+                                       Restriction or qualifier.  "Right/left/in/out"
+                                       and "live" may be used when it is a qualifier --
+                                          2x4 - I/O refers to centers
+                                          4x2 - R/L refers to ends
+                                          crosswave - R/L refers to handedness of
+                                             outer disconnected wave.
+
    explodable,                      1x4 - centers facing the same way
    reverse_explodable,              1x4 - ends facing the same way
+
    peelable_box,                    2x2, 3x2, 4x2, 5x2, 6x2 or 8x2 - all people in each
                                        column are facing same way
                                     2x4 - everyone is in real tandem with person front or back
    ends_are_peelable,               2x4 - ends are a box with each person in genuine tandem
+
    siamese_in_quad                  Any 2x4 or 4x2 - the people in each quadrant, if they
                                        exist, face the same way.  C1 phantom - the same.
+                                       Restriction or qualifier.
    not_tboned_in_quad               Any 2x4 or 4x2 - the people in each quadrant, if they
                                        exist, face the same or opposite.  C1 phantom - the same.
+                                       Restriction or qualifier.
+
    not_tboned,                      2x2 - people must not be T-boned
    opposite_sex,                    2x1 - people must be opposite sexes facing each other
    quarterbox_or_col,               4x2/3x2 - acceptable setup for "quick step" or
@@ -2819,59 +3000,14 @@ There are a number of internal ones not shown here.  See the file ~/sd/restricti
 
    none,                            any setup - this always passes (presumably to 
                                        use some special indicator like "num" or "live".
-   wave_only,                       Same as corresponding restriction, above.
-                                       This can take the "live" and/or "left" or "right"
-                                       mofifiers.  If "right" or "left", it means this:
-                                          1x2-1x16 - R/L means handedness
-                                          2x4/3x4/2x6/2x8 - R/L means handedness
-                                          2x3 - "right" means centers looking in; "left"
-                                             means centers loking out.
-                                          2x2 - real R/L box;
-                                          4x4 - consistent R/L waves either way, but not T-boned;
-                                          3x2/4x2/5x2/6x2/8x2 - R/L columns;
-                                          qtag/pqtag - right wave in center
-                                          2x1dmd/3x1dmd - right wave (of 6) in center
-                                          ptpd/pptpd - right miniwaves in centers of each diamond
-                                          dmd, trngl - people are paired in right miniwaves.
-                                             For diamonds, this applies just to the centers.
-                                             For triangles, it applies just to the base.
-                                          thar/crosswave - R/L waves
 
-                                             pshort6 (note that this means the short6 is
-                                                laterally oriented) - centers tandem in wave
-                                                of OPPOSITE handedness (sorry)
-                                             bone6 - ends tandem in wave of correct handedness
 
-   all_facing_same,                 Same as corresponding restriction, above, with "live".
-   1fl_only,                        Same as corresponding restriction, above, with "live".
-   2fl_only,                        Same as corresponding restriction, above, with "live".
-                                       This can take the "live" and/or "left/right/in/out"
-                                       mofifiers:
-
-                                       1x4/2x4/3x4 - R/L gives handedness of 2FL
-                                       qtag - applies to center 2FL
-                                       4x2 - I/O means starting/completed DPT
-
-   3x3_2fl_only,                    Same as corresponding restriction, above, with "live".
-   4x4_2fl_only,                    Same as corresponding restriction, above, with "live".
    couples_only,                    Same as corresponding restriction, above.
                                     The "live" modifier might not work for 2x2 -- check!
-   3x3couples_only,                 Same as corresponding restriction, above, with "live".
-   4x4couples_only,                 Same as corresponding restriction, above, with "live".
 
 
-   leads_only     same / live
-   trailers_only
 
 
-   magic_only,                      Same as corresponding restriction, above, with "live".
-                                       This can take the "live" and/or "left/right/in/out"
-                                       mofifiers:
-                                          2x4 - I/O refers to centers
-                                          4x2 - R/L refers to ends
-                                          crosswave - R/L refers to handedness of
-                                             outer disconnected wave.
-   diamond_like,                    Same as corresponding restriction, above.
    qtag_like,                       Same as corresponding restriction, above.
                                     We additionally allow the "in" or "out" modifiers, to
                                     demand 1/4 tag or 3/4 tag, respectively.
@@ -2901,9 +3037,6 @@ There are a number of internal ones not shown here.  See the file ~/sd/restricti
                                        be present.  The "in" or "out" modifiers may be used
                                        only with 1x4 setups.  They control the ends of the
                                        1x4.  They must looking into or out of the 1x4 column.
-
-   siamese_in_quad                  Same as corresponding restriction, above.
-   not_tboned_in_quad               Same as corresponding restriction, above.
 
    gen_qbox                         2x4/4x2 - demands that everyone be column-like.  This is
                                        intended to be used with the "left" or "right" modifiers.
@@ -2937,13 +3070,6 @@ There are a number of internal ones not shown here.  See the file ~/sd/restricti
 
    dmd_same_point,                  dmd - centers would circulate to same point
 
-   nice_diamonds                    Same as corresponding restriction, above.
-                                       This can take the "live" and/or "left/right"
-                                       mofifiers -- left/right demands that handedness.
-   dmd_facing                       Same as corresponding restriction, above.
-                                       This can take the "live" and/or "left/right"
-                                       mofifiers -- left/right demands that handedness
-                                       for the ends; the centers will be the opposite.
    true_Z_cw, true_Z_ccw,           2x3, 3x4, 2x6, 4x6, 3x8 - each 2x3 setup is a genuine Z.
                                     In a 2x3 setup it also demands that the shear direction
                                     be as shown.  In the larger setups either qualifier
@@ -2991,16 +3117,20 @@ There are a number of internal ones not shown here.  See the file ~/sd/restricti
                                     is some form of generalized 1/4 tag of the indicated
                                     handedness.
 
-                  ** We don't list trngl4 in the above two, because it doesn't obey the all-larger-setups rule, that is,
-                     it hasn't been implemented for bone and rigger.  (and how about c1phantoms?)
-                  There is another potential problem -- these are used to examine the base of individual triangles,
-                     but the bone6 and short6 versions demand consistent handedness.  We would like to have tests
-                     specifically aimed at individual triangles, even if they are unsymmetrical.  (The way "miniwaves"
-                     works -- when it tests larger setups like boxes, it passes if the boxes are inverted, because all
-                     we are asking about is the individual miniwaves.  Now this test, applied to spindles and short6's
-                     is specifically required to demand consistent handedness.  Therefore, we need additional names
-                     that check individual triangles.  Of course, if they see an unsymmetrical bone6, both the RH and
-                     LH versions will pass, so that splitting will take place.
+                  ** We don't list trngl4 in the above two, because it doesn't obey the
+                  all-larger-setups rule, that is, it hasn't been implemented for bone
+                  and rigger.  (and how about c1phantoms?)  There is another potential
+                  problem -- these are used to examine the base of individual triangles,
+                  but the bone6 and short6 versions demand consistent handedness.
+                  We would like to have tests specifically aimed at individual triangles,
+                  even if they are unsymmetrical.  (The way "miniwaves" works -- when it
+                  tests larger setups like boxes, it passes if the boxes are inverted,
+                  because all we are asking about is the individual miniwaves.
+                  Now this test, applied to spindles and short6's is specifically required
+                  to demand consistent handedness.  Therefore, we need additional names
+                  that check individual triangles.  Of course, if they see an unsymmetrical
+                  bone6, both the RH and LH versions will pass, so that splitting will
+                  take place.
 
 
    ctr_pts_rh,                      qtag, 2x1dmd, hrglass, dhrglass, bone, bone6 - the

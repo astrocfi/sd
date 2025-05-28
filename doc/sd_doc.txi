@@ -1,8 +1,8 @@
 \input texinfo @c %**start of header -*-texinfo-*-
 @c user documentation for Sd (square dance caller's helper)
 @c
-@set sd-version 34.4
-@set Time-stamp: February 19, 2001
+@set sd-version 34.5
+@set Time-stamp: May 27, 2001
 @c
 @setfilename sd_doc.info
 @c We want the version number to show in the html file.
@@ -3349,6 +3349,9 @@ shape-changers are allowed.
 
 A suitably populated 4x4 matrix can be construed as a center triple box
 surrounded by outside triple lines or columns.
+@item center tidal C/L/W @r{(singular)}
+This picks out a 1x8 from a larger setup.  It may be useful for certain
+types of @code{own} operations.
 @item center Z @r{(singular)}
 @item outside triple Z's
 These are straightforward.
@@ -3631,6 +3634,10 @@ kind of distorted 1x8.
 @item offset tidal C/L/W @r{(singular)}
 These are done from a 2x8 matrix in which the real people form two
 1x4's joined with an offset in the center.
+@item offset split phantom boxes
+This is done from a 3x8 formation that can be identified as two
+2x4's joined with a 50% offset in the center.
+@item parallelogram triple boxes
 @item distorted C/L/W @r{(singular)} of 6
 These are done from a center diamond with offset pairs of people on the outside.
 @item stagger D/1T/3T/1L/3L/GT
@@ -3989,10 +3996,14 @@ No universally recognized words for these exist, so the program uses the generic
 phrases noted above.  When calling, use whatever words you think are appropriate,
 such as ``twice,'' ``circulate two positions,'' or whatever.
 @item initially
+@item secondly
+@item thirdly
 @item finally
 @item piecewise
 @item random
 @item reverse random
+@item evenly
+@item oddly
 These are followed by the concept to which they apply.
 @xref{Anyone Start}, for more on the @code{initially} concept.
 @item shifty

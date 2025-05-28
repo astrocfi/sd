@@ -357,8 +357,8 @@ extern void show_match(void)
    char szLocalString[MAX_TEXT_LINE_LENGTH];
    szLocalString[0] = '\0';
    if (GLOB_match.indent) lstrcat(szLocalString, "   ");
-   lstrcat(szLocalString, GLOB_full_input);
-   lstrcat(szLocalString, GLOB_extension);
+   lstrcat(szLocalString, GLOB_user_input);
+   lstrcat(szLocalString, GLOB_full_extension);
    szLocalString[85] = '\0';  /* Just to be sure. */
    uims_add_new_line(szLocalString, 0);
 }
@@ -391,7 +391,7 @@ static void check_text_change(HWND hListbox, HWND hEditbox, long_boolean doing_e
    if (doing_escape) {
       matches = match_user_input(nLastOne, FALSE, FALSE, FALSE);
       user_match = GLOB_match;
-      p = GLOB_extended_input;
+      p = GLOB_echo_stuff;
       if (*p) {
          changed_editbox = TRUE;
 
@@ -402,7 +402,7 @@ static void check_text_change(HWND hListbox, HWND hEditbox, long_boolean doing_e
 
       }
    }
-   else if (lstrcmp(szLocalString, GLOB_full_input)) {
+   else if (lstrcmp(szLocalString, GLOB_user_input)) {
       if (nLen >= 0) {
          char cCurChar = szLocalString[nLen];
 
@@ -416,8 +416,8 @@ static void check_text_change(HWND hListbox, HWND hEditbox, long_boolean doing_e
 
             if (nLen > 0) {    /* Don't do this on a blank line. */
                my_mark = CurDisplay;
-               lstrcpy(GLOB_full_input, szLocalString);
-               GLOB_full_input_size = lstrlen(GLOB_full_input);
+               lstrcpy(GLOB_user_input, szLocalString);
+               GLOB_user_input_size = lstrlen(GLOB_user_input);
                // This will call show_match with each match.
                (void) match_user_input(nLastOne, TRUE, cCurChar == '?', FALSE);
                question_stuff_to_erase = my_mark;
@@ -426,14 +426,14 @@ static void check_text_change(HWND hListbox, HWND hEditbox, long_boolean doing_e
          }
          else if (cCurChar == ' ' || cCurChar == '-') {
             erase_questionable_stuff();
-            lstrcpy(GLOB_full_input, szLocalString);
-            GLOB_full_input[nLen] = '\0';
+            lstrcpy(GLOB_user_input, szLocalString);
+            GLOB_user_input[nLen] = '\0';
             // **** do we think nLen has the right stuff here?
-            GLOB_full_input_size = lstrlen(GLOB_full_input);
+            GLOB_user_input_size = lstrlen(GLOB_user_input);
             /* extend only to one space or hyphen, inclusive */
             matches = match_user_input(nLastOne, FALSE, FALSE, TRUE);
             user_match = GLOB_match;
-            p = GLOB_extended_input;
+            p = GLOB_echo_stuff;
 
             if (*p) {
                changed_editbox = TRUE;
@@ -470,9 +470,9 @@ static void check_text_change(HWND hListbox, HWND hEditbox, long_boolean doing_e
 
  pack_us:
 
-   lstrcpy(GLOB_full_input, szLocalString);
-   GLOB_full_input_size = lstrlen(GLOB_full_input);
-   for (p=GLOB_full_input ; *p ; p++)
+   lstrcpy(GLOB_user_input, szLocalString);
+   GLOB_user_input_size = lstrlen(GLOB_user_input);
+   for (p=GLOB_user_input ; *p ; p++)
       *p = tolower(*p);
 
    /* Write it back to the window. */
@@ -710,15 +710,15 @@ static int LookupKeystrokeBinding(
             break;
          case special_index_deleteword:
             GetWindowText(hwndEdit, szLocalString, MAX_TEXT_LINE_LENGTH);
-            lstrcpy(GLOB_full_input, szLocalString);
-            GLOB_full_input_size = lstrlen(GLOB_full_input);
+            lstrcpy(GLOB_user_input, szLocalString);
+            GLOB_user_input_size = lstrlen(GLOB_user_input);
             (void) delete_matcher_word();
-            SendMessage(hwndEdit, WM_SETTEXT, 0, (LPARAM) GLOB_full_input);
+            SendMessage(hwndEdit, WM_SETTEXT, 0, (LPARAM) GLOB_user_input);
             SendMessage(hwndEdit, EM_SETSEL, MAX_TEXT_LINE_LENGTH, MAX_TEXT_LINE_LENGTH);
             break;
          case special_index_deleteline:
             erase_matcher_input();
-            SendMessage(hwndEdit, WM_SETTEXT, 0, (LPARAM) GLOB_full_input);
+            SendMessage(hwndEdit, WM_SETTEXT, 0, (LPARAM) GLOB_user_input);
             SendMessage(hwndEdit, EM_SETSEL, MAX_TEXT_LINE_LENGTH, MAX_TEXT_LINE_LENGTH);
             break;
          case special_index_copytext:
@@ -733,9 +733,9 @@ static int LookupKeystrokeBinding(
          case special_index_quote_anything:
             GetWindowText(hwndEdit, szLocalString, MAX_TEXT_LINE_LENGTH);
             lstrcat(szLocalString, "<anything>");
-            lstrcpy(GLOB_full_input, szLocalString);
-            GLOB_full_input_size = lstrlen(GLOB_full_input);
-            SendMessage(hwndEdit, WM_SETTEXT, 0, (LPARAM) GLOB_full_input);
+            lstrcpy(GLOB_user_input, szLocalString);
+            GLOB_user_input_size = lstrlen(GLOB_user_input);
+            SendMessage(hwndEdit, WM_SETTEXT, 0, (LPARAM) GLOB_user_input);
             SendMessage(hwndEdit, EM_SETSEL, MAX_TEXT_LINE_LENGTH, MAX_TEXT_LINE_LENGTH);
             break;
          }
@@ -1489,7 +1489,7 @@ void MainWindow_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
       // clearly meant to accept the currently highlighted item.
 
       if (id == ENTER_INDEX &&
-          (GLOB_full_input[0] != '\0' || wherearewe == nMenuIndex)) break;
+          (GLOB_user_input[0] != '\0' || wherearewe == nMenuIndex)) break;
 
       // Or if, for some reason, the menu isn't anywhere, we don't accept it.
 

@@ -492,11 +492,11 @@ static void pack_and_echo_character(char c)
    /* Really should handle error better -- ring the bell,
       but this is called inside a loop. */
 
-   if (GLOB_full_input_size < INPUT_TEXTLINE_SIZE) {
-      user_input[GLOB_full_input_size] = c;
-      GLOB_full_input[GLOB_full_input_size++] = tolower(c);
-      user_input[GLOB_full_input_size] = '\0';
-      GLOB_full_input[GLOB_full_input_size] = '\0';
+   if (GLOB_user_input_size < INPUT_TEXTLINE_SIZE) {
+      user_input[GLOB_user_input_size] = c;
+      GLOB_user_input[GLOB_user_input_size++] = tolower(c);
+      user_input[GLOB_user_input_size] = '\0';
+      GLOB_user_input[GLOB_user_input_size] = '\0';
       put_char(c);
    }
 }
@@ -562,8 +562,8 @@ extern void show_match(void)
    match_counter--;
 
    if (GLOB_match.indent) put_line("   ");
-   put_line(GLOB_full_input);
-   put_line(GLOB_extension);
+   put_line(GLOB_user_input);
+   put_line(GLOB_full_extension);
    put_line("\n");
    current_text_line++;
 }
@@ -618,7 +618,7 @@ static long_boolean get_user_input(char *prompt, int which)
             switch (keyptr->index) {
             case special_index_deleteline:
                erase_matcher_input();
-               strcpy(user_input, GLOB_full_input);
+               strcpy(user_input, GLOB_user_input);
                function_key_expansion = (char *) 0;
                clear_line();           /* Clear the current line */
                put_line(user_input_prompt);    /* Redisplay the prompt. */
@@ -626,7 +626,7 @@ static long_boolean get_user_input(char *prompt, int which)
             case special_index_deleteword:
                chars_deleted = delete_matcher_word();
                while (chars_deleted-- > 0) rubout();
-               strcpy(user_input, GLOB_full_input);
+               strcpy(user_input, GLOB_user_input);
                function_key_expansion = (char *) 0;
                continue;
             case special_index_quote_anything:
@@ -722,10 +722,10 @@ static long_boolean get_user_input(char *prompt, int which)
    got_char:
 
       if ((c == '\b') || (c == DEL)) {
-         if (GLOB_full_input_size > 0) {
-            GLOB_full_input_size--;
-            user_input[GLOB_full_input_size] = '\0';
-            GLOB_full_input[GLOB_full_input_size] = '\0';
+         if (GLOB_user_input_size > 0) {
+            GLOB_user_input_size--;
+            user_input[GLOB_user_input_size] = '\0';
+            GLOB_user_input[GLOB_user_input_size] = '\0';
             function_key_expansion = (char *) 0;
             rubout(); /* Update the display. */
          }
@@ -749,7 +749,7 @@ static long_boolean get_user_input(char *prompt, int which)
          /* extend only to one space or hyphen, inclusive */
          matches = match_user_input(which, FALSE, FALSE, TRUE);
          //         user_match = GLOB_match;
-         p = GLOB_extended_input;
+         p = GLOB_echo_stuff;
 
          if (*p) {
             while (*p) {
@@ -775,7 +775,7 @@ static long_boolean get_user_input(char *prompt, int which)
          matches = match_user_input(which, FALSE, FALSE, TRUE);
          user_match = GLOB_match;
 
-         if (!strcmp(GLOB_full_input, "help")) {
+         if (!strcmp(GLOB_user_input, "help")) {
             put_line("\n");
             user_match.match.kind = ui_help_simple;
             current_text_line++;
@@ -793,14 +793,14 @@ static long_boolean get_user_input(char *prompt, int which)
               user_match.match.kind == ui_call_select ||
               user_match.match.kind == ui_concept_select)) {
 
-            p = GLOB_extended_input;
+            p = GLOB_echo_stuff;
             while (*p)
                pack_and_echo_character(*p++);
 
             put_line("\n");
 
             if (journal_file) {
-               fputs(GLOB_full_input, journal_file);
+               fputs(GLOB_user_input, journal_file);
                fputc('\n', journal_file);
             }
 
@@ -828,7 +828,7 @@ static long_boolean get_user_input(char *prompt, int which)
       else if (c == '\t' || c == '\033') {
          (void) match_user_input(which, FALSE, FALSE, TRUE);
          user_match = GLOB_match;
-         p = GLOB_extended_input;
+         p = GLOB_echo_stuff;
 
          if (*p) {
             while (*p)

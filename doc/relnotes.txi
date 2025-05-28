@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR SD VERSION 34.4
-@set title2 Database version = 34.4 format = 176
+@set title1 RELEASE NOTES FOR SD VERSION 34.5
+@set title2 Database version = 34.5 format = 181
 @set title3 X11 UI version 1.17, SDTTY UI version 1.12, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 34.5::
 * 34.4::
 * 34.31::
 * 34.3::
@@ -42,7 +43,7 @@ The files @file{relnotes98.txi} and @file{oldnotes} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 34.4, Top, (dir)
+@node Intro, 34.5, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -53,11 +54,40 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2001 William B. Ackerman
 @sp 3
 @menu
-* 34.31::               Changes in the current version
+* 34.5::               Changes in the current version
 @end menu
 
 @c ************
-@node 34.4, 34.31, Intro, Top
+@node 34.5, 34.4, Intro, Top
+@unnumberedsec Version 34.5 changes
+
+New concepts: @code{twin phantom point-to-point diamonds} and
+@code{twin phantom point-to-point diamond spots}.
+
+New concept: @code{offset split phantom boxes}.
+
+New concept: @code{parallelogram triple boxes}.
+
+As usual, we do not take a position on the tastefulness of
+various new concepts or their applications.
+
+New concepts: @code{center tidal C/L/W}.
+These may be useful for things like @code{own the <anyone>,
+center tidal wave grand swing thru by 3x1 triangle circulate}.
+
+The program can now do a better job of having people coming to
+the same spot after fractional @code{exchange the triangles}.
+
+The program now does a better job of telling when the outsides
+can circulate or half circulate.
+
+New calls:  @code{flip back, to a wave} and @code{<ATC> back to a wave, to a wave}.
+The program will insert commas as shown, to make the meaning clear.
+We do not take a position on whether @code{flip back to a wave} is ambiguous,
+or what it means.
+
+@c ************
+@node 34.4, 34.31, 34.5, Top
 @unnumberedsec Version 34.4 changes
 
 New concepts: @code{twin phantom point-to-point diamonds} and

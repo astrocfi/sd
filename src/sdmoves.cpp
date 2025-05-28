@@ -526,12 +526,11 @@ extern long_boolean divide_for_magic(
    saved_warnings = history[history_ptr+1].warnings;
    impose_assumption_and_move(ss, result);
 
-   /* Shut off "each 2x3" types of warnings -- they will arise spuriously while
-      the people do the calls in isolation. */
-   for (i=0 ; i<WARNING_WORDS ; i++) {
-      history[history_ptr+1].warnings.bits[i] &= ~dyp_each_warnings.bits[i];
-      history[history_ptr+1].warnings.bits[i] |= saved_warnings.bits[i];
-   }
+   // Shut off "each 2x3" types of warnings -- they will arise spuriously
+   // while the people do the calls in isolation.
+
+   history[history_ptr+1].warnings.clearmultiple(dyp_each_warnings);
+   history[history_ptr+1].warnings.setmultiple(saved_warnings);
 
    livemask = 0;
 
@@ -700,7 +699,11 @@ extern void do_call_in_series(
 {
    uint32 current_elongation = 0;
    uint32 saved_result_flags = sss->result_flags;
-   sss->cmd.prior_expire_bits |= sss->result_flags & RESULTFLAG__EXPIRATION_BITS;
+
+   // Start the execution mechanism, but only if we are really
+   // doing a call.
+   if (sss->cmd.callspec)
+      sss->cmd.prior_expire_bits |= sss->result_flags & RESULTFLAG__EXPIRATION_BITS;
 
    setup qqqq = *sss;
 
@@ -1041,6 +1044,8 @@ struct checkitem {
 
 
 const checkitem checktable[] = {
+   {0x00A60026, 0x08080104, s_nxtrglcw,  0, warn__none, (const coordrec *) 0, {127}},
+   {0x00A60026, 0x0C008002, s_nxtrglccw, 0, warn__none, (const coordrec *) 0, {127}},
    {0x00630095, 0x00840050, spgdmdcw,  0, warn__none, (const coordrec *) 0, {127}},
    {0x00630095, 0x10800A00, spgdmdccw, 0, warn__none, (const coordrec *) 0, {127}},
    {0x00A20026, 0x08008404, s_rigger, 0, warn__none, (const coordrec *) 0, {127}},
@@ -2142,6 +2147,7 @@ extern void anchor_someone_and_move(
    setup saved_start_people = *ss;
    int Bindex[4];
    int Aindex[4];
+   int Eindex[4];
 
    current_options.who = parseptr->options.who;
 
@@ -2151,16 +2157,16 @@ extern void anchor_someone_and_move(
    if (ss->cmd.cmd_misc_flags & CMD_MISC__DISTORTED)
       fail("This call not allowed in distorted or virtual setup.");
 
-   for (i=0 ; i<4 ; i++) { Bindex[i] = -1; Aindex[i] = -1; }
+   for (i=0 ; i<4 ; i++) { Eindex[i] = Bindex[i] = Aindex[i] = -1; }
 
    ss->rotation = 0;
 
-   if (     ss->kind != s2x4 &&
-            ss->kind != s1x8 &&
-            ss->kind != s2x6 &&
-            ss->kind != s3x4 &&
-            ss->kind != s_qtag &&
-            ss->kind != s_ptpd)
+   if (ss->kind != s2x4 &&
+       ss->kind != s1x8 &&
+       ss->kind != s2x6 &&
+       ss->kind != s3x4 &&
+       ss->kind != s_qtag &&
+       ss->kind != s_ptpd)
       fail("Sorry, can't do this in this setup.");
    move(ss, FALSE, result);
    numgroups = 0;
@@ -2199,7 +2205,10 @@ extern void anchor_someone_and_move(
          fail("Can't 'anchor' someone for an 8-person call.");
       }
 
-      before_matrix_info[i].nearest = j;    /* The "nearest" field tells what anchored group the person is in. */
+      Eindex[j] = 99;    // We have someone in this group.
+
+      // The "nearest" field tells what anchored group the person is in.
+      before_matrix_info[i].nearest = j;
 
       if (before_matrix_info[i].sel) {
          if (Bindex[j] >= 0) fail("Need exactly one 'anchored' person in each group.");
@@ -2208,7 +2217,8 @@ extern void anchor_someone_and_move(
    }
 
    for (k=0 ; k<numgroups ; k++) {
-      if (Bindex[k] < 0) fail("Need exactly one 'anchored' person in each group.");
+      if (Eindex[k] > 0 && Bindex[k] < 0)
+         fail("Need exactly one 'anchored' person in each group.");
    }
 
    // If the result is a "1p5x8", we do special stuff.
@@ -2226,21 +2236,21 @@ extern void anchor_someone_and_move(
       after_matrix_info[i].deltarot += result->rotation;
 
       for (k=0 ; k<numgroups ; k++) {
-         if (((after_matrix_info[i].id1 ^ before_matrix_info[Bindex[k]].id1) & XPID_MASK) == 0) Aindex[k] = i;
+         if (((after_matrix_info[i].id1 ^ before_matrix_info[Bindex[k]].id1) & XPID_MASK) == 0)
+            Aindex[k] = i;
       }
    }
 
    for (k=0 ; k<numgroups ; k++) {
-      if (Aindex[k] < 0) fail("Sorry6.");
-   }
-
-   for (k=0 ; k<numgroups ; k++) {
-      deltax[k] = before_matrix_info[Bindex[k]].x - after_matrix_info[Aindex[k]].x;
-      deltay[k] = before_matrix_info[Bindex[k]].y - after_matrix_info[Aindex[k]].y;
+      if (Eindex[k] > 0) {
+         if (Aindex[k] < 0) fail("Sorry6.");
+         deltax[k] = before_matrix_info[Bindex[k]].x - after_matrix_info[Aindex[k]].x;
+         deltay[k] = before_matrix_info[Bindex[k]].y - after_matrix_info[Aindex[k]].y;
+      }
    }
 
    for (i=0 ; i<nump ; i++) {
-      /* Find this person's group. */
+      // Find this person's group.
 
       for (k=0 ; k<nump ; k++) {
          if (((after_matrix_info[i].id1 ^ before_matrix_info[k].id1) & XPID_MASK) == 0) {
@@ -3321,8 +3331,8 @@ static void do_stuff_inside_sequential_call(
    }
 
    if (!first_call) {    // Is this right, or should we be using "first_time" here also?
-      /* Stop checking unless we are really serious. */
-      if (!setup_is_elongated)
+      // Stop checking unless we are really serious.
+      if (!setup_is_elongated && (result->kind == s2x2 || result->kind == s_short6))
          result->cmd.cmd_misc_flags |= CMD_MISC__NO_CHK_ELONG;
 
       result->cmd.cmd_misc2_flags &= ~CMD_MISC2__IN_Z_MASK;
@@ -4259,7 +4269,6 @@ static long_boolean do_misc_schema(
       return TRUE;
    }
    else {
-      int i;
       int rot = 0;
       long_boolean normalize_strongly = FALSE;
       warning_info saved_warnings = history[history_ptr+1].warnings;
@@ -4384,10 +4393,12 @@ static long_boolean do_misc_schema(
          break;
       }
 
+      // If the schema is "reverse checkpoint", we leave the ID bits in place.
+      // The database author is responsible for what ID bits mean in this case.
       concentric_move(ss, foo1p, &foo2, the_schema,
                       innerdef->modifiers1,
                       outerdef->modifiers1,
-                      TRUE, ~0UL, result);
+                      the_schema != schema_rev_checkpoint, ~0UL, result);
 
       result->rotation -= rot;   /* Flip the setup back. */
 
@@ -4398,12 +4409,9 @@ static long_boolean do_misc_schema(
       if (normalize_strongly)
          normalize_setup(result, normalize_after_triple_squash);
 
-      if (DFM1_SUPPRESS_ELONGATION_WARNINGS & outerdef->modifiers1) {
-         for (i=0 ; i<WARNING_WORDS ; i++)
-            history[history_ptr+1].warnings.bits[i] &= ~conc_elong_warnings.bits[i];
-      }
-      for (i=0 ; i<WARNING_WORDS ; i++)
-         history[history_ptr+1].warnings.bits[i] |= saved_warnings.bits[i];
+      if (DFM1_SUPPRESS_ELONGATION_WARNINGS & outerdef->modifiers1)
+         history[history_ptr+1].warnings.clearmultiple(conc_elong_warnings);
+      history[history_ptr+1].warnings.setmultiple(saved_warnings);
    }
 
    return FALSE;
@@ -4435,6 +4443,24 @@ static calldef_schema get_real_callspec_and_schema(setup *ss,
          return (herit_concepts & INHERITFLAG_SINGLE) ?
             schema_single_concentric : schema_concentric;
       }
+   case schema_grand_single_or_matrix_concentric:
+      if (herit_concepts & INHERITFLAG_GRAND) {
+         if (herit_concepts & (INHERITFLAG_12_MATRIX|INHERITFLAG_16_MATRIX))
+            fail("You must not use \"grand\" with \"12 matrix\" or \"16 matrix\".");
+         else if (herit_concepts & INHERITFLAG_SINGLE)
+            return schema_grand_single_concentric;
+         else
+            fail("You must not use \"grand\" without \"single\".");
+      }
+      else {
+         if (herit_concepts & INHERITFLAG_12_MATRIX)
+            return schema_conc_12;
+         else if (herit_concepts & INHERITFLAG_16_MATRIX)
+            return schema_conc_16;
+         else
+            return (herit_concepts & INHERITFLAG_SINGLE) ?
+               schema_single_concentric : schema_concentric;
+      }
    case schema_maybe_grand_single_cross_concentric:
       if (herit_concepts & INHERITFLAG_GRAND) {
          if (herit_concepts & INHERITFLAG_SINGLE)
@@ -4449,6 +4475,7 @@ static calldef_schema get_real_callspec_and_schema(setup *ss,
             return schema_cross_concentric;
       }
    case schema_maybe_special_single_concentric:
+   case schema_maybe_special_single_concentric_or_2_4:
       // "Single" has the usual meaning for this one.  But "grand single"
       // turns it into a "special concentric", which has the centers working
       // in three pairs.
@@ -4462,8 +4489,12 @@ static calldef_schema get_real_callspec_and_schema(setup *ss,
       else {
          if ((herit_concepts & (INHERITFLAG_GRAND | INHERITFLAG_NXNMASK)) == INHERITFLAG_GRAND)
             fail("You must not use \"grand\" without \"single\" or \"nxn\".");
-         else if ((herit_concepts & (INHERITFLAG_GRAND | INHERITFLAG_NXNMASK)) == 0)
-            return schema_concentric;
+         else if ((herit_concepts & (INHERITFLAG_GRAND | INHERITFLAG_NXNMASK)) == 0) {
+            if (the_schema == schema_maybe_special_single_concentric_or_2_4)
+               return schema_concentric_2_4_or_normal;
+            else
+               return schema_concentric;
+         }
          else if ((herit_concepts &
                    (INHERITFLAG_NXNMASK | INHERITFLAG_12_MATRIX | INHERITFLAG_16_MATRIX)) ==
                   (INHERITFLAGNXNK_4X4 | INHERITFLAG_16_MATRIX))
@@ -4882,12 +4913,10 @@ static void really_inner_move(setup *ss,
 
                the_results[1] = the_setups[1];
 
-               /* Shut off "each 1x4" types of warnings -- they will arise spuriously while
-                     the people do the calls in isolation. */
-               for (i=0 ; i<WARNING_WORDS ; i++) {
-                  history[history_ptr+1].warnings.bits[i] &= ~dyp_each_warnings.bits[i];
-                  history[history_ptr+1].warnings.bits[i] |= saved_warnings.bits[i];
-               }
+               // Shut off "each 1x4" types of warnings -- they will arise spuriously
+               // while the people do the calls in isolation.
+               history[history_ptr+1].warnings.clearmultiple(dyp_each_warnings);
+               history[history_ptr+1].warnings.setmultiple(saved_warnings);
 
                *result = the_results[1];
                result->result_flags = get_multiple_parallel_resultflags(the_results, 2);
@@ -5907,14 +5936,15 @@ extern void move(
 
    save_incoming_final = ss->cmd.cmd_final_flags;   /* In case we need to punt. */
 
- fuckit:
+   for (;;) {
+      parseptrcopy = process_final_concepts(parseptrcopy, TRUE, &ss->cmd.cmd_final_flags);
 
-   parseptrcopy = process_final_concepts(parseptrcopy, TRUE, &ss->cmd.cmd_final_flags);
-
-   if (parseptrcopy->concept->kind == concept_fractional &&
-       ss->cmd.cmd_misc_flags & CMD_MISC__RESTRAIN_MODIFIERS) {
-      parseptrcopy = parseptrcopy->next;
-      goto fuckit;
+      if (parseptrcopy->concept->kind == concept_fractional &&
+          ss->cmd.cmd_misc_flags & CMD_MISC__RESTRAIN_MODIFIERS) {
+         parseptrcopy = parseptrcopy->next;
+      }
+      else
+         break;
    }
 
    saved_magic_diamond = last_magic_diamond;
@@ -6184,9 +6214,11 @@ extern void move(
             ss->cmd.cmd_final_flags.her8it &= ~INHERITFLAG_DIAMOND;
 
             if (ss->kind == sdmd)
-               new_divided_setup_move(ss, MAPCODE(s1x2,2,MPKIND__DMD_STUFF,0), phantest_ok, TRUE, result);
+               new_divided_setup_move(ss, MAPCODE(s1x2,2,MPKIND__DMD_STUFF,0),
+                                      phantest_ok, TRUE, result);
             else {
-               /* Divide into diamonds and try again.  (Note that we back up the concept pointer.) */
+               // Divide into diamonds and try again.
+               // (Note that we back up the concept pointer.)
                ss->cmd.parseptr = parseptr;
                ss->cmd.cmd_final_flags.final = 0;
                ss->cmd.cmd_final_flags.her8it = 0;
@@ -6194,7 +6226,8 @@ extern void move(
             }
          }
          else
-            fail2("Can't do this concept with other concepts preceding it:", parseptrcopy->concept->menu_name);
+            fail2("Can't do this concept with other concepts preceding it:",
+                  parseptrcopy->concept->menu_name);
       }
    }
 

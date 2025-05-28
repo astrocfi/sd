@@ -80,32 +80,35 @@ static tm_thing maps_isearch_twosome[] = {
    {{10, 15, 3, 1, 4, 5, 6, 8,       12, 13, 14, 0, 2, 7, 11, 9},                0,     0000,         8, 0,  0,  0, 0,  s2x4,  s4x4},
    {{14, 3, 7, 5, 8, 9, 10, 12,      0, 1, 2, 4, 6, 11, 15, 13},                 0,   0xFFFF,         8, 1,  0,  0, 0,  s2x4,  s4x4},
 
-   /* When the map following this one gets fixed and uncommented, this one will have to appear first, of course.  Actually, it's
-      trickier than that.  The whole issue of 3x4 vs. qtag operation needs to be straightened out. */
    {{7, 22, 15, 20, 18, 11, 2, 9,    6, 23, 14, 21, 19, 10, 3, 8},               0, 0xFCCFCC,         8, 1,  0,  0, 0,  s_qtag,s4x6},
    {{11, 10, 9, 8, 7, 6, 12, 13, 14, 15, 16, 17, 
                       0, 1, 2, 3, 4, 5, 23, 22, 21, 20, 19, 18},                 0,     0000,        12, 0,  0,  0, 0,  s2x6,  s4x6},
-   /* This is for everyone as couples in a 3x4, making virtual columns of 6. */
+   {{0, 2, 4, 6, 8, 10, 13, 15, 17, 19, 21, 23,
+                      1, 3, 5, 7, 9, 11, 12, 14, 16, 18, 20, 22},         0x555555, 0xFFFFFF,        12, 0,  0,  0, 0,  s2x6,  s2x12},
+
+   // This is for everyone as couples in a 3x4, making virtual columns of 6.
    {{2, 5, 7, 9, 10, 0,              3, 4, 6, 8, 11, 1},                         0,   0x0FFF,         6, 1,  0,  0, 0,  s2x3,  s3x4},
-   /* This is for various people as couples in a 1/4 tag, making virtual columns of 6. */
+   // This is for various people as couples in a 1/4 tag, making virtual columns of 6.
    {{1, 3, 4, 5, 6, 0,               -1, 2, -1, -1, 7, -1},                      0,     0xCC,         6, 1,  0,  0, 0,  s2x3,  s_qtag},
 
-   /* There is an issue involving the order of the two pairs of items that follow.  In the order shown, (3x4 matrix stuff before c1phan),
-      the program will opt for a 3x4 if we say (normal columns; centers trail off) centers are as couples, circulate.  In the other
-      order, it would opt for C1 phantoms.  We believe that having them arranged in 3 definite lines, from which, for example, we
-      could have the very center 2 trade, is better. */
+   // There is an issue involving the order of the two pairs of items that follow.
+   // In the order shown, (3x4 matrix stuff before c1phan), the program will opt
+   // for a 3x4 if we say (normal columns; centers trail off)
+   // centers are as couples, circulate.  In the other order, it would opt
+   // for C1 phantoms.  We believe that having them arranged in 3 definite lines,
+   // from which, for example, we could have the very center 2 trade, is better.
 
-   /* Next two are for various people as couples in a 3x4 matrix, making virtual columns of 6. */
+   // Next two are for various people as couples in a 3x4 matrix, making virtual columns of 6.
    {{2, 5, 7, 8, 11, 0,              -1, -1, 6, -1, -1, 1},                      0,   0x00C3,         6, 1,  0,  0, 0,  s2x3,  s3x4},
    {{2, 5, 7, 9, 11, 1,              3, -1, -1, 8, -1, -1},                      0,   0x030C,         6, 1,  0,  0, 0,  s2x3,  s3x4},
 
-   /* Next two are for various people as couples in a C1 phantom, making virtual columns of 6. */
+   // Next two are for various people as couples in a C1 phantom, making virtual columns of 6.
    {{3, 7, 5, 9, 15, 13,             1, -1, -1, 11, -1, -1},                     0,     0000,         6, 0,  0,  0, 0,  s2x3,  s_c1phan},
    {{0, 2, 6, 8, 10, 12,             -1, -1, 4, -1, -1, 14},                     0,     0000,         6, 0,  0,  0, 0,  s2x3,  s_c1phan},
 
    {{0, 2, 4, 6, 9, 11, 13, 15,      1, 3, 5, 7, 8, 10, 12, 14},            0x5555,   0xFFFF,         8, 0,  0,  0, 0,  s2x4,  s2x8},
    {{0, 2, 4, 6, 9, 11, 13, 15, 17, 19, 20, 22, 
-                      1, 3, 5, 7, 8, 10, 12, 14, 16, 18, 21, 23},           0x555555, 0xFFFFFF,      12, 0,  0,  0, 0,  s3x4,  s3x8},
+                      1, 3, 5, 7, 8, 10, 12, 14, 16, 18, 21, 23},         0x555555, 0xFFFFFF,        12, 0,  0,  0, 0,  s3x4,  s3x8},
    {{2, 3, 5, 6, 7, 0,               -1, -1, 4, -1, -1, 1},                      0,     0x33,         6, 1,  0,  0, 0,  s_2x1dmd, s_crosswave},
    {{0, 1, 3, 4, 5, 6,               -1, -1, 2, -1, -1, 7},                      0,        0,         6, 0,  0,  0, 0,  s_1x2dmd, s_crosswave},
    {{6, 7, 0, 2, 3, 5,               -1, -1, 1, -1, -1, 4},                  0x410,     0x33,         6, 0,  0,  0, 0,  s_1x2dmd, s_rigger},
@@ -190,6 +193,19 @@ static tm_thing maps_isearch_twosome[] = {
    {{0, 2, 4, 5,                     1, -1, 3, -1},                           0x11,     0033,         4, 0,  0,  0, 0,  s2x2,  s2x3},
    {{1, 3, 5, 0,                     2, -1, 4, -1},                              0,     0066,         4, 1,  0,  0, 0,  s2x2,  s2x3},
    {{2, 4, 5, 0,                     -1, 3, -1, 1},                              0,     0033,         4, 1,  0,  0, 0,  s2x2,  s2x3},
+   // Next 2 are for similar situations, in "nonisotropic triangles".
+   // We do not have the 3rd or 4th maps in the class, because they apply only
+   // to unwinding, and we never unwind to these setups.  That's why
+   // these 2 maps are placed after the 4 preceding ones.
+   {{0, 1, 3, 5,                     -1, 2, -1, 4},                           0x44,     0066,         4, 0,  0,  0, 0,  s2x2,  s_ntrgl6cw},
+   {{0, 2, 4, 5,                     1, -1, 3, -1},                           0x11,     0033,         4, 0,  0,  0, 0,  s2x2,  s_ntrgl6ccw},
+
+   // Next 2 are for similar situations, with all 8 people present.
+   {{1, 3, 4, 6, 7, 0,               2, -1, -1, 5, -1, -1},                      0,     0x66,         6, 1,  0,  0, 0,  s_short6,  s_nxtrglcw},
+   {{2, 3, 5, 6, 7, 0,              -1, -1, 4, -1, -1, 1},                       0,     0x33,         6, 1,  0,  0, 0,  s_short6,  s_nxtrglccw},
+
+
+
    {{0, 2, 4, 7, 9, 11,              1, 3, 5, 6, 8, 10},                     0x555,   0x0FFF,         6, 0,  0,  0, 0,  s2x3,  s2x6},
    /* The two maps just below must be after the map just above. */
    {{-2, 7, 6, -2, 12, 15,           -2, 2, 5, -2, 17, 16},                  02020,  0x18060,         6, 0,  0,  0, 0,  s2x3,  s4x5},
@@ -228,6 +244,8 @@ static tm_thing maps_isearch_threesome[] = {
    {{0, 5,                 1, 4,                 2, 3},                          0,      077,         2, 1,  0,  0, 0,  s1x2,  s2x3},
    {{0, 3, 8, 11,          1, 4, 7, 10,          2, 5, 6, 9},                 0x55,    07777,         4, 0,  0,  0, 0,  s2x2,  s2x6},
    {{3, 8, 11, 0,          4, 7, 10, 1,          5, 6, 9, 2},                    0,    07777,         4, 1,  0,  0, 0,  s2x2,  s2x6},
+   {{0, 3, 6, 9, 14, 17, 20, 23,          1, 4, 7, 10, 13, 16, 19, 22,
+                      2, 5, 8, 11, 12, 15, 18, 21},                         0x5555,077777777,         8, 0,  0,  0, 0,  s2x4,  s2x12},
    {{0, 3, 6, 7,           1, -1, 5, -1,         2, -1, 4, -1},               0x11,     0x77,         4, 0,  0,  0, 0,  sdmd,  s1x3dmd},
    {{3, 6, 7, 0,           -1, 5, -1, 1,         -1, 4, -1, 2},                  0,     0x77,         4, 1,  0,  0, 0,  sdmd,  s3x1dmd},
    {{7, 0, 3, 6,           -1, 1, -1, 5,         -1, 2, -1, 4},               0x44,     0x77,         4, 0,  0,  0, 0,  sdmd,  s_spindle},
@@ -301,6 +319,8 @@ static tm_thing maps_isearch_boxsome[] = {
    {{10, 3, 5, 8,      12, 14, 7, 9,     15, 1, 4, 6,      13, 0, 2, 11},        0,        0,         4, 0,  0,  0, 0,  s2x2,  s4x4},
    {{11, 2, 7, 20,     10, 3, 6, 21,     18, 9, 22, 15,    19, 8, 23, 14},    0x55,0x0FCCFCC,         4, 0,  0,  0, 0,  sdmd,  s4x6},
    {{18, 9, 22, 15,    11, 2, 7, 20,     19, 8, 23, 14,    10, 3, 6, 21},        0,        0,         4, 0,  0,  0, 0,  sdmd,  s4x6},
+   {{0, 2, 4, 22, 20, 18,     1, 3, 5, 23, 21, 19,
+     11, 9, 7, 13, 15, 17,    10, 8, 6, 12, 14, 16},                         0x555, 0xFFFFFF,         6, 0,  0,  0, 0,  s2x3,  s4x6},
    {{0}, 0, 0, 0, 0,  0,  0, 0, nothing, nothing}};
 
 
@@ -337,10 +357,18 @@ static tm_thing maps_isearch_tglsome[] = {
    {{0, 3, 4, 7,       6, -1, 2, -1,     5, -1, 1, -1},                       0x31,     0x77,         4, 0,  0,  0, 0,  sdmd,  s_hrglass},
 
    // These four need to show a "fudgy" warning.
+   // Well, the last two are being changed to be not fudgy.
    {{6, 1, 2, 5,       0, -1, 4, -1,     7, -1, 3, -1},                       0x20,        0,         4, 0,  0,  0, 0,  sdmd,  s2x4},
    {{0, 2, 4, 6,       7, -1, 3, -1,     1, -1, 5, -1},                       0x02,        0,         4, 0,  0,  0, 0,  sdmd,  s2x4},
+   /*  old stuff
    {{7, 0, 3, 4,       -1, 6, -1, 2,     -1, 1, -1, 5},                       0x08,        0,         4, 0,  0,  0, 0,  s1x4,  s_spindle},
    {{7, 5, 3, 1,       -1, 0, -1, 4,     -1, 6, -1, 2},                       0x80,        0,         4, 0,  0,  0, 0,  s1x4,  s_spindle},
+   */
+   // New stuff.
+   {{7, 0, 3, 4,       -1, 6, -1, 2,     -1, 1, -1, 5},                       0x08,        0,         4, 0,  0,  0, 0,  s1x4,  s_nxtrglccw},
+   {{7, 5, 3, 1,       -1, 0, -1, 4,     -1, 6, -1, 2},                       0x80,        0,         4, 0,  0,  0, 0,  s1x4,  s_nxtrglcw},
+
+
 
    {{0, 3, 4, 7,       -1, 2, -1, 6,     -1, 1, -1, 5},                       0x80,        0,         4, 0,  0,  0, 0,  sdmd,  s_galaxy},
    {{2, 5, 6, 1,       -1, 4, -1, 0,     -1, 3, -1, 7},                       0x08,     0xBB,         4, 1,  0,  0, 0,  sdmd,  s_galaxy},
@@ -648,9 +676,12 @@ static long_boolean pack_us(
                [fb[0], fb[1]] must not match. */
 
             // But, if phantoms are allowed, and nobody is home, we allow it.
+            // And we allow empty spots if the reduced setup is larger than 4,
+            // since we couldn't possible fill them.  This allows skewsome Z axle.
 
             if ((orpeople ||
                  !(tandstuff->virtual_setup.cmd.cmd_misc_flags & CMD_MISC__PHANTOMS)) &&
+                (setup_attrs[tandstuff->virtual_setup.kind].setup_limits < 4 || orpeople != 0) &&
                 (((fb[0].id1 ^ fb[3].id1) |
                   (fb[1].id1 ^ fb[2].id1) |
                   (~(fb[0].id1 ^ fb[1].id1))) & BIT_PERSON))

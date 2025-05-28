@@ -599,24 +599,24 @@ SDLIB_API void write_history_line(int history_index, const char *header,
    /* Check for warnings to print. */
    /* Do not double space them, even if writing final output. */
 
-   /* First, don't print both "bad concept level" and "bad modifier level". */
+   // First, don't print both "bad concept level" and "bad modifier level".
 
-   if ((1 << (warn__bad_concept_level & 0x1F)) & this_item->warnings.bits[warn__bad_concept_level>>5])
-      this_item->warnings.bits[warn__bad_modifier_level>>5] &= ~(1 << (warn__bad_modifier_level & 0x1F));
+   if (this_item->warnings.testbit(warn__bad_concept_level))
+      this_item->warnings.clearbit(warn__bad_modifier_level);
 
-   /* Or "opt for parallelogram" and "each 1x4". */
+   // Or "opt for parallelogram" and "each 1x4".
 
-   if ((1 << (warn__check_pgram & 0x1F)) & this_item->warnings.bits[warn__check_pgram>>5])
-      this_item->warnings.bits[warn__each1x4>>5] &= ~(1 << (warn__each1x4 & 0x1F));
+   if (this_item->warnings.testbit(warn__check_pgram))
+      this_item->warnings.clearbit(warn__each1x4);
 
-   /* Or "each 1x6" and "each 1x3". */
+   // Or "each 1x6" and "each 1x3".
 
-   if ((1 << (warn__split_1x6 & 0x1F)) & this_item->warnings.bits[warn__split_1x6>>5])
-      this_item->warnings.bits[warn__split_to_1x6s>>5] &= ~(1 << (warn__split_to_1x6s & 0x1F));
+   if (this_item->warnings.testbit(warn__split_1x6))
+      this_item->warnings.clearbit(warn__split_to_1x6s);
 
    if (!ui_options.nowarn_mode) {
       for (w=0 ; w<warn__NUM_WARNINGS ; w++) {
-         if ((1 << (w & 0x1F)) & this_item->warnings.bits[w>>5]) {
+         if (this_item->warnings.testbit((warning_index) w)) {
             writestuff("  Warning:  ");
             writestuff(&warning_strings[w][1]);
             (*the_callback_block.newline_fn)();
@@ -1814,8 +1814,6 @@ SDLIB_API void display_initial_history(int upper_limit, int num_pics)
 
 extern void initialize_parse(void)
 {
-   int i;
-
    parse_state.concept_write_base = &history[history_ptr+1].command_root;
    parse_state.concept_write_ptr = parse_state.concept_write_base;
    *(parse_state.concept_write_ptr) = (parse_block *) 0;
@@ -1823,7 +1821,7 @@ extern void initialize_parse(void)
    parse_state.base_call_list_to_use = find_proper_call_list(&history[history_ptr].state);
    parse_state.call_list_to_use = parse_state.base_call_list_to_use;
    history[history_ptr+1].centersp = 0;
-   for (i=0 ; i<WARNING_WORDS ; i++) history[history_ptr+1].warnings.bits[i] = 0;
+   history[history_ptr+1].warnings = warning_info();
    history[history_ptr+1].draw_pic = FALSE;
 
    if (written_history_items > history_ptr)
@@ -2210,11 +2208,11 @@ SDLIB_API void run_program()
          // If this is a real call execution error, save the call that caused it.
 
          if (global_error_flag < error_flag_wrong_command) {
-            history[0] = history[history_ptr+1];     /* So failing call will get printed. */
-            /* But copy the parse tree, since we are going to clip it. */
+            history[0] = history[history_ptr+1];     // So failing call will get printed.
+            // But copy the parse tree, since we are going to clip it.
             history[0].command_root = copy_parse_tree(history[0].command_root);
-            /* But without any warnings we may have collected. */
-            for (i=0 ; i<WARNING_WORDS ; i++) history[0].warnings.bits[i] = 0;
+            // But without any warnings we may have collected.
+            history[0].warnings = warning_info();
          }
          if (global_error_flag == error_flag_wrong_command) {
             /* Special signal -- user clicked on special thing while trying to get subcall. */
@@ -2243,10 +2241,9 @@ SDLIB_API void run_program()
              ((history_ptr != 1) || !startinfolist[history[1].centersp].into_the_middle) &&
              backup_one_item()) {
             reply_pending = FALSE;
-            /* Take out warnings that arose from the failed call,
-               since we aren't going to do that call. */
-            for (i=0 ; i<WARNING_WORDS ; i++)
-               history[history_ptr+1].warnings.bits[i] = 0;
+            // Take out warnings that arose from the failed call,
+            // since we aren't going to do that call.
+            history[history_ptr+1].warnings = warning_info();
             goto simple_restart;
          }
          goto start_cycle;      /* Failed, reinitialize the whole line. */
@@ -2424,7 +2421,7 @@ SDLIB_API void run_program()
       whole_sequence_low_lim = 2;
       if (!startinfolist[uims_menu_index].into_the_middle) whole_sequence_low_lim = 1;
 
-      for (i=0 ; i<WARNING_WORDS ; i++) history[1].warnings.bits[i] = 0;
+      history[1].warnings = warning_info();
       history[1].draw_pic = FALSE;
       history[1].centersp = uims_menu_index;
       history[1].resolve_flag.kind = resolve_none;

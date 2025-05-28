@@ -252,11 +252,10 @@ extern void normalize_concentric(
       }
       else if (inners[0].kind == s1x2 && inners[0].rotation == 0 && outer_elongation == 2) {
          setup temp = *outers;
-
-         (void) copy_person(outers, 0, &inners[1], 0);
-         (void) copy_person(outers, 1, &inners[1], 1);
-         (void) copy_person(outers, 2, &inners[0], 1);
-         (void) copy_person(outers, 3, &inners[0], 0);
+         const veryshort v1[] = {3, 2};
+         const veryshort v2[] = {0, 1};
+         scatter(outers, &inners[0], v1, 1, 0);
+         scatter(outers, &inners[1], v2, 1, 0);
          outers->rotation = 0;
          outers->kind = s2x2;
          inners[0] = temp;
@@ -265,13 +264,36 @@ extern void normalize_concentric(
       }
       else if (inners[0].kind == s1x2 && inners[0].rotation == 1 && outer_elongation == 1) {
          setup temp = *outers;
-
-         (void) copy_person(outers, 0, &inners[0], 0);
-         (void) copy_person(outers, 1, &inners[1], 0);
-         (void) copy_person(outers, 2, &inners[1], 1);
-         (void) copy_person(outers, 3, &inners[0], 1);
+         const veryshort v1[] = {0, 3};
+         const veryshort v2[] = {1, 2};
+         scatter(outers, &inners[0], v1, 1, 0);
+         scatter(outers, &inners[1], v2, 1, 0);
          outers->rotation = 0;
          outers->kind = s2x2;
+         inners[0] = temp;
+         i = (inners[0].rotation - outers->rotation) & 3;
+         center_arity = 1;
+      }
+      else if (inners[0].kind == s1x2 && inners[0].rotation == 0 && outer_elongation == 1) {
+         setup temp = *outers;
+         const veryshort v1[] = {0, 1};
+         const veryshort v2[] = {3, 2};
+         scatter(outers, &inners[0], v1, 1, 0);
+         scatter(outers, &inners[1], v2, 1, 0);
+         outers->rotation = 0;
+         outers->kind = s1x4;
+         inners[0] = temp;
+         i = (inners[0].rotation - outers->rotation) & 3;
+         center_arity = 1;
+      }
+      else if (inners[0].kind == s1x2 && inners[0].rotation == 1 && outer_elongation == 2) {
+         setup temp = *outers;
+         const veryshort v1[] = {3, 2};
+         const veryshort v2[] = {0, 1};
+         scatter(outers, &inners[0], v1, 1, 0);
+         scatter(outers, &inners[1], v2, 1, 0);
+         outers->rotation = 1;
+         outers->kind = s1x4;
          inners[0] = temp;
          i = (inners[0].rotation - outers->rotation) & 3;
          center_arity = 1;
@@ -816,6 +838,7 @@ static calldef_schema concentrify(
    case schema_concentric_6_2_tgl:
    case schema_concentric_diamonds:
    case schema_concentric_2_4:
+   case schema_concentric_8_4:
       break;
    case schema_ckpt_star:
       analyzer_result = schema_checkpoint; break;
@@ -2122,6 +2145,11 @@ extern void concentric_move(
                       crossing ||
                       analyzer == schema_checkpoint)
                      begin_ptr->cmd.cmd_misc_flags |= CMD_MISC__NO_CHK_ELONG;
+
+                  // Do some more stuff.  This makes "fan the gating [recycle]" work.
+                  if ((DFM1_SUPPRESS_ELONGATION_WARNINGS & localmodsout1) &&
+                      analyzer_result == schema_concentric)
+                     begin_ptr->cmd.cmd_misc_flags |= CMD_MISC__NO_CHK_ELONG;
                }
             }
          }
@@ -2820,12 +2848,18 @@ static concmerge_thing map_2234b  = {nothing, nothing, 0, 0, 0, 0x0, schema_matr
 
 static concmerge_thing merge_maps[] = {
    {s1x4,        s_qtag, 0,        0, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {6, 7, 2, 3},               {0}},
+
+   {s_ntrgl6cw,   s_nxtrglcw, 0,   0, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {0, 1, 2, 4, 5, 6},               {0}},
+   {s_ntrgl6ccw, s_nxtrglccw, 0,   0, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {0, 1, 2, 4, 5, 6},               {0}},
+
+
    {s1x4,          sdmd, 0xA,    0x5, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {0, -1, 2, -1},             {0}},
    {s1x4,     s_hrglass, 0xA,   0x44, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {6, -1, 2, -1},             {0}},
    {s1x4,        s_qtag, 0xA,   0x88, 0x0D, 0x1, schema_concentric,     s_short6,    s1x2,     warn__check_galaxy, 1, 0, {1, 2, 4, 5, 6, 0},      {0, 2}},
    {s1x4,     s_hrglass, 0xA,   0x88, 0x0D, 0x1, schema_concentric,     s_short6,    s1x2,     warn__check_galaxy, 1, 0, {1, 2, 4, 5, 6, 0},      {0, 2}},
    {s2x3,        s_qtag, 0,        0, 0x0D, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {1, 3, 4, 5, 7, 0},         {0}},
    {s2x3,          s1x8, 022,   0x99, 0x1E, 0x0, schema_matrix,         s_ptpd,      nothing,  warn__none, 0, 0, {1, -1, 7, 5, -1, 3},       {-1, 0, 2, -1, -1, 4, 6, -1}},
+   {s2x3,          s1x8, 022,   0xAA, 0x2E, 0x0, schema_matrix,         s_ptpd,      nothing,  warn__none, 0, 0, {1, -1, 7, 5, -1, 3},       {0, -1, 2, -1, 4, -1, 6, -1}},
    {s2x3,          s1x8, 022,   0xAA, 0x1D, 0x1, schema_concentric,     s1x4,        s2x2,     warn__none, 0, 0, {0, 2, 4, 6},            {0, 2, 3, 5}},
    {s2x3,          s1x8, 0,     0xCC, 0x0D, 0x0, schema_matrix,         s4dmd,       nothing,  warn__none, 0, 0, {2, 7, 9, 10, 15, 1},    {12, 13, -1, -1, 4, 5, -1, -1}},
    {s_qtag,        s1x8, 0x44,  0xCC, 0x0E, 0x0, schema_matrix,         s4dmd,       nothing,  warn__none, 0, 0, {1, 2, -1, 7, 9, 10, -1, 15},    {12, 13, -1, -1, 4, 5, -1, -1}},
@@ -3553,7 +3587,6 @@ extern void on_your_own_move(
    parse_block *parseptr,
    setup *result) THROW_DECL
 {
-   int i;
    warning_info saved_warnings;
    setup setup1, setup2, res1;
    setup outer_inners[2];
@@ -3587,12 +3620,10 @@ extern void on_your_own_move(
    result->result_flags = get_multiple_parallel_resultflags(outer_inners, 2);
    merge_setups(&res1, merge_strict_matrix, result);
 
-   /* Shut off "superfluous phantom setups" warnings. */
+   // Shut off "superfluous phantom setups" warnings.
 
-   for (i=0 ; i<WARNING_WORDS ; i++) {
-      history[history_ptr+1].warnings.bits[i] &= ~useless_phan_clw_warnings.bits[i];
-      history[history_ptr+1].warnings.bits[i] |= saved_warnings.bits[i];
-   }
+   history[history_ptr+1].warnings.clearmultiple(useless_phan_clw_warnings);
+   history[history_ptr+1].warnings.setmultiple(saved_warnings);
 }
 
 
@@ -3760,12 +3791,10 @@ extern void punt_centers_use_concept(setup *ss, setup *result) THROW_DECL
       move(this_one, FALSE, &the_results[setupcount]);
    }
 
-   /* Shut off "each 1x4" types of warnings -- they will arise spuriously while
-      the people do the calls in isolation. */
-   for (i=0 ; i<WARNING_WORDS ; i++) {
-      history[history_ptr+1].warnings.bits[i] &= ~dyp_each_warnings.bits[i];
-      history[history_ptr+1].warnings.bits[i] |= saved_warnings.bits[i];
-   }
+   // Shut off "each 1x4" types of warnings -- they will arise spuriously
+   // while the people do the calls in isolation.
+   history[history_ptr+1].warnings.clearmultiple(dyp_each_warnings);
+   history[history_ptr+1].warnings.setmultiple(saved_warnings);
 
    *result = the_results[0];
 
@@ -4913,16 +4942,14 @@ back_here:
       }
    }
 
-   /* Shut off "each 1x4" types of warnings -- they will arise spuriously while
-      the people do the calls in isolation.
-      Also, shut off "superfluous phantom setups" warnings if this was "own the
-      <anyone> or <anyone> do your part". */
-   for (i=0 ; i<WARNING_WORDS ; i++) {
-      history[history_ptr+1].warnings.bits[i] &= ~dyp_each_warnings.bits[i];
-      if (indicator < selective_key_plain_no_live_subsets)
-         history[history_ptr+1].warnings.bits[i] &= ~useless_phan_clw_warnings.bits[i];
-      history[history_ptr+1].warnings.bits[i] |= saved_warnings.bits[i];
-   }
+   // Shut off "each 1x4" types of warnings -- they will arise spuriously while
+   // the people do the calls in isolation.
+   // Also, shut off "superfluous phantom setups" warnings if this was "own the
+   // <anyone> or <anyone> do your part".
+   history[history_ptr+1].warnings.clearmultiple(dyp_each_warnings);
+   if (indicator < selective_key_plain_no_live_subsets)
+      history[history_ptr+1].warnings.clearmultiple(useless_phan_clw_warnings);
+   history[history_ptr+1].warnings.setmultiple(saved_warnings);
 
    *result = the_results[1];
    result->result_flags = get_multiple_parallel_resultflags(the_results, 2);
