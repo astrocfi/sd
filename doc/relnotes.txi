@@ -1,7 +1,7 @@
 \input texinfo @c %**start of header -*-texinfo-*-
 @setfilename relnotes.info
 @settitle Sd Release Notes
-@c Time-stamp: <26 Aug 2021 wba>
+@c Time-stamp: <5 Nov 2021 wba>
 @iftex
 @headings off
 @oddheading @| @| @thispage
@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 39.39
-@set title2 Database version = 39.39 format = 396
+@set title1 RELEASE NOTES FOR VERSION 39.40
+@set title2 Database version = 39.40 format = 398
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 39.40::
 * 39.39::
 * 39.38::
 * 39.37::
@@ -139,7 +140,7 @@ and @file{relnotes98.txi} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 39.39, Top, (dir)
+@node Intro, 39.40, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -150,11 +151,24 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2021 William B. Ackerman
 @sp 3
 @menu
-* 39.39::               Changes in the current version
+* 39.40::               Changes in the current version
 @end menu
 
 @c ************
-@node 39.39, 39.38, Intro, Top
+@node 39.40, 39.39, Intro, Top
+@unnumberedsec Version 39.40 changes
+
+An error in @strong{3x1 lockit} was fixed.  The removal of empty spaaces at the end of the call is done
+separately for each subformation.
+
+The @strong{<N> steps at a time} calls may be fractionalized.
+
+An obscure and ill-advised suggested call was removed
+
+Handling of missing people may have been improved.
+
+@c ************
+@node 39.39, 39.38, 39.40, Top
 @unnumberedsec Version 39.39 changes
 
 Some call levels were changed in accordance with recent Callerlab list changes:

@@ -2,18 +2,20 @@
 *********** DO NOT RENAME THIS TO HOWTOBUILD.TXT **************
 Doing so might cause it to be included in the "do_pack" script.
 ===============================================================
+
           HOW TO RELEASE A NEW VERSION OF SD
 
      This file is \wba\sddoc\howtobuild.
 
------------------------------------------------------------------
-            MAINTAIN ALL SOURCE FILES ON WINDOWS 10,
-            AND DO THIS PART OF THE PROCESS ON WINDOWS 10
------------------------------------------------------------------
+-------------------------------------------------------------------------------
+       MAINTAIN ALL PROGRAM SOURCE FILES ON WINDOWS 10.
+       MAINTAIN ALL DOCUMENTATION SOURCE FILES ON WINDOWS XP.
 
-                    UPDATING VERSION NUMBERS
-                    AND MAINTAINING THE PROGRAM
-                    ON WINDOWS 10
+       ALL DEVELOPMENT, DEBUG, AND TEST OF THE PROGRAM IS DONE ON WINDOWS 10.
+       ALL DEVELOPMENT OF THE DOCUMENTATION IS DONE ON WINDOWS XP.
+-------------------------------------------------------------------------------
+
+       UPDATING VERSION NUMBERS AND MAINTAINING THE PROGRAM ON WINDOWS 10.
 
 Be sure the version numbers and dates are correct in:
     [sd]    sdmain.cpp   (version # and date are visible)
@@ -32,30 +34,48 @@ Be sure the version numbers and dates are correct in:
     [When rolling the year, fix copyright notices in sd.rc,
           sdutil.cpp, about.lst, sd_doc.txi, and relnotes.txi]
 
------------------------------------------------------------------
-
-                        SAVING SOURCES
-                        ON WINDOWS 10
+-------------------------------------------------------------------------------
+       SAVING PROGRAM SOURCES ON WINDOWS 10.
+-------------------------------------------------------------------------------
 
 BE SURE TO DELETE *~ and funny .h, .cpp, .cmd, and makefile files
 BEFORE DOING THIS.
 
 In \wba\sd:          save _vnnnn    (e.g.  save _v3201 -- Underscore, but no periods)
 In \wba\sd\regress:  save _vnnnn
-In \wba\sddoc:       save _vnnnn
 
------------------------------------------------------------------
-               BUILDING THE DOCUMENTATION
-                   STILL ON WINDOWS 10
------------------------------------------------------------------
+Create an appropriate directory in the main \wba\sdfullarchive directory, vnnnn, as in v3201
+
+Copy these 2 into it.  More will come later.
+
+   \wba\sd\sd_vnnnn.zip
+   \wba\sd\regress\r_vnnnn.zip
+
+
+Copy that directory (v3201) with its 2 subdirectories (sd_v3201.zip etc) to a thumb drive,
+take it to Windows XP, and unzip those  subdirectories into the appropriate places.
+
+-------------------------------------------------------------------------------
+       BUILDING THE DOCUMENTATION ON WINDOWS XP.
+-------------------------------------------------------------------------------
+
+In \wba\sddoc:   save _vnnnn
+
+Copy
+   \wba\sddoc\doc_vnnnn.zip
+to the archive subdirectory.  It will now have 3 items:
+   \wba\sd\sd_vnnnn.zip
+   \wba\sd\regress\r_vnnnn.zip
+   \wba\sddoc\doc_vnnnn.zip
 
 It is important that this be done before "new_binary" is run, because
 the manual and faq files are now wrapped into the binary distribution file.
 
 WARNING!!!!!  These scripts require "tar".  I have put tar.exe,
 cygwin1.dll, and cygwinB19.dll into the \bin directory.
+In fact, it requires many arcane things, in the sddoc directory.
 
-Go to sddoc directory and do:
+Go to the sddoc directory on Windows XP and do:
 
     setmingw64
     clean clean
@@ -136,26 +156,9 @@ Go to sddoc directory and do:
 (#25, #26, #48, #30, #47 are also available.)
 Also, do [DPT] initially touch by 1/2 x [split sidetrack]
 BUG!!!!!  [H star thru] initially touch by 1/2 x [pass the music] FAILS!
------------------------------------------------------------------
+-------------------------------------------------------------------------------
 
-               TESTING AND PRODUCTION BUILD - MSVC++
-   Don't do this for production release versions!  As of version 35,
-   use "mingw", below.
-
-   Set project configuration to "sdtty release", "sd release", "deploy release",
-   and "mkcalls release", issuing "build / rebuild all" in each case.
-
-   mkcalls
-   // Do regression test if desired.
-   // Be sure to test resolver:
-   // sdtty c4 -resolve_test 60   (or whatever)
-   // Then perform a resolve.  Also do "heads start" and "pick random call".
-   // Can do it on two processors with different arguments to get different
-   // deterministic random numbers.
-
------------------------------------------------------------------
-
-               TESTING AND PRODUCTION BUILD - MINGW 64 BITS
+               TESTING AND PRODUCTION BUILD - MINGW 64 BITS, ON WINDOWS XP
                32 BIT COMPILERS MAY NO LONGER BE USED!!!!
                     Yes, the make utility for 64-bit mingw
                     is still called "mingw32-make".
@@ -190,9 +193,9 @@ Stress tests to try:
    sdtty c4 -resolve_test 240 <today's ddmm date>*1000   S 1P, 1/2 tag, resolve
    sdtty c4 -resolve_test 240 <today's ddmm date>+10000  H start, pick random call
 
------------------------------------------------------------------
-
-                        FINAL PREPARATION
+-------------------------------------------------------------------------------
+                        FINAL PREPARATION, ON WINDOWS XP
+-------------------------------------------------------------------------------
 
    THE DOCUMENTATION MUST HAVE BEEN PREPARED, AND THE SOURCES SAVED,
    BEFORE DOING THIS!  This is because the html files from document
@@ -207,15 +210,22 @@ Stress tests to try:
 
 DO A VIRUS SCAN ON INSTALL.EXE and PACK.ZIP!
 
-Copy these into an appropriate directory:
-   \wba\sd\sd_vnnnn.zip
-   \wba\sd\regress\r_vnnnn.zip
-   \wba\sddoc\doc_vnnnn.zip
+Copy
    \wba\sddoc\sd_source.zip
    \wba\sddoc\pack.zip
    \wba\sddoc\install.exe
 
------------------------------------------------------------------
+from sddoc to the archive subdirectory.  It will now have these 6 items:
+   doc_vnnnn.zip
+   install.exe
+   pack.zip
+   r_vnnnn.zip
+   sd_source.zip
+   sd_vnnnn.zip
+
+Transport this, via a thumb drive, to the \Users\wba\sdfullarchive directory.
+
+
 
                PRODUCTION BUILD, TESTING, AND UPLOAD - Linux
 
@@ -239,15 +249,13 @@ cd ~/sd/regress
 chmod 775 *.sh
 ./doit.sh
 
-
------------------------------------------------------------------
-             UPLOADING TO LYNETTE'S WEB SITE
-             NEW WINDOWS 10
-
+-------------------------------------------------------------------------------
+             UPLOADING TO LYNETTE'S WEB SITE, ON WINDOWS 10
+-------------------------------------------------------------------------------
 Start WinSCP.  Choose host www.challengedance.org and
 user name USERNAME  (P=PASSWORD)
 On right pane, choose public_html/sd
-On left pane, navigate to C:\Users\wba\sdfullarchiv\vnnnn
+On left pane, navigate to C:\Users\wba\sdfullarchive\vnnnn
    or wherever the pack.zip file is.
 Drag left to right.  Exit from WinSCP.
 
