@@ -308,7 +308,7 @@ void expand::compress_setup(const expand::thing & thing, setup *stuff) THROW_DEC
 
    stuff->kind = thing.inner_kind;
    stuff->clear_people();
-   gather(stuff, &temp, thing.source_indices, thing.size-1, thing.rot * 011);
+   gather(stuff, &temp, thing.source_indices, attr::klimit(thing.inner_kind), thing.rot * 011);
    stuff->rotation -= thing.rot;
    canonicalize_rotation(stuff);
 }
@@ -320,7 +320,7 @@ void expand::expand_setup(const expand::thing & thing, setup *stuff) THROW_DECL
 
    stuff->kind = thing.outer_kind;
    stuff->clear_people();
-   scatter(stuff, &temp, thing.source_indices, thing.size-1, thing.rot * 033);
+   scatter(stuff, &temp, thing.source_indices, attr::klimit(thing.inner_kind), thing.rot * 033);
    stuff->rotation += thing.rot;
    canonicalize_rotation(stuff);
 }
@@ -1152,12 +1152,12 @@ extern void touch_or_rear_back(
    scopy->clear_people();
 
    if (tptr->forbidden_elongation & 8) {
-      gather(scopy, &stemp, zptr->source_indices, zptr->size-1, zptr->rot * 011);
+      gather(scopy, &stemp, zptr->source_indices, attr::klimit(zptr->inner_kind), zptr->rot * 011);
       scopy->rotation -= zptr->rot;
       scopy->kind = zptr->inner_kind;
    }
    else {
-      scatter(scopy, &stemp, zptr->source_indices, zptr->size-1, zptr->rot * 033);
+      scatter(scopy, &stemp, zptr->source_indices, attr::klimit(zptr->inner_kind), zptr->rot * 033);
       scopy->rotation += zptr->rot;
       scopy->kind = zptr->outer_kind;
    }
@@ -4424,7 +4424,6 @@ extern callarray *assoc(
 
 
 
-// See also end of "find_calldef" in sdbasic.cpp.
 uint32 uncompress_position_number(uint32 datum)
 {
    int field = ((datum >> 2) & 0x1F) - 1;
@@ -4582,8 +4581,8 @@ extern void install_scatter(setup *resultpeople, int num, const veryshort *place
 
 extern bool clean_up_unsymmetrical_setup(setup *ss)
 {
-   static expand::thing thing_splinedmd_1x8 = {{0, 1, 3, 2, -1, -1, -1, -1}, 8, splinedmd, s1x8, 0};
-   static expand::thing thing_splinedmd_qtag = {{-1, -1, -1, -1, 3, 1, 2, 4}, 8, splinedmd, s_qtag, 0};
+   static expand::thing thing_splinedmd_1x8 = {{0, 1, 3, 2, -1, -1, -1, -1}, splinedmd, s1x8, 0};
+   static expand::thing thing_splinedmd_qtag = {{-1, -1, -1, -1, 3, 1, 2, 4}, splinedmd, s_qtag, 0};
    uint32 livemask = little_endian_live_mask(ss);
 
    switch (ss->kind) {
@@ -4602,7 +4601,7 @@ extern bool clean_up_unsymmetrical_setup(setup *ss)
 }
 
 
-static const expand::thing s_2x4_qtg = {{3, 4, -1, -1, 7, 0, -1, -1}, 8, s_qtag, s2x4, 3};
+static const expand::thing s_2x4_qtg = {{3, 4, -1, -1, 7, 0, -1, -1}, s_qtag, s2x4, 3};
 
 
 extern setup_kind try_to_expand_dead_conc(const setup & result,
@@ -4617,9 +4616,9 @@ extern setup_kind try_to_expand_dead_conc(const setup & result,
    dmdout.rotation += dmdout.inner.srotation;
 
    if (result.inner.skind == s1x4) {
-      static const expand::thing exp_conc_1x8 = {{3, 2, 7, 6}, 4, s1x4, s1x8, 0};
-      static const expand::thing exp_conc_qtg = {{6, 7, 2, 3}, 4, s1x4, s_qtag, 0};
-      static const expand::thing exp_conc_dmd = {{1, 2, 5, 6}, 4, s1x4, s3x1dmd, 0};
+      static const expand::thing exp_conc_1x8 = {{3, 2, 7, 6}, s1x4, s1x8, 0};
+      static const expand::thing exp_conc_qtg = {{6, 7, 2, 3}, s1x4, s_qtag, 0};
+      static const expand::thing exp_conc_dmd = {{1, 2, 5, 6}, s1x4, s3x1dmd, 0};
       expand::expand_setup(exp_conc_1x8, &lineout);
       expand::expand_setup(exp_conc_qtg, &qtagout);
       expand::expand_setup(exp_conc_dmd, &dmdout);
@@ -5372,12 +5371,12 @@ extern bool warnings_are_unacceptable(bool strict)
 }
 
 
-const expand::thing s_dmd_hrgl = {{6, 3, 2, 7}, 4, sdmd, s_hrglass, 0};
-const expand::thing s_dmd_hrgl_disc = {{6, -1, 3, 2, -1, 7}, 6, s_1x2dmd, s_hrglass, 0};
+const expand::thing s_dmd_hrgl = {{6, 3, 2, 7}, sdmd, s_hrglass, 0};
+const expand::thing s_dmd_hrgl_disc = {{6, -1, 3, 2, -1, 7}, s_1x2dmd, s_hrglass, 0};
 /* s_1x2_dmd is duplicated in the big table. */
-const expand::thing s_1x2_dmd = {{3, 1}, 2, s1x2, sdmd, 1};
-const expand::thing s_1x2_hrgl = {{7, 3}, 2, s1x2, s_hrglass, 1};
-const expand::thing s_dmd_323 = {{5, 7, 1, 3}, 4, sdmd, s_323, 1};
+const expand::thing s_1x2_dmd = {{3, 1}, s1x2, sdmd, 1};
+const expand::thing s_1x2_hrgl = {{7, 3}, s1x2, s_hrglass, 1};
+const expand::thing s_dmd_323 = {{5, 7, 1, 3}, sdmd, s_323, 1};
 
 // The "action" argument tells how hard we work to remove the outside phantoms.
 // When merging the results of "on your own" or "own the so-and-so",

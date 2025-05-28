@@ -44,7 +44,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "37.83"
+version "37.84"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve
@@ -5785,6 +5785,10 @@ call "U-turn back" mainstream tag uturnback
       array [CR0S AL1S 2S AL3S CR4S 5S]
    setup p2x1dmd 2x1dmd
       array [0S 1S CR2S 3S 4S AL5S]
+   setup 3x1dmd 3x1dmd
+      array [CR0S AL1S CR2S 3S AL4S CR5S AL6S 7S]
+   setup p3x1dmd 3x1dmd
+      array [0S 1S 2S CR3S 4S 5S 6S AL7S]
    setup alamo alamo
       array [0S 1S 2S 3S 4S 5S 6S 7S]
    setup c1phan c1phan
@@ -9789,6 +9793,9 @@ call "_start dixie style" dontshow tag start_dixie
       preds "?"
          if 2x2_antitandem     [0 0 AL1W CR0E]
          if always             [0 0 ZM2N ZM3N]
+   setup trngl4 1x4 rotate qualifier not_split_dixie
+      preds "?"
+         if raise_some_sglfile [ZM2W ZM1W 0 0 0 0 ZM1W ZM2W]
             alternate_definition [singlefile] mainstream
    setup 4x1 1x4
       array [ZM0N ZM3N 0 0 ]
@@ -9817,8 +9824,7 @@ call "_start dixie style" dontshow tag start_dixie
       array [ZM0N 0 0 0]
 
 call "dixie style to a wave" mainstream tag full_dixie
-            visible_fractions
-            split_like_dixie_style
+            split_like_dixie_style visible_fractions
             single_is_inherited singlefile_is_inherited twisted_is_inherited
             nxn_is_inherited mxn_is_inherited fractal_is_inherited
             left_means_mirror reverse_means_mirror
@@ -10705,6 +10711,21 @@ call "_half by the right" dontshow tag 1_2_by_right
       array [CR1S 0]
    setup 1x4 1x4 restriction forbidden wave_only
       array [CR1S CR3S ZM2N CR2S]
+   setup 1x4 1x4 qualifier live right 2fl_only restriction unusual alwaysfail
+      array [ZM0N CR3S 0 0]
+   // This is here for the case of a 1/4 thru in triangles or swing thru in a wave of 6.
+   // We need to be sure this part is done in each 1x3, not crossing the center.
+   setup 1x6 1x6 restriction forbidden wave_only
+      array [CR1S CR2S ZM2N ZM3N CR3S CR4S]
+   setup qtag qtag qualifier left qtag_mag_mwv
+      array [CR1S ZM1N ZM2N CR2S ZM4N CR4S CR7S CR3S]
+   setup qtag qtag qualifier right qtag_mag_mwv
+      array [CR1S ZM1N ZM2N CR2S ZM4N CR4S CR7S CR3S]
+   // This one takes the case of diamonds.
+   setup qtag qtag restriction forbidden wave_only
+      array [0 0 ZM2N CR2S 0 0 CR7S CR3S]
+   setup pqtag qtag
+      array [ZM0N ZM1N 0 0 ZM4N ZM5N 0 0]
    setup 4x4 4x4
       array [0 0 0 0 0 0 CR5S 0 0 0 0 0 0 CR14S 0 0]
    setup alamo alamo
@@ -10786,23 +10807,23 @@ call "_half by the left" dontshow tag 1_2_by_left
             left_means_mirror diamond_is_legal
    setup 1x3 1x3 restriction forbidden wave_only
       array [ZM0N AL0S AL1S]
+   setup 1x2 1x2 restriction forbidden wave_only
+      array [0 AL0S]
    setup 1x4 1x4 qualifier wave_only
       array [ZM0N AL0S AL3S AL1S]
    setup 1x4 1x4 qualifier live left 2fl_only restriction unusual alwaysfail
       array [0 0 ZM2N AL1S]
-   // This is here for the case of a 1/4 thru in triangles.  We need
-   // to be sure this part is done in each 1x3, not crossing the center.
+   // This is here for the case of a 1/4 thru in triangles or swing thru in a wave of 6.
+   // We need to be sure this part is done in each 1x3, not crossing the center.
    setup 1x6 1x6 restriction forbidden wave_only
       array [ZM0N AL0S AL1S AL4S AL5S ZM5N]
-   setup 1x2 1x2 restriction forbidden wave_only
-      array [0 AL0S]
    setup qtag qtag qualifier right qtag_mag_mwv
       array [ZM0N AL0S AL3S AL7S AL5S ZM5N ZM6N AL6S]
    setup qtag qtag qualifier left qtag_mag_mwv
       array [ZM0N AL0S AL3S AL7S AL5S ZM5N ZM6N AL6S]
-   // This one take the case of outsides not in miniwaves.
+   // This one takes the case of diamonds.
    setup qtag qtag restriction forbidden wave_only
-      array [ZM0N ZM1N AL3S AL7S ZM4N ZM5N ZM6N AL6S]
+      array [0 0 AL3S AL7S 0 0 ZM6N AL6S]
    setup pqtag qtag
       array [ZM0N ZM1N 0 0 ZM4N ZM5N 0 0]
    setup 1x3dmd 1x3dmd
@@ -21430,6 +21451,9 @@ call "scoot chain thru to a wave" c1 tag scootchainthrutowave
 call "scoot and dodge" a1 tag scootndodge
    setup 2x2 2x2 restriction forbidden wave_only
       array [Z1N Z0N A3S C2S]
+            alternate_definition [half] mainstream
+   setup 2x2 1x4 rotate no_cutting_through restriction wave_only
+      array [ZM0W ZM0W AL1S CR1N]
 
 call "scoot chain thru and dodge" c4 tag scootchainthrundodge
    setup 2x4 2x4 restriction forbidden wave_only

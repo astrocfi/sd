@@ -2890,9 +2890,12 @@ columns_miniwave
       person is a phantom) it simply returns TRUE.
 
 can_swing_left
+
+or deep2x1dmd or wqtag
+
       applies to 1x3dmd only.  People are required to be in "normal"
       diamond-like orientation.  That is, the center 2 must be a line
-      of 2, and the groups of 3 must be lines.  Returns TRU if the
+      of 2, and the groups of 3 must be lines.  Returns TRUE if the
       person can cast 1/2 to the left, because he has a live person on
       his left hand, and that person is facing in the opposite direction.
       returns FALSE otherwise.

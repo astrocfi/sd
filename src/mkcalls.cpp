@@ -1487,6 +1487,7 @@ char *predtab[] = {
    "outroller_is_cw_2x8",
    "outposter_is_cw",
    "outposter_is_ccw",
+   "raise_some_sglfile",
    "zero_cw_people",
    "one_cw_person",
    "two_cw_people",

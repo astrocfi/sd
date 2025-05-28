@@ -2384,8 +2384,8 @@ static void inherit_conc_assumptions(
  got_new_assumption: ;
 }
 
-static const expand::thing fix_cw  = {{1, 2, 4, 5}, 4, s2x2, s2x3, 0};
-static const expand::thing fix_ccw = {{0, 1, 3, 4}, 4, s2x2, s2x3, 0};
+static const expand::thing fix_cw  = {{1, 2, 4, 5}, s2x2, s2x3, 0};
+static const expand::thing fix_ccw = {{0, 1, 3, 4}, s2x2, s2x3, 0};
 
 extern void concentric_move(
    setup *ss,
@@ -4285,9 +4285,7 @@ extern void punt_centers_use_concept(setup *ss, setup *result) THROW_DECL
       ssmask >>= 1;
    }
 
-   normalize_setup(&the_setups[0], normalize_before_isolated_call, false);
-   normalize_setup(&the_setups[1], normalize_before_isolated_call, false);
-   warning_info saved_warnings = configuration::save_warnings();
+   normalize_action normalizer = normalize_before_isolated_call;
 
    // Check for "someone work yoyo".  If call is sequential and yoyo is consumed by
    // first part, then just do this stuff on the first part.  After that, merge
@@ -4300,8 +4298,7 @@ extern void punt_centers_use_concept(setup *ss, setup *result) THROW_DECL
         ss->cmd.parseptr->next->call->the_defn.schema == schema_sequential_alternate ||
         ss->cmd.parseptr->next->call->the_defn.schema == schema_sequential_remainder) &&
        (ss->cmd.parseptr->next->call->the_defn.callflagsh & INHERITFLAG_YOYO) &&
-       (ss->cmd.parseptr->next->call->the_defn.stuff.seq.defarray[0].modifiersh &
-        INHERITFLAG_YOYO) &&
+       (ss->cmd.parseptr->next->call->the_defn.stuff.seq.defarray[0].modifiersh & INHERITFLAG_YOYO) &&
        ss->cmd.cmd_fraction.is_null()) {
       doing_yoyo = true;
       ss->cmd.cmd_fraction.set_to_null_with_flags(
@@ -4313,6 +4310,13 @@ extern void punt_centers_use_concept(setup *ss, setup *result) THROW_DECL
             ss->cmd.cmd_fraction.is_null()) {
       doing_do_last_frac = true;
    }
+   else if ((cmd2word & CMD_MISC2__ANY_WORK) && ss->cmd.parseptr->concept->kind == concept_tandem) {
+      normalizer = normalize_before_isolated_callMATRIXMATRIXMATRIX;
+   }
+
+   normalize_setup(&the_setups[0], normalizer, false);
+   normalize_setup(&the_setups[1], normalizer, false);
+   warning_info saved_warnings = configuration::save_warnings();
 
    for (setupcount=0; setupcount<2; setupcount++) {
       setup *this_one = &the_setups[setupcount];
@@ -4570,14 +4574,13 @@ extern void selective_move(
       // Check for special case of "<anyone> work tandem", and change it to
       // "<anyone> are tandem".
 
+      /*
       if ((k == concept_tandem || k == concept_frac_tandem) &&
           kk->arg1 == 0 &&
           kk->arg2 == 0 &&
           (kk->arg3 & ~0xF0) == 0 &&
-          (kk->arg4 == tandem_key_cpls ||
-           kk->arg4 == tandem_key_tand ||
-           kk->arg4 == tandem_key_cpls3 ||
-           kk->arg4 == tandem_key_tand3) &&
+          (kk->arg4 == tandem_key_cpls || kk->arg4 == tandem_key_cpls3 || kk->arg4 == tandem_key_cpls4 ||
+           kk->arg4 == tandem_key_tand || kk->arg4 == tandem_key_tand3 || kk->arg4 == tandem_key_tand4) &&
           ss->cmd.cmd_final_flags.test_heritbits(INHERITFLAG_SINGLE |
                                                  INHERITFLAG_MXNMASK |
                                                  INHERITFLAG_NXNMASK |
@@ -4595,7 +4598,9 @@ extern void selective_move(
                              result);
          return;
       }
-      else if ((k == concept_stable || k == concept_frac_stable) && kk->arg1 == 0) {
+      else
+      */
+      if ((k == concept_stable || k == concept_frac_stable) && kk->arg1 == 0) {
          ss->cmd.parseptr = cmd2thing.parseptr;  // Skip the concept.
          stable_move(ss,
                      kk->arg2 != 0,
@@ -5255,6 +5260,11 @@ extern void inner_selective_move(
    }
 
 back_here:
+
+   // Check for special case of "<anyone> work tandem", and fix the normalization action if so.
+   if (orig_indicator == selective_key_work_concept && cmd1->parseptr && cmd1->parseptr->concept &&
+       cmd1->parseptr->concept->kind == concept_tandem)
+      action = normalize_before_isolated_callMATRIXMATRIXMATRIX;
 
    normalize_setup(&the_setups[0], action, false);
    if (others > 0)

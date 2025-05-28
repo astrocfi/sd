@@ -5675,10 +5675,10 @@ static void do_concept_ferris(
    if (parseptr->concept->arg1) {
       // This is "release".
 
-      static const expand::thing mapr1 = {{10, 2, 3, 5, 4,  8, 9, 11}, 8, s_qtag, s3x4, 0};
-      static const expand::thing mapr2 = {{1,  4, 6, 5, 7, 10, 0, 11}, 8, s_qtag, s3x4, 0};
-      static const expand::thing mapr3 = {{1, 10, 0, 5, 7,  4, 6, 11}, 8, s_qtag, s3x4, 0};
-      static const expand::thing mapr4 = {{4,  2, 9, 5,10,  8, 3, 11}, 8, s_qtag, s3x4, 0};
+      static const expand::thing mapr1 = {{10, 2, 3, 5, 4,  8, 9, 11}, s_qtag, s3x4, 0};
+      static const expand::thing mapr2 = {{1,  4, 6, 5, 7, 10, 0, 11}, s_qtag, s3x4, 0};
+      static const expand::thing mapr3 = {{1, 10, 0, 5, 7,  4, 6, 11}, s_qtag, s3x4, 0};
+      static const expand::thing mapr4 = {{4,  2, 9, 5,10,  8, 3, 11}, s_qtag, s3x4, 0};
 
       if ((ss->kind != s_qtag) || ((global_tbonetest & 1) != 0))
          fail("Must have quarter-tag to do this concept.");
@@ -5719,8 +5719,8 @@ static void do_concept_ferris(
    else {
       // This is "ferris".
 
-      static const expand::thing mapf1 = {{0, 1, 5, 4, 6, 7, 11, 10}, 8, s2x4, s3x4, 0};
-      static const expand::thing mapf2 = {{10, 11, 2, 3, 4, 5, 8, 9}, 8, s2x4, s3x4, 0};
+      static const expand::thing mapf1 = {{0, 1, 5, 4, 6, 7, 11, 10}, s2x4, s3x4, 0};
+      static const expand::thing mapf2 = {{10, 11, 2, 3, 4, 5, 8, 9}, s2x4, s3x4, 0};
 
       if ((ss->kind != s2x4) || ((global_tbonetest & 1) != 0))
          fail("Must have lines to do this concept.");
@@ -5761,10 +5761,10 @@ static void do_concept_overlapped_diamond(
 {
    uint32 mapcode;
    const expand::thing *scatterlist;
-   static const expand::thing list1x4    = {{0, 1, 4, 5}, 4, s1x4, s_thar, 0};
-   static const expand::thing list1x4rot = {{2, 3, 6, 7}, 4, s1x4, s_thar, 3};
-   static const expand::thing listdmd    = {{0, 3, 4, 7}, 4, sdmd, s_thar, 0};
-   static const expand::thing listdmdrot = {{2, 5, 6, 1}, 4, sdmd, s_thar, 3};
+   static const expand::thing list1x4    = {{0, 1, 4, 5}, s1x4, s_thar, 0};
+   static const expand::thing list1x4rot = {{2, 3, 6, 7}, s1x4, s_thar, 3};
+   static const expand::thing listdmd    = {{0, 3, 4, 7}, sdmd, s_thar, 0};
+   static const expand::thing listdmdrot = {{2, 5, 6, 1}, sdmd, s_thar, 3};
 
    // Split an 8 person setup.
    if (attr::slimit(ss) == 7) {

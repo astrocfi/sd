@@ -2184,6 +2184,14 @@ static bool outposter_is_ccw(setup *real_people, int real_index,
 }
 
 /* ARGSUSED */
+static bool raise_some_sglfile(setup *real_people, int real_index,
+   int real_direction, int northified_index, const long int *extra_stuff)
+{
+   warn(warn_some_singlefile);
+   return true;
+}
+
+/* ARGSUSED */
 static bool count_cw_people(setup *real_people, int real_index,
    int real_direction, int northified_index, const long int *extra_stuff)
 {
@@ -2798,6 +2806,7 @@ predicate_descriptor pred_table[] = {
       {in_out_roll_select, (const long int *) &outroller_2x8},  // "outroller_is_cw_2x8"
       {outposter_is_cw,              (const long int *) 0},      // "outposter_is_cw"
       {outposter_is_ccw,             (const long int *) 0},      // "outposter_is_ccw"
+      {raise_some_sglfile,           (const long int *) 0},      // "raise_some_sglfile"
       {count_cw_people,                &iden_tab[0]},            // "zero_cw_people"
       {count_cw_people,                &iden_tab[1]},            // "one_cw_person"
       {count_cw_people,                &iden_tab[2]},            // "two_cw_people"

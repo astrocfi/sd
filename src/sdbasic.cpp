@@ -1281,6 +1281,25 @@ extern bool check_restriction(
 }
 
 
+// The 32 bit word returned by this is an unpacked/uncompressed version of the 16 bit
+// word in the database.  See comments at the end of database.h of a description of the latter.
+
+// Left half:
+//       unused         slide and roll info          unused
+//                   (2 for slide, 3 for roll)
+//       2 bits              5 bits                   9 bits
+//
+// The slide and roll info are in the proper position for the "id1" field of a person.
+// See NSLIDE_MASK, NSLIDE_BIT, SLIDE_IS_L, SLIDE_IS_R,
+//    NROLL_MASK, NROLL_BIT, PERSON_MOVED, ROLL_IS_L, and ROLL_IS_R.
+
+// Right half:
+//     stability info        unused         where to go     direction to face
+//                                        (uncompressed!)
+//         4 bits            4 bits            6 bits            2 bits
+//
+// The stability info is in the same location as in the 16 bit word from the database,
+// and is also indicated by DBSTAB_BIT.  The location might be zero.
 
 static uint32 find_calldef(
    callarray *tdef,
@@ -3837,22 +3856,22 @@ static int divide_the_setup(
    // in which it makes a difference.
 
    if (result->result_flags.misc & RESULTFLAG__EXPAND_TO_2X3) {
-      static const expand::thing inner_2x6 = {{0, 1, 4, 5, 6, 7, 10, 11}, 8, s2x4, s2x6, 0};
-      static const expand::thing inner_dblbone6 = {{1, 9, 11, 8, 7, 3, 5, 2}, 8, s_rigger, sdblbone6, 0};
-      static const expand::thing outer_dblbone6 = {{0, 10, 11, 8, 6, 4, 5, 2}, 8, s_bone, sdblbone6, 0};
-      static const expand::thing inner8_2x10 = {{0, 1, 2, 7, 8, 9, 10, 11, 12, 17, 18, 19}, 12, s2x6, s2x10, 0};
+      static const expand::thing inner_2x6 = {{0, 1, 4, 5, 6, 7, 10, 11}, s2x4, s2x6, 0};
+      static const expand::thing inner_dblbone6 = {{1, 9, 11, 8, 7, 3, 5, 2}, s_rigger, sdblbone6, 0};
+      static const expand::thing outer_dblbone6 = {{0, 10, 11, 8, 6, 4, 5, 2}, s_bone, sdblbone6, 0};
+      static const expand::thing inner8_2x10 = {{0, 1, 2, 7, 8, 9, 10, 11, 12, 17, 18, 19}, s2x6, s2x10, 0};
       static const expand::thing inner_2x10 = {
-         {0, 1, 2, 3, 6, 7, 8, 9, 10, 11, 12, 13, 16, 17, 18, 19}, 16, s2x8, s2x10, 0};
-      static const expand::thing outer8_2x10 = {{2, 3, 4, 5, 6, 7, 12, 13, 14, 15, 16, 17}, 12, s2x6, s2x10, 0};
+         {0, 1, 2, 3, 6, 7, 8, 9, 10, 11, 12, 13, 16, 17, 18, 19}, s2x8, s2x10, 0};
+      static const expand::thing outer8_2x10 = {{2, 3, 4, 5, 6, 7, 12, 13, 14, 15, 16, 17}, s2x6, s2x10, 0};
       static const expand::thing outer_2x10 = {
-         {1, 2, 3, 4, 5, 6, 7, 8, 11, 12, 13, 14, 15, 16, 17, 18}, 16, s2x8, s2x10, 0};
-      static const expand::thing inner_rig = {{6, 7, -1, 2, 3, -1}, 6, s1x6, s_rigger, 0};
+         {1, 2, 3, 4, 5, 6, 7, 8, 11, 12, 13, 14, 15, 16, 17, 18}, s2x8, s2x10, 0};
+      static const expand::thing inner_rig = {{6, 7, -1, 2, 3, -1}, s1x6, s_rigger, 0};
       static const expand::thing inner_4x6 = {{4, 7, 22, 8, 13, 14, 15, 21, 16, 19, 10, 20, 1, 2, 3, 9},
-                                              16, s4x4, s4x6, 0};
+                                              s4x4, s4x6, 0};
       static const expand::thing outer_4x6 = {{5, 6, 23, 7, 12, 13, 16, 22, 17, 18, 11, 19, 0, 1, 4, 10},
-                                              16, s4x4, s4x6, 0};
-      static const expand::thing inner_3x6 = {{0, 1, 4, 5, 6, 7, 9, 10, 13, 14, 15, 16}, 12, s3x4, s3x6, 0};
-      static const expand::thing outer_3x6 = {{1, 2, 3, 4, 7, 8, 10, 11, 12, 13, 16, 17}, 12, s3x4, s3x6, 0};
+                                              s4x4, s4x6, 0};
+      static const expand::thing inner_3x6 = {{0, 1, 4, 5, 6, 7, 9, 10, 13, 14, 15, 16}, s3x4, s3x6, 0};
+      static const expand::thing outer_3x6 = {{1, 2, 3, 4, 7, 8, 10, 11, 12, 13, 16, 17}, s3x4, s3x6, 0};
 
       const expand::thing *expand_ptr = (const expand::thing *) 0;
 

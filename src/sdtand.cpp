@@ -1499,8 +1499,8 @@ extern void tandem_couples_move(
 
    if (key == tandem_key_overlap_siam) {
       static const expand::thing localized_thing = {
-         {0, 3, 4, 7, 8, 11, 12, 15}, 8, s2x4, s2x8, 0};
-      // old:         {0, 5, 2, 7, 8, 13, 10, 15}, 8, s2x4, s2x8, 0};
+         {0, 3, 4, 7, 8, 11, 12, 15}, s2x4, s2x8, 0};
+      // old:         {0, 5, 2, 7, 8, 13, 10, 15}, s2x4, s2x8, 0};
       if (ss->kind != s2x4 || phantom != 0)
          fail("Need 2x4 for this concept.");
       phantom = 1;
@@ -2228,33 +2228,33 @@ void recursively_fix(setup *result, const uint16 split_info[2], const setup *ori
    static veryshort listfor1x4[] = {(veryshort) s1x4, 4, 0, 1, 3, 2};
    static veryshort listfor1x8[] = {(veryshort) s1x8, 8, 0, 1, 3, 2, 6, 7, 5, 4};
 
-   static expand::thing exp09_2x2_1x2 = {{3, 0}, 2, s1x2, s2x2, 1};
-   static expand::thing exp03_2x2_1x2 = {{0, 1}, 2, s1x2, s2x2, 0};
-   static expand::thing exp0C_2x2_1x2 = {{3, 2}, 2, s1x2, s2x2, 0};
-   static expand::thing exp06_2x2_1x2 = {{2, 1}, 2, s1x2, s2x2, 1};
+   static expand::thing exp09_2x2_1x2 = {{3, 0}, s1x2, s2x2, 1};
+   static expand::thing exp03_2x2_1x2 = {{0, 1}, s1x2, s2x2, 0};
+   static expand::thing exp0C_2x2_1x2 = {{3, 2}, s1x2, s2x2, 0};
+   static expand::thing exp06_2x2_1x2 = {{2, 1}, s1x2, s2x2, 1};
 
-   static expand::thing exp33_2x4_2x2 = {{0, 1, 4, 5}, 4, s2x2, s2x4, 0};
-   static expand::thing expCC_2x4_2x2 = {{2, 3, 6, 7}, 4, s2x2, s2x4, 0};
-   static expand::thing exp33_2x4_1x4 = {{0, 1, 4, 5}, 4, s1x4, s2x4, 0};
-   static expand::thing expCC_2x4_1x4 = {{7, 6, 3, 2}, 4, s1x4, s2x4, 0};
-   static expand::thing exp55_2x4_dmd = {{0, 2, 4, 6}, 4, sdmd, s2x4, 0};
-   static expand::thing expAA_2x4_dmd = {{7, 1, 3, 5}, 4, sdmd, s2x4, 0};
-   static expand::thing exp55_2x4_2x2 = {{0, 2, 4, 6}, 4, s2x2, s2x4, 0};
-   static expand::thing expAA_2x4_2x2 = {{1, 3, 5, 7}, 4, s2x2, s2x4, 0};
-   static expand::thing exp55_2x4_1x4 = {{0, 6, 4, 2}, 4, s1x4, s2x4, 0};
-   static expand::thing expAA_2x4_1x4 = {{7, 1, 3, 5}, 4, s1x4, s2x4, 0};
-   static expand::thing exp66_2x4_2x2 = {{1, 2, 5, 6}, 4, s2x2, s2x4, 0};
-   static expand::thing expC3_2x4_2x2 = {{0, 1, 6, 7}, 4, s2x2, s2x4, 0};
-   static expand::thing exp3C_2x4_2x2 = {{2, 3, 4, 5}, 4, s2x2, s2x4, 0};
-   static expand::thing exp0F_2x4_1x4 = {{0, 1, 3, 2}, 4, s1x4, s2x4, 0};
-   static expand::thing expF0_2x4_1x4 = {{7, 6, 4, 5}, 4, s1x4, s2x4, 0};
+   static expand::thing exp33_2x4_2x2 = {{0, 1, 4, 5}, s2x2, s2x4, 0};
+   static expand::thing expCC_2x4_2x2 = {{2, 3, 6, 7}, s2x2, s2x4, 0};
+   static expand::thing exp33_2x4_1x4 = {{0, 1, 4, 5}, s1x4, s2x4, 0};
+   static expand::thing expCC_2x4_1x4 = {{7, 6, 3, 2}, s1x4, s2x4, 0};
+   static expand::thing exp55_2x4_dmd = {{0, 2, 4, 6}, sdmd, s2x4, 0};
+   static expand::thing expAA_2x4_dmd = {{7, 1, 3, 5}, sdmd, s2x4, 0};
+   static expand::thing exp55_2x4_2x2 = {{0, 2, 4, 6}, s2x2, s2x4, 0};
+   static expand::thing expAA_2x4_2x2 = {{1, 3, 5, 7}, s2x2, s2x4, 0};
+   static expand::thing exp55_2x4_1x4 = {{0, 6, 4, 2}, s1x4, s2x4, 0};
+   static expand::thing expAA_2x4_1x4 = {{7, 1, 3, 5}, s1x4, s2x4, 0};
+   static expand::thing exp66_2x4_2x2 = {{1, 2, 5, 6}, s2x2, s2x4, 0};
+   static expand::thing expC3_2x4_2x2 = {{0, 1, 6, 7}, s2x2, s2x4, 0};
+   static expand::thing exp3C_2x4_2x2 = {{2, 3, 4, 5}, s2x2, s2x4, 0};
+   static expand::thing exp0F_2x4_1x4 = {{0, 1, 3, 2}, s1x4, s2x4, 0};
+   static expand::thing expF0_2x4_1x4 = {{7, 6, 4, 5}, s1x4, s2x4, 0};
 
-   static expand::thing expCC_qtg_line = {{6, 7, 2, 3}, 4, s1x4, s_qtag, 0};
+   static expand::thing expCC_qtg_line = {{6, 7, 2, 3}, s1x4, s_qtag, 0};
 
-   static expand::thing exp55_xwv_dmd = {{0, 2, 4, 6}, 4, sdmd, s_crosswave, 0};
-   static expand::thing expAA_xwv_dmd = {{1, 3, 5, 7}, 4, sdmd, s_crosswave, 0};
-   static expand::thing exp99_xwv_dmd = {{0, 3, 4, 7}, 4, sdmd, s_crosswave, 0};
-   static expand::thing exp66_xwv_dmd = {{1, 2, 5, 6}, 4, sdmd, s_crosswave, 0};
+   static expand::thing exp55_xwv_dmd = {{0, 2, 4, 6}, sdmd, s_crosswave, 0};
+   static expand::thing expAA_xwv_dmd = {{1, 3, 5, 7}, sdmd, s_crosswave, 0};
+   static expand::thing exp99_xwv_dmd = {{0, 3, 4, 7}, sdmd, s_crosswave, 0};
+   static expand::thing exp66_xwv_dmd = {{1, 2, 5, 6}, sdmd, s_crosswave, 0};
 
    uint32 finals = little_endian_live_mask(result);
    setup temp1 = *result;
@@ -2411,10 +2411,10 @@ void recursively_fix(setup *result, const uint16 split_info[2], const setup *ori
       }
 
       /*
-        static expand::thing exp55_rig_dmd = {{6, 0, 2, 4}, 4, sdmd, s_rigger, 0};
-        static expand::thing expAA_rig_dmd = {{7, 1, 3, 5}, 4, sdmd, s_rigger, 0};
-        static expand::thing exp66_rig_dmd = {{6, 1, 2, 5}, 4, sdmd, s_rigger, 0};
-        static expand::thing exp99_rig_dmd = {{7, 0, 3, 4}, 4, sdmd, s_rigger, 0};
+        static expand::thing exp55_rig_dmd = {{6, 0, 2, 4}, sdmd, s_rigger, 0};
+        static expand::thing expAA_rig_dmd = {{7, 1, 3, 5}, sdmd, s_rigger, 0};
+        static expand::thing exp66_rig_dmd = {{6, 1, 2, 5}, sdmd, s_rigger, 0};
+        static expand::thing exp99_rig_dmd = {{7, 0, 3, 4}, sdmd, s_rigger, 0};
         switch (finals)
         {
         case 0x55: compress_map = &exp55_rig_dmd; break;
@@ -2439,10 +2439,10 @@ void recursively_fix(setup *result, const uint16 split_info[2], const setup *ori
       return;
 
       /*
-        static expand::thing exp55_qtg_dmd = {{4, 6, 0, 2}, 4, sdmd, s_rigger, 1};
-        static expand::thing expAA_qtg_dmd = {{5, 7, 1, 3}, 4, sdmd, s_rigger, 0};
-        static expand::thing exp66_qtg_dmd = {{5, 6, 1, 2}, 4, sdmd, s_rigger, 0};
-        static expand::thing exp99_qtg_dmd = {{4, 7, 0, 3}, 4, sdmd, s_rigger, 0};
+        static expand::thing exp55_qtg_dmd = {{4, 6, 0, 2}, sdmd, s_rigger, 1};
+        static expand::thing expAA_qtg_dmd = {{5, 7, 1, 3}, sdmd, s_rigger, 0};
+        static expand::thing exp66_qtg_dmd = {{5, 6, 1, 2}, sdmd, s_rigger, 0};
+        static expand::thing exp99_qtg_dmd = {{4, 7, 0, 3}, sdmd, s_rigger, 0};
         switch (finals)
         {
         case 0x55: compress_map = &exp55_qtg_dmd; break;

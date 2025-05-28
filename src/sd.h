@@ -2495,6 +2495,7 @@ enum warning_index {
    warn_hairy_fraction,
    warn_bad_collision,
    warn_very_bad_collision,
+   warn_some_singlefile,
    warn__dyp_resolve_ok,
    warn__unusual,
    warn_controversial,
@@ -3776,8 +3777,12 @@ enum {
 };
 
 enum normalize_action {
+
+   normalize_before_isolated_callMATRIXMATRIXMATRIX,
+
    simple_normalize,
    normalize_after_exchange_boxes,
+
    normalize_before_isolated_call,
    normalize_before_isolate_not_too_strict,
    plain_normalize,
@@ -3806,7 +3811,6 @@ class expand {
 
    struct thing {
       veryshort source_indices[24];
-      int size;
       setup_kind inner_kind;
       setup_kind outer_kind;
       int rot;

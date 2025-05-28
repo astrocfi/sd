@@ -118,8 +118,8 @@ extern void remove_z_distortion(setup *ss) THROW_DECL
 {
    if (!(ss->cmd.cmd_misc2_flags & CMD_MISC2__IN_Z_MASK)) return;
 
-   static const expand::thing fix_cw  = {{1, 2, 4, 5}, 4, s2x2, s2x3, 0};
-   static const expand::thing fix_ccw = {{0, 1, 3, 4}, 4, s2x2, s2x3, 0};
+   static const expand::thing fix_cw  = {{1, 2, 4, 5}, s2x2, s2x3, 0};
+   static const expand::thing fix_ccw = {{0, 1, 3, 4}, s2x2, s2x3, 0};
 
    if (ss->kind != s2x3) fail("Internal error: Can't straighten 'Z'.");
 
@@ -142,20 +142,20 @@ extern void remove_tgl_distortion(setup *ss) THROW_DECL
    int rot;
    const expand::thing *eptr = (expand::thing *) 0;
 
-   static const expand::thing thing1    = {{0, 1, 3},          3, s_trngl,  sdmd, 3};
-   static const expand::thing thing2    = {{2, 3, 1},          3, s_trngl,  sdmd, 1};
-   static const expand::thing thing1x8a = {{1, 3, 2, 5, 7, 6}, 6, s1x6,     s1x8, 0};
-   static const expand::thing thing1x8b = {{0, 1, 3, 4, 5, 7}, 6, s1x6,     s1x8, 0};
-   static const expand::thing thingptpa = {{1, 7, 6, 5, 3, 2}, 6, s_bone6,  s_ptpd, 0};
-   static const expand::thing thingptpb = {{3, 0, 1, 7, 4, 5}, 6, s_short6, s_ptpd, 1};
-   static const expand::thing thing2x4a = {{1, 2, 3, 5, 6, 7}, 6, s2x3,     s2x4, 0};
-   static const expand::thing thing2x4b = {{0, 1, 2, 4, 5, 6}, 6, s2x3,     s2x4, 0};
-   static const expand::thing thing2x4c = {{0, 3, 2, 4, 7, 6}, 6, s_bone6,  s2x4, 0};
-   static const expand::thing thing2x4d = {{6, 0, 1, 2, 4, 5}, 6, s_short6, s2x4, 1};
-   static const expand::thing thing2x4e = {{0, 3, 5, 4, 7, 1}, 6, s_bone6,  s2x4, 0};
-   static const expand::thing thing2x4f = {{6, 7, 1, 2, 3, 5}, 6, s_short6, s2x4, 1};
-   static const expand::thing thing1x4a = {{0, 1, 3},          3, s1x3,     s1x4, 0};
-   static const expand::thing thing1x4b = {{1, 3, 2},          3, s1x3,     s1x4, 0};
+   static const expand::thing thing1    = {{0, 1, 3},          s_trngl,  sdmd, 3};
+   static const expand::thing thing2    = {{2, 3, 1},          s_trngl,  sdmd, 1};
+   static const expand::thing thing1x8a = {{1, 3, 2, 5, 7, 6}, s1x6,     s1x8, 0};
+   static const expand::thing thing1x8b = {{0, 1, 3, 4, 5, 7}, s1x6,     s1x8, 0};
+   static const expand::thing thingptpa = {{1, 7, 6, 5, 3, 2}, s_bone6,  s_ptpd, 0};
+   static const expand::thing thingptpb = {{3, 0, 1, 7, 4, 5}, s_short6, s_ptpd, 1};
+   static const expand::thing thing2x4a = {{1, 2, 3, 5, 6, 7}, s2x3,     s2x4, 0};
+   static const expand::thing thing2x4b = {{0, 1, 2, 4, 5, 6}, s2x3,     s2x4, 0};
+   static const expand::thing thing2x4c = {{0, 3, 2, 4, 7, 6}, s_bone6,  s2x4, 0};
+   static const expand::thing thing2x4d = {{6, 0, 1, 2, 4, 5}, s_short6, s2x4, 1};
+   static const expand::thing thing2x4e = {{0, 3, 5, 4, 7, 1}, s_bone6,  s2x4, 0};
+   static const expand::thing thing2x4f = {{6, 7, 1, 2, 3, 5}, s_short6, s2x4, 1};
+   static const expand::thing thing1x4a = {{0, 1, 3},          s1x3,     s1x4, 0};
+   static const expand::thing thing1x4b = {{1, 3, 2},          s1x3,     s1x4, 0};
 
    switch (ss->kind) {
    case s2x4:
@@ -1123,14 +1123,14 @@ static void innards(
    if (fix_pgram && result->kind == s1p5x8) {
 #ifdef Z_AXLE_GOES_TO_2X8
       static const expand::thing thingyF0F0 = {
-         {-1, -1, -1, -1, 4, 5, 6, 7, -1, -1, -1, -1, 12, 13, 14, 15}, 12, s2x8, s1p5x8, 0};
+         {-1, -1, -1, -1, 4, 5, 6, 7, -1, -1, -1, -1, 12, 13, 14, 15}, s2x8, s1p5x8, 0};
       static const expand::thing thingy0F0F = {
-         {0, 1, 2, 3, -1, -1, -1, -1, 8, 9, 10, 11, -1, -1, -1, -1}, 12, s2x8, s1p5x8, 0};
+         {0, 1, 2, 3, -1, -1, -1, -1, 8, 9, 10, 11, -1, -1, -1, -1}, s2x8, s1p5x8, 0};
 #else
       static const expand::thing thingyF0F0 = {
-         {-1, -1, 4, 5, 6, 7, -1, -1, 12, 13, 14, 15}, 12, s2x6, s1p5x8, 0};
+         {-1, -1, 4, 5, 6, 7, -1, -1, 12, 13, 14, 15}, s2x6, s1p5x8, 0};
       static const expand::thing thingy0F0F = {
-         {0, 1, 2, 3, -1, -1, 8, 9, 10, 11, -1, -1}, 12, s2x6, s1p5x8, 0};
+         {0, 1, 2, 3, -1, -1, 8, 9, 10, 11, -1, -1}, s2x6, s1p5x8, 0};
 #endif
 
       switch (little_endian_live_mask(result)) {
@@ -1489,10 +1489,10 @@ static void phantom_2x4_move(
 
 
 static const expand::thing expand_big2x2_4x4 = {
-   {12, 0, 4, 8}, 4, s2x2, s4x4, 0};
+   {12, 0, 4, 8}, s2x2, s4x4, 0};
 
 static const expand::thing expand_2x6_4x6 = {
-   {11, 10, 9, 8, 7, 6, 23, 22, 21, 20, 19, 18}, 12, s2x6, s4x6, 0};
+   {11, 10, 9, 8, 7, 6, 23, 22, 21, 20, 19, 18}, s2x6, s4x6, 0};
 
 
 /* This does bigblock, stagger, ladder, stairstep, "O", butterfly, and
@@ -2683,14 +2683,12 @@ extern void distorted_move(
 
          if (ss->kind != s4x4 || (global_tbonetest & 1)) fail("Can't find distorted 1/4 tag.");
          const expand::thing *p;
-         static const expand::thing foo1 =
-         {{-1, 2, -1, 3, -1, -1, 5, 4, -1, 6, -1, 7, -1, -1, 1, 0},
-          16, s4x4, spgdmdccw, 0, 0UL, 0UL, false,
-          warn__none, warn__none, simple_normalize, 0};
-         static const expand::thing foo2 =
-         {{-1, -1, 2, 1, -1, 4, -1, 3, -1, -1, 6, 5, -1, 0, -1, 7},
-          16, s4x4, spgdmdcw, 0, 0UL, 0UL, false,
-          warn__none, warn__none, simple_normalize, 0};
+         static const expand::thing foo1 = {{-1, 2, -1, 3, -1, -1, 5, 4, -1, 6, -1, 7, -1, -1, 1, 0},
+                                            s4x4, spgdmdccw, 0, 0UL, 0UL, false,
+                                            warn__none, warn__none, simple_normalize, 0};
+         static const expand::thing foo2 = {{-1, -1, 2, 1, -1, 4, -1, 3, -1, -1, 6, 5, -1, 0, -1, 7},
+                                            s4x4, spgdmdcw, 0, 0UL, 0UL, false,
+                                            warn__none, warn__none, simple_normalize, 0};
 
          if (livemask == 0xCACA)
             p = &foo1;
@@ -3813,7 +3811,7 @@ common_spot_map cmaps[] = {
 
 
 // s_2x3_qtg is duplicated in the big table.
-const expand::thing s_2x3_qtg = {{5, 7, 0, 1, 3, 4}, 6, s2x3, s_qtag, 1};
+const expand::thing s_2x3_qtg = {{5, 7, 0, 1, 3, 4}, s2x3, s_qtag, 1};
 
 extern void initialize_commonspot_tables()
 {

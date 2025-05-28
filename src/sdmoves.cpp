@@ -223,47 +223,47 @@ extern void reinstate_rotation(const setup *ss, setup *result) THROW_DECL
 }
 
 
-static const expand::thing exp72  = {{1, 3, 4, 5, 7, 9, 10, 11}, 8, s2x4, s2x6, 0, 0, 07272};
-static const expand::thing exp27  = {{0, 1, 2, 4, 6, 7, 8, 10},  8, s2x4, s2x6, 0, 0, 02727};
-static const expand::thing exp52  = {{1, 3, 5, 7, 9, 11},        6, s2x3, s2x6, 0, 0, 05252};
-static const expand::thing exp25  = {{0, 2, 4, 6, 8, 10},        6, s2x3, s2x6, 0, 0, 02525};
-static const expand::thing exp56  = {{1, 2, 3, 5, 7, 8, 9, 11},  8, s2x4, s2x6, 0, 0, 05656};
-static const expand::thing exp65  = {{0, 2, 4, 5, 6, 8, 10, 11}, 8, s2x4, s2x6, 0, 0, 06565};
-static const expand::thing exp35  = {{0, 2, 3, 4, 6, 8, 9, 10},  8, s2x4, s2x6, 0, 0, 03535};
-static const expand::thing exp53  = {{0, 1, 3, 5, 6, 7, 9, 11},  8, s2x4, s2x6, 0, 0, 05353};
-static const expand::thing exp3u  = {{1, 3, 4, 5, 6, 7, 8, 10},  8, s2x4, s2x6, 0, 0, 02772};
-static const expand::thing exp3d  = {{0, 1, 2, 4, 7, 9, 10, 11}, 8, s2x4, s2x6, 0, 0, 07227};
+static const expand::thing exp72  = {{1, 3, 4, 5, 7, 9, 10, 11}, s2x4, s2x6, 0, 0, 07272};
+static const expand::thing exp27  = {{0, 1, 2, 4, 6, 7, 8, 10},  s2x4, s2x6, 0, 0, 02727};
+static const expand::thing exp52  = {{1, 3, 5, 7, 9, 11},        s2x3, s2x6, 0, 0, 05252};
+static const expand::thing exp25  = {{0, 2, 4, 6, 8, 10},        s2x3, s2x6, 0, 0, 02525};
+static const expand::thing exp56  = {{1, 2, 3, 5, 7, 8, 9, 11},  s2x4, s2x6, 0, 0, 05656};
+static const expand::thing exp65  = {{0, 2, 4, 5, 6, 8, 10, 11}, s2x4, s2x6, 0, 0, 06565};
+static const expand::thing exp35  = {{0, 2, 3, 4, 6, 8, 9, 10},  s2x4, s2x6, 0, 0, 03535};
+static const expand::thing exp53  = {{0, 1, 3, 5, 6, 7, 9, 11},  s2x4, s2x6, 0, 0, 05353};
+static const expand::thing exp3u  = {{1, 3, 4, 5, 6, 7, 8, 10},  s2x4, s2x6, 0, 0, 02772};
+static const expand::thing exp3d  = {{0, 1, 2, 4, 7, 9, 10, 11}, s2x4, s2x6, 0, 0, 07227};
 
-static const expand::thing exp12m = {{9, 10, 1, 3, 4, 7},        6, s_2x1dmd, s3dmd, 0, 0, 03232};
-static const expand::thing exp21m = {{8, 11, 0, 2, 5, 6},        6, s2x3, s3dmd, 1, 0, 04545};
+static const expand::thing exp12m = {{9, 10, 1, 3, 4, 7},        s_2x1dmd, s3dmd, 0, 0, 03232};
+static const expand::thing exp21m = {{8, 11, 0, 2, 5, 6},        s2x3, s3dmd, 1, 0, 04545};
 
-static const expand::thing exp46  = {{1, 2, 5, 7, 8, 11},        6, s2x3, s2x6, 0, 0, 04646};
-static const expand::thing exp64  = {{2, 4, 5, 8, 10, 11},       6, s2x3, s2x6, 0, 0, 06464};
-static const expand::thing exp54  = {{2, 3, 5, 8, 9, 11},        6, s2x3, s2x6, 0, 0, 05454};
-static const expand::thing exp45  = {{0, 2, 5, 6, 8, 11},        6, s2x3, s2x6, 0, 0, 04545};
-static const expand::thing exp51  = {{0, 3, 5, 6, 9, 11},        6, s2x3, s2x6, 0, 0, 05151};
-static const expand::thing exp15  = {{0, 2, 3, 6, 8, 9},         6, s2x3, s2x6, 0, 0, 01515};
-static const expand::thing exp31  = {{0, 3, 4, 6, 9, 10},        6, s2x3, s2x6, 0, 0, 03131};
-static const expand::thing exp13  = {{0, 1, 3, 6, 7, 9},         6, s2x3, s2x6, 0, 0, 01313};
+static const expand::thing exp46  = {{1, 2, 5, 7, 8, 11},        s2x3, s2x6, 0, 0, 04646};
+static const expand::thing exp64  = {{2, 4, 5, 8, 10, 11},       s2x3, s2x6, 0, 0, 06464};
+static const expand::thing exp54  = {{2, 3, 5, 8, 9, 11},        s2x3, s2x6, 0, 0, 05454};
+static const expand::thing exp45  = {{0, 2, 5, 6, 8, 11},        s2x3, s2x6, 0, 0, 04545};
+static const expand::thing exp51  = {{0, 3, 5, 6, 9, 11},        s2x3, s2x6, 0, 0, 05151};
+static const expand::thing exp15  = {{0, 2, 3, 6, 8, 9},         s2x3, s2x6, 0, 0, 01515};
+static const expand::thing exp31  = {{0, 3, 4, 6, 9, 10},        s2x3, s2x6, 0, 0, 03131};
+static const expand::thing exp13  = {{0, 1, 3, 6, 7, 9},         s2x3, s2x6, 0, 0, 01313};
 
-static const expand::thing expl52 = {{1, 3, 5, 7, 9, 11},        6, s1x6, s1x12, 0, 0, 05252};
-static const expand::thing expl25 = {{0, 2, 4, 6, 8, 10},        6, s1x6, s1x12, 0, 0, 02525};
-static const expand::thing expg72 = {{1, 3, 5, 4, 7, 9, 11, 10}, 8, s1x8, s1x12, 0, 0, 07272};
-static const expand::thing expg27 = {{0, 1, 4, 2, 6, 7, 10, 8},  8, s1x8, s1x12, 0, 0, 02727};
-static const expand::thing expg56 = {{1, 2, 5, 3, 7, 8, 11, 9},  8, s1x8, s1x12, 0, 0, 05656};
-static const expand::thing expg35 = {{0, 2, 4, 3, 6, 8, 10, 9},  8, s1x8, s1x12, 0, 0, 03535};
+static const expand::thing expl52 = {{1, 3, 5, 7, 9, 11},        s1x6, s1x12, 0, 0, 05252};
+static const expand::thing expl25 = {{0, 2, 4, 6, 8, 10},        s1x6, s1x12, 0, 0, 02525};
+static const expand::thing expg72 = {{1, 3, 5, 4, 7, 9, 11, 10}, s1x8, s1x12, 0, 0, 07272};
+static const expand::thing expg27 = {{0, 1, 4, 2, 6, 7, 10, 8},  s1x8, s1x12, 0, 0, 02727};
+static const expand::thing expg56 = {{1, 2, 5, 3, 7, 8, 11, 9},  s1x8, s1x12, 0, 0, 05656};
+static const expand::thing expg35 = {{0, 2, 4, 3, 6, 8, 10, 9},  s1x8, s1x12, 0, 0, 03535};
 
-static const expand::thing expsp3 = {{1, 2, 3, 5, 7, 8, 9, 11}, 8, s_spindle, s_d3x4, 0, 0, 05656};
+static const expand::thing expsp3 = {{1, 2, 3, 5, 7, 8, 9, 11}, s_spindle, s_d3x4, 0, 0, 05656};
 static const expand::thing exp3d3 = {{10, 11, 0, -1, -1, 2, 4, 5, 6, -1, -1, 8},
-                                     12, s3dmd, s_d3x4, 1};
-static const expand::thing exp323 = {{10, 11, 0, 2, 4, 5, 6, 8}, 8, s_323, s_d3x4, 1, 0, 06565};
+                                     s3dmd, s_d3x4, 1};
+static const expand::thing exp323 = {{10, 11, 0, 2, 4, 5, 6, 8}, s_323, s_d3x4, 1, 0, 06565};
 
-static const expand::thing expb51 = {{0, 3, 5, 6, 9, 11},        6, s_bone6, s3x4, 0, 0, 05151};
-static const expand::thing expb26 = {{8, 10, 1, 2, 4, 7},        6, s_short6, s3x4, 1, 0, 02626};
-static const expand::thing expl65 = {{0, 2, 4, 5},               4, s1x4, s1x6, 0, 0, 065};
-static const expand::thing expl56 = {{1, 2, 3, 5},               4, s1x4, s1x6, 0, 0, 056};
-static const expand::thing expl72 = {{1, 5, 3, 4},               4, s1x4, s1x6, 0, 0, 072};
-static const expand::thing expl27 = {{0, 1, 4, 2},               4, s1x4, s1x6, 0, 0, 027};
+static const expand::thing expb51 = {{0, 3, 5, 6, 9, 11},        s_bone6, s3x4, 0, 0, 05151};
+static const expand::thing expb26 = {{8, 10, 1, 2, 4, 7},        s_short6, s3x4, 1, 0, 02626};
+static const expand::thing expl65 = {{0, 2, 4, 5},               s1x4, s1x6, 0, 0, 065};
+static const expand::thing expl56 = {{1, 2, 3, 5},               s1x4, s1x6, 0, 0, 056};
+static const expand::thing expl72 = {{1, 5, 3, 4},               s1x4, s1x6, 0, 0, 072};
+static const expand::thing expl27 = {{0, 1, 4, 2},               s1x4, s1x6, 0, 0, 027};
 
 
 extern void remove_mxn_spreading(setup *ss) THROW_DECL
@@ -5496,8 +5496,8 @@ static void really_inner_move(setup *ss,
    case schema_partner_partial_matrix:
       {
          bool expanded = false;
-         static const expand::thing exp_from_2x2_stuff = {{12, 0, 4, 8}, 4, s2x2, s4x4, 0};
-         static const expand::thing exp_back_to_2x6_stuff = {{0, 1, 4, 5, 6, 7, 10, 11}, 8, s2x4, s2x6, 0};
+         static const expand::thing exp_from_2x2_stuff = {{12, 0, 4, 8}, s2x2, s4x4, 0};
+         static const expand::thing exp_back_to_2x6_stuff = {{0, 1, 4, 5, 6, 7, 10, 11}, s2x4, s2x6, 0};
 
          // The "reverse" concept might mean mirror, as in "reverse truck".
          // The "left" concept might also mean mirror, as in "left anchor".
@@ -6403,8 +6403,8 @@ static void move_with_real_call(
             bool local_4x4_exp = false;
 
             if (the_schema == schema_conc_o) {
-               static const expand::thing thing1 = {{10, 1, 2, 9},  4, s2x2, s4x4, 0};
-               static const expand::thing thing2 = {{13, 14, 5, 6}, 4, s2x2, s4x4, 0};
+               static const expand::thing thing1 = {{10, 1, 2, 9},  s2x2, s4x4, 0};
+               static const expand::thing thing2 = {{13, 14, 5, 6}, s2x2, s4x4, 0};
 
                if (ss->kind != s2x2) fail("Can't find outside 'O' spots.");
 
