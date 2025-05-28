@@ -45,7 +45,29 @@
 #include <time.h>
 #endif
 
-static short *call_hash_lists[NUM_CALL_LIST_KINDS];
+/* Must be a power of 2. */
+#define NUM_NAME_HASH_BUCKETS 128
+#define BRACKET_HASH (NUM_NAME_HASH_BUCKETS+1)
+
+/* These lists have two extra item at the end:
+    The first is for calls whose names can't be hashed.
+    The second is the bucket that any string starting with left bracket hashes to. */
+static short *call_hash_lists[NUM_NAME_HASH_BUCKETS+2];
+static short call_hash_list_sizes[NUM_NAME_HASH_BUCKETS+2];
+static short *conc_hash_lists[NUM_NAME_HASH_BUCKETS+2];
+static short conc_hash_list_sizes[NUM_NAME_HASH_BUCKETS+2];
+static short *conclvl_hash_lists[NUM_NAME_HASH_BUCKETS+2];
+static short conclvl_hash_list_sizes[NUM_NAME_HASH_BUCKETS+2];
+
+/* These list all the buckets that selectors can go to. */
+static short *selector_hash_list;
+static short selector_hash_list_size;
+
+/* These list all the buckets that taggers can go to. */
+static short *tagger_hash_list;
+static short tagger_hash_list_size;
+
+
 static Cstring *selector_menu_list;
 
 static int *concept_list; /* all concepts */
@@ -94,9 +116,6 @@ static Cstring startup_commands[] = {
    "just as they are",
    "toggle concept levels",
    "toggle active phantoms",
-#ifdef OLD_ELIDE_BLANKS_JUNK
-   "toggle ignoreblanks",
-#endif
    "toggle retain after error",
    "toggle nowarn mode",
    "toggle singing call",
@@ -117,6 +136,44 @@ static Cstring n_4_patterns[] = {
    "5/4",
    (Cstring) 0
 };
+
+
+
+/* This returns zero if the name was clearly not able to be hashed
+   (contains NUL, comma, atsign, or single quote).  It returns 1
+   if it could clearly be hashed (no blanks).  It returns 2 if it
+   had blanks, and might be questionable.  Patterns to match
+   (call or concept names, etc. can have blanks in them and still
+   be hashed.  Strings the user types can't be hashed if they have blanks. */
+Private int get_hash(Cstring string, int *bucket_p)
+{
+   char c1 = string[0];
+   char c2 = string[1];
+   char c3 = string[2];
+   int bucket;
+
+   if (c1 == '<' && ((int) c2 & ~32) == 'A' && ((int) c3 & ~32) == 'N') {
+      *bucket_p = BRACKET_HASH;
+      return 1;
+   }
+   else if (
+               (c1 && c1 != ',' && c1 != '@' && c1 != '\'') &&
+               (c2 && c2 != ',' && c2 != '@' && c2 != '\'') &&
+               (c3 && c3 != ',' && c3 != '@' && c3 != '\'')) {
+      /* We use a hash function that ignores the "32" bit, so it is insensitive to case. */
+      bucket = (((((int) c1 & ~32) << 3) + ((int) c2 & ~32)) << 3) + ((int) c3 & ~32);
+      bucket += bucket * 20;
+      bucket += bucket >> 7;
+      bucket &= (NUM_NAME_HASH_BUCKETS-1);
+      *bucket_p = bucket;
+
+      if (c1 != ' ' && c2 != ' ' && c3 != ' ') return 1;
+      else return 2;
+   }
+   else
+      return 0;
+}
+
 
 
 /*
@@ -173,7 +230,7 @@ extern void matcher_initialize(void)
 
    item = concept_list;
    level_item = level_concept_list;
-   for (concept_number=0;;concept_number++) {
+   for (concept_number=0 ; ; concept_number++) {
       p = &concept_descriptor_table[concept_number];
       if (p->kind == end_marker) {
          break;
@@ -198,20 +255,242 @@ extern void matcher_initialize(void)
       selector_menu_list[i] = selector_list[i].name;
 
    selector_menu_list[last_selector_kind+1] = (Cstring) 0;
+
+
+
+
+
+
+   /* Initialize the hash buckets for call names. */
+
+   {
+      int i, j, k, bucket;
+      int *item;
+
+      /* First, do the selectors.  Before that, be sure "<anyone>" is hashed. */
+
+      selector_hash_list = (short *) get_mem(sizeof(short));
+      selector_hash_list_size = 1;
+
+      if (!get_hash("<an", &bucket)) {
+         fprintf(stderr, "Can't hash selector base!\n");
+         exit_program(2);
+      }
+
+      selector_hash_list[0] = bucket;
+
+      for (i=1; i<=last_selector_kind; i++) {
+         if (!get_hash(selector_list[i].name, &bucket)) {
+            fprintf(stderr, "Can't hash selector %d - 1!\n", i);
+            exit_program(2);
+         }
+
+         /* See if this bucket is already accounted for. */
+
+         for (j=0; j<selector_hash_list_size; j++) {
+            if (selector_hash_list[j] == bucket) goto already_in1;
+         }
+
+         selector_hash_list_size++;
+         selector_hash_list = (short *) get_more_mem(selector_hash_list, selector_hash_list_size * sizeof(short));
+         selector_hash_list[selector_hash_list_size-1] = bucket;
+
+         /* Now do it again for the singular names. */
+
+         already_in1:
+
+         if (!get_hash(selector_list[i].sing_name, &bucket)) {
+            fprintf(stderr, "Can't hash selector %d - 2!\n", i);
+            exit_program(2);
+         }
+
+         for (j=0; j<selector_hash_list_size; j++) {
+            if (selector_hash_list[j] == bucket) goto already_in2;
+         }
+
+         selector_hash_list_size++;
+         selector_hash_list = (short *) get_more_mem(selector_hash_list, selector_hash_list_size * sizeof(short));
+         selector_hash_list[selector_hash_list_size-1] = bucket;
+
+         already_in2: ;
+      }
+
+      /* Next, do the taggers.  Before that, be sure "<atc>" is hashed. */
+
+      tagger_hash_list = (short *) get_mem(sizeof(short));
+      tagger_hash_list_size = 1;
+
+      if (!get_hash("<at", &bucket)) {
+         fprintf(stderr, "Can't hash tagger base!\n");
+         exit_program(2);
+      }
+
+      tagger_hash_list[0] = bucket;
+
+      for (i=0; i<4; i++) {
+         for (k=0; k<number_of_taggers[i]; k++) {
+            if (!get_hash(tagger_calls[i][k]->name, &bucket)) {
+               fprintf(stderr, "Can't hash tagger %d %d!\n", i, k);
+               exit_program(2);
+            }
+   
+            for (j=0; j<tagger_hash_list_size; j++) {
+               if (tagger_hash_list[j] == bucket) goto already_in3;
+            }
+   
+            tagger_hash_list_size++;
+            tagger_hash_list = (short *) get_more_mem(tagger_hash_list, tagger_hash_list_size * sizeof(short));
+            tagger_hash_list[tagger_hash_list_size-1] = bucket;
+   
+            already_in3: ;
+         }
+      }
+
+      /* Now do the calls. */
+
+      for (i=0 ; i<NUM_NAME_HASH_BUCKETS+2 ; i++) {
+         call_hash_lists[i] = (short *) 0;
+         conc_hash_lists[i] = (short *) 0;
+         conclvl_hash_lists[i] = (short *) 0;
+         call_hash_list_sizes[i] = 0;
+         conc_hash_list_sizes[i] = 0;
+         conclvl_hash_list_sizes[i] = 0;
+      }
+
+      for (i=0; i<number_of_calls[call_list_any]; i++) {
+         Cstring name = main_call_lists[call_list_any][i]->name;
+
+         doitagain:
+
+         if (name[0] == '@') {
+            if (name[1] == '6' || name[1] == 'k') {
+               /* This is a call like "<anyone> run".  Put it into every bucket that could match a selector. */
+   
+               for (j=0 ; j<selector_hash_list_size ; j++) {
+                  bucket = selector_hash_list[j];
+                  call_hash_list_sizes[bucket]++;
+                  call_hash_lists[bucket] = (short *) get_more_mem(call_hash_lists[bucket], call_hash_list_sizes[bucket] * sizeof(short));
+                  call_hash_lists[bucket][call_hash_list_sizes[bucket]-1] = i;
+               }
+               continue;
+            }
+            else if (name[1] == 'v' || name[1] == 'w' || name[1] == 'x' || name[1] == 'y') {
+               /* This is a call like "<atc> your neighbor".  Put it into every bucket that could match a tagger. */
+   
+               for (j=0 ; j<tagger_hash_list_size ; j++) {
+                  bucket = tagger_hash_list[j];
+                  call_hash_list_sizes[bucket]++;
+                  call_hash_lists[bucket] = (short *) get_more_mem(call_hash_lists[bucket], call_hash_list_sizes[bucket] * sizeof(short));
+                  call_hash_lists[bucket][call_hash_list_sizes[bucket]-1] = i;
+               }
+               continue;
+            }
+            else if (name[1] == '0' || name[1] == 'm') {
+                /* We act as though any string starting with "[" hashes to BRACKET_HASH. */
+               call_hash_list_sizes[BRACKET_HASH]++;
+               call_hash_lists[BRACKET_HASH] = (short *) get_more_mem(call_hash_lists[BRACKET_HASH], call_hash_list_sizes[BRACKET_HASH] * sizeof(short));
+               call_hash_lists[BRACKET_HASH][call_hash_list_sizes[BRACKET_HASH]-1] = i;
+               continue;
+            }
+            else if (!get_escape_string(name[1])) {
+               /* If this escape is something like "@2", as in "@2scoot and plenty", ignore it.  Hash it under "scoot and plenty". */
+                  name += 2;
+                  goto doitagain;
+            }
+         }
+
+         if (get_hash(name, &bucket)) {
+            call_hash_list_sizes[bucket]++;
+            call_hash_lists[bucket] = (short *) get_more_mem(call_hash_lists[bucket], call_hash_list_sizes[bucket] * sizeof(short));
+            call_hash_lists[bucket][call_hash_list_sizes[bucket]-1] = i;
+            continue;
+         }
+
+         /* If we get here, this call needs to be put into the extra bucket at the end,
+            and also into EVERY OTHER BUCKET!!!! */
+         for (bucket=0 ; bucket < NUM_NAME_HASH_BUCKETS+1 ; bucket++) {
+            call_hash_list_sizes[bucket]++;
+            call_hash_lists[bucket] = (short *) get_more_mem(call_hash_lists[bucket], call_hash_list_sizes[bucket] * sizeof(short));
+            call_hash_lists[bucket][call_hash_list_sizes[bucket]-1] = i;
+         }
+      }
+
+      /* Now do the concepts from the big list. */
+
+      item = concept_list;
+
+      for (i=0; i<concept_list_length; i++,item++) {
+         Cstring name = concept_descriptor_table[*item].name;
+
+         if (name[0] == '@' && (name[1] == '6' || name[1] == 'k')) {
+            /* This is a call like "<anyone> run".  Put it into every bucket that could match a selector. */
+
+            for (j=0 ; j<selector_hash_list_size ; j++) {
+               bucket = selector_hash_list[j];
+               conc_hash_list_sizes[bucket]++;
+               conc_hash_lists[bucket] = (short *) get_more_mem(conc_hash_lists[bucket], conc_hash_list_sizes[bucket] * sizeof(short));
+               conc_hash_lists[bucket][conc_hash_list_sizes[bucket]-1] = *item;
+            }
+            continue;
+         }
+         else if (get_hash(name, &bucket)) {
+            conc_hash_list_sizes[bucket]++;
+            conc_hash_lists[bucket] = (short *) get_more_mem(conc_hash_lists[bucket], conc_hash_list_sizes[bucket] * sizeof(short));
+            conc_hash_lists[bucket][conc_hash_list_sizes[bucket]-1] = *item;
+            continue;
+         }
+
+         /* If we get here, this concept needs to be put into the extra bucket at the end,
+            and also into EVERY OTHER BUCKET!!!! */
+         for (bucket=0 ; bucket < NUM_NAME_HASH_BUCKETS+1 ; bucket++) {
+            conc_hash_list_sizes[bucket]++;
+            conc_hash_lists[bucket] = (short *) get_more_mem(conc_hash_lists[bucket], conc_hash_list_sizes[bucket] * sizeof(short));
+            conc_hash_lists[bucket][conc_hash_list_sizes[bucket]-1] = *item;
+         }
+      }
+
+      /* Now do the "level concepts". */
+
+      item = level_concept_list;
+
+      for (i=0; i<level_concept_list_length; i++,item++) {
+         Cstring name = concept_descriptor_table[*item].name;
+
+         if (name[0] == '@' && (name[1] == '6' || name[1] == 'k')) {
+            /* This is a call like "<anyone> run".  Put it into every bucket that could match a selector. */
+
+            for (j=0 ; j<selector_hash_list_size ; j++) {
+               bucket = selector_hash_list[j];
+               conclvl_hash_list_sizes[bucket]++;
+               conclvl_hash_lists[bucket] = (short *) get_more_mem(conclvl_hash_lists[bucket], conclvl_hash_list_sizes[bucket] * sizeof(short));
+               conclvl_hash_lists[bucket][conclvl_hash_list_sizes[bucket]-1] = *item;
+            }
+            continue;
+         }
+         else if (get_hash(name, &bucket)) {
+            conclvl_hash_list_sizes[bucket]++;
+            conclvl_hash_lists[bucket] = (short *) get_more_mem(conclvl_hash_lists[bucket], conclvl_hash_list_sizes[bucket] * sizeof(short));
+            conclvl_hash_lists[bucket][conclvl_hash_list_sizes[bucket]-1] = *item;
+            continue;
+         }
+
+         /* If we get here, this concept needs to be put into the extra bucket at the end,
+            and also into EVERY OTHER BUCKET!!!! */
+         for (bucket=0 ; bucket < NUM_NAME_HASH_BUCKETS+1 ; bucket++) {
+            conclvl_hash_list_sizes[bucket]++;
+            conclvl_hash_lists[bucket] = (short *) get_more_mem(conclvl_hash_lists[bucket], conclvl_hash_list_sizes[bucket] * sizeof(short));
+            conclvl_hash_lists[bucket][conclvl_hash_list_sizes[bucket]-1] = *item;
+         }
+      }
+   }
+
+
 }
+
 
 
 extern void matcher_setup_call_menu(call_list_kind cl)
 {
-/* used to be:
-   int i;
-
-   call_hash_lists[cl] = (short *) get_mem(number_of_calls[cl] * sizeof(short));
-   (void) memset(call_hash_lists[cl], 0, number_of_calls[cl] * sizeof(short));
-
-   for (i=0; i<number_of_calls[cl]; i++) call_hash_lists[cl][i] = 0;
-      call_hash_lists[cl][i] = main_call_lists[cl][i];
-*/
 }
 
 /*
@@ -406,7 +685,7 @@ Private long_boolean verify_call(void)
  * STRN_GCP sets S1 to be the greatest common prefix of S1 and S2.
  */
 
-static void strn_gcp(char *s1, char *s2)
+Private void strn_gcp(char *s1, char *s2)
 {
     for (;;) {
         if (*s1 == 0) break;
@@ -420,7 +699,7 @@ static void strn_gcp(char *s1, char *s2)
 }
 
 
-static void copy_sublist(Const match_result *outbar, modifier_block *tails)
+Private void copy_sublist(Const match_result *outbar, modifier_block *tails)
 {
    if (outbar->real_next_subcall) {
       modifier_block *out;
@@ -472,7 +751,7 @@ static void copy_sublist(Const match_result *outbar, modifier_block *tails)
  * not set.
  */
     
-static void record_a_match(void)
+Private void record_a_match(void)
 {
    int old_yield = static_ss.lowest_yield_depth;
 
@@ -521,9 +800,112 @@ static void record_a_match(void)
 }
 
 
+/* ************************************************************************
+
+This procedure must obey certain properties.  Be sure that no modifications
+to this procedure compromise this, or else fix the stuff in
+"scan_concepts_and_calls" that depends on it.
+
+Theorem 1 (pure calls):
+
+   If user != nil
+         AND
+   pat1[0..2] does not contain NUL, comma, atsign, or apostrophe
+         AND
+   user[0..2] does not contain NUL or blank
+         AND
+   user[0..2] does not match pat1[0..2] case insensitively,
+         THEN
+   this procedure will do nothing.
+
+Theorem 2 (<anyone> calls):
+
+   If user != nil
+         AND
+   pat1[0..1] = "@6" or "@k",
+         AND
+   user[0..2] does not contain NUL or blank
+         AND
+   user[0..2] does not match any selector name
+      (note that we have already determined that no selector
+      name has NUL, comma, atsign, or apostrophe in the first 3
+      characters, and have determined what hash buckets they must
+      lie in)
+         AND
+   user[0..2] does not match "<an" case insensitively,
+         THEN
+   this procedure will do nothing.
+
+Theorem 3 (<atc> calls):
+
+   If user != nil
+         AND
+   pat1[0..1] = "@v", "@w", "@x" or "@y",
+         AND
+   user[0..2] does not contain NUL or blank
+         AND
+   user[0..2] does not match any tagger name
+      (note that we have already determined that no tagger
+      name has NUL, comma, atsign, or apostrophe in the first 3
+      characters, and have determined what hash buckets they must
+      lie in)
+         AND
+   user[0..2] does not match "<at" case insensitively,
+         THEN
+   this procedure will do nothing.
+
+Theorem 4 (<anything> calls):
+
+   If user != nil
+         AND
+   pat1[0..1] = "@0" or "@m",
+         AND
+   user[0] is not left bracket or NUL
+***** under what circumstances is it true even if user[0] = NUL???????
+Well, we need static_ss.showing off, and pat2, if non-nil, must have folks_to_restore = nil
+then it won't do anything except record bunches of extra partial matches (but no exact ones),
+and generally mess around.
+         AND
+   user[0..2] does not match "<an" case insensitively,
+         THEN
+   this procedure will do nothing.
+
+Theorem A (prefix mismatch):
+
+   If user != nil AND user[0] is not NUL
+         AND
+   pat1 = the single character left bracket or blank (this theorem
+      could apply to many other characters, but these are the only
+      ones that arise)
+         AND
+   user[0] != pat1[0]
+         THEN
+   this procedure will do nothing.
+
+Theorem B (prefix match):
+
+   If user != nil AND user[0] is not NUL
+         AND
+   pat1 = the single character left bracket or blank
+         AND
+   user[0] = pat1[0]
+         AND
+   pat2 is not nil
+         AND
+   pat2->demand_a_call = FALSE   (don't really need this, since it's doing nothing!)
+         AND
+   pat2->folks_to_restore = nil
+         AND
+   this procedure would do nothing if called with
+      pat2->car in place of pat1 and the remaining characters of user.
+         THEN
+   this procedure will do nothing.
+
+************************************************************************ */
+
 /* Patxp is where the next character of the extension of the user input for the current pattern is to be written. */
 
-static void match_suffix_2(Cstring user, Cstring pat1, pat2_block *pat2, int patxi)
+Private void match_suffix_2(Cstring user, Cstring pat1, pat2_block *pat2, int patxi)
 {
    concept_descriptor *pat2_concept = (concept_descriptor *) 0;
 
@@ -696,15 +1078,6 @@ static void match_suffix_2(Cstring user, Cstring pat1, pat2_block *pat2, int pat
                char u = *user++;
 
                if (u != p && (p > 'Z' || p < 'A' || u != p+'a'-'A')) {
-#ifdef OLD_ELIDE_BLANKS_JUNK
-                  if (elide_blanks) {
-                     if (p != '-' || u != ' ') {           /* If user said "wave based" instead of "wave-based", just continue. */
-                        if (p == ' ' || p == '-') user--;  /* If user said "wavebased" (no hyphen) or "inroll" (no blank), elide. */
-                        else break;
-                     }
-                  }
-                  else
-#endif
                   if (p != '-' || u != ' ') {           /* If user said "wave based" instead of "wave-based", just continue. */
                      if (p == '\'' || p == ',') user--; /* If user left out apostrophe or comma, just continue. */
                      else break;
@@ -717,11 +1090,13 @@ static void match_suffix_2(Cstring user, Cstring pat1, pat2_block *pat2, int pat
 }
 
 
-static void scan_concepts_and_calls(Cstring user, Cstring firstchar, pat2_block *pat2, match_result *saved_result_p, int patxi)
+Private void scan_concepts_and_calls(Cstring user, Cstring firstchar, pat2_block *pat2, match_result *saved_result_p, int patxi)
 {
    int *item;
+   short **concitem;
    int menu_length;
    int i;
+   int bucket;
    pat2_block p2b;
    match_result *saved_folksptr = current_result;
 
@@ -739,6 +1114,91 @@ static void scan_concepts_and_calls(Cstring user, Cstring firstchar, pat2_block 
    saved_result_p->indent = FALSE;
    saved_result_p->real_next_subcall = (match_result *) 0;
    saved_result_p->real_secondary_subcall = (match_result *) 0;
+
+   /* We know that user is never nil when this procedure is called.
+      We also know the firstchar is just a single character, and that
+      that character is blank or left bracket. */
+
+   /* Given the above, we know that, in the next 2 loops, any iteration cycle will do nothing if:
+
+      user[0] != NUL and user[0] != firstchar[0]
+
+                  OR
+
+      (call_or_concept_name has 1st 3 chars with no comma, quote, atsign, or NUL)
+         AND
+      (user[1,2,3] are not NUL or blank and don't match call_or_concept_name)
+
+      */
+
+   if (!user[0] && static_ss.showing)
+      goto mundane;
+
+   if (user[0] && user[0] != firstchar[0])
+      goto getout;
+
+   /* We now know that it will do nothing if:
+
+
+   (call_or_concept_name has 1st 3 chars with no comma, quote, atsign, or NUL)
+      AND
+   (user[1,2,3] are not NUL or blank and don't match call_or_concept_name)
+
+   */
+
+   if (user[1] == '[' || get_hash(&user[1], &bucket) == 1) {
+       if (user[1] == '[') bucket = BRACKET_HASH;
+
+      /* Therefore, we should only search for those calls that either
+         (1) have comma/quote/atsign/NULL in 1st 3 characters, OR
+         (2) match user, that is, match the hash number we just computed.
+      */
+
+      /* scan concepts */
+   
+      if (allowing_all_concepts) {
+         menu_length = conc_hash_list_sizes[bucket];
+         concitem = conc_hash_lists;
+      }
+      else {
+         menu_length = conclvl_hash_list_sizes[bucket];
+         concitem = conclvl_hash_lists;
+      }
+   
+      saved_result_p->match.kind = ui_concept_select;
+
+      for (i = 0; i < menu_length; i++) {
+         concept_descriptor *this_concept = &concept_descriptor_table[concitem[bucket][i]];
+         p2b.car = this_concept->name;
+         p2b.special_concept = this_concept;
+         saved_result_p->match.concept_ptr = this_concept;
+         saved_result_p->match.call_conc_options = null_options;
+         current_result = saved_result_p;
+         match_suffix_2(user, firstchar, &p2b, patxi);
+      }
+
+      /* scan calls */
+
+      p2b.special_concept = (concept_descriptor *) 0;
+      saved_result_p->match.kind = ui_call_select;
+
+      menu_length = call_hash_list_sizes[bucket];
+
+      for (i = 0; i < menu_length; i++) {
+         callspec_block *cb = main_call_lists[call_list_any][call_hash_lists[bucket][i]];
+         saved_result_p->match.call_ptr = cb;
+         p2b.car = cb->name;
+         saved_result_p->match.call_conc_options = null_options;
+         current_result = saved_result_p;
+         match_suffix_2(user, firstchar, &p2b, patxi);
+      }
+
+      goto getout;
+   }
+
+   /* Do it the mundane way. */
+
+   mundane:
 
    /* scan concepts */
 
@@ -770,7 +1230,9 @@ static void scan_concepts_and_calls(Cstring user, Cstring firstchar, pat2_block 
    p2b.special_concept = (concept_descriptor *) 0;
    saved_result_p->match.kind = ui_call_select;
 
-   for (i = 0; i < number_of_calls[call_list_any]; i++) {
+   menu_length = number_of_calls[call_list_any];
+
+   for (i = 0; i < menu_length; i++) {
       callspec_block *cb = main_call_lists[call_list_any][i];
       saved_result_p->match.call_ptr = cb;
       p2b.car = cb->name;
@@ -778,6 +1240,8 @@ static void scan_concepts_and_calls(Cstring user, Cstring firstchar, pat2_block 
       current_result = saved_result_p;
       match_suffix_2(user, firstchar, &p2b, patxi);
    }
+
+   getout:
 
    current_result = saved_folksptr;
    current_result->indent = FALSE;
@@ -793,7 +1257,7 @@ static void scan_concepts_and_calls(Cstring user, Cstring firstchar, pat2_block 
  * room in the Result struct to store the associated value.
  */
 
-static void match_wildcard(Cstring user, Cstring pat, pat2_block *pat2, int patxi, concept_descriptor *special)
+Private void match_wildcard(Cstring user, Cstring pat, pat2_block *pat2, int patxi, concept_descriptor *special)
 {
    Cstring prefix;
    Cstring *number_table;
@@ -823,7 +1287,7 @@ static void match_wildcard(Cstring user, Cstring pat, pat2_block *pat2, int patx
             if (current_result->match.call_conc_options.who == selector_uninitialized) {
                selector_kind save_who = current_result->match.call_conc_options.who;
 
-               for (i=1; i<=last_selector_kind; ++i) {
+               for (i=1; i<=last_selector_kind; i++) {
                   current_result->match.call_conc_options.who = (selector_kind) i;
                   match_suffix_2(user, ((key == '6') ? selector_list[i].name : selector_list[i].sing_name), &p2b, patxi);
                }
@@ -1128,7 +1592,7 @@ static void match_wildcard(Cstring user, Cstring pat, pat2_block *pat2, int patx
  * a match is recorded in the search state.
  */
  
-static void match_pattern(Cstring pattern, concept_descriptor *this_is_grand)
+Private void match_pattern(Cstring pattern, concept_descriptor *this_is_grand)
 {
    char pch, uch;
    pat2_block p2b;
@@ -1153,7 +1617,7 @@ static void match_pattern(Cstring pattern, concept_descriptor *this_is_grand)
          /* fails to match */
          return;
       }
-      else if (pattern[1] == '0' && uch != '[' && uch != '<') {
+      else if ((pattern[1] == '0' || pattern[1] == 'm') && uch != '[' && uch != '<') {
          /* Call was "<ANYTHING> and ...", but user didn't type "[" or "<". */
          return;
       }
@@ -1168,11 +1632,10 @@ static void match_pattern(Cstring pattern, concept_descriptor *this_is_grand)
    match_suffix_2(static_ss.full_input, "", &p2b, 0);
 }
 
-static void search_menu(uims_reply kind)
+Private void search_menu(uims_reply kind)
 {
    int i;
    Cstring *menu;
-   int menu_length;
 
    everyones_real_result.valid = TRUE;
    everyones_real_result.exact = FALSE;
@@ -1186,7 +1649,7 @@ static void search_menu(uims_reply kind)
    current_result = &everyones_real_result;
 
    if (kind == ui_call_select) {
-      menu_length = number_of_calls[static_call_menu];
+      int menu_length = number_of_calls[static_call_menu];
 
       for (i = 0; i < menu_length; i++) {
          callspec_block *cb;
@@ -1200,6 +1663,7 @@ static void search_menu(uims_reply kind)
       }
    }
    else if (kind == ui_concept_select) {
+      int menu_length;
       int *item;
 
       if (allowing_all_concepts) {
@@ -1238,6 +1702,8 @@ static void search_menu(uims_reply kind)
       }
    }
    else {
+      int menu_length;
+
       if (kind == ui_command_select) {
          if (static_call_menu == match_resolve_extra_commands) {
             menu = extra_resolve_commands;

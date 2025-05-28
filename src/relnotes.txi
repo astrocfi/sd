@@ -8,13 +8,25 @@
 @evenheading @thispage @| @|
 @end iftex
 @c %**end of header
-Copyright @copyright{} 1996-1997 William B. Ackerman
+Copyright @copyright{} 1996-1998 William B. Ackerman
 @sp 2
 @example
-          RELEASE NOTES FOR SD VERSION 31.92
-         Database version = 31.92 format = 118
+          RELEASE NOTES FOR SD VERSION 31.93
+         Database version = 31.92 format = 120
        X11 UI version 1.17, SDTTY UI version 1.9
 @end example
+
+****** Changes as of version 31.93 ******
+
+The parser is about 15 times faster on very difficult phrases, such as
+@code{[[right and left thru] and roll] coordinate}.
+
+Because of an ambiguity, it was necessary to remove the ``space invader''
+versions of @code{right anchor <N/4>} and @code{left anchor <N/4>}, when
+no person designator is given.  If you want the ``space invader'' versions
+of these calls, you must use a person designator, even if that is @code{everyone}.
+Without a person designator, these are ``breathing'' calls that are suitable
+for use in distorted setups, as in @code{trapezoid left anchor 3/4}.
 
 ****** Changes as of version 31.92 ******
 

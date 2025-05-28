@@ -477,6 +477,9 @@ extern void touch_or_rear_back(
 
    if (setup_attrs[scopy->kind].setup_limits < 0) return;          /* We don't understand absurd setups. */
 
+   /* We don't do this if doing the last half of a call. */
+   if (scopy->cmd.cmd_final_flags.herit & INHERITFLAG_LASTHALF) return;
+
    directions = 0;
    livemask = 0;
 
@@ -1338,6 +1341,7 @@ extern void toplevelmove(void)
 
    starting_setup.cmd.cmd_misc_flags = 0;
    starting_setup.cmd.cmd_misc2_flags = 0;
+   starting_setup.cmd.do_couples_heritflags = 0;
    starting_setup.cmd.cmd_frac_flags = CMD_FRAC_NULL_VALUE;
    starting_setup.cmd.cmd_assume.assumption = cr_none;
    starting_setup.cmd.cmd_assume.assump_cast = 0;

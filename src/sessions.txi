@@ -231,11 +231,11 @@ You should see this:
 Do you want to use one of the following sessions?
 
   0     (no session)
-  1  sequence.C3          C3              12      NACC, June 1995
-  2  sequence.C4          C4              31      NACC, June 1995
-  3  workshop             C1              75      My wednesday group
-  4  a2stuff              A2               9      NESRDC/1995
-  5  a1stuff              A1               2      Lake Shore Farm Weekend
+  1  sequence.C3          C3           12      NACC, June 1995
+  2  sequence.C4          C4           31      NACC, June 1995
+  3  workshop             C1           75      My wednesday group
+  4  a2stuff              A2            9      NESRDC/1995
+  5  a1stuff              A1            2      Lake Shore Farm Weekend
   6     (create a new session)
 
 Enter the number of the desired session:  
@@ -262,12 +262,12 @@ typing 3 and pressing @key{ENTER}.
 @example
 @group
 Enter the number of the desired session:  @kbd{3}
-Sd: reading database....................................................done
+Sd: reading database.............................................done
 
 Version Sd 31.62 : db31.62 : ui1.7tty     C1
-Output file is "workshop"                   <-- it tells us the output file
+Output file is "workshop"              <-- it tells us the output file
 
-Enter startup command> @kbd{heads start}          <-- we're off and running
+Enter startup command> @kbd{heads start}     <-- we're off and running
 @end group
 @end example
 
@@ -375,11 +375,11 @@ group.  Start sdtty with the level c2:
 Do you want to use one of the following sessions?
 
   0     (no session)
-  1  sequence.C3          C3              12      NACC, June 1995
-  2  sequence.C4          C4              31      NACC, June 1995
-  3  workshop             C1              75      My wednesday group
-  4  a2stuff              A2               9      NESRDC/1995
-  5  a1stuff              A1               2      Lake Shore Farm Weekend
+  1  sequence.C3          C3           12      NACC, June 1995
+  2  sequence.C4          C4           31      NACC, June 1995
+  3  workshop             C1           75      My wednesday group
+  4  a2stuff              A2            9      NESRDC/1995
+  5  a1stuff              A1            2      Lake Shore Farm Weekend
   6     (create a new session)
 
 Enter the number of the desired session:  
@@ -392,7 +392,7 @@ this case, 6:
 @example
 @group
 Enter the number of the desired session:  @kbd{6}
-Sd: reading database....................................................done
+Sd: reading database.............................................done
 
 Version Sd 31.62 : db31.62 : ui1.7tty     C2
 Output file is "sequence.C2"
@@ -458,12 +458,12 @@ it, we will see:
 Do you want to use one of the following sessions?
 
   0     (no session)
-  1  sequence.C3          C3              12      NACC, June 1995
-  2  sequence.C4          C4              31      NACC, June 1995
-  3  workshop             C1              75      My wednesday group
-  4  a2stuff              A2               9      NESRDC/1995
-  5  a1stuff              A1               2      Lake Shore Farm Weekend
-  6  monday.C2            C2               2      Monday group
+  1  sequence.C3          C3           12      NACC, June 1995
+  2  sequence.C4          C4           31      NACC, June 1995
+  3  workshop             C1           75      My wednesday group
+  4  a2stuff              A2            9      NESRDC/1995
+  5  a1stuff              A1            2      Lake Shore Farm Weekend
+  6  monday.C2            C2            2      Monday group
   7     (create a new session)
 
 Enter the number of the desired session:  
@@ -500,12 +500,12 @@ part of the demonstration.  Type -5:
 Do you want to use one of the following sessions?
 
   0     (no session)
-  1  sequence.C3          C3              12      NACC, June 1995
-  2  sequence.C4          C4              31      NACC, June 1995
-  3  workshop             C1              75      My wednesday group
-  4  a2stuff              A2               9      NESRDC/1995
-  5  a1stuff              A1               2      Lake Shore Farm Weekend
-  6  monday.C2            C2               2      Monday group
+  1  sequence.C3          C3           12      NACC, June 1995
+  2  sequence.C4          C4           31      NACC, June 1995
+  3  workshop             C1           75      My wednesday group
+  4  a2stuff              A2            9      NESRDC/1995
+  5  a1stuff              A1            2      Lake Shore Farm Weekend
+  6  monday.C2            C2            2      Monday group
   7     (create a new session)
 
 Enter the number of the desired session:  @kbd{-5}
@@ -581,16 +581,16 @@ Do you want to use one of the following sessions?
   2     (create a new session)
 
 Enter the number of the desired session:  @kbd{2} <-- new session
-Sd: reading database....................................................done
+Sd: reading database.............................................done
 
 Version Sd 31.62 : db31.62 : ui1.7tty     C3
 Output file is "sequence.C3"
-Enter new title: @kbd{Fall Festival}              <-- new title
+Enter new title: @kbd{Fall Festival}      <-- new title
 Enter startup command> change output file
 Sequence output file is "sequence.C3".
-Enter new file name: @kbd{+}                      <-- new file name
-Output file changed to "9mar96.C3"          <-- it tells us the real file name
-Enter startup command> @kbd{heads start}          <-- we're off and running
+Enter new file name: @kbd{+}              <-- new file name
+Output file changed to "9mar96.C3"  <-- it tells us the real file name
+Enter startup command> @kbd{heads start}  <-- we're off and running
 @end group
 @end example
 
@@ -608,7 +608,7 @@ Do you want to use one of the following sessions?
   3     (create a new session)
 
 Enter the number of the desired session:  @kbd{2}
-Sd: reading database....................................................done
+Sd: reading database.............................................done
 
 Version Sd 31.62 : db31.62 : ui1.7tty     C3
 Output file is "9mar96.C3"

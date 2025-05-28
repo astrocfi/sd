@@ -2647,46 +2647,73 @@ Private int divide_the_setup(
       been squashed anyway due to the top level normalization, but we want this to occur
       immediately, not just at the top level, though we can't think of a concrete example
       in which it makes a difference. */
-   if ((result->result_flags & RESULTFLAG__EXPAND_TO_2X3) && result->kind == s2x6) {
-      if (!(result->people[2].id1 | result->people[3].id1 | result->people[8].id1 | result->people[9].id1)) {
-         /* Inner spots are empty. */
-         setup temp = *result;
-         static Const veryshort inner_2x6[8] = {0, 1, 4, 5, 6, 7, 10, 11};
 
-         gather(result, &temp, inner_2x6, 7, 0);
-         result->kind = s2x4;
+
+   if (result->result_flags & RESULTFLAG__EXPAND_TO_2X3) {
+      if (result->kind == s2x6) {
+         if (!(result->people[2].id1 | result->people[3].id1 | result->people[8].id1 | result->people[9].id1)) {
+            /* Inner spots are empty. */
+            setup temp = *result;
+            static Const veryshort inner_2x6[8] = {0, 1, 4, 5, 6, 7, 10, 11};
+   
+            gather(result, &temp, inner_2x6, 7, 0);
+            result->kind = s2x4;
+         }
+         else if (!(result->people[0].id1 | result->people[5].id1 | result->people[6].id1 | result->people[11].id1)) {
+            /* Outer spots are empty. */
+            setup temp = *result;
+            static Const veryshort outer_2x6[8] = {1, 2, 3, 4, 7, 8, 9, 10};
+   
+            gather(result, &temp, outer_2x6, 7, 0);
+            result->kind = s2x4;
+         }
       }
-      else if (!(result->people[0].id1 | result->people[5].id1 | result->people[6].id1 | result->people[11].id1)) {
-         /* Outer spots are empty. */
-         setup temp = *result;
-         static Const veryshort outer_2x6[8] = {1, 2, 3, 4, 7, 8, 9, 10};
-
-         gather(result, &temp, outer_2x6, 7, 0);
-         result->kind = s2x4;
+      else if (result->kind == s4x6) {
+         /* We do the same for two concatenated 3x4's.  This could happen if the people folding were not the ends. */
+         if (!(      result->people[2].id1 | result->people[3].id1 | result->people[8].id1 | result->people[9].id1 |
+                     result->people[20].id1 | result->people[21].id1 | result->people[14].id1 | result->people[15].id1)) {
+            /* Inner spots are empty. */
+            setup temp = *result;
+            static Const veryshort outer_4x6[16] = {
+               5, 6, 23, 7, 12, 13, 16, 22, 17, 18, 11, 19, 0, 1, 4, 10};
+   
+            gather(result, &temp, outer_4x6, 15, 0);
+            result->kind = s4x4;
+            /* It will get canonicalized. */
+         }
+         else if (!( result->people[0].id1 | result->people[5].id1 | result->people[6].id1 | result->people[11].id1 |
+                     result->people[18].id1 | result->people[23].id1 | result->people[12].id1 | result->people[17].id1)) {
+            /* Outer spots are empty. */
+            setup temp = *result;
+            static Const veryshort inner_4x6[16] = {4, 7, 22, 8, 13, 14, 15, 21, 16, 19, 10, 20, 1, 2, 3, 9};
+   
+            gather(result, &temp, inner_4x6, 15, 0);
+            result->kind = s4x4;
+            /* It will get canonicalized. */
+         }
       }
-   }
-   else if ((result->result_flags & RESULTFLAG__EXPAND_TO_2X3) && result->kind == s4x6) {
-      /* We do the same for two concatenated 3x4's.  This could happen if the people folding were not the ends. */
-      if (!(      result->people[2].id1 | result->people[3].id1 | result->people[8].id1 | result->people[9].id1 |
-                  result->people[20].id1 | result->people[21].id1 | result->people[14].id1 | result->people[15].id1)) {
-         /* Inner spots are empty. */
-         setup temp = *result;
-         static Const veryshort outer_4x6[16] = {
-            5, 6, 23, 7, 12, 13, 16, 22, 17, 18, 11, 19, 0, 1, 4, 10};
-
-         gather(result, &temp, outer_4x6, 15, 0);
-         result->kind = s4x4;
-         /* It will get canonicalized. */
-      }
-      else if (!( result->people[0].id1 | result->people[5].id1 | result->people[6].id1 | result->people[11].id1 |
-                  result->people[18].id1 | result->people[23].id1 | result->people[12].id1 | result->people[17].id1)) {
-         /* Outer spots are empty. */
-         setup temp = *result;
-         static Const veryshort inner_4x6[16] = {4, 7, 22, 8, 13, 14, 15, 21, 16, 19, 10, 20, 1, 2, 3, 9};
-
-         gather(result, &temp, inner_4x6, 15, 0);
-         result->kind = s4x4;
-         /* It will get canonicalized. */
+      else if (result->kind == s3x6 &&
+                  (result->result_flags & RESULTFLAG__SPLIT_AXIS_FIELDMASK) == 
+                     (result->rotation & 1) ?
+                     (RESULTFLAG__SPLIT_AXIS_BIT) :
+                     (RESULTFLAG__SPLIT_AXIS_BIT << RESULTFLAG__SPLIT_AXIS_SEPARATION)) {
+         /* These were offset 2x3's. */
+         if (!(result->people[2].id1 | result->people[3].id1 | result->people[8].id1 | result->people[11].id1 | result->people[12].id1 | result->people[17].id1)) {
+            /* Inner spots are empty. */
+            setup temp = *result;
+            static Const veryshort inner_3x6[12] = {0, 1, 4, 5, 6, 7, 9, 10, 13, 14, 15, 16};
+   
+            gather(result, &temp, inner_3x6, 11, 0);
+            result->kind = s3x4;
+         }
+         else if (!(result->people[0].id1 | result->people[5].id1 | result->people[6].id1 | result->people[9].id1 | result->people[14].id1 | result->people[15].id1)) {
+            /* Outer spots are empty. */
+            setup temp = *result;
+            static Const veryshort outer_3x6[12] = {1, 2, 3, 4, 7, 8, 10, 11, 12, 13, 16, 17};
+   
+            gather(result, &temp, outer_3x6, 11, 0);
+            result->kind = s3x4;
+         }
       }
    }
 
@@ -3026,7 +3053,7 @@ foobar:
          (plus possible 3x3/4x4 stuff) was what we were looking for, remove those flags and split the setup. */
 
       if (callspec->callflags1 & CFLAG1_12_16_MATRIX_MEANS_SPLIT) {
-         uint32 z = search_concepts & ~(INHERITFLAG_3X3 | INHERITFLAG_4X4);
+         uint32 z = search_concepts & ~(INHERITFLAG_3X3 | INHERITFLAG_4X4 | INHERITFLAG_6X6 | INHERITFLAG_8X8);
 
          switch (ss->kind) {
             case s3x4:
@@ -3347,9 +3374,9 @@ foobar:
          ss->cmd.cmd_misc_flags |= CMD_MISC__EXPLICIT_MATRIX;
       }
       else {
-         if (    ((matrix_check_flag & INHERITFLAG_12_MATRIX) && (search_concepts & INHERITFLAG_3X3) && (search_concepts & INHERITFLAG_12_MATRIX))
+         if (    ((matrix_check_flag & INHERITFLAG_12_MATRIX) && (search_concepts & (INHERITFLAG_3X3|INHERITFLAG_6X6)) && (search_concepts & INHERITFLAG_12_MATRIX))
                                              ||                                                                                            
-                 ((matrix_check_flag & INHERITFLAG_16_MATRIX) && (search_concepts & INHERITFLAG_4X4) && (search_concepts & INHERITFLAG_16_MATRIX))) {
+                 ((matrix_check_flag & INHERITFLAG_16_MATRIX) && (search_concepts & (INHERITFLAG_4X4|INHERITFLAG_8X8)) && (search_concepts & INHERITFLAG_16_MATRIX))) {
             search_concepts &= ~matrix_check_flag;
             ss->cmd.cmd_final_flags.herit &= ~matrix_check_flag;
             search_temp = search_concepts;

@@ -106,7 +106,7 @@ Private void do_glorious_triangles(
    a1.kind = s_trngl;
    a2.kind = s_trngl;
    a1.rotation = 0;
-   a2.rotation = 0;
+   a2.rotation = 2;
    a1.cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
    a2.cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
    move(&a1, FALSE, &res[0]);
@@ -119,6 +119,8 @@ Private void do_glorious_triangles(
    }
 
    result->result_flags = get_multiple_parallel_resultflags(res, 2);
+   res[1].rotation += 2;
+   canonicalize_rotation(&res[1]);
 
    /* Check for non-shape-or-orientation-changing result. */
 
@@ -407,42 +409,31 @@ extern void triangle_move(
       }
       else if (indicator_base >= 4) {
          /* Indicator = 5 for in point, 4 for out point */
+
+         int t = 0;
    
          if (ss->kind != s_qtag) fail("Must have diamonds.");
    
          if (indicator_base == 5) {
-            if (
-                  (ss->people[0].id1 & d_mask) == d_east &&
-                  (ss->people[1].id1 & d_mask) != d_west &&
-                  (ss->people[4].id1 & d_mask) == d_west &&
-                  (ss->people[5].id1 & d_mask) != d_east)
-               map_ptr = (indicator & 0100) ? &map1j : &map1b;
-            else if (
-                  (ss->people[0].id1 & d_mask) != d_east &&
-                  (ss->people[1].id1 & d_mask) == d_west &&
-                  (ss->people[4].id1 & d_mask) != d_west &&
-                  (ss->people[5].id1 & d_mask) == d_east)
-               map_ptr = (indicator & 0100) ? &map2j : &map2b;
-            else
-               fail("Can't find designated point.");
+            if ((ss->people[0].id1 & d_mask) == d_east) t |= 1;
+            if ((ss->people[4].id1 & d_mask) == d_west) t |= 1;
+            if ((ss->people[1].id1 & d_mask) == d_west) t |= 2;
+            if ((ss->people[5].id1 & d_mask) == d_east) t |= 2;
          }
          else {
-            if (
-                  (ss->people[0].id1 & d_mask) == d_west &&
-                  (ss->people[1].id1 & d_mask) != d_east &&
-                  (ss->people[4].id1 & d_mask) == d_east &&
-                  (ss->people[5].id1 & d_mask) != d_west)
-               map_ptr = (indicator & 0100) ? &map1j : &map1b;
-            else if (
-                  (ss->people[0].id1 & d_mask) != d_west &&
-                  (ss->people[1].id1 & d_mask) == d_east &&
-                  (ss->people[4].id1 & d_mask) != d_east &&
-                  (ss->people[5].id1 & d_mask) == d_west)
-               map_ptr = (indicator & 0100) ? &map2j : &map2b;
-            else
-               fail("Can't find designated point.");
+            if ((ss->people[0].id1 & d_mask) == d_west) t |= 1;
+            if ((ss->people[4].id1 & d_mask) == d_east) t |= 1;
+            if ((ss->people[1].id1 & d_mask) == d_east) t |= 2;
+            if ((ss->people[5].id1 & d_mask) == d_west) t |= 2;
          }
    
+         if (t == 1)
+            map_ptr = (indicator & 0100) ? &map1j : &map1b;
+         else if (t == 2)
+            map_ptr = (indicator & 0100) ? &map2j : &map2b;
+         else
+            fail("Can't find designated point.");
+
          do_glorious_triangles(ss, map_ptr, result);
          reinstate_rotation(ss, result);
       }

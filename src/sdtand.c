@@ -200,6 +200,10 @@ Private tm_thing maps_isearch_threesome[] = {
                                          {0, 1, 3, 2, 7, 6, 4, 5},     {0},      0,     0000,         8, 0,  0,  0, 0,  s1x8,  s3x8},
    {{9, 8, 6, 7},         {10, 11, 4, 5},       {0, 1, 3, 2},          {0},      0,     0000,         4, 0,  0,  0, 0,  s1x4,  s3x4},
    {{9, 11, 6, 5},        {10, -1, 4, -1},      {0, -1, 3, -1},        {0},      0,     0000,         4, 0,  0,  0, 0,  s1x4,  s3x4},
+   {{0, 3, 6, 7},         {1, -1, 5, -1},       {2, -1, 4, -1},        {0},   0x11,     0x77,         4, 0,  0,  0, 0,  s2x2,  s2x4},
+   {{0, 1, 4, 7},         {-1, 2, -1, 6},       {-1, 3, -1, 5},        {0},   0x44,     0xEE,         4, 0,  0,  0, 0,  s2x2,  s2x4},
+   {{3, 6, 7, 0},         {-1, 5, -1, 1},       {-1, 4, -1, 2},        {0},      0,     0x77,         4, 1,  0,  0, 0,  s2x2,  s2x4},
+   {{1, 4, 7, 0},         {2, -1, 6, -1},       {3, -1, 5, -1},        {0},      0,     0xEE,         4, 1,  0,  0, 0,  s2x2,  s2x4},
    {{6, 5, 2, 4},         {-1, 7, -1, 3},       {-1, 0, -1, 1},        {0},      0,     0000,         4, 0,  0,  0, 0,  s1x4,  s_qtag},
    {{0},                            {0},                          {0}, {0},      0,     0000,         0, 0,  0,  0, 0,  nothing,  nothing}};
 
@@ -678,11 +682,25 @@ extern void tandem_couples_move(
    int key,                   /* tandem of 2 = 0 / couples of 2 = 1 / siamese of 2 = 2
                                  tandem of 3 = 4 / couples of 3 = 5 / siamese of 3 = 6
                                  tandem of 4 = 8 / couples of 4 = 9 / siamese of 4 = 10
-                                 box = 10 / diamond = 11 / skew = 18
-                                 out point triangles = 20 / in point triangles = 21
-                                 inside triangles = 22 / outside triangles = 23
-                                 wave-based triangles triangles = 26 / tandem-based triangles = 27
-                                 <anyone>-based triangles = 30 / 3x1 triangles = 31 / Y's = 32 */
+                                 10: box
+                                 11: diamond
+                                 18: skew
+                                 20: out point triangles
+                                 21: in point triangles
+                                 22: inside triangles
+                                 23: outside triangles
+                                 26: wave-based triangles triangles
+                                 27: tandem-based triangles
+                                 30: <anyone>-based triangles
+                                 31: 3x1 triangles
+                                 32: Y's
+                                 40: 3x1 as couples
+                                 41: 1x3 as couples
+                                 42: 2x1 as couples
+                                 43: 1x2 as couples
+                                 44: 3x3 as couples
+                                 45: 4x4 as couples
+                              */
    long_boolean phantom_pairing_ok,
    setup *result)
 {
@@ -707,7 +725,109 @@ extern void tandem_couples_move(
    tandstuff.phantom_pairing_ok = phantom_pairing_ok;
    clear_people(result);
 
-   if (key == 32) {
+   if (key == 44) {
+      np = 3;
+      our_map_table = maps_isearch_threesome;
+      /* This will make it look like "as couples" when it needs to swap masks. */
+      key = 41;
+   }
+   else if (key == 45) {
+      np = 4;
+      our_map_table = maps_isearch_foursome;
+      /* This will make it look like "as couples" when it needs to swap masks. */
+      key = 41;
+   }
+   else if (key >= 40) {
+      uint32 directions = 0;
+      uint32 livemask = 0;
+
+      for (i=0; i<=setup_attrs[ss->kind].setup_limits; i++) {
+         uint32 t = ss->people[i].id1;
+         directions <<= 2;
+         livemask <<= 2;
+         if (t) { livemask |= 3 ; directions |= t & 3; }
+      }
+
+      if (key >= 42) {
+         np = 2;
+         our_map_table = maps_isearch_twosome;
+
+         if (ss->kind == s2x3 || ss->kind == s1x6) {
+            if (((directions ^ 0x0A8) & livemask) == 0 || ((directions ^ 0xA02) & livemask) == 0)
+               special_mask |= 044;
+   
+            if (((directions ^ 0x2A0) & livemask) == 0 || ((directions ^ 0x80A) & livemask) == 0)
+               special_mask |= 011;
+   
+            if (key == 42 && ((directions ^ 0x02A) & livemask) == 0)
+               special_mask |= 011;
+   
+            if (key == 42 && ((directions ^ 0xA80) & livemask) == 0)
+               special_mask |= 044;
+   
+            if (key == 43 && ((directions ^ 0x02A) & livemask) == 0)
+               special_mask |= 044;
+   
+            if (key == 43 && ((directions ^ 0xA80) & livemask) == 0)
+               special_mask |= 011;
+   
+            if (special_mask != 011 && special_mask != 044) special_mask = 0;
+         }
+      }
+      else {
+         np = 3;
+         our_map_table = maps_isearch_threesome;
+
+         if (ss->kind == s2x4) {
+            if (((directions ^ 0x02A8) & livemask) == 0 || ((directions ^ 0xA802) & livemask) == 0)
+               special_mask |= 0x88;
+   
+            if (((directions ^ 0x802A) & livemask) == 0 || ((directions ^ 0x2A80) & livemask) == 0)
+               special_mask |= 0x11;
+   
+            if (key == 40 && ((directions ^ 0x00AA) & livemask) == 0)
+               special_mask |= 0x11;
+   
+            if (key == 40 && ((directions ^ 0xAA00) & livemask) == 0)
+               special_mask |= 0x88;
+   
+            if (key == 41 && ((directions ^ 0x00AA) & livemask) == 0)
+               special_mask |= 0x88;
+   
+            if (key == 41 && ((directions ^ 0xAA00) & livemask) == 0)
+               special_mask |= 0x11;
+   
+            if (special_mask != 0x11 && special_mask != 0x88) special_mask = 0;
+         }
+         else if (ss->kind == s1x8) {
+            if (((directions ^ 0x08A2) & livemask) == 0 || ((directions ^ 0xA208) & livemask) == 0)
+               special_mask |= 0x44;
+
+            if (((directions ^ 0x2A80) & livemask) == 0 || ((directions ^ 0x802A) & livemask) == 0)
+               special_mask |= 0x11;
+
+            if (key == 40 && ((directions ^ 0x00AA) & livemask) == 0)
+               special_mask |= 0x11;
+   
+            if (key == 40 && ((directions ^ 0xAA00) & livemask) == 0)
+               special_mask |= 0x44;
+   
+            if (key == 41 && ((directions ^ 0x00AA) & livemask) == 0)
+               special_mask |= 0x44;
+   
+            if (key == 41 && ((directions ^ 0xAA00) & livemask) == 0)
+               special_mask |= 0x11;
+   
+            if (special_mask != 0x11 && special_mask != 0x44) special_mask = 0;
+         }
+      }
+
+      if (!special_mask) fail("Can't find 3x3/3x1/2x1 people.");
+
+      /* This will make it look like "as couples" when it needs to swap masks. */
+      key = 41;
+   }
+   else if (key == 32) {
       np = 4;
       our_map_table = maps_isearch_ysome;
       tandstuff.no_unit_symmetry = TRUE;
@@ -757,7 +877,7 @@ extern void tandem_couples_move(
             uint32 tbonetest = 0;
             int t = key;
 
-            for (i=0; i<=16; i++) tbonetest |= ss->people[i].id1;
+            for (i=0; i<16; i++) tbonetest |= ss->people[i].id1;
 
             if ((tbonetest & 010) == 0) t ^= 1;
             else if ((tbonetest & 1) != 0)

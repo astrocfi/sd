@@ -1736,6 +1736,8 @@ extern void anchor_someone_and_move(
 
    if (     ss->kind != s2x4 &&
             ss->kind != s1x8 &&
+            ss->kind != s2x6 &&
+            ss->kind != s3x4 &&
             ss->kind != s_qtag &&
             ss->kind != s_ptpd)
       fail("Sorry, can't do this in this setup.");
@@ -2687,18 +2689,8 @@ Private void do_sequential_call(
 
          if ((DFM1_REPEAT_N | DFM1_REPEAT_NM1 | DFM1_REPEAT_N_ALTERNATE) & this_mod1) {
             uint32 local_number_fields = current_options.number_fields;
-            int local_num_numbers = current_options.howmanynumbers;
 
-            if (this_mod1 & DFM1_NUM_INSERT_MASK) {
-               local_number_fields <<= 4;
-               local_number_fields += (this_mod1 & DFM1_NUM_INSERT_MASK) / DFM1_NUM_INSERT_BIT;
-               local_num_numbers++;
-            }
-
-            local_number_fields >>= ((this_mod1 & DFM1_NUM_SHIFT_MASK) / DFM1_NUM_SHIFT_BIT) * 4;
-            local_num_numbers -= ((this_mod1 & DFM1_NUM_SHIFT_MASK) / DFM1_NUM_SHIFT_BIT);
-            /*    ***** This line looks screwy. */
-            total += (local_number_fields >> (((this_mod1 & DFM1_NUM_SHIFT_MASK) / DFM1_NUM_SHIFT_BIT) * 4)) & 0xF;
+            total += local_number_fields & 0xF;
 
             if (this_mod1 & DFM1_REPEAT_N_ALTERNATE) ii++;
             if (this_mod1 & DFM1_SEQ_DO_HALF_MORE) {
@@ -3023,9 +3015,6 @@ do_plain_call:
          result->cmd.cmd_final_flags = foo1.cmd_final_flags;
       }
 
-      if ((DFM1_CPLS_UNLESS_SINGLE & this_mod1) && !(new_final_concepts.herit & INHERITFLAG_SINGLE))
-         result->cmd.cmd_misc_flags |= CMD_MISC__DO_AS_COUPLES;
-
       oldk = result->kind;
       if (oldk == s2x2 && result->cmd.prior_elongation_bits != 0) remembered_2x2_elongation = result->cmd.prior_elongation_bits & 3;
 
@@ -3080,6 +3069,11 @@ do_plain_call:
          }
       }
 
+      if (DFM1_CPLS_UNLESS_SINGLE & this_mod1) {
+         result->cmd.cmd_misc_flags |= CMD_MISC__DO_AS_COUPLES;
+         result->cmd.do_couples_heritflags = new_final_concepts.herit;
+      }
+
       do_call_in_series(
          result,
          reverse_order,
@@ -3092,6 +3086,8 @@ do_plain_call:
          result->result_flags = (result->result_flags & ~3) | remembered_2x2_elongation;
          result->cmd.prior_elongation_bits = (result->cmd.prior_elongation_bits & ~3) | remembered_2x2_elongation;
       }
+
+      remember_elongation = result->cmd.prior_elongation_bits;
 
       if (subpart_count && !distribute) continue;
 
@@ -4410,6 +4406,7 @@ extern void move(
    }
 
    if (ss->cmd.cmd_misc_flags & CMD_MISC__DO_AS_COUPLES) {
+
       /* If we have a pending "centers/ends work <concept>" concept,
          we must dispose of it the crude way. */
 
@@ -4419,8 +4416,32 @@ extern void move(
       }
 
       ss->cmd.cmd_misc_flags &= ~CMD_MISC__DO_AS_COUPLES;
-      tandem_couples_move(ss, selector_uninitialized, 0, 0, 0, 1, TRUE, result);
-      return;
+
+      switch (ss->cmd.do_couples_heritflags & (INHERITFLAG_SINGLE | MXN_BITS)) {
+         case 0:
+            tandem_couples_move(ss, selector_uninitialized, 0, 0, 0, 1, TRUE, result);
+            return;
+         case INHERITFLAG_3X1:
+            tandem_couples_move(ss, selector_uninitialized, 0, 0, 0, 40, TRUE, result);
+            return;
+         case INHERITFLAG_1X3:
+            tandem_couples_move(ss, selector_uninitialized, 0, 0, 0, 41, TRUE, result);
+            return;
+         case INHERITFLAG_2X1:
+            tandem_couples_move(ss, selector_uninitialized, 0, 0, 0, 42, TRUE, result);
+            return;
+         case INHERITFLAG_1X2:
+            tandem_couples_move(ss, selector_uninitialized, 0, 0, 0, 43, TRUE, result);
+            return;
+         case INHERITFLAG_3X3:
+            tandem_couples_move(ss, selector_uninitialized, 0, 0, 0, 44, TRUE, result);
+            return;
+         case INHERITFLAG_4X4:
+            tandem_couples_move(ss, selector_uninitialized, 0, 0, 0, 45, TRUE, result);
+            return;
+         case INHERITFLAG_SINGLE:
+            break;
+      }
    }
 
    if (ss->cmd.callspec) {
@@ -4514,13 +4535,8 @@ extern void move(
                               INHERITFLAG_GRAND |
                               INHERITFLAG_CROSS |
                               INHERITFLAG_SINGLE |
-                              INHERITFLAG_1X2 |
-                              INHERITFLAG_2X1 |
-                              INHERITFLAG_2X2 |
-                              INHERITFLAG_1X3 |
-                              INHERITFLAG_3X1 |
-                              INHERITFLAG_3X3 |
-                              INHERITFLAG_4X4 |
+                              INHERITFLAG_FUNNY |
+                              MXN_BITS |
                               INHERITFLAG_12_MATRIX |
                               INHERITFLAG_16_MATRIX |
                               INHERITFLAG_SINGLEFILE |

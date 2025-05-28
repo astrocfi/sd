@@ -1,6 +1,6 @@
 /* calls database source for Sd -- square dance caller's helper.
 
-    Copyright (C) 1990-1997  William B. Ackerman.
+    Copyright (C) 1990-1998  William B. Ackerman.
 
     All rights reserved.  Permission is granted to compile this file,
     or a modification thereof, for use with the calling program
@@ -30,7 +30,7 @@
     General Public License if you distribute the file.
 */
 
-version "31.92"
+version "31.93"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve
@@ -264,15 +264,6 @@ call "invert" c2 tag invert_the_tag_half
             alternate_definition [magic cross] c4
    setup 4x2 2x4 rotate restriction forbidden magic_only
       array [ZM5W ZM1W AL0E CM4E AM7E CR3E ZM2W ZM6W]
-
-/*
-            alternate_definition [1x3] c4
-   setup 4x2 3x4 rotate restriction peelable_box
-      array [ZM8W ZM11W ZM1W AL10E CR4E ZM2W ZM5W ZM7W]
-            alternate_definition [3x1] c4
-   setup 4x2 3x4 rotate restriction peelable_box
-      array [ZM11W AL0E AM10E AM9E CM6E CM4E CR3E ZM5W]
-*/
 
 call "magic cross invert" c4
             base_tag_call_0
@@ -545,16 +536,12 @@ call "scatter@O circulate@P" c3a
       array [CR1S CR3S AL0S AL2S ZM3N ZM1N ZM2N ZM0N]
    setup 4x2 2x4
       array [ZM1N ZM5N ZM4N CR4S AL3S ZM3N ZM2N ZM6N]
-            alternate_definition [3x1] c4
-   setup 2x4 2x4
-      preds "Not in correct kind of lines."
-         if miniwave_side_of_out_3n1_line [   0 AL0S CR3S    0 ZM2N   0   0 ZM1N]
-         if couple_side_of_out_3n1_line   [CR0S CR2S AL1S AL3S    0   0   0    0]
-            alternate_definition [1x3] c4
-   setup 2x4 2x4
-      preds "Not in correct kind of lines."
-         if miniwave_side_of_out_3n1_line [CR2S    0    0 AL1S    0 ZM3N ZM0N    0]
-         if couple_side_of_out_3n1_line   [   0    0    0    0 ZM3N ZM2N ZM1N ZM0N]
+            alternate_definition [3x3] c4
+   setup 2x6 2x6 qualifier 3x3_2fl_only
+      array [CR1S CR3S CR5S AL0S AL2S AL4S ZM5N ZM3N ZM1N ZM4N ZM2N ZM0N]
+            alternate_definition [4x4] c4
+   setup 2x8 2x8 qualifier 4x4_2fl_only
+      array [CR1S CR3S CR5S CR7S AL0S AL2S AL4S AL6S ZM7N ZM5N ZM3N ZM1N ZM6N ZM4N ZM2N ZM0N]
 
 call "split trade@O circulate@P" c2 tag split_trade_circ
             base_circ_call take_right_hands
@@ -1551,52 +1538,6 @@ call "ends go as you are, gravitate" c4
    setup bone c1phan qualifier couples_only
       array [C6S C3S A13W C15W C1S C4S C5E AC7E]
 
-call "@B the alter" c4
-            step_to_nonphantom_box left_means_touch_or_check neednumber visible_fractions
-   seq armturn_n4 [allow_forced_mod]
-   seq ctrarmturn_n4_utb [allow_forced_mod]
-   /* This next part will demand diamonds, which the previous part will create only if the fraction is odd. */
-   seq ctrrotstar [allow_forced_mod repeat_n]
-   seq flipdiamond [allow_forced_mod]
-
-call "@9-@9-@9 quarter the alter" c4
-            step_to_nonphantom_box left_means_touch_or_check need_three_numbers visible_fractions
-   seq armturn_n4 [allow_forced_mod]
-   seq ctrarmturn_n4_utb [allow_forced_mod shift_one_number]
-   /* This next part will demand diamonds, which the previous part will create only if the fraction is odd. */
-   seq ctrrotstar [allow_forced_mod repeat_n shift_two_numbers]
-   seq flipdiamond [allow_forced_mod]
-
-call "@B the alter and circulate" c4
-            step_to_nonphantom_box left_means_touch_or_check neednumber visible_fractions
-   seq armturn_n4 [allow_forced_mod]
-   seq ctrarmturn_n4_utb [allow_forced_mod]
-   seq ctrsslipendscirc []
-   /* This next part will demand diamonds, which the previous part will create only if the fraction is odd. */
-   seq ctrrotstar [allow_forced_mod repeat_n]
-   seq flipdiamond [allow_forced_mod]
-
-call "@9-@9-@9 alter and circulate" c4
-            step_to_nonphantom_box left_means_touch_or_check need_three_numbers visible_fractions
-   seq armturn_n4 [allow_forced_mod]
-   seq ctrarmturn_n4_utb [allow_forced_mod shift_one_number]
-   seq ctrsslipendscirc []
-   /* This next part will demand diamonds, which the previous part will create only if the fraction is odd. */
-   seq ctrrotstar [allow_forced_mod repeat_n shift_two_numbers]
-   seq flipdiamond [allow_forced_mod]
-
-/* Same as above.  Is this a legitimate name?
-call "@9-@9-@9 quarter the alter and circulate" c4
-            dont_use_in_resolve
-            step_to_nonphantom_box left_means_touch_or_check need_three_numbers visible_fractions
-   seq armturn_n4 [allow_forced_mod]
-   seq ctrarmturn_n4_utb [allow_forced_mod shift_one_number]
-   seq ctrsslipendscirc []
-   * This next part will demand diamonds, which the previous part will create only if the fraction is odd. *
-   seq ctrrotstar [allow_forced_mod repeat_n shift_two_numbers]
-   seq flipdiamond [allow_forced_mod]
-*/
-
 call "_ends begin peel/trail chain thru" dontshow tag epeelchainthru
             left_means_mirror yoyo_is_inherited cross_is_inherited
    seq real_leads_div_move_along [inherit_cross]
@@ -1628,29 +1569,6 @@ call "create a diamond" c4a
 call "triple trade" a1 tag tripletrade
             yoyo_is_inherited
    select_center6 trade [inherit_yoyo] nullcall []
-/*
-   setup 1x8 1x8
-      array [ZM0N CR3S CR6S AL1S ZM4N AL7S AL2S CR5S]
-   setup ptpd ptpd
-      array [ZM0N 0 CR6S 0 ZM4N 0 AL2S 0]
-   setup pptpd ptpd
-      array [ZM0N CR3S 0 AL1S ZM4N AL7S 0 CR5S]
-   setup spindle spindle
-      array [0 0 0 ZM3N 0 0 0 ZM7N]
-   setup pspindle spindle
-      array [CR6S CR5S CR4S 0 AL2S AL1S AL0S 0]
-   setup 1x3dmd 1x3dmd
-      array [ZM0N CR2S AL1S 0 ZM4N AL6S CR5S 0]
-   setup p1x3dmd 1x3dmd
-      array [ZM0N 0 0 CR7S ZM4N 0 0 AL3S]
-            alternate_definition [yoyo] c4
-   setup 1x8 spindle
-      array [ZM7N CR6W CR5W AL6E ZM3N AL4E AL5E CR4W]
-   setup ptpd 1x3dmd
-      array [ZM0N 0 CR7W 0 ZM4N 0 AL7E 0]
-   setup pptpd 1x3dmd
-      array [ZM0N CR1W 0 AL1E ZM4N AL6E 0 CR6W]
-*/
 
 call "turn four" c4a
    setup 1x8 1x8 rotate restriction 2fl_only
@@ -1909,26 +1827,77 @@ call "_centers slip/ends circulate" dontshow tag ctrsslipendscirc
             12_matrix_is_inherited 16_matrix_is_inherited
    maybematrix_conc slip [inherit_12_matrix inherit_16_matrix] circulate [conc_demand_lines conc_force_lines]
 
-call "alter the diamond" c4
+call "alter the wave@S" c1
+            step_to_wave yoyo_is_inherited can_be_fan left_means_touch_or_check visible_fractions
+   seq swing [inherit_yoyo allow_forced_mod]
+   seq fanback []
+   seq turndmdn [allow_forced_mod insert_number 2]
+   seq flipdiamond [allow_forced_mod]
+
+call "alter the diamond@S" c4
             visible_fractions
    seq turndmdn [allow_forced_mod insert_number 2]
    seq flipdiamond [allow_forced_mod]
    seq fanback []
 
-call "alter the wave" c1
-            step_to_wave yoyo_is_inherited can_be_fan left_means_touch_or_check visible_fractions
-   seq swing [inherit_yoyo]
-   seq fanback []
-   seq turndmdn [allow_forced_mod insert_number 2]
-   seq flipdiamond [allow_forced_mod]
-
-call "alter and circulate" c2
+call "alter and circulate@S" c2
             step_to_wave yoyo_is_inherited can_be_fan left_means_touch_or_check 12_matrix_is_inherited 16_matrix_is_inherited visible_fractions
-   seq swing [inherit_yoyo inherit_12_matrix inherit_16_matrix]
+   seq swing [inherit_yoyo inherit_12_matrix inherit_16_matrix allow_forced_mod]
    seq fanback [inherit_12_matrix inherit_16_matrix]
    seq ctrsslipendscirc [inherit_12_matrix inherit_16_matrix]
-   seq turndmdn [inherit_12_matrix inherit_16_matrix allow_forced_mod insert_number 2]
+   seq turndmdn [allow_forced_mod inherit_12_matrix inherit_16_matrix insert_number 2]
    seq flipdiamond [inherit_12_matrix inherit_16_matrix allow_forced_mod]
+
+call "@B the alter" c4
+            step_to_nonphantom_box left_means_touch_or_check neednumber visible_fractions
+   seq armturn_n4 [allow_forced_mod]
+   seq ctrarmturn_n4_utb [allow_forced_mod]
+   /* This next part will demand diamonds, which the previous part will create only if the fraction is odd. */
+   seq ctrrotstar [allow_forced_mod repeat_n]
+   seq flipdiamond [allow_forced_mod]
+
+call "@9-@9-@9 quarter the alter" c4
+            step_to_nonphantom_box left_means_touch_or_check need_three_numbers visible_fractions
+   seq armturn_n4 [allow_forced_mod]
+   seq ctrarmturn_n4_utb [allow_forced_mod shift_one_number]
+   /* This next part will demand diamonds, which the previous part will create only if the fraction is odd. */
+   seq ctrrotstar [allow_forced_mod repeat_n shift_two_numbers]
+   seq flipdiamond [allow_forced_mod]
+
+call "@B the alter and circulate" c4
+            step_to_nonphantom_box left_means_touch_or_check neednumber visible_fractions
+   seq armturn_n4 [allow_forced_mod]
+   seq ctrarmturn_n4_utb [allow_forced_mod]
+   seq ctrsslipendscirc []
+   /* This next part will demand diamonds, which the previous part will create only if the fraction is odd. */
+   seq ctrrotstar [allow_forced_mod repeat_n]
+   seq flipdiamond [allow_forced_mod]
+
+call "@9-@9-@9 alter and circulate" c4
+            step_to_nonphantom_box left_means_touch_or_check need_three_numbers visible_fractions
+   seq armturn_n4 [allow_forced_mod]
+   seq ctrarmturn_n4_utb [allow_forced_mod shift_one_number]
+   seq ctrsslipendscirc []
+   /* This next part will demand diamonds, which the previous part will create only if the fraction is odd. */
+   seq ctrrotstar [allow_forced_mod repeat_n shift_two_numbers]
+   seq flipdiamond [allow_forced_mod]
+
+/* Same as above.  Is this a legitimate name?
+call "@9-@9-@9 quarter the alter and circulate" c4
+            dont_use_in_resolve
+            step_to_nonphantom_box left_means_touch_or_check need_three_numbers visible_fractions
+   seq armturn_n4 [allow_forced_mod]
+   seq ctrarmturn_n4_utb [allow_forced_mod shift_one_number]
+   seq ctrsslipendscirc []
+   * This next part will demand diamonds, which the previous part will create only if the fraction is odd. *
+   seq ctrrotstar [allow_forced_mod repeat_n shift_two_numbers]
+   seq flipdiamond [allow_forced_mod]
+*/
+
+
+
+
+
 
 call "change the wave" c3
             step_to_wave yoyo_is_inherited can_be_fan left_means_touch_or_check grand_is_inherited visible_fractions
@@ -2428,18 +2397,6 @@ call "switch the wave" a2
             alternate_definition [4x4] c4
    setup 1x8 1x8 restriction forbidden wave_only
       array [CR6S AL0S AL1S CR7S AL2S CR4S CR5S AL3S]
-/*
-            alternate_definition [1x3] c4
-   setup 1x4 1x4
-      preds "Can't do this."
-         if miniwave_side_of_in_3n1_line [AL0S CR2S CR2S AL0S]
-         if couple_side_of_in_3n1_line   [CR1S CR3S AL3S AL1S]
-            alternate_definition [3x1] c4    * Same as 1x3. *
-   setup 1x4 1x4
-      preds "Can't do this."
-         if miniwave_side_of_in_3n1_line [AL0S CR2S CR2S AL0S]
-         if couple_side_of_in_3n1_line   [CR1S CR3S AL3S AL1S]
-*/
             alternate_definition [straight] c4
    setup 2x4 2x4 restriction wave_only
       array [CR2S AL0S CR3S AL1S ZM2N CR4S AL7S ZM1N]
@@ -2522,18 +2479,6 @@ call "cross roll" c1 tag crossroll
       preds "Can't do this call."
          if miniwave_side_of_2n1_line [CR1S CR2S AL1S AL4S AL5S CR4S]
          if couple_side_of_2n1_line   [CR0S AL0S AL2S AL3S CR3S CR5S]
-/*
-            alternate_definition [1x3] c4
-   setup 1x4 1x4
-      preds "Can't do this."
-         if miniwave_side_of_out_3n1_line [CR3S AL0S AL1S CR2S]
-         if couple_side_of_out_3n1_line   [CR0S CR3S AL2S AL1S]
-            alternate_definition [3x1] c4    * Same as 1x3. *
-   setup 1x4 1x4
-      preds "Can't do this."
-         if miniwave_side_of_out_3n1_line [CR3S AL0S AL1S CR2S]
-         if couple_side_of_out_3n1_line   [CR0S CR3S AL2S AL1S]
-*/
 
 /* Same as above. */
 call "cross roll to a wave" c1
@@ -2571,18 +2516,6 @@ call "cross roll to a wave" c1
       preds "Can't do this call."
          if miniwave_side_of_2n1_line [CR1S CR2S AL1S AL4S AL5S CR4S]
          if couple_side_of_2n1_line   [CR0S AL0S AL2S AL3S CR3S CR5S]
-/*
-            alternate_definition [1x3] c4
-   setup 1x4 1x4
-      preds "Can't do this."
-         if miniwave_side_of_out_3n1_line [CR3S AL0S AL1S CR2S]
-         if couple_side_of_out_3n1_line   [CR0S CR3S AL2S AL1S]
-            alternate_definition [3x1] c4    * Same as 1x3. *
-   setup 1x4 1x4
-      preds "Can't do this."
-         if miniwave_side_of_out_3n1_line [CR3S AL0S AL1S CR2S]
-         if couple_side_of_out_3n1_line   [CR0S CR3S AL2S AL1S]
-*/
 
 call "run wild" c4a
             grand_is_inherited 3x3_is_inherited 4x4_is_inherited 1x2_is_inherited 2x1_is_inherited 1x3_is_inherited 3x1_is_inherited
@@ -3072,49 +3005,25 @@ call "bridge the gap" c4a
    partnermatrix tbone_is_ok
       [M14N 18 M14N 18 L14S 18 L14S 18 0 0 0 0]
 
-call "right anchor 1/4" c4a
-   partnermatrix must_face_same_way
-      [R18E 18 R18E 18 R16E 16 R16E 16 0 0 0 0]
-
 call "@6 right anchor 1/4" c4a
    partnermatrix use_selector ignore_nonselectees must_face_same_way
       [0 0 0 0 R18E 18 R18E 18 R16E 16 R16E 16]
-
-call "left anchor 1/4" c4a
-   partnermatrix must_face_same_way
-      [L16W 16 L16W 16 L14W 18 L14W 18 0 0 0 0]
 
 call "@6 left anchor 1/4" c4a
    partnermatrix use_selector ignore_nonselectees must_face_same_way
       [0 0 0 0 L16W 16 L16W 16 L14W 18 L14W 18]
 
-call "right anchor 1/2" c4a
-   partnermatrix must_face_same_way
-      [R20S 16 R20S 16 R16S 16 R16S 16 0 0 0 0]
-
 call "@6 right anchor 1/2" c4a
    partnermatrix use_selector ignore_nonselectees must_face_same_way
       [0 0 0 0 R20S 16 R20S 16 R16S 16 R16S 16]
-
-call "left anchor 1/2" c4a
-   partnermatrix must_face_same_way
-      [L16S 16 L16S 16 L12S 16 L12S 16 0 0 0 0]
 
 call "@6 left anchor 1/2" c4a
    partnermatrix use_selector ignore_nonselectees must_face_same_way
       [0 0 0 0 L16S 16 L16S 16 L12S 16 L12S 16]
 
-call "right anchor 3/4" c4a
-   partnermatrix must_face_same_way
-      [R18W 14 R18W 14 R16W 16 R16W 16 0 0 0 0]
-
 call "@6 right anchor 3/4" c4a
    partnermatrix use_selector ignore_nonselectees must_face_same_way
       [0 0 0 0 R18W 14 R18W 14 R16W 16 R16W 16]
-
-call "left anchor 3/4" c4a
-   partnermatrix must_face_same_way
-      [L16E 16 L16E 16 L14E 14 L14E 14 0 0 0 0]
 
 call "@6 left anchor 3/4" c4a
    partnermatrix use_selector ignore_nonselectees must_face_same_way
@@ -3397,6 +3306,8 @@ call "arm turn 3/4" dontshow tag armturn_34
 
 call "arm turn @b" dontshow tag armturn_n4
             12_16_matrix_means_split neednumber parallel_conc_end
+   setup 1x2 1x2        restriction forbidden wave_only qualifier num 0 none
+      array [ZM0N ZM1N]
    setup 1x2 1x2 rotate restriction forbidden wave_only qualifier num 1 none
       array [CR0N AL0S]
    setup 1x2 1x2        restriction forbidden wave_only qualifier num 2 none
@@ -3965,6 +3876,8 @@ call "@6 trade" mainstream
       preds "Can't find anyone to trade with."
          if unselect                    [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N ZM7N]
          if other_diamond_point_select  [CR5S CR4S    0    0 AL1S AL0S    0    0]
+         if pair_person_select          [CR7S    0    0 CR4S AL3S    0    0 AL0S]
+         if conc_from_select            [0    CR3S    0 AL1S    0 AL7S    0 CR5S]
    setup crosswave crosswave
       preds "Can't find anyone to trade with."
          if unselect                    [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N ZM7N]
@@ -4018,6 +3931,14 @@ call "@6 trade" mainstream
       preds "Can't find anyone to trade with."
          if unselect                    [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N ZM7N]
          if pair_person_select          [CR7S CR6S CR5S CR4S AL3S AL2S AL1S AL0S]
+   setup 6x2 2x6
+      preds "Can't find anyone to trade with."
+         if unselect                    [ ZM0N  ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N ZM7N ZM8N ZM9N ZM10N ZM11N]
+         if person_select_sum11         [CR11S CR10S CR9S CR8S CR7S CR6S AL5S AL4S AL3S AL2S  AL1S  AL0S]
+   setup 8x2 2x8
+      preds "Can't find anyone to trade with."
+         if unselect                    [ ZM0N  ZM1N  ZM2N  ZM3N  ZM4N  ZM5N ZM6N ZM7N ZM8N ZM9N ZM10N ZM11N ZM12N ZM13N ZM14N ZM15N]
+         if person_select_sum15         [CR15S CR14S CR13S CR12S CR11S CR10S CR9S CR8S AL7S AL6S  AL5S  AL4S  AL3S  AL2S  AL1S  AL0S]
    setup dmd dmd
       preds "Can't find anyone to trade with."
          if unselect                    [ZM0N ZM1N ZM2N ZM3N]
@@ -4424,7 +4345,7 @@ call "pass thru" mainstream tag passthru
       array [ZM0W 0]
             alternate_definition [lasthalf] mainstream
    setup 1x2 1x2 rotate
-      array [Z0W Z0W]
+      array [ZM0W ZM0W]
             alternate_definition [twisted] c4
    setup 2x1 1x2 rotate
       array [CM1N 0]
@@ -4844,26 +4765,6 @@ call "single shuffle" c4 tag sglshuffle
             alternate_definition [4x4] c4
    setup 1x4 1x4 rotate restriction couples_only
       array [ZM2W ZM3W ZM0W ZM1W]
-/*
-            alternate_definition [3x1] c4
-   setup 1x8 qtag qualifier ctr2fl_endwv
-      preds "Can't do this."
-         if miniwave_side_of_out_3n1_line [ZM6N ZM5N    0    0 ZM2N ZM1N    0    0]
-         if couple_side_of_out_3n1_line   [   0    0 ZM0N ZM7N    0    0 ZM4N ZM3N]
-   setup 1x8 3x4 qualifier ctrwv_end2fl
-      preds "Can't do this."
-         if miniwave_side_of_out_3n1_line [   0     0 ZM11N ZM0N    0    0 ZM5N ZM6N]
-         if couple_side_of_out_3n1_line   [ZM9N ZM10N     0    0 ZM3N ZM4N    0    0]
-            alternate_definition [1x3] c4    * Same as 3x1. *
-   setup 1x8 qtag qualifier ctr2fl_endwv
-      preds "Can't do this."
-         if miniwave_side_of_out_3n1_line [ZM6N ZM5N    0    0 ZM2N ZM1N    0    0]
-         if couple_side_of_out_3n1_line   [   0    0 ZM0N ZM7N    0    0 ZM4N ZM3N]
-   setup 1x8 3x4 qualifier ctrwv_end2fl
-      preds "Can't do this."
-         if miniwave_side_of_out_3n1_line [   0     0 ZM11N ZM0N    0    0 ZM5N ZM6N]
-         if couple_side_of_out_3n1_line   [ZM9N ZM10N     0    0 ZM3N ZM4N    0    0]
-*/
 
 call "shuffle and wheel" c4
             reverse_means_mirror left_means_mirror
@@ -4980,18 +4881,6 @@ call "double pass thru" mainstream
             alternate_definition [4x4] c4
    setup 8x1 1x8
       array [ZM6N ZM7N ZM4N ZM5N 0 0 0 0]
-/*
-            alternate_definition [1x3] c4
-   setup 4x1 1x4
-      preds "Can't do this call."
-         if antitandem_side_of_out_3n1_col [ZM2N    0 0 ZM2N]
-         if tandem_side_of_out_3n1_col     [ZM1N ZM3N 0    0]
-            alternate_definition [3x1] c4    * Same as 1x3. *
-   setup 4x1 1x4
-      preds "Can't do this call."
-         if antitandem_side_of_out_3n1_col [ZM2N    0 0 ZM2N]
-         if tandem_side_of_out_3n1_col     [ZM1N ZM3N 0    0]
-*/
 
 call "reflected double pass thru" c3
             rear_back_from_qtag
@@ -5115,26 +5004,6 @@ call "ah so" c1 tag ahso
             alternate_definition [4x4] c4
    setup 1x8 2x4 rotate qualifier wave_only
       array [CR0E AL4E AL5E CR1E AL7E CR3E CR2E AL6E]
-/*
-            alternate_definition [3x1] c4
-   setup 1x4 2x3 rotate
-      preds "Can't do this call."
-         if miniwave_side_of_in_3n1_line  [AL3E CR1E CR2E AL4E]
-         if couple_side_of_in_3n1_line    [CR0E CR1E AL5E AL4E]
-   setup 2x4 2x4 rotate
-      preds "Can't do this call."
-         if miniwave_side_of_in_3n1_line  [AL5E CR0E AL7E CR2E CR3E AL4E CR3E AL4E]
-         if couple_side_of_in_3n1_line    [CR0E CR1E AL6E AL7E AL6E AL5E CR2E CR1E]
-            alternate_definition [1x3] c4    * Same. *
-   setup 1x4 2x3 rotate
-      preds "Can't do this call."
-         if miniwave_side_of_in_3n1_line  [AL3E CR1E CR2E AL4E]
-         if couple_side_of_in_3n1_line    [CR0E CR1E AL5E AL4E]
-   setup 2x4 2x4 rotate
-      preds "Can't do this call."
-         if miniwave_side_of_in_3n1_line  [AL5E CR0E AL7E CR2E CR3E AL4E CR3E AL4E]
-         if couple_side_of_in_3n1_line    [CR0E CR1E AL6E AL7E AL6E AL5E CR2E CR1E]
-*/
 
 call "_extend 1/2 to @a" dontshow tag extend_n
             neednumber split_large_setups
@@ -7120,6 +6989,10 @@ call "reach out" c3a
    setup 2x2 1x4 restriction wave_only
       array [CM3S AM1S CR2S AL0S]
 
+call "REWIND reach out" c4
+   setup 1x4 2x2
+      array [CR3S CR1S AL2S AL0S]
+
 call "flare out to a line" c3a
    setup 2x4 1x8 restriction 2fl_only
       array [AL0S AL1S CR5S CR4S ZM7N ZM6N ZM2N ZM3N]
@@ -7688,6 +7561,18 @@ call "@D mix" c3a
    seq odd_frac_by_right [inherit_left]
    seq ctrcrossrun [inherit_grand]
    seq maybegrandslip [inherit_grand inherit_yoyo roll_transparent]
+
+call "any hand @D mix" c3a
+            neednumber grand_is_inherited yoyo_is_inherited visible_fractions
+   seq cast_off_n4_odd []
+   seq ctrcrossrun [inherit_grand]
+   seq maybegrandslip [inherit_grand inherit_yoyo roll_transparent]
+
+call "any hand grand @D mix" c3a
+            neednumber yoyo_is_inherited visible_fractions
+   seq cast_off_n4_odd []
+   seq ctrcrossrun [force_grand]
+   seq maybegrandslip [force_grand inherit_yoyo roll_transparent]
 
 /* conc_o lossage
 call "_centers crossback/ends two o's" dontshow tag crossbackandtwoos
@@ -8739,10 +8624,10 @@ call "_bounce the @6 part 1" dontshow tag bounce1
       array [ZR0W ZL0W]
             alternate_definition [3x3] c3
    setup 1x6 2x3 restriction forbidden 3x3couples_only
-      array [ZR0N ZR1N ZR2N ZR2N ZL1N ZL0N]
+      array [ZR0N ZR1N ZR2N ZL2N ZL1N ZL0N]
             alternate_definition [4x4] c3
    setup 1x8 2x4 restriction forbidden 4x4couples_only
-      array [ZR0N ZR1N ZR3N ZR2N ZR3N ZR2N ZL0N ZL1N]
+      array [ZR0N ZR1N ZR3N ZR2N ZL3N ZL2N ZL0N ZL1N]
 
 call "_bounce part 2" dontshow tag bounce2
    setup 1x1 1x1
@@ -8758,6 +8643,50 @@ call "bounce the @6" c2
       call, which makes this work.  Compare wave the <anyone>. */
    seq bounce1 [inherit_single inherit_3x3 inherit_4x4]
    seq bounce2 []
+
+call "more or less bounce the @6" c4
+            single_is_inherited 3x3_is_inherited 4x4_is_inherited
+   setup 2x4 2x4 rotate restriction forbidden 2fl_only
+      preds "Can't tell who is designated."
+         if select   [CR7S CR0S AL7N AL0N AL2S AL5S CR2N CR5N]
+         if unselect [ZM7W ZM0W ZM7W ZM0W ZM2W ZM5W ZM2W ZM5W]
+            alternate_definition [single] c2
+   setup 2x2 1x4 rotate restriction forbidden wave_only
+      preds "Can't tell who is designated."
+         if select   [CR0S AL0N AL3S CR3N]
+         if unselect [ZM0W ZM0W ZM3W ZM3W]
+            alternate_definition [3x3] c3
+   setup 2x6 3x4 rotate restriction forbidden 3x3couples_only
+      preds "Can't tell who is designated."
+         if select   [CR9S CR10S CR0S AL9N AL10N AL0N AL2S AL5S AL7S CR2N CR5N CR7N]
+         if unselect [ZM9W ZM10W ZM0W ZM9W ZM10W ZM0W ZM2W ZM5W ZM7W ZM2W ZM5W ZM7W]
+            alternate_definition [4x4] c3
+   setup 2x8 4x4 restriction forbidden 4x4couples_only
+      preds "Can't tell who is designated."
+         if select   [CR12W CR13W CR14W CR0W AL12E AL13E AL14E AL0E AL2W AL7W AL11W AL9W CR2E CR7E CR11E CR9E]
+         if unselect [ZM12N ZM13N ZM14N ZM0N ZM12N ZM13N ZM14N ZM0N ZM2N ZM7N ZM11N ZM9N ZM2N ZM7N ZM11N ZM9N]
+
+call "less or more bounce the @6" c4
+            single_is_inherited 3x3_is_inherited 4x4_is_inherited
+   setup 2x4 2x4 rotate restriction forbidden 2fl_only
+      preds "Can't tell who is designated."
+         if select   [CR7N CR0N AL7S AL0S AL2N AL5N CR2S CR5S]
+         if unselect [ZM7W ZM0W ZM7W ZM0W ZM2W ZM5W ZM2W ZM5W]
+            alternate_definition [single] c2
+   setup 2x2 1x4 rotate restriction forbidden wave_only
+      preds "Can't tell who is designated."
+         if select   [CR0N AL0S AL3N CR3S]
+         if unselect [ZM0W ZM0W ZM3W ZM3W]
+            alternate_definition [3x3] c3
+   setup 2x6 3x4 rotate restriction forbidden 3x3couples_only
+      preds "Can't tell who is designated."
+         if select   [CR9N CR10N CR0N AL9S AL10S AL0S AL2N AL5N AL7N CR2S CR5S CR7S]
+         if unselect [ZM9W ZM10W ZM0W ZM9W ZM10W ZM0W ZM2W ZM5W ZM7W ZM2W ZM5W ZM7W]
+            alternate_definition [4x4] c3
+   setup 2x8 4x4 restriction forbidden 4x4couples_only
+      preds "Can't tell who is designated."
+         if select   [CR12E CR13E CR14E CR0E AL12W AL13W AL14W AL0W AL2E AL7E AL11E AL9E CR2W CR7W CR11W CR9W]
+         if unselect [ZM12N ZM13N ZM14N ZM0N ZM12N ZM13N ZM14N ZM0N ZM2N ZM7N ZM11N ZM9N ZM2N ZM7N ZM11N ZM9N]
 
 call "bounce" c2
             visible_fractions single_is_inherited 3x3_is_inherited 4x4_is_inherited
@@ -8835,16 +8764,23 @@ call "_circulate and quarter in" dontshow tag circ_and_quarter_in
    seq box_circulate_maybe_diamond []
    seq quarterin []
 
-call "rotate 1/4" c2 tag rot1
-            parallel_conc_end       /* This makes it win if we tell the ends only
-                                          to do a single rotate 1/4.  Is this OK? */
-            reverse_means_mirror
-   setup 4x2 1x8 rotate restriction forbidden couples_only
+call "rotate @b" c2 tag rotn
+            reverse_means_mirror neednumber
+   setup 4x2 1x8 rotate restriction forbidden couples_only qualifier num 1 none
       array [CAL5W CAL6W AL2E AL1E AL0E AL3E CAL7W CAL4W]
-   setup 2x4 1x8 restriction forbidden couples_only
+   setup 4x2 1x8        restriction forbidden couples_only qualifier num 2 none
+      array [CAL5W CAL6W AL2E AL1E AL0E AL3E CAL7W CAL4W]
+   setup 2x4 1x8        restriction forbidden couples_only qualifier num 1 none
       array [AL1S AL0S AL7S AL6S CAL4N CAL5N CAL2N CAL3N]
-   setup 2x2 1x4 restriction forbidden couples_only
+   setup 2x4 2x4 rotate restriction forbidden couples_only qualifier num 2 none
+      array [AL5N AL4N AL2N AL3N CAL0S CAL1S CAL7S CAL6S]
+   setup 2x2 1x4        restriction forbidden couples_only qualifier num 1 none
       array [AL1S AL0S CAL2N CAL3N]
+   setup 2x2 1x4 rotate restriction forbidden couples_only qualifier num 2 none
+      array [AL3N AL2N CAL0S CAL1S]
+   setup 2x2 1x4        restriction forbidden couples_only qualifier num 3 none
+      array [AL3N AL2N CAL0S CAL1S]
+
             /* This variant of the call is only C1, even though the call "rotate"
                itself is C2.  This makes it possible to do a
                squared-set single rotate at C1.  The squared-set rotate,
@@ -8854,77 +8790,65 @@ call "rotate 1/4" c2 tag rot1
                when the call itself is C2 therefore makes this legal from a
                squared set.  Direct use of single rotate at C1 is not legal,
                because it won't get past the C2 level in the call header. */
+
+            alternate_definition [single] c1
+   setup 4x2 2x4 rotate qualifier num 1 none
+      array [CAL4W CAL5W AL6E AL7E AL0E AL1E CAL2W CAL3W]
+   setup 4x2 2x4        qualifier num 2 none
+      array [CAL4W CAL5W AL6E AL7E AL0E AL1E CAL2W CAL3W]
+   setup 2x4 2x4        qualifier num 1 none
+      array [AL7S AL0S AL5S AL2S CAL3N CAL4N CAL1N CAL6N]
+   setup 2x4 2x4        qualifier num 2 none
+      array [AL6E AL7E AL4E AL5E CAL2W CAL3W CAL0W CAL1W]
+   setup 2x2 2x2 other_elongate qualifier num 1 none
+      array [AL3S AL0S CAL1N CAL2N]
+   setup 2x2 2x2                qualifier num 2 none
+      array [AL2E AL3E CAL0W CAL1W]
+   setup 2x2 2x2 other_elongate qualifier num 3 none
+      array [AL1N AL2N CAL3S CAL0S]
+   setup 2x1 1x2 rotate qualifier num 1 none
+      array [CAL1W AL0E]
+   setup 2x1 1x2        qualifier num 2 none
+      array [CAL1W AL0E]
+   setup 4x1 1x4 rotate qualifier num 1 none
+      array [CAL2W CAL3W AL0E AL1E]
+   setup 4x1 1x4        qualifier num 2 none
+      array [CAL2W CAL3W AL0E AL1E]
+   setup 6x1 1x6 rotate qualifier num 1 none
+      array [CAL3W CAL4W CAL5W AL0E AL1E AL2E]
+   setup 6x1 1x6        qualifier num 2 none
+      array [CAL3W CAL4W CAL5W AL0E AL1E AL2E]
+   setup 8x1 1x8 rotate qualifier num 1 none
+      array [CAL4W CAL5W CAL6W CAL7W AL0E AL1E AL2E AL3E]
+   setup 8x1 1x8        qualifier num 2 none
+      array [CAL4W CAL5W CAL6W CAL7W AL0E AL1E AL2E AL3E]
             alternate_definition [3x3] c4
-   setup 2x3 1x6 restriction forbidden 3x3couples_only
+   setup 2x3 1x6 restriction forbidden 3x3couples_only qualifier num 1 none
       array [AL2S AL1S AL0S CAL3N CAL4N CAL5N]
             alternate_definition [4x4] c4
-   setup 2x4 1x8 restriction forbidden 4x4couples_only
+   setup 2x4 1x8 restriction forbidden 4x4couples_only qualifier num 1 none
       array [AL2S AL3S AL1S AL0S CAL4N CAL5N CAL7N CAL6N]
             alternate_definition [3x3 single] c4
-   setup 2x3 2x3 rotate restriction forbidden 3x3couples_only
+   setup 2x3 2x3 rotate restriction forbidden 3x3couples_only qualifier num 1 none
       array [AL3E AL4E AL5E CAL0W CAL1W CAL2W]
             alternate_definition [4x4 single] c4
-   setup 2x4 2x4 rotate restriction forbidden 4x4couples_only
+   setup 2x4 2x4 rotate restriction forbidden 4x4couples_only qualifier num 1 none
       array [AL4E AL5E AL6E AL7E CAL0W CAL1W CAL2W CAL3W]
-            alternate_definition [single] c1
-   setup 4x2 2x4 rotate
-      array [CAL4W CAL5W AL6E AL7E AL0E AL1E CAL2W CAL3W]
-   setup 2x4 2x4
-      array [AL7S AL0S AL5S AL2S CAL3N CAL4N CAL1N CAL6N]
-   setup 2x2 2x2
-      array [AL3S AL0S CAL1N CAL2N]
-   setup 2x1 1x2 rotate
-      array [CAL1W AL0E]
-   setup 4x1 1x4 rotate
-      array [CAL2W CAL3W AL0E AL1E]
-   setup 6x1 1x6 rotate
-      array [CAL3W CAL4W CAL5W AL0E AL1E AL2E]
-   setup 8x1 1x8 rotate
-      array [CAL4W CAL5W CAL6W CAL7W AL0E AL1E AL2E AL3E]
             alternate_definition [singlefile] c4
-   setup 4x1 1x4 rotate
+   setup 4x1 1x4 rotate qualifier num 1 none
+      array [CAL2W CAL3W AL0E AL1E]
+   setup 4x1 1x4        qualifier num 2 none
       array [CAL2W CAL3W AL0E AL1E]
 
-call "rotate 1/2" c2 tag rot2
-            reverse_means_mirror
-   setup 4x2 1x8 restriction forbidden couples_only
-      array [CAL5W CAL6W AL2E AL1E AL0E AL3E CAL7W CAL4W]
-   setup 2x4 2x4 rotate restriction forbidden couples_only
-      array [AL5N AL4N AL2N AL3N CAL0S CAL1S CAL7S CAL6S]
-   setup 2x2 1x4 rotate restriction forbidden couples_only
-      array [AL3N AL2N CAL0S CAL1S]
-            alternate_definition [single] c1   /* See comment on "rotate 1/4" above. */
-   setup 4x2 2x4
-      array [CAL4W CAL5W AL6E AL7E AL0E AL1E CAL2W CAL3W]
-   setup 2x4 2x4
-      array [AL6E AL7E AL4E AL5E CAL2W CAL3W CAL0W CAL1W]
-   setup 2x2 2x2
-      array [AL2E AL3E CAL0W CAL1W]
-   setup 2x1 1x2
-      array [CAL1W AL0E]
-   setup 4x1 1x4
-      array [CAL2W CAL3W AL0E AL1E]
-   setup 6x1 1x6
-      array [CAL3W CAL4W CAL5W AL0E AL1E AL2E]
-   setup 8x1 1x8
-      array [CAL4W CAL5W CAL6W CAL7W AL0E AL1E AL2E AL3E]
-            alternate_definition [singlefile] c4
-   setup 4x1 1x4
-      array [CAL2W CAL3W AL0E AL1E]
-
-/* We need "conc_force_lines" on these because we already had so-and-so
+/* We need "conc_force_lines" on this because we already had so-and-so
    go into the center, so they perceive the elongation of the setup
-   incorrectly.  The call "rotate 1/4" has the "parallel_conc_end"
-   flag on, saying to go to antispots if it was single, which is not
-   what we want here. */
+   incorrectly.  If the number is odd, the call "rotate" from a 2x2
+   would go to antispots (normally the right thing, of course), but
+   that's not what we want here. */
 
-call "rotate 1/4 while the others @0" c1
-            sequence_starter reverse_means_mirror single_is_inherited dont_use_in_resolve
-   crossconc nullcall [mandatory_anycall] rot1 [inherit_reverse inherit_single conc_force_lines]
-
-call "rotate 1/2 while the others @0" c1
-            sequence_starter reverse_means_mirror single_is_inherited dont_use_in_resolve
-   crossconc nullcall [mandatory_anycall] rot2 [inherit_reverse inherit_single conc_force_lines]
+call "rotate @b while the others @0" c1
+            sequence_starter reverse_means_mirror neednumber single_is_inherited dont_use_in_resolve
+   crossconc nullcall [mandatory_anycall] rotn [inherit_reverse inherit_single conc_force_lines]
 
 call "trixie" c3x tag trixie
    setup 2x2 2x2
@@ -8960,6 +8884,12 @@ call "circle 4 clockwise" dontshow tag circle4
             alternate_definition [4x4] c4
    setup 2x4 2x4 rotate
       array [0 0 0 0 CR4N CR5N CR6N CR7N]
+            alternate_definition [6x6] c4
+   setup 2x6 2x6 rotate
+      array [0 0 0 0 0 0 CR6N CR7N CR8N CR9N CR10N CR11N]
+            alternate_definition [8x8] c4
+   setup 2x8 2x8 rotate
+      array [0 0 0 0 0 0 0 0 CR8N CR9N CR10N CR11N CR12N CR13N CR14N CR15N]
 
 call "circle 4 with bogus flow" dontshow tag circle4flow
 /* This is, of course, a complete kludge.  Doing these calls correctly
@@ -9114,24 +9044,12 @@ call "walk and dodge" mainstream tag walkndodge
       preds "???"
          if inroller_is_cw_2x3 [ZM1N ZM2N    0    0 0 ZM0N]
          if always             [   0 ZM0N ZM1N ZM2N 0 0  ]
-/*
-            alternate_definition [1x3] c3
-   setup 2x4 2x4
-      preds "???"
-         if inroller_is_cw [ZM1N ZM2N ZM3N    0    0 0 0 ZM0N]
-         if always         [   0 ZM0N ZM1N ZM2N ZM3N 0 0    0]
-*/
             alternate_definition [2x1] mainstream
                /* Mainstream?  Yes, you can do it if you tell them what you want.
                You will need to toggle concept levels, of course.  The manual
                even mentions this particular call. */
    setup 3x2 2x3 restriction forbidden wave_only
       array [ZM1N ZM2N ZM3N ZM2N ZM3N ZM4N]
-/*
-            alternate_definition [3x1] c3
-   setup 4x2 2x4 restriction forbidden wave_only
-      array [ZM1N ZM2N ZM3N ZM4N ZM3N ZM4N ZM5N ZM6N]
-*/
             alternate_definition [3x3] c4
    setup 3x2 2x3 rotate restriction forbidden wave_only
       array [ZM0W ZM1W ZM2W ZM0W ZM1W ZM2W]
@@ -9161,6 +9079,16 @@ call "with the flow" c2 tag withflow
       preds "Can't determine flow direction"
          if roll_is_cw  [0 0 0 0 ZM4W ZM5W ZM6W ZM7W]
          if roll_is_ccw [0 0 0 0 ZM0W ZM1W ZM2W ZM3W]
+            alternate_definition [6x6] c4
+   setup 2x6 2x6 rotate
+      preds "Can't determine flow direction"
+         if roll_is_cw  [0 0 0 0 0 0 ZM6W ZM7W ZM8W ZM9W ZM10W ZM11W]
+         if roll_is_ccw [0 0 0 0 0 0 ZM0W ZM1W ZM2W ZM3W  ZM4W  ZM5W]
+            alternate_definition [8x8] c4
+   setup 2x8 2x8 rotate
+      preds "Can't determine flow direction"
+         if roll_is_cw  [0 0 0 0 0 0 0 0 ZM8W ZM9W ZM10W ZM11W ZM12W ZM13W ZM14W ZM15W]
+         if roll_is_ccw [0 0 0 0 0 0 0 0 ZM0W ZM1W ZM2W   ZM3W  ZM4W  ZM5W  ZM6W  ZM7W]
 
 call "@0 with the flow" c2
             dont_use_in_resolve
@@ -9209,22 +9137,6 @@ call "couple up" c3a
    simple_funny
    setup 2x2 2x2 no_cutting_through
       array [CR1S AL0S AL1S CR0S]
-/*
-            alternate_definition [1x3] c4
-   setup 3x4 2x4 qualifier occupied_as_qtag
-      array [0 AL0S CR3S 0 AL3S CR2S 0 CR1S AL2S 0 CR0S AL1S]
-   setup qtag 2x4
-      array [AL0S CR3S AL3S CR2S CR1S AL2S CR0S AL1S]
-   setup 3x4 2x4 qualifier occupied_as_h
-      array [CR2S 0 0 AL1S AL2S CR3S AL3S 0 0 CR0S CR1S AL0S]
-            alternate_definition [3x1] c4    * Same as 1x3. *
-   setup 3x4 2x4 qualifier occupied_as_qtag
-      array [0 AL0S CR3S 0 AL3S CR2S 0 CR1S AL2S 0 CR0S AL1S]
-   setup qtag 2x4
-      array [AL0S CR3S AL3S CR2S CR1S AL2S CR0S AL1S]
-   setup 3x4 2x4 qualifier occupied_as_h
-      array [CR2S 0 0 AL1S AL2S CR3S AL3S 0 0 CR0S CR1S AL0S]
-*/
             alternate_definition [3x3] c4
    setup 3x2 2x3 rotate restriction forbidden wave_only
       array [CR0E CR1E CR2E AL0E AL1E AL2E]
@@ -9298,34 +9210,6 @@ call "mesh" c4
             alternate_definition [4x4] c4
    setup 4x1 1x4 rotate restriction forbidden all_facing_same
       array [M2W M3W M0W M1W]
-/*
-            alternate_definition [3x1] c4
-   setup 3x4 1x8 qualifier occupied_as_h
-      array [ZM0N 0 0 ZM7N ZM5N ZM6N ZM4N 0 0 ZM3N ZM1N ZM2N]
-   setup 3x4 1x8 qualifier occupied_as_qtag
-      array [0 ZM1N ZM6N 0 ZM4N ZM7N 0 ZM5N ZM2N 0 ZM0N ZM3N]
-   setup qtag 1x8
-      array [ZM1N ZM6N ZM4N ZM7N ZM5N ZM2N ZM0N ZM3N]
-   setup 4x2 2x4 rotate qualifier wave_only
-      array [ZM7W ZM2W ZM1W ZM0W ZM1W ZM2W ZM3W ZM4W]
-   setup 4x2 2x4 rotate
-      preds "Not in correct kind of columns."
-         if antitandem_side_of_out_3n1_col [ZM7W ZM2W ZM7W ZM0W ZM3W ZM6W ZM3W ZM4W]
-         if tandem_side_of_out_3n1_col     [ZM5W ZM6W ZM1W ZM0W ZM1W ZM2W ZM5W ZM4W]
-            alternate_definition [1x3] c4    * Nearly same as 3x1. *
-   setup 3x4 1x8 qualifier occupied_as_h
-      array [ZM0N 0 0 ZM7N ZM5N ZM6N ZM4N 0 0 ZM3N ZM1N ZM2N]
-   setup 3x4 1x8 qualifier occupied_as_qtag
-      array [0 ZM1N ZM6N 0 ZM4N ZM7N 0 ZM5N ZM2N 0 ZM0N ZM3N]
-   setup qtag 1x8
-      array [ZM1N ZM6N ZM4N ZM7N ZM5N ZM2N ZM0N ZM3N]
-   setup 4x2 2x4 rotate qualifier wave_only  * This one is different from 3x1. *
-      array [ZM5W ZM6W ZM7W ZM0W ZM3W ZM6W ZM5W ZM4W]
-   setup 4x2 2x4 rotate
-      preds "Not in correct kind of columns."
-         if antitandem_side_of_out_3n1_col [ZM7W ZM2W ZM7W ZM0W ZM3W ZM6W ZM3W ZM4W]
-         if tandem_side_of_out_3n1_col     [ZM5W ZM6W ZM1W ZM0W ZM1W ZM2W ZM5W ZM4W]
-*/
 
 call "curlique" c3x tag curlique
             rear_back_from_r_wave left_means_mirror
@@ -9361,16 +9245,6 @@ call "_those in lines curlique" dontshow tag lines_curlique
          if boyp  [CR1E 0]
          if girlp [AL1E 0]
 
-/*
-call "old curli-pass" c3x
-   setup 2x4 2x4
-      preds "Must be facing opposite sex."
-         if x22_boy_facing_girl [0 0 0 0 0 3E 1E 0]
-         if x22_girl_facing_boy [0 0 0 0 0 3E 1E 0]
-   setup 4x2 2x4
-      array [0N 0 0 0 4N 0 0 6N]
-*/
-
 call "_finish curli-pass" dontshow tag fin_curli_pass
    setup 2x1 1x2 qualifier facing_in
       array [ZM1N 0]
@@ -9398,14 +9272,14 @@ call "cross and turn" c1
       array [A3S Z2N 0 0]
 
 call "circle to a wave" c2
-            reverse_means_mirror singlefile_is_inherited 3x3_is_inherited 4x4_is_inherited visible_fractions
-   seq circle4 [inherit_reverse inherit_singlefile inherit_3x3 inherit_4x4]
-   seq withflow [inherit_3x3 inherit_4x4]
+            reverse_means_mirror singlefile_is_inherited 3x3_is_inherited 4x4_is_inherited 6x6_is_inherited 8x8_is_inherited visible_fractions
+   seq circle4 [inherit_reverse inherit_singlefile inherit_3x3 inherit_4x4 inherit_6x6 inherit_8x8]
+   seq withflow [inherit_3x3 inherit_4x4 inherit_6x6 inherit_8x8]
 
 call "circle @b to a wave" c2
-            reverse_means_mirror singlefile_is_inherited 3x3_is_inherited 4x4_is_inherited neednumber visible_fractions
-   seq circle4 [inherit_reverse inherit_singlefile inherit_3x3 inherit_4x4 repeat_n]
-   seq withflow [inherit_3x3 inherit_4x4]
+            reverse_means_mirror singlefile_is_inherited 3x3_is_inherited 4x4_is_inherited 6x6_is_inherited 8x8_is_inherited neednumber visible_fractions
+   seq circle4 [inherit_reverse inherit_singlefile inherit_3x3 inherit_4x4 inherit_6x6 inherit_8x8 repeat_n]
+   seq withflow [inherit_3x3 inherit_4x4 inherit_6x6 inherit_8x8]
 
 call "cross back" c2 tag crossback
    simple_funny
@@ -9958,18 +9832,6 @@ call "touch of class" c4a
 call "link up" c3a
    setup 2x4 2x4 restriction 2fl_only
       array [AM7S AL0S CR3S CM4S AM1S AM6S CM5S CM2S]
-/*
-            alternate_definition [3x1] c4
-   setup 2x4 3x4
-      preds "Can't do this call in this setup."
-         if miniwave_side_of_out_3n1_line [  0  C3S A0S   0 A11S   0   0 C5S]
-         if couple_side_of_out_3n1_line   [A9S A10S C4S C6S    0   0   0   0]
-            alternate_definition [1x3] c4
-   setup 2x4 qtag
-      preds "Can't do this call in this setup."
-         if miniwave_side_of_out_3n1_line [A6S   0   0 C2S   0 C4S A5S   0]
-         if couple_side_of_out_3n1_line   [  0   0   0   0 A0S A7S C3S C1S]
-*/
             alternate_definition [3x3] c4
    setup 2x6 3x4 restriction 3x3_2fl_only
       array [A9S A10S A0S C3S C4S C6S A1S A11S A8S C7S C5S C2S]
@@ -10631,8 +10493,12 @@ call "step lively" c4
    seq circulate []
 
 call "recount" c4a
-   setup 2x4 2x4 rotate restriction wave_only
+   setup 2x4 2x4 rotate qualifier wave_only
       array [CR0N AL6S CR1N AL7S AL1S CR3S AL4N CR6N]
+   setup 2x4 2x4 rotate
+      preds "Not in correct kind of lines."
+         if miniwave_side_of_out_3n1_line [CR0N    0    0 AL7S    0 CR3S AL4N    0]
+         if couple_side_of_out_3n1_line   [   0    0    0    0 AL1S AL2S CR5N CR6N]
 
 call "ferris to a column" c4
    setup 2x4 2x4 rotate restriction 2fl_only
@@ -10700,6 +10566,14 @@ call "_pass one person" dontshow tag passoneperson
       array [0 0 ZM1N ZM0N]
    setup 2x2 2x2 other_elongate qualifier facing_out
       array [CM1E AM0W 0 0]
+            alternate_definition [half] plus
+   setup 2x2 1x4 qualifier facing_in
+      array [0 0 ZM3N ZM0N]
+   setup 2x2 1x4 rotate qualifier facing_out
+      array [CM0N AM1S 0 0]
+            alternate_definition [lasthalf] plus
+   setup 1x4 2x2 other_elongate
+      array [ZM0N 0 0 ZM1N]
             alternate_definition [twisted] c4
    setup 4x1 2x2 other_elongate
       array [CM3E 0 0 CM2E]
@@ -11643,14 +11517,6 @@ call "turn away" c4a
       array [CR1S CM2S CR3N CR2S]
    setup 4x1 1x4 rotate qualifier out 2fl_only
       array [0 0 C2E C3E]
-/*
-            alternate_definition [1x3] c4
-   setup 4x2 2x4 rotate
-      array [0 CR1E CR2E CR3E CM4E 0 0 0]
-            alternate_definition [3x1] c4
-   setup 4x2 2x4 rotate
-      array [0 0 0 CR3E CM4E CM5E CM6E 0]
-*/
             alternate_definition [3x3] c4
    setup 6x2 2x6 rotate
       array [CR8E CR7E CR6E CR3E CR4E CR5E CM6E CM7E CM8E CR11W CR10W CR9W]
@@ -12331,7 +12197,7 @@ call "single checkmate" c4
       array [CR2W AL3E AM0W CM1E]
 
 /* We're not completely happy with this.  We would like fractionalization,
-   and "finish" to work properly, and be copmpatible with "mystic". */
+   and "finish" to work properly, and be compatible with "mystic". */
 
 call "_centers push off" dontshow tag ctrs_pushoff
             left_means_mirror
@@ -12410,51 +12276,7 @@ call "countershake part 1" dontshow tag countershake_1
             left_means_mirror single_is_inherited 1x3_is_inherited 3x1_is_inherited 3x3_is_inherited 4x4_is_inherited 12_matrix_is_inherited 16_matrix_is_inherited
    maybe_nxn_1331_lines_conc
       shakedown [inherit_left inherit_single inherit_3x3 inherit_4x4]
-      quarter_right [conc_force_spots]
-
-call "old countershake part 1" dontshow
-            left_means_mirror
-   setup 4x2 2x4
-      array [CR0E 0 CR5W CR3E CR4E CR6W 0 CR7E]
-   setup 2x4 2x4
-      array [CR0E CR2W CR5W CR3E CR4E 0 0 CR7E]
-   setup galaxy galaxy
-      array [CR0E CR3W CR2E CR5W CR4E 0 CR6E 0]
-   setup rigger rigger
-      array [CR1W CR4W CR2E CR3E 0 0 CR6E CR7E]
-   setup prigger rigger
-      array [0 CR4W CR2E CR3E CR5W 0 CR6E CR7E]
-            alternate_definition [single] c4
-   setup 4x1 dmd
-      array [CR0E 0 CR2E CR3W]
-   setup 1x4 dmd
-      array [CR0E 0 CR2E 0]
-   setup dmd 1x4
-      array [CR0E CR3W CR2E 0]
-   setup pmd 1x4
-      array [CR0E 0 CR2E 0]
-            alternate_definition [3x3 12matrix] c4
-   setup 4x3 d3x4
-      array [CR0E 0 CR7W CR4E CR5E CR8W CR6E CR9W 0 CR10E CR11E 0]
-   setup 3x4 d3x4
-      array [CR0E 0 0 CR4E CR5E 0 CR6E 0 0 CR10E CR11E 0]
-            alternate_definition [4x4 16matrix] c4
-   setup 4x4 4x6 rotate
-      array [CR0N CR7S 0 CR8S CR5N CR6N CR23N 0 CR12N 0 CR10S 0 CR17N CR18N CR11N CR9S]
-            alternate_definition [1x3] c4
-   setup 4x3 3dmd rotate qualifier occupied_as_h
-      array [CR8N 0 0 CR0N CR1N CR5S CR2N 0 0 CR6N CR7N 0]
-   setup 4x3 spindle qualifier occupied_as_qtag
-      array [0 0 CR4W 0 CR3E CR5W 0 CR6W 0 0 CR7E 0]
-   setup pqtag spindle
-      array [0 CR4W CR3E CR5W CR6W 0 CR7E 0]
-            alternate_definition [3x1] c4    /* Same as 1x3. */
-   setup 4x3 3dmd rotate qualifier occupied_as_h
-      array [CR8N 0 0 CR0N CR1N CR5S CR2N 0 0 CR6N CR7N 0]
-   setup 4x3 spindle qualifier occupied_as_qtag
-      array [0 0 CR4W 0 CR3E CR5W 0 CR6W 0 0 CR7E 0]
-   setup pqtag spindle
-      array [0 CR4W CR3E CR5W CR6W 0 CR7E 0]
+      quarter_right [inherit_left conc_force_spots]
 
 call "countershake part 2" dontshow tag countershake_2
             left_means_mirror single_is_inherited 1x3_is_inherited 3x1_is_inherited 3x3_is_inherited 4x4_is_inherited 12_matrix_is_inherited 16_matrix_is_inherited
@@ -12693,7 +12515,7 @@ call "criss cross wind the bobbin" c4a
    setup 4x2 2x4 rotate restriction unusual wave_only
    array [6E 0W 5W 7W 4W 6W 3W 5E]
 
-call "REWIND wind the bobbin" c4x
+call "REWIND wind the bobbin" c4
    setup 2x4 2x4 rotate
    array [3W 5W 2W 4W 6W 4E 3E 1W]
 
@@ -13726,7 +13548,7 @@ call "@2swing@3-o-late" c3
    seq swingslip [or_anycall]
    seq olate []
 
-call "finish snap the lock" dontshow tag finsnaplock
+call "_finish snap the lock" dontshow tag finsnaplock
    setup 4x2 2x4
       array [CM7E CM5E 0 CM4E AM3W 0 AM2W AM0W]
    setup 2x4 2x4
@@ -14804,7 +14626,14 @@ call "chain reaction@S" a1
    seq chreact_1 [inherit_cross]
    seq chreact_2 [inherit_left]
    seq turndmdn_endstrade [insert_number 1]
-   seq finish []
+   seq finishwithplainmod []
+
+call "chain reaction@S but @0" a1
+            first_part_visible left_means_mirror cross_is_inherited
+   seq chreact_1 [inherit_cross]
+   seq chreact_2 [inherit_left]
+   seq turndmdn_endstrade [insert_number 1]
+   seq finishwithplainmodbut []
 
 /* We don't put in "inherit_left" in the hinge of the chain reaction of these
    compound calls, because, in the case of tag reaction, left applies to the
@@ -15635,6 +15464,10 @@ call "_spread, with 2-faced" dontshow tag spread_2f
             12_16_matrix_means_split
    setup 1x4 1x4
       array [ZM1N ZM0N ZM3N ZM2N]
+   setup 2x4 2x4 rotate qualifier tbone none
+      array [ZM6W 0 0 ZM1W ZM2W 0 0 ZM5W]
+   setup 4x2 2x4 rotate qualifier tbone none
+      array [0 ZM7W ZM0W 0 0 ZM3W ZM4W 0]
 
 call "@B chain and circulate in" c4
             12_matrix_is_inherited 16_matrix_is_inherited neednumber
@@ -15777,6 +15610,11 @@ call "_ctrs rally" dontshow tag ctrsrally
    seq stepnfold_c3b_intlk [inherit_intlk]
    seq peelntrail [allow_plain_mod]
 
+call "_ctrs rally but @m" dontshow tag ctrsrallybut2nd
+            visible_fractions intlk_is_inherited
+   seq stepnfold_c3b_intlk [inherit_intlk]
+   seq nullsecond [mandatory_secondary_call]
+
 call "_ends rally" dontshow tag endsrally
             left_means_mirror
    setup 2x2 1x4
@@ -15785,6 +15623,10 @@ call "_ends rally" dontshow tag endsrally
 call "rally" c3a tag rally
             fudge_to_q_tag left_means_mirror intlk_is_inherited
    conc ctrsrally [inherit_intlk] endsrally [inherit_left conc_demand_columns endscando]
+
+call "rally but @m" c3a tag rallybut2nd
+            fudge_to_q_tag left_means_mirror intlk_is_inherited
+   conc ctrsrallybut2nd [inherit_intlk] endsrally [inherit_left conc_demand_columns endscando]
 
 call "_ends little" dontshow tag endslittle
             left_means_mirror
@@ -15978,83 +15820,35 @@ call "@2scoot @3and rally" c3a
    seq rtqtagscootback [or_anycall inherit_left inherit_intlk inherit_yoyo]
    seq rally [inherit_left inherit_intlk]
 
+call "@2scoot @3and rally but @m" c3a
+            left_means_mirror intlk_is_inherited yoyo_is_inherited first_part_visible
+   seq rtqtagscootback [or_anycall inherit_left inherit_intlk inherit_yoyo]
+   seq rallybut2nd [inherit_left inherit_intlk]
+
 call "@0 and rally" c3a
+            first_part_visible
    seq nullcall [mandatory_anycall]
    seq rally []
+
+call "@0 and rally but @m" c3a
+            intlk_is_inherited first_part_visible
+   seq nullcall [mandatory_anycall]
+   seq rallybut2nd [inherit_intlk]
 
 call "LINES @0 THRU" c2
             dont_use_in_resolve
    conc_or_diamond_line nullcall [mandatory_anycall] box_circulate_maybe_diamond [conc_force_spots]
 
 call "spin a wheel" c4
-            single_is_inherited visible_fractions
+            visible_fractions 1x3_is_inherited 3x1_is_inherited
    seq hinge [cpls_unless_single]
-   seq tripletrade []
+   /* Inheriting 1x3 etc. here makes it illegal.  You must say "random 3x1". */
+   seq tripletrade [inherit_1x3 inherit_3x1]
    seq hinge [cpls_unless_single]
-
-/* It's a real crock that we have to do this. */
-call "_special hinge" dontshow tag special_hinge
-            left_means_mirror
-   setup 1x4 1x4
-      array [0 0 0 0]
-            alternate_definition [3x3] c4
-   setup 1x6 1x6 rotate qualifier 1fl_only
-      array [CR0N CR1N CR2N AL5S AL4S AL3S]
-   setup 1x6 1x6 rotate qualifier 3x3couples_only
-      array [CR0N CR1N CR2N AL0S AL1S AL2S]
-            alternate_definition [4x4] c4
-   setup 1x8 1x8 rotate qualifier 1fl_only
-      array [CR0N CR1N CR2N CR3N AL6S AL7S AL4S AL5S]
-   setup 1x8 1x8 rotate qualifier 4x4couples_only
-      array [CR0N CR1N CR2N CR3N AL0S AL1S AL2S AL3S]
-            alternate_definition [3x1] c4
-   setup 1x4 1x4 rotate
-      preds "Can't find couples of 3."
-         if miniwave_side_of_out_3n1_line [CR0N AL3S AL0S CR3N]
-         if couple_side_of_out_3n1_line   [CR0N CR1N AL0S AL1S]
-            alternate_definition [2x1] c4
-   setup 1x6 2x3 rotate
-      preds "Can't do this call."
-         if miniwave_side_of_2n1_line [CR5N CR4N AL5S AL0S AL1S CR0N]
-         if couple_side_of_2n1_line   [CR5N AL4S AL5S AL0S CR1N CR0N]
-   setup 2x3 1x6 rotate
-      preds "Can't do this call."
-         if miniwave_side_of_2n1_line [CR0N CR1N AL0S AL5S AL4S CR5N]
-         if couple_side_of_2n1_line   [CR0N AL1S AL0S AL5S CR4N CR5N]
 
 call "stack the wheel" c4a
-            single_is_inherited visible_fractions
+            visible_fractions single_is_inherited 3x3_is_inherited 4x4_is_inherited 1x3_is_inherited 3x1_is_inherited 1x2_is_inherited 2x1_is_inherited
    seq hinge [cpls_unless_single]
-   seq roll []
-
-call "3x3 stack the wheel" c4a
-            visible_fractions
-   seq special_hinge [force_3x3]
-   seq roll []
-
-call "4x4 stack the wheel" c4a
-            visible_fractions
-   seq special_hinge [force_4x4]
-   seq roll []
-
-call "3x1 stack the wheel" c4
-            visible_fractions
-   seq special_hinge [force_3x1]
-   seq roll []
-
-call "1x3 stack the wheel" c4
-            visible_fractions
-   seq special_hinge [force_3x1]
-   seq roll []
-
-call "2x1 stack the wheel" c4
-            visible_fractions
-   seq special_hinge [force_2x1]
-   seq roll []
-
-call "1x2 stack the wheel" c4
-            visible_fractions
-   seq special_hinge [force_2x1]
    seq roll []
 
 call "_cross trade and wheel part 2" dontshow tag crosstradewheel2
@@ -16075,7 +15869,7 @@ call "_cross trade and wheel part 2" dontshow tag crosstradewheel2
 call "_cross and wheel part 3" dontshow tag crossnwheel3
    setup 1x4 2x2 qualifier miniwaves
       array [CR0S ZM0N AL1S ZM1N]
-   setup 1x4 2x2
+   setup 1x4 2x2 qualifier 1fl_only
       array [CR0S ZM3N AL1S ZM2N]
    setup dmd 2x2 restriction forbidden diamond_like   /* Might as well put these in. */
       array [CR0S 0 AL1S 0]
@@ -16095,34 +15889,16 @@ call "_cross and wheel part 3" dontshow tag crossnwheel3
    setup 1x6 2x3           /* 4 step; 2 fold */
       array [CR0S ZM0N ZM1N AL2S ZM2N ZM1N]
 
-call "_special cross and wheel part 3" dontshow tag speccrossnwheel3
-   setup 1x4 2x2 qualifier miniwaves
-      array [0 0 0 0]
-            alternate_definition [3x1] c4
-   setup 1x8 2x4
-      preds "Can't find couples of 3."
-         if miniwave_side_of_out_3n1_line [CR0S ZM0N ZM0N CR0S AL3S ZM3N ZM3N AL3S]
-         if couple_side_of_out_3n1_line   [CR2S CR1S ZM2N ZM1N AL1S AL2S ZM1N ZM2N]
-
 call "cross and wheel" c2 tag crossnwheel
-            visible_fractions grand_is_inherited single_is_inherited
+            visible_fractions grand_is_inherited single_is_inherited 3x3_is_inherited 4x4_is_inherited 1x3_is_inherited 3x1_is_inherited 1x2_is_inherited 2x1_is_inherited
    seq hinge [cpls_unless_single]
    seq crossnwheel3 [cpls_unless_single inherit_grand inherit_single]
 
-call "3x1 cross and wheel" c4
-            visible_fractions
-   seq special_hinge [force_3x1]
-   seq speccrossnwheel3 [force_3x1]
-
-call "1x3 cross and wheel" c4
-            visible_fractions
-   seq special_hinge [force_3x1]
-   seq speccrossnwheel3 [force_3x1]
-
 call "cross trade and wheel" c2
-            visible_fractions grand_is_inherited single_is_inherited
+            visible_fractions grand_is_inherited single_is_inherited 3x3_is_inherited 4x4_is_inherited 1x3_is_inherited 3x1_is_inherited 1x2_is_inherited 2x1_is_inherited
    seq hinge [cpls_unless_single]
-   seq crosstradewheel2 [inherit_grand inherit_single roll_transparent]
+   /* Inheriting 1x3 etc. here makes it illegal.  You must say "random 3x1". */
+   seq crosstradewheel2 [inherit_grand inherit_single inherit_3x3 inherit_4x4 inherit_1x3 inherit_3x1 inherit_1x2 inherit_2x1 roll_transparent]
    seq crossnwheel3 [cpls_unless_single inherit_grand inherit_single]
 
 call "hinge and trade" c4 tag hingentrade
@@ -16848,12 +16624,6 @@ call "_finish it but @m" dontshow tag finishwithplainmodbut2nd
             12_matrix_is_inherited 16_matrix_is_inherited
    conc_diamond_line nullsecond [mandatory_secondary_call] spec_drop_in [inherit_12_matrix inherit_16_matrix conc_force_otherway suppress_elongation_warnings]
 
-/* This one allows difficult modify, for "chain reaction, replace cast off 3/4 with flip back". */
-
-call "_finish it" dontshow tag finish
-            12_matrix_is_inherited 16_matrix_is_inherited
-   conc_diamond_line cast_off_34_with_warn [allow_forced_mod] spec_drop_in [inherit_12_matrix inherit_16_matrix conc_force_otherway suppress_elongation_warnings]
-
 /* This one forbids modify, for relay the top and motivate.  There are two instances of cast off 3/4 in those calls.
    It also assumes an arm turn if the cast is ambiguous.  It prints a warning in this case.
    We assume that's what people want for things like relay the top.  Note that, if it weren't for this,
@@ -16883,7 +16653,11 @@ call "good show" c3
             alternate_definition [2x1] c4
    setup pshort6 2x3 rotate restriction forbidden wave_only
       array [AL1E ZM0W AL0E CR2E ZM2W CR1E]
-            alternate_definition [1x2] c4
+   setup bone6 2x3 restriction forbidden wave_only
+      array [ZM1N ZM1N CR2S ZM2N ZM0N AL0S]
+            alternate_definition [1x2] c4    /* Same as 2x1. */
+   setup pshort6 2x3 rotate restriction forbidden wave_only
+      array [AL1E ZM0W AL0E CR2E ZM2W CR1E]
    setup bone6 2x3 restriction forbidden wave_only
       array [ZM1N ZM1N CR2S ZM2N ZM0N AL0S]
 

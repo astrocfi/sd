@@ -21,7 +21,7 @@
    database format version. */
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 118
+#define DATABASE_FORMAT_VERSION 120
 
 
 
@@ -32,14 +32,15 @@
 #define BASE_CALL_ENDS_SHADOW 4
 #define BASE_CALL_CHREACT_1   5
 #define BASE_CALL_MAKEPASS_1  6
-#define BASE_CALL_CIRCULATE   7
+#define BASE_CALL_BACKEMUP    7
+#define BASE_CALL_CIRCULATE   8
 /* The next 4 must be consecutive. */
-#define BASE_CALL_TAGGER0     8
-#define BASE_CALL_TAGGER1     9
-#define BASE_CALL_TAGGER2    10
-#define BASE_CALL_TAGGER3    11
-#define BASE_CALL_CIRCCER    12
-#define BASE_CALL_TURNSTAR_N 13
+#define BASE_CALL_TAGGER0     9
+#define BASE_CALL_TAGGER1    10
+#define BASE_CALL_TAGGER2    11
+#define BASE_CALL_TAGGER3    12
+#define BASE_CALL_CIRCCER    13
+#define BASE_CALL_TURNSTAR_N 14
 
 
 /* BEWARE!!  This list must track the tables "flagtabh", "defmodtabh",
@@ -68,12 +69,16 @@
 #define INHERITFLAG_3X1                   0x00008000UL
 #define INHERITFLAG_3X3                   0x00010000UL
 #define INHERITFLAG_4X4                   0x00020000UL
-#define INHERITFLAG_SINGLEFILE            0x00040000UL
-#define INHERITFLAG_HALF                  0x00080000UL
-#define INHERITFLAG_YOYO                  0x00100000UL
-#define INHERITFLAG_STRAIGHT              0x00200000UL
-#define INHERITFLAG_TWISTED               0x00400000UL
-#define INHERITFLAG_LASTHALF              0x00800000UL
+#define INHERITFLAG_6X6                   0x00040000UL
+#define INHERITFLAG_8X8                   0x00080000UL
+#define INHERITFLAG_SINGLEFILE            0x00100000UL
+#define INHERITFLAG_HALF                  0x00200000UL
+#define INHERITFLAG_YOYO                  0x00400000UL
+#define INHERITFLAG_STRAIGHT              0x00800000UL
+#define INHERITFLAG_TWISTED               0x01000000UL
+#define INHERITFLAG_LASTHALF              0x02000000UL   
+
+#define MXN_BITS (INHERITFLAG_1X2 | INHERITFLAG_2X1 | INHERITFLAG_2X2 | INHERITFLAG_1X3 | INHERITFLAG_3X1 | INHERITFLAG_3X3 | INHERITFLAG_4X4 | INHERITFLAG_6X6 | INHERITFLAG_8X8)
 
 /* BEWARE!!  This list must track the table "flagtab1" in dbcomp.c .
    These flags go into the "callflags1" word of a callspec_block,
@@ -420,6 +425,8 @@ typedef enum {
    sq_all_facing_same,
    sq_1fl_only,
    sq_2fl_only,
+   sq_3x3_2fl_only,
+   sq_4x4_2fl_only,
    sq_couples_only,
    sq_3x3couples_only,
    sq_4x4couples_only,

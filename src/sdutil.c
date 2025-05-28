@@ -277,6 +277,7 @@ Cstring warning_strings[] = {
    /*  warn__check_gen_c1_stars  */   " Check a generalized 'star' setup.",
    /*  warn__bigblock_feet       */   " Bigblock/stagger shapechanger -- go to footprints.",
    /*  warn__bigblockqtag_feet   */   " Adjust to bigblock/stagger 1/4 tag footprints.",
+   /*  warn__diagqtag_feet       */   " Adjust to diagonal 1/4 tag footprints on other diagonal.",
    /*  warn__adjust_to_feet      */   " Adjust back to footprints.",
    /*  warn__some_touch          */   " Some people step to a wave.",
    /*  warn__split_to_2x4s       */   "=Do the call in each 2x4.",
@@ -297,6 +298,7 @@ Cstring warning_strings[] = {
    /*  warn__opt_for_2fl         */   "*If in doubt, assume a two-faced line.",
    /*  warn__like_linear_action  */   "*Ends start like a linear action -- this may be controversial.",
    /*  warn__split_1x6           */   "*Do the call in each 1x3 setup.",
+   /*  warn_interlocked_to_6     */   "*This went from 4 interlocked groups to 6.",
    /*  warn__colocated_once_rem  */   " The once-removed setups have the same center.",
    /*  warn_hairy_fraction       */   " Fraction is very complicated.",
    /*  warn_bad_collision        */   "*This collision may be controversial.",
@@ -1471,15 +1473,15 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
             In addition to all of this, there may be any number of forcible replacements. */
 
          if (localcall) {      /* Call = NIL means we are echoing input and user hasn't entered call yet. */
-            char *np;
-            char savec;
+            char *np = localcall->name;
 
             if (enable_file_writing) localcall->age = global_age;
-            np = localcall->name;
 
             while (*np) {
-               if (*np == '@') {
-                  savec = np[1];
+               char c = *np++;
+
+               if (c == '@') {
+                  char savec = *np++;
 
                   switch (savec) {
                      case '6': case 'k':
@@ -1488,9 +1490,8 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
                            writestuff(selector_list[i16junk].name);
                         else
                            writestuff(selector_list[i16junk].sing_name);
-                        if (np[2] && np[2] != ' ' && np[2] != ']')
+                        if (np[0] && np[0] != ' ' && np[0] != ']')
                            writestuff(" ");
-                        np += 2;       /* skip the indicator */
                         break;
                      case 'v': case 'w': case 'x': case 'y':
                         write_blank_if_needed();
@@ -1571,9 +1572,8 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
 
                         did_tagger:
 #endif
-                        if (np[2] && np[2] != ' ' && np[2] != ']')
+                        if (np[0] && np[0] != ' ' && np[0] != ']')
                            writestuff(" ");
-                        np += 2;       /* skip the indicator */
                         break;
                      case 'N':
                         write_blank_if_needed();
@@ -1600,77 +1600,66 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
 
                         did_circcer:
 
-                        if (np[2] && np[2] != ' ' && np[2] != ']')
+                        if (np[0] && np[0] != ' ' && np[0] != ']')
                            writestuff(" ");
-                        np += 2;       /* skip the indicator */
                         break;
                      case 'h':                   /* Need to plug in a direction. */
                         write_blank_if_needed();
                         writestuff(direction_names[idirjunk]);
-                        if (np[2] && np[2] != ' ' && np[2] != ']')
+                        if (np[0] && np[0] != ' ' && np[0] != ']')
                            writestuff(" ");
-                        np += 2;       /* skip the indicator */
                         break;
                      case '9': case 'a': case 'b': case 'B': case 'D': case 'u':    /* Need to plug in a number. */
                         write_blank_if_needed();
                         write_nice_number(savec, number_list);
                         number_list >>= 4;    /* Get ready for next number. */
-                        np += 2;              /* skip the indicator */
                         break;
                      case 'e':
                         if (use_left_name) {
-                           np += 2;
                            while (*np != '@') np++;
                            if (lastchar == ']') writestuff(" ");
                            writestuff("left");
+                           np += 2;
                         }
-                        np += 2;
                         break;
                      case 'j':
                         if (!use_cross_name) {
-                           np += 2;
                            while (*np != '@') np++;
+                           np += 2;
                         }
-                        np += 2;
                         break;
                      case 'C':
                         if (use_cross_name) {
                            write_blank_if_needed();
                            writestuff("cross");
                         }
-                        np += 2;
                         break;
                      case 'S':                   /* Look for star turn replacement. */
-                        if (save_cptr->options.star_turn_option != 0) {
-                           switch (save_cptr->options.star_turn_option) {
-                              case -1: writestuff(", don't turn the star"); break;
-                              case 1: writestuff(", turn the star 1/4"); break;
-                              case 2: writestuff(", turn the star 1/2"); break;
-                              case 3: writestuff(", turn the star 3/4"); break;
-                           }
+                        if (save_cptr->options.star_turn_option < 0) {
+                           writestuff(", don't turn the star");
                         }
-                        np += 2;       /* skip the indicator */
+                        else if (save_cptr->options.star_turn_option != 0) {
+                           writestuff(", turn the star ");
+                           write_nice_number('b', save_cptr->options.star_turn_option);
+                        }
                         break;
                      case 'J':
                         if (!use_magic_name) {
-                           np += 2;
                            while (*np != '@') np++;
+                           np += 2;
                         }
-                        np += 2;
                         break;
                      case 'M':
                         if (use_magic_name) {
                            if (lastchar != ' ' && lastchar != '[') writechar(' ');
                            writestuff("magic");
                         }
-                        np += 2;
                         break;
                      case 'E':
                         if (!use_intlk_name) {
-                           np += 2;
                            while (*np != '@') np++;
+                           np += 2;
                         }
-                        np += 2;
                         break;
                      case 'I':
                         if (use_intlk_name) {
@@ -1680,22 +1669,20 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
                               writechar(' ');
                            writestuff("interlocked");
                         }
-                        np += 2;
                         break;
                      case 'l': case 'L': case 'F': case '8': case 'o':    /* Just skip these -- they end stuff that we could have elided but didn't. */
-                        np += 2;
                         break;
                      case 'n': case 'p': case 'r': case 'm': case 't':
                         if (subst2_in_use) {
                            if (savec == 'p' || savec == 'r') {
-                              np += 2;
                               while (*np != '@') np++;
+                              np += 2;
                            }
                         }
                         else {
                            if (savec == 'n') {
-                              np += 2;
                               while (*np != '@') np++;
+                              np += 2;
                            }
                         }
    
@@ -1708,27 +1695,25 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
                            pending_subst2 = FALSE;
                         }
          
-                        np += 2;        /* skip the digit */
                         break;
                      case 'O':
                         if (print_recurse_arg & PRINT_RECURSE_CIRC) {
-                           np += 2;
                            while (*np != '@') np++;
+                           np += 2;
                         }
 
-                        np += 2;        /* skip the digit */
                         break;
                      default:
                         if (subst1_in_use) {
                            if (savec == '2' || savec == '4') {
-                              np += 2;
                               while (*np != '@') np++;
+                              np += 2;
                            }
                         }
                         else {
                            if (savec == '7') {
-                              np += 2;
                               while (*np != '@') np++;
+                              np += 2;
                            }
                         }
          
@@ -1741,13 +1726,10 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
                            pending_subst1 = FALSE;
                         }
          
-                        np += 2;        /* skip the digit */
                         break;
                   }
                }
                else {
-                  char c = *np++;
-
                   if (lastchar == ']' && c != ' ' && c != ']')
                      writestuff(" ");
 
@@ -1803,14 +1785,12 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
                               ((cc->callflags1 & CFLAG1_IS_STAR_CALL) ||
                               cc->schema == schema_nothing)) {
                      first_replace++;
-                     write_blank_if_needed();
 
                      if (cc->schema == schema_nothing)
-                        writestuff("BUT don't turn the star");
+                        writestuff(", don't turn the star");
                      else {
-                        writestuff("BUT [");
+                        writestuff(", ");
                         print_recurse(subsidiary_ptr, PRINT_RECURSE_STAR);
-                        writestuff("]");
                      }
                   }
                   else {
@@ -2877,6 +2857,20 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
             goto check_tt;
          case sq_2fl_only:        /* 1x4 or 2x4 - 2FL; 4x1 - single DPT or single CDPT */
             goto do_2fl_stuff;
+         case sq_3x3_2fl_only:
+            switch (ss->cmd.cmd_assume.assumption) {
+               case cr_1fl_only: case cr_wave_only: case cr_miniwaves: case cr_magic_only: goto bad;
+            }
+
+            tt.assumption = cr_3x3_2fl_only;
+            goto fix_col_line_stuff;
+         case sq_4x4_2fl_only:
+            switch (ss->cmd.cmd_assume.assumption) {
+               case cr_1fl_only: case cr_wave_only: case cr_miniwaves: case cr_magic_only: goto bad;
+            }
+
+            tt.assumption = cr_4x4_2fl_only;
+            goto fix_col_line_stuff;
          case sq_couples_only:         /* 1x2/1x4/1x8/2x2/2x4 lines, or 2x4 columns - people are in genuine couples, not miniwaves */
             switch (ss->cmd.cmd_assume.assumption) {
                case cr_1fl_only:
@@ -3615,8 +3609,6 @@ extern void gather(setup *resultpeople, setup *sourcepeople, Const veryshort *re
 
 
 
-#define MXN_BITS (INHERITFLAG_1X2 | INHERITFLAG_2X1 | INHERITFLAG_2X2 | INHERITFLAG_1X3 | INHERITFLAG_3X1 | INHERITFLAG_3X3 | INHERITFLAG_4X4)
-
 /* Take a concept pointer and scan for all "final" concepts,
    returning an updated concept pointer and a mask of all such concepts found.
    "Final" concepts are those that modify the execution of a call but
@@ -3699,6 +3691,14 @@ extern parse_block *process_final_concepts(
             break;
          case concept_4x4:
             bit_to_set.herit = INHERITFLAG_4X4;
+            bit_to_forbid.herit = MXN_BITS;
+            break;
+         case concept_6x6:
+            bit_to_set.herit = INHERITFLAG_6X6;
+            bit_to_forbid.herit = MXN_BITS;
+            break;
+         case concept_8x8:
+            bit_to_set.herit = INHERITFLAG_8X8;
             bit_to_forbid.herit = MXN_BITS;
             break;
          case concept_split:
@@ -3840,6 +3840,8 @@ extern long_boolean fix_n_results(int arity, setup_kind goal, setup z[])
       }
 
       if (z[i].kind != nothing) {
+         uint32 zrot;
+
          canonicalize_rotation(&z[i]);
 
          if (z[i].kind == s1x2)
@@ -3861,10 +3863,16 @@ extern long_boolean fix_n_results(int arity, setup_kind goal, setup z[])
             }
          }
 
-         if (rr < 0) rr = z[i].rotation;
-         /* If the setups are "trngl" or "trngl4", we allow mismatched rotation --
-            the client will take care of it. */
-         if (rr != z[i].rotation && z[i].kind != s_trngl && z[i].kind != s_trngl4) goto lose;
+         /* If the setups are "trngl" or "trngl4", the rotations have
+            to alternate by 180 degrees. */
+
+         if (z[i].kind == s_trngl || z[i].kind == s_trngl4)
+            zrot = (z[i].rotation ^ (i << 1));
+         else
+            zrot = z[i].rotation;
+
+         if (rr < 0) rr = zrot;
+         if (rr != zrot) goto lose;
       }
    }
 
@@ -3981,7 +3989,11 @@ which we believe is equivalent to the following.
       }
 
       z[i].kind = kk;
-      if (kk != s_trngl && kk != s_trngl4) z[i].rotation = rr;
+
+      if (z[i].kind == s_trngl || z[i].kind == s_trngl4)
+         z[i].rotation = (rr ^ (i << 1));
+      else
+         z[i].rotation = rr;
    }
 
    return FALSE;

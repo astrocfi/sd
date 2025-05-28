@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-1997  William B. Ackerman.
+    Copyright (C) 1990-1998  William B. Ackerman.
 
     This file is unpublished and contains trade secrets.  It is
     to be used by permission only and not to be disclosed to third
@@ -21,8 +21,8 @@
     General Public License if you distribute the file.
 */
 
-#define VERSION_STRING "31.92"
-#define TIME_STAMP "wba@apollo.hp.com  28 Dec 97 $"
+#define VERSION_STRING "31.93"
+#define TIME_STAMP "wba@apollo.hp.com  8 Feb 98 $"
 
 /* This defines the following functions:
    sd_version_string
@@ -1779,7 +1779,7 @@ void main(int argc, char *argv[])
       writestuff("SD -- square dance caller's helper.");
       newline();
       newline();
-      writestuff("Copyright (c) 1991-1997 William B. Ackerman");
+      writestuff("Copyright (c) 1991-1998 William B. Ackerman");
       newline();
       writestuff("   and Stephen Gildea.");
       newline();

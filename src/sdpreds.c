@@ -314,7 +314,7 @@ extern long_boolean selectp(setup *ss, int place)
 }
 
 
-static Const long int iden_tab[9] = {0, 1, 2, 3, 4, 5, 6, 7, 8};
+static Const long int iden_tab[16] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
 
 static Const long int boystuff_no_rh[3]  = {ID1_PERM_BOY,  ID1_PERM_GIRL, 0};
 static Const long int girlstuff_no_rh[3] = {ID1_PERM_GIRL, ID1_PERM_BOY,  0};
@@ -1825,13 +1825,15 @@ predicate_descriptor pred_table[] = {
       {someone_selected,               &iden_tab[7]},            /* "pair_person_select" */
       {sum_mod_selected,               &iden_tab[5]},            /* "person_select_sum5" */
       {sum_mod_selected,               &iden_tab[8]},            /* "person_select_sum8" */
+      {sum_mod_selected,              &iden_tab[11]},            /* "person_select_sum11" */
+      {sum_mod_selected,              &iden_tab[15]},            /* "person_select_sum15" */
       {semi_squeezer_select,       semi_squeeze_tab},            /* "semi_squeezer_select" */
       {select_once_rem_from_unselect,(Const long int *) 0},      /* "select_once_rem_from_unselect" */
       {unselect_once_rem_from_select,(Const long int *) 0},      /* "unselect_once_rem_from_select" */
       {select_and_roll_is_cw,        (Const long int *) 0},      /* "select_and_roll_is_cw" */
       {select_and_roll_is_ccw,       (Const long int *) 0},      /* "select_and_roll_is_ccw" */
 /* End of predicates that force use of selector. */
-#define PREDS_BEFORE_THIS_POINT 19
+#define PREDS_BEFORE_THIS_POINT 23
       {always,                       (Const long int *) 0},      /* "always" */
       {x22_miniwave,                 (Const long int *) 0},      /* "x22_miniwave" */
       {x22_couple,                   (Const long int *) 0},      /* "x22_couple" */

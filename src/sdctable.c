@@ -653,9 +653,9 @@ concept_descriptor concept_descriptor_table[] = {
 
 /* distorted concepts */
 
-#define dd__1_size 24
+#define dd__1_size 36
 #define dd__1_pofl 23
-   {"BIG BLOCK",                             concept_do_phantom_2x4,            D, l_c3a,        {&map_stagger, phantest_only_one, 1, MPKIND__NONE}},
+   {"BIG BLOCK",                             concept_do_phantom_2x4,            D, l_c3a,        {0, phantest_only_one, 1, MPKIND__STAG}},
    {"STAIRSTEP LINES",                       concept_do_phantom_2x4,            D, l_c4,         {&map_ladder, phantest_only_one, 1, MPKIND__NONE}},
    {"LADDER LINES",                          concept_do_phantom_2x4,            D, l_c4,         {&map_stairst, phantest_only_one, 1, MPKIND__NONE}},
    {"OFFSET LINES",                          concept_distorted,                 D, l_c2,         {0, disttest_offset, 1}},
@@ -675,31 +675,29 @@ concept_descriptor concept_descriptor_table[] = {
    {"PARALLELOGRAM",                         concept_parallelogram,             D, l_c2},
          {"", concept_comment, 0, l_nonexistent_concept},
          {"", concept_comment, 0, l_nonexistent_concept},
-   {"PHANTOM BIG BLOCK LINES",               concept_do_phantom_2x4,            D, l_c4,         {&map_stagger, phantest_both, 1, MPKIND__NONE}},
+   {"PHANTOM BIG BLOCK LINES",               concept_do_phantom_2x4,            D, l_c4,         {0, phantest_both, 1, MPKIND__STAG}},
    {"PHANTOM STAIRSTEP LINES",               concept_do_phantom_2x4,            D, l_c4,         {&map_ladder, phantest_both, 1, MPKIND__NONE}},
    {"PHANTOM LADDER LINES",                  concept_do_phantom_2x4,            D, l_c4,         {&map_stairst, phantest_both, 1, MPKIND__NONE}},
    {"PHANTOM OFFSET LINES",                  concept_do_phantom_2x4,            D, l_c4a,        {&map_offset, phantest_both, 1, MPKIND__NONE}},
-
-/* Do these some other time.  Need to address issues of what tests we do:
-   CMD_MISC__VERIFY_1_4_TAG
-   CMD_MISC__VERIFY_3_4_TAG
-   CMD_MISC__VERIFY_REAL_1_4_LINE
-   CMD_MISC__VERIFY_REAL_3_4_LINE
-and whether we want the "big block" versions, and whether we want diamonds,
-and whether we want "diagonal" 1/4 tags (Vic says he uses them),
+/* other issues:
+and whether we want the "big block" versions,
 and whether we want "distorted" 1/4 tags in 4x4 of more general population,
-and whether we go freely into 2x4 distorted to same footprints (we probably do)
-and whether the existing concepts (e.g. big block) can go freely into 1/4 tags distorted to same footprints
-(we don't now, but SRC does.)
-   {"STAGGER 1/4 TAG",                       concept_do_phantom_2x4,            D, l_c3a,        {&map_stagger, phantest_only_one, 1, MPKIND__NONE}},
-   {"STAGGER 3/4 TAG",                       concept_do_phantom_2x4,            D, l_c3a,        {&map_stagger, phantest_only_one, 1, MPKIND__NONE}},
-   {"BIG BLOCK 1/4 TAG",                     concept_do_phantom_2x4,            D, l_c3a,        {&map_stagger, phantest_only_one, 1, MPKIND__NONE}},
-   {"BIG BLOCK 3/4 TAG",                     concept_do_phantom_2x4,            D, l_c3a,        {&map_stagger, phantest_only_one, 1, MPKIND__NONE}},
 */
-
+   {"STAGGER DIAMONDS",                      concept_do_phantom_stag_qtg,       D, l_c4, {0, phantest_only_one, 1, CMD_MISC__VERIFY_DMD_LIKE}},
+   {"STAGGER 1/4 TAG",                       concept_do_phantom_stag_qtg,       D, l_c4, {0, phantest_only_one, 0, CMD_MISC__VERIFY_1_4_TAG}},
+   {"STAGGER 3/4 TAG",                       concept_do_phantom_stag_qtg,       D, l_c4, {0, phantest_only_one, 0, CMD_MISC__VERIFY_3_4_TAG}},
+   {"STAGGER 1/4 LINE",                      concept_do_phantom_stag_qtg,       D, l_c4, {0, phantest_only_one, 0, CMD_MISC__VERIFY_REAL_1_4_LINE}},
+   {"STAGGER 3/4 LINE",                      concept_do_phantom_stag_qtg,       D, l_c4, {0, phantest_only_one, 0, CMD_MISC__VERIFY_REAL_3_4_LINE}},
+   {"STAGGER GENERAL 1/4 TAG",               concept_do_phantom_stag_qtg,       D, l_c4, {0, phantest_only_one, 0, CMD_MISC__VERIFY_QTAG_LIKE}},
+   {"DIAGONAL DIAMONDS",                     concept_do_phantom_diag_qtg,       D, l_c4, {0, phantest_only_one, 1, CMD_MISC__VERIFY_DMD_LIKE}},
+   {"DIAGONAL 1/4 TAG",                      concept_do_phantom_diag_qtg,       D, l_c4, {0, phantest_only_one, 0, CMD_MISC__VERIFY_1_4_TAG}},
+   {"DIAGONAL 3/4 TAG",                      concept_do_phantom_diag_qtg,       D, l_c4, {0, phantest_only_one, 0, CMD_MISC__VERIFY_3_4_TAG}},
+   {"DIAGONAL 1/4 LINE",                     concept_do_phantom_diag_qtg,       D, l_c4, {0, phantest_only_one, 0, CMD_MISC__VERIFY_REAL_1_4_LINE}},
+   {"DIAGONAL 3/4 LINE",                     concept_do_phantom_diag_qtg,       D, l_c4, {0, phantest_only_one, 0, CMD_MISC__VERIFY_REAL_3_4_LINE}},
+   {"DIAGONAL GENERAL 1/4 TAG",              concept_do_phantom_diag_qtg,       D, l_c4, {0, phantest_only_one, 0, CMD_MISC__VERIFY_QTAG_LIKE}},
 /* -------- column break -------- */
 #define dd__2_size 24
-   {"BIG BLOCK WAVES",                       concept_do_phantom_2x4,            D, l_c3a,        {&map_stagger, phantest_only_one, 3, MPKIND__NONE}},
+   {"BIG BLOCK WAVES",                       concept_do_phantom_2x4,            D, l_c3a,        {0, phantest_only_one, 3, MPKIND__STAG}},
    {"STAIRSTEP WAVES",                       concept_do_phantom_2x4,            D, l_c4,         {&map_ladder, phantest_only_one, 3, MPKIND__NONE}},
    {"LADDER WAVES",                          concept_do_phantom_2x4,            D, l_c4,         {&map_stairst, phantest_only_one, 3, MPKIND__NONE}},
    {"OFFSET WAVES",                          concept_distorted,                 D, l_c2,         {0, disttest_offset, 3}},
@@ -719,7 +717,7 @@ and whether the existing concepts (e.g. big block) can go freely into 1/4 tags d
    {"@6 IN YOUR DISTORTED DIAMOND",          concept_so_and_so_only,            D, l_c1,         {0, 6, 5}},
          {"", concept_comment, 0, l_nonexistent_concept},
          {"", concept_comment, 0, l_nonexistent_concept},
-   {"PHANTOM BIG BLOCK WAVES",               concept_do_phantom_2x4,            D, l_c4,         {&map_stagger, phantest_both, 3, MPKIND__NONE}},
+   {"PHANTOM BIG BLOCK WAVES",               concept_do_phantom_2x4,            D, l_c4,         {0, phantest_both, 3, MPKIND__STAG}},
    {"PHANTOM STAIRSTEP WAVES",               concept_do_phantom_2x4,            D, l_c4,         {&map_ladder, phantest_both, 3, MPKIND__NONE}},
    {"PHANTOM LADDER WAVES",                  concept_do_phantom_2x4,            D, l_c4,         {&map_stairst, phantest_both, 3, MPKIND__NONE}},
    {"PHANTOM OFFSET WAVES",                  concept_do_phantom_2x4,            D, l_c4a,        {&map_offset, phantest_both, 3, MPKIND__NONE}},
@@ -727,7 +725,7 @@ and whether the existing concepts (e.g. big block) can go freely into 1/4 tags d
 #define dd__3_size 24
 #define dd__3_pob 18
 #define dd__3_pofc 23
-   {"STAGGER",                               concept_do_phantom_2x4,            D, l_c2,         {&map_stagger, phantest_only_one, 0, MPKIND__NONE}},
+   {"STAGGER",                               concept_do_phantom_2x4,            D, l_c2,         {0, phantest_only_one, 0, MPKIND__STAG}},
    {"STAIRSTEP COLUMNS",                     concept_do_phantom_2x4,            D, l_c4,         {&map_stairst, phantest_only_one, 0, MPKIND__NONE}},
    {"LADDER COLUMNS",                        concept_do_phantom_2x4,            D, l_c4,         {&map_ladder, phantest_only_one, 0, MPKIND__NONE}},
    {"OFFSET COLUMNS",                        concept_distorted,                 D, l_c2,         {0, disttest_offset, 0}},
@@ -747,7 +745,7 @@ and whether the existing concepts (e.g. big block) can go freely into 1/4 tags d
    {"BUTTERFLY",                             concept_do_phantom_2x4,            D, l_c1,         {0, phantest_only_second_one, 0, MPKIND__X_SPOTS}},
    {"PHANTOM BUTTERFLY OR O",                concept_do_phantom_2x4,            D, l_c4a,        {&map_but_o, phantest_both, 0, MPKIND__NONE}},
          {"", concept_comment, 0, l_nonexistent_concept},
-   {"PHANTOM STAGGER COLUMNS",               concept_do_phantom_2x4,            D, l_c4,         {&map_stagger, phantest_both, 0, MPKIND__NONE}},
+   {"PHANTOM STAGGER COLUMNS",               concept_do_phantom_2x4,            D, l_c4,         {0, phantest_both, 0, MPKIND__STAG}},
    {"PHANTOM STAIRSTEP COLUMNS",             concept_do_phantom_2x4,            D, l_c4,         {&map_stairst, phantest_both, 0, MPKIND__NONE}},
    {"PHANTOM LADDER COLUMNS",                concept_do_phantom_2x4,            D, l_c4,         {&map_ladder, phantest_both, 0, MPKIND__NONE}},
    {"PHANTOM OFFSET COLUMNS",                concept_do_phantom_2x4,            D, l_c4a,        {&map_offset, phantest_both, 0, MPKIND__NONE}},
@@ -964,7 +962,7 @@ and whether the existing concepts (e.g. big block) can go freely into 1/4 tags d
    {"INTERRUPT AFTER @9/@9",                 concept_interrupt_at_fraction,     0, l_c1,         {0, 2}},
    {"SANDWICH",                              concept_sandwich,                  0, l_c3,         {0, 3}},
 /* -------- column break -------- */
-#define mm__3_size 65
+#define mm__3_size 67
 #define mm__3_3x3 59
 #define mm__3_4x4 60
    {"INSIDE TRIANGLES",                      concept_randomtrngl,               D, l_c1,         {0, 2}},
@@ -1028,6 +1026,8 @@ and whether the existing concepts (e.g. big block) can go freely into 1/4 tags d
    {"3X1",                                   concept_3x1,                     L+D, l_c2},
    {"3X3",                                   concept_3x3,                     L+D, l_c3x},
    {"4X4",                                   concept_4x4,                     L+D, l_c3x},
+   {"6X6",                                   concept_6x6,                     L+D, l_c3x},
+   {"8X8",                                   concept_8x8,                     L+D, l_c3x},
          {"", concept_comment, 0, l_nonexistent_concept},
    {"ALL 4 COUPLES",                         concept_all_8,                     D, l_a2,         {0, 0}},
    {"ALL 8",                                 concept_all_8,                     D, l_a2,         {0, 1}},

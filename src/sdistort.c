@@ -25,6 +25,8 @@
    new_overlapped_setup_move
    overlapped_setup_move
    do_phantom_2x4_concept
+   do_phantom_stag_qtg_concept
+   do_phantom_diag_qtg_concept
    distorted_2x2s_move
    distorted_move
    triple_twin_move
@@ -97,6 +99,7 @@ Private void innards(
    setup *result)
 {
    int i, j;
+   uint32 main_rotation;
    Const map_thing *final_map = (map_thing *) 0;
    setup z[8];
 
@@ -145,6 +148,19 @@ Private void innards(
       }
    }
 
+   /* If this is a special map that flips some setup upside-down, do so. */
+
+   if (arity == 2) {
+      if (rot & 0x200) {
+         z[0].rotation += 2;
+         canonicalize_rotation(&z[0]);
+      }
+      if (rot & 0x100) {
+         z[1].rotation += 2;
+         canonicalize_rotation(&z[1]);
+      }
+   }
+
    if (     arity == 2 &&
             z[0].kind == s1x2 &&
             z[1].kind == s1x2 &&
@@ -174,6 +190,10 @@ Private void innards(
       result->result_flags = 0;
       return;
    }
+
+   main_rotation = z[0].rotation & 3;
+   if (arity == 2 && (z[0].kind == s_trngl || z[0].kind == s_trngl4) && (rot & 0x200))
+      main_rotation += 2;
 
    /* Set the final result_flags to the OR of everything that happened.
       The elongation stuff doesn't matter --- if the result is a 2x2
@@ -211,24 +231,18 @@ Private void innards(
 
    /* See if we can put things back with the same map we used before. */
 
-   if (z[0].kind == maps->inner_kind && (z[0].rotation&3) == 0) {
+   if (z[0].kind == maps->inner_kind && main_rotation == 0) {
+      /* If this is a special map that expects some setup to have been flipped upside-down, do so. */
+
       if (sscmd->cmd_misc_flags & CMD_MISC__MATRIX_CONCEPT)
          fail("Unnecessary use of matrix concept.");
+
       final_map = maps;
       result->rotation = 0;
       goto finish;
    }
 
    noniso1:
-
-   /* If this is a special map that flips some setup upside-down, do so. */
-   if (arity == 2) {
-      if (rot & 0x200)
-         z[0].rotation += 2;
-
-      if (rot & 0x100)
-         z[1].rotation += 2;
-   }
 
    switch (map_kind) {
       case MPKIND__4_EDGES:
@@ -336,6 +350,14 @@ Private void innards(
          clear_people(&z[1]);
          arity = 3;
       }
+      else if (before_distance == after_distance*2 && arity == 3) {
+         map_kind = MPKIND__SPLIT;
+         z[4] = z[2];
+         z[2] = z[1];
+         clear_people(&z[3]);
+         clear_people(&z[1]);
+         arity = 5;
+      }
       else if (before_distance == after_distance*3 && arity == 2) {
          map_kind = MPKIND__SPLIT;
          z[3] = z[1];
@@ -369,7 +391,6 @@ Private void innards(
       }
 
       result->rotation = 0;
-      final_map = 0;
 
       if (z[0].rotation == 0 && z[1].rotation == 0) {
          if (z[0].kind == sdmd && z[1].kind == s2x2) {
@@ -387,138 +408,173 @@ Private void innards(
    if (maps == &map_tgl4_1 && z[0].kind == s1x2) {
       final_map = &map_tgl4_2;
       result->rotation = z[0].rotation;
+      goto got_map;
    }
-   else {
-      switch (map_kind) {
-         case MPKIND__O_SPOTS:
-            warn(warn__to_o_spots);
-            break;
-         case MPKIND__X_SPOTS:
-            warn(warn__to_x_spots);
-            break;
-         case MPKIND__STAG:
+
+   switch (map_kind) {
+      case MPKIND__O_SPOTS:
+         warn(warn__to_o_spots);
+         break;
+      case MPKIND__X_SPOTS:
+         warn(warn__to_x_spots);
+         break;
+      case MPKIND__STAG:
+         if (z[0].kind == s_qtag)
+            warn(warn__bigblockqtag_feet);
+         else
             warn(warn__bigblock_feet);
-            break;
-         case MPKIND__SPLIT:
-            /* If we went from a 4-person setup to a 1x6, we are expanding due to collisions.
-               If no one is present at the potential collision spots in the inboard side, assume
-               that there was no collision there, and leave just one phantom instead of two. */
-            if (z[0].kind == s1x6 && z[0].rotation == 0 && arity == 2 &&
-                  insize == 4 &&
-                  !(z[0].people[3].id1 | z[0].people[4].id1 | z[1].people[0].id1 | z[1].people[1].id1)) {
-               final_map = &map_1x8_1x6;
-               result->rotation = z[0].rotation;
-               goto got_map;
-            }
-            else if (z[0].kind == s_1x2dmd && z[0].rotation == 0 && arity == 2 &&
-                  insize == 4 &&
-                  !(z[0].people[3].id1 | z[0].people[4].id1 | z[1].people[0].id1 | z[1].people[1].id1)) {
-               final_map = &map_rig_1x6;
-               result->rotation = z[0].rotation;
-               goto got_map;
-            }
-            break;
-         case MPKIND__NONE:
-            fail("Can't do this shape-changing call here.");
-      }
-
-      result->rotation = z[0].rotation;
-
-      if (arity == 2 && z[0].kind == s2x3 && (z[0].rotation & 1) != 0 && rot == 0 && map_kind == MPKIND__REMOVED) {
-         final_map = &map_2x3_rmvr;
-         result->rotation = z[0].rotation-1;
-         goto got_map;
-      }
-      else if (arity == 2 && z[0].kind == s_trngl4 && (z[0].rotation & 1) == 0 && ((z[0].rotation ^ z[1].rotation) & 2)) {
-         if ((z[0].rotation + rot) & 2) {
-            if (map_kind == MPKIND__OFFS_L_HALF) {
-               final_map = &map_lh_zzztgl;
-               result->rotation = z[0].rotation-1+(rot&2);
-               goto got_map;
-            }
-            else if (map_kind == MPKIND__OFFS_R_HALF) {
-               final_map = get_map_from_code(MAPCODE(s_trngl4,2,MPKIND__OFFS_R_HALF, 1));
-               result->rotation = z[0].rotation-1+(rot&2);
-               goto got_map;
-            }
+         break;
+      case MPKIND__DIAGQTAG:
+         warn(warn__diagqtag_feet);
+         break;
+      case MPKIND__INTLK:
+         if (z[0].kind == s3x4 && z[0].rotation == 1) {
+            map_kind = MPKIND__REMOVED;
+            warn(warn_interlocked_to_6);
          }
-         else {
-            if (map_kind == MPKIND__OFFS_L_HALF) {
-               final_map = get_map_from_code(MAPCODE(s_trngl4,2,MPKIND__OFFS_L_HALF, 1));
-               result->rotation = z[0].rotation+1+(rot&2);
-               goto got_map;
-            }
-            else if (map_kind == MPKIND__OFFS_R_HALF) {
-               final_map = &map_rh_zzztgl;
-               result->rotation = z[0].rotation+1+(rot&2);
-               goto got_map;
-            }
+         break;
+      case MPKIND__SPLIT:
+         /* If we went from a 4-person setup to a 1x6, we are expanding due to collisions.
+            If no one is present at the potential collision spots in the inboard side, assume
+            that there was no collision there, and leave just one phantom instead of two. */
+         if (z[0].kind == s1x6 && z[0].rotation == 0 && arity == 2 &&
+               insize == 4 &&
+               !(z[0].people[3].id1 | z[0].people[4].id1 | z[1].people[0].id1 | z[1].people[1].id1)) {
+            final_map = &map_1x8_1x6;
+            result->rotation = z[0].rotation;
+            goto got_map;
          }
-      }
-      else if (arity == 1 && z[0].kind == s_c1phan) {
-         uint32 livemask = 0;
-
-         for (i=0 ; i<=setup_attrs[z[0].kind].setup_limits ; i++) {
-            livemask <<= 1;
-            if (z[0].people[i].id1) livemask |= 1;
+         else if (z[0].kind == s_1x2dmd && z[0].rotation == 0 && arity == 2 &&
+               insize == 4 &&
+               !(z[0].people[3].id1 | z[0].people[4].id1 | z[1].people[0].id1 | z[1].people[1].id1)) {
+            final_map = &map_rig_1x6;
+            result->rotation = z[0].rotation;
+            goto got_map;
          }
+         break;
+      case MPKIND__NONE:
+         fail("Can't do this shape-changing call here.");
+   }
 
+   result->rotation = z[0].rotation;
+
+   if (arity == 2 && z[0].kind == s2x3 && (z[0].rotation & 1) != 0 && rot == 0 && map_kind == MPKIND__REMOVED) {
+      final_map = &map_2x3_rmvr;
+      result->rotation = z[0].rotation-1;
+      goto got_map;
+   }
+
+   if (arity == 2 && z[0].kind == s_trngl4 && (z[0].rotation & 1) == 0 && ((z[0].rotation ^ z[1].rotation) & 2)) {
+      if ((z[0].rotation + rot) & 2) {
          if (map_kind == MPKIND__OFFS_L_HALF) {
-            if ((livemask & ~0xAAAA) == 0) {
-               final_map = &map_lh_c1phana;
-               result->rotation = z[0].rotation;
-               goto got_map;
-            }
-            else if ((livemask & ~0x5555) == 0) {
-               final_map = &map_lh_c1phanb;
-               result->rotation = z[0].rotation;
-               goto got_map;
-            }
+            final_map = &map_lh_zzztgl;
+            result->rotation = z[0].rotation-1+(rot&2);
+            goto got_map;
          }
          else if (map_kind == MPKIND__OFFS_R_HALF) {
-            if ((livemask & ~0x5555) == 0) {
-               final_map = &map_rh_c1phana;
-               result->rotation = z[0].rotation;
-               goto got_map;
-            }
-            else if ((livemask & ~0xAAAA) == 0) {
-               final_map = &map_rh_c1phanb;
-               result->rotation = z[0].rotation;
-               goto got_map;
-            }
+            final_map = get_map_from_code(MAPCODE(s_trngl4,2,MPKIND__OFFS_R_HALF, 1));
+            result->rotation = z[0].rotation-1+(rot&2);
+            goto got_map;
          }
       }
-
-      if (arity == 2 && map_kind == MPKIND__SPLIT && z[0].kind == s_trngl4 && (z[0].rotation & 1) == 0) {
-         if (z[0].rotation & 2)
-            final_map = &map_phan_trngl4a;
-         else if (z[1].rotation & 2)
-            final_map = &map_phan_trngl4b;
-      }
-      else if (arity == 2 && map_kind == MPKIND__SPLIT && z[0].kind == s_trngl && (z[0].rotation & 1) != 0) {
-         if (z[0].rotation & 2)
-            final_map = &map_b6_trngl;
-         if (z[1].rotation & 2)
-            final_map = &map_s6_trngl;
-      }
       else {
-         uint32 code = MAPCODE(z[0].kind,arity,map_kind,z[0].rotation & 1);
-         final_map = get_map_from_code(code);
-
-         if (arity == 2) {
-            if (z[0].rotation & 2) {
-               if      (code == MAPCODE(s_trngl4,2,MPKIND__REMOVED, 1)) {}
-               else if (code == MAPCODE(s_trngl4,2,MPKIND__SPLIT, 1)) final_map = &map_bone_trngl4;
-               else final_map = 0;        /* Raise an error. */
-            }
-            if (z[1].rotation & 2) {
-               if      (code == MAPCODE(s_trngl4,2,MPKIND__REMOVED, 1)) final_map = &map_p8_tgl4;
-               else if (code == MAPCODE(s_trngl4,2,MPKIND__SPLIT, 1)) {}
-               else final_map = 0;       /* Raise an error. */
-            }
+         if (map_kind == MPKIND__OFFS_L_HALF) {
+            final_map = get_map_from_code(MAPCODE(s_trngl4,2,MPKIND__OFFS_L_HALF, 1));
+            result->rotation = z[0].rotation+1+(rot&2);
+            goto got_map;
+         }
+         else if (map_kind == MPKIND__OFFS_R_HALF) {
+            final_map = &map_rh_zzztgl;
+            result->rotation = z[0].rotation+1+(rot&2);
+            goto got_map;
          }
       }
    }
+
+   if (arity == 1 && z[0].kind == s_c1phan) {
+      uint32 livemask = 0;
+
+      for (i=0 ; i<=setup_attrs[z[0].kind].setup_limits ; i++) {
+         livemask <<= 1;
+         if (z[0].people[i].id1) livemask |= 1;
+      }
+
+      if (map_kind == MPKIND__OFFS_L_HALF) {
+         if ((livemask & ~0xAAAA) == 0) {
+            final_map = &map_lh_c1phana;
+            result->rotation = z[0].rotation;
+            goto got_map;
+         }
+         else if ((livemask & ~0x5555) == 0) {
+            final_map = &map_lh_c1phanb;
+            result->rotation = z[0].rotation;
+            goto got_map;
+         }
+      }
+      else if (map_kind == MPKIND__OFFS_R_HALF) {
+         if ((livemask & ~0x5555) == 0) {
+            final_map = &map_rh_c1phana;
+            result->rotation = z[0].rotation;
+            goto got_map;
+         }
+         else if ((livemask & ~0xAAAA) == 0) {
+            final_map = &map_rh_c1phanb;
+            result->rotation = z[0].rotation;
+            goto got_map;
+         }
+      }
+   }
+
+   if (arity == 2 && map_kind == MPKIND__SPLIT && z[0].kind == s_trngl4 && (z[0].rotation & 1) == 0) {
+      if (z[0].rotation & 2)
+         final_map = &map_phan_trngl4a;
+      else if (z[1].rotation & 2)
+         final_map = &map_phan_trngl4b;
+      goto got_map;
+   }
+
+   if (arity == 2 && map_kind == MPKIND__SPLIT && z[0].kind == s_trngl4 && (z[0].rotation & 1) == 1) {
+      if (z[0].rotation & 2) {
+         final_map = &map_bone_trngl4;
+         goto got_map;
+      }
+      if (z[1].rotation & 2) {
+         goto get_coded_map;
+      }
+   }
+
+   if (arity == 2 && map_kind == MPKIND__REMOVED && z[0].kind == s_trngl4 && (z[0].rotation & 1) == 1) {
+      if (z[0].rotation & 2) {
+         goto get_coded_map;
+      }
+      if (z[1].rotation & 2) {
+         final_map = &map_p8_tgl4;
+         goto got_map;
+      }
+   }
+
+   if (arity == 2 && map_kind == MPKIND__SPLIT && z[0].kind == s_trngl && (z[0].rotation & 1) != 0) {
+      if (z[0].rotation & 2)
+         final_map = &map_b6_trngl;
+      if (z[1].rotation & 2)
+         final_map = &map_s6_trngl;
+      goto got_map;
+   }
+
+   if (arity == 2) {
+      if (z[0].rotation & 2) {
+         final_map = 0;        /* Raise an error. */
+         goto got_map;
+      }
+      if (z[1].rotation & 2) {
+         final_map = 0;       /* Raise an error. */
+         goto got_map;
+      }
+   }
+
+   get_coded_map:
+
+   final_map = get_map_from_code(MAPCODE(z[0].kind,arity,map_kind,z[0].rotation & 1));
 
    got_map:
 
@@ -581,6 +637,8 @@ Private void innards(
    if (final_map->warncode == 3) warn(warn__overlap_gone);
    if (final_map->warncode == 4) warn(warn__check_hokey_4x4);
 
+   finish:
+
    /* If this is a special map that expects some setup to have been flipped upside-down, do so. */
 
    if (arity == 2) {
@@ -593,8 +651,6 @@ Private void innards(
          canonicalize_rotation(&z[1]);
       }
    }
-
-   finish:
 
    if (arity != final_map->arity) fail("Confused about number of setups to divide into.");
 
@@ -652,21 +708,18 @@ extern void divided_setup_move(
    rot = maps->rot;
    arity = maps->arity;
 
-   for (j=0; j<arity; j++) vflags[j] = 0;
+   for (j=0; j<arity; j++) {
+      vflags[j] = 0;
 
-   for (i=0; i<insize; i++) {
-      setup tstuff;
-      clear_people(&tstuff);
-
-      for (j=0; j<arity; j++) {
-         int mm = maps->maps[i+insize*j];
-         if (mm >= 0)
-            tstuff.people[j] = ss->people[mm];
-         vflags[j] |= tstuff.people[j].id1;
+      for (i=0; i<insize; i++) {
+         int mm = maps->maps[insize*j+i];
+         if (mm >= 0) {
+            vflags[j] |= ss->people[mm].id1;
+            (void) copy_rot(&x[j], i, ss, mm, 011*((-(rot>>(j*2))) & 3));
+         }
+         else
+            clear_person(&x[j], i);
       }
-
-      for (j=0; j<arity; j++) 
-         (void) copy_rot(&x[j], i, &tstuff, j, 011*((-(rot>>(j*2))) & 3));
    }
 
    switch (phancontrol) {
@@ -710,10 +763,8 @@ extern void divided_setup_move(
          break;
    }
 
-   for (j=0; j<arity; j++) {
-      x[j].kind = nothing;
-      if (vflags[j]) x[j].kind = kn;
-   }
+   for (j=0; j<arity; j++)
+      x[j].kind = (vflags[j]) ? kn : nothing;
 
    if (maps->map_kind == MPKIND__SPEC_ONCEREM) x[1].kind = (setup_kind) maps->maps[insize*2];
 
@@ -753,7 +804,12 @@ extern void divided_setup_move(
       add onto that the splitting that we have just done, which also does not take
       the incoming rotation into account. */
 
-   if (maps->map_kind == MPKIND__SPLIT) {
+   if (maps->map_kind == MPKIND__SPLIT ||
+            (arity == 2 &&
+              (maps->map_kind == MPKIND__OFFS_L_HALF ||
+               maps->map_kind == MPKIND__OFFS_R_HALF ||
+               maps->map_kind == MPKIND__OFFS_L_FULL ||
+               maps->map_kind == MPKIND__OFFS_R_FULL))) {
       result->result_flags +=
             (maps->vert & 1) ?
                (RESULTFLAG__SPLIT_AXIS_BIT << RESULTFLAG__SPLIT_AXIS_SEPARATION) :
@@ -852,7 +908,7 @@ extern void do_phantom_2x4_concept(
       possible to do interesting cases of turn and weave, when one column
       is a single 8 chain and another is a single DPT.  But if it was phantom
       lines, we forbid it.  We also always forbid it if it was one of the special
-      things like "stagger", which is indicated by the map_kind field being MPKIND__NONE. */
+      things like "stairstep lines", which is indicated by the map_kind field being MPKIND__NONE. */
 
    if (linesp || parseptr->concept->value.arg3 == MPKIND__NONE)
       ss->cmd.cmd_misc_flags |= CMD_MISC__NO_STEP_TO_WAVE;
@@ -887,7 +943,7 @@ extern void do_phantom_2x4_concept(
          /* Check for special case of "stagger" or "bigblock", without the word "phantom",
             when people are not actually on block spots. */
 
-         if (maps == &map_stagger && parseptr->concept->value.arg1 == phantest_only_one) {
+         if (parseptr->concept->value.arg3 == MPKIND__STAG && parseptr->concept->value.arg1 == phantest_only_one) {
             if (global_livemask != 0x2D2D && global_livemask != 0xD2D2) {
                warn(warn__not_on_block_spots);
                distorted_move(ss, parseptr, disttest_any, result);
@@ -947,6 +1003,80 @@ extern void do_phantom_2x4_concept(
    /* The split-axis bits are gone.  If someone needs them, we have work to do. */
    result->result_flags &= ~RESULTFLAG__SPLIT_AXIS_FIELDMASK;
 }
+
+
+extern void do_phantom_stag_qtg_concept(
+   setup *ss,
+   parse_block *parseptr,
+   setup *result)
+{
+   int rot = ss->people[0].id1 | ss->people[4].id1 | ss->people[8].id1 | ss->people[12].id1;
+
+   if (ss->kind != s4x4)
+      fail("Need a 4x4 setup to do this concept.");
+
+   if (!(rot & 011))
+      fail("Can't figure this out -- not enough live people.");
+
+   if ((rot & 011) == 011)
+      fail("Can't figure this out -- facing directions are too weird.");
+
+   rot = (rot ^ parseptr->concept->value.arg2) & 1;
+
+   ss->cmd.cmd_misc_flags |= parseptr->concept->value.arg3;  /* The thing to verify, like CMD_MISC__VERIFY_1_4_TAG. */
+
+   ss->rotation += rot;   /* Just flip the setup around and recanonicalize. */
+   canonicalize_rotation(ss);
+
+   divided_setup_move(
+      ss, 
+      get_map_from_code(MAPCODE(s_qtag,2,MPKIND__STAG,1)),
+      (phantest_kind) parseptr->concept->value.arg1,
+      TRUE,
+      result);
+
+   result->rotation -= rot;   /* Flip the setup back. */
+   /* The split-axis bits are gone.  If someone needs them, we have work to do. */
+   result->result_flags &= ~RESULTFLAG__SPLIT_AXIS_FIELDMASK;
+}
+
+
+extern void do_phantom_diag_qtg_concept(
+   setup *ss,
+   parse_block *parseptr,
+   setup *result)
+{
+   int rot =   ss->people[1].id1 | ss->people[2].id1 | ss->people[5].id1 | ss->people[6].id1 |
+               ss->people[9].id1 | ss->people[10].id1 | ss->people[13].id1 | ss->people[14].id1;
+
+   if (ss->kind != s4x4)
+      fail("Need a 4x4 setup to do this concept.");
+
+   if (!(rot & 011))
+      fail("Can't figure this out -- not enough live people.");
+
+   if ((rot & 011) == 011)
+      fail("Can't figure this out -- facing directions are too weird.");
+
+   rot = (rot ^ parseptr->concept->value.arg2) & 1;
+
+   ss->cmd.cmd_misc_flags |= parseptr->concept->value.arg3;  /* The thing to verify, like CMD_MISC__VERIFY_1_4_TAG. */
+
+   ss->rotation += rot;   /* Just flip the setup around and recanonicalize. */
+   canonicalize_rotation(ss);
+
+   divided_setup_move(
+      ss, 
+      get_map_from_code(MAPCODE(s_qtag,2,MPKIND__DIAGQTAG,1)),
+      (phantest_kind) parseptr->concept->value.arg1,
+      TRUE,
+      result);
+
+   result->rotation -= rot;   /* Flip the setup back. */
+   /* The split-axis bits are gone.  If someone needs them, we have work to do. */
+   result->result_flags &= ~RESULTFLAG__SPLIT_AXIS_FIELDMASK;
+}
+
 
 
 /* This returns true if the two live people were consecutive, meaning this is a true Z line/column. */

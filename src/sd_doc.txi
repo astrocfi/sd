@@ -5,8 +5,8 @@
 @settitle Sd
 @c @subtitle A Square Dance Caller's Helper
 @c
-@set Time-stamp: December 30, 1997
-@set sd-version 31.92
+@set Time-stamp: February 7, 1998
+@set sd-version 31.93
 @set full-manual
 @c %**end of header
 @iftex
@@ -38,7 +38,7 @@
 @vskip 0pt plus 1fill
 @end iftex
 
-Copyright @copyright{} 1992-1997 William B. Ackerman and Stephen Gildea
+Copyright @copyright{} 1992-1998 William B. Ackerman and Stephen Gildea
 
 @ignore
 Permission is granted to process this file through TeX and print the
@@ -187,7 +187,7 @@ Call Notes
 * Hocus Pocus::                 Hocus Pocus
 * Funny Square Thru::           Funny Square Thru
 * Rotate from Columns::         Rotate from Columns
-* Recycle::                     Recycle has two forms in the Database
+* Recycle/Cross Cycle/Scoot and Weave/Couple Up:: Recycle has two forms in the Database
 * Adjust Alamo to Other Pairing:: Adjust Alamo to Other Pairing
 * Going Through Impossible Situations:: Going Through Impossible Situations
 * Matrix Calls in 1/4 Tags::    Matrix Calls in 1/4 Tags
@@ -203,7 +203,7 @@ Concept Notes
 * Concentric::                  Concentric
 * Assume Waves::                Assume Waves
 * Assuming a Quarter-Tag::      Assuming a Quarter-Tag
-* Interruptions and Interlace:: Interruptions, Interlace, and related issues
+* Interruptions and Replacements:: Interruptions, Replacements, and related issues
 * Designating Certain People::  Designating Certain People
 * Anyone Start::                Anyone Start
 * 12 Matrix and 16 Matrix::     12 Matrix and 16 Matrix
@@ -1110,7 +1110,7 @@ such as @code{boys} or @code{girls} can identify the same people unambiguously.
 If you want to designate the 4 people in the center of the set, use @code{center 4}.
 @code{Outer pairs} specifies the others.
 
-@subsubheading Tagging Calls
+@subsubheading Tagging calls
 Calls that use tagging calls have the keyword @code{<ATC>} (for Any Tagging Call) in
 them, as in @code{<ATC> your neighbor} or @code{<ATC> chain thru and scatter reaction}.
 Specify these in the usual way.  In @code{Sdtty} you can type the @code{<ATC>} directly
@@ -1199,18 +1199,22 @@ want that call, just move the mouse away from the popup.
 
 Only bona-fide circulate-type calls, and other well-recognized similar
 things such as @code{split counter percolate} can be obtained by this method.
-You can get more general substitutions by using the ``<ANYTHING>'' (as opposed to
-``<ANYCIRC>'') mechanism.  The more general substitutions are in brackets.
-For example, you can type ``@code{[2/3 recycle] percolate}'', which is of course pronounced
+You can get more general substitutions by using the @samp{<ANYTHING>} (as opposed to
+@samp{<ANYCIRC>}) mechanism.  The more general substitutions are in brackets.
+For example, you can type @samp{[2/3 recycle] percolate}, which is of course pronounced
 ``2/3 recycler's percolate''.
 
-Note that
+@noindent Note that
 @example
+@group
    trade motivate          @r{(an instance of @code{<ANYCIRC> motivate})}
+@end group
 @end example
-and
+@noindent and
 @example
+@group
    [trade] motivate        @r{(an instance of @code{<ANYTHING> motivate})}
+@end group
 @end example
 @noindent are very different.  The latter is of course pronounced ``trader's
 motivate.''
@@ -1361,6 +1365,16 @@ be printed as
 Whenever you run into trouble typing concepts, try typing each one separately,
 pressing @key{ENTER} after each one.
 
+@subsubheading Concepts displayed after the call
+
+The concepts @code{twice}, @code{<N> times}, and @code{1-<N>/<N>} will be displayed
+and printed after the call rather than before it, unless doing so would be
+ambiguous.  @strong{You still type the concept before the call.}  For example,
+you type @code{1-1/2 swing thru}.  The result will appear as @code{swing thru 1-1/2}.
+The program will sometimes use parentheses to prevent ambiguity.
+
+@subsubheading Concepts that operate on two calls
+
 Some concepts require two calls (e.g., @code{checkpoint} and @code{interlace}).
 @i{You must enter such concepts by themselves}.  That is, you must press
 @key{ENTER}
@@ -1394,6 +1408,17 @@ whatever concepts apply to it.  The program will then prompt you
 for the second call.  A complex tree of concepts and calls can
 thus be constructed.
 
+Some concepts require a numeric designator (e.g., @code{interrupt after the 3rd
+part}) or a people designator (e.g., @code{girls are stable}).  The handling
+is the same as for calls that require these.
+
+The program recognizes the level at which concepts are legal, but lets you
+override this if you wish.  The @code{toggle concept levels} command toggles
+(turns on or off) the state of off-level concept permission.
+@xref{Changing Modes} and @ref{Using Off-Level Concepts}.
+
+@subsubheading Entering concepts from Sd menus
+
 In @code{Sd}, click on the concept from a menu.  In a
 perhaps hopeless attempt to keep the concept menus from becoming too
 unwieldy, concepts have been organized into a general concept menu and
@@ -1409,15 +1434,6 @@ concepts, organized by submenu, are listed in @ref{Concept Notes}.
 When you select any concept, the universal call menu replaces whatever
 special call menu may have been presented, since the set of legal calls
 becomes highly unpredictable.
-
-Some concepts require a numeric designator (e.g., @code{interrupt after the 3rd
-part}) or a people designator (e.g., @code{girls are stable}).  The handling
-is the same as for calls that require these.
-
-The program recognizes the level at which concepts are legal, but lets you
-override this if you wish.  The @code{toggle concept levels} command toggles
-(turns on or off) the state of off-level concept permission.
-@xref{Changing Modes} and @ref{Using Off-Level Concepts}.
 
 @node Call Modifications, Retaining Concepts After an Error, Entering Concepts, Calling
 @section Call Modifications
@@ -2003,6 +2019,10 @@ the transcript that has changed with each command is simply redisplayed.
 This will inevitably lead to a choppy appearance on the screen or
 printing device.  The @code{refresh display} command cleans that up.
 
+To deal with different types of display hardware with various screen sizes,
+the @code{-lines @var{n}} switch can be given at program startup, as in
+@code{sdtty -lines 36 a2}.  The default size is 25.
+
 @node Function Keys in Sdtty, Sdtty on the PC, Sdtty, Terminal Interface
 @section Function Keys in Sdtty
 
@@ -2043,25 +2063,6 @@ brackets.  @xref{Call Variations}.
 
 @node Sdtty on the PC, Sdtty on Unix, Function Keys in Sdtty, Terminal Interface
 @section Sdtty on the PC
-
-@code{Sdtty} uses the @code{DPMI} memory manager.  If necessary, it uses its own
-copy of @code{DPMI}@.  It can be started under either standalone DOS or the
-@samp{MS-DOS Prompt} under Windows.  It can also be started directly as a Windows
-application, even though it does not use the mouse while running.
-@xref{Making Sdtty Start Under Windows}.
-
-You need a 386 or higher processor and 2Mb of memory.
-A hard disk is recommended.  There
-should be at least 175 kilobytes of memory free in the first 640Kb.
-The authors have not actually tried it on a system this small, and we
-would be interested in your experiences.
-
-@code{Sd} and @code{Sdtty} are believed to be
-insensitive to slight inaccuracies in floating-point division.
-
-To deal with different types of display hardware with various screen sizes,
-the @code{-lines @var{n}} switch can be given at program startup, as in
-@code{sdtty -lines 36 a2}.  The default size is 25.
 
 @node Sdtty on Unix,  , Sdtty on the PC, Terminal Interface
 @section Sdtty on Unix
@@ -2212,7 +2213,7 @@ This section documents these calls.
 * Hocus Pocus::                 Hocus Pocus
 * Funny Square Thru::           Funny Square Thru
 * Rotate from Columns::         Rotate from Columns
-* Recycle::                     Recycle has two forms in the Database
+* Recycle/Cross Cycle/Scoot and Weave/Couple Up:: Recycle has two forms in the Database
 * Adjust Alamo to Other Pairing:: Adjust Alamo to Other Pairing
 * Going Through Impossible Situations:: Going Through Impossible Situations
 * Matrix Calls in 1/4 Tags::    Matrix Calls in 1/4 Tags
@@ -2593,7 +2594,7 @@ on one line, rather than pressing
 after the word @code{funny}.
 In @code{Sd}, the call menu will have @code{funny square thru <n>}.
 
-@node Rotate from Columns, Recycle, Funny Square Thru, Call Notes
+@node Rotate from Columns, Recycle/Cross Cycle/Scoot and Weave/Couple Up, Funny Square Thru, Call Notes
 @section Rotate from Columns
 
 Remember that @i{rotate} and @i{single rotate} from columns are legal only
@@ -2601,8 +2602,8 @@ at C3, but from lines they are legal at C2.  Since the program has no
 knowledge of different starting setups implying different levels, the call
 is in the database at C2.  Don't use it from columns at that level.
 
-@node Recycle, Adjust Alamo to Other Pairing, Rotate from Columns, Call Notes
-@section Recycle
+@node Recycle/Cross Cycle/Scoot and Weave/Couple Up, Adjust Alamo to Other Pairing, Rotate from Columns, Call Notes
+@section Recycle, Cross Cycle, Scoot and Weave, and Couple Up
 
 There are two @i{recycle} calls in the database: @samp{recycle} can be done
 from waves, facing couples, right-handed boxes, or a couple facing a
@@ -2625,7 +2626,7 @@ dividing them into parts, you must use the version of the call that has the
 word ``(parts)'' after it.  When you do this, certain other aspects of the
 call (such as the ability to to it from all positions) are compromised.
 
-@node Adjust Alamo to Other Pairing, Going Through Impossible Situations, Recycle, Call Notes
+@node Adjust Alamo to Other Pairing, Going Through Impossible Situations, Recycle/Cross Cycle/Scoot and Weave/Couple Up, Call Notes
 @section Adjust Alamo to Other Pairing
 
 The program's notion of where people are in an alamo ring is rather imprecise.
@@ -2706,7 +2707,7 @@ For some calls, the @samp{12 matrix} concept will also be helpful.
 * Concentric::                  Concentric
 * Assume Waves::                Assume Waves
 * Assuming a Quarter-Tag::      Assuming a Quarter-Tag
-* Interruptions and Interlace:: Interruptions, Interlace, and related issues
+* Interruptions and Replacements:: Interruptions, Replacements, and related issues
 * Designating Certain People::  Designating Certain People
 * Anyone Start::                Anyone Start
 * 12 Matrix and 16 Matrix::     12 Matrix and 16 Matrix
@@ -3131,6 +3132,9 @@ These are done from a 2x8 matrix in which the real people form two
 1x4's joined with an offset in the center.
 @item distorted C/L/W (singular) of 6
 These are done from a center diamond with offset pairs of people on the outside.
+@item stagger D/1T/3T/1L/3L/GT
+@item diagonal D/1T/3T/1L/3L/GT
+These are done from ``blocks.''
 @item double bent tidal C/L/W @r{(singular)}
 These are done from a 1x8 in which the two people at each end are ``bent''
 90 degrees from the center 4.
@@ -3470,7 +3474,7 @@ These are straightforward.
 @item finish
 @item like a
 @item like an
-See @ref{Interruptions and Interlace}, for information about some tricky aspects
+See @ref{Interruptions and Replacements}, for information about some tricky aspects
 of the concepts that pull calls into their constituent parts.
 
 To Sd, @code{finish} means ``skip the first part'' and is only legal for
@@ -3500,7 +3504,7 @@ smooth dancing of this figure.
 @item replace the <Nth> part@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
 @item replace the last part@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
 @item interrupt after the <Nth> part@ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
-@item interrupt after <M>/<N>@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
+@item interrupt after <M>/<N>@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
 @item interrupt before the last part@ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
 @item start with@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
 @item sandwich@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
@@ -3548,7 +3552,7 @@ Because the @code{replace}, @code{interrupt} and @code{start with} require
 two calls, you must press @key{ENTER}
 after typing them, and then type the two calls with @key{ENTER} after each one.
 
-See @ref{Interruptions and Interlace}, for information about some tricky aspects
+See @ref{Interruptions and Replacements}, for information about some tricky aspects
 of these concepts.
 @item inside triangles
 @item outside triangles
@@ -3613,7 +3617,7 @@ diamonds} concept is used from the kind of setup one obtains after a
 @samp{6x2 acey deucey} from facing diamonds.   The @code{common end lines/waves}
 concept is used from a parallelogram in which the ``wings'' are collided
 ends of the lines.
-@item 1x2/2x1/2x2/1x3/3x1/3x3/4x4
+@item 1x2/2x1/2x2/1x3/3x1/3x3/4x4/6x6/8x8
 These are straightforward.
 @item all 4 couples
 @item all 8
@@ -3865,7 +3869,7 @@ this mode.  @xref{Changing Modes}.
 When in this mode, @code{Sd} will not actually insert the text
 @code{with active phantoms} after each @code{assume} concept.
 
-@node Assuming a Quarter-Tag, Interruptions and Interlace, Assume Waves, Concept Notes
+@node Assuming a Quarter-Tag, Interruptions and Replacements, Assume Waves, Concept Notes
 @section Assuming a Quarter-Tag
 
 Callers sometimes wish to perform a generalized quarter-tag call (e.g.,
@@ -3898,8 +3902,193 @@ Or, from parallel waves, you could select:
    tandem assume general 1/4 tags ping-pong circulate
 @end example
 
-@node Interruptions and Interlace, Designating Certain People, Assuming a Quarter-Tag, Concept Notes
-@section Interruptions and Interlace 
+@node Interruptions and Replacements, Designating Certain People, Assuming a Quarter-Tag, Concept Notes
+@section Interruptions and Replacements 
+
+There are a number of ways you can get @code{Sd} to interrupt calls
+or replace parts of calls, just as there are a number of ways to
+tell the dancers what you want.
+
+@subsubheading By Part Number
+
+For some calls, it is natural to indicate the interruption or
+replacement point by a part number.  This typically occurs when the numbers
+are well known but the names of the parts might be ambiguous.
+For example, callers say @samp{Pass the Axle, replace the 3rd part
+with Split Trade Circulate}.  The third part is a type of Trade, but
+the fourth part is also a Trade, so it is safer to refer to it by number.
+
+@noindent The concepts that @code{Sd} provides for this are:
+
+@example
+@group
+   replace the <Nth> part
+   replace the last part
+   interrupt after the <Nth> part
+   interrupt after <M>/<N>
+   interrupt before the last part
+   skip the <Nth> part
+@end group
+@end example
+
+The first four listed take two calls---the principal call and the
+replacement/interruption.  You must press @key{ENTER} after typing
+these, and then enter the calls separately.
+
+@example
+@group
+   replace the 3rd part @key{ENTER}
+   pass the axle @key{ENTER}
+   split trade circulate @key{ENTER}
+@end group
+@end example
+or
+@example
+@group
+   interrupt after the 3rd part @key{ENTER}
+   contour the line @key{ENTER}
+   fan relay the top @key{ENTER}
+@end group
+@end example
+
+@subsubheading By Fraction
+
+You can also interrupt a call (though you can't replace a part) by giving
+the fraction of the call at which the interruption is to occur.  The concept
+for this is @code{interrupt after <M>/<N>}.  You can use this concept to
+interrupt calls that don't actually have parts, as in
+
+@example
+@group
+   interrupt after 1/2 @key{ENTER}
+   scoot back @key{ENTER}
+   cross over circulate @key{ENTER}
+@end group
+@end example
+
+@noindent or to interrupt at a point that is not a part boundary, as in
+
+@example
+@group
+   interrupt after 1/8 @key{ENTER}
+   load the boat @key{ENTER}
+   grand swing thru @key{ENTER}
+@end group
+@end example
+
+@subsubheading Anything Anything
+
+For @samp{anything anything} calls, such as @samp{trade motivate},
+just type it in.
+
+@subsubheading Star Turns
+
+For calls with a star turn, you can usually modify the amount of the turn,
+or omit it, by typing @samp{, turn the star 1/4} (or 1/2 or 3/4), or
+@samp{, don't turn the star}.  (Remember that you never need to type
+commas or apostrophes.)
+
+@noindent When in doubt, type a question mark immediately after the call.
+
+@example
+@group
+   chain reaction, don't turn the star
+   scoot and plenty, turn the star 1/4
+@end group
+@end example
+
+To replace the star turn with some other call, you need to use the
+``brute force'' method described below.
+
+@subsubheading Replacing the Cast Off 3/4
+
+Calls that end with the centers casting off 3/4 (with the ends usually
+``moving up'') can usually have the cast off replaced by typing
+@code{but [<some other call>]}.  The replacement call is put in
+square brackets.
+
+@example
+@group
+   tally ho but [2/3 recycle]
+   chain reaction, turn the star 1/2 but [mix]
+@end group
+@end example
+
+@noindent When in doubt, type a question mark immediately after the call.
+
+@subsubheading ``But'' by Convention
+
+Some calls by convention allow ``but'' modifications of certain
+agreed-upon parts.  Just type it.
+
+@example
+@group
+   spin the pulley but [reach out]
+   line to line but [catch [grand mix] 2]
+   slant [swing thru] and [turn and deal]
+@end group
+@end example
+
+@noindent When in doubt, type a question mark immediately after the call.
+
+@subsubheading Initial Replacements
+
+Some calls can take a subcall in front, typically meaning to replace
+the first part.  The replacement call is placed in brackets.
+All of the @samp{anything anything} calls are of this type, when the replacement
+call isn't a circulate replacement.  (If it is a circulate replacement,
+just type it with no brackets.)
+
+@example
+@group
+   split counter percolate
+   [2/3 recycle] percolate
+   [reverse the top] an anchor
+   [reverse the top] an anchor but [ah so]
+   [bingo] cover up but [step and fold]
+@end group
+@end example
+
+@subsubheading Brute Force
+
+There are many other ``brute force'' ways to modify calls, typically
+by saying something like @samp{but replace the diamond circulate with
+6x2 acey deucey}.  This is done in @code{Sd} by giving the command
+@code{allow modifications} before the call.  @code{Sd} will ask
+about the various subcalls to be replaced.  Answer @code{y} or @code{n}
+to the questions, and enter the selected subcalls.
+
+@example
+@group
+   --> allow modifications
+   --> alter the wave
+   The "swing" can be replaced.
+   Do you want to replace it? n
+   The "turn the star 1/2" can be replaced.
+   Do you want to replace it? n
+   The "flip the diamond" can be replaced.
+   Do you want to replace it? y
+   REPLACEMENT FOR THE flip the diamond
+   --> relocate the diamonds
+@end group
+@end example
+or
+@example
+@group
+   --> allow modifications
+   --> scoot and plenty
+   The "right scoot back" can be replaced.
+   Do you want to replace it? n
+   The "turn the star 1/2" can be replaced.
+   Do you want to replace it? y
+   REPLACEMENT FOR THE turn the star 1/2
+   --> turn the star 3/4, interrupt after 1/2 with [2/3 recycle]
+@end group
+@end example
+
+@noindent (Yes, that last line is a real call that you can type.)
+
+@subsubheading Tricky Aspects of these Concepts
 
 Some of the replacement/interruption meta-concepts push the
 semantics of the language to the limit.  Whenever a call undergoes an
@@ -3942,21 +4131,22 @@ There are some calls that behave as though they had ``state'' information
 that one must remember as the call progresses.  Take the case of
 @samp{exchange the diamonds}.  When two people meet at a diamond point
 during this call, the person who has ``already exchanged'' takes the
-outside track, and the person who hasn't takes the inside track.  Hence,
-if the call is interrupted, interlaced, fractionalized, or otherwise
-manipulated, there is a rule determining whether those people take
-right or left hands.  (If they have both exchanged, or neither has exchanged,
-they are on the same track and take right hands.)
+outside track, and the person who hasn't takes the inside track.
+If they have to stop, they take right or left hands depending on who is
+on which track.  (If they have both exchanged, or neither has exchanged,
+they are on the same track and therefore take right hands.)
 
-It follows that people need to know whether or not they have passed the
-``exchange point'', that is, the very center.  If the call is interrupted
-or interlaced, this information can become very unnatural relative to
-the parts of the call that are being performed.  Some theories that have been
-promulgated involve people remembering individually whether they have passed
-the exchange point, no matter what other things they might do, or ``leaving
-notes on the floor'' when an interruption occurs, intending to tell the
-dancer who will resume from that point whether they should consider themselves
-to have passed the exchange point.  We believe that these methods are of
+It follows from this that people need to know how far they have progressed
+through the call.  If a call is interrupted, interlaced, fractionalized, or otherwise
+manipulated, this can become tricky.  The dancers may need to know how to
+complete a call that they didn't begin, or that they haven't been doing a consistent
+part of.  This can become very unnatural relative to
+the parts of the call that are being performed.  Some theories have been
+promulgated that involve people remembering individually what parts of the call they
+themselves did (e.g.@ whether they had passed the exchange point),
+or ``leaving notes on the floor'' when an interruption occurs, intending to tell the
+dancer who will resume from that point what they should pretend they had done.
+We believe that these methods are of
 marginal utility even in simple cases, and unworkable in complex cases.
 @code{Sd} takes the position that the only state information is what part of the call
 one is doing now.  If a collision occurs after parts 1 or 2 of an @samp{exchange the
@@ -3973,7 +4163,7 @@ If you think that some instance of a replacement or interruption will
 cause confusion on the dance floor because of these sorts of issues,
 you should not use it.
 
-@node Designating Certain People, Anyone Start, Interruptions and Interlace, Concept Notes
+@node Designating Certain People, Anyone Start, Interruptions and Replacements, Concept Notes
 @section Designating Certain People
 
 There are six related concepts here.  You must have a clear

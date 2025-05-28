@@ -539,6 +539,8 @@ char *qualtab[] = {
    "all_facing_same",
    "1fl_only",
    "2fl_only",
+   "3x3_2fl_only",
+   "4x4_2fl_only",
    "couples_only",
    "3x3couples_only",
    "4x4couples_only",
@@ -729,6 +731,8 @@ char *flagtabh[] = {
    "3x1_is_inherited",
    "3x3_is_inherited",
    "4x4_is_inherited",
+   "6x6_is_inherited",
+   "8x8_is_inherited",
    "singlefile_is_inherited",
    "half_is_inherited",
    "yoyo_is_inherited",
@@ -758,6 +762,8 @@ char *altdeftabh[] = {
    "3x1",
    "3x3",
    "4x4",
+   "6x6",
+   "8x8",
    "singlefile",
    "half",
    "yoyo",
@@ -788,6 +794,8 @@ char *defmodtabh[] = {
    "inherit_3x1",
    "inherit_3x3",
    "inherit_4x4",
+   "inherit_6x6",
+   "inherit_8x8",
    "inherit_singlefile",
    "inherit_half",
    "inherit_yoyo",
@@ -821,6 +829,8 @@ char *forcetabh[] = {
    "force_3x1",
    "force_3x3",
    "force_4x4",
+   "force_6x6",
+   "force_8x8",
    "force_singlefile",
    "force_half",
    "force_yoyo",
@@ -861,6 +871,8 @@ char *predtab[] = {
    "pair_person_select",
    "person_select_sum5",
    "person_select_sum8",
+   "person_select_sum11",
+   "person_select_sum15",
    "semi_squeezer_select",
    "select_once_rem_from_unselect",
    "unselect_once_rem_from_select",
@@ -1005,6 +1017,7 @@ tagtabitem tagtabinit[] = {
       {0, "endsshadow"},     /* This is used for "shadow <setup>". */
       {0, "chreact_1"},      /* This is used for propagating the hinge info for part 2 of chain reaction. */
       {0, "makepass_1"},     /* This is used for propagating the cast off 3/4 info for part 2 of make a pass. */
+      {0, "backemup"},       /* This is used for remembering the handedness. */
       {0, "circulate"},
       {0, "tagnullcall0"},   /* These 4 must be consecutive. */
       {0, "tagnullcall1"},
@@ -1012,7 +1025,7 @@ tagtabitem tagtabinit[] = {
       {0, "tagnullcall3"},
       {0, "circnullcall"},
       {0, "turnstarn"}};
-#define N_INITIAL_TAGS 14
+#define N_INITIAL_TAGS 15
 
 int tagtabsize = N_INITIAL_TAGS;  /* Number of items we currently have in tagtab -- we initially have 7; see below. */
 int tagtabmax = 100;              /* Amount of space allocated for tagtab; must be >= tagtabsize at all times, obviously. */

@@ -339,7 +339,11 @@ typedef struct {
    peel and trail" without giving the explicit "triangle" concept again.  This
    makes it possible to say things like "tandem-based triangles peel and trail".
 
-   CMD_MISC__DO_AS_COUPLES means the obvious thing.
+   CMD_MISC__DO_AS_COUPLES means that the "couples_unless_single" invocation
+   flag is on, and the call may need to be done as couples or whatever.  The
+   bits in "do_couples_heritflags" control this.  If INHERITFLAG_SINGLE is on,
+   do not do it as couples.  If off, do it as couples.  If various other bits
+   are on (e.g. INHERITFLAG_1X3), do the appropriate thing.
 
    CMD_MISC__NO_CHK_ELONG means that the elongation of the incoming setup is for
    informational purposes only (to tell where people should finish) and should not
@@ -672,6 +676,7 @@ typedef enum {
    MPKIND__ALL_8,
    MPKIND__DMD_STUFF,
    MPKIND__STAG,
+   MPKIND__DIAGQTAG,
    MPKIND_DBLBENTCW,
    MPKIND_DBLBENTCCW,
    MPKIND__SPEC_ONCEREM
@@ -794,6 +799,8 @@ typedef enum {
    concept_3x1,
    concept_3x3,
    concept_4x4,
+   concept_6x6,
+   concept_8x8,
    concept_create_matrix,
    concept_funny,
    concept_randomtrngl,
@@ -812,6 +819,8 @@ typedef enum {
    concept_do_phantom_1x8,
    concept_do_phantom_triple_1x8,
    concept_do_phantom_2x4,
+   concept_do_phantom_stag_qtg,
+   concept_do_phantom_diag_qtg,
    concept_do_phantom_2x3,
    concept_divided_2x4,
    concept_divided_2x3,
@@ -1106,6 +1115,11 @@ typedef struct {
       Even more miscellaneous info controlling the execution of the call,
       with names like CMD_MISC2__???.
 
+   do_couples_heritflags
+      These are "heritable" flags that tell what single/3x3/etc modifiers
+      are to be used in determining what to do when CMD_MISC__DO_AS_COUPLES
+      is specified.
+
    cmd_frac_flags
       If nonzero, fractionalization info controlling the execution of the call.
       See the comments in front of "get_fraction_info" in sdmoves.c for details.
@@ -1151,6 +1165,7 @@ typedef struct {
    uint64 cmd_final_flags;
    uint32 cmd_misc_flags;
    uint32 cmd_misc2_flags;
+   uint32 do_couples_heritflags;
    uint32 cmd_frac_flags;
    parse_block *restrained_concept;
    assumption_thing cmd_assume;
@@ -1240,6 +1255,7 @@ typedef enum {
    warn__check_gen_c1_stars,
    warn__bigblock_feet,
    warn__bigblockqtag_feet,
+   warn__diagqtag_feet,
    warn__adjust_to_feet,
    warn__some_touch,
    warn__split_to_2x4s,
@@ -1260,6 +1276,7 @@ typedef enum {
    warn__opt_for_2fl,
    warn__like_linear_action,
    warn__split_1x6,
+   warn_interlocked_to_6,
    warn__colocated_once_rem,
    warn_hairy_fraction,
    warn_bad_collision,
@@ -1974,7 +1991,6 @@ extern map_thing map_2x4_trapezoid;                                 /* in SDTABL
 extern map_thing map_4x4_ns;                                        /* in SDTABLES */
 extern map_thing map_4x4_ew;                                        /* in SDTABLES */
 extern map_thing map_vsplit_f;                                      /* in SDTABLES */
-extern map_thing map_stagger;                                       /* in SDTABLES */
 extern map_thing map_stairst;                                       /* in SDTABLES */
 extern map_thing map_ladder;                                        /* in SDTABLES */
 extern map_thing map_but_o;                                         /* in SDTABLES */
@@ -2365,6 +2381,16 @@ extern void overlapped_setup_move(setup *ss, Const map_thing *maps,
    uint32 *masks, setup *result);
 
 extern void do_phantom_2x4_concept(
+   setup *ss,
+   parse_block *parseptr,
+   setup *result);
+
+extern void do_phantom_stag_qtg_concept(
+   setup *ss,
+   parse_block *parseptr,
+   setup *result);
+
+extern void do_phantom_diag_qtg_concept(
    setup *ss,
    parse_block *parseptr,
    setup *result);

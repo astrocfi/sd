@@ -180,6 +180,7 @@ callers prefer Sdtty rather than Sd.
 @menu
 * Documentation::               Documentation
 * Getting Sd or Sdtty::         Getting Sd or Sdtty
+* A Few Technical Details::     A Few Technical Details
 * Installing Sdtty on a PC::    Installing Sdtty on a PC
 * Making Sdtty Start Under Windows:: Making Sdtty Start Under Windows
 * Licensing Terms::             Licensing Terms
@@ -217,7 +218,7 @@ World Wide Web.  Give the locator
 @end ifset
 to your WWW browser program.
 
-@node Getting Sd or Sdtty, Installing Sdtty on a PC, Documentation, Intro
+@node Getting Sd or Sdtty, A Few Technical Details, Documentation, Intro
 @unnumberedsec Getting Sd or Sdtty
 
 You can obtain Sdtty for DOS on PC-compatible computers,
@@ -274,7 +275,35 @@ If your mailer can interpret MIME messages, we can also send you Sd
 by email.  MIME is a draft Internet standard for structured mail, and
 it includes support for mailing large binary files.
 
-@node Installing Sdtty on a PC, Making Sdtty Start Under Windows, Getting Sd or Sdtty, Intro
+@node A Few Technical Details, Installing Sdtty on a PC, Getting Sd or Sdtty, Intro
+@unnumberedsec A Few Technical Details
+
+On a PC, @code{Sdtty} uses the @code{DPMI} memory manager.  If necessary, it uses its own
+copy of @code{DPMI}@.  It can be started under either standalone DOS or the
+@samp{MS-DOS Prompt} under Windows.  It can also be started directly as a Windows
+application, even though it does not use the mouse while running.
+
+You need a 386 or higher processor and 2Mb of memory.
+A hard disk is recommended.  There
+should be at least 175 kilobytes of memory free in the first 640Kb.
+The authors have not actually tried it on a system this small, and we
+would be interested in your experiences.
+
+@code{Sd} and @code{Sdtty} are believed to be
+insensitive to slight inaccuracies in floating-point division.
+It should operate correctly with early Pentium chips.
+
+The program is mostly "Year 2000 Compliant", but some care will be
+needed.  File names created with the special names @code{*} and @code{+}
+contain only the last two digits of the year.  We therefore recommend that you
+delete old files at least every 75 years or so.
+
+The date printed at the top of each sequence contains the full
+4-digit year, so there should be little danger of calling a 100-year-old
+card without realizing it.  Callers are nevertheless urged to be careful,
+since some dancers have extraordinarily long memories.
+
+@node Installing Sdtty on a PC, Making Sdtty Start Under Windows, A Few Technical Details, Intro
 @unnumberedsec Installing Sdtty on a PC
 
 To install the program from a floppy disk to a PC-compatible, you must be

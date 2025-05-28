@@ -2406,6 +2406,8 @@ There are a number of internal ones not shown here.  See the file ~/sd/restricti
    2fl_only,                        Same as corresponding restriction, above.
                                        This can take the "live" and/or "left" or "right" mofifiers.
                                        If "right" or "left" in qtag, it applies to 2fl in center.
+   3x3_2fl_only,                    Same as corresponding restriction, above.
+   4x4_2fl_only,                    Same as corresponding restriction, above.
    couples_only,                    Same as corresponding restriction, above.
    3x3couples_only,                 Same as corresponding restriction, above.
    4x4couples_only,                 Same as corresponding restriction, above.

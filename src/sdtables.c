@@ -56,7 +56,6 @@
    map_4x4_ns
    map_4x4_ew
    map_vsplit_f
-   map_stagger
    map_stairst
    map_ladder
    map_but_o
@@ -2837,7 +2836,6 @@ Private map_thing map_rig_trngl4        = {{6, 7, 0, 5,                       2,
         map_thing map_2x4_trapezoid     = {{1, 2, 4, 7,                       0, 3, 5, 6},                           MPKIND__NONE,        0, 2,  s2x4,   s2x2,      0x000, 0};
         map_thing map_4x4_ns            = {{12, 13, 0, 14,                    8, 6, 4, 5},                           MPKIND__NONE,        0, 2,  s4x4,   s1x4,      0x000, 1};
         map_thing map_4x4_ew            = {{0, 1, 4, 2,                       12, 10, 8, 9},                         MPKIND__NONE,        0, 2,  s4x4,   s1x4,      0x005, 1};
-        map_thing map_stagger           = {{10, 13, 3, 0, 2, 5, 11, 8,        12, 15, 14, 1, 4, 7, 6, 9},            MPKIND__STAG,        0, 2,  s4x4,   s2x4,      0x000, 1};
         map_thing map_stairst           = {{9, 13, 7, 0, 1, 5, 15, 8,         12, 11, 14, 2, 4, 3, 6, 10},           MPKIND__NONE,        0, 2,  s4x4,   s2x4,      0x000, 1};
         map_thing map_ladder            = {{10, 15, 14, 0, 2, 7, 6, 8,        12, 13, 3, 1, 4, 5, 11, 9},            MPKIND__NONE,        0, 2,  s4x4,   s2x4,      0x000, 1};
         map_thing map_offset            = {{9, 11, 14, 0, 1, 3, 6, 8,         12, 13, 7, 2, 4, 5, 15, 10},           MPKIND__NONE,        0, 2,  s4x4,   s2x4,      0x000, 1};
@@ -3011,7 +3009,15 @@ map_thing map_init_table2[] = {
    {{3, 2, 5, 4, 9, 8, 11, 10},                                               MPKIND_DBLBENTCCW,   0, 1,  sbigh,       s1x8, 0x000, 0, MAPCODE(s1x8,1,MPKIND_DBLBENTCCW,   0)},
    {{1, 9, 8, 12, 13, 21, 20, 0},                                             MPKIND_DBLBENTCW,    0, 1,  s4x6,        s2x4, 0x000, 0, MAPCODE(s2x4,1,MPKIND_DBLBENTCW,    0)},
    {{17, 9, 8, 4, 5, 21, 20, 16},                                             MPKIND_DBLBENTCCW,   0, 1,  s4x6,        s2x4, 0x000, 0, MAPCODE(s2x4,1,MPKIND_DBLBENTCCW,   0)},
-   {{12, 15, 14, 1, 4, 7, 6, 9,        10, 13, 3, 0, 2, 5, 11, 8},            MPKIND__STAG,        0, 2,  s4x4,   s2x4,      0x000, 1, MAPCODE(s2x4,2,MPKIND__STAG,        0)},
+
+   {{12, 15, 14, 1, 4, 7, 6, 9,        10, 13, 3, 0, 2, 5, 11, 8},            MPKIND__STAG,        0, 2,  s4x4,        s2x4, 0x000, 1, MAPCODE(s2x4,2,MPKIND__STAG,        0)},
+   {{10, 13, 3, 0, 2, 5, 11, 8,        12, 15, 14, 1, 4, 7, 6, 9},            MPKIND__STAG,        0, 2,  s4x4,        s2x4, 0x000, 1, MAPCODE(s2x4,2,MPKIND__STAG,        1)},
+   {{12, 14, 1, 7, 4, 6, 9, 15,        13, 0, 2, 3, 5, 8, 10, 11},            MPKIND__STAG,        0, 2,  s4x4,      s_qtag, 0x000, 1, MAPCODE(s_qtag,2,MPKIND__STAG,      0)},
+   {{13, 0, 2, 3, 5, 8, 10, 11,        12, 14, 1, 7, 4, 6, 9, 15},            MPKIND__STAG,        0, 2,  s4x4,      s_qtag, 0x000, 1, MAPCODE(s_qtag,2,MPKIND__STAG,      1)},
+
+   {{14, 1, 4, 7, 6, 9, 12, 15,        2, 5, 8, 11, 10, 13, 0, 3},            MPKIND__DIAGQTAG,    0, 2,  s4x4,      s_qtag, 0x000, 1, MAPCODE(s_qtag,2,MPKIND__DIAGQTAG,  0)},
+   {{14, 1, 4, 7, 6, 9, 12, 15,        10, 13, 0, 3, 2, 5, 8, 11},            MPKIND__DIAGQTAG,    0, 2,  s4x4,      s_qtag, 0x000, 1, MAPCODE(s_qtag,2,MPKIND__DIAGQTAG,  1)},
+
    {{0, 3, 4, 7, 2, 5, 6, 1},                                                 MPKIND__DMD_STUFF,   0, 2,  s_thar,      sdmd, 0x104, 0, MAPCODE(sdmd,2,MPKIND__DMD_STUFF,   0)},
    {{0, 3, 4, 7, 2, 5, 6, 1},                                                 MPKIND__DMD_STUFF,   0, 2,  s_thar,      sdmd, 0x004, 0, MAPCODE(sdmd,2,MPKIND__DMD_STUFF,   1)},
    {{0, 2,                 1, 3},                                             MPKIND__DMD_STUFF,   0, 2,  sdmd,        s1x2, 0x004, 0, MAPCODE(s1x2,2,MPKIND__DMD_STUFF,   0)},
@@ -3154,9 +3160,13 @@ map_thing map_init_table2[] = {
    {{11, 10, 9, 6, 7, 8,               0, 1, 2, 5, 4, 3},                     MPKIND__REMOVED,     0, 2,  s2x6,   s1x6,      0x000, 1, MAPCODE(s1x6,2,MPKIND__REMOVED,     1)},
    {{0, 2, 4, 6, 9, 11, 13, 15,        1, 3, 5, 7, 8, 10, 12, 14},            MPKIND__REMOVED,     0, 2,  s2x8,   s2x4,      0x000, 0, MAPCODE(s2x4,2,MPKIND__REMOVED,     0)},
    {{10, 15, 3, 1, 4, 5, 6, 8,         12, 13, 14, 0, 2, 7, 11, 9},           MPKIND__REMOVED,     0, 2,  s4x4,   s2x4,      0x000, 1, MAPCODE(s2x4,2,MPKIND__REMOVED,     1)},
+   {{4, 7, 22, 13, 15, 20, 17, 18, 11, 0, 2, 9,
+                            5, 6, 23, 12, 14, 21, 16, 19, 10, 1, 3, 8},       MPKIND__REMOVED,     0, 2,  s4x6,   s3x4,      0x005, 0, MAPCODE(s3x4,2,MPKIND__REMOVED,     1)},
    {{2, 7, 5, 0,                       6, 3, 1, 4},                           MPKIND__REMOVED,     0, 2,  s_bone, s_trngl4,  0x207, 0, MAPCODE(s_trngl4,2,MPKIND__REMOVED, 1)},
    {{0, 1,     2, 3,        4, 5,      11, 10,     9, 8,     7, 6},           MPKIND__SPLIT,       0, 6,  s1x12,  s1x2,      0x000, 0, MAPCODE(s1x2,6,MPKIND__SPLIT,       0)},
    {{0, 11,    1, 10,       2, 9,      3, 8,       4, 7,     5, 6},           MPKIND__SPLIT,       0, 6,  s2x6,   s1x2,      0x555, 0, MAPCODE(s1x2,6,MPKIND__SPLIT,       1)},
+   {{0, 9, 14, 15,          1, 8, 13, 16,          2, 7, 12, 17,
+                            3, 6, 11, 18,          4, 5, 10, 19},             MPKIND__SPLIT,       0, 5,  s4x5,   s1x4,      0x155, 0, MAPCODE(s1x4,5,MPKIND__SPLIT,       1)},
 
    {{0}, MPKIND__NONE, 0, 0,  nothing}};
 
