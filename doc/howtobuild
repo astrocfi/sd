@@ -241,6 +241,8 @@ chmod 775 *.sh
 ./doit.sh
 
 
+Now, in directory ~/wba, do:
+
 sftp USERNAME@www.challengedance.org
   challengedance.org> (P=PASSWORD)
   challengedance.org> cd public_html/sd
@@ -292,7 +294,7 @@ install                                  *
              THIS NO LONGER WORKS ON WINDOZE.
     BRING THE FILE (and sd_source too) OVER TO UBUNTU.
 -----------------------------------------------------------------
-Put the files into home directory on Kanga.
+Now, in directory ~/wba/vNNNN, do:
 
 sftp USERNAME@www.challengedance.org
   challengedance.org> (P=PASSWORD)

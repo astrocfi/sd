@@ -9450,7 +9450,7 @@ const concept_table_item concept_table[] = {
    {0, do_concept_two_faced},                               // concept_two_faced
    {0, 0},                                                  // concept_funny
    {CONCPROP__NO_STEP | CONCPROP__GET_MASK | CONCPROP__PERMIT_MODIFIERS,
-    triangle_move},                                         // concept_randomtrngl
+    do_tallshort6_move},                                    // concept_tallshort6
    {0, 0},                                                  // concept_split
    {CONCPROP__SHOW_SPLIT | CONCPROP__PERMIT_MATRIX | CONCPROP__GET_MASK,
     do_concept_do_each_1x4},                                // concept_each_1x4

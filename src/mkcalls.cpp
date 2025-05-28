@@ -846,6 +846,8 @@ const char *qualtab[] = {
    "diamond_like",
    "qtag_like",
    "qtag_like_anisotropic",
+   "qline_like_l",
+   "qline_like_r",
    "pu_qtag_like",
    "conc_cpls_same",
    "conc_cpls_diff",
@@ -933,7 +935,9 @@ const char *qualtab[] = {
    "levela2",
    "levelc1",
    "levelc2",
+   "levelc3a",
    "levelc3",
+   "levelc4a",
    "levelc4",
    "not_tboned",
    "opposite_sex",
@@ -1522,6 +1526,7 @@ tagtabitem tagtabinit[num_base_call_indices] = {
    {0, "makepass_1"},     // This is used for propagating the cast off 3/4 info for part 2 of make a pass.
    {0, "nuclear_1"},      // Same, for part 2 of nuclear reaction.
    {0, "scootback"},
+   {0, "qtagscootback"},
    {0, "scootbacktowave"},
    {0, "backemup"},       // This is used for remembering the handedness.
    {0, "circulate"},

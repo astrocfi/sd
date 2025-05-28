@@ -877,6 +877,28 @@ extern bool selectp(const setup *ss, int place, int allow_some /*= 0*/) THROW_DE
          if ((thing_to_test & 011) != 011 && !((tand_base ^ thing_to_test) & 1))
             return (((0xBB >> place) & 1) != 0);
          break;
+      case sbigdmd:
+         thing_to_test = ss->people[2].id1 | ss->people[3].id1 | ss->people[8].id1 | ss->people[9].id1;
+         if ((thing_to_test & 011) != 011 && ((tand_base ^ thing_to_test) & 1)) {
+            // Do top and bottom halves separately, of course.
+            uint32 testbits = 0;
+            if (ss->people[1].id1 != 0 && ss->people[4].id1 == 0)
+               testbits = 0x00E;
+            else if (ss->people[4].id1 != 0 && ss->people[1].id1 == 0)
+               testbits = 0x01C;
+            else
+               break;
+
+            if (ss->people[10].id1 != 0 && ss->people[7].id1 == 0)
+               testbits |= 0x700;
+            else if (ss->people[7].id1 != 0 && ss->people[10].id1 == 0)
+               testbits |= 0x380;
+            else
+               break;
+
+            return (((testbits >> place) & 1) != 0);
+         }
+         break;
       case s_ntrglcw:
       case s_nptrglcw:
          thing_to_test = ss->people[2].id1 | ss->people[3].id1 | ss->people[6].id1 | ss->people[7].id1;

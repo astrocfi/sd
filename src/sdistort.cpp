@@ -5089,76 +5089,55 @@ void tglmap::do_glorious_triangles(
 }
 
 
-extern void triangle_move(
+extern void do_tallshort6_move(
    setup *ss,
    parse_block *parseptr,
    setup *result) THROW_DECL
 {
    ss->clear_all_overcasts();
    calldef_schema schema;
-   int indicator = parseptr->concept->arg1;
-
-/* indicator = 0 - tall 6
-               1 - short 6
-               2 - inside
-               3 - outside
-               4 - out point
-               5 - in point
-               6 - wave-base
-               7 - tandem-base
-               8 - beau point
-               9 - belle point
-               20 - <anyone>-base
-   Add 100 octal if interlocked triangles.
-   Add 200 octal if magic triangles. */
-
-   // The indicators above are still in use elsewhere (sdconc.cpp),
-   // but only tall 6 and short 6 are actually used here.
+   int indicator = parseptr->concept->arg1;  // 0 for tall 6, 1 for short 6.
 
    if (ss->cmd.cmd_final_flags.test_for_any_herit_or_final_bit())
       fail("Illegal modifier for this concept.");
 
    warning_info saved_warnings = configuration::save_warnings();
 
-   if (indicator <= 1) {
-      // Indicator = 0 for tall 6, 1 for short 6.
+   if (ss->kind == s_galaxy) {
+      // We know the setup rotation is canonicalized.
+      uint32 tbonetest = ss->people[1].id1 | ss->people[3].id1 |
+         ss->people[5].id1 | ss->people[7].id1;
 
-      if (ss->kind == s_galaxy) {
-         // We know the setup rotation is canonicalized.
-         uint32 tbonetest = ss->people[1].id1 | ss->people[3].id1 |
-            ss->people[5].id1 | ss->people[7].id1;
-
-         if ((tbonetest & 011) == 011) fail("Can't find tall/short 6.");
-         else if ((indicator ^ tbonetest) & 1)
-            schema = schema_lateral_6;
-         else
-            schema = schema_vertical_6;
-
-         // The schema is now in terms of the absolute orientation.
-         concentric_move(ss, &ss->cmd, (setup_command *) 0, schema, 0, 0, true, false, ~0U, result);
-      }
-      else if (ss->kind == s_short6) {
-         uint32 tbonetest = ss->people[0].id1 | ss->people[2].id1 |
-            ss->people[3].id1 | ss->people[5].id1;
-         if ((tbonetest & 011) == 011 || ((indicator ^ tbonetest) & 1))
-            fail("Can't find tall/short 6.");
-
-         // No need to call any expand function; everyone is in the right place for a 2x3.
-         ss->kind = s2x3;
-         uint16 save_rotation = ss->rotation;  // Can the rotation field get clobbered?  We're not sure.
-
-         move(ss, false, result);
-
-         if (result->kind == s2x3 && result->rotation == save_rotation) {
-            // Once again, it's easy.
-            result->kind = s_short6;
-         }
-         else if (result->kind != s1x6)  // If it's a 1x6 of either orientation, we just let it pass.
-            fail("Can't do this.");
-      }
+      if ((tbonetest & 011) == 011) fail("Can't find tall/short 6.");
+      else if ((indicator ^ tbonetest) & 1)
+         schema = schema_lateral_6;
       else
-         fail("Must have galaxy for this concept.");
+         schema = schema_vertical_6;
+
+      // The schema is now in terms of the absolute orientation.
+      concentric_move(ss, &ss->cmd, (setup_command *) 0, schema, 0, 0, true, false, ~0U, result);
    }
+   else if (ss->kind == s_short6) {
+      uint32 tbonetest = ss->people[0].id1 | ss->people[2].id1 |
+         ss->people[3].id1 | ss->people[5].id1;
+      if ((tbonetest & 011) == 011 || ((indicator ^ tbonetest) & 1))
+         fail("Can't find tall/short 6.");
+
+      // No need to call any expand function; everyone is in the right place for a 2x3.
+      ss->kind = s2x3;
+      uint16 save_rotation = ss->rotation;  // Can the rotation field get clobbered?  We're not sure.
+
+      move(ss, false, result);
+
+      if (result->kind == s2x3 && result->rotation == save_rotation) {
+         // Once again, it's easy.
+         result->kind = s_short6;
+      }
+      else if (result->kind != s1x6)  // If it's a 1x6 of either orientation, we just let it pass.
+         fail("Can't do this.");
+   }
+   else
+      fail("Must have galaxy for this concept.");
 
    configuration::set_multiple_warnings(saved_warnings);
    result->clear_all_overcasts();

@@ -3695,6 +3695,14 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
                                     or "out".  It typically *IS* used with "live", which
                                     requires all people be live.
 
+   qline_like_l       R/Q           qtag only - with "in", demands a left-handed 1/4 line,
+                                    that is, left 2fl in center.  With "out", demands a
+                                    right-handed 3/4 line.
+
+   qline_like_r       R/Q           qtag only - with "in", demands a right-handed 1/4 line,
+                                    that is, right 2fl in center.  With "out", demands a
+                                    left-handed 3/4 line.
+
    gen_n_4_tag        Q             dmd/qtag/3dmd/4dmd - this is a "general 1/4 tag",
                                     in which the ends could individually be facing either
                                     in or out, and the centers form some kind of line.
@@ -4391,10 +4399,10 @@ inherit_single
 @K        - put selector here, and allow "some" (and a few others) in parse expand.  (@6 and @k don't expand "some".)
 @V        - put selector here, but don't allow "centers" or "ends".
 @u        - put ordinal number (1st, 2nd, ...) here.
-@v        - put tagging call here.
-@w        - put tagging call here.
-@x        - put tagging call here.
-@y        - put tagging call here.
+@v        - put tagging call here, works with base_tag_call_0.
+@w        - put tagging call here, works with base_tag_call_1.
+@x        - put tagging call here, works with base_tag_call_2.
+@y        - put tagging call here, works with base_tag_call_3.
 @N        - put circulate call here.
 @O ... @P - text to remove if invoked as a circulate-type call
 @X        - put "others" here, or be more specific if possible.

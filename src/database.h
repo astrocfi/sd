@@ -47,7 +47,7 @@
 // database format version.
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 358
+#define DATABASE_FORMAT_VERSION 360
 
 
 // We used to do some stuff to cater to compiler vendors (e.g. Sun
@@ -208,6 +208,7 @@ enum base_call_index {
    base_call_makepass_1,
    base_call_nuclear_1,
    base_call_scootback,
+   base_call_qtagscootback,
    base_call_scoottowave,
    base_call_backemup,
    base_call_circulate,
@@ -995,6 +996,8 @@ enum call_restriction {
    cr_diamond_like,
    cr_qtag_like,
    cr_qtag_like_anisotropic,
+   cr_qline_like_l,
+   cr_qline_like_r,
    cr_pu_qtag_like,
    cr_conc_iosame,
    cr_conc_iodiff,
@@ -1082,7 +1085,9 @@ enum call_restriction {
    cr_levela2,
    cr_levelc1,
    cr_levelc2,
+   cr_levelc3a,
    cr_levelc3,
+   cr_levelc4a,
    cr_levelc4,
    cr_not_tboned,          // Restriction only.
    cr_opposite_sex,

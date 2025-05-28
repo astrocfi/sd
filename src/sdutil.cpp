@@ -1728,8 +1728,7 @@ void ui_utils::print_recurse(parse_block *thing, int print_recurse_arg)
                         parse_block *subsidiary_ptr = search->subsidiary_root;
                         if (subsidiary_ptr &&
                             subsidiary_ptr->call_to_print &&
-                            (subsidiary_ptr->call_to_print->the_defn.callflags1 &
-                             CFLAG1_BASE_TAG_CALL_MASK)) {
+                            (subsidiary_ptr->call_to_print->the_defn.callflags1 & CFLAG1_BASE_TAG_CALL_MASK)) {
                            print_recurse(subsidiary_ptr, 0);
                            goto did_tagger;
                         }

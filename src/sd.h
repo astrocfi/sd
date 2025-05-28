@@ -163,7 +163,7 @@ enum concept_kind {
    concept_create_matrix,
    concept_two_faced,
    concept_funny,
-   concept_randomtrngl,
+   concept_tallshort6,
    concept_split,
    concept_each_1x4,
    concept_diamond,
@@ -3262,12 +3262,12 @@ class select {
       fx_fqtgctgl,
       fx_fqtgatgl,
       fx_fqtgitgl,
+      fx_fc1fctgl,
+      fx_fc1fatgl,
       fx_phanigna,
-      fx_phanignb,
       fx_phanignc,
       fx_phanignd,
       fx_phanigne,
-      fx_phanignf,
       fx_phanigng,
       fx_phanignh,
       fx_f2x477,
@@ -3427,6 +3427,32 @@ class tglmap {
       veryshort mapbd1[6];   // In bigdmd.
       veryshort map241[6];   // In 2x4.
       veryshort map261[6];   // In 2x6.
+   };
+
+
+   // Beware: we play a lot of games with the actual numerical assignments.
+   // For example, WAVEBASE and TANDBASE must be an even/odd pair.
+   // Same for OUTPOINT and INPOINT, and for BEAUPOINT and BELLEPOINT.
+   enum tgltype {
+      TGL_TYPE_INSIDE       = 0x00000002U,
+      TGL_TYPE_OUTSIDE      = 0x00000003U,
+      TGL_TYPE_OUTPOINT     = 0x00000004U,
+      TGL_TYPE_INPOINT      = 0x00000005U,
+      TGL_TYPE_WAVEBASE     = 0x00000006U,
+      TGL_TYPE_TANDBASE     = 0x00000007U,
+      TGL_TYPE_BEAUPOINT    = 0x00000008U,
+      TGL_TYPE_BELLEPOINT   = 0x00000009U,
+      TGL_TYPE_ANYBASE      = 0x00000014U,
+
+      TGL_CLASS_INTERLOCKED = 0x00000040U,
+      TGL_CLASS_MAGIC       = 0x00000080U,
+
+      // These groups use a differnet mechanism, with the low 2 bits active.
+      TGL_GROUP_400         = 0x00000400U,
+      TGL_GROUP_500         = 0x00000500U,
+
+      TGL_IGNORE_INTLK_LOWBIT     = ~(tglmap::TGL_CLASS_INTERLOCKED | 1),
+      TGL_IGNORE_MAG_INTLK_LOWBIT = ~(tglmap::TGL_CLASS_MAGIC | tglmap::TGL_CLASS_INTERLOCKED | 1)
    };
 
  private:
@@ -5697,7 +5723,7 @@ extern void common_spot_move(
    parse_block *parseptr,
    setup *result) THROW_DECL;
 
-extern void triangle_move(
+extern void do_tallshort6_move(
    setup *ss,
    parse_block *parseptr,
    setup *result) THROW_DECL;

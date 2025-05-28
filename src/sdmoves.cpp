@@ -5103,8 +5103,6 @@ void impose_assumption_and_move(setup *ss, setup *result, bool suppress_fudgy_2x
 }
 
 
-
-
 static void do_stuff_inside_sequential_call(
    setup *result,
    uint32 this_mod1,
@@ -5207,7 +5205,8 @@ static void do_stuff_inside_sequential_call(
                 old_assumption == cr_real_1_4_line)
                *fix_next_assumption_p = cr_ckpt_miniwaves;
          }
-         else if (result->cmd.callspec == base_calls[base_call_scootback]) {
+         else if (result->cmd.callspec == base_calls[base_call_scootback] ||
+                  result->cmd.callspec == base_calls[base_call_qtagscootback]) {
             if (result->kind == s_qtag) {
                if (old_assumption == cr_jright && old_assump_both == 2) {
                   // Jright:2 is left 1/4 tag, change to left 3/4 tag.

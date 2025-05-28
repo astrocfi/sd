@@ -39,6 +39,7 @@
 #include <commctrl.h>
 #include <commdlg.h>
 #include <stdlib.h>
+#include <time.h>
 #include <string.h>
 
 // Note that we do *NOT* include resource.h here.  The client will pass
@@ -368,9 +369,13 @@ void printer::print_this(const char *szFileName, char *szMainTitle, bool pagenum
                }
 
                // If doing page numbers, we have two more lines of space at the bottom.
+               // Sd/Sdtty themselves do not use the page numbers.
 
                if (pagenums && bPageIsOpen) {
-                  wsprintf(pstrBuffer, "                   %s   Page %d", szFileName, pagenum);
+                  time_t clocktime;
+                  time(&clocktime);
+                  char *szDateTimeText = ctime(&clocktime);
+                  wsprintf(pstrBuffer, "  %s  %s  Page %d", szDateTimeText, szFileName, pagenum);
                   TextOut (hdcPrn, iPixelLeftOfPage, iPixelBottomOfPage + 2*iPixelLineHeight, pstrBuffer, strlen(pstrBuffer));
                }
 

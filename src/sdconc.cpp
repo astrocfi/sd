@@ -5281,13 +5281,14 @@ extern void punt_centers_use_concept(setup *ss, setup *result) THROW_DECL
             the_results[0] = *this_one;
             continue;                                 // Designees do nothing.
          }
-         else
+         else {
             // Non-designees do first part only.
             this_one->cmd.cmd_fraction.process_fractions(NUMBER_FIELDS_1_0,
                                                          ss->cmd.parseptr->options.number_fields,
                                                          FRAC_INVERT_END,
                                                          this_one->cmd.cmd_fraction);
             this_one->cmd.cmd_fraction.flags = 0;
+         }
       }
 
       this_one->cmd.cmd_misc_flags |= CMD_MISC__PHANTOMS;
@@ -5959,19 +5960,19 @@ extern void inner_selective_move(
             switch (livemask[0]) {
             case 0x88:
                delta = 0x66;
-               tglindicator = 0x400;
+               tglindicator = tglmap::TGL_GROUP_400;
                break;
             case 0x11:
                delta = 0x66;
-               tglindicator = 0x401;
+               tglindicator = tglmap::TGL_GROUP_400+1;
                break;
             case 0x44:
                delta = 0x99;
-               tglindicator = 0x402;
+               tglindicator = tglmap::TGL_GROUP_400+2;
                break;
             case 0x22:
                delta = 0x99;
-               tglindicator = 0x403;
+               tglindicator = tglmap::TGL_GROUP_400+3;
                break;
             }
          }
@@ -5979,19 +5980,19 @@ extern void inner_selective_move(
             switch (livemask[0]) {
             case 0x88: 
                delta = 0x33;
-               tglindicator = 0x500;
+               tglindicator = tglmap::TGL_GROUP_500;
                break;
             case 0x44: 
                delta = 0x33;
-               tglindicator = 0x501;
+               tglindicator = tglmap::TGL_GROUP_500+1;
                break;
             case 0x22:
                delta = 0xCC;
-               tglindicator = 0x502;
+               tglindicator = tglmap::TGL_GROUP_500+2;
                break;
             case 0x11:
                delta = 0xCC;
-               tglindicator = 0x503;
+               tglindicator = tglmap::TGL_GROUP_500+3;
                break;
             }
          }
@@ -6008,9 +6009,11 @@ extern void inner_selective_move(
             default:
                fail("Can't find the indicated triangles.");
             }
+            break;
          case s_rigger:
             if ((livemask[0] & ~0x33) == 0)
-               delta = 0x88; break;
+               delta = 0x88;
+            break;
          default:
             fail("Can't find the indicated triangles.");
          }
@@ -6713,7 +6716,7 @@ extern void inner_selective_move(
          case selector_inside_tgl:
             // Plain inside and outside triangles go directly to the concentric mechanism, which is very powerful.
             if (ss->kind == sd2x7 || ss->kind == sbigdmd) {   // Except these.  They have "inside triangles".
-               tglindicator = 2;
+               tglindicator = tglmap::TGL_TYPE_INSIDE;
                goto back_here;
             }
 
@@ -6728,82 +6731,84 @@ extern void inner_selective_move(
             goto do_concentric_ends;
          case selector_inside_intlk_tgl:
          case selector_intlk_inside_tgl:
-            tglindicator = 0102;
+            tglindicator = tglmap::TGL_CLASS_INTERLOCKED | tglmap::TGL_TYPE_INSIDE;
             goto back_here;
          case selector_outside_intlk_tgl:
          case selector_intlk_outside_tgl:
-            tglindicator = 0103;
+            tglindicator = tglmap::TGL_CLASS_INTERLOCKED | tglmap::TGL_TYPE_OUTSIDE;
             goto back_here;
          case selector_inpoint_tgl:
-            tglindicator = 0005;
+            tglindicator = tglmap::TGL_TYPE_INPOINT;
             goto back_here;
          case selector_inpoint_intlk_tgl:
          case selector_intlk_inpoint_tgl:
-            tglindicator = 0105;
+            tglindicator = tglmap::TGL_CLASS_INTERLOCKED | tglmap::TGL_TYPE_INPOINT;
             goto back_here;
          case selector_magic_inpoint_tgl:
-            tglindicator = 0205;
+            tglindicator = tglmap::TGL_CLASS_MAGIC | tglmap::TGL_TYPE_INPOINT;
             goto back_here;
          case selector_magic_intlk_inpoint_tgl:
          case selector_intlk_magic_inpoint_tgl:
-            tglindicator = 0305;
+            tglindicator = tglmap::TGL_CLASS_MAGIC | tglmap::TGL_CLASS_INTERLOCKED | tglmap::TGL_TYPE_INPOINT;
             goto back_here;
          case selector_outpoint_tgl:
-            tglindicator = 0004;
+            tglindicator = tglmap::TGL_TYPE_OUTPOINT;
             goto back_here;
          case selector_outpoint_intlk_tgl:
          case selector_intlk_outpoint_tgl:
-            tglindicator = 0104;
+            tglindicator = tglmap::TGL_CLASS_INTERLOCKED | tglmap::TGL_TYPE_OUTPOINT;
             goto back_here;
          case selector_magic_outpoint_tgl:
-            tglindicator = 0204;
+            tglindicator = tglmap::TGL_CLASS_MAGIC | tglmap::TGL_TYPE_OUTPOINT;
             goto back_here;
          case selector_magic_intlk_outpoint_tgl:
          case selector_intlk_magic_outpoint_tgl:
-            tglindicator = 0304;
+            tglindicator = tglmap::TGL_CLASS_MAGIC | tglmap::TGL_CLASS_INTERLOCKED | tglmap::TGL_TYPE_OUTPOINT;
             goto back_here;
          case selector_beaupoint_tgl:
-            tglindicator = 0010;
+            tglindicator = tglmap::TGL_TYPE_BEAUPOINT;
             goto back_here;
          case selector_beaupoint_intlk_tgl:
          case selector_intlk_beaupoint_tgl:
-            tglindicator = 0110;
+            tglindicator = tglmap::TGL_CLASS_INTERLOCKED | tglmap::TGL_TYPE_BEAUPOINT;
             goto back_here;
          case selector_magic_beaupoint_tgl:
-            tglindicator = 0210;
+            tglindicator = tglmap::TGL_CLASS_MAGIC | tglmap::TGL_TYPE_BEAUPOINT;
             goto back_here;
          case selector_magic_intlk_beaupoint_tgl:
          case selector_intlk_magic_beaupoint_tgl:
-            tglindicator = 0310;
+            tglindicator = tglmap::TGL_CLASS_MAGIC | tglmap::TGL_CLASS_INTERLOCKED | tglmap::TGL_TYPE_BEAUPOINT;
             goto back_here;
          case selector_bellepoint_tgl:
-            tglindicator = 0011;
+            tglindicator = tglmap::TGL_TYPE_BELLEPOINT;
             goto back_here;
          case selector_bellepoint_intlk_tgl:
          case selector_intlk_bellepoint_tgl:
-            tglindicator = 0111;
+            tglindicator = tglmap::TGL_CLASS_INTERLOCKED | tglmap::TGL_TYPE_BELLEPOINT;
             goto back_here;
          case selector_magic_bellepoint_tgl:
-            tglindicator = 0211;
+            tglindicator = tglmap::TGL_CLASS_MAGIC | tglmap::TGL_TYPE_BELLEPOINT;
             goto back_here;
          case selector_magic_intlk_bellepoint_tgl:
          case selector_intlk_magic_bellepoint_tgl:
-            tglindicator = 0311;
+            tglindicator = tglmap::TGL_CLASS_MAGIC | tglmap::TGL_CLASS_INTERLOCKED | tglmap::TGL_TYPE_BELLEPOINT;
             goto back_here;
          case selector_wave_base_tgl:
-            tglindicator = 6;
+            tglindicator = tglmap::TGL_TYPE_WAVEBASE;
             goto wv_tand;
          case selector_wave_base_intlk_tgl:
          case selector_intlk_wave_base_tgl:
-            tglindicator = 0106;
+            tglindicator = tglmap::TGL_CLASS_INTERLOCKED | tglmap::TGL_TYPE_WAVEBASE;
             goto wv_tand;
          case selector_tand_base_tgl:
-            tglindicator = 7;
+            tglindicator = tglmap::TGL_TYPE_TANDBASE;
             goto wv_tand;
          case selector_tand_base_intlk_tgl:
          case selector_intlk_tand_base_tgl:
-            tglindicator = 0107;
+            tglindicator = tglmap::TGL_CLASS_INTERLOCKED | tglmap::TGL_TYPE_TANDBASE;
+         // FALL THROUGH
          wv_tand:
+         // FELL THROUGH!
             if (ss->kind == s_galaxy) {
                // When these are done from a galaxy, use the concentric mechanism,
                // albeit in a not-very-concentric way.
@@ -6812,52 +6817,52 @@ extern void inner_selective_move(
                if ((j & 011) == 011)
                   goto back_here;   // Will raise an error.
                else if ((tglindicator ^ j) & 1)
-                  schema = (tglindicator & 0100) ? schema_intlk_lateral_6 : schema_lateral_6;
+                  schema = (tglindicator & tglmap::TGL_CLASS_INTERLOCKED) ? schema_intlk_lateral_6 : schema_lateral_6;
                else
-                  schema = (tglindicator & 0100) ? schema_intlk_vertical_6 : schema_vertical_6;
+                  schema = (tglindicator & tglmap::TGL_CLASS_INTERLOCKED) ? schema_intlk_vertical_6 : schema_vertical_6;
 
                // For galaxies, the schema is now in terms of the absolute orientation.
                // We know that the original setup rotation was canonicalized.
                goto do_concentric_ctrs;
             }
-            else if (ss->kind == s_bone && !(tglindicator & 0100)) {
+            else if (ss->kind == s_bone && !(tglindicator & tglmap::TGL_CLASS_INTERLOCKED)) {
                schema = schema_concentric_2_6;
                goto do_concentric_ends;
             }
-            else if (ss->kind == s_rigger && !(tglindicator & 0100)) {
+            else if (ss->kind == s_rigger && !(tglindicator & tglmap::TGL_CLASS_INTERLOCKED)) {
                schema = schema_concentric_6_2;
                goto do_concentric_ctrs;
             }
             else if (ss->kind == s_hrglass) {
                // The same for an hourglass.
-               schema = (tglindicator & 0100) ? schema_intlk_vertical_6 : schema_vertical_6;
+               schema = (tglindicator & tglmap::TGL_CLASS_INTERLOCKED) ? schema_intlk_vertical_6 : schema_vertical_6;
                goto do_concentric_ctrs;
             }
-            else if (ss->kind == s_rigger && !(tglindicator & 0100)) {
+            else if (ss->kind == s_rigger && !(tglindicator & tglmap::TGL_CLASS_INTERLOCKED)) {
                schema = schema_concentric_6_2;
                goto do_concentric_ctrs;
             }
-            else if (ss->kind == s_ntrglcw && !(tglindicator & 0100)) {
+            else if (ss->kind == s_ntrglcw && !(tglindicator & tglmap::TGL_CLASS_INTERLOCKED)) {
                schema = schema_concentric_2_6;
                goto do_concentric_ends;
             }
-            else if (ss->kind == s_ntrglccw && !(tglindicator & 0100)) {
+            else if (ss->kind == s_ntrglccw && !(tglindicator & tglmap::TGL_CLASS_INTERLOCKED)) {
                schema = schema_concentric_2_6;
                goto do_concentric_ends;
             }
-            else if (ss->kind == s_nptrglcw && !(tglindicator & 0100)) {
+            else if (ss->kind == s_nptrglcw && !(tglindicator & tglmap::TGL_CLASS_INTERLOCKED)) {
                schema = schema_concentric_2_6;
                goto do_concentric_ends;
             }
-            else if (ss->kind == s_nptrglccw && !(tglindicator & 0100)) {
+            else if (ss->kind == s_nptrglccw && !(tglindicator & tglmap::TGL_CLASS_INTERLOCKED)) {
                schema = schema_concentric_2_6;
                goto do_concentric_ends;
             }
-            else if (ss->kind == s_nxtrglcw && !(tglindicator & 0100)) {
+            else if (ss->kind == s_nxtrglcw && !(tglindicator & tglmap::TGL_CLASS_INTERLOCKED)) {
                schema = schema_concentric_6_2;
                goto do_concentric_ctrs;
             }
-            else if (ss->kind == s_nxtrglccw && !(tglindicator & 0100)) {
+            else if (ss->kind == s_nxtrglccw && !(tglindicator & tglmap::TGL_CLASS_INTERLOCKED)) {
                schema = schema_concentric_6_2;
                goto do_concentric_ctrs;
             }
@@ -6892,11 +6897,11 @@ extern void inner_selective_move(
                goto do_concentric_ctrs;
             }
 
-            tglindicator = 024;
+            tglindicator = tglmap::TGL_TYPE_ANYBASE;
             goto back_here;
          case selector_anyone_base_intlk_tgl:
          case selector_intlk_anyone_base_tgl:
-            tglindicator = 0124;
+            tglindicator = tglmap::TGL_CLASS_INTERLOCKED | tglmap::TGL_TYPE_ANYBASE;
             goto back_here;
          }
       }
@@ -7158,86 +7163,91 @@ extern void inner_selective_move(
                else if (thislivemask == 01616)
                   map_key_table = tglmap::bdtglmap2;
             }
-            else if (tglindicator == 2 && kk == sd2x7) {
+            else if (tglindicator == tglmap::TGL_TYPE_INSIDE && kk == sd2x7) {
                if (thislivemask == 0x1C38U)
                   map_key_table = tglmap::d7tglmap1;
                else if (thislivemask == 0x070EU)
                   map_key_table = tglmap::d7tglmap2;
             }
-            else if (tglindicator == 0102 && kk == s_rigger) {
+            else if (tglindicator == (tglmap::TGL_CLASS_INTERLOCKED | tglmap::TGL_TYPE_INSIDE) && kk == s_rigger) {
                map_key_table = tglmap::rgtglmap1;
             }
-            else if (tglindicator == 0102 && kk == s_ptpd) {
+            else if (tglindicator == (tglmap::TGL_CLASS_INTERLOCKED | tglmap::TGL_TYPE_INSIDE) && kk == s_ptpd) {
                map_key_table = tglmap::rgtglmap2;
             }
-            else if (tglindicator == 0102 && kk == s_qtag) {
+            else if (tglindicator == (tglmap::TGL_CLASS_INTERLOCKED | tglmap::TGL_TYPE_INSIDE) && kk == s_qtag) {
                map_key_table = tglmap::rgtglmap3;
             }
-            else if (tglindicator == 0103 && kk == s_rigger) {
+            else if (tglindicator == (tglmap::TGL_CLASS_INTERLOCKED | tglmap::TGL_TYPE_OUTSIDE) && kk == s_rigger) {
                map_key_table = tglmap::ritglmap1;
             }
-            else if (tglindicator == 0103 && kk == s_ptpd) {
+            else if (tglindicator == (tglmap::TGL_CLASS_INTERLOCKED | tglmap::TGL_TYPE_OUTSIDE) && kk == s_ptpd) {
                map_key_table = tglmap::ritglmap2;
             }
-            else if (tglindicator == 0103 && kk == s_qtag) {
+            else if (tglindicator == (tglmap::TGL_CLASS_INTERLOCKED | tglmap::TGL_TYPE_OUTSIDE) && kk == s_qtag) {
                map_key_table = tglmap::ritglmap3;
             }
-            else if (kk == s_qtag && ((tglindicator & ~0301) == 4 || (tglindicator & ~0301) == 8)) {
+            else if (kk == s_qtag &&
+                     ((tglindicator & tglmap::TGL_IGNORE_MAG_INTLK_LOWBIT) == tglmap::TGL_TYPE_OUTPOINT ||
+                      (tglindicator & tglmap::TGL_IGNORE_MAG_INTLK_LOWBIT) == tglmap::TGL_TYPE_BEAUPOINT)) {
                // In/out/beau/belle-point.
-               // Picking out 4, 5, 8, or 9, with 100 or 200 bits; will get taken care of later.
+               // Ignoring the magic/interlocked bits for now; will get taken care of later.
                if ((thislivemask & 0x22) == 0)
                   map_key_table = tglmap::qttglmap1;
                else if ((thislivemask & 0x11) == 0)
                   map_key_table = tglmap::qttglmap2;
             }
-            else if (kk == s_ptpd && ((tglindicator & ~0001) == 8)) {
+            else if (kk == s_ptpd && ((tglindicator & ~1) == tglmap::TGL_TYPE_BEAUPOINT)) {
                // Beau/belle-point in point-to-point diamonds.
-               // Picking out 8 or 9.
                if ((thislivemask & 0x11) == 0)
                   map_key_table = tglmap::ptptglmap1;
                else if ((thislivemask & 0x44) == 0)
                   map_key_table = tglmap::ptptglmap2;
             }
-            else if (kk == sdmd && ((tglindicator & ~0301) == 8)) {
+            else if (kk == sdmd && ((tglindicator & tglmap::TGL_IGNORE_MAG_INTLK_LOWBIT) == tglmap::TGL_TYPE_BEAUPOINT)) {
                // Beau/belle-point in single diamond.
-               // Picking out 8 or 9, with 100 or 200 bits; will get taken care of later.
+               // Ignoring the magic/interlocked bits for now; will get taken care of later.
                if ((thislivemask & 0x4) == 0)
                   map_key_table = tglmap::dmtglmap1;
                else if ((thislivemask & 0x1) == 0)
                   map_key_table = tglmap::dmtglmap2;
             }
-            else if ((tglindicator & ~1) == 0106 && kk == s_rigger) {
+            else if (kk == s_rigger &&
+                     (tglindicator & ~1) == (tglmap::TGL_CLASS_INTERLOCKED | tglmap::TGL_TYPE_WAVEBASE)) {
                map_key_table = tglmap::rgtglmap1;
             }
-            else if ((tglindicator) == 0124 && kk == s_rigger) {
+            else if (kk == s_rigger &&
+                     tglindicator == (tglmap::TGL_CLASS_INTERLOCKED | tglmap::TGL_TYPE_ANYBASE)) {
                map_key_table = tglmap::rgtglmap1;
             }
-            else if ((tglindicator & ~1) == 6 && kk == s_bone6) {
+            else if (kk == s_bone6 && (tglindicator & ~1) == tglmap::TGL_TYPE_WAVEBASE) {
                map_key_table = tglmap::b6tglmap1;
             }
-            else if ((tglindicator & ~1) == 6 && kk == s_short6) {
+            else if (kk == s_short6 && (tglindicator & ~1) == tglmap::TGL_TYPE_WAVEBASE) {
                map_key_table = tglmap::s6tglmap1;
             }
-            else if (tglindicator == 0024 && kk == s_c1phan) {
-               if (thislivemask == 0xA8A8) {
+            else if (kk == s_c1phan && tglindicator == tglmap::TGL_TYPE_ANYBASE) {
+               switch (thislivemask) {
+               case 0xA8A8:
                   map_key_table = tglmap::c1tglmap2;
-               }
-               else if (thislivemask == 0x8A8A) {
+                  break;
+               case 0x8A8A:
                   map_key_table = tglmap::c1tglmap2;
                   rotfix = 1;
-               }
-               else if (thislivemask == 0x5454) {
+                  break;
+               case 0x4545:
+                  map_key_table = tglmap::c1tglmap1;
+                  break;
+               case 0x5454:
                   map_key_table = tglmap::c1tglmap1;
                   rotfix = 1;
-               }
-               else if (thislivemask == 0x4545) {
-                  map_key_table = tglmap::c1tglmap1;
+                  break;
                }
 
                this_one->rotation += rotfix;
                canonicalize_rotation(this_one);
             }
-            else if (tglindicator == 0024 && kk == s_323) {
+            else if (kk == s_323 && tglindicator == tglmap::TGL_TYPE_ANYBASE) {
                if (thislivemask == 0xBB) {
                   map_key_table = tglmap::s323map33;
                }
@@ -7245,7 +7255,7 @@ extern void inner_selective_move(
                   map_key_table = tglmap::s323map66;
                }
             }
-            else if (tglindicator == 0024 && kk == sd2x5) {
+            else if (kk == sd2x5 && tglindicator == tglmap::TGL_TYPE_ANYBASE) {
                if (thislivemask == 0x34D) {
                   map_key_table = tglmap::sd25map33;
                }
@@ -7253,7 +7263,7 @@ extern void inner_selective_move(
                   map_key_table = tglmap::sd25map66;
                }
             }
-            else if (tglindicator == 0024 && kk == s_343) {
+            else if (kk == s_343 && tglindicator == tglmap::TGL_TYPE_ANYBASE) {
                if (thislivemask == 0x39C) {
                   map_key_table = tglmap::s343map33;
                }
@@ -7261,7 +7271,7 @@ extern void inner_selective_move(
                   map_key_table = tglmap::s343map66;
                }
             }
-            else if (tglindicator == 0124 && kk == s_c1phan) {
+            else if (kk == s_c1phan && tglindicator == (tglmap::TGL_CLASS_INTERLOCKED | tglmap::TGL_TYPE_ANYBASE)) {
                if (thislivemask == 0x2A2A) {
                   map_key_table = tglmap::c1tglmap2;
                   rotfix = 1;
@@ -7280,9 +7290,8 @@ extern void inner_selective_move(
                this_one->rotation += rotfix;
                canonicalize_rotation(this_one);
             }
-            else if ((tglindicator & ~0101) == 6 && kk == s_c1phan) {
-
-               if (tglindicator & 0100) {
+            else if (kk == s_c1phan && (tglindicator & tglmap::TGL_IGNORE_INTLK_LOWBIT) == tglmap::TGL_TYPE_WAVEBASE) {
+               if (tglindicator & tglmap::TGL_CLASS_INTERLOCKED) {
                   i = 0x8484;   // Test for interlocked with vertical alignment of bases.
                   k = 0x4848;   // Test for interlocked with horizontal alignment of bases.
                }
@@ -7316,22 +7325,23 @@ extern void inner_selective_move(
                else
                   map_key_table = 0;    // Error.
             }
-            else if ((tglindicator & ~0101) == 6 && kk == sdeepbigqtg) {
+            else if (kk == sdeepbigqtg &&
+                     (tglindicator & tglmap::TGL_IGNORE_INTLK_LOWBIT) == tglmap::TGL_TYPE_WAVEBASE) {
                if ((thislivemask & 0x3A3A) == 0)
                   map_key_table = tglmap::dbqtglmap1;
                else if ((thislivemask & 0xC5C5) == 0)
                   map_key_table = tglmap::dbqtglmap2;
             }
-            else if (tglindicator == 024 && kk == sdeepbigqtg) {
+            else if (kk == sdeepbigqtg && tglindicator == tglmap::TGL_TYPE_ANYBASE) {
                if ((thislivemask & 0x3838) == 0)
                   map_key_table = tglmap::dbqtglmap1;
                else if ((thislivemask & 0xC4C4) == 0)
                   map_key_table = tglmap::dbqtglmap2;
             }
-            else if ((tglindicator & ~0101) == 6 && kk == s_ntrgl6cw) {
+            else if ((tglindicator & tglmap::TGL_IGNORE_INTLK_LOWBIT) == tglmap::TGL_TYPE_WAVEBASE && kk == s_ntrgl6cw) {
                map_key_table = tglmap::t6cwtglmap1;
             }
-            else if ((tglindicator & ~0101) == 6 && kk == s_ntrgl6ccw) {
+            else if ((tglindicator & tglmap::TGL_IGNORE_INTLK_LOWBIT) == tglmap::TGL_TYPE_WAVEBASE && kk == s_ntrgl6ccw) {
                map_key_table = tglmap::t6ccwtglmap1;
             }
             else if ((tglindicator & ~3) == 0x400 && kk == s2x4) {
@@ -7614,7 +7624,9 @@ extern void inner_selective_move(
                         fixp == select::fixer_ptr_table[select::fx_specfix3x41] ||
                         fixp == select::fixer_ptr_table[select::fx_fqtgitgl] ||
                         fixp == select::fixer_ptr_table[select::fx_fqtgctgl] ||
-                        fixp == select::fixer_ptr_table[select::fx_fqtgatgl]) {
+                        fixp == select::fixer_ptr_table[select::fx_fqtgatgl] ||
+                        fixp == select::fixer_ptr_table[select::fx_fc1fctgl] ||
+                        fixp == select::fixer_ptr_table[select::fx_fc1fatgl]) {
                   nextfixp = fixp;
                }
                else
@@ -7805,6 +7817,9 @@ extern void inner_selective_move(
 
             fixp = nextfixp;
          }
+
+         if (!fixp)
+            goto lose;
 
          this_result->kind = fixp->outk;
          map_scanner = 0;

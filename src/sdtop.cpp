@@ -2198,6 +2198,10 @@ restriction_tester::restr_initializer restriction_tester::restr_init_table9[] = 
     {4, 0, 1, 4, 5}, {0}, {0}, false, chk_dmd_qtag},
    {s_qtag, cr_qtag_like, 4, {8, 0, 1, 2, 3, 4, 5, 6, 7},
     {0}, {2, 4, 5}, {2, 0, 1}, false, chk_dmd_qtag},
+   {s_qtag, cr_qline_like_l, 8, {2, 0, 3, 1, 4, 6, 5, 7},
+    {0}, {0}, {0}, false, chk_wave},
+   {s_qtag, cr_qline_like_r, 8, {4, 0, 5, 1, 6, 2, 7, 3},
+    {0}, {0}, {0}, false, chk_wave},
    {s_qtag, cr_qtag_like_anisotropic, 4, {8, 0, 1, 2, 3, 4, 5, 6, 7},
     {0}, {2, 0, 5}, {2, 4, 1}, false, chk_dmd_qtag_new},
    {s_qtag, cr_pu_qtag_like, 0, {0},
@@ -2483,8 +2487,14 @@ restriction_test_result verify_restriction(
    case cr_levelc2:
       if (calling_level < l_c2) return restriction_bad_level;
       goto good;
+   case cr_levelc3a:
+      if (calling_level < l_c3a) return restriction_bad_level;
+      goto good;
    case cr_levelc3:
       if (calling_level < l_c3) return restriction_bad_level;
+      goto good;
+   case cr_levelc4a:
+      if (calling_level < l_c4a) return restriction_bad_level;
       goto good;
    case cr_levelc4:
       if (calling_level < l_c4) return restriction_bad_level;
@@ -4251,6 +4261,8 @@ extern callarray *assoc(
          goto check_tt;
       case cr_qtag_like:
       case cr_qtag_like_anisotropic:
+      case cr_qline_like_l:
+      case cr_qline_like_r:
          switch (ssA) {
          case cr_diamond_like: case cr_pu_qtag_like:
             goto bad;

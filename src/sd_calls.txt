@@ -57,7 +57,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "39.08"
+version "39.09"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve dont_raise_overcast
@@ -80,6 +80,8 @@ call "recenter" mainstream
 
 // We make these distinct calls so they won't get confused
 // with any other call that gets replaced.
+// They get encoded as base_calls base_call_tagger0 .. base_call_tagger3_noref.
+// The substitution takes place in get_real_subcall.
 
 call "(base ATC call 0)" dontshow tag tagnullcall0
    nulldefine
@@ -380,7 +382,7 @@ call "cross loop and tag" c3
    setup 5x2 2x5 rotate restriction peelable_box
       array [C5S C6S C7S C8S C9S A4N A3N A2N A1N A0N]
 
-call "invert" c3a tag invert_the_tag_half
+call "invert" c2 tag invert_the_tag_half
             base_tag_call_3
    setup 4x2 2x4 rotate restriction forbidden peelable_box
       array [ZM6W ZM1W AL0E AM7E CM4E CR3E ZM2W ZM5W]
@@ -1746,7 +1748,16 @@ call "ping-pong circulate" plus
       array [ZM6W 0 0 0 0 ZM3W 0 0]   // or else we would be hypocritical here.
          // Unless, of course, you think the outsides should look
          // at the handedness of a wave that is T-boned to them????
+   // Want to be able to use the "split" concept.
+   setup pmd dmd qualifier right wave_only restriction forbidden levelc4a
+      array [ZM1N CR2S 0 0]
+   setup pmd dmd qualifier left wave_only restriction forbidden levelc4a
+      array [ZM3N 0 0 AL2S]
 
+// Still need this:  From an hourglass-like thing, you can say
+// "center 4 split ping-pong circulate", because "split ping-pong
+// circulate" is a recognized call in its own right.  But you can't
+// give the "split" concept.
 call "split ping-pong circulate" c4a
    setup pmd dmd qualifier right wave_only
       array [ZM1N CR2S 0 0]
@@ -8096,7 +8107,7 @@ call "turn and deal" a1 tag turnanddeal
             left_means_mirror
    setup 1x4 2x2 no_cutting_through restriction awkward_centers
       array [CR0S CR1S AL2S AL3S]
-            alternate_definition [single] c3x
+            alternate_definition [single] c3a
    setup 1x2 1x2 rotate restriction awkward_centers
       array [CR0E AL1E]
             alternate_definition [3x3] c4
@@ -8558,13 +8569,29 @@ call "@a tag the line" plus tag tag_the_line_n_4
    setup 1x8 2x4 qualifier num 2 none
       array [C0E C1E C3E C2E A4W A5W A7W A6W]
 
-// The following 2 calls work with "flip", "tag", and "vertical tag".
+// Special case, no backing up, so that tag the line 0/4 can roll.
+call "tag the line 0/4" mainstream
+            left_means_mirror
+   setup 1x4 1x4
+      array [CR0E CR1E AL2W AL3W]
+            alternate_definition [single] c4
+   setup 1x2 1x2
+      array [CR0E AL1E]
+            alternate_definition [3x3] c4
+   setup 1x6 2x3
+      array [CR0E CR1E CR2E AL3W AL4W AL5W]
+            alternate_definition [4x4] c4
+   setup 1x8 1x8
+      array [CR0E CR1E CR2E CR3E AL4W AL5W AL6W AL7W]
+
+// The following 2 calls (tagnullcall1) work with "flip", "tag", and "vertical tag".
 
 // Actually, the 3/4 fraction is plus, but we are in violation
 // of such numerical niceties in many places.
 call "@w the line @a" mainstream
-            neednumber left_means_mirror single_is_inherited singlefile_is_inherited
-            nxn_is_inherited mxn_is_inherited revert_is_inherited fractal_is_inherited
+            neednumber yield_if_ambiguous left_means_mirror single_is_inherited
+            singlefile_is_inherited nxn_is_inherited mxn_is_inherited revert_is_inherited
+            fractal_is_inherited
    seq tagnullcall1 [inherit_left inherit_single inherit_singlefile inherit_nxn inherit_mxn]
    seq revert_if_needed [inherit_revert inherit_fractal inherit_nxn]
    seq extend_n [inherit_single inherit_nxn inherit_mxn]
@@ -8937,7 +8964,7 @@ call "continue to@M@C invert another @b" c4a tag continue_invert_n
             cross_is_inherited magic_is_inherited neednumber
    seq continue_invert [inherit_cross inherit_magic repeat_n]
 
-call "track @9" c3
+call "track @9" c1
             left_means_mirror neednumber
             single_is_inherited nxn_is_inherited bigmatrix_is_inherited revert_is_inherited fractal_is_inherited
    seq track2 [inherit_left inherit_nxn inherit_single]
@@ -14300,14 +14327,32 @@ call "courtesy turn" mainstream
    // we want "twisted" to work.
    setup 2x2 2x2 qualifier in in_or_out restriction controversial alwaysfail
       array [AL1S AL0S AL3S AL2S]
+
+   // These next few things involve the doctrine of "Turn however far
+   // (180 to 360 degrees, that is) until the couple is facing the direction
+   // from which the woman appeared to come."  As such, they are gender-sensitive.
+
+   // LH wave, boys on the end.
    setup 1x4 2x2 qualifier left wave_only
-      array [0 AL3E AAL2W 0]
+      predscantdo
+         if boyp  [0    0 AAL2W 0]
+         if girlp [0 AL3E     0 0]
+
+   // LH column, if girls are #1 and #2, go to a starting DPT.
+   // Other arrangements are similarly tricky.
    setup 4x2 2x4 qualifier left wave_only
-      array [0 0 0 0 AL3S AL2S AL1N AL0N]
+      predscantdo
+         if boyp  [0 0 0 0 AL4S AL2N AL1N AL0N]
+         if girlp [0 0 0 0 AL3S AL2S AL1S AL7N]
+
+   // Starting DPT.  Go all the way around.
    setup 4x2 2x4 qualifier in 2fl_only restriction controversial alwaysfail
-      array [AL7S AL6S AL5S AL4S AL3S AL2S AL1S AL0S]
+      array [AL0N AL1N    0    0    0    0 AL6N AL7N]
+
+   // Eight chain.  The outsides go all the way around; centers go half.
    setup 4x2 2x4 qualifier in in_or_out restriction controversial alwaysfail
-      array [AL7S AL6S AL5S AL4S AL3S AL2S AL1S AL0S]
+      array [AL0N    0 AL5S    0    0 AL2S    0 AL7N]
+
    setup 1x2 1x2 restriction forbidden couples_only
       array [AL1S AL0S]
             alternate_definition [half] mainstream
@@ -19344,6 +19389,23 @@ call "extend" mainstream tag extend
       array [0 ZM1N 0 ZM1N]
    setup 4x1 dmd qualifier live out regular_tbone restriction controversial alwaysfail
       array [0 0 ZM2N 0]
+            alternate_definition [interlocked] c3a
+   // starting DPT to 1/4 line.
+   setup 4x2 qtag rotate qualifier in 2fl_only
+      array [ZM5W ZM6W 0 0 0 0 ZM7W ZM4W]
+   // 1/4 line to waves.  Yes, waves.
+   setup qtag 2x4 qualifier live in qline_like_r
+      array [0 0 0 0 ZM5N ZM7N ZM0N ZM2N]
+   setup qtag 2x4 qualifier live in qline_like_l
+      array [0 0 ZM3N ZM1N ZM4N ZM6N 0 0]
+   // waves to 3/4 line.
+   setup 2x4 qtag qualifier wave_only
+      array [ZM0N ZM0N ZM1N ZM1N ZM2N ZM7N ZM3N ZM6N]
+   // 3/4 line to CDPT.
+   setup qtag 2x4 rotate qualifier out qline_like_l
+      array [ZM7W ZM0W ZM1W ZM6W 0 0 ZM6W ZM1W]
+   setup qtag 2x4 rotate qualifier out qline_like_r
+      array [ZM7W ZM0W ZM1W ZM6W 0 0 ZM6W ZM1W]  // same
             alternate_definition [cross] c1
    // 1/4 tag to 1/2 tag -- we do not demand a definitive test to distinguish
    // a 1/4 tag from a 3/4 tag, because cross extend is meaningless in a 3/4 tag.
@@ -23970,6 +24032,11 @@ call "scoot back in 1/4 tag" dontshow tag qtagscootback
    // Well, usually in a 1/4 tag.
    setup 2x2 2x2 qualifier wave_only restriction unusual alwaysfail
       array [CR1S AL0S AM3S CM2S]
+            alternate_definition [cross] c4
+   setup pmd dmd qualifier right dmd_ctrs_mwv
+      array [A0S A1S 0 0]
+   setup pmd dmd qualifier left dmd_ctrs_mwv
+      array [C0S 0 0 C3S]
             alternate_definition [yoyo] c4
    setup qtag qtag rotate qualifier right dmd_ctrs_mwv
       array [0 0   0 C7S C2S C4S C5S   0]
@@ -25949,7 +26016,7 @@ call "@0 the@C lock" c3a
    seq nullcall [mandatory_anycall]
    seq lockit [inherit_cross inherit_fractal]
 
-call "hinge the top" c4a
+call "hinge the top" c3a
             fractal_is_inherited visible_fractions
    seq hinge [inherit_fractal]
    seq fanthetop [inherit_fractal]
@@ -27050,13 +27117,13 @@ call "plenty, ends face @h@S, interrupt after the star turns with @m" c1
 call "@2scoot @3and little" c1
             visible_fractions left_means_mirror
             intlk_is_inherited yoyo_is_inherited gen_sting_is_inherited cross_is_inherited
-   seq scootback [or_anycall inherit_intlk inherit_yoyo inherit_gensting inherit_cross]
+   seq qtagscootback [or_anycall inherit_intlk inherit_yoyo inherit_gensting inherit_cross]
    seq natural_little [inherit_left inherit_intlk]
 
 call "@2scoot @3and little but @m" c1
             visible_fractions left_means_mirror
             intlk_is_inherited yoyo_is_inherited gen_sting_is_inherited cross_is_inherited
-   seq scootback [or_anycall inherit_intlk inherit_yoyo inherit_gensting inherit_cross]
+   seq qtagscootback [or_anycall inherit_intlk inherit_yoyo inherit_gensting inherit_cross]
    seq littlebut2nd [inherit_left]
 
 call "@2scoot @3and little, ends go as you are" c1
@@ -27066,13 +27133,13 @@ call "@2scoot @3and little, ends go as you are" c1
 
 call "@2scoot @3and little, ends face @h" c1
             left_means_mirror intlk_is_inherited yoyo_is_inherited gen_sting_is_inherited cross_is_inherited
-   seq scootback [or_anycall inherit_intlk inherit_yoyo inherit_gensting inherit_cross]
+   seq qtagscootback [or_anycall inherit_intlk inherit_yoyo inherit_gensting inherit_cross]
    seq little_ends_face_dir [inherit_left inherit_intlk]
 
 call "@2scoot @3and little more" c2
             visible_fractions left_means_mirror
             intlk_is_inherited yoyo_is_inherited gen_sting_is_inherited cross_is_inherited
-   seq scootback [or_anycall inherit_intlk inherit_yoyo inherit_gensting inherit_cross]
+   seq qtagscootback [or_anycall inherit_intlk inherit_yoyo inherit_gensting inherit_cross]
    seq natural_lilmore [inherit_left inherit_intlk]
 
 call "@2scoot @3and little more, ends go as you are" c2
@@ -27091,7 +27158,7 @@ call "@2scoot @3and plenty@S" c1
    // we don't require them to.
             visible_fractions left_means_mirror
             intlk_is_inherited yoyo_is_inherited gen_sting_is_inherited cross_is_inherited
-   seq scootback [or_anycall inherit_intlk inherit_yoyo inherit_gensting inherit_cross]
+   seq qtagscootback [or_anycall inherit_intlk inherit_yoyo inherit_gensting inherit_cross]
    seq natural_plenty [inherit_left inherit_intlk]
 
 call "@2scoot @3and plenty, ends go as you are@S" c1
@@ -27105,14 +27172,14 @@ call "@2scoot @3and plenty, ends go as you are@S" c1
 call "@2scoot @3and plenty, ends face @h@S" c1
             left_means_mirror intlk_is_inherited yoyo_is_inherited gen_sting_is_inherited
             cross_is_inherited visible_fractions
-   seq scootback [or_anycall inherit_intlk inherit_yoyo inherit_gensting inherit_cross]
+   seq qtagscootback [or_anycall inherit_intlk inherit_yoyo inherit_gensting inherit_cross]
    seq little_ends_face_dir [inherit_left inherit_intlk]
    seq turnstar2 [allow_forced_mod insert_number 2]
    seq finishplenty []
 
 call "@2scoot @3and plenty, replace the star turns with @m" c1
             left_means_mirror intlk_is_inherited yoyo_is_inherited gen_sting_is_inherited visible_fractions
-   seq scootback [or_anycall inherit_intlk inherit_yoyo inherit_gensting]
+   seq qtagscootback [or_anycall inherit_intlk inherit_yoyo inherit_gensting]
    seq natural_little [inherit_left inherit_intlk]
    seq nullsecond [mandatory_secondary_call]
    seq finishplenty []
@@ -27126,14 +27193,14 @@ call "@2scoot @3and plenty, ends go as you are, replace the star turns with @m" 
 
 call "@2scoot @3and plenty, ends face @h, replace the star turns with @m" c1
             left_means_mirror intlk_is_inherited yoyo_is_inherited gen_sting_is_inherited visible_fractions
-   seq scootback [or_anycall inherit_intlk inherit_yoyo inherit_gensting]
+   seq qtagscootback [or_anycall inherit_intlk inherit_yoyo inherit_gensting]
    seq little_ends_face_dir [inherit_left inherit_intlk]
    seq nullsecond [mandatory_secondary_call]
    seq finishplenty []
 
 call "@2scoot @3and plenty@S, interrupt before the star turns with @m" c1
             left_means_mirror intlk_is_inherited yoyo_is_inherited gen_sting_is_inherited visible_fractions
-   seq scootback [or_anycall inherit_intlk inherit_yoyo inherit_gensting]
+   seq qtagscootback [or_anycall inherit_intlk inherit_yoyo inherit_gensting]
    seq natural_little [inherit_left inherit_intlk]
    seq nullsecond [mandatory_secondary_call]
    seq turnstar2 [allow_forced_mod insert_number 2]
@@ -27149,7 +27216,7 @@ call "@2scoot @3and plenty, ends go as you are@S, interrupt before the star turn
 
 call "@2scoot @3and plenty, ends face @h@S, interrupt before the star turns with @m" c1
             left_means_mirror intlk_is_inherited yoyo_is_inherited gen_sting_is_inherited visible_fractions
-   seq scootback [or_anycall inherit_intlk inherit_yoyo inherit_gensting]
+   seq qtagscootback [or_anycall inherit_intlk inherit_yoyo inherit_gensting]
    seq little_ends_face_dir [inherit_left inherit_intlk]
    seq nullsecond [mandatory_secondary_call]
    seq turnstar2 [allow_forced_mod insert_number 2]
@@ -27157,7 +27224,7 @@ call "@2scoot @3and plenty, ends face @h@S, interrupt before the star turns with
 
 call "@2scoot @3and plenty@S, interrupt after the star turns with @m" c1
             left_means_mirror intlk_is_inherited yoyo_is_inherited gen_sting_is_inherited visible_fractions
-   seq scootback [or_anycall inherit_intlk inherit_yoyo inherit_gensting]
+   seq qtagscootback [or_anycall inherit_intlk inherit_yoyo inherit_gensting]
    seq natural_little [inherit_left inherit_intlk]
    seq turnstar2 [allow_forced_mod insert_number 2]
    seq nullsecond [mandatory_secondary_call]
@@ -27173,7 +27240,7 @@ call "@2scoot @3and plenty, ends go as you are@S, interrupt after the star turns
 
 call "@2scoot @3and plenty, ends face @h@S, interrupt after the star turns with @m" c1
             left_means_mirror intlk_is_inherited yoyo_is_inherited gen_sting_is_inherited visible_fractions
-   seq scootback [or_anycall inherit_yoyo inherit_gensting]
+   seq qtagscootback [or_anycall inherit_yoyo inherit_gensting]
    seq little_ends_face_dir [inherit_left inherit_intlk]
    seq turnstar2 [allow_forced_mod insert_number 2]
    seq nullsecond [mandatory_secondary_call]
@@ -27332,7 +27399,7 @@ call "@0 and@C counter" c2
 call "@2scoot @3and rally" c3a
             first_part_visible left_means_mirror
             intlk_is_inherited yoyo_is_inherited gen_sting_is_inherited cross_is_inherited
-   seq scootback [or_anycall inherit_intlk inherit_yoyo inherit_gensting inherit_cross]
+   seq qtagscootback [or_anycall inherit_intlk inherit_yoyo inherit_gensting inherit_cross]
    seq natural_rally [inherit_left inherit_intlk]
 
 call "@2scoot @3and rally but @m" c3a
