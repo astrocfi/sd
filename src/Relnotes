@@ -1,15 +1,154 @@
-		    RELEASE NOTES FOR SD VERSION 29.2
-       Database version = 29.1, format = 40, X11 UI version 1.14.
+		    RELEASE NOTES FOR SD VERSION 29.3
+       Database version = 29.3, format = 42, X11 UI version 1.14.
 
 
-WARNING!  This is not a major release!  It is being distributed for
-the purpose of testing the user interface changes.
+The good news is that athere are a lot of new features.  The bad news is
+that there are probably a lot of bugs.  The good news is that automatic
+regression tests have been developed, so that, in the future, bugs that
+get fixed will stay fixed.
 
+New concepts:
+   END-TO-END [SPLIT/INTERLOCKED] PHANTOM LINES/COLUMNS
+   END-TO-END TRIPLE/QUADRUPLE LINES/COLUMNS [WORKING TOGETHER/APART]
+   TRIPLE/QUADRUPLE LINES/COLUMNS/BOXES WORKING CLOCKWISE/COUNTERCLOCKWISE
+   CONCENTRIC TRIPLE/QUADRUPLE BOXES
+   [SPLIT/INTERLOCKED] PHANTOM 1/4-TAGS (analogous to diamonds)
+   DIVIDED (DIAMONDS)/(1/4 TAGS)  (these are end-to-end)
+   REVERSE ORDER
+   SKIP the Nth PART
+   LAST FRACTION (e.g. do the last 4/5)
+   FAN
+   YO-YO
+   FINISH
+      The program executes "finish" as "skip the first part".  That definition
+      is, of course, not universally accepted.  In fact, the meaning of
+      "finish" in its most general sense is very difficult to capture.
+      Because of this, there are only certain call in the database for
+      which this is permitted.  They are marked with the
+      "finish_means_skip_first_part" flag.
+   SINGLE FILE is now a concept in its own right.  You do not select
+      "single" to get it.  SINGLE rotate and SINGLE FILE rotate can now
+      be entered as such.
+   ASSUME WAVES
+      This concept is somewhat peculiar, as well as being in a primordial
+      state.  Its basic premise is that it tells the program (and the dancers)
+      to assume that phantoms always face in such a way that that everyone is
+      in waves or miniwaves, in all the usual ways, at all times.  If this
+      assumption turns out to be contrary to fact, that is, if any pair of
+      live people ever happen not to be in waves, the behavior will be
+      unpredictable.  Use with care.
+   CENTRAL
+      This is in a rather primordial state.  Use with care.
+   CRAZY / REVERSE CRAZY
+      These aren't very smart about doing the call on each side.  If the
+      setup is a 2x4, it does the call in each box.  To get "full crazy",
+      you must say "4/4".  Sorry.
+   RANDOM can now be used with most concepts.
+
+Calls can now take directions.  For example, quarter <direction>, will
+produce a popup asking about the desired direction.  Various calls such
+as "quarter right", "pass right", "face right", "divide the ocean", tunnel",
+"tunnel thru", "hinge and circulate", "spin the windmill", lines walk in",
+etc. were fixed.  "Face <direction>" is the call that is appropriate to use
+after "tag the line".  It is possible to "face zig-zag", etc., but not to
+"quarter zig-zag".  The calls "zig-zag" and "zag-zig" were left in the
+database under those names.
 
 Finally added the "magic_outroller_is_cw" predicate, so that magic outroll
 circulate now works as well as magic inroll circulate.
 
+Inside triangles can now be found from diamonds.
+
+In/out/zoom roll circulate, and "roll em", now work from 2x3, 2x6, and 2x8 matrices.
+
+Linear cycle and cross linear cycle are now believed to be correctly implemented.
+Same for linear/tagger's flow, with cross/criss-cross.
+
+The program now understands what "left spin the top" and related calls mean.
+From facing couples, the dancers step to a left-handed wave and do the call.
+From a left-handed wave, the dancers simply do the call.  (The "left" is
+superfluous in this case, but we allow it.)  From a right-handed wave, it
+is illegal.
+
+The call "shazam" is now a right-hand-only call.  Most people think it is
+an any-hand call -- this change was made under the principle of maximum
+conservatism.  If you want to do a shazam from a left-handed setup, you
+must enter "left shazam".  When you call the card, you don't need to read
+the word "left" if you don't want to.
+
+A bug was fixed that made the interaction of "12 MATRIX", "2X6 MATRIX", "MXN",
+and similar concepts not work correctly.  This may have led people to believe that
+this was formulated incorrectly.  It was just implemented incorrectly.
+Because this stuff is rather confusing, a description of the intended use of these
+concepts is included at the end of these release notes.
+
+Split phantom lines and columns can be used from parallelograms.
+
+Fixed the "phantom perk up" bug.
+
+Fixed the "phantom columns wheel thru from a squared set" bug.
+Fixed the more serious "phantom columns left wheel thru from a squared set" bug.
+(This bug caused the #4 boy to disappear!  We apologize for lawsuits and
+missing person reports that may have arisen from same.)
+
+Fixed the "stable split phantom boxes roll em", "stable 2x8 matrix roll em"
+and "1/4 split phantom boxes split the difference" bugs, not to mention
+the "2x8 matrix roll em" bug.
+
+The "nice setup" command works from more setups and uses a larger
+repertoire of concepts.  It sticks to concepts on the level unless the
+command "toggle concept levels" (see below) was given.
+
+More getouts are recognized: circle left/right, single file [reverse]
+promenade, including those from T-boned setups, regular reverse promenade.
+These all work with the "reconcile" command.
+
+Fixed a bug that made the reconciler see only a small percentage of
+the actual solutions.  Oops.
+
+Fixed a bug that made it think split phantom columns (yes, columns!)
+relay the top was legal.  You hadn't noticed?  Good.
+
+Perk up now works correctly (finally!) from inverted lines.
+
+2x2, 3x3, and 4x4 zing were implemented.
+
 New calls: [magic] in/out/zoom roll circulate from 2x3 setups.
+Grand follow your neighbor.  Barge the action.  The action and barge
+the action take all the usual star turn and finishing modifications.
+
+The call "reset" no longer takes a numeric argument saying how many
+quarters to go.  Instead, use the "fractional" concept with it.
+
+Calls can now have multiple numeric arguments.  The calls i-j-k quarter the
+alter, i-j-k-l quarter the deucey, i-j-k-l relay the top, touch by, circle by,
+touch tone, and touch & go were rewritten to use this.
+
+Breaker <n> and breaker <anycall> now work fairly naturally.
+Swap the windmill now takes the "cross" as well as "reverse" modifiers.
+
+[flip] the yellow bricking [bounce the beaux] and similar things can
+now be entered in a somewhat straightforward way.
+
+Fixed multitudinous problems, such as the problems with
+   tag and spin right/left from a grand line or a single line of 4
+   tag and spin right/left/in/out from parallel lines
+   shuttle right/left from a grand column or a single column of 4
+   shuttle right/left/in/out from 8-chain
+
+   tag and spin [u-turn-back] from a grand line or a single line of 4
+   tag and spin [rally etc.] from parallel lines
+   shuttle [u-turn-back] from a grand column or a single column of 4
+   shuttle [rally etc.] from 8-chain
+
+   own the <points> mix by flip the diamond from parallel diamonds,
+      point-to-point diamonds, or a single diamond.
+
+   you all from lines, diamonds, a grand line, point-to-point diamonds,
+      galaxy, and general columns.
+
+   shuttle [stampede] from 8-chain
+
 
 There is a new command "toggle concept levels" that affects whether
 concepts that are illegal at the current level will be presented.
@@ -28,19 +167,174 @@ It is an icon in the X11 version, and a typed command in sdtty.
 USER INTERFACE CHANGES:
 
 The program "sdtty" has been extensively rewritten for PC's and Unix
-systems.  The PC behavior has not been tested; differences from the
-previous version are difficult to characterize.  The Unix behavior
-now uses the "curses" display access mechanism.  It should make
-effective use of the screen-editing features of the terminal (VT-100
-or emulation of same, or whatever) to keep the screen updated.
+systems.
 
-You should be able to turn off the use of insert/delete line
-capabilities by giving the command-line switch "-no_line_delete" at
-program startup.
+When multiple sequences are written to the same file, they are separated
+from each other by the "formfeed" (control-L, octal 14, hex 0C) character,
+in order to make them print cleanly on separate pages.  If it appears that
+all sequences after the first are lost, your printing software is not
+handling the formfeed correctly.
 
-You should be able to turn the "curses" mechanism off completely by giving
-the command-line switch "-no_cursor" at program startup.  This should even
+A new command has been added: "refresh display".  This is available in sdtty
+and in the Macintosh implementation.  It causes a complete clean transcript
+of the current sequence to be printed.  This can be used if the display got
+messed up due to such things as unreliable terminal or modem behavior.
+Also, when using sdtty with the "-no_cursor" feature, no attempt is made to
+edit the screen to keep a clean-looking transcript.  Instead, the part of
+the transcript that has changed is simply redisplayed.  This will inevitably
+lead to a choppy appearance on the screen or printing device.  The "refresh
+display" command cleans that up.
+
+The "refresh display" command is not available or needed in the X11 version.
+
+The resolver commands "go to next" and "go to previous" were changed to just
+"next" and "previous", which are unambiguous on their first character.  When
+the original names were chosen, those names were on icons that one chose with
+a mouse, so their spelling didn't matter.  There was no "completing reader".
+I had no idea at the time how inconvenient they would become under sdtty.
+
+UNIX-SPECIFIC STUFF
+
+The Unix version now uses the "curses" display access mechanism.  It
+should make effective use of the screen-editing features of the terminal
+(VT-100 or emulation of same, or whatever) to keep the screen updated.
+
+You can turn off the use of insert/delete line capabilities by giving
+the command-line switch "-no_line_delete" at program startup.
+
+You can turn the "curses" mechanism off completely by giving the
+command-line switch "-no_cursor" at program startup.  This should even
 make it possible to use the program from a printing device.
+
+PC-SPECIFIC STUFF
+
+The PC version also tries to keep the screen up-to-date efficiently.
+It also recognizes the "-no_cursor" switch to disable that.
+
+To deal with different types of display hardware with various screen sizes,
+the "-screensize <n>" switch can be given at program invocation, as in
+     sdtty -screensize 36 a2
+The default size is 25.
+
+===============================================================================
+
+APPENDIX: 12 MATRIX, 2X6 MATRIX, and related stuff.
+
+If you do not use the program at C3 or C4, you don't need to worry about this.
+
+This discussion will be in terms of 12 matrices.  16 matrices are analogous.
+
+Definition: a "large" setup is a setup of more than 8 people.  A "large"
+call is a call executed in such a setup.  I know of no large calls that
+don't have some kind of modifier like "12 matrix" or "3x3" in their name.
+
+General principle:  when in a large setup, so that phantoms are present,
+you must say something to acknowledge the existence of the phantoms, that
+is, to say that the phantom's spots count.  This is necessary whether doing
+a large call, or splitting the large setup into smaller one for doing small
+calls.  So, for example, if you are in a parallelogram, you can't just say
+the name of a large call.  You must say "12 MATRIX" or "2X6 MATRIX".
+
+The explicit matrix concepts "MxN matrix", e.g. "2x6 matrix", legitimize
+the large setup, saying where the phantoms are, and making it possible to
+call large calls, or, if the call has no large version, to split the setup
+and do multiple instances of smaller versions.
+
+Explicit matrix concepts can also be used to dictate the precise formation
+with phantoms when using tandem or as-couples concepts.  For example, from
+two-faced lines, "2x8 matrix as couples" leads to virtual 2x4 lines (in
+which the ends are all phantoms), "4x4 matrix as couples" leads to virtual
+2x4 columns, and "4x4 matrix boxes work solid" leads to a virtual 2x2.
+"2x8 matrix boxes work solid" leads to a virtual 1x4.  From twin diamonds,
+"16 MATRIX OF PARALLEL DIAMONDS DIAMONDSOME" leads to a virtual 1x4.
+
+The call size modifiers "12 matrix" or "16 matrix" legitimize the large setup
+[though they don't always state unambiguously where the phantoms are, which
+can lead to difficulty] and also select a "large" version of a call.  When
+this modifier is used, only large versions of the call may be performed --
+the setup will not be split for small versions.
+
+When we say that "12 matrix" is a call size modifier, we mean that, for
+example, "12 matrix relay the top" is a call.  "3x4 matrix relay the top"
+is not a call, though there are some calls, like circulate, that can be
+done with explicit matrix concepts but no call size modifiers.
+
+In a great many instances explicit matrix concepts like "2x6 matrix" or
+"3x4 matrix" can be used interchangeably with the call size modifier
+"12 matrix".  For example, "2x6 matrix in roll circulate" and "12 matrix
+in roll circulate" are equivalent in 2x6 lines.  "3x4 matrix circulate"
+and "12 matrix circulate" are equivalent in triple lines.  It should
+never be necessary to give both an explicit matrix concept and a call
+size modifier.
+
+The explict matrix concepts and call size modifiers all have the additional
+property that they can expand a smaller setup as required, so, for example,
+"12 matrix circulate" is legal in normal columns.  [Special case: in a 2x4
+setup, the "16 matrix" call modifier doesn't know whether to expand to a
+4x4 or a 2x8, so you may need to use "4x4 matrix" or "2x8 matrix" explicitly.
+In other cases, the expansion is clear.]
+
+
+For example, from triple waves,
+         12 MATRIX circulate
+ and     3X4 MATRIX circulate
+are both legal and equivalent.
+
+From a parallelogram,
+         12 MATRIX circulate
+ and     2X6 MATRIX circulate
+are both legal and equivalent, as are
+         12 MATRIX in roll circulate
+ and     2X6 MATRIX in roll circulate
+
+         SMALL CALLS (defined for 8 people or fewer)
+
+If a call is defined for a setup of 8 people or fewer, and the setup is larger
+than 8 people, so you want the setup divided, you must give an explicit matrix
+concept such as "2X6 MATRIX".  This defines the formation, and tells people
+to divide the 12-person formation into the smaller formations required to do
+the call.  Do not say "12 MATRIX".  That designates a 12-person call, which
+this is not.
+
+So, from parallelogram columns,
+         2X6 MATRIX double play
+is legal, while
+         12 MATRIX double play
+  or     double play
+are not.  You may also say
+         12 MATRIX DIVIDED COLUMNS double play
+(The 12 MATRIX DIVIDED COLUMNS concept forms two 6-person setups.)
+
+The above examples will work from a 2x4 setup also -- it expands
+the matrix by placing phantoms outside.
+
+From triple waves, you may also say
+         3X4 MATRIX double play
+   or    12 MATRIX SPLIT PHANTOM COLUMNS double play
+but not
+         12 MATRIX double play
+
+You may substitute calls like "3x3 peel off" for "double play" in the
+above.  Note that the "MxN" concept identifies a variant of the call.
+It does not cause the matrix to be expanded or recognized.
+
+         LARGE CALLS (defined for more than 8 people)
+
+Most large calls are versions of calls that are normally done from small
+setups.  That large version must be identified with some modifier such as
+"12 matrix", or "MxN".  Furthermore, you must legitimize the phantoms by
+giving an appropriate modifier.  An explicit matrix concept such as
+"2x6 matrix" will do, as will a call size modifier such as "12 matrix".
+
+From a parallelogram, you may say
+         12 MATRIX circulate
+  or     2X6 MATRIX circulate
+  or     12 MATRIX 3X3 transfer the column
+  or     2X6 MATRIX 3X3 transfer the column
+but not  3X3 transfer the column
+
+The above examples will work from a 2x4 setup also -- it expands
+the matrix by placing phantoms outside.
 
 ===============================================================================
 

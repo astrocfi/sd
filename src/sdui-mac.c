@@ -39,6 +39,7 @@ static char *sdui_version = "1.96";
    uims_do_abort_popup
    uims_do_neglect_popup
    uims_do_selector_popup
+   uims_do_direction_popup
    uims_do_quantifier_popup
    uims_do_modifier_popup
    uims_do_concept_popup
@@ -167,7 +168,7 @@ get_user_command(int which)
             user_match = menu_match;
             return;
         }
-        matches = match_user_input(user_input, which, &user_match, extended_input, 0, 0);
+        matches = match_user_input(user_input, which, &user_match, extended_input, (show_function) 0, 0);
         if (c == ' ') {
             /* extend only to one space, inclusive */
             p = extended_input;
@@ -200,8 +201,6 @@ get_user_command(int which)
         }
     }
 }
-
-static int save_selector_kind; /* save selector kind for <anyone> */
 
 call_list_kind uims_current_call_menu;
 
@@ -275,13 +274,28 @@ uims_do_selector_popup(void)
 {
     int n;
 
-    if (user_match.valid && (user_match.who >= 0)) {
-        n = user_match.who;
-        user_match.who = -1;
+    if (user_match.valid && (user_match.who > selector_uninitialized)) {
+        n = (int) user_match.who;
+        user_match.who = selector_uninitialized;
         return n;
     }
     else {
         return mac_do_selector_popup();
+    }
+}    
+
+extern int
+uims_do_direction_popup(void)
+{
+    int n;
+
+    if (user_match.valid && (user_match.where > direction_uninitialized)) {
+        n = (int) user_match.where;
+        user_match.where = direction_uninitialized;
+        return n;
+    }
+    else {
+        return mac_do_direction_popup();
     }
 }    
 
@@ -291,9 +305,10 @@ uims_do_quantifier_popup(void)
     int n;
     char buffer[200];
 
-    if (user_match.valid && (user_match.n >= 1)) {
-        n = user_match.n;
-        user_match.n = -1;
+    if (user_match.valid && (user_match.howmanynumbers >= 1)) {
+        n = user_match.number_fields & 0xF;
+        user_match.number_fields >>= 4;
+        user_match.howmanynumbers--;
         return n;
     }
     else {

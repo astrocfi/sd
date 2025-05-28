@@ -16,9 +16,12 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-    This is for version 28. */
+    This is for version 30. */
 
 /* This defines the following functions:
+   divided_setup_move
+   overlapped_setup_move
+   do_phantom_2x4_concept
    distorted_2x2s_move
    distorted_move
    triple_twin_move
@@ -31,15 +34,529 @@
 #include "sd.h"
 
 
+Private void innards(
+   setup *ss,
+   parse_block *parseptr,
+   callspec_block *callspec,
+   final_set final_concepts,
+   map_thing *maps,
+   long_boolean recompute_id,
+   setup *x,
+   setup *result)
+{
+   int i, r;
+   map_thing *final_map;
+   map_hunk *hunk;
+   setup z[4];
 
-Private int list_10_6_5_4[4] = {8, 6, 5, 4};
-Private int list_11_13_7_2[4] = {9, 11, 7, 2};
-Private int list_12_17_3_1[4] = {10, 15, 3, 1};
-Private int list_14_15_16_0[4] = {12, 13, 14, 0};
-Private int list_14_12_11_10[4] = {12, 10, 9, 8};
-Private int list_15_17_13_6[4] = {13, 15, 11, 6};
-Private int list_16_3_7_5[4] = {14, 3, 7, 5};
-Private int list_0_1_2_4[4] = {0, 1, 2, 4};
+   int finalsetupflags = 0;
+   int rot = maps->rot;
+   int vert = maps->vert;
+   int arity = maps->arity;
+
+   clear_people(result);
+
+   for (i=0; i<arity; i++) {
+      if (x[i].kind != nothing) {
+         /* It is clearly too late to expand the matrix -- that can't be what is wanted. */
+         x[i].setupflags = (ss->setupflags & ~SETUPFLAG__OFFSET_Z) | SETUPFLAG__DISTORTED | SETUPFLAG__NO_EXPAND_MATRIX;
+         x[i].rotation = 0;
+         if (recompute_id) update_id_bits(&x[i]);
+         move(&x[i], parseptr, callspec, final_concepts, FALSE, &z[i]);
+         finalsetupflags |= z[i].setupflags;
+      }
+      else
+         z[i].kind = nothing;
+   }
+
+   if (fix_n_results(arity, z)) {
+      result->kind = nothing;
+      return;
+   }
+   
+   /* Set the final setupflags to the OR of everything that happened.
+      The PAR_CONC_END flag doesn't matter --- if the result is a 2x2
+      begin done around the outside, the procedure that called us
+      (basic_move) knows what is happening and will fix that bit. */
+
+   result->setupflags = finalsetupflags;
+
+   /* Some maps (the ones used in "triangle peel and trail") do not want the result
+      to be reassembled, so we get out now.  These maps are indicated by arity = 1
+      and map3[1] nonzero. */
+
+   if ((arity == 1) && (maps->map3[1])) {
+      *result = z[0];
+      goto getout;
+   }
+
+   /* See if we can put things back with the same map we used before. */
+
+   if (z[0].kind == maps->inner_kind && (z[0].rotation&3) == 0) {
+      final_map = maps;
+      result->rotation = 0;
+      goto finish;
+   }
+
+   /* If this is a special map that flips the second setup upside-down, do so. */
+   if (rot == 2) {
+      z[1].rotation += 2;
+      canonicalize_rotation(&z[1]);
+   }
+   else if (rot == 3) {    /* or the first setup */
+      z[0].rotation += 2;
+      canonicalize_rotation(&z[0]);
+   }
+
+   z[0].rotation += (rot & 1) + vert;
+   z[1].rotation += (rot & 1) + vert;
+   z[2].rotation += (rot & 1) + vert;
+   z[3].rotation += (rot & 1) + vert;
+
+   /* Do various special things. */
+
+   switch (maps->map_kind) {
+      case MPKIND__4_EDGES:
+      case MPKIND__4_QUADRANTS:
+         /* These particular maps misrepresent the rotation of subsetups 2 and 4, so
+            we have to repair things when a shape-changer is called. */
+         z[1].rotation += 2;
+         z[3].rotation += 2;
+         break;
+      case MPKIND__DMD_STUFF:
+         /* These particular maps misrepresent the rotation of subsetup 2, so
+            we have to repair things when a shape-changer is called. */
+         z[1].rotation += 2;
+         break;
+      case MPKIND__O_SPOTS:
+         warn(warn__to_o_spots);
+         break;
+      case MPKIND__X_SPOTS:
+         warn(warn__to_x_spots);
+         break;
+      case MPKIND__NONE:
+         fail("Can't do shape changer with complex line/box/column/diamond identification concept.");
+   }
+
+   for (i=0; i<arity; i++)
+      canonicalize_rotation(&z[i]);
+
+   final_map = 0;
+   hunk = map_lists[z[0].kind][arity-1];
+   if (hunk) final_map = (*hunk)[maps->map_kind][(z[0].rotation & 1)];
+
+   if (z[0].rotation & 2) {
+      if (final_map == &map_s6_trngl) final_map = &map_b6_trngl;
+      else final_map = 0;        /* Raise an error. */
+   }
+
+   if ((ss->setupflags & SETUPFLAG__OFFSET_Z) && final_map && (maps->map_kind == MPKIND__OFFS_L_HALF || maps->map_kind == MPKIND__OFFS_R_HALF)) {
+      if (final_map->outer_kind == s2x6) warn(warn__check_pgram);
+      else final_map = 0;        /* Raise an error. */
+   }
+
+   if (!final_map) {
+      if (arity == 1)
+         fail("Don't know how far to re-offset this.");
+      else
+         fail("Can't do shape changer with complex line/box/column/diamond identification concept.");
+   }
+
+   result->rotation = z[0].rotation;
+   if ((z[0].rotation & 1) && (final_map->rot & 1))
+      result->rotation = 0;
+
+   result->rotation -= vert;
+
+   /* For single arity maps, nonzero map3 item means to give warning. */
+   if ((arity == 1) && (final_map->map3[0])) warn(warn__offset_gone);
+   /* For triple arity maps, nonzero map4 item means to give warning. */
+   if ((arity == 3) && (final_map->map4[0])) warn(warn__overlap_gone);
+
+   /* If this is a special map that expects the second setup to have been flipped upside-down, do so. */
+   if (final_map->rot == 2) {
+      z[1].rotation += 2;
+      canonicalize_rotation(&z[1]);
+   }
+   else if (final_map->rot == 3) {    /* or the first setup */
+      z[0].rotation += 2;
+      canonicalize_rotation(&z[0]);
+   }
+
+   finish:
+
+   if (arity != final_map->arity) fail("Confused about number of setups to divide into.");
+
+   rot = final_map->rot;
+   r = rot * 011;
+
+   for (i=0; i<=setup_limits[final_map->inner_kind]; i++) {
+      int t;
+
+      if (rot & 1) {
+         install_rot(result, final_map->map1[i], &z[0], i, r);
+         if (maps->map_kind == MPKIND__4_QUADRANTS || maps->map_kind == MPKIND__4_EDGES) {
+            install_person(result, final_map->map2[i], &z[1], i);
+            install_rot(result, final_map->map3[i], &z[2], i, 011);
+            install_person(result, final_map->map4[i], &z[3], i);
+         }
+         else if (maps->map_kind == MPKIND__DMD_STUFF) {
+            install_person(result, final_map->map2[i], &z[1], i);
+         }
+         else {
+            if (final_map->arity >= 2) install_rot(result, final_map->map2[i], &z[1], i, 011);
+            if (final_map->arity >= 3) install_rot(result, final_map->map3[i], &z[2], i, 011);
+            if (final_map->arity == 4) install_rot(result, final_map->map4[i], &z[3], i, 011);
+         }
+      }
+      else {
+         t = final_map->map1[i];
+
+         if (t >= 0)
+            install_person(result, t, &z[0], i);
+         else if (z[0].people[i].id1 & BIT_PERSON)
+            fail("This would go into an excessively large matrix.");
+
+         if (maps->map_kind == MPKIND__4_QUADRANTS || maps->map_kind == MPKIND__4_EDGES) {
+            install_rot(result, final_map->map2[i], &z[1], i, 011);
+            install_person(result, final_map->map3[i], &z[2], i);
+            install_rot(result, final_map->map4[i], &z[3], i, 011);
+         }
+         else if (maps->map_kind == MPKIND__DMD_STUFF) {
+            install_rot(result, final_map->map2[i], &z[1], i, 011);
+         }
+         else {
+            if (final_map->arity >= 2) {
+               t = final_map->map2[i];
+   
+               if (t >= 0)
+                  install_rot(result, t, &z[1], i, r);
+               else if (z[1].people[i].id1 & BIT_PERSON)
+                  fail("This would go into an excessively large matrix.");
+            }
+   
+            if (final_map->arity >= 3) {
+               t = final_map->map3[i];
+      
+               if (t >= 0)
+                  install_person(result, t, &z[2], i);
+               else if (z[2].people[i].id1 & BIT_PERSON)
+                  fail("This would go into an excessively large matrix.");
+            }
+   
+            if (final_map->arity == 4) {
+               t = final_map->map4[i];
+      
+               if (t >= 0)
+                  install_person(result, t, &z[3], i);
+               else if (z[3].people[i].id1 & BIT_PERSON)
+                  fail("This would go into an excessively large matrix.");
+            }
+         }
+      }
+   }
+
+   result->kind = final_map->outer_kind;
+
+   getout:
+
+   canonicalize_rotation(result);
+   reinstate_rotation(ss, result);
+}
+
+
+extern void divided_setup_move(
+   setup *ss,
+   parse_block *parseptr,
+   callspec_block *callspec,
+   final_set final_concepts,
+   map_thing *maps,
+   phantest_kind phancontrol,
+   long_boolean recompute_id,
+   setup *result)
+{
+   int i, mm, v1flag, v2flag, v3flag, v4flag;
+   setup x[4];
+
+   setup_kind kn = maps->inner_kind;
+   int rot = maps->rot;
+   int arity = maps->arity;
+   
+   v1flag = 0;
+   v2flag = 0;
+   v3flag = 0;
+   v4flag = 0;
+
+   for (i=0; i<=setup_limits[kn]; i++) {
+      setup tstuff;
+      clear_people(&tstuff);
+
+      mm = maps->map1[i];
+      if (mm >= 0)
+         tstuff.people[0] = ss->people[mm];
+      v1flag |= tstuff.people[0].id1;
+
+      if (arity >= 2) {
+         mm = maps->map2[i];
+         if (mm >= 0)
+            tstuff.people[1] = ss->people[mm];
+         v2flag |= tstuff.people[1].id1;
+      }
+
+      if (arity >= 3) {
+         mm = maps->map3[i];
+         if (mm >= 0)
+            tstuff.people[2] = ss->people[mm];
+         v3flag |= tstuff.people[2].id1;
+      }
+
+      if (arity == 4) {
+         mm = maps->map4[i];
+         if (mm >= 0)
+            tstuff.people[3] = ss->people[mm];
+         v4flag |= tstuff.people[3].id1;
+      }
+
+      if (rot & 1) {
+         /* Rotation is odd.  3 is a special case. */
+         (void) copy_rot(&x[0], i, &tstuff, 0, (rot==3 ? 011 : 033));
+         if (maps->map_kind == MPKIND__4_QUADRANTS || maps->map_kind == MPKIND__4_EDGES) {
+            (void) copy_person(&x[1], i, &tstuff, 1);
+            (void) copy_rot(&x[2], i, &tstuff, 2, 033);
+            (void) copy_person(&x[3], i, &tstuff, 3);
+         }
+         else if (maps->map_kind == MPKIND__DMD_STUFF) {
+            (void) copy_person(&x[1], i, &tstuff, 1);
+         }
+         else {
+            if (arity >= 2) (void) copy_rot(&x[1], i, &tstuff, 1, 033);
+            if (arity >= 3) (void) copy_rot(&x[2], i, &tstuff, 2, 033);
+            if (arity == 4) (void) copy_rot(&x[3], i, &tstuff, 3, 033);
+         }
+      }
+      else {
+         /* Rotation is even.  2 is a special case. */
+         (void) copy_person(&x[0], i, &tstuff, 0);
+         if (maps->map_kind == MPKIND__4_QUADRANTS || maps->map_kind == MPKIND__4_EDGES) {
+            (void) copy_rot(&x[1], i, &tstuff, 1, 033);
+            (void) copy_person(&x[2], i, &tstuff, 2);
+            (void) copy_rot(&x[3], i, &tstuff, 3, 033);
+         }
+         else if (maps->map_kind == MPKIND__DMD_STUFF) {
+            (void) copy_rot(&x[1], i, &tstuff, 1, 033);
+         }
+         else {
+            if (arity >= 2) {
+               if (rot == 2) {
+                  (void) copy_rot(&x[1], i, &tstuff, 1, 022);
+               }
+               else {
+                  (void) copy_person(&x[1], i, &tstuff, 1);
+               }
+            }
+            if (arity >= 3) (void) copy_person(&x[2], i, &tstuff, 2);
+            if (arity == 4) (void) copy_person(&x[3], i, &tstuff, 3);
+         }
+      }
+   }
+
+   switch (phancontrol) {
+      case phantest_impossible:
+         if (!(v1flag && v2flag))
+            fail("This is impossible in a symmetric setup!!!!");
+         break;
+      case phantest_both:
+         if (!(v1flag && v2flag))
+            /* Only one of the two setups is occupied. */
+            fail("Don't use phantom concept if you don't mean it.");
+         break;
+      case phantest_only_one:
+         if (v1flag && v2flag) fail("Can't find the setup to work in.");
+         break;
+      case phantest_only_first_one:
+         if (v2flag) fail("Not in correct setup.");
+         break;
+      case phantest_only_second_one:
+         if (v1flag) fail("Not in correct setup.");
+         break;
+      case phantest_first_or_both:
+         if (!v1flag)
+            fail("Don't use phantom concept if you don't mean it.");
+         break;
+      case phantest_2x2_both:
+         /* Test for "C1" blocks. */
+         if (!((v1flag | v3flag) && (v2flag | v4flag)))
+            fail("Don't use phantom concept if you don't mean it.");
+         break;
+      case phantest_not_just_centers:
+         if (!(v1flag && v3flag))
+            fail("Don't use phantom concept if you don't mean it.");
+         break;
+      case phantest_2x2_only_two:
+         /* Test for NOT "C1" blocks. */
+         if ((v1flag | v3flag) && (v2flag | v4flag)) fail("Not in blocks.");
+         break;
+   }
+
+   x[0].kind = nothing;
+   x[1].kind = nothing;
+   x[2].kind = nothing;
+   x[3].kind = nothing;
+
+   if (v1flag) x[0].kind = maps->inner_kind;
+   if (v2flag) x[1].kind = maps->inner_kind;
+   if (v3flag) x[2].kind = maps->inner_kind;
+   if (v4flag) x[3].kind = maps->inner_kind;
+
+   innards(ss, parseptr, callspec,
+      final_concepts, maps, recompute_id, x, result);
+}
+
+
+extern void overlapped_setup_move(setup *s, map_thing *maps,
+   int m1, int m2, int m3, parse_block *parseptr, setup *result)
+{
+   int i, j;
+   setup x[4];
+
+   setup_kind kn = maps->inner_kind;
+   int rot = maps->rot;
+   int arity = maps->arity;
+
+   if (arity >= 4) fail("Can't handle this many overlapped setups.");
+
+   for (i=0, j=1; i<=setup_limits[kn]; i++, j<<=1) {
+      setup tstuff;
+
+      tstuff.people[0] = s->people[maps->map1[i]];
+      if (arity >= 2) tstuff.people[1] = s->people[maps->map2[i]];
+      if (arity == 3) tstuff.people[2] = s->people[maps->map3[i]];
+
+      if (rot & 1) {
+         /* Rotation is odd.  3 is a special case. */
+         if (rot == 3) tstuff.people[0].id1 = rotcw(tstuff.people[0].id1); else tstuff.people[0].id1 = rotccw(tstuff.people[0].id1);
+         if (arity >= 2) tstuff.people[1].id1 = rotccw(tstuff.people[1].id1);
+         if (arity == 3) tstuff.people[2].id1 = rotccw(tstuff.people[2].id1);
+      }
+      else {
+         /* Rotation is even.  2 is a special case. */
+         if (rot == 2) tstuff.people[1].id1 = rotperson(tstuff.people[1].id1, 022);
+      }
+
+      if (j & m1)
+         (void) copy_person(&x[0], i, &tstuff, 0);
+      else
+         clear_person(&x[0], i);
+
+      if (arity >= 2) {
+         if (j & m2)
+            (void) copy_person(&x[1], i, &tstuff, 1);
+         else
+            clear_person(&x[1], i);
+      }
+
+      if (arity >= 3) {
+         if (j & m3)
+            (void) copy_person(&x[2], i, &tstuff, 2);
+         else
+            clear_person(&x[2], i);
+      }
+   }
+
+   x[0].kind = maps->inner_kind;
+   x[1].kind = maps->inner_kind;
+   x[2].kind = maps->inner_kind;
+
+   innards(s, parseptr, NULLCALLSPEC,
+      0, maps, TRUE, x, result);
+}
+
+static int list_10_6_5_4[4] = {8, 6, 5, 4};
+static int list_11_13_7_2[4] = {9, 11, 7, 2};
+static int list_12_17_3_1[4] = {10, 15, 3, 1};
+static int list_14_15_16_0[4] = {12, 13, 14, 0};
+static int list_14_12_11_10[4] = {12, 10, 9, 8};
+static int list_15_17_13_6[4] = {13, 15, 11, 6};
+static int list_16_3_7_5[4] = {14, 3, 7, 5};
+static int list_0_1_2_4[4] = {0, 1, 2, 4};
+
+static short indices_for_2x6_4x6[12]  = {11, 10, 9, 8, 7, 6, 23, 22, 21, 20, 19, 18};
+
+
+
+/* This does bigblock, stagger, ladder, stairstep, "O", butterfly, and
+   [split/interlocked] phantom lines/columns.  The concept block always
+   provides the following:
+         maps: the map to use
+         arg1: "phantest_kind" -- special stuff to watch for
+         arg2: "linesp" -- 1 if these setups are lines; 0 if columns */
+
+extern void do_phantom_2x4_concept(
+   setup *ss,
+   parse_block *parseptr,
+   setup *result)
+{
+   /* This concept is "standard", which means that it can look at global_tbonetest
+      and global_livemask, but may not look at anyone's facing direction other
+      than through global_tbonetest. */
+
+   map_thing *maps = parseptr->concept->value.maps;
+   int rot = (global_tbonetest ^ parseptr->concept->value.arg2 ^ 1) & 1;
+
+   switch (ss->kind) {
+      case s1x16: case s1x14: case s1x12: case s1x10: case s1x8:
+         fail("Need a 4x4 setup to do this concept, try using \"end-to-end\".");
+      case s4x4:
+         break;
+      case s2x6:
+         /* Check for special case of split phantom lines/columns in a parallelogram. */
+
+         if (maps->map_kind == MPKIND__SPLIT) {
+            setup stemp;
+            int i;
+
+            if (rot) {
+               if (global_tbonetest & 1) fail("There are no split phantom lines here.");
+               else                      fail("There are no split phantom columns here.");
+            }
+
+            if (global_livemask == 07474) maps = (*map_lists[s2x4][1])[MPKIND__OFFS_L_HALF][0];
+            else if (global_livemask == 01717) maps = (*map_lists[s2x4][1])[MPKIND__OFFS_R_HALF][0];
+            else fail("Must have a parallelogram for this.");
+
+            /* Change the setup to a 4x6. */
+
+            stemp = *ss;
+            clear_people(ss);
+            for (i=0; i<12; i++) copy_person(ss, indices_for_2x6_4x6[i], &stemp, i);
+            goto do_division;   /* Note that rot is zero. */
+         }
+         /* Otherwise fall through to error message!!! */
+      default:
+         fail("Need a 4x4 setup to do this concept.");
+   }
+
+   if ((global_tbonetest & 011) == 011) {
+      /* People are T-boned!  This is messy. */
+
+      phantom_2x4_move(
+         ss,
+         parseptr->concept->value.arg2,
+         (phantest_kind) parseptr->concept->value.arg1,
+         maps,
+         parseptr->next,
+         result);
+      return;
+   }
+
+   do_division:
+
+   ss->rotation += rot;   /* Just flip the setup around and recanonicalize. */
+   canonicalize_rotation(ss);
+   divided_setup_move(ss, parseptr->next, NULLCALLSPEC, 0, maps,
+         (phantest_kind) parseptr->concept->value.arg1, TRUE, result);
+   result->rotation -= rot;   /* Flip the setup back. */
+}
 
 
 extern void distorted_2x2s_move(
@@ -123,7 +640,7 @@ extern void distorted_2x2s_move(
 
    /* Check for special case of "interlocked parallelogram", which doesn't look like the
       kind of concept we are expecting. */
-   
+
    if (parseptr->concept->kind == concept_do_both_boxes) {
       table_offset = 8;
       misc_indicator = 3;

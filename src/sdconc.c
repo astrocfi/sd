@@ -16,7 +16,7 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-    This is for version 28. */
+    This is for version 30. */
 
 /* This defines the following functions:
    concentric_move
@@ -36,6 +36,7 @@ typedef enum {
    analyzer_CHECKPT,
    analyzer_2X6,
    analyzer_6X2,
+   analyzer_6X2_TGL,
    analyzer_STAR12,
    analyzer_STAR16,
    analyzer_SINGLE,
@@ -68,7 +69,7 @@ Private cm_thing map1x2_1x2 =        {{1, 3},       {0, 2},              2, 2, s
 Private cm_thing oddmap1x2_1x2 =     {{3, 1},       {0, 2},              2, 2, sdmd,           s_1x2,    s_1x2,    4,  1, 0, 0};
 /* The map "oddmapdmd_dmd", with its loss of elongation information for the outer diamond, is necessary to make the call
    "with confidence" work from the setup formed by having the centers partner tag in left-hand waves.  This means that certain
-   Bakerisms invloving concentric diamonds, in which each diamond must remember its own elongation, are not possible.  Too bad. */
+   Bakerisms involving concentric diamonds, in which each diamond must remember its own elongation, are not possible.  Too bad. */
 Private cm_thing oddmapdmd_dmd =     {{1, 3, 5, 7}, {6, 0, 2, 4},        4, 4, s_crosswave,    sdmd,     sdmd,     8,  0, 1, 9};
 Private cm_thing mapdmd_dmd =        {{1, 3, 5, 7}, {0, 2, 4, 6},        4, 4, s_crosswave,    sdmd,     sdmd,     8,  0, 0, 9};
 Private cm_thing oddmapdmd_1x4 =     {{1, 2, 5, 6}, {7, 0, 3, 4},        4, 4, s_3x1dmd,       s1x4,     sdmd,     8,  0, 1, 9};
@@ -79,13 +80,13 @@ Private cm_thing map_cs_1x4_dmd =    {{0, 3, 4, 7}, {1, 2, 5, 6},        4, 4, s
 Private cm_thing oddmap_s_star_1x4 = {{1, 2, 5, 6}, {7, 0, 3, 4},        4, 4, s_wingedstar,   s1x4,     s_star,   8,  0, 1, 9};
 Private cm_thing map_s_star_1x4 =    {{1, 2, 5, 6}, {0, 3, 4, 7},        4, 4, s_wingedstar,   s1x4,     s_star,   8,  0, 0, 9};
 Private cm_thing oddmap_s_short_1x6 = {{1, 2, 4, 7, 8, 10},
-                                             {11, 0, 3, 5, 6, 9},       6, 6, s_wingedstar12, s_1x6,    s_short6, 12, 0, 1, 9};
+                                              {11, 0, 3, 5, 6, 9},       6, 6, s_wingedstar12, s_1x6,    s_short6, 12, 0, 1, 9};
 Private cm_thing map_s_spindle_1x8 = {{1, 2, 6, 5, 9, 10, 14, 13},
-                                     {3, 7, 12, 8, 11, 15, 4, 0},       8, 8, s_wingedstar16, s1x8,    s_spindle, 16, 0, 0, 9};
+                                      {3, 7, 12, 8, 11, 15, 4, 0},       8, 8, s_wingedstar16, s1x8,    s_spindle, 16, 0, 0, 9};
 Private cm_thing map_spec_star12 =   {{2, 3, 4, 11}, {0, 1, 6, 7},       4, 4, s_wingedstar12, s_star,   s1x4,     12, 0, 0, 0};
 Private cm_thing map_spec_star12v =  {{11, 2, 3, 4}, {0, 1, 6, 7},       4, 4, s_wingedstar12, s_star,   s1x4,     12, 1, 0, 0};
-Private cm_thing map_spec_star16 =   {{2, 3, 5, 4}, {0, 1, 8, 9},       4, 4, s_wingedstar16, s_star,   s1x4,     16, 0, 0, 0};
-Private cm_thing map_spec_star16v =  {{4, 2, 3, 5}, {0, 1, 8, 9},       4, 4, s_wingedstar16, s_star,   s1x4,     16, 1, 0, 0};
+Private cm_thing map_spec_star16 =   {{2, 3, 5, 4}, {0, 1, 8, 9},        4, 4, s_wingedstar16, s_star,   s1x4,     16, 0, 0, 0};
+Private cm_thing map_spec_star16v =  {{4, 2, 3, 5}, {0, 1, 8, 9},        4, 4, s_wingedstar16, s_star,   s1x4,     16, 1, 0, 0};
 Private cm_thing mapdmd_2x2h =       {{1, 3, 5, 7}, {0, 2, 4, 6},        4, 4, s_galaxy,       s2x2,     sdmd,     8,  0, 0, 9};
 Private cm_thing mapdmd_2x2v =       {{7, 1, 3, 5}, {0, 2, 4, 6},        4, 4, s_galaxy,       s2x2,     sdmd,     8,  1, 0, 9};
 Private cm_thing map2x3_1x2 =        {{11, 5}, {0, 1, 2, 6, 7, 8},       2, 6, s_3dmd,         s_1x2,    s_2x3,    12, 0, 0, 9};
@@ -104,6 +105,7 @@ Private cm_thing map2x2_1x4_rc = {{0, 2, 4, 6}, {1, 7, 5, 3},            4, 4, s
 Private cm_thing oddmap2x2_1x4_rc = {{0, 2, 4, 6}, {3, 1, 7, 5},         4, 4, s_ptpd,         s1x4,     s2x2,     8,  0, 1, 9};
 Private cm_thing map1x2_2x3 = {{0, 1, 2, 4, 5, 6}, {7, 3},               6, 2, s_spindle,      s_2x3,    s_1x2,    8,  0, 0, 0};
 Private cm_thing map1x2_short6 = {{1, 2, 3, 5, 6, 7}, {0, 4},            6, 2, s_galaxy,       s_short6, s_1x2,    8,  0, 0, 0};
+Private cm_thing map1x2_intgl = {{0, 1, 3, 4, 5, 7}, {6, 2},             6, 2, s_qtag,         s_bone6,  s_1x2,    8,  0, 0, 0};
 Private cm_thing mapshort6_1x2h = {{5, 1}, {6, 7, 0, 2, 3, 4},           2, 6, s_spindle,      s_1x2,    s_short6, 8,  1, 1, 1};
 Private cm_thing mapshort6_1x2v = {{7, 3}, {5, 6, 0, 1, 2, 4},           2, 6, s_hrglass,      s_1x2,    s_short6, 8,  1, 1, 0};
 Private cm_thing mapstar_2x2 = {{1, 3, 5, 7}, {0, 2, 4, 6},              4, 4, s_galaxy,       s2x2,     s_star,   8,  0, 0, 0};
@@ -139,9 +141,11 @@ Private cm_thing oddmapshort6_1x2v = {{7, 3}, {5, 6, 0, 1, 2, 4},        2, 6, s
 Private cm_thing oddmap1x2_short6_rc = {{5, 6, 0, 1, 2, 4}, {7, 3},      6, 2, s_rigger,       s_short6, s_1x2,    8,  1, 0, 0};
 Private cm_thing map2x4_2x2 = {{2, 3, 8, 9}, {0, 1, 4, 5, 6, 7, 10, 11}, 4, 8, s2x6,           s2x2,     s2x4,     12, 0, 0, 9};
 Private cm_thing oddmap2x4_2x2 = {{9, 2, 3, 8},
-                                       {0, 1, 4, 5, 6, 7, 10, 11},      4, 8, s2x6,           s2x2,     s2x4,     12, 1, 0, 9};
+                                        {0, 1, 4, 5, 6, 7, 10, 11},      4, 8, s2x6,           s2x2,     s2x4,     12, 1, 0, 9};
 Private cm_thing mapdmd_line = {{1, 2, 5, 6}, {0, 3, 4, 7},              4, 4, s_3x1dmd,       s1x4,     sdmd,     8,  0, 0, 0};
 Private cm_thing map_s_dmd_line = {{1, 2, 5, 6}, {0, 3, 4, 7},           4, 4, s_wingedstar,   s1x4,     sdmd,     8,  0, 0, 0};
+
+
 Private cm_thing *concmap1x2_1x2[4]       = {&map1x2_1x2,          &oddmap1x2_1x2,       &map1x2_1x2,      &oddmap1x2_1x2};
 Private cm_thing *concmapdmd_dmd[4]       = {&mapdmd_dmd,          &oddmapdmd_dmd,       &mapdmd_dmd,      &oddmapdmd_dmd};
 Private cm_thing *concmapdmd_1x4[4]       = {&mapdmd_1x4,          &oddmapdmd_1x4,       &mapdmd_1x4,      &oddmapdmd_1x4};
@@ -176,7 +180,7 @@ Private cm_thing *concmap1x6_1x2[4]       = {&map1x6_1x2,          0,           
 Private cm_thing *concmap1x4_1x4_rc[4]    = {&map1x4_1x4_rc,       0,                    &map1x4_1x4_rc,   0};
 Private cm_thing *concmap2x2_dmd_rc[4]    = {&map2x2_dmd_rc,       0,                    &map2x2_dmd_rc,   0};
 Private cm_thing *concmap2x2_1x4_rc[4]    = {&map2x2_1x4_rc,       &oddmap2x2_1x4_rc,    &map2x2_1x4_rc,   &oddmap2x2_1x4_rc};
-
+Private cm_thing *concmapspecintgl[4]     = {&map1x2_intgl,        0,                    &map1x2_intgl,    0};
 
 
 /* This overwrites its "inners" and "outers argument setups. */
@@ -402,6 +406,11 @@ extern void normalize_concentric(
             break;
          case s1x4:
             switch (inners[0].kind) {
+               case sdmd:
+                  /* Just turn it into a star. */
+                  inners[0].kind = s_star;
+                  canonicalize_rotation(&inners[0]);  /*Need to do this; it has 4-way symmetry now. */
+                  goto compute_rotation_again;
                case s_star: map_ptr = concmap1x4_star; break;
                case s1x4:
                   /* In certain phantom cases, what should have been a diamond
@@ -499,7 +508,18 @@ extern void normalize_concentric(
             switch (inners[0].kind) {
                case s_1x2:    map_ptr = concmap1x2_1x2; break;
                case s_2x3:    map_ptr = concmap1x2_2x3; break;
-               case s_bone6 : map_ptr = concmap1x2_bone6; break;
+               case s_bone6:
+                  /* If inners are a bone6 and outers are a 1x2 with same orientation,
+                     we need to figure out whether to put back parallel diamonds
+                     (i.e. a qtag) or point-to-point.  We use the outer_elongation
+                     to guide us. */
+
+                  map_ptr = concmap1x2_bone6;
+
+                  if (!(i & 1) && ((outers->rotation ^ outer_elongation) & 1))
+                     map_ptr = concmapspecintgl;      /* This will do it. */
+
+                  break;
                case s_short6: map_ptr = concmap1x2_short6; break;
                case s_1x6:    map_ptr = concmap1x2_1x6; break;
             }
@@ -664,55 +684,55 @@ gotit:
 
 /* BEWARE!!  This list is keyed to the definition of "setup_kind" in database.h . */
 /* BEWARE!!  The horizontal structure is keyed to the enumeration "analyzer_kind" :
-   normal      checkpt                   2x6                 6x2             star12            star16             single       vertical6          lateral6     diamond_line */
+   normal      checkpt                   2x6                 6x2                 6x2_tgl           star12            star16             single       vertical6          lateral6     diamond_line */
                                                                                                                      
-Private cm_thing *bigconctab[][10] = {
-   {0,              0,                    0,                  0,                 0,                0,                0,              0,                0,          0},               /* nothing */
-   {0,              0,                    0,                  0,                 0,                0,                0,              0,                0,          0},               /* s_1x1 */
-   {0,              0,                    0,                  0,                 0,                0,                0,              0,                0,          0},               /* s_1x2 */
-   {0,              0,                    0,                  0,                 0,                0,                0,              0,                0,          0},               /* s_1x3 */
-   {0,              0,                    0,                  0,                 0,                0,                0,              0,                0,          0},               /* s2x2 */
-   {0,              0,                    0,                  0,                 0,                0,                &oddmap1x2_1x2, 0,                0,          0},               /* sdmd */
-   {0,              0,                    0,                  0,                 0,                0,                0,              0,                0,          0},               /* s_star */
-   {0,              0,                    0,                  0,                 0,                0,                0,              0,                0,          0},               /* s_trngl */
-   {0,              0,                    0,                  0,                 0,                0,                0,              0,                0,          0},               /* s_bone6 */
-   {0,              0,                    0,                  0,                 0,                0,                0,              0,                0,          0},               /* s_short6 */
-   {&map2x2_1x4h,   0,                    &oddmapshort6_1x2v, &oddmap1x2_2x3,    0,                0,                0,              0,                0,          0},               /* s_qtag */
-   {&map2x2_1x4v,   &map1x2_bone6_rc,     &mapbone6_1x2,      0,                 0,                0,                0,              0,                0,          0},               /* s_bone */
-   {&map1x4_2x2,    &oddmap1x2_short6_rc, 0,                  &oddmap1x2_short6, 0,                0,                0,              0,                0,          0},               /* s_rigger */
-   {0,              &map2x2_dmd_rc,       &mapshort6_1x2h,    &map1x2_2x3,       0,                0,                0,              0,                0,          0},               /* s_spindle */
-   {&map2x2_dmd,    0,                    &mapshort6_1x2v,    0,                 0,                0,                0,              &oddmap1x2_bone6, 0,          0},               /* s_hrglass */
-   {0,              0,                    0,                  0,                 0,                0,                0,              0,                0,          0},               /* s_hyperglass */
-   {&oddmap1x4_1x4, 0,                    0,                  0,                 0,                0,                0,              0,                0,          0},               /* s_crosswave */
-   {0,              0,                    0,                  0,                 0,                0,                &map1x2_1x2,    0,                0,          0},               /* s1x4 */
-   {&map1x4_1x4,    &map1x4_1x4_rc,       &map1x6_1x2,        &map1x2_1x6,       0,                0,                0,              0,                0,          0},               /* s1x8 */
-   {&map2x2_2x2v,   0,                    0,                  0,                 0,                0,                0,              0,                0,          0},               /* s2x4 */
-   {0,              0,                    0,                  0,                 0,                0,                0,              0,                0,          0},               /* s_2x3 */
-   {0,              0,                    0,                  0,                 0,                0,                0,              0,                0,          0},               /* s_1x6 */
-   {0,              0,                    &oddmap2x3_1x2,     0,                 &map2x3_2x3,      0,                0,              0,                0,          0},               /* s3x4 */
-   {0,              0,                    0,                  0,                 0,                0,                0,              0,                0,          0},               /* s2x6 */
-   {0,              0,                    0,                  0,                 0,                0,                0,              0,                0,          0},               /* s2x8 */
-   {0,              0,                    0,                  0,                 0,                &map2x4_2x4v,     0,              0,                0,          0},               /* s4x4 */
-   {0,              0,                    0,                  0,                 0,                0,                0,              0,                0,          0},               /* s_x1x6 */
-   {0,              0,                    0,                  0,                 0,                0,                0,              0,                0,          0},               /* s1x10 */
-   {0,              0,                    0,                  0,                 0,                0,                0,              0,                0,          0},               /* s1x12 */
-   {0,              0,                    0,                  0,                 0,                0,                0,              0,                0,          0},               /* s1x14 */
-   {0,              0,                    0,                  0,                 0,                0,                0,              0,                0,          0},               /* s1x16 */
-   {0,              0,                    0,                  0,                 0,                0,                0,              0,                0,          0},               /* s_c1phan */
-   {0,              0,                    0,                  0,                 0,                0,                0,              0,                0,          0},               /* s_bigblob */
-   {0,              &map2x2_1x4_rc,       &oddmapshort6_1x2h, &map1x2_bone6,     0,                0,                0,              0,                0,          0},               /* s_ptpd */
-   {&oddmap1x4_dmd, 0,                    0,                  &oddmap1x2_1x6,    0,                0,                0,              0,                0,          &mapdmd_line},    /* s_3x1dmd */
-   {0,              0,                    0,                  0,                 0,                0,                0,              0,                0,          0},               /* s_3dmd */
-   {0,              0,                    0,                  0,                 0,                0,                0,              0,                0,          0},               /* s_4dmd */
-   {&map1x4_star,   0,                    0,                  0,                 0,                0,                0,              0,                0,          &map_s_dmd_line}, /* s_wingedstar */
-   {0,              0,                    0,                  0,                 &map_spec_star12, 0,                0,              0,                0,          &oddmap_s_short_1x6},/* s_wingedstar12 */
-   {0,              0,                    0,                  0,                 0,                &map_spec_star16, 0,              0,                0,          &map_s_spindle_1x8},/* s_wingedstar16 */
-   {&mapstar_2x2,   0,                    0,                  0,                 0,                0,                0,              &map1x2_short6,   &maplatgal, 0},               /* s_galaxy */
-   {0,              0,                    0,                  0,                 0,                0,                0,              0,                0,          0},               /* s4x6 */
-   {&mapstar_star,  0,                    0,                  0,                 0,                0,                0,              0,                0,          0},               /* s_thar */
-   {0,              0,                    0,                  0,                 0,                0,                0,              0,                0,          0},               /* s_x4dmd */
-   {0,              0,                    0,                  0,                 0,                0,                0,              0,                0,          0},               /* s_8x8 */
-   {0,              0,                    0,                  0,                 0,                0,                0,              0,                0,          0}};              /* s_normal_concentric */
+Private cm_thing *bigconctab[][11] = {
+   {0,              0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* nothing */
+   {0,              0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* s_1x1 */
+   {0,              0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* s_1x2 */
+   {0,              0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* s_1x3 */
+   {0,              0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* s2x2 */
+   {0,              0,                    0,                  0,                 0,                0,                0,                &oddmap1x2_1x2, 0,                0,          0},               /* sdmd */
+   {0,              0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* s_star */
+   {0,              0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* s_trngl */
+   {0,              0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* s_bone6 */
+   {0,              0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* s_short6 */
+   {&map2x2_1x4h,   0,                    &oddmapshort6_1x2v, &oddmap1x2_2x3,    &map1x2_intgl,    0,                0,                0,              0,                0,          0},               /* s_qtag */
+   {&map2x2_1x4v,   &map1x2_bone6_rc,     &mapbone6_1x2,      0,                 0,                0,                0,                0,              0,                0,          0},               /* s_bone */
+   {&map1x4_2x2,    &oddmap1x2_short6_rc, 0,                  &oddmap1x2_short6, 0,                0,                0,                0,              0,                0,          0},               /* s_rigger */
+   {0,              &map2x2_dmd_rc,       &mapshort6_1x2h,    &map1x2_2x3,       0,                0,                0,                0,              0,                0,          0},               /* s_spindle */
+   {&map2x2_dmd,    0,                    &mapshort6_1x2v,    0,                 0,                0,                0,                0,              &oddmap1x2_bone6, 0,          0},               /* s_hrglass */
+   {0,              0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* s_hyperglass */
+   {&oddmap1x4_1x4, 0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* s_crosswave */
+   {0,              0,                    0,                  0,                 0,                0,                0,                &map1x2_1x2,    0,                0,          0},               /* s1x4 */
+   {&map1x4_1x4,    &map1x4_1x4_rc,       &map1x6_1x2,        &map1x2_1x6,       0,                0,                0,                0,              0,                0,          0},               /* s1x8 */
+   {&map2x2_2x2v,   0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* s2x4 */
+   {0,              0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* s_2x3 */
+   {0,              0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* s_1x6 */
+   {0,              0,                    &oddmap2x3_1x2,     0,                 0,                &map2x3_2x3,      0,                0,              0,                0,          0},               /* s3x4 */
+   {0,              0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* s2x6 */
+   {0,              0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* s2x8 */
+   {0,              0,                    0,                  0,                 0,                0,                &map2x4_2x4v,     0,              0,                0,          0},               /* s4x4 */
+   {0,              0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* s_x1x6 */
+   {0,              0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* s1x10 */
+   {0,              0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* s1x12 */
+   {0,              0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* s1x14 */
+   {0,              0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* s1x16 */
+   {0,              0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* s_c1phan */
+   {0,              0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* s_bigblob */
+   {0,              &map2x2_1x4_rc,       &oddmapshort6_1x2h, &map1x2_bone6,     0,                0,                0,                0,              0,                0,          0},               /* s_ptpd */
+   {&oddmap1x4_dmd, 0,                    0,                  &oddmap1x2_1x6,    0,                0,                0,                0,              0,                0,          &mapdmd_line},    /* s_3x1dmd */
+   {0,              0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* s_3dmd */
+   {0,              0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* s_4dmd */
+   {&map1x4_star,   0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          &map_s_dmd_line}, /* s_wingedstar */
+   {0,              0,                    0,                  0,                 0,                &map_spec_star12, 0,                0,              0,                0,          &oddmap_s_short_1x6},/* s_wingedstar12 */
+   {0,              0,                    0,                  0,                 0,                0,                &map_spec_star16, 0,              0,                0,          &map_s_spindle_1x8},/* s_wingedstar16 */
+   {&mapstar_2x2,   0,                    0,                  0,                 0,                0,                0,                0,              &map1x2_short6,   &maplatgal, 0},               /* s_galaxy */
+   {0,              0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* s4x6 */
+   {&mapstar_star,  0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* s_thar */
+   {0,              0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* s_x4dmd */
+   {0,              0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* s_8x8 */
+   {0,              0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0}};              /* s_normal_concentric */
 
 
 
@@ -724,6 +744,7 @@ Private char *conc_error_messages[] = {
    "Can't find checkpoint people in this formation.",                  /* analyzer_CHECKPT */
    "Can't find 2 centers and 6 ends in this formation.",               /* analyzer_2X6 */
    "Can't find 6 centers and 2 ends in this formation.",               /* analyzer_6X2 */
+   "Can't find inside triangles in this formation.",                   /* analyzer_6X2_TGL */
    "Can't find 12 matrix centers and ends in this formation.",         /* analyzer_STAR12 */
    "Can't find 16 matrix centers and ends in this formation.",         /* analyzer_STAR16 */
    "Can't find single concentric centers and ends in this formation.", /* analyzer_SINGLE */
@@ -768,7 +789,7 @@ Private void concentrify(
    setup inners[],
    setup *outers,
    int *center_arity,
-   int *outer_elongation,    /* Set to elongation of original outers. */
+   int *outer_elongation,    /* Set to elongation of original outers, except if center 6 and outer 2, in which case, if centers are a bone6, it shows their elongation. */
    int *xconc_elongation)    /* If cross concentric, set to elongation of original ends. */
 
 {
@@ -804,6 +825,8 @@ Private void concentrify(
          analyzer_index = analyzer_DIAMOND_LINE; break;
       case schema_concentric_6_2:
          analyzer_index = analyzer_6X2; break;
+      case schema_concentric_6_2_tgl:
+         analyzer_index = analyzer_6X2_TGL; break;
       case schema_concentric_2_6:
          if (ss->kind == s3x4 && ((ss->people[1].id1 | ss->people[2].id1 | ss->people[7].id1 | ss->people[8].id1) ||
                      (!(ss->people[0].id1 & ss->people[3].id1 & ss->people[4].id1 & ss->people[5].id1 &
@@ -816,9 +839,14 @@ Private void concentrify(
       case schema_conc_star:
       case schema_cross_concentric:
          analyzer_index = analyzer_NORMAL; break;
-      case schema_any_concentric:
-         analyzer_index = setup_limits[ss->kind] == 3 ? analyzer_SINGLE : analyzer_NORMAL; break;
+      case schema_single_concentric_together:
+         if (ss->kind == s1x8 || ss->kind == s_ptpd || setup_limits[ss->kind] == 3)
+            analyzer_index = analyzer_SINGLE;
+         else
+            analyzer_index = analyzer_NORMAL;
+         break;
       case schema_maybe_single_concentric:
+      case schema_maybe_single_cross_concentric:
          fail("Can't figure out whether concentric is single -- this shouldn't happen.");
       case schema_maybe_matrix_conc_star:
          fail("Can't figure out whether concentric is 12 or 16 matrix -- this shouldn't happen.");
@@ -1041,6 +1069,14 @@ Private void concentrify(
             break;
       }
    }
+   else if (analyzer == schema_concentric_6_2_tgl) {
+      if (inners[0].kind == s_bone6)
+         *outer_elongation = (outers->rotation ^ 1) & 1;
+   }
+   else if (analyzer == schema_concentric_6_2) {
+      if (inners[0].kind == s_bone6)
+         *outer_elongation = outers->rotation & 1;
+   }
 
    finish:
 
@@ -1097,6 +1133,8 @@ extern void concentric_move(
 
    int final_outers_finish_dirs;         /* The final info about the people who FINISHED on the outside. */
    int final_outers_finish_directions[8];
+
+   int saved_number_fields = current_number_fields;
 
    /* It is clearly too late to expand the matrix -- that can't be what is wanted. */
    ss->setupflags |= SETUPFLAG__NO_EXPAND_MATRIX;
@@ -1164,7 +1202,9 @@ extern void concentric_move(
    if (parsein) {
       for (k=0; k<center_arity; k++) {
          update_id_bits(&begin_inner[k]);
+         current_number_fields >>= ((DFM1_NUM_SHIFT_MASK & modifiersin1) / DFM1_NUM_SHIFT_BIT) * 4;
          move(&begin_inner[k], parsein, callspecin, final_conceptsin, FALSE, &result_inner[k]);
+         current_number_fields = saved_number_fields;
       }
    }
    else {
@@ -1181,8 +1221,6 @@ extern void concentric_move(
    }
 
    if (parseout) {
-      setup begin_outer_temp;
-
       /* If the ends' starting setup is a 2x2, and we did not say "concentric" (indicated by
          the "concentric rules" flag being off), we mark the setup as elongated.  If the call
          turns out to be a 2-person call, the elongation will be checked against the pairings
@@ -1199,18 +1237,24 @@ extern void concentric_move(
          begin_outer.setupflags |= ((begin_outer_elongation+1) * SETUPFLAG__ELONGATE_BIT);
 
          /* If "demand lines" or "demand columns" has been given, we suppress elongation
-            checking.  In that case,
-            the database author knows what elongation is required and is taking responsibility
-            for it.  This is what makes "scamper" and "divvy up" work. */
+            checking.  In that case, the database author knows what elongation is required
+            and is taking responsibility for it.  This is what makes "scamper" and "divvy up" work.
+            We also do this if the concept is cross concentric.  In that case the people doing the
+            "ends" call actually did it in the center (the way they were taught in C2 class)
+            before moving to the outside. */
 
-         if ((DFM1_CONC_CONCENTRIC_RULES | DFM1_CONC_DEMAND_LINES | DFM1_CONC_DEMAND_COLUMNS) & modifiersout1)
+         if (((DFM1_CONC_CONCENTRIC_RULES | DFM1_CONC_DEMAND_LINES | DFM1_CONC_DEMAND_COLUMNS) & modifiersout1) ||
+               (analyzer == schema_cross_concentric) || (analyzer == schema_single_cross_concentric))
             begin_outer.setupflags |= SETUPFLAG__NO_CHK_ELONG;
       }
 
-      begin_outer_temp = begin_outer;   /* Defend against clobbering. */
-
-      update_id_bits(&begin_outer_temp);
-      move(&begin_outer_temp, parseout, callspecout, final_conceptsout, FALSE, &result_outer);
+      current_number_fields >>= ((DFM1_NUM_SHIFT_MASK & modifiersin1) / DFM1_NUM_SHIFT_BIT) * 4;
+      update_id_bits(&begin_outer);
+      /* This call to "move" will fill in good stuff (viz. the DFM1_CONCENTRICITY_FLAG_MASK)
+         into begin_outer.setupflags, which we will use below to do various "force_lines",
+         "demand_columns", etc. things. */
+      move(&begin_outer, parseout, callspecout, final_conceptsout, FALSE, &result_outer);
+      current_number_fields = saved_number_fields;
    }
    else {
       result_outer = begin_outer;
@@ -1473,6 +1517,9 @@ from a bone (heads left swing thru, side girl turn back).
       people who finished on the outside.  That is, if they went from a wave or diamond
       to a 2x2, it has the elongation of their initial wave or diamond points.
       
+      Exception: if the schema was conc_6_2 or conc_6_2_tri, and the centers are in a bone6,
+      "final_elongation" has the elongation of that bone6.
+
       The elongation bits in their setup tells how they "naturally" wanted to end,
       based on the call they did, how it got divided up, whether it had the "parallel_conc_end"
       flag on, etc.
@@ -1622,15 +1669,25 @@ from a bone (heads left swing thru, side girl turn back).
 
 
 /* This overwrites its first argument setup. */
-extern void merge_setups(setup *ss, setup *result)
+extern void merge_setups(setup *ss, merge_action action, setup *result)
 {
    int i, r, rot, offs, limit, lim1, limhalf;
    setup res2copy;
    setup *res1, *res2;
-
+/*
+   long_boolean preserve_4x4 = FALSE;
+*/
    res2copy = *result;
    res1 = ss;
    res2 = &res2copy;
+
+   /* If either incoming setup is big, opt for a 4x4 rather than C1 phantoms.
+      The test for this is, from a squared set, everyone phantom column wheel thru.
+      It used to go to C1 phantoms.  We want a 4x4. */
+/*    see long comment below
+   if (setup_limits[res1->kind] > 7 || setup_limits[res2->kind] > 7)
+      preserve_4x4 = TRUE;
+*/
 
    canonicalize_rotation(res1);    /* Do we really need to do this before normalize_setup? */
    normalize_setup(res1, normalize_before_merge);
@@ -1679,36 +1736,37 @@ extern void merge_setups(setup *ss, setup *result)
    }
    else if ((res1->kind == s2x4) && (res2->kind == s2x4) && (r&1)) {
       offs = r * 2;
-      if ((((res1->people[0].id1 & res1->people[1].id1 & res1->people[4].id1 & res1->people[5].id1) |
-               (res1->people[2].id1 & res1->people[3].id1 & res1->people[6].id1 & res1->people[7].id1)) & BIT_PERSON) &&
-         (((res2->people[0].id1 & res2->people[1].id1 & res2->people[4].id1 & res2->people[5].id1) |
-               (res2->people[2].id1 & res2->people[3].id1 & res2->people[6].id1 & res2->people[7].id1)) & BIT_PERSON)) {
-         result->kind = s_c1phan;
-         (void) copy_person(result, 10, res2, 5);
-         (void) copy_person(result, 5, res2, 3);
-         (void) copy_person(result, 13, res2, 7);
-         (void) copy_person(result, 7, res2, 2);
-         (void) copy_person(result, 2, res2, 1);
-         (void) copy_person(result, 8, res2, 4);
-         (void) copy_person(result, 15, res2, 6);
-         clear_person(result, 1);
-         clear_person(result, 3);
-         clear_person(result, 4);
-         clear_person(result, 6);
-         clear_person(result, 9);
-         clear_person(result, 11);
-         clear_person(result, 12);
-         clear_person(result, 14);
-         install_rot(result, 11, res1, 0^offs, rot);
-         install_rot(result, 9, res1, 1^offs, rot);
-         install_rot(result, 4, res1, 2^offs, rot);
-         install_rot(result, 6, res1, 3^offs, rot);
-         install_rot(result, 3, res1, 4^offs, rot);
-         install_rot(result, 1, res1, 5^offs, rot);
-         install_rot(result, 12, res1, 6^offs, rot);
-         install_rot(result, 14, res1, 7^offs, rot);
-      }
-      else {
+
+      /* It used to be that we used an algorithm, shown below, to decide whether to opt for C1 pahntoms
+         or a 4x4 matrix.  That algorithm said that one opted for C1 phantoms if each incoming 2x4
+         had, in each quadrant, either both dancers or neither.  That is, we would opt for C1 phantoms
+         if the result would have, in each quadrant, either a star, no one, or two people in a miniwave
+         or equivalent sort of thing.  That is, the result would be either stars or "classic" C1
+         phantoms.  It would never produce star-like things populated in a peculiar arrangement.
+         This was presumably a consequence of our aversion to such peculiarly populated stars.
+         It has since come to light that "perk up", done from classic C1 phantom miniwaves of
+         consistent handedness, really ought to go to C1 phantoms, even though the stars that
+         result are peculiarly populated.  It has further come to light that having "phantom columns
+         wheel thru" from a squared set go to C1 phantoms is not right -- they should go to a 4x4
+         matrix even though the C1 phantoms would be "classically" populated.  So we now ignore
+         the issue of how the stars would be populated, and make the determination based on the
+         sizes, prior to stripping, of the incoming setups.  If either was larger than 8 people,
+         they are presumed to be doing some kind of phantom call in a matrix, and want to maintain
+         spots.  The old code was:
+
+         if ((((res1->people[0].id1 & res1->people[1].id1 & res1->people[4].id1 & res1->people[5].id1) |
+                  (res1->people[2].id1 & res1->people[3].id1 & res1->people[6].id1 & res1->people[7].id1)) & BIT_PERSON) &&
+            (((res2->people[0].id1 & res2->people[1].id1 & res2->people[4].id1 & res2->people[5].id1) |
+                  (res2->people[2].id1 & res2->people[3].id1 & res2->people[6].id1 & res2->people[7].id1)) & BIT_PERSON)) {
+            result->kind = s_c1phan;
+            .....
+
+         The test cases for this stuff are the aforesaid phantom perk up and the aforesaid phantom
+         columns wheel thru.
+
+         We now do this even more carefully.  The argument "action" tells us what to do. */
+
+      if (action == merge_strict_matrix) {
          result->kind = s4x4;
          clear_person(result, 12);
          clear_person(result, 13);
@@ -1735,6 +1793,35 @@ extern void merge_setups(setup *ss, setup *result)
          install_rot(result, 13, res1, 5^offs, rot);
          install_rot(result, 6, res1, 6^offs, rot);
          install_rot(result, 11, res1, 7^offs, rot);
+      }
+      else {
+         unsigned int t1, t2;
+
+         result->kind = s_c1phan;
+         t1  = copy_person(result, 0,  res2, 0);
+         t1 |= copy_person(result, 2,  res2, 1);
+         t2  = copy_person(result, 7,  res2, 2);
+         t2 |= copy_person(result, 5,  res2, 3);
+         t1 |= copy_person(result, 8,  res2, 4);
+         t1 |= copy_person(result, 10, res2, 5);
+         t2 |= copy_person(result, 15, res2, 6);
+         t2 |= copy_person(result, 13, res2, 7);
+         t2 |= copy_rot(result, 11, res1, 0^offs, rot);
+         t2 |= copy_rot(result, 9,  res1, 1^offs, rot);
+         t1 |= copy_rot(result, 4,  res1, 2^offs, rot);
+         t1 |= copy_rot(result, 6,  res1, 3^offs, rot);
+         t2 |= copy_rot(result, 3,  res1, 4^offs, rot);
+         t2 |= copy_rot(result, 1,  res1, 5^offs, rot);
+         t1 |= copy_rot(result, 12, res1, 6^offs, rot);
+         t1 |= copy_rot(result, 14, res1, 7^offs, rot);
+
+         /* See if we have a "classical" C1 phantom setup, and give the appropriate warning. */
+         if (action == merge_c1_phantom) {
+            if (t1 == 0 || t2 == 0)
+               warn(warn__check_c1_phan);
+            else
+               warn(warn__check_c1_stars);
+         }
       }
       return;
    }
@@ -1945,7 +2032,7 @@ extern void on_your_own_move(
    move(&setup2, parseptr->subsidiary_root, NULLCALLSPEC, 0, FALSE, result);
    result->setupflags |= res1.setupflags;
    
-   merge_setups(&res1, result);
+   merge_setups(&res1, merge_strict_matrix, result);
 }
 
 
@@ -1990,18 +2077,18 @@ extern void so_and_so_only_move(
    
    move(&setup1, parseptr->next, NULLCALLSPEC, 0, FALSE, &res1);
    
-   if (others) {
+   if (others) {     /* This is "own the <anyone>". */
       move(&setup2, parseptr->subsidiary_root, NULLCALLSPEC, 0, FALSE, result);
 
       if ((res1.setupflags ^ result->setupflags) & RESULTFLAG__DID_LAST_PART)
          fail("Two calls must use the same number of fractions.");
    
       result->setupflags |= res1.setupflags;
+      merge_setups(&res1, merge_strict_matrix, result);
    }
-   else {
+   else {            /* This is "<anyone> do your part". */
       *result = setup2;
       result->setupflags = res1.setupflags;
+      merge_setups(&res1, merge_c1_phantom, result);
    }
-
-   merge_setups(&res1, result);
 }

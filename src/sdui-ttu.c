@@ -85,7 +85,7 @@ extern void ttu_process_command_line(int *argcp, char ***argvp)
       }
 
       (*argcp)--;      /* Remove this argument from the list. */
-      for (i=(*argcp); i > argno; i--) argv[i-1] = argv[i];
+      for (i=argno+1; i<=(*argcp); i++) argv[i-1] = argv[i];
    }
 }
 

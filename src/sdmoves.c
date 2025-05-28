@@ -872,6 +872,8 @@ Private void move_with_real_call(
    the_schema = callspec->schema;
    if (the_schema == schema_maybe_single_concentric)
       the_schema = (final_concepts & INHERITFLAG_SINGLE) ? schema_single_concentric : schema_concentric;
+   else if (the_schema == schema_maybe_single_cross_concentric)
+      the_schema = (final_concepts & INHERITFLAG_SINGLE) ? schema_single_cross_concentric : schema_cross_concentric;
    else if (the_schema == schema_maybe_matrix_conc_star)
       if (final_concepts & INHERITFLAG_12_MATRIX)
          the_schema = schema_conc_star12;
@@ -903,6 +905,17 @@ Private void move_with_real_call(
                divided_setup_move(ss, parseptr, callspec, final_concepts, (*map_lists[sdmd][1])[MPKIND__SPLIT][0], phantest_ok, TRUE, result);
                return;
          }
+         break;
+      case schema_single_concentric_together:
+         switch (ss->kind) {
+            case s1x8:
+               divided_setup_move(ss, parseptr, callspec, final_concepts, (*map_lists[s1x4][1])[MPKIND__SPLIT][0], phantest_ok, TRUE, result);
+               return;
+            case s_ptpd:
+               divided_setup_move(ss, parseptr, callspec, final_concepts, (*map_lists[sdmd][1])[MPKIND__SPLIT][0], phantest_ok, TRUE, result);
+               return;
+         }
+         break;
    }
 
    /* If the "diamond" concept has been given and the call doesn't want it, we do
@@ -960,7 +973,8 @@ Private void move_with_real_call(
 
    /* But, alas, if fractionalization is on, we can't do it yet, because we don't
       know whether we are starting at the beginning.  In the case of fractionalization,
-      we will do it later.  We already know that the call is sequentially defined. */
+      we will do it later.  In that case, we already know that the call is sequentially
+      defined, and tso we will get to it later. */
 
    if ((!(ss->setupflags & (SETUPFLAG__NO_STEP_TO_WAVE | SETUPFLAG__FRACTIONALIZE_MASK))) &&
          (callspec->callflags1 & (CFLAG1_REAR_BACK_FROM_R_WAVE | CFLAG1_REAR_BACK_FROM_QTAG | CFLAG1_STEP_TO_WAVE))) {
@@ -968,13 +982,32 @@ Private void move_with_real_call(
       ss->setupflags |= SETUPFLAG__NO_STEP_TO_WAVE;  /* Can only do it once. */
 
       if (final_concepts & INHERITFLAG_LEFT) {
-         mirror = TRUE;
          mirror_this(ss);
+         mirror = TRUE;
       }
 
       if (setup_limits[ss->kind] >= 0)          /* We don't understand absurd setups. */
-         touch_or_rear_back(ss, callspec->callflags1);
+         touch_or_rear_back(ss, mirror, callspec->callflags1);
+
+      /* But, if the "left_means_touch_or_check" flag is set, we only wanted the "left" flag for the
+         purpose of what "touch_or_rear_back" just did.  So, in that case, we turn off the "left"
+         flag and set things back to normal. */
+
+      if (callspec->callflags1 & CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK) {
+         final_concepts &= ~INHERITFLAG_LEFT;
+         if (mirror) mirror_this(ss);
+         mirror = FALSE;
+      }
    }
+
+   /* At this point, we may have mirrored the setup and, of course, left the switch "mirror"
+      on.  We did it only as needed for the [touch / rear back / check] stuff.  What we
+      did doesn't actually count.  In particular, if the call is defined concentrically
+      or sequentially, mirroring the setup in response to "left" is *NOT* the right thing
+      to do.  The right thing is to pass the "left" flag to all subparts that have the
+      "inherit_left" invocation flag, and letting events take their course.  So we allow
+      the "INHERITFLAG_LEFT" bit to remain in "final_concepts", because it is still important
+      to know whether we have been invoked with the "left" modifier. */
 
    if (ss->setupflags & SETUPFLAG__DOING_ENDS) {
       /* Check for special case of ends doing a call like "detour" which specifically
@@ -992,6 +1025,8 @@ Private void move_with_real_call(
          the_schema = callspec->schema;
          if (the_schema == schema_maybe_single_concentric)
             the_schema = (final_concepts & INHERITFLAG_SINGLE) ? schema_single_concentric : schema_concentric;
+         else if (the_schema == schema_maybe_single_cross_concentric)
+            the_schema = (final_concepts & INHERITFLAG_SINGLE) ? schema_single_cross_concentric : schema_cross_concentric;
          else if (the_schema == schema_maybe_matrix_conc_star)
             if (final_concepts & INHERITFLAG_12_MATRIX)
                the_schema = schema_conc_star12;
@@ -1111,6 +1146,7 @@ Private void move_with_real_call(
             mirroring may already have taken place. */
 
          if (final_concepts & INHERITFLAG_LEFT) {
+/* ***** why isn't this particular error test taken care of more generally elsewhere? */
             if (!(callspec->callflagsh & INHERITFLAG_LEFT)) fail("Can't do this call 'left'.");
             if (!mirror) mirror_this(ss);
             mirror = TRUE;
@@ -1157,8 +1193,14 @@ Private void move_with_real_call(
             int current_elongation;
             int finalsetupflags = 0;
             int highlimit;
-            long_boolean instant_stop;
+            long_boolean instant_stop = FALSE;
             long_boolean first_call = TRUE;
+            int total = callspec->stuff.def.howmanyparts;
+            long_boolean reverse_order = FALSE;
+   
+            int numer = ((ss->setupflags & (SETUPFLAG__FRACTIONALIZE_BIT*07))   / SETUPFLAG__FRACTIONALIZE_BIT);
+            int denom = ((ss->setupflags & (SETUPFLAG__FRACTIONALIZE_BIT*070))  / (SETUPFLAG__FRACTIONALIZE_BIT*8));
+            int key   = ((ss->setupflags & (SETUPFLAG__FRACTIONALIZE_BIT*0700)) / (SETUPFLAG__FRACTIONALIZE_BIT*64));
 
             qtf = qtfudged;
 
@@ -1173,43 +1215,53 @@ Private void move_with_real_call(
 
             highlimit = 1000000;
             subcall_index = 0;          /* Where we start, in the absence of special stuff. */
-            instant_stop = FALSE;
 
             /* If SETUPFLAG__FRACTIONALIZE_MASK stuff is nonzero, we are being asked to do something special.
                Read the three indicators.  Their meaning is as follows:
                   high 3 bits   middle 3 bits   low 3 bits
                      "key"       "denom"          "numer"
-                       2          zero            nonzero       do just the indicated part, set
-                                                                    RESULTFLAG__DID_LAST_PART if it was last
-                     zero        nonzero          nonzero       fractional - do first <numer>/<denom> of the call */
+
+                       0            0             nonzero       Do first <numer> parts of the call.
+
+                       1/3          0             nonzero       Do stuff strictly after first <numer> parts of the call.
+                                                                If key=3, demand that "finish_means_skip_first_part" is on.
+
+                       0         nonzero          nonzero       Do first <numer>/<denom> of the call.
+
+                       1         nonzero          nonzero       Do stuff strictly after first <numer>/<denom> of the call.
+
+                       2            0             nonzero       Do just the part <numer>, set
+                                                                    RESULTFLAG__DID_LAST_PART if it was last part.
+
+                       2            1             nonzero       Do just the part size-<numer>, that is, N=1 means do
+                                                                    last part, N=2 means do next-to-last, etc. set
+                                                                    RESULTFLAG__DID_LAST_PART if it was first part. */
 
             if (ss->setupflags & SETUPFLAG__FRACTIONALIZE_MASK) {
-               int numer = ((ss->setupflags & (SETUPFLAG__FRACTIONALIZE_BIT*07))   / SETUPFLAG__FRACTIONALIZE_BIT);
-               int denom = ((ss->setupflags & (SETUPFLAG__FRACTIONALIZE_BIT*070))  / (SETUPFLAG__FRACTIONALIZE_BIT*8));
-               int key   = ((ss->setupflags & (SETUPFLAG__FRACTIONALIZE_BIT*0700)) / (SETUPFLAG__FRACTIONALIZE_BIT*64));
-               int t;
-
-               for (t=0 ; callspec->stuff.def.defarray[t].call_id; t++);   /* Now t = number of parts in call. */
-
                if (key == 2) {
-                  /* Just do the "numer" part of the call, and tell if it was last. */
-                  subcall_index = numer-1;
-                  if (subcall_index >= t) fail("The indicated part number doesn't exist.");
+                  /* Just do the "numer" part of the call (or that part counting from end), and tell if it was last. */
+                  if (numer > total) fail("The indicated part number doesn't exist.");
+                  reverse_order = denom != 0;
+                  if (reverse_order) first_call = FALSE;
+                  subcall_index = reverse_order ? total-numer : numer-1;
                   instant_stop = TRUE;
                   /* If only first part is visible, this is illegal unless we are doing first part. */
                   if (!(callspec->callflags1 & CFLAG1_VISIBLE_FRACTIONS) && (subcall_index != 0))
                      fail("This call can't be fractionalized.");
                }
                else {
-                  /* Do parts up to (key=0) or after (key=1) the indicated part.  The indicated
-                     part may be an absolute part number (denom=0) or a fraction. */
+                  /* Do parts up to (key = 0) or after (key = 1 or 3) the indicated part.
+                     The indicated part may be an absolute part number (denom=0) or a fraction. */
 
                   int indicated_part;
+
+                  if (key == 3 && !(callspec->callflags1 & CFLAG1_FINISH_MEANS_SKIP_FIRST))
+                     fail("This call can't be 'finished'.");
 
                   if (denom) {
                      /* Amount to do was given as a fraction. */
                      if (numer >= denom) fail("Fraction must be proper.");
-                     indicated_part = t * numer;
+                     indicated_part = total * numer;
                      if ((indicated_part % denom) != 0) fail("This call can't be fractionalized with this fraction.");
                      indicated_part = indicated_part / denom;
                      /* If only first part is visible, this is illegal. */
@@ -1223,15 +1275,15 @@ Private void move_with_real_call(
                         fail("This call can't be fractionalized.");
                   }
 
-                  if (key == 1) {
+                  if (key != 0) {
                      /* Do the last section of the call, starting just after indicated_part. */
                      subcall_index = indicated_part;
-                     if (subcall_index > t) fail("The indicated part number doesn't exist.");
+                     if (subcall_index > total) fail("The indicated part number doesn't exist.");
                   }
                   else {
                      /* Do the first section of the call, up to the indicated_part. */
                      highlimit = indicated_part;
-                     if (highlimit > t) fail("The indicated part number doesn't exist.");
+                     if (highlimit > total) fail("The indicated part number doesn't exist.");
                   }
                }
             }
@@ -1240,47 +1292,55 @@ Private void move_with_real_call(
             if (ss->kind != s2x2 && ss->kind != s_short6) current_elongation = 0;
 
             /* Did we neglect to do the touch/rear back stuff because fractionalization was enabled?
-               If so, now is the time to correct that.  We only do it for the first part. */
+               If so, now is the time to correct that.  We only do it for the first part, and only if
+               doing parts in forward order. */
 
-            if ((!(ss->setupflags & SETUPFLAG__NO_STEP_TO_WAVE)) && (subcall_index == 0) &&
+            /* Test for all this is "random left, swing thru".
+               The test cases for this stuff are such things as "left swing thru". */
+
+            if ((!(ss->setupflags & SETUPFLAG__NO_STEP_TO_WAVE)) && (subcall_index == 0) && !reverse_order &&
                   (callspec->callflags1 & (CFLAG1_REAR_BACK_FROM_R_WAVE | CFLAG1_REAR_BACK_FROM_QTAG | CFLAG1_STEP_TO_WAVE))) {
 
                ss->setupflags |= SETUPFLAG__NO_STEP_TO_WAVE;  /* Can only do it once. */
 
-#ifdef never
-/* **** We want this to be something like:
                if (new_final_concepts & INHERITFLAG_LEFT) {
                   if (!mirror) mirror_this(ss);
                   mirror = TRUE;
-                  new_final_concepts &= ~INHERITFLAG_LEFT;
                }
-but even that isn't right.  This needs to be reconsidered carefully for
-stuff like "reverse order".
-*/
-#else
-               if (final_concepts & INHERITFLAG_LEFT) {
-                  mirror = TRUE;
-                  mirror_this(ss);
-               }
-#endif
 
                if (setup_limits[ss->kind] >= 0)          /* We don't understand absurd setups. */
-                  touch_or_rear_back(ss, callspec->callflags1);
+                  touch_or_rear_back(ss, mirror, callspec->callflags1);
             }
 
+            /* See comments above relating to "left_means_touch_or_check".  We are about to
+               un-mirror this in any case. */
+
+            if (callspec->callflags1 & CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK)
+               final_concepts &= ~INHERITFLAG_LEFT;
+
+            /* See comment earlier about mirroring.  For sequentially or concentrically defined
+               calls, the "left" flag does not mean mirror; it is simplt passed to subcalls.
+               So we must put things into their normal state.  If we did any mirroring, it was
+               onlt to facilitate the action of "touch_or_rear_back". */
+
+            if (mirror) mirror_this(ss);
+            mirror = FALSE;
+
             *result = *ss;
+
+            if (highlimit > total) highlimit = total;
 
             for (;;) {
                int j;
                setup tttt;
                by_def_item *this_item;
                defmodset this_mod1, this_modh;
+               int saved_number_fields = current_number_fields;
+               int count_to_use;
 
                if (subcall_index >= highlimit) break;
 
                this_item = &callspec->stuff.def.defarray[subcall_index];
-
-               if (!this_item->call_id) break;
 
                this_mod1 = this_item->modifiers1;
                this_modh = this_item->modifiersh;
@@ -1292,9 +1352,12 @@ stuff like "reverse order".
                if (DFM1_MUST_BE_TAG_CALL & this_mod1) conc1 |= FINAL__MUST_BE_TAG;
                else if (DFM1_MUST_BE_SCOOT_CALL & this_mod1) conc1 |= FINAL__MUST_BE_SCOOT;
 
+               current_number_fields >>= ((DFM1_NUM_SHIFT_MASK & this_mod1) / DFM1_NUM_SHIFT_BIT) * 4;
+               count_to_use = current_number_fields & 0xF;
+
                if (DFM1_REPEAT_N & this_mod1) {
                   tempsetup = *result;
-                  for (j = 1; j <= (parseptr->number & 0xF); j++) {
+                  for (j = 1; j <= count_to_use; j++) {
                      tttt = tempsetup;
                      tttt.setupflags = (ss->setupflags & ~(SETUPFLAG__FRACTIONALIZE_MASK | SETUPFLAG__ELONGATE_MASK)) | current_elongation;
                      if (!first_call) tttt.setupflags |= SETUPFLAG__NO_CHK_ELONG;
@@ -1305,7 +1368,7 @@ stuff like "reverse order".
                }
                else if (DFM1_REPEAT_NM1 & this_mod1) {
                   tempsetup = *result;
-                  for (j = 1; j <= (parseptr->number & 0xF) - 1; j++) {
+                  for (j = 1; j <= count_to_use - 1; j++) {
                      tttt = tempsetup;
                      tttt.setupflags = (ss->setupflags & ~(SETUPFLAG__FRACTIONALIZE_MASK | SETUPFLAG__ELONGATE_MASK)) | current_elongation;
                      if (!first_call) tttt.setupflags |= SETUPFLAG__NO_CHK_ELONG;
@@ -1320,7 +1383,7 @@ stuff like "reverse order".
                   /* Read the call after this one -- we will alternate between the two. */
                   get_real_subcall(parseptr, &callspec->stuff.def.defarray[subcall_index+1], temp_concepts, &cp2, &call2, &conc2);
 
-                  for (j = 1; j <= (parseptr->number & 0xF); j++) {
+                  for (j = 1; j <= count_to_use; j++) {
                      tttt = tempsetup;
                      tttt.setupflags = (ss->setupflags & ~(SETUPFLAG__FRACTIONALIZE_MASK | SETUPFLAG__ELONGATE_MASK)) | current_elongation;
                      if (!first_call) tttt.setupflags |= SETUPFLAG__NO_CHK_ELONG;
@@ -1347,6 +1410,8 @@ stuff like "reverse order".
 
                   finalsetupflags |= tempsetup.setupflags;
                }
+
+               current_number_fields = saved_number_fields;
 
                /* If this call is "roll transparent", restore roll info from before the call for those people
                   that are marked as roll-neutral. */
@@ -1451,8 +1516,10 @@ stuff like "reverse order".
                   exit now.  Also, see if we just did the last part. */
 
                if ((ss->setupflags & SETUPFLAG__FRACTIONALIZE_MASK) && instant_stop) {
-                  /* Check whether this is last part of the call, by peeking ahead. */
-                  if (!(&callspec->stuff.def.defarray[subcall_index])->call_id) finalsetupflags |= RESULTFLAG__DID_LAST_PART;
+                  /* Check whether we honored the last possible request.  That is,
+                     whether we did the last part of the call in forward order, or
+                     the first part in reverse order. */
+                  if (numer >= total) finalsetupflags |= RESULTFLAG__DID_LAST_PART;
                   break;
                }
             }
@@ -1575,7 +1642,6 @@ extern void move(
    final_set final_concepts,
    long_boolean qtfudged,
    setup *result)
-
 {
    parse_block *saved_magic_diamond;
    final_set new_final_concepts;
@@ -1605,7 +1671,9 @@ extern void move(
    check_concepts = new_final_concepts & ~(FINAL__MUST_BE_TAG | FINAL__MUST_BE_SCOOT);
 
    if (parseptrcopy->concept->kind <= marker_end_of_list) {
+      int saved_number_fields = current_number_fields;
       selector_kind saved_selector = current_selector;
+      direction_kind saved_direction = current_direction;
 
       /* There are no "non-final" concepts.  The only concepts are the final ones that
          have been encoded into new_final_concepts. */
@@ -1619,8 +1687,12 @@ extern void move(
          things like "checkpoint bounce the beaux by bounce the belles" work. */
       
       current_selector = parseptrcopy->selector;
+      current_direction = parseptrcopy->direction;
+      current_number_fields = parseptrcopy->number;
       move_with_real_call(ss, parseptrcopy, parseptrcopy->call, new_final_concepts, qtfudged, result);
       current_selector = saved_selector;
+      current_direction = saved_direction;
+      current_number_fields = saved_number_fields;
    }
    else {
       /* We now know that there are "non-final" (virtual setup) concepts present. */

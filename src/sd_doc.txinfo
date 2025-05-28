@@ -727,12 +727,18 @@ another attempt if you wish.
 
 Clicking on @code{nice setup} invokes an operation very similar to the resolver,
 except that it searches for sequences of up to three calls that normalize
-a 4x4 matrix into a 2x4.  It uses @i{split phantom lines} and similar concepts
-to do its work.
+various matrices, such as 4x4, into a "nice" 8-person setup.  It uses a variety
+of phantom-like concepts to do its work.
 
-The program does not yet have the ability to perform other normalization
-tasks, such as using the @i{triple box} or @i{triple line} concepts to get out
-of various 12 matrices.
+Be aware that the phantom-like concepts that this command uses are not the only ways
+to get out of large matrix setups.  There are a number of calls, like press,
+truck, loop, squeeze, "Z axle", and "finish a long trip" that are also useful.
+the @code{nice setup} operation does not search for such things.  It is only
+intended to search for things that might not be obvious.
+
+If you have selected "allow all concepts", the @code{nice setup} command may
+make use of concepts that are not legal at the chosen level.  This is sometimes
+useful in emergencies.
 
 @node Do Anything, Reconcile, Nice Setup, Resolving and Searching
 @section The @code{Do Anything} operation

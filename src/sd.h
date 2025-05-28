@@ -213,7 +213,7 @@ typedef struct {
 
    BEWARE!! These flags co-exist in the setupflags word with copies of some
    of the call invocation flags.  The mask for those flags is
-   DFM_CONCENTRICITY_FLAG_MASK.  Those flags, and that mask, are defined
+   DFM1_CONCENTRICITY_FLAG_MASK.  Those flags, and that mask, are defined
    in database.h .  We define these flags at the extreme left end of the
    word in order to keep them away from the concentricity flags.
 
@@ -281,6 +281,8 @@ typedef struct {
    SETUPFLAG__NO_STEP_TO_WAVE means that we are at a level of recursion that no longer permits us to do the
    implicit step to a wave or rear back from one that some calls permit at the top level.
 
+   SETUPFLAG__ASSUME_WAVES means that the "assume waves" concept has been given.
+
    SETUPFLAG__EXPLICIT_MATRIX means that the caller said "4x4 matrix" or "2x6 matrix" or whatever,
    so we got to this matrix explicitly.  This enables natural splitting of the setup, e.g. form
    a parallelogram, "2x6 matrix 1x2 checkmate" is legal -- the 2x6 gets divided naturally
@@ -296,6 +298,8 @@ typedef struct {
    makes "ends detour" work.
 */
 
+/* We are getting dangerously low on bits!!!  200 and 100 are the only spares we have. */
+#define SETUPFLAG__ASSUME_WAVES       0x00000400
 #define SETUPFLAG__EXPLICIT_MATRIX    0x00000800
 #define SETUPFLAG__NO_EXPAND_MATRIX   0x00001000
 #define SETUPFLAG__DISTORTED          0x00002000
@@ -368,8 +372,8 @@ typedef struct {
    would be incorrect.  The SETUPFLAG__XXX bits should start at zero at the
    beginning of each call, and accumulate stuff as the call goes deeper into
    recursion.  The RESULTFLAG__XXX bits should, in general, be the OR of the
-   bits of the components of a compound call, though this is not so for
-   RESULTFLAG__PAR_CONC_END. */
+   bits of the components of a compound call, though this may not be so for
+   RESULTFLAG__ELONGATE_MASK. */
 
 
 
@@ -422,6 +426,7 @@ typedef struct {
 #define warn__check_pgram         34
 #define warn__dyp_resolve_ok      35
 #define warn__ctrs_stay_in_ctr    36
+#define warn__check_c1_stars      37
 
 
 /* BEWARE!!  The warning numbers in this set must all be <= 31.  This is a
@@ -439,8 +444,7 @@ typedef struct {
                                           1<<warn__dmdconc_par   | 1<<warn__xclineconc_perp | 1<<warn__xcdmdconc_perp)
 
 
-/* BEWARE!!  If change this next definition, be sure to update the definition of
-   "resolve_names" in sdtables.c . */
+/* BEWARE!!  This list must track the definition of "resolve_table" in sdgetout.c . */
 typedef enum {
    resolve_none,
    resolve_rlg, resolve_la,
@@ -451,7 +455,9 @@ typedef enum {
    resolve_tby_rlg, resolve_tby_la,
    resolve_xby_rlg, resolve_xby_la,
    resolve_dixie_grand,
-   resolve_prom, resolve_at_home
+   resolve_prom, resolve_revprom,
+   resolve_sglfileprom, resolve_revsglfileprom,
+   resolve_circle
 } resolve_kind;
 
 typedef struct {
@@ -642,7 +648,8 @@ typedef struct {
          short stuff[8];
       } matrix;         /* if schema = schema_matrix or schema_partner_matrix */
       struct {
-         by_def_item *defarray;  /* Dynamically allocated, ends with a zero. */
+         int howmanyparts;
+         by_def_item *defarray;  /* Dynamically allocated, there are "howmanyparts" of them. */
       } def;            /* if schema = schema_by_def */
       struct {
          by_def_item innerdef;
@@ -706,7 +713,12 @@ typedef enum {
    concept_another_call_next_mod,         /* calla modified by callb */
    concept_another_call_next_modreact,    /* calla, which is a "scoot reaction" type, modified by callb */
    concept_another_call_next_modtag,      /* calla, which is a "tag your neighbor" type, modified by callb */
+   concept_another_call_next_2nd,         /* these are like the above 3, but use the "secondary" substitution point */
+   concept_another_call_next_2ndreact,
+   concept_another_call_next_2ndtag,
    concept_another_call_next_force,       /* calla, old subcall, changed to callb */
+   concept_another_call_next_plain,       /* like force, but old call won't appear in transcript, and doesn't
+                                             require forcing modifications. */
    concept_mod_declined,                  /* user was queried about modification, and said no. */
    marker_end_of_list,                    /* normal case */
 
@@ -731,6 +743,7 @@ typedef enum {
    concept_magic,
    concept_cross,
    concept_single,
+   concept_singlefile,
    concept_interlocked,
    concept_12_matrix,
    concept_16_matrix,
@@ -743,6 +756,7 @@ typedef enum {
    concept_4x4,
    concept_2x6_matrix,
    concept_2x8_matrix,
+   concept_3x4_matrix,
    concept_4x4_matrix,
    concept_4dmd_matrix,
    concept_funny,
@@ -757,21 +771,28 @@ typedef enum {
    concept_do_phantom_2x2,
    concept_do_phantom_boxes,
    concept_do_phantom_diamonds,
+   concept_do_phantom_qtags,
    concept_do_phantom_1x6,
    concept_do_phantom_1x8,
    concept_do_phantom_2x4,
-   concept_do_phantom_lines,
+   concept_do_phantom_endtoend,
    concept_do_phantom_2x3,
    concept_divided_2x4,
    concept_divided_2x3,
+   concept_do_divided_diamonds,
+   concept_do_divided_qtags,
    concept_distorted,
    concept_single_diagonal,
    concept_double_diagonal,
    concept_parallelogram,
    concept_triple_lines,
+   concept_triple_lines_endtoend,
    concept_triple_lines_together,
+   concept_triple_lines_tog_end2end,
    concept_quad_lines,
+   concept_quad_lines_endtoend,
    concept_quad_lines_together,
+   concept_quad_lines_tog_end2end,
    concept_quad_boxes,
    concept_quad_boxes_together,
    concept_triple_boxes,
@@ -786,6 +807,10 @@ typedef enum {
    concept_misc_distort,
    concept_old_stretch,
    concept_new_stretch,
+   concept_assume_waves,
+   concept_central,
+   concept_crazy,
+   concept_fan_or_yoyo,
    concept_c1_phantom,
    concept_grand_working,
    concept_centers_or_ends,
@@ -848,9 +873,10 @@ typedef enum {
 #define CONCPROP__USE_NUMBER      0x00001000
 #define CONCPROP__USE_TWO_NUMBERS 0x00002000
 #define CONCPROP__NEED_3DMD       0x00004000
-#define CONCPROP__NEED_3X4_1X12   0x00008000
+#define CONCPROP__NEED_1X12       0x00008000
 #define CONCPROP__NEED_3X4        0x00010000
-#define CONCPROP__NEED_4X4_1X16   0x00020000
+#define CONCPROP__NEED_1X16       0x00020000
+#define CONCPROP__MATRIX_OBLIVIOUS 0x00040000
 
 typedef enum {    /* These control error messages that arise when we divide a setup
                      into subsetups (e.g. phantom lines) and find that one of
@@ -910,6 +936,22 @@ typedef enum {
 } selector_kind;
 #define last_selector_kind ((int) selector_none)
 
+/* BEWARE!!  If change this next definition, be sure to update the definition of
+   "direction_names" in SDUTIL, and also necessary stuff in SDUI. */
+typedef enum {
+   direction_uninitialized,
+   direction_left,
+   direction_right,
+   direction_in,
+   direction_out,
+   direction_zigzag,
+   direction_zagzig,
+   direction_zigzig,
+   direction_zagzag,
+   direction_no_direction
+} direction_kind;
+#define last_direction_kind ((int) direction_no_direction)
+
 typedef struct {
    char *name;
    concept_kind kind;
@@ -928,7 +970,13 @@ typedef enum {
    simple_normalize,
    normalize_before_isolated_call,
    normalize_before_merge
-} normalize_level;
+} normalize_action;
+
+typedef enum {
+   merge_strict_matrix,
+   merge_c1_phantom,
+   merge_c1_phantom_nowarn
+} merge_action;
 
 typedef struct glock {
    concept_descriptor *concept;   /* the concept or end marker */
@@ -937,6 +985,7 @@ typedef struct glock {
    struct glock *subsidiary_root; /* for concepts that take a second call, this is its parse root */
    struct glock *gc_ptr;          /* used for reclaiming dead blocks */
    selector_kind selector;        /* selector, if any, used by concept or call */
+   direction_kind direction;      /* direction, if any, used by concept or call */
    int number;                    /* number, if any, used by concept or call */
 } parse_block;
 
@@ -1008,6 +1057,12 @@ typedef enum {
    resolver_display_failed
 } resolver_display_state;
 
+typedef struct {
+   int *full_list;
+   int *on_level_list;
+   int full_list_size;
+} nice_setup_thing;
+
 #define cross_by_level l_c1
 #define dixie_grand_level l_plus
 
@@ -1043,6 +1098,7 @@ extern unsigned int collision_person1;                              /* in SDUTIL
 extern unsigned int collision_person2;                              /* in SDUTIL */
 extern long_boolean enable_file_writing;                            /* in SDUTIL */
 extern char *selector_names[];                                      /* in SDUTIL */
+extern char *direction_names[];                                     /* in SDUTIL */
 
 extern int global_tbonetest;                                        /* in SDCONCPT */
 extern int global_livemask;                                         /* in SDCONCPT */
@@ -1057,12 +1113,25 @@ extern concept_descriptor marker_concept_mod;                       /* in SDCTAB
 extern concept_descriptor marker_concept_modreact;                  /* in SDCTABLE */
 extern concept_descriptor marker_concept_modtag;                    /* in SDCTABLE */
 extern concept_descriptor marker_concept_force;                     /* in SDCTABLE */
+extern concept_descriptor marker_concept_plain;                     /* in SDCTABLE */
+concept_descriptor marker_concept_second;                           /* in SDCTABLE */
+concept_descriptor marker_concept_secondreact;                      /* in SDCTABLE */
+concept_descriptor marker_concept_secondtag;                        /* in SDCTABLE */
 extern concept_descriptor marker_concept_comment;                   /* in SDCTABLE */
 extern callspec_block **main_call_lists[NUM_CALL_LIST_KINDS];       /* in SDCTABLE */
 extern int number_of_calls[NUM_CALL_LIST_KINDS];                    /* in SDCTABLE */
 extern dance_level calling_level;                                   /* in SDCTABLE */
 extern concept_descriptor concept_descriptor_table[];               /* in SDCTABLE */
-extern int nice_setup_concept[];                                    /* in SDCTABLE */
+extern nice_setup_thing nice_setup_thing_4x4;                       /* in SDCTABLE */
+extern nice_setup_thing nice_setup_thing_3x4;                       /* in SDCTABLE */
+extern nice_setup_thing nice_setup_thing_2x8;                       /* in SDCTABLE */
+extern nice_setup_thing nice_setup_thing_2x6;                       /* in SDCTABLE */
+extern nice_setup_thing nice_setup_thing_1x12;                      /* in SDCTABLE */
+extern nice_setup_thing nice_setup_thing_1x16;                      /* in SDCTABLE */
+extern nice_setup_thing nice_setup_thing_3dmd;                      /* in SDCTABLE */
+extern nice_setup_thing nice_setup_thing_4dmd;                      /* in SDCTABLE */
+extern nice_setup_thing nice_setup_thing_4x6;                       /* in SDCTABLE */
+extern int phantom_concept_index;
 extern int general_concept_offset;                                  /* in SDCTABLE */
 extern int general_concept_size;                                    /* in SDCTABLE */
 extern int *concept_offset_tables[];                                /* in SDCTABLE */
@@ -1071,8 +1140,6 @@ extern char *concept_menu_strings[];                                /* in SDCTAB
 
 extern char *getout_strings[];                                      /* in SDTABLES */
 extern char *filename_strings[];                                    /* in SDTABLES */
-extern char *resolve_names[];                                       /* in SDTABLES */
-extern char *resolve_distances[];                                   /* in SDTABLES */
 extern char *menu_names[];                                          /* in SDTABLES */
 extern begin_kind keytab[][2];                                      /* in SDTABLES */
 extern coordrec *setup_coords[];                                    /* in SDTABLES */
@@ -1118,8 +1185,8 @@ extern map_thing map_hv_2x4_2;                                      /* in SDTABL
 extern map_thing map_3x4_2x3;                                       /* in SDTABLES */
 extern map_thing map_4x6_2x4;                                       /* in SDTABLES */
 extern map_thing map_hv_qtg_2;                                      /* in SDTABLES */
+extern map_thing map_vv_qtg_2;                                      /* in SDTABLES */
 extern map_thing map_2x6_2x3;                                       /* in SDTABLES */
-extern map_thing map_ov_s2x4_k;                                     /* in SDTABLES */
 extern map_thing map_dbloff1;                                       /* in SDTABLES */
 extern map_thing map_dbloff2;                                       /* in SDTABLES */
 extern map_thing map_trngl_box1;                                    /* in SDTABLES */
@@ -1131,6 +1198,7 @@ extern map_thing map_rh_s2x3_2;                                     /* in SDTABL
 extern map_thing map_lf_s2x4_r;                                     /* in SDTABLES */
 extern map_thing map_rf_s2x4_r;                                     /* in SDTABLES */
 extern map_thing map_dmd_1x1;                                       /* in SDTABLES */
+extern map_thing map_star_1x1;                                      /* in SDTABLES */
 extern map_thing map_qtag_f0;                                       /* in SDTABLES */
 extern map_thing map_qtag_f1;                                       /* in SDTABLES */
 extern map_thing map_qtag_f2;                                       /* in SDTABLES */
@@ -1159,12 +1227,15 @@ extern long_boolean testing_fidelity;                               /* in SDMAIN
 extern selector_kind selector_for_initialize;                       /* in SDMAIN */
 extern int allowing_modifications;                                  /* in SDMAIN */
 extern long_boolean allowing_all_concepts;                          /* in SDMAIN */
+extern long_boolean resolver_is_unwieldy;                           /* in SDMAIN */
+extern selector_kind current_selector;                              /* in SDMAIN */
+extern direction_kind current_direction;                            /* in SDMAIN */
+extern int current_number_fields;                                   /* in SDMAIN */
 
 extern int random_number;                                           /* in SDSI */
 extern int hashed_randoms;                                          /* in SDSI */
 extern char *database_filename;                                     /* in SDSI */
 
-extern selector_kind current_selector;                              /* in PREDS */
 extern long_boolean selector_used;                                  /* in PREDS */
 extern long_boolean (*pred_table[])(                                /* in PREDS */
    setup *real_people,
@@ -1248,6 +1319,7 @@ extern int uims_do_getout_popup(char dest[]);
 extern int uims_do_abort_popup(void);
 extern int uims_do_neglect_popup(char dest[]);
 extern int uims_do_selector_popup(void);
+extern int uims_do_direction_popup(void);
 extern int uims_do_quantifier_popup(void);
 extern int uims_do_modifier_popup(char callname[], modify_popup_kind kind);
 extern void uims_reduce_line_count(int n);
@@ -1303,27 +1375,18 @@ extern parse_block *process_final_concepts(
    long_boolean check_errors,
    final_set *final_concepts);
 extern long_boolean fix_n_results(int arity, setup z[]);
-extern void divided_setup_move(
-   setup *ss,
-   parse_block *parseptr,
-   callspec_block *callspec,
-   final_set final_concepts,
-   map_thing *maps,
-   phantest_kind phancontrol,
-   long_boolean recompute_id,
-   setup *result);
-extern void overlapped_setup_move(setup *s, map_thing *maps,
-   int m1, int m2, int m3, parse_block *parseptr, setup *result);
 
 /* In SDGETOUT */
 
 extern resolve_indicator resolve_p(setup *s);
+extern void write_resolve_text(void);
 extern uims_reply full_resolve(search_kind goal);
 extern int concepts_in_place(void);
-extern int reconcile_command_ok(int **permutation_map_p, int *accept_extend_p);
+extern int reconcile_command_ok(void **permutation_map_p, int *accept_extend_p);
 extern int resolve_command_ok(void);
 extern int nice_setup_command_ok(void);
 extern void create_resolve_menu_title(search_kind goal, int cur, int max, resolver_display_state state, char *title);
+extern void initialize_getout_tables(void);
 
 /* In SDBASIC */
 
@@ -1351,7 +1414,33 @@ extern void move(
    long_boolean qtfudged,
    setup *result);
 
-/* In SDISTORT */
+/* In SDMISC */
+
+extern void divided_setup_move(
+   setup *ss,
+   parse_block *parseptr,
+   callspec_block *callspec,
+   final_set final_concepts,
+   map_thing *maps,
+   phantest_kind phancontrol,
+   long_boolean recompute_id,
+   setup *result);
+
+extern void overlapped_setup_move(setup *s, map_thing *maps,
+   int m1, int m2, int m3, parse_block *parseptr, setup *result);
+
+extern void do_phantom_2x4_concept(
+   setup *ss,
+   parse_block *parseptr,
+   setup *result);
+
+extern void phantom_2x4_move(
+   setup *ss,
+   int lineflag,
+   phantest_kind phantest,
+   map_thing *maps,
+   parse_block *parseptr,
+   setup *result);
 
 extern void distorted_2x2s_move(
    setup *ss,
@@ -1383,20 +1472,8 @@ extern void do_concept_callrigger(
    parse_block *parseptr,
    setup *result);
 
-/* In SD12 */
-
 extern void triangle_move(
    setup *ss,
-   parse_block *parseptr,
-   setup *result);
-
-/* In SD16 */
-
-extern void phantom_2x4_move(
-   setup *ss,
-   int lineflag,
-   phantest_kind phantest,
-   map_thing *maps,
    parse_block *parseptr,
    setup *result);
 
@@ -1446,7 +1523,7 @@ extern void normalize_concentric(
    int outer_elongation,
    setup *result);
 
-extern void merge_setups(setup *ss, setup *result);
+extern void merge_setups(setup *ss, merge_action action, setup *result);
 
 extern void on_your_own_move(
    setup *ss,
@@ -1464,6 +1541,7 @@ extern void update_id_bits(setup *ss);
 
 extern void touch_or_rear_back(
    setup *scopy,
+   long_boolean did_mirror,
    int callflags1);
 
 extern void do_matrix_expansion(
@@ -1471,6 +1549,6 @@ extern void do_matrix_expansion(
    unsigned int concprops,
    long_boolean recompute_id);
 
-extern void normalize_setup(setup *ss, normalize_level nlevel);
+extern void normalize_setup(setup *ss, normalize_action action);
 
 extern void toplevelmove(void);

@@ -43,12 +43,9 @@ Private void ctr_end_triangle_move(
          case s_ptpd:
             schema = schema_concentric_6_2;
             break;
-
-/* ***** We need a new schema: "schema_concentric_6_2_inside_triangles_in_qtag"
-   to handle qtag here.  The existing shema considers the center 6 to be in a 2x3,
-   which, for most purposes, is correct.  The new schema would consider them
-   to be in a bone6. */
-
+         case s_qtag:
+            schema = schema_concentric_6_2_tgl;
+            break;
          default:
             fail("There are no 'inside' triangles.");
       }

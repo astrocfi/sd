@@ -1339,8 +1339,14 @@ x22_facing_someone
       same way or is T-boned.  The name may be misleading.  It is intended
       to be used to determine if the person being tested is facing someone
       else's face, but, if the two people are back-to-back, the predicate
-      will also be satisfied.  To get the desired effect, you must only
-      use it on people who are trailers.
+      will also be satisfied.  To get the desired effect, you must require
+      everyone to be a trailer.
+
+x22_tandem_with_someone
+      applies to 2x2 only.  Returns TRUE if the vertical partner of the
+      person under test is alive and facing the same direction.
+      Returns FALSE if the vertical partner is a phantom or faces the
+      opposite way or is T-boned.
 
 x14_once_rem_miniwave
       applies to 1x4 only.  Returns TRUE if the person once-removed
@@ -1470,7 +1476,7 @@ columns_miniwave
       are no people on the other side and hence it can't tell.
 
 1x6_wheel_and_deal
-      applies to 1x6 lines only.  This implements the decision necessary
+      applies to 1x6 or 2x6 lines only.  This implements the decision necessary
       to do a 3X3 wheel and deal.  It is only as strict as necessary to resolve
       ambiguity.  You must use this only when it has already been determined
       that the live people in each triad are facing consistently -- this
@@ -1483,7 +1489,7 @@ columns_miniwave
       are no people on the other side and hence it can't tell.
 
 1x8_wheel_and_deal
-      applies to 1x8 lines only.  This implements the decision necessary
+      applies to 1x8 or 2x8 lines only.  This implements the decision necessary
       to do a 4X4 wheel and deal.  It is only as strict as necessary to resolve
       ambiguity.  You must use this only when it has already been determined
       that the live people in each quad are facing consistently -- this
@@ -1549,21 +1555,37 @@ socker_is_left
 
 inroller_is_cw
       applies to 2x4 lines only.  Returns TRUE if the end of the line clockwise
-      from this person is a live inroller (facing in) and the other end of that
-      line is not occupied by another live inroller.  Returns FALSE if the end
-      of the line counterclockwise from this person is a live inroller and the
-      other end of that line is not occupied by another live inroller.
-      Otherwise, raises an error.
+      from this person is an inroller (that is, the correct person for in roll
+      circulate) and the other end of that line is not.  Returns FALSE if the
+      end of the line counterclockwise from this person is an inroller and the
+      other end of that line is not.  Otherwise, raises an error.  When phantoms
+      are involved, it can still make its determination, as long as there is
+      only one way to infer the phantom's facing direction that would be legal.
 
 magic_inroller_is_cw
       applies to 2x4 lines only.  Same as inroller_is_cw, but applies to this
       person's magic line.
 
 outroller_is_cw
-      applies to 2x4 lines only.  Same as inroller_is_cw, but checks for live
+      applies to 2x4 lines only.  Same as inroller_is_cw, but checks for
       outrollers.
 
-******* why is there no magic_outroller_is_cw ??????
+magic_outroller_is_cw
+      applies to 2x4 lines only.  Same as outroller_is_cw, but applies to
+      this person's magic line.
+
+inroller_is_cw_2x3
+magic_inroller_is_cw_2x3
+outroller_is_cw_2x3
+magic_outroller_is_cw_2x3
+      apply to 2x3 lines only.  These are 2x3 versions of the preceding four.
+
+inroller_is_cw_2x6
+outroller_is_cw_2x6
+inroller_is_cw_2x8
+outroller_is_cw_2x8
+      apply to 2x6 and 2x8 lines only.  These are 2x6 and 2x8 versions.
+
 
 outposter_is_cw
       applies to 2x4 lines only.  Returns TRUE if the end of the line clockwise
@@ -1640,14 +1662,14 @@ girlp
 
 roll_is_cw
       applies to any setup.  Returns TRUE if this person's roll direction, from
-      the preceding call, is clockwise.  Returns if the direction is
+      the preceding call, is clockwise.  Returns FALSE if the direction is
       counterclockwise, or the person can't roll, or roll direction from the
       preceding call is ill-defined.
 
 roll_is_ccw
       applies to any setup.  Returns TRUE if this person's roll direction, from
-      the preceding call, is counterclockwise.  Returns if the direction is
-      clockwise, or the person can't roll, or roll direction from the
+      the preceding call, is counterclockwise.  Returns FALSE if the direction
+      is clockwise, or the person can't roll, or roll direction from the
       preceding call is ill-defined.
 
 x12_boy_facing_girl
@@ -1783,7 +1805,7 @@ parallel_conc_end
 
       By default, a call that begins in a 1x4 or diamond and finishes in a
       2x2 will, if the ends are told to do it without benefit of the word
-      "concentric" finish perpendicular to the original 1x4 or diamond, so
+      "concentric", finish perpendicular to the original 1x4 or diamond, so
       this flag forces those people to finish parallel to the original 1x4
       or diamond (hence the name of the flag).  By default, a call that
       begins in a 2x2 and finishes in a 2x2 will work to the same spots, so
@@ -1865,6 +1887,53 @@ conc_force_otherway
       flag overrides any defaults or "parallel_conc_end" behavior specified
       in the invoked call itself.
 
+
+================================================================================
+More stuff related to this, will work it into nice form someday:
+
+For a call that is defined concentrically:
+   The first subcall specifier gives the call to be executed by the centers.
+   The second subcall specifier gives the call to be executed by the ends.
+For a call that is defined cross concentrically:
+   The first subcall specifier gives the call to be executed by the
+      original ends, finishing in the center.
+   The second subcall specifier gives the call to be executed by the
+      original centers, finishing on the outside.
+
+The meaning of the "demand_lines" and "demand_columns" flags for the call
+executed by the people who START ON THE OUTSIDE (for "concentric" this is
+the second subcall specifier; for "cross concentric" it is the first) is
+as follows:
+   If the original ends are in a 2x2, their elongation is checked to
+   determine whether they are on line-like or column-like spots,
+   independently of the centers' formation.  So, for example, in a
+   quarter-tag, the ends are in a 2x2 and satisfy the "demand_columns"
+   criterion.  In a "trim a web" setup, they are also in column-like
+   spots.  In diamonds, they are in line-like spots.  If the original
+   ends are not in a 2x2 and a "demand" flag is set, no checking is done.
+
+The meaning of the "demand_lines" and "demand_columns" flags for the call
+executed by the people who START IN THE CENTER (for "concentric" this is
+the first subcall specifier; for "cross concentric" it is the second) is
+as follows:
+   If the original centers are in a 2x2, the elongation of the outsides
+   is measured relative to the facing direction of the centers.  If
+   "demand_lines" is given, the outsides' elongation is required to be lateral
+   to the centers.  If "demand_columns" is given, the outsides' elongation
+   is required to forward or back relative to the centers. If the outsides
+   are in a 2x2 (so the overall setup is a 2x4) these flags test whether the
+   centers are actually in their part of lines or columns.  If the outsides
+   are not in a 2x2, their elongation is tested anyway.  So, from a "rigger"
+   setup, the "demand_lines" flag tests whether the centers find the wings
+   lateral to them.
+
+Either flag will cause an error is the setup is a galaxy (elongation can't
+be determined), or if the centers are T-boned (elongation isn't consistent
+for all 4 centers.)  If the original centers are not in a 2x2 and one of these
+flags is set, no checking is done.
+
+================================================================================
+
 ***** Check all this in the code, now that there is documentation to check against!
 
 conc_concentric_rules
@@ -1917,19 +1986,24 @@ inherit_single
 @4 ... @5 - text to remove if optional substitution has been made.
 @6        - put selector here.
 @7 ... @8 - text to ADD if optional substitution has been made, as in the "ing"
-                      for "fascinating <anything>".
+                  for "fascinating <anything>".
 @9        - put number here.
 @a        - put number here, expressed as N/4, but say "full" instead of 4/4.
 @b        - put number here, expressed as N/4.
 @c ... @d - text to remove if this call was invoked with a "must_be_tag_call"
-                      substitution.
+                  substitution.
 @e ... @f - text to change to "left" if this call has "left" modifier.
                       Must use @g also if this appears.
 @g        - at beginning of call name: an @e...@f sequence will occur.
-@h        - at beginning of call name: if this is invoked with "single"
-                      concept, change to "single file".
+@h        - put direction here.
 @i        - at beginning of call name: an @j...@l sequence will occur.
 @j ... @l - text to add if this call has "cross" modifier.  Presumably
-                      has the word "cross" in it.
+                  has the word "cross" in it.
                       Must use @i also if this appears.
 @k        - put selector here, but use singular name, as in "beau tie".
+@m        - put mandatory secondary call substitution here.
+@n ... @o - text to ADD if optional secondary substitution has been made,
+                  as in the "ing" for "fascinating <anything>".
+@p ... @q - text to remove if optional secondary substitution has been made.
+@r ... @s - text to remove and replace with secondary subcall.  Like @p ... @q along with @t.
+@t        - put optional secondary call substitution here.

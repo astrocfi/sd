@@ -348,6 +348,7 @@ void recpoint_activate(long_boolean activate);
 /* macsel.c */
 
 int mac_do_selector_popup(void);
+int mac_do_direction_popup(void);
 int mac_do_quantifier_popup(void);
 
 /* macstart.c */

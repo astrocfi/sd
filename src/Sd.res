@@ -23,6 +23,7 @@
 *confirmpopup.WinGravity: 10
 *confirm*label.borderWidth: 2
 *selector.choose*borderWidth: 0
+*direction.choose*borderWidth: 0
 *startup.exit: Exit from the program
 *startup.heads1P2P: Heads 1P2P
 *startup.sides1P2P: Sides 1P2P

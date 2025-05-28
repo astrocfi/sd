@@ -22,16 +22,14 @@
    selectp
 
 and the following external variables:
-   current_selector
    selector_used
    pred_table     which is filled with pointers to the predicate functions
 */
 
 #include "sd.h"
 
-/* These variables are external. */
+/* This variable is external. */
 
-selector_kind current_selector;
 long_boolean selector_used;
 
 
@@ -295,6 +293,16 @@ Private long_boolean x22_facing_someone(setup *real_people, int real_index,
 }
 
 /* ARGSUSED */
+Private long_boolean x22_tandem_with_someone(setup *real_people, int real_index,
+   int real_direction, int northified_index)
+{
+   int this_person = real_people->people[real_index].id1;
+   int other_index = real_index ^ (((real_direction << 1) & 2) ^ 3);
+   int other_person = real_people->people[other_index].id1;
+   return(((this_person ^ other_person) & DIR_MASK) == 0);
+}
+
+/* ARGSUSED */
 Private long_boolean x14_once_rem_miniwave(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
@@ -313,25 +321,55 @@ Private long_boolean x14_once_rem_couple(setup *real_people, int real_index,
 }
 
 /* ARGSUSED */
-Private long_boolean same_in_quad(setup *real_people, int real_index,
+Private long_boolean lines_couple(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
-   int this_person = real_people->people[real_index].id1;
-   int other_person = real_people->people[real_index ^ 1].id1;
-   if (real_people->kind == s_1x6 && real_index >= 2)
-      other_person = real_people->people[7 - real_index].id1;
-   return(((this_person ^ other_person) & DIR_MASK) == 0);
+   if (real_people->setupflags & SETUPFLAG__ASSUME_WAVES)
+      return FALSE;
+   else {
+      int this_person = real_people->people[real_index].id1;
+      int other_person = real_people->people[real_index ^ 1].id1;
+      if (real_people->kind == s_1x6 && real_index >= 2)
+         other_person = real_people->people[7 - real_index].id1;
+      return ((this_person ^ other_person) & DIR_MASK) == 0;
+   }
 }
 
 /* ARGSUSED */
-Private long_boolean opp_in_quad(setup *real_people, int real_index,
+Private long_boolean columns_tandem(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
    int this_person = real_people->people[real_index].id1;
    int other_person = real_people->people[real_index ^ 1].id1;
    if (real_people->kind == s_1x6 && real_index >= 2)
       other_person = real_people->people[7 - real_index].id1;
-   return(((this_person ^ other_person) & DIR_MASK) == 2);
+   return ((this_person ^ other_person) & DIR_MASK) == 0;
+}
+
+/* ARGSUSED */
+Private long_boolean lines_miniwave(setup *real_people, int real_index,
+   int real_direction, int northified_index)
+{
+   if (real_people->setupflags & SETUPFLAG__ASSUME_WAVES)
+      return TRUE;
+   else {
+      int this_person = real_people->people[real_index].id1;
+      int other_person = real_people->people[real_index ^ 1].id1;
+      if (real_people->kind == s_1x6 && real_index >= 2)
+         other_person = real_people->people[7 - real_index].id1;
+      return ((this_person ^ other_person) & DIR_MASK) == 2;
+   }
+}
+
+/* ARGSUSED */
+Private long_boolean columns_antitandem(setup *real_people, int real_index,
+   int real_direction, int northified_index)
+{
+   int this_person = real_people->people[real_index].id1;
+   int other_person = real_people->people[real_index ^ 1].id1;
+   if (real_people->kind == s_1x6 && real_index >= 2)
+      other_person = real_people->people[7 - real_index].id1;
+   return ((this_person ^ other_person) & DIR_MASK) == 2;
 }
 
 /* ARGSUSED */
@@ -397,7 +435,7 @@ Private long_boolean lines_once_rem_couple(setup *real_people, int real_index,
 Private long_boolean x12_beau_or_miniwave(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
-   if (northified_index == 0)
+   if ((real_people->setupflags & SETUPFLAG__ASSUME_WAVES) || northified_index == 0)
       return(TRUE);
    else {
       int other_person = real_people->people[real_index ^ 1].id1;
@@ -446,14 +484,14 @@ Private long_boolean x16_wheel_and_deal(setup *real_people, int real_index,
 {
    /* We assume people have already been checked for coupleness. */
 
-   if (northified_index <= 2)
+   if (northified_index <= 2 || northified_index >= 9)
       /* We are in the beau-side triad -- it's OK. */
       return(TRUE);
    else {
       /* We are in the belle-side triad -- find the three people in the other triad.
          Just "or" them to be sure we get someone.  They are already known
          to be facing consistently if they are all there. */
-      int other_side = real_index <= 2 ? 3 : 0;
+      int other_side = ((real_index / 3) ^ 1) * 3;
       int other_people = real_people->people[other_side].id1 |
                            real_people->people[other_side+1].id1 |
                            real_people->people[other_side+2].id1;
@@ -478,14 +516,14 @@ Private long_boolean x18_wheel_and_deal(setup *real_people, int real_index,
 {
    /* We assume people have already been checked for coupleness. */
 
-   if (northified_index <= 3)
+   if (northified_index <= 3 || northified_index >= 12)
       /* We are in the beau-side quad -- it's OK. */
       return(TRUE);
    else {
-      /* We are in the belle-side quad -- find the three people in the other quad.
+      /* We are in the belle-side quad -- find the four people in the other quad.
          Just "or" them to be sure we get someone.  They are already known
          to be facing consistently if they are all there. */
-      int other_side = (real_index&4) ^ 4;
+      int other_side = (real_index & 014) ^ 4;
       int other_people = real_people->people[other_side].id1 |
                            real_people->people[other_side+1].id1 |
                            real_people->people[other_side+2].id1 |
@@ -625,18 +663,28 @@ static int magic_cw_idx[8] = {3, 7, 7, 3, 7, 3, 3, 7};
 static int magic_ccw_idx[8] = {0, 4, 4, 0, 4, 0, 0, 4};
 static int magic_cw_idx_2x3[8] = {2, 5, 2, 5, 2, 5};
 static int magic_ccw_idx_2x3[8] = {0, 3, 0, 3, 0, 3};
-static int cw_idx_2x3[8] = {2, 2, 2, 5, 5, 5};
-static int ccw_idx_2x3[8] = {0, 0, 0, 3, 3, 3};
+static int cw_idx_2x3[6] = {2, 2, 2, 5, 5, 5};
+static int ccw_idx_2x3[6] = {0, 0, 0, 3, 3, 3};
+static int cw_idx_2x6[12] = {5, 5, 5, 5, 5, 5, 11, 11, 11, 11, 11, 11};
+static int ccw_idx_2x6[12] = {0, 0, 0, 0, 0, 0, 6, 6, 6, 6, 6, 6};
+static int cw_idx_2x8[16] = {7, 7, 7, 7, 7, 7, 15, 15, 15, 15, 15, 15};
+static int ccw_idx_2x8[16] = {0, 0, 0, 0, 0, 0, 0, 0, 8, 8, 8, 8, 8, 8, 8, 8};
 
 static int magic_inroll_directions[8] = {012, 010, 010, 012, 010, 012, 012, 010};
-static int inroll_directions_2x3[8] = {012, 012, 012, 010, 010, 010};
-static int magic_inroll_directions_2x3[8] = {012, 010, 012, 010, 012, 010};
+static int inroll_directions_2x3[6] = {012, 012, 012, 010, 010, 010};
+static int inroll_directions_2x6[12] = {012, 012, 012, 012, 012, 012, 010, 010, 010, 010, 010, 010};
+static int inroll_directions_2x8[16] = {012, 012, 012, 012, 012, 012, 012, 012, 010, 010, 010, 010, 010, 010, 010, 010};
+static int magic_inroll_directions_2x3[6] = {012, 010, 012, 010, 012, 010};
 
 
 /* ARGSUSED */
 Private long_boolean inroller_is_cw(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
+
+   if (real_people->setupflags & SETUPFLAG__ASSUME_WAVES)
+      return ((northified_index ^ (northified_index >> 2)) & 1) == 0;
+
    return in_out_roll_select(
       012 - ((real_index & 4) >> 1),
       real_people->people[real_index | 3].id1 & 017,
@@ -648,6 +696,10 @@ Private long_boolean inroller_is_cw(setup *real_people, int real_index,
 Private long_boolean magic_inroller_is_cw(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
+
+   if (real_people->setupflags & SETUPFLAG__ASSUME_WAVES)
+      return ((northified_index ^ (northified_index >> 2)) & 1) == 0;
+
    return in_out_roll_select(
       magic_inroll_directions[real_index],
       real_people->people[magic_cw_idx[real_index]].id1 & 017,
@@ -659,6 +711,9 @@ Private long_boolean magic_inroller_is_cw(setup *real_people, int real_index,
 Private long_boolean outroller_is_cw(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
+   if (real_people->setupflags & SETUPFLAG__ASSUME_WAVES)
+      return ((northified_index ^ (northified_index >> 2)) & 1) != 0;
+
    return in_out_roll_select(
       010 + ((real_index & 4) >> 1),
       real_people->people[real_index | 3].id1 & 017,
@@ -670,6 +725,9 @@ Private long_boolean outroller_is_cw(setup *real_people, int real_index,
 Private long_boolean magic_outroller_is_cw(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
+   if (real_people->setupflags & SETUPFLAG__ASSUME_WAVES)
+      return ((northified_index ^ (northified_index >> 2)) & 1) != 0;
+
    return in_out_roll_select(
       022 - magic_inroll_directions[real_index],
       real_people->people[magic_cw_idx[real_index]].id1 & 017,
@@ -681,6 +739,9 @@ Private long_boolean magic_outroller_is_cw(setup *real_people, int real_index,
 Private long_boolean inroller_is_cw_2x3(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
+   if (real_people->setupflags & SETUPFLAG__ASSUME_WAVES)
+      fail("Not legal.");
+
    return in_out_roll_select(
       inroll_directions_2x3[real_index],
       real_people->people[cw_idx_2x3[real_index]].id1 & 017,
@@ -692,6 +753,9 @@ Private long_boolean inroller_is_cw_2x3(setup *real_people, int real_index,
 Private long_boolean magic_inroller_is_cw_2x3(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
+   if (real_people->setupflags & SETUPFLAG__ASSUME_WAVES)
+      fail("Not legal.");
+
    return in_out_roll_select(
       magic_inroll_directions_2x3[real_index],
       real_people->people[magic_cw_idx_2x3[real_index]].id1 & 017,
@@ -703,6 +767,9 @@ Private long_boolean magic_inroller_is_cw_2x3(setup *real_people, int real_index
 Private long_boolean outroller_is_cw_2x3(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
+   if (real_people->setupflags & SETUPFLAG__ASSUME_WAVES)
+      fail("Not legal.");
+
    return in_out_roll_select(
       022 - inroll_directions_2x3[real_index],
       real_people->people[cw_idx_2x3[real_index]].id1 & 017,
@@ -714,6 +781,9 @@ Private long_boolean outroller_is_cw_2x3(setup *real_people, int real_index,
 Private long_boolean magic_outroller_is_cw_2x3(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
+   if (real_people->setupflags & SETUPFLAG__ASSUME_WAVES)
+      fail("Not legal.");
+
    return in_out_roll_select(
       022 - magic_inroll_directions_2x3[real_index],
       real_people->people[magic_cw_idx_2x3[real_index]].id1 & 017,
@@ -722,19 +792,95 @@ Private long_boolean magic_outroller_is_cw_2x3(setup *real_people, int real_inde
 }
 
 /* ARGSUSED */
+Private long_boolean inroller_is_cw_2x6(setup *real_people, int real_index,
+   int real_direction, int northified_index)
+{
+
+   if (real_people->setupflags & SETUPFLAG__ASSUME_WAVES)
+      return ((northified_index ^ (northified_index / 6)) & 1) == 0;
+
+   return in_out_roll_select(
+      inroll_directions_2x6[real_index],
+      real_people->people[cw_idx_2x6[real_index]].id1 & 017,
+      real_people->people[ccw_idx_2x6[real_index]].id1 & 017,
+      "Can't find end looking in.");
+}
+
+/* ARGSUSED */
+Private long_boolean outroller_is_cw_2x6(setup *real_people, int real_index,
+   int real_direction, int northified_index)
+{
+
+   if (real_people->setupflags & SETUPFLAG__ASSUME_WAVES)
+      return ((northified_index ^ (northified_index / 6)) & 1) != 0;
+
+   return in_out_roll_select(
+      022 - inroll_directions_2x6[real_index],
+      real_people->people[cw_idx_2x6[real_index]].id1 & 017,
+      real_people->people[ccw_idx_2x6[real_index]].id1 & 017,
+      "Can't find end looking out.");
+}
+
+/* ARGSUSED */
+Private long_boolean inroller_is_cw_2x8(setup *real_people, int real_index,
+   int real_direction, int northified_index)
+{
+
+   if (real_people->setupflags & SETUPFLAG__ASSUME_WAVES)
+      return ((northified_index ^ (northified_index >> 3)) & 1) == 0;
+
+   return in_out_roll_select(
+      inroll_directions_2x8[real_index],
+      real_people->people[cw_idx_2x8[real_index]].id1 & 017,
+      real_people->people[ccw_idx_2x8[real_index]].id1 & 017,
+      "Can't find end looking in.");
+}
+
+/* ARGSUSED */
+Private long_boolean outroller_is_cw_2x8(setup *real_people, int real_index,
+   int real_direction, int northified_index)
+{
+
+   if (real_people->setupflags & SETUPFLAG__ASSUME_WAVES)
+      return ((northified_index ^ (northified_index >> 3)) & 1) != 0;
+
+   return in_out_roll_select(
+      022 - inroll_directions_2x8[real_index],
+      real_people->people[cw_idx_2x8[real_index]].id1 & 017,
+      real_people->people[ccw_idx_2x8[real_index]].id1 & 017,
+      "Can't find end looking out.");
+}
+
+/* ARGSUSED */
 Private long_boolean outposter_is_cw(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
+   int outroll_direction = 010 + ((real_index & 4) >> 1);
+   unsigned int cw_dir = real_people->people[real_index | 3].id1 & 017;
+
    /* cw_end exists and is looking out */
-   return(((real_people->people[real_index | 3].id1 & 017) == (010 + ((real_index & 4) >> 1))));
+   if (cw_dir == outroll_direction) return TRUE;
+   /* or cw_end is phantom but ccw_end is looking in, so it has to be the phantom */
+   else if (cw_dir == 0 && (real_people->people[real_index & 4].id1 & 017) == (022 - outroll_direction)) return TRUE;
+   /* we don't know */
+   else return FALSE;
 }
 
 /* ARGSUSED */
 Private long_boolean outposter_is_ccw(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
-   /* ccw_end exists and is looking out */
-   return(((real_people->people[real_index & 4].id1 & 017) == (010 + ((real_index & 4) >> 1))));
+   int outroll_direction = 010 + ((real_index & 4) >> 1);
+
+   /* Demand that cw_end be looking in -- otherwise "outposter_is_cw"
+      would have accepted it if it were legal. */
+   if ((real_people->people[real_index | 3].id1 & 017) != outroll_direction) return FALSE;
+   else {
+      /* Now if ccw_end is looking out or is a phantom, it's OK. */
+      unsigned int ccw_dir = real_people->people[real_index & 4].id1 & 017;
+      if (ccw_dir == 0 || ccw_dir == 022-outroll_direction) return TRUE;
+      return FALSE;
+   }
 }
 
 /* ARGSUSED */
@@ -917,6 +1063,70 @@ Private long_boolean x22_girl_facing_boy(setup *real_people, int real_index,
 }
 
 /* ARGSUSED */
+Private long_boolean leftp(setup *real_people, int real_index,
+   int real_direction, int northified_index)
+{
+   return current_direction == direction_left;
+}
+
+/* ARGSUSED */
+Private long_boolean rightp(setup *real_people, int real_index,
+   int real_direction, int northified_index)
+{
+   return current_direction == direction_right;
+}
+
+/* ARGSUSED */
+Private long_boolean inp(setup *real_people, int real_index,
+   int real_direction, int northified_index)
+{
+   return current_direction == direction_in;
+}
+
+/* ARGSUSED */
+Private long_boolean outp(setup *real_people, int real_index,
+   int real_direction, int northified_index)
+{
+   return current_direction == direction_out;
+}
+
+
+/* ARGSUSED */
+Private long_boolean zigzagp(setup *real_people, int real_index,
+   int real_direction, int northified_index)
+{
+   return current_direction == direction_zigzag;
+}
+
+/* ARGSUSED */
+Private long_boolean zagzigp(setup *real_people, int real_index,
+   int real_direction, int northified_index)
+{
+   return current_direction == direction_zagzig;
+}
+
+/* ARGSUSED */
+Private long_boolean zigzigp(setup *real_people, int real_index,
+   int real_direction, int northified_index)
+{
+   return current_direction == direction_zigzig;
+}
+
+/* ARGSUSED */
+Private long_boolean zagzagp(setup *real_people, int real_index,
+   int real_direction, int northified_index)
+{
+   return current_direction == direction_zagzag;
+}
+
+/* ARGSUSED */
+Private long_boolean no_dir_p(setup *real_people, int real_index,
+   int real_direction, int northified_index)
+{
+   return current_direction == direction_no_direction;
+}
+
+/* ARGSUSED */
 Private long_boolean dmd_ctrs_rh(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
@@ -1010,7 +1220,7 @@ Private long_boolean q_line_back(setup *real_people, int real_index,
    }
 }
 
-/* BEWARE!!  This list must track the array "predtab" in dbcomp.c. */
+/* BEWARE!!  This list must track the array "predtab" in dbcomp.c . */
 
 /* The first 10 of these (the constant to use is SELECTOR_PREDS) take a predicate.
    Any call that uses one of these predicates in its definition will cause a
@@ -1035,18 +1245,19 @@ long_boolean (*pred_table[])(
       x22_miniwave,                    /* "x22_miniwave" */
       x22_couple,                      /* "x22_couple" */
       x22_facing_someone,              /* "x22_facing_someone" */
+      x22_tandem_with_someone,         /* "x22_tandem_with_someone" */
       x14_once_rem_miniwave,           /* "x14_once_rem_miniwave" */
       x14_once_rem_couple,             /* "x14_once_rem_couple" */
-      opp_in_quad,                     /* "lines_miniwave" */
-      same_in_quad,                    /* "lines_couple" */
+      lines_miniwave,                  /* "lines_miniwave" */
+      lines_couple,                    /* "lines_couple" */
       opp_in_magic,                    /* "lines_magic_miniwave" */
       same_in_magic,                   /* "lines_magic_couple" */
       lines_once_rem_miniwave,         /* "lines_once_rem_miniwave" */
       lines_once_rem_couple,           /* "lines_once_rem_couple" */
       same_in_pair,                    /* "lines_tandem" */
       opp_in_pair,                     /* "lines_antitandem" */
-      same_in_quad,                    /* "columns_tandem" */
-      opp_in_quad,                     /* "columns_antitandem" */
+      columns_tandem,                  /* "columns_tandem" */
+      columns_antitandem,              /* "columns_antitandem" */
       same_in_magic,                   /* "columns_magic_tandem" */
       opp_in_magic,                    /* "columns_magic_antitandem" */
       lines_once_rem_couple,           /* "columns_once_rem_tandem" */
@@ -1073,6 +1284,10 @@ long_boolean (*pred_table[])(
       magic_inroller_is_cw_2x3,        /* "magic_inroller_is_cw_2x3" */
       outroller_is_cw_2x3,             /* "outroller_is_cw_2x3" */
       magic_outroller_is_cw_2x3,       /* "magic_outroller_is_cw_2x3" */
+      inroller_is_cw_2x6,              /* "inroller_is_cw_2x6" */
+      outroller_is_cw_2x6,             /* "outroller_is_cw_2x6" */
+      inroller_is_cw_2x8,              /* "inroller_is_cw_2x8" */
+      outroller_is_cw_2x8,             /* "outroller_is_cw_2x8" */
       outposter_is_cw,                 /* "outposter_is_cw" */
       outposter_is_ccw,                /* "outposter_is_ccw" */
       nexttrnglspot_is_tboned,         /* "nexttrnglspot_is_tboned" */
@@ -1088,6 +1303,15 @@ long_boolean (*pred_table[])(
       x12_girl_facing_boy,             /* "x12_girl_facing_boy" */
       x22_boy_facing_girl,             /* "x22_boy_facing_girl" */
       x22_girl_facing_boy,             /* "x22_girl_facing_boy" */
+      leftp,                           /* "leftp" */
+      rightp,                          /* "rightp" */
+      inp,                             /* "inp" */
+      outp,                            /* "outp" */
+      zigzagp,                         /* "zigzagp" */
+      zagzigp,                         /* "zagzigp" */
+      zigzigp,                         /* "zigzigp" */
+      zagzagp,                         /* "zagzagp" */
+      no_dir_p,                        /* "no_dir_p" */
       dmd_ctrs_rh,                     /* "dmd_ctrs_rh" */
       trngl_pt_rh,                     /* "trngl_pt_rh" */
       q_tag_front,                     /* "q_tag_front" */

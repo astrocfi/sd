@@ -27,21 +27,24 @@
  */
 
 typedef struct {
-    int valid;       /* set to TRUE if a match was found */
-    int exact;       /* set to TRUE if an exact match was found */
+    int valid;            /* set to TRUE if a match was found */
+    int exact;            /* set to TRUE if an exact match was found */
     uims_reply kind;
     int index;
-    int who;         /* matches <anyone> */
-    int n;           /* matches <n> */
-    int space_ok;    /* space is a legitimate next input character */
+    selector_kind who;    /* matches <anyone> */
+    direction_kind where; /* matches <direction> */
+    int number_fields;    /* matches all the number fields */
+    int howmanynumbers;   /* tells how many there are */
+    int space_ok;         /* space is a legitimate next input character */
 } match_result;
 
-typedef void (*show_function)(char *user_input, char *extension, match_result *mr);
+typedef void (*show_function)(char *user_input, char *extension, Const match_result *mr);
 
 enum {
     match_startup_commands = -1,
     match_resolve_commands = -2,
-    match_selectors = -3
+    match_selectors = -3,
+    match_directions = -4
 };
 
 #define NUM_SPECIAL_COMMANDS 2

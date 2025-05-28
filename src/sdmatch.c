@@ -68,16 +68,17 @@ static void startup_matcher(match_state *sp);
 static void resolve_matcher(match_state *sp);
 static void call_matcher(match_state *sp);
 static void selector_matcher(match_state *sp);
+static void direction_matcher(match_state *sp);
 static void search_menu(match_state *sp, char *menu[], int menu_length, uims_reply kind);
 static void search_concept(match_state *sp);
-static void match_pattern(match_state *sp, char pattern[], match_result *result);
+static void match_pattern(match_state *sp, char pattern[], Const match_result *result);
 static void match_suffix(match_state *sp, char *user, char *pat,
-                          char *patxp, match_result *result);
+                          char *patxp, Const match_result *result);
 static void match_suffix_2(match_state *sp, char *user, char *pat1, char *pat2,
-                          char *patxp, match_result *result);
+                          char *patxp, Const match_result *result);
 static int  match_wildcard(match_state *sp, char *user, char *pat,
-                          char *patxp, match_result *result);
-static void record_a_match(match_state *sp, match_result *result);
+                          char *patxp, Const match_result *result);
+static void record_a_match(match_state *sp, Const match_result *result);
 static void strn_gcp(char *s1, char *s2);
 static long_boolean verify_call(call_list_kind cl, int call_index, selector_kind who);
 static long_boolean verify_call_with_selector(callspec_block *call, selector_kind sel);
@@ -146,8 +147,8 @@ static char *command_commands[] = {
 static char *resolve_commands[] = {
     "abort the search",
     "find another",
-    "go to next",
-    "go to previous",
+    "next",
+    "previous",
     "accept current choice",
     "raise reconcile point",
     "lower reconcile point"
@@ -285,6 +286,7 @@ add_call_to_menu(char ***menu, int call_menu_index, int menu_size,
  * match_startup_commands - startup mode commands
  * match_resolve_commands - resolve mode commands
  * match_selectors        - selectors (e.g. "boys")
+ * match_directions       - directions (e.g. "left")
  * <call menu index>      - normal commands, concepts, and calls
  *                          from specified call menu
  *
@@ -365,6 +367,8 @@ match_user_input(char *user_input, int which_commands, match_result *mr,
         f = resolve_matcher;
     else if (which_commands == match_selectors)
         f = selector_matcher;
+    else if (which_commands == match_directions)
+        f = direction_matcher;
     else if ((which_commands >= 0) && (which_commands < NUM_CALL_LIST_KINDS)) {
         f = call_matcher;
         current_call_menu = which_commands;
@@ -425,6 +429,12 @@ selector_matcher(match_state *sp)
 }
 
 static void
+direction_matcher(match_state *sp)
+{
+    search_menu(sp, &direction_names[1], last_direction_kind, 0);
+}
+
+static void
 search_menu(match_state *sp, char *menu[], int menu_length, uims_reply kind)
 {
     int i;
@@ -433,8 +443,10 @@ search_menu(match_state *sp, char *menu[], int menu_length, uims_reply kind)
     result.valid = TRUE;
     result.exact = FALSE;
     result.kind = kind;
-    result.who = -1;
-    result.n = -1;
+    result.who = selector_uninitialized;
+    result.where = direction_uninitialized;
+    result.number_fields = 0;
+    result.howmanynumbers = 0;
     for (i = 0; i < menu_length; i++) {
         result.index = i;
         match_pattern(sp, menu[i], &result);
@@ -451,8 +463,10 @@ search_concept(match_state *sp)
     result.valid = TRUE;
     result.exact = FALSE;
     result.kind = ui_concept_select;
-    result.who = -1;
-    result.n = -1;
+    result.who = selector_uninitialized;
+    result.where = direction_uninitialized;
+    result.number_fields = 0;
+    result.howmanynumbers = 0;
 
     if (allowing_all_concepts) {
         item = concept_list;
@@ -480,7 +494,7 @@ search_concept(match_state *sp)
  */
  
 static void
-match_pattern(match_state *sp, char pattern[], match_result *result)
+match_pattern(match_state *sp, char pattern[], Const match_result *result)
 {
     int pch, uch;
 
@@ -531,7 +545,7 @@ match_pattern(match_state *sp, char pattern[], match_result *result)
  */
 
 static void
-match_suffix(match_state *sp, char *user, char *pat, char *patxp, match_result *result)
+match_suffix(match_state *sp, char *user, char *pat, char *patxp, Const match_result *result)
 {
     int exact;
 
@@ -583,7 +597,7 @@ match_suffix(match_state *sp, char *user, char *pat, char *patxp, match_result *
 
 static void
 match_suffix_2(match_state *sp, char *user, char *pat1, char *pat2,
-               char *patxp, match_result *result)
+               char *patxp, Const match_result *result)
 {
     if (*pat1 == 0) {
         /* PAT1 has run out, switch to PAT2 */
@@ -614,7 +628,7 @@ match_suffix_2(match_state *sp, char *user, char *pat1, char *pat2,
  */
 
 static int
-match_wildcard(match_state *sp, char *user, char *pat, char *patxp, match_result *result)
+match_wildcard(match_state *sp, char *user, char *pat, char *patxp, Const match_result *result)
 {
     char temp[200];
     char *prefix, *suffix;
@@ -628,21 +642,33 @@ match_wildcard(match_state *sp, char *user, char *pat, char *patxp, match_result
         return FALSE;
     }
 
-    if ((strncmp(pat, "<anyone>", 8)==0) && (result->who == -1)) {
+    if ((strncmp(pat, "<anyone>", 8)==0) && (result->who == selector_uninitialized)) {
         suffix = pat+8;
         new_result = *result;
         for (i=1; i<=last_selector_kind; ++i) {
-            new_result.who = i;
+            new_result.who = (selector_kind) i;
             prefix = selector_names[i];
             match_suffix_2(sp, user, prefix, suffix, patxp, &new_result);
         }
         return FALSE;
     }
-    else if ((strncmp(pat, "<n>", 3)==0) && (result->n == -1)) {
+    else if ((strncmp(pat, "<direction>", 11)==0) && (result->where == direction_uninitialized)) {
+        suffix = pat+11;
+        new_result = *result;
+        for (i=1; i<=last_direction_kind; ++i) {
+            new_result.where = (direction_kind) i;
+            prefix = direction_names[i];
+            match_suffix_2(sp, user, prefix, suffix, patxp, &new_result);
+        }
+        return FALSE;
+    }
+    else if (strncmp(pat, "<n>", 3)==0) {
         suffix = pat+3;
         new_result = *result;
+        new_result.howmanynumbers++;
+
         for (i=1;; ++i) {
-            new_result.n = i;
+            new_result.number_fields += 1 << ((new_result.howmanynumbers-1)*4);
             prefix = n_patterns[i-1];
             if (prefix == NULL) {
                 break;
@@ -651,18 +677,23 @@ match_wildcard(match_state *sp, char *user, char *pat, char *patxp, match_result
         }
         return FALSE;
     }
-    else if ((strncmp(pat, "<n/4>", 5)==0) && (result->n == -1)) {
+    else if (strncmp(pat, "<n/4>", 5)==0) {
         suffix = pat+5;
         new_result = *result;
+
+        new_result.howmanynumbers++;
+
         for (i=1;; ++i) {
-            new_result.n = i;
+            new_result.number_fields += 1 << ((new_result.howmanynumbers-1)*4);
             prefix = n_4_patterns[i-1];
             if (prefix == NULL) {
                 break;
             }
             match_suffix_2(sp, user, prefix, suffix, patxp, &new_result);
         }
-        new_result.n = 2; /* special case: allow 1/2 for 2/4 */
+
+        /* special case: allow 1/2 for 2/4 */
+        new_result.number_fields = result->number_fields + (2 << ((new_result.howmanynumbers-1)*4));
         match_suffix_2(sp, user, "1/2", suffix, patxp, &new_result);
         return FALSE;
     }
@@ -677,7 +708,7 @@ match_wildcard(match_state *sp, char *user, char *pat, char *patxp, match_result
  */
     
 static void
-record_a_match(match_state *sp, match_result *result)
+record_a_match(match_state *sp, Const match_result *result)
 {
     if (sp->extended_input) {
         if (sp->match_count == 0)

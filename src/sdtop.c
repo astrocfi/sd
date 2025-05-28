@@ -255,8 +255,8 @@ Private full_expand_thing step_1x2_pair =      {0, 0, &step_1x2_stuff};
 
 extern void touch_or_rear_back(
    setup *scopy,
+   long_boolean did_mirror,
    int callflags1)
-
 {
    int i, j;
    setup stemp;
@@ -268,115 +268,139 @@ extern void touch_or_rear_back(
    livemask = 0;
    tptr = 0;
 
-   for (i=0, j=1; i<=setup_limits[scopy->kind]; i++, j<<=1) {
+   for (i=0; i<=setup_limits[scopy->kind]; i++) {
       int p = scopy->people[i].id1;
       directions = (directions<<2) | (p&3);
-      if (p) livemask |= j;
+      if (p) livemask = (livemask<<2) | 3;
    }
 
    if (callflags1 & CFLAG1_REAR_BACK_FROM_R_WAVE) {
-      if (scopy->kind == s1x4 && (livemask == 0xF) && (directions == 0x28)) {
+      if (scopy->kind == s1x4 && (livemask == 0xFF) && (directions == 0x28)) {
          tptr = &rear_wave_pair;          /* Rear back from a wave to facing couples. */
       }
-      else if (scopy->kind == s_1x2 && (livemask == 0x3) && (directions == 0x2)) {
+      else if (scopy->kind == s_1x2 && (livemask == 0xF) && (directions == 0x2)) {
          tptr = &rear_miniwave_pair;      /* Rear back from a miniwave to facing people. */
       }
       else if (scopy->kind == s2x4) {
-         if ((livemask == 0xFF) && (directions == 0x2288)) {
+         if ((livemask == 0xFFFF) && (directions == 0x2288)) {
             tptr = &rear_2x4_pair;        /* Rear back from parallel waves to an 8 chain. */
          }
-         else if ((livemask == 0xFF) && (directions == 0x55FF)) {
+         else if ((livemask == 0xFFFF) && (directions == 0x55FF)) {
             tptr = &rear_col_pair;        /* Rear back from columns to end-to-end single 8-chains. */
          }
       }
       else if (scopy->kind == s2x2) {
-         if ((livemask == 0xF) && (directions == 0x28)) {
+         if ((livemask == 0xFF) && (directions == 0x28)) {
             tptr = &rear_vrbox_pair;      /* Rear back from a right-hand box to a single 8 chain. */
          }
-         else if ((livemask == 0xF) && (directions == 0x5F)) {
+         else if ((livemask == 0xFF) && (directions == 0x5F)) {
             tptr = &rear_hrbox_pair;      /* Rear back from a right-hand box to a single 8 chain. */
          }
       }
-      else if (scopy->kind == s1x8 && (livemask == 0xFF) && (directions == 0x2882)) {
+      else if (scopy->kind == s1x8 && (livemask == 0xFFFF) && (directions == 0x2882)) {
          tptr = &rear_gwave_pair;         /* Rear back from a grand wave to facing lines. */
       }
-      else if (scopy->kind == s_bone && livemask == 0xFF && ((directions == 0xA802) || (directions == 0x78D2))) {
+      else if (scopy->kind == s_bone && livemask == 0xFFFF && ((directions == 0xA802) || (directions == 0x78D2))) {
          /* Centers rear back from a "bone" to lines facing or "split square thru" setup. */
          tptr = &rear_bone_pair;
       }
-      else if (scopy->kind == s_rigger && livemask == 0xFF && ((directions == 0xA802) || (directions == 0xD872))) {
+      else if (scopy->kind == s_rigger && livemask == 0xFFFF && ((directions == 0xA802) || (directions == 0xD872))) {
          /* Ends rear back from a "wing" to lines facing or "split square thru" setup. */
          tptr = &rear_wing_pair;
       }
       else if (scopy->kind == s_c1phan) {
          /* Check for certain people rearing back from C1 phantoms. */
-         if ((livemask == 0x5555) && ((directions == 0x884C00C4) || (directions == 0x4C4CC4C4))) {
+         if ((livemask == 0xCCCCCCCC) && ((directions == 0x884C00C4) || (directions == 0x4C4CC4C4))) {
             tptr = &rear_c1a_pair;
          }
-         else if ((livemask == 0xAAAA) && ((directions == 0x13223100) || (directions == 0x13313113))) {
+         else if ((livemask == 0x33333333) && ((directions == 0x13223100) || (directions == 0x13313113))) {
             tptr = &rear_c1b_pair;
          }
-         else if ((livemask == 0x5555) && ((directions == 0x08CC8044) || (directions == 0x08808008))) {
+         else if ((livemask == 0xCCCCCCCC) && ((directions == 0x08CC8044) || (directions == 0x08808008))) {
             tptr = &rear_c1c_pair;
          }
-         else if ((livemask == 0xAAAA) && ((directions == 0x11203302) || (directions == 0x20200202))) {
+         else if ((livemask == 0x33333333) && ((directions == 0x11203302) || (directions == 0x20200202))) {
             tptr = &rear_c1d_pair;
          }
       }
    }
    else if (callflags1 & CFLAG1_REAR_BACK_FROM_QTAG) {
-      if (scopy->kind == s_qtag && livemask == 0xFF && ((directions == 0x08A2) || (directions == 0xA802))) {
+      if (scopy->kind == s_qtag && livemask == 0xFFFF && ((directions == 0x08A2) || (directions == 0xA802))) {
          tptr = &rear_qtag_pair;         /* Have the centers rear back from a 1/4 tag or 3/4 tag. */
       }
-      else if (scopy->kind == sdmd && livemask == 0xF && ((directions == 0x5F) || (directions == 0xD7))) {
+      else if (scopy->kind == sdmd && livemask == 0xFF && ((directions == 0x5F) || (directions == 0xD7))) {
          tptr = &rear_sqtag_pair;         /* Have the centers rear back from a single 1/4 tag or 3/4 tag. */
       }
    }
-   else {      /* We know that (callflags1 & CFLAG1_STEP_TO_WAVE) is true here. */
+   else {
+
+      /* We know that (callflags1 & CFLAG1_STEP_TO_WAVE) is true here.
+         It is also possible that CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK is true. */
+
       switch (scopy->kind) {
          case s2x2:
-            if ((livemask == 0xF) && (directions == 0x7D)) {
+            if ((livemask == 0xFF) && (directions == 0x7D)) {
                tptr = &step_2x2h_pair;
             }
-            else if ((livemask == 0xF) && (directions == 0xA0)) {
+            else if ((livemask == 0xFF) && (directions == 0xA0)) {
                tptr = &step_2x2v_pair;
+            }
+            else if ((callflags1 & CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK) && did_mirror) {
+               if ((directions & livemask) != (0x28 & livemask) && (directions & livemask) != (0x5F & livemask))
+                  fail("Setup is not left-handed.");
             }
             break;
          case s2x4:
-            if ((livemask == 0xFF) && (directions == 0x77DD)) {
+            if ((livemask == 0xFFFF) && (directions == 0x77DD)) {
                tptr = &step_8ch_pair;         /* Check for stepping to parallel waves from an 8 chain. */
             }
-            else if ((livemask == 0xFF) && (directions == 0xAA00)) {
+            else if ((livemask == 0xFFFF) && (directions == 0xAA00)) {
                tptr = &step_li_pair;          /* Check for stepping to a grand wave from lines facing. */
             }
-            else if ((livemask == 0xFF) && ((directions == 0xDD77) || (directions == 0x5FF5))) {
+            else if ((livemask == 0xFFFF) && ((directions == 0xDD77) || (directions == 0x5FF5))) {
                tptr = &step_tby_pair;         /* Check for stepping to a 1/4 tag or 3/4 tag from a DPT or trade-by. */
+            }
+            else if ((callflags1 & CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK) && did_mirror) {
+               if ((directions & livemask) != (0x2288 & livemask) && (directions & livemask) != (0x55FF & livemask))
+                  fail("Setup is not left-handed.");
             }
             break;
          case s_1x2:
-            if ((livemask == 0x3) && (directions == 0x7)) {
+            if ((livemask == 0xF) && (directions == 0x7)) {
                tptr = &step_1x2_pair;         /* Check for stepping to a miniwave from people facing. */
+            }
+            else if ((callflags1 & CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK) && did_mirror) {
+               if ((directions & livemask) != (0x2 & livemask))
+                  fail("Setup is not left-handed.");
             }
             break;
          case s1x4:
             /* Check for stepping to a box from a 1x4 single 8 chain -- we allow some phantoms.  This is what makes
                triple columns turn and weave legal in certain interesting cases. */
-            if ((livemask == 0xF) && (directions == 0x7D))
+            if ((livemask == 0xFF) && (directions == 0x7D))
                tptr = &step_1x4_pair;
-            else if ((livemask == 0x3) && (directions == 0x70))
+            else if ((livemask == 0xF0) && (directions == 0x70))
                tptr = &step_1x4_pair;
-            else if ((livemask == 0xC) && (directions == 0x0D))
+            else if ((livemask == 0x0F) && (directions == 0x0D))
                tptr = &step_1x4_pair;
             /* Check for stepping to a single 1/4 tag or 3/4 tag from a single-file DPT or trade-by --
                we allow some phantoms, as above. */
-            else if ((livemask == 0xF) && ((directions == 0xD7) || (directions == 0x5F)))
+            else if ((livemask == 0xFF) && ((directions == 0xD7) || (directions == 0x5F)))
                tptr = &step_1x4_side_pair;
-            else if ((livemask == 0xA) && (directions == 0x13))
+            else if ((livemask == 0x33) && (directions == 0x13))
                tptr = &step_1x4_side_pair;
+            else if ((callflags1 & CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK) && did_mirror) {
+               if ((directions & livemask) != (0x22 & livemask))
+                  fail("Setup is not left-handed.");
+            }
             break;
          case s1x8:
-            if ((livemask == 0xFF) && (directions == 0x7DD7)) {
+            if ((livemask == 0xFFFF) && (directions == 0x7DD7)) {
                tptr = &step_1x8_pair;         /* Check for stepping to a column from a 1x8 single 8 chain. */
+            }
+            else if ((callflags1 & CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK) && did_mirror) {
+               if ((directions & livemask) != (0x2882 & livemask))
+                  fail("Setup is not left-handed.");
             }
             break;
       }
@@ -493,25 +517,21 @@ extern void do_matrix_expansion(
             eptr = &exp_2x6_4x6_stuff; goto expand_me;
          }
       }
-      else if (concprops & CONCPROP__NEED_3X4_1X12) {
-         switch (ss->kind) {             /* Need to expand to a 3x4 or 1x12. */
-            case s1x8:
-               eptr = &exp_1x8_1x12_stuff; goto expand_me;
-            case s1x10:
-               eptr = &exp_1x10_1x12_stuff; goto expand_me;
-            case s_qtag:                 /* Need to expand to a 3x4. */
-               eptr = &exp_qtg_3x4_stuff; goto expand_me;
-         }
-      }
       else if (concprops & CONCPROP__NEED_3X4) {
          if (ss->kind == s_qtag) {       /* Need to expand to a 3x4. */
             eptr = &exp_qtg_3x4_stuff; goto expand_me;
          }
       }
-      else if (concprops & CONCPROP__NEED_4X4_1X16) {
-         switch (ss->kind) {             /* Need to expand to a 4x4 or 1x16. */
-            case s2x4:
-               eptr = &exp_2x4_4x4_stuff; goto expand_me;
+      else if (concprops & CONCPROP__NEED_1X12) {
+         switch (ss->kind) {             /* Need to expand to a 1x12. */
+            case s1x8:
+               eptr = &exp_1x8_1x12_stuff; goto expand_me;
+            case s1x10:
+               eptr = &exp_1x10_1x12_stuff; goto expand_me;
+         }
+      }
+      else if (concprops & CONCPROP__NEED_1X16) {
+         switch (ss->kind) {             /* Need to expand to a 1x16. */
             case s1x8:
                eptr = &exp_1x8_1x12_stuff; goto expand_me;
             case s1x10:
@@ -807,14 +827,14 @@ Private void normalize_c1_phan(setup *stuff)
 
 
 
-/* The "nlevel" argument tells how hard we work to remove the outside phantoms.
+/* The "action" argument tells how hard we work to remove the outside phantoms.
    When merging the results of "on your own" or "own the so-and-so",
-   we set nlevel=normalize_before_merge to work very hard at stripping away
+   we set action=normalize_before_merge to work very hard at stripping away
    outside phantoms, so that we can see more readily how to put things together.
    When preparing for an isolated call, that is, "so-and-so do your part, whatever",
-   we work at it a little, so we set nlevel=normalize_before_isolated_call.
-   For normal usage, we set nlevel=simple_normalize. */
-extern void normalize_setup(setup *ss, normalize_level nlevel)
+   we work at it a little, so we set action=normalize_before_isolated_call.
+   For normal usage, we set action=simple_normalize. */
+extern void normalize_setup(setup *ss, normalize_action action)
 {
    /* Normalize setup by removing outboard phantoms. */
 
@@ -874,7 +894,7 @@ extern void normalize_setup(setup *ss, normalize_level nlevel)
 
    /* Before a merge, we remove phantoms very aggressively. */
 
-   if (nlevel >= normalize_before_merge) {
+   if (action >= normalize_before_merge) {
       if ((ss->kind == s2x4) && (!(ss->people[0].id1 | ss->people[3].id1 | ss->people[4].id1 | ss->people[7].id1))) {
          /* This reduction is necessary to make "ends only rotate 1/4" work from a DPT, yielding a rigger. */
          ss->kind = s2x2;
@@ -898,15 +918,38 @@ extern void normalize_setup(setup *ss, normalize_level nlevel)
    }
 
    /* If preparing for a "so-and-so only do your part", we remove outboard phantoms
-      more aggressively.  For example, if we are selecting just the center line of
+      more aggressively.  The level "normalize_before_isolated_call" is used for
+         <anyone> start, <call>
+         <anyone> do your part, <call>
+         own the <anyone>, <call1> by <call2>. */
+
+   if (action >= normalize_before_isolated_call) {
+      if (ss->kind == s_qtag) {
+
+#ifdef never
+
+/*
+We used to do this stuff, with the following comment:
+      For example, if we are selecting just the center line of
       a quarter tag, we reduce the setup all the way down to a line.  Normally we
       wouldn't do this, lest we lose phantoms when gluing setups together.
-      If we are selecting the ends of a rigger, we tell them to think of themselves
-      as being in a 1x8, so that we could tell them to explode, for example. */
+But we have taken it out.  It goes beyond losing phantoms when gluing setups together.
+The code you see deleted here would preclude "own the <points>, trade by flip the diamond"
+from normal diamonds.  We believe that having the centers of diamonds know that they are
+still in diamonds on an "on your own" or "do your part" is exremely important.  In fact,
+it's hard to imagine why I thought otherwise.  I can only guess that
+"normalize_before_isolated_call" was formerly used for some other operation.
 
-   if (nlevel >= normalize_before_isolated_call) {
-      if (ss->kind == s_qtag) {
+In fact, the comment above: "we remove outboard phantoms more aggressively"
+suggestes that.  We are definitely NOT removing outboard phantoms.  We are simply
+moving them so as to make the overall setup seem more normal to the remaining live
+people.
+
+In any case, let's try it without this.
+*/
+
          if (!(ss->people[0].id1 | ss->people[1].id1 | ss->people[4].id1 | ss->people[5].id1)) {
+            /* This makes the centers able to do it. */
             if (!(ss->people[2].id1 | ss->people[6].id1)) {
                ss->kind = s_1x2;
                (void) copy_person(ss, 0, ss, 7);
@@ -918,7 +961,12 @@ extern void normalize_setup(setup *ss, normalize_level nlevel)
                (void) copy_person(ss, 1, ss, 7);
             }
          }
-         else if (!(ss->people[2].id1 | ss->people[3].id1 | ss->people[6].id1 | ss->people[7].id1)) {
+#endif
+
+
+         if (!(ss->people[2].id1 | ss->people[3].id1 | ss->people[6].id1 | ss->people[7].id1)) {
+            /* This makes it possible to do "own the <points>, trade by flip the diamond" from
+               normal diamonds. */
             /* We do NOT compress to a 2x2 -- doing so might permit people to
                work with each other across the set when they shouldn't, as in
                "heads pass the ocean; heads recycle while the sides star thru". */
@@ -933,7 +981,16 @@ extern void normalize_setup(setup *ss, normalize_level nlevel)
             canonicalize_rotation(ss);
          }
       }
+      if (ss->kind == sdmd) {
+         /* This makes it possible to do "own the <points>, trade by flip the diamond" from
+            a single diamond. */
+         if (!(ss->people[1].id1 | ss->people[3].id1)) {
+            /* We do NOT compress to a 1x2 -- see comment above. */
+            ss->kind = s1x4;   /* That's all it takes! */
+         }
+      }
       else if (ss->kind == s_rigger) {
+         /* This makes it possible to do "ends explode" from a rigger. */
          if (!(ss->people[0].id1 | ss->people[1].id1 | ss->people[4].id1 | ss->people[5].id1)) {
             ss->kind = s1x8;
             (void) copy_person(ss, 0, ss, 6);
@@ -947,6 +1004,8 @@ extern void normalize_setup(setup *ss, normalize_level nlevel)
          }
       }
       else if (ss->kind == s_ptpd) {
+         /* This makes it possible to do "own the <points>, trade by flip the diamond" from
+            point-to-point diamonds. */
          if (!(ss->people[1].id1 | ss->people[3].id1 | ss->people[5].id1 | ss->people[7].id1)) {
             ss->kind = s1x8;   /* That's all it takes! */
          }
@@ -1082,7 +1141,7 @@ extern void toplevelmove(void)
    /* Remove outboard phantoms from the resulting setup. */
 
    normalize_setup(&new_setup, simple_normalize);
-
+   for (i=0; i<MAX_PEOPLE; i++) new_setup.people[i].id2 &= ~UNSYM_BITS_TO_CLEAR;
    newhist->state = new_setup;
    newhist->resolve_flag = resolve_p(&new_setup);
 }

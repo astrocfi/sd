@@ -35,6 +35,7 @@ static char *time_stamp = "sdui-x11.c Time-stamp: <93/07/29 19:26:09 wba>";
    uims_do_abort_popup
    uims_do_neglect_popup
    uims_do_selector_popup
+   uims_do_direction_popup
    uims_do_quantifier_popup
    uims_do_modifier_popup
    uims_add_new_line
@@ -549,6 +550,7 @@ typedef struct _SdResources {
     String resolve_list[NUM_RESOLVE_COMMAND_KINDS];
     String quantifier_title;
     String selector_title;
+    String direction_title;
 } SdResources;
 
 Private SdResources sd_resources;
@@ -616,6 +618,7 @@ Private XtResource outfile_resources[] = {
 
 Private XtResource choose_resources[] = {
     MENU("who", selector_title, "  Who?  "),
+    MENU("direction", direction_title, "Direction?"),
     MENU("howMany", quantifier_title, "How many?")
 };
 
@@ -649,7 +652,8 @@ CONST static char *fallback_resources[] = {
     "*concept*items.borderWidth: 2",
     "*concept.hSpace: 20",	/* slack so don't move off accidentally */
     "*concept.vSpace: 20",
-    "*selector.choose*borderWidth: 0", /* prettier this way */
+    "*selector.choose*borderWidth: 0",  /* prettier this way */
+    "*direction.choose*borderWidth: 0", /* prettier this way */
     "*Dialog.value*Translations: #override <Key>Return: accept_string()\n",
     "*comment.label: You can insert a comment:",
     "*getout.label: Text to be placed at the beginning of this sequence:",
@@ -1449,6 +1453,15 @@ uims_do_selector_popup(void)
 {
     /* We skip the zeroth selector, which is selector_uninitialized. */
     int t = choose_popup(sd_resources.selector_title, &selector_names[1]);
+    if (t==0) return POPUP_DECLINE;
+    return t;
+}    
+
+extern int
+uims_do_direction_popup(void)
+{
+    /* We skip the zeroth direction, which is direction_uninitialized. */
+    int t = choose_popup(sd_resources.direction_title, &direction_names[1]);
     if (t==0) return POPUP_DECLINE;
     return t;
 }    

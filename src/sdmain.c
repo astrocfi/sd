@@ -27,7 +27,7 @@
     General Public License if you distribute the file.
 */
 
-#define VERSION_STRING "29.2"
+#define VERSION_STRING "29.3"
 
 /* This defines the following functions:
    sd_version_string
@@ -63,6 +63,10 @@ and the following external variables:
    selector_for_initialize
    allowing_modifications
    allowing_all_concepts
+   resolver_is_unwieldy
+   current_selector
+   current_direction
+   current_number_fields
 */
 
 
@@ -112,6 +116,10 @@ long_boolean testing_fidelity = FALSE;
 selector_kind selector_for_initialize;
 int allowing_modifications = 0;
 long_boolean allowing_all_concepts = FALSE;
+long_boolean resolver_is_unwieldy = FALSE;
+selector_kind current_selector;
+direction_kind current_direction;
+int current_number_fields;
 
 /* These variables are are global to this file. */
 
@@ -174,6 +182,7 @@ Private void initialize_concept_sublists(void)
    concept_sublists[call_list_any] = (short int *) get_mem(concepts_at_level*sizeof(short int));
 
    /* Make the concept sublists, one per setup. */
+   /* Note that the "assume_waves" concept is very dangerous.  We never allow it. */
 
    for (test_call_list_kind = call_list_qtag; test_call_list_kind > call_list_any; test_call_list_kind--) {
       for (       number_of_concepts = 0, concepts_at_level = 0;
@@ -181,7 +190,7 @@ Private void initialize_concept_sublists(void)
                   number_of_concepts++) {
          concept_descriptor *p = &concept_descriptor_table[number_of_concepts];
 
-         if (p->level <= calling_level) {
+         if (p->level <= calling_level && p->kind != concept_assume_waves) {
             setup_mask = ~0;
             /* This concept is legal at this level.  see if it is appropriate for this setup.
                If we don't know, the default value of setup_mask will make it legal. */
@@ -221,7 +230,8 @@ Private void initialize_concept_sublists(void)
    for (       number_of_concepts = 0, concepts_at_level = 0;
                concept_descriptor_table[number_of_concepts].kind != marker_end_of_list;
                number_of_concepts++) {
-      if (concept_descriptor_table[number_of_concepts].level <= calling_level)
+      if (     concept_descriptor_table[number_of_concepts].level <= calling_level &&
+               concept_descriptor_table[number_of_concepts].kind != concept_assume_waves)
          concept_sublists[call_list_any][concepts_at_level++] = number_of_concepts;
    }
 }
@@ -273,6 +283,7 @@ Private parse_block *get_parse_block(void)
    item->concept = (concept_descriptor *) 0;
    item->call = (callspec_block *) 0;
    item->selector = selector_uninitialized;
+   item->direction = direction_uninitialized;
    item->number = 0;
    item->subsidiary_root = (parse_block *) 0;
    item->next = (parse_block *) 0;
@@ -322,6 +333,7 @@ extern parse_block *copy_parse_tree(parse_block *original_tree)
       new_item->concept = old_item->concept;
       new_item->call = old_item->call;
       new_item->selector = old_item->selector;
+      new_item->direction = old_item->direction;
       new_item->number = old_item->number;
 
       if (old_item->subsidiary_root)
@@ -361,6 +373,7 @@ Private void reset_parse_tree(
       new_item->concept = old_item->concept;
       new_item->call = old_item->call;
       new_item->selector = old_item->selector;
+      new_item->direction = old_item->direction;
       new_item->number = old_item->number;
 
       /* Chop off branches that don't belong. */
@@ -410,41 +423,60 @@ extern long_boolean restore_parse_state(void)
 extern long_boolean deposit_call(callspec_block *call)
 {
    parse_block *new_block;
+   int i;
    selector_kind sel = selector_uninitialized;
-   int number = 0;
+   direction_kind dir = direction_uninitialized;
+   int number_list = 0;
+   int howmanynums = (call->callflags1 & CFLAG1_NUMBER_MASK) / CFLAG1_NUMBER_BIT;
 
-   /* Put in selector and/or number as required. */
+   /* Put in selector, direction, and/or number as required. */
 
    if (call->callflags1 & CFLAG1_REQUIRES_SELECTOR) {
       int j;
 
       if (initializing_database)
-         sel = selector_for_initialize;              
+         sel = selector_for_initialize;
       else if (not_interactive)
          sel = (selector_kind) generate_random_number(last_selector_kind)+1;
-      else if ((j = uims_do_selector_popup()) != 0)
-         sel = (selector_kind) j;
-      else
+      else if ((j = uims_do_selector_popup()) == 0)
          return(TRUE);
+      else
+         sel = (selector_kind) j;
    }
 
-   if (call->callflags1 & CFLAG1_REQUIRES_NUMBER) {
+   if (call->callflags1 & CFLAG1_REQUIRES_DIRECTION) {
+      int j;
+
+      if (initializing_database)
+         dir = direction_right;   /* This may not be right. */
+      else if (not_interactive)
+         dir = (direction_kind) generate_random_number(last_direction_kind)+1;
+      else if ((j = uims_do_direction_popup()) == 0)
+         return(TRUE);
+      else
+         dir = (direction_kind) j;
+   }
+
+   for (i=0 ; i<howmanynums ; i++) {
+      int this_num;
+
       if (initializing_database)
          /* If this wants a number, give it 1.  0 won't work for the call 1/4 the alter. */
-         number = 1;
+         this_num = 1;
       else if (not_interactive)
-         number = generate_random_number(4)+1;
-      else if ((number = uims_do_quantifier_popup()) != 0)
-         ;
-      else
-         return(TRUE);
+         this_num = generate_random_number(4)+1;
+      else if ((this_num = uims_do_quantifier_popup()) == 0)
+         return(TRUE);     /* User moved the mouse away. */
+
+      number_list |= (this_num << (i*4));
    }
 
    new_block = get_parse_block();
    new_block->concept = &mark_end_of_list;
    new_block->call = call;
    new_block->selector = sel;
-   new_block->number = number;
+   new_block->direction = dir;
+   new_block->number = number_list;
 
    parse_state.topcallflags1 = call->callflags1;
    *parse_state.concept_write_ptr = new_block;
@@ -500,6 +532,7 @@ extern long_boolean deposit_concept(concept_descriptor *conc)
    new_block = get_parse_block();
    new_block->concept = conc;
    new_block->selector = sel;
+   new_block->direction = direction_uninitialized;
    new_block->number = number;
 
    *parse_state.concept_write_ptr = new_block;
@@ -577,10 +610,7 @@ extern long_boolean query_for_call(void)
          newline();
          writestuff("     resolve is:");
          newline();
-         writestuff(resolve_names[history[history_ptr].resolve_flag.kind]);
-         if (history[history_ptr].resolve_flag.kind != resolve_at_home ||
-               (history[history_ptr].resolve_flag.distance & 7) != 0)
-            writestuff(resolve_distances[history[history_ptr].resolve_flag.distance & 7]);
+         write_resolve_text();
          newline();
       }
       
@@ -1052,9 +1082,10 @@ void main(int argc, char *argv[])
       goto start_cycle;
    }
 
-   /* The tandem module wants to initialize some static tables. */
+   /* A few other modules want to initialize some static tables. */
 
    initialize_tandem_tables();
+   initialize_getout_tables();
    
    initializing_database = FALSE;
    not_interactive = FALSE;
@@ -1264,6 +1295,7 @@ void main(int argc, char *argv[])
                goto start_cycle;
             }
          case command_neglect:
+#ifdef NEGLECT
             {
                char percentage_string[MAX_TEXT_LINE_LENGTH];
                uims_reply local_reply;
@@ -1325,6 +1357,9 @@ void main(int argc, char *argv[])
                else
                   goto start_cycle;
             }
+#else
+            specialfail("This command has been removed.");
+#endif
          case command_resolve: case command_reconcile: case command_anything: case command_nice_setup:
             {
                search_kind goal;
@@ -1449,10 +1484,7 @@ extern long_boolean write_sequence_to_file(void)
 
    if (sequence_is_resolved()) {
       doublespace_file();
-      writestuff(resolve_names[history[history_ptr].resolve_flag.kind]);
-      if (history[history_ptr].resolve_flag.kind != resolve_at_home ||
-            (history[history_ptr].resolve_flag.distance & 7) != 0)
-         writestuff(resolve_distances[history[history_ptr].resolve_flag.distance & 7]);
+      write_resolve_text();
    }
 
    newline();
@@ -1507,7 +1539,7 @@ extern void get_real_subcall(
       and we don't want the unmodifiable nullcall that the ends are supposed to
       do getting modified, do we? */
 
-   if (!(item->modifiers1 & (DFM1_MANDATORY_ANYCALL | DFM1_OR_ANYCALL | DFM1_ALLOW_FORCED_MOD)))
+   if (!(item->modifiers1 & DFM1_CALL_MOD_MASK))
       return;
 
    /* See if we had something from before.  This avoids embarassment if a call is actually
@@ -1569,12 +1601,22 @@ extern void get_real_subcall(
       Therefore, whether resolving or in normal interactive mode, we are guided by the
       call modifier flags and the "allowing_modifications" global variable. */
 
-   if (      (item->modifiers1 & DFM1_MANDATORY_ANYCALL) ||
-             ((item->modifiers1 & DFM1_OR_ANYCALL) && (allowing_modifications)) ||
-             ((item->modifiers1 & DFM1_ALLOW_FORCED_MOD) && (allowing_modifications > 1)))
-      ;
-   else
-      return;     /* Do not query about this subcall.  Just return the default. */
+   /* Depending on what type of substitution is involved and what the "allowing modifications"
+      level is, we may choose not to query about this subcall, but just return the default. */
+
+   switch ((item->modifiers1 & DFM1_CALL_MOD_MASK) / DFM1_CALL_MOD_BIT) {
+      case 1:   /* or_anycall */
+      case 3:   /* allow_plain_mod */
+      case 5:   /* or_secondary_call */
+         if (!allowing_modifications) return;
+         break;
+      case 2:   /* mandatory_anycall */
+      case 6:   /* mandatory_secondary_call */
+         break;
+      case 4:   /* allow_forced_mod */
+         if (allowing_modifications <= 1) return;
+         break;
+   }
 
    /* At this point, we know we should query the user about this call. */
       
@@ -1591,9 +1633,26 @@ extern void get_real_subcall(
    /* Create a reference on the list.  "search" points to the null item at the end. */
 
    marker = &marker_concept_mod;
-   if (DFM1_ALLOW_FORCED_MOD & item->modifiers1) marker = &marker_concept_force;
-   else if (DFM1_MUST_BE_SCOOT_CALL & item->modifiers1) marker = &marker_concept_modreact;
-   else if (DFM1_MUST_BE_TAG_CALL & item->modifiers1) marker = &marker_concept_modtag;
+
+   switch ((item->modifiers1 & DFM1_CALL_MOD_MASK) / DFM1_CALL_MOD_BIT) {
+      case 1:   /* or_anycall */
+      case 2:   /* mandatory_anycall */
+         if (DFM1_MUST_BE_SCOOT_CALL & item->modifiers1) marker = &marker_concept_modreact;
+         else if (DFM1_MUST_BE_TAG_CALL & item->modifiers1) marker = &marker_concept_modtag;
+         break;
+      case 3:   /* allow_plain_mod */
+         marker = &marker_concept_plain;
+         break;
+      case 4:   /* allow_forced_mod */
+         marker = &marker_concept_force;
+         break;
+      case 5:   /* or_secondary_call */
+      case 6:   /* mandatory_secondary_call */
+         marker = &marker_concept_second;
+         if (DFM1_MUST_BE_SCOOT_CALL & item->modifiers1) marker = &marker_concept_secondreact;
+         else if (DFM1_MUST_BE_TAG_CALL & item->modifiers1) marker = &marker_concept_secondtag;
+         break;
+   }
 
    tempstringptr = tempstring_text;
    *tempstringptr = 0;           /* Null string, just to be safe. */
@@ -1603,7 +1662,8 @@ extern void get_real_subcall(
 
    if (not_interactive)
       ;
-   else if (DFM1_MANDATORY_ANYCALL & item->modifiers1) {
+   else if (((item->modifiers1 & DFM1_CALL_MOD_MASK) / DFM1_CALL_MOD_BIT) == 2 ||
+            ((item->modifiers1 & DFM1_CALL_MOD_MASK) / DFM1_CALL_MOD_BIT) == 6) {
       string_copy(&tempstringptr, "SUBSIDIARY CALL");
    }
    else {

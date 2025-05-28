@@ -16,7 +16,7 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-    This is for version 29. */
+    This is for version 30. */
 
 /* dbcomp.c */
 
@@ -344,11 +344,13 @@ char *schematab[] = {
    "crossconc",
    "singleconc",
    "singlecrossconc",
-   "anyconc",
+   "singleconc_together",
    "maybesingleconc",
+   "maybesinglecrossconc",
    "conc_diamond_line",
    "conc6_2",
    "conc2_6",
+   "conc6_2_tgl",
    "conc_star",
    "conc_star12",
    "conc_star16",
@@ -422,15 +424,17 @@ char *defmodtab1[] = {
    "suppress_elongation_warnings",
    "or_anycall",
    "mandatory_anycall",
+   "allow_forced_mod",
    "repeat_n",
-   "repeat_nm1",
    "repeat_n_alternate",
    "endscando",
-   "allow_forced_mod",
+   "repeat_nm1",
    "roll_transparent",
    "must_be_tag_call",
    "must_be_scoot_call",
    "cpls_unless_single",
+   "shift_one_number",
+   "shift_two_numbers",     /* The constant "shift_three_numbers" is elsewhere. */
    ""};
 
 /* This table is keyed to the constants "CFLAG1_***".  These are the
@@ -455,8 +459,14 @@ char *flagtab1[] = {
    "dont_use_in_resolve",
    "needselector",         /* This actually never appears in the text -- it is automatically added. */
    "neednumber",
+   "need_two_numbers",     /* The constant "need_three_numbers" is elsewhere. */
+   "need_four_numbers",
    "sequence_starter",
    "split_like_square_thru",
+   "finish_means_skip_first_part",
+   "need_direction",       /* This actually never appears in the text -- it is automatically added. */
+   "left_means_touch_or_check",
+   "can_be_fan_or_yoyo",
    ""};
 
 /* The next three tables are all in step with each other, and with the "heritable" flags. */
@@ -482,6 +492,7 @@ char *flagtabh[] = {
    "3x1_is_inherited",
    "3x3_is_inherited",
    "4x4_is_inherited",
+   "singlefile_is_inherited",
    ""};
 
 /* This table is keyed to the constants "cflag__???".
@@ -505,6 +516,7 @@ char *altdeftabh[] = {
    "3x1",
    "3x3",
    "4x4",
+   "singlefile",
    ""};
 
 /* This table is keyed to the constants "dfm_***".  These are the heritable
@@ -529,6 +541,7 @@ char *defmodtabh[] = {
    "inherit_3x1",
    "inherit_3x3",
    "inherit_4x4",
+   "inherit_singlefile",
    ""};
 
 /* This table is keyed to the constants "MTX_???". */
@@ -560,7 +573,8 @@ char *predtab[] = {
    "always",
    "x22_miniwave",
    "x22_couple",
-   "x22_facing_someone",           /* does anyone use this? */
+   "x22_facing_someone",
+   "x22_tandem_with_someone",
    "x14_once_rem_miniwave",
    "x14_once_rem_couple",
    "lines_miniwave",
@@ -599,6 +613,10 @@ char *predtab[] = {
    "magic_inroller_is_cw_2x3",
    "outroller_is_cw_2x3",
    "magic_outroller_is_cw_2x3",
+   "inroller_is_cw_2x6",
+   "outroller_is_cw_2x6",
+   "inroller_is_cw_2x8",
+   "outroller_is_cw_2x8",
    "outposter_is_cw",
    "outposter_is_ccw",
    "nexttrnglspot_is_tboned",
@@ -614,6 +632,15 @@ char *predtab[] = {
    "x12_girl_facing_boy",
    "x22_boy_facing_girl",
    "x22_girl_facing_boy",
+   "leftp",
+   "rightp",
+   "inp",
+   "outp",
+   "zigzagp",
+   "zagzigp",
+   "zigzigp",
+   "zagzagp",
+   "no_dir_p",
    "dmd_ctrs_rh",
    "trngl_pt_rh",
    "q_tag_front",
@@ -636,16 +663,17 @@ char *predtab[] = {
    its own copy of the table, containing pointers to the actual call
    descriptors. */
 
-int tagtabsize = 2;      /* Number of items we currently have in tagtab -- we initially have two; see below. */
+int tagtabsize = 3;      /* Number of items we currently have in tagtab -- we initially have three; see below. */
 int tagtabmax = 100;     /* Amount of space allocated for tagtab; must be >= tagtabsize at all times, obviously. */
 
 tagtabitem *tagtab;      /* The dynamically allocated tag list. */
 
 tagtabitem tagtabinit[] = {
       {1, "+++"},         /* Must be unused -- call #0 signals end of list in sequential encoding. */
-      {0, "nullcall"}};   /* Must be next -- the database initializer uses call #1 for any mandatory
+      {0, "nullcall"},    /* Must be #1 -- the database initializer uses call #1 for any mandatory
                                     modifier, e.g. "clover and [anything]" is executed as
                                     "clover and [call #1]". */
+      {0, "armturn_34"}};   /* Must be #2 -- this is used for "yo-yo". */
 
 int eof;
 int chars_left;
@@ -934,6 +962,14 @@ static void write_defmod_flags(void)
 
          if ((i = search(defmodtab1)) >= 0)
             rr1 |= (1 << i);
+         else if (strcmp(tok_str, "allow_plain_mod") == 0)
+            rr1 |= (3*DFM1_CALL_MOD_BIT);
+         else if (strcmp(tok_str, "or_secondary_call") == 0)
+            rr1 |= (5*DFM1_CALL_MOD_BIT);
+         else if (strcmp(tok_str, "mandatory_secondary_call") == 0)
+            rr1 |= (6*DFM1_CALL_MOD_BIT);
+         else if (strcmp(tok_str, "shift_three_numbers") == 0)
+            rr1 |= (3*DFM1_NUM_SHIFT_BIT);
          else if ((i = search(defmodtabh)) >= 0)
             rrh |= (1 << i);
          else
@@ -1268,7 +1304,7 @@ extern void dbcompile(void)
    unsigned int funnyflag;
 
    tagtabmax = 100; /* try to make it reentrant */
-   tagtabsize = 2;
+   tagtabsize = 3;
    eof = 0;
    lineno = 0;
    chars_left = 0;
@@ -1341,6 +1377,8 @@ extern void dbcompile(void)
             else {
                if ((iii = search(flagtab1)) >= 0)
                   call_flags1 |= (1 << iii);
+               else if (strcmp(tok_str, "need_three_numbers") == 0)
+                  call_flags1 |= (3*CFLAG1_NUMBER_BIT);
                else if ((iii = search(flagtabh)) >= 0)
                   call_flags |= (1 << iii);
                else
@@ -1368,43 +1406,7 @@ extern void dbcompile(void)
          if (funnyflag != 0 && ccc != schema_by_array)
             errexit("Simple_funny out of place");
 
-
          switch(ccc) {
-            case schema_concentric:
-            case schema_cross_concentric:
-            case schema_any_concentric:
-            case schema_single_concentric:
-            case schema_single_cross_concentric:
-            case schema_maybe_single_concentric:
-            case schema_concentric_diamond_line:
-            case schema_concentric_6_2:
-            case schema_concentric_2_6:
-            case schema_conc_star:
-            case schema_conc_star12:
-            case schema_conc_star16:
-            case schema_maybe_matrix_conc_star:
-            case schema_checkpoint:
-            case schema_rev_checkpoint:
-            case schema_ckpt_star:
-               write_conc_stuff(ccc);
-               break;
-            case schema_sequential:
-            case schema_split_sequential:
-               write_call_header(ccc);
-               /* Write a level 2 seqdefine group. */
-   
-               write_seq_stuff();
-               for (;;) {
-                  get_tok_or_eof();
-                  if (eof) break;
-                  if ((tok_kind == tok_symbol) && (!strcmp(tok_str, "seq"))) {
-                     /* Write a level 2 seqdefine group. */
-                     write_seq_stuff();
-                  }
-                  else
-                     break;       /* Must have seen next 'call' indicator. */
-               }
-               goto startagain;
             case schema_by_array:
                write_array_def(funnyflag);
                goto startagain;
@@ -1413,7 +1415,6 @@ extern void dbcompile(void)
                break;
             case schema_matrix:
                matrixflags = 0;
-   
                write_call_header(ccc);
                write_halfword(matrixflags >> 8);
                write_halfword(matrixflags);
@@ -1422,10 +1423,8 @@ extern void dbcompile(void)
                break;
             case schema_partner_matrix:
                matrixflags = 0;
-   
-               /* Get partner matrix call options. */
-   
-               for (;;) {
+
+               for (;;) {     /* Get partner matrix call options. */
                   get_tok();
                   if (tok_kind != tok_symbol) break;
                   if ((bit = search(matrixcallflagtab)) < 0) errexit("Unknown matrix call flag");
@@ -1441,8 +1440,25 @@ extern void dbcompile(void)
             case schema_roll:
                write_call_header(ccc);
                break;
+            case schema_sequential:
+            case schema_split_sequential:
+               write_call_header(ccc);
+               write_seq_stuff();
+
+               for (;;) {               /* Write a level 2 seqdefine group. */
+                  get_tok_or_eof();
+                  if (eof) break;
+                  if ((tok_kind == tok_symbol) && (!strcmp(tok_str, "seq"))) {
+                     /* Write a level 2 seqdefine group. */
+                     write_seq_stuff();
+                  }
+                  else
+                     break;       /* Must have seen next 'call' indicator. */
+               }
+               goto startagain;
             default:
-               errexit("Can't determine call definition type");
+               write_conc_stuff(ccc);
+               break;
          }
       }
       else

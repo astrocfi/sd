@@ -16,20 +16,21 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-    This is for version 29. */
+    This is for version 30. */
 
 /* This defines the following functions:
    resolve_p
+   write_resolve_text
    full_resolve
    concepts_in_place
    reconcile_command_ok
    resolve_command_ok
    nice_setup_command_ok
    create_resolve_menu_title
+   initialize_getout_tables
 */
 
 #include "sd.h"
-
 
 /* bits that we need to manipulate, segregated by word number in the personrec */
 #define ID_BITS_1 000000700
@@ -50,6 +51,67 @@ typedef struct {
    int rotchange;
 } resolve_rec;
 
+
+
+/* These enumerate the setups from which we can perform a "nice setup" search. */
+/* This list tracks the array "nice_setup_info". */
+typedef enum {
+   nice_start_4x4,
+   nice_start_3x4,
+   nice_start_2x8,
+   nice_start_2x6,
+   nice_start_1x10,
+   nice_start_1x12,
+   nice_start_1x14,
+   nice_start_1x16,
+   nice_start_3dmd,
+   nice_start_4dmd,
+   nice_start_4x6
+} nice_start_kind;
+#define NUM_NICE_START_KINDS (((int) nice_start_4x6)+1)
+
+typedef struct {
+   setup_kind kind;
+   nice_setup_thing *thing;
+   int *array_to_use_now;
+   int number_available_now;
+} nice_setup_info_item;
+
+/* This array tracks the enumeration "nice_start_kind". */
+static nice_setup_info_item nice_setup_info[] = {
+   {s4x4,   &nice_setup_thing_4x4,  (int *) 0, 0},
+   {s3x4,   &nice_setup_thing_3x4,  (int *) 0, 0},
+   {s2x8,   &nice_setup_thing_2x8,  (int *) 0, 0},
+   {s2x6,   &nice_setup_thing_2x6,  (int *) 0, 0},
+   {s1x10,  &nice_setup_thing_1x12, (int *) 0, 0},  /* Note overuse. */
+   {s1x12,  &nice_setup_thing_1x12, (int *) 0, 0},
+   {s1x14,  &nice_setup_thing_1x16, (int *) 0, 0},  /* Note overuse. */
+   {s1x16,  &nice_setup_thing_1x16, (int *) 0, 0},
+   {s_3dmd, &nice_setup_thing_3dmd, (int *) 0, 0},
+   {s_4dmd, &nice_setup_thing_4dmd, (int *) 0, 0},
+   {s4x6,   &nice_setup_thing_4x6,  (int *) 0, 0}
+};
+
+
+typedef struct {
+   int perm[8];
+   int accept_extend;
+   long_boolean allow_eighth_rotation;
+} reconcile_descriptor;
+
+
+
+Private reconcile_descriptor promperm =  {{1, 0, 6, 7, 5, 4, 2, 3}, 0, FALSE};
+Private reconcile_descriptor rpromperm = {{0, 1, 7, 6, 4, 5, 3, 2}, 0, FALSE};
+Private reconcile_descriptor rlgperm =   {{1, 0, 6, 7, 5, 4, 2, 3}, 2, FALSE};
+Private reconcile_descriptor qtagperm =  {{1, 0, 7, 6, 5, 4, 3, 2}, 0, FALSE};
+Private reconcile_descriptor homeperm =  {{6, 5, 4, 3, 2, 1, 0, 7}, 0, TRUE};
+Private reconcile_descriptor sglperm =   {{7, 6, 5, 4, 3, 2, 1, 0}, 0, TRUE};
+Private reconcile_descriptor crossperm = {{5, 4, 3, 2, 1, 0, 7, 6}, 0, FALSE};
+Private reconcile_descriptor crossplus = {{5, 4, 3, 2, 1, 0, 7, 6}, 1, FALSE};
+Private reconcile_descriptor laperm =    {{1, 3, 6, 0, 5, 7, 2, 4}, 2, FALSE};
+
+
 Private configuration *huge_history_save = (configuration *) 0;
 Private int huge_history_allocation = 0;
 Private int huge_history_ptr;
@@ -62,6 +124,7 @@ Private int avoid_list_size;
 Private int perm_array[8];
 Private setup_kind goal_kind;
 Private int goal_directions[8];
+Private reconcile_descriptor *current_reconciler;
 
 Private char *title_string[] = {
    "Anything: ",
@@ -87,7 +150,12 @@ Private resolve_tester test_thar_xbyrlg = {0167, 0676, 0207, 0173, 0676, 0702, c
 Private resolve_tester test_thar_slc_rg = {0173, 0102, 0207, 0167, 0102, 0076, l_mainstream,      resolve_slipclutch_rlg, 1};   /* slip-the-clutch-RLG from thar. */
 Private resolve_tester test_thar_scl_la = {0167, 0676, 0207, 0173, 0676, 0702, l_mainstream,      resolve_slipclutch_la, 6};    /* slip-the-clutch-LA from thar. */
 Private resolve_tester test_thar_pr     = {0173, 0700, 0207, 0167, 0700, 0700, l_mainstream,      resolve_prom, 6};             /* promenade from thar. */
-Private resolve_tester test_2x4_home    = {0173, 0671, 0207, 0167, 0711, 0671, l_mainstream,      resolve_at_home, 7};          /* "at home" from pseudo-squared-set. */
+Private resolve_tester test_thar_revpr  = {0167, 0100, 0207, 0173, 0100, 0100, l_mainstream,      resolve_revprom, 5};          /* reverse promenade from thar. */
+Private resolve_tester test_2x4_circle  = {0173, 0671, 0207, 0167, 0711, 0671, l_mainstream,      resolve_circle, 7};           /* "circle left/right" from pseudo-squared-set. */
+Private resolve_tester test_sglfile     = {0202, 0700, 0200, 0176, 0700, 0700, l_mainstream,      resolve_sglfileprom, 7};      /* single file promenade from L columns */
+Private resolve_tester test_revsglfile  = {0176, 0700, 0200, 0202, 0700, 0700, l_mainstream,      resolve_revsglfileprom, 7};   /* reverse single file promenade from R columns */
+Private resolve_tester test_sglfilex    = {0207, 0705, 0173, 0207, 0671, 0711, l_mainstream,      resolve_sglfileprom, 7};      /* single file promenade from T-bone */
+Private resolve_tester test_revsglfilex = {0207, 0711, 0167, 0207, 0671, 0705, l_mainstream,      resolve_revsglfileprom, 7};   /* reverse single file promenade from T-bone */
 Private resolve_tester test_wv_la       = {0076, 0676, 0300, 0102, 0076, 0702, l_mainstream,      resolve_la, 6};               /* LA from waves. */
 Private resolve_tester test_wv_extla    = {0276, 0076, 0100, 0302, 0676, 0102, l_mainstream,      resolve_ext_la, 7};           /* ext-LA from waves. */
 Private resolve_tester test_wv_crcla    = {0476, 0276, 0700, 0502, 0476, 0302, l_mainstream,      resolve_circ_la, 0};          /* circulate-LA from waves. */
@@ -97,6 +165,7 @@ Private resolve_tester test_wv_extrg    = {0102, 0702, 0300, 0076, 0102, 0676, l
 Private resolve_tester test_wv_crcrg    = {0702, 0502, 0500, 0676, 0302, 0476, l_mainstream,      resolve_circ_rlg, 1};         /* circulate-RLG from waves. */
 Private resolve_tester test_wv_xbyrg    = {0276, 0076, 0100, 0302, 0676, 0102, cross_by_level,    resolve_xby_rlg, 3};          /* cross-by-RLG from waves. */
 Private resolve_tester test_2fl_prom    = {0300, 0100, 0102, 0300, 0700, 0100, l_mainstream,      resolve_prom, 7};             /* promenade from 2FL. */
+Private resolve_tester test_2fl_revprom = {0100, 0700, 0276, 0100, 0100, 0700, l_mainstream,      resolve_revprom, 6};          /* reverse promenade from 2FL. */
 Private resolve_tester test_8ch_rg      = {0202, 0702, 0200, 0176, 0702, 0676, l_mainstream,      resolve_rlg, 3};              /* RLG from 8-chain. */
 Private resolve_tester test_8ch_pthrg   = {0202, 0102, 0200, 0176, 0102, 0076, l_mainstream,      resolve_pth_rlg, 2};          /* pass-thru-RLG from 8-chain. */
 Private resolve_tester test_tby_rg      = {0176, 0676, 0200, 0202, 0676, 0702, l_mainstream,      resolve_rlg, 3};              /* RLG from trade-by. */
@@ -159,6 +228,7 @@ extern resolve_indicator resolve_p(setup *s)
                   case 0076: testptr = &test_wv_extrg; goto check_me;
                   case 0276: testptr = &test_wv_crcrg; goto check_me;
                   case 0700: testptr = &test_2fl_prom; goto check_me;
+                  case 0705: testptr = &test_2x4_circle; goto check_me;
                }
                break;
             case 0012:
@@ -172,6 +242,8 @@ extern resolve_indicator resolve_p(setup *s)
                switch ((s->people[5].id1 - s->people[4].id1) & 0777) {
                   case 0676: testptr = &test_8ch_rg; goto check_me;
                   case 0076: testptr = &test_8ch_pthrg; goto check_me;
+                  case 0700: testptr = &test_sglfile; goto check_me;
+                  case 0671: testptr = &test_sglfilex; goto check_me;
                }
                break;
             case 0003:
@@ -180,23 +252,28 @@ extern resolve_indicator resolve_p(setup *s)
                   case 0673: testptr = &test_tbone_la; goto check_me;
                   case 0502: testptr = &test_tby_tbyla; goto check_me;
                   case 0600: testptr = &test_dpt_dix; goto check_me;
+                  case 0700: testptr = &test_revsglfile; goto check_me;
+                  case 0671: testptr = &test_revsglfilex; goto check_me;
                }
                break;
             case 0112:
                switch ((s->people[5].id1 - s->people[4].id1) & 0777) {
                   case 0702: testptr = &test_wv_xbyrg; goto check_me;
+                  case 0100: testptr = &test_2fl_revprom; goto check_me;
                }
                break;
             case 0110:
                switch ((s->people[5].id1 - s->people[4].id1) & 0777) {
                   case 0076: testptr = &test_2x4_xby_la; goto check_me;
-                  case 0705: testptr = &test_2x4_home; goto check_me;
+                  case 0705: testptr = &test_2x4_circle; goto check_me;
                }
                break;
             case 0101:
                switch ((s->people[5].id1 - s->people[4].id1) & 0777) {
                   case 0676: testptr = &test_8ch_la; goto check_me;
                   case 0076: testptr = &test_8ch_pthla; goto check_me;
+                  case 0700: testptr = &test_sglfile; goto check_me;
+                  case 0671: testptr = &test_sglfilex; goto check_me;
                }
                break;
             case 0103:
@@ -204,6 +281,8 @@ extern resolve_indicator resolve_p(setup *s)
                   case 0702: testptr = &test_tby_rg; goto check_me;
                   case 0673: testptr = &test_tbone_rg; goto check_me;
                   case 0502: testptr = &test_tby_tbyrg; goto check_me;
+                  case 0700: testptr = &test_revsglfile; goto check_me;
+                  case 0671: testptr = &test_revsglfilex; goto check_me;
                }
                break;
          }
@@ -229,6 +308,7 @@ extern resolve_indicator resolve_p(setup *s)
             case 0112:
                switch ((s->people[5].id1 - s->people[4].id1) & 0777) {
                   case 0702: testptr = &test_thar_xbyrlg; goto check_me;
+                  case 0100: testptr = &test_thar_revpr; goto check_me;
                }
                break;
             case 0110:
@@ -256,9 +336,7 @@ extern resolve_indicator resolve_p(setup *s)
       k.kind = testptr->k;
       k.distance = ((s->rotation << 1) + (s->people[5].id1 >> 6) + testptr->distance) & 7;
 
-      /* Disallow an "at home" resolve unless promenade distance is zero. */
-      if (k.kind != resolve_at_home || k.distance == 0)
-         return(k);
+      return(k);
    }
 
    /* Too bad. */
@@ -266,6 +344,82 @@ extern resolve_indicator resolve_p(setup *s)
    k.kind = resolve_none;
    k.distance = 0;    /* To get around warnings from buggy and confused compilers. */
    return(k);
+}
+
+
+static char *resolve_distances[] = {
+   "0",
+   "1/8",
+   "1/4",
+   "3/8",
+   "1/2",
+   "5/8",
+   "3/4",
+   "7/8",
+   "0"};
+
+typedef struct {
+   int how_bad;  /* 0 means nice, 1 means throw away half, 2 means don't use with sdtty. */
+   char *name;
+} resolve_descriptor;
+
+/* BEWARE!!  This list is keyed to the definition of "resolve_kind" in sd.h . */
+static resolve_descriptor resolve_table[] = {
+   {2, "???"},
+   {0, "right and left grand"},
+   {0, "left allemande"},
+   {0, "extend, right and left grand"},
+   {1, "extend, left allemande"},
+   {1, "slip the clutch, right and left grand"},
+   {1, "slip the clutch, left allemande"},
+   {2, "circulate, right and left grand"},
+   {2, "circulate, left allemande"},
+   {2, "pass thru, right and left grand"},
+   {2, "pass thru, left allemande"},
+   {2, "trade by, right and left grand"},
+   {2, "trade by, left allemande"},
+   {1, "cross by, right and left grand"},
+   {0, "cross by, left allemande"},
+   {0, "dixie grand, left allemande"},
+   {0, "promenade"},
+   {1, "reverse promenade"},
+   {1, "single file promenade"},
+   {1, "reverse single file promenade"},
+   {0, "circle right"}};
+
+
+/* This assumes that "sequence_is_resolved" passes. */
+extern void write_resolve_text(void)
+{
+   resolve_indicator r = history[history_ptr].resolve_flag;
+
+   if (r.kind == resolve_circle) {
+      if ((r.distance & 7) == 0) {
+         writestuff("at home");
+      }
+      else {
+         writestuff("circle left ");
+         writestuff(resolve_distances[8 - (r.distance & 7)]);
+         writestuff(" or right ");
+         writestuff(resolve_distances[r.distance & 7]);
+      }
+   }
+   else {
+      writestuff(resolve_table[r.kind].name);
+
+      if ((r.distance & 7) == 0) {
+         writestuff("  (At home)");
+      }
+      else {
+         writestuff("  (");
+         if (  r.kind == resolve_revprom ||
+               r.kind == resolve_revsglfileprom)
+            writestuff(resolve_distances[8 - (r.distance & 7)]);
+         else
+            writestuff(resolve_distances[r.distance & 7]);
+         writestuff(" promenade)");
+      }
+   }
 }
 
 
@@ -284,7 +438,7 @@ Private int history_save;               /* Where we are inserting calls now.  Th
                                           forward as we build multiple-call resolves. */
        
 
-Private long_boolean inner_search(search_kind goal, resolve_rec *new_resolve, long_boolean accept_extend, int insertion_point)
+Private long_boolean inner_search(search_kind goal, resolve_rec *new_resolve, int insertion_point)
 {
    long_boolean retval;
    int i, j;
@@ -364,10 +518,27 @@ Private long_boolean inner_search(search_kind goal, resolve_rec *new_resolve, lo
    /* Put in a special initial concept if needed to make a nice setup. */
 
    if (goal == search_nice_setup) {
-      i = generate_random_number(4);
-      /* The table "nice_setup_concept" is defined in the interface file,
-         containing the 4 concept indices that we want. */
-      deposit_concept(&concept_descriptor_table[nice_setup_concept[i]]);
+      int i, k;
+
+      for (k=0 ; k < NUM_NICE_START_KINDS ; k++) {
+         if (nice_setup_info[k].kind == history[history_ptr].state.kind) {
+            i = nice_setup_info[k].number_available_now;
+            if (i != 0) goto found_k_and_i;
+            else goto try_again;  /* This shouldn't happen, because we are screening setups carefully. */
+         }
+      }
+
+      goto try_again;   /* This shouldn't happen. */
+
+      found_k_and_i:
+
+      i = generate_random_number(i);
+
+      /* If the concept is a tandem or as couples type, we really want "phantom" in front of it. */
+      if (concept_descriptor_table[nice_setup_info[k].array_to_use_now[i]].kind == concept_tandem)
+         deposit_concept(&concept_descriptor_table[phantom_concept_index]);
+
+      deposit_concept(&concept_descriptor_table[nice_setup_info[k].array_to_use_now[i]]);
    }
    
    /* Select the call.  Selecting one that says "don't use in resolve" will signal and go to try_again. */
@@ -402,20 +573,32 @@ Private long_boolean inner_search(search_kind goal, resolve_rec *new_resolve, lo
    ns = &history[history_ptr+1].state;
 
    if (goal == search_resolve) {
+      resolve_kind r = history[history_ptr+1].resolve_flag.kind;
+
       /* Here we bias the search against resolves with circulates (which we
-         consider to be of lower quality) by only sometimes accepting them. */
-      if (history[history_ptr+1].resolve_flag.kind == resolve_none ||
-         ((attempt_count & 1)
-            && history[history_ptr+1].resolve_flag.kind != resolve_rlg
-            && history[history_ptr+1].resolve_flag.kind != resolve_ext_rlg
-            && history[history_ptr+1].resolve_flag.kind != resolve_la
-            && history[history_ptr+1].resolve_flag.kind != resolve_xby_la
-            && history[history_ptr+1].resolve_flag.kind != resolve_dixie_grand
-            && history[history_ptr+1].resolve_flag.kind != resolve_prom))
+         consider to be of lower quality) by only sometimes accepting them.
+
+         We also take pity on people using a user interface for which the resolver
+         is known to be difficult to use,and  assume that such people want more time
+         spent finding quality resolves and less time spent showing mediocre
+         resolves.  This means sdtty, which is known to be beastly.  Hopefully
+         we can take this out someday. */
+
+      if (r == resolve_none ||
+
+         /* Make these never appear. */
+         (resolver_is_unwieldy && resolve_table[r].how_bad >= 2) ||
+
+         /* Make these appear only half the time. */
+         ((attempt_count & 1) && resolve_table[r].how_bad >= 1))
          goto what_a_loss;
    }
    else if (goal == search_nice_setup) {
-      if (ns->kind != s2x4) goto what_a_loss;
+      /* We accept any setup with 8 people in it.  This could conceivably give
+         somewhat unusual setups like dogbones or riggers, but they might be
+         sort of interesting if they arise.  (Actually, it is highly unlikely,
+         given the concepts that we use.) */
+      if (setup_limits[ns->kind] != 7) goto what_a_loss;
    }
    else if (goal == search_reconcile) {
       if (ns->kind != goal_kind) goto what_a_loss;
@@ -432,8 +615,8 @@ Private long_boolean inner_search(search_kind goal, resolve_rec *new_resolve, lo
          int p6 = ns->people[perm_indices[6]].id1 & 0700;
          int p7 = ns->people[perm_indices[7]].id1 & 0700;
 
-         /* This person must be a boy. */
-         if (p0 & 0100) goto what_a_loss;
+         /* Test for absolute sex correctness if required. */
+         if (!current_reconciler->allow_eighth_rotation && (p0 & 0100)) goto what_a_loss;
 
          p7 = (p7 - p6) & 0700;
          p6 = (p6 - p5) & 0700;
@@ -443,26 +626,19 @@ Private long_boolean inner_search(search_kind goal, resolve_rec *new_resolve, lo
          p2 = (p2 - p1) & 0700;
          p1 = (p1 - p0) & 0700;
 
-         /* By checking that the other 7 people are all in ascending sequence from the first, we know that they
-            are alternating boys and girls, with partners, in ascending couple number. */
-         if (  (p1 == 0100) && (p2 == 0100) &&
-               (p3 == 0100) && (p4 == 0100) &&
-               (p5 == 0100) && (p6 == 0100) &&
-               (p7 == 0100))
-            ;
-         else if (accept_extend &&           /* check for off by 1 ==> extend */
-               (p1 == 0700) && (p2 == 0300) &&
-               (p3 == 0700) && (p4 == 0300) &&
-               (p5 == 0700) && (p6 == 0300) &&
-               (p7 == 0700))
-            ;
-         else if (accept_extend &&           /* check for off by 2 ==> circulate */
-               (p1 == 0500) && (p2 == 0500) &&
-               (p3 == 0500) && (p4 == 0500) &&
-               (p5 == 0500) && (p6 == 0500) &&
-               (p7 == 0500))
-            ;
-         else
+         /* Test each sex individually for uniformity of offset around the ring. */
+         if (p1 != p3 || p3 != p5 || p5 != p7 || p2 != p4 || p4 != p6)
+            goto what_a_loss;
+
+         if (((p1 + p2) & 0700) != 0200)   /* Test for each sex in sequence. */
+            goto what_a_loss;
+
+         if ((p2 & 0100) == 0)         /* Test for alternating sex. */
+            goto what_a_loss;
+
+         /* Test for relative phase of boys and girls. */
+         /* "accept_extend" tells how accurate the placement must be. */
+         if ((p2 >> 7) > current_reconciler->accept_extend)
             goto what_a_loss;
          }
    }
@@ -561,7 +737,10 @@ Private long_boolean inner_search(search_kind goal, resolve_rec *new_resolve, lo
       How could the permutation be acceptable but not lead to an acceptable resolve?  Because,
       if the resolve is "at home", we demand that the promenade distance be zero.  Our
       previous tests were impervious to promenade distance, because it usually doesn't matter.
-      But for "at home", resolve_p will only show a resolve if the distance is zero. */
+      But for "at home", resolve_p will only show a resolve if the distance is zero.
+      Note that the above comment is obsolete, because we now allow circling a nonzero amount.
+      However, it does little harm to leave this test in place, and it might avoid future
+      problems if rotation-sensitive resolves are ever re-introduced. */
 
    if (goal == search_reconcile && history[history_ptr].resolve_flag.kind == resolve_none)
       goto try_again;   /* Sorry. */
@@ -587,6 +766,28 @@ Private long_boolean inner_search(search_kind goal, resolve_rec *new_resolve, lo
    }
    else if (little_count == 20 || little_count == 40) {
       /* Save current state as a base for future calls. */
+
+      /* But first, if doing a "nice setup" operation, we verify that the setup
+         we have arrived at is one from which we know how to do something.  Otherwise,
+         there is no point in trying to build on the setup at which we have arrived.
+         Also, if the setup has gotten bigger, do not proceed. */
+
+      if (goal == search_nice_setup) {
+         int k;
+
+         if (setup_limits[ns->kind] > setup_limits[history[history_ptr].state.kind])
+            goto try_again;
+
+         for (k=0 ; k < NUM_NICE_START_KINDS ; k++) {
+            if (nice_setup_info[k].kind == ns->kind && nice_setup_info[k].number_available_now != 0)
+               goto ok_to_save_this;
+         }
+
+         goto try_again;
+
+         ok_to_save_this: ;
+      }
+
       history_save = history_ptr + 1;
       inner_parse_mark = mark_parse_blocks();
       hashed_random_list[history_save - history_insertion_point] = hashed_randoms;
@@ -611,10 +812,10 @@ extern uims_reply full_resolve(search_kind goal)
    int current_resolve_index, max_resolve_index;
    long_boolean show_resolve;
    personrec *current_people = history[history_ptr].state.people;
-   long_boolean accept_extend = FALSE;
+   int junk;
+   void *junk2;
    int current_depth = 0;
    long_boolean find_another_resolve = TRUE;
-   int *perm_map;
    resolver_display_state state; /* for display to the user */
 
    /* Allocate or reallocate the huge_history_save save array if needed. */
@@ -650,11 +851,11 @@ extern uims_reply full_resolve(search_kind goal)
             specialfail("Not in acceptable setup for resolve.");
          break;
       case search_reconcile:
-         if (!reconcile_command_ok(&perm_map, &accept_extend))
+         if (!reconcile_command_ok(&junk2, &junk))
             specialfail("Not in acceptable setup for reconcile, or sequence is too short, or concepts are selected.");
 
          for (j=0; j<8; j++)
-            perm_array[j] = current_people[perm_map[j]].id1 & 0700;
+            perm_array[j] = current_people[current_reconciler->perm[j]].id1 & 0700;
 
          current_depth = 1;
          find_another_resolve = FALSE;       /* We initially don't look for resolves; we wait for the user
@@ -664,7 +865,7 @@ extern uims_reply full_resolve(search_kind goal)
          break;
       case search_nice_setup:
          if (!nice_setup_command_ok())
-            specialfail("Sorry, can only do this in 4x4 setup with no concepts selected.");
+            specialfail("Sorry, can't do this: concepts are already selected, or no applicable concepts are available.");
          break;
    }
 
@@ -682,7 +883,7 @@ extern uims_reply full_resolve(search_kind goal)
 
    uims_begin_search(goal);
    if (goal == search_reconcile)
-      display_reconcile_history(current_depth, huge_history_ptr);
+      show_resolve = TRUE;
 
    for (;;) {
       /* We know the history is restored at this point. */
@@ -691,8 +892,8 @@ extern uims_reply full_resolve(search_kind goal)
          uims_update_resolve_menu(goal, current_resolve_index, max_resolve_index, resolver_display_searching);
 
          (void) restore_parse_state();
-   
-         if (inner_search(goal, &all_resolves[max_resolve_index], accept_extend, current_depth)) {
+
+         if (inner_search(goal, &all_resolves[max_resolve_index], current_depth)) {
             /* Search succeeded, save it. */
             max_resolve_index++;
             /* Make it the current one. */
@@ -721,8 +922,6 @@ extern uims_reply full_resolve(search_kind goal)
          /* Put up a neutral resolve title. */
          state = resolver_display_ok;
       }
-
-      uims_update_resolve_menu(goal, current_resolve_index, max_resolve_index, state);
 
       /* Modify the history to show the current resolve. */
       /* Note that the currrent history has been restored to its saved state. */
@@ -794,12 +993,12 @@ extern uims_reply full_resolve(search_kind goal)
          newline();
          writestuff("     resolve is:");
          newline();
-         writestuff(resolve_names[history[history_ptr].resolve_flag.kind]);
-         if (history[history_ptr].resolve_flag.kind != resolve_at_home ||
-               (history[history_ptr].resolve_flag.distance & 7) != 0)
-            writestuff(resolve_distances[history[history_ptr].resolve_flag.distance & 7]);
+         write_resolve_text();
+         newline();
          newline();
       }
+
+      uims_update_resolve_menu(goal, current_resolve_index, max_resolve_index, state);
 
       show_resolve = TRUE;
 
@@ -807,7 +1006,7 @@ extern uims_reply full_resolve(search_kind goal)
          reply = uims_get_command(mode_resolve, (call_list_kind *) 0);
          if ((reply != ui_command_select) || (uims_menu_index != command_undo)) break;
       }
-   
+
       if (reply == ui_resolve_select) {
          switch ((resolve_command_kind) uims_menu_index) {
             case resolve_command_find_another:
@@ -899,20 +1098,15 @@ extern int concepts_in_place(void)
 }
 
 
-Private int promperm[8] = {1, 0, 6, 7, 5, 4, 2, 3};
-Private int qtagperm[8] = {1, 0, 7, 6, 5, 4, 3, 2};
-Private int homeperm[8] = {6, 5, 4, 3, 2, 1, 0, 7};
-Private int crossperm[8] = {5, 4, 3, 2, 1, 0, 7, 6};
-Private int laperm[8] = {1, 3, 6, 0, 5, 7, 2, 4};
-
 /* If this returns TRUE, it drops useful stuff into the places that its arguments
    point to.  If you don't want that, point the arguments at dummies. */
-extern int reconcile_command_ok(int **permutation_map_p, int *accept_extend_p)
+extern int reconcile_command_ok(void **permutation_map_p, int *accept_extend_p)
 {
    int k;
    int dirmask = 0;
    personrec *current_people = history[history_ptr].state.people;
    setup_kind current_kind = history[history_ptr].state.kind;
+   current_reconciler = (reconcile_descriptor *) 0;
 
    /* Since we are going to go back 1 call, demand we have at least 3. ***** */
    /* Also, demand no concepts already in place. */
@@ -921,34 +1115,45 @@ extern int reconcile_command_ok(int **permutation_map_p, int *accept_extend_p)
    for (k=0; k<8; k++)
       dirmask = (dirmask << 2) | (current_people[k].id1 & 3);
 
-   *accept_extend_p = FALSE;
+   if (current_kind == s2x4) {
+      if (dirmask == 0xA00A)
+         current_reconciler = &promperm;         /* L2FL, looking for promenade. */
+      else if (dirmask == 0x0AA0)
+         current_reconciler = &rpromperm;        /* R2FL, looking for reverse promenade. */
+      else if (dirmask == 0x6BC1)
+         current_reconciler = &homeperm;         /* pseudo-squared-set, looking for circle left/right. */
+      else if (dirmask == 0xFF55)
+         current_reconciler = &sglperm;          /* Lcol, looking for single file promenade. */
+      else if (dirmask == 0x55FF)
+         current_reconciler = &sglperm;          /* Rcol, looking for reverse single file promenade. */
+      else if (dirmask == 0xBC16)
+         current_reconciler = &sglperm;          /* L Tbone, looking for single file promenade. */
+      else if (dirmask == 0x16BC)
+         current_reconciler = &sglperm;          /* R Tbone, looking for reverse single file promenade. */
+      else if (dirmask == 0x2288)
+         current_reconciler = &rlgperm;          /* Rwave, looking for RLG (with possible extend or circulate). */
+      else if (dirmask == 0x8822)
+         current_reconciler = &laperm;           /* Lwave, looking for LA (with possible extend or circulate). */
+   }
+   else if (current_kind == s_qtag) {
+      if (dirmask == 0x08A2)
+         current_reconciler = &qtagperm;         /* Rqtag, looking for RLG. */
+      else if (dirmask == 0x78D2)
+         current_reconciler = &qtagperm;         /* diamonds with points facing, looking for RLG. */
+   }
+   else if (current_kind == s_crosswave || current_kind == s_thar) {
+      if (dirmask == 0x278D)
+         current_reconciler = &crossplus;        /* crossed waves or thar, looking for RLG, allow slip the clutch. */
+      else if (dirmask == 0x8D27)
+         current_reconciler = &crossplus;        /* crossed waves or thar, looking for LA, allow slip the clutch. */
+      else if (dirmask == 0xAF05)
+         current_reconciler = &crossperm;        /* crossed waves or thar, looking for promenade. */
+   }
 
-   if (current_kind == s2x4 && dirmask == 0xA00A)
-      *permutation_map_p = promperm;            /* L2FL, looking for promenade. */
-   else if (current_kind == s_qtag && dirmask == 0x08A2)
-      *permutation_map_p = qtagperm;            /* RQTAG, looking for RLG. */
-   else if (current_kind == s2x4 && dirmask == 0x6BC1)
-      *permutation_map_p = homeperm;            /* pseudo-squared-set, looking for at home. */
-   else if (current_kind == s_qtag && dirmask == 0x78D2)
-      *permutation_map_p = qtagperm;            /* diamonds with points facing, looking for RLG. */
-   else if ((current_kind == s_crosswave || current_kind == s_thar) && (dirmask == 0x278D || dirmask == 0xAF05))
-      *permutation_map_p = crossperm;            /* crossed waves or thar, looking for RLG or promenade. */
-   else if (current_kind == s2x4 && dirmask == 0x2288) {
-      /* Rwave, looking for RLG, we turn on "accept_extend" to tell it
-         to measure couple number only approximately. */
-      *accept_extend_p = TRUE;
-      *permutation_map_p = promperm;
-   }
-   else if (current_kind == s2x4 && dirmask == 0x8822) {
-      /* Lwave, looking for LA, we turn on "accept_extend" to tell it
-         to measure couple number only approximately. */
-      *accept_extend_p = TRUE;
-      *permutation_map_p = laperm;
-   }
+   if (current_reconciler)
+      return TRUE;
    else
       return FALSE;
-
-   return TRUE;
 }
 
 extern int resolve_command_ok(void)
@@ -961,8 +1166,30 @@ extern int resolve_command_ok(void)
 
 extern int nice_setup_command_ok(void)
 {
+   int i, k;
+   long_boolean setup_ok = FALSE;
    setup_kind current_kind = history[history_ptr].state.kind;
-   return current_kind == s4x4 && !concepts_in_place();
+
+   /* Decide which arrays we will use, depending on the current setting of the "allow all concepts" flag,
+      and see if we are in one of the known setups and there are concepts available for that setup. */
+
+   for (k=0 ; k < NUM_NICE_START_KINDS ; k++) {
+      /* Select the correct concept array. */
+      nice_setup_info[k].array_to_use_now = (allowing_all_concepts) ? nice_setup_info[k].thing->full_list : nice_setup_info[k].thing->on_level_list;
+
+      /* Note how many concepts are in it.  If there are zero in some of them, we may still be able to proceed,
+         but we must have concepts available for the current setup. */
+
+      for (i=0 ; ; i++) {
+         if (nice_setup_info[k].array_to_use_now[i] == -1) break;
+      }
+
+      nice_setup_info[k].number_available_now = i;
+
+      if (nice_setup_info[k].kind == current_kind && nice_setup_info[k].number_available_now != 0) setup_ok = TRUE;
+   }
+
+   return setup_ok && !concepts_in_place();
 }
 
 /*
@@ -996,5 +1223,33 @@ extern void create_resolve_menu_title(search_kind goal, int cur, int max, resolv
          if (max > 0) string_copy(&titleptr, " ");
          string_copy(&titleptr, "failed");
          break;
+   }
+}
+
+
+extern void initialize_getout_tables(void)
+{
+   int i, j, k;
+
+   for (k=0 ; k < NUM_NICE_START_KINDS ; k++) {
+      nice_setup_thing *nice = nice_setup_info[k].thing;
+
+      /* Create the "on level" lists if not already created.
+         Since we re-use some stuff (e.g. 1x10 and 1x12 both use
+         the 1x12 things), it might not be necessary. */
+
+      if (!nice->on_level_list) {
+         nice->on_level_list = (int *) get_mem(nice->full_list_size);
+
+         /* Copy those concepts that are on the level. */
+         for (i=0,j=0 ; ; i++) {
+            if (nice->full_list[i] == -1) break;
+            if (concept_descriptor_table[nice->full_list[i]].level <= calling_level)
+               nice->on_level_list[j++] = nice->full_list[i];
+         }
+
+         /* Put in the end mark. */
+         nice->on_level_list[j] = -1;
+      }
    }
 }

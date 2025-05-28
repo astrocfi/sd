@@ -110,7 +110,7 @@ Private void create_call_name_list(void)
             if (c == '@') {
                j++;
                c = name_ptr[j];
-               if (c == '0') {
+               if (c == '0' || c == 'm') {
                   char *p;
 
                   p = temp_ptr+templength;
@@ -122,6 +122,13 @@ Private void create_call_name_list(void)
 
                   p = temp_ptr+templength;
                   string_copy(&p, "<ANYONE>");
+                  templength = p - temp_ptr;
+               }
+               else if (c == 'h') {
+                  char *p;
+
+                  p = temp_ptr+templength;
+                  string_copy(&p, "<DIRECTION>");
                   templength = p - temp_ptr;
                }
                else if (c == '9') {
@@ -138,8 +145,8 @@ Private void create_call_name_list(void)
                   string_copy(&p, "<N/4>");
                   templength = p - temp_ptr;
                }
-               else if (c == '7' || c == 'j') {
-                  /* Skip over @7...@8 and @j...@l stuff. */
+               else if (c == '7' || c == 'n' || c == 'j') {
+                  /* Skip over @7...@8, @n .. @o, and @j...@l stuff. */
                   while (name_ptr[j] != '@') j++;
                   j++;
                }
@@ -312,14 +319,14 @@ Private long_boolean callcompare(callspec_block *x, callspec_block *y)
    n = y->name;
    for (;;) {
       if (*m == '@') {
-         /* Skip over @7...@8 and @j...@l stuff. */
-         if (m[1] == '7' || m[1] == 'j') {
+         /* Skip over @7...@8, @n .. @o, and @j...@l stuff. */
+         if (m[1] == '7' || m[1] == 'n' || m[1] == 'j') {
             while (*++m != '@');
          }
          m += 2;   
       }
       else if (*n == '@') {
-         if (n[1] == '7' || n[1] == 'j') {
+         if (n[1] == '7' || n[1] == 'n' || n[1] == 'j') {
             while (*++n != '@');
          }
          n += 2;
@@ -327,6 +334,9 @@ Private long_boolean callcompare(callspec_block *x, callspec_block *y)
       /* We need to ignore blanks too, otherwise "@6 run" will come out at the beginning of the list instead of under "r". */
       else if (*m == ' ') m++;
       else if (*n == ' ') n++;
+      /* And hyphens too, so that "1-3-2 quarter the alter" will be listed under "q" rather than "-". */
+      else if (*m == '-') m++;
+      else if (*n == '-') n++;
       else if (!*m) return(TRUE);
       else if (!*n) return(FALSE);
       else if (*m < *n) return(TRUE);
@@ -757,7 +767,10 @@ Private void build_database(call_list_mode_t call_list_mode)
 
       while (c = *np++) {
          if (c == '@') {
-            if ((c = *np++) == '6' || c == 'k') call_root->callflags1 |= CFLAG1_REQUIRES_SELECTOR;
+            if ((c = *np++) == '6' || c == 'k')
+               call_root->callflags1 |= CFLAG1_REQUIRES_SELECTOR;
+            else if (c == 'h')
+               call_root->callflags1 |= CFLAG1_REQUIRES_DIRECTION;
          }
       }
 
@@ -855,8 +868,8 @@ Private void build_database(call_list_mode_t call_list_mode)
                   read_halfword();
                }
 
-               call_root->stuff.def.defarray = (by_def_item *) get_mem((next_definition_index+1) * sizeof(by_def_item));
-               call_root->stuff.def.defarray[next_definition_index].call_id = 0;  /* Zero mark at end. */
+               call_root->stuff.def.howmanyparts = next_definition_index;
+               call_root->stuff.def.defarray = (by_def_item *) get_mem((next_definition_index) * sizeof(by_def_item));
 
                while (--next_definition_index >= 0)
                   call_root->stuff.def.defarray[next_definition_index] = templist[next_definition_index];

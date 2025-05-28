@@ -34,7 +34,6 @@ extern void phantom_2x4_move(
    map_thing *maps,
    parse_block *parseptr,
    setup *result)
-
 {
    setup resv;
    setup hpeople, vpeople;
@@ -106,7 +105,7 @@ extern void phantom_2x4_move(
    else
       result->kind = nothing;
   
-   merge_setups(&resv, result);
+   merge_setups(&resv, merge_strict_matrix, result);
    result->setupflags = finalsetupflags;
    reinstate_rotation(ss, result);
 }

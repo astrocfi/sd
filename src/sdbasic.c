@@ -16,7 +16,7 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-    This is for version 29. */
+    This is for version 30. */
 
 /* This defines the following functions:
    mirror_this
@@ -126,7 +126,7 @@ typedef struct {
    setup_kind final_kind;    /* what setup to change it to */
    int rot;                  /* whether to rotate final setup CW */
    int warning;              /* if >= 0, a warning to give */
-   } collision_map;
+} collision_map;
 
 Private collision_map collision_map_table[] = {
    /* These items handle various types of "1/2 circulate" calls from 2x4's. */
@@ -341,6 +341,39 @@ extern void do_stability(unsigned int *personp, unsigned int def_word, int turni
 
 
 
+
+typedef struct {
+   int size;
+   int map1[8];
+   int map2[8];
+} restriction_thing;
+
+restriction_thing *restr_thing_ptr;
+
+restriction_thing peelable_3x2 = {3, {0, 1, 2}, {3, 4, 5}};
+restriction_thing peelable_4x2 = {4, {0, 1, 2, 3}, {4, 5, 6, 7}};
+restriction_thing peelable_6x2 = {6, {0, 1, 2, 3, 4, 5}, {6, 7, 8, 9, 10, 11}};
+restriction_thing peelable_8x2 = {8, {0, 1, 2, 3, 4, 5, 6, 7}, {8, 9, 10, 11, 12, 13, 14, 15}};
+
+restriction_thing wave_1x2 = {1, {0}, {1}};
+restriction_thing wave_1x4 = {2, {0, 3}, {1, 2}};
+restriction_thing wave_qtag = {2, {2, 7}, {3, 6}};
+restriction_thing wave_1x8 = {4, {0, 3, 6, 5}, {1, 2, 7, 4}};
+restriction_thing wave_2x4 = {4, {0, 2, 5, 7}, {1, 3, 4, 6}};
+restriction_thing wave_2x6 = {6, {0, 2, 4, 7, 9, 11}, {1, 3, 5, 6, 8, 10}};
+restriction_thing wave_2x8 = {8, {0, 2, 4, 6, 9, 11, 13, 15}, {1, 3, 5, 7, 8, 10, 12, 14}};
+
+restriction_thing two_faced_1x4 = {2, {0, 1}, {2, 3}};
+restriction_thing two_faced_qtag = {2, {6, 7}, {2, 3}};
+restriction_thing two_faced_1x6 = {3, {0, 1, 2}, {3, 4, 5}};
+restriction_thing two_faced_1x8 = {4, {0, 1, 6, 7}, {3, 2, 5, 4}};
+restriction_thing two_faced_2x4 = {4, {0, 1, 6, 7}, {3, 2, 5, 4}};
+restriction_thing two_faced_2x6 = {6, {0, 1, 2, 9, 10, 11}, {3, 4, 5, 6, 7, 8}};
+restriction_thing two_faced_4x4_1x8 = {4, {0, 1, 2, 3}, {4, 5, 6, 7}};
+restriction_thing two_faced_4x4_2x8 = {8, {0, 1, 2, 3, 12, 13, 14, 15}, {4, 5, 6, 7, 8, 9, 10, 11}};
+
+
+
 Private void check_line_restriction(setup *ss, call_restriction restr, unsigned int flags)
 {
    int q0, q1, q2, q3, q4, q5, q6, q7;
@@ -415,19 +448,13 @@ Private void check_line_restriction(setup *ss, call_restriction restr, unsigned 
       case s2x4:
          switch (restr) {
             case cr_wave_only:
-               k = 0;         /* check for parallel waves */
-               i = 2;
-               if ((t = ss->people[0].id1) != 0) { k |=  t; i &=  t; }
-               if ((t = ss->people[1].id1) != 0) { k |= ~t; i &= ~t; }
-               if ((t = ss->people[2].id1) != 0) { k |=  t; i &=  t; }
-               if ((t = ss->people[3].id1) != 0) { k |= ~t; i &= ~t; }
-               if ((t = ss->people[4].id1) != 0) { k |= ~t; i &= ~t; }
-               if ((t = ss->people[5].id1) != 0) { k |=  t; i &=  t; }
-               if ((t = ss->people[6].id1) != 0) { k |= ~t; i &= ~t; }
-               if ((t = ss->people[7].id1) != 0) { k |=  t; i &=  t; }
-               if (k & ~i & 2)
-                  goto ldef_failed;
-               break;
+               /* check for parallel waves */
+               restr_thing_ptr = &wave_2x4;
+               goto check_wave_restr;
+            case cr_2fl_only:
+               /* check for parallel two-faced lines */
+               restr_thing_ptr = &two_faced_2x4;
+               goto check_wave_restr;
             case cr_all_facing_same:
                q0 = 0; q1 = 0;  /* check for all 8 people in a "one-faced" setup */
                if ((t = ss->people[0].id1) != 0) { q0 |= t; q1 |= ~t; }
@@ -453,20 +480,6 @@ Private void check_line_restriction(setup *ss, call_restriction restr, unsigned 
                if ((t = ss->people[6].id1) != 0) { q2 |= t; q3 |= ~t; }
                if ((t = ss->people[7].id1) != 0) { q2 |= t; q3 |= ~t; }
                if ((q0&q1&2) || (q2&q3&2))
-                  goto ldef_failed;
-               break;
-            case cr_2fl_only:
-               k = 0;         /* check for parallel two-faced lines */
-               i = 2;
-               if ((t = ss->people[0].id1) != 0) { k |=  t; i &=  t; }
-               if ((t = ss->people[1].id1) != 0) { k |=  t; i &=  t; }
-               if ((t = ss->people[2].id1) != 0) { k |= ~t; i &= ~t; }
-               if ((t = ss->people[3].id1) != 0) { k |= ~t; i &= ~t; }
-               if ((t = ss->people[4].id1) != 0) { k |= ~t; i &= ~t; }
-               if ((t = ss->people[5].id1) != 0) { k |= ~t; i &= ~t; }
-               if ((t = ss->people[6].id1) != 0) { k |=  t; i &=  t; }
-               if ((t = ss->people[7].id1) != 0) { k |=  t; i &=  t; }
-               if (k & ~i & 2)
                   goto ldef_failed;
                break;
             case cr_ends_are_peelable:
@@ -531,21 +544,30 @@ Private void check_line_restriction(setup *ss, call_restriction restr, unsigned 
       case s2x6:
          switch (restr) {
             case cr_wave_only:
-               k = 0;         /* check for parallel 12-matrix waves */
-               i = 2;
-               if ((t = ss->people[0].id1) != 0)  { k |=  t; i &=  t; }
-               if ((t = ss->people[1].id1) != 0)  { k |= ~t; i &= ~t; }
-               if ((t = ss->people[2].id1) != 0)  { k |=  t; i &=  t; }
-               if ((t = ss->people[3].id1) != 0)  { k |= ~t; i &= ~t; }
-               if ((t = ss->people[4].id1) != 0)  { k |=  t; i &=  t; }
-               if ((t = ss->people[5].id1) != 0)  { k |= ~t; i &= ~t; }
-               if ((t = ss->people[6].id1) != 0)  { k |= ~t; i &= ~t; }
-               if ((t = ss->people[7].id1) != 0)  { k |=  t; i &=  t; }
-               if ((t = ss->people[8].id1) != 0)  { k |= ~t; i &= ~t; }
-               if ((t = ss->people[9].id1) != 0)  { k |=  t; i &=  t; }
-               if ((t = ss->people[10].id1) != 0) { k |= ~t; i &= ~t; }
-               if ((t = ss->people[11].id1) != 0) { k |=  t; i &=  t; }
-               if (k & ~i & 2)
+               /* check for parallel 2x6 waves */
+               restr_thing_ptr = &wave_2x6;
+               goto check_wave_restr;
+            case cr_3x3_2fl_only:
+               /* check for parallel consistent 3x3 two-faced lines */
+               restr_thing_ptr = &two_faced_2x6;
+               goto check_wave_restr;
+            case cr_3x3couples_only:
+               /* check for each three people facing same way */
+               q0 = 0; q1 = 0; q2 = 0; q3 = 0;
+               q4 = 0; q5 = 0; q6 = 0; q7 = 0;
+               if ((t = ss->people[0].id1) != 0)  { q0 |= t; q1 |= ~t; }
+               if ((t = ss->people[1].id1) != 0)  { q0 |= t; q1 |= ~t; }
+               if ((t = ss->people[2].id1) != 0)  { q0 |= t; q1 |= ~t; }
+               if ((t = ss->people[3].id1) != 0)  { q2 |= t; q3 |= ~t; }
+               if ((t = ss->people[4].id1) != 0)  { q2 |= t; q3 |= ~t; }
+               if ((t = ss->people[5].id1) != 0)  { q2 |= t; q3 |= ~t; }
+               if ((t = ss->people[6].id1) != 0)  { q4 |= t; q5 |= ~t; }
+               if ((t = ss->people[7].id1) != 0)  { q4 |= t; q5 |= ~t; }
+               if ((t = ss->people[8].id1) != 0)  { q4 |= t; q5 |= ~t; }
+               if ((t = ss->people[9].id1) != 0)  { q6 |= t; q7 |= ~t; }
+               if ((t = ss->people[10].id1) != 0) { q6 |= t; q7 |= ~t; }
+               if ((t = ss->people[11].id1) != 0) { q6 |= t; q7 |= ~t; }
+               if (((q0&q1&2)) || ((q2&q3&2)) || ((q4&q5&2)) || ((q6&q7&2)))
                   goto ldef_failed;
                break;
          }
@@ -553,25 +575,34 @@ Private void check_line_restriction(setup *ss, call_restriction restr, unsigned 
       case s2x8:
          switch (restr) {
             case cr_wave_only:
-               k = 0;         /* check for parallel 16-matrix waves */
-               i = 2;
-               if ((t = ss->people[0].id1) != 0)  { k |=  t; i &=  t; }
-               if ((t = ss->people[1].id1) != 0)  { k |= ~t; i &= ~t; }
-               if ((t = ss->people[2].id1) != 0)  { k |=  t; i &=  t; }
-               if ((t = ss->people[3].id1) != 0)  { k |= ~t; i &= ~t; }
-               if ((t = ss->people[4].id1) != 0)  { k |=  t; i &=  t; }
-               if ((t = ss->people[5].id1) != 0)  { k |= ~t; i &= ~t; }
-               if ((t = ss->people[6].id1) != 0)  { k |=  t; i &=  t; }
-               if ((t = ss->people[7].id1) != 0)  { k |= ~t; i &= ~t; }
-               if ((t = ss->people[8].id1) != 0)  { k |= ~t; i &= ~t; }
-               if ((t = ss->people[9].id1) != 0)  { k |=  t; i &=  t; }
-               if ((t = ss->people[10].id1) != 0) { k |= ~t; i &= ~t; }
-               if ((t = ss->people[11].id1) != 0) { k |=  t; i &=  t; }
-               if ((t = ss->people[12].id1) != 0) { k |= ~t; i &= ~t; }
-               if ((t = ss->people[13].id1) != 0) { k |=  t; i &=  t; }
-               if ((t = ss->people[14].id1) != 0) { k |= ~t; i &= ~t; }
-               if ((t = ss->people[15].id1) != 0) { k |=  t; i &=  t; }
-               if (k & ~i & 2)
+               /* check for parallel 2x8 waves */
+               restr_thing_ptr = &wave_2x8;
+               goto check_wave_restr;
+            case cr_4x4_2fl_only:
+               /* check for parallel consistent 4x4 two-faced lines */
+               restr_thing_ptr = &two_faced_4x4_2x8;
+               goto check_wave_restr;
+            case cr_4x4couples_only:
+               /* check for each four people facing same way */
+               q0 = 0; q1 = 0; q2 = 0; q3 = 0;
+               q4 = 0; q5 = 0; q6 = 0; q7 = 0;
+               if ((t = ss->people[0].id1) != 0)  { q0 |= t; q1 |= ~t; }
+               if ((t = ss->people[1].id1) != 0)  { q0 |= t; q1 |= ~t; }
+               if ((t = ss->people[2].id1) != 0)  { q0 |= t; q1 |= ~t; }
+               if ((t = ss->people[3].id1) != 0)  { q0 |= t; q1 |= ~t; }
+               if ((t = ss->people[4].id1) != 0)  { q2 |= t; q3 |= ~t; }
+               if ((t = ss->people[5].id1) != 0)  { q2 |= t; q3 |= ~t; }
+               if ((t = ss->people[6].id1) != 0)  { q2 |= t; q3 |= ~t; }
+               if ((t = ss->people[7].id1) != 0)  { q2 |= t; q3 |= ~t; }
+               if ((t = ss->people[8].id1) != 0)  { q4 |= t; q5 |= ~t; }
+               if ((t = ss->people[9].id1) != 0)  { q4 |= t; q5 |= ~t; }
+               if ((t = ss->people[10].id1) != 0) { q4 |= t; q5 |= ~t; }
+               if ((t = ss->people[11].id1) != 0) { q4 |= t; q5 |= ~t; }
+               if ((t = ss->people[12].id1) != 0) { q6 |= t; q7 |= ~t; }
+               if ((t = ss->people[13].id1) != 0) { q6 |= t; q7 |= ~t; }
+               if ((t = ss->people[14].id1) != 0) { q6 |= t; q7 |= ~t; }
+               if ((t = ss->people[15].id1) != 0) { q6 |= t; q7 |= ~t; }
+               if (((q0&q1&2)) || ((q2&q3&2)) || ((q4&q5&2)) || ((q6&q7&2)))
                   goto ldef_failed;
                break;
          }
@@ -593,25 +624,13 @@ Private void check_line_restriction(setup *ss, call_restriction restr, unsigned 
                   goto ldef_failed;
                break;
             case cr_wave_only:
-               k = 0;         /* check for wave across the center */
-               i = 2;
-               if ((t = ss->people[2].id1) != 0) { k |=  t; i &=  t; }
-               if ((t = ss->people[3].id1) != 0) { k |= ~t; i &= ~t; }
-               if ((t = ss->people[6].id1) != 0) { k |= ~t; i &= ~t; }
-               if ((t = ss->people[7].id1) != 0) { k |=  t; i &=  t; }
-               if (k & ~i & 2)
-                  goto ldef_failed;
-               break;
+               /* check for wave across the center */
+               restr_thing_ptr = &wave_qtag;
+               goto check_wave_restr;
             case cr_2fl_only:
-               k = 0;         /* check for two-faced line across the center */
-               i = 2;
-               if ((t = ss->people[2].id1) != 0) { k |= ~t; i &= ~t; }
-               if ((t = ss->people[3].id1) != 0) { k |= ~t; i &= ~t; }
-               if ((t = ss->people[6].id1) != 0) { k |=  t; i &=  t; }
-               if ((t = ss->people[7].id1) != 0) { k |=  t; i &=  t; }
-               if (k & ~i & 2)
-                  goto ldef_failed;
-               break;
+               /* check for two-faced line across the center */
+               restr_thing_ptr = &two_faced_qtag;
+               goto check_wave_restr;
          }
          break;
       case s_ptpd:
@@ -635,47 +654,17 @@ Private void check_line_restriction(setup *ss, call_restriction restr, unsigned 
       case s1x8:
          switch (restr) {
             case cr_wave_only:
-               k = 0;         /* check for grand wave */
-               i = 2;
-               if ((t = ss->people[0].id1) != 0) { k |=  t; i &=  t; }
-               if ((t = ss->people[1].id1) != 0) { k |= ~t; i &= ~t; }
-               if ((t = ss->people[2].id1) != 0) { k |= ~t; i &= ~t; }
-               if ((t = ss->people[3].id1) != 0) { k |=  t; i &=  t; }
-               if ((t = ss->people[4].id1) != 0) { k |= ~t; i &= ~t; }
-               if ((t = ss->people[5].id1) != 0) { k |=  t; i &=  t; }
-               if ((t = ss->people[6].id1) != 0) { k |=  t; i &=  t; }
-               if ((t = ss->people[7].id1) != 0) { k |= ~t; i &= ~t; }
-               if (k & ~i & 2)
-                  goto ldef_failed;
-               break;
+               /* check for grand wave */
+               restr_thing_ptr = &wave_1x8;
+               goto check_wave_restr;
             case cr_2fl_only:
-               k = 0;         /* check for grand two-faced line */
-               i = 2;
-               if ((t = ss->people[0].id1) != 0) { k |=  t; i &=  t; }
-               if ((t = ss->people[1].id1) != 0) { k |=  t; i &=  t; }
-               if ((t = ss->people[2].id1) != 0) { k |= ~t; i &= ~t; }
-               if ((t = ss->people[3].id1) != 0) { k |= ~t; i &= ~t; }
-               if ((t = ss->people[4].id1) != 0) { k |= ~t; i &= ~t; }
-               if ((t = ss->people[5].id1) != 0) { k |= ~t; i &= ~t; }
-               if ((t = ss->people[6].id1) != 0) { k |=  t; i &=  t; }
-               if ((t = ss->people[7].id1) != 0) { k |=  t; i &=  t; }
-               if (k & ~i & 2)
-                  goto ldef_failed;
-               break;
+               /* check for grand two-faced line */
+               restr_thing_ptr = &two_faced_1x8;
+               goto check_wave_restr;
             case cr_4x4_2fl_only:
-               k = 0;         /* check for 4x4 two-faced line -- 4 up and 4 down */
-               i = 2;
-               if ((t = ss->people[0].id1) != 0) { k |=  t; i &=  t; }
-               if ((t = ss->people[1].id1) != 0) { k |=  t; i &=  t; }
-               if ((t = ss->people[2].id1) != 0) { k |=  t; i &=  t; }
-               if ((t = ss->people[3].id1) != 0) { k |=  t; i &=  t; }
-               if ((t = ss->people[4].id1) != 0) { k |= ~t; i &= ~t; }
-               if ((t = ss->people[5].id1) != 0) { k |= ~t; i &= ~t; }
-               if ((t = ss->people[6].id1) != 0) { k |= ~t; i &= ~t; }
-               if ((t = ss->people[7].id1) != 0) { k |= ~t; i &= ~t; }
-               if (k & ~i & 2)
-                  goto ldef_failed;
-               break;
+               /* check for 4x4 two-faced line -- 4 up and 4 down */
+               restr_thing_ptr = &two_faced_4x4_1x8;
+               goto check_wave_restr;
             case cr_4x4couples_only:
                /* check for each four people facing same way */
                q0 = 0; q1 = 0; q2 = 0; q3 = 0;
@@ -695,20 +684,11 @@ Private void check_line_restriction(setup *ss, call_restriction restr, unsigned 
       case s_1x6:
          switch (restr) {
             case cr_3x3_2fl_only:
-               k = 0;         /* check for 3x3 two-faced line -- 3 up and 3 down */
-               i = 2;
-               if ((t = ss->people[0].id1) != 0) { k |=  t; i &=  t; }
-               if ((t = ss->people[1].id1) != 0) { k |=  t; i &=  t; }
-               if ((t = ss->people[2].id1) != 0) { k |=  t; i &=  t; }
-               if ((t = ss->people[3].id1) != 0) { k |= ~t; i &= ~t; }
-               if ((t = ss->people[4].id1) != 0) { k |= ~t; i &= ~t; }
-               if ((t = ss->people[5].id1) != 0) { k |= ~t; i &= ~t; }
-               if (k & ~i & 2)
-                  goto ldef_failed;
-               break;
+               /* check for 3x3 two-faced line -- 3 up and 3 down */
+               restr_thing_ptr = &two_faced_1x6;
+               goto check_wave_restr;
             case cr_3x3couples_only:
                /* check for each three people facing same way */
-               /* check for everyone as a couple */
                q0 = 0; q1 = 0; q2 = 0; q3 = 0;
                if ((t = ss->people[0].id1) != 0) { q0 |= t; q1 |= ~t; }
                if ((t = ss->people[1].id1) != 0) { q0 |= t; q1 |= ~t; }
@@ -724,25 +704,13 @@ Private void check_line_restriction(setup *ss, call_restriction restr, unsigned 
       case s1x4:
          switch (restr) {
             case cr_wave_only:
-               k = 0;         /* check for a wave */
-               i = 2;
-               if ((t = ss->people[0].id1) != 0) { k |=  t; i &=  t; }
-               if ((t = ss->people[1].id1) != 0) { k |= ~t; i &= ~t; }
-               if ((t = ss->people[2].id1) != 0) { k |= ~t; i &= ~t; }
-               if ((t = ss->people[3].id1) != 0) { k |=  t; i &=  t; }
-               if (k & ~i & 2)
-                  goto ldef_failed;
-               break;
+               /* check for waves */
+               restr_thing_ptr = &wave_1x4;
+               goto check_wave_restr;
             case cr_2fl_only:
-               k = 0;         /* check for a 2-faced line */
-               i = 2;
-               if ((t = ss->people[0].id1) != 0) { k |=  t; i &=  t; }
-               if ((t = ss->people[1].id1) != 0) { k |=  t; i &=  t; }
-               if ((t = ss->people[2].id1) != 0) { k |= ~t; i &= ~t; }
-               if ((t = ss->people[3].id1) != 0) { k |= ~t; i &= ~t; }
-               if (k & ~i & 2)
-                  goto ldef_failed;
-               break;
+               /* check for 2-faced lines */
+               restr_thing_ptr = &two_faced_1x4;
+               goto check_wave_restr;
             case cr_1fl_only:
                k = 0;         /* check for a 1-faced line */
                i = 0;
@@ -775,13 +743,9 @@ Private void check_line_restriction(setup *ss, call_restriction restr, unsigned 
       case s_1x2:
          switch (restr) {
             case cr_wave_only:
-               k = 0;         /* check for a miniwave */
-               i = 2;
-               if ((t = ss->people[0].id1) != 0) { k |=  t; i &=  t; }
-               if ((t = ss->people[1].id1) != 0) { k |= ~t; i &= ~t; }
-               if (k & ~i & 2)
-                  goto ldef_failed;
-               break;
+               /* check for a miniwave */
+               restr_thing_ptr = &wave_1x2;
+               goto check_wave_restr;
             case cr_2fl_only: case cr_couples_only:
                k = 0;         /* check for a couple */
                i = 2;
@@ -803,6 +767,22 @@ Private void check_line_restriction(setup *ss, call_restriction restr, unsigned 
 
    return;
 
+
+   check_wave_restr:
+
+   k = 0;
+   i = 2;
+
+   for (j=0; j<restr_thing_ptr->size; j++) {
+      if ((t = ss->people[restr_thing_ptr->map1[j]].id1) != 0) { k |=  t; i &=  t; }
+      if ((t = ss->people[restr_thing_ptr->map2[j]].id1) != 0) { k |= ~t; i &= ~t; }
+   }
+
+   if (k & ~i & 2)
+      goto ldef_failed;
+   return;
+
+
    ldef_failed:
 
    switch (flags & CAF__RESTR_MASK) {
@@ -820,8 +800,6 @@ Private void check_line_restriction(setup *ss, call_restriction restr, unsigned 
          break;
    }
 }
-
-
 
 
 Private void check_column_restriction(setup *ss, call_restriction restr, unsigned int flags)
@@ -884,19 +862,8 @@ Private void check_column_restriction(setup *ss, call_restriction restr, unsigne
                break;
             case cr_peelable_box:
                /* check for a "peelable" 2x4 column */
-               q2 = 3; q3 = 3;
-               q7 = 3; q6 = 3;
-               if ((t = ss->people[0].id1) != 0) { q2 &= t; q3 &= (t^2); }
-               if ((t = ss->people[1].id1) != 0) { q2 &= t; q3 &= (t^2); }
-               if ((t = ss->people[2].id1) != 0) { q2 &= t; q3 &= (t^2); }
-               if ((t = ss->people[3].id1) != 0) { q2 &= t; q3 &= (t^2); }
-               if ((t = ss->people[4].id1) != 0) { q7 &= t; q6 &= (t^2); }
-               if ((t = ss->people[5].id1) != 0) { q7 &= t; q6 &= (t^2); }
-               if ((t = ss->people[6].id1) != 0) { q7 &= t; q6 &= (t^2); }
-               if ((t = ss->people[7].id1) != 0) { q7 &= t; q6 &= (t^2); }
-               if ((((~q2)&3) && ((~q3)&3)) || (((~q7)&3) && ((~q6)&3)))
-                  goto cdef_failed;
-               break;
+               restr_thing_ptr = &peelable_4x2;
+               goto check_peelable_restr;
             case cr_quarterbox_or_col:
                k = 0;         /* check for a reasonable "triple cross" setup */
                i = 2;
@@ -955,17 +922,8 @@ Private void check_column_restriction(setup *ss, call_restriction restr, unsigne
                break;
             case cr_peelable_box:
                /* check for a "peelable" 2x3 column */
-               q2 = 3; q3 = 3;
-               q7 = 3; q6 = 3;
-               if ((t = ss->people[0].id1) != 0) { q2 &= t; q3 &= (t^2); }
-               if ((t = ss->people[1].id1) != 0) { q2 &= t; q3 &= (t^2); }
-               if ((t = ss->people[2].id1) != 0) { q2 &= t; q3 &= (t^2); }
-               if ((t = ss->people[3].id1) != 0) { q7 &= t; q6 &= (t^2); }
-               if ((t = ss->people[4].id1) != 0) { q7 &= t; q6 &= (t^2); }
-               if ((t = ss->people[5].id1) != 0) { q7 &= t; q6 &= (t^2); }
-               if ((((~q2)&3) && ((~q3)&3)) || (((~q7)&3) && ((~q6)&3)))
-                  goto cdef_failed;
-               break;
+               restr_thing_ptr = &peelable_3x2;
+               goto check_peelable_restr;
          }
          break;
       case s2x6:
@@ -988,6 +946,10 @@ Private void check_column_restriction(setup *ss, call_restriction restr, unsigne
                if (k & ~i & 2)
                   goto cdef_failed;
                break;
+            case cr_peelable_box:
+               /* check for a "peelable" 2x6 column */
+               restr_thing_ptr = &peelable_6x2;
+               goto check_peelable_restr;
          }
          break;
       case s2x8:
@@ -1014,6 +976,10 @@ Private void check_column_restriction(setup *ss, call_restriction restr, unsigne
                if (k & ~i & 2)
                   goto cdef_failed;
                break;
+            case cr_peelable_box:
+               /* check for a "peelable" 2x8 column */
+               restr_thing_ptr = &peelable_8x2;
+               goto check_peelable_restr;
          }
          break;
       case s_qtag:
@@ -1055,6 +1021,22 @@ Private void check_column_restriction(setup *ss, call_restriction restr, unsigne
    }
 
    return;
+
+
+   check_peelable_restr:
+
+   q2 = 3; q3 = 3;
+   q7 = 3; q6 = 3;
+
+   for (i=0; i<restr_thing_ptr->size; i++) {
+      if ((t = ss->people[restr_thing_ptr->map1[i]].id1) != 0)  { q2 &= t; q3 &= (t^2); }
+      if ((t = ss->people[restr_thing_ptr->map2[i]].id1) != 0)  { q7 &= t; q6 &= (t^2); }
+   }
+
+   if ((((~q2)&3) && ((~q3)&3)) || (((~q7)&3) && ((~q6)&3)))
+      goto cdef_failed;
+   return;
+
 
    cdef_failed:
 
@@ -1334,7 +1316,7 @@ extern void basic_move(
 
    for (qq = callspec->stuff.arr.def_list; qq; qq = qq->next) {
       if (qq->modifier_seth == search_concepts) {
-         if (qq->modifier_level > calling_level)
+         if (qq->modifier_level > calling_level && !allowing_all_concepts)
             fail("Use of this modifier on this call is not allowed at this level.");
          calldeflist = qq->callarray_list;
          break;
@@ -1351,7 +1333,7 @@ extern void basic_move(
       unsigned long int y;
       switch (ss->kind) {
          case s2x4:
-            y = search_concepts & ~(INHERITFLAG_DIAMOND | INHERITFLAG_SINGLE | INHERITFLAG_CROSS | INHERITFLAG_GRAND);
+            y = search_concepts & ~(INHERITFLAG_DIAMOND | INHERITFLAG_SINGLE | INHERITFLAG_SINGLEFILE | INHERITFLAG_CROSS | INHERITFLAG_GRAND);
             if (y == INHERITFLAG_MAGIC) {
                /* "Magic" was specified.  Split it into 1x4's in the appropriate magical way. */
                division_maps = &map_2x4_magic;
@@ -1400,7 +1382,7 @@ extern void basic_move(
             }
             break;
          case s_qtag:
-            y = search_concepts & ~(INHERITFLAG_DIAMOND | INHERITFLAG_SINGLE | INHERITFLAG_CROSS | INHERITFLAG_GRAND);
+            y = search_concepts & ~(INHERITFLAG_DIAMOND | INHERITFLAG_SINGLE | INHERITFLAG_SINGLEFILE | INHERITFLAG_CROSS | INHERITFLAG_GRAND);
             if (y == INHERITFLAG_MAGIC) {
                /* "Magic" was specified, perhaps with "diamond".  Split it into diamonds in the appropriate magical way. */
                division_maps = &map_qtg_magic;
@@ -1424,7 +1406,7 @@ extern void basic_move(
             }
             break;
          case s_ptpd:
-            y = search_concepts & ~(INHERITFLAG_DIAMOND | INHERITFLAG_SINGLE | INHERITFLAG_CROSS | INHERITFLAG_GRAND);
+            y = search_concepts & ~(INHERITFLAG_DIAMOND | INHERITFLAG_SINGLE | INHERITFLAG_SINGLEFILE | INHERITFLAG_CROSS | INHERITFLAG_GRAND);
             if (y == INHERITFLAG_MAGIC) {
                /* "Magic" was specified, perhaps with "diamond".  Split it into diamonds in the appropriate magical way. */
                division_maps = &map_ptp_magic;
@@ -1449,7 +1431,7 @@ extern void basic_move(
             break;
       }
 
-      fail("Can't do this call with this modifier.");
+      goto try_to_find_deflist;
    }
    
    /* We now have an association list (setups ==> definition arrays) in calldeflist.
@@ -1535,7 +1517,10 @@ extern void basic_move(
       goto do_the_call;
    }
 
-   /* We got something in "calldeflist" corresponding to the modifiers on this call,
+
+   try_to_find_deflist:
+
+   /* We may have something in "calldeflist" corresponding to the modifiers on this call,
       but there was nothing listed under that definition matching the starting setup. */
 
    /* First, see if adding a "12 matrix" or "16 matrix" modifier to the call will help.
@@ -1560,20 +1545,23 @@ extern void basic_move(
       what people want. */
       
    if (matrix_check_flag == 0 && (ss->setupflags & SETUPFLAG__EXPLICIT_MATRIX)) {
-      if (ss->kind == s2x6) matrix_check_flag |= INHERITFLAG_12_MATRIX;
+      if (ss->kind == s2x6 || ss->kind == s3x4) matrix_check_flag |= INHERITFLAG_12_MATRIX;
       else matrix_check_flag |= INHERITFLAG_16_MATRIX;
 
       /* Now search again. */
 
       for (qq = callspec->stuff.arr.def_list; qq; qq = qq->next) {
-         if (qq->modifier_seth == matrix_check_flag | search_concepts) {
-            if (qq->modifier_level > calling_level)
+         if (qq->modifier_seth == (matrix_check_flag | search_concepts)) {
+            if (qq->modifier_level > calling_level && !allowing_all_concepts)
                fail("Use of this modifier on this call is not allowed at this level.");
             calldeflist = qq->callarray_list;
             goto use_this_calldeflist;
          }
       }
    }
+
+   if (!calldeflist)
+      fail("Can't do this call with this modifier.");
 
    /* We need to divide the setup. It will be helpful to have a mask of where the
       live people are. */
@@ -1655,9 +1643,9 @@ extern void basic_move(
          /* See if this call has applicable 2x8 definitions and matrix expansion is permitted.
             If so, that is what we must do. */
 
-         if ((!(newtb & 010) || assoc(b_2x8, ss, calldeflist)) &&
-               (!(newtb & 1) || assoc(b_8x2, ss, calldeflist)) &&
-               !(ss->setupflags & SETUPFLAG__NO_EXPAND_MATRIX)) {
+         if (  !(ss->setupflags & SETUPFLAG__NO_EXPAND_MATRIX) &&
+               (!(newtb & 010) || assoc(b_2x8, ss, calldeflist)) &&
+               (!(newtb & 1) || assoc(b_8x2, ss, calldeflist))) {
             do_matrix_expansion(ss, CONCPROP__NEED_2X8, TRUE);
             if (ss->kind != s2x8) fail("Failed to expand to 2X8.");  /* Should never fail, but we don't want a loop. */
             goto search_for_call_def;        /* And try again. */
@@ -1684,18 +1672,17 @@ extern void basic_move(
             case 07474:    /* a parallelogram */
                division_maps = (*map_lists[s1x4][1])[MPKIND__OFFS_R_HALF][1];
                warn(warn__each1x4);
-               goto divide_us_no_recompute;
             case 01717:    /* a parallelogram */
                division_maps = (*map_lists[s1x4][1])[MPKIND__OFFS_L_HALF][1];
                warn(warn__each1x4);
-               goto divide_us_no_recompute;
             case 06363:    /* the outer triple boxes */
                division_maps = (*map_lists[s2x2][2])[MPKIND__SPLIT][0];
                warn(warn__each2x2);
-               goto divide_us_no_recompute;
+            default:
+               fail("You must specify a concept.");
          }
    
-         fail("You must specify a concept.");
+         goto divide_us_no_recompute;
       case s2x8:
 
          /* Check whether it has 2x4/4x2 definitions, and divide the setup if so,
@@ -1831,7 +1818,20 @@ extern void basic_move(
                   fail("Can't figure out who should be working with whom.");
                }
                else if (foo == SETUPFLAG__ELONGATE_MASK) {
-                  if (!(ss->setupflags & SETUPFLAG__NO_CHK_ELONG))
+                  /* We are in trouble if SETUPFLAG__NO_CHK_ELONG is off.
+                     But, if there was a 1x1 definition, we allow it anyway.
+                     This is what makes "you all" legal from lines.
+                     The "U-turn-back" is done in a 2x2 that is elongated laterally.
+                     "U-turn-back" ihas a 1x2 definition (so that you can roll) but
+                     no 2x1 definition (because, from a 2x2, it might overtake the 1x2
+                     definition, in view of the fact that there is no definite priority
+                     for searching for definitions, which could make people unable to
+                     roll during certain phases of the moon.)  So, when we are having the
+                     ends U-turn-back while in parallel lines, their 1x2's appear to be
+                     illegally separated.  Since they could have done it in 1x1's, we allow
+                     it.  And, incidentally, we allow a roll afterwards. */
+
+                  if (!(ss->setupflags & SETUPFLAG__NO_CHK_ELONG) && !assoc(b_1x1, ss, calldeflist))
                      fail("People are too far away to work with each other on this call.");
                   foo ^= elong;
                }
@@ -1843,84 +1843,6 @@ extern void basic_move(
             }
          }
 
-         break;
-      case s2x4:
-         division_maps = (*map_lists[s2x2][1])[MPKIND__SPLIT][0];    /* The map we will probably use. */
-   
-         /* See if this call is being done "split" as in "split square thru" or "split dixie style",
-            in which case split into boxes. */
-   
-         if (final_concepts & (FINAL__SPLIT_SQUARE_APPROVED | FINAL__SPLIT_DIXIE_APPROVED))
-            goto divide_us_no_recompute;
-   
-         /* See if this call has applicable 2x6 or 2x8 definitions and matrix expansion is permitted.
-            If so, that is what we must do. */
-
-         if ((!(newtb & 010) || assoc(b_2x6, ss, calldeflist) || assoc(b_2x8, ss, calldeflist)) &&
-               (!(newtb & 1) || assoc(b_6x2, ss, calldeflist) || assoc(b_8x2, ss, calldeflist)) &&
-               !(ss->setupflags & SETUPFLAG__NO_EXPAND_MATRIX)) {
-            do_matrix_expansion(ss, CONCPROP__NEED_2X6, TRUE);
-            if (ss->kind != s2x6) fail("Failed to expand to 2X6.");  /* Should never fail, but we don't want a loop. */
-            goto search_for_call_def;        /* And try again. */
-         }
-
-         /* See if this call has applicable 1x4 or 4x1 definitions, in which case split it that way. */
-      
-         if ((!(newtb & 010) || assoc(b_1x4, ss, calldeflist)) &&
-               (!(newtb & 1) || assoc(b_4x1, ss, calldeflist))) {
-            division_maps = (*map_lists[s1x4][1])[MPKIND__SPLIT][1];
-            goto divide_us_no_recompute;
-         }
-   
-         /* See if this call has applicable 2x2 definition, in which case split into boxes. */
-            
-         else if (assoc(b_2x2, ss, calldeflist)) goto divide_us_no_recompute;
-   
-         /* See if this call has applicable 1x2 or 2x1 definitions, (but not 2x2), in a non-T-boned setup.
-            If so, split into boxes.  Also, if some phantom concept has been used and there are 1x2 or 2x1
-            definitions, we also split it into boxes even if people are T-boned.  This is what makes
-            everyone do their part if we say "heads into the middle and heads are standard in split phantom
-            lines, partner trade". */
-   
-         else if (     (((newtb & 011) != 011) || (ss->setupflags & SETUPFLAG__PHANTOMS))
-                                                  &&
-                       (assoc(b_1x2, ss, calldeflist) || assoc(b_2x1, ss, calldeflist)))
-            goto divide_us_no_recompute;
-      
-         /* If we are T-boned and have 1x2 or 2x1 definitions, we need to be careful. */
-   
-         else if ((newtb & 011) == 011) {
-            int tbi = ss->people[1].id1 | ss->people[2].id1 | ss->people[5].id1 | ss->people[6].id1;
-            int tbo = ss->people[0].id1 | ss->people[3].id1 | ss->people[4].id1 | ss->people[7].id1;
-   
-            /* If the centers and ends are separately consistent, we can do the call concentrically *IF*
-               the appropriate type of definition exists for the ends to work with the near person rather
-               than the far one.  This is what makes "heads into the middle and everbody partner trade" work,
-               and forbids "heads into the middle and everbody star thru". */
-   
-            if (((tbi & 011) != 011) && ((tbo & 011) != 011)) {
-               if ((!(tbo & 010) || assoc(b_2x1, ss, calldeflist)) &&
-                        (!(tbo & 1) || assoc(b_1x2, ss, calldeflist))) {
-                  concentric_move(ss, parseptr, parseptr, callspec, callspec, final_concepts, final_concepts, schema_concentric, 0, 0, result);
-                  goto un_mirror;
-               }
-
-               /* Or if we have a 1x1 definition, we can divide it.  Otherwise, we lose. */
-               else if (assoc(b_1x1, ss, calldeflist)) goto divide_us_no_recompute;
-            }
-   
-            /* If the centers and ends are not separately consistent, we should just split it into 2x2's.
-               Perhaps the call has both 1x2 and 2x1 definitions, and will be done sort of siamese in each quadrant.
-               Another possibility is that the call has just (say) 1x2 definitions, but everyone can do their
-               part and miraculously not hit each other. */
-   
-            else goto divide_us_no_recompute;
-         }
-   
-         /* We are not T-boned, and there is no 1x2 or 2x1 definition.  The only possibility is that there
-            is a 1x1 definition, in which case splitting into boxes will work. */
-   
-         else if (assoc(b_1x1, ss, calldeflist)) goto divide_us_no_recompute;
          break;
       case s_rigger:
          {
@@ -1946,9 +1868,10 @@ extern void basic_move(
             /* First, check whether it has 2x3/3x2 definitions, and divide the setup if so,
                and if the call permits it.  This is important for permitting "Z axle" from
                a 3x4 but forbidding "circulate" (unless we give a concept like 12 matrix
-               phantom columns.) */
-      
-            if ((callspec->callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) &&
+               phantom columns.)  We also enable this if the caller explicitly said
+               "3x4 matrix". */
+
+            if (((callspec->callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) || (ss->setupflags & SETUPFLAG__EXPLICIT_MATRIX)) &&
                   (!(newtb & 010) || assoc(b_3x2, ss, calldeflist)) &&
                   (!(newtb & 001) || assoc(b_2x3, ss, calldeflist))) {
                division_maps = (*map_lists[s_2x3][1])[MPKIND__SPLIT][1];
@@ -2197,28 +2120,35 @@ extern void basic_move(
          }
          break;
       case s_1x6:
-         /* See if this call has applicable 1x2 or 2x1 definitions, in which case split it 3 ways. */
-            
+         /* See if this call has a 1x2, 2x1, or 1x1 definition, in which case split it 3 ways. */
          if (assoc(b_1x2, ss, calldeflist) || assoc(b_2x1, ss, calldeflist) || assoc(b_1x1, ss, calldeflist)) {
             division_maps = (*map_lists[s_1x2][2])[MPKIND__SPLIT][0];
             goto divide_us_no_recompute;
          }
          break;
       case s_1x2:
+         /* See if the call has a 1x1 definition, in which case split it and do each part. */
          if (assoc(b_1x1, ss, calldeflist)) {
             division_maps = (*map_lists[s_1x1][1])[MPKIND__SPLIT][0];
             goto divide_us_no_recompute;
          }
          break;
       case sdmd:
+         /* See if the call has a 1x1 definition, in which case split it and do each part. */
          if (assoc(b_1x1, ss, calldeflist)) {
             division_maps = &map_dmd_1x1;
             goto divide_us_no_recompute;
          }
          break;
+      case s_star:
+         /* See if the call has a 1x1 definition, in which case split it and do each part. */
+         if (assoc(b_1x1, ss, calldeflist)) {
+            division_maps = &map_star_1x1;
+            goto divide_us_no_recompute;
+         }
+         break;
       case s1x8:
          /* See if the call has a 1x4, 4x1, 1x2, 2x1, or 1x1 definition, in which case split it and do each part. */
-         
          if (     assoc(b_1x4, ss, calldeflist) || assoc(b_4x1, ss, calldeflist) ||
                   assoc(b_1x2, ss, calldeflist) || assoc(b_2x1, ss, calldeflist) ||
                   assoc(b_1x1, ss, calldeflist)) {
@@ -2233,7 +2163,8 @@ extern void basic_move(
             into a 1x8 (it needs to do that in order for "own the <points>, trade by flip the diamond"
             to work.  We must turn that 1x8 back into diamonds.  The "own the so-and-so" concept turns
             on SETUPFLAG__PHANTOMS.  If this flag weren't on, we would have no business saying "I see
-            phantoms in the center 2 spots of my wave, I'm allowed to think of this as a diamond." */
+            phantoms in the center 2 spots of my wave, I'm allowed to think of this as a diamond."
+            The same thing is done below for 2x4's and 1x4's. */
 
          if ((ss->setupflags & SETUPFLAG__PHANTOMS) &&
                   (ss->people[1].id1 | ss->people[3].id1 | ss->people[5].id1 | ss->people[7].id1) == 0) {
@@ -2247,9 +2178,132 @@ extern void basic_move(
          }
 
          break;
+      case s_crosswave:
+         /* If we do not have a 1x4 or 4x1 definition, but we have 1x2, 2x1, or 1x1 definitions,
+            do the call concentrically.  This will have the effect of having each miniwave do it.
+            If we did this when a 1x4 or 4x1 definition existed, it would have the effect of having
+            the people in the outer, disconnected, 1x4 work with each other across the set, which
+            we do not want. */
+
+         if (!assoc(b_4x1, ss, calldeflist) && !assoc(b_1x4, ss, calldeflist) &&
+               (assoc(b_2x1, ss, calldeflist) || assoc(b_1x2, ss, calldeflist) || assoc(b_1x1, ss, calldeflist))) {
+            concentric_move(ss, parseptr, parseptr, callspec, callspec, final_concepts, final_concepts, schema_concentric, 0, 0, result);
+            goto un_mirror;
+         }
+
+         break;
+      case s2x4:
+         division_maps = (*map_lists[s2x2][1])[MPKIND__SPLIT][0];    /* The map we will probably use. */
+   
+         /* See if this call is being done "split" as in "split square thru" or "split dixie style",
+            in which case split into boxes. */
+   
+         if (final_concepts & (FINAL__SPLIT_SQUARE_APPROVED | FINAL__SPLIT_DIXIE_APPROVED))
+            goto divide_us_no_recompute;
+   
+         /* See if this call has applicable 2x6 or 2x8 definitions and matrix expansion is permitted.
+            If so, that is what we must do.  But if it has a 4x4 definition also, it is ambiguous,
+            so we can't do it. */
+
+         if (  !(ss->setupflags & SETUPFLAG__NO_EXPAND_MATRIX) &&
+               !assoc(b_4x4, ss, calldeflist) &&
+               (!(newtb & 010) || assoc(b_2x6, ss, calldeflist) || assoc(b_2x8, ss, calldeflist)) &&
+               (!(newtb & 1) || assoc(b_6x2, ss, calldeflist) || assoc(b_8x2, ss, calldeflist))) {
+            do_matrix_expansion(ss, CONCPROP__NEED_2X6, TRUE);
+            if (ss->kind != s2x6) fail("Failed to expand to 2X6.");  /* Should never fail, but we don't want a loop. */
+            goto search_for_call_def;        /* And try again. */
+         }
+
+         /* See long comment above for s1x8.  The test cases for this are "own the <points>, trade
+            by flip the diamond", and "own the <points>, flip the diamond by flip the diamond". */
+
+         if ((ss->setupflags & SETUPFLAG__PHANTOMS) &&
+                  (ss->people[1].id1 | ss->people[2].id1 | ss->people[5].id1 | ss->people[6].id1) == 0) {
+            ss->kind = s_qtag;   /* It makes assoc happier if we do this now. */
+            (void) copy_rot(ss, 1, ss, 0, 011);
+            (void) copy_rot(ss, 0, ss, 7, 011);
+            (void) copy_rot(ss, 5, ss, 4, 011);
+            (void) copy_rot(ss, 4, ss, 3, 011);
+            clear_person(ss, 3);
+            clear_person(ss, 7);
+            ss->rotation--;
+
+            if   (assoc(b_ptpd, ss, calldeflist) || assoc(b_pptpd, ss, calldeflist) ||
+                  assoc(b_dmd, ss, calldeflist) || assoc(b_pmd, ss, calldeflist))
+               goto search_for_call_def;
+
+            ss->kind = s2x4;        /* Too bad; set it back. */
+            (void) copy_rot(ss, 3, ss, 4, 033);
+            (void) copy_rot(ss, 4, ss, 5, 033);
+            (void) copy_rot(ss, 7, ss, 0, 033);
+            (void) copy_rot(ss, 0, ss, 1, 033);
+            clear_person(ss, 1);
+            clear_person(ss, 5);
+            ss->rotation++;
+         }
+
+         /* See if this call has applicable 1x4 or 4x1 definitions, in which case split it that way. */
+      
+         if ((!(newtb & 010) || assoc(b_1x4, ss, calldeflist)) &&
+               (!(newtb & 1) || assoc(b_4x1, ss, calldeflist))) {
+            division_maps = (*map_lists[s1x4][1])[MPKIND__SPLIT][1];
+            goto divide_us_no_recompute;
+         }
+   
+         /* See if this call has applicable 2x2 definition, in which case split into boxes. */
+            
+         else if (assoc(b_2x2, ss, calldeflist)) goto divide_us_no_recompute;
+   
+         /* See if this call has applicable 1x2 or 2x1 definitions, (but not 2x2), in a non-T-boned setup.
+            If so, split into boxes.  Also, if some phantom concept has been used and there are 1x2 or 2x1
+            definitions, we also split it into boxes even if people are T-boned.  This is what makes
+            everyone do their part if we say "heads into the middle and heads are standard in split phantom
+            lines, partner trade". */
+   
+         else if (     (((newtb & 011) != 011) || (ss->setupflags & SETUPFLAG__PHANTOMS))
+                                                  &&
+                       (assoc(b_1x2, ss, calldeflist) || assoc(b_2x1, ss, calldeflist)))
+            goto divide_us_no_recompute;
+      
+         /* If we are T-boned and have 1x2 or 2x1 definitions, we need to be careful. */
+   
+         else if ((newtb & 011) == 011) {
+            int tbi = ss->people[1].id1 | ss->people[2].id1 | ss->people[5].id1 | ss->people[6].id1;
+            int tbo = ss->people[0].id1 | ss->people[3].id1 | ss->people[4].id1 | ss->people[7].id1;
+   
+            /* If the centers and ends are separately consistent, we can do the call concentrically *IF*
+               the appropriate type of definition exists for the ends to work with the near person rather
+               than the far one.  This is what makes "heads into the middle and everbody partner trade" work,
+               and forbids "heads into the middle and everbody star thru". */
+   
+            if (((tbi & 011) != 011) && ((tbo & 011) != 011)) {
+               if ((!(tbo & 010) || assoc(b_2x1, ss, calldeflist)) &&
+                        (!(tbo & 1) || assoc(b_1x2, ss, calldeflist))) {
+                  concentric_move(ss, parseptr, parseptr, callspec, callspec, final_concepts, final_concepts, schema_concentric, 0, 0, result);
+                  goto un_mirror;
+               }
+
+               /* Or if we have a 1x1 definition, we can divide it.  Otherwise, we lose. */
+               else if (assoc(b_1x1, ss, calldeflist)) goto divide_us_no_recompute;
+            }
+   
+            /* If the centers and ends are not separately consistent, we should just split it into 2x2's.
+               Perhaps the call has both 1x2 and 2x1 definitions, and will be done sort of siamese in each quadrant.
+               Another possibility is that the call has just (say) 1x2 definitions, but everyone can do their
+               part and miraculously not hit each other. */
+   
+            else goto divide_us_no_recompute;
+         }
+   
+         /* We are not T-boned, and there is no 1x2 or 2x1 definition.  The only possibility is that there
+            is a 1x1 definition, in which case splitting into boxes will work. */
+   
+         else if (assoc(b_1x1, ss, calldeflist))
+            goto divide_us_no_recompute;
+
+         break;
       case s1x4:
          /* See if the call has a 1x2, 2x1, or 1x1 definition, in which case split it and do each part. */
-         
          if ((assoc(b_1x2, ss, calldeflist) || assoc(b_2x1, ss, calldeflist) || assoc(b_1x1, ss, calldeflist))) {
 
             /* The following makes "ends hinge" work from a grand wave.  Any 1x4 -> 2x2 call
@@ -2266,6 +2320,21 @@ extern void basic_move(
             division_maps = (*map_lists[s_1x2][1])[MPKIND__SPLIT][0];
             goto divide_us_no_recompute;
          }
+
+         /* See long comment above for s1x8.  The test cases for this are "tandem own the <points>, trade
+            by flip the diamond", and "tandem own the <points>, flip the diamond by flip the diamond",
+            both from a tandem diamond (the point being that there will be only one of them.) */
+
+         if ((ss->setupflags & SETUPFLAG__PHANTOMS) &&
+                  (ss->people[1].id1 | ss->people[3].id1) == 0) {
+            ss->kind = sdmd;   /* It makes assoc happier if we do this now. */
+
+            if   (assoc(b_dmd, ss, calldeflist) || assoc(b_pmd, ss, calldeflist))
+               goto search_for_call_def;
+
+            ss->kind = s1x4;        /* Too bad; set it back. */
+         }
+
          break;
    }
 

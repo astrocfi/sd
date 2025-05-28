@@ -50,6 +50,7 @@ static char *sdui_version = "1.5";
    uims_do_abort_popup
    uims_do_neglect_popup
    uims_do_selector_popup
+   uims_do_direction_popup
    uims_do_quantifier_popup
    uims_do_modifier_popup
    uims_add_new_line
@@ -270,6 +271,7 @@ uims_postinitialize(void)
 #if defined(UNIX_STYLE) && !defined(MSDOS)
     initialize_signal_handlers();
 #endif
+    resolver_is_unwieldy = TRUE;   /* Sorry about that. */
     ttu_initialize();
     current_text_line = 0;
 }
@@ -346,7 +348,7 @@ prompt_for_more_output(void)
 }
 
 Private void
-show_match(char *user_input, char *extension, match_result *mr)
+show_match(char *user_input, char *extension, Const match_result *mr)
 {
     if (match_counter < 0) return;  /* Showing has been turned off. */
 
@@ -654,9 +656,6 @@ uims_do_modifier_popup(char callname[], modify_popup_kind kind)
     return confirm("Do you want to replace it? ");
 }
 
-static int first_reconcile_history;
-static search_kind reconcile_goal;
-
 /*
  * UIMS_BEGIN_SEARCH is called at the beginning of each search mode
  * command (resolve, reconcile, nice setup, do anything).
@@ -665,8 +664,6 @@ static search_kind reconcile_goal;
 extern void
 uims_begin_search(search_kind goal)
 {
-    reconcile_goal = goal;
-    first_reconcile_history = (goal == search_reconcile);
 }
 
 /*
@@ -685,8 +682,6 @@ uims_begin_search(search_kind goal)
 extern int
 uims_begin_reconcile_history(int currentpoint, int maxpoint)
 {
-    if (!first_reconcile_history)
-        uims_update_resolve_menu(reconcile_goal, 0, 0, resolver_display_ok);
     return FALSE;
 }
 
@@ -697,7 +692,7 @@ uims_begin_reconcile_history(int currentpoint, int maxpoint)
 extern int
 uims_end_reconcile_history(void)
 {
-    first_reconcile_history = FALSE;
+    put_line("\n");
     return FALSE;
 }
 
@@ -717,9 +712,9 @@ uims_do_selector_popup(void)
 {
     int n;
 
-    if (user_match.valid && (user_match.who >= 0)) {
-        n = user_match.who;
-        user_match.who = -1;
+    if (user_match.valid && (user_match.who > selector_uninitialized)) {
+        n = (int) user_match.who;
+        user_match.who = selector_uninitialized;
         return n;
     }
     else {
@@ -730,14 +725,32 @@ uims_do_selector_popup(void)
 }    
 
 extern int
+uims_do_direction_popup(void)
+{
+    int n;
+
+    if (user_match.valid && (user_match.where > direction_uninitialized)) {
+        n = (int) user_match.where;
+        user_match.where = direction_uninitialized;
+        return n;
+    }
+    else {
+        /* We skip the zeroth direction, which is direction_uninitialized. */
+        get_user_input("Enter direction> ", (int) match_directions);
+        return user_match.index+1;
+    }
+}    
+
+extern int
 uims_do_quantifier_popup(void)
 {
     int n;
     char buffer[200];
 
-    if (user_match.valid && (user_match.n >= 1)) {
-        n = user_match.n;
-        user_match.n = -1;
+    if (user_match.valid && (user_match.howmanynumbers >= 1)) {
+        n = user_match.number_fields & 0xF;
+        user_match.number_fields >>= 4;
+        user_match.howmanynumbers--;
         return n;
     }
     else {

@@ -16,7 +16,7 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-    This is for version 28. */
+    This is for version 30. */
 
 /* This defines the following functions:
    clear_screen
@@ -46,8 +46,6 @@
    install_rot
    process_final_concepts
    fix_n_results
-   divided_setup_move
-   overlapped_setup_move
 
 and the following external variables:
    longjmp_buffer
@@ -64,6 +62,7 @@ and the following external variables:
    collision_person2
    enable_file_writing
    selector_names
+   direction_names
 */
 
 #include <string.h>
@@ -95,7 +94,7 @@ int history_ptr;
 int written_history_items;
 /* When written_history_items is positive, this tells how many of the initial lines
    did not have pictures forced on (other than having been drawn as a natural consequence
-   of the "draw_pic" flag being on.  If this number ever becomes greater than
+   of the "draw_pic" flag being on.)  If this number ever becomes greater than
    written_history_items, that's OK.  It just means that none of the lines had
    forced pictures. */
 int written_history_nopic;
@@ -345,6 +344,23 @@ Private char *selector_singular[] = {
    "everyone",
    "no one"};
 
+/* BEWARE!!  This list is keyed to the definition of "direction_kind" in sd.h,
+   and to the necessary stuff in SDUI. */
+/* This one is external, so that the user interface can use it for popup text. */
+char *direction_names[] = {
+   "???",
+   "left",
+   "right",
+   "in",
+   "out",
+   "zig-zag",
+   "zag-zig",
+   "zig-zig",
+   "zag-zag",
+   "(no direction)",
+   NULL};         /* The X11 interface uses this when making the popup text. */
+
+
 /* BEWARE!!  These strings are keyed to the definitions of "warn__<whatever>" in sd.h . */
 Private char *warning_strings[] = {
    /*  warn__do_your_part        */   "Do your part.",
@@ -383,32 +399,30 @@ Private char *warning_strings[] = {
    /*  warn__check_2x4           */   "Check a 2x4 setup.",
    /*  warn__check_pgram         */   "Opt for a parallelogram.",
    /*  warn__dyp_resolve_ok      */   "Do your part.",
-   /*  warn__ctrs_stay_in_ctr    */   "Centers stay in the center."};
+   /*  warn__ctrs_stay_in_ctr    */   "Centers stay in the center.",
+   /*  warn__opt_for_c1_stars    */   "Check a generalized 'star' setup."};
 
 Private char *ordinals[] = {"1st", "2nd", "3rd", "4th", "5th"};
-
-/* This variable is shared by "print_recurse", which is subordinate
-   to "write_history_line". */
-
-Private parse_block *static_cptr;
 
 /* Bits that go into argument to print_recurse. */
 #define PRINT_RECURSE_STAR 01
 #define PRINT_RECURSE_TAGREACT 02
 #define PRINT_RECURSE_TAGENDING 04
 
-Private void print_recurse(int print_recurse_arg)
+Private void print_recurse(parse_block *thing, int print_recurse_arg)
 {
+   parse_block *static_cptr;
+   parse_block *next_cptr;
    long_boolean use_left_name = FALSE;
    long_boolean use_cross_name = FALSE;
    long_boolean comma_after_next_concept = FALSE;
+
+   static_cptr = thing;
 
    while (static_cptr) {
       int i;
       concept_kind k;
       concept_descriptor *item;
-      int next_recurse_arg;
-      parse_block *saved_cptr;
 
       item = static_cptr->concept;
       k = item->kind;
@@ -442,7 +456,7 @@ Private void print_recurse(int print_recurse_arg)
             if (kk <= marker_end_of_list) {
                break;
             }
-            else if (kk != concept_left && kk != concept_single && kk != concept_cross) {
+            else if (kk != concept_left && kk != concept_cross) {
                print_recurse_arg &= ~(PRINT_RECURSE_TAGREACT | PRINT_RECURSE_TAGENDING);
                break;
             }
@@ -454,32 +468,34 @@ Private void print_recurse(int print_recurse_arg)
          if (concept_table[k].concept_prop & CONCPROP__USE_SELECTOR)
             you_owe_me_a_selector = TRUE;
 
-         if ((concept_table[k].concept_prop & (CONCPROP__USE_NUMBER | CONCPROP__USE_TWO_NUMBERS)) &&
-                     k != concept_nth_part && k != concept_replace_nth_part) {
-            if (k == concept_frac_stable || k == concept_frac_tandem || k == concept_some_are_frac_tandem ||
-                     k == concept_so_and_so_frac_stable || k == concept_gruesome_frac_tandem) {
-               you_owe_me_a_number = TRUE;
-            }
-            else {
+         if (concept_table[k].concept_prop & (CONCPROP__USE_NUMBER | CONCPROP__USE_TWO_NUMBERS)) {
+            if (k == concept_fractional) {
                char nn[3];
+
+               if (item->value.arg1 != 0) writestuff("DO THE LAST ");
                nn[0] = '0' + (index & 0xFFFF);
                nn[1] = '\0';
                writestuff(nn);
-               if (concept_table[k].concept_prop & CONCPROP__USE_TWO_NUMBERS) {
-                  nn[0] = '/';
-                  nn[1] = '0' + (index >> 16);
-                  nn[2] = '\0';
-                  writestuff(nn);
-               }
+               nn[0] = '/';
+               nn[1] = '0' + (index >> 16);
+               nn[2] = '\0';
+               writestuff(nn);
+               if (item->value.arg1 != 0) writestuff(",");
                writestuff(" ");
+            }
+            else if (k == concept_nth_part || k == concept_replace_nth_part) {
+            }
+            else {
+               /* Must be concept_frac_stable, concept_frac_tandem, concept_some_are_frac_tandem,
+                  concept_so_and_so_frac_stable, or concept_gruesome_frac_tandem. */
+               you_owe_me_a_number = TRUE;
             }
          }
 
-         saved_cptr = static_cptr;
-         static_cptr = static_cptr->next;    /* Now it points to the thing after this concept. */
+         next_cptr = static_cptr->next;    /* Now it points to the thing after this concept. */
 
          if (concept_table[k].concept_prop & CONCPROP__SECOND_CALL) {
-            parse_block *subsidiary_ptr = saved_cptr->subsidiary_root;
+            parse_block *subsidiary_ptr = static_cptr->subsidiary_root;
 
             if (k == concept_centers_and_ends) {
                if ((i = item->value.arg1) == 2)
@@ -501,8 +517,8 @@ Private void print_recurse(int print_recurse_arg)
             }
             else if (k == concept_replace_nth_part) {
                writestuff("DELAY: ");
-               if (!static_cptr || !subsidiary_ptr) {
-                  if (saved_cptr->concept->value.arg1)
+               if (!static_cptr->next || !subsidiary_ptr) {
+                  if (static_cptr->concept->value.arg1)
                      writestuff("(interrupting after the ");
                   else
                      writestuff("(replacing the ");
@@ -515,7 +531,7 @@ Private void print_recurse(int print_recurse_arg)
                writestuff(" ");
             }
 
-            print_recurse(0);
+            print_recurse(static_cptr->next, 0);
 
             if (k == concept_callrigger) {
                writestuff("]-RIGGER");             /* We want to print this even if input is incomplete. */
@@ -534,7 +550,7 @@ Private void print_recurse(int print_recurse_arg)
                else if (k == concept_interlace)
                   writestuff(" WITH");
                else if (k == concept_replace_nth_part) {
-                  if (saved_cptr->concept->value.arg1)
+                  if (static_cptr->concept->value.arg1)
                      writestuff(" BUT INTERRUPT AFTER THE ");
                   else
                      writestuff(" BUT REPLACE THE ");
@@ -548,7 +564,7 @@ Private void print_recurse(int print_recurse_arg)
                   writestuff(" BY");
             }
 
-            static_cptr = subsidiary_ptr;
+            next_cptr = subsidiary_ptr;
          }
          else if (k == concept_so_and_so_only || k == concept_standard || k == concept_double_offset || k == concept_single_diagonal) {
             writestuff_with_decorations(item->name, you_owe_me_a_number, you_owe_me_a_selector, index, selector_names[selector]);
@@ -565,7 +581,7 @@ Private void print_recurse(int print_recurse_arg)
             writestuff(",");
             request_final_space = TRUE;
          }
-         else if (static_cptr && (k == concept_left || k == concept_cross || k == concept_single)) {
+         else if (static_cptr && (k == concept_left || k == concept_cross)) {
 
             /* These concepts want to take special action if there are no following concepts and
                certain escape characters are found in the name of the following call. */
@@ -576,7 +592,7 @@ Private void print_recurse(int print_recurse_arg)
             
             /* Skip all final concepts, then demand that what remains is a marker (as opposed to a serious
                 concept), and that a real call has been entered, and that its name starts with "@g". */
-            tptr = process_final_concepts(static_cptr, FALSE, &finaljunk);
+            tptr = process_final_concepts(next_cptr, FALSE, &finaljunk);
 
             if (tptr) {
                target_call = tptr->call;
@@ -592,21 +608,10 @@ Private void print_recurse(int print_recurse_arg)
                         request_final_space = TRUE;
                      }
                   }
-                  else if (k == concept_cross) {
+                  else {
                      /* See if this is a call that wants the "cross" modifier to be moved inside its name. */
                      if (target_call->name[1] == 'i') {
                         use_cross_name = TRUE;
-                     }
-                     else {
-                        writestuff(item->name);
-                        request_final_space = TRUE;
-                     }
-                  }
-                  else {
-                     /* See if this is a call that wants the "single" concept to be given as "single file" instead. */
-                     if (target_call->name[1] == 'h') {
-                        writestuff("SINGLE FILE");
-                        request_final_space = TRUE;
                      }
                      else {
                         writestuff(item->name);
@@ -628,10 +633,18 @@ Private void print_recurse(int print_recurse_arg)
             /* Already printed the fraction; that's all we want. */
             ;
          else if (k == concept_nth_part) {
-            writestuff("DO THE ");
-            writestuff(ordinals[index-1]);
-            writestuff(" PART");
-            request_comma_after_next_concept = TRUE;
+            if (static_cptr->concept->value.arg1 == 1) {
+               writestuff("SKIP THE ");
+               writestuff(ordinals[index-1]);
+               writestuff(" PART,");
+            }
+            else {
+               writestuff("DO THE ");
+               writestuff(ordinals[index-1]);
+               writestuff(" PART");
+               request_comma_after_next_concept = TRUE;
+            }
+
             request_final_space = TRUE;
          }
          else if (k == concept_replace_nth_part) {
@@ -641,7 +654,7 @@ Private void print_recurse(int print_recurse_arg)
             request_comma_after_next_concept = TRUE;
             request_final_space = TRUE;
          }
-         else if ((k == concept_meta) && saved_cptr->concept->value.arg1 == 3) {
+         else if ((k == concept_meta) && static_cptr->concept->value.arg1 == 3) {
             writestuff("START");
             request_comma_after_next_concept = TRUE;
             request_final_space = TRUE;
@@ -651,48 +664,99 @@ Private void print_recurse(int print_recurse_arg)
             request_final_space = TRUE;
          }
 
+         static_cptr = next_cptr;
+
          if (comma_after_next_concept)
             writestuff(", ");
          else if (request_final_space)
             writestuff(" ");
 
          comma_after_next_concept = request_comma_after_next_concept;
+
+         if (k == concept_sequential) {
+            print_recurse(static_cptr, PRINT_RECURSE_STAR);
+            writestuff(")");
+            return;
+         }
+         else if (k == concept_replace_nth_part) {
+            print_recurse(static_cptr, PRINT_RECURSE_STAR);
+            writestuff("]");
+            return;
+         }
       }
       else {
          /* This is a "marker", so it has a call, perhaps with a selector and/or number.
             The call may be null if we are printing a partially entered line.  Beware. */
 
+         int next_recurse1_arg;
+         int next_recurse2_arg;
          parse_block *save_cptr;
          parse_block *subsidiary_ptr;
+         parse_block *sub1_ptr;
+         parse_block *sub2_ptr;
          parse_block *search;
          callspec_block *localcall;
-         long_boolean pending_subst, subst_in_use;
+         long_boolean pending_subst1, subst1_in_use, this_is_subst1;
+         long_boolean pending_subst2, subst2_in_use, this_is_subst2;
          selector_kind i16junk = static_cptr->selector;
-         int i17junk = static_cptr->number;
+         direction_kind idirjunk = static_cptr->direction;
+         int number_list = static_cptr->number;
          localcall = static_cptr->call;
 
          save_cptr = static_cptr;
-         subst_in_use = FALSE;
-         next_recurse_arg = 0;
+         subst1_in_use = FALSE;
+         subst2_in_use = FALSE;
+         next_recurse1_arg = 0;
+         next_recurse2_arg = 0;
 
          if (k == concept_another_call_next_mod) {
             search = save_cptr->next;
             while (search) {
+               this_is_subst1 = FALSE;
+               this_is_subst2 = FALSE;
                subsidiary_ptr = search->subsidiary_root;
-               if (subsidiary_ptr && ( (search->concept->kind == concept_another_call_next_mod) ||
-                                       (search->concept->kind == concept_another_call_next_modreact) ||
-                                       (search->concept->kind == concept_another_call_next_modtag))) {
-                  if (search->concept->kind == concept_another_call_next_modreact) next_recurse_arg = PRINT_RECURSE_TAGREACT;
-                  else if (search->concept->kind == concept_another_call_next_modtag) next_recurse_arg = PRINT_RECURSE_TAGENDING;
-                  subst_in_use = TRUE;
-                  static_cptr = subsidiary_ptr;
-                  break;
+               if (subsidiary_ptr) {
+                  switch (search->concept->kind) {
+                     case concept_another_call_next_mod:
+                     case concept_another_call_next_modreact:
+                     case concept_another_call_next_modtag:
+                        if (search->concept->value.arg2 == 1)
+                           next_recurse1_arg = PRINT_RECURSE_TAGREACT;
+                        else if (search->concept->value.arg2 == 2)
+                           next_recurse1_arg = PRINT_RECURSE_TAGENDING;
+                        this_is_subst1 = TRUE;
+                        break;
+                     case concept_another_call_next_2nd:
+                        this_is_subst2 = TRUE;
+                        break;
+                     case concept_another_call_next_2ndreact:
+                        next_recurse2_arg = PRINT_RECURSE_TAGREACT;
+                        this_is_subst2 = TRUE;
+                        break;
+                     case concept_another_call_next_2ndtag:
+                        next_recurse2_arg = PRINT_RECURSE_TAGENDING;
+                        this_is_subst2 = TRUE;
+                        break;
+                  }
+
+                  if (this_is_subst1) {
+                     if (subst1_in_use) writestuff("ERROR!!!");
+                     subst1_in_use = TRUE;
+                     sub1_ptr = subsidiary_ptr;
+                  }
+
+                  if (this_is_subst2) {
+                     if (subst2_in_use) writestuff("ERROR!!!");
+                     subst2_in_use = TRUE;
+                     sub2_ptr = subsidiary_ptr;
+                  }
                }
                search = search->next;
             }
          }
    
-         pending_subst = subst_in_use;
+         pending_subst1 = subst1_in_use;
+         pending_subst2 = subst2_in_use;
 
          /* Now "subst_in_use" is on if there is a replacement call that goes in naturally.  During the
             scan of the name, we will try to fit that replacement into the name of the call as directed
@@ -705,8 +769,8 @@ Private void print_recurse(int print_recurse_arg)
             if (enable_file_writing) localcall->age = global_age;
             np = localcall->name;
 
-            /* Skip any "@g", "@h", or "@i" marker (we already acted on it.) */
-            if ((*np == '@') && ((np[1] == 'g') || (np[1] == 'h') || (np[1] == 'i'))) np += 2;
+            /* Skip any "@g" or "@i" marker (we already acted on it.) */
+            if ((*np == '@') && ((np[1] == 'g') || (np[1] == 'i'))) np += 2;
 
             while (*np) {
                if (*np == '@') {
@@ -720,24 +784,33 @@ Private void print_recurse(int print_recurse_arg)
                         writestuff(" ");
                      np += 2;       /* skip the digit */
                   }
+                  else if (np[1] == 'h') {    /* Need to plug in a direction. */
+                     if (lastchar != ' ' && lastchar != '[') writestuff(" ");
+                     writestuff(direction_names[idirjunk]);
+                     if (np[2] && np[2] != ' ' && np[2] != ']')
+                        writestuff(" ");
+                     np += 2;       /* skip the indicator */
+                  }
                   else if (np[1] == '9' || np[1] == 'a' || np[1] == 'b') {
+                     /* Need to plug in a number. */
                      char nn[2];
 
-                     if (lastchar != ' ' && lastchar != '[') writestuff(" ");
-                     nn[0] = '0' + (i17junk & 0xF);
+                     if (lastchar != ' ' && lastchar != ' ' && lastchar != '-') writestuff(" ");
+                     nn[0] = '0' + (number_list & 0xF);
                      nn[1] = '\0';
                      if (np[1] == '9')
                         writestuff(nn);
-                     else if ((i17junk & 0xF) == 2)
+                     else if ((number_list & 0xF) == 2)
                         writestuff("1/2");
-                     else if ((i17junk & 0xF) == 4 && np[1] == 'a')
+                     else if ((number_list & 0xF) == 4 && np[1] == 'a')
                         writestuff("full");
                      else {
                         writestuff(nn);
                         writestuff("/4");
                      }
 
-                     np += 2;       /* skip the digit */
+                     number_list >>= 4;    /* Get ready for next number. */
+                     np += 2;              /* skip the indicator */
                   }
                   else if (np[1] == 'e') {
                      if (use_left_name) {
@@ -755,8 +828,8 @@ Private void print_recurse(int print_recurse_arg)
                      }
                      np += 2;
                   }
-                  else if (np[1] == 'l')
-                     np += 2;
+                  else if (np[1] == 'l' || np[1] == '8' || np[1] == 'o')
+                     np += 2;     /* Just skip these -- they end stuff that we could have elided but didn't. */
                   else if (np[1] == 'c') {
                      if (print_recurse_arg & (PRINT_RECURSE_TAGREACT | PRINT_RECURSE_TAGENDING)) {
                         np += 2;
@@ -767,10 +840,37 @@ Private void print_recurse(int print_recurse_arg)
                      }
                      np += 2;
                   }
+                  else if (np[1] == 'n' || np[1] == 'p' || np[1] == 'r' || np[1] == 'm' || np[1] == 't') {
+                     char savec = np[1];
+      
+                     if (subst2_in_use) {
+                        if (np[1] == 'p' || np[1] == 'r') {
+                           np += 2;
+                           while (*np != '@') np++;
+                        }
+                     }
+                     else {
+                        if (np[1] == 'n') {
+                           np += 2;
+                           while (*np != '@') np++;
+                        }
+                     }
+
+                     if (pending_subst2 && savec != 'p' && savec != 'n') {
+                        if (lastchar != ' ' && lastchar != '[') writestuff(" ");
+                        writestuff("[");
+                        print_recurse(sub2_ptr, next_recurse2_arg | PRINT_RECURSE_STAR);
+                        writestuff("]");
+      
+                        pending_subst2 = FALSE;
+                     }
+      
+                     np += 2;        /* skip the digit */
+                  }
                   else {
                      char savec = np[1];
       
-                     if (subst_in_use) {
+                     if (subst1_in_use) {
                         if (np[1] == '2' || np[1] == '4') {
                            np += 2;
                            while (*np != '@') np++;
@@ -783,13 +883,13 @@ Private void print_recurse(int print_recurse_arg)
                         }
                      }
       
-                     if (pending_subst && savec != '4' && savec != '7') {
+                     if (pending_subst1 && savec != '4' && savec != '7') {
                         if (lastchar != ' ' && lastchar != '[') writestuff(" ");
                         writestuff("[");
-                        print_recurse(next_recurse_arg | PRINT_RECURSE_STAR);
+                        print_recurse(sub1_ptr, next_recurse1_arg | PRINT_RECURSE_STAR);
                         writestuff("]");
       
-                        pending_subst = FALSE;
+                        pending_subst1 = FALSE;
                      }
       
                      np += 2;        /* skip the digit */
@@ -823,42 +923,54 @@ Private void print_recurse(int print_recurse_arg)
             while (search) {
                subsidiary_ptr = search->subsidiary_root;
                if (subsidiary_ptr) {
-                  static_cptr = subsidiary_ptr;
+
+                  switch (search->concept->kind) {
+                     case concept_another_call_next_mod:
+                     case concept_another_call_next_modreact:
+                     case concept_another_call_next_modtag:
+                     case concept_another_call_next_plain:
+                        /* This is a natural replacement.  It may already have been taken care of. */
+                        if (pending_subst1 || search->concept->kind == concept_another_call_next_plain) {
+                           writestuff(" [modification: ");
+                           print_recurse(subsidiary_ptr, PRINT_RECURSE_STAR);
+                           writestuff("]");
+                        }
+                        break;
+                     case concept_another_call_next_2nd:
+                     case concept_another_call_next_2ndreact:
+                     case concept_another_call_next_2ndtag:
+                        /* This is a secondary replacement.  It may already have been taken care of. */
+                        if (pending_subst2) {
+                           writestuff(" [modification: ");
+                           print_recurse(subsidiary_ptr, PRINT_RECURSE_STAR);
+                           writestuff("]");
+                        }
+                        break;
+                     default:
+                        /* This is a forced replacement.  Need to check for case of replacing
+                           one star turn with another. */
+                        localcall = search->call;
    
-                  if (  (search->concept->kind == concept_another_call_next_mod) ||
-                        (search->concept->kind == concept_another_call_next_modreact) ||
-                        (search->concept->kind == concept_another_call_next_modtag)) {
-                     /* This is a natural replacement.  It may already have been taken care of. */
-                     if (pending_subst) {
-                        writestuff(" [modification: ");
-                        print_recurse(PRINT_RECURSE_STAR);
+                        if ((!(first_replace++)) && subsidiary_ptr &&
+                              (localcall->callflags1 & CFLAG1_IS_STAR_CALL) &&
+                                    ((subsidiary_ptr->concept->kind == marker_end_of_list) ||
+                                    (subsidiary_ptr->concept->kind == concept_another_call_next_mod)) &&
+                              (subsidiary_ptr->call) &&
+                              (subsidiary_ptr->call->callflags1 & CFLAG1_IS_STAR_CALL)) {
+                           writestuff(" BUT [");
+                        }
+                        else {
+                           if (first_replace == 1)
+                              writestuff(" BUT REPLACE ");
+                           else
+                              writestuff(" AND REPLACE ");
+                           writestuff(localcall->name);
+                           writestuff(" WITH [");
+                        }
+   
+                        print_recurse(subsidiary_ptr, PRINT_RECURSE_STAR);
                         writestuff("]");
-                     }
-                  }
-                  else {
-                     /* This is a forced replacement.  Need to check for case of replacing
-                        one star turn with another. */
-                     localcall = search->call;
-
-                     if ((!(first_replace++)) && static_cptr &&
-                           (localcall->callflags1 & CFLAG1_IS_STAR_CALL) &&
-                                 ((static_cptr->concept->kind == marker_end_of_list) ||
-                                 (static_cptr->concept->kind == concept_another_call_next_mod)) &&
-                           (static_cptr->call) &&
-                           (static_cptr->call->callflags1 & CFLAG1_IS_STAR_CALL)) {
-                        writestuff(" BUT [");
-                     }
-                     else {
-                        if (first_replace == 1)
-                           writestuff(" BUT REPLACE ");
-                        else
-                           writestuff(" AND REPLACE ");
-                        writestuff(localcall->name);
-                        writestuff(" WITH [");
-                     }
-
-                     print_recurse(PRINT_RECURSE_STAR);
-                     writestuff("]");
+                        break;
                   }
                }
                search = search->next;
@@ -867,18 +979,9 @@ Private void print_recurse(int print_recurse_arg)
 
          break;
       }
-
-      if (k == concept_sequential) {
-         print_recurse(PRINT_RECURSE_STAR);
-         writestuff(")");
-         return;
-      }
-      else if (k == concept_replace_nth_part) {
-         print_recurse(PRINT_RECURSE_STAR);
-         writestuff("]");
-         return;
-      }
    }
+
+   return;
 }
 
 
@@ -1302,6 +1405,7 @@ extern void display_initial_history(int upper_limit, int num_pics)
 extern void write_history_line(int history_index, Const char *header, long_boolean picture, file_write_flag write_to_file)
 {
    int index, w;
+   parse_block *thing;
 
    if (write_to_file == file_write_double)
       doublespace_file();
@@ -1318,22 +1422,22 @@ extern void write_history_line(int history_index, Const char *header, long_boole
       goto final;
    }
 
-   static_cptr = history[history_index].command_root;
+   thing = history[history_index].command_root;
    
    /* Need to check for the special case of starting a sequence with heads or sides.
       If this is the first line of the history, and we started with heads of sides,
       change the name of this concept from "centers" to the appropriate thing. */
 
-   if (history_index == 2 && static_cptr->concept->kind == concept_centers_or_ends && static_cptr->concept->value.arg1 == 0) {
+   if (history_index == 2 && thing->concept->kind == concept_centers_or_ends && thing->concept->value.arg1 == 0) {
       index = history[1].centersp;
       if (startinfolist[index].into_the_middle) {
          writestuff(startinfolist[index].name);
          writestuff(" ");
-         static_cptr = static_cptr->next;
+         thing = thing->next;
       }
    }
    
-   print_recurse(0);
+   print_recurse(thing, 0);
    
    final:
 
@@ -2093,6 +2197,8 @@ extern void install_rot(setup *resultpeople, int resultplace, setup *sourcepeopl
 }
 
 
+#define SINGLE_BITS INHERITFLAG_SINGLE | INHERITFLAG_SINGLEFILE | INHERITFLAG_1X2 | INHERITFLAG_2X1 | INHERITFLAG_2X2 | INHERITFLAG_1X3 | INHERITFLAG_3X1 | INHERITFLAG_3X3 | INHERITFLAG_4X4
+
 /* Take a concept pointer and scan for all "final" concepts,
    returning an updated concept pointer and a mask of all such concepts found.
    "Final" concepts are those that modify the execution of a call but
@@ -2112,6 +2218,7 @@ extern parse_block *process_final_concepts(
 
    while (tptr) {
       final_set bit_to_set = 0;
+      final_set bit_to_forbid = 0;
 
       switch (tptr->concept->kind) {
          case concept_comment:
@@ -2120,27 +2227,55 @@ extern parse_block *process_final_concepts(
             bit_to_set = FINAL__TRIANGLE; break;
          case concept_magic:
             last_magic_diamond = tptr;
-            if (check_errors && (*final_concepts & (INHERITFLAG_SINGLE | INHERITFLAG_DIAMOND)))
-               fail("Modifiers specified in illegal order.");
-            bit_to_set = INHERITFLAG_MAGIC; break;
-         case concept_grand:
-            if (check_errors && (*final_concepts & INHERITFLAG_SINGLE))
-               fail("Modifiers specified in illegal order.");
-            bit_to_set = INHERITFLAG_GRAND; break;
-         case concept_cross: bit_to_set = INHERITFLAG_CROSS; break;
-         case concept_single: bit_to_set = INHERITFLAG_SINGLE; break;
-         case concept_1x2: bit_to_set = INHERITFLAG_1X2; break;
-         case concept_2x1: bit_to_set = INHERITFLAG_2X1; break;
-         case concept_2x2: bit_to_set = INHERITFLAG_2X2; break;
-         case concept_1x3: bit_to_set = INHERITFLAG_1X3; break;
-         case concept_3x1: bit_to_set = INHERITFLAG_3X1; break;
-         case concept_3x3: bit_to_set = INHERITFLAG_3X3; break;
-         case concept_4x4: bit_to_set = INHERITFLAG_4X4; break;
+            bit_to_set = INHERITFLAG_MAGIC;
+            bit_to_forbid = INHERITFLAG_SINGLE | INHERITFLAG_DIAMOND;
+            break;
          case concept_interlocked:
             last_magic_diamond = tptr;
-            if (check_errors && (*final_concepts & (INHERITFLAG_SINGLE | INHERITFLAG_DIAMOND)))
-               fail("Modifiers specified in illegal order.");
-            bit_to_set = INHERITFLAG_INTLK; break;
+            bit_to_set = INHERITFLAG_INTLK;
+            bit_to_forbid = INHERITFLAG_SINGLE | INHERITFLAG_DIAMOND;
+            break;
+         case concept_grand:
+            bit_to_set = INHERITFLAG_GRAND;
+            bit_to_forbid = INHERITFLAG_SINGLE;
+            break;
+         case concept_cross: bit_to_set = INHERITFLAG_CROSS; break;
+         case concept_single:
+            bit_to_set = INHERITFLAG_SINGLE;
+            bit_to_forbid = SINGLE_BITS;
+            break;
+         case concept_singlefile:
+            bit_to_set = INHERITFLAG_SINGLEFILE;
+            bit_to_forbid = SINGLE_BITS;
+            break;
+         case concept_1x2:
+            bit_to_set = INHERITFLAG_1X2;
+            bit_to_forbid = SINGLE_BITS;
+            break;
+         case concept_2x1:
+            bit_to_set = INHERITFLAG_2X1;
+            bit_to_forbid = SINGLE_BITS;
+            break;
+         case concept_2x2:
+            bit_to_set = INHERITFLAG_2X2;
+            bit_to_forbid = SINGLE_BITS;
+            break;
+         case concept_1x3:
+            bit_to_set = INHERITFLAG_1X3;
+            bit_to_forbid = SINGLE_BITS;
+            break;
+         case concept_3x1:
+            bit_to_set = INHERITFLAG_3X1;
+            bit_to_forbid = SINGLE_BITS;
+            break;
+         case concept_3x3:
+            bit_to_set = INHERITFLAG_3X3;
+            bit_to_forbid = SINGLE_BITS;
+            break;
+         case concept_4x4:
+            bit_to_set = INHERITFLAG_4X4;
+            bit_to_forbid = SINGLE_BITS;
+            break;
          case concept_split:
             bit_to_set = FINAL__SPLIT; break;
          case concept_reverse:
@@ -2150,25 +2285,33 @@ extern parse_block *process_final_concepts(
          case concept_12_matrix:
             if (check_errors && *final_concepts)
                fail("Matrix modifier must appear first.");
-            bit_to_set = INHERITFLAG_12_MATRIX; break;
+            bit_to_set = INHERITFLAG_12_MATRIX;
+            break;
          case concept_16_matrix:
             if (check_errors && *final_concepts)
                fail("Matrix modifier must appear first.");
-            bit_to_set = INHERITFLAG_16_MATRIX; break;
+            bit_to_set = INHERITFLAG_16_MATRIX;
+            break;
          case concept_diamond:
-            if (check_errors && (*final_concepts & INHERITFLAG_SINGLE))
-               fail("Modifiers specified in illegal order.");
-            bit_to_set = INHERITFLAG_DIAMOND; break;
+            bit_to_set = INHERITFLAG_DIAMOND;
+            bit_to_forbid = INHERITFLAG_SINGLE;
+            break;
          case concept_funny:
             bit_to_set = INHERITFLAG_FUNNY; break;
          default:
             goto exit5;
       }
 
-      if (check_errors && tptr->concept->level > calling_level) warn(warn__bad_concept_level);
+      if (check_errors) {
+         if (tptr->concept->level > calling_level) warn(warn__bad_concept_level);
+   
+         if (*final_concepts & bit_to_set)
+            fail("Redundant call modifier.");
+   
+         if (*final_concepts & bit_to_forbid)
+            fail("Illegal combination or order of call modifiers.");
+      }
 
-      if (check_errors && (*final_concepts & bit_to_set))
-         fail("Redundant call modifier.");
       *final_concepts |= bit_to_set;
 
       get_next:
@@ -2283,442 +2426,4 @@ extern long_boolean fix_n_results(int arity, setup z[])
 
    fail("This is a ridiculously inconsistent shape or orientation changer!!");
    /* NOTREACHED */
-}
-
-
-Private void innards(
-   setup *ss,
-   parse_block *parseptr,
-   callspec_block *callspec,
-   final_set final_concepts,
-   map_thing *maps,
-   long_boolean recompute_id,
-   setup *x,
-   setup *result)
-{
-   int i, r;
-   map_thing *final_map;
-   map_hunk *hunk;
-   setup z[4];
-
-   int finalsetupflags = 0;
-   int rot = maps->rot;
-   int vert = maps->vert;
-   int arity = maps->arity;
-
-   clear_people(result);
-
-   for (i=0; i<arity; i++) {
-      if (x[i].kind != nothing) {
-         /* It is clearly too late to expand the matrix -- that can't be what is wanted. */
-         x[i].setupflags = (ss->setupflags & ~SETUPFLAG__OFFSET_Z) | SETUPFLAG__DISTORTED | SETUPFLAG__NO_EXPAND_MATRIX;
-         x[i].rotation = 0;
-         if (recompute_id) update_id_bits(&x[i]);
-         move(&x[i], parseptr, callspec, final_concepts, FALSE, &z[i]);
-         finalsetupflags |= z[i].setupflags;
-      }
-      else
-         z[i].kind = nothing;
-   }
-
-   if (fix_n_results(arity, z)) {
-      result->kind = nothing;
-      return;
-   }
-   
-   /* Set the final setupflags to the OR of everything that happened.
-      The PAR_CONC_END flag doesn't matter --- if the result is a 2x2
-      begin done around the outside, the procedure that called us
-      (basic_move) knows what is happening and will fix that bit. */
-
-   result->setupflags = finalsetupflags;
-
-   /* Some maps (the ones used in "triangle peel and trail") do not want the result
-      to be reassembled, so we get out now.  These maps are indicated by arity = 1
-      and map3[1] nonzero. */
-
-   if ((arity == 1) && (maps->map3[1])) {
-      *result = z[0];
-      goto getout;
-   }
-
-   /* See if we can put things back with the same map we used before. */
-
-   if (z[0].kind == maps->inner_kind && (z[0].rotation&3) == 0) {
-      final_map = maps;
-      result->rotation = 0;
-      goto finish;
-   }
-
-   /* If this is a special map that flips the second setup upside-down, do so. */
-   if (rot == 2) {
-      z[1].rotation += 2;
-      canonicalize_rotation(&z[1]);
-   }
-   else if (rot == 3) {    /* or the first setup */
-      z[0].rotation += 2;
-      canonicalize_rotation(&z[0]);
-   }
-
-   z[0].rotation += (rot & 1) + vert;
-   z[1].rotation += (rot & 1) + vert;
-   z[2].rotation += (rot & 1) + vert;
-   z[3].rotation += (rot & 1) + vert;
-
-   /* Do various special things. */
-
-   switch (maps->map_kind) {
-      case MPKIND__4_EDGES:
-      case MPKIND__4_QUADRANTS:
-         /* These particular maps misrepresent the rotation of subsetups 2 and 4, so
-            we have to repair things when a shape-changer is called. */
-         z[1].rotation += 2;
-         z[3].rotation += 2;
-         break;
-      case MPKIND__DMD_STUFF:
-         /* These particular maps misrepresent the rotation of subsetup 2, so
-            we have to repair things when a shape-changer is called. */
-         z[1].rotation += 2;
-         break;
-      case MPKIND__O_SPOTS:
-         warn(warn__to_o_spots);
-         break;
-      case MPKIND__X_SPOTS:
-         warn(warn__to_x_spots);
-         break;
-      case MPKIND__NONE:
-         fail("Can't do shape changer with complex line/box/column/diamond identification concept.");
-   }
-
-   for (i=0; i<arity; i++)
-      canonicalize_rotation(&z[i]);
-
-   final_map = 0;
-   hunk = map_lists[z[0].kind][arity-1];
-   if (hunk) final_map = (*hunk)[maps->map_kind][(z[0].rotation & 1)];
-
-   if (z[0].rotation & 2) {
-      if (final_map == &map_s6_trngl) final_map = &map_b6_trngl;
-      else final_map = 0;        /* Raise an error. */
-   }
-
-   if ((ss->setupflags & SETUPFLAG__OFFSET_Z) && final_map && (maps->map_kind == MPKIND__OFFS_L_HALF || maps->map_kind == MPKIND__OFFS_R_HALF)) {
-      if (final_map->outer_kind == s2x6) warn(warn__check_pgram);
-      else final_map = 0;        /* Raise an error. */
-   }
-
-   if (!final_map) {
-      if (arity == 1)
-         fail("Don't know how far to re-offset this.");
-      else
-         fail("Can't do shape changer with complex line/box/column/diamond identification concept.");
-   }
-
-   result->rotation = z[0].rotation;
-   if ((z[0].rotation & 1) && (final_map->rot & 1))
-      result->rotation = 0;
-
-   result->rotation -= vert;
-
-   /* For single arity maps, nonzero map3 item means to give warning. */
-   if ((arity == 1) && (final_map->map3[0])) warn(warn__offset_gone);
-   /* For triple arity maps, nonzero map4 item means to give warning. */
-   if ((arity == 3) && (final_map->map4[0])) warn(warn__overlap_gone);
-
-   /* If this is a special map that expects the second setup to have been flipped upside-down, do so. */
-   if (final_map->rot == 2) {
-      z[1].rotation += 2;
-      canonicalize_rotation(&z[1]);
-   }
-   else if (final_map->rot == 3) {    /* or the first setup */
-      z[0].rotation += 2;
-      canonicalize_rotation(&z[0]);
-   }
-
-   finish:
-
-   if (arity != final_map->arity) fail("Confused about number of setups to divide into.");
-
-   rot = final_map->rot;
-   r = rot * 011;
-
-   for (i=0; i<=setup_limits[final_map->inner_kind]; i++) {
-      int t;
-
-      if (rot & 1) {
-         install_rot(result, final_map->map1[i], &z[0], i, r);
-         if (maps->map_kind == MPKIND__4_QUADRANTS || maps->map_kind == MPKIND__4_EDGES) {
-            install_person(result, final_map->map2[i], &z[1], i);
-            install_rot(result, final_map->map3[i], &z[2], i, 011);
-            install_person(result, final_map->map4[i], &z[3], i);
-         }
-         else if (maps->map_kind == MPKIND__DMD_STUFF) {
-            install_person(result, final_map->map2[i], &z[1], i);
-         }
-         else {
-            if (final_map->arity >= 2) install_rot(result, final_map->map2[i], &z[1], i, 011);
-            if (final_map->arity >= 3) install_rot(result, final_map->map3[i], &z[2], i, 011);
-            if (final_map->arity == 4) install_rot(result, final_map->map4[i], &z[3], i, 011);
-         }
-      }
-      else {
-         t = final_map->map1[i];
-
-         if (t >= 0)
-            install_person(result, t, &z[0], i);
-         else if (z[0].people[i].id1 & BIT_PERSON)
-            fail("This would go into an excessively large matrix.");
-
-         if (maps->map_kind == MPKIND__4_QUADRANTS || maps->map_kind == MPKIND__4_EDGES) {
-            install_rot(result, final_map->map2[i], &z[1], i, 011);
-            install_person(result, final_map->map3[i], &z[2], i);
-            install_rot(result, final_map->map4[i], &z[3], i, 011);
-         }
-         else if (maps->map_kind == MPKIND__DMD_STUFF) {
-            install_rot(result, final_map->map2[i], &z[1], i, 011);
-         }
-         else {
-            if (final_map->arity >= 2) {
-               t = final_map->map2[i];
-   
-               if (t >= 0)
-                  install_rot(result, t, &z[1], i, r);
-               else if (z[1].people[i].id1 & BIT_PERSON)
-                  fail("This would go into an excessively large matrix.");
-            }
-   
-            if (final_map->arity >= 3) {
-               t = final_map->map3[i];
-      
-               if (t >= 0)
-                  install_person(result, t, &z[2], i);
-               else if (z[2].people[i].id1 & BIT_PERSON)
-                  fail("This would go into an excessively large matrix.");
-            }
-   
-            if (final_map->arity == 4) {
-               t = final_map->map4[i];
-      
-               if (t >= 0)
-                  install_person(result, t, &z[3], i);
-               else if (z[3].people[i].id1 & BIT_PERSON)
-                  fail("This would go into an excessively large matrix.");
-            }
-         }
-      }
-   }
-
-   result->kind = final_map->outer_kind;
-
-   getout:
-
-   canonicalize_rotation(result);
-   reinstate_rotation(ss, result);
-}
-
-
-extern void divided_setup_move(
-   setup *ss,
-   parse_block *parseptr,
-   callspec_block *callspec,
-   final_set final_concepts,
-   map_thing *maps,
-   phantest_kind phancontrol,
-   long_boolean recompute_id,
-   setup *result)
-{
-   int i, mm, v1flag, v2flag, v3flag, v4flag;
-   setup x[4];
-
-   setup_kind kn = maps->inner_kind;
-   int rot = maps->rot;
-   int arity = maps->arity;
-   
-   v1flag = 0;
-   v2flag = 0;
-   v3flag = 0;
-   v4flag = 0;
-
-   for (i=0; i<=setup_limits[kn]; i++) {
-      setup tstuff;
-      clear_people(&tstuff);
-
-      mm = maps->map1[i];
-      if (mm >= 0)
-         tstuff.people[0] = ss->people[mm];
-      v1flag |= tstuff.people[0].id1;
-
-      if (arity >= 2) {
-         mm = maps->map2[i];
-         if (mm >= 0)
-            tstuff.people[1] = ss->people[mm];
-         v2flag |= tstuff.people[1].id1;
-      }
-
-      if (arity >= 3) {
-         mm = maps->map3[i];
-         if (mm >= 0)
-            tstuff.people[2] = ss->people[mm];
-         v3flag |= tstuff.people[2].id1;
-      }
-
-      if (arity == 4) {
-         mm = maps->map4[i];
-         if (mm >= 0)
-            tstuff.people[3] = ss->people[mm];
-         v4flag |= tstuff.people[3].id1;
-      }
-
-      if (rot & 1) {
-         /* Rotation is odd.  3 is a special case. */
-         (void) copy_rot(&x[0], i, &tstuff, 0, (rot==3 ? 011 : 033));
-         if (maps->map_kind == MPKIND__4_QUADRANTS || maps->map_kind == MPKIND__4_EDGES) {
-            (void) copy_person(&x[1], i, &tstuff, 1);
-            (void) copy_rot(&x[2], i, &tstuff, 2, 033);
-            (void) copy_person(&x[3], i, &tstuff, 3);
-         }
-         else if (maps->map_kind == MPKIND__DMD_STUFF) {
-            (void) copy_person(&x[1], i, &tstuff, 1);
-         }
-         else {
-            if (arity >= 2) (void) copy_rot(&x[1], i, &tstuff, 1, 033);
-            if (arity >= 3) (void) copy_rot(&x[2], i, &tstuff, 2, 033);
-            if (arity == 4) (void) copy_rot(&x[3], i, &tstuff, 3, 033);
-         }
-      }
-      else {
-         /* Rotation is even.  2 is a special case. */
-         (void) copy_person(&x[0], i, &tstuff, 0);
-         if (maps->map_kind == MPKIND__4_QUADRANTS || maps->map_kind == MPKIND__4_EDGES) {
-            (void) copy_rot(&x[1], i, &tstuff, 1, 033);
-            (void) copy_person(&x[2], i, &tstuff, 2);
-            (void) copy_rot(&x[3], i, &tstuff, 3, 033);
-         }
-         else if (maps->map_kind == MPKIND__DMD_STUFF) {
-            (void) copy_rot(&x[1], i, &tstuff, 1, 033);
-         }
-         else {
-            if (arity >= 2) {
-               if (rot == 2) {
-                  (void) copy_rot(&x[1], i, &tstuff, 1, 022);
-               }
-               else {
-                  (void) copy_person(&x[1], i, &tstuff, 1);
-               }
-            }
-            if (arity >= 3) (void) copy_person(&x[2], i, &tstuff, 2);
-            if (arity == 4) (void) copy_person(&x[3], i, &tstuff, 3);
-         }
-      }
-   }
-
-   switch (phancontrol) {
-      case phantest_impossible:
-         if (!(v1flag && v2flag))
-            fail("This is impossible in a symmetric setup!!!!");
-         break;
-      case phantest_both:
-         if (!(v1flag && v2flag))
-            /* Only one of the two setups is occupied. */
-            fail("Don't use phantom concept if you don't mean it.");
-         break;
-      case phantest_only_one:
-         if (v1flag && v2flag) fail("Can't find the setup to work in.");
-         break;
-      case phantest_only_first_one:
-         if (v2flag) fail("Not in correct setup.");
-         break;
-      case phantest_only_second_one:
-         if (v1flag) fail("Not in correct setup.");
-         break;
-      case phantest_first_or_both:
-         if (!v1flag)
-            fail("Don't use phantom concept if you don't mean it.");
-         break;
-      case phantest_2x2_both:
-         /* Test for "C1" blocks. */
-         if (!((v1flag | v3flag) && (v2flag | v4flag)))
-            fail("Don't use phantom concept if you don't mean it.");
-         break;
-      case phantest_not_just_centers:
-         if (!(v1flag && v3flag))
-            fail("Don't use phantom concept if you don't mean it.");
-         break;
-      case phantest_2x2_only_two:
-         /* Test for NOT "C1" blocks. */
-         if ((v1flag | v3flag) && (v2flag | v4flag)) fail("Not in blocks.");
-         break;
-   }
-
-   x[0].kind = nothing;
-   x[1].kind = nothing;
-   x[2].kind = nothing;
-   x[3].kind = nothing;
-
-   if (v1flag) x[0].kind = maps->inner_kind;
-   if (v2flag) x[1].kind = maps->inner_kind;
-   if (v3flag) x[2].kind = maps->inner_kind;
-   if (v4flag) x[3].kind = maps->inner_kind;
-
-   innards(ss, parseptr, callspec,
-      final_concepts, maps, recompute_id, x, result);
-}
-
-
-extern void overlapped_setup_move(setup *s, map_thing *maps,
-   int m1, int m2, int m3, parse_block *parseptr, setup *result)
-{
-   int i, j;
-   setup x[4];
-
-   setup_kind kn = maps->inner_kind;
-   int rot = maps->rot;
-   int arity = maps->arity;
-
-   if (arity >= 4) fail("Can't handle this many overlapped setups.");
-
-   for (i=0, j=1; i<=setup_limits[kn]; i++, j<<=1) {
-      setup tstuff;
-
-      tstuff.people[0] = s->people[maps->map1[i]];
-      if (arity >= 2) tstuff.people[1] = s->people[maps->map2[i]];
-      if (arity == 3) tstuff.people[2] = s->people[maps->map3[i]];
-
-      if (rot & 1) {
-         /* Rotation is odd.  3 is a special case. */
-         if (rot == 3) tstuff.people[0].id1 = rotcw(tstuff.people[0].id1); else tstuff.people[0].id1 = rotccw(tstuff.people[0].id1);
-         if (arity >= 2) tstuff.people[1].id1 = rotccw(tstuff.people[1].id1);
-         if (arity == 3) tstuff.people[2].id1 = rotccw(tstuff.people[2].id1);
-      }
-      else {
-         /* Rotation is even.  2 is a special case. */
-         if (rot == 2) tstuff.people[1].id1 = rotperson(tstuff.people[1].id1, 022);
-      }
-
-      if (j & m1)
-         (void) copy_person(&x[0], i, &tstuff, 0);
-      else
-         clear_person(&x[0], i);
-
-      if (arity >= 2) {
-         if (j & m2)
-            (void) copy_person(&x[1], i, &tstuff, 1);
-         else
-            clear_person(&x[1], i);
-      }
-
-      if (arity >= 3) {
-         if (j & m3)
-            (void) copy_person(&x[2], i, &tstuff, 2);
-         else
-            clear_person(&x[2], i);
-      }
-   }
-
-   x[0].kind = maps->inner_kind;
-   x[1].kind = maps->inner_kind;
-   x[2].kind = maps->inner_kind;
-
-   innards(s, parseptr, NULLCALLSPEC,
-      0, maps, FALSE, x, result);
 }
