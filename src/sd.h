@@ -90,6 +90,7 @@
 #include <string.h>
 
 #include "database.h"
+#include "sdchars.h"
 
 
 struct resolve_tester;
@@ -583,7 +584,6 @@ enum warning_index {
    warn__cant_track_phantoms,
    warn__6peoplestretched,
    warn__did_weird_stretch_response,
-   warn__crazy_tandem_interaction,
    warn__mimic_ambiguity_checked,
    warn__mimic_ambiguity_resolved,
    warn__diagnostic,
@@ -1671,6 +1671,14 @@ struct setup_command {
    parse_block *skippable_concept;
    uint32_t skippable_heritflags;
    uint32_t cmd_heritflags_to_save_from_mxn_expansion;
+
+   void promote_restrained_fraction() {
+      if (restrained_fraction.fraction != 0) {
+         cmd_fraction = restrained_fraction;
+         restrained_fraction.flags = 0;
+         restrained_fraction.fraction = 0;
+      }
+   }
 };
 
 
@@ -5932,60 +5940,6 @@ enum { MAX_RESOLVE_SIZE = 5 };
 // when printing.  It defaults to 59 (for printing in 14-point Courier on 8.5 by 11 paper),
 // but can be overridden by the user at startup.
 
-
-// Codes for special accelerator keystrokes.
-
-// Function keys can be plain, shifted, control, alt, or control-alt.
-
-enum {
-   FKEY = 128,
-   SFKEY = 144,
-   CFKEY = 160,
-   AFKEY = 176,
-   CAFKEY = 192,
-
-   // "Enhanced" keys can be plain, shifted, control, alt, or control-alt.
-   // e1 = page up
-   // e2 = page down
-   // e3 = end
-   // e4 = home
-   // e5 = left arrow
-   // e6 = up arrow
-   // e7 = right arrow
-   // e8 = down arrow
-   // e13 = insert
-   // e14 = delete
-
-   EKEY = 208,
-   SEKEY = 224,
-   CEKEY = 240,
-   AEKEY = 256,
-   CAEKEY = 272,
-
-   // Digits can be control, alt, or control-alt.
-
-   CTLDIG = 288,
-   ALTDIG = 298,
-   CTLALTDIG = 308,
-
-   // Numeric keypad can be control, alt, or control-alt.
-
-   CTLNKP = 318,
-   ALTNKP = 328,
-   CTLALTNKP = 338,
-
-   // Letters can be control, alt, or control-alt.
-
-   CTLLET = (348-'A'),
-   ALTLET = (374-'A'),
-   CTLALTLET = (400-'A'),
-
-   CLOSEPROGRAMKEY = 426,
-
-   FCN_KEY_TAB_LOW = (FKEY+1),
-   FCN_KEY_TAB_LAST = CLOSEPROGRAMKEY
-};
-
 // This allows numbers from 0 to 36, inclusive.
 enum {
    NUM_CARDINALS = 37
@@ -6056,7 +6010,6 @@ public:
       the_list[the_list_size++] = datum;
    }
 };
-
 
 
 enum color_scheme_type {
@@ -6144,7 +6097,7 @@ class ui_option_type {
    int squeeze_this_newline;  // randomly used by printing stuff.
    int drawing_picture;       // randomly used by printing stuff.
 
-   ui_option_type();      // Constructor is in sdmain.
+   ui_option_type();      // Constructor is in sdutils.
 };
 
 
@@ -6184,158 +6137,11 @@ struct pat2_block {
    {}
 };
 
-
-class SDLIB_API matcher_class {
-public:
-
-   // Must be a power of 2.
-   enum {
-      NUM_NAME_HASH_BUCKETS = 128,
-      BRACKET_HASH = (NUM_NAME_HASH_BUCKETS+1)
-   };
-
-   // These negative values to the call menu type, which tells what menu we are to pick from.
-   enum {
-      e_match_startup_commands = -1,
-      e_match_resolve_commands = -2,
-      e_match_selectors = -3,
-      e_match_directions = -4,
-      e_match_taggers = -8,      // This embraces 4 (NUM_TAGGER_CLASSES) numbers: -8, -7, -6, and -5.
-      e_match_circcer = -9,
-      e_match_number = -10       // Only used by sdui-win; sdui-tty just reads it and uses atoi.
-   };
-
-   // This class is a singleton object.  It gets effectively recreated for every parse,
-   // by initialize_for_parse, except for these two program-static items, which get initialized
-   // just once and get manipulated through the life of the program.
-
-   matcher_class() : s_modifier_active_list((modifier_block *) 0),
-                     s_modifier_inactive_list((modifier_block *) 0),
-                     m_abbrev_table_normal((abbrev_block *) 0),
-                     m_abbrev_table_start((abbrev_block *) 0),
-                     m_abbrev_table_resolve((abbrev_block *) 0)
-   {
-      // These lists are allocated to size NUM_NAME_HASH_BUCKETS+2.
-      // So they will have two extra items at the end:
-      //   The first is for calls whose names can't be hashed.
-      //   The second is the bucket that any string starting with left bracket hashes to.
-
-      call_hashers = new index_list[NUM_NAME_HASH_BUCKETS+2];
-      conc_hashers = new index_list[NUM_NAME_HASH_BUCKETS+2];
-      conclvl_hashers = new index_list[NUM_NAME_HASH_BUCKETS+2];
-
-      ::memset(m_fcn_key_table_normal, 0,
-               sizeof(modifier_block *) * (FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1));
-      ::memset(m_fcn_key_table_start, 0,
-               sizeof(modifier_block *) * (FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1));
-      ::memset(m_fcn_key_table_resolve, 0,
-               sizeof(modifier_block *) * (FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1));
-   }
-
-   void initialize_for_parse(int which_commands, bool show, bool only_want_extension);
-
-   void copy_sublist(const match_result *outbar, modifier_block *tails);
-
-   void copy_to_user_input(const char *stuff);
-
-   void erase_matcher_input();
-
-   int delete_matcher_word();
-
-   bool process_accel_or_abbrev(modifier_block & mb, char linebuff[]);
-
-   void do_accelerator_spec(Cstring inputline, bool is_accelerator);
-
-   bool verify_call();
-
-   void record_a_match();
-
-   void match_pattern(Cstring pattern);
-
-   void match_suffix_2(Cstring user, Cstring pat1, pat2_block *pat2, int patxi);
-
-   void scan_concepts_and_calls(
-      Cstring user,
-      Cstring firstchar,
-      pat2_block *pat2,
-      const match_result **fixme,
-      int patxi);
-
-   void match_wildcard(
-      Cstring user,
-      Cstring pat,
-      pat2_block *pat2,
-      int patxi,
-      const concept_descriptor *special);
-
-   void search_menu(uims_reply_kind kind);
-
-   int match_user_input(
-      int which_commands,
-      bool show,
-      bool show_verify,
-      bool only_want_extension);
-
-   // These are used for allocating and "garbage collecting" blocks dynamically.
-   // If this were not a singleton object, these two fields would have to be declared static,
-   // because they are program-static.  So we use the "s_" prefix.
-   modifier_block *s_modifier_active_list;
-   modifier_block *s_modifier_inactive_list;
-
-   // This is the structure that gets manipulated as parsing and matching proceed.
-   match_result m_active_result;
-
-   // This usually points to m_active_result, and is used for manipulations deep inside
-   // the matching code.  It occasionally get pointed at other things in the matching code,
-   // but is always set back.
-   match_result *m_current_result;
-
-   // When a parse is completed, the result information for the user is copied out to this structure.
-   // Things in m_active_result, including the all-important "match.kind" and "match.index" fields,
-   // were manipulated as menu searches were performed, and aren't left with the right result.
-   // But if a unique match is found, it is copied out to this field.
-   match_result m_final_result;
-
-   bool m_only_extension;          // Only want extension, short-circuit the search.
-   int m_user_bracket_depth;
-   int m_match_count;              // The number of matches so far.
-   int m_exact_count;              // The number of exact matches so far.
-   bool m_showing;                 // We are only showing the matching patterns.
-   bool m_showing_has_stopped;
-   bool m_verify;                  // True => verify calls before showing.
-   int m_lowest_yield_depth;
-   int m_call_menu;       // The call menu (or special negative command) that we are searching.
-
-   int m_extended_bracket_depth;
-   bool m_space_ok;
-   int m_yielding_matches;
-   char m_user_input[INPUT_TEXTLINE_SIZE+1];     // the current user input
-   char m_full_extension[INPUT_TEXTLINE_SIZE+1]; // the extension for the current pattern
-   char m_echo_stuff[INPUT_TEXTLINE_SIZE+1];     // the maximal common extension
-   int m_user_input_size;                        // This is always equal to strlen(m_user_input).
-
-   // Things below here are effectively "static constants".  They are filled in by
-   // matcher_initialize and open_session at program startup.
-
-   index_list m_concept_list;        // indices of all concepts
-   index_list m_level_concept_list;  // indices of concepts valid at current level
-
-   index_list *call_hashers;
-   index_list *conc_hashers;
-   index_list *conclvl_hashers;
-
-   modifier_block *m_fcn_key_table_normal[FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1];
-   modifier_block *m_fcn_key_table_start[FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1];
-   modifier_block *m_fcn_key_table_resolve[FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1];
-
-   abbrev_block *m_abbrev_table_normal;
-   abbrev_block *m_abbrev_table_start;
-   abbrev_block *m_abbrev_table_resolve;
-};
-
+// ***** For matcher stuff.  Does everyone need it?
+#include "sdmatch.h"
 
 extern SDLIB_API parse_state_type parse_state;                      /* in SDTOP */
-extern SDLIB_API ui_option_type ui_options;                         /* in SDTOP */
+extern SDLIB_API ui_option_type ui_options;                         /* in SDUTIL */
 
 extern SDLIB_API int *color_index_list;                             /* in SDINIT */
 extern SDLIB_API int color_randomizer[4];                           /* in SDINIT */

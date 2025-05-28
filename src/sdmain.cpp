@@ -46,8 +46,8 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-#define VERSION_STRING "39.09"
-#define TIME_STAMP "wba@alum.mit.edu May 23 2019 $"
+#define VERSION_STRING "39.10"
+#define TIME_STAMP "wba@alum.mit.edu Sept 5 2019 $"
 
 /* This defines the following functions:
    sd_version_string
@@ -983,38 +983,6 @@ extern bool query_for_call()
 }
 
 
-ui_option_type::ui_option_type() :
-   color_scheme(color_by_gender),
-   force_session(-1000000),
-   sequence_num_override(-1),
-   no_graphics(0),
-   no_c3x(false),
-   no_intensify(false),
-   reverse_video(false),
-   pastel_color(false),
-   use_magenta(false),
-   use_cyan(false),
-   singlespace_mode(false),
-   nowarn_mode(false),
-   keep_all_pictures(false),
-   accept_single_click(false),
-   hide_glyph_numbers(false),
-   diagnostic_mode(false),
-   no_sound(false),
-   tab_changes_focus(false),
-   max_print_length(59),
-   resolve_test_minutes(0),
-   singing_call_mode(0),
-   use_escapes_for_drawing_people(0),
-   pn1("11223344"),
-   pn2("BGBGBGBG"),
-   direc("?>?<????^?V?????"),
-   stddirec("?>?<????^?V?????"),
-   squeeze_this_newline(0),
-   drawing_picture(0)
-{}
-
-
 extern int sdmain(int argc, char *argv[], iobase & ggg)
 {
    bool just_get_out_of_here = false;
@@ -1096,7 +1064,6 @@ extern int sdmain(int argc, char *argv[], iobase & ggg)
    global_cache_failed_flag = false;
 
    // The "ui_utils" object is a singleton.  It will be accessed by the global static variable "gg77".
-   // (Declared in sdbase.h, proclaimed in sdtop.cpp.)
    //
    // There are two other important global singleton objects inside the "ui_utils" object:
    //    The "matcher_p" field is a pointer to the matcher, which is in sdmatch.cpp.  We instantiate
@@ -1104,22 +1071,23 @@ extern int sdmain(int argc, char *argv[], iobase & ggg)
    //    The "iob88" field is a pointer (a reference, to be precise) to the actual user interface.
    //       This is the base interface class that distinguishes between Sd and Sdtty.
    //       It is instantiated in the top-level Sd/Sdtty file and passed to us as incoming argument ggg.
-   //
-   // These are all declared in sdbase.h.
 
-   matcher_class global_matcher;
-   ui_utils thingy(&global_matcher, ggg);
-   gg77 = &thingy;
+   // Create a scope to go into and out of, so that the "matcher_class" destructor will be called.
+   {
+      matcher_class global_matcher;
+      ui_utils thingy(&global_matcher, ggg);
+      gg77 = &thingy;
 
-   if (just_get_out_of_here) general_final_exit(0);  // general_final_exit requires gg77, even if just doing "-help".
+      if (!just_get_out_of_here) {
+         // In addition to the "ui_utils" object having a reference ("iob88") to the user interface,
+         // the user interface needs a pointer back to the "ui_utils" object.  This is set with "set_utils_ptr".
+         ggg.set_utils_ptr(gg77);
 
-   // In addition to the "ui_utils" object having a reference ("iob88") to the user interface,
-   // the user interface needs a pointer back to the "ui_utils" object.  This is set with "set_utils_ptr".
-   ggg.set_utils_ptr(gg77);
-
-   if (!open_session(argc, argv)) {
-      thingy.run_program(ggg);
-      close_session();
+         if (!open_session(argc, argv)) {
+            thingy.run_program(ggg);
+            close_session();
+         }
+      }
    }
 
    // This does a lot more than just exit.  It updates the init file.

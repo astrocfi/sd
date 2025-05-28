@@ -57,7 +57,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "39.09"
+version "39.10"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve dont_raise_overcast
@@ -4631,8 +4631,6 @@ call "spread" plus tag spread
       array [ZM1N ZM0N ZM3N ZM2N]
    setup 1x6 1x6 qualifier miniwaves
       array [ZM1N ZM0N ZM5N ZM4N ZM3N ZM2N]
-   setup 1x8 1x8 qualifier miniwaves
-      array [ZM1N ZM0N ZM3N ZM2N ZM5N ZM4N ZM7N ZM6N]
 
    // If in 4x2 columns, the first thing we have to do is check for
    // all combinations of 1-faced 2x2 boxes.  This is because, independently
@@ -9407,7 +9405,7 @@ call "finish chain down the line" mainstream
 // Callerlab says this is a no-no, Feb 2000, so we set it to c1.
 call "3/4 chain down the line" c1
             parallel_conc_end
-   setup dmd 2x2
+   setup dmd 2x2 restriction controversial alwaysfail
       array [AL0E 0 AAL2W 0]
    setup pmd 2x2
       array [0 CCCAL3N 0 0]
@@ -17783,7 +17781,10 @@ call "square the bases plus @9" c4
    seq splitsq2plusn [inherit_left allow_forced_mod]
    seq trade_by [inherit_left allow_forced_mod]
 
+// This is just 1/4 out in the box, hoping that people are leads.
 call "_ends regroup 1" dontshow tag eregroup1
+   setup 1x2 1x2
+      array [AL0W CR1E]
    setup 2x2 2x2 qualifier out in_or_out
       array [AL0W CR1E 0 0]
    setup 2x2 2x2 restriction unusual alwaysfail
@@ -17795,10 +17796,24 @@ call "_ends regroup" dontshow tag eregroup
    seq trade []
    seq nullcall_other_elong []
 
+call "_regroup 1" dontshow tag regroup1
+            yoyo_is_inherited gen_sting_is_inherited diamond_is_legal funny_is_inherited
+   conc2_4_or_single trade_w_tbone [inherit_yoyo inherit_gensting inherit_diamond inherit_funny]
+                     eregroup1 [conc_demand_lines endscando]
+
+call "_regroup 2" dontshow tag regroup2
+            yoyo_is_inherited gen_sting_is_inherited diamond_is_legal funny_is_inherited
+   conc roll  []
+        trade [conc_force_lines endscando]
+
 call "regroup" c1
+   // Need both the conc-over-seq definition and the seq-over-conc one.
             visible_fractions diamond_is_legal funny_is_inherited
    conc trade_and_roll_w_tbone [inherit_diamond inherit_funny]
         eregroup [inherit_diamond inherit_funny conc_demand_lines endscando]
+            visible_fractions yoyo_is_inherited gen_sting_is_inherited diamond_is_legal funny_is_inherited
+   seq regroup1 [inherit_yoyo inherit_gensting inherit_diamond inherit_funny]
+   seq regroup2 [inherit_yoyo inherit_gensting inherit_diamond inherit_funny]
 
 call "regroup but @m" c3
             visible_fractions diamond_is_legal funny_is_inherited
@@ -19343,6 +19358,11 @@ call "_extend 1/4 to 1/2" dontshow tag extend_1_to_2
       predscantdocallinsetup
          if dmd_ctrs_rh [ZM0N ZM1N 0 0]
          if always      [ZM3N 0 0 ZM2N]
+            alternate_definition [cross] c1
+   setup pmd 2x2 qualifier in qtag_like
+      predscantdocallinsetup
+         if dmd_ctrs_rh [ZM3N ZM2N 0 0]
+         if always      [ZM0N 0 0 ZM1N]
 
 call "extend" mainstream tag extend
    // 0/4 tag to 1/4 tag
@@ -24379,38 +24399,35 @@ call "_fix scoot chain thru" dontshow tag fixscootchainthru
    setup 2x4 2x4 restriction forbidden wave_only
       array [CM6S CCAM3N AACM0N AM5S ZM4N ZM5N ZM6N ZM7N]
 
-call "_inner scoot chain thru" dontshow tag innerscootchainthru
-   // Illegal if we do the whole call.
-   setup 1x4 1x4
-      array [0 0 0 0]
-            alternate_definition [half] a2
+call "_inner scoot chain thru 1" dontshow tag innerscootchainthru_1
    setup 2x4 hrglass restriction forbidden wave_only
       array [CR0E AL0W CR1E AL1W AACR7W CR2S AL6S CCAL7E]
    setup qtag qtag rotate qualifier right wave_only
       array [0 0 0 CR0E CR1E CCAL2N CCAL7N 0]
    setup qtag qtag rotate qualifier left wave_only
       array [0 0 AACR7S 0 AACR2S AL4E 0 AL5E]
-            alternate_definition [half cross] c4
+            alternate_definition [cross] c4
    setup qtag qtag rotate qualifier right wave_only
       array [0 0 0 AACR7S AACR2S AL4E AL5E 0]
    setup qtag qtag rotate qualifier left wave_only
       array [0 0 CR0E 0 CR1E CCAL2N 0 CCAL7N]
-            alternate_definition [half interlocked] c3a
+            alternate_definition [interlocked] c3a
    setup qtag qtag rotate qualifier right 2fl_only
       array [0 0 0 0 CR1E CCAL2N CCAL7N CR0E]
    setup qtag qtag rotate qualifier left 2fl_only
       array [0 0 AACR7S AL5E AACR2S AL4E 0 0]
-            alternate_definition [half yoyo] c4
+            alternate_definition [yoyo] c4
    setup qtag qtag qualifier right wave_only
       array [0 0 0 CCCAL3S CR4W CR5W CCCAL6S 0]
    setup qtag qtag qualifier left wave_only
       array [0 0 AAACR2S 0 AL4E AL5E 0 AAACR7S]
-            alternate_definition [half yoyo interlocked] c4
+            alternate_definition [yoyo interlocked] c4
    setup qtag qtag qualifier right 2fl_only
       array [0 0 0 0 CR4W CR5W CCCAL6S CCCAL3S]
    setup qtag qtag qualifier left 2fl_only
       array [0 0 AAACR2S AAACR7S AL4E AL5E 0 0]
-            alternate_definition [lasthalf] a2
+
+call "_inner scoot chain thru 2" dontshow tag innerscootchainthru_2
    setup hrglass 2x4
       array [0 0 AM5S 0 0 0 CM6S 0]
    setup phrglass 2x4
@@ -24419,17 +24436,17 @@ call "_inner scoot chain thru" dontshow tag innerscootchainthru
       array [0 0 ACM0N CAM6S 0 0 CAM5S ACM6N]
    setup pqtag qtag rotate
       array [CM5E CM7E 0 0 AM3E AM4E 0 0]
-            alternate_definition [lasthalf interlocked] c3a
+            alternate_definition [interlocked] c3a
    setup qtag qtag rotate
       array [0 0 ACM0N CAM6S 0 0 CAM5S ACM6N]
    setup pqtag qtag rotate
       array [CM5E CM3E 0 0 AM7E AM4E 0 0]
-            alternate_definition [lasthalf yoyo] c4
+            alternate_definition [yoyo] c4
    setup qtag qtag
       array [0 0 ACM2S CAM3S 0 0 CAM6S ACM7S]
    setup pqtag qtag
       array [CM0W CM1W 0 0 AM4E AM5E 0 0]
-            alternate_definition [lasthalf yoyo interlocked] c4
+            alternate_definition [yoyo interlocked] c4
    setup qtag qtag
       array [0 0 ACM2S CAM7S 0 0 CAM6S ACM3S]
    setup pqtag qtag
@@ -24511,15 +24528,24 @@ call "scoot chain thru" a2 tag scootchainthru
       array [0 0 ACM2S CAM7S 0 0 CAM6S ACM3S]
    setup pqtag qtag
       array [CM0W CM1W 0 0 AM4E AM5E 0 0]
-            intlk_is_inherited yoyo_is_inherited gen_sting_is_inherited cross_is_inherited
-   // If we do the whole call, it comes here.  Note that we
-   // do *not* set visible_fractions.  This call does not have
-   // parts.  It has halves.
-   seq innerscootchainthru [force_half inherit_intlk inherit_yoyo inherit_gensting inherit_cross]
-   seq innerscootchainthru [force_lasthalf inherit_intlk inherit_yoyo inherit_gensting]
+   // A "seq" definition.  If we do the whole call, it comes here.
+            visible_fractions intlk_is_inherited yoyo_is_inherited
+            gen_sting_is_inherited cross_is_inherited
+   seq innerscootchainthru_1 [inherit_intlk inherit_yoyo inherit_gensting inherit_cross]
+   seq innerscootchainthru_2 [inherit_intlk inherit_yoyo inherit_gensting]
+   // What?  Two "seq" definitions?  Yes.  When we break it into halves, we can do it
+   // from waves, because the leads know what to do.  When we break it into fifths,
+   // there are no leads to worry about.
+            visible_fractions yoyo_is_inherited
+            gen_sting_is_inherited cross_is_inherited
+   seq extend_1_to_2 [inherit_cross]
+   seq swing [inherit_yoyo inherit_gensting]
+   seq maybegrandslip [inherit_yoyo inherit_gensting]
+   seq swing [inherit_yoyo inherit_gensting]
+   seq extend_n [insert_number 3]
 
 call "_fudgy scoot chain thru" dontshow tag fudgyscootchainthru
-   /* The yoyo version of this has the same fudge as "fudgyboxyscootback".  See above. */
+   // The yoyo version of this has the same fudge as "fudgyboxyscootback".  See above.
             yoyo_is_inherited gen_sting_is_inherited
    seq fudgyboxyscootback [inherit_yoyo inherit_gensting]
    seq fixscootchainthru []
@@ -24691,7 +24717,7 @@ call "scoot chain thru and dodge" c4 tag scootchainthrundodge
       array [ZM1N ZM0N ZM3N ZM2N 7S CM2N AM1N 4S]
 
 call "_fudgy scatter scoot chain thru" dontshow tag fudgyscatscootchainthru
-   /* The yoyo version of this has the same fudge as "fudgyboxyscootback".  See above. */
+   // The yoyo version of this has the same fudge as "fudgyboxyscootback".  See above.
             yoyo_is_inherited gen_sting_is_inherited
    seq fudgyscatscoot [inherit_yoyo inherit_gensting]  /* The yoyo version is only legal in a T-bone. */
    seq fixscootchainthru []
@@ -24959,7 +24985,7 @@ call "the K" c2 tag the_k
    singleconc_together trade [inherit_half inherit_yoyo inherit_gensting]
                        uturnaway [inherit_half conc_force_spots]
 
-call "the K but @m" c3 tag the_k_but
+call "the K but @m" c3a tag the_k_but
    singleconc_together nullsecond [mandatory_secondary_call]
                        uturnaway [conc_force_spots]
 
@@ -24975,13 +25001,13 @@ call "@0 the K" c2
    seq nullcall [mandatory_anycall]
    seq the_k [inherit_yoyo inherit_gensting]
 
-call "@2cross @3the K but @m" c3
+call "@2cross @3the K but @m" c3a
             twisted_is_inherited visible_fractions yoyo_is_inherited gen_sting_is_inherited
             mxn_is_inherited nxn_is_inherited
    seq crosstrail [inherit_twisted inherit_nxn inherit_mxn or_anycall]
    seq the_k_but []
 
-call "@0 the K but @m" c3
+call "@0 the K but @m" c3a
             visible_fractions yoyo_is_inherited gen_sting_is_inherited
    seq nullcall [mandatory_anycall]
    seq the_k_but []
@@ -26574,7 +26600,7 @@ call "@2galaxy @3chain thru" c2
    seq ctrs_slip_with_mod [inherit_yoyo inherit_gensting roll_transparent]
    seq ctrscastoff_n [inherit_fractal roll_transparent insert_number 3]
 
-call "@2diamond @3chain thru but @m" c4a
+call "@2diamond @3chain thru but @m" c3a
             yoyo_is_inherited gen_sting_is_inherited intlk_is_inherited magic_is_inherited
             funny_is_inherited visible_fractions
    seq diamondcirc [or_anycall inherit_yoyo inherit_gensting inherit_intlk inherit_magic inherit_funny]
@@ -26587,7 +26613,7 @@ call "@0 chain thru" c1
    seq ctrs_slip_with_mod [inherit_yoyo inherit_gensting roll_transparent]
    seq ctrscastoff_n [inherit_fractal roll_transparent insert_number 3]
 
-call "@0 chain thru but @m" c4a
+call "@0 chain thru but @m" c3a
             dont_use_in_resolve yoyo_is_inherited gen_sting_is_inherited visible_fractions
    seq nullcall [mandatory_anycall]
    seq ctrs_slip_with_mod [inherit_yoyo inherit_gensting roll_transparent]
@@ -26868,40 +26894,40 @@ call "_ctrs rally but @m" dontshow tag ctrsrallybut2nd
 call "_ends rally" dontshow tag endsrally
             left_means_mirror
    setup 2x2 1x4 qualifier out in_or_out
-      array [CR2S CR3N CAL3S CAL2N]
+      array [CM2S CR3N CAL3S CAM2N]
    setup 2x2 1x4 restriction unusual alwaysfail
-      array [CR2S CR3N CAL3S CAL2N]
+      array [CM2S CR3N CAL3S CAM2N]
 
 call "_ends rally, ends go as you are" dontshow tag endsrally_ends_as_are
             left_means_mirror
    setup 2x2 1x4 rotate restriction wave_only
-      array [CR1S AL1N AL0S CR0N]
+      array [CR1S AL1N AM0S CM0N]
 
 call "rally" c3a tag rally
             fudge_to_q_tag left_means_mirror
    setup qtag 1x8 qualifier right wave_only
-      array [CR4S CR5N 0 CR7S 0 0 CCAL6N 0]
+      array [CM4S CR5N 0 CR7S 0 0 CCAL6N 0]
    setup qtag 1x8 qualifier left wave_only
-      array [CR4S CR5N AACR2N 0 0 0 0 AL3S]
+      array [CM4S CR5N AACR2N 0 0 0 0 AL3S]
             alternate_definition [interlocked] c3a
    setup qtag 1x8 qualifier right 2fl_only
-      array [CR4S CR5N 0 0 0 0 CR2N AL3S]
+      array [CM4S CR5N 0 0 0 0 CR2N AL3S]
    setup qtag 1x8 qualifier left 2fl_only
-      array [CR4S CR5N AL6N CR7S 0 0 0 0]
+      array [CM4S CR5N AL6N CR7S 0 0 0 0]
             fudge_to_q_tag left_means_mirror intlk_is_inherited
    conc ctrsrally [inherit_intlk] endsrally [inherit_left conc_demand_columns endscando]
 
 call "_natural rally" dontshow tag natural_rally
             fudge_to_q_tag left_means_touch_or_check
    setup qtag 1x8 qualifier right wave_only
-      array [CR4S CR5N 0 CR7S 0 0 CCAL6N 0]
+      array [CM4S CR5N 0 CR7S 0 0 CCAL6N 0]
    setup qtag 1x8 qualifier left wave_only
-      array [AL1N AL0S AACR2N 0 0 0 0 AL3S]
+      array [AL1N AM0S AACR2N 0 0 0 0 AL3S]
             alternate_definition [interlocked] c3a
    setup qtag 1x8 qualifier right 2fl_only
-      array [CR4S CR5N 0 0 0 0 CR2N AL3S]
+      array [CM4S CR5N 0 0 0 0 CR2N AL3S]
    setup qtag 1x8 qualifier left 2fl_only
-      array [AL1N AL0S AL6N CR7S 0 0 0 0]
+      array [AL1N AM0S AL6N CR7S 0 0 0 0]
             fudge_to_q_tag left_means_mirror intlk_is_inherited
    conc ctrsrally [inherit_intlk] endsrally [inherit_left conc_demand_columns endscando]
 
@@ -26945,9 +26971,6 @@ call "_finish plenty" dontshow tag finishplenty
 
 call "_finish little more" dontshow tag finlilmore
    conc box_circulate_maybe_diamond [] nullcall []
-
-call "_finish nonstd little more" dontshow tag finlilmore_ns
-   conc box_circulate_maybe_diamond [] ctr_rot [conc_force_otherway]
 
 call "little" c1 tag little
             fudge_to_q_tag left_means_mirror
@@ -27000,20 +27023,6 @@ call "_natural little more" dontshow tag natural_lilmore
    seq natural_little [inherit_left inherit_intlk]
    seq finlilmore []
 
-call "_start nonstd little more" dontshow tag startlilmore_ns
-            fudge_to_q_tag left_means_mirror intlk_is_inherited
-   conc stepnfold [inherit_intlk] quarter_right [conc_force_spots inherit_left endscando]
-
-call "_start nonstd little more, ends face @h" dontshow tag startlilmoredir_ns
-            fudge_to_q_tag intlk_is_inherited
-   conc stepnfold [inherit_intlk] quarter_maybe [endscando]
-
-call "little more (nonstandard)" c3
-            fudge_to_q_tag left_means_mirror intlk_is_inherited visible_fractions
-            dont_use_in_resolve
-   seq startlilmore_ns [inherit_intlk inherit_left]
-   seq finlilmore_ns []
-
 call "little more, ends go as you are" c2 tag lilmore_ends_as_are
             fudge_to_q_tag intlk_is_inherited      /* No visible fractions. */
    seq little_ends_as_are [inherit_intlk]
@@ -27023,12 +27032,6 @@ call "little more, ends face @h" c2 tag lilmore_ends_face_dir
             fudge_to_q_tag left_means_mirror intlk_is_inherited visible_fractions
    seq little_ends_face_dir [inherit_left inherit_intlk]
    seq finlilmore []
-
-call "little more, ends face @h (nonstandard)" c3
-            fudge_to_q_tag intlk_is_inherited visible_fractions
-            dont_use_in_resolve
-   seq startlilmoredir_ns [inherit_intlk inherit_left]
-   seq finlilmore_ns []
 
 call "plenty@S" c1 tag plenty
             left_means_mirror intlk_is_inherited visible_fractions

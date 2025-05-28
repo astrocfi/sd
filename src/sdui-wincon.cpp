@@ -588,7 +588,8 @@ extern int get_char()
                   (key == 0xC0) ||                    // Random other keys ...
                   (key >= 0xDB && key <= 0xDE)) {     // Random other keys ...
             ctlbits &= ~SHIFT_PRESSED;
-            if (ctlbits == 0) return c;
+            // Numeric keypad return is same as normal return.
+            if (ctlbits == 0 || (ctlbits == ENHANCED_KEY && key == VK_RETURN)) return c;
             else continue;
          }
          else if (key >= VK_NUMPAD0 && key <= VK_NUMPAD9) {    // Numeric keypad with NUMLOCK on.

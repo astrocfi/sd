@@ -1690,6 +1690,13 @@ concept_descriptor conzept::unsealed_concept_descriptor_table[] = {
     UC_none, s2x2, 8},
    {"@6 PREFERRED FOR TRADE, CHECKERDIAMOND",concept_sel_checkerboard,        D, l_c4a,
     UC_none, sdmd, 8},
+   // Another spelling.
+   {"PREFER THE @6 FOR THE TRADE, CHECKERBOARD",concept_sel_checkerboard,     D, l_c3a,
+    UC_none, s1x4, 8},
+   {"PREFER THE @6 FOR THE TRADE, CHECKERBOX", concept_sel_checkerboard,      D, l_c3a,
+    UC_none, s2x2, 8},
+   {"PREFER THE @6 FOR THE TRADE, CHECKERDIAMOND",concept_sel_checkerboard,   D, l_c4a,
+    UC_none, sdmd, 8},
    {"ORBITBOARD",                            concept_checkerboard,            D, l_c4,
     UC_none, s1x4, 2},
    {"ORBITBOX",                              concept_checkerboard,            D, l_c4,

@@ -355,6 +355,40 @@ void ui_utils::write_nice_number(char indicator, int num)
 }
 
 
+ui_option_type::ui_option_type() :
+   color_scheme(color_by_gender),
+   force_session(-1000000),
+   sequence_num_override(-1),
+   no_graphics(0),
+   no_c3x(false),
+   no_intensify(false),
+   reverse_video(false),
+   pastel_color(false),
+   use_magenta(false),
+   use_cyan(false),
+   singlespace_mode(false),
+   nowarn_mode(false),
+   keep_all_pictures(false),
+   accept_single_click(false),
+   hide_glyph_numbers(false),
+   diagnostic_mode(false),
+   no_sound(false),
+   tab_changes_focus(false),
+   max_print_length(59),
+   resolve_test_minutes(0),
+   singing_call_mode(0),
+   use_escapes_for_drawing_people(0),
+   pn1("11223344"),
+   pn2("BGBGBGBG"),
+   direc("?>?<????^?V?????"),
+   stddirec("?>?<????^?V?????"),
+   squeeze_this_newline(0),
+   drawing_picture(0)
+{}
+
+
+
+
 void ui_utils::writestuff_with_decorations(const call_conc_option_state *cptr, Cstring f, bool is_concept)
 {
    uint32 index = cptr->number_fields;

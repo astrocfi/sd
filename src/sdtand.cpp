@@ -208,6 +208,11 @@ static tm_thing maps_isearch_twosome[] = {
    {{-2, -2, 5, 4, -2, -2, 8, 9,     -2, -2, 2, 3, -2, -2, 11, 10},        0,0,     0,            8, 0,  s1p5x4,s3x4},
    {{10, 11, -2, -2, 6, 7, -2, -2,   0, 1, -2, -2, 4, 5, -2, -2},          0,0,     0,            8, 0,  s1p5x4,s3x4},
 
+   {{0, 1, 2, 4, 6, 11, 8, 9, 10, 12, 13, 15,
+                  -1, -1, -1, -1, 5, 7, -1, -1, -1, -1, 14, 3},            0,0,     0xE8E8,      12, 1,  s3x4,  s4x4},
+   {{12, 13, 14, 0, 2, 7, 4, 5, 6, 8, 9, 11,
+                  -1, -1, -1, -1, 1, 3, -1, -1, -1, -1, 10, 15},           0,0,     0,           12, 0,  s3x4,  s4x4},
+
    // When analyzing, we prefer the 4x6->3x4 formulation.  But we can synthesize
    // from a qtag.
    {{4, 7, 22, 13, 15, 20, 17, 18, 11, 0, 2, 9,
@@ -371,38 +376,30 @@ static tm_thing maps_isearch_twosome[] = {
    // Missing right half.
    {{0, -2, -2, -2, 5, 6,            -1, -2, -2, -2, -1, 7},        0,0200000,     0xC0,       6, 0,  s_bone6,  s_bone},
 
-   {{0, 2, 4, 7, 9, 11,              1, 3, 5, 6, 8, 10},
-    0,0222222,      0x0FFF,     6, 0,  s2x3,  s2x6},
+   {{0, 2, 4, 7, 9, 11,              1, 3, 5, 6, 8, 10},            0,0222222,   0x0FFF,       6, 0,  s2x3,     s2x6},
 
    // The three maps just below must be after the map just above.
-   {{-2, 7, 6, -2, 12, 15,           -2, 2, 5, -2, 17, 16},
-    0,0200200,      0x18060,    6, 0,  s2x3,  s4x5},
-   {{9, 7, -2, 18, 12, -2,           8, 2, -2, 19, 17, -2},
-    0,0002002,      0xC0300,    6, 0,  s2x3,  s4x5},
-   {{3, 6, 8, 10, 11, 1,             4, 5, 7, 9, 0, 2},
-    0,0020020,      03636,      6, 1,  s_short6,  s2x6},
+   {{-2, 7, 6, -2, 12, 15,           -2, 2, 5, -2, 17, 16},         0,0200200,   0x18060,      6, 0,  s2x3,     s4x5},
+   {{9, 7, -2, 18, 12, -2,           8, 2, -2, 19, 17, -2},         0,0002002,   0xC0300,      6, 0,  s2x3,     s4x5},
+   {{3, 6, 8, 10, 11, 1,             4, 5, 7, 9, 0, 2},             0,0020020,     03636,      6, 1,  s_short6, s2x6},
    // This must be after the 2x3/2x6 map above.
-   {{0, 2, 3, 4, 7, 8, 9, 11,        1, -1, -1, 5, 6, -1, -1, 10},
-    0,020022002,     06363,      8, 0,  s2x4, s2x6},
+   {{0, 2, 3, 4, 7, 8, 9, 11,        1, -1, -1, 5, 6, -1, -1, 10},0,020022002,     06363,      8, 0,  s2x4,     s2x6},
 
-   {{10, 7, 8, 5, 0, 3,              11, 6, 9, 4, 1, 2},
-    0,0202202,      00303,      6, 1,  s_short6,  sdeepxwv},
+   {{10, 7, 8, 5, 0, 3,              11, 6, 9, 4, 1, 2},            0,0202202,     00303,      6, 1,  s_short6, sdeepxwv},
 
-   {{-2, 3, 4, -2, 8, 11,           -2, 2, 5, -2, 9, 10},
-    0,0200200,      0xC30,      6, 0,  s2x3,  sbigdmd},
-   {{0, 3, -2, 7, 8, -2,           1, 2, -2, 6, 9, -2},
-    0,0002002,      0x0C3,      6, 0,  s2x3,  sbigdmd},
+   {{-2, 3, 4, -2, 8, 11,           -2, 2, 5, -2, 9, 10},           0,0200200,     0xC30,      6, 0,  s2x3,     sbigdmd},
+   {{0, 3, -2, 7, 8, -2,           1, 2, -2, 6, 9, -2},             0,0002002,     0x0C3,      6, 0,  s2x3,     sbigdmd},
 
-   {{2, 0,                           3, 1},                         0,020,        0xC,        2, 1,  s1x2,  s_trngl4},
-   {{1, 3,                           0, 2},                         0,02,         0xC,        2, 3,  s1x2,  s_trngl4},
-   {{2, 1, 0,                        3, -1, -1},                    0,0,          0xC,        3, 1,  s1x3,  s_trngl4},
-   {{0, 1, 3,                        -1, -1, 2},                    0,0,          0xC,        3, 3,  s1x3,  s_trngl4},
-   {{0, 3, 2,                        -1, 1, -1},                    0,0,          0,          3, 0,  s1x3,  sdmd},
+   {{2, 0,                           3, 1},                         0,020,           0xC,      2, 1,  s1x2,  s_trngl4},
+   {{1, 3,                           0, 2},                         0,02,            0xC,      2, 3,  s1x2,  s_trngl4},
+   {{2, 1, 0,                        3, -1, -1},                    0,0,             0xC,      3, 1,  s1x3,  s_trngl4},
+   {{0, 1, 3,                        -1, -1, 2},                    0,0,             0xC,      3, 3,  s1x3,  s_trngl4},
+   {{0, 3, 2,                        -1, 1, -1},                    0,0,               0,      3, 0,  s1x3,  sdmd},
 
-   {{1, 3, 4, 7, 9, 11,              -1, -1, 5, -1, -1, 10},    0,0200200,      0xC30,        6, 0,  s_ntrgl6cw,  s2x6},
-   {{0, 2, 4, 7, 8, 10,              1, -1, -1, 6, -1, -1},     0,0002002,      0x0C3,        6, 0,  s_ntrgl6ccw, s2x6},
-   {{1, 3, 5, 7, 10, 11,              -1, 4, -1, -1, 9, -1},    0,0020020,      0x618,        6, 0,  s_ntrgl6cw,  s2x6},
-   {{0, 1, 4, 6, 8, 10,              -1, 2, -1, -1, 7, -1},     0,0020020,      0x186,        6, 0,  s_ntrgl6ccw, s2x6},
+   {{1, 3, 4, 7, 9, 11,              -1, -1, 5, -1, -1, 10},        0,0200200,     0xC30,        6, 0,  s_ntrgl6cw,  s2x6},
+   {{0, 2, 4, 7, 8, 10,              1, -1, -1, 6, -1, -1},         0,0002002,     0x0C3,        6, 0,  s_ntrgl6ccw, s2x6},
+   {{1, 3, 5, 7, 10, 11,              -1, 4, -1, -1, 9, -1},        0,0020020,     0x618,        6, 0,  s_ntrgl6cw,  s2x6},
+   {{0, 1, 4, 6, 8, 10,              -1, 2, -1, -1, 7, -1},         0,0020020,     0x186,        6, 0,  s_ntrgl6ccw, s2x6},
 
    // This map must be very late, after the two that do 2x4->4x4
    // and the one that does 2x4->2x8.
@@ -1210,10 +1207,11 @@ bool tandrec::pack_us(
             // as "split phantom lines").  If we get here, such a concept was not used.
             // We forbid a live person paired with a phantom.  Additionally, we forbid
             // ANY PERSON AT ALL to be a phantom, even if paired with another phantom,
-            // except in the special case of a virtual 2x3.
+            // except in the special case of a virtual 2x3 or 3x4.
 
             if (!(andpeople1 & BIT_PERSON)) {
-               if (orpeople1 || (m_virtual_setup[0].kind != s2x3 && key != tandem_key_siam))
+               if (orpeople1 || (m_virtual_setup[0].kind != s2x3 && m_virtual_setup[0].kind != s3x4 &&
+                                 key != tandem_key_siam))
                   m_maybe_raise_phantom_warning = true;
             }
          }
@@ -1399,7 +1397,14 @@ extern void tandem_couples_move(
    // relative, so it needs to be compensated.
 
    uint32 prior = ss->cmd.prior_elongation_bits;
-   if (((prior+1) & 2) != 0 && (ss->rotation & 1)) prior ^= 3;
+
+   if (ss->rotation & 1) {
+      if (((prior+1) & 2) != 0)
+         prior ^= 3;
+
+      if (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK)
+         ss->cmd.cmd_misc_flags ^= CMD_MISC__MUST_SPLIT_MASK;
+   }
 
    // Look for very special cases of selectors that specify triangles and concepts
    // that work with same.  The triangle designators are:

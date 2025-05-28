@@ -5,7 +5,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2013  William B. Ackerman.
+//    Copyright (C) 1990-2019  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -36,14 +36,24 @@
 //
 //    ===================================================================
 //
-//    This is for version 38.
+//    This is for version 39.
+
+#if defined(WIN32)
+#if defined(SDLIB_EXPORTS)
+#define SDLIB_API __declspec(dllexport)
+#else
+#define SDLIB_API __declspec(dllimport)
+#endif
+#else
+#define SDLIB_API
+#endif
 
 #include <stdio.h>
 #include <string.h>
 
 
 #include "database.h"
-#include "sdbase.h"
+#include "sdchars.h"
 
 
 enum {
@@ -101,59 +111,6 @@ enum { MAX_RESOLVE_SIZE = 5 };
 // when printing.  It defaults to 59 (for printing in 14-point Courier on 8.5 by 11 paper),
 // but can be overridden by the user at startup.
 
-
-// Codes for special accelerator keystrokes.
-
-// Function keys can be plain, shifted, control, alt, or control-alt.
-
-enum {
-   FKEY = 128,
-   SFKEY = 144,
-   CFKEY = 160,
-   AFKEY = 176,
-   CAFKEY = 192,
-
-   // "Enhanced" keys can be plain, shifted, control, alt, or control-alt.
-   // e1 = page up
-   // e2 = page down
-   // e3 = end
-   // e4 = home
-   // e5 = left arrow
-   // e6 = up arrow
-   // e7 = right arrow
-   // e8 = down arrow
-   // e13 = insert
-   // e14 = delete
-
-   EKEY = 208,
-   SEKEY = 224,
-   CEKEY = 240,
-   AEKEY = 256,
-   CAEKEY = 272,
-
-   // Digits can be control, alt, or control-alt.
-
-   CTLDIG = 288,
-   ALTDIG = 298,
-   CTLALTDIG = 308,
-
-   // Numeric keypad can be control, alt, or control-alt.
-
-   CTLNKP = 318,
-   ALTNKP = 328,
-   CTLALTNKP = 338,
-
-   // Letters can be control, alt, or control-alt.
-
-   CTLLET = (348-'A'),
-   ALTLET = (374-'A'),
-   CTLALTLET = (400-'A'),
-
-   CLOSEPROGRAMKEY = 426,
-
-   FCN_KEY_TAB_LOW = (FKEY+1),
-   FCN_KEY_TAB_LAST = CLOSEPROGRAMKEY
-};
 
 // This allows numbers from 0 to 36, inclusive.
 enum {
@@ -236,84 +193,6 @@ enum color_scheme_type {
    color_by_couple_rgyb,
    color_by_couple_ygrb,
    color_by_couple_random
-};
-
-class ui_option_type {
- public:
-   color_scheme_type color_scheme;
-   int force_session;
-   int sequence_num_override;
-   int no_graphics;       // 1 = "no_checkers"; 2 = "no_graphics"
-   bool no_c3x;
-   bool no_intensify;
-   bool reverse_video;    // T = white-on-black; F = black-on-white.
-   bool pastel_color;     // T = use pastel red/blue for color by gender.
-                          // F = bold colors.  Color by couple or color by corner
-                          // are always done with bold colors.
-   bool use_magenta;      // These two override the above on a case-by-case basis.
-   bool use_cyan;
-   bool singlespace_mode;
-   bool nowarn_mode;
-   bool keep_all_pictures;
-   bool accept_single_click;
-   bool hide_glyph_numbers;
-   bool diagnostic_mode;
-   bool no_sound;
-   bool tab_changes_focus;
-
-   // This is the line length beyond which we will take pity on
-   // whatever device has to print the result, and break the text line.
-   // It is presumably smaller than our internal text capacity.
-   // It is an observed fact that, with the default font (14 point Courier),
-   // one can print 66 characters on 8.5 x 11 inch paper.
-   // This is 59 by default.
-   int max_print_length;
-
-   // This is for the hidden command-line switch "resolve_test <N>".  Any
-   // nonzero argument will seed the random number generator with that value,
-   // thereby making all search operations deterministic.  (The random number
-   // generator is normally seeded with the clock, of course.)
-   //
-   // Also, if the number is positive, it makes all search operations fail, and
-   // sets the timeout to that many minutes.  This can be used for testing for
-   // crashes in the resolve searcher.  Give an argument of 60, for example, and
-   // any search command ("resolve", "pick random call", etc.) will generate
-   // random solutions for an hour, rejecting them all.  Doing this on multiple
-   // processors, with slightly different arguments, will run separate
-   // deterministic tests on each processor.
-   int resolve_test_minutes;
-
-   int singing_call_mode;
-
-   // This gets set if a user interface (e.g. sdui-tty/sdui-win) wants escape sequences
-   // for drawing people, so that it can fill in funny characters, or draw in color.
-   // This applies only to calls to add_new_line with a nonzero second argument.
-   //
-   // 0 means don't use any funny stuff.  The text strings transmitted when drawing
-   // setups are completely plain ASCII.
-   //
-   // 1 means use escapes for the people themselves (13 octal followed by a byte of
-   // person identifier followed by a byte of direction) but don't use the special
-   // spacing characters.  All spacing and formatting is done with spaces.
-   //
-   // 2 means use escapes and other special characters.  Whenever the second arg to
-   // add_new_line is nonzero, then in addition to the escape sequences for the
-   // people themselves, we have an escape sequence for a phantom, and certain
-   // characters have special meaning:  5 means space 1/2 of a glyph width, etc.
-   // See the definition of newline for details.
-   int use_escapes_for_drawing_people;
-
-   // These could get changed if the user requests special naming.  See "alternate_glyphs_1"
-   // in the command-line switch parser in sdsi.cpp.
-   const char *pn1;       // 1st char (1/2/3/4) of what we use to print person.
-   const char *pn2;       // 2nd char (B/G) of what we use to print person.
-   const char *direc;     // 3rd char (direction arrow) of what we use to print person.
-   const char *stddirec;  // the "standard" directions, for transcript files.
-                          // Doesn't get overridden by any options.
-   int squeeze_this_newline;  // randomly used by printing stuff.
-   int drawing_picture;       // randomly used by printing stuff.
-
-   ui_option_type();      // Constructor is in sdmain.
 };
 
 
@@ -504,23 +383,6 @@ public:
 
 
 extern SDLIB_API parse_state_type parse_state;                      /* in SDTOP */
-extern SDLIB_API ui_option_type ui_options;                         /* in SDTOP */
-
-extern SDLIB_API int *color_index_list;                             /* in SDINIT */
-extern SDLIB_API int color_randomizer[4];                           /* in SDINIT */
-
-extern SDLIB_API const concept_kind constant_with_concept_diagnose; /* in SDTOP */
-extern SDLIB_API const concept_kind constant_with_marker_end_of_list;/* in SDTOP */
-extern SDLIB_API int last_direction_kind;                           /* in SDTOP */
-extern SDLIB_API char database_version[81];                         /* in SDTOP */
-extern SDLIB_API bool testing_fidelity;                             /* in SDTOP */
-extern SDLIB_API bool allowing_minigrand;                           /* in SDTOP */
-extern SDLIB_API bool allow_bend_home_getout;                       /* in SDTOP */
-extern SDLIB_API call_conc_option_state verify_options;             /* in SDTOP */
-extern SDLIB_API bool verify_used_number;                           /* in SDTOP */
-extern SDLIB_API bool verify_used_direction;                        /* in SDTOP */
-extern SDLIB_API bool verify_used_selector;                         /* in SDTOP */
-
 
 struct comment_block {
    char txt[MAX_TEXT_LINE_LENGTH];

@@ -3433,6 +3433,8 @@ extern void concentric_move(
          begin_ptr->cmd.cmd_final_flags = cmdptr->cmd_final_flags;
          begin_ptr->cmd.cmd_fraction = cmdptr->cmd_fraction;
          begin_ptr->cmd.restrained_fraction = cmdptr->restrained_fraction;
+         begin_ptr->cmd.cmd_misc_flags &= ~CMD_MISC__VERIFY_MASK;
+         begin_ptr->cmd.cmd_misc_flags |= (CMD_MISC__VERIFY_MASK & cmdptr->cmd_misc_flags);
 
          // If a restrained fraction got promoted, turn off this flag.
          if (begin_ptr->cmd.restrained_fraction.fraction != 0 && cmdptr->restrained_fraction.fraction == 0)
@@ -6686,15 +6688,38 @@ extern void inner_selective_move(
                goto do_concentric_ctrs;
             if (local_selector == selector_outer6)
                goto do_concentric_ends;
-            schema = schema_concentric_diamond_line;
-            // Why not include selector_center_col?  Because people are accustomed to thinking
-            // of a wave or line as 4 people.  Not so much for a column.  If you want the center
-            // column of 4, say "center 1x4".
-            if (ss->kind == s3x1dmd &&
-                (local_selector == selector_ctr_1x4 ||
-                 local_selector == selector_center_wave ||
-                 local_selector == selector_center_line))
-               goto do_concentric_ctrs;
+            if (ss->kind == s3x1dmd) {
+               schema = schema_concentric_diamond_line;
+
+               switch (local_selector) {
+               case selector_ctr_1x4:
+                  goto do_concentric_ctrs;
+               case selector_center_line:
+                  cmd1->cmd_misc_flags |= CMD_MISC__VERIFY_LINES;
+                  goto do_concentric_ctrs;
+               case selector_center_wave:
+                  cmd1->cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
+                  goto do_concentric_ctrs;
+               case selector_center_col:
+                  cmd1->cmd_misc_flags |= CMD_MISC__VERIFY_COLS;
+                  goto do_concentric_ctrs;
+               }
+
+               schema = schema_concentric_6_2_line;
+               switch (local_selector) {
+               case selector_ctr_1x6:
+                  goto do_concentric_ctrs;
+               case selector_center_line_of_6:
+                  cmd1->cmd_misc_flags |= CMD_MISC__VERIFY_LINES;
+                  goto do_concentric_ctrs;
+               case selector_center_wave_of_6:
+                  cmd1->cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
+                  goto do_concentric_ctrs;
+               case selector_center_col_of_6:
+                  cmd1->cmd_misc_flags |= CMD_MISC__VERIFY_COLS;
+                  goto do_concentric_ctrs;
+               }
+            }
          }
 
          schema = schema_concentric;
@@ -8005,8 +8030,6 @@ extern void inner_selective_move(
    if (attr::slimit(ss) > 7 &&
        ss->kind != sd2x5 &&
        ss->kind != s2x5 &&
-       //       ss->kind != sd3x4 &&
-       //       ss->kind != s4x5 &&
        indicator == selective_key_plain &&
        others <= 0)
       goto back_here;

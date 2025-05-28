@@ -1165,6 +1165,8 @@ popup_return iofull::get_popup_string(Cstring prompt1, Cstring prompt2, Cstring 
    return PopupStatus;
 }
 
+// This is the top-level entry for Sd, on Windows.  The OS should invoke this
+// when the command is given.
 int WINAPI WinMain(
    HINSTANCE hInstance,
    HINSTANCE hPrevInstance,

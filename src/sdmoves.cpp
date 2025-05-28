@@ -1156,7 +1156,17 @@ extern uint32 do_call_in_series(
          qqqq.cmd.cmd_misc3_flags &= ~CMD_MISC3__RESTRAIN_CRAZINESS;
          qqqq.cmd.restrained_fraction = qqqq.cmd.cmd_fraction;
          qqqq.cmd.cmd_fraction.set_to_null();
+      }
+   }
 
+   if (qqqq.cmd.cmd_misc3_flags & CMD_MISC3__RESTRAIN_CRAZINESS &&
+       (qqqq.cmd.cmd_fraction.flags & CMD_FRAC_CODE_MASK) == CMD_FRAC_CODE_ONLY) {
+      if (qqqq.cmd.restrained_concept->concept->kind == concept_dbl_frac_crazy) {
+         qqqq.cmd.cmd_misc3_flags &= ~CMD_MISC3__RESTRAIN_CRAZINESS;
+         qqqq.cmd.parseptr = qqqq.cmd.restrained_concept;
+         qqqq.cmd.restrained_concept = 0;
+         qqqq.cmd.restrained_fraction = qqqq.cmd.cmd_fraction;
+         qqqq.cmd.cmd_fraction.set_to_null();
       }
    }
 
@@ -4091,15 +4101,10 @@ extern bool get_real_subcall(
    return true;
 }
 
-static void promote_restrained_fraction(const by_def_item *source_def, setup_command *result_obj) {
+static void anycall_promote_restrained_fraction(const by_def_item *source_def, setup_command *result_obj) {
    if (((source_def->modifiers1 & DFM1_CALL_MOD_MASK) == DFM1_CALL_MOD_MAND_ANYCALL) ||
        ((source_def->modifiers1 & DFM1_CALL_MOD_MASK) == DFM1_CALL_MOD_MAND_SECONDARY)) {
-      // Promote a restrained fraction.
-      if (result_obj->restrained_fraction.fraction != 0) {
-         result_obj->cmd_fraction = result_obj->restrained_fraction;
-         result_obj->restrained_fraction.flags = 0;
-         result_obj->restrained_fraction.fraction = 0;
-      }
+      result_obj->promote_restrained_fraction();
    }
 }
 
@@ -4877,8 +4882,7 @@ void fraction_info::get_fraction_info(
           m_do_last_half_of_first_part != 0 ||
           m_do_half_of_last_part != (fracfrac) 0)
          fail("Can't do this.");
-
-      if ((*restrained_concept_p)->concept->kind == concept_meta &&
+      else if ((*restrained_concept_p)->concept->kind == concept_meta &&
           (*restrained_concept_p)->concept->arg1 == meta_key_revorder) {
          // Swap my_start_point and m_end_point.  They are inclusive integer limits.
          int t = my_start_point;
@@ -5915,11 +5919,8 @@ static void do_sequential_call(
       }
 
       if ((result->cmd.cmd_misc2_flags & CMD_MISC2_RESTRAINED_SUPER) &&
-          (this_mod1 & DFM1_CALL_MOD_MAND_ANYCALL) &&
-          (result->cmd.restrained_fraction.fraction)) {
-         result->cmd.cmd_fraction = result->cmd.restrained_fraction;
-         result->cmd.restrained_fraction.flags = 0;
-         result->cmd.restrained_fraction.fraction = 0;
+          (this_mod1 & DFM1_CALL_MOD_MAND_ANYCALL)) {
+         result->cmd.promote_restrained_fraction();
       }
 
       if (doing_weird_revert == weirdness_otherstuff) {
@@ -6048,9 +6049,9 @@ static bool do_misc_schema(
                     &ss->cmd, callspec, false, 0, &foo2);
 
    foo1p->cmd_fraction = ss->cmd.cmd_fraction;
-   promote_restrained_fraction(innerdef, foo1p);
+   anycall_promote_restrained_fraction(innerdef, foo1p);
    foo2.cmd_fraction = ss->cmd.cmd_fraction;
-   promote_restrained_fraction(outerdef, &foo2);
+   anycall_promote_restrained_fraction(outerdef, &foo2);
    ss->cmd.cmd_misc3_flags |= CMD_MISC3__DOING_YOUR_PART;
 
    if (the_schema == schema_select_leads) {
@@ -7987,10 +7988,8 @@ static void move_with_real_call(
                                nxnflags == INHERITFLAGNXNK_3X3)) ||
              ((limits == 15 && nxnflags == INHERITFLAGNXNK_4X4))) {
             if (!(ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK)) {
-               if (ss->rotation & 1)
-                  ss->cmd.cmd_misc_flags |= CMD_MISC__MUST_SPLIT_VERT;
-               else
-                  ss->cmd.cmd_misc_flags |= CMD_MISC__MUST_SPLIT_HORIZ;
+               ss->cmd.cmd_misc_flags |= (ss->rotation & 1) ?
+                  CMD_MISC__MUST_SPLIT_VERT : CMD_MISC__MUST_SPLIT_HORIZ;
             }
          }
          else if (ss->kind == s3x4) {

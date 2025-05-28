@@ -1233,19 +1233,6 @@ extern void prepare_to_read_menus()
    else if (UINT16_C(~0) != 0xFFFF)          // Do it this way also.
       gg77->iob88.fatal_error_exit(1, "Incorrect type coercion 2", "program has been compiled incorrectly.");
 
-   // We need to take away the "zig-zag" directions if the level is below A2, and "the music" if below C3A.
-
-   if (calling_level < zig_zag_level) {
-      last_direction_kind = direction_zigzag-1;
-      direction_names[direction_zigzag].name = (Cstring) 0;
-      direction_names[direction_zigzag].name_uc = (Cstring) 0;
-   }
-   else if (calling_level < face_the_music_level) {
-      last_direction_kind = direction_the_music-1;
-      direction_names[direction_the_music].name = (Cstring) 0;
-      direction_names[direction_the_music].name_uc = (Cstring) 0;
-   }
-
    if (glob_abridge_mode < abridge_mode_writing_only) {   // Not writing out a list, actually running the program.
       int i;
 
@@ -2982,6 +2969,20 @@ bool open_session(int argc, char **argv)
    }
 
    close_init_file();
+
+   // We need to take away the "zig-zag" directions if the level is below A2, and "the music" if below C3A.
+
+   if (calling_level < zig_zag_level) {
+      last_direction_kind = direction_zigzag-1;
+      direction_names[direction_zigzag].name = (Cstring) 0;
+      direction_names[direction_zigzag].name_uc = (Cstring) 0;
+   }
+   else if (calling_level < face_the_music_level) {
+      last_direction_kind = direction_the_music-1;
+      direction_names[direction_the_music].name = (Cstring) 0;
+      direction_names[direction_the_music].name_uc = (Cstring) 0;
+   }
+
    gg77->iob88.final_initialize();
    return false;
 }

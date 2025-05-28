@@ -119,6 +119,14 @@ SOURCE=.\sd.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\sdchars.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\sdmatch.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\sdbasic.cpp
 # End Source File
 # Begin Source File

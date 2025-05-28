@@ -32,9 +32,52 @@
 #include <stdio.h>  /* for sprintf */
 #include <ctype.h>  /* for tolower */
 
-// The definitions of "matcher_class" and "pat2_block" are in sdui.h.
+// The definition of "matcher_class" is in sdmatch.h.
+// The definition of "pat2_block" is in sdui.h.
 
 #include "sd.h"
+#include "sdmatch.h"
+
+
+// Constructor.
+matcher_class::matcher_class() : s_modifier_active_list((modifier_block *) 0),
+                                 s_modifier_inactive_list((modifier_block *) 0),
+                                 m_abbrev_table_normal((abbrev_block *) 0),
+                                 m_abbrev_table_start((abbrev_block *) 0),
+                                 m_abbrev_table_resolve((abbrev_block *) 0)
+{
+   // These lists are allocated to size NUM_NAME_HASH_BUCKETS+2.
+   // So they will have two extra items at the end:
+   //   The first is for calls whose names can't be hashed.
+   //   The second is the bucket that any string starting with left bracket hashes to.
+
+   call_hashers = new index_list[NUM_NAME_HASH_BUCKETS+2];
+   conc_hashers = new index_list[NUM_NAME_HASH_BUCKETS+2];
+   conclvl_hashers = new index_list[NUM_NAME_HASH_BUCKETS+2];
+
+   m_fcn_key_table_normal = new modifier_block *[FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1];
+   m_fcn_key_table_start = new modifier_block *[FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1];
+   m_fcn_key_table_resolve = new modifier_block *[FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1];
+
+   ::memset(m_fcn_key_table_normal, 0,
+            sizeof(modifier_block *) * (FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1));
+   ::memset(m_fcn_key_table_start, 0,
+            sizeof(modifier_block *) * (FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1));
+   ::memset(m_fcn_key_table_resolve, 0,
+            sizeof(modifier_block *) * (FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1));
+}
+
+// Destructor.
+matcher_class::~matcher_class()
+{
+   delete [] call_hashers;
+   delete [] conc_hashers;
+   delete [] conclvl_hashers;
+
+   delete [] m_fcn_key_table_normal;
+   delete [] m_fcn_key_table_start;
+   delete [] m_fcn_key_table_resolve;
+}
 
 
 

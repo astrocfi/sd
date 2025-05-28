@@ -241,7 +241,7 @@ chmod 775 *.sh
 ./doit.sh
 
 
-Now, in directory ~/wba, do:
+Now, in directory ~/sd, do:
 
 sftp USERNAME@www.challengedance.org
   challengedance.org> (P=PASSWORD)
@@ -294,7 +294,7 @@ install                                  *
              THIS NO LONGER WORKS ON WINDOZE.
     BRING THE FILE (and sd_source too) OVER TO UBUNTU.
 -----------------------------------------------------------------
-Now, in directory ~/wba/vNNNN, do:
+Now, in directory ~/vNNNN, do:
 
 sftp USERNAME@www.challengedance.org
   challengedance.org> (P=PASSWORD)

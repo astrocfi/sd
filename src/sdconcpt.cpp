@@ -3749,6 +3749,7 @@ static void do_concept_crazy(
 
    // Lift the craziness restraint from before -- we are about to pull things apart.
    cmd.cmd_misc3_flags &= ~CMD_MISC3__RESTRAIN_CRAZINESS;
+   cmd.promote_restrained_fraction();
 
    if (parseptr->concept->arg3 == 1)   // Handle "crazy Z's".
       cmd.cmd_misc3_flags |= CMD_MISC3__IMPOSE_Z_CONCEPT;
@@ -3784,7 +3785,6 @@ static void do_concept_crazy(
 
          if (attr::klimit(tempsetup.kind) < 7) {
             if (tempsetup.cmd.prior_elongation_bits & PRIOR_ELONG_BASE_FOR_TANDEM) {
-               warn(warn__crazy_tandem_interaction);
                sel.who[0] = selector_center2;
             }
             else
@@ -3804,7 +3804,6 @@ static void do_concept_crazy(
 
          if (attr::klimit(tempsetup.kind) < 7) {
             if (tempsetup.kind == s2x2 && (tempsetup.cmd.prior_elongation_bits & (PRIOR_ELONG_BASE_FOR_TANDEM*3))) {
-               warn(warn__crazy_tandem_interaction);
                tempsetup.cmd.cmd_misc_flags |=
                   (tempsetup.cmd.prior_elongation_bits & (PRIOR_ELONG_BASE_FOR_TANDEM*2)) ?
                   CMD_MISC__MUST_SPLIT_VERT :
@@ -4833,9 +4832,7 @@ static bool prepare_for_call_under_repetition(
       result->cmd.cmd_fraction.fraction = yyy->m_do_half_of_last_part;
    }
    else if (result->cmd.restrained_fraction.fraction) {
-      result->cmd.cmd_fraction = result->cmd.restrained_fraction;
-      result->cmd.restrained_fraction.flags = 0;
-      result->cmd.restrained_fraction.fraction = 0;
+      result->cmd.promote_restrained_fraction();
    }
    else
       result->cmd.cmd_fraction.set_to_null();  // No fractions to constituent call.
@@ -7333,19 +7330,33 @@ static void do_concept_meta(
                result->cmd.cmd_fraction.set_to_null();
                goto finish_it;
             }
-            else if (!result->cmd.cmd_fraction.is_null())
-               fail("Can't stack meta or fractional concepts this way.");
          }
 
-         // Do the call without the concept.
-         result->cmd = nocmd;
-         do_call_in_series_and_update_bits(result);
+         if (!corefracs.is_null() || !result->cmd.cmd_fraction.is_null())
+            fail("Can't stack meta or fractional concepts this way.");
 
-         // And then again with it.
-         result->cmd = yescmd;
+         {
+            parse_block *nosave = nocmd.parseptr;
 
-         // Assumptions don't carry through.
-         result->cmd.cmd_assume.assumption = cr_none;
+            while (concept_option_code > 0) {
+               for (int nn = concept_option_code; nn > 1 ; nn--) {
+                  skipped_concept_info foo2(nocmd.parseptr);
+                  nocmd.parseptr = foo2.m_result_of_skip;
+               }
+
+               result->cmd = nocmd;
+               do_call_in_series_and_update_bits(result);
+               nocmd.parseptr = nosave;
+
+               concept_option_code--;
+            }
+
+            result->cmd = yescmd;
+
+            // Assumptions don't carry through.
+            result->cmd.cmd_assume.assumption = cr_none;
+         }
+
          goto finish_it;
 
       case meta_key_randomize:

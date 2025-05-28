@@ -536,7 +536,6 @@ Cstring warning_strings[] = {
    /*  warn__cant_track_phantoms */   "*The phantoms may not have been tracked correctly.",
    /*  warn__6peoplestretched    */   "*6 people stretched.",
    /*  warn__did_weird_stretch_response */"*Forced a smaller setup for 'stretch', this may be controversial.",
-   /*  warn__crazy_tandem_interaction */  "*Using \"crazy\" on decomposed tandem-like operation.",
    /*  warn__mimic_ambiguity_checked */"*The mimic was ambiguous, but the result is the same either way.",
    /*  warn__mimic_ambiguity_resolved */"*The mimic was ambiguous, but only one assumption works.",
    /*  warn__diagnostic          */   "*This is a diagnostic warning and should never arise."};

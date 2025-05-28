@@ -1,7 +1,7 @@
 \input texinfo @c %**start of header -*-texinfo-*-
 @setfilename relnotes.info
 @settitle Sd Release Notes
-@c Time-stamp: <21 Jan 2019 wba>
+@c Time-stamp: <5 Sep 2019 wba>
 @iftex
 @headings off
 @oddheading @| @| @thispage
@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 39.09
-@set title2 Database version = 39.09 format = 360
+@set title1 RELEASE NOTES FOR VERSION 39.10
+@set title2 Database version = 39.10 format = 360
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 39.10::
 * 39.09::
 * 39.08::
 * 39.07::
@@ -106,7 +107,7 @@ and @file{relnotes98.txi} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 39.09, Top, (dir)
+@node Intro, 39.10, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -117,11 +118,34 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2019 William B. Ackerman
 @sp 3
 @menu
-* 39.09::               Changes in the current version
+* 39.10::               Changes in the current version
 @end menu
 
 @c ************
-@node 39.09, 39.08, Intro, Top
+@node 39.10, 39.09, Intro, Top
+@unnumberedsec Version 39.10 changes
+
+The ``nonstandard'' version of @strong{little more} was removed.  This
+had been put in 20 years ago, in version 32.9, in response to the
+belief, by some, that @strong{little more} had two parts for the ends:
+1/4 Right and Counter Rotate, and two parts for the centers: Step &
+Fold and Circulate.  That was wrong then and it is wrong now.  The
+call has two parts: @strong{little} (centers Step & Fold while the
+ends do two subparts) and then centers Circulate while the ends do
+nothing.)
+
+The warning "Using 'crazy' on decomposed tandem-like operation." has
+been removed.  It dates from a time when that kind of intricacy was
+not generally accepted usage.  It is now commonplace.
+
+The general notion that @strong{but} replaces the last thing that the centers do
+has been moved down from C3B down to C3A.
+
+In addition to the wording @strong{<anyone> PREFERRED FOR TRADE, CHECKERBOARD/BOX/DIAMOND} the program
+now allows @strong{PREFER THE <anyone> FOR THE TRADE, CHECKERBOARD/BOX/DIAMOND}.
+
+@c ************
+@node 39.09, 39.08, 39.10, Top
 @unnumberedsec Version 39.09 changes
 
 The calls database has been updated to reflect the recent changes to the call lists.
