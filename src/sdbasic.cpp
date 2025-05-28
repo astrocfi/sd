@@ -6567,6 +6567,8 @@ foobar:
                   matrix_check_flagr = INHERITFLAGR_16_MATRIX;
                }
             }
+
+            newtb = or_all_people(ss);
          }
 
          search_concepts_without_funny.clear_bits_rl(matrix_check_flagr, 0);

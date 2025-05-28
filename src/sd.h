@@ -4032,7 +4032,7 @@ class configuration {
    inline static configuration & current_config() { return history[config_history_ptr]; }
    inline static configuration & next_config() { return history[config_history_ptr+1]; }
 
-   inline static int concepts_in_place()
+   inline static bool concepts_in_place()
       { return next_config().command_root != 0; }
 
    inline void init_centersp_specific() { startinfoindex = 0; }
@@ -5163,9 +5163,6 @@ extern bool selectp(const setup *ss, int place, int allow_some = 0) THROW_DECL;
 
 /* In SDGETOUT */
 
-extern int concepts_in_place();
-extern int resolve_command_ok();
-extern int nice_setup_command_ok();
 void initialize_getout_tables();
 
 

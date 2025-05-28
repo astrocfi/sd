@@ -41,9 +41,6 @@
    configuration::calculate_resolve
    write_resolve_text
    full_resolve
-   configuration::concepts_in_place
-   resolve_command_ok
-   nice_setup_command_ok
    create_resolve_menu_title
    initialize_getout_tables
 */
@@ -1728,12 +1725,13 @@ static bool reconcile_command_ok()
    return (current_reconciler != 0);
 }
 
-extern int resolve_command_ok(void)
+static bool resolve_command_ok()
 {
-   return attr::klimit(configuration::current_config().state.kind) == 7;
+   int n = attr::klimit(configuration::current_config().state.kind);
+   return n == 7 || (two_couple_calling && n == 3);
 }
 
-extern int nice_setup_command_ok(void)
+static bool nice_setup_command_ok()
 {
    int i, k;
    bool setup_ok = false;
@@ -1805,20 +1803,17 @@ uims_reply_thing ui_utils::full_resolve()
 
    // See if we are in a reasonable position to do the search.
 
-   if (two_couple_calling)
-      specialfail("You need to do your own at-home getouts.");
-
    switch (search_goal) {
       case command_resolve:
          if (!resolve_command_ok())
             specialfail("Not in acceptable setup for resolve.");
          break;
       case command_standardize:
-         if (!resolve_command_ok())
+         if (!resolve_command_ok() || two_couple_calling)
             specialfail("Not in acceptable setup for standardize.");
          break;
       case command_reconcile:
-         if (!reconcile_command_ok())
+         if (!reconcile_command_ok() || two_couple_calling)
             specialfail("Not in acceptable setup for reconcile, or sequence is too short, or concepts are selected.");
 
          {
@@ -1834,7 +1829,7 @@ uims_reply_thing ui_utils::full_resolve()
                                              // we wait for the user to set the depth.
          break;
       case command_normalize:
-         if (!nice_setup_command_ok())
+         if (!nice_setup_command_ok() || two_couple_calling)
             specialfail("Sorry, can't do this: concepts are already selected, or no applicable concepts are available.");
          break;
    }
