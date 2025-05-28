@@ -700,6 +700,21 @@ bigdmd                  |_____|
                         |_____|
 
 
+                   _____             _____
+                  |     |           |     |
+                  |  5  |           |  6  |
+                  |_____|           |_____|
+             _____|     |_____ _____|     |_____
+            |     |  4  |     |     |  7  |     |
+bigptpd     |  2  |_____|  3  |  9  |_____|  8  |
+            |_____|     |_____|_____|     |_____|
+                  |  1  |           | 10  |
+                  |_____|           |_____|
+                  |     |           |     |
+                  |  0  |           | 11  |
+                  |_____|           |_____|
+
+
 
                             _____
                            |     |
@@ -1722,7 +1737,7 @@ tandem_side_of_in_3n1_col
 antitandem_side_of_out_3n1_col
 tandem_side_of_out_3n1_col
       apply to 1x4, 2x4, or 1x8 columns only.  These are similar to the above,
-      except that everyone must be in columns.  The "antitandem side" is anologous
+      except that everyone must be in columns.  The "antitandem side" is analogous
       to the "couple" side -- it contains the person facing the opposite
       direction from the other 3, and hence the two people on that side are
       either facing each other or are back-to-back.  The "tandem side" has
@@ -1742,6 +1757,13 @@ couple_side_of_2n1_line
       phantoms -- all 6 people must be present.  If not, or if the setup is not
       completely symmetrical, FALSE is returned.  These will malfunction if any
       person is in column orientation.
+
+antitandem_side_of_2n1_col
+tandem_side_of_2n1_col
+      apply to 1x6 or 2x3 columns only.  These are similar to the above,
+      except that everyone must be in columns.  The "antitandem side" is
+      analogous to the "couple" side, and the "tandem side" is analogous
+      to the "miniwave" side.
 
 cast_normal
       applies to 1x2, 1x4, or 1x6 lines only.
@@ -2280,11 +2302,12 @@ There are a number of internal ones not shown here.  See the file ~/sd/restricti
    4x4_2fl_only,                 /* 1x8/2x8 - "2-faced lines" of 4 facing one way, 4 the other */
    leads_only,                   /* 2x2 - all people are leads, and not T-boned */
    trailers_only,                /* 2x2 - all people are trailers, and not T-boned */
-   couples_only,                 /* 1x2 or 1x4 or 1x8 or 2x2 or 2x4 lines, or 2x4 columns - people are in genuine couples, not miniwaves */
-   miniwaves,                       1x2/1x4/1x6/1x8, 2x4 (lines/cols), 2x2, dmd, qtag, ptpd, trngl - people
+   couples_only,                 /* 1x2/1x4/1x8, 2x4 (lines/cols), 2x2, qtag, bone - people
+                                       are paired in genuine couples, not miniwaves.
+                                       For qtags, and bones, this applies just to the centers.
+   miniwaves,                       1x2/1x4/1x6/1x8, 2x4 (lines/cols), 2x2, dmd, qtag, bone, ptpd, trngl - people
                                        are paired in miniwaves of various handedness.
-                                       This ignores
-                                       For diamonds and qtags, this applies just to the centers.
+                                       For diamonds, qtags, and bones, this applies just to the centers.
                                        For triangles, it applies just to the base.
                                        So this includes waves, inverted lines, columns,
                                        magic columns, diamonds, wave-based triangles...

@@ -611,27 +611,28 @@ Private void do_concept_parallelogram(
    parse_block *parseptr,
    setup *result)
 {
-   mpkind mk;
+   mpkind mk, mkbox;
    parse_block *next_parseptr;
    uint64 junk_concepts;
    uint32 map_code;
    parse_block *standard_concept = (parse_block *) 0;
 
    if (ss->kind == s2x6) {
-      if (global_livemask == 07474) mk = MPKIND__OFFS_R_HALF;
-      else if (global_livemask == 01717) mk = MPKIND__OFFS_L_HALF;
+      if (global_livemask == 07474) { mk = MPKIND__OFFS_R_HALF; mkbox = MPKIND__OFFS_R_HALF_SPECIAL; }
+      else if (global_livemask == 01717) { mk = MPKIND__OFFS_L_HALF; mkbox = MPKIND__OFFS_L_HALF_SPECIAL; }
       else fail("Can't find a parallelogram.");
    }
    else if (ss->kind == s2x8) {
       warn(warn__full_pgram);
-      if (global_livemask == 0xF0F0) mk = MPKIND__OFFS_R_FULL;
-      else if (global_livemask == 0x0F0F) mk = MPKIND__OFFS_L_FULL;
+      if (global_livemask == 0xF0F0) { mk = MPKIND__OFFS_R_FULL; mkbox = MPKIND__OFFS_R_FULL_SPECIAL; }
+      else if (global_livemask == 0x0F0F) { mk = MPKIND__OFFS_L_FULL; mkbox = MPKIND__OFFS_L_FULL_SPECIAL; }
       else fail("Can't find a parallelogram.");
    }
    else
       fail("Can't do parallelogram concept from this position.");
 
-   /* See if it is followed by "split phantom C/L/W", in which case we do something esoteric. */
+   /* See if it is followed by "split phantom C/L/W" or "split phantom boxes",
+      in which case we do something esoteric. */
 
    next_parseptr = process_final_concepts(parseptr->next, FALSE, &junk_concepts);
 
@@ -645,7 +646,7 @@ Private void do_concept_parallelogram(
             ss->kind == s2x6 &&     /* Only allow 50% offset. */
             junk_concepts.herit == 0 &&
             junk_concepts.final == 0 &&
-            next_parseptr->concept->value.maps == &map_split_f) {
+            next_parseptr->concept->value.arg3 == MPKIND__SPLIT) {
       int linesp = next_parseptr->concept->value.arg2 & 7;
 
       ss->cmd.cmd_misc_flags |= CMD_MISC__PHANTOMS;
@@ -704,10 +705,27 @@ Private void do_concept_parallelogram(
       ss->cmd.parseptr = next_parseptr->next;
       map_code = MAPCODE(s2x4,2,mk,1);
    }
+   else if (next_parseptr->concept->kind == concept_do_phantom_boxes &&
+            ss->kind == s2x6 &&     /* Only allow 50% offset. */
+            junk_concepts.herit == 0 &&
+            junk_concepts.final == 0 &&
+            next_parseptr->concept->value.maps == &map_hv_2x4_2) {
+      ss->cmd.cmd_misc_flags |= CMD_MISC__PHANTOMS;
+      do_matrix_expansion(ss, CONCPROP__NEEDK_2X8, FALSE);
+      if (ss->kind != s2x8) fail("Not in proper setup for this concept.");
+
+      if (standard_concept) fail("Don't use \"standard\" with split phantom boxes.");
+
+      ss->cmd.parseptr = next_parseptr->next;
+      map_code = MAPCODE(s2x4,2,mkbox,0);
+   }
    else
       map_code = MAPCODE(s2x4,1,mk,0);
 
    new_divided_setup_move(ss, map_code, phantest_ok, TRUE, result);
+
+   /* The split-axis bits are gone.  If someone needs them, we have work to do. */
+   result->result_flags &= ~RESULTFLAG__SPLIT_AXIS_FIELDMASK;
 }
 
 
@@ -1635,6 +1653,36 @@ Private void do_concept_do_phantom_1x8(
    }
    else
       fail("Must have a 2x8 or 1x16 setup for this concept.");
+
+   new_divided_setup_move(ss, map_code, (phantest_kind) parseptr->concept->value.arg1, TRUE, result);
+}
+
+
+Private void do_concept_do_phantom_triple_1x6(
+   setup *ss,
+   parse_block *parseptr,
+   setup *result)
+
+/* This concept is "standard", which means that it can look at global_tbonetest
+   and global_livemask, but may not look at anyone's facing direction other
+   than through global_tbonetest. */
+
+{
+   uint32 map_code;
+
+   if (ss->kind != s3x6) fail("Must have a 3x6 setup for this concept.");
+
+   if ((global_tbonetest & 011) == 011) fail("Can't do this from T-bone setup.");
+
+   if (parseptr->concept->value.arg3 == 3)
+      ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
+
+   if (!((parseptr->concept->value.arg3 ^ global_tbonetest) & 1)) {
+      if (global_tbonetest & 1) fail("There are no grand lines here.");
+      else                      fail("There are no grand columns here.");
+   }
+
+   map_code = MAPCODE(s1x6,3,MPKIND__SPLIT,1);
 
    new_divided_setup_move(ss, map_code, (phantest_kind) parseptr->concept->value.arg1, TRUE, result);
 }
@@ -2821,79 +2869,95 @@ Private void do_concept_checkpoint(
 
 
 
+typedef struct {
+   fraction_info fracs;
+   int repetitions;
+/*
+   int highlimit;
+   int subcall_incr;
+   int subcall_index;
+   long_boolean first_call;
+   uint32 do_half_of_last_part;
+   uint32 do_last_half_of_first_part;
+*/
+} repetitionrec;
+
+
+
+Private long_boolean do_call_under_repetition(repetitionrec *yyy, setup *ss, setup *result)
+{
+   uint32 save_elongation = result->cmd.prior_elongation_bits;   /* Save it temporarily. */
+   if (yyy->fracs.subcall_index*yyy->fracs.subcall_incr >= yyy->fracs.highlimit) return TRUE;
+   if (yyy->fracs.subcall_index >= yyy->repetitions) fail("The indicated part number doesn't exist.");
+
+   result->cmd = ss->cmd;      /* The call we wish to execute. */
+
+   if (yyy->fracs.do_half_of_last_part != 0 && yyy->fracs.subcall_index+1 == yyy->fracs.highlimit)
+      result->cmd.cmd_frac_flags = yyy->fracs.do_half_of_last_part;
+   else
+      result->cmd.cmd_frac_flags = CMD_FRAC_NULL_VALUE;  /* No fractions to constituent call. */
+
+   /* We don't supply these; they get filled in by the call. */
+   result->cmd.cmd_misc_flags &= ~DFM1_CONCENTRICITY_FLAG_MASK;
+   if (!yyy->fracs.first_call) {
+      result->cmd.cmd_misc_flags |= CMD_MISC__NO_CHK_ELONG;
+      result->cmd.cmd_assume.assumption = cr_none;
+   }
+
+   result->cmd.prior_elongation_bits = save_elongation;
+   update_id_bits(result);
+   return FALSE;
+}
+
+
+
 Private void do_concept_sequential(
    setup *ss,
    parse_block *parseptr,
    setup *result)
 {
-   int highlimit;
-   int subcall_incr;
-   int subcall_index;
+   repetitionrec yyy;
    int instant_stop;
-   long_boolean first_call;
-   long_boolean reverse_order;
-   long_boolean do_half_of_last_part;
 
    if (ss->cmd.cmd_frac_flags != CMD_FRAC_NULL_VALUE) {
-      fraction_info zzz = get_fraction_info(ss->cmd.cmd_frac_flags, 3*CFLAG1_VISIBLE_FRACTION_BIT, 2);
-      reverse_order = zzz.reverse_order;
-      do_half_of_last_part = zzz.do_half_of_last_part;
-      highlimit = zzz.highlimit;
-      if (reverse_order) highlimit = 1-highlimit;
-      subcall_index = zzz.subcall_index;
-      subcall_incr = reverse_order ? -1 : 1;
-      instant_stop = zzz.instant_stop ? subcall_index*subcall_incr+1 : 99;
+      get_fraction_info(ss->cmd.cmd_frac_flags, 3*CFLAG1_VISIBLE_FRACTION_BIT, 2, &yyy.fracs);
+      yyy.fracs.subcall_incr = yyy.fracs.reverse_order ? -1 : 1;
+      if (yyy.fracs.reverse_order) yyy.fracs.highlimit = 1-yyy.fracs.highlimit;
+      instant_stop = yyy.fracs.instant_stop != 0 ? yyy.fracs.subcall_index*yyy.fracs.subcall_incr+1 : 99;
    }
    else {     /* No fractions. */
-      reverse_order = FALSE;
+      yyy.fracs.reverse_order = FALSE;
       instant_stop = 99;
-      do_half_of_last_part = FALSE;
-      highlimit = 2;
-      subcall_index = 0;
-      subcall_incr = 1;
+      yyy.fracs.do_half_of_last_part = 0;
+      yyy.fracs.do_last_half_of_first_part = 0;
+      yyy.fracs.highlimit = 2;
+      yyy.fracs.subcall_index = 0;
+      yyy.fracs.subcall_incr = 1;
    }
 
-   first_call = reverse_order ? FALSE : TRUE;
+   yyy.repetitions = 2;
+   yyy.fracs.first_call = yyy.fracs.reverse_order ? FALSE : TRUE;
 
    *result = *ss;
    result->result_flags = RESULTFLAG__SPLIT_AXIS_FIELDMASK;   /* Seed the result. */
 
    for (;;) {
-      uint32 save_elongation = result->cmd.prior_elongation_bits;   /* Save it temporarily. */
+      if (do_call_under_repetition(&yyy, ss, result)) break;
 
-      if (subcall_index*subcall_incr >= highlimit) break;
-      if (subcall_index >= 2) fail("The indicated part number doesn't exist.");
-
-      result->cmd = ss->cmd;      /* The call we wish to execute (we will fix it up shortly). */
-
-      if (do_half_of_last_part && subcall_index+1 == highlimit)
-         result->cmd.cmd_frac_flags = CMD_FRAC_HALF_VALUE;
-      else
-         result->cmd.cmd_frac_flags = CMD_FRAC_NULL_VALUE;  /* No fractions to constituent call. */
-
-      /* We don't supply these; they get filled in by the call. */
-      result->cmd.cmd_misc_flags &= ~DFM1_CONCENTRICITY_FLAG_MASK;
-      if (!first_call) {
-         result->cmd.cmd_misc_flags |= CMD_MISC__NO_CHK_ELONG;
-         result->cmd.cmd_assume.assumption = cr_none;
-      }
-
-      if (subcall_index != 0) result->cmd.parseptr = parseptr->subsidiary_root;
-      result->cmd.prior_elongation_bits = save_elongation;
-      update_id_bits(result);
+      if (yyy.fracs.subcall_index != 0) result->cmd.parseptr = parseptr->subsidiary_root;
       do_call_in_series(result, FALSE, FALSE, TRUE, FALSE);
-      subcall_index += subcall_incr;
-      first_call = FALSE;
+      yyy.fracs.subcall_index += yyy.fracs.subcall_incr;
+      yyy.fracs.first_call = FALSE;
 
       /* If we are being asked to do just one part of a call (from cmd_frac_flags),
          exit now.  Also, see if we just did the last part. */
 
-      if (ss->cmd.cmd_frac_flags != CMD_FRAC_NULL_VALUE && instant_stop != 99) {
+      if (instant_stop != 99) {
          /* Check whether we honored the last possible request.  That is,
             whether we did the last part of the call in forward order, or
             the first part in reverse order. */
          result->result_flags |= RESULTFLAG__PARTS_ARE_KNOWN;
-         if (instant_stop >= highlimit)
+         if (instant_stop >= yyy.fracs.highlimit)
             result->result_flags |= RESULTFLAG__DID_LAST_PART;
          break;
       }
@@ -2973,7 +3037,6 @@ Private void do_concept_special_sequential(
 
 
 
-
 Private void do_concept_twice(
    setup *ss,
    parse_block *parseptr,
@@ -2984,22 +3047,14 @@ Private void do_concept_twice(
       arg1 = 0 :  number of repetitions is hardwired and is in arg2.
       arg1 = 1 :  number of repetitions was specified by user. */
 
-   int highlimit;
-   int repetitions;
-   int subcall_incr;
-   int subcall_index;
+   repetitionrec yyy;
    int instant_stop;
-   long_boolean first_call;
-   long_boolean reverse_order;
-   long_boolean do_half_of_last_part;
-   uint32 subject_fractions;
-   fraction_info zzz;
    uint32 saved_result_flags = RESULTFLAG__SPLIT_AXIS_FIELDMASK;   /* Seed the result. */
 
    if (parseptr->concept->value.arg1)
-      repetitions = parseptr->options.number_fields;
+      yyy.repetitions = parseptr->options.number_fields;
    else
-      repetitions = parseptr->concept->value.arg2;
+      yyy.repetitions = parseptr->concept->value.arg2;
 
    /* If fractions come in but the craziness is restrained, just pass the fractions on.
       This is what makes "random twice mix" work.  The "random" concept wants to reach through
@@ -3007,43 +3062,18 @@ Private void do_concept_twice(
       twiceness.  But if the craziness is unrestrained, which is the usual case, we act on
       the fractions.  This makes "interlace twice this with twice that" work. */
 
-   zzz = get_fraction_info(ss->cmd.cmd_frac_flags, 3*CFLAG1_VISIBLE_FRACTION_BIT, repetitions);
-   reverse_order = zzz.reverse_order;
-   do_half_of_last_part = zzz.do_half_of_last_part;
-   highlimit = zzz.highlimit;
-   if (reverse_order) highlimit = repetitions-highlimit-1;
-   subcall_index = zzz.subcall_index;
-   subcall_incr = reverse_order ? -1 : 1;
-   instant_stop = zzz.instant_stop ? subcall_index*subcall_incr+1 : 99;
-   subject_fractions = CMD_FRAC_NULL_VALUE;
+   get_fraction_info(ss->cmd.cmd_frac_flags, 3*CFLAG1_VISIBLE_FRACTION_BIT, yyy.repetitions, &yyy.fracs);
+   yyy.fracs.subcall_incr = yyy.fracs.reverse_order ? -1 : 1;
+   if (yyy.fracs.reverse_order) yyy.fracs.highlimit = yyy.repetitions-yyy.fracs.highlimit-1;
+   instant_stop = yyy.fracs.instant_stop != 0 ? yyy.fracs.subcall_index*yyy.fracs.subcall_incr+1 : 99;
 
-   first_call = reverse_order ? FALSE : TRUE;
+   yyy.fracs.first_call = yyy.fracs.reverse_order ? FALSE : TRUE;
 
    *result = *ss;
    result->result_flags = 0;
 
    for (;;) {
-      uint32 save_elongation = result->cmd.prior_elongation_bits;   /* Save it temporarily. */
-
-      if (subcall_index*subcall_incr >= highlimit) break;
-      if (subcall_index >= repetitions) fail("The indicated part number doesn't exist.");
-
-      result->cmd = ss->cmd;      /* The call we wish to execute. */
-
-      if (do_half_of_last_part && subcall_index+1 == highlimit)
-         result->cmd.cmd_frac_flags = CMD_FRAC_HALF_VALUE;
-      else
-         result->cmd.cmd_frac_flags = subject_fractions;  /* Fractions for subject call. */
-
-      /* We don't supply these; they get filled in by the call. */
-      result->cmd.cmd_misc_flags &= ~DFM1_CONCENTRICITY_FLAG_MASK;
-      if (!first_call) {
-         result->cmd.cmd_misc_flags |= CMD_MISC__NO_CHK_ELONG;
-         result->cmd.cmd_assume.assumption = cr_none;
-      }
-
-      result->cmd.prior_elongation_bits = save_elongation;
-      update_id_bits(result);
+      if (do_call_under_repetition(&yyy, ss, result)) break;
 
       /* Do *NOT* try to maintain consistent splitting across repetitions when doing "twice". */
       result->result_flags &= ~RESULTFLAG__SPLIT_AXIS_FIELDMASK;
@@ -3061,8 +3091,8 @@ Private void do_concept_twice(
          saved_result_flags |= (result->result_flags & (RESULTFLAG__SPLIT_AXIS_BIT << RESULTFLAG__SPLIT_AXIS_SEPARATION)*7);
       }
 
-      subcall_index += subcall_incr;
-      first_call = FALSE;
+      yyy.fracs.subcall_index += yyy.fracs.subcall_incr;
+      yyy.fracs.first_call = FALSE;
 
       /* If we are being asked to do just one part of a call (from cmd_frac_flags),
          exit now.  Also, see if we just did the last part. */
@@ -3072,7 +3102,7 @@ Private void do_concept_twice(
             whether we did the last part of the call in forward order, or
             the first part in reverse order. */
          result->result_flags |= RESULTFLAG__PARTS_ARE_KNOWN;
-         if (instant_stop >= highlimit)
+         if (instant_stop >= yyy.fracs.highlimit)
             result->result_flags |= RESULTFLAG__DID_LAST_PART;
          break;
       }
@@ -3518,7 +3548,7 @@ Private void do_concept_do_each_1x4(
       switch (ss->kind) {
          case s2x4: case s1x8:
             goto split_small;
-         /* Really ought to handle 4x4 as well, but then the tbonte test above won't do. */
+         /* Really ought to handle 4x4 as well, but then the tbone test above won't do. */
          case s3x4:
             if (global_livemask == 01717) {
                map_code = MAPCODE(s1x4,3,MPKIND__SPLIT,1);
@@ -3532,6 +3562,16 @@ Private void do_concept_do_each_1x4(
             }
             else if (global_livemask == 01717) {
                map_code = MAPCODE(s1x4,2,MPKIND__OFFS_L_HALF,1);
+               goto split_big;
+            }
+            break;
+         case s2x8:
+            if (global_livemask == 0xF0F0) {
+               map_code = MAPCODE(s1x4,2,MPKIND__OFFS_R_FULL,1);
+               goto split_big;
+            }
+            else if (global_livemask == 0x0F0F) {
+               map_code = MAPCODE(s1x4,2,MPKIND__OFFS_L_FULL,1);
                goto split_big;
             }
             break;
@@ -4032,7 +4072,8 @@ Private void do_concept_meta(
    if (   ss->cmd.cmd_final_flags.final ||     /* Any final flags at all --> error. */
 
             (ss->cmd.cmd_final_flags.herit &   /* Any herit flags other than these few --> error. */
-            ~(INHERITFLAG_YOYO|INHERITFLAG_STRAIGHT|INHERITFLAG_TWISTED)) ||
+            ~(INHERITFLAG_YOYO|INHERITFLAG_STRAIGHT|INHERITFLAG_TWISTED|
+                  INHERITFLAG_CROSS|INHERITFLAG_SINGLE)) ||
             (  ss->cmd.cmd_final_flags.herit &&   /* And even those, if the concept takes another call. */
                (key == 0 || key == 1 || key == 2 || key == 3 || key == 7 || key == 8)))
       fail("Illegal modifier for this concept.");
@@ -4508,6 +4549,7 @@ Private void do_concept_replace_nth_part(
    setup tttt;
    uint32 finalresultflags = 0;
    int stopindex;
+   int newfracs;
    uint32 frac_key;
 
    if (ss->cmd.cmd_frac_flags != CMD_FRAC_NULL_VALUE)
@@ -4536,7 +4578,34 @@ Private void do_concept_replace_nth_part(
       tttt = *result;
       tttt.cmd = ss->cmd;
 
-      tttt.cmd.cmd_frac_flags = CMD_FRAC_NULL_VALUE | frac_key | (stopindex * CMD_FRAC_PART_BIT);
+      if (parseptr->concept->value.arg1 == 2) {
+         /* "Interrupt after M/N" is very special. */
+
+         int numer, divisor;
+
+         numer = parseptr->options.number_fields;
+         newfracs = numer >> 4;
+         numer &= 0xF;
+
+         /* Check that user isn't doing something stupid. */
+         if (newfracs <= 0 || numer <= 0 || numer >= newfracs)
+            fail("Illegal fraction.");
+
+         divisor = gcd(numer, newfracs);
+         numer /= divisor;
+         newfracs /= divisor;
+         newfracs += (numer<<4);
+         tttt.cmd.cmd_frac_flags = 0x0100 | newfracs;
+      }
+      else if (parseptr->concept->value.arg1 == 3) {
+         /* "Sandwich" is very mundane. */
+         newfracs = 0x12;
+         tttt.cmd.cmd_frac_flags = 0x0100 | newfracs;
+      }
+      else {
+         tttt.cmd.cmd_frac_flags = CMD_FRAC_NULL_VALUE | frac_key | (stopindex * CMD_FRAC_PART_BIT);
+      }
+
       move(&tttt, FALSE, result);
       finalresultflags |= result->result_flags;
       normalize_setup(result, simple_normalize);
@@ -4559,6 +4628,9 @@ Private void do_concept_replace_nth_part(
          goto nolastpart;
       case 1:
          frac_key = CMD_FRAC_NULL_VALUE | CMD_FRAC_REVERSE | CMD_FRAC_CODE_ONLY | CMD_FRAC_PART_BIT;
+         break;
+      case 2: case 3:
+         frac_key = (newfracs<<8) | 0x0011;
          break;
       default:
          frac_key = CMD_FRAC_NULL_VALUE | CMD_FRAC_CODE_BEYOND | (parseptr->options.number_fields * CMD_FRAC_PART_BIT);
@@ -4656,19 +4728,6 @@ Private void do_concept_interlace(
    while ((first_doneflag & second_doneflag) == 0);
 }
 
-
-
-Private int gcd(int a, int b)    /* a <= b */
-{
-   for (;;) {
-      int rem;
-      if (a==0) return b;
-      rem = b % a;
-      if (rem==0) return a;
-      b = a;
-      a = rem;
-   }
-}
 
 
 Private void do_concept_fractional(
@@ -5369,6 +5428,7 @@ concept_table_item concept_table[] = {
    /* concept_do_phantom_boxes */         {CONCPROP__NEEDK_2X8 | Nostandard_matrix_phantom,                                        do_concept_do_phantom_boxes},
    /* concept_do_phantom_diamonds */      {CONCPROP__NEEDK_4DMD | CONCPROP__NO_STEP | Nostandard_matrix_phantom,                   do_concept_do_phantom_diamonds},
    /* concept_do_phantom_1x6 */           {CONCPROP__NEEDK_2X6 | CONCPROP__NO_STEP | Standard_matrix_phantom,                      do_concept_do_phantom_1x6},
+   /* concept_do_phantom_triple_1x6 */    {CONCPROP__NEEDK_3X6 | CONCPROP__NO_STEP | Standard_matrix_phantom,                      do_concept_do_phantom_triple_1x6},
    /* concept_do_phantom_1x8 */           {CONCPROP__NEEDK_2X8 | CONCPROP__NO_STEP | Standard_matrix_phantom,                      do_concept_do_phantom_1x8},
    /* concept_do_phantom_triple_1x8 */    {CONCPROP__NEEDK_3X8 | CONCPROP__NO_STEP | Standard_matrix_phantom,                      do_concept_do_phantom_triple_1x8},
    /* concept_do_phantom_2x4 */           {CONCPROP__NEEDK_4X4_1X16 | Standard_matrix_phantom | CONCPROP__PERMIT_MYSTIC,           do_phantom_2x4_concept},
@@ -5443,6 +5503,8 @@ concept_table_item concept_table[] = {
    /* concept_nth_part */                 {CONCPROP__USE_NUMBER | CONCPROP__SHOW_SPLIT | CONCPROP__PERMIT_REVERSE,                 do_concept_meta},
    /* concept_replace_nth_part */         {CONCPROP__USE_NUMBER | CONCPROP__SECOND_CALL | CONCPROP__SHOW_SPLIT,                    do_concept_replace_nth_part},
    /* concept_replace_last_part */        {CONCPROP__SECOND_CALL | CONCPROP__SHOW_SPLIT,                                           do_concept_replace_nth_part},
+   /* concept_interrupt_at_fraction */    {CONCPROP__USE_NUMBER | CONCPROP__USE_TWO_NUMBERS | CONCPROP__SECOND_CALL | CONCPROP__SHOW_SPLIT, do_concept_replace_nth_part},
+   /* concept_sandwich */                 {CONCPROP__SECOND_CALL | CONCPROP__SHOW_SPLIT,                                           do_concept_replace_nth_part},
    /* concept_interlace */                {CONCPROP__SECOND_CALL | CONCPROP__SHOW_SPLIT,                                           do_concept_interlace},
    /* concept_fractional */               {CONCPROP__USE_NUMBER | CONCPROP__USE_TWO_NUMBERS | CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT, do_concept_fractional},
    /* concept_rigger */                   {CONCPROP__NO_STEP,                                                                      do_concept_rigger},

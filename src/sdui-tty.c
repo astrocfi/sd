@@ -104,13 +104,6 @@ and the following data that are used by sdmatch.c :
 /* See comments in sdmain.c regarding this string. */
 static Const char id[] = "@(#)$He" "ader: Sd: sdui-tty.c " UI_VERSION_STRING "  " UI_TIME_STAMP;
 
-static Const call_conc_option_state null_options = {
-   selector_uninitialized,
-   direction_uninitialized,
-   0,
-   0,
-   0,
-   0};
 
 #include "sdui-ttu.h"
 
@@ -384,6 +377,8 @@ extern void show_match(void)
       }
    }
    match_counter--;
+
+   if (static_ss.result.indent) put_line("   ");
    put_line(static_ss.full_input);
    put_line(static_ss.extension);
    put_line("\n");
@@ -744,6 +739,7 @@ Private void get_user_input(char *prompt, int which)
                user_match.match.packed_next_conc_or_subcall = (modifier_block *) 0;
                user_match.match.packed_secondary_subcall = (modifier_block *) 0;
                user_match.match.call_conc_options = null_options;
+               user_match.indent = FALSE;
                user_match.real_next_subcall = (match_result *) 0;
                user_match.real_secondary_subcall = (match_result *) 0;
             }
@@ -774,7 +770,8 @@ Private void get_user_input(char *prompt, int which)
          continue;
       }
       else if (c == '?' || c == '!') {
-         put_line ("\n");
+         put_char(c);
+         put_line("\n");
          current_text_line++;
          start_matches();
          (void) match_user_input(which, TRUE, c == '?');
@@ -960,7 +957,7 @@ static long_boolean deposit_call_tree(modifier_block *anythings, parse_block *sa
    user_match.match.call_conc_options = anythings->call_conc_options;
 
    if (anythings->kind == ui_call_select) {
-      if (deposit_call(anythings->call_ptr)) return TRUE;
+      if (deposit_call(anythings->call_ptr, &anythings->call_conc_options)) return TRUE;
       save1 = *parse_state.concept_write_ptr;
       if (!there_is_a_call) the_topcallflags = parse_state.topcallflags1;
       there_is_a_call = TRUE;

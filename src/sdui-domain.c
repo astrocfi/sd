@@ -1073,7 +1073,7 @@ extern long_boolean uims_get_call_command(uims_reply *reply_p)
 
       callspec_block *save_call = main_call_lists[parse_state.call_list_to_use][uims_menu_index];
 
-      if (deposit_call(save_call)) return TRUE;
+      if (deposit_call(save_call, &null_options)) return TRUE;
    }
    else if (*reply_p == ui_concept_select) {
       /* A concept is required.  Its index has been stored in uims_menu_index. */

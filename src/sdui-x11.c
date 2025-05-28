@@ -1,4 +1,4 @@
-static char *time_stamp = "sdui-x11.c Time-stamp: <96/05/01 12:49:02 gildea>";
+static const char time_stamp[] = "sdui-x11.c Time-stamp: <1997-10-14 17:51:42 gildea>";
 /* 
  * sdui-x11.c - Sd User Interface for X11
  * Copyright 1990,1991,1992,1993 Stephen Gildea and William B. Ackerman
@@ -792,7 +792,7 @@ uims_process_command_line(int *argcp, char **argvp[])
 
 extern void uims_display_help(void)
 {
-   printf("\nIn addition, the usual X window system flags are supported.\n");
+   printf("\nIn addition, the usual X Window System flags are supported.\n");
 }
 
 extern void uims_display_ui_intro_text(void)
@@ -1472,7 +1472,7 @@ extern long_boolean uims_get_call_command(uims_reply *reply_p)
       /* If user gave a call, deposit same. */
 
       callspec_block *save_call = main_call_lists[parse_state.call_list_to_use][uims_menu_index];
-      if (deposit_call(save_call)) return TRUE;
+      if (deposit_call(save_call, &null_options)) return TRUE;
    }
    else if (*reply_p == ui_concept_select) {
       /* A concept is required.  Its index has been stored in uims_menu_index. */
@@ -1817,7 +1817,7 @@ extern uint32 uims_get_number_fields(int nnumbers, long_boolean forbid_zero)
          this_num = choose_popup(sd_resources.quantifier_title, cardinals);
          if (this_num == 0) return ~0;    /* User waved the mouse away. */
       }
-      if (forbid_zero && num == 1) return ~0;
+      if (forbid_zero && this_num == 1) return ~0;
       number_list |= ((this_num-1) << (i*4));
    }
 

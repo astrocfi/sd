@@ -1,7 +1,7 @@
 \input texinfo @c %**start of header -*-texinfo-*-
 @setfilename demo.info
 @settitle release notes
-@c Time-stamp: <96/04/05 14:25:00 wba>
+@c Time-stamp: <1997-10-14 16:28:44 gildea>
 @iftex
 @headings off
 @oddheading @| @| @thispage
@@ -11,10 +11,48 @@
 Copyright @copyright{} 1996-1997 William B. Ackerman
 @sp 2
 @example
-          RELEASE NOTES FOR SD VERSION 31.90
-         Database version = 31.89 format = 110
+          RELEASE NOTES FOR SD VERSION 31.91
+         Database version = 31.91 format = 113
        X11 UI version 1.17, SDTTY UI version 1.9
 @end example
+
+****** Changes as of version 31.91 ******
+
+This is an interim release, fixing a few embarrassing bugs.  Major
+functionality improvements that are being worked on are not yet in place.
+They will be coming out soon.
+
+The function key control-F6 really, really, really gives the @samp{centers}
+concept.
+
+The definitions of @samp{scoot and weave} and @samp{turn and weave} were
+fixed to handle the turning motions correctly.  We thank Kerry Hodnett
+for pointing out this problem.
+
+The problem with @samp{outer 6 invert the column 1/3} was fixed.
+
+For most calls with star turns, you can type a modification to the star turn amount
+directly.  Say @samp{motivate, don't turn the star} or @samp{motivate, turn the star 3/4}.
+This doesn't yet work with @samp{tag the star}.
+Also, if you want more esoteric things, like @samp{turn the star 3 but interrupt
+after 2 with a bias motivate}, you still need to use the @code{allow modifications}
+mechanism.
+
+There is a new section of the manual, ``Interruptions and Interlace'',
+describing some esoteric aspects of calls like @samp{exchange the diamonds}.
+
+It is legal to omit the typing of apostrophe or comma.  This means that
+you can type "chain reaction turn the star 1/2" or "ends go as you
+are turntable" or "lockers choice" or "tag the star ers delight".
+
+It is also legal to type a space where a hyphen would normally be
+required.  This means that you can type "swing o late" or "tandem based
+triangles".  Use this cautiously!!  Because of word completion, Sd may
+complete more of the call than you were expecting when you type a space.
+
+The calls @samp{triple scoot}, @samp{partner tag}, and @samp{remake the thar}
+were moved from the Plus to the A1 lists, in accordance with the recent
+Callerlab resolution.
 
 ****** Changes as of version 31.90 ******
 
@@ -43,8 +81,8 @@ Y-SOME N/4 SOLID
 @end example
 
 In the concepts BOXES/DIAMONDS/TRIANGLES WORK solid / N-some /
-fractional solid / fractional N-some, the word "WORK" has been
-changed to "ARE".  We realize that callers often use the word
+fractional solid / fractional N-some, the word @i{WORK} has been
+changed to @i{ARE}.  We realize that callers often use the word
 "work" in things like "triangles work solid 1/4 threesome",
 but this change makes the program's naming more consistent,
 and avoids any possibility of ambiguity.  There is a meta-concept
@@ -59,7 +97,7 @@ cross cycle, scoot and weave, and couple up.
 
 The program's interpretation of the splitting of a 2x4 for the concepts
 CENTRAL or CRAZY has been made more regular.  The rule is that, if
-it is at all possible to divide the 2x4 int 2x2's, the program, and
+it is at all possible to divide the 2x4 into 2x2's, the program, and
 presumably the dancers, do so, even if such a division does not lead to
 the most common application of the call.  The 2x4 is split into 1x4's
 only if the call is impossible in 2x2's.  So, for example, @samp{1/2 crazy
@@ -74,7 +112,7 @@ cross counter}, the initial division is into each wave, since the call
 is impossible otherwise.
 
 The definition of crossfire has been changed so that the original ends
-can roll.  The definition of this call does not involve an "extend".
+can roll.  The definition of this call does not involve an extend.
 It involves the original centers walking straight ahead to meet the
 original ends.  Since the latter did not move forward, they do not lose
 their roll status from the cross fold.
@@ -101,16 +139,16 @@ The program now understands the number zero.  It can do things like
 @samp{take 0}, @samp{loop and tag 0/4}, @samp{0 steps at a time},
 and @samp{track 0}.
 
-The word order "reverse N/4 crazy" is no longer accepted.  It appears
+The word order @samp{reverse N/4 crazy} is no longer accepted.  It appears
 that some people believe that this word order is just a short notation
-for "reverse order N/4 crazy".  If you want "reverse order N/4 crazy",
-say so.  If you want "N/4 reverse crazy", say so.
+for ``reverse order N/4 crazy.''  If you want @samp{reverse order N/4 crazy},
+say so.  If you want @samp{N/4 reverse crazy}, say so.
 
 ****** Changes as of version 31.89 ******
 
 The program can do singing call progressions.  There are two new
 commands, available only at the start of a sequence (that is, when
-you could say "heads start"):
+you could say @samp{heads start}):
 
 @example
 @group

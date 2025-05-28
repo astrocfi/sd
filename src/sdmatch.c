@@ -154,7 +154,7 @@ extern void matcher_initialize(void)
 
       /* Pick out concepts that will be produced when certain function keys are pressed. */
       if (p->kind == concept_twice) twice_concept_ptr = p;
-      if (p->kind == concept_centers_or_ends && p->value.arg1 == selector_ends) centers_concept_ptr = p;
+      if (p->kind == concept_centers_or_ends && p->value.arg1 == selector_centers) centers_concept_ptr = p;
       if (p->kind == concept_sequential) two_calls_concept_ptr = p;
 
       concept_list_length++;
@@ -345,7 +345,7 @@ Private long_boolean verify_call(void)
 
          if (anythings->kind == ui_call_select) {
             verify_options = anythings->call_conc_options;
-            if (deposit_call(anythings->call_ptr)) goto try_again;
+            if (deposit_call(anythings->call_ptr, &anythings->call_conc_options)) goto try_again;
             save1 = *parse_state.concept_write_ptr;
             theres_a_call_in_here = TRUE;
          }
@@ -481,6 +481,9 @@ static void record_a_match(void)
          strn_gcp(static_ss.extended_input, static_ss.extension);
    }
 
+   /* Copy if we are doing the "show" operation, whether we are verifying or not. */
+   if (static_ss.showing) static_ss.result = everyones_real_result;
+
    /* Always copy the first match.
       Also, always copy, and process modifiers, if we are processing the "verify" operation.
       Also, copy the first exact match, and any exact match that isn't yielding relative to what we have so far. */
@@ -513,15 +516,6 @@ static void record_a_match(void)
          show_match();
    }
 }
-
-
-static Const call_conc_option_state null_options = {
-   selector_uninitialized,
-   direction_uninitialized,
-   0,
-   0,
-   0,
-   0};
 
 
 /* Patxp is where the next character of the extension of the user input for the current pattern is to be written. */
@@ -573,6 +567,7 @@ static void match_suffix_2(Cstring user, Cstring pat1, pat2_block *pat2, int pat
                case 'C':
                case 'r':
                case 's':
+               case 'S':
                   p += 2;
                   continue;
                case 'n':
@@ -584,7 +579,7 @@ static void match_suffix_2(Cstring user, Cstring pat1, pat2_block *pat2, int pat
             break;
          }
 
-         if (*p == ' ')
+         if (*p == ' ' || *p == '-')
             static_ss.space_ok = TRUE;
 
          if (!pat2 && *pat1 == '\0') {
@@ -693,6 +688,7 @@ static void match_suffix_2(Cstring user, Cstring pat1, pat2_block *pat2, int pat
                char u = *user++;
 
                if (u != p && (p > 'Z' || p < 'A' || u != p+'a'-'A')) {
+#ifdef NONE_OF_THIS_CRAP
                   if (elide_blanks) {
                      if (p != '-' || u != ' ') {           /* If user said "wave based" instead of "wave-based", just continue. */
                         if (p == ' ' || p == '-') user--;  /* If user said "wavebased" (no hyphen) or "inroll" (no blank), elide. */
@@ -700,7 +696,11 @@ static void match_suffix_2(Cstring user, Cstring pat1, pat2_block *pat2, int pat
                      }
                   }
                   else
-                     break;
+#endif
+                  if (p != '-' || u != ' ') {           /* If user said "wave based" instead of "wave-based", just continue. */
+                     if (p == '\'' || p == ',') user--; /* If user left out apostrophe or comma, just continue. */
+                     else break;
+                  }
                }
             }
          }
@@ -728,6 +728,7 @@ static void scan_concepts_and_calls(Cstring user, Cstring firstchar, pat2_block 
       an ambiguous call/concept utterance.  For example, we do not expect anyone to
       invent a call "and turn" that can be used with the "cross" modifier. */
    saved_result_p->yield_depth++;
+   saved_result_p->indent = FALSE;
    saved_result_p->real_next_subcall = (match_result *) 0;
    saved_result_p->real_secondary_subcall = (match_result *) 0;
 
@@ -771,6 +772,7 @@ static void scan_concepts_and_calls(Cstring user, Cstring firstchar, pat2_block 
    }
 
    current_result = saved_folksptr;
+   current_result->indent = FALSE;
    current_result->real_next_subcall = (match_result *) 0;
    current_result->real_secondary_subcall = (match_result *) 0;
 }
@@ -982,7 +984,31 @@ static void match_wildcard(Cstring user, Cstring pat, pat2_block *pat2, int patx
       }
    }
 
+   /* The following escape codes are the ones that we print out
+      even if the user input has run out. */
+
    switch (key) {
+      case 'S':
+         {
+            long_boolean saved_indent = current_result->indent;
+            save_number_fields = current_result->match.call_conc_options.star_turn_option;
+            current_result->indent = TRUE;
+         
+            current_result->match.call_conc_options.star_turn_option = -1;
+            match_suffix_2(user, ", don't turn the star", &p2b, patxi);
+   
+            current_result->match.call_conc_options.star_turn_option = 1;
+            match_suffix_2(user, ", turn the star 1/4", &p2b, patxi);
+            current_result->match.call_conc_options.star_turn_option = 2;
+            match_suffix_2(user, ", turn the star 1/2", &p2b, patxi);
+            current_result->match.call_conc_options.star_turn_option = 3;
+            match_suffix_2(user, ", turn the star 3/4", &p2b, patxi);
+         
+            current_result->match.call_conc_options.star_turn_option = save_number_fields;
+            current_result->indent = saved_indent;
+         }
+      
+         return;
       case 'j':
          crossptr = crossname;
          while ((*crossptr++ = *pat++) != '@');
@@ -1056,8 +1082,8 @@ static void match_wildcard(Cstring user, Cstring pat, pat2_block *pat2, int patx
    current_result->match.call_conc_options.howmanynumbers++;
 
    for (i=0 ; (prefix = number_table[i]) ; i++) {
-       match_suffix_2(user, prefix, &p2b, patxi);
-       current_result->match.call_conc_options.number_fields += 1 << (save_howmanynumbers*4);
+      match_suffix_2(user, prefix, &p2b, patxi);
+      current_result->match.call_conc_options.number_fields += 1 << (save_howmanynumbers*4);
    }
 
    current_result->match.call_conc_options.howmanynumbers = save_howmanynumbers;
@@ -1075,6 +1101,7 @@ static void match_wildcard(Cstring user, Cstring pat, pat2_block *pat2, int patx
       current_result->match.call_conc_options = null_options;
       current_result->match.concept_ptr = &concept_descriptor_table[concidx];
       current_result->real_next_subcall = &saved_result;
+      current_result->indent = TRUE;
       p2b.car = pat;
       current_result = &saved_result;
       match_suffix_2(user, pattern, &p2b, patxi);
@@ -1143,6 +1170,7 @@ static void search_menu(uims_reply kind)
    everyones_real_result.exact = FALSE;
    everyones_real_result.match.kind = kind;
    everyones_real_result.match.call_conc_options = null_options;
+   everyones_real_result.indent = FALSE;
    everyones_real_result.real_next_subcall = (match_result *) 0;
    everyones_real_result.real_secondary_subcall = (match_result *) 0;
    everyones_real_result.yield_depth = 0;

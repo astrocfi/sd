@@ -5,8 +5,8 @@
 @settitle Sd
 @c @subtitle A Square Dance Caller's Helper
 @c
-@set Time-stamp: October 12, 1997
-@set sd-version 31.90
+@set Time-stamp: November 14, 1997
+@set sd-version 31.91
 @set full-manual
 @c %**end of header
 @iftex
@@ -203,6 +203,7 @@ Concept Notes
 * Concentric::                  Concentric
 * Assume Waves::                Assume Waves
 * Assuming a Quarter-Tag::      Assuming a Quarter-Tag
+* Interruptions and Interlace:: Interruptions, Interlace, and related issues
 * Designating Certain People::  Designating Certain People
 * Anyone Start::                Anyone Start
 * 12 Matrix and 16 Matrix::     12 Matrix and 16 Matrix
@@ -531,20 +532,25 @@ location of the calls database.  The default is @file{sd_calls.dat} in
 the current directory.
 @item -sequence @var{filename}
 base name of the file to write sequences to.  The calling level will be
-appended to this name.  The default is @file{sequence}, so a complete
+used as the extension of the file name.
+The default base name is @file{sequence}, so a complete
 file name might be @file{sequence.C1}.
 @item -singlespace
 This makes the program write out the output file with single spacing.
 This may be useful for those who use special fonts or special printer
 arrangements.
 @item -concept_levels
-This turns on the ``concept levels'' behavior, as though the command
-@code{toggle concept levels} had been given.  It makes the program allow
+This turns on the ``concept levels'' behavior,
+allowing
 all concepts, even those that are not actually legal at the specified level.
+It is the same as giving the
+@code{toggle concept levels} command to the program.
 @item -active_phantoms
-This turns on the ``active phantoms'' behavior, as though the command
-@code{toggle active phantoms} had been given.  It makes phantoms persist
+This turns on the ``active phantoms'' behavior,
+which makes phantoms persist
 throughout calls.
+It is the same as giving the
+@code{toggle active phantoms} command to the program.
 @item -ignoreblanks
 This makes the program recognize calls and concepts that have been typed
 in without the spaces that normally separate words.  In particular, it
@@ -1062,9 +1068,10 @@ in the given context.
 
 @subsubheading Numbers
 Calls that take a number have the keyword @code{<N>}, @code{<N/4>}, or @code{<Nth>}
-in them, as in the calls @code{eight chain <N>},
+in their name.  Examples are the calls
+@code{eight chain <N>},
 @code{invert the column <N/4>},
-or
+and
 @code{square thru, but on the <Nth> hand <ANYTHING>}.
 
 You can just type the call naturally, for example, @code{invert the column 3/4} or
@@ -1204,7 +1211,7 @@ These variations are in the menu as ``@code{<ANYCIRC> motivate}''.
 They are entered in @code{Sdtty} just as shown above.
 You can also type them in a piecemeal fashion, typing the keyword ``@code{<ANYCIRC>}''
 literally, and then typing the circulate replacement as a complete call,
-e.g. ``@code{out roll circulate}''.
+for example, ``@code{out roll circulate}''.
 
 When using @code{Sd}, the second way is the only way---click on the call, and then select the
 circulate replacement from the popup that will will appear.  If you decide you don't
@@ -1327,9 +1334,7 @@ Whether you typed concepts separately or together, the result is
 the same, and the output file will look the same.
 For example, the following are all legal and equivalent.
 @example
-@group
    @kbd{reverse random tandem swing thru} @key{ENTER}
-@end group
 @end example
 @example
 @group
@@ -1381,15 +1386,11 @@ Some concepts require two calls (e.g., @code{checkpoint} and @code{interlace}).
 @key{ENTER}
 after typing any of these concepts.  You can't type
 @example
-@group
    @kbd{checkpoint ah so by recycle @key{ENTER}}
-@end group
 @end example
 nor
 @example
-@group
    @kbd{boys trade (while the others) u-turn back @key{ENTER}}
-@end group
 @end example
 You must type
 @example
@@ -1443,9 +1444,10 @@ override this if you wish.  The @code{toggle concept levels} command toggles
 
 Some calls can be modified in a natural way, such as @samp{catch fan the top 3},
 @samp{busy 1/2 tag},
-and @samp{vertical tag your neighbor}, or in unnatural ways, such as @samp{trade
+and @samp{vertical tag your neighbor}.  Some calls can be modified in
+unnatural ways, such as @samp{trade
 the diamond but replace the diamond circulate with explode the diamond}.
-To form such calls, you must first enable call modifications
+To form either type of modified call, you must first enable call modifications
 by selecting @code{simple modifications} or @code{allow modifications}
 before choosing the call.
 
@@ -1605,7 +1607,7 @@ Selecting @code{accept current choice} will leave resolve mode, causing
 the current resolution to be added to the sequence exactly as though
 you had entered those calls manually.
 
-Selecting @code{abort the search}, @code{exit the search}, @code{quit the search},
+Selecting any of @code{abort the search}, @code{exit the search}, @code{quit the search},
 or @code{undo the search}
 will throw away all of the saved resolutions and leave resolve
 mode, but will not destroy the sequence.  The sequence will be left just
@@ -1653,7 +1655,7 @@ command to write out the sequence.
 
 These commands invoke an operation very similar to the resolver,
 except that they search for sequences of up to three calls that
-make the setup ``nicer.''
+make the setup nicer.
 
 The @code{normalize} command reduces
 various matrices, such as 4x4, into an 8-person setup.  It uses a variety
@@ -1891,7 +1893,7 @@ will appear into which you may enter the text.  In @code{Sdtty}, simply type
 the comment text on the next line.  The comment will be enclosed in curly braces
 in the transcript.
 
-A comment may be entered in front of any concept or call, and goes into
+A comment may be entered in front of any concept or call and goes into
 the transcript exactly where it was entered.  Because of the way the program
 assembles mouse-clicks into transcript lines, it is not possible to enter
 a comment at the end of a line.
@@ -1973,7 +1975,8 @@ you had typed when an error occurs.
 The @code{toggle nowarn mode} command changes the suppression
 of warning messages.
 
-The @code{toggle singing call} commands change the singing call mode.
+The @code{toggle singing call} commands change the singing call mode,
+which affects resolves.
 @xref{Singing Call Progressions}.
 
 Any of these modes, except the singing call modes, can be turned on
@@ -2064,7 +2067,7 @@ brackets.  @xref{Call Variations}.
 @section Sdtty on the PC
 
 @code{Sdtty} uses the @code{DPMI} memory manager.  If necessary, it uses its own
-copy of @code{DPMI}.  It can be started under either standalone DOS or the
+copy of @code{DPMI}@.  It can be started under either standalone DOS or the
 @samp{MS-DOS Prompt} under Windows.  It can also be started directly as a Windows
 application, even though it does not use the mouse while running.
 @xref{Making Sdtty Start Under Windows}.
@@ -2131,7 +2134,7 @@ that you think are correct and natural.  Your judgement is much better than any
 program's judgement can ever be.
 
 The program sometimes requires you to say various @dfn{helper} words, such
-as @code{left} in cases where their necessity is is not universally
+as @code{left} in cases where their necessity is not universally
 agreed upon.  For example, from a left-handed quarter-tag, @code{Sd}
 will not accept @code{scoot and plenty}---you are required to enter
 @code{left scoot and plenty}, even though the Callerlab definition does
@@ -2154,7 +2157,7 @@ what you want, don't call it.
 A number of concepts are particularly vulnerable to this phenomenon.
 Examples are @code{precede it by}, @code{follow it by}, the fractional
 concepts like @code{1/2}, @code{1-1/2}, and @code{3 times}, and
-the calls that designate certain people.
+the calls that designate certain people.  @xref{Designating Certain People}.
 
 Callers often use phrases such as @samp{finish @dots{}} or @samp{like a @dots{}}
 in imprecise ways.  Sd uses a very precise definition
@@ -2205,6 +2208,9 @@ appropriate to get the dancers through the action that you intend.
 @node Call Notes, Concept Notes, Using Off-Level Concepts, Top
 @chapter Call Notes
 
+Some calls require explanation of how Sd interprets them.
+This section documents these calls.
+
 @menu
 * Sweeping Direction::          Sweeping Direction
 * <ANYONE> roll::               <ANYTHING> and the <ANYONE> roll
@@ -2244,7 +2250,7 @@ the preceding call.  This is known to work for the common calls such as
 @i{recycle}, but may do something tasteless if used with an unusual call.
 
 @node <ANYONE> roll, C1 Single Rotate, Sweeping Direction, Call Notes
-@section <ANYTHING> and the <ANYONE> roll
+@section @code{<ANYTHING> and the <ANYONE> roll}
 
 The call @samp{<anything> and the <anyone> roll} re-evaluates people's
 positions before deciding who should roll.  So, for example, if you say
@@ -2265,7 +2271,7 @@ this call.  It is nonsensical in other contexts.
 @node Spread, <ANYTHING> and circle, C1 Single Rotate, Call Notes
 @section Spread
 
-The term @dfn{spread} can mean different things.  It is three calls in
+The term @dfn{spread} can mean different things.  It is four calls in
 this program.
 
 Use the call @samp{spread} after calls such as @i{follow your neighbor},
@@ -2275,8 +2281,10 @@ after calls like @i{wheel and deal} or a sequence started with
 
 There is also a call @samp{<anything> and spread}, which simply does
 the @i{<anything>} followed by a @i{spread}, to make the printout
-look nicer by having the calls appear on the same line.  Do not use
-this after somethinge like @i{heads star thru}.  That is, do not enter:
+look nicer by having the calls appear on the same line.  It is intended for
+things like @samp{[follow your neighbor] and spread}.  You must type the
+@i{<anything>} call in square brackets.  Do not use
+this with something like @i{heads star thru}.  That is, do not enter:
 @example
    heads start
    [star thru] and spread
@@ -2291,21 +2299,25 @@ must enter:
 @end example
 and get the calls on separate lines
 
+There is also a call @samp{<ANYONE> spread}.  It is typically used
+from columns, to get the designated
+people to slide away from their partner into a butterfly, ``O'', or
+whatever.  It can also be used to get selected people (who must be
+adjacent) to do a @samp{follow your neighbor} type of spread.
+
 There is also a call @samp{<anything> and the <anyone> spread}, which
-does the @i{<anything>} followed by having the selected people @i{spread}.
+combines the previous two calls.  It does the @i{<anything>} followed
+by having the selected people @i{spread}.
 For example, you could enter
 @example
    [motivate] and the boys spread
 @end example
 
-There is also a call @samp{wheel and spread}, which is just a
-@i{wheel and deal} and @i{spread}.
-
-Use the call @samp{<ANYONE> spread} from columns, to get the designated
-people to slide away from their partner into a 4x4 matrix.
+(There is also the call @samp{wheel and spread}, which is just the
+special case call on the Plus list.)
 
 @node <ANYTHING> and circle, Centers Back Away, Spread, Call Notes
-@section <ANYTHING> and circle
+@section @code{<ANYTHING> and circle}
 
 Callers use the @code{<ANYTHING> and circle} construction with either
 an 8-person call to be done by everyone, or a 4-person call to be done
@@ -2349,7 +2361,7 @@ You might read this as ``head ladies chain, then the sides move in and
 star thru.''
 
 @node <ANYONE> Promenade, Up to the Middle, Centers Back Away, Call Notes
-@section <ANYONE> Promenade
+@section @code{<ANYONE> Promenade}
 
 These calls are intended for use in sequences that begin with heads
 or sides promenading halfway around the set.  The calls are
@@ -2391,19 +2403,19 @@ after an @samp{all 4 ladies chain 3/4}), use the designation @code{headliners}
 or @code{sideliners}.  These designations refer to the people currently facing
 head or side walls, respectively.  @code{Sd} and @code{Sdtty} recognize them
 at Mainstream.  When actually calling in such a situation, a common phrase to use
-is @samp{at the heads}, as in @samp{all 4 ladies chain 3/4; at the heads,
-square thru 2}.  The way this would be entered to the program is:
+is ``at the heads,'' as in ``all 4 ladies chain 3/4; at the heads,
+square thru 2.''  The way this would be entered to the program is as follows:
 @example
 @group
-   just as they are               (instead of heads or sides start)
+   just as they are               @r{(instead of heads or sides start)}
    all 4 ladies chain 3/4
    headliners press ahead
-   centers square thru 2          (you must identify the centers)
+   centers square thru 2          @r{(you must identify the centers)}
 @end group
 @end example
 
 @node <ANYONE> Cloverleaf, And N/4 More, Up to the Middle, Call Notes
-@section <ANYONE> Cloverleaf
+@section @code{<ANYONE> Cloverleaf}
 
 The call @samp{cloverleaf} is expected to be done from a completed
 double pass thru setup, and has everyone doing the call.
@@ -2424,7 +2436,7 @@ An example of this, in which the designated people are not ends, is:
 @noindent 
 @noindent In this example, the sides would step into the center.
 
-The call "<ANYONE> cloverleaf while the others <ANYTHING>" is similar,
+The call @code{<ANYONE> cloverleaf while the others <ANYTHING>} is similar,
 but has the inactive people, after they step into the center, do the
 other call.  It is in many cases identical to the A1 call
 @samp{clover and <ANYTHING>}, but the latter call is more restrictive.
@@ -2451,7 +2463,9 @@ swing thru}, you might say @samp{ends divide}, and then have them @samp{star thr
 Note that @samp{ends divide} is the name of the call.  It is not an
 application of the @samp{ends} concept.  You must type it on one line,
 and you may not substitute another designator, such as @samp{sides}, for
-the word @samp{ends}.  There is also a call @samp{ends divide and <anything>}.
+the word @samp{ends}.
+
+There is also a call @samp{ends divide and <anything>}.
 This call can have the ``anything'' subcall entered in the usual way, by placing
 it in brackets.  So, for example, you might type:
 @example
@@ -2462,8 +2476,9 @@ it in brackets.  So, for example, you might type:
    6x2 acey deucey
 @end group
 @end example
-@noindent You might read this as @samp{heads swing thru, while the sides divide
-and touch 1/4}.
+@noindent
+You might read this as ``heads swing thru, while the sides divide
+and touch 1/4.''
 
 @node Little/Little More/Plenty, Flip Back, Ends Divide, Call Notes
 @section Little, Little More, and Plenty
@@ -2491,14 +2506,14 @@ of calls, and is a recognized C1 call.  You should use this name rather
 than the potentially misleading @samp{flip back to a wave}.
 
 @node Face <DIRECTION>, Grand Chain 8, Flip Back, Call Notes
-@section Face <DIRECTION>
+@section @code{Face <DIRECTION>}
 
 The call @samp{face <DIRECTION>} does not appear to be a genuine
 Callerlab-sanctioned call.  It is intended to be used, for example,
 after @samp{tag the line}, to give the direction that you wish to
 have the dancers face.  So, for example, you could enter the calls
 @samp{tag the line} followed by @samp{face in} to get the action
-that is commonly expressed as @samp{tag the line, in}.  Note that
+that is commonly expressed as ``tag the line, in.''  Note that
 the A2 designators @samp{zig-zag}, etc., are among the permissible
 directions.
 
@@ -2553,7 +2568,8 @@ Hence, the separate call @samp{snag circulate} has been provided.
 @section Bridge the Gap
 
 The call @samp{bridge the gap} is defined as a ``space invader'' call.
-That is, the call is defined in terms of matrix operations like @samp{press}.
+That is, the call is defined in terms of matrix operations like
+@samp{press} that do not involve square breathing.
 As such, using it with a concept such as @code{offset columns} is
 problematical---it isn't clear how to put back an arbitrary matrix.
 
@@ -2602,15 +2618,15 @@ In @code{Sd}, the call menu will have @code{funny square thru <n>}.
 @node Rotate from Columns, Recycle, Funny Square Thru, Call Notes
 @section Rotate from Columns
 
-Remember that @i{rotate} and @i{single rotate} from columns is legal only
-at C3, but from lines it is legal at C2.  Since the program has no
+Remember that @i{rotate} and @i{single rotate} from columns are legal only
+at C3, but from lines they are legal at C2.  Since the program has no
 knowledge of different starting setups implying different levels, the call
 is in the database at C2.  Don't use it from columns at that level.
 
 @node Recycle, Adjust Alamo to Other Pairing, Rotate from Columns, Call Notes
 @section Recycle
 
-There are two @i{Recycle} calls in the database: @samp{recycle} can be done
+There are two @i{recycle} calls in the database: @samp{recycle} can be done
 from waves, facing couples, right-handed boxes, or a couple facing a
 right-handed mini-wave.  It can take the @samp{cross}, @samp{single}, or
 @samp{diamond} modifiers.  It is the call that dancers will do when told
@@ -2635,7 +2651,7 @@ call (such as the ability to to it from all positions) are compromised.
 @section Adjust Alamo to Other Pairing
 
 The program's notion of where people are in an alamo ring is rather imprecise.
-It has them paired up on "O" spots, with the people in each pair precisely
+It has them paired up on ``O'' spots, with the people in each pair precisely
 facing head walls or side walls, rather than uniformly spread around the circle.
 Its notion of how alamo calls work is based on this flawed notion, in that it
 can only deal with one kind of pairing.  Typically, the people must be paired
@@ -2712,12 +2728,13 @@ For some calls, the @samp{12 matrix} concept will also be helpful.
 * Concentric::                  Concentric
 * Assume Waves::                Assume Waves
 * Assuming a Quarter-Tag::      Assuming a Quarter-Tag
+* Interruptions and Interlace:: Interruptions, Interlace, and related issues
 * Designating Certain People::  Designating Certain People
 * Anyone Start::                Anyone Start
 * 12 Matrix and 16 Matrix::     12 Matrix and 16 Matrix
 @end menu
 
-Most concepts have clear and precise meanings, and do not
+Most concepts have clear and precise meanings and do not
 need any further discussion here.  However, for a significant
 number of concepts, the distinction between precisely defined,
 universally understood terminology, and ``common sense''
@@ -2745,35 +2762,33 @@ In @code{Sdtty}, just type the name of the concept without worrying about what
 menu it would be on.
 
 Be aware that those concepts that take two calls, such as @code{checkpoint},
-@code{two calls in succession}, or @code{<ANYONE> do your part (while the others)}
+@code{<ANYONE> do your part (while the others)}, or
+@code{two calls in succession}
 must be entered by themselves.  That is, you must press
 @key{ENTER}
 after typing any of these concepts.  You can't type
 @example
-@group
-   checkpoint ah so by recycle @key{ENTER}
-@end group
+   @kbd{checkpoint ah so by recycle @key{ENTER}}
 @end example
-or
+nor
 @example
-@group
-   boys trade (while the others) u-turn back @key{ENTER}
-@end group
+   @kbd{boys trade (while the others) u-turn back @key{ENTER}}
 @end example
 You must type
 @example
 @group
-   checkpoint @key{ENTER}
+   @kbd{checkpoint @key{ENTER}
    ah so @key{ENTER}
-   recycle @key{ENTER}
+   recycle @key{ENTER}}
 @end group
 @end example
 or
 @example
 @group
-   boys (while the others) @key{ENTER}
+   @kbd{boys (while the others) @key{ENTER}
    trade @key{ENTER}
-   u-turn back @key{ENTER}
+   u-turn back @key{ENTER}}
+
 @end group
 @end example
 
@@ -2810,9 +2825,10 @@ In all concepts that can specify either lines or waves,
 the ``waves'' version has an implicit ``assume waves'' operation
 in it.  Under normal circumstances, this means that the live people can make use of
 the assumption of waves in order to decide how to start the call.  For example,
-in normal columns, @code{split phantom waves in roll circulate}, which
-is equivalent to @code{split phantom lines, assume waves, in roll circulate},
-is legal, since the phantom in-roller's location can be deduced from the
+in normal columns, @code{split phantom waves in roll circulate}---which
+is equivalent to @code{split phantom lines, assume waves, in roll
+circulate}---is legal, because the phantom in-roller's location can be
+deduced from the
 wave assumption.
 
 The call @code{split phantom lines in roll circulate} is illegal from columns
@@ -2861,13 +2877,14 @@ Precisely what an assumption means is determined by whether the
 @node Phantom Concepts, Tandem or Couples Concepts, , Concept Notes
 @section Phantom Concepts
 
-These involve picking out virtual setups, which may include
+These concepts involve picking out virtual setups, which may include
 phantoms, from a real formation that is larger than eight people.
 
-The menu for these is brought up by clicking on the ``phantom
+In @code{Sd}, the menu for these concepts is brought up by clicking on
+the ``phantom
 line/col concepts'' or ``phantom box/dmd/qtag concepts'' icon.
 
-In all cases outboard phantoms are added as required at the start of the call,
+In all cases outboard phantoms are added as required at the start of the call
 and removed where possible at the conclusion of the call.
 
 @table @code
@@ -2879,7 +2896,7 @@ These are straightforward.
 @item 12 matrix interlocked phantom C/L
 @item 12 matrix phantom C/L
 These are done from a 3x4.  The setup is separated into
-parallel 2x3's, and the call is done in each of those setups.
+parallel 3x2's, and the call is done in each of those setups.
 @item divided C/L/W
 These are done from a 2x8.  The setup is separated into
 end-to-end 2x4's, and the call is done in each of those setups.  They are equivalent
@@ -2892,14 +2909,21 @@ end-to-end 2x3's, and the call is done in each of those setups.  There is no
 @i{split phantom boxes} equivalent for these.
 @item twin phantom tidal C/L/W
 @item triple tidal C/L/W
-These are done from a 2x8 or 3x8, respectively, and form two or three parallel 1x8's with phantoms,
-in each of which the call is done independently.
+These are done from a 2x8 or 3x8, respectively, and form two or three parallel
+1x8's with phantoms, in each of which the call is done independently.
 
 The program uses the term ``tidal'' to mean a 1x8.  You may prefer to
 use the word @code{grand}.
 @item twin phantom C/L/W of 6
-These are done from a 2x6, and form two parallel 1x6's with phantoms,
+@item triple C/L/W of 6
+@item quadruple C/L/W of 6
+These are done from a 2x6, 3x6 or 4x6, respectively, and form two, three,
+or four parallel 1x6's with phantoms,
 in each of which the call is done independently.
+@item split phantom C/L/W of 6
+@item interlocked phantom C/L/W of 6
+@item phantom C/L/W of 6
+These are done from a 4x6.
 @item triple C/L/W/B/D/1T/3T/1L/3L/DS/GT
 @item triple 1x4s
 @item quadruple C/L/W/B/D/1T/3T/1L/3L/DS/GT
@@ -2969,7 +2993,8 @@ pairs work independently.
 @node Tandem or Couples Concepts, Distorted Setup Concepts, Phantom Concepts, Concept Notes
 @section Tandem or Couples Concepts
 
-The menu for these is brought up by clicking on the ``couples/tandem concepts'' icon.
+The menu for these concepts is brought up by clicking on the
+``couples/tandem concepts'' icon.
 
 @table @code
 @item as couples@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ couples twosome
@@ -2984,7 +3009,7 @@ The menu for these is brought up by clicking on the ``couples/tandem concepts'' 
 @item boxes are solid@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ boxsome
 @item diamonds are solid@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ diamondsome
 @item skew@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ skewsome
-@item gruesome twosome
+@item @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ gruesome twosome
 @item gruesome as couples@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ gruesome couples twosome
 @item gruesome tandem@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ gruesome tandem twosome
 @item as couples in a 1/4 tag@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ couples twosome in a 1/4 tag
@@ -3011,7 +3036,7 @@ The menu for these is brought up by clicking on the ``couples/tandem concepts'' 
 These are straightforward.
 
 Any of the above twosome/threesome/whateversome may also be
-``<N/4> whateversome'' or ``whateversome <N/4> solid''
+``<N/4> whateversome'' or ``whateversome <N/4> solid.''
 
 The concepts like @samp{as couples in a 1/4 tag} are intended to be used from tidal
 2-faced lines or tidal 1-faced lines.  The concepts like @samp{tandem in a 1/4 tag}
@@ -3028,10 +3053,10 @@ line, you could say:
 @group
    16 matrix of parallel diamonds siamese twosome
          diamond circulate
-@noindent or
+@noindent @r{or}
    16 matrix of parallel diamonds siamese twosome
          assume normal diamonds 6x2 acey deucey
-@noindent or
+@noindent @r{or}
    16 matrix of parallel diamonds
          assume normal interlocked diamonds
          siamese twosome 6x2 acey deucey
@@ -3046,12 +3071,11 @@ concept that you want.  Of course, when using @code{Sdtty}, this issue doesn't m
 difference---you can just type
 
 @example
-@group
-   phantom tandem swing thru @key{ENTER}
-@end group
+   @kbd{phantom tandem swing thru @key{ENTER}}
 @end example
 
-The @i{phantom tandem/as couples} concepts expand the people into a 4x4
+The @i{phantom tandem} and @i{phantom as couples} concepts expand the
+people into a 4x4
 matrix whenever possible.  When that is not possible, a 2x8 matrix is
 formed.  You can use the @code{2x8 matrix} concept in order to force this.
 For example, from normal columns, @code{phantom tandem} puts all the real
@@ -3059,7 +3083,7 @@ people in tandem with each other, and makes them the centers of @i{lines}.
 You could call a @code{ferris wheel}, but not a @code{checkmate the column},
 from this setup.  If you wanted the pairs of real people to be centers of
 columns, so that you could call @code{checkmate the column}, use
-@code{2x8 matrix phantom tandem checkmate the columns}.
+@code{2x8 matrix phantom tandem checkmate the column}.
 Concepts with the word ``gruesome'' always form a 2x8, and require that
 the people be paired in a direction parallel to that 2x8.  The @code{gruesome twosome}
 concept is the same as @code{gruesome couples twosome}, with the additional requirement
@@ -3094,7 +3118,7 @@ waves.  You may wish to use the @code{distorted C/L/W} concept instead.
 An ``offset'' C/L/W is a pair of lines or columns that has been sheared
 in the middle by either 50% or 100%, making a 3x4 or 4x4 matrix, respectively.
 A 4x4 matrix offset line or column is sometimes referred to as ``clumps.''
-All of the live people work together accross the shear line.  If a shape-changer
+All of the live people work together across the shear line.  If a shape-changer
 is called, the setup may become a 2x8 matrix, that is, a 100% offset
 parallelogram.
 @item Z C/L/W
@@ -3108,28 +3132,28 @@ having everyone 1/2 press ahead from waves.
 @item distorted C/L/W
 This encompasses any kind of distortion of a pair of lines or columns
 into a 3x4 or 4x4 matrix.
-@item diagonal C/L/W (singular)
-@item <ANYONE> in your diagonal C/L/W (singular)
+@item diagonal C/L/W @r{(singular)}
+@item <ANYONE> in your diagonal C/L/W @r{(singular)}
 These require a ``blocks'' setup.  They specify the ``long diagonal'',
 recognized as either a line or column.  You may specify who the people
 are (heads, boys, etc.) or not, as you choose.
-@item diagonal C/L/W (plural)
+@item diagonal C/L/W @r{(plural)}
 These are done from a 4x6.  The setup has 8 real people, doing an
 8-person call.  The setup could be formed from stairsteps by having
 the ends press ahead or back such that each line is diagonal and straight.
 These concepts are quite obscure.
-@item diagonal C/L/W of 3 (plural)
+@item diagonal C/L/W of 3 @r{(plural)}
 These are done from ``blocks.''  The two lines or columns work together
 in a 2x3 matrix, doing a 6-person call.
-@item distorted tidal C/L/W (singular)
+@item distorted tidal C/L/W @r{(singular)}
 These are done from a 2x8 matrix in which the real people form some
 kind of distorted 1x8.
 @item distorted C/L/W (singular) of 6
 These are done from a center diamond with offset pairs of people on the outside.
-@item double bent tidal C/L/W (singular)
+@item double bent tidal C/L/W @r{(singular)}
 These are done from a 1x8 in which the two people at each end are ``bent''
 90 degrees from the center 4.
-@item <ANYONE> in your distorted C/L/W/B/D (singular)
+@item <ANYONE> in your distorted C/L/W/B/D @r{(singular)}
 These are done from a variety of setups, in which the designated people
 form a recognizable distorted setup.  Reasonable shape-changers are allowed.
 @item parallelogram
@@ -3148,7 +3172,7 @@ or phantoms as required.
 @node 4-person distorted concepts, Miscellaneous Concepts, Distorted Setup Concepts, Concept Notes
 @section 4-person distorted concepts
 
-The menu for these is brought up by clicking on the ``4-person distorted
+The menu for these concepts is brought up by clicking on the ``4-person distorted
 setup concepts'' icon.
 
 @table @code
@@ -3170,7 +3194,7 @@ This is done from a 1x4.
 @item overlapped waves
 These are done from a diamond.
 @item interlocked parallelogram
-This is either done from a 2x4 or a 3x4.  In the latter case,
+This is done from either a 2x4 or a 3x4.  In the latter case,
 the spots occupied by real people are used to form two
 interlocked parallelograms sharing the center line or column.
 @item interlocked boxes
@@ -3183,11 +3207,11 @@ This is done from 3x4 matrix offset lines or columns.  The people
 that would form each distorted line or column instead form a distorted
 box.
 @item Z
-This can be done from a single ``Z'', or from two ``Z'''s.
+This can be done from a single ``Z'', or from two Z's.
 A 4-person call must be used.
 @item each Z
 @item interlocked Z's
-These two are done from a setup in which there are two identifiable ``Z'''s.
+These two are done from a setup in which there are two identifiable Z's.
 A 4-person call must be used.
 @item jay
 @item back-to-front jay
@@ -3210,7 +3234,7 @@ the center line is required to be a 2-faced line.
 @item in your blocks
 These are two names for the same thing.
 @item 4 phantom interlocked blocks
-These are straightforward.
+This concept is straightforward.
 @item triangular boxes
 This may only be done from a ``blocks'' setup.
 @item 4 phantom triangular boxes
@@ -3224,7 +3248,8 @@ in an unambiguous way.  People work to the same spots.
 @node Miscellaneous Concepts, Main Menu Concepts, 4-person distorted concepts, Concept Notes
 @section Miscellaneous Concepts
 
-The menu for these is brought up by clicking on the ``miscellaneous concepts'' icon.
+The menu for these concepts is brought up by clicking on the
+``miscellaneous concepts'' icon.
 Many also appear in the special concept menu that is always visible.
 
 @table @code
@@ -3250,8 +3275,9 @@ except when you actually want this concept.  There are cases in which it
 may seem that the word @i{diamond} ought to be added after selecting
 @code{interlocked} and/or @code{magic}.  The program will insert the
 extra word @i{diamond} for you.  So, for example, selecting @code{magic}
-and then @code{alter the diamond} will get @samp{magic diamond, alter
-the diamond}, and selecting @code{magic}, @code{interlocked}, @code{diamond},
+and then @code{alter the diamond}
+will produce the output @samp{magic diamond, alter the diamond},
+and selecting @code{magic}, @code{interlocked}, @code{diamond},
 @code{as couples}, and @code{quarter right} will get @samp{magic interlocked
 diamond, diamond as couples quarter right}.
 @item 12 matrix
@@ -3266,7 +3292,7 @@ This can handle @samp{circulate}-like calls and @samp{square thru}, but
 can't handle things like @samp{funny slide thru 3 times}
 @item matrix
 This is used in front of concepts like @samp{split phantom waves} to indicate
-that the normal ``glueing'' rule is replaced by a rule that makes each setup
+that the normal ``gluing'' rule is replaced by a rule that makes each setup
 stay centered on its original center, possibly resulting in overlap among
 the setups.
 @item assume <some setup>
@@ -3318,7 +3344,8 @@ These are straightforward.
 @item on your own@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
 @item own the <ANYONE>@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
 @item ignore the <ANYONE>
-These are straightforward.  See @ref{Designating Certain People} for a detailed discussion of these concepts.
+These are straightforward.  See @ref{Designating Certain People}, for a
+detailed discussion of these concepts.
 @item <ANYONE> lead for a
 This is used from a ``promenade, do not stop @dots{}'' situation.  The call
 will be done as if in 2-faced lines, with the designated people in the
@@ -3369,7 +3396,7 @@ This makes it possible to do a @samp{concentric (couple up ; touch 1/4)} and hav
 lines-to-lines rule embrace the whole thing.  It also makes it possible to place two
 calls on the same line that you believe will need to be spoken together for clarity, so that
 you won't accidentally pause when reading the card.  The finished transcript will show
-the two calls within parentheses, and separated by a semicolon.  The proper way
+the two calls within parentheses and separated by a semicolon.  The proper way
 to say the concept when calling can, in extreme cases, be problematical.
 Something like ``consider the following two calls to be one unit, and do a stable
 swing thru and turn thru'' might be appropriate.
@@ -3389,8 +3416,8 @@ These concepts are among the situations in which the program does not attempt
 to print out the exact words that are appropriate to use when calling, but
 instead prints out an unambiguous description of what is supposed to happen.
 The exact words you should use depend on the context and on your judgement.
-You might say @code{piecewise add a criss cross the deucey, and turn the key},
-or @code{do a criss cross the deucey after each part, and turn the key}, or
+You might say ``piecewise add a criss cross the deucey, and turn the key,''
+or ``do a criss cross the deucey after each part, and turn the key,'' or
 something similar.
 @item crazy
 @item reverse crazy
@@ -3418,15 +3445,15 @@ say the fraction after the call, as in @samp{swing the fractions four fifths} or
 @samp{split circulate once and a half}.
 
 In extremely tricky cases, such as @samp{1/2, mix}, @samp{3/4, mix}, @samp{3/4 mix},
-and @samp{2/3, 3/4 mix}. these concepts can lead to ambiguity.  It may
+and @samp{2/3, 3/4 mix}, these concepts can lead to ambiguity.  It may
 be necessary to type the concept by itself, that is, to press
 @key{ENTER}
 at the appropriate moment, to get what you want.  If you really want 3/4 of the
 call @samp{mix}, type
 @example
 @group
-   3/4 @key{ENTER}
-   mix @key{ENTER}
+   @kbd{3/4 @key{ENTER}
+   mix @key{ENTER}}
 @end group
 @end example
 
@@ -3446,13 +3473,14 @@ asking for the number.
 
 No universally recognized words for these exist, so the program uses the generic
 phrases noted above.  When calling, use whatever words you think are appropriate,
-such as @samp{twice}, @samp{thrice}, @samp{circulate two positions}, or whatever.
-@item piecewise
+such as ``twice,'' ``thrice,'' ``circulate two positions,'' or whatever.
 @item initially
 @item finally
+@item piecewise
 @item random
 @item reverse random
 These are followed by the concept to which they apply.
+@xref{Anyone Start}, for more on the @code{initially} concept.
 @item shifty
 @item shift <N>
 @item interlace@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
@@ -3460,7 +3488,10 @@ These are followed by the concept to which they apply.
 These are straightforward.
 @item finish
 @item like a
-To Sd, @code{finish} means ``skip the first part,'' and is only legal for
+See @ref{Interruptions and Interlace}, for information about some tricky aspects
+of the concepts that pull calls into their constituent parts.
+
+To Sd, @code{finish} means ``skip the first part'' and is only legal for
 calls for which the first part is recognizable.  Sd also recognizes the concept
 @code{like a}, meaning ``do the last part.''  You need to be aware, however,
 that there are calls for which, while it is technically legal to say such things,
@@ -3489,26 +3520,28 @@ of that is clear, the way you must enter that to Sd is
    CENTERS LIKE A wheel the ocean
 @end group
 @end example
-You must, of course, verify that the casting direction is correct for
+You must, of course, verify yourself that the casting direction is correct for
 smooth dancing of this figure.
 @item <ANYONE> start
 @item skip the <Nth> part
 @item do the <Nth> part
 @item replace the <Nth> part@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
-@item replace the last part@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
+@item replace the last part@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
 @item interrupt after the <Nth> part@ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
+@item interrupt after <M>/<N>@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
 @item interrupt before the last part@ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
 @item start with@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
+@item sandwich@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
 These concepts cause the call to be interrupted or replaced as indicated.
 
 The @code{<ANYONE> start} concept has the indicated people do their own
 part of the first part of the call, after which the others join them.
 You should type this in as, for example
 @example
-@group
-boys start quarter thru @key{ENTER}
-@end group
+   @kbd{boys start quarter thru @key{ENTER}}
 @end example
+@xref{Anyone Start}, for more on the @code{<ANYONE> start} concept.
+
 The @code{do the <Nth> part} concept is intended to be used
 with a following concept, as in @samp{do the 2nd part tandem remake}.
 It applies the following concept
@@ -3521,9 +3554,9 @@ replacement.
 For example, you might type
 @example
 @group
-replace the 3rd part @key{ENTER}
-swing the fractions @key{ENTER}
-2/3 recycle @key{ENTER}
+   @kbd{replace the 3rd part @key{ENTER}
+   swing the fractions @key{ENTER}
+   2/3 recycle @key{ENTER}}
 @end group
 @end example
 
@@ -3533,9 +3566,9 @@ prompt you for the call that is to have its first part replaced.
 For example, you might type
 @example
 @group
-start with @key{ENTER}
-fan the top @key{ENTER}
-the difference @key{ENTER}
+   @kbd{start with @key{ENTER}
+   fan the top @key{ENTER}
+   the difference @key{ENTER}}
 @end group
 @end example
 
@@ -3543,46 +3576,8 @@ Because the @code{replace}, @code{interrupt} and @code{start with} require
 two calls, you must press @key{ENTER}
 after typing them, and then type the two calls with @key{ENTER} after each one.
 
-Some of the replacement/interruption meta-concepts push the
-semantics of the language to the limit.  Whenever a call undergoes an
-interruption or enters or leaves a part with an additional concept on it,
-there is an implicit @i{piecewise} at that instant.  That is, concepts and
-setups are re-evaluated.
-This behavior is not always obvious to the dancers.
-Furthermore, in some cases it may be perceived as wrong.  For example, an
-implied @i{piecewise} on a concept such as @i{cross concentric} or
-@i{single cross concentric} is very likely to be considered wrong,
-because the centers and ends will switch with each other multiple times.
-If you have any doubt about whether some instance of concept stacking is
-correct and will be understood by the dancers, do not use it.
-
-Furthermore, replacements and interruptions are @emph{normal}, that is, they
-do not carry any concepts that were on the call being replaced---only
-those on the entire operation.
-
-Example, from a starting DPT setup:
-
-@example
-DELAY: TANDEM TWOSOME clean sweep 1/4 BUT REPLACE THE 3rd
-PART WITH A [CHECKPOINT crossfire BY crossfire]
-@end example
-
-Normally, the tandem twosome behavior is not re-evaluated after each
-part of the clean sweep.  But, since the third part was replaced with
-something else to which that concept did not apply, the setup is
-re-evaluated before doing the final part.  Note in particular that
-the replacement was @emph{normal}---the call having a part replaced was a
-@i{tandem twosome clean sweep 1/4}.  If we wanted the entire operation,
-including the replacement, to be tandem twosome (with no re-evaluation,
-of course) we might call:
-@example
-TANDEM TWOSOME DELAY: clean sweep 1/4 BUT REPLACE THE 3rd
-PART WITH A [SINGLE CROSS CONCENTRIC turn thru]
-@end example
-
-If you think that some instance of a replacement or interruption will
-cause confusion on the dance floor because of this sort of issue,
-you should not use it.
+See @ref{Interruptions and Interlace}, for information about some tricky aspects
+of these concepts.
 @item inside triangles
 @item outside triangles
 @item in point triangles
@@ -3651,8 +3646,9 @@ These are straightforward.
 @item all 4 couples
 @item all 8
 @item all 8 (diamonds)
-The @code{all 4 couples} and @code{all 8} concepts appear to be undergoing
-some re-examination.  The program's behavior on these might not be
+The @code{all 4 couples} and @code{all 8} concepts currently appear to
+be undergoing some re-examination.
+The program's behavior on these might not be
 satisfactory at the present time.  The @code{all 8 (diamonds)} concept
 is used from a thar, in which the call is intended to be performed in
 each of two interleaved diamonds.  In real life, one can generally call this
@@ -3663,8 +3659,8 @@ program is not that smart, and requires the ``(diamonds)'' hint.
 @node Main Menu Concepts, Concentric, Miscellaneous Concepts, Concept Notes
 @section Miscellaneous Concepts Appearing Only in the Main Menu
 
-These appear only in the concept menu that is always visible on the left
-side of the screen.
+These concepts appear only in the concept menu that is always visible on
+the left side of the screen.
 
 @table @code
 @item each C/L/W/B/D
@@ -3715,7 +3711,7 @@ quadruple diamond spots.
 The @samp{concentric} and @samp{cross concentric} concepts are formulated
 as follows:
 The rule tells how the people who finish on the outside should
-elongate their 2x2 if they finish in a 2x2.  This is the only
+elongate their 2x2 if they finish in one.  This is the only
 case that needs to be addressed.
 
 @enumerate
@@ -3742,17 +3738,17 @@ ends are not in an acceptable setup.  The centers do @emph{not} use the
 ``checkpoint elongate perpendicular to the 1x4 rule''---that rule does not
 apply here.  If the outsides are in a pinwheel, that is, occupying a 4x4
 matrix in an irregular way, each center
-makes the line vs.@: columns decision based on the end person in their own
+makes the lines vs.@: columns decision based on the end person in their own
 quadrant.  That is, the center person's own facing direction and that
 end person's @emph{location,} but not that end person's facing direction.
 
 @item
 If the people who finished on the outside in a 2x2 started
 in a 1x4 or diamond, they use the @dfn{checkpoint rule}---they elongate
-their resulting 2x2 perpendicular to ``the long axis.''  In order to handle
+their resulting 2x2 perpendicular to the long axis.  In order to handle
 all cases correctly, it is important to be very careful in choosing what
 that long axis is.  As a good approximation, it is the long axis of
-``the whole set.''
+the whole set.
 
 If the concept was @i{concentric}, so these people started on
 the outside in a 1x4 or diamond, they use their own long axis, which is
@@ -3777,8 +3773,8 @@ cross concentric diamond recycle} is called from a quarter-tag.
 @node Assume Waves, Assuming a Quarter-Tag, Concentric, Concept Notes
 @section Assume Waves
 
-There are several concepts that you can use to tell the dancers how phantoms
-are facing.  They are
+There are a number of concepts that you can use to tell the dancers how
+phantoms are facing.  They are
 @example
    assume waves
    assume miniwaves
@@ -3859,7 +3855,7 @@ motivate, assume the final cast off is normal}.
 
 The concept @code{with active phantoms}, used after one of the @code{assume}
 concepts (either implicit or explicit), effectively places invisible but
-otherwise intelligent dancers
+intelligent dancers
 on the phantom spots, with facing directions deduced from the assumption.
 Those phantoms proceed through the entire call, interacting with each other
 and with the live dancers as necessary.  If the call is impossible for the
@@ -3897,7 +3893,7 @@ this mode.  @xref{Changing Modes}.
 When in this mode, @code{Sd} will not actually insert the text
 @code{with active phantoms} after each @code{assume} concept.
 
-@node Assuming a Quarter-Tag, Designating Certain People, Assume Waves, Concept Notes
+@node Assuming a Quarter-Tag, Interruptions and Interlace, Assume Waves, Concept Notes
 @section Assuming a Quarter-Tag
 
 Callers sometimes wish to perform a generalized quarter-tag call (e.g.,
@@ -3908,7 +3904,7 @@ are the as-couples center wave of a quarter-tag.  The way to specify this
 when calling is typically something like @samp{as couples in a quarter-tag,
 scoot and little}.
 
-You can do this in either of two ways.  You can use the concepts with names like
+You can do this with Sd in either of two ways.  You can use the concepts with names like
 @code{as couples in a 1/4 tag}.  These concepts exist for @samp{1/4 tag},
 @samp{1/4 line}, @samp{3/4 tag}, and @samp{3/4 line} formations, with all the usual
 @samp{twosome} variations.  There are no @code{tandem} variations of this.
@@ -3930,7 +3926,82 @@ Or, from parallel waves, you could select:
    tandem assume general 1/4 tags ping-pong circulate
 @end example
 
-@node Designating Certain People, Anyone Start, Assuming a Quarter-Tag, Concept Notes
+@node Interruptions and Interlace, Designating Certain People, Assuming a Quarter-Tag, Concept Notes
+@section Interruptions and Interlace 
+
+Some of the replacement/interruption meta-concepts push the
+semantics of the language to the limit.  Whenever a call undergoes an
+interruption or enters or leaves a part with an additional concept on it,
+there is an implicit @i{piecewise} at that instant.  That is, concepts and
+setups are re-evaluated.
+This behavior is not always obvious to the dancers.
+Furthermore, in some cases it may be perceived as wrong.  For example, an
+implied @i{piecewise} on a concept such as @i{cross concentric} or
+@i{single cross concentric} is very likely to be considered wrong,
+because the centers and ends will switch with each other multiple times.
+If you have any doubt about whether some instance of concept stacking is
+correct and will be understood by the dancers, do not use it.
+
+Furthermore, replacements and interruptions are @emph{normal}, that is, they
+do not carry any concepts that were on the call being replaced---only
+those on the entire operation.
+
+Example, from a starting DPT setup:
+
+@example
+DELAY: TANDEM TWOSOME clean sweep 1/4 BUT REPLACE THE
+3rd PART WITH A [CHECKPOINT crossfire BY crossfire]
+@end example
+
+Normally, the tandem twosome behavior is not re-evaluated after each
+part of the clean sweep.  But, since the third part was replaced with
+something else to which that concept did not apply, the setup is
+re-evaluated before doing the final part.  Note in particular that
+the replacement was @emph{normal}---the call having a part replaced was a
+@i{tandem twosome clean sweep 1/4}.  If we wanted the entire operation,
+including the replacement, to be tandem twosome (with no re-evaluation,
+of course) we might call:
+@example
+TANDEM TWOSOME DELAY: clean sweep 1/4 BUT REPLACE THE
+3rd PART WITH A [SINGLE CROSS CONCENTRIC turn thru]
+@end example
+
+There are some calls that behave as though they had ``state'' information
+that one must remember as the call progresses.  Take the case of
+@samp{exchange the diamonds}.  When two people meet at a diamond point
+during this call, the person who has ``already exchanged'' takes the
+outside track, and the person who hasn't takes the inside track.  Hence,
+if the call is interrupted, interlaced, fractionalized, or otherwise
+manipulated, there is a rule determining whether those people take
+right or left hands.  (If they have both exchanged, or neither has exchanged,
+they are on the same track and take right hands.)
+
+It follows that people need to know whether or not they have passed the
+``exchange point'', that is, the very center.  If the call is interrupted
+or interlaced, this information can become very unnatural relative to
+the parts of the call that are being performed.  Some theories that have been
+promulgated involve people remembering individually whether they have passed
+the exchange point, no matter what other things they might do, or ``leaving
+notes on the floor'' when an interruption occurs, intending to tell the
+dancer who will resume from that point whether they should consider themselves
+to have passed the exchange point.  We believe that these methods are of
+marginal utility even in simple cases, an unworkable in complex cases.
+Sd takes the position that the only state information is what part of the call
+one is doing now.  If a collision occurs after parts 1 or 2 of an @samp{exchange the
+diamonds}, the person who is an out-point has exchanged and the other has
+not.  If a collision occurs after parts 3 or 4, both have exchanged, and
+hence they take right hands.  (You can work this out with checkers.)
+Sd therefore considers parts 1 and 2 to be different from parts 3 and 4.
+No matter what interruptions, interlaces, or other concepts were in use,
+the dancers only need to know which of the 4 parts of the @samp{exchange the diamond}
+they are doing at each instant.  They infer whether they have passed the
+exchange point from that information alone.
+
+If you think that some instance of a replacement or interruption will
+cause confusion on the dance floor because of these sorts of issues,
+you should not use it.
+
+@node Designating Certain People, Anyone Start, Interruptions and Interlace, Concept Notes
 @section Designating Certain People
 
 There are six related concepts here.  You must have a clear
@@ -3996,13 +4067,13 @@ accept @code{centers} or @code{center 6} for this, since those terms are not
 well-defined in this situation.
 @end table
 
-@subsection <ANYONE>
+@subsection @code{<ANYONE>}
 
-The concepts are:
+The concepts are
 
 @example
    @code{<ANYONE> <call>}
-         or
+@noindent @r{or}
    @code{<ANYONE> <call> while the others <other call>}
 @end example
 
@@ -4042,13 +4113,13 @@ Incidentally, this is why concepts are capitalized.  Otherwise, the line
 The Sd program is designed to make it possible to determine unambiguously, by looking at
 the printout, how an action arose.
 
-@subsection <ANYONE> Disconnected
+@subsection @code{<ANYONE> Disconnected}
 
-The concepts are:
+The concepts are
 
 @example
    @code{<ANYONE> disconnected <call>}
-         or
+@noindent @r{or}
    @code{<ANYONE> disconnected <call> while the others <other call>}
 @end example
 
@@ -4062,19 +4133,19 @@ whichever set of people occupied the centermost spots prior to the call will
 occupy the center of the result, in accordance with accepted usage for
 this concept.
 
-@subsection <ANYONE> in your Distorted Setup
+@subsection @code{<ANYONE> in your Distorted} @i{Setup}
 
-The concepts are:
+The concepts are
 
 @example
    @code{<ANYONE> in your distorted line <call>}
-         or
+@noindent @r{or}
    @code{<ANYONE> in your distorted wave <call>}
-         or
+@noindent @r{or}
    @code{<ANYONE> in your distorted column <call>}
-         or
+@noindent @r{or}
    @code{<ANYONE> in your distorted diamond <call>}
-         or
+@noindent @r{or}
    @code{<ANYONE> in your distorted box <call>}
 @end example
 
@@ -4093,13 +4164,13 @@ geometrically distorted in shape, not just disconnected.  Do not say
 This concept has been set at C2.  You can use it at lower levels if
 you issue the @code{toggle concept levels} command.
 
-@subsection <ANYONE> Do Your Part
+@subsection @code{<ANYONE> Do Your Part}
 
-The concepts are:
+The concepts are
 
 @example
    @code{<ANYONE> do your part <call>}
-         or
+@noindent @r{or}
    @code{<ANYONE> do your part <call> while the others <other call>}
 @end example
 
@@ -4126,9 +4197,9 @@ as @code{do your part, <ANYONE> <call> while the others <other call>}.
 You must still enter it as shown above, with the designator first and
 the phrase @samp{do your part} second.
 
-@subsection Ignore the <ANYONE>
+@subsection @code{Ignore the <ANYONE>}
 
-The concept is:
+The concept is
 
 @example
    @code{ignore the <ANYONE>, <call>}
@@ -4142,9 +4213,9 @@ people do not exist.
 This concept has been set at C1.  You can use it at lower levels if
 you issue the @code{toggle concept levels} command.
 
-@subsection Own the <ANYONE>
+@subsection @code{Own the <ANYONE>}
 
-The concept is:
+The concept is
 
 @example
    @code{own the <ANYONE>, <call> by <other call>}
@@ -4156,7 +4227,7 @@ is, instead of a C1 phantom setup, a 4x4 matrix may result.
 This is a recognized C3A concept.
 
 @node Anyone Start, 12 Matrix and 16 Matrix, Designating Certain People, Concept Notes
-@section Anyone Start
+@section @code{<ANYONE> Start}
 
 It is often useful to designate that certain people are to start a call,
 with everyone joining in after the first part.
@@ -4164,7 +4235,7 @@ There are two general ways to do this:
 @example
 @group
    @code{<anyone> start}
-         or
+@noindent @r{or}
    @code{initially <anyone>}
 @end group
 @end example
@@ -4178,47 +4249,40 @@ their part of the start of the call.  They do this in the entire setup.
 That is, they are aware of the spots occupied by the others.
 
 The concept @samp{initially <anyone>} means that the @samp{<anyone>} concept
-is applied to the first part of the call.  What that means depends on what
-the formation is, and on who are designated.  If the centers are designated, they
+is applied to the first part of the call.  When a selector name is used as a concept,
+what happens depends on what the formation is, and on who are designated.
+If the centers are designated, they
 do the first part of the call, working in the center.  They are usually unaware
 of the other people around them.
 
 Suppose we have an hourglass and wish to have the centers start a
 @samp{reverse order alter the wave}.  The parts of @samp{reverse order alter the wave}
-are @samp{flip the diamond}, @samp{diamond circulate twice}, @samp{fan back},
+are @samp{flip the diamond}, @samp{diamond counter rotate twice}, @samp{fan back},
 and @samp{swing}.  We clearly want the centers to work by themselves, flipping the
 center diamond.  The result will be twin diamonds, from which everyone can finish the
 call.
 
 @noindent We could say:
 @example
-@group
    @code{initially centers reverse order alter the wave}
-@end group
 @end example
 The @samp{centers} concept picks out the center diamond, and tells them to
 work in that diamond.
 
 @noindent If we had said
 @example
-@group
    @code{centers start reverse order alter the wave}
-@end group
 @end example
 it wouldn't work.  The centers would try to do their part of a @samp{flip the diamond}
 in the entire hourglass, which is impossible.
 
 @noindent A similar thing happens if we have a galaxy and call
 @example
-@group
    @code{initially centers tally ho}.
-@end group
 @end example
 The centers recognize their 2x2 box, and do a @samp{1/2 circulate}.  If we had said
 @example
-@group
    @code{centers start tally ho}
-@end group
 @end example
 the centers would have to try to do a @samp{1/2 circulate}
 in the galaxy, which is impossible.
@@ -4227,17 +4291,13 @@ Suppose we have a galaxy and wish to have the centers begin a @samp{with confide
 That is, the centers @samp{hinge} but the ends do @emph{not} do a @samp{1/2 circulate}.
 The first part of @samp{with confidence} is @samp{centers hinge while the ends 1/2 circulate}.  If we say
 @example
-@group
    @code{centers start with confidence}
-@end group
 @end example
 @noindent the centers will do their part of a @samp{centers hinge} in the entire galaxy.
 That means, of course, that they will recognize themselves as centers, and will
 @samp{hinge}, so the call will work.  If we had said
 @example
-@group
    @code{initially centers with confidence}
-@end group
 @end example
 @noindent the centers would recognize only their center box, from which a @samp{centers hinge}
 is impossible because the centers have been designated twice.
@@ -4247,9 +4307,9 @@ you can call
 @example
 @group
    @code{centers start swing the fractions}
-         or
+@noindent @r{or}
    @code{initially centers swing the fractions}
-         or just
+@noindent @r{or just}
    swing the fractions
 @end group
 @end example
@@ -4259,7 +4319,7 @@ tidal wave, you can call
 @example
 @group
    @code{ends start 2/3 recycle}
-         or
+@noindent @r{or}
    @code{initially ends 2/3 recycle}
 @end group
 @end example
@@ -4300,10 +4360,11 @@ some 2x6 matrices.  Exactly what large setups a call can be done from
 depends on the call.
 
 Also, some calls, like @samp{circulate}, can be used with either @samp{12 MATRIX}
-or @samp{3x4 MATRIX}, while others require @samp{12 MATRIX}.  For example,
+or @samp{3x4 MATRIX}, while other calls require @samp{12 MATRIX}@.
+For example,
 @code{12 MATRIX motivate} is legal, but @code{3x4 MATRIX motivate} is not.
 The rationale is that @samp{12 MATRIX} and @samp{16 MATRIX} are call
-modifiers---@code{12 MATRIX circulate} and @code{12 MATRIX motivate} are
+modifiers; @code{12 MATRIX circulate} and @code{12 MATRIX motivate} are
 calls that have definitions in this setup.  Concepts like @samp{3x4 MATRIX},
 @samp{4x4 MATRIX}, @samp{2x6 MATRIX}, and @samp{2x8 MATRIX} simply state
 how big the setup is.  The call @samp{circulate} is defined in such a way
@@ -4326,14 +4387,15 @@ two end-to-end 2x3's, in each of which the call will be performed.
 These concepts all have the additional
 property that they can expand a smaller setup as required, so, for example,
 @samp{12 MATRIX circulate} is legal in normal (2x4) columns.  It expands the setup
-to a 2x6 be placing pairs of phantoms on the ends.  (Special case: in a 2x4
+to a 2x6 by placing pairs of phantoms on the ends.  (Special case: in a 2x4
 setup, the @samp{16 MATRIX} call modifier doesn't know whether to expand to a
 4x4 or a 2x8, so you may need to use @samp{4X4 MATRIX} or @samp{2X8 MATRIX} explicitly.
 In other cases, the expansion is clear.)
 
 Explicit matrix concepts can also be used to dictate the precise formation
-with phantoms when using tandem or as-couples concepts.  For example, from
-two-faced lines, @samp{2X8 MATRIX AS COUPLES} leads to virtual 2x4 lines (in
+with phantoms when using tandem or as-couples concepts.
+For example, from two-faced lines,
+the concept @samp{2X8 MATRIX AS COUPLES} leads to virtual 2x4 lines (in
 which the ends are all phantoms), @samp{4X4 MATRIX AS COUPLES} leads to virtual
 2x4 columns (this happens to be the same as @samp{PHANTOM AS COUPLES} in this
 setup), and @samp{4X4 MATRIX BOXES WORK SOLID} leads to a virtual 2x2.
@@ -4410,8 +4472,12 @@ Sd*text*font: -misc-fixed-medium-r-normal--13-*-*-*-c-70-iso8859-1
 
 The file @file{Sd.res} is a sample X user resource file for the program.  It
 contains values for a number of parameters, including most of the
-text on the screen which is not fetched from the calls database.
-Install @file{Sd.res} as @file{$HOME/Sd} to use these resources.
+text on the screen that is not fetched from the calls database.
+
+All values in the distributed @file{Sd.res} file---except the
+colors---are the defaults and are in the file for illustration only.
+To change a value, copy its line into the file @file{$HOME/Sd} and make
+the change you want.
 
 People who have many user resource files for different applications
 may wish to store them in a directory other than their home directory.
@@ -4432,11 +4498,6 @@ whatever your X startup file is called).  You will have to re-run @code{xrdb}
 after editing your @file{.Xresources} file.
 You should add @samp{Sd} to the front
 of any lines you move to your @file{.Xresources} file.
-
-All values in the distributed @file{Sd.res} file except the colors are the
-defaults and are in the file for illustration only.  You can remove
-them if you wish your installed user resource file to contain only the
-resources you change.
 
 To have mouse button 3 invoke the Undo operation, as one of the
 authors does, set these resources:

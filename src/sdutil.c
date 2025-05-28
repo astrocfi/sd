@@ -295,6 +295,7 @@ Cstring warning_strings[] = {
    /*  warn__like_linear_action  */   "*Ends start like a linear action -- this may be controversial.",
    /*  warn__split_1x6           */   "*Do the call in each 1x3 setup.",
    /*  warn__colocated_once_rem  */   " The once-removed setups have the same center.",
+   /*  warn_hairy_fraction       */   " Fraction is very complicated.",
    /*  warn_bad_collision        */   "*This collision may be controversial.",
    /*  warn__dyp_resolve_ok      */   " Do your part.",
    /*  warn__unusual             */   "*This is an unusual setup for this call.",
@@ -334,7 +335,7 @@ static restriction_thing wave_1x16     = {16, {0, 1, 2, 3, 4, 5, 6, 7, 9, 8, 11,
 static restriction_thing wave_2x8      = {16, {0, 1, 2, 3, 4, 5, 6, 7, 9, 8, 11, 10, 13, 12, 15, 14},{0}, {0}, {0}, TRUE, chk_wave};            /* check for parallel 2x8 waves */
 
 static restriction_thing wave_dmd      = {2, {1, 3},                         {0},                         {0}, {0}, TRUE, chk_wave};            /* check for miniwave in center of diamond */
-static restriction_thing wave_ptpd     = {4, {1, 3, 7, 5},                   {0},                         {0}, {0}, TRUE, chk_wave};            /* check for miniwaves in center of each diamond */
+static restriction_thing wavectrs_ptpd = {4, {1, 3, 7, 5},                   {0},                         {0}, {0}, TRUE, chk_wave};            /* check for miniwaves in center of each diamond */
 static restriction_thing wave_tgl      = {2, {1, 2},                         {0},                         {0}, {0}, TRUE, chk_wave};            /* check for miniwave as base of triangle */
 
 static restriction_thing wave_thar     = {8, {0, 1, 2, 3, 5, 4, 7, 6},           /* NOTE THE 4 --> */{4}, {0}, {0}, TRUE,  chk_wave};           /* check for consistent wavy thar */
@@ -406,10 +407,14 @@ static restriction_thing s4x4_2fl     = {0,    {0, 0, 0, 0, 0, 0, 2, 0, 2, 2, 2,
 
 static restriction_thing cwave_qtg     = {4, {2, 3, 7, 6},                                           {0}, {0}, {0}, FALSE, chk_wave};           /* check for wave across the center */
 static restriction_thing wave_qtag     = {4, {6, 7, 3, 2},                                           {0}, {0}, {0}, TRUE,  chk_wave};           /* check for wave across the center */
-static restriction_thing miniwave_qtg  = {2, {6, 2, 7, 3},                                           {2}, {0}, {0}, TRUE,  chk_anti_groups};    /* check for center people in miniwaves */
-static restriction_thing miniwave_ptpd = {2, {1, 7, 3, 5},                                           {2}, {0}, {0}, TRUE,  chk_anti_groups};    /* check for miniwaves in center of each diamond */
+static restriction_thing two_faced_qtag= {4, {6, 2, 7, 3},                                           {0}, {0}, {0}, TRUE,  chk_wave};           /* check for two-faced line across the center */
+static restriction_thing miniwave_qtbn = {2, {6, 2, 7, 3},                                           {2}, {0}, {0}, TRUE,  chk_anti_groups};    /* check for center people in miniwaves */
+static restriction_thing cpls_qtbn     = {2, {6, 2, 7, 3},                                           {2}, {0}, {0}, TRUE,  chk_groups};         /* check for center people in couples */
 
-static restriction_thing two_faced_qtag= {4, {6, 2, 7, 3},                                           {0}, {0}, {0}, FALSE, chk_wave};           /* check for two-faced line across the center */
+static restriction_thing wave_ptpd     = {4, {0, 2, 6, 4},                                           {0}, {0}, {0}, TRUE,  chk_wave};           /* check for disconnected wave across the center */
+static restriction_thing two_faced_ptpd= {4, {0, 6, 2, 4},                                           {0}, {0}, {0}, TRUE,  chk_wave};           /* check for disconnected two-faced line across the center */
+
+static restriction_thing miniwave_ptpd = {2, {1, 7, 3, 5},                                           {2}, {0}, {0}, TRUE,  chk_anti_groups};    /* check for miniwaves in center of each diamond */
 
 static restriction_thing qtag_1        = {4, {8, 0, 1, 2, 3, 4, 5, 6, 7}, {0},                {2, 4, 5}, {2, 0, 1}, FALSE, chk_dmd_qtag};
 static restriction_thing dmd4_1        = {4, {16, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}, {0}, {4, 8, 9, 10, 11}, {4, 0, 1, 2, 3}, FALSE, chk_dmd_qtag};
@@ -504,8 +509,15 @@ static restr_initializer restr_init_table[] = {
    {s2x4, cr_couples_only, &cpls_2x4},
    {s2x4, cr_miniwaves, &mnwv_2x4},
    {s_qtag, cr_wave_only, &wave_qtag},
-   {s_qtag, cr_miniwaves, &miniwave_qtg},
    {s_qtag, cr_2fl_only, &two_faced_qtag},
+   {s_qtag, cr_dmd_not_intlk, &wave_qtag},
+   {s_qtag, cr_dmd_intlk, &two_faced_qtag},
+   {s_ptpd, cr_dmd_not_intlk, &wave_ptpd},
+   {s_ptpd, cr_dmd_intlk, &two_faced_ptpd},
+   {s_qtag, cr_miniwaves, &miniwave_qtbn},
+   {s_qtag, cr_couples_only, &cpls_qtbn},
+   {s_bone, cr_miniwaves, &miniwave_qtbn},
+   {s_bone, cr_couples_only, &cpls_qtbn},
    {s_bone6, cr_wave_only, &bone6_1x4},
    {s2x8, cr_wave_only, &wave_2x8},
    {s2x8, cr_4x4_2fl_only, &two_faced_4x4_2x8},
@@ -656,7 +668,7 @@ extern restriction_thing *get_restriction_thing(setup_kind k, assumption_thing t
             break;
          case s_ptpd:
             if (t.assumption == cr_wave_only)
-               restr_thing_ptr = &wave_ptpd;
+               restr_thing_ptr = &wavectrs_ptpd;
             else if (t.assumption == cr_miniwaves)
                restr_thing_ptr = &miniwave_ptpd;
             break;
@@ -950,6 +962,10 @@ Private void writestuff_with_decorations(parse_block *cptr, Const char *s)
                writestuff(selector_list[cptr->options.who].sing_name_uc);
                f += 2;
                continue;
+            default:   /**** maybe we should really fo what "translate_menu_name"
+                           does, using call to "get_escape_string". */
+               f += 2;
+               continue;
          }
       }
 
@@ -1206,26 +1222,34 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
             else if (k == concept_sequential) {
                writestuff("(");
             }
-            else if (k == concept_replace_nth_part || k == concept_replace_last_part) {
+            else if (k == concept_replace_nth_part || k == concept_replace_last_part || k == concept_interrupt_at_fraction) {
                writestuff("DELAY: ");
                if (!local_cptr->next || !subsidiary_ptr) {
                   switch (local_cptr->concept->value.arg1) {
                      case 9:
                         writestuff("(interrupting after the ");
                         writestuff(ordinals[local_cptr->options.number_fields]);
+                        writestuff(" part) ");
                         break;
                      case 8:
                         writestuff("(replacing the ");
                         writestuff(ordinals[local_cptr->options.number_fields]);
+                        writestuff(" part) ");
                         break;
                      case 0:
-                        writestuff("(replacing the last");
+                        writestuff("(replacing the last part) ");
                         break;
                      case 1:
-                        writestuff("(interrupting before the last");
+                        writestuff("(interrupting before the last part) ");
+                        break;
+                     case 2:
+                        writestuff("(interrupting after ");
+                        writestuff(cardinals[local_cptr->options.number_fields & 0xF]);
+                        writestuff("/");
+                        writestuff(cardinals[(local_cptr->options.number_fields >> 4) & 0xF]);
+                        writestuff(") ");
                         break;
                   }
-                  writestuff(" part) ");
                }
             }
             else {
@@ -1256,9 +1280,9 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
             }
             else if (k == concept_on_your_own)
                writestuff(" AND");
-            else if (k == concept_interlace)
+            else if (k == concept_interlace || k == concept_sandwich)
                writestuff(" WITH");
-            else if (k == concept_replace_nth_part || k == concept_replace_last_part) {
+            else if (k == concept_replace_nth_part || k == concept_replace_last_part || k == concept_interrupt_at_fraction) {
                writestuff(" BUT ");
                writestuff_with_decorations(local_cptr, (Const char *) 0);
                writestuff(" WITH A [");
@@ -1380,7 +1404,7 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
             writestuff(")");
             return;
          }
-         else if (k == concept_replace_nth_part) {
+         else if (k == concept_replace_nth_part || k == concept_replace_last_part || k == concept_interrupt_at_fraction) {
             if (request_final_space) writestuff(" ");
             print_recurse(local_cptr, PRINT_RECURSE_STAR);
             writestuff("]");
@@ -1614,10 +1638,21 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
                         break;
                      case 'C':
                         if (use_cross_name) {
-                           if (lastchar != ' ' && lastchar != '[') writechar(' ');
+                           write_blank_if_needed();
                            writestuff("cross");
                         }
                         np += 2;
+                        break;
+                     case 'S':                   /* Look for star turn replacement. */
+                        if (save_cptr->options.star_turn_option != 0) {
+                           switch (save_cptr->options.star_turn_option) {
+                              case -1: writestuff(", don't turn the star"); break;
+                              case 1: writestuff(", turn the star 1/4"); break;
+                              case 2: writestuff(", turn the star 1/2"); break;
+                              case 3: writestuff(", turn the star 3/4"); break;
+                           }
+                        }
+                        np += 2;       /* skip the indicator */
                         break;
                      case 'J':
                         if (!use_magic_name) {
@@ -2382,9 +2417,6 @@ extern long_boolean verify_restriction(
          for (idx=0; idx<rr->size; idx++) {
             if ((t = ss->people[rr->map1[idx]].id1) != 0) { qaa[idx&1] |=  t; qaa[(idx&1)^1] |= t^2; }
             else if (tt.assump_negate || tt.assump_live) goto bad;    /* All live people were demanded. */
-#ifdef TAKING_THIS_OUT
-            else if (rr->map3[0] != 0) goto bad;    /* All live people were demanded. */
-#endif
          }
 
          if ((qaa[0] & qaa[1] & 2) != 0)
@@ -2743,16 +2775,23 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
          if ((p->qual_num & 0xF) != (current_options.number_fields & 0xF)+1) continue;
       }
 
-      /* The "16" bit of the "qual_num" field means we require people
-         to be not T-boned. */
+      /* The "0x10" bit of the "qual_num" field means we require people to be not T-boned. */
+      /* The "0x20" bit of the "qual_num" field means we require people to be T-boned. */
 
-      if ((p->qual_num & 0x10) != 0) {
+      if ((p->qual_num & 0x30) != 0) {
          u = 0;
 
          for (i=0; i<=setup_attrs[ss->kind].setup_limits; i++)
             u |= ss->people[i].id1;
 
-         if ((u & 011) == 011) continue;
+         if ((u & 011) == 011) {
+            /* They are T-boned.  The "10" bit says to reject. */
+            if ((p->qual_num & 0x10) != 0) continue;
+         }
+         else {
+            /* They are not T-boned.  The "20" bit says to reject. */
+            if ((p->qual_num & 0x20) != 0) continue;
+         }
       }
 
       if ((search_qualifier) p->qualifier == sq_none) goto good;
@@ -2773,6 +2812,8 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
       tt.assump_both = 0;
       tt.assump_cast = 0;
       tt.assump_live = 0;
+      /* The "0x40" bit of the "qual_num" field means we require people to be live. */
+      if ((p->qual_num & 0x40) != 0) tt.assump_live = 1;
 
       switch ((search_qualifier) p->qualifier) {
          case sq_wave_only:       /* 1x4 or 2x4 - waves; 3x2 or 4x2 - magic columns; 2x2 - real RH or LH box */
@@ -2904,7 +2945,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
 
             switch (ss->kind) {
                case s1x2: case s1x4: case s1x6: case s1x8: case s1x16: case s2x4:
-               case sdmd: case s_trngl: case s_qtag: case s_ptpd:
+               case sdmd: case s_trngl: case s_qtag: case s_ptpd: case s_bone:
                   goto fix_col_line_stuff;
                case s2x2:
                   if ((t = ss->people[0].id1) & (u = ss->people[1].id1)) { k |= t|u; i &= t^u; }
@@ -3105,6 +3146,27 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
             }
 
             tt.assumption = cr_diamond_like;
+            goto check_tt;
+         case sq_dmd_intlk:
+            switch (ss->cmd.cmd_assume.assumption) {
+               case cr_ijright: case cr_ijleft: case cr_real_1_4_line: case cr_real_3_4_line:
+                  goto good;
+               case cr_jright: case cr_jleft: case cr_real_1_4_tag: case cr_real_3_4_tag:
+                  goto bad;
+            }
+
+            tt.assumption = cr_dmd_intlk;
+            goto check_tt;
+
+         case sq_dmd_not_intlk:
+            switch (ss->cmd.cmd_assume.assumption) {
+               case cr_ijright: case cr_ijleft: case cr_real_1_4_line: case cr_real_3_4_line:
+                  goto bad;
+               case cr_jright: case cr_jleft: case cr_real_1_4_tag: case cr_real_3_4_tag:
+                  goto good;
+            }
+
+            tt.assumption = cr_dmd_not_intlk;
             goto check_tt;
          case sq_split_dixie:
             if (ss->cmd.cmd_final_flags.final & FINAL__SPLIT_DIXIE_APPROVED) goto good;
@@ -3350,7 +3412,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
             /* FALL THROUGH!!! */
          case s1x6: case s1x8: case s1x10:
          case s1x12: case s1x14: case s1x16:
-         case s2x2: case s4x4: case s_thar: case s_qtag: case s_trngl:
+         case s2x2: case s4x4: case s_thar: case s_qtag: case s_trngl: case s_bone:
             /* FELL THROUGH!!! */
             goto check_tt;
          case sdmd: case s_ptpd:

@@ -1,5 +1,5 @@
 # Makefile for Sd (square dance caller's helper)
-# Time-stamp: <96/05/05 10:50:56 gildea>
+# Time-stamp: <1997-10-14 19:02:28 gildea>
 
 srcdir = @srcdir@
 # VPATH is for GNU make
@@ -130,12 +130,12 @@ dvi: sd_doc.dvi
 ps: sd_doc.ps
 html: sd_doc_toc.html
 
-DOCSRCS = sd_doc.txinfo readme.txinfo install.txinfo gpl.txinfo
+DOCSRCS = sd_doc.txi readme.txi install.txi gpl.txi
 
 sd_doc.dvi sd_doc.info sd_doc.txt sd_doc_toc.html: $(DOCSRCS)
 
 # additional suffixes used for the documentation
-.SUFFIXES: .dvi .info .txt .txinfo
+.SUFFIXES: .dvi .info .txt .txi
 
 RM = rm -f
 
@@ -147,15 +147,18 @@ TXI2HTML = texi2html
 @SET_MAKE@
 
 # We do it twice, so cross references will be reconciled.
-.txinfo.dvi:
+.txi.dvi:
 	$(TXI2DVI) $<
 	$(TXI2DVI) $<
 
-.txinfo.info:
+.txi.info:
 	$(MAKEINFO) -I$(srcdir) $<
 
-.txinfo.txt:
+.txi.txt:
 	$(MAKE_ASCII) -o $@ -I$(srcdir) $<
+
+.txi.html:
+	$(TXI2HTML) $<
 
 sd_doc.ps: sd_doc.dvi
 	$(DVIPS) -o $@ $?
@@ -169,8 +172,20 @@ relnotes.ps: relnotes.dvi
 demo.ps: demo.dvi
 	$(DVIPS) -o $@ $?
 
-sd_doc_toc.html:
-	$(TXI2HTML) -split_node -menu sd_doc.txinfo
+# These large documents have two Web forms: monolithic and split
+
+sd_doc.html:
+	$(TXI2HTML) -monolithic sd_doc.txi
+
+sd_doc_toc.html: sd_doc.txi
+	$(TXI2HTML) -split_node -menu sd_doc.txi
+
+sessions.html:
+	$(TXI2HTML) -monolithic sessions.txi
+
+sessions_toc.html: sessions.txi
+	$(TXI2HTML) -split_chapter -menu sessions.txi
+
 
 # Stephen's fancy way of producing a pretty, compact PostScript file.
 # You don't want to know.
@@ -178,11 +193,11 @@ sd_doc.PS: $(DOCSRCS)
 	if [ -r make-ps ]; then make-ps $@ $(DOCSRCS); \
 	else $(MAKE) sd_doc.ps && mv sd_doc.ps sd_doc.PS; fi
 
-INSTALL: install.txinfo
-	$(MAKE_ASCII) -o $@ --no-validate $(srcdir)/install.txinfo
+INSTALL: install.txi
+	$(MAKE_ASCII) -o $@ --no-validate $(srcdir)/install.txi
 
-README: readme.txinfo
-	$(MAKE_ASCII) -o $@ --no-validate $(srcdir)/readme.txinfo
+README: readme.txi
+	$(MAKE_ASCII) -o $@ --no-validate $(srcdir)/readme.txi
 
 
 docclean:
@@ -250,10 +265,9 @@ BIN_TARFILE = sd-@VERSION@-@SYSTEM@.tar
 
 @BINDIST_RULE@
 
-TARFILES1 = README oldnotes
+TARFILES1 = README relnotes.txt relnotes.ps oldnotes
 TARFILES2 = sd sdtty mkcalls \
 	 sample1.ini sample2.ini demo.ps demo.txt sessions.ps sessions.txt \
-          relnotes.ps relnotes.txt \
 	 sd_calls.txt sd_calls.dat \
 	 Sd.res sd_doc.txt sd_doc.PS
 

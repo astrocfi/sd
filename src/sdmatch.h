@@ -42,6 +42,7 @@ typedef struct glozk {
 typedef struct filch {
    long_boolean valid;       /* set to TRUE if a match was found */
    long_boolean exact;       /* set to TRUE if an exact match was found */
+   long_boolean indent;      /* This is a subordinate call; indent it in listing. */
    modifier_block match;
    Const struct filch *real_next_subcall;
    Const struct filch *real_secondary_subcall;

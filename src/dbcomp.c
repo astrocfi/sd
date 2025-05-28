@@ -359,6 +359,8 @@ char *sstab[] = {
    "pbigbone",
    "bigdmd",
    "pbigdmd",
+   "bigptpd",
+   "pbigptpd",
    ""};
 
 /* This table is keyed to "setup_kind". */
@@ -399,7 +401,6 @@ char *estab[] = {
    "???",
    "2x8",
    "4x4",
-   "???",
    "1x10",
    "1x12",
    "1x14",
@@ -435,6 +436,7 @@ char *estab[] = {
    "bigdhrgl",
    "bigbone",
    "bigdmd",
+   "bigptpd",
    "???",
    "normal_concentric",
    ""};
@@ -467,10 +469,10 @@ char *schematab[] = {
    "conc_or_diamond_line",
    "conc6_2",
    "conc2_6",
-   "conc4_2",
-   "conc4_2_or_normal",
-   "conc4_2_or_singletogether",
-   "crossconc4_2_or_normal",
+   "conc6p",
+   "conc6p_or_normal",
+   "conc6p_or_singletogether",
+   "crossconc6p_or_normal",
    "conc_others",
    "conc6_2_tgl",
    "conc_to_outer_dmd",
@@ -491,12 +493,15 @@ char *schematab[] = {
    "in_out_triple",
    "in_out_quad",
    "select_leads",
+   "select_center2",
+   "select_center4",
    "???",
    "???",
    "???",
    "???",
    "seq",
    "splitseq",
+   "seq_with_fraction",
    "setup",
    "nulldefine",
    "matrix",
@@ -549,6 +554,8 @@ char *qualtab[] = {
    "dmd_ctrs_rh",
    "dmd_ctrs_lh",
    "dmd_ctrs_1f",
+   "dmd_intlk",
+   "dmd_not_intlk",
    "ctr_pts_rh",
    "ctr_pts_lh",
    "said_triangle",
@@ -599,6 +606,8 @@ char *crtab[] = {
    "ends_are_peelable",
    "siamese_in_quad",
    "not_tboned",
+   "dmd_intlk",
+   "dmd_not_intlk",
    "opposite_sex",
    "quarterbox_or_col",
    "quarterbox_or_magic_col",
@@ -679,7 +688,7 @@ char *flagtab1[] = {
    "base_tag_call_3",
    "base_circ_call",
    "ends_take_right_hands",
-   "full_size_mystic",
+   "???",                  /* Filled in during initialization. */
    ""};
 
 /* The next three tables are all in step with each other, and with the "heritable" flags. */
@@ -710,6 +719,7 @@ char *flagtabh[] = {
    "yoyo_is_inherited",
    "straight_is_inherited",
    "twisted_is_inherited",
+   "lasthalf_is_inherited",
    ""};
 
 /* This table is keyed to the constants "cflag__???".
@@ -738,6 +748,7 @@ char *altdeftabh[] = {
    "yoyo",
    "straight",
    "twisted",
+   "lasthalf",
    ""};
 
 /* This table is keyed to the constants "dfm_***".  These are the heritable
@@ -767,6 +778,7 @@ char *defmodtabh[] = {
    "inherit_yoyo",
    "inherit_straight",
    "inherit_twisted",
+   "inherit_lasthalf",
    ""};
 
 /* This table is keyed to the constants "dfm_***".  These are the heritable
@@ -859,6 +871,8 @@ char *predtab[] = {
    "tandem_side_of_out_3n1_col",
    "miniwave_side_of_2n1_line",
    "couple_side_of_2n1_line",
+   "antitandem_side_of_2n1_col",
+   "tandem_side_of_2n1_col",
    "cast_normal",
    "cast_pushy",
    "cast_normal_or_warn",
@@ -976,13 +990,14 @@ tagtabitem tagtabinit[] = {
       {0, "endsshadow"},     /* This is used for "shadow <setup>". */
       {0, "chreact_1"},      /* This is used for propagating the hinge info for part 2 of chain reaction. */
       {0, "makepass_1"},     /* This is used for propagating the cast off 3/4 info for part 2 of make a pass. */
-      {0, "circulate"},     /* This is used for propagating the cast off 3/4 info for part 2 of make a pass. */
+      {0, "circulate"},
       {0, "tagnullcall0"},   /* These 4 must be consecutive. */
       {0, "tagnullcall1"},
       {0, "tagnullcall2"},
       {0, "tagnullcall3"},
-      {0, "circnullcall"}};
-#define N_INITIAL_TAGS 13
+      {0, "circnullcall"},
+      {0, "turnstarn"}};
+#define N_INITIAL_TAGS 14
 
 int tagtabsize = N_INITIAL_TAGS;  /* Number of items we currently have in tagtab -- we initially have 7; see below. */
 int tagtabmax = 100;              /* Amount of space allocated for tagtab; must be >= tagtabsize at all times, obviously. */
@@ -1619,12 +1634,31 @@ def2:
          if (call_qualifier) errexit("Only one qualifier is allowed");
          call_qual_num = 0;
          get_tok();
+
+         /* Look for other indicators. */
+         for (;;) {
+            if (tok_kind == tok_symbol && !strcmp(tok_str, "live")) {
+               call_qual_num |= 0x40;
+               get_tok();
+            }
+            else if (tok_kind == tok_symbol && !strcmp(tok_str, "tbone")) {
+               call_qual_num |= 0x20;
+               get_tok();
+            }
+            else if (tok_kind == tok_symbol && !strcmp(tok_str, "ntbone")) {
+               call_qual_num |= 0x10;
+               get_tok();
+            }
+            else
+               break;
+         }
+
          if (tok_kind != tok_symbol) errexit("Improper qualifier");
          if ((call_qualifier = search(qualtab)) < 0) errexit("Unknown qualifier");
       }
       else if (!strcmp(tok_str, "tqualifier")) {
          if (call_qualifier) errexit("Only one qualifier is allowed");
-         call_qual_num = 16;
+         call_qual_num = 0x10;
          get_tok();
          if (tok_kind != tok_symbol) errexit("Improper qualifier");
          if ((call_qualifier = search(qualtab)) < 0) errexit("Unknown qualifier");
@@ -1638,7 +1672,7 @@ def2:
       }
       else if (!strcmp(tok_str, "tnqualifier")) {
          if (call_qualifier) errexit("Only one qualifier is allowed");
-         call_qual_num = get_num("Need a qualifier number here")+17;
+         call_qual_num = get_num("Need a qualifier number here")+0x10+1;
          get_tok();
          if (tok_kind != tok_symbol) errexit("Improper qualifier");
          if ((call_qualifier = search(qualtab)) < 0) errexit("Unknown qualifier");
@@ -1900,6 +1934,7 @@ extern void dbcompile(void)
                write_call_header(ccc);
                break;
             case schema_sequential:
+            case schema_sequential_with_fraction:
             case schema_split_sequential:
                write_call_header(ccc);
                write_seq_stuff();

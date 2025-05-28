@@ -21,8 +21,8 @@
     General Public License if you distribute the file.
 */
 
-#define VERSION_STRING "31.90"
-#define TIME_STAMP "wba@apollo.hp.com  2 Aug 97 $"
+#define VERSION_STRING "31.91"
+#define TIME_STAMP "wba@apollo.hp.com  15 Nov 97 $"
 
 /* This defines the following functions:
    sd_version_string
@@ -62,6 +62,7 @@ and the following external variables:
    testing_fidelity
    selector_for_initialize
    number_for_initialize
+   null_options
    verify_options
    verify_used_number
    verify_used_selector
@@ -158,6 +159,10 @@ interactivity_state interactivity = interactivity_normal;
 long_boolean testing_fidelity = FALSE;
 selector_kind selector_for_initialize;
 int number_for_initialize;
+Const call_conc_option_state null_options = {
+   selector_uninitialized,
+   direction_uninitialized,
+   0, 0, 0, 0, 0};
 call_conc_option_state verify_options;
 long_boolean verify_used_number;
 long_boolean verify_used_selector;
@@ -368,12 +373,7 @@ extern parse_block *get_parse_block(void)
 
    item->concept = (concept_descriptor *) 0;
    item->call = (callspec_block *) 0;
-   item->options.who = selector_uninitialized;
-   item->options.where = direction_uninitialized;
-   item->options.number_fields = 0;
-   item->options.howmanynumbers = 0;
-   item->options.tagger = -1;
-   item->options.circcer = -1;
+   item->options = null_options;
    item->replacement_key = 0;
    item->no_check_call_level = 0;
    item->subsidiary_root = (parse_block *) 0;
@@ -580,7 +580,7 @@ Private long_boolean find_numbers(int howmanynumbers, long_boolean forbid_zero, 
    and so we have taken no action.  This can only occur if interactive.
    If not interactive, stuff will be chosen by random number. */
 
-extern long_boolean deposit_call(callspec_block *call)
+extern long_boolean deposit_call(callspec_block *call, Const call_conc_option_state *options)
 {
    parse_block *new_block;
    int tagclass;
@@ -660,12 +660,13 @@ extern long_boolean deposit_call(callspec_block *call)
    new_block = get_parse_block();
    new_block->concept = &mark_end_of_list;
    new_block->call = call;
+   new_block->options = *options;
    new_block->options.who = sel;
    new_block->options.where = dir;
    new_block->options.number_fields = number_list;
    new_block->options.howmanynumbers = howmanynums;
-   new_block->options.tagger = -1;
-   new_block->options.circcer = -1;
+   new_block->options.tagger = 0;
+   new_block->options.circcer = 0;
 
    /* Filling in the tagger requires recursion! */
 
@@ -686,7 +687,7 @@ extern long_boolean deposit_call(callspec_block *call)
       if (tagg > number_of_taggers[tagclass]) fail("bad tagger index???");
 
       parse_state.concept_write_ptr = &new_block->next->subsidiary_root;
-      if (deposit_call(tagger_calls[tagclass][tagg-1]))
+      if (deposit_call(tagger_calls[tagclass][tagg-1], &null_options))
          longjmp(longjmp_ptr->the_buf, 5);     /* User waved the mouse away while getting subcall. */
       parse_state.concept_write_ptr = savecwp;
    }
@@ -708,7 +709,7 @@ extern long_boolean deposit_call(callspec_block *call)
       if (circc > number_of_circcers) fail("bad circcer index???");
 
       parse_state.concept_write_ptr = &new_block->next->subsidiary_root;
-      if (deposit_call(circcer_calls[circc-1]))
+      if (deposit_call(circcer_calls[circc-1], &null_options))
          longjmp(longjmp_ptr->the_buf, 5);     /* User waved the mouse away while getting subcall. */
       parse_state.concept_write_ptr = savecwp;
    }
@@ -1107,7 +1108,7 @@ extern long_boolean query_for_call(void)
       if (     (search_goal == command_level_call || search_goal == command_8person_level_call) &&
                ((dance_level) result->level) < level_threshholds[calling_level]) fail("Level reject.");
       if (result->callflags1 & CFLAG1_DONT_USE_IN_RESOLVE) fail("This shouldn't get printed.");
-      if (deposit_call(result)) goto recurse_entry;
+      if (deposit_call(result, &null_options)) goto recurse_entry;
    }
 
    /* Check our "stack" and see if we have recursive invocations to clean up. */

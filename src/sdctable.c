@@ -86,22 +86,22 @@ concept_descriptor concept_descriptor_table[] = {
 
 /* phantom concepts */
 
-#define pl__1_size 46
+#define pl__1_size 52
 #define pl__1_spl 0
 #define pl__1_ipl 1
 #define pl__1_pl 2
-#define pl__1_pl8 10
-#define pl__1_pl6 11
-#define pl__1_tl 18
-#define pl__1_tlwt 21
-#define pl__1_tlwa 22
-#define pl__1_tlwf 23
-#define pl__1_tlwb 24
-#define pl__1_trtl 34
-#define pl__1_qlwt 39
-#define pl__1_qlwa 40
-#define pl__1_qlwf 41
-#define pl__1_qlwb 42
+#define pl__1_pl8 14
+#define pl__1_pl6 15
+#define pl__1_tl 22
+#define pl__1_tlwt 26
+#define pl__1_tlwa 27
+#define pl__1_tlwf 28
+#define pl__1_tlwb 29
+#define pl__1_trtl 39
+#define pl__1_qlwt 45
+#define pl__1_qlwa 46
+#define pl__1_qlwf 47
+#define pl__1_qlwb 48
    {"SPLIT PHANTOM LINES",                   concept_do_phantom_2x4,            D, l_c3a, {&map_split_f, phantest_impossible, 1, MPKIND__SPLIT}},
    {"INTERLOCKED PHANTOM LINES",             concept_do_phantom_2x4,            D, l_c4a, {&map_intlk_f, phantest_impossible, 1, MPKIND__INTLK}},
    {"PHANTOM LINES",                         concept_do_phantom_2x4,            D, l_c3, {&map_full_f, phantest_first_or_both, 1, MPKIND__CONCPHAN}},
@@ -109,6 +109,10 @@ concept_descriptor concept_descriptor_table[] = {
    {"12 MATRIX SPLIT PHANTOM LINES",         concept_do_phantom_2x3,            D, l_c3x, {&map_3x4_2x3, phantest_impossible, 1}},
    {"12 MATRIX INTERLOCKED PHANTOM LINES",   concept_do_phantom_2x3,            D, l_c3x, {&map_3x4_2x3_intlk, phantest_impossible, 1}},
    {"12 MATRIX PHANTOM LINES",               concept_do_phantom_2x3,            D, l_c3x, {&map_3x4_2x3_conc, phantest_first_or_both, 1}},
+         {"", concept_comment, 0, l_nonexistent_concept},
+   {"SPLIT PHANTOM LINES OF 6",              concept_triple_twin,               D, l_c3x, {0, 1, 0, 3, MPKIND__SPLIT}},
+   {"INTERLOCKED PHANTOM LINES OF 6",        concept_triple_twin,               D, l_c3x, {0, 1, 0, 3, MPKIND__INTLK}},
+   {"PHANTOM LINES OF 6",                    concept_triple_twin,               D, l_c3x, {0, 1, 0, 3, MPKIND__CONCPHAN}},
          {"", concept_comment, 0, l_nonexistent_concept},
    {"DIVIDED LINES",                         concept_divided_2x4,               D, l_c4, {&map_hv_2x4_2, phantest_impossible, 1}},
    {"12 MATRIX DIVIDED LINES",               concept_divided_2x3,               D, l_c4, {&map_2x6_2x3, phantest_impossible, 1}},
@@ -121,6 +125,7 @@ concept_descriptor concept_descriptor_table[] = {
    {"@a REVERSE CRAZY PHANTOM LINES",        concept_frac_phan_crazy,           D, l_c4, {0, 16+8+1, CONCPROP__NEEDK_4X4, CMD_MISC__VERIFY_LINES}},
          {"", concept_comment, 0, l_nonexistent_concept},
    {"TRIPLE LINES",                          concept_triple_lines,              D, l_c2, {0, 1}},
+   {"TRIPLE LINES OF 6",                     concept_do_phantom_triple_1x6,     D, l_c3x, {0, phantest_ok, 0, 1}},
    {"CENTER TRIPLE LINE",                    concept_in_out_std,                D, l_c2, {0, 1, CONCPROP__NEEDK_CTR_1X4, 0}},
    {"OUTSIDE TRIPLE LINES",                  concept_in_out_std,                D, l_c2, {0, 8+1, CONCPROP__NEEDK_END_1X4, 0}},
    {"TRIPLE LINES WORKING TOGETHER",         concept_triple_lines_tog_std,      D, l_c4a, {0, 10, 1}},
@@ -136,9 +141,10 @@ concept_descriptor concept_descriptor_table[] = {
    {"TRIPLE TIDAL LINES WORKING FORWARD",    concept_triple_1x8_tog,            D, l_c4, {0, 0, 1}},
    {"TRIPLE TIDAL LINES WORKING BACKWARD",   concept_triple_1x8_tog,            D, l_c4, {0, 2, 1}},
          {"", concept_comment, 0, l_nonexistent_concept},
-   {"TRIPLE TWIN LINES",                     concept_triple_twin,               D, l_c4a, {&map_4x6_2x4, 1}},
+   {"TRIPLE TWIN LINES",                     concept_triple_twin,               D, l_c4a, {0, 1, 0, 0}},
          {"", concept_comment, 0, l_nonexistent_concept},
    {"QUADRUPLE LINES",                       concept_quad_lines,                D, l_c4a, {0, 1}},
+   {"QUADRUPLE LINES OF 6",                  concept_triple_twin,               D, l_c3x, {0, 1, 0, 2}},
    {"CENTER PHANTOM LINES",                  concept_in_out_std,                D, l_c3,  {0, 16+1, CONCPROP__NEEDK_4X4_1X16, 0}},
    {"OUTSIDE PHANTOM LINES",                 concept_in_out_std,                D, l_c3,  {0, 16+8+1, CONCPROP__NEEDK_4X4_1X16, 0}},
    {"QUADRUPLE LINES WORKING TOGETHER",      concept_quad_lines_tog_std,        D, l_c4a, {0, 10, 1}},
@@ -149,7 +155,7 @@ concept_descriptor concept_descriptor_table[] = {
    {"QUADRUPLE LINES WORKING COUNTERCLOCKWISE",concept_quad_lines_tog_std,      D, l_c4,  {0, 9, 1}},
    {"QUADRUPLE LINES WORKING TOWARD THE CENTER",concept_quad_lines_tog_std,     D, l_c4,  {0, 12, 1}},
 /* -------- column break -------- */
-#define pl__2_size 46
+#define pl__2_size 52
 #define pl__2_spw 0
 #define pl__2_ipw 1
 #define pl__2_pw 2
@@ -160,6 +166,10 @@ concept_descriptor concept_descriptor_table[] = {
          {"", concept_comment, 0, l_nonexistent_concept},
          {"", concept_comment, 0, l_nonexistent_concept},
          {"", concept_comment, 0, l_nonexistent_concept},
+         {"", concept_comment, 0, l_nonexistent_concept},
+   {"SPLIT PHANTOM WAVES OF 6",              concept_triple_twin,               D, l_c3x, {0, 3, 0, 3, MPKIND__SPLIT}},
+   {"INTERLOCKED PHANTOM WAVES OF 6",        concept_triple_twin,               D, l_c3x, {0, 3, 0, 3, MPKIND__INTLK}},
+   {"PHANTOM WAVES OF 6",                    concept_triple_twin,               D, l_c3x, {0, 3, 0, 3, MPKIND__CONCPHAN}},
          {"", concept_comment, 0, l_nonexistent_concept},
    {"DIVIDED WAVES",                         concept_divided_2x4,               D, l_c4, {&map_hv_2x4_2, phantest_impossible, 3}},
    {"12 MATRIX DIVIDED WAVES",               concept_divided_2x3,               D, l_c4, {&map_2x6_2x3, phantest_impossible, 3}},
@@ -172,6 +182,7 @@ concept_descriptor concept_descriptor_table[] = {
    {"@a REVERSE CRAZY PHANTOM WAVES",        concept_frac_phan_crazy,           D, l_c4, {0, 16+8+3, CONCPROP__NEEDK_4X4, CMD_MISC__VERIFY_WAVES}},
          {"", concept_comment, 0, l_nonexistent_concept},
    {"TRIPLE WAVES",                          concept_triple_lines,              D, l_c2, {0, 3}},
+   {"TRIPLE WAVES OF 6",                     concept_do_phantom_triple_1x6,     D, l_c3x, {0, phantest_ok, 0, 3}},
    {"CENTER TRIPLE WAVE",                    concept_in_out_std,                D, l_c2, {0, 3, CONCPROP__NEEDK_CTR_1X4, 0}},
    {"OUTSIDE TRIPLE WAVES",                  concept_in_out_std,                D, l_c2, {0, 8+3, CONCPROP__NEEDK_END_1X4, 0}},
    {"TRIPLE WAVES WORKING TOGETHER",         concept_triple_lines_tog_std,      D, l_c4a, {0, 10, 3}},
@@ -187,9 +198,10 @@ concept_descriptor concept_descriptor_table[] = {
    {"TRIPLE TIDAL WAVES WORKING FORWARD",    concept_triple_1x8_tog,            D, l_c4, {0, 0, 3}},
    {"TRIPLE TIDAL WAVES WORKING BACKWARD",   concept_triple_1x8_tog,            D, l_c4, {0, 2, 3}},
          {"", concept_comment, 0, l_nonexistent_concept},
-   {"TRIPLE TWIN WAVES",                     concept_triple_twin,               D, l_c4a, {&map_4x6_2x4, 3}},
+   {"TRIPLE TWIN WAVES",                     concept_triple_twin,               D, l_c4a, {0, 3, 0, 0}},
          {"", concept_comment, 0, l_nonexistent_concept},
    {"QUADRUPLE WAVES",                       concept_quad_lines,                D, l_c4a, {0, 3}},
+   {"QUADRUPLE WAVES OF 6",                  concept_triple_twin,               D, l_c3x, {0, 3, 0, 2}},
    {"CENTER PHANTOM WAVES",                  concept_in_out_std,                D, l_c3,  {0, 16+3, CONCPROP__NEEDK_4X4_1X16, 0}},
    {"OUTSIDE PHANTOM WAVES",                 concept_in_out_std,                D, l_c3,  {0, 16+8+3, CONCPROP__NEEDK_4X4_1X16, 0}},
    {"QUADRUPLE WAVES WORKING TOGETHER",      concept_quad_lines_tog_std,        D, l_c4a, {0, 10, 3}},
@@ -200,22 +212,22 @@ concept_descriptor concept_descriptor_table[] = {
    {"QUADRUPLE WAVES WORKING COUNTERCLOCKWISE",concept_quad_lines_tog_std,      D, l_c4, {0, 9, 3}},
    {"QUADRUPLE WAVES WORKING TOWARD THE CENTER",concept_quad_lines_tog_std,     D, l_c4, {0, 12, 3}},
 /* -------- column break -------- */
-#define pl__3_size 46
+#define pl__3_size 52
 #define pl__3_spc 0
 #define pl__3_ipc 1
 #define pl__3_pc 2
-#define pl__3_pc8 10
-#define pl__3_pc6 11
-#define pl__3_tc 18
-#define pl__3_tcwt 21
-#define pl__3_tcwa 22
-#define pl__3_tcwr 23
-#define pl__3_tcwl 24
-#define pl__3_trtc 34
-#define pl__3_qcwt 39
-#define pl__3_qcwa 40
-#define pl__3_qcwr 41
-#define pl__3_qcwl 42
+#define pl__3_pc8 14
+#define pl__3_pc6 15
+#define pl__3_tc 22
+#define pl__3_tcwt 26
+#define pl__3_tcwa 27
+#define pl__3_tcwr 28
+#define pl__3_tcwl 29
+#define pl__3_trtc 39
+#define pl__3_qcwt 45
+#define pl__3_qcwa 46
+#define pl__3_qcwr 47
+#define pl__3_qcwl 48
    {"SPLIT PHANTOM COLUMNS",                 concept_do_phantom_2x4,            D, l_c3a, {&map_split_f, phantest_impossible, 0, MPKIND__SPLIT}},
    {"INTERLOCKED PHANTOM COLUMNS",           concept_do_phantom_2x4,            D, l_c4a, {&map_intlk_f, phantest_impossible, 0, MPKIND__INTLK}},
    {"PHANTOM COLUMNS",                       concept_do_phantom_2x4,            D, l_c3, {&map_full_f, phantest_first_or_both, 0, MPKIND__CONCPHAN}},
@@ -223,6 +235,10 @@ concept_descriptor concept_descriptor_table[] = {
    {"12 MATRIX SPLIT PHANTOM COLUMNS",       concept_do_phantom_2x3,            D, l_c3x, {&map_3x4_2x3, phantest_impossible, 0}},
    {"12 MATRIX INTERLOCKED PHANTOM COLUMNS", concept_do_phantom_2x3,            D, l_c3x, {&map_3x4_2x3_intlk, phantest_impossible, 0}},
    {"12 MATRIX PHANTOM COLUMNS",             concept_do_phantom_2x3,            D, l_c3x, {&map_3x4_2x3_conc, phantest_first_or_both, 0}},
+         {"", concept_comment, 0, l_nonexistent_concept},
+   {"SPLIT PHANTOM COLUMNS OF 6",            concept_triple_twin,               D, l_c3x, {0, 0, 0, 3, MPKIND__SPLIT}},
+   {"INTERLOCKED PHANTOM COLUMNS OF 6",      concept_triple_twin,               D, l_c3x, {0, 0, 0, 3, MPKIND__INTLK}},
+   {"PHANTOM COLUMNS OF 6",                  concept_triple_twin,               D, l_c3x, {0, 0, 0, 3, MPKIND__CONCPHAN}},
          {"", concept_comment, 0, l_nonexistent_concept},
    {"DIVIDED COLUMNS",                       concept_divided_2x4,               D, l_c4, {&map_hv_2x4_2, phantest_impossible, 0}},
    {"12 MATRIX DIVIDED COLUMNS",             concept_divided_2x3,               D, l_c4, {&map_2x6_2x3, phantest_impossible, 0}},
@@ -235,6 +251,7 @@ concept_descriptor concept_descriptor_table[] = {
    {"@a REVERSE CRAZY PHANTOM COLUMNS",      concept_frac_phan_crazy,           D, l_c4, {0, 16+8+0, CONCPROP__NEEDK_4X4, CMD_MISC__VERIFY_COLS}},
          {"", concept_comment, 0, l_nonexistent_concept},
    {"TRIPLE COLUMNS",                        concept_triple_lines,              D, l_c3, {0, 2}},
+   {"TRIPLE COLUMNS OF 6",                   concept_do_phantom_triple_1x6,     D, l_c3x, {0, phantest_ok, 0, 0}},
    {"CENTER TRIPLE COLUMN",                  concept_in_out_std,                D, l_c3, {0, 0, CONCPROP__NEEDK_CTR_1X4, 0}},
    {"OUTSIDE TRIPLE COLUMNS",                concept_in_out_std,                D, l_c3, {0, 8+0, CONCPROP__NEEDK_END_1X4, 0}},
    {"TRIPLE COLUMNS WORKING TOGETHER",       concept_triple_lines_tog_std,      D, l_c4a, {0, 10, 0}},
@@ -250,9 +267,10 @@ concept_descriptor concept_descriptor_table[] = {
    {"TRIPLE TIDAL COLUMNS WORKING RIGHT",    concept_triple_1x8_tog,            D, l_c4, {0, 2, 0}},
    {"TRIPLE TIDAL COLUMNS WORKING LEFT",     concept_triple_1x8_tog,            D, l_c4, {0, 0, 0}},
          {"", concept_comment, 0, l_nonexistent_concept},
-   {"TRIPLE TWIN COLUMNS",                   concept_triple_twin,               D, l_c4a, {&map_4x6_2x4, 0}},
+   {"TRIPLE TWIN COLUMNS",                   concept_triple_twin,               D, l_c4a, {0, 0, 0, 0}},
          {"", concept_comment, 0, l_nonexistent_concept},
    {"QUADRUPLE COLUMNS",                     concept_quad_lines,                D, l_c4a, {0, 0}},
+   {"QUADRUPLE COLUMNS OF 6",                concept_triple_twin,               D, l_c3x, {0, 0, 0, 2}},
    {"CENTER PHANTOM COLUMNS",                concept_in_out_std,                D, l_c3a, {0, 16+0, CONCPROP__NEEDK_4X4_1X16, 0}},
    {"OUTSIDE PHANTOM COLUMNS",               concept_in_out_std,                D, l_c3a, {0, 16+8+0, CONCPROP__NEEDK_4X4_1X16, 0}},
    {"QUADRUPLE COLUMNS WORKING TOGETHER",    concept_quad_lines_tog_std,        D, l_c4a, {0, 10, 0}},
@@ -813,7 +831,7 @@ concept_descriptor concept_descriptor_table[] = {
    {"FERRIS",                                concept_ferris,                    D, l_c3x,        {0, 0}},
    {"RELEASE",                               concept_ferris,                    D, l_c3a,        {0, 1}},
 /* -------- column break -------- */
-#define mm__2_size 76
+#define mm__2_size 78
    {"CENTERS",                               concept_centers_or_ends,           D, l_mainstream, {0, selector_centers, FALSE}},
    {"ENDS",                                  concept_centers_or_ends,           D, l_mainstream, {0, selector_ends,    FALSE}},
    {"CENTERS AND ENDS",                      concept_centers_and_ends,          0, l_mainstream, {0, selector_centers, FALSE}},
@@ -890,6 +908,8 @@ concept_descriptor concept_descriptor_table[] = {
    {"START WITH",                            concept_special_sequential,        0, l_c2,         {0, 2}},
    {"INTERRUPT AFTER THE @u PART",           concept_replace_nth_part,          0, l_c1,         {0, 9}},
    {"INTERRUPT BEFORE THE LAST PART",        concept_replace_last_part,         0, l_c1,         {0, 1}},
+   {"INTERRUPT AFTER @9/@9",                 concept_interrupt_at_fraction,     0, l_c1,         {0, 2}},
+   {"SANDWICH",                              concept_sandwich,                  0, l_c3,         {0, 3}},
 /* -------- column break -------- */
 #define mm__3_size 65
 #define mm__3_3x3 59
@@ -1103,8 +1123,8 @@ static int nice_setup_concept_2x8[] = {
    pb_1_offset + pb__1_qbwl,    /* quadruple boxes working left */
    pb_1_offset + pb__1_qbwt,    /* quadruple boxes working together */
    pb_1_offset + pb__1_qbwa,    /* quadruple boxes working apart */
-   pl_1_offset + pl__1_pl8,     /* phantom tidal lines */
-   pl_3_offset + pl__3_pc8,     /* phantom tidal columns */
+   pl_1_offset + pl__1_pl8,     /* twin phantom tidal lines */
+   pl_3_offset + pl__3_pc8,     /* twin phantom tidal columns */
    /* The less likely ones: */
    mm_3_offset + mm__3_4x4,
    tt_1_offset + tt__1_cpl,     /* (2x8 matrix) as couples */
@@ -1121,8 +1141,8 @@ static int nice_setup_concept_2x6[] = {
    pb_1_offset + pb__1_tbwl,    /* triple boxes working left */
    pb_1_offset + pb__1_tbwt,    /* triple boxes working together */
    pb_1_offset + pb__1_tbwa,    /* triple boxes working apart */
-   pl_1_offset + pl__1_pl6,     /* phantom lines of 6 */
-   pl_3_offset + pl__3_pc6,     /* phantom columns of 6 */
+   pl_1_offset + pl__1_pl6,     /* twin phantom lines of 6 */
+   pl_3_offset + pl__3_pc6,     /* twin phantom columns of 6 */
    mm_3_offset + mm__3_3x3,     /* 3x3 */
    /* Let's give these extra probability. */
    pb_1_offset + pb__1_tb,      /* triple boxes */

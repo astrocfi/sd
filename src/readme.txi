@@ -1,4 +1,4 @@
-@c readme.txi  Time-stamp: <1997-10-09 20:16:57 gildea> -*-texinfo-*-
+@c readme.txi  Time-stamp: <1997-10-14 17:19:42 gildea> -*-texinfo-*-
 @c Included by sd_doc, also used to produce README.
 @node Intro, Getting Started, Top, Top
 @unnumbered Introduction
@@ -30,7 +30,7 @@ Mainstream staples missing, such as Circle Left, Grand Square, and
 Do-Si-Do.  Since these calls are @dfn{zeros}, there is no
 reason to have them in a checker-pushing program.  However, if you
 wish to write sequences containing calls such as these, you can use the
-@code{insert comment} command to write them into the sequence.
+@code{insert a comment} command to write them into the sequence.
 
 In short, if you are writing a Traditional or Mainstream dance,
 you may find that this program is not for you.
@@ -69,7 +69,7 @@ is to receive instruction from a qualified teacher or coach, and to practice.
 We recognize that people sometimes have to learn a level in a tape group without
 benefit of any human expertise at that level, and that such people may have
 no choice but to rely on a computer program as one of their sources of
-information.  This is an undesireable situation, and we believe that computer
+information.  This is an undesirable situation, and we believe that computer
 programs should not be used as references except in emergencies.  There is an
 enormous body of knowledge about the accepted usage of various calls and concepts.
 That body of knowledge is generally possessed by all competent dancers and callers
@@ -130,7 +130,7 @@ calls that are not on the official or semi-official lists.  In an attempt to
 allow this, while maintaining the appearance of strict compliance with
 the lists, Sd has two special levels @code{c3x} and @code{c4x}.  These contain
 the calls that are currently believed to be called at C3 and C4 but are
-not yet on the semi-official C3 list or the various informal C4 complilations
+not yet on the semi-official C3 list or the various informal C4 compilations
 of ``commonly used'' calls.
 
 It is generally @emph{not necessary} to run the program at either of these
@@ -151,7 +151,7 @@ controversial, or might violate some definition or some commonly accepted notion
 These warning messages are intended for callers less competent than you.
 Ignore them.
 
-You can prevent the program from displaying or printing warning messages
+You can prevent the program from displaying or printing these warning messages
 by giving the @code{toggle nowarn mode} command.  This turns on (or turns
 off if it was already on) the ``no warnings'' mode.  You can also start the
 program with a command-line switch ``-no_warnings'', or place a line
@@ -228,7 +228,7 @@ The price is $4 (price valid for 1997).
 @end ifset
 If you want a different format instead, please say so.
 
-Sd and Sdtty are also available via anonymous FTP from the directory
+Sd and Sdtty are also available via FTP from the directory
 @file{sd/} on host ftp.gildea.com.
 FTP is the Internet file transfer protocol.
 
@@ -261,15 +261,14 @@ contains a description of all the files in this directory.
 
 You must transfer the files in FTP's binary mode.
 
-If you are on the Internet, you can download the program using the
-World Wide Web.  Give the locator
+You can download the program from
 @ifclear html
 @t{http://www.gildea.com/sd/}
 @end ifclear
 @ifset html
 @t{<A HREF="http://www.gildea.com/sd/">http://www.gildea.com/sd/</A>}
 @end ifset
-to your WWW browser program.
+on the World Wide Web.
 
 If your mailer can interpret MIME messages, we can also send you Sd
 by email.  MIME is a draft Internet standard for structured mail, and

@@ -405,12 +405,11 @@ static veryshort ftc2x4[8] = {10, 15, 3, 1, 2, 7, 11, 9};
 static veryshort ftc4x4[24] = {10, 15, 3, 1, 2, 7, 11, 9, 2, 7, 11, 9, 10, 15, 3, 1, 10, 15, 3, 1, 2, 7, 11, 9};
 static veryshort ftcphan[24] = {0, 2, 7, 5, 8, 10, 15, 13, 8, 10, 15, 13, 0, 2, 7, 5, 0, 2, 7, 5, 8, 10, 15, 13};
 static veryshort ftl2x4[12] = {6, 11, 15, 13, 14, 3, 7, 5, 6, 11, 15, 13};
-static veryshort ftcspn[8] = {-1, 5, -1, 6, -1, 11, -1, 0};
+static veryshort ftcspn[8] = {6, 11, 13, 17, 22, 27, 29, 1};
 static veryshort ftcbone[8] = {6, 13, 18, 19, 22, 29, 2, 3};
-static veryshort ftlcwv[12] = {9, 10, 1, 2, 3, 4, 7, 8, 9, 10, 1, 2};
+static veryshort ftlcwv[12] = {25, 26, 2, 3, 9, 10, 18, 19, 25, 26, 2, 3};
 static veryshort ftlqtg[12] = {29, 6, 10, 11, 13, 22, 26, 27, 29, 6, 10, 11};
 static veryshort qtlqtg[12] = {5, -1, -1, 0, 1, -1, -1, 4, 5, -1, -1, 0};
-static veryshort btlqtg[12] = {5, 0, -1, -1, 1, 4, -1, -1, 5, 0, -1, -1};
 static veryshort qtlbone[12] = {0, 3, -1, -1, 4, 7, -1, -1, 0, 3, -1, -1};
 static veryshort qtlxwv[12] = {0, 1, -1, -1, 4, 5, -1, -1, 0, 1, -1, -1};
 static veryshort ft4x4bh[16] = {9, 8, 7, -1, 6, -1, -1, -1, 3, 2, 1, -1, 0, -1, -1, -1};
@@ -421,17 +420,8 @@ static veryshort galtranslatev[16] = {-1, -1, -1,  1, -1,  3,  4,  2, -1, -1, -1
 static veryshort phan4x4xlatea[16] = {-1, -1,  8,  6, -1, -1, 12, 10, -1, -1,  0, 14, -1, -1,  4,  2};
 static veryshort phan4x4xlateb[16] = {-1,  5, -1,  7, -1,  9, -1, 11, -1, 13, -1, 15, -1,  1, -1,  3};
 #endif
-static veryshort s1x6translateh[12] = {0, 1, 2, 0, 0, 0, 3, 4, 5, 0, 0, 0};
-static veryshort s1x6translatev[12] = {0, 0, 0, 0, 1, 2, 0, 0, 0, 3, 4, 5};
-static veryshort sxwvtranslateh[12] = {0, 1, 0, 0, 2, 3, 4, 5, 0, 0, 6, 7};
-static veryshort sxwvtranslatev[12] = {0, 6, 7, 0, 1, 0, 0, 2, 3, 4, 5, 0};
 static veryshort sdmdtranslateh[8] = {0, 0, 0, 1, 2, 0, 0, 3};
 static veryshort sdmdtranslatev[8] = {0, 3, 0, 0, 0, 1, 2, 0};
-static veryshort s3dmftranslateh[12] = {0, 1, 2, 3, 0, 0, 4, 5, 6, 7, 0, 0};
-static veryshort s3dmntranslateh[12] = {0, 1, 2, 0, 3, 0, 4, 5, 6, 0, 7, 0};
-static veryshort s3dmftranslatev[12] = {7, 0, 0, 0, 1, 2, 3, 0, 0, 4, 5, 6};
-static veryshort s3dmntranslatev[12] = {0, 7, 0, 0, 1, 2, 0, 3, 0, 4, 5, 6};
-static veryshort s_vacate_star[12]   = {0, 1, 2, 0, 0, 3, 4, 5, 6, 0, 0, 7};
 
 
 
@@ -467,37 +457,6 @@ static veryshort hextranslatev[32] = {
    0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  2,  3,  4,  5,  6,  7,
    0,  0,  0,  0,  0,  0,  0,  0,  8,  9, 10, 11, 12, 13, 14, 15};
 
-static veryshort qdmtranslateh[32] = {
-   12, 13, 14, 15,  0,  1,  0,  0,  0,   0,  0,  0,  3,  0,  2,  0,
-   4,   5,  6,  7,  0,  9,  0,  8,  0,   0,  0,  0, 11,  0, 10,  0};
-
-static veryshort qdmtranslatev[32] = {
-   0,  0,  0,  0,  11, 0,  10, 0,  12, 13, 14, 15, 0,  1,  0,  0,
-   0,  0,  0,  0,  3,  0,  2,  0,  4,  5,  6,  7,  0,  9,  0,  8};
-
-static veryshort qtgtranslateh[32] = {
-   -1, -1, 6, 7, -1, 0, -1, -1, -1, -1, -1, -1, -1, -1, 1, -1,
-   -1, -1, 2, 3, -1, 4, -1, -1, -1, -1, -1, -1, -1, -1, 5, -1};
-
-static veryshort qtgtranslatev[32] = {
-   -1, -1, -1, -1, -1, -1, 5, -1, -1, -1, 6, 7, -1, 0, -1, -1,
-   -1, -1, -1, -1, -1, -1, 1, -1, -1, -1, 2, 3, -1, 4, -1, -1};
-
-static veryshort bonetranslateh[32] = {
-   -1, -1, 6, 7, -1, -1, 0, -1, -1, -1, -1, -1, -1, 1, -1, -1,
-   -1, -1, 2, 3, -1, -1, 4, -1, -1, -1, -1, -1, -1, 5, -1, -1};
-
-static veryshort bonetranslatev[32] = {
-   -1, -1, -1, -1, -1, 5, -1, -1, -1, -1, 6, 7, -1, -1, 0, -1,
-   -1, -1, -1, -1, -1, 1, -1, -1, -1, -1, 2, 3, -1, -1, 4, -1};
-
-static veryshort j23translateh[32] = {
-   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  0,  2,  0,  0,
-   0,  0,  0,  0,  0,  0,  3,  0,  0,  0,  0,  4,  0,  5,  0,  0};
-
-static veryshort j23translatev[32] = {
-   0,  0,  0,  4,  0,  5,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-   0,  0,  0,  1,  0,  2,  0,  0,  0,  0,  0,  0,  0,  0,  3,  0};
 
 
 
@@ -952,40 +911,40 @@ Private void special_4_way_symm(
    setup *result)
 
 {
-   static int table_2x4[8] = {10, 15, 3, 1, 2, 7, 11, 9};
+   static Const veryshort table_2x4[8] = {10, 15, 3, 1, 2, 7, 11, 9};
 
-   static int table_2x8[16] = {
+   static Const veryshort table_2x8[16] = {
       12, 13, 14, 15, 31, 27, 23, 19,
       44, 45, 46, 47, 63, 59, 55, 51};
 
-   static int table_3x1d[8] = {
-      0, 1, 2, 3, 6, 7, 8, 9};
+   static Const veryshort table_3x1d[8] = {
+      1, 2, 3, 9, 17, 18, 19, 25};
 
-   static int table_4x6[24] = {
+   static Const veryshort table_4x6[24] = {
        9, 10, 11, 30, 26, 22,
       23, 27, 31, 15, 14, 13,
       41, 42, 43, 62, 58, 54,
       55, 59, 63, 47, 46, 45};
 
-   static int table_1x16[16] = {
+   static Const veryshort table_1x16[16] = {
        0,  1,  2,  3,  4,  5,  6,  7,
       16, 17, 18, 19, 20, 21, 22, 23};
 
-   static int table_4dmd[16] = {
+   static Const veryshort table_4dmd[16] = {
       7, 5, 14, 12, 16, 17, 18, 19,
       23, 21, 30, 28, 0, 1, 2, 3};
 
-   static int table_2x3_4dmd[6] = {
+   static Const veryshort table_2x3_4dmd[6] = {
       6, 11, 13, 22, 27, 29};
 
+   static Const veryshort line_table[4] = {0, 1, 6, 7};
 
-   static int line_table[4] = {0, 1, 6, 7};
-   static int dmd_table[4] = {0, 4, 6, 10};
+   static Const veryshort dmd_table[4] = {0, 4, 6, 10};
 
    int begin_size;
    int real_index;
    int k, result_size, result_quartersize;
-   int *the_table = (int *) 0;
+   Const veryshort *the_table = (Const veryshort *) 0;
 
    switch (result->kind) {
       case s2x2: case s_galaxy:
@@ -1010,7 +969,7 @@ Private void special_4_way_symm(
          the_table = table_2x8;
          break;
       case s3x1dmd:
-         result->kind = sx1x6;
+         result->kind = sx4dmd;
          the_table = table_3x1d;
          break;
       case s4x6:
@@ -1176,9 +1135,11 @@ Private int divide_the_setup(
    uint64 final_concepts = ss->cmd.cmd_final_flags;
    setup_command conc_cmd;
    uint32 must_do_mystic = ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_KMASK;
+   calldef_schema conc_schema = schema_concentric;
    long_boolean matrix_aware =
          (callflags1 & CFLAG1_12_16_MATRIX_MEANS_SPLIT) &&
          (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX);
+   int finalrot = 0;
 
    /* It will be helpful to have a mask of where the
       live people are. */
@@ -1252,20 +1213,58 @@ Private int divide_the_setup(
             case 0xF0F0:    /* a parallelogram */
                division_code = MAPCODE(s1x4,2,MPKIND__OFFS_R_FULL,1);
                warn(warn__each1x4);
-               break;
+               goto divide_us_no_recompute;
             case 0x0F0F:    /* a parallelogram */
                division_code = MAPCODE(s1x4,2,MPKIND__OFFS_L_FULL,1);
                warn(warn__each1x4);
-               break;
+               goto divide_us_no_recompute;
             case 0xC3C3:    /* the outer quadruple boxes */
                division_code = MAPCODE(s2x2,4,MPKIND__SPLIT,0);
                warn(warn__each2x2);
-               break;
-            default:
-               fail("You must specify a concept.");
+               goto divide_us_no_recompute;
          }
 
-         goto divide_us_no_recompute;
+
+
+
+
+/* new stuff */
+
+
+
+         {
+            /* Setup is randomly populated.  See if we have 1x2/1x1 definitions, but no 2x2.
+               If so, divide the 2x8 into 2 2x4's. */
+
+            long_boolean forbid_little_stuff =
+                  assoc(b_2x4, ss, calldeflist) ||
+                  assoc(b_4x2, ss, calldeflist) ||
+                  assoc(b_2x3, ss, calldeflist) ||
+                  assoc(b_3x2, ss, calldeflist) ||
+                  assoc(b_dmd, ss, calldeflist) ||
+                  assoc(b_pmd, ss, calldeflist) ||
+                  assoc(b_qtag, ss, calldeflist) ||
+                  assoc(b_pqtag, ss, calldeflist);
+
+            if (  !forbid_little_stuff &&
+/*
+                  (callflags1 & CFLAG1_12_16_MATRIX_MEANS_SPLIT) &&
+                  (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX) &&
+*/
+                  !assoc(b_2x2, ss, calldeflist) &&
+                  (  assoc(b_1x2, ss, calldeflist) ||
+                     assoc(b_2x1, ss, calldeflist) ||
+                     assoc(b_1x1, ss, calldeflist))) {
+               /* Without a lot of examination of facing directions, and whether the call has 1x2 vs. 2x1
+                  definitions, and all that, we don't know which axis to use when dividing it.  But any
+                  division into 2 2x4's is safe, and code elsewhere will make the tricky decisions later. */
+               division_code = MAPCODE(s2x4,2,MPKIND__SPLIT,0);
+               goto divide_us_no_recompute;
+            }
+         }
+
+
+         fail("You must specify a concept.");
       case s2x6:
          /* The call has no applicable 2x6 or 6x2 definition. */
 
@@ -1304,6 +1303,20 @@ Private int divide_the_setup(
             }
          }
 
+         /* Next, check whether it has 1x2/2x1/2x2/1x1 definitions, and we are doing some phantom concept.
+            Divide the setup into 3 boxes if so. */
+
+         if (ss->cmd.cmd_misc_flags & CMD_MISC__PHANTOMS) {
+            if (
+                  assoc(b_2x2, ss, calldeflist) ||
+                  assoc(b_1x2, ss, calldeflist) ||
+                  assoc(b_2x1, ss, calldeflist) ||
+                  assoc(b_1x1, ss, calldeflist)) {
+               division_code = MAPCODE(s2x2,3,MPKIND__SPLIT,0);
+               goto divide_us_no_recompute;
+            }
+         }
+
          /* Otherwise, the only way this can be legal is if we can identify
             smaller setups of all real people and can do the call on them.  For
             example, we will look for 1x4 setups, so we could do things like
@@ -1318,9 +1331,15 @@ Private int divide_the_setup(
                division_code = MAPCODE(s1x4,2,MPKIND__OFFS_L_HALF,1);
                warn(warn__each1x4);
                break;
-            case 06363: case 06060: case 00303: case 04141: case 02222:    /* the outer triple boxes */
+            case 06060: case 00303:
+            case 06363:    /* the outer triple boxes */
                division_code = MAPCODE(s2x2,3,MPKIND__SPLIT,0);
                warn(warn__each2x2);
+               break;
+            case 05555: case 04141: case 02222:
+               /* Split into 6 stacked 1x2's. */
+               division_code = MAPCODE(s1x2,6,MPKIND__SPLIT,1);
+               warn(warn__each1x2);
                break;
             default:
                fail("You must specify a concept.");
@@ -1369,7 +1388,24 @@ Private int divide_the_setup(
                goto divide_us_no_recompute;
             }
          }
-         break;
+
+         /* Otherwise, the only way this can be legal is if we can identify
+            smaller setups of all real people and can do the call on them. */
+
+         switch (livemask) {
+            case 01717:    /* outer 1x4's */
+               division_code = MAPCODE(s1x4,3,MPKIND__SPLIT,0);
+               warn(warn__each1x4);
+               break;
+            case 06363:    /* center 1x4 and outer 1x2's */
+               division_code = MAPCODE(s1x2,6,MPKIND__SPLIT,0);
+               warn(warn__each1x2);
+               break;
+            default:
+               fail("You must specify a concept.");
+         }
+
+         goto divide_us_no_recompute;
       case s1x16:
          /* The call has no applicable 1x16 or 16x1 definition. */
 
@@ -1479,6 +1515,18 @@ Private int divide_the_setup(
 
          goto divide_us_no_recompute;
       case s_c1phan:
+
+         /* Check for "twisted split" stuff. */
+
+         if (     (ss->cmd.cmd_final_flags.herit & INHERITFLAG_TWISTED) &&
+                  (ss->cmd.cmd_final_flags.final & (FINAL__SPLIT_SQUARE_APPROVED | FINAL__SPLIT_DIXIE_APPROVED)) &&
+                  (livemask == 0xAAAA || livemask == 0x5555)) {
+            finalrot = newtb & 1;
+            division_maps = (livemask & 1) ? &map_phan_trngl4b : &map_phan_trngl4c;
+            ss->rotation += finalrot;   /* Just flip the setup around and recanonicalize. */
+            canonicalize_rotation(ss);
+            goto divide_us_no_recompute;
+         }
 
          /* The only way this can be legal is if people are in genuine
             C1 phantom spots and the call can be done from 1x2's or 2x1's.
@@ -1914,9 +1962,10 @@ Private int divide_the_setup(
                      !(ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK) &&
                           (assoc(b_2x4, ss, calldeflist) ||
                            assoc(b_4x2, ss, calldeflist) ||
+/*    these lines make peel off not work in clumps.
                            assoc(b_2x3, ss, calldeflist) ||
                            assoc(b_3x2, ss, calldeflist) ||
-                           assoc(b_dmd, ss, calldeflist) ||
+*/                           assoc(b_dmd, ss, calldeflist) ||
                            assoc(b_pmd, ss, calldeflist) ||
                            assoc(b_qtag, ss, calldeflist) ||
                            assoc(b_pqtag, ss, calldeflist));
@@ -1935,7 +1984,7 @@ Private int divide_the_setup(
 
          {
             /* Setup is randomly populated.  See if we have 1x2/1x1 definitions, but no 2x2.
-               If so, divide the 3x4 into 3 1x4's. */
+               If so, divide the 4x4 into 2 2x4's. */
 
             long_boolean forbid_little_stuff =
                   assoc(b_2x4, ss, calldeflist) ||
@@ -1948,8 +1997,10 @@ Private int divide_the_setup(
                   assoc(b_pqtag, ss, calldeflist);
 
             if (  !forbid_little_stuff &&
+/*
                   (callflags1 & CFLAG1_12_16_MATRIX_MEANS_SPLIT) &&
                   (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX) &&
+*/
                   !assoc(b_2x2, ss, calldeflist) &&
                   (  assoc(b_1x2, ss, calldeflist) ||
                      assoc(b_2x1, ss, calldeflist) ||
@@ -2030,8 +2081,8 @@ Private int divide_the_setup(
             goto do_mystically;
 
          {
-            int tbi = ss->people[2].id1 | ss->people[3].id1 | ss->people[6].id1 | ss->people[7].id1;
-            int tbo = ss->people[0].id1 | ss->people[1].id1 | ss->people[4].id1 | ss->people[5].id1;
+            uint32 tbi = ss->people[2].id1 | ss->people[3].id1 | ss->people[6].id1 | ss->people[7].id1;
+            uint32 tbo = ss->people[0].id1 | ss->people[1].id1 | ss->people[4].id1 | ss->people[5].id1;
 
             if ((!((tbi & 010) | (tbo & 001)) || assoc(b_1x2, ss, calldeflist)) &&
                      (!((tbi & 001) | (tbo & 010)) || assoc(b_2x1, ss, calldeflist)))
@@ -2084,6 +2135,36 @@ Private int divide_the_setup(
                assoc(b_1x1, ss, calldeflist) || assoc(b_2x2, ss, calldeflist)) {
             division_maps = &map_b6_trngl;
             goto divide_us_no_recompute;
+         }
+
+         {
+            uint32 tbi = ss->people[2].id1 | ss->people[5].id1;
+            uint32 tbo = ss->people[0].id1 | ss->people[1].id1 | ss->people[3].id1 | ss->people[4].id1;
+
+            if (assoc(b_1x1, ss, calldeflist) ||
+                  (
+                     (!((tbi & 010) | (tbo & 001)) || assoc(b_1x2, ss, calldeflist)) &&
+                     (!((tbi & 001) | (tbo & 010)) || assoc(b_2x1, ss, calldeflist))
+                  )) {
+               conc_schema = schema_concentric_6p;
+               goto do_concentrically;
+            }
+         }
+
+         break;
+      case s_1x2dmd:
+         {
+            uint32 tbi = ss->people[2].id1 | ss->people[5].id1;
+            uint32 tbo = ss->people[0].id1 | ss->people[1].id1 | ss->people[3].id1 | ss->people[4].id1;
+
+            if (assoc(b_1x1, ss, calldeflist) ||
+                  (
+                     (!((tbi & 010) | (tbo & 001)) || assoc(b_2x1, ss, calldeflist)) &&
+                     (!((tbi & 001) | (tbo & 010)) || assoc(b_1x2, ss, calldeflist))
+                  )) {
+               conc_schema = schema_concentric_6p;
+               goto do_concentrically;
+            }
          }
          break;
       case s_trngl:
@@ -2519,6 +2600,9 @@ Private int divide_the_setup(
    else
       new_divided_setup_move(ss, division_code, phantest_ok, recompute_anyway, result);
 
+   result->rotation -= finalrot;    /* Flip the setup back if necessary. */
+                                    /* It will get canonicalized. */
+
    /* If expansion to a 2x3 occurred (because the call was, for example, a "pair the line"),
       and the two 2x3's are end-to-end in a 2x6, see if we can squash phantoms.  We squash both
       internal (the center triple box) and external ones.  The external ones would probably have
@@ -2554,7 +2638,7 @@ Private int divide_the_setup(
 
          gather(result, &temp, outer_4x6, 15, 0);
          result->kind = s4x4;
-         canonicalize_rotation(result);
+         /* It will get canonicalized. */
       }
       else if (!( result->people[0].id1 | result->people[5].id1 | result->people[6].id1 | result->people[11].id1 |
                   result->people[18].id1 | result->people[23].id1 | result->people[12].id1 | result->people[17].id1)) {
@@ -2564,7 +2648,7 @@ Private int divide_the_setup(
 
          gather(result, &temp, inner_4x6, 15, 0);
          result->kind = s4x4;
-         canonicalize_rotation(result);
+         /* It will get canonicalized. */
       }
    }
 
@@ -2573,14 +2657,16 @@ Private int divide_the_setup(
    do_concentrically:
 
    conc_cmd = ss->cmd;
-   concentric_move(ss, &conc_cmd, &conc_cmd, schema_concentric, 0, 0, FALSE, result);
+   concentric_move(ss, &conc_cmd, &conc_cmd, conc_schema, 0, 0, FALSE, result);
    return 1;
 
    do_mystically:
 
    conc_cmd = ss->cmd;
 
+#ifdef TRY_NEW_MYSTIC
    update_id_bits(ss);    /* It would be nice if we didn't have to do this. */
+#endif
    inner_selective_move(ss, &conc_cmd, &conc_cmd, 0, TRUE, 0, 0, selector_centers, 0, 0, result);
    return 1;
 }
@@ -2590,6 +2676,88 @@ Private int divide_the_setup(
 static veryshort exp_conc_1x8[] = {3, 2, 7, 6};
 static veryshort exp_conc_qtg[] = {6, 7, 2, 3};
 static veryshort exp_conc_2x2[] = {6, 1, 2, 5, 6};
+
+
+
+
+static veryshort s1x6translateh[32] = {
+   -1, 0, 1, 2, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+   -1, 3, 4, 5, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
+
+static veryshort s1x6translatev[32] = {
+   -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 1, 2, -1, -1, -1, -1,
+   -1, -1, -1, -1, -1, -1, -1, -1, -1, 3, 4, 5, -1, -1, -1, -1};
+
+static veryshort sxwvtranslateh[32] = {
+   -1, 0, 1, -1, -1, -1, -1, -1, -1, -1, 2, 3, -1, -1, -1, -1,
+   -1, 4, 5, -1, -1, -1, -1, -1, -1, -1, 6, 7, -1, -1, -1, -1};
+
+static veryshort sxwvtranslatev[32] = {
+   -1, -1, 6, 7, -1, -1, -1, -1, -1, 0, 1, -1, -1, -1, -1, -1,
+   -1, -1, 2, 3, -1, -1, -1, -1, -1, 4, 5, -1, -1, -1, -1, -1};
+
+static veryshort s3dmftranslateh[32] = {
+   -1, 0, 1, 2, -1, -1, -1, -1, -1, 3, -1, -1, -1, -1, -1, -1,
+   -1, 4, 5, 6, -1, -1, -1, -1, -1, 7, -1, -1, -1, -1, -1, -1};
+
+static veryshort s3dmftranslatev[32] = {
+   -1, 7, -1, -1, -1, -1, -1, -1, -1, 0, 1, 2, -1, -1, -1, -1,
+   -1, 3, -1, -1, -1, -1, -1, -1, -1, 4, 5, 6, -1, -1, -1, -1};
+
+static veryshort s3dmntranslateh[32] = {
+   -1, 0, 1, 2, -1, -1, -1, -1, -1, -1, 3, -1, -1, -1, -1, -1,
+   -1, 4, 5, 6, -1, -1, -1, -1, -1, -1, 7, -1, -1, -1, -1, -1};
+
+static veryshort s3dmntranslatev[32] = {
+   -1, -1, 7, -1, -1, -1, -1, -1, -1, 0, 1, 2, -1, -1, -1, -1,
+   -1, -1, 3, -1, -1, -1, -1, -1, -1, 4, 5, 6, -1, -1, -1, -1};
+
+static veryshort s_vacate_star[32] = {
+   -1, 0, 1, 2, -1, -1, -1, -1, -1, -1, -1, 3, -1, -1, -1, -1,
+   -1, 4, 5, 6, -1, -1, -1, -1, -1, -1, -1, 7, -1, -1, -1, -1};
+
+static veryshort jqttranslateh[32] = {
+   -1, 6, -1, 7, -1, 0, -1, -1, -1, -1, -1, -1, -1, -1, 1, -1,
+   -1, 2, -1, 3, -1, 4, -1, -1, -1, -1, -1, -1, -1, -1, 5, -1};
+
+static veryshort jqttranslatev[32] = {
+   -1, -1, -1, -1, -1, -1, 5, -1, -1, 6, -1, 7, -1, 0, -1, -1,
+   -1, -1, -1, -1, -1, -1, 1, -1, -1, 2, -1, 3, -1, 4, -1, -1};
+
+static veryshort j23translateh[32] = {
+   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  0,  2,  0,  0,
+   0,  0,  0,  0,  0,  0,  3,  0,  0,  0,  0,  4,  0,  5,  0,  0};
+
+static veryshort j23translatev[32] = {
+   0,  0,  0,  4,  0,  5,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+   0,  0,  0,  1,  0,  2,  0,  0,  0,  0,  0,  0,  0,  0,  3,  0};
+
+static veryshort qdmtranslateh[32] = {
+   12, 13, 14, 15,  0,  1,  0,  0,  0,   0,  0,  0,  3,  0,  2,  0,
+   4,   5,  6,  7,  0,  9,  0,  8,  0,   0,  0,  0, 11,  0, 10,  0};
+
+static veryshort qdmtranslatev[32] = {
+   0,  0,  0,  0,  11, 0,  10, 0,  12, 13, 14, 15, 0,  1,  0,  0,
+   0,  0,  0,  0,  3,  0,  2,  0,  4,  5,  6,  7,  0,  9,  0,  8};
+
+static veryshort qtgtranslateh[32] = {
+   -1, -1, 6, 7, -1, 0, -1, -1, -1, -1, -1, -1, -1, -1, 1, -1,
+   -1, -1, 2, 3, -1, 4, -1, -1, -1, -1, -1, -1, -1, -1, 5, -1};
+
+static veryshort qtgtranslatev[32] = {
+   -1, -1, -1, -1, -1, -1, 5, -1, -1, -1, 6, 7, -1, 0, -1, -1,
+   -1, -1, -1, -1, -1, -1, 1, -1, -1, -1, 2, 3, -1, 4, -1, -1};
+
+static veryshort bonetranslateh[32] = {
+   -1, -1, 6, 7, -1, -1, 0, -1, -1, -1, -1, -1, -1, 1, -1, -1,
+   -1, -1, 2, 3, -1, -1, 4, -1, -1, -1, -1, -1, -1, 5, -1, -1};
+
+static veryshort bonetranslatev[32] = {
+   -1, -1, -1, -1, -1, 5, -1, -1, -1, -1, 6, 7, -1, -1, 0, -1,
+   -1, -1, -1, -1, -1, 1, -1, -1, -1, -1, 2, 3, -1, -1, 4, -1};
+
+
+
 
 /* For this routine, we know that callspec is a real call, with an array definition schema.
    Also, result->people have been cleared. */
@@ -2736,7 +2904,7 @@ extern void basic_move(
          case s_trngl4:
             /* The same, with twisted. */
 
-            if (     (ss->cmd.cmd_final_flags.herit & INHERITFLAG_TWISTED) &&
+            if (     (final_concepts.herit & INHERITFLAG_TWISTED) &&
                      (final_concepts.final & (FINAL__SPLIT_SQUARE_APPROVED | FINAL__SPLIT_DIXIE_APPROVED))) {
                ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
 
@@ -3405,7 +3573,7 @@ foobar:
          numoutc = numoutl;
 
          /* Check for a 1x4 call around the outside that sends people far away without permission. */
-         if (     ss->kind == s1x4 &&
+         if (     (ss->kind == s1x4 || ss->kind == s1x6) &&
                   ss->cmd.prior_elongation_bits & 0x40 &&
                   !(ss->cmd.cmd_misc_flags & CMD_MISC__NO_CHK_ELONG)) {
             if (goodies->callarray_flags & CAF__NO_CUTTING_THROUGH) {
@@ -3416,8 +3584,8 @@ foobar:
          if (inconsistent_setup) {
             if (inconsistent_rotation) {
                if (result->kind == s_spindle && (setup_kind) linedefinition->end_setup == s_crosswave) {
-                  result->kind = sx1x6;
-                  tempkind = sx1x6;
+                  result->kind = sx4dmd;
+                  tempkind = sx4dmd;
                   final_translatec = ftcspn;
                   vacate = linedefinition->callarray_flags & CAF__VACATE_CENTER;
 
@@ -3445,22 +3613,6 @@ foobar:
                      rotfudge_col = 3;
                   }
                }
-/*
-               else if (result->kind == s_bone && (setup_kind) linedefinition->end_setup == s_qtag) {
-                  result->rotation = linedefinition->callarray_flags & CAF__ROT;
-                  result->kind = s_qtag;
-                  tempkind = s_qtag;
-
-                  if (goodies->callarray_flags & CAF__ROT) {
-                     final_translatec = &btlqtg[4];
-                     rotfudge_col = 1;
-                  }
-                  else {
-                     final_translatec = &btlqtg[0];
-                     rotfudge_col = 3;
-                  }
-               }
-*/
                else if (result->kind == s_bone && (setup_kind) linedefinition->end_setup == s_qtag) {
                   result->kind = sx4dmd;
                   tempkind = sx4dmd;
@@ -3626,54 +3778,6 @@ foobar:
 #endif
             }
          }
-         else if (result->kind == sx1x6) {
-            if ((lilresult_mask[0] & 07070) == 0) {         /* Check horiz 1x6 spots. */
-               result->kind = s1x6;
-               permuter = s1x6translateh;
-            }
-            else if ((lilresult_mask[0] & 00707) == 0) {    /* Check vert 1x6 spots. */
-               result->kind = s1x6;
-               permuter = s1x6translatev;
-               rotator = 1;
-            }
-            else if ((lilresult_mask[0] & 01414) == 0) {    /* Check horiz xwv spots. */
-               result->kind = s_crosswave;
-               permuter = sxwvtranslateh;
-            }
-            else if ((lilresult_mask[0] & 04141) == 0) {    /* Check vert xwv spots. */
-               result->kind = s_crosswave;
-               permuter = sxwvtranslatev;
-               rotator = 1;
-            }
-            else if ((lilresult_mask[0] & 06060) == 0) {    /* Check horiz 3x1dmd spots w/points out far. */
-               result->kind = s3x1dmd;
-               permuter = s3dmftranslateh;
-            }
-            else if ((lilresult_mask[0] & 00606) == 0) {    /* Check vert 3x1dmd spots w/points out far. */
-               result->kind = s3x1dmd;
-               permuter = s3dmftranslatev;
-               rotator = 1;
-            }
-            else if ((lilresult_mask[0] & 05050) == 0) {    /* Check horiz 3x1dmd spots w/points in close. */
-               result->kind = s3x1dmd;
-               permuter = s3dmntranslateh;
-            }
-            else if ((lilresult_mask[0] & 00505) == 0) {    /* Check vert 3x1dmd spots w/points in close. */
-               result->kind = s3x1dmd;
-               permuter = s3dmntranslatev;
-               rotator = 1;
-            }
-            else if (vacate && (lilresult_mask[0] & 03030) == 0 && (lilresult_mask[0] & 00404) == 00404) {
-               /* Check for star in the middle that can be disambiguated by having someone vacate it. */
-               /* We have to mark this as controversial -- the center star is actually isotropic, and
-                  we are fudging it so that T-boned coordinate will work. */
-               warn(warn_controversial);
-               result->kind = s1x3dmd;
-               permuter = s_vacate_star;
-            }
-            else
-               fail("Call went to improperly-formed setup.");
-         }
          else if (result->kind == s_thar) {
             if ((lilresult_mask[0] & 0x66) == 0) {    /* Check horiz dmd spots. */
                result->kind = sdmd;
@@ -3721,43 +3825,94 @@ foobar:
                fail("Call went to improperly-formed setup.");
          }
          else if (result->kind == sx4dmd) {
-            /* See if people landed on quad diamond spots. */
-
-            if ((lilresult_mask[0] & 0xBFD7BFD7UL) == 0) {
+            if ((lilresult_mask[0] & 0xD7BFD7BFUL) == 0) {
+               result->kind = s2x3;
+               permuter = j23translateh;
+            }
+            else if ((lilresult_mask[0] & 0xBFD7BFD7UL) == 0) {
                result->kind = s2x3;
                permuter = j23translatev;
                rotator = 1;
             }
-            else if ((lilresult_mask[0] & 0xD7BFD7BFUL) == 0) {
-               result->kind = s2x3;
-               permuter = j23translateh;
+            else if ((lilresult_mask[0] & 0xFFF1FFF1) == 0) {    /* Check horiz 1x6 spots. */
+               result->kind = s1x6;
+               permuter = s1x6translateh;
             }
-            else if ((lilresult_mask[0] & 0x50AF50AFUL) == 0) {
-               result->kind = s4dmd;
-               permuter = qdmtranslatev;
+            else if ((lilresult_mask[0] & 0xF1FFF1FF) == 0) {    /* Check vert 1x6 spots. */
+               result->kind = s1x6;
+               permuter = s1x6translatev;
                rotator = 1;
             }
-            else if ((lilresult_mask[0] & 0xAF50AF50UL) == 0) {
-               result->kind = s4dmd;
-               permuter = qdmtranslateh;
-            }
-            else if ((lilresult_mask[0] & 0xD3BFD3BFUL) == 0) {
+            else if ((lilresult_mask[0] & 0xBFD5BFD5UL) == 0) {
                result->kind = s_qtag;
-               permuter = qtgtranslatev;
+               permuter = jqttranslateh;
+            }
+            else if ((lilresult_mask[0] & 0xD5BFD5BFUL) == 0) {
+               result->kind = s_qtag;
+               permuter = jqttranslatev;
                rotator = 1;
             }
             else if ((lilresult_mask[0] & 0xBFD3BFD3UL) == 0) {
                result->kind = s_qtag;
                permuter = qtgtranslateh;
             }
-            else if ((lilresult_mask[0] & 0xB3DFB3DFUL) == 0) {
-               result->kind = s_bone;
-               permuter = bonetranslatev;
+            else if ((lilresult_mask[0] & 0xD3BFD3BFUL) == 0) {
+               result->kind = s_qtag;
+               permuter = qtgtranslatev;
+               rotator = 1;
+            }
+            else if ((lilresult_mask[0] & 0xF3F9F3F9) == 0) {    /* Check horiz xwv spots. */
+               result->kind = s_crosswave;
+               permuter = sxwvtranslateh;
+            }
+            else if ((lilresult_mask[0] & 0xF9F3F9F3) == 0) {    /* Check vert xwv spots. */
+               result->kind = s_crosswave;
+               permuter = sxwvtranslatev;
+               rotator = 1;
+            }
+            else if ((lilresult_mask[0] & 0xFDF1FDF1) == 0) {    /* Check horiz 3x1dmd spots w/points out far. */
+               result->kind = s3x1dmd;
+               permuter = s3dmftranslateh;
+            }
+            else if ((lilresult_mask[0] & 0xF1FDF1FD) == 0) {    /* Check vert 3x1dmd spots w/points out far. */
+               result->kind = s3x1dmd;
+               permuter = s3dmftranslatev;
+               rotator = 1;
+            }
+            else if ((lilresult_mask[0] & 0xFBF1FBF1) == 0) {    /* Check horiz 3x1dmd spots w/points in close. */
+               result->kind = s3x1dmd;
+               permuter = s3dmntranslateh;
+            }
+            else if ((lilresult_mask[0] & 0xF1FBF1FB) == 0) {    /* Check vert 3x1dmd spots w/points in close. */
+               result->kind = s3x1dmd;
+               permuter = s3dmntranslatev;
+               rotator = 1;
+            }
+            else if (vacate && (lilresult_mask[0] & 0xF7F1F7F1) == 0 && (lilresult_mask[0] & 0x00080008) == 0x00080008) {
+               /* Check for star in the middle that can be disambiguated by having someone vacate it. */
+               /* We have to mark this as controversial -- the center star is actually isotropic, and
+                  we are fudging it so that T-boned coordinate will work. */
+               warn(warn_controversial);
+               result->kind = s1x3dmd;
+               permuter = s_vacate_star;
+            }
+            else if ((lilresult_mask[0] & 0xAF50AF50UL) == 0) {
+               result->kind = s4dmd;
+               permuter = qdmtranslateh;
+            }
+            else if ((lilresult_mask[0] & 0x50AF50AFUL) == 0) {
+               result->kind = s4dmd;
+               permuter = qdmtranslatev;
                rotator = 1;
             }
             else if ((lilresult_mask[0] & 0xDFB3DFB3UL) == 0) {
                result->kind = s_bone;
                permuter = bonetranslateh;
+            }
+            else if ((lilresult_mask[0] & 0xB3DFB3DFUL) == 0) {
+               result->kind = s_bone;
+               permuter = bonetranslatev;
+               rotator = 1;
             }
             else
                fail("Call went to improperly-formed setup.");

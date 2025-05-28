@@ -642,7 +642,7 @@ Private long_boolean check_3n1_setup(setup *real_people, int real_index,
    }
    else if (real_people->kind == s1x8) {
       int k = real_index & 2;
-      int j = k + k>>1;
+      int j = k + (k>>1);
 
       return
          ((real_people->people[C].id1 ^ real_people->people[G].id1) & DIR_MASK) == 0 &&
@@ -1847,6 +1847,8 @@ predicate_descriptor pred_table[] = {
       {check_3n1_setup,             tab_cpl_out_3n1},            /* "tandem_side_of_out_3n1_col" */
       {some_side_of_2n1_line,          &iden_tab[0]},            /* "miniwave_side_of_2n1_line" */
       {some_side_of_2n1_line,          &iden_tab[3]},            /* "couple_side_of_2n1_line" */
+      {some_side_of_2n1_line,          &iden_tab[0]},            /* "antitandem_side_of_2n1_col" */
+      {some_side_of_2n1_line,          &iden_tab[3]},            /* "tandem_side_of_2n1_col" */
       {cast_normal_or_whatever,        &iden_tab[1]},            /* "cast_normal" */
       {cast_normal_or_whatever,        &iden_tab[0]},            /* "cast_pushy" */
       {cast_normal_or_whatever,        &iden_tab[3]},            /* "cast_normal_or_warn" */

@@ -660,6 +660,10 @@ typedef enum {
    MPKIND__OFFS_R_HALF,
    MPKIND__OFFS_L_FULL,
    MPKIND__OFFS_R_FULL,
+   MPKIND__OFFS_L_HALF_SPECIAL,
+   MPKIND__OFFS_R_HALF_SPECIAL,
+   MPKIND__OFFS_L_FULL_SPECIAL,
+   MPKIND__OFFS_R_FULL_SPECIAL,
    MPKIND__O_SPOTS,
    MPKIND__X_SPOTS,
    MPKIND__4_QUADRANTS,
@@ -674,7 +678,7 @@ typedef enum {
 
 #define MAPCODE(setupkind,num,mapkind,rot) ((((int)(setupkind)) << 10) | (((int)(mapkind)) << 4) | (((num)-1) << 1) | (rot))
 
-typedef struct {
+typedef struct skrilch {
    Const veryshort maps[32];
    Const mpkind map_kind;
    Const short int warncode;
@@ -683,6 +687,8 @@ typedef struct {
    Const setup_kind inner_kind;
    Const uint32 rot;
    Const int vert;
+   uint32 code;
+   struct skrilch *next;
 } map_thing;
 
 
@@ -692,7 +698,7 @@ typedef enum {
    analyzer_CHECKPT,
    analyzer_2X6,
    analyzer_6X2,
-   analyzer_4X2,
+   analyzer_6P,
    analyzer_6X2_TGL,
    analyzer_O,
    analyzer_BAR,
@@ -798,6 +804,7 @@ typedef enum {
    concept_do_phantom_boxes,
    concept_do_phantom_diamonds,
    concept_do_phantom_1x6,
+   concept_do_phantom_triple_1x6,
    concept_do_phantom_1x8,
    concept_do_phantom_triple_1x8,
    concept_do_phantom_2x4,
@@ -872,6 +879,8 @@ typedef enum {
    concept_nth_part,
    concept_replace_nth_part,
    concept_replace_last_part,
+   concept_interrupt_at_fraction,
+   concept_sandwich,
    concept_interlace,
    concept_fractional,
    concept_rigger,
@@ -882,14 +891,16 @@ typedef enum {
 
 
 /* These bits appear in the "concparseflags" word. */
-/* This is a duplicate, and exists only to make menus nicer.  Ignore it
-   when scanning in parser. */
+/* This is a duplicate, and exists only to make menus nicer.
+   Ignore it when scanning in parser. */
 #define CONCPARSE_MENU_DUP       0x00000001UL
-/* If the parse turns out to be ambiguous, don't use this one -- yield to the other one. */
+/* If the parse turns out to be ambiguous, don't use this one --
+   yield to the other one. */
 #define CONCPARSE_YIELD_IF_AMB   0x00000002UL
-/* Parse directly.  It directs the parser to allow this concept (and similar concepts)
-   and the following call to be typed on one line.  One needs to be very careful
-   about avoiding ambiguity when setting this flag. */
+/* Parse directly.  It directs the parser to allow this concept
+   (and similar concepts) and the following call to be typed
+   on one line.  One needs to be very careful about avoiding
+   ambiguity when setting this flag. */
 #define CONCPARSE_PARSE_DIRECT   0x00000004UL
 /* These are used by "print_recurse" in sdutil.c to control the printing.
    They govern the placement of commas. */
@@ -1014,6 +1025,8 @@ typedef enum {
    direction_zagzag
 } direction_kind;
 
+/* BEWARE!!  There is a static initializer for this, "null_options", in sdmain.c
+   that must be kept up to date. */
 typedef struct {
    selector_kind who;        /* selector, if any, used by concept or call */
    direction_kind where;     /* direction, if any, used by concept or call */
@@ -1021,6 +1034,7 @@ typedef struct {
    uint32 circcer;           /* circulating call index, if any, used by call */
    uint32 number_fields;     /* number, if any, used by concept or call */
    int howmanynumbers;       /* tells how many there are */
+   int star_turn_option;     /* For calls with "@S" star turn stuff. */
 } call_conc_option_state;
 
 typedef struct glock {
@@ -1052,11 +1066,14 @@ typedef struct {
 
 
 typedef struct {
-   unsigned int reverse_order: 1;
-   unsigned int instant_stop: 1;
-   unsigned int do_half_of_last_part: 1;
-   unsigned int highlimit: 13;
-   unsigned int subcall_index: 16;
+   long_boolean reverse_order;
+   long_boolean first_call;
+   int instant_stop;
+   uint32 do_half_of_last_part;
+   uint32 do_last_half_of_first_part;
+   int highlimit;
+   int subcall_index;
+   int subcall_incr;
 } fraction_info;
 
 
@@ -1108,6 +1125,7 @@ typedef struct {
 
 #define CMD_FRAC_NULL_VALUE     0x00000111
 #define CMD_FRAC_HALF_VALUE     0x00000112
+#define CMD_FRAC_LASTHALF_VALUE 0x00001211
 #define CMD_FRAC_PART_BIT       0x00010000
 #define CMD_FRAC_PART_MASK      0x000F0000
 #define CMD_FRAC_REVERSE        0x00100000
@@ -1238,6 +1256,7 @@ typedef enum {
    warn__like_linear_action,
    warn__split_1x6,
    warn__colocated_once_rem,
+   warn_hairy_fraction,
    warn_bad_collision,
    warn__dyp_resolve_ok,
    warn__unusual,
@@ -1559,6 +1578,7 @@ typedef uint32 defmodset;
 #define CONCPROP__NEEDK_CTR_2X2    0x00000140UL
 #define CONCPROP__NEEDK_END_2X2    0x00000150UL
 #define CONCPROP__NEEDK_3X4_D3X4   0x00000160UL
+#define CONCPROP__NEEDK_3X6        0x00000170UL
                                    
 #define CONCPROP__NEED_ARG2_MATRIX 0x00000200UL                                   
 /* spare:                          0x00000400UL */
@@ -1577,6 +1597,14 @@ typedef uint32 defmodset;
 #define CONCPROP__SHOW_SPLIT       0x08000000UL
 #define CONCPROP__PERMIT_MYSTIC    0x10000000UL
 #define CONCPROP__PERMIT_REVERSE   0x20000000UL
+
+typedef struct {
+   Const veryshort source_indices[24];
+   Const int size;
+   Const setup_kind inner_kind;
+   Const setup_kind outer_kind;
+   Const int rot;
+} expand_thing;
 
 typedef enum {    /* These control error messages that arise when we divide a setup
                      into subsetups (e.g. phantom lines) and find that one of
@@ -1605,6 +1633,9 @@ typedef enum {
 typedef enum {
    simple_normalize,
    normalize_before_isolated_call,
+   normalize_to_6,
+   normalize_to_4,
+   normalize_to_2,
    normalize_after_triple_squash,
    normalize_before_merge
 } normalize_action;
@@ -1913,6 +1944,7 @@ extern map_thing map_spndle_once_rem;                               /* in SDTABL
 extern map_thing map_1x3dmd_once_rem;                               /* in SDTABLES */
 extern map_thing map_phan_trngl4a;                                  /* in SDTABLES */
 extern map_thing map_phan_trngl4b;                                  /* in SDTABLES */
+extern map_thing map_phan_trngl4c;                                  /* in SDTABLES */
 extern map_thing map_lh_zzztgl;                                     /* in SDTABLES */
 extern map_thing map_rh_zzztgl;                                     /* in SDTABLES */
 extern map_thing map_2x2v;                                          /* in SDTABLES */
@@ -1967,6 +1999,8 @@ extern map_thing map_dbloff1;                                       /* in SDTABL
 extern map_thing map_dbloff2;                                       /* in SDTABLES */
 extern map_thing map_dhrgl1;                                        /* in SDTABLES */
 extern map_thing map_dhrgl2;                                        /* in SDTABLES */
+extern map_thing map_dbgbn1;                                        /* in SDTABLES */
+extern map_thing map_dbgbn2;                                        /* in SDTABLES */
 extern map_thing map_trngl_box1;                                    /* in SDTABLES */
 extern map_thing map_trngl_box2;                                    /* in SDTABLES */
 extern map_thing map_inner_box;                                     /* in SDTABLES */
@@ -1998,7 +2032,9 @@ extern map_thing map_w4x4_2x8;                                      /* in SDTABL
 extern map_thing *maps_3diag[4];                                    /* in SDTABLES */
 extern map_thing *maps_3diagwk[4];                                  /* in SDTABLES */
 extern mapcoder map_init_table[];                                   /* in SDTABLES */
+extern map_thing map_init_table2[];                                 /* in SDTABLES */
 extern map_thing *split_lists[][6];                                 /* in SDTABLES */
+
 
 /*
 extern comment_block *comment_root;
@@ -2032,6 +2068,7 @@ extern interactivity_state interactivity;                           /* in SDMAIN
 extern long_boolean testing_fidelity;                               /* in SDMAIN */
 extern selector_kind selector_for_initialize;                       /* in SDMAIN */
 extern int number_for_initialize;                                   /* in SDMAIN */
+extern Const call_conc_option_state null_options;                   /* in SDMAIN */
 extern call_conc_option_state verify_options;                       /* in SDMAIN */
 extern long_boolean verify_used_number;                             /* in SDMAIN */
 extern long_boolean verify_used_selector;                           /* in SDMAIN */
@@ -2058,6 +2095,14 @@ extern long_boolean mandatory_call_used;                            /* in SDPRED
 extern predicate_descriptor pred_table[];                           /* in SDPREDS */
 extern int selector_preds;                                          /* in SDPREDS */
 
+extern  expand_thing exp_2x3_qtg_stuff;                             /* in SDTOP */
+extern  expand_thing exp_4x4_4x6_stuff_a;                           /* in SDTOP */
+extern  expand_thing exp_4x4_4x6_stuff_b;                           /* in SDTOP */
+extern  expand_thing exp_3x4_4x5_stuff;                             /* in SDTOP */
+extern  expand_thing exp_c1phan_4x4_stuff1;                         /* in SDTOP */
+extern  expand_thing exp_c1phan_4x4_stuff2;                         /* in SDTOP */
+
+
 /* In SDMAIN */
 
 extern char *sd_version_string(void);
@@ -2068,7 +2113,7 @@ extern void initialize_parse(void);
 extern parse_block *copy_parse_tree(parse_block *original_tree);
 extern void save_parse_state(void);
 extern long_boolean restore_parse_state(void);
-extern long_boolean deposit_call(callspec_block *call);
+extern long_boolean deposit_call(callspec_block *call, Const call_conc_option_state *options);
 extern long_boolean deposit_concept(concept_descriptor *conc);
 extern long_boolean query_for_call(void);
 extern void write_header_stuff(long_boolean with_ui_version, uint32 act_phan_flags);
@@ -2268,7 +2313,13 @@ extern void do_call_in_series(
 
 extern void anchor_someone_and_move(setup *ss, parse_block *parseptr, setup *result);
 
-extern fraction_info get_fraction_info(uint32 frac_flags, uint32 callflags1, int total);
+extern int gcd(int a, int b);
+
+extern void get_fraction_info(
+   uint32 frac_flags,
+   uint32 callflags1,
+   int total,
+   fraction_info *zzz);
 
 extern long_boolean fill_active_phantoms_and_move(setup *ss, setup *result);
 
@@ -2425,6 +2476,10 @@ extern void inner_selective_move(
    setup *result);
 
 /* In SDTOP */
+
+extern void compress_setup(expand_thing *thing, setup *stuff);
+
+extern void expand_setup(expand_thing *thing, setup *stuff);
 
 extern void update_id_bits(setup *ss);
 

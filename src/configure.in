@@ -1,4 +1,4 @@
-AC_REVISION(Time-stamp: "95/04/26 16:12:34 gildea")
+AC_REVISION(Time-stamp: "1997-10-15 14:10:13 gildea")
 # configure script for Sd (square dance caller's helper)
 #
 # options:
@@ -117,6 +117,12 @@ dnl I have much newer ones than most people.
 case "$CC" in
     gcc*)
 	STATIC=-static
+	case "$SYSTEM" in
+	    solaris2)
+		STATIC="-Xlinker -Bstatic"
+		DYNAMIC="-Xlinker -Bdynamic -lintl -lw -ldl"
+		;;
+	esac
         ;;
     *)
 	case "$SYSTEM" in

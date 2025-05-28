@@ -21,7 +21,7 @@
    database format version. */
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 110
+#define DATABASE_FORMAT_VERSION 113
 
 
 
@@ -39,6 +39,7 @@
 #define BASE_CALL_TAGGER2    10
 #define BASE_CALL_TAGGER3    11
 #define BASE_CALL_CIRCCER    12
+#define BASE_CALL_TURNSTAR_N 13
 
 
 /* BEWARE!!  This list must track the tables "flagtabh", "defmodtabh",
@@ -72,6 +73,7 @@
 #define INHERITFLAG_YOYO                  0x00100000UL
 #define INHERITFLAG_STRAIGHT              0x00200000UL
 #define INHERITFLAG_TWISTED               0x00400000UL
+#define INHERITFLAG_LASTHALF              0x00800000UL
 
 /* BEWARE!!  This list must track the table "flagtab1" in dbcomp.c .
    These flags go into the "callflags1" word of a callspec_block,
@@ -112,7 +114,7 @@
 #define CFLAG1_BASE_TAG_CALL_BIT          0x01000000UL
 #define CFLAG1_BASE_CIRC_CALL             0x08000000UL
 #define CFLAG1_ENDS_TAKE_RIGHT_HANDS      0x10000000UL
-#define CFLAG1_FULL_SIZE_MYSTIC           0x20000000UL
+#define CFLAG1_ODD_NUMBER_ONLY            0x20000000UL
 
 /* Beware!!  This list must track the table "matrixcallflagtab" in dbcomp.c . */
 
@@ -197,7 +199,6 @@ typedef enum {
    s1p5x8,   /* internal use only */
    s2x8,
    s4x4,
-   sx1x6,    /* Crossed 1x6's -- internal use only. */
    s1x10,
    s1x12,
    s1x14,
@@ -233,6 +234,7 @@ typedef enum {
    sbigdhrgl,
    sbigbone,
    sbigdmd,
+   sbigptpd,
    s_dead_concentric,
    s_normal_concentric
 } setup_kind;
@@ -345,7 +347,9 @@ typedef enum {
    b_bigbone,
    b_pbigbone,
    b_bigdmd,
-   b_pbigdmd
+   b_pbigdmd,
+   b_bigptpd,
+   b_pbigptpd
 } begin_kind;
 
 /* These bits are used in the "callarray_flags" field of a "callarray".
@@ -421,6 +425,8 @@ typedef enum {
    sq_dmd_ctrs_rh,
    sq_dmd_ctrs_lh,
    sq_dmd_ctrs_1f,
+   sq_dmd_intlk,
+   sq_dmd_not_intlk,
    sq_ctr_pts_rh,
    sq_ctr_pts_lh,
    sq_said_tgl,
@@ -473,6 +479,8 @@ typedef enum {
    cr_ends_are_peelable,
    cr_siamese_in_quad,
    cr_not_tboned,
+   cr_dmd_intlk,
+   cr_dmd_not_intlk,
    cr_opposite_sex,
    cr_quarterbox_or_col,
    cr_quarterbox_or_magic_col,
@@ -519,10 +527,10 @@ typedef enum {
    schema_concentric_or_diamond_line,
    schema_concentric_6_2,
    schema_concentric_2_6,
-   schema_concentric_4_2,
-   schema_concentric_4_2_or_normal,
-   schema_concentric_4_2_or_sgltogether,
-   schema_cross_concentric_4_2_or_normal,
+   schema_concentric_6p,
+   schema_concentric_6p_or_normal,
+   schema_concentric_6p_or_sgltogether,
+   schema_cross_concentric_6p_or_normal,
    schema_concentric_others,
    schema_concentric_6_2_tgl,
    schema_concentric_to_outer_diamond,
@@ -543,12 +551,15 @@ typedef enum {
    schema_in_out_triple,
    schema_in_out_quad,
    schema_select_leads,
+   schema_select_ctr2,
+   schema_select_ctr4,
    schema_lateral_6,             /* Not for public use! */
    schema_vertical_6,            /* Not for public use! */
    schema_intlk_lateral_6,       /* Not for public use! */
    schema_intlk_vertical_6,      /* Not for public use! */
    schema_sequential,
    schema_split_sequential,
+   schema_sequential_with_fraction,
    schema_by_array,
    schema_nothing,
    schema_matrix,

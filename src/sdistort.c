@@ -34,24 +34,34 @@
 
 
 #include "sd.h"
-extern map_thing map_dbgbn1;                                        /* in SDTABLES */
-extern map_thing map_dbgbn2;                                        /* in SDTABLES */
-
 
 /* Must be a power of 2. */
 #define NUM_MAP_HASH_BUCKETS 64
 
 static mapcoder *map_hash_table[NUM_MAP_HASH_BUCKETS];
+static map_thing *map_hash_table2[NUM_MAP_HASH_BUCKETS];
 
 extern void initialize_map_tables(void)
 {
    mapcoder *tabp;
+   map_thing *tab2p;
    int i;
-   for (i=0 ; i<NUM_MAP_HASH_BUCKETS ; i++) map_hash_table[i] = (mapcoder *) 0;
+
+   for (i=0 ; i<NUM_MAP_HASH_BUCKETS ; i++) {
+      map_hash_table[i] = (mapcoder *) 0;
+      map_hash_table2[i] = (map_thing *) 0;
+   }
+
    for (tabp = map_init_table ; tabp->code != ~0 ; tabp++) {
       uint32 hash_num = ((tabp->code+(tabp->code>>8) * ((unsigned int) 035761254233))) & (NUM_MAP_HASH_BUCKETS-1);
       tabp->next = map_hash_table[hash_num];
       map_hash_table[hash_num] = tabp;
+   }
+
+   for (tab2p = map_init_table2 ; tab2p->outer_kind != nothing ; tab2p++) {
+      uint32 hash_num = ((tab2p->code+(tab2p->code>>8) * ((unsigned int) 035761254233))) & (NUM_MAP_HASH_BUCKETS-1);
+      tab2p->next = map_hash_table2[hash_num];
+      map_hash_table2[hash_num] = tab2p;
    }
 }
 
@@ -61,7 +71,7 @@ Private Const map_thing *get_map_from_code(uint32 map_encoding)
 {
    int mk = (map_encoding & 0x3F0) >> 4;
 
-   if (mk == MPKIND__SPLIT) {
+   if (mk == MPKIND__SPLIT && !(map_encoding & 8)) {
       int sk = (map_encoding & 0xFFFFFC00) >> 10;
       if (sk > s2x6) return (Const map_thing *) 0;
 
@@ -69,10 +79,15 @@ Private Const map_thing *get_map_from_code(uint32 map_encoding)
    }
    else {
       mapcoder *p;
+      map_thing *q;
       uint32 hash_num = ((map_encoding+(map_encoding>>8) * ((unsigned int) 035761254233))) & (NUM_MAP_HASH_BUCKETS-1);
 
       for (p=map_hash_table[hash_num] ; p ; p=p->next) {
          if (p->code == map_encoding) return p->the_map;
+      }
+
+      for (q=map_hash_table2[hash_num] ; q ; q=q->next) {
+         if (q->code == map_encoding) return q;
       }
 
       return (Const map_thing *) 0;
@@ -91,7 +106,7 @@ Private void innards(
 {
    int i, j;
    Const map_thing *final_map;
-   setup z[4];
+   setup z[8];
 
    uint32 rot = maps->rot;
    int vert = maps->vert;
@@ -610,112 +625,85 @@ extern void divided_setup_move(
    long_boolean recompute_id,
    setup *result)
 {
-   int i, mm, v1flag, v2flag, v3flag, v4flag;
-   setup x[4];
+   int i, j;
+   int vflags[8];
+   setup x[8];
+   setup_kind kn;
+   int insize;
+   int rot;
+   int arity;
 
-   setup_kind kn = maps->inner_kind;
-   int insize = setup_attrs[kn].setup_limits+1;
-   int rot = maps->rot;
-   int arity = maps->arity;
    assumption_thing t = ss->cmd.cmd_assume;
 
-   v1flag = 0;
-   v2flag = 0;
-   v3flag = 0;
-   v4flag = 0;
+   if (!maps) fail("Can't do this concept.");
+
+   kn = maps->inner_kind;
+   insize = setup_attrs[kn].setup_limits+1;
+   rot = maps->rot;
+   arity = maps->arity;
+
+   for (j=0; j<arity; j++) vflags[j] = 0;
 
    for (i=0; i<insize; i++) {
       setup tstuff;
       clear_people(&tstuff);
 
-      mm = maps->maps[i];
-      if (mm >= 0)
-         tstuff.people[0] = ss->people[mm];
-      v1flag |= tstuff.people[0].id1;
-
-      if (arity >= 2) {
-         mm = maps->maps[i+insize];
+      for (j=0; j<arity; j++) {
+         int mm = maps->maps[i+insize*j];
          if (mm >= 0)
-            tstuff.people[1] = ss->people[mm];
-         v2flag |= tstuff.people[1].id1;
+            tstuff.people[j] = ss->people[mm];
+         vflags[j] |= tstuff.people[j].id1;
       }
 
-      if (arity >= 3) {
-         mm = maps->maps[i+insize*2];
-         if (mm >= 0)
-            tstuff.people[2] = ss->people[mm];
-         v3flag |= tstuff.people[2].id1;
-      }
-
-      if (arity == 4) {
-         mm = maps->maps[i+insize*3];
-         if (mm >= 0)
-            tstuff.people[3] = ss->people[mm];
-         v4flag |= tstuff.people[3].id1;
-      }
-
-      (void) copy_rot(&x[0], i, &tstuff, 0, 011*((-(rot)) & 3));
-
-      if (arity >= 2)
-         (void) copy_rot(&x[1], i, &tstuff, 1, 011*((-(rot>>2)) & 3));
-
-      if (arity >= 3)
-         (void) copy_rot(&x[2], i, &tstuff, 2, 011*((-(rot>>4)) & 3));
-
-      if (arity == 4)
-         (void) copy_rot(&x[3], i, &tstuff, 3, 011*((-(rot>>6)) & 3));
+      for (j=0; j<arity; j++) 
+         (void) copy_rot(&x[j], i, &tstuff, j, 011*((-(rot>>(j*2))) & 3));
    }
 
    switch (phancontrol) {
 #ifdef NOCANDO
-/* So "phantest_impossible" is obsolete and shoudl be replaced with "phantest_ok". */
+/* So "phantest_impossible" is obsolete and should be replaced with "phantest_ok". */
       case phantest_impossible:
-         if (!(v1flag && v2flag))
+         if (!(vflags[0] && vflags[1]))
             fail("This is impossible in a symmetric setup!!!!");
          break;
 #endif
       case phantest_both:
-         if (!(v1flag && v2flag))
+         if (!(vflags[0] && vflags[1]))
             /* Only one of the two setups is occupied. */
             fail("Don't use phantom concept if you don't mean it.");
          break;
       case phantest_only_one:
-         if (v1flag && v2flag) fail("Can't find the setup to work in.");
+         if (vflags[0] && vflags[1]) fail("Can't find the setup to work in.");
          break;
       case phantest_only_first_one:
-         if (v2flag) fail("Not in correct setup.");
+         if (vflags[1]) fail("Not in correct setup.");
          break;
       case phantest_only_second_one:
-         if (v1flag) fail("Not in correct setup.");
+         if (vflags[0]) fail("Not in correct setup.");
          break;
       case phantest_first_or_both:
-         if (!v1flag)
+         if (!vflags[0])
             fail("Don't use phantom concept if you don't mean it.");
          break;
       case phantest_2x2_both:
          /* Test for "C1" blocks. */
-         if (!((v1flag | v3flag) && (v2flag | v4flag)))
+         if (!((vflags[0] | vflags[2]) && (vflags[1] | vflags[3])))
             fail("Don't use phantom concept if you don't mean it.");
          break;
       case phantest_not_just_centers:
-         if (!(v1flag | v3flag))
+         if (!(vflags[0] | vflags[2]))
             fail("Don't use phantom concept if you don't mean it.");
          break;
       case phantest_2x2_only_two:
          /* Test for NOT "C1" blocks. */
-         if ((v1flag | v3flag) && (v2flag | v4flag)) fail("Not in blocks.");
+         if ((vflags[0] | vflags[2]) && (vflags[1] | vflags[3])) fail("Not in blocks.");
          break;
    }
 
-   x[0].kind = nothing;
-   x[1].kind = nothing;
-   x[2].kind = nothing;
-   x[3].kind = nothing;
-
-   if (v1flag) x[0].kind = kn;
-   if (v2flag) x[1].kind = kn;
-   if (v3flag) x[2].kind = kn;
-   if (v4flag) x[3].kind = kn;
+   for (j=0; j<arity; j++) {
+      x[j].kind = nothing;
+      if (vflags[j]) x[j].kind = kn;
+   }
 
    if (maps->map_kind == MPKIND__SPEC_ONCEREM) x[1].kind = (setup_kind) maps->maps[insize*2];
 
@@ -747,7 +735,7 @@ extern void divided_setup_move(
 
    innards(
          &ss->cmd, maps, recompute_id, t,
-         maps->map_kind == MPKIND__CONCPHAN && phancontrol == phantest_ctr_phantom_line && !v1flag,
+         maps->map_kind == MPKIND__CONCPHAN && phancontrol == phantest_ctr_phantom_line && !vflags[0],
          x, result);
 
    /* "Innards" has returned with the splitting info correct for the subcalls, but
@@ -790,7 +778,7 @@ extern void new_overlapped_setup_move(setup *ss, uint32 map_encoding,
 extern void overlapped_setup_move(setup *ss, Const map_thing *maps,
    int m1, int m2, int m3, setup *result)
 {
-   int i, j;
+   int i, j, k;
    setup x[4];
    assumption_thing t = ss->cmd.cmd_assume;
 
@@ -801,30 +789,28 @@ extern void overlapped_setup_move(setup *ss, Const map_thing *maps,
 
    if (arity >= 4) fail("Can't handle this many overlapped setups.");
 
-   for (i=0, j=1; i<insize; i++, j<<=1) {
-      if (j & m1)
+   for (i=0, k=1; i<insize; i++, k<<=1) {
+      if (k & m1)
          (void) copy_rot(&x[0], i, ss, maps->maps[i], 011*((-rot) & 3));
       else
          clear_person(&x[0], i);
 
       if (arity >= 2) {
-         if (j & m2)
+         if (k & m2)
             (void) copy_rot(&x[1], i, ss, maps->maps[i+insize], 011*((-(rot>>2)) & 3));
          else
             clear_person(&x[1], i);
       }
 
       if (arity >= 3) {
-         if (j & m3)
+         if (k & m3)
             (void) copy_rot(&x[2], i, ss, maps->maps[i+insize*2], 011*((-(rot>>4)) & 3));
          else
             clear_person(&x[2], i);
       }
    }
 
-   x[0].kind = kn;
-   x[1].kind = kn;
-   x[2].kind = kn;
+   for (j=0; j<arity; j++) x[j].kind = kn;
 
    t.assumption = cr_none;
    innards(&ss->cmd, maps, TRUE, t, FALSE, x, result);
@@ -1342,13 +1328,13 @@ extern void distorted_move(
       disttest_offset - user claims this is offset lines/columns
       disttest_z      - user claims this is Z lines/columns
       disttest_any    - user claims this is distorted lines/columns
-   arg2 & 7 =
+   linesp & 7 =
       0 - user claims this is some kind of columns
       1 - user claims this is some kind of lines
       3 - user claims this is waves
-   arg2 & 8 != 0:
+   linesp & 8 != 0:
       user claims this is a single tidal (grand) setup
-   arg2 & 16 != 0:
+   linesp & 16 != 0:
       user claims this is a single 6-person setup (legal only in bighrgl)
 
    Global_tbonetest has the OR of all the people, or all the standard people if
@@ -1369,7 +1355,7 @@ extern void distorted_move(
    setup_kind k;
    setup a1;
    setup res1;
-   mpkind mk;
+   mpkind mk, mkbox;
 
    map_thing *map_ptr;
    uint32 mapcode = ~0;
@@ -1466,8 +1452,8 @@ extern void distorted_move(
    
          /* Check for special case of offset lines/columns, and do it the elegant way (handling shape-changers) if so. */
 
-         if (livemask == 0xB4B4) { mk = MPKIND__OFFS_L_FULL; goto do_offset_call; }
-         if (livemask == 0x4B4B) { mk = MPKIND__OFFS_R_FULL; goto do_offset_call; }
+         if (livemask == 0xB4B4) { mk = MPKIND__OFFS_L_FULL; mkbox = MPKIND__OFFS_L_FULL_SPECIAL; goto do_offset_call; }
+         if (livemask == 0x4B4B) { mk = MPKIND__OFFS_R_FULL; mkbox = MPKIND__OFFS_R_FULL_SPECIAL; goto do_offset_call; }
 
          /* Search for the live people.
             Must scan sideways for each Y value, looking for exactly 2 people
@@ -1493,8 +1479,8 @@ extern void distorted_move(
    
          /* Check for special case of offset lines/columns, and do it the elegant way (handling shape-changers) if so. */
          
-         if (livemask == 07474) { mk = MPKIND__OFFS_L_HALF; goto do_offset_call; }
-         if (livemask == 06363) { mk = MPKIND__OFFS_R_HALF; goto do_offset_call; }
+         if (livemask == 07474) { mk = MPKIND__OFFS_L_HALF; mkbox = MPKIND__OFFS_L_HALF_SPECIAL; goto do_offset_call; }
+         if (livemask == 06363) { mk = MPKIND__OFFS_R_HALF; mkbox = MPKIND__OFFS_R_HALF_SPECIAL; goto do_offset_call; }
 
          /* Search for the live people. */
          
@@ -1549,14 +1535,38 @@ extern void distorted_move(
    reinstate_rotation(ss, result);
    goto getout;
    
+
    do_offset_call:
 
    /* This is known to be a plain offset C/L/W in a 3x4 or 4x4.  See if it
-      is followed by "split phantom boxes", in which case we do something esoteric. */
+      is followed by "split phantom C/L/W" or "split phantom boxes", in which
+      case we do something esoteric. */
 
    next_parseptr = process_final_concepts(parseptr->next, FALSE, &junk_concepts);
 
-   if (     next_parseptr->concept->kind == concept_do_phantom_boxes &&
+   if (     next_parseptr->concept->kind == concept_do_phantom_2x4 &&
+            ss->kind == s3x4 &&     /* Only allow 50% offset. */
+            junk_concepts.herit == 0 &&
+            junk_concepts.final == 0 &&
+            linesp == (next_parseptr->concept->value.arg2 & 7) &&  /* Demand same "CLW" as original. */
+            next_parseptr->concept->value.arg3 == MPKIND__SPLIT) {
+      int i;
+
+      ss->cmd.cmd_misc_flags |= CMD_MISC__PHANTOMS;
+
+      /* Actually, should do
+      do_matrix_expansion(ss, CONCPROP__NEEDK_4X5, FALSE);
+      */
+      expand_setup(&exp_3x4_4x5_stuff, ss);
+      for (i=0; i<MAX_PEOPLE; i++)
+         ss->people[i].id2 &= (~GLOB_BITS_TO_CLEAR | (ID2_FACEFRONT|ID2_FACEBACK|ID2_HEADLINE|ID2_SIDELINE));
+
+      if (ss->kind != s4x5) fail("Must have a 4x5 setup for this concept.");
+
+      ss->cmd.parseptr = next_parseptr->next;
+      mapcode = MAPCODE(s2x4,2,mkbox,1);
+   }
+   else if (next_parseptr->concept->kind == concept_do_phantom_boxes &&
             ss->kind == s3x4 &&     /* Only allow 50% offset. */
             junk_concepts.herit == 0 &&
             junk_concepts.final == 0 &&
@@ -1564,9 +1574,6 @@ extern void distorted_move(
       ss->cmd.cmd_misc_flags |= CMD_MISC__PHANTOMS;
       do_matrix_expansion(ss, CONCPROP__NEEDK_3X8, FALSE);
       if (ss->kind != s3x8) fail("Must have a 3x4 setup for this concept.");
-
-      if ((linesp & 7) == 3)
-         ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
 
       ss->cmd.parseptr = next_parseptr->next;
       mapcode = MAPCODE(s2x4,2,mk,0);
@@ -1604,10 +1611,19 @@ extern void triple_twin_move(
    parse_block *parseptr,
    setup *result)
 {
-   uint32 tbonetest;
-   static Const veryshort source_indices[20] = {1, 2, 3, 9, 4, 7, 22, 8, 13, 14, 15, 21, 16, 19, 10, 20, 1, 2, 3, 9};
+   uint32 tbonetest = global_tbonetest;
+   uint32 mapcode;
+   phantest_kind phan = phantest_ok;
 
    /* Arg1 = 0 for triple twin columns, 1 for triple twin lines, 3 for triple twin waves. */
+   /* Arg3 =
+      0 : triple twin C/L/W
+      1 : triple C/L/W of 6
+      2 : quadruple C/L/W of 6
+      3 : [split/interlocked] phantom C/L/W, arg4 has map kind */
+
+   /* This needs a 3x6 setup -- need to make a NEEDK indicator and use the "ARG2_MATRIX" stuff. */
+   if (parseptr->concept->value.arg3 == 1) fail("Sorry, can't do this.");
 
    /* The setup has not necessarily been expanded to a 4x6.  It has only been
       expanded to a 4x4.  Why?  Because the stuff in toplevelmove that does
@@ -1619,7 +1635,7 @@ extern void triple_twin_move(
       level.  When the concept "in your split phantom line" is executed,
       toplevelmove expands the setup to a 4x4, the concept routine splits
       it into 2x4's, and then the second concept is applied without further
-      expansion.  Since we now have 2x4's and the you have a split phantom
+      expansion.  Since we now have 2x4's and the "you have a split phantom
       column" concept requires a 4x4, it will raise an error.  If the
       expansion were done wherever a concept is performed, this monstrosity
       would by permitted to occur.  So the remaining question is "What
@@ -1633,40 +1649,41 @@ extern void triple_twin_move(
       NOEXPAND, and do the expansion when the concept is acted upon.
       Anyway, here goes. */
 
-   tbonetest = global_tbonetest;
-
    if ((tbonetest & 011) == 011) fail("Can't do this from T-bone setup.");
 
    tbonetest ^= parseptr->concept->value.arg1;
+   if (parseptr->concept->value.arg3 != 0) tbonetest ^= 1;
 
    if (ss->kind == s4x4) {
-      setup stemp;
-      stemp = *ss;
-      clear_people(ss);
-
-      if (tbonetest & 1) {
-         ss->rotation++;
-         tbonetest ^= 1;    /* Fix it. */
-         scatter(ss, &stemp, source_indices, 15, 033);
-      }
-      else
-         scatter(ss, &stemp, &source_indices[4], 15, 0);
-   
-      ss->kind = s4x6;
-
+      expand_setup(
+         ((tbonetest & 1) ? &exp_4x4_4x6_stuff_b : &exp_4x4_4x6_stuff_a), ss);
+      tbonetest = 0;
    }
-   else if (ss->kind != s4x6) fail("Must have a 4x6 setup for this concept.");
+
+   if (ss->kind != s4x6) fail("Must have a 4x6 setup for this concept.");
 
    if (parseptr->concept->value.arg1 == 3)
       ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
    
    if (tbonetest & 1) {
-      if (parseptr->concept->value.arg1 == 0) fail("Can't find triple twin columns.");
-      else fail("Can't find triple twin lines.");
+      if (parseptr->concept->value.arg1 == 0) fail("Can't find the required columns.");
+      else fail("Can't find the required lines.");
    }
    
-   new_divided_setup_move(ss, MAPCODE(s2x4,3,MPKIND__SPLIT,1),
-         phantest_not_just_centers, TRUE, result);
+   switch (parseptr->concept->value.arg3) {
+      case 0:
+         mapcode = MAPCODE(s2x4,3,MPKIND__SPLIT,1);
+         phan = phantest_not_just_centers;
+         break;
+      case 2:
+         mapcode = MAPCODE(s1x6,4,MPKIND__SPLIT,1);
+         break;
+      case 3:
+         mapcode = MAPCODE(s2x6,2,(mpkind)parseptr->concept->value.arg4,1);
+         break;
+   }
+
+   new_divided_setup_move(ss, mapcode, phan, TRUE, result);
 }
 
 
@@ -2079,6 +2096,12 @@ extern void common_spot_move(
    impose_assumption_and_move(&a1, &the_results[1]);
 
    if (uncommon) {
+
+      if (the_results[0].kind == s_qtag && the_results[1].kind == s2x3 && the_results[0].rotation != the_results[1].rotation)
+         expand_setup(&exp_2x3_qtg_stuff, &the_results[1]);
+      else if (the_results[1].kind == s_qtag && the_results[0].kind == s2x3 && the_results[0].rotation != the_results[1].rotation)
+         expand_setup(&exp_2x3_qtg_stuff, &the_results[0]);
+
       if (the_results[0].kind != the_results[1].kind || the_results[0].rotation != the_results[1].rotation)
          fail("This common spot call is very problematical.");
 

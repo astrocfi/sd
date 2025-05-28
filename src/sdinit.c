@@ -315,7 +315,7 @@ Private void test_starting_setup(call_list_kind cl, Const setup *test_setup)
    if (intlkness)
       (void) deposit_concept(&concept_descriptor_table[intlk_concept_index]);
 
-   if (deposit_call(test_call)) goto try_again;
+   if (deposit_call(test_call, &null_options)) goto try_again;
    toplevelmove();
 
    /* It seems to have worked, save it.  We don't care about warnings here. */
@@ -844,6 +844,7 @@ Private void read_in_call_definition(void)
          break;
       case schema_sequential:
       case schema_split_sequential:
+      case schema_sequential_with_fraction:
          {
             by_def_item templist[100];
             int next_definition_index = 0;

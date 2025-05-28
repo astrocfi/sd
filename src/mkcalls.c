@@ -163,7 +163,9 @@ int begin_sizes[] = {
    12,         /* b_bigbone */
    12,         /* b_pbigbone */
    12,         /* b_bigdmd */
-   12};        /* b_pbigdmd */
+   12,         /* b_pbigdmd */
+   12,         /* b_bigptpd */
+   12};        /* b_pbigptpd */
 
 extern void do_exit(void)
 {
