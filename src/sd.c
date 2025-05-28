@@ -335,18 +335,112 @@ static void do_concept_quad_lines(
    than through global_tbonetest. */
 
 {
-   int rot;
+   map_thing *maps;
+   int rot = (global_tbonetest ^ parseptr->concept->value.arg1 ^ 1) & 1;
 
-   if (ss->kind != s4x4) fail("Must have a 4x4 setup to do this concept.");
+   /* If this was quadruple columns, we allow stepping to a wave.  This makes it
+      possible to do interested cases of turn and weave, when one column
+      is a single 8 chain and another is a single DPT.  But if it was quadruple
+      lines, we forbid it. */
+
+   if (parseptr->concept->value.arg1 & 1)
+      ss->setupflags |= SETUPFLAG__NO_STEP_TO_WAVE;
 
    if ((global_tbonetest & 011) == 011) fail("Can't do this from T-bone setup.");
 
-   rot = (global_tbonetest ^ parseptr->concept->value.arg1 ^ 1) & 1;
+   if (ss->kind == s4x4) {
+      maps = (*map_lists[s1x4][3])[MPKIND__SPLIT][1];
+   }
+   else if (ss->kind == s1x16) {
+      if (rot) {
+         if (global_tbonetest & 1) fail("There are no lines of 4 here.");
+         else                      fail("There are no columns of 4 here.");
+      }
+      maps = (*map_lists[s1x4][3])[MPKIND__SPLIT][0];
+   }
+   else
+      fail("Must have a 4x4 or 1x16 setup for this concept.");
+
    ss->rotation += rot;   /* Just flip the setup around and recanonicalize. */
    canonicalize_rotation(ss);
    divided_setup_move(ss, parseptr->next, NULLCALLSPEC, 0,
-      (*map_lists[s1x4][3])[MPKIND__SPLIT][1], phantest_ok, TRUE, result);
+      maps, phantest_ok, TRUE, result);
    result->rotation -= rot;   /* Flip the setup back. */
+}
+
+
+static void do_concept_quad_lines_tog(
+   setup *ss,
+   parse_block *parseptr,
+   setup *result)
+{
+   int cstuff, tbonetest;
+   int i, m1, m2, m3, linesp;
+   map_thing *map_ptr;
+
+   cstuff = parseptr->concept->value.arg1;
+   /* cstuff =
+      forward  : 0
+      left     : 1
+      back     : 2
+      right    : 3
+      together : 8
+      apart    : 9 */
+
+   linesp = parseptr->concept->value.arg2;
+
+   tbonetest = 0;
+   for (i=0; i<16; i++) tbonetest |= ss->people[i].id1;
+
+   /* If this was quadruple columns, we allow stepping to a wave.  This makes it
+      possible to do interested cases of turn and weave, when one column
+      is a single 8 chain and another is a single DPT.  But if it was quadruple
+      lines, we forbid it. */
+
+   if (linesp)
+      ss->setupflags |= SETUPFLAG__NO_STEP_TO_WAVE;
+
+   if ((tbonetest & 011) == 011) fail("Sorry, can't do this from T-bone setup.");
+
+   if (cstuff < 4) {         /* Working forward/back/right/left. */
+      if (ss->kind != s4x4) fail("Must have a 4x4 setup to do this concept.");
+
+      map_ptr = ((linesp ^ tbonetest) & 1) ? (*map_lists[s2x4][2])[MPKIND__OVERLAP][1] : &map_ov_s2x4_k;
+
+      m1 = 0xF0; m2 = 0xF0; m3 = 0xFF;
+   
+      /* Look at the center 8 people and put each one in the correct group. */
+   
+      if ((cstuff + 1 - ss->people[map_ptr->map2[0]].id1) & 2) { m2 |= 0x01; m3 &= ~0x80; };
+      if ((cstuff + 1 - ss->people[map_ptr->map2[1]].id1) & 2) { m2 |= 0x02; m3 &= ~0x40; };
+      if ((cstuff + 1 - ss->people[map_ptr->map2[2]].id1) & 2) { m2 |= 0x04; m3 &= ~0x20; };
+      if ((cstuff + 1 - ss->people[map_ptr->map2[3]].id1) & 2) { m2 |= 0x08; m3 &= ~0x10; };
+      if ((cstuff + 1 - ss->people[map_ptr->map2[4]].id1) & 2) { m1 |= 0x08; m2 &= ~0x10; };
+      if ((cstuff + 1 - ss->people[map_ptr->map2[5]].id1) & 2) { m1 |= 0x04; m2 &= ~0x20; };
+      if ((cstuff + 1 - ss->people[map_ptr->map2[6]].id1) & 2) { m1 |= 0x02; m2 &= ~0x40; };
+      if ((cstuff + 1 - ss->people[map_ptr->map2[7]].id1) & 2) { m1 |= 0x01; m2 &= ~0x80; };
+   }
+   else {                    /* Working together/apart. */
+      if (ss->kind != s1x16) fail("Must have a 1x16 setup for this concept.");
+
+      map_ptr = (*map_lists[s1x8][2])[MPKIND__OVERLAP][0];
+   
+      if (linesp) {
+         if (tbonetest & 1) fail("There are no lines of 4 here.");
+      }
+      else {
+         if (!(tbonetest & 1)) fail("There are no columns of 4 here.");
+      }
+
+      if (cstuff == 8) {     /* Working together. */
+         m1 = 0xCF; m2 = 0xCC; m3 = 0xFC;
+      }
+      else {                 /* Working apart. */
+         m1 = 0x3F; m2 = 0x33; m3 = 0xF3;
+      }
+   }
+
+   overlapped_setup_move(ss, map_ptr, m1, m2, m3, parseptr->next, result);
 }
 
 
@@ -431,51 +525,6 @@ static void do_concept_quad_boxes_tog(
    }
 
    overlapped_setup_move(ss, (*map_lists[s2x4][2])[MPKIND__OVERLAP][0], m1, m2, m3, parseptr->next, result);
-}
-
-
-static void do_concept_quad_lines_tog(
-   setup *ss,
-   parse_block *parseptr,
-   setup *result)
-
-{
-   int i, tbonetest, cstuff;
-   int m1, m2, m3;
-   map_thing *map_ptr;
-
-   cstuff = parseptr->concept->value.arg1;
-   /* cstuff =
-      forward  : 0
-      left     : 1
-      back     : 2
-      right    : 3
-      together : 8 (doesn't really exist)
-      apart    : 9 (doesn't really exist) */
-
-   if (ss->kind != s4x4) fail("Must have a 4x4 setup to do this concept.");
-
-   tbonetest = 0;
-   for (i=0; i<16; i++) tbonetest |= ss->people[i].id1;
-
-   if ((tbonetest & 011) == 011) fail("Sorry, can't do this from T-bone setup.");
-
-   m1 = 0xF0; m2 = 0xF0; m3 = 0xFF;
-
-   map_ptr = ((cstuff ^ tbonetest) & 1) ? &map_ov_s2x4_k : (*map_lists[s2x4][2])[MPKIND__OVERLAP][1];
-
-   /* Look at the center 8 people and put each one in the correct group. */
-
-   if ((cstuff + 1 - ss->people[map_ptr->map2[0]].id1) & 2) { m2 |= 0x01; m3 &= ~0x80; };
-   if ((cstuff + 1 - ss->people[map_ptr->map2[1]].id1) & 2) { m2 |= 0x02; m3 &= ~0x40; };
-   if ((cstuff + 1 - ss->people[map_ptr->map2[2]].id1) & 2) { m2 |= 0x04; m3 &= ~0x20; };
-   if ((cstuff + 1 - ss->people[map_ptr->map2[3]].id1) & 2) { m2 |= 0x08; m3 &= ~0x10; };
-   if ((cstuff + 1 - ss->people[map_ptr->map2[4]].id1) & 2) { m1 |= 0x08; m2 &= ~0x10; };
-   if ((cstuff + 1 - ss->people[map_ptr->map2[5]].id1) & 2) { m1 |= 0x04; m2 &= ~0x20; };
-   if ((cstuff + 1 - ss->people[map_ptr->map2[6]].id1) & 2) { m1 |= 0x02; m2 &= ~0x40; };
-   if ((cstuff + 1 - ss->people[map_ptr->map2[7]].id1) & 2) { m1 |= 0x01; m2 &= ~0x80; };
-
-   overlapped_setup_move(ss, map_ptr, m1, m2, m3, parseptr->next, result);
 }
 
 
@@ -589,16 +638,26 @@ static void do_concept_triple_lines(
    than through global_tbonetest. */
 
 {
-   if (ss->kind != s3x4) fail("Must have a 3x4 setup for this concept.");
-
-   if ((global_tbonetest & 011) == 011) fail("Can't do this from T-bone setup.");
+   map_thing *maps;
 
    /* If this was triple columns, we allow stepping to a wave.  This makes it
       possible to do interested cases of turn and weave, when one column
-      is a single 8 chain and another is a single DPT. */
+      is a single 8 chain and another is a single DPT.  But if it was triple
+      lines, we forbid it. */
 
-   if (global_tbonetest & 010)
+   if (parseptr->concept->value.arg1 & 1)
       ss->setupflags |= SETUPFLAG__NO_STEP_TO_WAVE;
+
+   if ((global_tbonetest & 011) == 011) fail("Can't do this from T-bone setup.");
+
+   if (ss->kind == s3x4) {
+      maps = (*map_lists[s1x4][2])[MPKIND__SPLIT][1];
+   }
+   else if (ss->kind == s1x12) {
+      maps = (*map_lists[s1x4][2])[MPKIND__SPLIT][0];
+   }
+   else
+      fail("Must have a 3x4 or 1x12 setup for this concept.");
 
    if (!((parseptr->concept->value.arg1 ^ global_tbonetest) & 1)) {
       if (global_tbonetest & 1) fail("There are no lines of 4 here.");
@@ -606,7 +665,7 @@ static void do_concept_triple_lines(
    }
 
    divided_setup_move(ss, parseptr->next, NULLCALLSPEC, 0,
-      (*map_lists[s1x4][2])[MPKIND__SPLIT][1], phantest_ok, TRUE, result);
+      maps, phantest_ok, TRUE, result);
 }
 
 
@@ -614,10 +673,10 @@ static void do_concept_triple_lines_tog(
    setup *ss,
    parse_block *parseptr,
    setup *result)
-
 {
    int cstuff, tbonetest;
    int i, m1, m2, linesp;
+   map_thing *map_ptr;
 
    cstuff = parseptr->concept->value.arg1;
    /* cstuff =
@@ -625,30 +684,23 @@ static void do_concept_triple_lines_tog(
       left     : 1
       back     : 2
       right    : 3
-      together : 8 (doesn't really exist)
-      apart    : 9 (doesn't really exist) */
+      together : 8
+      apart    : 9 */
 
    linesp = parseptr->concept->value.arg2;
-
-   if (!linesp && (!(cstuff & 1))) fail("Must indicate left/right.");
-   if (linesp && (cstuff & 1)) fail("Must indicate forward/back.");
-
-   if (ss->kind != s3x4) fail("Must have a 3x4 setup for this concept.");
 
    tbonetest = 0;
    for (i=0; i<12; i++) tbonetest |= ss->people[i].id1;
 
-   if ((tbonetest & 011) == 011) fail("Can't do this from T-bone setup.");
-
    /* If this was triple columns, we allow stepping to a wave.  This makes it
       possible to do interested cases of turn and weave, when one column
-      is a single 8 chain and another is a single DPT. */
+      is a single 8 chain and another is a single DPT.  But if it was triple
+      lines, we forbid it. */
 
-   /* ****** we should only permit it if "standard" was NOT used.  That is,
-      if "standard" was used, we should set SETUPFLAG__NO_STEP_TO_WAVE always. */
-
-   if (tbonetest & 010)
+   if (linesp)
       ss->setupflags |= SETUPFLAG__NO_STEP_TO_WAVE;
+
+   if ((tbonetest & 011) == 011) fail("Can't do this from T-bone setup.");
 
    if (linesp) {
       if (tbonetest & 1) fail("There are no lines of 4 here.");
@@ -657,17 +709,40 @@ static void do_concept_triple_lines_tog(
       if (!(tbonetest & 1)) fail("There are no columns of 4 here.");
    }
 
-   /* Initially assign the centers to the upper (m2) group. */
-   m1 = 0xF0; m2 = 0xFF;
+   if (cstuff < 4) {         /* Working forward/back/right/left. */
+      if (ss->kind != s3x4) fail("Must have a 3x4 setup for this concept.");
+      map_ptr = (*map_lists[s2x4][1])[MPKIND__OVERLAP][1];
 
-   /* Look at the center line people and put each one in the correct group. */
+      if (linesp) {
+         if (cstuff & 1) fail("Must indicate forward/back.");
+      }
+      else {
+         if (!(cstuff & 1)) fail("Must indicate left/right.");
+      }
 
-   if ((ss->people[10].id1 ^ cstuff) & 2) { m2 &= ~0x80 ; m1 |= 0x1; };
-   if ((ss->people[11].id1 ^ cstuff) & 2) { m2 &= ~0x40 ; m1 |= 0x2; };
-   if ((ss->people[5].id1  ^ cstuff) & 2) { m2 &= ~0x20 ; m1 |= 0x4; };
-   if ((ss->people[4].id1  ^ cstuff) & 2) { m2 &= ~0x10 ; m1 |= 0x8; };
+      /* Initially assign the centers to the upper (m2) group. */
+      m1 = 0xF0; m2 = 0xFF;
 
-   overlapped_setup_move(ss, (*map_lists[s2x4][1])[MPKIND__OVERLAP][1], m1, m2, 0, parseptr->next, result);
+      /* Look at the center line people and put each one in the correct group. */
+
+      if ((ss->people[10].id1 ^ cstuff) & 2) { m2 &= ~0x80 ; m1 |= 0x1; };
+      if ((ss->people[11].id1 ^ cstuff) & 2) { m2 &= ~0x40 ; m1 |= 0x2; };
+      if ((ss->people[5].id1  ^ cstuff) & 2) { m2 &= ~0x20 ; m1 |= 0x4; };
+      if ((ss->people[4].id1  ^ cstuff) & 2) { m2 &= ~0x10 ; m1 |= 0x8; };
+   }
+   else {                    /* Working together/apart. */
+      if (ss->kind != s1x12) fail("Must have a 1x12 setup for this concept.");
+      map_ptr = (*map_lists[s1x8][1])[MPKIND__OVERLAP][0];
+
+      if (cstuff == 8) {     /* Working together. */
+         m1 = 0xCF; m2 = 0xFC;
+      }
+      else {                 /* Working apart. */
+         m1 = 0x3F; m2 = 0xF3;
+      }
+   }
+
+   overlapped_setup_move(ss, map_ptr, m1, m2, 0, parseptr->next, result);
 }
 
 
@@ -1053,19 +1128,31 @@ static void do_concept_stable(
    setup *result)
 {
    selector_kind saved_selector, new_selector;
-   long_boolean everyone;
+   long_boolean everyone, fractional;
    int directions[8];
-   int n, i, j, rot;
+   int n, i, rot, howfar;
 
+   fractional = parseptr->concept->value.arg2;
    everyone = !parseptr->concept->value.arg1;
+
+   howfar = parseptr->number;
+   if (fractional && howfar > 4)
+      fail("Can't do fractional stable more than 4/4.");
+
    new_selector = parseptr->selector;
    n = setup_limits[ss->kind];
    if (n < 0) fail("Sorry, can't do stable starting in this setup.");
 
    for (i=0; i<=n; i++) {           /* Save current facing directions. */
-      j = ss->people[i].id1;
-      if (j & BIT_PERSON)
-         directions[(j >> 6) & 07] = j & d_mask;
+      unsigned int p = ss->people[i].id1;
+      if (p & BIT_PERSON) {
+         directions[(p >> 6) & 07] = p;
+         if (fractional) {
+            if (p & STABLE_MASK)
+               fail("Sorry, can't nest fractional stable/twosome.");
+            ss->people[i].id1 |= STABLE_ENAB | (STABLE_RBIT * howfar);
+         }
+      }
    }
 
    move(ss, parseptr->next, NULLCALLSPEC, 0, FALSE, result);
@@ -1078,9 +1165,24 @@ static void do_concept_stable(
    current_selector = new_selector;
 
    for (i=0; i<=n; i++) {           /* Restore facing directions of selected people. */
-      j = result->people[i].id1;
-      if ((j & BIT_PERSON) && (everyone || selectp(result, i)))
-         result->people[i].id1 = rotperson((j & (BIT_PERSON | ~d_mask)) | directions[(j >> 6) & 07], rot);
+      unsigned int p = result->people[i].id1;
+      if (p & BIT_PERSON) {
+         if (everyone || selectp(result, i)) {
+            if (fractional) {
+               if (!(p & STABLE_ENAB))
+                  fail("fractional stable not supported for this call.");
+               result->people[i].id1 = rotperson(p, ((- ((p & (STABLE_VBIT*3)) / STABLE_VBIT)) & 3) * 011);
+            }
+            else {
+               result->people[i].id1 = rotperson(
+                     (p & ~(d_mask | STABLE_MASK)) |
+                        (directions[(p >> 6) & 07] & (d_mask | STABLE_MASK)),
+                     rot);
+            }
+         }
+         if (fractional)
+            result->people[i].id1 &= ~STABLE_MASK;
+      }
    }
 
    current_selector = saved_selector;
@@ -2190,8 +2292,9 @@ static void do_concept_tandem(
    tandem_couples_move(ss, parseptr->next, NULLCALLSPEC, 0,
          parseptr->concept->value.arg1 ? parseptr->selector : selector_uninitialized,
          parseptr->concept->value.arg2,    /* normal=FALSE, twosome=TRUE */
+         parseptr->number,
          parseptr->concept->value.arg3,    /* normal=0 phantom=1 gruesome=2 */
-         parseptr->concept->value.arg4,    /* couples=0 tandem=1 siamese=2 */
+         parseptr->concept->value.arg4,    /* tandem=0 couples=1 siamese=2 */
          result);
 }
 
@@ -2201,57 +2304,9 @@ static void do_concept_standard(
    parse_block *parseptr,
    setup *result)
 {
-   parse_block *parseptrcopy;
-   int tbonetest, stdtest, livemask;
-
-   tbonetest = 0;
-   stdtest = 0;
-   livemask = 0;
-
-   if (setup_limits[ss->kind] < 0) fail("Can't do this concept in this setup.");
-
-   {
-      selector_kind saved_selector;
-      int i, j;
-
-      saved_selector = current_selector;
-      current_selector = parseptr->selector;
-
-      for (i=0, j=1; i<=setup_limits[ss->kind]; i++, j<<=1) {
-         int p = ss->people[i].id1;
-         tbonetest |= p;
-         if (p) {
-            livemask |= j;
-            if (selectp(ss, i)) stdtest |= p;
-         }
-      }
-
-      current_selector = saved_selector;
-   }
-
-   if (!tbonetest) {
-      result->kind = nothing;
-      return;
-   }
-
-   if ((tbonetest & 011) != 011) fail("People are not T-boned -- 'standard' is meaningless.");
-
-   if (!stdtest) fail("No one is standard.");
-   if ((stdtest & 011) == 011) fail("The standard people are not facing consistently.");
-
-   global_tbonetest = stdtest;
-   global_livemask = livemask;
-
-   parseptrcopy = parseptr->next;       /* should point to the phantom-line (or whatever) concept. */
-
-   while (parseptrcopy->concept->kind == concept_comment) parseptrcopy = parseptrcopy->next;
-
-   if (concept_table[parseptrcopy->concept->kind].concept_prop & CONCPROP__STANDARD) {
-      (concept_table[parseptrcopy->concept->kind].concept_action)(ss, parseptrcopy, result);
-   }
-   else {
-      fail("This concept must be used with some offset/distorted/phantom concept.");
-   }
+   /* This should never be called this way -- "standard" is treated specially.
+      But we do need a nonzero entry in the dispatch table. */
+   fail("Huh????.");
 }
 
 
@@ -2272,8 +2327,81 @@ extern long_boolean do_big_concept(
    if (concept_table[parseptr->concept->kind].concept_prop & CONCPROP__NO_STEP)
       ss->setupflags |= SETUPFLAG__NO_STEP_TO_WAVE;
 
-   clear_people(result);
-   result->setupflags = 0;
+   /* "Standard" is special -- process it now. */
+
+   if (parseptr->concept->kind == concept_standard) {
+      parse_block *parseptr_realconcept;
+      final_set junk_concepts;
+      int tbonetest = 0;
+      int stdtest = 0;
+      int livemask = 0;
+
+      /* Skip to the phantom-line (or whatever) concept by going over the "standard" and skipping comments. */
+      parseptr_realconcept = process_final_concepts(parseptr->next, TRUE, &junk_concepts);
+   
+      if ((junk_concepts != 0) || (!(concept_table[parseptr_realconcept->concept->kind].concept_prop & CONCPROP__STANDARD)))
+         fail("This concept must be used with some offset/distorted/phantom concept.");
+
+      /* We don't think stepping to a wave is ever a good idea if standard is used.  Most calls that
+         permit standard (CONCPROP__STANDARD is on) forbid it anyway (CONCPROP__NO_STEP is on also),
+         but a few (e.g. concept_triple_lines) permit standard but don't necessarily forbid stepping
+         to a wave.  This is so that interesting cases of triple columns turn and weave will work.
+         However, we think that this should be disallowed if "so-and-so are standard in triple lines"
+         is given.  At least, that is the theory behind this next line of code. */
+      ss->setupflags |= SETUPFLAG__NO_STEP_TO_WAVE;
+
+      if (concept_table[parseptr_realconcept->concept->kind].concept_prop & CONCPROP__SET_PHANTOMS)
+         ss->setupflags |= SETUPFLAG__PHANTOMS;
+
+      if (!(ss->setupflags & SETUPFLAG__NO_EXPAND_MATRIX)) {
+         do_matrix_expansion(ss, parseptr_realconcept->concept->kind);
+      }
+
+      ss->setupflags |= SETUPFLAG__NO_EXPAND_MATRIX;
+
+      if (setup_limits[ss->kind] < 0) fail("Can't do this concept in this setup.");
+   
+      {
+         int i, j;
+         selector_kind saved_selector = current_selector;
+   
+         current_selector = parseptr->selector;
+   
+         for (i=0, j=1; i<=setup_limits[ss->kind]; i++, j<<=1) {
+            int p = ss->people[i].id1;
+            tbonetest |= p;
+            if (p) {
+               livemask |= j;
+               if (selectp(ss, i)) stdtest |= p;
+            }
+         }
+   
+         current_selector = saved_selector;
+      }
+   
+      if (!tbonetest) {
+         result->kind = nothing;
+         return(TRUE);
+      }
+   
+      if ((tbonetest & 011) != 011) fail("People are not T-boned -- 'standard' is meaningless.");
+   
+      if (!stdtest) fail("No one is standard.");
+      if ((stdtest & 011) == 011) fail("The standard people are not facing consistently.");
+   
+      global_tbonetest = stdtest;
+      global_livemask = livemask;
+
+      (concept_table[parseptr_realconcept->concept->kind].concept_action)(ss, parseptr_realconcept, result);
+      canonicalize_rotation(result);
+      return(TRUE);
+   }
+
+   if (!(ss->setupflags & SETUPFLAG__NO_EXPAND_MATRIX)) {
+      do_matrix_expansion(ss, parseptr->concept->kind);
+   }
+
+   ss->setupflags |= SETUPFLAG__NO_EXPAND_MATRIX;
 
    /* See if this concept can be invoked with "standard".  If so, it wants
       tbonetest and livemask computed, and expects the former to indicate
@@ -2282,7 +2410,7 @@ extern long_boolean do_big_concept(
    if (concept_table[parseptr->concept->kind].concept_prop & (CONCPROP__STANDARD | CONCPROP__GET_MASK)) {
       int i, j;
       long_boolean doing_select;
-      selector_kind saved_selector;
+      selector_kind saved_selector = current_selector;
 
       if (setup_limits[ss->kind] < 0) fail("Can't do this concept in this setup.");
 
@@ -2292,7 +2420,6 @@ extern long_boolean do_big_concept(
       doing_select = concept_table[parseptr->concept->kind].concept_prop & CONCPROP__USE_SELECTOR;
 
       if (doing_select) {
-         saved_selector = current_selector;
          current_selector = parseptr->selector;
       }
 
@@ -2305,17 +2432,15 @@ extern long_boolean do_big_concept(
          }
       }
 
-      if (doing_select)
-         current_selector = saved_selector;
+      current_selector = saved_selector;
 
-      if (!global_tbonetest) result->kind = nothing;
-      else
-         (*concept_func)(ss, parseptr, result);
-   }
-   else {
-      (*concept_func)(ss, parseptr, result);
+      if (!global_tbonetest) {
+         result->kind = nothing;
+         return(TRUE);
+      }
    }
 
+   (*concept_func)(ss, parseptr, result);
    canonicalize_rotation(result);
    return(TRUE);
 }
@@ -2337,6 +2462,10 @@ concept_table_item concept_table[] = {
    {CONCPROP__NEED_4X4 | CONCPROP__SET_PHANTOMS,                                            do_concept_tandem},               /* concept_phantom_tandem */
    {CONCPROP__NEED_2X8 | CONCPROP__SET_PHANTOMS,                                            do_concept_tandem},               /* concept_gruesome_tandem */
    {CONCPROP__USE_SELECTOR,                                                                 do_concept_tandem},               /* concept_some_are_tandem */
+   {CONCPROP__USE_NUMBER,                                                                   do_concept_tandem},               /* concept_frac_tandem */
+   {CONCPROP__USE_NUMBER | CONCPROP__NEED_4X4 | CONCPROP__SET_PHANTOMS,                     do_concept_tandem},               /* concept_phantom_frac_tandem */
+   {CONCPROP__USE_NUMBER | CONCPROP__NEED_2X8 | CONCPROP__SET_PHANTOMS,                     do_concept_tandem},               /* concept_gruesome_frac_tandem */
+   {CONCPROP__USE_NUMBER | CONCPROP__USE_SELECTOR,                                          do_concept_tandem},               /* concept_some_are_frac_tandem */
    {0,                                                                                      do_concept_checkerboard},         /* concept_checkerboard */
    {0,                                                                                      0},                               /* concept_reverse */
    {0,                                                                                      0},                               /* concept_left */
@@ -2367,10 +2496,10 @@ concept_table_item concept_table[] = {
    {CONCPROP__NO_STEP | CONCPROP__GET_MASK | CONCPROP__USE_SELECTOR,                        do_concept_single_diagonal},      /* concept_single_diagonal */
    {CONCPROP__NO_STEP | CONCPROP__STANDARD,                                                 do_concept_double_diagonal},      /* concept_double_diagonal */
    {CONCPROP__NO_STEP | CONCPROP__GET_MASK,                                                 do_concept_parallelogram},        /* concept_parallelogram */
-   {CONCPROP__SET_PHANTOMS | CONCPROP__STANDARD,                                            do_concept_triple_lines},         /* concept_triple_lines */
-   {CONCPROP__SET_PHANTOMS,                                                                 do_concept_triple_lines_tog},     /* concept_triple_lines_together */
-   {CONCPROP__NEED_4X4 | CONCPROP__SET_PHANTOMS | CONCPROP__NO_STEP | CONCPROP__STANDARD,   do_concept_quad_lines},           /* concept_quad_lines */
-   {CONCPROP__NEED_4X4 | CONCPROP__SET_PHANTOMS | CONCPROP__NO_STEP,                        do_concept_quad_lines_tog},       /* concept_quad_lines_together */
+   {CONCPROP__NEED_3X4_1X12 | CONCPROP__SET_PHANTOMS | CONCPROP__STANDARD,                  do_concept_triple_lines},         /* concept_triple_lines */
+   {CONCPROP__NEED_3X4_1X12 | CONCPROP__SET_PHANTOMS,                                       do_concept_triple_lines_tog},     /* concept_triple_lines_together */
+   {CONCPROP__NEED_4X4_1X16 | CONCPROP__SET_PHANTOMS | CONCPROP__STANDARD,                  do_concept_quad_lines},           /* concept_quad_lines */
+   {CONCPROP__NEED_4X4_1X16 | CONCPROP__SET_PHANTOMS,                                       do_concept_quad_lines_tog},       /* concept_quad_lines_together */
    {CONCPROP__NEED_2X8 | CONCPROP__NO_STEP,                                                 do_concept_quad_boxes},           /* concept_quad_boxes */
    {CONCPROP__NEED_2X8 | CONCPROP__SET_PHANTOMS | CONCPROP__NO_STEP,                        do_concept_quad_boxes_tog},       /* concept_quad_boxes_together */
    {CONCPROP__NEED_2X6 | CONCPROP__SET_PHANTOMS | CONCPROP__NO_STEP,                        do_concept_triple_boxes},         /* concept_triple_boxes */
@@ -2390,8 +2519,10 @@ concept_table_item concept_table[] = {
    {0,                                                                                      do_concept_centers_or_ends},      /* concept_centers_or_ends */
    {CONCPROP__USE_SELECTOR | CONCPROP__NO_STEP,                                             so_and_so_only_move},             /* concept_so_and_so_only */
    {CONCPROP__USE_SELECTOR | CONCPROP__SECOND_CALL | CONCPROP__NO_STEP,                     so_and_so_only_move},             /* concept_some_vs_others */
-   {CONCPROP__NO_STEP,                                                                      do_concept_stable},               /* concept_stable */
-   {CONCPROP__USE_SELECTOR | CONCPROP__NO_STEP,                                             do_concept_stable},               /* concept_so_and_so_stable */
+   {0,                                                                                      do_concept_stable},               /* concept_stable */
+   {CONCPROP__USE_SELECTOR,                                                                 do_concept_stable},               /* concept_so_and_so_stable */
+   {CONCPROP__USE_NUMBER,                                                                   do_concept_stable},               /* concept_frac_stable */
+   {CONCPROP__USE_SELECTOR | CONCPROP__USE_NUMBER,                                          do_concept_stable},               /* concept_so_and_so_frac_stable */
    {CONCPROP__USE_SELECTOR | CONCPROP__NO_STEP,                                             do_concept_standard},             /* concept_standard */
    {CONCPROP__NO_STEP | CONCPROP__GET_MASK | CONCPROP__USE_SELECTOR,                        do_concept_double_offset},        /* concept_double_offset */
    {CONCPROP__SECOND_CALL,                                                                  do_concept_checkpoint},           /* concept_checkpoint */

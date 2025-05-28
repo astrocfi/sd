@@ -1,84 +1,71 @@
-		    RELEASE NOTES FOR VERSION 26.0
-       Database version = 25.3, format = 26, X11 UI version 1.10.
+		    RELEASE NOTES FOR VERSION 27.1
 
-The beginnings of some user documentation has been written!!!
-See the file sd_doc.txi .
-
-Interlocked phantom box <--> line/column <--> diamond shape-changers
-are implemented.
-
-It is much more robust in the presence of phantoms for calls that have
-star turns and centers cast 3/4 while the ends move up, such as chain
-reaction and relay the top.
-
-The fix to make spin chain thru illegal from lines back-to-back, alleged
-in version 24, was finally done correctly.
-
-Concepts that are illegal for the level are not used during "resolve"
-or "do anything" operations.  The levels of concepts have been updated.
-
-It now has a tiny glimmer of intelligence about what concepts not
-to waste time with during "do anything" and "resolve" operations.
-This glimmer is currently only noticeable at levels up through A2.
-
-All the concentricity/elongation stuff has been completely reworked.
-Again.  Sorry.  This should really work this time.  I think.  It can
-now do "ENDS leads latch on" correctly from lines back-to-back and
-"ENDS quarter right" correctly from a quarter-tag.
-
-The built-in limits on total number of calls (previously 1000) and tagged
-calls (previously 350) have been greatly improved.  There is no limit on
-the total number of calls, and the built-in limit on the number of tagged
-calls now exists only in the "mkcalls" program, and has been greatly
-increased.  All memory allocation in sd itself is completely dynamic,
-based on information that mkcalls encodes into the database file.
-
-A bug was fixed that could lead to memory access violation if 40
-concepts of the type that take two calls (e.g. checkpoint or centers
-do this while ends do that) were nested.  Such a situation could
-never lead to a legal call tree, and would not likely be entered
-manually, but the resolver could in some cases (probability ~ 10**-25)
-try to do such a thing.  (The bug was actually observed during stress
-testing.)
-
-A bug in the use of "longjmp" was fixed, that made the resolver not work
-correctly when optimized on HP-UX, and perhaps other systems as well.
-
-Flip the line and cross flip the line, and fractions thereof, are now legal
-only from waves and two-faced lines, respectively.  Cross flip the line
-is now the "CROSS" variation of flip the line, instead of being a separate
-call.  The program will move the word "cross" into the correct place in the
-call name.  Cross invert the column was changed in the same way.
-
-Lockit is now legal from diamonds.
-Counter rotate now works from 2x6, 2x8, 3x4, 4x4, and C1 phantom setups.
-There are still some setups that it can't be done from.
-
-The call "circulate" is now in the database in lower case.  It had previously
-been in upper case to make it easier to find when window systems other
-than X11 were used.
-
-To get vertical dixie style, etc., select vertical [single file dixie style].
-
-New calls: Zag zig, By golly, vertical <anything>, vertical turn and deal,
-8 roll away with a half sashay.  The latter is a C4 call and is normally done
-from a miniwave.  The mainstream call "roll away" is now legal only from a
-couple.  The calls "wave the beaux" and "wave the belles" have been changed
-to "wave the <anyone>".  Clear out is now done correctly.
-
-Box the gnat was added.  It is equivalent to touch 1/2.  This is,
-of course, not really right.  Don't call box the gnat followed by
-hinge.
+========================================================================
+To remove from SRC's database:  3x3/4x4 peel/trail off, peel/trail the deal,
+loop & tag.  Beau hop.  Turn to a line, turn and deal, triple turn,
+circle to a wave, follow your leader.  Walk and dodge, bend the line,
+crossfire, shake and/or rattle, wheel thru, wheel the ocean/sea
+========================================================================
 
 
-			User Interface Changes
 
-The call menu has a title over it saying which menu you are looking at.
 
-Mouse button 3 no longer does Undo by default.  It made the program
-too unfriendly for novices.  The README file explains how to get this
-behavior back.
+Finally fixed (????) stuff like "centers [2/3 recycle] the difference"
+from a grand wave.  This also makes the evil example in the documentation
+work.
+
+Fixed another evil case of knowing where the phantoms went on things like
+"split phantom lines tag chain thru reaction".
+
+New MxN calls: various fractions of peel/trail off, peel/trail the deal,
+including 3X3 and 4X4.  3X3 and 4X4 loop and tag, beau/belle hop, turn/wheel to a line,
+turn/wheel and deal, triple turn/wheel, circle to a wave, follow your leader,
+walk and dodge, couple up, bend/retreat the line, crossfire, shake and/or rattle,
+wheel thru, wheel the ocean/sea.
+
+The ability to expand the matrix from a 2x4 to a 2x6 or 2x8 when executing a
+call that requires same was implemented.  It is now possible to do 12 matrix
+circulate or 3X3/4X4 follow your leader from a 2x4.
+
+Other new calls: Soft touch, about.
+
+New concepts: Triple/quadruple lines/columns working together/apart.
+These take a 1x12 or 1x16 setup.  Also, plain triple/quadruple
+lines/columns can be done from a 1x12 or 1x16.
+
+More new concepts: Fractional stable.  It can only do these for calls that
+have had stability information encoded into the database, which most calls
+do not yet have.  See below.
+
+It can now do "matrix" calls (U-turn back, quarter left/right, press/truck where
+appropriate) in more setups, including triple diamonds, quadruple diamonds,
+3x1 diamonds, and 1x10/1x12/1x14/1x16.
+
+Database internal stuff:
+   The restriction in the database known as "peelable box" is now legal from
+   3x2 and 4x2 columns, and means that, in each single file column, all people
+   are facing the same way.  The meaning of "peelable box" in a 2x4, that the
+   ends are in a peelable 2x2, was removed.  Use "ends_are_peelable" for this.
+   Cast a shadow and criss-cross the shadow were modified accordingly.
+
+   The new letters "Z", "C", and "A" are used to indicate stability in a
+   by-array call specifier.  They appear just before the roll indicator,
+   if any.  For example:
+         array [AL0E CR1W AL0W CR1E]    (this is "bingo")
+   "C" means this person turns 1 to 4 positions clockwise.  Exactly how
+   far will be deduced from his ending direction.  "A" means he turns 1
+   to 4 positions anticlockwise.  "Z" means he does not turn at all, but
+   stability is still supported.  If no indicator is present, fractional
+   stable is not supported for this person.  More complex indicators will
+   be provided in the future for calls that have people reverse direction.
+
+A bug in initialization was fixed that made it not think that "ladies chain"
+was legal from facing lines.  What was the problem?  Ladies chain is only
+legal from normal couples.  When setups were being tested at program startup,
+the test setup for lines facing and 8 chain had the couples sashayed.
 
 ===============================================================================
 
 See the file relnotes.archive for notes relating to older versions.
+
+

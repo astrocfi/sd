@@ -36,6 +36,31 @@ shown with a map giving the person numbering:
             |     |     |     |     |     |     |     |     |
 1x8         |  0  |  1  |  3  |  2  |  6  |  7  |  5  |  4  |
             |_____|_____|_____|_____|_____|_____|_____|_____|
+
+
+             _____ _____ _____ _____ _____ _____ _____ ___________ _____
+            |     |     |     |     |     |     |     |     |     |     |
+1x10        |  0  |  1  |  2  |  3  |  4  |  9  |  8  |  7  |  6  |  5  |
+            |_____|_____|_____|_____|_____|_____|_____|_____|_____|_____|
+
+
+             _____ _____ _____ _____ _____ _____ _____ ___________ _____ _____ _____
+            |     |     |     |     |     |     |     |     |     |     |     |     |
+1x12        |  0  |  1  |  2  |  3  |  4  |  5  | 11  | 10  |  9  |  8  |  7  |  6  |
+            |_____|_____|_____|_____|_____|_____|_____|_____|_____|_____|_____|_____|
+
+
+             _____ _____ _____ _____ _____ _____ _____ ___________ _____ _____ _____ _____ _____
+            |     |     |     |     |     |     |     |     |     |     |     |     |     |     |
+1x14        |  0  |  1  |  2  |  3  |  4  |  5  |  6  | 13  | 12  | 11  | 10  |  9  |  8  |  7  |
+            |_____|_____|_____|_____|_____|_____|_____|_____|_____|_____|_____|_____|_____|_____|
+
+
+             _____ _____ _____ _____ _____ _____ _____ ___________ _____ _____ _____ _____ _____ _____ _____
+            |     |     |     |     |     |     |     |     |     |     |     |     |     |     |     |     |
+1x16        |  0  |  1  |  2  |  3  |  4  |  5  |  6  |  7  | 15  | 14  | 13  | 12  | 11  | 10  |  9  |  8  |
+            |_____|_____|_____|_____|_____|_____|_____|_____|_____|_____|_____|_____|_____|_____|_____|_____|
+
 
              _____ _____
             |     |     |
@@ -425,6 +450,10 @@ The extra beginning setup kinds are as follows:
                 hrglass              phrglass
                 1x4                  4x1
                 1x8                  8x1
+                1x10                 10x1
+                1x12                 12x1
+                1x14                 14x1
+                1x16                 16x1
                 2x4                  4x2
                 2x3                  3x2
                 1x6                  6x1
@@ -1322,12 +1351,49 @@ columns_miniwave
       Returns FALSE if this belle is in a couple with the other person.
       Raises an error if this belle can't tell.
 
+1x4_wheel_and_deal
+      applies to 1x4 lines only.  This implements the decision necessary
+      to do a wheel and deal.  It is only as strict as necessary to resolve
+      ambiguity.  You must use this only when it has already been determined
+      that the live people in each couple are facing consistently -- this
+      predicate will malfunction if presented with people in waves, for
+      example.  Hence, it must only be used in the context
+               setup 1x4 2x2 restriction forbidden couples_only
+      It returns TRUE if this person is on the beau-side couple of the line.
+      If this person is on the belle-side couple, it returns TRUE if the line
+      is two-faced, and FALSE if it is one-faced.  It raises an error if there
+      are no people on the other side and hence it can't tell.
+
+1x6_wheel_and_deal
+      applies to 1x6 lines only.  This implements the decision necessary
+      to do a 3X3 wheel and deal.  It is only as strict as necessary to resolve
+      ambiguity.  You must use this only when it has already been determined
+      that the live people in each triad are facing consistently -- this
+      predicate will malfunction if presented with people in waves, for
+      example.  Hence, it must only be used in the context
+               setup 1x6 2x3 restriction forbidden 3x3couples_only
+      It returns TRUE if this person is on the beau-side triad of the line.
+      If this person is on the belle-side triad, it returns TRUE if the line
+      is two-faced, and FALSE if it is one-faced.  It raises an error if there
+      are no people on the other side and hence it can't tell.
+
+1x8_wheel_and_deal
+      applies to 1x8 lines only.  This implements the decision necessary
+      to do a 4X4 wheel and deal.  It is only as strict as necessary to resolve
+      ambiguity.  You must use this only when it has already been determined
+      that the live people in each quad are facing consistently -- this
+      predicate will malfunction if presented with people in waves, for
+      example.  Hence, it must only be used in the context
+               setup 1x8 2x4 restriction forbidden 4x4couples_only
+      It returns TRUE if this person is on the beau-side quad of the line.
+      If this person is on the belle-side quad, it returns TRUE if the line
+      is two-faced, and FALSE if it is one-faced.  It raises an error if there
+      are no people on the other side and hence it can't tell.
+
 
 
 Still to do:
 
-1x4_wheel_and_deal_1
-1x4_wheel_and_deal_2
 vert1
 vert2
 inner_active_lines
@@ -1389,8 +1455,6 @@ outposter_is_ccw
       applies to 2x4 lines only.  Returns TRUE if the end of the line counterclockwise
       from this person is the outposter.  Returns FALSE if the outposter is at the
       clockwise end of the line, or there is no live outposter.
-
-Still to do:
 
 nexttrnglspot_is_tboned
       applies to triangles only.  This is intended to determine which way a

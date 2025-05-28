@@ -16,7 +16,7 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-    This is for version 25.5 */
+    This is for version 27 */
 
 /* mkcalls.c */
 
@@ -267,8 +267,15 @@ char *sstab[] = {
    "2x8",
    "8x2",
    "4x4",
+   "1x10",
+   "10x1",
+   "1x12",
+   "12x1",
+   "1x14",
+   "14x1",
+   "1x16",
+   "16x1",
    "c1phan",
-   "pc1phan",
    "galaxy",
    "4x6",
    "6x4",
@@ -311,6 +318,10 @@ char *estab[] = {
    "2x6",
    "2x8",
    "4x4",
+   "1x10",
+   "1x12",
+   "1x14",
+   "1x16",
    "c1phan",
    "bigblob",
    "ptpd",
@@ -378,10 +389,15 @@ char *crtab[] = {
    "wave_unless_say_2faced",
    "1fl_only",
    "2fl_only",
+   "3x3_2fl_only",
+   "4x4_2fl_only",
    "couples_only",
+   "3x3couples_only",
+   "4x4couples_only",
    "awkward_centers",
    "magic_only",
    "peelable_box",
+   "ends_are_peelable",
    "not_tboned",
    "quarterbox_or_col",
    "quarterbox_or_magic_col",
@@ -522,8 +538,9 @@ char *predtab[] = {
    "columns_couple",
    "columns_miniwave",
    "1x2_beau_or_miniwave",
-   "1x4_wheel_and_deal_1",
-   "1x4_wheel_and_deal_2",
+   "1x4_wheel_and_deal",
+   "1x6_wheel_and_deal",
+   "1x8_wheel_and_deal",
    "vert1",
    "vert2",
    "inner_active_lines",
@@ -648,8 +665,15 @@ int begin_sizes[] = {
    16,         /* b_2x8 */
    16,         /* b_8x2 */
    16,         /* b_4x4 */
+   10,         /* b_1x10 */
+   10,         /* b_10x1 */
+   12,         /* b_1x12 */
+   12,         /* b_12x1 */
+   14,         /* b_1x14 */
+   14,         /* b_14x1 */
+   16,         /* b_1x16 */
+   16,         /* b_16x1 */
    16,         /* b_c1phan */
-   16,         /* b_pc1phan */
    8,          /* b_galaxy */
    24,         /* b_4x6 */
    24,         /* b_6x4 */
@@ -663,7 +687,7 @@ int begin_sizes[] = {
    16,         /* b_4dmd */
    16};        /* b_p4dmd */
 
-void errexit(char s[])
+static void errexit(char s[])
 {
    char my_line[80];
    int i;
@@ -697,7 +721,7 @@ void errexit(char s[])
 }
 
 
-int get_char(void)
+static int get_char(void)
 {
    if (!chars_left) {
       lineno++;
@@ -722,13 +746,13 @@ int get_char(void)
    return(0);
 }
 
-int symchar(void)
+static int symchar(void)
 {
    if (ch == '[' || ch == ']' || ch == ',' || ch == ':' || (int)ch <= 32) return(0);
    else return(1);
 }
 
-void get_tok_or_eof(void)
+static void get_tok_or_eof(void)
 {
    int digit;
 
@@ -826,7 +850,7 @@ void get_tok_or_eof(void)
 
 /* This returns -1 if the item is not found. */
 
-int search(char *table[])
+static int search(char *table[])
 {
    int i;
 
@@ -839,7 +863,7 @@ int search(char *table[])
 }
 
 
-int tagsearch(int def)
+static int tagsearch(int def)
 {
    int i;
 
@@ -861,14 +885,14 @@ int tagsearch(int def)
 }
 
 
-void get_tok(void)
+static void get_tok(void)
 {
    get_tok_or_eof();
    if (eof) errexit("Unexpected end of file");
 }
 
 
-int get_num(char s[])
+static int get_num(char s[])
 {
    get_tok();
    if ((tok_kind != tok_number)) errexit(s);
@@ -876,7 +900,7 @@ int get_num(char s[])
 }
 
 
-int dfmsearch(void)
+static int dfmsearch(void)
 {
    int i;
    int rrr = 0;
@@ -905,7 +929,7 @@ int dfmsearch(void)
 
 
 
-void write_halfword(int n)
+static void write_halfword(int n)
 {
    fputc((n>>8) & 0xFF, outfile);
    fputc((n) & 0xFF, outfile);
@@ -914,7 +938,7 @@ void write_halfword(int n)
 
 
 
-void write_fullword(int n)
+static void write_fullword(int n)
 {
    fputc((n>>24) & 0xFF, outfile);
    fputc((n>>16) & 0xFF, outfile);
@@ -925,36 +949,44 @@ void write_fullword(int n)
 
 
 
-void write_callarray(int num, int doing_matrix)
+static void write_callarray(int num, int doing_matrix)
 {
-   int count, dat;
+   int count;
 
    if (tok_kind != tok_lbkt)
       errexit("Missing left bracket in callarray list");
 
-   count = 0;
+   for (count=0; ; count++) {
+      int dat = 0;
+      int p = 0;
+      stability stab = stb_none;
 
-   while (1) {
       get_tok();
       if (tok_kind == tok_rbkt) break;
       else if (tok_kind == tok_number && tok_value == 0)
          write_halfword(0);
       else if (tok_kind == tok_symbol) {
-         if (letcount == 1)
-            dat = 0;          /* No roll indicator was given. */
-         else if (letcount == 2) {
-            if (tok_str[0] == 'L' || tok_str[0] == 'l') dat = 010000;
-            else if (tok_str[0] == 'M' || tok_str[0] == 'm') dat = 04000;
-            else if (tok_str[0] == 'R' || tok_str[0] == 'r') dat = 02000;
+         if (letcount > 1) {
+            if      (tok_str[0] == 'Z' || tok_str[0] == 'z') { stab = stb_z; p++; }
+            else if (tok_str[0] == 'A' || tok_str[0] == 'a') { stab = stb_a; p++; }
+            else if (tok_str[0] == 'C' || tok_str[0] == 'c') { stab = stb_c; p++; }
+         }
+
+         if (letcount-p == 2) {
+            if (tok_str[p] == 'L' || tok_str[p] == 'l') dat = 4;
+            else if (tok_str[p] == 'M' || tok_str[p] == 'm') dat = 2;
+            else if (tok_str[p] == 'R' || tok_str[p] == 'r') dat = 1;
             else errexit("Improper callarray specifier");
          }
-         else
+         else if (letcount-p != 1)
             errexit("Improper callarray specifier");
 
-         if (doing_matrix) dat <<= 2;         /* **** We gotta straighten this out someday. */
-
-         if (doing_matrix) dat |= (tok_value << 7);
-         else dat |= (tok_value << 4);
+         if (doing_matrix) {
+            dat = (dat << 12) | (tok_value << 7);
+         }
+         else {
+            dat = (dat * DBROLL_BIT) | (tok_value << 4) | (((unsigned int) stab) * DBSTAB_BIT);
+         }
 
          /* We now have roll indicator and position, need to get direction. */
          switch (tok_str[char_ct-1]) {
@@ -975,8 +1007,6 @@ void write_callarray(int num, int doing_matrix)
       }
       else
          errexit("Improper callarray element");
-
-      count++;
    }
 
    if (count < num) errexit("Callarray list is too short for this call");
@@ -984,7 +1014,7 @@ void write_callarray(int num, int doing_matrix)
 }
 
 
-void write_call_header(calldef_schema schema)
+static void write_call_header(calldef_schema schema)
 {
    int i, j;
 
@@ -1002,7 +1032,7 @@ void write_call_header(calldef_schema schema)
 }
 
 
-void write_conc_stuff(calldef_schema schema)
+static void write_conc_stuff(calldef_schema schema)
 {
    int defin, minn, defout, mout;
 
@@ -1029,7 +1059,7 @@ void write_conc_stuff(calldef_schema schema)
 }
 
 
-void write_seq_stuff(void)
+static void write_seq_stuff(void)
 {
    int deff, mods;
 

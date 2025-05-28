@@ -16,11 +16,13 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-    This is version 24.0. */
+    This is for version 27. */
 
 /* This defines the following functions:
    update_id_bits
    touch_or_rear_back
+   do_matrix_expansion
+   normalize_setup
    toplevelmove
 */
 
@@ -29,6 +31,7 @@
 typedef struct {
    short source_indices[16];
    int size;
+   setup_kind inner_kind;
    setup_kind outer_kind;
    int rot;
    } expand_thing;
@@ -39,18 +42,39 @@ typedef struct {
    expand_thing *expand_lists;
    } full_expand_thing;
 
-static expand_thing exp_1x8_4dm_stuff   = {{12, 13, 15, 14, 4, 5, 7, 6}, 8, s_4dmd, 0};
-static expand_thing exp_qtg_4dm_stuff   = {{1, 2, 6, 7, 9, 10, 14, 15}, 8, s_4dmd, 0};
-static expand_thing exp_3x1d_3d_stuff   = {{9, 10, 11, 1, 3, 4, 5, 7}, 8, s_3dmd, 0};
-static expand_thing exp_4x4_4dm_stuff_a = {{8, 9, 10, 6, 11, 13, 12, 15, 0, 1, 2, 14, 3, 5, 4, 7}, 16, s_4dmd, 1};
-static expand_thing exp_4x4_4dm_stuff_b = {{3, 4, 5, 6, 8, 9, 10, 7, 11, 12, 13, 14, 0, 1, 2, 15}, 16, s_4dmd, 0};
-static expand_thing exp_2x4_2x6_stuff   = {{1, 2, 3, 4, 7, 8, 9, 10}, 8, s2x6, 0};
-static expand_thing exp_qtg_3x4_stuff   = {{1, 2, 4, 5, 7, 8, 10, 11}, 8, s3x4, 0};
-static expand_thing exp_2x6_2x8_stuff   = {{1, 2, 3, 4, 5, 6, 9, 10, 11, 12, 13, 14}, 12, s2x8, 0};
-static expand_thing exp_2x6_4x6_stuff   = {{11, 10, 9, 8, 7, 6, 23, 22, 21, 20, 19, 18}, 12, s4x6, 0};
-static expand_thing exp_2x4_2x8_stuff   = {{2, 3, 4, 5, 10, 11, 12, 13}, 8, s2x8, 0};
-static expand_thing exp_2x4_4x4_stuff   = {{10, 15, 3, 1, 2, 7, 11, 9}, 8, s4x4, 0};
-static expand_thing exp_4x4_blob_stuff  = {{3, 4, 8, 5, 9, 10, 14, 11, 15, 16, 20, 17, 21, 22, 2, 23}, 16, s_bigblob, 0};
+static expand_thing exp_1x8_4dm_stuff   = {{12, 13, 15, 14, 4, 5, 7, 6}, 8, s1x8, s_4dmd, 0};
+static expand_thing exp_qtg_4dm_stuff   = {{1, 2, 6, 7, 9, 10, 14, 15}, 8, nothing, s_4dmd, 0};
+static expand_thing exp_3x1d_3d_stuff   = {{9, 10, 11, 1, 3, 4, 5, 7}, 8, s_3x1dmd, s_3dmd, 0};
+static expand_thing exp_4x4_4dm_stuff_a = {{8, 9, 10, 6, 11, 13, 12, 15, 0, 1, 2, 14, 3, 5, 4, 7}, 16, nothing, s_4dmd, 1};
+static expand_thing exp_4x4_4dm_stuff_b = {{3, 4, 5, 6, 8, 9, 10, 7, 11, 12, 13, 14, 0, 1, 2, 15}, 16, nothing, s_4dmd, 0};
+static expand_thing exp_2x4_2x6_stuff   = {{1, 2, 3, 4, 7, 8, 9, 10}, 8, s2x4, s2x6, 0};
+static expand_thing exp_qtg_3x4_stuff   = {{1, 2, 4, 5, 7, 8, 10, 11}, 8, nothing, s3x4, 0};
+static expand_thing exp_2x6_2x8_stuff   = {{1, 2, 3, 4, 5, 6, 9, 10, 11, 12, 13, 14}, 12, s2x6, s2x8, 0};
+static expand_thing exp_1x8_1x12_stuff  = {{2, 3, 5, 4, 8, 9, 11, 10}, 8, nothing, s1x12, 0};
+static expand_thing exp_1x10_1x12_stuff = {{1, 2, 3, 4, 5, 7, 8, 9, 10, 11}, 10, s1x10, s1x12, 0};
+static expand_thing exp_1x12_1x14_stuff = {{1, 2, 3, 4, 5, 6, 8, 9, 10, 11, 12, 13}, 12, s1x12, s1x14, 0};
+static expand_thing exp_1x14_1x16_stuff = {{1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 14, 15}, 14, s1x14, s1x16, 0};
+static expand_thing exp_1x8_1x10_stuff = {{1, 2, 4, 3, 6, 7, 9, 8}, 8, s1x8, s1x10, 0};
+static expand_thing exp_2x6_4x6_stuff   = {{11, 10, 9, 8, 7, 6, 23, 22, 21, 20, 19, 18}, 12, nothing, s4x6, 0};
+static expand_thing exp_2x4_2x8_stuff   = {{2, 3, 4, 5, 10, 11, 12, 13}, 8, nothing, s2x8, 0};
+static expand_thing exp_2x4_4x4_stuff   = {{10, 15, 3, 1, 2, 7, 11, 9}, 8, s2x4, s4x4, 0};
+static expand_thing exp_4x4_blob_stuff  = {{3, 4, 8, 5, 9, 10, 14, 11, 15, 16, 20, 17, 21, 22, 2, 23}, 16, nothing, s_bigblob, 0};
+
+
+
+static void compress_setup(expand_thing *thing, setup *stuff)
+{
+   int i;
+   setup temp = *stuff;
+
+   stuff->kind = thing->inner_kind;
+   for (i=0; i<thing->size; i++) {
+      (void) copy_person(stuff, i, &temp, thing->source_indices[i]);
+   }
+}
+
+
+
 
 static int bit_table_2x2[][4] = {
    {ID2_LEAD|ID2_BEAU,     ID2_TRAILER|ID2_BEAU,  ID2_TRAILER|ID2_BELLE, ID2_LEAD|ID2_BELLE},
@@ -163,21 +187,21 @@ extern void update_id_bits(setup *ss)
 }
 
 
-static expand_thing rear_wave_stuff = {{3, 0, 1, 2}, 4, s2x2, 0};
-static expand_thing rear_bone_stuff = {{0, 3, 2, 5, 4, 7, 6, 1}, 8, s2x4, 0};
-static expand_thing rear_wing_stuff = {{1, 2, 3, 4, 5, 6, 7, 0}, 8, s2x4, 0};
-static expand_thing rear_c1a_stuff = {{0, -1, 1, -1, 2, -1, 3, -1, 4, -1, 5, -1, 6, -1, 7, -1}, 16, s2x4, 0};
-static expand_thing rear_c1b_stuff = {{-1, 0, -1, 1, -1, 3, -1, 2, -1, 4, -1, 5, -1, 7, -1, 6}, 16, s2x4, 0};
-static expand_thing rear_c1c_stuff = {{6, -1, 7, -1, 0, -1, 1, -1, 2, -1, 3, -1, 4, -1, 5, -1}, 16, s2x4, 1};
-static expand_thing rear_c1d_stuff = {{-1, 7, -1, 6, -1, 0, -1, 1, -1, 3, -1, 2, -1, 4, -1, 5}, 16, s2x4, 1};
-static expand_thing rear_miniwave_stuff = {{1, 0}, 2, s_1x2, 1};
-static expand_thing rear_2x4_stuff = {{6, 7, 1, 0, 2, 3, 5, 4}, 8, s2x4, 1};
-static expand_thing rear_col_stuff = {{0, 3, 6, 5, 4, 7, 2, 1}, 8, s1x8, 0};
-static expand_thing rear_vrbox_stuff = {{1, 0, 3, 2}, 4, s1x4, 1};
-static expand_thing rear_hrbox_stuff = {{0, 3, 2, 1}, 4, s1x4, 0};
-static expand_thing rear_gwave_stuff = {{7, 0, 1, 6, 3, 4, 5, 2}, 8, s2x4, 0};
-static expand_thing rear_qtag_stuff = {{7, 0, 1, 2, 3, 4, 5, 6}, 8, s2x4, 1};
-static expand_thing rear_sqtag_stuff = {{0, 1, 2, 3}, 4, s1x4, 0};
+static expand_thing rear_wave_stuff = {{3, 0, 1, 2}, 4, nothing, s2x2, 0};
+static expand_thing rear_bone_stuff = {{0, 3, 2, 5, 4, 7, 6, 1}, 8, nothing, s2x4, 0};
+static expand_thing rear_wing_stuff = {{1, 2, 3, 4, 5, 6, 7, 0}, 8, nothing, s2x4, 0};
+static expand_thing rear_c1a_stuff = {{0, -1, 1, -1, 2, -1, 3, -1, 4, -1, 5, -1, 6, -1, 7, -1}, 16, nothing, s2x4, 0};
+static expand_thing rear_c1b_stuff = {{-1, 0, -1, 1, -1, 3, -1, 2, -1, 4, -1, 5, -1, 7, -1, 6}, 16, nothing, s2x4, 0};
+static expand_thing rear_c1c_stuff = {{6, -1, 7, -1, 0, -1, 1, -1, 2, -1, 3, -1, 4, -1, 5, -1}, 16, nothing, s2x4, 1};
+static expand_thing rear_c1d_stuff = {{-1, 7, -1, 6, -1, 0, -1, 1, -1, 3, -1, 2, -1, 4, -1, 5}, 16, nothing, s2x4, 1};
+static expand_thing rear_miniwave_stuff = {{1, 0}, 2, nothing, s_1x2, 1};
+static expand_thing rear_2x4_stuff = {{6, 7, 1, 0, 2, 3, 5, 4}, 8, nothing, s2x4, 1};
+static expand_thing rear_col_stuff = {{0, 3, 6, 5, 4, 7, 2, 1}, 8, nothing, s1x8, 0};
+static expand_thing rear_vrbox_stuff = {{1, 0, 3, 2}, 4, nothing, s1x4, 1};
+static expand_thing rear_hrbox_stuff = {{0, 3, 2, 1}, 4, nothing, s1x4, 0};
+static expand_thing rear_gwave_stuff = {{7, 0, 1, 6, 3, 4, 5, 2}, 8, nothing, s2x4, 0};
+static expand_thing rear_qtag_stuff = {{7, 0, 1, 2, 3, 4, 5, 6}, 8, nothing, s2x4, 1};
+static expand_thing rear_sqtag_stuff = {{0, 1, 2, 3}, 4, nothing, s1x4, 0};
 
 static full_expand_thing rear_wave_pair     = {warn__rear_back,       0, &rear_wave_stuff};
 static full_expand_thing rear_bone_pair     = {warn__some_rear_back,  0, &rear_bone_stuff};
@@ -195,15 +219,15 @@ static full_expand_thing rear_gwave_pair    = {warn__rear_back,       0, &rear_g
 static full_expand_thing rear_qtag_pair     = {warn__rear_back,       0, &rear_qtag_stuff};
 static full_expand_thing rear_sqtag_pair    = {warn__awful_rear_back, 0, &rear_sqtag_stuff};
 
-static expand_thing step_1x8_stuff = {{0, 7, 6, 1, 4, 3, 2, 5}, 8, s2x4, 0};
-static expand_thing step_1x4_side_stuff = {{0, 1, 2, 3}, 4, sdmd, 0};
-static expand_thing step_1x4_stuff = {{0, 3, 2, 1}, 4, s2x2, 0};
-static expand_thing step_1x2_stuff = {{0, 1}, 2, s_1x2, 1};
-static expand_thing step_2x2v_stuff = {{1, 2, 3, 0}, 4, s1x4, 0};
-static expand_thing step_2x2h_stuff = {{0, 1, 2, 3}, 4, s1x4, 1};
-static expand_thing step_8ch_stuff = {{7, 6, 0, 1, 3, 2, 4, 5}, 8, s2x4, 1};
-static expand_thing step_li_stuff = {{1, 2, 7, 4, 5, 6, 3, 0}, 8, s1x8, 0};
-static expand_thing step_tby_stuff = {{5, 6, 7, 0, 1, 2, 3, 4}, 8, s_qtag, 1};
+static expand_thing step_1x8_stuff = {{0, 7, 6, 1, 4, 3, 2, 5}, 8, nothing, s2x4, 0};
+static expand_thing step_1x4_side_stuff = {{0, 1, 2, 3}, 4, nothing, sdmd, 0};
+static expand_thing step_1x4_stuff = {{0, 3, 2, 1}, 4, nothing, s2x2, 0};
+static expand_thing step_1x2_stuff = {{0, 1}, 2, nothing, s_1x2, 1};
+static expand_thing step_2x2v_stuff = {{1, 2, 3, 0}, 4, nothing, s1x4, 0};
+static expand_thing step_2x2h_stuff = {{0, 1, 2, 3}, 4, nothing, s1x4, 1};
+static expand_thing step_8ch_stuff = {{7, 6, 0, 1, 3, 2, 4, 5}, 8, nothing, s2x4, 1};
+static expand_thing step_li_stuff = {{1, 2, 7, 4, 5, 6, 3, 0}, 8, nothing, s1x8, 0};
+static expand_thing step_tby_stuff = {{5, 6, 7, 0, 1, 2, 3, 4}, 8, nothing, s_qtag, 1};
 
 static full_expand_thing step_1x8_pair =      {0, 0, &step_1x8_stuff};
 static full_expand_thing step_1x4_side_pair = {0, 0, &step_1x4_side_stuff};
@@ -348,7 +372,7 @@ extern void touch_or_rear_back(
 
    if (!tptr) return;
    if (tptr->warning) warn(tptr->warning);
-   if (scopy->setupflags & tptr->forbidden_elongation)
+   if ((scopy->setupflags & tptr->forbidden_elongation) && (!(scopy->setupflags & SETUPFLAG__NO_CHK_ELONG)))
       fail("People are too far away to work with each other on this call.");
    zptr = tptr->expand_lists;
 
@@ -387,16 +411,502 @@ extern void touch_or_rear_back(
 
 
 
+extern void do_matrix_expansion(setup *ss, concept_kind ckind)
+{
+   int i, j;
+   expand_thing *eptr;
+   setup stemp;
+   unsigned int concprops = concept_table[ckind].concept_prop;
+
+   for (;;) {
+      if (concprops & (CONCPROP__NEED_4X4 | CONCPROP__NEED_BLOB | CONCPROP__NEED_4X6)) {
+         if (ss->kind == s2x4) {
+            eptr = &exp_2x4_4x4_stuff; goto expand_me;
+         }
+      }
+   
+      if (concprops & (CONCPROP__NEED_BLOB)) {
+         if (ss->kind == s4x4) {
+            eptr = &exp_4x4_blob_stuff; goto expand_me;
+         }
+      }
+      else if (concprops & CONCPROP__NEED_4DMD) {
+         int livemask;
+   
+         switch (ss->kind) {
+            case s1x8:
+               eptr = &exp_1x8_4dm_stuff; goto expand_me;
+            case s_qtag:
+               eptr = &exp_qtg_4dm_stuff; goto expand_me;
+            case s4x4:
+               for (i=0, j=1, livemask=0; i<16; i++, j<<=1) {
+                  if (ss->people[i].id1) livemask |= j;
+               }
+   
+               if (livemask == 0x1717) {
+                  eptr = &exp_4x4_4dm_stuff_a; goto expand_me;
+               }
+               else if (livemask == 0x7171) {
+                  eptr = &exp_4x4_4dm_stuff_b; goto expand_me;
+               }
+         }
+      }
+      else if (concprops & CONCPROP__NEED_3DMD) {
+         if (ss->kind == s_3x1dmd) {         /* Need to expand to real triple diamonds. */
+            eptr = &exp_3x1d_3d_stuff; goto expand_me;
+         }
+      }
+      else if (concprops & CONCPROP__NEED_2X8) {
+         switch (ss->kind) {         /* Need to expand to a 2x8. */
+            case s2x4:
+               eptr = &exp_2x4_2x8_stuff; goto expand_me;
+            case s2x6:
+               eptr = &exp_2x6_2x8_stuff; goto expand_me;
+         }
+      }
+      else if (concprops & CONCPROP__NEED_2X6) {
+         if (ss->kind == s2x4) {         /* Need to expand to a 2x6. */
+            eptr = &exp_2x4_2x6_stuff; goto expand_me;
+         }
+      }
+      else if (concprops & CONCPROP__NEED_4X6) {
+         if (ss->kind == s2x6) {         /* Need to expand to a 4x6. */
+            eptr = &exp_2x6_4x6_stuff; goto expand_me;
+         }
+      }
+      else if (concprops & CONCPROP__NEED_3X4_1X12) {
+         switch (ss->kind) {             /* Need to expand to a 3x4 or 1x12. */
+            case s1x8:
+               eptr = &exp_1x8_1x12_stuff; goto expand_me;
+            case s1x10:
+               eptr = &exp_1x10_1x12_stuff; goto expand_me;
+         }
+      }
+      else if (concprops & CONCPROP__NEED_4X4_1X16) {
+         switch (ss->kind) {             /* Need to expand to a 4x4 or 1x16. */
+            case s2x4:
+               eptr = &exp_2x4_4x4_stuff; goto expand_me;
+            case s1x8:
+               eptr = &exp_1x8_1x12_stuff; goto expand_me;
+            case s1x10:
+               eptr = &exp_1x10_1x12_stuff; goto expand_me;
+            case s1x12:
+               eptr = &exp_1x12_1x14_stuff; goto expand_me;
+            case s1x14:
+               eptr = &exp_1x14_1x16_stuff; goto expand_me;
+         }
+      }
+      else {
+         switch (ckind) {
+            case concept_triple_lines: case concept_triple_lines_together:
+               if (ss->kind == s_qtag) {         /* Need to expand to a 3x4. */
+                  eptr = &exp_qtg_3x4_stuff; goto expand_me;
+               }
+               break;
+         }
+      }
+   
+      /* If get here, we did NOT see any concept that requires a setup expansion. */
+   
+      return;
+   
+      expand_me:
+   
+      /* If get here, we DID see a concept that requires a setup expansion. */
+   
+      stemp = *ss;
+      clear_people(ss);
+      if (eptr->rot) {
+         for (i=0; i<eptr->size; i++) (void) copy_rot(ss, eptr->source_indices[i], &stemp, i, 033);
+         ss->rotation++;
+      }
+      else {
+         for (i=0; i<eptr->size; i++) (void) copy_person(ss, eptr->source_indices[i], &stemp, i);
+      }
+   
+      /* Unsymmetrical selectors are disabled if we expanded the matrix. */
+      for (i=0; i<MAX_PEOPLE; i++) ss->people[i].id2 &= ~UNSYM_BITS_TO_CLEAR;
+      ss->kind = eptr->outer_kind;
+
+      canonicalize_rotation(ss);
+   
+      /* Put in position-identification bits (leads/trailers/beaux/belles/centers/ends etc.) */
+      update_id_bits(ss);
+   }
+}
+
+
+static void normalize_4x4(setup *stuff)
+{
+   if (!(stuff->people[0].id1 | stuff->people[4].id1 | stuff->people[8].id1 | stuff->people[12].id1)) {
+      if (!(stuff->people[5].id1 | stuff->people[6].id1 | stuff->people[13].id1 | stuff->people[14].id1)) {
+         compress_setup(&exp_2x4_4x4_stuff, stuff);
+      }
+      else if (!(stuff->people[1].id1 | stuff->people[2].id1 | stuff->people[9].id1 | stuff->people[10].id1)) {
+         stuff->kind = s2x4;
+         stuff->rotation++;
+         (void) copy_rot(stuff, 1, stuff, 3, 033);     /* careful -- order is important */
+         (void) copy_rot(stuff, 2, stuff, 7, 033);
+         (void) copy_rot(stuff, 3, stuff, 5, 033);
+         (void) copy_rot(stuff, 4, stuff, 6, 033);
+         (void) copy_rot(stuff, 0, stuff, 14, 033);
+         (void) copy_rot(stuff, 5, stuff, 11, 033);
+         (void) copy_rot(stuff, 6, stuff, 15, 033);
+         (void) copy_rot(stuff, 7, stuff, 13, 033);
+      }
+   }
+}
+
+
+static void normalize_blob(setup *stuff)
+
+{
+   if (!(stuff->people[0].id1 | stuff->people[1].id1 | stuff->people[12].id1 | stuff->people[13].id1)) {
+      stuff->kind = s4x6;
+      (void) copy_person(stuff, 13, stuff, 9);         /* careful -- order is important */
+      (void) copy_person(stuff, 9, stuff, 23);
+      (void) copy_person(stuff, 23, stuff, 7);
+      (void) copy_person(stuff, 7, stuff, 4);
+      (void) copy_person(stuff, 4, stuff, 3);
+      (void) copy_person(stuff, 3, stuff, 2);
+      (void) copy_person(stuff, 2, stuff, 22);
+      (void) copy_person(stuff, 22, stuff, 8);
+      (void) copy_person(stuff, 8, stuff, 5);
+      (void) copy_person(stuff, 1, stuff, 21);
+      (void) copy_person(stuff, 21, stuff, 11);
+      (void) copy_person(stuff, 11, stuff, 19);
+      (void) copy_person(stuff, 19, stuff, 16);
+      (void) copy_person(stuff, 16, stuff, 15);
+      (void) copy_person(stuff, 15, stuff, 14);
+      (void) copy_person(stuff, 14, stuff, 10);
+      (void) copy_person(stuff, 10, stuff, 20);
+      (void) copy_person(stuff, 20, stuff, 17);
+
+      clear_person(stuff, 5);
+      clear_person(stuff, 17);
+   }
+   else if (!(stuff->people[6].id1 | stuff->people[7].id1 | stuff->people[18].id1 | stuff->people[19].id1)) {
+      stuff->kind = s4x6;
+      stuff->rotation++;
+      (void) copy_rot(stuff, 18, stuff, 0, 033);       /* careful -- order is important */
+      (void) copy_rot(stuff, 7, stuff, 10, 033);
+      (void) copy_rot(stuff, 10, stuff, 2, 033);
+      (void) copy_rot(stuff, 2, stuff, 4, 033);
+      (void) copy_rot(stuff, 4, stuff, 9, 033);
+      (void) copy_rot(stuff, 9, stuff, 5, 033);
+      (void) copy_rot(stuff, 6, stuff, 12, 033);
+      (void) copy_rot(stuff, 19, stuff, 22, 033);
+      (void) copy_rot(stuff, 22, stuff, 14, 033);
+      (void) copy_rot(stuff, 14, stuff, 16, 033);
+      (void) copy_rot(stuff, 16, stuff, 21, 033);
+      (void) copy_rot(stuff, 21, stuff, 17, 033);
+
+      (void) copy_rot(stuff, 0, stuff, 3, 033);
+      (void) copy_rot(stuff, 3, stuff, 8, 033);
+      (void) copy_rot(stuff, 8, stuff, 11, 033);
+      (void) copy_rot(stuff, 11, stuff, 1, 033);
+      (void) copy_person(stuff, 1, stuff, 0);
+
+      (void) copy_rot(stuff, 0, stuff, 23, 033);
+      (void) copy_rot(stuff, 23, stuff, 13, 033);
+      (void) copy_rot(stuff, 13, stuff, 15, 033);
+      (void) copy_rot(stuff, 15, stuff, 20, 033);
+      (void) copy_person(stuff, 20, stuff, 0);
+
+      clear_person(stuff, 0);
+      clear_person(stuff, 5);
+      clear_person(stuff, 12);
+      clear_person(stuff, 17);
+   }
+}
+
+
+
+
+static void normalize_4x6(setup *stuff)
+{
+   if (!(stuff->people[0].id1 | stuff->people[11].id1 | stuff->people[18].id1 | stuff->people[17].id1 |
+            stuff->people[5].id1 | stuff->people[6].id1 | stuff->people[23].id1 | stuff->people[12].id1)) {
+      stuff->kind = s4x4;
+      (void) copy_person(stuff, 6, stuff, 15);         /* careful -- order is important */
+      (void) copy_person(stuff, 15, stuff, 9);
+      (void) copy_person(stuff, 9, stuff, 19);
+      (void) copy_person(stuff, 11, stuff, 20);
+      (void) copy_person(stuff, 5, stuff, 14);
+      (void) copy_person(stuff, 14, stuff, 3);
+      (void) copy_person(stuff, 3, stuff, 8);
+      (void) copy_person(stuff, 8, stuff, 16);
+      (void) copy_person(stuff, 12, stuff, 1);
+      (void) copy_person(stuff, 1, stuff, 7);
+      (void) copy_person(stuff, 7, stuff, 21);
+      (void) copy_person(stuff, 0, stuff, 4);
+      (void) copy_person(stuff, 4, stuff, 13);
+      (void) copy_person(stuff, 13, stuff, 2);
+      (void) copy_person(stuff, 2, stuff, 22);
+
+      canonicalize_rotation(stuff);
+   }
+   else if (!(stuff->people[0].id1 | stuff->people[1].id1 | stuff->people[2].id1 | stuff->people[3].id1 |
+            stuff->people[4].id1 | stuff->people[5].id1 | stuff->people[17].id1 | stuff->people[16].id1 |
+            stuff->people[15].id1 | stuff->people[14].id1 | stuff->people[13].id1 | stuff->people[12].id1)) {
+      stuff->kind = s2x6;
+
+      (void) copy_person(stuff, 0, stuff, 11);         /* careful -- order is important */
+      (void) copy_person(stuff, 11, stuff, 18);
+      (void) copy_person(stuff, 1, stuff, 10);
+      (void) copy_person(stuff, 10, stuff, 19);
+      (void) copy_person(stuff, 2, stuff, 9);
+      (void) copy_person(stuff, 9, stuff, 20);
+      (void) copy_person(stuff, 3, stuff, 8);
+      (void) copy_person(stuff, 8, stuff, 21);
+      (void) copy_person(stuff, 4, stuff, 7);
+      (void) copy_person(stuff, 7, stuff, 22);
+      (void) copy_person(stuff, 5, stuff, 6);
+      (void) copy_person(stuff, 6, stuff, 23);
+   }
+}
+
+
+static void normalize_4dmd(setup *stuff)
+
+{
+   setup temp;
+
+   if (!(stuff->people[0].id1 | stuff->people[3].id1 | stuff->people[4].id1 | stuff->people[5].id1 |
+            stuff->people[8].id1 | stuff->people[11].id1 | stuff->people[12].id1 | stuff->people[13].id1)) {
+
+      /* Danger!  If the people were in side-by-side quarter-tags, turning this into
+         a single quarter-tag would require that the outsides slide together.  That
+         would be wrong.  The bug show up in cases like
+            1P2P; pass the ocean; swing and mix; follow thru; truck twice;
+            split phantom twin boxes sets in motion.
+         So, if people do not have diamond-like orientation, we go into an "H". */
+
+      if (!(((stuff->people[6].id1 | stuff->people[7].id1 | stuff->people[14].id1 | stuff->people[15].id1) & 1) |
+            ((stuff->people[1].id1 | stuff->people[2].id1 | stuff->people[9].id1 | stuff->people[10].id1) & 010))) {
+         temp = *stuff;
+
+         stuff->kind = s_qtag;
+         (void) copy_person(stuff, 0, &temp, 1);
+         (void) copy_person(stuff, 1, &temp, 2);
+         (void) copy_person(stuff, 2, &temp, 6);
+         (void) copy_person(stuff, 3, &temp, 7);
+         (void) copy_person(stuff, 4, &temp, 9);
+         (void) copy_person(stuff, 5, &temp, 10);
+         (void) copy_person(stuff, 6, &temp, 14);
+         (void) copy_person(stuff, 7, &temp, 15);
+      }
+      else {
+         temp = *stuff;
+         clear_people(stuff);
+
+         stuff->kind = s3x4;
+         (void) copy_person(stuff, 0, &temp, 1);
+         (void) copy_person(stuff, 3, &temp, 2);
+         (void) copy_person(stuff, 4, &temp, 6);
+         (void) copy_person(stuff, 5, &temp, 7);
+         (void) copy_person(stuff, 6, &temp, 9);
+         (void) copy_person(stuff, 9, &temp, 10);
+         (void) copy_person(stuff, 10, &temp, 14);
+         (void) copy_person(stuff, 11, &temp, 15);
+      }
+   }
+   else if (!(stuff->people[0].id1 | stuff->people[1].id1 | stuff->people[2].id1 | stuff->people[3].id1 |
+            stuff->people[8].id1 | stuff->people[9].id1 | stuff->people[10].id1 | stuff->people[11].id1)) {
+      compress_setup(&exp_1x8_4dm_stuff, stuff);
+   }
+   else if (!(stuff->people[4].id1 | stuff->people[5].id1 | stuff->people[6].id1 | stuff->people[7].id1 |
+            stuff->people[12].id1 | stuff->people[13].id1 | stuff->people[14].id1 | stuff->people[15].id1)) {
+      temp = *stuff;
+      clear_people(stuff);
+
+      stuff->kind = s4x4;
+      (void) copy_person(stuff, 12, &temp, 0);
+      (void) copy_person(stuff, 13, &temp, 1);
+      (void) copy_person(stuff, 14, &temp, 2);
+      (void) copy_person(stuff, 0, &temp, 3);
+      (void) copy_person(stuff, 4, &temp, 8);
+      (void) copy_person(stuff, 5, &temp, 9);
+      (void) copy_person(stuff, 6, &temp, 10);
+      (void) copy_person(stuff, 8, &temp, 11);
+
+      canonicalize_rotation(stuff);
+   }
+}
+
+
+/* See if this 3x4 is actually occupied only in spots of a qtag. */
+
+static void normalize_3x4(setup *stuff)
+{
+   if ((!stuff->people[0].id1) && (!stuff->people[3].id1) && (!stuff->people[6].id1) && (!stuff->people[9].id1)) {
+      stuff->kind = s_qtag;
+      (void) copy_person(stuff, 0, stuff, 1);         /* careful -- order is important */
+      (void) copy_person(stuff, 1, stuff, 2);
+      (void) copy_person(stuff, 2, stuff, 4);
+      (void) copy_person(stuff, 3, stuff, 5);
+      (void) copy_person(stuff, 4, stuff, 7);
+      (void) copy_person(stuff, 5, stuff, 8);
+      (void) copy_person(stuff, 6, stuff, 10);
+      (void) copy_person(stuff, 7, stuff, 11);
+   }
+}
+
+
+/* Check whether "C1 phantom" setup is only occupied in 2x4 spots, and fix it if so. */
+
+static void normalize_c1_phan(setup *stuff)
+
+{
+   if (!(stuff->people[1].id1 | stuff->people[3].id1 | stuff->people[4].id1 | stuff->people[6].id1 |
+            stuff->people[9].id1 | stuff->people[11].id1 | stuff->people[12].id1 | stuff->people[14].id1)) {
+      stuff->kind = s2x4;
+      (void) copy_person(stuff, 1, stuff, 2);                /* careful -- order is important */
+      (void) copy_person(stuff, 2, stuff, 7);
+      (void) copy_person(stuff, 3, stuff, 5);
+      (void) copy_person(stuff, 4, stuff, 8);
+      (void) copy_person(stuff, 5, stuff, 10);
+      (void) copy_person(stuff, 6, stuff, 15);
+      (void) copy_person(stuff, 7, stuff, 13);
+   }
+   else if (!(stuff->people[0].id1 | stuff->people[2].id1 | stuff->people[5].id1 | stuff->people[7].id1 |
+            stuff->people[8].id1 | stuff->people[10].id1 | stuff->people[13].id1 | stuff->people[15].id1)) {
+      stuff->kind = s2x4;
+      stuff->rotation++;
+      (void) copy_rot(stuff, 7, stuff, 1, 033);        /* careful -- order is important */
+      (void) copy_rot(stuff, 0, stuff, 4, 033);
+      (void) copy_rot(stuff, 2, stuff, 11, 033);
+      (void) copy_rot(stuff, 1, stuff, 6, 033);
+      (void) copy_rot(stuff, 6, stuff, 3, 033);
+      (void) copy_rot(stuff, 3, stuff, 9, 033);
+      (void) copy_rot(stuff, 4, stuff, 12, 033);
+      (void) copy_rot(stuff, 5, stuff, 14, 033);
+   }
+}
+
+
+
+
+/* The "level" argument tells how hard we work to remove the outside phantoms.
+   When merging the results of "on your own" or "own the so-and-so",
+   we set level=normalize_before_merge to work very hard at stripping away
+   outside phantoms, so that we can see more readily how to put things together.
+   When preparing for an isolated call, we work at it a little, so
+   level=normalize_before_isolated_call.   For normal usage, level=simple_normalize. */
+extern void normalize_setup(setup *ss, normalize_level level)
+{
+   /* Normalize setup by removing outboard phantoms. */
+
+   if (ss->kind == s1x16) {         /* This might leave a 1x14, which might be reduced further. */
+      if (!(ss->people[0].id1 | ss->people[8].id1)) {
+         compress_setup(&exp_1x14_1x16_stuff, ss);
+      }
+   }
+
+   if (ss->kind == s1x14) {         /* This might leave a 1x12, which might be reduced further. */
+      if (!(ss->people[0].id1 | ss->people[7].id1)) {
+         compress_setup(&exp_1x12_1x14_stuff, ss);
+      }
+   }
+
+   if (ss->kind == s1x12) {         /* This might leave a 1x10, which might be reduced further. */
+      if (!(ss->people[0].id1 | ss->people[6].id1)) {
+         compress_setup(&exp_1x10_1x12_stuff, ss);
+      }
+   }
+
+   if (ss->kind == s_bigblob)
+      normalize_blob(ss);           /* This might leave a 4x6, which might be reduced further. */
+
+   if (ss->kind == s4x6)
+      normalize_4x6(ss);            /* This might leave a 4x4 or 2x6, which might be reduced further. */
+
+   if (ss->kind == s1x10) {
+      if (!(ss->people[0].id1 | ss->people[5].id1)) {
+         compress_setup(&exp_1x8_1x10_stuff, ss);
+      }
+   }
+   else if (ss->kind == s4x4)
+      normalize_4x4(ss);
+   else if (ss->kind == s_3dmd) {
+      if (!(ss->people[0].id1 | ss->people[2].id1 | ss->people[6].id1 | ss->people[8].id1)) {
+         compress_setup(&exp_3x1d_3d_stuff, ss);
+      }
+   }
+   else if (ss->kind == s_4dmd)
+      normalize_4dmd(ss);
+   else if (ss->kind == s_c1phan)
+      normalize_c1_phan(ss);
+   else if (ss->kind == s3x4)
+      normalize_3x4(ss);
+   else if (ss->kind == s2x8) {  /* This might leave a 2x6, which could then be reduced to 2x4, below. */
+      if (!(ss->people[7].id1 | ss->people[8].id1 | ss->people[0].id1 | ss->people[15].id1)) {
+         compress_setup(&exp_2x6_2x8_stuff, ss);
+      }
+   }
+
+   if (ss->kind == s2x6) {
+      if (!(ss->people[0].id1 | ss->people[5].id1 | ss->people[6].id1 | ss->people[11].id1)) {
+         compress_setup(&exp_2x4_2x6_stuff, ss);
+      }
+   }
+
+   /* If preparing for a "so-and-so only do whatever", we remove outboard phantoms
+      more aggressively.  For example, if we are selecting just the center line of
+      a quarter tag, we reduce the setup all the way down to a line.  Normally we
+      wouldn't do this, lest we lose phantoms when gluing setups together. */
+
+   if (level >= normalize_before_merge) {
+      /* This reduction is necessary to make "ends only rotate 1/4" work from a DPT, yielding a rigger. */
+      if ((ss->kind == s2x4) && (!(ss->people[0].id1 | ss->people[3].id1 | ss->people[4].id1 | ss->people[7].id1))) {
+         ss->kind = s2x2;
+         (void) copy_person(ss, 0, ss, 1);
+         (void) copy_person(ss, 1, ss, 2);
+         (void) copy_person(ss, 2, ss, 5);
+         (void) copy_person(ss, 3, ss, 6);
+      }
+      else if ((ss->kind == s1x8) && (!(ss->people[0].id1 | ss->people[1].id1 | ss->people[4].id1 | ss->people[5].id1))) {
+         ss->kind = s1x4;
+         (void) copy_person(ss, 0, ss, 3);
+         (void) copy_person(ss, 1, ss, 2);
+         (void) copy_person(ss, 2, ss, 7);
+         (void) copy_person(ss, 3, ss, 6);
+      }
+   }
+
+   if (level >= normalize_before_isolated_call) {
+      if (ss->kind == s_qtag) {
+         if (!(ss->people[0].id1 | ss->people[1].id1 | ss->people[4].id1 | ss->people[5].id1)) {
+            ss->kind = s1x4;
+            (void) copy_person(ss, 0, ss, 6);
+            (void) copy_person(ss, 1, ss, 7);
+         }
+         if (!(ss->people[2].id1 | ss->people[3].id1 | ss->people[6].id1 | ss->people[7].id1)) {
+            /* We do NOT compress to a 2x2 -- doing so might permit people to
+               work with each other across the set when they shouldn't, as in
+               "heads pass the ocean; heads recycle while the sides star thru". */
+            ss->kind = s2x4;
+            ss->rotation++;
+            (void) copy_rot(ss, 7, ss, 0, 033);         /* careful -- order is important */
+            (void) copy_rot(ss, 3, ss, 4, 033);
+            (void) copy_rot(ss, 0, ss, 1, 033);
+            (void) copy_rot(ss, 4, ss, 5, 033);
+            clear_person(ss, 1);
+            clear_person(ss, 5);
+            canonicalize_rotation(ss);
+         }
+      }
+   }
+}
+
+
+
 /* Top level move routine. */
 
 extern void toplevelmove(void)
 {
-   setup stemp;
-   int i, j, livemask;
-   expand_thing *eptr;
+   int i;
    parse_block *conceptptr;
-   parse_block *cptr;
-   final_set new_final_concepts;
    setup new_setup;
 
    int concept_read_base = 0;
@@ -476,125 +986,6 @@ extern void toplevelmove(void)
 
    current_selector = selector_uninitialized;
 
-   /* This next thing is not really right.  It makes the program refuse to step to a wave     */
-   /*   or rear back from one if any concepts are in use.  Actually, we should allow          */
-   /*   a few concepts, such as left.  We should only disallow concepts where the change of   */
-   /*   shape resulting from the stepping to a wave or rearing back alters the interpretation */
-   /*   of the concept.  For example, the evaluation of split phantom lines would be ruined   */
-   /*   if an implicit step to a wave occurred.                                               */
-
-   /* We must check for rearing back from a wave or stepping to one.  Do this only if there are
-      no virtual-setup concepts.  The way we find out is to pass over
-      all the final concepts and demand that the next thing be the end of the concept list.
-      If this test is satisfied, just call move. */
-
-   cptr = process_final_concepts(conceptptr, TRUE, &new_final_concepts);
-
-   if (cptr->concept->kind <= marker_end_of_list) {
-
-      /* We make move re-read the final concepts.  ***** Is this necessary? */
-
-      goto do_the_call;
-   }
-
-   /* We seem to have a virtual-setup concept.  See if the matrix needs to be expanded. */
-/* ****** We should just use the left-over cptr, and demand that the new final mask be zero. */
-
-   cptr = conceptptr;
-   while (cptr->concept->kind == concept_comment) cptr = cptr->next;
-   if (cptr->concept->kind == concept_standard) cptr = cptr->next;
-   while (cptr->concept->kind == concept_comment) cptr = cptr->next;
-
-   tryagain:
-
-   if (concept_table[cptr->concept->kind].concept_prop & (CONCPROP__NEED_4X4 | CONCPROP__NEED_BLOB | CONCPROP__NEED_4X6)) {
-      if (starting_setup.kind == s2x4) {
-         eptr = &exp_2x4_4x4_stuff; goto expand_me;
-      }
-   }
-
-   if (concept_table[cptr->concept->kind].concept_prop & (CONCPROP__NEED_BLOB)) {
-      if (starting_setup.kind == s4x4) {
-         eptr = &exp_4x4_blob_stuff; goto expand_me;
-      }
-   }
-   else if (concept_table[cptr->concept->kind].concept_prop & CONCPROP__NEED_4DMD) {
-      switch (starting_setup.kind) {
-         case s1x8:
-            eptr = &exp_1x8_4dm_stuff; goto expand_me;
-         case s_qtag:
-            eptr = &exp_qtg_4dm_stuff; goto expand_me;
-         case s4x4:
-            for (i=0, j=1, livemask=0; i<16; i++, j<<=1) {
-               if (starting_setup.people[i].id1) livemask |= j;
-            }
-
-            if (livemask == 0x1717) {
-               eptr = &exp_4x4_4dm_stuff_a; goto expand_me;
-            }
-            else if (livemask == 0x7171) {
-               eptr = &exp_4x4_4dm_stuff_b; goto expand_me;
-            }
-      }
-   }
-   else if (concept_table[cptr->concept->kind].concept_prop & CONCPROP__NEED_3DMD) {
-      if (starting_setup.kind == s_3x1dmd) {         /* Need to expand to real triple diamonds. */
-         eptr = &exp_3x1d_3d_stuff; goto expand_me;
-      }
-   }
-   else if (concept_table[cptr->concept->kind].concept_prop & CONCPROP__NEED_2X8) {
-      switch (starting_setup.kind) {         /* Need to expand to a 2x8. */
-         case s2x4:
-            eptr = &exp_2x4_2x8_stuff; goto expand_me;
-         case s2x6:
-            eptr = &exp_2x6_2x8_stuff; goto expand_me;
-      }
-   }
-   else if (concept_table[cptr->concept->kind].concept_prop & CONCPROP__NEED_2X6) {
-      if (starting_setup.kind == s2x4) {         /* Need to expand to a 2x6. */
-         eptr = &exp_2x4_2x6_stuff; goto expand_me;
-      }
-   }
-   else if (concept_table[cptr->concept->kind].concept_prop & CONCPROP__NEED_4X6) {
-      if (starting_setup.kind == s2x6) {         /* Need to expand to a 4x6. */
-         eptr = &exp_2x6_4x6_stuff; goto expand_me;
-      }
-   }
-   else {
-      switch (cptr->concept->kind) {
-         case concept_triple_lines: case concept_triple_lines_together:
-            if (starting_setup.kind == s_qtag) {         /* Need to expand to a 3x4. */
-               eptr = &exp_qtg_3x4_stuff; goto expand_me;
-            }
-            break;
-      }
-   }
-
-   /* If get here, we did NOT see any concept that requires a setup expansion. */
-
-   goto do_the_call;
-
-   expand_me:
-
-   /* If get here, we DID see a concept that requires a setup expansion. */
-
-   stemp = starting_setup;
-   clear_people(&starting_setup);
-   if (eptr->rot) {
-      for (i=0; i<eptr->size; i++) (void) copy_rot(&starting_setup, eptr->source_indices[i], &stemp, i, 033);
-      starting_setup.rotation++;
-   }
-   else {
-      for (i=0; i<eptr->size; i++) (void) copy_person(&starting_setup, eptr->source_indices[i], &stemp, i);
-   }
-
-   starting_setup.kind = eptr->outer_kind;
-   canonicalize_rotation(&starting_setup);
-
-   goto tryagain;
-
-   do_the_call:
-
    /* Put in identification bits for unsymmetrical stuff, if possible. */
 
    for (i=0; i<MAX_PEOPLE; i++) starting_setup.people[i].id2 &= ~UNSYM_BITS_TO_CLEAR;
@@ -628,7 +1019,6 @@ extern void toplevelmove(void)
    }
 
    /* Put in position-identification bits (leads/trailers/beaux/belles/centers/ends etc.) */
-
    update_id_bits(&starting_setup);
    move(&starting_setup, conceptptr, NULLCALLSPEC, 0, FALSE, &new_setup);
 

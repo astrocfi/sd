@@ -16,7 +16,7 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-    This is version 24.0. */
+    This is for version 27. */
 
 /* This defines the following function:
    selectp
@@ -378,67 +378,103 @@ static long_boolean x12_beau_or_miniwave(setup *real_people, int real_index,
    }
 }
 
-/* Test for wheel_and_deal to be done 2FL-style, or beau side of 1FL. */
+/* Test for wheel and deal to be done 2FL-style, or beau side of 1FL.  Returns
+   false if belle side of 1FL.  Raises an error if wheel and deal can't be done. */
 /* ARGSUSED */
-static long_boolean x14_wheel_and_deal_1(setup *real_people, int real_index,
+static long_boolean x14_wheel_and_deal(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
-   int other_person = real_people->people[real_index ^ 1].id1;
+   /* We assume people have already been checked for coupleness. */
 
-   /* If person next to me exists, he must face same way as myself. */
-   if ((other_person != 0) && (real_direction != (other_person & 3)))
-      return(FALSE);
-   else if ((northified_index & 2) == 0)
+   if (northified_index <= 1)
       /* We are in the beau-side couple -- it's OK. */
       return(TRUE);
    else {
-      /* We are in the belle-side couple -- find the two people in the other couple. */
-      int other_person1 = real_people->people[real_index ^ 2].id1;
-      int other_person2 = real_people->people[real_index ^ 3].id1;
+      /* We are in the belle-side couple -- find the two people in the other couple.
+         Just "or" them to be sure we get someone.  They are already known
+         to be facing consistently if they are both there. */
+      int other_people = real_people->people[real_index ^ 2].id1 |
+                           real_people->people[real_index ^ 3].id1;
 
       /* At least one of those people must exist. */
-      if (!(other_person1 || other_person2))
-         return(FALSE);
+      if (!other_people)
+         fail("Can't tell how to do this -- no live people.");
 
-      /* Whichever of those people exists must face the opposite way from myself, so
-         I can convince myself that I am in a 2FL.*/
+      /* See if they face the same way as myself.  Note that the "2" bit of
+         real_index is the complement of my own direction bit. */
+      if (((other_people ^ real_index) & 2))
+         return(FALSE);   /* This is a 1FL. */
 
-      if (other_person1 && ((other_person1 ^ real_index) & 2) != 0)
-         return(FALSE);
-      if (other_person2 && ((other_person2 ^ real_index) & 2) != 0)
-         return(FALSE);
-
-      return(TRUE);
+      return(TRUE);       /* This is a 2FL. */
    }
 }
 
-/* Test for belle side of 1FL. */
 
+/* Test for 3X3 wheel_and_deal to be done 2FL-style, or beau side of 1FL. */
 /* ARGSUSED */
-static long_boolean x14_wheel_and_deal_2(setup *real_people, int real_index,
+static long_boolean x16_wheel_and_deal(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
-   int other_person = real_people->people[real_index ^ 1].id1;
+   /* We assume people have already been checked for coupleness. */
 
-   /* If person next to me exists, he must face same way as myself. */
-   if ((other_person != 0) && (real_direction != (other_person & 3)))
-      return(FALSE);
+   if (northified_index <= 2)
+      /* We are in the beau-side triad -- it's OK. */
+      return(TRUE);
    else {
-      /* Furthermore, assuming we are in the belle-side couple (which we can safely assume
-         because of the way this predicate is used in defining Wheel and Deal),
-         find the two people in the other couple. */
-      int other_person1 = real_people->people[real_index ^ 2].id1;
-      int other_person2 = real_people->people[real_index ^ 3].id1;
+      /* We are in the belle-side triad -- find the three people in the other triad.
+         Just "or" them to be sure we get someone.  They are already known
+         to be facing consistently if they are all there. */
+      int other_side = real_index <= 2 ? 3 : 0;
+      int other_people = real_people->people[other_side].id1 |
+                           real_people->people[other_side+1].id1 |
+                           real_people->people[other_side+2].id1;
 
-      /* Those people must both exist and face the same way, i.e. we are in a 1FL. */
-      if (other_person1 != 0 && other_person2 != 0 &&
-            ((other_person1 ^ real_index) & 2) != 0 &&
-            ((other_person2 ^ real_index) & 2) != 0)
-         return(TRUE);
-      else
-         return(FALSE);
+      /* At least one of those people must exist. */
+      if (!other_people)
+         fail("Can't tell how to do this -- no live people.");
+
+      /* See if they face the same way as myself. */
+      if (((other_people ^ real_people->people[real_index].id1) & 2))
+         return(TRUE);    /* This is a 2FL. */
+
+      return(FALSE);      /* This is a 1FL. */
    }
 }
+
+
+/* Test for 4X4 wheel_and_deal to be done 2FL-style, or beau side of 1FL. */
+/* ARGSUSED */
+static long_boolean x18_wheel_and_deal(setup *real_people, int real_index,
+   int real_direction, int northified_index)
+{
+   /* We assume people have already been checked for coupleness. */
+
+   if (northified_index <= 3)
+      /* We are in the beau-side quad -- it's OK. */
+      return(TRUE);
+   else {
+      /* We are in the belle-side quad -- find the three people in the other quad.
+         Just "or" them to be sure we get someone.  They are already known
+         to be facing consistently if they are all there. */
+      int other_side = (real_index&4) ^ 4;
+      int other_people = real_people->people[other_side].id1 |
+                           real_people->people[other_side+1].id1 |
+                           real_people->people[other_side+2].id1 |
+                           real_people->people[other_side+3].id1;
+
+      /* At least one of those people must exist. */
+      if (!other_people)
+         fail("Can't tell how to do this -- no live people.");
+
+      /* See if they face the same way as myself. */
+      if (((other_people ^ real_people->people[real_index].id1) & 2))
+         return(TRUE);    /* This is a 2FL. */
+
+      return(FALSE);      /* This is a 1FL. */
+   }
+}
+
+
 
 static long_boolean vert1(setup *real_people, int real_index,
    int real_direction, int northified_index)
@@ -748,7 +784,6 @@ static long_boolean column_double_down(setup *real_people, int real_index,
 static long_boolean boyp(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
-   if (initializing_database) return TRUE;
    return((real_people->people[real_index].id2 & ID2_BOY) != 0);
 }
 
@@ -756,7 +791,6 @@ static long_boolean boyp(setup *real_people, int real_index,
 static long_boolean girlp(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
-   if (initializing_database) return TRUE;
    return((real_people->people[real_index].id2 & ID2_GIRL) != 0);
 }
 
@@ -780,7 +814,6 @@ static long_boolean x12_boy_facing_girl(setup *real_people, int real_index,
 {
    int this_person = real_people->people[real_index].id2;
    int other_person = real_people->people[real_index ^ 1].id2;
-   if (initializing_database) return TRUE;
    return((this_person & ID2_BOY) && (other_person & ID2_GIRL));
 }
 
@@ -790,7 +823,6 @@ static long_boolean x12_girl_facing_boy(setup *real_people, int real_index,
 {
    int this_person = real_people->people[real_index].id2;
    int other_person = real_people->people[real_index ^ 1].id2;
-   if (initializing_database) return TRUE;
    return((this_person & ID2_GIRL) && (other_person & ID2_BOY));
 }
 
@@ -800,7 +832,6 @@ static long_boolean x22_boy_facing_girl(setup *real_people, int real_index,
 {
    int this_person = real_people->people[real_index].id2;
    int other_person = real_people->people[real_index ^ (((real_direction << 1) & 2) ^ 3)].id2;
-   if (initializing_database) return TRUE;
    return((this_person & ID2_BOY) && (other_person & ID2_GIRL));
 }
 
@@ -810,7 +841,6 @@ static long_boolean x22_girl_facing_boy(setup *real_people, int real_index,
 {
    int other_person = real_people->people[real_index ^ (((real_direction << 1) & 2) ^ 3)].id2;
    int this_person = real_people->people[real_index].id2;
-   if (initializing_database) return TRUE;
    return((this_person & ID2_GIRL) && (other_person & ID2_BOY));
 }
 
@@ -948,8 +978,9 @@ long_boolean (*pred_table[])(
       same_in_pair,                    /* "columns_couple" */
       opp_in_pair,                     /* "columns_miniwave" */
       x12_beau_or_miniwave,            /* "1x2_beau_or_miniwave" */
-      x14_wheel_and_deal_1,            /* "1x4_wheel_and_deal_1" */
-      x14_wheel_and_deal_2,            /* "1x4_wheel_and_deal_2" */
+      x14_wheel_and_deal,              /* "1x4_wheel_and_deal" */
+      x16_wheel_and_deal,              /* "1x6_wheel_and_deal" */
+      x18_wheel_and_deal,              /* "1x8_wheel_and_deal" */
       vert1,                           /* "vert1" */
       vert2,                           /* "vert2" */
       inner_active_lines,              /* "inner_active_lines" */

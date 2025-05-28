@@ -16,7 +16,7 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-    This is for version 25. */
+    This is for version 27. */
 
 /* This defines the following functions:
    clear_screen
@@ -101,8 +101,8 @@ int written_history_nopic;
 parse_block *last_magic_diamond;
 char error_message1[MAX_ERR_LENGTH];
 char error_message2[MAX_ERR_LENGTH];
-int collision_person1;
-int collision_person2;
+unsigned int collision_person1;
+unsigned int collision_person2;
 long_boolean enable_file_writing;
 
 /* These variables are used by the text-packing stuff. */
@@ -182,12 +182,36 @@ extern void newline(void)
 
 extern void writestuff(char s[])
 {
-   char *f;
-
-   f = &s[0];
+   char *f = s;
    while (*f) writechar(*f++);
 }
 
+
+
+static void writestuff_with_fraction(char s[], long_boolean do_number, int num)
+{
+   if (do_number) {
+      char *f = s;
+      while (*f) {
+         if (f[0] == 'N' && f[1] == '/' && f[2] == '4') {
+            char nn = '0' + (num & 0xFFFF);
+
+            if ((num & 0xFFFF) == 2)
+               writestuff("1/2");
+            else {
+               writechar(nn);
+               writestuff("/4");
+            }
+            f += 3;
+         }
+         else
+            writechar(*f++);
+      }
+   }
+   else {
+      writestuff(s);
+   }
+}
 
 
 extern void doublespace_file(void)
@@ -310,41 +334,41 @@ static char *selector_singular[] = {
 
 /* BEWARE!!  These strings are keyed to the definitions of "warn__<whatever>" in sd.h . */
 static char *warning_strings[] = {
-   "Do your part.",
-   "This is a T-bone phantom setup call.  Everyone will do their own part.",
-   "Ends work to same spots.",
-   "Awkward for centers.",
-   "This concept is not allowed at this level.",
-   "That wasn't funny.",
-   "Very difficult funny concept.",
-   "This is an unusual setup for this call.",
-   "Rear back from the handhold.",
-   "Rear back from the handhold -- this is very unusual.",
-   "Split concept seems to be superfluous here.",
-   "Ends should opt for setup perpendicular to their original line.",
-   "Ends should opt for setup perpendicular to their original diamond points.",
-   "Ends should opt for setup parallel to their original line -- concentric rule does not apply.",
-   "Ends should opt for setup parallel to their original diamond points -- concentric rule does not apply.",
-   "New ends should opt for setup perpendicular to their original (center) line.",
-   "New ends should opt for setup perpendicular to their original (center) diamond points.",
-   "Centers work in tandem, ends as couples.",
-   "Centers work as couples, ends in tandem.",
-   "Each 2x2.",
-   "Each 1x4.",
-   "Each 1x2.",
-   "Take right hands.",
-   "The centers are the diamond.",
-   "Completely offset parallelogram.",
-   "The offset goes away.",
-   "The overlap goes away.",
-   "Go back to 'O' spots.",
-   "Go back to butterfly spots.",
-   "Some people rear back.",
-   "Work with the person to whom you are not T-boned.",
-   "Check a 'C1 phantom' setup.",
-   "Fudge to a diamond/quarter-tag setup.",
-   "Check a 2x4 setup.",
-   "Opt for a parallelogram."};
+   /*  warn__do_your_part        */   "Do your part.",
+   /*  warn__tbonephantom        */   "This is a T-bone phantom setup call.  Everyone will do their own part.",
+   /*  warn__ends_work_to_spots  */   "Ends work to same spots.",
+   /*  warn__awkward_centers     */   "Awkward for centers.",
+   /*  warn__bad_concept_level   */   "This concept is not allowed at this level.",
+   /*  warn__not_funny           */   "That wasn't funny.",
+   /*  warn__hard_funny          */   "Very difficult funny concept.",
+   /*  warn__unusual             */   "This is an unusual setup for this call.",
+   /*  warn__rear_back           */   "Rear back from the handhold.",
+   /*  warn__awful_rear_back     */   "Rear back from the handhold -- this is very unusual.",
+   /*  warn__excess_split        */   "Split concept seems to be superfluous here.",
+   /*  warn__lineconc_perp       */   "Ends should opt for setup perpendicular to their original line.",
+   /*  warn__dmdconc_perp        */   "Ends should opt for setup perpendicular to their original diamond points.",
+   /*  warn__lineconc_par        */   "Ends should opt for setup parallel to their original line -- concentric rule does not apply.",
+   /*  warn__dmdconc_par         */   "Ends should opt for setup parallel to their original diamond points -- concentric rule does not apply.",
+   /*  warn__xclineconc_perp     */   "New ends should opt for setup perpendicular to their original (center) line.",
+   /*  warn__xcdmdconc_perp      */   "New ends should opt for setup perpendicular to their original (center) diamond points.",
+   /*  warn__ctrstand_endscpls   */   "Centers work in tandem, ends as couples.",
+   /*  warn__ctrscpls_endstand   */   "Centers work as couples, ends in tandem.",
+   /*  warn__each2x2             */   "Each 2x2.",
+   /*  warn__each1x4             */   "Each 1x4.",
+   /*  warn__each1x2             */   "Each 1x2.",
+   /*  warn__take_right_hands    */   "Take right hands.",
+   /*  warn__ctrs_are_dmd        */   "The centers are the diamond.",
+   /*  warn__full_pgram          */   "Completely offset parallelogram.",
+   /*  warn__offset_gone         */   "The offset goes away.",
+   /*  warn__overlap_gone        */   "The overlap goes away.",
+   /*  warn__to_o_spots          */   "Go back to 'O' spots.",
+   /*  warn__to_x_spots          */   "Go back to butterfly spots.",
+   /*  warn__some_rear_back      */   "Some people rear back.",
+   /*  warn__not_tbone_person    */   "Work with the person to whom you are not T-boned.",
+   /*  warn__check_c1_phan       */   "Check a 'C1 phantom' setup.",
+   /*  warn__check_dmd_qtag      */   "Fudge to a diamond/quarter-tag setup.",
+   /*  warn__check_2x4           */   "Check a 2x4 setup.",
+   /*  warn__check_pgram         */   "Opt for a parallelogram."};
 
 static char *ordinals[] = {"1st", "2nd", "3rd", "4th", "5th"};
 
@@ -359,7 +383,6 @@ static parse_block *static_cptr;
 #define PRINT_RECURSE_TAGENDING 04
 
 static void print_recurse(int print_recurse_arg)
-
 {
    long_boolean use_left_name = FALSE;
    long_boolean use_cross_name = FALSE;
@@ -389,12 +412,13 @@ static void print_recurse(int print_recurse_arg)
 
          int index = static_cptr->number;
          long_boolean request_final_space = FALSE;
+         long_boolean you_owe_me_a_number = FALSE;
          long_boolean request_comma_after_next_concept = FALSE;
          concept_kind kk = k;
          parse_block *cc = static_cptr;
 
          /* We turn off the funny name elision if concepts are present,
-            except for "cross" and "left"", since we want "[cross flip] your neighbor"
+            except for "cross" and "left", since we want "[cross flip] your neighbor"
             and "[LEFT tag the star] your neighbor" to work. */
 
          for (;;) {
@@ -427,22 +451,42 @@ static void print_recurse(int print_recurse_arg)
             }
          }
 
+         if (k == concept_so_and_so_frac_stable || k == concept_some_are_frac_tandem || k == concept_some_are_tandem)
+            writestuff("ARE ");
+
          if ((concept_table[k].concept_prop & (CONCPROP__USE_NUMBER | CONCPROP__USE_TWO_NUMBERS)) &&
                      k != concept_nth_part && k != concept_replace_nth_part) {
-            char nn[2];
+            char nn[3];
 
-            nn[0] = '0' + (index & 0xFFFF);
-            nn[1] = '\0';
-            writestuff(nn);
-            if (concept_table[k].concept_prop & CONCPROP__USE_TWO_NUMBERS) {
-               nn[0] = '0' + (index >> 16);
+            if (k == concept_frac_stable || k == concept_so_and_so_frac_stable) {
+               nn[0] = '0' + (index & 0xFFFF);
                nn[1] = '\0';
-               writestuff("/");
-               writestuff(nn);
+
+               if ((index & 0xFFFF) == 2)
+                  writestuff("1/2 ");
+               else {
+                  writestuff(nn);
+                  writestuff("/4 ");
+               }
             }
-            writestuff(" ");
+            else if (k == concept_frac_tandem || k == concept_some_are_frac_tandem ||
+                     k == concept_phantom_frac_tandem || k == concept_gruesome_frac_tandem) {
+               you_owe_me_a_number = TRUE;
+            }
+            else {
+               nn[0] = '0' + (index & 0xFFFF);
+               nn[1] = '\0';
+               writestuff(nn);
+               if (concept_table[k].concept_prop & CONCPROP__USE_TWO_NUMBERS) {
+                  nn[0] = '/';
+                  nn[1] = '0' + (index >> 16);
+                  nn[2] = '\0';
+                  writestuff(nn);
+               }
+               writestuff(" ");
+            }
          }
-   
+
          saved_cptr = static_cptr;
          static_cptr = static_cptr->next;    /* Now it points to the thing after this concept. */
 
@@ -527,7 +571,21 @@ static void print_recurse(int print_recurse_arg)
             request_final_space = TRUE;
          }
          else if (k == concept_some_are_tandem || k == concept_so_and_so_stable || k == concept_so_and_so_begin) {
-            writestuff(&item->name[10]);      /* Strip off the "so-and-so". */
+            writestuff(&item->name[10]);      /* Strip off the "so-and-so ". */
+            writestuff(",");
+            request_final_space = TRUE;
+         }
+         else if (k == concept_some_are_frac_tandem) {
+            writestuff_with_fraction(&item->name[10], you_owe_me_a_number, index);      /* Strip off the "so-and-so ". */
+            writestuff(",");
+            request_final_space = TRUE;
+         }
+         else if (k == concept_frac_stable) {
+            writestuff(&item->name[4]);       /* Strip off the "N/4 ". */
+            request_final_space = TRUE;
+         }
+         else if (k == concept_so_and_so_frac_stable) {
+            writestuff(&item->name[18]);      /* Strip off the "so-and-so are N/4 ". */
             writestuff(",");
             request_final_space = TRUE;
          }
@@ -559,10 +617,10 @@ static void print_recurse(int print_recurse_arg)
             if (tptr) {
                target_call = tptr->call;
    
-               if ((tptr->concept->kind <= marker_end_of_list) && target_call && (target_call->name[0] == '@')) {
+               if ((tptr->concept->kind <= marker_end_of_list) && target_call && (target_call->real_name[0] == '@')) {
                   if (k == concept_left) {
                      /* See if this is a call whose name naturally changes when the "left" concept is used. */
-                     if (target_call->name[1] == 'g') {
+                     if (target_call->real_name[1] == 'g') {
                         use_left_name = TRUE;
                      }
                      else {
@@ -572,7 +630,7 @@ static void print_recurse(int print_recurse_arg)
                   }
                   else if (k == concept_cross) {
                      /* See if this is a call that wants the "cross" modifier to be moved inside its name. */
-                     if (target_call->name[1] == 'i') {
+                     if (target_call->real_name[1] == 'i') {
                         use_cross_name = TRUE;
                      }
                      else {
@@ -582,7 +640,7 @@ static void print_recurse(int print_recurse_arg)
                   }
                   else {
                      /* See if this is a call that wants the "single" concept to be given as "single file" instead. */
-                     if (target_call->name[1] == 'h') {
+                     if (target_call->real_name[1] == 'h') {
                         writestuff("SINGLE FILE");
                         request_final_space = TRUE;
                      }
@@ -625,7 +683,7 @@ static void print_recurse(int print_recurse_arg)
             request_final_space = TRUE;
          }
          else {
-            writestuff(item->name);
+            writestuff_with_fraction(item->name, you_owe_me_a_number, index);      /* Strip off the "so-and-so are ". */
             request_final_space = TRUE;
          }
 
@@ -684,7 +742,7 @@ static void print_recurse(int print_recurse_arg)
             char *np;
 
             if (enable_file_writing) localcall->age = global_age;
-            np = localcall->name;
+            np = localcall->real_name;
 
             /* Skip any "@g", "@h", or "@i" marker (we already acted on it.) */
             if ((*np == '@') && ((np[1] == 'g') || (np[1] == 'h') || (np[1] == 'i'))) np += 2;
@@ -834,7 +892,7 @@ static void print_recurse(int print_recurse_arg)
                            writestuff(" BUT REPLACE ");
                         else
                            writestuff(" AND REPLACE ");
-                        writestuff(localcall->name);
+                        writestuff(localcall->real_name);
                         writestuff(" WITH [");
                      }
 
@@ -870,7 +928,6 @@ static char directions[] = "B?B>B?B<B?B?B?B?B^B?BVB?B?B?B?B?G?G>G?G<G?G?G?G?G^G?
 static char personbuffer[] = " ZZZ";
 
 static void printperson(int x)
-
 {
    int i;
 
@@ -893,7 +950,6 @@ static int offs, roti, ri, modulus, personstart;
 static setup *printarg;
 
 static void do_write4_small(char s[])
-
 {
    char c;
 
@@ -910,7 +966,6 @@ static void do_write4_small(char s[])
 
 
 static void do_write(char s[])
-
 {
    char c;
 
@@ -926,9 +981,7 @@ static void do_write(char s[])
 
 
 static void print_4_person_setup(int ps, small_setup *s, int elong)
-
 {
-
    roti = (s->srotation & 3);
    ri = roti * 011;
    personstart = ps;
@@ -1024,7 +1077,6 @@ static void print_4_person_setup(int ps, small_setup *s, int elong)
 }
 
 static void printsetup(setup *x)
-
 {
    printarg = x;
    modulus = setup_limits[x->kind]+1;
@@ -1045,6 +1097,32 @@ static void printsetup(setup *x)
             do_write("a@b@d@c@g@h@f@e");
          else
             do_write("a b d c g h f e");
+         break;
+      case s1x10:
+         if (x->rotation & 1)
+            do_write("a@b@c@d@e@j@i@h@g@f");
+         else
+            do_write("a b c d e j i h g f");
+         break;
+      case s1x12:
+         if (x->rotation & 1)
+            do_write("a@b@c@d@e@f@l@k@j@i@h@g");
+         else
+            do_write("a b c d e f l k j i h g");
+         break;
+      case s1x14:
+         if (x->rotation & 1)
+            do_write("a@b@c@d@e@f@g@n@m@l@k@j@i@h");
+         else
+            /* Sorry, they won't fit unless we run them together like this. */
+            do_write("abcdefgnmlkjih");
+         break;
+      case s1x16:
+         if (x->rotation & 1)
+            do_write("a@b@c@d@e@f@g@h@p@o@n@m@l@k@j@i");
+         else
+            /* Sorry, they won't fit unless we run them together like this. */
+            do_write("abcdefghponmlkji");
          break;
       case s_crosswave:
          if (x->rotation & 1)
@@ -1247,7 +1325,6 @@ extern void display_initial_history(int upper_limit, int num_pics)
 
 
 extern void write_history_line(int history_index, char *header, long_boolean picture, file_write_flag write_to_file)
-
 {
    int index, w;
 
@@ -1310,14 +1387,12 @@ extern void write_history_line(int history_index, char *header, long_boolean pic
 
 
 extern void warn(int w)
-
 {
    history[history_ptr+1].warnings.bits[w>>5] |= 1 << (w & 0x1f);
 }
 
 
 extern call_list_kind find_proper_call_list(setup *s)
-
 {
    if (s->kind == s1x8) {
       if      ((s->people[0].id1 & 017) == 010 &&
@@ -1466,7 +1541,6 @@ extern call_list_kind find_proper_call_list(setup *s)
 
 
 extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
-
 {
    callarray *p;
    int t, u, i, k, mask;
@@ -1865,16 +1939,16 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
 }
 
 
-extern int find_calldef(
+extern unsigned int find_calldef(
    callarray *tdef,
    setup *scopy,
    int real_index,
    int real_direction,
    int northified_index)
 {
-   short *calldef_array;
+   unsigned short *calldef_array;
    predptr_pair *predlistptr;
-   int z;
+   unsigned int z;
 
    if (tdef->callarray_flags & CAF__PREDS) {
       predlistptr = tdef->stuff.prd.predlist;
@@ -1905,7 +1979,6 @@ got_it:
 
 
 extern void clear_people(setup *z)
-
 {
    int i;
 
@@ -1916,47 +1989,41 @@ extern void clear_people(setup *z)
 }
 
 
-extern int rotperson(int n, int amount)
-
+extern unsigned int rotperson(unsigned int n, int amount)
 {
    if (n == 0) return(0); else return((n + amount) & ~064);
 }
 
 
-extern int rotcw(int n)
-
+extern unsigned int rotcw(unsigned int n)
 {
    if (n == 0) return(0); else return((n + 011) & ~064);
 }
 
 
-extern int rotccw(int n)
-
+extern unsigned int rotccw(unsigned int n)
 {
    if (n == 0) return(0); else return((n + 033) & ~064);
 }
 
 
 extern void clear_person(setup *resultpeople, int resultplace)
-
 {
    resultpeople->people[resultplace].id1 = 0;
    resultpeople->people[resultplace].id2 = 0;
 }
 
 
-extern int copy_person(setup *resultpeople, int resultplace, setup *sourcepeople, int sourceplace)
-
+extern unsigned int copy_person(setup *resultpeople, int resultplace, setup *sourcepeople, int sourceplace)
 {
    resultpeople->people[resultplace] = sourcepeople->people[sourceplace];
    return(resultpeople->people[resultplace].id1);
 }
 
 
-extern int copy_rot(setup *resultpeople, int resultplace, setup *sourcepeople, int sourceplace, int rotamount)
-
+extern unsigned int copy_rot(setup *resultpeople, int resultplace, setup *sourcepeople, int sourceplace, int rotamount)
 {
-   int newperson = sourcepeople->people[sourceplace].id1;
+   unsigned int newperson = sourcepeople->people[sourceplace].id1;
 
    if (newperson) newperson = (newperson + rotamount) & ~064;
    resultpeople->people[resultplace].id2 = sourcepeople->people[sourceplace].id2;
@@ -1973,9 +2040,8 @@ extern void swap_people(setup *ss, int oneplace, int otherplace)
 
 
 extern void install_person(setup *resultpeople, int resultplace, setup *sourcepeople, int sourceplace)
-
 {
-   int newperson = sourcepeople->people[sourceplace].id1;
+   unsigned int newperson = sourcepeople->people[sourceplace].id1;
 
    if (resultpeople->people[resultplace].id1 == 0)
       resultpeople->people[resultplace] = sourcepeople->people[sourceplace];
@@ -1990,9 +2056,8 @@ extern void install_person(setup *resultpeople, int resultplace, setup *sourcepe
 
 
 extern void install_rot(setup *resultpeople, int resultplace, setup *sourcepeople, int sourceplace, int rotamount)
-
 {
-   int newperson = sourcepeople->people[sourceplace].id1;
+   unsigned int newperson = sourcepeople->people[sourceplace].id1;
 
    if (newperson) {
       if (resultpeople->people[resultplace].id1 == 0) {
@@ -2022,7 +2087,6 @@ extern parse_block *process_final_concepts(
    parse_block *cptr,
    long_boolean check_errors,
    final_set *final_concepts)
-
 {
    parse_block *tptr = cptr;
 
@@ -2173,7 +2237,6 @@ static void innards(
    setup *a3,
    setup *a4,
    setup *result)
-
 {
    int i, r;
    map_thing *final_map;
@@ -2195,7 +2258,8 @@ static void innards(
    x[3] = a4;
    
    for (i=0; i<arity; i++) {
-      x[i]->setupflags = (ss->setupflags & ~SETUPFLAG__OFFSET_Z) | SETUPFLAG__DISTORTED;
+      /* It is clearly too late to expand the matrix -- that can't be what is wanted. */
+      x[i]->setupflags = (ss->setupflags & ~SETUPFLAG__OFFSET_Z) | SETUPFLAG__DISTORTED | SETUPFLAG__NO_EXPAND_MATRIX;
       x[i]->kind = kn;
       x[i]->rotation = 0;
       if (recompute_id) update_id_bits(x[i]);
@@ -2407,7 +2471,6 @@ extern void divided_setup_move(
    phantest_kind phancontrol,
    long_boolean recompute_id,
    setup *result)
-
 {
    int i, mm, v1flag, v2flag, v3flag, v4flag;
    setup a1, a2, a3, a4;
@@ -2540,7 +2603,6 @@ extern void divided_setup_move(
 
 extern void overlapped_setup_move(setup *s, map_thing *maps,
    int m1, int m2, int m3, parse_block *parseptr, setup *result)
-
 {
    int i, j;
    setup a1, a2, a3;

@@ -16,7 +16,7 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-    This is for version 26. */
+    This is for version 27. */
 
 /* This defines the following functions:
    initialize_menus
@@ -46,15 +46,17 @@ static char **global_main_call_name_list;
 #define NORT(x) (d_north|(x)<<6)
 #define SOUT(x) (d_south|(x)<<6)
 
+/* In all of these setups in which people are facing, they are normal couples.  This makes initialization of things like star thru,
+   ladies chain, and curlique work. */
 static setup test_setup_1x8  = {s1x8, 0, {{NORT(6), SB}, {SOUT(5), HG}, {SOUT(4), HB}, {NORT(7), SG}, {SOUT(2), SB}, {NORT(1), HG}, {NORT(0), HB}, {SOUT(3), SG}}, 0};
 static setup test_setup_l1x8 = {s1x8, 0, {{SOUT(6), SB}, {NORT(5), HG}, {NORT(4), HB}, {SOUT(7), SG}, {NORT(2), SB}, {SOUT(1), HG}, {SOUT(0), HB}, {NORT(3), SG}}, 0};
-static setup test_setup_dpt  = {s2x4, 0, {{EAST(6), SB}, {EAST(5), HG}, {WEST(4), HB}, {WEST(7), SG}, {WEST(2), SB}, {WEST(1), HG}, {EAST(0), HB}, {EAST(3), SG}}, 0};
-static setup test_setup_cdpt = {s2x4, 0, {{WEST(6), SB}, {WEST(5), HG}, {EAST(4), HB}, {EAST(7), SG}, {EAST(2), SB}, {EAST(1), HG}, {WEST(0), HB}, {WEST(3), SG}}, 0};
+static setup test_setup_dpt  = {s2x4, 0, {{EAST(6), SB}, {EAST(4), HB}, {WEST(5), HG}, {WEST(7), SG}, {WEST(2), SB}, {WEST(0), HB}, {EAST(1), HG}, {EAST(3), SG}}, 0};
+static setup test_setup_cdpt = {s2x4, 0, {{WEST(7), SG}, {WEST(5), HG}, {EAST(4), HB}, {EAST(6), SB}, {EAST(3), SG}, {EAST(1), HG}, {WEST(0), HB}, {WEST(2), SB}}, 0};
 static setup test_setup_rcol = {s2x4, 0, {{EAST(6), SB}, {EAST(5), HG}, {EAST(4), HB}, {EAST(7), SG}, {WEST(2), SB}, {WEST(1), HG}, {WEST(0), HB}, {WEST(3), SG}}, 0};
 static setup test_setup_lcol = {s2x4, 0, {{WEST(6), SB}, {WEST(5), HG}, {WEST(4), HB}, {WEST(7), SG}, {EAST(2), SB}, {EAST(1), HG}, {EAST(0), HB}, {EAST(3), SG}}, 0};
 static setup test_setup_8ch  = {s2x4, 0, {{EAST(6), SB}, {WEST(5), HG}, {EAST(4), HB}, {WEST(7), SG}, {WEST(2), SB}, {EAST(1), HG}, {WEST(0), HB}, {EAST(3), SG}}, 0};
-static setup test_setup_tby  = {s2x4, 0, {{WEST(6), SB}, {EAST(5), HG}, {WEST(4), HB}, {EAST(7), SG}, {EAST(2), SB}, {WEST(1), HG}, {EAST(0), HB}, {WEST(3), SG}}, 0};
-static setup test_setup_lin  = {s2x4, 0, {{SOUT(6), SB}, {SOUT(5), HG}, {SOUT(4), HB}, {SOUT(7), SG}, {NORT(2), SB}, {NORT(1), HG}, {NORT(0), HB}, {NORT(3), SG}}, 0};
+static setup test_setup_tby  = {s2x4, 0, {{WEST(5), HG}, {EAST(6), SB}, {WEST(7), SG}, {EAST(4), HB}, {EAST(1), HG}, {WEST(2), SB}, {EAST(3), SG}, {WEST(0), HB}}, 0};
+static setup test_setup_lin  = {s2x4, 0, {{SOUT(5), HG}, {SOUT(6), SB}, {SOUT(7), SG}, {SOUT(4), HB}, {NORT(1), HG}, {NORT(2), SB}, {NORT(3), SG}, {NORT(0), HB}}, 0};
 static setup test_setup_lout = {s2x4, 0, {{NORT(6), SB}, {NORT(5), HG}, {NORT(4), HB}, {NORT(7), SG}, {SOUT(2), SB}, {SOUT(1), HG}, {SOUT(0), HB}, {SOUT(3), SG}}, 0};
 static setup test_setup_rwv  = {s2x4, 0, {{NORT(6), SB}, {SOUT(5), HG}, {NORT(4), HB}, {SOUT(7), SG}, {SOUT(2), SB}, {NORT(1), HG}, {SOUT(0), HB}, {NORT(3), SG}}, 0};
 static setup test_setup_lwv  = {s2x4, 0, {{SOUT(6), SB}, {NORT(5), HG}, {SOUT(4), HB}, {NORT(7), SG}, {NORT(2), SB}, {SOUT(1), HG}, {NORT(0), HB}, {SOUT(3), SG}}, 0};
@@ -80,7 +82,7 @@ static void create_call_name_list(void)
    int namelength;
 
    for (i=0; i<number_of_calls[call_list_any]; i++) {
-      name_ptr = main_call_lists[call_list_any][i]->name;
+      name_ptr = main_call_lists[call_list_any][i]->real_name;
       atsign = FALSE;
 
       /* See if the name has an 'at' sign, in which case we have to modify it to
@@ -258,7 +260,7 @@ static void test_starting_setup(call_list_kind cl, setup test_setup)
    /* Create the call list itself. */
 
    number_of_calls[cl] = global_callcount;
-   main_call_lists[cl] = (callspec_block **) get_mem(global_callcount*sizeof(int));
+   main_call_lists[cl] = (callspec_block **) get_mem(global_callcount * sizeof(callspec_block *));
    for (i=0; i < global_callcount; i++) {
       main_call_lists[cl][i] = global_temp_call_list[i];
    }
@@ -301,8 +303,8 @@ static long_boolean callcompare(callspec_block *x, callspec_block *y)
 {
    char *m, *n;
 
-   m = x->name;
-   n = y->name;
+   m = x->real_name;
+   n = y->real_name;
    for (;;) {
       if (*m == '@') {
          /* Skip over @7...@8 and @j...@l stuff. */
@@ -415,7 +417,7 @@ static void create_misc_call_lists(void)
    /* Create the call list itself. */
 
    number_of_calls[call_list_gcol] = callcount;
-   main_call_lists[call_list_gcol] = (callspec_block **) get_mem(callcount*sizeof(int));
+   main_call_lists[call_list_gcol] = (callspec_block **) get_mem(callcount * sizeof(callspec_block *));
    for (i=0; i < callcount; i++) {
       main_call_lists[call_list_gcol][i] = global_temp_call_list[i];
    }
@@ -456,7 +458,7 @@ static void create_misc_call_lists(void)
    /* Create the call list itself. */
 
    number_of_calls[call_list_qtag] = callcount;
-   main_call_lists[call_list_qtag] = (callspec_block **) get_mem(callcount*sizeof(int));
+   main_call_lists[call_list_qtag] = (callspec_block **) get_mem(callcount * sizeof(callspec_block *));
    for (i=0; i < callcount; i++) {
       main_call_lists[call_list_qtag][i] = global_temp_call_list[i];
    }
@@ -471,7 +473,6 @@ static void create_misc_call_lists(void)
 
 static int last_datum, last_12;
 static callspec_block *call_root;
-static predptr_pair *this_predlist, *temp_predlist, *temp_predblock;
 static callarray *tp;
 /* This shows the highest index we have seen so far.  It must never exceed max_base_calls-1. */
 static int highest_base_call;
@@ -491,21 +492,6 @@ static void read_fullword(void)
 }
 
 
-static void create_fresh_call_block(void)
-{
-   callarray *tt;
-
-   tt = (callarray*) get_mem(sizeof(callarray));
-   tt->next = 0;
-   tt->start_setup = b_1x2;
-   tt->qualifier = sq_none;
-   tt->end_setup = s_1x2;
-   tt->callarray_flags = 0;
-   tt->restriction = cr_any;
-   this_predlist = (predptr_pair *) 0;
-   tp = tt;
-}
-
 
 /* Found an error while reading CALL out of the database.
    Print an error message and quit.
@@ -515,16 +501,15 @@ static void create_fresh_call_block(void)
 static void database_error(char *message)
 {
     print_line(message);
-    if (call_root && call_root->name && *(call_root->name)) {
+    if (call_root && call_root->real_name) {
 	print_line("  While reading this call from the database:");
-	print_line(call_root->name);
+	print_line(call_root->real_name);
     }
     exit_program(1);
 }
 
 
-static void read_level_3_groups(void)
-
+static void read_level_3_groups(calldef_block *where_to_put)
 {
    int j, char_count;
    callarray *current_call_block;
@@ -538,38 +523,73 @@ static void read_level_3_groups(void)
    current_call_block = 0;
 
    while ((last_datum & 0xE000) == 0x6000) {
-      if (!current_call_block)
-         current_call_block = tp;
-      else {
-         create_fresh_call_block();
-         current_call_block->next = tp;
-         current_call_block = tp;
-      }
+      begin_kind this_start_setup;
+      search_qualifier this_qualifier;
+      call_restriction this_restriction;
+      setup_kind end_setup;
+      setup_kind end_setup_out;
+      int this_start_size;
+      unsigned int these_flags;
+      int extra;
 
-      tp->callarray_flags = last_12;
+      these_flags = last_12;
 
       read_halfword();       /* Get qualifier and start setup. */
-      tp->qualifier = (search_qualifier) ((last_datum & 0xFF00) >> 8);
-      tp->start_setup = (begin_kind) (last_datum & 0xFF);
+      this_qualifier = (search_qualifier) ((last_datum & 0xFF00) >> 8);
+      this_start_setup = (begin_kind) (last_datum & 0xFF);
+      this_start_size = begin_sizes[this_start_setup];
 
       read_halfword();       /* Get restriction and end setup. */
+      this_restriction = (call_restriction) ((last_datum & 0xFF00) >> 8);
+      end_setup = (setup_kind) (last_datum & 0xFF);
 
-      tp->restriction = (call_restriction) ((last_datum & 0xFF00) >> 8);
-
-      if (tp->callarray_flags & CAF__CONCEND) {      /* See if "concendsetup" was used. */
-         tp->end_setup = s_normal_concentric;
-         tp->end_setup_in = (setup_kind) (last_datum & 0xFF);
+      if (these_flags & CAF__CONCEND) {      /* See if "concendsetup" was used. */
          read_halfword();       /* Get outer setup and outer rotation. */
-         tp->end_setup_out = (setup_kind) (last_datum & 0xFF);
+         end_setup_out = (setup_kind) (last_datum & 0xFF);
+      }
+
+      if (these_flags & CAF__PREDS) {
+         read_halfword();    /* Get error message count. */
+         char_count = last_datum & 0xFF;
+         /* We will naturally get 4 items in the "stuff.prd.errmsg" field; we are responsible all for the others. */
+         /* We subtract 3 because 4 chars are already present, but we need one extra for the pad. */
+         extra = (char_count-3) * sizeof(char);
       }
       else {
-         tp->end_setup = (setup_kind) (last_datum & 0xFF);
+         /* We will naturally get 4 items in the "stuff.def" field; we are responsible all for the others. */
+         extra = (this_start_size-4) * sizeof(unsigned short int);
       }
 
-      if (tp->callarray_flags & CAF__PREDS) {
+      tp = (callarray *) get_mem(sizeof(callarray) + extra);
+      tp->next = 0;
+
+      if (!current_call_block)
+         where_to_put->callarray_list = tp;   /* First time. */
+      else {
+         current_call_block->next = tp;       /* Subsequent times. */
+      }
+
+      current_call_block = tp;
+
+      tp->callarray_flags = these_flags;
+      tp->qualifier = this_qualifier;
+      tp->start_setup = this_start_setup;
+      tp->restriction = this_restriction;
+
+      if (these_flags & CAF__CONCEND) {      /* See if "concendsetup" was used. */
+         tp->end_setup = s_normal_concentric;
+         tp->end_setup_in = end_setup;
+         tp->end_setup_out = end_setup_out;
+      }
+      else {
+         tp->end_setup = end_setup;
+      }
+
+      if (these_flags & CAF__PREDS) {
+         predptr_pair *temp_predlist;
+         predptr_pair *this_predlist = (predptr_pair *) 0;
+
          /* Read error message text. */
-         read_halfword();
-         char_count = last_datum & 0xFF;
 
          for (j=1; j <= ((char_count+1) >> 1); j++) {
             read_halfword();
@@ -588,13 +608,15 @@ static void read_level_3_groups(void)
 
          while ((last_datum & 0xE000) == 0x8000) {
             read_halfword();       /* Read predicate indicator. */
-            temp_predlist = (predptr_pair*) get_mem(sizeof(predptr_pair));
+            /* "predptr_pair" will get us 4 items in the "arr" field; we are responsible all for the others. */
+            temp_predlist = (predptr_pair *) get_mem(sizeof(predptr_pair) +
+                    (this_start_size-4) * sizeof(unsigned short));
             temp_predlist->pred = pred_table[last_datum];
             /* If this call uses a predicate that takes a selector, flag the call so that
                we will query the user for that selector. */
             if (last_datum < SELECTOR_PREDS)
                call_root->callflags |= cflag__requires_selector;
-            for (j=0; j < begin_sizes[tp->start_setup]; j++) {
+            for (j=0; j < this_start_size; j++) {
                read_halfword();
                temp_predlist->arr[j] = last_datum;
             }
@@ -607,18 +629,16 @@ static void read_level_3_groups(void)
          /* need to reverse stuff in "this_predlist" */
          temp_predlist = 0;
          while (this_predlist) {
-            temp_predblock = this_predlist;
+            predptr_pair *revptr = this_predlist;
             this_predlist = this_predlist->next;
-            temp_predblock->next = temp_predlist;
-            temp_predlist = temp_predblock;
+            revptr->next = temp_predlist;
+            temp_predlist = revptr;
          }
 
          tp->stuff.prd.predlist = temp_predlist;
-
-         this_predlist = 0;           /* clear it for next time (might be in same call) */
       }
       else {
-         for (j=0; j < begin_sizes[tp->start_setup]; j++) {
+         for (j=0; j < this_start_size; j++) {
             read_halfword();
             tp->stuff.def[j] = last_datum;
          }
@@ -654,7 +674,6 @@ static void build_database(call_list_mode_t call_list_mode)
    char *np, c;
    int savetag, saveflags;
    level savelevel;
-   calldef_block *zz, *yy;
    callspec_block **local_call_list;
 
    open_database();    /* This sets up the values of abs_max_calls and max_base_calls. */
@@ -700,10 +719,10 @@ static void build_database(call_list_mode_t call_list_mode)
          either because it is tagged or because it is legal at this level!!!! */
 
       /* Now that we know how long the name is, create the block and fill in the saved stuff. */
+      /* We subtract 3 because 4 chars are already present, but we need one extra for the pad. */
 
-      call_root = (callspec_block*) get_mem(sizeof(callspec_block) + char_count + 1);
-      np = (char *) (((int) call_root) + sizeof(callspec_block));
-      call_root->name = np;
+      call_root = (callspec_block *) get_mem(sizeof(callspec_block) + char_count - 3);
+      np = call_root->real_name;
 
       if (savetag) {
          check_tag(savetag);
@@ -736,7 +755,7 @@ static void build_database(call_list_mode_t call_list_mode)
       /* Scan the name for "@6" or "@e", fill in "needselector" or
          "left_changes_name" flag if found. */
 
-      np = call_root->name;
+      np = call_root->real_name;
 
       while (c = *np++) {
          if (c == '@') {
@@ -784,44 +803,42 @@ static void build_database(call_list_mode_t call_list_mode)
             continue;
       }
 
-      create_fresh_call_block();
-
-      zz = (calldef_block*) get_mem(sizeof(calldef_block));
-      zz->next = 0;
-      zz->modifier_set = 0;
-      zz->modifier_level = l_mainstream;
-      zz->callarray_list = tp;
-      call_root->stuff.arr.def_list = zz;
-
       switch (call_schema) {
          case schema_by_array:
-            /* Demand a level 2 group. */
-            if ((last_datum) != 0x4000) {
-               database_error("database phase error 2");
-            }
-
-            read_level_3_groups();
-
-            /* Check for more level 2 groups. */
-
-            while ((last_datum & 0xE000) == 0x4000) {
-               create_fresh_call_block();
-               yy = (calldef_block*) get_mem(sizeof(calldef_block));
-               zz->next = yy;
-               zz = yy;
-               zz->modifier_level = (level) (last_datum & 0xFF);
+            {
+               calldef_block *zz, *yy;
+   
+               /* Demand a level 2 group. */
+               if ((last_datum) != 0x4000) {
+                  database_error("database phase error 2");
+               }
+   
+               zz = (calldef_block *) get_mem(sizeof(calldef_block));
                zz->next = 0;
-               zz->callarray_list = tp;
-               /* We make use of the fact that HERITABLE_FLAG_MASK, which has all the
-                  bits we could read in, lies only in the left half.  This was tested
-                  by some compile-time code near the start of this file. */
-               read_halfword();
-               zz->modifier_set = last_datum << 16;
-
-               read_level_3_groups();
+               zz->modifier_set = 0;
+               zz->modifier_level = l_mainstream;
+               call_root->stuff.arr.def_list = zz;
+   
+               read_level_3_groups(zz);
+   
+               /* Check for more level 2 groups. */
+   
+               while ((last_datum & 0xE000) == 0x4000) {
+                  yy = (calldef_block *) get_mem(sizeof(calldef_block));
+                  zz->next = yy;
+                  zz = yy;
+                  zz->modifier_level = (level) (last_datum & 0xFF);
+                  zz->next = 0;
+                  /* We make use of the fact that HERITABLE_FLAG_MASK, which has all the
+                     bits we could read in, lies only in the left half.  This was tested
+                     by some compile-time code near the start of this file. */
+                  read_halfword();
+                  zz->modifier_set = last_datum << 16;
+   
+                  read_level_3_groups(zz);
+               }
             }
             break;
-
          case schema_sequential:
          case schema_split_sequential:
             {
@@ -843,15 +860,8 @@ static void build_database(call_list_mode_t call_list_mode)
                   call_root->stuff.def.defarray[next_definition_index].call_id = 0;
                   read_halfword();
                }
-               break;
             }
-
-         case schema_nothing:
-         case schema_matrix:
-         case schema_partner_matrix:
-         case schema_roll:
             break;
-
          default:          /* These are all the variations of concentric. */
             /* Demand a level 2 group. */
             if ((last_datum & 0xE000) != 0x4000) {
@@ -873,7 +883,7 @@ static void build_database(call_list_mode_t call_list_mode)
    }
 
    number_of_calls[call_list_any] = local_callcount;
-   main_call_lists[call_list_any] = (callspec_block **) get_mem(local_callcount*sizeof(int));
+   main_call_lists[call_list_any] = (callspec_block **) get_mem(local_callcount * sizeof(callspec_block *));
    for (i=0; i < local_callcount; i++) {
       main_call_lists[call_list_any][i] = local_call_list[i];
    }
@@ -897,33 +907,42 @@ extern void initialize_menus(call_list_mode_t call_list_mode)
       This "if" should never get executed.  We expect compilers to optimize
       it away, and perhaps print a warning about it. */
    
-   if (cflag__diamond_is_inherited     != dfm_inherit_diamond ||
-      cflag__reverse_means_mirror      != dfm_inherit_reverse ||
-      cflag__left_means_mirror         != dfm_inherit_left ||
-      cflag__funny_is_inherited        != dfm_inherit_funny ||
-      cflag__intlk_is_inherited        != dfm_inherit_intlk ||
-      cflag__magic_is_inherited        != dfm_inherit_magic ||
-      cflag__grand_is_inherited        != dfm_inherit_grand ||
-      cflag__twelvematrix_is_inherited != dfm_inherit_12_matrix ||
-      cflag__cross_is_inherited        != dfm_inherit_cross ||
-      cflag__single_is_inherited       != dfm_inherit_single ||
-      cflag__diamond_is_inherited      != FINAL__DIAMOND ||
-      cflag__reverse_means_mirror      != FINAL__REVERSE ||
-      cflag__left_means_mirror         != FINAL__LEFT ||
-      cflag__funny_is_inherited        != FINAL__FUNNY ||
-      cflag__intlk_is_inherited        != FINAL__INTERLOCKED ||
-      cflag__magic_is_inherited        != FINAL__MAGIC ||
-      cflag__grand_is_inherited        != FINAL__GRAND ||
-      cflag__twelvematrix_is_inherited != FINAL__12_MATRIX ||
-      cflag__cross_is_inherited        != FINAL__CROSS ||
-      cflag__single_is_inherited       != FINAL__SINGLE ||
+   if (cflag__diamond_is_inherited        != dfm_inherit_diamond ||
+         cflag__reverse_means_mirror      != dfm_inherit_reverse ||
+         cflag__left_means_mirror         != dfm_inherit_left ||
+         cflag__funny_is_inherited        != dfm_inherit_funny ||
+         cflag__intlk_is_inherited        != dfm_inherit_intlk ||
+         cflag__magic_is_inherited        != dfm_inherit_magic ||
+         cflag__grand_is_inherited        != dfm_inherit_grand ||
+         cflag__twelvematrix_is_inherited != dfm_inherit_12_matrix ||
+         cflag__cross_is_inherited        != dfm_inherit_cross ||
+         cflag__single_is_inherited       != dfm_inherit_single ||
+         cflag__diamond_is_inherited      != FINAL__DIAMOND ||
+         cflag__reverse_means_mirror      != FINAL__REVERSE ||
+         cflag__left_means_mirror         != FINAL__LEFT ||
+         cflag__funny_is_inherited        != FINAL__FUNNY ||
+         cflag__intlk_is_inherited        != FINAL__INTERLOCKED ||
+         cflag__magic_is_inherited        != FINAL__MAGIC ||
+         cflag__grand_is_inherited        != FINAL__GRAND ||
+         cflag__twelvematrix_is_inherited != FINAL__12_MATRIX ||
+         cflag__cross_is_inherited        != FINAL__CROSS ||
+         cflag__single_is_inherited       != FINAL__SINGLE ||
    
+   /* Also test that the constants ROLL_BIT and DBROLL_BIT are in the right
+      relationship, with ROLL_BIT >= DBROLL_BIT, that is, the roll bits
+      in a person record are to the left of the roll bits in the binary database.
+      This is because of expressions "ROLL_BIT/DBROLL_BIT" in sdbasic.c to
+      align stuff from the binary database into the person record. */
+
+         ROLL_BIT < DBROLL_BIT ||
+
    /* Also test that HERITABLE_FLAG_MASK lies only in the left half.
       This will be necessary in the code below which reads in the
       "modifier_set" field from the database. */
    
-      (HERITABLE_FLAG_MASK & 0x0000FFFF)) {
+         (HERITABLE_FLAG_MASK & 0x0000FFFF)) {
       init_error("constants not consistent");
+
       final_exit(1);
    }
 

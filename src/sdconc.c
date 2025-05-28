@@ -16,12 +16,11 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-    This is for version 25. */
+    This is for version 27. */
 
 /* This defines the following functions:
-   normalize_concentric
-   normalize_setup
    concentric_move
+   normalize_concentric
    merge_setups
    on_your_own_move
    so_and_so_only_move
@@ -40,327 +39,6 @@ typedef enum {
    analyzer_VERTICAL6,
    analyzer_LATERAL6,
    analyzer_DIAMOND_LINE } analyzer_kind;
-
-
-static void normalize_4x4(setup *stuff)
-
-{
-   if (!(stuff->people[0].id1 | stuff->people[4].id1 | stuff->people[8].id1 | stuff->people[12].id1)) {
-      if (!(stuff->people[5].id1 | stuff->people[6].id1 | stuff->people[13].id1 | stuff->people[14].id1)) {
-         stuff->kind = s2x4;
-         (void) copy_person(stuff, 4, stuff, 2);       /* careful -- order is important */
-         (void) copy_person(stuff, 5, stuff, 7);
-         (void) copy_person(stuff, 2, stuff, 3);
-         (void) copy_person(stuff, 3, stuff, 1);
-         (void) copy_person(stuff, 0, stuff, 10);
-         (void) copy_person(stuff, 1, stuff, 15);
-         (void) copy_person(stuff, 6, stuff, 11);
-         (void) copy_person(stuff, 7, stuff, 9);
-      }
-      else if (!(stuff->people[1].id1 | stuff->people[2].id1 | stuff->people[9].id1 | stuff->people[10].id1)) {
-         stuff->kind = s2x4;
-         stuff->rotation++;
-         (void) copy_rot(stuff, 1, stuff, 3, 033);     /* careful -- order is important */
-         (void) copy_rot(stuff, 2, stuff, 7, 033);
-         (void) copy_rot(stuff, 3, stuff, 5, 033);
-         (void) copy_rot(stuff, 4, stuff, 6, 033);
-         (void) copy_rot(stuff, 0, stuff, 14, 033);
-         (void) copy_rot(stuff, 5, stuff, 11, 033);
-         (void) copy_rot(stuff, 6, stuff, 15, 033);
-         (void) copy_rot(stuff, 7, stuff, 13, 033);
-      }
-   }
-}
-
-
-static void normalize_blob(setup *stuff)
-
-{
-   if (!(stuff->people[0].id1 | stuff->people[1].id1 | stuff->people[12].id1 | stuff->people[13].id1)) {
-      stuff->kind = s4x6;
-      (void) copy_person(stuff, 13, stuff, 9);         /* careful -- order is important */
-      (void) copy_person(stuff, 9, stuff, 23);
-      (void) copy_person(stuff, 23, stuff, 7);
-      (void) copy_person(stuff, 7, stuff, 4);
-      (void) copy_person(stuff, 4, stuff, 3);
-      (void) copy_person(stuff, 3, stuff, 2);
-      (void) copy_person(stuff, 2, stuff, 22);
-      (void) copy_person(stuff, 22, stuff, 8);
-      (void) copy_person(stuff, 8, stuff, 5);
-      (void) copy_person(stuff, 1, stuff, 21);
-      (void) copy_person(stuff, 21, stuff, 11);
-      (void) copy_person(stuff, 11, stuff, 19);
-      (void) copy_person(stuff, 19, stuff, 16);
-      (void) copy_person(stuff, 16, stuff, 15);
-      (void) copy_person(stuff, 15, stuff, 14);
-      (void) copy_person(stuff, 14, stuff, 10);
-      (void) copy_person(stuff, 10, stuff, 20);
-      (void) copy_person(stuff, 20, stuff, 17);
-
-      clear_person(stuff, 5);
-      clear_person(stuff, 17);
-   }
-   else if (!(stuff->people[6].id1 | stuff->people[7].id1 | stuff->people[18].id1 | stuff->people[19].id1)) {
-      stuff->kind = s4x6;
-      stuff->rotation++;
-      (void) copy_rot(stuff, 18, stuff, 0, 033);       /* careful -- order is important */
-      (void) copy_rot(stuff, 7, stuff, 10, 033);
-      (void) copy_rot(stuff, 10, stuff, 2, 033);
-      (void) copy_rot(stuff, 2, stuff, 4, 033);
-      (void) copy_rot(stuff, 4, stuff, 9, 033);
-      (void) copy_rot(stuff, 9, stuff, 5, 033);
-      (void) copy_rot(stuff, 6, stuff, 12, 033);
-      (void) copy_rot(stuff, 19, stuff, 22, 033);
-      (void) copy_rot(stuff, 22, stuff, 14, 033);
-      (void) copy_rot(stuff, 14, stuff, 16, 033);
-      (void) copy_rot(stuff, 16, stuff, 21, 033);
-      (void) copy_rot(stuff, 21, stuff, 17, 033);
-
-      (void) copy_rot(stuff, 0, stuff, 3, 033);
-      (void) copy_rot(stuff, 3, stuff, 8, 033);
-      (void) copy_rot(stuff, 8, stuff, 11, 033);
-      (void) copy_rot(stuff, 11, stuff, 1, 033);
-      (void) copy_person(stuff, 1, stuff, 0);
-
-      (void) copy_rot(stuff, 0, stuff, 23, 033);
-      (void) copy_rot(stuff, 23, stuff, 13, 033);
-      (void) copy_rot(stuff, 13, stuff, 15, 033);
-      (void) copy_rot(stuff, 15, stuff, 20, 033);
-      (void) copy_person(stuff, 20, stuff, 0);
-
-      clear_person(stuff, 0);
-      clear_person(stuff, 5);
-      clear_person(stuff, 12);
-      clear_person(stuff, 17);
-   }
-}
-
-
-
-static void normalize_4x6(setup *stuff)
-
-{
-   if (!(stuff->people[0].id1 | stuff->people[11].id1 | stuff->people[18].id1 | stuff->people[17].id1 |
-            stuff->people[5].id1 | stuff->people[6].id1 | stuff->people[23].id1 | stuff->people[12].id1)) {
-      stuff->kind = s4x4;
-      (void) copy_person(stuff, 6, stuff, 15);         /* careful -- order is important */
-      (void) copy_person(stuff, 15, stuff, 9);
-      (void) copy_person(stuff, 9, stuff, 19);
-      (void) copy_person(stuff, 11, stuff, 20);
-      (void) copy_person(stuff, 5, stuff, 14);
-      (void) copy_person(stuff, 14, stuff, 3);
-      (void) copy_person(stuff, 3, stuff, 8);
-      (void) copy_person(stuff, 8, stuff, 16);
-      (void) copy_person(stuff, 12, stuff, 1);
-      (void) copy_person(stuff, 1, stuff, 7);
-      (void) copy_person(stuff, 7, stuff, 21);
-      (void) copy_person(stuff, 0, stuff, 4);
-      (void) copy_person(stuff, 4, stuff, 13);
-      (void) copy_person(stuff, 13, stuff, 2);
-      (void) copy_person(stuff, 2, stuff, 22);
-
-      canonicalize_rotation(stuff);
-   }
-   else if (!(stuff->people[0].id1 | stuff->people[1].id1 | stuff->people[2].id1 | stuff->people[3].id1 |
-            stuff->people[4].id1 | stuff->people[5].id1 | stuff->people[17].id1 | stuff->people[16].id1 |
-            stuff->people[15].id1 | stuff->people[14].id1 | stuff->people[13].id1 | stuff->people[12].id1)) {
-      stuff->kind = s2x6;
-
-      (void) copy_person(stuff, 0, stuff, 11);         /* careful -- order is important */
-      (void) copy_person(stuff, 11, stuff, 18);
-      (void) copy_person(stuff, 1, stuff, 10);
-      (void) copy_person(stuff, 10, stuff, 19);
-      (void) copy_person(stuff, 2, stuff, 9);
-      (void) copy_person(stuff, 9, stuff, 20);
-      (void) copy_person(stuff, 3, stuff, 8);
-      (void) copy_person(stuff, 8, stuff, 21);
-      (void) copy_person(stuff, 4, stuff, 7);
-      (void) copy_person(stuff, 7, stuff, 22);
-      (void) copy_person(stuff, 5, stuff, 6);
-      (void) copy_person(stuff, 6, stuff, 23);
-   }
-}
-
-
-
-static void normalize_3dmd(setup *stuff)
-
-{
-   setup temp;
-
-   if (!(stuff->people[0].id1 | stuff->people[2].id1 | stuff->people[6].id1 | stuff->people[8].id1)) {
-      temp = *stuff;
-
-      stuff->kind = s_3x1dmd;
-      (void) copy_person(stuff, 0, &temp, 9);
-      (void) copy_person(stuff, 6, &temp, 5);
-      (void) copy_person(stuff, 5, &temp, 4);
-      (void) copy_person(stuff, 4, &temp, 3);
-      (void) copy_person(stuff, 3, &temp, 1);
-      (void) copy_person(stuff, 1, &temp, 10);
-      (void) copy_person(stuff, 2, &temp, 11);
-   }
-}
-
-
-
-static void normalize_4dmd(setup *stuff)
-
-{
-   setup temp;
-
-   if (!(stuff->people[0].id1 | stuff->people[3].id1 | stuff->people[4].id1 | stuff->people[5].id1 |
-            stuff->people[8].id1 | stuff->people[11].id1 | stuff->people[12].id1 | stuff->people[13].id1)) {
-
-      /* Danger!  If the people were in side-by-side quarter-tags, turning this into
-         a single quarter-tag would require that the outsides slide together.  That
-         would be wrong.  The bug show up in cases like
-            1P2P; pass the ocean; swing and mix; follow thru; truck twice;
-            split phantom twin boxes sets in motion.
-         So, if people do not have diamond-like orientation, we go into an "H". */
-
-      if (!(((stuff->people[6].id1 | stuff->people[7].id1 | stuff->people[14].id1 | stuff->people[15].id1) & 1) |
-            ((stuff->people[1].id1 | stuff->people[2].id1 | stuff->people[9].id1 | stuff->people[10].id1) & 010))) {
-         temp = *stuff;
-
-         stuff->kind = s_qtag;
-         (void) copy_person(stuff, 0, &temp, 1);
-         (void) copy_person(stuff, 1, &temp, 2);
-         (void) copy_person(stuff, 2, &temp, 6);
-         (void) copy_person(stuff, 3, &temp, 7);
-         (void) copy_person(stuff, 4, &temp, 9);
-         (void) copy_person(stuff, 5, &temp, 10);
-         (void) copy_person(stuff, 6, &temp, 14);
-         (void) copy_person(stuff, 7, &temp, 15);
-      }
-      else {
-         temp = *stuff;
-         clear_people(stuff);
-
-         stuff->kind = s3x4;
-         (void) copy_person(stuff, 0, &temp, 1);
-         (void) copy_person(stuff, 3, &temp, 2);
-         (void) copy_person(stuff, 4, &temp, 6);
-         (void) copy_person(stuff, 5, &temp, 7);
-         (void) copy_person(stuff, 6, &temp, 9);
-         (void) copy_person(stuff, 9, &temp, 10);
-         (void) copy_person(stuff, 10, &temp, 14);
-         (void) copy_person(stuff, 11, &temp, 15);
-      }
-   }
-   else if (!(stuff->people[0].id1 | stuff->people[1].id1 | stuff->people[2].id1 | stuff->people[3].id1 |
-            stuff->people[8].id1 | stuff->people[9].id1 | stuff->people[10].id1 | stuff->people[11].id1)) {
-      temp = *stuff;
-
-      stuff->kind = s1x8;
-      (void) copy_person(stuff, 0, &temp, 12);
-      (void) copy_person(stuff, 1, &temp, 13);
-      (void) copy_person(stuff, 2, &temp, 15);
-      (void) copy_person(stuff, 3, &temp, 14);
-      (void) copy_person(stuff, 4, &temp, 4);
-      (void) copy_person(stuff, 5, &temp, 5);
-      (void) copy_person(stuff, 6, &temp, 7);
-      (void) copy_person(stuff, 7, &temp, 6);
-   }
-   else if (!(stuff->people[4].id1 | stuff->people[5].id1 | stuff->people[6].id1 | stuff->people[7].id1 |
-            stuff->people[12].id1 | stuff->people[13].id1 | stuff->people[14].id1 | stuff->people[15].id1)) {
-      temp = *stuff;
-      clear_people(stuff);
-
-      stuff->kind = s4x4;
-      (void) copy_person(stuff, 12, &temp, 0);
-      (void) copy_person(stuff, 13, &temp, 1);
-      (void) copy_person(stuff, 14, &temp, 2);
-      (void) copy_person(stuff, 0, &temp, 3);
-      (void) copy_person(stuff, 4, &temp, 8);
-      (void) copy_person(stuff, 5, &temp, 9);
-      (void) copy_person(stuff, 6, &temp, 10);
-      (void) copy_person(stuff, 8, &temp, 11);
-
-      canonicalize_rotation(stuff);
-   }
-}
-
-
-/* See if this 2x6 is actually occupied only in spots of a 2x4. */
-
-static void normalize_2x6(setup *stuff)
-
-{
-   if (!(stuff->people[0].id1 | stuff->people[5].id1 | stuff->people[6].id1 | stuff->people[11].id1)) {
-      stuff->kind = s2x4;
-      (void) copy_person(stuff, 0, stuff, 1);            /* careful -- order is important */
-      (void) copy_person(stuff, 1, stuff, 2);
-      (void) copy_person(stuff, 2, stuff, 3);
-      (void) copy_person(stuff, 3, stuff, 4);
-      (void) copy_person(stuff, 4, stuff, 7);
-      (void) copy_person(stuff, 5, stuff, 8);
-      (void) copy_person(stuff, 6, stuff, 9);
-      (void) copy_person(stuff, 7, stuff, 10);
-   }
-}
-
-
-/* See if this 2x8 is actually occupied only in spots of a 2x6. */
-
-static void normalize_2x8(setup *s, setup *result)
-
-{
-   if (!(s->people[7].id1 | s->people[8].id1 | s->people[0].id1 | s->people[15].id1)) {
-      result->kind = s2x6;
-      result->rotation = s->rotation;
-      (void) copy_person(result, 0, s, 1);
-      (void) copy_person(result, 1, s, 2);
-      (void) copy_person(result, 2, s, 3);
-      (void) copy_person(result, 3, s, 4);
-      (void) copy_person(result, 4, s, 5);
-      (void) copy_person(result, 5, s, 6);
-      (void) copy_person(result, 6, s, 9);
-      (void) copy_person(result, 7, s, 10);
-      (void) copy_person(result, 8, s, 11);
-      (void) copy_person(result, 9, s, 12);
-      (void) copy_person(result, 10, s, 13);
-      (void) copy_person(result, 11, s, 14);
-      return;
-   }
-   *result = *s;
-}
-
-
-
-/* Check whether "C1 phantom" setup is only occupied in 2x4 spots, and fix it if so. */
-
-static void normalize_c1_phan(setup *stuff)
-
-{
-   if (!(stuff->people[1].id1 | stuff->people[3].id1 | stuff->people[4].id1 | stuff->people[6].id1 |
-            stuff->people[9].id1 | stuff->people[11].id1 | stuff->people[12].id1 | stuff->people[14].id1)) {
-      stuff->kind = s2x4;
-      (void) copy_person(stuff, 1, stuff, 2);                /* careful -- order is important */
-      (void) copy_person(stuff, 2, stuff, 7);
-      (void) copy_person(stuff, 3, stuff, 5);
-      (void) copy_person(stuff, 4, stuff, 8);
-      (void) copy_person(stuff, 5, stuff, 10);
-      (void) copy_person(stuff, 6, stuff, 15);
-      (void) copy_person(stuff, 7, stuff, 13);
-   }
-   else if (!(stuff->people[0].id1 | stuff->people[2].id1 | stuff->people[5].id1 | stuff->people[7].id1 |
-            stuff->people[8].id1 | stuff->people[10].id1 | stuff->people[13].id1 | stuff->people[15].id1)) {
-      stuff->kind = s2x4;
-      stuff->rotation++;
-      (void) copy_rot(stuff, 7, stuff, 1, 033);        /* careful -- order is important */
-      (void) copy_rot(stuff, 0, stuff, 4, 033);
-      (void) copy_rot(stuff, 2, stuff, 11, 033);
-      (void) copy_rot(stuff, 1, stuff, 6, 033);
-      (void) copy_rot(stuff, 6, stuff, 3, 033);
-      (void) copy_rot(stuff, 3, stuff, 9, 033);
-      (void) copy_rot(stuff, 4, stuff, 12, 033);
-      (void) copy_rot(stuff, 5, stuff, 14, 033);
-   }
-}
-
-
-
 
 
 typedef struct {
@@ -879,111 +557,6 @@ gotit:
 
 
 
-/* This "normalizes" the setup, checking whether a 3x4 is actually occupied only in the
-   spots of a qtag, and reducing it if so. */
-
-static void normalize_3x4(setup *stuff)
-
-{
-   if ((!stuff->people[0].id1) && (!stuff->people[3].id1) && (!stuff->people[6].id1) && (!stuff->people[9].id1)) {
-      stuff->kind = s_qtag;
-      (void) copy_person(stuff, 0, stuff, 1);         /* careful -- order is important */
-      (void) copy_person(stuff, 1, stuff, 2);
-      (void) copy_person(stuff, 2, stuff, 4);
-      (void) copy_person(stuff, 3, stuff, 5);
-      (void) copy_person(stuff, 4, stuff, 7);
-      (void) copy_person(stuff, 5, stuff, 8);
-      (void) copy_person(stuff, 6, stuff, 10);
-      (void) copy_person(stuff, 7, stuff, 11);
-   }
-}
-
-
-/* The "level" argument tells how hard we work to remove the outside phantoms.
-   When merging the results of "on your own" or "own the so-and-so",
-   we set level=normalize_before_merge to work very hard at stripping away
-   outside phantoms, so that we can see more readily how to put things together.
-   When preparing for an isolated call, we work at it a little, so
-   level=normalize_before_isolated_call.   For normal usage, level=simple_normalize. */
-extern void normalize_setup(setup *ss, normalize_level level)
-{
-   setup temp;
-
-   /* Normalize setup by removing outboard phantoms. */
-   
-   if (ss->kind == s_bigblob)
-      normalize_blob(ss);           /* This might leave a 4x6, which might be reduced further. */
-
-   if (ss->kind == s4x6)
-      normalize_4x6(ss);            /* This might leave a 4x4 or 2x6, which might be reduced further. */
-
-   if (ss->kind == s4x4)
-      normalize_4x4(ss);
-   else if (ss->kind == s_3dmd)
-      normalize_3dmd(ss);
-   else if (ss->kind == s_4dmd)
-      normalize_4dmd(ss);
-   else if (ss->kind == s_c1phan)
-      normalize_c1_phan(ss);
-   else if (ss->kind == s3x4)
-      normalize_3x4(ss);
-   else if (ss->kind == s2x8) {
-      temp = *ss;
-      normalize_2x8(&temp, ss);     /* This might leave a 2x6, which could then be reduced to 2x4, below. */
-   }
-   
-   if (ss->kind == s2x6)
-      normalize_2x6(ss);
-
-   /* If preparing for a "so-and-so only do whatever", we remove outboard phantoms
-      more aggressively.  For example, if we are selecting just the center line of
-      a quarter tag, we reduce the setup all the way down to a line.  Normally we
-      wouldn't do this, lest we lose phantoms when gluing setups together. */
-
-   if (level >= normalize_before_merge) {
-      /* This reduction is necessary to make "ends only rotate 1/4" work from a DPT, yielding a rigger. */
-      if ((ss->kind == s2x4) && (!(ss->people[0].id1 | ss->people[3].id1 | ss->people[4].id1 | ss->people[7].id1))) {
-         ss->kind = s2x2;
-         (void) copy_person(ss, 0, ss, 1);
-         (void) copy_person(ss, 1, ss, 2);
-         (void) copy_person(ss, 2, ss, 5);
-         (void) copy_person(ss, 3, ss, 6);
-      }
-      else if ((ss->kind == s1x8) && (!(ss->people[0].id1 | ss->people[1].id1 | ss->people[4].id1 | ss->people[5].id1))) {
-         ss->kind = s1x4;
-         (void) copy_person(ss, 0, ss, 3);
-         (void) copy_person(ss, 1, ss, 2);
-         (void) copy_person(ss, 2, ss, 7);
-         (void) copy_person(ss, 3, ss, 6);
-      }
-   }
-
-   if (level >= normalize_before_isolated_call) {
-      if (ss->kind == s_qtag) {
-         if (!(ss->people[0].id1 | ss->people[1].id1 | ss->people[4].id1 | ss->people[5].id1)) {
-            ss->kind = s1x4;
-            (void) copy_person(ss, 0, ss, 6);
-            (void) copy_person(ss, 1, ss, 7);
-         }
-         if (!(ss->people[2].id1 | ss->people[3].id1 | ss->people[6].id1 | ss->people[7].id1)) {
-            /* We do NOT compress to a 2x2 -- doing so might permit people to
-               work with each other across the set when they shouldn't, as in
-               "heads pass the ocean; heads recycle while the sides star thru". */
-            ss->kind = s2x4;
-            ss->rotation++;
-            (void) copy_rot(ss, 7, ss, 0, 033);         /* careful -- order is important */
-            (void) copy_rot(ss, 3, ss, 4, 033);
-            (void) copy_rot(ss, 0, ss, 1, 033);
-            (void) copy_rot(ss, 4, ss, 5, 033);
-            clear_person(ss, 1);
-            clear_person(ss, 5);
-            canonicalize_rotation(ss);
-         }
-      }
-   }
-}
-
-
 /* BEWARE!!  This list is keyed to the definition of "setup_kind" in database.h . */
 /* The horizontal structure is keyed to the enumeration "analyzer_kind" :
    normal      checkpt                   2x6                 6x2             star12             single       vertical6          lateral6     diamond_line */
@@ -1015,6 +588,10 @@ static cm_thing *bigconctab[][9] = {
    {0,              0,                    0,                  0,                 0,                0,              0,                0,          0},               /* s2x6 */
    {0,              0,                    0,                  0,                 0,                0,              0,                0,          0},               /* s2x8 */
    {0,              0,                    0,                  0,                 0,                0,              0,                0,          0},               /* s4x4 */
+   {0,              0,                    0,                  0,                 0,                0,              0,                0,          0},               /* s1x10 */
+   {0,              0,                    0,                  0,                 0,                0,              0,                0,          0},               /* s1x12 */
+   {0,              0,                    0,                  0,                 0,                0,              0,                0,          0},               /* s1x14 */
+   {0,              0,                    0,                  0,                 0,                0,              0,                0,          0},               /* s1x16 */
    {0,              0,                    0,                  0,                 0,                0,              0,                0,          0},               /* s_c1phan */
    {0,              0,                    0,                  0,                 0,                0,              0,                0,          0},               /* s_bigblob */
    {0,              &map2x2_1x4_rc,       &oddmapshort6_1x2h, &map1x2_bone6,     0,                0,              0,                0,          0},               /* s_ptpd */
@@ -1375,11 +952,13 @@ extern void concentric_move(
    int orig_outers_start_directions[8];
 
    setup_kind final_outers_start_kind;   /* The original info about the people who will FINISH on the outside. */
-   int final_outers_start_dirs;          /* In case of cross-concentric, that's the original centers. */
    int *final_outers_start_directions;
 
    int final_outers_finish_dirs;         /* The final info about the people who FINISHED on the outside. */
    int final_outers_finish_directions[8];
+
+   /* It is clearly too late to expand the matrix -- that can't be what is wanted. */
+   ss->setupflags |= SETUPFLAG__NO_EXPAND_MATRIX;
 
    for (i=0; i<8; i++) {
       orig_inners_start_directions[i] =
@@ -1416,12 +995,10 @@ extern void concentric_move(
       begin_outer = temptemp;
 
       final_outers_start_kind = orig_inners_start_kind;
-      final_outers_start_dirs = orig_inners_start_dirs;
       final_outers_start_directions = orig_inners_start_directions;
    }
    else {
       final_outers_start_kind = orig_outers_start_kind;
-      final_outers_start_dirs = orig_outers_start_dirs;
       final_outers_start_directions = orig_outers_start_directions;
    }
 
@@ -1456,7 +1033,7 @@ extern void concentric_move(
          /* Strip out the roll bits -- people who didn't move can't roll. */
          if (setup_limits[result_inner[k].kind] >= 0) {
             for (i=0; i<=setup_limits[result_inner[k].kind]; i++) {
-               if (result_inner[k].people[i].id1) result_inner[k].people[i].id1 = (result_inner[k].people[i].id1 & (~ROLLBITS)) | ROLLBITM;
+               if (result_inner[k].people[i].id1) result_inner[k].people[i].id1 = (result_inner[k].people[i].id1 & (~ROLL_MASK)) | ROLLBITM;
             }
          }
       }
@@ -1470,17 +1047,21 @@ extern void concentric_move(
          illegal from diamonds, and "ends hinge" illegal from waves.  The reason this is turned
          off when the "concentric" concept is given is so that "concentric hinge" from waves,
          obnoxious as it may be, will be legal.
-      We also turn it off if "demand lines" or "demand columns" has been given.  In that case,
-         the database author knows what elongation is required and is taking responsibility
-         for it.  This is what makes "scamper" and "divvy up" work.
       We also turn it off if this is reverse checkpoint.  In that case, the ends know exactly
          where they should go.  This is what makes "reverse checkpoint recycle by star thru"
          work from a DPT setup. */
 
       if (begin_outer.kind == s2x2 && analyzer != schema_rev_checkpoint &&
-            !((dfm_conc_concentric_rules | dfm_conc_demand_lines | dfm_conc_demand_columns) & modifiersout) &&
             !(begin_outer_elongation & ~1)) {      /* We demand elongation be 0 or 1. */
          begin_outer.setupflags |= ((begin_outer_elongation+1) * SETUPFLAG__ELONGATE_BIT);
+
+         /* If "demand lines" or "demand columns" has been given, we suppress elongation
+            checking.  In that case,
+            the database author knows what elongation is required and is taking responsibility
+            for it.  This is what makes "scamper" and "divvy up" work. */
+
+         if ((dfm_conc_concentric_rules | dfm_conc_demand_lines | dfm_conc_demand_columns) & modifiersout)
+            begin_outer.setupflags |= SETUPFLAG__NO_CHK_ELONG;
       }
 
       update_id_bits(&begin_outer);
@@ -1493,7 +1074,7 @@ extern void concentric_move(
       /* Strip out the roll bits -- people who didn't move can't roll. */
       if (setup_limits[result_outer.kind] >= 0) {
          for (i=0; i<=setup_limits[result_outer.kind]; i++) {
-            if (result_outer.people[i].id1) result_outer.people[i].id1 = (result_outer.people[i].id1 & (~ROLLBITS)) | ROLLBITM;
+            if (result_outer.people[i].id1) result_outer.people[i].id1 = (result_outer.people[i].id1 & (~ROLL_MASK)) | ROLLBITM;
          }
       }
    }
@@ -1564,7 +1145,7 @@ extern void concentric_move(
       final_outers_finish_directions[(q >> 6) & 07] = q;
    }
 
-   /* Now final_outers_start_dirs and final_outers_finish_dirs tell whether outer peoples' orientations changed.
+   /* Now final_outers_finish_dirs tells whether outer peoples' orientations changed.
       This is only meaningful if outer setup is 2x2.  Note that, if the setups
       are 2x2's, canonicalization sets their rotation to zero, so the
       tbonetest quantities refer to absolute orientation. */
@@ -1618,11 +1199,15 @@ extern void concentric_move(
       }
       else if (analyzer == schema_concentric_diamond_line) {
          if (ss->kind == s_wingedstar || ss->kind == s_wingedstar12 || ss->kind == s_wingedstar16) {
-            final_elongation = ~ss->rotation & 1;
             result_outer.kind = s2x2;
             result_outer.rotation = 0;
-            result_outer.setupflags = result_inner[0].setupflags;
             clear_people(&result_outer);
+            /* Set their "natural" elongation perpendicular to their original diamond.
+               The test for this is 1P2P; touch 1/4; column circ; boys truck; split phantom
+               lines tag chain thru reaction.  They should finish in outer triple boxes,
+               not a 2x4. */
+            result_outer.setupflags = (result_inner[0].setupflags & ~RESULTFLAG__ELONGATE_MASK) |
+                  (((~ss->rotation & 1) + 1) * RESULTFLAG__ELONGATE_BIT);
          }
          else
             goto no_end_err;
@@ -1713,23 +1298,49 @@ normalize_concentric.  This code was making "outer 6 convert the triangle" fail
 from a bone (heads left swing thru, side girl turn back).
 ***** */
 
+   /* At this point, "final_elongation" actually has the INITIAL elongation of the
+      people who finished on the outside.  That is, if they went from a wave or diamond
+      to a 2x2, it has the elongation of their initial wave or diamond points.
+      
+      The elongation bits in their setup tells how they "naturally" wanted to end,
+      based on the call they did, how it got divided up, whether it had the "parallel_conc_end"
+      flag on, etc.
+      
+      We will use both pieces of information to figure out how to elongate the outsides at
+      the conclusion of the call.  For example, if the word "concentric" was not spoken,
+      we will just use their "natural" elongation from the setup.  This is what makes
+      "ends hinge" work from a grand wave.  If the word "concentric" was spoken, their
+      natural elongation is discarded, and we will set them perpendicular to their
+      original 1x4 or diamond, using the value in "final_elongation"  If invocation
+      flags like "force lines" or "force columns" are present, we will use those.
+      
+      When we are done, our final judgement will be put back into the variable
+      "final_elongation". */
+
    if (result_outer.kind == s2x2) {
       int *concwarntable = (final_outers_start_kind == s1x4) ? concwarn1x4table : concwarndmdtable;
 
       switch (final_outers_start_kind) {
          case s1x4: case sdmd:
 
-            /* Outers' call has gone from a 1x4 or diamond to a 2x2.  We change elongation if:
-               (1) the "force_columns" or "force_lines" flag in the invocation takes precedence
+            /* Outers' call has gone from a 1x4 or diamond to a 2x2.  The rules are:
+               (1) The "force_columns" or "force_lines" flag in the invocation takes precedence
                   over anything else.
-               (2) the "concentric rules" flag is on (that flag is a euphemism for "the
-                  concentric concept is explicitly in use here", which means we want
-                  elongation perpendicular to the original 1x4, no matter what anyone says.)
-               (3) the "force_otherway" invocation flag is on, meaning the database
-                  really wants it this way.
-               (4) the "par_conc_end" flag is OFF.  For 1x4->2x2 calls, this flag means
-                  the call prefers the SAME elongation in the resulting 2x2.  The default,
-                  absent this flag, is to change the elongation. */
+               (2) If the "concentric rules" flag is on (that flag is a euphemism for "the
+                  concentric or checkpoint concept is explicitly in use here"), we set the
+                  elongation perpendicular to the original 1x4 or diamond.
+               (3) If the "force_otherway" invocation flag is on, meaning the database
+                  really wants us to, we set the elongation perpendicular to the original
+                  1x4 or diamond.  *** Actually, it appears that this flag is meaningless
+                  for 1x4/dmd -> 2x2 calls, and the "par_conc_end" does this function
+               (4) Otherwise, we set the elongation to the natural elongation that the people
+                  went to.  This uses the result of the "par_conc_end" flag for 1x4/dmd -> 2x2
+                  calls, or the manner in which the setup was divided for calls that were put
+                  together from 2-person calls, or whatever.  (For 1x4->2x2 calls, the "par_conc_end"
+                  flag means the call prefers the SAME elongation in the resulting 2x2.  The default,
+                  absent this flag, is to change the elongation.  In any case, the result of all that
+                  has been encoded into the elongation of the 2x2 setup that the people went to;
+                  we just have to obey. */
 
             if (dfm_conc_force_lines & localmods) {
                if ((final_outers_finish_dirs & 011) == 011)
@@ -1879,7 +1490,11 @@ extern void merge_setups(setup *ss, setup *result)
    r = (res1->rotation - res2->rotation) & 3;
    rot = r * 011;
    
-   if ((res1->kind == s2x4) && (res2->kind == s2x4) && (r&1)) {
+   if (res1->kind == nothing) {
+      *result = *res2;
+      return;
+   }
+   else if ((res1->kind == s2x4) && (res2->kind == s2x4) && (r&1)) {
       offs = r * 2;
       if ((((res1->people[0].id1 & res1->people[1].id1 & res1->people[4].id1 & res1->people[5].id1) |
                (res1->people[2].id1 & res1->people[3].id1 & res1->people[6].id1 & res1->people[7].id1)) & BIT_PERSON) &&

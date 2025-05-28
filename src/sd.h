@@ -16,7 +16,7 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-    This is for version 25. */
+    This is for version 27. */
 
 #define TRUE 1
 #define FALSE 0
@@ -26,6 +26,7 @@
 typedef int long_boolean;
 
 /* We would like this to be a signed char, but not all compilers are fully ANSI compliant. */
+/* The IBM AIX compiler, for example, considers char to be unsigned. */
 typedef short veryshort;
 
 #include <setjmp.h>
@@ -45,8 +46,8 @@ typedef short veryshort;
 
 /* This defines a person in a setup.  Unfortunately, there is too much data to fit into 32 bits. */
 typedef struct {
-   int id1;       /* Frequently used bits go here. */
-   int id2;       /* Bits used for evaluating predicates. */
+   unsigned int id1;       /* Frequently used bits go here. */
+   unsigned int id2;       /* Bits used for evaluating predicates. */
 } personrec;
 
 /* Person bits for "id1" field are:
@@ -58,12 +59,12 @@ typedef struct {
     400 000 000 - roll direction is CCW
     200 000 000 - roll direction is neutral
     100 000 000 - roll direction is CW
-     40 000 000 -
-     20 000 000 -
-     10 000 000 -
-      4 000 000 -
-      2 000 000 -
-      1 000 000 -
+     40 000 000 - fractional stability enabled
+     20 000 000 - stability "v" field -- 2 bits
+     10 000 000 -     "
+      4 000 000 - stability "r" field -- 3 bits
+      2 000 000 -     "
+      1 000 000 -     "
         400 000 -
         200 000 -
         100 000 -
@@ -81,10 +82,16 @@ typedef struct {
               1 - part of rotation (facing east/west)
 */
 
-#define ROLLBITS    0700000000
+/* These are a 3 bit field -- ROLL_BIT tells where its low bit lies. */
+#define ROLL_MASK   0700000000
+#define ROLL_BIT    0100000000
 #define ROLLBITL    0400000000
 #define ROLLBITM    0200000000
 #define ROLLBITR    0100000000
+#define STABLE_MASK  077000000
+#define STABLE_ENAB  040000000
+#define STABLE_VBIT  010000000
+#define STABLE_RBIT  001000000
 #define BIT_VIRTUAL 02000
 #define BIT_PERSON  01000
 #define d_mask  01013
@@ -169,6 +176,10 @@ typedef struct {
    in database.h .  We define these flags at the extreme left end of the
    word in order to keep them away from the concentricity flags.
 
+   SETUPFLAG__DISTORTED means that we are at a level of recursion in which some
+   distorted-setup concept has been used.  When this is set, "matrix" (a.k.a.
+   "space invader") calls, such as press and truck, are not permitted.  Sorry, Clark.
+
    SETUPFLAG__OFFSET_Z means that we are doing a 2x3 call (the only known case
    of this is "Z axle") that came from Z's picked out of a 4x4 setup.  The map
    that we are using has a "50% offset" map schema, so that, if the call goes
@@ -205,9 +216,11 @@ typedef struct {
    always absolute.  A 1 in this field means the elongation is east-west.  A 2
    means the elongation is north-south.  A zero means the elongation is unknown.
 
-   SETUPFLAG__DISTORTED means that we are at a level of recursion in which some distorted-setup
-   concept has been used.  When this is set, "matrix" (a.k.a. "space invader")
-   calls, such as press and truck, are not permitted.  Sorry, Clark.
+   SETUPFLAG__NO_CHK_ELONG means that the elongation of the incoming setup is for
+   informational purposes only (to tell where people should finish) and should not
+   be used for raising error messages.  It suppresses the error that would be
+   raised if we have people in a facing 2x2 star thru when they are far from the
+   ones they are facing.
 
    SETUPFLAG__PHANTOMS means that we are at a level of recursion in which some phantom concept
    has been used.  When this is set, the "tandem" or "as couples" concepts will
@@ -218,12 +231,18 @@ typedef struct {
    SETUPFLAG__NO_STEP_TO_WAVE means that we are at a level of recursion that no longer permits us to do the
    implicit step to a wave or rear back from one that some calls permit at the top level.
 
+   SETUPFLAG__NO_EXPAND_MATRIX means that we are at a level of recursion that no longer permits us to do the
+   implicit expansion of the matrix (e.g. add outboard phantoms to turn a 2x4 into a 2x6
+   if the concept "triple box" is used) that some concepts perform at the top level.
+
    SETUPFLAG__DOING_ENDS means that this call is directed only to the ends (and the setup is the ends
    of the original setup.  If the call turns out to be an 8-person call with distinct
    centers and ends parts, we may want to just apply the ends part.  This is what
    makes "ends detour" work.
 */
 
+#define SETUPFLAG__NO_EXPAND_MATRIX   0x00001000
+#define SETUPFLAG__DISTORTED          0x00002000
 #define SETUPFLAG__OFFSET_Z           0x00004000
 #define SETUPFLAG__SAID_SPLIT         0x00008000
 #define SETUPFLAG__SAID_TRIANGLE      0x00010000
@@ -233,7 +252,7 @@ typedef struct {
 /* This one is a 2 bit field -- ELONGATE_BIT tells where its low bit lies. */
 #define SETUPFLAG__ELONGATE_MASK      0x0C000000
 #define SETUPFLAG__ELONGATE_BIT       0x04000000
-#define SETUPFLAG__DISTORTED          0x10000000
+#define SETUPFLAG__NO_CHK_ELONG       0x10000000
 #define SETUPFLAG__PHANTOMS           0x20000000
 #define SETUPFLAG__NO_STEP_TO_WAVE    0x40000000
 #define SETUPFLAG__DOING_ENDS         0x80000000
@@ -525,9 +544,7 @@ typedef enum {
 #define FINAL__CROSS                 0x40000000
 #define FINAL__SINGLE                0x80000000
 
-typedef int final_set;
-
-#define BASIC_CALLARRAY_SIZE 12
+typedef unsigned int final_set;
 
 typedef long_boolean (*predicate_ptr)(
    setup *real_people,
@@ -537,13 +554,14 @@ typedef long_boolean (*predicate_ptr)(
 
 typedef struct glosk {
    predicate_ptr pred;
-   short arr[BASIC_CALLARRAY_SIZE];
    struct glosk *next;
+   /* Dynamically allocated to whatever size is required. */
+   unsigned short arr[4];
 } predptr_pair;
 
 typedef struct glork {
    struct glork *next;
-   int callarray_flags;
+   unsigned int callarray_flags;
    call_restriction restriction;
    search_qualifier qualifier;
    begin_kind start_setup;
@@ -551,9 +569,12 @@ typedef struct glork {
    setup_kind end_setup_in;             /* only if end_setup = concentric */
    setup_kind end_setup_out;            /* only if end_setup = concentric */
    union {
-      short def[BASIC_CALLARRAY_SIZE];  /* only if pred = false */
-      struct {                          /* only if pred = true */
-         predptr_pair *predlist; char errmsg[80];
+      /* Dynamically allocated to whatever size is required. */
+      unsigned short def[4];     /* only if pred = false */
+      struct {                   /* only if pred = true */
+         predptr_pair *predlist;
+         /* Dynamically allocated to whatever size is required. */
+         char errmsg[4];
       } prd;
    } stuff;
 } callarray;
@@ -584,7 +605,6 @@ typedef struct glowk {
 
 typedef struct {
    int callflags;
-   char *name;
    int age;
    calldef_schema schema;
    union {
@@ -603,6 +623,8 @@ typedef struct {
          by_def_item outerdef;
       } conc;           /* if schema = schema_concentric, schema_concentric_6_2, schema_concentric_2_6, schema_cross_concentric, schema_concentric_diamond_line */
    } stuff;
+   /* Dynamically allocated to whatever size is required, will have trailing null. */
+   char real_name[4];
 } callspec_block;
 
 /* BEWARE!!  This list must track all the "map_hunk" definitions in sdtables.c . */
@@ -639,9 +661,10 @@ typedef map_thing *map_hunk[][2];
 
 typedef struct {
    setup_kind result_kind;
-   char xca[24];
-   char yca[24];
-   char numbers[8][8];
+   int xfactor;
+   veryshort xca[24];
+   veryshort yca[24];
+   veryshort diagram[64];
 } coordrec;
 
 
@@ -671,6 +694,10 @@ typedef enum {
    concept_phantom_tandem,
    concept_gruesome_tandem,
    concept_some_are_tandem,
+   concept_frac_tandem,
+   concept_phantom_frac_tandem,
+   concept_gruesome_frac_tandem,
+   concept_some_are_frac_tandem,
    concept_checkerboard,
    concept_reverse,
    concept_left,
@@ -726,6 +753,8 @@ typedef enum {
    concept_some_vs_others,
    concept_stable,
    concept_so_and_so_stable,
+   concept_frac_stable,
+   concept_so_and_so_frac_stable,
    concept_standard,
    concept_double_offset,
    concept_checkpoint,
@@ -777,6 +806,8 @@ typedef enum {
 #define CONCPROP__USE_NUMBER      0x00001000
 #define CONCPROP__USE_TWO_NUMBERS 0x00002000
 #define CONCPROP__NEED_3DMD       0x00004000
+#define CONCPROP__NEED_3X4_1X12   0x00008000
+#define CONCPROP__NEED_4X4_1X16   0x00010000
 
 typedef enum {    /* These control error messages that arise when we divide a setup
                      into subsetups (e.g. phantom lines) and find that one of
@@ -897,7 +928,7 @@ typedef struct {
 } parse_state_type;
 
 typedef struct {
-   int concept_prop;      /* Takes bits of the form CONCPROP__??? */
+   unsigned int concept_prop;      /* Takes bits of the form CONCPROP__??? */
    void (*concept_action)(setup *, parse_block *, setup *);
 } concept_table_item;
 
@@ -952,7 +983,8 @@ extern int written_history_nopic;                                   /* in SDUTIL
 extern parse_block *last_magic_diamond;                             /* in SDUTIL */
 extern char error_message1[MAX_ERR_LENGTH];                         /* in SDUTIL */
 extern char error_message2[MAX_ERR_LENGTH];                         /* in SDUTIL */
-extern int collision_person1, collision_person2;                    /* in SDUTIL */
+extern unsigned int collision_person1;                              /* in SDUTIL */
+extern unsigned int collision_person2;                              /* in SDUTIL */
 extern long_boolean enable_file_writing;                            /* in SDUTIL */
 extern char *selector_names[];                                      /* in SDUTIL */
 
@@ -1006,6 +1038,7 @@ extern map_thing map_rh_s2x3_3;                                     /* in SDTABL
 extern map_thing map_rh_s2x3_2;                                     /* in SDTABLES */
 extern map_thing map_lf_s2x4_r;                                     /* in SDTABLES */
 extern map_thing map_rf_s2x4_r;                                     /* in SDTABLES */
+extern map_thing map_dmd_1x1;                                       /* in SDTABLES */
 extern map_thing *maps_3diag[4];                                    /* in SDTABLES */
 extern map_thing *maps_3diagwk[4];                                  /* in SDTABLES */
 extern map_hunk *map_lists[][4];                                    /* in SDTABLES */
@@ -1149,19 +1182,19 @@ extern void write_history_line(int history_index, char *header, long_boolean pic
 extern void warn(int w);
 extern call_list_kind find_proper_call_list(setup *s);
 extern callarray *assoc(begin_kind key, setup *ss, callarray *spec);
-extern int find_calldef(
+extern unsigned int find_calldef(
    callarray *tdef,
    setup *scopy,
    int real_index,
    int real_direction,
    int northified_index);
 extern void clear_people(setup *z);
-extern int rotperson(int n, int amount);
-extern int rotcw(int n);
-extern int rotccw(int n);
+extern unsigned int rotperson(unsigned int n, int amount);
+extern unsigned int rotcw(unsigned int n);
+extern unsigned int rotccw(unsigned int n);
 extern void clear_person(setup *resultpeople, int resultplace);
-extern int copy_person(setup *resultpeople, int resultplace, setup *sourcepeople, int sourceplace);
-extern int copy_rot(setup *resultpeople, int resultplace, setup *sourcepeople, int sourceplace, int rotamount);
+extern unsigned int copy_person(setup *resultpeople, int resultplace, setup *sourcepeople, int sourceplace);
+extern unsigned int copy_rot(setup *resultpeople, int resultplace, setup *sourcepeople, int sourceplace, int rotamount);
 extern void swap_people(setup *ss, int oneplace, int otherplace);
 extern void install_person(setup *resultpeople, int resultplace, setup *sourcepeople, int sourceplace);
 extern void install_rot(setup *resultpeople, int resultplace, setup *sourcepeople, int sourceplace, int rotamount);
@@ -1272,24 +1305,15 @@ extern void tandem_couples_move(
    callspec_block *callspec,
    final_set final_concepts,
    selector_kind selector,
-   long_boolean twosome,    /* normal=FALSE, twosome=TRUE */
-   int phantom,             /* normal=0 phantom=1 gruesome=2 */
-   int tnd_cpl_siam,        /* couples=0 tandem=1 siamese=2 */
+   int twosome,               /* solid=0 / twosome=1 / solid-to-twosome=2 / twosome-to-solid=3 */
+   int fraction,              /* number, if doing fractional twosome/solid */
+   int phantom,               /* normal=0 / phantom=1 / gruesome=2 */
+   int tnd_cpl_siam,          /* tandem=0 / couples=1 / siamese=2 / skew=3 */
    setup *result);
 
 extern void initialize_tandem_tables(void);
 
 /* In SDCONC */
-
-extern void normalize_concentric(
-   calldef_schema synthesizer,
-   int center_arity,
-   setup inners[],
-   setup *outers,
-   int outer_elongation,
-   setup *result);
-
-extern void normalize_setup(setup *ss, normalize_level level);
 
 extern void concentric_move(
    setup *ss,
@@ -1302,6 +1326,14 @@ extern void concentric_move(
    calldef_schema analyzer,
    defmodset modifiersin,
    defmodset modifiersout,
+   setup *result);
+
+extern void normalize_concentric(
+   calldef_schema synthesizer,
+   int center_arity,
+   setup inners[],
+   setup *outers,
+   int outer_elongation,
    setup *result);
 
 extern void merge_setups(setup *ss, setup *result);
@@ -1323,5 +1355,9 @@ extern void update_id_bits(setup *ss);
 extern void touch_or_rear_back(
    setup *scopy,
    int callflags);
+
+extern void do_matrix_expansion(setup *ss, concept_kind ckind);
+
+extern void normalize_setup(setup *ss, normalize_level level);
 
 extern void toplevelmove(void);

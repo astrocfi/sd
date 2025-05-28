@@ -16,7 +16,7 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-    This is for version 25. */
+    This is for version 27. */
 
 /* This defines the following functions:
    canonicalize_rotation
@@ -25,6 +25,7 @@
 */
 
 #include "sd.h"
+
 
 
 
@@ -244,7 +245,7 @@ static void finish_matrix_call(
    xmax = xpar = ymax = ypar = signature = 0;
 
    for (i=0; i<nump; i++) {
-      people->people[i].id1 = (rotperson(people->people[i].id1, matrix_info[i].deltarot*011) & (~ROLLBITS)) | matrix_info[i].rollinfo;
+      people->people[i].id1 = (rotperson(people->people[i].id1, matrix_info[i].deltarot*011) & (~ROLL_MASK)) | matrix_info[i].rollinfo;
 
       /* If this person's position has low bit on, that means we consider his coordinates
          not sufficiently well-defined that we will allow him to do any pressing or
@@ -322,6 +323,22 @@ static void finish_matrix_call(
       checkptr = setup_coords[s_qtag];
       goto doitrot;
    }
+   else if ((ypar == 0x00A60055) && ((signature & (~0x09000480)) == 0)) {
+      checkptr = setup_coords[s_3x1dmd];
+      goto doit;
+   }
+   /* If certain far out people are missing, xmax will be different, but we will
+       still need to go to a 3dmd. */
+   else if (((ypar == 0x00A70055) || (ypar == 0x00770055) || (ypar == 0x00730055)) && ((signature & (~0x29008480)) == 0)) {
+      checkptr = setup_coords[s_3dmd];
+      goto doit;
+   }
+   /* If certain far out people are missing, xmax will be different, but we will
+       still need to go to a 4dmd. */
+   else if (((ypar == 0x00E30055) || (ypar == 0x00B30055) || (ypar == 0x00A30055)) && ((signature & (~0x0940A422)) == 0)) {
+      checkptr = setup_coords[s_4dmd];
+      goto doit;
+   }
    else if ((ypar == 0x00550057) && ((signature & (~0x20000620)) == 0)) {
       checkptr = setup_coords[s_hrglass];
       goto doit;
@@ -341,6 +358,22 @@ static void finish_matrix_call(
    else if ((ypar == 0x000400E2) && ((signature & (~0x08004202)) == 0)) {
       checkptr = setup_coords[s1x8];
       goto doitrot;
+   }
+   else if ((ypar == 0x01220004) && ((signature & (~0x49002400)) == 0)) {
+      checkptr = setup_coords[s1x10];
+      goto doit;
+   }
+   else if ((ypar == 0x01620004) && ((signature & (~0x49012400)) == 0)) {
+      checkptr = setup_coords[s1x12];
+      goto doit;
+   }
+   else if ((ypar == 0x01A20004) && ((signature & (~0x49012404)) == 0)) {
+      checkptr = setup_coords[s1x14];
+      goto doit;
+   }
+   else if ((ypar == 0x01E20004) && ((signature & (~0x49092404)) == 0)) {
+      checkptr = setup_coords[s1x16];
+      goto doit;
    }
    else if ((ypar == 0x00620022) && ((signature & (~0x00088006)) == 0)) {
       checkptr = setup_coords[s2x4];
@@ -404,11 +437,12 @@ static void finish_matrix_call(
 doit:
       result->kind = checkptr->result_kind;
       for (i=0; i<nump; i++) {
-         place = checkptr->numbers[3-(matrix_info[i].y >> 2)] [(matrix_info[i].x >> 2)+4];
+         place = checkptr->diagram[28 - ((matrix_info[i].y >> 2) << checkptr->xfactor) + (matrix_info[i].x >> 2)];
          if (place < 0) fail("Person has moved into a grossly ill-defined location.");
          if ((checkptr->xca[place] != matrix_info[i].x) || (checkptr->yca[place] != matrix_info[i].y))
             fail("Person has moved into a slightly ill-defined location.");
          install_person(result, place, people, i);
+         result->people[place].id1 &= ~STABLE_MASK;   /* For now, can't do fractional stable on this kind of call. */
       }
       
       return;
@@ -417,11 +451,12 @@ doitrot:
       result->kind = checkptr->result_kind;
       result->rotation = 1;   
       for (i=0; i<nump; i++) {
-         place = checkptr->numbers[3-(matrix_info[i].x >> 2)] [3-(matrix_info[i].y >> 2)];
+         place = checkptr->diagram[27 - ((matrix_info[i].x >> 2) << checkptr->xfactor) - (matrix_info[i].y >> 2)];
          if (place < 0) fail("Person has moved into a grossly ill-defined location.");
          if ((checkptr->xca[place] != -matrix_info[i].y) || (checkptr->yca[place] != matrix_info[i].x))
             fail("Person has moved into a slightly ill-defined location.");
          install_rot(result, place, people, i, 033);
+         result->people[place].id1 &= ~STABLE_MASK;   /* For now, can't do fractional stable on this kind of call. */
       }
       
       return;
@@ -731,7 +766,7 @@ static void rollmove(
       if (ss->people[i].id1) {
          rot = 0;
          if (!(callspec->callflags & cflag__requires_selector) || selectp(ss, i)) {
-            switch (ss->people[i].id1 & ROLLBITS) {
+            switch (ss->people[i].id1 & ROLL_MASK) {
                case ROLLBITL: rot = 033; break;
                case ROLLBITM: break;
                case ROLLBITR: rot = 011; break;
@@ -739,6 +774,7 @@ static void rollmove(
             }
          }
          install_rot(result, i, ss, i, rot);
+         result->people[i].id1 &= ~STABLE_MASK;   /* For now, can't do fractional stable on this kind of call. */
       }
       else
          clear_person(result, i);
@@ -774,21 +810,7 @@ static final_set get_mods_for_subcall(final_set new_final_concepts, defmodset th
 }
 
 
-
-/* ***** The following is all wrong.  It's much simpler now.  We just fill in the
-         elongation in the result flags, if we can deduce it. */
-/* Whenever the ending setup is 2x2, we are responsible for filling in the "parallel_conc_end"
-   field of the result, to say, for 1x4/dmd->2x2 calls, whether the people prefer to
-   elongate parallel to the long axis of the 1x4/dmd, and, for 2x2->2x2 calls, whether
-   the people prefer to go to antispots.  This info will be used if the call is executed
-   by the outsides, so that the resulting 2x2 must be elongated in some direction to leave
-   room for the centers.  Of course, if the "concentric" or "checkpoint" concept has been
-   given, this info will be overruled by the various rules for executing those concepts.
-   If this call is executed as part of some kind of concentric schema, there are modification
-   flags that can also override this stuff. */
-
-
-extern void move(
+static void move_with_real_call(
    setup *ss,
    parse_block *parseptr,
    callspec_block *callspec,
@@ -805,174 +827,11 @@ extern void move(
    warning_info saved_warnings;
    int tbonetest;
    setup tempsetup;
-   parse_block *saved_magic_diamond;
    final_set new_final_concepts;
-   final_set check_concepts;
-   parse_block *parseptrcopy;
    callspec_block *call1, *call2;
    calldef_schema the_schema;
    long_boolean mirror;
 
-   clear_people(result);
-   result->setupflags = 0;
-
-   if (!callspec) {
-
-      /* Scan the "final" concepts, remembering them and their end point. */
-      last_magic_diamond = 0;
-      parseptrcopy = process_final_concepts(parseptr, TRUE, &new_final_concepts);
-      saved_magic_diamond = last_magic_diamond;
-
-      /* See if there were any "non-final" ones present also. */
-
-      new_final_concepts |= final_concepts;         /* Include any old ones we had. */
-
-      /* These are the concepts that we are interested in. */
-
-      check_concepts = new_final_concepts & ~(FINAL__MUST_BE_TAG | FINAL__MUST_BE_SCOOT);
-
-      if (parseptrcopy->concept->kind > marker_end_of_list) {
-
-         /* We now know that there are "non-final" (virtual setup) concepts present. */
-
-         /* Look for virtual setup concept that can be done by dispatch from table, with no
-            intervening final concepts. */
-
-         if ((check_concepts == 0) && do_big_concept(ss, parseptrcopy, result)) {
-            goto norot;
-         }
-
-         /* We are about to do some semi-final (?) concepts.  Stepping to a wave or
-            rearing back from one is no longer permitted. */
-         ss->setupflags |= SETUPFLAG__NO_STEP_TO_WAVE;
-
-         /* There are a few "final" concepts that
-            will not be treated as such if there are non-final concepts occurring
-            after them.  Instead, they will be treated as virtual setup concepts.
-            This is what makes "magic once removed trade" work, for
-            example.  On the other hand, if there are no non-final concepts following, treat these as final.
-            This is what makes "magic transfer" or "split square thru" work. */
-
-         if (check_concepts == FINAL__SPLIT) {
-            map_thing *split_map;
-      
-            ss->setupflags |= SETUPFLAG__SAID_SPLIT;
-
-            if (ss->kind == s2x4) split_map = (*map_lists[s2x2][1])[MPKIND__SPLIT][0];
-            else if (ss->kind == s1x8) split_map = (*map_lists[s1x4][1])[MPKIND__SPLIT][0];
-            else if (ss->kind == s_ptpd) split_map = (*map_lists[sdmd][1])[MPKIND__SPLIT][0];
-            else if (ss->kind == s_qtag) split_map = (*map_lists[sdmd][1])[MPKIND__SPLIT][1];
-            else fail("Can't do split concept in this setup.");
-      
-            divided_setup_move(ss, parseptrcopy, NULLCALLSPEC, new_final_concepts & ~FINAL__SPLIT,
-               split_map, phantest_ok, TRUE, result);
-         }
-         else if ((check_concepts & ~FINAL__DIAMOND) == FINAL__MAGIC) {
-            if (ss->kind == s2x4) {
-               divided_setup_move(ss, parseptrcopy, NULLCALLSPEC, new_final_concepts & ~FINAL__MAGIC,
-                  &map_2x4_magic, phantest_ok, TRUE, result);
-            }
-            else if (ss->kind == s_qtag) {
-               divided_setup_move(ss, parseptrcopy, NULLCALLSPEC, new_final_concepts & ~FINAL__MAGIC,
-                  &map_qtg_magic, phantest_ok, TRUE, result);
-
-               /* Since more concepts follow the magic and/or interlocked stuff, we can't
-                  allow the concept to be just "magic" etc.  We have to change it to
-                  "magic diamond, ..."  Otherwise, things could come out sounding like
-                  "magic diamond as couples quarter right" when we should really be saying
-                  "magic diamond, diamond as couples quarter right".  Therefore, we are going
-                  to do something seriously hokey: we are going to change the concept descriptor
-                  to one whose name has the extra "diamond" word.  We do this by marking the
-                  setupflags word in the result.  The actual hokey stuff will be done presently. */
-
-               result->setupflags |= RESULTFLAG__NEED_DIAMOND;
-            }
-            else if (ss->kind == s_ptpd) {
-               divided_setup_move(ss, parseptrcopy, NULLCALLSPEC, new_final_concepts & ~FINAL__MAGIC,
-                  &map_ptp_magic, phantest_ok, TRUE, result);
-               result->setupflags |= RESULTFLAG__NEED_DIAMOND;      /* See above. */
-            }
-            else
-               fail("Can't do magic concept in this context.");
-         }
-         else if ((check_concepts & ~FINAL__DIAMOND) == FINAL__INTERLOCKED) {
-            if (ss->kind == s_qtag) {
-               divided_setup_move(ss, parseptrcopy, NULLCALLSPEC, new_final_concepts & ~FINAL__INTERLOCKED,
-                  &map_qtg_intlk, phantest_ok, TRUE, result);
-               result->setupflags |= RESULTFLAG__NEED_DIAMOND;      /* See above. */
-            }
-            if (ss->kind == s_ptpd) {
-               divided_setup_move(ss, parseptrcopy, NULLCALLSPEC, new_final_concepts & ~FINAL__INTERLOCKED,
-                  &map_ptp_intlk, phantest_ok, TRUE, result);
-               result->setupflags |= RESULTFLAG__NEED_DIAMOND;      /* See above. */
-            }
-            else
-               fail("Can't do interlocked concept in this context.");
-         }
-         else if ((check_concepts & ~FINAL__DIAMOND) == (FINAL__INTERLOCKED | FINAL__MAGIC)) {
-            if (ss->kind == s_qtag) {
-               divided_setup_move(ss, parseptrcopy, NULLCALLSPEC, new_final_concepts & ~(FINAL__INTERLOCKED | FINAL__MAGIC),
-                     &map_qtg_magic_intlk, phantest_ok, TRUE, result);
-               result->setupflags |= RESULTFLAG__NEED_DIAMOND;      /* See above. */
-            }
-            if (ss->kind == s_ptpd) {
-               divided_setup_move(ss, parseptrcopy, NULLCALLSPEC, new_final_concepts & ~(FINAL__INTERLOCKED | FINAL__MAGIC),
-                     &map_ptp_magic_intlk, phantest_ok, TRUE, result);
-               result->setupflags |= RESULTFLAG__NEED_DIAMOND;      /* See above. */
-            }
-            else
-               fail("Can't do magic interlocked concept in this context.");
-         }
-         else if (check_concepts == FINAL__DIAMOND) {
-            if (ss->kind == sdmd) {
-               divided_setup_move(ss, parseptrcopy, NULLCALLSPEC, new_final_concepts & ~FINAL__DIAMOND,
-                     (*map_lists[s_1x2][1])[MPKIND__DMD_STUFF][0], phantest_ok, TRUE, result);
-            }
-            else if (ss->kind == s_qtag) {
-               /* Divide into diamonds and try again.  (Note that we back up the concept pointer.) */
-               divided_setup_move(ss, parseptr, NULLCALLSPEC, 0,
-                     (*map_lists[sdmd][1])[MPKIND__SPLIT][1], phantest_ok, FALSE, result);
-            }
-            else
-               fail("Must have diamonds for this concept.");
-         }
-         else
-            fail2("Can't do this concept with other concepts preceding it:", parseptrcopy->concept->name);
-      }
-      else {
-         /* There are no "non-final" concepts.  The only concepts are the final ones that
-            have been encoded into new_final_concepts. */
-
-         /* We must read the selector out of the concept list and use it for this call to "move".
-            We are effectively using it as an argument to "move", with all the care that must go
-            into invocations of recursive procedures.  However, at its point of actual use, it
-            must be in a global variable.  Therefore, we explicitly save and restore that
-            global variable (in a dynamic variable local to this instance) rather than passing
-            it as an explicit argument.  By saving it and restoring it in this way, we make
-            things like "checkpoint bounce the beaux by bounce the belles" work. */
-         
-         {
-            selector_kind saved_selector = current_selector;
-   
-            current_selector = parseptrcopy->selector;
-            move(ss, parseptrcopy, parseptrcopy->call, new_final_concepts, qtfudged, result);
-            current_selector = saved_selector;
-         }
-      }
-
-      /* If execution of the call raised a request that we change a concept name from "magic" to
-         "magic diamond,", for example, do so. */
-
-      if (result->setupflags & RESULTFLAG__NEED_DIAMOND) {
-         if (saved_magic_diamond && saved_magic_diamond->concept->value.arg1 == 0) {
-            if (saved_magic_diamond->concept->kind == concept_magic) saved_magic_diamond->concept = &special_magic;
-            else if (saved_magic_diamond->concept->kind == concept_interlocked) saved_magic_diamond->concept = &special_interlocked;
-         }
-      }
-
-      return;
-   }
-   
    /* We have a genuine call.  Presumably all serious concepts have been disposed of
       (that is, nothing interesting will be found in parseptr -- it might be
       useful to check that someday) and we just have the callspec and the final
@@ -1019,6 +878,8 @@ extern void move(
          before the diamond concept can be inherited.  Since that flag is off, it is an error. */
       if (the_schema != schema_by_array)
          fail("Can't do this call with the 'diamond' concept.");
+
+      ss->setupflags |= SETUPFLAG__NO_EXPAND_MATRIX;
 
       switch (ss->kind) {
          case sdmd:
@@ -1083,6 +944,7 @@ extern void move(
    if (ss->setupflags & SETUPFLAG__DOING_ENDS) {
       /* Check for special case of ends doing a call like "detour" which specifically
          allows just the ends part to be done. */
+      ss->setupflags |= SETUPFLAG__NO_EXPAND_MATRIX;
       if ((the_schema == schema_concentric || the_schema == schema_rev_checkpoint) &&
             (dfm_endscando & callspec->stuff.conc.outerdef.modifiers)) {
 
@@ -1116,6 +978,7 @@ extern void move(
       setup into 2x2's that are isolated from each other. */
 
    if (final_concepts & FINAL__SPLIT) {
+      ss->setupflags |= SETUPFLAG__NO_EXPAND_MATRIX;
       if (callspec->callflags & cflag__split_like_square_thru)
          final_concepts = (final_concepts | FINAL__SPLIT_SQUARE_APPROVED) & (~FINAL__SPLIT);
       else if (callspec->callflags & cflag__split_like_dixie_style)
@@ -1136,7 +999,7 @@ extern void move(
       map_thing *split_map;
 
       final_concepts &= ~FINAL__SPLIT;
-      ss->setupflags |= SETUPFLAG__SAID_SPLIT;
+      ss->setupflags |= (SETUPFLAG__SAID_SPLIT | SETUPFLAG__NO_EXPAND_MATRIX);
 
       /* We can't handle the mirroring, so undo it. */
       if (mirror) { mirror_this(ss); mirror = FALSE; }
@@ -1231,6 +1094,9 @@ extern void move(
    
          /* Must be sequential or some form of concentric. */
    
+         /* ***** This probably isn't right -- we should allow expansion on the first part, and then
+            shut it off for later parts. */
+         ss->setupflags |= SETUPFLAG__NO_EXPAND_MATRIX;
          new_final_concepts = final_concepts;
    
          /* We demand that the final concepts that remain be only those in the following list,
@@ -1247,10 +1113,11 @@ extern void move(
          if (HERITABLE_FLAG_MASK & new_final_concepts & (~callspec->callflags)) fail("Can't do this call with this concept.");
 
          if (the_schema == schema_sequential || the_schema == schema_split_sequential) {
-            int current_elongation = ss->setupflags & SETUPFLAG__ELONGATE_MASK;
+            int current_elongation;
             int finalsetupflags = 0;
             int highlimit;
             long_boolean instant_stop;
+            long_boolean first_call = TRUE;
 
             qtf = qtfudged;
 
@@ -1328,6 +1195,9 @@ extern void move(
                }
             }
 
+            current_elongation = ss->setupflags & SETUPFLAG__ELONGATE_MASK;
+            if (ss->kind != s2x2 && ss->kind != s_short6) current_elongation = 0;
+
             /* Did we neglect to do the touch/rear back stuff because fractionalization was enabled?
                If so, now is the time to correct that.  We only do it for the first part. */
 
@@ -1373,6 +1243,8 @@ extern void move(
                   for (j=1; j<=parseptr->number; j++) {
                      tttt = tempsetup;
                      tttt.setupflags = (ss->setupflags & ~(SETUPFLAG__FRACTIONALIZE_MASK | SETUPFLAG__ELONGATE_MASK)) | current_elongation;
+                     if (!first_call) tttt.setupflags |= SETUPFLAG__NO_CHK_ELONG;
+
                      move(&tttt, cp1, call1, conc1, qtf, &tempsetup);
                      finalsetupflags |= tempsetup.setupflags;
                   }
@@ -1382,6 +1254,8 @@ extern void move(
                   for (j=1; j<=parseptr->number-1; j++) {
                      tttt = tempsetup;
                      tttt.setupflags = (ss->setupflags & ~(SETUPFLAG__FRACTIONALIZE_MASK | SETUPFLAG__ELONGATE_MASK)) | current_elongation;
+                     if (!first_call) tttt.setupflags |= SETUPFLAG__NO_CHK_ELONG;
+
                      move(&tttt, cp1, call1, conc1, qtf, &tempsetup);
                      finalsetupflags |= tempsetup.setupflags;
                   }
@@ -1395,6 +1269,8 @@ extern void move(
                   for (j=1; j<=parseptr->number; j++) {
                      tttt = tempsetup;
                      tttt.setupflags = (ss->setupflags & ~(SETUPFLAG__FRACTIONALIZE_MASK | SETUPFLAG__ELONGATE_MASK)) | current_elongation;
+                     if (!first_call) tttt.setupflags |= SETUPFLAG__NO_CHK_ELONG;
+
                      if (j&1)
                         move(&tttt, cp1, call1, conc1, qtf, &tempsetup);
                      else
@@ -1406,10 +1282,11 @@ extern void move(
                else {
                   tttt = *result;
                   tttt.setupflags = (ss->setupflags & ~(SETUPFLAG__FRACTIONALIZE_MASK | SETUPFLAG__ELONGATE_MASK)) | current_elongation;
+                  if (!first_call) tttt.setupflags |= SETUPFLAG__NO_CHK_ELONG;
 
                   if ((dfm_cpls_unless_single & this_mod) && !(new_final_concepts & FINAL__SINGLE)) {
                      tandem_couples_move(&tttt, cp1, call1, conc1,
-                           selector_uninitialized, FALSE, FALSE, 1, &tempsetup);
+                           selector_uninitialized, 0, 0, 0, 1, &tempsetup);
                   }
                   else
                      move(&tttt, cp1, call1, conc1, qtf, &tempsetup);
@@ -1429,10 +1306,10 @@ extern void move(
                         if (tempsetup.people[u].id1 & ROLLBITM) {
                            /* This person is roll-neutral.  Reinstate his original roll info, by
                               searching for him in the starting setup. */
-                           tempsetup.people[u].id1 &= ~ROLLBITS;
+                           tempsetup.people[u].id1 &= ~ROLL_MASK;
                            for (v=0; v<=setup_limits[result->kind]; v++) {
                               if (((tempsetup.people[u].id1 ^ result->people[v].id1) & 0700) == 0)
-                                 tempsetup.people[u].id1 |= (result->people[v].id1 & ROLLBITS);
+                                 tempsetup.people[u].id1 |= (result->people[v].id1 & ROLL_MASK);
                            }
                         }
                      }
@@ -1514,6 +1391,7 @@ extern void move(
                new_final_concepts &= ~(FINAL__SPLIT | FINAL__SPLIT_SQUARE_APPROVED | FINAL__SPLIT_DIXIE_APPROVED);
 
                subcall_index++;
+               first_call = FALSE;
 
                /* If we are being asked to do just one part of a call (from SETUPFLAG__FRACTIONALIZE_MASK),
                   exit now.  Also, see if we just did the last part. */
@@ -1599,8 +1477,218 @@ extern void move(
 
    /* Reflect back if necessary. */
    if (mirror) mirror_this(result);
-
-   norot:
-
    canonicalize_rotation(result);
+}
+
+
+
+/* The current interpretation of the elongation flags, on input and output, is now
+   as follows:
+   
+   Note first that, on input and output, the elongation bits are only meaningful in
+      a 2x2 or short6 setup.
+   On input, nonzero bits in the SETUPFLAG__ELONGATE_MASK with a 2x2 setup mean that
+      the setup _was_ _actually_ _elongated_, and that the elongation is actually felt
+      by the dancers.  In this case, the "move" routine is entitled to raise an error
+      if the 2x2 call is awkward.  For example, a star thru from facing couples is
+      illegal if the elongate bit is on that makes the people far away from the one
+      they are facing.  It follows from this that, if we call concentric star thru,
+      these bits will be cleared before calling "move", since the concentric concept
+      forgives awkward elongation.  Of course, the "concentric_move" routine will
+      remember the actual elongation in order to move people to the correct ending
+      formation.
+   On output, nonzero bits in the RESULTFLAG__ELONGATE_MASK with a 2x2 setup mean that,
+      _if_ _result_ _elongation_ _is_ _required_, this is what it should be.  It does
+      _not_ mean that such elongation actually exists.  Whoever called "move" must
+      make that judgement.  These bits are set when, for example, a 1x4 -> 2x2 call
+      is executed, to indicate how to elongate the result, if it turns out that those
+      people were working around the outside.  This determination is made not just on
+      the "checkpoint rule" that says they go perpendicular to their original axis,
+      but also on the basis of the "parallel_conc_end" flag in the call.  That is, these
+      bits tell which way to go if the call had been "ends do <whatever>".  Of course,
+      if the concentric concept was in use, this information is not used.  Instead,
+      "concentric_move" overrides the bits we return with an absolute "checkpoint rule"
+      application.
+
+   It may well be that the goal described above is not actually implemented correctly.
+*/
+
+
+extern void move(
+   setup *ss,
+   parse_block *parseptr,
+   callspec_block *callspec,
+   final_set final_concepts,
+   long_boolean qtfudged,
+   setup *result)
+
+{
+   parse_block *saved_magic_diamond;
+   final_set new_final_concepts;
+   final_set check_concepts;
+   parse_block *parseptrcopy;
+
+   clear_people(result);
+   result->setupflags = 0;
+
+   if (callspec) {
+      move_with_real_call(ss, parseptr, callspec, final_concepts, qtfudged, result);
+      return;
+   }
+
+   /* Scan the "final" concepts, remembering them and their end point. */
+   last_magic_diamond = 0;
+   parseptrcopy = process_final_concepts(parseptr, TRUE, &new_final_concepts);
+
+   saved_magic_diamond = last_magic_diamond;
+
+   /* See if there were any "non-final" ones present also. */
+
+   new_final_concepts |= final_concepts;         /* Include any old ones we had. */
+
+   /* These are the concepts that we are interested in. */
+
+   check_concepts = new_final_concepts & ~(FINAL__MUST_BE_TAG | FINAL__MUST_BE_SCOOT);
+
+   if (parseptrcopy->concept->kind <= marker_end_of_list) {
+      selector_kind saved_selector = current_selector;
+
+      /* There are no "non-final" concepts.  The only concepts are the final ones that
+         have been encoded into new_final_concepts. */
+
+      /* We must read the selector out of the concept list and use it for this call to "move".
+         We are effectively using it as an argument to "move", with all the care that must go
+         into invocations of recursive procedures.  However, at its point of actual use, it
+         must be in a global variable.  Therefore, we explicitly save and restore that
+         global variable (in a dynamic variable local to this instance) rather than passing
+         it as an explicit argument.  By saving it and restoring it in this way, we make
+         things like "checkpoint bounce the beaux by bounce the belles" work. */
+      
+      current_selector = parseptrcopy->selector;
+      move_with_real_call(ss, parseptrcopy, parseptrcopy->call, new_final_concepts, qtfudged, result);
+      current_selector = saved_selector;
+   }
+   else {
+      /* We now know that there are "non-final" (virtual setup) concepts present. */
+
+
+      if (check_concepts == 0) {
+         /* Look for virtual setup concept that can be done by dispatch from table, with no
+            intervening final concepts. */
+   
+         if (do_big_concept(ss, parseptrcopy, result)) {
+            canonicalize_rotation(result);
+            return;
+         }
+      }
+
+      /* Some final concept (e.g. "magic") is present in front of our virtual setup concept.
+         We have to dispose of it.  This means that expanding the matrix (e.g. 2x4->2x6)
+         and stepping to a wave or rearing back from one are no longer legel. */
+
+      ss->setupflags |= (SETUPFLAG__NO_EXPAND_MATRIX | SETUPFLAG__NO_STEP_TO_WAVE);
+
+      /* There are a few "final" concepts that
+         will not be treated as such if there are non-final concepts occurring
+         after them.  Instead, they will be treated as virtual setup concepts.
+         This is what makes "magic once removed trade" work, for
+         example.  On the other hand, if there are no non-final concepts following, treat these as final.
+         This is what makes "magic transfer" or "split square thru" work. */
+
+      if (check_concepts == FINAL__SPLIT) {
+         map_thing *split_map;
+   
+         ss->setupflags |= SETUPFLAG__SAID_SPLIT;
+
+         if (ss->kind == s2x4) split_map = (*map_lists[s2x2][1])[MPKIND__SPLIT][0];
+         else if (ss->kind == s1x8) split_map = (*map_lists[s1x4][1])[MPKIND__SPLIT][0];
+         else if (ss->kind == s_ptpd) split_map = (*map_lists[sdmd][1])[MPKIND__SPLIT][0];
+         else if (ss->kind == s_qtag) split_map = (*map_lists[sdmd][1])[MPKIND__SPLIT][1];
+         else fail("Can't do split concept in this setup.");
+   
+         divided_setup_move(ss, parseptrcopy, NULLCALLSPEC, new_final_concepts & ~FINAL__SPLIT,
+            split_map, phantest_ok, TRUE, result);
+      }
+      else if ((check_concepts & ~FINAL__DIAMOND) == FINAL__MAGIC) {
+         if (ss->kind == s2x4) {
+            divided_setup_move(ss, parseptrcopy, NULLCALLSPEC, new_final_concepts & ~FINAL__MAGIC,
+               &map_2x4_magic, phantest_ok, TRUE, result);
+         }
+         else if (ss->kind == s_qtag) {
+            divided_setup_move(ss, parseptrcopy, NULLCALLSPEC, new_final_concepts & ~FINAL__MAGIC,
+               &map_qtg_magic, phantest_ok, TRUE, result);
+
+            /* Since more concepts follow the magic and/or interlocked stuff, we can't
+               allow the concept to be just "magic" etc.  We have to change it to
+               "magic diamond, ..."  Otherwise, things could come out sounding like
+               "magic diamond as couples quarter right" when we should really be saying
+               "magic diamond, diamond as couples quarter right".  Therefore, we are going
+               to do something seriously hokey: we are going to change the concept descriptor
+               to one whose name has the extra "diamond" word.  We do this by marking the
+               setupflags word in the result.  The actual hokey stuff will be done presently. */
+
+            result->setupflags |= RESULTFLAG__NEED_DIAMOND;
+         }
+         else if (ss->kind == s_ptpd) {
+            divided_setup_move(ss, parseptrcopy, NULLCALLSPEC, new_final_concepts & ~FINAL__MAGIC,
+               &map_ptp_magic, phantest_ok, TRUE, result);
+            result->setupflags |= RESULTFLAG__NEED_DIAMOND;      /* See above. */
+         }
+         else
+            fail("Can't do magic concept in this context.");
+      }
+      else if ((check_concepts & ~FINAL__DIAMOND) == FINAL__INTERLOCKED) {
+         if (ss->kind == s_qtag) {
+            divided_setup_move(ss, parseptrcopy, NULLCALLSPEC, new_final_concepts & ~FINAL__INTERLOCKED,
+               &map_qtg_intlk, phantest_ok, TRUE, result);
+            result->setupflags |= RESULTFLAG__NEED_DIAMOND;      /* See above. */
+         }
+         if (ss->kind == s_ptpd) {
+            divided_setup_move(ss, parseptrcopy, NULLCALLSPEC, new_final_concepts & ~FINAL__INTERLOCKED,
+               &map_ptp_intlk, phantest_ok, TRUE, result);
+            result->setupflags |= RESULTFLAG__NEED_DIAMOND;      /* See above. */
+         }
+         else
+            fail("Can't do interlocked concept in this context.");
+      }
+      else if ((check_concepts & ~FINAL__DIAMOND) == (FINAL__INTERLOCKED | FINAL__MAGIC)) {
+         if (ss->kind == s_qtag) {
+            divided_setup_move(ss, parseptrcopy, NULLCALLSPEC, new_final_concepts & ~(FINAL__INTERLOCKED | FINAL__MAGIC),
+                  &map_qtg_magic_intlk, phantest_ok, TRUE, result);
+            result->setupflags |= RESULTFLAG__NEED_DIAMOND;      /* See above. */
+         }
+         if (ss->kind == s_ptpd) {
+            divided_setup_move(ss, parseptrcopy, NULLCALLSPEC, new_final_concepts & ~(FINAL__INTERLOCKED | FINAL__MAGIC),
+                  &map_ptp_magic_intlk, phantest_ok, TRUE, result);
+            result->setupflags |= RESULTFLAG__NEED_DIAMOND;      /* See above. */
+         }
+         else
+            fail("Can't do magic interlocked concept in this context.");
+      }
+      else if (check_concepts == FINAL__DIAMOND) {
+         if (ss->kind == sdmd) {
+            divided_setup_move(ss, parseptrcopy, NULLCALLSPEC, new_final_concepts & ~FINAL__DIAMOND,
+                  (*map_lists[s_1x2][1])[MPKIND__DMD_STUFF][0], phantest_ok, TRUE, result);
+         }
+         else if (ss->kind == s_qtag) {
+            /* Divide into diamonds and try again.  (Note that we back up the concept pointer.) */
+            divided_setup_move(ss, parseptr, NULLCALLSPEC, 0,
+                  (*map_lists[sdmd][1])[MPKIND__SPLIT][1], phantest_ok, FALSE, result);
+         }
+         else
+            fail("Must have diamonds for this concept.");
+      }
+      else
+         fail2("Can't do this concept with other concepts preceding it:", parseptrcopy->concept->name);
+   }
+
+   /* If execution of the call raised a request that we change a concept name from "magic" to
+      "magic diamond,", for example, do so. */
+
+   if (result->setupflags & RESULTFLAG__NEED_DIAMOND) {
+      if (saved_magic_diamond && saved_magic_diamond->concept->value.arg1 == 0) {
+         if (saved_magic_diamond->concept->kind == concept_magic) saved_magic_diamond->concept = &special_magic;
+         else if (saved_magic_diamond->concept->kind == concept_interlocked) saved_magic_diamond->concept = &special_interlocked;
+      }
+   }
 }

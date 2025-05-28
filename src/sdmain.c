@@ -19,7 +19,7 @@
     The version of this file is as shown immediately below.  This string
     gets displayed at program startup. */
 
-#define VERSION_STRING "26.0"
+#define VERSION_STRING "27.1"
 
 /* This defines the following functions:
    main
@@ -705,7 +705,7 @@ extern long_boolean query_for_call(void)
    }
    else if (local_reply == ui_concept_select) {
       /* A concept is required.  Its index has been stored in uims_menu_index. */
-      deposit_concept(&concept_descriptor_table[uims_menu_index]);
+      (void) deposit_concept(&concept_descriptor_table[uims_menu_index]);
 
       /* We ignore the value returned by deposit_concept.
          If the user refused to enter a selector, no action is taken. */
@@ -789,7 +789,8 @@ static int mark_aged_calls(
    int kk)
 {
    int r, d, k;
-   int i, j, l, lomask, bits, lm, hibit, sum, remainder;
+   int i, j, l, hibit, sum, remainder;
+   unsigned int lomask, bits, lm;
 
    r = rr;
    d = dd;
@@ -949,7 +950,9 @@ void main(int argc, char *argv[])
    /* Create the top level error handler. */
 
    longjmp_ptr = &longjmp_buffer;          /* point the global pointer at it. */
-   if (error_flag = setjmp(longjmp_buffer.the_buf)) {
+   error_flag = setjmp(longjmp_buffer.the_buf);
+
+   if (error_flag) {
 
       /* The call we were trying to do has failed.  Abort it and display the error message. */
    
@@ -1210,7 +1213,7 @@ void main(int argc, char *argv[])
             
                for (i=0; i<number_of_calls[call_list_any]; i++) {
                   if (main_call_lists[call_list_any][i]->callflags & 0x80000000) {
-                     writestuff(main_call_lists[call_list_any][i]->name);
+                     writestuff(main_call_lists[call_list_any][i]->real_name);
                      writestuff(", ");
                   }
                }
@@ -1374,6 +1377,7 @@ void main(int argc, char *argv[])
 
 
 
+static long_boolean debug_popup = FALSE;
 
 extern void get_real_subcall(
    parse_block *parseptr,
@@ -1524,12 +1528,12 @@ extern void get_real_subcall(
       else if (item->modifiers & dfm_must_be_scoot_call) kind = modify_popup_only_scoot;
       else kind = modify_popup_any;
 
-      if (uims_do_modifier_popup(base_calls[item->call_id]->name, kind)) {
+      if (debug_popup || uims_do_modifier_popup(base_calls[item->call_id]->real_name, kind)) {
          /* User accepted the modification.
             Set up the prompt and get the concepts and call. */
       
          string_copy(&tempstringptr, "REPLACEMENT FOR THE ");
-         string_copy(&tempstringptr, base_calls[item->call_id]->name);
+         string_copy(&tempstringptr, base_calls[item->call_id]->real_name);
          string_copy(&tempstringptr, " --> ");
       }
       else {

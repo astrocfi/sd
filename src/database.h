@@ -16,7 +16,7 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-    This is for version 25. */
+    This is for version 27. */
 
 /* These are written as the first two halfwords of the binary database file.
    The format version is not related to the version of the program or database.
@@ -27,7 +27,7 @@
    database format version. */
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 26
+#define DATABASE_FORMAT_VERSION 29
 
 /* BEWARE!!  This list must track the tables "flagtab" and "nexttab"" in mkcalls.c .
    Because the constants are not defined contiguously, there are spacer items
@@ -136,6 +136,10 @@ typedef enum {
    s2x6,
    s2x8,
    s4x4,
+   s1x10,
+   s1x12,
+   s1x14,
+   s1x16,
    s_c1phan,
    s_bigblob,
    s_ptpd,
@@ -202,8 +206,15 @@ typedef enum {
    b_2x8,
    b_8x2,
    b_4x4,
+   b_1x10,
+   b_10x1,
+   b_1x12,
+   b_12x1,
+   b_1x14,
+   b_14x1,
+   b_1x16,
+   b_16x1,
    b_c1phan,
-   b_pc1phan,
    b_galaxy,
    b_4x6,
    b_6x4,
@@ -265,10 +276,15 @@ typedef enum {
    cr_wave_unless_say_2faced,
    cr_1fl_only,                     /* 1x4 - a 1FL; 2x3 or 2x4 - 1FL's */
    cr_2fl_only,                     /* 1x2 - a couple; 1x4 - a 2FL; 2x4 - 2FL's; 1x8 - a grand 2FL; 2x2 - "1-faced" box; qtag - 2FL in center */
-   cr_couples_only,                 /* 1x2 or 1x4 or 2x2 or 2x4 lines or columns - people are in genuine couples, not miniwaves */
+   cr_3x3_2fl_only,                 /* 1x6 - 3 facing one way, 3 the other */
+   cr_4x4_2fl_only,                 /* 1x8 - 4 facing one way, 4 the other */
+   cr_couples_only,                 /* 1x2 or 1x4 or 2x2 or 2x4 lines, or 2x4 columns - people are in genuine couples, not miniwaves */
+   cr_3x3couples_only,              /* 1x6 lines - each group of 3 people are facing the same way */
+   cr_4x4couples_only,              /* 1x8 lines - each group of 4 people are facing the same way */
    cr_awkward_centers,              /* 1x4 or 1x2 - centers must not have left hands with each other */
    cr_magic_only,                   /* 2x2 - split-trade-circulate type of box; 4x2 - magic column */
-   cr_peelable_box,                 /* 2x2 - box with each person in genuine tandem; 2x4 - ends are such */
+   cr_peelable_box,                 /* 2x2 or 3x2 or 4x2 - all people in each column are facing same way */
+   cr_ends_are_peelable,            /* 2x4 - ends are a box with each person in genuine tandem */
    cr_not_tboned,                   /* 2x2 - people must not be T-boned */
    cr_quarterbox_or_col,            /* 4x2 - acceptable setup for "triple cross" */
    cr_quarterbox_or_magic_col       /* 4x2 - acceptable setup for "make magic" */
@@ -406,3 +422,30 @@ typedef enum {
    take selectors.  The following constant indicates that. */
 #define SELECTOR_PREDS 6
 
+typedef enum {
+   stb_none,
+   stb_z,
+   stb_a,
+   stb_c
+} stability;
+
+/* These define the format of the short int (16 bits, presumably) items emitted
+   for each person in a by-array call definition.  These will get read into the
+   "arr" array of a predptr_pair or the "stuff.def" array of a callarray.
+
+   The format of this item is:
+       stability     roll     where     direction
+         info        info     to go      to face
+        4 bits      3 bits    5 bits      4 bits
+
+   The direction is in the special format
+            north   10 octal
+            south   12 octal
+            east    01 octal
+            west    03 octal
+   that makes procedures "rotcw" etc. work correctly.  The constants
+   d_north, d_south, d_east, d_west in sd.h are just these numbers
+   with the 1000 (octal) bit, which is BIT_PERSON, added. */
+
+#define DBROLL_BIT 0x200
+#define DBSTAB_BIT 0x1000

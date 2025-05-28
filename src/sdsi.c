@@ -50,10 +50,13 @@ and the following external variables:
 */
 
 
+#define _POSIX_SOURCE
+
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>
 #include <time.h>
+#include <unistd.h>
 
 /* We take pity on those poor souls who are compelled to use
     troglodyte development environments. */
@@ -86,7 +89,7 @@ static char fail_message[MAX_ERR_LENGTH];
 static char fail_errstring[MAX_ERR_LENGTH];
 
 
-static char * get_errstring(void)
+static char *get_errstring(void)
 {
 #ifdef sun
    extern int sys_nerr;
@@ -221,7 +224,10 @@ extern void open_file(void)
 
 extern long_boolean probe_file(char filename[])
 {
-   return (TRUE);       /* Can't probe in UNIX. */
+   if (!access(filename, W_OK))
+      return (TRUE);
+   else
+      return (FALSE);
 }
 
 

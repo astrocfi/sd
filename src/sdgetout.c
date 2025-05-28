@@ -16,7 +16,7 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-    This is for version 25. */
+    This is for version 27. */
 
 /* This defines the following functions:
    resolve_p
@@ -753,14 +753,12 @@ extern uims_reply full_resolve(search_kind goal)
    char title[80];
    char junk[80];
    char *titleptr;
-   int current_depth;
-   long_boolean accept_extend;
    int current_resolve_index, max_resolve_index;
    resolve_rec all_resolves[max_resolves];
-   long_boolean find_another_resolve, show_resolve;
-
-   current_depth = 0;
-   find_another_resolve = TRUE;
+   long_boolean show_resolve;
+   long_boolean accept_extend = FALSE;
+   int current_depth = 0;
+   long_boolean find_another_resolve = TRUE;
 
    /* See if we are in a reasonable position to do the search. */
 
@@ -791,7 +789,6 @@ extern uims_reply full_resolve(search_kind goal)
                ((history[history_ptr].state.people[5].id1 & d_mask) == d_north) &&
                ((history[history_ptr].state.people[6].id1 & d_mask) == d_south) &&
                ((history[history_ptr].state.people[7].id1 & d_mask) == d_south)) {
-            accept_extend = FALSE;
             for (j=0; j<8; j++)
                perm_array[j] = history[history_ptr].state.people[promperm[j]].id1 & 0700;
          }

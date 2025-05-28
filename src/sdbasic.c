@@ -16,7 +16,7 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-    This is for version 25. */
+    This is for version 27. */
 
 /* This defines the following functions:
    mirror_this
@@ -30,12 +30,11 @@
 extern void mirror_this(setup *s)
 
 {
-   int l, r, z, i, n;
-   setup temp;
+   unsigned int l, r, z, n, t;
    coordrec *cptr;
-   int x, y, place, limit;
+   int i, x, y, place, limit;
 
-   temp = *s;
+   setup temp = *s;
 
    cptr = nice_setup_coords[s->kind];
    if (!cptr) fail("Don't recognize ending setup for this call; not able to do it mirror.");
@@ -45,16 +44,16 @@ extern void mirror_this(setup *s)
       for (i=0; i<=limit; i++) {
          x = cptr->xca[i];
          y = - cptr->yca[i];
-         place = cptr->numbers[3-(y >> 2)] [(x >> 2)+4];
+         place = cptr->diagram[28 - ((y >> 2) << cptr->xfactor) + (x >> 2)];
 
-         if (place < 0) fail("Don't recognize ending setup for this call, not able to do it mirror.");
-         if ((cptr->xca[place] != x) || (cptr->yca[place] != y))
+         if ((place < 0) || (cptr->xca[place] != x) || (cptr->yca[place] != y))
             fail("Don't recognize ending setup for this call, not able to do it mirror.");
 
          n = temp.people[i].id1;
+         t = (- (n & (STABLE_VBIT*3))) & (STABLE_VBIT*3);
          l = (n & ROLLBITL) >> 2;
          r = (n & ROLLBITR) << 2;
-         z = (n & ~(ROLLBITL | ROLLBITR)) | l | r;
+         z = (n & ~(ROLLBITL | ROLLBITR | (STABLE_VBIT*3))) | l | r | t;
          s->people[place].id1 = (z & 010) ? (z ^ 2) : z;
          s->people[place].id2 = temp.people[i].id2;
       }
@@ -63,16 +62,16 @@ extern void mirror_this(setup *s)
       for (i=0; i<=limit; i++) {
          x = - cptr->xca[i];
          y = cptr->yca[i];
-         place = cptr->numbers[3-(y >> 2)] [(x >> 2)+4];
+         place = cptr->diagram[28 - ((y >> 2) << cptr->xfactor) + (x >> 2)];
 
-         if (place < 0) fail("Don't recognize ending setup for this call, not able to do it mirror.");
-         if ((cptr->xca[place] != x) || (cptr->yca[place] != y))
+         if ((place < 0) || (cptr->xca[place] != x) || (cptr->yca[place] != y))
             fail("Don't recognize ending setup for this call, not able to do it mirror.");
 
          n = temp.people[i].id1;
+         t = (- (n & (STABLE_VBIT*3))) & (STABLE_VBIT*3);
          l = (n & ROLLBITL) >> 2;
          r = (n & ROLLBITR) << 2;
-         z = (n & ~(ROLLBITL | ROLLBITR)) | l | r;
+         z = (n & ~(ROLLBITL | ROLLBITR | (STABLE_VBIT*3))) | l | r | t;
          s->people[place].id1 = (z & 1) ? (z ^ 2) : z;
          s->people[place].id2 = temp.people[i].id2;
       }
@@ -216,6 +215,43 @@ static int fstarhyperh[12] = {0, 0, 0, 1, 0, 0, 2, 0, 0, 3, 0, 0};
 
 
 
+static void do_stability(unsigned int *personp, unsigned int def_word, int turning)
+{
+   int t, at, st, atr;
+
+   t = turning & 3;
+
+   switch ((stability) ((def_word/DBSTAB_BIT) & 0xF)) {
+      case stb_z:
+         if (t != 0)
+            fail("Person turned but was marked 'Z' stability.");
+         break;
+      case stb_a:
+         t -= 4;
+         break;
+      case stb_c:
+         if (t == 0) t = 4;
+         break;
+      default:
+         *personp &= ~STABLE_MASK;
+         break;
+   }
+
+   st = (t < 0) ? -1 : 1;
+   at = t * st;
+   atr = at - ((*personp & (STABLE_RBIT*7)) / STABLE_RBIT);
+
+   if (atr <= 0) {
+      *personp -= at*STABLE_RBIT;
+   }
+   else {
+      *personp =
+         *personp & ~(STABLE_RBIT*7|STABLE_VBIT*3) |
+         ((*personp + (STABLE_VBIT * atr * st)) & (STABLE_VBIT*3));
+   }
+}
+
+
 static void special_4_way_symm(
    callarray *tdef,
    setup *scopy,
@@ -232,7 +268,8 @@ static void special_4_way_symm(
    int begin_size;
    int real_index;
    int real_direction, northified_index;
-   int z, k, zzz, result_size, result_quartersize;
+   unsigned int z;
+   int k, zzz, result_size, result_quartersize;
    int *the_table;
 
    switch (result->kind) {
@@ -272,7 +309,12 @@ static void special_4_way_symm(
          if (the_table) k = the_table[k];
          k = (k + real_direction*result_quartersize) % result_size;
          zzz = (z+real_direction*011) & 013;
-         newpersonlist[real_index].id1 = (this_person.id1 & ~(ROLLBITS | 077)) | zzz | ((z << 14) & ROLLBITS);
+         newpersonlist[real_index].id1 = (this_person.id1 & ~(ROLL_MASK | 077)) | zzz | ((z * (ROLL_BIT/DBROLL_BIT)) & ROLL_MASK);
+
+         if (this_person.id1 & STABLE_ENAB) {
+            do_stability(&newpersonlist[real_index].id1, z, (z + result->rotation));
+         }
+
          newpersonlist[real_index].id2 = this_person.id2;
          newplacelist[real_index] = k;
          *result_mask |= (1 << k);
@@ -294,7 +336,8 @@ static void special_triangle(
 {
    int real_index;
    int real_direction, d2, northified_index;
-   int z, k;
+   unsigned int z;
+   int k;
 
    for (real_index=0; real_index<3; real_index++) {
       personrec this_person = scopy->people[real_index];
@@ -308,7 +351,8 @@ static void special_triangle(
          z = find_calldef((real_direction & 1) ? cdef : ldef, scopy, real_index, real_direction, northified_index);
          k = (((z >> 4) & 017) - d2);
          if (k < 0) k += 6;
-         newpersonlist[real_index].id1 = (this_person.id1 & ~(ROLLBITS | 077)) | ((z + real_direction * 011) & 013) | ((z << 14) & ROLLBITS);
+         newpersonlist[real_index].id1 = (this_person.id1 & ~(ROLL_MASK | 077)) | ((z + real_direction * 011) & 013) | ((z * (ROLL_BIT/DBROLL_BIT)) & ROLL_MASK);
+         newpersonlist[real_index].id1 &= ~STABLE_MASK;   /* For now, can't do fractional stable on this kind of call. */
          newpersonlist[real_index].id2 = this_person.id2;
          newplacelist[real_index] = k;
       }
@@ -341,7 +385,7 @@ extern void basic_move(
    callarray *linedefinition;
    callarray *coldefinition;
    callarray *goodies;
-   unsigned long int z;
+   unsigned int z;
    int real_index, northified_index;
    int num, halfnum, numout, halfnumout;
    int collision_mask, collision_index;
@@ -501,6 +545,8 @@ extern void basic_move(
          /* Now we do a special check for split-square-thru or split-dixie-style types of things. */
          
          if (final_concepts & FINAL__SPLIT_SQUARE_APPROVED) {
+            ss->setupflags |= SETUPFLAG__NO_EXPAND_MATRIX;
+
             /* Find out who are facing each other directly and will therefore start. */
    
             if (((ss->people[2].id1 & d_mask) == d_west) && ((ss->people[3].id1 & d_mask) == d_east))
@@ -542,6 +588,8 @@ extern void basic_move(
 
   /* Now search the association list for an entry matching the setup we have, or else
      divide the setup until we find something. */
+
+   search_for_call_def:
 
    linedefinition = (callarray *) 0;
    coldefinition = (callarray *) 0;
@@ -611,6 +659,7 @@ extern void basic_move(
       if (final_concepts & FINAL__TRIANGLE)
          fail("Triangle concept not allowed here.");
 
+      ss->setupflags |= SETUPFLAG__NO_EXPAND_MATRIX;
       goto do_the_call;
    }
 
@@ -680,7 +729,19 @@ extern void basic_move(
          fail("You must specify a concept.");
       case s2x6:
          /* The call has no applicable 2x6 or 6x2 definition. */
-         /* First, check whether it has 2x3/3x2 definitions, and divide the setup if so,
+
+         /* See if this call has applicable 2x8 definitions and matrix expansion is permitted.
+            If so, that is what we must do. */
+
+         if ((!(newtb & 010) || assoc(b_2x8, ss, calldeflist)) &&
+               (!(newtb & 1) || assoc(b_8x2, ss, calldeflist)) &&
+               !(ss->setupflags & SETUPFLAG__NO_EXPAND_MATRIX)) {
+            do_matrix_expansion(ss, concept_quad_boxes);
+            if (ss->kind != s2x8) fail("Failed to expand to 2X8.");  /* Should never fail, but we don't want a loop. */
+            goto search_for_call_def;        /* And try again. */
+         }
+
+         /* Next, check whether it has 2x3/3x2 definitions, and divide the setup if so,
             and if the call permits it.  This is important for permitting "Z axle" from
             a 2x6 but forbidding "circulate". */
 
@@ -753,6 +814,8 @@ extern void basic_move(
    
          goto divide_us_no_recompute;
       case s2x2:
+         ss->setupflags |= SETUPFLAG__NO_EXPAND_MATRIX;
+
          /* Any 2x2 -> 2x2 call that acts by dividing itself into 1x2's
             is presumed to want the people in each 1x2 to stay near each other.
             We signify that by reverting to the original elongation,
@@ -771,6 +834,8 @@ extern void basic_move(
                But if the call has neither 1x2 nor 2x1 definitions, but does have
                a 1x1 definition, we can do it.  Just divide the setup arbitrarily. */
    
+            long_boolean losing = FALSE;
+
             if (assoc(b_2x1, ss, calldeflist)) {
                if (assoc(b_1x2, ss, calldeflist)) {
                   /* The call has both definitions.  We look at the manner in
@@ -787,12 +852,19 @@ extern void basic_move(
                   goto divide_us_no_recompute;
                }
                else
-                  fail("People are not working with each other in a consistent way.");
+                  losing = TRUE;
             }
             else if (assoc(b_1x2, ss, calldeflist))
-               fail("People are not working with each other in a consistent way.");
+               losing = TRUE;
             else if (assoc(b_1x1, ss, calldeflist))
                goto divide_us_no_recompute;
+
+            if (losing) {
+               if (ss->setupflags & SETUPFLAG__PHANTOMS)
+                  fail("Sorry, should have people do their own part, but don't know how.");
+               else
+                  fail("People are not working with each other in a consistent way.");
+            }
          }
          else {
             /* People are not T-boned.  Check for a 2x1 or 1x2 definition.
@@ -802,6 +874,7 @@ extern void basic_move(
                inconsistent with our decision. */
 
             unsigned long int elong = 0;
+            unsigned long int foo;
 
             if (assoc(b_2x1, ss, calldeflist)) {
                elong |= (2 -  (newtb & 1));
@@ -818,20 +891,22 @@ extern void basic_move(
                   goto divide_us_no_recompute;
             }
             else {
-               /* It's too bad switch statements can't take constants in their case values. */
-               unsigned long int foo = (ss->setupflags | ~(elong*SETUPFLAG__ELONGATE_BIT)) & SETUPFLAG__ELONGATE_MASK;
+               elong *= SETUPFLAG__ELONGATE_BIT;
+               foo = (ss->setupflags | ~elong) & SETUPFLAG__ELONGATE_MASK;
 
-               if (foo == (2*SETUPFLAG__ELONGATE_BIT))
-                  goto divide_us_no_recompute;
-               else if (foo == (1*SETUPFLAG__ELONGATE_BIT)) {
-                  division_maps = &map_2x2v;
-                  goto divide_us_no_recompute;
-               }
-               else if (foo == 0) {
+               if (foo == 0) {
                   fail("Can't figure out who should be working with whom.");
                }
-               else
-                  fail("People are too far away to work with each other on this call.");
+               else if (foo == SETUPFLAG__ELONGATE_MASK) {
+                  if (!(ss->setupflags & SETUPFLAG__NO_CHK_ELONG))
+                     fail("People are too far away to work with each other on this call.");
+                  foo ^= elong;
+               }
+
+               if (foo == (1*SETUPFLAG__ELONGATE_BIT))
+                  division_maps = &map_2x2v;
+
+               goto divide_us_no_recompute;
             }
          }
 
@@ -845,9 +920,20 @@ extern void basic_move(
          if (final_concepts & (FINAL__SPLIT_SQUARE_APPROVED | FINAL__SPLIT_DIXIE_APPROVED))
             goto divide_us_no_recompute;
    
+         /* See if this call has applicable 2x6 or 2x8 definitions and matrix expansion is permitted.
+            If so, that is what we must do. */
+
+         if ((!(newtb & 010) || assoc(b_2x6, ss, calldeflist) || assoc(b_2x8, ss, calldeflist)) &&
+               (!(newtb & 1) || assoc(b_6x2, ss, calldeflist) || assoc(b_8x2, ss, calldeflist)) &&
+               !(ss->setupflags & SETUPFLAG__NO_EXPAND_MATRIX)) {
+            do_matrix_expansion(ss, concept_triple_boxes);
+            if (ss->kind != s2x6) fail("Failed to expand to 2X6.");  /* Should never fail, but we don't want a loop. */
+            goto search_for_call_def;        /* And try again. */
+         }
+
          /* See if this call has applicable 1x4 or 4x1 definitions, in which case split it that way. */
       
-         else if ((!(newtb & 010) || assoc(b_1x4, ss, calldeflist)) &&
+         if ((!(newtb & 010) || assoc(b_1x4, ss, calldeflist)) &&
                (!(newtb & 1) || assoc(b_4x1, ss, calldeflist))) {
             division_maps = (*map_lists[s1x4][1])[MPKIND__SPLIT][1];
             goto divide_us_no_recompute;
@@ -857,10 +943,15 @@ extern void basic_move(
             
          else if (assoc(b_2x2, ss, calldeflist)) goto divide_us_no_recompute;
    
-         /* See if this call has applicable 1x2 or 2x1 definitions, (but not 2x2), in non-T-boned setup.
-            If so, split into boxes. */
+         /* See if this call has applicable 1x2 or 2x1 definitions, (but not 2x2), in a non-T-boned setup.
+            If so, split into boxes.  Also, if some phantom concept has been used and there are 1x2 or 2x1
+            definitions, we also split it into boxes even if people are T-boned.  This is what makes
+            everyone do their part if we say "heads into the middle and heads are standard in split phantom
+            lines, partner trade". */
    
-         else if (((newtb & 011) != 011) && (assoc(b_1x2, ss, calldeflist) || assoc(b_2x1, ss, calldeflist)))
+         else if (     (((newtb & 011) != 011) || (ss->setupflags & SETUPFLAG__PHANTOMS))
+                                                  &&
+                       (assoc(b_1x2, ss, calldeflist) || assoc(b_2x1, ss, calldeflist)))
             goto divide_us_no_recompute;
       
          /* If we are T-boned and have 1x2 or 2x1 definitions, we need to be careful. */
@@ -1012,6 +1103,7 @@ extern void basic_move(
             sss.kind = s_qtag;
             sss.rotation = ss->rotation;
             sss.setupflags = ss->setupflags | SETUPFLAG__DISTORTED;
+            ss->setupflags |= SETUPFLAG__NO_EXPAND_MATRIX;
             move(&sss, parseptr, callspec, final_concepts, really_fudged, result);
          }
 
@@ -1173,6 +1265,12 @@ extern void basic_move(
             goto divide_us_no_recompute;
          }
          break;
+      case sdmd:
+         if (assoc(b_1x1, ss, calldeflist)) {
+            division_maps = &map_dmd_1x1;
+            goto divide_us_no_recompute;
+         }
+         break;
       case s1x8:
          /* See if the call has a 1x4, 4x1, 1x2, 2x1, or 1x1 definition, in which case split it and do each part. */
          
@@ -1208,6 +1306,8 @@ extern void basic_move(
    /* We are about to do the call by array! */
 
    do_the_call:
+
+   ss->setupflags |= SETUPFLAG__NO_EXPAND_MATRIX;
 
    funny = final_concepts & FINAL__FUNNY;
    inconsistent_rotation = 0;
@@ -1366,7 +1466,7 @@ extern void basic_move(
                   if (k & ~i & 2)
                      goto ldef_failed;
                   break;
-               case cr_peelable_box:
+               case cr_ends_are_peelable:
                   /* check for ends in a "peelable" (everyone in genuine tandem somehow) box */
                   q1 = 0; q0 = 0; q5 = 0; q4 = 0;
                   if (t = ss->people[0].id1) { q1 |= t; q0 |= (t^2); }
@@ -1466,6 +1566,63 @@ extern void basic_move(
                   if (t = ss->people[6].id1) { k |=  t; i &=  t; }
                   if (t = ss->people[7].id1) { k |=  t; i &=  t; }
                   if (k & ~i & 2)
+                     goto ldef_failed;
+                  break;
+               case cr_4x4_2fl_only:
+                  k = 0;         /* check for 4x4 two-faced line -- 4 up and 4 down */
+                  i = 2;
+                  if (t = ss->people[0].id1) { k |=  t; i &=  t; }
+                  if (t = ss->people[1].id1) { k |=  t; i &=  t; }
+                  if (t = ss->people[2].id1) { k |=  t; i &=  t; }
+                  if (t = ss->people[3].id1) { k |=  t; i &=  t; }
+                  if (t = ss->people[4].id1) { k |= ~t; i &= ~t; }
+                  if (t = ss->people[5].id1) { k |= ~t; i &= ~t; }
+                  if (t = ss->people[6].id1) { k |= ~t; i &= ~t; }
+                  if (t = ss->people[7].id1) { k |= ~t; i &= ~t; }
+                  if (k & ~i & 2)
+                     goto ldef_failed;
+                  break;
+               case cr_4x4couples_only:
+                  /* check for each four people facing same way */
+                  q0 = 0; q1 = 0; q2 = 0; q3 = 0;
+                  if (t = ss->people[0].id1) { q0 |= t; q1 |= ~t; }
+                  if (t = ss->people[1].id1) { q0 |= t; q1 |= ~t; }
+                  if (t = ss->people[2].id1) { q0 |= t; q1 |= ~t; }
+                  if (t = ss->people[3].id1) { q0 |= t; q1 |= ~t; }
+                  if (t = ss->people[4].id1) { q2 |= t; q3 |= ~t; }
+                  if (t = ss->people[5].id1) { q2 |= t; q3 |= ~t; }
+                  if (t = ss->people[6].id1) { q2 |= t; q3 |= ~t; }
+                  if (t = ss->people[7].id1) { q2 |= t; q3 |= ~t; }
+                  if (((q0&q1&2)) || ((q2&q3&2)))
+                     goto ldef_failed;
+                  break;
+            }
+            break;
+         case s_1x6:
+            switch (ldef->restriction) {
+               case cr_3x3_2fl_only:
+                  k = 0;         /* check for 3x3 two-faced line -- 3 up and 3 down */
+                  i = 2;
+                  if (t = ss->people[0].id1) { k |=  t; i &=  t; }
+                  if (t = ss->people[1].id1) { k |=  t; i &=  t; }
+                  if (t = ss->people[2].id1) { k |=  t; i &=  t; }
+                  if (t = ss->people[3].id1) { k |= ~t; i &= ~t; }
+                  if (t = ss->people[4].id1) { k |= ~t; i &= ~t; }
+                  if (t = ss->people[5].id1) { k |= ~t; i &= ~t; }
+                  if (k & ~i & 2)
+                     goto ldef_failed;
+                  break;
+               case cr_3x3couples_only:
+                  /* check for each three people facing same way */
+                  /* check for everyone as a couple */
+                  q0 = 0; q1 = 0; q2 = 0; q3 = 0;
+                  if (t = ss->people[0].id1) { q0 |= t; q1 |= ~t; }
+                  if (t = ss->people[1].id1) { q0 |= t; q1 |= ~t; }
+                  if (t = ss->people[2].id1) { q0 |= t; q1 |= ~t; }
+                  if (t = ss->people[3].id1) { q2 |= t; q3 |= ~t; }
+                  if (t = ss->people[4].id1) { q2 |= t; q3 |= ~t; }
+                  if (t = ss->people[5].id1) { q2 |= t; q3 |= ~t; }
+                  if (((q0&q1&2)) || ((q2&q3&2)))
                      goto ldef_failed;
                   break;
             }
@@ -1649,6 +1806,21 @@ extern void basic_move(
                       ((q5&3) && (q4&3)))
                      goto cdef_failed;
                   break;
+               case cr_peelable_box:
+                  /* check for a "peelable" 2x4 column */
+                  q2 = 3; q3 = 3;
+                  q7 = 3; q6 = 3;
+                  if (t = ss->people[0].id1) { q2 &= t; q3 &= (t^2); }
+                  if (t = ss->people[1].id1) { q2 &= t; q3 &= (t^2); }
+                  if (t = ss->people[2].id1) { q2 &= t; q3 &= (t^2); }
+                  if (t = ss->people[3].id1) { q2 &= t; q3 &= (t^2); }
+                  if (t = ss->people[4].id1) { q7 &= t; q6 &= (t^2); }
+                  if (t = ss->people[5].id1) { q7 &= t; q6 &= (t^2); }
+                  if (t = ss->people[6].id1) { q7 &= t; q6 &= (t^2); }
+                  if (t = ss->people[7].id1) { q7 &= t; q6 &= (t^2); }
+                  if ((((~q2)&3) && ((~q3)&3)) || (((~q7)&3) && ((~q6)&3)))
+                     goto cdef_failed;
+                  break;
                case cr_quarterbox_or_col:
                   k = 0;         /* check for a reasonable "triple cross" setup */
                   i = 2;
@@ -1691,6 +1863,19 @@ extern void basic_move(
                   if (ss->people[4].id1) { k |= ~ss->people[4].id1; i &= ~ss->people[4].id1; }
                   if (ss->people[5].id1) { k |= ~ss->people[5].id1; i &= ~ss->people[5].id1; }
                   if (k & ~i & 2)
+                     goto cdef_failed;
+                  break;
+               case cr_peelable_box:
+                  /* check for a "peelable" 2x3 column */
+                  q2 = 3; q3 = 3;
+                  q7 = 3; q6 = 3;
+                  if (t = ss->people[0].id1) { q2 &= t; q3 &= (t^2); }
+                  if (t = ss->people[1].id1) { q2 &= t; q3 &= (t^2); }
+                  if (t = ss->people[2].id1) { q2 &= t; q3 &= (t^2); }
+                  if (t = ss->people[3].id1) { q7 &= t; q6 &= (t^2); }
+                  if (t = ss->people[4].id1) { q7 &= t; q6 &= (t^2); }
+                  if (t = ss->people[5].id1) { q7 &= t; q6 &= (t^2); }
+                  if ((((~q2)&3) && ((~q3)&3)) || (((~q7)&3) && ((~q6)&3)))
                      goto cdef_failed;
                   break;
             }
@@ -1758,7 +1943,8 @@ extern void basic_move(
             z = find_calldef((real_direction & 1) ? cdef : ldef, ss, real_index, real_direction, northified_index);
             k = ((z >> 4) & 017) ^ (d2 >> 1);
             install_person(&p1, k, ss, real_index);
-            p1.people[k].id1 = (p1.people[k].id1 & ~(ROLLBITS | 077)) | ((z + real_direction * 011) & 013) | ((z << 14) & ROLLBITS);
+            p1.people[k].id1 = (p1.people[k].id1 & ~(ROLL_MASK | 077)) | ((z + real_direction * 011) & 013) | ((z * (ROLL_BIT/DBROLL_BIT)) & ROLL_MASK);
+            p1.people[k].id1 &= ~STABLE_MASK;   /* For now, can't do fractional stable on this kind of call. */
          }
       }
    
@@ -1865,7 +2051,12 @@ extern void basic_move(
                final_direction = real_direction;
                /* Line people are going into wrong rotation. */
                if (!(real_direction & 1)) final_direction = (final_direction + rotfudge) & 3;
-               newpersonlist[real_index].id1 = (this_person.id1 & ~(ROLLBITS | 077)) | ((z + final_direction * 011) & 013) | ((z << 14) & ROLLBITS);
+               newpersonlist[real_index].id1 = (this_person.id1 & ~(ROLL_MASK | 077)) | ((z + final_direction * 011) & 013) | ((z * (ROLL_BIT/DBROLL_BIT)) & ROLL_MASK);
+
+               if (this_person.id1 & STABLE_ENAB) {
+                  do_stability(&newpersonlist[real_index].id1, z, (z + final_direction - real_direction + result->rotation));
+               }
+
                newpersonlist[real_index].id2 = this_person.id2;
                kt = ((real_direction & 1) ? final_translatec : final_translatel) [k];
                newplacelist[real_index] = kt;
@@ -2020,9 +2211,9 @@ extern void basic_move(
                   if (k == real_index) goto funny_win;
                } while (k != j);
 
-               /* This person can't move, because he moves into a loop not conaining his starting point. */
+               /* This person can't move, because he moves into a loop not containing his starting point. */
                k = real_index;
-               newperson.id1 = (ss->people[real_index].id1 & ~ROLLBITS) | ROLLBITM;
+               newperson.id1 = (ss->people[real_index].id1 & ~ROLL_MASK) | ROLLBITM;
                newperson.id2 = ss->people[real_index].id2;
                result->people[k] = newperson;
                newpersonlist[k].id1 = -1;

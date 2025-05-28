@@ -1,3 +1,86 @@
+		    RELEASE NOTES FOR VERSION 26.0
+       Database version = 25.3, format = 26, X11 UI version 1.10.
+
+The beginnings of some user documentation has been written!!!
+See the file sd_doc.txi .
+
+Interlocked phantom box <--> line/column <--> diamond shape-changers
+are implemented.
+
+It is much more robust in the presence of phantoms for calls that have
+star turns and centers cast 3/4 while the ends move up, such as chain
+reaction and relay the top.
+
+The fix to make spin chain thru illegal from lines back-to-back, alleged
+in version 24, was finally done correctly.
+
+Concepts that are illegal for the level are not used during "resolve"
+or "do anything" operations.  The levels of concepts have been updated.
+
+It now has a tiny glimmer of intelligence about what concepts not
+to waste time with during "do anything" and "resolve" operations.
+This glimmer is currently only noticeable at levels up through A2.
+
+All the concentricity/elongation stuff has been completely reworked.
+Again.  Sorry.  This should really work this time.  I think.  It can
+now do "ENDS leads latch on" correctly from lines back-to-back and
+"ENDS quarter right" correctly from a quarter-tag.
+
+The built-in limits on total number of calls (previously 1000) and tagged
+calls (previously 350) have been greatly improved.  There is no limit on
+the total number of calls, and the built-in limit on the number of tagged
+calls now exists only in the "mkcalls" program, and has been greatly
+increased.  All memory allocation in sd itself is completely dynamic,
+based on information that mkcalls encodes into the database file.
+
+A bug was fixed that could lead to memory access violation if 40
+concepts of the type that take two calls (e.g. checkpoint or centers
+do this while ends do that) were nested.  Such a situation could
+never lead to a legal call tree, and would not likely be entered
+manually, but the resolver could in some cases (probability ~ 10**-25)
+try to do such a thing.  (The bug was actually observed during stress
+testing.)
+
+A bug in the use of "longjmp" was fixed, that made the resolver not work
+correctly when optimized on HP-UX, and perhaps other systems as well.
+
+Flip the line and cross flip the line, and fractions thereof, are now legal
+only from waves and two-faced lines, respectively.  Cross flip the line
+is now the "CROSS" variation of flip the line, instead of being a separate
+call.  The program will move the word "cross" into the correct place in the
+call name.  Cross invert the column was changed in the same way.
+
+Lockit is now legal from diamonds.
+Counter rotate now works from 2x6, 2x8, 3x4, 4x4, and C1 phantom setups.
+There are still some setups that it can't be done from.
+
+The call "circulate" is now in the database in lower case.  It had previously
+been in upper case to make it easier to find when window systems other
+than X11 were used.
+
+To get vertical dixie style, etc., select vertical [single file dixie style].
+
+New calls: Zag zig, By golly, vertical <anything>, vertical turn and deal,
+8 roll away with a half sashay.  The latter is a C4 call and is normally done
+from a miniwave.  The mainstream call "roll away" is now legal only from a
+couple.  The calls "wave the beaux" and "wave the belles" have been changed
+to "wave the <anyone>".  Clear out is now done correctly.
+
+Box the gnat was added.  It is equivalent to touch 1/2.  This is,
+of course, not really right.  Don't call box the gnat followed by
+hinge.
+
+
+			User Interface Changes
+
+The call menu has a title over it saying which menu you are looking at.
+
+Mouse button 3 no longer does Undo by default.  It made the program
+too unfriendly for novices.  The README file explains how to get this
+behavior back.
+
+===============================================================================
+
 		    RELEASE NOTES FOR VERSION 24.1
        Database version = 24.0, format = 24, X11 UI version 1.9.
 

@@ -754,7 +754,7 @@ extern void do_concept_callrigger(
    move(&a2, parseptr->next, NULLCALLSPEC, 0, FALSE, &z[1]);
    result->setupflags = z[0].setupflags | z[1].setupflags;
 
-   if (fix_n_results(2, z));
+   if (fix_n_results(2, z))
       fail("There are no wings???");
 
    if (z[0].kind != rig_map->end_kind) fail("Can't figure out result of rigging call.");
