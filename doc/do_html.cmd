@@ -21,6 +21,7 @@ REM call make_text sample.html html.msg
 REM call make_text appnote1.html html.msg
 REM call make_text appnote2.html html.msg
 REM call make_text appnote3.html html.msg
+REM call make_text appnote4.html html.msg
 REM echo cd sessions>> html.msg
 REM call make_text sessions.html html.msg
 REM call make_text sessions_toc.html html.msg
@@ -42,5 +43,6 @@ REM REM               public_html/sd/relnotes98.html
 REM REM               public_html/sd/appnote1.html
 REM REM               public_html/sd/appnote2.html
 REM REM               public_html/sd/appnote3.html
+REM REM               public_html/sd/appnote4.html
 REM REM               public_html/sd/sessions/sessions.html
 REM REM               public_html/sd/sessions/sessions_toc.html

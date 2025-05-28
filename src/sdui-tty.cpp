@@ -38,6 +38,7 @@
 
    iofull::display_help
    iofull::help_manual
+   iofull::help_faq
    iofull::final_initialize
 
 and the following other variables:
@@ -94,8 +95,8 @@ int main(int argc, char *argv[])
 {
    // In Sdtty, the defaults are reverse video (white-on-black) and pastel colors.
 
-   ui_options.reverse_video = 1;
-   ui_options.pastel_color = 1;
+   ui_options.reverse_video = true;
+   ui_options.pastel_color = true;
 
    // Initialize all the callbacks that sdlib will need.
    iofull ggg;
@@ -655,7 +656,7 @@ static bool get_user_input(char *prompt, int which)
          match_counter = match_lines-1; /* last line used for "--More--" prompt */
          showing_has_stopped = false;
          (void) match_user_input(which, true, c == '?', false);
-         put_line("\n");     /* Write a blank line. */
+         put_line("\n");     // Write a blank line.
          current_text_line++;
          put_line(user_input_prompt);   /* Redisplay the current line. */
          put_line(user_input);
@@ -1049,11 +1050,10 @@ popup_return iofull::do_getout_popup(char dest[])
 
 static int confirm(char *question)
 {
-   int c;
-
    for (;;) {
       put_line(question);
-      c = get_char();
+      put_line(" ");
+      char c = get_char();
       if ((c=='n') || (c=='N')) {
          put_line("no\n");
          current_text_line++;
@@ -1067,7 +1067,7 @@ static int confirm(char *question)
          return POPUP_ACCEPT;
       }
 
-      if (c < 128) put_char(c);
+      if (c >= 0) put_char(c);
 
       if (ui_options.diagnostic_mode) {
          (void) fputs("\nParsing error during diagnostic.\n", stdout);
@@ -1082,55 +1082,21 @@ static int confirm(char *question)
    }
 }
 
-int iofull::do_write_anyway_popup()
+int iofull::yesnoconfirm(char * /*title*/, char *line1, char *line2, bool /*excl*/, bool /*info*/)
 {
-    put_line("This sequence is not resolved.\n");
-    current_text_line++;
-    return confirm("Do you want to write it anyway? ");
-}
+   if (line1) {
+      put_line(line1);
+      put_line("\n");
+      current_text_line++;
+   }
 
-int iofull::do_delete_clipboard_popup()
-{
-    put_line("There are calls in the clipboard.\n");
-    current_text_line++;
-    return confirm("Do you want to delete all of them? ");
+   return confirm(line2);
 }
 
 int iofull::do_abort_popup()
 {
-    put_line("The current sequence will be aborted.\n");
-    current_text_line++;
-    return confirm("Do you really want to abort it? ");
-}
-
-int iofull::do_session_init_popup()
-{
-    put_line("You already have a session file.\n");
-    current_text_line++;
-    return confirm("Do you really want to delete it and start over? ");
-}
-
-int iofull::do_modifier_popup(Cstring callname, modify_popup_kind kind)
-{
-    char *line_format = "Internal error: unknown modifier kind.\n";
-    char tempstuff[200];
-
-    switch (kind) {
-        case modify_popup_any:
-            line_format = "The \"%s\" can be replaced.\n";
-            break;
-        case modify_popup_only_tag:
-            line_format = "The \"%s\" can be replaced with a tagging call.\n";
-            break;
-        case modify_popup_only_circ:
-            line_format = "The \"%s\" can be replaced with a modified circulate-like call.\n";
-            break;
-    }
-
-    sprintf(tempstuff, line_format, callname);
-    put_line(tempstuff);
-    current_text_line++;
-    return confirm("Do you want to replace it? ");
+   return yesnoconfirm("Confirmation", "The current sequence will be aborted.",
+                       "Do you really want to abort it?", true, false);
 }
 
 void iofull::update_resolve_menu(command_kind goal, int cur, int max,

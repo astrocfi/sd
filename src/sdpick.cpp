@@ -151,9 +151,9 @@ selector_kind do_selector_iteration(bool allow_iteration)
       j = (int) selector_centers;
    }
    else {
-      /* We don't generate unsymmetrical selectors when searching.  It generates
-         too many "couple #3 u-turn-back" calls. */
-      j = generate_random_number(unsymm_selector_start-1)+1;
+      // We don't generate unsymmetrical selectors when searching.  It generates
+      // too many "couple #3 u-turn-back" calls.
+      j = generate_random_number(unsymm_SELECTOR_START-1)+1;
    }
 
    hash_nonrandom_number(j-1);

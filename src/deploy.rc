@@ -7,7 +7,14 @@
 //
 // Generated from the TEXTINCLUDE 2 resource.
 //
-#include "afxres.h"
+//     ************** Warning!  Micro$oft Developer Studio deletes this
+//     next line.  It deletes this comment, too.  Therefore, if you *must*
+//     use Developer Studio on this file, repair the damage.  We include
+//     winresrc.h instead of winres.h because MingW needs it that way.
+//     And MingW, unlike Micro$oft, seems to know what they're doing.
+//
+
+#include "winresrc.h"
 
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS

@@ -66,8 +66,10 @@ char *file_list[] = {
    "Edit sd.ini.lnk",
    "Sd manual.lnk",
    "Release Notes.lnk",
+   "Faq.lnk",
    "sd_doc.html",
    "relnotes.html",
+   "faq.html",
    "sample1.ini",
    "sample2.ini",
    "sample3.ini",
@@ -93,6 +95,7 @@ char *shortcut_list[] = {
    "Edit sd.ini.lnk",
    "Sd manual.lnk",
    "Release Notes.lnk",
+   "Faq.lnk",
    (char *) 0};
 
 void do_install(HWND hwnd)
@@ -110,7 +113,6 @@ void do_install(HWND hwnd)
       lstrcat(szStringBuf, *file_ptr);
 
       if (!CopyFile(*file_ptr, szStringBuf, false)) {
-         int foo = GetLastError();
          lstrcpy(szStringBuf, "ERROR!!  Can't copy file   ");
          lstrcat(szStringBuf, *file_ptr);
          lstrcat(szStringBuf, "\nThe installation has failed.");
@@ -173,7 +175,6 @@ void do_install(HWND hwnd)
       lstrcat(szSecondBuf, *file_ptr);
 
       if (!CopyFile(*file_ptr, szSecondBuf, false)) {
-         int foo = GetLastError();
          lstrcpy(szStringBuf, "ERROR!!  Can't copy file   ");
          lstrcat(szStringBuf, *file_ptr);
          lstrcat(szStringBuf, "\nThe installation has failed.");

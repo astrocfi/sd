@@ -633,7 +633,7 @@ void matcher_initialize()
 
       selector_hash_list[0] = bucket;
 
-      for (i=1; i<selector_enum_extent; i++) {
+      for (i=1; i<selector_ENUM_EXTENT; i++) {
          if (!get_hash(selector_list[i].name, &bucket)) {
             char errbuf[255];
             sprintf(errbuf, "Can't hash selector %d - 1!", i);
@@ -1742,7 +1742,7 @@ static void match_wildcard(
          if (current_result->match.call_conc_options.who == selector_uninitialized) {
             selector_kind save_who = current_result->match.call_conc_options.who;
 
-            for (i=1; i<selector_enum_extent; i++) {
+            for (i=1; i<selector_ENUM_EXTENT; i++) {
                current_result->match.call_conc_options.who = (selector_kind) i;
                match_suffix_2(user,
                               (key == '6') ? selector_list[i].name : selector_list[i].sing_name,
@@ -2262,7 +2262,7 @@ static void search_menu(uims_reply kind)
       else if (static_call_menu == match_selectors) {
          menu = selector_menu_list;
          // Menu is shorter than it appears, because we are skipping first item.
-         menu_length = selector_enum_extent-1;
+         menu_length = selector_ENUM_EXTENT-1;
       }
       else if (static_call_menu == match_startup_commands) {
          kind = ui_start_select;

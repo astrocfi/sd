@@ -46,7 +46,7 @@ Then choose the poster child.  Do "do_index <number>".
                BUILDING THE DOCUMENTATION
 
 It is important that this be done before "new_binary" is run, because
-the manual is now wrapped into the binary distribution file.
+the manual and faq files are now wrapped into the binary distribution file.
 
 LOG OUT OF THE NETWORK ACCOUNT!!!!!   LOG IN IN THE LOCAL DOMAIN!!!!
 
@@ -88,19 +88,42 @@ Go to sddoc directory and do:
 -----------------------------------------------------------------
 
                TESTING AND PRODUCTION BUILD - MSVC++
+   Don't do this for production release versions!  As of version 35,
+   use "mingw", below.
 
-    Set project configuration to "sdtty release", "sd release", "deploy release",
-    and "mkcalls release", issuing "build / rebuild all" in each case.
+   Set project configuration to "sdtty release", "sd release", "deploy release",
+   and "mkcalls release", issuing "build / rebuild all" in each case.
 
    mkcalls
    // Do regression test if desired.
    // Be sure to test resolver:
-   // sdtty c4 -resolve_test_minutes 60   (or whatever)
+   // sdtty c4 -resolve_test 60   (or whatever)
    // Then perform a resolve.  Also do "heads start" and "pick random call".
    // Can do it on two processors with different arguments to get different
    // deterministic random numbers.
    cd ..\sddoc
    new_binary     (this depends on all documentation, binaries, and database)
+   do_pack        (this depends on all of the above)
+
+-----------------------------------------------------------------
+
+               TESTING AND PRODUCTION BUILD - MINGW
+
+   In directory sd:
+   setmingw
+   mingw clean
+   mingw all
+   mingw cleanup   // optional: remove .o files etc. after building
+
+   // Do regression test if desired.
+   // Be sure to test resolver:
+   // sdtty c4 -resolve_test 60   (or whatever)
+   // Then perform a resolve.  Also do "heads start" and "pick random call".
+   // Can do it on two processors with different arguments to get different
+   // deterministic random numbers.
+   cd ..\sddoc
+   new_binary     (this depends on all documentation, binaries, and database)
+   del foo*       // be sure not to upload junk
    do_pack        (this depends on all of the above)
 
 -----------------------------------------------------------------
@@ -120,7 +143,9 @@ Copy these files onto a zip disk:
 
 -----------------------------------------------------------------
 
-               PRODUCTION BUILD - Linux
+               PRODUCTION BUILD AND TESTING - Linux
+
+This assumes that a normal zip file (e.g. r_v348.zip) exists in the sd directory.
 
 windows> cd sd
 windows> del *~
@@ -130,20 +155,27 @@ windows> ftp atlas
             (pass=x464pq)
 windows> bin
 windows> put linuxsource.tar.gz
+windows> put r_XXXXX.zip r.zip   (whatever the zip name is.  Just leave it as r.zip after this point.)
 windows> quit
 windows> telnet atlas
             (user=wba)
             (pass=x464pq)
    atlas> scp linuxsource.tar.gz wba@goblin.jaws.umn.edu:linuxsource.tar.gz
             (pass=wba;sd)
+   atlas> scp r.zip wba@goblin.jaws.umn.edu:r.zip
+            (pass=wba;sd)
    atlas> ssh goblin.jaws.umn.edu
             (pass=wba;sd)
-      goblin> # Check that "sd" directory does not exist.
+      goblin> # Check that the "sd" directory does not exist.
+      goblin> # Check that the "regress" directory does not exist.
       goblin> gzip -d linuxsource.tar.gz
       goblin> tar xovf linuxsource.tar
       goblin> cd sd
       goblin> make -f makefile.linux
-          ## One might want to perform the regression test (below) at this point.
+      goblin> cp sdtty ..
+      goblin> cp mkcalls ..
+      goblin> cp sd_calls.txt ..
+      goblin> cp sd_calls.dat ..
       goblin> rm *.o *.c *.h *.cpp *.a
       goblin> rm *cache
       goblin> rm sample*
@@ -152,47 +184,26 @@ windows> telnet atlas
       goblin> ls -l
           ## Only the files mkcalls, sd_calls.dat, sd_calls.txt, and sdtty should exist.
       goblin> cd ..
-      goblin> rm linux.tar
-      goblin> rm linux.tar.gz
-      goblin> tar cvf linux.tar sd
-      goblin> gzip linux.tar
-      goblin> cp sd/* .
-      goblin> rm sd/*
-      goblin> rmdir sd
-          ## One might want to perform the regression test (below) at this point.
-      goblin> scp linux.tar.gz ackerman@scotch.ics.uci.edu:linux.tar.gz
-            (pass=12b0z0s)
-      goblin> exit
-   atlas> exit
-windows> exit
-
------------------------------------------------------------------
-
-               TESTING - Linux
-
-This assumes that a normal zip file (e.g. r_v348.zip) exists in the sd directory,
-and that a runnable copy of sdtty is on goblin, left from the previous step.
-
-windows> cd sd
-windows> ftp atlas
-            (user=wba)
-            (pass=x464pq)
-windows> bin
-windows> put r_v348.zip r.zip    (or whatever the zip name is.  Just leave it as r.zip after this point.)
-windows> quit
-windows> telnet atlas
-            (user=wba)
-            (pass=x464pq)
-   atlas> scp r.zip wba@goblin.jaws.umn.edu:r.zip
-            (pass=wba;sd)
-   atlas> ssh goblin.jaws.umn.edu
-            (pass=wba;sd)
-      goblin> # Check that the "regress" directory exists and is empty.
+      goblin> mkdir regress
       goblin> cd regress
       goblin> ../unzip -a ../r.zip
       goblin> chmod 777 *.sh
       goblin> ./doit.sh
       goblin> rm *
+      goblin> cd ..
+      goblin> rmdir regress
+      goblin> rm r.zip
+      goblin> rm linuxsource.tar
+      goblin> rm linux.tar
+      goblin> rm linux.tar.gz
+      goblin> ls -l
+          ## Only the files mkcalls, sd_calls.dat, sd_calls.txt, sdtty, and zip stuff should exist.
+      goblin> tar cvf linux.tar sd
+      goblin> gzip linux.tar
+      goblin> rm sd/*
+      goblin> rmdir sd
+      goblin> scp linux.tar.gz ackerman@scotch.ics.uci.edu:linux.tar.gz
+            (pass=12b0z0s)
       goblin> exit
    atlas> exit
 windows> exit
@@ -262,6 +273,7 @@ sample          *
 download-pc     *
 index           *
 intro           *
+faq             *
 sessions_toc    *
 sd_doc*         *
 

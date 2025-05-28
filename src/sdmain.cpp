@@ -21,7 +21,7 @@
     General Public License if you distribute the file.
 */
 
-#define VERSION_STRING "34.81"
+#define VERSION_STRING "35.0"
 #define TIME_STAMP "wba@alum.mit.edu  11 Oct 2003 $"
 
 /* This defines the following functions:
@@ -171,6 +171,7 @@ command_list_menu_item command_menu[] = {
    {"create 3/4 line",                command_create_3qline, ID_COMMAND_CREATE_3QLINE},
    {"create any 1/4 tag",             command_create_any_qtag, ID_COMMAND_CREATE_ANY_QTAG},
    {"help manual",                    command_help_manual, ID_HELP_SDHELP},
+   {"help questions",                 command_help_faq, ID_HELP_FAQ},
    {(Cstring) 0}};
 
 resolve_list_menu_item resolve_menu[] = {
@@ -874,19 +875,19 @@ extern bool query_for_call()
 
 
 ui_option_type::ui_option_type() :
-   no_graphics(0),
-   no_intensify(0),
-   reverse_video(0),
-   pastel_color(0),
    color_scheme(color_by_gender),
-   no_sound(0),
    force_session(-1000000),
    sequence_num_override(-1),
+   no_graphics(0),
+   no_intensify(false),
+   reverse_video(false),
+   pastel_color(false),
    singlespace_mode(false),
    nowarn_mode(false),
    keep_all_pictures(false),
    accept_single_click(false),
    diagnostic_mode(false),
+   no_sound(false),
    resolve_test_minutes(0),
    singing_call_mode(0),
    use_escapes_for_drawing_people(0),

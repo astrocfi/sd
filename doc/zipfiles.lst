@@ -13,8 +13,10 @@
 "..\sd\Edit sd.ini.lnk"
 "..\sd\Sd manual.lnk"
 "..\sd\Release Notes.lnk"
+..\sd\Faq.lnk
 sd_doc.html
 relnotes.html
+faq.html
 sample1.ini
 sample2.ini
 sample3.ini

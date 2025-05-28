@@ -140,7 +140,8 @@ BEGIN
     POPUP "&Help"
     BEGIN
         MENUITEM "Help &Manual",                ID_HELP_SDHELP
-        MENUITEM "&About Sd",                   ID_FILE_ABOUTSD
+        MENUITEM "Frequently Asked &Questions", ID_HELP_FAQ
+        MENUITEM "&About Sd",                   ID_HELP_ABOUTSD
     END
 END
 
@@ -186,7 +187,7 @@ BEGIN
                     IDC_STATIC,43,9,159,8
     CTEXT           "This program may be freely distributed.",IDC_STATIC,43,
                     19,159,8
-    CTEXT           "SD Version 34.81:   Copyright © 1990-2003 All rights reserved.",
+    CTEXT           "SD Version 35.0:   Copyright © 1990-2003 All rights reserved.",
                     IDC_STATIC,13,32,199,8
     CTEXT           "William B. Ackerman and Stephen Gildea",IDC_STATIC,47,
                     42,130,8
@@ -306,8 +307,9 @@ BEGIN
     ID_FILE_CHOOSE_FONT     "Customize the font that will be used later if you print the file."
     ID_FILE_PRINTTHIS       "Print the file you have been working on."
     ID_FILE_PRINTFILE       "Print any other file."
-    ID_FILE_ABOUTSD         "Display program information and copyright."
     ID_HELP_SDHELP          "Browse the Sd manual, in html format, using your selected browser."
+    ID_HELP_FAQ             "Browse the Frequently Asked Questions file, in html format, using your selected browser."
+    ID_HELP_ABOUTSD         "Display program information and copyright."
     ID_FILE_EXIT            "Exit from the program."
     ID_COMMAND_UNDO         "Undo last call or concept, or exit from current search."
     ID_COMMAND_ABORTTHISSEQUENCE 

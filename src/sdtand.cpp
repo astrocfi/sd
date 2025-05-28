@@ -826,8 +826,8 @@ extern void tandem_couples_move(
    setup *result) THROW_DECL
 {
    if (ss->cmd.cmd_misc2_flags & CMD_MISC2__DO_NOT_EXECUTE) {
-      result->result_flags = 0;
       result->kind = nothing;
+      clear_result_flags(result);
       return;
    }
 
@@ -1206,8 +1206,8 @@ extern void tandem_couples_move(
    current_options.who = saved_selector;
 
    if (!allmask) {
-      result->result_flags = 0;
       result->kind = nothing;
+      clear_result_flags(result);
       return;
    }
 
@@ -1619,8 +1619,8 @@ extern void tandem_couples_move(
             for (i=0 ; i<12 ; i++) swap_people(result, i, i+12);
          }
          else if (ss->kind == s1x4 && result->kind == s2x2) {
-            result->result_flags &= ~3;
-            result->result_flags |= (ss->rotation & 1) + 1;
+            result->result_flags.misc &= ~3;
+            result->result_flags.misc |= (ss->rotation & 1) + 1;
          }
 
          return;

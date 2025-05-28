@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-2002  William B. Ackerman.
+    Copyright (C) 1990-2003  William B. Ackerman.
 
     This file is unpublished and contains trade secrets.  It is
     to be used by permission only and not to be disclosed to third
@@ -1464,7 +1464,7 @@ static bool handle_3x4_division(
    sss.cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
    move(&sss, really_fudged, result);
    ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
-   result->result_flags &= ~RESULTFLAG__SPLIT_AXIS_FIELDMASK;
+   result->result_flags.clear_split_info();
    return false;
 }
 
@@ -1594,13 +1594,9 @@ static bool handle_4x4_division(
       case 0xE1E1:
          division_code = spcmap_4x4_spec5;
          return true;
-      case 0xA3A3: finalrot++;
-      case 0x3A3A:
-         division_code = spcmap_4x4_spec6;
-         return true;
-      case 0x5C5C: finalrot++;
-      case 0xC5C5:
-         division_code = spcmap_4x4_spec7;
+      case 0xA3A3: case 0x5C5C: finalrot++;
+      case 0x3A3A: case 0xC5C5:
+         division_code = MAPCODE(s1x4,4,MPKIND__SPLIT,1);
          return true;
       case 0x7171:
          division_code = spcmap_4x4_ns;
@@ -1794,6 +1790,7 @@ static bool handle_4x6_division(
    if (!(ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX)) {
       switch (livemask) {
       case 0xC03C03: case 0x0F00F0:
+         // We are in "clumps".  See if we can do the call in 2x2 or smaller setups.
          forbid_little_stuff =
             !(ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK) &&
             (assoc(b_2x4, ss, calldeflist) ||
@@ -1803,7 +1800,6 @@ static bool handle_4x6_division(
              assoc(b_qtag, ss, calldeflist) ||
              assoc(b_pqtag, ss, calldeflist));
 
-         // We are in "clumps".  See if we can do the call in 2x2 or smaller setups.
          if (forbid_little_stuff ||
              (!assoc(b_2x2, ss, calldeflist) &&
               !assoc(b_1x2, ss, calldeflist) &&
@@ -1814,12 +1810,32 @@ static bool handle_4x6_division(
          // This will do.
          division_code = MAPCODE(s2x4,3,MPKIND__SPLIT,1);
          return true;
+      case 0xA05A05: case 0x168168:
+         // We are in "offset stairsteps".  See if we can do the call in 1x2 or smaller setups.
+         forbid_little_stuff =
+            !(ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK) &&
+            (assoc(b_2x4, ss, calldeflist) ||
+             assoc(b_4x2, ss, calldeflist) ||
+             assoc(b_dmd, ss, calldeflist) ||
+             assoc(b_pmd, ss, calldeflist) ||
+             assoc(b_qtag, ss, calldeflist) ||
+             assoc(b_pqtag, ss, calldeflist));
+
+         if (forbid_little_stuff ||
+             (!assoc(b_1x2, ss, calldeflist) &&
+              !assoc(b_2x1, ss, calldeflist) &&
+              !assoc(b_1x1, ss, calldeflist)))
+            fail("Don't know how to do this call in this setup.");
+         if (!matrix_aware) warn(warn__each1x2);
+         // This will do.
+         division_code = MAPCODE(s1x4,6,MPKIND__SPLIT,1);
+         return true;
       case 0x1D01D0: case 0xE02E02:
+         // We are in "diamond clumps".  See if we can do the call in diamonds.
          forbid_little_stuff =
             !(ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK) &&
             (assoc(b_2x4, ss, calldeflist) || assoc(b_4x2, ss, calldeflist));
 
-         // We are in "diamond clumps".  See if we can do the call in diamonds.
          if (forbid_little_stuff ||
              (!assoc(b_dmd, ss, calldeflist) &&
               !assoc(b_pmd, ss, calldeflist)))
@@ -1962,8 +1978,7 @@ static int divide_the_setup(
    int *desired_elongation_p,
    setup *result) THROW_DECL
 {
-   int i, j;
-   uint32 livemask;
+   int i;
    callarray *have_1x2, *have_2x1;
    uint32 division_code = ~0UL;
    uint32 newtb = *newtb_p;
@@ -1981,10 +1996,7 @@ static int divide_the_setup(
       ss->cmd.cmd_final_flags.test_heritbits(INHERITFLAG_NXNMASK|INHERITFLAG_MXNMASK);
 
    // It will be helpful to have a mask of where the live people are.
-
-   for (i=0, j=1, livemask = 0; i<=attr::slimit(ss); i++, j<<=1) {
-      if (ss->people[i].id1) livemask |= j;
-   }
+   uint32 livemask = little_endian_live_mask(ss);
 
    // Take care of "snag" and "mystic".  "Central" is illegal, and was already caught.
    // We first limit it to just the few setups for which it can possibly be legal, to make
@@ -2886,8 +2898,8 @@ static int divide_the_setup(
          sss.cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
          move(&sss, true, result);
          ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
-         result->result_flags &= ~RESULTFLAG__SPLIT_AXIS_FIELDMASK;
-         result->result_flags |= RESULTFLAG__DID_SHORT6_2X3;
+         result->result_flags.clear_split_info();
+         result->result_flags.misc |= RESULTFLAG__DID_SHORT6_2X3;
          return 1;
       }
 
@@ -2970,8 +2982,8 @@ static int divide_the_setup(
          final_concepts.clear_finalbits(FINAL__TRIANGLE|FINAL__LEADTRIANGLE);
          ss->cmd.cmd_final_flags = final_concepts;
          divided_setup_move(ss, division_code, phantest_ok, false, result);
-         result->result_flags |= RESULTFLAG__DID_TGL_EXPANSION;
-         result->result_flags &= ~RESULTFLAG__SPLIT_AXIS_FIELDMASK;
+         result->result_flags.misc |= RESULTFLAG__DID_TGL_EXPANSION;
+         result->result_flags.clear_split_info();
          return 1;
       }
       break;
@@ -3386,7 +3398,7 @@ static int divide_the_setup(
    if (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK)
       fail("Can't split the setup.");
 
-   result->result_flags &= ~RESULTFLAG__SPLIT_AXIS_FIELDMASK;
+   result->result_flags.clear_split_info();
    return 0;    // We did nothing.  An error will presumably result.
 
    divide_us_no_recompute:
@@ -3415,7 +3427,7 @@ static int divide_the_setup(
       immediately, not just at the top level, though we can't think of a concrete example
       in which it makes a difference. */
 
-   if (result->result_flags & RESULTFLAG__EXPAND_TO_2X3) {
+   if (result->result_flags.misc & RESULTFLAG__EXPAND_TO_2X3) {
       if (result->kind == s2x6) {
          if (!(result->people[2].id1 | result->people[3].id1 |
                result->people[8].id1 | result->people[9].id1)) {
@@ -3427,7 +3439,7 @@ static int divide_the_setup(
             // "punt_centers_use_concept" will know what to do.
             if (!(result->people[0].id1 | result->people[5].id1 |
                   result->people[6].id1 | result->people[11].id1))
-               result->result_flags &= ~RESULTFLAG__EXPAND_TO_2X3;
+               result->result_flags.misc &= ~RESULTFLAG__EXPAND_TO_2X3;
 
             static const expand::thing inner_2x6 = {
                {0, 1, 4, 5, 6, 7, 10, 11}, 8, s2x4, s2x6, 0};
@@ -3479,7 +3491,7 @@ static int divide_the_setup(
             static const expand::thing inner_rig = {
                {6, 7, -1, 2, 3, -1}, 6, s1x6, s_rigger, 0};
             expand::compress_setup(&inner_rig, result);
-            result->result_flags &= ~RESULTFLAG__EXPAND_TO_2X3;
+            result->result_flags.misc &= ~RESULTFLAG__EXPAND_TO_2X3;
          }
       }
       else if (result->kind == s4x6) {
@@ -3510,21 +3522,21 @@ static int divide_the_setup(
          }
       }
       else if (result->kind == s3x6 &&
-               ((int) (result->result_flags & RESULTFLAG__SPLIT_AXIS_FIELDMASK)) == 
-               ((result->rotation & 1) ?
-                RESULTFLAG__SPLIT_AXIS_YBIT :
-                RESULTFLAG__SPLIT_AXIS_XBIT)) {
-         /* These were offset 2x3's. */
-         if (!(result->people[2].id1 | result->people[3].id1 | result->people[8].id1 | result->people[11].id1 | result->people[12].id1 | result->people[17].id1)) {
-            /* Inner spots are empty. */
+               result->result_flags.split_info[result->rotation & 1] == 1 &&
+               result->result_flags.split_info[(result->rotation ^ 1) & 1] == 0) {
+         // These were offset 2x3's.
+         if (!(result->people[2].id1 | result->people[3].id1 | result->people[8].id1 |
+               result->people[11].id1 | result->people[12].id1 | result->people[17].id1)) {
+            // Inner spots are empty.
             setup temp = *result;
             static const veryshort inner_3x6[12] = {0, 1, 4, 5, 6, 7, 9, 10, 13, 14, 15, 16};
    
             gather(result, &temp, inner_3x6, 11, 0);
             result->kind = s3x4;
          }
-         else if (!(result->people[0].id1 | result->people[5].id1 | result->people[6].id1 | result->people[9].id1 | result->people[14].id1 | result->people[15].id1)) {
-            /* Outer spots are empty. */
+         else if (!(result->people[0].id1 | result->people[5].id1 | result->people[6].id1 |
+                    result->people[9].id1 | result->people[14].id1 | result->people[15].id1)) {
+            // Outer spots are empty.
             setup temp = *result;
             static const veryshort outer_3x6[12] = {1, 2, 3, 4, 7, 8, 10, 11, 12, 13, 16, 17};
    
@@ -3668,7 +3680,7 @@ extern void basic_move(
    int inconsistent_rotation, inconsistent_setup;
    bool four_way_startsetup;
    uint32 newtb = tbonetest;
-   uint32 resultflags = 0;
+   uint32 resultflagsmisc = 0;
    int desired_elongation = 0;
    bool funny_ok1 = false;
    bool funny_ok2 = false;
@@ -3688,7 +3700,7 @@ extern void basic_move(
    // (1) We want it to be zero in case we bail out.
    // (2) we want the RESULTFLAG__SPLIT_AXIS_MASK stuff to be clear
    //     for the normal case, and have bits only if splitting actually occurs.
-   result->result_flags = 0;
+   clear_result_flags(result);
 
    if (ss->cmd.cmd_misc2_flags & CMD_MISC2__DO_NOT_EXECUTE) {
       result->kind = nothing;
@@ -4347,7 +4359,7 @@ foobar:
 
    if ((coldefinition && (coldefinition->callarray_flags & CAF__PLUSEIGHTH_ROTATION)) ||
        (linedefinition && (linedefinition->callarray_flags & CAF__PLUSEIGHTH_ROTATION)))
-      result->result_flags |= RESULTFLAG__PLUSEIGHTH_ROT;
+      result->result_flags.misc |= RESULTFLAG__PLUSEIGHTH_ROT;
 
    if ((callspec->callflags1 & CFLAG1_PARALLEL_CONC_END) ||
        (coldefinition && (coldefinition->callarray_flags & CAF__OTHER_ELONGATE)) ||
@@ -4517,8 +4529,8 @@ foobar:
          (void) copy_person(&outer_inners[0], k, &p1, k+4);
       }
 
-      outer_inners[0].result_flags = 0;
-      outer_inners[1].result_flags = 0;
+      clear_result_flags(&outer_inners[0]);
+      clear_result_flags(&outer_inners[1]);
       outer_inners[0].kind = (setup_kind) goodies->end_setup_out;
       outer_inners[1].kind = (setup_kind) goodies->end_setup_in;
       outer_inners[0].rotation = (goodies->callarray_flags & CAF__ROT_OUT) ? 1 : 0;
@@ -5272,7 +5284,7 @@ foobar:
             // Flag the result setup so that the appropriate phantom-squashing
             // will take place if two of these results are placed end-to-end.
             // We also do this if a 3x3 pair the line went to a 2x5.
-            resultflags |= RESULTFLAG__EXPAND_TO_2X3;
+            resultflagsmisc |= RESULTFLAG__EXPAND_TO_2X3;
             break;
          case s3x4:
             if (ss->kind == s1x4) {
@@ -5303,7 +5315,7 @@ foobar:
                   rotator = 3;
                }
 
-               resultflags |= RESULTFLAG__EXPAND_TO_2X3;
+               resultflagsmisc |= RESULTFLAG__EXPAND_TO_2X3;
             }
             break;
          }
@@ -5425,8 +5437,8 @@ foobar:
    // We take out any elongation info that divided_setup_move may have put in
    // and override it with the correct info.
 
-   result->result_flags =
-      (result->result_flags & (~3)) |
-      resultflags |
+   result->result_flags.misc =
+      (result->result_flags.misc & (~3)) |
+      resultflagsmisc |
       (desired_elongation & 3);
 }

@@ -193,17 +193,10 @@ extern void reinstate_rotation(setup *ss, setup *result) THROW_DECL
          break;
    }
 
-   // If we turned by 90 degress, and the "split axis" bits are 01 or 10,
-   // we have to to swap those bits.
+   // If we turned by 90 degrees, we have to to swap the "split_info" fields.
 
-   if (globalrotation & 1) {
-      uint32 xbits = result->result_flags & RESULTFLAG__SPLIT_AXIS_XMASK;
-      uint32 ybits = result->result_flags & RESULTFLAG__SPLIT_AXIS_YMASK;
-
-      result->result_flags &= ~RESULTFLAG__SPLIT_AXIS_FIELDMASK;
-      result->result_flags |= xbits << RESULTFLAG__SPLIT_AXIS_SEPARATION;
-      result->result_flags |= ybits >> RESULTFLAG__SPLIT_AXIS_SEPARATION;
-   }
+   if (globalrotation & 1)
+      result->result_flags.swap_fields();
 
    canonicalize_rotation(result);
 }
@@ -257,7 +250,7 @@ extern bool divide_for_magic(
    warning_info saved_warnings;
    int i;
    uint32 division_code;
-   uint32 resflags = 0;
+   uint32 resflagsmisc = 0;
    uint32 directions;
    uint32 livemask;
 
@@ -301,7 +294,7 @@ extern bool divide_for_magic(
    case s_qtag:
       // Indicate that we have done a diamond division
       // and the concept name needs to be changed.
-      resflags = RESULTFLAG__NEED_DIAMOND;
+      resflagsmisc = RESULTFLAG__NEED_DIAMOND;
 
       if (heritflags_to_check == INHERITFLAG_MAGIC) {
          division_code = MAPCODE(sdmd,2,MPKIND__MAGICDMD,1);
@@ -322,7 +315,7 @@ extern bool divide_for_magic(
       }
       break;
    case s_ptpd:
-      resflags = RESULTFLAG__NEED_DIAMOND;
+      resflagsmisc = RESULTFLAG__NEED_DIAMOND;
 
       if (heritflags_to_check == INHERITFLAG_MAGIC) {
          division_code = spcmap_ptp_magic;
@@ -564,7 +557,7 @@ extern bool divide_for_magic(
       to one whose name has the extra "diamond" word.  We do this by marking the
       setupflags word in the result. */
 
-   result->result_flags |= resflags;
+   result->result_flags.misc |= resflagsmisc;
    return true;
 
  do_3x3:
@@ -615,11 +608,11 @@ extern bool divide_for_magic(
       else if (livemask == 05252) expand::compress_setup(&expl31, result);
       else if (livemask == 02727) {
          expand::compress_setup(&expg27, result);
-         result->result_flags |= RESULTFLAG__VERY_ENDS_ODD;
+         result->result_flags.misc |= RESULTFLAG__VERY_ENDS_ODD;
       }
       else if (livemask == 07272) {
          expand::compress_setup(&expg72, result);
-         result->result_flags |= RESULTFLAG__VERY_CTRS_ODD;
+         result->result_flags.misc |= RESULTFLAG__VERY_CTRS_ODD;
       }
       else if (livemask == 03535) expand::compress_setup(&expg35, result);
       else if (livemask == 05656) expand::compress_setup(&expg56, result);
@@ -719,8 +712,8 @@ extern bool do_simple_split(
 
    The result_flags are carried from one part to another through the "result_flags"
    word of the setup, even though (or especially because) that word is undefined
-   prior to doing a call.  The client must seed that word with RESULTFLAG__SPLIT_AXIS_FIELDMASK
-   (or whatever other bits are desired) prior to the beginning of the series, and not
+   prior to doing a call.  The client must seed that word with a huge "split_info"
+   field (plus whatever "misc" bits are desired) prior to the beginning of the series, and not
    clobber it between parts.  At the end of the series, it will contain all the required
    result flags for the whole operation, including the final elongation.
 
@@ -738,12 +731,12 @@ extern void do_call_in_series(
    bool qtfudged) THROW_DECL
 {
    uint32 current_elongation = 0;
-   uint32 saved_result_flags = sss->result_flags;
+   resultflag_rec saved_result_flags = sss->result_flags;
 
    // Start the execution mechanism, but only if we are really
    // doing a call.
    if (sss->cmd.callspec)
-      sss->cmd.prior_expire_bits |= sss->result_flags & RESULTFLAG__EXPIRATION_BITS;
+      sss->cmd.prior_expire_bits |= sss->result_flags.misc & RESULTFLAG__EXPIRATION_BITS;
 
    setup qqqq = *sss;
 
@@ -767,17 +760,16 @@ extern void do_call_in_series(
       one field being zero and the other nonzero), we continue to split
       along the same axis. */
 
+    // We want one field nonzero and the other zero.
+
    if ((qqqq.cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK) &&
        !dont_enforce_consistent_split &&
-       (saved_result_flags & RESULTFLAG__SPLIT_AXIS_FIELDMASK) &&    /* at least one field
-                                                                        is nonzero */
-       (!(saved_result_flags & RESULTFLAG__SPLIT_AXIS_XMASK) ||   /* but one field or
-                                                                     the other is zero */
-        !(saved_result_flags & RESULTFLAG__SPLIT_AXIS_YMASK))) {
+       (saved_result_flags.split_info[0] | saved_result_flags.split_info[1]) != 0 &&
+       (saved_result_flags.split_info[0] * saved_result_flags.split_info[1]) == 0) {
       int prefer_1x4;
       uint32 save_split = qqqq.cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK;
 
-      if (saved_result_flags & RESULTFLAG__SPLIT_AXIS_XMASK)
+      if (saved_result_flags.split_info[0])
          prefer_1x4 = qqqq.rotation & 1;
       else
          prefer_1x4 = (~qqqq.rotation) & 1;
@@ -798,7 +790,7 @@ extern void do_call_in_series(
    if (tempsetup.kind == s2x2) {
       switch (sss->kind) {
          case s1x4: case sdmd: case s2x2:
-            current_elongation = tempsetup.result_flags & 3;
+            current_elongation = tempsetup.result_flags.misc & 3;
 
             /* If just the ends were doing this, and it had some
                "force_lines" type of directive, honor same. */
@@ -930,7 +922,7 @@ extern void do_call_in_series(
          *  The RESULTFLAG__PART_COMPLETION_BITS bits:
             Set to the result of the part we just did -- discard incoming values.
 
-         *  The RESULTFLAG__SPLIT_AXIS_FIELDMASK bits:
+         *  The "split_info" field:
             Set to the AND of the incoming values and what we just got --
             this has the effect of correctly keeping track of the splitting through all
             parts of the call.  Actually, it's a little more complicated than this,
@@ -950,25 +942,23 @@ extern void do_call_in_series(
             this is believed to be the correct way to accumulate these bits.
 
       It follows from this that the correct way to "seed" the result_flags word
-      at the start of a series is by initializing it to RESULTFLAG__SPLIT_AXIS_FIELDMASK. */
+      at the start of a series is by initializing it to a huge split_info field. */
 
-   sss->result_flags = ((saved_result_flags &
-                         ~(RESULTFLAG__PART_COMPLETION_BITS|RESULTFLAG__PLUSEIGHTH_ROT)) |
-                         tempsetup.result_flags);
+   sss->result_flags = saved_result_flags;
 
-   sss->result_flags &= ~(3|RESULTFLAG__SPLIT_AXIS_FIELDMASK);
+   sss->result_flags.misc &= ~(RESULTFLAG__PART_COMPLETION_BITS|RESULTFLAG__PLUSEIGHTH_ROT);
+   sss->result_flags.misc |= tempsetup.result_flags.misc;
+   sss->result_flags.misc &= ~3;
 
-   if (sss->result_flags & saved_result_flags & RESULTFLAG__PLUSEIGHTH_ROT) {
-      sss->result_flags &= ~RESULTFLAG__PLUSEIGHTH_ROT;
+   if (sss->result_flags.misc & saved_result_flags.misc & RESULTFLAG__PLUSEIGHTH_ROT) {
+      sss->result_flags.misc &= ~RESULTFLAG__PLUSEIGHTH_ROT;
       sss->rotation++;
    }
    else
-      sss->result_flags |= saved_result_flags & RESULTFLAG__PLUSEIGHTH_ROT;
+      sss->result_flags.misc |= saved_result_flags.misc & RESULTFLAG__PLUSEIGHTH_ROT;
 
-   sss->result_flags |= current_elongation;
-
-   sss->result_flags |=
-      (tempsetup.result_flags & RESULTFLAG__SPLIT_AXIS_FIELDMASK);
+   sss->result_flags.misc |= current_elongation;
+   sss->result_flags.copy_split_info(tempsetup.result_flags);
 
    canonicalize_rotation(sss);
    minimize_splitting_info(sss, saved_result_flags);
@@ -1523,24 +1513,23 @@ static void matrixmove(
          fail("Can't split the setup.");
    }
    else
-      /* This call split the setup in every possible way. */
-      result->result_flags |= RESULTFLAG__SPLIT_AXIS_FIELDMASK;
+      // This call split the setup in every possible way.
+      result->result_flags.maximize_split_info();
 
    finish_matrix_call(matrix_info, nump, true, false, &people, result);
    reinstate_rotation(ss, result);
+   clear_result_flags(result);
 
-   /* If the call just kept a 2x2 in place, and they were the outsides, make
-      sure that the elongation is preserved. */
+   // If the call just kept a 2x2 in place, and they were the outsides, make
+   // sure that the elongation is preserved.
 
    switch (ss->kind) {
    case s2x2: case s_short6:
-      result->result_flags = ss->cmd.prior_elongation_bits & 3;
+      result->result_flags.misc |= ss->cmd.prior_elongation_bits & 3;
       break;
    case s1x2: case s1x4: case sdmd:
-      result->result_flags = 2 - (ss->rotation & 1);
+      result->result_flags.misc |= 2 - (ss->rotation & 1);
       break;
-   default:
-      result->result_flags = 0;
    }
 }
 
@@ -2020,7 +2009,7 @@ static void partner_matrixmove(
       }
    }
 
-   result->result_flags = 0;
+   clear_result_flags(result);
 }
 
 
@@ -2211,7 +2200,7 @@ extern void drag_someone_and_move(setup *ss, parse_block *parseptr, setup *resul
    ss->rotation += result->rotation;
    finish_matrix_call(second_matrix_info, final_2nd_nump, true, false, &second_people, result);
    reinstate_rotation(ss, result);
-   result->result_flags = 0;
+   clear_result_flags(result);
 }
 
 
@@ -2222,15 +2211,16 @@ extern void anchor_someone_and_move(
    setup *result)  THROW_DECL
 {
    setup people;
+   const int MAX_GROUPS = 12;
    matrix_rec before_matrix_info[9];
    matrix_rec after_matrix_info[9];
    int i, j, k, nump, numgroups;
-   int deltax[4], deltay[4];
+   int deltax[MAX_GROUPS], deltay[MAX_GROUPS];
    selector_kind saved_selector = current_options.who;
    setup saved_start_people = *ss;
-   int Bindex[4];
-   int Aindex[4];
-   int Eindex[4];
+   int Bindex[MAX_GROUPS];
+   int Aindex[MAX_GROUPS];
+   int Eindex[MAX_GROUPS];
 
    current_options.who = parseptr->options.who;
 
@@ -2240,7 +2230,7 @@ extern void anchor_someone_and_move(
    if (ss->cmd.cmd_misc_flags & CMD_MISC__DISTORTED)
       fail("This call not allowed in distorted or virtual setup.");
 
-   for (i=0 ; i<4 ; i++) { Eindex[i] = Bindex[i] = Aindex[i] = -1; }
+   for (i=0 ; i<MAX_GROUPS ; i++) { Eindex[i] = Bindex[i] = Aindex[i] = -1; }
 
    ss->rotation = 0;
 
@@ -2248,7 +2238,11 @@ extern void anchor_someone_and_move(
        ss->kind != s1x8 &&
        ss->kind != s2x3 &&
        ss->kind != s2x6 &&
+       ss->kind != s2x8 &&
+       ss->kind != s2x12 &&
        ss->kind != s3x4 &&
+       ss->kind != s4x4 &&
+       ss->kind != s4x6 &&
        ss->kind != s_qtag &&
        ss->kind != s_ptpd)
       fail("Sorry, can't do this in this setup.");
@@ -2260,30 +2254,91 @@ extern void anchor_someone_and_move(
    current_options.who = saved_selector;
 
    for (i=0 ; i<nump ; i++) {
-      switch (result->result_flags & RESULTFLAG__SPLIT_AXIS_FIELDMASK) {
-      case RESULTFLAG__SPLIT_AXIS_XBIT:
+      int x = before_matrix_info[i].x;
+      int y = before_matrix_info[i].y;
+
+      // Look at both fields simultaneously.
+
+      switch ((result->result_flags.split_info[1] << 4) | result->result_flags.split_info[0]) {
+      case 1:    // Single split on X.
          numgroups = 2;
-         if (before_matrix_info[i].x < 0) j = 0;
+         if (x < 0) j = 0;
          else j = 1;
          break;
-      case RESULTFLAG__SPLIT_AXIS_YBIT:
+      case 0x10:    // Single split on Y.
          numgroups = 2;
-         if (before_matrix_info[i].y < 0) j = 0;
+         if (y < 0) j = 0;
          else j = 1;
          break;
-      case (RESULTFLAG__SPLIT_AXIS_XBIT + RESULTFLAG__SPLIT_AXIS_YBIT):
+      case 0x11:    // Single split on both X and Y.
          numgroups = 4;
-         if (before_matrix_info[i].x < 0) j = 0;
+         if (x < 0) j = 0;
          else j = 2;
-         if (before_matrix_info[i].y < 0) j++;
+         if (y < 0) j++;
          break;
-      case (RESULTFLAG__SPLIT_AXIS_XBIT * 2):
-         /* This is split into four groups in a row from left to right. */
+      case 3:    // Triple split on X.
+         // This is split into four groups in a row from left to right.
          numgroups = 4;
-         if      (before_matrix_info[i].x < -setup_attrs[ss->kind].bounding_box[0]) j = 0;
-         else if (before_matrix_info[i].x < 0) j = 1;
-         else if (before_matrix_info[i].x < setup_attrs[ss->kind].bounding_box[0]) j = 2;
+         if      (x < -setup_attrs[ss->kind].bounding_box[0]) j = 0;
+         else if (x < 0) j = 1;
+         else if (x < setup_attrs[ss->kind].bounding_box[0]) j = 2;
          else j = 3;
+         break;
+      case 0x12:    // Double split on both X, single on Y.
+         // This is split into 2 groups vertically and 3 groups laterally.
+         numgroups = 6;
+         if (y < 0) j = 0;
+         else j = 3;
+         if (x+x/2 > setup_attrs[ss->kind].bounding_box[0]) j += 2;
+         else if (x+x/2 >= -setup_attrs[ss->kind].bounding_box[0]) j += 1;
+         break;
+      case 0x21:    // Double split on both Y, single on X.
+         // This is split into 3 groups vertically and 2 groups laterally.
+         numgroups = 6;
+         if (x < 0) j = 0;
+         else j = 3;
+         if (y+y/2 > setup_attrs[ss->kind].bounding_box[1]) j += 2;
+         else if (y+y/2 >= -setup_attrs[ss->kind].bounding_box[1]) j += 1;
+         break;
+      case 0x13:    // Triple split on both X, single on Y.
+         // This is split into 2 groups vertically and 4 groups laterally.
+         numgroups = 8;
+         if (y < 0) j = 0;
+         else j = 4;
+         if      (x < -setup_attrs[ss->kind].bounding_box[0]) j += 3;
+         else if (x < 0) j += 2;
+         else if (x < setup_attrs[ss->kind].bounding_box[0]) j += 1;
+         break;
+      case 0x31:    // Triple split on both Y, single on X.
+         // This is split into 4 groups vertically and 2 groups laterally.
+         numgroups = 8;
+         if (x < 0) j = 0;
+         else j = 4;
+         if      (y < -setup_attrs[ss->kind].bounding_box[0]) j += 3;
+         else if (y < 0) j += 2;
+         else if (y < setup_attrs[ss->kind].bounding_box[0]) j += 1;
+         break;
+      case 0x15:    // Quintuple split on both X, single on Y.
+         // This is split into 2 groups vertically and 6 groups laterally.
+         numgroups = 12;
+         if (y < 0) j = 0;
+         else j = 6;
+         if      (x < -2*setup_attrs[ss->kind].bounding_box[0]) j += 5;
+         if      (x < -setup_attrs[ss->kind].bounding_box[0]) j += 4;
+         else if (x < 0) j += 3;
+         else if (x < setup_attrs[ss->kind].bounding_box[0]) j += 2;
+         else if (x < 2*setup_attrs[ss->kind].bounding_box[0]) j += 1;
+         break;
+      case 0x51:    // Quintuple split on both Y, single on X.
+         // This is split into 6 groups vertically and 2 groups laterally.
+         numgroups = 12;
+         if (x < 0) j = 0;
+         else j = 6;
+         if      (y < -2*setup_attrs[ss->kind].bounding_box[0]) j += 5;
+         if      (y < -setup_attrs[ss->kind].bounding_box[0]) j += 4;
+         else if (y < 0) j += 3;
+         else if (y < setup_attrs[ss->kind].bounding_box[0]) j += 2;
+         else if (y < 2*setup_attrs[ss->kind].bounding_box[0]) j += 1;
          break;
       default:
          fail("Can't 'anchor' someone for an 8-person call.");
@@ -2354,7 +2409,7 @@ extern void anchor_someone_and_move(
 
    finish_matrix_call(after_matrix_info, nump, false, false, &people, result);
    reinstate_rotation(&saved_start_people, result);
-   result->result_flags = 0;
+   clear_result_flags(result);
 }
 
 
@@ -3284,17 +3339,17 @@ uint32 fraction_info::get_fracs_for_this_part()
 }
 
 
-bool fraction_info::query_instant_stop(uint32 & result_flag_word)
+bool fraction_info::query_instant_stop(uint32 & result_flag_wordmisc)
 {
    if (m_instant_stop != 99) {
       // Check whether we honored the last possible request.  That is,
       // whether we did the last part of the call in forward order, or
       // the first part in reverse order.
-      result_flag_word |= RESULTFLAG__PARTS_ARE_KNOWN;
+      result_flag_wordmisc |= RESULTFLAG__PARTS_ARE_KNOWN;
       if (m_instant_stop >= m_highlimit)
-         result_flag_word |= RESULTFLAG__DID_LAST_PART;
+         result_flag_wordmisc |= RESULTFLAG__DID_LAST_PART;
       if (m_instant_stop == m_highlimit-1)
-         result_flag_word |= RESULTFLAG__DID_NEXTTOLAST_PART;
+         result_flag_wordmisc |= RESULTFLAG__DID_NEXTTOLAST_PART;
       return true;
    }
    else return false;
@@ -3337,12 +3392,12 @@ extern void move_perhaps_with_active_phantoms(setup *ss, setup *result) THROW_DE
          move(ss, false, result);
       }
       else
-         result->result_flags |= RESULTFLAG__ACTIVE_PHANTOMS_ON;
+         result->result_flags.misc |= RESULTFLAG__ACTIVE_PHANTOMS_ON;
    }
    else {
       (void) check_restriction(ss, ss->cmd.cmd_assume, false, 99);
       move(ss, false, result);
-      result->result_flags |= RESULTFLAG__ACTIVE_PHANTOMS_OFF;
+      result->result_flags.misc |= RESULTFLAG__ACTIVE_PHANTOMS_OFF;
    }
 }
 
@@ -3497,8 +3552,6 @@ static void do_stuff_inside_sequential_call(
 
    if (oldk == s2x2 && (result->cmd.prior_elongation_bits & 3) != 0)
       *remembered_2x2_elongation_p = result->cmd.prior_elongation_bits & 3;
-
-   //   int remembered_2x2_elongation = 0;
 
    // We need to manipulate some assumptions -- there are a few cases in
    // dancers really do track an awareness of the formation.
@@ -3698,7 +3751,7 @@ static void do_stuff_inside_sequential_call(
       qtfudged);
 
    if (oldk != s2x2 && result->kind == s2x2 && *remembered_2x2_elongation_p != 0) {
-      result->result_flags = (result->result_flags & ~3) | *remembered_2x2_elongation_p;
+      result->result_flags.misc = (result->result_flags.misc & ~3) | *remembered_2x2_elongation_p;
       result->cmd.prior_elongation_bits = (result->cmd.prior_elongation_bits & ~3) | *remembered_2x2_elongation_p;
    }
 }
@@ -3988,7 +4041,7 @@ static void do_sequential_call(
 
       if ((this_mod1 & DFM1_SEQ_NO_RE_EVALUATE) &&
           !(result->cmd.cmd_misc2_flags & CMD_MISC2_RESTRAINED_SUPER))
-         result->result_flags |= RESULTFLAG__NO_REEVALUATE;
+         result->result_flags.misc |= RESULTFLAG__NO_REEVALUATE;
 
       if (zzz.m_reverse_order) {
          if (zzz.m_fetch_index >= 1 &&
@@ -4186,7 +4239,7 @@ static void do_sequential_call(
       // If we are being asked to do just one part of a call,
       // exit now.  Also, fill in bits in result->result_flags.
 
-      if (zzz.query_instant_stop(result->result_flags)) break;
+      if (zzz.query_instant_stop(result->result_flags.misc)) break;
 
    go_to_next_cycle:
 
@@ -4797,7 +4850,7 @@ static void really_inner_move(setup *ss,
                               uint32 callflags1,
                               uint32 callflagsf,
                               bool did_4x4_expansion,
-                              uint32 imprecise_rotation_result_flag,
+                              uint32 imprecise_rotation_result_flagmisc,
                               bool mirror,
                               setup *result) THROW_DECL
 {
@@ -4820,14 +4873,15 @@ static void really_inner_move(setup *ss,
       for (int j=0; j<=attr::slimit(ss); j++) tbonetest |= ss->people[j].id1;
       if (!(tbonetest & 011) && the_schema != schema_by_array) {
          result->kind = nothing;
+         clear_result_flags(result);
 
          // We need to mark the result elongation, even though there aren't any people.
          switch (ss->kind) {
          case s2x2: case s_short6:
-            result->result_flags = ss->cmd.prior_elongation_bits & 3;
+            result->result_flags.misc |= ss->cmd.prior_elongation_bits & 3;
             break;
          case s1x2: case s1x4: case sdmd:
-            result->result_flags = 2 - (ss->rotation & 1);
+            result->result_flags.misc |= 2 - (ss->rotation & 1);
             break;
          }
 
@@ -4863,8 +4917,8 @@ static void really_inner_move(setup *ss,
       *result = *ss;
       // This call is a 1-person call, so it can be presumed
       // to have split maximally both ways.
-      result->result_flags =
-         (ss->cmd.prior_elongation_bits & 3) | RESULTFLAG__SPLIT_AXIS_FIELDMASK;
+      result->result_flags.maximize_split_info();
+      result->result_flags.misc = ss->cmd.prior_elongation_bits & 3;
       break;
    case schema_recenter:
       if ((ss->cmd.cmd_final_flags.test_heritbits(~(INHERITFLAG_HALF|INHERITFLAG_LASTHALF))) |
@@ -4944,10 +4998,10 @@ static void really_inner_move(setup *ss,
          else
             matrixmove(ss, flags, callstuff, result);
 
-         result->result_flags |= RESULTFLAG__INVADED_SPACE;
+         result->result_flags.misc |= RESULTFLAG__INVADED_SPACE;
 
          if (expanded) {
-            result->result_flags &= ~3;
+            result->result_flags.misc &= ~3;
             if (result->kind == s4x4 &&
                      !(result->people[15].id1 | result->people[3].id1 |
                        result->people[7].id1 | result->people[11].id1 |
@@ -4955,13 +5009,13 @@ static void really_inner_move(setup *ss,
                        result->people[5].id1 | result->people[6].id1 |
                        result->people[10].id1 | result->people[9].id1 |
                        result->people[1].id1 | result->people[2].id1)) {
-               result->result_flags |= 3;
+               result->result_flags.misc |= 3;
                expand::compress_setup(&exp_from_2x2_stuff, result);
             }
             else if (result->kind == s2x4 &&
                      !(result->people[1].id1 | result->people[2].id1 |
                        result->people[5].id1 | result->people[6].id1)) {
-               result->result_flags |= (result->rotation & 1) + 1;
+               result->result_flags.misc |= (result->rotation & 1) + 1;
                expand::compress_setup(&exp_back_to_2x4_stuff, result);
             }
          }
@@ -4972,10 +5026,10 @@ static void really_inner_move(setup *ss,
          fail("Illegal concept for this call.");
       remove_z_distortion(ss);
       rollmove(ss, callspec, result);
-      /* This call is a 1-person call, so it can be presumed
-         to have split maximally both ways. */
-      result->result_flags =
-         (ss->cmd.prior_elongation_bits & 3) | RESULTFLAG__SPLIT_AXIS_FIELDMASK;
+      // This call is a 1-person call, so it can be presumed
+      // to have split maximally both ways.
+      result->result_flags.misc = ss->cmd.prior_elongation_bits & 3;
+      result->result_flags.maximize_split_info();
       break;
    case schema_by_array:
 
@@ -5238,10 +5292,10 @@ static void really_inner_move(setup *ss,
       "in" is.  But in fact they are treated as 1-person calls in
       terms of "stretch", "crazy", etc. */
    if (callflagsf & CFLAG2_ONE_PERSON_CALL)
-      result->result_flags |= RESULTFLAG__SPLIT_AXIS_FIELDMASK;
+      result->result_flags.maximize_split_info();
 
-   result->result_flags |= imprecise_rotation_result_flag;
-   result->result_flags |=
+   result->result_flags.misc |= imprecise_rotation_result_flagmisc;
+   result->result_flags.misc |=
       ((ss->cmd.cmd_misc2_flags & CMD_MISC2__DID_Z_COMPRESSMASK) /
        CMD_MISC2__DID_Z_COMPRESSBIT) *
       RESULTFLAG__DID_Z_COMPRESSBIT;
@@ -5254,7 +5308,7 @@ static void really_inner_move(setup *ss,
       setup outer_inners[2];
       outer_inners[0] = *result;
       outer_inners[1].kind = nothing;
-      outer_inners[1].result_flags = 0;
+      clear_result_flags(&outer_inners[1]);
       normalize_concentric(schema_conc_o, 1, outer_inners, 1, 0, result);
       normalize_setup(result, simple_normalize, false);
       if (result->kind == s2x4) {
@@ -5265,7 +5319,7 @@ static void really_inner_move(setup *ss,
          swap_people(result, 2, 4);
          swap_people(result, 3, 7);
          result->kind = s2x2;
-         result->result_flags = (result->result_flags & ~3) | (result->rotation+1);
+         result->result_flags.misc = (result->result_flags.misc & ~3) | (result->rotation+1);
          canonicalize_rotation(result);
       }
    }
@@ -5333,7 +5387,7 @@ static void move_with_real_call(
          fail("Can't fractionalize a call if no one is doing it.");
 
       result->kind = nothing;
-      result->result_flags = 0;   // Do we need this?
+      clear_result_flags(result);   // Do we need this?
       return;
    }
 
@@ -5357,8 +5411,8 @@ static void move_with_real_call(
       configuration::restore_warnings(saved_warnings);
       *ss = saved_ss;
       clear_people(result);
-      result->result_flags = 0;   // In case we bail out.
-      uint32 imprecise_rotation_result_flag = 0;
+      clear_result_flags(result);   // In case we bail out.
+      uint32 imprecise_rotation_result_flagmisc = 0;
       split_command_kind force_split = split_command_none;
       bool mirror = false;
       uint32 callflags1 = this_defn->callflags1;
@@ -5714,7 +5768,7 @@ static void move_with_real_call(
       }
 
       if (callflagsf & CFLAG2_IMPRECISE_ROTATION)
-         imprecise_rotation_result_flag = RESULTFLAG__IMPRECISE_ROT;
+         imprecise_rotation_result_flagmisc = RESULTFLAG__IMPRECISE_ROT;
 
       /* Check for a call whose schema is single (cross) concentric.
          If so, be sure the setup is divided into 1x4's or diamonds.
@@ -6000,7 +6054,7 @@ static void move_with_real_call(
                fail("\"Matrix\" concept must be followed by applicable concept.");
 
             move(ss, qtfudged, result);
-            result->result_flags &= ~RESULTFLAG__SPLIT_AXIS_FIELDMASK;
+            result->result_flags.clear_split_info();
             return;
          }
          else
@@ -6014,7 +6068,7 @@ static void move_with_real_call(
       }
 
       really_inner_move(ss, qtfudged, this_defn, the_schema, callflags1, callflagsf,
-                        did_4x4_expansion, imprecise_rotation_result_flag, mirror, result);
+                        did_4x4_expansion, imprecise_rotation_result_flagmisc, mirror, result);
 
       if ((callflagsf & CFLAG2_DO_EXCHANGE_COMPRESS))
          normalize_setup(result, normalize_after_exchange_boxes, false);
@@ -6078,7 +6132,7 @@ extern void move(
    parse_block *saved_magic_diamond = (parse_block *) 0;
    parse_block *parseptrcopy;
    parse_block *parseptr = ss->cmd.parseptr;
-   uint32 resultflags_to_put_in = 0;
+   uint32 resultflags_to_put_inmisc = 0;
    final_and_herit_flags save_incoming_final;
 
    /* This shouldn't be necessary, but there have been occasional reports of the
@@ -6233,19 +6287,19 @@ extern void move(
          if (ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_TWISTED)) {
             if (ss->cmd.prior_expire_bits & RESULTFLAG__TWISTED_EXPIRED)
                ss->cmd.cmd_final_flags.clear_heritbit(INHERITFLAG_TWISTED);   // Already did that.
-            resultflags_to_put_in |= RESULTFLAG__TWISTED_EXPIRED;
+            resultflags_to_put_inmisc |= RESULTFLAG__TWISTED_EXPIRED;
          }
 
          if (ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_YOYO)) {
             if (ss->cmd.prior_expire_bits & RESULTFLAG__YOYO_EXPIRED)
                ss->cmd.cmd_final_flags.clear_heritbit(INHERITFLAG_YOYO);
-            resultflags_to_put_in |= RESULTFLAG__YOYO_EXPIRED;
+            resultflags_to_put_inmisc |= RESULTFLAG__YOYO_EXPIRED;
          }
 
          if (ss->cmd.cmd_final_flags.test_finalbit(FINAL__SPLIT_SQUARE_APPROVED)) {
             if (ss->cmd.prior_expire_bits & RESULTFLAG__SPLIT_EXPIRED)
                ss->cmd.cmd_final_flags.clear_finalbit(FINAL__SPLIT_SQUARE_APPROVED);
-            resultflags_to_put_in |= RESULTFLAG__SPLIT_EXPIRED;
+            resultflags_to_put_inmisc |= RESULTFLAG__SPLIT_EXPIRED;
          }
       }
 
@@ -6296,13 +6350,13 @@ extern void move(
       if (ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_TWISTED)) {
          if (ss->cmd.prior_expire_bits & RESULTFLAG__TWISTED_EXPIRED)
             ss->cmd.cmd_final_flags.clear_heritbit(INHERITFLAG_TWISTED);   // Already did that.
-         resultflags_to_put_in |= RESULTFLAG__TWISTED_EXPIRED;
+         resultflags_to_put_inmisc |= RESULTFLAG__TWISTED_EXPIRED;
       }
 
       if (ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_YOYO)) {
          if (ss->cmd.prior_expire_bits & RESULTFLAG__YOYO_EXPIRED)
             ss->cmd.cmd_final_flags.clear_heritbit(INHERITFLAG_YOYO);
-         resultflags_to_put_in |= RESULTFLAG__YOYO_EXPIRED;
+         resultflags_to_put_inmisc |= RESULTFLAG__YOYO_EXPIRED;
       }
 
       // This used to be "FINAL_SPLIT" for some reason that we can't figure out now.
@@ -6313,7 +6367,7 @@ extern void move(
       if (ss->cmd.cmd_final_flags.test_finalbit(FINAL__SPLIT_SQUARE_APPROVED)) {
          if (ss->cmd.prior_expire_bits & RESULTFLAG__SPLIT_EXPIRED)
             ss->cmd.cmd_final_flags.clear_finalbit(FINAL__SPLIT_SQUARE_APPROVED);
-         resultflags_to_put_in |= RESULTFLAG__SPLIT_EXPIRED;
+         resultflags_to_put_inmisc |= RESULTFLAG__SPLIT_EXPIRED;
       }
    }
 
@@ -6424,7 +6478,7 @@ extern void move(
          goto punt;
 
       ss->cmd.parseptr = parseptrcopy;
-      result->result_flags = 0;
+      clear_result_flags(result);
 
       /* Most concepts simply have no understanding of, or tolerance for, modifiers
          like "interlocked" in front of them.  So, in the general case, we check for
@@ -6588,13 +6642,13 @@ extern void move(
 
  getout:
 
-   result->result_flags |= resultflags_to_put_in;
+   result->result_flags.misc |= resultflags_to_put_inmisc;
 
    /* If execution of the call raised a request that we change a concept name from "magic" to
       "magic diamond,", for example, do so. */
 
    if (saved_magic_diamond &&
-       (result->result_flags & RESULTFLAG__NEED_DIAMOND) &&
+       (result->result_flags.misc & RESULTFLAG__NEED_DIAMOND) &&
        saved_magic_diamond->concept->arg1 == 0) {
       if (saved_magic_diamond->concept->kind == concept_magic)
          saved_magic_diamond->concept = &conzept::special_magic;

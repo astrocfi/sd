@@ -3331,8 +3331,10 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
                                     and the ends are not.
    ends_sel                         1x4/2x4/qtag/bone - the ends are selected
                                     and the centers are not.
-   all_sel                 Q        1x1/1x2 - everyone in the setup is selected.
-   none_sel                Q        1x1/1x2 - no one in the setup is selected.
+   all_sel                          everyone in the setup is selected.
+   not_all_sel                      not everyone in the setup is selected.
+   some_sel                         someone in the setup is selected.
+   none_sel                         no one in the setup is selected.
 
 
                            APPENDIX D -- TOP LEVEL FLAGS

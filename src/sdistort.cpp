@@ -63,23 +63,18 @@ void tglmap::initialize()
 extern void prepare_for_call_in_series(setup *result, setup *ss)
 {
    *result = *ss;
-   result->result_flags = RESULTFLAG__SPLIT_AXIS_FIELDMASK;
+   result->result_flags.misc = 0;
+   result->result_flags.maximize_split_info();
 }
 
 
-extern void minimize_splitting_info(setup *ss, uint32 other_info)
+extern void minimize_splitting_info(setup *ss, const resultflag_rec & other_split_info)
 {
-   if ((ss->result_flags & RESULTFLAG__SPLIT_AXIS_XMASK) >
-       (other_info & RESULTFLAG__SPLIT_AXIS_XMASK)) {
-      ss->result_flags &= ~RESULTFLAG__SPLIT_AXIS_XMASK;
-      ss->result_flags |= (other_info & RESULTFLAG__SPLIT_AXIS_XMASK);
-   }
+   if (ss->result_flags.split_info[0] > other_split_info.split_info[0])
+      ss->result_flags.split_info[0] = other_split_info.split_info[0];
 
-   if ((ss->result_flags & RESULTFLAG__SPLIT_AXIS_YMASK) >
-       (other_info & RESULTFLAG__SPLIT_AXIS_YMASK)) {
-      ss->result_flags &= ~(RESULTFLAG__SPLIT_AXIS_YMASK);
-      ss->result_flags |= (other_info & RESULTFLAG__SPLIT_AXIS_YMASK);
-   }
+   if (ss->result_flags.split_info[1] > other_split_info.split_info[1])
+      ss->result_flags.split_info[1] = other_split_info.split_info[1];
 }
 
 
@@ -130,7 +125,7 @@ extern void remove_z_distortion(setup *ss) THROW_DECL
 
 extern void remove_tgl_distortion(setup *ss) THROW_DECL
 {
-   if (!(ss->result_flags & RESULTFLAG__DID_TGL_EXPANSION))
+   if (!(ss->result_flags.misc & RESULTFLAG__DID_TGL_EXPANSION))
       return;
 
    int rot;
@@ -155,9 +150,9 @@ extern void remove_tgl_distortion(setup *ss) THROW_DECL
    case s2x4:
       rot = ss->rotation & 1;
 
-      if (ss->result_flags & RESULTFLAG__SPLIT_AXIS_XMASK)
+      if (ss->result_flags.split_info[0])
          rot += 0x1000;
-      if (ss->result_flags & RESULTFLAG__SPLIT_AXIS_YMASK)
+      if (ss->result_flags.split_info[1])
          rot += 0x1001;
       if (!(rot & 0x1000)) goto losing;   // Demand that exactly one field was on.
 
@@ -219,7 +214,7 @@ extern void remove_tgl_distortion(setup *ss) THROW_DECL
          eptr = &thing1x4b;
       goto check_and_do;
    case s2x2:
-      ss->result_flags &= ~RESULTFLAG__DID_TGL_EXPANSION;
+      ss->result_flags.misc &= ~RESULTFLAG__DID_TGL_EXPANSION;
       if      (!ss->people[0].id1) rot = 3;
       else if (!ss->people[1].id1) rot = 2;
       else if (!ss->people[2].id1) rot = 1;
@@ -272,7 +267,7 @@ extern void remove_tgl_distortion(setup *ss) THROW_DECL
 
  check_and_do:
    if (!eptr) goto losing;
-   ss->result_flags &= ~RESULTFLAG__DID_TGL_EXPANSION;
+   ss->result_flags.misc &= ~RESULTFLAG__DID_TGL_EXPANSION;
    expand::compress_setup(eptr, ss);
    return;
 
@@ -374,11 +369,11 @@ static void innards(
       }
       else {
          z[i].kind = nothing;
-         z[i].result_flags = 0;
+         clear_result_flags(&z[i]);
       }
 
       if (arity >= 2 &&
-          (z[i].result_flags & (RESULTFLAG__IMPRECISE_ROT | RESULTFLAG__PLUSEIGHTH_ROT)))
+          (z[i].result_flags.misc & (RESULTFLAG__IMPRECISE_ROT | RESULTFLAG__PLUSEIGHTH_ROT)))
          fail("Rotation is imprecise or is 45 degrees.");
    }
 
@@ -433,7 +428,7 @@ static void innards(
                      (map_kind == MPKIND__NONE && maps->inner_kind == sdmd) ? 9 : -1,
                      z, rotstate, pointclip)) {
       result->kind = nothing;
-      result->result_flags = 0;
+      clear_result_flags(result);
       return;
    }
 
@@ -517,7 +512,7 @@ static void innards(
    result->result_flags = get_multiple_parallel_resultflags(z, arity);
 
    if (map_kind == MPKIND__LILZCOM) {
-      if (result->result_flags & RESULTFLAG__DID_Z_COMPRESSMASK) {
+      if (result->result_flags.misc & RESULTFLAG__DID_Z_COMPRESSMASK) {
          /* **** Actually, should just forcibly reinstate the Z's,
             the same as is done in sdconc.c at about 1679. */
          if (sscmd->cmd_misc2_flags & CMD_MISC2__IN_Z_CW)
@@ -556,14 +551,8 @@ static void innards(
    if (map_kind == MPKIND__OVERLAP ||
        map_kind == MPKIND__INTLK ||
        map_kind == MPKIND__CONCPHAN) {
-      if (vert & 1) {
-         if (result->result_flags & RESULTFLAG__SPLIT_AXIS_YMASK)
-            warn(warn__did_not_interact);
-      }
-      else {
-         if (result->result_flags & RESULTFLAG__SPLIT_AXIS_XMASK)
-            warn(warn__did_not_interact);
-      }
+      if (result->result_flags.split_info[vert & 1])
+         warn(warn__did_not_interact);
    }
 
    // See if we can put things back with the same map we used before.
@@ -1236,6 +1225,12 @@ extern void divided_setup_move(
       add onto that the splitting that we have just done, which also does not take
       the incoming rotation into account. */
 
+   // But first, if the map rotation was odd, we need to swap the pre-existing
+   // split fields.
+
+   if ((maps->rot) & 1)
+      result->result_flags.swap_fields();
+
    if (maps->map_kind == MPKIND__SPLIT ||
        maps->map_kind == MPKIND__NONISOTROP1 ||
        (arity == 2 &&
@@ -1243,15 +1238,41 @@ extern void divided_setup_move(
          maps->map_kind == MPKIND__OFFS_R_HALF ||
          maps->map_kind == MPKIND__OFFS_L_FULL ||
          maps->map_kind == MPKIND__OFFS_R_FULL))) {
-      if ((maps->vert ^ maps->rot) & 1) {
-         if ((result->result_flags & RESULTFLAG__SPLIT_AXIS_YMASK) !=
-             RESULTFLAG__SPLIT_AXIS_YMASK)
-            result->result_flags += RESULTFLAG__SPLIT_AXIS_YBIT;
+      // Find the appropriate field, double it, and add 1.  If nonzero,
+      // the field means to split into that many parts plus 1.
+
+      int fieldselect = (maps->vert ^ maps->rot) & 1;
+
+      uint16 field = result->result_flags.split_info[fieldselect];
+      if (field < 100)
+         result->result_flags.split_info[fieldselect] += (field+1) * (arity-1);
+
+      // More stuff to do if this was a "parallelogram" type map.
+      // Look at the "other" division.  If the call split things along
+      // that axis, we change it to 1.5 times that much split.  So,
+      // for example, if we are doing a "hinge" in a parallelogram,
+      // divided_setup_move will see where the live people are and
+      // call us with this kind of map.  We split things vertically
+      // into the 2 waves---that was taken care of above.  But
+      // executing the call on each wave left an indication of a
+      // horizontal split also, since "hinge" is a 2-person call.  If
+      // we see this 2-way split, we change it to a 3-way split.
+
+      if (maps->map_kind == MPKIND__OFFS_L_HALF ||
+          maps->map_kind == MPKIND__OFFS_R_HALF) {
+         // Look at the other field.
+         fieldselect ^= 1;
+         uint32 otherfield = result->result_flags.split_info[fieldselect];
+         if (otherfield < 100)
+            result->result_flags.split_info[fieldselect] += (uint16) ((otherfield+1) >> 1);
       }
-      else {
-         if ((result->result_flags & RESULTFLAG__SPLIT_AXIS_XMASK) !=
-             RESULTFLAG__SPLIT_AXIS_XMASK)
-            result->result_flags += RESULTFLAG__SPLIT_AXIS_XBIT;
+      else if (maps->map_kind == MPKIND__OFFS_L_FULL ||
+               maps->map_kind == MPKIND__OFFS_R_FULL) {
+         // Change a 2-way split to a 4-way split.
+         fieldselect ^= 1;
+         uint32 otherfield = result->result_flags.split_info[fieldselect];
+         if (otherfield < 100)
+            result->result_flags.split_info[fieldselect] += (uint16) (otherfield+1);
       }
    }
 
@@ -1302,7 +1323,7 @@ extern void overlapped_setup_move(
    t.assumption = cr_none;
    innards(&ss->cmd, map_encoding, maps, true, t, false, x, result);
    reinstate_rotation(ss, result);
-   result->result_flags &= ~RESULTFLAG__SPLIT_AXIS_FIELDMASK;
+   result->result_flags.clear_split_info();
 }
 
 
@@ -1372,7 +1393,7 @@ static void phantom_2x4_move(
    }
    else {
       the_setups[1].kind = nothing;
-      the_setups[1].result_flags = 0;
+      clear_result_flags(&the_setups[1]);
    }
 
    // Do the N-S facing people.
@@ -1382,7 +1403,7 @@ static void phantom_2x4_move(
    }
    else {
       the_setups[0].kind = nothing;
-      the_setups[0].result_flags = 0;
+      clear_result_flags(&the_setups[0]);
    }
 
    the_setups[0].result_flags = get_multiple_parallel_resultflags(the_setups, 2);
@@ -1515,7 +1536,7 @@ extern void do_phantom_2x4_concept(
                       true, result);
    result->rotation -= rot;   // Flip the setup back.
    // The split-axis bits are gone.  If someone needs them, we have work to do.
-   result->result_flags &= ~RESULTFLAG__SPLIT_AXIS_FIELDMASK;
+   result->result_flags.clear_split_info();
    return;
 
  lose:
@@ -1555,7 +1576,7 @@ extern void do_phantom_stag_qtg_concept(
 
    result->rotation -= rot;   /* Flip the setup back. */
    /* The split-axis bits are gone.  If someone needs them, we have work to do. */
-   result->result_flags &= ~RESULTFLAG__SPLIT_AXIS_FIELDMASK;
+   result->result_flags.clear_split_info();
 }
 
 
@@ -1607,7 +1628,7 @@ extern void do_phantom_diag_qtg_concept(
    result->rotation -= rot;   // Flip the setup back.
 
    // The split-axis bits are gone.  If someone needs them, we have work to do.
-   result->result_flags &= ~RESULTFLAG__SPLIT_AXIS_FIELDMASK;
+   result->result_flags.clear_split_info();
 }
 
 
@@ -2257,7 +2278,9 @@ extern void distorted_2x2s_move(
 
          result->kind = s4x4;
          result->rotation = results[0].rotation;
-         result->result_flags = results[0].result_flags & ~RESULTFLAG__SPLIT_AXIS_FIELDMASK;
+
+         result->result_flags = results[0].result_flags;
+         result->result_flags.clear_split_info();
          reinstate_rotation(ss, result);
 
          if (columns) {
@@ -2546,16 +2569,12 @@ extern void distorted_move(
       // Offset split phantom boxes.
       static const uint32 map_code_table[4] = {0, MAPCODE(s2x4,2,MPKIND__OFFS_L_HALF,0),
                                                MAPCODE(s2x4,2,MPKIND__OFFS_R_HALF,0), 0};
-      int i, j;
 
       do_matrix_expansion(ss, CONCPROP__NEEDK_3X8, false);
       if (ss->kind != s3x8) fail("Can't do this concept in this setup.");
 
       // Need to recompute this, darn it.
-      global_livemask = 0;
-      for (i=0, j=1; i<=attr::slimit(ss); i++, j<<=1) {
-         if (ss->people[i].id1) global_livemask |= j;
-      }
+      global_livemask = little_endian_live_mask(ss);
 
       int key = 0;
       if ((global_livemask & 0x00F00F) == 0) key |= 1;
@@ -2808,7 +2827,8 @@ extern void distorted_move(
    if (res1.kind != k || (res1.rotation & 1)) fail("Can only do non-shape-changing calls in Z or distorted setups.");
    result->rotation = res1.rotation;
    scatter(result, &res1, the_map, 7, rotz);
-   result->result_flags = res1.result_flags & ~RESULTFLAG__SPLIT_AXIS_FIELDMASK;
+   result->result_flags = res1.result_flags;
+   result->result_flags.clear_split_info();
    reinstate_rotation(ss, result);
    goto getout;
 
@@ -2884,8 +2904,8 @@ extern void distorted_move(
 
  getoutnosplit:
 
-   /* The split-axis bits are gone.  If someone needs them, we have work to do. */
-   result->result_flags &= ~RESULTFLAG__SPLIT_AXIS_FIELDMASK;
+   // The split-axis bits are gone.  If someone needs them, we have work to do.
+   result->result_flags.clear_split_info();
 
  getout:
 
@@ -3455,7 +3475,7 @@ common_spot_map cmaps[] = {
          {       1,      -1,      -1,      -1,       7,      -1,      -1,      -1},
          { d_south,       0,       0,       0, d_north,       0,       0,       0}},
 
-   // Common spot lines from waves -- they become 2-faced lines; everyone is a center.
+   // Common spot lines from waves; everyone is a center.
 
    {0x20, s2x4, s2x4, 0,
          {      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1},
@@ -3699,7 +3719,6 @@ extern void common_spot_move(
    setup *result) THROW_DECL
 {
    int i, k, r;
-   uint32 livemask, jbit;
    bool uncommon = false;
    setup the_results[2];
    bool not_rh;
@@ -3709,7 +3728,7 @@ extern void common_spot_move(
    int rstuff = parseptr->concept->arg1;
    // rstuff =
    // common point galaxy from rigger          : 0x1
-   // common spot columns (from 4x4)           : 0x2
+   // common spot columns (from 4x4 or perhaps 2x4) : 0x2
    // common point diamonds                    : 0x4
    // common point hourglass                   : 0x80
    // common end lines/waves (from 2x6)        : 0x10
@@ -3729,9 +3748,7 @@ extern void common_spot_move(
       configuration::set_multiple_warnings(saved_warnings);
    }
 
-   for (i=0, jbit=1, livemask = 0; i<=attr::slimit(ss); i++, jbit<<=1) {
-      if (ss->people[i].id1) livemask |= jbit;
-   }
+   uint32 livemask = little_endian_live_mask(ss);
 
    for (map_ptr = cmaps ; map_ptr->orig_kind != nothing ; map_ptr++) {
       if (ss->kind != map_ptr->orig_kind ||
@@ -3959,7 +3976,7 @@ void tglmap::do_glorious_triangles(
 
    if (fix_n_results(2, -1, res, rotstate, pointclip)) {
       result->kind = nothing;
-      result->result_flags = 0;
+      clear_result_flags(result);
       return;
    }
 

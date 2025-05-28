@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR SD VERSION 34.81
-@set title2 Database version = 34.81 format = 217
+@set title1 RELEASE NOTES FOR SD VERSION 35.0
+@set title2 Database version = 35.0 format = 217
 @set title3 parser version 1.12, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 35.0::
 * 34.81::
 * 34.8::
 * 34.7::
@@ -47,7 +48,7 @@ The files @file{relnotes98.txi} and @file{oldnotes} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 34.81, Top, (dir)
+@node Intro, 35.0, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -58,11 +59,23 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2003 William B. Ackerman
 @sp 3
 @menu
-* 34.81::               Changes in the current version
+* 35.0::               Changes in the current version
 @end menu
 
 @c ************
-@node 34.81, 34.8, Intro, Top
+@node 35.0, 34.81, Intro, Top
+@unnumberedsec Version 35.0 changes
+
+A bug that may have caused printed files to appear as garbage was fixed.
+The files themselves would not have been corrupted, and printing by other means
+would have worked.
+
+A bug in the @kbd{anchor} concept was fixed.
+
+The program is now compiled with Gcc.
+
+@c ************
+@node 34.81, 34.8, 35.0, Top
 @unnumberedsec Version 34.81 changes
 
 The program has a better understanding of the ability of people to @kbd{roll}

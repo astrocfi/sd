@@ -1,0 +1,355 @@
+\input texinfo @c %**start of header -*-texinfo-*-
+@setfilename appnote4.info
+@settitle Sd Application Note 4
+@iftex
+@headings off
+@oddheading @| @| @thispage
+@evenheading @thispage @| @|
+@end iftex
+@c %**end of header
+@ifclear html
+@center @strong{SD APPLICATION NOTE 4}
+@sp 1
+@end ifclear
+Copyright @copyright{} 2003 William B. Ackerman
+@sp 1
+@center COMMON SPOT
+@sp 1
+There are several ``common spot'' concepts available in @code{Sd}.  They
+were designed to reflect the way these concepts are used by top challenge
+callers.
+
+The general way these concepts work is that some or all of the people in
+the formation are in right-handed miniwaves.  They are to act as though
+they got there by colliding from the previous call, and are to do the
+``common spot'' call as though they hadn't taken right hands, but
+actually occupied the spot where the previous call would have left them.
+@sp 1
+@example
+@group
+          .     .    1B>   1G>
+
+          .     .    2G<   2B<
+
+         4B>   4G>    .     .
+
+         3G<   3B<    .     .
+
+        COMMON SPOT COLUMNS circulate
+
+         3G>   2G<   2B<   1B>
+
+         3B<   4B>   4G>   1G<
+@end group
+@end example
+@sp 1
+There are many concepts in this family.  They name the formation that
+the dancers are supposed to imagine themselves in, as opposed to the
+actual setup.  Sometimes ``common spot'' is used, and sometimes a more
+specific designation, such as ``common point'' or ``common end''.  In
+many cases it doesn't matter whether ``common spot'' or a more specific
+concept was used.
+@sp 1
+If the concept names a formation with specific facing direction assumptions,
+such as ``waves'' or ``1/4 tag'', there will be an implicit assumption given
+to the computer dancers after they separate themselves.  That is, after
+``common spot waves'', the separated dancers may assume that they are in
+waves of the appropriate handedness.
+@sp 1
+@strong{Common point galaxy} is done from a ``rigger'' or ``bat'' setup (box
+with miniwave ``wings'').  The wings act as collided galaxy points.  The other
+points are absent.
+@sp 1
+@example
+@group
+               4GV  1B^
+       4B^ 3GV          1G^ 2BV
+               3BV  2G^
+
+ COMMON POINT GALAXY galaxy circulate
+
+                 1B<
+               4B^ 1G^
+            4GV       2G^
+               3GV 2BV
+                 3B>
+@end group
+@end example
+@sp 1
+@strong{Common point diamonds} and @strong{common spot diamonds} are they same.
+They are done from the setup obtained by doing a @strong{6x2 acey deucey} from
+facing diamonds.
+@sp 1
+@example
+@group
+               .        4B>
+               .        2G<
+           3B^  1G^  3GV  1BV
+              4G>        .
+              2B<        .
+
+COMMON SPOT DIAMONDS exchange the diamonds 1/4
+
+              3B>      1G>
+
+           2B^  4G^  2GV  4BV
+
+              3G<      1B<
+@end group
+@end example
+@sp 1
+@strong{Common point hourglass} and @strong{common spot hourglass} are similar.
+@sp 1
+@example
+@group
+               .    4B>
+
+               .    2G<
+                 1G<
+           3B^         1BV
+                 3G>
+              4G>    .
+
+              2B<    .
+
+COMMON SPOT HOURGLASS unwrap the hourglass
+
+         2G<   2B>   3B>   3G<
+
+         1G>   1B<   4B<   4G>
+@end group
+@end example
+@sp 1
+@strong{Common spot point-to-point diamonds} are done from point-to-point diamonds
+in which either the interior points have collided or the centers of each diamond
+have collided.  The latter situation can arise from partial @strong{exchange the diamonds}.
+It can not arise from a @strong{diamond circulate}, because the Callerlab definition
+specifically makes the dancers recenter themselves.
+@sp 1
+@example
+@group
+              .         3B>
+              .         2B<
+          2G^   3GV  1G^   4GV
+             4B>         .
+             1B<         .
+
+COMMON SPOT POINT-TO-POINT DIAMONDS diamond circulate
+
+           2G>            1G>
+       1B^     4B^    2BV     3BV
+           3G<            4G<
+@end group
+@end example
+@sp 1
+@example
+@group
+       4B>                    1G>
+           4G^  3BV  1B^  2GV
+       3G<                    2B<
+
+COMMON SPOT POINT-TO-POINT DIAMONDS diamond circulate
+
+           4G<            1B>
+       3G^     4BV    2B^     1GV
+           3B<            2G>
+@end group
+@end example
+@sp 1
+@strong{Common spot 1/4 tags} and @strong{common spot 1/4 lines} are done
+from a tidal wave.  The live dancers imagine that they have collided in
+the center wave or 2-faced line.  The name of the concept determines how
+they collect themselves into groups, in case that matters.  Nothing is
+implied about the facing directions of the phantom outsides.  You may
+add something like @strong{assume 1/4 tags} or @strong{assume normal
+diamonds} if you wish.
+@sp 1
+@example
+@group
+4B^  3GV  4G^  3BV  1B^  2GV  1G^  2BV
+
+COMMON SPOT 1/4 TAGS fall into a column
+
+              4B^   1G^
+
+              3B^   2G^
+
+              4GV   1BV
+
+              3GV   2BV
+@end group
+@end example
+@sp 1
+@example
+@group
+4B^  3GV  4G^  3BV  1B^  2GV  1G^  2BV
+
+COMMON SPOT 1/4 LINES, ASSUME 1/4 LINES, make a pass
+
+              1B>   4G<
+
+              3G<   2B>
+
+              4B<   1G>
+
+              2G>   3B<
+@end group
+@end example
+@sp 1
+@noindent The various types of @strong{common spot lines} concepts may be done from
+a 2x4, 2x6, or 2x8.
+@sp 1
+From a 2x4, everyone has collided in the center.  The ends of the imagined
+lines are all phantoms.  You may use @strong{common spot} or @strong{common center},
+indicating either lines or waves.  If you indicate waves, there will be an
+implicit @strong{assume waves} on the result.
+@sp 1
+@example
+@group
+          3G^   4BV   2G^   1BV
+
+          3B^   4GV   2B^   1GV
+
+    COMMON CENTER WAVES touch of class
+
+          4G^   1BV   4BV   1G^
+
+          3GV   2B^   3B^   2GV
+@end group
+@end example
+@sp 1
+From a 2x6 that is a parallelogram, the ``wings'' are ends that have
+collided, and the center box are normal centers.  You may use
+@strong{common spot lines} or @strong{common end lines}.
+@sp 1
+@example
+@group
+     .     .    3B^   4GV   2B^   1GV
+
+    3G^   4BV   2G^   1BV    .     .
+
+   COMMON END LINES switch to an hourglass
+
+                   2B<
+              3BV       4G^
+                 3G^ 1GV
+              2GV       1B^
+                   4B>
+@end group
+@end example
+@sp 1
+From a 2x6 that has only the outer triple boxes occupied, everyone are
+ends that have collided.  You may use @strong{common spot} or @strong{common
+end}, indicating either lines or waves.  If you indicate waves, there
+will be an implicit @strong{assume waves} on the result.
+@sp 1
+@example
+@group
+    4B^   1BV    .     .    4G^   1GV
+
+    3G^   2GV    .     .    3B^   2BV
+
+      COMMON END WAVES scatter scoot
+
+          4GV   1B^   1G^   4BV
+
+          2B^   3GV   3BV   2G^
+@end group
+@end example
+@sp 1
+From a 2x8 that has everyone in a miniwave with someone, with those
+miniwaves arranged as either a fully offset parallelogram or as a
+``miniwave zipper'', everyone has collided on the spot in the imagined
+2x4 that corresponds to the location of their miniwave in the actual
+2x8.  You may use @strong{common spot lines}, @strong{common spot waves}, or
+@strong{common spot two-faced lines}.  If you indicate waves or two-faced
+lines, there will be an implicit assumption on the result, and people
+will be grouped in a way consistent with that, in case it matters.
+@sp 1
+@example
+@group
+  .     .    3G^   4BV    .     .    2G^   1BV
+
+ 3B^   4GV    .     .    2B^   1GV    .     .
+
+   COMMON SPOT TWO-FACED LINES double down
+
+          2GV   3BV   3GV   2BV
+
+          4B^   1G^   1B^   4G^
+@end group
+@end example
+@sp 1
+@example
+@group
+  .     .    3G^   4BV    .     .    2G^   1BV
+
+ 3B^   4GV    .     .    2B^   1GV    .     .
+
+       COMMON SPOT WAVES double down
+
+          2GV   3BV   2B^   1G^
+
+          3GV   4BV   1B^   4G^
+@end group
+@end example
+@sp 1
+@example
+@group
+  .     .     .     .    3G^   4BV   2G^   1BV
+
+ 3B^   4GV   2B^   1GV    .     .     .     .
+
+         COMMON SPOT LINES presto
+
+                4B^   3BV
+
+                2GV   1G^
+
+                3GV   4G^
+
+                1B^   2BV
+@end group
+@end example
+@sp 1
+The @strong{common spot columns} concept may be done from
+``clumps'', ``stairsteps'', Z columns, or waves.  From waves,
+everyone has collided and are the centers of the imagined columns.
+@sp 1
+From ``clumps'' or ``stairsteps'', everyone has collided.
+@sp 1
+@example
+@group
+          .    4G>    .    4B>
+
+          .    1B<    .    1G<
+
+         3G>    .    3B>    .
+
+         2B<    .    2G<    .
+
+ COMMON SPOT COLUMNS cross your neighbor
+
+    2BV  3G^  1BV  4G^  2GV  3B^  1GV  4B^
+@end group
+@end example
+@sp 1
+From Z columns, some people (those that aren't centered) have collided,
+and the others are normal.
+@sp 1
+@example
+@group
+          .    4G>    .     .
+
+         1G>   1B<    .    4B>
+
+         2B<    .    3B>   3G<
+
+          .     .    2G<    .
+
+    COMMON SPOT COLUMNS follow thru
+
+    2B^  1BV  1GV  4GV  2G^  3G^  3B^  4BV
+@end group
+@end example
+@bye

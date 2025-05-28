@@ -1,8 +1,8 @@
 \input texinfo @c %**start of header -*-texinfo-*-
 @c user documentation for Sd (square dance caller's helper)
 @c
-@set sd-version 34.81
-@set Time-stamp: Oct 11, 2003
+@set sd-version 35.0
+@set Time-stamp: Dec 22, 2003
 @c
 @setfilename sd_doc.info
 @c We want the version number to show in the html file.
@@ -257,7 +257,7 @@ use the mouse.
 
 The first thing it will do (assuming you are not using the session control feature
 of the initialization file) is ask you for the level.  Type the desired level
-and press @key{ENTER}.
+and press @key{<ENTER>}.
 
 @code{Sd} or @code{Sdtty} can be run from a shell (on Unix or DOS) by typing its name
 and the level you want to write sequences for, e.g.,
@@ -402,20 +402,20 @@ whatever concepts or modifier words it has, in the natural way.  For example,
 you could type:
 
 @example
-@kbd{grand swing thru} @key{ENTER}
+@kbd{grand swing thru} @key{<ENTER>}
 @end example
 
 or:
 
 @example
-@kbd{centers cross run} @key{ENTER}
+@kbd{centers cross run} @key{<ENTER>}
 @end example
 
 In a few cases, either because a concept has a complex structure
 (e.g., @code{checkpoint}), or because an utterance is ambiguous
 (e.g., doing 1/2 of a @i{stable swing thru} vs.@: doing a @i{1/2 stable swing thru}),
 it is necessary to type concepts by themselves, pressing
-@key{ENTER}
+@key{<ENTER>}
 after each one.  This will be discussed further in @ref{Entering Concepts}.
 
 When using @code{Sd} and selecting things with the mouse,
@@ -608,11 +608,11 @@ You can also enter such things in a piecemeal fashion, typing the keyword ``@cod
 literally, and then typing the subcall when the program asks for it.  For example, you
 could type
 @example
-@kbd{clover and <anything>} @key{ENTER}
+@kbd{clover and <anything>} @key{<ENTER>}
 @end example
 @noindent and then type
 @example
-@kbd{square thru 2} @key{ENTER}.
+@kbd{square thru 2} @key{<ENTER>}.
 @end example
 
 When using the mouse with @code{Sd}, the second way is the
@@ -783,34 +783,34 @@ operate in the usual way.  Nearly all concepts may be entered in a natural way,
 on the same line as the call that they affect.  As discussed previously,
 this means that you can type things like
 @example
-@kbd{grand swing thru} @key{ENTER}
+@kbd{grand swing thru} @key{<ENTER>}
 @end example
 or
 @example
-@kbd{boys 1/2 stable split the difference} @key{ENTER}
+@kbd{boys 1/2 stable split the difference} @key{<ENTER>}
 @end example
 or
 @example
-@kbd{random tandem swing thru} @key{ENTER}
+@kbd{random tandem swing thru} @key{<ENTER>}
 @end example
 Whether you typed concepts separately or together, the result is
 the same, and the output file will look the same.
 For example, the following are all legal and equivalent.
 @example
-   @kbd{reverse random tandem swing thru} @key{ENTER}
+   @kbd{reverse random tandem swing thru} @key{<ENTER>}
 @end example
 @example
 @group
-   @kbd{reverse random} @key{ENTER}
-   @kbd{tandem swing thru} @key{ENTER}
+   @kbd{reverse random} @key{<ENTER>}
+   @kbd{tandem swing thru} @key{<ENTER>}
 @end group
 @end example
 @example
 @group
-   @kbd{reverse} @key{ENTER}
-   @kbd{random} @key{ENTER}
-   @kbd{tandem} @key{ENTER}
-   @kbd{swing thru} @key{ENTER}
+   @kbd{reverse} @key{<ENTER>}
+   @kbd{random} @key{<ENTER>}
+   @kbd{tandem} @key{<ENTER>}
+   @kbd{swing thru} @key{<ENTER>}
 @end group
 @end example
 @noindent In the output file, they will all be shown as @code{reverse random tandem swing thru}.
@@ -824,14 +824,14 @@ an application of the @i{1/2} concept followed by an application of the
 @i{stable} concept, so it chooses the former.  If you really want to tell
 the program to do the latter, you must make clear that you mean the @i{1/2}
 concept by itself.  The way to do this is to enter each concept separately, pressing
-@key{ENTER}
+@key{<ENTER>}
 after each one.  That is, type
 @example
 @group
-@kbd{boys} @key{ENTER}
-@kbd{1/2} @key{ENTER}
-@kbd{stable} @key{ENTER}
-@kbd{split the difference} @key{ENTER}
+@kbd{boys} @key{<ENTER>}
+@kbd{1/2} @key{<ENTER>}
+@kbd{stable} @key{<ENTER>}
+@kbd{split the difference} @key{<ENTER>}
 @end group
 @end example
 
@@ -850,7 +850,7 @@ be printed as
 @code{boys, 1/2 stable, split the difference}.  Do not type the commas in.
 
 Whenever you run into trouble typing concepts, try typing each one separately,
-pressing @key{ENTER} after each one.
+pressing @key{<ENTER>} after each one.
 
 @subsubheading Concepts displayed after the call
 
@@ -864,29 +864,29 @@ The program will sometimes use parentheses to prevent ambiguity.
 
 Some concepts require two calls (e.g., @code{checkpoint} and @code{interlace}).
 @i{You must enter such concepts by themselves}.  That is, you must press
-@key{ENTER}
+@key{<ENTER>}
 after typing any of these concepts.  You can't type
 @example
-   @kbd{checkpoint ah so by recycle @key{ENTER}}
+   @kbd{checkpoint ah so by recycle @key{<ENTER>}}
 @end example
 nor
 @example
-   @kbd{boys trade (while the others) u-turn back @key{ENTER}}
+   @kbd{boys trade (while the others) u-turn back @key{<ENTER>}}
 @end example
 You must type
 @example
 @group
-   @kbd{checkpoint @key{ENTER}
-   ah so @key{ENTER}
-   recycle @key{ENTER}}
+   @kbd{checkpoint @key{<ENTER>}
+   ah so @key{<ENTER>}
+   recycle @key{<ENTER>}}
 @end group
 @end example
 or
 @example
 @group
-   @kbd{boys (while the others) @key{ENTER}
-   trade @key{ENTER}
-   u-turn back @key{ENTER}}
+   @kbd{boys (while the others) @key{<ENTER>}
+   trade @key{<ENTER>}
+   u-turn back @key{<ENTER>}}
 @end group
 @end example
 
@@ -1089,34 +1089,34 @@ each other if only keyboard input is used.
 The completing reader requires you to type only as much of the word or command as is
 required to be unambiguous.  Whenever you type a space, the program completes
 the word you just typed, if necessary and possible.  Whenever you type
-@key{ENTER} (or @key{RETURN} on some keyboards),
+@key{<ENTER>} (or @key{<RETURN>} on some keyboards),
 the program completes the entire line if necessary and possible.
 
 For example, at Mainstream, you can enter a swing thru by typing
-@samp{swing thru @key{ENTER}}.
+@samp{swing thru @key{<ENTER>}}.
 When the space after @samp{swing} is typed,
 no completion is required.  When the
-@key{ENTER}
+@key{<ENTER>}
 after @samp{thru} is typed, no completion is required either.  If you type
-@samp{sw thru @key{ENTER}}
+@samp{sw thru @key{<ENTER>}}
 instead, @code{Sd} completes the word @samp{swing}.
 It does this by displaying
 @samp{ing} on the screen as soon as you type the space after
 @samp{sw}.  If you type
-@samp{sw th @key{ENTER}},
+@samp{sw th @key{<ENTER>}},
 @code{Sd} will complete both words.  It displays @samp{ing} as soon as you type the
 space, and it displays @samp{ru} as soon as you type
-@key{ENTER}.
+@key{<ENTER>}.
 In fact, you could just type
-@samp{sw @key{ENTER}}.
+@samp{sw @key{<ENTER>}}.
 @code{Sd} completes the entire line, if necessary
-and possible, when @key{ENTER} is pressed.
+and possible, when @key{<ENTER>} is pressed.
 So it will display @samp{ing thru} after
 your @samp{sw}.  In each case, the full phrase @samp{swing thru} will appear
 on the screen, and will be printed in the final sequence.
 
 Because of this completion, you can get into the habit of just typing
-@samp{sw @key{ENTER}}
+@samp{sw @key{<ENTER>}}
 at Mainstream.  However, it will only work if what you type is unambiguous.
 At higher levels, @samp{sw} could also mean @samp{swap around}.  When there is an
 ambiguity, @code{Sd} will complete as much as it can and beep at you.
@@ -1126,9 +1126,9 @@ type @samp{?} or @samp{!} (discussed below) to see what the problem is.
 With practice, you can get a reasonable feel for how much abbreviation you can
 get away with in a given context.
 
-Typing @key{ESC} will complete the entire line, just like @key{ENTER},
+Typing @key{<ESC>} will complete the entire line, just like @key{<ENTER>},
 but will not actually process the line.  If you like what you see, you can
-then press @key{ENTER}
+then press @key{<ENTER>}
 to execute the call.  If the line is ambiguous,
 the program will display as much of the line as it can.
 When used effectively, this can save you a lot of typing.
@@ -1172,17 +1172,17 @@ The output from typing a question mark or exclamation point may be quite lengthy
 If it fills more than one screenful, @code{Sdtty} will stop and display
 @samp{--More--} at the
 bottom of the screen.  Type
-@key{SPACE}
+@key{<SPACE>}
 to go on to the next screenful.  Type
-@key{ENTER}
+@key{<ENTER>}
 to see just one more line.  Type a backspace (or
-@key{DEL})
+@key{<DEL>})
 to stop.  When the output ends, either because @code{Sdtty} displayed everything or
 because you typed a backspace, the partially entered line will be redisplayed, just
 as it was before you typed the question mark.
 
 When you are typing calls or concepts and you type
-@key{ENTER}
+@key{<ENTER>}
 while the line that you have typed is ambiguous, @code{Sdtty} will display something
 like @samp{(10 matches, type ! or ? for list)}.  The number that it displays is the
 number of syntactically legal choices among which it can't decide.  This is the number
@@ -1190,7 +1190,7 @@ of choices that would have been listed if you had typed @samp{!}.  It may be mor
 the number of things that would be listed if you had typed @samp{?}.  The reason
 is that the @samp{?} operation has to test every call before listing it.  It can
 easily do this faster than you can read the list of choices.  When you type
-@key{ENTER}
+@key{<ENTER>}
 while there are multiple syntactic choices available, the computer can't count
 them fast enough to respond instantaneously.  It therefore displays an approximate
 number, computed by looking at its database without testing each call.
@@ -1199,15 +1199,15 @@ number, computed by looking at its database without testing each call.
 @section Minimizing the Amount of Typing You Must Do
 
 The @code{Sdtty} completion mechanism, especially the
-@key{ESC}
+@key{<ESC>}
 (or
-@key{ALT MODE}
+@key{<ALT MODE>}
 or
-@key{TAB})
+@key{<TAB>})
 key, can save you a lot of typing.
 For example, typing
 @example
-      @kbd{heads do your part @key{ENTER}}
+      @kbd{heads do your part @key{<ENTER>}}
 @end example
 @noindent is probably more than you want to do.  If you type just
 @example
@@ -1228,21 +1228,21 @@ What these concepts actually mean will be discussed at length in
 type them.
 
 These commands don't differ until the @samp{t} in @samp{part}.  If you type
-@key{ENTER}
+@key{<ENTER>}
 after @samp{part}, @code{Sdtty} will know that you want the
 first of these commands.  If you type a space and then
-@key{ENTER},
+@key{<ENTER>},
 @code{Sdtty} will know that you want the second.  Does this mean that you
 must type the whole command up to @samp{part}, followed by a space or
-@key{ENTER}?
+@key{<ENTER>}?
 No.  Just type @samp{heads do}, and then press
-@key{ESC}.
+@key{<ESC>}.
 @code{Sdtty} will display @samp{heads do your part}, since that is the text
 that is common to both commands.  At that point, you may press
-@key{ENTER}
+@key{<ENTER>}
 to get the @samp{heads do your part} concept.  Or you could type space
 and then
-@key{ENTER}
+@key{<ENTER>}
 to get the @samp{heads do your part (while the others)}
 concept.  You could, of course, type the complete phrase @samp{(while the others)}
 after the space, but there is no need to.  Once you type the space, @code{Sdtty}
@@ -1260,14 +1260,14 @@ Here is another example.  To enter @samp{criss cross the shadow} or
 @samp{criss cross your neighbor}, it is not necessary to type
 @samp{criss cross t} or @samp{criss cross y}.  You can just type @samp{cri}
 followed by
-@key{ESC}.
+@key{<ESC>}.
 The program will display everything up to the
 point of ambiguity, which, at C2, is @samp{criss cross }.  At that point,
 you just need to type @samp{t} or @samp{y}, followed by
-@key{ENTER}.
+@key{<ENTER>}.
 Above C2, there are more possible calls, but typing @samp{cri}
 followed by
-@key{ESC}
+@key{<ESC>}
 is still a good way to start.
 
 @node Ignoring Hyphens, , Minimizing Typing, The Completing Reader
@@ -1904,7 +1904,7 @@ will appear, prompting you for a new title, or @code{Sdtty} will
 ask you to type in the new title.  This action will become
 effective the next time a sequence is written out.  Sequences previously
 written will keep their old title.  You can remove the title by just
-pressing @key{ENTER} when asked for the new title.
+pressing @key{<ENTER>} when asked for the new title.
 
 When the program starts, there is no title unless the initialization
 file was used.  @xref{The Initialization File}.
@@ -2128,9 +2128,9 @@ Enter the number of the desired session:
 In @code{Sdtty}, type the number of the selection that you want.
 In @code{Sd}, either select the desired line with a double mouse click,
 or use the cursor keys to highlight the line and then press
-@key{ENTER}.
+@key{<ENTER>}.
 
-If you select ``0'', or just press @key{ENTER}, the program will ignore
+If you select ``0'', or just press @key{<ENTER>}, the program will ignore
 the sessions and proceed normally.  If you enter the
 number of one of the lines that are displayed, the program will operate
 at that level,
@@ -2309,8 +2309,7 @@ file never use these icons.  This option is meaningless in @code{Sdtty}.
 This suppresses the use of special PC graphics characters
 (``triangles'') when drawing pictures on the screen.  These characters
 are not standard on all PC's.  Pictures drawn in the output file will
-never use the special graphics characters.  This is not meaningful in
-@code{Sd} unless @code{no_checkers} is also given.
+never use the special graphics characters.  This overrides @code{no_checkers}.
 @item no_color
 @code{Sdtty} and @code{Sd} normally color-code
 the dancers shown on the screen, according to various color schemes that
@@ -2646,8 +2645,8 @@ uses a character-oriented terminal interface.
 The program @code{Sdtty} uses the completing reader for call,
 concept, and command entry.
 
-When typing, press @key{Space} to complete the current word.
-Type @key{TAB} or @key{ESC} to complete as much as possible.
+When typing, press @key{<Space>} to complete the current word.
+Type @key{<TAB>} or @key{<ESC>} to complete as much as possible.
 Type @kbd{C-u} (that is, Control U) to clear a partially-typed line.
 Type @kbd{C-v} (that is, Control V) to clear just the last word.
 
@@ -2724,7 +2723,7 @@ shift-<down arrow> lower reconcile point
 @end example
 All of these except @key{F8} execute the command directly, that is,
 pressing the function key is equivalent to typing the indicated
-text and then pressing @key{ENTER}.  Furthermore, these keys erase
+text and then pressing @key{<ENTER>}.  Furthermore, these keys erase
 any text that you may have typed in on the present line.  Therefore,
 if you define, for example, @key{alt-S} to mean ``swing thru'', do not type
 @example
@@ -2736,13 +2735,13 @@ if you define, for example, @key{alt-S} to mean ``swing thru'', do not type
 @samp{left} concept by itself:
 @example
 @group
-   left @key{ENTER}
+   left @key{<ENTER>}
    @key{alt-S}
 
 @end group
 @end example
 The key @key{F8} for @samp{<anything>} is simply equivalent to
-entering that text without pressing @key{ENTER}.
+entering that text without pressing @key{<ENTER>}.
 This key is present only for compatibility with past usage.
 It is almost never necessary
 to type ``<anything>''.  Instead, type the substituted call in
@@ -2921,7 +2920,7 @@ and the new centers roll}.  Of course, if you have the girls roll there
 will be no problem.
 
 @node Roll after Exchange the Gears, C1 Single Rotate, <ANYONE> roll, Call Notes
-@section Roll after Exchange the Gears, 
+@section Roll after Exchange the Gears
 
 The program considers @samp{roll} to be of limited use after @samp{spin
 chain and exchange the gears} if using the true Callerlab definition.
@@ -3292,29 +3291,29 @@ Be aware that those concepts that take two calls, such as @code{checkpoint},
 @code{<ANYONE> do your part (while the others)}, or
 @code{two calls in succession}
 must be entered by themselves.  That is, you must press
-@key{ENTER}
+@key{<ENTER>}
 after typing any of these concepts.  You can't type
 @example
-   @kbd{checkpoint ah so by recycle @key{ENTER}}
+   @kbd{checkpoint ah so by recycle @key{<ENTER>}}
 @end example
 nor
 @example
-   @kbd{boys trade (while the others) u-turn back @key{ENTER}}
+   @kbd{boys trade (while the others) u-turn back @key{<ENTER>}}
 @end example
 You must type
 @example
 @group
-   @kbd{checkpoint @key{ENTER}
-   ah so @key{ENTER}
-   recycle @key{ENTER}}
+   @kbd{checkpoint @key{<ENTER>}
+   ah so @key{<ENTER>}
+   recycle @key{<ENTER>}}
 @end group
 @end example
 or
 @example
 @group
-   @kbd{boys (while the others) @key{ENTER}
-   trade @key{ENTER}
-   u-turn back @key{ENTER}}
+   @kbd{boys (while the others) @key{<ENTER>}
+   trade @key{<ENTER>}
+   u-turn back @key{<ENTER>}}
 
 @end group
 @end example
@@ -3668,7 +3667,7 @@ course, when using @code{Sdtty}, this issue doesn't make any
 difference---you can just type
 
 @example
-   @kbd{phantom tandem swing thru @key{ENTER}}
+   @kbd{phantom tandem swing thru @key{<ENTER>}}
 @end example
 
 The @i{phantom tandem} and @i{phantom as couples} concepts expand the
@@ -4097,14 +4096,14 @@ In any case, you must use your judgement when choosing what to say when calling.
 In extremely tricky cases, such as @samp{1/2, mix}, @samp{3/4, mix}, @samp{3/4 mix},
 and @samp{2/3, 3/4 mix}, these concepts can lead to ambiguity.  It may
 be necessary to type the concept by itself, that is, to press
-@key{ENTER}
+@key{<ENTER>}
 at the appropriate moment, to get what you want.  (If using the menu in @code{Sd},
 select just the concept, and then select the call.)  For example, if you really want
 3/4 of the call @samp{mix}, type
 @example
 @group
-   @kbd{3/4 @key{ENTER}
-   mix @key{ENTER}}
+   @kbd{3/4 @key{<ENTER>}
+   mix @key{<ENTER>}}
 @end group
 @end example
 
@@ -4185,7 +4184,7 @@ The @kbd{<ANYONE> start} concept has the indicated people do their own
 part of the first part of the call, after which the others join them.
 You should type this in as, for example
 @example
-   @kbd{boys start quarter thru @key{ENTER}}
+   @kbd{boys start quarter thru @key{<ENTER>}}
 @end example
 @xref{Anyone Start}, for more on the @kbd{<ANYONE> start} concept.
 
@@ -4221,9 +4220,9 @@ replacement.
 For example, you might type
 @example
 @group
-   @kbd{replace the 3rd part        @key{ENTER}
-   swing the fractions         @key{ENTER}
-   2/3 recycle                 @key{ENTER}}
+   @kbd{replace the 3rd part        @key{<ENTER>}
+   swing the fractions         @key{<ENTER>}
+   2/3 recycle                 @key{<ENTER>}}
 @end group
 @end example
 
@@ -4234,9 +4233,9 @@ The @kbd{use for the <Nth> part} concept is the same as
 It is entered thusly:
 @example
 @group
-   @kbd{use for the 3rd part      @key{ENTER}
-   ah so                     @key{ENTER}
-   swing the fractions       @key{ENTER}}
+   @kbd{use for the 3rd part      @key{<ENTER>}
+   ah so                     @key{<ENTER>}
+   swing the fractions       @key{<ENTER>}}
 @end group
 @end example
 
@@ -4250,9 +4249,9 @@ By itself, it is rather nonsensical.  It is intended to be used with
 meta concepts.  It is entered thusly:
 @example
 @group
-   @kbd{reverse random use        @key{ENTER}
-   acey deucey               @key{ENTER}
-   swing the fractions       @key{ENTER}}
+   @kbd{reverse random use        @key{<ENTER>}
+   acey deucey               @key{<ENTER>}
+   swing the fractions       @key{<ENTER>}}
 @end group
 @end example
 
@@ -4264,15 +4263,15 @@ prompt you for the call that is to have its first part replaced.
 For example, you might type
 @example
 @group
-   @kbd{start with @key{ENTER}
-   fan the top @key{ENTER}
-   the difference @key{ENTER}}
+   @kbd{start with @key{<ENTER>}
+   fan the top @key{<ENTER>}
+   the difference @key{<ENTER>}}
 @end group
 @end example
 
 Because the @kbd{replace}, @kbd{interrupt} @kbd{start with}, and @kbd{use}
-concepts require two calls, you must press @key{ENTER}
-after typing them, and then type the two calls with @key{ENTER} after each one.
+concepts require two calls, you must press @key{<ENTER>}
+after typing them, and then type the two calls with @key{<ENTER>} after each one.
 
 See @ref{Interruptions and Replacements}, for information about some tricky aspects
 of these concepts.
@@ -4315,14 +4314,15 @@ See @ref{Concentric}.
 @item left wing
 These are straightforward.
 @item common point galaxy
-@item common point diamonds
-@item common point hourglass
-@item common end L/W
-@item common center L/W
-@item common spot C/L/W/D
+@item common spot/point diamonds
+@item common spot/point hourglass
 @item common spot point-to-point diamonds
-@item common spot hourglass
+@item common spot 1/4 tag
+@item common spot 1/4 line
+@item common center/end L/W
+@item common spot C/L/W
 @item common spot two-faced lines
+@sp 1
 The ``common spot'' concept directs people to do their part of the call
 as though the presumed collision from the previous call had not forced
 them to take right hands, and they are simply occupying the same spot.
@@ -4331,24 +4331,55 @@ way that such a setup can be created---the dancers are simply directed
 to act as though that is how they got there.  Some people consider the
 use of collisions to set up ``common spot'' calls to be among the
 less creative ways to get into these formations.)
-
+@sp 1
 The program therefore expects the ``common spot'' people to have
 @i{right} hands.  If you want to use these concepts with people in left-hand
 miniwaves, we recommend that you apply the @samp{mirror} concept to the entire operation.
-
+@sp 1
 Common spot point-to-point diamonds can arise from
 certain fractional exchanges of point-to-point diamonds.
 Note that @code{switch to a diamond} and @code{diamond circulate}
 never produce this setup -- the Callerlab C1 definitions specifically
 state that the colliding people center themselves.
-
-The @code{common point galaxy} concept is used from a ``rigger'' setup in
-which the ``wings'' are collided points.  The @code{common spot columns}
-concept is used from offset right-hand columns.  The @code{common point
-diamonds} concept is used from the kind of setup one obtains after a
-@samp{6x2 acey deucey} from facing diamonds.   The @code{common end lines/waves}
-concept is used from a parallelogram in which the ``wings'' are collided
-ends of the lines.
+@sp 1
+The @code{common point galaxy} concept is used from a ``rigger'' or ``bat'' setup in
+which the ``wings'' are collided points.
+@sp 1
+The @code{common spot diamonds} or @code{common point diamonds} concept
+is used from the kind of setup one obtains after a @samp{6x2 acey
+deucey} from facing diamonds.  The @code{common spot hourglass} or
+@code{common point hourglass} concept is used from the kind of setup one
+obtains after a @samp{6x2 acey deucey} from a facing hourglass.
+@sp 1
+The @code{common spot 1/4 tag} and @code{common spot 1/4 line} concepts
+are used from a tidal wave.  Everyone acts as though they are in the center
+wave or two-faced line.
+@sp 1
+The @code{common spot columns} concept is used from ``clumps'',
+``stairsteps'', Z columns, or waves.  From clumps or stairsteps everyone
+is presumed to have collided.  From Z columns some people have collided
+and some (those that are centered) have not.  From waves, everyone has
+collided and is in the center of the imagined columns.
+@sp 1
+The @code{common end lines/waves} concept is used from a parallelogram
+in which the ``wings'' are collided ends of the lines.  It can also be
+used from outer triple boxes, in which everyone has collided at the ends
+of lines.  People in the center triple box, if any, are natural.
+@sp 1
+The @code{common center lines/waves} concepts are used from waves in which
+everyone is presumed to have collided in the center.  The ends of the
+imagined lines or waves are all phantoms.
+@sp 1
+The @code{common spot lines/waves} concepts may be used from waves,
+having the same meaning as @code{common center lines/waves}.
+@sp 1
+The @code{common spot waves/two-faced lines} concepts may also
+be used from a 2x8 that is either a fully offset parallelogram or
+is a ``miniwave zipper''.  That is, everyone is in a miniwave with
+someone, and they collectively occupy a 2x4 matrix of live minwaves
+or phantom miniwaves.  The concept name tells how the people should be
+grouped together, in case that matters.
+@sp 1
 @item 1x2/2x1/2x2/1x3/3x1/3x3/4x4/6x6/8x8
 These are straightforward.
 @item all 4 couples
@@ -4660,22 +4691,22 @@ the fourth part is also a Trade, so it is safer to refer to it by number.
 @end example
 
 The first four listed take two calls---the principal call and the
-replacement/interruption.  You must press @key{ENTER} after typing
+replacement/interruption.  You must press @key{<ENTER>} after typing
 these, and then enter the calls separately.
 
 @example
 @group
-   replace the 3rd part @key{ENTER}
-   pass the axle @key{ENTER}
-   split trade circulate @key{ENTER}
+   replace the 3rd part @key{<ENTER>}
+   pass the axle @key{<ENTER>}
+   split trade circulate @key{<ENTER>}
 @end group
 @end example
 or
 @example
 @group
-   interrupt after the 3rd part @key{ENTER}
-   contour the line @key{ENTER}
-   fan relay the top @key{ENTER}
+   interrupt after the 3rd part @key{<ENTER>}
+   contour the line @key{<ENTER>}
+   fan relay the top @key{<ENTER>}
 @end group
 @end example
 
@@ -4688,9 +4719,9 @@ interrupt calls that don't actually have parts, as in
 
 @example
 @group
-   interrupt after 1/2 @key{ENTER}
-   scoot back @key{ENTER}
-   cross over circulate @key{ENTER}
+   interrupt after 1/2 @key{<ENTER>}
+   scoot back @key{<ENTER>}
+   cross over circulate @key{<ENTER>}
 @end group
 @end example
 
@@ -4698,9 +4729,9 @@ interrupt calls that don't actually have parts, as in
 
 @example
 @group
-   interrupt after 1/8 @key{ENTER}
-   load the boat @key{ENTER}
-   grand swing thru @key{ENTER}
+   interrupt after 1/8 @key{<ENTER>}
+   load the boat @key{<ENTER>}
+   grand swing thru @key{<ENTER>}
 @end group
 @end example
 
@@ -5066,6 +5097,10 @@ perpendicular to, two miniwaves.  (This is the setup that results
 from a @code{1/2 circulate} from waves.)  In this setup, @code{centers}
 means the center @emph{wave}.  If you want the center diamond instead, you
 must say so.
+@sp 1
+@item center box
+This is intended for use in a parallelogram or other setup in which there
+is a recognizeable fully occupied 2x2 box in the center.
 @sp 1
 @item center 1x4
 @item center column

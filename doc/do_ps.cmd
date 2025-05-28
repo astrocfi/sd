@@ -12,11 +12,12 @@ REM                   "sd/relnotes98.ps"
 REM                   "sd/appnote1.ps"
 REM                   "sd/appnote2.ps"
 REM                   "sd/appnote3.ps"
+REM                   "sd/appnote4.ps"
 REM
 make ps.all
 del psdoc.zip psdoc.tar psdoc.tar.gz
 REM del psdoc.lzh psdoc.exe psdoc.tar
-"C:\program files\winzip\wzzip" psdoc sd_doc.ps demo.ps sessions.ps relnotes.ps relnotes98.ps appnote1.ps appnote2.ps appnote3.ps
+"C:\program files\winzip\wzzip" psdoc sd_doc.ps demo.ps sessions.ps relnotes.ps relnotes98.ps appnote1.ps appnote2.ps appnote3.ps appnote4.ps
 crunfix sd_doc.ps \temp\sd_doc.ps
 crunfix demo.ps \temp\demo.ps
 crunfix sessions.ps \temp\sessions.ps
@@ -25,8 +26,9 @@ crunfix relnotes98.ps \temp\relnotes98.ps
 crunfix appnote1.ps \temp\appnote1.ps
 crunfix appnote2.ps \temp\appnote2.ps
 crunfix appnote3.ps \temp\appnote3.ps
+crunfix appnote4.ps \temp\appnote4.ps
 pushd \temp
-tar cvf psdoc.tar sd_doc.ps demo.ps sessions.ps relnotes.ps relnotes98.ps appnote1.ps appnote2.ps appnote3.ps
+tar cvf psdoc.tar sd_doc.ps demo.ps sessions.ps relnotes.ps relnotes98.ps appnote1.ps appnote2.ps appnote3.ps appnote4.ps
 popd
 copy \temp\psdoc.tar .
 gzip psdoc.tar -c > psdoc.tar.gz
@@ -46,6 +48,7 @@ REM call make_text relnotes98.ps ps.msg
 REM call make_text appnote1.ps ps.msg
 REM call make_text appnote2.ps ps.msg
 REM call make_text appnote3.ps ps.msg
+REM call make_text appnote4.ps ps.msg
 REM pgp -sta +clearsig=on +armor=on ps.msg -u wba -o ps.asc
 REM del ps.msg
 REM ren ps.asc ps.txt

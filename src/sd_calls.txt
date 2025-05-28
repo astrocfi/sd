@@ -33,7 +33,7 @@
     General Public License if you distribute the file.
 */
 
-version "34.81"
+version "35.0"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve
@@ -3598,6 +3598,9 @@ call "_maybe grand slip, not c3" dontshow tag maybegrandslip_notc3
 call "slide" a2
    setup 1x4 1x4 restriction controversial miniwaves
       array [ZM1N ZM0N ZM3N ZM2N]
+            alternate_definition [twisted] c4
+   setup 1x4 2x2 qualifier miniwaves
+      array [AM0W CM0E CM1E AM1W]
 
 call "spread" plus tag spread
    /* There are a number of problems with this call, not the least of
@@ -3646,6 +3649,9 @@ call "spread" plus tag spread
       array [ZM0N ZM2N ZM3N ZM1N]
    setup trngl 1x3 qualifier 2fl_only
       array [ZM1N ZM0N ZM2N 0 0 0]
+            alternate_definition [twisted] c4
+   setup 1x4 2x2 qualifier miniwaves
+      array [AM0W CM0E CM1E AM1W]
             alternate_definition [2x1] mainstream
    setup trngl 1x3 qualifier 2fl_only
       array [ZM1N ZM0N ZM2N 0 0 0]
@@ -3701,6 +3707,9 @@ call "swing" a2 tag swing
 call "slither" a2
    setup 1x4 1x4
       array [ZM0N ZM3N ZM2N ZM1N]
+            alternate_definition [twisted] c4
+   setup 1x4 dmd
+      array [ZM0N AM1W ZM2N CM1E]
             alternate_definition [single] c4
    setup 1x2 1x2
       array [ZM0N ZM1N]
@@ -3718,9 +3727,13 @@ call "slither" a2
 call "_inner sashay" dontshow tag spiffy_sashay
    setup 1x2 1x2
       array [ZM1N ZM0N]
+            alternate_definition [twisted] c4
+   setup 1x2 1x2 rotate qualifier wave_only
+      array [AM0S CM0N]
 
 call "_inner slither" dontshow tag spiffy_slither
-   singleconc spiffy_sashay [] nullcall []
+            twisted_is_inherited
+   singleconc spiffy_sashay [inherit_twisted] nullcall []
 
 // But if it's used in some other call, as in dixie sashay,
 // we want the ends to be able to roll.  So we arrange for
@@ -3750,8 +3763,9 @@ call "_slither as subcall" dontshow tag slither
    // Now, after the plain call has failed, we do the good stuff.
    // First, make sure we aren't in a diamond.  The "singleconc"
    // schema wouldn't mind, but we do.
+            twisted_is_inherited
    seq checkline [roll_transparent]
-   seq spiffy_slither []
+   seq spiffy_slither [inherit_twisted]
 
 call "_maybe grand slither" dontshow tag maybegrandslither
             diamond_is_legal
@@ -3772,6 +3786,9 @@ call "_maybe grand slither" dontshow tag maybegrandslither
       array [ZM0N ZM2N ZM1N ZM3N ZM5N ZM4N]
    setup 1x8 1x8
       array [ZM0N ZM3N ZM6N ZM1N ZM4N ZM7N ZM2N ZM5N]
+            alternate_definition [twisted] c4
+   setup 1x4 dmd
+      array [ZM0N AM1W ZM2N CM1E]
             alternate_definition [diamond] c3a
    setup qtag qtag
       array [0 0 ZM2N ZM7N 0 0 ZM6N ZM3N]
@@ -4732,7 +4749,7 @@ call "clover the wave" c3x
 
 call "trade" mainstream tag trade
             left_means_mirror diamond_is_legal 12_16_matrix_means_split
-            /* Need "left" for "half trade" */
+            // Need "left" for "half trade".
    setup 1x2 1x2
       array [CR1S AL0S]
             alternate_definition [half] mainstream
@@ -4741,19 +4758,24 @@ call "trade" mainstream tag trade
          if 1x2_beau_or_miniwave [CR0N AL0S]
          if always [0 AL1S]
             alternate_definition [lasthalf] mainstream
-   /* We do this as an arm turn.  If that isn't right, sorry. */
+   // We do this as an arm turn.  If that isn't right, sorry.
    setup 1x2 1x2 rotate restriction forbidden wave_only
       array [CR0N AL0S]
             alternate_definition [yoyo] c4
    setup 1x4 2x2 other_elongate restriction controversial miniwaves
-      /* Many people consider things like "yoyo turn the key"
-         with a pushy cast to be bogus. */
+      // Many people consider things like "yoyo turn the key"
+      // with a pushy cast to be bogus.
       preds "?"
          if cast_normal  [CR3W AL3E AL2E CR2W]
          if cast_pushy   [AL0E AL3E CR1W CR2W]
          if always       [0    AL3E 0    CR2W]
    setup 1x2 1x2 rotate restriction forbidden miniwaves
       array [CR1S AL1N]
+            alternate_definition [twisted] c4
+   setup 1x2 1x2 rotate qualifier miniwaves
+      array [CR1S AL1N]
+   setup 1x2 1x2 rotate qualifier couples_only
+      array [CR1S L0S]
             alternate_definition [diamond] c4
    setup dmd dmd
       array [CR2S 0 AL0S 0]
@@ -4781,6 +4803,11 @@ call "_trade, allow t-bone" dontshow tag trade_w_tbone
       preds "???"
          if 1x2_beau_or_miniwave [CR0N AL0S]
          if always [0 AL1S]
+            alternate_definition [twisted] c4
+   setup 1x2 1x2 rotate qualifier miniwaves
+      array [CR1S AL1N]
+   setup 1x2 1x2 rotate qualifier couples_only
+      array [CR1S L0S]
             alternate_definition [yoyo] c4
    setup 1x4 2x2 other_elongate restriction controversial miniwaves
       /* Many people consider things like "yoyo turn the key"
@@ -4819,11 +4846,19 @@ call "california twirl" mainstream
       preds "Unknown sex."
          if boyp [CR1S 0]
          if girlp [0 AL0S]
+            alternate_definition [twisted] c4
+   setup 1x2 1x2 rotate qualifier couples_only
+      preds "Unknown sex."
+         if boyp [CR1S 0]
+         if girlp [0 L0S]
 
 call "wheel around" mainstream
             reverse_means_mirror
    setup 1x2 1x2 restriction forbidden all_facing_same
       array [AL1S AL0S]
+            alternate_definition [twisted] c4
+   setup 1x2 1x2 rotate restriction forbidden all_facing_same
+      array [AL0N AL1N]
             alternate_definition [single] c4
    setup 1x1 1x1
       array [AL0S]
@@ -5818,8 +5853,8 @@ call "touch 1/4" dontshow tag touch_1_4
       array [CR1E 0]
 
 call "left touch 1/4" dontshow tag left_touch_1_4
-            left_means_mirror   /* That is, it means RIGHT touch 1/4. */
-            reverse_means_mirror
+            left_means_mirror   // That is, it means RIGHT touch 1/4.
+            reverse_means_mirror 12_16_matrix_means_split
    setup 2x1 1x2
       array [AL1W 0]
 
@@ -8912,11 +8947,12 @@ call "_start dixie style" dontshow tag start_dixie
 call "dixie style to a wave" mainstream tag full_dixie
             visible_fractions
             split_like_dixie_style rear_back_from_wave_or_qtag
-            single_is_inherited singlefile_is_inherited twisted_is_inherited nxn_is_inherited
-            fractal_is_inherited left_means_mirror reverse_means_mirror
+            single_is_inherited singlefile_is_inherited twisted_is_inherited
+            nxn_is_inherited mxn_is_inherited fractal_is_inherited
+            left_means_mirror reverse_means_mirror
    seq start_dixie [inherit_left inherit_reverse inherit_singlefile
-                    inherit_single inherit_nxn inherit_twisted]
-   seq left_touch_1_4 [inherit_left inherit_reverse inherit_fractal]
+                    inherit_single inherit_nxn inherit_mxn inherit_twisted]
+   seq left_touch_1_4 [inherit_left inherit_reverse inherit_fractal inherit_mxn]
 
 call "dixie diamond" c1
             visible_fractions
@@ -8931,11 +8967,11 @@ call "dixie sashay" c1
             visible_fractions
             split_like_dixie_style rear_back_from_wave_or_qtag
             singlefile_is_inherited twisted_is_inherited magic_is_inherited
-            nxn_is_inherited fractal_is_inherited left_means_mirror
-            reverse_means_mirror
+            nxn_is_inherited mxn_is_inherited fractal_is_inherited
+            left_means_mirror reverse_means_mirror
    seq full_dixie [inherit_left inherit_reverse inherit_singlefile
-                  inherit_nxn inherit_fractal inherit_magic inherit_twisted]
-   seq slither [inherit_nxn]
+                  inherit_nxn inherit_mxn inherit_fractal inherit_magic inherit_twisted]
+   seq slither [inherit_nxn inherit_mxn inherit_twisted]
 
 call "dixie derby" c3x
             split_like_dixie_style rear_back_from_wave_or_qtag
@@ -9086,9 +9122,9 @@ call "_sashay thru part 1" dontshow tag sashay_thru_1
       array [ZM1W 0]
 
 call "sashay thru" c4
-            visible_fractions rear_back_from_r_wave left_means_mirror
-   seq sashay_thru_1 []
-   seq slither []
+            visible_fractions rear_back_from_r_wave left_means_mirror twisted_is_inherited
+   seq sashay_thru_1 [inherit_twisted]
+   seq slither [inherit_twisted]
             rear_back_from_r_wave left_means_mirror
    setup 2x2 1x4
       array [0 0 ZM2N ZM3N]
@@ -11242,6 +11278,9 @@ call "zoom" mainstream tag zoom
             alternate_definition [half] mainstream
    setup 2x2 1x4 no_cutting_through restriction forbidden peelable_box
       array [AL0S CR2S ZM3N ZM1N]
+            alternate_definition [twisted] c4
+   setup 2x2 1x4 no_cutting_through restriction forbidden peelable_box
+      array [AL1W CR3E CM2E AM0W]
 
 call "_zoom, ends OK" dontshow tag zoomok
    setup 2x2 2x2 restriction forbidden peelable_box
@@ -11312,9 +11351,9 @@ call "_beaus run" dontshow tag beaurun
 call "@6@C run" mainstream tag anyonerun
             yield_if_ambiguous split_large_setups
    lateral_to_selectees
-   setup 1x2 1x2
+   setup 1x2 1x2 restriction unusual not_all_sel
       preds "Can't have both people run."
-         if select_near_unselect [CR1S AL0S]
+         if select [CR1S AL0S]
          if unselect_near_select [ZM1N ZM0N]
          if unselect_near_unselect [ZM0N ZM1N]
    setup 2x1 1x2
@@ -11332,13 +11371,13 @@ call "@6@C run" mainstream tag anyonerun
          if unselect_once_rem_from_select   [ZM1N ZM0N ZM3N ZM2N]
             alternate_definition [half] mainstream
    lateral_to_selectees
-   setup 1x2 1x2 rotate qualifier couples_only
+   setup 1x2 1x2 rotate qualifier couples_only restriction unusual not_all_sel
       preds "Need one runner and one runnee."
-         if select_near_unselect [CR0N AL0S]
+         if select [CR0N AL0S]
          if unselect_near_select [ZM1W ZM1W]
-   setup 1x2 1x2 rotate qualifier miniwaves
+   setup 1x2 1x2 rotate qualifier miniwaves restriction unusual not_all_sel
       preds "Need one runner and one runnee."
-         if select_near_unselect [CR0N AL0S]
+         if select [CR0N AL0S]
          if unselect_near_select [ZM0W ZM0W]
             alternate_definition [twisted] c4
    lateral_to_selectees
@@ -13685,7 +13724,8 @@ call "2/3 stroll down the lane" c4 tag newstrolldown1
             reverse_means_mirror singlefile_is_inherited
    // By inheriting singlefile to both parts, of which the second is illegal,
    // we make it necessary to say "centers work single file".
-   conc hammerlane [inherit_singlefile] endsstrolldown1 [inherit_singlefile conc_demand_lines conc_force_columns]
+   conc hammerlane [inherit_singlefile]
+        endsstrolldown1 [inherit_singlefile conc_demand_lines conc_force_columns]
 
 call "_stroll down the lane part 2" dontshow tag newstrolldown2
             reverse_means_mirror
@@ -16532,10 +16572,11 @@ call "checkover" c1
              AL0E AL1E AL2E AL3E AM12E AM13E AM14E AM15E]
 
 call "turnover" c4
-            visible_fractions diamond_is_legal
+            visible_fractions diamond_is_legal twisted_is_inherited
             grand_is_inherited nxn_is_inherited fractal_is_inherited
-   seq boxy_cast_off_34 [inherit_diamond inherit_fractal]
-   seq maybegrandslither [roll_transparent inherit_grand inherit_diamond inherit_nxn]
+   seq boxy_cast_off_34 [inherit_diamond inherit_fractal inherit_twisted]
+   seq maybegrandslither [roll_transparent inherit_grand inherit_diamond
+                          inherit_twisted inherit_nxn]
 
 call "turn by" c4 tag turnby
    // Do we actually allow this from a single 8-chain?  Isn't it the equivalent of a trade by,
@@ -16637,7 +16678,7 @@ call "transfer the column" a1 tag transfer
    setup 8x2 2x8 restriction forbidden wave_only
       array [M0W M2W M4W M6W R9W R11W R13W R15W L0E L2E L4E L6E M9E M11E M13E M15E]
             alternate_definition [single] c4
-   setup 2x2 2x2 restriction forbidden wave_only
+   setup 2x2 2x2 restriction wave_only
       array [CR2W AL3E AM2E CM3W]
             alternate_definition [3x3 single] c4
    setup 3x2 2x3 rotate restriction forbidden wave_only
@@ -16648,7 +16689,7 @@ call "transfer the column" a1 tag transfer
 
 call "box transfer" a2
             dont_use_in_resolve
-   setup 2x2 2x2 restriction forbidden wave_only
+   setup 2x2 2x2 restriction wave_only
       array [CR2W AL3E AM2E CM3W]
             alternate_definition [3x3] c4
    setup 3x2 2x3 rotate restriction forbidden wave_only
@@ -16659,7 +16700,7 @@ call "box transfer" a2
 
 // Both "split" and "box" are legal on Callerlab lists.
 call "split transfer" a2
-   setup 2x2 2x2 restriction forbidden wave_only
+   setup 2x2 2x2 restriction wave_only
       array [CR2W AL3E AM2E CM3W]
             alternate_definition [3x3] c4
    setup 3x2 2x3 rotate restriction forbidden wave_only
@@ -17407,9 +17448,19 @@ call "slim down" c4a tag slimdown
       array [ZM9W ZM10W ZM11W ZM0W ZM1W ZM2W ZM3W ZM4W ZM5W ZM6W ZM7W ZM8W]
             alternate_definition [4x4] c4
    setup 2x8 2x8 rotate
-      array [ZM12W ZM13W ZM14W ZM15W ZM0W ZM1W ZM2W ZM3W ZM4W ZM5W ZM6W ZM7W ZM8W ZM9W ZM10W ZM11W]
+      array [ZM12W ZM13W ZM14W ZM15W ZM0W ZM1W ZM2W  ZM3W
+             ZM4W  ZM5W  ZM6W  ZM7W  ZM8W ZM9W ZM10W ZM11W]
    setup 8x2 2x8 rotate
-      array [ZM12W ZM13W ZM14W ZM15W ZM0W ZM1W ZM2W ZM3W ZM4W ZM5W ZM6W ZM7W ZM8W ZM9W ZM10W ZM11W]
+      array [ZM12W ZM13W ZM14W ZM15W ZM0W ZM1W ZM2W  ZM3W
+             ZM4W  ZM5W  ZM6W  ZM7W  ZM8W ZM9W ZM10W ZM11W]
+
+call "substitute" c4
+            dont_use_in_nice_resolve
+   setup 4x2 2x4
+      array [ZM1N ZM0N ZM3N ZM2N ZM5N ZM4N ZM7N ZM6N]
+            alternate_definition [twisted] c4
+   setup 4x2 2x4 rotate
+      array [AM7S AM6S CM1N CM0N AM3S AM2S CM5N CM4N]
 
 call "lateral substitute" c2
             dont_use_in_nice_resolve
@@ -17421,6 +17472,11 @@ call "lateral substitute" c2
       array [ZM3N ZM5N ZM4N ZM0N ZM2N ZM1N]
    setup trngl trngl
       array [   0 ZM5N ZM4N    0 ZM2N ZM1N]
+            alternate_definition [twisted] c4
+   setup 2x4 2x4 rotate
+      array [AM7S AM6S CM1N CM0N AM3S AM2S CM5N CM4N]
+   setup 4x2 2x4 rotate
+      array [AM7S    0    0 CM0N AM3S    0    0 CM4N]
 
 call "triangle substitute" c2
             dont_use_in_nice_resolve
@@ -19744,8 +19800,10 @@ call "quick change" c4
    conc6p_or_normal trade_and_roll_w_tbone [inherit_yoyo inherit_diamond] circ_and_quarter_in [inherit_diamond conc_force_spots endscando]
 
 call "deuces wild" c4
-            half_is_inherited yoyo_is_inherited diamond_is_legal
-   conc6p_or_normal trade_w_tbone [inherit_half inherit_yoyo inherit_diamond suppress_elongation_warnings] zoom [inherit_half inherit_diamond endscando]
+            half_is_inherited yoyo_is_inherited diamond_is_legal twisted_is_inherited
+   conc6p_or_normal trade_w_tbone [inherit_half inherit_yoyo inherit_twisted
+                                  inherit_diamond suppress_elongation_warnings]
+                    zoom [inherit_half inherit_diamond inherit_twisted endscando]
 
 call "nice and easy" c4
             yoyo_is_inherited diamond_is_legal
@@ -19938,7 +19996,7 @@ call "@2cross @3the K" c2
             twisted_is_inherited visible_fractions yoyo_is_inherited
             mxn_is_inherited nxn_is_inherited
    seq crosstrail [inherit_twisted inherit_nxn inherit_mxn or_anycall]
-   /* Usual hack: you must say "initially 4x4", or next line will be illegal. */
+   // Usual hack: you must say "initially 4x4", or next line will be illegal.
    seq the_k [inherit_yoyo inherit_nxn inherit_mxn]
 
 call "@0 the K" c2

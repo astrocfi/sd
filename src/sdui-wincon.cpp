@@ -39,9 +39,9 @@ static DWORD oldMode;
 static DWORD newMode;
 
 
-static char *my_pn1;
-static char *my_pn2;
-static char *my_directions;
+static const char *my_pn1;
+static const char *my_pn2;
+static const char *my_directions;
 
 void iofull::final_initialize()
 {
@@ -295,6 +295,13 @@ bool iofull::help_manual()
 {
    (void) ShellExecute(NULL, "open", "c:\\sd\\sd_doc.html", NULL, NULL, SW_SHOWNORMAL);
    return true;
+}
+
+
+bool iofull::help_faq()
+{
+   (void) ShellExecute(NULL, "open", "c:\\sd\\faq.html", NULL, NULL, SW_SHOWNORMAL);
+   return TRUE;
 }
 
 

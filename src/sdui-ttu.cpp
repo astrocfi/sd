@@ -110,6 +110,7 @@ void iofull::display_help()
 }
 
 bool iofull::help_manual() { return false; }
+bool iofull::help_faq() { return false; }
 
 
 #ifndef NO_CURSES

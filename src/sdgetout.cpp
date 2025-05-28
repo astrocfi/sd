@@ -199,7 +199,7 @@ void write_resolve_text(bool doing_file)
    int distance = r.distance;
    resolve_kind index = r.the_item->k;
 
-   if (configuration::current_config().state.result_flags & RESULTFLAG__PLUSEIGHTH_ROT)
+   if (configuration::current_config().state.result_flags.misc & RESULTFLAG__PLUSEIGHTH_ROT)
       distance++;
 
    distance &= 7;
@@ -208,17 +208,17 @@ void write_resolve_text(bool doing_file)
 
    if (index == resolve_circle) {
       if (distance == 0) {
-         if (configuration::current_config().state.result_flags & RESULTFLAG__IMPRECISE_ROT)
+         if (configuration::current_config().state.result_flags.misc & RESULTFLAG__IMPRECISE_ROT)
             writestuff("approximately ");
          writestuff("at home");
       }
       else {
          writestuff("circle left ");
-         if (configuration::current_config().state.result_flags & RESULTFLAG__IMPRECISE_ROT)
+         if (configuration::current_config().state.result_flags.misc & RESULTFLAG__IMPRECISE_ROT)
             writestuff("approximately ");
          writestuff(resolve_distances[8 - distance]);
          writestuff(" or right ");
-         if (configuration::current_config().state.result_flags & RESULTFLAG__IMPRECISE_ROT)
+         if (configuration::current_config().state.result_flags.misc & RESULTFLAG__IMPRECISE_ROT)
             writestuff("approximately ");
          writestuff(resolve_distances[distance]);
       }
@@ -259,7 +259,7 @@ void write_resolve_text(bool doing_file)
       writestuff(resolve_main_parts[mainpart]);
 
       writestuff("  (");
-      if (configuration::current_config().state.result_flags & RESULTFLAG__IMPRECISE_ROT)
+      if (configuration::current_config().state.result_flags.misc & RESULTFLAG__IMPRECISE_ROT)
          writestuff("approximately ");
 
       if (distance == 0) {
@@ -587,7 +587,7 @@ static bool inner_search(command_kind goal,
 
       case command_8person_level_call:
          // We demand that no splitting have taken place along either axis.
-         if (ns->result_flags & RESULTFLAG__SPLIT_AXIS_FIELDMASK) goto what_a_loss;
+         if (ns->result_flags.split_info) goto what_a_loss;
          break;
 
       default:

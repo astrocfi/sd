@@ -36,7 +36,7 @@ SD_OBJS = sdprint.o sdui-win.o
 
 MKCALLS_OBJS = mkcalls.o
 
-all: sdtty.exe sd.exe mkcalls.exe sd_calls.dat
+all: sdtty.exe sd.exe mkcalls.exe deploy.exe sd_calls.dat
 
 libsdlib.a: sdlib.dll $(SDLIB_OBJS)
 
@@ -47,20 +47,27 @@ sdlib.dll: $(SDLIB_OBJS)
 sdres.o: sd.rc
 	windres sd.rc sdres.o
 
+deployres.o: deploy.rc
+	windres deploy.rc deployres.o
+
 sdttyres.o: sdtty.rc
 	windres sdtty.rc sdttyres.o
 
 mkcalls.exe: $(MKCALLS_OBJS)
-	$(CC) $(CFLAGS) -o $@ $(MKCALLS_OBJS)
+	$(CC) -o $@ $(MKCALLS_OBJS)
 	strip mkcalls.exe
 
 sdtty.exe: libsdlib.a sdlib.dll $(SDTTY_OBJS) sdttyres.o
-	$(CC) $(CFLAGS) -o $@ $(SDTTY_OBJS) sdttyres.o $(SDTTY_LIBS)
+	$(CC) -o $@ $(SDTTY_OBJS) sdttyres.o $(SDTTY_LIBS)
 	strip sdtty.exe
 
 sd.exe: libsdlib.a sdlib.dll $(SD_OBJS) sdres.o
-	$(CC) -mwindows $(CFLAGS) -o $@ $(SD_OBJS) sdres.o $(SD_LIBS)
+	$(CC) -mwindows -o $@ $(SD_OBJS) sdres.o $(SD_LIBS)
 	strip sd.exe
+
+deploy.exe:  deploy.o deployres.o
+	$(CC) -mwindows -o $@ deploy.o deployres.o
+	strip deploy.exe
 
 sd_calls.dat: sd_calls.txt mkcalls.exe
 	mkcalls
@@ -78,6 +85,9 @@ sd_calls.dat: sd_calls.txt mkcalls.exe
 # without "-DSDLIB_EXPORTS".
 
 mkcalls.o: mkcalls.cpp
+	$(CC) $(CFLAGS) -c $<
+
+deploy.o: deploy.cpp
 	$(CC) $(CFLAGS) -c $<
 
 sdui-tty.o: sdui-tty.cpp
@@ -105,4 +115,7 @@ mapcachefile.cpp: mapcachefile.h
 $(SDLIB_OBJS) $(SDTTY_OBJS): sd.h database.h
 
 clean::
-	del *.o sd.exe sdtty.exe mkcalls.exe sd_calls.dat libsdlib.a sdlib.dll
+	del *.o deploy.exe sd.exe sdtty.exe mkcalls.exe sd_calls.dat libsdlib.a sdlib.dll
+
+cleanup::
+	del *.o libsdlib.a

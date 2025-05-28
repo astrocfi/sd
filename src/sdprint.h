@@ -1,0 +1,65 @@
+#ifndef SDPRINT_H
+#define SDPRINT_H
+
+/* SD -- square dance caller's helper.
+
+    Copyright (C) 1990-2000  William B. Ackerman.
+    Copyright (C) 1996 Charles Petzold.
+
+    This file is unpublished and contains trade secrets.  It is
+    to be used by permission only and not to be disclosed to third
+    parties without the express permission of the copyright holders.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+    This is for version 34. */
+
+// This file is used in print utilities other than Sd.
+
+// The parameters passed here are just the initial defaults.  The user can
+// change them by calling "windows_choose_font" and clicking on things.
+
+// Q: why do we pass "ID" values in a structure at runtime, rather than
+//    using values straight out of a "resource.h" file the way the rest
+//    of the civilized world does?
+// A: This file, and the file sdprint.cpp, are used in different programs,
+//    with different resource.h files.  We can't sensibly include resource.h
+//    either here or in sdprint.cpp, because we might not get the same file
+//    the client used.
+
+struct print_default_info {
+   const char *font;
+   const char *filter;
+   int pointsize;
+   bool bold;
+   bool italic;
+   int IDD_PRINTING_DIALOG;
+   int IDC_FILENAME;
+};
+
+
+struct printer_innards;
+
+class printer {
+
+ public:
+
+   printer(HINSTANCE hInstance, HWND hwnd, const print_default_info & info);
+   ~printer();
+
+   void choose_font();
+
+   // This prints a specific file.  Not sure what "szMainTitle" actually does.
+   void print_this(const char *filename, char *szMainTitle, bool pagenums);
+
+   // This brings up the "choose file" dialog and lets the user click on things.
+   void print_any(char *szMainTitle, bool pagenums);
+
+ private:
+
+   printer_innards *innards;
+};
+
+#endif

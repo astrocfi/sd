@@ -215,48 +215,48 @@ enum color_scheme_type {
 
 class ui_option_type {
  public:
-   int no_graphics;       // 1 = "no_checkers"; 2 = "no_graphics"
-   int no_intensify;
-   int reverse_video;     // 0 = black-on-white (default); 1 = white-on-black
-   int pastel_color;      // 1 = use pastel red/grn for color by gender;
-                          // 0 = bold colors.  Color by couple or color by corner
-                          // are always done with bold colors.
    color_scheme_type color_scheme;
-   int no_sound;
    int force_session;
    int sequence_num_override;
+   int no_graphics;       // 1 = "no_checkers"; 2 = "no_graphics"
+   bool no_intensify;
+   bool reverse_video;    // T = white-on-black; F = black-on-white.
+   bool pastel_color;     // T = use pastel red/blue for color by gender.
+                          // F = bold colors.  Color by couple or color by corner
+                          // are always done with bold colors.
    bool singlespace_mode;
    bool nowarn_mode;
    bool keep_all_pictures;
    bool accept_single_click;
    bool diagnostic_mode;
+   bool no_sound;
    int resolve_test_minutes;
    int singing_call_mode;
 
-   /* This gets set if a user interface (e.g. sdui-tty/sdui-win) wants escape sequences
-      for drawing people, so that it can fill in funny characters, or draw in color.
-      This applies only to calls to add_new_line with a nonzero second argument.
-
-      0 means don't use any funny stuff.  The text strings transmitted when drawing
-      setups are completely plain ASCII.
-
-      1 means use escapes for the people themselves (13 octal followed by a byte of
-      person identifier followed by a byte of direction) but don't use the special
-      spacing characters.  All spacing and formatting is done with spaces.
-
-      2 means use escapes and other special characters.  Whenever the second arg to
-      add_new_line is nonzero, then in addition to the escape sequences for the
-      people themselves, we have an escape sequence for a phantom, and certain
-      characters have special meaning:  5 means space 1/2 of a glyph width, etc.
-      See the definition of newline for details. */
+   // This gets set if a user interface (e.g. sdui-tty/sdui-win) wants escape sequences
+   // for drawing people, so that it can fill in funny characters, or draw in color.
+   // This applies only to calls to add_new_line with a nonzero second argument.
+   //
+   // 0 means don't use any funny stuff.  The text strings transmitted when drawing
+   // setups are completely plain ASCII.
+   //
+   // 1 means use escapes for the people themselves (13 octal followed by a byte of
+   // person identifier followed by a byte of direction) but don't use the special
+   // spacing characters.  All spacing and formatting is done with spaces.
+   //
+   // 2 means use escapes and other special characters.  Whenever the second arg to
+   // add_new_line is nonzero, then in addition to the escape sequences for the
+   // people themselves, we have an escape sequence for a phantom, and certain
+   // characters have special meaning:  5 means space 1/2 of a glyph width, etc.
+   // See the definition of newline for details.
    int use_escapes_for_drawing_people;
 
-   /* These could get changed if the user requests special naming.  See "alternate_glyphs_1"
-      in the command-line switch parser in sdsi.cpp. */
-   char *pn1;             // 1st char (1/2/3/4) of what we use to print person.
-   char *pn2;             // 2nd char (B/G) of what we use to print person.
-   char *direc;           // 3rd char (direction arrow) of what we use to print person.
-   char *stddirec;        // the "standard" directions, for transcript files.
+   // These could get changed if the user requests special naming.  See "alternate_glyphs_1"
+   // in the command-line switch parser in sdsi.cpp.
+   const char *pn1;       // 1st char (1/2/3/4) of what we use to print person.
+   const char *pn2;       // 2nd char (B/G) of what we use to print person.
+   const char *direc;     // 3rd char (direction arrow) of what we use to print person.
+   const char *stddirec;  // the "standard" directions, for transcript files.
                           // Doesn't get overridden by any options.
    int squeeze_this_newline;  // randomly used by printing stuff.
    int drawing_picture;       // randomly used by printing stuff.
@@ -616,6 +616,7 @@ enum selector_kind {
    selector_center_wave,
    selector_center_line,
    selector_center_col,
+   selector_center_box,
    selector_outerpairs,
 #ifdef TGL_SELECTORS
    /* Taken out.  Not convinced these are right.  See also sdutil.c, sdpreds.c . */
@@ -632,9 +633,8 @@ enum selector_kind {
    selector_everyone,
    selector_all,
    selector_none,
-   /* Start of unsymmetrical selectors. */
-#define unsymm_selector_start ((int) selector_nearline)
-   selector_nearline,
+   // Start of unsymmetrical selectors.
+   unsymm_SELECTOR_START,    selector_nearline = unsymm_SELECTOR_START,
    selector_farline,
    selector_nearcolumn,
    selector_farcolumn,
@@ -658,7 +658,7 @@ enum selector_kind {
    selector_cpls2_3,
    selector_cpls3_4,
    selector_cpls4_1,
-   selector_enum_extent    // Not a selector; indicates extent of the enum.
+   selector_ENUM_EXTENT    // Not a selector; indicates extent of the enum.
 };
 
 // BEWARE!!  This list must track the array "direction_names" in sdutil.cpp .
@@ -846,6 +846,7 @@ enum command_kind {
    command_save_pic,
    command_help,
    command_help_manual,
+   command_help_faq,
    command_simple_mods,
    command_all_mods,
    command_toggle_conc_levels,
@@ -1238,6 +1239,37 @@ struct setup_command {
 };
 
 
+// We would like to have made this a class, with the "split_info" fields
+// private, since those fields are somewhat dangerous.  But this is used
+// in static aggregate initializers, so we can't.  Of course, what we
+// would really like to have done, if the fields were private, is have
+// the methods do tricky things by accessing the those fields as a
+// single 32-bit integer, somewhat the way older (extremely dangerous)
+// versions of the code used to.  But it would get us into endian-ness
+// problems, and do-we-really-know-that-uint32-is-twice-as-big-as-uint16
+// problems, that are simply not worth it.  Especially on 64-bit machines.
+
+struct resultflag_rec {
+   uint16 split_info[2];  // The split stuff.  X in slot 0, Y in slot 1.
+   uint32 misc;           // Miscellaneous info, with names like RESULTFLAG__???.
+
+   inline void clear_split_info()
+   { split_info[0] = split_info[1] = 0; }
+
+   inline void maximize_split_info()
+   { split_info[0] = split_info[1] = ~0; }
+
+   inline void copy_split_info(const resultflag_rec & rhs)
+   { split_info[0] = rhs.split_info[0]; split_info[1] = rhs.split_info[1]; }
+
+   inline void swap_fields()
+   {
+      uint16 temp = split_info[0];
+      split_info[0] = split_info[1];
+      split_info[1] = temp;
+   }
+};
+
 /* Warning!  Do not rearrange these fields without good reason.  There are data
    initializers instantiating these in sdinit.cpp (test_setup_*) and in sdtables.cpp
    (startinfolist) that will need to be rewritten. */
@@ -1250,7 +1282,7 @@ struct setup {
    // The following item is not actually part of the setup description, but contains
    // miscellaneous information left by "move" and similar procedures, for the
    // convenience of whatever called same.
-   uint32 result_flags;           // Miscellaneous info, with names like RESULTFLAG__???.
+   resultflag_rec result_flags;           // Miscellaneous info, with names like RESULTFLAG__???.
 
    // The following three items are only used if the setup kind is "s_normal_concentric".
    // Note in particular that "outer_elongation" is thus underutilized, and that a lot
@@ -2016,6 +2048,83 @@ struct coordrec {
 };
 
 
+class merge_table {
+
+ public:
+
+   // We make this a struct inside the class, rather than having its
+   // fields just comprise the class itself (note that there are no
+   // fields in this class, and it is never instantiated) so that
+   // we can make "merge_init_table" be a statically initialized array.
+
+   struct concmerge_thing {
+      setup_kind k1;
+      setup_kind k2;
+      uint32 m1;
+      uint32 m2;
+      /* This is the mask of things that we will reject.  The low 4 bits are rotations
+         that we will reject.  It is ANDed with "1 << r".  R is the rotation of res1,
+         after localizing so that res2 has rotation zero.  Hence r=0 if the two setups
+         have the same orientation, and, except in the case of things like triangles,
+         r=1 if they are orthogonal.  Common values of the low hex digit of "rotmask"
+         are therefore:
+         E demand same orientation
+         D demand orthogonal
+         C either way.
+
+         Additionally:
+         The "10" bit means that action must be merge_without_gaps.
+         The "20" bit means that action must NOT be merge_strict_matrix.
+         The "40" bit means only accept it if the setups, prior to cutting down,
+         were a 2x4 and a 1x8 that were perpendicular to each other.
+         The "80" bit means that action must NOT be merge_c1_phantom_real.
+         The "100" bit means that original action must NOT be merge_after_dyp.
+         The "200" bit means only accept it if the setups, prior to cutting down,
+         were a 2x4 and a ptpd that were perpendicular to each other. */
+
+      unsigned short rotmask;
+      // 1 bit - swap setups;
+      // 2 bit - change elongation;
+      // 4 bit - no take right hands
+      // 8 bit - force outer_elong to 3, so people will go to corners of 4x4
+      unsigned short swap_setups;
+      calldef_schema conc_type;
+      setup_kind innerk;
+      setup_kind outerk;
+      warning_index warning;
+      int irot;
+      int orot;
+      veryshort innermap[16];
+      veryshort outermap[24];  // Only one map (bigh+4x6) needs more than 16
+      concmerge_thing *next;
+   };
+
+ private:
+
+   // Must be a power of 2.
+   enum { NUM_MERGE_HASH_BUCKETS = 32 };
+
+   // The big initialization table, in sdtables.
+   static concmerge_thing merge_init_table[];
+
+   // The hash table, constructed during initialization.  In sdconc.
+   static concmerge_thing *merge_hash_tables[NUM_MERGE_HASH_BUCKETS];
+
+ public:
+
+   static const concmerge_thing map_tgl4l;
+   static const concmerge_thing map_tgl4b;
+   static const concmerge_thing map_2234b;
+
+   static const concmerge_thing *lookup(setup_kind res1k,
+                                        setup_kind res2k,
+                                        unsigned int rotreject,
+                                        uint32 mask1,
+                                        uint32 mask2);
+
+   static void initialize();             // In sdconc.
+};
+
 struct setup_attr {
    // This is the size of the setup MINUS ONE.
    int setup_limits;
@@ -2355,12 +2464,6 @@ enum mode_kind {
    mode_resolve
 };
 
-enum modify_popup_kind {
-    modify_popup_any,
-    modify_popup_only_tag,
-    modify_popup_only_circ
-};
-
 enum file_write_flag {
    file_write_no,
    file_write_double
@@ -2495,19 +2598,6 @@ enum {
    concept.  Otherwise, we might end up saying "magic diamond single wheel" when
    we should have said "magic diamond, diamond single wheel".
 
-   RESULTFLAG__SPLIT_AXIS_MASK has info saying whether the call was split
-   vertically (2) or horizontally (1) in "absolute space".  We can't say for
-   sure whether the orientation is absolute, since a client may have stripped
-   out rotation info.  What we mean is that it is relative to the incoming setup
-   including the effect of its rotation field.  So, if the incoming setup was
-   a 2x4 with rotation=0, that is, horizontally oriented in "absolute space",
-   1 means it was done in 2x2's (split horizontally) and 2 means it was done
-   in 1x4's (split vertically).  If the incoming setup was a 2x4 with
-   rotation=1, that is, vertically oriented in "absolute space", 1 means it
-   was done in 1x4's (split horizontally) and 2 means it was done in 2x2's
-   (split vertically).  3 means that the call was a 1 or 2 person call, that
-   could be split either way, so we have no information.
-
    RESULTFLAG__ACTIVE_PHANTOMS_ON and _OFF tell whether the state of the "active
    phantoms" mode flag was used in this sequence.  If it was read and found to
    be on, RESULTFLAG__ACTIVE_PHANTOMS_ON is set.  If it was read and found to
@@ -2522,6 +2612,19 @@ enum {
    RESULTFLAG__DID_SHORT6_2X3 means that we fudged a short6 to a 2x3
    (with permission), and, if we are putting back a concentric formation,
    we may need to act accordingly.
+
+   The "split_info" field has info saying whether the call was split
+   vertically (2) or horizontally (1) in "absolute space".  We can't say for
+   sure whether the orientation is absolute, since a client may have stripped
+   out rotation info.  What we mean is that it is relative to the incoming setup
+   including the effect of its rotation field.  So, if the incoming setup was
+   a 2x4 with rotation=0, that is, horizontally oriented in "absolute space",
+   1 means it was done in 2x2's (split horizontally) and 2 means it was done
+   in 1x4's (split vertically).  If the incoming setup was a 2x4 with
+   rotation=1, that is, vertically oriented in "absolute space", 1 means it
+   was done in 1x4's (split horizontally) and 2 means it was done in 2x2's
+   (split vertically).  3 means that the call was a 1 or 2 person call, that
+   could be split either way, so we have no information.
 */
 
 // The two low bits are used for result elongation, so we start with 0x00000004.
@@ -2535,15 +2638,7 @@ enum {
    RESULTFLAG__PARTS_ARE_KNOWN      = 0x00000020UL,
 
    RESULTFLAG__NEED_DIAMOND         = 0x00000040UL,
-
-   // This is a six bit field.
-   RESULTFLAG__SPLIT_AXIS_FIELDMASK = 0x00001F80UL,
-   RESULTFLAG__SPLIT_AXIS_XMASK     = 0x00000380UL,
-   RESULTFLAG__SPLIT_AXIS_XBIT      = 0x00000080UL,
-   RESULTFLAG__SPLIT_AXIS_YMASK     = 0x00001C00UL,
-   RESULTFLAG__SPLIT_AXIS_YBIT      = 0x00000400UL,
-   RESULTFLAG__SPLIT_AXIS_SEPARATION= 3,
-
+   // Skipped 6 bits here
    RESULTFLAG__ACTIVE_PHANTOMS_ON   = 0x00002000UL,
    RESULTFLAG__ACTIVE_PHANTOMS_OFF  = 0x00004000UL,
    RESULTFLAG__EXPAND_TO_2X3        = 0x00008000UL,
@@ -2570,6 +2665,7 @@ enum {
    RESULTFLAG__FORCE_SPOTS_ALWAYS   = 0x20000000UL,
    RESULTFLAG__INVADED_SPACE        = 0x40000000UL
 };
+
 
 struct comment_block {
    char txt[MAX_TEXT_LINE_LENGTH];
@@ -3568,7 +3664,6 @@ enum init_callback_state {
 class iobase {
  public:
    virtual int do_abort_popup() = 0;
-   virtual int do_session_init_popup() = 0;
    virtual uims_reply get_startup_command() = 0;
    virtual void set_window_title(char s[]) = 0;
    virtual void add_new_line(char the_line[], uint32 drawing_picture) = 0;
@@ -3582,11 +3677,10 @@ class iobase {
    virtual bool print_this() = 0;
    virtual bool print_any() = 0;
    virtual bool help_manual() = 0;
+   virtual bool help_faq() = 0;
    virtual popup_return do_outfile_popup(char dest[]) = 0;
    virtual popup_return do_header_popup(char dest[]) = 0;
    virtual popup_return do_getout_popup(char dest[]) = 0;
-   virtual int do_write_anyway_popup() = 0;
-   virtual int do_delete_clipboard_popup() = 0;
    virtual void fatal_error_exit(int code, Cstring s1=0, Cstring s2=0) = 0;
    virtual void serious_error_print(Cstring s1) = 0;
    virtual void create_menu(call_list_kind cl) = 0;
@@ -3594,7 +3688,7 @@ class iobase {
    virtual int do_direction_popup() = 0;
    virtual int do_circcer_popup() = 0;
    virtual int do_tagger_popup(int tagger_class) = 0;
-   virtual int do_modifier_popup(Cstring callname, modify_popup_kind kind) = 0;
+   virtual int yesnoconfirm(char *title, char *line1, char *line2, bool excl, bool info) = 0;
    virtual popup_return do_comment_popup(char dest[]) = 0;
    virtual uint32 get_number_fields(int nnumbers, bool forbid_zero) = 0;
    virtual bool get_call_command(uims_reply *reply_p) = 0;
@@ -3610,7 +3704,6 @@ class iobase {
 class iofull : public iobase {
  public:
    int do_abort_popup();
-   int do_session_init_popup();
    uims_reply get_startup_command();
    void set_window_title(char s[]);
    void add_new_line(char the_line[], uint32 drawing_picture);
@@ -3624,11 +3717,10 @@ class iofull : public iobase {
    bool print_this();
    bool print_any();
    bool help_manual();
+   bool help_faq();
    popup_return do_outfile_popup(char dest[]);
    popup_return do_header_popup(char dest[]);
    popup_return do_getout_popup(char dest[]);
-   int do_write_anyway_popup();
-   int do_delete_clipboard_popup();
    void fatal_error_exit(int code, Cstring s1=0, Cstring s2=0);
    void serious_error_print(Cstring s1);
    void create_menu(call_list_kind cl);
@@ -3636,7 +3728,7 @@ class iofull : public iobase {
    int do_direction_popup();
    int do_circcer_popup();
    int do_tagger_popup(int tagger_class);
-   int do_modifier_popup(Cstring callname, modify_popup_kind kind);
+   int yesnoconfirm(char *title, char *line1, char *line2, bool excl, bool info);
    void set_pick_string(const char *string);
    popup_return do_comment_popup(char dest[]);
    uint32 get_number_fields(int nnumbers, bool forbid_zero);
@@ -4017,8 +4109,6 @@ enum specmapkind {
    spcmap_4x4_spec3,
    spcmap_4x4_spec4,
    spcmap_4x4_spec5,
-   spcmap_4x4_spec6,
-   spcmap_4x4_spec7,
    spcmap_4x4v,
    spcmap_4x4_1x1,
    spcmap_trglbox3x4a,
@@ -4276,7 +4366,7 @@ extern void move(
 
 extern void prepare_for_call_in_series(setup *result, setup *ss);
 
-extern void minimize_splitting_info(setup *ss, uint32 other_info);
+extern void minimize_splitting_info(setup *ss, const resultflag_rec & other_split_info);
 
 extern void remove_z_distortion(setup *ss) THROW_DECL;
 
@@ -4395,7 +4485,7 @@ extern void concentric_move(
    uint32 specialoffsetmapcode,
    setup *result) THROW_DECL;
 
-extern uint32 get_multiple_parallel_resultflags(setup outer_inners[], int number) THROW_DECL;
+extern resultflag_rec get_multiple_parallel_resultflags(setup outer_inners[], int number) THROW_DECL;
 
 extern void initialize_fix_tables();
 
@@ -4504,6 +4594,8 @@ extern uint32 find_calldef(
 
 extern void clear_people(setup *z);
 
+extern void clear_result_flags(setup *z);
+
 inline uint32 rotperson(uint32 n, int amount)
 { if (n == 0) return 0; else return (n + amount) & ~064; }
 
@@ -4518,6 +4610,18 @@ inline void clear_person(setup *resultpeople, int resultplace)
    resultpeople->people[resultplace].id1 = 0;
    resultpeople->people[resultplace].id2 = 0;
 }
+
+
+inline uint32 little_endian_live_mask(const setup *ss)
+{
+   int i;
+   uint32 j, result;
+   for (i=0, j=1, result = 0; i<=attr::slimit(ss); i++, j<<=1) {
+      if (ss->people[i].id1) result |= j;
+   }
+   return result;
+}
+
 
 extern uint32 copy_person(setup *resultpeople, int resultplace, const setup *sourcepeople, int sourceplace);
 
@@ -4597,19 +4701,22 @@ class fraction_info {
       m_subcall_incr(1)
       {}
 
+   // This one is in sdmoves.cpp
+   void get_fraction_info(uint32 frac_flags,
+                          uint32 callflags1,
+                          revert_weirdness_type doing_weird_revert) THROW_DECL;
+
+   // This one is in sdmoves.cpp
+   uint32 get_fracs_for_this_part();
+
+   // This one is in sdmoves.cpp
+   bool query_instant_stop(uint32 & result_flag_wordmisc);
+
    void demand_this_part_exists() THROW_DECL
       {
          if (m_fetch_index >= m_fetch_total || m_fetch_index < 0)
             fail("The indicated part number doesn't exist.");
       }
-
-   void get_fraction_info(uint32 frac_flags,
-                          uint32 callflags1,
-                          revert_weirdness_type doing_weird_revert) THROW_DECL;
-
-   uint32 get_fracs_for_this_part();
-
-   bool query_instant_stop(uint32 & result_flag_word);
 
    void fudge_client_total(int delta)
       {

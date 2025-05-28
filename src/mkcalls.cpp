@@ -962,6 +962,8 @@ char *qualtab[] = {
    "centers_sel",
    "ends_sel",
    "all_sel",
+   "not_all_sel",
+   "some_sel",
    "none_sel",
    "normal_unwrap_sel",
    "ptp_unwrap_sel",

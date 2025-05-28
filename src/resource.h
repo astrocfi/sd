@@ -44,9 +44,9 @@
 #define ID_FILE_CHOOSE_FONT             40001
 #define ID_FILE_PRINTTHIS               40002
 #define ID_FILE_PRINTFILE               40003
-#define ID_FILE_ABOUTSD                 40004
-#define ID_FILE_EXIT                    40005
-#define ID_COMMAND                      40006
+#define ID_FILE_EXIT                    40004
+#define ID_HELP_ABOUTSD                 40005
+#define ID_HELP_FAQ                     40006
 #define ID_COMMAND_UNDO                 40007
 #define ID_COMMAND_ABORTTHISSEQUENCE    40008
 #define ID_COMMAND_ENDTHISSEQUENCE      40009

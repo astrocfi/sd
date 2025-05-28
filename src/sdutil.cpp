@@ -405,8 +405,8 @@ static void do_write(Cstring s)
       else if (c >= 'a' && c <= 'x')
          printperson(rotperson(printarg->people[personstart + ((c-'a'-offs)%modulus)].id1, ri));
       else {
-         /* We need to do the mundane translation of "5" and "6" if the result
-            isn't going to be used by something that uses same. */
+         // We need to do the mundane translation of "5" and "6" if the result
+         // isn't going to be used by something that uses same.
          if (enable_file_writing ||
              ui_options.use_escapes_for_drawing_people <= 1 ||
              ui_options.no_graphics != 0) {
@@ -672,7 +672,7 @@ void write_history_line(int history_index,
    if (picture || this_item->draw_pic || ui_options.keep_all_pictures) {
       printsetup(&this_item->state);
 
-      if (this_item->state.result_flags & RESULTFLAG__PLUSEIGHTH_ROT) {
+      if (this_item->state.result_flags.misc & RESULTFLAG__PLUSEIGHTH_ROT) {
          writestuff("  Note:  Actual setup is 45 degrees clockwise from diagram above.");
          newline();
       }
@@ -2054,7 +2054,7 @@ static bool write_sequence_to_file() THROW_DECL
    get_date(date);
    writestuff(date);
    writestuff("     ");
-   write_header_stuff(false, configuration::current_config().state.result_flags);
+   write_header_stuff(false, configuration::current_config().state.result_flags.misc);
    newline();
 
    if (!configuration::sequence_is_resolved()) {
@@ -2486,7 +2486,11 @@ void run_program()
 
             if (session) {
                (void) fclose(session);
-               if (gg->do_session_init_popup() != POPUP_ACCEPT) {
+
+               if (gg->yesnoconfirm("Confirmation",
+                                    "You already have a session file.",
+                                    "Do you really want to delete it and start over?",
+                                    true, false) != POPUP_ACCEPT) {
                   writestuff("No action has been taken.");
                   newline();
                   goto new_sequence;
@@ -2668,7 +2672,9 @@ void run_program()
             goto start_cycle;
          case command_delete_entire_clipboard:
             if (clipboard_size != 0) {
-               if (gg->do_delete_clipboard_popup() != POPUP_ACCEPT)
+               if (gg->yesnoconfirm("Confirmation", "There are calls in the clipboard.",
+                                    "Do you want to delete all of them?",
+                                    false, true) != POPUP_ACCEPT)
                   goto simple_restart;
             }
 
@@ -2954,7 +2960,10 @@ void run_program()
             // Check that it is really resolved.
 
             if (!configuration::sequence_is_resolved()) {
-               if (gg->do_write_anyway_popup() != POPUP_ACCEPT)
+               if (gg->yesnoconfirm("Confirmation",
+                       "This sequence is not resolved.",
+                       "Do you want to write it anyway?",
+                       false, true) != POPUP_ACCEPT)
                   specialfail("This sequence is not resolved.");
                configuration::current_config().draw_pic = true;
             }
@@ -2976,6 +2985,10 @@ void run_program()
             goto start_cycle;
          case command_help_manual:
             if (!gg->help_manual())
+               specialfail("Manual browsing is not supported in this program.");
+            goto start_cycle;
+         case command_help_faq:
+            if (!gg->help_faq())
                specialfail("Manual browsing is not supported in this program.");
             goto start_cycle;
          default:     // Should be some kind of search command.

@@ -87,6 +87,7 @@ extern void ttu_set_window_title(const char *string) {}
 
 
 bool iofull::help_manual() { return false; }
+bool iofull::help_faq() { return false; }
 
 
 extern void ttu_initialize()

@@ -10,7 +10,7 @@
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-    This is for version 34. */
+    This is for version 35. */
 
 /* These are written as the first two halfwords of the binary database file.
    The format version is not related to the version of the program or database.
@@ -21,7 +21,7 @@
    database format version. */
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 217
+#define DATABASE_FORMAT_VERSION 218
 
 // BEWARE!!  These must track the items in "tagtabinit" in mkcalls.cpp .
 enum base_call_index {
@@ -684,12 +684,14 @@ enum call_restriction {
    cr_ripple_both_centers, // Qualifier only.
    cr_ripple_any_centers,  // Qualifier only.
    cr_people_1_and_5_real, // Qualifier only.
-   cr_ctrs_sel,            // Qualifier only.
-   cr_ends_sel,            // Qualifier only.
-   cr_all_sel,             // Qualifier only.
-   cr_none_sel,            // Qualifier only.
-   cr_nor_unwrap_sel,      // Qualifier only.
-   cr_ptp_unwrap_sel,      // Qualifier only.
+   cr_ctrs_sel,
+   cr_ends_sel,
+   cr_all_sel,
+   cr_not_all_sel,
+   cr_some_sel,
+   cr_none_sel,
+   cr_nor_unwrap_sel,
+   cr_ptp_unwrap_sel,
    cr_explodable,          // Restriction only.
    cr_rev_explodable,      // Restriction only.
    cr_peelable_box,        // Restriction only.

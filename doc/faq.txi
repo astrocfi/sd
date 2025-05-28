@@ -10,19 +10,84 @@
 @end iftex
 @c %**end of header
 
-@set title1 FREQUENTLY ASKED QUESTIONS
-@set title2 WHUZZIS SECOND LINE FOR?
-
-@center @titlefont{@value{title1}}@*
-@center @value{title2}@*
-
 @w{ }@c the @* above makes the @sp below fail without this line  1998-05
 @sp 2
 @noindent Copyright @copyright{} 1996-2003 William B. Ackerman
-@sp 3
-I really liked the choice @kbd{no one do your part, bend the line} -- Justin Legakis
 
-@unnumberedsec How do I change the Sd window size?
+@unnumberedsec The options for sessions and abridgement files are confusing!
+
+You may find that @code{Sd} is more user-friendly than @code{Sdtty},
+particularly if you are having trouble with sessions or abridgement
+files.  It will show you the startup options more clearly.  You can type
+commands at @code{Sd} the same way you type at @code{Sdtty}.  It just
+looks different.  During the @code{Sdtty} startup screen, you can click
+on the question mark in the upper right corner and then on any button
+or checkbox to get help.
+
+@unnumberedsec Entering complex calls is confusing!
+
+If in doubt about how to enter some complex call, type part of the call
+and a question mark.  For example, if you want to know how to modify the star
+turn on a chain reaction, type @strong{chain reac?}.  Then, following its hint,
+type @strong{tion, turn the star 1/2}.
+
+@unnumberedsec I've heard that @code{Sd} lets me type subcalls directly, but it's confusing!
+
+You may have heard that @code{Sd} lets you type complex calls directly,
+using brackets, as in @strong{catch [motivate] 3}.  This is true, but you
+may find it unwieldy, especially if you have been using @code{SRC Sd}
+and are accustomed to entering things piecemeal.  You can still do it
+that way.  Remember to type @strong{<anything>}, not just @strong{<any>}.  For
+example, type @strong{catch <anything> 3}.  (Not sure about that?  Type
+@strong{catch?})  Then type the @strong{motivate}.
+
+@unnumberedsec I can't seem to enter simple things like @strong{right and left thru}.
+
+If you are having really serious problems like this, use @code{Sd} instead of
+@code{Sdtty}.  Look at the menu and see how it wants things to be spelled.
+
+@unnumberedsec I want some special option, such as @code{-normal_video}.  How can put it in an icon or initialization file?
+
+You have (or can create) an initialization file, which is ``C:\sd.ini''.
+If you put options in it, you will get those options every time you run
+@code{Sd} or @code{Sdtty}.  If you don't have such a file, give the
+command @strong{initialize session file} to @code{Sd} or @code{Sdtty} to
+create it.  Then edit it.  Use a plain text editor such as Emacs or
+Notepad -- do not use a word processor.  You will see a section called
+``[Options]''.  Add whatever options you like.  Do not put hyphens in front
+of options in this file.  For example:
+
+@example
+@group
+normal_video
+color_by_couple
+@end group
+@end example
+
+All of this works the same under Windows or Linux, except that, under
+Linux, the location of the ``sd.ini'' file will be wherever you
+installed the program.
+
+You can also create Windows icons that run the program with specific
+options, such that the options will depend on which icon you operate.
+To do this, make a copy of whichever icon from the @code{Sd} group in
+the Start Menu is closest to what you want.  How this works depends on
+exactly what version of Windows you have, but it generally involves
+right-clicking the icon, or going to Start->Settings->Taskbar->Start
+Menu Programs->Advanced.  Either way, you should be able to copy and
+paste it, and right-click it to rename it or edit its properties.  Put
+the copied icon wherever you want -- desktop, Start Menu, or wherever.
+Rename it to whatever you want.  Then edit its properties.  When editing
+its properties, you can change the icon that is displayed, and you can
+add options by selecting the ``shortcut'' tab.  On the ``target'' line,
+you will see something like ``C:\sd\sdtty.exe'' perhaps followed by some
+options.  Change those to whatever you want.  Put hyphens in front of
+all options when editing an icon. For example, ``C:\sd\sdtty.exe
+-single_click c1'' or ``C:\sd\sdtty.exe -color_by_couple -session 2''.
+The latter would always select whatever session 2 means in your
+initialization file, complete with its title, level, and file name.
+
+@unnumberedsec How can I change the Sd window size?
 
 Users have different preferences about how big they want the
 @code{Sd} window size to be.  Furthermore, graphics resolution
@@ -39,7 +104,7 @@ as in
 @end group
 @end example
 
-You can put that line into the ``options'' section of your initialization
+You can put that line into the ``[Options]'' section of your initialization
 file, which is C:\sd\sd.ini, so that section might look like
 
 @example
@@ -55,11 +120,115 @@ have different icons to start Sd, and you want to control the window
 size separately for each icon, follow the instructions in the
 ``command-line options'' section of the manual.
 
-@unnumberedsec How do I change the star turns on Chain Reaction?
+@unnumberedsec How can I define ``hot keys''?
 
-The short answer to the question is that you type ``chain
-reaction, turn the star 1/2'', or ``motivate, don't turn the star'',
-or something similar.
+Edit (with a plain text editor such as Emacs or Notepad -- do not use a
+word processor) the initialization file C:\sd\sd.ini.  If you don't have
+such a file, give the command @strong{initialize session file} to @code{Sd} to
+create it.  Then edit it.  You will see a section called ``[Accelerators]''
+with things like
+
+@example
+@group
+f3     pick random call
+@end group
+@end example
+
+In that line, ``f3'' means function key 3.  (That is the line that makes
+function key 3 perform the ``pick random call'' operation.  You can change
+it if you want.)
+
+You can add lines to this section to define ``hot keys'' that specify
+calls, concepts, or commands.  Since I don't like to type ``concentric'',
+my file contains
+
+@example
+@group
+az     concentric
+cz     cross concentric
+caz    single concentric
+@end group
+@end example
+
+These define alt-Z as ``concentric'', control-Z as ``cross concentric'',
+and control-alt-Z as ``single concentric''.  Prefix letters of @strong{a},
+@strong{s}, @strong{c}, and @strong{ca} denote alt, shift, control, and
+control-alt, respectively.  After that, a plain letter or digit denotes
+that key.  A combination like @strong{f6} denotes that function key.  When
+defining function keys, you may use the @strong{s} prefix, or no prefix at
+all, to get shift-function-key or plain-function key.  With letter or
+digits, you must use some combination of alt or control.  (You can't
+define just @strong{c} as a hot key for concentric -- it would make it
+impossible to type @strong{circulate}.)
+
+@unnumberedsec How can I define abreviations for calls?
+
+First, read the previous section.  Abbreviations are defined somewhat
+like hot keys, but they don't take effect the instant you press the key.
+You have to press @strong{<ENTER>}, just as for any call or concept.
+Also, they don't involve meta or control modifiers.  They can be multiple
+letters long, just like call names.
+
+Now find the ``[Abbreviations]'' section of sd.ini, with things like
+
+@example
+@group
+u       U-turn back
+rlt     right and left thru
+@end group
+@end example
+
+This means that you can type @strong{rlt} as if it were a call.  It will be
+expanded to the full call in the transcript file.  (Yes, those
+abbreviations are actually there.)  You can add things like
+
+@example
+@group
+p       pass thru
+@end group
+@end example
+
+If you define abbreviations that give the parser a hard time, the parser
+will give you a hard time.  For example, the parser recognizes @strong{fe
+w} as @strong{ferris wheel}.  If you define an abbreviation @strong{ferris
+where}, typing @strong{ferris wheel} will become harder.
+
+@unnumberedsec How can I abort a sequence in progress?
+
+If you select the @strong{abort} command, the program will abort the sequence
+(but not exit).  It will go back to the startup menu to allow you to
+start another sequence.  It will ask for confirmation first.
+
+@unnumberedsec Why can't it do things like @strong{men run} or @strong{ladies trade}?
+
+The program only recognizes the designators @strong{boys} and @strong{girls}.
+The only exception is the call @strong{ladies chain}.  Of course, you can
+use whatever designation you want when calling.
+
+@unnumberedsec How do I do @strong{plenty} from diamonds?
+
+Notwithstanding the Callerlab definitions, the program considers @strong{plenty}
+@emph{always} to have the outsides quarter right.  There is a call @strong{plenty,
+ends go as you are} that gets the action that you probably want.
+
+@unnumberedsec How can I call ``boys start quarter thru'' from C1 phantoms?
+
+Just like that: @strong{boys start quarter thru}, or @strong{boys start 1/4
+thru} (either spelling is accepted.)  The @strong{<ANYONE> start} concept
+has the indicated people do their own part of the first part of the
+call, after which the others join them.  You give a person indicator
+like @strong{boys} in place of the @strong{<ANYONE>}.  Or, if like, you may
+literally type the @strong{<ANYONE>}, complete with angle brackets.  The
+program will then ask for the person indicator.
+
+If using @code{Sd} with the menu and mouse, you must find the concept listed
+under @strong{<ANYONE> start}, not @strong{boys start}.
+
+@unnumberedsec How can I change the star turns on Chain Reaction?
+
+The short answer to the question is that you type ``chain reaction, turn
+the star 1/2'', or ``motivate, don't turn the star'', or something
+similar.
 
 But the more important question is: ``How do you know that?''.  There
 are many common ways of modifying calls, and many ways of expressing
@@ -112,37 +281,85 @@ and the final cast off 3/4.
 
 By the way, if you don't want to type commas or apostrophes, that's OK.
 They're optional.  Capitalization is also optional.  But subsidiary calls
-must be in square brackets.
+@emph{must} be in square brackets.
 
-@unnumberedsec How do I do a Load the Boat, centers do just 3-1/2 parts?
+@unnumberedsec How can I do a Load the Boat, centers do just 3-1/2 parts?
 
-Say @kbd{centers work 7/8 load the boat}.  Telling people to do only part of
+Say @strong{centers work 7/8 load the boat}.  Telling people to do only part of
 a call is generally done in terms of fractions, not number of parts.
 3-1/2 of the 4 parts of ``Load the Boat'' is 7/8ths of it.  You want just
-the centers to obey that, so you use the @kbd{centers work} meta-concept,
-followed by the concept (7/8) that you want them to obey.
+the centers to obey that, so you use the @strong{centers work} meta-concept,
+followed by the concept (@strong{7/8}) that you want them to obey.
+
+@unnumberedsec How can I do things like Centers Work As Couples, all Here Comes the Judge?
+
+The best way is to say @strong{centers are as couples here comes the
+judge}.  For every couples/tandem-type concept, there is also an
+@strong{<anyone> are <concept>} version of it.  For example, @strong{center 6
+are tandem threesome 1/4 solid}.  So you could say @strong{centers are as couples here
+comes the judge}.  The ``all'' word is often spoken but is never typed in to @code{Sd}
+or @code{Sdtty}.
+
+There is also a meta-concept @strong{<anyone> work <concept>} that you can
+use.  It has the designated people do the call with the concept while
+the others do it normally.  However, it is a much more problematical and
+difficult meta-concept.  When the concept is a couples/tandem-type
+concept, ``are'' is much better than ``work''.
+
+@unnumberedsec How can I do things like Centers Work Stable, all Here Comes the Judge?
+
+The answer is essentially the same as for the previous question.  When the
+concept is stable or fractional stable, there is also an
+@strong{<anyone> are <concept>} version of it.  As with the previous question,
+``are'' is preferable to ``work''.
+
+@unnumberedsec How can I call @strong{split phantom lines in roll circulate}?
+
+In all concepts that can specify either lines or waves, the ``waves''
+version has an implicit @strong{assume waves} operation in it.  Under
+normal circumstances, this means that the live people can make use of
+the assumption of waves in order to decide how to start the call.
+
+For example,
+in normal columns, @strong{split phantom waves in roll circulate}, which
+is equivalent to @strong{split phantom lines, assume waves, in roll circulate},
+is legal, since the phantom in-roller's location can be deduced from the
+wave assumption.
+
+The call @strong{split phantom lines in roll circulate} is illegal from columns
+because the facing direction of the phantom in-roller is unknown.
 
 @unnumberedsec Why does it complain about things like magic split circulate?
 
-Because there's no such call.  You should be using @kbd{split trade circulate}.
-Similarly, you should use @kbd{split trade couple up} instead of
-@kbd{magic couple up}, and @kbd{cross walk and dodge} instead of
-@kbd{magic walk and dodge}.
+Because there's no such call.  You should be using @strong{split trade circulate}.
+Similarly, you should use @strong{split trade couple up} instead of
+@strong{magic couple up}, and @strong{cross walk and dodge} instead of
+@strong{magic walk and dodge}.
 
-@unnumberedsec How do I type all 8 recycle and circle 1/4?
+@unnumberedsec Why doesn't it allow some simple things like boys trade?
 
-How do I type in things like @kbd{all 8 recycle and circle 1/4}?
-How about @kbd{flip the diamond and circle 1/4}?  How do I tell
+The @strong{<anyone> trade} call is extremely complex, because it has to
+allow the people trading to be nonadjacent.  This means that
+@strong{<anyone> trade} is not just an instance of the @strong{<anyone>}
+concept applied to the call @strong{trade}.  @code{Sd} tries to allow you
+to type everything all on one line.  It sometimes fails in this case.
+If something like @strong{boys trade} doesn't work when typed together, try
+typing the @strong{boys} selector, pressing @strong{<ENTER>}, and then typing
+the @strong{trade} call.
+
+@unnumberedsec How can I type @strong{all 8 recycle and circle 1/4}?
+
+How about @strong{flip the diamond and circle 1/4}?  How do I tell
 the program whether it's a 4 person or an 8 person call?
 
-The program recognizes a call @kbd{[anything] and circle N/4}.
+The program recognizes a call @strong{[anything] and circle N/4}.
 It tries the ``anything'' call first with just the centers, and
 with all 8 people if that fails, so it should work in either case.
 You can type the fraction as 1/4, 1/2, 3/4, 2/4, or ``full''.
 
 As with all calls of this sort, the ``official'' name of the call
 uses angle brackets to indicate something that gets filled in:
-@kbd{<ANYTHING> and circle <N/4>}.  You can literally enter the call
+@strong{<ANYTHING> and circle <N/4>}.  You can literally enter the call
 that way.  (If using @code{Sd} and the menu, that's the way you have
 to enter it.  Calls starting with things in angle brackets are
 alphabetized at the end of the call menu, but before the concepts.)
@@ -175,10 +392,10 @@ with tricky syntax like that.  It will usually accept what you want to
 type.  But there are many tricky areas.  If you are confused, the right
 thing is to type part of the call, followed by a question mark.
 
-@unnumberedsec How do I do a shadow box couple up?
+@unnumberedsec How can I do a shadow box couple up?
 
 Sometimes the following confusing thing happens.  You want to
-do a @kbd{shadow box couple up}, so you type:
+do a @strong{shadow box couple up}, so you type:
 
 @example
 @group
@@ -216,39 +433,65 @@ shadow box [couple up] with the flow
 
 and you wonder ``Why won't it let me do a normal one?''
 
-The issue is whether @kbd{shadow box} is a concept, or
+The issue is whether @strong{shadow box} is a concept, or
 a call with a subcall.  If it's a concept, you should just
-type @kbd{shadow box couple up}.  But if it's a call that takes
+type @strong{shadow box couple up}.  But if it's a call that takes
 a subcall, you should use brackets.  How do you know?
 
 That isn't easy to answer.  Where to draw the line isn't well
-established, so @kbd{Sd} makes decisions that may seem arbitrary.
+established, so @code{Sd} makes decisions that may seem arbitrary.
 There is no way to avoid this.  Most things are obvious, of
-course, like the @kbd{as couples} concept.  And it should be fairly
-obvious from usage that @kbd{breaker [2/3 recycle]} is a call with
-a modifier.  Why is that obvious?  Because @kbd{breaker N} is a call,
-and it is obvious that @kbd{breaker [anything]} just has the
-@kbd{anything} replace some pre-existing part of the call.
+course, like the @strong{as couples} concept.  And it should be fairly
+obvious from usage that @strong{breaker [2/3 recycle]} is a call with
+a modifier.  Why is that obvious?  Because @strong{breaker N} is a call,
+and it is obvious that @strong{breaker [anything]} just has the
+@strong{anything} replace some pre-existing part of the call.
 
 Of course, anything that takes the modifier other than at the
 end, must be a call with a modifier, since concepts are always
-typed first.  Hence @kbd{[anything] and roll} always uses brackets.
+typed first.  Hence @strong{[anything] and roll} always uses brackets.
 
 So, if you are having trouble of this sort, try adding brackets
 or leaving them out.
 
+@unnumberedsec In a parallelogram, how can I specify the ``wings''?
+
+@code{Sd} has a rather fussy, but, we hope, serviceable nomenclature for
+identifying people.  (Remember that, when calling to live dancers, you
+can take advantage of their common sense.  They will generally figure
+out what you mean from the context and from their experience.  Computers
+can't do that.)
+
+The phrase @strong{outer pairs} is used to specify these people, and
+@strong{center 4} to specify the others.  Note that @strong{center 4} is not
+the same as @strong{centers}.  The designators @strong{centers} and @strong{ends}
+are meaningless in setups like this.
+
+The @strong{center 4} do not need to be in a 2x2.  In common-point diamonds
+or a common-point hourglass (the result of @strong{6x2 acey deucey} from
+facing diamonds or a facing hourglass) the people who collided can be
+designated as the @strong{outer pairs}, and the others as the @strong{center
+4}.
+
+You can also use designators like @strong{center line}, @strong{center box},
+@strong{center diamond}, and so on.
+
 @unnumberedsec Why is the Roll direction wrong after Spin Chain and Exchange the Gears?
 
-@code{Sd} defines this call in terms of @kbd{3/4 Exchange the Diamonds} and @kbd{Interlocked
+@code{Sd} defines this call in terms of @strong{3/4 Exchange the Diamonds} and @strong{Interlocked
 Flip the Diamond}, and sets the Roll direction accordingly.  We consider the
 Callerlab definition to be a pathetic attempt to give precision to a definition
 that was never intended to be precise.  Accordingly, we consider attempts to
 deduce Roll direction from the Callerlab definition to be misguided.
 
-@unnumberedsec How can I make Sd doesn't seem to understand ``common spot'' better?
+@unnumberedsec How does @strong{common spot} work?
 
-Try saying (to the program, not necessarily to the dancers) ``initially common
-spot''.  This tells @code{Sd} to reassemble the different groups of people
+See ``Sd Application Note 4'' on the web page.
+
+@unnumberedsec How can I make Sd understand @strong{common spot} better?
+
+Try saying (to the program, not necessarily to the dancers) @strong{initially common
+spot}.  This tells @code{Sd} to reassemble the different groups of people
 after the first part of the call.  Otherwise, it keeps the groups separate
 through the whole call, which makes it much harder to figure out what is
 happening.
@@ -267,42 +510,61 @@ legal or appropriate.  You should not use @code{Sd}, or any other choreography
 program, if you do not understand the level that you are calling.  If you
 call beyond your knowledge and ability, the dancers will notice.
 
-@unnumberedsec Why is @code{Sd} so fussy with apostrophes?  Why can't I just type @kbd{lockers choice}?
+@unnumberedsec Why is @code{Sd} so fussy with apostrophes?  Why can't I just type @strong{lockers choice}?
 
 You can.  You never need to type apostrophes or hyphens.  You can type
-either @kbd{lockers choice} or @kbd{locker's choice}.  You can type either
-@kbd{tandem based triangles} or @kbd{tandem-based triangles}.
+either @strong{lockers choice} or @strong{locker's choice}.  You can type either
+@strong{tandem based triangles} or @strong{tandem-based triangles}.
 
-@unnumberedsec Why is @code{Sd} so fussy with spaces in call names?  Why can't I just type @kbd{inroll circulate}?
+@unnumberedsec Why is @code{Sd} so fussy with spaces in call names?  Why can't I just type @strong{inroll circulate}?
 
 Sorry.  The parser (the part of the program that interprets your keystrokes as
 call and concept names) has a very hard job to do when it completes your
-input.  That is, it lets you type @kbd{fe w} at Mainstream, and figures out that
-you meant @kbd{ferris wheel}.  In order to do this, it must take clues from
+input.  That is, it lets you type @strong{fe w} at Mainstream, and figures out that
+you meant @strong{ferris wheel}.  In order to do this, it must take clues from
 the spaces that you typed.  Unlike apostrophes and hyphens, it can't make
 spaces optional.
 
 We are aware that there are programs that spell some calls with shorter names,
-such as @kbd{inroll circulate}.  We believe that spelling the calls the way they
+such as @strong{inroll circulate}.  We believe that spelling the calls the way they
 are spelled in the Callerlab lists and other commonly accepted literature is
 more important.  You can always define your own ``hot keys'' (accelerator keys)
 or abbreviations for any calls.
 
-@unnumberedsec When I say @kbd{patch the centers}, is it the original centers that do the U-turn back?
+@unnumberedsec Why is @strong{leftrigger} spelled as one word?
+
+When there is no ``official'' Callerlab spelling to go by, I use the
+principle that a call should be one word if the English phrase or word
+from which it was derived is one word.  The ``rigger'' names are derived
+from ``outrigger'', which is a single word.  This seems to be compatible
+with the Callerlab spelling of things like @strong{crossfire} and
+@strong{cross fold}.  ``Crossfire'' is a single word.
+
+I realize that these decisions are not always straightforward or without
+controversy.
+
+@unnumberedsec Who rolls on @strong{[swing thru] and centers roll}?
+
+The @emph{new} centers.  @code{Sd} re-evaluates people's positions
+before deciding who should roll.  We believe that this is usually the
+more natural thing to do, but it is not automatically assumed.
+Therefore, you may need to make that clear to the dancers by saying
+something like ``swing thru and the new centers roll.''  Of course, if
+you have the girls roll there will be no problem.
+
+@unnumberedsec When I say @strong{patch the centers}, is it the original centers that do the U-turn back?
 
 Yes.  People's positions are not re-evaluated after the hinge.  We
 believe that this the right way of handling this sort of
-thing in general.  There are exceptions, such as @kbd{tap the
+thing in general.  There are exceptions, such as @strong{tap the
 centers}, but those are best left as exceptions rooted in history.
 
-Actually, this is all screwed up.  I need to check Lynette and Rob's email.
+@unnumberedsec How can I do 3x1 triangles circulate?
 
-@unnumberedsec How do I do 3x1 triangles circulate?
-
-You try to circulate in 3x1 triangles, by typing @kbd{3x1
+You try to circulate in 3x1 triangles, by typing @strong{3x1
 triangles circulate}.  It doesn't allow it.
 
-So you try leaving off the @kbd{circulate} and typing a question
+So you try leaving off the @strong{circulate} and typing a question
 mark.  You get
 
 @example
@@ -317,9 +579,9 @@ mark.  You get
 
 What happened to plain 3x1 triangles?
 
-The reason is that the call is known to @code{Sd} as @kbd{3x1 triangle
-circulate}, without the s.  That is, it is the @kbd{3x1} variant of the
-call @kbd{triangle circulate}.
+The reason is that the call is known to @code{Sd} as @strong{3x1 triangle
+circulate}, without the s.  That is, it is the @strong{3x1} variant of the
+call @strong{triangle circulate}.
 
 Now this fussiness about spelling, some of which you may not agree with
 at all, can be extremely annoying.  When you run into problems like
@@ -340,15 +602,15 @@ So if you tried just @code{triang}, you might get
 @end group
 @end example
 
-@unnumberedsec How do I do @kbd{line to line but replace the last part with <anything>}?
+@unnumberedsec How can I do @strong{line to line but replace the last part with <anything>}?
 
-@code{Sd} recognizes the call @kbd{line to line but <anything>}.  The <anything>
-replaces the final @kbd{pass in}.  (Note that this is an exception to the general
-principle the @kbd{but} calls replace the last thing done in the center.  This
+@code{Sd} recognizes the call @strong{line to line but <anything>}.  The <anything>
+replaces the final @strong{pass in}.  (Note that this is an exception to the general
+principle the @strong{but} calls replace the last thing done in the center.  This
 is one of a handful of exceptions that are justified by longstanding usage.)
 
 Suppose you didn't know that.  You do the usual thing---type something like
-@kbd{line to l?}.  It will list
+@strong{line to l?}.  It will list
 
 @example
 @group
@@ -360,6 +622,79 @@ line to line but <ANYTHING>
 Of course, when you see the ``<ANYTHING>'', you know that you can type
 square brackets with a call inside.
 
+@unnumberedsec Is there some way to add one extra circulate to @strong{along}?
+
+@code{Sd} allows you to replace that circulate with anything, but does
+not single out ``add an extra circulate'' for special treatment.  To
+make modifications of this type, give the @strong{allow modifications}
+command.  This tells the program that you want to do something complex
+to the next call (and only that call.)  After giving that command, type
+@strong{along}, or @strong{swing along}, or @strong{[split recycle] along}, or
+whatever.  The program will then ask you about substitutions.  It will
+ask
+
+@example
+@group
+The ``column circulate'' can be replaced.
+Do you want to replace it?
+@end group
+@end example
+
+Type ``y''.  Just the letter, without @strong{<ENTER>}.  Then type the
+replacement call.  It might be @strong{twice circulate}, or @strong{grand
+cross back}, or @strong{remake the column}, or @strong{invert the column}, or
+whatever.
+
+When the program asks about things you don't want to replace (it does this a lot),
+type ``n''.  When using @code{Sd} instead of @code{Sdtty}, there will be a popup
+window.
+
+@unnumberedsec How can I do a @strong{turn the key but do a criss cross the deucey after each part}?
+
+The concept @strong{add} (and @strong{follow it by}, which is identical) is
+followed by two calls.  It performs the first call (first in textual order, that is)
+@emph{after} the second.  For example:
+
+@example
+@group
+add
+roll
+swing thru
+@end group
+@end example
+
+does a @strong{swing thru} and @strong{roll}.
+
+You must type this on 3 lines: one with the ``add'' concept, and then each of
+the two calls on its own line.  This is because ``add'' operates
+on two calls.
+
+There is also a concept @strong{precede it by}, which performs the first call
+@emph{before} the second.
+
+There is only one context in which these concepts are sensible--they can be
+the subject of the @strong{piecewise}, @strong{random}, or @strong{reverse random}
+meta-concepts.  For example:
+
+@example
+@group
+piecewise add
+criss cross the deucey
+turn the key
+@end group
+@end example
+
+will do a @strong{criss cross the deucey}
+after each of the three parts of @strong{turn the key}.
+
+These concepts are among the situations in which the program does not attempt
+to print out the exact words that are appropriate to use when calling, but
+instead prints out an unambiguous description of what is supposed to happen.
+The exact words you should use depend on the context and on your judgement.
+You might say ``piecewise add a criss cross the deucey, and turn the key,''
+or ``do a criss cross the deucey after each part, and turn the key,'' or
+something similar.
+
 @unnumberedsec What is the difference between ``initially centers'' and ``centers start''?
 
 A very profound question.  A lot of discussion went on among challenge callers
@@ -368,11 +703,11 @@ these sorts of things were used in an imprecise way, only in situations in which
 the meaning would be simple and obvious.  As challenge choreography became more
 complex, it became necessary to work out a really precise meaning.
 
-@kbd{Initially <concept>} always means to apply the concept to the first part.
-When you apply the @kbd{centers} concept to something, it means only the centers do
-it, as though they are the only people present.  For example, on @kbd{centers trade}
+@strong{Initially <concept>} always means to apply the concept to the first part.
+When you apply the @strong{centers} concept to something, it means only the centers do
+it, as though they are the only people present.  For example, on @strong{centers trade}
 from waves, the centers trade with each other.  The ends do not enter into their
-thinking.  So @kbd{initially centers recycle} applies the @kbd{centers} concept
+thinking.  So @strong{initially centers recycle} applies the @strong{centers} concept
 to the first part or recycle.  As such, the very center 2 are the ones who fold.
 
 @example
@@ -385,10 +720,10 @@ to the first part or recycle.  As such, the very center 2 are the ones who fold.
 @end group
 @end example
 
-@kbd{Anyone start} means that the designated people do the first part of the
+@strong{Anyone start} means that the designated people do the first part of the
 call, while the others wait.  Then the ohers join in for the rest of the call.
 When doing the first part, they are aware of the whole setup.
-For example, from C1 phantoms, one could call @kbd{girls start, 1/4 thru}.
+For example, from C1 phantoms, one could call @strong{girls start, 1/4 thru}.
 The girls are aware of the rest of the setup (even though the boys aren't precisely
 where they need to be for a 1/4 thru) when they start the call.  Everyone
 joins in after the first part.
@@ -407,7 +742,7 @@ joins in after the first part.
 @end group
 @end example
 
-So, on @kbd{centers start, recycle}, the centers are aware of the ends, and of
+So, on @strong{centers start, recycle}, the centers are aware of the ends, and of
 the general setup that the ends make part of.  The person in the center wave that
 is closer to the ends considers herself to be the ``center'' of the 4-person
 formation doing the recycle.
@@ -422,7 +757,7 @@ formation doing the recycle.
 @end group
 @end example
 
-@unnumberedsec How do I say something like ``initially use ah so in spin chain the gears''?
+@unnumberedsec How can I say something like ``initially use ah so in spin chain the gears''?
 
 @example
 @group
@@ -437,56 +772,129 @@ the two calls on its own line.  This is because the ``use'' concept operates
 on two calls: the call to be used, and the call in which it is to be used.
 (The ``use'' concept is like ``checkpoint'' in this regard.)  Such concepts
 are very hard for @code{Sd} to understand, so you have to write them on
-separate lines.  That is, you must press @kbd{<ENTER>} after the concept and
+separate lines.  That is, you must press @strong{<ENTER>} after the concept and
 then after each of the two calls.
 
-@unnumberedsec How do I start a sequence with all 4 ladies chain?
+@unnumberedsec How can I start a sequence with all 4 ladies chain?
 
-This, of course, needs to be written.....
-
-@code{Sd} is very strongly oriented toward the ``heads pass the ocean''
+@code{Sd} is very strongly oriented toward the @strong{heads pass the ocean}
 style of sequence openings.  That is, you start with the heads or sides
 doing some call, either by themselves in the center, or something like
-@kbd{split square thru 4}.
+@strong{split square thru 4}.  @code{Sd} is somewhat unwieldy with calls
+like @strong{all 4 ladies chain}.
 
-When calling, you will presumably say something like
-"heads move in and pass the ocean".  To get Sd to do
-that, issue the separate call "heads press ahead".
-Then have the heads (or the centers) pass the ocean
-or whatever.
+First, you have to give the startup command @strong{just as they are}.  This
+will leave the dancers in a squared set.  Then, after doing the @strong{4 ladies
+chain} and whatever other thar/alamo/squared set calls you want, you may
+very well want to go into the more ``normal'' style of calling by having
+some people move in and pass the ocean or whatever.  To do this, use
+the call @strong{<anyone> press ahead}, and then have those same people
+(or just give the designator @strong{centers}) do the desired call.
 
-So the sequence will look like
+The sequence might look like:
 
+@example
+@group
 just as they are
 all 4 ladies chain
-head press ahead
+heads press ahead
 heads pass the ocean
 etc...
+@end group
+@end example
 
-The call "press ahead" is actually a Challenge call, but
+(You would presumably say something like @strong{heads move in and pass
+the ocean} when calling this.)
+
+The call @strong{press ahead} is actually a Challenge call, but
 Sd recognizes it at Mainstream, just for the purpose of
 dealing with this issue, and other similar issues of
 brute-force moving people around.
 
-If you had the ladies chain 3/4, "heads" won't do.  In that
-case, use the designator "headliners" or "sideliners".  These
+If you had the ladies chain 3/4, @strong{heads} won't do.  In that
+case, use the designator @strong{headliners} or @strong{sideliners}.  These
 are also Challenge terms that Sd recognizes at Mainstream.
 They mean "whoever is facing head/side walls right now".
 When calling, you would presumably say
-"All 4 ladies chain 3/4, @kbd{*AT*} the heads, square thru ...."
+@strong{All 4 ladies chain 3/4, @strong{*AT*} the heads, square thru ....}
 or whatever terminology you like to use.
+
+@unnumberedsec What are active phantoms?
+
+The concept @strong{with active phantoms}, used after one of the
+@strong{assume} concepts (either an explicit one like @strong{assume waves},
+or an implicit one like @strong{split phantom waves}), effectively places
+invisible but otherwise intelligent dancers on the phantom spots, with
+facing directions deduced from the assumption.  Those phantoms proceed
+through the entire call, interacting with each other and with the live
+dancers as necessary.  If the call is impossible for the phantoms to do,
+or if illegal collisions occur between live dancers and phantoms, it is
+an error.  At the end of the call, any live dancers or phantoms that
+come to the same spot may take right hands with each other, if that is
+appropriate for the call.  @emph{Note that this is contrary to what dancers
+generally expect when working with phantoms}.
+
+Most of the types of @strong{assume} concepts are sufficiently explicit
+that, if even a single live dancer is present in the setup, everyone's
+facing direction may be inferred.  This is necessary for the @strong{with
+active phantoms} concept, of course.  For example, a single live dancer
+can determine the handedness of all the phantoms when @strong{assume
+two-faced lines} is given.  Two of the concepts are not sufficiently
+explicit for this, and may not be used with @strong{with active phantoms}.
+They are @strong{assume general diamonds} and @strong{assume general 1/4
+tags}.  If you are going to use @strong{with active phantoms}, you must
+give more detailed assumptions than these two, such as @strong{assume left
+1/4 lines} or @strong{assume facing diamonds}.
+
+You can put @code{Sd} into a mode in which there is an implicit @strong{with
+active phantoms} whenever any assumption is made.  The @strong{toggle
+active phantoms} command toggles (turns on or off) this mode.  When in
+this mode, @code{Sd} will not actually insert the text @strong{with active
+phantoms} after each @strong{assume} concept.
+
+Beware: The @strong{with active phantoms} operation @emph{is almost never
+the right thing}.  While callers certainly have different philosophies
+on this subject, I have found that it is almost never necessary to use
+this in order to make @code{Sd} perform the material that top-notch
+callers call.  In nearly all cases, giving an appropriate @strong{assume}
+command is all that is required.
+
+@unnumberedsec The resolver seems befuddled at times.  Why?
+
+Especially at very high levels, the resolver seems to
+take a longer time to find a resolve than one might expect.  The reason
+is that it starts its resolve search looking only for ``high quality''
+resolves, and throwing away huge numbers of ``low quality'' ones.
+It assumes that you would press F12 to throw away the low quality
+resolves anyway.  So it is initially reluctant to show a lot of resolves.
+After it has shown all the high quality resolves it can, it lowers its standards
+and shows the ones that it skipped.
+
+Things that make a resolve high in quality are brevity, short promenade
+distance, and avoidance of such things as @strong{extend}, @strong{slip the
+clutch}, and @strong{reverse single file promenade}.  The promenade distance
+criterion is only applied at C2 and above.
+
+@unnumberedsec How can I use ``minigrand'' getouts?
+
+Mini-grand (right and left grand, but on the 3rd hand, promenade) can be
+added to @code{Sd's} repertoire of resolves by giving the @strong{toggle
+minigrand getouts} command.  You can also start the program (@code{Sd} or
+@code{Sdtty}) with a command-line argument of "-minigrand_getouts", either
+on the command line or in a script or Windows shortcut, or put the line
+"minigrand_getouts" in the ``[Options]'' section of the "sd.ini" file.
 
 @unnumberedsec Why are Sd and Sdtty no longer compiled with Microsoft Visual C++?
 
 I'm glad you asked.  The Microsoft compiler is not of acceptably high
 quality for the compilation of Sd and Sdtty.  Microsoft may know how to
-write software that propagates email viruses, and they may know how to
-write software that deletes competitors' products, and they may know how
-to write software that makes competing web browsers look defective, but
-they don't know how to write compilers.  Compilations of Sd and Sdtty
-have been observed to crash on ``snag bits and pieces'' from waves.  At
-first this was believed to occur only with Visual C++ version 6, service
-pack 3, which caused me to revert to version 5.
+write software that aggressively propagates email viruses, and they may
+know how to write software that deletes competitors' products, and they
+may know how to write software that makes competing web browsers look
+defective, but they don't know how to write compilers.  Compilations of
+Sd and Sdtty have been observed to crash on ``snag bits and pieces''
+from waves.  At first this was believed to occur only with Visual C++
+version 6, service pack 3, which caused me to revert to version 5.
 
 The bug was eventually tracked down to incorrect restoration of the ECX
 register upon exit from a ``switch'' statement.  Bugs of this type, in
@@ -500,10 +908,15 @@ points want me to pay them money before I can even find out whether they intend
 to fix this bug.
 
 The bug was subsequently observed with version 5 also, creating a
-serious problem.  (No version of Sd or Sdtty exhibiting this bug was
-ever released.)  As of version 35, Gcc is used for the compilation of
-Sd/Sdtty for Windows.  It has always been used for the Linux release, of
-course.
+serious problem, since those are the only Microsoft compilers that I
+have.  As of Sd version
+35, Gcc is used for the compilation of Sd/Sdtty for Windows.  It has
+always been used for the Linux release, of course.
+
+No version of Sd or Sdtty suffering from this Microsoft compiler bug was
+ever released--the code was modified to avoid the bug.  But that is not
+a workable solution in the long run, since I don't know what other parts
+of the program could be getting compiled incorrectly.
 
 @unnumberedsec So what software is used in the preparation of Sd and Sdtty?
 
@@ -532,13 +945,12 @@ course.
 Microsoft Frontpage is not used at any point in the preparation, so there
 is no danger of running afoul of Microsoft's licensing restrictions against
 making web pages that "disparage Microsoft, MSN, MSNBC, Expedia, or their
-products or services".  We don't want to damage Bill Gates' ego.  He'd have to
-buy a new one.
+products or services".
 
 The Compaq Armada on which Sd is developed has no internet connections,
 and runs no mail or internet software, Microsoft or otherwise.  It has
-never seen a virus.  The released files are written onto a Zip disk and
-transferred to another computer for upload.
+never been exposed to a virus.  The released files are written onto a
+Zip disk and transferred to another computer for upload.
 
 @unnumberedsec Is free software actually that much higher in quality than commercial software?
 

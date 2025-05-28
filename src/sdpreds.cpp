@@ -104,6 +104,7 @@ extern bool selectp(setup *ss, int place) THROW_DECL
             case selector_center_wave:
             case selector_center_line:
             case selector_center_col:
+            case selector_center_box:
             case selector_outerpairs:
                pid2 = ptr[place][0] &
                   BITS_TO_CLEAR &
@@ -119,316 +120,321 @@ extern bool selectp(setup *ss, int place) THROW_DECL
  foo:
 
    switch (current_options.who) {
-      case selector_boys:
-         if      ((permpid1 & (ID1_PERM_BOY|ID1_PERM_GIRL)) == ID1_PERM_BOY) return true;
-         else if ((permpid1 & (ID1_PERM_BOY|ID1_PERM_GIRL)) == ID1_PERM_GIRL) return false;
-         break;
-      case selector_girls:
-         if      ((permpid1 & (ID1_PERM_BOY|ID1_PERM_GIRL)) == ID1_PERM_GIRL) return true;
-         else if ((permpid1 & (ID1_PERM_BOY|ID1_PERM_GIRL)) == ID1_PERM_BOY) return false;
-         break;
-      case selector_heads:
-         if      ((permpid1 & (ID1_PERM_HEAD|ID1_PERM_SIDE)) == ID1_PERM_HEAD) return true;
-         else if ((permpid1 & (ID1_PERM_HEAD|ID1_PERM_SIDE)) == ID1_PERM_SIDE) return false;
-         break;
-      case selector_sides:
-         if      ((permpid1 & (ID1_PERM_HEAD|ID1_PERM_SIDE)) == ID1_PERM_SIDE) return true;
-         else if ((permpid1 & (ID1_PERM_HEAD|ID1_PERM_SIDE)) == ID1_PERM_HEAD) return false;
-         break;
-      case selector_headcorners:
-         if      ((permpid1 & (ID1_PERM_HCOR|ID1_PERM_SCOR)) == ID1_PERM_HCOR) return true;
-         else if ((permpid1 & (ID1_PERM_HCOR|ID1_PERM_SCOR)) == ID1_PERM_SCOR) return false;
-         break;
-      case selector_sidecorners:
-         if      ((permpid1 & (ID1_PERM_HCOR|ID1_PERM_SCOR)) == ID1_PERM_SCOR) return true;
-         else if ((permpid1 & (ID1_PERM_HCOR|ID1_PERM_SCOR)) == ID1_PERM_HCOR) return false;
-         break;
-      case selector_headboys:
-         if      ((permpid1 & (ID1_PERM_ALL_ID|ID1_PERM_NHB)) == (ID1_PERM_HEAD|ID1_PERM_BOY))
-            return true;
-         else if ((permpid1 & ID1_PERM_NHB) == ID1_PERM_NHB)
-            return false;
-         break;
-      case selector_headgirls:
-         if      ((permpid1 & (ID1_PERM_ALL_ID|ID1_PERM_NHG)) == (ID1_PERM_HEAD|ID1_PERM_GIRL))
-            return true;
-         else if ((permpid1 & ID1_PERM_NHG) == ID1_PERM_NHG)
-            return false;
-         break;
-      case selector_sideboys:
-         if      ((permpid1 & (ID1_PERM_ALL_ID|ID1_PERM_NSB)) == (ID1_PERM_SIDE|ID1_PERM_BOY))
-            return true;
-         else if ((permpid1 & ID1_PERM_NSB) == ID1_PERM_NSB)
-            return false;
-         break;
-      case selector_sidegirls:
-         if      ((permpid1 & (ID1_PERM_ALL_ID|ID1_PERM_NSG)) == (ID1_PERM_SIDE|ID1_PERM_GIRL))
-            return true;
-         else if ((permpid1 & ID1_PERM_NSG) == ID1_PERM_NSG)
-            return false;
-         break;
-      case selector_centers:
-      case selector_ends:
-         p2 = pid2 & (ID2_CENTER|ID2_END);
-         if      (p2 == ID2_CENTER) s = selector_centers;
-         else if (p2 == ID2_END)    s = selector_ends;
+   case selector_boys:
+      if      ((permpid1 & (ID1_PERM_BOY|ID1_PERM_GIRL)) == ID1_PERM_BOY) return true;
+      else if ((permpid1 & (ID1_PERM_BOY|ID1_PERM_GIRL)) == ID1_PERM_GIRL) return false;
+      break;
+   case selector_girls:
+      if      ((permpid1 & (ID1_PERM_BOY|ID1_PERM_GIRL)) == ID1_PERM_GIRL) return true;
+      else if ((permpid1 & (ID1_PERM_BOY|ID1_PERM_GIRL)) == ID1_PERM_BOY) return false;
+      break;
+   case selector_heads:
+      if      ((permpid1 & (ID1_PERM_HEAD|ID1_PERM_SIDE)) == ID1_PERM_HEAD) return true;
+      else if ((permpid1 & (ID1_PERM_HEAD|ID1_PERM_SIDE)) == ID1_PERM_SIDE) return false;
+      break;
+   case selector_sides:
+      if      ((permpid1 & (ID1_PERM_HEAD|ID1_PERM_SIDE)) == ID1_PERM_SIDE) return true;
+      else if ((permpid1 & (ID1_PERM_HEAD|ID1_PERM_SIDE)) == ID1_PERM_HEAD) return false;
+      break;
+   case selector_headcorners:
+      if      ((permpid1 & (ID1_PERM_HCOR|ID1_PERM_SCOR)) == ID1_PERM_HCOR) return true;
+      else if ((permpid1 & (ID1_PERM_HCOR|ID1_PERM_SCOR)) == ID1_PERM_SCOR) return false;
+      break;
+   case selector_sidecorners:
+      if      ((permpid1 & (ID1_PERM_HCOR|ID1_PERM_SCOR)) == ID1_PERM_SCOR) return true;
+      else if ((permpid1 & (ID1_PERM_HCOR|ID1_PERM_SCOR)) == ID1_PERM_HCOR) return false;
+      break;
+   case selector_headboys:
+      if      ((permpid1 & (ID1_PERM_ALL_ID|ID1_PERM_NHB)) == (ID1_PERM_HEAD|ID1_PERM_BOY))
+         return true;
+      else if ((permpid1 & ID1_PERM_NHB) == ID1_PERM_NHB)
+         return false;
+      break;
+   case selector_headgirls:
+      if      ((permpid1 & (ID1_PERM_ALL_ID|ID1_PERM_NHG)) == (ID1_PERM_HEAD|ID1_PERM_GIRL))
+         return true;
+      else if ((permpid1 & ID1_PERM_NHG) == ID1_PERM_NHG)
+         return false;
+      break;
+   case selector_sideboys:
+      if      ((permpid1 & (ID1_PERM_ALL_ID|ID1_PERM_NSB)) == (ID1_PERM_SIDE|ID1_PERM_BOY))
+         return true;
+      else if ((permpid1 & ID1_PERM_NSB) == ID1_PERM_NSB)
+         return false;
+      break;
+   case selector_sidegirls:
+      if      ((permpid1 & (ID1_PERM_ALL_ID|ID1_PERM_NSG)) == (ID1_PERM_SIDE|ID1_PERM_GIRL))
+         return true;
+      else if ((permpid1 & ID1_PERM_NSG) == ID1_PERM_NSG)
+         return false;
+      break;
+   case selector_centers:
+   case selector_ends:
+      p2 = pid2 & (ID2_CENTER|ID2_END);
+      if      (p2 == ID2_CENTER) s = selector_centers;
+      else if (p2 == ID2_END)    s = selector_ends;
+      else break;
+      goto eq_return;
+   case selector_leads:
+   case selector_trailers:
+      p2 = pid2 & (ID2_LEAD|ID2_TRAILER);
+      if      (p2 == ID2_LEAD)    s = selector_leads;
+      else if (p2 == ID2_TRAILER) s = selector_trailers;
+      else break;
+      goto eq_return;
+   case selector_lead_ends:
+   case selector_lead_ctrs:
+   case selector_trail_ends:
+   case selector_trail_ctrs:
+      p2 = pid2 & (ID2_LEAD|ID2_TRAILER|ID2_CENTER|ID2_END);
+      if      (p2 == (ID2_LEAD|ID2_END))       s = selector_lead_ends;
+      else if (p2 == (ID2_LEAD|ID2_CENTER))    s = selector_lead_ctrs;
+      else if (p2 == (ID2_TRAILER|ID2_END))    s = selector_trail_ends;
+      else if (p2 == (ID2_TRAILER|ID2_CENTER)) s = selector_trail_ctrs;
+      else break;
+      goto eq_return;
+   case selector_end_boys:
+   case selector_end_girls:
+   case selector_center_boys:
+   case selector_center_girls:
+      p1 = permpid1 & (ID1_PERM_BOY|ID1_PERM_GIRL);
+      p2 = pid2 & (ID2_CENTER|ID2_END);
+      if      (p2 == ID2_END && p1 == ID1_PERM_BOY)     s = selector_end_boys;
+      else if (p2 == ID2_END && p1 == ID1_PERM_GIRL)    s = selector_end_girls;
+      else if (p2 == ID2_CENTER && p1 == ID1_PERM_BOY)  s = selector_center_boys;
+      else if (p2 == ID2_CENTER && p1 == ID1_PERM_GIRL) s = selector_center_girls;
+      else break;
+      goto eq_return;
+   case selector_beaus:
+   case selector_belles:
+      p2 = pid2 & (ID2_BEAU|ID2_BELLE);
+      if      (p2 == ID2_BEAU)  s = selector_beaus;
+      else if (p2 == ID2_BELLE) s = selector_belles;
+      else break;
+      goto eq_return;
+   case selector_center2:
+   case selector_outer6:
+      if (ss->kind == s1x6) {
+         p2 = pid2 & (ID2_CTR2|ID2_OUTRPAIRS);
+         if      (p2 == ID2_CTR2)      s = selector_center2;
+         else if (p2 == ID2_OUTRPAIRS) s = selector_outerpairs;
          else break;
-         goto eq_return;
-      case selector_leads:
-      case selector_trailers:
-         p2 = pid2 & (ID2_LEAD|ID2_TRAILER);
-         if      (p2 == ID2_LEAD)    s = selector_leads;
-         else if (p2 == ID2_TRAILER) s = selector_trailers;
-         else break;
-         goto eq_return;
-      case selector_lead_ends:
-      case selector_lead_ctrs:
-      case selector_trail_ends:
-      case selector_trail_ctrs:
-         p2 = pid2 & (ID2_LEAD|ID2_TRAILER|ID2_CENTER|ID2_END);
-         if      (p2 == (ID2_LEAD|ID2_END))       s = selector_lead_ends;
-         else if (p2 == (ID2_LEAD|ID2_CENTER))    s = selector_lead_ctrs;
-         else if (p2 == (ID2_TRAILER|ID2_END))    s = selector_trail_ends;
-         else if (p2 == (ID2_TRAILER|ID2_CENTER)) s = selector_trail_ctrs;
-         else break;
-         goto eq_return;
-      case selector_end_boys:
-      case selector_end_girls:
-      case selector_center_boys:
-      case selector_center_girls:
-         p1 = permpid1 & (ID1_PERM_BOY|ID1_PERM_GIRL);
-         p2 = pid2 & (ID2_CENTER|ID2_END);
-         if      (p2 == ID2_END && p1 == ID1_PERM_BOY)     s = selector_end_boys;
-         else if (p2 == ID2_END && p1 == ID1_PERM_GIRL)    s = selector_end_girls;
-         else if (p2 == ID2_CENTER && p1 == ID1_PERM_BOY)  s = selector_center_boys;
-         else if (p2 == ID2_CENTER && p1 == ID1_PERM_GIRL) s = selector_center_girls;
-         else break;
-         goto eq_return;
-      case selector_beaus:
-      case selector_belles:
-         p2 = pid2 & (ID2_BEAU|ID2_BELLE);
-         if      (p2 == ID2_BEAU)  s = selector_beaus;
-         else if (p2 == ID2_BELLE) s = selector_belles;
-         else break;
-         goto eq_return;
-      case selector_center2:
-      case selector_outer6:
-         if (ss->kind == s1x6) {
-            p2 = pid2 & (ID2_CTR2|ID2_OUTRPAIRS);
-            if      (p2 == ID2_CTR2)      s = selector_center2;
-            else if (p2 == ID2_OUTRPAIRS) s = selector_outerpairs;
-            else break;
-         }
-         else if (ss->kind == s2x7 || ss->kind == sdblspindle) {
-            if (current_options.who == selector_center2)
-               return (pid2 & ID2_CTR2) != 0;
-            else break;
-         }
-         else {
-            p2 = pid2 & (ID2_CTR2|ID2_OUTR6);
-            if      (p2 == ID2_CTR2)  s = selector_center2;
-            else if (p2 == ID2_OUTR6) s = selector_outer6;
-            else break;
-         }
-         goto eq_return;
-      case selector_verycenters:    /* Gotta fix this stuff - use fall-through variable. */
-         if (ss->kind == s1x6) {
-            p2 = pid2 & (ID2_CTR2|ID2_OUTRPAIRS);
-            if      (p2 == ID2_CTR2) return true;
-            else if (p2 == ID2_OUTRPAIRS) s = selector_outerpairs;
-            else break;
-         }
-         else if (ss->kind == s2x7) {
+      }
+      else if (ss->kind == s2x7 || ss->kind == sdblspindle) {
+         if (current_options.who == selector_center2)
             return (pid2 & ID2_CTR2) != 0;
-         }
-         else {
-            p2 = pid2 & (ID2_CTR2|ID2_OUTR6);
-            if      (p2 == ID2_CTR2) return true;
-            else if (p2 == ID2_OUTR6) s = selector_outer6;
-            else break;
-         }
-         goto eq_return;
-      case selector_center6:
-      case selector_outer2:
-         p2 = pid2 & (ID2_CTR6|ID2_OUTR2);
-         if      (p2 == ID2_CTR6)  s = selector_center6;
-         else if (p2 == ID2_OUTR2) s = selector_outer2;
          else break;
-         goto eq_return;
-      case selector_veryends:    /* Gotta fix this stuff - use fall-through variable. */
-         p2 = pid2 & (ID2_CTR6|ID2_OUTR2);
-         if      (p2 == ID2_CTR6)  s = selector_center6;
-         else if (p2 == ID2_OUTR2) s = selector_veryends;
+      }
+      else {
+         p2 = pid2 & (ID2_CTR2|ID2_OUTR6);
+         if      (p2 == ID2_CTR2)  s = selector_center2;
+         else if (p2 == ID2_OUTR6) s = selector_outer6;
          else break;
-         goto eq_return;
+      }
+      goto eq_return;
+   case selector_verycenters:    /* Gotta fix this stuff - use fall-through variable. */
+      if (ss->kind == s1x6) {
+         p2 = pid2 & (ID2_CTR2|ID2_OUTRPAIRS);
+         if      (p2 == ID2_CTR2) return true;
+         else if (p2 == ID2_OUTRPAIRS) s = selector_outerpairs;
+         else break;
+      }
+      else if (ss->kind == s2x7) {
+         return (pid2 & ID2_CTR2) != 0;
+      }
+      else {
+         p2 = pid2 & (ID2_CTR2|ID2_OUTR6);
+         if      (p2 == ID2_CTR2) return true;
+         else if (p2 == ID2_OUTR6) s = selector_outer6;
+         else break;
+      }
+      goto eq_return;
+   case selector_center6:
+   case selector_outer2:
+      p2 = pid2 & (ID2_CTR6|ID2_OUTR2);
+      if      (p2 == ID2_CTR6)  s = selector_center6;
+      else if (p2 == ID2_OUTR2) s = selector_outer2;
+      else break;
+      goto eq_return;
+   case selector_veryends:    /* Gotta fix this stuff - use fall-through variable. */
+      p2 = pid2 & (ID2_CTR6|ID2_OUTR2);
+      if      (p2 == ID2_CTR6)  s = selector_center6;
+      else if (p2 == ID2_OUTR2) s = selector_veryends;
+      else break;
+      goto eq_return;
 #ifdef TGL_SELECTORS
-      case selector_wvbasetgl:
+   case selector_wvbasetgl:
+      break;
+   case selector_tndbasetgl:
+      break;
+   case selector_insidetgl:
+      switch (ss->kind) {
+      case s_ptpd: case s_qtag: case s_rigger:
+         p2 = pid2 & (ID2_CTR6|ID2_OUTR2);
+         if      (p2 == ID2_CTR6)  return true;
+         else if (p2 == ID2_OUTR2) return false;
          break;
-      case selector_tndbasetgl:
+      }
+      break;
+   case selector_outsidetgl:
+      switch (ss->kind) {
+      case s_ptpd: case s_qtag: case s_bone: case s_spindle:
+         p2 = pid2 & (ID2_CTR2|ID2_OUTR6);
+         if      (p2 == ID2_CTR2)  return false;
+         else if (p2 == ID2_OUTR6) return true;
          break;
-      case selector_insidetgl:
-         switch (ss->kind) {
-            case s_ptpd: case s_qtag: case s_rigger:
-               p2 = pid2 & (ID2_CTR6|ID2_OUTR2);
-               if      (p2 == ID2_CTR6)  return true;
-               else if (p2 == ID2_OUTR2) return false;
-               break;
-         }
-         break;
-      case selector_outsidetgl:
-         switch (ss->kind) {
-            case s_ptpd: case s_qtag: case s_bone: case s_spindle:
-               p2 = pid2 & (ID2_CTR2|ID2_OUTR6);
-               if      (p2 == ID2_CTR2)  return false;
-               else if (p2 == ID2_OUTR6) return true;
-               break;
-         }
-         break;
-      case selector_inpttgl:
-         break;
-      case selector_outpttgl:
-         break;
+      }
+      break;
+   case selector_inpttgl:
+      break;
+   case selector_outpttgl:
+      break;
 #endif
-      case selector_ctrdmd:
-         if      ((pid2 & (ID2_CTRDMD|ID2_NCTRDMD)) == ID2_CTRDMD) return true;
-         else if ((pid2 & (ID2_CTRDMD|ID2_NCTRDMD)) == ID2_NCTRDMD) return false;
-         break;
-      case selector_ctr_1x4:
-         if      ((pid2 & (ID2_CTR1X4|ID2_NCTR1X4)) == ID2_CTR1X4) return true;
-         else if ((pid2 & (ID2_CTR1X4|ID2_NCTR1X4)) == ID2_NCTR1X4) return false;
-         break;
-      case selector_ctr_1x6:
-         if      ((pid2 & (ID2_CTR1X6|ID2_NCTR1X6)) == ID2_CTR1X6) return true;
-         else if ((pid2 & (ID2_CTR1X6|ID2_NCTR1X6)) == ID2_NCTR1X6) return false;
-         break;
-      case selector_outer1x3s:
-         if      ((pid2 & (ID2_OUTR1X3|ID2_NOUTR1X3)) == ID2_OUTR1X3) return true;
-         else if ((pid2 & (ID2_OUTR1X3|ID2_NOUTR1X3)) == ID2_NOUTR1X3) return false;
-         break;
-      case selector_center4:
-      case selector_center_wave:
-      case selector_center_line:
-      case selector_center_col:
-         if      ((pid2 & (ID2_CTR4|ID2_OUTRPAIRS)) == ID2_CTR4) return true;
-         else if ((pid2 & (ID2_CTR4|ID2_OUTRPAIRS)) == ID2_OUTRPAIRS) return false;
-         else if ((pid2 & (ID2_CTR4|ID2_END)) == ID2_CTR4) return true;
-         else if ((pid2 & (ID2_CTR4|ID2_END)) == ID2_END) return false;
-         else if ((pid2 & (ID2_CTR4|ID2_NCTR1X4)) == ID2_CTR4) return true;
-         else if ((pid2 & (ID2_CTR4|ID2_NCTR1X4)) == ID2_NCTR1X4) return false;
-         break;
-      case selector_outerpairs:
-         if (ss->kind == s1x6) {
-            if      ((pid2 & (ID2_CTR2  |ID2_OUTRPAIRS)) == ID2_OUTRPAIRS) return true;
-            else if ((pid2 & (ID2_CTR2  |ID2_OUTRPAIRS)) == ID2_CTR2) return false;
-         }
-         else {
-            if      ((pid2 & (ID2_CTR4  |ID2_OUTRPAIRS)) == ID2_OUTRPAIRS) return true;
-            else if ((pid2 & (ID2_CTR4  |ID2_OUTRPAIRS)) == ID2_CTR4) return false;
-            else if ((pid2 & (ID2_CENTER|ID2_OUTRPAIRS)) == ID2_OUTRPAIRS) return true;
-            else if ((pid2 & (ID2_CENTER|ID2_OUTRPAIRS)) == ID2_CENTER) return false;
-         }
+   case selector_ctrdmd:
+      if      ((pid2 & (ID2_CTRDMD|ID2_NCTRDMD)) == ID2_CTRDMD) return true;
+      else if ((pid2 & (ID2_CTRDMD|ID2_NCTRDMD)) == ID2_NCTRDMD) return false;
+      break;
+   case selector_ctr_1x4:
+      if      ((pid2 & (ID2_CTR1X4|ID2_NCTR1X4)) == ID2_CTR1X4) return true;
+      else if ((pid2 & (ID2_CTR1X4|ID2_NCTR1X4)) == ID2_NCTR1X4) return false;
+      break;
+   case selector_ctr_1x6:
+      if      ((pid2 & (ID2_CTR1X6|ID2_NCTR1X6)) == ID2_CTR1X6) return true;
+      else if ((pid2 & (ID2_CTR1X6|ID2_NCTR1X6)) == ID2_NCTR1X6) return false;
+      break;
+   case selector_outer1x3s:
+      if      ((pid2 & (ID2_OUTR1X3|ID2_NOUTR1X3)) == ID2_OUTR1X3) return true;
+      else if ((pid2 & (ID2_OUTR1X3|ID2_NOUTR1X3)) == ID2_NOUTR1X3) return false;
+      break;
+   case selector_center4:
+   case selector_center_wave:
+   case selector_center_line:
+   case selector_center_col:
+   case selector_center_box:
+      if      ((pid2 & (ID2_CTR4|ID2_OUTRPAIRS)) == ID2_CTR4) return true;
+      else if ((pid2 & (ID2_CTR4|ID2_OUTRPAIRS)) == ID2_OUTRPAIRS) return false;
+      else if ((pid2 & (ID2_CTR4|ID2_END)) == ID2_CTR4) return true;
+      else if ((pid2 & (ID2_CTR4|ID2_END)) == ID2_END) return false;
+      else if ((pid2 & (ID2_CTR4|ID2_NCTR1X4)) == ID2_CTR4) return true;
+      else if ((pid2 & (ID2_CTR4|ID2_NCTR1X4)) == ID2_NCTR1X4) return false;
+      break;
+   case selector_outerpairs:
+      if (ss->kind == s1x6) {
+         if      ((pid2 & (ID2_CTR2  |ID2_OUTRPAIRS)) == ID2_OUTRPAIRS) return true;
+         else if ((pid2 & (ID2_CTR2  |ID2_OUTRPAIRS)) == ID2_CTR2) return false;
+      }
+      else {
+         if      ((pid2 & (ID2_CTR4  |ID2_OUTRPAIRS)) == ID2_OUTRPAIRS) return true;
+         else if ((pid2 & (ID2_CTR4  |ID2_OUTRPAIRS)) == ID2_CTR4) return false;
+         else if ((pid2 & (ID2_CENTER|ID2_OUTRPAIRS)) == ID2_OUTRPAIRS) return true;
+         else if ((pid2 & (ID2_CENTER|ID2_OUTRPAIRS)) == ID2_CENTER) return false;
+      }
 
-         break;
-      case selector_headliners:
-         if      ((pid2 & (ID2_HEADLINE|ID2_SIDELINE)) == ID2_HEADLINE) return true;
-         else if ((pid2 & (ID2_HEADLINE|ID2_SIDELINE)) == ID2_SIDELINE) return false;
-         break;
-      case selector_sideliners:
-         if      ((pid2 & (ID2_HEADLINE|ID2_SIDELINE)) == ID2_SIDELINE) return true;
-         else if ((pid2 & (ID2_HEADLINE|ID2_SIDELINE)) == ID2_HEADLINE) return false;
-         break;
-      case selector_thosefacing:
-         if      ((pid2 & (ID2_FACING|ID2_NOTFACING)) == ID2_FACING) return true;
-         else if ((pid2 & (ID2_FACING|ID2_NOTFACING)) == ID2_NOTFACING) return false;
-         break;
-      case selector_nearline:
-         if      (pid2 & ID2_NEARLINE) return true;
-         else if (pid2 & (ID2_FARLINE|ID2_FARCOL|ID2_FARBOX)) return false;
-         break;
-      case selector_farline:
-         if      (pid2 & ID2_FARLINE) return true;
-         else if (pid2 & (ID2_NEARLINE|ID2_NEARCOL|ID2_NEARBOX)) return false;
-         break;
-      case selector_nearcolumn:
-         if      (pid2 & ID2_NEARCOL) return true;
-         else if (pid2 & (ID2_FARLINE|ID2_FARCOL|ID2_FARBOX)) return false;
-         break;
-      case selector_farcolumn:
-         if      (pid2 & ID2_FARCOL) return true;
-         else if (pid2 & (ID2_NEARLINE|ID2_NEARCOL|ID2_NEARBOX)) return false;
-         break;
-      case selector_nearbox:
-         if      (pid2 & ID2_NEARBOX) return true;
-         else if (pid2 & (ID2_FARLINE|ID2_FARCOL|ID2_FARBOX)) return false;
-         break;
-      case selector_farbox:
-         if      (pid2 & ID2_FARBOX) return true;
-         else if (pid2 & (ID2_NEARLINE|ID2_NEARCOL|ID2_NEARBOX)) return false;
-         break;
-      case selector_facingfront:
-         if      (pid2 & ID2_FACEFRONT) return true;
-         else if (pid2 & ID2_FACEBACK) return false;
-         break;
-      case selector_facingback:
-         if      (pid2 & ID2_FACEBACK) return true;
-         else if (pid2 & ID2_FACEFRONT) return false;
-         break;
+      break;
+   case selector_headliners:
+      if      ((pid2 & (ID2_HEADLINE|ID2_SIDELINE)) == ID2_HEADLINE) return true;
+      else if ((pid2 & (ID2_HEADLINE|ID2_SIDELINE)) == ID2_SIDELINE) return false;
+      break;
+   case selector_sideliners:
+      if      ((pid2 & (ID2_HEADLINE|ID2_SIDELINE)) == ID2_SIDELINE) return true;
+      else if ((pid2 & (ID2_HEADLINE|ID2_SIDELINE)) == ID2_HEADLINE) return false;
+      break;
+   case selector_thosefacing:
+      if      ((pid2 & (ID2_FACING|ID2_NOTFACING)) == ID2_FACING) return true;
+      else if ((pid2 & (ID2_FACING|ID2_NOTFACING)) == ID2_NOTFACING) return false;
+      break;
+   case selector_nearline:
+      if      (pid2 & ID2_NEARLINE) return true;
+      else if (pid2 & (ID2_FARLINE|ID2_FARCOL|ID2_FARBOX)) return false;
+      break;
+   case selector_farline:
+      if      (pid2 & ID2_FARLINE) return true;
+      else if (pid2 & (ID2_NEARLINE|ID2_NEARCOL|ID2_NEARBOX)) return false;
+      break;
+   case selector_nearcolumn:
+      if      (pid2 & ID2_NEARCOL) return true;
+      else if (pid2 & (ID2_FARLINE|ID2_FARCOL|ID2_FARBOX)) return false;
+      break;
+   case selector_farcolumn:
+      if      (pid2 & ID2_FARCOL) return true;
+      else if (pid2 & (ID2_NEARLINE|ID2_NEARCOL|ID2_NEARBOX)) return false;
+      break;
+   case selector_nearbox:
+      if      (pid2 & ID2_NEARBOX) return true;
+      else if (pid2 & (ID2_FARLINE|ID2_FARCOL|ID2_FARBOX)) return false;
+      break;
+   case selector_farbox:
+      if      (pid2 & ID2_FARBOX) return true;
+      else if (pid2 & (ID2_NEARLINE|ID2_NEARCOL|ID2_NEARBOX)) return false;
+      break;
+   case selector_facingfront:
+      if      (pid2 & ID2_FACEFRONT) return true;
+      else if (pid2 & ID2_FACEBACK) return false;
+      break;
+   case selector_facingback:
+      if      (pid2 & ID2_FACEBACK) return true;
+      else if (pid2 & ID2_FACEFRONT) return false;
+      break;
 
-      /* For the unsymmetrical selectors, we demand that the person not be virtual
-         (e.g. tandem person) or active phantom.  The former requirement could cause
-         us to lose a few extremely rare cases, but it isn't worth using up zillions of bits. */
+      // For the unsymmetrical selectors, we demand that the person not be virtual
+      // (e.g. tandem person) or active phantom.  The former requirement could cause
+      // us to lose a few extremely rare cases, but it isn't worth using up zillions of bits.
 
-      case selector_boy1:
-         if (!(permpid1 & (XPID_MASK & ~PID_MASK))) return (permpid1 & PID_MASK) == 0000;
-         break;
-      case selector_girl1:
-         if (!(permpid1 & (XPID_MASK & ~PID_MASK))) return (permpid1 & PID_MASK) == 0100;
-         break;
-      case selector_cpl1:
-         if (!(permpid1 & (XPID_MASK & ~PID_MASK))) return (permpid1 & PID_MASK & ~0100) == 0000;
-         break;
-      case selector_boy2:
-         if (!(permpid1 & (XPID_MASK & ~PID_MASK))) return (permpid1 & PID_MASK) == 0200;
-         break;
-      case selector_girl2:
-         if (!(permpid1 & (XPID_MASK & ~PID_MASK))) return (permpid1 & PID_MASK) == 0300;
-         break;
-      case selector_cpl2:
-         if (!(permpid1 & (XPID_MASK & ~PID_MASK))) return (permpid1 & PID_MASK & ~0100) == 0200;
-         break;
-      case selector_boy3:
-         if (!(permpid1 & (XPID_MASK & ~PID_MASK))) return (permpid1 & PID_MASK) == 0400;
-         break;
-      case selector_girl3:
-         if (!(permpid1 & (XPID_MASK & ~PID_MASK))) return (permpid1 & PID_MASK) == 0500;
-         break;
-      case selector_cpl3:
-         if (!(permpid1 & (XPID_MASK & ~PID_MASK))) return (permpid1 & PID_MASK & ~0100) == 0400;
-         break;
-      case selector_boy4:
-         if (!(permpid1 & (XPID_MASK & ~PID_MASK))) return (permpid1 & PID_MASK) == 0600;
-         break;
-      case selector_girl4:
-         if (!(permpid1 & (XPID_MASK & ~PID_MASK))) return (permpid1 & PID_MASK) == 0700;
-         break;
-      case selector_cpl4:
-         if (!(permpid1 & (XPID_MASK & ~PID_MASK))) return (permpid1 & PID_MASK & ~0100) == 0600;
-         break;
-      case selector_cpls1_2:
-         if (!(permpid1 & (XPID_MASK & ~PID_MASK))) return (permpid1 & PID_MASK & ~0300) == 0000;
-         break;
-      case selector_cpls2_3:
-         if (!(permpid1 & (XPID_MASK & ~PID_MASK))) return ((permpid1+0200) & PID_MASK & ~0300) == 0400;
-         break;
-      case selector_cpls3_4:
-         if (!(permpid1 & (XPID_MASK & ~PID_MASK))) return (permpid1 & PID_MASK & ~0300) == 0400;
-         break;
-      case selector_cpls4_1:
-         if (!(permpid1 & (XPID_MASK & ~PID_MASK))) return ((permpid1+0200) & PID_MASK & ~0300) == 0000;
-         break;
+   case selector_boy1:
+      if (!(permpid1 & (XPID_MASK & ~PID_MASK))) return (permpid1 & PID_MASK) == 0000;
+      break;
+   case selector_girl1:
+      if (!(permpid1 & (XPID_MASK & ~PID_MASK))) return (permpid1 & PID_MASK) == 0100;
+      break;
+   case selector_cpl1:
+      if (!(permpid1 & (XPID_MASK & ~PID_MASK))) return (permpid1 & PID_MASK & ~0100) == 0000;
+      break;
+   case selector_boy2:
+      if (!(permpid1 & (XPID_MASK & ~PID_MASK))) return (permpid1 & PID_MASK) == 0200;
+      break;
+   case selector_girl2:
+      if (!(permpid1 & (XPID_MASK & ~PID_MASK))) return (permpid1 & PID_MASK) == 0300;
+      break;
+   case selector_cpl2:
+      if (!(permpid1 & (XPID_MASK & ~PID_MASK))) return (permpid1 & PID_MASK & ~0100) == 0200;
+      break;
+   case selector_boy3:
+      if (!(permpid1 & (XPID_MASK & ~PID_MASK))) return (permpid1 & PID_MASK) == 0400;
+      break;
+   case selector_girl3:
+      if (!(permpid1 & (XPID_MASK & ~PID_MASK))) return (permpid1 & PID_MASK) == 0500;
+      break;
+   case selector_cpl3:
+      if (!(permpid1 & (XPID_MASK & ~PID_MASK))) return (permpid1 & PID_MASK & ~0100) == 0400;
+      break;
+   case selector_boy4:
+      if (!(permpid1 & (XPID_MASK & ~PID_MASK))) return (permpid1 & PID_MASK) == 0600;
+      break;
+   case selector_girl4:
+      if (!(permpid1 & (XPID_MASK & ~PID_MASK))) return (permpid1 & PID_MASK) == 0700;
+      break;
+   case selector_cpl4:
+      if (!(permpid1 & (XPID_MASK & ~PID_MASK))) return (permpid1 & PID_MASK & ~0100) == 0600;
+      break;
+   case selector_cpls1_2:
+      if (!(permpid1 & (XPID_MASK & ~PID_MASK)))
+         return (permpid1 & PID_MASK & ~0300) == 0000;
+      break;
+   case selector_cpls2_3:
+      if (!(permpid1 & (XPID_MASK & ~PID_MASK)))
+         return ((permpid1+0200) & PID_MASK & ~0300) == 0400;
+      break;
+   case selector_cpls3_4:
+      if (!(permpid1 & (XPID_MASK & ~PID_MASK)))
+         return (permpid1 & PID_MASK & ~0300) == 0400;
+      break;
+   case selector_cpls4_1:
+      if (!(permpid1 & (XPID_MASK & ~PID_MASK)))
+         return ((permpid1+0200) & PID_MASK & ~0300) == 0000;
+      break;
 
-      default:
-         fail("ERROR - selector failed to get initialized.");
+   default:
+      fail("ERROR - selector failed to get initialized.");
    }
 
    fail("Can't decide who are selected.");

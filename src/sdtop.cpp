@@ -32,6 +32,7 @@
    assoc
    find_calldef
    clear_people
+   clear_result
    rotperson
    rotcw
    rotccw
@@ -870,7 +871,8 @@ extern void touch_or_rear_back(
    case CFLAG1_REAR_BACK_FROM_QTAG:
    case CFLAG1_REAR_BACK_FROM_R_WAVE:
    case CFLAG1_REAR_BACK_FROM_EITHER:
-      if (touchflags != CFLAG1_REAR_BACK_FROM_QTAG) {
+      if (touchflags != CFLAG1_REAR_BACK_FROM_QTAG &&
+          !scopy->cmd.cmd_final_flags.test_heritbits(INHERITFLAG_MXNMASK)) {
          // Check for rearing back from a wave.
          tptr = full_expand::search_table_1(scopy->kind, livemask, directions);
          if (tptr) goto found_tptr;
@@ -1133,11 +1135,7 @@ extern void do_matrix_expansion(
 
    for (;;) {
       int i;
-      uint32 livemask, j;
-
-      for (i=0, j=1, livemask=0; i<=attr::slimit(ss); i++, j<<=1) {
-         if (ss->people[i].id1) livemask |= j;
-      }
+      uint32 livemask = little_endian_live_mask(ss);
 
       // Search for simple things in the hash table.
 
@@ -1880,7 +1878,7 @@ restriction_test_result verify_restriction(
    bool instantiate_phantoms,
    bool *failed_to_instantiate) THROW_DECL
 {
-   int idx, limit, i, j, k;
+   int idx, limit, i, j;
    uint32 t = 0;
    uint32 qa0, qa1, qa2, qa3;
    uint32 qaa[4];
@@ -1889,6 +1887,11 @@ restriction_test_result verify_restriction(
    const veryshort *p, *q;
    int phantom_count = 0;
    restriction_tester::restr_initializer *rr;
+   int k = 0;
+   int local_negate = tt.assump_negate;
+
+   if (tt.assumption == cr_not_all_sel || tt.assumption == cr_some_sel)
+      local_negate = 1;
 
    switch (tt.assumption) {
    case cr_alwaysfail:
@@ -1896,6 +1899,50 @@ restriction_test_result verify_restriction(
    case cr_give_fudgy_warn:
       warn(warn__may_be_fudgy);
       return restriction_passes;
+
+   case cr_ptp_unwrap_sel:
+      k ^= 022002200 ^ 014001400;
+   case cr_nor_unwrap_sel:
+      k ^= 014001400;
+      goto cr_none_sel_label;
+
+   case cr_ends_sel:
+      k = ~k;
+      /* FALL THROUGH!!!!!! */
+   case cr_ctrs_sel:
+      /* FELL THROUGH!!!!!! */
+
+      switch (ss->kind) {
+      case s1x4: k ^= 0x5; break;
+      case s2x4: k ^= 0x99; break;
+      case s_qtag: case s_bone: k ^= 0x33; break;
+      case s_rigger: k ^= 0xCC; break;
+      default: goto bad;
+      }
+      /* FALL THROUGH!!!!!! */
+   case cr_not_all_sel:
+   case cr_all_sel:
+      /* FELL THROUGH!!!!!! */
+      k = ~k;
+      /* FALL THROUGH!!!!!! */
+
+   case cr_some_sel:
+   case cr_none_sel:
+   cr_none_sel_label:
+      /* FELL THROUGH!!!!!! */
+      for (idx=0 ; idx<=attr::slimit(ss) ; idx++,k>>=1) {
+         if (!ss->people[idx].id1) {
+            if (tt.assump_live) goto bad;
+         }
+         else if (selectp(ss, idx)) {
+            if (!(k&1)) goto bad;
+         }
+         else {
+            if (k&1) goto bad;
+         }
+      }
+      goto good;
+
    case cr_nice_diamonds:
       // B=1 => right-handed; B=2 => left-handed.
       tt.assumption = cr_jright;
@@ -2013,7 +2060,7 @@ restriction_test_result verify_restriction(
             qaa[idx&1] |=  t;
             qaa[(idx&1)^1] |= t^2;
          }
-         else if (tt.assump_negate || tt.assump_live) goto bad;    /* All live people
+         else if (local_negate || tt.assump_live) goto bad;    /* All live people
                                                                       were demanded. */
       }
 
@@ -2178,7 +2225,7 @@ restriction_test_result verify_restriction(
 
          for (i=0,j=idx; i<rr->size; i++,j+=limit) {
             if ((t = ss->people[rr->map1[j]].id1) != 0) { qa0 |= t; qa1 |= t^2; }
-            else if (tt.assump_negate || tt.assump_live) goto bad;    /* All live people were demanded. */
+            else if (local_negate || tt.assump_live) goto bad;    /* All live people were demanded. */
          }
 
          if ((qa0 & qa1 & 2) != 0) goto bad;
@@ -2232,9 +2279,9 @@ restriction_test_result verify_restriction(
 
          for (int jjj=0 ; jjj<rr->size ; jjj++) {
             if ((t = ss->people[map1item[0]].id1) != 0)     { qa0 |= t;   qa1 |= t^2; }
-            else if (tt.assump_negate) goto bad;    /* All live people were demanded. */
+            else if (local_negate) goto bad;    /* All live people were demanded. */
             if ((t = ss->people[map1item[szlim]].id1) != 0) { qa0 |= t^2; qa1 |= t;   }
-            else if (tt.assump_negate) goto bad;    /* All live people were demanded. */
+            else if (local_negate) goto bad;    /* All live people were demanded. */
             map1item++;
          }
 
@@ -2551,11 +2598,11 @@ restriction_test_result verify_restriction(
    }
 
  good:
-   if (tt.assump_negate) return restriction_fails;
+   if (local_negate) return restriction_fails;
    else return restriction_passes;
 
  bad:
-   if (tt.assump_negate) return restriction_passes;
+   if (local_negate) return restriction_passes;
    else return restriction_fails;
 }
 
@@ -2761,6 +2808,7 @@ extern void initialize_sdlib()
    restriction_tester::initialize_tables();
    select::initialize();
    conc_tables::initialize();
+   merge_table::initialize();
    tglmap::initialize();
    initialize_commonspot_tables();
    map::initialize();
@@ -2803,12 +2851,12 @@ extern void initialize_sdlib()
    // Create the selector menu list.  It is one item shorter than the enumeration,
    // because we skip the first item in the enumeration.
 
-   selector_menu_list = (Cstring *) get_mem((selector_enum_extent) * sizeof(char *));
+   selector_menu_list = (Cstring *) get_mem((selector_ENUM_EXTENT) * sizeof(char *));
 
-   for (i=0; i<selector_enum_extent-1; i++)
+   for (i=0; i<selector_ENUM_EXTENT-1; i++)
       selector_menu_list[i] = selector_list[i+1].name;
 
-   selector_menu_list[selector_enum_extent-1] = (Cstring) 0;
+   selector_menu_list[selector_ENUM_EXTENT-1] = (Cstring) 0;
 
    /* Create the circcer list. */
 
@@ -3823,36 +3871,14 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
          if (ss->people[1].id1 & ss->people[5].id1) goto good;
          goto bad;
 
-         // Beware!  These next ones use cumulative xoring of the variable k,
-         // which is in all cases initialized to zero.
-
       case cr_ptp_unwrap_sel:
-         k ^= 022002200 ^ 014001400;
       case cr_nor_unwrap_sel:
-         k ^= 014001400;
-         goto cr_none_sel_label;
-
       case cr_ends_sel:
-         k = ~k;
-         /* FALL THROUGH!!!!!! */
       case cr_ctrs_sel:
-         /* FELL THROUGH!!!!!! */
-
-         switch (ssK) {
-         case s1x4: k ^= 0x5; break;
-         case s2x4: k ^= 0x99; break;
-         case s_qtag: case s_bone: k ^= 0x33; break;
-         case s_rigger: k ^= 0xCC; break;
-         default: k = ~1;  /* Will force an error later, unless splitting. */
-         }
-         /* FALL THROUGH!!!!!! */
       case cr_all_sel:
-         /* FELL THROUGH!!!!!! */
-         k = ~k;
-         /* FALL THROUGH!!!!!! */
+      case cr_not_all_sel:
+      case cr_some_sel:
       case cr_none_sel:
-      cr_none_sel_label:
-         /* FELL THROUGH!!!!!! */
 
          // If we are not looking at the whole setup (that is, we are deciding
          // whether to split the setup into smaller ones), let it pass.
@@ -3861,20 +3887,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
              setup_attrs[ssK].keytab[1] != key)
             goto good;
 
-         if (k == 1) goto bad;
-
-         for (idx=0 ; idx<=attr::slimit(ss) ; idx++,k>>=1) {
-            if (!ss->people[idx].id1) {
-               if (tt.assump_live) goto bad;
-            }
-            else if (selectp(ss, idx)) {
-               if (!(k&1)) goto bad;
-            }
-            else {
-               if (k&1) goto bad;
-            }
-         }
-         goto good;
+         goto check_tt;
       default:
          break;
       }
@@ -4045,6 +4058,15 @@ extern void clear_people(setup *z)
 {
    (void) memset(z->people, 0, sizeof(personrec)*MAX_PEOPLE);
 }
+
+
+extern void clear_result_flags(setup *z)
+{
+   z->result_flags.misc = 0;
+   z->result_flags.clear_split_info();
+}
+
+
 
 
 extern uint32 copy_person(setup *resultpeople, int resultplace, const setup *sourcepeople, int sourceplace)
@@ -4517,8 +4539,8 @@ extern bool fix_n_results(int arity, int goal, setup z[],
       // First, check that all setups have the same "eighth rotation" stuff,
       // and don't have any "imprecise rotation".
 
-      if ((z[i].result_flags & RESULTFLAG__IMPRECISE_ROT) ||
-          (i > 0 && (z[0].result_flags ^ z[i].result_flags) & RESULTFLAG__PLUSEIGHTH_ROT))
+      if ((z[i].result_flags.misc & RESULTFLAG__IMPRECISE_ROT) ||
+          (i > 0 && (z[0].result_flags.misc ^ z[i].result_flags.misc) & RESULTFLAG__PLUSEIGHTH_ROT))
          goto lose;
 
       if (z[i].kind == s_normal_concentric) {
@@ -4808,6 +4830,7 @@ const resolve_tester configuration::null_resolve = {
 
 static const resolve_tester test_thar_stuff[] = {
    {resolve_rlg,            MS, 2,   {5, 4, 3, 2, 1, 0, 7, 6},     0x8A31A813},
+   {resolve_minigrand,      MS, 4,   {5, 0, 3, 6, 1, 4, 7, 2},     0x8833AA11},
    {resolve_prom,           MS, 6,   {5, 4, 3, 2, 1, 0, 7, 6},     0x8833AA11},
    {resolve_slipclutch_rlg, MS, 1,   {5, 2, 3, 0, 1, 6, 7, 4},     0x8138A31A},
    {resolve_la,             MS, 5,   {5, 2, 3, 0, 1, 6, 7, 4},     0xA31A8138},
@@ -5634,7 +5657,7 @@ void toplevelmove() THROW_DECL
    // Put in identification bits for global/unsymmetrical stuff, if possible.
    for (i=0; i<MAX_PEOPLE; i++) starting_setup.people[i].id2 &= ~GLOB_BITS_TO_CLEAR;
 
-   if (!(starting_setup.result_flags & RESULTFLAG__IMPRECISE_ROT)) {
+   if (!(starting_setup.result_flags.misc & RESULTFLAG__IMPRECISE_ROT)) {
       // Can't do it if rotation is not known.
       if (attr::slimit(&starting_setup) >= 0) {
          // Put in headliner/sideliner stuff if possible.
@@ -5760,17 +5783,17 @@ void toplevelmove() THROW_DECL
    }
 
    // Once rotation is imprecise, it is always imprecise.  Same for the other flags copied here.
-   newhist.state.result_flags |= starting_setup.result_flags &
+   newhist.state.result_flags.misc |= starting_setup.result_flags.misc &
       (RESULTFLAG__IMPRECISE_ROT|RESULTFLAG__ACTIVE_PHANTOMS_ON|RESULTFLAG__ACTIVE_PHANTOMS_OFF);
 
    // But 1/8 rotation stuff cancels in pairs.
-   if (newhist.state.result_flags & starting_setup.result_flags & RESULTFLAG__PLUSEIGHTH_ROT) {
-      newhist.state.result_flags &= ~RESULTFLAG__PLUSEIGHTH_ROT;
+   if (newhist.state.result_flags.misc & starting_setup.result_flags.misc & RESULTFLAG__PLUSEIGHTH_ROT) {
+      newhist.state.result_flags.misc &= ~RESULTFLAG__PLUSEIGHTH_ROT;
       newhist.state.rotation++;
       canonicalize_rotation(&newhist.state);
    }
    else
-      newhist.state.result_flags |= starting_setup.result_flags & RESULTFLAG__PLUSEIGHTH_ROT;
+      newhist.state.result_flags.misc |= starting_setup.result_flags.misc & RESULTFLAG__PLUSEIGHTH_ROT;
 }
 
 
@@ -5943,7 +5966,6 @@ extern bool do_subcall_query(
       // Need to present the popup to the operator
       // and find out whether modification is desired.
 
-      modify_popup_kind kind;
       char pretty_call_name[MAX_TEXT_LINE_LENGTH];
 
       // Star turn calls can have funny names like "nobox".
@@ -5953,14 +5975,20 @@ extern bool do_subcall_query(
          "turn the star @b" : orig_call->name,
          pretty_call_name, &current_options);
 
-      if (this_is_tagger) kind = modify_popup_only_tag;
-      else if (this_is_tagger_circcer) kind = modify_popup_only_circ;
-      else kind = modify_popup_any;
+      char *line_format;
 
-      if (gg->do_modifier_popup(pretty_call_name, kind)) {
+      if (this_is_tagger)
+         line_format = "The \"%s\" can be replaced with a tagging call.";
+      else if (this_is_tagger_circcer)
+         line_format = "The \"%s\" can be replaced with a modified circulate-like call.";
+      else
+         line_format = "The \"%s\" can be replaced.";
+
+      char tempstuff[200];
+      sprintf(tempstuff, line_format, pretty_call_name);
+      if (gg->yesnoconfirm("Replacement", tempstuff, "Do you want to replace it?", false, false)) {
          // User accepted the modification.
          // Set up the prompt and get the concepts and call.
-
          (void) sprintf(tempstring_text, "REPLACEMENT FOR THE %s", pretty_call_name);
       }
       else {
