@@ -1777,6 +1777,14 @@ static calldef_schema concentrify(
       else
          analyzer_result = schema_concentric;
       break;
+   case schema_concentric_6p_or_normal_or_2x6:
+      if (ss->cmd.cmd_final_flags.test_heritbits(INHERITFLAG_MXNMASK) == INHERITFLAGMXNK_6X2)
+         analyzer_result = schema_concentric_2_6;
+      else if (attr::slimit(ss) == 5)
+         analyzer_result = schema_concentric_6p;
+      else
+         analyzer_result = schema_concentric;
+      break;
    case schema_concentric_6p_or_sgltogether:
       if (attr::slimit(ss) == 5)
          analyzer_result = schema_concentric_2_4;
@@ -2205,6 +2213,7 @@ static calldef_schema concentrify(
       case schema_concentric_diamonds:
       case schema_concentric_zs:   // This may not be right.
       case schema_concentric_6p_or_normal:
+      case schema_concentric_6p_or_normal_or_2x6:
          if (crossing) {
             *xconc_elongation = inner_rot+1;
 
@@ -2802,6 +2811,7 @@ static void inherit_conc_assumptions(
 {
    if (analyzer == schema_concentric ||
        analyzer == schema_concentric_6p_or_normal ||
+       analyzer == schema_concentric_6p_or_normal_or_2x6 ||
        analyzer == schema_concentric_4_2_or_normal ||
        analyzer == schema_concentric_2_4_or_normal) {
       if (sskind == s2x4 && beginkind == s2x2) {

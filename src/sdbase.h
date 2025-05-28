@@ -160,6 +160,8 @@ enum concept_kind {
    concept_0x3,
    concept_4x0,
    concept_0x4,
+   concept_6x2,
+   concept_3x2,
    concept_3x3,
    concept_4x4,
    concept_5x5,

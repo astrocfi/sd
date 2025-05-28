@@ -47,7 +47,7 @@
 // database format version.
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 318
+#define DATABASE_FORMAT_VERSION 319
 
 
 // We used to do some stuff to cater to compiler vendors (e.g. Sun
@@ -274,7 +274,7 @@ enum heritflags {
    INHERITFLAG_FRACTAL    = 0x00020000U,
    INHERITFLAG_FAST       = 0x00040000U,
 
-   // This is a 2 bit field.
+   // This is a 2 bit field.  These track "yoyotabforce" and "yoyotabplain" in mkcalls.cpp.
    INHERITFLAG_YOYOETCMASK      = 0x00180000U,
    // This is its low bit.
    INHERITFLAG_YOYOETCBIT       = 0x00080000U,
@@ -285,11 +285,11 @@ enum heritflags {
    INHERITFLAG_YOYOETCK_GENEROUS= 0x00100000U,
    INHERITFLAG_YOYOETCK_STINGY  = 0x00180000U,
 
-   // This is a 4 bit field.
+   // This is a 4 bit field.  These track "mxntabforce" and "mxntabplain" in mkcalls.cpp.
    INHERITFLAG_MXNMASK    = 0x01E00000U,
    // This is its low bit.
    INHERITFLAG_MXNBIT     = 0x00200000U,
-   // These 8 things are some of the 15 choices available inside.
+   // These 10 things are some of the 15 choices available inside.
    INHERITFLAGMXNK_1X2    = 0x00200000U,
    INHERITFLAGMXNK_2X1    = 0x00400000U,
    INHERITFLAGMXNK_1X3    = 0x00600000U,
@@ -298,8 +298,10 @@ enum heritflags {
    INHERITFLAGMXNK_3X0    = 0x00C00000U,
    INHERITFLAGMXNK_0X4    = 0x00E00000U,
    INHERITFLAGMXNK_4X0    = 0x01000000U,
+   INHERITFLAGMXNK_6X2    = 0x01200000U,   // For 6x2 acey deucey.
+   INHERITFLAGMXNK_3X2    = 0x01400000U,   // For 3x2 acey deucey.
 
-   // This is a 3 bit field.
+   // This is a 3 bit field.  These track "nxntabforce" and  "nxntabplain" in mkcalls.cpp.
    INHERITFLAG_NXNMASK    = 0x0E000000U,
    // This is its low bit.
    INHERITFLAG_NXNBIT     = 0x02000000U,
@@ -312,7 +314,7 @@ enum heritflags {
    INHERITFLAGNXNK_7X7    = 0x0C000000U,
    INHERITFLAGNXNK_8X8    = 0x0E000000U,
 
-   // This is a 3 bit field.
+   // This is a 3 bit field.  These track "reverttabforce" and "reverttabplain" in mkcalls.cpp .
    INHERITFLAG_REVERTMASK = 0x70000000U,
    // This is its low bit.
    INHERITFLAG_REVERTBIT  = 0x10000000U,
@@ -1114,6 +1116,7 @@ enum calldef_schema {
    schema_single_cross_concentric_together_if_odd,
    schema_concentric_6p,
    schema_concentric_6p_or_normal,
+   schema_concentric_6p_or_normal_or_2x6,
    schema_concentric_6p_or_sgltogether,
    schema_cross_concentric_6p_or_normal,
    schema_concentric_others,

@@ -689,6 +689,7 @@ const char *schematab[] = {
    "singlecrossconc_together_if_odd",
    "conc6p",
    "conc6p_or_normal",
+   "conc6p_or_normal_or_2x6",
    "conc6p_or_singletogether",
    "crossconc6p_or_normal",
    "conc_others",
@@ -1044,49 +1045,21 @@ const char *altdeftabh[] = {
    "fast",
    ""};
 
-const char *yoyotabplain[] = {
-   "yoyo",
-   "generous",
-   "stingy",
-   ""};
-
-const char *mxntabplain[] = {
-   "1x2",
-   "2x1",
-   "1x3",
-   "3x1",
-   "0x3",
-   "3x0",
-   "0x4",
-   "4x0",
-   ""};
-
-const char *nxntabplain[] = {
-   "2x2",
-   "3x3",
-   "4x4",
-   "5x5",
-   "6x6",
-   "7x7",
-   "8x8",
-   ""};
-
-const char *reverttabplain[] = {
-   "revert",
-   "reflect",
-   "revertreflect",
-   "reflectrevert",
-   "revertreflectrevert",
-   "reflectrevertreflect",
-   "reflectreflect",
-   ""};
-
+// See INHERITFLAG_YOYOETCMASK in database.h
 const char *yoyotabforce[] = {
    "force_yoyo",
    "force_generous",
    "force_stingy",
    ""};
 
+// See INHERITFLAG_YOYOETCMASK in database.h
+const char *yoyotabplain[] = {
+   "yoyo",
+   "generous",
+   "stingy",
+   ""};
+
+// See INHERITFLAG_MXNMASK in database.h
 const char *mxntabforce[] = {
    "force_1x2",
    "force_2x1",
@@ -1096,8 +1069,25 @@ const char *mxntabforce[] = {
    "force_3x0",
    "force_0x4",
    "force_4x0",
+   "force_6x2",
+   "force_3x2",
    ""};
 
+// See INHERITFLAG_MXNMASK in database.h
+const char *mxntabplain[] = {
+   "1x2",
+   "2x1",
+   "1x3",
+   "3x1",
+   "0x3",
+   "3x0",
+   "0x4",
+   "4x0",
+   "6x2",
+   "3x2",
+   ""};
+
+// See INHERITFLAG_NXNMASK in database.h
 const char *nxntabforce[] = {
    "force_2x2",
    "force_3x3",
@@ -1108,6 +1098,18 @@ const char *nxntabforce[] = {
    "force_8x8",
    ""};
 
+// See INHERITFLAG_NXNMASK in database.h
+const char *nxntabplain[] = {
+   "2x2",
+   "3x3",
+   "4x4",
+   "5x5",
+   "6x6",
+   "7x7",
+   "8x8",
+   ""};
+
+// See INHERITFLAG_REVERTMASK in database.h
 const char *reverttabforce[] = {
    "force_revert",
    "force_reflect",
@@ -1116,6 +1118,17 @@ const char *reverttabforce[] = {
    "force_revertreflectrevert",
    "force_reflectrevertreflect",
    "force_reflectreflect",
+   ""};
+
+// See INHERITFLAG_REVERTMASK in database.h
+const char *reverttabplain[] = {
+   "revert",
+   "reflect",
+   "revertreflect",
+   "reflectrevert",
+   "revertreflectrevert",
+   "reflectrevertreflect",
+   "reflectreflect",
    ""};
 
 // This table is keyed to the constants "dfm_***".  These are the heritable

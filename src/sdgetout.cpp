@@ -499,6 +499,17 @@ static const resolve_tester test_qtag_stuff[] = {
    {resolve_rlg,            MS, 0x14,{5, 4, 2, 3, 1, 0, 6, 7},     0xAAA8888A},
    // Swing/prom from 3/4 tag, centers traded, ends sashayed.
    {resolve_rlg,            MS, 0x14,{4, 5, 2, 3, 0, 1, 6, 7},     0xAAA8888A},
+   // From diamonds with points facing each other but switched from the 0x138A31A8 case above.
+   {resolve_rlg,            MS, 4,   {4, 5, 3, 2, 0, 1, 7, 6},     0x318A13A8},
+   // More diamonds with points facing each other.
+   {resolve_rlg,            MS, 4,   {5, 4, 2, 3, 1, 0, 6, 7},     0x13A8318A},
+   // More diamonds with points facing each other.
+   {resolve_rlg,            MS, 4,   {4, 5, 2, 3, 0, 1, 6, 7},     0x31A8138A},
+   // 1/4-tag-like spots, but ends in RH miniwave.  Various milli-Tersoff scores.
+   {resolve_rlg,            MS, 4,   {4, 5, 3, 2, 0, 1, 7, 6},     0xA88A8AA8},
+   {resolve_rlg,            MS, 4,   {4, 5, 2, 3, 0, 1, 6, 7},     0xA8A88A8A},
+   {resolve_rlg,            MS, 4,   {5, 4, 2, 3, 1, 0, 6, 7},     0x8AA8A88A},
+   {resolve_rlg,            MS, 4,   {5, 4, 3, 2, 1, 0, 7, 6},     0x8A8AA8A8},
    {resolve_none, MS, 0x10}};
 
 static const resolve_tester test_2x6_stuff[] = {
@@ -708,6 +719,10 @@ static const resolve_tester test_2x4_stuff[] = {
    {resolve_rlg,            MS,   0x14,   {6, 5, 3, 4, 2, 1, 7, 0},     0x13113133},
    // Dixie grand/swing/prom from DPT.
    {resolve_singing_dixie_grand,DX,011,   {4, 2, 1, 7, 0, 6, 5, 3},     0x33111133},
+   // From T-bone setup, ends facing.
+   {resolve_rlg,            MS, 2,   {3, 4, 2, 1, 7, 0, 6, 5},     0xA8318A13},
+   {resolve_rlg,            MS, 2,   {4, 3, 1, 2, 0, 7, 5, 6},     0x8A13A831},
+   {resolve_rlg,            MS, 2,   {3, 4, 1, 2, 7, 0, 5, 6},     0xA8138A31},
    {resolve_none, MS, 0x10}};
 
 static const resolve_tester test_hrgl_stuff[] = {

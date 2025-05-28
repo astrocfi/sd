@@ -57,7 +57,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "38.64"
+version "38.65"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve dont_raise_overcast
@@ -6062,9 +6062,14 @@ call "_trade, allow t-bone" dontshow tag trade_w_tbone
    setup 2x2 2x2 restriction not_tboned
       array [CR1S AL0S AL3S CR2S]
 
+            alternate_definition [funny] c2
+   // This is so one can do a funny 6x2 acey deucey in which the funny applies to the outsides,
+   // while the centers are just in the usual 1x2 setup.
+   setup 1x2 1x2
+      array [CR1S AL0S]
+
    // We say that "funny" means those who can trade with someone who can trade back with them
    // (that is, who are in a real couple or miniwave) can do the trade.  T-boned people cannot.
-            alternate_definition [funny] c2
    setup 2x2 2x2
       preds "Can't do this with phantoms or T-boned people."
          if 2x2_miniwave [CR1S AL0S AL3S CR2S]   // Yes.
@@ -9918,6 +9923,12 @@ call "run away" c4a
       array [CR3W AL0E ACR1E CR2W]
    setup pshort6 2x3 rotate restriction unusual alwaysfail
       array [0 CR4S AL0N CR2S ACR1N 0]
+            alternate_definition [generous] c3
+   setup 1x4 1x4
+      array [CR1N AL0E ACR3S CR2W]
+            alternate_definition [stingy] c3
+   setup 1x4 1x4
+      array [CR3S AL0E ACR1N CR2W]
             alternate_definition [cross] c4a
    setup 1x4 dmd
       array [CR3W CR2W ACR1E AL0E]
@@ -11530,6 +11541,12 @@ call "weave" c1 tag weave
             step_to_wave
    setup 2x2 1x4 rotate restriction wave_only
       array [CR0N AL0S CR1N AL1S]
+            alternate_definition [stingy] c3
+   setup 2x2 dmd rotate restriction wave_only
+      array [CR0N AL0S ZM3W ZM1W]
+            alternate_definition [generous] c3
+   setup 2x2 dmd rotate restriction wave_only
+      array [CR0N AL0S CR1E AL3E]
 
 call "_natural 3/4 thru" dontshow tag nat34thru
    setup 2x2 1x4 rotate restriction wave_only
@@ -14976,9 +14993,9 @@ call "_veer and turn zero" dontshow tag veer_and_turn
 
 call "veer and turn @b X @b" c4a
    // See "circle 4 with bogus flow" above.
-            dont_use_in_resolve need_two_numbers
+            dont_use_in_resolve need_two_numbers gen_sting_is_inherited
    seq veer_and_turn []
-   seq ctrarmturn_n_ends_roll_n []
+   seq ctrarmturn_n_ends_roll_n [inherit_gensting]
 
 call "clean sweep @b" c4a
             reverse_means_mirror neednumber singlefile_is_inherited visible_fractions
@@ -17630,6 +17647,12 @@ call "track and trade" c4
    setup 4x2 2x4 rotate
       // We say you can only do it in a right-hand column.
       array [CR5E CR2E CM3E CM4E 0 0 0 0]
+            alternate_definition [generous] c3
+   setup 4x2 qtag
+      array [CR6W CR3W CM4S CM5s 0 0 0 0]
+            alternate_definition [stingy] c3
+   setup 4x2 qtag
+      array [CR7E CR2E CM4S CM5s 0 0 0 0]
             alternate_definition [3x3] c4
    setup 6x2 3x4 rotate
       array [CR7E CR5E CR2E CM3E CM4E CM6E 0 0 0 0 0 0]
@@ -20368,16 +20391,29 @@ call "_start criss cross wind the bobbin" dontshow tag startxxstreaking
    setup 2x2 1x4 restriction unusual wave_only
       array [CR2S AL0S ZM1N ZM3N]
 
+// This is awfully close to ctrs_fanchainthru.  But we probably really
+// do want to enforce a miniwave arm turn at the start.
 call "_yoyo central spin the windmill" dontshow tag yoyoctrwindmill
             fractal_is_inherited gen_sting_is_inherited
    seq armturn_n4 [insert_number 3 inherit_fractal inherit_gensting]
    seq any_hand_slip [roll_transparent inherit_gensting]
    seq cast_off_n4_with_warn [insert_number 3 inherit_fractal inherit_gensting]
 
+call "_yoyo central spin the windmill" dontshow tag yoyoctrwindmillbut
+            fractal_is_inherited gen_sting_is_inherited
+   seq armturn_n4 [insert_number 3 inherit_fractal inherit_gensting]
+   seq any_hand_slip [roll_transparent inherit_gensting]
+   seq nullcall [mandatory_anycall]
+
 call "_finish wind the bobbin" dontshow tag finstreaking
             fractal_is_inherited gen_sting_is_inherited
    conc yoyoctrwindmill [inherit_fractal inherit_gensting]
         circ_n_times    [conc_demand_lines conc_force_spots insert_number 2]
+
+call "_finish wind the bobbin but @0" dontshow tag finstreakingbut
+            fractal_is_inherited gen_sting_is_inherited
+   conc yoyoctrwindmillbut [inherit_fractal inherit_gensting]
+        circ_n_times       [conc_demand_lines conc_force_spots insert_number 2]
 
 call "wind the bobbin" c3a
             first_part_visible cross_is_inherited fractal_is_inherited gen_sting_is_inherited
@@ -20388,6 +20424,16 @@ call "criss cross wind the bobbin" c4a
             first_part_visible fractal_is_inherited gen_sting_is_inherited
    seq startxxstreaking []
    seq finstreaking [inherit_fractal inherit_gensting]
+
+call "wind the bobbin but @0" c3a
+            first_part_visible cross_is_inherited fractal_is_inherited gen_sting_is_inherited
+   seq startstreaking [inherit_cross]
+   seq finstreakingbut [inherit_fractal inherit_gensting]
+
+call "criss cross wind the bobbin but @0" c4a
+            first_part_visible fractal_is_inherited gen_sting_is_inherited
+   seq startxxstreaking []
+   seq finstreakingbut [inherit_fractal inherit_gensting]
 
 call "REWIND wind the bobbin" c4
    setup 2x4 2x4 rotate
@@ -21856,9 +21902,23 @@ call "@6 rip n snort" c4x
          if person_select_plus8  [0 0 0 0 0 AL5N CR6N 0 0 0 0 0 0 0 0 0]
          if person_select_plus12 [0 0 0 0 0 AL5N AL6N 0 0 0 0 0 0 0 0 0]
 
+call "6X2 acey deucey" a1
+            fudge_to_q_tag
+            half_is_inherited yoyo_is_inherited gen_sting_is_inherited magic_is_inherited funny_is_inherited
+   conc2_6 trade [inherit_half inherit_yoyo inherit_gensting or_anycall]
+           circulate [inherit_half inherit_magic inherit_funny]
+
+call "3X2 acey deucey" c1
+            fudge_to_q_tag
+            yoyo_is_inherited gen_sting_is_inherited funny_is_inherited
+   conc2_6 trade [inherit_yoyo inherit_gensting] trngle_circ [or_anycall inherit_funny]
+
 call "acey deucey" plus tag aceydeucey
-            half_is_inherited yoyo_is_inherited gen_sting_is_inherited funny_is_inherited
-   conc6p_or_normal trade_w_tbone [inherit_half inherit_funny inherit_yoyo inherit_gensting suppress_elongation_warnings]
+            fudge_to_q_tag
+            half_is_inherited yoyo_is_inherited gen_sting_is_inherited
+            magic_is_inherited funny_is_inherited mxn_is_inherited
+   conc6p_or_normal_or_2x6
+                    trade_w_tbone [inherit_half inherit_funny inherit_yoyo inherit_gensting suppress_elongation_warnings]
                     circulate [inherit_half inherit_funny conc_force_spots endscando]
 
 call "mix the deucey" c4a
@@ -21935,7 +21995,7 @@ call "snap the lock" c3a
 call "_ctrs fan chain thru" dontshow tag ctrs_fanchainthru
             fractal_is_inherited gen_sting_is_inherited
    seq cast_off_n4_with_warn [insert_number 3 inherit_fractal inherit_gensting]
-   seq any_hand_slip [roll_transparent]
+   seq any_hand_slip [roll_transparent inherit_gensting]
    seq cast_off_n4_with_warn [insert_number 3 inherit_fractal inherit_gensting]
 
 call "_ends fan tag the deucey part 2" dontshow tag ends_fantag2
@@ -25124,6 +25184,12 @@ call "turn and weave" c4a
       array [CR3E 0 0 0]
    setup 1x4 1x4 qualifier left dmd_ctrs_mwv
       array [0 0 0 AL2N]
+            alternate_definition [generous] c3
+   setup 1x4 1x4 qualifier ntbone wave_only
+      array [CR0N AAACR3S AL2N CCCAL1S]
+            alternate_definition [stingy] c3
+   setup 1x4 1x4 qualifier ntbone wave_only
+      array [CCAL3N AL0S AACR1N CR2S]
 
 call "_fold to face" dontshow tag foldtoface
    setup 1x2 1x2 rotate restriction wave_only
@@ -26510,17 +26576,6 @@ call "lead the way" c4a
         trade_and_roll [inherit_yoyo inherit_gensting inherit_mxn inherit_nxn
                         inherit_bigmatrix conc_demand_columns endscando]
 
-call "6X2 acey deucey" a1
-            fudge_to_q_tag
-            half_is_inherited yoyo_is_inherited gen_sting_is_inherited magic_is_inherited funny_is_inherited
-   conc2_6 trade [inherit_half inherit_yoyo inherit_gensting or_anycall]
-           circulate [inherit_half inherit_magic inherit_funny]
-
-call "3X2 acey deucey" c1
-            fudge_to_q_tag
-            yoyo_is_inherited gen_sting_is_inherited funny_is_inherited
-   conc2_6 trade [inherit_yoyo inherit_gensting] trngle_circ [or_anycall inherit_funny]
-
 call "3X2 reshape" c2
             fudge_to_q_tag
             yoyo_is_inherited gen_sting_is_inherited funny_is_inherited
@@ -26713,16 +26768,16 @@ call "barge the action@S" c4a
             fractal_is_inherited gen_sting_is_inherited
    seq square_thru_n [inherit_twisted insert_number 2]
    seq startaction [inherit_left]
-   seq turndmdn_endstrade [insert_number 1]
-   seq finishwithmod []
+   seq turndmdn_endstrade [inherit_gensting insert_number 1]
+   seq finishwithmod [inherit_gensting]
 
 call "square the barge the action@S" c4
             first_part_visible split_like_square_thru left_means_mirror twisted_is_inherited
             fractal_is_inherited gen_sting_is_inherited
    seq square_thru_n [inherit_twisted insert_number 4]
    seq startaction [inherit_left]
-   seq turndmdn_endstrade [insert_number 1]
-   seq finishwithmod []
+   seq turndmdn_endstrade [inherit_gensting insert_number 1]
+   seq finishwithmod [inherit_gensting]
 
 call "_fudge to parallel diamonds" dontshow tag fudge_to_parallel_diamonds
    setup 2stars qtag
@@ -26903,9 +26958,9 @@ call "turn on" c4a
    seq extend [inherit_single inherit_nxn]
 
 call "tickle" c4a tag tickle
-            visible_fractions single_is_inherited
+            visible_fractions single_is_inherited fractal_is_inherited gen_sting_is_inherited
             mxn_is_inherited nxn_is_inherited bigmatrix_is_inherited
-   seq hinge_for_nicely [inherit_mxn inherit_nxn inherit_bigmatrix]
+   seq hinge_for_nicely [inherit_mxn inherit_nxn inherit_bigmatrix inherit_gensting inherit_fractal]
    seq splitctrrot [inherit_single inherit_mxn inherit_nxn]
 
 /*  This never caught on.

@@ -1597,8 +1597,8 @@ extern void tandem_couples_move(
    uint32 allmask = 0;
 
    if (key == tandem_key_overlap_siam) {
-      if (ss->kind != s2x4 || phantom != 0)
-         fail("Need 2x4 for this concept.");
+      if ((ss->kind != s2x4 && ss->kind != s_qtag && ss->kind != s_bone && ss->kind != s1x8) || phantom != 0)
+         fail("Can't do this concept in this setup.");
       phantom = 1;
    }
 
@@ -1782,8 +1782,12 @@ extern void tandem_couples_move(
       }
    }
    else if (key == tandem_key_overlap_siam) {
-      ewmask = allmask;
-      nsmask = 0;
+      ewmask = allmask;  // This works for 2x4, 1x8, and qtag
+
+      if (ss->kind == s_bone)
+         ewmask &= ~0x33;
+
+      nsmask = allmask & ~ewmask;
       tandstuff.m_phantom_pairing_ok = true;
    }
    else if (key & 2) {
@@ -1991,9 +1995,6 @@ extern void tandem_couples_move(
          fail("Can't do this.");
 
       result->result_flags = get_multiple_parallel_resultflags(ttt, tttcount+1);
-
-      if (key == tandem_key_overlap_siam && ttt[0].kind != s2x2)
-         fail("Can't do this.");    // They will all be the same, because of fix_n_results.
    }
    else {
       // If going to a 2x2, remember physical 2x4 elongation.  This may help in the case

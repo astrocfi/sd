@@ -8780,7 +8780,7 @@ enum {
 };
 
 
-// Beware!!  This table must be keyed to definition of "concept_kind" in sd.h .
+// Beware!!  This table must be keyed to definition of "concept_kind" in sdbase.h .
 const concept_table_item concept_table[] = {
    {CONCPROP__USES_PARTS, 0},                               // concept_another_call_next_mod
    {0, 0},                                                  // concept_mod_declined
@@ -8842,6 +8842,8 @@ const concept_table_item concept_table[] = {
    {0, 0},                                                  // concept_0x3
    {0, 0},                                                  // concept_4x0
    {0, 0},                                                  // concept_0x4
+   {0, 0},                                                  // concept_6x2
+   {0, 0},                                                  // concept_3x2
    {0, 0},                                                  // concept_3x3
    {0, 0},                                                  // concept_4x4
    {0, 0},                                                  // concept_5x5

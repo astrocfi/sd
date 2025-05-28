@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 38.64
-@set title2 Database version = 38.64 format = 318
+@set title1 RELEASE NOTES FOR VERSION 38.65
+@set title2 Database version = 38.65 format = 319
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 38.65::
 * 38.64::
 * 38.63::
 * 38.62::
@@ -103,7 +104,7 @@ The files @file{relnotes03.txi} and @file{relnotes98.txi} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 38.64, Top, (dir)
+@node Intro, 38.65, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -114,11 +115,21 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2014 William B. Ackerman
 @sp 3
 @menu
-* 38.64::               Changes in the current version
+* 38.65::               Changes in the current version
 @end menu
 
 @c ************
-@node 38.64, 38.63, Intro, Top
+@node 38.65, 38.64, Intro, Top
+@unnumberedsec Version 38.65 changes
+
+Some @strong{generous} and @strong{stingy} improvements were made.
+
+@noindent The handling of @strong{melded} was improved.
+
+@noindent More singing call getouts are recognized.
+
+@c ************
+@node 38.64, 38.63, 38.65, Top
 @unnumberedsec Version 38.64 changes
 
 Moved call levels to adhere to the rule that C4A is those things on

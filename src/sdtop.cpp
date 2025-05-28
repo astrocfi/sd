@@ -4928,6 +4928,10 @@ extern parse_block *process_final_concepts(
          heritsetbit = INHERITFLAGMXNK_4X0; break;
       case concept_0x4:
          heritsetbit = INHERITFLAGMXNK_0X4; break;
+      case concept_6x2:
+         heritsetbit = INHERITFLAGMXNK_6X2; break;
+      case concept_3x2:
+         heritsetbit = INHERITFLAGMXNK_3X2; break;
       case concept_2x2:
          heritsetbit = INHERITFLAGNXNK_2X2; break;
       case concept_3x3:

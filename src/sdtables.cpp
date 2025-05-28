@@ -9691,11 +9691,12 @@ const schema_attr schema_attrs[] = {
     schema_nothing},                     // schema_single_concentric_together_if_odd
    {SCA_CROSS | SCA_COPY_LYZER,
     schema_single_concentric_together_if_odd},  // schema_single_cross_concentric_together_if_odd
-
    {SCA_CENTRALCONC | SCA_SNAGOK | SCA_DETOUR | SCA_INV_SUP_ELWARN,
     schema_nothing},                     // schema_concentric_6p
    {SCA_CENTRALCONC | SCA_SNAGOK | SCA_DETOUR | SCA_INV_SUP_ELWARN,
     schema_nothing},                     // schema_concentric_6p_or_normal
+   {SCA_CENTRALCONC | SCA_SNAGOK | SCA_DETOUR | SCA_INV_SUP_ELWARN,
+    schema_nothing},                     // schema_concentric_6p_or_normal_or_2x6
    {SCA_CENTRALCONC | SCA_SNAGOK,
     schema_nothing},                     // schema_concentric_6p_or_sgltogether
    {SCA_CROSS | SCA_COPY_LYZER | SCA_SNAGOK,
