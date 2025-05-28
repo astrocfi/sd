@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2007  William B. Ackerman.
+//    Copyright (C) 1990-2011  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -6792,10 +6792,11 @@ static void do_concept_meta(
          result->cmd.cmd_fraction.flags += CMD_FRAC_PART2_BIT;
          do_call_in_series_simple(result);
          result->cmd = yescmd;
-         result->cmd.cmd_fraction.set_to_null_with_flags(
-            FRACS(CMD_FRAC_CODE_ONLYREV,1,0) | CMD_FRAC_BREAKING_UP);
+         result->result_flags.misc &= ~expirations_to_clearmisc;
          // Assumptions don't carry through.
          result->cmd.cmd_assume.assumption = cr_none;
+         result->cmd.cmd_fraction.set_to_null_with_flags(
+            FRACS(CMD_FRAC_CODE_ONLYREV,1,0) | CMD_FRAC_BREAKING_UP);
       }
       else if (ss->cmd.cmd_fraction.is_null_with_masked_flags(
                   ~CMD_FRAC_PART_MASK,
@@ -6819,10 +6820,11 @@ static void do_concept_meta(
          // Do the call with the concept.
          // Set the fractionalize field to execute the last part of the call.
          result->cmd = yescmd;
-         result->cmd.cmd_fraction.set_to_null_with_flags(
-            FRACS(CMD_FRAC_CODE_ONLYREV,1,0) | CMD_FRAC_BREAKING_UP);
+         result->result_flags.misc &= ~expirations_to_clearmisc;
          // Assumptions don't carry through.
          result->cmd.cmd_assume.assumption = cr_none;
+         result->cmd.cmd_fraction.set_to_null_with_flags(
+            FRACS(CMD_FRAC_CODE_ONLYREV,1,0) | CMD_FRAC_BREAKING_UP);
          result->result_flags.misc |= RESULTFLAG__EXPIRATION_ENAB;
       }
       else
@@ -6873,14 +6875,8 @@ static void do_concept_meta(
 
          result->cmd = yescmd;
          result->result_flags.misc &= ~expirations_to_clearmisc;
-
          // Assumptions don't carry through.
          result->cmd.cmd_assume.assumption = cr_none;
-         result->cmd.cmd_fraction.set_to_null_with_flags(
-            FRACS(CMD_FRAC_CODE_ONLYREV,1,0) | CMD_FRAC_BREAKING_UP);
-         result->result_flags.misc |= RESULTFLAG__EXPIRATION_ENAB;
-         result->cmd = yescmd;
-         result->result_flags.misc &= ~expirations_to_clearmisc;
          result->cmd.cmd_fraction.set_to_null_with_flags(
             FRACS(CMD_FRAC_CODE_ONLYREV,1,0) | CMD_FRAC_BREAKING_UP);
          result->result_flags.misc |= RESULTFLAG__EXPIRATION_ENAB;

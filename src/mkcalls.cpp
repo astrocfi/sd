@@ -1405,7 +1405,6 @@ tagtabitem tagtabinit[num_base_call_indices] = {
    {0, "real_base_0"},         // General thing that takes a tagging call
    {0, "real_base_0_noflip"},  // Same, but must not be "flip"
    {0, "base_tag_call_flip"},  // "flip"
-   {0, "armturn_34"},     // This is used for "yo-yo".
    {0, "armturn_n4"},     // To tell where phantoms went.
    {0, "endsshadow"},     // This is used for "shadow <setup>".
    {0, "chreact_1"},      // This is used for propagating the hinge info for part 2 of chain reaction.

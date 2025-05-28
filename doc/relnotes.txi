@@ -1,7 +1,7 @@
 \input texinfo @c %**start of header -*-texinfo-*-
 @setfilename relnotes.info
 @settitle Sd Release Notes
-@c Time-stamp: <10 Aug 2008 wba>
+@c Time-stamp: <9 Jan 2011 wba>
 @iftex
 @headings off
 @oddheading @| @| @thispage
@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 38.37
-@set title2 Database version = 38.37 format = 300
+@set title1 RELEASE NOTES FOR VERSION 38.38
+@set title2 Database version = 38.38 format = 302
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 38.38::
 * 38.37::
 * 38.36::
 * 38.35::
@@ -76,7 +77,7 @@ The files @file{relnotes03.txi} and @file{relnotes98.txi} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 38.37, Top, (dir)
+@node Intro, 38.38, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -84,14 +85,24 @@ notes relating to even older versions.
 
 @w{ }@c the @* above makes the @sp below fail without this line  1998-05
 @sp 2
-@noindent Copyright @copyright{} 1996-2010 William B. Ackerman
+@noindent Copyright @copyright{} 1996-2011 William B. Ackerman
 @sp 3
 @menu
-* 38.37::               Changes in the current version
+* 38.38::               Changes in the current version
 @end menu
 
 @c ************
-@node 38.37, 38.36, Intro, Top
+@node 38.38, 38.37, Intro, Top
+@unnumberedsec Version 38.38 changes
+
+The ability to do the @strong{stingy} and @strong{generous} concepts has been further improved.
+
+It is not legal to apply more than one of @strong{stingy}, @strong{generous}, @strong{yoyo}, or @strong{fractal}
+to the same action.  But things like @strong{finally stingy generous 1/4 thru} are legal, because
+the concepts apply to different parts.
+
+@c ************
+@node 38.37, 38.36, 38.38, Top
 @unnumberedsec Version 38.37 changes
 
 The ability to do the @strong{stingy} and @strong{generous} concepts has been much improved.

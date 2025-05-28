@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2009  William B. Ackerman.
+//    Copyright (C) 1990-2011  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -1026,16 +1026,15 @@ extern uint32 do_call_in_series(
    uint32 current_elongation = 0;
    resultflag_rec saved_result_flags = sss->result_flags;
 
-   // Start the execution mechanism, but only if we are really
-   // doing a call.
+   // Start the expiration mechanism, but only if we are really doing a call.
    if (sss->cmd.callspec)
       sss->cmd.prior_expire_bits |= sss->result_flags.misc & RESULTFLAG__EXPIRATION_BITS;
 
    setup qqqq = *sss;
 
-   /* Check for a concept that will need to be re-evaluated under "twice".
-      The test for this is [waves] initially twice initially once removed
-      hinge the lock.  We want the "once removed" to be re-evaluated. */
+   // Check for a concept that will need to be re-evaluated under "twice".
+   // The test for this is [waves] initially twice initially once removed
+   // hinge the lock.  We want the "once removed" to be re-evaluated.
 
    if (qqqq.cmd.cmd_misc3_flags & CMD_MISC3__RESTRAIN_CRAZINESS &&
        (qqqq.cmd.cmd_fraction.flags & CMD_FRAC_CODE_MASK) == CMD_FRAC_CODE_ONLY) {
@@ -1049,10 +1048,10 @@ extern uint32 do_call_in_series(
 
    setup tempsetup;
 
-   /* If we are forcing a split, and an earlier call in the series has responded
-      to that split by returning an unequivocal splitting axis (indicated by
-      one field being zero and the other nonzero), we continue to split
-      along the same axis. */
+   // If we are forcing a split, and an earlier call in the series has responded
+   // to that split by returning an unequivocal splitting axis (indicated by
+   // one field being zero and the other nonzero), we continue to split
+   // along the same axis.
 
     // We want one field nonzero and the other zero.
 
@@ -1076,7 +1075,7 @@ extern uint32 do_call_in_series(
                           &tempsetup))
          fail("Can't figure out how to split this multiple part call.");
 
-      qqqq.cmd.cmd_misc_flags |= save_split;  /* Put it back in. */
+      qqqq.cmd.cmd_misc_flags |= save_split;  // Put it back in.
    }
    else
       move(&qqqq, qtfudged, &tempsetup);
@@ -6986,6 +6985,45 @@ static void move_with_real_call(
 }
 
 
+static void handle_expiration(setup *ss, uint32 *bit_to_set)
+{
+   if (ss->cmd.prior_expire_bits & RESULTFLAG__EXPIRATION_ENAB) {
+      if (ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_TWISTED)) {
+         if (ss->cmd.prior_expire_bits & RESULTFLAG__TWISTED_EXPIRED)
+            ss->cmd.cmd_final_flags.clear_heritbit(INHERITFLAG_TWISTED);   // Already did that.
+         *bit_to_set |= RESULTFLAG__TWISTED_EXPIRED;
+      }
+
+      // Take care of generous and stingy; they are complicated.
+
+
+      switch (ss->cmd.cmd_final_flags.test_heritbits(INHERITFLAG_YOYOETCMASK)) {
+      case INHERITFLAG_YOYOETCK_YOYO:
+         if (ss->cmd.prior_expire_bits & RESULTFLAG__YOYO_ONLY_EXPIRED)
+            ss->cmd.cmd_final_flags.clear_heritbits(INHERITFLAG_YOYOETCMASK);
+         *bit_to_set |= RESULTFLAG__YOYO_ONLY_EXPIRED;
+         break;
+      case INHERITFLAG_YOYOETCK_GENEROUS:
+      case INHERITFLAG_YOYOETCK_STINGY:
+         if (ss->cmd.prior_expire_bits & RESULTFLAG__GEN_STING_EXPIRED)
+            ss->cmd.cmd_final_flags.clear_heritbits(INHERITFLAG_YOYOETCMASK);
+         *bit_to_set |= RESULTFLAG__GEN_STING_EXPIRED;
+         break;
+      }
+
+      // This used to be "FINAL_SPLIT" for some reason that we can't figure out now.
+      // But that breaks tests nf25 and ng13. ([cheese] init triple boxes split turn the key
+      // caused expiration on the "split" of the first part, which wasn't supposed
+      // to have anything to do with split square thru stuff.)
+      // So set it back to FINAL__SPLIT_SQUARE_APPROVED.
+      if (ss->cmd.cmd_final_flags.test_finalbit(FINAL__SPLIT_SQUARE_APPROVED)) {
+         if (ss->cmd.prior_expire_bits & RESULTFLAG__SPLIT_EXPIRED)
+            ss->cmd.cmd_final_flags.clear_finalbit(FINAL__SPLIT_SQUARE_APPROVED);
+         *bit_to_set |= RESULTFLAG__SPLIT_EXPIRED;
+      }
+   }
+}
+
 
 /* The current interpretation of the elongation flags, on input and output, is now
    as follows:
@@ -7205,36 +7243,7 @@ void move(
       }
 
       // Handle expired concepts.
-
-      if (ss->cmd.prior_expire_bits & RESULTFLAG__EXPIRATION_ENAB) {
-         if (ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_TWISTED)) {
-            if (ss->cmd.prior_expire_bits & RESULTFLAG__TWISTED_EXPIRED)
-               ss->cmd.cmd_final_flags.clear_heritbit(INHERITFLAG_TWISTED);   // Already did that.
-            resultflags_to_put_inmisc |= RESULTFLAG__TWISTED_EXPIRED;
-         }
-
-         // Take care of generous and stingy; they are complicated.
-
-         switch (ss->cmd.cmd_final_flags.test_heritbits(INHERITFLAG_YOYOETCMASK)) {
-         case INHERITFLAG_YOYOETCK_YOYO:
-            if (ss->cmd.prior_expire_bits & RESULTFLAG__YOYO_ONLY_EXPIRED)
-               ss->cmd.cmd_final_flags.clear_heritbits(INHERITFLAG_YOYOETCMASK);
-            resultflags_to_put_inmisc |= RESULTFLAG__YOYO_ONLY_EXPIRED;
-            break;
-         case INHERITFLAG_YOYOETCK_STINGY:
-         case INHERITFLAG_YOYOETCK_GENEROUS:
-            if (ss->cmd.prior_expire_bits & RESULTFLAG__GEN_STING_EXPIRED)
-               ss->cmd.cmd_final_flags.clear_heritbits(INHERITFLAG_YOYOETCMASK);
-            resultflags_to_put_inmisc |= RESULTFLAG__GEN_STING_EXPIRED;
-            break;
-         }
-
-         if (ss->cmd.cmd_final_flags.test_finalbit(FINAL__SPLIT_SQUARE_APPROVED)) {
-            if (ss->cmd.prior_expire_bits & RESULTFLAG__SPLIT_EXPIRED)
-               ss->cmd.cmd_final_flags.clear_finalbit(FINAL__SPLIT_SQUARE_APPROVED);
-            resultflags_to_put_inmisc |= RESULTFLAG__SPLIT_EXPIRED;
-         }
-      }
+      handle_expiration(ss, &resultflags_to_put_inmisc);
 
       move_with_real_call(ss, qtfudged, false, result);
       goto getout;
@@ -7271,43 +7280,7 @@ void move(
    saved_magic_diamond = last_magic_diamond;
 
    // Handle expired concepts.
-
-   if (ss->cmd.prior_expire_bits & RESULTFLAG__EXPIRATION_ENAB) {
-      if (ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_TWISTED)) {
-         if (ss->cmd.prior_expire_bits & RESULTFLAG__TWISTED_EXPIRED)
-            ss->cmd.cmd_final_flags.clear_heritbit(INHERITFLAG_TWISTED);   // Already did that.
-         resultflags_to_put_inmisc |= RESULTFLAG__TWISTED_EXPIRED;
-      }
-
-      if (ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_TWISTED)) {
-         if (ss->cmd.prior_expire_bits & RESULTFLAG__TWISTED_EXPIRED)
-            ss->cmd.cmd_final_flags.clear_heritbit(INHERITFLAG_TWISTED);   // Already did that.
-         resultflags_to_put_inmisc |= RESULTFLAG__TWISTED_EXPIRED;
-      }
-
-      if (ss->cmd.cmd_final_flags.test_heritbits(INHERITFLAG_YOYOETCK_YOYO)) {
-         if (ss->cmd.prior_expire_bits & RESULTFLAG__YOYO_ONLY_EXPIRED)
-            ss->cmd.cmd_final_flags.clear_heritbits(INHERITFLAG_YOYOETCK_YOYO);
-         resultflags_to_put_inmisc |= RESULTFLAG__YOYO_ONLY_EXPIRED;
-      }
-
-      if (ss->cmd.cmd_final_flags.test_heritbits(INHERITFLAG_YOYOETCK_GENEROUS)) { // Takes care of generous and stingy/
-         if (ss->cmd.prior_expire_bits & RESULTFLAG__GEN_STING_EXPIRED)
-            ss->cmd.cmd_final_flags.clear_heritbits(INHERITFLAG_YOYOETCK_GENEROUS);
-         resultflags_to_put_inmisc |= RESULTFLAG__GEN_STING_EXPIRED;
-      }
-
-      // This used to be "FINAL_SPLIT" for some reason that we can't figure out now.
-      // But that breaks tests nf25 and ng13. ([cheese] init triple boxes split turn the key
-      // caused expiration on the "split" of the first part, which wasn't supposed
-      // to have anything to do with split square thru stuff.)
-      // So set it back to FINAL__SPLIT_SQUARE_APPROVED.
-      if (ss->cmd.cmd_final_flags.test_finalbit(FINAL__SPLIT_SQUARE_APPROVED)) {
-         if (ss->cmd.prior_expire_bits & RESULTFLAG__SPLIT_EXPIRED)
-            ss->cmd.cmd_final_flags.clear_finalbit(FINAL__SPLIT_SQUARE_APPROVED);
-         resultflags_to_put_inmisc |= RESULTFLAG__SPLIT_EXPIRED;
-      }
-   }
+   handle_expiration(ss, &resultflags_to_put_inmisc);
 
    if (ss->cmd.cmd_misc3_flags & CMD_MISC3__IMPOSE_Z_CONCEPT) {
       distorted_2x2s_move(ss, (parse_block *) 0, result);   // It will see the flag, do the right thing, and clear it.
@@ -7424,7 +7397,10 @@ void move(
 
       if (ss->cmd.cmd_misc3_flags & CMD_MISC3__RESTRAIN_MODIFIERS) {
          ss->cmd.cmd_misc3_flags &= ~CMD_MISC3__RESTRAIN_MODIFIERS;
-         ss->cmd.cmd_final_flags.set_heritbits(ss->cmd.restrained_super8flags);
+
+         if (do_heritflag_merge((uint32 *) &ss->cmd.cmd_final_flags.herit, ss->cmd.restrained_super8flags))
+            fail("Illegal combination of call modifiers.");
+
          ss->cmd.do_couples_her8itflags = ss->cmd.restrained_super9flags;
 
          ss->cmd.cmd_final_flags.set_heritbits(ss->cmd.parseptr->more_finalherit_flags.herit);

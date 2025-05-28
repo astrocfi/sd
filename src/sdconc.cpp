@@ -2541,9 +2541,10 @@ static bool this_call_preserves_shape(const setup *begin,
    case schema_nothing: case schema_nothing_noroll: return true;
    case schema_by_array:
       {
-         // The call "arm turn N/4" is special.  Look at the number that it was given.
-         // It preserves shape if that number is even.
-         if (begin->cmd.callspec == base_calls[base_call_armturn_n4])
+         // Calls like "arm turn N/4" are special.  Look at the number that it was given.
+         // It preserves shape if that number is even.  These calls are characterized
+         // by having "yoyo_fractal_numbers".
+         if (def->callflags1 & CFLAG1_YOYO_FRACTAL_NUM)
             return sss == s1x2 && (call_options.number_fields & 1) == 0;
 
          if ((def->stuff.arr.def_list->callarray_list->callarray_flags & CAF__ROT) != 0 ||
