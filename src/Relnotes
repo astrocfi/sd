@@ -1,13 +1,28 @@
-		   RELEASE NOTES FOR SD VERSION 31.63
-		 Database version = 31.63 format = 74.
-                X11 UI version 1.16, SDTTY UI version 1.6.
+		   RELEASE NOTES FOR SD VERSION 31.65
+		 Database version = 31.64 format = 74.
+                X11 UI version 1.16, SDTTY UI version 1.7.
 
+
+****** Changes as of version 31.64 ******
+
+The sdtty parser can now optionally accept calls that have been typed
+in without the usual blanks that separate words.  That is, you can type
+things like "inroll circulate" if you wish.  You can even type
+"tandemreverserandomstablespinthetop" if you wish.  This also allows
+you to omit hyphens, as in "tandembased triangles", or to type a blank
+where a hyphen would normally be required, as in "tandem based triangles".
+The command-line switch "-ignoreblanks" enables this "feature".  You can
+put the line "ignoreblanks" into your "sd.ini" file to have sdtty
+automatically use this feature.
+
+The call "(nothing)" has been changed to "nothing".  That is, the
+parentheses have been removed from this call.
 
 ****** Changes as of version 31.63 ******
 
 The section of the manual describing concepts has been extensively
 rewritten.  It now contains a complete list of all available concepts.
-Please read that section.  It begins at approximately page 55.
+Please read that section.  It begins at approximately page 49.
 
 The command "end this sequence" has been changed to "write this
 sequence".  The old name still exists for compatibility, but

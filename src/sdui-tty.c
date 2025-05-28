@@ -615,8 +615,13 @@ Private void get_user_input(char *prompt, int which)
             function_key_expansion = "write this sequence\n";        /* F10 */
          else if (nc == 139)
             function_key_expansion = "pick level call\n";            /* F11 */
-         else if (nc == 140)
-            function_key_expansion = "accept current choice\n";      /* F12 */
+         else if (nc == 140 && which == match_resolve_commands) {
+            put_line("accept current choice\n");                     /* F12 */
+            current_text_line++;
+            user_match.kind = ui_resolve_select;
+            user_match.index = -1-resolve_command_accept;
+            return;
+         }
 
          else if (nc == 161 && which == match_startup_commands) {
             put_line("sides start\n");                               /* sF1 */
@@ -639,8 +644,13 @@ Private void get_user_input(char *prompt, int which)
             function_key_expansion = "toggle active phantoms\n";     /* sF7 */
          else if (nc == 168)
             function_key_expansion = "<concept>";                    /* sF8 */
-         else if (nc == 169)
-            function_key_expansion = "abort the search\n";           /* sF9 */
+         else if (nc == 169 && which == match_resolve_commands) {
+            put_line("abort the search\n");                          /* sF9 */
+            current_text_line++;
+            user_match.kind = ui_resolve_select;
+            user_match.index = -1-resolve_command_abort;
+            return;
+         }
          else if (nc == 170)
             function_key_expansion = "change output file\n";         /* sF10 */
          else if (nc == 171)
@@ -660,7 +670,7 @@ Private void get_user_input(char *prompt, int which)
          else if (nc == 197)
             function_key_expansion = "insert a comment\n";           /* cF5 */
 
-         else nc = ' ';
+         else continue;      /* Ignore the function key. */
       }
 
       c = nc;
@@ -884,8 +894,6 @@ extern long_boolean uims_get_call_command(call_list_kind *call_menu, uims_reply 
          }
       }
 
-
-
       (void) strcat(prompt_buffer, "] ");
       (void) strcat(prompt_buffer, call_menu_prompts[*call_menu_ptr]);
    }
@@ -956,8 +964,12 @@ extern uims_reply uims_get_resolve_command(void)
    if (user_match.kind == ui_command_select) {
       uims_menu_index = extra_resolve_command_values[user_match.index];
    }
-   else
-      uims_menu_index = resolve_command_values[user_match.index];
+   else {
+      if (user_match.index < 0)
+         uims_menu_index = -1-user_match.index;   /* Special encoding from a function key. */
+      else
+         uims_menu_index = resolve_command_values[user_match.index];
+   }
 
    return user_match.kind;
 }

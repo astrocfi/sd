@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-1995  William B. Ackerman.
+    Copyright (C) 1990-1996  William B. Ackerman.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -2240,6 +2240,7 @@ extern void selective_move(
    parse_block *parseptr,
    int indicator,
    int arg2,
+   uint32 override_selector,
    selector_kind selector_to_use,
    long_boolean concentric_rules,
    setup *result);

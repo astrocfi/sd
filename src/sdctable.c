@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-1995  William B. Ackerman.
+    Copyright (C) 1990-1996  William B. Ackerman.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -488,8 +488,8 @@ concept_descriptor concept_descriptor_table[] = {
    {"OFFSET LINES",                          concept_distorted,             4, l_c2,         {0, disttest_offset, 1}},
    {"Z LINES",                               concept_distorted,             4, l_c4a,        {0, disttest_z, 1}},
    {"DISTORTED LINES",                       concept_distorted,             4, l_c3,         {0, disttest_any, 1}},
-   {"DIAGONAL LINE",                         concept_single_diagonal,       4, l_c4a,        {0, 1}},
-   {"@6 IN A DIAGONAL LINE",                 concept_single_diagonal_sel,   4, l_c4a,        {0, 8+1}},
+   {"DIAGONAL LINE",                         concept_single_diagonal,       4, l_c1,         {0, 1}},
+   {"@6 IN YOUR DIAGONAL LINE",              concept_single_diagonal_sel,   4, l_c1,         {0, 8+1}},
    {"DIAGONAL LINES",                        concept_double_diagonal,       4, l_c4a,        {0, 1, 0}},
    {"DIAGONAL LINES OF 3",                   concept_double_diagonal,       4, l_c1,         {0, 1, 1}},
    {"DISTORTED TIDAL LINE",                  concept_distorted,             4, l_c3,         {0, disttest_any, 8+1}},
@@ -511,8 +511,8 @@ concept_descriptor concept_descriptor_table[] = {
    {"OFFSET WAVES",                          concept_distorted,             4, l_c2,         {0, disttest_offset, 3}},
    {"Z WAVES",                               concept_distorted,             4, l_c4a,        {0, disttest_z, 3}},
    {"DISTORTED WAVES",                       concept_distorted,             4, l_c3,         {0, disttest_any, 3}},
-   {"DIAGONAL WAVE",                         concept_single_diagonal,       4, l_c4a,        {0, 3}},
-   {"@6 IN A DIAGONAL WAVE",                 concept_single_diagonal_sel,   4, l_c4a,        {0, 8+3}},
+   {"DIAGONAL WAVE",                         concept_single_diagonal,       4, l_c1,         {0, 3}},
+   {"@6 IN YOUR DIAGONAL WAVE",              concept_single_diagonal_sel,   4, l_c1,         {0, 8+3}},
    {"DIAGONAL WAVES",                        concept_double_diagonal,       4, l_c4a,        {0, 3, 0}},
    {"DIAGONAL WAVES OF 3",                   concept_double_diagonal,       4, l_c1,         {0, 3, 1}},
    {"DISTORTED TIDAL WAVE",                  concept_distorted,             4, l_c3,         {0, disttest_any, 8+3}},
@@ -536,8 +536,8 @@ concept_descriptor concept_descriptor_table[] = {
    {"OFFSET COLUMNS",                        concept_distorted,             4, l_c2,         {0, disttest_offset, 0}},
    {"Z COLUMNS",                             concept_distorted,             4, l_c4a,        {0, disttest_z, 0}},
    {"DISTORTED COLUMNS",                     concept_distorted,             4, l_c3,         {0, disttest_any, 0}},
-   {"DIAGONAL COLUMN",                       concept_single_diagonal,       4, l_c4a,        {0, 0}},
-   {"@6 IN A DIAGONAL COLUMN",               concept_single_diagonal_sel,   4, l_c4a,        {0, 8+0}},
+   {"DIAGONAL COLUMN",                       concept_single_diagonal,       4, l_c1,         {0, 2}},
+   {"@6 IN YOUR DIAGONAL COLUMN",            concept_single_diagonal_sel,   4, l_c1,         {0, 8+2}},
    {"DIAGONAL COLUMNS",                      concept_double_diagonal,       4, l_c4a,        {0, 0, 0}},
    {"DIAGONAL COLUMNS OF 3",                 concept_double_diagonal,       4, l_c1,         {0, 0, 1}},
    {"DISTORTED TIDAL COLUMN",                concept_distorted,             4, l_c3,         {0, disttest_any, 8+0}},

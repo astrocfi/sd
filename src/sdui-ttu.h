@@ -13,7 +13,6 @@
  * By Stephen Gildea <gildea@lcs.mit.edu> January 1993
  */
 
-
 /* This is a variable in "sdutil.c" that we can set if we want to
    draw pretty graphical characters for the arrows that show
    which way a person is facing.  It must point to a string in stable storage. */

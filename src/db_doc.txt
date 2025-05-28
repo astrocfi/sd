@@ -2114,6 +2114,32 @@ split_like_square_thru
 split_like_dixie_style
 
 parallel_conc_end
+      In general, this means to elongate the setup opposite what it would
+      "usually" be.
+
+      For 1x4 -> 2x2 calls, the "usual" result is opposite
+      elongation, as in having outsides recycle.  The flag is set on "explode"
+      so that they will keep same elongation.
+
+      For 1x2 -> 1x2 calls the "usual" result is same orientation.  This flag
+      says to re-orient.  Note that  we practically never use this.  The *ONLY*
+      time it is used is when the 1x2 is all phantoms and we want to figure out
+      where they went.  This flag is set for "counter rotate" (it needs to be
+      set in any case for its effect on 2x2 -> 2x2 counter rotate, by making this
+      convention we make it unnecessary to make the flag per-array, we may someday
+      have to make it per-array anyway) so that having a 1x2 of phantoms counter
+      rotate, they will go to opposite orientation.
+
+      For 2x2 -> 2x2 calls, the default is to go to same spots.  The flag says
+      to change spots.
+
+
+
+      I hope that the description above is consistent with the description below.
+      Only the 1x2 -> 1x2 behavior was added.
+
+
+
       For any by-array definition that this call has that explicitly indicates
       a 1x4, diamond, or 2x2 starting setup and a 2x2 final setup, the elongation
       of the final 2x2 is set opposite to what it would be by default.  This flag

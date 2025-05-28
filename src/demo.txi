@@ -1,0 +1,1701 @@
+\input texinfo @c %**start of header -*-texinfo-*-
+@setfilename demo.info
+@settitle sdtty demo
+@c Time-stamp: <96/04/05 14:25:00 wba>
+@tex
+\global\setfont\smallrm\rmshape{8}{1000}
+\global\font\smallsy=cmsy9
+\global\def\keycap#1{{\smallrm\textfont2=\smallsy \leavevmode\hbox{%
+  \raise0.4pt\hbox{$\langle$}\kern-.08em\vtop{%
+    \vbox{\hrule\kern-0.4pt
+     \hbox{\raise0.4pt\hbox{\vphantom{$\langle$}}\uppercase{#1}}}%
+    \kern-0.4pt\hrule}%
+  \kern-.06em\raise0.4pt\hbox{$\rangle$}}}}
+@end tex
+@iftex
+@headings off
+@oddheading @| @| @thispage
+@evenheading @thispage @| @|
+@end iftex
+@c %**end of header
+Copyright @copyright{} 1996 William B. Ackerman
+@sp 2
+@c
+@unnumberedsec SDTTY DEMO
+
+Here is a demonstration of the use of @code{sdtty}, illustrating
+various concepts and other capabilities.  You should follow along on
+your computer.  You must use sdtty version 31.64 or later.
+
+We will write a very long and horrible sequence that demonstrates a number
+of things that the program can do, and how you can get it to do them.
+
+
+First, we start the program.  We will run it at C2.
+
+Type @kbd{sdtty} and press
+@iftex
+@keycap{ENTER}
+@end iftex
+@ifinfo
+<ENTER>
+@end ifinfo
+at the DOS or UNIX prompt:
+
+@example
+@group
+C:\SD> @kbd{sdtty}
+Enter the level: 
+@end group
+@end example
+
+The program wants us to type the level.  Type @kbd{c2} and press
+@iftex
+@keycap{ENTER}:
+@end iftex
+@ifinfo
+<ENTER>:
+@end ifinfo
+
+@example
+@group
+Enter the level: @kbd{c2}
+Sd: reading database............................................done
+SD -- square dance caller's helper.
+
+Copyright (c) 1991-1996 William B. Ackerman
+   and Stephen Gildea.
+SD comes with ABSOLUTELY NO WARRANTY;
+   for details see the license.
+This is free software, and you are
+   welcome to redistribute it.
+
+At any time that you don't know what you can type,
+type a question mark.  The program will show you all
+legal choices.
+
+Version Sd 31.64 : db31.64 : ui1.7tty     C2
+Output file is "sequence.C2"
+Enter startup command> 
+@end group
+@end example
+
+After printing all the introductory stuff, the program wants us to
+enter a startup command.  The line
+
+@example
+@group
+Enter startup command> 
+@end group
+@end example
+
+is called a @dfn{prompt}.  If we type a question mark at this
+point, it will list the possible things we could type.
+Here is what it prints:
+
+@example
+@group
+Enter startup command> @kbd{?}
+exit from the program
+heads 1p2p
+sides 1p2p
+heads start
+sides start
+just as they are
+toggle concept levels
+toggle active phantoms
+change output file
+change title
+
+Enter startup command> 
+@end group
+@end example
+
+It prints a number of choices, and then gives us another prompt.
+We will type @kbd{heads start}, and press
+@iftex
+@keycap{ENTER}:
+@end iftex
+@ifinfo
+<ENTER>:
+@end ifinfo
+
+@example
+@group
+Enter startup command> @kbd{heads start}
+Sd 31.64 : db31.64 : ui1.7tty     C2
+
+
+ 4B>   3GV   3BV   2G<
+
+ 4G>   1B^   1G^   2B<
+
+ 1:   HEADS
+--> 
+@end group
+@end example
+
+It prints out some header information, and shows us
+the setup with the heads in the middle, waiting for
+a call.  Below that, it shows the current line of our
+sequence.  It is line 1, and all it knows so far is that
+it is going to start with @code{heads}.
+
+The @code{-->} prompt is the general prompt that it
+gives when it wants us to enter a call.
+
+If we were to type question mark at this point, it
+would show over 500 possible calls, concepts, or other
+commands, so we won't do it for this demo (though you
+may wish to try it).
+
+We type @kbd{pass the ocean}, and press
+@iftex
+@keycap{ENTER}.
+@end iftex
+@ifinfo
+<ENTER>.
+@end ifinfo
+
+@example
+@group
+--> @kbd{pass the ocean}
+ 1:   HEADS pass the ocean
+
+       1B>
+ 4B>   1G<   2G<
+ 4G>   3G>   2B<
+       3B<
+
+ 2:
+(diamond/qtag)--> 
+@end group
+@end example
+
+It has now done the call.  The first line of the sequence is
+now complete: @code{HEADS pass the ocean}.  This line will be
+printed on the finished sequence.  It shows the result setup,
+shows that line 2 has nothing on it yet, and gives us another
+prompt.  The time, the prompt reminds us that we are in
+diamonds or quarter tags.
+
+We type @kbd{extend} and press
+@iftex
+@keycap{ENTER}.
+@end iftex
+@ifinfo
+<ENTER>.
+@end ifinfo
+
+@example
+@group
+(diamond/qtag)--> @kbd{extend}
+Sd 31.64 : db31.64 : ui1.7tty     C2
+
+ 1:   HEADS pass the ocean
+
+       1B>
+ 4B>   1G<   2G<
+ 4G>   3G>   2B<
+       3B<
+
+ 2:   extend
+
+ 4B>   1B>
+
+ 1G<   2G<
+
+ 4G>   3G>
+
+ 3B<   2B<
+
+ 3:
+(waves)--> 
+@end group
+@end example
+
+It shows the full sequence that we have so far.  After it does
+any call, it shows a picture of the setup before and after.
+In this case, it has done the @code{extend} on line 2, and is
+showing the setup before and after.  Those pictures will not
+be printed on the final sequence (unless we request that the program
+do so, by giving the @code{keep picture} command).  The pictures
+before and after the last call are displayed on the screen
+just so we can be sure that we agree with what the computer did.
+
+The prompt shows that we are in waves.
+
+We want to do a tandem swing thru at this point.  Tandem is a
+concept, so we type it in, and press
+@iftex
+@keycap{ENTER}.
+@end iftex
+@ifinfo
+<ENTER>.
+@end ifinfo
+
+@example
+@group
+(waves)--> @kbd{tandem}
+ 3:   TANDEM
+--> 
+@end group
+@end example
+
+Line 3 has the TANDEM concept on it, and it gave us another prompt.
+Type @kbd{swing thru}, and press
+@iftex
+@keycap{ENTER}.
+@end iftex
+@ifinfo
+<ENTER>.
+@end ifinfo
+
+@example
+@group
+--> @kbd{swing thru}
+ 1:   HEADS pass the ocean
+ 2:   extend
+
+ 4B>   1B>
+
+ 1G<   2G<
+
+ 4G>   3G>
+
+ 3B<   2B<
+
+ 3:   TANDEM swing thru
+
+ 2G>   1G>
+
+ 3B<   2B<
+
+ 4B>   1B>
+
+ 3G<   4G<
+
+
+     resolve is:
+extend, right and left grand  (1/4 promenade)
+ 4:
+(waves)--> 
+@end group
+@end example
+
+It is now showing us 3 lines.  There are pictures of the setup
+before and after the tandem swing thru, but it is not showing
+earlier pictures.  It assumes we are satisfied with what went
+on previously.
+
+Line 4 is now blank and ready to be filled in.
+
+The program has noticed that we happen to be in a setup
+from which we could say @code{extend, right and left grand}, and
+is pointing that out to us.  If we wanted to end the sequence right
+here, we could do so (by typing @kbd{write this sequence}).  Instead,
+we are going to continue, and forget all about that resolve.
+
+Let's demonstrate some concepts that identify people.
+We will do a @code{1/2 acey deucey} to make a 3x1 diamond setup.
+@code{1/2} is a concept, so we type it in, and press
+@iftex
+@keycap{ENTER}.
+@end iftex
+@ifinfo
+<ENTER>.
+@end ifinfo
+
+@example
+@group
+(waves)--> @kbd{1/2}
+
+ 4:   1/2,
+--> 
+@end group
+@end example
+
+Line 4 now has that concept, and it is giving us another prompt
+for a call or concept.  Type @kbd{acey deucey}, and press
+@iftex
+@keycap{ENTER}.
+@end iftex
+@ifinfo
+<ENTER>.
+@end ifinfo
+
+@example
+@group
+--> @kbd{acey deucey}
+ 2:   extend
+ 3:   TANDEM swing thru
+
+ 2G>   1G>
+
+ 3B<   2B<
+
+ 4B>   1B>
+
+ 3G<   4G<
+
+ 4:   1/2, acey deucey
+
+              2G>
+
+ 3G^  3BV  4B^  2BV  1B^  1GV
+
+              4G<
+
+ 5:
+--> 
+@end group
+@end example
+
+It now shows us the full line 4, and the 3x1 diamond that resulted.
+
+As the sequence progresses, early parts of it may scroll off the
+top of the screen and be invisible.  Note that, in this example,
+we have not shown line 1, but are only showing the last few calls.
+How much you see on your screen may be different.  Don't worry,
+the computer remembers the whole sequence and will print it all
+out when we are done.
+
+We would like the girls to circulate in the big diamond around the
+outside.  We must use the @code{disconnected} concept to do this.  The
+disconnected concept is C2.  Now it happens that you could almost
+certainly get dancers to do what you want at lower levels by saying
+@code{girls diamond circulate around the outside}, or something like
+that, but the program doesn't know that.  It insists on meticulously
+correct use of concepts.  If we wanted to do this at a level below
+C2, we would therefore have to tell the program that we really want
+to use a concept that isn't legitimate.  We can do this by giving
+the @code{toggle concept levels} command.  But in the present situation
+we don't need to do that, because we are running the program at
+C2.  So we use the @code{girls disconnected} concept.  There are
+@code{<anyone> disconnected} concepts for a number of designators,
+such as boys, girls, heads, sides, centers, ends, beaus, belles,
+etc.  Many of them would of course be illegal in the present context,
+but @code{girls disconnected} is legal.
+
+@example
+@group
+--> @kbd{girls disconnected}
+ 5:   GIRLS DISCONNECTED
+--> 
+@end group
+@end example
+
+And then we type @kbd{diamond circulate}, and of course press
+@iftex
+@keycap{ENTER}.
+@end iftex
+@ifinfo
+<ENTER>.
+@end ifinfo
+
+@example
+@group
+--> @kbd{diamond circulate}
+ 3:   TANDEM swing thru
+ 4:   1/2, acey deucey
+
+              2G>
+
+ 3G^  3BV  4B^  2BV  1B^  1GV
+
+              4G<
+
+ 5:   GIRLS DISCONNECTED diamond circulate
+
+              3G>
+
+ 4G^  3BV  4B^  2BV  1B^  2GV
+
+              1G<
+
+ 6:
+--> 
+@end group
+@end example
+
+The program shows a few calls back, and the just-completed call
+with pictures before and after.  We can use other designators also.
+Let's do a @code{heads disconnected diamond circulate} at this point.
+As usual, we will type the concept, press
+@iftex
+@keycap{ENTER},
+@end iftex
+@ifinfo
+<ENTER>,
+@end ifinfo
+type the call, and press
+@iftex
+@keycap{ENTER}
+@end iftex
+@ifinfo
+<ENTER>
+@end ifinfo
+again.
+
+The program responds by showing this:
+
+@example
+@group
+ 4:   1/2, acey deucey
+ 5:   GIRLS DISCONNECTED diamond circulate
+
+              3G>
+
+ 4G^  3BV  4B^  2BV  1B^  2GV
+
+              1G<
+
+ 6:   HEADS DISCONNECTED diamond circulate
+
+              1B<
+
+ 4G^  1G^  4B^  2BV  3GV  2GV
+
+              3B>
+
+ 7:
+--> 
+@end group
+@end example
+
+We could have the boys diamond circulate.  They are not
+disconnected, so we just use the @code{boys} concept.  As with
+disconnected, there are @code{boys}, @code{girls}, @code{centers}, @code{ends},
+@code{leads}, @code{trailers}, etc. concepts.  From now on, we will
+not describe in detail the act of entering concepts and calls.
+Type the concept or call name, and press
+@iftex
+@keycap{ENTER}.
+@end iftex
+@ifinfo
+<ENTER>.
+@end ifinfo
+
+@example
+@group
+              1B<
+
+ 4G^  1G^  4B^  2BV  3GV  2GV
+
+              3B>
+
+ 7:   BOYS diamond circulate
+
+              4B>
+
+ 4G^  1G^  1BV  3B^  3GV  2GV
+
+              2B<
+@end group
+@end example
+
+We could also have designated them as the centers, since the
+centers of a 3x1 diamond is the center diamond.  Let's try it.
+But first, let's undo the @code{boys diamond circulate} that we just
+entered.  The @code{undo} command does this.  There are two ways of entering
+this command.  One way, of course, is to type @kbd{undo}, and press
+@iftex
+@keycap{ENTER}.
+@end iftex
+@ifinfo
+<ENTER>.
+@end ifinfo
+(The full name of the command is @code{undo last
+call}, but we just need to type @kbd{undo}.  The program will show the
+full name.)  The other way is to press function key
+@iftex
+@keycap{F9}.
+@end iftex
+@ifinfo
+<F9>.
+@end ifinfo
+Many
+function keys are arranged to perform common operations.  The list is given
+in the ``Terminal Interface'' chapter of the reference manual.
+
+@example
+@group
+--> @kbd{undo} last call
+ 5:   GIRLS DISCONNECTED diamond circulate
+
+              3G>
+
+ 4G^  3BV  4B^  2BV  1B^  2GV
+
+              1G<
+
+ 6:   HEADS DISCONNECTED diamond circulate
+
+              1B<
+
+ 4G^  1G^  4B^  2BV  3GV  2GV
+
+              3B>
+
+ 7:
+--> 
+@end group
+@end example
+
+The program has erased the @code{boys diamond circulate}, and is
+showing us the last few calls of the remaining sequence.  It
+is prompting us for the new line 7.  Have the centers diamond
+circulate, by typing @kbd{centers}, pressing
+@iftex
+@keycap{ENTER},
+@end iftex
+@ifinfo
+<ENTER>,
+@end ifinfo
+typing @kbd{diamond circulate}, and pressing
+@iftex
+@keycap{ENTER}.
+@end iftex
+@ifinfo
+<ENTER>.
+@end ifinfo
+
+@example
+@group
+ 7:   CENTERS diamond circulate
+
+              4B>
+
+ 4G^  1G^  1BV  3B^  3GV  2GV
+
+              2B<
+@end group
+@end example
+
+There is also a @code{center diamond} concept.  So let's undo the last
+call, either by typing the command name or by pressing
+@iftex
+@keycap{F9},
+@end iftex
+@ifinfo
+<F9>,
+@end ifinfo
+and try it.
+
+@example
+@group
+@iftex
+--> @keycap{F9}
+@end iftex
+@ifinfo
+--> <F9>
+@end ifinfo
+ 5:   GIRLS DISCONNECTED diamond circulate
+
+              3G>
+
+ 4G^  3BV  4B^  2BV  1B^  2GV
+
+              1G<
+
+ 6:   HEADS DISCONNECTED diamond circulate
+
+              1B<
+
+ 4G^  1G^  4B^  2BV  3GV  2GV
+
+              3B>
+
+ 7:
+--> @kbd{center diamond}
+ 7:   CENTER DIAMOND
+--> @kbd{diamond circulate}
+ 5:   GIRLS DISCONNECTED diamond circulate
+ 6:   HEADS DISCONNECTED diamond circulate
+
+              1B<
+
+ 4G^  1G^  4B^  2BV  3GV  2GV
+
+              3B>
+
+ 7:   CENTER DIAMOND diamond circulate
+
+              4B>
+
+ 4G^  1G^  1BV  3B^  3GV  2GV
+
+              2B<
+
+ 8:
+--> 
+@end group
+@end example
+
+Now we would like to have the heads in the center wave do
+a swing thru.  We can't say @code{centers}, because the centers
+of a 3x1 diamond are the center diamond, not the center line.
+Instead, we use the @kbd{center 1x4} concept.
+
+@example
+@group
+              4B>
+
+ 4G^  1G^  1BV  3B^  3GV  2GV
+
+              2B<
+
+ 8:   CENTER 1X4 swing thru
+
+              4B>
+
+ 4G^  1B^  3GV  1G^  3BV  2GV
+
+              2B<
+@end group
+@end example
+
+The concept is called @code{center 1x4} instead of @code{center line}
+or @code{center wave} or @code{center column} because otherwise it would
+lead to a proliferation of concept names that basically do
+the same thing.  When reading the card, you should probably
+say ``center wave of 4,'' or something like that.
+
+Of course, instead of @code{center 1x4}, we could have designated
+the people directly, since they are the heads.  Let's have them
+trade the wave to demonstrate that:
+
+@example
+@group
+              4B>
+
+ 4G^  1B^  3GV  1G^  3BV  2GV
+
+              2B<
+
+ 9:   HEADS trade the wave
+
+              4B>
+
+ 4G^  1GV  3B^  1BV  3G^  2GV
+
+              2B<
+@end group
+@end example
+
+Now we would like to have the center wave of 6 do a grand
+swing thru.  We use the @kbd{center 1x6} concept:
+
+@example
+@group
+              4B>
+
+ 4G^  1GV  3B^  1BV  3G^  2GV
+
+              2B<
+
+10:   CENTER 1X6 GRAND swing thru
+
+              4B>
+
+ 1G^  1BV  4G^  2GV  3B^  3GV
+
+              2B<
+@end group
+@end example
+
+Incidentally, @code{grand} is a concept.  So we could have typed
+@kbd{center 1x6}, pressed
+@iftex
+@keycap{ENTER},
+@end iftex
+@ifinfo
+<ENTER>,
+@end ifinfo
+@kbd{grand}, pressed
+@iftex
+@keycap{ENTER},
+@end iftex
+@ifinfo
+<ENTER>,
+@end ifinfo
+and @kbd{swing thru}, and pressed
+@iftex
+@keycap{ENTER}
+@end iftex
+@ifinfo
+<ENTER>
+@end ifinfo
+a third time.  However, the program lets us type some concepts with just a
+space after them, instead of pressing
+@iftex
+@keycap{ENTER},
+@end iftex
+@ifinfo
+<ENTER>,
+@end ifinfo
+so that the
+concept and the following call are just typed in as though they were a
+big call.  The @code{grand} concept is one of these concepts.  (We'll
+discuss some of the others later.) So you could have typed @kbd{center
+1x6}, pressed
+@iftex
+@keycap{ENTER},
+@end iftex
+@ifinfo
+<ENTER>,
+@end ifinfo
+and then typed @kbd{grand swing thru}
+and pressed
+@iftex
+@keycap{ENTER}
+@end iftex
+@ifinfo
+<ENTER>
+@end ifinfo
+a second time.  It won't make any
+difference in the final printout which method you used.
+
+Let's have the centers flip the diamond while the ends explode.
+For this we use the @code{centers (while the others)} concept.
+As usual, there is a whole series of these concepts, for centers,
+heads, sides, leads, trailers, and so on.
+
+Yes, the concept actually looks like that when we type it in.
+It even has to have the parentheses.  The program will print
+it out on the card looking much better than that, but, while
+we type it in, that's the name of the concept.
+
+Now, because of the @dfn{completion} property of sdtty, we don't
+have to type the whole thing.  As soon as we have typed the
+left parenthesis, the program knows what concept it has to be.
+
+One thing we could do is type @kbd{centers (} and then press
+@iftex
+@keycap{ESC}.
+@end iftex
+@ifinfo
+<ESC>.
+@end ifinfo
+The program will put the rest of the concept on the screen
+just as though we had typed it.
+
+@example
+@group
+@iftex
+--> @kbd{centers (}         @r{then press @keycap{ESC}}
+@end iftex
+@ifinfo
+--> @kbd{centers (}         @r{then press <ESC>}
+@end ifinfo
+@end group
+@end example
+
+the screen now shows
+
+@example
+@group
+--> centers (while the others)
+@end group
+@end example
+
+because the program has typed @code{while the others)} for us.
+We can now press
+@iftex
+@keycap{ENTER}
+@end iftex
+@ifinfo
+<ENTER>
+@end ifinfo
+to tell the program that we want that concept.
+
+Another thing we could have done, if we were really sure we
+knew what we wanted without seeing it, is to just press
+@iftex
+@keycap{ENTER}
+@end iftex
+@ifinfo
+<ENTER>
+@end ifinfo
+after typing @kbd{centers (}, without pressing
+@iftex
+@keycap{ESC}.
+@end iftex
+@ifinfo
+<ESC>.
+@end ifinfo
+
+Either way, the program takes the @code{centers (while the others)}
+concept, and gives us another prompt.  This is the prompt for
+the call that we want the centers to do.
+
+@example
+@group
+--> centers (while the others)
+11:   CENTERS
+--> 
+@end group
+@end example
+
+Line 11 just says @code{CENTERS}.  It will say more very soon.
+At the prompt, we type @kbd{flip the diamond}, and press
+@iftex
+@keycap{ENTER}.
+@end iftex
+@ifinfo
+<ENTER>.
+@end ifinfo
+
+@example
+@group
+--> @kbd{flip the diamond}
+11:   CENTERS flip the diamond
+ENTER SECOND CALL
+--> 
+@end group
+@end example
+
+Line 11 is looking more complete.  We are given another prompt,
+with special instructions.  It wants the second call.  This is,
+of course, the call for the ends.  Type @kbd{explode}, and press
+@iftex
+@keycap{ENTER}.
+@end iftex
+@ifinfo
+<ENTER>.
+@end ifinfo
+
+@example
+@group
+              4B>
+
+ 1G^  1BV  4G^  2GV  3B^  3GV
+
+              2B<
+
+11:   CENTERS flip the diamond WHILE THE ENDS explode
+  Warning:  Ends should opt for setup parallel to their
+   original line -- concentric rule does not apply.
+
+       4G>
+ 1G>   4B<   3B<
+ 1B>   2B>   3G<
+       2G<
+
+12:
+(diamond/qtag)--> 
+@end group
+@end example
+
+Line 11 is finished.  As promised, it looks much better
+than it did when we typed it in.  The program knows that
+the @code{others} are actually the ends, and it has put the whole
+thing into a reasonable word order.  The program's exact
+wording may not always be ideal---you are responsible for
+using the right words.
+
+The program has put a warning into the sequence, in case someone
+mistakenly thinks that the @dfn{opposite elongation} rule for the
+concentric concept somehow applies here.  Warnings are printed
+in a wide variety of situations, if the program thinks that
+there might be some danger of misinterpretation.  In most cases,
+you should not read the warnings when calling.
+
+(Incidentally, instead of @code{centers (while the others)}, we
+could have said @code{sides (while the others)}.  If we had done
+this, the sequence would of course say ``SIDES flip the diamond
+WHILE THE HEADS explode''.)
+
+To prepare for what comes next, do a @kbd{chain reaction} and @kbd{ah so}.
+
+@example
+@group
+12:   chain reaction
+
+ 4B>   1B>
+
+ 2G<   1G<
+
+ 3G>   4G>
+
+ 3B<   2B<
+
+13:   ah so
+
+ 3B>   2G>   2B>   1G>
+
+ 3G<   4B<   4G<   1B<
+
+
+     resolve is:
+reverse single file promenade  (1/4 promenade)
+@end group
+@end example
+
+The program reminds us that we have stumbled into a resolve.
+We're not interested.
+
+Have the ends hinge, by typing @kbd{ends},
+@iftex
+@keycap{ENTER},
+@end iftex
+@ifinfo
+<ENTER>,
+@end ifinfo
+@kbd{hinge}, and
+@iftex
+@keycap{ENTER}.
+@end iftex
+@ifinfo
+<ENTER>.
+@end ifinfo
+(We could have said @code{heads} instead of @code{ends}, of course.)
+
+@example
+@group
+14:   ENDS hinge
+
+         2G>  2B>
+ 3G^ 3BV          1B^ 1GV
+         4B<  4G<
+@end group
+@end example
+
+The boys have a distorted facing diamond.  We can use the
+@kbd{boys in your distorted diamond} concept to have them diamond
+circulate.
+
+@example
+@group
+15:   BOYS IN YOUR DISTORTED DIAMOND diamond circulate
+
+         2G>  1B<
+ 3G^ 4B^          2BV 1GV
+         3B>  4G<
+@end group
+@end example
+
+Have the centers left touch 1/4.
+
+@example
+@group
+16:   CENTERS LEFT touch 1/4
+
+         1BV  2G^
+ 3G^ 4B^          2BV 1GV
+         4GV  3B^
+@end group
+@end example
+
+Now the girls have a distorted wave, and can swing thru.
+
+@example
+@group
+17:   GIRLS IN YOUR DISTORTED WAVE swing thru
+
+         1BV  3G^
+ 4G^ 4B^          2BV 2GV
+         1GV  3B^
+@end group
+@end example
+
+Have the heads trail off, then everyone crossfire.
+
+@example
+@group
+18:   HEADS trail off
+
+ 4G^  4B^  3GV  3BV  1B^  1G^  2BV  2GV
+
+19:   crossfire
+
+ 3G^   4GV   2B^   1BV
+
+ 3B^   4BV   2G^   1GV
+@end group
+@end example
+
+Have the leads press ahead to make blocks.  We do @emph{not} use the
+@code{leads} concept for this.  All the little press-and-truck calls
+(including @code{quarter left}, @code{quarter right}, and @code{u-turn
+back}) have a designator right in the name.  So instead of typing a
+concept, pressing
+@iftex
+@keycap{ENTER},
+@end iftex
+@ifinfo
+<ENTER>,
+@end ifinfo
+typing a call, and pressing
+@iftex
+@keycap{ENTER}
+@end iftex
+@ifinfo
+<ENTER>
+@end ifinfo
+again, we just type the whole thing as one call, and press
+@iftex
+@keycap{ENTER}
+@end iftex
+@ifinfo
+<ENTER>
+@end ifinfo
+once.  The name of the call is @kbd{leads press
+ahead}.  Of course there are other calls for other designators.
+
+@example
+@group
+20:   leads press ahead
+
+ 3G^    .    2B^    .
+
+  .    4GV    .    1BV
+
+ 3B^    .    2G^    .
+
+  .    4BV    .    1GV
+@end group
+@end example
+
+We have a diagonal wave of four.  We can use the @kbd{diagonal wave}
+concept.
+
+@example
+@group
+21:   DIAGONAL WAVE swing thru
+
+ 4G^    .    2B^    .
+
+  .    1GV    .    1BV
+
+ 3B^    .    3G^    .
+
+  .    4BV    .    2GV
+@end group
+@end example
+
+(We could also have identified the people in that wave, by using
+the @kbd{girls in your diagonal wave} concept.)
+
+There are also two diagonal waves of 3, or two diagonal columns of
+three, depending on what we want to do.  Let's have them
+identify columns and do a magic column circulate.
+
+The name of the concept is @kbd{diagonal columns of 3}.
+After we type that and press
+@iftex
+@keycap{ENTER},
+@end iftex
+@ifinfo
+<ENTER>,
+@end ifinfo
+we can just type
+@kbd{magic column circulate} and press
+@iftex
+@keycap{ENTER}.
+@end iftex
+@ifinfo
+<ENTER>.
+@end ifinfo
+Even though @code{magic}
+is a concept, it can be typed in front of a call, with just a
+space after it.
+
+@example
+@group
+22:   DIAGONAL COLUMNS OF 3 MAGIC column circulate
+
+ 4G^    .    3G^    .
+
+  .    1BV    .    2BV
+
+ 4B^    .    3B^    .
+
+  .    1GV    .    2GV
+@end group
+@end example
+
+Have the girls u-turn back and press ahead.  We do not use @code{girls}
+as a concept in either case.  @code{<anyone> u-turn back} and @code{<anyone>
+press ahead} are simply calls, so we type them directly.
+
+@example
+@group
+23:   girls U-turn back
+
+ 4GV    .    3GV    .
+
+  .    1BV    .    2BV
+
+ 4B^    .    3B^    .
+
+  .    1G^    .    2G^
+
+24:   girls press ahead
+
+ 4GV   1BV   3GV   2BV
+
+ 4B^   1G^   3B^   2G^
+@end group
+@end example
+
+For the next item, do @kbd{cross the K}, and then have the
+boys single wheel.  For the latter, use the @code{boys} concept.
+That is, type @kbd{boys}, press
+@iftex
+@keycap{ENTER},
+@end iftex
+@ifinfo
+<ENTER>,
+@end ifinfo
+type @kbd{single wheel}, and press
+@iftex
+@keycap{ENTER}.
+@end iftex
+@ifinfo
+<ENTER>.
+@end ifinfo
+
+@example
+@group
+25:   cross the K
+
+ 1GV   2GV   4BV   3BV
+
+ 1B^   2B^   4G^   3G^
+
+26:   BOYS single wheel
+  Warning:  Check a 'C1 phantom' setup.
+
+     .          4B^
+ 1GV   2GV    .     .
+     .          3B^
+
+    1BV          .
+  .     .    4G^   3G^
+    2BV          .
+@end group
+@end example
+
+Do a siamese trail to a diamond.  Siamese (and all of the couples
+and tandem concepts) can be typed in as part of the call that it
+modifies, with just a space after it.  So we type @kbd{siamese trail
+to a diamond}, and press
+@iftex
+@keycap{ENTER}.
+@end iftex
+@ifinfo
+<ENTER>.
+@end ifinfo
+
+@example
+@group
+27:   SIAMESE trail to a diamond
+
+       3G<
+ 3BV         2B^
+       4G<
+
+       2G>
+ 4BV         1B^
+       1G>
+@end group
+@end example
+
+We now want to unwrap the interlocked diamonds.  We can type this
+in any of three ways.  @code{Interlocked}, like @code{grand}, @code{cross},
+@code{magic}, @code{left}, @code{single}, @code{split}, and those sorts
+of things, is
+considered by the program to be a concept.  As such, we could type
+@kbd{interlocked}, press
+@iftex
+@keycap{ENTER},
+@end iftex
+@ifinfo
+<ENTER>,
+@end ifinfo
+type @kbd{unwrap the diamonds}, and press
+@iftex
+@keycap{ENTER}.
+@end iftex
+@ifinfo
+<ENTER>.
+@end ifinfo
+All of these concepts can also be typed right in front
+of the call that they modify, as in
+@iftex
+@code{interlocked unwrap the diamonds @keycap{ENTER}}.
+@end iftex
+@ifinfo
+@code{interlocked unwrap the diamonds <ENTER>}.
+@end ifinfo
+We could also type @kbd{unwrap the interlocked diamonds}
+directly, with the word order the way it is supposed to be.
+A number of calls that take magic, interlocked, cross, and left
+modifiers with unusual word order can be typed in that exact word
+order.  It isn't easy to know which ones, so it is always safe to
+type the concept name first and then see what happens.  No matter
+how we type it, it gets printed out with the correct word order.
+
+When in doubt about how to type in a concept or modifier, type
+it by itself, and press
+@iftex
+@keycap{ENTER}.
+@end iftex
+@ifinfo
+<ENTER>.
+@end ifinfo
+Use the shorter form only as
+you get accustomed to the way the program operates.
+
+@example
+@group
+28:   unwrap the interlocked diamonds
+
+ 2GV   1B^
+
+ 2BV   1G^
+
+ 3GV   4B^
+
+ 3BV   4G^
+@end group
+@end example
+
+Let's have the column circulate one and a half times.  There is
+a @code{1-1/2} concept (in fact, there is a @code{1-M/N} concept for any
+reasonable value of M and N).  There is actually a hyphen (minus sign)
+in the call name, to avoid confusion.  So we type @kbd{1-1/2}, press
+@iftex
+@keycap{ENTER},
+@end iftex
+@ifinfo
+<ENTER>,
+@end ifinfo
+and type @kbd{column circulate} and press
+@iftex
+@keycap{ENTER}.
+@end iftex
+@ifinfo
+<ENTER>.
+@end ifinfo
+
+@example
+@group
+29:   1-1/2, column circulate
+
+   1G<
+ 1BV 4B^
+ 2GV 4G^
+ 2BV 3B^
+   3G>
+@end group
+@end example
+
+It is common to say ``once and a half'' after you say the name of the
+call, but the program prints concepts first, and leaves the exact
+wording up to you.
+
+Let's have the boys hinge.
+
+@example
+@group
+30:   BOYS hinge
+
+    1G<
+
+    4B<
+
+    1B>
+
+ 2GV   4G^
+
+    3B<
+
+    2B>
+
+    3G>
+@end group
+@end example
+
+The boys were in a disconnected setup.  Why didn't we need to say
+@code{boys disconnected hinge}?  The reason is that hinge is just a
+two-person call, and the people actually doing each hinge were
+right next to each other.  If we had instead wanted the boys to
+do a box circulate, we would have had to say @code{disconnected}.
+
+Have the center diamond flip the diamond, and then do a wheel and deal
+and tag your neighbor.
+
+@example
+@group
+33:   tag your neighbor
+
+ 3G<   2G<
+
+ 1B>   4B>
+
+ 2B<   3B<
+
+ 4G>   1G>
+@end group
+@end example
+
+Do a @kbd{sets in motion but hold the column}.
+
+@example
+@group
+34:   sets in motion but hold the column
+
+              1G<
+
+ 2G>  2B>  3B>  1B<  4B<  4G<
+
+              3G>
+@end group
+@end example
+
+The call @code{sets in motion but hold the column} is simply a
+call with a very long name.  There is no @code{but hold the column}
+concept.
+
+We can have the four in the middle do a swing thru.  The head
+boys will step to right hands and begin the call, and then
+finish with the head girls.  We can use the @code{centers}, or
+@code{center diamond}, or @code{heads} concept.
+As discussed above, the @code{centers}
+in a 3x1 diamond (which is what this is, even though people are facing in
+unusual directions) are the center diamond.
+
+@example
+@group
+35:   CENTERS swing thru
+  Warning:  Some people step to a wave.
+
+           1B<
+           1G>
+ 2G> 2B>         4B< 4G<
+           3G<
+           3B>
+@end group
+@end example
+
+Let's have the centers mix.
+
+@example
+@group
+36:   CENTERS mix
+
+           3G>
+           3B<
+ 2G> 2B>         4B< 4G<
+           1B>
+           1G<
+@end group
+@end example
+
+This would be a good time to demonstrate the
+@code{<anyone> are tandem} concept.
+There are such concepts (and for @code{as couples}
+too, of course), for all the usual designators.  In this case,
+we will say @code{sides are tandem}.
+
+All the tandem and couples concepts can be entered directly
+before the call that they affect, so we can type just
+
+@example
+@group
+--> @kbd{sides are tandem swing and circle 1/4}
+@end group
+@end example
+
+with no comma.  The program puts commas in the final
+sequence where needed for clarity.  You never type them in.
+
+@example
+@group
+37:   SIDES ARE TANDEM, swing and circle 1/4
+
+    2G>   2B>
+       1G<
+ 1B>         3B<
+       3G>
+    4B<   4G<
+@end group
+@end example
+
+Have the centers extend, all trade circulate, and do another
+sets in motion but hold the column to demonstrate the next
+thing.
+
+@example
+@group
+38:   CENTERS extend
+
+ 2G>   2B>
+
+ 1G<   3B<
+
+ 1B>   3G>
+
+ 4B<   4G<
+
+39:   trade circulate
+
+ 3B<   3G<
+
+ 4B>   2G>
+
+ 4G<   2B<
+
+ 1G>   1B>
+
+40:   sets in motion but hold the column
+
+              1B<
+
+ 3G>  4G>  2B>  4B<  2G<  1G<
+
+              3B>
+@end group
+@end example
+
+We are going to have the center column of 6 do a single
+file dixie sashay, with the girls in tandem.  We need to use the
+@code{center 1x6} concept for this.  The @code{center 6} concept would be
+ambiguous.  After typing @kbd{center 1x6}, we must press
+@iftex
+@keycap{ENTER},
+@end iftex
+@ifinfo
+<ENTER>,
+@end ifinfo
+because we can't combine any of the @code{<anyone>} concepts with the
+calls that they modify.  However, the @code{girls are tandem} and
+@code{single file} concepts do not require us to press
+@iftex
+@keycap{ENTER}
+@end iftex
+@ifinfo
+<ENTER>
+@end ifinfo
+after them.
+We can just type @kbd{girls are tandem single file dixie sashay} and
+press
+@iftex
+@keycap{ENTER}.
+@end iftex
+@ifinfo
+<ENTER>.
+@end ifinfo
+Of course, we can always press
+@iftex
+@keycap{ENTER}
+@end iftex
+@ifinfo
+<ENTER>
+@end ifinfo
+after each concept if we aren't sure.
+
+@example
+@group
+41:   CENTER 1X6, GIRLS ARE TANDEM, SINGLE FILE dixie
+   sashay
+
+      1B<
+    1GV 4G^
+ 4BV       2B^
+    2GV 3G^
+      3B>
+@end group
+@end example
+
+We didn't type in any of those commas.  We should read this line
+as something like ``center column of 6, the girls are in tandem,
+single file dixie sashay.''
+
+Let's squeeze the galaxy and flip the hourglass.
+
+@example
+@group
+42:   squeeze the galaxy
+
+      1B<
+ 4GV       1G^
+    2BV 4B^
+ 3GV       2G^
+      3B>
+
+43:   flip the hourglass
+
+ 1BV   4G^   1GV   4B^
+
+ 2BV   3G^   2GV   3B^
+@end group
+@end example
+
+Just to finish the job, we resolve the sequence.  The program will
+not permit us to write the sequence to the file unless it is
+resolved.  We could notice that slip and rims trade back gives us an
+allemande left.
+
+@example
+@group
+44:   slip
+
+ 1BV   1G^   4GV   4B^
+
+ 2BV   2G^   3GV   3B^
+
+45:   rims trade back
+
+ 1GV   2B^   1BV   4G^
+
+ 2GV   3B^   4BV   3G^
+
+
+     resolve is:
+left allemande  (1/2 promenade)
+46:
+(left waves)--> 
+@end group
+@end example
+
+The program is still prompting us for more.  The facts that
+we have a resolve, and that the sequence is 45 calls long, don't
+mean anything to the computer.  In order to really write this
+out we have to give the @code{write this sequence} command.
+We type @kbd{write this sequence}, and press
+@iftex
+@keycap{ENTER}.
+@end iftex
+@ifinfo
+<ENTER>.
+@end ifinfo
+(We could also have pressed function key
+@iftex
+@keycap{F10}.)
+@end iftex
+@ifinfo
+<F10>.)
+@end ifinfo
+
+The program prompts us for a comment.
+
+@example
+@group
+(left waves)--> @kbd{write this sequence}
+Type comment for this sequence, if desired.
+Enter comment: 
+@end group
+@end example
+
+At the prompt, we type @kbd{demo}, and then press
+@iftex
+@keycap{ENTER}.
+@end iftex
+@ifinfo
+<ENTER>.
+@end ifinfo
+
+The program then prints
+
+@example
+@group
+   Appending to existing file.
+@end group
+@end example
+
+to let us know that it is writing the sequence to a file, and that
+there was already a file present under the name @file{sequence.C2}, and that
+it is not destroying whatever sequences were already in that file.
+It then prints out the entire card for our perusal and delectation:
+
+@example
+Wed Jan  3 17:39:44 1996     Sd31.64:db31.64     C2
+       demo
+
+HEADS pass the ocean
+extend
+TANDEM swing thru
+1/2, acey deucey
+GIRLS DISCONNECTED diamond circulate
+HEADS DISCONNECTED diamond circulate
+CENTER DIAMOND diamond circulate
+CENTER 1X4 swing thru
+HEADS trade the wave
+CENTER 1X6 GRAND swing thru
+CENTERS flip the diamond WHILE THE ENDS explode
+  Warning:  Ends should opt for setup parallel to their
+   original line -- concentric rule does not apply.
+chain reaction
+ah so
+ENDS hinge
+BOYS IN YOUR DISTORTED DIAMOND diamond circulate
+CENTERS LEFT touch 1/4
+GIRLS IN YOUR DISTORTED WAVE swing thru
+HEADS trail off
+crossfire
+leads press ahead
+DIAGONAL WAVE swing thru
+DIAGONAL COLUMNS OF 3 MAGIC column circulate
+girls U-turn back
+girls press ahead
+cross the K
+BOYS single wheel
+  Warning:  Check a 'C1 phantom' setup.
+SIAMESE trail to a diamond
+unwrap the interlocked diamonds
+1-1/2, column circulate
+BOYS hinge
+CENTER DIAMOND flip the diamond
+wheel and deal
+tag your neighbor
+sets in motion but hold the column
+CENTERS swing thru
+  Warning:  Some people step to a wave.
+CENTERS mix
+SIDES ARE TANDEM, swing and circle 1/4
+CENTERS extend
+trade circulate
+sets in motion but hold the column
+CENTER 1X6, GIRLS ARE TANDEM, SINGLE FILE dixie sashay
+squeeze the galaxy
+flip the hourglass
+slip
+rims trade back
+left allemande  (1/2 promenade)
+
+Sequence written to "sequence.C2".
+Enter startup command> 
+@end example
+
+This sequence is so excessively long that, when you follow this
+demo on your computer, you very likely won't be able to see
+it all on your screen, but it's all there.
+
+The program then reassures us that the sequence was written:
+
+@example
+@group
+   Sequence written to "sequence.C2".
+@end group
+@end example
+
+It then prompts us for instructions on starting another
+sequence.
+
+@example
+@group
+   Enter startup command> 
+@end group
+@end example
+
+We could type, for example, @kbd{sides start}, and do the next
+sequence, or we could type @kbd{exit}.
+
+The file @file{sequence.C2} contains the sequence in all its glory.
+If we print it out, it would probably take 2 or 3 pages.
+Don't call this card.
+
+@bye

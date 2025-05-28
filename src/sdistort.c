@@ -1745,7 +1745,7 @@ extern void common_spot_move(
       }
 
       the_results[1].result_flags = get_multiple_parallel_resultflags(the_results, 2);
-      merge_setups(&the_results[0], merge_strict_matrix, &the_results[1]);
+      merge_setups(&the_results[0], merge_c1_phantom, &the_results[1]);
       reinstate_rotation(ss, &the_results[1]);
       *result = the_results[1];
    }
@@ -1754,7 +1754,7 @@ extern void common_spot_move(
          independently.  They do not have to be similar.  Just merge them. */
 
       the_results[0].result_flags = get_multiple_parallel_resultflags(the_results, 2);
-      merge_setups(&the_results[1], merge_strict_matrix, &the_results[0]);
+      merge_setups(&the_results[1], merge_c1_phantom, &the_results[0]);
       reinstate_rotation(ss, &the_results[0]);
       *result = the_results[0];
    }

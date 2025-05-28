@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-1995  William B. Ackerman.
+    Copyright (C) 1990-1996  William B. Ackerman.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -2479,8 +2479,10 @@ that probably need to be put in. */
       if (!(tbonetest & 011)) {
          if (ss->cmd.cmd_frac_flags)
             fail("Can't fractionalize a call if no one is doing it.");
-         result->kind = nothing;
-         return;
+         if (the_schema != schema_by_array) {    /* If it's by array, we go ahead anyway. */
+            result->kind = nothing;
+            return;
+         }
       }
    }
 

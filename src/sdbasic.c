@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-1995  William B. Ackerman.
+    Copyright (C) 1990-1996  William B. Ackerman.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -183,6 +183,9 @@ Private collision_map collision_map_table[] = {
    {2, 0x000000, 0x30, 0x30, {5, 4},               {7, 5},                {6, 4},                 s2x4,        s2x4,        0, warn__none},
    {2, 0x000000, 0xC0, 0xC0, {7, 6},               {7, 5},                {6, 4},                 s2x4,        s2x4,        0, warn__none},
 */
+
+   {4, 0x000000, 0xAA, 0x0AA, {1, 3, 5, 7},        {2, 6, 11, 15},        {3, 7, 10, 14},         s2x4,        s2x8,        0, warn__none},
+   {4, 0x000000, 0x55, 0x055, {0, 2, 4, 6},        {0, 4, 9, 13},         {1, 5, 8, 12},          s2x4,        s2x8,        0, warn__none},
 
    /* These items handle various types of "1/2 circulate" calls from 2x2's. */
    {2, 0x000000, 0x05, 0x05, {0, 2},               {0, 3},                {1, 2},                 sdmd,        s1x4,        0, warn__none},   /* from couples out if it went to diamond */
@@ -2393,10 +2396,11 @@ extern void basic_move(
    uint32 result_mask;
    personrec newpersonlist[24];
    int newplacelist[24];
-   uint32 resultflags;
-   int desired_elongation, orig_elongation;
+   int orig_elongation;
    int inconsistent_rotation, inconsistent_setup;
    long_boolean four_way_startsetup;
+   uint32 resultflags = 0;
+   int desired_elongation = 0;
    long_boolean funny_ok1 = FALSE;
    long_boolean funny_ok2 = FALSE;
    calldef_block *qq;
@@ -2449,8 +2453,6 @@ extern void basic_move(
 
    newtb = tbonetest;
    if (setup_attrs[ss->kind].setup_limits < 0) fail("Setup is extremely bizarre.");
-   resultflags = 0;
-   desired_elongation = 0;
 
    /* We demand that the final concepts that remain be only those in the following list,
       which includes all of the "heritable" concepts. */
@@ -2487,7 +2489,7 @@ extern void basic_move(
       case s2x2: case s_short6:
          desired_elongation = ss->cmd.prior_elongation_bits;
          break;
-      case s1x4: case sdmd:
+      case s1x2: case s1x4: case sdmd:
          desired_elongation = 2 - (ss->rotation & 1);
          break;
    }
@@ -2498,6 +2500,12 @@ extern void basic_move(
    /* If the flags were zero and we complemented them so that both are set, that's not good. */
    if (desired_elongation == 3)
       desired_elongation = 0;
+
+   if (!(tbonetest & 011)) {
+      result->kind = nothing;
+      result->result_flags = desired_elongation & 3;
+      return;
+   }
 
    /* Attend to a few details. */
 
@@ -3107,11 +3115,6 @@ extern void basic_move(
          numout = setup_attrs[result->kind].setup_limits+1;
          halfnumout = numout >> 1;
 
-
-
-
-
-
          /* Check for a 1x4 call around the outside that sends people far away without permission. */
          if (     ss->kind == s1x4 &&
                   ss->cmd.prior_elongation_bits & 0x40 &&
@@ -3120,12 +3123,6 @@ extern void basic_move(
                fail("Call has outsides going too far around the set.");
             }
          }
-
-
-
-
-
-
 
          if (inconsistent_setup) {
             if (inconsistent_rotation) {

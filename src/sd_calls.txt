@@ -35,9 +35,13 @@
     General Public License if you distribute the file.
 */
 
-version "31.63"
+version "31.65"
 
-call "(nothing)" mainstream tag nullcall
+call "nothing" mainstream tag nullcall
+            dont_use_in_resolve
+   nulldefine
+
+call "(nothing)" mainstream
             dont_use_in_resolve
    nulldefine
 
@@ -2214,6 +2218,11 @@ call "california twirl" mainstream
          if boyp [CR1S 0]
          if girlp [0 AL0S]
 
+call "wheel around" mainstream
+            reverse_means_mirror
+   setup 1x2 1x2 restriction forbidden couples_only
+      array [AL1S AL0S]
+
 call "_maybe single trade" dontshow tag maybesingletrade
    setup 1x2 1x2
       array [CR1S AL0S]
@@ -2477,7 +2486,7 @@ call "pass thru" mainstream tag passthru
 
 call "touch" mainstream tag touch
             /* The "rear back" property is required for square thru, etc. */
-            rear_back_from_r_wave left_means_mirror
+            rear_back_from_r_wave diamond_is_legal left_means_mirror
    setup 2x1 1x2 rotate
       array [ZM0W 0]
 
@@ -2496,7 +2505,7 @@ call "touch 3/4" dontshow tag touch_3_4
    setup 2x1 1x2
       array [CR0W 0]
 
-call "touch @b" mainstream
+call "touch @b" mainstream tag touch_n_4
             rear_back_from_r_wave neednumber diamond_is_legal left_means_mirror
    seq touch [inherit_left inherit_diamond]
    seq armturn_14 [repeat_n inherit_diamond]
@@ -2516,14 +2525,23 @@ call "_face and maybe touch" dontshow tag facenmaybetouch
    seq quarterin []
    seq touch [or_anycall]
 
+call "_face and touch @b" dontshow tag facentouch_n_4
+            visible_fractions neednumber
+   seq quarterin []
+   seq touch_n_4 []
+
 call "_hinge and U-turn away" dontshow tag hingnturnaway
             visible_fractions
    seq hinge []
    seq uturnaway []
 
-call "soft @2touch@3" c3x
+call "soft @2touch@3" c4a
             visible_fractions
    singlecrossconc facenmaybetouch [] hingnturnaway []
+
+call "soft touch @b" c4a
+            visible_fractions neednumber
+   singlecrossconc facentouch_n_4 [] hingnturnaway []
 
 call "box the gnat" mainstream       /* Beware!!!  This is a problematical and easily abused call. */
    setup 1x2 1x2 rotate qualifier right_wave
@@ -10377,7 +10395,7 @@ call "hinge and circulate @h" c4
    seq quarter_maybe [cpls_unless_single]
 
 call "_stim part 2" dontshow tag stim2
-   conc6_2 armturn_14 [] armturn_14 []
+   conc6_2 armturn_14 [] ctr_rot []
 
 call "@1stimulate the column" c3
             first_part_visible
@@ -10800,7 +10818,7 @@ call "_finish it with modify" dontshow tag finishwithmod
 
 call "_finish it with plain modify" dontshow tag finishwithplainmod
             12_matrix_is_inherited
-   conc_diamond_line cast_off_34 [allow_plain_mod] spec_drop_in [inherit_12_matrix suppress_elongation_warnings]
+   conc_diamond_line cast_off_34_with_warn [allow_plain_mod] spec_drop_in [inherit_12_matrix suppress_elongation_warnings]
 
 /* This one allows difficult modify, for "chain reaction, replace cast off 3/4 with flip back". */
 

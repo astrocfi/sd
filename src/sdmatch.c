@@ -1,7 +1,7 @@
 /*
  * sdmatch.c - command matching support
  *
- * Copyright (C) 1994-1995 William B. Ackerman
+ * Copyright (C) 1994-1996 William B. Ackerman
  * Copyright (C) 1993 Alan Snyder
  *
  * Permission to use, copy, modify, and distribute this software for
@@ -19,8 +19,9 @@
    matcher_setup_call_menu
    match_user_input
 
-and the following external variable:
+and the following external variables:
    call_menu_ptr
+   elide_blanks
 */
 
 /* #define TIMING */ /* uncomment to display timing information */
@@ -36,6 +37,7 @@ and the following external variable:
 #endif
 
 call_list_kind *call_menu_ptr;
+int elide_blanks = 0;
 
 static callspec_block *empty_menu[] = {NULLCALLSPEC};
 static callspec_block **call_menu_lists[NUM_CALL_LIST_KINDS];
@@ -586,8 +588,16 @@ static void match_suffix_2(Cstring user, Cstring pat1, pat2_block *pat2, int pat
             else {
                char u = *user++;
 
-               if (u != p && (p > 'Z' || p < 'A' || u != p+'a'-'A'))
-                  break;
+               if (u != p && (p > 'Z' || p < 'A' || u != p+'a'-'A')) {
+                  if (elide_blanks) {
+                     if (p != '-' || u != ' ') {           /* If user said "wave based" instead of "wave-based", just continue. */
+                        if (p == ' ' || p == '-') user--;  /* If user said "wavebased" (no hyphen) or "inroll" (no blank), elide. */
+                        else break;
+                     }
+                  }
+                  else
+                     break;
+               }
             }
          }
       }
@@ -748,12 +758,6 @@ static void match_wildcard(Cstring user, Cstring pat, pat2_block *pat2, int patx
       match_suffix_2(user, interlockedname, &p2b, patxi, &new_result);
    }
    else if (key == 'I') {
-
-
-
-
-
-
       char *p = static_ss.extension;
       int idx = patxi;
       long_boolean fixing_an_a = TRUE;
@@ -763,7 +767,6 @@ static void match_wildcard(Cstring user, Cstring pat, pat2_block *pat2, int patx
          if (idx < 0) { idx = static_ss.full_input_size-1 ; p = static_ss.full_input; }
          if (p[idx] != "a "[i]) { fixing_an_a = FALSE; break; }
       }
-
 
       new_result = *result;
       new_result.modifier_parent = result;

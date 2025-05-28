@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-1995  William B. Ackerman.
+    Copyright (C) 1990-1996  William B. Ackerman.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -77,7 +77,7 @@ Private char *conc_error_messages[] = {
    "Wrong formation.",                                                 /* analyzer_INTLK_LATERAL6 */
    "Wrong formation.",                                                 /* analyzer_OTHERS */
    "Can't find concentric diamonds.",                                  /* analyzer_CONC_DIAMONDS */
-   "Can't find center line and outer diamond."                         /* analyzer_DIAMOND_LINE */
+   "Can't find center line and outer diamond.",                        /* analyzer_DIAMOND_LINE */
    "Can't find center diamond."                                        /* analyzer_CTR_DMD */
 };
 
@@ -1364,6 +1364,8 @@ extern void concentric_move(
             goto no_end_err;
       }
       else {
+         uint32 orig_elong_flags = result_outer.result_flags & 3;
+
          /* We may be in serious trouble -- we have to figure out what setup the ends
             finish in, and they are all phantoms. */
 
@@ -1377,6 +1379,13 @@ extern void concentric_move(
                   result_outer.kind == s2x2 &&
                   (localmods1 & (DFM1_CONC_FORCE_SPOTS | DFM1_CONC_FORCE_OTHERWAY))) {
             ;        /* Take no further action. */
+         }
+         else if (final_outers_start_kind == s1x2 && result_outer.kind == s1x2 && ((orig_elong_flags+1) & 2)) {
+            result_outer.rotation = orig_elong_flags & 1;    /* Note that the "desired elongation" is the opposite
+                                                               of the rotation, because of the default change
+                                                               if the call went to a 2x2.  (See the documentation
+                                                               of the "parallel_conc_end" flag.)  So we do what
+                                                               seems to be the wrong thing. */
          }
          else {
             /* Otherwise, we can save the day only if we
@@ -1740,6 +1749,7 @@ static concmerge_thing map_bn14   = {schema_nothing,        s_bone,      nothing
 static concmerge_thing map_31d12  = {schema_nothing,        s3x1dmd,     nothing, 0, {0}, {2, 6}};
 static concmerge_thing map_31d12r = {schema_nothing,        s_crosswave, nothing, 0, {0}, {3, 7}};
 static concmerge_thing map_31d14  = {schema_nothing,        s3x1dmd,     nothing, 0, {0}, {1, 2, 5, 6}};
+static concmerge_thing map_31d16  = {schema_nothing,        s3x1dmd,     nothing, 0, {0}, {0, 1, 2, 4, 5, 6}};
 static concmerge_thing map_3d12   = {schema_nothing,        s3dmd,       nothing, 0, {0}, {11, 5}};
 static concmerge_thing map_3d14   = {schema_nothing,        s3dmd,       nothing, 0, {0}, {10, 11, 4, 5}};
 static concmerge_thing map_3d16   = {schema_nothing,        s3dmd,       nothing, 0, {0}, {9, 10, 11, 3, 4, 5}};
@@ -1750,6 +1760,7 @@ static concmerge_thing map_2418   = {schema_nothing,        s_ptpd,      nothing
 static concmerge_thing map_13d14  = {schema_nothing,        s1x8,        nothing, 0, {0}, {3, 2, 7, 6}};
 static concmerge_thing map_12d14  = {schema_nothing,        s1x8,        nothing, 0, {0}, {3, 2, 7, 6}};
 static concmerge_thing map_31d18  = {schema_nothing,        s3x1dmd,     nothing, 0, {0}, {0, 0, 2, 0, 4, 0, 6, 0}};
+static concmerge_thing map_18_16  = {schema_nothing,        s1x8,        nothing, 0, {0}, {0, 0, 2, 4, 0, 6}};
 static concmerge_thing map_13d18  = {schema_nothing,        s1x3dmd,     nothing, 0, {0}, {0, 1, 0, 2, 0, 5, 0, 6}};
 static concmerge_thing map_pp18   = {schema_nothing,        s_ptpd,      nothing, 0, {0}, {0, 0, 2, 0, 4, 0, 6, 0}};
 static concmerge_thing map_13d12d = {schema_nothing,        s1x3dmd,     nothing, 0, {0}, {1, 2, 3, 5, 6, 7}};
@@ -2245,6 +2256,11 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
       the_map = &map_31d18;
       goto merge_concentric;
    }
+   else if (res2->kind == s1x8 && res1->kind == s1x6 && r == 0 && action == merge_without_gaps &&
+            (!(res1->people[1].id1 | res1->people[4].id1))) {
+      the_map = &map_18_16;
+      goto merge_concentric;
+   }
    else if (res2->kind == s3x1dmd && res1->kind == s1x2 && (r&1)) {
       install_person(res2, 2, res2, 3);
       install_person(res2, 6, res2, 7);
@@ -2257,6 +2273,10 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
    }
    else if (res2->kind == s3x1dmd && res1->kind == s1x4 && r == 0) {
       the_map = &map_31d14;
+      goto merge_concentric;
+   }
+   else if (res2->kind == s3x1dmd && res1->kind == s1x6 && r == 0) {
+      the_map = &map_31d16;
       goto merge_concentric;
    }
    else if (res2->kind == s3dmd && res1->kind == s1x2 && r == 0) {
@@ -2626,10 +2646,18 @@ static Const fixer d2x4x1;
 static Const fixer d2x4c1;
 static Const fixer d2x4x2;
 static Const fixer d2x4c2;
+static Const fixer d4x4l1;
+static Const fixer d4x4l2;
+static Const fixer d4x4l3;
+static Const fixer d4x4l4;
+static Const fixer d4x4d1;
+static Const fixer d4x4d2;
+static Const fixer d4x4d3;
+static Const fixer d4x4d4;
 
 
 
-/*                              ink   outk       rot  numsetup 1x2          1x2rot    1x4     1x4rot  dmd      dmdrot   2x2         nonrot            yesrot  */
+/*                              ink   outk       rot  numsetup 1x2       1x2rot       1x4     1x4rot dmd       dmdrot   2x2         nonrot            yesrot  */
 
 static Const fixer foo33     = {s1x2, s2x4,        0, 2,       &foo33,     0,          0,          0, 0,          0,    0,          {{0, 1}, {5, 4}},   {{7, 6}, {2, 3}}};
 static Const fixer foocc     = {s1x2, s2x4,        0, 2,       &foocc,     0,          0,          0, 0,          0,    0,          {{2, 3}, {7, 6}},   {{0, 1}, {5, 4}}};
@@ -2692,6 +2720,17 @@ static Const fixer distrig8  = {sdmd, s_rigger,    0, 1,       0,          0,   
 static Const fixer distrig6  = {s1x4, s_rigger,    0, 1,       0,          0,          &distrig6,  0, &distrig8,  0,    0,          {{7, 5, 3, 1}},     {{-1}}};
 static Const fixer disthrg1  = {s1x4, s_hrglass,   1, 1,       0,          0,          &disthrg1,  0, 0,          0,    0,          {{1, 3, 5, 7}},     {{-1}}};
 static Const fixer disthrg2  = {s1x4, s_hrglass,   1, 1,       0,          0,          &disthrg2,  0, 0,          0,    0,          {{0, 3, 4, 7}},     {{-1}}};
+
+static Const fixer d4x4l1    = {s1x4, s4x4,        1, 1,       0,          0,          &d4x4l1, &d4x4l4, &d4x4d1, &d4x4d4, 0,       {{0, 3, 8, 11}},     {{-1}}};
+static Const fixer d4x4l2    = {s1x4, s4x4,        0, 1,       0,          0,          &d4x4l2, &d4x4l3, &d4x4d2, &d4x4d3, 0,       {{8, 11, 0, 3}},     {{-1}}};
+static Const fixer d4x4l3    = {s1x4, s4x4,        1, 1,       0,          0,          &d4x4l3, &d4x4l2, &d4x4d3, &d4x4d2, 0,       {{12, 15, 4, 7}},    {{-1}}};
+static Const fixer d4x4l4    = {s1x4, s4x4,        0, 1,       0,          0,          &d4x4l4, &d4x4l1, &d4x4d4, &d4x4d1, 0,       {{12, 15, 4, 7}},    {{-1}}};
+
+static Const fixer d4x4d1    = {sdmd, s4x4,        1, 1,       0,          0,          &d4x4l1, &d4x4l4, &d4x4d1, &d4x4d4, 0,       {{0, 7, 8, 15}},     {{-1}}};
+static Const fixer d4x4d2    = {sdmd, s4x4,        0, 1,       0,          0,          &d4x4l2, &d4x4l3, &d4x4d2, &d4x4d3, 0,       {{8, 15, 0, 7}},     {{-1}}};
+static Const fixer d4x4d3    = {sdmd, s4x4,        1, 1,       0,          0,          &d4x4l3, &d4x4l2, &d4x4d3, &d4x4d2, 0,       {{12, 3, 4, 11}},    {{-1}}};
+static Const fixer d4x4d4    = {sdmd, s4x4,        0, 1,       0,          0,          &d4x4l4, &d4x4l1, &d4x4d4, &d4x4d1, 0,       {{12, 3, 4, 11}},    {{-1}}};
+
 static Const fixer foo55d    = {s1x4, s1x8,        0, 1,       0,          0,          &foo55d,    0, &f1x3zzd,   0,    &bar55d,    {{0, 2, 4, 6}},     {{-1}}};
 static Const fixer fgalctb   = {s2x2, s_galaxy,    0, 1,       0,          0,          0,          0, 0,          0,    &fgalctb,   {{1, 3, 5, 7}},     {{-1}}};
 static Const fixer f3x1ctl   = {s1x4, s3x1dmd,     0, 1,       0,          0,          &f3x1ctl,   0, 0,          0,    &fgalctb,   {{1, 2, 5, 6}},     {{-1}}};
@@ -2730,32 +2769,33 @@ extern void selective_move(
    parse_block *parseptr,
    int indicator,
    int arg2,
+   uint32 override_selector,
    selector_kind selector_to_use,
    long_boolean concentric_rules,
    setup *result)
 {
 
-/* arg1 = 0  - <> do your part
-          1  - <> do your part while the others ....
-          2  - own the <>, with the others not doing any call, which doesn't exist
-          3  - own the <>, .... by ....
-          4  - <>
-          5  - <> while the others ....
-          6  - <> disconnected   or   <> distorted
-          7  - <> disconnected .... while the others ....
-          8  - <> ignored
-          9  - <> ignored .... while the others ...., which doesn't exist
-          10 - <> work <concept>, with the others not doing any call, which doesn't exist
-          11 - <> work <concept> (the others do the call, but without the concept)
-          12 - <> lead for a .... (as in cast a shadow from a promenade)
+/* indicator = 0  - <> do your part
+               1  - <> do your part while the others ....
+               2  - own the <>, with the others not doing any call, which doesn't exist
+               3  - own the <>, .... by ....
+               4  - <>
+               5  - <> while the others ....
+               6  - <> disconnected   or   <> distorted
+               7  - <> disconnected .... while the others ....
+               8  - <> ignored
+               9  - <> ignored .... while the others ...., which doesn't exist
+               10 - <> work <concept>, with the others not doing any call, which doesn't exist
+               11 - <> work <concept> (the others do the call, but without the concept)
+               12 - <> lead for a .... (as in cast a shadow from a promenade)
 
-   arg2 = 0 - not doing distorted setup, this is the usual case, people work in the
-                  actual setup that they have
-          1 - distorted line -- used only with arg1 = 6
-          2 - distorted column -- used only with arg1 = 6
-          3 - distorted wave -- used only with arg1 = 6
-          4 - distorted box -- used only with arg1 = 6
-          5 - distorted diamond -- used only with arg1 = 6 */
+        arg2 = 0 - not doing distorted setup, this is the usual case, people work in the
+                       actual setup that they have
+               1 or 17 - distorted line -- used only with indicator = 6 (16 bit means user said "diagonal")
+               2 or 18 - distorted column -- used only with indicator = 6 (same)
+               3 or 19 - distorted wave -- used only with indicator = 6   (same)
+               4       - distorted box -- used only with indicator = 6
+               5       - distorted diamond -- used only with indicator = 6 */
 
    setup_command subsid_cmd;
    setup_command *subsid_cmd_p = (setup_command *) 0;
@@ -2781,7 +2821,7 @@ volatile   int setupcount;    /* ******FUCKING DEBUGGER BUG!!!!!! */
 
    if (sizem1 < 0) fail("Can't identify people in this setup.");
 
-   for (i=0, ssmask=0; i<=sizem1; i++) {
+   for (i=0, ssmask=0, j=1; i<=sizem1; i++, j<<=1) {
       ssmask <<= 1;
       if (ss->people[i].id1) {
          int q = 0;
@@ -2797,6 +2837,9 @@ volatile   int setupcount;    /* ******FUCKING DEBUGGER BUG!!!!!! */
          }
          else if (ss->kind == s1x8 && current_selector == selector_ends) {
             if (!(i&2)) q = 1;
+         }
+         else if (override_selector) {
+            if (override_selector & j) q = 1;
          }
          else if (selectp(ss, i))
             q = 1;
@@ -3027,6 +3070,22 @@ back_here:
                fixp = &d2x4d1;
             else if (kk == s2x4 && thislivemask == 0x55)
                fixp = &d2x4d2;
+            else if (kk == s4x4 && thislivemask == 0x8181) {
+               /* We make an extremely trivial test here to see which way the distortion goes.
+                  It will be checked thoroughly later. */
+               if (this_one->people[0].id1 & 1)
+                  fixp = &d4x4d1;
+               else
+                  fixp = &d4x4d2;
+            }
+            else if (kk == s4x4 && thislivemask == 0x1818) {
+               /* We make an extremely trivial test here to see which way the distortion goes.
+                  It will be checked thoroughly later. */
+               if (this_one->people[4].id1 & 1)
+                  fixp = &d4x4d3;
+               else
+                  fixp = &d4x4d4;
+            }
          }
          else if (arg2 == 4) {
             if (kk == s2x4 && thislivemask == 0xAA)
@@ -3037,6 +3096,27 @@ back_here:
                fixp = &d2x4y1;
             else if (kk == s2x4 && thislivemask == 0xCC)
                fixp = &d2x4y2;
+         }
+         else if (arg2 & 16) {
+            /* These are "diagonal C/L/W" concepts. */
+            if (kk == s4x4 && thislivemask == 0x0909) {
+               /* We make an extremely trivial test here to see which way the distortion goes.
+                  It will be checked thoroughly later. */
+
+               if ((this_one->people[0].id1 ^ arg2) & 1)
+                  fixp = &d4x4l2;
+               else
+                  fixp = &d4x4l1;
+            }
+            else if (kk == s4x4 && thislivemask == 0x9090) {
+               /* We make an extremely trivial test here to see which way the distortion goes.
+                  It will be checked thoroughly later. */
+
+               if ((this_one->people[4].id1 ^ arg2) & 1)
+                  fixp = &d4x4l4;
+               else
+                  fixp = &d4x4l3;
+            }
          }
          else if (arg2 != 0) {
             /* Search for distorted column/line/wave. */
@@ -3213,18 +3293,35 @@ back_here:
             uint32 tbone = 0;
             lilsetup[lilcount].cmd = this_one->cmd;
             lilsetup[lilcount].cmd.cmd_assume.assumption = cr_none;
+            if (indicator == 6)
+               lilsetup[lilcount].cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
             lilsetup[lilcount].kind = fixp->ink;
             lilsetup[lilcount].rotation = 0;
 
             for (k=0; k<=setup_attrs[fixp->ink].setup_limits; k++)
                tbone |= copy_rot(&lilsetup[lilcount], k, this_one, fixp->nonrot[lilcount][k], 011*((-fixp->rot) & 3));
 
-            if (arg2     == 2 && (tbone & 010) != 0) fail("There is no column of 4 here.");
-            if ((arg2|2) == 3 && (tbone & 001) != 0) fail("There is no line of 4 here.");
+            /* If we are picking out a distorted diamond from a 4x4, we can't tell unambiguously how
+               to do it unless all 4 people are facing in a sensible way, that is, as if in real diamonds.
+               We did an extremely cursory test to see which map to use, now we have to test whether
+               everyone agrees that the distortion direction was correct, by checking whether they are
+               in fact in real diamonds. */
 
-            if (arg2 == 3)
+            if (kk == s4x4 && arg2 == 5) {
+               if ((    (lilsetup[lilcount].people[0].id1) |
+                        (~lilsetup[lilcount].people[1].id1) |
+                        (lilsetup[lilcount].people[2].id1) |
+                        (~lilsetup[lilcount].people[3].id1)) & 1)
+                  fail("Can't determine direction of diamond distortion.");
+            }
+
+            if ((arg2&7) == 2 && (tbone & 010) != 0) fail("There is no column of 4 here.");
+            if ((arg2&5) == 1 && (tbone & 001) != 0) fail("There is no line of 4 here.");
+
+            if ((arg2&7) == 3)
                lilsetup[lilcount].cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
 
+            update_id_bits(&lilsetup[lilcount]);
             impose_assumption_and_move(&lilsetup[lilcount], &lilresult[lilcount]);
 
             /* There are a few cases in which we handle shape-changers in a distorted setup.
@@ -3247,7 +3344,6 @@ back_here:
          if (lilresult[0].rotation != 0) {
             Const fixer *nextfixp;
 
-            the_results[setupcount].kind = fixp->outk;
             the_results[setupcount].rotation = 0;
 
 /* ****** What on earth was this for?????????
@@ -3290,6 +3386,7 @@ back_here:
             }
             else {
                if (fixp->yesrot[0][0] < 0) goto lose;
+               the_results[setupcount].kind = fixp->outk;
                the_results[setupcount].rotation++;
                for (lilcount=0; lilcount<numsetups; lilcount++) {
                   for (k=0; k<=setup_attrs[lilresult[0].kind].setup_limits; k++)

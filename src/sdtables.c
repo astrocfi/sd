@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-1995  William B. Ackerman.
+    Copyright (C) 1990-1996  William B. Ackerman.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -1095,6 +1095,17 @@ Private cm_thing map_3boxbr   =      {{11, 0, 1, 10, 7, 4, 5, 6,
                                                       2, 3, 8, 9},        4, 4, sbigbone,       s2x2,     s1x4,     12, 1, 0, 0, 2};
 Private cm_thing map_4line    =      {{8, 6, 4, 5, 12, 13, 0, 14,
                                            10, 15, 3, 1, 2, 7, 11, 9},    4, 8, s4x4,           s1x4,     s2x4,     16, 0, 0, 1, 2};
+
+
+
+
+
+Private cm_thing map_4linev    =      {{17, 18, 0, 11, 12, 23, 5, 6,
+                                           10, 9, 8, 7, 22, 21, 20, 19},  4, 8, s4x6,           s1x4,     s2x4,     24, 1, 0, 0, 2};
+
+
+
+
 Private cm_thing map_3box    =       {{0, 1, 10, 11, 4, 5, 6, 7,
                                                       2, 3, 8, 9},        4, 4, s2x6,           s2x2,     s2x2,     12, 0, 0, 0, 2};
 Private cm_thing map_3boxv   =       {{11, 0, 1, 10, 7, 4, 5, 6,
@@ -1283,7 +1294,7 @@ conc_initializer conc_init_table[] = {
    {s2x2,        s2x2,     schema_in_out_triple,     2, {&map_3box,       0,                   &map_3boxv,       0}},
    {s1x4,        s2x2,     schema_in_out_triple,     2, {&map_3boxb,      &map_3boxbr,         &map_3lb,         &map_3lbr}},
    {s2x2,        s1x4,     schema_in_out_triple,     2, {&map_3boxr,      &map_3box4,          &map_3boxrv,      &map_3box4v}},
-   {s2x4,        s1x4,     schema_in_out_quad,       2, {0,               0,                   &map_4line,       0}},
+   {s2x4,        s1x4,     schema_in_out_quad,       2, {0,               &map_4linev,         &map_4line,       0}},
    {s2x4,        s2x2,     schema_in_out_quad,       2, {&map_4box,       0,                   &map_4boxv,                0}},
    {s1x2,        s_trngl,  schema_intlk_vertical_6,  2, {&map_intlk_hrglass, &mapintlkvgal,    0,                         0}},
    {s1x2,        s_trngl,  schema_intlk_lateral_6,   2, {&mapintlklgal,   0,                   0,                         0}},

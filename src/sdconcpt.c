@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-1995  William B. Ackerman.
+    Copyright (C) 1990-1996  William B. Ackerman.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -248,103 +248,23 @@ Private void do_c1_phantom_move(
 
 
 
-
-
-typedef struct asdfgh {
-   int map[4];
-   int othermap[4];
-   struct asdfgh *other;
-} diag_map;
-
-/* These need to be external so that they can refer to each other. */
-extern diag_map map_diag1a;
-extern diag_map map_diag1b;
-
-diag_map map_diag1a = {{8, 11, 0, 3}, {12, 15, 4, 7}, &map_diag1b};
-diag_map map_diag1b = {{12, 15, 4, 7}, {0, 3, 8, 11}, &map_diag1a};
-
-
 Private void do_concept_single_diagonal(
    setup *ss,
    parse_block *parseptr,
    setup *result)
 {
-   int i, rot;
-   setup a1;
-   setup res1;
-   diag_map *map_ptr = &map_diag1b;
-   uint32 tbonetest = 0;
-
-   if (!global_tbonetest) {
-      result->result_flags = 0;
-      result->kind = nothing;
-      return;
+   if (parseptr->concept->value.arg1 & 8) {
+      /* Concept identified specific people. */
+      selective_move(ss, parseptr, 6, 16+(parseptr->concept->value.arg1 & 7), 0, parseptr->selector, FALSE, result);
    }
-
-   if (ss->kind != s4x4) tbonetest = ~0UL;   /* Force error. */
-
-   if (parseptr->concept->value.arg1 & 8) {    /* Concept identified specific people -- check them. */
-      if      (global_selectmask == (global_livemask & 0x0909)) map_ptr = map_ptr->other;
-      else if (global_selectmask != (global_livemask & 0x9090)) tbonetest = ~0UL;   /* Force error. */
+   else if (global_livemask == 0x2D2D || global_livemask == 0xD2D2) {
+      /* It didn't -- deduce what the mask would have been, based on the full population
+         of the 4x4, which must be blocks. */
+      selective_move(ss, parseptr, 6, 16+(parseptr->concept->value.arg1 & 7),
+            global_livemask & 0x9999, selector_uninitialized, FALSE, result);
    }
-   else {
-      if      (global_livemask == 0x2D2D) map_ptr = map_ptr->other;
-      else if (global_livemask != 0xD2D2) tbonetest = ~0UL;   /* Force error. */
-   }
-
-   for (i=0; i<4; i++) tbonetest |= ss->people[map_ptr->map[i]].id1;
-
-   /* New tbonetest has all the people on the chosen diagonal. */
-
-   if ((tbonetest & 011) == 011) {
-      if (parseptr->concept->value.arg1 & 1)
-         fail("Designated people are not consistently in a diagonal line.");
-      else
-         fail("Designated people are not consistently in a diagonal column.");
-   }
-
-   rot = (tbonetest ^ parseptr->concept->value.arg1 ^ 1) & 1;
-
-   if (rot) map_ptr = map_ptr->other;
-
-   ss->rotation += rot;   /* Just flip the setup around and recanonicalize. */
-   canonicalize_rotation(ss);
-
-   a1 = *ss;
-   a1.kind = s1x4;
-   a1.rotation = 0;
-   a1.cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
-
-   for (i=0; i<4; i++) {
-      (void) copy_person(&a1, i, ss, map_ptr->map[i]);
-      clear_person(ss, map_ptr->map[i]);
-   }
-
-   if ((parseptr->concept->value.arg1 & 7) == 3)
-      a1.cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
-
-   update_id_bits(&a1);
-   impose_assumption_and_move(&a1, &res1);
-
-   *result = *ss;
-
-   if (res1.kind != s1x4)
-      fail("The call must go back to a 1x4.");
-
-   /* The rotation is either 0 or 1. */
-   if (res1.rotation != 0) {
-      for (i=0; i<4; i++) {
-         install_rot(result, map_ptr->othermap[i], &res1, i, 011);
-      }
-   }
-   else {
-      for (i=0; i<4; i++) {
-         install_person(result, map_ptr->map[i], &res1, i);
-      }
-   }
-
-   result->result_flags = res1.result_flags;
-   result->rotation -= rot;   /* Flip the setup back. */
+   else
+      fail("People must be in blocks -- try specifying the people who should do the call.");
 }
 
 
@@ -3000,7 +2920,7 @@ Private void do_concept_centers_or_ends(
    parse_block *parseptr,
    setup *result)
 {
-   selective_move(ss, parseptr, 4, 0, (selector_kind) parseptr->concept->value.arg1, parseptr->concept->value.arg2, result);
+   selective_move(ss, parseptr, 4, 0, 0, (selector_kind) parseptr->concept->value.arg1, parseptr->concept->value.arg2, result);
 }
 
 
@@ -3010,7 +2930,7 @@ Private void do_concept_centers_and_ends(
    parse_block *parseptr,
    setup *result)
 {
-   selective_move(ss, parseptr, 5, 0, (selector_kind) parseptr->concept->value.arg1, parseptr->concept->value.arg2, result);
+   selective_move(ss, parseptr, 5, 0, 0, (selector_kind) parseptr->concept->value.arg1, parseptr->concept->value.arg2, result);
 }
 
 
@@ -3020,7 +2940,7 @@ Private void so_and_so_only_move(
    parse_block *parseptr,
    setup *result)
 {
-   selective_move(ss, parseptr, parseptr->concept->value.arg1, parseptr->concept->value.arg2, parseptr->selector, FALSE, result);
+   selective_move(ss, parseptr, parseptr->concept->value.arg1, parseptr->concept->value.arg2, 0, parseptr->selector, FALSE, result);
 }
 
 

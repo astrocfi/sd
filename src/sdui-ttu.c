@@ -34,6 +34,24 @@
 
 #include "sdui-ttu.h"
 
+
+
+
+
+
+
+extern int elide_blanks;
+
+
+
+
+
+
+
+
+
+
+
 static int no_line_delete = 0;
 
 #ifdef NO_CURSES
@@ -91,6 +109,8 @@ extern void ttu_process_command_line(int *argcp, char **argv)
          no_line_delete = 1;
       else if (strcmp(argv[argno], "-no_cursor") == 0)
          no_cursor = 1;
+      else if (strcmp(argv[argno], "-ignoreblanks") == 0)
+         elide_blanks = 1;
       else if (strcmp(argv[argno], "-no_graphics") == 0) ;   /* ignore this */
       else if (strcmp(argv[argno], "-lines") == 0 && argno+1 < (*argcp)) {   /* ignore this */
          (*argcp) -= 2;      /* Remove two arguments from the list. */
@@ -112,6 +132,7 @@ extern void ttu_display_help(void)
 {
    printf("-no_line_delete             do not use the \"line delete\" function for screen management\n");
    printf("-no_cursor                  do not use screen management functions at all\n");
+   printf("-ignoreblanks               allow user to omit spaces when typing in\n");
 }
 
 extern void ttu_initialize(void)
