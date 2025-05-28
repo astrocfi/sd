@@ -31,6 +31,7 @@
 
 
 #include "sd.h"
+extern map_thing map_rig_1x6;
 
 
 
@@ -283,6 +284,12 @@ Private void innards(
                final_map = &map_1x10_1x6;
                goto got_map;
             }
+            else if (z[0].kind == s_1x2dmd && z[0].rotation == 0 && arity == 2 &&
+                  insize == 4 &&
+                  !(z[0].people[3].id1 | z[0].people[4].id1 | z[1].people[0].id1 | z[1].people[1].id1)) {
+               final_map = &map_rig_1x6;
+               goto got_map;
+            }
             break;
          case MPKIND__NONE:
             fail("Can't do this shape-changing call here.");
@@ -508,7 +515,6 @@ extern void divided_setup_move(
    if (v2flag) x[1].kind = kn;
    if (v3flag) x[2].kind = kn;
    if (v4flag) x[3].kind = kn;
-
 
    if (t.assumption == cr_couples_only) {
       /* Pass it through. */

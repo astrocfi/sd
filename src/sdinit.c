@@ -779,8 +779,6 @@ Private void read_in_call_definition(void)
                call_root->stuff.matrix.stuff[j] = last_datum & 0xFFFF;
                read_halfword();
             }
-
-            call_root->callflagsh |= CFLAGH__REQUIRES_SELECTOR;
          }
          return;
       case schema_partner_matrix:

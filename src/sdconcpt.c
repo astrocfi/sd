@@ -28,8 +28,6 @@ and the following external variables:
 #include <stdio.h>
 
 #include "sd.h"
-#define CMD_FRAC_BREAKING_UP 0x01000000
-#define CMD_FRAC_REVERSE     0x00100000
 
 
 uint32 global_tbonetest;
@@ -1063,16 +1061,18 @@ Private void do_concept_grand_working(
 {
    int cstuff, tbonetest;
    int m1, m2, m3;
-   map_thing *the_map;
+   setup_kind kk;
 
    cstuff = parseptr->concept->value.arg1;
    /* cstuff =
-      forward    : 0
-      left       : 1
-      back       : 2
-      right      : 3
-      as centers : 8
-      as ends    : 9 */
+      forward          : 0
+      left             : 1
+      back             : 2
+      right            : 3
+      clockwise        : 8
+      counterclockwise : 9
+      as centers       : 10
+      as ends          : 11 */
 
    if (cstuff < 4) {      /* Working forward/back/right/left. */
       if (ss->kind != s2x4) fail("Must have a 2x4 setup for this concept.");
@@ -1091,7 +1091,21 @@ Private void do_concept_grand_working(
       if (((ss->people[5].id1 + 6) ^ cstuff) & 8) { m2 |= 0x4 ; m3 &= ~0x8; };
       if (((ss->people[6].id1 + 6) ^ cstuff) & 8) { m1 |= 0x4 ; m2 &= ~0x8; };
 
-      the_map = map_lists[s2x2][2]->f[MPKIND__OVERLAP][0];
+      kk = s2x2;
+   }
+   else if (cstuff < 10) {      /* Working clockwise/counterclockwise. */
+      if (ss->kind != s2x4) fail("Must have a 2x4 setup for this concept.");
+
+      /* Put each of the center 4 people in the correct group, no need to look. */
+
+      if (cstuff & 1) {
+         m1 = 0xB; m2 = 0xA; m3 = 0xE;
+      }
+      else {
+         m1 = 0xD; m2 = 0x5; m3 = 0x7;
+      }
+
+      kk = s2x2;
    }
    else {      /* Working as-ends or as-centers. */
       if (ss->kind != s1x8) fail("May not specify as-ends/as-centers here.");
@@ -1105,10 +1119,10 @@ Private void do_concept_grand_working(
          m1 = 0xB; m2 = 0xA; m3 = 0xE;
       }
 
-      the_map = map_lists[s1x4][2]->f[MPKIND__OVERLAP][0];
+      kk = s1x4;
    }
 
-   overlapped_setup_move(ss, the_map, m1, m2, m3, result);
+   overlapped_setup_move(ss, map_lists[kk][2]->f[MPKIND__OVERLAP][0], m1, m2, m3, result);
 }
 
 
@@ -2258,7 +2272,7 @@ Private void do_concept_checkerboard(
 {
    static veryshort mape[16] = {0, 2, 4, 6, 1, 3, 5, 7, 0, 1, 4, 5, 2, 3, 6, 7};
    static veryshort mapl[16] = {7, 1, 3, 5, 0, 6, 4, 2, 7, 6, 3, 2, 0, 1, 4, 5};
-   static veryshort mapb[16] = {1, 3, 5, 7, 0, 2, 4, 6, -1, -1, -1, -1, -1, -1, -1, -1};
+   static veryshort mapb[16] = {1, 3, 5, 7, 0, 2, 4, 6, 2, 3, 6, 7, 0, 1, 4, 5};
    static veryshort mapd[16] = {7, 1, 3, 5, 0, 2, 4, 6, -1, -1, -1, -1, -1, -1, -1, -1};
 
    int i, rot, offset;
@@ -2284,73 +2298,83 @@ Private void do_concept_checkerboard(
       concentric_move(ss, &ss->cmd, &subsid_cmd, schema_concentric, 0, DFM1_CONC_DEMAND_LINES | DFM1_CONC_FORCE_COLUMNS, TRUE, result);
       return;
    }
-   else {
-      /* This is "checker <setup>" */
 
-      if (ss->kind != s2x4) fail("Must have a 2x4 setup for 'checker' concept.");
+   /* This is "checker <setup>" */
 
-      if (parseptr->concept->value.arg2 & 8) {
-         /* This is "so-and-so preferred for the trade, checkerboard". */
-         if (global_selectmask == 0x55)
-            offset = 0;
-         else if (global_selectmask == 0xAA)
-            offset = 4;
-         else if (global_selectmask == 0x33)
-            offset = 8;
-         else if (global_selectmask == 0xCC)
-            offset = 12;
-         else fail("Can't select these people.");
-      }
-      else {
-         if ((ss->people[0].id1 & d_mask) == d_north && (ss->people[1].id1 & d_mask) != d_north &&
-               (ss->people[2].id1 & d_mask) == d_north && (ss->people[3].id1 & d_mask) != d_north &&
-               (ss->people[4].id1 & d_mask) == d_south && (ss->people[5].id1 & d_mask) != d_south &&
-               (ss->people[6].id1 & d_mask) == d_south && (ss->people[7].id1 & d_mask) != d_south)
-            offset = 0;
-         else if ((ss->people[0].id1 & d_mask) != d_north && (ss->people[1].id1 & d_mask) == d_north &&
-               (ss->people[2].id1 & d_mask) != d_north && (ss->people[3].id1 & d_mask) == d_north &&
-               (ss->people[4].id1 & d_mask) != d_south && (ss->people[5].id1 & d_mask) == d_south &&
-               (ss->people[6].id1 & d_mask) != d_south && (ss->people[7].id1 & d_mask) == d_south)
-            offset = 4;
-         else
-            fail("Can't identify checkerboard people.");
-      }
-   
-      /* Move the people who simply trade, filling in their roll info. */
-   
-      if (      (ss->people[mape[0+offset]].id1 & d_mask) != d_north ||
-                (ss->people[mape[1+offset]].id1 & d_mask) != d_north ||
-                (ss->people[mape[2+offset]].id1 & d_mask) != d_south ||
-                (ss->people[mape[3+offset]].id1 & d_mask) != d_south)
-            fail("Selected people are not facing out.");
+   if (ss->kind != s2x4) fail("Must have a 2x4 setup for 'checker' concept.");
 
-      (void) copy_rot(result, mape[0+offset], ss, mape[1+offset], 022);
-      if (result->people[mape[0+offset]].id1) result->people[mape[0+offset]].id1 = (result->people[mape[0+offset]].id1 & (~ROLL_MASK)) | ROLLBITL;
-      (void) copy_rot(result, mape[1+offset], ss, mape[0+offset], 022);
-      if (result->people[mape[1+offset]].id1) result->people[mape[1+offset]].id1 = (result->people[mape[1+offset]].id1 & (~ROLL_MASK)) | ROLLBITR;
-      (void) copy_rot(result, mape[2+offset], ss, mape[3+offset], 022);
-      if (result->people[mape[2+offset]].id1) result->people[mape[2+offset]].id1 = (result->people[mape[2+offset]].id1 & (~ROLL_MASK)) | ROLLBITL;
-      (void) copy_rot(result, mape[3+offset], ss, mape[2+offset], 022);
-      if (result->people[mape[3+offset]].id1) result->people[mape[3+offset]].id1 = (result->people[mape[3+offset]].id1 & (~ROLL_MASK)) | ROLLBITR;
-
-      a1 = *ss;
-
-      switch (kn) {
-         case s1x4:
-            map_ptr = mapl;
-            break;
-         case s2x2:
-            map_ptr = mapb;
-            break;
-         case sdmd:
-            map_ptr = mapd;
-            break;
-      }
-
-      if (map_ptr[offset] < 0) fail("Can't select these people.");
-   
-      for (i=0; i<4; i++) (void) copy_person(&a1, i, ss, map_ptr[i+offset]);
+   if (parseptr->concept->value.arg2 & 8) {
+      /* This is "so-and-so preferred for the trade, checkerboard". */
+      if      (global_selectmask == 0x55)
+         offset = 0;
+      else if (global_selectmask == 0xAA)
+         offset = 4;
+      else if (global_selectmask == 0x33)
+         offset = 8;
+      else if (global_selectmask == 0xCC)
+         offset = 12;
+      else fail("Can't select these people.");
    }
+   else {
+      uint32 directions = 0;
+
+      for (i=0; i<8; i++) {
+         uint32 p = ss->people[i].id1 & d_mask;
+
+         directions = directions<<4;
+         if (p == d_north) directions |= 0x8;
+         if (p != d_north) directions |= 0x4;
+         if (p == d_south) directions |= 0x2;
+         if (p != d_south) directions |= 0x1;
+      }
+
+      if      ((directions & 0x84842121) == 0x84842121)
+         offset = 0;
+      else if ((directions & 0x48481212) == 0x48481212)
+         offset = 4;
+      else if ((directions & 0x88442211) == 0x88442211)
+         offset = 8;
+      else if ((directions & 0x44881122) == 0x44881122)
+         offset = 12;
+      else
+         fail("Can't identify checkerboard people.");
+   }
+
+   /* Move the people who simply trade, filling in their roll info. */
+
+   if (      (ss->people[mape[0+offset]].id1 & d_mask) != d_north ||
+             (ss->people[mape[1+offset]].id1 & d_mask) != d_north ||
+             (ss->people[mape[2+offset]].id1 & d_mask) != d_south ||
+             (ss->people[mape[3+offset]].id1 & d_mask) != d_south)
+         fail("Selected people are not facing out.");
+
+   (void) copy_rot(result, mape[0+offset], ss, mape[1+offset], 022);
+   if (result->people[mape[0+offset]].id1) result->people[mape[0+offset]].id1 = (result->people[mape[0+offset]].id1 & (~ROLL_MASK)) | ROLLBITL;
+   (void) copy_rot(result, mape[1+offset], ss, mape[0+offset], 022);
+   if (result->people[mape[1+offset]].id1) result->people[mape[1+offset]].id1 = (result->people[mape[1+offset]].id1 & (~ROLL_MASK)) | ROLLBITR;
+   (void) copy_rot(result, mape[2+offset], ss, mape[3+offset], 022);
+   if (result->people[mape[2+offset]].id1) result->people[mape[2+offset]].id1 = (result->people[mape[2+offset]].id1 & (~ROLL_MASK)) | ROLLBITL;
+   (void) copy_rot(result, mape[3+offset], ss, mape[2+offset], 022);
+   if (result->people[mape[3+offset]].id1) result->people[mape[3+offset]].id1 = (result->people[mape[3+offset]].id1 & (~ROLL_MASK)) | ROLLBITR;
+
+   a1 = *ss;
+
+   switch (kn) {
+      case s1x4:
+         map_ptr = mapl;
+         break;
+      case s2x2:
+         map_ptr = mapb;
+         break;
+      case sdmd:
+         map_ptr = mapd;
+         break;
+   }
+
+   map_ptr += offset;
+   if (*map_ptr < 0) fail("Can't select these people.");
+
+   for (i=0; i<4; i++) (void) copy_person(&a1, i, ss, map_ptr[i]);
 
    a1.kind = kn;
    a1.cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
@@ -2360,10 +2384,10 @@ Private void do_concept_checkerboard(
    move(&a1, FALSE, &res1);
 
    /* Look at the rotation coming out of the move.  If the setup is 1x4, we require it to be
-      even (no checkerboard lockit allowed).  Otherwise, allow any rotation.  This means
+      even (checkerboard lockit not allowed).  Otherwise, allow any rotation.  This means
       we allow diamonds that are oriented rather peculiarly! */
 
-   if ((res1.rotation & 1) && res1.kind == s1x4)
+   if ((res1.rotation != 0) && res1.kind == s1x4)
       fail("'Checker' call went to 1x4 setup oriented wrong way.");
 
    rot = res1.rotation * 011;
@@ -2382,7 +2406,11 @@ Private void do_concept_checkerboard(
          fail("Don't recognize ending setup after 'checker' call.");
    }
 
-   for (i=0; i<4; i++) (void) copy_rot(result, map_ptr[i+offset], &res1, (i-res1.rotation)&3, rot);
+   map_ptr += offset;
+   if (*map_ptr < 0) fail("Can't do this.");
+
+   for (i=0; i<4; i++) (void) copy_rot(result, map_ptr[i], &res1, (i-res1.rotation)&3, rot);
+
    result->kind = s2x4;
    result->rotation = 0;
    result->result_flags = res1.result_flags;
@@ -4345,8 +4373,19 @@ extern long_boolean do_big_concept(
          ss->cmd.cmd_misc2_flags &= ~CMD_MISC2__CTR_END_MASK;
       }
       else if (   (ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_KMASK) == CMD_MISC2__CENTRAL_PLAIN &&
-                  this_kind == concept_fractional) {
-         /* We *DO* allow central and fractional to be stacked in either order. */
+                    (
+                        this_kind == concept_fractional
+                                    ||
+                        (this_kind == concept_meta &&
+                             (this_concept->value.arg1 == 4 ||
+                              this_concept->value.arg1 == 5 ||
+                              this_concept->value.arg1 == 6 ||
+                              this_concept->value.arg1 == 11))
+                                    ||
+                        (this_kind == concept_nth_part &&
+                             (this_concept->value.arg1 == 9 ||
+                              this_concept->value.arg1 == 10)))) {
+         /* We *DO* allow central and various fractional and meta concepts to be stacked in either order. */
          ;
       }
       else if (this_kind != concept_snag_mystic && this_kind != concept_central) {

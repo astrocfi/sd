@@ -5,7 +5,7 @@
 @settitle Sd
 @c @subtitle A Square Dance Caller's Helper
 @c
-@set Time-stamp: August 3, 1996
+@set Time-stamp: August 15, 1996
 @tex
 \global\setfont\smallrm\rmshape{8}{1000}
 \global\font\smallsy=cmsy9
@@ -16,7 +16,7 @@
     \kern-0.4pt\hrule}%
   \kern-.06em\raise0.4pt\hbox{$\rangle$}}}}
 @end tex
-@set sd-version 31.74
+@set sd-version 31.75
 @set full-manual
 @c %**end of header
 @iftex
@@ -2447,7 +2447,6 @@ There is also a call @samp{<anything> and the <anyone> spread}, which
 does the @i{<anything>} followed by having the selected people @i{spread}.
 For example, you could enter
 @example
-   heads start
    <anything> and the boys spread
    motivate
 @end example

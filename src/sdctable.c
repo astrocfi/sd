@@ -759,9 +759,9 @@ concept_descriptor concept_descriptor_table[] = {
    {"REPLACE THE @u PART",                   concept_replace_nth_part,      0, l_c1,         {0, 0}},
    {"INTERRUPT AFTER THE @u PART",           concept_replace_nth_part,      0, l_c1,         {0, 1}},
 /* -------- column break -------- */
-#define mm__3_size 53
-#define mm__3_3x3 47
-#define mm__3_4x4 48
+#define mm__3_size 55
+#define mm__3_3x3 49
+#define mm__3_4x4 50
    {"INSIDE TRIANGLES",                      concept_randomtrngl,           4, l_c1,         {0, 2}},
    {"OUTSIDE TRIANGLES",                     concept_randomtrngl,           4, l_c1,         {0, 3}},
    {"IN POINT TRIANGLES",                    concept_randomtrngl,           4, l_c1,         {0, 5}},
@@ -779,12 +779,14 @@ concept_descriptor concept_descriptor_table[] = {
    {"CONCENTRIC DIAMONDS",                   concept_concentric,            4, l_c1,         {0, schema_concentric_diamonds}},
    {"CROSS CONCENTRIC DIAMONDS",             concept_concentric,            4, l_c2,         {0, schema_cross_concentric_diamonds}},
          {"", concept_comment, 0, l_nonexistent_concept},
-   {"GRAND WORKING FORWARD",                 concept_grand_working,         4, l_c3x,        {0, 0}},
-   {"GRAND WORKING BACKWARD",                concept_grand_working,         4, l_c3x,        {0, 2}},
-   {"GRAND WORKING LEFT",                    concept_grand_working,         4, l_c3x,        {0, 1}},
-   {"GRAND WORKING RIGHT",                   concept_grand_working,         4, l_c3x,        {0, 3}},
-   {"GRAND WORKING AS CENTERS",              concept_grand_working,         4, l_c3x,        {0, 8}},
-   {"GRAND WORKING AS ENDS",                 concept_grand_working,         4, l_c3x,        {0, 9}},
+   {"GRAND WORKING FORWARD",                 concept_grand_working,         4, l_c4a,        {0, 0}},
+   {"GRAND WORKING BACKWARD",                concept_grand_working,         4, l_c4a,        {0, 2}},
+   {"GRAND WORKING LEFT",                    concept_grand_working,         4, l_c4a,        {0, 1}},
+   {"GRAND WORKING RIGHT",                   concept_grand_working,         4, l_c4a,        {0, 3}},
+   {"GRAND WORKING AS CENTERS",              concept_grand_working,         4, l_c4a,        {0, 10}},
+   {"GRAND WORKING AS ENDS",                 concept_grand_working,         4, l_c4a,        {0, 11}},
+   {"GRAND WORKING CLOCKWISE",               concept_grand_working,         4, l_c4a,        {0, 8}},
+   {"GRAND WORKING COUNTERCLOCKWISE",        concept_grand_working,         4, l_c4a,        {0, 9}},
          {"", concept_comment, 0, l_nonexistent_concept},
    {"@6 ARE CENTERS OF A DOUBLE-OFFSET 1/4 TAG",concept_double_offset,      4, l_c4,         {0, 0}},
    {"@6 ARE CENTERS OF A DOUBLE-OFFSET 3/4 TAG",concept_double_offset,      4, l_c4,         {0, 1}},

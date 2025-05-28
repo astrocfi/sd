@@ -451,6 +451,15 @@ typedef struct gloop {
 
 
 
+static coordrec squeezethingglass = {s_hrglass, 3,
+   { -4,   4,   8,   0,   4,  -4,  -8,   0},
+   {  6,   6,   0,   2,  -6,  -6,   0,  -2}, {0}};
+
+static coordrec squeezethinggal = {s_galaxy, 3,
+   { -6,  -2,   0,   2,   6,   2,   0,  -2},
+   {  0,   2,   6,   2,   0,  -2,  -6,  -2}, {0}};
+
+
 Private int start_matrix_call(
    setup *ss,
    matrix_rec matrix_info[],
@@ -463,8 +472,15 @@ Private int start_matrix_call(
 
    clear_people(people);
 
-   thingyptr = setup_attrs[ss->kind].setup_coords;
    nicethingyptr = setup_attrs[ss->kind].nice_setup_coords;
+   thingyptr = setup_attrs[ss->kind].setup_coords;
+
+   if (flags & (MTX_FIND_SQUEEZERS|MTX_FIND_SPREADERS)) {
+      thingyptr = nicethingyptr;
+      /* Fix up a galaxy or hourglass so that points can squeeze.  They have funny coordinates so that they can't truck or loop. */
+      if (ss->kind == s_hrglass) thingyptr = &squeezethingglass;
+      else if (ss->kind == s_galaxy) thingyptr = &squeezethinggal;
+   }
 
    if (!thingyptr || !nicethingyptr) fail("Can't do this in this setup.");
    if (setup_attrs[ss->kind].setup_limits < 0) fail("Can't do this in this setup.");        /* this is actually superfluous */
@@ -473,10 +489,11 @@ Private int start_matrix_call(
       if (ss->people[i].id1) {
          if (nump == 8) fail("?????too many people????");
          (void) copy_person(people, nump, ss, i);
-         matrix_info[nump].x = thingyptr->xca[i];
-         matrix_info[nump].y = thingyptr->yca[i];
+
          matrix_info[nump].nicex = nicethingyptr->xca[i];
          matrix_info[nump].nicey = nicethingyptr->yca[i];
+         matrix_info[nump].x = thingyptr->xca[i];
+         matrix_info[nump].y = thingyptr->yca[i];
 
          matrix_info[nump].done = FALSE;
          matrix_info[nump].realdone = FALSE;
@@ -507,6 +524,20 @@ Private int start_matrix_call(
 
    return nump;
 }
+
+
+
+static coordrec squeezefinalglass = {s_hrglass, 3,
+   { -2,   2,   6,   0,   2,  -2,  -6,   0},
+   {  6,   6,   0,   2,  -6,  -6,   0,  -2}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1,  0,  1, -1, -1, -1,
+      -1, -1,  6, -1,  3, -1,  2, -1,
+      -1, -1, -1, -1,  7, -1, -1, -1,
+      -1, -1, -1,  5,  4, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
 
 
 Private void finish_matrix_call(
@@ -590,8 +621,7 @@ Private void finish_matrix_call(
       goto doit;
    }
    else if ((ypar == 0x00840066) && ((signature & (~0x0C000108)) == 0)) {
-      /* Fudge this to a galaxy.  Someone had the center 2 squeeze or spread
-         from a spindle. */
+      /* Fudge this to a galaxy.  The center 2 did a squeeze or spread from a spindle. */
 
       for (i=0; i<nump; i++) {
          if      (matrix_info[i].x ==  0 && matrix_info[i].y ==  6) {                        matrix_info[i].y =  7; }
@@ -605,6 +635,42 @@ Private void finish_matrix_call(
       warn(warn__check_galaxy);
       checkptr = setup_attrs[s_galaxy].setup_coords;
       goto doit;
+   }
+   else if ((ypar == 0x00260062 || ypar == 0x00660066) && ((signature & (~0x10100600)) == 0)) {
+      /* Fudge this to an hourglass.  Six poeple did a squeeze from a galaxy. */
+      checkptr = &squeezefinalglass;
+      goto doit;
+   }
+   else if ((ypar == 0x00620026 || ypar == 0x00660066) && ((signature & (~0x09080002)) == 0)) {
+      /* Same, on other orientation. */
+      checkptr = &squeezefinalglass;
+      goto doitrot;
+   }
+   else if ((ypar == 0x00660026) && ((signature & (~0x00008604)) == 0)) {
+      /* Fudge this to a spindle.  Some points did a squeeze from a galaxy. */
+
+      for (i=0; i<nump; i++) {
+         if      (matrix_info[i].x ==  6 && matrix_info[i].y ==  0) { matrix_info[i].x =  8; }
+         else if (matrix_info[i].x == -6 && matrix_info[i].y ==  0) { matrix_info[i].x = -8; }
+         else if (   (matrix_info[i].x == 2 || matrix_info[i].x == -2) &&
+                     (matrix_info[i].y == 2 || matrix_info[i].y == -2)) { matrix_info[i].x <<= 1; }
+      }
+
+      checkptr = setup_attrs[s_spindle].setup_coords;
+      goto doit;
+   }
+   else if ((ypar == 0x00260066) && ((signature & (~0x09008004)) == 0)) {
+      /* Same, on other orientation. */
+
+      for (i=0; i<nump; i++) {
+         if      (matrix_info[i].x ==  0 && matrix_info[i].y ==  6) { matrix_info[i].y =  8; }
+         else if (matrix_info[i].x ==  0 && matrix_info[i].y == -6) { matrix_info[i].y = -8; }
+         else if (   (matrix_info[i].x == 2 || matrix_info[i].x == -2) &&
+                     (matrix_info[i].y == 2 || matrix_info[i].y == -2)) { matrix_info[i].y <<= 1; }
+      }
+
+      checkptr = setup_attrs[s_spindle].setup_coords;
+      goto doitrot;
    }
    else if ((ypar == 0x00950062 || ypar == 0x00550062) && ((signature & (~0x091002C0)) == 0)) {
       checkptr = setup_attrs[sbigdmd].setup_coords;
@@ -777,6 +843,10 @@ Private void finish_matrix_call(
       checkptr = setup_attrs[s2x8].setup_coords;
       goto doitrot;
    }
+   else if ((ypar == 0x00A20044) && ((signature & (~0x19804E40)) == 0)) {
+      checkptr = setup_attrs[s3x8].setup_coords;   /* Actually a 3x6. */
+      goto doit;
+   }
    else if ((ypar == 0x00E20044) && ((signature & (~0x1D806E41)) == 0)) {
       checkptr = setup_attrs[s3x8].setup_coords;
       goto doit;
@@ -843,7 +913,7 @@ doitrot:
       result->kind = checkptr->result_kind;
       result->rotation = 1;   
       for (i=0; i<nump; i++) {
-         place = checkptr->diagram[27 - ((matrix_info[i].x >> 2) << checkptr->xfactor) - (matrix_info[i].y >> 2)];
+         place = checkptr->diagram[28 - ((matrix_info[i].x >> 2) << checkptr->xfactor) + ((-matrix_info[i].y) >> 2)];
          if (place < 0) fail("Person has moved into a grossly ill-defined location.");
          if ((checkptr->xca[place] != -matrix_info[i].y) || (checkptr->yca[place] != matrix_info[i].x))
             fail("Person has moved into a slightly ill-defined location.");
@@ -861,18 +931,15 @@ Private void matrixmove(
    callspec_block *callspec,
    setup *result)
 {
-   uint32 flags;
    uint32 datum;
    setup people;
    matrix_rec matrix_info[9];
    int i, nump, alldelta;
+    uint32 flags = callspec->stuff.matrix.flags;
 
    if (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT)
       fail("Can't split the setup.");
 
-   /* For now, we assume every matrix call uses a selector.
-      Eventually, we will take this from the database the way we should. */
-   flags = callspec->stuff.matrix.flags | MTX_USE_SELECTOR;
    alldelta = 0;
 
    nump = start_matrix_call(ss, matrix_info, flags, &people);
@@ -880,7 +947,7 @@ Private void matrixmove(
    for (i=0; i<nump; i++) {
       matrix_rec *this = &matrix_info[i];
 
-      if (this->sel) {
+      if (!(flags & MTX_USE_SELECTOR) || this->sel) {
          /* This is legal if girlbit or boybit is on (in which case we use the appropriate datum)
             or if the two data are identical so the sex doesn't matter. */
          if ((this->girlbit | this->boybit) == 0 &&
@@ -966,18 +1033,14 @@ Private void do_pair(
 
 
 
-Private void do_matrix_chains(
+Private void make_matrix_chains(
    matrix_rec matrix_info[],
    int nump,
-   callspec_block *callspec,
+   long_boolean finding_far_squeezers,
+   uint32 flags,
    int filter)                        /* 1 for E/W chains, 0 for N/S chains. */
 {
-   long_boolean another_round = TRUE;
-   long_boolean picking_end_jaywalkers = FALSE;
    int i, j;
-   uint32 flags;
-
-   flags = callspec->stuff.matrix.flags;
 
    /* Find adjacency relationships, and fill in the "se"/"nw" pointers. */
 
@@ -1041,7 +1104,7 @@ Private void do_matrix_chains(
             }
          }
          else {
-            if (dely != 4 || delx != 0) continue;
+            if (dely != (finding_far_squeezers ? 12 : 4) || delx != 0) continue;
 
             /* Now, if filter = 1, person j is just east of person i.
                If filter = 0, person j is just south of person i. */
@@ -1074,6 +1137,18 @@ Private void do_matrix_chains(
          }
       }
    }
+}
+
+Private void process_matrix_chains(
+   matrix_rec matrix_info[],
+   int nump,
+   callspec_block *callspec,
+   uint32 flags,
+   int filter)                        /* 1 for E/W chains, 0 for N/S chains. */
+{
+   long_boolean another_round = TRUE;
+   long_boolean picking_end_jaywalkers = FALSE;
+   int i, j;
 
    /* Pick out pairs of people and move them. */
 
@@ -1271,7 +1346,10 @@ Private void partner_matrixmove(
 
    /* Make the lateral chains first. */
 
-   do_matrix_chains(matrix_info, nump, callspec, 1);
+   make_matrix_chains(matrix_info, nump, FALSE, flags, 1);
+   if (flags & MTX_FIND_SQUEEZERS)
+      make_matrix_chains(matrix_info, nump, TRUE, flags, 1);
+   process_matrix_chains(matrix_info, nump, callspec, flags, 1);
 
    /* If jaywalking, don't do it again. */
 
@@ -1288,7 +1366,10 @@ Private void partner_matrixmove(
 
       /* Vertical chains next. */
 
-      do_matrix_chains(matrix_info, nump, callspec, 0);
+      make_matrix_chains(matrix_info, nump, FALSE, flags, 0);
+      if (flags & MTX_FIND_SQUEEZERS)
+         make_matrix_chains(matrix_info, nump, TRUE, flags, 0);
+      process_matrix_chains(matrix_info, nump, callspec, flags, 0);
    }
 
    /* Scan for people who ought to have done something but didn't. */
@@ -1402,8 +1483,7 @@ Private void divide_diamonds(setup *ss, setup *result)
       with themselves.
 
       digit 3 - the code (3 bits) and the reversal bit (1 bit)
-                  Because of this perhaps unfortunate packing,
-                  we will consider codes to be even numbers 0, 2, 4, .... 14.
+                  Note that the code*2 is what is visible in this digit.
                   If this digit is odd, the reversal bit is on.  The code
                   indicates what kind of special job we are doing.
       digit 4 - the selected part, called "N".  Think of this as being 1-based,
@@ -1476,21 +1556,23 @@ Private void divide_diamonds(setup *ss, setup *result)
    Let T be the number of parts in the region.  In this example, T is 4.
 
    The meanings of the key values are as follows:
+      (What you see in the digit is twice this,
+      because the reversal bit is at the bottom.)
 
       key = 0 (but N != 0) - do part N only.
 
-      key = 2 - obsolete -- use 8 instead.
+      key = 1 - obsolete -- use 4 instead.
 
-      key = 4 - do parts from the beginning of the region up through N, inclusive,
+      key = 2 - do parts from the beginning of the region up through N, inclusive,
                   that is, 1, 2, 3, .... N.
 
-      key = 6 - [PLANNED, NOT IMPLEMENTED] - do parts from N down to 1, inclusive,
+      key = 3 - [PLANNED, NOT IMPLEMENTED] - do parts from N down to 1, inclusive,
                   that is, N, N-1, ..... 2, 1.
 
-      key = 8 - do parts from N+1 up to the end of the region,
+      key = 4 - do parts from N+1 up to the end of the region,
                   that is, N, N+1, ..... T-1, T.
 
-      key = 10 - do parts from the top of the region down to N+1,
+      key = 5 - do parts from the top of the region down to N+1,
                   that is, T, T-1, ..... N+2, N+1.  This executes the region
                   in reverse order.  Of course, if the "reverse" bit is on,
                   the region represents the call in reverse order, so the parts
@@ -1563,7 +1645,7 @@ extern fraction_info get_fraction_info(uint32 frac_flags, uint32 callflags1, int
       fail("Fraction must be proper.");
 
    /* Check for "reverse order" */
-   if (frac_flags & 0x100000) {
+   if (frac_flags & CMD_FRAC_REVERSE) {
       retval.reverse_order = 1;
       subcall_index = total-1-subcall_index;
       highlimit = total-highlimit;
@@ -1576,7 +1658,7 @@ extern fraction_info get_fraction_info(uint32 frac_flags, uint32 callflags1, int
 
       if (retval.do_half_of_last_part) fail("This call can't be fractionalized with this fraction.");
 
-      switch ((frac_flags >> 20) & 0xE) {
+      switch ((frac_flags & CMD_FRAC_CODE_MASK) / CMD_FRAC_CODE_BIT) {
          case 0:
             retval.instant_stop = 1;
                      subcall_index += retval.reverse_order ? (1-this_part) : (this_part-1);
@@ -1585,7 +1667,7 @@ extern fraction_info get_fraction_info(uint32 frac_flags, uint32 callflags1, int
                         fail("This call can't be fractionalized.");
                      if (subcall_index >= total) fail("The indicated part number doesn't exist.");
             break;
-         case 4:
+         case 2:
             /* We are not just doing part N, we are doing parts up through N. */
 
             if (retval.reverse_order) {
@@ -1602,7 +1684,7 @@ extern fraction_info get_fraction_info(uint32 frac_flags, uint32 callflags1, int
             }
 
             break;
-         case 2: case 8:
+         case 1: case 4:
             /* We are not just doing part N, we are doing parts strictly after N. */
                      subcall_index += retval.reverse_order ? (-this_part) : (this_part);
                      /* Be sure that enough parts are visible. */
@@ -1610,7 +1692,7 @@ extern fraction_info get_fraction_info(uint32 frac_flags, uint32 callflags1, int
                         fail("This call can't be fractionalized.");
                      if (subcall_index > total) fail("The indicated part number doesn't exist.");
             break;
-         case 10:
+         case 5:
             if (retval.reverse_order) {
                int t = subcall_index;
                subcall_index = highlimit;

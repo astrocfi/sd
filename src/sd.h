@@ -996,6 +996,14 @@ typedef struct {
       A zero means there was no elongation. */
 
 
+#define CMD_FRAC_PART_BIT    0x00010000
+#define CMD_FRAC_PART_MASK   0x000F0000
+#define CMD_FRAC_REVERSE     0x00100000
+#define CMD_FRAC_CODE_BIT    0x00200000
+#define CMD_FRAC_CODE_MASK   0x00E00000
+#define CMD_FRAC_BREAKING_UP 0x01000000
+
+
 typedef struct {
    parse_block *parseptr;
    callspec_block *callspec;

@@ -230,7 +230,8 @@ Private expand_thing step_phan4_stuff = {{-1, 1, -1, 0, -1, 3, -1, 2, -1, 5, -1,
 
 Private expand_thing step_bigd_stuff1 = {{0, 1, 3, 2, -1, -1, 6, 7, 9, 8, -1, -1}, 12, nothing, s2x6, 0};
 Private expand_thing step_bigd_stuff2 = {{-1, -1, 3, 2, 4, 5, -1, -1, 9, 8, 10, 11}, 12, nothing, s2x6, 0};
-Private expand_thing step_tgl4_stuff = {{2, 3, 0, 1}, 4, nothing, s1x4, 1};
+Private expand_thing step_tgl4_stuffa = {{2, 3, 0, 1}, 4, nothing, s1x4, 1};
+Private expand_thing step_tgl4_stuffb = {{3, 2, 0, 1}, 4, nothing, s2x2, 0};
 Private expand_thing step_dmd_stuff = {{0, 3, 2, 1}, 4, nothing, s1x4, 0};
 Private expand_thing step_qtgctr_stuff = {{7, 0, 2, 1, 3, 4, 6, 5}, 8, nothing, s2x4, 1};
 
@@ -295,7 +296,12 @@ static full_expand_thing touch_init_table3[] = {
    {warn__some_touch, 0, &step_2x4_rig_stuff, s2x4,         0xFFFFUL,     0x963CUL, ~0UL},      /* Check for stepping to rigger from suitable T-bone. */
    {warn__some_touch, 0, &step_2x4_rig_stuff, s2x4,         0xC3C3UL,     0x8200UL, ~0UL},      /* Same, with missing people. */
    {warn__some_touch, 0, &step_2x4_rig_stuff, s2x4,         0x3C3CUL,     0x143CUL, ~0UL},      /* Same, with missing people. */
-   {warn__some_touch, 0, &step_tgl4_stuff,    s_trngl4,       0xFFUL,       0xD7UL, ~0UL},
+   {warn__some_touch, 0, &step_tgl4_stuffa,   s_trngl4,       0xFFUL,       0xD7UL, ~0UL},      /* Triangle base, who are facing, touch. */
+   {warn__some_touch, 0, &step_tgl4_stuffa,   s_trngl4,       0xF0UL,       0xD0UL, ~0UL},      /* Same, with missing people. */
+   {warn__some_touch, 0, &step_tgl4_stuffa,   s_trngl4,       0x0FUL,       0x07UL, ~0UL},      /* Same, with missing people. */
+   {warn__some_touch, 0, &step_tgl4_stuffb,   s_trngl4,       0xFFUL,       0x22UL, ~0UL},      /* Triangle apexes, who are facing, touch. */
+   {warn__some_touch, 0, &step_tgl4_stuffb,   s_trngl4,       0xF0UL,       0x20UL, ~0UL},      /* Same, with missing people. */
+   {warn__some_touch, 0, &step_tgl4_stuffb,   s_trngl4,       0x0FUL,       0x02UL, ~0UL},      /* Same, with missing people. */
    {warn__some_touch, 0, &step_bone_stuff,    s_bone,       0xFFFFUL,     0xA802UL, 0xFFFFUL},  /* Ends touch from a "bone" to a grand wave. */
    {warn__none,       0, &step_bone_rigstuff, s_bone,       0xFFFFUL,     0xAD07UL, 0xFFFFUL},  /* All touch from a "bone" to a rigger. */
    {warn__none,       0, &step_bone_rigstuff, s_bone,       0xF0F0UL,     0xAD07UL, 0xF0F0UL},  /* Same, with missing people. */

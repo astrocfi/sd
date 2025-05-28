@@ -2078,9 +2078,9 @@ There are a number of internal ones not shown here.  See the file ~/sd/restricti
    wave_only,                       1x2 - a miniwave; 1x3-1x16 - [grand] wave; 2x3 - two "waves" -- people not in tandem with each other;
                                        2x4/3x4/2x6/2x8 - consistent waves the long way; 4x4 - consistent waves either way, but not T-boned;
                                        2x2 - real RH or LH box;
-                                       3x2/4x2/6x2/8x2 - column; qtag - wave in center; pqtag - wave in center
-                                       (use only if center people have no legal move from pqtag, only from qtag);
-                                       thar - same handedness waves (undefined if anyone is in column orientation)
+                                       3x2/4x2/6x2/8x2 - column;
+                                       qtag/pqtag - wave in center
+                                       thar - same handedness waves
    wave_unless_say_2faced,
    all_facing_same,              /* 2x2/2x3/2x4/1x4/1x6/1x8 - all people in the setup facing the same way */
    1fl_only,                     /* 1x3/1x4/1x6/1x8 - a 1FL, that is, all 3/4/6/8 facing same; 2x3/2x4 - individual 1FL's
@@ -2109,10 +2109,12 @@ There are a number of internal ones not shown here.  See the file ~/sd/restricti
                            APPENDIX C -- QUALIFIERS
 
    wave_only,                       1x2 - a miniwave; 1x3-1x16 - [grand] wave; 2x3 - two "waves" -- people not in tandem with each other;
-                                       2x4/3x4/2x6/2x8 - consistent waves the long way; 4x4 - consistent waves either way, but not T-boned;
+                                       2x4/3x4/2x6/2x8 - consistent waves the long way;
                                        2x2 - real RH or LH box;
+                                       4x4 - consistent waves either way, but not T-boned;
                                        3x2 or 4x2 - columns;
-                                       thar - same handedness waves (undefined if anyone is in column orientation)
+                                       qtag/pqtag - wave in center
+                                       thar - same handedness waves
    1fl_only,                     /* 1x3/1x4/1x6/1x8 - a 1FL, that is, all 3/4/6/8 facing same; 2x3/2x4 - individual 1FL's
                                        thar - crossed 2FL's of opposite handedness, ready to move along
    2fl_only,                     /* 1x2 - a couple; 1x4 - a 2FL; 2x4/3x4 - 2FL's; 4x4 - consistent 2FL's; 1x8 - a grand 2FL;
@@ -2128,8 +2130,18 @@ There are a number of internal ones not shown here.  See the file ~/sd/restricti
                                     For triangles, it applies just to the base.
                                     So this includes waves, inverted lines, columns,
                                     magic columns, diamonds, wave-based triangles... */
-   right_wave,                   /* As above, but all the miniwaves must be right-handed */
-   left_wave,                    /* As above, but all the miniwaves must be left-handed */
+
+   right_wave,                      1x2 - right miniwave; 1x4-1x16 - [grand] right wave;
+                                       2x4 - right waves the long way;
+                                       2x2 - real RH box;
+                                       4x4 - consistent right waves either way, but not T-boned;
+                                       qtag/pqtag - right wave in center
+                                       dmd, trngl - people are paired in right miniwaves.
+                                       For diamonds, this applies just to the centers.
+                                       For triangles, it applies just to the base.
+                                       thar - right waves
+
+   left_wave,                    /* As above, but left-handed.
    1_4_tag,                      /* dmd, qtag - this is a 1/4 tag, i.e. points are looking in */
    3_4_tag,                      /* dmd, qtag - this is a 3/4 tag, i.e. points are looking out */
    dmd_same_point,               /* dmd - centers would circulate to same point */

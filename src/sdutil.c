@@ -270,7 +270,7 @@ static restriction_thing two_faced_3x4 = {12, {0, 2, 1, 3, 8, 4, 9, 5, 10, 6, 11
 static restriction_thing wave_1x2      = {2, {0, 1},                      {0},                            {0}, {0}, TRUE, chk_wave};            /* check for a miniwave -- note this is NOT OK for assume */
 static restriction_thing wave_1x3      = {3, {0, 1, 2},                      {0},                         {0}, {0}, TRUE, chk_wave};            /* check for a wave */
 static restriction_thing wave_1x4      = {4, {0, 1, 3, 2},                   {0},                         {0}, {0}, TRUE, chk_wave};            /* check for a wave */
-static restriction_thing wave_1x6      = {6, {0, 1, 2, 3, 4, 5},                {0},                      {0}, {0}, TRUE, chk_wave};            /* check for grand wave of 6 */
+static restriction_thing wave_1x6      = {6, {0, 1, 2, 5, 4, 3},                {0},                      {0}, {0}, TRUE, chk_wave};            /* check for grand wave of 6 */
 static restriction_thing wave_1x8      = {8, {0, 1, 3, 2, 6, 7, 5, 4},             {0},                   {0}, {0}, TRUE, chk_wave};            /* check for grand wave */
 static restriction_thing wave_1x10     = {10, {0, 1, 2, 3, 4, 5, 6, 7, 8, 9},         {0},                {0}, {0}, TRUE, chk_wave};            /* check for grand wave of 10 */
 static restriction_thing wave_1x12     = {12, {0, 1, 2, 3, 4, 5, 7, 6, 9, 8, 11, 10},     {0},            {0}, {0}, TRUE, chk_wave};            /* check for grand wave of 12 */
@@ -279,12 +279,12 @@ static restriction_thing wave_2x6      = {12, {0, 1, 2, 3, 4, 5, 7, 6, 9, 8, 11,
 static restriction_thing wave_1x14     = {14, {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13},        {0}, {0}, {0}, TRUE, chk_wave};            /* check for grand wave of 14 */
 static restriction_thing wave_1x16     = {16, {0, 1, 2, 3, 4, 5, 6, 7, 9, 8, 11, 10, 13, 12, 15, 14},{0}, {0}, {0}, TRUE, chk_wave};            /* check for grand wave of 16 */
 static restriction_thing wave_2x8      = {16, {0, 1, 2, 3, 4, 5, 6, 7, 9, 8, 11, 10, 13, 12, 15, 14},{0}, {0}, {0}, TRUE, chk_wave};            /* check for parallel 2x8 waves */
-static restriction_thing wave_thar     = {8, {0, 1, 2, 3, 5, 4, 7, 6},             {0},                   {0}, {0}, FALSE, chk_wave};           /* check for consistent wavy thar */
-static restriction_thing thar_1fl      = {8, {0, 3, 1, 2, 6, 5, 7, 4},             {0},                   {0}, {0}, FALSE, chk_wave};           /* check for consistent wavy thar */
+static restriction_thing wave_thar     = {8, {0, 1, 2, 3, 5, 4, 7, 6},           /* NOTE THE 4 --> */{4}, {0}, {0}, TRUE, chk_wave};            /* check for consistent wavy thar */
+static restriction_thing thar_1fl      = {8, {0, 3, 1, 2, 6, 5, 7, 4},                               {0}, {0}, {0}, FALSE, chk_wave};           /* check for consistent 1-faced thar */
 
-static restriction_thing cwave_2x4     = {8, {0, 4, 1, 5, 2, 6, 3, 7},             {0},                   {0}, {0}, TRUE, chk_wave};            /* check for real columns */
-static restriction_thing cwave_2x3     = {6, {0, 3, 1, 4, 2, 5},                {0},                      {0}, {0}, TRUE, chk_wave};            /* check for real columns of 6 */
-static restriction_thing cwave_2x6     = {12, {0, 6, 1, 7, 2, 8, 3, 9, 4, 10, 5, 11},      {0},           {0}, {0}, TRUE, chk_wave};            /* check for real 12-matrix columns */
+static restriction_thing cwave_2x4     = {8, {0, 4, 1, 5, 2, 6, 3, 7},                               {0}, {0}, {0}, TRUE, chk_wave};            /* check for real columns */
+static restriction_thing cwave_2x3     = {6, {0, 3, 1, 4, 2, 5},                                     {0}, {0}, {0}, TRUE, chk_wave};            /* check for real columns of 6 */
+static restriction_thing cwave_2x6     = {12, {0, 6, 1, 7, 2, 8, 3, 9, 4, 10, 5, 11},                {0}, {0}, {0}, TRUE, chk_wave};            /* check for real 12-matrix columns */
 static restriction_thing cwave_2x8     = {16, {0, 8, 1, 9, 2, 10, 3, 11, 4, 12, 5, 13, 6, 14, 7, 15},{0}, {0}, {0}, TRUE, chk_wave};            /* check for real 16-matrix columns */
 static restriction_thing cmagic_2x3    = {6, {0, 1, 2, 3, 4, 5},                {0},                      {0}, {0}, TRUE, chk_wave};            /* check for magic columns */
 static restriction_thing cmagic_2x4    = {8, {0, 1, 3, 2, 5, 4, 6, 7},             {0},                   {0}, {0}, TRUE, chk_wave};            /* check for magic columns */
@@ -335,7 +335,7 @@ static restriction_thing s4x4_2fl     = {0,    {0, 0, 0, 0, 0, 0, 2, 0, 2, 2, 2,
                                                 {2, 2, 0, 2, 0, 0, 0, 0, 0, 0, 2, 0, 2, 2, 2, 2},          {0}, {0}, FALSE, chk_box};            /* check for 4 waves of consistent handedness and consistent headliner-ness. */
 
 static restriction_thing cwave_qtg     = {4, {2, 3, 7, 6},                                           {0}, {0}, {0}, FALSE, chk_wave};           /* check for wave across the center */
-static restriction_thing wave_qtag     = {4, {2, 3, 7, 6},                                           {0}, {0}, {0}, FALSE, chk_wave};           /* check for wave across the center */
+static restriction_thing wave_qtag     = {4, {6, 7, 3, 2},                                           {0}, {0}, {0}, TRUE,  chk_wave};           /* check for wave across the center */
 static restriction_thing two_faced_qtag= {4, {6, 2, 7, 3},                                           {0}, {0}, {0}, FALSE, chk_wave};           /* check for two-faced line across the center */
 
 static restriction_thing qtag_1        = {4, {8, 0, 1, 2, 3, 4, 5, 6, 7}, {0},                {2, 4, 5}, {2, 0, 1}, FALSE, chk_dmd_qtag};
@@ -441,6 +441,11 @@ static restr_initializer *restr_hash_table[NUM_RESTR_HASH_BUCKETS];
 extern void initialize_restr_tables(void)
 {
    restr_initializer *tabp;
+   int i;
+
+   for (i=0 ; i<NUM_RESTR_HASH_BUCKETS ; i++)
+      restr_hash_table[i] = (restr_initializer *) 0;
+
    for (tabp = restr_init_table ; tabp->k != nothing ; tabp++) {
       uint32 hash_num = ((tabp->k + (5*tabp->restr)) * 25) & (NUM_RESTR_HASH_BUCKETS-1);
       tabp->next = restr_hash_table[hash_num];
@@ -2070,7 +2075,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
       assumption_thing tt;
       int idx, limit, j;
       uint32 qa0, qa1;
-      uint32 qaa[2];
+      uint32 qaa[4];
       restriction_thing *rr;
 
       /* First, we demand that the starting setup be correct.  Also, if a qualifier
@@ -2121,10 +2126,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
       switch ((search_qualifier) p->qualifier) {
          case sq_wave_only:                    /* 1x4 or 2x4 - waves; 3x2 or 4x2 - magic columns; 2x2 - real RH or LH box */
             switch (ss->cmd.cmd_assume.assumption) {
-               case cr_1fl_only:
-               case cr_2fl_only:
-               case cr_magic_only:
-                  goto bad;
+               case cr_1fl_only: case cr_2fl_only: case cr_magic_only: goto bad;
             }
 
             tt.assumption = cr_wave_only;
@@ -2133,7 +2135,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
                case s1x2: case s1x3: case s1x4: case s1x6: case s1x8: case s1x10:
                case s1x12: case s1x14: case s1x16:
                case s2x3: case s2x4: case s2x6: case s2x8: case s3x4:
-               case s2x2: case s4x4: case s_thar:
+               case s2x2: case s4x4: case s_thar: case s_qtag:
                   goto check_tt;
                default:
                   goto good;                 /* We don't understand the setup -- we'd better accept it. */
@@ -2311,215 +2313,99 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
                   goto good;                 /* We don't understand the setup -- we'd better accept it. */
             }
          case sq_rwave_only:
-            if (ss->kind == s1x2) {
-               if ((!(t = ss->people[0].id1 & d_mask) || t == d_north) &&
-                   (!(t = ss->people[1].id1 & d_mask) || t == d_south))
-               goto good;
-               goto bad;
+            switch (ss->cmd.cmd_assume.assumption) {
+               case cr_1fl_only: case cr_2fl_only: case cr_magic_only: goto bad;
             }
-            else if (ss->kind == s1x4) {
-               if ((!(t = ss->people[0].id1 & d_mask) || t == d_north) &&
-                   (!(t = ss->people[1].id1 & d_mask) || t == d_south) &&
-                   (!(t = ss->people[3].id1 & d_mask) || t == d_north) &&
-                   (!(t = ss->people[2].id1 & d_mask) || t == d_south))
-               goto good;
-               goto bad;
+
+            switch (ss->kind) {
+               case s1x2: case s1x4: case s1x6: case s1x8: case s1x10:
+               case s1x12: case s1x14: case s1x16:
+               case s2x2: case s4x4: case s_thar: case s_qtag:
+                  tt.assump_both = 1;   /* To get right-hand only. */
+                  tt.assumption = cr_wave_only;
+                  goto check_tt;
+               case s2x4:
+                  if ((!(t = ss->people[0].id1 & d_mask) || t == d_north) &&
+                      (!(t = ss->people[1].id1 & d_mask) || t == d_south) &&
+                      (!(t = ss->people[2].id1 & d_mask) || t == d_north) &&
+                      (!(t = ss->people[3].id1 & d_mask) || t == d_south) &&
+                      (!(t = ss->people[4].id1 & d_mask) || t == d_south) &&
+                      (!(t = ss->people[5].id1 & d_mask) || t == d_north) &&
+                      (!(t = ss->people[6].id1 & d_mask) || t == d_south) &&
+                      (!(t = ss->people[7].id1 & d_mask) || t == d_north))
+                  goto good;
+                  if ((!(t = ss->people[0].id1 & d_mask) || t == d_east) &&
+                      (!(t = ss->people[1].id1 & d_mask) || t == d_east) &&
+                      (!(t = ss->people[2].id1 & d_mask) || t == d_east) &&
+                      (!(t = ss->people[3].id1 & d_mask) || t == d_east) &&
+                      (!(t = ss->people[4].id1 & d_mask) || t == d_west) &&
+                      (!(t = ss->people[5].id1 & d_mask) || t == d_west) &&
+                      (!(t = ss->people[6].id1 & d_mask) || t == d_west) &&
+                      (!(t = ss->people[7].id1 & d_mask) || t == d_west))
+                  goto good;
+                  goto bad;
+               case sdmd:
+/* Need assump_col = 1 and map that looks like    {2, {1, 3},    {0}, {0}, {0}, TRUE,  chk_wave};  */
+                  if ((!(t = ss->people[1].id1 & d_mask) || t == d_east) &&
+                      (!(t = ss->people[3].id1 & d_mask) || t == d_west))
+                  goto good;
+                  goto bad;
+               case s_trngl:
+/* Need map that looks like    {2, {1, 2},    {0}, {0}, {0}, TRUE,  chk_wave};  */
+                  if ((!(t = ss->people[1].id1 & d_mask) || t == d_north) &&
+                      (!(t = ss->people[2].id1 & d_mask) || t == d_south))
+                  goto good;
+                  goto bad;
+               default:
+                  goto good;                 /* We don't understand the setup -- we'd better accept it. */
             }
-            else if (ss->kind == s1x6) {
-               if ((!(t = ss->people[0].id1 & d_mask) || t == d_north) &&
-                   (!(t = ss->people[1].id1 & d_mask) || t == d_south) &&
-                   (!(t = ss->people[2].id1 & d_mask) || t == d_north) &&
-                   (!(t = ss->people[5].id1 & d_mask) || t == d_south) &&
-                   (!(t = ss->people[4].id1 & d_mask) || t == d_north) &&
-                   (!(t = ss->people[3].id1 & d_mask) || t == d_south))
-               goto good;
-               goto bad;
-            }
-            else if (ss->kind == s1x8) {
-               if ((!(t = ss->people[0].id1 & d_mask) || t == d_north) &&
-                   (!(t = ss->people[1].id1 & d_mask) || t == d_south) &&
-                   (!(t = ss->people[3].id1 & d_mask) || t == d_north) &&
-                   (!(t = ss->people[2].id1 & d_mask) || t == d_south) &&
-                   (!(t = ss->people[6].id1 & d_mask) || t == d_north) &&
-                   (!(t = ss->people[7].id1 & d_mask) || t == d_south) &&
-                   (!(t = ss->people[5].id1 & d_mask) || t == d_north) &&
-                   (!(t = ss->people[4].id1 & d_mask) || t == d_south))
-               goto good;
-               goto bad;
-            }
-            else if (ss->kind == s_thar) {
-               if ((!(t = ss->people[0].id1 & d_mask) || t == d_north) &&
-                   (!(t = ss->people[1].id1 & d_mask) || t == d_south) &&
-                   (!(t = ss->people[3].id1 & d_mask) || t == d_west) &&
-                   (!(t = ss->people[2].id1 & d_mask) || t == d_east) &&
-                   (!(t = ss->people[6].id1 & d_mask) || t == d_west) &&
-                   (!(t = ss->people[7].id1 & d_mask) || t == d_east) &&
-                   (!(t = ss->people[5].id1 & d_mask) || t == d_north) &&
-                   (!(t = ss->people[4].id1 & d_mask) || t == d_south))
-               goto good;
-               goto bad;
-            }
-            else if (ss->kind == s2x4) {
-               if ((!(t = ss->people[0].id1 & d_mask) || t == d_north) &&
-                   (!(t = ss->people[1].id1 & d_mask) || t == d_south) &&
-                   (!(t = ss->people[2].id1 & d_mask) || t == d_north) &&
-                   (!(t = ss->people[3].id1 & d_mask) || t == d_south) &&
-                   (!(t = ss->people[4].id1 & d_mask) || t == d_south) &&
-                   (!(t = ss->people[5].id1 & d_mask) || t == d_north) &&
-                   (!(t = ss->people[6].id1 & d_mask) || t == d_south) &&
-                   (!(t = ss->people[7].id1 & d_mask) || t == d_north))
-               goto good;
-               if ((!(t = ss->people[0].id1 & d_mask) || t == d_east) &&
-                   (!(t = ss->people[1].id1 & d_mask) || t == d_east) &&
-                   (!(t = ss->people[2].id1 & d_mask) || t == d_east) &&
-                   (!(t = ss->people[3].id1 & d_mask) || t == d_east) &&
-                   (!(t = ss->people[4].id1 & d_mask) || t == d_west) &&
-                   (!(t = ss->people[5].id1 & d_mask) || t == d_west) &&
-                   (!(t = ss->people[6].id1 & d_mask) || t == d_west) &&
-                   (!(t = ss->people[7].id1 & d_mask) || t == d_west))
-               goto good;
-               goto bad;
-            }
-            else if (ss->kind == s2x2) {
-               if ((!(t = ss->people[0].id1 & d_mask) || t == d_north) &&
-                   (!(t = ss->people[1].id1 & d_mask) || t == d_south) &&
-                   (!(t = ss->people[2].id1 & d_mask) || t == d_south) &&
-                   (!(t = ss->people[3].id1 & d_mask) || t == d_north))
-               goto good;
-               if ((!(t = ss->people[0].id1 & d_mask) || t == d_east) &&
-                   (!(t = ss->people[1].id1 & d_mask) || t == d_east) &&
-                   (!(t = ss->people[2].id1 & d_mask) || t == d_west) &&
-                   (!(t = ss->people[3].id1 & d_mask) || t == d_west))
-               goto good;
-               goto bad;
-            }
-            else if (ss->kind == sdmd) {
-               if ((!(t = ss->people[1].id1 & d_mask) || t == d_east) &&
-                   (!(t = ss->people[3].id1 & d_mask) || t == d_west))
-               goto good;
-               goto bad;
-            }
-            else if (ss->kind == s_trngl) {
-               if ((!(t = ss->people[1].id1 & d_mask) || t == d_north) &&
-                   (!(t = ss->people[2].id1 & d_mask) || t == d_south))
-               goto good;
-               goto bad;
-            }
-            else if (ss->kind == s_qtag) {
-               if ((!(t = ss->people[2].id1 & d_mask) || t == d_south) &&
-                   (!(t = ss->people[3].id1 & d_mask) || t == d_north) &&
-                   (!(t = ss->people[6].id1 & d_mask) || t == d_north) &&
-                   (!(t = ss->people[7].id1 & d_mask) || t == d_south))
-               goto good;
-               goto bad;
-            }
-            else
-               goto good;                 /* We don't understand the setup -- we'd better accept it. */
          case sq_lwave_only:
-            if (ss->kind == s1x2) {
-               if ((!(t = ss->people[0].id1 & d_mask) || t == d_south) &&
-                   (!(t = ss->people[1].id1 & d_mask) || t == d_north))
-               goto good;
-               goto bad;
+            switch (ss->cmd.cmd_assume.assumption) {
+               case cr_1fl_only: case cr_2fl_only: case cr_magic_only: goto bad;
             }
-            else if (ss->kind == s1x4) {
-               if ((!(t = ss->people[0].id1 & d_mask) || t == d_south) &&
-                   (!(t = ss->people[1].id1 & d_mask) || t == d_north) &&
-                   (!(t = ss->people[3].id1 & d_mask) || t == d_south) &&
-                   (!(t = ss->people[2].id1 & d_mask) || t == d_north))
-               goto good;
-               goto bad;
+
+            switch (ss->kind) {
+               case s1x2: case s1x4: case s1x6: case s1x8: case s1x10:
+               case s1x12: case s1x14: case s1x16:
+               case s2x2: case s4x4: case s_thar: case s_qtag:
+                  tt.assump_both = 2;   /* To get left-hand only. */
+                  tt.assumption = cr_wave_only;
+                  goto check_tt;
+               case s2x4:
+                  if ((!(t = ss->people[0].id1 & d_mask) || t == d_south) &&
+                      (!(t = ss->people[1].id1 & d_mask) || t == d_north) &&
+                      (!(t = ss->people[2].id1 & d_mask) || t == d_south) &&
+                      (!(t = ss->people[3].id1 & d_mask) || t == d_north) &&
+                      (!(t = ss->people[4].id1 & d_mask) || t == d_north) &&
+                      (!(t = ss->people[5].id1 & d_mask) || t == d_south) &&
+                      (!(t = ss->people[6].id1 & d_mask) || t == d_north) &&
+                      (!(t = ss->people[7].id1 & d_mask) || t == d_south))
+                  goto good;
+                  if ((!(t = ss->people[0].id1 & d_mask) || t == d_west) &&
+                      (!(t = ss->people[1].id1 & d_mask) || t == d_west) &&
+                      (!(t = ss->people[2].id1 & d_mask) || t == d_west) &&
+                      (!(t = ss->people[3].id1 & d_mask) || t == d_west) &&
+                      (!(t = ss->people[4].id1 & d_mask) || t == d_east) &&
+                      (!(t = ss->people[5].id1 & d_mask) || t == d_east) &&
+                      (!(t = ss->people[6].id1 & d_mask) || t == d_east) &&
+                      (!(t = ss->people[7].id1 & d_mask) || t == d_east))
+                  goto good;
+                  goto bad;
+               case sdmd:
+/* Need assump_col = 1 and map that looks like    {2, {1, 3},    {0}, {0}, {0}, TRUE,  chk_wave};  */
+                  if ((!(t = ss->people[1].id1 & d_mask) || t == d_west) &&
+                      (!(t = ss->people[3].id1 & d_mask) || t == d_east))
+                  goto good;
+                  goto bad;
+               case s_trngl:
+/* Need map that looks like    {2, {1, 2},    {0}, {0}, {0}, TRUE,  chk_wave};  */
+                  if ((!(t = ss->people[1].id1 & d_mask) || t == d_south) &&
+                      (!(t = ss->people[2].id1 & d_mask) || t == d_north))
+                  goto good;
+                  goto bad;
+               default:
+                  goto good;                 /* We don't understand the setup -- we'd better accept it. */
             }
-            else if (ss->kind == s1x6) {
-               if ((!(t = ss->people[0].id1 & d_mask) || t == d_south) &&
-                   (!(t = ss->people[1].id1 & d_mask) || t == d_north) &&
-                   (!(t = ss->people[2].id1 & d_mask) || t == d_south) &&
-                   (!(t = ss->people[5].id1 & d_mask) || t == d_north) &&
-                   (!(t = ss->people[4].id1 & d_mask) || t == d_south) &&
-                   (!(t = ss->people[3].id1 & d_mask) || t == d_north))
-               goto good;
-               goto bad;
-            }
-            else if (ss->kind == s1x8) {
-               if ((!(t = ss->people[0].id1 & d_mask) || t == d_south) &&
-                   (!(t = ss->people[1].id1 & d_mask) || t == d_north) &&
-                   (!(t = ss->people[3].id1 & d_mask) || t == d_south) &&
-                   (!(t = ss->people[2].id1 & d_mask) || t == d_north) &&
-                   (!(t = ss->people[6].id1 & d_mask) || t == d_south) &&
-                   (!(t = ss->people[7].id1 & d_mask) || t == d_north) &&
-                   (!(t = ss->people[5].id1 & d_mask) || t == d_south) &&
-                   (!(t = ss->people[4].id1 & d_mask) || t == d_north))
-               goto good;
-               goto bad;
-            }
-            else if (ss->kind == s_thar) {
-               if ((!(t = ss->people[0].id1 & d_mask) || t == d_south) &&
-                   (!(t = ss->people[1].id1 & d_mask) || t == d_north) &&
-                   (!(t = ss->people[3].id1 & d_mask) || t == d_east) &&
-                   (!(t = ss->people[2].id1 & d_mask) || t == d_west) &&
-                   (!(t = ss->people[6].id1 & d_mask) || t == d_east) &&
-                   (!(t = ss->people[7].id1 & d_mask) || t == d_west) &&
-                   (!(t = ss->people[5].id1 & d_mask) || t == d_south) &&
-                   (!(t = ss->people[4].id1 & d_mask) || t == d_north))
-               goto good;
-               goto bad;
-            }
-            else if (ss->kind == s2x4) {
-               if ((!(t = ss->people[0].id1 & d_mask) || t == d_south) &&
-                   (!(t = ss->people[1].id1 & d_mask) || t == d_north) &&
-                   (!(t = ss->people[2].id1 & d_mask) || t == d_south) &&
-                   (!(t = ss->people[3].id1 & d_mask) || t == d_north) &&
-                   (!(t = ss->people[4].id1 & d_mask) || t == d_north) &&
-                   (!(t = ss->people[5].id1 & d_mask) || t == d_south) &&
-                   (!(t = ss->people[6].id1 & d_mask) || t == d_north) &&
-                   (!(t = ss->people[7].id1 & d_mask) || t == d_south))
-               goto good;
-               if ((!(t = ss->people[0].id1 & d_mask) || t == d_west) &&
-                   (!(t = ss->people[1].id1 & d_mask) || t == d_west) &&
-                   (!(t = ss->people[2].id1 & d_mask) || t == d_west) &&
-                   (!(t = ss->people[3].id1 & d_mask) || t == d_west) &&
-                   (!(t = ss->people[4].id1 & d_mask) || t == d_east) &&
-                   (!(t = ss->people[5].id1 & d_mask) || t == d_east) &&
-                   (!(t = ss->people[6].id1 & d_mask) || t == d_east) &&
-                   (!(t = ss->people[7].id1 & d_mask) || t == d_east))
-               goto good;
-               goto bad;
-            }
-            else if (ss->kind == s2x2) {
-               if ((!(t = ss->people[0].id1 & d_mask) || t == d_south) &&
-                   (!(t = ss->people[1].id1 & d_mask) || t == d_north) &&
-                   (!(t = ss->people[2].id1 & d_mask) || t == d_north) &&
-                   (!(t = ss->people[3].id1 & d_mask) || t == d_south))
-               goto good;
-               if ((!(t = ss->people[0].id1 & d_mask) || t == d_west) &&
-                   (!(t = ss->people[1].id1 & d_mask) || t == d_west) &&
-                   (!(t = ss->people[2].id1 & d_mask) || t == d_east) &&
-                   (!(t = ss->people[3].id1 & d_mask) || t == d_east))
-               goto good;
-               goto bad;
-            }
-            else if (ss->kind == sdmd) {
-               if ((!(t = ss->people[1].id1 & d_mask) || t == d_west) &&
-                   (!(t = ss->people[3].id1 & d_mask) || t == d_east))
-               goto good;
-               goto bad;
-            }
-            if (ss->kind == s_trngl) {
-               if ((!(t = ss->people[1].id1 & d_mask) || t == d_south) &&
-                   (!(t = ss->people[2].id1 & d_mask) || t == d_north))
-               goto good;
-               goto bad;
-            }
-            else if (ss->kind == s_qtag) {
-               if ((!(t = ss->people[2].id1 & d_mask) || t == d_north) &&
-                   (!(t = ss->people[3].id1 & d_mask) || t == d_south) &&
-                   (!(t = ss->people[6].id1 & d_mask) || t == d_south) &&
-                   (!(t = ss->people[7].id1 & d_mask) || t == d_north))
-               goto good;
-               goto bad;
-            }
-            else
-               goto good;                 /* We don't understand the setup -- we'd better accept it. */
          case sq_ctrwv_end2fl:
             /* Note that this qualifier is kind of strict.  We won't permit the call "with
                confidence" do be done unless everyone can trivially determine which
@@ -2796,6 +2682,24 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
             if (((qaa[0] | tt.assump_both) & (qaa[1] | (tt.assump_both << 1)) & 2) != 0)
                goto bad;
 
+            if (rr->ok_for_assume) {
+               qaa[0] = 0;
+               qaa[2] = 0;
+
+               for (idx=0; idx<rr->size; idx++)
+                  qaa[idx&2] |= ss->people[rr->map1[idx]].id1;
+
+               if ((tt.assump_col | rr->map2[0]) & 4) {
+                  qaa[2] >>= 3;
+               }
+               else if (tt.assump_col == 1) {
+                  qaa[0] >>= 3;
+                  qaa[2] >>= 3;
+               }
+
+               if ((qaa[0]|qaa[2]) & 1) goto bad;
+            }
+
             goto good;
          case chk_box:
             qa0 = 0; qa1 = 0;
@@ -2822,7 +2726,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
             else
                goto bad;
 
-            if (qa0 & qa1 & 2) goto bad;
+            if (((qa0 | tt.assump_both) & (qa1 | (tt.assump_both << 1)) & 2) != 0) goto bad;
 
             goto good;
          case chk_1_group:

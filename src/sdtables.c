@@ -71,6 +71,7 @@
    map_blocks
    map_trglbox
    map_1x10_1x6
+   map_rig_1x6
    map_hv_2x4_2
    map_3x4_2x3
    map_4x6_2x4
@@ -2514,8 +2515,9 @@ Private map_thing map_4dmd_dmd = {{0, 13, 11, 12,        1, 15, 10, 14,        2
 Private map_thing map_2x6_1x6           = {{11, 10, 9, 6, 7, 8,               0, 1, 2, 5, 4, 3},                     MPKIND__SPLIT,       2,  s2x6,   s1x6,      0x000, 1};
 Private map_thing map_2x8_1x8           = {{15, 14, 12, 13, 8, 9, 11, 10,     0, 1, 3, 2, 7, 6, 4, 5},               MPKIND__SPLIT,       2,  s2x8,   s1x8,      0x000, 1};
 Private map_thing map_1x12_1x6          = {{0, 1, 2, 5, 4, 3,                 11, 10, 9, 6, 7, 8},                   MPKIND__SPLIT,       2,  s1x12,  s1x6,      0x000, 0};
-/* Special map for putting back end-to-end 1x6's resulting from collisions at one end. */
-        map_thing map_1x10_1x6          = {{0, 1, 2, 9, 4, 3,                 4, 9, 8, 5, 6, 7},                     MPKIND__NONE,        2,  s1x10,  s1x6,      0x000, 0};
+/* Special maps for putting back end-to-end 1x6's, or 1x2 diamonds, resulting from collisions at one end. */
+        map_thing map_1x10_1x6          = {{0, 1, 3, -1, -1, 2,               -1, -1, 6, 4, 5, 7},                   MPKIND__NONE,        2,  s1x8,   s1x6,      0x000, 0};
+        map_thing map_rig_1x6           = {{6, 7, 0, -1, -1, 5,               -1, -1, 1, 2, 3, 4},                   MPKIND__NONE,        2,  s_rigger,s_1x2dmd,  0x000, 0};
 Private map_thing map_1x16_1x8          = {{0, 1, 3, 2, 7, 6, 4, 5,           15, 14, 12, 13, 8, 9, 11, 10},         MPKIND__SPLIT,       2,  s1x16,  s1x8,      0x000, 0};
 Private map_thing map_intlk_phan_grand  = {{0, 1, 3, 2, 12, 13, 15, 14,       4, 5, 7, 6, 8, 9, 11, 10},             MPKIND__INTLK,       2,  s1x16,  s1x8,      0x000, 0};
 Private map_thing map_conc_phan_grand   = {{0, 1, 3, 2, 8, 9, 11, 10,         4, 5, 7, 6, 12, 13, 15, 14},           MPKIND__CONCPHAN,    2,  s1x16,  s1x8,      0x000, 0};

@@ -351,6 +351,7 @@ static int s3dmftranslateh[12] = {9, 10, 11, 1, 0, 0, 3, 4, 5, 7, 0, 0};
 static int s3dmftranslatev[12] = {7, 0, 0, 9, 10, 11, 1, 0, 0, 3, 4, 5};
 static int s3dmntranslateh[12] = {9, 10, 11, 0, 1, 0, 3, 4, 5, 0, 7, 0};
 static int s3dmntranslatev[12] = {0, 7, 0, 9, 10, 11, 0, 1, 0, 3, 4, 5};
+static int s_vacate_star[12]   = {0, 1, 2, 0, 0, 3, 4, 5, 6, 0, 0, 7};
 
 
 
@@ -734,7 +735,7 @@ extern restriction_thing *check_restriction(setup *ss, assumption_thing restr, u
             for (idx=0; idx<restr_thing_ptr->size; idx++)
                qa0[idx&2] |= ss->people[restr_thing_ptr->map1[idx]].id1;
 
-            if (restr.assump_col & 4) {
+            if ((restr.assump_col | restr_thing_ptr->map2[0]) & 4) {
                qa0[2] >>= 3;
             }
             else if (restr.assump_col == 1) {
@@ -1190,7 +1191,7 @@ Private int divide_the_setup(
             return 2;        /* And try again. */
          }
 
-         /* Next, check whether it has 2x3/3x2/1x6/6x1 definitions, and divide the setup if so,
+         /* Next, check whether it has 1x3/3x1/2x3/3x2/1x6/6x1 definitions, and divide the setup if so,
             and if the call permits it.  This is important for permitting "Z axle" from
             a 2x6 but forbidding "circulate".  We also enable this if the caller explicitly
             said "2x6 matrix". */
@@ -1205,8 +1206,8 @@ Private int divide_the_setup(
                goto divide_us_no_recompute;
             }
             else if (
-                  (!(newtb & 010) || assoc(b_1x6, ss, calldeflist)) &&
-                  (!(newtb & 001) || assoc(b_6x1, ss, calldeflist))) {
+                  (!(newtb & 010) || assoc(b_1x3, ss, calldeflist) || assoc(b_1x6, ss, calldeflist)) &&
+                  (!(newtb & 001) || assoc(b_3x1, ss, calldeflist) || assoc(b_6x1, ss, calldeflist))) {
                division_maps = map_lists[s1x6][1]->f[MPKIND__SPLIT][1];
                /* See comment above about abomination. */
                if (!(callflags1 & CFLAG1_SPLIT_LARGE_SETUPS)) warn(warn__split_to_1x6s);  /* If database said to split, don't give warning. */
@@ -1331,12 +1332,6 @@ Private int divide_the_setup(
                goto divide_us_no_recompute;
             }
             else if (
-                  (!(newtb & 010) || assoc(b_2x3, ss, calldeflist)) &&
-                  (!(newtb & 001) || assoc(b_3x2, ss, calldeflist))) {
-               division_maps = map_lists[s3x4][1]->f[MPKIND__SPLIT][1];
-               goto divide_us_no_recompute;
-            }
-            else if (
                   (!(newtb & 010) || assoc(b_4x3, ss, calldeflist) || assoc(b_2x3, ss, calldeflist)) &&
                   (!(newtb & 001) || assoc(b_3x4, ss, calldeflist) || assoc(b_3x2, ss, calldeflist))) {
                division_maps = map_lists[s3x4][1]->f[MPKIND__SPLIT][1];
@@ -1436,7 +1431,7 @@ Private int divide_the_setup(
                      Otherwise, we look at the manner in which the setup is T-boned
                         in order to figure out how to divide the setup. */
 
-                  if (calldeflist->callarray_flags & CAF_LATERAL_TO_SELECTEES) {
+                  if (calldeflist->callarray_flags & CAF__LATERAL_TO_SELECTEES) {
                      uint32 selmask = 0;
 
                      for (i=0 ; i<4 ; i++) if (selectp(ss, i)) selmask |= ss->people[i].id1;
@@ -1483,7 +1478,7 @@ Private int divide_the_setup(
 
             /* If this is "run" and people aren't T-boned, just ignore the 2x1 definition. */
 
-            if (!(calldeflist->callarray_flags & CAF_LATERAL_TO_SELECTEES) && assoc(b_2x1, ss, calldeflist))
+            if (!(calldeflist->callarray_flags & CAF__LATERAL_TO_SELECTEES) && assoc(b_2x1, ss, calldeflist))
                elong |= (2 -  (newtb & 1));
 
             if (assoc(b_1x2, ss, calldeflist))
@@ -2005,6 +2000,11 @@ Private int divide_the_setup(
             division_maps = map_lists[s1x2][2]->f[MPKIND__SPLIT][0];
             goto divide_us_no_recompute;
          }
+         /* If it has 1x3 or 3x1 definitions, split it 2 ways. */
+         if (assoc(b_1x3, ss, calldeflist) || assoc(b_3x1, ss, calldeflist)) {
+            division_maps = map_lists[s1x3][1]->f[MPKIND__SPLIT][0];
+            goto divide_us_no_recompute;
+         }
          break;
       case s1x2:
          /* See if the call has a 1x1 definition, in which case split it and do each part. */
@@ -2111,7 +2111,7 @@ Private int divide_the_setup(
 
          /* If this is "run", always split it into boxes.  If they are T-boned, they will figure it out, we hope. */
 
-         if (calldeflist->callarray_flags & CAF_LATERAL_TO_SELECTEES)
+         if (calldeflist->callarray_flags & CAF__LATERAL_TO_SELECTEES)
             goto divide_us_no_recompute;
 
          /* See if this call has applicable 2x6 or 2x8 definitions and matrix expansion is permitted.
@@ -3055,6 +3055,7 @@ extern void basic_move(
    else {
       int lilresult_mask[2];
       setup_kind tempkind;
+      uint32 vacate = 0;
 
       result->rotation = goodies->callarray_flags & CAF__ROT;
 
@@ -3098,12 +3099,12 @@ extern void basic_move(
          special_3person(coldefinition, linedefinition, ss, newpersonlist, newplacelist, lilresult_mask, result);
       }
       else {
+         int numout;
+         int halfnumout;
          int *final_translatec = identity;
          int *final_translatel = identity;
          int rotfudge_line = 0;
          int rotfudge_col = 0;
-         int numout;
-         int halfnumout;
 
          numout = setup_attrs[result->kind].setup_limits+1;
          halfnumout = numout >> 1;
@@ -3123,6 +3124,7 @@ extern void basic_move(
                   result->kind = sx1x6;
                   tempkind = sx1x6;
                   final_translatec = ftcspn;
+                  vacate = linedefinition->callarray_flags & CAF__VACATE_CENTER;
 
                   if (goodies->callarray_flags & CAF__ROT) {
                      final_translatel = &ftlcwv[0];
@@ -3322,6 +3324,11 @@ extern void basic_move(
                result->kind = s3dmd;
                permuter = s3dmntranslatev;
                rotator = 1;
+            }
+            else if (vacate && (lilresult_mask[0] & 03030) == 0 && (lilresult_mask[0] & 00404) == 00404) {
+               /* Check for star in the middle that can be disambiguated by having someone vacate it. */
+               result->kind = s1x3dmd;
+               permuter = s_vacate_star;
             }
             else
                fail("Call went to improperly-formed setup.");

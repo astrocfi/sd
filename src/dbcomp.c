@@ -701,6 +701,8 @@ char *matrixcallflagtab[] = {
    "must_face_same_way",
    "find_jaywalkers",
    "both_selected_ok",
+   "find_squeezers",
+   "find_spreaders",
    ""};
 
 /* BEWARE!!  This list must track the array "pred_table" in sdpreds.c . */
@@ -1509,6 +1511,9 @@ def2:
       else if (!strcmp(tok_str, "no_cutting_through")) {
          callarray_flags1 |= CAF__NO_CUTTING_THROUGH;
       }
+      else if (!strcmp(tok_str, "vacate_center")) {
+         callarray_flags1 |= CAF__VACATE_CENTER;
+      }
       else if ((!(callarray_flags1 & CAF__CONCEND)) && (!strcmp(tok_str, "concendsetup"))) {
          if (call_endsetup != (int)s_normal_concentric)
             errexit("concendsetup with wrong end_setup");
@@ -1583,7 +1588,7 @@ def2:
          if (tok_kind != tok_symbol) errexit("Missing indicator");
       }
       else if (!strcmp(tok_str, "lateral_to_selectees")) {
-         callarray_flags1 = CAF_LATERAL_TO_SELECTEES;
+         callarray_flags1 = CAF__LATERAL_TO_SELECTEES;
          get_tok();
          if (tok_kind != tok_symbol) errexit("Missing indicator");
       }
@@ -1702,7 +1707,7 @@ extern void dbcompile(void)
             if (tok_kind != tok_symbol) errexit("Missing indicator");
          }
          else if (!strcmp(tok_str, "lateral_to_selectees")) {
-            funnyflag = CAF_LATERAL_TO_SELECTEES;
+            funnyflag = CAF__LATERAL_TO_SELECTEES;
             get_tok();
             if (tok_kind != tok_symbol) errexit("Missing indicator");
          }

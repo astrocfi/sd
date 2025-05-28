@@ -218,11 +218,10 @@ extern long_boolean selectp(setup *ss, int place)
 
 static Const long int iden_tab[8] = {0, 1, 2, 3, 4, 5, 6, 7};
 
-static Const long int boystuff_no_rh[2]  = {0, 0};
-static Const long int girlstuff_no_rh[2] = {1, 0};
-static Const long int boystuff_rh[2]     = {0, 1};
-static Const long int girlstuff_rh[2]    = {1, 1};
-static Const uint32 sexbits[2]    = {ID1_PERM_BOY, ID1_PERM_GIRL};
+static Const long int boystuff_no_rh[3]  = {ID1_PERM_BOY,  ID1_PERM_GIRL, 0};
+static Const long int girlstuff_no_rh[3] = {ID1_PERM_GIRL, ID1_PERM_BOY,  0};
+static Const long int boystuff_rh[3]     = {ID1_PERM_BOY,  ID1_PERM_GIRL, 1};
+static Const long int girlstuff_rh[3]    = {ID1_PERM_GIRL, ID1_PERM_BOY,  1};
 
 
 /* Here are the predicates.  They will get put into the array "pred_table". */
@@ -1192,54 +1191,61 @@ Private long_boolean socker_is_left_1x3(setup *real_people, int real_index,
 }
 
 
-static Const long int inroll_directions[24] =           {012, 012, 012, 012, 010, 010, 010, 010,
-                                                               3,  3,  3,  3,  7,  7,  7,  7,
-                                                               0,  0,  0,  0,  4,  4,  4,  4};
+static Const veryshort inroll_directions[24] = {
+   012, 012, 012, 012, 010, 010, 010, 010,
+      3,  3,  3,  3,  7,  7,  7,  7,
+      0,  0,  0,  0,  4,  4,  4,  4};
+ 
+static Const veryshort magic_inroll_directions[24] = {
+   012, 010, 010, 012, 010, 012, 012, 010,
+      3,  7,  7,  3,  7,  3,  3,  7,
+      0,  4,  4,  0,  4,  0,  0,  4};
+ 
+static Const veryshort inroll_directions_2x3[18] = {
+   012, 012, 012, 010, 010, 010,
+      2,  2,  2,  5,  5,  5,
+      0,  0,  0,  3,  3,  3};
+ 
+static Const veryshort magic_inroll_directions_2x3[18] = {
+   012, 010, 012, 010, 012, 010,
+      2,  5,  2,  5,  2,  5,
+      0,  3,  0,  3,  0,  3};
+ 
+static Const veryshort inroll_directions_2x6[36] = {
+   012, 012, 012, 012, 012, 012, 010, 010, 010, 010, 010, 010,
+      5,  5,  5,  5,  5,  5, 11, 11, 11, 11, 11, 11,
+      0,  0,  0,  0,  0,  0,  6,  6,  6,  6,  6,  6};
+ 
+static Const veryshort inroll_directions_2x8[48] = {
+   012, 012, 012, 012, 012, 012, 012, 012, 010, 010, 010, 010, 010, 010, 010, 010,
+      7,  7,  7,  7,  7,  7,  7,  7, 15, 15, 15, 15, 15, 15, 15, 15,
+      0,  0,  0,  0,  0,  0,  0,  0,  8,  8,  8,  8,  8,  8,  8,  8};
 
-static Const long int magic_inroll_directions[24] =     {012, 010, 010, 012, 010, 012, 012, 010,
-                                                               3,  7,  7,  3,  7,  3,  3,  7,
-                                                               0,  4,  4,  0,  4,  0,  0,  4};
-
-static Const long int inroll_directions_2x3[18] =       {012, 012, 012, 010, 010, 010,
-                                                               2,  2,  2,  5,  5,  5,
-                                                               0,  0,  0,  3,  3,  3};
-
-static Const long int magic_inroll_directions_2x3[18] = {012, 010, 012, 010, 012, 010,
-                                                               2,  5,  2,  5,  2,  5,
-                                                               0,  3,  0,  3,  0,  3};
-
-static Const long int inroll_directions_2x6[36] =      {012, 012, 012, 012, 012, 012, 010, 010, 010, 010, 010, 010,
-                                                               5,  5,  5,  5,  5,  5, 11, 11, 11, 11, 11, 11,
-                                                               0,  0,  0,  0,  0,  0,  6,  6,  6,  6,  6,  6};
-
-static Const long int inroll_directions_2x8[48] =      {012, 012, 012, 012, 012, 012, 012, 012, 010, 010, 010, 010, 010, 010, 010, 010,
-                                                               7,  7,  7,  7,  7,  7,  7,  7, 15, 15, 15, 15, 15, 15, 15, 15,
-                                                               0,  0,  0,  0,  0,  0,  0,  0,  8,  8,  8,  8,  8,  8,  8,  8};
+typedef enum {
+   ira__no_wave,
+   ira__sixes,
+   ira__eights,
+   ira__gen
+} inroll_assume_test;
 
 typedef struct {
-   Const long int *directions;
+   Const veryshort *directions;
    Const long int code;
-   Const long_boolean no_wave;
-   Const long_boolean sixes;
-   Const long_boolean eights;
-   Const long_boolean nzzz;
-   Const long_boolean zzzz;
+   Const inroll_assume_test ira;
 } inroll_action;
 
-static Const inroll_action inroller_cw            = {inroll_directions,           0, FALSE, FALSE, FALSE, TRUE,  FALSE};
-static Const inroll_action outroller_cw           = {inroll_directions,           1, FALSE, FALSE, FALSE, FALSE, TRUE};
-static Const inroll_action inroller_cw_2x3        = {inroll_directions_2x3,       0, TRUE,  FALSE, FALSE, FALSE, FALSE};
-static Const inroll_action outroller_cw_2x3       = {inroll_directions_2x3,       1, TRUE,  FALSE, FALSE, FALSE, FALSE};
-static Const inroll_action magic_inroller_cw_2x3  = {magic_inroll_directions_2x3, 2, TRUE,  FALSE, FALSE, FALSE, FALSE};
-static Const inroll_action magic_outroller_cw_2x3 = {magic_inroll_directions_2x3, 3, TRUE,  FALSE, FALSE, FALSE, FALSE};
-static Const inroll_action inroller_2x6           = {inroll_directions_2x6,       0, FALSE, TRUE,  FALSE, FALSE, FALSE};
-static Const inroll_action outroller_2x6          = {inroll_directions_2x6,       1, FALSE, TRUE,  FALSE, FALSE, FALSE};
-static Const inroll_action inroller_2x8           = {inroll_directions_2x8,       0, FALSE, FALSE, TRUE,  FALSE, FALSE};
-static Const inroll_action outroller_2x8          = {inroll_directions_2x8,       1, FALSE, FALSE, TRUE,  FALSE, FALSE};
-static Const inroll_action magic_inroller_cw      = {magic_inroll_directions,     2, FALSE, FALSE, FALSE, TRUE,  FALSE};
-static Const inroll_action magic_outroller_cw     = {magic_inroll_directions,     3, FALSE, FALSE, FALSE, FALSE, TRUE};
-
-
+static Const inroll_action inroller_cw            = {inroll_directions,           0, ira__gen};
+static Const inroll_action outroller_cw           = {inroll_directions,           1, ira__gen};
+static Const inroll_action magic_inroller_cw      = {magic_inroll_directions,     2, ira__gen};
+static Const inroll_action magic_outroller_cw     = {magic_inroll_directions,     3, ira__gen};
+static Const inroll_action inroller_cw_2x3        = {inroll_directions_2x3,       0, ira__no_wave};
+static Const inroll_action outroller_cw_2x3       = {inroll_directions_2x3,       1, ira__no_wave};
+static Const inroll_action magic_inroller_cw_2x3  = {magic_inroll_directions_2x3, 2, ira__no_wave};
+static Const inroll_action magic_outroller_cw_2x3 = {magic_inroll_directions_2x3, 3, ira__no_wave};
+static Const inroll_action inroller_2x6           = {inroll_directions_2x6,       0, ira__sixes};
+static Const inroll_action outroller_2x6          = {inroll_directions_2x6,       1, ira__sixes};
+static Const inroll_action inroller_2x8           = {inroll_directions_2x8,       0, ira__eights};
+static Const inroll_action outroller_2x8          = {inroll_directions_2x8,       1, ira__eights};
 
 
 
@@ -1250,7 +1256,7 @@ Private long_boolean in_out_roll_select(setup *real_people, int real_index,
    /* "Yes_roll_direction" is the facing direction that constitutes what we are
       looking for (inroller or outroller as the case may be). */
 
-   Const long int *directions;
+   Const veryshort *directions;
    Const inroll_action *thing;
    int yes_roll_direction, no_roll_direction;
    int cw_end, ccw_end;
@@ -1262,29 +1268,25 @@ Private long_boolean in_out_roll_select(setup *real_people, int real_index,
    directions = thing->directions;
    code = thing->code;
 
-   if (thing->no_wave) {
-      if (real_people->cmd.cmd_assume.assumption == cr_wave_only)
-         fail("Not legal.");
-   }
-   else if (thing->sixes) {
-      if (real_people->cmd.cmd_assume.assumption == cr_wave_only)
-         return ((northified_index ^ (northified_index / 6) ^ code) & 1) == 0;
-   }
-   else if (thing->eights) {
-      if (real_people->cmd.cmd_assume.assumption == cr_wave_only)
-         return ((northified_index ^ (northified_index >> 3) ^ code) & 1) == 0;
-   }
-   else if (thing->nzzz) {
-      if (real_people->cmd.cmd_assume.assumption == cr_wave_only)
-         return ((northified_index ^ (northified_index >> 2) ^ code) & 1) == 0;
-      if (real_people->cmd.cmd_assume.assumption == cr_2fl_only)
-         return ((northified_index ^ (northified_index >> 1)) & 2) == 0;
-   }
-   else if (thing->zzzz) {
-      if (real_people->cmd.cmd_assume.assumption == cr_wave_only)
-         return ((northified_index ^ (northified_index >> 2) ^ code) & 1) == 0;
-      if (real_people->cmd.cmd_assume.assumption == cr_2fl_only)
-         return ((northified_index ^ (northified_index >> 1)) & 2) != 0;
+   switch (thing->ira) {
+      case ira__no_wave:
+         if (real_people->cmd.cmd_assume.assumption == cr_wave_only)
+            fail("Not legal.");
+         break;
+      case ira__sixes:
+         if (real_people->cmd.cmd_assume.assumption == cr_wave_only)
+            return ((northified_index ^ (northified_index / 6) ^ code) & 1) == 0;
+         break;
+      case ira__eights:
+         if (real_people->cmd.cmd_assume.assumption == cr_wave_only)
+            return ((northified_index ^ (northified_index >> 3) ^ code) & 1) == 0;
+         break;
+      case ira__gen:
+         if (real_people->cmd.cmd_assume.assumption == cr_wave_only)
+            return ((northified_index ^ (northified_index >> 2) ^ code) & 1) == 0;
+         if (real_people->cmd.cmd_assume.assumption == cr_2fl_only)
+            return (((northified_index >> 1) ^ (northified_index >> 2) ^ code) & 1) == 0;
+         break;
    }
 
    yes_roll_direction = directions[real_index];
@@ -1408,16 +1410,16 @@ Private long_boolean check_tbone(setup *real_people, int real_index,
    /* NOTREACHED */
 }
 
-static Const long int trnglspot_tboned_tab[12] = {-3, 2, -3, 1,     -2, -2, 0, 0,    -2, 0, 0, -2};
-static Const long int six2spot_tboned_tab[24]  = {-2, -2, -2, -2,    -3, 2, -3, 0,    -2, -2, -2, -2,    -2, -2, -2, -2,    -3, 3, -3, 5,    -2, -2, -2, -2};
-static Const long int mag62spot_tboned_tab[24] = {-3, -2, -3, -2,    -3, 3, -3, 5,     -3, -2, -3, -2,     -3, -2, -3, -2,     -3, 2, -3, 0,     -3, -2, -3, -2};
+static Const long int trnglspot_tboned_tab[12] = {-3,  2, -3,  1,    -2, -2,  0, 0,    -2,  0,  0, -2};
+static Const long int six2spot_tboned_tab[24]  = {-2, -2, -2, -2,    -3,  2, -3, 0,    -2, -2, -2, -2,    -2, -2, -2, -2,    -3, 3, -3, 5,    -2, -2, -2, -2};
+static Const long int mag62spot_tboned_tab[24] = {-3, -2, -3, -2,    -3,  3, -3, 5,    -3, -2, -3, -2,    -3, -2, -3, -2,    -3, 2, -3, 0,    -3, -2, -3, -2};
 
 /* ARGSUSED */
 Private long_boolean nextinttrnglspot_is_tboned(setup *real_people, int real_index,
    int real_direction, int northified_index, Const long int *extra_stuff)
 {
-   static long int bb[24] = {-2, -2, 4, 4,     -3, 3, -3, 5,     -2, 4, 4, -2,     1, 1, -2, -2,     -3, 2, -3, 0,     1, -2, -2, 1};
-   static long int cc[24] = {2, 2, -2, -2,      5, -2, -2, 5,    0, -3, 4, -3,     -2, -2, 5, 5,     -2, 2, 2, -2,     1, -3, 3, -3};
+   static Const long int bb[24] = {-2, -2, 4, 4,     -3, 3, -3, 5,     -2, 4, 4, -2,     1, 1, -2, -2,     -3, 2, -3, 0,     1, -2, -2, 1};
+   static Const long int cc[24] = {2, 2, -2, -2,      5, -2, -2, 5,    0, -3, 4, -3,     -2, -2, 5, 5,     -2, 2, 2, -2,     1, -3, 3, -3};
 
    return check_tbone(real_people, real_index, real_direction, northified_index,
          (real_people->kind == s_short6) ? bb : cc);
@@ -1427,7 +1429,7 @@ Private long_boolean nextinttrnglspot_is_tboned(setup *real_people, int real_ind
 Private long_boolean next_galaxyspot_is_tboned(setup *real_people, int real_index,
    int real_direction, int northified_index, Const long int *extra_stuff)
 {
-   static long int aa[32] = {1, -3, 7, -3,     2, 2, 0, 0,     -3, 3, -3, 1,     2, 4, 4, 2,    3, -3, 5, -3,     4, 4, 6, 6,    -3, 5, -3, 7,      0, 6, 6, 0};
+   static Const long int aa[32] = {1, -3, 7, -3,     2, 2, 0, 0,     -3, 3, -3, 1,     2, 4, 4, 2,    3, -3, 5, -3,     4, 4, 6, 6,    -3, 5, -3, 7,      0, 6, 6, 0};
 
    /* We always return true for centers.  That way
       the centers can reverse flip a galaxy even if the
@@ -1457,10 +1459,10 @@ Private long_boolean boygirlp(setup *real_people, int real_index,
    int real_direction, int northified_index, Const long int *extra_stuff)
 {
    /* If this is a slide thru from a miniwave that is not right-handed, raise a warning. */
-   if (extra_stuff[1] && northified_index != 0)
+   if (extra_stuff[2] && northified_index != 0)
       warn(warn__tasteless_slide_thru);
 
-   return((real_people->people[real_index].id1 & sexbits[extra_stuff[0]]) != 0);
+   return((real_people->people[real_index].id1 & extra_stuff[0]) != 0);
 }
 
 /* ARGSUSED */
@@ -1478,104 +1480,33 @@ Private long_boolean roll_is_ccw(setup *real_people, int real_index,
 }
 
 /* ARGSUSED */
-Private long_boolean x12_boy_facing_girl(setup *real_people, int real_index,
+Private long_boolean x12_facing_other_sex(setup *real_people, int real_index,
    int real_direction, int northified_index, Const long int *extra_stuff)
 {
    int this_person = real_people->people[real_index].id1;
    int other_person = real_people->people[real_index ^ 1].id1;
-   return((this_person & ID1_PERM_BOY) && (other_person & ID1_PERM_GIRL));
+   return((this_person & extra_stuff[0]) && (other_person & extra_stuff[1]));
 }
 
 /* ARGSUSED */
-Private long_boolean x12_girl_facing_boy(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff)
-{
-   int this_person = real_people->people[real_index].id1;
-   int other_person = real_people->people[real_index ^ 1].id1;
-   return((this_person & ID1_PERM_GIRL) && (other_person & ID1_PERM_BOY));
-}
-
-/* ARGSUSED */
-Private long_boolean x22_boy_facing_girl(setup *real_people, int real_index,
+Private long_boolean x22_facing_other_sex(setup *real_people, int real_index,
    int real_direction, int northified_index, Const long int *extra_stuff)
 {
    int this_person = real_people->people[real_index].id1;
    int other_person = real_people->people[real_index ^ (((real_direction << 1) & 2) ^ 3)].id1;
-   return((this_person & ID1_PERM_BOY) && (other_person & ID1_PERM_GIRL));
+   return((this_person & extra_stuff[0]) && (other_person & extra_stuff[1]));
 }
 
-/* ARGSUSED */
-Private long_boolean x22_girl_facing_boy(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff)
-{
-   int other_person = real_people->people[real_index ^ (((real_direction << 1) & 2) ^ 3)].id1;
-   int this_person = real_people->people[real_index].id1;
-   return((this_person & ID1_PERM_GIRL) && (other_person & ID1_PERM_BOY));
-}
-
-/* ARGSUSED */
-Private long_boolean leftp(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff)
-{
-   return current_options.where == direction_left;
-}
-
-/* ARGSUSED */
-Private long_boolean rightp(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff)
-{
-   return current_options.where == direction_right;
-}
-
-/* ARGSUSED */
-Private long_boolean inp(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff)
-{
-   return current_options.where == direction_in;
-}
-
-/* ARGSUSED */
-Private long_boolean outp(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff)
-{
-   return current_options.where == direction_out;
-}
 
 
 /* ARGSUSED */
-Private long_boolean zigzagp(setup *real_people, int real_index,
+Private long_boolean directionp(setup *real_people, int real_index,
    int real_direction, int northified_index, Const long int *extra_stuff)
 {
-   return current_options.where == direction_zigzag;
+   return current_options.where == (uint32) extra_stuff;
 }
 
-/* ARGSUSED */
-Private long_boolean zagzigp(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff)
-{
-   return current_options.where == direction_zagzig;
-}
 
-/* ARGSUSED */
-Private long_boolean zigzigp(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff)
-{
-   return current_options.where == direction_zigzig;
-}
-
-/* ARGSUSED */
-Private long_boolean zagzagp(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff)
-{
-   return current_options.where == direction_zagzag;
-}
-
-/* ARGSUSED */
-Private long_boolean no_dir_p(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff)
-{
-   return current_options.where == direction_no_direction;
-}
 
 /* ARGSUSED */
 Private long_boolean dmd_ctrs_rh(setup *real_people, int real_index,
@@ -1615,9 +1546,9 @@ Private long_boolean dmd_ctrs_rh(setup *real_people, int real_index,
 Private long_boolean trngl_pt_rh(setup *real_people, int real_index,
    int real_direction, int northified_index, Const long int *extra_stuff)
 {
-   if ((real_people->people[0].id1 & d_mask)==d_west)
+   if ((real_people->people[0].id1 & d_mask) == d_west)
       return TRUE;
-   else if ((real_people->people[0].id1 & d_mask)==d_east)
+   else if ((real_people->people[0].id1 & d_mask) == d_east)
       return FALSE;
 
    fail("Can't determine handedness of triangle point.");
@@ -1824,19 +1755,19 @@ predicate_descriptor pred_table[] = {
       {boygirlp,                       girlstuff_rh},            /* "girlp_rh_slide_thru" */
       {roll_is_cw,                   (Const long int *) 0},      /* "roll_is_cw" */
       {roll_is_ccw,                  (Const long int *) 0},      /* "roll_is_ccw" */
-      {x12_boy_facing_girl,          (Const long int *) 0},      /* "x12_boy_facing_girl" */
-      {x12_girl_facing_boy,          (Const long int *) 0},      /* "x12_girl_facing_boy" */
-      {x22_boy_facing_girl,          (Const long int *) 0},      /* "x22_boy_facing_girl" */
-      {x22_girl_facing_boy,          (Const long int *) 0},      /* "x22_girl_facing_boy" */
-      {leftp,                        (Const long int *) 0},      /* "leftp" */
-      {rightp,                       (Const long int *) 0},      /* "rightp" */
-      {inp,                          (Const long int *) 0},      /* "inp" */
-      {outp,                         (Const long int *) 0},      /* "outp" */
-      {zigzagp,                      (Const long int *) 0},      /* "zigzagp" */
-      {zagzigp,                      (Const long int *) 0},      /* "zagzigp" */
-      {zigzigp,                      (Const long int *) 0},      /* "zigzigp" */
-      {zagzagp,                      (Const long int *) 0},      /* "zagzagp" */
-      {no_dir_p,                     (Const long int *) 0},      /* "no_dir_p" */
+      {x12_facing_other_sex,          boystuff_no_rh},           /* "x12_boy_facing_girl" */
+      {x12_facing_other_sex,         girlstuff_no_rh},           /* "x12_girl_facing_boy" */
+      {x22_facing_other_sex,          boystuff_no_rh},           /* "x22_boy_facing_girl" */
+      {x22_facing_other_sex,         girlstuff_no_rh},           /* "x22_girl_facing_boy" */
+      {directionp,   (Const long int *) direction_left},         /* "leftp" */
+      {directionp,   (Const long int *) direction_right},        /* "rightp" */
+      {directionp,   (Const long int *) direction_in},           /* "inp" */
+      {directionp,   (Const long int *) direction_out},          /* "outp" */
+      {directionp,   (Const long int *) direction_zigzag},       /* "zigzagp" */
+      {directionp,   (Const long int *) direction_zagzig},       /* "zagzigp" */
+      {directionp,   (Const long int *) direction_zigzig},       /* "zigzigp" */
+      {directionp,   (Const long int *) direction_zagzag},       /* "zagzagp" */
+      {directionp,   (Const long int *) direction_no_direction}, /* "no_dir_p" */
       {dmd_ctrs_rh,                    &iden_tab[0]},            /* "dmd_ctrs_rh" */
       {dmd_ctrs_rh,                    &iden_tab[1]},            /* "dmd_ctrs_lh" */
       {trngl_pt_rh,                  (Const long int *) 0},      /* "trngl_pt_rh" */

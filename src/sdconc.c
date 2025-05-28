@@ -1722,66 +1722,74 @@ typedef struct {
    Const calldef_schema conc_type;
    Const setup_kind innerk;
    Const setup_kind outerk;
-   Const int rot;
+   Const int irot;
+   Const int orot;
    Const veryshort innermap[8];
    Const veryshort outermap[8];
 } concmerge_thing;
 
-static concmerge_thing map_1618   = {schema_concentric_2_6, s1x6,        s1x2,    0, {0, 1, 3, 4, 5, 7}, {0, 1}};
-static concmerge_thing map_1418   = {schema_concentric,     s1x4,        s1x4,    0, {0, 1, 4, 5}, {0, 1, 2, 3}};
-static concmerge_thing map_123d   = {schema_concentric,     s2x3,        s1x2,    0, {0, 1, 2, 6, 7, 8}, {0, 1}};
-static concmerge_thing map_2218   = {schema_concentric,     s1x4,        s2x2,    0, {1, 3, 5, 7}, {0, 1, 2, 3}};
-static concmerge_thing map_2218p  = {schema_concentric,     s1x4,        s2x2,    0, {0, 3, 4, 7}, {0, 1, 2, 3}};
-static concmerge_thing map_18_d8  = {schema_concentric,     s1x2,        s1x6,    0, {0, 2}, {0, 1, 2, 4, 5, 6}};
-static concmerge_thing map_18_d2  = {schema_concentric,     s1x2,        s1x6,    0, {0, 2}, {0, 3, 2, 4, 7, 6}};
-static concmerge_thing map_18_d1  = {schema_concentric,     s1x2,        s1x6,    0, {0, 2}, {1, 3, 2, 5, 7, 6}};
-static concmerge_thing map_2218q  = {schema_concentric,     s1x4,        s2x2,    0, {0, 1, 4, 5}, {0, 1, 2, 3}};
-static concmerge_thing map_223x1  = {schema_concentric,     sdmd,        s2x2,    0, {0, 3, 4, 7}, {0, 1, 2, 3}};
-static concmerge_thing map_1424   = {schema_concentric,     s2x2,        s1x4,    0, {0, 3, 4, 7}, {0, 1, 2, 3}};
-static concmerge_thing map_qt24   = {schema_concentric,     s2x2,        s1x4,    0, {0, 3, 4, 7}, {6, 7, 2, 3}};
-static concmerge_thing map_hr24   = {schema_concentric,     s2x2,        sdmd,    0, {0, 3, 4, 7}, {6, 3, 2, 7}};
-static concmerge_thing map_s612   = {schema_concentric_2_6, s_short6,    s1x2,    1, {1, 2, 4, 5, 6, 0}, {0, 1}};
-static concmerge_thing map_13dspn = {schema_rev_checkpoint, s2x2,        sdmd,    0, {0, 2, 4, 6}, {0, 3, 4, 7}};
-static concmerge_thing map_13dptp = {schema_rev_checkpoint, s2x2,        sdmd,    0, {1, 7, 5, 3}, {0, 3, 4, 7}};
-static concmerge_thing map_14spn  = {schema_rev_checkpoint, s2x2,        s1x4,    0, {0, 2, 4, 6}, {0, 2, 4, 6}};
-static concmerge_thing map_24spn  = {schema_concentric,     s2x2,        sdmd,    0, {0, 3, 4, 7}, {7, 1, 3, 5}};
-static concmerge_thing map_spnspn = {schema_concentric,     s2x2,        sdmd,    0, {0, 2, 4, 6}, {7, 1, 3, 5}};
-static concmerge_thing map_24qtv  = {schema_concentric,     s2x2,        s1x4,    0, {0, 3, 4, 7}, {0, 2, 4, 6}};
-static concmerge_thing map_1418a  = {schema_nothing,        s1x8,        nothing, 0, {0}, {3, 2, 7, 6}};
-static concmerge_thing map_dm3dm  = {schema_nothing,        s3dmd,       nothing, 0, {0}, {5, 1, 11, 7}};
-static concmerge_thing map_2234b  = {schema_nothing,        s4x4,        nothing, 0, {0}, {15, 3, 7, 11}};
-static concmerge_thing map_3d1x4  = {schema_nothing,        s3x1dmd,     nothing, 0, {0}, {0, 3, 0, 7}};
-static concmerge_thing map_1x6t1x4= {schema_concentric,     s1x2,        s1x6,    0, {0, 2}, {0, 1, 2, 3, 4, 5}};
-static concmerge_thing map_2614   = {schema_nothing,        sbigdmd,     nothing, 0, {0}, {3, 2, 9, 8}};
-static concmerge_thing map_2624   = {schema_nothing,        s2x6,        nothing, 0, {0}, {1, 2, 3, 4, 7, 8, 9, 10}};
-static concmerge_thing map_26qt   = {schema_nothing,        sbigdmd,     nothing, 0, {0}, {8, 9, 0, 0, 2, 3, 0, 0}};
-static concmerge_thing map_13d_23 = {schema_nothing,        s_spindle,   nothing, 0, {0}, {0, 1, 2, 4, 5, 6}};
-static concmerge_thing map_gal22  = {schema_nothing,        s_galaxy,    nothing, 0, {0}, {1, 3, 5, 7}};
-static concmerge_thing map_18bn   = {schema_nothing,        s1x8,        nothing, 0, {0}, {0, 0, 7, 6, 0, 0, 3, 2}};
-static concmerge_thing map_34qt   = {schema_nothing,        s3x4,        nothing, 0, {0}, {1, 2, 4, 5, 7, 8, 10, 11}};
-static concmerge_thing map_bn14   = {schema_nothing,        s_bone,      nothing, 0, {0}, {6, 7, 2, 3}};
-static concmerge_thing map_31d12  = {schema_nothing,        s3x1dmd,     nothing, 0, {0}, {2, 6}};
-static concmerge_thing map_31d12r = {schema_nothing,        s_crosswave, nothing, 0, {0}, {3, 7}};
-static concmerge_thing map_31d14  = {schema_nothing,        s3x1dmd,     nothing, 0, {0}, {1, 2, 5, 6}};
-static concmerge_thing map_31d16  = {schema_nothing,        s3x1dmd,     nothing, 0, {0}, {0, 1, 2, 4, 5, 6}};
-static concmerge_thing map_3d12   = {schema_nothing,        s3dmd,       nothing, 0, {0}, {11, 5}};
-static concmerge_thing map_3d14   = {schema_nothing,        s3dmd,       nothing, 0, {0}, {10, 11, 4, 5}};
-static concmerge_thing map_3d16   = {schema_nothing,        s3dmd,       nothing, 0, {0}, {9, 10, 11, 3, 4, 5}};
-static concmerge_thing map_3d23   = {schema_concentric,     s2x3,        s2x3, 0, {0, 1, 2, 6, 7, 8}, {0, 1, 2, 3, 4, 5}};
-static concmerge_thing map_xw12h  = {schema_nothing,        s3x1dmd,     nothing, 0, {0}, {2, 6}};
-static concmerge_thing map_xw12v  = {schema_nothing,        s_crosswave, nothing, 0, {0}, {3, 7}};
-static concmerge_thing map_2418   = {schema_nothing,        s_ptpd,      nothing, 0, {0}, {0, 0, 2, 0, 0, 4, 6, 0}};
-static concmerge_thing map_13d14  = {schema_nothing,        s1x8,        nothing, 0, {0}, {3, 2, 7, 6}};
-static concmerge_thing map_12d14  = {schema_nothing,        s1x8,        nothing, 0, {0}, {3, 2, 7, 6}};
-static concmerge_thing map_31d18  = {schema_nothing,        s3x1dmd,     nothing, 0, {0}, {0, 0, 2, 0, 4, 0, 6, 0}};
-static concmerge_thing map_18_16  = {schema_nothing,        s1x8,        nothing, 0, {0}, {0, 0, 2, 4, 0, 6}};
-static concmerge_thing map_13d18  = {schema_nothing,        s1x3dmd,     nothing, 0, {0}, {0, 1, 0, 2, 0, 5, 0, 6}};
-static concmerge_thing map_pp18   = {schema_nothing,        s_ptpd,      nothing, 0, {0}, {0, 0, 2, 0, 4, 0, 6, 0}};
-static concmerge_thing map_13d12d = {schema_nothing,        s1x3dmd,     nothing, 0, {0}, {1, 2, 3, 5, 6, 7}};
-static concmerge_thing map_rig1x8 = {schema_nothing,        s_rigger,    nothing, 0, {0}, {6, 7, 0, 0, 2, 3, 0, 0}};
-static concmerge_thing map_14xw   = {schema_nothing,        s_crosswave, nothing, 0, {0}, {3, 2, 7, 6}};
-static concmerge_thing map_14qt   = {schema_nothing,        s_qtag,      nothing, 0, {0}, {6, 7, 2, 3}};
-static concmerge_thing map_1434   = {schema_nothing,        s3x4,        nothing, 0, {0}, {10, 11, 4, 5}};
+static concmerge_thing map_1618   = {schema_concentric_2_6, s1x2,        s1x6,     0, 0, {0, 1},                     {0, 1, 3, 4, 5, 7}};
+static concmerge_thing map_1418   = {schema_concentric,     s1x4,        s1x4,     0, 0, {0, 1, 2, 3},               {0, 1, 4, 5}};
+static concmerge_thing map_123d   = {schema_concentric,     s1x2,        s2x3,     0, 0, {0, 1},                     {0, 1, 2, 6, 7, 8}};
+static concmerge_thing map_2218   = {schema_concentric,     s2x2,        s1x4,     0, 0, {0, 1, 2, 3},               {1, 3, 5, 7}};
+static concmerge_thing map_2218p  = {schema_concentric,     s2x2,        s1x4,     0, 0, {0, 1, 2, 3},               {0, 3, 4, 7}};
+static concmerge_thing map_18_d8  = {schema_concentric,     s1x6,        s1x2,     0, 0, {0, 1, 2, 4, 5, 6},         {0, 2}};
+static concmerge_thing map_18_d2  = {schema_concentric,     s1x6,        s1x2,     0, 0, {0, 3, 2, 4, 7, 6},         {0, 2}};
+static concmerge_thing map_18_d1  = {schema_concentric,     s1x6,        s1x2,     0, 0, {1, 3, 2, 5, 7, 6},         {0, 2}};
+static concmerge_thing map_2218q  = {schema_concentric,     s2x2,        s1x4,     0, 0, {0, 1, 2, 3},               {0, 1, 4, 5}};
+static concmerge_thing map_223x1  = {schema_concentric,     s2x2,        sdmd,     0, 0, {0, 1, 2, 3},               {0, 3, 4, 7}};
+static concmerge_thing map_1424   = {schema_concentric,     s1x4,        s2x2,     0, 0, {0, 1, 2, 3},               {0, 3, 4, 7}};
+static concmerge_thing map_qt24   = {schema_concentric,     s1x4,        s2x2,     0, 0, {6, 7, 2, 3},               {0, 3, 4, 7}};
+static concmerge_thing map_hr24   = {schema_concentric,     sdmd,        s2x2,     0, 0, {6, 3, 2, 7},               {0, 3, 4, 7}};
+static concmerge_thing map_ptp22  = {schema_concentric,     s2x2,        s2x2,     0, 0, {0, 1, 2, 3},               {1, 7, 5, 3}};
+static concmerge_thing map_bn22   = {schema_concentric,     s2x2,        s2x2,     0, 0, {0, 1, 2, 3},               {0, 1, 4, 5}};
+static concmerge_thing map_qtqhgl = {schema_concentric,     s_short6,    s1x2,     1, 0, {1, 2, 4, 5, 6, 0},         {6, 2}};
+static concmerge_thing map_hglgalh= {schema_concentric,     s_bone6,     s1x2,     1, 0, {1, 4, 7, 5, 0, 3},         {0, 4}};
+static concmerge_thing map_hglgalv= {schema_concentric,     s_bone6,     s1x2,     1, 1, {1, 4, 7, 5, 0, 3},         {2, 6}};
+static concmerge_thing map_s612   = {schema_concentric_2_6, s1x2,        s_short6, 0, 1, {0, 1},                     {1, 2, 4, 5, 6, 0}};
+static concmerge_thing map_13dspn = {schema_rev_checkpoint, sdmd,        s2x2,     0, 0, {0, 3, 4, 7},               {0, 2, 4, 6}};
+static concmerge_thing map_13dptp = {schema_rev_checkpoint, sdmd,        s2x2,     0, 0, {0, 3, 4, 7},               {1, 7, 5, 3}};
+static concmerge_thing map_14spn  = {schema_rev_checkpoint, s1x4,        s2x2,     0, 0, {0, 2, 4, 6},               {0, 2, 4, 6}};
+static concmerge_thing map_24spn  = {schema_concentric,     sdmd,        s2x2,     0, 0, {7, 1, 3, 5},               {0, 3, 4, 7}};
+static concmerge_thing map_spnspn = {schema_concentric,     sdmd,        s2x2,     0, 0, {7, 1, 3, 5},               {0, 2, 4, 6}};
+static concmerge_thing map_24qtv  = {schema_concentric,     s1x4,        s2x2,     0, 0, {0, 2, 4, 6},               {0, 3, 4, 7}};
+static concmerge_thing map_1x6t1x4= {schema_concentric,     s1x6,        s1x2,     0, 0, {0, 1, 2, 3, 4, 5},         {0, 2}};
+static concmerge_thing map_3d23   = {schema_concentric,     s2x3,        s2x3,     0, 0, {0, 1, 2, 3, 4, 5},         {0, 1, 2, 6, 7, 8}};
+static concmerge_thing map_tgl4l  = {schema_nothing,        s1x4,        nothing,  0, 0, {2, 3, 0, 1},               {0}};
+static concmerge_thing map_tgl4b  = {schema_nothing,        s2x2,        nothing,  0, 0, {0, 1, 2, 3},               {0}};
+static concmerge_thing map_1418a  = {schema_nothing,        s1x8,        nothing,  0, 0, {3, 2, 7, 6},               {0}};
+static concmerge_thing map_dm3dm  = {schema_nothing,        s3dmd,       nothing,  0, 0, {5, 1, 11, 7},              {0}};
+static concmerge_thing map_2234b  = {schema_nothing,        s4x4,        nothing,  0, 0, {15, 3, 7, 11},             {0}};
+static concmerge_thing map_3d1x4  = {schema_nothing,        s3x1dmd,     nothing,  0, 0, {0, 3, 0, 7},               {0}};
+static concmerge_thing map_2614   = {schema_nothing,        sbigdmd,     nothing,  0, 0, {3, 2, 9, 8},               {0}};
+static concmerge_thing map_2624   = {schema_nothing,        s2x6,        nothing,  0, 0, {1, 2, 3, 4, 7, 8, 9, 10},  {0}};
+static concmerge_thing map_26qt   = {schema_nothing,        sbigdmd,     nothing,  0, 0, {8, 9, 0, 0, 2, 3, 0, 0},   {0}};
+static concmerge_thing map_13d_23 = {schema_nothing,        s_spindle,   nothing,  0, 0, {0, 1, 2, 4, 5, 6},         {0}};
+static concmerge_thing map_gal22  = {schema_nothing,        s_galaxy,    nothing,  0, 0, {1, 3, 5, 7},               {0}};
+static concmerge_thing map_18bn   = {schema_nothing,        s1x8,        nothing,  0, 0, {0, 0, 7, 6, 0, 0, 3, 2},   {0}};
+static concmerge_thing map_34qt   = {schema_nothing,        s3x4,        nothing,  0, 0, {1, 2, 4, 5, 7, 8, 10, 11}, {0}};
+static concmerge_thing map_bn14   = {schema_nothing,        s_bone,      nothing,  0, 0, {6, 7, 2, 3},               {0}};
+static concmerge_thing map_31d12  = {schema_nothing,        s3x1dmd,     nothing,  0, 0, {2, 6},                     {0}};
+static concmerge_thing map_31d12r = {schema_nothing,        s_crosswave, nothing,  0, 0, {3, 7},                     {0}};
+static concmerge_thing map_31d14  = {schema_nothing,        s3x1dmd,     nothing,  0, 0, {1, 2, 5, 6},               {0}};
+static concmerge_thing map_31d16  = {schema_nothing,        s3x1dmd,     nothing,  0, 0, {0, 1, 2, 4, 5, 6},         {0}};
+static concmerge_thing map_3d12   = {schema_nothing,        s3dmd,       nothing,  0, 0, {11, 5},                    {0}};
+static concmerge_thing map_3d14   = {schema_nothing,        s3dmd,       nothing,  0, 0, {10, 11, 4, 5},             {0}};
+static concmerge_thing map_3d16   = {schema_nothing,        s3dmd,       nothing,  0, 0, {9, 10, 11, 3, 4, 5},       {0}};
+static concmerge_thing map_xw12h  = {schema_nothing,        s3x1dmd,     nothing,  0, 0, {2, 6},                     {0}};
+static concmerge_thing map_xw12v  = {schema_nothing,        s_crosswave, nothing,  0, 0, {3, 7},                     {0}};
+static concmerge_thing map_2418   = {schema_nothing,        s_ptpd,      nothing,  0, 0, {0, 0, 2, 0, 0, 4, 6, 0},   {0}};
+static concmerge_thing map_13d14  = {schema_nothing,        s1x8,        nothing,  0, 0, {3, 2, 7, 6},               {0}};
+static concmerge_thing map_12d14  = {schema_nothing,        s1x8,        nothing,  0, 0, {3, 2, 7, 6},               {0}};
+static concmerge_thing map_31d18  = {schema_nothing,        s3x1dmd,     nothing,  0, 0, {0, 0, 2, 0, 4, 0, 6, 0},   {0}};
+static concmerge_thing map_18_16  = {schema_nothing,        s1x8,        nothing,  0, 0, {0, 0, 2, 4, 0, 6},         {0}};
+static concmerge_thing map_13d18  = {schema_nothing,        s1x3dmd,     nothing,  0, 0, {0, 1, 0, 2, 0, 5, 0, 6},   {0}};
+static concmerge_thing map_pp18   = {schema_nothing,        s_ptpd,      nothing,  0, 0, {0, 0, 2, 0, 4, 0, 6, 0},   {0}};
+static concmerge_thing map_13d12d = {schema_nothing,        s1x3dmd,     nothing,  0, 0, {1, 2, 3, 5, 6, 7},         {0}};
+static concmerge_thing map_rig1x8 = {schema_nothing,        s_rigger,    nothing,  0, 0, {6, 7, 0, 0, 2, 3, 0, 0},   {0}};
+static concmerge_thing map_14xw   = {schema_nothing,        s_crosswave, nothing,  0, 0, {3, 2, 7, 6},               {0}};
+static concmerge_thing map_14qt   = {schema_nothing,        s_qtag,      nothing,  0, 0, {6, 7, 2, 3},               {0}};
+static concmerge_thing map_1434   = {schema_nothing,        s3x4,        nothing,  0, 0, {10, 11, 4, 5},             {0}};
 
 
 static Const veryshort matrixmap[8] = {10, 15, 3, 1, 2, 7, 11, 9};
@@ -2069,6 +2077,27 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
       the_map = &map_1x6t1x4;
       goto merge_concentric;
    }
+   else if (res2->kind == s_trngl4 && res1->kind == s_trngl4 && r == 2 && (mask1 & 0xC) == 0 && (mask2 & 0xC) == 0) {
+      (void) copy_rot(res2, 0, res2, 0, 011);
+      (void) copy_rot(res2, 1, res2, 1, 011);
+      res2->rotation +=3;
+      the_map = &map_tgl4l;
+      r = res2->rotation & 2;
+      rot = ((r+3)&3) * 011;
+      goto merge_concentric;
+   }
+   else if (res2->kind == s_trngl4 && res1->kind == s_trngl4 && r == 2 && (mask1 & 0x3) == 0 && (mask2 & 0x3) == 0) {
+      (void) swap_people(res1, 0, 2);
+      (void) swap_people(res1, 1, 3);
+      res1->kind = s2x2;
+      canonicalize_rotation(res1);
+      (void) swap_people(res2, 0, 2);
+      (void) swap_people(res2, 1, 3);
+      the_map = &map_tgl4b;
+      r = 0;
+      rot = 0;
+      goto merge_concentric;
+   }
    else if (res2->kind == s_qtag && res1->kind == s1x2 && ((mask2 & 0x88) == 0)) {
       outer_elongation = res2->rotation & 1;
       the_map = &map_s612;
@@ -2168,6 +2197,20 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
    else if (res1->kind == s_qtag && res2->kind == s2x4 && ((mask1 & 0x33) == 0) && ((mask2 & 0x66) == 0)) {
       outer_elongation = res2->rotation & 1;
       the_map = &map_qt24;
+      goto merge_concentric;
+   }
+   else if (res2->kind == s_hrglass && res1->kind == s_qtag && (r&1) && ((mask1 & 0x88) == 0) && ((mask2 & 0xBB) == 0)) {
+      warn(warn__check_galaxy);
+      outer_elongation = res2->rotation & 1;
+      the_map = &map_qtqhgl;
+      goto merge_concentric;
+   }
+   else if (res2->kind == s_galaxy && res1->kind == s_hrglass && r == 0 && ((mask1 & 0x44) == 0) && ((mask2 & 0xEE) == 0)) {
+      the_map = &map_hglgalh;
+      goto merge_concentric;
+   }
+   else if (res2->kind == s_galaxy && res1->kind == s_hrglass && (r&1) && ((mask1 & 0x44) == 0) && ((mask2 & 0xBB) == 0)) {
+      the_map = &map_hglgalv;
       goto merge_concentric;
    }
    else if ((res1->kind == s_hrglass || res1->kind == s_dhrglass) && res2->kind == s2x4 && ((mask1 & 0x33) == 0) && ((mask2 & 0x66) == 0)) {
@@ -2333,49 +2376,23 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
       the_map = &map_34qt;
       goto merge_concentric;
    }
-   else if (res2->kind == s1x8 && res1->kind == s_bone && r == 0 &&
-            (!(res1->people[0].id1 | res1->people[1].id1 | res1->people[4].id1 | res1->people[5].id1))) {
+   else if (res2->kind == s1x8 && res1->kind == s_bone && r == 0 && (mask1 & 0x33) == 0) {
       the_map = &map_18bn;
       goto merge_concentric;
    }
-   else if (res2->kind == s_ptpd && res1->kind == s2x2 &&
-            (!(res2->people[0].id1 | res2->people[2].id1 | res2->people[4].id1 | res2->people[6].id1))) {
-      result->kind = s2x4;
-      res1->rotation += r;
-      canonicalize_rotation(res1);
-      (void) copy_person(result, 0, res2, 1);
-      (void) copy_person(result, 3, res2, 7);
-      (void) copy_person(result, 4, res2, 5);
-      (void) copy_person(result, 7, res2, 3);
-      (void) copy_person(result, 1, res1, 0);
-      (void) copy_person(result, 2, res1, 1);
-      (void) copy_person(result, 5, res1, 2);
-      (void) copy_person(result, 6, res1, 3);
-      canonicalize_rotation(result);
-      return;
+   else if (res2->kind == s_ptpd && res1->kind == s2x2 && (mask2 & 0x55) == 0) {
+      the_map = &map_ptp22;
+      goto merge_concentric;
    }
    else if (res2->kind == s_galaxy && res1->kind == s2x2) {
       the_map = &map_gal22;
       goto merge_concentric;
    }
-   else if (res2->kind == s_bone && res1->kind == s2x2 && action != merge_strict_matrix &&
-            (!(res2->people[3].id1 | res2->people[2].id1 | res2->people[7].id1 | res2->people[6].id1))) {
-      result->kind = s2x4;
-      res1->rotation += r;
-      canonicalize_rotation(res1);
-      (void) copy_person(result, 0, res2, 0);
-      (void) copy_person(result, 3, res2, 1);
-      (void) copy_person(result, 4, res2, 4);
-      (void) copy_person(result, 7, res2, 5);
-      (void) copy_person(result, 1, res1, 0);
-      (void) copy_person(result, 2, res1, 1);
-      (void) copy_person(result, 5, res1, 2);
-      (void) copy_person(result, 6, res1, 3);
-      canonicalize_rotation(result);
-      return;
+   else if (res2->kind == s_bone && res1->kind == s2x2 && action != merge_strict_matrix && (mask2 & 0xCC) == 0) {
+      the_map = &map_bn22;
+      goto merge_concentric;
    }
-   else if (res2->kind == s_spindle && res1->kind == s_1x2dmd && action != merge_strict_matrix && r==0 &&
-            (!(res2->people[0].id1 | res2->people[2].id1 | res2->people[4].id1 | res2->people[6].id1))) {
+   else if (res2->kind == s_spindle && res1->kind == s_1x2dmd && action != merge_strict_matrix && r==0 && (mask2 & 0x55) == 0) {
       result->kind = s1x3dmd;
       (void) copy_person(result, 0, res2, 7);
       (void) copy_person(result, 3, res2, 1);
@@ -2390,8 +2407,7 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
       canonicalize_rotation(result);
       return;
    }
-   else if (res2->kind == s1x3dmd && res1->kind == s2x3 && action != merge_strict_matrix && r==0 &&
-            (!(res2->people[1].id1 | res2->people[2].id1 | res2->people[5].id1 | res2->people[6].id1))) {
+   else if (res2->kind == s1x3dmd && res1->kind == s2x3 && action != merge_strict_matrix && r==0 && (mask2 & 0x66) == 0) {
       swap_people(res2, 0, 7);
       swap_people(res2, 1, 3);
       swap_people(res2, 3, 4);
@@ -2399,8 +2415,7 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
       the_map = &map_13d_23;
       goto merge_concentric;
    }
-   else if (res2->kind == s_ptpd && res1->kind == s1x8 && r == 0 &&
-            (!(res2->people[1].id1 | res2->people[3].id1 | res2->people[5].id1 | res2->people[7].id1))) {
+   else if (res2->kind == s_ptpd && res1->kind == s1x8 && r == 0 && (mask2 & 0xAA) == 0) {
       *result = *res1;
 
       install_person(result, 0, res2, 0);
@@ -2409,8 +2424,7 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
       install_person(result, 6, res2, 6);
       return;
    }
-   else if (res2->kind == s2x4 && res1->kind == s_bone && r == 0 &&
-            (!(res2->people[1].id1 | res2->people[2].id1 | res2->people[5].id1 | res2->people[6].id1))) {
+   else if (res2->kind == s2x4 && res1->kind == s_bone && r == 0 && (mask2 & 0x66) == 0) {
       *result = *res1;
 
       install_person(result, 0, res2, 0);
@@ -2419,14 +2433,11 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
       install_person(result, 5, res2, 7);
       return;
    }
-   else if (res2->kind == s2x6 && res1->kind == s_qtag && (r&1) &&
-            (!(res2->people[2].id1 | res2->people[3].id1 | res2->people[8].id1 | res2->people[9].id1 |
-               res1->people[0].id1 | res1->people[1].id1 | res1->people[4].id1 | res1->people[5].id1))) {
+   else if (res2->kind == s2x6 && res1->kind == s_qtag && (r&1) && (mask1 & 0x33) == 0 && (mask2 & 0x30C) == 0) {
       the_map = &map_26qt;
       goto merge_concentric;
    }
-   else if (res2->kind == s2x6 && res1->kind == s1x4 && (r&1) &&
-            (!(res2->people[2].id1 | res2->people[3].id1 | res2->people[8].id1 | res2->people[9].id1))) {
+   else if (res2->kind == s2x6 && res1->kind == s1x4 && (r&1) && (mask2 & 0x30C) == 0) {
       the_map = &map_2614;
       goto merge_concentric;
    }
@@ -2447,7 +2458,7 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
    collision_mask = 0;
    result_mask = 0;
 
-   if (res1->kind != res2->kind || r & 1 || lim1 <= 0 || lim1 & 1)
+   if (res1->kind != res2->kind || res1->kind == s_trngl4 || (r & 1) || lim1 <= 0 || (lim1 & 1))
       fail("Can't figure out result setup.");
 
    for (i=0; i<lim1; i++)
@@ -2491,17 +2502,23 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
    if (the_map->conc_type == schema_nothing) goto merge_otherwise;
 
    rot = 0;
-   res2->kind = the_map->innerk;
-   res1->kind = the_map->outerk;
-   if (the_map->rot) {
+   res2->kind = the_map->outerk;
+   if (the_map->orot) {
       res2->rotation++;
       rot = 033;
    }
    outer_inners[0] = *res2;
-   outer_inners[1] = *res1;
-   gather(&outer_inners[0], res2, the_map->innermap, setup_attrs[res2->kind].setup_limits, rot);
-   gather(&outer_inners[1], res1, the_map->outermap, setup_attrs[res1->kind].setup_limits, 0);
+   gather(&outer_inners[0], res2, the_map->outermap, setup_attrs[res2->kind].setup_limits, rot);
    canonicalize_rotation(&outer_inners[0]);
+
+   rot = 0;
+   res1->kind = the_map->innerk;
+   if (the_map->irot) {
+      res1->rotation++;
+      rot = 033;
+   }
+   outer_inners[1] = *res1;
+   gather(&outer_inners[1], res1, the_map->innermap, setup_attrs[res1->kind].setup_limits, rot);
    canonicalize_rotation(&outer_inners[1]);
    normalize_concentric(the_map->conc_type, 1, outer_inners, outer_elongation, result);
    return;
@@ -2513,7 +2530,7 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
    canonicalize_rotation(result);
    offs = ((setup_attrs[res1->kind].setup_limits+1) * r) >> 2;
    for (i=0; i<=setup_attrs[res1->kind].setup_limits; i++)
-      install_rot(result, the_map->outermap[i], res1, i^offs, rot);
+      install_rot(result, the_map->innermap[i], res1, i^offs, rot);
 
    return;
 }
@@ -3436,6 +3453,7 @@ back_here:
        /* Give the people who didn't move the same result flags as those who did.
          This is important for the "did last part" check. */
       the_results[1].result_flags = the_results[0].result_flags;
+      if (livemask[1] == 0) the_results[1].kind = nothing;
 
       /* Strip out the roll bits -- people who didn't move can't roll. */
       if (setup_attrs[the_results[1].kind].setup_limits >= 0) {
