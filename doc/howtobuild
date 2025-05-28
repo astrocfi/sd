@@ -100,7 +100,7 @@ Go to sddoc directory and do:
 25 Apr 12  -  16 Jun 12  #44
 16 Jun 12                #46
 next          #45
-(#25, #26, #29, #30, #36 are also available.)
+(#25, #26, #29, #30, #36, #47 are also available.)
 Also, do [DPT] initially touch by 1/2 x [split sidetrack]
 BUG!!!!!  [H star thru] initially touch by 1/2 x [pass the music] FAILS!
 -----------------------------------------------------------------
@@ -289,6 +289,7 @@ install                                  *
 
 
 -----------------------------------------------------------------
+        CURRENT METHOD
 -----------------------------------------------------------------
 New way, Dec 10, 2010, uses psftp, no email
 

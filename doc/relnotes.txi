@@ -1,7 +1,7 @@
 \input texinfo @c %**start of header -*-texinfo-*-
 @setfilename relnotes.info
 @settitle Sd Release Notes
-@c Time-stamp: <9 Sep 2012 wba>
+@c Time-stamp: <14 Nov 2012 wba>
 @iftex
 @headings off
 @oddheading @| @| @thispage
@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 38.48
-@set title2 Database version = 38.48 format = 313
+@set title1 RELEASE NOTES FOR VERSION 38.49
+@set title2 Database version = 38.49 format = 313
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 38.49::
 * 38.48::
 * 38.47::
 * 38.46::
@@ -87,7 +88,7 @@ The files @file{relnotes03.txi} and @file{relnotes98.txi} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 38.48, Top, (dir)
+@node Intro, 38.49, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -98,11 +99,21 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2012 William B. Ackerman
 @sp 3
 @menu
-* 38.48::               Changes in the current version
+* 38.49::               Changes in the current version
 @end menu
 
 @c ************
-@node 38.48, 38.47, Intro, Top
+@node 38.49, 38.48, Intro, Top
+@unnumberedsec Version 38.49 changes
+
+The action of the people who spread to become ends of lines on @strong{relay the shadow} is a @strong{hinge}.  It is not an arm turn, nor a cast off 1/4.  Furthermore, it is not legal to apply @strong{fractal} to it if the people are not in a miniwave.  The Callerlab definition describes it as a @strong{single hinge}, but Sd relaxes that to a @strong{hinge}.  The antique definition of this call is quite different, of course.
+
+Sd has a slightly improved ability to do things on a 45 degree angle.
+
+There were a few other minor improvements to execute certain calls more accurately.
+
+@c ************
+@node 38.48, 38.47, 38.49, Top
 @unnumberedsec Version 38.48 changes
 
 This release fixes a few bugs.  You might recognize yours.  Specifically:

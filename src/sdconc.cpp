@@ -4355,6 +4355,7 @@ void merge_table::merge_setups(setup *ss,
    int i, r, rot;
    setup outer_inners[2];
    int reinstatement_rotation = 0;
+   int reinstatement_eighth = 0;
    bool rose_from_dead = false;
    bool perp_2x4_1x8 = false;
    bool perp_2x4_ptp = false;
@@ -4479,12 +4480,17 @@ void merge_table::merge_setups(setup *ss,
       return;
    }
    else {
+      if (res1->eighth_rotation != res2->eighth_rotation)
+            fail("Rotation is inconsistent.");
+
       reinstatement_rotation = res2->rotation;
+      reinstatement_eighth = res2->eighth_rotation;
+
       res1->rotation -= res2->rotation;
       res2->rotation = 0;
-      res2->eighth_rotation = 0;
       result->rotation = 0;
       result->eighth_rotation = 0;
+      res2->eighth_rotation = 0;
       canonicalize_rotation(res1);
       canonicalize_rotation(res2);
       uint32 mask1 = little_endian_live_mask(res1);
@@ -4751,6 +4757,7 @@ void merge_table::merge_setups(setup *ss,
  final_getout:
 
    result->rotation += reinstatement_rotation;
+   result->eighth_rotation = reinstatement_eighth;
    canonicalize_rotation(result);
 }
 
@@ -6230,7 +6237,7 @@ extern void inner_selective_move(
                goto done_with_this_one;
             }
             else if (thislivemask == (uint32) ((1U << (attr::klimit(kk)+1)) - 1) ||
-                     otherlivemask == 0 ||
+                     (otherlivemask == 0 && kk != s4x5) ||
                      orig_indicator == selective_key_plain_from_id_bits ||
                      (orig_indicator == selective_key_ignore && kk != s_c1phan && attr::klimit(kk) > 7) ||
                      ((schema == schema_select_ctr2 ||

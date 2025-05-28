@@ -57,7 +57,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "38.48"
+version "38.49"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve dont_raise_overcast
@@ -924,8 +924,12 @@ call "counter@O rotate@P" c1 tag ctr_rot
       array [AL3S CR1N CR2N CR3N AL1S AL2S]
    setup trngl4 trngl4 rotate
       array [0 0 CR2N AL7S 0 0 AL2S CR7N]
+   // It can be argued that the "center" of the triangle (position 1 and 5)
+   // can't actually counter rotate.  But in practice, this will only be legal
+   // if the other 3 people in the group are moving in a consistent way, and,
+   // in that case, the center person's truning direction should be clear.
    setup ptrngl4 trngl4 rotate
-      array [AL4S 0 CR2N CR3N CR4N 0 AL2S AL3S]
+      array [AL4S AL5S CR2N CR3N CR4N CR5N AL2S AL3S]
    setup dmd dmd rotate
       array [CR0N 0 AL0S 0]
    setup pmd dmd rotate
@@ -2606,10 +2610,22 @@ call "arm turn @b" dontshow tag armturn_n4
             alternate_definition [half] mainstream
    setup 1x2 1x2        restriction forbidden wave_only qualifier num 0 none
       array [ZM0N ZM1N]
+   setup 1x2 1x2        plus_eighth_rotation qualifier right live num 1 wave_only
+      array [CR0N 0]
+   setup 1x2 1x2 rotate plus_eighth_rotation qualifier  left live num 1 wave_only
+      array [0 AL0S]
    setup 1x2 1x2 rotate restriction forbidden wave_only qualifier num 2 none
       array [CR0N AL0S]
+   setup 1x2 1x2 rotate plus_eighth_rotation qualifier right live num 3 wave_only
+      array [CR0N 0]
+   setup 1x2 1x2        plus_eighth_rotation qualifier  left live num 3 wave_only
+      array [0 AL0S]
    setup 1x2 1x2        restriction forbidden wave_only qualifier num 4 none
       array [CR1S AL0S]
+   setup 1x2 1x2        plus_eighth_rotation qualifier right live num 5 wave_only
+      array [CR1S 0]
+   setup 1x2 1x2 rotate plus_eighth_rotation qualifier  left live num 5 wave_only
+      array [0 AL1N]
             alternate_definition [lasthalf] mainstream
    setup 1x2 1x2        restriction forbidden wave_only qualifier num 0 none
       array [ZM0N ZM1N]
@@ -2684,19 +2700,19 @@ call "cast off 1/4" dontshow tag cast_off_14
    setup 1x8 2x4 rotate qualifier 4x4couples_only
       array [AL4S AL5S AL7S AL6S CR3N CR2N CR0N CR1N]
 
-// Used for "relay the shadow".  People do the miniwave cast without even thinking about it.
-// The "spread" aspect of this comes from the cross-concentric invocation.
-call "cast off @b, opt for normal, just do it" dontshow tag hingenspread_for_relay_shad
+// Used for "relay the shadow".  This is the "slap someone and run away" near the end of the call.
+// It is a hinge.  The Callerlab definition says "single hinge", but we know better.
+// Roll info must be "M", since these people will implicitly spread as part of a crossconc.
+call "hinge @b times, opt for normal" dontshow tag hinge_for_relay_shad
             neednumber fractal_is_inherited yoyo_is_inherited gen_sting_is_inherited yoyo_fractal_numbers
             fractional_numbers diamond_is_legal parallel_conc_end
    setup 1x4 2x2 qualifier num 1 none
       preds "?"
-         if cast_normal_or_nowarn [CM0E AM0W AM1W CM1E]
-         if always                [AM3W AM0W CM2E CM1E]
-   setup 1x4 2x2 qualifier num 3 none
-      preds "?"
-         if cast_normal_or_nowarn [CM3W AM3E AM2E CM2W]
-         if always                [AM0E AM3E CM1W CM2W]
+         if cast_normal_or_warn [CM0E AM0W AM1W CM1E]
+         if always              [CM0E AM3W AM2W CM1E]
+   // Use this if "fractal" given.  Must be miniwave.
+   setup 1x4 2x2 qualifier num 3 none restriction forbidden wave_only
+      array [CM3W AM3E  AM2E  CM2W]
 
 call "cast off @b, opt for normal" dontshow tag cast_off_n4_with_warn
             neednumber yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited yoyo_fractal_numbers
@@ -3066,11 +3082,11 @@ call "turn the star @b for cross chain and roll" dontshow tag turnstarn_xchroll
    setup 2x2 2x2 qualifier num 0 none
       array [0 0 CR2E CR3E]
    setup 2x2 2x2 qualifier num 1 none
-      array [0 0 CAL1W CM2E]
+      array [0 0 CAL1W CL2E]
    setup 2x2 2x2 qualifier num 2 none
-      array [0 0 CAM0W CAL1W]
+      array [0 0 CAL0W CAL1W]
    setup 2x2 2x2 qualifier num 3 none
-      array [0 0 CAL3E CAM0W]
+      array [0 0 CAL3E CAL0W]
             alternate_definition [single] c4
    setup 2x1 1x2 qualifier num 2 none
       array [CAL1W 0]
@@ -5403,7 +5419,7 @@ call "hinge" mainstream tag hinge
             alternate_definition [stingy] c3x
    setup 1x2 1x2 restriction forbidden wave_only
       array [ZM0N ZM1N]
-            alternate_definition [half] c1
+            alternate_definition [half] mainstream
    setup 1x2 1x2 plus_eighth_rotation qualifier right live wave_only
       array [CR0N 0]
    setup 1x2 1x2 rotate plus_eighth_rotation qualifier left live wave_only
@@ -7117,6 +7133,24 @@ call "touch @b" mainstream tag touch_n_4
             twisted_is_inherited diamond_is_legal left_means_mirror
    seq touch [inherit_left inherit_diamond inherit_twisted]
    seq armturn_n4 [inherit_diamond inherit_yoyo inherit_fractal inherit_gensting]
+
+call "touch 1/8" mainstream
+            visible_fractions rear_back_from_r_wave
+            left_means_mirror
+   seq touch [inherit_left]
+   seq armturn_n4 [force_half insert_number 1]
+
+call "touch 3/8" mainstream
+            visible_fractions rear_back_from_r_wave
+            left_means_mirror
+   seq touch [inherit_left]
+   seq armturn_n4 [force_half insert_number 3]
+
+call "touch 5/8" mainstream
+            visible_fractions rear_back_from_r_wave
+            left_means_mirror
+   seq touch [inherit_left]
+   seq armturn_n4 [force_half insert_number 5]
 
 call "_leftable touch" dontshow tag lft_touch
             left_means_mirror 12_16_matrix_means_split
@@ -10660,13 +10694,13 @@ call "dixie grand" plus
 
 call "dixie grand, but on the 3rd hand" plus
             dont_use_in_resolve rear_back_from_wave_or_qtag
-            imprecise_rotation left_means_mirror
+            left_means_mirror
    setup 4x2 thar qualifier 2fl_only
-      array [2N 4E 0 0 0 0  5W 7N]
-   setup 4x2 thar qualifier magic_only
-      array [ 2N 2N 4E 4E 3S 3S 5W 5W]
-   setup 4x2 thar qualifier ntbone in in_or_out
-      array [ 2N  0 4E  0  0 3S  0 5W]
+      array [2N 4E  0  0  0  0 5W 7N]
+   setup 4x2 thar plus_eighth_rotation qualifier magic_only
+      array [2N 2N 4E 4E 3S 3S 5W 5W]
+   setup 4x2 thar plus_eighth_rotation qualifier ntbone in in_or_out
+      array [2N  0 4E  0  0 3S  0 5W]
 
 call "pass the sea" a1
             rear_back_from_r_wave visible_fractions twisted_is_inherited funny_is_inherited
@@ -12391,12 +12425,12 @@ call "roll the wave" c4
 call "_relay the shadow part 2" dontshow tag relay_shadow_part_2
             step_to_wave left_means_touch_or_check fractal_is_inherited gen_sting_is_inherited
    checkpoint fanthetop [inherit_fractal inherit_gensting]
-              hingenspread_for_relay_shad [insert_number 3 inherit_fractal inherit_gensting conc_force_columns]
+              cast_off_n4_with_warn [insert_number 3 inherit_fractal inherit_gensting conc_force_columns]
 
 call "_relay the shadow part 3" dontshow tag relay_shadow_part_3
             fractal_is_inherited gen_sting_is_inherited
    crossconc numberbingo [inherit_fractal inherit_gensting insert_number 1]
-             hingenspread_for_relay_shad [insert_number 1 inherit_fractal inherit_gensting conc_force_lines]
+             hinge_for_relay_shad [insert_number 1 inherit_fractal inherit_gensting conc_force_lines]
 
 call "_finish relay the shadow, but the @6 criss cross it" dontshow tag fin_relay_shadow_but_xx
             step_to_wave left_means_touch_or_check
@@ -19210,7 +19244,7 @@ call "_finish cross chain and roll @b@S" dontshow tag fin_x_chain_roll
             left_means_mirror neednumber single_is_inherited
             nxn_is_inherited bigmatrix_is_inherited
    maybe_nxn_lines_conc
-      turnstarn_xchroll [inherit_single inherit_left inherit_nxn]
+      turnstarn_xchroll [inherit_left inherit_single inherit_nxn]
       finxchrollends [inherit_single inherit_left inherit_nxn
                       conc_demand_columns conc_force_spots]
 
@@ -24736,8 +24770,10 @@ call "_ctrs rally but @m" dontshow tag ctrsrallybut2nd
 
 call "_ends rally" dontshow tag endsrally
             left_means_mirror
-   setup 2x2 1x4
-      array [CR2S CR3N 0 0]
+   setup 2x2 1x4 qualifier out in_or_out
+      array [CR2S CR3N CAL3S CAL2N]
+   setup 2x2 1x4 restriction unusual alwaysfail
+      array [CR2S CR3N CAL3S CAL2N]
 
 call "_ends rally, ends go as you are" dontshow tag endsrally_ends_as_are
             left_means_mirror

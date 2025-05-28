@@ -1712,7 +1712,7 @@ static void special_triangle(
                if (newplacelist[i] >=0) {
                   newplacelist[i] -= numout;
                   if (newplacelist[i] < 0)
-                     fail("Call went into other triangle????.");
+                     fail("Inconsistent orientation of triangle result.");
                   destination->people[i].id1 = rotperson(destination->people[i].id1, 022);
                }
             }
@@ -2723,6 +2723,19 @@ static int divide_the_setup(
             }
          }
       }
+      else {
+         if ((!(newtb & 010) || assoc(b_1x2, ss, calldeflist)) &&
+             (!(newtb & 001) || assoc(b_2x1, ss, calldeflist))) {
+            if (livemask == 0x360D8) {
+               division_code = MAPCODE(s1x2,4,MPKIND__OFFS_R_STEP,1);
+               goto divide_us_no_recompute;
+            }
+            else if (livemask == 0x60D83) {
+               division_code = MAPCODE(s1x2,4,MPKIND__OFFS_L_STEP,1);
+               goto divide_us_no_recompute;
+            }
+         }
+      }
 
       break;
    case s1p5x8:
@@ -3599,13 +3612,13 @@ static int divide_the_setup(
       if (must_do_mystic)
          goto do_mystically;
 
+      // See if the call has a 1x4, 4x1, 1x2, 2x1, or 1x1 definition, in which case split it and do each part.
       division_code = MAPCODE(s1x4,2,MPKIND__SPLIT,0);
-
-      /* See if the call has a 1x4, 4x1, 1x2, 2x1, or 1x1 definition, in which case split it and do each part. */
       if (     assoc(b_1x4, ss, calldeflist) || assoc(b_4x1, ss, calldeflist)) {
          goto divide_us_no_recompute;
       }
 
+      division_code = MAPCODE(s1x2,4,MPKIND__SPLIT,0);
       if (     assoc(b_1x2, ss, calldeflist) || assoc(b_2x1, ss, calldeflist) ||
                assoc(b_1x1, ss, calldeflist)) {
          goto divide_us_no_recompute;

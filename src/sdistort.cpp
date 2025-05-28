@@ -513,6 +513,23 @@ static bool multiple_move_innards(
          map_kind = MPKIND__SPLIT_OTHERWAY_TOO;
          take_out_double_45_rotation = true;
       }
+      else if (map_kind == MPKIND__OFFS_R_STEP) {
+         map_kind = MPKIND__SPLIT;
+         // This is unfortunate.
+         setup ttt = z[3];
+         z[3] = z[2];
+         z[2] = ttt;
+      }
+      else if (map_kind == MPKIND__OFFS_L_STEP) {
+         map_kind = MPKIND__SPLIT;
+         vert ^= 1;
+         // This is unfortunate.
+         setup ttt = z[0];
+         z[0] = z[3];
+         z[3] = z[1];
+         z[1] = z[2];
+         z[2] = ttt;
+      }
       else if (map_kind == MPKIND__QTAG8) {
          map_kind = MPKIND__QTAG8_WITH_45_ROTATION;
       }
@@ -614,7 +631,7 @@ static bool multiple_move_innards(
 
       if (fix_n_results(arity,
                         (map_kind == MPKIND__NONE && maps->inner_kind == sdmd) ? 9 : funnymap ? 7 : -1,
-                        map_kind == MPKIND__SPLIT,
+                        map_kind == MPKIND__SPLIT && (arity != 4 || maps->inner_kind != s1x2),
                         z, rotstate, pointclip, rot)) {
          result->kind = nothing;
          clear_result_flags(result);
