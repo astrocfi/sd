@@ -1569,8 +1569,8 @@ static void special_triangle(
 {
    int real_index;
    int numout = attr::slimit(result)+1;
-   bool is_triangle = scopy->kind == s_trngl || scopy->kind == s_trngl4;
-   bool result_is_triangle = (result->kind == s_trngl || result->kind == s_trngl4);
+   bool is_triangle = setup_attrs[scopy->kind].no_symmetry;
+   bool result_is_triangle = setup_attrs[result->kind].no_symmetry;
 
    for (real_index=0; real_index<num; real_index++) {
       personrec this_person = scopy->people[real_index];
@@ -2349,7 +2349,7 @@ static int divide_the_setup(
 {
    int i;
    callarray *have_1x2, *have_2x1;
-   uint32 division_code = ~0UL;
+   uint32 division_code = ~0U;
    uint32 newtb = *newtb_p;
    uint32 callflags1 = ss->cmd.callspec->the_defn.callflags1;
    final_and_herit_flags final_concepts = ss->cmd.cmd_final_flags;
@@ -3009,7 +3009,7 @@ static int divide_the_setup(
             case, the setup elongation flag, if present, must not be
             inconsistent with our decision. */
 
-         unsigned long int elong = 0;
+         uint32 elong = 0;
 
          // If this is "run" and people aren't T-boned, just ignore the 2x1 definition.
 
@@ -3030,7 +3030,7 @@ static int divide_the_setup(
                goto divide_us_no_recompute;
          }
          else {
-            unsigned long int foo = (ss->cmd.prior_elongation_bits | ~elong) & 3;
+            uint32 foo = (ss->cmd.prior_elongation_bits | ~elong) & 3;
 
             if (foo == 0) {
                fail("Can't figure out who should be working with whom.");
@@ -3876,7 +3876,7 @@ static int divide_the_setup(
 
    divide_us_no_recompute:
 
-   if (division_code == ~0UL)
+   if (division_code == ~0U)
       fail("You must specify a concept.");
 
    if (must_do_mystic)
@@ -4024,7 +4024,7 @@ static int divide_the_setup(
 
    conc_cmd = ss->cmd;
    concentric_move(ss, &conc_cmd, &conc_cmd, conc_schema,
-                   0, DFM1_SUPPRESS_ELONGATION_WARNINGS, false, true, ~0UL, result);
+                   0, DFM1_SUPPRESS_ELONGATION_WARNINGS, false, true, ~0U, result);
    return 1;
 
    do_mystically:
@@ -4518,8 +4518,8 @@ static uint32 do_actual_array_call(
          special_4_way_symm(linedefinition, ss, &newpersonlist, newplacelist,
                             lilresult_mask, result);
       }
-      else if (ss->kind == s_trngl || ss->kind == s_trngl4 || ss->kind == s1x3 ||
-               result->kind == s_trngl || result->kind == s_trngl4 || result->kind == s1x3) {
+      else if (setup_attrs[ss->kind].no_symmetry || ss->kind == s1x3 ||
+               setup_attrs[result->kind].no_symmetry || result->kind == s1x3) {
          if (inconsistent_rotation | inconsistent_setup)
             fail("This call is an inconsistent shape-changer.");
          special_triangle(coldefinition, linedefinition, ss, &newpersonlist, newplacelist,
@@ -4924,46 +4924,46 @@ static uint32 do_actual_array_call(
             result->kind = s2x8;
             permuter = octtranslatev+16;
 
-            if ((lilresult_mask[0] & 0x333F11FFUL) == 0 &&
-                (lilresult_mask[1] & 0x333F11FFUL) == 0) {
+            if ((lilresult_mask[0] & 0x333F11FFU) == 0 &&
+                (lilresult_mask[1] & 0x333F11FFU) == 0) {
                result->kind = s4x6;
                permuter = octt4x6latev+16;
             }
-            else if ((lilresult_mask[0] & 0x11FF333FUL) == 0 &&
-                     (lilresult_mask[1] & 0x11FF333FUL) == 0) {
+            else if ((lilresult_mask[0] & 0x11FF333FU) == 0 &&
+                     (lilresult_mask[1] & 0x11FF333FU) == 0) {
                result->kind = s4x6;
                permuter = octt4x6latev;
                rotator = 1;
             }
-            else if ((lilresult_mask[0] & 0x0FFF7777UL) == 0 &&
-                     (lilresult_mask[1] & 0x0FFF7777UL) == 0) {
+            else if ((lilresult_mask[0] & 0x0FFF7777U) == 0 &&
+                     (lilresult_mask[1] & 0x0FFF7777U) == 0) {
                permuter = octtranslatev;
                rotator = 1;
             }
-            else if ((lilresult_mask[0] & 0x77770FFFUL) != 0 ||
-                     (lilresult_mask[1] & 0x77770FFFUL) != 0)
+            else if ((lilresult_mask[0] & 0x77770FFFU) != 0 ||
+                     (lilresult_mask[1] & 0x77770FFFU) != 0)
                fail("Call went to improperly-formed setup.");
             break;
          case sx1x16:
-            if ((lilresult_mask[0] & 0x00FF00FFUL) == 0) {
+            if ((lilresult_mask[0] & 0x00FF00FFU) == 0) {
                permuter = hextranslatev;  // 1x16 spots, vertical.
                result->kind = s1x16;
                rotator = 1;
             }
-            else if ((lilresult_mask[0] & 0xFF00FF00UL) == 0) {
+            else if ((lilresult_mask[0] & 0xFF00FF00U) == 0) {
                permuter = hextranslatev+8;  // 1x16 spots, horizontal.
                result->kind = s1x16;
             }
-            else if ((lilresult_mask[0] & 0x3F3F3F3FUL) == 0) {
+            else if ((lilresult_mask[0] & 0x3F3F3F3FU) == 0) {
                permuter = hthartranslate;   // thar spots.
                result->kind = s_thar;
             }
-            else if ((lilresult_mask[0] & 0x9F3F9F3FUL) == 0) {
+            else if ((lilresult_mask[0] & 0x9F3F9F3FU) == 0) {
                permuter = hxwtranslatev;  // crosswave spots, vertical.
                result->kind = s_crosswave;
                rotator = 1;
             }
-            else if ((lilresult_mask[0] & 0x3F9F3F9FUL) == 0) {
+            else if ((lilresult_mask[0] & 0x3F9F3F9FU) == 0) {
                permuter = hxwtranslatev+8;  // crosswave spots, horizontal.
                result->kind = s_crosswave;
             }
@@ -4971,16 +4971,16 @@ static uint32 do_actual_array_call(
                fail("Call went to improperly-formed setup.");
             break;
          case sx1x6:
-            if ((lilresult_mask[0] & 00707UL) == 0) {
+            if ((lilresult_mask[0] & 00707U) == 0) {
                permuter = h1x6translatev;  // 1x6 spots, vertical.
                result->kind = s1x6;
                rotator = 1;
             }
-            else if ((lilresult_mask[0] & 07070UL) == 0) {
+            else if ((lilresult_mask[0] & 07070U) == 0) {
                permuter = h1x6translatev+3;  // 1x6 spots, horizontal.
                result->kind = s1x6;
             }
-            else if ((lilresult_mask[0] & 01111UL) == 0) {
+            else if ((lilresult_mask[0] & 01111U) == 0) {
                permuter = h1x6thartranslate;   // thar spots.
                result->kind = s_thar;
             }
@@ -4999,47 +4999,47 @@ static uint32 do_actual_array_call(
                // will sometimes be in close, and sometimes out.  They have to take their cues from
                // the other people.  Similarly for the trailing belles.  They slide over and may be
                // facing directly in the center, or may be far apart, depending on what the others do.
-               if ((lilresult_mask[0] & ~0x7F78UL) == 0 ||  // Anyone deep inside, with no one else conflicting
-                   (lilresult_mask[0] & ~0x787FUL) == 0 ||
-                   (lilresult_mask[0] & ~0xFE1EUL) == 0 ||  // Anyone far outside
-                   (lilresult_mask[0] & ~0x1EFEUL) == 0 ||
-                   (lilresult_mask[0] & ~0x3C3CUL) == 0) {  // Generally inside and outside
+               if ((lilresult_mask[0] & ~0x7F78U) == 0 ||  // Anyone deep inside, with no one else conflicting
+                   (lilresult_mask[0] & ~0x787FU) == 0 ||
+                   (lilresult_mask[0] & ~0xFE1EU) == 0 ||  // Anyone far outside
+                   (lilresult_mask[0] & ~0x1EFEU) == 0 ||
+                   (lilresult_mask[0] & ~0x3C3CU) == 0) {  // Generally inside and outside
                   permuter = hxwvdmdtranslate3012;
                   result->kind = sdmd;
                   rotator = 1;
                }
-               else if ((lilresult_mask[0] & ~0xF787UL) == 0 ||  // Anyone deep inside, with no one else conflicting
-                        (lilresult_mask[0] & ~0x87F7UL) == 0 ||
-                        (lilresult_mask[0] & ~0xE1EFUL) == 0 ||  // Anyone far outside
-                        (lilresult_mask[0] & ~0xEFE1UL) == 0 ||
-                        (lilresult_mask[0] & ~0xC3C3UL) == 0) {  // Generally inside and outside
+               else if ((lilresult_mask[0] & ~0xF787U) == 0 ||  // Anyone deep inside, with no one else conflicting
+                        (lilresult_mask[0] & ~0x87F7U) == 0 ||
+                        (lilresult_mask[0] & ~0xE1EFU) == 0 ||  // Anyone far outside
+                        (lilresult_mask[0] & ~0xEFE1U) == 0 ||
+                        (lilresult_mask[0] & ~0xC3C3U) == 0) {  // Generally inside and outside
                   permuter = hxwvdmdtranslate3012+4;
                   result->kind = sdmd;
                }
                else
                   fail("Call went to improperly-formed setup.");
             }
-            else if ((lilresult_mask[0] & 0x0F0FUL) == 0) {
+            else if ((lilresult_mask[0] & 0x0F0FU) == 0) {
                warn(warn__4_circ_tracks);
                permuter = h1x8translatev;    // 1x8 spots, vertical.
                result->kind = s1x8;
                rotator = 1;
             }
-            else if ((lilresult_mask[0] & 0xF0F0UL) == 0) {
+            else if ((lilresult_mask[0] & 0xF0F0U) == 0) {
                warn(warn__4_circ_tracks);
                permuter = h1x8translatev+4;  // 1x8 spots, horizontal.
                result->kind = s1x8;
             }
-            else if ((lilresult_mask[0] & 0x9999UL) == 0) {
+            else if ((lilresult_mask[0] & 0x9999U) == 0) {
                warn(warn__4_circ_tracks);
                permuter = h1x8thartranslate9999;   // thar spots.
                result->kind = s_thar;
             }
-            else if ((lilresult_mask[0] & 0x3C3CUL) == 0) {
+            else if ((lilresult_mask[0] & 0x3C3CU) == 0) {
                permuter = h1x8thartranslatec3c3+4;  // crosswave spots, horizontal.
                result->kind = s_crosswave;
             }
-            else if ((lilresult_mask[0] & 0xC3C3UL) == 0) {
+            else if ((lilresult_mask[0] & 0xC3C3U) == 0) {
                permuter = h1x8thartranslatec3c3;   // crosswave spots, vertical.
                result->kind = s_crosswave;
                rotator = 1;
@@ -5048,29 +5048,29 @@ static uint32 do_actual_array_call(
                fail("Call went to improperly-formed setup.");
             break;
          case sxequlize:
-            if ((lilresult_mask[0] & 0xD6BFD6BFUL) == 0) {
+            if ((lilresult_mask[0] & 0xD6BFD6BFU) == 0) {
                result->kind = s2x4;
                permuter = eqlizr+8;
             }
-            else if ((lilresult_mask[0] & 0xBFD6BFD6UL) == 0) {
+            else if ((lilresult_mask[0] & 0xBFD6BFD6U) == 0) {
                result->kind = s2x4;
                permuter = eqlizr;
                rotator = 1;
             }
-            else if ((lilresult_mask[0] & 0xD7BED7BEUL) == 0) {
+            else if ((lilresult_mask[0] & 0xD7BED7BEU) == 0) {
                result->kind = s2x4;
                permuter = eqlizl+8;
             }
-            else if ((lilresult_mask[0] & 0xBED7BED7UL) == 0) {
+            else if ((lilresult_mask[0] & 0xBED7BED7U) == 0) {
                result->kind = s2x4;
                permuter = eqlizl;
                rotator = 1;
             }
-            else if ((lilresult_mask[0] & 0xBFD3BFD3UL) == 0) {
+            else if ((lilresult_mask[0] & 0xBFD3BFD3U) == 0) {
                result->kind = s_qtag;
                permuter = qtgtranslateh+8;
             }
-            else if ((lilresult_mask[0] & 0xD3BFD3BFUL) == 0) {
+            else if ((lilresult_mask[0] & 0xD3BFD3BFU) == 0) {
                result->kind = s_qtag;
                permuter = qtgtranslateh;
                rotator = 1;
@@ -5088,11 +5088,11 @@ static uint32 do_actual_array_call(
                fail("Call went to improperly-formed setup.");
             break;
          case sx4dmd:
-            if ((lilresult_mask[0] & 0xD7BFD7BFUL) == 0) {
+            if ((lilresult_mask[0] & 0xD7BFD7BFU) == 0) {
                result->kind = s2x3;
                permuter = j23translatev+8;
             }
-            else if ((lilresult_mask[0] & 0xBFD7BFD7UL) == 0) {
+            else if ((lilresult_mask[0] & 0xBFD7BFD7U) == 0) {
                result->kind = s2x3;
                permuter = j23translatev;
                rotator = 1;
@@ -5108,39 +5108,39 @@ static uint32 do_actual_array_call(
                permuter = s1x6translatev;
                rotator = 1;
             }
-            else if ((lilresult_mask[0] & 0xBFD5BFD5UL) == 0) {
+            else if ((lilresult_mask[0] & 0xBFD5BFD5U) == 0) {
                result->kind = s_qtag;
                permuter = jqttranslatev+8;
             }
-            else if ((lilresult_mask[0] & 0xD5BFD5BFUL) == 0) {
+            else if ((lilresult_mask[0] & 0xD5BFD5BFU) == 0) {
                result->kind = s_qtag;
                permuter = jqttranslatev;
                rotator = 1;
             }
-            else if ((lilresult_mask[0] & 0xBFD3BFD3UL) == 0) {
+            else if ((lilresult_mask[0] & 0xBFD3BFD3U) == 0) {
                result->kind = s_qtag;
                permuter = qtgtranslateh+8;
             }
-            else if ((lilresult_mask[0] & 0xD3BFD3BFUL) == 0) {
+            else if ((lilresult_mask[0] & 0xD3BFD3BFU) == 0) {
                result->kind = s_qtag;
                permuter = qtgtranslateh;
                rotator = 1;
             }
-            else if ((lilresult_mask[0] & ~0x204C204CUL) == 0) {
+            else if ((lilresult_mask[0] & ~0x204C204CU) == 0) {
                result->kind = s_2stars;
                permuter = starstranslatev+8;
             }
-            else if ((lilresult_mask[0] & ~0x4C204C20UL) == 0) {
+            else if ((lilresult_mask[0] & ~0x4C204C20U) == 0) {
                result->kind = s_2stars;
                permuter = starstranslatev;
                rotator = 1;
             }
-            else if ((lilresult_mask[0] & ~0xA05CA05CUL) == 0) {
+            else if ((lilresult_mask[0] & ~0xA05CA05CU) == 0) {
                result->kind = sbigdmd;
                permuter = bigdtranslatev;
                rotator = 1;
             }
-            else if ((lilresult_mask[0] & ~0x5CA05CA0UL) == 0) {
+            else if ((lilresult_mask[0] & ~0x5CA05CA0U) == 0) {
                result->kind = sbigdmd;
                permuter = bigdtranslatev+8;
             }
@@ -5187,11 +5187,11 @@ static uint32 do_actual_array_call(
                permuter = s_wingedstartranslate;
                rotator = 1;
             }
-            else if ((lilresult_mask[0] & 0xAF50AF50UL) == 0) {
+            else if ((lilresult_mask[0] & 0xAF50AF50U) == 0) {
                result->kind = s4dmd;
                permuter = qdmtranslatev+8;
             }
-            else if ((lilresult_mask[0] & 0x50AF50AFUL) == 0) {
+            else if ((lilresult_mask[0] & 0x50AF50AFU) == 0) {
                result->kind = s4dmd;
                permuter = qdmtranslatev;
                rotator = 1;
@@ -5211,11 +5211,11 @@ static uint32 do_actual_array_call(
                fail("Call went to improperly-formed setup.");
             break;
          case sx4dmdbone:
-            if ((lilresult_mask[0] & 0xEF73EF73UL) == 0) {
+            if ((lilresult_mask[0] & 0xEF73EF73U) == 0) {
                result->kind = s_bone;
                permuter = bonetranslatev+8;
             }
-            else if ((lilresult_mask[0] & 0x73EF73EFUL) == 0) {
+            else if ((lilresult_mask[0] & 0x73EF73EFU) == 0) {
                result->kind = s_bone;
                permuter = bonetranslatev;
                rotator = 1;
@@ -5529,7 +5529,7 @@ static uint32 do_actual_array_call(
          personrec newperson = newpersonlist.people[real_index];
          if (newperson.id1) {
             if (funny) {
-               if (newperson.id1 != ~0UL) {  // We only handle people who haven't been erased.
+               if (newperson.id1 != ~0U) {  // We only handle people who haven't been erased.
                   k = real_index;
                   j = real_index;    // J will move twice as fast as k, looking for a loop not containing starting point.
                   do {
@@ -5537,10 +5537,10 @@ static uint32 do_actual_array_call(
                      // If hit a phantom, we can't proceed.
                      if (!newpersonlist.people[j].id1) fail("Can't do 'funny' call with phantoms.");
                      // If hit an erased person, we have clearly hit a loop not containing starting point.
-                     else if (newpersonlist.people[j].id1 == ~0UL) break;
+                     else if (newpersonlist.people[j].id1 == ~0U) break;
                      j = newplacelist[j];
                      if (!newpersonlist.people[j].id1) fail("Can't do 'funny' call with phantoms.");
-                     else if (newpersonlist.people[j].id1 == ~0UL) break;
+                     else if (newpersonlist.people[j].id1 == ~0U) break;
                      k = newplacelist[k];
                      if (k == real_index) goto funny_win;
                   } while (k != j);
@@ -5552,7 +5552,7 @@ static uint32 do_actual_array_call(
                   newperson.id2 = ss->people[real_index].id2;
                   newperson.id3 = ss->people[real_index].id3;
                   result->people[k] = newperson;
-                  newpersonlist.people[k].id1 = ~0UL;
+                  newpersonlist.people[k].id1 = ~0U;
                   funny_ok1 = true;    // Someone decided not to move.  Hilarious.
                   goto funny_end;
 
@@ -5562,7 +5562,7 @@ static uint32 do_actual_array_call(
                   j = 0;      /* See how long the loop is. */
                   do {
                      newperson = newpersonlist.people[k];
-                     newpersonlist.people[k].id1 = ~0UL;
+                     newpersonlist.people[k].id1 = ~0U;
                      k = newplacelist[k];
                      result->people[k] = newperson;
                      j++;
@@ -5721,7 +5721,7 @@ extern void basic_move(
    int j;
    callarray *calldeflist;
    uint32 funny;
-   uint32 division_code = ~0UL;
+   uint32 division_code = ~0U;
    callarray *linedefinition;
    callarray *coldefinition;
    uint32 matrix_check_flag = 0;
@@ -5999,7 +5999,7 @@ foobar:
          break;
       }
 
-      if (division_code != ~0UL) {
+      if (division_code != ~0U) {
          warn(warn__really_no_eachsetup);   // This will shut off all future "do it in each XYZ" warnings.
          goto divide_us;
       }

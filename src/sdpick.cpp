@@ -248,7 +248,7 @@ void do_number_iteration(int howmanynumbers,
          *number_list |= (this_num << (i*BITS_PER_NUMBER_FIELD));
 
          if (odd_number_only && !(this_num & 1))
-            *number_list = ~0UL;     // Set it illegal.
+            *number_list = ~0U;     // Set it illegal.
       }
 
       return;

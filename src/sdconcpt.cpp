@@ -270,7 +270,7 @@ static void do_c1_phantom_move(
 
          if (!mxnflags) {
             what_we_need = next_parseptr->concept->arg2;
-            if (what_we_need == 0) what_we_need = ~0UL;
+            if (what_we_need == 0) what_we_need = ~0U;
          }
 
          break;
@@ -282,7 +282,7 @@ static void do_c1_phantom_move(
          // No matrix expand.
       }
       else if (!(ss->cmd.cmd_misc_flags & CMD_MISC__NO_EXPAND_MATRIX)) {
-         if (what_we_need == ~0UL) {
+         if (what_we_need == ~0U) {
             // Expand for "phantom tandem" etc.  First priority is a 4x4.
             do_matrix_expansion(ss, CONCPROP__NEEDK_4X4, true);
             if (ss->kind != s4x4) do_matrix_expansion(ss, CONCPROP__NEEDK_2X8, true);
@@ -615,9 +615,9 @@ static void do_concept_double_diagonal(
       if (     global_livemask == 0x2A82A8) map_code = spcmap_diag2a;
       else if (global_livemask == 0x505505) map_code = spcmap_diag2b;
       else
-         tbonetest = ~0UL;   // Force error.
+         tbonetest = ~0U;   // Force error.
 
-      if (ss->kind != s4x6) tbonetest = ~0UL;   // Force error.
+      if (ss->kind != s4x6) tbonetest = ~0U;   // Force error.
 
       if (parseptr->concept->arg1 & 1) {
          if (tbonetest & 010) fail("There are no diagonal lines here.");
@@ -1163,7 +1163,7 @@ static void do_concept_parallelogram(
       kk = concept_comment;
 
    phantest_kind phancontrol = phantest_ok;
-   uint32 map_code = ~0UL;
+   uint32 map_code = ~0U;
    bool is_pgram = false;
    bool no_overcast = false;
 
@@ -1328,7 +1328,7 @@ static void do_concept_parallelogram(
    else
       map_code = MAPCODE(s2x4,1,mk,1);   // Plain parallelogram.
 
-   if (map_code == ~0UL)
+   if (map_code == ~0U)
       fail("Can't do this concept with parallelogram.");
 
    if (no_overcast) ss->clear_all_overcasts();
@@ -1634,7 +1634,7 @@ static void do_triple_formation(
        !(ss->cmd.cmd_misc_flags & CMD_MISC__MATRIX_CONCEPT))
       concentric_move(ss, &ss->cmd, &ss->cmd, schema_in_out_triple,
                       0, DFM1_CONC_CONCENTRIC_RULES,
-                      true, false, ~0UL, result);
+                      true, false, ~0U, result);
    else {
       // Gotta do this by hand.  Sigh.
       if (ss->cmd.cmd_misc2_flags & CMD_MISC2__CENTRAL_MYSTIC) {
@@ -2253,7 +2253,7 @@ static void do_concept_do_triangular_boxes(
    parse_block *parseptr,
    setup *result) THROW_DECL
 {
-   uint32 division_map_code = ~0UL;
+   uint32 division_map_code = ~0U;
    phantest_kind phant = (phantest_kind) parseptr->concept->arg1;
 
    // We only allow it in a 3x4 if it was real, not phantom.  Arg1 tells which.
@@ -2278,7 +2278,7 @@ static void do_concept_do_triangular_boxes(
    else if (ss->kind == s4x4)
       division_map_code = spcmap_trglbox4x4;
 
-   if (division_map_code == ~0UL)
+   if (division_map_code == ~0U)
       fail("Must have a 3x4, 4x4, or 4x5 setup for this concept.");
 
    divided_setup_move(ss, division_map_code, phant, true, result);
@@ -2579,7 +2579,7 @@ static void do_concept_once_removed(
    setup *result) THROW_DECL
 {
    ss->clear_all_overcasts();
-   uint32 map_code = ~0UL;
+   uint32 map_code = ~0U;
 
    // We allow "3x1" and the like only with plain "once removed".
    if (parseptr->concept->arg1 &&
@@ -3530,7 +3530,7 @@ static void do_concept_phan_crazy(
                            // we need to rematerialize them at each step.
 
    uint32 offsetmapcode;
-   uint32 specialmapcode = ~0UL;
+   uint32 specialmapcode = ~0U;
 
    phantest_kind phanstuff = phantest_ok;
 
@@ -4044,7 +4044,7 @@ static void do_concept_checkerboard(
       subsid_cmd.cmd_fraction.set_to_null();
       subsid_cmd.cmd_final_flags.clear_all_herit_and_final_bits();
       concentric_move(ss, &ss->cmd, &subsid_cmd, schema_concentric, 0,
-                      DFM1_CONC_DEMAND_LINES | DFM1_CONC_FORCE_COLUMNS, true, false, ~0UL, result);
+                      DFM1_CONC_DEMAND_LINES | DFM1_CONC_FORCE_COLUMNS, true, false, ~0U, result);
       result->clear_all_overcasts();
       return;
    }
@@ -4106,7 +4106,7 @@ static void do_concept_checkerboard(
          // spots all have Q != 00, which means that they are phantoms
          // or are facing some other way.
          if ((M & Q) == 0 &&
-             (((Q & 0x55555555) << 1) | Q | M | 0x55555555) == ~0UL) {
+             (((Q & 0x55555555U) << 1) | Q | M | 0x55555555U) == ~0U) {
             offset = i;
             break;
          }
@@ -4345,10 +4345,10 @@ static void do_concept_checkpoint(
 
    if (reverseness)
       concentric_move(ss, &this_cmd, &subsid_cmd, schema_rev_checkpoint_concept,
-                      0, 0, true, false, ~0UL, result);
+                      0, 0, true, false, ~0U, result);
    else
       concentric_move(ss, &subsid_cmd, &this_cmd, schema_checkpoint,
-                      0, DFM1_CONC_FORCE_OTHERWAY, true, false, ~0UL, result);
+                      0, DFM1_CONC_FORCE_OTHERWAY, true, false, ~0U, result);
 }
 
 
@@ -5033,7 +5033,7 @@ static void do_concept_move_in_and(
    parse_block *bogus_parse_block = ss->cmd.parseptr;
    if (check_for_centers_concept(bogus_topcallflags1, bogus_parse_block, &ss->cmd)) {
       ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
-      concentric_move(ss, &ss->cmd, (setup_command *) 0, the_schema, 0, 0, true, false, ~0UL, result);
+      concentric_move(ss, &ss->cmd, (setup_command *) 0, the_schema, 0, 0, true, false, ~0U, result);
    }
    else {
       move(ss, false, result);
@@ -5429,9 +5429,9 @@ static void do_concept_inner_outer(
       ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
 
    if (arg1 & 8)
-      concentric_move(ss, &ss->cmd, (setup_command *) 0, sch, 0, 0, true, false, ~0UL, result);
+      concentric_move(ss, &ss->cmd, (setup_command *) 0, sch, 0, 0, true, false, ~0U, result);
    else
-      concentric_move(ss, (setup_command *) 0, &ss->cmd, sch, 0, 0, true, false, ~0UL, result);
+      concentric_move(ss, (setup_command *) 0, &ss->cmd, sch, 0, 0, true, false, ~0U, result);
 
    result->rotation -= rot;   // Flip the setup back.
    return;
@@ -5768,7 +5768,7 @@ static void do_concept_multiple_formations(
       break;
    }
 
-   do_triple_formation(&tempsetup, parseptr, ~0UL, result);
+   do_triple_formation(&tempsetup, parseptr, ~0U, result);
 }
 
 
@@ -5857,7 +5857,7 @@ static void do_concept_ferris(
       fail("Illegal modifier before \"ferris\" or \"release\".");
 
    expand::expand_setup(*map_ptr, ss);
-   concentric_move(ss, &ss->cmd, &ss->cmd, schema_in_out_triple_squash, 0, 0, false, false, ~0UL, result);
+   concentric_move(ss, &ss->cmd, &ss->cmd, schema_in_out_triple_squash, 0, 0, false, false, ~0U, result);
 }
 
 
@@ -6545,9 +6545,9 @@ static void do_concept_meta(
          if (numer <= 0 || numer >= denom)
             fail("Illegal fraction.");
 
-         uint32 afracs = ~0UL;
-         uint32 bfracs = ~0UL;
-         uint32 cfracs = ~0UL;
+         uint32 afracs = ~0U;
+         uint32 bfracs = ~0U;
+         uint32 cfracs = ~0U;
 
          if (concept_option_code == 2) {
             // This is "middle M/N".
@@ -6575,7 +6575,7 @@ static void do_concept_meta(
          }
 
          // Do afracs without.
-         if (afracs != ~0UL) {
+         if (afracs != ~0U) {
             result->cmd = nocmd;
             result->cmd.parseptr = result_of_skip;      // Skip over the concept.
             result->cmd.cmd_fraction.flags = CMD_FRAC_BREAKING_UP;
@@ -6584,7 +6584,7 @@ static void do_concept_meta(
          }
 
          // Do bfracs with.
-         if (bfracs != ~0UL) {
+         if (bfracs != ~0U) {
             result->cmd = yescmd;
             result->cmd.cmd_fraction.flags = corefracs.flags | CMD_FRAC_BREAKING_UP;
             result->cmd.cmd_fraction.fraction = bfracs;
@@ -6592,7 +6592,7 @@ static void do_concept_meta(
          }
 
          // Do cfracs without.
-         if (cfracs != ~0UL) {
+         if (cfracs != ~0U) {
             result->cmd = nocmd;
             result->cmd.parseptr = result_of_skip;      // Skip over the concept.
             result->cmd.cmd_fraction.flags = CMD_FRAC_BREAKING_UP;
@@ -7805,7 +7805,7 @@ static void do_concept_concentric(
       case s_ptpd: map_code = MAPCODE(sdmd,2,MPKIND__SPLIT,0); break;
       case s1x4: case sdmd:
          concentric_move(ss, &ss->cmd, &ss->cmd, schema, 0,
-                         DFM1_CONC_CONCENTRIC_RULES, true, false, ~0UL, result);
+                         DFM1_CONC_CONCENTRIC_RULES, true, false, ~0U, result);
          return;
       default:
          fail("Can't figure out how to do single concentric here.");
@@ -7818,7 +7818,7 @@ static void do_concept_concentric(
    case schema_intermediate_diamond: case schema_outside_diamond:
       ss->cmd.cmd_misc_flags |= CMD_MISC__SAID_DIAMOND;
       concentric_move(ss, &ss->cmd, (setup_command *) 0, schema, 0,
-                      DFM1_CONC_CONCENTRIC_RULES, true, false, ~0UL, result);
+                      DFM1_CONC_CONCENTRIC_RULES, true, false, ~0U, result);
 
       // 8-person concentric operations do not show the split.
       result->result_flags.clear_split_info();
@@ -7829,7 +7829,7 @@ static void do_concept_concentric(
          fail("Use the \"CONCENTRIC Z's\" concept.");
 
       concentric_move(ss, &ss->cmd, &ss->cmd, schema, 0,
-                      DFM1_CONC_CONCENTRIC_RULES, true, false, ~0UL, result);
+                      DFM1_CONC_CONCENTRIC_RULES, true, false, ~0U, result);
 
       // 8-person concentric operations do not show the split.
       result->result_flags.clear_split_info();

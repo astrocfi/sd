@@ -29,7 +29,72 @@
 // database format version.
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 299
+#define DATABASE_FORMAT_VERSION 300
+
+
+// We used to do some stuff to cater to compiler vendors (e.g. Sun
+// Microsystems) that couldn't be bothered to do the "const" attribute
+// correctly.
+//
+// So we used to have a line that said "#define Const const".  But not
+// any longer.  If your compiler doesn't handle "const" correctly (or
+// any other aspect of ANSI C++, for that matter), that's too bad.
+//
+// We no longer take pity on broken compilers.
+
+
+// We would like "veryshort" to be a signed char, but not all
+// compilers are fully ANSI compliant.  The IBM AIX compiler, for
+// example, considers char to be unsigned.  The switch
+// "NO_SIGNED_CHAR" alerts us to that fact.  The configure script has
+// checked this for us.
+//
+// Baloney!  We no longer use a configure script.  We are aware of the
+// fact that there is a whole "industry" (config/autoconf/etc.)
+// dedicated to the job of figuring out what hideous brokenness any
+// given Unix implementation is inflicting on us today, but we have no
+// patience for that kind of garbage, and we are not going to support
+// that "industry".  If your compiler or OS can't handle this, tough.
+// (But we still leave the ifdef in place; it does no harm.)
+//
+// We no longer take pity on broken compilers or operating systems.
+
+#ifdef NO_SIGNED_CHAR
+#error "We need to have the char datatype be signed"
+#endif
+
+// We would like to think that we will always be able to count on compilers to do the
+// right thing with "int" and "long int" and so on.  What we would really like is
+// for compilers to be counted on to make "int" at least 32 bits, because we need
+// 32 bits in many places.  However, some compilers don't, so we have to use
+// "long int" or "unsigned long int".  We think that all compilers we deal with
+// will do the right thing with that, but, just in case, we use a typedef.
+//
+// The type "uint32" must be an unsigned integer of at least 32 bits.
+// The type "uint16" must be an unsigned integer of at least 16 bits.
+//
+// Note also:  There are many places in the program (not just in database.h and sd.h)
+// where the suffix "UL" is put on constants that are intended to be of type "uint32".
+// If "uint32" is changed to anything other than "unsigned long int", it may be
+// necessary to change all of those.   Done.
+//
+// The above dates from a time when the major challenge was dealing with compilers that
+// considered "int" to mean 16 bits.  Those days are long gone.  (Or, to be precise,
+// I have no interest in supporting such compilers.)  Contemporary usage (that is, 32 bit
+// and 64 bit gcc) seems to be that "int" means 32 bits and "long int" means the longest
+// native type.  In principle, the code should be impervious to using "long int" on a
+// 64 bit sytem (the comment does say "at least 32 bits, doesn't it?), but in practice
+// there have been problems.
+
+typedef int int32;
+typedef unsigned int uint32;
+typedef short int int16;
+typedef unsigned short int uint16;
+typedef char veryshort;
+typedef char int8;
+typedef unsigned char uint8;
+typedef const char *Cstring;
+
 
 // BEWARE!!  These must track the items in "tagtabinit" in mkcalls.cpp .
 enum base_call_index {
@@ -92,76 +157,76 @@ enum base_call_index {
 // "calldef_block", and the "cmd_final_flags.herit" of a setup with its command block.
 
 enum heritflags {
-   INHERITFLAG_DIAMOND    = 0x00000001UL,
-   INHERITFLAG_REVERSE    = 0x00000002UL,
-   INHERITFLAG_LEFT       = 0x00000004UL,
-   INHERITFLAG_FUNNY      = 0x00000008UL,
-   INHERITFLAG_INTLK      = 0x00000010UL,
-   INHERITFLAG_MAGIC      = 0x00000020UL,
-   INHERITFLAG_GRAND      = 0x00000040UL,
-   INHERITFLAG_12_MATRIX  = 0x00000080UL,
-   INHERITFLAG_16_MATRIX  = 0x00000100UL,
-   INHERITFLAG_CROSS      = 0x00000200UL,
-   INHERITFLAG_SINGLE     = 0x00000400UL,
-   INHERITFLAG_SINGLEFILE = 0x00000800UL,
-   INHERITFLAG_HALF       = 0x00001000UL,
-   INHERITFLAG_REWIND     = 0x00002000UL,
-   INHERITFLAG_STRAIGHT   = 0x00004000UL,
-   INHERITFLAG_TWISTED    = 0x00008000UL,
-   INHERITFLAG_LASTHALF   = 0x00010000UL,
-   INHERITFLAG_FRACTAL    = 0x00020000UL,
-   INHERITFLAG_FAST       = 0x00040000UL,
+   INHERITFLAG_DIAMOND    = 0x00000001U,
+   INHERITFLAG_REVERSE    = 0x00000002U,
+   INHERITFLAG_LEFT       = 0x00000004U,
+   INHERITFLAG_FUNNY      = 0x00000008U,
+   INHERITFLAG_INTLK      = 0x00000010U,
+   INHERITFLAG_MAGIC      = 0x00000020U,
+   INHERITFLAG_GRAND      = 0x00000040U,
+   INHERITFLAG_12_MATRIX  = 0x00000080U,
+   INHERITFLAG_16_MATRIX  = 0x00000100U,
+   INHERITFLAG_CROSS      = 0x00000200U,
+   INHERITFLAG_SINGLE     = 0x00000400U,
+   INHERITFLAG_SINGLEFILE = 0x00000800U,
+   INHERITFLAG_HALF       = 0x00001000U,
+   INHERITFLAG_REWIND     = 0x00002000U,
+   INHERITFLAG_STRAIGHT   = 0x00004000U,
+   INHERITFLAG_TWISTED    = 0x00008000U,
+   INHERITFLAG_LASTHALF   = 0x00010000U,
+   INHERITFLAG_FRACTAL    = 0x00020000U,
+   INHERITFLAG_FAST       = 0x00040000U,
 
    // This is a 2 bit field.
-   INHERITFLAG_YOYOETCMASK      = 0x00180000UL,
+   INHERITFLAG_YOYOETCMASK      = 0x00180000U,
    // This is its low bit.
-   INHERITFLAG_YOYOETCBIT       = 0x00080000UL,
+   INHERITFLAG_YOYOETCBIT       = 0x00080000U,
    // These 3 things are the choices available inside.
    // Warning!  We sort of cheat on inheritance.  The low bit ("yoyo") means inherit yoyo,
    // and the high bit ("generous") means inherit both generous and stingy.
-   INHERITFLAG_YOYOETCK_YOYO    = 0x00080000UL,
-   INHERITFLAG_YOYOETCK_GENEROUS= 0x00100000UL,
-   INHERITFLAG_YOYOETCK_STINGY  = 0x00180000UL,
+   INHERITFLAG_YOYOETCK_YOYO    = 0x00080000U,
+   INHERITFLAG_YOYOETCK_GENEROUS= 0x00100000U,
+   INHERITFLAG_YOYOETCK_STINGY  = 0x00180000U,
 
    // This is a 4 bit field.
-   INHERITFLAG_MXNMASK    = 0x01E00000UL,
+   INHERITFLAG_MXNMASK    = 0x01E00000U,
    // This is its low bit.
-   INHERITFLAG_MXNBIT     = 0x00200000UL,
+   INHERITFLAG_MXNBIT     = 0x00200000U,
    // These 8 things are some of the 15 choices available inside.
-   INHERITFLAGMXNK_1X2    = 0x00200000UL,
-   INHERITFLAGMXNK_2X1    = 0x00400000UL,
-   INHERITFLAGMXNK_1X3    = 0x00600000UL,
-   INHERITFLAGMXNK_3X1    = 0x00800000UL,
-   INHERITFLAGMXNK_0X3    = 0x00A00000UL,
-   INHERITFLAGMXNK_3X0    = 0x00C00000UL,
-   INHERITFLAGMXNK_0X4    = 0x00E00000UL,
-   INHERITFLAGMXNK_4X0    = 0x01000000UL,
+   INHERITFLAGMXNK_1X2    = 0x00200000U,
+   INHERITFLAGMXNK_2X1    = 0x00400000U,
+   INHERITFLAGMXNK_1X3    = 0x00600000U,
+   INHERITFLAGMXNK_3X1    = 0x00800000U,
+   INHERITFLAGMXNK_0X3    = 0x00A00000U,
+   INHERITFLAGMXNK_3X0    = 0x00C00000U,
+   INHERITFLAGMXNK_0X4    = 0x00E00000U,
+   INHERITFLAGMXNK_4X0    = 0x01000000U,
 
    // This is a 3 bit field.
-   INHERITFLAG_NXNMASK    = 0x0E000000UL,
+   INHERITFLAG_NXNMASK    = 0x0E000000U,
    // This is its low bit.
-   INHERITFLAG_NXNBIT     = 0x02000000UL,
+   INHERITFLAG_NXNBIT     = 0x02000000U,
    // These 7 things are the choices available inside.
-   INHERITFLAGNXNK_2X2    = 0x02000000UL,
-   INHERITFLAGNXNK_3X3    = 0x04000000UL,
-   INHERITFLAGNXNK_4X4    = 0x06000000UL,
-   INHERITFLAGNXNK_5X5    = 0x08000000UL,
-   INHERITFLAGNXNK_6X6    = 0x0A000000UL,
-   INHERITFLAGNXNK_7X7    = 0x0C000000UL,
-   INHERITFLAGNXNK_8X8    = 0x0E000000UL,
+   INHERITFLAGNXNK_2X2    = 0x02000000U,
+   INHERITFLAGNXNK_3X3    = 0x04000000U,
+   INHERITFLAGNXNK_4X4    = 0x06000000U,
+   INHERITFLAGNXNK_5X5    = 0x08000000U,
+   INHERITFLAGNXNK_6X6    = 0x0A000000U,
+   INHERITFLAGNXNK_7X7    = 0x0C000000U,
+   INHERITFLAGNXNK_8X8    = 0x0E000000U,
 
    // This is a 3 bit field.
-   INHERITFLAG_REVERTMASK = 0x70000000UL,
+   INHERITFLAG_REVERTMASK = 0x70000000U,
    // This is its low bit.
-   INHERITFLAG_REVERTBIT  = 0x10000000UL,
+   INHERITFLAG_REVERTBIT  = 0x10000000U,
    // These 7 things are the choices available inside.
-   INHERITFLAGRVRTK_REVERT= 0x10000000UL,
-   INHERITFLAGRVRTK_REFLECT=0x20000000UL,
-   INHERITFLAGRVRTK_RVF   = 0x30000000UL,
-   INHERITFLAGRVRTK_RFV   = 0x40000000UL,
-   INHERITFLAGRVRTK_RVFV  = 0x50000000UL,
-   INHERITFLAGRVRTK_RFVF  = 0x60000000UL,
-   INHERITFLAGRVRTK_RFF   = 0x70000000UL
+   INHERITFLAGRVRTK_REVERT= 0x10000000U,
+   INHERITFLAGRVRTK_REFLECT=0x20000000U,
+   INHERITFLAGRVRTK_RVF   = 0x30000000U,
+   INHERITFLAGRVRTK_RFV   = 0x40000000U,
+   INHERITFLAGRVRTK_RVFV  = 0x50000000U,
+   INHERITFLAGRVRTK_RFVF  = 0x60000000U,
+   INHERITFLAGRVRTK_RFF   = 0x70000000U
 
    // one bit remains.
 };
@@ -181,58 +246,58 @@ enum heritflags {
 // and the "topcallflags1" word of the parse_state.
 
 enum {
-   CFLAG1_VISIBLE_FRACTION_MASK     = 0x00000003UL, // 2 bit field
-   CFLAG1_VISIBLE_FRACTION_BIT      = 0x00000001UL, // its low bit
-   CFLAG1_12_16_MATRIX_MEANS_SPLIT  = 0x00000004UL,
-   CFLAG1_PRESERVE_Z_STUFF          = 0x00000008UL,
-   CFLAG1_SPLIT_LIKE_DIXIE_STYLE    = 0x00000010UL,
-   CFLAG1_PARALLEL_CONC_END         = 0x00000020UL,
-   CFLAG1_TAKE_RIGHT_HANDS          = 0x00000040UL,
-   CFLAG1_IS_STAR_CALL              = 0x00000080UL,
-   CFLAG1_YOYO_FRACTAL_NUM          = 0x00000100UL,
-   CFLAG1_FUDGE_TO_Q_TAG            = 0x00000200UL,
-   CFLAG1_STEP_REAR_MASK            = 0x00001C00UL, // 3 bit field
-   CFLAG1_STEP_TO_WAVE              = 0x00000400UL, // the encodings inside
-   CFLAG1_REAR_BACK_FROM_R_WAVE     = 0x00000800UL,
-   CFLAG1_STEP_TO_NONPHAN_BOX       = 0x00000C00UL,
-   CFLAG1_REAR_BACK_FROM_QTAG       = 0x00001000UL,
-   CFLAG1_REAR_BACK_FROM_EITHER     = 0x00001400UL,
-   CFLAG1_STEP_TO_QTAG              = 0x00001800UL,
-   CFLAG1_DISTRIBUTE_REPETITIONS    = 0x00002000UL,
-   CFLAG1_NUMBER_MASK               = 0x0001C000UL, // 3 bit field
-   CFLAG1_NUMBER_BIT                = 0x00004000UL, // its low bit
-   CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK = 0x00020000UL,
-   CFLAG1_LEFT_ONLY_IF_HALF         = 0x00040000UL,
-   CFLAG1_SEQUENCE_STARTER          = 0x00080000UL,
-   CFLAG1_SEQUENCE_STARTER_PROM     = 0x00100000UL,
-   CFLAG1_DONT_USE_IN_RESOLVE       = 0x00200000UL,
-   CFLAG1_DONT_USE_IN_NICE_RESOLVE  = 0x00400000UL,
-   CFLAG1_SPLIT_LARGE_SETUPS        = 0x00800000UL,
-   CFLAG1_SPLIT_IF_Z                = 0x01000000UL,
-   CFLAG1_BASE_TAG_CALL_MASK        = 0x0E000000UL, // 3 bit field
-   CFLAG1_BASE_TAG_CALL_BIT         = 0x02000000UL, // its low bit
-   CFLAG1_BASE_CIRC_CALL            = 0x10000000UL,
-   CFLAG1_ENDS_TAKE_RIGHT_HANDS     = 0x20000000UL,
-   CFLAG1_FUNNY_MEANS_THOSE_FACING  = 0x40000000UL,
-   CFLAG1_SPLIT_LIKE_SQUARE_THRU    = 0x80000000UL
+   CFLAG1_VISIBLE_FRACTION_MASK     = 0x00000003U, // 2 bit field
+   CFLAG1_VISIBLE_FRACTION_BIT      = 0x00000001U, // its low bit
+   CFLAG1_12_16_MATRIX_MEANS_SPLIT  = 0x00000004U,
+   CFLAG1_PRESERVE_Z_STUFF          = 0x00000008U,
+   CFLAG1_SPLIT_LIKE_DIXIE_STYLE    = 0x00000010U,
+   CFLAG1_PARALLEL_CONC_END         = 0x00000020U,
+   CFLAG1_TAKE_RIGHT_HANDS          = 0x00000040U,
+   CFLAG1_IS_STAR_CALL              = 0x00000080U,
+   CFLAG1_YOYO_FRACTAL_NUM          = 0x00000100U,
+   CFLAG1_FUDGE_TO_Q_TAG            = 0x00000200U,
+   CFLAG1_STEP_REAR_MASK            = 0x00001C00U, // 3 bit field
+   CFLAG1_STEP_TO_WAVE              = 0x00000400U, // the encodings inside
+   CFLAG1_REAR_BACK_FROM_R_WAVE     = 0x00000800U,
+   CFLAG1_STEP_TO_NONPHAN_BOX       = 0x00000C00U,
+   CFLAG1_REAR_BACK_FROM_QTAG       = 0x00001000U,
+   CFLAG1_REAR_BACK_FROM_EITHER     = 0x00001400U,
+   CFLAG1_STEP_TO_QTAG              = 0x00001800U,
+   CFLAG1_DISTRIBUTE_REPETITIONS    = 0x00002000U,
+   CFLAG1_NUMBER_MASK               = 0x0001C000U, // 3 bit field
+   CFLAG1_NUMBER_BIT                = 0x00004000U, // its low bit
+   CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK = 0x00020000U,
+   CFLAG1_LEFT_ONLY_IF_HALF         = 0x00040000U,
+   CFLAG1_SEQUENCE_STARTER          = 0x00080000U,
+   CFLAG1_SEQUENCE_STARTER_PROM     = 0x00100000U,
+   CFLAG1_DONT_USE_IN_RESOLVE       = 0x00200000U,
+   CFLAG1_DONT_USE_IN_NICE_RESOLVE  = 0x00400000U,
+   CFLAG1_SPLIT_LARGE_SETUPS        = 0x00800000U,
+   CFLAG1_SPLIT_IF_Z                = 0x01000000U,
+   CFLAG1_BASE_TAG_CALL_MASK        = 0x0E000000U, // 3 bit field
+   CFLAG1_BASE_TAG_CALL_BIT         = 0x02000000U, // its low bit
+   CFLAG1_BASE_CIRC_CALL            = 0x10000000U,
+   CFLAG1_ENDS_TAKE_RIGHT_HANDS     = 0x20000000U,
+   CFLAG1_FUNNY_MEANS_THOSE_FACING  = 0x40000000U,
+   CFLAG1_SPLIT_LIKE_SQUARE_THRU    = 0x80000000U
 };
 
 // These are the logical continuation of the "CFLAG1" bits, that have to overflow
 // into the "flagsf" word.  They must lie in the top 16 bits.
 enum {
-   CFLAG2_NO_SEQ_IF_NO_FRAC         = 0x00010000UL,
-   CFLAG2_CAN_BE_ONE_SIDE_LATERAL   = 0x00020000UL,
-   CFLAG2_NO_ELONGATION_ALLOWED     = 0x00040000UL,
-   CFLAG2_IMPRECISE_ROTATION        = 0x00080000UL,
-   CFLAG2_CAN_BE_FAN                = 0x00100000UL,
-   CFLAG2_EQUALIZE                  = 0x00200000UL,
-   CFLAG2_ONE_PERSON_CALL           = 0x00400000UL,
-   CFLAG2_YIELD_IF_AMBIGUOUS        = 0x00800000UL,
-   CFLAG2_DO_EXCHANGE_COMPRESS      = 0x01000000UL,
-   CFLAG2_IF_MOVE_CANT_ROLL         = 0x02000000UL,
-   CFLAG2_FRACTIONAL_NUMBERS        = 0x04000000UL,
-   CFLAG2_NO_RAISE_OVERCAST         = 0x08000000UL,
-   CFLAG2_OVERCAST_TRANSPARENT      = 0x10000000UL
+   CFLAG2_NO_SEQ_IF_NO_FRAC         = 0x00010000U,
+   CFLAG2_CAN_BE_ONE_SIDE_LATERAL   = 0x00020000U,
+   CFLAG2_NO_ELONGATION_ALLOWED     = 0x00040000U,
+   CFLAG2_IMPRECISE_ROTATION        = 0x00080000U,
+   CFLAG2_CAN_BE_FAN                = 0x00100000U,
+   CFLAG2_EQUALIZE                  = 0x00200000U,
+   CFLAG2_ONE_PERSON_CALL           = 0x00400000U,
+   CFLAG2_YIELD_IF_AMBIGUOUS        = 0x00800000U,
+   CFLAG2_DO_EXCHANGE_COMPRESS      = 0x01000000U,
+   CFLAG2_IF_MOVE_CANT_ROLL         = 0x02000000U,
+   CFLAG2_FRACTIONAL_NUMBERS        = 0x04000000U,
+   CFLAG2_NO_RAISE_OVERCAST         = 0x08000000U,
+   CFLAG2_OVERCAST_TRANSPARENT      = 0x10000000U
    // 3 spares.
 };
 
@@ -332,6 +397,8 @@ enum setup_kind {
    s_star,
    s_trngl,
    s_trngl4,
+   sbeehive,
+   svee,
    s_bone6,
    s_short6,
    s1x6,
@@ -501,6 +568,10 @@ enum begin_kind {
    b_ptrngl,
    b_trngl4,
    b_ptrngl4,
+   b_beehive,
+   b_pbeehive,
+   b_vee,
+   b_pvee,
    b_trngl8,
    b_ptrngl8,
    b_bone6,
@@ -1094,17 +1165,17 @@ enum mods1_word {
 
    // Under normal conditions, we do *not* re-evaluate between parts.  This
    // flag overrides that and makes us re-evaluate.
-   DFM1_SEQ_RE_EVALUATE              = 0x00000001UL,
-   DFM1_SEQ_DO_HALF_MORE             = 0x00000002UL,
+   DFM1_SEQ_RE_EVALUATE              = 0x00000001U,
+   DFM1_SEQ_DO_HALF_MORE             = 0x00000002U,
    // But, if we break up a call with something like "random", the convention
    // is to re-evaluate at the break point.  This flag, used for calls like
    // "patch the <anyone>" or "rims trade back", says that we *never* re-evaluate,
    // even if the call is broken up.
-   DFM1_SEQ_NO_RE_EVALUATE           = 0x00000004UL,
-   DFM1_SEQ_REENABLE_ELONG_CHK       = 0x00000008UL,
-   DFM1_SEQ_REPEAT_N                 = 0x00000010UL,
-   DFM1_SEQ_REPEAT_NM1               = 0x00000020UL,
-   DFM1_SEQ_NORMALIZE                = 0x00000040UL,
+   DFM1_SEQ_NO_RE_EVALUATE           = 0x00000004U,
+   DFM1_SEQ_REENABLE_ELONG_CHK       = 0x00000008U,
+   DFM1_SEQ_REPEAT_N                 = 0x00000010U,
+   DFM1_SEQ_REPEAT_NM1               = 0x00000020U,
+   DFM1_SEQ_NORMALIZE                = 0x00000040U,
    // Beware!!  The above "seq" flags must all lie within DFM1_CONCENTRICITY_FLAG_MASK.
 
    // End of the separate conc/seq flags.  This constant embraces them.
@@ -1119,32 +1190,32 @@ enum mods1_word {
    // Start of miscellaneous flags.
 
    // This is a 3 bit field -- CALL_MOD_BIT tells where its low bit lies.
-   DFM1_CALL_MOD_MASK                = 0x00000700UL,
-   DFM1_CALL_MOD_BIT                 = 0x00000100UL,
+   DFM1_CALL_MOD_MASK                = 0x00000700U,
+   DFM1_CALL_MOD_BIT                 = 0x00000100U,
    // Here are the codes that can be inside.
-   DFM1_CALL_MOD_ANYCALL             = 0x00000100UL,
-   DFM1_CALL_MOD_MAND_ANYCALL        = 0x00000200UL,
-   DFM1_CALL_MOD_ALLOW_PLAIN_MOD     = 0x00000300UL,
-   DFM1_CALL_MOD_ALLOW_FORCED_MOD    = 0x00000400UL,
-   DFM1_CALL_MOD_OR_SECONDARY        = 0x00000500UL,
-   DFM1_CALL_MOD_MAND_SECONDARY      = 0x00000600UL,
+   DFM1_CALL_MOD_ANYCALL             = 0x00000100U,
+   DFM1_CALL_MOD_MAND_ANYCALL        = 0x00000200U,
+   DFM1_CALL_MOD_ALLOW_PLAIN_MOD     = 0x00000300U,
+   DFM1_CALL_MOD_ALLOW_FORCED_MOD    = 0x00000400U,
+   DFM1_CALL_MOD_OR_SECONDARY        = 0x00000500U,
+   DFM1_CALL_MOD_MAND_SECONDARY      = 0x00000600U,
 
-   DFM1_ONLY_FORCE_ELONG_IF_EMPTY    = 0x00000800UL,
-   DFM1_ROLL_TRANSPARENT_IF_Z        = 0x00001000UL,
-   DFM1_ENDSCANDO                    = 0x00002000UL,
-   DFM1_FINISH_THIS                  = 0x00004000UL,
-   DFM1_ROLL_TRANSPARENT             = 0x00008000UL,
-   DFM1_PERMIT_TOUCH_OR_REAR_BACK    = 0x00010000UL,
-   DFM1_CPLS_UNLESS_SINGLE           = 0x00020000UL,
+   DFM1_ONLY_FORCE_ELONG_IF_EMPTY    = 0x00000800U,
+   DFM1_ROLL_TRANSPARENT_IF_Z        = 0x00001000U,
+   DFM1_ENDSCANDO                    = 0x00002000U,
+   DFM1_FINISH_THIS                  = 0x00004000U,
+   DFM1_ROLL_TRANSPARENT             = 0x00008000U,
+   DFM1_PERMIT_TOUCH_OR_REAR_BACK    = 0x00010000U,
+   DFM1_CPLS_UNLESS_SINGLE           = 0x00020000U,
    // This is a 2 bit field -- NUM_SHIFT_BIT tells where its low bit lies.
-   DFM1_NUM_SHIFT_MASK               = 0x000C0000UL,
-   DFM1_NUM_SHIFT_BIT                = 0x00040000UL,
+   DFM1_NUM_SHIFT_MASK               = 0x000C0000U,
+   DFM1_NUM_SHIFT_BIT                = 0x00040000U,
    // This is a 3 bit field -- NUM_INSERT_BIT tells where its low bit lies.
-   DFM1_NUM_INSERT_MASK              = 0x00700000UL,
-   DFM1_NUM_INSERT_BIT               = 0x00100000UL,
-   DFM1_NO_CHECK_MOD_LEVEL           = 0x00800000UL,
-   DFM1_FRACTAL_INSERT               = 0x01000000UL,
-   DFM1_SUPPRESS_ROLL                = 0x02000000UL
+   DFM1_NUM_INSERT_MASK              = 0x00700000U,
+   DFM1_NUM_INSERT_BIT               = 0x00100000U,
+   DFM1_NO_CHECK_MOD_LEVEL           = 0x00800000U,
+   DFM1_FRACTAL_INSERT               = 0x01000000U,
+   DFM1_SUPPRESS_ROLL                = 0x02000000U
 };
 
 enum  {
@@ -1189,5 +1260,5 @@ enum {
 
 // Some external stuff in common.cpp:
 
-extern bool do_heritflag_merge(unsigned long int *dest, unsigned long int source);
+extern bool do_heritflag_merge(uint32 *dest, uint32 source);
 extern int begin_sizes[];

@@ -351,7 +351,7 @@ bool iofull::init_step(init_callback_state s, int n)
 
       parse_level(line);
 
-      strncat(outfile_string, filename_strings[calling_level], MAX_FILENAME_LENGTH);
+      strncat(outfile_string, filename_strings[calling_level], MAX_FILENAME_LENGTH-80);
       break;
 
    case init_database1:
@@ -1217,7 +1217,7 @@ uint32 iofull::get_number_fields(int nnumbers, bool odd_number_only, bool forbid
                writestuff("Type a number between 0 and 36");
                newline();
             }
-            else if (!buffer[0]) return ~0UL;
+            else if (!buffer[0]) return ~0U;
             else {
                this_num = atoi(buffer);
                break;
@@ -1230,9 +1230,9 @@ uint32 iofull::get_number_fields(int nnumbers, bool odd_number_only, bool forbid
          howmanynumbers--;
       }
 
-      if (odd_number_only && !(this_num & 1)) return ~0UL;
-      if (forbid_zero && this_num == 0) return ~0UL;
-      if (this_num >= NUM_CARDINALS) return ~0UL;    // User gave bad answer.
+      if (odd_number_only && !(this_num & 1)) return ~0U;
+      if (forbid_zero && this_num == 0) return ~0U;
+      if (this_num >= NUM_CARDINALS) return ~0U;    // User gave bad answer.
       number_list |= (this_num << (i*BITS_PER_NUMBER_FIELD));
    }
 

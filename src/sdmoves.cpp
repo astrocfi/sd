@@ -617,7 +617,7 @@ extern bool do_1x3_type_expansion(setup *ss, uint32 heritflags_to_check) THROW_D
    uint32 directions;
    uint32 dblbitlivemask;
    const Nx1_checker *getin_search;
-   uint32 full_occupation = (uint32) ((1 << ((attr::klimit(ss->kind)+1) << 1)) - 1);
+   uint32 full_occupation = (uint32) ((1U << ((attr::klimit(ss->kind)+1) << 1)) - 1);
 
    big_endian_get_directions(ss, directions, dblbitlivemask);
 
@@ -5093,7 +5093,7 @@ static bool do_misc_schema(
    }
    else if (the_schema == schema_select_headliners) {
       inner_selective_move(ss, foo1p, &foo2,
-                           selective_key_plain, 1, 0, false, 0x80000008UL,
+                           selective_key_plain, 1, 0, false, 0x80000008U,
                            selector_uninitialized,
                            innerdef->modifiers1,
                            outerdef->modifiers1,
@@ -5101,7 +5101,7 @@ static bool do_misc_schema(
    }
    else if (the_schema == schema_select_sideliners) {
       inner_selective_move(ss, foo1p, &foo2,
-                           selective_key_plain, 1, 0, false, 0x80000001UL,
+                           selective_key_plain, 1, 0, false, 0x80000001U,
                            selector_uninitialized,
                            innerdef->modifiers1,
                            outerdef->modifiers1,
@@ -5394,7 +5394,7 @@ static bool do_misc_schema(
       concentric_move(ss, foo1p, &foo2, the_schema,
                       innerdef->modifiers1,
                       override_concentric_rules ? override_concentric_rules : outerdef->modifiers1,
-                      the_schema != schema_rev_checkpoint, true, ~0UL, result);
+                      the_schema != schema_rev_checkpoint, true, ~0U, result);
 
       result->rotation -= rot;   /* Flip the setup back. */
 
@@ -7507,7 +7507,7 @@ void move(
       if (!(concept_table[ddd->kind].concept_prop & CONCPROP__PERMIT_MODIFIERS)) {
          foobar = INHERITFLAG_HALF | INHERITFLAG_LASTHALF | INHERITFLAG_DIAMOND |
             INHERITFLAG_MAGIC | INHERITFLAG_INTLK | INHERITFLAG_REVERSE;
-         fooble = ~0UL;
+         fooble = ~0U;
 
          if (ddd->kind == concept_meta) {
              if (ddd->arg1 != meta_key_initially &&

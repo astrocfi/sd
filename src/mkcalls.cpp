@@ -65,16 +65,6 @@ FILE *db_output = NULL;
 char db_input_filename[FILENAME_LEN];
 char db_output_filename[FILENAME_LEN];
 
-/* We would like to think that we will always be able to count on compilers to do the
-   right thing with "int" and "long int" and so on.  What we would really like is
-   for compilers to be counted on to make "int" at least 32 bits, because we need
-   32 bits in many places.  However, some compilers don't, so we have to use
-   "long int" or "unsigned long int".  We think that all compilers we deal with
-   will do the right thing with that, but, just in case, we use a typedef.
-
-   The type "uint32" must be an unsigned integer of at least 32 bits. */
-
-typedef unsigned long int uint32;
 
 typedef enum {
    tok_string, tok_symbol, tok_lbkt, tok_rbkt, tok_number} toktype;
@@ -272,6 +262,10 @@ const char *sstab[] = {
    "ptrngl",
    "trngl4",
    "ptrngl4",
+   "beehive",
+   "pbeehive",
+   "vee",
+   "pvee",
    "trngl8",
    "ptrngl8",
    "bone6",
@@ -468,6 +462,8 @@ const char *estab[] = {
    "star",
    "trngl",
    "trngl4",
+   "beehive",
+   "vee",
    "bone6",
    "short6",
    "1x6",
@@ -1228,6 +1224,7 @@ const char *predtab[] = {
    "1x2_selectee_is_linelike_facing_ccw",
    "1x4_selectee_of_far_side_is_linelike_facing_cw",
    "1x4_selectee_of_far_side_is_linelike_facing_ccw",
+   "kicker_coming",
    "always",
    "2x2_miniwave",
    "2x2_couple",
@@ -1810,9 +1807,9 @@ static void write_defmod_flags(int is_seq)
             errexit("Improper defmod key");
 
          if ((i = search(defmodtab1)) >= 0)
-            rr1 |= (1 << i);
+            rr1 |= (1U << i);
          else if (is_seq && (i = search(seqmodtab1)) >= 0)
-            rr1 |= (1 << i);
+            rr1 |= (1U << i);
          else if (!strcmp(tok_str, "allow_plain_mod"))
             rr1 |= (DFM1_CALL_MOD_ALLOW_PLAIN_MOD);
          else if (!strcmp(tok_str, "or_secondary_call"))
@@ -1872,7 +1869,7 @@ static void write_defmod_flags(int is_seq)
             rrh |= INHERITFLAG_YOYOETCK_GENEROUS;
          }
          else if ((i = search(defmodtabh)) >= 0) {
-            uint32 bit = 1 << i;
+            uint32 bit = 1U << i;
 
             // Don't check the left/reverse flags -- they are complicated,
             // so there is no "force" word for them.
@@ -1884,7 +1881,7 @@ static void write_defmod_flags(int is_seq)
          else {
             uint32 bit;
 
-            if ((i = search(forcetabh)) >= 0) bit = (1 << i);
+            if ((i = search(forcetabh)) >= 0) bit = (1U << i);
             else if ((i = search(yoyotabforce)) >= 0) bit = INHERITFLAG_YOYOETCBIT * (i+1);
             else if ((i = search(mxntabforce)) >= 0) bit = INHERITFLAG_MXNBIT * (i+1);
             else if ((i = search(nxntabforce)) >= 0) bit = INHERITFLAG_NXNBIT * (i+1);
@@ -2156,7 +2153,7 @@ static void process_alt_def_header()
          if (tok_kind != tok_symbol)
             errexit("Improper alternate_definition key");
 
-         if ((i = search(altdeftabh)) >= 0) bit = (1 << i);
+         if ((i = search(altdeftabh)) >= 0) bit = (1U << i);
          else if ((i = search(yoyotabplain)) >= 0) bit = INHERITFLAG_YOYOETCBIT * (i+1);
          else if ((i = search(mxntabplain)) >= 0) bit = INHERITFLAG_MXNBIT * (i+1);
          else if ((i = search(nxntabplain)) >= 0) bit = INHERITFLAG_NXNBIT * (i+1);
@@ -2528,13 +2525,13 @@ int main(int argc, char *argv[])
 
          if ((iii = search(flagtab1f)) >= 0) {
             if (iii >= 32) {
-               call_flags1overflow |= (1 << (iii-32));
+               call_flags1overflow |= (1U << (iii-32));
                // We only have room for 16 overflow call flags.
                if (call_flags1overflow & ~0xFFFF)
                   errexit("Too many secondary flags");
             }
             else {
-               uint32 bit = 1 << iii;
+               uint32 bit = 1U << iii;
                if ((call_flags1 & CFLAG1_STEP_REAR_MASK) &&
                    (bit & CFLAG1_STEP_REAR_MASK))
                   errexit("Too many touch/rear flags");
@@ -2577,7 +2574,7 @@ int main(int argc, char *argv[])
          else if (!strcmp(tok_str, "revert_is_inherited"))
             flagh_to_set = INHERITFLAG_REVERTMASK;
          else if ((iii = search(flagtabh)) >= 0)
-            flagh_to_set = (1 << iii);
+            flagh_to_set = (1U << iii);
          else
             break;
 
@@ -2630,7 +2627,7 @@ int main(int argc, char *argv[])
             get_tok();
             if (tok_kind != tok_symbol) break;
             if ((bit = search(matrixcallflagtab)) < 0) errexit("Unknown matrix call flag");
-            matrixflags |= (1 << bit);
+            matrixflags |= (1U << bit);
          }
 
          write_fullword(matrixflags);

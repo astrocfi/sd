@@ -354,7 +354,7 @@ static void innards(
    }
 
    mpkind starting_map_kind = map_kind;
-   uint32 eighth_rot_flag = ~0UL;
+   uint32 eighth_rot_flag = ~0U;
 
    result->clear_people();
    result->rotation = 0;
@@ -445,7 +445,7 @@ static void innards(
          if (arity >= 2 && (z[i].result_flags.misc & RESULTFLAG__IMPRECISE_ROT))
             fail("Rotation is imprecise.");
 
-         if (eighth_rot_flag == ~0UL)
+         if (eighth_rot_flag == ~0U)
             eighth_rot_flag = z[i].result_flags.misc & RESULTFLAG__PLUSEIGHTH_ROT;
          else if ((eighth_rot_flag ^ z[i].result_flags.misc) & RESULTFLAG__PLUSEIGHTH_ROT)
             fail("Rotation is inconsistent.");
@@ -981,7 +981,7 @@ static void innards(
    }
 
    if (!final_map) {
-      final_mapcode = ~0UL;
+      final_mapcode = ~0U;
 
       if (arity == 1) {
          switch (map_kind) {
@@ -1032,7 +1032,7 @@ static void innards(
          }
       }
 
-      if (final_mapcode != ~0UL)
+      if (final_mapcode != ~0U)
          final_map = map::get_map_from_code(final_mapcode);
 
       if (!final_map) fail("Can't do this shape-changing call with this concept.");
@@ -1149,7 +1149,7 @@ static void innards(
       final_mapcode = spcmap_fix_triple_turnstyle;
    }
 
-   if (final_mapcode != ~0UL)
+   if (final_mapcode != ~0U)
       final_map = map::get_map_from_code(final_mapcode);
 
    getptr = final_map->maps;
@@ -2546,7 +2546,7 @@ extern void distorted_move(
    setup a1;
    setup res1;
    mpkind mk;
-   uint32 map_code = ~0UL;
+   uint32 map_code = ~0U;
    int rotate_back = 0;
    uint32 livemask = global_livemask;
    uint32 linesp = parseptr->concept->arg2;
@@ -2625,7 +2625,7 @@ extern void distorted_move(
          break;
       }
 
-      if (map_code == ~0UL)
+      if (map_code == ~0U)
          fail("Must have 4x4 or triple diamond setup for this concept.");
 
       goto do_divided_nocheck;
@@ -2722,8 +2722,8 @@ extern void distorted_move(
    }
    else if (linesp & 128) {
       // Offset split phantom boxes.
-      static const uint32 map_code_table[4] = {~0UL, MAPCODE(s2x4,2,MPKIND__OFFS_L_HALF,0),
-                                               MAPCODE(s2x4,2,MPKIND__OFFS_R_HALF,0), ~0UL};
+      static const uint32 map_code_table[4] = {~0U, MAPCODE(s2x4,2,MPKIND__OFFS_L_HALF,0),
+                                               MAPCODE(s2x4,2,MPKIND__OFFS_R_HALF,0), ~0U};
 
       do_matrix_expansion(ss, CONCPROP__NEEDK_3X8, false);
       if (ss->kind != s3x8) fail("Can't do this concept in this setup.");
@@ -2736,7 +2736,7 @@ extern void distorted_move(
       if ((global_livemask & 0x0F00F0) == 0) key |= 2;
 
       map_code = map_code_table[key];
-      if (map_code == ~0UL) fail("Can't find offset 2x4's.");
+      if (map_code == ~0U) fail("Can't find offset 2x4's.");
       goto do_divided_call;
    }
    else if (linesp & 256) {
@@ -2753,10 +2753,10 @@ extern void distorted_move(
          if (ss->kind != s4x4 || (global_tbonetest & 1)) fail("Can't find distorted 1/4 tag.");
          const expand::thing *p;
          static const expand::thing foo1 = {{-1, 2, -1, 3, -1, -1, 5, 4, -1, 6, -1, 7, -1, -1, 1, 0},
-                                            s4x4, spgdmdccw, 0, 0UL, 0UL, false,
+                                            s4x4, spgdmdccw, 0, 0U, 0U, false,
                                             warn__none, warn__none, simple_normalize, 0};
          static const expand::thing foo2 = {{-1, -1, 2, 1, -1, 4, -1, 3, -1, -1, 6, 5, -1, 0, -1, 7},
-                                            s4x4, spgdmdcw, 0, 0UL, 0UL, false,
+                                            s4x4, spgdmdcw, 0, 0U, 0U, false,
                                             warn__none, warn__none, simple_normalize, 0};
 
          if (livemask == 0xCACA)
@@ -4461,7 +4461,7 @@ static void wv_tand_base_move(
       if (s->kind == s_bone) {
          if (indicator & 0100) fail("Can't do this concept in this setup.");
          concentric_move(s, (setup_command *) 0, &s->cmd, schema_concentric_2_6,
-                         0, 0, true, false, ~0UL, result);
+                         0, 0, true, false, ~0U, result);
          return;
       }
       else {
@@ -4650,7 +4650,7 @@ static void wv_tand_base_move(
       fail("Can't do this concept in this setup.");
    }
 
-   concentric_move(s, &s->cmd, (setup_command *) 0, schema, 0, 0, true, false, ~0UL, result);
+   concentric_move(s, &s->cmd, (setup_command *) 0, schema, 0, 0, true, false, ~0U, result);
    return;
 
  losing:
@@ -4728,7 +4728,7 @@ extern void triangle_move(
 
       // For galaxies, the schema is now in terms of the absolute orientation.
 
-      concentric_move(ss, &ss->cmd, (setup_command *) 0, schema, 0, 0, true, false, ~0UL, result);
+      concentric_move(ss, &ss->cmd, (setup_command *) 0, schema, 0, 0, true, false, ~0U, result);
    }
    else {
       // Set this so we can do "peel and trail" without saying "triangle" again.
@@ -4812,9 +4812,9 @@ extern void triangle_move(
             case sd2x7:
                if (indicator & 0300) fail("Can't find the indicated triangles.");
 
-               if (global_livemask == 0x3C78UL)
+               if (global_livemask == 0x3C78U)
                   map_key_table = tglmap::d7tglmap1;
-               else if (global_livemask == 0x078FUL)
+               else if (global_livemask == 0x078FU)
                   map_key_table = tglmap::d7tglmap2;
                else
                   fail("Can't find the triangle.");
@@ -4834,7 +4834,7 @@ extern void triangle_move(
             }
 
             concentric_move(ss, &ss->cmd, (setup_command *) 0, schema,
-                            0, 0, true, false, ~0UL, result);
+                            0, 0, true, false, ~0U, result);
          }
          else {
             switch (ss->kind) {
@@ -4855,7 +4855,7 @@ extern void triangle_move(
             }
 
             concentric_move(ss, (setup_command *) 0, &ss->cmd, schema,
-                            0, 0, true, false, ~0UL, result);
+                            0, 0, true, false, ~0U, result);
          }
       }
    }

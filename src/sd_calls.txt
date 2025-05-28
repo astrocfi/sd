@@ -44,7 +44,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "38.32"
+version "38.33"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve dont_raise_overcast
@@ -1307,6 +1307,7 @@ call "slip the clutch" mainstream
       array [CR0N CR1N 0 0 AL2W AL3W 0 0]
    setup pcrosswave thar plus_eighth_rotation restriction forbidden wave_only
       array [0 0 CR2N CR3N 0 0 AL4W AL5W]
+   // Callerlab says this is improper.  Many people think it's OK.
    setup 2x4 thar qualifier wave_only restriction controversial alwaysfail
       array [CR2E CR3E AL3W AL2W ZM4N ZM5N ZM1N ZM0N]
 
@@ -1322,12 +1323,16 @@ call "move along and make lines" mainstream
 call "cross by" c1
    setup thar thar plus_eighth_rotation restriction forbidden wave_only
       array [R1N R0N 0 0 L3W L2W 0 0]
+   // Callerlab doesn't allow these, which means they don't allow multiple
+   // cross by's starting in a 2x4.  Whatever.
    setup crosswave thar plus_eighth_rotation restriction forbidden wave_only
       array [R1N R0N 0 0 L3W L2W 0 0]
    setup pcrosswave thar plus_eighth_rotation restriction forbidden wave_only
       array [0 0 R3N R2N 0 0 L5W L4W]
-   setup 2x4 thar restriction forbidden wave_only
-      array [CR3E CR2E AL2W AL3W ZM5N ZM4N ZM0N ZM1N]
+   // Callerlab says this goes to a crosswave.  Don't blame me
+   // if you exploit this and your squares break down.
+   setup 2x4 crosswave rotate restriction forbidden wave_only
+      array [CR1N CR0N AL0S AL1S ZM3W ZM2W ZM6W ZM7W]
       // This appears in a published reference.
       // We need to make a clear statement that it is illegal.
    setup qtag 2x4 restriction forbidden alwaysfail
@@ -2594,12 +2599,12 @@ call "cast off @b, opt for normal, just do it" dontshow tag hingenspread_for_rel
             fractional_numbers diamond_is_legal parallel_conc_end
    setup 1x4 2x2 qualifier num 1 none
       preds "?"
-         if cast_normal_or_nowarn [CR0E AL0W AL1W CR1E]
-         if always                [AL3W AL0W CR2E CR1E]
+         if cast_normal_or_nowarn [CM0E AM0W AM1W CM1E]
+         if always                [AM3W AM0W CM2E CM1E]
    setup 1x4 2x2 qualifier num 3 none
       preds "?"
-         if cast_normal_or_nowarn [CR3W AL3E AL2E CR2W]
-         if always                [AL0E AL3E CR1W CR2W]
+         if cast_normal_or_nowarn [CM3W AM3E AM2E CM2W]
+         if always                [AM0E AM3E CM1W CM2W]
 
 call "cast off @b, opt for normal" dontshow tag cast_off_n4_with_warn
             neednumber fractal_is_inherited yoyo_is_inherited yoyo_fractal_numbers
@@ -5446,6 +5451,12 @@ call "_trade for 8-person call" dontshow tag trade_for_8_person_call
       array [CR1S AL0S AL3S CR2S AL5S CR4S CR7S AL6S]
    setup 2x4 2x4 restriction unusual wave_unless_say_2faced
       array [CR1S AL0S CR3S AL2S AL5S CR4S AL7S CR6S]
+            alternate_definition [stingy] c4
+   setup 1x2 1x2 rotate restriction forbidden miniwaves
+      array [CR0N AL0S]
+            alternate_definition [generous] c4
+   setup 1x2 1x2 rotate restriction forbidden miniwaves
+      array [CR1S AL1N]
             alternate_definition [half] mainstream
    setup 1x2 1x2 rotate
       preds "???"
@@ -8853,7 +8864,7 @@ call "_spin the web 1" dontshow tag spin_web_1
       array [5E 0W 6N  0 1W 4E  0 7E]
 
 call "_spin the web 2" dontshow tag spin_web_2
-   conc2_6 nullcall [] turnstarn [allow_forced_mod insert_number 1]
+   conc2_6 nullcall [] turnstarn [allow_forced_mod insert_number 4]
 
 call "_spin the web 3" dontshow tag spin_web_3
    setup dhrglass qtag rotate
@@ -13099,8 +13110,13 @@ call "@6@C kickoff" c2 tag designeeskick
             yield_if_ambiguous
    setup 1x2 1x2
       preds "Can't tell who is kicking off."
-         if select   [CR1W AL0E]
-         if unselect [CM1E AM0W]
+         if select        [CR1W AL0E]
+         if kicker_coming [CM1E AM0W]
+         if always        [ZM0N ZM1N]
+   setup 2x1 1x2
+      preds "Can't tell who is kicking off."
+         if unselect [ZM0N ZM1N]
+
    // We put the 4-person version of this into a second definition, which will
    // be used only if the 2-person version fails.  (Under normal circumstances,
    // the program gives priority to larger starting setups before smaller ones,
@@ -13114,25 +13130,39 @@ call "@6@C kickoff" c2 tag designeeskick
             yield_if_ambiguous
    setup 2x2 2x2
       preds "Can't tell who is kicking off."
-         if select   [CR1W AL0E AL3E CR2W]
-         if unselect [CM1E AM0W AM3W CM2E]
+         if select        [CR1W AL0E AL3E CR2W]
+         if kicker_coming [CM1E AM0W AM3W CM2E]
+         if always        [ZM0N ZM1N ZM2N ZM3N]
             alternate_definition [cross] c2
    setup 1x4 1x4 qualifier live none
       preds "Can't have both people or neither person cross kickoff."
          if select_once_rem_from_unselect   [CR3W CR2W AL1E AL0E]
          if unselect_once_rem_from_select   [CM1E AM0W AM3W CM2E]
          if select                          [0    CR2W 0    AL0E]
-   /* When phantoms are present, we may get this wrong.  The code here assumes
-      that the selector is equivalent to "centers" or "ends".  If not, (for
-      example, it is something "side girls" with lots of phantoms), a nondesignee
-      may have a hard time telling what to do.  We hope that the "do your part"
-      warning will cause the caller to look carefully and decide whether this
-      is really what is wanted.  Of course, if the selector is literally "centers"
-      or "ends", the special case code below will save the day. */
+   // When phantoms are present, we may get this wrong.  The code here assumes
+   // that the selector is equivalent to "centers" or "ends".  If not, (for
+   // example, it is something "side girls" with lots of phantoms), a nondesignee
+   // may have a hard time telling what to do.  We hope that the "do your part"
+   // warning will cause the caller to look carefully and decide whether this
+   // is really what is wanted.  Of course, if the selector is literally "centers"
+   // or "ends", the special case code below will save the day.
    setup 1x4 1x4 restriction alwaysfail
       preds "???"
          if select [CR3W CR2W AL1E AL0E]
          if always [CM1E AM0W AM3W CM2E]
+
+// This is the "old" definition, so that "wave the <anyone>" will work.
+call "@6@C classic kickoff" dontshow tag designeeskickclassic
+            yield_if_ambiguous
+   setup 1x2 1x2
+      preds "Can't tell who is kicking off."
+         if select   [CR1W AL0E]
+         if unselect [CM1E AM0W]
+            yield_if_ambiguous
+   setup 2x2 2x2
+      preds "Can't tell who is kicking off."
+         if select   [CR1W AL0E AL3E CR2W]
+         if unselect [CM1E AM0W AM3W CM2E]
 
 call "centers@C kickoff" c2 tag centerskick
    setup 1x4 1x4
@@ -19568,6 +19598,16 @@ call "circulate" mainstream tag circulate
       array [0 0 0 AL2W 0 0 0 CR0E]
    setup pspindle spindle qualifier didnt_say_triangle
       array [ZM1N ZM2N CR3E 0 AL3W ZM4N ZM5N 0]
+
+   setup beehive beehive
+      array [CR1E 0 AL1W ZM2N ZM0N ZM9N 0 ZM8N CR9S AL8S]
+   setup pbeehive beehive
+      array [0 CR2E 0 0 0 0 AL5W 0 0 0]
+   setup vee vee restriction controversial alwaysfail
+      array [ZM1N CR2E 0 AL2W ZM3N AL9S ZM5N 0 ZM9N CR5S]
+   setup pvee vee restriction controversial alwaysfail
+      array [0 0 CR3E 0 0 0 0 AL6W 0 0]
+
    /* These are for Clark. */
    /*   Sorry.  Breaks t34t, t37t,
    setup 1x4 1x4 restriction controversial alwaysfail
@@ -20072,7 +20112,7 @@ call "finish wave the @6" dontshow tag finishwave
    // Selector identities *do* get re-evaluated for the new centers and ends,
    // which makes this work.  Compare patch the <anyone>. */
    conc starthopping []
-        designeeskick [conc_demand_columns conc_force_lines]
+        designeeskickclassic [conc_demand_columns conc_force_lines]
 
 call "finish wave the beaus" dontshow tag finishwavebo
             single_is_inherited
@@ -24560,7 +24600,7 @@ call "cross trade and wheel" c2
    seq crossnwheel3 [cpls_unless_single inherit_grand inherit_single]
 
 call "hinge and trade" c4 tag hingentrade
-            single_is_inherited grand_is_inherited visible_fractions
+            single_is_inherited grand_is_inherited visible_fractions dont_raise_overcast
    seq hinge_with_warn [cpls_unless_single]
    seq maybegrandslip [cpls_unless_single inherit_grand roll_transparent]
    seq roll [cpls_unless_single]

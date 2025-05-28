@@ -33,8 +33,8 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-#define VERSION_STRING "38.32"
-#define TIME_STAMP "wba@alum.mit.edu  7 Aug 2010 $"
+#define VERSION_STRING "38.33"
+#define TIME_STAMP "wba@alum.mit.edu  16 Oct 2010 $"
 
 /* This defines the following functions:
    sd_version_string
@@ -401,7 +401,7 @@ static bool find_numbers(int howmanynumbers, bool forbid_zero,
    else
       do_number_iteration(howmanynumbers, odd_number_only, allow_iteration, number_list);
 
-   if ((*number_list) == ~0UL)
+   if ((*number_list) == ~0U)
       return true;           // User waved the mouse away.
 
    return false;
@@ -554,7 +554,7 @@ extern bool deposit_concept(const conzept::concept_descriptor *conc)
    int howmanynumbers = 0;
 
    // We hash the actual concept pointer, as though it were an integer index.
-   hash_nonrandom_number((int) conc);
+   hash_nonrandom_number((int) (size_t) conc);
 
    if (concept_table[conc->kind].concept_prop & CONCPROP__USE_SELECTOR) {
       if (find_selector(&sel, false)) return true;

@@ -199,7 +199,7 @@ void do_install(HWND hwnd)
 
    // See if the start folder exists.
    DWORD sd_att = GetFileAttributes(szStartMenuBuf);
-   if (sd_att == ~0UL || !(sd_att & FILE_ATTRIBUTE_DIRECTORY)) {
+   if (sd_att == ~0U || !(sd_att & FILE_ATTRIBUTE_DIRECTORY)) {
       // It doesn't exist -- create it.
       if (!CreateDirectory(szStartMenuBuf, 0)) {
          lstrcpy(szSecondBuf, "ERROR!!  Can't create Start Menu folder\n\n");
@@ -277,7 +277,7 @@ void exists_check_and_install(HWND hwnd)
       char szFilenameBuf[1000];
       lstrcpy(szFilenameBuf, "C:\\Sd\\");
       lstrcat(szFilenameBuf, *file_ptr);
-      if (GetFileAttributes(szFilenameBuf) != ~0UL) {
+      if (GetFileAttributes(szFilenameBuf) != ~0U) {
          // We have a pre-existing program.  Try to get the database version.
 
          char Buffer[200];
@@ -386,7 +386,7 @@ LRESULT CALLBACK MainWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
             lstrcat(tempstring, szInstallDir);
 
             DWORD sd_att = GetFileAttributes(szInstallDir);
-            if (sd_att != ~0UL && (sd_att & FILE_ATTRIBUTE_DIRECTORY)) {
+            if (sd_att != ~0U && (sd_att & FILE_ATTRIBUTE_DIRECTORY)) {
                InstallDirExists = true;
                lstrcat(tempstring, " exists.\n\n");
                lstrcat(tempstring, "Press OK to install Sd and Sdtty there.");
@@ -507,7 +507,7 @@ int WINAPI WinMain(
    lstrcpy(szInstallDir, "C:\\Sd");
 
    DWORD sd_att = GetFileAttributes(szInstallDir);
-   if (sd_att != ~0UL && (sd_att & FILE_ATTRIBUTE_DIRECTORY)) {
+   if (sd_att != ~0U && (sd_att & FILE_ATTRIBUTE_DIRECTORY)) {
       InstallDirExists = true;
       SetDlgItemText(hwnd, IDC_MAINCAPTION,
                      "The directory C:\\Sd exists.\n\n"

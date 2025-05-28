@@ -1931,14 +1931,14 @@ static calldef_schema concentrify(
    // Next, do the 3x4 -> qtag fudging.  Don't ask permission, just do it.
 
    if (analyzer_result == schema_concentric && ss->kind == s3x4) {
-      if ((livemask & 03131UL) != 01111UL) {
+      if ((livemask & 03131U) != 01111U) {
          *center_arity_p = 1;
          inners[0].kind = s1x4;
          inners[0].rotation = 0;
          outers->kind = s2x2;
          outers->rotation = 0;
 
-         if (livemask == 07171UL)
+         if (livemask == 07171U)
             *outer_elongation = 3;   // If occupied as "H", put them in the corners.
          else
             *outer_elongation = ((~outers->rotation) & 1) + 1;
@@ -3504,7 +3504,7 @@ extern void concentric_move(
             if (doing_ends || suppress_overcasts)
                begin_ptr->clear_all_overcasts();
 
-            if (specialoffsetmapcode < ~1UL) {
+            if (specialoffsetmapcode < ~1U) {
                divided_setup_move(begin_ptr, specialoffsetmapcode,
                                   phantest_only_one, true, result_ptr);
             }
@@ -4494,6 +4494,15 @@ extern void merge_setups(setup *ss, merge_action action, setup *result) THROW_DE
          // The only remaining hope is that the setups match and we can blindly combine them.
          // Our 180 degree rotation wouldn't work for triangles.
 
+         // But first, watch for case of a 4x4 vs. a C1 phantom.  Just throw people onto the 4x4 and hope for the best.
+         if (res1->kind == s4x4 && res2->kind == s_c1phan) {
+            static veryshort fixup[16] = {10, 13, 15, 15, 14, 1, 3, 3, 2, 5, 7, 7, 6, 9, 11, 11};
+            setup temp = *res2;
+            res2->kind = s4x4;
+            res2->clear_people();
+            install_scatter(res2, 16, fixup, &temp, 0);
+         }
+
          brute_force_merge(res1, res2, action, result);
          goto final_getout;
       }
@@ -5214,7 +5223,7 @@ extern void inner_selective_move(
             if (!(i&2)) q = 1;
          }
          else if (override_selector) {
-            if (override_selector & 0x80000000UL) {
+            if (override_selector & 0x80000000U) {
                // It is a headliner/sideliner mask.
                if (override_selector & 011 & ss->people[i].id1) q = 1;
             }
@@ -5373,22 +5382,22 @@ extern void inner_selective_move(
       else if (ss->kind == s_c1phan) {
          if (bigend_llmask == 0x5555) {
             if (bigend_ssmask == 0x5050) {
-               if (dirmask == 0x33001122UL) {
+               if (dirmask == 0x33001122U) {
                   map_prom = map_phan_1;
                   the_setups[0].rotation++;
                   goto got_map;
                }
-               else if (dirmask == 0x11223300UL) {
+               else if (dirmask == 0x11223300U) {
                   map_prom = map_phan_2;
                   goto got_map;
                }
             }
             else if (bigend_ssmask == 0x0505) {
-               if (dirmask == 0x33001122UL) {
+               if (dirmask == 0x33001122U) {
                   map_prom = map_phan_2;
                   goto got_map;
                }
-               else if (dirmask == 0x11223300UL) {
+               else if (dirmask == 0x11223300U) {
                   map_prom = map_phan_1;
                   the_setups[0].rotation++;
                   goto got_map;
@@ -5397,23 +5406,23 @@ extern void inner_selective_move(
          }
          else if (bigend_llmask == 0xAAAA) {
             if (bigend_ssmask == 0x0A0A) {
-               if (dirmask == 0x88CC0044UL) {
+               if (dirmask == 0x88CC0044U) {
                   map_prom = map_phan_3;
                   goto got_map;
                }
-               else if (dirmask == 0x004488CCUL) {
+               else if (dirmask == 0x004488CCU) {
                   map_prom = map_phan_4;
                   the_setups[0].rotation++;
                   goto got_map;
                }
             }
             else if (bigend_ssmask == 0xA0A0) {
-               if (dirmask == 0x88CC0044UL) {
+               if (dirmask == 0x88CC0044U) {
                   map_prom = map_phan_4;
                   the_setups[0].rotation++;
                   goto got_map;
                }
-               else if (dirmask == 0x004488CCUL) {
+               else if (dirmask == 0x004488CCU) {
                   map_prom = map_phan_3;
                   goto got_map;
                }
@@ -5423,22 +5432,22 @@ extern void inner_selective_move(
       else if (ss->kind == s4x4) {
          if (bigend_llmask == 0x5555) {
             if (bigend_ssmask == 0x0505) {
-               if (dirmask == 0x00112233UL) {
+               if (dirmask == 0x00112233U) {
                   map_prom = map_4x4_1;
                   the_setups[0].rotation++;
                   goto got_map;
                }
-               else if (dirmask == 0x22330011UL) {
+               else if (dirmask == 0x22330011U) {
                   map_prom = map_4x4_2;
                   goto got_map;
                }
             }
             else if (bigend_ssmask == 0x5050) {
-               if (dirmask == 0x00112233UL) {
+               if (dirmask == 0x00112233U) {
                   map_prom = map_4x4_2;
                   goto got_map;
                }
-               else if (dirmask == 0x22330011UL) {
+               else if (dirmask == 0x22330011U) {
                   map_prom = map_4x4_1;
                   the_setups[0].rotation++;
                   goto got_map;
@@ -5447,23 +5456,23 @@ extern void inner_selective_move(
          }
          else if (bigend_llmask == 0x3333) {
             if (bigend_ssmask == 0x1212) {
-               if (dirmask == 0x0304090EUL) {
+               if (dirmask == 0x0304090EU) {
                   map_prom = map_4x4_3;
                   goto got_map;
                }
-               else if (dirmask == 0x090E0304UL) {
+               else if (dirmask == 0x090E0304U) {
                   map_prom = map_4x4_4;
                   the_setups[0].rotation++;
                   goto got_map;
                }
             }
             else if (bigend_ssmask == 0x2121) {
-               if (dirmask == 0x0304090EUL) {
+               if (dirmask == 0x0304090EU) {
                   map_prom = map_4x4_4;
                   the_setups[0].rotation++;
                   goto got_map;
                }
-               else if (dirmask == 0x090E0304UL) {
+               else if (dirmask == 0x090E0304U) {
                   map_prom = map_4x4_3;
                   goto got_map;
                }
@@ -6015,7 +6024,7 @@ extern void inner_selective_move(
                clear_result_flags(this_result);
                goto done_with_this_one;
             }
-            else if (thislivemask == (uint32) ((1 << (attr::klimit(kk)+1)) - 1) ||
+            else if (thislivemask == (uint32) ((1U << (attr::klimit(kk)+1)) - 1) ||
                      otherlivemask == 0 ||
                      orig_indicator == selective_key_plain_from_id_bits ||
                      (orig_indicator == selective_key_ignore && kk != s_c1phan && attr::klimit(kk) > 7) ||
@@ -6568,7 +6577,7 @@ extern void inner_selective_move(
    // a "promenade" type of call.  It's OK; no map code comes anywhere near -1.
 
    {
-      uint32 specialoffsetmapcode = doing_special_promenade_thing ? ~1UL : ~0UL;
+      uint32 specialoffsetmapcode = doing_special_promenade_thing ? ~1U : ~0U;
 
       concentric_move(ss,
                       crossconc ? cmd2 : cmd1,

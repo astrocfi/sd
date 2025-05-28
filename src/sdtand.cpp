@@ -572,86 +572,86 @@ struct siamese_item {
 };
 
 const siamese_item siamese_table_of_2[] = {
-   {s2x4,        0x00FF0000UL, 0x99UL,   warn__ctrstand_endscpls},
-   {s2x4,        0x00990066UL, 0x99UL,   warn__ctrstand_endscpls},
-   {s2x4,        0x000000FFUL, 0x66UL,   warn__ctrscpls_endstand},
-   {s2x4,        0x00660099UL, 0x66UL,   warn__ctrscpls_endstand},
-   {s2x4,        0x00F0000FUL, 0x0FUL,   warn__none},  // unsymm
-   {s2x4,        0x000F00F0UL, 0xF0UL,   warn__none},  // unsymm
-   {s1x8,        0x00CC0033UL, 0x33UL,   warn__ctrstand_endscpls},
-   {s1x8,        0x003300CCUL, 0xCCUL,   warn__ctrscpls_endstand},
-   {s2x4,        0x003300CCUL, 0xCCUL,   warn__none},
-   {s2x4,        0x00CC0033UL, 0x33UL,   warn__none},
-   {s_trngl4,    0x000F0000UL, 0x03UL,   warn__none},
-   {s_trngl4,    0x0000000FUL, 0x0CUL,   warn__none},
-   {s_c1phan,    0x0000AAAAUL, 0xA0A0UL, warn__none},
-   {s_c1phan,    0x00005555UL, 0x0505UL, warn__none},
-   {s_c1phan,    0xAAAA0000UL, 0x0A0AUL, warn__none},
-   {s_c1phan,    0x55550000UL, 0x5050UL, warn__none},
-   {s_c1phan,    0x00005AA5UL, 0x00A5UL, warn__none},  // These 8 are unsymmetrical.
-   {s_c1phan,    0x0000A55AUL, 0xA500UL, warn__none},
-   {s_c1phan,    0x000055AAUL, 0x05A0UL, warn__none},
-   {s_c1phan,    0x0000AA55UL, 0xA005UL, warn__none},
-   {s_c1phan,    0x5AA50000UL, 0x5A00UL, warn__none},
-   {s_c1phan,    0xA55A0000UL, 0x005AUL, warn__none},
-   {s_c1phan,    0x55AA0000UL, 0x500AUL, warn__none},
-   {s_c1phan,    0xAA550000UL, 0x0A50UL, warn__none},
+   {s2x4,        0x00FF0000U, 0x99U,   warn__ctrstand_endscpls},
+   {s2x4,        0x00990066U, 0x99U,   warn__ctrstand_endscpls},
+   {s2x4,        0x000000FFU, 0x66U,   warn__ctrscpls_endstand},
+   {s2x4,        0x00660099U, 0x66U,   warn__ctrscpls_endstand},
+   {s2x4,        0x00F0000FU, 0x0FU,   warn__none},  // unsymm
+   {s2x4,        0x000F00F0U, 0xF0U,   warn__none},  // unsymm
+   {s1x8,        0x00CC0033U, 0x33U,   warn__ctrstand_endscpls},
+   {s1x8,        0x003300CCU, 0xCCU,   warn__ctrscpls_endstand},
+   {s2x4,        0x003300CCU, 0xCCU,   warn__none},
+   {s2x4,        0x00CC0033U, 0x33U,   warn__none},
+   {s_trngl4,    0x000F0000U, 0x03U,   warn__none},
+   {s_trngl4,    0x0000000FU, 0x0CU,   warn__none},
+   {s_c1phan,    0x0000AAAAU, 0xA0A0U, warn__none},
+   {s_c1phan,    0x00005555U, 0x0505U, warn__none},
+   {s_c1phan,    0xAAAA0000U, 0x0A0AU, warn__none},
+   {s_c1phan,    0x55550000U, 0x5050U, warn__none},
+   {s_c1phan,    0x00005AA5U, 0x00A5U, warn__none},  // These 8 are unsymmetrical.
+   {s_c1phan,    0x0000A55AU, 0xA500U, warn__none},
+   {s_c1phan,    0x000055AAU, 0x05A0U, warn__none},
+   {s_c1phan,    0x0000AA55U, 0xA005U, warn__none},
+   {s_c1phan,    0x5AA50000U, 0x5A00U, warn__none},
+   {s_c1phan,    0xA55A0000U, 0x005AU, warn__none},
+   {s_c1phan,    0x55AA0000U, 0x500AU, warn__none},
+   {s_c1phan,    0xAA550000U, 0x0A50U, warn__none},
 
-   {s4x4,        0x0000AAAAUL, 0x0A0AUL, warn__none},
-   {s4x4,        0x0000CCCCUL, 0x8484UL, warn__none},
-   {s4x4,        0xAAAA0000UL, 0xA0A0UL, warn__none},
-   {s4x4,        0xCCCC0000UL, 0x4848UL, warn__none},
+   {s4x4,        0x0000AAAAU, 0x0A0AU, warn__none},
+   {s4x4,        0x0000CCCCU, 0x8484U, warn__none},
+   {s4x4,        0xAAAA0000U, 0xA0A0U, warn__none},
+   {s4x4,        0xCCCC0000U, 0x4848U, warn__none},
 
-   {s4x5,        0x000090E4UL, 0x18060UL, warn__none},
-   {s4x5,        0x00001384UL, 0xC0300UL, warn__none},
-   {s4x5,        0x90E40000UL, 0x21084UL, warn__none},
-   {s4x5,        0x13840000UL, 0x21084UL, warn__none},
+   {s4x5,        0x000090E4U, 0x18060U, warn__none},
+   {s4x5,        0x00001384U, 0xC0300U, warn__none},
+   {s4x5,        0x90E40000U, 0x21084U, warn__none},
+   {s4x5,        0x13840000U, 0x21084U, warn__none},
 
-   {sbigdmd,     0x00000F3CUL, 0x18060UL, warn__none},
-   {sbigdmd,     0x000003CFUL, 0xC0300UL, warn__none},
-   {sbigdmd,     0x0F3C0000UL, 0x0030CUL, warn__none},
+   {sbigdmd,     0x00000F3CU, 0x18060U, warn__none},
+   {sbigdmd,     0x000003CFU, 0xC0300U, warn__none},
+   {sbigdmd,     0x0F3C0000U, 0x0030CU, warn__none},
    // ************************** THIS IS THE ONE ************************
-   {sbigdmd,     0x03CF0000UL, 0x0030CUL, warn__none},
+   {sbigdmd,     0x03CF0000U, 0x0030CU, warn__none},
    // ************************** THIS IS THE ONE ************************
 
-   {s4x4,        0x30304141UL, 0x80004141UL, warn__none},
-   {s4x4,        0x41413030UL, 0x80003030UL, warn__none},
-   {s4x4,        0x03031414UL, 0x80000303UL, warn__none},
-   {s4x4,        0x14140303UL, 0x80001414UL, warn__none},
+   {s4x4,        0x30304141U, 0x80004141U, warn__none},
+   {s4x4,        0x41413030U, 0x80003030U, warn__none},
+   {s4x4,        0x03031414U, 0x80000303U, warn__none},
+   {s4x4,        0x14140303U, 0x80001414U, warn__none},
 
-   {s3x4,        0x09E70000UL, 0x0924UL, warn__none},
-   {s3x4,        0x000009E7UL, 0x00C3UL, warn__none},
-   {s3x4,        0x0BAE0000UL, 0x08A2UL, warn__none},
-   {s3x4,        0x00000BAEUL, 0x030CUL, warn__none},
+   {s3x4,        0x09E70000U, 0x0924U, warn__none},
+   {s3x4,        0x000009E7U, 0x00C3U, warn__none},
+   {s3x4,        0x0BAE0000U, 0x08A2U, warn__none},
+   {s3x4,        0x00000BAEU, 0x030CU, warn__none},
 
-   {s_qtag,      0x003300CCUL, 0xCCUL,   warn__ctrscpls_endstand},
-   {s_qtag,      0x00CC0033UL, 0x33UL,   warn__ctrstand_endscpls},
-   {s4dmd,       0x0F0FF0F0UL, 0xF0F0UL, warn__ctrscpls_endstand},
-   {s4dmd,       0xF0F00F0FUL, 0x0F0FUL, warn__ctrstand_endscpls},
-   {s_rigger,    0x00FF0000UL, 0x33UL,   warn__ctrscpls_endstand},
-   {s_rigger,    0x00CC0033UL, 0x33UL,   warn__ctrscpls_endstand},
-   {s_rigger,    0x000000FFUL, 0xCCUL,   warn__ctrstand_endscpls},
-   {s_rigger,    0x003300CCUL, 0xCCUL,   warn__ctrstand_endscpls},
-   {s_bone,      0x00FF0000UL, 0x33UL,   warn__ctrstand_endscpls},
-   {s_bone,      0x000000FFUL, 0xCCUL,   warn__ctrscpls_endstand},
-   {s_crosswave, 0x00FF0000UL, 0xCCUL,   warn__ctrscpls_endstand},
-   {s_crosswave, 0x000000FFUL, 0x33UL,   warn__ctrstand_endscpls},
-   {sdeepbigqtg, 0xFFFF0000UL, 0x0F0FUL, warn__none},
-   {sdeepbigqtg, 0x0000FFFFUL, 0xF0F0UL, warn__none},
-   {sdeepbigqtg, 0x3535CACAUL, 0xC5C5UL, warn__none},
-   {sdeepbigqtg, 0xCACA3535UL, 0x3A3AUL, warn__none},
-   {sdeepbigqtg, 0xC5C53A3AUL, 0x3535UL, warn__none},
-   {sdeepbigqtg, 0x3A3AC5C5UL, 0xCACAUL, warn__none},
+   {s_qtag,      0x003300CCU, 0xCCU,   warn__ctrscpls_endstand},
+   {s_qtag,      0x00CC0033U, 0x33U,   warn__ctrstand_endscpls},
+   {s4dmd,       0x0F0FF0F0U, 0xF0F0U, warn__ctrscpls_endstand},
+   {s4dmd,       0xF0F00F0FU, 0x0F0FU, warn__ctrstand_endscpls},
+   {s_rigger,    0x00FF0000U, 0x33U,   warn__ctrscpls_endstand},
+   {s_rigger,    0x00CC0033U, 0x33U,   warn__ctrscpls_endstand},
+   {s_rigger,    0x000000FFU, 0xCCU,   warn__ctrstand_endscpls},
+   {s_rigger,    0x003300CCU, 0xCCU,   warn__ctrstand_endscpls},
+   {s_bone,      0x00FF0000U, 0x33U,   warn__ctrstand_endscpls},
+   {s_bone,      0x000000FFU, 0xCCU,   warn__ctrscpls_endstand},
+   {s_crosswave, 0x00FF0000U, 0xCCU,   warn__ctrscpls_endstand},
+   {s_crosswave, 0x000000FFU, 0x33U,   warn__ctrstand_endscpls},
+   {sdeepbigqtg, 0xFFFF0000U, 0x0F0FU, warn__none},
+   {sdeepbigqtg, 0x0000FFFFU, 0xF0F0U, warn__none},
+   {sdeepbigqtg, 0x3535CACAU, 0xC5C5U, warn__none},
+   {sdeepbigqtg, 0xCACA3535U, 0x3A3AU, warn__none},
+   {sdeepbigqtg, 0xC5C53A3AU, 0x3535U, warn__none},
+   {sdeepbigqtg, 0x3A3AC5C5U, 0xCACAU, warn__none},
    {nothing,     0,            0,        warn__none}};
 
 const siamese_item siamese_table_of_3[] = {
-   {s2x6,        0x01C70E38UL, 0xE38UL,  warn__none},
-   {s2x6,        0x0E3801C7UL, 0x1C7UL,  warn__none},
+   {s2x6,        0x01C70E38U, 0xE38U,  warn__none},
+   {s2x6,        0x0E3801C7U, 0x1C7U,  warn__none},
    {nothing,     0,            0,        warn__none}};
 
 const siamese_item siamese_table_of_4[] = {
-   {s2x8,        0x0F0FF0F0UL, 0xF0F0UL, warn__none},
-   {s2x8,        0xF0F00F0FUL, 0x0F0FUL, warn__none},
+   {s2x8,        0x0F0FF0F0U, 0xF0F0U, warn__none},
+   {s2x8,        0xF0F00F0FU, 0x0F0FU, warn__none},
    {nothing,     0,            0,        warn__none}};
 
 static void initialize_one_table(tm_thing *map_start, int m_people_per_group)
@@ -667,7 +667,9 @@ static void initialize_one_table(tm_thing *map_start, int m_people_per_group)
 
       uint32 osidemask = 0;
       // All 1's for people in outer setup.
-      map_search->outunusedmask = (1 << (attr::klimit(map_search->outsetup)+1))-1;
+      int outsize = attr::klimit(map_search->outsetup)+1;
+      // Yes, we could handle this better on a 64-bit system.
+      map_search->outunusedmask = outsize >= 32 ? 0xFFFFFFFF : ((1U << outsize)-1);
 
       for (i=0; i<map_search->limit; i++) {
          if (map_search->maps[i] == -2) continue;
@@ -676,10 +678,11 @@ static void initialize_one_table(tm_thing *map_start, int m_people_per_group)
 
          if (map_search->maps[i+map_search->limit] < 0) {
             int bitpos = i*3;
+            // Obviously, we could handle this a *LOT* better on a 64-bit system.
             if (bitpos >= 32)
-               map_search->insinglemaskhigh |= 1 << (bitpos-32);
+               map_search->insinglemaskhigh |= 1U << (bitpos-32);
             else
-               map_search->insinglemasklow |= 1 << bitpos;
+               map_search->insinglemasklow |= 1U << bitpos;
 
             map_search->outsinglemask |= 1 << map_search->maps[i];
          }
@@ -706,7 +709,7 @@ static void initialize_one_table(tm_thing *map_start, int m_people_per_group)
 
             if ((ilatmidbit ^ map_search->rot) & 1) {
                for (j=0 ; j<m_people_per_group ; j++)
-                  osidemask |= 1 << map_search->maps[i+(map_search->limit*j)];
+                  osidemask |= 1U << map_search->maps[i+(map_search->limit*j)];
             }
          }
       }
@@ -718,6 +721,7 @@ static void initialize_one_table(tm_thing *map_start, int m_people_per_group)
          if (map_search->olatmask != osidemask)
             gg->fatal_error_exit(1, "Tandem table initialization failed", "smask");
       }
+
    }
 }
 
@@ -1012,7 +1016,7 @@ bool tandrec::pack_us(
          vp1 = fb[0].id1;
          vp2 = fb[0].id2;
          vp3 = fb[0].id3;
-         fb[1].id1 = ~0UL;
+         fb[1].id1 = ~0U;
       }
       else {
          // This person is paired; pick up the other real people.
@@ -1066,9 +1070,9 @@ bool tandrec::pack_us(
             if ((fraction_in_use || dynamic_in_use) && (orpeople1 & STABLE_ALL_MASK))
                fail("Sorry, can't nest fractional stable/twosome.");
 
-            vp1 = ~0UL;
-            vp2 = ~0UL;
-            vp3 = ~0UL;
+            vp1 = ~0U;
+            vp2 = ~0U;
+            vp3 = ~0U;
 
             // Create the virtual person.  When both people are present, anding
             // the real peoples' id2 bits gets the right bits.  For example,
@@ -1492,7 +1496,6 @@ extern void tandem_couples_move(
    if (key == tandem_key_overlap_siam) {
       static const expand::thing localized_thing = {
          {0, 3, 4, 7, 8, 11, 12, 15}, s2x4, s2x8, 0};
-      // old:         {0, 5, 2, 7, 8, 13, 10, 15}, s2x4, s2x8, 0};
       if (ss->kind != s2x4 || phantom != 0)
          fail("Need 2x4 for this concept.");
       phantom = 1;
@@ -1689,7 +1692,6 @@ extern void tandem_couples_move(
       }
    }
    else if (key == tandem_key_overlap_siam) {
-      //      doing_siamese = true;
       saveew = ewmask;
       savens = nsmask;
       ewmask = allmask;
@@ -1727,7 +1729,7 @@ extern void tandem_couples_move(
             // We seem to have a match.  However, it still might be wrong.
             ewmask ^= (siamese_fixup & allmask);
             nsmask ^= (siamese_fixup & allmask);
-            if (ptr->fixup & 0x80000000UL) tandstuff.m_phantom_pairing_ok = true;
+            if (ptr->fixup & 0x80000000U) tandstuff.m_phantom_pairing_ok = true;
             goto try_this;
          }
       }
@@ -1877,23 +1879,12 @@ extern void tandem_couples_move(
 
    update_id_bits(&tandstuff.m_virtual_setup);
 
-   setup siamese_setup1, siamese_setup2;
+   setup ttt[8];
 
    if (key == tandem_key_overlap_siam) {
-      siamese_setup1.kind = s2x2;
-      siamese_setup1.rotation = 0;
-      siamese_setup1.clear_people();
-      clear_result_flags(&siamese_setup1);
-      siamese_setup2.kind = s2x2;
-      siamese_setup2.rotation = 0;
-      siamese_setup2.clear_people();
-      clear_result_flags(&siamese_setup2);
-
-      int j;
-      setup ttt[8];
       uint32 rotstate, pointclip;
 
-      for (j=0 ; j<8 ; j++) {
+      for (int j=0 ; j<8 ; j++) {
          setup sss = tandstuff.m_virtual_setup;
          sss.kind = s2x2;
          sss.rotation = 0;
@@ -1905,30 +1896,19 @@ extern void tandem_couples_move(
       if (fix_n_results(8, -1, false, ttt, rotstate, pointclip, 0) || !(rotstate & 0xF03))
          fail("Can't do this.");
 
-      // Might need something much more sophisticated than this.
       result->result_flags = get_multiple_parallel_resultflags(ttt, 8);
 
       if (ttt[0].kind != s2x2)
-         fail("Can't do this.");    // Probably need to look harder at this case.
-
-      for (j=0 ; j<8 ; j++) {
-         setup *dest = (j & 1) ? &siamese_setup2 : &siamese_setup1;
-         install_person(dest, 0, &ttt[j], 0);
-         install_person(dest, 1, &ttt[j], 1);
-         install_person(dest, 2, &ttt[j], 2);
-         install_person(dest, 3, &ttt[j], 3);
-      }
-
-      tandstuff.virtual_result = siamese_setup1;   // prepare for first of two final cycles.
+         fail("Can't do this.");    // They will al be the same, because of fix_n_results.
    }
    else {
-      impose_assumption_and_move(&tandstuff.m_virtual_setup, &tandstuff.virtual_result);
+      impose_assumption_and_move(&tandstuff.m_virtual_setup, &ttt[0]);
    }
 
-   setup extra_siamese_result[2];
+   // This loop runs only once, unless overlapped siamese, in which case it runs eight times.
+   for (int finalcount = 0 ; finalcount < 8 ; finalcount++) {
+      tandstuff.virtual_result = ttt[finalcount];
 
-   // This loop runs only once, unless overlapped siamese, in which case it runs twice.
-   for (int finalcount = 0 ; finalcount < 2 ; finalcount++) {
       remove_mxn_spreading(&tandstuff.virtual_result);
       remove_tgl_distortion(&tandstuff.virtual_result);
 
@@ -1989,7 +1969,7 @@ extern void tandem_couples_move(
             int vpi = (p >> 6) & 7;
             livemask3low |= 7;
 
-            if (tandstuff.m_real_saved_people[1].people[vpi].id1 == ~0UL) {
+            if (tandstuff.m_real_saved_people[1].people[vpi].id1 == ~0U) {
                sglmask3low |= 7;
             }
             else {
@@ -2044,22 +2024,22 @@ extern void tandem_couples_move(
          }
       }
 
-      uint32 orbitcomhigh = orbitmask3high ^ 0155555UL;
-      uint32 orbitcomlow = orbitmask3low ^ 026666666666UL;
+      uint32 orbitcomhigh = orbitmask3high ^ 0155555U;
+      uint32 orbitcomlow = orbitmask3low ^ 026666666666U;
       uint32 hmask3high = orbitcomhigh & livemask3high & ~sglmask3high;
       uint32 hmask3low = orbitcomlow & livemask3low & ~sglmask3low;
 
       // Bits appear here in triples!  Only low bit of each triple is used.
-      uint32 sglmaskhigh = sglmask3high & 022222UL;
-      uint32 sglmasklow = sglmask3low & 011111111111UL;
+      uint32 sglmaskhigh = sglmask3high & 022222U;
+      uint32 sglmasklow = sglmask3low & 011111111111U;
 
       // Bits appear here in triples!  Only low two bits of each triple are used.
-      uint32 livemaskhigh = livemask3high & 066666UL;
-      uint32 livemasklow = livemask3low & 033333333333UL;
+      uint32 livemaskhigh = livemask3high & 066666U;
+      uint32 livemasklow = livemask3low & 033333333333U;
 
       // Pick out only low two bits for map search, and only bits of live paired people.
-      uint32 hmaskhigh = hmask3high & 066666UL;
-      uint32 hmasklow = hmask3low & 033333333333UL;
+      uint32 hmaskhigh = hmask3high & 066666U;
+      uint32 hmasklow = hmask3low & 033333333333U;
 
       if (tandstuff.m_no_unit_symmetry) {
          livemaskhigh = livemask3high;
@@ -2120,16 +2100,20 @@ extern void tandem_couples_move(
       if (key != tandem_key_overlap_siam)
          break;
 
-      // If overlapped siamese, we do everything twice.
-      extra_siamese_result[finalcount] = *result;   // Save the result of this run
-      tandstuff.virtual_result = siamese_setup2;    // Prepare for the second run.
+      // If overlapped siamese, we do everything eight times
+      ttt[finalcount] = *result;   // Save the result of this run
    }
 
-   // If overlapped siamese, we have two setups to merge.
-
+   // If overlapped siamese, we have eight setups to merge.
    if (key == tandem_key_overlap_siam) {
-      *result = extra_siamese_result[1];
-      merge_setups(&extra_siamese_result[0], merge_strict_matrix, result);
+      merge_setups(&ttt[4], merge_strict_matrix, &ttt[0]);
+      merge_setups(&ttt[5], merge_strict_matrix, &ttt[1]);
+      merge_setups(&ttt[6], merge_strict_matrix, &ttt[2]);
+      merge_setups(&ttt[7], merge_strict_matrix, &ttt[3]);
+      merge_setups(&ttt[3], merge_strict_matrix, &ttt[1]);
+      merge_setups(&ttt[2], merge_strict_matrix, &ttt[0]);
+      merge_setups(&ttt[1], merge_strict_matrix, &ttt[0]);
+      *result = ttt[0];
    }
 
    result->clear_all_overcasts();
@@ -2496,14 +2480,14 @@ void mimic_move(
 
       // Try more esoteric splits.
       if (ss->kind == s_qtag || ss->kind == s_rigger || ss->kind == s_crosswave || ss->kind == s2x4) {
-         concentric_move(&aa, &aa.cmd, &aa.cmd, schema_in_out_triple, 0, 0, false, false, ~0UL, result);
+         concentric_move(&aa, &aa.cmd, &aa.cmd, schema_in_out_triple, 0, 0, false, false, ~0U, result);
          return;
       }
 
       fail("Can't do this.");
    }
 
-   if (little_endian_live_mask(ss) != (uint32) (1 << (attr::slimit(ss)+1)) - 1)
+   if (little_endian_live_mask(ss) != (uint32) (1U << (attr::slimit(ss)+1)) - 1)
       fail_no_retry("Phantoms not allowed.");
 
    // What we do is very different for centers/ends vs. other designators.

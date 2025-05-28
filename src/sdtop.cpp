@@ -43,7 +43,6 @@
    verify_restriction
    assoc
    uncompress_position_number
-   setup::clear_people
    clear_result_flags
    setup::setup    // big constructor.
    clear_result
@@ -549,79 +548,79 @@ extern void update_id_bits(setup *ss)
    switch (ss->kind) {
    case s2x5:
       // We recognize "centers" or "center 4" if they are a Z within the center 6.
-      if (livemask == 0x3BDUL || livemask == 0x2F7UL)
+      if (livemask == 0x3BDU || livemask == 0x2F7U)
          ptr = id_bit_table_2x5_z;
       // We recognize "center 6"/"outer 2" and "center 2"/"outer 6" if the center 2x3
       // is fully occupied.
-      else if (livemask == 0x3DEUL || livemask == 0x1EFUL)
+      else if (livemask == 0x3DEU || livemask == 0x1EFU)
          ptr = id_bit_table_2x5_ctr6;
       break;
    case sd2x5:
       // We recognize "center 6"/"outer 2" and "center 2"/"outer 6" if the center 2x3
       // is fully occupied.
-      if (livemask == 0x3DEUL || livemask == 0x3BDUL)
+      if (livemask == 0x3DEU || livemask == 0x3BDU)
          ptr = id_bit_table_d2x5_ctr6;
       // We recognize "centers" or "center 4" if they are a Z within the center 6.
-      else if (livemask != 0x37BUL && livemask != 0x1EFUL)
+      else if (livemask != 0x37BU && livemask != 0x1EFU)
          ptr = (id_bit_table *) 0;
       break;
    case sd2x7:
       // We recognize "centers" or "center 4" if they are a Z with outer wings.
-      if (livemask == 0x3C78UL || livemask == 0x0D9BUL)
+      if (livemask == 0x3C78U || livemask == 0x0D9BU)
          ptr = id_bit_table_d2x7a;
-      else if (livemask == 0x366CUL || livemask == 0x078FUL)
+      else if (livemask == 0x366CU || livemask == 0x078FU)
          ptr = id_bit_table_d2x7b;
       // Otherwise, the center 6 must be fully occupied, and we
       // recognize "center 6"/"outer 2" and "center 2"/"outer 6".
-      else if ((livemask & 0x0E1CUL) != 0x0E1CUL)
+      else if ((livemask & 0x0E1CU) != 0x0E1CU)
          ptr = (id_bit_table *) 0;
       break;
    case s2x6:
       /* **** This isn't really right -- it would allow "outer pairs bingo".
          We really should only allow 2-person calls, unless we say
          "outer triple boxes".  So we're not completely sure what the right thing is. */
-      if (livemask == 07474UL || livemask == 0x3CFUL)
+      if (livemask == 07474U || livemask == 0x3CFU)
          /* Setup is parallelogram, accept slightly stronger table. */
          ptr = id_bit_table_2x6_pg;
       break;
    case s1x10:
       /* We recognize center 4 and center 6 if this has center 6 filled, then a gap,
          then isolated people. */
-      if (livemask != 0x3BDUL) ptr = (id_bit_table *) 0;
+      if (livemask != 0x3BDU) ptr = (id_bit_table *) 0;
       break;
    case s3x6:
       // If the center 1x6 is fully occupied, use this better table.
-      if ((livemask & 0700700UL) == 0700700UL) ptr = id_bit_table_3x6_with_1x6;
+      if ((livemask & 0700700U) == 0700700U) ptr = id_bit_table_3x6_with_1x6;
       // Or, if center 1x4 is occupied, use the standard table.
       // Otherwise, fail.
-      if ((livemask & 0600600UL) != 0600600UL) ptr = (id_bit_table *) 0;
+      if ((livemask & 0600600U) != 0600600U) ptr = (id_bit_table *) 0;
       break;
    case sbigdmd:
       // If this is populated appropriately, we can identify "outer pairs".
-      if (livemask == 07474UL || livemask == 0x3CFUL) ptr = id_bit_table_bigdmd_wings;
+      if (livemask == 07474U || livemask == 0x3CFU) ptr = id_bit_table_bigdmd_wings;
       break;
    case sbigbone:
       // If this is populated appropriately, we can identify "outer pairs".
-      if (livemask == 07474UL || livemask == 0x3CFUL) ptr = id_bit_table_bigbone_wings;
+      if (livemask == 07474U || livemask == 0x3CFU) ptr = id_bit_table_bigbone_wings;
       break;
    case sbigdhrgl:
       // If this is populated appropriately, we can identify "outer pairs".
-      if (livemask == 07474UL || livemask == 0x3CFUL) ptr = id_bit_table_bigdhrgl_wings;
+      if (livemask == 07474U || livemask == 0x3CFU) ptr = id_bit_table_bigdhrgl_wings;
       break;
    case sbighrgl:
       // If this is populated appropriately, we can identify "outer pairs".
-      if (livemask == 07474UL || livemask == 0x3CFUL) ptr = id_bit_table_bighrgl_wings;
+      if (livemask == 07474U || livemask == 0x3CFU) ptr = id_bit_table_bighrgl_wings;
       break;
    case sbigh:
       // If it's a "double bent tidal line", we can recognize the "center 4"
       // and "outer pairs".
-      if (livemask != 06363UL || livemask != 07474UL) ptr = id_bit_table_bigh_dblbent;
+      if (livemask != 06363U || livemask != 07474U) ptr = id_bit_table_bigh_dblbent;
       // Otherwise, we recognize only the center 1x4, and only if it is full.
-      else if ((livemask & 06060UL) != 06060UL) ptr = (id_bit_table *) 0;
+      else if ((livemask & 06060U) != 06060U) ptr = (id_bit_table *) 0;
       break;
    case s_525:
-      if (livemask == 04747UL) ptr = id_bit_table_525_nw;
-      else if (livemask == 07474UL) ptr = id_bit_table_525_ne;
+      if (livemask == 04747U) ptr = id_bit_table_525_nw;
+      else if (livemask == 07474U) ptr = id_bit_table_525_ne;
       break;
    case s_343:
       if ((livemask & 0xE7) == 0xE7) ptr = id_bit_table_343_outr;
@@ -648,24 +647,24 @@ extern void update_id_bits(setup *ss)
       // If occupied as Z's, recognize "center 4" as the center Z.
       // If all else fails, we use the default table. */
 
-      if (livemask == 07171UL) ptr = id_bit_table_3x4_h;
-      else if ((livemask & 04646UL) == 04646UL) ptr = id_bit_table_3x4_ctr6;
-      else if (livemask == 07474UL || livemask == 06363UL) ptr = id_bit_table_3x4_offset;
-      else if ((livemask & 03131UL) == 01111UL) ptr = id_bit_table_3x4_corners;
-      else if (livemask == 07272UL || livemask == 06565UL) ptr = id_bit_table_3x4_zs;
+      if (livemask == 07171U) ptr = id_bit_table_3x4_h;
+      else if ((livemask & 04646U) == 04646U) ptr = id_bit_table_3x4_ctr6;
+      else if (livemask == 07474U || livemask == 06363U) ptr = id_bit_table_3x4_offset;
+      else if ((livemask & 03131U) == 01111U) ptr = id_bit_table_3x4_corners;
+      else if (livemask == 07272U || livemask == 06565U) ptr = id_bit_table_3x4_zs;
       break;
    case sd3x4:
-      if ((livemask & 01616UL) != 01616UL) ptr = (id_bit_table *) 0;
+      if ((livemask & 01616U) != 01616U) ptr = (id_bit_table *) 0;
       break;
    case s4x4:
       // We recognize centers and ends if this is populated as a butterfly.
       // Otherwise, we recognize "center 4" only if those 4 spots are occupied.
-      if (livemask == 0x9999UL)
+      if (livemask == 0x9999U)
          ptr = id_bit_table_butterfly;
-      else if (livemask == 0xC9C9UL || livemask == 0x9C9CUL ||
-               livemask == 0xB8B8UL || livemask == 0x8B8BUL)
+      else if (livemask == 0xC9C9U || livemask == 0x9C9CU ||
+               livemask == 0xB8B8U || livemask == 0x8B8BU)
          ptr = id_bit_table_4x4_outer_pairs;
-      else if ((livemask & 0x8888UL) != 0x8888UL)
+      else if ((livemask & 0x8888U) != 0x8888U)
          ptr = (id_bit_table *) 0;
       break;
    case s4x6:
@@ -674,12 +673,12 @@ extern void update_id_bits(setup *ss)
       // is something of a crock.  It will recognize stupid things like
       // "center line", "center wave", "center column", and "center 1x4".
       // We expect users not to specify such things in a 4x6.
-      if ((livemask & 014001400UL) != 014001400UL)
+      if ((livemask & 014001400U) != 014001400U)
          ptr = (id_bit_table *) 0;
       break;
    case sdeepxwv:
       // We recognize outer pairs if they are fully populated.
-      if ((livemask & 00303UL) != 00303UL) ptr = (id_bit_table *) 0;
+      if ((livemask & 00303U) != 00303U) ptr = (id_bit_table *) 0;
       break;
    case swqtag:
       // We recognize "center 6" if the center 2 spots are empty,
@@ -687,7 +686,7 @@ extern void update_id_bits(setup *ss)
       // Otherwise, we recognize the center 1x6 if it is fully populated.
       if (livemask == 0x1EF)
          ptr = id_bit_table_wqtag_hollow;
-      else if ((livemask & 0x39CUL) != 0x39CUL)
+      else if ((livemask & 0x39CU) != 0x39CU)
          ptr = (id_bit_table *) 0;
       break;
    case s3dmd:
@@ -695,29 +694,29 @@ extern void update_id_bits(setup *ss)
       // But first we look for a few other configurations.
 
       // Look for center 1x6 occupied.
-      if ((livemask & 0xE38UL) == 0xE38UL) ptr = id_bit_table_3dmd_ctr1x6;
+      if ((livemask & 0xE38U) == 0xE38U) ptr = id_bit_table_3dmd_ctr1x6;
       // Look for center 1x6 having center 1x4 occupied.
-      else if ((livemask & 0xC30UL) == 0xC30UL) ptr = id_bit_table_3dmd_ctr1x4;
+      else if ((livemask & 0xC30U) == 0xC30U) ptr = id_bit_table_3dmd_ctr1x4;
       // Look for center 1x4 and outer points.
-      else if (livemask == 06565UL) ptr = id_bit_table_3dmd_in_out;
+      else if (livemask == 06565U) ptr = id_bit_table_3dmd_in_out;
       // Otherwise, see whether to accept default or reject everything.
-      else if (livemask != 04747UL) ptr = (id_bit_table *) 0;
+      else if (livemask != 04747U) ptr = (id_bit_table *) 0;
       break;
    case s4dmd:
       // If center diamonds have only centers and outer ones only points, use this.
-      if (livemask == 0xC9C9UL) ptr = id_bit_table_4dmd_cc_ee;
+      if (livemask == 0xC9C9U) ptr = id_bit_table_4dmd_cc_ee;
       // Or if center 1x4 is occupied, use standard map.
-      else if ((livemask & 0xC0C0UL) != 0xC0C0UL) ptr = (id_bit_table *) 0;
+      else if ((livemask & 0xC0C0U) != 0xC0C0U) ptr = (id_bit_table *) 0;
       break;
    case s3ptpd:
       /* If the center diamond is full and the inboard points of each outer diamond
          is present, we can do a "triple trade". */
-      if (livemask == 06666UL || livemask == 06363UL || livemask == 07272UL)
+      if (livemask == 06666U || livemask == 06363U || livemask == 07272U)
          ptr = id_bit_table_3ptpd;
       break;
    case s_hsqtag:
       // Only allow it if outer pairs are together.
-      if (livemask != 0xF3CUL && livemask != 0xCF3UL) ptr = (id_bit_table *) 0;
+      if (livemask != 0xF3CU && livemask != 0xCF3U) ptr = (id_bit_table *) 0;
       break;
    }
 
@@ -916,19 +915,19 @@ extern void touch_or_rear_back(
          if (livemask != 0) {
             switch (scopy->kind) {
             case s1x2:
-               if (((directions ^ 0x2UL) & livemask) == 0) {
+               if (((directions ^ 0x2U) & livemask) == 0) {
                   tptr = &rear_1x2_pair;
                   goto found_tptr;
                }
                break;
             case s1x4:
-               if (((directions ^ 0x28UL) & livemask) == 0) {
+               if (((directions ^ 0x28U) & livemask) == 0) {
                   tptr = &rear_2x2_pair;
                   goto found_tptr;
                }
                break;
             case s_bone:
-               if (((directions ^ 0xA802UL) & livemask) == 0) {
+               if (((directions ^ 0xA802U) & livemask) == 0) {
                   tptr = &rear_bone_pair;
                   goto found_tptr;
                }
@@ -987,15 +986,15 @@ extern void touch_or_rear_back(
       switch (scopy->kind) {
       case s2x4:
          if (livemask != 0) {
-            if ((step_ok || livemask == 0xFFFFUL) &&
-                ((directions ^ 0x77DDUL) & livemask) == 0) {
+            if ((step_ok || livemask == 0xFFFFU) &&
+                ((directions ^ 0x77DDU) & livemask) == 0) {
                // Check for stepping to parallel waves from an 8-chain.
                tptr = &step_8ch_pair;
                goto found_tptr;
             }
             else if (((0x003C & ~livemask) == 0 || (0x3C00 & ~livemask) == 0) &&
                      (livemask & 0xC3C3) != 0 &&
-                     ((directions ^ 0x5D75UL) & 0x7D7DUL & livemask) == 0) {
+                     ((directions ^ 0x5D75U) & 0x7D7DU & livemask) == 0) {
                // Check for stepping to some kind of 1/4 tag
                // from a DPT or trade-by or whatever.
                // But we require at least one person on the outside.  See test t57.
@@ -1003,7 +1002,7 @@ extern void touch_or_rear_back(
                goto found_tptr;
             }
             else if (touchflags == CFLAG1_STEP_TO_QTAG &&
-                     ((directions ^ 0x5D75UL) & 0x7D7DUL & livemask) == 0 &&
+                     ((directions ^ 0x5D75U) & 0x7D7DU & livemask) == 0 &&
                      (livemask & 0x3C3C) != 0) {
                // If the command is specifically to step to a qtag, we are
                // more accepting relative to missing people.
@@ -1018,11 +1017,11 @@ extern void touch_or_rear_back(
       case s2x2:
          if (livemask != 0 &&
              (step_ok || livemask == 0xFF)) {
-            if (((directions ^ 0x7DUL) & livemask) == 0) {
+            if (((directions ^ 0x7DU) & livemask) == 0) {
                tptr = &step_2x2h_pair;
                goto found_tptr;
             }
-            else if (((directions ^ 0xA0UL) & livemask) == 0) {
+            else if (((directions ^ 0xA0U) & livemask) == 0) {
                tptr = &step_2x2v_pair;
                goto found_tptr;
             }
@@ -1030,39 +1029,39 @@ extern void touch_or_rear_back(
          break;
       case s_spindle:
          if (livemask != 0 &&
-             ((step_ok || livemask == 0xFFFFUL) &&
-              ((directions ^ 0xA802UL) & livemask) == 0)) {
+             ((step_ok || livemask == 0xFFFFU) &&
+              ((directions ^ 0xA802U) & livemask) == 0)) {
             tptr = &step_spindle_pair;
             goto found_tptr;
          }
          break;
       case s_trngl:
-         if ((0x0FUL & ~livemask) == 0 &&
-             ((directions ^ 0x17UL) & livemask) == 0 &&
+         if ((0x0FU & ~livemask) == 0 &&
+             ((directions ^ 0x17U) & livemask) == 0 &&
              !(callflags1 & CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK)) {
             tptr = &step_tgl_pair;
             goto found_tptr;
          }
          break;
       case sdmd:
-         if ((0x33UL & ~livemask) == 0 &&
-             ((directions ^ 0xA0UL) & livemask) == 0 &&
+         if ((0x33U & ~livemask) == 0 &&
+             ((directions ^ 0xA0U) & livemask) == 0 &&
              !(callflags1 & CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK)) {
             tptr = &step_dmd_pair;
             goto found_tptr;
          }
          break;
       case s_ptpd:
-         if ((0x3333UL & ~livemask) == 0 &&
-             ((directions ^ 0xA00AUL) & livemask) == 0 &&
+         if ((0x3333U & ~livemask) == 0 &&
+             ((directions ^ 0xA00AU) & livemask) == 0 &&
              !(callflags1 & CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK)) {
             tptr = &step_ptpd_pair;
             goto found_tptr;
          }
          break;
       case s_qtag:
-         if ((0x0F0FUL & ~livemask) == 0 &&
-             ((directions ^ 0xFD57UL) & livemask) == 0 &&
+         if ((0x0F0FU & ~livemask) == 0 &&
+             ((directions ^ 0xFD57U) & livemask) == 0 &&
              !(callflags1 & CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK)) {
             tptr = &step_qtgctr_pair;
             goto found_tptr;
@@ -1080,42 +1079,42 @@ extern void touch_or_rear_back(
    if (callflags1 & CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK) {
       big_endian_get_directions(scopy, directions, livemask);    // Need to do this again.
 
-      uint32 rtest = ~0UL;
-      uint32 rothertest = ~0UL;
+      uint32 rtest = ~0U;
+      uint32 rothertest = ~0U;
 
       switch (scopy->kind) {
       case s2x2:
-         rtest = 0x28UL;
-         rothertest = 0x5FUL;
+         rtest = 0x28U;
+         rothertest = 0x5FU;
          break;
       case s2x4:
-         rtest = 0x2288UL;
-         rothertest = 0x55FFUL;
+         rtest = 0x2288U;
+         rothertest = 0x55FFU;
          break;
       case s_bone:
-         rtest = 0x58F2UL;
+         rtest = 0x58F2U;
          break;
       case s_rigger:
-         rtest = 0x58F2UL;
+         rtest = 0x58F2U;
          break;
       case s1x2:
-         rtest = 0x2UL;
+         rtest = 0x2U;
          break;
       case s1x4:
-         rtest = 0x28UL;
+         rtest = 0x28U;
          break;
       case s1x8:
-         rtest = 0x2882UL;
+         rtest = 0x2882U;
          break;
       case s_qtag:
-         rtest = 0x0802UL;
+         rtest = 0x0802U;
          livemask &= 0x0F0F;
          break;
       }
 
-      if (rtest != ~0UL) {
+      if (rtest != ~0U) {
          bool rfail = (((directions) ^ rtest) & livemask) != 0;
-         if (rothertest != ~0UL)
+         if (rothertest != ~0U)
             rfail = rfail && ((directions ^ rothertest) & livemask) != 0;
 
          if (did_mirror && rfail) fail("Setup is not left-handed.");
@@ -1320,11 +1319,11 @@ extern void do_matrix_expansion(
       if (ss->kind == s4x4) {
          if (needpropbits &
              (NEEDMASK(CONCPROP__NEEDK_4D_4PTPD) | NEEDMASK(CONCPROP__NEEDK_4DMD))) {
-            if (livemask == 0x1717UL) {
+            if (livemask == 0x1717U) {
                expand::expand_setup(s_4x4_4dma, ss);
                goto expanded;
             }
-            else if (livemask == 0x7171UL) {
+            else if (livemask == 0x7171U) {
                expand::expand_setup(s_4x4_4dmb, ss);
                goto expanded;
             }
@@ -1345,11 +1344,11 @@ extern void do_matrix_expansion(
             // also, or the facing directions of the "points" are innapropriate
             // for the twin qtag / twin diamond nature of the concept, an error
             // will be raised when the concept is executed.
-            if ((livemask & 0x6060UL) != 0) {
+            if ((livemask & 0x6060U) != 0) {
                expand::expand_setup(s_4x4_4x6b, ss);
                goto expanded;
             }
-            else if ((livemask & 0x0606UL) != 0) {
+            else if ((livemask & 0x0606U) != 0) {
                expand::expand_setup(s_4x4_4x6a, ss);
                goto expanded;
             }
@@ -1374,11 +1373,11 @@ extern void do_matrix_expansion(
                expand::expand_setup((ctrs & 1) ? s_4x4_4x6b : s_4x4_4x6a, ss);
                goto expanded;
             }
-            else if (livemask == 0x1717UL) {
+            else if (livemask == 0x1717U) {
                expand::expand_setup(s_4x4_4x6a, ss);
                goto expanded;
             }
-            else if (livemask == 0x7171UL) {
+            else if (livemask == 0x7171U) {
                expand::expand_setup(s_4x4_4x6b, ss);
                goto expanded;
             }
@@ -2198,8 +2197,8 @@ void create_active_phantom(personrec *person_p, uint32 dir, int *phantom_count_p
    if (!person_p->id1) {
       if (*phantom_count_p >= 16) fail("Too many phantoms.");
       person_p->id1 = dir | BIT_ACT_PHAN | (((*phantom_count_p)++) << 6);
-      person_p->id2 = 0UL;
-      person_p->id3 = 0UL;
+      person_p->id2 = 0U;
+      person_p->id3 = 0U;
    }
    else if (person_p->id1 & BIT_ACT_PHAN)
       fail("Active phantoms may only be used once.");
@@ -4421,11 +4420,6 @@ uint32 uncompress_position_number(uint32 datum)
 }
 
 
-void setup::clear_people()
-{
-   memset(people, 0, sizeof(personrec)*MAX_PEOPLE);
-}
-
 
 extern void clear_result_flags(setup *z)
 {
@@ -5127,7 +5121,7 @@ extern bool fix_n_results(int arity,
       if (arity >=2) rotstates &= 1;
    }
 
-   if (arity == 1) rotstates &= 0x3;
+   if (arity == 1 && kk != s_trngl && kk != s_trngl4) rotstates &= 0x3;
    if (!rotstates) goto lose;
 
    // Now deal with any setups that we may have deferred.
@@ -5805,7 +5799,10 @@ void toplevelmove() THROW_DECL
    current_options = null_options;
 
    // Put in identification bits for global/unsymmetrical stuff, if possible.
-   for (i=0; i<MAX_PEOPLE; i++) starting_setup.people[i].id3 &= ~ID3_GLOB_BITS_TO_CLEAR;
+   for (i=0; i<MAX_PEOPLE; i++) {
+      starting_setup.people[i].id2 &= ~ID2_DIR_BITS_TO_CLEAR;
+      starting_setup.people[i].id3 &= ~ID3_LESS_BITS_TO_CLEAR;
+   }
 
    if (!(starting_setup.result_flags.misc & RESULTFLAG__IMPRECISE_ROT)) {
       // Can't do it if rotation is not known.
@@ -5815,16 +5812,16 @@ void toplevelmove() THROW_DECL
             if (starting_setup.people[i].id1 & BIT_PERSON) {
                switch ((starting_setup.people[i].id1 + starting_setup.rotation) & 3) {
                case 0:
-                  starting_setup.people[i].id3 |= ID3_FACEBACK;
+                  starting_setup.people[i].id2 |= ID2_FACEBACK;
                   break;
                case 1:
-                  starting_setup.people[i].id3 |= ID3_FACERIGHT;
+                  starting_setup.people[i].id2 |= ID2_FACERIGHT;
                   break;
                case 2:
-                  starting_setup.people[i].id3 |= ID3_FACEFRONT;
+                  starting_setup.people[i].id2 |= ID2_FACEFRONT;
                   break;
                case 3:
-                  starting_setup.people[i].id3 |= ID3_FACELEFT;
+                  starting_setup.people[i].id2 |= ID2_FACELEFT;
                   break;
                }
             }
@@ -5862,33 +5859,56 @@ void toplevelmove() THROW_DECL
          }
       }
       else if ((starting_setup.kind == s1x8 || starting_setup.kind == s_ptpd) && starting_setup.rotation & 1) {
+         uint32 or_all = or_all_people(&starting_setup);
+         uint32 near4bit = ID3_NEARFOUR;
+         uint32 far4bit = ID3_FARFOUR;
+         uint32 near1bit = ID3_NEAREST1|ID3_NOTFARTHEST1;
+         uint32 far1bit = ID3_FARTHEST1|ID3_NOTNEAREST1;
+         uint32 no1bit = ID3_NOTNEAREST1|ID3_NOTFARTHEST1;
+
+         if (starting_setup.kind == s1x8) {
+            if (!(or_all & 1)) {
+               near4bit |= ID3_NEARLINE;
+               far4bit |= ID3_FARLINE;
+            }
+            else if (!(or_all & 010)) {
+               near4bit |= ID3_NEARCOL;
+               far4bit |= ID3_FARCOL;
+            }
+         }
+
          for (i=0; i<8; i++) {
             if (starting_setup.people[i].id1 & BIT_PERSON) {
-               uint32 nearbit = ID3_NEARFOUR;
-               uint32 farbit = ID3_FARFOUR;
-
                if (starting_setup.kind == s1x8) {
-                  if (starting_setup.people[i].id1 & 1) {
-                     nearbit |= ID3_NEARCOL;
-                     farbit |= ID3_FARCOL;
-                  }
-                  else {
-                     nearbit |= ID3_NEARLINE;
-                     farbit |= ID3_FARLINE;
-                  }
-
                   starting_setup.people[i].id3 |=
-                     (((i + (starting_setup.rotation << 1)) & 6) == 6 ?
-                      ID3_NEARTWO : ID3_FARSIX) |
-                     (((i + (starting_setup.rotation << 1) + 4) & 6) == 6 ?
-                      ID3_FARTWO : ID3_NEARSIX);
+                     (((i + 2) & 6) == 6 ? ID3_NEARTWO : ID3_FARSIX) |
+                     (((i + 6) & 6) == 6 ? ID3_FARTWO : ID3_NEARSIX);
                }
 
-               starting_setup.people[i].id3 |=
-                  ((i & 4) ? nearbit : farbit) |
-                  ((i == 0) ? (ID3_FARTHEST1|ID3_NOTNEAREST1) :
-                   ((i == 4) ? (ID3_NEAREST1|ID3_NOTFARTHEST1) :
-                    (ID3_NOTNEAREST1|ID3_NOTFARTHEST1)));
+               if (i & 4) {
+                  starting_setup.people[i].id3 |=
+                     near4bit | ID3_NEARFIVE |
+                     ((i == 6) ? ID3_FARFIVE : ID3_NEARTHREE) |
+                     ((i == 4) ? near1bit : no1bit);
+               }
+               else {
+                  starting_setup.people[i].id3 |=
+                     far4bit | ID3_FARFIVE |
+                     ((i == 2) ? ID3_NEARFIVE : ID3_FARTHREE) |
+                     ((i == 0) ? far1bit : no1bit);
+               }
+            }
+         }
+      }
+      else if ((starting_setup.kind == s_bone) && starting_setup.rotation & 1) {
+         for (i=0; i<8; i++) {
+            if (starting_setup.people[i].id1 & BIT_PERSON) {
+               starting_setup.people[i].id3 |= 
+                  (((0x1E >> i) & 1) ? ID3_NEARFOUR : ID3_FARFOUR) |
+                  (((0x12 >> i) & 1) ? ID3_NEARTWO : ID3_FARSIX) |
+                  (((0x21 >> i) & 1) ? ID3_FARTWO : ID3_NEARSIX) |
+                  (((0x16 >> i) & 1) ? ID3_NEARTHREE : ID3_FARFIVE) |
+                  (((0x61 >> i) & 1) ? ID3_FARTHREE : ID3_NEARFIVE);
             }
          }
       }
@@ -5896,87 +5916,127 @@ void toplevelmove() THROW_DECL
                 starting_setup.kind == splinedmd ||
                 starting_setup.kind == slinebox) &&
                starting_setup.rotation & 1) {
-         uint32 nearbit = ID3_NEARFOUR;
-         uint32 farbit = ID3_FARFOUR;
-         uint32 waynearbit = ID3_NEAREST1|ID3_NOTFARTHEST1;
-         uint32 wayfarbit = ID3_FARTHEST1|ID3_NOTNEAREST1;
+         uint32 near4bit = ID3_NEARFOUR;
+         uint32 far4bit = ID3_FARFOUR;
+         uint32 near5bit = ID3_NEARFIVE;
+         uint32 far5bit = ID3_FARFIVE;
+         uint32 near3bit = ID3_NEARTHREE;
+         uint32 far3bit = ID3_FARTHREE;
+         uint32 near6bit = ID3_NEARSIX;
+         uint32 far6bit = ID3_FARSIX;
+         uint32 near2bit = ID3_NEARTWO;
+         uint32 far2bit = ID3_FARTWO;
+         uint32 near1bit = ID3_NEAREST1|ID3_NOTFARTHEST1;
+         uint32 far1bit = ID3_FARTHEST1|ID3_NOTNEAREST1;
+         uint32 no1bit = ID3_NOTNEAREST1|ID3_NOTFARTHEST1;
 
-         uint32 lowpeople =
+         uint32 linepeople =
             starting_setup.people[0].id1 | starting_setup.people[1].id1 |
             starting_setup.people[2].id1 | starting_setup.people[3].id1;
 
          if (starting_setup.rotation & 2) {
-            nearbit = ID3_FARFOUR;
-            farbit = ID3_NEARFOUR;
-            waynearbit = ID3_FARTHEST1|ID3_NOTNEAREST1;
-            wayfarbit = ID3_NEAREST1|ID3_NOTFARTHEST1;
+            near4bit = ID3_FARFOUR;
+            far4bit = ID3_NEARFOUR;
+            near5bit = ID3_FARTHREE;
+            far5bit = ID3_NEARTHREE;
+            near3bit = ID3_FARFIVE;
+            far3bit = ID3_NEARFIVE;
+            near6bit = ID3_FARTWO;
+            far6bit = ID3_NEARTWO;
+            near2bit = ID3_FARSIX;
+            far2bit = ID3_NEARSIX;
+            near1bit = ID3_FARTHEST1|ID3_NOTNEAREST1;
+            far1bit = ID3_NEAREST1|ID3_NOTFARTHEST1;
 
-            if (!(lowpeople & 1))
-               farbit |= ID3_NEARLINE;
-            else if (!(lowpeople & 010))
-               farbit |= ID3_NEARCOL;
+            if (!(linepeople & 1))
+               far4bit |= ID3_NEARLINE;
+            else if (!(linepeople & 010))
+               far4bit |= ID3_NEARCOL;
          }
          else {
-            if (!(lowpeople & 1))
-               farbit |= ID3_FARLINE;
-            else if (!(lowpeople & 010))
-               farbit |= ID3_FARCOL;
+            if (!(linepeople & 1))
+               far4bit |= ID3_FARLINE;
+            else if (!(linepeople & 010))
+               far4bit |= ID3_FARCOL;
          }
 
          for (i=0; i<8; i++) {
             if (starting_setup.people[i].id1 & BIT_PERSON)
                starting_setup.people[i].id3 |=
-                  ((i & 4) ? nearbit : farbit) |
-                  ((i == 0) ? wayfarbit : ((i == 6) ? waynearbit : (ID3_NOTNEAREST1|ID3_NOTFARTHEST1)));
+                  ((i >= 4) ? near4bit : far4bit) |
+                  ((i >= 3) ? near5bit : far3bit) |
+                  ((i >= 2) ? near6bit : far2bit) |
+                  ((i != 0) ? ((i == 6 && (starting_setup.kind == splinepdmd || starting_setup.kind == splinedmd)) ?
+                    near1bit : no1bit) : far1bit);
          }
       }
       else if ((starting_setup.kind == slinepdmd || starting_setup.kind == slinedmd) && !(starting_setup.rotation & 1)) {
-         uint32 nearbit = ID3_NEARFOUR;
-         uint32 farbit = ID3_FARFOUR;
+         uint32 near4bit = ID3_NEARFOUR;
+         uint32 far4bit = ID3_FARFOUR;
 
          uint32 hipeople =
             starting_setup.people[4].id1 | starting_setup.people[5].id1 |
             starting_setup.people[6].id1 | starting_setup.people[7].id1;
 
          if (starting_setup.rotation & 2) {
-            nearbit = ID3_FARFOUR;
-            farbit = ID3_NEARFOUR;
+            near4bit = ID3_FARFOUR;
+            far4bit = ID3_NEARFOUR;
 
             if (!(hipeople & 1))
-               farbit |= ID3_NEARLINE;
+               far4bit |= ID3_NEARLINE;
             else if (!(hipeople & 010))
-               farbit |= ID3_NEARCOL;
+               far4bit |= ID3_NEARCOL;
          }
          else {
             if (!(hipeople & 1))
-               farbit |= ID3_FARLINE;
+               far4bit |= ID3_FARLINE;
             else if (!(hipeople & 010))
-               farbit |= ID3_FARCOL;
+               far4bit |= ID3_FARCOL;
          }
 
          for (i=0; i<8; i++) {
             if (starting_setup.people[i].id1 & BIT_PERSON)
-               starting_setup.people[i].id3 |= ((i & 4) ? farbit : nearbit);
+               starting_setup.people[i].id3 |= ((i & 4) ? far4bit : near4bit);
          }
       }
-      else if ((starting_setup.kind == sdmdpdmd || starting_setup.kind == sboxdmd || starting_setup.kind == sboxpdmd) &&
-               !(starting_setup.rotation & 1)) {
-         uint32 nearbit = ID3_NEARFOUR;
-         uint32 farbit = ID3_FARFOUR;
+      else if ((starting_setup.kind == sboxpdmd) && !(starting_setup.rotation & 1)) {
+         uint32 near4bit = ID3_NEARFOUR;
+         uint32 far4bit = ID3_FARFOUR;
+         uint32 near3bit = ID3_NEARTHREE;
+         uint32 far5bit = ID3_FARFIVE;
 
          if (starting_setup.rotation & 2) {
-            nearbit = ID3_FARFOUR;
-            farbit = ID3_NEARFOUR;
+            near4bit = ID3_FARFOUR;
+            far4bit = ID3_NEARFOUR;
+            near3bit = ID3_FARTHREE;
+            far5bit = ID3_NEARFIVE;
          }
 
          for (i=0; i<8; i++) {
             if (starting_setup.people[i].id1 & BIT_PERSON)
-               starting_setup.people[i].id3 |= ((i & 4) ? farbit : nearbit);
+               starting_setup.people[i].id3 |=
+                  ((i >= 4) ? far4bit : near4bit) |
+                  ((i >= 4 || i == 2) ? far5bit : near3bit);
+         }
+      }
+      else if ((starting_setup.kind == sdmdpdmd || starting_setup.kind == sboxdmd) &&
+               !(starting_setup.rotation & 1)) {
+         uint32 near4bit = ID3_NEARFOUR;
+         uint32 far4bit = ID3_FARFOUR;
+
+         if (starting_setup.rotation & 2) {
+            near4bit = ID3_FARFOUR;
+            far4bit = ID3_NEARFOUR;
+         }
+
+         for (i=0; i<8; i++) {
+            if (starting_setup.people[i].id1 & BIT_PERSON)
+               starting_setup.people[i].id3 |= ((i & 4) ? far4bit : near4bit);
          }
       }
       else if (starting_setup.kind == s_trngl8 && !(starting_setup.rotation & 1)) {
-         uint32 nearbit = ID3_NEARFOUR;
-         uint32 farbit = ID3_FARFOUR;
+         uint32 near4bit = ID3_NEARFOUR;
+         uint32 far4bit = ID3_FARFOUR;
 
          uint32 lowpeople =
             starting_setup.people[0].id1 | starting_setup.people[1].id1 |
@@ -5986,43 +6046,61 @@ void toplevelmove() THROW_DECL
             starting_setup.people[6].id1 | starting_setup.people[7].id1;
 
          if (starting_setup.rotation & 2) {
-            nearbit = ID3_FARFOUR;
-            farbit = ID3_NEARFOUR;
+            near4bit = ID3_FARFOUR;
+            far4bit = ID3_NEARFOUR;
 
             if (!(hipeople & 1))
-               farbit |= ID3_NEARLINE;
+               far4bit |= ID3_NEARLINE;
             else if (!(hipeople & 010))
-               farbit |= ID3_NEARCOL;
+               far4bit |= ID3_NEARCOL;
 
             if (!(lowpeople & 1))
-               nearbit |= ID3_FARCOL;
+               near4bit |= ID3_FARCOL;
             else if (!(lowpeople & 010))
-               nearbit |= ID3_FARLINE;
+               near4bit |= ID3_FARLINE;
          }
          else {
             if (!(lowpeople & 1))
-               nearbit |= ID3_NEARCOL;
+               near4bit |= ID3_NEARCOL;
             else if (!(lowpeople & 010))
-               nearbit |= ID3_NEARLINE;
+               near4bit |= ID3_NEARLINE;
 
             if (!(hipeople & 1))
-               farbit |= ID3_FARLINE;
+               far4bit |= ID3_FARLINE;
             else if (!(hipeople & 010))
-               farbit |= ID3_FARCOL;
+               far4bit |= ID3_FARCOL;
          }
 
          for (i=0; i<8; i++) {
             if (starting_setup.people[i].id1 & BIT_PERSON)
-               starting_setup.people[i].id3 |= ((i & 4) ? farbit : nearbit);
+               starting_setup.people[i].id3 |= ((i & 4) ? far4bit : near4bit);
          }
       }
       else if (starting_setup.kind == s_qtag && starting_setup.rotation & 1) {
-         uint32 nearbit = ID3_NEARFOUR;
-         uint32 farbit = ID3_FARFOUR;
-
          for (i=0; i<8; i++) {
             if (starting_setup.people[i].id1 & BIT_PERSON)
-               starting_setup.people[i].id3 |= (((i+3) & 4) ? nearbit : farbit);
+               starting_setup.people[i].id3 |= (((i+3) & 4) ? ID3_NEARFOUR : ID3_FARFOUR);
+         }
+      }
+      else if (starting_setup.kind == s_spindle && starting_setup.rotation & 1) {
+         for (i=0; i<8; i++) {
+            if (starting_setup.people[i].id1 & BIT_PERSON) {
+               starting_setup.people[i].id3 |= 
+                  (((0x1C >> i) & 1) ? ID3_NEARTHREE : ID3_FARFIVE) |
+                  (((0xC1 >> i) & 1) ? ID3_FARTHREE : ID3_NEARFIVE);
+            }
+         }
+      }
+      else if (starting_setup.kind == s_galaxy) {
+         for (i=0; i<8; i++) {
+            if (starting_setup.people[i].id1 & BIT_PERSON) {
+               if (!(i&3))
+                  starting_setup.people[i].id3 |= ID3_NEARFIVE|ID3_FARFIVE;
+               else if (i&4)
+                  starting_setup.people[i].id3 |= ID3_NEARTHREE|ID3_NEARFIVE;
+               else
+                  starting_setup.people[i].id3 |= ID3_FARTHREE|ID3_FARFIVE;
+            }
          }
       }
       else if (starting_setup.kind == s_c1phan) {
@@ -6037,7 +6115,7 @@ void toplevelmove() THROW_DECL
          for (i=0; i<16; i++)
             tbonetest[i>>3] |= starting_setup.people[i].id1;
 
-         if (livemask == 0x5AA5UL) {
+         if (livemask == 0x5AA5U) {
             nearbit = ID3_NEARBOX|ID3_NEARFOUR;
 
             if (!(tbonetest[0] & 1))
@@ -6045,7 +6123,7 @@ void toplevelmove() THROW_DECL
             else if (!(tbonetest[0] & 010))
                farbit = ID3_FARCOL|ID3_FARFOUR;
          }
-         else if (livemask == 0xA55AUL) {
+         else if (livemask == 0xA55AU) {
             farbit = ID3_FARBOX|ID3_FARFOUR;
 
             if (!(tbonetest[1] & 1))
@@ -6053,7 +6131,7 @@ void toplevelmove() THROW_DECL
             else if (!(tbonetest[1] & 010))
                nearbit = ID3_NEARCOL|ID3_NEARFOUR;
          }
-         else if (livemask == 0x5555UL || livemask == 0xAAAAUL) {
+         else if (livemask == 0x5555U || livemask == 0xAAAAU) {
             farbit = ID3_FARFOUR;
             nearbit = ID3_NEARFOUR;
          }
@@ -6075,15 +6153,15 @@ void toplevelmove() THROW_DECL
          for (i=0; i<16; i++)
             tbonetest[(setup_attrs[s4x4].setup_coords->yca[i] < 0) ? 1 : 0] |= starting_setup.people[i].id1;
 
-         if (livemask == 0x4B4BUL || livemask == 0x0B4B4UL) {
+         if (livemask == 0x4B4BU || livemask == 0x0B4B4U) {
             farbit = ID3_FARBOX|ID3_FARFOUR;
             nearbit = ID3_NEARBOX|ID3_NEARFOUR;
          }
-         else if (livemask == 0xEA8CUL) {
+         else if (livemask == 0xEA8CU) {
             farbit = ID3_FARBOX|ID3_FARFOUR;
             nearbit = ID3_NEARLINE|ID3_NEARCOL|ID3_NEARFOUR;
          }
-         else if (livemask == 0x8CEAUL) {
+         else if (livemask == 0x8CEAU) {
             farbit = ID3_FARLINE|ID3_FARCOL|ID3_FARFOUR;
             nearbit = ID3_NEARBOX|ID3_NEARFOUR;
          }
@@ -6141,7 +6219,11 @@ void finish_toplevelmove() THROW_DECL
    // Remove outboard phantoms from the resulting setup.
    normalize_setup(&newhist.state, plain_normalize, false);
 
-   for (int i=0; i<MAX_PEOPLE; i++) newhist.state.people[i].id3 &= ~ID3_GLOB_BITS_TO_CLEAR;
+   for (int i=0; i<MAX_PEOPLE; i++) {
+      newhist.state.people[i].id2 &= ~ID2_DIR_BITS_TO_CLEAR;
+      newhist.state.people[i].id3 &= ~ID3_LESS_BITS_TO_CLEAR;
+   }
+
    newhist.calculate_resolve();
 }
 

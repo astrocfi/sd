@@ -868,7 +868,7 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
          if (root_to_use->stuff.matrix.matrix_flags & MTX_USE_NUMBER)
             root_to_use->callflags1 |= CFLAG1_NUMBER_BIT;
 
-         matrix_def_block *this_matrix_block = 
+         matrix_def_block *this_matrix_block =
             (matrix_def_block *) ::operator new(sizeof(matrix_def_block) + sizeof(uint32)*(lim-2));
          root_to_use->stuff.matrix.matrix_def_list = this_matrix_block;
 
@@ -891,7 +891,7 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
             }
             else {
                this_matrix_block->matrix_def_items[j] = 0;
-            }               
+            }
          }
 
          read_halfword();
@@ -1419,7 +1419,7 @@ static void rewrite_init_file()
          strncpy(errmsg, "Failed to save file '" SESSION_FILENAME
                  "' in '" SESSION2_FILENAME "':\n",
                  MAX_TEXT_LINE_LENGTH);
-         strncat(errmsg, get_errstring(), MAX_FILENAME_LENGTH);
+         strncat(errmsg, get_errstring(), MAX_FILENAME_LENGTH-80);
          strncat(errmsg, ".", MAX_FILENAME_LENGTH);
          gg->serious_error_print(errmsg);
       }
@@ -2178,7 +2178,7 @@ bool open_session(int argc, char **argv)
       the user.  In the latter case, we will do this step again. */
 
    if (calling_level != l_nonexistent_concept)
-      strncat(outfile_string, filename_strings[calling_level], MAX_FILENAME_LENGTH);
+      strncat(outfile_string, filename_strings[calling_level], MAX_FILENAME_LENGTH-80);
 
    /* At this point, the command-line arguments, and the preferences in the "[Options]"
       section of the initialization file, have been processed.  Some of those things
@@ -2345,8 +2345,8 @@ bool open_session(int argc, char **argv)
       for (i=0 ; i<NUM_CARDINALS ; i++) {
          int tens_digit = i/10;
          int units_digit = i - tens_digit*10;
-         char *cardptr = new char [3]; 
-         char *ordptr = new char [5]; 
+         char *cardptr = new char [3];
+         char *ordptr = new char [5];
          cardinals[i] = cardptr;
          ordinals[i] = ordptr;
          if (tens_digit > 0) {
@@ -2643,7 +2643,7 @@ bool open_session(int argc, char **argv)
 
          // RH tidal wave
          test_starting_setup(call_list_1x8,
-                             setup(s1x8, 0, 
+                             setup(s1x8, 0,
                                    0600|NORT,ID3_B4, 0500|SOUT,ID3_G3, 0400|SOUT,ID3_B3, 0700|NORT,ID3_G4,
                                    0200|SOUT,ID3_B2, 0100|NORT,ID3_G1, 0000|NORT,ID3_B1, 0300|SOUT,ID3_G2));
 

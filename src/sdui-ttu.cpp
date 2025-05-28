@@ -258,7 +258,7 @@ extern void get_string(char *dest, int max)
    int size;
 
    csetmode(0);         /* Regular full-line mode with system echo. */
-   fgets(dest, max, stdin);
+   if (!fgets(dest, max, stdin)) return;
    size = strlen(dest);
 
    while (size > 0 && (dest[size-1] == '\n' || dest[size-1] == '\r'))

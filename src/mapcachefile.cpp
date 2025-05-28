@@ -265,7 +265,13 @@ void MAPPED_CACHE_FILE::map_for_writing(int clientmapfilesizeinbytes)
       while (bytesleft > 0) {
          int size = 1024;
          if (size > bytesleft) size = bytesleft;
-         write(innards->mapfd, buffer, size);
+         if (write(innards->mapfd, buffer, size) == -1) {
+             innards->map_address = (int *) 0;
+             delete [] buffer;
+             close(innards->mapfd);
+             return;
+         }
+
          bytesleft -= size;
       }
       delete [] buffer;

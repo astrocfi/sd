@@ -38,7 +38,10 @@ ICONS = sd.ico sdbg.ico sdbw.ico sdby.ico sdcpl.ico sdgy.ico sdry.ico sdtty.ico
 SHORTCUTS = "Edit sd.ini.lnk" Faq.lnk "Release Notes.lnk" "SD couple.lnk" "SD hidecouple.lnk" "Sd manual.lnk" \
              "SD nocheckers.lnk" "SD plain.lnk" SD.lnk "SDTTY plain.lnk" SDTTY.lnk
 
-MAKEFILES = makefile.linuxwithgpm makefile.linuxwithoutgpm makefile.mingw makefile.mac makefile.solaris
+MAKEFILES = makefile.linux32withgpm makefile.linux32withoutgpm \
+             makefile.linux64withgpm makefile.linux64withoutgpm \
+             makefile.cygnus makefile.cygwin makefile.djgpp \
+             makefile.mingw makefile.mac makefile.solaris
 
 SDTTY_OBJS = sdui-tty.o sdui-wincon.o
 

@@ -93,58 +93,6 @@
 #define NORETURN2
 #endif
 
-// We used to do some stuff to cater to compiler vendors (e.g. Sun
-// Microsystems) that couldn't be bothered to do the "const" attribute
-// correctly.
-//
-// So we used to have a line that said "#define Const const".  But not
-// any longer.  If your compiler doesn't handle "const" correctly (or
-// any other aspect of ANSI C++, for that matter), that's too bad.
-//
-// We no longer take pity on broken compilers.
-
-
-// We would like "veryshort" to be a signed char, but not all
-// compilers are fully ANSI compliant.  The IBM AIX compiler, for
-// example, considers char to be unsigned.  The switch
-// "NO_SIGNED_CHAR" alerts us to that fact.  The configure script has
-// checked this for us.
-//
-// Baloney!  We no longer use a configure script.  We are aware of the
-// fact that there is a whole "industry" (config/autoconf/etc.)
-// dedicated to the job of figuring out what hideous brokenness any
-// given Unix implementation is inflicting on us today, but we have no
-// patience for that kind of garbage, and we are not going to support
-// that "industry".  If your compiler or OS can't handle this, tough.
-// (But we still leave the ifdef in place; it does no harm.)
-//
-// We no longer take pity on broken compilers or operating systems.
-
-#ifdef NO_SIGNED_CHAR
-typedef short veryshort;
-#else
-typedef char veryshort;
-#endif
-
-// We would like to think that we will always be able to count on compilers to do the
-// right thing with "int" and "long int" and so on.  What we would really like is
-// for compilers to be counted on to make "int" at least 32 bits, because we need
-// 32 bits in many places.  However, some compilers don't, so we have to use
-// "long int" or "unsigned long int".  We think that all compilers we deal with
-// will do the right thing with that, but, just in case, we use a typedef.
-//
-// The type "uint32" must be an unsigned integer of at least 32 bits.
-// The type "uint16" must be an unsigned integer of at least 16 bits.
-//
-// Note also:  There are many places in the program (not just in database.h and sd.h)
-// where the suffix "UL" is put on constants that are intended to be of type "uint32".
-// If "uint32" is changed to anything other than "unsigned long int", it may be
-// necessary to change all of those.
-
-typedef unsigned long int uint32;
-typedef unsigned short int uint16;
-typedef unsigned char uint8;
-typedef const char *Cstring;
 
 enum { MAX_PEOPLE = 24 };
 
@@ -737,6 +685,10 @@ enum selector_kind {
    selector_fartwo,
    selector_nearsix,
    selector_farsix,
+   selector_nearthree,
+   selector_farthree,
+   selector_nearfive,
+   selector_farfive,
    selector_the2x3,
    selector_thediamond,
    selector_theline,
@@ -820,17 +772,17 @@ enum {
    NUMBER_FIELD_MASK_SECOND_ONE = NUMBER_FIELD_MASK << (BITS_PER_NUMBER_FIELD*2),
    NUMBER_FIELD_MASK_RIGHT_TWO = (1<<(BITS_PER_NUMBER_FIELD*2))-1,
    NUMBER_FIELD_MASK_LEFT_TWO = NUMBER_FIELD_MASK_RIGHT_TWO << (BITS_PER_NUMBER_FIELD*2),
-   NUMBER_FIELDS_1_0 = 00100UL,          // A few useful canned values.
-   NUMBER_FIELDS_2_1 = 00201UL,
-   NUMBER_FIELDS_1_1 = 00101UL,
-   NUMBER_FIELDS_0_0_1_1 = 000000101UL,
-   NUMBER_FIELDS_1_0_0_0 = 001000000UL,
-   NUMBER_FIELDS_1_0_1_1 = 001000101UL,
-   NUMBER_FIELDS_1_0_2_1 = 001000201UL,
-   NUMBER_FIELDS_1_0_4_0 = 001000400UL,
-   NUMBER_FIELDS_2_1_1_1 = 002010101UL,
-   NUMBER_FIELDS_2_1_2_1 = 002010201UL,
-   NUMBER_FIELDS_4_0_1_1 = 004000101UL
+   NUMBER_FIELDS_1_0 = 00100U,          // A few useful canned values.
+   NUMBER_FIELDS_2_1 = 00201U,
+   NUMBER_FIELDS_1_1 = 00101U,
+   NUMBER_FIELDS_0_0_1_1 = 000000101U,
+   NUMBER_FIELDS_1_0_0_0 = 001000000U,
+   NUMBER_FIELDS_1_0_1_1 = 001000101U,
+   NUMBER_FIELDS_1_0_2_1 = 001000201U,
+   NUMBER_FIELDS_1_0_4_0 = 001000400U,
+   NUMBER_FIELDS_2_1_1_1 = 002010101U,
+   NUMBER_FIELDS_2_1_2_1 = 002010201U,
+   NUMBER_FIELDS_4_0_1_1 = 004000101U
 };
 
 /* BEWARE!!  There is a static initializer for this, "null_options", in sdtop.cpp
@@ -966,21 +918,21 @@ struct call_with_name {
 
 enum {
    // A 3-bit field.
-   CFLAGH__TAG_CALL_RQ_MASK        = 0x00000007UL,
-   CFLAGH__TAG_CALL_RQ_BIT         = 0x00000001UL,
-   CFLAGH__REQUIRES_SELECTOR       = 0x00000008UL,
-   CFLAGH__REQUIRES_DIRECTION      = 0x00000010UL,
-   CFLAGH__CIRC_CALL_RQ_BIT        = 0x00000020UL,
-   CFLAGH__ODD_NUMBER_ONLY         = 0x00000040UL,
-   CFLAGH__HAS_AT_ZERO             = 0x00000080UL,
-   CFLAGH__HAS_AT_M                = 0x00000100UL,
-   CFLAGHSPARE_1                   = 0x00000200UL,
-   CFLAGHSPARE_2                   = 0x00000400UL,
-   CFLAGHSPARE_3                   = 0x00000800UL,
-   CFLAGHSPARE_4                   = 0x00001000UL,
-   CFLAGHSPARE_5                   = 0x00002000UL,
-   CFLAGHSPARE_6                   = 0x00004000UL,
-   CFLAGHSPARE_7                   = 0x00008000UL
+   CFLAGH__TAG_CALL_RQ_MASK        = 0x00000007U,
+   CFLAGH__TAG_CALL_RQ_BIT         = 0x00000001U,
+   CFLAGH__REQUIRES_SELECTOR       = 0x00000008U,
+   CFLAGH__REQUIRES_DIRECTION      = 0x00000010U,
+   CFLAGH__CIRC_CALL_RQ_BIT        = 0x00000020U,
+   CFLAGH__ODD_NUMBER_ONLY         = 0x00000040U,
+   CFLAGH__HAS_AT_ZERO             = 0x00000080U,
+   CFLAGH__HAS_AT_M                = 0x00000100U,
+   CFLAGHSPARE_1                   = 0x00000200U,
+   CFLAGHSPARE_2                   = 0x00000400U,
+   CFLAGHSPARE_3                   = 0x00000800U,
+   CFLAGHSPARE_4                   = 0x00001000U,
+   CFLAGHSPARE_5                   = 0x00002000U,
+   CFLAGHSPARE_6                   = 0x00004000U,
+   CFLAGHSPARE_7                   = 0x00008000U
 };
 
 /* These flags, and "CFLAGH__???" flags, go along for the ride, in the callflagsf
@@ -1085,33 +1037,33 @@ enum {
    // These refer to the "flags" field.  First, there are two numeric fields,
    // called "n" and "k", that are associated with the codes.  We encode those
    // fields in 6 bits, as usual.
-   CMD_FRAC_PART_BIT        = 00001UL,  // This is "n".
-   CMD_FRAC_PART_MASK       = 00077UL,
-   CMD_FRAC_PART2_BIT       = 00100UL,  // This is "k".
-   CMD_FRAC_PART2_MASK      = 07700UL,
+   CMD_FRAC_PART_BIT        = 00001U,  // This is "n".
+   CMD_FRAC_PART_MASK       = 00077U,
+   CMD_FRAC_PART2_BIT       = 00100U,  // This is "k".
+   CMD_FRAC_PART2_MASK      = 07700U,
 
-   CMD_FRAC_IMPROPER_BIT    = 0x00200000UL,
-   CMD_FRAC_THISISLAST      = 0x00400000UL,
-   CMD_FRAC_REVERSE         = 0x00800000UL,
-   CMD_FRAC_CODE_MASK       = 0x07000000UL,    // This is a 3 bit field.
+   CMD_FRAC_IMPROPER_BIT    = 0x00200000U,
+   CMD_FRAC_THISISLAST      = 0x00400000U,
+   CMD_FRAC_REVERSE         = 0x00800000U,
+   CMD_FRAC_CODE_MASK       = 0x07000000U,    // This is a 3 bit field.
 
    // Here are the codes that can be inside.  We require that CMD_FRAC_CODE_ONLY be zero.
    // We require that the PART_MASK field be nonzero (we use 1-based part numbering)
    // when these are in use.  If the PART_MASK field is zero, the code must be zero
    // (that is, CMD_FRAC_CODE_ONLY), and this stuff is not in use.
 
-   CMD_FRAC_CODE_ONLY           = 0x00000000UL,
-   CMD_FRAC_CODE_ONLYREV        = 0x01000000UL,
-   CMD_FRAC_CODE_FROMTO         = 0x02000000UL,
-   CMD_FRAC_CODE_FROMTOREV      = 0x03000000UL,
-   CMD_FRAC_CODE_FROMTOREVREV   = 0x04000000UL,
-   CMD_FRAC_CODE_FROMTOMOST     = 0x05000000UL,
-   CMD_FRAC_CODE_LATEFROMTOREV  = 0x06000000UL,
+   CMD_FRAC_CODE_ONLY           = 0x00000000U,
+   CMD_FRAC_CODE_ONLYREV        = 0x01000000U,
+   CMD_FRAC_CODE_FROMTO         = 0x02000000U,
+   CMD_FRAC_CODE_FROMTOREV      = 0x03000000U,
+   CMD_FRAC_CODE_FROMTOREVREV   = 0x04000000U,
+   CMD_FRAC_CODE_FROMTOMOST     = 0x05000000U,
+   CMD_FRAC_CODE_LATEFROMTOREV  = 0x06000000U,
 
-   CMD_FRAC_BREAKING_UP     = 0x10000000UL,
-   CMD_FRAC_FORCE_VIS       = 0x20000000UL,
-   CMD_FRAC_LASTHALF_ALL    = 0x40000000UL,
-   CMD_FRAC_FIRSTHALF_ALL   = 0x80000000UL
+   CMD_FRAC_BREAKING_UP     = 0x10000000U,
+   CMD_FRAC_FORCE_VIS       = 0x20000000U,
+   CMD_FRAC_LASTHALF_ALL    = 0x40000000U,
+   CMD_FRAC_FIRSTHALF_ALL   = 0x80000000U
 };
 
 // The "flags" word has special information, like "do parts 5 through 2 in
@@ -1394,24 +1346,24 @@ struct personrec {
 enum {
    // Highest bit is unused.  (But there are more bits in id2 and id3.)
 
-   OVERCAST_BIT     = 0x40000000UL,  // person is in danger of turning overflow
+   OVERCAST_BIT     = 0x40000000U,  // person is in danger of turning overflow
 
    // These comprise a 2 bit field for slide info.
-   NSLIDE_MASK      = 0x30000000UL,  // mask of the field
-   NSLIDE_BIT       = 0x10000000UL,  // low bit of the field
-   SLIDE_IS_R       = 0x10000000UL,
-   SLIDE_IS_L       = 0x20000000UL,
+   NSLIDE_MASK      = 0x30000000U,  // mask of the field
+   NSLIDE_BIT       = 0x10000000U,  // low bit of the field
+   SLIDE_IS_R       = 0x10000000U,
+   SLIDE_IS_L       = 0x20000000U,
 
    // These comprise a 3 bit field for roll info.
    // High bit says person moved.
    // Low 2 bits are: 1=R; 2=L; 3=M; 0=roll unknown/unsupported.
-   NROLL_MASK       = 0x0E000000UL,  // mask of the field
-   PERSON_MOVED     = 0x08000000UL,
-   ROLL_DIRMASK     = 0x06000000UL,  // the low 2 bits, that control roll direction
-   NROLL_BIT        = 0x02000000UL,  // low bit of the field
-   ROLL_IS_R        = 0x02000000UL,
-   ROLL_IS_L        = 0x04000000UL,
-   ROLL_IS_M        = 0x06000000UL,
+   NROLL_MASK       = 0x0E000000U,  // mask of the field
+   PERSON_MOVED     = 0x08000000U,
+   ROLL_DIRMASK     = 0x06000000U,  // the low 2 bits, that control roll direction
+   NROLL_BIT        = 0x02000000U,  // low bit of the field
+   ROLL_IS_R        = 0x02000000U,
+   ROLL_IS_L        = 0x04000000U,
+   ROLL_IS_M        = 0x06000000U,
 
    NSLIDE_ROLL_MASK = NSLIDE_MASK | NROLL_MASK,   // Commonly used together.
 
@@ -1428,29 +1380,29 @@ enum {
    // of the fractional stable call to compensate.
    //
    // All counting is done in eighths, not quarters.
-   STABLE_ENAB      = 0x01000000UL,  // fractional stability enabled
-   STABLE_VLMASK    = 0x00F00000UL,  // stability "V" field for left turns, 4 bits
-   STABLE_VLBIT     = 0x00100000UL,  // this is low bit
-   STABLE_VRMASK    = 0x000F0000UL,  // stability "V" field for right turns, 4 bits
-   STABLE_VRBIT     = 0x00010000UL,  // this is low bit
-   STABLE_RMASK     = 0x0000F000UL,  // stability "R" field, 4 bits
-   STABLE_RBIT      = 0x00001000UL,  // this is low bit
+   STABLE_ENAB      = 0x01000000U,  // fractional stability enabled
+   STABLE_VLMASK    = 0x00F00000U,  // stability "V" field for left turns, 4 bits
+   STABLE_VLBIT     = 0x00100000U,  // this is low bit
+   STABLE_VRMASK    = 0x000F0000U,  // stability "V" field for right turns, 4 bits
+   STABLE_VRBIT     = 0x00010000U,  // this is low bit
+   STABLE_RMASK     = 0x0000F000U,  // stability "R" field, 4 bits
+   STABLE_RBIT      = 0x00001000U,  // this is low bit
    STABLE_ALL_MASK  = STABLE_ENAB|STABLE_VLMASK|STABLE_VRMASK|STABLE_RMASK, // This is 0x01FFF000.
 
-   BIT_PERSON       = 0x00000800UL,  // live person (just so at least one bit is always set)
-   BIT_ACT_PHAN     = 0x00000400UL,  // active phantom (see below, under XPID_MASK)
-   BIT_TANDVIRT     = 0x00000200UL,  // virtual person (see below, under XPID_MASK)
+   BIT_PERSON       = 0x00000800U,  // live person (just so at least one bit is always set)
+   BIT_ACT_PHAN     = 0x00000400U,  // active phantom (see below, under XPID_MASK)
+   BIT_TANDVIRT     = 0x00000200U,  // virtual person (see below, under XPID_MASK)
 
    // Person ID.  These bit positions are extremely hard wired into, among other
    // things, the resolver and the printer.
-   PID_MASK         = 0x000001C0UL,  // these 3 bits identify actual person
+   PID_MASK         = 0x000001C0U,  // these 3 bits identify actual person
 
    // Extended person ID.  These 5 bits identify who the person is for the purpose
    // of most manipulations.  0 to 7 are normal live people (the ones who squared up).
    // 8 to 15 are virtual people assembled for tandem or couples.  16 to 31 are
    // active (but nevertheless identifiable) phantoms.  This means that, when
    // BIT_ACT_PHAN is on, it usurps the meaning of BIT_TANDVIRT.
-   XPID_MASK        = 0x000007C0UL,
+   XPID_MASK        = 0x000007C0U,
 
    // Remaining bits:
    // For various historical reasons, we count these in octal.
@@ -1459,11 +1411,11 @@ enum {
    //     0x00000004 (004) - bit must be clear for rotation
    //     0x00000002 (002) - part of rotation
    //     0x00000001 (001) - part of rotation (facing east/west)
-   d_mask  = BIT_PERSON | 013UL,
-   d_north = BIT_PERSON | 010UL,
-   d_south = BIT_PERSON | 012UL,
-   d_east  = BIT_PERSON | 001UL,
-   d_west  = BIT_PERSON | 003UL
+   d_mask  = BIT_PERSON | 013U,
+   d_north = BIT_PERSON | 010U,
+   d_south = BIT_PERSON | 012U,
+   d_east  = BIT_PERSON | 001U,
+   d_west  = BIT_PERSON | 003U
 };
 
 // Bits that go into the "id2" field.
@@ -1478,32 +1430,38 @@ enum {
 // "bounce".
 
 enum {
-   ID2_CTR2       = 0x80000000UL,
-   ID2_BELLE      = 0x40000000UL,
-   ID2_BEAU       = 0x20000000UL,
-   ID2_CTR6       = 0x10000000UL,
-   ID2_OUTR2      = 0x08000000UL,
-   ID2_OUTR6      = 0x04000000UL,
-   ID2_TRAILER    = 0x02000000UL,
-   ID2_LEAD       = 0x01000000UL,
-   ID2_CTRDMD     = 0x00800000UL,
-   ID2_NCTRDMD    = 0x00400000UL,
-   ID2_CTR1X4     = 0x00200000UL,
-   ID2_NCTR1X4    = 0x00100000UL,
-   ID2_CTR1X6     = 0x00080000UL,
-   ID2_NCTR1X6    = 0x00040000UL,
-   ID2_OUTR1X3    = 0x00020000UL,
-   ID2_NOUTR1X3   = 0x00010000UL,
-   ID2_FACING     = 0x00008000UL,
-   ID2_NOTFACING  = 0x00004000UL,
-   ID2_CENTER     = 0x00002000UL,
-   ID2_END        = 0x00001000UL,
-   ID2_CTR4       = 0x00000800UL,
-   ID2_OUTRPAIRS  = 0x00000400UL,
+   ID2_CTR2       = 0x80000000U,
+   ID2_BELLE      = 0x40000000U,
+   ID2_BEAU       = 0x20000000U,
+   ID2_CTR6       = 0x10000000U,
+   ID2_OUTR2      = 0x08000000U,
+   ID2_OUTR6      = 0x04000000U,
+   ID2_TRAILER    = 0x02000000U,
+   ID2_LEAD       = 0x01000000U,
+   ID2_CTRDMD     = 0x00800000U,
+   ID2_NCTRDMD    = 0x00400000U,
+   ID2_CTR1X4     = 0x00200000U,
+   ID2_NCTR1X4    = 0x00100000U,
+   ID2_CTR1X6     = 0x00080000U,
+   ID2_NCTR1X6    = 0x00040000U,
+   ID2_OUTR1X3    = 0x00020000U,
+   ID2_NOUTR1X3   = 0x00010000U,
+   ID2_FACING     = 0x00008000U,
+   ID2_NOTFACING  = 0x00004000U,
+   ID2_CENTER     = 0x00002000U,
+   ID2_END        = 0x00001000U,
+   ID2_CTR4       = 0x00000800U,
+   ID2_OUTRPAIRS  = 0x00000400U,
+   ID2_FACEFRONT  = 0x00000200U,
+   ID2_FACEBACK   = 0x00000100U,
+   ID2_FACELEFT   = 0x00000080U,
+   ID2_FACERIGHT  = 0x00000040U,
 
-   // 10 available codes.
+   // 6 available codes.
 
    // Various useful combinations.
+
+   ID2_DIR_BITS_TO_CLEAR = ID2_FACEFRONT|ID2_FACEBACK|ID2_FACELEFT|ID2_FACERIGHT,
 
    // These bits are not a property just of the person and his position
    // in the formation -- they depend on other people's facing direction.
@@ -1528,47 +1486,45 @@ enum {
 // bits are all zero.  This field also has unsymmetrical selector bits.
 
 enum {
-
-   ID3_NEARCOL      = 0x80000000UL,
-   ID3_NEARLINE     = 0x40000000UL,
-   ID3_NEARBOX      = 0x20000000UL,
-   ID3_NEARFOUR     = 0x10000000UL,
-   ID3_FARCOL       = 0x08000000UL,
-   ID3_FARLINE      = 0x04000000UL,
-   ID3_FARBOX       = 0x02000000UL,
-   ID3_FARFOUR      = 0x01000000UL,
-   ID3_FACEFRONT    = 0x00800000UL,
-   ID3_FACEBACK     = 0x00400000UL,
-   ID3_FACELEFT     = 0x00200000UL,
-   ID3_FACERIGHT    = 0x00100000UL,
-   ID3_FARTHEST1    = 0x00080000UL,
-   ID3_NOTFARTHEST1 = 0x00040000UL,
-   ID3_NEAREST1     = 0x00020000UL,
-   ID3_NOTNEAREST1  = 0x00010000UL,
-   ID3_NEARTWO      = 0x00008000UL,
-   ID3_FARTWO       = 0x00004000UL,
-   ID3_NEARSIX      = 0x00002000UL,
-   ID3_FARSIX       = 0x00001000UL,
+   ID3_NEARCOL      = 0x80000000U,
+   ID3_NEARLINE     = 0x40000000U,
+   ID3_NEARBOX      = 0x20000000U,
+   ID3_NEARFOUR     = 0x10000000U,
+   ID3_FARCOL       = 0x08000000U,
+   ID3_FARLINE      = 0x04000000U,
+   ID3_FARBOX       = 0x02000000U,
+   ID3_FARFOUR      = 0x01000000U,
+   ID3_NEARTHREE    = 0x00800000U,
+   ID3_NEARFIVE     = 0x00400000U,
+   ID3_FARTHREE     = 0x00200000U,
+   ID3_FARFIVE      = 0x00100000U,
+   ID3_FARTHEST1    = 0x00080000U,
+   ID3_NOTFARTHEST1 = 0x00040000U,
+   ID3_NEAREST1     = 0x00020000U,
+   ID3_NOTNEAREST1  = 0x00010000U,
+   ID3_NEARTWO      = 0x00008000U,
+   ID3_FARTWO       = 0x00004000U,
+   ID3_NEARSIX      = 0x00002000U,
+   ID3_FARSIX       = 0x00001000U,
 
    ID3_LESS_BITS_TO_CLEAR =
    ID3_NEARCOL|ID3_NEARLINE|ID3_NEARBOX|ID3_NEARFOUR|
    ID3_FARCOL|ID3_FARLINE|ID3_FARBOX|ID3_FARFOUR|
+   ID3_NEARTHREE|ID3_NEARFIVE|ID3_FARTHREE|ID3_FARFIVE|
+   ID3_FARTHEST1|ID3_NOTFARTHEST1|ID3_NEAREST1|ID3_NOTNEAREST1|
    ID3_NEARTWO|ID3_FARTWO|ID3_NEARSIX|ID3_FARSIX,
 
-   ID3_GLOB_BITS_TO_CLEAR =
-   ID3_LESS_BITS_TO_CLEAR|ID3_FACEFRONT|ID3_FACEBACK|ID3_FACELEFT|ID3_FACERIGHT,
-
-   ID3_PERM_NSG     = 0x00000200UL,  // Not side girl
-   ID3_PERM_NSB     = 0x00000100UL,  // Not side boy
-   ID3_PERM_NHG     = 0x00000080UL,  // Not head girl
-   ID3_PERM_NHB     = 0x00000040UL,  // Not head boy
-   ID3_PERM_HCOR    = 0x00000020UL,  // Head corner
-   ID3_PERM_SCOR    = 0x00000010UL,  // Side corner
-   ID3_PERM_HEAD    = 0x00000008UL,  // Head
-   ID3_PERM_SIDE    = 0x00000004UL,  // Side
-   ID3_PERM_BOY     = 0x00000002UL,  // Boy
-   ID3_PERM_GIRL    = 0x00000001UL,  // Girl
-   ID3_PERM_ALLBITS = 0x000003FFUL,
+   ID3_PERM_NSG     = 0x00000200U,  // Not side girl
+   ID3_PERM_NSB     = 0x00000100U,  // Not side boy
+   ID3_PERM_NHG     = 0x00000080U,  // Not head girl
+   ID3_PERM_NHB     = 0x00000040U,  // Not head boy
+   ID3_PERM_HCOR    = 0x00000020U,  // Head corner
+   ID3_PERM_SCOR    = 0x00000010U,  // Side corner
+   ID3_PERM_HEAD    = 0x00000008U,  // Head
+   ID3_PERM_SIDE    = 0x00000004U,  // Side
+   ID3_PERM_BOY     = 0x00000002U,  // Boy
+   ID3_PERM_GIRL    = 0x00000001U,  // Girl
+   ID3_PERM_ALLBITS = 0x000003FFU,
 
    // These are the standard definitions for the 8 people in the square.
 
@@ -1690,7 +1646,7 @@ struct setup {
    small_setup outer;
    int concsetup_outer_elongation;
 
-   void clear_people();     // in sdtop.cpp.
+   inline void clear_people();
    inline void clear_person(int resultplace);
    inline void suppress_roll(int place);
    inline void suppress_all_rolls(bool just_clear_the_moved_bit);
@@ -1779,8 +1735,8 @@ class conc_tables {
 
 struct predicate_descriptor {
    // We wish we could put a "throw" clause on this function, but we can't.
-   bool (*predfunc) (setup *, int, int, int, const long int *);
-   const long int *extra_stuff;
+   bool (*predfunc) (setup *, int, int, int, const int32 *);
+   const int32 *extra_stuff;
 };
 
 struct predptr_pair {
@@ -1791,22 +1747,22 @@ struct predptr_pair {
 
 
 enum {
-   LOOKUP_NONE     = 0x1UL,
-   LOOKUP_DIST_CLW = 0x2UL,
-   LOOKUP_DISC     = 0x4UL,
-   LOOKUP_IGNORE   = 0x8UL,
-   LOOKUP_DIST_DMD = 0x10UL,
-   LOOKUP_Z        = 0x20UL,
-   LOOKUP_DIST_BOX = 0x40UL,
-   LOOKUP_DIAG_BOX = 0x80UL,
-   LOOKUP_STAG_BOX = 0x100UL,
-   LOOKUP_TRAPEZOID= 0x200UL,
-   LOOKUP_DIAG_CLW = 0x400UL,
-   LOOKUP_OFFS_CLW = 0x800UL,
-   LOOKUP_STAG_CLW = 0x1000UL,
-   LOOKUP_DBL_BENT = 0x2000UL,
-   LOOKUP_MINI_B   = 0x4000UL,
-   LOOKUP_MINI_O   = 0x8000UL,
+   LOOKUP_NONE     = 0x1U,
+   LOOKUP_DIST_CLW = 0x2U,
+   LOOKUP_DISC     = 0x4U,
+   LOOKUP_IGNORE   = 0x8U,
+   LOOKUP_DIST_DMD = 0x10U,
+   LOOKUP_Z        = 0x20U,
+   LOOKUP_DIST_BOX = 0x40U,
+   LOOKUP_DIAG_BOX = 0x80U,
+   LOOKUP_STAG_BOX = 0x100U,
+   LOOKUP_TRAPEZOID= 0x200U,
+   LOOKUP_DIAG_CLW = 0x400U,
+   LOOKUP_OFFS_CLW = 0x800U,
+   LOOKUP_STAG_CLW = 0x1000U,
+   LOOKUP_DBL_BENT = 0x2000U,
+   LOOKUP_MINI_B   = 0x4000U,
+   LOOKUP_MINI_O   = 0x8000U,
 
    LOOKUP_GEN_MASK = (LOOKUP_DIST_DMD|LOOKUP_Z|LOOKUP_DIST_BOX|LOOKUP_DIAG_BOX|
                       LOOKUP_STAG_BOX|LOOKUP_TRAPEZOID|LOOKUP_DIAG_CLW|
@@ -2142,6 +2098,9 @@ class select {
       fx_f4dmdiden,
       fx_1x5p1d,
       fx_1x5p1e,
+      fx_1x5p1f,
+      fx_1x5p1g,
+      fx_1x5p1y,
       fx_1x5p1z,
       fx_5p1x1d,
       fx_plndmda,
@@ -2156,6 +2115,17 @@ class select {
       fx_boxdmb,
       fx_boxdmc,
       fx_boxdmd,
+      fx_boxpdma,
+      fx_boxpdmb,
+      fx_beehive1,
+      fx_beehive2,
+      fx_beehive3,
+      fx_spnnrtgl,
+      fx_spnfrtgl,
+      fx_galnrtgl,
+      fx_galfrtgl,
+      fx_galnrvee,
+      fx_galfrvee,
       fx_trngl8a,
       fx_trngl8b,
       fxdmdpdmda,
@@ -2168,6 +2138,8 @@ class select {
       fxboxpdmda,
       fxboxpdmdb,
       fxboxpdmdc,
+      fxboxpdmdd,
+      fxboxpdmde,
       fxlinboxa,
       fxlinboxb,
       fx23232a,
@@ -2187,6 +2159,10 @@ class select {
       fx_fqtghif,
       fx_fdmdlowf,
       fx_fdmdhif,
+      fx_fdmdlow3,
+      fx_fdmdhi3,
+      fx_f1x8low3,
+      fx_f1x8hi3,
       fx_f2x4far,
       fx_f2x4near,
       fx_f2x4pos1,
@@ -2717,15 +2693,15 @@ extern const setup_attr setup_attrs[];    // In sdtables.
 
 // These are the "schema_attr" bits.
 enum {
-   SCA_CENTRALCONC     = 0x00000001UL,
-   SCA_CROSS           = 0x00000002UL,
-   SCA_COPY_LYZER      = 0x00000004UL,
-   SCA_SNAGOK          = 0x00000008UL,
-   SCA_DETOUR          = 0x00000010UL,
-   SCA_SPLITOK         = 0x00000020UL,
-   SCA_INV_SUP_ELWARN  = 0x00000040UL,
-   SCA_CONC_REV_ORDER  = 0x00000080UL,
-   SCA_NO_OVERCAST     = 0x00000100UL
+   SCA_CENTRALCONC     = 0x00000001U,
+   SCA_CROSS           = 0x00000002U,
+   SCA_COPY_LYZER      = 0x00000004U,
+   SCA_SNAGOK          = 0x00000008U,
+   SCA_DETOUR          = 0x00000010U,
+   SCA_SPLITOK         = 0x00000020U,
+   SCA_INV_SUP_ELWARN  = 0x00000040U,
+   SCA_CONC_REV_ORDER  = 0x00000080U,
+   SCA_NO_OVERCAST     = 0x00000100U
 };
 
 struct schema_attr {
@@ -2797,7 +2773,11 @@ struct writechar_block_type {
 #endif
 
 
-#define MAX_FILENAME_LENGTH 260
+// This has to be 80 more than you might think, because we append system
+// error codes to what this would otherwise be, and to keep GCC's extremely
+// picky warning checking happy, we subtract 80 before letting the system
+// library append an error message to it.
+#define MAX_FILENAME_LENGTH 340
 #define INPUT_TEXTLINE_SIZE 300
 /* Absolute maximum length we can handle in text operations, including
    writing to file.  If a call gets more complicated than this, stuff
@@ -2906,7 +2886,7 @@ enum uims_reply {
 
 struct modifier_block {
    uims_reply kind;
-   long int index;
+   int32 index;
    call_conc_option_state call_conc_options;  /* Has numbers, selectors, etc. */
    call_with_name *call_ptr;
    const conzept::concept_descriptor *concept_ptr;
@@ -3181,42 +3161,42 @@ enum popup_return {
 
 enum {
    // This is a four bit field.
-   RESULTFLAG__PART_COMPLETION_BITS = 0x0000003CUL,
-   RESULTFLAG__DID_LAST_PART        = 0x00000004UL,
-   RESULTFLAG__DID_NEXTTOLAST_PART  = 0x00000008UL,
-   RESULTFLAG__SECONDARY_DONE       = 0x00000010UL,
-   RESULTFLAG__PARTS_ARE_KNOWN      = 0x00000020UL,
+   RESULTFLAG__PART_COMPLETION_BITS = 0x0000003CU,
+   RESULTFLAG__DID_LAST_PART        = 0x00000004U,
+   RESULTFLAG__DID_NEXTTOLAST_PART  = 0x00000008U,
+   RESULTFLAG__SECONDARY_DONE       = 0x00000010U,
+   RESULTFLAG__PARTS_ARE_KNOWN      = 0x00000020U,
 
-   RESULTFLAG__NEED_DIAMOND         = 0x00000040UL,
-   RESULTFLAG__DID_MXN_EXPANSION    = 0x00000080UL,
+   RESULTFLAG__NEED_DIAMOND         = 0x00000040U,
+   RESULTFLAG__DID_MXN_EXPANSION    = 0x00000080U,
    // Skipped 4 bits here
-   RESULTFLAG__ACTIVE_PHANTOMS_ON   = 0x00001000UL,
-   RESULTFLAG__ACTIVE_PHANTOMS_OFF  = 0x00002000UL,
-   RESULTFLAG__EXPAND_TO_2X3        = 0x00004000UL,
+   RESULTFLAG__ACTIVE_PHANTOMS_ON   = 0x00001000U,
+   RESULTFLAG__ACTIVE_PHANTOMS_OFF  = 0x00002000U,
+   RESULTFLAG__EXPAND_TO_2X3        = 0x00004000U,
 
    // This is a 5 bit field.
-   RESULTFLAG__EXPIRATION_BITS      = 0x000F8000UL,
-   RESULTFLAG__YOYO_ONLY_EXPIRED    = 0x00008000UL,
-   RESULTFLAG__GEN_STING_EXPIRED    = 0x00010000UL,
-   RESULTFLAG__TWISTED_EXPIRED      = 0x00020000UL,
-   RESULTFLAG__SPLIT_EXPIRED        = 0x00040000UL,
-   RESULTFLAG__EXPIRATION_ENAB      = 0x00080000UL,
+   RESULTFLAG__EXPIRATION_BITS      = 0x000F8000U,
+   RESULTFLAG__YOYO_ONLY_EXPIRED    = 0x00008000U,
+   RESULTFLAG__GEN_STING_EXPIRED    = 0x00010000U,
+   RESULTFLAG__TWISTED_EXPIRED      = 0x00020000U,
+   RESULTFLAG__SPLIT_EXPIRED        = 0x00040000U,
+   RESULTFLAG__EXPIRATION_ENAB      = 0x00080000U,
 
-   RESULTFLAG__DID_TGL_EXPANSION    = 0x00100000UL,
-   RESULTFLAG__VERY_ENDS_ODD        = 0x00200000UL,
-   RESULTFLAG__VERY_CTRS_ODD        = 0x00400000UL,
+   RESULTFLAG__DID_TGL_EXPANSION    = 0x00100000U,
+   RESULTFLAG__VERY_ENDS_ODD        = 0x00200000U,
+   RESULTFLAG__VERY_CTRS_ODD        = 0x00400000U,
 
    // This is a 2 bit field.
-   RESULTFLAG__DID_Z_COMPRESSMASK   = 0x01800000UL,
-   RESULTFLAG__DID_Z_COMPRESSBIT    = 0x00800000UL,
+   RESULTFLAG__DID_Z_COMPRESSMASK   = 0x01800000U,
+   RESULTFLAG__DID_Z_COMPRESSBIT    = 0x00800000U,
 
-   RESULTFLAG__NO_REEVALUATE        = 0x02000000UL,
-   RESULTFLAG__IMPRECISE_ROT        = 0x04000000UL,
-   RESULTFLAG__PLUSEIGHTH_ROT       = 0x08000000UL,
-   RESULTFLAG__DID_SHORT6_2X3       = 0x10000000UL,
-   RESULTFLAG__FORCE_SPOTS_ALWAYS   = 0x20000000UL,
-   RESULTFLAG__INVADED_SPACE        = 0x40000000UL,
-   RESULTFLAG__STOP_OVERCAST_CHECK  = 0x80000000UL
+   RESULTFLAG__NO_REEVALUATE        = 0x02000000U,
+   RESULTFLAG__IMPRECISE_ROT        = 0x04000000U,
+   RESULTFLAG__PLUSEIGHTH_ROT       = 0x08000000U,
+   RESULTFLAG__DID_SHORT6_2X3       = 0x10000000U,
+   RESULTFLAG__FORCE_SPOTS_ALWAYS   = 0x20000000U,
+   RESULTFLAG__INVADED_SPACE        = 0x40000000U,
+   RESULTFLAG__STOP_OVERCAST_CHECK  = 0x80000000U
 };
 
 
@@ -3229,12 +3209,12 @@ struct comment_block {
 
 // If the parse turns out to be ambiguous, don't use this one --
 // yield to the other one.
-#define CONCPARSE_YIELD_IF_AMB   0x00000002UL
+#define CONCPARSE_YIELD_IF_AMB   0x00000002U
 // Parse directly.  It directs the parser to allow this concept
 // (and similar concepts) and the following call to be typed
 // on one line.  One needs to be very careful about avoiding
 // ambiguity when setting this flag.
-#define CONCPARSE_PARSE_DIRECT   0x00000004UL
+#define CONCPARSE_PARSE_DIRECT   0x00000004U
 // These are used by "print_recurse" in sdutil.cpp to control the printing.
 // They govern the placement of commas.
 #define CONCPARSE_PARSE_L_TYPE 0x8
@@ -3316,67 +3296,67 @@ struct resolve_indicator {
 
 
 enum {
-   CONCPROP__SECOND_CALL     = 0x00000001UL,
-   CONCPROP__USE_SELECTOR    = 0x00000002UL,
-   CONCPROP__SET_PHANTOMS    = 0x00000004UL,
-   CONCPROP__NO_STEP         = 0x00000008UL,
+   CONCPROP__SECOND_CALL     = 0x00000001U,
+   CONCPROP__USE_SELECTOR    = 0x00000002U,
+   CONCPROP__SET_PHANTOMS    = 0x00000004U,
+   CONCPROP__NO_STEP         = 0x00000008U,
 
    // This is a five bit field.  CONCPROP__NEED_LOBIT marks its low bit.
    // WARNING!!!  The values in this field are encoded into a bit field
    // for the setup expansion/normalization tables (see the definition
    // of the macro "NEEDMASK".)  It follows that there can't be more than 32 of them.
-   CONCPROP__NEED_MASK       = 0x000001F0UL,
-   CONCPROP__NEED_LOBIT      = 0x00000010UL,
-   CONCPROP__NEEDK_4X4       = 0x00000010UL,
-   CONCPROP__NEEDK_2X8       = 0x00000020UL,
-   CONCPROP__NEEDK_2X6       = 0x00000030UL,
-   CONCPROP__NEEDK_4DMD      = 0x00000040UL,
-   CONCPROP__NEEDK_BLOB      = 0x00000050UL,
-   CONCPROP__NEEDK_4X6       = 0x00000060UL,
-   CONCPROP__NEEDK_3X8       = 0x00000070UL,
-   CONCPROP__NEEDK_3DMD      = 0x00000080UL,
-   CONCPROP__NEEDK_1X10      = 0x00000090UL,
-   CONCPROP__NEEDK_1X12      = 0x000000A0UL,
-   CONCPROP__NEEDK_3X4       = 0x000000B0UL,
-   CONCPROP__NEEDK_1X16      = 0x000000C0UL,
-   CONCPROP__NEEDK_QUAD_1X4  = 0x000000D0UL,
-   CONCPROP__NEEDK_TWINDMD   = 0x000000E0UL,
-   CONCPROP__NEEDK_TWINQTAG  = 0x000000F0UL,
-   CONCPROP__NEEDK_CTR_DMD   = 0x00000100UL,
-   CONCPROP__NEEDK_END_DMD   = 0x00000110UL,
-   CONCPROP__NEEDK_TRIPLE_1X4= 0x00000120UL,
-   CONCPROP__NEEDK_CTR_1X4   = 0x00000130UL,
-   CONCPROP__NEEDK_END_1X4   = 0x00000140UL,
-   CONCPROP__NEEDK_CTR_2X2   = 0x00000150UL,
-   CONCPROP__NEEDK_END_2X2   = 0x00000160UL,
-   CONCPROP__NEEDK_3X4_D3X4  = 0x00000170UL,
-   CONCPROP__NEEDK_3X6       = 0x00000180UL,
-   CONCPROP__NEEDK_4D_4PTPD  = 0x00000190UL,
-   CONCPROP__NEEDK_4X5       = 0x000001A0UL,
-   CONCPROP__NEEDK_2X10      = 0x000001B0UL,
-   CONCPROP__NEEDK_2X12      = 0x000001C0UL,
-   CONCPROP__NEEDK_DBLX      = 0x000001D0UL,
-   CONCPROP__NEEDK_DEEPXWV   = 0x000001E0UL,
-   CONCPROP__NEEDK_QUAD_1X3  = 0x000001F0UL,
+   CONCPROP__NEED_MASK       = 0x000001F0U,
+   CONCPROP__NEED_LOBIT      = 0x00000010U,
+   CONCPROP__NEEDK_4X4       = 0x00000010U,
+   CONCPROP__NEEDK_2X8       = 0x00000020U,
+   CONCPROP__NEEDK_2X6       = 0x00000030U,
+   CONCPROP__NEEDK_4DMD      = 0x00000040U,
+   CONCPROP__NEEDK_BLOB      = 0x00000050U,
+   CONCPROP__NEEDK_4X6       = 0x00000060U,
+   CONCPROP__NEEDK_3X8       = 0x00000070U,
+   CONCPROP__NEEDK_3DMD      = 0x00000080U,
+   CONCPROP__NEEDK_1X10      = 0x00000090U,
+   CONCPROP__NEEDK_1X12      = 0x000000A0U,
+   CONCPROP__NEEDK_3X4       = 0x000000B0U,
+   CONCPROP__NEEDK_1X16      = 0x000000C0U,
+   CONCPROP__NEEDK_QUAD_1X4  = 0x000000D0U,
+   CONCPROP__NEEDK_TWINDMD   = 0x000000E0U,
+   CONCPROP__NEEDK_TWINQTAG  = 0x000000F0U,
+   CONCPROP__NEEDK_CTR_DMD   = 0x00000100U,
+   CONCPROP__NEEDK_END_DMD   = 0x00000110U,
+   CONCPROP__NEEDK_TRIPLE_1X4= 0x00000120U,
+   CONCPROP__NEEDK_CTR_1X4   = 0x00000130U,
+   CONCPROP__NEEDK_END_1X4   = 0x00000140U,
+   CONCPROP__NEEDK_CTR_2X2   = 0x00000150U,
+   CONCPROP__NEEDK_END_2X2   = 0x00000160U,
+   CONCPROP__NEEDK_3X4_D3X4  = 0x00000170U,
+   CONCPROP__NEEDK_3X6       = 0x00000180U,
+   CONCPROP__NEEDK_4D_4PTPD  = 0x00000190U,
+   CONCPROP__NEEDK_4X5       = 0x000001A0U,
+   CONCPROP__NEEDK_2X10      = 0x000001B0U,
+   CONCPROP__NEEDK_2X12      = 0x000001C0U,
+   CONCPROP__NEEDK_DBLX      = 0x000001D0U,
+   CONCPROP__NEEDK_DEEPXWV   = 0x000001E0U,
+   CONCPROP__NEEDK_QUAD_1X3  = 0x000001F0U,
 
-   CONCPROP__NEED_ARG2_MATRIX= 0x00000200UL,
-   CONCPROP__USE_DIRECTION   = 0x00000400UL,
-   /* spare:                   0x00000800UL, */
-   /* spare:                   0x00010000UL, */
-   /* spare:                   0x00020000UL, */
-   /* spare:                   0x00040000UL, */
-   CONCPROP__IS_META         = 0x00080000UL,
-   CONCPROP__GET_MASK        = 0x00100000UL,
-   CONCPROP__STANDARD        = 0x00200000UL,
-   CONCPROP__USE_NUMBER      = 0x00400000UL,
-   CONCPROP__USE_TWO_NUMBERS = 0x00800000UL,
-   CONCPROP__USE_FOUR_NUMBERS= 0x01000000UL,
-   CONCPROP__MATRIX_OBLIVIOUS= 0x02000000UL,
-   CONCPROP__PERMIT_MATRIX   = 0x04000000UL,
-   CONCPROP__SHOW_SPLIT      = 0x08000000UL,
-   CONCPROP__PERMIT_MYSTIC   = 0x10000000UL,
-   CONCPROP__PERMIT_REVERSE  = 0x20000000UL,
-   CONCPROP__PERMIT_MODIFIERS= 0x40000000UL
+   CONCPROP__NEED_ARG2_MATRIX= 0x00000200U,
+   CONCPROP__USE_DIRECTION   = 0x00000400U,
+   /* spare:                   0x00000800U, */
+   /* spare:                   0x00010000U, */
+   /* spare:                   0x00020000U, */
+   /* spare:                   0x00040000U, */
+   CONCPROP__IS_META         = 0x00080000U,
+   CONCPROP__GET_MASK        = 0x00100000U,
+   CONCPROP__STANDARD        = 0x00200000U,
+   CONCPROP__USE_NUMBER      = 0x00400000U,
+   CONCPROP__USE_TWO_NUMBERS = 0x00800000U,
+   CONCPROP__USE_FOUR_NUMBERS= 0x01000000U,
+   CONCPROP__MATRIX_OBLIVIOUS= 0x02000000U,
+   CONCPROP__PERMIT_MATRIX   = 0x04000000U,
+   CONCPROP__SHOW_SPLIT      = 0x08000000U,
+   CONCPROP__PERMIT_MYSTIC   = 0x10000000U,
+   CONCPROP__PERMIT_REVERSE  = 0x20000000U,
+   CONCPROP__PERMIT_MODIFIERS= 0x40000000U
 };
 
 
@@ -3705,47 +3685,47 @@ struct concept_table_item {
 // Since DFM1_CONCENTRICITY_FLAG_MASK is FF, we start at 100 hex.
 
 enum {
-   CMD_MISC__EXPLICIT_MIRROR      = 0x00000100UL,
-   CMD_MISC__MATRIX_CONCEPT       = 0x00000200UL,
+   CMD_MISC__EXPLICIT_MIRROR      = 0x00000100U,
+   CMD_MISC__MATRIX_CONCEPT       = 0x00000200U,
 
    // This is a 4 bit field.
-   CMD_MISC__VERIFY_MASK          = 0x00003C00UL,
+   CMD_MISC__VERIFY_MASK          = 0x00003C00U,
    // Here are the encodings that can go into same.
-   CMD_MISC__VERIFY_WAVES         = 0x00000400UL,
-   CMD_MISC__VERIFY_2FL           = 0x00000800UL,
-   CMD_MISC__VERIFY_DMD_LIKE      = 0x00000C00UL,
-   CMD_MISC__VERIFY_QTAG_LIKE     = 0x00001000UL,
-   CMD_MISC__VERIFY_1_4_TAG       = 0x00001400UL,
-   CMD_MISC__VERIFY_3_4_TAG       = 0x00001800UL,
-   CMD_MISC__VERIFY_REAL_1_4_TAG  = 0x00001C00UL,
-   CMD_MISC__VERIFY_REAL_3_4_TAG  = 0x00002000UL,
-   CMD_MISC__VERIFY_REAL_1_4_LINE = 0x00002400UL,
-   CMD_MISC__VERIFY_REAL_3_4_LINE = 0x00002800UL,
-   CMD_MISC__VERIFY_LINES         = 0x00002C00UL,
-   CMD_MISC__VERIFY_COLS          = 0x00003000UL,
-   CMD_MISC__VERIFY_TALL6         = 0x00003400UL,
+   CMD_MISC__VERIFY_WAVES         = 0x00000400U,
+   CMD_MISC__VERIFY_2FL           = 0x00000800U,
+   CMD_MISC__VERIFY_DMD_LIKE      = 0x00000C00U,
+   CMD_MISC__VERIFY_QTAG_LIKE     = 0x00001000U,
+   CMD_MISC__VERIFY_1_4_TAG       = 0x00001400U,
+   CMD_MISC__VERIFY_3_4_TAG       = 0x00001800U,
+   CMD_MISC__VERIFY_REAL_1_4_TAG  = 0x00001C00U,
+   CMD_MISC__VERIFY_REAL_3_4_TAG  = 0x00002000U,
+   CMD_MISC__VERIFY_REAL_1_4_LINE = 0x00002400U,
+   CMD_MISC__VERIFY_REAL_3_4_LINE = 0x00002800U,
+   CMD_MISC__VERIFY_LINES         = 0x00002C00U,
+   CMD_MISC__VERIFY_COLS          = 0x00003000U,
+   CMD_MISC__VERIFY_TALL6         = 0x00003400U,
 
-   CMD_MISC__EXPLICIT_MATRIX      = 0x00004000UL,
+   CMD_MISC__EXPLICIT_MATRIX      = 0x00004000U,
 
-   CMD_MISC__NO_EXPAND_1          = 0x00008000UL,  // Allow only one triple box expansion.
-   CMD_MISC__NO_EXPAND_2          = 0x00010000UL,  // Allow only one split phantom C/L/W expansion.
-   CMD_MISC__NO_EXPAND_AT_ALL     = 0x00020000UL,  // Positively no expansion.
+   CMD_MISC__NO_EXPAND_1          = 0x00008000U,  // Allow only one triple box expansion.
+   CMD_MISC__NO_EXPAND_2          = 0x00010000U,  // Allow only one split phantom C/L/W expansion.
+   CMD_MISC__NO_EXPAND_AT_ALL     = 0x00020000U,  // Positively no expansion.
    CMD_MISC__NO_EXPAND_MATRIX = CMD_MISC__NO_EXPAND_1 | CMD_MISC__NO_EXPAND_2 | CMD_MISC__NO_EXPAND_AT_ALL,
 
-   CMD_MISC__DISTORTED            = 0x00040000UL,
-   CMD_MISC__OFFSET_Z             = 0x00080000UL,
-   CMD_MISC__SAID_SPLIT           = 0x00100000UL,
-   CMD_MISC__SAID_TRIANGLE        = 0x00200000UL,
-   CMD_MISC__SAID_DIAMOND         = 0x00400000UL,
-   CMD_MISC__SAID_PG_OFFSET       = 0x00800000UL,  // Explicitly said it, so space-invasion rules don't apply.
-   CMD_MISC__NO_CHECK_MOD_LEVEL   = 0x01000000UL,
-   CMD_MISC__MUST_SPLIT_HORIZ     = 0x02000000UL,
-   CMD_MISC__MUST_SPLIT_VERT      = 0x04000000UL,
-   CMD_MISC__NO_CHK_ELONG         = 0x08000000UL,
-   CMD_MISC__PHANTOMS             = 0x10000000UL,
-   CMD_MISC__NO_STEP_TO_WAVE      = 0x20000000UL,
-   CMD_MISC__ALREADY_STEPPED      = 0x40000000UL,
-   CMD_MISC__DID_LEFT_MIRROR      = 0x80000000UL,
+   CMD_MISC__DISTORTED            = 0x00040000U,
+   CMD_MISC__OFFSET_Z             = 0x00080000U,
+   CMD_MISC__SAID_SPLIT           = 0x00100000U,
+   CMD_MISC__SAID_TRIANGLE        = 0x00200000U,
+   CMD_MISC__SAID_DIAMOND         = 0x00400000U,
+   CMD_MISC__SAID_PG_OFFSET       = 0x00800000U,  // Explicitly said it, so space-invasion rules don't apply.
+   CMD_MISC__NO_CHECK_MOD_LEVEL   = 0x01000000U,
+   CMD_MISC__MUST_SPLIT_HORIZ     = 0x02000000U,
+   CMD_MISC__MUST_SPLIT_VERT      = 0x04000000U,
+   CMD_MISC__NO_CHK_ELONG         = 0x08000000U,
+   CMD_MISC__PHANTOMS             = 0x10000000U,
+   CMD_MISC__NO_STEP_TO_WAVE      = 0x20000000U,
+   CMD_MISC__ALREADY_STEPPED      = 0x40000000U,
+   CMD_MISC__DID_LEFT_MIRROR      = 0x80000000U,
 
    CMD_MISC__MUST_SPLIT_MASK      = (CMD_MISC__MUST_SPLIT_HORIZ|CMD_MISC__MUST_SPLIT_VERT)
 };
@@ -3776,83 +3756,83 @@ enum {
    //    is if the call takes a 2x3 starting setup but not a 2x2 (that is, the call
    //    is "Z axle").  In that case, the call is done directly in the 2x3, and the
    //    "Z" distortion is presumed not to have been in place.
-   CMD_MISC2__IN_Z_CW           = 0x00001000UL,
-   CMD_MISC2__IN_Z_CCW          = 0x00002000UL,
-   CMD_MISC2__IN_AZ_CW          = 0x00004000UL,
-   CMD_MISC2__IN_AZ_CCW         = 0x00008000UL,
-   CMD_MISC2__IN_Z_MASK         = 0x0000F000UL,
+   CMD_MISC2__IN_Z_CW           = 0x00001000U,
+   CMD_MISC2__IN_Z_CCW          = 0x00002000U,
+   CMD_MISC2__IN_AZ_CW          = 0x00004000U,
+   CMD_MISC2__IN_AZ_CCW         = 0x00008000U,
+   CMD_MISC2__IN_Z_MASK         = 0x0000F000U,
 
-   CMD_MISC2_RESTRAINED_SUPER   = 0x00010000UL,
+   CMD_MISC2_RESTRAINED_SUPER   = 0x00010000U,
 
    // The following two are used for "mystic".
 
    // This tells "divided_setup_move" to perform selective mirroring
    // of the subsidiary setups because a concept like "mystic triple boxes" is in use.
    // It is removed immediately by "divided_setup_move" after use.
-   CMD_MISC2__MYSTIFY_SPLIT     = 0x00020000UL,
+   CMD_MISC2__MYSTIFY_SPLIT     = 0x00020000U,
 
    // This is only meaningful when CMD_MISC2__MYSTIFY_SPLIT is on.
    // It says that the concept is actually "invert mystic triple boxes" or whatever.
-   CMD_MISC2__MYSTIFY_INVERT    = 0x00040000UL,
+   CMD_MISC2__MYSTIFY_INVERT    = 0x00040000U,
 
-   CMD_MISC2__ANY_WORK          = 0x00080000UL,
-   CMD_MISC2__ANY_SNAG          = 0x00100000UL,
-   CMD_MISC2__ANY_WORK_INVERT   = 0x00200000UL,
+   CMD_MISC2__ANY_WORK          = 0x00080000U,
+   CMD_MISC2__ANY_SNAG          = 0x00100000U,
+   CMD_MISC2__ANY_WORK_INVERT   = 0x00200000U,
 
    // Here are the inversion bits for the basic operations.
-   CMD_MISC2__INVERT_CENTRAL    = 0x00400000UL,
-   CMD_MISC2__INVERT_SNAG       = 0x00800000UL,
-   CMD_MISC2__INVERT_MYSTIC     = 0x01000000UL,
+   CMD_MISC2__INVERT_CENTRAL    = 0x00400000U,
+   CMD_MISC2__INVERT_SNAG       = 0x00800000U,
+   CMD_MISC2__INVERT_MYSTIC     = 0x01000000U,
 
    // The following are used for what we call the "center/end" mechanism.  This
    //    mechanism is used for the "invert" (centers and ends) concept, as well as
    //    "central", "snag", and "mystic" and inverts thereof.
    //
    // Here are the basic operations we can do.
-   CMD_MISC2__DO_CENTRAL        = 0x02000000UL,
-   CMD_MISC2__CENTRAL_SNAG      = 0x04000000UL,
-   CMD_MISC2__CENTRAL_MYSTIC    = 0x08000000UL,
+   CMD_MISC2__DO_CENTRAL        = 0x02000000U,
+   CMD_MISC2__CENTRAL_SNAG      = 0x04000000U,
+   CMD_MISC2__CENTRAL_MYSTIC    = 0x08000000U,
    // This field embraces the above 3 bits.  When nonzero, says that one of the "central", "snag",
    //    or "mystic" concepts is in use.  They are all closely related.
-   CMD_MISC2__CTR_END_KMASK     = 0x0E000000UL,
+   CMD_MISC2__CTR_END_KMASK     = 0x0E000000U,
 
    // This says the the operator said "invert".  It might later cause
    // a "central" to be turned into an "invert central".
-   CMD_MISC2__SAID_INVERT       = 0x10000000UL,
+   CMD_MISC2__SAID_INVERT       = 0x10000000U,
 
    // This mask embraces this whole mechanism, including the "invert" bit.
-   CMD_MISC2__CTR_END_MASK      = 0x1FC00000UL,
+   CMD_MISC2__CTR_END_MASK      = 0x1FC00000U,
 
    // This is a 2 bit field.
-   CMD_MISC2__DID_Z_COMPRESSMASK= 0x60000000UL,
-   CMD_MISC2__DID_Z_COMPRESSBIT = 0x20000000UL,
-   CMD_MISC2__DO_NOT_EXECUTE    = 0x80000000UL
+   CMD_MISC2__DID_Z_COMPRESSMASK= 0x60000000U,
+   CMD_MISC2__DID_Z_COMPRESSBIT = 0x20000000U,
+   CMD_MISC2__DO_NOT_EXECUTE    = 0x80000000U
 };
 
 
 // Flags that reside in the "cmd_misc3_flags" word of a setup BEFORE a call is executed.
 enum {
-   CMD_MISC3__PUT_FRAC_ON_FIRST    = 0x00000002UL,
-   CMD_MISC3__RESTRAIN_CRAZINESS   = 0x00000004UL,
-   CMD_MISC3__RESTRAIN_MODIFIERS   = 0x00000008UL,
-   CMD_MISC3__META_NOCMD           = 0x00000010UL,
-   CMD_MISC3__DO_AS_COUPLES        = 0x00000020UL,
-   CMD_MISC3__DOING_YOUR_PART      = 0x00000040UL,    // Some kind of "DYP" has happened, setups may be bizarre.
-   CMD_MISC3__NEED_DIAMOND         = 0x00000080UL,
-   CMD_MISC3__DOING_ENDS           = 0x00000100UL,    // This call is directed only to the ends of the original setup.
+   CMD_MISC3__PUT_FRAC_ON_FIRST    = 0x00000002U,
+   CMD_MISC3__RESTRAIN_CRAZINESS   = 0x00000004U,
+   CMD_MISC3__RESTRAIN_MODIFIERS   = 0x00000008U,
+   CMD_MISC3__META_NOCMD           = 0x00000010U,
+   CMD_MISC3__DO_AS_COUPLES        = 0x00000020U,
+   CMD_MISC3__DOING_YOUR_PART      = 0x00000040U,    // Some kind of "DYP" has happened, setups may be bizarre.
+   CMD_MISC3__NEED_DIAMOND         = 0x00000080U,
+   CMD_MISC3__DOING_ENDS           = 0x00000100U,    // This call is directed only to the ends of the original setup.
                                                       // If the call turns out to be an 8-person call with distinct
                                                       // centers and ends parts, we may want to just apply the ends part.
                                                       // This is what makes "ends detour" work.
-   CMD_MISC3__TWO_FACED_CONCEPT    = 0x00000200UL,
-   CMD_MISC3__NO_ANYTHINGERS_SUBST = 0x00000400UL,    // Treat "<anything> motivate" as plain motivate.
-   CMD_MISC3__PARENT_COUNT_IS_ONE  = 0x00000800UL,
-   CMD_MISC3__IMPOSE_Z_CONCEPT     = 0x00001000UL,
-   CMD_MISC3__DONE_WITH_REST_SUPER = 0x00002000UL,
-   CMD_MISC3__STOP_OVERCAST_CHECK  = 0x00004000UL,    // Off at start of utterance, gets turned on after first part.
+   CMD_MISC3__TWO_FACED_CONCEPT    = 0x00000200U,
+   CMD_MISC3__NO_ANYTHINGERS_SUBST = 0x00000400U,    // Treat "<anything> motivate" as plain motivate.
+   CMD_MISC3__PARENT_COUNT_IS_ONE  = 0x00000800U,
+   CMD_MISC3__IMPOSE_Z_CONCEPT     = 0x00001000U,
+   CMD_MISC3__DONE_WITH_REST_SUPER = 0x00002000U,
+   CMD_MISC3__STOP_OVERCAST_CHECK  = 0x00004000U,    // Off at start of utterance, gets turned on after first part.
                                                       // This is how we enforce the "no overcast warnings for actions
                                                       // internal to a compound call" rule.
-   CMD_MISC3__ROLL_TRANSP          = 0x00008000UL,
-   CMD_MISC3__ROLL_TRANSP_IF_Z     = 0x00010000UL
+   CMD_MISC3__ROLL_TRANSP          = 0x00008000U,
+   CMD_MISC3__ROLL_TRANSP_IF_Z     = 0x00010000U
 };
 
 enum normalize_action {
@@ -4120,9 +4100,9 @@ enum meta_key_kind {
 
 // These are the "meta_key_props" bits.
 enum mkprop {
-   MKP_RESTRAIN_1    = 0x00000001UL,
-   MKP_RESTRAIN_2    = 0x00000002UL,
-   MKP_COMMA_NEXT    = 0x00000004UL
+   MKP_RESTRAIN_1    = 0x00000001U,
+   MKP_RESTRAIN_2    = 0x00000002U,
+   MKP_COMMA_NEXT    = 0x00000004U
 };
 
 extern const uint32 meta_key_props[];    // In sdtables.
@@ -4907,6 +4887,11 @@ inline uint32 or_all_people(const setup *ss)
       result |= ss->people[i].id1;
 
    return result;
+}
+
+inline void setup::clear_people()
+{
+   memset(people, 0, sizeof(personrec)*MAX_PEOPLE);
 }
 
 
