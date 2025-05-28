@@ -905,8 +905,6 @@ Private void special_4_way_symm(
 
    int begin_size;
    int real_index;
-   int real_direction, northified_index;
-   uint32 z;
    int k, result_size, result_quartersize;
    int *the_table = (int *) 0;
 
@@ -951,14 +949,14 @@ Private void special_4_way_symm(
       newpersonlist[real_index].id1 = 0;
       newpersonlist[real_index].id2 = 0;
       if (this_person.id1) {
-         real_direction = this_person.id1 & 3;
-         northified_index = (real_index + (((4-real_direction)*begin_size) >> 2)) % begin_size;
-         z = find_calldef(tdef, scopy, real_index, real_direction, northified_index);
+         int real_direction = this_person.id1 & 3;
+         int northified_index = (real_index + (((4-real_direction)*begin_size) >> 2)) % begin_size;
+         uint32 z = find_calldef(tdef, scopy, real_index, real_direction, northified_index);
          k = (z >> 4) & 017;
          if (the_table) k = the_table[k];
          k = (k + real_direction*result_quartersize) % result_size;
          newpersonlist[real_index].id1 = (this_person.id1 & ~(ROLL_MASK | 077)) |
-               (z+real_direction*011) & 013 |
+               ((z+real_direction*011) & 013) |
                ((z * (ROLL_BIT/DBROLL_BIT)) & ROLL_MASK);
 
          if (this_person.id1 & STABLE_ENAB) {
@@ -2635,7 +2633,6 @@ extern void basic_move(
                }
                break;
          }
-
       }
 
       goto try_to_find_deflist;
@@ -3056,7 +3053,7 @@ extern void basic_move(
 
       /* Check for people cutting through or working around an elongated 2x2 setup. */
       if (     ss->kind == s2x2 &&
-               orig_elongation != 0 &&
+               (orig_elongation & 0x3F) != 0 &&
                !(ss->cmd.cmd_misc_flags & CMD_MISC__NO_CHK_ELONG)) {
          if (callspec->callflags1 & CFLAG1_NO_ELONGATION_ALLOWED) {
             fail("Call can't be done around the outside of the set.");
@@ -3604,6 +3601,5 @@ extern void basic_move(
    /* We take out any elongation info that divided_setup_move may have put in
       and override it with the correct info. */
 
-   result->result_flags &= ~3;
-   result->result_flags |= resultflags | desired_elongation;
+   result->result_flags = (result->result_flags & (~3)) | resultflags | (desired_elongation & 3);
 }

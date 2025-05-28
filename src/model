@@ -80,7 +80,7 @@ MODEL sd =
                    '/usr/apollo/include/gpr.h';
                    '/usr/apollo/include/dialog.h';
                    '/usr/include/string.h';
-                   sd_dialog.ins.c @ the_libe;
+                   '/wba/sd/sd_dialog.ins.c';
       END OF sdui-domain.c;
    END OF dom_dialog;
 

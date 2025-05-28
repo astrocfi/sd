@@ -26,6 +26,8 @@
  *
  */
 
+#define INPUT_TEXTLINE_SIZE 200
+
 typedef struct glozk {
    concept_descriptor *this_modifier;
    struct glozk *next;            /* next concept, or, if this is end mark, points to substitution list */
@@ -54,18 +56,38 @@ typedef struct filch {
 
 typedef void (*show_function)(char *user_input, Const char *extension, Const match_result *mr);
 
+typedef struct {
+   char full_input[INPUT_TEXTLINE_SIZE+1];   /* the current user input */
+   char extension[INPUT_TEXTLINE_SIZE+1];    /* the extension for the current pattern */
+   int full_input_size;        /* Number of characters in full_input, not counting null. */
+   char *extended_input;       /* the maximal common extension to the user input */
+   int match_count;            /* the number of matches so far */
+   int exact_count;            /* the number of exact matches so far */
+   modifier_block *newmodifiers;  /* has "left", "magic", etc. modifiers. */
+   int yielding_matches;       /* the number of them that are marked "yield_if_ambiguous". */
+   int exact_match;            /* true if an exact match has been found */
+   int showing;                /* we are only showing the matching patterns */
+   show_function sf;           /* function to call with matching command (if showing) */
+   long_boolean verify;        /* true => verify calls before showing */
+   int space_ok;               /* space is a legitimate next input character */
+   match_result result;        /* value of the first or exact matching pattern */
+   int call_menu;              /* The call menu (or special negative command) that we are searching */
+} match_state;
+
 enum {
     match_startup_commands = -1,
     match_resolve_commands = -2,
-    match_selectors = -3,
-    match_directions = -4,
-    match_taggers = -8,      /* This is the lowest of 4 numbers. */
-    match_circcer = -9
+    match_resolve_extra_commands = -3,
+    match_selectors = -4,
+    match_directions = -5,
+    match_taggers = -9,      /* This is the lowest of 4 numbers. */
+    match_circcer = -10
 };
 
 
 /* These are provided by sdmatch.c */
 extern call_list_kind *call_menu_ptr;
+extern match_state static_ss;
 extern match_result result_for_verify;
 extern long_boolean verify_used_number;
 extern long_boolean verify_used_selector;
@@ -77,11 +99,10 @@ extern long_boolean verify_has_stopped;
 
 extern int num_command_commands;
 extern Cstring command_commands[];
-
 extern int number_of_resolve_commands;
 extern Cstring resolve_command_strings[];
-
-
+extern int num_extra_resolve_commands;
+extern Cstring extra_resolve_commands[];
 
 
 extern void
@@ -92,7 +113,6 @@ matcher_setup_call_menu(call_list_kind cl, callspec_block *call_name_list[]);
     
 extern int
 match_user_input(
-    char *user_input,
     int which_commands,
     match_result *mr,
     char *extension,

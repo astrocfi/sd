@@ -218,7 +218,7 @@ extern void *get_mem(uint32 siz)
 
    buf = get_mem_gracefully(siz);
    if (!buf && siz != 0) {
-      fprintf(stderr, "Can't allocate %d bytes of memory.\n", siz);
+      fprintf(stderr, "Can't allocate %d bytes of memory.\n", (int) siz);
       exit_program(2);
    }
    return buf;
@@ -241,7 +241,7 @@ extern void *get_more_mem(void *oldp, uint32 siz)
       return get_mem(siz);	/* SunOS 4 realloc doesn't handle NULL */
    buf = get_more_mem_gracefully(oldp, siz);
    if (!buf && siz != 0) {
-      fprintf(stderr, "Can't allocate %d bytes of memory.\n", siz);
+      fprintf(stderr, "Can't allocate %d bytes of memory.\n", (int) siz);
       exit_program(2);
    }
    return buf;
@@ -457,7 +457,7 @@ extern void open_file(void)
       fact that it doesn't work.
 
       So we remember our seek position, close the file, reopen it in "text"
-      mode (that is "r+"), and seek back to that spot. */
+      mode (that is, "r+"), and seek back to that spot. */
 
    (void) fclose(fildes);
    if (!(fildes = fopen(outfile_string, "r+"))) {
@@ -588,15 +588,15 @@ Private long_boolean parse_level(Cstring s, dance_level *levelp)
    char first = tolower(s[0]);
 
    switch (first) {
-      case 'm': *levelp = l_mainstream; break;
-      case 'p': *levelp = l_plus; break;
+      case 'm': *levelp = l_mainstream; return TRUE;
+      case 'p': *levelp = l_plus; return TRUE;
       case 'a':
          if (s[1] == '1' && !s[2]) *levelp = l_a1;
          else if (s[1] == '2' && !s[2]) *levelp = l_a2;
          else if (s[1] == 'l' && s[2] == 'l' && !s[3]) *levelp = l_dontshow;
          else
             return FALSE;
-         break;
+         return TRUE;
       case 'c':
          if (s[1] == '3' && (s[2] == 'a' || s[2] == 'A') && !s[3])
             *levelp = l_c3a;
@@ -606,19 +606,17 @@ Private long_boolean parse_level(Cstring s, dance_level *levelp)
             *levelp = l_c4a;
          else if (!s[2]) {
             switch (s[1]) {
-               case '1': *levelp = l_c1; break;
-               case '2': *levelp = l_c2; break;
-               case '3': *levelp = l_c3; break;
-               case '4': *levelp = l_c4; break;
+               case '1': *levelp = l_c1; return TRUE;
+               case '2': *levelp = l_c2; return TRUE;
+               case '3': *levelp = l_c3; return TRUE;
+               case '4': *levelp = l_c4; return TRUE;
                default: return FALSE;
             }
          }
-         break;
+         return TRUE;
       default:
          return FALSE;
    }
-
-   return TRUE;
 }
 
 
@@ -668,6 +666,7 @@ extern long_boolean close_call_list_file(void)
    to it at that line. */
 
 static int session_index = 0;        /* If this is nonzero, we have opened a session. */
+static char rewrite_filename_as_star[2] = { '\0' , '\0' };  /* First char could be "*" or "+". */
 
 
 /* This makes sure that outfile string is a legal filename, and sets up
@@ -680,9 +679,56 @@ extern long_boolean install_outfile_string(char newstring[])
    long_boolean file_is_ok;
    int j;
 
+   rewrite_filename_as_star[0] = '\0';
+
    /* Clean off leading blanks, and stop after any internal blank. */
 
    (void) sscanf(newstring, "%s", test_string);
+
+   /* Look for special file string of "*".  If so, generate a new file name. */
+
+   if ((test_string[0] == '*' || test_string[0] == '+') && !test_string[1]) {
+      time_t clocktime;
+      FILE *filetest;
+      char junk[20], junk2[20], t1[20], t2[20], t3[20], t4[20], t5[20];
+      char letter[2];
+      char *p;
+
+      letter[0] = 'a';
+      letter[1] = '\0';
+      time(&clocktime);
+      (void) sscanf(ctime(&clocktime), "%s %s %s %s %s", t1, t2, t3, t4, t5);
+
+      /* Now t2 = "Jan", t3 = "16", and t5 = "1996". */
+
+      (void) strncpy(junk, t3, 3);
+      (void) strncat(junk, t2, 3);
+      (void) strncat(junk, &t5[strlen(t5)-2], 2);
+      for (p=junk ; *p ; p++) *p = tolower(*p);  /* Month in lower case. */
+      (void) strncpy(junk2, junk, 10);    /* This should be "16jan96". */
+
+      for (;;) {
+         (void) strncat(junk2, filename_strings[calling_level], 4);
+
+         /* If the given filename is "+", accept it immediately.
+            Otherwise, fuss with the generated name until we get a
+            nonexistent file. */
+
+         if (test_string[0] == '+' || (filetest = fopen(junk2, "r")) == 0) break;
+         (void) fclose(filetest);
+         if (letter[0] == 'z'+1) letter[0] = 'A';
+         else if (letter[0] == 'Z'+1) return FALSE;
+         (void) strncpy(junk2, junk, 10);
+         (void) strncat(junk2, letter, 4);     /* Try appending a letter. */
+         letter[0]++;
+      }
+
+      (void) strncpy(outfile_string, junk2, MAX_FILENAME_LENGTH);
+      outfile_special = FALSE;
+      last_file_position = -1;
+      rewrite_filename_as_star[0] = test_string[0];
+      return TRUE;
+   }
 
    /* Now see if we can write to it. */
 
@@ -715,7 +761,6 @@ extern long_boolean install_outfile_string(char newstring[])
 extern long_boolean open_session(int argc, char **argv)
 {
    int session_linenum = 0;
-   int session_position;
    int i, j;
    int argno;
    FILE *session;
@@ -761,7 +806,7 @@ extern long_boolean open_session(int argc, char **argv)
    uims_process_command_line(&nargs, &args);
 
    glob_call_list_mode = call_list_mode_none;
-   calling_level = l_mainstream;    /* The default. */
+   calling_level = l_nonexistent_concept;    /* Mark it uninitialized. */
 
    for (argno=1; argno < nargs; argno++) {
       if (args[argno][0] == '-') {
@@ -820,12 +865,10 @@ extern long_boolean open_session(int argc, char **argv)
    }
 
    /* Initialize outfile_string to calling-level-specific default outfile, that is,
-      "sequence.A2" or whatever.  It already contains "sequence". */
+      "sequence.A2" or whatever.  It already contains "sequence".  If no level was given
+      on the command line, it will be the null suffix, and we will query for it later. */
 
    (void) strncat(outfile_string, filename_strings[calling_level], MAX_FILENAME_LENGTH);
-
-   if (new_outfile_string)
-      (void) install_outfile_string(new_outfile_string);
 
    /* If we are writing a call list file, that's all we do. */
    if (glob_call_list_mode == call_list_mode_writing || glob_call_list_mode == call_list_mode_writing_full)
@@ -834,20 +877,15 @@ extern long_boolean open_session(int argc, char **argv)
    /* Or if the file didn't exist, or we are in diagnostic mode. */
    if (!session || diagnostic_mode) goto no_session;
 
+   /* Search for the "[Sessions]" indicator. */
+
    if (fseek(session, 0, SEEK_SET))
       goto no_session;
-
-   if (!(session = fopen(SESSION_FILENAME, "r")))
-      goto no_session;
-
-   /* Search for the "[Sessions]" indicator. */
 
    for (;;) {
       if (!fgets(line, MAX_FILENAME_LENGTH, session)) goto no_session;
       if (!strncmp(line, "[Sessions]", 10)) break;
    }
-
-   session_position = ftell(session);
 
    printf("Do you want to use one of the following sessions?\n\n");
    printf("  0     (no session)\n");
@@ -872,40 +910,50 @@ extern long_boolean open_session(int argc, char **argv)
    }
 
    if (session_index <= session_linenum) {
-      if (!fseek(session, session_position, SEEK_SET)) {
-         for (i=0 ; i<session_index ; i++)
-            if (!fgets(line, MAX_FILENAME_LENGTH, session)) break;
+      int ccount;
+      char filename_string[MAX_FILENAME_LENGTH];
+      char session_levelstring[50];
 
-         if (i == session_index) {
-            int ccount;
-            char test_string[MAX_FILENAME_LENGTH];
-            char session_levelstring[50];
+      /* Find the "[Sessions]" indicator again. */
 
-            if (sscanf(line, "%s %s %d %n", test_string, session_levelstring, &sequence_number, &ccount) != 3) {
-               printf("Bad format in session file.\n");
-               goto no_session;
-            }
-
-            if (!install_outfile_string(test_string)) {
-               printf("Bad file name in session file, using default instead.\n");
-            }
-
-            #if defined(MSDOS)
-               /* What a total crock!!!!!!  The "%n" scan specifier doesn't work. */
-               ccount = strlen(line);
-               if (ccount > 45) ccount = 45;
-            #endif
-
-            if (!parse_level(session_levelstring, &calling_level)) {
-               printf("Bad level given in session file.\n");
-               goto no_session;
-            }
-
-            strncpy(header_comment, &line[ccount], MAX_TEXT_LINE_LENGTH);
-            j = strlen(header_comment);
-            if (j>0) header_comment[j-1] = '\0';   /* Strip off the <NEWLINE> -- we don't want it. */
-         }
+      if (fseek(session, 0, SEEK_SET)) {
+         printf("Can't find correct position in session file.\n");
+         goto no_session;
       }
+
+      for (;;) {
+         if (!fgets(line, MAX_FILENAME_LENGTH, session)) {
+            printf("Can't find correct indicator in session file.\n");
+            goto no_session;
+         }
+         if (!strncmp(line, "[Sessions]", 10)) break;
+      }
+
+      /* Skip over the lines before the one we want. */
+
+      for (i=0 ; i<session_index ; i++)
+         if (!fgets(line, MAX_FILENAME_LENGTH, session)) break;
+
+      if (i != session_index)
+         goto no_session;
+
+      if (sscanf(line, "%s %s %d %n", filename_string, session_levelstring, &sequence_number, &ccount) != 3) {
+         printf("Bad format in session file.\n");
+         goto no_session;
+      }
+
+      if (!parse_level(session_levelstring, &calling_level)) {
+         printf("Bad level given in session file.\n");
+         goto no_session;
+      }
+
+      if (!install_outfile_string(filename_string)) {
+         printf("Bad file name in session file, using default instead.\n");
+      }
+
+      strncpy(header_comment, &line[ccount], MAX_TEXT_LINE_LENGTH);
+      j = strlen(header_comment);
+      if (j>0) header_comment[j-1] = '\0';   /* Strip off the <NEWLINE> -- we don't want it. */
    }
    else {
       sequence_number = 1;       /* We are creating a new session to be appended to the file. */
@@ -920,9 +968,39 @@ extern long_boolean open_session(int argc, char **argv)
 
    really_do_it:
 
+   if (calling_level == l_nonexistent_concept) {
+
+      /* The level never got specified, either from a command line argument
+         or from the session file.  Perhaps the program was invoked under
+         a window-ish OS in which one clicks on icons rather than typing
+         a command line.  In that case, we need to query the user for the level. */
+
+      calling_level = l_mainstream;   /* Default in case we fail. */
+      printf("Enter the level: ");
+
+      if (gets(line))
+         (void) parse_level(line, &calling_level);
+
+      (void) strncat(outfile_string, filename_strings[calling_level], MAX_FILENAME_LENGTH);
+   }
+
+   if (new_outfile_string)
+      (void) install_outfile_string(new_outfile_string);
+
    if (session) (void) fclose(session);
 
    return FALSE;
+}
+
+
+
+Private int write_back_session_line(FILE *wfile)
+{
+   return fprintf(wfile, "%-20s %-11s %6d      %s\n",
+         rewrite_filename_as_star[0] ? rewrite_filename_as_star : outfile_string,
+         getout_strings[calling_level],
+         sequence_number,
+         header_comment);
 }
 
 
@@ -962,7 +1040,7 @@ extern void final_exit(int code)
                   if (line[0] == '\n') { more_stuff = TRUE; break; }
 
                   if (i == session_index-1) {
-                     if (fprintf(wfile, "%-20s %-11s %6d      %s\n", outfile_string, getout_strings[calling_level], sequence_number, header_comment) < 0)
+                     if (write_back_session_line(wfile) < 0)
                         goto copy_failed;
                   }
                   else if (i == -session_index-1) {
@@ -974,7 +1052,7 @@ extern void final_exit(int code)
 
                if (i < session_index) {
                   /* User has requested a line number larger than the file.  Append a new line. */
-                  if (fprintf(wfile, "%20-s %11-s %6d      %s\n", outfile_string, getout_strings[calling_level], sequence_number, header_comment) < 0)
+                  if (write_back_session_line(wfile) < 0)
                      goto copy_failed;
                }
 

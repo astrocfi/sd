@@ -409,7 +409,7 @@ typedef struct {
 #define CMD_MISC__VERIFY_LINES       0x00001800UL
 #define CMD_MISC__VERIFY_COLS        0x00001C00UL
 
-/* Flags that reside in the "cmd_misc2_flags" word of a setup BEFORE a call is executed.
+/* Flags that reside in the "cmd_misc2_flags" word of a setup BEFORE a call is executed. */
 
 /* The following are used for the "centers/ends work <concept>" mechanism:
 
@@ -1225,8 +1225,8 @@ typedef enum {
 #define NUM_START_SELECT_KINDS (((int) start_select_change_header_comment)+1)
 
 /* For ui_command_select: */
-/* BEWARE!!  This next definition must be keyed to stuff in sdgetout.c or 
-   the UI, particularly the array "title_string". */
+/* BEWARE!!  This next definition must be keyed to the array "title_string"
+   in sdgetout.c, and maybe stuff in the UI. */
 /* BEWARE!!  The order is slightly significant -- all search-type commands
    are >= command_resolve, and all "create some setup" commands
    are >= command_create_any_lines.  Certain tests are made easier by this. */
@@ -1243,6 +1243,12 @@ typedef enum {
    command_neglect,
 #endif
    command_save_pic,
+   command_simple_mods,
+   command_all_mods,
+   command_toggle_conc_levels,
+   command_toggle_act_phan,
+   command_toggle_singer,
+   command_toggle_singer_backward,
    command_refresh,
    command_resolve,            /* Search commands start here */
    command_normalize,
@@ -1787,6 +1793,8 @@ extern map_thing map_bone_trngl4;                                   /* in SDTABL
 extern map_thing map_rig_trngl4;                                    /* in SDTABLES */
 extern map_thing map_s8_tgl4;                                       /* in SDTABLES */
 extern map_thing map_p8_tgl4;                                       /* in SDTABLES */
+extern map_thing map_phan_trngl4a;                                  /* in SDTABLES */
+extern map_thing map_phan_trngl4b;                                  /* in SDTABLES */
 extern map_thing map_2x2v;                                          /* in SDTABLES */
 extern map_thing map_2x4_magic;                                     /* in SDTABLES */
 extern map_thing map_qtg_magic;                                     /* in SDTABLES */
@@ -1893,6 +1901,7 @@ extern int number_for_initialize;                                   /* in SDMAIN
 extern int allowing_modifications;                                  /* in SDMAIN */
 extern long_boolean allowing_all_concepts;                          /* in SDMAIN */
 extern long_boolean using_active_phantoms;                          /* in SDMAIN */
+extern int singing_call_mode;                                       /* in SDMAIN */
 extern long_boolean diagnostic_mode;                                /* in SDMAIN */
 extern selector_kind current_selector;                              /* in SDMAIN */
 extern direction_kind current_direction;                            /* in SDMAIN */
@@ -1927,7 +1936,7 @@ extern long_boolean deposit_call(callspec_block *call);
 extern long_boolean deposit_concept(concept_descriptor *conc, uint32 number_fields);
 extern long_boolean query_for_call(void);
 extern void write_header_stuff(long_boolean with_ui_version, uint32 act_phan_flags);
-extern void get_real_subcall(
+extern long_boolean get_real_subcall(
    parse_block *parseptr,
    by_def_item *item,
    final_set concin,
@@ -2226,9 +2235,13 @@ extern void on_your_own_move(
 
 extern void punt_centers_use_concept(setup *ss, setup *result);
 
-extern void so_and_so_only_move(
+extern void selective_move(
    setup *ss,
    parse_block *parseptr,
+   int indicator,
+   int arg2,
+   selector_kind selector_to_use,
+   long_boolean concentric_rules,
    setup *result);
 
 /* In SDTOP */

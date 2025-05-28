@@ -15,9 +15,10 @@
  * Uses console I/O package with djgpp, a port of gcc to DOS on IBM PC.
  */
 
-#include "sdui-ttu.h"
 #include <stdio.h>
+#include <stdlib.h>
 #include <gppconio.h>
+#include "sdui-ttu.h"
 
 static int screen_height = 25;
 static int no_cursor = 0;
@@ -157,14 +158,11 @@ extern void put_line(char the_line[])
    if (!no_cursor) {
       char *p = the_line;
       char c;
-      while (c = *p++)
+      while ((c = *p++))
          pack_in_buffer(c);
+   }
 
-      (void) fputs(the_line, stdout);
-   }
-   else {
-      (void) fputs(the_line, stdout);
-   }
+   (void) fputs(the_line, stdout);
 }
 
 extern void put_char(int c)
@@ -175,6 +173,7 @@ extern void put_char(int c)
    (void) putchar(c);
 }
 
+
 extern int get_char(void)
 {
    int n;
@@ -184,7 +183,34 @@ extern int get_char(void)
       n = getch();
    } while (n == EOF);   /* busy wait (EOF means no character yet) */
 
-   if (n == 339) /* Delete */
+   if (n == 0) {     /* Escape for function keys on some keyboards. */
+      do {           /* Get the indicator character. */
+         fflush(stdout);
+         n = getch();
+      } while (n == EOF);
+
+      if (n == 83)
+         n = '\177';        /* delete */
+      else if (n >= 59 && n <= 68)
+         n += 128+1-59;     /* f1..f10 */
+      else if (n >= 133 && n <= 134)
+         n += 128+11-133;     /* f11..f12 */
+      else if (n >= 84 && n <= 93)
+         n += 160+1-84;     /* shift f1..f10 */
+      else if (n >= 135 && n <= 136)
+         n += 160+11-135;     /* shift f11..f12 */
+      else if (n >= 94 && n <= 103)
+         n += 192+1-94;     /* control f1..f10 */
+      else if (n >= 137 && n <= 138)
+         n += 192+11-137;     /* control f11..f12 */
+      else if (n >= 104 && n <= 113)
+         n += 224+1-104;     /* alt f1..f10 */
+      else if (n >= 139 && n <= 140)
+         n += 224+11-139;     /* alt f11..f12 */
+      else
+         n = ' ';
+   }
+   else if (n == 339) /* Delete */
       n = '\177';
    else if (n >= 315 && n <= 324)
       n += 128+1-315;     /* f1..f10 */

@@ -27,7 +27,7 @@
     General Public License if you distribute the file.
 */
 
-#define VERSION_STRING "31.61"
+#define VERSION_STRING "31.63"
 
 /* We cause this string (that is, the concatentaion of these strings) to appear
    in the binary image of the program, so that the "what" and "ident" utilities
@@ -90,6 +90,8 @@ and the following external variables:
    allowing_modifications
    allowing_all_concepts
    using_active_phantoms
+   singing_call_mode
+   diagnostic_mode
    current_selector
    current_direction
    current_number_fields
@@ -142,7 +144,7 @@ callspec_block **tagger_calls[4];
 int number_of_circcers;
 callspec_block **circcer_calls;
 char outfile_string[MAX_FILENAME_LENGTH] = SEQUENCE_FILENAME;
-char header_comment[MAX_TEXT_LINE_LENGTH] = "";
+char header_comment[MAX_TEXT_LINE_LENGTH];
 long_boolean need_new_header_comment = FALSE;
 call_list_mode_t glob_call_list_mode;
 int sequence_number = -1;
@@ -160,6 +162,7 @@ int number_for_initialize;
 int allowing_modifications = 0;
 long_boolean allowing_all_concepts = FALSE;
 long_boolean using_active_phantoms = FALSE;
+int singing_call_mode = 0;
 long_boolean diagnostic_mode = FALSE;
 selector_kind current_selector;
 direction_kind current_direction;
@@ -193,7 +196,7 @@ static parse_block *saved_command_root;
 
 /* This static variable is used by main. */
 
-Private concept_descriptor centers_concept = {"centers????", concept_centers_or_ends, TRUE, l_mainstream, {0, 0}};
+Private concept_descriptor centers_concept = {"centers????", concept_centers_or_ends, TRUE, l_mainstream, {0, selector_centers, FALSE}};
 
 
 /* This fills in concept_sublist_sizes and concept_sublists. */
@@ -255,10 +258,19 @@ Private void initialize_concept_sublists(void)
                If we don't know, the default value of setup_mask will make it legal. */
 
             switch (p->kind) {
-               case concept_centers_or_ends: case concept_centers_and_ends:
-                  if (p->value.arg1 >= 2 && p->value.arg1 < 7) {
-                     setup_mask = MASK_CTR_2;    /* This is a 6 and 2 type of concept. */
+               case concept_centers_or_ends:
+               case concept_centers_and_ends:
+                  switch (p->value.arg1) {
+                     case selector_center6:
+                     case selector_outer6:
+                     case selector_center2:
+                     case selector_outer2:
+                        setup_mask = MASK_CTR_2;    /* This is a 6 and 2 type of concept. */
+                        break;
+                     default:
+                        break;
                   }
+
                   break;
                case concept_tandem:
                case concept_some_are_tandem:
@@ -903,28 +915,63 @@ extern long_boolean query_for_call(void)
          that is, nothing was entered, and we should try again.  Otherwise, the concepts
          and call have been deposited with calls to "deposit_call" and "deposit_concept". */
 
+      check_menu:
+
       if (uims_get_call_command(&parse_state.call_list_to_use, &local_reply)) goto recurse_entry;
 
       if (local_reply == ui_command_select) {
-         if (uims_menu_index == command_refresh) {
+         if (uims_menu_index == (int) command_simple_mods) {
+            /* Increment "allowing_modifications" up to a maximum of 2. */
+            if (allowing_modifications != 2) allowing_modifications++;
+            goto check_menu;
+         }
+         else if (uims_menu_index == (int) command_all_mods) {
+            allowing_modifications = 2;
+            goto check_menu;
+         }
+         else if (uims_menu_index == (int) command_toggle_conc_levels) {
+            allowing_all_concepts = !allowing_all_concepts;
+            goto check_menu;
+         }
+         else if (uims_menu_index == (int) command_toggle_act_phan) {
+            using_active_phantoms = !using_active_phantoms;
+            goto check_menu;
+         }
+         else if (uims_menu_index == (int) command_toggle_singer) {
+            if (singing_call_mode != 0)
+               singing_call_mode = 0;    /* Turn it off. */
+            else
+               singing_call_mode = 1;    /* 1 for forward progression, 2 for backward. */
+
+            goto check_menu;
+         }
+         else if (uims_menu_index == (int) command_toggle_singer_backward) {
+            if (singing_call_mode != 0)
+               singing_call_mode = 0;    /* Turn it off. */
+            else
+               singing_call_mode = 2;
+
+            goto check_menu;
+         }
+         else if (uims_menu_index == command_refresh) {
              written_history_items = -1; /* suppress optimized display update */
              error_flag = old_error_flag; /* want to see error messages, too */
              goto redisplay;
          }
          else if (uims_menu_index == command_create_comment) {
             char comment[MAX_TEXT_LINE_LENGTH];
-      
+
             if (uims_do_comment_popup(comment)) {
                char *temp_text_ptr;
                comment_block *new_comment_block;     /* ****** Kludge!!!!! */
-      
+
                new_comment_block = (comment_block *) get_mem(sizeof(comment_block));
                temp_text_ptr = &new_comment_block->txt[0];
                string_copy(&temp_text_ptr, comment);
-   
+
                *parse_state.concept_write_ptr = get_parse_block();
                (*parse_state.concept_write_ptr)->concept = &marker_concept_comment;
-   
+
                (*parse_state.concept_write_ptr)->call = (callspec_block *) new_comment_block;
                /* Advance the write pointer. */
                parse_state.concept_write_ptr = &((*parse_state.concept_write_ptr)->next);
@@ -975,7 +1022,7 @@ extern long_boolean query_for_call(void)
                local_reply = ui_concept_select;
                uims_menu_index = concept_sublists[parse_state.call_list_to_use][j];
                concepts_deposited++;
-      
+
                /* We give 0 for the number fields.  It gets taken care of later, perhaps
                   not the best way. */
                (void) deposit_concept(&concept_descriptor_table[uims_menu_index], 0);
@@ -1338,6 +1385,7 @@ void main(int argc, char *argv[])
    testing_fidelity = FALSE;
    parse_active_list = (parse_block *) 0;
    parse_inactive_list = (parse_block *) 0;
+   header_comment[0] = '\0';
 
    if (argc >= 2 && strcmp(argv[1], "-help") == 0)
        display_help();		/* does not return */
@@ -1477,6 +1525,11 @@ void main(int argc, char *argv[])
    writestuff(outfile_string);
    writestuff("\"");
    newline();
+
+   if (need_new_header_comment) {
+      (void) uims_do_header_popup(header_comment);
+      need_new_header_comment = FALSE;
+   }
    
    new_sequence:
    
@@ -1503,10 +1556,21 @@ void main(int argc, char *argv[])
       case start_select_change_outfile:
          {
             char newfile_string[MAX_FILENAME_LENGTH];
-      
+
             if (uims_do_outfile_popup(newfile_string)) {
-               if (newfile_string[0])
-                  (void) install_outfile_string(newfile_string);
+               if (newfile_string[0]) {
+                  if (install_outfile_string(newfile_string)) {
+                     char confirm_message[MAX_FILENAME_LENGTH+25];
+                     (void) strncpy(confirm_message, "Output file changed to \"", 25);
+                     (void) strncat(confirm_message, outfile_string, MAX_FILENAME_LENGTH);
+                     (void) strncat(confirm_message, "\"", 2);
+                     writestuff(confirm_message);
+                  }
+                  else
+                     writestuff("No write access to that file, no action taken.");
+
+                  newline();
+               }
             }
          }
          goto new_sequence;
@@ -1514,11 +1578,6 @@ void main(int argc, char *argv[])
          (void) uims_do_header_popup(header_comment);
          need_new_header_comment = FALSE;
          goto new_sequence;
-   }
-
-   if (need_new_header_comment) {
-      (void) uims_do_header_popup(header_comment);
-      need_new_header_comment = FALSE;
    }
    
    history_ptr = 1;              /* Clear the position history. */
@@ -1650,7 +1709,7 @@ void main(int argc, char *argv[])
          case command_change_outfile:
             {
                char newfile_string[MAX_FILENAME_LENGTH];
-         
+
                if (uims_do_outfile_popup(newfile_string)) {
                   if (newfile_string[0]) {
                      if (install_outfile_string(newfile_string)) {
@@ -1808,7 +1867,7 @@ void main(int argc, char *argv[])
 }
 
 
-extern void get_real_subcall(
+extern long_boolean get_real_subcall(
    parse_block *parseptr,
    by_def_item *item,
    final_set concin,
@@ -1852,7 +1911,7 @@ extern void get_real_subcall(
    /* But if this is a tagging call substitution, we most definitely do proceed with the search. */
 
    if (!(item->modifiers1 & DFM1_CALL_MOD_MASK) && !this_is_tagger_circcer)
-      return;
+      return FALSE;
 
    /* See if we had something from before.  This avoids embarassment if a call is actually
       done multiple times.  We want to query the user just once and use that result everywhere.
@@ -1879,19 +1938,18 @@ extern void get_real_subcall(
 
             /* If the pointer is nil, we already asked about this call,
                and the reply was no. */
-            if (!subsidiary_ptr) return;
+            if (!subsidiary_ptr) return FALSE;
 
             *concptrout = subsidiary_ptr;
 
-            if (this_is_tagger_circcer) {
+            if (this_is_tagger_circcer)
                *callout = subsidiary_ptr->call;
-            }
             else {
                *callout = NULLCALLSPEC;             /* ****** not right????. */
                *concout = 0;                        /* ****** not right????. */
             }
 
-            return;
+            return TRUE;
          }
 
          newsearch = &search->next;
@@ -1922,7 +1980,7 @@ extern void get_real_subcall(
       interactive) for the calls that we randomly choose, but not for the later calls
       that we test for fidelity. */
 
-   if (interactivity == interactivity_database_init || interactivity == interactivity_verify || testing_fidelity) return;
+   if (interactivity == interactivity_database_init || interactivity == interactivity_verify || testing_fidelity) return FALSE;
 
    /* When we are searching for resolves and the like, the situation is different.  In this case,
       the interactivity state is set for a search.  We do perform mandatory
@@ -1938,10 +1996,10 @@ extern void get_real_subcall(
       case 1:   /* or_anycall */
       case 3:   /* allow_plain_mod */
       case 5:   /* or_secondary_call */
-         if (!allowing_modifications) return;
+         if (!allowing_modifications) return FALSE;
          break;
       case 4:   /* allow_forced_mod */
-         if (allowing_modifications <= 1) return;
+         if (allowing_modifications <= 1) return FALSE;
          break;
    }
 
@@ -1996,7 +2054,7 @@ extern void get_real_subcall(
          (*newsearch)->concept = &marker_concept_mod;
          (*newsearch)->number = number;
          (*newsearch)->call = base_calls[item->call_id];
-         return;
+         return FALSE;
       }
    }
 
@@ -2031,6 +2089,7 @@ extern void get_real_subcall(
    *concptrout = (*newsearch)->subsidiary_root;
    *callout = NULLCALLSPEC;              /* We THROW AWAY the alternate call, because we want our user to get it from the concept list. */
    *concout = 0;
+   return TRUE;
 }
 
 extern long_boolean sequence_is_resolved(void)

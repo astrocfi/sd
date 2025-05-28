@@ -37,35 +37,18 @@ and the following external variable:
 
 call_list_kind *call_menu_ptr;
 
-Private callspec_block *empty_menu[] = {NULLCALLSPEC};
-Private callspec_block **call_menu_lists[NUM_CALL_LIST_KINDS];
-Private Cstring *selector_menu_list;
+static callspec_block *empty_menu[] = {NULLCALLSPEC};
+static callspec_block **call_menu_lists[NUM_CALL_LIST_KINDS];
+static Cstring *selector_menu_list;
 
-Private long_boolean commands_last_option;
+static long_boolean commands_last_option;
 
-Private int *concept_list; /* all concepts */
-Private int concept_list_length;
+static int *concept_list; /* all concepts */
+static int concept_list_length;
 
-Private int *level_concept_list; /* indices of concepts valid at current level */
-Private int level_concept_list_length;
+static int *level_concept_list; /* indices of concepts valid at current level */
+static int level_concept_list_length;
 
-
-typedef struct {
-   char *full_input;           /* the current user input */
-   char *extended_input;       /* the maximal common extension to the user input */
-   char extension[200];        /* the extension for the current pattern */
-   int match_count;            /* the number of matches so far */
-   int exact_count;            /* the number of exact matches so far */
-   modifier_block *newmodifiers;  /* has "left", "magic", etc. modifiers. */
-   int yielding_matches;       /* the number of them that are marked "yield_if_ambiguous". */
-   int exact_match;            /* true if an exact match has been found */
-   int showing;                /* we are only showing the matching patterns */
-   show_function sf;           /* function to call with matching command (if showing) */
-   long_boolean verify;        /* true => verify calls before showing */
-   int space_ok;               /* space is a legitimate next input character */
-   match_result result;        /* value of the first or exact matching pattern */
-   int call_menu;              /* The call menu (or special negative command) that we are searching */
-} match_state;
 
 typedef struct pat2_blockstruct {
    Cstring car;
@@ -98,13 +81,13 @@ Private modifier_block *get_modifier_block(void)
 
 
 
-static void match_wildcard(Cstring user, Cstring pat, pat2_block *pat2, char *patxp, concept_descriptor *special, Const match_result *result);
-static void match_grand(Cstring user, concept_descriptor *grand_concept, char *patxp, Const match_result *result);
+static void match_wildcard(Cstring user, Cstring pat, pat2_block *pat2, int patxi, concept_descriptor *special, Const match_result *result);
+static void match_grand(Cstring user, concept_descriptor *grand_concept, int patxi, Const match_result *result);
 
 
 /* This is statically used by the match_wildcard and match_suffix_2 procedures. */
 
-static match_state static_ss;
+match_state static_ss;
 match_result result_for_verify;
 long_boolean verify_used_number;
 long_boolean verify_used_selector;
@@ -242,22 +225,20 @@ matcher_setup_call_menu(call_list_kind cl, callspec_block *call_name_list[])
 
 /* These variables are actually local to verify_call, but they are
    expected to be preserved across the longjmp, so they must be static. */
-Private parse_block *parse_mark;
-Private int call_index;
+static parse_block *parse_mark;
+static call_list_kind savecl;
 
 /*
  * Return TRUE if the specified call appears to be legal in the
  * current context.
  */
 
-static long_boolean verify_call(call_list_kind *clp, Const match_result *result)
+Private long_boolean verify_call(call_list_kind *clp, Const match_result *result)
 {
    uint32 bits0, bits1;
    int old_history_ptr;
    long_boolean resultval;
-   parse_block *parse_mark;
    modifier_block *foobar;
-   call_list_kind savecl;
    real_jmp_buf my_longjmp_buffer;
 
    /* If we are not verifying, or the menu we are examining is not the call menu,
@@ -350,7 +331,7 @@ static long_boolean verify_call(call_list_kind *clp, Const match_result *result)
       foobar = foobar->next;
    }
 
-   if (deposit_call(main_call_lists[*clp][result->index])) goto try_again;     /* Deposit_call returns true if something goes wrong. */
+   if (deposit_call(main_call_lists[savecl][result->index])) goto try_again;     /* Deposit_call returns true if something goes wrong. */
 
    *clp = savecl;         /* deposit_concept screwed it up */
 
@@ -471,7 +452,7 @@ static void record_a_match(Const match_result *result)
 
 /* Patxp is where the next character of the extension of the user input for the current pattern is to be written. */
 
-static void match_suffix_2(Cstring user, Cstring pat1, pat2_block *pat2, char *patxp, Const match_result *result)
+static void match_suffix_2(Cstring user, Cstring pat1, pat2_block *pat2, int patxi, Const match_result *result)
 {
    concept_descriptor *pat2_concept = (concept_descriptor *) 0;
 
@@ -479,7 +460,7 @@ static void match_suffix_2(Cstring user, Cstring pat1, pat2_block *pat2, char *p
       if (*pat1 == 0) {
          /* PAT1 has run out, get a string from PAT2 */
          if (pat2_concept) {
-            if (user) match_grand(user, pat2_concept, patxp, result);
+            if (user) match_grand(user, pat2_concept, patxi, result);
             pat2 = (pat2_block *) 0;
             pat2_concept = (concept_descriptor *) 0;
          }
@@ -493,13 +474,16 @@ static void match_suffix_2(Cstring user, Cstring pat1, pat2_block *pat2, char *p
 
       if (user && (*user == '\0')) {
          /* we have just reached the end of the user input */
+         Cstring p = pat1;
 
-         if (*pat1 == ' ')
+         while (p[0] == '@' && (p[1] == 'M' || p[1] == 'I' || p[1] == 'C')) p += 2;
+
+         if (*p == ' ')
             static_ss.space_ok = TRUE;
 
          if (!pat2 && *pat1 == '\0') {
             /* exact match */
-            *patxp = '\0';
+            static_ss.extension[patxi] = '\0';
             record_a_match(result);
             break;
          }
@@ -516,7 +500,7 @@ static void match_suffix_2(Cstring user, Cstring pat1, pat2_block *pat2, char *p
             that are past the part that matches the user input */
 
          if (p == '@') {
-            match_wildcard(user, pat1, pat2, patxp, pat2_concept, result);
+            match_wildcard(user, pat1, pat2, patxi, pat2_concept, result);
    
             if (user==0) {
                /* User input has run out, just looking for more wildcards. */
@@ -524,8 +508,8 @@ static void match_suffix_2(Cstring user, Cstring pat1, pat2_block *pat2, char *p
                Cstring ep = get_escape_string(*pat1++);
 
                if (ep && *ep) {
-                  (void) strcpy(patxp, ep);
-                  patxp += strlen(patxp);
+                  (void) strcpy(&static_ss.extension[patxi], ep);
+                  patxi += strlen(ep);
                }
                else {
                   if (ep) {
@@ -534,8 +518,7 @@ static void match_suffix_2(Cstring user, Cstring pat1, pat2_block *pat2, char *p
                   }
 
                   /* Don't write duplicate blanks. */
-                  /* ***** It would be nice to make this not look back before the beginning!!!!! */
-                  if (*pat1 == ' ' && patxp[-1] == ' ') pat1++;
+                  if (*pat1 == ' ' && patxi > 0 && static_ss.extension[patxi-1] == ' ') pat1++;
                }
             }
             else {
@@ -548,7 +531,7 @@ static void match_suffix_2(Cstring user, Cstring pat1, pat2_block *pat2, char *p
 
                      for (i=1; ep[i]; i++) {
                         if (!user[i-1]) {
-                           while (ep[i]) { *patxp++ = ep[i]; i++; }
+                           while (ep[i]) { static_ss.extension[patxi++] = ep[i] ; i++; }
                            user = 0;
                            goto cont;
                         }
@@ -587,12 +570,12 @@ static void match_suffix_2(Cstring user, Cstring pat1, pat2_block *pat2, char *p
    
                if (p) {
                   /* there is more pattern */
-                  *patxp++ = tolower(p);
+                  static_ss.extension[patxi++] = tolower(p);
                }
                else {
                   /* reached the end of the pattern */
    
-                  *patxp = '\0';
+                  static_ss.extension[patxi] = '\0';
    
                   if (!pat2) {
                      record_a_match(result);
@@ -617,7 +600,7 @@ static void match_suffix_2(Cstring user, Cstring pat1, pat2_block *pat2, char *p
  * room in the Result struct to store the associated value.
  */
 
-static void match_wildcard(Cstring user, Cstring pat, pat2_block *pat2, char *patxp, concept_descriptor *special, Const match_result *result)
+static void match_wildcard(Cstring user, Cstring pat, pat2_block *pat2, int patxi, concept_descriptor *special, Const match_result *result)
 {
    Cstring prefix;
    int i;
@@ -638,7 +621,7 @@ static void match_wildcard(Cstring user, Cstring pat, pat2_block *pat2, char *pa
       new_result = *result;
       for (i=1; i<=last_selector_kind; ++i) {
          new_result.who = (selector_kind) i;
-         match_suffix_2(user, ((key == '6') ? selector_list[i].name : selector_list[i].sing_name), &p2b, patxp, &new_result);
+         match_suffix_2(user, ((key == '6') ? selector_list[i].name : selector_list[i].sing_name), &p2b, patxi, &new_result);
       }
    }
    else if (key == 'h' && (result->where == direction_uninitialized)) {
@@ -646,7 +629,7 @@ static void match_wildcard(Cstring user, Cstring pat, pat2_block *pat2, char *pa
       new_result = *result;
       for (i=1; i<=last_direction_kind; ++i) {
          new_result.where = (direction_kind) i;
-         match_suffix_2(user, direction_names[i], &p2b, patxp, &new_result);
+         match_suffix_2(user, direction_names[i], &p2b, patxi, &new_result);
       }
    }
    else if ((key == 'v' || key == 'w' || key == 'x' || key == 'y') && (result->tagger & 0xFF000000UL) == 0) {
@@ -678,7 +661,7 @@ static void match_wildcard(Cstring user, Cstring pat, pat2_block *pat2, char *pa
 
       for (i=0; i<number_of_taggers[tagclass]; ++i) {
          new_result.tagger++;
-         match_suffix_2(user, tagger_calls[tagclass][i]->name, &p2b, patxp, &new_result);
+         match_suffix_2(user, tagger_calls[tagclass][i]->name, &p2b, patxi, &new_result);
       }
    }
    else if ((key == 'N') && result->circcer == 0) {
@@ -705,7 +688,7 @@ static void match_wildcard(Cstring user, Cstring pat, pat2_block *pat2, char *pa
          } while (c);
 
          new_result.circcer++;
-         match_suffix_2(user, circname, &p2b, patxp, &new_result);
+         match_suffix_2(user, circname, &p2b, patxi, &new_result);
       }
    }
    else if (key == 'j') {
@@ -720,14 +703,14 @@ static void match_wildcard(Cstring user, Cstring pat, pat2_block *pat2, char *pa
       new_result.modifier_parent = result;
       new_result.current_modifier = &concept_descriptor_table[cross_concept_index];
       p2b.car = pat;
-      match_suffix_2(user, crossname, &p2b, patxp, &new_result);
+      match_suffix_2(user, crossname, &p2b, patxi, &new_result);
    }
    else if (key == 'C') {
       new_result = *result;
       new_result.modifier_parent = result;
       new_result.current_modifier = &concept_descriptor_table[cross_concept_index];
       p2b.car = pat;
-      match_suffix_2(user, "cross ", &p2b, patxp, &new_result);
+      match_suffix_2(user, " cross", &p2b, patxi, &new_result);
    }
    else if (key == 'J') {
       char magicname[80];
@@ -741,14 +724,14 @@ static void match_wildcard(Cstring user, Cstring pat, pat2_block *pat2, char *pa
       new_result.modifier_parent = result;
       new_result.current_modifier = &concept_descriptor_table[magic_concept_index];
       p2b.car = pat;
-      match_suffix_2(user, magicname, &p2b, patxp, &new_result);
+      match_suffix_2(user, magicname, &p2b, patxi, &new_result);
    }
    else if (key == 'M') {
       new_result = *result;
       new_result.modifier_parent = result;
       new_result.current_modifier = &concept_descriptor_table[magic_concept_index];
       p2b.car = pat;
-      match_suffix_2(user, "magic ", &p2b, patxp, &new_result);
+      match_suffix_2(user, " magic", &p2b, patxi, &new_result);
    }
    else if (key == 'E') {
       char interlockedname[80];
@@ -762,14 +745,36 @@ static void match_wildcard(Cstring user, Cstring pat, pat2_block *pat2, char *pa
       new_result.modifier_parent = result;
       new_result.current_modifier = &concept_descriptor_table[intlk_concept_index];
       p2b.car = pat;
-      match_suffix_2(user, interlockedname, &p2b, patxp, &new_result);
+      match_suffix_2(user, interlockedname, &p2b, patxi, &new_result);
    }
    else if (key == 'I') {
+
+
+
+
+
+
+      char *p = static_ss.extension;
+      int idx = patxi;
+      long_boolean fixing_an_a = TRUE;
+
+      for (i=0 ; i<2 ; i++) {
+         idx--;
+         if (idx < 0) { idx = static_ss.full_input_size-1 ; p = static_ss.full_input; }
+         if (p[idx] != "a "[i]) { fixing_an_a = FALSE; break; }
+      }
+
+
       new_result = *result;
       new_result.modifier_parent = result;
       new_result.current_modifier = &concept_descriptor_table[intlk_concept_index];
       p2b.car = pat;
-      match_suffix_2(user, "interlocked ", &p2b, patxp, &new_result);
+
+      if (fixing_an_a ||
+               (user && user[-1] == 'a' && user[-2] == ' '))
+         match_suffix_2(user, "n interlocked", &p2b, patxi, &new_result);
+      else
+         match_suffix_2(user, " interlocked", &p2b, patxi, &new_result);
    }
    else if (key == 'e') {
       new_result = *result;
@@ -778,7 +783,7 @@ static void match_wildcard(Cstring user, Cstring pat, pat2_block *pat2, char *pa
       new_result.modifier_parent = result;
       new_result.current_modifier = &concept_descriptor_table[left_concept_index];
       p2b.car = pat;
-      match_suffix_2(user, "left", &p2b, patxp, &new_result);
+      match_suffix_2(user, "left", &p2b, patxi, &new_result);
    }
    else if (key == '9') {
       if (user == 0) return;
@@ -791,7 +796,7 @@ static void match_wildcard(Cstring user, Cstring pat, pat2_block *pat2, char *pa
               break;
           }
           new_result.number_fields += 1 << ((new_result.howmanynumbers-1)*4);
-          match_suffix_2(user, prefix, &p2b, patxp, &new_result);
+          match_suffix_2(user, prefix, &p2b, patxi, &new_result);
       }
    }
    else if (key == 'u') {
@@ -805,7 +810,7 @@ static void match_wildcard(Cstring user, Cstring pat, pat2_block *pat2, char *pa
               break;
           }
           new_result.number_fields += 1 << ((new_result.howmanynumbers-1)*4);
-          match_suffix_2(user, prefix, &p2b, patxp, &new_result);
+          match_suffix_2(user, prefix, &p2b, patxi, &new_result);
       }
    }
    else if (key == 'a' || key == 'b' || key == 'B') {
@@ -820,30 +825,30 @@ static void match_wildcard(Cstring user, Cstring pat, pat2_block *pat2, char *pa
               break;
           }
           new_result.number_fields += 1 << ((new_result.howmanynumbers-1)*4);
-          match_suffix_2(user, prefix, &p2b, patxp, &new_result);
+          match_suffix_2(user, prefix, &p2b, patxi, &new_result);
       }
 
       /* special case: allow "quarter" for 1/4 */
       new_result.number_fields = result->number_fields + (1 << ((new_result.howmanynumbers-1)*4));
-      match_suffix_2(user, "quarter", &p2b, patxp, &new_result);
+      match_suffix_2(user, "quarter", &p2b, patxi, &new_result);
 
       /* special case: allow "half" or "1/2" for 2/4 */
       new_result.number_fields = result->number_fields + (2 << ((new_result.howmanynumbers-1)*4));
-      match_suffix_2(user, "half", &p2b, patxp, &new_result);
-      match_suffix_2(user, "1/2", &p2b, patxp, &new_result);
+      match_suffix_2(user, "half", &p2b, patxi, &new_result);
+      match_suffix_2(user, "1/2", &p2b, patxi, &new_result);
 
       /* special case: allow "three quarter" for 3/4 */
       new_result.number_fields = result->number_fields + (3 << ((new_result.howmanynumbers-1)*4));
-      match_suffix_2(user, "three quarter", &p2b, patxp, &new_result);
+      match_suffix_2(user, "three quarter", &p2b, patxi, &new_result);
 
       /* special case: allow "full" for 4/4 */
       new_result.number_fields = result->number_fields + (4 << ((new_result.howmanynumbers-1)*4));
-      match_suffix_2(user, "full", &p2b, patxp, &new_result);
+      match_suffix_2(user, "full", &p2b, patxi, &new_result);
    }
 }
 
 
-static void match_grand(Cstring user, concept_descriptor *grand_concept, char *patxp, Const match_result *result)
+static void match_grand(Cstring user, concept_descriptor *grand_concept, int patxi, Const match_result *result)
 {
    int i;
    match_result new_result;
@@ -878,7 +883,7 @@ static void match_grand(Cstring user, concept_descriptor *grand_concept, char *p
          new_result.yield_depth = result->yield_depth + 1;
          p2b.car = this_concept->name;
          p2b.special_concept = this_concept;
-         match_suffix_2(user, " ", &p2b, patxp, &new_result);
+         match_suffix_2(user, " ", &p2b, patxi, &new_result);
       }
 
       item++;
@@ -900,7 +905,7 @@ static void match_grand(Cstring user, concept_descriptor *grand_concept, char *p
          invent a call "and turn" that can be used with the "cross" modifier. */
       new_result.yield_depth = result->yield_depth + 1;
       p2b.car = call_menu_lists[call_list_any][i]->name;
-      match_suffix_2(user, " ", &p2b, patxp, &new_result);
+      match_suffix_2(user, " ", &p2b, patxi, &new_result);
    }
 }
 
@@ -951,7 +956,7 @@ static void match_pattern(Cstring pattern, Const match_result *result, concept_d
    p2b.special_concept = this_is_grand;
    p2b.next = (pat2_block *) 0;
 
-   match_suffix_2(static_ss.full_input, "", &p2b, static_ss.extension, result);
+   match_suffix_2(static_ss.full_input, "", &p2b, 0, result);
 }
 
 static void search_menu(uims_reply kind)
@@ -1031,8 +1036,14 @@ static void search_menu(uims_reply kind)
    }
    else {
       if (kind == ui_command_select) {
-         menu = command_commands;
-         menu_length = num_command_commands;
+         if (static_ss.call_menu == match_resolve_extra_commands) {
+            menu = extra_resolve_commands;
+            menu_length = num_extra_resolve_commands;
+         }
+         else {
+            menu = command_commands;
+            menu_length = num_command_commands;
+         }
       }
       else if (static_ss.call_menu == match_directions) {
          menu = &direction_names[1];
@@ -1122,15 +1133,12 @@ static void search_menu(uims_reply kind)
  */
 
 extern int match_user_input(
-    char *user_input,
     int which_commands,
     match_result *mr,
     char *extension,
     show_function sf,
     long_boolean show_verify)
 {
-    char *p;
-
 #ifdef TIMING
     clock_t timer = clock();
     char time_buf[20];
@@ -1146,44 +1154,45 @@ extern int match_user_input(
       modifier_inactive_list = item;
    }
 
-    static_ss.full_input = user_input;
-    static_ss.extended_input = extension;
-    static_ss.match_count = 0;
-    static_ss.exact_count = 0;
-    static_ss.yielding_matches = 0;
-    static_ss.exact_match = FALSE;
-    static_ss.showing = (sf != 0);
-    static_ss.sf = sf;
-    static_ss.result.valid = FALSE;
-    static_ss.result.exact = FALSE;
-    static_ss.space_ok = FALSE;
-    static_ss.verify = show_verify;
-    static_ss.call_menu = which_commands;
+   static_ss.extended_input = extension;
+   static_ss.match_count = 0;
+   static_ss.exact_count = 0;
+   static_ss.yielding_matches = 0;
+   static_ss.exact_match = FALSE;
+   static_ss.showing = (sf != 0);
+   static_ss.sf = sf;
+   static_ss.result.valid = FALSE;
+   static_ss.result.exact = FALSE;
+   static_ss.space_ok = FALSE;
+   static_ss.verify = show_verify;
+   static_ss.call_menu = which_commands;
 
-    if (extension) { /* needed if no matches or user input is empty */
-        extension[0] = 0;
-    }
+   if (extension) { /* needed if no matches or user input is empty */
+       extension[0] = 0;
+   }
 
-    /* convert user input to lower case for easier comparison */
-    p = user_input;
-    while (*p) {*p = tolower(*p); p++;}
-
-    if (static_ss.call_menu >= 0) {
-       if (!commands_last_option)
-           search_menu(ui_command_select);
-   
-       search_menu(ui_call_select);
-       search_menu(ui_concept_select);
-   
-       if (commands_last_option)
-           search_menu(ui_command_select);
+   if (static_ss.call_menu >= 0) {
+      if (!commands_last_option)
+         search_menu(ui_command_select);
+  
+      search_menu(ui_call_select);
+      search_menu(ui_concept_select);
+  
+      if (commands_last_option)
+         search_menu(ui_command_select);
 
       /* ******* This is sleazy!!!!! */
       if (static_ss.result.need_big_menu)
          *call_menu_ptr = call_list_any;
-    }
-    else
-       search_menu((uims_reply) 0);
+   }  
+   else {
+      search_menu(ui_special_concept);
+      /* During a resolve, we allow various other commands. */
+      if (static_ss.call_menu == match_resolve_commands) {
+         static_ss.call_menu = match_resolve_extra_commands;
+         search_menu(ui_command_select);
+      }
+   }
 
    if (mr) {
       *mr = static_ss.result;

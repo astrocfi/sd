@@ -109,7 +109,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "sd.h"
-#include "sd_dialog.ins.c"
+#include "/wba/sd/sd_dialog.ins.c"
 
 
 /* Number of characters we can put into a call menu item.

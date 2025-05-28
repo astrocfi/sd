@@ -30,7 +30,7 @@ SDTTY_OBJ="$(SDTTY_OBJ_PC)"
 [#] DOS can't handle long command lines
 SDTTY_OBJS="@pcfiles.lnk"
 CC=gcc
-CDEBUGFLAGS=-O
+CDEBUGFLAGS="-O2 -Wall -Wno-switch -Wno-uninitialized -Wno-char-subscripts"
 DEFS=
 TTY_FLAGS=
 TTY_LIBS=-lpc
@@ -39,9 +39,9 @@ LN_S="ln -s"
 SET_MAKE="MAKE=make"	dnl is this necessary for dmake?
 dnl those are Tab characters in the next two lines
 STRIP="	strip \$@"
-AOUT2EXE="	aout2exe \$@"
+COFF2EXE="	coff2exe \$@"
 AC_SUBST(STRIP)dnl
-AC_SUBST(AOUT2EXE)dnl
+AC_SUBST(COFF2EXE)dnl
 DEFAULT_TARGET=alltty
 dnl This rule is for dmake on DOS, in case not installed for djgpp
 [#] ****** End of PC section ******

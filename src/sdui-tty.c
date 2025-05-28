@@ -78,6 +78,8 @@ and the following data that are used by sdmatch.c :
    command_commands
    number_of_resolve_commands
    resolve_command_strings
+   num_extra_resolve_commands
+   extra_resolve_commands
 */
 
 #ifndef THINK_C
@@ -100,7 +102,6 @@ and the following data that are used by sdmatch.c :
 #include "sdui-ttu.h"
 
 #define DEL 0x7F
-#define INPUT_TEXTLINE_SIZE 200
 
 /*
  * The total version string looks something like
@@ -120,9 +121,10 @@ extern char *uims_version_string(void)
  * User Input functions
  */
 
-/* not passed as args so refresh_input can be called from signal handler */
+/* This array is the same as static_ss.full_input, but has the original capitalization
+   as typed by the user.  Static_ss.full_input is converted to all lower case for
+   ease of searching. */
 Private char user_input[INPUT_TEXTLINE_SIZE+1];
-Private int user_input_size;
 Private char *user_input_prompt;
 Private char *function_key_expansion;
 
@@ -130,7 +132,8 @@ void
 refresh_input(void)
 {
     user_input[0] = '\0';
-    user_input_size = 0;
+    static_ss.full_input[0] = '\0';
+    static_ss.full_input_size = 0;
     function_key_expansion = (char *) 0;
     clear_line(); /* clear the current line */
     put_line(user_input_prompt);
@@ -144,92 +147,6 @@ get_string_input(char prompt[], char dest[])
 }
 
 
-Private int
-get_char_input(void)
-{
-   int c;
-
-   start_expand:
-
-   if (function_key_expansion) {
-      c = *function_key_expansion++;
-      if (c) return c;
-      else function_key_expansion = (char *) 0;
-   }
-
-#ifdef THINK_C			/* Unix or DOS provides its own cursor */
-   putchar('_'); /* a cursor */
-   c = get_char();
-   putchar('\b'); putchar(' '); putchar('\b'); /* erase the cursor */
-#else
-   c = get_char();
-#endif
-
-   if (c == 129)
-      function_key_expansion = "heads start\n";                /* F1 */
-   else if (c == 130)
-      function_key_expansion = "two calls in succession\n";    /* F2 */
-   else if (c == 131)
-      function_key_expansion = "pick random call\n";           /* F3 */
-   else if (c == 132)
-      function_key_expansion = "resolve\n";                    /* F4 */
-   else if (c == 133)
-      function_key_expansion = "refresh display\n";            /* F5 */
-   else if (c == 134)
-      function_key_expansion = "simple modifications\n";       /* F6 */
-   else if (c == 135)
-      function_key_expansion = "toggle concept levels\n";      /* F7 */
-   else if (c == 136)
-      function_key_expansion = "<anything>";                   /* F8 */
-   else if (c == 137)
-      function_key_expansion = "undo last call\n";             /* F9 */
-   else if (c == 138)
-      function_key_expansion = "end this sequence\n";          /* F10 */
-   else if (c == 139)
-      function_key_expansion = "pick level call\n";            /* F11 */
-
-   else if (c == 161)
-      function_key_expansion = "sides start\n";                /* sF1 */
-   else if (c == 162)
-      function_key_expansion = "twice\n";                      /* sF2 */
-   else if (c == 163)
-      function_key_expansion = "pick concept call\n";          /* sF3 */
-   else if (c == 164)
-      function_key_expansion = "reconcile\n";                  /* sF4 */
-   else if (c == 165)
-      function_key_expansion = "keep picture\n";               /* sF5 */
-   else if (c == 166)
-      function_key_expansion = "allow modifications\n";        /* sF6 */
-   else if (c == 167)
-      function_key_expansion = "toggle active phantoms\n";     /* sF7 */
-   else if (c == 168)
-      function_key_expansion = "<concept>";                    /* sF8 */
-   else if (c == 169)
-      function_key_expansion = "abort the search\n";           /* sF9 */
-   else if (c == 170)
-      function_key_expansion = "change output file\n";         /* sF10 */
-   else if (c == 171)
-      function_key_expansion = "pick 8 person level call\n";   /* sF11 */
-
-   else if (c == 193)
-      function_key_expansion = "just as they are\n";           /* cF1 */
-   else if (c == 195)
-      function_key_expansion = "pick simple call\n";           /* cF3 */
-   else if (c == 196)
-      function_key_expansion = "normalize\n";                  /* cF4 */
-   else if (c == 197)
-      function_key_expansion = "insert a comment\n";           /* cF5 */
-
-   else if (c >= 128)
-      c = ' ';
-
-   if (function_key_expansion)
-      goto start_expand;
-
-   return c;
-
-}
-  
 /* This tells how many of the last lines currently on the screen contain
    the text that the main program thinks comprise the transcript.  That is,
    if we count this far up from the bottom of the screen (well, from the
@@ -250,15 +167,14 @@ get_char_input(void)
    command to the next.  This is the appropriate behavior for a printing
    terminal or computer emulation of same. */
 
-Private int current_text_line;
+static int current_text_line;
 
 /*
  * Throw away all but the first n lines of the text output.
  * n = 0 means to erase the entire buffer.
  */
 
-Private void
-text_output_trim(int n)
+Private void text_output_trim(int n)
 {
     if (current_text_line > n)
         erase_last_n(current_text_line-n);
@@ -270,7 +186,7 @@ text_output_trim(int n)
  * end of text output stuff
  */
 
-Private char *call_menu_prompts[NUM_CALL_LIST_KINDS];
+static char *call_menu_prompts[NUM_CALL_LIST_KINDS];
 
 /*
  * The main program calls this before doing anything else, so we can
@@ -371,9 +287,11 @@ pack_and_echo_character(char c)
    /* Really should handle error better -- ring the bell,
       but this is called inside a loop. */
 
-   if (user_input_size < INPUT_TEXTLINE_SIZE) {
-      user_input[user_input_size++] = c;
-      user_input[user_input_size] = '\0';
+   if (static_ss.full_input_size < INPUT_TEXTLINE_SIZE) {
+      user_input[static_ss.full_input_size] = c;
+      static_ss.full_input[static_ss.full_input_size++] = tolower(c);
+      user_input[static_ss.full_input_size] = '\0';
+      static_ss.full_input[static_ss.full_input_size] = '\0';
       put_char(c);
    }
 }
@@ -420,7 +338,7 @@ prompt_for_more_output(void)
     put_line("--More--");
 
     for (;;) {
-        char c = get_char_input();
+        char c = get_char();
         clear_line();   /* Erase the "more" line; next item goes on that line. */
 
         switch (c) {
@@ -443,12 +361,6 @@ prompt_for_more_output(void)
 Private void
 show_match(char *user_input_str, Const char *extension, Const match_result *mr)
 {
-   char temp[200];
-   char c;
-   Const char *p;
-   char *q;
-   char *z;
-
    if (verify_has_stopped) return;  /* Showing has been turned off. */
 
    if (match_counter <= 0) {
@@ -477,30 +389,35 @@ show_match(char *user_input_str, Const char *extension, Const match_result *mr)
 Private match_result user_match;
 
 
-
 /* BEWARE!!  These two lists must stay in step. */
 
-#define NUM_SPECIAL_COMMANDS 4
-#define SPECIAL_COMMAND_SIMPLE_MODS 0
-#define SPECIAL_COMMAND_ALLOW_MODS 1
-#define SPECIAL_COMMAND_TOGGLE_CONCEPT_LEVELS 2
-#define SPECIAL_COMMAND_TOGGLE_ACTIVE_PHANTOMS 3
 
-int num_command_commands = 46;          /* The number of items in the tables, independent of NUM_COMMAND_KINDS. */
+
+#ifdef SINGERS
+int num_command_commands = 49;          /* The number of items in the tables, independent of NUM_COMMAND_KINDS. */
+#else
+int num_command_commands = 47;
+#endif
+
 
 Cstring command_commands[] = {
+   "exit the program",
+   "quit the program",
    "simple modifications",
    "allow modifications",
    "toggle concept levels",
    "toggle active phantoms",
-   "exit the program",
-   "quit the program",
+#ifdef SINGERS
+   "toggle singing call",
+   "toggle singing call with backward progression",
+#endif
    "undo last call",
    "discard entered concepts",
    "abort this sequence",
    "insert a comment",
    "change output file",
    "change title",
+   "write this sequence",
    "end this sequence",
    "keep picture",
    "refresh display",
@@ -538,18 +455,23 @@ Cstring command_commands[] = {
 };
 
 static command_kind command_command_values[] = {
-   (command_kind) -1,    /* The first 4 are special. */
-   (command_kind) -1,
-   (command_kind) -1,
-   (command_kind) -1,
    command_quit,
    command_quit,
+   command_simple_mods,
+   command_all_mods,
+   command_toggle_conc_levels,
+   command_toggle_act_phan,
+#ifdef SINGERS
+   command_toggle_singer,
+   command_toggle_singer_backward,
+#endif
    command_undo,
    command_erase,
    command_abort,
    command_create_comment,
    command_change_outfile,
    command_change_header,
+   command_getout,
    command_getout,
    command_save_pic,
    command_refresh,
@@ -618,6 +540,17 @@ static resolve_command_kind resolve_command_values[] = {
 };
 
 
+/* BEWARE!!  These two lists must stay in step. */
+
+int num_extra_resolve_commands = 1;     /* The short list of extra things we present during a resolve. */
+
+Cstring extra_resolve_commands[] = {
+   "write this sequence"
+};
+
+static command_kind extra_resolve_command_values[] = {
+   command_getout
+};
 
 
 
@@ -626,15 +559,17 @@ static resolve_command_kind resolve_command_values[] = {
 
 Private void get_user_input(char *prompt, int which)
 {
-   char extended_input[200];
+   char extended_input[INPUT_TEXTLINE_SIZE+1];
    char *p;
    char c;
+   int nc;
    int matches;
 
    user_match.valid = FALSE;
    user_input_prompt = prompt;
    user_input[0] = '\0';
-   user_input_size = 0;
+   static_ss.full_input[0] = '\0';
+   static_ss.full_input_size = 0;
    function_key_expansion = (char *) 0;
    put_line(user_input_prompt);
 
@@ -642,12 +577,104 @@ Private void get_user_input(char *prompt, int which)
       /* At this point we always have the concatenation of "user_input_prompt"
          and "user_input" displayed on the current line. */
 
-      c = get_char_input();
+      start_expand:
+
+      if (function_key_expansion) {
+         c = *function_key_expansion++;
+         if (c) goto got_char;
+         else function_key_expansion = (char *) 0;
+      }
+
+      nc = get_char();
+
+      if (nc >= 128) {
+         if (nc == 129 && which == match_startup_commands) {
+            put_line("heads start\n");                               /* F1 */
+            current_text_line++;
+            user_match.kind = ui_start_select;
+            user_match.index = (int) start_select_heads_start;
+            return;
+         }
+         else if (nc == 130)
+            function_key_expansion = "two calls in succession\n";    /* F2 */
+         else if (nc == 131)
+            function_key_expansion = "pick random call\n";           /* F3 */
+         else if (nc == 132)
+            function_key_expansion = "resolve\n";                    /* F4 */
+         else if (nc == 133)
+            function_key_expansion = "refresh display\n";            /* F5 */
+         else if (nc == 134)
+            function_key_expansion = "simple modifications\n";       /* F6 */
+         else if (nc == 135)
+            function_key_expansion = "toggle concept levels\n";      /* F7 */
+         else if (nc == 136)
+            function_key_expansion = "<anything>";                   /* F8 */
+         else if (nc == 137)
+            function_key_expansion = "undo last call\n";             /* F9 */
+         else if (nc == 138)
+            function_key_expansion = "write this sequence\n";        /* F10 */
+         else if (nc == 139)
+            function_key_expansion = "pick level call\n";            /* F11 */
+         else if (nc == 140)
+            function_key_expansion = "accept current choice\n";      /* F12 */
+
+         else if (nc == 161 && which == match_startup_commands) {
+            put_line("sides start\n");                               /* sF1 */
+            current_text_line++;
+            user_match.kind = ui_start_select;
+            user_match.index = (int) start_select_sides_start;
+            return;
+         }
+         else if (nc == 162)
+            function_key_expansion = "twice\n";                      /* sF2 */
+         else if (nc == 163)
+            function_key_expansion = "pick concept call\n";          /* sF3 */
+         else if (nc == 164)
+            function_key_expansion = "reconcile\n";                  /* sF4 */
+         else if (nc == 165)
+            function_key_expansion = "keep picture\n";               /* sF5 */
+         else if (nc == 166)
+            function_key_expansion = "allow modifications\n";        /* sF6 */
+         else if (nc == 167)
+            function_key_expansion = "toggle active phantoms\n";     /* sF7 */
+         else if (nc == 168)
+            function_key_expansion = "<concept>";                    /* sF8 */
+         else if (nc == 169)
+            function_key_expansion = "abort the search\n";           /* sF9 */
+         else if (nc == 170)
+            function_key_expansion = "change output file\n";         /* sF10 */
+         else if (nc == 171)
+            function_key_expansion = "pick 8 person level call\n";   /* sF11 */
+
+         else if (nc == 193 && which == match_startup_commands) {
+            put_line("just as they are\n");                          /* cF1 */
+            current_text_line++;
+            user_match.kind = ui_start_select;
+            user_match.index = (int) start_select_as_they_are;
+            return;
+         }
+         else if (nc == 195)
+            function_key_expansion = "pick simple call\n";           /* cF3 */
+         else if (nc == 196)
+            function_key_expansion = "normalize\n";                  /* cF4 */
+         else if (nc == 197)
+            function_key_expansion = "insert a comment\n";           /* cF5 */
+
+         else nc = ' ';
+      }
+
+      c = nc;
+
+      if (function_key_expansion)
+         goto start_expand;
+
+      got_char:
 
       if ((c == '\b') || (c == DEL)) {
-         if (user_input_size > 0) {
-            user_input_size--;
-            user_input[user_input_size] = '\0';
+         if (static_ss.full_input_size > 0) {
+            static_ss.full_input_size--;
+            user_input[static_ss.full_input_size] = '\0';
+            static_ss.full_input[static_ss.full_input_size] = '\0';
             function_key_expansion = (char *) 0;
             rubout(); /* Update the display. */
          }
@@ -657,7 +684,7 @@ Private void get_user_input(char *prompt, int which)
          put_line ("\n");
          current_text_line++;
          start_matches();
-         (void) match_user_input(user_input, which, (match_result *) 0, (char *) 0, show_match, c == '?');
+         (void) match_user_input(which, (match_result *) 0, (char *) 0, show_match, c == '?');
          put_line ("\n");     /* Write a blank line. */
          current_text_line++;
          put_line(user_input_prompt);   /* Redisplay the current line. */
@@ -667,7 +694,7 @@ Private void get_user_input(char *prompt, int which)
 
       if (c == ' ') {
          /* extend only to one space, inclusive */
-         matches = match_user_input(user_input, which, &user_match, extended_input, (show_function) 0, FALSE);
+         matches = match_user_input(which, &user_match, extended_input, (show_function) 0, FALSE);
          p = extended_input;
          if (*p) {
             while (*p) {
@@ -689,7 +716,7 @@ Private void get_user_input(char *prompt, int which)
             bell();
       }
       else if ((c == '\n') || (c == '\r')) {
-         matches = match_user_input(user_input, which, &user_match, extended_input, (show_function) 0, FALSE);
+         matches = match_user_input(which, &user_match, extended_input, (show_function) 0, FALSE);
 
          /* We forbid a match consisting of two or more "direct parse" concepts, such as "grand cross".
             Direct parse concepts may only be stacked if they are followed by a call.
@@ -729,7 +756,7 @@ Private void get_user_input(char *prompt, int which)
          current_text_line++;   /* Count that line for erasure. */
       }
       else if (c == '\t' || c == '\033') {
-         (void) match_user_input(user_input, which, &user_match, extended_input, (show_function) 0, FALSE);
+         (void) match_user_input(which, &user_match, extended_input, (show_function) 0, FALSE);
          p = extended_input;
          if (*p) {
             while (*p)
@@ -742,7 +769,8 @@ Private void get_user_input(char *prompt, int which)
       }
       else if (c == ('U'&'\037')) { /* C-u: kill line */
          user_input[0] = '\0';
-         user_input_size = 0;
+         static_ss.full_input[0] = '\0';
+         static_ss.full_input_size = 0;
          function_key_expansion = (char *) 0;
          clear_line();           /* Clear the current line */
          put_line(user_input_prompt);    /* Redisplay the prompt. */
@@ -765,19 +793,31 @@ Private void get_user_input(char *prompt, int which)
 
 
 
-static char *banner_prompts[] = {
-    (char *) 0,
-    "[AP] ",
-    "[all concepts] ",
-    "[all concepts,AP] ",
-    "[simple modifications] ",
-    "[AP,simple modifications] ",
-    "[all concepts,simple modifications] ",
-    "[all concepts,AP,simple modifications] ",
-    "[all modifications] ",
-    "[AP,all modifications] ",
-    "[all concepts,all modifications] ",
-    "[all concepts,AP,all modifications] "};
+
+static char *banner_prompts0[] = {
+    "",
+    "simple modifications",
+    "all modifications",
+    "??"};
+
+static char *banner_prompts1[] = {
+    "",
+    "all concepts",
+    "??",
+    "??"};
+
+static char *banner_prompts2[] = {
+    "",
+    "AP",
+    "??",
+    "??"};
+
+static char *banner_prompts3[] = {
+    "",
+    "singer",
+    "reverse singer",
+    "??"};
+
 
 
 
@@ -789,6 +829,7 @@ extern uims_reply uims_get_startup_command(void)
 }
 
 
+/* This returns TRUE if it fails, e.g. the user waves the mouse away. */
 extern long_boolean uims_get_call_command(call_list_kind *call_menu, uims_reply *reply_p)
 {
    char prompt_buffer[200];
@@ -797,21 +838,57 @@ extern long_boolean uims_get_call_command(call_list_kind *call_menu, uims_reply 
 
    call_menu_ptr = call_menu;
 
-   check_menu:
-
    if (allowing_modifications)
-       *call_menu_ptr = call_list_any;
+      *call_menu_ptr = call_list_any;
 
    prompt_ptr = prompt_buffer;
+   prompt_buffer[0] = '\0';
 
    /* Put any necessary special things into the prompt. */
 
-   banner_mode = (allowing_modifications << 2) |
-                 (allowing_all_concepts ? 2 : 0) |
-                 (using_active_phantoms ? 1 : 0);
+   banner_mode = (singing_call_mode << 6) |
+                 (using_active_phantoms << 4) |
+                 (allowing_all_concepts << 2) |
+                 (allowing_modifications);
 
-   if (banner_mode != 0)
-      (void) sprintf(prompt_ptr, "%s%s", banner_prompts[banner_mode], call_menu_prompts[*call_menu_ptr]);
+   if (banner_mode != 0) {
+      int i;
+      int comma = 0;
+
+      (void) strcat(prompt_buffer, "[");
+
+      for (i=0 ; i<4 ; i++,banner_mode>>=2) {
+
+
+         if (banner_mode&3) {
+
+            if (comma) (void) strcat(prompt_buffer, ",");
+
+            if (i==0) {
+               (void) strcat(prompt_buffer, banner_prompts0[banner_mode&3]);
+            }
+
+            if (i==1) {
+               (void) strcat(prompt_buffer, banner_prompts1[banner_mode&3]);
+            }
+
+            if (i==2) {
+               (void) strcat(prompt_buffer, banner_prompts2[banner_mode&3]);
+            }
+
+            if (i==3) {
+               (void) strcat(prompt_buffer, banner_prompts3[banner_mode&3]);
+            }
+
+            comma |= banner_mode&3;
+         }
+      }
+
+
+
+      (void) strcat(prompt_buffer, "] ");
+      (void) strcat(prompt_buffer, call_menu_prompts[*call_menu_ptr]);
+   }
    else
       prompt_ptr = call_menu_prompts[*call_menu_ptr];
 
@@ -821,30 +898,10 @@ extern long_boolean uims_get_call_command(call_list_kind *call_menu, uims_reply 
 
    uims_menu_index = user_match.index;
 
-   if (user_match.kind == ui_command_select) {
-      if (user_match.index < NUM_SPECIAL_COMMANDS) {
-         if (user_match.index == SPECIAL_COMMAND_SIMPLE_MODS) {
-             /* Increment "allowing_modifications" up to a maximum of 2. */
-             if (allowing_modifications != 2) allowing_modifications++;
-         }
-         else if (user_match.index == SPECIAL_COMMAND_ALLOW_MODS) {
-             allowing_modifications = 2;
-         }
-         else if (user_match.index == SPECIAL_COMMAND_TOGGLE_CONCEPT_LEVELS) {
-             allowing_all_concepts = !allowing_all_concepts;
-         }
-         else {   /* Must be SPECIAL_COMMAND_TOGGLE_ACTIVE_PHANTOMS. */
-             using_active_phantoms = !using_active_phantoms;
-         }
-
-         goto check_menu;
-      }
-
+   if (user_match.kind == ui_command_select)
       /* Translate the command. */
-      uims_menu_index = command_command_values[user_match.index];
-   }
-
-   if (user_match.kind == ui_call_select) {
+      uims_menu_index = (int) command_command_values[user_match.index];
+   else if (user_match.kind == ui_call_select) {
       modifier_block *mods;
       callspec_block *save_call = main_call_lists[parse_state.call_list_to_use][uims_menu_index];
 
@@ -895,7 +952,13 @@ extern long_boolean uims_get_call_command(call_list_kind *call_menu, uims_reply 
 extern uims_reply uims_get_resolve_command(void)
 {
    get_user_input("Enter search command> ", (int) match_resolve_commands);
-   uims_menu_index = resolve_command_values[user_match.index];
+
+   if (user_match.kind == ui_command_select) {
+      uims_menu_index = extra_resolve_command_values[user_match.index];
+   }
+   else
+      uims_menu_index = resolve_command_values[user_match.index];
+
    return user_match.kind;
 }
 
@@ -957,7 +1020,7 @@ Private int confirm(char *question)
 
     for (;;) {
         put_line(question);
-        c = get_char_input();
+        c = get_char();
         if ((c=='n') || (c=='N')) {
             put_line("no\n");
             current_text_line++;
@@ -1107,7 +1170,7 @@ extern int uims_do_direction_popup(void)
       user_match = saved_match;
       return retval;
    }
-}    
+}
 
 extern int uims_do_tagger_popup(int tagger_class)
 {

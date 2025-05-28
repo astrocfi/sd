@@ -1001,7 +1001,7 @@ Private void build_database(call_list_mode_t call_list_mode)
 
       np = call_root->name;
 
-      while (c = *np++) {
+      while ((c = *np++)) {
          if (c == '@') {
             if ((c = *np++) == '6' || c == 'k')
                call_root->callflagsh |= CFLAGH__REQUIRES_SELECTOR;

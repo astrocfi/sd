@@ -27,7 +27,7 @@
    database format version. */
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 73
+#define DATABASE_FORMAT_VERSION 74
 
 
 
@@ -377,7 +377,9 @@ typedef enum {
    sq_ctr_pts_rh,
    sq_ctr_pts_lh,
    sq_said_tgl,
-   sq_didnt_say_tgl
+   sq_didnt_say_tgl,
+   sq_all_sel,
+   sq_none_sel
 } search_qualifier;
 
 /* These restrictions are "overloaded" -- their meaning depends on the starting setup. */

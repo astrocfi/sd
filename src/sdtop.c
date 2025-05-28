@@ -96,6 +96,33 @@ Private void compress_setup(expand_thing *thing, setup *stuff)
 
 
 
+Private id_bit_table spec_3dmd_ctr1x4[] = {
+   {ID2_NCTR1X4, ID2_NCTR1X4, ID2_NCTR1X4, ID2_NCTR1X4},
+   {ID2_NCTR1X4, ID2_NCTR1X4, ID2_NCTR1X4, ID2_NCTR1X4},
+   {ID2_NCTR1X4, ID2_NCTR1X4, ID2_NCTR1X4, ID2_NCTR1X4},
+   {ID2_NCTR1X4, ID2_NCTR1X4, ID2_NCTR1X4, ID2_NCTR1X4},
+   {ID2_CTR1X4, ID2_CTR1X4, ID2_CTR1X4, ID2_CTR1X4},
+   {ID2_CTR1X4, ID2_CTR1X4, ID2_CTR1X4, ID2_CTR1X4},
+   {ID2_NCTR1X4, ID2_NCTR1X4, ID2_NCTR1X4, ID2_NCTR1X4},
+   {ID2_NCTR1X4, ID2_NCTR1X4, ID2_NCTR1X4, ID2_NCTR1X4},
+   {ID2_NCTR1X4, ID2_NCTR1X4, ID2_NCTR1X4, ID2_NCTR1X4},
+   {ID2_NCTR1X4, ID2_NCTR1X4, ID2_NCTR1X4, ID2_NCTR1X4},
+   {ID2_CTR1X4, ID2_CTR1X4, ID2_CTR1X4, ID2_CTR1X4},
+   {ID2_CTR1X4, ID2_CTR1X4, ID2_CTR1X4, ID2_CTR1X4}};
+
+Private id_bit_table spec_3dmd_ctr1x6[] = {
+   {ID2_NCTR1X6 | ID2_NCTR1X4, ID2_NCTR1X6 | ID2_NCTR1X4, ID2_NCTR1X6 | ID2_NCTR1X4, ID2_NCTR1X6 | ID2_NCTR1X4},
+   {ID2_NCTR1X6 | ID2_NCTR1X4, ID2_NCTR1X6 | ID2_NCTR1X4, ID2_NCTR1X6 | ID2_NCTR1X4, ID2_NCTR1X6 | ID2_NCTR1X4},
+   {ID2_NCTR1X6 | ID2_NCTR1X4, ID2_NCTR1X6 | ID2_NCTR1X4, ID2_NCTR1X6 | ID2_NCTR1X4, ID2_NCTR1X6 | ID2_NCTR1X4},
+   {ID2_CTR1X6 | ID2_NCTR1X4, ID2_CTR1X6 | ID2_NCTR1X4, ID2_CTR1X6 | ID2_NCTR1X4, ID2_CTR1X6 | ID2_NCTR1X4},
+   {ID2_CTR1X6 | ID2_CTR1X4, ID2_CTR1X6 | ID2_CTR1X4, ID2_CTR1X6 | ID2_CTR1X4, ID2_CTR1X6 | ID2_CTR1X4},
+   {ID2_CTR1X6 | ID2_CTR1X4, ID2_CTR1X6 | ID2_CTR1X4, ID2_CTR1X6 | ID2_CTR1X4, ID2_CTR1X6 | ID2_CTR1X4},
+   {ID2_NCTR1X6 | ID2_NCTR1X4, ID2_NCTR1X6 | ID2_NCTR1X4, ID2_NCTR1X6 | ID2_NCTR1X4, ID2_NCTR1X6 | ID2_NCTR1X4},
+   {ID2_NCTR1X6 | ID2_NCTR1X4, ID2_NCTR1X6 | ID2_NCTR1X4, ID2_NCTR1X6 | ID2_NCTR1X4, ID2_NCTR1X6 | ID2_NCTR1X4},
+   {ID2_NCTR1X6 | ID2_NCTR1X4, ID2_NCTR1X6 | ID2_NCTR1X4, ID2_NCTR1X6 | ID2_NCTR1X4, ID2_NCTR1X6 | ID2_NCTR1X4},
+   {ID2_CTR1X6 | ID2_NCTR1X4, ID2_CTR1X6 | ID2_NCTR1X4, ID2_CTR1X6 | ID2_NCTR1X4, ID2_CTR1X6 | ID2_NCTR1X4},
+   {ID2_CTR1X6 | ID2_CTR1X4, ID2_CTR1X6 | ID2_CTR1X4, ID2_CTR1X6 | ID2_CTR1X4, ID2_CTR1X6 | ID2_CTR1X4},
+   {ID2_CTR1X6 | ID2_CTR1X4, ID2_CTR1X6 | ID2_CTR1X4, ID2_CTR1X6 | ID2_CTR1X4, ID2_CTR1X6 | ID2_CTR1X4}};
 
 
 extern void update_id_bits(setup *ss)
@@ -138,8 +165,13 @@ extern void update_id_bits(setup *ss)
          if (livemask == 0xE79UL) ptr = id_bit_table_3x4_h;
          else if (livemask != 0xF3CUL && livemask != 0xCF3UL) ptr = (id_bit_table *) 0;
          break;
-      case s3dmd:    /* Must have all points, and centers of center diamond only, occupied. */
-         if (livemask != 0x9E7UL) ptr = (id_bit_table *) 0;
+      case s3dmd:
+         /* The standard table requires all points, and centers of center diamond only, occupied.
+            But first we look for a few other configurations. */
+
+         if ((livemask & 0xE38UL) == 0xE38UL) ptr = spec_3dmd_ctr1x6;          /* Look for center 1x6 occupied. */
+         else if ((livemask & 0xC30UL) == 0xC30UL) ptr = spec_3dmd_ctr1x4;     /* Look for center 1x6 having center 1x4 occupied. */
+         else if (livemask != 0x9E7UL) ptr = (id_bit_table *) 0;
          break;
    }
 
@@ -1163,6 +1195,12 @@ extern void normalize_setup(setup *ss, normalize_action action)
          (void) copy_person(ss, 2, ss, 5);
          (void) copy_person(ss, 3, ss, 6);
       }
+      else if ((ss->kind == s3x1dmd) && (!(ss->people[3].id1 | ss->people[7].id1))) {
+         ss->kind = s1x6;
+         (void) copy_person(ss, 3, ss, 4);
+         (void) copy_person(ss, 4, ss, 5);
+         (void) copy_person(ss, 5, ss, 6);
+      }
       else if ((ss->kind == s1x3dmd) && (!(ss->people[0].id1 | ss->people[4].id1))) {
          ss->kind = s_1x2dmd;
          (void) copy_person(ss, 0, ss, 1);
@@ -1181,7 +1219,7 @@ extern void normalize_setup(setup *ss, normalize_action action)
          own the <anyone>, <call1> by <call2>. */
 
    if (action >= normalize_before_isolated_call) {
-      if (ss->kind == s_qtag) {
+      if (ss->kind == s_qtag || ss->kind == s_hrglass) {
 
 #ifdef never
 

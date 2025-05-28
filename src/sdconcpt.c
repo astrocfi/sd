@@ -1339,7 +1339,7 @@ Private void do_concept_diagnose(
    move(ss, FALSE, result);
 
    sprintf(junk, "Command flags: 0x%08X, result flags: 0x%08X.",
-         ss->cmd.cmd_misc_flags, result->result_flags);
+         (unsigned int) ss->cmd.cmd_misc_flags, (unsigned int) result->result_flags);
    fail(junk);
 }
 
@@ -3000,36 +3000,9 @@ Private void do_concept_centers_or_ends(
    parse_block *parseptr,
    setup *result)
 {
-   calldef_schema schema;
-   int k = parseptr->concept->value.arg1;
-   uint32 concbits = 0;
-
-   switch (k&6) {
-      case 2:
-         schema = schema_concentric_6_2;
-         break;
-      case 4:
-         schema = schema_concentric_2_6;
-         break;
-      case 6:
-         schema = schema_concentric;
-         concbits = DFM1_CONC_CONCENTRIC_RULES;
-         break;
-      default:
-         if (setup_attrs[ss->kind].setup_limits == 3)
-            schema = schema_single_concentric;
-         else
-            schema = schema_concentric;
-         break;
-   }
-
-   if (k&1)
-      concentric_move(ss, (setup_command *) 0, &ss->cmd,
-               schema, 0, concbits, result);
-   else
-      concentric_move(ss, &ss->cmd, (setup_command *) 0,
-               schema, 0, 0, result);
+   selective_move(ss, parseptr, 4, 0, (selector_kind) parseptr->concept->value.arg1, parseptr->concept->value.arg2, result);
 }
+
 
 
 Private void do_concept_centers_and_ends(
@@ -3037,33 +3010,19 @@ Private void do_concept_centers_and_ends(
    parse_block *parseptr,
    setup *result)
 {
-   calldef_schema schema;
-   setup_command subsid_cmd;
-   uint32 concbits = 0;
-
-   switch (parseptr->concept->value.arg1) {
-      case 2:
-         schema = schema_concentric_6_2;
-         break;
-      case 3:
-         schema = schema_concentric_2_6;
-         break;
-      case 7:
-         schema = schema_concentric;
-         concbits = DFM1_CONC_CONCENTRIC_RULES;
-         break;
-      default:
-         if (setup_attrs[ss->kind].setup_limits == 3)
-            schema = schema_single_concentric;
-         else
-            schema = schema_concentric;
-         break;
-   }
-
-   subsid_cmd = ss->cmd;
-   subsid_cmd.parseptr = parseptr->subsidiary_root;
-   concentric_move(ss, &ss->cmd, &subsid_cmd, schema, 0, concbits, result);
+   selective_move(ss, parseptr, 5, 0, (selector_kind) parseptr->concept->value.arg1, parseptr->concept->value.arg2, result);
 }
+
+
+
+Private void so_and_so_only_move(
+   setup *ss,
+   parse_block *parseptr,
+   setup *result)
+{
+   selective_move(ss, parseptr, parseptr->concept->value.arg1, parseptr->concept->value.arg2, parseptr->selector, FALSE, result);
+}
+
 
 
 Private void do_concept_triple_diamonds(
@@ -3411,7 +3370,7 @@ Private void do_concept_all_8(
          /* First, it's clearly only legal if on squared-set spots. */
 
          if ((    ss->people[0].id1 | ss->people[3].id1 | ss->people[4].id1 | ss->people[7].id1 |
-                  ss->people[8].id1 | ss->people[11].id1 | ss->people[12].id1 | ss->people[15].id1 != 0))
+                  ss->people[8].id1 | ss->people[11].id1 | ss->people[12].id1 | ss->people[15].id1) != 0)
             fail("Must be on squared-set spots.");
 
          /* Next, we remember whether people started in line-like or column-like elongation. */

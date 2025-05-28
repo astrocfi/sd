@@ -42,6 +42,8 @@
    map_rig_trngl4
    map_s8_tgl4
    map_p8_tgl4
+   map_phan_trngl4a
+   map_phan_trngl4b
    map_2x2v
    map_2x4_magic
    map_qtg_magic
@@ -1399,7 +1401,7 @@ Private cm_hunk concthing_dhrglass = {0x33, 0, 0x11, 0,
               &mapbone6_1x2v,
                    0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0}};
 
-Private cm_hunk concthing_xwave = {0x33, 0x77, 0x11, 0,
+Private cm_hunk concthing_xwave = {0x33, 0x77, 0x11, 0x55,
    {&oddmap1x4_1x4,
          0,   &oddmap2x1dmd_1x2,
                    &oddmap1x2_2x1dmd,
@@ -2412,6 +2414,8 @@ startinfo startinfolist[] = {
         map_thing map_rig_trngl4        = {{6, 7, 0, 5,                       2, 3, 4, 1},                           MPKIND__SPLIT,       2,  s_rigger,s_trngl4, 0x10D, 0};
         map_thing map_s8_tgl4           = {{2, 7, 5, 0,                       6, 3, 1, 4},                           MPKIND__REMOVED,     2,  s_bone, s_trngl4,  0x207, 0};
         map_thing map_p8_tgl4           = {{0, 2, 7, 5,                       4, 6, 3, 1},                           MPKIND__REMOVED,     2,  s_ptpd, s_trngl4,  0x10D, 0};
+        map_thing map_phan_trngl4a      = {{9, 11, 7, 5,                      1, 3, 15, 13},                         MPKIND__SPLIT,       2,  s_c1phan,s_trngl4, 0x208, 0};
+        map_thing map_phan_trngl4b      = {{12, 14, 0, 2,                     4, 6, 8, 10},                          MPKIND__SPLIT,       2,  s_c1phan,s_trngl4, 0x108, 0};
         map_thing map_2x2v              = {{0, 3,                             1, 2},                                 MPKIND__SPLIT,       2,  s2x2,   s1x2,      0x005, 0};
         map_thing map_2x4_magic         = {{0, 6, 3, 5,                       7, 1, 4, 2},                           MPKIND__NONE,        2,  s2x4,   s1x4,      0x000, 0};
         map_thing map_qtg_magic         = {{0, 2, 5, 3,                       1, 7, 4, 6},                           MPKIND__NONE,        2,  s_qtag, sdmd,      0x005, 0};
@@ -2713,7 +2717,7 @@ Private map_hunk mm_tgl_2 = {{{0, 0},
                              {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0}}};
 
 Private map_hunk mm_tg4_2 = {{{0, 0},
-                    {0, &map_rig_trngl4},
+                    {&map_phan_trngl4a, &map_rig_trngl4},
                              {0, &map_s8_tgl4},
                                       {0, 0},  {0, 0},  {0, 0},  {&map_lh_bigd, 0},
                                                                           {&map_rh_bigd, 0},

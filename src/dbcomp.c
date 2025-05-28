@@ -24,7 +24,7 @@
 
 #define DB_FMT_STR(name) DB_FMT_NUM(name)
 #define DB_FMT_NUM(number) #number
-static char *id="@(#)$Sd: dbcomp.c for db fmt " DB_FMT_STR(DATABASE_FORMAT_VERSION) "      wba@apollo.hp.com  15 Jan 95 $";
+volatile char *id="@(#)$Sd: dbcomp.c for db fmt " DB_FMT_STR(DATABASE_FORMAT_VERSION) "      wba@apollo.hp.com  15 Jan 95 $";
 
 #include "paths.h"
 
@@ -481,6 +481,8 @@ char *qualtab[] = {
    "ctr_pts_lh",
    "said_triangle",
    "didnt_say_triangle",
+   "all_sel",
+   "none_sel",
    ""};
 
 /* This table is keyed to "call_restriction". */
@@ -510,8 +512,8 @@ char *crtab[] = {
    "opposite_sex",
    "quarterbox_or_col",
    "quarterbox_or_magic_col",
-   "all_ns",
-   "all_ew",
+   "???",
+   "???",
    "???",
    "???",
    "???",
@@ -782,6 +784,7 @@ char *predtab[] = {
    "outposter_is_cw",
    "outposter_is_ccw",
    "nexttrnglspot_is_tboned",
+   "nextinttrnglspot_is_tboned",
    "next62spot_is_tboned",
    "next_magic62spot_is_tboned",
    "next_galaxyspot_is_tboned",

@@ -31,7 +31,7 @@
 
 
 #include "sd.h"
-extern void impose_assumption_and_move(setup *ss, setup *result);
+
 
 
 Private void innards(
@@ -51,6 +51,7 @@ Private void innards(
    int vert = maps->vert;
    int arity = maps->arity;
    int insize = setup_attrs[maps->inner_kind].setup_limits+1;
+   long_boolean nonisotropic_1x2 = FALSE;
    uint32 mysticflag = ss->cmd.cmd_misc2_flags;
    mpkind map_kind = maps->map_kind;
 
@@ -90,6 +91,19 @@ Private void innards(
       }
    }
 
+   if (     arity == 2 &&
+            z[0].kind == s1x2 &&
+            z[1].kind == s1x2 &&
+            map_kind == MPKIND__SPLIT &&
+            ((z[0].rotation ^ z[1].rotation) & 1) &&
+            !(ss->cmd.cmd_misc_flags & CMD_MISC__MATRIX_CONCEPT)) {
+      canonicalize_rotation(&z[0]);
+      canonicalize_rotation(&z[1]);
+      result->result_flags = get_multiple_parallel_resultflags(z, arity);
+      nonisotropic_1x2 = TRUE;
+      goto noniso1;
+   }
+
    if (fix_n_results(arity, z)) {
       result->kind = nothing;
       result->result_flags = 0;
@@ -127,6 +141,8 @@ Private void innards(
       goto finish;
    }
 
+   noniso1:
+
    /* If this is a special map that flips some setup upside-down, do so. */
    if (arity == 2) {
       if (rot & 0x200)
@@ -151,7 +167,6 @@ Private void innards(
          if ((z[0].rotation&3) != 0) z[1].rotation += 2;
          break;
    }
-
 
    for (i=0; i<arity; i++) {
       z[i].rotation += (rot & 1) + vert;
@@ -211,6 +226,20 @@ Private void innards(
          fail("Can't do this matrix call.");
    }
 
+   if (nonisotropic_1x2) {
+      if ((z[0].rotation) & 1) {
+         final_map = &map_tgl4_2;
+      }
+      else {
+         z[0].rotation += 2;
+         canonicalize_rotation(&z[0]);
+         final_map = &map_tgl4_1;
+      }
+
+      result->rotation = 1;
+      goto noniso2;
+   }
+
    if (maps == &map_tgl4_1 && z[0].kind == s1x2) {
       final_map = &map_tgl4_2;
    }
@@ -235,16 +264,22 @@ Private void innards(
       if (hunk) final_map = hunk->f[map_kind][(z[0].rotation & 1)];
    }
 
+   result->rotation = z[0].rotation;
+
+   noniso2:
+
    if (arity == 2) {
       if (z[0].rotation & 2) {
          if      (final_map == &map_s6_trngl) final_map = &map_b6_trngl;
          else if (final_map == &map_s8_tgl4) {}
+         else if (final_map == &map_phan_trngl4a) {}
          else if (final_map == &map_rig_trngl4) final_map = &map_bone_trngl4;
          else final_map = 0;        /* Raise an error. */
       }
       if (z[1].rotation & 2) {
          if      (final_map == &map_s6_trngl) {}
          else if (final_map == &map_s8_tgl4) final_map = &map_p8_tgl4;
+         else if (final_map == &map_phan_trngl4a) final_map = &map_phan_trngl4b;
          else if (final_map == &map_rig_trngl4) {}
          else final_map = 0;       /* Raise an error. */
       }
@@ -284,7 +319,6 @@ Private void innards(
    }
 
    insize = setup_attrs[final_map->inner_kind].setup_limits+1;
-   result->rotation = z[0].rotation;
 
    if (final_map == &map_tgl4_2)
       result->rotation += 2;
@@ -296,7 +330,7 @@ Private void innards(
 
    /* For single arity maps, a marker of 2 means to give warning. */
    if ((arity == 1) && (final_map->maps[insize] == 2)) warn(warn__offset_gone);
-   /* For triple arity maps, a marker of 2\3 means to give warning. */
+   /* For triple arity maps, a marker of 3 means to give warning. */
    if ((arity == 3) && (final_map->maps[insize*3] == 3)) warn(warn__overlap_gone);
 
    /* If this is a special map that expects some setup to have been flipped upside-down, do so. */

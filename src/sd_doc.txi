@@ -5,8 +5,8 @@
 @settitle Sd
 @c @subtitle A Square Dance Caller's Helper
 @c
-@set Time-stamp: February 5, 1996
-@set sd-version 31.61
+@set Time-stamp: March 21, 1996
+@set sd-version 31.63
 @set full-manual
 @c %**end of header
 @iftex
@@ -85,7 +85,6 @@ This is the summary table of contents:
 * Calling::                     Calling
 * Resolving and Searching::     Resolving and Searching
 * Misc Commands::               Miscellaneous Commands
-* Macintosh Overview::          Overview of the Macintosh Version
 * Terminal Interface::          Terminal Interface
 * Linguistic Idiosyncrasies::   Linguistic Idiosyncrasies
 * Using Off-Level Concepts::    Using Off-Level Concepts
@@ -156,20 +155,6 @@ Miscellaneous Commands
 * Keeping Pictures::            Keeping Pictures of the Setup
 * Changing Modes::              Changing Modes
 
-Macintosh Overview
-
-* Mac Requirements::            Macintosh System Requirements
-* Initial Dialog::              The Initial Dialog
-* Mac Abridgement::             Abridgement
-* Creating Dictionaries::       Creating New Call Dictionaries
-* Preferences::                 Saving Preferences
-* Sequence Files::              Sequence Files
-* Log Files::                   Log Files
-* Sequence Window::             The Sequence Window
-* Call Window::                 The Call Window
-* Keyboard Input::              Keyboard Input
-* Hiding Couple Numbers::       Hiding Couple Numbers on the Macintosh
-
 Terminal Interface
 
 * Sdtty::                       The @code{sdtty} program
@@ -189,6 +174,7 @@ Call Notes
 * Little/Little More/Plenty::   Little/Little More/Plenty
 * Flip Back::                   Flip Back
 * Face <DIRECTION>::            Face <DIRECTION>
+* Grand Chain 8::               Grand Chain 8
 * Snag Circulate::              Snag Circulate
 * Funny Square Thru::           Funny Square Thru
 * Rotate from Columns::         Rotate from Columns
@@ -229,16 +215,11 @@ or
 sdtty c2
 @end example
 
-The Macintosh version of @code{sd} is typically run by double clicking
-on the application icon, which looks like the square dance symbol (two
-overlapping squares).  An information window is displayed at startup;
-this window can be dismissed by clicking anywhere on it with the mouse.
-
 In addition to calls and concepts, there are program commands for actions
 such as automatic resolves, exiting the program, and other miscellaneous
 actions.  @xref{Resolving and Searching}.
 In @code{sd}, they are found in the menu in the upper
-left corner (or in pull-down menus on the Macintosh version).
+left corner.
 In @code{sdtty}, just type the name of the command.
 
 With some experimentation, you should be able to use the program without
@@ -395,9 +376,6 @@ followed by @code{<ESCAPE>} is still a good way to proceed.
 @t{sd} level @t{-write_list} filename
 @t{sd} level @t{-write_full_list} filename
 @end display
-
-Note: This chapter does not apply to the Macintosh version.
-@xref{Macintosh Overview}.
 
 The program is normally invoked with a single argument---the level.
 This is one of the following: @code{m} (mainstream), @code{p} (plus),
@@ -746,11 +724,6 @@ operation.  The selections here, and almost everywhere else in the
 program, are made by moving the mouse until the cursor is over the
 chosen item, and pressing Mouse Button 1 (typically the left button).
 
-If you are using the Macintosh version of @code{sd}, the startup screen
-displays a set of buttons in the input pane of the sequence window.
-These buttons correspond to the startup menu commands described in this
-chapter.
-
 @menu
 * Heads/Sides Start::           starting with the heads or sides
 * 1P2P Lines::                  starting with 1P2P lines
@@ -796,8 +769,6 @@ The @code{just as they are} button starts the sequence on squared set spots,
 without having the heads or sides begin.  This is nearly useless, since
 the program doesn't know about the @i{all 4 couples} concept or about
 thars or alamo rings.  This shortcoming may be fixed in the future.
-
-In the Macintosh version, this button is labelled @code{Squared Set}.
 
 @node Entering Calls, Entering Concepts, Startup Screen, Calling
 @section Entering Calls
@@ -872,8 +843,7 @@ menus, like @code{pass <DIRECTION>} or @code{spin a windmill, outsides <DIRECTIO
 
 When using @code{sd}, after you click on such a call, a popup will appear listing
 all possible directions.  Click on the one you want.  If you decide you don't
-want that call, just move the mouse away from the popup.  (On the Macintosh, click
-the @code{Cancel} button.)
+want that call, just move the mouse away from the popup.
 
 When using @code{sdtty}, you can either type @code{pass <DIRECTION>} literally,
 and then answer the question that the program will ask, or just type the actual call,
@@ -891,8 +861,7 @@ When using @code{sd}, a popup will appear listing the numbers from 1 to 8.  Clic
 on the one you want.  If the keyword was @code{<N/4>}, click on the value of @code{N}.
 The program will turn it into @code{N/4} (or, if @code{N}=2, into @code{1/2}).
 If you decide you don't
-want that call, just move the mouse away from the popup.  (On the Macintosh, click
-the @code{Cancel} button.)
+want that call, just move the mouse away from the popup.
 
 When using @code{sdtty}, you can either type the keyword literally,
 and then answer the question, or just type the number just as you want it to
@@ -1041,11 +1010,6 @@ or @code{<ANYTHING>} are listed before letters.
 Hence, @code{<ANYONE> run} and @code{<ATC> your neighbor}
 will be found near the beginning of the menu.
 
-If you are using the Macintosh version of @code{sd}, the call menu
-is displayed as a utility window.  Calls are selected by double
-clicking.  In addition, calls can be entered by typing their name,
-as described in @ref{Keyboard Input}.
-
 @node Scrolling,  , Call Menus, Entering Calls
 @subsection Scrolling
 
@@ -1058,9 +1022,6 @@ same amount.  Clicking the middle mouse button will move the window to a
 percentage down the menu that is equal to the percentage that the cursor
 is down from the top of the scroll bar.  If the mouse is moved while the
 middle mouse button is held down, the menu will scroll in real time.
-
-If you are using the Macintosh version of @code{sd}, the call window
-can be scrolled using the scroll bar at the right of the window.
 
 @node Entering Concepts, Call Modifications, Entering Calls, Calling
 @section Entering Concepts
@@ -1120,9 +1081,6 @@ When you click on any concept, the universal call menu replaces whatever
 special call menu may have been presented, since the set of legal calls
 becomes highly unpredictable.
 
-If you are using the Macintosh version of @code{sd}, concepts are
-displayed in the call window, following the calls.
-
 Some concepts require a numeric designator (e.g., @code{interrupt after the 3rd
 part}) or a people designator (e.g., @code{girls are stable}).  The handling
 is the same as for calls that require these.
@@ -1136,11 +1094,6 @@ The program recognizes the level at which concepts are legal, but lets you
 override this if you wish.  The @code{toggle concept levels} command toggles
 (turns on or off) the state of off-level concept permission.
 @xref{Changing Modes} and @ref{Using Off-Level Concepts}.
-
-In the Macintosh program, use the @code{Allow Any Concept} command in the
-@code{Sequence} menu to enable or disable off-level concepts.
-When off-level concepts are enabled,
-their use will cause a warning to be inserted into the transcript.
 
 @node Call Modifications, Discarding Concepts After an Error, Entering Concepts, Calling
 @section Call Modifications
@@ -1173,11 +1126,6 @@ However, there is a better way to get these particular types of modifications---
 The result will look natural, for example, @code{in roll motivate}.
 In @code{sdtty} you can type in such a call directly.
 
-If you are using the Macintosh version, call modification is enabled
-using the @code{Modify Next Call} submenu of the @code{Sequence} menu.
-Three commands are provided, which either disable call modification,
-enable simple modifications, or enable all modifications.
-
 When either level of modifications is selected, the line at the top of
 the text transcript area indicates this.  Also, the universal call menu
 is chosen whenever modifications are enabled, since the possibilities are
@@ -1187,8 +1135,7 @@ When you click on a call for which modifications are possible, a popup
 will appear saying something like @code{The box circulate can be
 replaced.  Do you want to replace it?}  If you want to replace the
 designated call, click in the active area of the popup; otherwise, move
-the mouse away.  (On the Macintosh, click either the @code{Replace} or
-the @code{Don't Replace} button.)  If you indicate that you want to
+the mouse away.  If you indicate that you want to
 replace the call, you will then be prompted for the replacement call.
 Enter it, along with any concepts.  In some cases you may be asked
 repeatedly about various modifications.  For example, in @i{motivate},
@@ -1273,13 +1220,10 @@ getouts from a variety of setups.  If the sequence needs an
 first, the program reports that too.
 
 Whenever the @samp{resolve} message appears, you can end the sequence and
-write it to a file by selecting @code{end this sequence}.
+write it to a file by selecting @code{write this sequence}.
 In @code{sd}, the button for this is in the group in the upper left
 portion of the screen.  In @code{sdtty}, simply type the command, with
 the usual completion mechanism.
-If you are using the Macintosh version, you can save the sequence to
-a file at any time, whether or not it is resolved, using the @code{Save}
-or @code{Save As} commands.
 
 There are
 at least three ways to resolve a sequence: you can wander into a resolve
@@ -1314,14 +1258,14 @@ the current resolution to be added to the sequence exactly as though
 you had entered those calls manually.
 
 Selecting @code{abort the search}, @code{exit the search}, @code{quit the search},
-or @code{undo the search} (or @code{Cancel} in the Macintosh
-version) will throw away all of the saved resolutions and leave resolve
+or @code{undo the search}
+will throw away all of the saved resolutions and leave resolve
 mode, but will not destroy the sequence.  The sequence will be left just
 as it was before @code{resolve} was selected.
 
-Selecting anything else, such as @code{end this sequence},
+Selecting anything else, such as @code{write this sequence},
 is equivalent to @code{accept} followed by whatever that action
-is.  So, for example, you can select @code{end this sequence} as soon as
+is.  So, for example, you can select @code{write this sequence} as soon as
 you see a resolution that you like.
 
 When using @code{sdtty}, these special commands are typed into the completing reader
@@ -1353,7 +1297,7 @@ another 5000 attempts if you wish.
 
 @i{Remember that the @code{resolve} operation by itself does not write
 the sequence to a file.}  You will not be able to print a sequence until
-it has been written to a file.  You must give the @code{end this sequence}
+it has been written to a file.  You must give the @code{write this sequence}
 command to write out the sequence.
 
 @node Normalize and Standardize, Pick Random Call, Resolving, Resolving and Searching
@@ -1474,12 +1418,6 @@ the generated calls will be placed.  When this is in the right place,
 select @code{find another} to find the first reconcile.  You can
 change the insertion point at any time.
 
-If you are using the Macintosh version, you change the insertion point
-using a utility window labelled @code{reconcile point} that appears
-after you perform the @code{Resolve} command.  Simply drag the dotted
-line to the place in the sequence where you want the generated calls to
-be inserted.
-
 Reconciles are extremely difficult to find---much harder than resolves.
 To avoid frustration, make the insertion point be at a place where the
 setup is very simple and a large number of calls are legal.  We recommend
@@ -1502,7 +1440,7 @@ before doing the reconcile, you know that any inserted sequence will
 have to be gender-preserving anyway, so calls like @samp{star thru} and
 @samp{boys kickoff} will be okay.
 
-@node Misc Commands, Macintosh Overview, Resolving and Searching, Top
+@node Misc Commands, Terminal Interface, Resolving and Searching, Top
 @chapter Miscellaneous Commands
 
 This section describes commands that are not concerned with generating
@@ -1522,7 +1460,8 @@ sequences.
 @section Saving the Sequence
 
 At any time when the sequence is resolved (for example, after a successful
-use of the @code{resolve} operation), you can select @code{end this sequence}.
+use of the @code{resolve} operation), you can select @code{write this sequence}.
+(This command used to be called @code{end this sequence}.)
 This will append the current sequence to the current output file, and then
 go back to the startup screen.  You will be given an opportunity to enter
 a line of text to be used as a subtitle, for example ``very hard interlace''
@@ -1530,13 +1469,9 @@ or ``stupid biggie.''  The written sequence will also be annotated with the
 level, the current date and time, and the version numbers of the program and
 database.
 
-Until you have done the @code{end this sequence} operation, the sequence is not
+Until you have done the @code{write this sequence} operation, the sequence is not
 written to disk and you cannot start writing a new sequence.  Just
 resolving isn't enough.
-
-If you are using the Macintosh version, files are handled differently.
-@xref{Sequence Files}.  To specify a label to be used as a subtitle,
-use the @code{Label} command in the @code{Sequence} menu.
 
 @node Change Output File, Change Title, Save Sequence, Misc Commands
 @section Changing the Output File
@@ -1550,9 +1485,6 @@ written will stay under their old name.
 
 When the initialization file is used, any change in the output file name will
 be written back to that file at the end of the session.
-
-If you are using the Macintosh version, files are handled differently.
-@xref{Sequence Files}.
 
 @node Change Title, Abort/Exit/Undo, Change Output File, Misc Commands
 @section Changing the Title
@@ -1576,7 +1508,7 @@ be written back to that file at the end of the session.
 
 If you select the @code{exit} command, the program will exit.  If a
 sequence is in progress, the program will ask for confirmation first.
-(Remember that a sequence is not finished until the @code{end this
+(Remember that a sequence is not finished until the @code{write this
 sequence} command has been given.)
 In @code{sd} with the X Window System, using your window manager
 to send a @code{Delete Window} message to the
@@ -1587,10 +1519,6 @@ upper left corner of the @code{sd} window.
 If you select the @code{abort} command, the program will abort the sequence
 but not exit.  It will go back to the startup screen to allow you to
 start another sequence.  It will ask for confirmation first.
-
-If you are using the Macintosh version, you end a sequence and start a
-new one using the @code{End This Sequence} command in the
-@code{Sequence} menu.
 
 If you select the @code{undo} command while no call is partially entered,
 that is, while no concepts have been entered, the program will erase
@@ -1629,17 +1557,6 @@ sequence is very difficult and you believe it may be necessary to say
 something helpful then like ``check a parallelogram with boys in the center
 box'') click on @code{keep picture}.
 
-If you are using the Macintosh version, the picture stored in a sequence
-file or log file uses alphanumeric characters, even if the sequence
-window displays graphical symbols.  Similarly, if you copy text from the
-sequence window, the copied text will use alphanumeric characters for
-pictures.  However, if you have an appropriate symbol font, you can
-recreate the pictures using graphical symbols by using the @code{Copy
-Special Font} command in the @code{Edit} menu.  This command is like the
-@code{Copy} command except that pictures are represented using encoded
-text, where each graphical symbol is represented by a single ASCII
-character.
-
 @node Changing Modes, , Keeping Pictures, Misc Commands
 @section Changing Modes
 
@@ -1659,278 +1576,7 @@ that are not on the specified calling level.  @xref{Entering Concepts}.
 The @code{toggle active phantoms} command changes the persistence of
 phantoms during certain calls.  @xref{Assume Waves}.
 
-@node Macintosh Overview, Terminal Interface, Misc Commands, Top
-@chapter Overview of the Macintosh Version
-
-The Macintosh version of @code{sd} supports a graphical user interface
-that can be driven entirely using the mouse.  The user interface is
-generally similar to the X Window System user interface of @code{sd}, although
-it has been adapted to follow standard Macintosh user interface
-conventions, such as the use of pull down menus.  This section of the
-document describes the unique features of the Macintosh user interface.
-In the remainder of the document, comments are inserted to explain
-specific differences in the Macintosh user interface.
-
-In addition to mouse input, the Macintosh version of @code{sd} supports
-keyboard input of calls and most commands (similar to @code{sdtty}).
-Keyboard input can be used interchangeably with mouse input.  Keyboard
-input is most useful when you know exactly what you want to do (and you
-are a good typist).  Menus are useful when you want to select from a
-display of available options.
-
-@menu
-* Mac Requirements::            Macintosh System Requirements
-* Initial Dialog::              The Initial Dialog
-* Mac Abridgement::             Abridgement
-* Creating Dictionaries::       Creating New Call Dictionaries
-* Preferences::                 Saving Preferences
-* Sequence Files::              Sequence Files
-* Log Files::                   Log Files
-* Sequence Window::             The Sequence Window
-* Call Window::                 The Call Window
-* Keyboard Input::              Keyboard Input
-* Hiding Couple Numbers::       Hiding Couple Numbers on the Macintosh
-@end menu
-
-@node Mac Requirements, Initial Dialog,  , Macintosh Overview
-@section Macintosh System Requirements
-
-The Macintosh version of @code{sd} was designed to run on System 6 or 7;
-however, it has not been extensively tested on System 6.  If you have
-difficultly running @code{sd}, please contact the authors.
-
-The amount of memory required to run @code{sd} depends upon the calling
-level you select.  Under normal use, @code{sd} runs in a 1Mb partition
-at level @code{c4}.  If you are running System 7, this means you should
-have at least 3Mb of RAM.
-
-@node Initial Dialog, Mac Abridgement, Mac Requirements, Macintosh Overview
-@section The Initial Dialog
-
-An information window is displayed at startup;
-this window can be dismissed by clicking anywhere on it with the mouse.
-
-The initial dialog is entitled @code{sd options}.  It allows you to
-select the calling level from a pull down menu.  The available levels
-are: @code{mainstream}, @code{plus}, @code{a1}, @code{a2}, @code{c1},
-@code{c2}, @code{c3a}, @code{c3}, @code{c3x}, @code{c4a}, or @code{c4}.
-(An additional level @code{all} is provided primarily for use in
-debugging call definitions.)  The calling level determines the calls and
-concepts that will be made available, according to our best guess of
-what the levels mean.
-
-Once you have selected the desired calling level, click the @code{New
-Sequence} button to begin a new call sequence.  The program will read a
-set of call definitions from a call dictionary and then bring up the
-sequence window.  Reading the call dictionary can take a few seconds or
-even minutes, depending up the speed of your machine and the calling
-level you have selected.
-
-@node Mac Abridgement, Creating Dictionaries, Initial Dialog, Macintosh Overview
-@section Abridgement
-
-@code{Sd} allows you to alter the set of calls it knows about by
-striking out specific calls.  This feature can be used, for example,
-when teaching a class, so that calls that have not yet been taught
-will not be used.
-
-To use this feature, you must first prepare a text file containing the
-names of the calls to be avoided.  The @code{Sd} menu contains a
-@code{Save Call List} command that can be used to create a file
-containing the names of all calls defined at the selected level.  The
-file selection dialog that appears includes a check box labelled
-@code{Include Lower Level Calls} that allows you to select whether to
-include calls defined at lower levels or only include those calls
-introduced at the current calling level.  Once the text file has been
-created, you can edit it with a text editor to contain only the names of
-calls you want to avoid.  The @code{Save Call List} command can be used
-only while the initial dialog is displayed.
-
-The initial dialog contains a button labelled @code{Abridge}.  This
-button brings up a file selection dialog, which you use to select the
-file containing the list of calls to avoid.  These calls are removed
-from the menus for the duration of this execution of the program.  When
-this feature is used, every sequence listing will say @samp{(abridged)}
-after its level.
-
-The lines in the abridgement file must always be in exactly the same
-format as the strings that are written out by the @code{Save Call List}
-command.  The program has no tolerance for creative capitalization,
-stray blanks, or other variations.  Any line in the file that does not
-match a call in the menu is simply ignored.  Because the names of calls
-are sometimes changed in new versions of @code{sd}, you may need to
-reconstruct your abridgement file after installing a new version of
-@code{sd}.
-
-To write sequences for a group that is learning C2, for example, use the
-@code{Save Call List} command, turn off the @code{Include Lower Level
-Calls} check box, and write to a file, say @file{my_group}.  Use a text
-editor to delete from the file @file{my_group} those C2 calls that the
-group has learned, i.e., those calls @emph{not} to be avoided.  Then, when
-writing sequences, use the @code{Abridge} button and select the file
-@file{my_group}.  As the group learns new C2 calls, delete the
-corresponding lines from the file @file{my_group}.  That file always
-contains the calls that they don't yet know.  When the file goes to
-zero, they know the whole list.
-
-
-@node Creating Dictionaries, Preferences, Mac Abridgement, Macintosh Overview
-@section Creating New Call Dictionaries
-
-@code{Sd} obtains its definitions of calls from a file called a call
-dictionary.  A standard call dictionary is supplied with @code{sd}.
-you can also create your own call dictionary and select among multiple
-call dictionaries.
-
-A call dictionary is created by compiling a call definition file.  A
-call definition file is a text file containing call definitions in a
-particular format.  The format is described in a separate document
-@file{db_doc.txt}.  To compile a call dictionary, use the @code{Compile
-Call Dictionary} command in the @code{Sd} menu.
-
-To select a call dictionary other than the default one, use the
-@code{Select Call Dictionary} command in the @code{Sd} menu.  The
-@code{Select Call Dictionary} command can be used only while the initial
-dialog is displayed.
-
-The default call dictionary is the file @file{sd_calls.dat} in the
-directory containing the @code{sd} application file.
-
-
-@node Preferences, Sequence Files, Creating Dictionaries, Macintosh Overview
-@section Preferences
-
-@code{Sd} allows you to alter certain options that are retained between
-executions of the program.  These options are displayed and modified
-using a dialog box entitled @code{sd Preferences}.  To bring up this
-dialog box, use the @code{Preferences} command in the @code{Sd} menu.
-Using the preferences dialog box, you can change the default calling
-level displayed in the initial dialog box when you start the program.
-You can also choose whether to display formations using graphical
-symbols or alphanumeric characters and whether or not to display each
-couple using different colors.  Using different colors is visually
-attractive, but it slows down the program considerably.
-
-
-@node Sequence Files, Log Files, Preferences, Macintosh Overview
-@section Sequence Files
-
-The Macintosh version of @code{sd} stores the call sequences you create
-as individual files.  These files are text files and can be edited with
-a text editor or included in a document.  The current sequence can be
-saved at any time using the @code{Save} or @code{Save As} commands in
-the @code{File} menu.
-
-
-@node Log Files, Sequence Window, Sequence Files, Macintosh Overview
-@section Log Files
-
-In addition to storing call sequences as individual files, the Macintosh
-version of @code{sd} allows you to collect multiple sequences in a
-single text file, called a log file.  In this way, you can create a
-single file containing an entire evening's program, for example.
-
-The commands for writing log files are contained in the @code{Log}
-submenu of the @code{File} menu.  Each command writes a copy of the
-current sequence to a log file.  The @code{New Log} command writes a
-copy of the current sequence to a new log file.  The @code{Append to
-File} allows you to select an existing log file; the current sequence is
-appended to that file.  The @code{Append} command appends a copy of the
-current sequence to the log file you specified previously.  The
-name of the current log file is displayed in the title bar of the
-sequence window with the prefix @code{log:}.
-
-Although these commands can be used at any time, they are normally used
-only when you have completed a sequence.
-
-
-@node Sequence Window, Call Window, Log Files, Macintosh Overview
-@section The Sequence Window
-
-When working on a call sequence, the sequence and the current setup
-are displayed in a window called the sequence window.  The title of the
-sequence window displays the name of the sequence file, if any.
-
-The top portion of the sequence window displays a transcript of the
-current call sequence.  Intermixed with the calls are pictures that show
-the setup at that point in the sequence.  Normally, only two pictures
-are shown, the current setup and the setup prior to the last call.  (The
-@code{Keep Picture} command can be used to retain additional pictures in
-the transcript.)  The transcript also includes warning messages, error
-message, and input prompts.  The transcript pane supports the @code{Copy}
-command for copying text from the pane to the clipboard.
-
-Below the transcript pane is an area used for input.  Depending upon the
-current activity, this area either displays a set of buttons or it shows
-a text box for entering calls.  The text box supports the normal text
-editing operations, including transferring text via the clipboard.
-
-At the bottom of the sequence window is status pane containing three
-boxes.  The calling level is displayed in the left box.  The current
-setup is displayed in the middle box; this name corresponds to the
-current menu of calls displayed by the program.  The right box displays
-status information when resolving a square.
-
-
-@node Call Window, Keyboard Input, Sequence Window, Macintosh Overview
-@section The Call Window
-
-Normally, when you are creating a call sequence, a utility window
-labelled @code{Matching Calls} is displayed that shows the set of calls
-and concepts that are available.  Calls are displayed first, in
-alphabetical order.  Concepts are displayed after the calls, in an order
-that attempts to group related concepts together and put simple concepts
-first.  Finally, the call window displays commands that are equivalent to
-the pull down menu commands.
-
-The calls and concepts that are displayed in the call window are
-selected based on the current setup.  This selection is approximate but
-conservative---appearance of a call or concept on the menu does not
-necessarily mean it is legal, though absence from the menu means that
-the program is fairly certain that it can't be legal.
-
-To select a call, concept, or command from the call window, double click
-on it.
-
-The call window contains a button labelled @code{Validate}.  When you
-click this button, the program performs a more careful check to see
-which concepts and calls are possible from the current setup and removes
-those which are not possible.  This feature is very useful to suggest
-ideas for possible calls in a given situation.  The time needed to
-determine the valid concepts and calls varies depending upon the setup
-and the calling level.  Although normally validation is quite fast, it
-is not fast enough to want to do it automatically after every call.
-
-
-@node Keyboard Input, Hiding Couple Numbers, Call Window, Macintosh Overview
-@section Keyboard Input
-
-When working on a call sequence, you can enter calls and concepts using
-the keyboard.  You can also enter most of the commands that are
-available on menus.  Keyboard input is echoed in the text box in the
-input pane of the sequence window.  Terminate a call, concept, or
-command by typing @key{Return}, @key{Enter}, or clicking on the
-@code{Accept} button.
-
-Keyboard input supports automatic completion, meaning that you need type
-only as much of each word as will make the word unique.  When you type
-@key{Space}, @code{sd} will complete the word for you if it can.  When
-you type @key{Return}, @key{Enter}, or @key{Tab}, @code{sd} will
-complete the entire phrase.  So, for example, if the setup is waves and
-the level is mainstream, you could type just @code{sw th} and
-@key{Return} to get a @i{swing thru}.  In fact, just @code{sw} and
-@key{Return} is enough.  Typing a question mark (@key{?}) is equivalent
-to clicking on the @code{Validate} button.
-
-@node Hiding Couple Numbers, , Keyboard Input, Macintosh Overview
-@section Hiding Couple Numbers
-
-If you are using the Macintosh version and displaying formations using
-graphical symbols, you can select whether or not to display couple
-numbers using the @code{Hide Couple Numbers} or @code{Reveal Couple
-Numbers} commands in the @code{Sequence} menu.
-
-@node Terminal Interface, Linguistic Idiosyncrasies, Macintosh Overview, Top
+@node Terminal Interface, Linguistic Idiosyncrasies, Misc Commands, Top
 @chapter Terminal Interface
 
 @menu
@@ -1985,8 +1631,9 @@ F6    simple modifications      allow modifications
 F7    toggle concept levels     toggle active phantoms
 F8    <anything>                <concept>
 F9    undo last call            abort the search
-F10   end this sequence         change output file
+F10   write this sequence       change output file
 F11   pick level call           pick 8 person level call
+F12   accept current choice
 @end example
 
 All of these except @samp{<anything>} and @samp{<concept>} execute the command
@@ -2149,6 +1796,7 @@ appropriate to get the dancers through the action that you intend.
 * Little/Little More/Plenty::   Little/Little More/Plenty
 * Flip Back::                   Flip Back
 * Face <DIRECTION>::            Face <DIRECTION>
+* Grand Chain 8::               Grand Chain 8
 * Snag Circulate::              Snag Circulate
 * Funny Square Thru::           Funny Square Thru
 * Rotate from Columns::         Rotate from Columns
@@ -2296,7 +1944,7 @@ This call is a special case of the @samp{<ATC> back to a wave} class
 of calls, and is a recognized C1 call.  You should use this name rather
 than the potentially misleading @samp{flip back to a wave}.
 
-@node Face <DIRECTION>, Snag Circulate, Flip Back, Call Notes
+@node Face <DIRECTION>, Grand Chain 8, Flip Back, Call Notes
 @section Face <DIRECTION>
 
 The call @samp{face <DIRECTION>} does not appear to be a genuine
@@ -2308,7 +1956,16 @@ that is commonly expressed as @samp{tag the line, in}.  Note that
 the A2 designators @samp{zig-zag}, etc., are among the permissible
 directions.
 
-@node Snag Circulate, Funny Square Thru, Face <DIRECTION>, Call Notes
+@node Grand Chain 8, Snag Circulate, Face <DIRECTION>, Call Notes
+@section Grand Chain 8
+
+In order to handle all of the nuances of @samp{grand chain 8}, it
+was necessary to make a separate call @samp{grand chain 8 (centers and ends)}.
+Use this call when you want just the centers or ends to do their part,
+or you are using some concept like @samp{central}.  In other circumstances,
+just @samp{grand chain 8} should work.
+
+@node Snag Circulate, Funny Square Thru, Grand Chain 8, Call Notes
 @section Snag Circulate
 
 The @samp{snag} concept, meaning to have the centers do just half of the

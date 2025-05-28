@@ -351,6 +351,8 @@ extern void do_call_in_series(
             break;
 
          /* Otherwise (perhaps the setup was a star) we have no idea how to elongate the setup. */
+         default:
+            break;
       }
    }
 
@@ -1224,7 +1226,7 @@ Private void partner_matrixmove(
    uint32 flags;
    setup people;
    matrix_rec matrix_info[9];
-   int i, j, nump;
+   int i, nump;
 
    if (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT)
       fail("Can't split the setup.");
@@ -1752,7 +1754,6 @@ Private void do_sequential_call(
    }
 
    for (;;) {
-      int j;
 #ifdef CLEAN_CALLSPEC
       parse_block f1;
 #endif
@@ -1764,6 +1765,7 @@ Private void do_sequential_call(
       uint32 conc1, conc2;
       by_def_item *alt_item;
       int use_alternate;
+      long_boolean recompute_id;
       uint32 saved_number_fields = current_number_fields;
 
       /* Now the "index" values (fetch_index and dist_index) contain the
@@ -1830,10 +1832,17 @@ Private void do_sequential_call(
          }
       }
 
-      get_real_subcall(parseptr, this_item, get_mods_for_subcall(new_final_concepts, this_item->modifiersh, callspec->callflagsh), &cp1, &call1, &conc1);
+      /* If an explicit substitution was made, we will recompute the ID bits for the setup.  Normally, we don't,
+         which is why "patch the <anyone>" works.  The original evaluation of the designees is retained after
+         the first part of the call.  But if the user does something like "circle by 1/4 x [leads run]", we
+         want to re-evaluate who the leads are. */
+
+      recompute_id = get_real_subcall(parseptr, this_item, get_mods_for_subcall(new_final_concepts, this_item->modifiersh, callspec->callflagsh), &cp1, &call1, &conc1);
 
       if (DFM1_REPEAT_N_ALTERNATE & this_mod1)
-         get_real_subcall(parseptr, alt_item, get_mods_for_subcall(new_final_concepts, alt_item->modifiersh, callspec->callflagsh), &cp2, &call2, &conc2);
+         (void) get_real_subcall(parseptr, alt_item, get_mods_for_subcall(new_final_concepts, alt_item->modifiersh, callspec->callflagsh), &cp2, &call2, &conc2);
+
+      if (recompute_id) update_id_bits(result);
 
       /* If this context requires a tagging or scoot call, pass that fact on. */
       if (this_item->call_id >= BASE_CALL_TAGGER0 && this_item->call_id <= BASE_CALL_TAGGER3) conc1 |= FINAL__MUST_BE_TAG;
@@ -2588,12 +2597,12 @@ that probably need to be put in. */
             ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;     /* We think this is the right thing to do. */
             saved_warnings = history[history_ptr+1].warnings;
 
-            get_real_subcall(
+            (void) get_real_subcall(
                parseptr, innerdef,
                get_mods_for_subcall(new_final_concepts, innerdef->modifiersh, callspec->callflagsh),
                &foo1.parseptr, &foo1.callspec, &foo1.cmd_final_flags);
 
-            get_real_subcall(parseptr, outerdef,
+            (void) get_real_subcall(parseptr, outerdef,
                get_mods_for_subcall(new_final_concepts, outerdef->modifiersh, callspec->callflagsh),
                &foo2.parseptr, &foo2.callspec, &foo2.cmd_final_flags);
 

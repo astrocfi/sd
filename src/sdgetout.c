@@ -199,6 +199,10 @@ extern resolve_indicator resolve_p(setup *s)
 {
    resolve_indicator k;
    resolve_tester *testptr;
+   uint32 singer_offset = 0;
+
+   if (singing_call_mode == 1) singer_offset = 0200;
+   else if (singing_call_mode == 2) singer_offset = 0600;
 
    switch (s->kind) {
       case s_qtag:
@@ -233,7 +237,7 @@ extern resolve_indicator resolve_p(setup *s)
       case s2x4:
          switch (s->people[5].id1 & 0177) {
             case 0010:
-               switch ((s->people[5].id1 - s->people[4].id1) & 0777) {
+               switch ((s->people[5].id1 - s->people[4].id1 - singer_offset) & 0777) {
                   case 0676: testptr = &test_wv_rg; goto check_me;
                   case 0076: testptr = &test_wv_extrg; goto check_me;
                   case 0276: testptr = &test_wv_crcrg; goto check_me;
@@ -1178,9 +1182,15 @@ extern uims_reply full_resolve(command_kind goal)
 
          history_ptr = huge_history_ptr + this_resolve->size;
 
-         /* Show the history up to the start of the resolve, forcing a picture on the last item. */
+         /* Show the history up to the start of the resolve, forcing a picture on the last item (unless reconciling). */
 
-         display_initial_history(huge_history_ptr-this_resolve->insertion_point, 1);
+         display_initial_history(huge_history_ptr-this_resolve->insertion_point, goal != command_reconcile);
+
+         /* Or a dotted line if doing a reconcile. */
+         if (goal == command_reconcile) {
+            writestuff("------------------------------------");
+            newline();
+         }
 
          /* Show the resolve itself, without its last item. */
 
@@ -1188,7 +1198,13 @@ extern uims_reply full_resolve(command_kind goal)
             write_history_line(j, (char *) 0, FALSE, file_write_no);
 
          /* Show the last item of the resolve, with a forced picture. */
-         write_history_line(history_ptr-this_resolve->insertion_point, (char *) 0, TRUE, file_write_no);
+         write_history_line(history_ptr-this_resolve->insertion_point, (char *) 0, goal != command_reconcile, file_write_no);
+
+         /* Or a dotted line if doing a reconcile. */
+         if (goal == command_reconcile) {
+            writestuff("------------------------------------");
+            newline();
+         }
 
          /* Show whatever comes after the resolve. */
          for (j=history_ptr-this_resolve->insertion_point+1; j<=history_ptr; j++)

@@ -845,23 +845,37 @@ Private long_boolean cycle_and_wheel_2(setup *real_people, int real_index,
 Private long_boolean vert1(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
-   int this_person = real_people->people[real_index].id1;
-   int other_person = real_people->people[real_index ^ (((real_direction << 1) & 2) | 1)].id1;
-   if (northified_index & 1)
+   if (!(northified_index & 1))
+      return TRUE;
+   else if (real_people->cmd.cmd_assume.assumption == cr_wave_only)
+      return FALSE;
+   else if (real_people->cmd.cmd_assume.assumption == cr_couples_only ||
+            real_people->cmd.cmd_assume.assumption == cr_li_lo)
+      return TRUE;
+   else {
+      int this_person = real_people->people[real_index].id1;
+      int other_person = real_people->people[real_index ^ (((real_direction << 1) & 2) | 1)].id1;
+
       return(((this_person ^ other_person) & DIR_MASK) == 0);
-   else
-      return(TRUE);
+   }
 }
 
 Private long_boolean vert2(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
-   int this_person = real_people->people[real_index].id1;
-   int other_person = real_people->people[real_index ^ (((real_direction << 1) & 2) | 1)].id1;
-   if (northified_index & 1)
+   if (!(northified_index & 1))
+      return FALSE;
+   else if (real_people->cmd.cmd_assume.assumption == cr_wave_only)
+      return TRUE;
+   else if (real_people->cmd.cmd_assume.assumption == cr_couples_only ||
+            real_people->cmd.cmd_assume.assumption == cr_li_lo)
+      return FALSE;
+   else {
+      int this_person = real_people->people[real_index].id1;
+      int other_person = real_people->people[real_index ^ (((real_direction << 1) & 2) | 1)].id1;
+
       return(((this_person ^ other_person) & DIR_MASK) == 2);
-   else
-      return(FALSE);
+   }
 }
 
 /* ARGSUSED */
@@ -1286,106 +1300,76 @@ Private long_boolean outposter_is_ccw(setup *real_people, int real_index,
    }
 }
 
+
+/* -3 means error, -2 means return FALSE, -1 does not occur, and >= 0 means test that person. */
+
+/* ARGSUSED */
+Private long_boolean check_tbone(setup *real_people, int real_index,
+   int real_direction, int northified_index, int *p)
+{
+   int z = p[(real_index<<2) + real_direction];
+
+   if (z == -2)
+      return FALSE;
+   else if (z >= 0) {
+      uint32 zz = real_people->people[z].id1;
+      if (zz & BIT_PERSON)
+         return (zz ^ real_people->people[real_index].id1) & 1;
+   }
+   fail("Can't determine where to go or which way to face.");
+   /* NOTREACHED */
+}
+
+
+
 /* ARGSUSED */
 Private long_boolean nexttrnglspot_is_tboned(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
-   int z;
-   static int aa[4][3] = {
-      {-3, -2, -2}, {2, -2, 0}, {-3, 0, 0}, {1, 0, -2}};
-   int this_person = real_people->people[real_index].id1;
+   static int aa[12] = {-3, 2, -3, 1,     -2, -2, 0, 0,    -2, 0, 0, -2};
+   return check_tbone(real_people, real_index, real_direction, northified_index, aa);
+}
 
-   z = aa[real_direction][real_index];
-   if (z < -2)
-      fail("Can't determine where to go or which way to face.");
-   else if (z == -2)
-      return(FALSE);
-   else {
-      z = real_people->people[z].id1;
-      if (z & BIT_PERSON)
-         return((z ^ this_person) & 1);
-      else {
-         fail("Can't determine where to go or which way to face.");
-	 /* NOTREACHED */
-      }
-   }
+/* ARGSUSED */
+Private long_boolean nextinttrnglspot_is_tboned(setup *real_people, int real_index,
+   int real_direction, int northified_index)
+{
+   static int bb[24] = {-2, -2, 4, 4,     -3, 3, -3, 5,     -2, 4, 4, -2,     1, 1, -2, -2,     -3, 2, -3, 0,     1, -2, -2, 1};
+   static int cc[24] = {2, 2, -2, -2,      5, -2, -2, 5,    0, -3, 4, -3,     -2, -2, 5, 5,     -2, 2, 2, -2,     1, -3, 3, -3};
+   return check_tbone(real_people, real_index, real_direction, northified_index,
+         (real_people->kind == s_short6) ? bb : cc);
 }
 
 /* ARGSUSED */
 Private long_boolean next62spot_is_tboned(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
-   int z;
-   static int aa[4][6] = {
-      {-2, -3, -2, -2, -3, -2}, {-2, 2, -2, -2, 3, -2}, {-2, -3, -2, -2, -3, -2}, {-2, 0, -2, -2, 5, -2}};
-   int this_person = real_people->people[real_index].id1;
-
-   z = aa[real_direction][real_index];
-   if (z < -2)
-      fail("Can't determine where to go or which way to face.");
-   else if (z == -2)
-      return(FALSE);
-   else {
-      z = real_people->people[z].id1;
-      if (z & BIT_PERSON)
-         return((z ^ this_person) & 1);
-      else {
-         fail("Can't determine where to go or which way to face.");
-	 /* NOTREACHED */
-     }
-   }
+   static int aa[24] = {-2, -2, -2, -2,    -3, 2, -3, 0,    -2, -2, -2, -2,    -2, -2, -2, -2,    -3, 3, -3, 5,    -2, -2, -2, -2};
+   return check_tbone(real_people, real_index, real_direction, northified_index, aa);
 }
 
 /* ARGSUSED */
 Private long_boolean next_magic62spot_is_tboned(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
-   int z;
-   static int aa[4][6] = {
-      {-3, -3, -3, -3, -3, -3}, {-2, 3, -2, -2, 2, -2}, {-3, -3, -3, -3, -3, -3}, {-2, 5, -2, -2, 0, -2}};
-   int this_person = real_people->people[real_index].id1;
-
-   z = aa[real_direction][real_index];
-   if (z < -2)
-      fail("Can't determine where to go or which way to face.");
-   else if (z == -2)
-      return(FALSE);
-   else {
-      z = real_people->people[z].id1;
-      if (z & BIT_PERSON)
-         return((z ^ this_person) & 1);
-      else {
-         fail("Can't determine where to go or which way to face."); 
-         /* NOTREACHED */
-      }
-   }
+   static int aa[24] = {-3, -2, -3, -2,    -3, 3, -3, 5,     -3, -2, -3, -2,     -3, -2, -3, -2,     -3, 2, -3, 0,     -3, -2, -3, -2};
+   return check_tbone(real_people, real_index, real_direction, northified_index, aa);
 }
 
 /* ARGSUSED */
 Private long_boolean next_galaxyspot_is_tboned(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
-   int z;
-   static int aa[4][8] = {
-      { 1,  2, -3,  2,  3,  4, -3,  0},
-      {-3,  2,  3,  4, -3,  4,  5,  6},
-      { 7,  0, -3,  4,  5,  6, -3,  6},
-      {-3,  0,  1,  2, -3,  6,  7,  0}};
-   int this_person = real_people->people[real_index].id1;
+   static int aa[32] = {1, -3, 7, -3,     2, 2, 0, 0,     -3, 3, -3, 1,     2, 4, 4, 2,    3, -3, 5, -3,     4, 4, 6, 6,    -3, 5, -3, 7,      0, 6, 6, 0};
 
    /* We always return true for centers.  That way
       the centers can reverse flip a galaxy even if the
       next point does not exist.  Maybe this isn't a good way
       to do it, and we need another predicate.  Sigh. */
-   if (real_index & 1) return(TRUE);
 
-   z = aa[real_direction][real_index];
-   if (z >= -2) {
-      z = real_people->people[z].id1;
-      if (z & BIT_PERSON) return((z ^ this_person) & 1);
-   }
-   fail("Can't determine where to go or which way to face.");
-   /* NOTREACHED */
+   if (real_index & 1) return TRUE;
+
+   return check_tbone(real_people, real_index, real_direction, northified_index, aa);
 }
 
 /* ARGSUSED */
@@ -1795,6 +1779,7 @@ long_boolean (*pred_table[])(
       outposter_is_cw,                 /* "outposter_is_cw" */
       outposter_is_ccw,                /* "outposter_is_ccw" */
       nexttrnglspot_is_tboned,         /* "nexttrnglspot_is_tboned" */
+      nextinttrnglspot_is_tboned,      /* "nextinttrnglspot_is_tboned" */
       next62spot_is_tboned,            /* "next62spot_is_tboned" */
       next_magic62spot_is_tboned,      /* "next_magic62spot_is_tboned" */
       next_galaxyspot_is_tboned,       /* "next_galaxyspot_is_tboned" */

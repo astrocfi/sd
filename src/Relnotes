@@ -1,12 +1,86 @@
-		   RELEASE NOTES FOR SD VERSION 31.61
-		 Database version = 31.61 format = 72.
+		   RELEASE NOTES FOR SD VERSION 31.63
+		 Database version = 31.63 format = 74.
                 X11 UI version 1.16, SDTTY UI version 1.6.
 
+
+****** Changes as of version 31.63 ******
+
+The section of the manual describing concepts has been extensively
+rewritten.  It now contains a complete list of all available concepts.
+Please read that section.  It begins at approximately page 55.
+
+The command "end this sequence" has been changed to "write this
+sequence".  The old name still exists for compatibility, but
+may be withdrawn in the future.  The command "write this sequence"
+can be issued during a resolve.  It is equivalent to "accept current
+choice" followed by "write this sequence", that is, it immediately
+writes the card with the currently displayed resolve.
+
+The problems that made it impossible to run sdtty on a PC by
+using the "MS-DOS" prompt under Windows appears to be fixed.
+You can now click on the "MS-DOS" prompt, change to the directory
+in which sdtty is stored, and run it.  You can also run it the old
+way, by leaving Windows.  Double-click the button in the upper left
+corner of the program manager window.
+
++++ The changes described below for the specification of file names
++++ are described in much more detail in the file "sessions", which
++++ is distributed with the program.
+
+You can specify a file name of "*" or "+" (that's right, just an
+asterisk or plus sign) in either the "change output file" operation
+or in the "sdi.ini" file.  When such a file name is given, Sd will
+generate a file name containing the current date and level, and use
+that name instead of the asterisk or plus sign.  Typical file names
+will look like "15feb96.C3A" or "15feb96a.C3A".
+
+If the given file name was "*", the generated name will be unique
+for each session of using the program.  If, for example, the name
+"15feb96.C3A" already exists, the program will put a letter after
+the date, as in "15feb96a.C3A", until it finds an unused name.
+This way, the program will never write over an existing file, and
+no sequences should ever get lost.  This will be useful for people
+who process the output file with a word processing program.  It
+has been observed that, once a file has been processed by a word
+processor, any further sequences that Sdtty adds to it will not be
+recognized by the word processor, and so it is important that Sdtty
+never add sequences to an existing file.
+
+If the given file name was "+", the generated name will not necessarily
+be unique, and Sdtty may use a file that already exists.  In that case,
+sequences will be appended to the end of the file.  Existing sequences
+will not be lost, assuming that no word processing program interferes.
+
+The intention of this feature is that it be used with the initialization
+file.  If your initialization file "sd.ini" contains:
+
+sequence.C3A         C3A             12      NACC, June 1995
+*                    C1              36      Cambridge
+*                    A2               9      NESRDC/1995
+
+(note that some file names are given as asterisks), then, whenever you
+start with one of these sessions, a generated file name will be used.
+For example, if you specify session choice number 2, the level will
+be C1, the file will be something like "15feb96.C1", and the title
+on each card will be "Cambridge".
+
+When choices are added to the initialization file (by typing a number
+one higher than the last existing choice), the file name is still
+set to "sequence.C1" or whatever.  After creating the new choice,
+you may use the "change output file" command to set it to asterisk
+or plus sign.  Just type an asterisk or plus sign as the new file name.
+
+
+****** Changes as of version 31.62 ******
+
+New calls: square chain thru, <anyone> to a wave.  Similarly for
+square chain the top, square thru, etc.
 
 ****** Changes as of version 31.61 ******
 
 The section of the manual describing concepts has been extensively
 rewritten.  It now contains a complete list of all available concepts.
+Please read that section.  It begins at approximately page 55.
 
 New concept: "<anyone> lead for a", used with a call like cast a
 shadow or link up, is done from a promemade-like setup.  The

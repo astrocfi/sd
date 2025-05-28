@@ -1811,6 +1811,10 @@ nexttrnglspot_is_tboned
       for the subject, or if there is no person on the target spot and such a
       person is needed.
 
+nextinttrnglspot_is_tboned
+      applies to short6 or bone6 only.  This is similar to "nexttrnglspot_is_tboned",
+      but analyzes an interlocked triangle circulate.
+
 next62spot_is_tboned
       applies to short6 only.  This is intended to determine which way a
       person should face after doing the outsides part of a 6x2 acey-deucey.
@@ -2014,7 +2018,8 @@ restriction is violated, as follows:
                telling the dancers to do their own part isn't the right fix.
    "forbidden" -- an error is given.  The call is simply not permitted.
 
-/* These restrictions are "overloaded" -- their meaning depends on the starting setup. */
+These restrictions are "overloaded" -- their meaning depends on the starting setup.
+There are a number of internal ones not shown here.  See the file ~/sd/restrictions.txt for details.
 
    alwaysfail,                   /* any setup - this always fails (presumably to give the "unusual position" warning) */
    wave_only,                    /* 1x2 - a miniwave; 1x4 - a wave; 2x3 - two "waves" -- people not in tandem with each other;
@@ -2044,15 +2049,6 @@ restriction is violated, as follows:
    opposite_sex,                 /* 2x1 - people must be opposite sexes facing each other */
    quarterbox_or_col,            /* 4x2 - acceptable setup for "triple cross" */
    quarterbox_or_magic_col,      /* 4x2 - acceptable setup for "make magic" */
-   all_ns,                       /* SPECIAL -- used for "assume" stuff - 1x4/1x8/2x4 is lines */
-   all_ew,                       /* SPECIAL -- used for "assume" stuff - 1x4/1x8/2x4 is columns */
-   gen_1_4_tag,                  /* SPECIAL -- used for "assume" stuff */
-   gen_3_4_tag,                  /* SPECIAL -- used for "assume" stuff */
-   jleft,                        /* SPECIAL -- used for "assume" stuff */
-   jright,                       /* SPECIAL -- used for "assume" stuff */
-   ijleft,                       /* SPECIAL -- used for "assume" stuff */
-   ijright,                      /* SPECIAL -- used for "assume" stuff */
-   li_lo                         /* SPECIAL -- used for "assume" stuff */
 
                            APPENDIX C -- QUALIFIERS
 
@@ -2099,6 +2095,8 @@ restriction is violated, as follows:
    dmd_ctrs_1f,                  /* dmd - the centers (2 of them) are in a couple */
    said_triangle,                /* short6/pshort6 - caller said the word "triangle" */
    didnt_say_triangle            /* short6/pshort6 - caller didn't say the word "triangle" */
+   all_sel                       /* 1x1/1x2 - everyone in the setup is selected */
+   none_sel                      /* 1x1/1x2 - no one in the setup is selected */
 
 
                            APPENDIX D -- TOP LEVEL FLAGS

@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-1995  William B. Ackerman.
+    Copyright (C) 1990-1996  William B. Ackerman.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -280,7 +280,7 @@ Private restriction_thing cwave_2x8     = {8, {0, 1, 2, 3, 4, 5, 6, 7},    {8, 9
 Private restriction_thing cmagic_2x3    = {3, {0, 2, 4},                   {1, 3, 5},                      {0}, {0}, TRUE, chk_wave};            /* check for magic columns */
 Private restriction_thing cmagic_2x4    = {4, {0, 3, 5, 6},                {1, 2, 4, 7},                   {0}, {0}, TRUE, chk_wave};            /* check for magic columns */
 
-Private restriction_thing lio_2x4       = {4, {0, 1, 2, 3},                {4, 5, 6, 7},                   {0}, {0}, TRUE, chk_wave};            /* check for lines in or lines out */
+Private restriction_thing lio_2x4       = {4, {4, 5, 6, 7},                {0, 1, 2, 3},                   {0}, {0}, TRUE, chk_wave};            /* check for lines in or lines out */
 Private restriction_thing invert_2x4    = {4, {0, 3, 5, 6},                {1, 2, 4, 7},                   {0}, {0}, TRUE, chk_wave};            /* check for inverted lines or magic columns */
 Private restriction_thing invert_1x4    = {2, {0, 2},                      {1, 3},                         {0}, {0}, TRUE, chk_wave};            /* check for single inverted line */
 Private restriction_thing invert_2x3    = {3, {0, 2, 4},                   {1, 3, 5},                      {0}, {0}, TRUE, chk_wave};            /* check for magic columns of 3 */
@@ -562,6 +562,7 @@ extern restriction_thing *get_restriction_thing(setup_kind k, assumption_thing t
 
 static char *destcurr;
 static char lastchar;
+static char lastlastchar;
 static char *lastblank;
 static char current_line[MAX_TEXT_LINE_LENGTH];
 static int text_line_count = 0;
@@ -572,6 +573,7 @@ Private void open_text_line(void)
 {
    destcurr = current_line;
    lastchar = ' ';
+   lastlastchar = ' ';
    lastblank = (char *) 0;
 }
 
@@ -587,6 +589,8 @@ extern void clear_screen(void)
 
 Private void writechar(char src)
 {
+   lastlastchar = lastchar;
+
    *destcurr = (lastchar = src);
    if (src == ' ' && destcurr != current_line) lastblank = destcurr;
 
@@ -832,7 +836,7 @@ extern void string_copy(char **dest, Cstring src)
    Cstring f = src;
    char *t = *dest;
 
-   while (*t++ = *f++);
+   while ((*t++ = *f++));
    *dest = t-1;
 }
 
@@ -907,7 +911,7 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
                   k == concept_twice ||
                   k == concept_n_times ||
                   k == concept_some_are_tandem ||
-                  k == concept_snag_mystic && (item->value.arg1 & CMD_MISC2__CTR_END_INV_CONC) ||  /* INVERT SNAG or INVERT MYSTIC */
+                  (k == concept_snag_mystic && (item->value.arg1 & CMD_MISC2__CTR_END_INV_CONC)) ||  /* INVERT SNAG or INVERT MYSTIC */
                   k == concept_some_are_frac_tandem ||
                   (    (k == concept_tandem ||           /* The arg4 test picks out the more esoteric */
                         k == concept_frac_tandem) &&     /* things like "<some setup> work solid". */
@@ -943,23 +947,21 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
                   k == concept_interlocked ||
                   k == concept_standard ||
                   k == concept_fan ||
-                  k == concept_snag_mystic && item->value.arg1 == CMD_MISC2__CTR_END_INVERT ||    /* INVERT */
-                  k == concept_nth_part && item->value.arg1 == 8 ||
-                  k == concept_so_and_so_only && item->value.arg1 == 11 ||
+                  (k == concept_snag_mystic && item->value.arg1 == CMD_MISC2__CTR_END_INVERT) ||    /* INVERT */
+                  (k == concept_nth_part && item->value.arg1 == 8) ||
+                  (k == concept_so_and_so_only && item->value.arg1 == 11) ||
                   k == concept_c1_phantom ||
                   k == concept_yoyo) {
             /* This is an "L" type concept. */
             last_was_t_type = FALSE;
             last_was_l_type = TRUE;
          }
-         else if (k == concept_meta && (item->value.arg1 <= 3 || item->value.arg1 == 7) ||
+         else if ((k == concept_meta && (item->value.arg1 <= 3 || item->value.arg1 == 7)) ||
                   k == concept_matrix) {
             /* This is a "leading T/trailing L" type concept. */
             force = last_was_t_type && !last_was_l_type;;
-/*            comma_after_next_concept |= did_concept; */
             last_was_t_type = FALSE;
             last_was_l_type = TRUE;
-/*            did_concept = FALSE; */
          }
          else {
             /* This is a "T" type concept. */
@@ -981,9 +983,9 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
             parse_block *subsidiary_ptr = local_cptr->subsidiary_root;
 
             if (k == concept_centers_and_ends) {
-               if ((i = item->value.arg1) == 2)
+               if (item->value.arg1 == selector_center6)
                   writestuff("CENTER 6 ");
-               else if (i == 3)
+               else if (item->value.arg1 == selector_center2)
                   writestuff("CENTER 2 ");
                else
                   writestuff("CENTERS ");
@@ -1029,7 +1031,7 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
             request_final_space = TRUE;
 
             if (k == concept_centers_and_ends) {
-               if (item->value.arg1 == 7)
+               if (item->value.arg2)
                   writestuff(" WHILE THE ENDS CONCENTRIC");
                else
                   writestuff(" WHILE THE ENDS");
@@ -1349,8 +1351,8 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
                         break;
                      case 'C':
                         if (use_cross_name) {
-                           if (lastchar == ']') writestuff(" ");
-                           writestuff("cross ");
+                           if (lastchar != ' ' && lastchar != '[') writechar(' ');
+                           writestuff("cross");
                         }
                         np += 2;
                         break;
@@ -1363,8 +1365,8 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
                         break;
                      case 'M':
                         if (use_magic_name) {
-                           if (lastchar == ']') writestuff(" ");
-                           writestuff("magic ");
+                           if (lastchar != ' ' && lastchar != '[') writechar(' ');
+                           writestuff("magic");
                         }
                         np += 2;
                         break;
@@ -1377,8 +1379,11 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
                         break;
                      case 'I':
                         if (use_intlk_name) {
-                           if (lastchar == ']') writestuff(" ");
-                           writestuff("interlocked ");
+                           if (lastchar == 'a' && lastlastchar == ' ')
+                              writestuff("n ");
+                           else if (lastchar != ' ' && lastchar != '[')
+                              writechar(' ');
+                           writestuff("interlocked");
                         }
                         np += 2;
                         break;
@@ -1806,7 +1811,7 @@ extern void write_history_line(int history_index, Const char *header, long_boole
       If this is the first line of the history, and we started with heads of sides,
       change the name of this concept from "centers" to the appropriate thing. */
 
-   if (history_index == 2 && thing->concept->kind == concept_centers_or_ends && thing->concept->value.arg1 == 0) {
+   if (history_index == 2 && thing->concept->kind == concept_centers_or_ends && thing->concept->value.arg1 == selector_centers) {
       centersp = history[1].centersp;
       if (startinfolist[centersp].into_the_middle) {
          writestuff(startinfolist[centersp].name);
@@ -2352,9 +2357,8 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
                goto good;
                goto bad;
             }
-            else {
+            else
                goto good;                 /* We don't understand the setup -- we'd better accept it. */
-            }
          case sq_lwave_only:
             if (ss->kind == s1x2) {
                if ((!(t = ss->people[0].id1 & d_mask) || t == d_south) &&
@@ -2436,9 +2440,8 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
                goto good;
                goto bad;
             }
-            else {
+            else
                goto good;                 /* We don't understand the setup -- we'd better accept it. */
-            }
          case sq_ctrwv_end2fl:
             /* Note that this qualifier is kind of strict.  We won't permit the call "with
                confidence" do be done unless everyone can trivially determine which
@@ -2451,9 +2454,8 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
                goto good;
                goto bad;
             }
-            else {
+            else
                goto good;                 /* We don't understand the setup -- we'd better accept it. */
-            }
          case sq_ctr2fl_endwv:
             /* Note that this qualifier is kind of strict.  We won't permit the call "with
                confidence" do be done unless everyone can trivially determine which
@@ -2466,9 +2468,8 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
                goto good;
                goto bad;
             }
-            else {
+            else
                goto good;                 /* We don't understand the setup -- we'd better accept it. */
-            }
          case sq_true_Z_cw: case sq_true_Z_ccw:
             mask = 0;
 
@@ -2515,7 +2516,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
                goto good;
             else if (ss->kind == s4x6 && (t & 010) == 0) goto good;
             else if (ss->kind == s3x8 && (t & 001) == 0) goto good;
-            break;
+            goto bad;
          case sq_1_4_tag:                      /* dmd or qtag - is a 1/4 tag, i.e. points looking in */
             switch (ss->kind) {
                case sdmd:
@@ -2587,6 +2588,8 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
                         (!ss->people[6].id1 || (ss->people[6].id1 & 2)))
                      goto good;
                   break;
+               default:
+                  goto bad;
             }
             goto bad;
          case sq_trade_by:                  /* 4x1/4x2 - setup is (single) trade-by */
@@ -2604,6 +2607,8 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
                         (!ss->people[5].id1 || (ss->people[5].id1 & 2)) &&
                         (!ss->people[7].id1 || (ss->people[7].id1 & 2)))
                      goto good;
+                  break;
+               default:
                   break;
             }
             goto bad;
@@ -2674,6 +2679,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
 
                if ((search_qualifier) p->qualifier == kkk) goto good;
             }
+            goto bad;
          case sq_ctr_pts_rh:
          case sq_ctr_pts_lh:
             {
@@ -2706,6 +2712,26 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
                kkk = b1 ? sq_ctr_pts_rh : sq_ctr_pts_lh;
                if ((search_qualifier) p->qualifier == kkk) goto good;
             }
+            goto bad;
+         case sq_all_sel:
+            k = 1;     /* K was initialized to zero. */
+            /* FALL THROUGH!!!!!! */
+         case sq_none_sel:
+            /* Now k=0 for "none_sel", and 1 for "all_sel". */
+            if (setup_attrs[ss->kind].setup_limits >= 2) goto good;
+            j = 1;
+            for (idx=0 ; idx<=setup_attrs[ss->kind].setup_limits ; idx++) {
+               if (selectp(ss, idx)) {
+                  if (k==0) j = 0;
+               }
+               else {
+                  if (k!=0) j = 0;
+               }
+            }
+            if (j) goto good;
+            goto bad;
+         default:
+            break;
       }
 
       goto bad;
