@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990, 1991, 1992, 1993, 1994  William B. Ackerman.
+    Copyright (C) 1990-1994  William B. Ackerman.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -406,11 +406,6 @@ char *qualtab[] = {
    "true_Z",
    "ctrwv_end2fl",
    "ctr2fl_endwv",
-   "n_is_0",
-   "n_is_1",
-   "n_is_2",
-   "n_is_3",
-   "n_is_4",
    "split_dixie",
    "not_split_dixie",
    ""};
@@ -431,6 +426,8 @@ char *crtab[] = {
    "3x3couples_only",
    "4x4couples_only",
    "awkward_centers",
+   "diamond_like",
+   "qtag_like",
    "nice_diamonds",
    "magic_only",
    "peelable_box",
@@ -439,6 +436,12 @@ char *crtab[] = {
    "opposite_sex",
    "quarterbox_or_col",
    "quarterbox_or_magic_col",
+   "???",
+   "???",
+   "???",
+   "???",
+   "???",
+   "???",
    "???",
    ""};
 
@@ -526,6 +529,7 @@ char *flagtabh[] = {
    "3x3_is_inherited",
    "4x4_is_inherited",
    "singlefile_is_inherited",
+   "half_is_inherited",
    ""};
 
 /* This table is keyed to the constants "cflag__???".
@@ -550,6 +554,7 @@ char *altdeftabh[] = {
    "3x3",
    "4x4",
    "singlefile",
+   "half",
    ""};
 
 /* This table is keyed to the constants "dfm_***".  These are the heritable
@@ -575,6 +580,7 @@ char *defmodtabh[] = {
    "inherit_3x3",
    "inherit_4x4",
    "inherit_singlefile",
+   "inherit_half",
    ""};
 
 /* This table is keyed to the constants "MTX_???". */
@@ -736,6 +742,7 @@ int call_namelen;
 int call_level;
 int call_startsetup;
 int call_qualifier;
+int call_qual_num;
 int call_endsetup;
 int call_endsetup_in;
 int call_endsetup_out;
@@ -1185,6 +1192,7 @@ static void write_level_3_group(unsigned int arrayflags)
 {
    write_halfword(0x6000 | arrayflags);
    write_halfword(call_startsetup | (call_qualifier << 8));
+   write_halfword(call_qual_num);
    if (arrayflags & CAF__CONCEND) {
       write_halfword(call_endsetup_in | (restrstate << 8));
       write_halfword(call_endsetup_out);
@@ -1210,6 +1218,7 @@ def2:
    restrstate = 0;
    callarray_flags2 = 0;
    call_qualifier = 0;
+   call_qual_num = 0;
 
    get_tok();
    if (tok_kind != tok_symbol) errexit("Improper starting setup");
@@ -1267,6 +1276,13 @@ def2:
          break;
       }
       else if (!strcmp(tok_str, "qualifier")) {
+         call_qual_num = 0;
+         get_tok();
+         if (tok_kind != tok_symbol) errexit("Improper qualifier");
+         if ((call_qualifier = search(qualtab)) < 0) errexit("Unknown qualifier");
+      }
+      else if (!strcmp(tok_str, "nqualifier")) {
+         call_qual_num = get_num("Need a qualifier number here")+1;
          get_tok();
          if (tok_kind != tok_symbol) errexit("Improper qualifier");
          if ((call_qualifier = search(qualtab)) < 0) errexit("Unknown qualifier");

@@ -686,9 +686,18 @@ match_wildcard(match_state *sp, char *user, char *pat, char *patxp, Const match_
             match_suffix_2(sp, user, prefix, suffix, patxp, &new_result);
         }
 
-        /* special case: allow 1/2 for 2/4 */
+        /* special case: allow "quarter" for 1/4 */
+        new_result.number_fields = result->number_fields + (1 << ((new_result.howmanynumbers-1)*4));
+        match_suffix_2(sp, user, "quarter", suffix, patxp, &new_result);
+
+        /* special case: allow "half" or "1/2" for 2/4 */
         new_result.number_fields = result->number_fields + (2 << ((new_result.howmanynumbers-1)*4));
+        match_suffix_2(sp, user, "half", suffix, patxp, &new_result);
         match_suffix_2(sp, user, "1/2", suffix, patxp, &new_result);
+
+        /* special case: allow "three quarter" for 3/4 */
+        new_result.number_fields = result->number_fields + (3 << ((new_result.howmanynumbers-1)*4));
+        match_suffix_2(sp, user, "three quarter", suffix, patxp, &new_result);
 
         /* special case: allow "full" for 4/4 */
         new_result.number_fields = result->number_fields + (4 << ((new_result.howmanynumbers-1)*4));

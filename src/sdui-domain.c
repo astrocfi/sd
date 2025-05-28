@@ -252,7 +252,7 @@ void dialog_setmsg(int task, dp_$string_desc_t *msg)
 
 
 int phantoml_tasks[] = {task$phantoml_concept_menu_1, task$phantoml_concept_menu_2, task$phantoml_concept_menu_3, -1};
-int phantomb_tasks[] = {task$phantomb_concept_menu_1, task$phantomb_concept_menu_2, -1};
+int phantomb_tasks[] = {task$phantomb_concept_menu_1, task$phantomb_concept_menu_2, task$phantomb_concept_menu_3, -1};
 int tandem_tasks[] = {task$tandem_concept_menu_1, task$tandem_concept_menu_2, task$tandem_concept_menu_3, task$tandem_concept_menu_4, -1};
 int distort_tasks[] = {task$distort_concept_menu_1, task$distort_concept_menu_2, task$distort_concept_menu_3, task$distort_concept_menu_4, -1};
 int dist4_tasks[] = {task$dist4_concept_menu_1, task$dist4_concept_menu_2, task$dist4_concept_menu_3, task$dist4_concept_menu_4, -1};

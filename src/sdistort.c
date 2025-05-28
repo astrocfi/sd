@@ -63,21 +63,30 @@ Private void innards(
          x[i].cmd.cmd_assume = new_assume;
          if (recompute_id) update_id_bits(&x[i]);
 
-         if (x[i].cmd.cmd_misc_flags & CMD_MISC__VERIFY_WAVES) {
+         if (x[i].cmd.cmd_misc_flags & CMD_MISC__VERIFY_MASK) {
             assumption_thing t;
-
-            x[i].cmd.cmd_misc_flags &= ~CMD_MISC__VERIFY_WAVES;
 
             /* **** actually, we want to allow the case of "assume waves" already in place. */
             if (x[i].cmd.cmd_assume.assumption != cr_none)
                fail("Redundant or conflicting assumptions.");
 
-            t.assumption = cr_wave_only;
             t.assump_col = 0;
             t.assump_both = 0;
             t.assump_cast = x[i].cmd.cmd_assume.assump_cast;
+
+            switch (x[i].cmd.cmd_misc_flags & CMD_MISC__VERIFY_MASK) {
+               case CMD_MISC__VERIFY_WAVES:     t.assumption = cr_wave_only;    break;
+               case CMD_MISC__VERIFY_DMD_LIKE:  t.assumption = cr_diamond_like; break;
+               case CMD_MISC__VERIFY_QTAG_LIKE: t.assumption = cr_qtag_like;    break;
+               case CMD_MISC__VERIFY_1_4_TAG:   t.assumption = cr_gen_1_4_tag;  break;
+               case CMD_MISC__VERIFY_3_4_TAG:   t.assumption = cr_gen_3_4_tag;  break;
+               default:
+                  fail("Unknown assumption verify code.");
+            }
+
             x[i].cmd.cmd_assume = t;
-            check_restriction(&x[i], t, 99);
+            (void) check_restriction(&x[i], t, 99);
+            x[i].cmd.cmd_misc_flags &= ~CMD_MISC__VERIFY_MASK;
          }
 
          move(&x[i], FALSE, &z[i]);
@@ -211,26 +220,25 @@ Private void innards(
          fail("Can't do this matrix call.");
    }
 
-   switch (map_kind) {
-      case MPKIND__O_SPOTS:
-         warn(warn__to_o_spots);
-         break;
-      case MPKIND__X_SPOTS:
-         warn(warn__to_x_spots);
-         break;
-      case MPKIND__STAG:
-         warn(warn__bigblock_feet);
-         break;
-      case MPKIND__NONE:
-         if (maps != &map_tgl4_1 || z[0].kind != s1x2)
-            fail("Can't do shape-changer with this concept.");
-         break;
-   }
-
    if (maps == &map_tgl4_1 && z[0].kind == s1x2) {
       final_map = &map_tgl4_2;
    }
    else {
+      switch (map_kind) {
+         case MPKIND__O_SPOTS:
+            warn(warn__to_o_spots);
+            break;
+         case MPKIND__X_SPOTS:
+            warn(warn__to_x_spots);
+            break;
+         case MPKIND__STAG:
+            warn(warn__bigblock_feet);
+            break;
+         case MPKIND__NONE:
+            fail("Can't do this shape-changing call here.");
+            break;
+      }
+
       final_map = 0;
       hunk = map_lists[z[0].kind][arity-1];
       if (hunk) final_map = (*hunk)[map_kind][(z[0].rotation & 1)];

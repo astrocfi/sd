@@ -361,7 +361,9 @@ extern void do_call_in_series(
    /* Set the low bits to the current elongation, set the split bits to the AND of the before and
       after states, and set all other bits to the OR of the before and after states.
       But we clear the incoming RESULTFLAG__DID_LAST_PART bit, using only the bit from the call just executed. */
-   sss->result_flags = (((saved_result_flags & ~RESULTFLAG__DID_LAST_PART) | tempsetup.result_flags) & ~(3|RESULTFLAG__SPLIT_AXIS_MASK)) |
+   sss->result_flags = ((
+                  (saved_result_flags & ~(RESULTFLAG__DID_LAST_PART|RESULTFLAG__PARTS_ARE_KNOWN)) |
+                  tempsetup.result_flags) & ~(3|RESULTFLAG__SPLIT_AXIS_MASK)) |
          current_elongation |
          (saved_result_flags & tempsetup.result_flags & RESULTFLAG__SPLIT_AXIS_MASK);
 }
@@ -1093,7 +1095,6 @@ Private void move_with_real_call(
    long_boolean qtfudged,
    setup *result)
 {
-   uint32 temp_concepts, conc1, conc2;
    long_boolean qtf;
    parse_block *cp1;
    parse_block *cp2;
@@ -1101,7 +1102,6 @@ Private void move_with_real_call(
    uint32 tbonetest;
    uint32 imprecise_rotation_result_flag = 0;
    uint32 unaccepted_flags;
-   setup tempsetup;
    uint32 new_final_concepts;
    callspec_block *call1, *call2;
    calldef_schema the_schema;
@@ -1185,14 +1185,19 @@ that probably need to be put in. */
    /* Do some quick error checking for visible fractions.  For now, either flag is acceptable.  Later, we will
       distinguish between the "visible_fractions" and "first_part_visible" flags. */
 
-   if (ss->cmd.cmd_frac_flags &&
-            (  the_schema == schema_by_array ||
-               the_schema == schema_nothing ||
+   if (ss->cmd.cmd_frac_flags) {
+      if (the_schema == schema_by_array) {
+         if (ss->cmd.cmd_frac_flags != 0200112) fail("This fraction is illegal.");
+         ss->cmd.cmd_frac_flags = 0;
+         final_concepts |= INHERITFLAG_HALF;
+      }
+      else if (the_schema == schema_nothing ||
                the_schema == schema_matrix ||
                the_schema == schema_partner_matrix ||
                the_schema == schema_roll ||
-               (!(callspec->callflags1 & (CFLAG1_VISIBLE_FRACTIONS | CFLAG1_FIRST_PART_VISIBLE)))))
-      fail("This call can't be fractionalized.");
+               (!(callspec->callflags1 & (CFLAG1_VISIBLE_FRACTIONS | CFLAG1_FIRST_PART_VISIBLE))))
+         fail("This call can't be fractionalized.");
+   }
 
    switch (the_schema) {
       case schema_single_concentric:
@@ -1735,6 +1740,7 @@ that probably need to be put in. */
 
             for (;;) {
                int j;
+               uint32 temp_concepts, conc1, conc2;
                by_def_item *this_item;
                defmodset this_mod1, this_modh;
                uint32 saved_number_fields = current_number_fields;
@@ -1882,6 +1888,7 @@ that probably need to be put in. */
                   /* Check whether we honored the last possible request.  That is,
                      whether we did the last part of the call in forward order, or
                      the first part in reverse order. */
+                  result->result_flags |= RESULTFLAG__PARTS_ARE_KNOWN;
                   if (instant_stop >= highlimit)
                      result->result_flags |= RESULTFLAG__DID_LAST_PART;
                   break;
@@ -1894,6 +1901,7 @@ that probably need to be put in. */
          }
          else {
             setup_command foo1, foo2;
+            uint32 temp_concepts, conc1, conc2;
 
             /* Must be some form of concentric. */
 

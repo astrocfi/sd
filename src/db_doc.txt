@@ -2097,6 +2097,7 @@ inherit_single
 @9        - put number here.
 @a        - put number here, expressed as N/4, but say "full" instead of 4/4.
 @b        - put number here, expressed as N/4.
+@B        - put number here, expressed as N/4 written in words: "quarter", "half", "three quarter"
 @c ... @d - text to remove if this call was invoked with a "must_be_tag_call"
                   substitution.
 @e ... @f - text to change to "left" if this call has "left" modifier.

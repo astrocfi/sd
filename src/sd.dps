@@ -334,6 +334,11 @@ APPLICATION_INTERFACE sd_dialog
       CHANGES_ONLY = false ;
       END
 
+   task$phantomb_concept_menu_3 := ENUM:
+      COMP => <RETURN> ;
+      CHANGES_ONLY = false ;
+      END
+
    task$misc_concept_menu_1 := ENUM:
       COMP => <RETURN> ;
       CHANGES_ONLY = false ;
@@ -1088,7 +1093,7 @@ USER_INTERFACE sd_dialog
                   NICE_MENU:
                      [m1] => <* select> ;
                      TASK = task$phantomb_concept_menu_1 ;
-                     SIZE = ((5 34) (41 34) (100 34)) chars ;
+                     SIZE = ((5 39) (41 39) (100 39)) chars ;
                      END )
                END
             ROW:
@@ -1099,7 +1104,18 @@ USER_INTERFACE sd_dialog
                   NICE_MENU:
                      [m1] => <* select> ;
                      TASK = task$phantomb_concept_menu_2 ;
-                     SIZE = ((5 34) (41 34) (100 34)) chars ;
+                     SIZE = ((5 39) (41 39) (100 39)) chars ;
+                     END )
+               END
+            ROW:
+               SHAPE = square ;
+               ORIENTATION = vertical ;
+               CONTENTS = (
+                  NICE_HEADER: TEXT = "(1/4 tags)"; END
+                  NICE_MENU:
+                     [m1] => <* select> ;
+                     TASK = task$phantomb_concept_menu_3 ;
+                     SIZE = ((5 39) (41 39) (100 39)) chars ;
                      END )
                END )
          END

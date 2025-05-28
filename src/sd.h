@@ -248,8 +248,8 @@ typedef struct {
    BEWARE!! These flags co-exist in the cmd_misc_flags word with copies of some
    of the call invocation flags.  The mask for those flags is
    DFM1_CONCENTRICITY_FLAG_MASK.  Those flags, and that mask, are defined
-   in database.h .  We define these flags at the extreme left end of the
-   word in order to keep them away from the concentricity flags.
+   in database.h .  We must define these flags starting where the concentricity
+   flags end.
 
    CMD_MISC__EXPLICIT_MIRROR means that the setup has been mirrored by the "mirror"
    concept, separately from anything done by "left" or "reverse".  Such a mirroring
@@ -341,21 +341,21 @@ typedef struct {
    makes "ends detour" work.
 */
 
+/* Since DFM1_CONCENTRICITY_FLAG_MASK is FF, we start at 100. */
 #define CMD_MISC__EXPLICIT_MIRROR    0x00000100
 #define CMD_MISC__MATRIX_CONCEPT     0x00000200
-#define CMD_MISC__VERIFY_WAVES       0x00000400
-#define CMD_MISC__EXPLICIT_MATRIX    0x00000800
-#define CMD_MISC__NO_EXPAND_MATRIX   0x00001000
-#define CMD_MISC__DISTORTED          0x00002000
-#define CMD_MISC__OFFSET_Z           0x00004000
-#define CMD_MISC__SAID_SPLIT         0x00008000
-#define CMD_MISC__SAID_TRIANGLE      0x00010000
-#define CMD_MISC__PUT_FRAC_ON_FIRST  0x00020000
-#define CMD_MISC__DO_AS_COUPLES      0x00040000
-#define CMD_MISC__RESTRAIN_CRAZINESS 0x00080000
-/* available:                        0x00100000
-                                     0x00200000
-                                     0x00400000
+/* This is a 3 bit field.  For codes inside same, see "CMD_MISC__VERIFY_WAVES" below. */
+#define CMD_MISC__VERIFY_MASK        0x00001C00
+#define CMD_MISC__EXPLICIT_MATRIX    0x00002000
+#define CMD_MISC__NO_EXPAND_MATRIX   0x00004000
+#define CMD_MISC__DISTORTED          0x00008000
+#define CMD_MISC__OFFSET_Z           0x00010000
+#define CMD_MISC__SAID_SPLIT         0x00020000
+#define CMD_MISC__SAID_TRIANGLE      0x00040000
+#define CMD_MISC__PUT_FRAC_ON_FIRST  0x00080000
+#define CMD_MISC__DO_AS_COUPLES      0x00100000
+#define CMD_MISC__RESTRAIN_CRAZINESS 0x00200000
+/* available:                        0x00400000
                                      0x00800000
                                      0x01000000
                                      0x02000000 */
@@ -365,6 +365,16 @@ typedef struct {
 #define CMD_MISC__PHANTOMS           0x20000000
 #define CMD_MISC__NO_STEP_TO_WAVE    0x40000000
 #define CMD_MISC__DOING_ENDS         0x80000000
+
+/* Here are the encodings that can go into the CMD_MISC__VERIFY_MASK field.
+   Zero means no verification. */
+#define CMD_MISC__VERIFY_WAVES       0x00000400
+#define CMD_MISC__VERIFY_DMD_LIKE    0x00000800
+#define CMD_MISC__VERIFY_QTAG_LIKE   0x00000C00
+#define CMD_MISC__VERIFY_1_4_TAG     0x00001000
+#define CMD_MISC__VERIFY_3_4_TAG     0x00001400
+/* available:                        0x00001800
+                                     0x00001C00 */
 
 /* Flags that reside in the "cmd_frac_flags" word of a setup BEFORE a call is executed. */
 
@@ -400,7 +410,14 @@ typedef struct {
    with the CMD_FRAC__FRACTIONALIZE_MASK nonzero, so that just one part was done,
    that part was the last part.  Hence, if we are doing a call with some "piecewise"
    or "random" concept, we do that parts of the call one at a time, with appropriate
-   concepts on each part, until it comes back with this flag set.
+   concepts on each part, until it comes back with this flag set.  This is used with
+   RESULTFLAG__PARTS_ARE_KNOWN.
+
+   RESULTFLAG__PARTS_ARE_KNOWN means that the bit in RESULTFLAG__DID_LAST_PART is
+   valid.  Sometimes we are unable to obtain information about parts, because
+   no one is doing the call.  This can legally happen, for example, on "interlocked
+   parallelogram leads shakedown while the trailers star thru" from waves.  In each
+   virtual 2x2 setup one or the other of the calls is being done by no one.
 
    RESULTFLAG__EXPAND_TO_2X3 means that a call was executed that takes a four person
    starting setup (typically a line) and yields a 2x3 result setup.  Two of those
@@ -431,7 +448,8 @@ typedef struct {
 
 /* The two low bits are used for result elongation, so we start with 0x00000004. */
 #define RESULTFLAG__DID_LAST_PART   0x00000004
-#define RESULTFLAG__EXPAND_TO_2X3   0x00000008
+#define RESULTFLAG__PARTS_ARE_KNOWN 0x00000008
+#define RESULTFLAG__EXPAND_TO_2X3   0x00000010
 #define RESULTFLAG__NEED_DIAMOND    0x00000020
 #define RESULTFLAG__IMPRECISE_ROT   0x00000040
 /* This is a two-bit field. */
@@ -453,11 +471,12 @@ typedef struct glork {
    struct glork *next;
    uint32 callarray_flags;
    call_restriction restriction;
-   search_qualifier qualifier;
-   begin_kind start_setup;
-   setup_kind end_setup;
-   setup_kind end_setup_in;             /* only if end_setup = concentric */
-   setup_kind end_setup_out;            /* only if end_setup = concentric */
+   veryshort qualifier;     /* Must cast to search_qualifier! */
+   veryshort qual_num;      /* Zero for no qualification, else N+1 */
+   veryshort start_setup;   /* Must cast to begin_kind! */
+   veryshort end_setup;     /* Must cast to setup_kind! */
+   veryshort end_setup_in;  /* Only if end_setup = concentric */  /* Must cast to setup_kind! */
+   veryshort end_setup_out; /* Only if end_setup = concentric */  /* Must cast to setup_kind! */
    union {
       /* Dynamically allocated to whatever size is required. */
       unsigned short def[4];     /* only if pred = false */
@@ -599,7 +618,6 @@ typedef enum {
    concept_do_phantom_2x2,
    concept_do_phantom_boxes,
    concept_do_phantom_diamonds,
-   concept_do_phantom_qtags,
    concept_do_phantom_1x6,
    concept_do_phantom_1x8,
    concept_do_phantom_2x4,
@@ -607,7 +625,6 @@ typedef enum {
    concept_divided_2x4,
    concept_divided_2x3,
    concept_do_divided_diamonds,
-   concept_do_divided_qtags,
    concept_distorted,
    concept_single_diagonal,
    concept_double_diagonal,
@@ -1153,15 +1170,16 @@ typedef enum {
    chk_2_groups,
    chk_4_groups,
    chk_box,
+   chk_dmd_qtag,
    chk_peelable
 } chk_type;
 
 typedef struct {
    int size;
-   int map1[8];
-   int map2[8];
-   int map3[8];
-   int map4[8];
+   veryshort map1[16];
+   veryshort map2[16];
+   veryshort map3[8];
+   veryshort map4[8];
    long_boolean ok_for_assume;
    chk_type check;
 } restriction_thing;
@@ -1625,7 +1643,7 @@ extern void initialize_getout_tables(void);
 
 extern void mirror_this(setup *s);
 extern void do_stability(uint32 *personp, stability stab, int turning);
-extern void check_restriction(setup *ss, assumption_thing restr, unsigned int flags);
+extern restriction_thing *check_restriction(setup *ss, assumption_thing restr, unsigned int flags);
 extern void basic_move(
    setup *ss,
    int tbonetest,

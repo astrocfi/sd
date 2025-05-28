@@ -4,8 +4,8 @@
 @setfilename sd_doc.info
 @settitle Sd
 @c @subtitle A Square Dance Caller's Helper
-@set sd-version 30.76
-@set Time-stamp: Aug 7, 1994
+@set sd-version 30.78
+@set Time-stamp: Aug 28, 1994
 @set full-manual
 @c %**end of header
 @iftex
@@ -174,9 +174,9 @@ Concept Notes
 * Assume Waves::                Assume Waves
 * Diamond::                     Diamond
 * Implied Piecewise::           Implied Piecewise
-* Do it Twice::                 Do it Twice
+* Twice::                       Twice
 * Precede it or Follow it::     Precede it or Follow it
-* So-And-So Only::              So-And-So Only
+* So-And-So::                   So-And-So
 * Finish::                      Finish
 * 12 Matrix and 16 Matrix::     12 Matrix and 16 Matrix
 
@@ -1467,7 +1467,7 @@ In general, if you don't think you can clearly express to the dancers
 what you want, don't call it.
 
 A number of concepts are particularly vulnerable to this phenomenon.
-See @ref{Do it Twice}, @ref{Precede it or Follow it}, and @ref{So-And-So Only}.
+See @ref{Twice}, @ref{Precede it or Follow it}, and @ref{So-And-So}.
 
 Callers often indulge in a form of poetic license, using phrases such as
 @samp{like a @dots{}} or @samp{finish like a @dots{}}.
@@ -1582,9 +1582,9 @@ To permit fractional use of recycle, as with
 * Assume Waves::                Assume Waves
 * Diamond::                     Diamond
 * Implied Piecewise::           Implied Piecewise
-* Do it Twice::                 Do it Twice
+* Twice::                       Twice
 * Precede it or Follow it::     Precede it or Follow it
-* So-And-So Only::              So-And-So Only
+* So-And-So::                   So-And-So
 * Finish::                      Finish
 * 12 Matrix and 16 Matrix::     12 Matrix and 16 Matrix
 @end menu
@@ -1684,8 +1684,8 @@ might be appropriate.
 @node Assume Waves, Diamond, Two Calls, Concept Notes
 @section Assume Waves
 
-There are several concepts that tell the dancers how phantoms are facing.
-They are
+There are several concepts that you can use to tell the dancers how phantoms
+are facing.  They are
 @example
    @code{assume waves}
    @code{assume miniwaves}
@@ -1701,9 +1701,26 @@ They are
    @code{assume cdpt}
    @code{assume facing lines}
    @code{assume back-to-back lines}
+   @code{assume general diamonds}
+   @code{assume general 1/4 tags}
+   @code{assume right 1/4 tags}
+   @code{assume left 1/4 tags}
+   @code{assume left 3/4 tags}
+   @code{assume right 3/4 tags}
+   @code{assume right 1/4 lines}
+   @code{assume left 1/4 lines}
+   @code{assume left 3/4 lines}
+   @code{assume right 3/4 lines}
+   @code{assume normal diamonds}
+   @code{assume facing diamonds}
+   @code{assume normal interlocked diamonds}
+   @code{assume facing interlocked diamonds}
 @end example
 
-When these are used without @dfn{active phantoms} (see below), the information
+Additionally, there are two related concepts, @code{assume normal casts} and
+@code{with active phantoms}, that will be discussed below.
+
+When these concepts are used by themselves, the information
 that they convey tells the dancers how to begin certain calls such as
 @samp{hinge}, @samp{vertical tag}, and @samp{in roll circulate}.
 The information is thrown away after the call begins.  That is, the program
@@ -1713,6 +1730,67 @@ It only tells them how to begin.
 Use these concepts with care.  Many dancers don't like to be held responsible
 for the facing direction of phantoms.
 
+These concepts will be implicitly applied whenever something like @code{split
+phantom waves} or @code{triple diamonds} is used.  See below.
+
+It is of course illegal to use one of these concepts, either explicitly
+with @code{assume} or implicitly with something like @code{split phantom
+waves}, if the live dancers are not facing in a way that is consistent with
+the assumption.
+
+@subsection Split Phantom Waves, etc.
+
+The various concepts that name a virtual formation, like @code{split phantom waves},
+@code{offset waves}, @code{triple 1/4 tags} and @code{quadruple diamonds}, may
+contain an implicit @code{assume} in them.
+
+For the concepts that name @dfn{lines}, such as @code{split phantom lines} and
+@code{triple lines}, there are equivalent concepts with the word @code{waves}
+instead of @code{lines}.  These cause an implicit @code{assume waves}.
+So, for example, in columns, @code{split phantom waves in roll circulate}, which
+is equivalent to @code{split phantom lines assume waves in roll circulate}, tells
+the live dancers which way the phantom in-roller is facing.  The call @code{split
+phantom lines in roll circulate} is illegal because the facing direction of the
+phantom in-roller is unknown.
+
+For the concepts that name some kind of @dfn{diamonds} or @dfn{1/4 tags}, there
+are 5 types of setups that can be named.  They are
+@example
+   @code{diamonds}
+   @code{diamond spots}
+   @code{1/4-tags}
+   @code{3/4-tags}
+   @code{general 1/4-tags}
+@end example
+
+For example, there are concepts @code{split phantom diamonds}, @code{split phantom
+diamond spots}, @code{split phantom 1/4-tags}, etc.
+
+When using these concepts, @code{diamonds} gives an implicit assumption @code{assume
+general diamonds}, that is, it requires that everyone think they are individually
+in some kind of diamond.  You may give an explicit @code{assume} concept to make
+the setup more specific if you wish, as in @code{split phantom diamonds} followed
+by @code{assume interlocked diamonds}.
+
+The @code{general 1/4-tags} designator gives an implicit assumption @code{assume
+general 1/4 tags}, that is, the centers must be in some kind of line, and the
+ends must be in some kind of couple or miniwave.  The word @dfn{general} means
+that the in-or-out facing direction of the outsides is unimportant, but they
+must be facing in or out, not sideways as in diamonds.
+
+The @code{1/4-tags} or @code{3/4 tags} designators assume some kind of line in
+the middle, and the ends as a couple facing in or out, respectively.
+Hence, for example, the @code{split phantom 1/4 tags} concept includes 1/4 tags,
+1/4 lines, or any kind of line in the center, as long as the ends are facing in.
+You may use a concept like @code{assume right 1/4 lines} to be more specific
+about it.
+
+The @code{diamond spots} designator makes no assumptions at all.  The people can
+be in any kind of general diamond or general 1/4 tag.  Use this when people's
+facing directions are bizarre.
+
+@subsection Assume Normal Casts
+
 The concept @code{assume normal casts} may be used in cases in which you
 do not require the dancers to track phantoms through the call, but you
 want to resolve any ambiguity about the @samp{cast off 3/4} operations
@@ -1720,20 +1798,40 @@ that happen at the end of such calls as @samp{chain reaction} and
 @samp{motivate}.  You might read such an operation as @samp{12 matrix
 motivate, assume the final cast off is normal}.
 
-The concept @code{with active phantoms}, used after one of the @code{assume}
-concepts, effectively places invisible but otherwise intelligent dancers
-on the phantom spots, with the indicated facing direction.  Those phantoms
-proceed through the entire call, interacting with each other and with the
-live dancers as necessary.  If the call is impossible for the phantoms do,
-or if illegal collisions occur between live dancers and phantoms. an error
-message is printed.  At the end of the call, any live dancers or phantoms
-that come to the same spot may take right hands with each other, if that is
-appropriate for the call.
+@subsection With Active Phantoms
 
-Use this concept with extreme care, if at all.  It is extremely dangerous
-in terms of what it may require the dancers to do.  Many dancers find it
-difficult enough to do the live people's parts of calls without having to
-do the phantoms' parts also.
+The concept @code{with active phantoms}, used after one of the @code{assume}
+concepts (either implicit or explicit), effectively places invisible but
+otherwise intelligent dancers
+on the phantom spots, with facing directions deduced from the assumption.
+Those phantoms proceed through the entire call, interacting with each other
+and with the live dancers as necessary.  If the call is impossible for the
+phantoms do, or if illegal collisions occur between live dancers and phantoms.
+an error message is printed.  At the end of the call, any live dancers or
+phantoms that come to the same spot may take right hands with each other,
+if that is appropriate for the call.
+
+Most of the types of @code{assume} concepts listed above are sufficiently
+explicit that, if even a single live dancer is present in the setup, everyone's
+facing direction may be inferred.  This is necessary for the @code{with active
+phantoms} concept, of course.  For example, a single live dancer can determine
+the handedness of all the phantoms when @code{assume two-faced lines} is given.
+Two of the concepts are not sufficiently explicit for this, and may not be used
+with @code{with active phantoms}.  They are
+
+@example
+   @code{assume general diamonds}
+   @code{assume general 1/4 tags}
+@end example
+
+If you are going to use @code{with active phantoms}, you must give more detailed
+assumptions than these two, such as @code{assume left 1/4 lines} or @code{assume
+facing diamonds}.
+
+Use the @code{with active phantoms} concept with extreme care, if at all.
+It is extremely dangerous in terms of what it may require the dancers to do.
+Many dancers find it difficult enough to do the live people's parts of calls
+without having to do the phantoms' parts also.
 
 @node Diamond, Implied Piecewise, Assume Waves, Concept Notes
 @section Diamond
@@ -1750,7 +1848,7 @@ diamond, alter the diamond}, and clicking on @code{magic},
 right} will get @samp{magic interlocked diamond, diamond as couples
 quarter right}.
 
-@node Implied Piecewise, Do it Twice, Diamond, Concept Notes
+@node Implied Piecewise, Twice, Diamond, Concept Notes
 @section Implied Piecewise
 
 Some of the replacement/interruption meta-concepts push the
@@ -1794,18 +1892,18 @@ If you think that some instance of a replacement or interruption will
 cause confusion on the dance floor because of this sort of issue,
 you should not use it.
 
-@node Do it Twice, Precede it or Follow it, Implied Piecewise, Concept Notes
-@section Do it Twice
+@node Twice, Precede it or Follow it, Implied Piecewise, Concept Notes
+@section Twice
 
-The @code{do it twice} concept simply causes the subject call to be executed
+The @code{twice} concept simply causes the subject call to be executed
 twice.  This is a notion familiar at all levels from Mainstream
 (@samp{spin chain thru, the girls double circulate}) to C4 (@samp{piecewise
 twice, recoil}).
 No universally recognized words for this exist, so the program
-uses the generic phrase @code{do it twice}.  When calling, use whatever words
+uses the generic phrase @code{twice}.  When calling, use whatever words
 you think are appropriate.
 
-@node Precede it or Follow it, So-And-So Only, Do it Twice, Concept Notes
+@node Precede it or Follow it, So-And-So, Twice, Concept Notes
 @section Precede it or Follow it
 
 The concepts @code{precede it by} and @code{follow it by} take two subject
@@ -1826,8 +1924,8 @@ You might say @code{piecewise add a criss cross the deucey, and turn the key},
 or @code{do a criss cross the deucey after each part, and turn the key}, or
 something similar.
 
-@node So-And-So Only, Finish, Precede it or Follow it, Concept Notes
-@section So-And-So Only
+@node So-And-So, Finish, Precede it or Follow it, Concept Notes
+@section So-And-So
 
 There are four closely related concepts here.  You must have a clear
 understanding of how the program treats them in order to use them effectively.
@@ -1835,13 +1933,13 @@ Compared to the natural and fluent way most dancers and callers use these
 ideas, the program may seem idiosyncratic and ignorant in its handling of them.
 @xref{Linguistic Idiosyncrasies}.
 
-The four concepts are @code{only}, @code{disconnected}, @code{do your part},
-and @code{own the <anyone>}.
+The four concepts are @code{so-and-so}, @code{so-and-so disconnected},
+@code{so-and-so do your part}, and @code{own the <so-and-so>}.
 
 @example
-   @code{<anyone> only <call>}
+   @code{<so-and-so>, <call>}
          or
-   @code{<anyone> only <call> while the others <other call>}
+   @code{<so-and-so>, <call> while the others <other call>}
 @end example
 
 This means find the maximal connected undistorted subsets, and
@@ -1850,7 +1948,7 @@ the boys are in two miniwaves that have nothing to do with
 each other.  The boys can do 2-person calls, such as trade or hinge,
 in those setups.  If the others are told to do a second call, they do it
 in their connected undistorted subsets.  For example, we could say
-@code{boys only hinge while the others shazam}.  The results will be
+@code{boys, hinge while the others shazam}.  The results will be
 reassembled as a 2x4, a C1-phantom setup, stars, or something similar.
 
 From boy-girl-boy-girl waves, the boys are in 4 1-person connected undistorted
@@ -1867,27 +1965,26 @@ by designated people who are not adjacent, is simply an idiosyncrasy that
 everyone knows.
 The Sd program recognizes this by having a call in its database
 @code{<anyone> trade} as well as the call @code{trade}.  Use that call, not
-the @code{<anyone> only} concept, to get the appropriate people to trade
+the @code{<anyone>} concept, to get the appropriate people to trade
 down the line when in waves.
 
 If you really want non-adjacent people to @code{roll away}, use the
 @code{disconnected} concept.
 
-Incidentally, this is why the concept has the word @dfn{only} in it.
-Without it,
-the line @code{boys trade} appearing on a printed sequence would be ambiguous.
-The Sd program is designed to make it possible to determine unambiguously how
-an action arose by looking at the printout.  Of course, in many cases, you
-should not read the word @dfn{only} when calling the card.
-Use your own judgement.
+Incidentally, this is why the concept has a comma in it.
+Without it, the line @code{boys trade} appearing on a printed sequence would be ambiguous.
+The Sd program is designed to make it possible to determine unambiguously, by looking at
+the printout, how an action arose.  Of course, in many cases, you
+may find that the comma goes against your judgement of how to phrase the
+call for maximum dancer success.  Use your own judgement, of course.
 
 @example
-   @code{<anyone> disconnected <call>} or
+   @code{<so-and-so> disconnected <call>} or
          or
-   @code{<anyone> disconnected <call> while the others <other call>}
+   @code{<so-and-so> disconnected <call> while the others <other call>}
 @end example
 
-This is like @code{<anyone> only}, but finds the maximal undistorted subsets,
+This is like @code{<so-and-so>}, but finds the maximal undistorted subsets,
 whether they are connected or not.  This is a recognized C2 concept.  It is
 generally intended to be used from grand (1x8) setups, in which the designated
 people leave the room and compress themselves into a 1x4 setup.  After doing
@@ -1898,9 +1995,9 @@ occupy the center of the result, in accordance with accepted usage for
 this concept.
 
 @example
-   @code{<anyone> do your part, <call>}
+   @code{<so-and-so> do your part, <call>}
          or
-   @code{<anyone> do your part, <call> while the others <other call>}
+   @code{<so-and-so> do your part, <call> while the others <other call>}
 @end example
 
 This means that the non-designated dancers leave the room and re-form their own
@@ -1908,9 +2005,9 @@ setup in another room.  The setups are not shrink-wrapped---they stay
 the same size in each room, with phantoms where the other people are.
 The appropriate call is done in each room.  The non-designees come back,
 and the two setups are merged.  This merging operation is similar to that
-used for @code{<anyone> only}.  It may result in things like C1-phantom
+used for @code{<so-and-so>}.  It may result in things like C1-phantom
 setups.  From boy-boy-girl-girl waves, @code{boys do your part, hinge}
-will leave C1 phantom setups, just as @code{boys only hinge} will.
+will leave C1 phantom setups, just as @code{boys, hinge} will.
 In fact, the difference
 between these concepts is rather subtle in many cases.  The important point
 is that, in each room, the dancers work in the entire setup.  For example,
@@ -1922,10 +2019,10 @@ From boy-girl-boy-girl waves, @code{boys do your part, hinge} creates a mess.
 No sensible dancer would consider it acceptable.  Do not use such things.
 
 @example
-   @code{own the <anyone>, <call> by <other call>}
+   @code{own the <so-and-so>, <call> by <other call>}
 @end example
 
-This is similar to the @code{<anyone> do your part} concept, except that the
+This is similar to the @code{<so-and-so> do your part} concept, except that the
 result setups are reassembled according to strict matrix positions.  That
 is, instead of a C1 phantom setup, a 4x4 matrix may result.
 This is a recognized C3A concept.
@@ -1934,17 +2031,17 @@ In all of these concepts, the program will always use the word @dfn{others} for
 the non-designated people.  When calling, you should probably say something
 more intelligent, like @dfn{girls} or @dfn{sides} or whatever.
 
-In general, be aware that the choice of words that the program uses for these
-concepts is determined by the need to avoid ambiguity, and may not be the
-words that you should use when calling.  For example, if the program prints
-out @samp{boys only hinge}, it may be more natural to say just
+In general, be aware that the choice of words and punctuation that the program
+uses for these concepts is determined by the need to avoid ambiguity, and may
+not be the words that you should use when calling.  For example, if the program
+prints out @samp{boys, hinge}, it may be more natural to say just
 @samp{boys hinge}.  Similarly, if the program prints out @samp{boys do your
 part, transfer the column while the others switch the wave}, it may be more
 natural to say @samp{everyone do your part, boys transfer the column while
 the girls switch the wave}.  As in all aspects of calling, choose your
 words carefully.
 
-@node Finish, 12 Matrix and 16 Matrix, So-And-So Only, Concept Notes
+@node Finish, 12 Matrix and 16 Matrix, So-And-So, Concept Notes
 @section Finish
 
 To Sd, this concept means ``skip the first part,'' and is only legal for

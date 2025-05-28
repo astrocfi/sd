@@ -1,6 +1,83 @@
-		   RELEASE NOTES FOR SD VERSION 30.76
-		 Database version = 30.74 format = 46,
+		   RELEASE NOTES FOR SD VERSION 30.78
+		 Database version = 30.78 format = 48,
     X11 UI version 1.15, SDTTY UI version 1.6, MAC UI version 2.2.
+
+****** Changes as of version 30.78 ******
+
+You can type in calls such as "quarter thru" to sdtty either in words:
+"quarter thru"/"three quarter thru", or as fractions: "1/4 thru"/"3/4 thru".
+They will always print out in the transcript in words.  In the sd program,
+they appear on the menu as "<N/4> thru", alphabetized under "t" for "thru".
+A popup will appear asking for the number.
+
+The "fractional" concept, as in "3/5 swing the fractions", is now
+entered just as the fraction, for example, "3/5".  The word "(fractional)"
+is no longer used.  To avoid ambiguity in the transcript, a comma will
+be placed after the fraction, as in
+         1/4, stable change the wave
+not to be confused with
+         1/4 stable change the wave
+
+Furthermore, the concept formerly known as "do it twice" is now just
+called "twice".  It, too, will have a comma after it in the transcript
+to make the meaning more clear.
+
+Furthermore, there is a concept "1-M/N", for any suitable fraction M/N,
+that does the call once and a little more.  Typically this is 1-1/2 or so.
+
+The concept formerly (as of version 30.74) known as "<so-and-so> ONLY"
+is now just called "<so-and-so>".  It will be separated by a comma from
+the following text in the transcript to avoid ambiguity.  When using sdtty,
+YOU MUST TYPE IN THE COMMA.  This is to avoid ambiguity with such concepts
+as "centers", which is different in very subtle ways, I think.
+To have the other people do some other call, type in
+"heads, (while the others)" with a comma after the people designator.
+It will be printed in the transcript as "heads, hinge while the others trade".
+
+There is now an extensive collection of "assume" concepts, such as
+"assume waves" and "assume facing diamonds".  Furthermore, the concepts
+"split phantom waves", "split phantom 1/4 tags", and the like are considered
+to carry such concepts, unlike "split phantom lines" and "Split phantom
+diamond spots".  See the section "assume waves" in the manual for more details.
+
+The following is an inconsistency between the program and the manual, that
+has not been fixed pending resolution of this issue.  As such, it is
+important that you know about this.  An erratum sheet is being shipped
+with all printed manuals.
+      
+      A recent change was made in the way the "allow modifications"
+      operation works.  Because this change is tentative, the
+      manual was not changed to reflect it.  This affects both the
+      mouse click in the "sd" program and the typed command in the
+      "sdtty" program.
+
+      As described in the manual, there are two levels of this
+      feature.  If the command is given just once, only simple
+      modifications, such as "catch lockit 4" and "in roll motivate"
+      will be enabled.  If the command is given a second time,
+      additional substitutions, such as "trade the diamond but
+      replace the diamond circulate with a flip the diamond"
+      are enabled.
+
+      In the present program, there is only one level of this
+      feature.  Hence, typing the "allow modifications" command just
+      once, or clicking on the icon just once, enables all modifications
+      and substitutions.
+
+A change was made in the database file format.  Unless you write your own database,
+this will not affect you.  The qualifiers "n_is_1" etc., have been removed.  Instead
+of "qualifier n_is_1", use "nqualifier 1 none".  The "nqualifier" keyword says that
+a combined number test and qualifier are coming next.  The call definition clause will
+only be acted upon if the qualifier is satisfied and the number matches.  The qualifier
+"none" is always satisfied.
+
+****** Changes as of version 30.77 ******
+
+For users of the X11 window system (sd on Unix), the "parallelogram" concept
+has been moved to the "distorted setup concepts" submenu, at the bottom of
+the second column.
+
+****** Changes as of version 30.76 ******
 
 New person designators: "headliners" (the people currently facing the head walls)
 and "sideliners" (the people currently facing the side walls).  These are not

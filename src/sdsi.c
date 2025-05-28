@@ -293,7 +293,10 @@ extern void get_date(char dest[])
 
 extern void open_file(void)
 {
-   int i, this_file_position;
+   int this_file_position;
+#if defined(MSDOS)
+   int i;
+#endif
 
    file_error = FALSE;
 

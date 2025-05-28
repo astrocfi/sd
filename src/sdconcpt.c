@@ -35,7 +35,14 @@ and the following external variables:
 
 #include "sd.h"
 
+
+
+
 Private restriction_thing wave_2x4      = {4, {0, 2, 5, 7},                {1, 3, 4, 6},                   {0}, {0}, TRUE, chk_wave};            /* check for two parallel consistent waves */
+Private restriction_thing jleft_qtag    = {4, {2, 0, 7, 1},                {3, 4, 6, 5},                   {0}, {0}, TRUE, chk_wave};
+Private restriction_thing jright_qtag   = {4, {3, 0, 6, 1},                {2, 4, 7, 5},                   {0}, {0}, TRUE, chk_wave};
+Private restriction_thing ijleft_qtag   = {4, {2, 0, 3, 1},                {6, 4, 7, 5},                   {0}, {0}, TRUE, chk_wave};
+Private restriction_thing ijright_qtag  = {4, {6, 0, 7, 1},                {2, 4, 3, 5},                   {0}, {0}, TRUE, chk_wave};
 Private restriction_thing two_faced_2x4 = {4, {0, 1, 6, 7},                {3, 2, 5, 4},                   {0}, {0}, TRUE, chk_wave};            /* check for two parallel consistent two-faced lines */
 Private restriction_thing wave_3x4      = {6, {0, 2, 5, 7, 9, 10},         {1, 3, 4, 6, 8, 11},            {0}, {0}, TRUE, chk_wave};            /* check for three parallel consistent waves */
 Private restriction_thing two_faced_3x4 = {6, {0, 1, 8, 9, 10, 11},        {2, 3, 4, 5, 6, 7},             {0}, {0}, TRUE, chk_wave};            /* check for three parallel consistent two-faced lines */
@@ -87,13 +94,31 @@ Private restriction_thing two_faced_1x4 = {2, {0, 1},                      {2, 3
 Private restriction_thing two_faced_2x6 = {6, {0, 1, 2, 9, 10, 11},        {3, 4, 5, 6, 7, 8},             {0}, {0}, FALSE, chk_wave};           /* check for parallel consistent 3x3 two-faced lines */
 Private restriction_thing two_faced_4x4_2x8 = {8, {0, 1, 2, 3, 12, 13, 14, 15}, {4, 5, 6, 7, 8, 9, 10, 11},{0}, {0}, FALSE, chk_wave};           /* check for parallel consistent 4x4 two-faced lines */
 
-Private restriction_thing box_wave      = {4, {2, 0, 0, 2},                {0, 0, 2, 2},                   {0}, {0}, FALSE, chk_box};            /* check for a "real" (walk-and-dodge type) box */
-Private restriction_thing box_1face     = {4, {2, 2, 2, 2},                {0, 0, 0, 0},                   {0}, {0}, FALSE, chk_box};            /* check for a "one-faced" (reverse-the-pass type) box */
-Private restriction_thing box_magic     = {4, {2, 0, 2, 0},                {0, 2, 0, 2},                   {0}, {0}, TRUE, chk_box};             /* check for a "magic" (split-trade-circulate type) box */
+Private restriction_thing box_wave      = {0, {2, 0, 0, 2},                {0, 0, 2, 2},                   {0}, {0}, FALSE, chk_box};            /* check for a "real" (walk-and-dodge type) box */
+Private restriction_thing box_1face     = {0, {2, 2, 2, 2},                {0, 0, 0, 0},                   {0}, {0}, FALSE, chk_box};            /* check for a "one-faced" (reverse-the-pass type) box */
+Private restriction_thing box_magic     = {0, {2, 0, 2, 0},                {0, 2, 0, 2},                   {0}, {0}, TRUE, chk_box};             /* check for a "magic" (split-trade-circulate type) box */
+Private restriction_thing s4x4_wave     = {0,   {2, 0, 2, 0, 0, 0, 0, 2, 0, 2, 0, 2, 2, 2, 2, 0},
+                                                {0, 0, 0, 2, 0, 2, 0, 2, 2, 2, 2, 0, 2, 0, 2, 0},          {0}, {0}, FALSE, chk_box};            /* check for 4 waves of consistent handedness and consistent headliner-ness. */
 
 Private restriction_thing cwave_qtg     = {2, {2, 7},                      {3, 6},                         {0}, {0}, FALSE, chk_wave};           /* check for wave across the center */
 Private restriction_thing wave_qtag     = {2, {2, 7},                      {3, 6},                         {0}, {0}, FALSE, chk_wave};           /* check for wave across the center */
 Private restriction_thing two_faced_qtag= {2, {6, 7},                      {2, 3},                         {0}, {0}, FALSE, chk_wave};           /* check for two-faced line across the center */
+
+Private restriction_thing qtag_1        = {4, {8, 0, 1, 2, 3, 4, 5, 6, 7}, {0},                {2, 4, 5}, {2, 0, 1}, FALSE, chk_dmd_qtag};
+Private restriction_thing dmd_1         = {4, {0}, {4, 0, 1, 2, 3},                            {1, 0},    {1, 2},    FALSE, chk_dmd_qtag};
+Private restriction_thing ptpd_1        = {4, {0}, {8, 0, 1, 2, 3, 4, 5, 6, 7},                {2, 0, 6}, {2, 2, 4}, FALSE, chk_dmd_qtag};
+Private restriction_thing qtag_3        = {4, {8, 0, 1, 2, 3, 4, 5, 6, 7}, {0},                {2, 0, 1}, {2, 4, 5}, FALSE, chk_dmd_qtag};
+Private restriction_thing dmd_3         = {4, {0}, {4, 0, 1, 2, 3},                            {1, 2},    {1, 0},    FALSE, chk_dmd_qtag};
+Private restriction_thing ptpd_3        = {4, {0}, {8, 0, 1, 2, 3, 4, 5, 6, 7},                {2, 2, 4}, {2, 0, 6}, FALSE, chk_dmd_qtag};
+Private restriction_thing qtag_q        = {4, {8, 0, 1, 2, 3, 4, 5, 6, 7}, {0},                {0},       {0},       FALSE, chk_dmd_qtag};
+Private restriction_thing dmd_q         = {4, {0}, {4, 0, 1, 2, 3},                            {0},       {0},       FALSE, chk_dmd_qtag};
+Private restriction_thing ptpd_q        = {4, {0}, {8, 0, 1, 2, 3, 4, 5, 6, 7},                {0},       {0},       FALSE, chk_dmd_qtag};
+Private restriction_thing qtag_d        = {4, {4, 2, 3, 6, 7}, {4, 0, 1, 4, 5},                {0},       {0},       FALSE, chk_dmd_qtag};
+Private restriction_thing dmd_d         = {4, {2, 0, 2}, {2, 1, 3},                            {0},       {0},       FALSE, chk_dmd_qtag};
+Private restriction_thing ptpd_d        = {4, {4, 0, 2, 4, 7}, {4, 1, 3, 5, 6},                {0},       {0},       FALSE, chk_dmd_qtag};
+
+
+
 
 
 
@@ -111,6 +136,10 @@ extern restriction_thing *get_restriction_thing(setup_kind k, assumption_thing t
             restr_thing_ptr = &box_1face;
          else if (t.assumption == cr_magic_only && (t.assump_col & 1) == 0)
             restr_thing_ptr = &box_magic;
+         break;
+      case s4x4:
+         if (t.assumption == cr_wave_only && (t.assump_col & 1) == 0)
+            restr_thing_ptr = &s4x4_wave;
          break;
       case s2x3:
          if (t.assumption == cr_wave_only && t.assump_col != 0)
@@ -251,6 +280,43 @@ extern restriction_thing *get_restriction_thing(setup_kind k, assumption_thing t
             restr_thing_ptr = &wave_qtag;
          else if (t.assumption == cr_2fl_only && t.assump_col == 0)
             restr_thing_ptr = &two_faced_qtag;
+         else if (t.assumption == cr_jleft)
+            restr_thing_ptr = &jleft_qtag;
+         else if (t.assumption == cr_jright)
+            restr_thing_ptr = &jright_qtag;
+         else if (t.assumption == cr_ijleft)
+            restr_thing_ptr = &ijleft_qtag;
+         else if (t.assumption == cr_ijright)
+            restr_thing_ptr = &ijright_qtag;
+         else if (t.assumption == cr_diamond_like)
+            restr_thing_ptr = &qtag_d;
+         else if (t.assumption == cr_qtag_like)
+            restr_thing_ptr = &qtag_q;
+         else if (t.assumption == cr_gen_1_4_tag)
+            restr_thing_ptr = &qtag_1;
+         else if (t.assumption == cr_gen_3_4_tag)
+            restr_thing_ptr = &qtag_3;
+         break;
+      case sdmd:
+         if (t.assumption == cr_diamond_like)
+            restr_thing_ptr = &dmd_d;
+         else if (t.assumption == cr_qtag_like)
+            restr_thing_ptr = &dmd_q;
+         else if (t.assumption == cr_gen_1_4_tag)
+            restr_thing_ptr = &dmd_1;
+         else if (t.assumption == cr_gen_3_4_tag)
+            restr_thing_ptr = &dmd_3;
+         break;
+      case s_ptpd:
+         if (t.assumption == cr_diamond_like)
+            restr_thing_ptr = &ptpd_d;
+         else if (t.assumption == cr_qtag_like)
+            restr_thing_ptr = &ptpd_q;
+         else if (t.assumption == cr_gen_1_4_tag)
+            restr_thing_ptr = &ptpd_1;
+         else if (t.assumption == cr_gen_3_4_tag)
+            restr_thing_ptr = &ptpd_3;
+         break;
    }
 
    return restr_thing_ptr;
@@ -1353,29 +1419,18 @@ Private void do_concept_do_phantom_diamonds(
    parse_block *parseptr,
    setup *result)
 {
-   if (ss->kind != s4dmd) fail("Must have a quadruple diamond setup for this concept.");
+   /* The values of arg2 are:
+      CMD_MISC__VERIFY_DMD_LIKE   "diamonds" -- require diamond-like, i.e. centers in some kind of line, ends are line-like.
+      CMD_MISC__VERIFY_1_4_TAG    "1/4 tags" -- centers in some kind of line, ends are a couple looking in (includes 1/4 line, etc.)
+                                      If this isn't specific enough for you, use the "ASSUME LEFT 1/4 LINES" concept, or whatever.
+      CMD_MISC__VERIFY_3_4_TAG    "3/4 tags" -- centers in some kind of line, ends are a couple looking out (includes 3/4 line, etc.)
+                                      If this isn't specific enough for you, use the "ASSUME LEFT 3/4 LINES" concept, or whatever.
+      CMD_MISC__VERIFY_QTAG_LIKE  "general 1/4 tags" -- all facing same orientaion -- centers in some kind of line, ends are column-like.
+      0                           "diamond spots" -- any facing direction is allowed. */
 
-   if (((ss->people[0].id1 | ss->people[1].id1 | ss->people[2].id1 | ss->people[3].id1 |
-         ss->people[8].id1 | ss->people[9].id1 | ss->people[10].id1 | ss->people[11].id1) & 010) != 0 ||
-       ((ss->people[4].id1 | ss->people[5].id1 | ss->people[6].id1 | ss->people[7].id1 |
-         ss->people[12].id1 | ss->people[13].id1 | ss->people[14].id1 | ss->people[15].id1) & 001) != 0)
-      fail("People are not facing as in diamonds.");
-   divided_setup_move(ss, parseptr->concept->value.maps, (phantest_kind) parseptr->concept->value.arg1, TRUE, result);
-}
+   if (ss->kind != s4dmd) fail("Must have a quadruple diamond/quarter-tag setup for this concept.");
 
-
-Private void do_concept_do_phantom_qtags(
-   setup *ss,
-   parse_block *parseptr,
-   setup *result)
-
-/* This concept is "standard", which means that it can look at global_tbonetest
-   and global_livemask, but may not look at anyone's facing direction other
-   than through global_tbonetest. */
-
-{
-   if (ss->kind != s4dmd) fail("Must have a quadruple quarter-tag setup for this concept.");
-   if (global_tbonetest & 1) fail("People are not facing as in general quarter tags, try using \"standard\".");
+   ss->cmd.cmd_misc_flags |= parseptr->concept->value.arg2;
    divided_setup_move(ss, parseptr->concept->value.maps, (phantest_kind) parseptr->concept->value.arg1, TRUE, result);
 }
 
@@ -1385,37 +1440,12 @@ Private void do_concept_do_divided_diamonds(
    parse_block *parseptr,
    setup *result)
 {
-   if (ss->kind != s4x6 ||
-         (ss->people[0].id1 | ss->people[2].id1 | ss->people[3].id1 | ss->people[5].id1 |
-         ss->people[12].id1 | ss->people[14].id1 | ss->people[15].id1 | ss->people[17].id1) != 0)
-      fail("Must have a divided diamond setup for this concept.");
+   /* See "do_concept_do_phantom_diamonds" for meaning of arg2. */
 
-   if (((ss->people[6].id1 | ss->people[8].id1 | ss->people[9].id1 | ss->people[11].id1 |
-         ss->people[18].id1 | ss->people[20].id1 | ss->people[21].id1 | ss->people[23].id1) & 001) != 0 ||
-       ((ss->people[1].id1 | ss->people[4].id1 | ss->people[7].id1 | ss->people[10].id1 |
-         ss->people[13].id1 | ss->people[16].id1 | ss->people[19].id1 | ss->people[22].id1) & 010) != 0)
-      fail("People are not facing as in diamonds.");
-
-   divided_setup_move(ss, parseptr->concept->value.maps, (phantest_kind) parseptr->concept->value.arg1, TRUE, result);
-}
-
-
-Private void do_concept_do_divided_qtags(
-   setup *ss,
-   parse_block *parseptr,
-   setup *result)
-
-/* This concept is "standard", which means that it can look at global_tbonetest
-   and global_livemask, but may not look at anyone's facing direction other
-   than through global_tbonetest. */
-
-{
    if (ss->kind != s4x6 || (global_livemask & 0x02D02D) != 0)
-      fail("Must have a divided quarter-tag setup for this concept.");
+      fail("Must have a divided diamond or 1/4 tag setup for this concept.");
 
-   if (global_tbonetest & 010)
-      fail("People are not facing as in general quarter tags, try using \"standard\".");
-
+   ss->cmd.cmd_misc_flags |= parseptr->concept->value.arg2;
    divided_setup_move(ss, parseptr->concept->value.maps, (phantest_kind) parseptr->concept->value.arg1, TRUE, result);
 }
 
@@ -1706,6 +1736,7 @@ Private void do_concept_assume_waves(
    setup *result)
 {
    assumption_thing t;
+   restriction_thing *restr_thing_ptr;
    int i;
 
    /* "Assume normal casts" is special. */
@@ -1716,9 +1747,6 @@ Private void do_concept_assume_waves(
       ss->cmd.cmd_assume.assump_cast = 1;
       goto dont_check_it;
    }
-
-   if (ss->cmd.cmd_assume.assumption != cr_none)
-      fail("Redundant or conflicting assumptions.");
 
    /* Check that there actually are some phantoms needing to be filled in.
       If user specifically said there are phantoms, we believe it. */
@@ -1741,13 +1769,37 @@ Private void do_concept_assume_waves(
    t.assump_col = parseptr->concept->value.arg2;
    t.assump_both = parseptr->concept->value.arg3;
    t.assump_cast = ss->cmd.cmd_assume.assump_cast;
+
+   /* Need to check any pre-existing assumption. */
+
+   if (ss->cmd.cmd_assume.assumption == cr_none) ;   /* If no pre-existing assumption, OK. */
+   else {     /* We have something, and must check carefully. */
+      /* First, an exact match is allowed. */
+      if (         ss->cmd.cmd_assume.assumption == t.assumption &&
+                   ss->cmd.cmd_assume.assump_col == t.assump_col &&
+                   ss->cmd.cmd_assume.assump_both == t.assump_both) ;
+      /* We also allow certain tightenings of existing assumptions. */
+      else if (  ((ss->cmd.cmd_assume.assumption == cr_diamond_like && t.assump_col == 4) ||
+                  (ss->cmd.cmd_assume.assumption == cr_qtag_like && t.assump_col == 0))
+                           &&
+                   (t.assumption == cr_jleft || t.assumption == cr_jright || t.assumption == cr_ijleft || t.assumption == cr_ijright)) ;
+      else
+         fail("Redundant or conflicting assumptions.");
+   }
+
    ss->cmd.cmd_assume = t;
 
    /* The restrictions mean different things in different setups.  In some setups, they
       mean things that are unsuitable for the "assume" concept.  In some setups they
       take no action at all.  So we must check the setups on a case-by-case basis. */
 
-   if (t.assump_col == 2) {
+   if (t.assumption == cr_jleft || t.assumption == cr_jright || t.assumption == cr_ijleft || t.assumption == cr_ijright) {
+      /* These assumptions work independently of the "assump_col" number. */
+      switch (ss->kind) {
+         case s_qtag: goto check_it;
+      }
+   }
+   else if (t.assump_col == 2) {
       /* This is a special assumption -- "assume miniwaves" or "assume inverted boxes". */
 
       if (t.assumption == cr_wave_only) {
@@ -1815,13 +1867,45 @@ Private void do_concept_assume_waves(
             case s2x4: goto check_it;
          }
       }
+      else if (t.assumption == cr_diamond_like) {
+         switch (ss->kind) {
+            case s_qtag: goto check_it;
+         }
+      }
+      else if (t.assumption == cr_qtag_like) {
+         switch (ss->kind) {
+            case s_qtag: goto check_it;
+         }
+      }
    }
 
    fail("This assumption is not legal from this formation.");
 
    check_it:
 
-   check_restriction(ss, t, 99);
+   restr_thing_ptr = check_restriction(ss, t, 99);
+
+   if (restr_thing_ptr && restr_thing_ptr->ok_for_assume) {
+      uint32 q0 = 0;
+      uint32 q1 = 0;
+
+      switch (restr_thing_ptr->check) {
+         case chk_wave:
+            for (i=0; i<restr_thing_ptr->size; i+=2)
+               q0 |= ss->people[restr_thing_ptr->map1[i]].id1 | ss->people[restr_thing_ptr->map2[i]].id1;
+               q1 |= ss->people[restr_thing_ptr->map1[i+1]].id1 | ss->people[restr_thing_ptr->map2[i+1]].id1;
+
+            if (ss->cmd.cmd_assume.assump_col & 4) {
+               q1 >>= 3;
+            }
+            else if (ss->cmd.cmd_assume.assump_col == 1) {
+               q0 >>= 3;
+               q1 >>= 3;
+            }
+
+            if ((q0|q1) & 1) fail("The people do not satisfy the assumption.");
+      }
+   }
 
    dont_check_it:
 
@@ -1838,11 +1922,11 @@ Private void do_concept_active_phantoms(
 {
    int phantom_count = 0;
    int i;
-   unsigned int pdir, qdir;
+   uint32 pdir, qdir, pdirodd, qdirodd;
    unsigned int bothp;
    restriction_thing *restr_thing_ptr;
-   unsigned int dirtest1 = 0;
-   unsigned int dirtest2 = 0;
+   uint32 dirtest1 = 0;
+   uint32 dirtest2 = 0;
 
    if (ss->cmd.cmd_assume.assump_cast)
       fail("Don't use \"active phantoms\" with \"assume normal casts\".");
@@ -1851,147 +1935,150 @@ Private void do_concept_active_phantoms(
 
    if (restr_thing_ptr && restr_thing_ptr->ok_for_assume) {
       switch (restr_thing_ptr->check) {
-         case chk_wave: goto do_wave;
-         case chk_1_group: goto do_1_group;
-         case chk_box: goto do_box;
+         case chk_wave:
+
+            /* Figure out handedness of live people. */
+         
+            for (i=0; i<restr_thing_ptr->size; i++) {
+               int p = restr_thing_ptr->map1[i];
+               int q = restr_thing_ptr->map2[i];
+         
+               if (ss->people[p].id1) { dirtest1 |= ss->people[p].id1;       dirtest2 |= (ss->people[p].id1 ^ 2); }
+               if (ss->people[q].id1) { dirtest1 |= (ss->people[q].id1 ^ 2); dirtest2 |= ss->people[q].id1; }
+            }
+         
+            if (dirtest1 == 0)
+               fail("Need live person to determine handedness.");
+         
+            bothp = ss->cmd.cmd_assume.assump_both;
+         
+            if (ss->cmd.cmd_assume.assump_col & 4) {
+               if ((dirtest1 & 077) == 011)
+                  { pdir = d_north; qdir = d_south; }
+               else if ((dirtest2 & 077) == 011)
+                  { pdir = d_south; qdir = d_north; }
+               else
+                  fail("Live people are not consistent.");
+
+               pdirodd = rotcw(pdir); qdirodd = rotcw(qdir);
+            }
+            else if (ss->cmd.cmd_assume.assump_col == 1) {
+               if ((dirtest1 & 077) == 001 && ((bothp & 2) == 0))
+                  { pdir = d_east; qdir = d_west; }
+               else if ((dirtest2 & 077) == 001 && ((bothp & 1) == 0))
+                  { pdir = d_west; qdir = d_east; }
+               else
+                  fail("Live people are not consistent.");
+               pdirodd = pdir; qdirodd = qdir;
+            }
+            else {
+               if ((dirtest1 & 077) == 010 && ((bothp & 2) == 0))
+                  { pdir = d_north; qdir = d_south; }
+               else if ((dirtest2 & 077) == 010 && ((bothp & 1) == 0))
+                  { pdir = d_south; qdir = d_north; }
+               else
+                  fail("Live people are not consistent.");
+               pdirodd = pdir; qdirodd = qdir;
+            }
+         
+            for (i=0; i<restr_thing_ptr->size; i++) {
+               int p = restr_thing_ptr->map1[i];
+               int q = restr_thing_ptr->map2[i];
+         
+               if (!ss->people[p].id1) {
+                  if (phantom_count >= 16)
+                     fail("Too many phantoms.");
+                  ss->people[p].id1 = ((i&1) ? pdirodd : pdir) | BIT_ACT_PHAN | ((phantom_count++) << 6);
+                  ss->people[p].id2 = 0;
+               }
+               else if (ss->people[p].id1 & BIT_ACT_PHAN)
+                  fail("Active phantoms may only be used once.");
+         
+               if (!ss->people[q].id1) {
+                  if (phantom_count >= 16)
+                     fail("Too many phantoms.");
+                  ss->people[q].id1 = ((i&1) ? qdirodd : qdir) | BIT_ACT_PHAN | ((phantom_count++) << 6);
+                  ss->people[q].id2 = 0;
+               }
+               else if (ss->people[q].id1 & BIT_ACT_PHAN)
+                  fail("Active phantoms may only be used once.");
+            }
+
+            goto finished_filling_in;
+         case chk_1_group:
+            /* Figure out handedness of live people. */
+         
+            for (i=0; i<restr_thing_ptr->size; i++) {
+               int p = restr_thing_ptr->map1[i];
+         
+               if (ss->people[p].id1) { dirtest1 |= ss->people[p].id1; dirtest2 |= (ss->people[p].id1 ^ 2); }
+            }
+         
+            if (dirtest1 == 0)
+               fail("Need live person to determine handedness.");
+         
+            if ((dirtest1 & 077) == 010)
+               { pdir = d_north; }
+            else if ((dirtest2 & 077) == 010)
+               { pdir = d_south; }
+            else
+               fail("Live people are not consistent.");
+         
+            for (i=0; i<restr_thing_ptr->size; i++) {
+               int p = restr_thing_ptr->map1[i];
+         
+               if (!ss->people[p].id1) {
+                  if (phantom_count >= 16)
+                     fail("Too many phantoms.");
+                  ss->people[p].id1 = pdir | BIT_ACT_PHAN | ((phantom_count++) << 6);
+                  ss->people[p].id2 = 0;
+               }
+               else if (ss->people[p].id1 & BIT_ACT_PHAN)
+                  fail("Active phantoms may only be used once.");
+            }
+            goto finished_filling_in;
+         case chk_box:
+            {
+               unsigned int j, k, m, z, t;
+      
+               j = 0; k = 0; m = 0; z = 0;
+      
+               for (i=0 ; i<4 ; i++) {
+                  if ((t = ss->people[i].id1) != 0) {
+                     j |= (t^restr_thing_ptr->map1[i]);
+                     k |= (t^restr_thing_ptr->map1[i]^2);
+                     m |= (t^restr_thing_ptr->map2[i]^3);
+                     z |= (t^restr_thing_ptr->map2[i]^1);
+                  }
+               }
+      
+               if ((j | k | m | z) == 0)
+                  fail("Need live person to determine handedness.");
+      
+               if ((k&3) && (j&3) && (m&3) && (z&3))
+                  fail("Live people are not consistent.");
+      
+               for (i=0 ; i<4 ; i++) {
+                  if (!ss->people[i].id1) {
+                     if (phantom_count >= 16)
+                        fail("Too many phantoms.");
+      
+                     pdir = (j&1) ?
+                           (d_east ^ ((restr_thing_ptr->map2[i] ^ z) & 2)) :
+                           (d_north ^ ((restr_thing_ptr->map1[i] ^ j) & 2));
+      
+                     ss->people[i].id1 = pdir | BIT_ACT_PHAN | ((phantom_count++) << 6);
+                     ss->people[i].id2 = 0;
+                  }
+                  else if (ss->people[i].id1 & BIT_ACT_PHAN)
+                     fail("Active phantoms may only be used once.");
+               }
+            }
+            goto finished_filling_in;
       }
    }
 
    fail("Sorry, this type of assumption and setup not supported.");
-
-   do_box:
-      {
-         unsigned int i, j, k, z, t;
-         int p;
-
-         k = 0; j = 0; i = 0; z = 0;
-
-         for (p=0 ; p<4 ; p++) {
-            if ((t = ss->people[p].id1) != 0) {
-               j |= (t^restr_thing_ptr->map1[p]);
-               k |= (t^restr_thing_ptr->map1[p]^2);
-               i |= (t^restr_thing_ptr->map2[p]^3);
-               z |= (t^restr_thing_ptr->map2[p]^1);
-            }
-         }
-
-         if ((j | k | i | z) == 0)
-            fail("Need live person to determine handedness.");
-
-         if ((k&3) && (j&3) && (i&3) && (z&3))
-            fail("Live people are not consistent.");
-
-         for (p=0 ; p<4 ; p++) {
-            if (!ss->people[p].id1) {
-               if (phantom_count >= 16)
-                  fail("Too many phantoms.");
-
-               pdir = (j&1) ?
-                     (d_east ^ ((restr_thing_ptr->map2[p] ^ z) & 2)) :
-                     (d_north ^ ((restr_thing_ptr->map1[p] ^ j) & 2));
-
-               ss->people[p].id1 = pdir | BIT_ACT_PHAN | ((phantom_count++) << 6);
-               ss->people[p].id2 = 0;
-            }
-            else if (ss->people[p].id1 & BIT_ACT_PHAN)
-               fail("Active phantoms may only be used once.");
-         }
-      }
-   goto finished_filling_in;
-
-
-   do_1_group:
-
-   /* Figure out handedness of live people. */
-
-   for (i=0; i<restr_thing_ptr->size; i++) {
-      int p = restr_thing_ptr->map1[i];
-
-      if (ss->people[p].id1) { dirtest1 |= ss->people[p].id1; dirtest2 |= (ss->people[p].id1 ^ 2); }
-   }
-
-   if (dirtest1 == 0)
-      fail("Need live person to determine handedness.");
-
-   if ((dirtest1 & 077) == 010)
-      { pdir = d_north; }
-   else if ((dirtest2 & 077) == 010)
-      { pdir = d_south; }
-   else
-      fail("Live people are not consistent.");
-
-   for (i=0; i<restr_thing_ptr->size; i++) {
-      int p = restr_thing_ptr->map1[i];
-
-      if (!ss->people[p].id1) {
-         if (phantom_count >= 16)
-            fail("Too many phantoms.");
-         ss->people[p].id1 = pdir | BIT_ACT_PHAN | ((phantom_count++) << 6);
-         ss->people[p].id2 = 0;
-      }
-      else if (ss->people[p].id1 & BIT_ACT_PHAN)
-         fail("Active phantoms may only be used once.");
-   }
-
-   goto finished_filling_in;
-
-
-   do_wave:
-
-   /* Figure out handedness of live people. */
-
-   for (i=0; i<restr_thing_ptr->size; i++) {
-      int p = restr_thing_ptr->map1[i];
-      int q = restr_thing_ptr->map2[i];
-
-      if (ss->people[p].id1) { dirtest1 |= ss->people[p].id1; dirtest2 |= (ss->people[p].id1 ^ 2); }
-      if (ss->people[q].id1) { dirtest1 |= (ss->people[q].id1 ^ 2); dirtest2 |= ss->people[q].id1; }
-   }
-
-   if (dirtest1 == 0)
-      fail("Need live person to determine handedness.");
-
-   bothp = ss->cmd.cmd_assume.assump_both;
-
-   if (ss->cmd.cmd_assume.assump_col == 1) {
-      if ((dirtest1 & 077) == 001 && ((bothp & 2) == 0))
-         { pdir = d_east; qdir = d_west; }
-      else if ((dirtest2 & 077) == 001 && ((bothp & 1) == 0))
-         { pdir = d_west; qdir = d_east; }
-      else
-         fail("Live people are not consistent.");
-   }
-   else {
-      if ((dirtest1 & 077) == 010 && ((bothp & 2) == 0))
-         { pdir = d_north; qdir = d_south; }
-      else if ((dirtest2 & 077) == 010 && ((bothp & 1) == 0))
-         { pdir = d_south; qdir = d_north; }
-      else
-         fail("Live people are not consistent.");
-   }
-
-   for (i=0; i<restr_thing_ptr->size; i++) {
-      int p = restr_thing_ptr->map1[i];
-      int q = restr_thing_ptr->map2[i];
-
-      if (!ss->people[p].id1) {
-         if (phantom_count >= 16)
-            fail("Too many phantoms.");
-         ss->people[p].id1 = pdir | BIT_ACT_PHAN | ((phantom_count++) << 6);
-         ss->people[p].id2 = 0;
-      }
-      else if (ss->people[p].id1 & BIT_ACT_PHAN)
-         fail("Active phantoms may only be used once.");
-
-      if (!ss->people[q].id1) {
-         if (phantom_count >= 16)
-            fail("Too many phantoms.");
-         ss->people[q].id1 = qdir | BIT_ACT_PHAN | ((phantom_count++) << 6);
-         ss->people[q].id2 = 0;
-      }
-      else if (ss->people[q].id1 & BIT_ACT_PHAN)
-         fail("Active phantoms may only be used once.");
-   }
 
    finished_filling_in:
 
@@ -2074,6 +2161,7 @@ Private void do_concept_crazy(
          else {
             /* We are taking the part number indication. */
             highlimit = i+1;          /* This will make us do just the selected part. */
+            finalresultflags |= RESULTFLAG__PARTS_ARE_KNOWN;
             if (highlimit == craziness) finalresultflags |= RESULTFLAG__DID_LAST_PART;
             cmd.cmd_frac_flags = 0;   /* No fractions for subject, we have consumed them. */
          }
@@ -2439,7 +2527,7 @@ Private void do_concept_special_sequential(
 
       if ((call_index ^ parseptr->concept->value.arg1) != 0) {   /* Maybe do them in reverse order. */
          result->cmd.cmd_frac_flags = 0;  /* No fractions to 2nd call. */
-         saved_last_flag = result->result_flags & RESULTFLAG__DID_LAST_PART;
+         saved_last_flag = result->result_flags & (RESULTFLAG__DID_LAST_PART|RESULTFLAG__PARTS_ARE_KNOWN);
       }
       else {
          result->cmd.parseptr = parseptr->subsidiary_root;
@@ -2459,17 +2547,16 @@ Private void do_concept_twice(
    parse_block *parseptr,
    setup *result)
 {
-   int call_index;
+   unsigned int save_elongation;
 
    *result = *ss;
    result->result_flags = RESULTFLAG__SPLIT_AXIS_MASK;   /* Seed the result. */
+   do_call_in_series(result, FALSE, TRUE, FALSE);
 
-   for (call_index=0; call_index<2; call_index++) {
-      unsigned int save_elongation = result->cmd.prior_elongation_bits;   /* Save it temporarily. */
-      result->cmd = ss->cmd;      /* The call we wish to execute. */
-      result->cmd.prior_elongation_bits = save_elongation;
-      do_call_in_series(result, FALSE, TRUE, FALSE);
-   }
+   save_elongation = result->cmd.prior_elongation_bits;   /* Save it temporarily. */
+   result->cmd = ss->cmd;      /* The call we wish to execute. */
+   result->cmd.prior_elongation_bits = save_elongation;
+   do_call_in_series(result, FALSE, TRUE, FALSE);
 }
 
 
@@ -2832,7 +2919,10 @@ Private void do_concept_triple_diamonds(
    parse_block *parseptr,
    setup *result)
 {
-   if (ss->kind != s3dmd) fail("Must have a triple diamond setup to do this concept.");
+   /* See "do_concept_do_phantom_diamonds" for meaning of arg2. */
+
+   if (ss->kind != s3dmd) fail("Must have a triple diamond or 1/4 tag setup for this concept.");
+   ss->cmd.cmd_misc_flags |= parseptr->concept->value.arg2;
    divided_setup_move(ss, (*map_lists[sdmd][2])[MPKIND__SPLIT][1], phantest_ok, TRUE, result);
 }
 
@@ -2842,7 +2932,10 @@ Private void do_concept_quad_diamonds(
    parse_block *parseptr,
    setup *result)
 {
-   if (ss->kind != s4dmd) fail("Must have a quadruple diamond setup to do this concept.");
+   /* See "do_concept_do_phantom_diamonds" for meaning of arg2. */
+
+   if (ss->kind != s4dmd) fail("Must have a quadruple diamond or 1/4 tag setup for this concept.");
+   ss->cmd.cmd_misc_flags |= parseptr->concept->value.arg2;
    divided_setup_move(ss, (*map_lists[sdmd][3])[MPKIND__SPLIT][1], phantest_ok, TRUE, result);
 }
 
@@ -3318,6 +3411,8 @@ Private void do_concept_meta(
          move(&tttt, FALSE, result);
          finalresultflags |= result->result_flags;
          normalize_setup(result, simple_normalize);
+         if (!(result->result_flags & RESULTFLAG__PARTS_ARE_KNOWN))
+            fail("Can't have 'no one' do a call.");
       }
       while (!(result->result_flags & RESULTFLAG__DID_LAST_PART));
    }
@@ -3366,18 +3461,15 @@ Private void do_concept_nth_part(
          finalresultflags |= result->result_flags;
          normalize_setup(result, simple_normalize);
       }
-   
-      /* Do the final part, if there is more. */
-   
-      if (!(result->result_flags & RESULTFLAG__DID_LAST_PART)) {
-         tttt = *result;
-         /* Set the fractionalize field to [1 0 parts-to-do-first+1]. */
-         tttt.cmd = ss->cmd;
-         tttt.cmd.cmd_frac_flags |= ((64|parseptr->number)*CMD_FRAC__FRACTIONALIZE_BIT);
-         move(&tttt, FALSE, result);
-         finalresultflags |= result->result_flags;
-         normalize_setup(result, simple_normalize);
-      }
+
+      /* Do the final part. */
+      tttt = *result;
+      /* Set the fractionalize field to [1 0 parts-to-do-first+1]. */
+      tttt.cmd = ss->cmd;
+      tttt.cmd.cmd_frac_flags |= ((64|parseptr->number)*CMD_FRAC__FRACTIONALIZE_BIT);
+      move(&tttt, FALSE, result);
+      finalresultflags |= result->result_flags;
+      normalize_setup(result, simple_normalize);
    }
    else {
       /* Scan the "final" concepts, remembering them and their end point. */
@@ -3424,6 +3516,9 @@ Private void do_concept_nth_part(
       finalresultflags |= result->result_flags;
       normalize_setup(result, simple_normalize);
    
+      if (!(result->result_flags & RESULTFLAG__PARTS_ARE_KNOWN))
+         fail("Can't have 'no one' do a call.");
+
       /* Do the final part, if there is more. */
    
       if (!(result->result_flags & RESULTFLAG__DID_LAST_PART)) {
@@ -3530,6 +3625,8 @@ Private void do_concept_interlace(
          result->cmd.cmd_frac_flags |= index << 12;
          result->cmd.prior_elongation_bits = save_elongation;
          do_call_in_series(result, FALSE, TRUE, FALSE);
+         if (!(result->result_flags & RESULTFLAG__PARTS_ARE_KNOWN))
+            fail("Can't have 'no one' do a call.");
          first_doneflag = result->result_flags & RESULTFLAG__DID_LAST_PART;
       }
       else if (second_doneflag == 0)
@@ -3543,6 +3640,8 @@ Private void do_concept_interlace(
          result->cmd.parseptr = parseptr->subsidiary_root;
          result->cmd.prior_elongation_bits = save_elongation;
          do_call_in_series(result, FALSE, TRUE, FALSE);
+         if (!(result->result_flags & RESULTFLAG__PARTS_ARE_KNOWN))
+            fail("Can't have 'no one' do a call.");
          second_doneflag = result->result_flags & RESULTFLAG__DID_LAST_PART;
       }
       else if (first_doneflag == 0)
@@ -3576,12 +3675,26 @@ Private void do_concept_fractional(
       have not set CONCPROP__NO_STEP in the concept table.  The user is responsible
       for the consequences of using this. */
 
+   /* The meaning of arg1 is as follows:
+      0 - "M/N" - do first part
+      1 - "DO THE LAST M/N"
+      2 - "1-M/N" do the whole call and then some. */
+
    int numer, denom;
    int s_numer, s_denom, e_numer, e_denom, divisor;
 
    numer = parseptr->number;
    denom = numer >> 4;
    numer &= 0xF;
+
+   if (parseptr->concept->value.arg1 == 2) {
+
+      /* Do the whole call first, then part of it again. */
+
+      *result = *ss;
+      result->result_flags = RESULTFLAG__SPLIT_AXIS_MASK;   /* Seed the result. */
+      do_call_in_series(result, FALSE, TRUE, FALSE);
+   }
 
    /* We don't allow stacking with the old regime. */
    if (ss->cmd.cmd_frac_flags & CMD_FRAC__FRACTIONALIZE_MASK)
@@ -3634,7 +3747,15 @@ Private void do_concept_fractional(
    ss->cmd.parseptr = parseptr->next;
    ss->cmd.callspec = NULLCALLSPEC;
    ss->cmd.cmd_final_flags = 0;
-   move(ss, FALSE, result);
+
+   if (parseptr->concept->value.arg1 == 2) {
+      unsigned int save_elongation = result->cmd.prior_elongation_bits;
+      result->cmd = ss->cmd;      /* The call we wish to execute. */
+      result->cmd.prior_elongation_bits = save_elongation;
+      do_call_in_series(result, FALSE, TRUE, FALSE);
+   }
+   else
+      move(ss, FALSE, result);
 }
 
 
@@ -4040,15 +4161,13 @@ concept_table_item concept_table[] = {
    /* concept_do_phantom_2x2 */           {CONCPROP__NEED_4X4 | CONCPROP__NO_STEP | CONCPROP__SET_PHANTOMS,                        do_concept_do_phantom_2x2},
    /* concept_do_phantom_boxes */         {CONCPROP__NEED_2X8 | CONCPROP__NO_STEP | Nostandard_matrix_phantom,                     do_concept_do_phantom_boxes},
    /* concept_do_phantom_diamonds */      {CONCPROP__NEED_4DMD | CONCPROP__NO_STEP | Nostandard_matrix_phantom,                    do_concept_do_phantom_diamonds},
-   /* concept_do_phantom_qtags */         {CONCPROP__NEED_4DMD | CONCPROP__NO_STEP | Standard_matrix_phantom,                      do_concept_do_phantom_qtags},
    /* concept_do_phantom_1x6 */           {CONCPROP__NEED_2X6 | CONCPROP__NO_STEP | Standard_matrix_phantom,                       do_concept_do_phantom_1x6},
    /* concept_do_phantom_1x8 */           {CONCPROP__NEED_2X8 | CONCPROP__NO_STEP | Standard_matrix_phantom,                       do_concept_do_phantom_1x8},
    /* concept_do_phantom_2x4 */           {CONCPROP__NEED_4X4_1X16 | Standard_matrix_phantom,                                      do_phantom_2x4_concept},
    /* concept_do_phantom_2x3 */           {CONCPROP__NEED_3X4 | CONCPROP__NO_STEP | Standard_matrix_phantom,                       do_concept_do_phantom_2x3},
    /* concept_divided_2x4 */              {CONCPROP__NEED_2X8 | CONCPROP__NO_STEP | Standard_matrix_phantom,                       do_concept_divided_2x4},
    /* concept_divided_2x3 */              {CONCPROP__NEED_2X6 | CONCPROP__NO_STEP | Standard_matrix_phantom,                       do_concept_divided_2x3},
-   /* concept_do_divided_diamonds */      {CONCPROP__NEED_4X6 | CONCPROP__NO_STEP | Nostandard_matrix_phantom,                     do_concept_do_divided_diamonds},
-   /* concept_do_divided_qtags */         {CONCPROP__NEED_4X6 | CONCPROP__NO_STEP | Standard_matrix_phantom,                       do_concept_do_divided_qtags},
+   /* concept_do_divided_diamonds */      {CONCPROP__NEED_4X6 | CONCPROP__NO_STEP | CONCPROP__GET_MASK | Nostandard_matrix_phantom,do_concept_do_divided_diamonds},
    /* concept_distorted */                {CONCPROP__NO_STEP | CONCPROP__STANDARD,                                                 do_concept_distorted},
    /* concept_single_diagonal */          {CONCPROP__NO_STEP | CONCPROP__GET_MASK | CONCPROP__USE_SELECTOR,                        do_concept_single_diagonal},
    /* concept_double_diagonal */          {CONCPROP__NO_STEP | CONCPROP__STANDARD,                                                 do_concept_double_diagonal},

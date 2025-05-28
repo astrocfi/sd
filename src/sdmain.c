@@ -27,7 +27,7 @@
     General Public License if you distribute the file.
 */
 
-#define VERSION_STRING "30.76"
+#define VERSION_STRING "30.78"
 
 /* We cause this string (that is, the concatentaion of these strings) to appear
    in the binary image of the program, so that the "what" and "ident" utilities
@@ -143,9 +143,9 @@ long_boolean diagnostic_mode = FALSE;
 selector_kind current_selector;
 direction_kind current_direction;
 uint32 current_number_fields;
-warning_info no_search_warnings = {0, 0};
-warning_info conc_elong_warnings = {0, 0};
-warning_info dyp_each_warnings = {0, 0};
+warning_info no_search_warnings = {{0, 0}};
+warning_info conc_elong_warnings = {{0, 0}};
+warning_info dyp_each_warnings = {{0, 0}};
 
 /* These variables are are global to this file. */
 

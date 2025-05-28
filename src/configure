@@ -1,5 +1,5 @@
 #!/bin/sh
-# From configure.in Time-stamp: 94/07/28 01:12:58 gildea
+# From configure.in Time-stamp: 94/08/23 17:41:13 gildea
 # configure script for Sd (square dance caller's helper)
 #
 # options:
@@ -525,6 +525,8 @@ rm -f conftest*
 
 # Begin X11 investigation.
 
+x_direct_test_library='Xaw'
+x_direct_test_include='X11/Xaw/Label.h'
 # If we find X, set shell vars x_includes and x_libraries to the paths.
 no_x=true
 if test "x$with_x" != xno; then
@@ -709,6 +711,55 @@ fi
 if test -n "$no_x"; then
   echo "note: cannot find X11 headers and libraries"
 fi
+LIBS="$x_flags"
+R6LIBS=
+ac_save_LIBS="${LIBS}"
+LIBS="${LIBS} -lICE"
+ac_have_lib=""
+test -n "$silent" || echo "checking for -lICE"
+cat > conftest.${ac_ext} <<EOF
+#include "confdefs.h"
+
+int main() { return 0; }
+int t() { main();; return 0; }
+EOF
+if eval $ac_compile; then
+  rm -rf conftest*
+  ac_have_lib="1"
+
+fi
+rm -f conftest*
+LIBS="${ac_save_LIBS}"
+if test -n "${ac_have_lib}"; then
+   :; LIBS="$LIBS -lICE"; R6LIBS="-lICE"
+else
+   :; 
+fi
+
+ac_save_LIBS="${LIBS}"
+LIBS="${LIBS} -lSM"
+ac_have_lib=""
+test -n "$silent" || echo "checking for -lSM"
+cat > conftest.${ac_ext} <<EOF
+#include "confdefs.h"
+
+int main() { return 0; }
+int t() { main();; return 0; }
+EOF
+if eval $ac_compile; then
+  rm -rf conftest*
+  ac_have_lib="1"
+
+fi
+rm -f conftest*
+LIBS="${ac_save_LIBS}"
+if test -n "${ac_have_lib}"; then
+   :; R6LIBS="-lSM $R6LIBS"
+else
+   :; 
+fi
+
+LIBS=
 ac_save_LIBS="${LIBS}"
 LIBS="${LIBS} -lsocket"
 ac_have_lib=""
@@ -756,7 +807,7 @@ else
 fi
 
 
-X11_LIBS="$x_flags -lXaw -lXmu -lXt -lXext -lX11 $LIBS"
+X11_LIBS="$x_flags -lXaw -lXmu -lXt $R6LIBS -lXext -lX11 $LIBS"
 
 if test -n "$x_libraries"; then
     test -n "$silent" || echo "checking whether -R$x_libraries is needed"

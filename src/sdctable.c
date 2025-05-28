@@ -205,22 +205,22 @@ concept_descriptor concept_descriptor_table[] = {
    {"QUADRUPLE COLUMNS WORKING CLOCKWISE",   concept_quad_lines_tog_std,    FALSE, l_c4, {0, 8, 0}},
    {"QUADRUPLE COLUMNS WORKING COUNTERCLOCKWISE",concept_quad_lines_tog_std,FALSE, l_c4, {0, 9, 0}},
 /* -------- column break -------- */
-#define pb__1_size 34
+#define pb__1_size 39
 #define pb__1_spb 0
 #define pb__1_ipb 1
-#define pb__1_tb 11
-#define pb__1_tbwt 13
-#define pb__1_tbwa 14
-#define pb__1_tbwf 15
-#define pb__1_tbwb 16
-#define pb__1_tbwr 17
-#define pb__1_tbwl 18
-#define pb__1_qbwt 26
-#define pb__1_qbwa 27
-#define pb__1_qbwf 28
-#define pb__1_qbwb 29
-#define pb__1_qbwr 30
-#define pb__1_qbwl 31
+#define pb__1_tb 16
+#define pb__1_tbwt 19
+#define pb__1_tbwa 20
+#define pb__1_tbwf 21
+#define pb__1_tbwb 22
+#define pb__1_tbwr 23
+#define pb__1_tbwl 24
+#define pb__1_qbwt 31
+#define pb__1_qbwa 32
+#define pb__1_qbwf 33
+#define pb__1_qbwb 34
+#define pb__1_qbwr 35
+#define pb__1_qbwl 36
    {"SPLIT PHANTOM BOXES",                   concept_do_phantom_boxes,      FALSE, l_c3, {&map_hv_2x4_2, phantest_impossible}},
    {"INTERLOCKED PHANTOM BOXES",             concept_do_phantom_boxes,      FALSE, l_c4, {&map_intlk_phantom_box, phantest_impossible}},
    {"PHANTOM BOXES",                         concept_do_phantom_boxes,      FALSE, l_c4a, {&map_phantom_box, phantest_first_or_both}},
@@ -232,7 +232,13 @@ concept_descriptor concept_descriptor_table[] = {
          {"", concept_comment, l_nonexistent_concept},
          {"", concept_comment, l_nonexistent_concept},
          {"", concept_comment, l_nonexistent_concept},
+         {"", concept_comment, l_nonexistent_concept},
+         {"", concept_comment, l_nonexistent_concept},
+         {"", concept_comment, l_nonexistent_concept},
+         {"", concept_comment, l_nonexistent_concept},
+         {"", concept_comment, l_nonexistent_concept},
    {"TRIPLE BOXES",                          concept_triple_boxes,          FALSE, l_c1, {0, MPKIND__SPLIT}},
+         {"", concept_comment, l_nonexistent_concept},
    {"CONCENTRIC TRIPLE BOXES",               concept_triple_boxes,          FALSE, l_c4, {0, MPKIND__CONCPHAN}},
    {"TRIPLE BOXES WORKING TOGETHER",         concept_triple_boxes_together, FALSE, l_c3, {0, 6, 0}},
    {"TRIPLE BOXES WORKING APART",            concept_triple_boxes_together, FALSE, l_c3, {0, 7, 0}},
@@ -243,9 +249,8 @@ concept_descriptor concept_descriptor_table[] = {
    {"TRIPLE BOXES WORKING CLOCKWISE",        concept_triple_boxes_together, FALSE, l_c4, {0, 8, 0}},
    {"TRIPLE BOXES WORKING COUNTERCLOCKWISE", concept_triple_boxes_together, FALSE, l_c4, {0, 9, 0}},
          {"", concept_comment, l_nonexistent_concept},
-   {"INNER DUAL BOXES",                      concept_inner_boxes,           FALSE, l_c4},
-         {"", concept_comment, l_nonexistent_concept},
    {"QUADRUPLE BOXES",                       concept_quad_boxes,            FALSE, l_c4a, {0, MPKIND__SPLIT}},
+   {"INNER DUAL BOXES",                      concept_inner_boxes,           FALSE, l_c4},
    {"CONCENTRIC QUADRUPLE BOXES",            concept_quad_boxes,            FALSE, l_c4a, {0, MPKIND__CONCPHAN}},
    {"QUADRUPLE BOXES WORKING TOGETHER",      concept_quad_boxes_together,   FALSE, l_c4a, {0, 6, 0}},
    {"QUADRUPLE BOXES WORKING APART",         concept_quad_boxes_together,   FALSE, l_c4a, {0, 7, 0}},
@@ -256,25 +261,31 @@ concept_descriptor concept_descriptor_table[] = {
    {"QUADRUPLE BOXES WORKING CLOCKWISE",     concept_quad_boxes_together,   FALSE, l_c4,  {0, 8, 0}},
    {"QUADRUPLE BOXES WORKING COUNTERCLOCKWISE",concept_quad_boxes_together, FALSE, l_c4 , {0, 9, 0}},
 /* -------- column break -------- */
-#define pb__2_size 27
+#define pb__2_size 32
 #define pb__2_spd 0
 #define pb__2_ipd 1
-#define pb__2_td 11
-#define pb__2_tdwt 13
-#define pb__2_qd 24
-#define pb__2_qdwt 26
-   {"SPLIT PHANTOM DIAMONDS",                concept_do_phantom_diamonds,   FALSE, l_c3x, {&map_hv_qtg_2, phantest_impossible, 0}},
-   {"INTERLOCKED PHANTOM DIAMONDS",          concept_do_phantom_diamonds,   FALSE, l_c4, {&map_intlk_phantom_dmd, phantest_impossible, 0}},
-   {"PHANTOM DIAMONDS",                      concept_do_phantom_diamonds,   FALSE, l_c4, {&map_phantom_dmd, phantest_first_or_both, 0}},
+#define pb__2_td 16
+#define pb__2_tdwt 19
+#define pb__2_qd 28
+#define pb__2_qdwt 31
+   {"SPLIT PHANTOM DIAMONDS",                concept_do_phantom_diamonds,   FALSE, l_c3x, {&map_hv_qtg_2, phantest_impossible, CMD_MISC__VERIFY_DMD_LIKE}},
+   {"INTERLOCKED PHANTOM DIAMONDS",          concept_do_phantom_diamonds,   FALSE, l_c4, {&map_intlk_phantom_dmd, phantest_impossible, CMD_MISC__VERIFY_DMD_LIKE}},
+   {"PHANTOM DIAMONDS",                      concept_do_phantom_diamonds,   FALSE, l_c4, {&map_phantom_dmd, phantest_first_or_both, CMD_MISC__VERIFY_DMD_LIKE}},
          {"", concept_comment, l_nonexistent_concept},
-   {"SPLIT PHANTOM 1/4-TAGS",                concept_do_phantom_qtags,      FALSE, l_c3x, {&map_hv_qtg_2, phantest_impossible, 1}},
-   {"INTERLOCKED PHANTOM 1/4-TAGS",          concept_do_phantom_qtags,      FALSE, l_c4, {&map_intlk_phantom_dmd, phantest_impossible, 1}},
-   {"PHANTOM 1/4-TAGS",                      concept_do_phantom_qtags,      FALSE, l_c4, {&map_phantom_dmd, phantest_first_or_both, 1}},
+   {"SPLIT PHANTOM DIAMOND SPOTS",           concept_do_phantom_diamonds,   FALSE, l_c3x, {&map_hv_qtg_2, phantest_impossible, 0}},
+   {"INTERLOCKED PHANTOM DIAMOND SPOTS",     concept_do_phantom_diamonds,   FALSE, l_c4, {&map_intlk_phantom_dmd, phantest_impossible, 0}},
+   {"PHANTOM DIAMOND SPOTS",                 concept_do_phantom_diamonds,   FALSE, l_c4, {&map_phantom_dmd, phantest_first_or_both, 0}},
          {"", concept_comment, l_nonexistent_concept},
-   {"TWIN PHANTOM DIAMONDS",                 concept_do_divided_diamonds,   FALSE, l_c3x, {&map_vv_qtg_2, phantest_impossible}},
-   {"TWIN PHANTOM 1/4-TAGS",                 concept_do_divided_qtags,      FALSE, l_c3x, {&map_vv_qtg_2, phantest_impossible}},
          {"", concept_comment, l_nonexistent_concept},
-   {"TRIPLE DIAMONDS",                       concept_triple_diamonds,       FALSE, l_c3a},
+         {"", concept_comment, l_nonexistent_concept},
+         {"", concept_comment, l_nonexistent_concept},
+         {"", concept_comment, l_nonexistent_concept},
+   {"TWIN PHANTOM DIAMONDS",                 concept_do_divided_diamonds,   FALSE, l_c3x, {&map_vv_qtg_2, phantest_impossible, CMD_MISC__VERIFY_DMD_LIKE}},
+   {"TWIN PHANTOM DIAMOND SPOTS",            concept_do_divided_diamonds,   FALSE, l_c3x, {&map_vv_qtg_2, phantest_impossible, 0}},
+         {"", concept_comment, l_nonexistent_concept},
+         {"", concept_comment, l_nonexistent_concept},
+   {"TRIPLE DIAMONDS",                       concept_triple_diamonds,       FALSE, l_c3a, {0, 0, CMD_MISC__VERIFY_DMD_LIKE}},
+   {"TRIPLE DIAMOND SPOTS",                  concept_triple_diamonds,       FALSE, l_c3a, {0, 0, 0}},
          {"", concept_comment, l_nonexistent_concept},
    {"TRIPLE DIAMONDS WORKING TOGETHER",    concept_triple_diamonds_together,FALSE, l_c3},
          {"", concept_comment, l_nonexistent_concept},
@@ -285,11 +296,44 @@ concept_descriptor concept_descriptor_table[] = {
          {"", concept_comment, l_nonexistent_concept},
          {"", concept_comment, l_nonexistent_concept},
          {"", concept_comment, l_nonexistent_concept},
-         {"", concept_comment, l_nonexistent_concept},
-         {"", concept_comment, l_nonexistent_concept},
-   {"QUADRUPLE DIAMONDS",                    concept_quad_diamonds,         FALSE, l_c4a},
+   {"QUADRUPLE DIAMONDS",                    concept_quad_diamonds,         FALSE, l_c4a, {0, 0, CMD_MISC__VERIFY_DMD_LIKE}},
+   {"QUADRUPLE DIAMOND SPOTS",               concept_quad_diamonds,         FALSE, l_c4a, {0, 0, 0}},
          {"", concept_comment, l_nonexistent_concept},
    {"QUADRUPLE DIAMONDS WORKING TOGETHER",   concept_quad_diamonds_together,FALSE, l_c4a},
+/* -------- column break -------- */
+#define pb__3_size 32
+   {"SPLIT PHANTOM 1/4-TAGS",                concept_do_phantom_diamonds,   FALSE, l_c3x, {&map_hv_qtg_2, phantest_impossible, CMD_MISC__VERIFY_1_4_TAG}},
+   {"INTERLOCKED PHANTOM 1/4-TAGS",          concept_do_phantom_diamonds,   FALSE, l_c4, {&map_intlk_phantom_dmd, phantest_impossible, CMD_MISC__VERIFY_1_4_TAG}},
+   {"PHANTOM 1/4-TAGS",                      concept_do_phantom_diamonds,   FALSE, l_c4, {&map_phantom_dmd, phantest_first_or_both, CMD_MISC__VERIFY_1_4_TAG}},
+         {"", concept_comment, l_nonexistent_concept},
+   {"SPLIT PHANTOM 3/4-TAGS",                concept_do_phantom_diamonds,   FALSE, l_c3x, {&map_hv_qtg_2, phantest_impossible, CMD_MISC__VERIFY_3_4_TAG}},
+   {"INTERLOCKED PHANTOM 3/4-TAGS",          concept_do_phantom_diamonds,   FALSE, l_c4, {&map_intlk_phantom_dmd, phantest_impossible, CMD_MISC__VERIFY_3_4_TAG}},
+   {"PHANTOM 3/4-TAGS",                      concept_do_phantom_diamonds,   FALSE, l_c4, {&map_phantom_dmd, phantest_first_or_both, CMD_MISC__VERIFY_3_4_TAG}},
+         {"", concept_comment, l_nonexistent_concept},
+   {"SPLIT PHANTOM GENERAL 1/4-TAGS",        concept_do_phantom_diamonds,   FALSE, l_c3x, {&map_hv_qtg_2, phantest_impossible, CMD_MISC__VERIFY_QTAG_LIKE}},
+   {"INTERLOCKED PHANTOM GENERAL 1/4-TAGS",  concept_do_phantom_diamonds,   FALSE, l_c4, {&map_intlk_phantom_dmd, phantest_impossible, CMD_MISC__VERIFY_QTAG_LIKE}},
+   {"PHANTOM GENERAL 1/4-TAGS",              concept_do_phantom_diamonds,   FALSE, l_c4, {&map_phantom_dmd, phantest_first_or_both, CMD_MISC__VERIFY_QTAG_LIKE}},
+         {"", concept_comment, l_nonexistent_concept},
+   {"TWIN PHANTOM 1/4-TAGS",                 concept_do_divided_diamonds,   FALSE, l_c3x, {&map_vv_qtg_2, phantest_impossible, CMD_MISC__VERIFY_1_4_TAG}},
+   {"TWIN PHANTOM 3/4-TAGS",                 concept_do_divided_diamonds,   FALSE, l_c3x, {&map_vv_qtg_2, phantest_impossible, CMD_MISC__VERIFY_3_4_TAG}},
+   {"TWIN PHANTOM GENERAL 1/4-TAGS",         concept_do_divided_diamonds,   FALSE, l_c3x, {&map_vv_qtg_2, phantest_impossible, CMD_MISC__VERIFY_QTAG_LIKE}},
+         {"", concept_comment, l_nonexistent_concept},
+   {"TRIPLE 1/4 TAGS",                       concept_triple_diamonds,       FALSE, l_c3a, {0, 0, CMD_MISC__VERIFY_1_4_TAG}},
+   {"TRIPLE 3/4 TAGS",                       concept_triple_diamonds,       FALSE, l_c3a, {0, 0, CMD_MISC__VERIFY_3_4_TAG}},
+   {"TRIPLE GENERAL 1/4 TAGS",               concept_triple_diamonds,       FALSE, l_c3a, {0, 0, CMD_MISC__VERIFY_QTAG_LIKE}},
+/* ! */  {"TRIPLE 1/4 TAGS WORKING TOGETHER",      concept_triple_diamonds_together,FALSE, l_c3},
+         {"", concept_comment, l_nonexistent_concept},
+         {"", concept_comment, l_nonexistent_concept},
+         {"", concept_comment, l_nonexistent_concept},
+         {"", concept_comment, l_nonexistent_concept},
+         {"", concept_comment, l_nonexistent_concept},
+         {"", concept_comment, l_nonexistent_concept},
+         {"", concept_comment, l_nonexistent_concept},
+         {"", concept_comment, l_nonexistent_concept},
+   {"QUADRUPLE 1/4 TAGS",                    concept_quad_diamonds,         FALSE, l_c4a, {0, 0, CMD_MISC__VERIFY_1_4_TAG}},
+   {"QUADRUPLE 3/4 TAGS",                    concept_quad_diamonds,         FALSE, l_c4a, {0, 0, CMD_MISC__VERIFY_3_4_TAG}},
+   {"QUADRUPLE GENERAL 1/4 TAGS",            concept_quad_diamonds,         FALSE, l_c4a, {0, 0, CMD_MISC__VERIFY_QTAG_LIKE}},
+/* ! */  {"QUADRUPLE 1/4 TAGS WORKING TOGETHER",   concept_quad_diamonds_together,FALSE, l_c4a},
 
 /* tandem concepts */
 
@@ -377,7 +421,7 @@ concept_descriptor concept_descriptor_table[] = {
    {"\"O\"",                                 concept_do_phantom_2x4,        FALSE, l_c1,         {&map_o_s2x4_3, phantest_only_first_one, 0, MPKIND__NONE}},
    {"BUTTERFLY",                             concept_do_phantom_2x4,        FALSE, l_c1,         {&map_x_s2x4_3, phantest_only_second_one, 0, MPKIND__NONE}},
 /* -------- column break -------- */
-#define dd__2_size 8
+#define dd__2_size 10
    {"BIGBLOCK",                              concept_do_phantom_2x4,        FALSE, l_c3a,        {&map_stagger, phantest_only_one, 1, MPKIND__NONE}},
    {"STAIRSTEP LINES",                       concept_do_phantom_2x4,        FALSE, l_c4,         {&map_ladder, phantest_only_one, 1, MPKIND__NONE}},
    {"LADDER LINES",                          concept_do_phantom_2x4,        FALSE, l_c4,         {&map_stairst, phantest_only_one, 1, MPKIND__NONE}},
@@ -386,6 +430,8 @@ concept_descriptor concept_descriptor_table[] = {
    {"DISTORTED LINES",                       concept_distorted,             FALSE, l_c3,         {0, disttest_any, 1}},
    {"<ANYONE> IN A DIAGONAL LINE",           concept_single_diagonal,       FALSE, l_c3,         {0, 1}},
    {"TWO DIAGONAL LINES",                    concept_double_diagonal,       FALSE, l_c3,         {0, 1}},
+         {"", concept_comment, l_nonexistent_concept},
+   {"PARALLELOGRAM",                         concept_parallelogram,         FALSE, l_c2},
 /* -------- column break -------- */
 #define dd__3_size 9
 #define dd__3_pofc 3
@@ -441,22 +487,23 @@ concept_descriptor concept_descriptor_table[] = {
 
 /* Miscellaneous concepts */
 
-#define mm__1_size 46
-#define mm__1_phan 34
+#define mm__1_size 58
+#define mm__1_phan 12
    {"LEFT",                                  concept_left,                  FALSE, l_mainstream},
    {"REVERSE",                               concept_reverse,               FALSE, l_mainstream},
    {"CROSS",                                 concept_cross,                 FALSE, l_mainstream},
    {"SINGLE",                                concept_single,                FALSE, l_mainstream},
-   {"SINGLE FILE",                           concept_singlefile,            FALSE, l_mainstream},  /* Not C3X?  No, mainstream, for dixie style. */
+   {"SINGLE FILE",                           concept_singlefile,            FALSE, l_mainstream},  /* Not C3?  No, mainstream, for dixie style. */
    {"GRAND",                                 concept_grand,                 FALSE, l_plus},
    {"MIRROR",                                concept_mirror,                FALSE, l_c2},  /* C2 is about where people become aware of taking right hands. */
-         {"", concept_comment, l_nonexistent_concept},
    {"TRIANGLE",                              concept_triangle,              FALSE, l_c1},
    {"DIAMOND",                               concept_diamond,               FALSE, l_c3x},
    {"INTERLOCKED",                           concept_interlocked,           FALSE, l_c1},
    {"12 MATRIX",                             concept_12_matrix,             FALSE, l_c3x},
    {"16 MATRIX",                             concept_16_matrix,             FALSE, l_c3x},
+   {"PHANTOM",                               concept_c1_phantom,            FALSE, l_c1},
    {"FUNNY",                                 concept_funny,                 FALSE, l_c2},
+   {"MATRIX",                                concept_matrix,                FALSE, l_c4},
    {"ASSUME WAVES",                          concept_assume_waves,          FALSE, l_c3,        {0, cr_wave_only,  0, 0}},
    {"ASSUME MINIWAVES",                      concept_assume_waves,          FALSE, l_c3,        {0, cr_wave_only,  2, 0}},
    {"ASSUME TWO-FACED LINES",                concept_assume_waves,          FALSE, l_c3,        {0, cr_2fl_only,   0, 0}},
@@ -471,14 +518,28 @@ concept_descriptor concept_descriptor_table[] = {
    {"ASSUME CDPT",                           concept_assume_waves,          FALSE, l_c3,        {0, cr_2fl_only,   1, 2}},
    {"ASSUME FACING LINES",                   concept_assume_waves,          FALSE, l_c3,        {0, cr_li_lo,      0, 2}},
    {"ASSUME BACK-TO-BACK LINES",             concept_assume_waves,          FALSE, l_c3,        {0, cr_li_lo,      0, 1}},
+   {"ASSUME GENERAL DIAMONDS",               concept_assume_waves,          FALSE, l_c3,        {0, cr_diamond_like,0, 0}},
+   {"ASSUME GENERAL 1/4 TAGS",               concept_assume_waves,          FALSE, l_c3,        {0, cr_qtag_like,  0, 0}},
+
+   {"ASSUME RIGHT 1/4 TAGS",                 concept_assume_waves,          FALSE, l_c3,        {0, cr_jleft,      0, 2}},
+   {"ASSUME LEFT 1/4 TAGS",                  concept_assume_waves,          FALSE, l_c3,        {0, cr_jright,     0, 2}},
+   {"ASSUME LEFT 3/4 TAGS",                  concept_assume_waves,          FALSE, l_c3,        {0, cr_jleft,      0, 1}},
+   {"ASSUME RIGHT 3/4 TAGS",                 concept_assume_waves,          FALSE, l_c3,        {0, cr_jright,     0, 1}},
+   {"ASSUME RIGHT 1/4 LINES",                concept_assume_waves,          FALSE, l_c3,        {0, cr_ijleft,     0, 2}},
+   {"ASSUME LEFT 1/4 LINES",                 concept_assume_waves,          FALSE, l_c3,        {0, cr_ijright,    0, 2}},
+   {"ASSUME LEFT 3/4 LINES",                 concept_assume_waves,          FALSE, l_c3,        {0, cr_ijleft,     0, 1}},
+   {"ASSUME RIGHT 3/4 LINES",                concept_assume_waves,          FALSE, l_c3,        {0, cr_ijright,    0, 1}},
+
+   {"ASSUME NORMAL DIAMONDS",                concept_assume_waves,          FALSE, l_c3,        {0, cr_jright,     4, 0}},
+   {"ASSUME FACING DIAMONDS",                concept_assume_waves,          FALSE, l_c3,        {0, cr_jleft,      4, 0}},
+   {"ASSUME NORMAL INTERLOCKED DIAMONDS",    concept_assume_waves,          FALSE, l_c3,        {0, cr_ijright,    4, 0}},
+   {"ASSUME FACING INTERLOCKED DIAMONDS",    concept_assume_waves,          FALSE, l_c3,        {0, cr_ijleft,     4, 0}},
+
    {"ASSUME NORMAL CASTS",                   concept_assume_waves,          FALSE, l_c3,        {0, cr_alwaysfail, 0, 0}},
-   {"WITH ACTIVE PHANTOMS",                  concept_active_phantoms,       FALSE, l_c4},
+   {"WITH ACTIVE PHANTOMS",                  concept_active_phantoms,       FALSE, l_c3},
    {"CENTRAL",                               concept_central,               FALSE, l_c3},
    {"FAN",                                   concept_fan_or_yoyo,           FALSE, l_c3,        {0, 0}},
    {"YO-YO",                                 concept_fan_or_yoyo,           FALSE, l_c4,        {0, 1}},
-   {"PARALLELOGRAM",                         concept_parallelogram,         FALSE, l_c2},
-   {"PHANTOM",                               concept_c1_phantom,            FALSE, l_c1},
-   {"MATRIX",                                concept_matrix,                FALSE, l_c4},
    {"<ANYONE> ARE STANDARD IN",              concept_standard,              FALSE, l_c4a,        {0, 0}},
    {"STABLE",                                concept_stable,                FALSE, l_c3a,        {0, FALSE, FALSE}},
    {"<ANYONE> ARE STABLE",                   concept_so_and_so_stable,      FALSE, l_c3a,        {0, TRUE,  FALSE}},
@@ -490,7 +551,7 @@ concept_descriptor concept_descriptor_table[] = {
    {"FERRIS",                                concept_ferris,                FALSE, l_c3x,        {0, 0}},
    {"RELEASE",                               concept_ferris,                FALSE, l_c3a,        {0, 1}},
 /* -------- column break -------- */
-#define mm__2_size 47
+#define mm__2_size 48
    {"CENTERS",                               concept_centers_or_ends,       FALSE, l_mainstream, {0, 0}},
    {"ENDS",                                  concept_centers_or_ends,       FALSE, l_mainstream, {0, 1}},
    {"CENTERS AND ENDS",                      concept_centers_and_ends,      FALSE, l_mainstream, {0, 0}},
@@ -507,8 +568,8 @@ concept_descriptor concept_descriptor_table[] = {
    {"CHECKERBOX",                            concept_checkerboard,          FALSE, l_c3a,        {0, s2x2}},
    {"CHECKERDIAMOND",                        concept_checkerboard,          FALSE, l_c3x,        {0, sdmd}},
          {"", concept_comment, l_nonexistent_concept},
-   {"<ANYONE> ONLY",                         concept_so_and_so_only,        FALSE, l_mainstream, {0, 4}},
-   {"<ANYONE> ONLY (while the others)",      concept_some_vs_others,        FALSE, l_mainstream, {0, 5}},
+   {"<ANYONE>,",                             concept_so_and_so_only,        FALSE, l_mainstream, {0, 4}},
+   {"<ANYONE>, (while the others)",          concept_some_vs_others,        FALSE, l_mainstream, {0, 5}},
    {"<ANYONE> DISCONNECTED",                 concept_so_and_so_only,        FALSE, l_c2, {0, 6}},
    {"<ANYONE> DISCONNECTED (while the others)", concept_some_vs_others,     FALSE, l_c2, {0, 7}},
    {"<ANYONE> DO YOUR PART,",                concept_so_and_so_only,        FALSE, l_mainstream, {0, 0}},
@@ -523,12 +584,13 @@ concept_descriptor concept_descriptor_table[] = {
    {"REVERSE CRAZY",                         concept_crazy,                 FALSE, l_c3x,       {0, 1, FALSE}},
    {"<N/4> CRAZY",                           concept_frac_crazy,            FALSE, l_c2,        {0, 0, TRUE}},
    {"<N/4> REVERSE CRAZY",                   concept_frac_crazy,            FALSE, l_c3x,       {0, 1, TRUE}},
-   {"DO IT TWICE:",                          concept_twice,                 FALSE, l_mainstream},
    {"RANDOM",                                concept_meta,                  FALSE, l_c3a,        {0, 0}},
    {"REVERSE RANDOM",                        concept_meta,                  FALSE, l_c3x,        {0, 1}},
    {"PIECEWISE",                             concept_meta,                  FALSE, l_c3x,        {0, 2}},
-   {"<N>/<N> (fractional)",                  concept_fractional,            FALSE, l_c1,         {0, 0}},
-   {"DO THE LAST <N>/<N>:",                  concept_fractional,            FALSE, l_c1,         {0, 1}},
+   {"<N>/<N>",                               concept_fractional,            FALSE, l_mainstream, {0, 0}},
+   {"1-<N>/<N>",                             concept_fractional,            FALSE, l_mainstream, {0, 2}},
+   {"TWICE",                                 concept_twice,                 FALSE, l_mainstream},
+   {"DO THE LAST <N>/<N>",                   concept_fractional,            FALSE, l_c1,         {0, 1}},
    {"REVERSE ORDER",                         concept_meta,                  FALSE, l_c3x,        {0, 5}},
    {"INTERLACE",                             concept_interlace,             FALSE, l_c3x},
    {"START <concept>",                       concept_meta,                  FALSE, l_c2,         {0, 3}},
@@ -624,7 +686,7 @@ concept_descriptor concept_descriptor_table[] = {
    BE CAREFUL!! */
 
 #define pl__tot_size (pl__1_size+pl__2_size+pl__3_size)
-#define pb__tot_size (pb__1_size+pb__2_size)
+#define pb__tot_size (pb__1_size+pb__2_size+pb__3_size)
 #define tt__tot_size (tt__1_size+tt__2_size+tt__3_size+tt__4_size)
 #define dd__tot_size (dd__1_size+dd__2_size+dd__3_size+dd__4_size)
 #define d4__tot_size (d4__1_size+d4__2_size+d4__3_size+d4__4_size)
@@ -635,6 +697,7 @@ concept_descriptor concept_descriptor_table[] = {
 
 #define pb_1_offset (0 + pl__tot_size)
 #define pb_2_offset (0 + pl__tot_size + pb__1_size)
+#define pb_3_offset (0 + pl__tot_size + pb__1_size + pb__2_size)
 
 #define tt_1_offset (0 + pl__tot_size + pb__tot_size)
 #define tt_2_offset (0 + pl__tot_size + pb__tot_size + tt__1_size)
@@ -822,14 +885,14 @@ int phantom_concept_index = mm_1_offset + mm__1_phan;
 
 
 Private int phantoml_sizes[]  = {pl__1_size, pl__2_size, pl__3_size,             -1};
-Private int phantomb_sizes[]  = {pb__1_size, pb__2_size,                         -1};
+Private int phantomb_sizes[]  = {pb__1_size, pb__2_size, pb__3_size,             -1};
 Private int tandem_sizes[]    = {tt__1_size, tt__2_size, tt__3_size, tt__4_size, -1};
 Private int distort_sizes[]   = {dd__1_size, dd__2_size, dd__3_size, dd__4_size, -1};
 Private int dist4_sizes[]     = {d4__1_size, d4__2_size, d4__3_size, d4__4_size, -1};
 Private int misc_c_sizes[]    = {mm__1_size, mm__2_size, mm__3_size,             -1};
 
 Private int phantoml_offsets[] = {pl_1_offset, pl_2_offset, pl_3_offset};
-Private int phantomb_offsets[] = {pb_1_offset, pb_2_offset};
+Private int phantomb_offsets[] = {pb_1_offset, pb_2_offset, pb_3_offset};
 Private int tandem_offsets[]   = {tt_1_offset, tt_2_offset, tt_3_offset, tt_4_offset};
 Private int distort_offsets[]  = {dd_1_offset, dd_2_offset, dd_3_offset, dd_4_offset};
 Private int dist4_offsets[]    = {d4_1_offset, d4_2_offset, d4_3_offset, d4_4_offset};
@@ -859,7 +922,7 @@ int *concept_size_tables[] = {
 
 Const char *concept_menu_strings[] = {
    "PHANTOM LINE/COL concepts",
-   "PHANTOM BOX/DMD concepts",
+   "PHANTOM BOX/DMD/QTAG concepts",
    "COUPLES/TANDEM concepts",
    "DISTORTED SETUP concepts",
    "4-PERSON DISTORTED concepts",

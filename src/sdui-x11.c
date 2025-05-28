@@ -1,4 +1,4 @@
-static char *time_stamp = "sdui-x11.c Time-stamp: <94/07/27 23:52:37 gildea>";
+static char *time_stamp = "sdui-x11.c Time-stamp: <94/08/23 12:28:19 gildea>";
 /* 
  * sdui-x11.c - Sd User Interface for X11
  * Copyright 1990,1991,1992,1993 Stephen Gildea and William B. Ackerman
@@ -13,17 +13,17 @@ static char *time_stamp = "sdui-x11.c Time-stamp: <94/07/27 23:52:37 gildea>";
  * By Stephen Gildea, March 1990.
  * Requires the Athena Widget Set from X11 Release 4 or later.
  *
- * For use with version 30 of the Sd program.
+ * For use with version 31 of the Sd program.
  *
  * The version of this file is as shown immediately below.  This string
  * gets displayed at program startup, as the "ui" part of the complete
  * version.
  */
 
-#define UI_VERSION_STRING "1.15"
+#define UI_VERSION_STRING "1.16"
 
 /* See comments in sdmain.c regarding this string. */
-static char *id="@(#)$He" "ader: Sd: sdui-x11.c  " UI_VERSION_STRING "    gildea@lcs.mit.edu  27 Jul 94 $";
+static char *id="@(#)$He" "ader: Sd: sdui-x11.c  " UI_VERSION_STRING "    gildea@lcs.mit.edu  23 Aug 94 $";
 
 /* This file defines the following functions:
    uims_process_command_line
@@ -674,6 +674,7 @@ CONST static char *fallback_resources[] = {
     NULL};
 
 Private char *program_name = NULL;	/* argv[0]: our name */
+Private int window_is_mapped = FALSE;
 
 /*
  * The main program calls this before doing anything else, so we can
@@ -1143,6 +1144,7 @@ uims_postinitialize(void)
     XSetWMProtocols(XtDisplay(toplevel), XtWindow(toplevel), &wm_delete_window, 1);
 
     XtMapWidget(toplevel);
+    window_is_mapped = TRUE;
 }
 
 
@@ -1593,9 +1595,10 @@ uims_reduce_line_count(int n)
 extern void
 uims_terminate(void)
 {
-    /* if uims_preinitialize was called, close down the window system */
+    /* if uims_process_command_line was called, close down the window system */
     if (program_name) {
-	XtUnmapWidget(toplevel); 	/* make it disappear neatly */
+	if (window_is_mapped)
+	    XtUnmapWidget(toplevel); 	/* make it disappear neatly */
 	XtDestroyWidget(toplevel);
 	XtDestroyApplicationContext(xtcontext);
     }

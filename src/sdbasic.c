@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990, 1991, 1992, 1993, 1994  William B. Ackerman.
+    Copyright (C) 1990-1994  William B. Ackerman.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -433,14 +433,14 @@ extern void do_stability(uint32 *personp, stability stab, int turning)
 
 
 
-
-extern void check_restriction(setup *ss, assumption_thing restr, unsigned int flags)
+extern restriction_thing *check_restriction(setup *ss, assumption_thing restr, unsigned int flags)
 {
-   int q0, q1, q2, q3, q4, q5, q6, q7;
-   int i, j, k, z, t, idx;
-   restriction_thing *restr_thing_ptr;
+   unsigned int q0, q1, q2, q3, q4, q5, q6, q7;
+   unsigned int i, j, k, z, t;
+   int idx;
+   restriction_thing *restr_thing_ptr = (restriction_thing *) 0;
 
-   if (restr.assumption == cr_alwaysfail) goto ldef_failed;
+   if (restr.assumption == cr_alwaysfail) goto restr_failed;
 
    /* First, check for nice things. */
 
@@ -474,7 +474,7 @@ extern void check_restriction(setup *ss, assumption_thing restr, unsigned int fl
                       ((q2&3) && (q3&3)) ||
                       ((q6&3) && (q7&3)) ||
                       ((q5&3) && (q4&3)))
-                     goto ldef_failed;
+                     goto restr_failed;
                   break;
                case cr_quarterbox_or_col:
                   k = 0;         /* check for a reasonable "triple cross" setup */
@@ -488,7 +488,7 @@ extern void check_restriction(setup *ss, assumption_thing restr, unsigned int fl
                   if (ss->people[6].id1) { k |= ~ss->people[6].id1; i &= ~ss->people[6].id1; }
                   if (ss->people[7].id1) {                          i &= ~ss->people[7].id1; }
                   if (k & ~i & 2)
-                     goto ldef_failed;
+                     goto restr_failed;
                   break;
                case cr_quarterbox_or_magic_col:
                   k = 0;         /* check for a reasonable "make magic" setup */
@@ -502,7 +502,7 @@ extern void check_restriction(setup *ss, assumption_thing restr, unsigned int fl
                   if (ss->people[6].id1) { k |= ~ss->people[6].id1; i &= ~ss->people[6].id1; }
                   if (ss->people[7].id1) { k |=  ss->people[7].id1;                          }
                   if (k & ~i & 2)
-                     goto ldef_failed;
+                     goto restr_failed;
                   break;
             }
             break;
@@ -514,17 +514,17 @@ extern void check_restriction(setup *ss, assumption_thing restr, unsigned int fl
                   if (ss->people[0].id1) {
                      i = ss->people[0].id2;
                      if (!(i & (ID2_BOY | ID2_GIRL)))
-                        goto ldef_failed;
+                        goto restr_failed;
                   }
 
                   if (ss->people[1].id1) {
                      k = ss->people[1].id2;
                      if (!(k & (ID2_BOY | ID2_GIRL)))
-                        goto ldef_failed;
+                        goto restr_failed;
                   }
 
                   if ((i&k) & (ID2_BOY | ID2_GIRL))
-                     goto ldef_failed;
+                     goto restr_failed;
                   break;
             }
             break;
@@ -532,6 +532,74 @@ extern void check_restriction(setup *ss, assumption_thing restr, unsigned int fl
    }
    else {
       /* Restriction is "line-like" or special. */
+
+      switch (restr.assumption) {
+         case cr_nice_diamonds:
+            k = 0;         /* check for consistent diamonds, so can do "diamond swing thru" */
+            i = 2;
+            switch (ss->kind) {
+               case s_qtag:
+                  if ((t = ss->people[0].id1) != 0) { k |=  t+1; i &=  t+1; }
+                  if ((t = ss->people[1].id1) != 0) { k |=  t+1; i &=  t+1; }
+                  if ((t = ss->people[4].id1) != 0) { k |=  t-1; i &=  t-1; }
+                  if ((t = ss->people[5].id1) != 0) { k |=  t-1; i &=  t-1; }
+                  if ((t = ss->people[2].id1) != 0) { k |=  t;   i &=  t; }
+                  if ((t = ss->people[3].id1) != 0) { k |= ~t;   i &= ~t; }
+                  if ((t = ss->people[6].id1) != 0) { k |= ~t;   i &= ~t; }
+                  if ((t = ss->people[7].id1) != 0) { k |=  t;   i &=  t; }
+                  if (k & ~i & 2)
+                     goto restr_failed;
+                  break;
+               case sdmd:
+                  if ((t = ss->people[1].id1) != 0) { k |=  t+1; i &=  t+1; }
+                  if ((t = ss->people[3].id1) != 0) { k |=  t-1; i &=  t-1; }
+                  if ((t = ss->people[0].id1) != 0) { k |= ~t  ; i &= ~t; }
+                  if ((t = ss->people[2].id1) != 0) { k |=  t  ; i &=  t; }
+                  if (k & ~i & 2)
+                     goto restr_failed;
+                  break;
+               case s_ptpd:
+                  if ((t = ss->people[1].id1) != 0) { k |=  t+1; i &=  t+1; }
+                  if ((t = ss->people[7].id1) != 0) { k |=  t+1; i &=  t+1; }
+                  if ((t = ss->people[5].id1) != 0) { k |=  t-1; i &=  t-1; }
+                  if ((t = ss->people[3].id1) != 0) { k |=  t-1; i &=  t-1; }
+                  if ((t = ss->people[4].id1) != 0) { k |=  t;   i &=  t; }
+                  if ((t = ss->people[6].id1) != 0) { k |= ~t;   i &= ~t; }
+                  if ((t = ss->people[0].id1) != 0) { k |= ~t;   i &= ~t; }
+                  if ((t = ss->people[2].id1) != 0) { k |=  t;   i &=  t; }
+                  if (k & ~i & 2)
+                     goto restr_failed;
+                  break;
+            }
+            break;
+         case cr_awkward_centers:
+            /* check for centers not having left hands */
+            k = 2;
+            i = 2;
+            switch (ss->kind) {
+               case s1x8:
+                  if ((t = ss->people[2].id1) != 0) { k &= ~t; }
+                  if ((t = ss->people[6].id1) != 0) { i &=  t; }
+                  if (!((k | i) & 2)) warn(warn__awkward_centers);
+                  break;
+               case s1x6:
+                  if ((t = ss->people[2].id1) != 0) { k &= ~t; }
+                  if ((t = ss->people[5].id1) != 0) { i &=  t; }
+                  if (!((k | i) & 2)) warn(warn__awkward_centers);
+                  break;
+               case s1x4:
+                  if ((t = ss->people[1].id1) != 0) { k &= ~t; }
+                  if ((t = ss->people[3].id1) != 0) { i &=  t; }
+                  if (!((k | i) & 2)) warn(warn__awkward_centers);
+                  break;
+               case s1x2:
+                  if ((t = ss->people[0].id1) != 0) { k &= ~t; }
+                  if ((t = ss->people[1].id1) != 0) { i &=  t; }
+                  if (!((k | i) & 2)) warn(warn__awkward_centers);
+                  break;
+            }
+            break;
+      }
 
       switch (ss->kind) {
          case s2x2:
@@ -546,7 +614,7 @@ extern void check_restriction(setup *ss, assumption_thing restr, unsigned int fl
                   if ((t = ss->people[3].id1) != 0) { q5 |= t; q2 &= t; q4 |= (t^2); q3 &= (t^2); }
                   if (((q0&3) && ((~q2)&3) && (q1&3) && ((~q3)&3)) ||
                       ((q5&3) && ((~q7)&3) && (q4&3) && ((~q6)&3)))
-                     goto ldef_failed;
+                     goto restr_failed;
                   break;
                case cr_leads_only:
                   /* check for everyone a lead, and not T-boned */
@@ -556,7 +624,7 @@ extern void check_restriction(setup *ss, assumption_thing restr, unsigned int fl
                   if ((t = ss->people[2].id1) != 0) { q0 |= (t^2); q2 &= (t^2); }
                   if ((t = ss->people[3].id1) != 0) { q0 |= (t^2); q2 &= t; }
                   if ((q0&3) && ((~q2)&3))
-                     goto ldef_failed;
+                     goto restr_failed;
                   break;
                case cr_peelable_box:
                   /* check for a "peelable" (everyone in genuine tandem somehow) box */
@@ -568,38 +636,12 @@ extern void check_restriction(setup *ss, assumption_thing restr, unsigned int fl
                   if ((t = ss->people[3].id1) != 0) { q0 |= t; q7 &= t; q1 |= (t^2); q6 &= (t^2); }
                   if (((q0&3) && ((~q2)&3) && (q1&3) && ((~q3)&3)) ||
                       ((q5&3) && ((~q7)&3) && (q4&3) && ((~q6)&3)))
-                     goto ldef_failed;
+                     goto restr_failed;
                   break;
                case cr_not_tboned:
                   /* check for a box that is not T-boned */
                   if (((ss->people[0].id1 | ss->people[1].id1 | ss->people[2].id1 | ss->people[3].id1) & 011) == 011)
-                     goto ldef_failed;
-                  break;
-            }
-            break;
-         case s4x4:
-            switch (restr.assumption) {
-               case cr_wave_only:
-                  /* check for 4 waves of consistent handedness and consistent headliner-ness. */
-                  k = 0; j = 0; i = 3; z = 3;
-                  if ((t = ss->people[0].id1) != 0)  { k |= t; i &= t; j |= (t^2); z &= (t^2); }
-                  if ((t = ss->people[2].id1) != 0)  { k |= t; i &= t; j |= (t^2); z &= (t^2); }
-                  if ((t = ss->people[11].id1) != 0) { k |= t; i &= t; j |= (t^2); z &= (t^2); }
-                  if ((t = ss->people[13].id1) != 0) { k |= t; i &= t; j |= (t^2); z &= (t^2); }
-                  if ((t = ss->people[1].id1) != 0)  { j |= t; i &= t; k |= (t^2); z &= (t^2); }
-                  if ((t = ss->people[4].id1) != 0)  { j |= t; i &= t; k |= (t^2); z &= (t^2); }
-                  if ((t = ss->people[6].id1) != 0)  { j |= t; i &= t; k |= (t^2); z &= (t^2); }
-                  if ((t = ss->people[15].id1) != 0) { j |= t; i &= t; k |= (t^2); z &= (t^2); }
-                  if ((t = ss->people[3].id1) != 0)  { j |= t; z &= t; k |= (t^2); i &= (t^2); }
-                  if ((t = ss->people[5].id1) != 0)  { j |= t; z &= t; k |= (t^2); i &= (t^2); }
-                  if ((t = ss->people[8].id1) != 0)  { j |= t; z &= t; k |= (t^2); i &= (t^2); }
-                  if ((t = ss->people[10].id1) != 0) { j |= t; z &= t; k |= (t^2); i &= (t^2); }
-                  if ((t = ss->people[7].id1) != 0)  { k |= t; z &= t; j |= (t^2); i &= (t^2); }
-                  if ((t = ss->people[9].id1) != 0)  { k |= t; z &= t; j |= (t^2); i &= (t^2); }
-                  if ((t = ss->people[12].id1) != 0) { k |= t; z &= t; j |= (t^2); i &= (t^2); }
-                  if ((t = ss->people[14].id1) != 0) { k |= t; z &= t; j |= (t^2); i &= (t^2); }
-                  if ((k&3) && ((~i)&3) && (j&3) && ((~z)&3))
-                     goto ldef_failed;
+                     goto restr_failed;
                   break;
             }
             break;
@@ -613,204 +655,127 @@ extern void check_restriction(setup *ss, assumption_thing restr, unsigned int fl
                   if ((t = ss->people[4].id1) != 0) { q5 |= t; q4 |= (t^2); }
                   if ((t = ss->people[7].id1) != 0) { q1 |= t; q0 |= (t^2); }
                   if (((q1&3) && (q0&3)) || ((q5&3) && (q4&3)))
-                     goto ldef_failed;
-                  break;
-            }
-            break;
-         case s_qtag:
-            switch (restr.assumption) {
-               case cr_nice_diamonds:
-                  k = 0;         /* check for consistent diamonds, so can do "diamond swing thru" */
-                  i = 2;
-                  if ((t = ss->people[0].id1) != 0) { k |=  t+1; i &=  t+1; }
-                  if ((t = ss->people[1].id1) != 0) { k |=  t+1; i &=  t+1; }
-                  if ((t = ss->people[4].id1) != 0) { k |=  t-1; i &=  t-1; }
-                  if ((t = ss->people[5].id1) != 0) { k |=  t-1; i &=  t-1; }
-                  if ((t = ss->people[2].id1) != 0) { k |=  t; i &=  t; }
-                  if ((t = ss->people[3].id1) != 0) { k |= ~t; i &= ~t; }
-                  if ((t = ss->people[6].id1) != 0) { k |= ~t; i &= ~t; }
-                  if ((t = ss->people[7].id1) != 0) { k |=  t; i &=  t; }
-                  if (k & ~i & 2)
-                     goto ldef_failed;
-                  break;
-            }
-            break;
-         case s_ptpd:
-            switch (restr.assumption) {
-               case cr_nice_diamonds:
-                  k = 0;         /* check for consistent diamonds, so can do "diamond swing thru" */
-                  i = 2;
-                  if ((t = ss->people[1].id1) != 0) { k |=  t+1; i &=  t+1; }
-                  if ((t = ss->people[7].id1) != 0) { k |=  t+1; i &=  t+1; }
-                  if ((t = ss->people[5].id1) != 0) { k |=  t-1; i &=  t-1; }
-                  if ((t = ss->people[3].id1) != 0) { k |=  t-1; i &=  t-1; }
-                  if ((t = ss->people[4].id1) != 0) { k |=  t; i &=  t; }
-                  if ((t = ss->people[6].id1) != 0) { k |= ~t; i &= ~t; }
-                  if ((t = ss->people[0].id1) != 0) { k |= ~t; i &= ~t; }
-                  if ((t = ss->people[2].id1) != 0) { k |=  t; i &=  t; }
-                  if (k & ~i & 2)
-                     goto ldef_failed;
-                  break;
-            }
-            break;
-         case s1x8:
-            switch (restr.assumption) {
-               case cr_awkward_centers:
-                  k = 2;         /* check for centers not having left hands */
-                  i = 2;
-                  if ((t = ss->people[2].id1) != 0) { k &= ~t; }
-                  if ((t = ss->people[6].id1) != 0) { i &=  t; }
-                  if (!((k | i) & 2)) warn(warn__awkward_centers);
-                  break;
-            }
-            break;
-         case s1x6:
-            switch (restr.assumption) {
-               case cr_awkward_centers:
-                  k = 2;         /* check for centers not having left hands */
-                  i = 2;
-                  if ((t = ss->people[2].id1) != 0) { k &= ~t; }
-                  if ((t = ss->people[5].id1) != 0) { i &=  t; }
-                  if (!((k | i) & 2)) warn(warn__awkward_centers);
-                  break;
-            }
-            break;
-         case s1x4:
-            switch (restr.assumption) {
-               case cr_awkward_centers:
-                  k = 2;         /* check for centers not having left hands */
-                  i = 2;
-                  if ((t = ss->people[1].id1) != 0) { k &= ~t; }
-                  if ((t = ss->people[3].id1) != 0) { i &=  t; }
-                  if (!((k | i) & 2)) warn(warn__awkward_centers);
-                  break;
-            }
-            break;
-         case s1x2:
-            switch (restr.assumption) {
-               case cr_awkward_centers:
-                  k = 2;         /* check for people not having left hands */
-                  i = 2;
-                  if ((t = ss->people[0].id1) != 0) { k &= ~t; }
-                  if ((t = ss->people[1].id1) != 0) { i &=  t; }
-                  if (!((k | i) & 2)) warn(warn__awkward_centers);
+                     goto restr_failed;
                   break;
             }
             break;
       }
    }
 
-   return;
-
-
+   goto getout;
 
    check_gen_restr:
 
    switch (restr_thing_ptr->check) {
-      case chk_wave: goto check_wave_restr;
-      case chk_1_group: goto check_one_group;
-      case chk_2_groups: goto check_two_groups;
-      case chk_4_groups: goto check_four_groups;
-      case chk_box: goto check_box;
-      case chk_peelable: goto check_peelable_restr;
+      case chk_wave:
+         q0 = 0; q1 = 0;
+
+         for (idx=0; idx<restr_thing_ptr->size; idx++) {
+            if ((t = ss->people[restr_thing_ptr->map1[idx]].id1) != 0) { q0 |=  t; q1 |= ~t; }
+            if ((t = ss->people[restr_thing_ptr->map2[idx]].id1) != 0) { q0 |= ~t; q1 |=  t; }
+         }
+
+         if (((q0 | restr.assump_both) & (q1 | (restr.assump_both << 1)) & 2) == 0)
+            goto getout;
+
+         break;
+      case chk_1_group:
+         q0 = 0; q1 = 0;
+
+         for (idx=0; idx<restr_thing_ptr->size; idx++) {
+            if ((t = ss->people[restr_thing_ptr->map1[idx]].id1) != 0) { q0 |= t; q1 |= ~t; }
+         }
+
+         if ((q0&q1&2) == 0)
+            goto getout;
+
+         break;
+      case chk_2_groups:
+         q0 = 0; q1 = 0;
+         q2 = 0; q3 = 0;
+
+         for (idx=0; idx<restr_thing_ptr->size; idx++) {
+            if ((t = ss->people[restr_thing_ptr->map1[idx]].id1) != 0) { q0 |= t; q1 |= ~t; }
+            if ((t = ss->people[restr_thing_ptr->map2[idx]].id1) != 0) { q2 |= t; q3 |= ~t; }
+         }
+
+         if ((q0&q1&2) == 0 && (q2&q3&2) == 0)
+            goto getout;
+
+         break;
+      case chk_4_groups:
+         q0 = 0; q1 = 0;
+         q4 = 0; q5 = 0;
+         q2 = 0; q3 = 0;
+         q6 = 0; q7 = 0;
+
+         for (idx=0; idx<restr_thing_ptr->size; idx++) {
+            if ((t = ss->people[restr_thing_ptr->map1[idx]].id1) != 0) { q0 |= t; q1 |= ~t; }
+            if ((t = ss->people[restr_thing_ptr->map2[idx]].id1) != 0) { q2 |= t; q3 |= ~t; }
+            if ((t = ss->people[restr_thing_ptr->map3[idx]].id1) != 0) { q4 |= t; q5 |= ~t; }
+            if ((t = ss->people[restr_thing_ptr->map4[idx]].id1) != 0) { q6 |= t; q7 |= ~t; }
+         }
+
+         if ((q0&q1&2) == 0 && (q2&q3&2) == 0 && (q4&q5&2) == 0 && (q6&q7&2) == 0)
+            goto getout;
+
+         break;
+      case chk_box:
+         k = 0; j = 0; i = 3; z = 3;
+
+         for (idx=0 ; idx<=setup_attrs[ss->kind].setup_limits ; idx++) {
+            if ((t = ss->people[idx].id1) != 0) {
+               j |= (t^restr_thing_ptr->map1[idx]);
+               k |= (t^restr_thing_ptr->map1[idx]^2);
+               i &= (t^restr_thing_ptr->map2[idx]);
+               z &= (t^restr_thing_ptr->map2[idx]^2);
+            }
+         }
+
+         if ((k&3) == 0 || ((~i)&3) == 0 || (j&3) == 0 || ((~z)&3) == 0)
+            goto getout;
+
+         break;
+      case chk_peelable:
+         q2 = 3; q3 = 3;
+         q7 = 3; q6 = 3;
+
+         for (j=0; j<restr_thing_ptr->size; j++) {
+            if ((t = ss->people[restr_thing_ptr->map1[j]].id1) != 0)  { q2 &= t; q3 &= (t^2); }
+            if ((t = ss->people[restr_thing_ptr->map2[j]].id1) != 0)  { q7 &= t; q6 &= (t^2); }
+         }
+
+         if ((((~q2)&3) == 0 || ((~q3)&3) == 0) && (((~q7)&3) == 0 || ((~q6)&3) == 0))
+            goto getout;
+
+         break;
+      case chk_dmd_qtag:
+         k = 0;
+         i = 0;
+
+         for (idx=0; idx<restr_thing_ptr->map1[0]; idx++)
+            k |= ss->people[restr_thing_ptr->map1[idx+1]].id1;
+
+         for (idx=0; idx<restr_thing_ptr->map2[0]; idx++)
+            i |= ss->people[restr_thing_ptr->map2[idx+1]].id1;
+
+         for (idx=0; idx<restr_thing_ptr->map3[0]; idx++) {
+            if ((t = ss->people[restr_thing_ptr->map3[idx+1]].id1) != 0 && (t & 2) != 0)
+               goto restr_failed;
+         }
+
+         for (idx=0; idx<restr_thing_ptr->map4[0]; idx++) {
+            if ((t = ss->people[restr_thing_ptr->map4[idx+1]].id1) != 0 && (t & 2) != 2)
+               goto restr_failed;
+         }
+
+         if ((k & 001) != 0 || (i & 010) != 0)
+            goto restr_failed;
+
+         goto getout;
    }
 
-   goto ldef_failed;
-
-
-
-   check_box:
-
-   k = 0; j = 0; i = 3; z = 3;
-
-   for (idx=0 ; idx<4 ; idx++) {
-      if ((t = ss->people[idx].id1) != 0) { j |= (t^restr_thing_ptr->map1[idx]); k |= (t^restr_thing_ptr->map1[idx]^2); i &= (t^restr_thing_ptr->map2[idx]); z &= (t^restr_thing_ptr->map2[idx]^2); }
-   }
-
-   if ((k&3) && ((~i)&3) && (j&3) && ((~z)&3))
-      goto ldef_failed;
-   return;
-
-   check_one_group:
-
-   q0 = 0; q1 = 0;
-
-   for (j=0; j<restr_thing_ptr->size; j++) {
-      if ((t = ss->people[restr_thing_ptr->map1[j]].id1) != 0) { q0 |= t; q1 |= ~t; }
-   }
-
-   if (q0&q1&2)
-      goto ldef_failed;
-   return;
-
-
-   check_two_groups:
-
-   q0 = 0; q1 = 0;
-   q2 = 0; q3 = 0;
-
-   for (j=0; j<restr_thing_ptr->size; j++) {
-      if ((t = ss->people[restr_thing_ptr->map1[j]].id1) != 0) { q0 |= t; q1 |= ~t; }
-      if ((t = ss->people[restr_thing_ptr->map2[j]].id1) != 0) { q2 |= t; q3 |= ~t; }
-   }
-
-   if ((q0&q1&2) || (q2&q3&2))
-      goto ldef_failed;
-   return;
-
-
-   check_four_groups:
-
-   q0 = 0; q1 = 0;
-   q4 = 0; q5 = 0;
-   q2 = 0; q3 = 0;
-   q6 = 0; q7 = 0;
-
-   for (j=0; j<restr_thing_ptr->size; j++) {
-      if ((t = ss->people[restr_thing_ptr->map1[j]].id1) != 0) { q0 |= t; q1 |= ~t; }
-      if ((t = ss->people[restr_thing_ptr->map2[j]].id1) != 0) { q2 |= t; q3 |= ~t; }
-      if ((t = ss->people[restr_thing_ptr->map3[j]].id1) != 0) { q4 |= t; q5 |= ~t; }
-      if ((t = ss->people[restr_thing_ptr->map4[j]].id1) != 0) { q6 |= t; q7 |= ~t; }
-   }
-
-   if ((q0&q1&2) || (q2&q3&2) || (q4&q5&2) || (q6&q7&2))
-      goto ldef_failed;
-   return;
-
-   check_peelable_restr:
-
-   q2 = 3; q3 = 3;
-   q7 = 3; q6 = 3;
-
-   for (j=0; j<restr_thing_ptr->size; j++) {
-      if ((t = ss->people[restr_thing_ptr->map1[j]].id1) != 0)  { q2 &= t; q3 &= (t^2); }
-      if ((t = ss->people[restr_thing_ptr->map2[j]].id1) != 0)  { q7 &= t; q6 &= (t^2); }
-   }
-
-   if ((((~q2)&3) && ((~q3)&3)) || (((~q7)&3) && ((~q6)&3)))
-      goto ldef_failed;
-   return;
-
-
-   check_wave_restr:
-
-   q0 = 0; q1 = 0;
-
-   for (j=0; j<restr_thing_ptr->size; j++) {
-      if ((t = ss->people[restr_thing_ptr->map1[j]].id1) != 0) { q0 |=  t; q1 |= ~t; }
-      if ((t = ss->people[restr_thing_ptr->map2[j]].id1) != 0) { q0 |= ~t; q1 |=  t; }
-   }
-
-   if ((q0 | restr.assump_both) & (q1 | (restr.assump_both << 1)) & 2)
-      goto ldef_failed;
-   return;
-
-
-
-
-
-
-   ldef_failed:
+   restr_failed:
 
    switch (flags) {
       case CAF__RESTR_UNUSUAL:
@@ -822,11 +787,54 @@ extern void check_restriction(setup *ss, assumption_thing restr, unsigned int fl
       case CAF__RESTR_FORBID:
          fail("This call is not legal from this formation.");
       case 99:
-         fail("The people do not satisfy the assumption.");
+         if (restr.assumption == cr_gen_1_4_tag)
+            fail("People are not facing as in 1/4 tags.");
+         else if (restr.assumption == cr_gen_3_4_tag)
+            fail("People are not facing as in 3/4 tags.");
+         else
+            fail("The people do not satisfy the assumption.");
       default:
          warn(warn__do_your_part);
          break;
    }
+
+   getout:
+
+   /* One final check.  If there is an assumption in place that is inconsistent with the restriction
+      being enforced, then it is an error, even though no live people violate the restriction. */
+
+   switch (ss->cmd.cmd_assume.assumption) {
+      case cr_gen_1_4_tag: case cr_gen_3_4_tag: case cr_qtag_like:
+         switch (restr.assumption) {
+            case cr_diamond_like:
+               fail("An assumed facing direction for phantoms is illegal for this call.");
+               break;
+         }
+         break;
+      case cr_diamond_like:
+         switch (restr.assumption) {
+            case cr_gen_1_4_tag: case cr_gen_3_4_tag: case cr_qtag_like:
+               fail("An assumed facing direction for phantoms is illegal for this call.");
+               break;
+         }
+         break;
+      case cr_couples_only: case cr_3x3couples_only: case cr_4x4couples_only:
+         switch (restr.assumption) {
+            case cr_wave_only:
+               fail("An assumed facing direction for phantoms is illegal for this call.");
+               break;
+         }
+         break;
+      case cr_wave_only:
+         switch (restr.assumption) {
+            case cr_couples_only: case cr_3x3couples_only: case cr_4x4couples_only:
+               fail("An assumed facing direction for phantoms is illegal for this call.");
+               break;
+         }
+         break;
+   }
+
+   return restr_thing_ptr;
 }
 
 
@@ -2534,7 +2542,7 @@ extern void basic_move(
       t.assumption = linedefinition->restriction;
       t.assump_col = 0;
       t.assump_both = 0;
-      if (linedefinition->restriction != cr_none) check_restriction(ss, t, linedefinition->callarray_flags & CAF__RESTR_MASK);
+      if (linedefinition->restriction != cr_none) (void) check_restriction(ss, t, linedefinition->callarray_flags & CAF__RESTR_MASK);
       goodies = linedefinition;
    }
 
@@ -2573,20 +2581,20 @@ extern void basic_move(
       t.assumption = coldefinition->restriction;
       t.assump_col = 1;
       t.assump_both = 0;
-      if (coldefinition->restriction != cr_none) check_restriction(ss, t, coldefinition->callarray_flags & CAF__RESTR_MASK);
+      if (coldefinition->restriction != cr_none) (void) check_restriction(ss, t, coldefinition->callarray_flags & CAF__RESTR_MASK);
 
       /* If we have linedefinition also, check for consistency. */
 
       if (goodies) {
          /* ***** should also check the other stupid fields! */
          inconsistent_rotation = (goodies->callarray_flags ^ coldefinition->callarray_flags) & CAF__ROT;
-         if (goodies->end_setup != coldefinition->end_setup) inconsistent_setup = 1;
+         if ((setup_kind) goodies->end_setup != (setup_kind) coldefinition->end_setup) inconsistent_setup = 1;
       }
 
       goodies = coldefinition;
    }
 
-   result->kind = goodies->end_setup;
+   result->kind = (setup_kind) goodies->end_setup;
 
    if (result->kind == s_normal_concentric) {         /* ***** this requires an 8-person call definition */
       setup outer_inners[2];
@@ -2620,8 +2628,8 @@ extern void basic_move(
 
       outer_inners[0].result_flags = 0;
       outer_inners[1].result_flags = 0;
-      outer_inners[0].kind = goodies->end_setup_out;
-      outer_inners[1].kind = goodies->end_setup_in;
+      outer_inners[0].kind = (setup_kind) goodies->end_setup_out;
+      outer_inners[1].kind = (setup_kind) goodies->end_setup_in;
       outer_inners[0].rotation = (goodies->callarray_flags & CAF__ROT_OUT) ? 1 : 0;
       outer_inners[1].rotation = goodies->callarray_flags & CAF__ROT;
 
@@ -2705,7 +2713,7 @@ extern void basic_move(
 
          if (inconsistent_setup) {
             if (inconsistent_rotation) {
-               if (result->kind == s_spindle && linedefinition->end_setup == s_crosswave) {
+               if (result->kind == s_spindle && (setup_kind) linedefinition->end_setup == s_crosswave) {
                   result->kind = sx1x6;
                   tempkind = sx1x6;
                   final_translatec = ftcspn;
@@ -2719,7 +2727,7 @@ extern void basic_move(
                      rotfudge_line = 1;
                   }
                }
-               else if (result->kind == s2x4 && linedefinition->end_setup == s_qtag) {
+               else if (result->kind == s2x4 && (setup_kind) linedefinition->end_setup == s_qtag) {
                   /* In this case, line people are right, column people are wrong. */
                   result->rotation = linedefinition->callarray_flags & CAF__ROT;
                   result->kind = s_qtag;
@@ -2738,7 +2746,7 @@ extern void basic_move(
                   fail("T-bone call went to a weird setup.");
             }
             else {
-               if (result->kind == s4x4 && linedefinition->end_setup == s2x4) {
+               if (result->kind == s4x4 && (setup_kind) linedefinition->end_setup == s2x4) {
                   if (goodies->callarray_flags & CAF__ROT) {
                      final_translatel = &ftc4x4[8];   /* Shouldn't really happen -- can't specify rotation if end=4x4. */
                      rotfudge_line = 2;
@@ -2746,7 +2754,7 @@ extern void basic_move(
                   else
                      final_translatel = &ftc4x4[0];
                }
-               else if (result->kind == s_c1phan && linedefinition->end_setup == s2x4) {
+               else if (result->kind == s_c1phan && (setup_kind) linedefinition->end_setup == s2x4) {
                   if (goodies->callarray_flags & CAF__ROT) {
                      final_translatel = &ftcphan[8];   /* Shouldn't really happen -- can't specify rotation if end=4x4. */
                      rotfudge_line = 2;

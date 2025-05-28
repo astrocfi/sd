@@ -569,7 +569,7 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
                else if (i == 3)
                   writestuff_with_decorations("OWN THE <ANYONE>, ", you_owe_me_a_number, you_owe_me_a_selector, &index, selector_names[selector]);
                else if (i == 5)
-                  writestuff_with_decorations("<ANYONE> ONLY ", you_owe_me_a_number, you_owe_me_a_selector, &index, selector_names[selector]);
+                  writestuff_with_decorations("<ANYONE>, ", you_owe_me_a_number, you_owe_me_a_selector, &index, selector_names[selector]);
                else
                   writestuff_with_decorations("<ANYONE> DISCONNECTED ", you_owe_me_a_number, you_owe_me_a_selector, &index, selector_names[selector]);
             }
@@ -620,10 +620,6 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
                writestuff(" BY");
 
             next_cptr = subsidiary_ptr;
-         }
-         else if (k == concept_so_and_so_only || k == concept_standard || k == concept_double_offset || k == concept_single_diagonal) {
-            writestuff_with_decorations(item->name, you_owe_me_a_number, you_owe_me_a_selector, &index, selector_names[selector]);
-            request_final_space = TRUE;
          }
          else if (k == concept_selbasedtrngl) {
             writestuff_with_decorations(item->name, you_owe_me_a_number, you_owe_me_a_selector, &index, selector_singular[selector]);
@@ -703,6 +699,9 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
             writestuff_with_decorations(item->name, you_owe_me_a_number, you_owe_me_a_selector, &index, selector_names[selector]);
             request_final_space = TRUE;
          }
+
+         if (k == concept_fractional || k == concept_twice)
+            comma_after_next_concept = TRUE;
 
          static_cptr = next_cptr;
 
@@ -841,12 +840,26 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
                            writestuff(" ");
                         np += 2;       /* skip the indicator */
                         break;
-                     case '9': case 'a': case 'b':    /* Need to plug in a number. */
+                     case '9': case 'a': case 'b': case 'B':    /* Need to plug in a number. */
                         write_blank_if_needed();
                         nn[0] = '0' + (number_list & 0xF);
                         nn[1] = '\0';
                         if (savec == '9')
                            writestuff(nn);
+                        else if (savec == 'B') {
+                           if ((number_list & 0xF) == 1)
+                              writestuff("quarter");
+                           else if ((number_list & 0xF) == 2)
+                              writestuff("half");
+                           else if ((number_list & 0xF) == 3)
+                              writestuff("three quarter");
+                           else if ((number_list & 0xF) == 4)
+                              writestuff("four quarter");
+                           else {
+                              writestuff(nn);
+                              writestuff("/4");
+                           }
+                        }
                         else if ((number_list & 0xF) == 2)
                            writestuff("1/2");
                         else if ((number_list & 0xF) == 4 && savec == 'a')
@@ -1547,449 +1560,447 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
    callarray *p;
    int t, u, i, k, mask;
 
-   p = spec;
-   for (;;) {
-      if (p == 0) goto good;
-      if (p->start_setup == key) {
-         if (p->qualifier == sq_none) goto good;
+   /* Can't be bothered to figure out what setup to create when
+      calling this during initialization, so it sends nil.
+      Therefore, we always accept such a thing. */
+   if (!ss) goto good;
 
-         /* Can't be bothered to figure out what setup to create when
-            calling this during initialization, so it sends nil.
-            Therefore, we always accept such a thing. */
-         if (!ss) goto good;
+   for (p = spec; p; p = p->next) {
 
-         /* Note that we have to examine setups larger than the setup the
-            qualifier is officially defined for.  If a qualifier were defined
-            as being legal only on 1x4's (so that, in the database, we only had
-            specifications of the sort "setup 1x4 1x4 qualifier wave_only") we could
-            still find ourselves here with ss->kind equal to s2x4.  Why?  Because
-            the setup could be a 2x4 and the splitter could be trying to decide
-            whether to split the setup into parallel 1x4's.  This happens when
-            trying to figure out whether to split a 2x4 into 1x4's or 2x2's for
-            the call "recycle". */
+      /* First, we demand that the starting setup be correct.  Also, if a qualifier
+         number was specified, it must match. */
 
-         k = 0;   /* Many tests will find these values useful. */
-         i = 2;
+      if ((begin_kind) p->start_setup != key) continue;
+      if (p->qual_num != 0 && p->qual_num != (current_number_fields & 0xF)+1) continue;
 
-         switch (p->qualifier) {
-            case sq_wave_only:                    /* 1x4 or 2x4 - waves; 2x2 - real RH or LH box */
-               switch (ss->kind) {
-                  case s1x4:
+      if ((search_qualifier) p->qualifier == sq_none) goto good;
+
+      /* Note that we have to examine setups larger than the setup the
+         qualifier is officially defined for.  If a qualifier were defined
+         as being legal only on 1x4's (so that, in the database, we only had
+         specifications of the sort "setup 1x4 1x4 qualifier wave_only") we could
+         still find ourselves here with ss->kind equal to s2x4.  Why?  Because
+         the setup could be a 2x4 and the splitter could be trying to decide
+         whether to split the setup into parallel 1x4's.  This happens when
+         trying to figure out whether to split a 2x4 into 1x4's or 2x2's for
+         the call "recycle". */
+
+      k = 0;   /* Many tests will find these values useful. */
+      i = 2;
+
+      switch ((search_qualifier) p->qualifier) {
+         case sq_wave_only:                    /* 1x4 or 2x4 - waves; 2x2 - real RH or LH box */
+            switch (ss->kind) {
+               case s1x4:
+                  if ((t = ss->people[0].id1) != 0) { k |=  t; i &=  t; }
+                  if ((t = ss->people[1].id1) != 0) { k |= ~t; i &= ~t; }
+                  if ((t = ss->people[2].id1) != 0) { k |= ~t; i &= ~t; }
+                  if ((t = ss->people[3].id1) != 0) { k |=  t; i &=  t; }
+                  if (!(k & ~i & 2)) goto good;
+                  goto bad;
+               case s2x2:
+                  u = ss->people[0].id1 | ss->people[1].id1 | ss->people[2].id1 | ss->people[3].id1;
+
+                  if ((u & 1) == 0) {
                      if ((t = ss->people[0].id1) != 0) { k |=  t; i &=  t; }
                      if ((t = ss->people[1].id1) != 0) { k |= ~t; i &= ~t; }
                      if ((t = ss->people[2].id1) != 0) { k |= ~t; i &= ~t; }
                      if ((t = ss->people[3].id1) != 0) { k |=  t; i &=  t; }
                      if (!(k & ~i & 2)) goto good;
-                     goto bad;
-                  case s2x2:
-                     u = ss->people[0].id1 | ss->people[1].id1 | ss->people[2].id1 | ss->people[3].id1;
+                  }
+                  else if ((u & 010) == 0) {
+                     if ((t = ss->people[0].id1) != 0) { k |=  t; i &=  t; }
+                     if ((t = ss->people[1].id1) != 0) { k |=  t; i &=  t; }
+                     if ((t = ss->people[2].id1) != 0) { k |= ~t; i &= ~t; }
+                     if ((t = ss->people[3].id1) != 0) { k |= ~t; i &= ~t; }
+                     if (!(k & ~i & 2)) goto good;
+                  }
 
-                     if ((u & 1) == 0) {
-                        if ((t = ss->people[0].id1) != 0) { k |=  t; i &=  t; }
-                        if ((t = ss->people[1].id1) != 0) { k |= ~t; i &= ~t; }
-                        if ((t = ss->people[2].id1) != 0) { k |= ~t; i &= ~t; }
-                        if ((t = ss->people[3].id1) != 0) { k |=  t; i &=  t; }
-                        if (!(k & ~i & 2)) goto good;
-                     }
-                     else if ((u & 010) == 0) {
-                        if ((t = ss->people[0].id1) != 0) { k |=  t; i &=  t; }
-                        if ((t = ss->people[1].id1) != 0) { k |=  t; i &=  t; }
-                        if ((t = ss->people[2].id1) != 0) { k |= ~t; i &= ~t; }
-                        if ((t = ss->people[3].id1) != 0) { k |= ~t; i &= ~t; }
-                        if (!(k & ~i & 2)) goto good;
-                     }
+                  goto bad;
+               case s2x4:
+                  if ((t = ss->people[0].id1) != 0) { k |=  t; i &=  t; }
+                  if ((t = ss->people[1].id1) != 0) { k |= ~t; i &= ~t; }
+                  if ((t = ss->people[2].id1) != 0) { k |=  t; i &=  t; }
+                  if ((t = ss->people[3].id1) != 0) { k |= ~t; i &= ~t; }
+                  if ((t = ss->people[4].id1) != 0) { k |= ~t; i &= ~t; }
+                  if ((t = ss->people[5].id1) != 0) { k |=  t; i &=  t; }
+                  if ((t = ss->people[6].id1) != 0) { k |= ~t; i &= ~t; }
+                  if ((t = ss->people[7].id1) != 0) { k |=  t; i &=  t; }
+                  if (!(k & ~i & 2)) goto good;
+                  goto bad;
+               default:
+                  goto good;                 /* We don't understand the setup -- we'd better accept it. */
+            }
+         case sq_in_or_out:                    /* 2x2 - all facing in or all facing out */
+            switch (ss->kind) {
+               case s2x2:
+                  u = ss->people[0].id1 | ss->people[1].id1 | ss->people[2].id1 | ss->people[3].id1;
 
-                     goto bad;
-                  case s2x4:
+                  if ((u & 1) == 0) {
+                     if ((t = ss->people[0].id1) != 0) { k |=  t; i &=  t; }
+                     if ((t = ss->people[1].id1) != 0) { k |=  t; i &=  t; }
+                     if ((t = ss->people[2].id1) != 0) { k |= ~t; i &= ~t; }
+                     if ((t = ss->people[3].id1) != 0) { k |= ~t; i &= ~t; }
+                     if (!(k & ~i & 2)) goto good;
+                  }
+                  else if ((u & 010) == 0) {
                      if ((t = ss->people[0].id1) != 0) { k |=  t; i &=  t; }
                      if ((t = ss->people[1].id1) != 0) { k |= ~t; i &= ~t; }
-                     if ((t = ss->people[2].id1) != 0) { k |=  t; i &=  t; }
-                     if ((t = ss->people[3].id1) != 0) { k |= ~t; i &= ~t; }
-                     if ((t = ss->people[4].id1) != 0) { k |= ~t; i &= ~t; }
-                     if ((t = ss->people[5].id1) != 0) { k |=  t; i &=  t; }
-                     if ((t = ss->people[6].id1) != 0) { k |= ~t; i &= ~t; }
-                     if ((t = ss->people[7].id1) != 0) { k |=  t; i &=  t; }
-                     if (!(k & ~i & 2)) goto good;
-                     goto bad;
-                  default:
-                     goto good;                 /* We don't understand the setup -- we'd better accept it. */
-               }
-            case sq_in_or_out:                    /* 2x2 - all facing in or all facing out */
-               switch (ss->kind) {
-                  case s2x2:
-                     u = ss->people[0].id1 | ss->people[1].id1 | ss->people[2].id1 | ss->people[3].id1;
-
-                     if ((u & 1) == 0) {
-                        if ((t = ss->people[0].id1) != 0) { k |=  t; i &=  t; }
-                        if ((t = ss->people[1].id1) != 0) { k |=  t; i &=  t; }
-                        if ((t = ss->people[2].id1) != 0) { k |= ~t; i &= ~t; }
-                        if ((t = ss->people[3].id1) != 0) { k |= ~t; i &= ~t; }
-                        if (!(k & ~i & 2)) goto good;
-                     }
-                     else if ((u & 010) == 0) {
-                        if ((t = ss->people[0].id1) != 0) { k |=  t; i &=  t; }
-                        if ((t = ss->people[1].id1) != 0) { k |= ~t; i &= ~t; }
-                        if ((t = ss->people[2].id1) != 0) { k |= ~t; i &= ~t; }
-                        if ((t = ss->people[3].id1) != 0) { k |=  t; i &=  t; }
-                        if (!(k & ~i & 2)) goto good;
-                     }
-
-                     goto bad;
-                  default:
-                     goto good;                 /* We don't understand the setup -- we'd better accept it. */
-               }
-            case sq_2fl_only:                     /* 1x4 or 2x4 - 2FL; 4x1 - single DPT or single CDPT */
-               switch (ss->kind) {
-                  case s1x4:
-                     if ((t = ss->people[0].id1) != 0) { k |=  t; i &=  t; }
-                     if ((t = ss->people[1].id1) != 0) { k |=  t; i &=  t; }
                      if ((t = ss->people[2].id1) != 0) { k |= ~t; i &= ~t; }
-                     if ((t = ss->people[3].id1) != 0) { k |= ~t; i &= ~t; }
+                     if ((t = ss->people[3].id1) != 0) { k |=  t; i &=  t; }
                      if (!(k & ~i & 2)) goto good;
-                     goto bad;
-                  case s2x4:
-                     if ((t = ss->people[0].id1) != 0) { k |=  t; i &=  t; }
-                     if ((t = ss->people[1].id1) != 0) { k |=  t; i &=  t; }
-                     if ((t = ss->people[2].id1) != 0) { k |= ~t; i &= ~t; }
-                     if ((t = ss->people[3].id1) != 0) { k |= ~t; i &= ~t; }
-                     if ((t = ss->people[4].id1) != 0) { k |= ~t; i &= ~t; }
-                     if ((t = ss->people[5].id1) != 0) { k |= ~t; i &= ~t; }
-                     if ((t = ss->people[6].id1) != 0) { k |=  t; i &=  t; }
-                     if ((t = ss->people[7].id1) != 0) { k |=  t; i &=  t; }
-                     if (!(k & ~i & 2)) goto good;
-                     goto bad;
-                  default:
-                     goto good;                 /* We don't understand the setup -- we'd better accept it. */
-               }
-            case sq_miniwaves:                    /* miniwaves everywhere */
-               switch (ss->kind) {
-                  case s1x2:
-                     if ((t = ss->people[0].id1) & (u = ss->people[1].id1)) { k |= t|u; i &= t^u; }
-                     if ((i & 2) && !(k & 1)) goto good;
-                     goto bad;
-                  case s1x4:
-                     if ((t = ss->people[0].id1) & (u = ss->people[1].id1)) { k |= t|u; i &= t^u; }
-                     if ((t = ss->people[3].id1) & (u = ss->people[2].id1)) { k |= t|u; i &= t^u; }
-                     if ((i & 2) && !(k & 1)) goto good;
-                     goto bad;
-                  case s1x8:
-                     if ((t = ss->people[0].id1) & (u = ss->people[1].id1)) { k |= t|u; i &= t^u; }
-                     if ((t = ss->people[3].id1) & (u = ss->people[2].id1)) { k |= t|u; i &= t^u; }
-                     if ((t = ss->people[6].id1) & (u = ss->people[7].id1)) { k |= t|u; i &= t^u; }
-                     if ((t = ss->people[5].id1) & (u = ss->people[4].id1)) { k |= t|u; i &= t^u; }
-                     if ((i & 2) && !(k & 1)) goto good;
-                     goto bad;
-                  case s2x4:
-                     if ((t = ss->people[0].id1) & (u = ss->people[1].id1)) { k |= t|u; i &= t^u; }
-                     if ((t = ss->people[2].id1) & (u = ss->people[3].id1)) { k |= t|u; i &= t^u; }
-                     if ((t = ss->people[5].id1) & (u = ss->people[4].id1)) { k |= t|u; i &= t^u; }
-                     if ((t = ss->people[7].id1) & (u = ss->people[6].id1)) { k |= t|u; i &= t^u; }
-                     if ((i & 2) && !(k & 1)) goto good;
-                     k = 1;
-                     i = 2;
-                     if ((t = ss->people[0].id1) & (u = ss->people[7].id1)) { k &= t&u; i &= t^u; }
-                     if ((t = ss->people[1].id1) & (u = ss->people[6].id1)) { k &= t&u; i &= t^u; }
-                     if ((t = ss->people[2].id1) & (u = ss->people[5].id1)) { k &= t&u; i &= t^u; }
-                     if ((t = ss->people[3].id1) & (u = ss->people[4].id1)) { k &= t&u; i &= t^u; }
-                     if ((i & 2) && (k & 1)) goto good;
-                     goto bad;
-                  case s2x2:
-                     if ((t = ss->people[0].id1) & (u = ss->people[1].id1)) { k |= t|u; i &= t^u; }
-                     if ((t = ss->people[3].id1) & (u = ss->people[2].id1)) { k |= t|u; i &= t^u; }
-                     if ((i & 2) && !(k & 1)) goto good;
-                     k = 1;
-                     i = 2;
-                     if ((t = ss->people[0].id1) & (u = ss->people[3].id1)) { k &= t&u; i &= t^u; }
-                     if ((t = ss->people[1].id1) & (u = ss->people[2].id1)) { k &= t&u; i &= t^u; }
-                     if ((i & 2) && (k & 1)) goto good;
-                     goto bad;
-                  case sdmd:
-                     k = 1;
-                     i = 2;
-                     if ((t = ss->people[1].id1) & (u = ss->people[3].id1)) { k &= t&u; i &= t^u; }
-                     if ((i & 2) && (k & 1)) goto good;
-                     goto bad;
-                  case s_trngl:
-                     if ((t = ss->people[1].id1) & (u = ss->people[2].id1)) { k |= t|u; i &= t^u; }
-                     if ((i & 2) && !(k & 1)) goto good;
-                     goto bad;
-                  case s_qtag:
-                     if ((t = ss->people[6].id1) & (u = ss->people[7].id1)) { k |= t|u; i &= t^u; }
-                     if ((t = ss->people[3].id1) & (u = ss->people[2].id1)) { k |= t|u; i &= t^u; }
-                     if ((i & 2) && !(k & 1)) goto good;
-                     goto bad;
-                  default:
-                     goto good;                 /* We don't understand the setup -- we'd better accept it. */
-               }
-            case sq_rwave_only:
-               if (ss->kind == s1x2) {
-                  if ((!(t = ss->people[0].id1 & d_mask) || t == d_north) &&
-                      (!(t = ss->people[1].id1 & d_mask) || t == d_south))
-                  goto good;
-                  goto bad;
-               }
-               else if (ss->kind == s1x4) {
-                  if ((!(t = ss->people[0].id1 & d_mask) || t == d_north) &&
-                      (!(t = ss->people[1].id1 & d_mask) || t == d_south) &&
-                      (!(t = ss->people[3].id1 & d_mask) || t == d_north) &&
-                      (!(t = ss->people[2].id1 & d_mask) || t == d_south))
-                  goto good;
-                  goto bad;
-               }
-               else if (ss->kind == s1x8) {
-                  if ((!(t = ss->people[0].id1 & d_mask) || t == d_north) &&
-                      (!(t = ss->people[1].id1 & d_mask) || t == d_south) &&
-                      (!(t = ss->people[3].id1 & d_mask) || t == d_north) &&
-                      (!(t = ss->people[2].id1 & d_mask) || t == d_south) &&
-                      (!(t = ss->people[6].id1 & d_mask) || t == d_north) &&
-                      (!(t = ss->people[7].id1 & d_mask) || t == d_south) &&
-                      (!(t = ss->people[5].id1 & d_mask) || t == d_north) &&
-                      (!(t = ss->people[4].id1 & d_mask) || t == d_south))
-                  goto good;
-                  goto bad;
-               }
-               else if (ss->kind == s2x4) {
-                  if ((!(t = ss->people[0].id1 & d_mask) || t == d_north) &&
-                      (!(t = ss->people[1].id1 & d_mask) || t == d_south) &&
-                      (!(t = ss->people[2].id1 & d_mask) || t == d_north) &&
-                      (!(t = ss->people[3].id1 & d_mask) || t == d_south) &&
-                      (!(t = ss->people[4].id1 & d_mask) || t == d_south) &&
-                      (!(t = ss->people[5].id1 & d_mask) || t == d_north) &&
-                      (!(t = ss->people[6].id1 & d_mask) || t == d_south) &&
-                      (!(t = ss->people[7].id1 & d_mask) || t == d_north))
-                  goto good;
-                  if ((!(t = ss->people[0].id1 & d_mask) || t == d_east) &&
-                      (!(t = ss->people[1].id1 & d_mask) || t == d_east) &&
-                      (!(t = ss->people[2].id1 & d_mask) || t == d_east) &&
-                      (!(t = ss->people[3].id1 & d_mask) || t == d_east) &&
-                      (!(t = ss->people[4].id1 & d_mask) || t == d_west) &&
-                      (!(t = ss->people[5].id1 & d_mask) || t == d_west) &&
-                      (!(t = ss->people[6].id1 & d_mask) || t == d_west) &&
-                      (!(t = ss->people[7].id1 & d_mask) || t == d_west))
-                  goto good;
-                  goto bad;
-               }
-               else if (ss->kind == s2x2) {
-                  if ((!(t = ss->people[0].id1 & d_mask) || t == d_north) &&
-                      (!(t = ss->people[1].id1 & d_mask) || t == d_south) &&
-                      (!(t = ss->people[2].id1 & d_mask) || t == d_south) &&
-                      (!(t = ss->people[3].id1 & d_mask) || t == d_north))
-                  goto good;
-                  if ((!(t = ss->people[0].id1 & d_mask) || t == d_east) &&
-                      (!(t = ss->people[1].id1 & d_mask) || t == d_east) &&
-                      (!(t = ss->people[2].id1 & d_mask) || t == d_west) &&
-                      (!(t = ss->people[3].id1 & d_mask) || t == d_west))
-                  goto good;
-                  goto bad;
-               }
-               else if (ss->kind == sdmd) {
-                  if ((!(t = ss->people[1].id1 & d_mask) || t == d_east) &&
-                      (!(t = ss->people[3].id1 & d_mask) || t == d_west))
-                  goto good;
-                  goto bad;
-               }
-               else if (ss->kind == s_trngl) {
-                  if ((!(t = ss->people[1].id1 & d_mask) || t == d_north) &&
-                      (!(t = ss->people[2].id1 & d_mask) || t == d_south))
-                  goto good;
-                  goto bad;
-               }
-               else if (ss->kind == s_qtag) {
-                  if ((!(t = ss->people[2].id1 & d_mask) || t == d_south) &&
-                      (!(t = ss->people[3].id1 & d_mask) || t == d_north) &&
-                      (!(t = ss->people[6].id1 & d_mask) || t == d_north) &&
-                      (!(t = ss->people[7].id1 & d_mask) || t == d_south))
-                  goto good;
-                  goto bad;
-               }
-               else {
-                  goto good;                 /* We don't understand the setup -- we'd better accept it. */
-               }
-            case sq_lwave_only:
-               if (ss->kind == s1x2) {
-                  if ((!(t = ss->people[0].id1 & d_mask) || t == d_south) &&
-                      (!(t = ss->people[1].id1 & d_mask) || t == d_north))
-                  goto good;
-                  goto bad;
-               }
-               else if (ss->kind == s1x4) {
-                  if ((!(t = ss->people[0].id1 & d_mask) || t == d_south) &&
-                      (!(t = ss->people[1].id1 & d_mask) || t == d_north) &&
-                      (!(t = ss->people[3].id1 & d_mask) || t == d_south) &&
-                      (!(t = ss->people[2].id1 & d_mask) || t == d_north))
-                  goto good;
-                  goto bad;
-               }
-               else if (ss->kind == s1x8) {
-                  if ((!(t = ss->people[0].id1 & d_mask) || t == d_south) &&
-                      (!(t = ss->people[1].id1 & d_mask) || t == d_north) &&
-                      (!(t = ss->people[3].id1 & d_mask) || t == d_south) &&
-                      (!(t = ss->people[2].id1 & d_mask) || t == d_north) &&
-                      (!(t = ss->people[6].id1 & d_mask) || t == d_south) &&
-                      (!(t = ss->people[7].id1 & d_mask) || t == d_north) &&
-                      (!(t = ss->people[5].id1 & d_mask) || t == d_south) &&
-                      (!(t = ss->people[4].id1 & d_mask) || t == d_north))
-                  goto good;
-                  goto bad;
-               }
-               else if (ss->kind == s2x4) {
-                  if ((!(t = ss->people[0].id1 & d_mask) || t == d_south) &&
-                      (!(t = ss->people[1].id1 & d_mask) || t == d_north) &&
-                      (!(t = ss->people[2].id1 & d_mask) || t == d_south) &&
-                      (!(t = ss->people[3].id1 & d_mask) || t == d_north) &&
-                      (!(t = ss->people[4].id1 & d_mask) || t == d_north) &&
-                      (!(t = ss->people[5].id1 & d_mask) || t == d_south) &&
-                      (!(t = ss->people[6].id1 & d_mask) || t == d_north) &&
-                      (!(t = ss->people[7].id1 & d_mask) || t == d_south))
-                  goto good;
-                  if ((!(t = ss->people[0].id1 & d_mask) || t == d_west) &&
-                      (!(t = ss->people[1].id1 & d_mask) || t == d_west) &&
-                      (!(t = ss->people[2].id1 & d_mask) || t == d_west) &&
-                      (!(t = ss->people[3].id1 & d_mask) || t == d_west) &&
-                      (!(t = ss->people[4].id1 & d_mask) || t == d_east) &&
-                      (!(t = ss->people[5].id1 & d_mask) || t == d_east) &&
-                      (!(t = ss->people[6].id1 & d_mask) || t == d_east) &&
-                      (!(t = ss->people[7].id1 & d_mask) || t == d_east))
-                  goto good;
-                  goto bad;
-               }
-               else if (ss->kind == s2x2) {
-                  if ((!(t = ss->people[0].id1 & d_mask) || t == d_south) &&
-                      (!(t = ss->people[1].id1 & d_mask) || t == d_north) &&
-                      (!(t = ss->people[2].id1 & d_mask) || t == d_north) &&
-                      (!(t = ss->people[3].id1 & d_mask) || t == d_south))
-                  goto good;
-                  if ((!(t = ss->people[0].id1 & d_mask) || t == d_west) &&
-                      (!(t = ss->people[1].id1 & d_mask) || t == d_west) &&
-                      (!(t = ss->people[2].id1 & d_mask) || t == d_east) &&
-                      (!(t = ss->people[3].id1 & d_mask) || t == d_east))
-                  goto good;
-                  goto bad;
-               }
-               else if (ss->kind == sdmd) {
-                  if ((!(t = ss->people[1].id1 & d_mask) || t == d_west) &&
-                      (!(t = ss->people[3].id1 & d_mask) || t == d_east))
-                  goto good;
-                  goto bad;
-               }
-               if (ss->kind == s_trngl) {
-                  if ((!(t = ss->people[1].id1 & d_mask) || t == d_south) &&
-                      (!(t = ss->people[2].id1 & d_mask) || t == d_north))
-                  goto good;
-                  goto bad;
-               }
-               else if (ss->kind == s_qtag) {
-                  if ((!(t = ss->people[2].id1 & d_mask) || t == d_north) &&
-                      (!(t = ss->people[3].id1 & d_mask) || t == d_south) &&
-                      (!(t = ss->people[6].id1 & d_mask) || t == d_south) &&
-                      (!(t = ss->people[7].id1 & d_mask) || t == d_north))
-                  goto good;
-                  goto bad;
-               }
-               else {
-                  goto good;                 /* We don't understand the setup -- we'd better accept it. */
-               }
-            case sq_ctrwv_end2fl:
-               /* Note that this qualifier is kind of strict.  We won't permit the call "with
-                  confidence" do be done unless everyone can trivially determine which
-                  part to do. */
-               if (ss->kind == s_crosswave) {
-                  if (((ss->people[0].id1 ^ ss->people[1].id1) & d_mask) == 0 &&
-                      ((ss->people[4].id1 ^ ss->people[5].id1) & d_mask) == 0 &&
-                      ((ss->people[2].id1 | ss->people[3].id1) == 0 || ((ss->people[2].id1 ^ ss->people[3].id1) & d_mask) == 2) &&
-                      ((ss->people[6].id1 | ss->people[7].id1) == 0 || ((ss->people[6].id1 ^ ss->people[7].id1) & d_mask) == 2))
-                  goto good;
-                  goto bad;
-               }
-               else {
-                  goto good;                 /* We don't understand the setup -- we'd better accept it. */
-               }
-            case sq_ctr2fl_endwv:
-               /* Note that this qualifier is kind of strict.  We won't permit the call "with
-                  confidence" do be done unless everyone can trivially determine which
-                  part to do. */
-               if (ss->kind == s_crosswave) {
-                  if (((ss->people[2].id1 ^ ss->people[3].id1) & d_mask) == 0 &&
-                      ((ss->people[6].id1 ^ ss->people[7].id1) & d_mask) == 0 &&
-                      ((ss->people[0].id1 | ss->people[1].id1) == 0 || ((ss->people[0].id1 ^ ss->people[1].id1) & d_mask) == 2) &&
-                      ((ss->people[4].id1 | ss->people[5].id1) == 0 || ((ss->people[4].id1 ^ ss->people[5].id1) & d_mask) == 2))
-                  goto good;
-                  goto bad;
-               }
-               else {
-                  goto good;                 /* We don't understand the setup -- we'd better accept it. */
-               }
-            case sq_true_Z:                    /* 2x3, 3x4, or 2x6 - real Z spots occupied, so can do Z axle */
-               mask = 0;
+                  }
 
-               for (i=0, k=1; i<=setup_attrs[ss->kind].setup_limits; i++, k<<=1) {
-                  if (ss->people[i].id1) mask |= k;
-               }
-
-               if (ss->kind == s2x3) {
-                  if (mask == 033 || mask == 066) goto good;
                   goto bad;
-               }
-               else if (ss->kind == s3x4) {
-                  if (mask == 0xEBA || mask == 0xD75) goto good;
-                  goto bad;
-               }
-               else if (ss->kind == s2x6) {
-                  if (mask == 03333 || mask == 06666) goto good;
-                  goto bad;
-               }
-               else {
+               default:
                   goto good;                 /* We don't understand the setup -- we'd better accept it. */
-               }
-            case sq_3_4_tag:                      /* dmd or qtag - is a 3/4 tag, i.e. points looking out */
-               switch (ss->kind) {
-                  case sdmd:
-                     if ((!(t = ss->people[0].id1 & d_mask) || t == d_west) &&
-                         (!(t = ss->people[2].id1 & d_mask) || t == d_east))
-                     goto good;
-                     goto bad;
-                  case s_qtag:
-                     if ((!(t = ss->people[0].id1 & d_mask) || t == d_north) &&
-                         (!(t = ss->people[1].id1 & d_mask) || t == d_north) &&
-                         (!(t = ss->people[4].id1 & d_mask) || t == d_south) &&
-                         (!(t = ss->people[5].id1 & d_mask) || t == d_south))
-                     goto good;
-                     goto bad;
-                  default:
-                     goto good;                 /* We don't understand the setup -- we'd better accept it. */
-               }
-            case sq_dmd_same_pt:                   /* dmd or pdmd - centers would circulate to same point */
-               if (((ss->people[1].id1 & 01011) == d_east) &&                        /* faces either east or west */
-                   (!((ss->people[3].id1 ^ ss->people[1].id1) & d_mask)))   /* and both face same way */
-                  goto good;
-               goto bad;
-            case sq_dmd_facing:                    /* dmd or pdmd - diamond is fully occupied and fully facing */
-               if ((ss->people[0].id1 & d_mask) == d_north &&
-                   (ss->people[1].id1 & d_mask) == d_west &&
-                   (ss->people[2].id1 & d_mask) == d_south &&
-                   (ss->people[3].id1 & d_mask) == d_east)
-                  goto good;
-               if ((ss->people[0].id1 & d_mask) == d_south &&
-                   (ss->people[1].id1 & d_mask) == d_east &&
-                   (ss->people[2].id1 & d_mask) == d_north &&
-                   (ss->people[3].id1 & d_mask) == d_west)
-                  goto good;
-               goto bad;
-            case sq_n_is_0: if ((current_number_fields & 0xF) == 0) goto good; goto bad;
-            case sq_n_is_1: if ((current_number_fields & 0xF) == 1) goto good; goto bad;
-            case sq_n_is_2: if ((current_number_fields & 0xF) == 2) goto good; goto bad;
-            case sq_n_is_3: if ((current_number_fields & 0xF) == 3) goto good; goto bad;
-            case sq_n_is_4: if ((current_number_fields & 0xF) == 4) goto good; goto bad;
-            case sq_split_dixie:
-               if (ss->cmd.cmd_final_flags & FINAL__SPLIT_DIXIE_APPROVED) goto good;
-               goto bad;
-            case sq_not_split_dixie:
-               if (ss->cmd.cmd_final_flags & FINAL__SPLIT_DIXIE_APPROVED) goto bad;
+            }
+         case sq_2fl_only:                     /* 1x4 or 2x4 - 2FL; 4x1 - single DPT or single CDPT */
+            switch (ss->kind) {
+               case s1x4:
+                  if ((t = ss->people[0].id1) != 0) { k |=  t; i &=  t; }
+                  if ((t = ss->people[1].id1) != 0) { k |=  t; i &=  t; }
+                  if ((t = ss->people[2].id1) != 0) { k |= ~t; i &= ~t; }
+                  if ((t = ss->people[3].id1) != 0) { k |= ~t; i &= ~t; }
+                  if (!(k & ~i & 2)) goto good;
+                  goto bad;
+               case s2x4:
+                  if ((t = ss->people[0].id1) != 0) { k |=  t; i &=  t; }
+                  if ((t = ss->people[1].id1) != 0) { k |=  t; i &=  t; }
+                  if ((t = ss->people[2].id1) != 0) { k |= ~t; i &= ~t; }
+                  if ((t = ss->people[3].id1) != 0) { k |= ~t; i &= ~t; }
+                  if ((t = ss->people[4].id1) != 0) { k |= ~t; i &= ~t; }
+                  if ((t = ss->people[5].id1) != 0) { k |= ~t; i &= ~t; }
+                  if ((t = ss->people[6].id1) != 0) { k |=  t; i &=  t; }
+                  if ((t = ss->people[7].id1) != 0) { k |=  t; i &=  t; }
+                  if (!(k & ~i & 2)) goto good;
+                  goto bad;
+               default:
+                  goto good;                 /* We don't understand the setup -- we'd better accept it. */
+            }
+         case sq_miniwaves:                    /* miniwaves everywhere */
+            switch (ss->kind) {
+               case s1x2:
+                  if ((t = ss->people[0].id1) & (u = ss->people[1].id1)) { k |= t|u; i &= t^u; }
+                  if ((i & 2) && !(k & 1)) goto good;
+                  goto bad;
+               case s1x4:
+                  if ((t = ss->people[0].id1) & (u = ss->people[1].id1)) { k |= t|u; i &= t^u; }
+                  if ((t = ss->people[3].id1) & (u = ss->people[2].id1)) { k |= t|u; i &= t^u; }
+                  if ((i & 2) && !(k & 1)) goto good;
+                  goto bad;
+               case s1x8:
+                  if ((t = ss->people[0].id1) & (u = ss->people[1].id1)) { k |= t|u; i &= t^u; }
+                  if ((t = ss->people[3].id1) & (u = ss->people[2].id1)) { k |= t|u; i &= t^u; }
+                  if ((t = ss->people[6].id1) & (u = ss->people[7].id1)) { k |= t|u; i &= t^u; }
+                  if ((t = ss->people[5].id1) & (u = ss->people[4].id1)) { k |= t|u; i &= t^u; }
+                  if ((i & 2) && !(k & 1)) goto good;
+                  goto bad;
+               case s2x4:
+                  if ((t = ss->people[0].id1) & (u = ss->people[1].id1)) { k |= t|u; i &= t^u; }
+                  if ((t = ss->people[2].id1) & (u = ss->people[3].id1)) { k |= t|u; i &= t^u; }
+                  if ((t = ss->people[5].id1) & (u = ss->people[4].id1)) { k |= t|u; i &= t^u; }
+                  if ((t = ss->people[7].id1) & (u = ss->people[6].id1)) { k |= t|u; i &= t^u; }
+                  if ((i & 2) && !(k & 1)) goto good;
+                  k = 1;
+                  i = 2;
+                  if ((t = ss->people[0].id1) & (u = ss->people[7].id1)) { k &= t&u; i &= t^u; }
+                  if ((t = ss->people[1].id1) & (u = ss->people[6].id1)) { k &= t&u; i &= t^u; }
+                  if ((t = ss->people[2].id1) & (u = ss->people[5].id1)) { k &= t&u; i &= t^u; }
+                  if ((t = ss->people[3].id1) & (u = ss->people[4].id1)) { k &= t&u; i &= t^u; }
+                  if ((i & 2) && (k & 1)) goto good;
+                  goto bad;
+               case s2x2:
+                  if ((t = ss->people[0].id1) & (u = ss->people[1].id1)) { k |= t|u; i &= t^u; }
+                  if ((t = ss->people[3].id1) & (u = ss->people[2].id1)) { k |= t|u; i &= t^u; }
+                  if ((i & 2) && !(k & 1)) goto good;
+                  k = 1;
+                  i = 2;
+                  if ((t = ss->people[0].id1) & (u = ss->people[3].id1)) { k &= t&u; i &= t^u; }
+                  if ((t = ss->people[1].id1) & (u = ss->people[2].id1)) { k &= t&u; i &= t^u; }
+                  if ((i & 2) && (k & 1)) goto good;
+                  goto bad;
+               case sdmd:
+                  k = 1;
+                  i = 2;
+                  if ((t = ss->people[1].id1) & (u = ss->people[3].id1)) { k &= t&u; i &= t^u; }
+                  if ((i & 2) && (k & 1)) goto good;
+                  goto bad;
+               case s_trngl:
+                  if ((t = ss->people[1].id1) & (u = ss->people[2].id1)) { k |= t|u; i &= t^u; }
+                  if ((i & 2) && !(k & 1)) goto good;
+                  goto bad;
+               case s_qtag:
+                  if ((t = ss->people[6].id1) & (u = ss->people[7].id1)) { k |= t|u; i &= t^u; }
+                  if ((t = ss->people[3].id1) & (u = ss->people[2].id1)) { k |= t|u; i &= t^u; }
+                  if ((i & 2) && !(k & 1)) goto good;
+                  goto bad;
+               default:
+                  goto good;                 /* We don't understand the setup -- we'd better accept it. */
+            }
+         case sq_rwave_only:
+            if (ss->kind == s1x2) {
+               if ((!(t = ss->people[0].id1 & d_mask) || t == d_north) &&
+                   (!(t = ss->people[1].id1 & d_mask) || t == d_south))
                goto good;
-         }
+               goto bad;
+            }
+            else if (ss->kind == s1x4) {
+               if ((!(t = ss->people[0].id1 & d_mask) || t == d_north) &&
+                   (!(t = ss->people[1].id1 & d_mask) || t == d_south) &&
+                   (!(t = ss->people[3].id1 & d_mask) || t == d_north) &&
+                   (!(t = ss->people[2].id1 & d_mask) || t == d_south))
+               goto good;
+               goto bad;
+            }
+            else if (ss->kind == s1x8) {
+               if ((!(t = ss->people[0].id1 & d_mask) || t == d_north) &&
+                   (!(t = ss->people[1].id1 & d_mask) || t == d_south) &&
+                   (!(t = ss->people[3].id1 & d_mask) || t == d_north) &&
+                   (!(t = ss->people[2].id1 & d_mask) || t == d_south) &&
+                   (!(t = ss->people[6].id1 & d_mask) || t == d_north) &&
+                   (!(t = ss->people[7].id1 & d_mask) || t == d_south) &&
+                   (!(t = ss->people[5].id1 & d_mask) || t == d_north) &&
+                   (!(t = ss->people[4].id1 & d_mask) || t == d_south))
+               goto good;
+               goto bad;
+            }
+            else if (ss->kind == s2x4) {
+               if ((!(t = ss->people[0].id1 & d_mask) || t == d_north) &&
+                   (!(t = ss->people[1].id1 & d_mask) || t == d_south) &&
+                   (!(t = ss->people[2].id1 & d_mask) || t == d_north) &&
+                   (!(t = ss->people[3].id1 & d_mask) || t == d_south) &&
+                   (!(t = ss->people[4].id1 & d_mask) || t == d_south) &&
+                   (!(t = ss->people[5].id1 & d_mask) || t == d_north) &&
+                   (!(t = ss->people[6].id1 & d_mask) || t == d_south) &&
+                   (!(t = ss->people[7].id1 & d_mask) || t == d_north))
+               goto good;
+               if ((!(t = ss->people[0].id1 & d_mask) || t == d_east) &&
+                   (!(t = ss->people[1].id1 & d_mask) || t == d_east) &&
+                   (!(t = ss->people[2].id1 & d_mask) || t == d_east) &&
+                   (!(t = ss->people[3].id1 & d_mask) || t == d_east) &&
+                   (!(t = ss->people[4].id1 & d_mask) || t == d_west) &&
+                   (!(t = ss->people[5].id1 & d_mask) || t == d_west) &&
+                   (!(t = ss->people[6].id1 & d_mask) || t == d_west) &&
+                   (!(t = ss->people[7].id1 & d_mask) || t == d_west))
+               goto good;
+               goto bad;
+            }
+            else if (ss->kind == s2x2) {
+               if ((!(t = ss->people[0].id1 & d_mask) || t == d_north) &&
+                   (!(t = ss->people[1].id1 & d_mask) || t == d_south) &&
+                   (!(t = ss->people[2].id1 & d_mask) || t == d_south) &&
+                   (!(t = ss->people[3].id1 & d_mask) || t == d_north))
+               goto good;
+               if ((!(t = ss->people[0].id1 & d_mask) || t == d_east) &&
+                   (!(t = ss->people[1].id1 & d_mask) || t == d_east) &&
+                   (!(t = ss->people[2].id1 & d_mask) || t == d_west) &&
+                   (!(t = ss->people[3].id1 & d_mask) || t == d_west))
+               goto good;
+               goto bad;
+            }
+            else if (ss->kind == sdmd) {
+               if ((!(t = ss->people[1].id1 & d_mask) || t == d_east) &&
+                   (!(t = ss->people[3].id1 & d_mask) || t == d_west))
+               goto good;
+               goto bad;
+            }
+            else if (ss->kind == s_trngl) {
+               if ((!(t = ss->people[1].id1 & d_mask) || t == d_north) &&
+                   (!(t = ss->people[2].id1 & d_mask) || t == d_south))
+               goto good;
+               goto bad;
+            }
+            else if (ss->kind == s_qtag) {
+               if ((!(t = ss->people[2].id1 & d_mask) || t == d_south) &&
+                   (!(t = ss->people[3].id1 & d_mask) || t == d_north) &&
+                   (!(t = ss->people[6].id1 & d_mask) || t == d_north) &&
+                   (!(t = ss->people[7].id1 & d_mask) || t == d_south))
+               goto good;
+               goto bad;
+            }
+            else {
+               goto good;                 /* We don't understand the setup -- we'd better accept it. */
+            }
+         case sq_lwave_only:
+            if (ss->kind == s1x2) {
+               if ((!(t = ss->people[0].id1 & d_mask) || t == d_south) &&
+                   (!(t = ss->people[1].id1 & d_mask) || t == d_north))
+               goto good;
+               goto bad;
+            }
+            else if (ss->kind == s1x4) {
+               if ((!(t = ss->people[0].id1 & d_mask) || t == d_south) &&
+                   (!(t = ss->people[1].id1 & d_mask) || t == d_north) &&
+                   (!(t = ss->people[3].id1 & d_mask) || t == d_south) &&
+                   (!(t = ss->people[2].id1 & d_mask) || t == d_north))
+               goto good;
+               goto bad;
+            }
+            else if (ss->kind == s1x8) {
+               if ((!(t = ss->people[0].id1 & d_mask) || t == d_south) &&
+                   (!(t = ss->people[1].id1 & d_mask) || t == d_north) &&
+                   (!(t = ss->people[3].id1 & d_mask) || t == d_south) &&
+                   (!(t = ss->people[2].id1 & d_mask) || t == d_north) &&
+                   (!(t = ss->people[6].id1 & d_mask) || t == d_south) &&
+                   (!(t = ss->people[7].id1 & d_mask) || t == d_north) &&
+                   (!(t = ss->people[5].id1 & d_mask) || t == d_south) &&
+                   (!(t = ss->people[4].id1 & d_mask) || t == d_north))
+               goto good;
+               goto bad;
+            }
+            else if (ss->kind == s2x4) {
+               if ((!(t = ss->people[0].id1 & d_mask) || t == d_south) &&
+                   (!(t = ss->people[1].id1 & d_mask) || t == d_north) &&
+                   (!(t = ss->people[2].id1 & d_mask) || t == d_south) &&
+                   (!(t = ss->people[3].id1 & d_mask) || t == d_north) &&
+                   (!(t = ss->people[4].id1 & d_mask) || t == d_north) &&
+                   (!(t = ss->people[5].id1 & d_mask) || t == d_south) &&
+                   (!(t = ss->people[6].id1 & d_mask) || t == d_north) &&
+                   (!(t = ss->people[7].id1 & d_mask) || t == d_south))
+               goto good;
+               if ((!(t = ss->people[0].id1 & d_mask) || t == d_west) &&
+                   (!(t = ss->people[1].id1 & d_mask) || t == d_west) &&
+                   (!(t = ss->people[2].id1 & d_mask) || t == d_west) &&
+                   (!(t = ss->people[3].id1 & d_mask) || t == d_west) &&
+                   (!(t = ss->people[4].id1 & d_mask) || t == d_east) &&
+                   (!(t = ss->people[5].id1 & d_mask) || t == d_east) &&
+                   (!(t = ss->people[6].id1 & d_mask) || t == d_east) &&
+                   (!(t = ss->people[7].id1 & d_mask) || t == d_east))
+               goto good;
+               goto bad;
+            }
+            else if (ss->kind == s2x2) {
+               if ((!(t = ss->people[0].id1 & d_mask) || t == d_south) &&
+                   (!(t = ss->people[1].id1 & d_mask) || t == d_north) &&
+                   (!(t = ss->people[2].id1 & d_mask) || t == d_north) &&
+                   (!(t = ss->people[3].id1 & d_mask) || t == d_south))
+               goto good;
+               if ((!(t = ss->people[0].id1 & d_mask) || t == d_west) &&
+                   (!(t = ss->people[1].id1 & d_mask) || t == d_west) &&
+                   (!(t = ss->people[2].id1 & d_mask) || t == d_east) &&
+                   (!(t = ss->people[3].id1 & d_mask) || t == d_east))
+               goto good;
+               goto bad;
+            }
+            else if (ss->kind == sdmd) {
+               if ((!(t = ss->people[1].id1 & d_mask) || t == d_west) &&
+                   (!(t = ss->people[3].id1 & d_mask) || t == d_east))
+               goto good;
+               goto bad;
+            }
+            if (ss->kind == s_trngl) {
+               if ((!(t = ss->people[1].id1 & d_mask) || t == d_south) &&
+                   (!(t = ss->people[2].id1 & d_mask) || t == d_north))
+               goto good;
+               goto bad;
+            }
+            else if (ss->kind == s_qtag) {
+               if ((!(t = ss->people[2].id1 & d_mask) || t == d_north) &&
+                   (!(t = ss->people[3].id1 & d_mask) || t == d_south) &&
+                   (!(t = ss->people[6].id1 & d_mask) || t == d_south) &&
+                   (!(t = ss->people[7].id1 & d_mask) || t == d_north))
+               goto good;
+               goto bad;
+            }
+            else {
+               goto good;                 /* We don't understand the setup -- we'd better accept it. */
+            }
+         case sq_ctrwv_end2fl:
+            /* Note that this qualifier is kind of strict.  We won't permit the call "with
+               confidence" do be done unless everyone can trivially determine which
+               part to do. */
+            if (ss->kind == s_crosswave) {
+               if (((ss->people[0].id1 ^ ss->people[1].id1) & d_mask) == 0 &&
+                   ((ss->people[4].id1 ^ ss->people[5].id1) & d_mask) == 0 &&
+                   ((ss->people[2].id1 | ss->people[3].id1) == 0 || ((ss->people[2].id1 ^ ss->people[3].id1) & d_mask) == 2) &&
+                   ((ss->people[6].id1 | ss->people[7].id1) == 0 || ((ss->people[6].id1 ^ ss->people[7].id1) & d_mask) == 2))
+               goto good;
+               goto bad;
+            }
+            else {
+               goto good;                 /* We don't understand the setup -- we'd better accept it. */
+            }
+         case sq_ctr2fl_endwv:
+            /* Note that this qualifier is kind of strict.  We won't permit the call "with
+               confidence" do be done unless everyone can trivially determine which
+               part to do. */
+            if (ss->kind == s_crosswave) {
+               if (((ss->people[2].id1 ^ ss->people[3].id1) & d_mask) == 0 &&
+                   ((ss->people[6].id1 ^ ss->people[7].id1) & d_mask) == 0 &&
+                   ((ss->people[0].id1 | ss->people[1].id1) == 0 || ((ss->people[0].id1 ^ ss->people[1].id1) & d_mask) == 2) &&
+                   ((ss->people[4].id1 | ss->people[5].id1) == 0 || ((ss->people[4].id1 ^ ss->people[5].id1) & d_mask) == 2))
+               goto good;
+               goto bad;
+            }
+            else {
+               goto good;                 /* We don't understand the setup -- we'd better accept it. */
+            }
+         case sq_true_Z:                    /* 2x3, 3x4, or 2x6 - real Z spots occupied, so can do Z axle */
+            mask = 0;
+
+            for (i=0, k=1; i<=setup_attrs[ss->kind].setup_limits; i++, k<<=1) {
+               if (ss->people[i].id1) mask |= k;
+            }
+
+            if (ss->kind == s2x3) {
+               if (mask == 033 || mask == 066) goto good;
+               goto bad;
+            }
+            else if (ss->kind == s3x4) {
+               if (mask == 0xEBA || mask == 0xD75) goto good;
+               goto bad;
+            }
+            else if (ss->kind == s2x6) {
+               if (mask == 03333 || mask == 06666) goto good;
+               goto bad;
+            }
+            else {
+               goto good;                 /* We don't understand the setup -- we'd better accept it. */
+            }
+         case sq_3_4_tag:                      /* dmd or qtag - is a 3/4 tag, i.e. points looking out */
+            switch (ss->kind) {
+               case sdmd:
+                  if ((!(t = ss->people[0].id1 & d_mask) || t == d_west) &&
+                      (!(t = ss->people[2].id1 & d_mask) || t == d_east))
+                  goto good;
+                  goto bad;
+               case s_qtag:
+                  if ((!(t = ss->people[0].id1 & d_mask) || t == d_north) &&
+                      (!(t = ss->people[1].id1 & d_mask) || t == d_north) &&
+                      (!(t = ss->people[4].id1 & d_mask) || t == d_south) &&
+                      (!(t = ss->people[5].id1 & d_mask) || t == d_south))
+                  goto good;
+                  goto bad;
+               default:
+                  goto good;                 /* We don't understand the setup -- we'd better accept it. */
+            }
+         case sq_dmd_same_pt:                   /* dmd or pdmd - centers would circulate to same point */
+            if (((ss->people[1].id1 & 01011) == d_east) &&                        /* faces either east or west */
+                (!((ss->people[3].id1 ^ ss->people[1].id1) & d_mask)))   /* and both face same way */
+               goto good;
+            goto bad;
+         case sq_dmd_facing:                    /* dmd or pdmd - diamond is fully occupied and fully facing */
+            if ((ss->people[0].id1 & d_mask) == d_north &&
+                (ss->people[1].id1 & d_mask) == d_west &&
+                (ss->people[2].id1 & d_mask) == d_south &&
+                (ss->people[3].id1 & d_mask) == d_east)
+               goto good;
+            if ((ss->people[0].id1 & d_mask) == d_south &&
+                (ss->people[1].id1 & d_mask) == d_east &&
+                (ss->people[2].id1 & d_mask) == d_north &&
+                (ss->people[3].id1 & d_mask) == d_west)
+               goto good;
+            goto bad;
+         case sq_split_dixie:
+            if (ss->cmd.cmd_final_flags & FINAL__SPLIT_DIXIE_APPROVED) goto good;
+            goto bad;
+         case sq_not_split_dixie:
+            if (!(ss->cmd.cmd_final_flags & FINAL__SPLIT_DIXIE_APPROVED)) goto good;
+            goto bad;
       }
-      bad:
-      p = p->next;
+
+      bad: ;
    }
 
    good:

@@ -27,7 +27,7 @@
    database format version. */
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 46
+#define DATABASE_FORMAT_VERSION 48
 
 
 
@@ -59,8 +59,9 @@
 #define INHERITFLAG_3X3                   0x00010000
 #define INHERITFLAG_4X4                   0x00020000
 #define INHERITFLAG_SINGLEFILE            0x00040000
+#define INHERITFLAG_HALF                  0x00080000
 
-#define HERITABLE_FLAG_MASK               0x0007FFFF
+#define HERITABLE_FLAG_MASK               0x000FFFFF
 
 /* These spare bits are used in the include file sd.h to allocate flag bits
    that will share a word with the heritable flags.  Those flag bits are
@@ -71,19 +72,18 @@
    If the definitions in sd.h find themselves using an undefined spare bit,
    we know we are in serious trouble. */
 
-#define INHERITSPARE_1                    0x00080000
-#define INHERITSPARE_2                    0x00100000
-#define INHERITSPARE_3                    0x00200000
-#define INHERITSPARE_4                    0x00400000
-#define INHERITSPARE_5                    0x00800000
-#define INHERITSPARE_6                    0x01000000
-#define INHERITSPARE_7                    0x02000000
-#define INHERITSPARE_8                    0x04000000
-#define INHERITSPARE_9                    0x08000000
-#define INHERITSPARE_10                   0x10000000
-#define INHERITSPARE_11                   0x20000000
-#define INHERITSPARE_12                   0x40000000
-#define INHERITSPARE_13                   0x80000000
+#define INHERITSPARE_1                    0x00100000
+#define INHERITSPARE_2                    0x00200000
+#define INHERITSPARE_3                    0x00400000
+#define INHERITSPARE_4                    0x00800000
+#define INHERITSPARE_5                    0x01000000
+#define INHERITSPARE_6                    0x02000000
+#define INHERITSPARE_7                    0x04000000
+#define INHERITSPARE_8                    0x08000000
+#define INHERITSPARE_9                    0x10000000
+#define INHERITSPARE_10                   0x20000000
+#define INHERITSPARE_11                   0x40000000
+#define INHERITSPARE_12                   0x80000000
 
 /* BEWARE!!  This list must track the table "flagtab1" in dbcomp.c .
    These flags go into the "callflags1" word of a callspec_block. */
@@ -322,11 +322,6 @@ typedef enum {
    sq_true_Z,                       /* 2x3, 3x4, 2x6 - setup is a genuine Z */
    sq_ctrwv_end2fl,                 /* crosswave - center line is wave, end line is 2fl */
    sq_ctr2fl_endwv,                 /* crosswave - center line is 2fl, end line is wave */
-   sq_n_is_0,                       /* any - given number is 0 (doesn't currently work, since 0 isn't a legal number) */
-   sq_n_is_1,                       /* any - given number is 1 */
-   sq_n_is_2,                       /* any - given number is 2 */
-   sq_n_is_3,                       /* any - given number is 3 */
-   sq_n_is_4,                       /* any - given number is 4 */
    sq_split_dixie,                  /* 2x2 - invoked with "split" for dixie style */
    sq_not_split_dixie               /* 2x2 - invoked without "split" for dixie style */
 } search_qualifier;
@@ -352,7 +347,9 @@ typedef enum {
    cr_3x3couples_only,              /* 1x6 lines - each group of 3 people are facing the same way */
    cr_4x4couples_only,              /* 1x8 lines - each group of 4 people are facing the same way */
    cr_awkward_centers,              /* 1x2, 1x4, 1x6, or 1x8 - centers must not have left hands with each other */
-   cr_nice_diamonds,                /* qtag or ptpd - diamonds have consistent handedness */
+   cr_diamond_like,                 /* dmd, qtag or ptpd - in some kind of diamond(s), as opposed to single quarter-tag(s), i.e. points look sideways */
+   cr_qtag_like,                    /* dmd, qtag or ptpd - in some kind of single quarter-tag(s), as opposed to diamond(s), i.e. points look in or out */
+   cr_nice_diamonds,                /* dmd, qtag or ptpd - diamond(s) have consistent handedness, assuming they are dimaonds and not qtags */
    cr_magic_only,                   /* 2x2 - split-trade-circulate type of box; 3x2 or 4x2 - magic column; 2x4 - inverted lines; 1x4 - single inverted line */
    cr_peelable_box,                 /* 2x2, 3x2, 4x2, 6x2 or 8x2 - all people in each column are facing same way */
    cr_ends_are_peelable,            /* 2x4 - ends are a box with each person in genuine tandem */
@@ -360,6 +357,12 @@ typedef enum {
    cr_opposite_sex,                 /* 2x1 - people must be opposite sexes facing each other */
    cr_quarterbox_or_col,            /* 4x2 - acceptable setup for "triple cross" */
    cr_quarterbox_or_magic_col,      /* 4x2 - acceptable setup for "make magic" */
+   cr_gen_1_4_tag,                  /* SPECIAL -- used for "assume" stuff */
+   cr_gen_3_4_tag,                  /* SPECIAL -- used for "assume" stuff */
+   cr_jleft,                        /* SPECIAL -- used for "assume" stuff */
+   cr_jright,                       /* SPECIAL -- used for "assume" stuff */
+   cr_ijleft,                       /* SPECIAL -- used for "assume" stuff */
+   cr_ijright,                      /* SPECIAL -- used for "assume" stuff */
    cr_li_lo                         /* SPECIAL -- used for "assume" stuff */
 } call_restriction;
 
@@ -449,6 +452,10 @@ typedef enum {
 
 
 /* BEWARE!!  This list must track the table "defmodtab1" in dbcomp.c . */
+/* BEWARE!!  The union of all of these flags, which is encoded in DFM1_CONCENTRICITY_FLAG_MASK,
+   must coexist with the CMD_MISC__ flags defined in sd.h .  Note that the bit definitions
+   of those flags start where these end.  Keep it that way.  If any flags are added here,
+   they must be taken away from the CMD_MISC__ flags. */
 /* Start of concentricity flags.  These go in the "modifiers1" word of a by_def_item. */
 
 #define DFM1_CONC_DEMAND_LINES            0x00000001

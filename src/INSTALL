@@ -15,7 +15,7 @@ program is not used on the Macintosh; the Macintosh version of `sd'
 performs compilation.
 
    The program is known to operate on the following configurations:
-        SunOS 4.1.3, gcc 2.5.8, X11 Release 6 with public patches 1-3,
+        SunOS 4.1.3, gcc 2.6.0, X11 Release 6 with public patches 1-4,
            the twm window manager, on Sun 4 (Sparc)
         Domain/OS 10.4, C compiler 6.9, Dialog 2.0, on Apollo M68K
         OSF/1.0.A, C compiler 1.0, X11 Release 4, on HP series 700

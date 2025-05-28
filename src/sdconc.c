@@ -197,7 +197,11 @@ extern uint32 get_multiple_parallel_resultflags(setup outer_inners[], int number
       report it to the higher level in the recursion. */
 
    for (i=0 ; i<number ; i++) {
-      if ((outer_inners[i].result_flags ^ outer_inners[0].result_flags) & RESULTFLAG__DID_LAST_PART)
+      if (!(outer_inners[i].result_flags & RESULTFLAG__PARTS_ARE_KNOWN))
+         outer_inners[i].result_flags &= ~RESULTFLAG__DID_LAST_PART;
+
+      if (((outer_inners[i].result_flags & outer_inners[0].result_flags) & RESULTFLAG__PARTS_ARE_KNOWN) &&
+            ((outer_inners[i].result_flags ^ outer_inners[0].result_flags) & RESULTFLAG__DID_LAST_PART))
          fail("Two calls must use the same number of fractions.");
 
       result_flags |= outer_inners[i].result_flags;
@@ -1295,7 +1299,7 @@ extern void concentric_move(
          result_outer.result_flags = 0;   /* Outer people have unknown elongation and aren't moving.  Not good. */
 
       /* Grab the "did_last_part" flag from the call that was actually done. */
-      result_outer.result_flags |= result_inner[0].result_flags & RESULTFLAG__DID_LAST_PART;
+      result_outer.result_flags |= result_inner[0].result_flags & (RESULTFLAG__DID_LAST_PART|RESULTFLAG__PARTS_ARE_KNOWN);
 
       localmodsout1 |= DFM1_CONC_FORCE_SPOTS;      /* Make sure these people go to the same spots. */
       /* Strip out the roll bits -- people who didn't move can't roll. */
@@ -1309,7 +1313,7 @@ extern void concentric_move(
    if (!cmdin) {
       /* Grab the "did_last_part" flags from the call that was actually done. */
       for (k=0; k<center_arity; k++)
-         result_inner[k].result_flags |= result_outer.result_flags & RESULTFLAG__DID_LAST_PART;
+         result_inner[k].result_flags |= result_outer.result_flags & (RESULTFLAG__DID_LAST_PART|RESULTFLAG__PARTS_ARE_KNOWN);
    }
 
    /* If the call was something like "ends detour", the concentricity info was left in the
@@ -2671,6 +2675,7 @@ extern void so_and_so_only_move(
    warning_info saved_warnings;
    setup the_setups[2], the_results[2];
 
+   uint32 nonempty_setups = 0;
    int indicator = parseptr->concept->value.arg1;
    long_boolean others = indicator & 1;
    indicator &= ~1;
@@ -2686,9 +2691,6 @@ extern void so_and_so_only_move(
 
    saved_selector = current_selector;
    current_selector = parseptr->selector;
-
-   if (current_selector == selector_all || current_selector == selector_none)
-      fail("Can't have 'everyone' or 'no one' do a call.");
 
    the_setups[0] = *ss;              /* designees */
    the_setups[1] = *ss;              /* non-designees */
@@ -2713,6 +2715,7 @@ extern void so_and_so_only_move(
          else if (selectp(ss, i))
             q = 1;
 
+         nonempty_setups |= 2-q;
          clear_person(&the_setups[q], i);
       }
    }
@@ -2726,6 +2729,22 @@ extern void so_and_so_only_move(
    /* Iterate 1 or 2 times, depending on whether the "other" people do a call. */
 
    for (setupcount=0; setupcount<=others; setupcount++) {
+
+#ifdef dontneedthisnomore
+      /* We need to be careful not to allow a situation in which no one does a call.
+         The reason is that we must not lose the required information for the
+         "did last part" check -- failure to do this can lead to an infinite loop.
+         So someone must actually do a call, and the resultflags from that must get
+         transmitted as the final resultflags. */
+
+      if ((nonempty_setups & (setupcount+1)) == 0) {
+         /* No one working in this iteration.  Indicate so, and see if we can fix it later. */
+         the_results[setupcount].kind = nothing;
+         the_results[setupcount].result_flags = 0;
+         continue;
+      }
+#endif
+
       the_setups[setupcount].cmd = ss->cmd;
       the_setups[setupcount].cmd.cmd_misc_flags |= CMD_MISC__PHANTOMS;
       if (setupcount == 1) the_setups[setupcount].cmd.parseptr = parseptr->subsidiary_root;
@@ -2737,7 +2756,7 @@ extern void so_and_so_only_move(
          setup lilsetup[4], lilresult[4];
 
          /* It will be helpful to have a mask of where the live people are. */
-      
+
          for (i=0, j=1, livemask = 0; i<=setup_attrs[the_setups[setupcount].kind].setup_limits; i++, j<<=1) {
             if (the_setups[setupcount].people[i].id1) livemask |= j;
          }
@@ -2892,12 +2911,34 @@ extern void so_and_so_only_move(
          move(&the_setups[setupcount], FALSE, &the_results[setupcount]);
    }
 
+#ifdef dontneedthisnomore
+   if (others) {
+      if (the_results[0].kind == nothing) {
+         if (the_results[1].kind == nothing)
+            fail("Can't have 'everyone' or 'no one' do a call.");
+         else
+            the_results[0].result_flags = the_results[1].result_flags;
+      }
+      else if (the_results[1].kind == nothing)
+         the_results[1].result_flags = the_results[0].result_flags;
+   }
+   else {             /* The non-designees did nothing. */
+      if (the_results[0].kind == nothing)
+         fail("Can't have 'everyone' or 'no one' do a call.");
+
+      the_results[1] = the_setups[1];
+       /* Give the people who didn't move the same result flags as those who did.
+         This is important for the "did last part" check. */
+      the_results[1].result_flags = the_results[0].result_flags;
+   }
+#else
    if (!others) {      /* The non-designees did nothing. */
       the_results[1] = the_setups[1];
        /* Give the people who didn't move the same result flags as those who did.
          This is important for the "did last part" check. */
       the_results[1].result_flags = the_results[0].result_flags;
    }
+#endif
 
    /* Shut off "each 1x4" types of warnings -- they will arise spuriously while
       the people do the calls in isolation. */

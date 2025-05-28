@@ -138,7 +138,7 @@ Private void create_call_name_list(void)
                   string_copy(&p, "<N>");
                   templength = p - temp_ptr;
                }
-               else if (c == 'a' || c == 'b') {
+               else if (c == 'a' || c == 'b' || c == 'B') {
                   char *p;
 
                   p = temp_ptr+templength;
@@ -544,6 +544,7 @@ Private void read_level_3_groups(calldef_block *where_to_put)
    while ((last_datum & 0xE000) == 0x6000) {
       begin_kind this_start_setup;
       search_qualifier this_qualifier;
+      int this_qual_num;
       call_restriction this_restriction;
       setup_kind end_setup;
       setup_kind end_setup_out;
@@ -557,6 +558,9 @@ Private void read_level_3_groups(calldef_block *where_to_put)
       this_qualifier = (search_qualifier) ((last_datum & 0xFF00) >> 8);
       this_start_setup = (begin_kind) (last_datum & 0xFF);
       this_start_size = begin_sizes[this_start_setup];
+
+      read_halfword();       /* Get qualifier number. */
+      this_qual_num = last_datum & 0xFF;
 
       read_halfword();       /* Get restriction and end setup. */
       this_restriction = (call_restriction) ((last_datum & 0xFF00) >> 8);
@@ -591,17 +595,18 @@ Private void read_level_3_groups(calldef_block *where_to_put)
       current_call_block = tp;
 
       tp->callarray_flags = these_flags;
-      tp->qualifier = this_qualifier;
-      tp->start_setup = this_start_setup;
+      tp->qualifier = (veryshort) this_qualifier;
+      tp->qual_num = this_qual_num;
+      tp->start_setup = (veryshort) this_start_setup;
       tp->restriction = this_restriction;
 
       if (these_flags & CAF__CONCEND) {      /* See if "concendsetup" was used. */
-         tp->end_setup = s_normal_concentric;
-         tp->end_setup_in = end_setup;
-         tp->end_setup_out = end_setup_out;
+         tp->end_setup = (veryshort) s_normal_concentric;
+         tp->end_setup_in = (veryshort) end_setup;
+         tp->end_setup_out = (veryshort) end_setup_out;
       }
       else {
-         tp->end_setup = end_setup;
+         tp->end_setup = (veryshort) end_setup;
       }
 
       if (these_flags & CAF__PREDS) {
