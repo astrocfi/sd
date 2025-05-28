@@ -35,7 +35,7 @@
     General Public License if you distribute the file.
 */
 
-version "29.3"
+version "29.4"
 
 /* ****************** TEMPORARY HACK FOR TESTING
 
@@ -107,19 +107,6 @@ call "turn up" dontshow tag hinge_circ_trade
    seq hinge []
    seq box_circ []
    seq trade [] */
-
-/*call "_ctrs scamper" dontshow tag ctrs_scamper
-            step_to_wave
-   seq armturn1_4 []
-   seq circulate [] */
-
-/*call "_ends scamper" dontshow tag ends_scamper
-   seq div_move_along []
-   seq touch_1_4 [] */
-
-/*call "scamper" c4*/
-      /* ***** make sure we do a "fudge to 3/4 tag" */
-/*   conc ctrs_scamper [] ends_scamper [conc_demand_columns conc_force_columns endscando] */
 
 /*call "reverse the diamond" c4
    conc tradethewave [] uturnback [] */
@@ -367,6 +354,13 @@ call "gravitate" c4
             fudge_to_q_tag reverse_means_mirror
    setup qtag 2x4
       array [4W 5W 0 6W 0E 1E 3E 0]
+
+call "quarter the alter" c4
+            step_to_wave left_means_touch_or_check visible_fractions
+   seq armturn1_4 [allow_forced_mod]
+   seq ctrarmturn1_4_utb [allow_forced_mod]
+   seq ctrrotstar [allow_forced_mod]
+   seq flipdiamond [allow_forced_mod]
 
 call "@9-@9-@9 quarter the alter" c4
             step_to_wave left_means_touch_or_check need_three_numbers visible_fractions
@@ -688,7 +682,14 @@ call "_special drop in" dontshow tag spec_drop_in
    setup spindle 2x4
       array [0 0 0 L3W 0 0 0 R0E]
 
-call "switch" a2
+call "switch the wave" a2
+   setup 1x4 1x4 restriction wave_only
+      array [CR3S AL0S AL1S CR2S]
+            alternate_definition [grand] c3
+   setup 1x8 1x8 restriction wave_only
+      array [CR3S AL0S AL1S CR6S AL7S CR4S CR5S AL2S]
+
+call "switch the line" c1
    setup 1x4 1x4
       array [CR3S AL0S AL1S CR2S]
             alternate_definition [grand] c3
@@ -1045,20 +1046,25 @@ call "shazam" c2
       conservatism.  You must write "left" if you want it to be legal
       from a left-handed setup.  You don't need to read the word "left"
       if you don't want to. */
-   seq 1_4_by_right [inherit_left]
+   seq armturn1_4_r [inherit_left]
    seq uturnback []
 
 call "snake" c3x
    setup 1x2 1x2 rotate
       array [C1N A1S]
 
+call "right arm turn 1/4" dontshow tag armturn1_4_r
+            dont_use_in_resolve left_means_mirror
+   setup 1x2 1x2 rotate restriction forbidden wave_only
+      array [CR0N 0]
+
 call "arm turn 1/4" dontshow tag armturn1_4
-            12_16_matrix_means_split
+            dont_use_in_resolve 12_16_matrix_means_split
    setup 1x2 1x2 rotate restriction forbidden wave_only
       array [CR0N AL0S]
 
 call "arm turn 3/4" dontshow tag armturn_34
-            12_16_matrix_means_split
+            dont_use_in_resolve 12_16_matrix_means_split
    setup 1x2 1x2 rotate restriction forbidden wave_only
       array [CR1S AL1N]
 
@@ -1069,6 +1075,10 @@ call "arm turn @b" dontshow tag armturnn_4
 call "_centers arm turn @b / ends turn back" dontshow tag ctrarmturnn_4_utb
             dont_use_in_resolve neednumber
    singleconc armturnn_4 [] uturnback []
+
+call "_centers arm turn 1/4 / ends turn back" dontshow tag ctrarmturn1_4_utb
+            dont_use_in_resolve
+   singleconc armturn1_4 [] uturnback []
 
 call "cast off 1/4" dontshow tag cast_off_14
             dont_use_in_resolve parallel_conc_end
@@ -1184,6 +1194,12 @@ call "trade" mainstream tag trade
             12_16_matrix_means_split
    setup 1x2 1x2
       array [CR1S AL0S]
+
+call "california twirl" mainstream
+   setup 1x2 1x2
+      preds "Unknown sex."
+         if boyp [CR1S 0]
+         if girlp [0 AL0S]
 
 call "_maybe single trade" dontshow tag maybesingletrade
             dont_use_in_resolve
@@ -3068,10 +3084,15 @@ call "@2cast @3an anchor" c4
    seq cast_off_34 [or_anycall]
    seq ananchor []
 
-call "relay your pleasure" c4a
+call "_finish relay your pleasure" dontshow tag fin_relay_pleasure
             step_to_wave left_means_touch_or_check
    setup 1x8 qtag rotate restriction forbidden wave_only
-   array [5N 3N 5N 6S 0S 3S 0S 6N]
+      array [C7N R4N C2S AL4N A7S L1S A2N CR1S]
+
+call "relay your pleasure" c4a
+            step_to_wave can_be_fan_or_yoyo left_means_touch_or_check first_part_visible finish_means_skip_first_part
+   seq trade []
+   seq fin_relay_pleasure []
 
 call "shake and rattle" c3
             reverse_means_mirror
@@ -3185,15 +3206,19 @@ call "turn and flip" c4
    setup 2x2 2x2 restriction not_tboned
       array [0 0 AL3S CM2S]
 
+call "courtesy turn" mainstream tag courtesy
+   setup 1x2 1x2 restriction forbidden 2fl_only
+      array [AL1S AL0S]
+
 call "right and left thru" mainstream
-            rear_back_from_r_wave
-   setup 2x2 2x2 restriction not_tboned
-      array [0 0 AL0S AL1S]
+            visible_fractions finish_means_skip_first_part
+   seq passthru []
+   seq courtesy []
 
 call "turn and left thru" c3x
-            rear_back_from_r_wave
-   setup 2x2 2x2 restriction not_tboned
-      array [0 0 L3N L2N]
+            visible_fractions finish_means_skip_first_part
+   seq turnthru []
+   seq courtesy []
 
 call "flutter wheel" mainstream
             rear_back_from_qtag reverse_means_mirror
@@ -3340,7 +3365,7 @@ call "@i@6 @j cross @lkickoff" c2 tag designeeskick
          if unselect_once_rem_from_select   [C1E A0W A3W C2E]
 
 call "bounce the @6" c2
-   setup 1x4 2x2 restriction 2fl_only
+   setup 1x4 2x2 restriction forbidden 2fl_only
       preds "Can't tell who is designated."
          if select [R0S R1S L1S L0S]
          if unselect [M0N M1N M1N M0N]
@@ -3546,6 +3571,10 @@ call "walk and dodge" mainstream tag walkndodge
    /* Purists would say 2x1 walk and dodge. */
    setup 3x2 2x3 restriction forbidden wave_only
       array [ZM1N ZM2N ZM3N ZM2N ZM3N ZM4N]
+            alternate_definition [cross] c3
+   simple_funny
+   setup 2x2 2x2 restriction unusual magic_only
+      array [M1N M0N M0N M1N]
             alternate_definition [grand] c3x
    setup 4x2 2x4 restriction unusual wave_only
       array [ZM2N ZM5N ZM3N ZM4N ZM3N ZM4N ZM2N ZM5N]
@@ -4268,8 +4297,9 @@ call "recount" c4a
       array [0N L6S R1N 7S L1S R3S L4N R6N]
 
 call "ferris to a column" c4
-   setup 2x4 2x4 rotate
-   array [1E 0E 7E 6E 0W 5E 2E 7W]
+   setup 2x4 2x4 rotate restriction 2fl_only
+      array [C1E C0E A7E A6E Z0W A5E C2E Z7W]
+
 call "rip saw" c4
    setup 2x4 2x4 rotate
    array [2E 0E 7E 5E 0 4W 3W 0]
@@ -4351,7 +4381,6 @@ call "@9-@9-@9-@9 quarter the deucey" c4
    seq quarterdeucey2 [inherit_12_matrix inherit_16_matrix shift_one_number]
    seq turnstarn_endsnothing [inherit_12_matrix inherit_16_matrix shift_two_numbers]
    seq quarterdeucey4 [inherit_12_matrix inherit_16_matrix shift_three_numbers]
-
 
 /* We can't be bothered with roll direction. */
 call "_finish linear flow" dontshow tag fin_lin_flow
@@ -4530,14 +4559,14 @@ call "hot foot spin" c4a
    seq veryctr2trade [allow_forced_mod]
    seq spinthetop [allow_forced_mod]
 
-call "_finsih cast a net" dontshow tag fincastanet
+call "_finish cast a net" dontshow tag fincastanet
             dont_use_in_resolve
    setup crosswave 1x8
       array [C2S A1S 0 0 A6S C5S 0 0]
    setup pcrosswave 1x8
       array [0 0 C4E C3W 0 0 A4W A3E]
 
-call "cast a net, new" c4a
+call "cast a net" c4a
             first_part_visible finish_means_skip_first_part
    seq half_circ [allow_forced_mod]
    seq fincastanet []
@@ -4760,16 +4789,19 @@ call "hit the wall" c4a
    setup 4x2 2x4
    array [7E 2W 0 4E 3W 0 5E 0W]
 
-call "finish advance to a column" c4a tag finishadvance
-   /* The restriction will make it get unhappy if we call
-      so-and-so advance to a column for inappropriate
-      designees or in an inappropriate setup for them. */
-   setup 4x2 2x4 restriction forbidden wave_only
-      array [M7S M6S R4S M5S M2S L3S M1S M0S]
+call "centers trade" dontshow tag ctrstrade
+   conc trade [] nullcall []
 
 call "@6 advance to a column" c4a
+            visible_fractions finish_means_skip_first_part
    seq starthopping []
-   seq finishadvance []
+   /* Q: Why use "column circulate" instead of just "circulate"?  Wouldn't
+      it be more general and creative to allow any circulate?
+      A: It would be way too general.  It would have no defense against
+      "beaus advance to a column" from facing lines. */
+   seq realcolcirc []
+   seq ctrstrade []
+   seq realcolcirc []
 
 call "swing to a column" c4a
    setup qtag 2x4
@@ -4799,6 +4831,18 @@ call "turn away" c4a
             alternate_definition [single] c4
    setup 2x2 2x2
       array [CR1S CM2S CR3N CR2S]
+            alternate_definition [1x3] c4
+   setup 4x2 2x4 rotate
+      array [0 CR1E CR2E CR3E CM4E 0 0 0]
+            alternate_definition [3x1] c4
+   setup 4x2 2x4 rotate
+      array [0 0 0 CR3E CM4E CM5E CM6E 0]
+            alternate_definition [3x3] c4
+   setup 6x2 2x6 rotate
+      array [CR8E CR7E CR6E CR3E CR4E CR5E CM6E CM7E CM8E CR11W CR10W CR9W]
+            alternate_definition [4x4] c4
+   setup 8x2 2x8 rotate
+      array [CR11E CR10E CR9E CR8E CR4E CR5E CR6E CR7E CM8E CM9E CM10E CM11E CR15W CR14W CR13W CR12W]
 
 call "@ghang a @eright@f" c4
             left_means_mirror
@@ -5229,9 +5273,11 @@ call "explosion" c4a
 call "explode the clover" c4
    setup 4x2 2x4 rotate
    array [0 5S 2S 0N 3S 1N 6N 0]
+
 call "press for time" c4
    setup 4x2 2x4 rotate restriction wave_only
-   array [7W 0W 5E 2E 1E 6E 3W 4W]
+      /* Since no one can roll, we don't even specify that.  We make roll simply illegal. */
+      array [Z7W Z0W C5E C2E A1E A6E Z3W Z4W]
 
 call "_horsehsoe centers" dontshow tag horsey
    setup 1x2 1x2           /* This is partner tag, of course. */
@@ -5360,7 +5406,7 @@ call "circulate" mainstream tag circulate
 
 call "couples circulate" mainstream
    /* The "as couples" concept is illegal at mainstream, so we include this. */
-   setup 2x4 2x4 restriction forbidden 2fl_only
+   setup 2x4 2x4 restriction 2fl_only
       array [CR3S CR2S AL1S AL0S ZM3N ZM2N ZM1N ZM0N]
 
 call "cross over circulate" a1
@@ -5393,6 +5439,13 @@ call "column circulate" mainstream tag colcirc
    simple_funny
    setup 8x2 2x8
       array [ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N ZM7N CR8S AL7S ZM8N ZM9N ZM10N ZM11N ZM12N ZM13N ZM14N]
+
+call "real column circulate" dontshow tag realcolcirc
+   /* Used in advance to a column.  The restriction will make it get unhappy if
+      we call so-and-so advance to a column for inappropriate
+      designees or in an inappropriate setup for them. */
+   setup 4x2 2x4 restriction forbidden wave_only
+      array [ZM1N ZM2N ZM3N CR4S AL3S ZM4N ZM5N ZM6N]
 
 call "1/2 circulate" mainstream tag half_circ
             dont_use_in_resolve take_right_hands
@@ -7033,9 +7086,33 @@ call "cy-kick" c4a
             cross_is_inherited
    conc 23recycle [inherit_cross] beaukick []
 
+call "_ctrs scamper" dontshow tag ctrs_scamper
+            step_to_wave
+   seq armturn1_4 []
+   seq circulate []
+
+call "_ends scamper" dontshow tag ends_scamper
+   seq div_move_along []
+   seq touch_1_4 []
+
+call "scamper" c4
+      /* ***** make sure we do a "fudge to 3/4 tag" */
+   conc ctrs_scamper [] ends_scamper [conc_demand_columns conc_force_columns endscando]
+
 call "divvy up" c3x
       /* ***** make sure we do a "fudge to 3/4 tag" */
    conc single_wheel [] div_move_along [conc_demand_columns conc_force_lines]
+
+call "lead the way, part 1" dontshow tag leadtheway_1
+   conc peeloff [] trade []
+
+call "lead the way, part 2" dontshow tag leadtheway_2
+   conc bendtheline [] roll []
+
+call "lead the way" c4
+            visible_fractions finish_means_skip_first_part
+   seq leadtheway_1 []
+   seq leadtheway_2 []
 
 call "6X2 acey deucey" a1
             fudge_to_q_tag

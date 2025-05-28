@@ -1610,7 +1610,7 @@ from a bone (heads left swing thru, side girl turn back).
                Finally, check the elongation bits in the result flags left over from the call.  These tell
                   whether to work to spots, or antispots, or whatever, based what the call was, and whether
                   it, or various sequential parts of it, had the "parallel_conc_end" flag on.
-               If there are no elongation bits, we simply don't know waht to do.
+               If there are no elongation bits, we simply don't know what to do.
 
                Note that the "ends do thus-and-so" concept does NOT set the lines_lines flag in the
                   invocation, so we work to spots unless the call says "parallel_conc_end".  Counter-rotate,

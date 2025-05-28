@@ -1091,12 +1091,12 @@ Private void do_concept_grand_working(
 
    cstuff = parseptr->concept->value.arg1;
    /* cstuff =
-      forward  : 0
-      left     : 1
-      back     : 2
-      right    : 3
-      together : 8
-      apart    : 9 */
+      forward    : 0
+      left       : 1
+      back       : 2
+      right      : 3
+      as centers : 8
+      as ends    : 9 */
 
    if (cstuff < 4) {      /* Working forward/back/right/left. */
       if (ss->kind != s2x4) fail("Must have a 2x4 setup for this concept.");
@@ -1117,8 +1117,8 @@ Private void do_concept_grand_working(
 
       the_map = (*map_lists[s2x2][2])[MPKIND__OVERLAP][0];
    }
-   else {      /* Working together or apart. */
-      if (ss->kind != s1x8) fail("May not specify together/apart here.");
+   else {      /* Working as-ends or as-centers. */
+      if (ss->kind != s1x8) fail("May not specify as-ends/as-centers here.");
 
       /* Put each of the center 4 people in the correct group, no need to look. */
 

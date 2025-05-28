@@ -427,6 +427,7 @@ typedef struct {
 #define warn__dyp_resolve_ok      35
 #define warn__ctrs_stay_in_ctr    36
 #define warn__check_c1_stars      37
+#define warn__bigblock_feet       38
 
 
 /* BEWARE!!  The warning numbers in this set must all be <= 31.  This is a
@@ -676,7 +677,8 @@ typedef enum {
    MPKIND__X_SPOTS,
    MPKIND__4_QUADRANTS,
    MPKIND__4_EDGES,
-   MPKIND__DMD_STUFF
+   MPKIND__DMD_STUFF,
+   MPKIND__STAG
 } mpkind;
 
 typedef struct {

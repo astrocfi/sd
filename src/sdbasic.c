@@ -1199,8 +1199,8 @@ extern void basic_move(
 
 {
    int i, j, k;
-   int livemask;
-   int newtb;
+   unsigned int livemask;
+   unsigned int newtb;
    callarray *calldeflist;
    long_boolean funny;
    map_thing *division_maps;
@@ -1211,8 +1211,9 @@ extern void basic_move(
    unsigned int search_concepts;
    int real_index, northified_index;
    int num, halfnum, final_numout;
-   int collision_mask, collision_index;
-   int result_mask;
+   unsigned int collision_mask;
+   int collision_index;
+   unsigned int result_mask;
    personrec newpersonlist[24];
    int newplacelist[24];
    int resultflags, desired_elongation, orig_elongation;
@@ -1645,22 +1646,30 @@ extern void basic_move(
 
          if (  !(ss->setupflags & SETUPFLAG__NO_EXPAND_MATRIX) &&
                (!(newtb & 010) || assoc(b_2x8, ss, calldeflist)) &&
-               (!(newtb & 1) || assoc(b_8x2, ss, calldeflist))) {
+               (!(newtb & 001) || assoc(b_8x2, ss, calldeflist))) {
             do_matrix_expansion(ss, CONCPROP__NEED_2X8, TRUE);
             if (ss->kind != s2x8) fail("Failed to expand to 2X8.");  /* Should never fail, but we don't want a loop. */
             goto search_for_call_def;        /* And try again. */
          }
 
-         /* Next, check whether it has 2x3/3x2 definitions, and divide the setup if so,
+         /* Next, check whether it has 2x3/3x2/1x6/6x1 definitions, and divide the setup if so,
             and if the call permits it.  This is important for permitting "Z axle" from
             a 2x6 but forbidding "circulate".  We also enable this if the caller explicitly
             said "2x6 matrix". */
 
-         if (((callspec->callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) || (ss->setupflags & SETUPFLAG__EXPLICIT_MATRIX)) &&
+         if ((callspec->callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) || (ss->setupflags & SETUPFLAG__EXPLICIT_MATRIX)) {
+            if (
                   (!(newtb & 010) || assoc(b_2x3, ss, calldeflist)) &&
                   (!(newtb & 001) || assoc(b_3x2, ss, calldeflist))) {
-            division_maps = (*map_lists[s_2x3][1])[MPKIND__SPLIT][0];
-            goto divide_us_no_recompute;
+               division_maps = (*map_lists[s_2x3][1])[MPKIND__SPLIT][0];
+               goto divide_us_no_recompute;
+            }
+            else if (
+                  (!(newtb & 010) || assoc(b_1x6, ss, calldeflist)) &&
+                  (!(newtb & 001) || assoc(b_6x1, ss, calldeflist))) {
+               division_maps = (*map_lists[s_1x6][1])[MPKIND__SPLIT][1];
+               goto divide_us_no_recompute;
+            }
          }
    
          /* Otherwise, the only way this can be legal is if we can identify
@@ -1672,12 +1681,15 @@ extern void basic_move(
             case 07474:    /* a parallelogram */
                division_maps = (*map_lists[s1x4][1])[MPKIND__OFFS_R_HALF][1];
                warn(warn__each1x4);
+               break;
             case 01717:    /* a parallelogram */
                division_maps = (*map_lists[s1x4][1])[MPKIND__OFFS_L_HALF][1];
                warn(warn__each1x4);
+               break;
             case 06363:    /* the outer triple boxes */
                division_maps = (*map_lists[s2x2][2])[MPKIND__SPLIT][0];
                warn(warn__each2x2);
+               break;
             default:
                fail("You must specify a concept.");
          }
@@ -1685,14 +1697,22 @@ extern void basic_move(
          goto divide_us_no_recompute;
       case s2x8:
 
-         /* Check whether it has 2x4/4x2 definitions, and divide the setup if so,
+         /* Check whether it has 2x4/4x2/1x8/8x1 definitions, and divide the setup if so,
             and if the caller explicitly said "2x8 matrix". */
 
-         if ((ss->setupflags & SETUPFLAG__EXPLICIT_MATRIX) &&
+         if (ss->setupflags & SETUPFLAG__EXPLICIT_MATRIX) {
+            if (
                   (!(newtb & 010) || assoc(b_2x4, ss, calldeflist)) &&
                   (!(newtb & 001) || assoc(b_4x2, ss, calldeflist))) {
-            division_maps = (*map_lists[s2x4][1])[MPKIND__SPLIT][0];
-            goto divide_us_no_recompute;
+               division_maps = (*map_lists[s2x4][1])[MPKIND__SPLIT][0];
+               goto divide_us_no_recompute;
+            }
+            else if (
+                  (!(newtb & 010) || assoc(b_1x8, ss, calldeflist)) &&
+                  (!(newtb & 001) || assoc(b_8x1, ss, calldeflist))) {
+               division_maps = (*map_lists[s1x8][1])[MPKIND__SPLIT][1];
+               goto divide_us_no_recompute;
+            }
          }
    
          /* Otherwise, the only way this can be legal is if we can identify
@@ -2168,13 +2188,16 @@ extern void basic_move(
 
          if ((ss->setupflags & SETUPFLAG__PHANTOMS) &&
                   (ss->people[1].id1 | ss->people[3].id1 | ss->people[5].id1 | ss->people[7].id1) == 0) {
-            ss->kind = s_ptpd;   /* It makes assoc happier if we do this now. */
+            setup sstest = *ss;
 
-            if   (assoc(b_ptpd, ss, calldeflist) || assoc(b_pptpd, ss, calldeflist) ||
-                  assoc(b_dmd, ss, calldeflist) || assoc(b_pmd, ss, calldeflist))
+            sstest.kind = s_ptpd;   /* It makes assoc happier if we do this now. */
+
+            if (
+                  (!(newtb & 010) || assoc(b_ptpd, &sstest, calldeflist) || assoc(b_dmd, &sstest, calldeflist)) &&
+                  (!(newtb & 001) || assoc(b_pptpd, &sstest, calldeflist) || assoc(b_pmd, &sstest, calldeflist))) {
+               *ss = sstest;
                goto search_for_call_def;
-
-            ss->kind = s1x8;        /* Too bad; set it back. */
+            }
          }
 
          break;
@@ -2219,27 +2242,26 @@ extern void basic_move(
 
          if ((ss->setupflags & SETUPFLAG__PHANTOMS) &&
                   (ss->people[1].id1 | ss->people[2].id1 | ss->people[5].id1 | ss->people[6].id1) == 0) {
-            ss->kind = s_qtag;   /* It makes assoc happier if we do this now. */
-            (void) copy_rot(ss, 1, ss, 0, 011);
-            (void) copy_rot(ss, 0, ss, 7, 011);
-            (void) copy_rot(ss, 5, ss, 4, 011);
-            (void) copy_rot(ss, 4, ss, 3, 011);
-            clear_person(ss, 3);
-            clear_person(ss, 7);
-            ss->rotation--;
+            setup sstest = *ss;
+            unsigned int tbtest;
 
-            if   (assoc(b_ptpd, ss, calldeflist) || assoc(b_pptpd, ss, calldeflist) ||
-                  assoc(b_dmd, ss, calldeflist) || assoc(b_pmd, ss, calldeflist))
+            sstest.kind = s_qtag;   /* It makes assoc happier if we do this now. */
+            (void) copy_rot(&sstest, 1, &sstest, 0, 011);
+            (void) copy_rot(&sstest, 0, &sstest, 7, 011);
+            (void) copy_rot(&sstest, 5, &sstest, 4, 011);
+            (void) copy_rot(&sstest, 4, &sstest, 3, 011);
+            clear_person(&sstest, 3);
+            clear_person(&sstest, 7);
+            sstest.rotation--;
+            tbtest = sstest.people[0].id1 | sstest.people[1].id1 | sstest.people[4].id1 | sstest.people[5].id1;
+
+            if (
+                  (!(tbtest & 010) || assoc(b_qtag, &sstest, calldeflist) || assoc(b_pmd, &sstest, calldeflist)) &&
+                  (!(tbtest & 001) || assoc(b_pqtag, &sstest, calldeflist) || assoc(b_dmd, &sstest, calldeflist))) {
+               *ss = sstest;
+               newtb = tbtest;
                goto search_for_call_def;
-
-            ss->kind = s2x4;        /* Too bad; set it back. */
-            (void) copy_rot(ss, 3, ss, 4, 033);
-            (void) copy_rot(ss, 4, ss, 5, 033);
-            (void) copy_rot(ss, 7, ss, 0, 033);
-            (void) copy_rot(ss, 0, ss, 1, 033);
-            clear_person(ss, 1);
-            clear_person(ss, 5);
-            ss->rotation++;
+            }
          }
 
          /* See if this call has applicable 1x4 or 4x1 definitions, in which case split it that way. */
@@ -2325,14 +2347,20 @@ extern void basic_move(
             by flip the diamond", and "tandem own the <points>, flip the diamond by flip the diamond",
             both from a tandem diamond (the point being that there will be only one of them.) */
 
+
+
          if ((ss->setupflags & SETUPFLAG__PHANTOMS) &&
                   (ss->people[1].id1 | ss->people[3].id1) == 0) {
-            ss->kind = sdmd;   /* It makes assoc happier if we do this now. */
+            setup sstest = *ss;
 
-            if   (assoc(b_dmd, ss, calldeflist) || assoc(b_pmd, ss, calldeflist))
+            sstest.kind = sdmd;   /* It makes assoc happier if we do this now. */
+
+            if (
+                  (!(newtb & 010) || assoc(b_dmd, &sstest, calldeflist)) &&
+                  (!(newtb & 001) || assoc(b_pmd, &sstest, calldeflist))) {
+               *ss = sstest;
                goto search_for_call_def;
-
-            ss->kind = s1x4;        /* Too bad; set it back. */
+            }
          }
 
          break;

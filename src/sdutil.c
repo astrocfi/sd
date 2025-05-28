@@ -135,10 +135,6 @@ extern void clear_screen(void)
 
 Private void writechar(char src)
 {
-   char save_buffer[MAX_TEXT_LINE_LENGTH];
-   char *p;
-   char *q;
-
    *destcurr = (lastchar = src);
    if (src == ' ' && destcurr != current_line) lastblank = destcurr;
 
@@ -147,21 +143,24 @@ Private void writechar(char src)
    else {
       /* Line overflow.  Try to write everything up to the last
          blank, then fill next line with everything since that blank. */
+
+      char save_buffer[MAX_TEXT_LINE_LENGTH];
+      char *q = save_buffer;
+
       if (lastblank) {
-         p = lastblank+1;
-         q = save_buffer;
+         char *p = lastblank+1;
          while (p <= destcurr) *q++ = *p++;
-         *q = '\0';
          destcurr = lastblank;
       }
       else {
          /* Must break a word. */
-         save_buffer[0] = *destcurr;
-         save_buffer[1] = '\0';
+         *q++ = *destcurr;
       }
 
-      newline();
-      writestuff("   ");
+      *q = '\0';
+
+      newline();            /* End the current buffer and write it out. */
+      writestuff("   ");    /* Make a new line, copying saved stuff into it. */
       writestuff(save_buffer);
    }
 }
@@ -169,6 +168,9 @@ Private void writechar(char src)
 
 extern void newline(void)
 {
+   /* Erase any trailing blanks. */
+   while (destcurr != current_line && destcurr[-1] == ' ') destcurr--;
+
    *destcurr = '\0';
 
    if (enable_file_writing)
@@ -400,7 +402,8 @@ Private char *warning_strings[] = {
    /*  warn__check_pgram         */   "Opt for a parallelogram.",
    /*  warn__dyp_resolve_ok      */   "Do your part.",
    /*  warn__ctrs_stay_in_ctr    */   "Centers stay in the center.",
-   /*  warn__opt_for_c1_stars    */   "Check a generalized 'star' setup."};
+   /*  warn__check_c1_stars      */   "Check a generalized 'star' setup.",
+   /*  warn__bigblock_feet       */   "Bigblock/stagger shapechanger -- go to footprints."};
 
 Private char *ordinals[] = {"1st", "2nd", "3rd", "4th", "5th"};
 

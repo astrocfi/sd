@@ -27,7 +27,7 @@
     General Public License if you distribute the file.
 */
 
-#define VERSION_STRING "29.3"
+#define VERSION_STRING "29.4"
 
 /* This defines the following functions:
    sd_version_string
@@ -176,9 +176,9 @@ Private void initialize_concept_sublists(void)
       if (concept_descriptor_table[number_of_concepts].level <= calling_level)
          concepts_at_level++;
    }
-   general_concept_size = number_of_concepts - general_concept_offset;
 
-   concept_sublist_sizes[call_list_any] = concepts_at_level;
+   general_concept_size = number_of_concepts - general_concept_offset;  /* Our friends in the UI will need this. */
+
    concept_sublists[call_list_any] = (short int *) get_mem(concepts_at_level*sizeof(short int));
 
    /* Make the concept sublists, one per setup. */
@@ -234,6 +234,8 @@ Private void initialize_concept_sublists(void)
                concept_descriptor_table[number_of_concepts].kind != concept_assume_waves)
          concept_sublists[call_list_any][concepts_at_level++] = number_of_concepts;
    }
+
+   concept_sublist_sizes[call_list_any] = concepts_at_level;
 }
 
 

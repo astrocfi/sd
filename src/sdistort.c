@@ -134,6 +134,9 @@ Private void innards(
       case MPKIND__X_SPOTS:
          warn(warn__to_x_spots);
          break;
+      case MPKIND__STAG:
+         warn(warn__bigblock_feet);
+         break;
       case MPKIND__NONE:
          fail("Can't do shape changer with complex line/box/column/diamond identification concept.");
    }

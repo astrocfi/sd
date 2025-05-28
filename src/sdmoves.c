@@ -1140,6 +1140,7 @@ Private void move_with_real_call(
       case schema_roll:
          if (final_concepts) fail("Illegal concept for this call.");
          rollmove(ss, callspec, result);
+         result->setupflags = ((ss->setupflags & SETUPFLAG__ELONGATE_MASK) / SETUPFLAG__ELONGATE_BIT) * RESULTFLAG__ELONGATE_BIT;
          break;
       case schema_by_array:
          /* Dispose of the "left" concept first -- it can only mean mirror.  If it is on,

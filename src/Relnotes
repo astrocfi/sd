@@ -1,8 +1,8 @@
-		    RELEASE NOTES FOR SD VERSION 29.3
-       Database version = 29.3, format = 42, X11 UI version 1.14.
+		    RELEASE NOTES FOR SD VERSION 29.4
+       Database version = 29.4, format = 42, X11 UI version 1.14.
 
 
-The good news is that athere are a lot of new features.  The bad news is
+The good news is that there are a lot of new features.  The bad news is
 that there are probably a lot of bugs.  The good news is that automatic
 regression tests have been developed, so that, in the future, bugs that
 get fixed will stay fixed.
@@ -42,8 +42,10 @@ New concepts:
    CRAZY / REVERSE CRAZY
       These aren't very smart about doing the call on each side.  If the
       setup is a 2x4, it does the call in each box.  To get "full crazy",
-      you must say "4/4".  Sorry.
+      you must say "4/4 crazy".  Sorry.
    RANDOM can now be used with most concepts.
+   GRAND WORKING TOGETHER/APART have been changed to AS CENTERS/AS ENDS.
+   BIGBLOCK/STAGGER can now take shapechangers.  Please exercise good taste.
 
 Calls can now take directions.  For example, quarter <direction>, will
 produce a popup asking about the desired direction.  Various calls such
@@ -116,6 +118,7 @@ Perk up now works correctly (finally!) from inverted lines.
 New calls: [magic] in/out/zoom roll circulate from 2x3 setups.
 Grand follow your neighbor.  Barge the action.  The action and barge
 the action take all the usual star turn and finishing modifications.
+Scamper.  Lead the way.  Courtesy turn.  California twirl.
 
 The call "reset" no longer takes a numeric argument saying how many
 quarters to go.  Instead, use the "fractional" concept with it.
@@ -125,6 +128,7 @@ alter, i-j-k-l quarter the deucey, i-j-k-l relay the top, touch by, circle by,
 touch tone, and touch & go were rewritten to use this.
 
 Breaker <n> and breaker <anycall> now work fairly naturally.
+
 Swap the windmill now takes the "cross" as well as "reverse" modifiers.
 
 [flip] the yellow bricking [bounce the beaux] and similar things can
@@ -169,12 +173,6 @@ USER INTERFACE CHANGES:
 The program "sdtty" has been extensively rewritten for PC's and Unix
 systems.
 
-When multiple sequences are written to the same file, they are separated
-from each other by the "formfeed" (control-L, octal 14, hex 0C) character,
-in order to make them print cleanly on separate pages.  If it appears that
-all sequences after the first are lost, your printing software is not
-handling the formfeed correctly.
-
 A new command has been added: "refresh display".  This is available in sdtty
 and in the Macintosh implementation.  It causes a complete clean transcript
 of the current sequence to be printed.  This can be used if the display got
@@ -192,6 +190,20 @@ The resolver commands "go to next" and "go to previous" were changed to just
 the original names were chosen, those names were on icons that one chose with
 a mouse, so their spelling didn't matter.  There was no "completing reader".
 I had no idea at the time how inconvenient they would become under sdtty.
+
+When multiple sequences are written to the same file,  The program
+appends the text of each sequence after the first to the end of the
+existing file, with an intervening "formfeed" (control-L, octal 14,
+hex 0C) character, in order to make the sequences print cleanly on
+separate pages.  It uses the ANSI-C facilities for appending to text
+files.  If an editor or other text-handling utility has placed any
+special character (e.g. control-Z) at the end of the file, and
+subsequent sequences are written, that special character will be
+in the interior of the file.  Some print utilities may stop printing
+when they encounter the special character.  Hence, if it appears that
+sequences after the first are lost, your printing software may not
+be handling formfeeds correctly, or a destructive control character
+may have been placed in the file by some errant software.
 
 UNIX-SPECIFIC STUFF
 
@@ -225,13 +237,13 @@ If you do not use the program at C3 or C4, you don't need to worry about this.
 This discussion will be in terms of 12 matrices.  16 matrices are analogous.
 
 Definition: a "large" setup is a setup of more than 8 people.  A "large"
-call is a call executed in such a setup.  I know of no large calls that
-don't have some kind of modifier like "12 matrix" or "3x3" in their name.
+call is a call executed in such a setup.  There are extremely few large calls
+that don't have some kind of modifier like "12 matrix" or "3x3" in their name.
 
 General principle:  when in a large setup, so that phantoms are present,
 you must say something to acknowledge the existence of the phantoms, that
 is, to say that the phantom's spots count.  This is necessary whether doing
-a large call, or splitting the large setup into smaller one for doing small
+a large call, or splitting the large setup into smaller ones for doing small
 calls.  So, for example, if you are in a parallelogram, you can't just say
 the name of a large call.  You must say "12 MATRIX" or "2X6 MATRIX".
 
@@ -244,9 +256,11 @@ Explicit matrix concepts can also be used to dictate the precise formation
 with phantoms when using tandem or as-couples concepts.  For example, from
 two-faced lines, "2x8 matrix as couples" leads to virtual 2x4 lines (in
 which the ends are all phantoms), "4x4 matrix as couples" leads to virtual
-2x4 columns, and "4x4 matrix boxes work solid" leads to a virtual 2x2.
+2x4 columns (this happens to be the same as "phantom as couples" in this
+setup), and "4x4 matrix boxes work solid" leads to a virtual 2x2.
 "2x8 matrix boxes work solid" leads to a virtual 1x4.  From twin diamonds,
-"16 MATRIX OF PARALLEL DIAMONDS DIAMONDSOME" leads to a virtual 1x4.
+"16 MATRIX OF PARALLEL DIAMONDS DIAMONDSOME" leads to a virtual 1x4 in which
+both ends are phantoms.
 
 The call size modifiers "12 matrix" or "16 matrix" legitimize the large setup
 [though they don't always state unambiguously where the phantoms are, which
@@ -280,7 +294,7 @@ For example, from triple waves,
  and     3X4 MATRIX circulate
 are both legal and equivalent.
 
-From a parallelogram,
+From parallelogram waves,
          12 MATRIX circulate
  and     2X6 MATRIX circulate
 are both legal and equivalent, as are
@@ -305,7 +319,7 @@ are not.  You may also say
          12 MATRIX DIVIDED COLUMNS double play
 (The 12 MATRIX DIVIDED COLUMNS concept forms two 6-person setups.)
 
-The above examples will work from a 2x4 setup also -- it expands
+The above examples will work from 2x4 columns also -- it expands
 the matrix by placing phantoms outside.
 
 From triple waves, you may also say
@@ -326,14 +340,14 @@ setups.  That large version must be identified with some modifier such as
 giving an appropriate modifier.  An explicit matrix concept such as
 "2x6 matrix" will do, as will a call size modifier such as "12 matrix".
 
-From a parallelogram, you may say
+From parallelogram columns, you may say
          12 MATRIX circulate
   or     2X6 MATRIX circulate
   or     12 MATRIX 3X3 transfer the column
   or     2X6 MATRIX 3X3 transfer the column
 but not  3X3 transfer the column
 
-The above examples will work from a 2x4 setup also -- it expands
+The above examples will work from 2x4 columns also -- it expands
 the matrix by placing phantoms outside.
 
 ===============================================================================
