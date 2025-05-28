@@ -7,8 +7,11 @@ Sd: a checker-moving program that is <strong>powerful</strong>,
 <strong>reliable</strong>.
 </p>
 <p align="center">
-<strong>The current version of Sd/Sdtty is 34.8e</strong>, released on January 27, 2003.
+<strong>The current version of Sd/Sdtty is 34.8j</strong>, released on February 23, 2003.
 <br>
+<p>
+<strong>A bug causing occasional crashes during resolving
+has been fixed.  You should download this version.</strong>
 <p>
 The program is now able to write the output file with a "new style" name.
 These names end in ".txt", as in "sequence_C1.txt" or "01sep02_C1.txt".
@@ -18,11 +21,6 @@ The simplest way to get this new behavior is to add the following line
 to the "[options]" section of the sd.ini file:
 <p>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;new_style_filename
-<p>
-The program now allows you to define call or concept abbreviations
-in the sd.ini file.  See the release notes.
-<p>
-The resolver has been modified to improve its behavior at high levels.
 <p>
 <dl>
 <dt>

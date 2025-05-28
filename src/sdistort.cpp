@@ -2829,7 +2829,7 @@ extern void distorted_move(
 
    junk_concepts.clear_all_herit_and_final_bits();
 
-   next_parseptr = process_final_concepts(parseptr->next, FALSE, &junk_concepts);
+   next_parseptr = process_final_concepts(parseptr->next, FALSE, &junk_concepts, true, __FILE__, __LINE__);
 
    map_code = MAPCODE(s2x4,1,mk,1);
 

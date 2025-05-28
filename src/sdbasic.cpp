@@ -4478,7 +4478,7 @@ foobar:
       goodies = coldefinition;
    }
 
-   if (!goodies) crash_print();
+   if (!goodies) crash_print(__FILE__, __LINE__);
 
    result->kind = (setup_kind) goodies->end_setup;
 

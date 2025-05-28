@@ -2466,7 +2466,7 @@ extern void concentric_move(
                const parse_block *next_parseptr;
 
                next_parseptr = process_final_concepts(begin_ptr->cmd.parseptr,
-                                                      FALSE, &junk_concepts);
+                                                      FALSE, &junk_concepts, true, __FILE__, __LINE__);
 
                if (junk_concepts.test_herit_and_final_bits() == 0 &&
                    next_parseptr->concept->kind == concept_concentric) {

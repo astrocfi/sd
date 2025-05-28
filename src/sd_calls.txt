@@ -33,7 +33,7 @@
     General Public License if you distribute the file.
 */
 
-version "34.8h"
+version "34.8j"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve
@@ -2755,67 +2755,81 @@ call "alter and circulate@S" c2
    seq flipdiamond [inherit_bigmatrix allow_forced_mod]
 
 call "@B the alter@S" c4
-            step_to_nonphantom_box left_means_touch_or_check neednumber visible_fractions
+            step_to_nonphantom_box left_means_touch_or_check
+            neednumber visible_fractions
    seq armturn_n4 [allow_forced_mod]
    seq ctrarmturn_n4_utb [allow_forced_mod]
-   /* This next part will demand diamonds, which the previous part will create only if the fraction is odd. */
+   // This next part will demand diamonds, which the previous part
+   // will create only if the fraction is odd.
    seq turndmdn [allow_forced_mod]
    seq flipdiamond [allow_forced_mod]
 
 call "@9-@9-@9 quarter the alter" c4
-            step_to_nonphantom_box left_means_touch_or_check need_three_numbers visible_fractions
+            step_to_nonphantom_box left_means_touch_or_check
+            need_three_numbers visible_fractions
    seq armturn_n4 [allow_forced_mod]
    seq ctrarmturn_n4_utb [allow_forced_mod shift_one_number]
-   /* This next part will demand diamonds, which the previous part will create only if the fraction is odd. */
+   // This next part will demand diamonds, which the previous part
+   // will create only if the fraction is odd.
    seq turndmdn [allow_forced_mod shift_two_numbers]
    seq flipdiamond [allow_forced_mod]
 
-/* Same as above. */
+// Same as above.
 call "@9-@9-@9 1/4 the alter" c4
-            step_to_nonphantom_box left_means_touch_or_check need_three_numbers visible_fractions
+            step_to_nonphantom_box left_means_touch_or_check
+            need_three_numbers visible_fractions
    seq armturn_n4 [allow_forced_mod]
    seq ctrarmturn_n4_utb [allow_forced_mod shift_one_number]
-   /* This next part will demand diamonds, which the previous part will create only if the fraction is odd. */
+   // This next part will demand diamonds, which the previous part
+   // will create only if the fraction is odd.
    seq turndmdn [allow_forced_mod shift_two_numbers]
    seq flipdiamond [allow_forced_mod]
 
 call "@B the alter and circulate" c4
-            step_to_nonphantom_box left_means_touch_or_check neednumber visible_fractions
+            step_to_nonphantom_box left_means_touch_or_check
+            neednumber visible_fractions
    seq armturn_n4 [allow_forced_mod]
    seq ctrarmturn_n4_utb [allow_forced_mod]
    seq ctrsslipendscirc []
-   /* This next part will demand diamonds, which the previous part will create only if the fraction is odd. */
+   // This next part will demand diamonds, which the previous part
+   // will create only if the fraction is odd.
    seq turndmdn [allow_forced_mod]
    seq flipdiamond [allow_forced_mod]
 
 call "@9-@9-@9 alter and circulate" c4
-            step_to_nonphantom_box left_means_touch_or_check need_three_numbers visible_fractions
+            step_to_nonphantom_box left_means_touch_or_check
+            need_three_numbers visible_fractions
    seq armturn_n4 [allow_forced_mod]
    seq ctrarmturn_n4_utb [allow_forced_mod shift_one_number]
    seq ctrsslipendscirc []
-   /* This next part will demand diamonds, which the previous part will create only if the fraction is odd. */
+   // This next part will demand diamonds, which the previous part
+   // will create only if the fraction is odd.
    seq turndmdn [allow_forced_mod shift_two_numbers]
    seq flipdiamond [allow_forced_mod]
 
-/* Same as above. */
+// Same as above.
 call "@9-@9-@9 quarter the alter and circulate" c4
             dont_use_in_resolve
-            step_to_nonphantom_box left_means_touch_or_check need_three_numbers visible_fractions
+            step_to_nonphantom_box left_means_touch_or_check
+            need_three_numbers visible_fractions
    seq armturn_n4 [allow_forced_mod]
    seq ctrarmturn_n4_utb [allow_forced_mod shift_one_number]
    seq ctrsslipendscirc []
-   /* This next part will demand diamonds, which the previous part will create only if the fraction is odd. */
+   // This next part will demand diamonds, which the previous part
+   // will create only if the fraction is odd.
    seq turndmdn [allow_forced_mod shift_two_numbers]
    seq flipdiamond [allow_forced_mod]
 
-/* Same as above. */
+// Same as above.
 call "@9-@9-@9 1/4 the alter and circulate" c4
             dont_use_in_resolve
-            step_to_nonphantom_box left_means_touch_or_check need_three_numbers visible_fractions
+            step_to_nonphantom_box left_means_touch_or_check
+            need_three_numbers visible_fractions
    seq armturn_n4 [allow_forced_mod]
    seq ctrarmturn_n4_utb [allow_forced_mod shift_one_number]
    seq ctrsslipendscirc []
-   /* This next part will demand diamonds, which the previous part will create only if the fraction is odd. */
+   // This next part will demand diamonds, which the previous part
+   // will create only if the fraction is odd.
    seq turndmdn [allow_forced_mod shift_two_numbers]
    seq flipdiamond [allow_forced_mod]
 
@@ -7457,6 +7471,26 @@ call "all 8 recycle" c1
             reverse_means_mirror singlefile_is_inherited cross_is_inherited diamond_is_legal
    crossconc splitrecycle [conc_demand_columns inherit_reverse inherit_singlefile inherit_cross inherit_diamond]
              waverecycle [inherit_cross inherit_diamond suppress_elongation_warnings]
+   // This is also legal in a thar, meaning the A2 "all 8" concept.
+   // The "all 8" code knows how to handle it, of course, but the parser
+   // will give this definition precedence.
+            reverse_means_mirror
+   setup thar 4x4 qualifier wave_only
+      array [CR14S AL6N 0 0 AL13S CR5N 0 0]
+            alternate_definition [cross] c3
+   setup thar 4x4 qualifier 2fl_only
+      array [CR14S CR5N 0 0 AL13S AL6N 0 0]
+
+call "all 8 cross cycle" c3
+            reverse_means_mirror singlefile_is_inherited diamond_is_legal
+   crossconc splitrecycle [conc_demand_columns inherit_reverse inherit_singlefile force_cross inherit_diamond]
+             waverecycle [force_cross inherit_diamond suppress_elongation_warnings]
+   // This is also legal in a thar, meaning the A2 "all 8" concept.
+   // The "all 8" code knows how to handle it, of course, but the parser
+   // will give this definition precedence.
+            reverse_means_mirror
+   setup thar 4x4 qualifier 2fl_only
+      array [CR14S CR5N 0 0 AL13S AL6N 0 0]
 
 call "all 8 cycle and wheel" c1
             reverse_means_mirror singlefile_is_inherited cross_is_inherited diamond_is_legal
@@ -18272,29 +18306,26 @@ call "_centers 3/4 / ends half-circ, to star" dontshow tag motivate2
    maybematrix_conc_star armturn_n4 [inherit_fractal insert_number 3]
                          circulate [force_half]
 
-// In these three, we can't allow the cast off 3/4 to be replaced,
-// because there are two of them.  That is, you can't explicitly
-// say "but replace the cast off 3/4 with ..."
 call "@1motivate@S" a2
             bigmatrix_is_inherited first_part_visible fractal_is_inherited
    seq circulate [inherit_bigmatrix or_anycall]
    seq motivate2 [inherit_bigmatrix inherit_fractal]
    seq turndmdn_endstrade [inherit_bigmatrix insert_number 2]
-   seq finishnomod [inherit_bigmatrix inherit_fractal]
+   seq finishwithplainmod [inherit_bigmatrix inherit_fractal]
 
 call "@T motivate@S" c2
             bigmatrix_is_inherited first_part_visible fractal_is_inherited
    seq nullcall [mandatory_anycall]
    seq motivate2 [inherit_bigmatrix inherit_fractal]
    seq turndmdn_endstrade [inherit_bigmatrix insert_number 2]
-   seq finishnomod [inherit_bigmatrix inherit_fractal]
+   seq finishwithplainmod [inherit_bigmatrix inherit_fractal]
 
 call "@N motivate@S" c2
             bigmatrix_is_inherited first_part_visible fractal_is_inherited
    seq circnullcall [inherit_bigmatrix or_anycall]
    seq motivate2 [inherit_bigmatrix inherit_fractal]
    seq turndmdn_endstrade [inherit_bigmatrix insert_number 2]
-   seq finishnomod [inherit_bigmatrix inherit_fractal]
+   seq finishwithplainmod [inherit_bigmatrix inherit_fractal]
 
 // But you can say "motivate but [...]", because it's clear (well,
 // it's clear to any group that you have any business calling this to)
@@ -22555,14 +22586,15 @@ call "reflected linear action but cross it" c4
    seq cross_the_lin_act []
    seq finishwithplainmod []
 
-/* This one allows syntactically easy modify, for "breaker flip back". */
+// This one allows syntactically easy modify, for "breaker [flip back]".
 
 call "_finish it with modify" dontshow tag finishwithmod
             bigmatrix_is_inherited fractal_is_inherited
-   conc_diamond_line cast_off_n4_with_warn [or_anycall insert_number 3 inherit_fractal]
-                     spec_drop_in [inherit_bigmatrix suppress_elongation_warnings]
+   conc_diamond_line cast_off_n4_with_warn [or_anycall inherit_fractal insert_number 3]
+                     spec_drop_in [inherit_bigmatrix conc_force_otherway
+                                   suppress_elongation_warnings]
 
-/* This one allows plain modify, for "tally ho but flip back". */
+// This one allows plain modify, for "tally ho but [flip back]".
 
 call "_finish it with plain modify" dontshow tag finishwithplainmod
             bigmatrix_is_inherited fractal_is_inherited

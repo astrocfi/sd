@@ -21,8 +21,8 @@
     General Public License if you distribute the file.
 */
 
-#define VERSION_STRING "34.8h"
-#define TIME_STAMP "wba@alum.mit.edu  27 January 2003 $"
+#define VERSION_STRING "34.8j"
+#define TIME_STAMP "wba@alum.mit.edu  23 February 2003 $"
 
 /* This defines the following functions:
    sd_version_string
@@ -466,7 +466,7 @@ extern long_boolean deposit_call(call_with_name *call, const call_conc_option_st
       new_block->next->call = base_calls[base_call_circcer];
       new_block->next->call_to_print = base_calls[base_call_circcer];
 
-      if (circc > number_of_circcers) fail("bad circcer index???");
+      if (circc > number_of_circcers) fail_no_retry("bad circcer index???");
 
       parse_state.concept_write_ptr = &new_block->next->subsidiary_root;
       if (deposit_call(circcer_calls[circc-1], &null_options))
@@ -818,10 +818,10 @@ extern long_boolean query_for_call()
       if we haven't already. */
 
    if (interactivity == interactivity_database_init || interactivity == interactivity_verify)
-      fail("This shouldn't get printed.");
+      fail_no_retry("This shouldn't get printed.");
    else if (interactivity != interactivity_normal) {
       if (deposit_call(do_pick(), &null_options))
-         fail("This shouldn't get printed.");
+         fail_no_retry("This shouldn't get printed.");
    }
 
    /* Check our "stack" and see if we have recursive invocations to clean up. */

@@ -195,7 +195,7 @@ static void do_c1_phantom_move(
    // so we check that there weren't any.
 
    junk_concepts.clear_all_herit_and_final_bits();
-   next_parseptr = process_final_concepts(parseptr->next, FALSE, &junk_concepts);
+   next_parseptr = process_final_concepts(parseptr->next, FALSE, &junk_concepts, true, __FILE__, __LINE__);
 
    if (next_parseptr->concept->kind == concept_tandem ||
        next_parseptr->concept->kind == concept_frac_tandem) {
@@ -1020,7 +1020,7 @@ static void do_concept_parallelogram(
    final_and_herit_flags junk_concepts;
    junk_concepts.clear_all_herit_and_final_bits();
 
-   next_parseptr = process_final_concepts(parseptr->next, FALSE, &junk_concepts);
+   next_parseptr = process_final_concepts(parseptr->next, FALSE, &junk_concepts, true, __FILE__, __LINE__);
 
    const parse_block *standard_concept = (parse_block *) 0;
 
@@ -1029,7 +1029,7 @@ static void do_concept_parallelogram(
        junk_concepts.test_herit_and_final_bits() == 0) {
       standard_concept = next_parseptr;
       junk_concepts.clear_all_herit_and_final_bits();
-      next_parseptr = process_final_concepts(next_parseptr->next, FALSE, &junk_concepts);
+      next_parseptr = process_final_concepts(next_parseptr->next, FALSE, &junk_concepts, true, __FILE__, __LINE__);
    }
 
    // The only concepts we are interested in are "split phantom 2x4"
@@ -2501,7 +2501,7 @@ static void do_concept_new_stretch(
       final_and_herit_flags junk_concepts;
       junk_concepts.clear_all_herit_and_final_bits();
       parse_block *next_parseptr = process_final_concepts(parseptr->next, FALSE,
-                                                          &junk_concepts);
+                                                          &junk_concepts, true, __FILE__, __LINE__);
 
       if ((next_parseptr->concept->kind != concept_randomtrngl &&
           next_parseptr->concept->kind != concept_selbasedtrngl) ||
@@ -3247,7 +3247,7 @@ static void do_concept_fan(
    const parse_block *parseptrcopy;
    call_with_name *callspec;
 
-   parseptrcopy = process_final_concepts(parseptr->next, TRUE, &new_final_concepts);
+   parseptrcopy = process_final_concepts(parseptr->next, TRUE, &new_final_concepts, true, __FILE__, __LINE__);
 
    if (new_final_concepts.test_herit_and_final_bits() ||
        parseptrcopy->concept->kind > marker_end_of_list)
@@ -6763,7 +6763,7 @@ extern long_boolean do_big_concept(
       junk_concepts.clear_all_herit_and_final_bits();
       substandard_concptptr = process_final_concepts(orig_concept_parse_block->next,
                                                      TRUE,
-                                                     &junk_concepts);
+                                                     &junk_concepts, true, __FILE__, __LINE__);
    
       // If we hit "matrix", do a little extra stuff and continue.
 
@@ -6772,7 +6772,7 @@ extern long_boolean do_big_concept(
          ss->cmd.cmd_misc_flags |= CMD_MISC__MATRIX_CONCEPT;
          substandard_concptptr = process_final_concepts(substandard_concptptr->next,
                                                         TRUE,
-                                                        &junk_concepts);
+                                                        &junk_concepts, true, __FILE__, __LINE__);
       }
 
       if (junk_concepts.test_herit_and_final_bits() != 0 ||

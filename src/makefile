@@ -38,7 +38,7 @@ X11_LIBS =
 # "sdtty".
 #
 # There was a time when I thought that libraries might actually work
-# properly on Linux.  After all, the Unix community has had nearly
+# properly on Linux.  After all, the Unix community has had about
 # 30 years to figure out how to do it.  Alas, it isn't so.  Libraries
 # are just as broken on Linux as on HP-UX.  (OK, not *that* broken,
 # but still unacceptable.)  Specifically, a compilation on Debian 3.0
@@ -57,12 +57,15 @@ X11_LIBS =
 # this for many years.  Sd and Sdtty on Windoze make use of those,
 # but Linux can't be bothered.
 #
-# Sorry about the flaming, but I'm really sick of this.
+# Sorry about the flaming, but I'm really tired of this.
 #
 # So we statically bind the curses library.  We do not use "-lcurses".
 #
-#TTY_LIBS = -lcurses
-TTY_LIBS = /usr/lib/libcurses.a
+# In fact, we statically bind all libraries, because there have been
+# other problems.  The Linux community, like the Unix community
+# before them, just can't get their act together.
+#TTY_LIBS = /usr/lib/libcurses.a
+TTY_LIBS = -static -lcurses
 
 SD_SRCS = sdmain.cpp sdutil.cpp sdbasic.cpp sdinit.cpp \
           sdtables.cpp sdctable.cpp sdtop.cpp sdconcpt.cpp sdpreds.cpp \

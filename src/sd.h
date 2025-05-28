@@ -558,10 +558,9 @@ enum selector_kind {
    selector_enum_extent    // Not a selector; indicates extent of the enum.
 };
 
-/* BEWARE!!  This list must track the array "direction_names" in sdutil.c .
-   It must also track the DITL "which direction" in *.rsrc in the Macintosh system. */
-/* Note also that the "zig-zag" items will get disabled below A2.
-   The key for this is "direction_zigzag". */
+// BEWARE!!  This list must track the array "direction_names" in sdutil.cpp .
+// Note also that the "zig-zag" items will get disabled below A2.
+// The key for this is "direction_zigzag".
 enum direction_kind {
    direction_uninitialized,
    direction_no_direction,
@@ -1012,12 +1011,13 @@ enum {
    CFLAGH__REQUIRES_DIRECTION      = 0x00000010UL,
    CFLAGH__CIRC_CALL_RQ_BIT        = 0x00000020UL,
    CFLAGH__ODD_NUMBER_ONLY         = 0x00000040UL,
-   CFLAGHSPARE_1                   = 0x00000080UL,
-   CFLAGHSPARE_2                   = 0x00000100UL,
-   CFLAGHSPARE_3                   = 0x00000200UL,
-   CFLAGHSPARE_4                   = 0x00000400UL,
-   CFLAGHSPARE_5                   = 0x00000800UL,
-   CFLAGHSPARE_6                   = 0x00001000UL
+   CFLAGH__HAS_AT_ZERO             = 0x00000080UL,
+   CFLAGHSPARE_1                   = 0x00000100UL,
+   CFLAGHSPARE_2                   = 0x00000200UL,
+   CFLAGHSPARE_3                   = 0x00000400UL,
+   CFLAGHSPARE_4                   = 0x00000800UL,
+   CFLAGHSPARE_5                   = 0x00001000UL,
+   CFLAGHSPARE_6                   = 0x00002000UL
    // We need to leave the top 8 bits free in order to accomodate the "CFLAG2" bits.
 };
 
@@ -2465,7 +2465,7 @@ struct comment_block {
 // on one line.  One needs to be very careful about avoiding
 // ambiguity when setting this flag.
 #define CONCPARSE_PARSE_DIRECT   0x00000004UL
-// These are used by "print_recurse" in sdutil.c to control the printing.
+// These are used by "print_recurse" in sdutil.cpp to control the printing.
 // They govern the placement of commas.
 #define CONCPARSE_PARSE_L_TYPE 0x8
 #define CONCPARSE_PARSE_F_TYPE 0x10
@@ -2800,35 +2800,42 @@ struct concept_table_item{
 };
 
 enum error_flag_type {
-   error_flag_none = 0,          /* Must be zero because setjmp returns this. */
-   error_flag_1_line,            /* 1-line error message, text is in error_message1. */
-   error_flag_2_line,            /* 2-line error message, text is in error_message1 and
-                                    error_message2. */
-   error_flag_no_retry,          /* Like error_flag_1_line, but it is instantly fatal. */
-   error_flag_collision,         /* collision error, message is that people collided, they are in
-                                    collision_person1 and collision_person2. */
-   error_flag_cant_execute,      /* unable-to-execute error, person is in collision_person1,
-                                    text is in error_message1. */
+   error_flag_none = 0,          // Must be zero because setjmp returns this.
+                                 // (Of course, we haven't used setjmp since March, 2000.)
+   error_flag_1_line,            // 1-line error message, text is in error_message1.
+   error_flag_2_line,            // 2-line error message, text is in error_message1 and
+                                 // error_message2.
+   error_flag_collision,         // collision error, message is that people collided, they are in
+                                 // collision_person1 and collision_person2.
+   error_flag_cant_execute,      // unable-to-execute error, person is in collision_person1,
+                                 // text is in error_message1.
+
+   // Errors after this can't be restarted by the mechanism that goes on to the
+   // call's next definition when a call execution fails.
+   // "Error_flag_no_retry" is the indicator for this.
+
+   error_flag_no_retry,          // Like error_flag_1_line, but it is instantly fatal.
 
    // Errors after this did not arise from call execution, so we don't
    // show the ending formation.  "Error_flag_wrong_command" is the indicator for this.
 
-   error_flag_wrong_command,     /* clicked on something inappropriate in subcall reader. */
-   error_flag_wrong_resolve_command, /* "resolve" or similar command was called
-                                         in inappropriate context, text is in error_message1. */
-   error_flag_show_stats,        /* wants to display stale call statistics. */
-   error_flag_selector_changed,  /* warn that selector was changed during clipboard paste. */
-   error_flag_formation_changed  /* warn that formation changed during clipboard paste. */
+   error_flag_wrong_command,     // clicked on something inappropriate in subcall reader.
+   error_flag_wrong_resolve_command, // "resolve" or similar command was called
+                                     // in inappropriate context, text is in error_message1.
+   error_flag_show_stats,        // wants to display stale call statistics.
+   error_flag_selector_changed,  // warn that selector was changed during clipboard paste.
+   error_flag_formation_changed  // warn that formation changed during clipboard paste.
 };
 
-#define zig_zag_level l_a2
-#define cross_by_level l_c1
-#define dixie_grand_level l_plus
-#define extend_34_level l_plus
-#define phantom_tandem_level l_c4a
-#define intlk_triangle_level l_c2
-#define general_magic_level l_c3
-#define beau_belle_level l_a2
+
+static const dance_level dixie_grand_level = l_plus;
+static const dance_level extend_34_level = l_plus;
+static const dance_level zig_zag_level = l_a2;
+static const dance_level beau_belle_level = l_a2;
+static const dance_level cross_by_level = l_c1;
+static const dance_level intlk_triangle_level = l_c2;
+static const dance_level general_magic_level = l_c3;
+static const dance_level phantom_tandem_level = l_c4a;
 
 
 /* It should be noted that the CMD_MISC__??? and RESULTFLAG__XXX bits have
@@ -4367,7 +4374,7 @@ extern void do_matrix_expansion(
 
 void initialize_sdlib();
 
-extern void crash_print() THROW_DECL;
+extern void crash_print(const char *filename, int linenum) THROW_DECL;
 
 extern bool check_for_concept_group(
    parse_block *parseptrcopy,
@@ -4441,7 +4448,10 @@ extern void install_scatter(setup *resultpeople, int num, const veryshort *place
 extern parse_block *process_final_concepts(
    parse_block *cptr,
    long_boolean check_errors,
-   final_and_herit_flags *final_concepts) THROW_DECL;
+   final_and_herit_flags *final_concepts,
+   bool forbid_unfinished_parse,
+   const char *filename,
+   int linenum) THROW_DECL;
 
 extern parse_block *really_skip_one_concept(
    parse_block *incoming,
@@ -4563,6 +4573,8 @@ class fraction_info {
 
 
 /* In SDUTIL */
+
+extern void FuckingThingToTryToKeepTheFuckingStupidMicrosoftCompilerFromScrewingUp();
 
 const char *get_escape_string(char c);
 void write_history_line(int history_index,

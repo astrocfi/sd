@@ -1407,11 +1407,15 @@ restriction_tester::restr_initializer restriction_tester::restr_init_table0[] = 
     {0}, {0}, {0}, true,  chk_wave},
    {s_thar, cr_wave_only, 8, {0, 1, 2, 3, 5, 4, 7, 6},
     /* NOTE THE 4 --> */{4}, {0}, {0}, true,  chk_wave},
+   {s_thar, cr_2fl_only, 8, {0, 5, 2, 7, 1, 4, 3, 6},
+    /* NOTE THE 4 --> */{4}, {0}, {0}, true,  chk_wave},
    {s_thar, cr_1fl_only, 8, {0, 3, 1, 2, 6, 5, 7, 4},
     {0}, {0}, {0}, false, chk_wave},
    {s_thar, cr_magic_only, 8, {0, 1, 3, 2, 5, 4, 6, 7},
     /* NOTE THE 4 --> */{4}, {0}, {0}, true,  chk_wave},
    {s_crosswave, cr_wave_only, 8, {0, 1, 2, 3, 5, 4, 7, 6},
+    /* NOTE THE 4 --> */{4}, {0}, {0}, true,  chk_wave},
+   {s_crosswave, cr_2fl_only, 8, {0, 5, 2, 7, 1, 4, 3, 6},
     /* NOTE THE 4 --> */{4}, {0}, {0}, true,  chk_wave},
    {s_crosswave, cr_1fl_only, 8, {0, 3, 1, 2, 6, 5, 7, 4},
     {0}, {0}, {0}, false, chk_wave},
@@ -2596,7 +2600,10 @@ static bool check_for_supercall(parse_block *parseptrcopy)
    concept_kind kk = parseptrcopy->concept->kind;
 
    if (kk <= marker_end_of_list) {
-      if (kk == marker_end_of_list && !parseptrcopy->next) {
+      // Only calls with "@0" in their name may be supercalls.
+      if (kk == marker_end_of_list &&
+          !parseptrcopy->next &&
+          (parseptrcopy->call->the_defn.callflagsf & CFLAGH__HAS_AT_ZERO)) {
          setup_command foo2;
          by_def_item innerdef;
          innerdef.call_id = base_call_null;
@@ -2641,7 +2648,7 @@ extern bool check_for_concept_group(
 
  try_again:
 
-   if (!parseptrcopy) crash_print();
+   if (!parseptrcopy) fail("A concept is required.");
 
    parseptr_skip = parseptrcopy->next;
 
@@ -2689,7 +2696,7 @@ extern bool check_for_concept_group(
       junk_concepts.clear_all_herit_and_final_bits();
 
       next_parseptr =
-         process_final_concepts(parseptr_skip, FALSE, &junk_concepts);
+         process_final_concepts(parseptr_skip, FALSE, &junk_concepts, true, __FILE__, __LINE__);
 
       if ((next_parseptr->concept->kind == concept_tandem ||
            next_parseptr->concept->kind == concept_frac_tandem) &&
@@ -2709,7 +2716,7 @@ extern bool check_for_concept_group(
       junk_concepts.clear_all_herit_and_final_bits();
 
       next_parseptr =
-         process_final_concepts(parseptr_skip, FALSE, &junk_concepts);
+         process_final_concepts(parseptr_skip, FALSE, &junk_concepts, true, __FILE__, __LINE__);
 
       if ((next_parseptr->concept->kind == concept_do_phantom_2x4 ||
            next_parseptr->concept->kind == concept_do_phantom_boxes) &&
@@ -2764,7 +2771,7 @@ static void debug_print_parse_block(int level, const parse_block *p, char *temps
       if (level > 0) n += sprintf(tempstring_text+n, "(%d) ", level);
       if (p->concept) n += sprintf(tempstring_text+n, "  concept %s  ", p->concept->name);
       if (p->call) n += sprintf(tempstring_text+n, "  call %s  ", p->call->name);
-      n += sprintf(tempstring_text+n, "  opt %d %d %d %d %d \n",
+      n += sprintf(tempstring_text+n, " %d %d %d %d %d \n",
              p->options.who,
              p->options.where,
              p->options.howmanynumbers,
@@ -2775,11 +2782,12 @@ static void debug_print_parse_block(int level, const parse_block *p, char *temps
    }
 }
 
-extern void crash_print() THROW_DECL
+extern void crash_print(const char *filename, int linenum) THROW_DECL
 {
    char tempstring_text[10000];  // If this isn't big enough, I guess we lose.
 
    int n = sprintf(tempstring_text, "++++++++ CRASH - PLEASE REPORT THIS ++++++++\n");
+   n += sprintf(tempstring_text+n, "%s %d\n", filename, linenum);
 
    int hsize = configuration::history_ptr+1;
    for (int jjj = 2 ; jjj <= hsize ; jjj++) {
@@ -3732,7 +3740,7 @@ extern uint32 find_calldef(
    int real_direction,
    int northified_index) THROW_DECL
 {
-   if (!tdef) crash_print();
+   if (!tdef) crash_print(__FILE__, __LINE__);
 
    unsigned short *calldef_array;
    uint32 z;
@@ -3967,9 +3975,12 @@ static bool do_heritflag_merge(final_and_herit_flags *dest, uint32 source)
 extern parse_block *process_final_concepts(
    parse_block *cptr,
    long_boolean check_errors,
-   final_and_herit_flags *final_concepts) THROW_DECL
+   final_and_herit_flags *final_concepts,
+   bool forbid_unfinished_parse,
+   const char *filename,
+   int linenum) THROW_DECL
 {
-   while (cptr) {
+   for ( ; cptr ; cptr=cptr->next) {
       finalflags the_final_bit;
       uint32 forbidfinalbit = 0;
       heritflags heritsetbit = (heritflags) 0;
@@ -3977,7 +3988,7 @@ extern parse_block *process_final_concepts(
 
       switch (cptr->concept->kind) {
       case concept_comment:
-         goto get_next;               // Skip comments.
+         continue;               // Skip comments.
       case concept_triangle:
          the_final_bit = FINAL__TRIANGLE;
          forbidfinalbit = FINAL__LEADTRIANGLE;
@@ -4108,11 +4119,9 @@ extern parse_block *process_final_concepts(
 
       if (check_errors && cptr->concept->level > calling_level)
          warn(warn__bad_concept_level);
-
-   get_next:
-
-      cptr = cptr->next;
    }
+
+   if (forbid_unfinished_parse) fail_no_retry("Incomplete parse.");
 
    exit5:
 
@@ -4134,7 +4143,7 @@ extern parse_block *really_skip_one_concept(
 
    junk_concepts.clear_all_herit_and_final_bits();
 
-   parseptrcopy = process_final_concepts(incoming, FALSE, &junk_concepts);
+   parseptrcopy = process_final_concepts(incoming, FALSE, &junk_concepts, true, __FILE__, __LINE__);
 
    // Find out whether the next concept (the one that will be "random" or whatever)
    // is a modifier or a "real" concept.
@@ -5253,7 +5262,7 @@ void toplevelmove() THROW_DECL
 
          // Skip all simple modifiers.  If we pass a "split" modifier, remember same.
          finaljunk.clear_all_herit_and_final_bits();
-         parse_block *new_parse_scan = process_final_concepts(parse_scan, FALSE, &finaljunk);
+         parse_block *new_parse_scan = process_final_concepts(parse_scan, FALSE, &finaljunk, true, __FILE__, __LINE__);
          if (parse_scan != new_parse_scan) {
             parse_scan = new_parse_scan;
             callflags1_to_examine = parse_scan->call->the_defn.callflags1;
@@ -5537,7 +5546,7 @@ extern long_boolean do_subcall_query(
          to choose a mandatory subcall.  In that case, the call requiring the
          mandatory subcall (e.g. "wheel and <anything>") is simply rejected. */
       if (forbid_call_with_mandatory_subcall())
-         fail("Mandatory subcall fail.");
+         fail_no_retry("Mandatory subcall fail.");
       mandatory_call_used = TRUE;
    }
 
@@ -5615,12 +5624,13 @@ extern long_boolean do_subcall_query(
       (void) sprintf(tempstring_text, "SECOND SUBSIDIARY CALL");
    else {
 
-      /* Need to present the popup to the operator and find out whether modification is desired. */
+      // Need to present the popup to the operator
+      // and find out whether modification is desired.
 
       modify_popup_kind kind;
       char pretty_call_name[MAX_TEXT_LINE_LENGTH];
 
-      /* Star turn calls can have funny names like "nobox". */
+      // Star turn calls can have funny names like "nobox".
 
       unparse_call_name(
          (orig_call->the_defn.callflags1 & CFLAG1_IS_STAR_CALL) ?
@@ -5632,13 +5642,14 @@ extern long_boolean do_subcall_query(
       else kind = modify_popup_any;
 
       if (gg->do_modifier_popup(pretty_call_name, kind)) {
-         /* User accepted the modification.
-            Set up the prompt and get the concepts and call. */
+         // User accepted the modification.
+         // Set up the prompt and get the concepts and call.
 
          (void) sprintf(tempstring_text, "REPLACEMENT FOR THE %s", pretty_call_name);
       }
       else {
-         /* User declined the modification.  Create a null entry so that we don't query again. */
+         // User declined the modification.  Create a null entry
+         // so that we don't query again.
          *newsearch = get_parse_block();
          (*newsearch)->concept = &conzept::marker_concept_mod;
          (*newsearch)->options = current_options;

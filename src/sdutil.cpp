@@ -218,6 +218,14 @@ static long_boolean reply_pending;
 static int clipboard_allocation = 0;
 
 
+// Some things fail under Visual C++ version 5 and version 6.  (Under different
+// circumstances for those 2 compilers!)  I complained, and they won't even
+// acknowledge the existence of the bug report unless I pay them money.
+extern void FuckingThingToTryToKeepTheFuckingStupidMicrosoftCompilerFromScrewingUp()
+{
+}
+
+
 /* Getting blanks into all the right places in the presence of substitions,
    insertions, and elisions is way too complicated to do in the database, or
    to test.  For example, consider calls like "@4keep @5busy@1",
@@ -979,7 +987,7 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
                /* Skip all final concepts, then demand that what remains is a marker
                   (as opposed to a serious concept), and that a real call
                   has been entered, and that its name starts with "@g". */
-               tptr = process_final_concepts(next_cptr, FALSE, &junk_concepts);
+               tptr = process_final_concepts(next_cptr, FALSE, &junk_concepts, false, __FILE__, __LINE__);
    
                if (tptr && tptr->concept->kind <= marker_end_of_list) target_call = tptr->call_to_print;
             }

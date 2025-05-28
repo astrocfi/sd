@@ -1,0 +1,371 @@
+\input texinfo @c %**start of header -*-texinfo-*-
+@setfilename faq.info
+@settitle Sd Frequently Asked Questions
+@c Time-stamp: <18 July 2002 wba>
+@iftex
+@headings off
+@oddheading @| @| @thispage
+@evenheading @thispage @| @|
+@finalout
+@end iftex
+@c %**end of header
+
+@set title1 FREQUENTLY ASKED QUESTIONS
+@set title2 WHUZZIS SECOND LINE FOR?
+
+@center @titlefont{@value{title1}}@*
+@center @value{title2}@*
+
+@w{ }@c the @* above makes the @sp below fail without this line  1998-05
+@sp 2
+@noindent Copyright @copyright{} 1996-2003 William B. Ackerman
+@sp 3
+I really liked the choice @kbd{no one do your part, bend the line} -- Justin Legakis
+
+@unnumberedsec Version 34.7 changes
+
+The program can write the output file with extension @file{.txt}
+if it is given the command line argument ``-new_style_filename''.
+Such files will have names like @file{sequence_C1.txt} or
+@file{01sep02_C1.txt}.  You can also get this behavior by adding
+the line ''new_style_filename'' to the ``[options]'' section of
+the sd.ini file, so that it looks like this:
+
+@example
+@group
+[Options]
+new_style_filename
+@end group
+@end example
+
+Having a file name of this form should make the output files
+able to be read and printed by common text editors and word processors,
+and sent as email attachments.
+
+@unnumberedsec How do I change the Sd window size?
+
+Users have different preferences about how big they want the
+@code{Sd} window size to be.  Furthermore, graphics resolution
+settings can vary significantly.  By default, @code{Sd} makes an
+arbitrary decision about this, which is generally 780 x 560 pixels.
+If this doesn't suit you or your graphics hardware, you can change
+it with the ``window_size'' option.  Follow the option with
+2 numbers separated by a lower case ``x'' but no whitespace,
+as in
+
+@example
+@group
+   window_size 1000x720
+@end group
+@end example
+
+You can put that line into the ``options'' section of your initialization
+file, which is C:\sd\sd.ini, so that section might look like
+
+@example
+@group
+[Options]
+new_style_filename
+window_size 1000x720
+@end group
+@end example
+
+Doing so will affect every copy of Sd on your computer.  If you want to
+have different icons to start Sd, and you want to control the window
+size separately for each icon, follow the instructions in the
+``command-line options'' section of the manual.
+
+@unnumberedsec How do I change the star turns on Chain Reaction?
+
+The short answer to the question is that you type ``chain
+reaction, turn the star 1/2'', or ``motivate, don't turn the star'',
+or something similar.
+
+But the more important question is: ``How do you know that?''.  There
+are many common ways of modifying calls, and many ways of expressing
+those modifications in words.  Sd is not known for its deep
+understanding of colloquial English.  How do you know what the required
+words are?
+
+Type part of the call, immediately followed by a question mark.
+If you type ``motiv?'' you will see
+@example
+@group
+   motivate, don't turn the star
+   motivate, turn the star 1/4
+   motivate, turn the star 1/2
+   motivate, turn the star 3/4
+motivate
+   motivate, don't turn the star but <ANYTHING>
+   motivate, turn the star 1/4 but <ANYTHING>
+   motivate, turn the star 1/2 but <ANYTHING>
+   motivate, turn the star 3/4 but <ANYTHING>
+motivate but <ANYTHING>
+@end group
+@end example
+
+This should tell you what you need to know.  At that point you can type
+``ate, don't turn the star''.  (Remember, you already typed ``motiv''.)
+
+Suppose the ``<ANYTHING>'' piques your curiosity.  This is a
+modification for the final centers' cast off 3/4.  Try it.  Issue the
+call ``motivate but <anything>''.  The upper case is optional.  You will
+be prompted for a subsidiary call.  Type ``2/3 recycle''.  You will then
+see ``motivate but [2/3 recycle]''.  You could also have entered the
+call exactly that way.  Whenever the ``?''  printout shows
+``<ANYTHING>'', you can type a subcall instead, in square brackets.  Not
+angle brackets.
+
+You can also experiment with things by giving the ``allow modifications''
+command and then trying the call, but this method is somewhat unwieldy.
+If you type
+
+@example
+@group
+allow modifications
+motivate
+@end group
+@end example
+
+You will be asked about modifying the initial circulate, the star turn,
+and the final cast off 3/4.
+
+By the way, if you don't want to type commas or apostrophes, that's OK.
+They're optional.  Capitalization is also optional.  But subsidiary calls
+must be in square brackets.
+
+@unnumberedsec How do I type all 8 recycle and circle 1/4?
+
+How do I type in things like @code{all 8 recycle and circle 1/4}?
+How about @code{flip the diamond and circle 1/4}?  How do I tell
+the program whether it's a 4 person or an 8 person call?
+
+The program recognizes a call ``@code{[anything] and circle N/4}''.
+It tries the ``anything'' call first with just the centers, and
+with all 8 people if that fails, so it should work in either case.
+You can type the fraction as 1/4, 1/2, 3/4, 2/4, or ``full''.
+
+As with all calls of this sort, the ``official'' name of the call
+uses angle brackets to indicate something that gets filled in:
+@code{<ANYTHING> and circle <N/4>}.  You can literally enter the call
+that way.  (If using @code{Sd} and the menu, that's the way you have
+to enter it.  Calls starting with things in angle brackets are
+alphabetized at the end of the call menu, but before the concepts.)
+If you enter the call that way, the program will ask you about the
+things that need to be filled in.
+
+@example
+@group
+   <anything> and circle <n/4>
+   how many?
+   2
+   subsidiary call
+   switch the line
+@end group
+@end example
+
+But a much easier way is to type everything directly.  Remember
+that, while angle brackets are used in the ``official'' name of the
+call, you use square brackets when you type subcalls.  And you
+just type numbers and similar things directly.
+
+@example
+@group
+   [switch the line] and circle 1/2
+@end group
+@end example
+
+How do you know that that call is available?  @code{Sd} has many calls
+with tricky syntax like that.  It will usually accept what you want to
+type.  But there are many tricky areas.  If you are confused, the right
+thing is to type part of the call, followed by a question mark.
+
+@unnumberedsec How do I do a shadow box couple up?
+
+Sometimes the following confusing thing happens.  You want to
+do a @kbd{shadow box couple up}, so you type:
+
+@example
+@group
+   shadow box [couple up]
+@end group
+@end example
+
+and all you get is
+
+@example
+@group
+   shadow box [couple up]  (129 matches, type ! or ? for list)
+@end group
+@end example
+
+so you do so, and get
+
+@example
+@group
+shadow box [couple up] and a quarter more
+shadow box [couple up] and cross
+shadow box [couple up] and roll
+shadow box [couple up] and sweep <N/4>
+shadow box [couple up] and the <ANYONE> roll
+shadow box [couple up] and <N/4> more
+shadow box [couple up] by golly
+shadow box [couple up] er's cover up but <ANYTHING>
+shadow box [couple up] like a couple up
+shadow box [couple up] the k but <ANYTHING>
+shadow box [couple up] the key
+shadow box [couple up] the windmill, outsides <ANYTHING>
+shadow box [couple up] with the flow
+@end group
+@end example
+
+and you wonder ``Why won't it let me do a normal one?''
+
+The issue is whether @kbd{shadow box} is a concept, or
+a call with a subcall.  If it's a concept, you should just
+type @kbd{shadow box couple up}.  But if it's a call that takes
+a subcall, you should use brackets.  How do you know?
+
+That isn't easy to answer.  Where to draw the line isn't well
+established, so @kbd{Sd} makes decisions that may seem arbitrary.
+There is no way to avoid this.  Most things are obvious, of
+course, like the @kbd{as couples} concept.  And it should be fairly
+obvious from usage that @kbd{breaker [2/3 recycle]} is a call with
+a modifier.  Why is that obvious?  Because @kbd{breaker N} is a call,
+and it is obvious that @kbd{breaker [anything]} just has the
+@kbd{anything} replace some pre-existing part of the call.
+
+Of course, anything that takes the modifier other than at the
+end, must be a call with a modifier, since concepts are always
+typed first.  Hence @kbd{[anything] and roll} always uses brackets.
+
+So, if you are having trouble of this sort, try adding brackets
+or leaving them out.
+
+@unnumberedsec How do I do 3x1 triangles circulate?
+
+You try to circulate in 3x1 triangles, by typing @kbd{3x1
+triangles circulate}.  It doesn't allow it.
+
+So you try leaving off the @code{circulate} and typing a question
+mark.  You get
+
+@example
+@group
+3x1 triangles?
+3x1 triangles are solid
+3x1 triangles are solid <N/4> trianglesome
+3x1 triangles are trianglesome
+3x1 triangles are trianglesome <N/4> solid
+@end group
+@end example
+
+What happened to plain 3x1 triangles?
+
+The reason is that the call is known to @code{Sd} as @kbd{3x1 triangle
+circulate}, without the s.  That is, it is the @kbd{3x1} variant of the
+call @kbd{triangle circulate}.
+
+Now this fussiness about spelling, some of which you may not agree with
+at all, can be extremely annoying.  When you run into problems like
+this, try typing a little less, followed by a question mark.  Most of
+the annoying spelling habits of @code{Sd} occur at the ends of words.
+So if you tried just @code{triang}, you might get
+
+@example
+@group
+3x1 triang?
+3x1 triangles are solid
+3x1 triangles are solid <N/4> trianglesome
+3x1 triangles are trianglesome
+3x1 triangles are trianglesome <N/4> solid
+3x1 triangular boxes
+3x1 triangle
+3x1 triangle circulate
+@end group
+@end example
+
+@unnumberedsec How do I start a sequence with all 4 ladies chain?
+
+This, of course, needs to be written.....
+
+@code{Sd} is very strongly oriented toward the ``heads pass the ocean''
+style of sequence openings.  That is, you start with the heads or sides
+doing some call, either by themselves in the center, or something like
+@kbd{split square thru 4}.
+
+When calling, you will presumably say something like
+"heads move in and pass the ocean".  To get Sd to do
+that, issue the separate call "heads press ahead".
+Then have the heads (or the centers) pass the ocean
+or whatever.
+
+So the sequence will look like
+
+just as they are
+all 4 ladies chain
+head press ahead
+heads pass the ocean
+etc...
+
+The call "press ahead" is actually a Challenge call, but
+Sd recognizes it at Mainstream, just for the purpose of
+dealing with this issue, and other similar issues of
+brute-force moving people around.
+
+If you had the ladies chain 3/4, "heads" won't do.  In that
+case, use the designator "headliners" or "sideliners".  These
+are also Challenge terms that Sd recognizes at Mainstream.
+They mean "whoever is facing head/side walls right now".
+When calling, you would presumably say [emphasis added]
+"All 4 ladies chain 3/4, *AT* the heads, square thru ...."
+or whatever terminology you like to use.
+
+@unnumberedsec Version 33.15 changes
+
+The function key control-F11 has been set to perform the @samp{standardize} operation.
+
+@unnumberedsec Version 33.0 changes
+
+The call previously known as just @samp{mixed up} has been changed to
+@samp{mixed up square thru}.
+
+@unnumberedsec Version 32.95 changes
+
+The program has been tested successfully for year 2000 compliance.
+
+@unnumberedsec Version 32.9 changes
+
+The installation program was improved.  If a previous version of @code{Sd} is
+found in the folder @file{C:\Sd}, you are asked whether to save that version,
+and you are allowed to choose the folder in which to place the saved copy.
+
+@unnumberedsec Version 32.81 changes
+
+A bug was fixed in the definition of @samp{little more}.  This is a two-part
+call.  The first part is just a @samp{little}, which has the centers
+step and fold while the ends both 1/4 right and counter rotate.
+The second part has the centers circulate while the ends do nothing.
+While people might prefer a different apportioning of the centers'
+and ends' parts for various reasons, this is the way it is defined in
+the Callerlab C2 definitions, the Ceder Chest, and the Ben Rubright
+Pocket Reference.
+
+@unnumberedsec Version 32.67 changes
+
+A bug that caused a failure in tip #8 in the C4 hall at the 1999 National
+Advanced and Challenge Convention was fixed.  We apologize for any
+inconvenience that this may have caused.
+
+@unnumberedsec Version 32.65 changes
+
+There were no profound changes in the ``dancing'' behavior of the
+program, but there were, as usual, numerous minor changes.  Most of the
+significant changes were in the internal organization, to prepare for
+the upcoming release of @code{Sd} for Windows.
+
+@unnumberedsec Version 32.6 changes
+
+Foobar.
+
+@bye

@@ -846,22 +846,35 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
 
       while ((c = *np++)) {
          if (c == '@') {
-            if ((c = *np++) == '6' || c == 'k')
+            switch ((c = *np++)) {
+            case '6': case 'k':
                root_to_use->callflagsf |= CFLAGH__REQUIRES_SELECTOR;
-            else if (c == 'h')
+               break;
+            case 'h':
                root_to_use->callflagsf |= CFLAGH__REQUIRES_DIRECTION;
-            else if (c == 'D')
+               break;
+            case 'D':
                root_to_use->callflagsf |= CFLAGH__ODD_NUMBER_ONLY;
-            else if (c == 'v')
+               break;
+            case 'v':
                root_to_use->callflagsf |= (CFLAGH__TAG_CALL_RQ_BIT*1);
-            else if (c == 'w')
+               break;
+            case 'w':
                root_to_use->callflagsf |= (CFLAGH__TAG_CALL_RQ_BIT*2);
-            else if (c == 'x')
+               break;
+            case 'x':
                root_to_use->callflagsf |= (CFLAGH__TAG_CALL_RQ_BIT*3);
-            else if (c == 'y')
+               break;
+            case 'y':
                root_to_use->callflagsf |= (CFLAGH__TAG_CALL_RQ_BIT*4);
-            else if (c == 'N')
+               break;
+            case 'N':
                root_to_use->callflagsf |= CFLAGH__CIRC_CALL_RQ_BIT;
+               break;
+            case '0':
+               root_to_use->callflagsf |= CFLAGH__HAS_AT_ZERO;
+               break;
+            }
          }
          else if (c == '[' || c == ']')
             database_error_exit("calls may not have brackets in their name");

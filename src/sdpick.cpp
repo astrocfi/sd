@@ -344,7 +344,7 @@ bool do_tagger_iteration(uint32 tagclass,
 
    /* We don't generate "dont_use_in_resolve" taggers in any random search. */
    if (tagtable[tag]->the_defn.callflags1 & CFLAG1_DONT_USE_IN_RESOLVE)
-      fail("This shouldn't get printed.");
+      fail_no_retry("This shouldn't get printed.");
 
    *tagg = (tagclass << 5) | (tag+1);
    return false;
@@ -535,13 +535,13 @@ call_with_name *do_pick()
    
    if ((search_goal == command_level_call || search_goal == command_8person_level_call) &&
        ((dance_level) result->the_defn.level) < level_threshholds[calling_level])
-      fail("Level reject.");
+      fail_no_retry("Level reject.");
 
    rejectflag = pick_type_table[current_pick_type].exhaustive_search ?
       (CFLAG1_DONT_USE_IN_RESOLVE|CFLAG1_DONT_USE_IN_NICE_RESOLVE) :
       CFLAG1_DONT_USE_IN_RESOLVE;
 
-   if (result->the_defn.callflags1 & rejectflag) fail("This shouldn't get printed.");
+   if (result->the_defn.callflags1 & rejectflag) fail_no_retry("This shouldn't get printed.");
    return result;
 }
 

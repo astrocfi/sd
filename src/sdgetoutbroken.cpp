@@ -336,10 +336,11 @@ static bool inner_search(command_kind goal,
 
    // Since these variables are expected to be preserved
    // across the throw, they must be volatile.
+
    volatile int little_count = 0;
    volatile int attempt_count = 0;
+   volatile int attempt_start_time = clock();
 
-   int attempt_start_time = clock();
    hashed_random_list[0] = 0;
 
    /* Mark the parse block allocation, so that we throw away the garbage

@@ -2554,7 +2554,7 @@ extern bool get_real_subcall(
             if (this_is_tagger_circcer) {
                cmd_out->callspec = subsidiary_ptr->call;
                if (forbid_flip && subsidiary_ptr->call == base_calls[base_call_flip])
-                  fail("Don't say 'flip back to a wave' -- put a comma"
+                  fail_no_retry("Don't say 'flip back to a wave' -- put a comma"
                        " after the 'back' if that's what you want.");
             }
             else {
@@ -2585,7 +2585,7 @@ extern bool get_real_subcall(
       }
    }
    else if (parseptr->concept->kind != marker_end_of_list)
-      fail("wrong marker in get_real_subcall???");
+      fail_no_retry("wrong marker in get_real_subcall???");
 
    if (do_subcall_query(snumber, parseptr, newsearch,
                         this_is_tagger, this_is_tagger_circcer, orig_call))
@@ -5891,7 +5891,7 @@ static void move_with_real_call(
                         did_4x4_expansion, imprecise_rotation_result_flag, mirror, result);
    }
    catch(error_flag_type foo) {
-      if (foo != error_flag_no_retry && this_defn != deferred_array_defn) {
+      if (foo < error_flag_no_retry && this_defn != deferred_array_defn) {
          if (this_defn->compound_part) {
             this_defn = this_defn->compound_part;
             goto try_next_callspec;
@@ -6169,10 +6169,7 @@ extern void move(
    save_incoming_final = ss->cmd.cmd_final_flags;   /* In case we need to punt. */
 
    for (;;) {
-      parseptrcopy = process_final_concepts(parseptrcopy, TRUE, &ss->cmd.cmd_final_flags);
-
-      if (!parseptrcopy)
-         fail("Incomplete parse.");
+      parseptrcopy = process_final_concepts(parseptrcopy, TRUE, &ss->cmd.cmd_final_flags, true, __FILE__, __LINE__);
 
       if (parseptrcopy->concept->kind == concept_fractional &&
           ss->cmd.cmd_misc_flags & CMD_MISC__RESTRAIN_MODIFIERS) {
@@ -6258,6 +6255,7 @@ extern void move(
          if ((ss->cmd.cmd_frac_flags & CMD_FRAC_PART_MASK) == 0 ||
              (((ss->cmd.cmd_frac_flags & CMD_FRAC_CODE_MASK) != CMD_FRAC_CODE_ONLY) &&
               ((ss->cmd.cmd_frac_flags & CMD_FRAC_CODE_MASK) != CMD_FRAC_CODE_ONLYREV))) {
+            FuckingThingToTryToKeepTheFuckingStupidMicrosoftCompilerFromScrewingUp();
             switch (this_call->the_defn.schema) {
             case schema_concentric:
             case schema_concentric_6_2:
@@ -6269,8 +6267,10 @@ extern void move(
             case schema_concentric_6p_or_sgltogether:
             case schema_concentric_6p_or_normal:
             case schema_conc_o:
+               FuckingThingToTryToKeepTheFuckingStupidMicrosoftCompilerFromScrewingUp();
                break;
             default:
+               FuckingThingToTryToKeepTheFuckingStupidMicrosoftCompilerFromScrewingUp();
                goto punt;
             }
          }

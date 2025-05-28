@@ -2965,6 +2965,7 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
                                     qtag - 2FL in center; 2x2 - "1-faced" box;
                                     4x4 - consistent 2FL's; 4x2 columns - a DPT or CDPT;
                                     trngl - all 3 facing the same way.
+                                    thar/crosswave - same handedness 2FL's.
 
                                     As a qualifier, this can take the "live" and/or
                                     "left/right/in/out" mofifiers:
@@ -2972,6 +2973,7 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
                                     1x4/2x4/3x4 - R/L gives handedness of 2FL
                                     qtag - applies to center 2FL
                                     4x2 - I/O means starting/completed DPT
+                                    thar/crosswave - R/L 2FL's
 
    3x3_2fl_only    R/Q              1x6/2x6 - "2-faced lines" of 3 facing one way, 3 the other.
                                     As a qualifier, this can take the "live" modifier.
