@@ -2702,6 +2702,17 @@ extern void distorted_2x2s_move(
                else if ((livemaskBElo & 0xC30) == 0) map_ptr = mapf1;
             }
             break;
+         case s_qtag:
+            if (arity != 1) fail("Use the 'Z' concept here.");
+            {
+               // Maps for single Z in a 1/4 tag.
+               static const int8_t mapm1[8] = {7, 1, 3, 5, -1, -1, -1, -1};
+               static const int8_t mapn1[8] = {0, 3, 4, 7, -1, -1, -1, -1};
+
+               if (     (livemaskBElo & 0xCCCC) == 0) map_ptr = mapm1;
+               else if ((livemaskBElo & 0x3C3C) == 0) map_ptr = mapn1;
+            }
+            break;
          case s2x2:
             if (arity == 1) {
                update_id_bits(ss);
@@ -2710,7 +2721,7 @@ extern void distorted_2x2s_move(
             }
             break;
          default:
-            fail("Must have 3x4, 2x6, 3x6, 2x3, 4x4, 4x6, or split 1/4 tags for this concept.");
+            fail("Must have 3x4, 2x6, 3x6, 2x3, 1/4 tag, 4x4, 4x6, or split 1/4 tags for this concept.");
          }
       }
       break;
@@ -2739,8 +2750,19 @@ extern void distorted_2x2s_move(
             else if ((livemaskBElo & 0xC30) == 0) map_ptr = mapf1;
          }
          break;
+      case s_qtag:
+         if (arity != 1) fail("Use the 'Z diamond' concept here.");
+         {
+            // Maps for single Z in a 1/4 tag.
+            static const int8_t mapm1[8] = {7, 1, 3, 5};
+            static const int8_t mapn1[8] = {0, 3, 4, 7};
+
+            if (     (livemaskBElo & 0xCCCC) == 0) map_ptr = mapm1;
+            else if ((livemaskBElo & 0x3C3C) == 0) map_ptr = mapn1;
+         }
+         break;
       default:
-         fail("Must have 3x4, 2x6, 3x6, 2x3, 4x4, 4x6, or split 1/4 tags for this concept.");
+         fail("Must have 3x4, 2x6, 3x6, 2x3, 1/4 tag, 4x4, 4x6, or split 1/4 tags for this concept.");
       }
 
       break;

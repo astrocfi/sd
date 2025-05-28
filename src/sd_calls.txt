@@ -57,7 +57,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "39.19"
+version "39.20"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve dont_raise_overcast
@@ -2911,6 +2911,8 @@ call "cut the Z" c4
    // If just the center 1x2, don't know offset, but don't need it.
    setup 3x2 1x4 rotate
       array [   0 CR2E 0       0 AL0E 0]
+   setup qtag 1x4
+      array [0 0 0 AL0S ZM3N ZM1N 0 CR2S]
 
 call "reshape the triangle" c2 tag trngle_reshape
    simple_funny
@@ -3649,30 +3651,40 @@ call "turn the star @b, nobox" dontshow tag turndmdn
       array [CR0N 0 AL0S 0]
    setup pmd dmd rotate qualifier num 1 none
       array [0 CR1N 0 AL1S]
+   setup 1x4 dmd rotate qualifier num 1 none   // Empty centers?  No problem.
+      array [CR0N 0 AL0S 0]
    setup star star      qualifier num 2 none
       array [CR2S 0 AL0S 0]
    setup dmd dmd        qualifier num 2 none
       array [CR2S 0 AL0S 0]
    setup pmd dmd        qualifier num 2 none
       array [0 CR3S 0 AL1S]
+   setup 1x4 dmd        qualifier num 2 none
+      array [CR2S 0 AL0S 0]
    setup star star      qualifier num 3 none
       array [CR3W 0 AL3E 0]
    setup dmd dmd rotate qualifier num 3 none
       array [CR2S 0 AL2N 0]
    setup pmd dmd rotate qualifier num 3 none
       array [0 CR3S 0 AL3N]
+   setup 1x4 dmd rotate qualifier num 3 none
+      array [CR2S 0 AL2N 0]
    setup star star      qualifier num 4 none
       array [CR0N 0 AL2N 0]
    setup dmd dmd        qualifier num 4 none
       array [CR0N 0 AL2N 0]
    setup pmd dmd        qualifier num 4 none
       array [0 CR1N 0 AL3N]
+   setup 1x4 dmd        qualifier num 4 none
+      array [CR0N 0 AL2N 0]
    setup star star      qualifier num 5 none
       array [CCR1E 0 AAL1W 0]
    setup dmd dmd rotate qualifier num 5 none
       array [CCR0N 0 AAL0S 0]
    setup pmd dmd rotate qualifier num 5 none
       array [0 CCR1N 0 AAL1S]
+   setup 1x4 dmd rotate qualifier num 5 none
+      array [CCR0N 0 AAL0S 0]
             alternate_definition [half] a2
    setup star star      qualifier num 2 none
       array [CR1E 0 AL1W 0]
@@ -9626,6 +9638,9 @@ call "split recycle" c1 tag splitrecycle
          if 2x2_couple   [0    0    ZM0N CR1E]
          if always       [CR2S 0    0    CR1E]
 
+call "box recycle" c1
+   alias splitrecycle
+
 call "centers fold" dontshow tag ctrsfoldforrecycle
             parallel_conc_end
    // Only for weird constructions, demand live to be sure that's what is wanted.
@@ -11975,6 +11990,12 @@ call "peel and trail" a2 tag peelntrail
       array [   0 CR3E AL0E    0 CR2E AL1E]
    setup 3x2 1x4 rotate qualifier true_Z_ccw
       array [CR3E AL0E 0    CR2E AL1E 0]
+            alternate_definition [generous] c3
+   setup 2x2 dmd no_cutting_through restriction peelable_box
+      array [AL0S CR2S AL3E CR3W]
+            alternate_definition [stingy] c3
+   setup 2x2 dmd no_cutting_through restriction peelable_box
+      array [AL0S CR2S AL1W CR1E]
             alternate_definition [yoyo] c4
    setup 2x2 dmd no_cutting_through restriction peelable_box
       array [AL0S CR2S AL3E CR3W]
@@ -20198,6 +20219,8 @@ call "_grand chain 8 part 1" dontshow tag gc8p1
       array [ZM0N ZM2N ZM3N 0 0 ZM4N ZM5N ZM7N]
    setup 4x2 2x4 qualifier in in_or_out
       array [ZM1N 0    ZM3N 0 0 ZM4N 0    ZM6N]
+   setup qtag 2x4 rotate qualifier in qtag_like
+      array [0 0 ZM1W ZM1W ZM3W ZM4W ZM6W ZM6W]
    setup 2x2 2x2 qualifier split_dixie
       predscantdo
          if 2x2_antitandem     [0 0 AL1W CR0E]
@@ -23152,6 +23175,9 @@ call "step and step" c3 tag startwave
             alternate_definition [single] c4
    setup short6 2x3
       array [0 0 0 0 ZM4N 0]
+            alternate_definition [half] c3
+   setup 3x2 2x4
+      array [ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N]
 
 call "finish wave the @6" dontshow tag finishwave
             yield_if_ambiguous
@@ -26731,12 +26757,12 @@ call "_fan the gate part 1" dontshow tag fanthegate1
 
 call "_finish fan the gat@pe@q@ning@o@t" dontshow tag fanthegate2
    // See vg05 for this schema.
-   conc_or_6_2_line nullcall []
+   conc_or_2_6_line nullcall []
                     bendtheline [or_secondary_call
                                  conc_force_spots suppress_elongation_warnings]
 
 call "_finish fan the gating @0" dontshow tag fanthegating2
-   conc_or_6_2_line nullcall []
+   conc_or_2_6_line nullcall []
                     nullcall [mandatory_anycall
                               conc_force_spots suppress_elongation_warnings]
 
@@ -27288,9 +27314,9 @@ call "cross counter" c3a
         endscounter [inherit_left force_cross conc_demand_columns conc_force_otherway endscando]
 
 call "_ctrs rally" dontshow tag ctrsrally
-            visible_fractions intlk_is_inherited
+            visible_fractions intlk_is_inherited gen_sting_is_inherited
    seq stepnfold_c3b_intlk [inherit_intlk]
-   seq peelntrail [allow_plain_mod]
+   seq peelntrail [allow_plain_mod inherit_gensting]
 
 call "_ctrs rally but @m" dontshow tag ctrsrallybut2nd
             visible_fractions intlk_is_inherited
@@ -27320,8 +27346,8 @@ call "rally" c3a tag rally
       array [CM4S CR5N 0 0 0 0 CR2N AL3S]
    setup qtag 1x8 qualifier left 2fl_only
       array [CM4S CR5N AL6N CR7S 0 0 0 0]
-            fudge_to_q_tag left_means_mirror intlk_is_inherited
-   conc ctrsrally [inherit_intlk] endsrally [inherit_left conc_demand_columns endscando]
+            fudge_to_q_tag left_means_mirror intlk_is_inherited gen_sting_is_inherited
+   conc ctrsrally [inherit_intlk inherit_gensting] endsrally [inherit_left conc_demand_columns endscando]
 
 call "_natural rally" dontshow tag natural_rally
             fudge_to_q_tag left_means_touch_or_check

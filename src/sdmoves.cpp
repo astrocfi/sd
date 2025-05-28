@@ -5357,10 +5357,22 @@ void do_stuff_inside_sequential_call(
             *fix_next_assump_col_p = 0;
          }
          else if (result->cmd.callspec == base_calls[base_call_check_cross_counter]) {
-            /* Just pass everything directly -- this call does nothing. */
+            // Just pass everything directly -- this call does nothing.
             *fix_next_assumption_p = old_assumption;
             *fix_next_assump_col_p = old_assump_col;
             *fix_next_assump_both_p = old_assump_both;
+         }
+         else if (result->cmd.callspec == base_calls[base_call_armturn_n4] && result->kind == s2x4) {
+            if (old_assumption == cr_wave_only)
+               *fix_next_assumption_p = old_assumption;
+         }
+         else if (result->cmd.callspec == base_calls[base_call_ctrarmturn_n4_utb] &&
+                  result->kind == s2x4 &&
+                  (result->cmd.parseptr->options.number_fields & 1) != 0 &&
+                  (result->people[1].id1 | result->people[2].id1 |
+                   result->people[5].id1 | result->people[6].id1) == 0) {
+            if (old_assumption == cr_wave_only)
+               *fix_next_assumption_p = cr_diamond_like;
          }
       }
       else if ((result->cmd.cmd_final_flags.test_heritbits_r(INHERITFLAGR_HALF))) {
@@ -8558,7 +8570,7 @@ void move(
          case schema_concentric_or_6_2:
          case schema_concentric_2_4_or_normal:
          case schema_concentric_2_4_or_single:
-         case schema_concentric_or_6_2_line:
+         case schema_concentric_or_2_6_line:
          case schema_concentric_6p:
          case schema_concentric_6p_or_sgltogether:
          case schema_concentric_6p_or_normal:
@@ -8605,7 +8617,7 @@ void move(
             case schema_concentric_or_2_6:
             case schema_concentric_or_6_2:
             case schema_concentric_4_2_or_normal:
-            case schema_concentric_or_6_2_line:
+            case schema_concentric_or_2_6_line:
             case schema_concentric_6p:
             case schema_concentric_6p_or_sgltogether:
             case schema_concentric_6p_or_normal:

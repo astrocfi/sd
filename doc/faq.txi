@@ -26,7 +26,7 @@ be done in the usual way from there.  (You can also get into larger setups with
 things like @strong{press} and @strong{truck}.)
 
 You will now be in an eight-person setup.  You can call @strong{motivate} from
-there, without saying anything about phantoms.  Missing people don't particularly
+there, without typing anything about phantoms.  Missing people don't particularly
 bother Sd, though you may need to say something like "In your phantom waves, motivate"
 to reassure the dancers.  After doing this, you will have people as ends
 of parallel waves.  You can then call @strong{switch to a diamond}, also without
@@ -39,24 +39,36 @@ couples, @strong{assume eight chain rotary spin}.
 You very well may need to say things about working with phantoms when actually
 calling.  The exact words are something you need to figure out.  You might say
 something like @strong{with the phantoms in front of you, rotary spin}.  But the
-@strong{assume} commands are generally the preferred way to break out of a 4-person
-setup.  You would type that to the computer; you would presumably not say it
-to the dancers.
+@strong{assume} commands are generally the way you would type it to the
+computer.  You would presumably not say that to the dancers.
 
-There is no @strong{resolve} command.  You need to get the dancers home by calling.
+You almost never need to type @strong{phantom} to Sd.
+
+Sd can sometimes be cantakerous about doing calls with missing people.  You may
+be able to work around that by giving the @strong{with active phantoms} cammand
+after the @strong{assume} cammand.
+
+To get @strong{split square thru} types of openings, including things like
+@strong{spin the pulley}, give the @strong{assume split square thru setup}
+command.
 
 @unnumberedsec How do I call things like @strong{cast a shadow} from a promenade?
 
 Issue @strong{promenade, <anyone> lead for a}, followed by the call you want, as
 in @strong{promenade, sides lead for a cast a shadow}.  You can give this in
 appropriate setups, such as left-handed two-faced lines, or some kind of thar or
-as-couples star or diamond.  You have to do this in the context of a
-@strong{promenade} command.  Sd will have the people move around a suitable
+as-couples star or diamond.  Sd will have the people move around a suitable
 amount before beginning the call, to model the amount of promenading that will
-take place, so that the final position will be reasonably close.  But it isn't
+take place, so the final position will be reasonably close.  But it isn't
 exact, of course.
 
+If you are elready in a promenade setup, you can just say
+@strong{sides lead for a cast a shadow}.
+
 Calls like @strong{pinwheel} and @strong{mix and mingle} work similarly.
+
+You can also do @strong{ends pinwheel} or @strong{centers pinwheel}
+from applicable formations such as tidal lines.
 
 @unnumberedsec The program offered something that I've never heard of, or don't understand, or doesn't seem right.  What should I do?
 
@@ -566,14 +578,6 @@ question mark, and @code{Sd} will remind you of what to do.
 
 Just type it.  But there is no call @strong{press ahead and trade}.  You must say
 @strong{girls press ahead} followed by @strong{girls trade}.
-
-@unnumberedsec How can I do @strong{pinwheel}?
-
-If you are in a promenade setup, type something like @strong{sides lead
-for a pinwheel}.  The program will give you a rough guess of how far it
-thought the dancers promenaded before doing the call.  You can also do
-@strong{ends pinwheel} or @strong{centers pinwheel} from applicable
-formations such as tidal lines.
 
 @unnumberedsec How can I change the star turns on Chain Reaction?
 

@@ -552,6 +552,7 @@ const expand::thing s_1x4_1x8_ends = {{0, 1, 4, 5}, s1x4, s1x8, 0};
 const expand::thing s_1x6_1x8_ctrs = {{1, 3, 2, 5, 7, 6}, s1x6, s1x8, 0};
 const expand::thing s_qtg_2x3 = {{5, -1, 0, 1, -1, 4}, s2x3, s_qtag, 1};
 const expand::thing s_qtg_2x4 = {{5, -1, -1, 0, 1, -1, -1, 4}, s2x4, s_qtag, 1};
+const expand::thing s_2x2_gal_ctrs = {{1, 3, 5, 7}, s2x2, s_galaxy, 0};
 const expand::thing s_4x4_4x6a = {
    {4, 7, 22, 8, 13, 14, 15, 21, 16, 19, 10, 20, 1, 2, 3, 9}, s4x4, s4x6, 0};
 const expand::thing s_4x4_4x6b = {
@@ -10447,7 +10448,7 @@ const schema_attr schema_attrs[] = {
    {SCA_CENTRALCONC | SCA_SNAGOK | SCA_REMOVE_VERIFY,
     schema_nothing},                     // schema_concentric_or_diamond_line
    {SCA_CENTRALCONC | SCA_SNAGOK | SCA_DETOUR | SCA_INV_SUP_ELWARN | SCA_REMOVE_VERIFY,
-    schema_nothing},                     // schema_concentric_or_6_2_line
+    schema_nothing},                     // schema_concentric_or_2_6_line
    {SCA_REMOVE_VERIFY,
     schema_nothing},                     // schema_concentric_6_2
    {SCA_CROSS | SCA_REMOVE_VERIFY,

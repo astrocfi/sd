@@ -3406,13 +3406,18 @@ static void do_concept_assume_waves(
       goto fudge_diamond_like;
    }
    else if ((t.assump_col & 2) == 2) {
-      /* This is a special assumption -- "assume normal boxes", or "assume inverted boxes". */
-
+      // These are special assumptions -- "assume normal boxes", or "assume inverted boxes".
       if (t.assumption == cr_wave_only || t.assumption == cr_magic_only) {
          switch (ss->kind) {
             case s2x2: goto check_it;
             case s2x4: goto check_it;
          }
+      }
+      else if (t.assumption == cr_split_square_setup) {
+         if (ss->kind == s2x4)
+            goto check_it;
+         else
+            goto check_for_2x2;
       }
    }
    else if (t.assump_col == 1) {
@@ -3427,8 +3432,7 @@ static void do_concept_assume_waves(
            (ss->kind == s2x2 || ss->kind == s2x4)) ||
           ((t.assumption == cr_couples_only ||
             t.assumption == cr_miniwaves) &&
-           (ss->kind == s2x2 || ss->kind == s2x3 || ss->kind == s2x4 || ss->kind == s2x6 || ss->kind == s2x8)))
-      {
+           (ss->kind == s2x2 || ss->kind == s2x3 || ss->kind == s2x4 || ss->kind == s2x6 || ss->kind == s2x8))) {
          if (ss->kind == s2x2) {
             if (two_couple_calling) {
                no_phan_error = false;
@@ -3498,6 +3502,23 @@ static void do_concept_assume_waves(
       case cr_qtag_like:
       case cr_pu_qtag_like:
          goto fudge_diamond_like;
+      case cr_galaxy:
+         if (ss->kind == s_galaxy)
+            goto check_it;
+         else if (ss->kind == s2x2) {
+            if (two_couple_calling) {
+               no_phan_error = false;
+               expand::expand_setup(s_2x2_gal_ctrs, ss);
+               goto check_it;
+            }
+
+            else
+               goto bad_assume;
+         }
+      case cr_split_square_setup:
+         switch (ss->kind) {
+         case s2x2: goto check_for_2x2;
+         }
       }
    }
 
@@ -7868,9 +7889,13 @@ static void do_concept_meta(
 
             do_call_in_series_and_update_bits(result);
 
-            // Is this the right thing to do?  Test pt02 seems to think so.
+            // Is this the right thing to do?  
+            // Cf. tests pt00, pt01, and pt02.
             // We really don't completely know how two-couple stuff is supposed to work.
-            if (two_couple_calling) normalize_setup(result, normalize_to_4, true);
+            if (two_couple_calling &&
+                (yescmd.parseptr->concept->kind == concept_meta ||
+                 yescmd.parseptr->concept->kind == concept_each_1x4))
+               normalize_setup(result, normalize_to_4, true);
 
             // And the rest of the call without it.
             // Try to figure out whether there is more.

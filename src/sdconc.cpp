@@ -1792,9 +1792,15 @@ static calldef_schema concentrify(
       else
          analyzer_result = schema_concentric;
       break;
-   case schema_concentric_or_6_2_line:
-      if (ss->kind == s3x1dmd)
-         analyzer_result = schema_concentric_6_2_line;
+   case schema_concentric_or_2_6_line:
+      if (ss->kind == s3x1dmd) {
+         if ((livemask & 0xCC) == 0 && two_couple_calling) {
+            normalize_setup(ss, normalize_to_4, true);     // Get rid of the outlier.
+            analyzer_result = schema_concentric_2_4;       // The pt04 case.
+         }
+         else
+            analyzer_result = schema_concentric_6_2_line;  // The vg05 case.
+      }
       else
          analyzer_result = schema_concentric;
       break;

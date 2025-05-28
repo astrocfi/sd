@@ -4797,6 +4797,7 @@ extern const expand::thing s_1x4_1x8_ends;
 extern const expand::thing s_1x6_1x8_ctrs;
 extern const expand::thing s_qtg_2x3;
 extern const expand::thing s_qtg_2x4;
+extern const expand::thing s_2x2_gal_ctrs;
 extern const expand::thing s_4x4_4x6a;
 extern const expand::thing s_4x4_4x6b;
 extern const expand::thing s_4x4_4dma;

@@ -47,7 +47,7 @@
 // database format version.
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 369
+#define DATABASE_FORMAT_VERSION 374
 
 
 // We used to do some stuff to cater to compiler vendors (e.g. Sun
@@ -226,6 +226,7 @@ enum base_call_index {
    base_base_hinge_for_breaker,
    base_base_hinge_and_then_trade,
    base_base_hinge_and_then_trade_for_breaker,
+   base_call_ctrarmturn_n4_utb,
    base_call_two_o_circs,
    base_call_cloverleaf,
    base_call_clover,
@@ -1174,6 +1175,8 @@ enum call_restriction {
    cr_real_3_4_tag,        // Restriction only.
    cr_real_1_4_line,       // Restriction only.
    cr_real_3_4_line,       // Restriction only.
+   cr_galaxy,              // Restriction only.
+   cr_split_square_setup,  // Restriction only.
    cr_jleft,               // Restriction only.
    cr_jright,              // Restriction only.
    cr_ijleft,              // Restriction only.
@@ -1238,7 +1241,7 @@ enum calldef_schema {
    schema_concentric_zs,
    schema_cross_concentric_zs,
    schema_concentric_or_diamond_line,
-   schema_concentric_or_6_2_line,
+   schema_concentric_or_2_6_line,
    schema_concentric_6_2,
    schema_cross_concentric_6_2,
    schema_concentric_6_2_line,
