@@ -316,6 +316,11 @@ static collision_map collision_map_table[] = {
     s3x1dmd,     s3x1dmd,     0, warn__none, 0},                  // Same.
    {6, 0x00000088, 0x0EE, 0x022, {3, 5, 6, 7, 1, 2}, {3, 5, 6, 7, 0, 2},    {3, 4, 6, 7, 1, 2},
     s3x1dmd,     s3x1dmd,     0, warn__none, 0},                  // Same.
+
+   // 1/2 circulate.
+   {6, 0x00000088, 0x0BB, 0x022, {0, 1, 3, 4, 5, 7}, {0, 1, 3, 4, 6, 7},    {0, 2, 3, 4, 5, 7},
+    s3x1dmd,     s3x1dmd,     0, warn__none, 0},                  // Same.
+
    // Phantom 1/2 circulate.
    {6, 0x00000000, 0x077, 0x022, {0, 1, 2, 4, 5, 6}, {0, 1, 2, 4, 7, 6},    {0, 3, 2, 4, 5, 6},
     s3x1dmd,     s1x8,        0, warn__none, 0},
@@ -3373,6 +3378,13 @@ static int divide_the_setup(
             }
             else {
                uint32_t foo = (ss->cmd.prior_elongation_bits | ~elong) & 3;
+
+               /* This was put in for 2022.8.9@1901.  Unfortunately, it broke
+                  everything.  Revisit.
+               if (ss->cmd.cmd_misc3_flags & CMD_MISC3__DOING_ENDS) {
+                  foo = ss->cmd.prior_elongation_bits ^ 3;
+               }
+*/
 
                if (foo == 0) {
                   fail("Can't figure out who should be working with whom.");

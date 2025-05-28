@@ -206,6 +206,8 @@ concept_descriptor conzept::unsealed_concept_descriptor_table[] = {
     UC_none, 0, 0,                    0x000, tandem_key_diamond},
    {"Y's ARE SOLID",                         concept_tandem,                F+D, l_c4,
     UC_none, 0, 0,                    0x000, tandem_key_ys},
+   {"Z's ARE SOLID",                         concept_tandem,                F+D, l_c4,
+    UC_none, 0, 0,                    0x000, tandem_key_zs},
    {"SKEW",                                  concept_tandem,                  D, l_c4,
     UC_none, 0, 0,                    0x000, tandem_key_skew},
    {"GRUESOME AS COUPLES",                   concept_gruesome_tandem,         D, l_c4a,
@@ -308,6 +310,8 @@ concept_descriptor conzept::unsealed_concept_descriptor_table[] = {
     UC_none, 0, 0,                    0x020, tandem_key_3x1tgls},
    {"Y's ARE SOLID @9/@9 Y-SOME",            concept_frac_tandem,           F+D, l_c4,
     UC_none, 0, 0,                    0x020, tandem_key_ys},
+   {"Z's ARE SOLID @9/@9 Z-SOME",            concept_frac_tandem,           F+D, l_c4,
+    UC_none, 0, 0,                    0x020, tandem_key_zs},
 
    {"COUPLES TWOSOME",                       concept_tandem,                  D, l_c3a,
     UC_cpl2s, 0, 0,                   0x010, tandem_key_cpls},
@@ -333,6 +337,8 @@ concept_descriptor conzept::unsealed_concept_descriptor_table[] = {
     UC_none, 0, 0,                    0x010, tandem_key_diamond},
    {"Y-SOME",                                concept_tandem,                F+D, l_c4,
     UC_none, 0, 0,                    0x010, tandem_key_ys},
+   {"Z-SOME",                                concept_tandem,                F+D, l_c4,
+    UC_none, 0, 0,                    0x010, tandem_key_zs},
    {"SKEWSOME",                              concept_tandem,                  D, l_c4,
     UC_none, 0, 0,                    0x010, tandem_key_skew},
    {"GRUESOME TWOSOME",                      concept_gruesome_tandem,         D, l_c4a,
@@ -435,6 +441,8 @@ concept_descriptor conzept::unsealed_concept_descriptor_table[] = {
     UC_none, 0, 0,                    0x030, tandem_key_3x1tgls},
    {"Y-SOME @9/@9 SOLID",                    concept_frac_tandem,           F+D, l_c4,
     UC_none, 0, 0,                    0x030, tandem_key_ys},
+   {"Z-SOME @9/@9 SOLID",                    concept_frac_tandem,           F+D, l_c4,
+    UC_none, 0, 0,                    0x030, tandem_key_zs},
 
    // Things to be used only with <various triangles> work <whatever>
    {"SOLID",                                 concept_tandem,                F+D, l_c2,

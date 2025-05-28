@@ -547,18 +547,18 @@ static tm_thing maps_isearch_boxsome[] = {
 
    // Special maps for couples 1/8 twosome stuff.
    // These need further work in the table initializer.
-   {{3, 4, 28, 27,        13, 9, 30, 26,   14, 10, 29, 25,   12, 11, 19, 20}, 03333ULL,   0xFF,  4, 0,  s2x2,  shyper4x8b},
-   {{14, 10, 29, 25,      3, 4, 28, 27,    12, 11, 19, 20,   13, 9, 30, 26},  01111ULL,   0xFF,  4, 0,  s2x2,  shyper4x8b},
-   {{14, 4, 29, 27,       3, 9, 28, 26,    12, 10, 19, 25,   13, 11, 30, 20}, 03131ULL,   0xFF,  4, 0,  s2x2,  shyper4x8b},
-   {{3, 10, 28, 25,       13, 4, 30, 27,   14, 11, 29, 20,   12, 9, 19, 26},  01313ULL,   0xFF,  4, 0,  s2x2,  shyper4x8b},
-   {{20, 22, 9, 11,       2, 3, 5, 4,      17, 16, 14, 15,   21, 23, 8, 10},  01111ULL,   0xFF,  4, 0,  s1x4,  shyper3x8},
-   {{2, 3, 5, 4,          21, 23, 8, 10,   20, 22, 9, 11,    17, 16, 14, 15}, 03333ULL,   0xFF,  4, 0,  s1x4,  shyper3x8},
-   {{20, 3, 9, 4,         2, 23, 5, 10,    17, 22, 14, 11,   21, 16, 8, 15},  03131ULL,   0xFF,  4, 0,  s1x4,  shyper3x8},
-   {{2, 22, 5, 11,        21, 3, 8, 4,     20, 16, 9, 15,    17, 23, 14, 10}, 01313ULL,   0xFF,  4, 0,  s1x4,  shyper3x8},
-   {{6, 3,       0, 1,      5, 4,    7, 2},                                   011ULL,      0xF,  2, 0,  s1x2,  s_2stars},
-   {{0, 1,       7, 2,      6, 3,    5, 4},                                   033ULL,      0xF,  2, 0,  s1x2,  s_2stars},
-   {{6, 1,       0, 2,      5, 3,    7, 4},                                   031ULL,      0xF,  2, 0,  s1x2,  s_2stars},
-   {{0, 3,       7, 1,      6, 4,    5, 2},                                   013ULL,      0xF,  2, 0,  s1x2,  s_2stars},
+   {{3, 4, 28, 27,        13, 9, 30, 26,   14, 10, 29, 25,   12, 11, 19, 20},      03333ULL,   0xFF,  4, 0,  s2x2,  shyper4x8b},
+   {{14, 10, 29, 25,      3, 4, 28, 27,    12, 11, 19, 20,   13, 9, 30, 26},       01111ULL,   0xFF,  4, 0,  s2x2,  shyper4x8b},
+   {{14, 4, 29, 27,       3, 9, 28, 26,    12, 10, 19, 25,   13, 11, 30, 20},      03131ULL,   0xFF,  4, 0,  s2x2,  shyper4x8b},
+   {{3, 10, 28, 25,       13, 4, 30, 27,   14, 11, 29, 20,   12, 9, 19, 26},       01313ULL,   0xFF,  4, 0,  s2x2,  shyper4x8b},
+   {{20, 22, 9, 11,       2, 3, 5, 4,      17, 16, 14, 15,   21, 23, 8, 10},       01111ULL,   0xFF,  4, 0,  s1x4,  shyper3x8},
+   {{2, 3, 5, 4,          21, 23, 8, 10,   20, 22, 9, 11,    17, 16, 14, 15},      03333ULL,   0xFF,  4, 0,  s1x4,  shyper3x8},
+   {{20, 3, 9, 4,         2, 23, 5, 10,    17, 22, 14, 11,   21, 16, 8, 15},       03131ULL,   0xFF,  4, 0,  s1x4,  shyper3x8},
+   {{2, 22, 5, 11,        21, 3, 8, 4,     20, 16, 9, 15,    17, 23, 14, 10},      01313ULL,   0xFF,  4, 0,  s1x4,  shyper3x8},
+   {{6, 3,       0, 1,      5, 4,    7, 2},       011ULL,      0xF,  2, 0,  s1x2,  s_2stars},
+   {{0, 1,       7, 2,      6, 3,    5, 4},       033ULL,      0xF,  2, 0,  s1x2,  s_2stars},
+   {{6, 1,       0, 2,      5, 3,    7, 4},       031ULL,      0xF,  2, 0,  s1x2,  s_2stars},
+   {{0, 3,       7, 1,      6, 4,    5, 2},       013ULL,      0xF,  2, 0,  s1x2,  s_2stars},
 
 
    {{11, 2, 7, 20,     10, 3, 6, 21,     18, 9, 22, 15,    19, 8, 23, 14},        02222ULL,0x0FCCFCC,  4, 0,  sdmd,  s4x6},
@@ -649,23 +649,21 @@ static tm_thing maps_isearch_ysome[] = {
 
 
 
-static tm_thing maps_isearch_zsome_ccw[] = {
+static tm_thing maps_isearch_zsome_left[] = {
 //   map1              map2              map3              map4               ilatmask3 olatmask    limit rot  insetup outsetup
-// All maps require octal "2" bit and "20" bit of ilatmask3 be on.  And all digits even.
-// All getouts will be to a 2x6, and unpack_us will straighten it out.
+// All maps require octal "2" bit and "20" bit of ilatmask3 be on.
    {{0, 3,             1, 4,             10, 7,             9, 6},              066ULL,   03333,        2, 0,  s1x2,  s2x6},
-   {{10, 7,            0, 3,              9, 6,             1, 4},                0ULL,       0,        2, 0,  s1x2,  s2x6},
-   {{10, 5,            1, 3,              9, 7,            11, 4},              066ULL,   07272,        2, 0,  s1x2,  s3x4},
+   {{10, 5,            1, 3,              9, 7,            11, 4},              022ULL,   07272,        2, 0,  s1x2,  s3x4},
    {{0}, 0ULL,0, 0, 0,  nothing, nothing}};
 
-static tm_thing maps_isearch_zsome_cw[] = {
+static tm_thing maps_isearch_zsome_right[] = {
 //   map1              map2              map3              map4               ilatmask3 olatmask    limit rot  insetup outsetup
-// All maps require octal "2" bit and "20" bit of ilatmask3 be on.  And all digits even.
-// All getouts will be to a 2x6, and unpack_us will straighten it out.
+// All maps require octal "2" bit and "20" bit of ilatmask3 be on.
    {{1, 4,             2, 5,             11, 8,            10, 7},              022ULL,   06666,        2, 0,  s1x2,  s2x6},
-   {{11, 8,            1, 4,             10, 7,             2, 5},                0ULL,       0,        2, 0,  s1x2,  s2x6},
-   {{0, 2,            11, 4,             10, 5,             8, 6},              066ULL,   06565,        2, 0,  s1x2,  s3x4},
+   {{0, 2,            11, 4,             10, 5,             8, 6},              022ULL,   06565,        2, 0,  s1x2,  s3x4},
    {{0}, 0ULL,0, 0, 0,  nothing, nothing}};
+
+
 
 
 
@@ -881,8 +879,8 @@ extern void initialize_tandem_tables()
    initialize_one_table(maps_isearch_tglsome, 3);
    initialize_one_table(maps_isearch_3x1tglsome, 4);
    initialize_one_table(maps_isearch_ysome, 4);
-   initialize_one_table(maps_isearch_zsome_ccw, 4);
-   initialize_one_table(maps_isearch_zsome_cw, 4);
+   initialize_one_table(maps_isearch_zsome_left, 4);
+   initialize_one_table(maps_isearch_zsome_right, 4);
    initialize_one_table(maps_isearch_mimictwo, 2);
    initialize_one_table(maps_isearch_mimicfour, 2);
    initialize_one_table(maps_isearch_fudgy2x3, 2);
@@ -1606,9 +1604,9 @@ extern void tandem_couples_move(
       no_unit_symmetry = false;
 
       if ((ss->kind == s2x6 && livemask64 == 0x3CF3CF) || (ss->kind == s3x4 && livemask64 == 0xCCFCCF))
-         our_map_table = maps_isearch_zsome_cw;
+         our_map_table = maps_isearch_zsome_right;
       else if ((ss->kind == s2x6 && livemask64 == 0xF3CF3C) || (ss->kind == s3x4 && livemask64 == 0x33F33F))
-         our_map_table = maps_isearch_zsome_ccw;
+         our_map_table = maps_isearch_zsome_left;
       else
          fail("Can't find the Z's.");
    }
@@ -2320,6 +2318,8 @@ extern void tandem_couples_move(
       impose_assumption_and_move(&tandstuff.m_virtual_setup[0], &ttt[0], true);
    }
 
+   uint64_t initial_ilatmask3 = incoming_map->ilatmask3;
+
    // This loop runs only once, unless melded, in which case it runs eight times.
    for (finalcount = 0 ; finalcount <= tttcount ; finalcount++) {
       tandstuff.virtual_result = ttt[finalcount];
@@ -2446,15 +2446,17 @@ extern void tandem_couples_move(
          hmask = hmask3;
       }
 
-      bool fudged_zmap_to_boxes = false;
-      map_search = our_map_table;
+      //      if (key == tandem_key_zs) {
+      //         livemask = livemask3;
+      //         hmask = initial_ilatmask3;
+      //      }
 
       // If doing a "fudgy 2x3", we have to do two separate actions, with two different getin maps.
       if (fudgy2x3limit != 0) {
          map_search = incoming_map;
       }
-      else if (key == tandem_key_zs) {
-         fudged_zmap_to_boxes = true;
+      else {
+         map_search = our_map_table;
       }
 
       // We don't accept the special 1/8-twosome maps from the "maps_isearch_boxsome"
@@ -2466,8 +2468,7 @@ extern void tandem_couples_move(
          if ((map_search->insetup == tandstuff.virtual_result.kind) &&
              (!map_search->map_is_eighth_twosome || key != tandem_key_box) &&
              (map_search->insinglemask & livemask) == sglmask &&
-             ((key == tandem_key_zs && !fudged_zmap_to_boxes) ||
-              (map_search->ilatmask3 & livemask) == hmask) &&
+             (map_search->ilatmask3 & livemask) == hmask &&
              !(map_search->rot&0x10 && tandstuff.m_virtual_setup[0].kind != s1x6)) {
             if (tandstuff.virtual_result.kind != s1p5x4)
                break;
@@ -2656,38 +2657,6 @@ extern void tandem_couples_move(
 
       *result = ttt[horizontal_2x4_indices];
    }
-   
-
-
-   if (key == tandem_key_zs && result->kind == s2x6) {
-      static const expand::thing thing_cw = {{-1, 0, 11, -1, 2, 4, -1, 6, 5, -1, 8, 10}, s2x6, s3x4, 0};
-      static const expand::thing thing_ccw = {{10, 1, -1, 5, 3, -1, 4, 7, -1, 11, 9, -1}, s2x6, s3x4, 0};
-
-      if (ss->kind == s2x6) {
-         if (map_search->ilatmask3 == 0) {
-            if (livemask64 == 0xF3CF3C) {
-               expand::expand_setup(thing_ccw, result);  // For test C
-            }
-            else if (livemask64 == 0x3CF3CF) {
-               expand::expand_setup(thing_cw, result);   // For test B
-            }
-         }
-      }
-      else if (ss->kind == s3x4) {
-         if (map_search->ilatmask3 != 0) {
-            if (livemask64 == 0x33F33F) {
-               expand::expand_setup(thing_ccw, result);  // For test E
-            }
-            else if (livemask64 == 0xCCFCCF) {
-               expand::expand_setup(thing_cw, result);   // For test D
-            }
-         }
-      }
-      else
-         fail("Sorry, can't handle this result setup.");   // Shouldn't happen.
-   }
-
-
 
    // Don't raise the "phantom tandem" warning if it's just a 2x4 to a 2x4
    // that splits into 1x2's.  That is, things like tandem hinge from clumps.

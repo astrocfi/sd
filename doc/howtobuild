@@ -229,7 +229,7 @@ from sd or sddoc to the archive subdirectory.
 -------------------------------------------------------------------------------
 Start WinSCP.  Choose host www.challengedance.org and
 user name USERNAME  (P=PASSWORD)
-On right pane, choose public_html/sd
+On right pane, choose public_html/sd (It might already be showing that.)
 On left pane, navigate to C:\Users\wba\sdfullarchive\vnnnn
    or wherever the pack.zip file is.
 Drag left to right.  Exit from WinSCP.
@@ -244,31 +244,3 @@ Login as USERNAME  (P=PASSWORD)
   challengedance.org> exit
 
 The c4 books (book1.pdf etc.) go into the same directory.
-
-
------------------------------------------------------------------
-RUBBISH              UPLOADING TO LYNETTE'S WEB SITE
-RUBBISH              UBUNTU -- THIS NO LONGER WORKS ON WINDOZE.
-RUBBISH     BRING THE FILE (and sd_source too) OVER TO UBUNTU, as shown above.
------------------------------------------------------------------
-RUBBISH Now, in directory ~/vNNNN, do:
-
-RUBBISH sftp USERNAME@www.challengedance.org
-RUBBISH   challengedance.org> (P=PASSWORD)
-RUBBISH   challengedance.org> cd public_html/sd
-RUBBISH   challengedance.org> put pack.zip
-RUBBISH   challengedance.org> (Check size)
-RUBBISH (upload linux program:)
-RUBBISH   challengedance.org> lcd ~/sd
-RUBBISH   challengedance.org> put linux.tgz
-RUBBISH   challengedance.org> quit
-
-
-RUBBISH rsh USERNAME@www.challengedance.org
-RUBBISH   challengedance.org> (P=PASSWORD)
-RUBBISH   challengedance.org> cd public_html/sd
-RUBBISH   challengedance.org> unzip pack.zip
-RUBBISH   challengedance.org> rm pack.zip
-RUBBISH   challengedance.org> exit
-
-RUBBISH The c4 books (book1.pdf etc.) go into the same directory.

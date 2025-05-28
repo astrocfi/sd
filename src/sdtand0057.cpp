@@ -652,19 +652,21 @@ static tm_thing maps_isearch_ysome[] = {
 static tm_thing maps_isearch_zsome_ccw[] = {
 //   map1              map2              map3              map4               ilatmask3 olatmask    limit rot  insetup outsetup
 // All maps require octal "2" bit and "20" bit of ilatmask3 be on.  And all digits even.
-// All getouts will be to a 2x6, and unpack_us will straighten it out.
+// Make it always choose the first getout maps.  All getouts will be to a 2x6,
+// and unpack_us will straighten it out.
    {{0, 3,             1, 4,             10, 7,             9, 6},              066ULL,   03333,        2, 0,  s1x2,  s2x6},
-   {{10, 7,            0, 3,              9, 6,             1, 4},                0ULL,       0,        2, 0,  s1x2,  s2x6},
    {{10, 5,            1, 3,              9, 7,            11, 4},              066ULL,   07272,        2, 0,  s1x2,  s3x4},
    {{0}, 0ULL,0, 0, 0,  nothing, nothing}};
 
 static tm_thing maps_isearch_zsome_cw[] = {
 //   map1              map2              map3              map4               ilatmask3 olatmask    limit rot  insetup outsetup
 // All maps require octal "2" bit and "20" bit of ilatmask3 be on.  And all digits even.
-// All getouts will be to a 2x6, and unpack_us will straighten it out.
-   {{1, 4,             2, 5,             11, 8,            10, 7},              022ULL,   06666,        2, 0,  s1x2,  s2x6},
-   {{11, 8,            1, 4,             10, 7,             2, 5},                0ULL,       0,        2, 0,  s1x2,  s2x6},
-   {{0, 2,            11, 4,             10, 5,             8, 6},              066ULL,   06565,        2, 0,  s1x2,  s3x4},
+// Make it always choose the first getout maps.  All getouts will be to a 2x6,
+// and unpack_us will straighten it out.
+   //  Note that olat=0xFF means this will be used for getout only; it's been poisoned for getin.
+   {{1, 4,             2, 5,             11, 8,            10, 7},              022ULL,   06666,      2, 0,  s1x2,  s2x6},
+   {{11, 8,            1, 4,             10, 7,             2, 5},               0ULL,       0,       2, 0,  s1x2,  s2x6},
+   {{0, 2,            11, 4,             10, 5,             8, 6},              066ULL,   06565,      2, 0,  s1x2,  s3x4},
    {{0}, 0ULL,0, 0, 0,  nothing, nothing}};
 
 
@@ -2656,38 +2658,6 @@ extern void tandem_couples_move(
 
       *result = ttt[horizontal_2x4_indices];
    }
-   
-
-
-   if (key == tandem_key_zs && result->kind == s2x6) {
-      static const expand::thing thing_cw = {{-1, 0, 11, -1, 2, 4, -1, 6, 5, -1, 8, 10}, s2x6, s3x4, 0};
-      static const expand::thing thing_ccw = {{10, 1, -1, 5, 3, -1, 4, 7, -1, 11, 9, -1}, s2x6, s3x4, 0};
-
-      if (ss->kind == s2x6) {
-         if (map_search->ilatmask3 == 0) {
-            if (livemask64 == 0xF3CF3C) {
-               expand::expand_setup(thing_ccw, result);  // For test C
-            }
-            else if (livemask64 == 0x3CF3CF) {
-               expand::expand_setup(thing_cw, result);   // For test B
-            }
-         }
-      }
-      else if (ss->kind == s3x4) {
-         if (map_search->ilatmask3 != 0) {
-            if (livemask64 == 0x33F33F) {
-               expand::expand_setup(thing_ccw, result);  // For test E
-            }
-            else if (livemask64 == 0xCCFCCF) {
-               expand::expand_setup(thing_cw, result);   // For test D
-            }
-         }
-      }
-      else
-         fail("Sorry, can't handle this result setup.");   // Shouldn't happen.
-   }
-
-
 
    // Don't raise the "phantom tandem" warning if it's just a 2x4 to a 2x4
    // that splits into 1x2's.  That is, things like tandem hinge from clumps.

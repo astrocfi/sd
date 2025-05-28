@@ -2,7 +2,7 @@
 @c user documentation for Sd (square dance caller's helper)
 @c
 @set sd-version 39.46
-@set Time-stamp: August 10, 2022
+@set Time-stamp: November 17, 2022
 @c
 @setfilename sd_doc.info
 @c We want the version number to show in the html file.
@@ -4161,6 +4161,8 @@ These concepts are the same.  The setups are end-to-end.
 @item siamese of 4@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ siamese foursome
 @item boxes are solid@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ boxsome
 @item diamonds are solid@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ diamondsome
+@item Y's are solid@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ Y-some
+@item Z's are solid@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ Z-some
 @item skew@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ skewsome
 @item @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ gruesome twosome
 @item gruesome as couples@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ gruesome couples twosome
@@ -4181,7 +4183,6 @@ These concepts are the same.  The setups are end-to-end.
 @item tandem-based triangles are solid@ @ @ @ @ @ tandem-based triangles are threesome
 @item <ANYONE>-based triangles are solid@ @ @ @ <ANYONE>-based triangles are threesome
 @item 3x1 triangles are solid@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ 3x1 triangles are trianglesome
-@item Y's are solid@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ Y-some
 These are straightforward.
 
 Any of the above twosome/threesome/whateversome may also be

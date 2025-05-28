@@ -55,7 +55,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "39.46"
+version "39.47"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve dont_raise_overcast
@@ -16875,7 +16875,7 @@ call "lead @eright@f" mainstream
 call "wheel fan thru" c1
             left_means_mirror
    setup 2x2 2x2
-      array [0 0 CR2E CR3W]
+      array [0 0 CR2E CM3W]
             alternate_definition [half] c1
    setup 2x2 dmd plus_eighth_rotation qualifier in live in_or_out
       array [0 0 CR2N CR1E]
@@ -18172,6 +18172,17 @@ call "chuck-a-luck part 1" dontshow tag chuckaluck1
    setup 1x4 1x4
       array [CM1E CR2S AM3W AL0S]
 
+call "ends as you are chuck-a-luck part 1" dontshow tag chuckaluck1endsasare
+   setup 1x4 1x4
+      array [0 AL0S 0 CR2S]
+   setup 4x1 1x4
+      array [ZM1N 0 0 0]
+            alternate_definition [cross] c3
+   setup 1x4 1x4
+      array [0 CR2S 0 AL0S]
+   setup 4x1 1x4
+      array [ZM1N 0 0 0]
+
 call "chuck-a-luck part 2" dontshow tag chuckaluck2
             cross_is_inherited
    conc chuckaluck2ctr [inherit_cross]
@@ -18185,14 +18196,15 @@ call "chuck-a-luck part 2, ctr" dontshow tag chuckaluck2ctr
       array [0 0 ZM0N ZM1N]
 
 call "chuck-a-luck" c3
-   setup 2x4 2x4
-      array [CM2E AL7E CR4W AM1W AM6W 0 0 CM5E]
-            alternate_definition [cross] c3
-   setup 2x4 2x4
-      array [CM5E CR4W AL7E AM6W AM1W 0 0 CM2E]
             visible_fractions
             cross_is_inherited
    seq chuckaluck1 [inherit_cross]
+   seq chuckaluck2 [inherit_cross]
+
+call "ends go as you are,@C chuck-a-luck" c3
+            visible_fractions
+            cross_is_inherited
+   seq chuckaluck1endsasare [inherit_cross]
    seq chuckaluck2 [inherit_cross]
 
 call "mix the line" c4
@@ -20720,6 +20732,20 @@ call "@0 the plank" c4a
             visible_fractions
    seq nullcall [mandatory_anycall]
    seq plank []
+
+call "the plank but @m" c4a tag plankbut
+            visible_fractions
+   conc nullsecond [mandatory_secondary_call] leadrun [conc_demand_columns conc_force_spots endscando]
+
+call "@0 the plank but @m" c4a
+            visible_fractions
+   seq nullcall [mandatory_anycall]
+   seq plankbut []
+
+call "walk the plank but @m" c4a
+            visible_fractions
+   seq circulate []
+   seq plankbut []
 
 call "cut across" c4a
    setup 4x2 2x4
@@ -25812,6 +25838,16 @@ call "push open the gate" c4
    seq endsbend []
    seq pass_thru_slide_thru []
 
+call "push open the gate but @m" c4
+            first_part_visible
+   seq centersinifneeded []
+   seq cast_off_n4 [allow_forced_mod insert_number 3]
+   seq endsbend []
+   seq null_w_slide_thru []
+
+call "_null with slide thru @m" dontshow tag null_w_slide_thru
+   conc nullsecond [mandatory_secondary_call] slidethru [conc_demand_lines conc_force_spots]
+
 call "centers thru and close the gate" c4
    seq centersinifneeded []
    seq twist1 []
@@ -26766,6 +26802,11 @@ call "lock the hinge the lock" c3a
    seq hinge [inherit_fractal]
    seq lockit [inherit_fractal]
 
+call "lock the @m" dontshow tag locktheanything
+            visible_fractions fractal_is_inherited
+   seq lockit [inherit_fractal]
+   seq nullsecond [mandatory_secondary_call]
+
 call "hinge the@C lock" c3a
             cross_is_inherited visible_fractions fractal_is_inherited
    seq hinge [inherit_fractal]
@@ -27718,6 +27759,12 @@ call "little" c1 tag little
    conc4_2_or_normal stepnfold [inherit_intlk inherit_straight]
                      endslittle [inherit_left inherit_straight conc_force_otherway
                                 only_force_elong_if_empty endscando]
+            left_means_mirror intlk_is_inherited
+   setup 2x1dmd short6
+      array [0 0 0 0 0 0]  // Mist have interlocked
+            alternate_definition [interlocked] c3a
+   setup 2x1dmd short6 rotate
+      array [CR0E ZM5W CR1E AL5E ZM0W CAL1W]
 
 call "little but @m" c1 tag littlebut2nd
             fudge_to_q_tag left_means_mirror
@@ -28819,6 +28866,21 @@ call "_finish choice" dontshow tag finchoice
 
 call "_rewind finish choice" dontshow tag rewfinchoice
    conc hinge [] zoom [force_half]
+
+call "choice but @m" c3a tag choicebut
+            visible_fractions dont_use_in_resolve
+   conc locktheanything []
+        tradestpnfld [allow_forced_mod suppress_elongation_warnings endscando]
+
+call "@2lock@3er's choice but @m" c3a
+            visible_fractions cross_is_inherited dont_use_in_resolve
+   seq lockit [inherit_cross or_anycall normalize]
+   seq choicebut []
+
+call "@0 er's choice but @m" c3a
+            dont_use_in_resolve
+   seq nullcall [mandatory_anycall normalize]
+   seq choicebut []
 
 // We define it this way so one can do a "snag choice".  One can also fractionalize.
 call "choice" c3a

@@ -3492,6 +3492,7 @@ static expand::thing step_bn_stuff = {{0, 7, 2, 1, 4, 3, 6, 5}, s2x4, s_bone, 0}
 static expand::thing step_bn23_stuff = {{0, 2, 1, 3, 5, 4}, s2x3, s_bone6, 0};
 static expand::thing step_24bn_stuff = {{0, 3, 5, 2, 4, 7, 1, 6}, s_bone, s2x4, 0};
 static expand::thing step_23bn_stuff = {{0, 2, 4, 3, 5, 1}, s_bone6, s2x3, 0};
+static expand::thing step_16bn_stuff = {{1, 3, 5, 4, 0, 2}, s_bone6, s1x6, 0};
 static expand::thing step_232a_stuff = {{-1, 0, 7, 6, -1, 1, -1, 4, 3, 2, -1, 5}, s_23232, s2x4, 1};
 static expand::thing step_232b_stuff = {{7, -1, -1, 0, 1, 2, 3, -1, -1, 4, 5, 6}, s_23232, s2x4, 1};
 static expand::thing step_tby_stuff = {{5, 6, 7, 0, 1, 2, 3, 4}, s2x4, s_qtag, 1};
@@ -3774,6 +3775,8 @@ full_expand::thing touch_init_table3[] = {
 
    // Check for centers stepping to a column of 6 from a bone6.
    {warn__none,       0, &step_23bn_stuff,    s_bone6,       07777U,      02725U,  02727U},
+   // Check for ends stepping to a line of 6 from a bone6.
+   {warn__none,       0, &step_16bn_stuff,    s_bone6,       07777U,      05000U,  07575U},
 
    // Check for some people facing after a "1/2 make magic".
    {warn__may_be_fudgy,0,&step_232a_stuff,    s_23232,       0x003F33F3U, 0x001733D1U, 0x003F33F3U},
