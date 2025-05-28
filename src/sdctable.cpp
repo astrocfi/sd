@@ -1504,7 +1504,7 @@ concept_descriptor conzept::unsealed_concept_descriptor_table[] = {
     UC_none},
    {"ROTARY",                                concept_rotary,                  D, l_c4a,
     UC_none},
-   {"SCATTER",                               concept_scatter,               L+D, l_c3a,
+   {"SCATTER",                               concept_scatter,               L+D, l_c1,
     UC_none},
    {"CROSS OVER",                            concept_crossover,             L+D, l_a1,
     UC_none},

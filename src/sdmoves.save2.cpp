@@ -3613,7 +3613,7 @@ static bool try_this_split(uint32_t splitting_indicator,
       numgroups = 12;
       break;
    default:
-      return false;
+      fail("Can't do this 'anchor'.");
    }
 
    for (i=0 ; i<nump ; i++) {
@@ -3762,21 +3762,22 @@ static bool try_this_split(uint32_t splitting_indicator,
 }
 
 
-static bool try_split_and_move(setup *ss, parse_block *parseptr, uint32_t division_code,
-                               matrix_rec before_matrix_info[],
-                               matrix_rec after_matrix_info[],
-                               setup *before_people_p,
-                               setup *result)
+static bool whuzzis(setup *saved_start_people_p, parse_block *parseptr, uint32_t division_code,
+                    matrix_rec before_matrix_info[],
+                    matrix_rec after_matrix_info[],
+                    setup *before_people_p,
+                    setup *result)
 {
-   ss->rotation = 0;
-   ss->eighth_rotation = 0;
+   setup sss = *saved_start_people_p;
+   sss.rotation = 0;
+   sss.eighth_rotation = 0;
    current_options.who = parseptr->options.who;
 
    // Preserved across a throw; must be volatile.
    volatile error_flag_type maybe_throw_this = error_flag_none;
 
    try {
-      divided_setup_move(ss, division_code, phantest_ok, true, result);
+      divided_setup_move(&sss, MAPCODE(s1x2,4,MPKIND__SPLIT,1), phantest_ok, true, result);
    }
    catch(error_flag_type foo) {
       maybe_throw_this = foo;
@@ -3784,9 +3785,9 @@ static bool try_split_and_move(setup *ss, parse_block *parseptr, uint32_t divisi
 
    if (maybe_throw_this == error_flag_none) {
       uint32_t splitting_indicator = (result->result_flags.split_info[1] << 4) | result->result_flags.split_info[0];
-      int nump = start_matrix_call(ss, before_matrix_info, 0, MTX_USE_SELECTOR, before_people_p);
+      int nump = start_matrix_call(saved_start_people_p, before_matrix_info, 0, MTX_USE_SELECTOR, before_people_p);
       if (try_this_split(splitting_indicator,
-                         setup_attrs[ss->kind].bounding_box,
+                         setup_attrs[sss.kind].bounding_box,
                          nump,
                          before_matrix_info,
                          after_matrix_info,
@@ -3848,32 +3849,48 @@ extern void anchor_someone_and_move(
                       result))
       goto we_are_done;
 
+   // Preserved across a throw; must be volatile.
+   volatile error_flag_type maybe_throw_this;
+
+   // Look for the case of a 2x4 that wound up being split into two 2x2 boxes,
+   // when two 1x4's would have worked.
    if (splitting_indicator == 0x01 && ss->kind == s2x4) {
-      // A 2x4 got split into two 2x2 boxes, maybe two 1x4's would have worked.
+      // ********************** MAKE THIS
       *ss = saved_start_people;
-      if (try_split_and_move(ss, parseptr, MAPCODE(s1x4,2,MPKIND__SPLIT,1),
-                             before_matrix_info, after_matrix_info, &before_people, result))
-         goto we_are_done;
+      ss->rotation = 0;
+      ss->eighth_rotation = 0;
+      current_options.who = parseptr->options.who;
+      maybe_throw_this = error_flag_none;
 
+      try {
+         divided_setup_move(ss, MAPCODE(s1x4,2,MPKIND__SPLIT,1), phantest_ok, true, result);
+      }
+      catch(error_flag_type foo) {
+         maybe_throw_this = foo;
+      }
+
+      if (maybe_throw_this == error_flag_none) {
+         splitting_indicator = (result->result_flags.split_info[1] << 4) | result->result_flags.split_info[0];
+         nump = start_matrix_call(&saved_start_people, before_matrix_info, 0, MTX_USE_SELECTOR, &before_people);
+         if (try_this_split(splitting_indicator,
+                            setup_attrs[ss->kind].bounding_box,
+                            nump,
+                            before_matrix_info,
+                            after_matrix_info,
+                            result))
+            goto we_are_done;
+      }
+      // ************* (END)
+
+      // ***************** LOOK LIKE THIS
       // That didn't work.  Try 4 1x2's in a row.
-      *ss = saved_start_people;
-      if (try_split_and_move(ss, parseptr, MAPCODE(s1x2,4,MPKIND__SPLIT,1),
-                             before_matrix_info, after_matrix_info, &before_people, result))
+      if (whuzzis(&saved_start_people, parseptr, MAPCODE(s1x2,4,MPKIND__SPLIT,1),
+                  before_matrix_info,
+                  after_matrix_info,
+                  &before_people,
+                  result))
          goto we_are_done;
-   }
-
-   if (splitting_indicator == 0x00 && ss->kind == s2x2) {
-      // A 2x2 didn't get split at all; need to try both 1x2 splits
-      *ss = saved_start_people;
-      if (try_split_and_move(ss, parseptr, MAPCODE(s1x2,2,MPKIND__SPLIT,1),
-                             before_matrix_info, after_matrix_info, &before_people, result))
-         goto we_are_done;
-
-      // And the other way.
-      *ss = saved_start_people;
-      if (try_split_and_move(ss, parseptr, spcmap_2x2v,    // Special map; ordinary encodings can't handle this.
-                             before_matrix_info, after_matrix_info, &before_people, result))
-         goto we_are_done;
+      // ************* (END)
    }
 
    fail("Need exactly one 'anchored' person in each group.");

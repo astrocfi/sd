@@ -57,7 +57,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "39.24"
+version "39.25"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve dont_raise_overcast
@@ -12735,11 +12735,6 @@ call "_ @B by the right" dontshow tag odd_frac_by_right
       array [ZM0N 0 ZM2N 0]
    setup pmd 1x4 qualifier num 3 right wave_only
       array [0 CR1W 0 0]
-
-
-
-
-
    setup short6 1x6  rotate qualifier num 1 right dmd_ctrs_mwv
       array [CR1N 0 0 0 0 CR5N]
    setup pshort6 1x6 rotate qualifier num 1 right dmd_ctrs_mwv
