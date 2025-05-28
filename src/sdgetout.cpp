@@ -201,11 +201,17 @@ static resolve_descriptor resolve_table[] = {
 SDLIB_API void write_resolve_text(long_boolean doing_file)
 {
    resolve_indicator r = history[history_ptr].resolve_flag;
+   int distance = r.distance;
+
+   if (history[history_ptr].state.result_flags & RESULTFLAG__PLUSEIGHTH_ROT)
+      distance++;
+
+   distance &= 7;
 
    if (doing_file && !ui_options.singlespace_mode) doublespace_file();
 
    if (r.kind == resolve_circle) {
-      if ((r.distance & 7) == 0) {
+      if (distance == 0) {
          if (history[history_ptr].state.result_flags & RESULTFLAG__IMPRECISE_ROT)
             writestuff("approximately ");
          writestuff("at home");
@@ -214,16 +220,15 @@ SDLIB_API void write_resolve_text(long_boolean doing_file)
          writestuff("circle left ");
          if (history[history_ptr].state.result_flags & RESULTFLAG__IMPRECISE_ROT)
             writestuff("approximately ");
-         writestuff(resolve_distances[8 - (r.distance & 7)]);
+         writestuff(resolve_distances[8 - distance]);
          writestuff(" or right ");
          if (history[history_ptr].state.result_flags & RESULTFLAG__IMPRECISE_ROT)
             writestuff("approximately ");
-         writestuff(resolve_distances[r.distance & 7]);
+         writestuff(resolve_distances[distance]);
       }
    }
    else {
       int index = (int) r.kind;
-      int distance = r.distance;
       first_part_kind first;
       main_part_kind mainpart;
 
@@ -253,7 +258,7 @@ SDLIB_API void write_resolve_text(long_boolean doing_file)
 
       if (singing_call_mode != 0 && mainpart == main_part_rlg) {
          mainpart = main_part_swing;
-         distance += 4;
+         distance ^= 4;
       }
 
       writestuff(resolve_main_parts[mainpart]);
@@ -262,15 +267,15 @@ SDLIB_API void write_resolve_text(long_boolean doing_file)
       if (history[history_ptr].state.result_flags & RESULTFLAG__IMPRECISE_ROT)
          writestuff("approximately ");
 
-      if ((distance & 7) == 0) {
+      if (distance == 0) {
          writestuff("at home)");
       }
       else {
-         if (  r.kind == resolve_revprom ||
-               r.kind == resolve_revsglfileprom)
-            writestuff(resolve_distances[8 - (distance & 7)]);
+         if (r.kind == resolve_revprom ||
+             r.kind == resolve_revsglfileprom)
+            writestuff(resolve_distances[8 - distance]);
          else
-            writestuff(resolve_distances[distance & 7]);
+            writestuff(resolve_distances[distance]);
          writestuff(" promenade)");
       }
    }

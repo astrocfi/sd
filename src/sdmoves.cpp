@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-2000  William B. Ackerman.
+    Copyright (C) 1990-2001  William B. Ackerman.
 
     This file is unpublished and contains trade secrets.  It is
     to be used by permission only and not to be disclosed to third
@@ -266,6 +266,32 @@ extern long_boolean divide_for_magic(
 
    uint32 heritflags_to_use = ss->cmd.cmd_final_flags.her8it;
 
+   // If "magic" was specified, we have to be sure the level is
+   // high enough (e.g. C3B).  At C1, only real magic columns,
+   // and whatever calls have something explicit in the database,
+   // are permitted.
+
+   if (heritflags_to_check & INHERITFLAG_MAGIC) {
+      long_boolean booljunk;
+      assumption_thing tt;
+
+      tt.assumption = cr_magic_only;
+      tt.assump_col = 1;
+      tt.assump_both = 0;
+      tt.assump_negate = 0;
+      tt.assump_live = 0;
+      tt.assump_cast = 0;
+      if (ss->kind != s2x4 ||
+          verify_restriction(ss, tt, FALSE, &booljunk) != restriction_passes) {
+         if (calling_level < general_magic_level) {
+            if (allowing_all_concepts)
+               warn(warn__bad_concept_level);
+            else
+               fail("This concept is not allowed at this level.");
+         }
+      }
+   }
+
    switch (ss->kind) {
    case s2x4:
       if (heritflags_to_check == INHERITFLAG_MAGIC) {
@@ -316,7 +342,7 @@ extern long_boolean divide_for_magic(
       break;
    }
 
-   /* Now check for 1x3 types of stuff. */
+   // Now check for 1x3 types of stuff.
 
    if (heritflags_to_check == INHERITFLAGMXNK_3X1 ||
        heritflags_to_check == INHERITFLAGMXNK_1X3 ||
@@ -463,6 +489,24 @@ extern long_boolean divide_for_magic(
             else if (directions == 07725 || directions == 05200) {
                expand_setup((heritflags_to_check == INHERITFLAGMXNK_2X1) ? &exp52 : &exp25,
                             ss);
+               goto do_3x3;
+            }
+         }
+         else if (ss->kind == s_bone6) {
+            if (livemask != 077) return FALSE;
+
+            if (directions == 01240 || directions == 04012 ||
+                directions == 01042 || directions == 04210) {
+               expand_setup(&expb45, ss);
+               goto do_3x3;
+            }
+         }
+         else if (ss->kind == s_short6) {
+            if (livemask != 077) return FALSE;
+
+            if (directions == 00052 || directions == 05200 ||
+                directions == 01042 || directions == 04210) {
+               expand_setup(&expb32, ss);
                goto do_3x3;
             }
          }
@@ -679,7 +723,7 @@ extern long_boolean do_simple_split(
 
    The result_flags are carried from one part to another through the "result_flags"
    word of the setup, even though (or especially because) that word is undefined
-   prior to doing a call.  The client must seed that word with RESULTFLAG__SPLIT_AXIS_MASK
+   prior to doing a call.  The client must seed that word with RESULTFLAG__SPLIT_AXIS_FIELDMASK
    (or whatever other bits are desired) prior to the beginning of the series, and not
    clobber it between parts.  At the end of the series, it will contain all the required
    result flags for the whole operation, including the final elongation.
@@ -870,8 +914,6 @@ extern void do_call_in_series(
 
    if (normalize) normalize_setup(sss, simple_normalize);
 
-   canonicalize_rotation(sss);
-
    /* To be safe, we should take away the "did last part" bit for the second call,
       but we are fairly sure it won't be on. */
 
@@ -888,15 +930,20 @@ extern void do_call_in_series(
          *  The RESULTFLAG__PART_COMPLETION_BITS bits:
             Set to the result of the part we just did -- discard incoming values.
 
-         *  The RESULTFLAG__SPLIT_AXIS_MASK bits:
+         *  The RESULTFLAG__SPLIT_AXIS_FIELDMASK bits:
             Set to the AND of the incoming values and what we just got --
             this has the effect of correctly keeping track of the splitting through all
-            parts of the call.
+            parts of the call.  Actually, it's a little more complicated than this,
+            and we let minimize_splitting_info do it.
 
          *  The low 2 bits, which have the elongation:
             Set to "current_elongation", which typically has the incoming stuff,
             but it actually a little bit subtle.  Put this in the
             "cmd.prior_elongation_bits" field also.
+
+         *  The RESULTFLAG__PLUSEIGHTH_ROT bit:
+            XOR it with the previous stuff.  But, if both are set,
+            rotate the setup.
 
          *  The other bits:
             Set to the OR of the incoming values and what we just got --
@@ -905,15 +952,25 @@ extern void do_call_in_series(
       It follows from this that the correct way to "seed" the result_flags word
       at the start of a series is by initializing it to RESULTFLAG__SPLIT_AXIS_FIELDMASK. */
 
-   sss->result_flags = (((saved_result_flags & ~RESULTFLAG__PART_COMPLETION_BITS) |
-                         tempsetup.result_flags) &
-                        ~(3|RESULTFLAG__SPLIT_AXIS_FIELDMASK)) | current_elongation;
+   sss->result_flags = ((saved_result_flags &
+                         ~(RESULTFLAG__PART_COMPLETION_BITS|RESULTFLAG__PLUSEIGHTH_ROT)) |
+                         tempsetup.result_flags);
 
-   /* We now have all but the SPLIT_AXIS stuff. */
+   sss->result_flags &= ~(3|RESULTFLAG__SPLIT_AXIS_FIELDMASK);
 
-   sss->result_flags |= tempsetup.result_flags & RESULTFLAG__SPLIT_AXIS_FIELDMASK;
+   if (sss->result_flags & saved_result_flags & RESULTFLAG__PLUSEIGHTH_ROT) {
+      sss->result_flags &= ~RESULTFLAG__PLUSEIGHTH_ROT;
+      sss->rotation++;
+   }
+   else
+      sss->result_flags |= saved_result_flags & RESULTFLAG__PLUSEIGHTH_ROT;
 
-   /* Now have tempsetup, need to minimize with saved_result_flags. */
+   sss->result_flags |= current_elongation;
+
+   sss->result_flags |=
+      (tempsetup.result_flags & RESULTFLAG__SPLIT_AXIS_FIELDMASK);
+
+   canonicalize_rotation(sss);
    minimize_splitting_info(sss, saved_result_flags);
 }
 
@@ -1153,6 +1210,7 @@ const checkitem checktable[] = {
    {0x00550067, 0x08410200, s_qtag, 1, warn__none, (const coordrec *) 0, {127}},
    {0x00620046, 0x01080842, sd2x5, 0, warn__none, (const coordrec *) 0, {127}},
    {0x00660055, 0x01000480, s_2x1dmd, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00950026, 0x20008200, s_1x2dmd, 0, warn__none, (const coordrec *) 0, {127}},
    {0x00D50026, 0x20008202, s1x3dmd, 0, warn__none, (const coordrec *) 0, {127}},
    {0x00A30055, 0x09000420, swqtag, 0, warn__none, (const coordrec *) 0, {127}},
    {0x00A60055, 0x09000420, swqtag, 0, warn__none, (const coordrec *) 0, {127}},
@@ -1253,6 +1311,12 @@ const checkitem checktable[] = {
    {0x00220004, 0x01000000, s1x2, 0, warn__none, (const coordrec *) 0, {127}},
    {0x00040022, 0x00000200, s1x2, 1, warn__none, (const coordrec *) 0, {127}},
    {0x00A20066, 0x09084042, sbigptpd, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00A20026, 0x414C0032, sdblspindle, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x01220026, 0x414C0032, sdblspindle, 0, warn__none, (const coordrec *) 0, {127}},
+
+   {0x00510062, 0x02000004, s2x4, 1, warn__none, (const coordrec *) 0,
+    {-5, 6, -2, 6, 5, 6, 2, 6, -5, -6, -2, -6, 5, -6, 2, -6, 127}},
+
    {0}};
 
 
@@ -1891,14 +1955,15 @@ static void partner_matrixmove(
    if (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK)
       fail("Can't split the setup.");
 
-   /* We allow stuff like "tandem jay walk". */
+   // We allow stuff like "tandem jay walk".
 
-   if ((ss->cmd.cmd_misc_flags & CMD_MISC__DISTORTED) && !(flags & MTX_FIND_JAYWALKERS))
+   if ((ss->cmd.cmd_misc_flags & CMD_MISC__DISTORTED) &&
+       !(flags & (MTX_FIND_JAYWALKERS|MTX_FIND_SQUEEZERS)))
       fail("This call not allowed in distorted or virtual setup.");
 
    nump = start_matrix_call(ss, matrix_info, 0, flags, &people);
 
-   /* Make the lateral chains first. */
+   // Make the lateral chains first.
 
    make_matrix_chains(matrix_info, nump, FALSE, flags, 1);
    if (flags & MTX_FIND_SQUEEZERS)
@@ -2163,6 +2228,7 @@ extern void anchor_someone_and_move(
 
    if (ss->kind != s2x4 &&
        ss->kind != s1x8 &&
+       ss->kind != s2x3 &&
        ss->kind != s2x6 &&
        ss->kind != s3x4 &&
        ss->kind != s_qtag &&
@@ -2223,6 +2289,7 @@ extern void anchor_someone_and_move(
 
    // If the result is a "1p5x8", we do special stuff.
    if (result->kind == s1p5x8) result->kind = s2x8;
+   else if (result->kind == s1p5x4) result->kind = s2x4;
 
    nump = start_matrix_call(result, after_matrix_info, 0, 0, &people);
 
@@ -2741,12 +2808,10 @@ extern uint32 process_new_fractions(
    int denom,
    uint32 incoming_fracs,
    uint32 reverse_orderbit,   /* Low bit on mean treat as if we mean "do the last M/N". */
-   long_boolean allow_improper,
-   long_boolean *improper_p) THROW_DECL
+   bool allow_improper,
+   bool *improper_p) THROW_DECL
 {
    int s_numer, s_denom, e_numer, e_denom, divisor;
-
-   *improper_p = FALSE;
 
    s_numer = (incoming_fracs & 0xF000) >> 12;        /* Start point. */
    s_denom = (incoming_fracs & 0xF00) >> 8;
@@ -2769,7 +2834,7 @@ extern uint32 process_new_fractions(
    e_denom *= denom;
 
    if (allow_improper && e_numer > e_denom) {
-      *improper_p = TRUE;
+      if (improper_p) *improper_p = TRUE;
       e_numer -= e_denom;
    }
 
@@ -3474,7 +3539,9 @@ static void do_stuff_inside_sequential_call(
             *fix_next_assump_both_p = old_assump_both ^ 3;
          }
       }
-      else if (result->cmd.callspec == base_calls[base_call_slither] &&
+      else if ((result->cmd.callspec == base_calls[base_call_slither] ||
+                (result->cmd.callspec == base_calls[base_call_maybegrandslither] &&
+                 !(result->cmd.cmd_final_flags.her8it & INHERITFLAG_GRAND))) &&
                old_assump_col == 0 &&
                old_assump_both == 0) {
          switch (old_assumption) {
@@ -3707,9 +3774,14 @@ static void do_sequential_call(
       else if (callspec->stuff.seq.defarray[0].call_id == base_call_basetag0 &&
           (revertflags == INHERITFLAGRVRTK_REVERT ||
            revertflags == INHERITFLAGRVRTK_REFLECT)) {
-         zzz.client_total++;    // Treat it as though it had an extra part
-         callflags1 &= ~CFLAG1_VISIBLE_FRACTION_MASK;  // and 2 parts are visible.
-         callflags1 |= CFLAG1_VISIBLE_FRACTION_BIT*2;
+         // Treat it as though it had an extra part
+         zzz.client_total++;
+         // and all parts are visible, up to 3.  If call has lots of parts,
+         // make just the first 2 visible.
+         callflags1 &= ~CFLAG1_VISIBLE_FRACTION_MASK;
+         callflags1 |= (zzz.client_total <= 3) ?
+            CFLAG1_VISIBLE_FRACTION_BIT*zzz.client_total :
+            CFLAG1_VISIBLE_FRACTION_BIT*2;
          doing_weird_revert = weirdness_otherstuff;
       }
 
@@ -4609,6 +4681,7 @@ static void really_inner_move(setup *ss,
                               calldefn *callspec,
                               calldef_schema the_schema,
                               uint32 callflags1,
+                              uint32 callflagsf,
                               bool did_4x4_expansion,
                               uint32 imprecise_rotation_result_flag,
                               bool mirror,
@@ -4689,33 +4762,72 @@ static void really_inner_move(setup *ss,
          fail("This setup can't be recentered.");
       break;
    case schema_matrix:
-      /* The "reverse" concept might mean mirror, as in "reverse truck". */
-
-      if ((TEST_HERITBITS(ss->cmd.cmd_final_flags,INHERITFLAG_REVERSE)) &&
-          (callflagsh & INHERITFLAG_REVERSE)) {
-         mirror_this(ss);
-         mirror = true;
-         ss->cmd.cmd_final_flags.her8it &= ~INHERITFLAG_REVERSE;
-      }
-
-      if (ss->kind == s_qtag && (TEST_HERITBITS(ss->cmd.cmd_final_flags,INHERITFLAG_12_MATRIX)))
-         do_matrix_expansion(ss, CONCPROP__NEEDK_3X4, TRUE);
-
-      if ((ss->cmd.cmd_final_flags.her8it & ~(INHERITFLAG_12_MATRIX|INHERITFLAG_16_MATRIX)) |
-          ss->cmd.cmd_final_flags.final)
-         fail("Illegal concept for this call.");
-      remove_z_distortion(ss);
-      matrixmove(ss, callspec, result);
-      break;
    case schema_partner_matrix:
-      if (ss->kind == s_qtag && (TEST_HERITBITS(ss->cmd.cmd_final_flags,INHERITFLAG_12_MATRIX)))
-         do_matrix_expansion(ss, CONCPROP__NEEDK_3X4, TRUE);
+      // The "reverse" concept might mean mirror, as in "reverse truck".
 
-      if ((ss->cmd.cmd_final_flags.her8it & ~(INHERITFLAG_12_MATRIX|INHERITFLAG_16_MATRIX)) |
-          ss->cmd.cmd_final_flags.final)
-         fail("Illegal concept for this call.");
-      remove_z_distortion(ss);
-      partner_matrixmove(ss, callspec, result);
+      {
+         bool expanded = false;
+         static const expand_thing exp_from_2x2_stuff = {{12, 0, 4, 8}, 4, s2x2, s4x4, 0};
+         static const expand_thing exp_back_to_2x4_stuff = {{0, 3, 4, 7}, 4, s2x2, s2x4, 0};
+         static const expand_thing exp_2x2_2x4r_stuff = {{7, 0, 3, 4}, 4, s2x2, s2x4, 1};
+
+         if ((TEST_HERITBITS(ss->cmd.cmd_final_flags,INHERITFLAG_REVERSE)) &&
+             (callflagsh & INHERITFLAG_REVERSE)) {
+            mirror_this(ss);
+            mirror = true;
+            ss->cmd.cmd_final_flags.her8it &= ~INHERITFLAG_REVERSE;
+         }
+
+         if ((ss->cmd.cmd_final_flags.her8it & ~(INHERITFLAG_12_MATRIX|INHERITFLAG_16_MATRIX)) |
+             ss->cmd.cmd_final_flags.final)
+            fail("Illegal concept for this call.");
+
+         if (ss->kind == s_qtag &&
+             (TEST_HERITBITS(ss->cmd.cmd_final_flags,INHERITFLAG_12_MATRIX)))
+            do_matrix_expansion(ss, CONCPROP__NEEDK_3X4, TRUE);
+         else if (ss->kind == s2x2 && ss->cmd.prior_elongation_bits != 0) {
+            expanded = true;
+            if (ss->cmd.prior_elongation_bits == 3)
+               expand_setup(&exp_from_2x2_stuff, ss);
+            else if (ss->cmd.prior_elongation_bits == 1)
+               expand_setup(&exp_back_to_2x4_stuff, ss);
+            else
+               expand_setup(&exp_2x2_2x4r_stuff, ss);
+
+            // Since we are reconstructing the original setup,
+            // we think it is reasonable to say that the setup is
+            // no longer distorted.  Now, users might be able to
+            // abuse this, but we hope they won't.
+            ss->cmd.cmd_misc_flags &= ~CMD_MISC__DISTORTED;
+         }
+
+         remove_z_distortion(ss);
+
+         if (the_schema == schema_partner_matrix)
+            partner_matrixmove(ss, callspec, result);
+         else
+            matrixmove(ss, callspec, result);
+
+         if (expanded) {
+            result->result_flags &= ~3;
+            if (result->kind == s4x4 &&
+                     !(result->people[15].id1 | result->people[3].id1 |
+                       result->people[7].id1 | result->people[11].id1 |
+                       result->people[13].id1 | result->people[14].id1 |
+                       result->people[5].id1 | result->people[6].id1 |
+                       result->people[10].id1 | result->people[9].id1 |
+                       result->people[1].id1 | result->people[2].id1)) {
+               result->result_flags |= 3;
+               compress_setup(&exp_from_2x2_stuff, result);
+            }
+            else if (result->kind == s2x4 &&
+                     !(result->people[1].id1 | result->people[2].id1 |
+                       result->people[5].id1 | result->people[6].id1)) {
+               result->result_flags |= (result->rotation & 1) + 1;
+               compress_setup(&exp_back_to_2x4_stuff, result);
+            }
+         }
+      }
       break;
    case schema_roll:
       if (ss->cmd.cmd_final_flags.her8it | ss->cmd.cmd_final_flags.final)
@@ -4740,7 +4852,7 @@ static void really_inner_move(setup *ss,
          ss->cmd.cmd_final_flags.her8it &= ~INHERITFLAG_LEFT;
       }
 
-      /* The "reverse" concept might mean mirror, or it might be genuine. */
+      // The "reverse" concept might mean mirror, or it might be genuine.
 
       if ((TEST_HERITBITS(ss->cmd.cmd_final_flags,INHERITFLAG_REVERSE)) &&
           (callflagsh & INHERITFLAG_REVERSE)) {
@@ -4751,8 +4863,8 @@ static void really_inner_move(setup *ss,
          ss->cmd.cmd_final_flags.her8it &= ~INHERITFLAG_REVERSE;
       }
 
-      /* If the "reverse" flag is still set in cmd_final_flags, it means a genuine
-            reverse as in reverse cut/flip the diamond or reverse change-O. */
+      // If the "reverse" flag is still set in cmd_final_flags, it means a genuine
+      // reverse as in reverse cut/flip the diamond or reverse change-O.
 
       basic_move(ss, callspec, tbonetest, qtfudged, mirror, result);
 
@@ -4863,9 +4975,9 @@ static void really_inner_move(setup *ss,
                int sizem1 = setup_attrs[ss->kind].setup_limits;
                int crossconc = (misc2 & CMD_MISC2__INVERT_SNAG) ? 0 : 1;
 
-               ssmask = setup_attrs[ss->kind].mask_normal;
+               ssmask = setup_attrs[ss->kind].setup_conc_masks.mask_normal;
 
-                  /* note who the original centers are. */
+               // Note who the original centers are.
 
                if (sizem1 < 0 || ssmask == 0) fail("Can't identify centers and ends.");
 
@@ -4987,12 +5099,13 @@ static void really_inner_move(setup *ss,
       to roll direction, elongation checking, and telling which way
       "in" is.  But in fact they are treated as 1-person calls in
       terms of "stretch", "crazy", etc. */
-   if (callflags1 & CFLAG1_ONE_PERSON_CALL)
+   if (callflagsf & CFLAG2_ONE_PERSON_CALL)
       result->result_flags |= RESULTFLAG__SPLIT_AXIS_FIELDMASK;
 
    result->result_flags |= imprecise_rotation_result_flag;
    result->result_flags |=
-      ((ss->cmd.cmd_misc2_flags & CMD_MISC2__DID_Z_COMPRESSMASK) / CMD_MISC2__DID_Z_COMPRESSBIT) *
+      ((ss->cmd.cmd_misc2_flags & CMD_MISC2__DID_Z_COMPRESSMASK) /
+       CMD_MISC2__DID_Z_COMPRESSBIT) *
       RESULTFLAG__DID_Z_COMPRESSBIT;
 
    /* Reflect back if necessary. */
@@ -5005,8 +5118,10 @@ static void really_inner_move(setup *ss,
       outer_inners[1].kind = nothing;
       outer_inners[1].result_flags = 0;
       normalize_concentric(schema_conc_o, 1, outer_inners, 1, 0, result);
+      normalize_setup(result, simple_normalize);
       if (result->kind == s2x4) {
-         if (result->people[1].id1 | result->people[2].id1 | result->people[5].id1 | result->people[6].id1)
+         if (result->people[1].id1 | result->people[2].id1 |
+             result->people[5].id1 | result->people[6].id1)
             fail("Internal error: 'O' people wandered into middle.");
          swap_people(result, 1, 3);
          swap_people(result, 2, 4);
@@ -5073,6 +5188,8 @@ static void move_with_real_call(
                                       2 means this is 1x8 and do not recompute id. */
       bool mirror = false;
       uint32 callflags1 = this_defn->callflags1;
+      uint32 callflagsh = this_defn->callflagsh;
+      uint32 callflagsf = this_defn->callflagsf;
 
       calldef_schema the_schema =
          get_real_callspec_and_schema(ss, herit_concepts, this_defn->schema);
@@ -5087,7 +5204,7 @@ static void move_with_real_call(
          goto try_next_callspec;
       }
 
-      if ((this_defn->callflagsf & CFLAG2_YOYO_FRACTAL_NUM)) {
+      if ((callflags1 & CFLAG1_YOYO_FRACTAL_NUM)) {
          if ((TEST_HERITBITS(ss->cmd.cmd_final_flags,INHERITFLAG_FRACTAL))) {
             if ((current_options.number_fields & 0xD) == 1)
                current_options.number_fields ^= 2;
@@ -5133,7 +5250,7 @@ static void move_with_real_call(
 
          if (the_schema != schema_by_array &&
              (ss->cmd.cmd_final_flags.her8it &
-              (~(this_defn->callflagsh|INHERITFLAG_HALF|INHERITFLAG_LASTHALF))))
+              (~(callflagsh|INHERITFLAG_HALF|INHERITFLAG_LASTHALF))))
             fail("Can't do this call with this concept.");
 
          if (ss->cmd.cmd_misc2_flags & CMD_MISC2__DO_CENTRAL) {
@@ -5320,7 +5437,7 @@ static void move_with_real_call(
       /* If the "diamond" concept has been given and the call doesn't want it, we do
          the "diamond single wheel" variety. */
 
-      if (INHERITFLAG_DIAMOND & ss->cmd.cmd_final_flags.her8it & (~this_defn->callflagsh))  {
+      if (INHERITFLAG_DIAMOND & ss->cmd.cmd_final_flags.her8it & (~callflagsh))  {
          /* If the call is sequentially or concentrically defined, the top level flag is required
          before the diamond concept can be inherited.  Since that flag is off, it is an error. */
          if (the_schema != schema_by_array)
@@ -5416,7 +5533,7 @@ static void move_with_real_call(
          }
       }
 
-      if (callflags1 & CFLAG1_IMPRECISE_ROTATION)
+      if (callflagsf & CFLAG2_IMPRECISE_ROTATION)
          imprecise_rotation_result_flag = RESULTFLAG__IMPRECISE_ROT;
 
       /* Check for a call whose schema is single (cross) concentric.
@@ -5424,7 +5541,7 @@ static void move_with_real_call(
          But don't do it if something like "magic" is still unprocessed. */
 
       if ((ss->cmd.cmd_final_flags.her8it &
-           (~(this_defn->callflagsh|INHERITFLAG_HALF|INHERITFLAG_LASTHALF))) == 0) {
+           (~(callflagsh|INHERITFLAG_HALF|INHERITFLAG_LASTHALF))) == 0) {
          switch (the_schema) {
          case schema_single_concentric:
          case schema_single_cross_concentric:
@@ -5710,7 +5827,7 @@ static void move_with_real_call(
          return;
       }
 
-      really_inner_move(ss, qtfudged, this_defn, the_schema, callflags1,
+      really_inner_move(ss, qtfudged, this_defn, the_schema, callflags1, callflagsf,
                         did_4x4_expansion, imprecise_rotation_result_flag, mirror, result);
    }
    catch(error_flag_type foo) {
@@ -5993,15 +6110,28 @@ extern void move(
          case schema_concentric_6p:
          case schema_concentric_6p_or_sgltogether:
          case schema_concentric_6p_or_normal:
+            // If the schema under which we are operating is special (e.g. 6x2),
+            // but the call definition has a vanilla schema, we can't just
+            // use the call definition's parts, can we?  See test nf19.
+            switch ((calldef_schema) (ss->cmd.cmd_misc2_flags & 0xFFF)) {
+            case schema_concentric_6_2:
+            case schema_cross_concentric_6_2:
+            case schema_concentric_2_6:
+            case schema_cross_concentric_2_6:
+            case schema_concentric_2_4:
+            case schema_cross_concentric_2_4:
+            case schema_concentric_4_2:
+            case schema_cross_concentric_4_2:
+               goto punt;
+            }
+
+            break;
          case schema_maybe_nxn_1331_lines_concentric:
          case schema_maybe_nxn_1331_cols_concentric:
          case schema_conc_o:
             break;
          default:
-            ss->cmd.cmd_final_flags = save_incoming_final;
-            punt_centers_use_concept(ss, result);
-            saved_magic_diamond = (parse_block *) 0;
-            goto getout;
+            goto punt;
          }
       }
       else if (ss->cmd.cmd_misc2_flags & CMD_MISC2__CENTRAL_SNAG) {
@@ -6023,10 +6153,7 @@ extern void move(
             case schema_conc_o:
                break;
             default:
-               ss->cmd.cmd_final_flags = save_incoming_final;
-               punt_centers_use_concept(ss, result);
-               saved_magic_diamond = (parse_block *) 0;
-               goto getout;
+               goto punt;
             }
          }
       }
@@ -6062,12 +6189,8 @@ extern void move(
       /* If we have a pending "centers/ends work <concept>" concept,
          we must dispose of it the crude way. */
 
-      if (ss->cmd.cmd_misc2_flags & (CMD_MISC2__ANY_WORK | CMD_MISC2__ANY_SNAG)) {
-         ss->cmd.cmd_final_flags = save_incoming_final;
-         punt_centers_use_concept(ss, result);
-         saved_magic_diamond = (parse_block *) 0;
-         goto getout;
-      }
+      if (ss->cmd.cmd_misc2_flags & (CMD_MISC2__ANY_WORK | CMD_MISC2__ANY_SNAG))
+         goto punt;
 
       ss->cmd.parseptr = parseptrcopy;
       result->result_flags = 0;
@@ -6246,4 +6369,13 @@ extern void move(
       else if (saved_magic_diamond->concept->kind == concept_interlocked)
          saved_magic_diamond->concept = &special_interlocked;
    }
+
+   return;
+
+ punt:
+
+   ss->cmd.cmd_final_flags = save_incoming_final;
+   punt_centers_use_concept(ss, result);
+   saved_magic_diamond = (parse_block *) 0;
+   goto getout;
 }

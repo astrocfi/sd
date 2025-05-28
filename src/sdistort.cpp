@@ -123,6 +123,8 @@ extern void remove_tgl_distortion(setup *ss) THROW_DECL
    static const expand_thing thing2    = {{2, 3, 1},          3, s_trngl,  sdmd, 1};
    static const expand_thing thing1x8a = {{1, 3, 2, 5, 7, 6}, 6, s1x6,     s1x8, 0};
    static const expand_thing thing1x8b = {{0, 1, 3, 4, 5, 7}, 6, s1x6,     s1x8, 0};
+   static const expand_thing thingptpa = {{1, 7, 6, 5, 3, 2}, 6, s_bone6,  s_ptpd, 0};
+   static const expand_thing thingptpb = {{3, 0, 1, 7, 4, 5}, 6, s_short6, s_ptpd, 1};
    static const expand_thing thing2x4a = {{1, 2, 3, 5, 6, 7}, 6, s2x3,     s2x4, 0};
    static const expand_thing thing2x4b = {{0, 1, 2, 4, 5, 6}, 6, s2x3,     s2x4, 0};
    static const expand_thing thing2x4c = {{0, 3, 2, 4, 7, 6}, 6, s_bone6,  s2x4, 0};
@@ -229,13 +231,21 @@ extern void remove_tgl_distortion(setup *ss) THROW_DECL
       (void) copy_person(ss, 1, ss, 0);
       (void) copy_person(ss, 0, ss, 3);
       ss->kind = s_trngl;
-      ss->rotation -= rot;   /* Put it back. */
+      ss->rotation -= rot;   // Put it back.
       break;
    case sdmd:
       if (ss->people[0].id1 && !ss->people[2].id1)
          eptr = &thing1;
       else if (ss->people[2].id1 && !ss->people[0].id1)
          eptr = &thing2;
+      goto check_and_do;
+   case s_ptpd:
+      if (ss->people[2].id1 && ss->people[6].id1 &&
+          !ss->people[0].id1 && !ss->people[4].id1)
+         eptr = &thingptpa;
+      else if (ss->people[0].id1 && ss->people[4].id1 &&
+               !ss->people[2].id1 && !ss->people[6].id1)
+         eptr = &thingptpb;
       goto check_and_do;
    default:
       goto losing;
@@ -342,6 +352,10 @@ static void innards(
          z[i].kind = nothing;
          z[i].result_flags = 0;
       }
+
+      if (arity >= 2 &&
+          (z[i].result_flags & (RESULTFLAG__IMPRECISE_ROT | RESULTFLAG__PLUSEIGHTH_ROT)))
+         fail("Rotation is imprecise or is 45 degrees.");
    }
 
    /* If this is a special map that flips some setup upside-down, do so. */
@@ -1230,13 +1244,12 @@ extern void overlapped_setup_move(setup *ss, Const map_thing *maps,
    result->result_flags &= ~RESULTFLAG__SPLIT_AXIS_FIELDMASK;
 }
 
-static const veryshort list_10_6_5_4[4] = {8, 6, 5, 4};
-static const veryshort list_11_13_7_2[4] = {9, 11, 7, 2};
-static const veryshort list_12_17_3_1[4] = {10, 15, 3, 1};
-static const veryshort list_14_15_16_0[4] = {12, 13, 14, 0};
 
-static Const veryshort indices_for_2x6_4x6[12]  = {11, 10, 9, 8, 7, 6, 23, 22, 21, 20, 19, 18};
+const expand_thing expand_big2x2_4x4 = {
+   {12, 0, 4, 8}, 4, s2x2, s4x4, 0};
 
+const expand_thing expand_2x6_4x6 = {
+   {11, 10, 9, 8, 7, 6, 23, 22, 21, 20, 19, 18}, 12, s2x6, s4x6, 0};
 
 
 /* This does bigblock, stagger, ladder, stairstep, "O", butterfly, and
@@ -1254,9 +1267,9 @@ extern void do_phantom_2x4_concept(
    parse_block *parseptr,
    setup *result) THROW_DECL
 {
-   /* This concept is "standard", which means that it can look at global_tbonetest
-      and global_livemask, but may not look at anyone's facing direction other
-      than through global_tbonetest. */
+   // This concept is "standard", which means that it can look at global_tbonetest
+   // and global_livemask, but may not look at anyone's facing direction other
+   // than through global_tbonetest.
 
    int linesp = parseptr->concept->value.arg2 & 1;
    int rot = (global_tbonetest ^ linesp ^ 1) & 1;
@@ -1268,6 +1281,13 @@ extern void do_phantom_2x4_concept(
 
    if (parseptr->concept->value.arg2 == 3)
       ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
+
+   // We allow stuff like "dodge [split phantom lines zing]" from a butterfly.
+   if (ss->kind == s2x2 &&
+       ss->cmd.prior_elongation_bits == 3 &&
+       (ss->cmd.cmd_misc_flags & CMD_MISC__DOING_ENDS)) {
+      expand_setup(&expand_big2x2_4x4, ss);
+   }
 
    switch (ss->kind) {
    case s1x16:
@@ -1291,8 +1311,8 @@ extern void do_phantom_2x4_concept(
       else
          maps = parseptr->concept->value.maps;
 
-      /* Check for special case of "stagger" or "bigblock", without the word "phantom",
-         when people are not actually on block spots. */
+      // Check for special case of "stagger" or "bigblock", without the word "phantom",
+      // when people are not actually on block spots.
 
       if (parseptr->concept->value.arg3 == MPKIND__STAG &&
           parseptr->concept->value.arg1 == phantest_only_one) {
@@ -1304,7 +1324,7 @@ extern void do_phantom_2x4_concept(
       }
 
       if ((global_tbonetest & 011) == 011) {
-         /* People are T-boned!  This is messy. */
+         // People are T-boned!  This is messy.
          phantom_2x4_move(ss,
                           linesp,
                           (phantest_kind) parseptr->concept->value.arg1,
@@ -1315,11 +1335,9 @@ extern void do_phantom_2x4_concept(
 
       break;
    case s2x6:
-      /* Check for special case of split phantom lines/columns in a parallelogram. */
+      // Check for special case of split phantom lines/columns in a parallelogram.
 
       if (parseptr->concept->value.arg3 == MPKIND__SPLIT) {
-         setup stemp;
-
          if (rot) {
             if (global_tbonetest & 1) fail("There are no split phantom lines here.");
             else                      fail("There are no split phantom columns here.");
@@ -1333,28 +1351,26 @@ extern void do_phantom_2x4_concept(
 
          warn(warn__split_phan_in_pgram);
 
-         /* Change the setup to a 4x6. */
-
-         stemp = *ss;
-         ss->kind = s4x6;
-         clear_people(ss);
-         scatter(ss, &stemp, indices_for_2x6_4x6, 11, 0);
-         break;              /* Note that rot is zero. */
+         // Change the setup to a 4x6.
+         expand_setup(&expand_2x6_4x6, ss);
+         break;              // Note that rot is zero.
       }
-      /* Otherwise fall through to error message!!! */
-      /* FALL THROUGH!!! */
+      goto lose;
    default:
-      /* FELL THROUGH!!! */
-      fail("Need a 4x4 setup to do this concept.");
+      goto lose;
    }
 
-   ss->rotation += rot;   /* Just flip the setup around and recanonicalize. */
+   ss->rotation += rot;   // Just flip the setup around and recanonicalize.
    canonicalize_rotation(ss);
 
    divided_setup_move(ss, maps, (phantest_kind) parseptr->concept->value.arg1, TRUE, result);
-   result->rotation -= rot;   /* Flip the setup back. */
-   /* The split-axis bits are gone.  If someone needs them, we have work to do. */
+   result->rotation -= rot;   // Flip the setup back.
+   // The split-axis bits are gone.  If someone needs them, we have work to do.
    result->result_flags &= ~RESULTFLAG__SPLIT_AXIS_FIELDMASK;
+   return;
+
+ lose:
+   fail("Need a 4x4 setup to do this concept.");
 }
 
 
@@ -2177,6 +2193,8 @@ extern void distorted_move(
       this is staggered C/L/W of 3
    linesp & 128 != 0:
       this is offset split phantom boxes
+   linesp & 256 != 0:
+      this is offset 1/4 tag
 
    Global_tbonetest has the OR of all the people, or all the standard people if
       this is "standard", so it is what we look at to interpret the
@@ -2383,6 +2401,55 @@ extern void distorted_move(
       mapcode = map_code_table[key];
       if (mapcode == 0) fail("Can't find offset 2x4's.");
       goto do_divided_call;
+   }
+   else if (linesp & 256) {
+      if (ss->kind != spgdmdcw && ss->kind != spgdmdccw) {
+         // Try to fudge a 4x4 into the setup we want.
+         if (global_tbonetest & 1) {
+            rotate_back = 1;
+            global_tbonetest >>= 3;
+            livemask = ((livemask << 4) & 0xFFFF) | (livemask >> 12);
+            ss->rotation++;
+            canonicalize_rotation(ss);
+         }
+
+         if (ss->kind != s4x4 || (global_tbonetest & 1)) fail("Can't find distorted 1/4 tag.");
+         expand_thing *p;
+         static expand_thing foo1 =
+         {{-1, 2, -1, 3, -1, -1, 5, 4, -1, 6, -1, 7, -1, -1, 1, 0},
+          16, s4x4, spgdmdccw, 0, 0UL, 0UL,
+          warn__none, warn__none, simple_normalize, 0};
+         static expand_thing foo2 =
+         {{-1, -1, 2, 1, -1, 4, -1, 3, -1, -1, 6, 5, -1, 0, -1, 7},
+          16, s4x4, spgdmdcw, 0, 0UL, 0UL,
+          warn__none, warn__none, simple_normalize, 0};
+
+         if (livemask == 0xCACA)
+            p = &foo1;
+         else if (livemask == 0xACAC)
+            p = &foo2;
+         else fail("Can't find distorted 1/4 tag.");
+
+         expand_setup(p, ss);
+         warn(warn__fudgy_half_offset);
+
+         // This line taken from do_matrix_expansion.  Would like to do it right.
+         for (int i=0; i<MAX_PEOPLE; i++)
+            ss->people[i].id2 &= (~GLOB_BITS_TO_CLEAR | (ID2_FACEFRONT|ID2_FACEBACK|ID2_HEADLINE|ID2_SIDELINE));
+      }
+
+      // Now we have the setup we want.
+      // **** We probably ought to put in a check to demand a real 1/4 tag.  Or whatever.
+
+      if (ss->kind == spgdmdcw)
+         mapcode = MAPCODE(s_qtag,1,MPKIND__OFFS_R_HALF,1);
+      else if (ss->kind == spgdmdccw)
+         mapcode = MAPCODE(s_qtag,1,MPKIND__OFFS_L_HALF,1);
+      else
+         fail("Can't find distorted 1/4 tag.");
+
+      ss->cmd.cmd_misc_flags |= parseptr->concept->value.arg3;
+      goto do_divided_nocheck;
    }
    else {
       // Look for singular "offset C/L/W" in a 2x4.
@@ -3811,7 +3878,7 @@ extern void triangle_move(
       if (allowing_all_concepts)
          warn(warn__bad_concept_level);
       else
-         fail("This concept modifier is not allowed at this level.");
+         fail("This concept is not allowed at this level.");
    }
 
    if (indicator <= 1) {

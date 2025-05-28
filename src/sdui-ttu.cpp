@@ -22,7 +22,9 @@
    In this case, the program will ignore the "-no_cursor" run-time switch, and will
    always act as though that switch had been given. */
 
+
 #ifndef NO_CURSES
+#include <ncurses/ncurses_dll.h>
 #include <curses.h>
 #else
 #include <stdio.h>
@@ -429,30 +431,28 @@ extern int get_char(void)
 
 extern void get_string(char *dest, int max)
 {
-#ifndef NO_CURSES
    if (!no_cursor) {
+#ifndef NO_CURSES
+      // If NO_CURSES is on, we can't compile these lines.
+      // But we'll never get here in that case.
       echo();
       getstr(dest);
       noecho();
+#endif
    }
    else {
+      int size;
+
       csetmode(0);         /* Regular full-line mode with system echo. */
-      gets(dest);          /* Yeah, we shouldn't use this.  Need to run test
-                              and see if end-of-line decorations are the same. */
+      (void) fgets(dest, max, stdin);
+      size = strlen(dest);
+
+      while (size > 0 && (dest[size-1] == '\n' || dest[size-1] == '\r'))
+         dest[--size] = '\000';
+
+      (void) fputs(dest, stdout);
+      (void) putchar('\n');
    }
-#else
-   int size;
-
-   csetmode(0);         /* Regular full-line mode with system echo. */
-   (void) fgets(dest, max, stdin);
-   size = strlen(dest);
-
-   while (size > 0 && (dest[size-1] == '\n' || dest[size-1] == '\r'))
-      dest[--size] = '\000';
-
-   (void) fputs(dest, stdout);
-   (void) putchar('\n');
-#endif
 }
 
 

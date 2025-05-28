@@ -1080,6 +1080,17 @@ dblxwave    |  0  |  1  |_____|  5  |  4  | 12  | 13  |_____|  9  |  8  |
 
 
 
+                   _____ _____ _____             _____ _____ _____
+             _____|     |     |     |_____ _____|     |     |     |_____
+            |     |  0  |  1  |  2  |     |     | 12  | 13  | 14  |     |
+dblspindle  |  7  |_____|_____|_____|  3  | 11  |_____|_____|_____| 15  |
+            |_____|     |     |     |_____|_____|     |     |     |_____|
+                  |  6  |  5  |  4  |           | 10  |  9  |  8  |
+                  |_____|_____|_____|           |_____|_____|_____|
+
+
+
+
 
 
              _____                   _____
@@ -2935,17 +2946,21 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
                                        Also, the ends must be column-like and the centers
                                        must be line-like.
 
-   nice_diamonds                    dmd, qtag or ptpd - diamond(s) are actual diamonds, and
-                                       have consistent handedness.  Restriction or qualifier.
-                                       "Right/left" and "live" may be used when it is a
-                                       qualifier -- right/left demands that handedness.
-
-   dmd_facing                       dmd, qtag or ptpd - diamond(s) are actual diamonds, are
-                                       facing, and have consistent handedness.
+   nice_diamonds                    dmd, qtag, ptpd, or c1phan - diamond(s) are actual
+                                       diamonds, and have consistent handedness.
                                        Restriction or qualifier.  "Right/left" and "live"
-                                       may be used when it is a qualifier --
-                                       right/left demands that handedness for the ends;
-                                       the centers will be the opposite.
+                                       may be used when it is a qualifier -- right/left
+                                       demand that handedness.  When used in a c1phan,
+                                       the expectation is that people are in stars.
+
+   dmd_facing                       dmd, qtag, ptpd, or c1phan - diamond(s) are actual
+                                       diamonds, are facing, and have consistent handedness.
+                                       Restriction or qualifier.  "Right/left" and "live"
+                                       may be used when it is a qualifier -- right/left
+                                       demand that handedness for the ends; the centers
+                                       will be the opposite.  When used in a c1phan,
+                                       the expectation is that people are in stars, and
+                                       "right"/"left" are meaningless.
 
    nice_wv_triangles                short6, bone6, trngl - triangle(s) are wave-based and
                                        of consistent handedness.  Restriction or qualifier.
@@ -3478,7 +3493,7 @@ inherit_single
 @I          equivalent to "@Einterlocked @F".
 @P ... @Q - text to add if this call has "grand" modifier.  Presumably
                   has the word "grand" in it.
-@G          equivalent to "@Egrand @F".
+@G          equivalent to "@Pgrand @Q".
 @k        - put selector here, but use singular name, as in "beau tie".
 @m        - put mandatory secondary call substitution here.
 @n ... @o - text to ADD if optional secondary substitution has been made,

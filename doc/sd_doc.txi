@@ -1,8 +1,8 @@
 \input texinfo @c %**start of header -*-texinfo-*-
 @c user documentation for Sd (square dance caller's helper)
 @c
-@set sd-version 34.5
-@set Time-stamp: May 27, 2001
+@set sd-version 34.6
+@set Time-stamp: September 16, 2001
 @c
 @setfilename sd_doc.info
 @c We want the version number to show in the html file.
@@ -2735,10 +2735,6 @@ use the @code{3x3} (or @code{4x4}) concept.  Of course, if you were calling
 Mainstream, you wouldn't say @samp{3x3 1/2 tag}.  You would presumably say
 something like @samp{line of 6 in the center, 1/2 tag}.
 
-If you have a column of 6, and you want them to @samp{walk and dodge} in that
-setup, that is, the lead two dodge while the other 4 walk forward, use
-the @code{2X1} concept.  Use your own words when calling this.
-
 If you want people to do something (e.g., @samp{diamond circulate}) around the outside,
 you may need to use the @code{disconnected} concept.  For example, if
 you had waves with the boys on the ends, and you had just done a
@@ -3634,6 +3630,9 @@ kind of distorted 1x8.
 @item offset tidal C/L/W @r{(singular)}
 These are done from a 2x8 matrix in which the real people form two
 1x4's joined with an offset in the center.
+@item offset 1T/3T
+These are done from a suitably populated 4x4.  The offset amount is presumed to be 50%.
+The ``shear line'' of the setup lies between the two single 1/4 tags.
 @item offset split phantom boxes
 This is done from a 3x8 formation that can be identified as two
 2x4's joined with a 50% offset in the center.
@@ -3656,6 +3655,7 @@ These are done from suitable setups.
 @item <ANYONE> in your distorted C/L/W/B/D @r{(singular)}
 @item <ANYONE> in your diagonal box
 @item <ANYONE> in your offset C/L/W @r{(singular)}
+@item <ANYONE> in your staggered C/L/W/B @r{(singular)}
 @item <ANYONE> in your Z @r{(singular)}
 These are done from a variety of setups, in which the designated people
 form a recognizable distorted or offset setup.  Reasonable shape-changers are allowed.
@@ -4047,6 +4047,8 @@ smooth dancing of this figure.
 @item do the <Nth> part
 @item do the last part
 @item replace the <Nth> part@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
+@item use (call) for the <Nth> part@ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
+@item use (call) in@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
 @item replace the last part@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
 @item interrupt after the <Nth> part@ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
 @item interrupt after <M>/<N>@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
@@ -4080,6 +4082,21 @@ For example, you might type
    2/3 recycle @key{ENTER}}
 @end group
 @end example
+
+The @code{use (call) for the <Nth> part} concept is the same as
+@code{replace the <Nth> part}, except that the replacement call is entered first.
+
+The @code{use (call) in} concept simply replaces the second call with the first.
+By itself, it is rather nonsensical.  It is intended to be used in applications
+like @samp{reverse random use acey deucey in swing the fractions}.
+
+For the preceding two concepts, you literally type the concept name,
+which has the word ``call'' in parentheses.  Command completion makes
+the typing easier than it might seem.  Type @code{use} and press
+@key{TAB} or @key{ESC} to cause completion of the @code{(call)} part.
+Then type @code{in} or @code{for} to specify which of the two concepts
+is desired.  After entering the concept, follow the prompts.  The
+concept will be printed in the transcript in a more sensible way.
 
 The @code{start with} concept is equivalent to replacing the first part.
 However, you must enter the replacement call first, and the program will then

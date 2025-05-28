@@ -82,7 +82,7 @@ typedef const char *Cstring;
    database format version. */
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 181
+#define DATABASE_FORMAT_VERSION 187
 
 /* BEWARE!!  These must track the items in "tagtabinit" in dbcomp.c . */
 typedef enum {
@@ -103,6 +103,7 @@ typedef enum {
    base_call_lockit,
    base_call_disband1,
    base_call_slither,
+   base_call_maybegrandslither,
    base_base_prepare_to_drop,
    base_call_two_o_circs,
    /* The next "NUM_TAGGER_CLASSES" (that is, 4) must be a consecutive group. */
@@ -194,55 +195,44 @@ static const uint32 INHERITFLAG_FAST       = 0x00040000UL;
    These flags go into the "callflags1" word of a callspec_block,
    and the "topcallflags1" word of the parse_state. */
 
-/* This is a 2 bit field -- VISIBLE_FRACTION_BIT tells where its low bit lies. */
-static const uint32 CFLAG1_VISIBLE_FRACTION_MASK     = 0x00000003UL;
-static const uint32 CFLAG1_VISIBLE_FRACTION_BIT      = 0x00000001UL;
-
+static const uint32 CFLAG1_VISIBLE_FRACTION_MASK     = 0x00000003UL; // 2 bit field
+static const uint32 CFLAG1_VISIBLE_FRACTION_BIT      = 0x00000001UL; // its low bit
 static const uint32 CFLAG1_12_16_MATRIX_MEANS_SPLIT  = 0x00000004UL;
-static const uint32 CFLAG1_IMPRECISE_ROTATION        = 0x00000008UL;
+static const uint32 CFLAG1_PRESERVE_Z_STUFF          = 0x00000008UL;
 static const uint32 CFLAG1_SPLIT_LIKE_DIXIE_STYLE    = 0x00000010UL;
 static const uint32 CFLAG1_PARALLEL_CONC_END         = 0x00000020UL;
 static const uint32 CFLAG1_TAKE_RIGHT_HANDS          = 0x00000040UL;
 static const uint32 CFLAG1_IS_STAR_CALL              = 0x00000080UL;
 static const uint32 CFLAG1_SPLIT_LARGE_SETUPS        = 0x00000100UL;
 static const uint32 CFLAG1_FUDGE_TO_Q_TAG            = 0x00000200UL;
-
-/* This is a 3 bit field. */
-static const uint32 CFLAG1_STEP_REAR_MASK            = 0x00001C00UL;
-/* Here are the 3 bits. */
-static const uint32 CFLAG1_STEP_TO_WAVE              = 0x00000400UL;
-static const uint32 CFLAG1_REAR_BACK_FROM_R_WAVE     = 0x00000800UL;
-static const uint32 CFLAG1_REAR_BACK_FROM_QTAG       = 0x00001000UL;
-
-static const uint32 CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK = 0x00002000UL;
-
-/* This is a 3 bit field -- NUMBER_BIT tells where its low bit lies. */
-static const uint32 CFLAG1_NUMBER_MASK               = 0x0001C000UL;
-static const uint32 CFLAG1_NUMBER_BIT                = 0x00004000UL;
-
-static const uint32 CFLAG1_SEQUENCE_STARTER          = 0x00020000UL;
-static const uint32 CFLAG1_SPLIT_LIKE_SQUARE_THRU    = 0x00040000UL;
+static const uint32 CFLAG1_STEP_REAR_MASK            = 0x00001C00UL; // 3 bit field
+static const uint32 CFLAG1_STEP_TO_WAVE              = 0x00000400UL; // its low bit
+static const uint32 CFLAG1_REAR_BACK_FROM_R_WAVE     = 0x00000800UL; // its middle bit
+static const uint32 CFLAG1_REAR_BACK_FROM_QTAG       = 0x00001000UL; // its high bit
+static const uint32 CFLAG1_SEQUENCE_STARTER          = 0x00002000UL;
+static const uint32 CFLAG1_NUMBER_MASK               = 0x0001C000UL; // 3 bit field
+static const uint32 CFLAG1_NUMBER_BIT                = 0x00004000UL; // its low bit
+static const uint32 CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK = 0x00020000UL;
+static const uint32 CFLAG1_LEFT_ONLY_IF_HALF         = 0x00040000UL;
 static const uint32 CFLAG1_DISTRIBUTE_REPETITIONS    = 0x00080000UL;
 static const uint32 CFLAG1_DONT_USE_IN_RESOLVE       = 0x00100000UL;
 static const uint32 CFLAG1_DONT_USE_IN_NICE_RESOLVE  = 0x00200000UL;
 static const uint32 CFLAG1_YIELD_IF_AMBIGUOUS        = 0x00400000UL;
 static const uint32 CFLAG1_NO_ELONGATION_ALLOWED     = 0x00800000UL;
-
-/* This is a 3 bit field -- BASE_TAG_CALL_BIT tells where its low bit lies. */
-static const uint32 CFLAG1_BASE_TAG_CALL_MASK        = 0x07000000UL;
-static const uint32 CFLAG1_BASE_TAG_CALL_BIT         = 0x01000000UL;
-
+static const uint32 CFLAG1_BASE_TAG_CALL_MASK        = 0x07000000UL; // 3 bit field
+static const uint32 CFLAG1_BASE_TAG_CALL_BIT         = 0x01000000UL; // its low bit
 static const uint32 CFLAG1_BASE_CIRC_CALL            = 0x08000000UL;
 static const uint32 CFLAG1_ENDS_TAKE_RIGHT_HANDS     = 0x10000000UL;
 static const uint32 CFLAG1_FUNNY_MEANS_THOSE_FACING  = 0x20000000UL;
-static const uint32 CFLAG1_ONE_PERSON_CALL           = 0x40000000UL;
-static const uint32 CFLAG1_PRESERVE_Z_STUFF          = 0x80000000UL;
+static const uint32 CFLAG1_SPLIT_LIKE_SQUARE_THRU    = 0x40000000UL;
+static const uint32 CFLAG1_YOYO_FRACTAL_NUM          = 0x80000000UL;
 
 /* These are the continuation of the "CFLAG1" bits, that have to overflow into this word.
    They must lie in the top 8 bits for now. */
-static const uint32 CFLAG2_YOYO_FRACTAL_NUM          = 0x01000000UL;
+static const uint32 CFLAG2_IMPRECISE_ROTATION        = 0x01000000UL;
 static const uint32 CFLAG2_CAN_BE_FAN                = 0x02000000UL;
 static const uint32 CFLAG2_EQUALIZE                  = 0x04000000UL;
+static const uint32 CFLAG2_ONE_PERSON_CALL           = 0x08000000UL;
 
 /* Beware!!  This list must track the table "matrixcallflagtab" in dbcomp.c . */
 
@@ -361,6 +351,7 @@ typedef enum {
    s2x7,
    s_d3x4,
    s1p5x8,   // internal use only
+   s1p5x4,   // internal use only
    s2x8,
    s4x4,
    s1x10,
@@ -421,6 +412,7 @@ typedef enum {
    sbigdmd,
    sbigptpd,
    sdblxwave,
+   sdblspindle,
    s_dead_concentric,
    s_normal_concentric
 } setup_kind;
@@ -589,44 +581,47 @@ typedef enum {
    b_bigptpd,
    b_pbigptpd,
    b_dblxwave,
-   b_pdblxwave
+   b_pdblxwave,
+   b_dblspindle,
+   b_pdblspindle
 } begin_kind;
 
 /* These bits are used in the "callarray_flags" field of a "callarray".
    There is room for 21 of them. */
 
 /* This one must be 1!!!! */
-#define CAF__ROT                    0x1
-#define CAF__FACING_FUNNY           0x2
+#define CAF__ROT                     0x1
+#define CAF__FACING_FUNNY            0x2
 /* Next one says this is concentrically defined --- the "end_setup" slot
    has the centers' end setup, and there is an extra slot with the ends' end setup. */
-#define CAF__CONCEND                0x4
+#define CAF__CONCEND                 0x4
 /* Next one meaningful only if previous one is set. */
-#define CAF__ROT_OUT                0x8
+#define CAF__ROT_OUT                 0x8
 /* This is a 3 bit field. */
-#define CAF__RESTR_MASK            0x70
+#define CAF__RESTR_MASK             0x70
 /* These next 5 are the nonzero values it can have. */
-#define CAF__RESTR_UNUSUAL         0x10
-#define CAF__RESTR_FORBID          0x20
-#define CAF__RESTR_RESOLVE_OK      0x30
-#define CAF__RESTR_CONTROVERSIAL   0x40
-#define CAF__RESTR_BOGUS           0x50
-#define CAF__PREDS                 0x80
-#define CAF__NO_CUTTING_THROUGH   0x100
-#define CAF__NO_FACING_ENDS       0x200
-#define CAF__LATERAL_TO_SELECTEES 0x400
-#define CAF__VACATE_CENTER        0x800
-#define CAF__OTHER_ELONGATE      0x1000
-#define CAF__SPLIT_TO_BOX        0x2000
-#define CAF__REALLY_WANT_DIAMOND 0x4000
-#define CAF__NO_COMPRESS         0x8000
+#define CAF__RESTR_UNUSUAL          0x10
+#define CAF__RESTR_FORBID           0x20
+#define CAF__RESTR_RESOLVE_OK       0x30
+#define CAF__RESTR_CONTROVERSIAL    0x40
+#define CAF__RESTR_BOGUS            0x50
+#define CAF__PREDS                  0x80
+#define CAF__NO_CUTTING_THROUGH    0x100
+#define CAF__NO_FACING_ENDS        0x200
+#define CAF__LATERAL_TO_SELECTEES  0x400
+#define CAF__VACATE_CENTER         0x800
+#define CAF__OTHER_ELONGATE       0x1000
+#define CAF__SPLIT_TO_BOX         0x2000
+#define CAF__REALLY_WANT_DIAMOND  0x4000
+#define CAF__NO_COMPRESS          0x8000
+#define CAF__PLUSEIGHTH_ROTATION 0x10000
 
-/* BEWARE!!  This list must track the array "qualtab" in dbcomp.c . */
+// BEWARE!!  This list must track the array "qualtab" in dbcomp.c
 typedef enum {
    cr_none,                /* Qualifier only. */
    cr_alwaysfail,          /* Restriction only. */
    cr_wave_only,
-   cr_wave_unless_say_2faced, /* Qualifier only. */
+   cr_wave_unless_say_2faced, /* Not implemented. */
    cr_all_facing_same,
    cr_1fl_only,
    cr_2fl_only,
@@ -659,7 +654,6 @@ typedef enum {
    cr_miniwaves,
    cr_not_miniwaves,       /* Qualifier only. */
    cr_tgl_tandbase,        /* Qualifier only. */
-   cr_as_couples_miniwaves,/* Qualifier only. */
    cr_true_Z_cw,           /* Qualifier only. */
    cr_true_Z_ccw,          /* Qualifier only. */
    cr_lateral_cols_empty,  /* Qualifier only. */
@@ -693,12 +687,18 @@ typedef enum {
    cr_ends_sel,            /* Qualifier only. */
    cr_all_sel,             /* Qualifier only. */
    cr_none_sel,            /* Qualifier only. */
+   cr_nor_unwrap_sel,      /* Qualifier only. */
+   cr_ptp_unwrap_sel,      /* Qualifier only. */
    cr_explodable,          /* Restriction only. */
    cr_rev_explodable,      /* Restriction only. */
    cr_peelable_box,        /* Restriction only. */
    cr_ends_are_peelable,   /* Restriction only. */
    cr_siamese_in_quad,
    cr_not_tboned_in_quad,
+   cr_inroller_is_cw,
+   cr_inroller_is_ccw,
+   cr_outroller_is_cw,
+   cr_outroller_is_ccw,
    cr_levela1,
    cr_levela2,
    cr_levelc1,

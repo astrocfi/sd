@@ -212,7 +212,7 @@ extern long_boolean selectp(setup *ss, int place) THROW_DECL
             else if (p2 == ID2_OUTRPAIRS) s = selector_outerpairs;
             else break;
          }
-         else if (ss->kind == s2x7) {
+         else if (ss->kind == s2x7 || ss->kind == sdblspindle) {
             if (current_options.who == selector_center2)
                return (pid2 & ID2_CTR2);
             else break;
@@ -1614,64 +1614,57 @@ static C_const inroll_action outroller_2x8          = {inroll_directions_2x8,   
 static long_boolean in_out_roll_select(setup *real_people, int real_index,
    int real_direction, int northified_index, const long int *extra_stuff) THROW_DECL
 {
-   /* "Yes_roll_direction" is the facing direction that constitutes what we are
-      looking for (inroller or outroller as the case may be). */
-
-   Const veryshort *directions;
-   Const inroll_action *thing;
-   int yes_roll_direction, no_roll_direction;
-   int cw_end, ccw_end;
-   int cw_idx, ccw_idx;
-   int size, code;
-
-   thing = (Const inroll_action *) extra_stuff;
-
-   directions = thing->directions;
-   code = thing->code;
+   const inroll_action *thing = (const inroll_action *) extra_stuff;
+   const veryshort *directions = thing->directions;
+   int code = thing->code;
 
    switch (thing->ira) {
-      case ira__no_wave:
-         if (real_people->cmd.cmd_assume.assumption == cr_wave_only)
-            fail("Not legal.");
-         break;
-      case ira__sixes:
-         if (real_people->cmd.cmd_assume.assumption == cr_wave_only)
-            return ((northified_index ^ (northified_index / 6) ^ code) & 1) == 0;
-         break;
-      case ira__eights:
-         if (real_people->cmd.cmd_assume.assumption == cr_wave_only)
-            return ((northified_index ^ (northified_index >> 3) ^ code) & 1) == 0;
-         break;
-      case ira__gen:
-         if (real_people->cmd.cmd_assume.assumption == cr_wave_only)
-            return ((northified_index ^ (northified_index >> 2) ^ code) & 1) == 0;
-         if (real_people->cmd.cmd_assume.assumption == cr_2fl_only)
-            return (((northified_index >> 1) ^ (northified_index >> 2) ^ code) & 1) == 0;
-         break;
+   case ira__no_wave:
+      if (real_people->cmd.cmd_assume.assumption == cr_wave_only)
+         fail("Not legal.");
+      break;
+   case ira__sixes:
+      if (real_people->cmd.cmd_assume.assumption == cr_wave_only)
+         return ((northified_index ^ (northified_index / 6) ^ code) & 1) == 0;
+      break;
+   case ira__eights:
+      if (real_people->cmd.cmd_assume.assumption == cr_wave_only)
+         return ((northified_index ^ (northified_index >> 3) ^ code) & 1) == 0;
+      break;
+   case ira__gen:
+      if (real_people->cmd.cmd_assume.assumption == cr_wave_only)
+         return ((northified_index ^ (northified_index >> 2) ^ code) & 1) == 0;
+      if (real_people->cmd.cmd_assume.assumption == cr_2fl_only)
+         return (((northified_index >> 1) ^ (northified_index >> 2) ^ code) & 1) == 0;
+      break;
    }
 
-   yes_roll_direction = directions[real_index];
+   // "Yes_roll_direction" is the facing direction that constitutes what we are
+   // looking for (inroller or outroller as the case may be).
+
+   int yes_roll_direction = directions[real_index];
    if (code&1) yes_roll_direction = 022 - yes_roll_direction;
-   no_roll_direction = 022 - yes_roll_direction;
+   int no_roll_direction = 022 - yes_roll_direction;
 
-   size = setup_attrs[real_people->kind].setup_limits+1;
+   int size = setup_attrs[real_people->kind].setup_limits+1;
 
-   cw_idx  = directions[real_index+size];
-   ccw_idx = directions[real_index+2*size];
+   int cw_idx  = directions[real_index+size];
+   int ccw_idx = directions[real_index+2*size];
 
-   cw_end =  real_people->people[cw_idx].id1 & 017;
-   ccw_end = real_people->people[ccw_idx].id1 & 017;
+   int cw_end =  real_people->people[cw_idx].id1 & 017;
+   int ccw_end = real_people->people[ccw_idx].id1 & 017;
 
-   if (  /* cw_end exists and is proper, and we do not have ccw_end proper also */
-         (cw_end == yes_roll_direction && ccw_end != yes_roll_direction) ||
-         /* or if ccw_end exists and is improper, and cw_end is a phantom */
-         (ccw_end == no_roll_direction && cw_end == 0))
-      return(TRUE);
+   if (
+       // cw_end exists and is proper, and we do not have ccw_end proper also
+       (cw_end == yes_roll_direction && ccw_end != yes_roll_direction) ||
+       // or if ccw_end exists and is improper, and cw_end is a phantom
+       (ccw_end == no_roll_direction && cw_end == 0))
+      return TRUE;
    else if (
-         /* ccw_end exists and is proper, and we do not have cw_end proper also */
-         (ccw_end == yes_roll_direction && cw_end != yes_roll_direction) ||
-         /* or if cw_end exists and is improper, and ccw_end is a phantom */
-         (cw_end == no_roll_direction && ccw_end == 0))
+            // ccw_end exists and is proper, and we do not have cw_end proper also
+            (ccw_end == yes_roll_direction && cw_end != yes_roll_direction) ||
+            // or if cw_end exists and is improper, and ccw_end is a phantom
+            (cw_end == no_roll_direction && ccw_end == 0))
       return FALSE;
    else {
       char *errmsg;

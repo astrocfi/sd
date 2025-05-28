@@ -1085,7 +1085,7 @@ extern void do_matrix_expansion(
 /* Must be a power of 2. */
 #define NUM_RESTR_HASH_BUCKETS 32
 
-typedef struct grzlch {
+struct restr_initializer {
    setup_kind k;
    call_restriction restr;
    int size;
@@ -1093,309 +1093,344 @@ typedef struct grzlch {
    veryshort map2[17];
    veryshort map3[8];
    veryshort map4[8];
-   long_boolean ok_for_assume;
+   bool ok_for_assume;
    chk_type check;
-   struct grzlch *next;
-} restr_initializer;
+   restr_initializer *next;
+};
 
 
 static restr_initializer restr_init_table0[] = {
-   {s1x2, cr_opposite_sex, 2, {0}, {0}, {0}, {1}, FALSE, chk_sex},
+   {s2x4, cr_inroller_is_cw,   99,    {3, 7, 0, 4, 0, 4, 3, 7},
+    {012, 010, 012, 010, 010, 012, 0, 0},
+    {0}, {0}, false,  chk_inroller},
+   {s2x4, cr_inroller_is_ccw,   99,    {4, 0, 7, 3, 7, 3, 4, 0},
+    {010, 012, 010, 012, 012, 010, 0, 0},
+    {0}, {0}, false,  chk_inroller},
+   {s2x4, cr_outroller_is_cw,   99,    {3, 7, 0, 4, 0, 4, 3, 7},
+    {010, 012, 010, 012, 012, 010, 0, 0},
+    {0}, {0}, false,  chk_inroller},
+   {s2x4, cr_outroller_is_ccw,   99,    {4, 0, 7, 3, 7, 3, 4, 0},
+    {012, 010, 012, 010, 010, 012, 0, 0},
+    {0}, {0}, false,  chk_inroller},
+
+   {s_qtag, cr_inroller_is_cw,   99,    {4, 0, 1, 5, 1, 5, 4, 0},
+    {003, 001, 003, 001, 001, 003, 0, 0},
+    {0}, {0}, false,  chk_inroller},
+   {s_qtag, cr_inroller_is_ccw,   99,    {5, 1, 0, 4, 0, 4, 5, 1},
+    {001, 003, 001, 003, 003, 001, 0, 0},
+    {0}, {0}, false,  chk_inroller},
+   {s_qtag, cr_outroller_is_cw,   99,    {4, 0, 1, 5, 1, 5, 4, 0},
+    {001, 003, 001, 003, 003, 001, 0, 0},
+    {0}, {0}, false,  chk_inroller},
+   {s_qtag, cr_outroller_is_ccw,   99,    {5, 1, 0, 4, 0, 4, 5, 1},
+    {003, 001, 003, 001, 001, 003, 0, 0},
+    {0}, {0}, false,  chk_inroller},
+
+   {s1x2, cr_opposite_sex, 2, {0}, {0}, {0}, {1}, false, chk_sex},
    {s4x4,      cr_wave_only,    1,   {0, 0, 0, 2, 0, 2, 0, 2, 2, 2, 2, 0, 2, 0, 2, 0},
-                                 {2, 0, 2, 0, 0, 0, 0, 2, 0, 2, 0, 2, 2, 2, 2, 0}, {0}, {0}, TRUE,  chk_box},
+                                 {2, 0, 2, 0, 0, 0, 0, 2, 0, 2, 0, 2, 2, 2, 2, 0}, {0}, {0}, true,  chk_box},
    {s4x4,      cr_2fl_only,     1,    {0, 0, 0, 0, 0, 0, 2, 0, 2, 2, 2, 2, 2, 2, 0, 2},
-                                 {2, 2, 0, 2, 0, 0, 0, 0, 0, 0, 2, 0, 2, 2, 2, 2}, {0}, {0}, TRUE,  chk_box},
-   {s_qtag,    cr_qtag_mwv,     8, {0, 1, 3, 2, 5, 4, 6, 7, -1}, {0, 2, 0},       {0}, {0}, FALSE, chk_spec_directions},
-   {s_qtag,    cr_qtag_mag_mwv, 8, {0, 1, 2, 3, 5, 4, 7, 6, -1}, {0, 2, 0},       {0}, {0}, FALSE, chk_spec_directions},
-   {s_spindle, cr_dmd_ctrs_mwv, 6, {0, 6, 1, 5, 2, 4, -1},    {1, 3, 0},          {0}, {0}, FALSE, chk_spec_directions},
-   {s_short6,  cr_dmd_ctrs_mwv, 4, {0, 2, 5, 3, -1},          {0, 2, 0},          {0}, {0}, FALSE, chk_spec_directions},
-   {sdmd,      cr_dmd_ctrs_mwv, 2, {1, 3, -1},                {1, 3, 0},          {0}, {0}, FALSE, chk_spec_directions},
-   {s_star,    cr_dmd_ctrs_mwv, 2, {1, 1}, {1, 3},             {1, 0}, {1, 2},              FALSE, chk_star},
-   {s_2stars,  cr_dmd_ctrs_mwv, 2, {2, 0, 1}, {2, 4, 5},      {2, 3, 6}, {2, 2, 7},         FALSE, chk_star},
-   {s_trngl,   cr_dmd_ctrs_mwv, 2, {1, 2, -1},                {0, 2, 0},          {0}, {0}, FALSE, chk_spec_directions},
-   {s_trngl4,  cr_dmd_ctrs_mwv, 6, {2, 3, -1},                {0, 2, 0},          {0}, {0}, FALSE, chk_spec_directions},
-   {s_bone6,   cr_dmd_ctrs_mwv, 4, {0, 4, 1, 3, -1},          {1, 3, 0},          {0}, {0}, FALSE, chk_spec_directions},
-   {s1x4,      cr_dmd_ctrs_mwv, 2, {1, 3, -1},                {0, 2, 0},          {0}, {0}, FALSE, chk_spec_directions},
-   {s2x4,      cr_dmd_ctrs_mwv, 4, {1, 2, 6, 5, -1},          {0, 2, 0},          {0}, {0}, FALSE, chk_spec_directions},
-   {s2x3,      cr_dmd_ctrs_mwv, 2, {1, 4, -1},                {1, 3, 0},          {0}, {0}, FALSE, chk_spec_directions},
-   {s_qtag,    cr_dmd_ctrs_mwv, 4, {3, 2, 6, 7, -1},          {0, 2, 0},          {0}, {0}, FALSE, chk_spec_directions},
-   {s3dmd,     cr_dmd_ctrs_mwv, 6, {4, 3, 11, 5, 9, 10, -1},  {0, 2, 0},          {0}, {0}, FALSE, chk_spec_directions},
-   {s4dmd,     cr_dmd_ctrs_mwv, 8, {5, 4, 7, 6, 14, 15, 12, 13, -1}, {0, 2, 0},   {0}, {0}, FALSE, chk_spec_directions},
-   {swqtag,    cr_dmd_ctrs_mwv, 6, {3, 2, 9, 4, 7, 8, -1},    {0, 2, 0},          {0}, {0}, FALSE, chk_spec_directions},
-   {sdeep2x1dmd, cr_dmd_ctrs_mwv, 8, {0, 1, 3, 4, 6, 5, 9, 8, -1}, {0, 2, 0},     {0}, {0}, FALSE, chk_spec_directions},
-   {s_ptpd,    cr_dmd_ctrs_mwv, 4, {1, 3, 7, 5, -1},          {1, 3, 0},          {0}, {0}, FALSE, chk_spec_directions},
-   {sdmd,      cr_dmd_ctrs_1f, 2, {1, 3, -1},                 {1, 3, 1},          {0}, {0}, FALSE, chk_spec_directions},
-   {s1x4,      cr_dmd_ctrs_1f, 2, {1, 3, -1},                 {0, 2, 1},          {0}, {0}, FALSE, chk_spec_directions},
+                                 {2, 2, 0, 2, 0, 0, 0, 0, 0, 0, 2, 0, 2, 2, 2, 2}, {0}, {0}, true,  chk_box},
+   {s_qtag,    cr_qtag_mwv,     8, {0, 1, 3, 2, 5, 4, 6, 7, -1}, {0, 2, 0},       {0}, {0}, false, chk_spec_directions},
+   {s_qtag,    cr_qtag_mag_mwv, 8, {0, 1, 2, 3, 5, 4, 7, 6, -1}, {0, 2, 0},       {0}, {0}, false, chk_spec_directions},
+   {s_spindle, cr_dmd_ctrs_mwv, 6, {0, 6, 1, 5, 2, 4, -1},    {1, 3, 0},          {0}, {0}, false, chk_spec_directions},
+   {s_short6,  cr_dmd_ctrs_mwv, 4, {0, 2, 5, 3, -1},          {0, 2, 0},          {0}, {0}, false, chk_spec_directions},
+   {sdmd,      cr_dmd_ctrs_mwv, 2, {1, 3, -1},                {1, 3, 0},          {0}, {0}, false, chk_spec_directions},
+   {s_star,    cr_dmd_ctrs_mwv, 2, {1, 1}, {1, 3},             {1, 0}, {1, 2},              false, chk_star},
+   {s_2stars,  cr_dmd_ctrs_mwv, 2, {2, 0, 1}, {2, 4, 5},      {2, 3, 6}, {2, 2, 7},         false, chk_star},
+   {s_trngl,   cr_dmd_ctrs_mwv, 2, {1, 2, -1},                {0, 2, 0},          {0}, {0}, false, chk_spec_directions},
+   {s_trngl4,  cr_dmd_ctrs_mwv, 6, {2, 3, -1},                {0, 2, 0},          {0}, {0}, false, chk_spec_directions},
+   {s_bone6,   cr_dmd_ctrs_mwv, 4, {0, 4, 1, 3, -1},          {1, 3, 0},          {0}, {0}, false, chk_spec_directions},
+   {s1x4,      cr_dmd_ctrs_mwv, 2, {1, 3, -1},                {0, 2, 0},          {0}, {0}, false, chk_spec_directions},
+   {s2x4,      cr_dmd_ctrs_mwv, 4, {1, 2, 6, 5, -1},          {0, 2, 0},          {0}, {0}, false, chk_spec_directions},
+   {s2x3,      cr_dmd_ctrs_mwv, 2, {1, 4, -1},                {1, 3, 0},          {0}, {0}, false, chk_spec_directions},
+   {s_qtag,    cr_dmd_ctrs_mwv, 4, {3, 2, 6, 7, -1},          {0, 2, 0},          {0}, {0}, false, chk_spec_directions},
+   {s3dmd,     cr_dmd_ctrs_mwv, 6, {4, 3, 11, 5, 9, 10, -1},  {0, 2, 0},          {0}, {0}, false, chk_spec_directions},
+   {s4dmd,     cr_dmd_ctrs_mwv, 8, {5, 4, 7, 6, 14, 15, 12, 13, -1}, {0, 2, 0},   {0}, {0}, false, chk_spec_directions},
+   {s4x6,      cr_dmd_ctrs_mwv, 8, {1, 10, 4, 7, 22, 13, 19, 16, -1}, {1, 3, 0},  {0}, {0}, false, chk_spec_directions},
+   {swqtag,    cr_dmd_ctrs_mwv, 6, {3, 2, 9, 4, 7, 8, -1},    {0, 2, 0},          {0}, {0}, false, chk_spec_directions},
+   {sdeep2x1dmd, cr_dmd_ctrs_mwv, 8, {0, 1, 3, 4, 6, 5, 9, 8, -1}, {0, 2, 0},     {0}, {0}, false, chk_spec_directions},
+   {s_ptpd,    cr_dmd_ctrs_mwv, 4, {1, 3, 7, 5, -1},          {1, 3, 0},          {0}, {0}, false, chk_spec_directions},
+   {sdmd,      cr_dmd_ctrs_1f, 2, {1, 3, -1},                 {1, 3, 1},          {0}, {0}, false, chk_spec_directions},
+   {s1x4,      cr_dmd_ctrs_1f, 2, {1, 3, -1},                 {0, 2, 1},          {0}, {0}, false, chk_spec_directions},
 
-   {s1x8, cr_wave_only, 8, {0, 1, 3, 2, 6, 7, 5, 4},                              {0}, {0}, {0}, TRUE, chk_wave},
-   {s1x8, cr_1fl_only, 4, {0, 4, 1, 5, 2, 6, 3, 7},                               {2}, {0}, {0}, TRUE,  chk_groups},
-   {s1x8, cr_all_facing_same, 8, {0, 1, 2, 3, 4, 5, 6, 7},                        {1}, {0}, {0}, TRUE,  chk_groups},
-   {s1x8, cr_2fl_only, 8, {0, 3, 1, 2, 6, 5, 7, 4},                               {0}, {0}, {0}, FALSE, chk_wave},
+   {s1x8, cr_wave_only, 8, {0, 1, 3, 2, 6, 7, 5, 4},                              {0}, {0}, {0}, true, chk_wave},
+   {s1x8, cr_1fl_only, 4, {0, 4, 1, 5, 2, 6, 3, 7},                               {2}, {0}, {0}, true,  chk_groups},
+   {s1x8, cr_all_facing_same, 8, {0, 1, 2, 3, 4, 5, 6, 7},                        {1}, {0}, {0}, true,  chk_groups},
+   {s1x8, cr_2fl_only, 8, {0, 3, 1, 2, 6, 5, 7, 4},                               {0}, {0}, {0}, false, chk_wave},
 
-   {s1x8, cr_2fl_per_1x4, 2, {0, 1, 4, 5, 2, 3, 6, 7},                            {2}, {0}, {0}, FALSE,  chk_anti_groups},
+   {s1x8, cr_2fl_per_1x4, 2, {0, 1, 4, 5, 2, 3, 6, 7},                            {2}, {0}, {0}, false,  chk_anti_groups},
 
-   {s2x4, cr_4x4couples_only, 4, {0, 4, 1, 5, 2, 6, 3, 7},                        {2}, {0}, {0}, TRUE,  chk_groups},
-   {s1x8, cr_4x4couples_only, 4, {0, 4, 1, 5, 2, 6, 3, 7},                        {2}, {0}, {0}, TRUE,  chk_groups},
-   {s1x8, cr_4x4_2fl_only, 8, {0, 4, 1, 5, 2, 6, 3, 7},                           {0}, {0}, {0}, FALSE, chk_wave},
-   {s1x8, cr_couples_only, 2, {0, 2, 4, 6, 1, 3, 5, 7},                           {4}, {0}, {0}, TRUE,  chk_groups},
-   {s1x8, cr_miniwaves, 1, {0, 2, 4, 6, 1, 3, 5, 7},                              {4}, {0}, {0}, TRUE,  chk_anti_groups},
-   {s1x3, cr_1fl_only, 3, {0, 1, 2},                                              {1}, {0}, {0}, TRUE,  chk_groups},
-   {s1x3, cr_3x3couples_only, 3, {0, 1, 2},                                       {1}, {0}, {0}, TRUE,  chk_groups},
-   {s1x3, cr_wave_only, 3, {0, 1, 2},                                             {0}, {0}, {0}, TRUE,  chk_wave},
-   {s1x4, cr_wave_only, 4, {0, 1, 3, 2},                                          {0}, {0}, {0}, TRUE,  chk_wave},
-   {s1x4, cr_2fl_only, 4, {0, 2, 1, 3},                                           {0}, {0}, {0}, TRUE,  chk_wave},
-   {s1x4, cr_1fl_only, 4, {0, 1, 2, 3},                                           {1}, {0}, {0}, TRUE,  chk_groups},
-   {s1x4, cr_4x4couples_only, 4, {0, 1, 2, 3},                                    {1}, {0}, {0}, TRUE,  chk_groups},
-   {s1x4, cr_all_facing_same, 4, {0, 1, 2, 3},                                    {1}, {0}, {0}, TRUE,  chk_groups},
-   {s1x4, cr_couples_only, 2, {0, 2, 1, 3},                                       {2}, {0}, {0}, TRUE,  chk_groups},
-   {s1x4, cr_miniwaves, 1, {0, 2, 1, 3},                                          {2}, {0}, {0}, TRUE,  chk_anti_groups},
-   {s1x4, cr_magic_only, 4, {0, 1, 2, 3},                                         {0}, {0}, {0}, TRUE,  chk_wave},
-   {s1x4, cr_all_ns, 4, {4, 0, 1, 2, 3}, {0},  {0},  {0},  FALSE, chk_dmd_qtag},
-   {s1x4, cr_all_ew, 4, {0}, {4, 0, 1, 2, 3}, {0}, {0}, FALSE, chk_dmd_qtag},
-   {s2x4, cr_all_ns, 4, {8, 0, 1, 2, 3, 4, 5, 6, 7}, {0}, {0}, {0}, FALSE, chk_dmd_qtag},
-   {s2x4, cr_all_ew, 4, {0}, {8, 0, 1, 2, 3, 4, 5, 6, 7}, {0}, {0}, FALSE, chk_dmd_qtag},
-   {s1x8, cr_all_ns, 4, {8, 0, 1, 2, 3, 4, 5, 6, 7}, {0}, {0}, {0}, FALSE, chk_dmd_qtag},
-   {s1x8, cr_all_ew, 4, {0}, {8, 0, 1, 2, 3, 4, 5, 6, 7}, {0}, {0}, FALSE, chk_dmd_qtag},
-   {s1x6, cr_miniwaves, 1, {0, 2, 4, 1, 5, 3},                                    {3}, {0}, {0}, TRUE,  chk_anti_groups},
-   {s1x6, cr_wave_only, 6, {0, 1, 2, 5, 4, 3},                                    {0}, {0}, {0}, TRUE,  chk_wave},
-   {s1x6, cr_1fl_only, 3, {0, 3, 1, 4, 2, 5},                                     {2}, {0}, {0}, TRUE,  chk_groups},
-   {s1x6, cr_all_facing_same, 6, {0, 1, 2, 3, 4, 5},                              {1}, {0}, {0}, TRUE,  chk_groups},
-   {s1x6, cr_3x3_2fl_only, 6, {0, 3, 1, 4, 2, 5},                                 {0}, {0}, {0}, FALSE, chk_wave},
-   {s1x6, cr_3x3couples_only, 3, {0, 3, 1, 4, 2, 5},                              {2}, {0}, {0}, TRUE,  chk_groups},
-   {s2x3, cr_3x3couples_only, 3, {0, 3, 1, 4, 2, 5},                              {2}, {0}, {0}, TRUE,  chk_groups},
-   {s1x10, cr_wave_only, 10, {0, 1, 2, 3, 4, 5, 6, 7, 8, 9},         {0},         {0}, {0}, TRUE, chk_wave},
-   {s1x12, cr_wave_only, 12, {0, 1, 2, 3, 4, 5, 7, 6, 9, 8, 11, 10},              {0}, {0}, {0}, TRUE,  chk_wave},
-   {s1x14, cr_wave_only, 14, {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13},      {0}, {0}, {0}, TRUE,  chk_wave},
-   {s1x16, cr_wave_only, 16, {0, 1, 2, 3, 4, 5, 6, 7, 9, 8, 11, 10, 13, 12, 15, 14},{0}, {0}, {0}, TRUE, chk_wave},
-   {s1x16, cr_couples_only, 2, {0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15}, {8}, {0}, {0}, TRUE,  chk_groups},
-   {s1x16, cr_miniwaves, 1, {0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15}, {8}, {0}, {0}, TRUE,  chk_anti_groups},
-   {s2x3, cr_all_facing_same, 6, {0, 1, 2, 3, 4, 5},                              {1}, {0}, {0}, TRUE,  chk_groups},
-   {s2x3, cr_1fl_only, 3, {0, 3, 1, 4, 2, 5},                                     {2}, {0}, {0}, TRUE,  chk_groups},
-   {s2x3, cr_li_lo, 6, {3, 0, 4, 1, 5, 2},                                        {0}, {0}, {0}, TRUE,  chk_wave},
-   {s2x4, cr_2fl_only, 8, {0, 3, 1, 2, 6, 5, 7, 4},                               {0}, {0}, {0}, TRUE,  chk_wave},
+   {s2x4, cr_4x4couples_only, 4, {0, 4, 1, 5, 2, 6, 3, 7},                        {2}, {0}, {0}, true,  chk_groups},
+   {s1x8, cr_4x4couples_only, 4, {0, 4, 1, 5, 2, 6, 3, 7},                        {2}, {0}, {0}, true,  chk_groups},
+   {s1x8, cr_4x4_2fl_only, 8, {0, 4, 1, 5, 2, 6, 3, 7},                           {0}, {0}, {0}, false, chk_wave},
+   {s1x8, cr_couples_only, 2, {0, 2, 4, 6, 1, 3, 5, 7},                           {4}, {0}, {0}, true,  chk_groups},
+   {s1x8, cr_miniwaves, 1, {0, 2, 4, 6, 1, 3, 5, 7},                              {4}, {0}, {0}, true,  chk_anti_groups},
+   {s1x3, cr_1fl_only, 3, {0, 1, 2},                                              {1}, {0}, {0}, true,  chk_groups},
+   {s1x3, cr_3x3couples_only, 3, {0, 1, 2},                                       {1}, {0}, {0}, true,  chk_groups},
+   {s1x3, cr_wave_only, 3, {0, 1, 2},                                             {0}, {0}, {0}, true,  chk_wave},
+   {s1x4, cr_wave_only, 4, {0, 1, 3, 2},                                          {0}, {0}, {0}, true,  chk_wave},
+   {s1x4, cr_2fl_only, 4, {0, 2, 1, 3},                                           {0}, {0}, {0}, true,  chk_wave},
+   {s1x4, cr_1fl_only, 4, {0, 1, 2, 3},                                           {1}, {0}, {0}, true,  chk_groups},
+   {s1x4, cr_4x4couples_only, 4, {0, 1, 2, 3},                                    {1}, {0}, {0}, true,  chk_groups},
+   {s1x4, cr_all_facing_same, 4, {0, 1, 2, 3},                                    {1}, {0}, {0}, true,  chk_groups},
+   {s1x4, cr_couples_only, 2, {0, 2, 1, 3},                                       {2}, {0}, {0}, true,  chk_groups},
+   {s1x4, cr_miniwaves, 1, {0, 2, 1, 3},                                          {2}, {0}, {0}, true,  chk_anti_groups},
+   {s1x4, cr_magic_only, 4, {0, 1, 2, 3},                                         {0}, {0}, {0}, true,  chk_wave},
+   {s1x4, cr_all_ns, 4, {4, 0, 1, 2, 3}, {0},  {0},  {0},  false, chk_dmd_qtag},
+   {s1x4, cr_all_ew, 4, {0}, {4, 0, 1, 2, 3}, {0}, {0}, false, chk_dmd_qtag},
+   {s2x4, cr_all_ns, 4, {8, 0, 1, 2, 3, 4, 5, 6, 7}, {0}, {0}, {0}, false, chk_dmd_qtag},
+   {s2x4, cr_all_ew, 4, {0}, {8, 0, 1, 2, 3, 4, 5, 6, 7}, {0}, {0}, false, chk_dmd_qtag},
+   {s1x8, cr_all_ns, 4, {8, 0, 1, 2, 3, 4, 5, 6, 7}, {0}, {0}, {0}, false, chk_dmd_qtag},
+   {s1x8, cr_all_ew, 4, {0}, {8, 0, 1, 2, 3, 4, 5, 6, 7}, {0}, {0}, false, chk_dmd_qtag},
+   {s1x6, cr_miniwaves, 1, {0, 2, 4, 1, 5, 3},                                    {3}, {0}, {0}, true,  chk_anti_groups},
+   {s1x6, cr_wave_only, 6, {0, 1, 2, 5, 4, 3},                                    {0}, {0}, {0}, true,  chk_wave},
+   {s1x6, cr_1fl_only, 3, {0, 3, 1, 4, 2, 5},                                     {2}, {0}, {0}, true,  chk_groups},
+   {s1x6, cr_all_facing_same, 6, {0, 1, 2, 3, 4, 5},                              {1}, {0}, {0}, true,  chk_groups},
+   {s1x6, cr_3x3_2fl_only, 6, {0, 3, 1, 4, 2, 5},                                 {0}, {0}, {0}, false, chk_wave},
+   {s1x6, cr_3x3couples_only, 3, {0, 3, 1, 4, 2, 5},                              {2}, {0}, {0}, true,  chk_groups},
+   {s2x3, cr_3x3couples_only, 3, {0, 3, 1, 4, 2, 5},                              {2}, {0}, {0}, true,  chk_groups},
+   {s1x10, cr_wave_only, 10, {0, 1, 2, 3, 4, 5, 6, 7, 8, 9},         {0},         {0}, {0}, true, chk_wave},
+   {s1x12, cr_wave_only, 12, {0, 1, 2, 3, 4, 5, 7, 6, 9, 8, 11, 10},              {0}, {0}, {0}, true,  chk_wave},
+   {s1x14, cr_wave_only, 14, {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13},      {0}, {0}, {0}, true,  chk_wave},
+   {s1x16, cr_wave_only, 16, {0, 1, 2, 3, 4, 5, 6, 7, 9, 8, 11, 10, 13, 12, 15, 14},{0}, {0}, {0}, true, chk_wave},
+   {s1x16, cr_couples_only, 2, {0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15}, {8}, {0}, {0}, true,  chk_groups},
+   {s1x16, cr_miniwaves, 1, {0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15}, {8}, {0}, {0}, true,  chk_anti_groups},
+   {s2x3, cr_all_facing_same, 6, {0, 1, 2, 3, 4, 5},                              {1}, {0}, {0}, true,  chk_groups},
+   {s2x3, cr_1fl_only, 3, {0, 3, 1, 4, 2, 5},                                     {2}, {0}, {0}, true,  chk_groups},
+   {s2x3, cr_li_lo, 6, {3, 0, 4, 1, 5, 2},                                        {0}, {0}, {0}, true,  chk_wave},
+   {s2x4, cr_2fl_only, 8, {0, 3, 1, 2, 6, 5, 7, 4},                               {0}, {0}, {0}, true,  chk_wave},
 
-   {s2x4, cr_2fl_per_1x4, 2, {0, 1, 4, 5, 2, 3, 6, 7},                            {2}, {0}, {0}, FALSE,  chk_anti_groups},
+   {s2x4, cr_2fl_per_1x4, 2, {0, 1, 4, 5, 2, 3, 6, 7},                            {2}, {0}, {0}, false,  chk_anti_groups},
 
-   {s2x4, cr_wave_only, 8, {0, 1, 2, 3, 5, 4, 7, 6},                              {0}, {0}, {0}, TRUE,  chk_wave},
-   {s2x3, cr_wave_only, 6, {0, 1, 2, 3, 4, 5},                                    {0}, {0}, {0}, FALSE, chk_wave},
-   {s2x3, cr_magic_only, 6, {0, 1, 2, 3, 4, 5},                                   {0}, {0}, {0}, TRUE,  chk_wave},
-   {s2x4, cr_magic_only, 8, {0, 1, 3, 2, 5, 4, 6, 7},                             {0}, {0}, {0}, TRUE,  chk_wave},
-   {s2x4, cr_li_lo, 8, {4, 0, 5, 1, 6, 2, 7, 3},                                  {0}, {0}, {0}, TRUE,  chk_wave},
-   {s2x4, cr_ctrs_in_out, 4, {5, 1, 6, 2},                                        {0}, {0}, {0}, FALSE, chk_wave},
-   {s2x4, cr_indep_in_out, 0, {3, 2, 3, 2, 1, 0, 1, 0},                           {0}, {0}, {0}, FALSE, chk_indep_box},
-   {s2x4, cr_all_facing_same, 8, {0, 1, 2, 3, 4, 5, 6, 7},                        {1}, {0}, {0}, TRUE,  chk_groups},
-   {s2x4, cr_1fl_only, 4, {0, 4, 1, 5, 2, 6, 3, 7},                               {2}, {0}, {0}, TRUE,  chk_groups},
-   {s2x4, cr_couples_only, 2, {0, 2, 4, 6, 1, 3, 5, 7},                           {4}, {0}, {0}, TRUE,  chk_groups},
-   {s2x4, cr_miniwaves, 1, {0, 2, 4, 6, 1, 3, 5, 7},                              {4}, {0}, {0}, TRUE,  chk_anti_groups},
-   {s_qtag, cr_wave_only, 4, {6, 7, 3, 2},                                        {0}, {0}, {0}, TRUE,  chk_wave},
-   {s_qtag, cr_2fl_only, 4, {6, 2, 7, 3},                                         {0}, {0}, {0}, TRUE,  chk_wave},
-   {s_qtag, cr_dmd_not_intlk, 4, {6, 7, 3, 2},                                    {0}, {0}, {0}, TRUE,  chk_wave},
-   {s_qtag, cr_dmd_intlk, 4, {6, 2, 7, 3},                                        {0}, {0}, {0}, TRUE,  chk_wave},
-   {s_ptpd, cr_dmd_not_intlk, 4, {0, 2, 6, 4},                                    {0}, {0}, {0}, TRUE,  chk_wave},
-   {s_ptpd, cr_dmd_intlk, 4, {0, 6, 2, 4},                                        {0}, {0}, {0}, TRUE,  chk_wave},
-   {s_qtag, cr_miniwaves, 1, {6, 2, 7, 3},                                        {2}, {0}, {0}, TRUE,  chk_anti_groups},
-   {s_qtag, cr_couples_only, 2, {6, 2, 7, 3},                                     {2}, {0}, {0}, TRUE,  chk_groups},
-   {s_bone, cr_miniwaves, 1, {6, 2, 7, 3},                                        {2}, {0}, {0}, TRUE,  chk_anti_groups},
-   {s_bone, cr_couples_only, 2, {6, 2, 7, 3},                                     {2}, {0}, {0}, TRUE,  chk_groups},
-   {s_bone6, cr_wave_only, 6, {0, 1, 2, 3, 4, 5},                                     {0}, {0}, {0}, TRUE, chk_wave},
+   {s2x4, cr_wave_only, 8, {0, 1, 2, 3, 5, 4, 7, 6},                              {0}, {0}, {0}, true,  chk_wave},
+   {s2x3, cr_wave_only, 6, {0, 1, 2, 3, 4, 5},                                    {0}, {0}, {0}, false, chk_wave},
+   {s2x3, cr_magic_only, 6, {0, 1, 2, 3, 4, 5},                                   {0}, {0}, {0}, true,  chk_wave},
+   {s2x4, cr_magic_only, 8, {0, 1, 3, 2, 5, 4, 6, 7},                             {0}, {0}, {0}, true,  chk_wave},
+   {s2x4, cr_li_lo, 8, {4, 0, 5, 1, 6, 2, 7, 3},                                  {0}, {0}, {0}, true,  chk_wave},
+   {s2x4, cr_ctrs_in_out, 4, {5, 1, 6, 2},                                        {0}, {0}, {0}, false, chk_wave},
+   {s2x4, cr_indep_in_out, 0, {3, 2, 3, 2, 1, 0, 1, 0},                           {0}, {0}, {0}, false, chk_indep_box},
+   {s2x4, cr_all_facing_same, 8, {0, 1, 2, 3, 4, 5, 6, 7},                        {1}, {0}, {0}, true,  chk_groups},
+   {s2x4, cr_1fl_only, 4, {0, 4, 1, 5, 2, 6, 3, 7},                               {2}, {0}, {0}, true,  chk_groups},
+   {s2x4, cr_couples_only, 2, {0, 2, 4, 6, 1, 3, 5, 7},                           {4}, {0}, {0}, true,  chk_groups},
+   {s2x4, cr_miniwaves, 1, {0, 2, 4, 6, 1, 3, 5, 7},                              {4}, {0}, {0}, true,  chk_anti_groups},
+   {s_qtag, cr_wave_only, 4, {6, 7, 3, 2},                                        {0}, {0}, {0}, true,  chk_wave},
+   {s_qtag, cr_2fl_only, 4, {6, 2, 7, 3},                                         {0}, {0}, {0}, true,  chk_wave},
+   {s_qtag, cr_dmd_not_intlk, 4, {6, 7, 3, 2},                                    {0}, {0}, {0}, true,  chk_wave},
+   {s_qtag, cr_dmd_intlk, 4, {6, 2, 7, 3},                                        {0}, {0}, {0}, true,  chk_wave},
+   {s_ptpd, cr_dmd_not_intlk, 4, {0, 2, 6, 4},                                    {0}, {0}, {0}, true,  chk_wave},
+   {s_ptpd, cr_dmd_intlk, 4, {0, 6, 2, 4},                                        {0}, {0}, {0}, true,  chk_wave},
+   {s_qtag, cr_miniwaves, 1, {6, 2, 7, 3},                                        {2}, {0}, {0}, true,  chk_anti_groups},
+   {s_qtag, cr_couples_only, 2, {6, 2, 7, 3},                                     {2}, {0}, {0}, true,  chk_groups},
+   {s_bone, cr_miniwaves, 1, {6, 2, 7, 3},                                        {2}, {0}, {0}, true,  chk_anti_groups},
+   {s_bone, cr_couples_only, 2, {6, 2, 7, 3},                                     {2}, {0}, {0}, true,  chk_groups},
+   {s_bone6, cr_wave_only, 6, {0, 1, 2, 3, 4, 5},                                     {0}, {0}, {0}, true, chk_wave},
    {s2x8, cr_wave_only, 16, {0, 1, 2, 3, 4, 5, 6, 7, 9, 8, 11, 10, 13, 12, 15, 14},
-    {0}, {0}, {0}, TRUE, chk_wave},
+    {0}, {0}, {0}, true, chk_wave},
    {s2x8, cr_4x4_2fl_only, 16, {0, 4, 1, 5, 2, 6, 3, 7, 12, 8, 13, 9, 14, 10, 15, 11},
-    {0},{0},{0}, FALSE,chk_wave},
+    {0},{0},{0}, false,chk_wave},
    {s1x16, cr_4x4couples_only, 4, {0, 4, 8, 12, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15},
-    {4}, {0}, {0}, TRUE, chk_groups},
+    {4}, {0}, {0}, true, chk_groups},
    {s2x8, cr_4x4couples_only, 4, {0, 4, 8, 12, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15},
-    {4}, {0}, {0}, TRUE,  chk_groups},
+    {4}, {0}, {0}, true,  chk_groups},
    {s2x8, cr_couples_only, 2, {0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15},
-    {8}, {0}, {0}, TRUE,  chk_groups},
+    {8}, {0}, {0}, true,  chk_groups},
    {s2x8, cr_miniwaves, 1, {0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15},
-    {8}, {0}, {0}, FALSE, chk_anti_groups},
+    {8}, {0}, {0}, false, chk_anti_groups},
    {s2x6, cr_wave_only, 12, {0, 1, 2, 3, 4, 5, 7, 6, 9, 8, 11, 10},
-    {0}, {0}, {0}, TRUE,  chk_wave},
+    {0}, {0}, {0}, true,  chk_wave},
    {s2x6, cr_3x3_2fl_only, 12, {0, 3, 1, 4, 2, 5, 9, 6, 10, 7, 11, 8},
-    {0}, {0}, {0}, FALSE, chk_wave},
+    {0}, {0}, {0}, false, chk_wave},
    {s2x6, cr_3x3couples_only, 3, {0, 3, 6, 9, 1, 4, 7, 10, 2, 5, 8, 11},
-    {4}, {0}, {0}, TRUE,  chk_groups},
+    {4}, {0}, {0}, true,  chk_groups},
    {s1x12, cr_3x3couples_only, 3, {0, 3, 6, 9, 1, 4, 7, 10, 2, 5, 8, 11},
-    {4}, {0}, {0}, TRUE,  chk_groups},
+    {4}, {0}, {0}, true,  chk_groups},
    {s1x2, cr_wave_only, 2, {0, 1},
-    {0}, {0}, {0}, TRUE,  chk_wave},
+    {0}, {0}, {0}, true,  chk_wave},
    {s1x2, cr_2fl_only, 2, {0, 1},
-    {1}, {0}, {0}, TRUE,  chk_groups},
+    {1}, {0}, {0}, true,  chk_groups},
    {s1x2, cr_couples_only, 2, {0, 1},
-    {1}, {0}, {0}, TRUE,  chk_groups},
+    {1}, {0}, {0}, true,  chk_groups},
    {s1x2, cr_all_facing_same, 2, {0, 1},
-    {1}, {0}, {0}, TRUE,  chk_groups},
+    {1}, {0}, {0}, true,  chk_groups},
    {s1x2, cr_miniwaves, 1, {0, 1},
-    {1}, {0}, {0}, TRUE,  chk_anti_groups},
+    {1}, {0}, {0}, true,  chk_anti_groups},
    {s2x2, cr_couples_only, 0, {1, 0, 3, 2},
-    {3, 2, 1, 0}, {0}, {0}, FALSE, chk_box_dbl},
+    {3, 2, 1, 0}, {0}, {0}, false, chk_box_dbl},
    {s2x2, cr_miniwaves, 2, {1, 0, 3, 2, 3, 0, 0, 3},
-    {3, 2, 1, 0, 3, 3, 0, 0}, {0}, {0}, FALSE, chk_box_dbl},
+    {3, 2, 1, 0, 3, 3, 0, 0}, {0}, {0}, false, chk_box_dbl},
    {s2x2, cr_peelable_box, 0, {3, 2, 1, 0},
-    {1, 0, 3, 2}, {0}, {0}, FALSE, chk_box_dbl},
+    {1, 0, 3, 2}, {0}, {0}, false, chk_box_dbl},
    {s2x4, cr_peelable_box, 2, {0, 1, 2, 3, 7, 6, 5, 4},
-    {4}, {0}, {0}, FALSE, chk_groups},
+    {4}, {0}, {0}, false, chk_groups},
    {s2x4, cr_reg_tbone, 1, { 3, 2, 0, 1, 1, 0, 2, 3},
-    {0, 3, 1, 2, 2, 1, 3, 0}, {0}, {0}, FALSE, chk_box},
+    {0, 3, 1, 2, 2, 1, 3, 0}, {0}, {0}, false, chk_box},
    {s2x2, cr_reg_tbone, 1, {2, 1, 0, 3},
-    {2, 3, 0, 1}, {0}, {0}, FALSE, chk_box},
+    {2, 3, 0, 1}, {0}, {0}, false, chk_box},
    {s1x4, cr_reg_tbone, 1, {3, 2, 1, 0},
-    {0, 3, 2, 1}, {0}, {0}, FALSE, chk_box},
+    {0, 3, 2, 1}, {0}, {0}, false, chk_box},
    {s3x4, cr_wave_only, 12, {0, 1, 2, 3, 5, 4, 7, 6, 9, 8, 10, 11},
-    {0}, {0}, {0}, TRUE,  chk_wave},
+    {0}, {0}, {0}, true,  chk_wave},
    {s3x4, cr_2fl_only, 12, {0, 2, 1, 3, 8, 4, 9, 5, 10, 6, 11, 7},
-    {0}, {0}, {0}, TRUE,  chk_wave},
+    {0}, {0}, {0}, true,  chk_wave},
    {s_thar, cr_wave_only, 8, {0, 1, 2, 3, 5, 4, 7, 6},
-    /* NOTE THE 4 --> */{4}, {0}, {0}, TRUE,  chk_wave},
+    /* NOTE THE 4 --> */{4}, {0}, {0}, true,  chk_wave},
    {s_thar, cr_1fl_only, 8, {0, 3, 1, 2, 6, 5, 7, 4},
-    {0}, {0}, {0}, FALSE, chk_wave},
+    {0}, {0}, {0}, false, chk_wave},
    {s_thar, cr_magic_only, 8, {0, 1, 3, 2, 5, 4, 6, 7},
-    /* NOTE THE 4 --> */{4}, {0}, {0}, TRUE,  chk_wave},
+    /* NOTE THE 4 --> */{4}, {0}, {0}, true,  chk_wave},
    {s_crosswave, cr_wave_only, 8, {0, 1, 2, 3, 5, 4, 7, 6},
-    /* NOTE THE 4 --> */{4}, {0}, {0}, TRUE,  chk_wave},
+    /* NOTE THE 4 --> */{4}, {0}, {0}, true,  chk_wave},
    {s_crosswave, cr_1fl_only, 8, {0, 3, 1, 2, 6, 5, 7, 4},
-    {0}, {0}, {0}, FALSE, chk_wave},
+    {0}, {0}, {0}, false, chk_wave},
    {s_crosswave, cr_magic_only, 8, {0, 1, 3, 2, 5, 4, 6, 7},
-    /* NOTE THE 4 --> */{4}, {0}, {0}, TRUE,  chk_wave},
+    /* NOTE THE 4 --> */{4}, {0}, {0}, true,  chk_wave},
    {s3x1dmd, cr_wave_only, 6, {0, 1, 2, 6, 5, 4},
-    {0}, {0}, {0}, TRUE,  chk_wave},
+    {0}, {0}, {0}, true,  chk_wave},
    {s_2x1dmd, cr_wave_only, 4, {0, 1, 4, 3},
-    {0}, {0}, {0}, TRUE,  chk_wave},
+    {0}, {0}, {0}, true,  chk_wave},
    {s_qtag, cr_real_1_4_tag, 4, {6, 7, 3, 2},
-    {4, 4, 0, 5, 1}, {0}, {0}, TRUE,  chk_qtag},
+    {4, 4, 0, 5, 1}, {0}, {0}, true,  chk_qtag},
    {s_qtag, cr_real_3_4_tag, 4, {6, 7, 3, 2},
-    {4, 0, 4, 1, 5}, {0}, {0}, TRUE,  chk_qtag},
+    {4, 0, 4, 1, 5}, {0}, {0}, true,  chk_qtag},
    {s_qtag, cr_real_1_4_line, 4, {6, 3, 7, 2},
-    {4, 4, 0, 5, 1}, {0}, {0}, TRUE,  chk_qtag},
+    {4, 4, 0, 5, 1}, {0}, {0}, true,  chk_qtag},
    {s_qtag, cr_real_3_4_line, 4, {6, 3, 7, 2},
-    {4, 0, 4, 1, 5}, {0}, {0}, TRUE,  chk_qtag},
+    {4, 0, 4, 1, 5}, {0}, {0}, true,  chk_qtag},
    {s_trngl, cr_wave_only, 2, {1, 2},
-    {0}, {0}, {0}, TRUE,  chk_wave},
+    {0}, {0}, {0}, true,  chk_wave},
    {s_trngl, cr_miniwaves, 2, {1, 2},
-    {0}, {0}, {0}, TRUE,  chk_wave},
+    {0}, {0}, {0}, true,  chk_wave},
    {s_trngl, cr_couples_only, 2, {1, 2},
-    {1}, {0}, {0}, TRUE,  chk_groups},
+    {1}, {0}, {0}, true,  chk_groups},
    {s_trngl, cr_2fl_only, 3, {0, 1, 2},
-    {1}, {0}, {0}, TRUE,  chk_groups},
+    {1}, {0}, {0}, true,  chk_groups},
    {s_trngl, cr_tgl_tandbase, 0, {0},
-    {2, 1, 2}, {2, 1, 2}, {0}, TRUE,  chk_dmd_qtag},
+    {2, 1, 2}, {2, 1, 2}, {0}, true,  chk_dmd_qtag},
    {s_short6, cr_nice_wv_triangles, 0, {4, 0, 2, 3, 5},
-    {2, 1, 4}, {3, 0, 1, 5}, {3, 2, 3, 4}, FALSE,  chk_dmd_qtag_new},
+    {2, 1, 4}, {3, 0, 1, 5}, {3, 2, 3, 4}, false,  chk_dmd_qtag_new},
    {s_bone6, cr_nice_wv_triangles, 0, {2, 2, 5},
-    {4, 0, 1, 3, 4}, {3, 0, 1, 2}, {3, 3, 4, 5}, FALSE,  chk_dmd_qtag_new},
+    {4, 0, 1, 3, 4}, {3, 0, 1, 2}, {3, 3, 4, 5}, false,  chk_dmd_qtag_new},
    {s_trngl, cr_nice_wv_triangles, 0, {2, 1, 2},
-    {1, 0}, {1, 1}, {2, 0, 2}, FALSE,  chk_dmd_qtag_new},
+    {1, 0}, {1, 1}, {2, 0, 2}, false,  chk_dmd_qtag_new},
    {s_short6, cr_nice_tnd_triangles, 0, {0},
-    {6, 0, 1, 2, 3, 4, 5}, {3, 1, 3, 5}, {3, 0, 2, 4}, FALSE,  chk_dmd_qtag_new},
+    {6, 0, 1, 2, 3, 4, 5}, {3, 1, 3, 5}, {3, 0, 2, 4}, false,  chk_dmd_qtag_new},
    {s_bone6, cr_nice_tnd_triangles, 0, {6, 0, 1, 2, 3, 4, 5},
-    {0}, {3, 0, 2, 4}, {3, 1, 3, 5}, FALSE,  chk_dmd_qtag_new},
+    {0}, {3, 0, 2, 4}, {3, 1, 3, 5}, false,  chk_dmd_qtag_new},
    {s_trngl, cr_nice_tnd_triangles, 0, {0},
-    {3, 0, 1, 2}, {2, 1, 2}, {1, 0}, FALSE,  chk_dmd_qtag_new},
+    {3, 0, 1, 2}, {2, 1, 2}, {1, 0}, false,  chk_dmd_qtag_new},
    {nothing}};
 
 static restr_initializer restr_init_table1[] = {
-   {s1x2, cr_opposite_sex, 2, {0}, {0}, {0}, {0}, FALSE, chk_sex},
-   {s2x4, cr_quarterbox_or_col, 0, {3, 0, 1, 2}, {3, 4, 5, 6},       {3, 1, 2, 3}, {3, 5, 6, 7}, FALSE, chk_qbox},
-   {s2x4, cr_quarterbox_or_magic_col, 0, {3, 1, 2, 7}, {3, 3, 5, 6}, {3, 1, 2, 4}, {3, 0, 5, 6}, FALSE, chk_qbox},
-   {s2x3, cr_quarterbox_or_col, 0, {2, 0, 1}, {2, 3, 4}, {2, 1, 2}, {2, 4, 5},                   FALSE, chk_qbox},
-   {s2x3, cr_quarterbox_or_magic_col, 0, {2, 1, 5}, {2, 2, 4}, {2, 1, 3}, {2, 0, 4},             FALSE, chk_qbox},
-   {s2x3, cr_wave_only, 6, {0, 3, 1, 4, 2, 5},                                     {0}, {0}, {0}, TRUE, chk_wave},
-   {s2x3, cr_magic_only, 6, {0, 1, 2, 3, 4, 5},                {0},                    {0}, {0}, TRUE,  chk_wave},
-   {s2x3, cr_peelable_box, 3, {0, 1, 2},                   {3, 4, 5},                  {0}, {0}, FALSE, chk_peelable},
-   {s2x3, cr_all_facing_same, 6, {0, 1, 2, 3, 4, 5},                              {1}, {0}, {0}, TRUE,  chk_groups},
-   {s1x4, cr_all_facing_same, 4, {0, 1, 2, 3},                                    {1}, {0}, {0}, TRUE,  chk_groups},
-   {s1x4, cr_2fl_only, 4, {0, 2, 1, 3},                                           {0}, {0}, {0}, TRUE,  chk_wave},
-   {s1x4, cr_li_lo, 4, {0, 1, 3, 2},                                              {0}, {0}, {0}, TRUE,  chk_wave},
-   {s1x6, cr_all_facing_same, 6, {0, 1, 2, 3, 4, 5},                              {1}, {0}, {0}, TRUE,  chk_groups},
-   {s1x8, cr_all_facing_same, 8, {0, 1, 2, 3, 4, 5, 6, 7},                        {1}, {0}, {0}, TRUE,  chk_groups},
-   {s2x4, cr_li_lo, 8, {0, 1, 2, 3, 5, 4, 7, 6},                                  {0}, {0}, {0}, TRUE,  chk_wave},
-   {s2x4, cr_ctrs_in_out, 4, {1, 2, 6, 5},                                        {0}, {0}, {0}, FALSE, chk_wave},
-   {s2x4, cr_2fl_only, 8, {0, 3, 1, 2, 6, 5, 7, 4},                               {0}, {0}, {0}, TRUE,  chk_wave},
-   {s2x4, cr_wave_only, 8, {0, 4, 1, 5, 2, 6, 3, 7},                              {0}, {0}, {0}, TRUE,  chk_wave},
-   {s2x4, cr_magic_only, 8, {0, 1, 3, 2, 5, 4, 6, 7},                             {0}, {0}, {0}, TRUE,  chk_wave},
-   {s2x4, cr_peelable_box, 4, {0, 1, 2, 3},                {4, 5, 6, 7},               {0}, {0}, FALSE, chk_peelable},
-   {s2x4, cr_couples_only, 2, {0, 1, 2, 3, 7, 6, 5, 4},                           {4}, {0}, {0}, TRUE,  chk_groups},
-   {s2x4, cr_miniwaves, 1, {0, 1, 2, 3, 7, 6, 5, 4},                              {4}, {0}, {0}, TRUE,  chk_anti_groups},
-   {s2x4, cr_all_facing_same, 8, {0, 1, 2, 3, 4, 5, 6, 7},                        {1}, {0}, {0}, TRUE,  chk_groups},
-   {s1x2, cr_all_facing_same, 2, {0, 1},                                          {1}, {0}, {0}, TRUE,  chk_groups},
-   {s1x2, cr_li_lo, 2, {0, 1},                                                    {0}, {0}, {0}, TRUE, chk_wave},
-   {s2x4, cr_reg_tbone, 1, {2, 1, 2, 1, 0, 3, 0, 3},    {2, 3, 2, 3, 0, 1, 0, 1},      {0}, {0}, FALSE, chk_box},
-   {s2x6, cr_wave_only, 12, {0, 6, 1, 7, 2, 8, 3, 9, 4, 10, 5, 11},               {0}, {0}, {0}, TRUE, chk_wave},
-   {s2x6, cr_peelable_box, 6, {0, 1, 2, 3, 4, 5},          {6, 7, 8, 9, 10, 11},           {0}, {0}, FALSE, chk_peelable},
-   {s2x6, cr_couples_only, 3, {0, 1, 2, 3, 4, 5, 11, 10, 9, 8, 7, 6},                 {4}, {0}, {0}, TRUE,  chk_groups},
-   {s2x5, cr_wave_only, 10, {0, 5, 1, 6, 2, 7, 3, 8, 4, 9},                       {0}, {0}, {0}, TRUE, chk_wave},
-   {s2x5, cr_peelable_box, 5, {0, 1, 2, 3, 4},                        {5, 6, 7, 8, 9}, {0}, {0}, FALSE, chk_peelable},
-   {s2x8, cr_wave_only, 16, {0, 8, 1, 9, 2, 10, 3, 11, 4, 12, 5, 13, 6, 14, 7, 15},{0}, {0}, {0}, TRUE, chk_wave},
-   {s2x8, cr_peelable_box, 8, {0, 1, 2, 3, 4, 5, 6, 7},    {8, 9, 10, 11, 12, 13, 14, 15}, {0}, {0}, FALSE, chk_peelable},
-   {s2x8, cr_couples_only, 2, {0, 1, 2, 3, 4, 5, 6, 7, 15, 14, 13, 12, 11, 10, 9, 8}, {8}, {0}, {0}, TRUE,  chk_groups},
-   {s_qtag, cr_wave_only, 4, {2, 3, 7, 6},                                        {0}, {0}, {0}, FALSE, chk_wave},
-   {s_short6, cr_tall6, 6, {4, 0, 2, 3, 5},         {2, 1, 4},       {3, 0, 1, 5}, {3, 2, 3, 4}, TRUE,  chk_dmd_qtag},
-   {s_short6, cr_wave_only, 6, {1, 0, 3, 2, 5, 4},                                {0}, {0}, {0}, TRUE,  chk_wave},
-   {s_trngl, cr_wave_only, 2, {1, 2},                                             {0}, {0}, {0}, TRUE,  chk_wave},   /* isn't this bogus?  It checks for TANDEM-BASE. */
-   {sdmd, cr_wave_only, 2, {1, 3},                                                {0}, {0}, {0}, TRUE,  chk_wave},
-   {sdmd, cr_miniwaves, 2, {1, 3},                                                {0}, {0}, {0}, TRUE,  chk_wave},
-   {s_ptpd, cr_wave_only, 4, {1, 3, 7, 5},                                        {0}, {0}, {0}, TRUE,  chk_wave},
-   {s_ptpd, cr_miniwaves, 1, {1, 7, 3, 5},                                        {2}, {0}, {0}, TRUE,  chk_anti_groups},
+   {s1x2, cr_opposite_sex, 2, {0}, {0}, {0}, {0}, false, chk_sex},
+   {s2x4, cr_quarterbox_or_col, 0, {3, 0, 1, 2}, {3, 4, 5, 6},       {3, 1, 2, 3}, {3, 5, 6, 7}, false, chk_qbox},
+   {s2x4, cr_quarterbox_or_magic_col, 0, {3, 1, 2, 7}, {3, 3, 5, 6}, {3, 1, 2, 4}, {3, 0, 5, 6}, false, chk_qbox},
+   {s2x3, cr_quarterbox_or_col, 0, {2, 0, 1}, {2, 3, 4}, {2, 1, 2}, {2, 4, 5},                   false, chk_qbox},
+   {s2x3, cr_quarterbox_or_magic_col, 0, {2, 1, 5}, {2, 2, 4}, {2, 1, 3}, {2, 0, 4},             false, chk_qbox},
+   {s2x3, cr_wave_only, 6, {0, 3, 1, 4, 2, 5},                                     {0}, {0}, {0}, true, chk_wave},
+   {s2x3, cr_magic_only, 6, {0, 1, 2, 3, 4, 5},                {0},                    {0}, {0}, true,  chk_wave},
+   {s2x3, cr_peelable_box, 3, {0, 1, 2},                   {3, 4, 5},                  {0}, {0}, false, chk_peelable},
+   {s2x3, cr_all_facing_same, 6, {0, 1, 2, 3, 4, 5},                              {1}, {0}, {0}, true,  chk_groups},
+   {s1x4, cr_all_facing_same, 4, {0, 1, 2, 3},                                    {1}, {0}, {0}, true,  chk_groups},
+   {s1x4, cr_2fl_only, 4, {0, 2, 1, 3},                                           {0}, {0}, {0}, true,  chk_wave},
+   {s1x4, cr_li_lo, 4, {0, 1, 3, 2},                                              {0}, {0}, {0}, true,  chk_wave},
+   {s1x6, cr_all_facing_same, 6, {0, 1, 2, 3, 4, 5},                              {1}, {0}, {0}, true,  chk_groups},
+   {s1x8, cr_all_facing_same, 8, {0, 1, 2, 3, 4, 5, 6, 7},                        {1}, {0}, {0}, true,  chk_groups},
+   {s2x4, cr_li_lo, 8, {0, 1, 2, 3, 5, 4, 7, 6},                                  {0}, {0}, {0}, true,  chk_wave},
+   {s2x4, cr_ctrs_in_out, 4, {1, 2, 6, 5},                                        {0}, {0}, {0}, false, chk_wave},
+   {s2x4, cr_2fl_only, 8, {0, 3, 1, 2, 6, 5, 7, 4},                               {0}, {0}, {0}, true,  chk_wave},
+   {s2x4, cr_wave_only, 8, {0, 4, 1, 5, 2, 6, 3, 7},                              {0}, {0}, {0}, true,  chk_wave},
+   {s2x4, cr_magic_only, 8, {0, 1, 3, 2, 5, 4, 6, 7},                             {0}, {0}, {0}, true,  chk_wave},
+   {s2x4, cr_peelable_box, 4, {0, 1, 2, 3},                {4, 5, 6, 7},               {0}, {0}, false, chk_peelable},
+   {s2x4, cr_couples_only, 2, {0, 1, 2, 3, 7, 6, 5, 4},                           {4}, {0}, {0}, true,  chk_groups},
+   {s2x4, cr_miniwaves, 1, {0, 1, 2, 3, 7, 6, 5, 4},                              {4}, {0}, {0}, true,  chk_anti_groups},
+   {s2x4, cr_all_facing_same, 8, {0, 1, 2, 3, 4, 5, 6, 7},                        {1}, {0}, {0}, true,  chk_groups},
+   {s1x2, cr_all_facing_same, 2, {0, 1},                                          {1}, {0}, {0}, true,  chk_groups},
+   {s1x2, cr_li_lo, 2, {0, 1},                                                    {0}, {0}, {0}, true, chk_wave},
+   {s2x4, cr_reg_tbone, 1, {2, 1, 2, 1, 0, 3, 0, 3},    {2, 3, 2, 3, 0, 1, 0, 1},      {0}, {0}, false, chk_box},
+   {s2x6, cr_wave_only, 12, {0, 6, 1, 7, 2, 8, 3, 9, 4, 10, 5, 11},               {0}, {0}, {0}, true, chk_wave},
+   {s2x6, cr_peelable_box, 6, {0, 1, 2, 3, 4, 5},          {6, 7, 8, 9, 10, 11},           {0}, {0}, false, chk_peelable},
+   {s2x6, cr_couples_only, 3, {0, 1, 2, 3, 4, 5, 11, 10, 9, 8, 7, 6},                 {4}, {0}, {0}, true,  chk_groups},
+   {s2x5, cr_wave_only, 10, {0, 5, 1, 6, 2, 7, 3, 8, 4, 9},                       {0}, {0}, {0}, true, chk_wave},
+   {s2x5, cr_peelable_box, 5, {0, 1, 2, 3, 4},                        {5, 6, 7, 8, 9}, {0}, {0}, false, chk_peelable},
+   {s2x8, cr_wave_only, 16, {0, 8, 1, 9, 2, 10, 3, 11, 4, 12, 5, 13, 6, 14, 7, 15},{0}, {0}, {0}, true, chk_wave},
+   {s2x8, cr_peelable_box, 8, {0, 1, 2, 3, 4, 5, 6, 7},    {8, 9, 10, 11, 12, 13, 14, 15}, {0}, {0}, false, chk_peelable},
+   {s2x8, cr_couples_only, 2, {0, 1, 2, 3, 4, 5, 6, 7, 15, 14, 13, 12, 11, 10, 9, 8}, {8}, {0}, {0}, true,  chk_groups},
+   {s_qtag, cr_wave_only, 4, {2, 3, 7, 6},                                        {0}, {0}, {0}, false, chk_wave},
+   {s_short6, cr_tall6, 6, {4, 0, 2, 3, 5},         {2, 1, 4},       {3, 0, 1, 5}, {3, 2, 3, 4}, true,  chk_dmd_qtag},
+   {s_short6, cr_wave_only, 6, {1, 0, 3, 2, 5, 4},                                {0}, {0}, {0}, true,  chk_wave},
+   {s_trngl, cr_wave_only, 2, {1, 2},                                             {0}, {0}, {0}, true,  chk_wave},   /* isn't this bogus?  It checks for TANDEM-BASE. */
+   {sdmd, cr_wave_only, 2, {1, 3},                                                {0}, {0}, {0}, true,  chk_wave},
+   {sdmd, cr_miniwaves, 2, {1, 3},                                                {0}, {0}, {0}, true,  chk_wave},
+   {s_ptpd, cr_wave_only, 4, {1, 3, 7, 5},                                        {0}, {0}, {0}, true,  chk_wave},
+   {s_ptpd, cr_miniwaves, 1, {1, 7, 3, 5},                                        {2}, {0}, {0}, true,  chk_anti_groups},
    {nothing}};
 
 static restr_initializer restr_init_table4[] = {
-   {sdmd, cr_jright, 4, {0, 2, 1, 3},                                             {0}, {0}, {0}, TRUE,  chk_wave},
-   {sdmd, cr_jleft, 4, {0, 2, 3, 1},                                              {0}, {0}, {0}, TRUE,  chk_wave},
-   {s_ptpd, cr_jright, 8, {0, 2, 1, 3, 6, 4, 7, 5},                               {0}, {0}, {0}, TRUE,  chk_wave},
-   {s_ptpd, cr_jleft, 8, {0, 2, 3, 1, 6, 4, 5, 7},                                {0}, {0}, {0}, TRUE,  chk_wave},
+   {sdmd, cr_jright, 4, {0, 2, 1, 3},                     {0}, {0}, {0}, true,  chk_wave},
+   {sdmd, cr_jleft, 4, {0, 2, 3, 1},                      {0}, {0}, {0}, true,  chk_wave},
+   {s_ptpd, cr_jright, 8, {0, 2, 1, 3, 6, 4, 7, 5},       {0}, {0}, {0}, true,  chk_wave},
+   {s_ptpd, cr_jleft, 8, {0, 2, 3, 1, 6, 4, 5, 7},        {0}, {0}, {0}, true,  chk_wave},
    {nothing}};
 
 static restr_initializer restr_init_table9[] = {
-   {s_qtag, cr_jleft, 8, {2, 3, 0, 4, 7, 6, 1, 5},        {0}, {0}, {0}, TRUE,  chk_wave},
-   {s_qtag, cr_jright, 8, {3, 2, 0, 4, 6, 7, 1, 5},       {0}, {0}, {0}, TRUE,  chk_wave},
-   {s_qtag, cr_ijleft, 8, {2, 6, 0, 4, 3, 7, 1, 5},       {0}, {0}, {0}, TRUE,  chk_wave},
-   {s_qtag, cr_ijright, 8, {6, 2, 0, 4, 7, 3, 1, 5},      {0}, {0}, {0}, TRUE,  chk_wave},
+   {s_qtag, cr_jleft, 8, {2, 3, 0, 4, 7, 6, 1, 5},        {0}, {0}, {0}, true,  chk_wave},
+   {s_qtag, cr_jright, 8, {3, 2, 0, 4, 6, 7, 1, 5},       {0}, {0}, {0}, true,  chk_wave},
+   {s_c1phan,cr_jleft,16, {2, 0, 1, 3, 5, 7, 4, 6,
+                           8, 10, 11, 9, 15, 13, 14, 12}, {0}, {0}, {0}, false, chk_wave},
+   {s_c1phan,cr_jright,16,{0, 2, 1, 3, 7, 5, 4, 6,
+                           10, 8, 11, 9, 13, 15, 14, 12}, {0}, {0}, {0}, false, chk_wave},
+   {s_qtag, cr_ijleft, 8, {2, 6, 0, 4, 3, 7, 1, 5},       {0}, {0}, {0}, true,  chk_wave},
+   {s_qtag, cr_ijright, 8, {6, 2, 0, 4, 7, 3, 1, 5},      {0}, {0}, {0}, true,  chk_wave},
    {s_qtag, cr_diamond_like, 4, {4, 2, 3, 6, 7}, {4, 0, 1, 4, 5},
-                                                               {0}, {0}, FALSE, chk_dmd_qtag},
+                                                               {0}, {0}, false, chk_dmd_qtag},
    {s_qtag, cr_qtag_like, 4, {8, 0, 1, 2, 3, 4, 5, 6, 7}, {0},
-                                                   {2, 4, 5}, {2, 0, 1}, FALSE, chk_dmd_qtag},
+                                                   {2, 4, 5}, {2, 0, 1}, false, chk_dmd_qtag},
    {s_qtag, cr_pu_qtag_like, 0, {0}, {8, 0, 1, 2, 3, 4, 5, 6, 7},
-                                                   {2, 0, 1}, {2, 4, 5}, FALSE, chk_dmd_qtag},
+                                                   {2, 0, 1}, {2, 4, 5}, false, chk_dmd_qtag},
    {s3dmd, cr_diamond_like, 0, {6, 3, 4, 5, 9, 10, 11}, {6, 0, 1, 2, 6, 7, 8},
-                                                               {0}, {0}, FALSE, chk_dmd_qtag},
+                                                               {0}, {0}, false, chk_dmd_qtag},
    {s3dmd, cr_qtag_like, 0, {12, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}, {0},
-                                             {3, 6, 7, 8}, {3, 0, 1, 2}, FALSE, chk_dmd_qtag},
+                                             {3, 6, 7, 8}, {3, 0, 1, 2}, false, chk_dmd_qtag},
    {s3dmd, cr_pu_qtag_like, 0, {0}, {12, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11},
-                                             {3, 0, 1, 2}, {3, 6, 7, 8}, FALSE, chk_dmd_qtag},
+                                             {3, 0, 1, 2}, {3, 6, 7, 8}, false, chk_dmd_qtag},
    {s4dmd, cr_jleft, 16, {4, 5, 0, 8, 6, 7, 1, 9, 15, 14, 2, 10, 13, 12, 3, 11},
-                                                          {0}, {0}, {0}, TRUE, chk_wave},
+                                                          {0}, {0}, {0}, true, chk_wave},
    {s4dmd, cr_jright, 16, {5, 4, 0, 8, 7, 6, 1, 9, 14, 15, 2, 10, 12, 13, 3, 11},
-                                                          {0}, {0}, {0}, TRUE, chk_wave},
+                                                          {0}, {0}, {0}, true, chk_wave},
    {s4dmd, cr_diamond_like, 8, {8, 4, 5, 6, 7, 12, 13, 14, 15},
-                                {8, 0, 1, 2, 3, 8, 9, 10, 11}, {0}, {0}, FALSE, chk_dmd_qtag},
+                                {8, 0, 1, 2, 3, 8, 9, 10, 11}, {0}, {0}, false, chk_dmd_qtag},
    {s4dmd, cr_qtag_like, 4, {16, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15},
-                                {0}, {4, 8, 9, 10, 11}, {4, 0, 1, 2, 3}, FALSE, chk_dmd_qtag},
+                                {0}, {4, 8, 9, 10, 11}, {4, 0, 1, 2, 3}, false, chk_dmd_qtag},
    {s4dmd, cr_pu_qtag_like, 0, {0}, {16, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15},
-                                     {4, 0, 1, 2, 3}, {4, 8, 9, 10, 11}, FALSE, chk_dmd_qtag},
-   {sdmd, cr_jright, 4, {2, 0, 1, 3},                     {8}, {0}, {0}, TRUE,  chk_wave},
-   {sdmd, cr_jleft, 4, {2, 0, 3, 1},                      {8}, {0}, {0}, TRUE,  chk_wave},
-   {sdmd, cr_diamond_like, 4, {2, 0, 2}, {2, 1, 3},            {0}, {0}, FALSE, chk_dmd_qtag},
-   {sdmd, cr_qtag_like, 4, {0}, {4, 0, 1, 2, 3},         {1, 0}, {1, 2}, FALSE, chk_dmd_qtag},
-   {sdmd, cr_pu_qtag_like, 0, {4, 0, 1, 2, 3}, {0},      {1, 0}, {1, 2}, FALSE, chk_dmd_qtag},
-   {s_ptpd, cr_jright, 8, {2, 0, 1, 3, 4, 6, 7, 5},       {8}, {0}, {0}, TRUE,  chk_wave},
-   {s_ptpd, cr_jleft, 8, {2, 0, 3, 1, 4, 6, 5, 7},        {8}, {0}, {0}, TRUE,  chk_wave},
+                                     {4, 0, 1, 2, 3}, {4, 8, 9, 10, 11}, false, chk_dmd_qtag},
+   {sdmd, cr_jright, 4, {2, 0, 1, 3},                     {8}, {0}, {0}, true,  chk_wave},
+   {sdmd, cr_jleft, 4, {2, 0, 3, 1},                      {8}, {0}, {0}, true,  chk_wave},
+   {sdmd, cr_diamond_like, 4, {2, 0, 2}, {2, 1, 3},            {0}, {0}, false, chk_dmd_qtag},
+   {sdmd, cr_qtag_like, 4, {0}, {4, 0, 1, 2, 3},         {1, 0}, {1, 2}, false, chk_dmd_qtag},
+   {sdmd, cr_pu_qtag_like, 0, {4, 0, 1, 2, 3}, {0},      {1, 0}, {1, 2}, false, chk_dmd_qtag},
+   {s_ptpd, cr_jright, 8, {2, 0, 1, 3, 4, 6, 7, 5},       {8}, {0}, {0}, true,  chk_wave},
+   {s_ptpd, cr_jleft, 8, {2, 0, 3, 1, 4, 6, 5, 7},        {8}, {0}, {0}, true,  chk_wave},
    {s_ptpd, cr_diamond_like, 4, {4, 0, 2, 4, 6}, {4, 1, 3, 5, 7},
-                                                               {0}, {0}, FALSE, chk_dmd_qtag},
+                                                               {0}, {0}, false, chk_dmd_qtag},
    {s_ptpd, cr_qtag_like, 4, {0}, {8, 0, 1, 2, 3, 4, 5, 6, 7},
-                                                   {2, 0, 6}, {2, 2, 4}, FALSE, chk_dmd_qtag},
+                                                   {2, 0, 6}, {2, 2, 4}, false, chk_dmd_qtag},
+
+   {s4x6, cr_qtag_like, 8, {0}, {16, 11, 1, 9, 10, 8, 4, 6, 7, 23, 13, 21, 22, 20, 16, 19, 18},
+                                  {4, 11, 8, 18, 21}, {4, 9, 6, 23, 20}, false, chk_dmd_qtag},
+
    {s_ptpd, cr_pu_qtag_like, 0, {8, 0, 1, 2, 3, 4, 5, 6, 7}, {0},
-                                                   {2, 0, 6}, {2, 2, 4}, FALSE, chk_dmd_qtag},
+                                                   {2, 0, 6}, {2, 2, 4}, false, chk_dmd_qtag},
    {s2x4, cr_gen_qbox, 4, {0}, {8, 0, 1, 2, 3, 4, 5, 6, 7},
-                                                   {2, 1, 2}, {2, 5, 6}, FALSE, chk_dmd_qtag},
-   {s2x2, cr_wave_only, 1, {2, 0, 0, 2}, {0, 0, 2, 2},         {0}, {0}, TRUE,  chk_box},
-   {s2x2, cr_all_facing_same, 1, {2, 2, 2, 2}, {0, 0, 0, 0},   {0}, {0}, TRUE,  chk_box},
-   {s2x2, cr_2fl_only, 1, {2, 2, 2, 2}, {0, 0, 0, 0},          {0}, {0}, TRUE,  chk_box},
-   {s2x2, cr_trailers_only, 1, {0, 0, 2, 2}, {0, 2, 2, 0},     {0}, {0}, TRUE,  chk_box},
-   {s2x2, cr_leads_only, 1, {0, 0, 2, 2}, {0, 2, 2, 0},        {0}, {0}, TRUE,  chk_box},
-   {s2x2, cr_li_lo, 1, {0, 0, 2, 2}, {0, 2, 2, 0},             {0}, {0}, TRUE,  chk_box},
-   {s2x2, cr_indep_in_out, 0, {3, 2, 1, 0},               {0}, {0}, {0}, FALSE, chk_indep_box},
-   {s2x2, cr_magic_only, 1, {2, 0, 2, 0}, {0, 2, 0, 2},        {0}, {0}, TRUE,  chk_box},
+                                                   {2, 1, 2}, {2, 5, 6}, false, chk_dmd_qtag},
+   {s2x2, cr_wave_only, 1, {2, 0, 0, 2}, {0, 0, 2, 2},         {0}, {0}, true,  chk_box},
+   {s2x2, cr_all_facing_same, 1, {2, 2, 2, 2}, {0, 0, 0, 0},   {0}, {0}, true,  chk_box},
+   {s2x2, cr_2fl_only, 1, {2, 2, 2, 2}, {0, 0, 0, 0},          {0}, {0}, true,  chk_box},
+   {s2x2, cr_trailers_only, 1, {0, 0, 2, 2}, {0, 2, 2, 0},     {0}, {0}, true,  chk_box},
+   {s2x2, cr_leads_only, 1, {0, 0, 2, 2}, {0, 2, 2, 0},        {0}, {0}, true,  chk_box},
+   {s2x2, cr_li_lo, 1, {0, 0, 2, 2}, {0, 2, 2, 0},             {0}, {0}, true,  chk_box},
+   {s2x2, cr_indep_in_out, 0, {3, 2, 1, 0},               {0}, {0}, {0}, false, chk_indep_box},
+   {s2x2, cr_magic_only, 1, {2, 0, 2, 0}, {0, 2, 0, 2},        {0}, {0}, true,  chk_box},
    {nothing}};
 
 static restr_initializer *restr_hash_table0[NUM_RESTR_HASH_BUCKETS];
@@ -1724,7 +1759,7 @@ static restr_initializer *get_restriction_thing(setup_kind k, assumption_thing t
 }
 
 
-static long_boolean check_for_supercall(const parse_block *parseptrcopy)
+static bool check_for_supercall(const parse_block *parseptrcopy)
 {
    concept_kind kk = parseptrcopy->concept->kind;
 
@@ -1735,13 +1770,13 @@ static long_boolean check_for_supercall(const parse_block *parseptrcopy)
            parseptrcopy->next->call == base_calls[base_call_null_second]) &&
           !parseptrcopy->next->next &&
           parseptrcopy->next->subsidiary_root) {
-         return TRUE;
+         return true;
       }
       else
          fail("A concept is required.");
    }
 
-   return FALSE;
+   return false;
 }
 
 
@@ -2527,6 +2562,7 @@ extern restriction_test_result verify_restriction(
       }
 
       goto good;
+
    case chk_sex:
       qaa[0] = tt.assump_both;
       qaa[1] = tt.assump_both << 1;
@@ -2548,8 +2584,58 @@ extern restriction_test_result verify_restriction(
       if (rr->map4[0] && (qaa[0] & qaa[1] & 2)) goto bad;
 
       goto good;
+
+   case chk_inroller:
+
+      if (ss->kind == s2x4) {
+         // For these assumptions, finding a single usable person
+         // will suffice to determine the outcome.
+         // Now it happens that, if assump_both has something,
+         // we could determine the handedness, and hence the
+         // in/out roll direction, without even one person.
+         // But we won't be called if there isn't even one person.
+         switch (ss->cmd.cmd_assume.assumption) {
+         case cr_wave_only:
+            if ((ss->people[0].id1 & 013) == (uint32) rr->map2[1] ||
+                (ss->people[1].id1 & 013) == (uint32) rr->map2[0] ||
+                (ss->people[2].id1 & 013) == (uint32) rr->map2[1] ||
+                (ss->people[3].id1 & 013) == (uint32) rr->map2[0] ||
+                (ss->people[4].id1 & 013) == (uint32) rr->map2[0] ||
+                (ss->people[5].id1 & 013) == (uint32) rr->map2[1] ||
+                (ss->people[6].id1 & 013) == (uint32) rr->map2[0] ||
+                (ss->people[7].id1 & 013) == (uint32) rr->map2[1])
+               goto good;
+            break;
+         case cr_2fl_only:
+            if ((ss->people[0].id1 & 013) == (uint32) rr->map2[1] ||
+                (ss->people[2].id1 & 013) == (uint32) rr->map2[0] ||
+                (ss->people[1].id1 & 013) == (uint32) rr->map2[1] ||
+                (ss->people[3].id1 & 013) == (uint32) rr->map2[0] ||
+                (ss->people[4].id1 & 013) == (uint32) rr->map2[0] ||
+                (ss->people[6].id1 & 013) == (uint32) rr->map2[1] ||
+                (ss->people[5].id1 & 013) == (uint32) rr->map2[0] ||
+                (ss->people[7].id1 & 013) == (uint32) rr->map2[1])
+               goto good;
+            break;
+         }
+      }
+
+      if ((ss->people[rr->map1[0]].id1 & 013) == (uint32) rr->map2[0] &&
+          (ss->people[rr->map1[1]].id1 & 013) == (uint32) rr->map2[1] &&
+          (ss->people[rr->map1[2]].id1 & 013) != (uint32) rr->map2[2] &&
+          (ss->people[rr->map1[3]].id1 & 013) != (uint32) rr->map2[3])
+         goto good;
+
+      if ((ss->people[rr->map1[4]].id1 & 013) == (uint32) rr->map2[4] &&
+          (ss->people[rr->map1[5]].id1 & 013) == (uint32) rr->map2[5] &&
+          (ss->people[rr->map1[6]].id1 & 013) == 0 &&
+          (ss->people[rr->map1[7]].id1 & 013) == 0)
+         goto good;
+
+      goto bad;
+
    default:
-      goto bad;    /* Shouldn't happen. */
+      goto bad;    // Shouldn't happen.
    }
 
  good:
@@ -2564,17 +2650,15 @@ extern restriction_test_result verify_restriction(
 
 extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
 {
-   callarray *p;
-   long_boolean booljunk;
-
-   for (p = spec; p; p = p->next) {
+   for (callarray *p = spec ; p ; p = p->next) {
       uint32 i, k, t, u, w, mask;
       assumption_thing tt;
       int idx, plaini;
       call_restriction this_qualifier;
+      long_boolean booljunk;
 
-      /* First, we demand that the starting setup be correct.  Also, if a qualifier
-         number was specified, it must match. */
+      // First, we demand that the starting setup be correct.
+      // Also, if a qualifier number was specified, it must match.
 
       if ((begin_kind) p->start_setup != key) continue;
 
@@ -2621,7 +2705,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
       this_qualifier = (call_restriction) (p->qualifierstuff & QUALBIT__QUAL_CODE);
 
       if (this_qualifier == cr_none) {
-         if ((p->qualifierstuff / QUALBIT__LIVE) & 1) {   /* All live people were demanded. */
+         if ((p->qualifierstuff / QUALBIT__LIVE) & 1) {   // All live people were demanded.
             for (plaini=0; plaini<=setup_attrs[ss->kind].setup_limits; plaini++) {
                if ((ss->people[plaini].id1) == 0) goto bad;
             }
@@ -2640,7 +2724,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
          trying to figure out whether to split a 2x4 into 1x4's or 2x2's for
          the call "recycle". */
 
-      k = 0;   /* Many tests will find these values useful. */
+      k = 0;   // Many tests will find these values useful.
       mask = 0;
       i = 2;
       tt.assumption = this_qualifier;
@@ -2699,6 +2783,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
          default:
             goto good;           /* We don't understand the setup -- we'd better accept it. */
          }
+
       case cr_all_facing_same:
          switch (ss->cmd.cmd_assume.assumption) {
          case cr_wave_only:
@@ -3068,6 +3153,10 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
       case cr_qtag_mag_mwv:
       case cr_dmd_ctrs_1f:
       case cr_gen_qbox:
+      case cr_inroller_is_cw:
+      case cr_inroller_is_ccw:
+      case cr_outroller_is_cw:
+      case cr_outroller_is_ccw:
          /* **** FELL THROUGH!!!!!! */
          goto check_tt;
       case cr_ctr_pts_rh:
@@ -3180,8 +3269,14 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
          if (ss->people[1].id1 & ss->people[5].id1) goto good;
          goto bad;
 
-         /* Beware!  These next four use cumulative xoring of the variable k, which
-            is in all cases initialized to zero. */
+         // Beware!  These next ones use cumulative xoring of the variable k,
+         // which is in all cases initialized to zero.
+
+      case cr_ptp_unwrap_sel:
+         k ^= 022002200 ^ 014001400;
+      case cr_nor_unwrap_sel:
+         k ^= 014001400;
+         goto cr_none_sel_label;
 
       case cr_ends_sel:
          k = ~k;
@@ -3202,6 +3297,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
          k = ~k;
          /* FALL THROUGH!!!!!! */
       case cr_none_sel:
+      cr_none_sel_label:
          /* FELL THROUGH!!!!!! */
 
          /* If we are not looking at the whole setup (that is, we are deciding
@@ -3827,21 +3923,35 @@ extern long_boolean fix_n_results(int arity, setup_kind goal, setup z[], uint32 
       to 1x4's. */
 
    for (i=0; i<arity; i++) {
+
+      // First, check that all setups have the same "eighth rotation" stuff,
+      // and don't have any "imprecise rotation".
+
+      if ((z[i].result_flags & RESULTFLAG__IMPRECISE_ROT) ||
+          (i > 0 && (z[0].result_flags ^ z[i].result_flags) & RESULTFLAG__PLUSEIGHTH_ROT))
+         goto lose;
+
       if (z[i].kind == s_normal_concentric) {
-         /* We definitely have a problem.  A common way for this to happen is if a concentric call
-            was done and there were no ends, so we don't know what the setup really is.  Example:
-            from normal columns, do a split phantom lines hocus-pocus.  Do we leave space for the
-            phantoms?  Humans would probably say yes because they know where the phantoms went, but
-            this program has no idea in general.  If a call is concentrically executed and the
-            outsides are all phantoms, we don't know what the setup is.  Concentric_move signifies
-            this by creating a "concentric" setup with "nothing" for the outer setup.  So we raise
-            an error that is somewhat descriptive. */
+
+         // We definitely have a problem.  A common way for this to happen
+         // is if a concentric call was done and there were no ends,
+         // so we don't know what the setup really is.
+         // Example:  from normal columns, do a split phantom lines hocus-pocus.
+         // Do we leave space for the phantoms?  Humans would probably say yes
+         // because they know where the phantoms went, but this program has no
+         // idea in general.  If a call is concentrically executed and the
+         // outsides are all phantoms, we don't know what the setup is.
+         // Concentric_move signifies this by creating a "concentric" setup
+         // with "nothing" for the outer setup.  So we raise an error that is
+         // somewhat descriptive.
+
          if (z[i].outer.skind == nothing)
-            continue;      /* Defer this until later; we may be able to figure something out. */
+            continue;  // Defer this until later; we may be able to figure something out.
          else if (z[i].inner.skind == nothing && z[i].outer.skind == s1x2) {
-            /* We can fix this up.  Just turn it into a 1x4 with the ends missing.
-            (If a diamond is actually required, that will get fixed up below.)
-            The test case for this is split phantom lines cross to a diamond from 2FL. */
+
+            // We can fix this up.  Just turn it into a 1x4 with the ends missing.
+            // (If a diamond is actually required, that will get fixed up below.)
+            // The test case for this is split phantom lines cross to a diamond from 2FL.
 
             z[i].kind = s1x4;
             z[i].rotation = z[i].outer.srotation;
@@ -3854,7 +3964,7 @@ extern long_boolean fix_n_results(int arity, setup_kind goal, setup z[], uint32 
             fail("Don't recognize ending setup for this call.");
       }
       else if (z[i].kind == s_dead_concentric) {
-         continue;      /* Defer this until later; we may be able to figure something out. */
+         continue;  // Defer this until later; we may be able to figure something out.
       }
 
       if (z[i].kind != nothing) {
@@ -3884,9 +3994,6 @@ extern long_boolean fix_n_results(int arity, setup_kind goal, setup z[], uint32 
                }
                else if (((kk == s2x4 && z[i].kind == s2x2) ||
                          (kk == s2x2 && z[i].kind == s2x4))) {
-                  /*
-                  warn(warn__hokey_jay_shapechanger);  // For now.
-                  */
                   boxrectflag = TRUE;
                }
                else if (((kk == s1x4 && z[i].kind == sdmd) ||
@@ -3899,8 +4006,8 @@ extern long_boolean fix_n_results(int arity, setup_kind goal, setup z[], uint32 
             }
          }
 
-         /* If the setups are "trngl" or "trngl4", the rotations have
-            to alternate by 180 degrees. */
+         // If the setups are "trngl" or "trngl4", the rotations have
+         // to alternate by 180 degrees.
 
          if (z[i].kind == s2x2)
             rotstates &= 0x0FF;
@@ -3921,8 +4028,8 @@ extern long_boolean fix_n_results(int arity, setup_kind goal, setup z[], uint32 
    if (boxrectflag) kk = s2x4;
 
    if (kk == nothing) {
-      /* If client really needs a diamond, return a diamond.
-         Otherwise opt for 1x4. */
+      // If client really needs a diamond, return a diamond.
+      // Otherwise opt for 1x4.
       if (lineflag) kk = (goal == sdmd) ? sdmd : s1x4;
       else if (miniflag) kk = s1x2;
    }
@@ -3937,7 +4044,7 @@ extern long_boolean fix_n_results(int arity, setup_kind goal, setup z[], uint32 
    if (arity == 1) rotstates &= 0x3;
    if (!rotstates) goto lose;
 
-   /* Now deal with any setups that we may have deferred. */
+   // Now deal with any setups that we may have deferred.
 
    if (dmdflag && kk == s1x4) {
       rotstates ^= 3;
@@ -3981,8 +4088,8 @@ extern long_boolean fix_n_results(int arity, setup_kind goal, setup z[], uint32 
             canonicalize_rotation(&z[i]);
          }
          else if (z[i].inner.skind == s1x4 && kk == s_qtag) {
-            /* Turn the 1x4 into a qtag. */
-            if (rotstates & 0x0F) rotstates &= 0x03;     /* That does the defaulting. */
+            // Turn the 1x4 into a qtag.
+            if (rotstates & 0x0F) rotstates &= 0x03;     // That does the defaulting.
             if (!rotstates) goto lose;
             rr = (((rotstates & 0x0F0) ? (rotstates >> 4) : rotstates) >> 1) & 1;
             if (z[i].inner.srotation != rr) goto lose;
@@ -4065,12 +4172,13 @@ extern long_boolean fix_n_results(int arity, setup_kind goal, setup z[], uint32 
          z[i].inner.srotation = z[deadconcindex].inner.srotation;
       }
 
-      /* We know rotstates has a nonzero bit in an appropriate field. */
+      // We know rotstates has a nonzero bit in an appropriate field.
 
       if (z[i].kind == s_trngl || z[i].kind == s_trngl4) {
          z[i].rotation = i << 1;
          if (rotstates & 0xC00) z[i].rotation += 2;
          if (rotstates & 0xA00) z[i].rotation++;
+         z[i].rotation &= 3;
       }
       else
          z[i].rotation = (rotstates >> 1) & 1;
@@ -4081,18 +4189,18 @@ extern long_boolean fix_n_results(int arity, setup_kind goal, setup z[], uint32 
 
    lose:
 
-   fail("This is an inconsistent shape or orientation changer!!");
+   fail("This is an inconsistent shape or orientation changer.");
    return FALSE;
 }
 
 
 typedef struct {
-  resolve_kind k;
-  dance_level level_needed;
-  short distance;      /* Add the 64 bit for singer-only; these must be last. */
-  short nonzero_only;  /* If this is nonzero, we demand only nonzero distances. */
-  int locations[8];
-  uint32 directions;
+   resolve_kind k;
+   dance_level level_needed;
+   short distance;      // Add the 64 bit for singer-only; these must be last.
+   short nonzero_only;  // If this is nonzero, we demand only nonzero distances.
+   int locations[8];
+   uint32 directions;
 } resolve_tester;
 
 static resolve_tester test_thar_stuff[] = {
@@ -4298,26 +4406,42 @@ static resolve_tester test_2x4_stuff[] = {
    {resolve_rlg,            l_mainstream, 3, 0,   {5, 4, 2, 3, 1, 0, 6, 7},     0x8A8AA8A8},
    {resolve_minigrand,      l_mainstream, 5, 0,   {5, 0, 2, 7, 1, 4, 6, 3},     0x8888AAAA},
    {resolve_la,             l_mainstream, 6, 0,   {5, 3, 2, 0, 1, 7, 6, 4},     0xA8AA8A88},
-   {resolve_ext_rlg,        extend_34_level, 2, 0,   {5, 3, 2, 0, 1, 7, 6, 4},  0x8A88A8AA},
+   {resolve_ext_rlg,        extend_34_level,2, 0, {5, 3, 2, 0, 1, 7, 6, 4},     0x8A88A8AA},
    {resolve_circ_rlg,       l_mainstream, 1, 0,   {5, 0, 2, 7, 1, 4, 6, 3},     0x8888AAAA},
-   {resolve_xby_rlg,        cross_by_level, 2, 0,   {4, 2, 3, 1, 0, 6, 7, 5},   0x8A88A8AA},
+   {resolve_xby_rlg,        cross_by_level, 2, 0, {4, 2, 3, 1, 0, 6, 7, 5},     0x8A88A8AA},
 
-   /* RLG from T-bone setup, ends facing. */
+   // RLG from T-bone setup, ends facing.
    {resolve_rlg,            l_mainstream, 2, 0,   {4, 3, 2, 1, 0, 7, 6, 5},     0x8A31A813},
-   {resolve_rlg,            l_mainstream, 2, 0,   {4, 3, 2, 1, 0, 7, 6, 5},     0x31311313},    /* RLG from centers facing and ends in miniwaves. */
-   {resolve_la,             l_mainstream, 6, 0,   {4, 3, 2, 1, 0, 7, 6, 5},     0xA8888AAA},    /* LA from lines-out. */
-   {resolve_ext_la,         extend_34_level,   7, 0,   {5, 4, 2, 3, 1, 0, 6, 7},     0xA8A88A8A},    /* ext-LA from waves. */
-   {resolve_circ_la,        l_mainstream,      0, 0,   {5, 7, 2, 4, 1, 3, 6, 0},     0xAAA8888A},    /* circulate-LA from waves. */
-   {resolve_xby_la,         cross_by_level,    5, 0,   {3, 2, 0, 1, 7, 6, 4, 5},     0xA88A8AA8},    /* cross-by-LA from waves. */
-   {resolve_la,             l_mainstream,      7, 0,   {5, 4, 3, 2, 1, 0, 7, 6},     0x38A31A81},    /* LA from T-bone setup, ends facing. */
-   {resolve_prom,           l_mainstream,      7, 0,   {5, 4, 2, 3, 1, 0, 6, 7},     0x8888AAAA},    /* promenade from 2FL. */
-   {resolve_revprom,        l_mainstream,      5, 0,   {3, 2, 0, 1, 7, 6, 4, 5},     0xAA8888AA},    /* reverse promenade from 2FL. */
-   {resolve_circle,         l_mainstream,      6, 0,   {4, 3, 2, 1, 0, 7, 6, 5},     0x33AA1188},    /* "circle left/right" from pseudo squared-set, normal. */
-   {resolve_circle,         l_mainstream,      7, 0,   {5, 4, 3, 2, 1, 0, 7, 6},     0x833AA118},    /* "circle left/right" from pseudo squared-set, sashayed. */
-   {resolve_circle,         l_mainstream,      6, 1,   {4, 3, 2, 1, 0, 7, 6, 5},     0x8AAAA888},    /* "circle left/right" from lines-in, sashayed. */
-   {resolve_circle,         l_mainstream,      7, 1,   {5, 4, 3, 2, 1, 0, 7, 6},     0x88AAAA88},    /* "circle left/right" from lines-in, normal. */
+   // RLG from centers facing and ends in miniwaves.
+   {resolve_rlg,            l_mainstream, 2, 0,   {4, 3, 2, 1, 0, 7, 6, 5},     0x31311313},
+   // LA from lines-out.
+   {resolve_la,             l_mainstream, 6, 0,   {4, 3, 2, 1, 0, 7, 6, 5},     0xA8888AAA},
+   // LA from wacky T-bone.
+   {resolve_la,             l_mainstream, 6, 0,   {4, 3, 2, 1, 0, 7, 6, 5},     0x38131A31},
 
-   {resolve_dixie_grand,    dixie_grand_level, 2, 0,   {5, 2, 4, 7, 1, 6, 0, 3},     0x33311113},    /* dixie grand from DPT. */
+   // ext-LA from waves.
+   {resolve_ext_la,         extend_34_level,7, 0, {5, 4, 2, 3, 1, 0, 6, 7},     0xA8A88A8A},
+   // circulate-LA from waves.
+   {resolve_circ_la,        l_mainstream, 0, 0,   {5, 7, 2, 4, 1, 3, 6, 0},     0xAAA8888A},
+   // cross-by-LA from waves.
+   {resolve_xby_la,         cross_by_level, 5, 0, {3, 2, 0, 1, 7, 6, 4, 5},     0xA88A8AA8},
+   // LA from T-bone setup, ends facing.
+   {resolve_la,             l_mainstream, 7, 0,   {5, 4, 3, 2, 1, 0, 7, 6},     0x38A31A81},
+   // promenade from 2FL.
+   {resolve_prom,           l_mainstream, 7, 0,   {5, 4, 2, 3, 1, 0, 6, 7},     0x8888AAAA},
+   // reverse promenade from 2FL.
+   {resolve_revprom,        l_mainstream, 5, 0,   {3, 2, 0, 1, 7, 6, 4, 5},     0xAA8888AA},
+   // "circle left/right" from pseudo squared-set, normal.
+   {resolve_circle,         l_mainstream, 6, 0,   {4, 3, 2, 1, 0, 7, 6, 5},     0x33AA1188},
+   // "circle left/right" from pseudo squared-set, sashayed.
+   {resolve_circle,         l_mainstream, 7, 0,   {5, 4, 3, 2, 1, 0, 7, 6},     0x833AA118},
+   // "circle left/right" from lines-in, sashayed.
+   {resolve_circle,         l_mainstream, 6, 1,   {4, 3, 2, 1, 0, 7, 6, 5},     0x8AAAA888},
+   // "circle left/right" from lines-in, normal.
+   {resolve_circle,         l_mainstream, 7, 1,   {5, 4, 3, 2, 1, 0, 7, 6},     0x88AAAA88},
+   // dixie grand from DPT.
+   {resolve_dixie_grand,    dixie_grand_level,2,0,{5, 2, 4, 7, 1, 6, 0, 3},     0x33311113},
+
 #ifdef BOGUSDIXIEGRAND
    // These are bogus because the first move is a direct pull by.  It doesn't
    // distort to a circle until the second hand.
@@ -4807,14 +4931,25 @@ SDLIB_API void toplevelmove(void) THROW_DECL
 
    if (newhist->state.kind == s1p5x8)
       fail("Can't go into a 50% offset 1x8.");
+   else if (newhist->state.kind == s1p5x4)
+      fail("Can't go into a 50% offset 1x4.");
    else if (newhist->state.kind == s_dead_concentric) {
       newhist->state.kind = newhist->state.inner.skind;
       newhist->state.rotation += newhist->state.inner.srotation;
    }
 
-   /* Once rotation is imprecise, it is always imprecise.  Same for the other flags copied here. */
+   // Once rotation is imprecise, it is always imprecise.  Same for the other flags copied here.
    newhist->state.result_flags |= starting_setup.result_flags &
-         (RESULTFLAG__IMPRECISE_ROT|RESULTFLAG__ACTIVE_PHANTOMS_ON|RESULTFLAG__ACTIVE_PHANTOMS_OFF);
+      (RESULTFLAG__IMPRECISE_ROT|RESULTFLAG__ACTIVE_PHANTOMS_ON|RESULTFLAG__ACTIVE_PHANTOMS_OFF);
+
+   // But 1/8 rotation stuff cancels in pairs.
+   if (newhist->state.result_flags & starting_setup.result_flags & RESULTFLAG__PLUSEIGHTH_ROT) {
+      newhist->state.result_flags &= ~RESULTFLAG__PLUSEIGHTH_ROT;
+      newhist->state.rotation++;
+      canonicalize_rotation(&newhist->state);
+   }
+   else
+      newhist->state.result_flags |= starting_setup.result_flags & RESULTFLAG__PLUSEIGHTH_ROT;
 }
 
 

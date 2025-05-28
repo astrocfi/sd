@@ -1,6 +1,6 @@
 echo on
 rem        This command alone cleans temporary stuff and mailing
-rem        files, but not actual derived objects.  With the arguemnt
+rem        files, but not actual derived objects.  With the argument
 rem        "clean" (that is, "clean clean") it deletes all derived
 rem        objects.
 rem

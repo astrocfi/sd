@@ -10,9 +10,9 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR SD VERSION 34.5
-@set title2 Database version = 34.5 format = 181
-@set title3 X11 UI version 1.17, SDTTY UI version 1.12, SD UI version 4.10
+@set title1 RELEASE NOTES FOR SD VERSION 34.6
+@set title2 Database version = 34.6 format = 187
+@set title3 parser version 1.12, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
 
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 34.6::
 * 34.5::
 * 34.4::
 * 34.31::
@@ -43,7 +44,7 @@ The files @file{relnotes98.txi} and @file{oldnotes} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 34.5, Top, (dir)
+@node Intro, 34.6, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -54,11 +55,44 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2001 William B. Ackerman
 @sp 3
 @menu
-* 34.5::               Changes in the current version
+* 34.6::               Changes in the current version
 @end menu
 
 @c ************
-@node 34.5, 34.4, Intro, Top
+@node 34.6, 34.5, Intro, Top
+@unnumberedsec Version 34.6 changes
+
+New concepts: @code{offset 1/4 tag} and @code{offset 3/4 tag}.
+These are done from a suitably populated 4x4.  The offset amount is presumed to be 50%.
+The ``shear line'' of the setup lies between the two single 1/4 tags.
+
+New concept: @code{use (call) for the <Nth> part}.
+
+New concept: @code{use (call) in}.  This is intended to be used in
+applications like @samp{reverse random use acey deucey in swing the fractions}.
+
+The preceding two concepts are actually entered that way, with the word
+``call'' in parentheses.  Command completion makes the typing easier
+than it might seem.  After entering the concept, follow the prompts.
+The concept will be printed in the transcript in a more sensible way.
+
+The @code{magic} concept is now permitted only for simple magic
+columns at C1.  Other applications of @code{magic} (magic lines,
+magic diamonds, etc.) are legal only at C3B.  We thank the dancers
+at the 2001 National Square Dance Convention C3A hall for pointing
+this out, and apologize for the bug.
+
+New calls: @code{unwrap the boxes/stars/diamonds to a normal column,
+follow the <anyone>}.  These are used from fully offset formations,
+such as 16-matrix ``clumps''.
+
+The program can handle simple cases of setups tilted at a 45 degree
+angle.  For example, it is possible to do a @code{swing the fractions}
+interrupted at the half way point with a @code{6x2 acey deucey}.
+Please be careful with this; it is not very robust.
+
+@c ************
+@node 34.5, 34.4, 34.6, Top
 @unnumberedsec Version 34.5 changes
 
 New concepts: @code{twin phantom point-to-point diamonds} and
@@ -226,7 +260,7 @@ session from the initialization file.  In @code{Sdtty}, give the
 command-line argument ``-sequence_num'' followed by the number.  In
 @code{Sd}, it can be done this way, or it can be specified in the
 startup screen.  If a sequence number is specified when using a session,
-that number permanantly overrides the number in the initialization file.
+that number permanently overrides the number in the initialization file.
 
 The documentation is now available at all times when running @code{Sd}.  Typing
 ``help manual'', from either @code{Sdtty} or @code{Sd}, will bring up the

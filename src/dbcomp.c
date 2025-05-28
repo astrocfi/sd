@@ -406,6 +406,8 @@ char *sstab[] = {
    "pbigptpd",
    "dblxwave",
    "pdblxwave",
+   "dblspindle",
+   "pdblspindle",
    ""};
 
 /* This table is keyed to "setup_kind". */
@@ -459,6 +461,7 @@ char *estab[] = {
    "2x6",
    "2x7",
    "d3x4",
+   "???",
    "???",
    "2x8",
    "4x4",
@@ -520,6 +523,7 @@ char *estab[] = {
    "bigdmd",
    "bigptpd",
    "dblxwave",
+   "dblspindle",
    "???",
    "normal_concentric",
    ""};
@@ -667,7 +671,6 @@ char *qualtab[] = {
    "miniwaves",
    "not_miniwaves",
    "tgl_tandbase",
-   "as_couples_miniwaves",
    "true_Z_cw",
    "true_Z_ccw",
    "lateral_columns_empty",
@@ -701,12 +704,18 @@ char *qualtab[] = {
    "ends_sel",
    "all_sel",
    "none_sel",
+   "normal_unwrap_sel",
+   "ptp_unwrap_sel",
    "explodable",
    "reverse_explodable",
    "peelable_box",
    "ends_are_peelable",
    "siamese_in_quad",
    "not_tboned_in_quad",
+   "inroller_is_cw",
+   "inroller_is_ccw",
+   "outroller_is_cw",
+   "outroller_is_ccw",
    "levela1",
    "levela2",
    "levelc1",
@@ -779,7 +788,7 @@ char *flagtab1[] = {
    "first_part_visible",
    "first_two_parts_visible",
    "12_16_matrix_means_split",
-   "imprecise_rotation",
+   "preserve_z_stuff",
    "split_like_dixie_style",
    "parallel_conc_end",
    "take_right_hands",
@@ -789,12 +798,12 @@ char *flagtab1[] = {
    "step_to_wave",
    "rear_back_from_r_wave",
    "rear_back_from_qtag",
-   "left_means_touch_or_check",
+   "sequence_starter",
    "neednumber",
    "need_two_numbers",     /* The constant "need_three_numbers" is elsewhere. */
    "need_four_numbers",
-   "sequence_starter",
-   "split_like_square_thru",
+   "left_means_touch_or_check",
+   "left_only_if_half",
    "distribute_repetitions",
    "dont_use_in_resolve",
    "dont_use_in_nice_resolve",
@@ -806,11 +815,12 @@ char *flagtab1[] = {
    "base_circ_call",
    "ends_take_right_hands",
    "funny_means_those_facing",
-   "one_person_call",
-   "preserve_z_stuff",
-   "yoyo_fractal_numbers",     // The overflow (into CFLAG2_) items start here.
-   "can_be_fan",               // There is space for 8 of them.  So there are 5 left.
+   "split_like_square_thru",
+   "yoyo_fractal_numbers",
+   "imprecise_rotation",       // The overflow (into CFLAG2_) items start here.
+   "can_be_fan",               //    There is space for 8 of them.  So there are 4 left.
    "equalize",
+   "one_person_call",
    ""};
 
 /* The next three tables are all in step with each other, and with the "heritable" flags. */
@@ -1157,7 +1167,7 @@ char *predtab[] = {
    its own copy of the table, containing pointers to the actual call
    descriptors. */
 
-/* BEWARE!!  These must track the enumeration "base_call_index" in database.h */
+// BEWARE!!  These must track the enumeration "base_call_index" in database.h
 tagtabitem tagtabinit[num_base_call_indices] = {
       {1, "+++"},            /* Must be unused -- call #0 signals end of list
                                 in sequential encoding. */
@@ -1181,6 +1191,7 @@ tagtabitem tagtabinit[num_base_call_indices] = {
       {0, "lockit"},
       {0, "disband1"},
       {0, "slither"},
+      {0, "maybegrandslither"},
       {0, "prepare_to_drop"},
       {0, "two_o_circs_for_frac"},
       /* The next "NUM_TAGGER_CLASSES" (that is, 4) must be a consecutive group. */
@@ -2015,27 +2026,22 @@ def2:
 
          if ((restrstate = search(qualtab)) < 0) errexit("Unknown restriction specifier");
       }
-      else if (!strcmp(tok_str, "rotate")) {
+      else if (!strcmp(tok_str, "rotate"))
          callarray_flags1 |= CAF__ROT;
-      }
-      else if (!strcmp(tok_str, "no_cutting_through")) {
+      else if (!strcmp(tok_str, "no_cutting_through"))
          callarray_flags1 |= CAF__NO_CUTTING_THROUGH;
-      }
-      else if (!strcmp(tok_str, "no_facing_ends")) {
+      else if (!strcmp(tok_str, "no_facing_ends"))
          callarray_flags1 |= CAF__NO_FACING_ENDS;
-      }
-      else if (!strcmp(tok_str, "vacate_center")) {
+      else if (!strcmp(tok_str, "vacate_center"))
          callarray_flags1 |= CAF__VACATE_CENTER;
-      }
-      else if (!strcmp(tok_str, "other_elongate")) {
+      else if (!strcmp(tok_str, "other_elongate"))
          callarray_flags1 |= CAF__OTHER_ELONGATE;
-      }
-      else if (!strcmp(tok_str, "really_want_diamond")) {
+      else if (!strcmp(tok_str, "really_want_diamond"))
          callarray_flags1 |= CAF__REALLY_WANT_DIAMOND;
-      }
-      else if (!strcmp(tok_str, "no_compress")) {
+      else if (!strcmp(tok_str, "no_compress"))
          callarray_flags1 |= CAF__NO_COMPRESS;
-      }
+      else if (!strcmp(tok_str, "plus_eighth_rotation"))
+         callarray_flags1 |= CAF__PLUSEIGHTH_ROTATION;
       else if ((!(callarray_flags1 & CAF__CONCEND)) && (!strcmp(tok_str, "concendsetup"))) {
          if (call_endsetup != (int) s_normal_concentric)
             errexit("concendsetup with wrong end_setup");

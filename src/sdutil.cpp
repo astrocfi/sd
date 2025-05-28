@@ -589,7 +589,7 @@ SDLIB_API void write_history_line(int history_index, const char *header,
    }
    
    print_recurse(thing, 0);
-   
+
    final:
 
    (*the_callback_block.newline_fn)();
@@ -624,10 +624,16 @@ SDLIB_API void write_history_line(int history_index, const char *header,
       }
    }
 
-   if (picture || this_item->draw_pic)
+   if (picture || this_item->draw_pic) {
       printsetup(&this_item->state);
 
-   /* Record that this history item has been written to the UI. */
+      if (this_item->state.result_flags & RESULTFLAG__PLUSEIGHTH_ROT) {
+         writestuff("  Note:  Actual setup is 45 degrees clockwise from diagram above.");
+         (*the_callback_block.newline_fn)();
+      }
+   }
+
+   // Record that this history item has been written to the UI.
    this_item->text_line = the_callback_block.text_line_count;
 }
 
@@ -775,33 +781,71 @@ SDLIB_API void print_recurse(parse_block *thing, int print_recurse_arg)
             else if (k == concept_sequential) {
                writestuff("(");
             }
-            else if (k == concept_replace_nth_part || k == concept_replace_last_part || k == concept_interrupt_at_fraction) {
-               writestuff("DELAY: ");
-               if (!local_cptr->next || !subsidiary_ptr) {
+
+            else if (k == concept_special_sequential &&
+                     local_cptr->concept->value.arg1 == 4) {
+               if (local_cptr->next && subsidiary_ptr) {
+                  writestuff("USE ");
+               }
+               else {
+                  if (local_cptr->next) {
+                     writestuff_with_decorations(&local_cptr->options,
+                                                 "indicated part will be ");
+                  }
+                  else {
+                     writestuff_with_decorations(&local_cptr->options,
+                                                 "using this call as the indicated part");
+                  }
+               }
+            }
+            else if (k == concept_special_sequential_num) {
+               if (local_cptr->next && subsidiary_ptr) {
+                  writestuff("USE ");
+               }
+               else {
+                  if (local_cptr->next) {
+                     writestuff_with_decorations(&local_cptr->options,
+                                                 "@u part will be ");
+                  }
+                  else {
+                     writestuff_with_decorations(&local_cptr->options,
+                                                 "using this call as the @u part");
+                  }
+               }
+            }
+            else if (k == concept_replace_nth_part ||
+                     k == concept_replace_last_part ||
+                     k == concept_interrupt_at_fraction) {
+               if (local_cptr->next && subsidiary_ptr) {
+                  writestuff("DELAY: ");
+               }
+               else {
                   switch (local_cptr->concept->value.arg1) {
-                     case 9:
-                        writestuff("(interrupting after the ");
-                        writestuff(ordinals[local_cptr->options.number_fields]);
-                        writestuff(" part) ");
-                        break;
-                     case 8:
-                        writestuff("(replacing the ");
-                        writestuff(ordinals[local_cptr->options.number_fields]);
-                        writestuff(" part) ");
-                        break;
-                     case 0:
-                        writestuff("(replacing the last part) ");
-                        break;
-                     case 1:
-                        writestuff("(interrupting before the last part) ");
-                        break;
-                     case 2:
-                        writestuff("(interrupting after ");
-                        writestuff(cardinals[local_cptr->options.number_fields & 0xF]);
-                        writestuff("/");
-                        writestuff(cardinals[(local_cptr->options.number_fields >> 4) & 0xF]);
-                        writestuff(") ");
-                        break;
+                  case 0:
+                     writestuff("replace the last part of ");
+                     if (!local_cptr->next) writestuff("this call:");
+                     break;
+                  case 1:
+                     writestuff("interrupt before the last part of ");
+                     if (!local_cptr->next) writestuff("this call:");
+                     break;
+                  case 2:
+                     if (!local_cptr->next)
+                        writestuff_with_decorations(&local_cptr->options,
+                                                    "interrupt this call after @9/@9:");
+                     else
+                        writestuff("interrrupt ");
+                     break;
+                  case 8:
+                     writestuff_with_decorations(&local_cptr->options,
+                                                 "replace the @u part of ");
+                     if (!local_cptr->next) writestuff("this call:");
+                     break;
+                  case 9:
+                     writestuff_with_decorations(&local_cptr->options,
+                                                 "interrupting after the @u part of ");
+                     if (!local_cptr->next) writestuff("this call:");
+                     break;
                   }
                }
             }
@@ -812,7 +856,30 @@ SDLIB_API void print_recurse(parse_block *thing, int print_recurse_arg)
 
             print_recurse(local_cptr->next, 0);
 
-            if (!subsidiary_ptr) break;         /* Can happen if echoing incomplete input. */
+            // If echoing incomplete input, we can't show the second call.
+            // But we may want to show something useful.
+            if (!subsidiary_ptr) {
+               if (local_cptr->next) {
+                  if (k == concept_replace_nth_part ||
+                      k == concept_replace_last_part ||
+                      k == concept_interrupt_at_fraction) {
+                     switch (local_cptr->concept->value.arg1) {
+                     case 0: case 1: case 8: case 9:
+                        writestuff(" with this call:");
+                        break;
+                     case 2:
+                        writestuff_with_decorations(&local_cptr->options,
+                                                    " after @9/@9 with this call:");
+                        break;
+                     }
+                  }
+                  else if (k == concept_special_sequential &&
+                           local_cptr->concept->value.arg1 == 4) {
+                     writestuff(" in this call:");
+                  }
+               }
+               break;
+            }
 
             did_concept = FALSE;                /* We're starting over. */
             last_was_t_type = FALSE;
@@ -826,17 +893,23 @@ SDLIB_API void print_recurse(parse_block *thing, int print_recurse_arg)
                else
                   writestuff(" WHILE THE ENDS");
             }
-            else if (k == concept_some_vs_others && (selective_key) item->value.arg1 != selective_key_own) {
-
+            else if (k == concept_some_vs_others &&
+                     (selective_key) item->value.arg1 != selective_key_own) {
                selector_kind opp = selector_list[local_cptr->options.who].opposite;
                writestuff(" WHILE THE ");
-               writestuff((opp == selector_uninitialized) ? ((Cstring) "OTHERS") : selector_list[opp].name_uc);
+               writestuff((opp == selector_uninitialized) ?
+                          ((Cstring) "OTHERS") :
+                          selector_list[opp].name_uc);
             }
             else if (k == concept_on_your_own)
                writestuff(" AND");
             else if (k == concept_interlace ||
                      k == concept_sandwich)
                writestuff(" WITH");
+            else if (k == concept_special_sequential_num) {
+               writestuff_with_decorations(&local_cptr->options, " FOR THE @u PART: ");
+               request_final_space = FALSE;
+            }
             else if (k == concept_replace_nth_part ||
                      k == concept_replace_last_part ||
                      k == concept_interrupt_at_fraction) {
@@ -849,22 +922,27 @@ SDLIB_API void print_recurse(parse_block *thing, int print_recurse_arg)
                writestuff(" ;");
             else if (k == concept_special_sequential) {
                if (item->value.arg1 == 2)
-                  writestuff(" :");   /* This is "start with". */
+                  writestuff(" :");   // This is "start with".
+               else if (item->value.arg1 == 4)
+                  writestuff(" IN");
                else
                   writestuff(",");
             }
             else
                writestuff(" BY");
 
-            /* Note that we leave "allow_deferred_concept" on.  This means that if we say "twice"
-               immediately inside the second clause of an interlace, it will get the special
-               processing.  The first clause will get the special processing by virtue of the recursion. */
+            // Note that we leave "allow_deferred_concept" on.  This means that
+            // if we say "twice" immediately inside the second clause
+            // of an interlace, it will get the special processing.
+            // The first clause will get the special processing by virtue
+            // of the recursion.
 
             next_cptr = subsidiary_ptr;
 
-            /* Setting this means that, if the second argument uses "twice", we will put
-               it in parens.  This is needed to disambiguate this situation from the
-               use of "twice" before the entire "interlace". */
+            // Setting this means that, if the second argument uses "twice",
+            // we will put it in parens.  This is needed to disambiguate
+            // this situation from the use of "twice" before the entire
+            // "interlace".
             if (deferred_concept_paren == 0) deferred_concept_paren = 2;
          }
          else {
@@ -934,8 +1012,8 @@ SDLIB_API void print_recurse(parse_block *thing, int print_recurse_arg)
                /* If there is another concept, we need parens. */
                if (next_cptr->concept->kind > marker_end_of_list) deferred_concept_paren |= 1;
 
-               if (deferred_concept_paren == 3) writestuff("("/*)*/);
-               if (deferred_concept_paren) writestuff("("/*)*/);
+               if (deferred_concept_paren == 3) writestuff("(");
+               if (deferred_concept_paren) writestuff("(");
             }
             else {
                if ((k == concept_meta_one_arg && item->value.arg1 == meta_key_nth_part_work) ||

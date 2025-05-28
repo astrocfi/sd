@@ -677,8 +677,8 @@ concept_descriptor concept_descriptor_table[] = {
 
 /* distorted concepts */
 
-#define dd__1_size 49
-#define dd__1_pofl 29
+#define dd__1_size 51
+#define dd__1_pofl 25
    {"BIG BLOCK",                             concept_do_phantom_2x4,            D, l_c3a,        {0, phantest_only_one, 1, MPKIND__STAG, 0}},
    {"STAIRSTEP LINES",                       concept_do_phantom_2x4,            D, l_c4,         {&map_ladder, phantest_only_one, 1, MPKIND__NONE, 0}},
    {"LADDER LINES",                          concept_do_phantom_2x4,            D, l_c4,         {&map_stairst, phantest_only_one, 1, MPKIND__NONE, 0}},
@@ -689,6 +689,7 @@ concept_descriptor concept_descriptor_table[] = {
    {"DIAGONAL LINE",                         concept_single_diagonal,           D, l_c1,         {0, LOOKUP_DIAG_CLW+1}},
    {"@6 IN YOUR DIAGONAL LINE",              concept_so_and_so_only,            D, l_c1,         {0, selective_key_disc_dist, 0, LOOKUP_DIAG_CLW+1}},
    {"@6 IN YOUR OFFSET LINE",                concept_so_and_so_only,            D, l_c1,         {0, selective_key_disc_dist, 0, LOOKUP_OFFS_CLW+1}},
+   {"@6 IN YOUR STAGGERED LINE",             concept_so_and_so_only,            D, l_c4a,        {0, selective_key_disc_dist, 0, LOOKUP_STAG_CLW+1}},
    {"DIAGONAL LINES",                        concept_double_diagonal,           D, l_c4a,        {0, 1, 0}},
    {"DIAGONAL LINES OF 3",                   concept_double_diagonal,           D, l_c1,         {0, 1, 1}},
    {"STAGGERED LINES OF 3",                  concept_distorted,                 D, l_c3,         {0, disttest_any, 64+1, 0, 0}},
@@ -700,15 +701,16 @@ concept_descriptor concept_descriptor_table[] = {
    {"DOUBLE BENT TIDAL LINE",                concept_dblbent,                   D, l_c4,         {0, 8+1}},
    {"@6 IN YOUR DOUBLE BENT LINE",           concept_so_and_so_only,            D, l_c4,         {0, selective_key_disc_dist, 0, LOOKUP_DBL_BENT+1}},
    {"@6 IN YOUR DISTORTED LINE",             concept_so_and_so_only,            D, l_c1,         {0, selective_key_disc_dist, 0, 1}},
-         {"", concept_comment, 0, l_nonexistent_concept},
-         {"", concept_comment, 0, l_nonexistent_concept},
-   {"PARALLELOGRAM",                         concept_parallelogram,             D, l_c2,         {0, 0}},
-   {"PARALLELOGRAM DIAMONDS",                concept_parallelogram,             D, l_c3a,        {0, 1}},
-         {"", concept_comment, 0, l_nonexistent_concept},
    {"PHANTOM BIG BLOCK LINES",               concept_do_phantom_2x4,            D, l_c4,         {0, phantest_both, 1, MPKIND__STAG, 0}},
    {"PHANTOM STAIRSTEP LINES",               concept_do_phantom_2x4,            D, l_c4,         {&map_ladder, phantest_both, 1, MPKIND__NONE, 0}},
    {"PHANTOM LADDER LINES",                  concept_do_phantom_2x4,            D, l_c4,         {&map_stairst, phantest_both, 1, MPKIND__NONE, 0}},
    {"PHANTOM OFFSET LINES",                  concept_do_phantom_2x4,            D, l_c4a,        {0, phantest_both, 1, MPKIND__OFFS_BOTH_FULL, 0}},
+         {"", concept_comment, 0, l_nonexistent_concept},
+   {"PARALLELOGRAM",                         concept_parallelogram,             D, l_c2,         {0, 0}},
+   {"PARALLELOGRAM DIAMONDS",                concept_parallelogram,             D, l_c3a,        {0, 1}},
+         {"", concept_comment, 0, l_nonexistent_concept},
+   {"OFFSET 1/4 TAG",                        concept_distorted,                 D, l_c4,         {0, disttest_any, 256, CMD_MISC__VERIFY_1_4_TAG}},
+   {"OFFSET 3/4 TAG",                        concept_distorted,                 D, l_c4,         {0, disttest_any, 256, CMD_MISC__VERIFY_3_4_TAG}},
    {"STAGGER DIAMONDS",                      concept_do_phantom_stag_qtg,       D, l_c4, {0, phantest_only_one, 1, CMD_MISC__VERIFY_DMD_LIKE}},
    {"STAGGER 1/4 TAG",                       concept_do_phantom_stag_qtg,       D, l_c4, {0, phantest_only_one, 0, CMD_MISC__VERIFY_1_4_TAG}},
    {"STAGGER 3/4 TAG",                       concept_do_phantom_stag_qtg,       D, l_c4, {0, phantest_only_one, 0, CMD_MISC__VERIFY_3_4_TAG}},
@@ -729,7 +731,7 @@ concept_descriptor concept_descriptor_table[] = {
    {"DISTORTED GENERAL 1/4 TAG",             concept_distorted,                 D, l_c3x, {0, disttest_any, 16, CMD_MISC__VERIFY_QTAG_LIKE}},
    {"DISTORTED DIAMOND SPOTS",               concept_distorted,                 D, l_c3x, {0, disttest_any, 16, 0}},
 /* -------- column break -------- */
-#define dd__2_size 31
+#define dd__2_size 32
    {"BIG BLOCK WAVES",                       concept_do_phantom_2x4,            D, l_c3a,        {0, phantest_only_one, 3, MPKIND__STAG, 0}},
    {"STAIRSTEP WAVES",                       concept_do_phantom_2x4,            D, l_c4,         {&map_ladder, phantest_only_one, 3, MPKIND__NONE, 0}},
    {"LADDER WAVES",                          concept_do_phantom_2x4,            D, l_c4,         {&map_stairst, phantest_only_one, 3, MPKIND__NONE, 0}},
@@ -740,6 +742,7 @@ concept_descriptor concept_descriptor_table[] = {
    {"DIAGONAL WAVE",                         concept_single_diagonal,           D, l_c1,         {0, LOOKUP_DIAG_CLW+3}},
    {"@6 IN YOUR DIAGONAL WAVE",              concept_so_and_so_only,            D, l_c1,         {0, selective_key_disc_dist, 0, LOOKUP_DIAG_CLW+3}},
    {"@6 IN YOUR OFFSET WAVE",                concept_so_and_so_only,            D, l_c1,         {0, selective_key_disc_dist, 0, LOOKUP_OFFS_CLW+3}},
+   {"@6 IN YOUR STAGGERED WAVE",             concept_so_and_so_only,            D, l_c4a,        {0, selective_key_disc_dist, 0, LOOKUP_STAG_CLW+3}},
    {"DIAGONAL WAVES",                        concept_double_diagonal,           D, l_c4a,        {0, 3, 0}},
    {"DIAGONAL WAVES OF 3",                   concept_double_diagonal,           D, l_c1,         {0, 3, 1}},
    {"STAGGERED WAVES OF 3",                  concept_distorted,                 D, l_c3,         {0, disttest_any, 64+3, 0, 0}},
@@ -751,20 +754,20 @@ concept_descriptor concept_descriptor_table[] = {
    {"DOUBLE BENT TIDAL WAVE",                concept_dblbent,                   D, l_c4,         {0, 8+3}},
    {"@6 IN YOUR DOUBLE BENT WAVE",           concept_so_and_so_only,            D, l_c4,         {0, selective_key_disc_dist, 0, LOOKUP_DBL_BENT+3}},
    {"@6 IN YOUR DISTORTED WAVE",             concept_so_and_so_only,            D, l_c1,         {0, selective_key_disc_dist, 0, 3}},
-         {"", concept_comment, 0, l_nonexistent_concept},
-   {"@6 IN YOUR DISTORTED BOX",              concept_so_and_so_only,            D, l_c1,         {0, selective_key_disc_dist, 0, LOOKUP_DIST_BOX}},
-   {"@6 IN YOUR DIAGONAL BOX",               concept_so_and_so_only,            D, l_c3,         {0, selective_key_disc_dist, 0, LOOKUP_DIAG_BOX}},
-   {"@6 IN YOUR DISTORTED DIAMOND",          concept_so_and_so_only,            D, l_c1,         {0, selective_key_disc_dist, 0, LOOKUP_DIST_DMD+7}},
-   {"@6 IN YOUR Z",                          concept_so_and_so_only,            D, l_c3,         {0, selective_key_disc_dist, 0, LOOKUP_Z}},
-         {"", concept_comment, 0, l_nonexistent_concept},
    {"PHANTOM BIG BLOCK WAVES",               concept_do_phantom_2x4,            D, l_c4,         {0, phantest_both, 3, MPKIND__STAG, 0}},
    {"PHANTOM STAIRSTEP WAVES",               concept_do_phantom_2x4,            D, l_c4,         {&map_ladder, phantest_both, 3, MPKIND__NONE, 0}},
    {"PHANTOM LADDER WAVES",                  concept_do_phantom_2x4,            D, l_c4,         {&map_stairst, phantest_both, 3, MPKIND__NONE, 0}},
    {"PHANTOM OFFSET WAVES",                  concept_do_phantom_2x4,            D, l_c4a,        {0, phantest_both, 3, MPKIND__OFFS_BOTH_FULL, 0}},
+         {"", concept_comment, 0, l_nonexistent_concept},
+   {"@6 IN YOUR DISTORTED BOX",              concept_so_and_so_only,            D, l_c1,         {0, selective_key_disc_dist, 0, LOOKUP_DIST_BOX}},
+   {"@6 IN YOUR DIAGONAL BOX",               concept_so_and_so_only,            D, l_c3,         {0, selective_key_disc_dist, 0, LOOKUP_DIAG_BOX}},
+   {"@6 IN YOUR STAGGERED BOX",              concept_so_and_so_only,            D, l_c4a,        {0, selective_key_disc_dist, 0, LOOKUP_STAG_BOX}},
+   {"@6 IN YOUR DISTORTED DIAMOND",          concept_so_and_so_only,            D, l_c1,         {0, selective_key_disc_dist, 0, LOOKUP_DIST_DMD+7}},
+   {"@6 IN YOUR Z",                          concept_so_and_so_only,            D, l_c3,         {0, selective_key_disc_dist, 0, LOOKUP_Z}},
 /* -------- column break -------- */
 #define dd__3_size 31
-#define dd__3_pob 24
-#define dd__3_pofc 29
+#define dd__3_pofc 25
+#define dd__3_pob 29
    {"STAGGER",                               concept_do_phantom_2x4,            D, l_c2,         {0, phantest_only_one, 0, MPKIND__STAG, 0}},
    {"STAIRSTEP COLUMNS",                     concept_do_phantom_2x4,            D, l_c4,         {&map_stairst, phantest_only_one, 0, MPKIND__NONE, 0}},
    {"LADDER COLUMNS",                        concept_do_phantom_2x4,            D, l_c4,         {&map_ladder, phantest_only_one, 0, MPKIND__NONE, 0}},
@@ -775,6 +778,7 @@ concept_descriptor concept_descriptor_table[] = {
    {"DIAGONAL COLUMN",                       concept_single_diagonal,           D, l_c1,         {0, LOOKUP_DIAG_CLW+2}},
    {"@6 IN YOUR DIAGONAL COLUMN",            concept_so_and_so_only,            D, l_c1,         {0, selective_key_disc_dist, 0, LOOKUP_DIAG_CLW+2}},
    {"@6 IN YOUR OFFSET COLUMN",              concept_so_and_so_only,            D, l_c1,         {0, selective_key_disc_dist, 0, LOOKUP_OFFS_CLW+2}},
+   {"@6 IN YOUR STAGGERED COLUMN",           concept_so_and_so_only,            D, l_c4a,        {0, selective_key_disc_dist, 0, LOOKUP_STAG_CLW+2}},
    {"DIAGONAL COLUMNS",                      concept_double_diagonal,           D, l_c4a,        {0, 0, 0}},
    {"DIAGONAL COLUMNS OF 3",                 concept_double_diagonal,           D, l_c1,         {0, 0, 1}},
    {"STAGGERED COLUMNS OF 3",                concept_distorted,                 D, l_c3,         {0, disttest_any, 64+0, 0, 0}},
@@ -786,15 +790,14 @@ concept_descriptor concept_descriptor_table[] = {
    {"DOUBLE BENT TIDAL COLUMN",              concept_dblbent,                   D, l_c4,         {0, 8+0}},
    {"@6 IN YOUR DOUBLE BENT COLUMN",         concept_so_and_so_only,            D, l_c4,         {0, selective_key_disc_dist, 0, LOOKUP_DBL_BENT+2}},
    {"@6 IN YOUR DISTORTED COLUMN",           concept_so_and_so_only,            D, l_c1,         {0, selective_key_disc_dist, 0, 2}},
-         {"", concept_comment, 0, l_nonexistent_concept},
-   {"O",                                     concept_do_phantom_2x4,            D, l_c1,         {0, phantest_only_first_one, 0, MPKIND__O_SPOTS, 0}},
-   {"BUTTERFLY",                             concept_do_phantom_2x4,            D, l_c1,         {0, phantest_only_second_one, 0, MPKIND__X_SPOTS, 0}},
-   {"PHANTOM BUTTERFLY OR O",                concept_do_phantom_2x4,            D, l_c4a,        {&map_but_o, phantest_both, 0, MPKIND__NONE, 0}},
-         {"", concept_comment, 0, l_nonexistent_concept},
    {"PHANTOM STAGGER COLUMNS",               concept_do_phantom_2x4,            D, l_c4,         {0, phantest_both, 0, MPKIND__STAG, 0}},
    {"PHANTOM STAIRSTEP COLUMNS",             concept_do_phantom_2x4,            D, l_c4,         {&map_stairst, phantest_both, 0, MPKIND__NONE, 0}},
    {"PHANTOM LADDER COLUMNS",                concept_do_phantom_2x4,            D, l_c4,         {&map_ladder, phantest_both, 0, MPKIND__NONE, 0}},
    {"PHANTOM OFFSET COLUMNS",                concept_do_phantom_2x4,            D, l_c4a,        {0, phantest_both, 0, MPKIND__OFFS_BOTH_FULL, 0}},
+         {"", concept_comment, 0, l_nonexistent_concept},
+   {"O",                                     concept_do_phantom_2x4,            D, l_c1,         {0, phantest_only_first_one, 0, MPKIND__O_SPOTS, 0}},
+   {"BUTTERFLY",                             concept_do_phantom_2x4,            D, l_c1,         {0, phantest_only_second_one, 0, MPKIND__X_SPOTS, 0}},
+   {"PHANTOM BUTTERFLY OR O",                concept_do_phantom_2x4,            D, l_c4a,        {&map_but_o, phantest_both, 0, MPKIND__NONE, 0}},
    {"BENT BOXES",                            concept_dblbent,                   D, l_c4,         {0, 16+4}},
 
 /* 4-person distorted concepts */
@@ -937,7 +940,7 @@ concept_descriptor concept_descriptor_table[] = {
    {"FERRIS",                                concept_ferris,                    D, l_c3x,        {0, 0, 0}},
    {"RELEASE",                               concept_ferris,                    D, l_c3a,        {0, 1, /*CONCPROP__NEEDK_3X4*/0}},
 /* -------- column break -------- */
-#define mm__2_size 91
+#define mm__2_size 93
    {"CENTERS AND ENDS",                      concept_centers_and_ends,          0, l_mainstream, {0, selector_centers, FALSE}},
    {"CENTER 6/OUTER 2",                      concept_centers_and_ends,          0, l_mainstream, {0, selector_center6, FALSE}},
    {"CENTER 2/OUTER 6",                      concept_centers_and_ends,          0, l_mainstream, {0, selector_center2, FALSE}},
@@ -980,6 +983,7 @@ concept_descriptor concept_descriptor_table[] = {
    {"two calls in succession",               concept_sequential,                0, l_mainstream},
    {"FOLLOW IT BY",                          concept_special_sequential,        0, l_c2,         {0, 0}},
    {"PRECEDE IT BY",                         concept_special_sequential,        0, l_c2,         {0, 1}},
+   {"USE (call) IN",                         concept_special_sequential,        0, l_c2,         {0, 4}},
    {"CRAZY",                                 concept_crazy,                     D, l_c2,         {0, 0, FALSE}},
    {"REVERSE CRAZY",                         concept_crazy,                     D, l_c3a,        {0, 1, FALSE}},
    {"@a CRAZY",                              concept_frac_crazy,                D, l_c2,         {0, 0, TRUE}},
@@ -1015,6 +1019,7 @@ concept_descriptor concept_descriptor_table[] = {
    {"THIRDLY",            concept_meta,        L+D,l_c4,    {0, meta_key_nth_part_work, 3}},
    {"DO THE LAST PART",   concept_meta,     G+D, l_c3a,     {0, meta_key_finally}},
    {"REPLACE THE @u PART",                   concept_replace_nth_part,          0, l_c1,         {0, 8}},
+   {"USE (call) FOR THE @u PART",            concept_special_sequential_num,    0, l_c1,         {0, 3}},
    {"REPLACE THE LAST PART",                 concept_replace_last_part,         0, l_c1,         {0, 0}},
    {"START WITH",                            concept_special_sequential,        0, l_c2,         {0, 2}},
    {"INTERRUPT AFTER THE @u PART",           concept_replace_nth_part,          0, l_c1,         {0, 9}},

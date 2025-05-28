@@ -213,7 +213,9 @@ int begin_sizes[] = {
    12,         /* b_bigptpd */
    12,         /* b_pbigptpd */
    16,         /* b_dblxwave */
-   16};        /* b_pdblxwave */
+   16,         /* b_pdblxwave */
+   16,         /* b_dblspindle */
+   16};        /* b_pdblspindle */
 
 extern void do_exit(void)
 {

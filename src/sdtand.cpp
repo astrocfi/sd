@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-2000  William B. Ackerman.
+    Copyright (C) 1990-2001  William B. Ackerman.
 
     This file is unpublished and contains trade secrets.  It is
     to be used by permission only and not to be disclosed to third
@@ -79,6 +79,8 @@ static tm_thing maps_isearch_twosome[] = {
 
    {{10, 15, 3, 1, 4, 5, 6, 8,       12, 13, 14, 0, 2, 7, 11, 9},                0,     0000,         8, 0,  0,  0, 0,  s2x4,  s4x4},
    {{14, 3, 7, 5, 8, 9, 10, 12,      0, 1, 2, 4, 6, 11, 15, 13},                 0,   0xFFFF,         8, 1,  0,  0, 0,  s2x4,  s4x4},
+   {{-2, 15, 3, 1, -2, 5, 11, 9,     -1, 13, -1, -1, -1, 7, -1, -1},             0,     0000,         8, 0,  0,  0, 0,  s2x4,  s4x4},
+   {{10, 15, 3, -2, 2, 7, 6, -2,     -1, -1, 14, -1, -1, -1, 11, -1},            0,     0000,         8, 0,  0,  0, 0,  s2x4,  s4x4},
 
    {{7, 22, 15, 20, 18, 11, 2, 9,    6, 23, 14, 21, 19, 10, 3, 8},               0, 0xFCCFCC,         8, 1,  0,  0, 0,  s_qtag,s4x6},
    {{11, 10, 9, 8, 7, 6, 12, 13, 14, 15, 16, 17, 
@@ -112,6 +114,7 @@ static tm_thing maps_isearch_twosome[] = {
    {{2, 3, 5, 6, 7, 0,               -1, -1, 4, -1, -1, 1},                      0,     0x33,         6, 1,  0,  0, 0,  s_2x1dmd, s_crosswave},
    {{0, 1, 3, 4, 5, 6,               -1, -1, 2, -1, -1, 7},                      0,        0,         6, 0,  0,  0, 0,  s_1x2dmd, s_crosswave},
    {{6, 7, 0, 2, 3, 5,               -1, -1, 1, -1, -1, 4},                  0x410,     0x33,         6, 0,  0,  0, 0,  s_1x2dmd, s_rigger},
+   {{0, 1, 3, 4, 6, 7,               -1, 2, -1, -1, 5, -1},                  0x104,     0x66,         6, 0,  0,  0, 0,  s_1x2dmd, s1x3dmd},
    {{0, 3, 2, 5, 7, 6,               1, -1, -1, 4, -1, -1},                      0,     0x33,         6, 1,  0,  0, 0,  s_2x1dmd, s_hrglass},
    {{0, 2, 3, 5, 6, 7,               1, -1, -1, 4, -1, -1},                  0x041,     0x33,         6, 0,  0,  0, 0,  s_2x1dmd, s3x1dmd},
    {{0, 1, 3, 4, 6, 7,               -1, 2, -1, -1, 5, -1},                  0x104,     0x66,         6, 0,  0,  0, 0,  s_2x1dmd, s3x1dmd},

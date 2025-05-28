@@ -129,20 +129,20 @@ typedef struct {
 } ui_option_type;
 
 
-/* BEWARE!!  This list must track the array "concept_table" in sdconcpt.cpp . */
+// BEWARE!!  This list must track the array "concept_table" in sdconcpt.cpp .
 typedef enum {
 
-/* These next few are not concepts.  Their appearance marks the end of a parse tree. */
+// These next few are not concepts.  Their appearance marks the end of a parse tree.
 
-   concept_another_call_next_mod,         /* calla modified by callb */
-   concept_mod_declined,                  /* user was queried about modification, and said no. */
-   marker_end_of_list,                    /* normal case */
+   concept_another_call_next_mod,         // calla modified by callb
+   concept_mod_declined,                  // user was queried about modification, and said no.
+   marker_end_of_list,                    // normal case
 
-/* This is not a concept.  Its appearance indicates a comment is to be placed here. */
+// This is not a concept.  Its appearance indicates a comment is to be placed here.
 
    concept_comment,
 
-/* Everything after this is a real concept. */
+// Everything after this is a real concept.
 
    concept_concentric,
    concept_tandem,
@@ -270,6 +270,7 @@ typedef enum {
    concept_n_times,
    concept_sequential,
    concept_special_sequential,
+   concept_special_sequential_num,
    concept_meta,
    concept_meta_one_arg,
    concept_so_and_so_begin,
@@ -887,20 +888,17 @@ typedef struct {
 
 
 typedef struct gfwzqg {
-   Const setup_kind bigsetup;
-   Const calldef_schema lyzer;
-   Const veryshort maps[24];
-   Const short inlimit;
-   Const short outlimit;
-   Const setup_kind insetup;
-   Const setup_kind outsetup;
-   Const int bigsize;
-   Const int inner_rot;    /* 1 if inner setup is rotated CCW relative to big setup */
-   Const int outer_rot;    /* 1 if outer setup is rotated CCW relative to big setup */
-   Const int mapelong;
-   Const int center_arity;
-   Const int elongrotallow;
-   Const calldef_schema getout_schema;
+   const setup_kind bigsetup;
+   const calldef_schema lyzer;
+   const veryshort maps[24];
+   const setup_kind insetup;
+   const setup_kind outsetup;
+   const int inner_rot;    /* 1 if inner setup is rotated CCW relative to big setup */
+   const int outer_rot;    /* 1 if outer setup is rotated CCW relative to big setup */
+   const int mapelong;
+   const int center_arity;
+   const int elongrotallow;
+   const calldef_schema getout_schema;
    uint32 used_mask_analyze;
    uint32 used_mask_synthesize;
    struct gfwzqg *next_analyze;
@@ -993,14 +991,17 @@ typedef struct predptr_pair_struct {
 #define LOOKUP_Z        0x20
 #define LOOKUP_DIST_BOX 0x40
 #define LOOKUP_DIAG_BOX 0x80
-#define LOOKUP_DIAG_CLW 0x100
-#define LOOKUP_OFFS_CLW 0x200
-#define LOOKUP_DBL_BENT 0x400
-#define LOOKUP_MINI_B   0x800
-#define LOOKUP_MINI_O   0x1000
+#define LOOKUP_STAG_BOX 0x100
+#define LOOKUP_DIAG_CLW 0x200
+#define LOOKUP_OFFS_CLW 0x400
+#define LOOKUP_STAG_CLW 0x800
+#define LOOKUP_DBL_BENT 0x1000
+#define LOOKUP_MINI_B   0x2000
+#define LOOKUP_MINI_O   0x4000
 
-#define LOOKUP_GEN_MASK (LOOKUP_DIAG_BOX|LOOKUP_DIST_DMD|LOOKUP_Z|LOOKUP_DIST_BOX| \
-   LOOKUP_DIAG_CLW|LOOKUP_OFFS_CLW|LOOKUP_DBL_BENT|LOOKUP_MINI_B|LOOKUP_MINI_O)
+#define LOOKUP_GEN_MASK (LOOKUP_DIST_DMD|LOOKUP_Z|LOOKUP_DIST_BOX| \
+   LOOKUP_DIAG_BOX|LOOKUP_STAG_BOX|LOOKUP_DIAG_CLW|LOOKUP_OFFS_CLW| \
+   LOOKUP_STAG_CLW|LOOKUP_DBL_BENT|LOOKUP_MINI_B|LOOKUP_MINI_O)
 
 
 
@@ -1062,41 +1063,58 @@ typedef struct {
 
 typedef uint32 id_bit_table[4];
 
-typedef Const struct {
-   /* This is the size of the setup MINUS ONE. */
-   Const int setup_limits;
+/* We sometimes don't want to use "const" in C++,
+   because initializers are screwed up.
+   In particular, we need this on any structure type
+   that is initialized sometimes in C files (e.g. sdtables.c)
+   and sometimes in C++ files (e.g. the structure "expand_thing"
+   has initializers in sdmoves.cpp as well.)
+*/
+#ifdef __cplusplus
+#define C_const
+#else
+#define C_const const
+#endif
 
-   /* These "coordrec" items have the fudged coordinates that are used for doing
-      press/truck calls.  For some setups, the coordinates of some people are
-      deliberately moved away from the obvious precise matrix spots so that
-      those people can't press or truck.  For example, the lateral spacing of
-      diamond points is not an integer.  If a diamond point does any truck or loop
-      call, he/she will not end up on the other diamond point spot (or any other
-      spot in the formation), so the call will not be legal.  This enforces our
-      view, not shared by all callers (Hi, Clark!) that the diamond points are NOT
-      as if the ends of lines of 3, and hence can NOT trade with each other by
-      doing a right loop 1. */
+typedef C_const struct {
+   C_const uint32 mask_normal;
+   C_const uint32 mask_6_2;
+   C_const uint32 mask_2_6;
+   C_const uint32 mask_ctr_dmd;
+} ctr_end_mask_rec;
+
+
+typedef const struct {
+   // This is the size of the setup MINUS ONE.
+   const int setup_limits;
+
+   // These "coordrec" items have the fudged coordinates that are used for doing
+   // press/truck calls.  For some setups, the coordinates of some people are
+   // deliberately moved away from the obvious precise matrix spots so that
+   // those people can't press or truck.  For example, the lateral spacing of
+   // diamond points is not an integer.  If a diamond point does any truck or loop
+   // call, he/she will not end up on the other diamond point spot (or any other
+   // spot in the formation), so the call will not be legal.  This enforces our
+   // view, not shared by all callers (Hi, Clark!) that the diamond points are NOT
+   // as if the ends of lines of 3, and hence can NOT trade with each other by
+   // doing a right loop 1.
    coordrec *setup_coords;
 
-   /* The above table is not suitable for performing mirror inversion because,
-      for example, the points of diamonds do not reflect onto each other.  This
-      table has unfudged coordinates, in which all the symmetries are observed.
-      This is the table that is used for mirror reversal.  Most of the items in
-      it are the same as those in the table above. */
+   // The above table is not suitable for performing mirror inversion because,
+   // for example, the points of diamonds do not reflect onto each other.  This
+   // table has unfudged coordinates, in which all the symmetries are observed.
+   // This is the table that is used for mirror reversal.  Most of the items in
+   // it are the same as those in the table above.
    coordrec *nice_setup_coords;
 
-   /* These determine how designators like "side boys" get turned into
-      "center 2", so that so-and-so moves can be done with the much
-      more powerful concentric mechanism. */
+   // These determine how designators like "side boys" get turned into
+   // "center 2", so that so-and-so moves can be done with the much
+   // more powerful concentric mechanism.
+   ctr_end_mask_rec setup_conc_masks;
 
-   Const uint32 mask_normal;
-   Const uint32 mask_6_2;
-   Const uint32 mask_2_6;
-   Const uint32 mask_ctr_dmd;
-
-   /* These show the beginning setups that we look for in a by-array call
-      definition in order to do a call in this setup. */
-   Const begin_kind keytab[2];
+   // These show the beginning setups that we look for in a by-array call
+   // definition in order to do a call in this setup.
+   const begin_kind keytab[2];
 
    /* In the bounding boxes, we do not fill in the "length" of a diamond, nor
       the "height" of a qtag.  Everyone knows that the number must be 3, but it
@@ -1569,8 +1587,9 @@ static const uint32 RESULTFLAG__VERY_CTRS_ODD        = 0x00400000UL;
 // This is a 2 bit field.
 static const uint32 RESULTFLAG__DID_Z_COMPRESSMASK   = 0x01800000UL;
 static const uint32 RESULTFLAG__DID_Z_COMPRESSBIT    = 0x00800000UL;
-static const uint32 RESULTFLAG__IMPRECISE_ROT        = 0x02000000UL;
-static const uint32 RESULTFLAG__NO_REEVALUATE        = 0x04000000UL;
+static const uint32 RESULTFLAG__NO_REEVALUATE        = 0x02000000UL;
+static const uint32 RESULTFLAG__IMPRECISE_ROT        = 0x04000000UL;
+static const uint32 RESULTFLAG__PLUSEIGHTH_ROT       = 0x08000000UL;
 
 typedef struct glonk {
    char txt[MAX_TEXT_LINE_LENGTH];
@@ -1638,6 +1657,7 @@ typedef enum {
    warn__check_dmd_qtag,
    warn__check_quad_dmds,
    warn__may_be_fudgy,
+   warn__fudgy_half_offset,
    warn__check_3x4,
    warn__check_2x4,
    warn__check_hokey_2x4,
@@ -1659,6 +1679,7 @@ typedef enum {
    warn__split_to_1x8s,
    warn__split_to_1x6s,
    warn__take_left_hands,
+   warn__left_half_pass,
    warn__evil_interlocked,
    warn__split_phan_in_pgram,
    warn__bad_interlace_match,
@@ -1696,6 +1717,7 @@ typedef enum {
    warn__tasteless_com_spot,
    warn__tasteless_junk,
    warn__tasteless_slide_thru,
+   warn__compress_carefully,
    warn__diagnostic,
    warn__NUM_WARNINGS       // Not a real warning; just used for counting.
 } warning_index;
@@ -1961,6 +1983,7 @@ typedef enum {
 #define extend_34_level l_plus
 #define phantom_tandem_level l_c4a
 #define intlk_triangle_level l_c2
+#define general_magic_level l_c3
 #define beau_belle_level l_a2
 
 
@@ -2176,8 +2199,23 @@ static const uint32 FINAL__LEADTRIANGLE               = CFLAGHSPARE_6;
 
 static const uint32 CMD_MISC__EXPLICIT_MIRROR    = 0x00000100UL;
 static const uint32 CMD_MISC__MATRIX_CONCEPT     = 0x00000200UL;
-/* This is a 4 bit field.  For codes inside same, see "CMD_MISC__VERIFY_WAVES" below. */
+// This is a 4 bit field.
 static const uint32 CMD_MISC__VERIFY_MASK        = 0x00003C00UL;
+// Here are the encodings that can go into same.
+#define             CMD_MISC__VERIFY_WAVES         0x00000400UL
+#define             CMD_MISC__VERIFY_2FL           0x00000800UL
+#define             CMD_MISC__VERIFY_DMD_LIKE      0x00000C00UL
+#define             CMD_MISC__VERIFY_QTAG_LIKE     0x00001000UL
+#define             CMD_MISC__VERIFY_1_4_TAG       0x00001400UL
+#define             CMD_MISC__VERIFY_3_4_TAG       0x00001800UL
+#define             CMD_MISC__VERIFY_REAL_1_4_TAG  0x00001C00UL
+#define             CMD_MISC__VERIFY_REAL_3_4_TAG  0x00002000UL
+#define             CMD_MISC__VERIFY_REAL_1_4_LINE 0x00002400UL
+#define             CMD_MISC__VERIFY_REAL_3_4_LINE 0x00002800UL
+#define             CMD_MISC__VERIFY_LINES         0x00002C00UL
+#define             CMD_MISC__VERIFY_COLS          0x00003000UL
+#define             CMD_MISC__VERIFY_TALL6         0x00003400UL
+
 static const uint32 CMD_MISC__EXPLICIT_MATRIX    = 0x00004000UL;
 static const uint32 CMD_MISC__NO_EXPAND_MATRIX   = 0x00008000UL;
 static const uint32 CMD_MISC__DISTORTED          = 0x00010000UL;
@@ -2198,22 +2236,6 @@ static const uint32 CMD_MISC__ALREADY_STEPPED    = 0x40000000UL;
 static const uint32 CMD_MISC__DOING_ENDS         = 0x80000000UL;
 
 static const uint32 CMD_MISC__MUST_SPLIT_MASK    = (CMD_MISC__MUST_SPLIT_HORIZ|CMD_MISC__MUST_SPLIT_VERT);
-
-/* Here are the encodings that can go into the CMD_MISC__VERIFY_MASK field.
-   Zero means no verification. */
-#define             CMD_MISC__VERIFY_WAVES         0x00000400UL
-#define             CMD_MISC__VERIFY_2FL           0x00000800UL
-#define             CMD_MISC__VERIFY_DMD_LIKE      0x00000C00UL
-#define             CMD_MISC__VERIFY_QTAG_LIKE     0x00001000UL
-#define             CMD_MISC__VERIFY_1_4_TAG       0x00001400UL
-#define             CMD_MISC__VERIFY_3_4_TAG       0x00001800UL
-#define             CMD_MISC__VERIFY_REAL_1_4_TAG  0x00001C00UL
-#define             CMD_MISC__VERIFY_REAL_3_4_TAG  0x00002000UL
-#define             CMD_MISC__VERIFY_REAL_1_4_LINE 0x00002400UL
-#define             CMD_MISC__VERIFY_REAL_3_4_LINE 0x00002800UL
-#define             CMD_MISC__VERIFY_LINES         0x00002C00UL
-#define             CMD_MISC__VERIFY_COLS          0x00003000UL
-#define             CMD_MISC__VERIFY_TALL6         0x00003400UL
 
 
 /* Flags that reside in the "cmd_misc2_flags" word of a setup BEFORE a call is executed. */
@@ -2300,6 +2322,7 @@ static const uint32 CMD_MISC2__ANY_WORK_INVERT   = 0x00200000UL;
 // This is a 2 bit field.
 static const uint32 CMD_MISC2__DID_Z_COMPRESSMASK= 0x60000000UL;
 static const uint32 CMD_MISC2__DID_Z_COMPRESSBIT = 0x20000000UL;
+static const uint32 CMD_MISC2__DO_NOT_EXECUTE    = 0x80000000UL;
 
 typedef enum {
    simple_normalize,
@@ -2323,19 +2346,6 @@ typedef enum {
    merge_c1phan_nocompress,
    merge_without_gaps
 } merge_action;
-
-/* We sometimes don't want to use "const" in C++,
-   because initializers are screwed up.
-   In particular, we need this on any structure type
-   that is initialized sometimes in C files (e.g. sdtables.c)
-   and sometimes in C++ files (e.g. the structure "expand_thing"
-   has initializers in sdmoves.cpp as well.)
-*/
-#ifdef __cplusplus
-#define C_const
-#else
-#define C_const const
-#endif
 
 typedef struct grylch {
    C_const veryshort source_indices[24];
@@ -2410,7 +2420,8 @@ enum chk_type {
    chk_qbox,
    chk_peelable,
    chk_spec_directions,
-   chk_sex
+   chk_sex,
+   chk_inroller
 };
 
 
@@ -2740,8 +2751,13 @@ extern "C" {
 #endif
 
 extern SDLIB_API selector_item selector_list[];                     /* in SDTABLES */
-
 extern SDLIB_API Cstring warning_strings[];                         /* in SDTABLES */
+extern SDLIB_API ctr_end_mask_rec dead_masks;                       /* in SDTABLES */
+extern SDLIB_API ctr_end_mask_rec masks_for_3x4;                    /* in SDTABLES */
+extern SDLIB_API ctr_end_mask_rec masks_for_3dmd_ctr2;              /* in SDTABLES */
+extern SDLIB_API ctr_end_mask_rec masks_for_3dmd_ctr4;              /* in SDTABLES */
+extern SDLIB_API ctr_end_mask_rec masks_for_bigh_ctr4;              /* in SDTABLES */
+extern SDLIB_API ctr_end_mask_rec masks_for_4x4;                    /* in SDTABLES */
 extern SDLIB_API setup_attr setup_attrs[];                          /* in SDTABLES */
 extern SDLIB_API int begin_sizes[];                                 /* in SDTABLES */
 extern SDLIB_API startinfo startinfolist[];                         /* in SDTABLES */
@@ -2770,15 +2786,15 @@ extern id_bit_table id_bit_table_4dmd_cc_ee[];                      /* in SDTABL
 extern id_bit_table id_bit_table_3ptpd[];                           /* in SDTABLES */
 extern id_bit_table id_bit_table_3x6_with_1x6[];                    /* in SDTABLES */
 extern cm_thing conc_init_table[];                                  /* in SDTABLES */
+extern const fixer f3x4outer;                                       /* in SDTABLES */
 extern const fixer fdhrgl;                                          /* in SDTABLES */
+extern const fixer specspindle;                                     /* in SDTABLES */
+extern const fixer specfix3x40;                                     /* in SDTABLES */
+extern const fixer specfix3x41;                                     /* in SDTABLES */
 extern const fixer f323;                                            /* in SDTABLES */
 extern const fixer f2x4far;                                         /* in SDTABLES */
 extern const fixer f2x4near;                                        /* in SDTABLES */
 extern const fixer f4dmdiden;                                       /* in SDTABLES */
-extern const fixer fixmumble;                                       /* in SDTABLES */
-extern const fixer fixfrotz;                                        /* in SDTABLES */
-extern const fixer fixwhuzzis;                                      /* in SDTABLES */
-extern const fixer fixgizmo;                                        /* in SDTABLES */
 
 extern full_expand_thing rear_1x2_pair;
 extern full_expand_thing rear_2x2_pair;
@@ -2867,11 +2883,11 @@ extern map_thing map_ladder;                                        /* in SDTABL
 extern map_thing map_but_o;                                         /* in SDTABLES */
 extern map_thing map_4x4v;                                          /* in SDTABLES */
 extern map_thing map_blocks;                                        /* in SDTABLES */
-extern map_thing map_trglbox;                                       /* in SDTABLES */
-extern map_thing map_trglbox12a;                                    /* in SDTABLES */
-extern map_thing map_trglbox12b;                                    /* in SDTABLES */
-extern map_thing map_2x3_0134;                                      /* in SDTABLES */
-extern map_thing map_2x3_1245;                                      /* in SDTABLES */
+extern map_thing map_trglbox3x4a;                                   /* in SDTABLES */
+extern map_thing map_trglbox3x4b;                                   /* in SDTABLES */
+extern map_thing map_trglbox4x4;                                    /* in SDTABLES */
+extern map_thing map_trglbox4x5a;                                   /* in SDTABLES */
+extern map_thing map_trglbox4x5b;                                   /* in SDTABLES */
 extern map_thing map_2x3_1234;                                      /* in SDTABLES */
 extern map_thing map_2x3_0145;                                      /* in SDTABLES */
 extern map_thing map_1x8_1x6;                                       /* in SDTABLES */
@@ -3020,7 +3036,8 @@ public:
       collision_mask(0),
       callflags1(CFLAG1_TAKE_RIGHT_HANDS),  // Default is that collisions are legal.
       assume_ptr((assumption_thing *) 0),
-      force_mirror_warn(false),
+      m_force_mirror_warn(false),
+      m_doing_half_override(false),
       cmd_misc_flags(0),
       collision_appears_illegal(1),    // Halfway between "appears_illegal"
                                        // and not -- use table item.
@@ -3033,11 +3050,19 @@ public:
       collision_mask(0),
       callflags1(callspec->callflags1),
       assume_ptr(&cmd->cmd_assume),
-      force_mirror_warn(mirror),
+      m_force_mirror_warn(mirror),
+      m_doing_half_override(false),
       cmd_misc_flags(cmd->cmd_misc_flags),
       collision_appears_illegal(0),    // May change to 2 as call progresses.
       result_mask(0)
-      {}
+      {
+         // If doing half of a call, and doing it left,
+         // and there is a "collision", make them come to left hands.
+         if (mirror && (cmd->cmd_final_flags.her8it & INHERITFLAG_HALF)) {
+            m_force_mirror_warn = false;
+            m_doing_half_override = true;
+         }
+      }
 
    void note_prefilled_result(setup *result)
       {
@@ -3058,7 +3083,8 @@ private:
    uint32 collision_mask;
    uint32 callflags1;
    assumption_thing *assume_ptr;
-   bool force_mirror_warn;
+   bool m_force_mirror_warn;
+   bool m_doing_half_override;
    uint32 cmd_misc_flags;
    int collision_appears_illegal;
    uint32 result_mask;
@@ -3120,8 +3146,8 @@ extern uint32 process_new_fractions(
    int denom,
    uint32 incoming_fracs,
    uint32 reverse_orderbit,   /* Low bit on mean treat as if we mean "do the last M/N". */
-   long_boolean allow_improper,
-   long_boolean *improper_p) THROW_DECL;
+   bool allow_improper = false,
+   bool *improper_p = 0) THROW_DECL;
 
 extern long_boolean fill_active_phantoms_and_move(setup *ss, setup *result) THROW_DECL;
 

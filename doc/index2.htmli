@@ -8,9 +8,10 @@ Sd: a checker-moving program that is <strong>powerful</strong>,
 </p>
 <br>
 <p align="center">
-<strong>The current version of Sd/Sdtty is 34.5</strong>, released on May 27, 2001.
+<strong>The current version of Sd/Sdtty is 34.6</strong>, released on September 16, 2001.
 <p>
-The program can now handle "parallelogram diamonds".
+The program can handle simple cases of setups tilted at a 45 degree
+angle.
 <p>
 <dl>
 <dt>

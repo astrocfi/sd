@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-2000  William B. Ackerman.
+    Copyright (C) 1990-2001  William B. Ackerman.
 
     This file is unpublished and contains trade secrets.  It is
     to be used by permission only and not to be disclosed to third
@@ -415,10 +415,18 @@ void collision_collector::fix_possible_collision(setup *result) THROW_DECL
 
    win:
 
-      if (cmd_misc_flags & CMD_MISC__EXPLICIT_MIRROR)
-         warn(warn__take_left_hands);
-      else
-         warn(warn__take_right_hands);
+      if (m_doing_half_override) {
+         if (cmd_misc_flags & CMD_MISC__EXPLICIT_MIRROR)
+            warn(warn__take_right_hands);
+         else
+            warn(warn__left_half_pass);
+      }
+      else {
+         if (cmd_misc_flags & CMD_MISC__EXPLICIT_MIRROR)
+            warn(warn__take_left_hands);
+         else
+            warn(warn__take_right_hands);
+      }
 
       if (c_map_ptr->warning != warn_bad_collision || controversial)
          warn(c_map_ptr->warning);
@@ -430,7 +438,7 @@ void collision_collector::fix_possible_collision(setup *result) THROW_DECL
       // If this is under an implicit mirror image operation,
       // make them take left hands, by swapping the maps.
 
-      uint32 flip = force_mirror_warn ? 2 : 0;
+      uint32 flip = m_force_mirror_warn ? 2 : 0;
 
       for (i=0; i<c_map_ptr->size; i++) {
          int oldperson;
@@ -1722,6 +1730,21 @@ static long_boolean handle_4x6_division(
          // This will do.
          *division_code_p = MAPCODE(s2x4,3,MPKIND__SPLIT,1);
          return TRUE;
+      case 0x1D01D0: case 0xE02E02:
+         forbid_little_stuff =
+            !(ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK) &&
+            (assoc(b_2x4, ss, calldeflist) || assoc(b_4x2, ss, calldeflist));
+
+         // We are in "diamond clumps".  See if we can do the call in diamonds.
+         if (forbid_little_stuff ||
+             (!assoc(b_dmd, ss, calldeflist) &&
+              !assoc(b_pmd, ss, calldeflist)))
+            fail("Don't know how to do this call in this setup.");
+         if (!matrix_aware) warn(warn__eachdmd);
+
+         *division_code_p = (livemask == 0x1D01D0) ?
+            MAPCODE(sdmd,2,MPKIND__OFFS_R_FULL,1) : MAPCODE(sdmd,2,MPKIND__OFFS_L_FULL,1);
+         return TRUE;
       }
    }
 
@@ -2738,8 +2761,8 @@ static int divide_the_setup(
          goto divide_us_no_recompute;
       }
 
-      /* See if this call has applicable 1x3 or 3x1 definitions,
-         in which case split it 2 ways. */
+      // See if this call has applicable 1x3 or 3x1 definitions,
+      // in which case split it 2 ways.
       if ((!(newtb & 010) || assoc(b_1x3, ss, calldeflist)) &&
           (!(newtb & 001) || assoc(b_3x1, ss, calldeflist))) {
          division_code = MAPCODE(s1x3,2,MPKIND__SPLIT,1);
@@ -2751,13 +2774,13 @@ static int divide_the_setup(
       if (livemask == 033 &&
           (!(newtb & 010) || assoc(b_1x2, ss, calldeflist)) &&
           (!(newtb & 1) || assoc(b_2x1, ss, calldeflist))) {
-         division_maps = &map_2x3_0134;
+         division_code = MAPCODE(s1x2,2,MPKIND__OFFS_L_HALF,1);
          goto divide_us_no_recompute;
       }
       else if (livemask == 066 &&
                (!(newtb & 010) || assoc(b_1x2, ss, calldeflist)) &&
                (!(newtb & 1) || assoc(b_2x1, ss, calldeflist))) {
-         division_maps = &map_2x3_1245;
+         division_code = MAPCODE(s1x2,2,MPKIND__OFFS_R_HALF,1);
          goto divide_us_no_recompute;
       }
       else if (livemask == 036 &&
@@ -3559,14 +3582,22 @@ extern void basic_move(
 
    long_boolean check_peeloff_migration = FALSE;
 
-   /* We don't allow "central" or "invert" with array-defined calls.  We might allow "snag" or "mystic". */
+   // We don't allow "central" or "invert" with array-defined calls.
+   // We might allow "snag" or "mystic".
 
    if (ss->cmd.cmd_misc2_flags & (CMD_MISC2__SAID_INVERT | CMD_MISC2__DO_CENTRAL))
       fail("Can't do \"central\" or \"invert\" with this call.");
 
-   result->result_flags = 0;   /* Do this now, in case we bail out.  Note also that
-      this means the RESULTFLAG__SPLIT_AXIS_MASK stuff will be clear for the normal case.
-      It will only have good stuff if splitting actually occurs. */
+   // Do this now, for 2 reasons:
+   // (1) We want it to be zero in case we bail out.
+   // (2) we want the RESULTFLAG__SPLIT_AXIS_MASK stuff to be clear
+   //     for the normal case, and have bits only if splitting actually occurs.
+   result->result_flags = 0;
+
+   if (ss->cmd.cmd_misc2_flags & CMD_MISC2__DO_NOT_EXECUTE) {
+      result->kind = nothing;
+      return;
+   }
 
    /* We demand that the final concepts that remain be only the following ones. */
 
@@ -3727,7 +3758,6 @@ foobar:
          goto use_this_calldeflist;
       }
    }
-
 
    /* We didn't find anything. */
 
@@ -4216,6 +4246,10 @@ foobar:
    ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
    inconsistent_rotation = 0;
    inconsistent_setup = 0;
+
+   if ((coldefinition && (coldefinition->callarray_flags & CAF__PLUSEIGHTH_ROTATION)) ||
+       (linedefinition && (linedefinition->callarray_flags & CAF__PLUSEIGHTH_ROTATION)))
+      result->result_flags |= RESULTFLAG__PLUSEIGHTH_ROT;
 
    if ((callspec->callflags1 & CFLAG1_PARALLEL_CONC_END) ||
        (coldefinition && (coldefinition->callarray_flags & CAF__OTHER_ELONGATE)) ||
