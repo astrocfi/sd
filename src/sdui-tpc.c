@@ -217,6 +217,8 @@ extern int get_char(void)
    }
    else if (n == K_Delete)           /* Delete */
       n = '\177';
+   else if (n == K_EDelete)          /* The real delete key */
+      n = '\177';
    else if (n >= K_F1 && n <= K_F10)
       n += 128+1-K_F1;               /* F1..F10 */
    else if (n >= K_F11 && n <= K_F12)

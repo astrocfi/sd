@@ -26,6 +26,17 @@ Copyright @copyright{} 1996 William B. Ackerman
        X11 UI version 1.17, SDTTY UI version 1.9.
 @end example
 
+****** Changes as of version 31.80 ******
+
+The handling of Quarter the Deucey, Spin Chain the Star, and variants thereof
+has been changed.  After the first part, the end looking out has only one
+remaining part, which is a circulate to the other end of the wave.  This
+person formerly did two parts -- a half circulate as if in a Relay the Top,
+and then the other half of the circulate.  This makes a difference if
+"Finally Stable" is used.  The correct ending position for "Finally Stable
+Quarter the Deucey" has both ends facing out, as if in lines.  We thank
+Dave Hodson and Leon Eskenazi for pointing out this problem.
+
 ****** Changes as of version 31.78 ******
 
 Various problems in the parser changes of version 31.77 were fixed.

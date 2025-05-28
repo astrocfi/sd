@@ -258,6 +258,15 @@ Private tm_thing maps_isearch_tglsome[] = {
    {{0},              {0},              {0},              {0},                   0,     0000,         0, 0,  0,  0, 0,  nothing,  nothing}};
 
 
+Private tm_thing maps_isearch_3x1tglsome[] = {
+/*   map1              map2              map3              map4               ilatmask olatmask    limit rot            insetup outsetup */
+   {{9, 3},           {10, 4},          {0, 6},           {11, 5},             0x7,    07171,         2, 0,  0,  0, 0,  s1x2,  s3x4},
+   {{0, 4},           {7, 3},           {5, 1},           {6, 2},              0xD,     0xFF,         2, 0,  0,  0, 0,  s1x2,  s_qtag},
+   {{9, 3},           {10, 4},          {11, 5},          {1, 7},              0x8,     0000,         2, 0,  0,  0, 0,  s1x2,  s2x6},
+   {{0, 6},           {1, 7},           {2, 8},           {10, 4},             0x2,     0000,         2, 0,  0,  0, 0,  s1x2,  s2x6},
+   {{0},              {0},              {0},              {0},                   0,     0000,         0, 0,  0,  0, 0,  nothing,  nothing}};
+
+
 typedef struct {
    setup_kind testkind;
    uint32 testval;
@@ -360,6 +369,7 @@ extern void initialize_tandem_tables(void)
    initialize_one_table(maps_isearch_boxsome, 4);
    initialize_one_table(maps_isearch_dmdsome, 4);
    initialize_one_table(maps_isearch_tglsome, 3);
+   initialize_one_table(maps_isearch_3x1tglsome, 4);
 }
 
 
@@ -634,7 +644,7 @@ extern void tandem_couples_move(
                                  box = 10 / diamond = 11 / out point triangles = 20
                                  in point triangles = 21 / inside triangles = 22 / outside triangles = 23
                                  wave-based triangles triangles = 26 / tandem-based triangles = 27
-                                 <anyone>-based triangles = 30 */
+                                 <anyone>-based triangles = 30 / 3x1 triangles = 31 */
    setup *result)
 {
    selector_kind saved_selector;
@@ -657,7 +667,12 @@ extern void tandem_couples_move(
    clear_people(result);
 
 
-   if (key >= 20) {
+   if (key == 31) {
+      np = 4;
+      our_map_table = maps_isearch_3x1tglsome;
+      tandstuff.no_unit_symmetry = TRUE;
+   }
+   else if (key >= 20) {
       np = 3;
       our_map_table = maps_isearch_tglsome;
       tandstuff.no_unit_symmetry = TRUE;
@@ -873,6 +888,16 @@ extern void tandem_couples_move(
          }
          else
             fail("Can't find these triangles.");
+      }
+      else if (key == 31) {
+         if (ss->kind == s2x6) {
+            ewmask = 0;
+            nsmask = allmask;
+         }
+         else {
+            ewmask = allmask;
+            nsmask = 0;
+         }
       }
       else if (ss->kind == s_galaxy) {
          if (special_mask == 0x44) {

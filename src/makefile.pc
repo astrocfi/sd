@@ -210,7 +210,7 @@ lint:
 DISTTXT = README INSTALL oldnotes COPYING sample1.ini sample2.ini demo.ps demo.txt sessions.ps sessions.txt \
             relnotes.ps relnotes.txt \
             Imakefile Makefile.in configure.in configure Sd.res sd_calls.txt \
-            sd_doc.ps sd_doc.txt
+            sd_doc.PS sd_doc.txt db_doc.txt
 DISTSRCS = sd.h database.h paths.h sdui-ttu.h sdmatch.h
 MACFILES = MacSd.p.Hqx MacSd.p.rsrc.Hqx Macwdef.p.Hqx \
             macalert.c maccomp.c macdlog.c macevent.c macguts.h maclabel.c \
@@ -222,7 +222,7 @@ DISTFILES = $(DISTTXT) $(DOCSRCS) $(SRCS) $(DISTSRCS) $(PCFILES)
 
 TAR = tar
 TARFLAGS = 
-DIST_TARFILE = sd-31.73.tar
+DIST_TARFILE = sd-31.79.tar
 COMPRESS = compress
 
 dist: dist-files
@@ -246,7 +246,7 @@ install: sdtty.exe mkcalls.exe sd_calls.dat
 	lha a $@ sd_doc.txt sd_doc.ps
 	lha s $@
 
-BIN_TARFILE = sd-31.73-.tar
+BIN_TARFILE = sd-31.79-.tar
 
 
 

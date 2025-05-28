@@ -535,11 +535,11 @@ extern void do_matrix_expansion(
          else if (ss->kind == s_c1phan) {
             if (!(ss->people[0].id1 | ss->people[2].id1 | ss->people[4].id1 | ss->people[6].id1 |
                      ss->people[8].id1 | ss->people[10].id1 | ss->people[12].id1 | ss->people[14].id1)) {
-               eptr = &exp_c1phan_4x4_stuff1; warn(warn__check_4x4); goto expand_me;
+               eptr = &exp_c1phan_4x4_stuff1; warn(warn__check_4x4_start); goto expand_me;
             }
             else if (!(ss->people[1].id1 | ss->people[3].id1 | ss->people[5].id1 | ss->people[7].id1 |
                      ss->people[9].id1 | ss->people[11].id1 | ss->people[13].id1 | ss->people[15].id1)) {
-               eptr = &exp_c1phan_4x4_stuff2; warn(warn__check_4x4); goto expand_me;
+               eptr = &exp_c1phan_4x4_stuff2; warn(warn__check_4x4_start); goto expand_me;
             }
          }
 /* ***** This is a kludge to make threesome work!!!! */
@@ -549,7 +549,7 @@ extern void do_matrix_expansion(
          else if (ss->kind == s4dmd) {
             if (!(ss->people[4].id1 | ss->people[5].id1 | ss->people[6].id1 | ss->people[7].id1 |
                      ss->people[12].id1 | ss->people[13].id1 | ss->people[14].id1 | ss->people[15].id1)) {
-               eptr = &exp_4dmd_4x4_stuff; warn(warn__check_4x4); goto expand_me;
+               eptr = &exp_4dmd_4x4_stuff; warn(warn__check_4x4_start); goto expand_me;
             }
          }
       }
@@ -655,6 +655,18 @@ extern void do_matrix_expansion(
                eptr = &exp_qtag_bigdmd_stuff; goto expand_me;
             case s_bone:
                eptr = &exp_bone_bigbone_stuff; goto expand_me;
+         }
+      }
+      else if (concprops & CONCPROP__NEED_CTR_DMD) {
+         switch (ss->kind) {
+            case s3x1dmd:
+               eptr = &exp_3x1d_3d_stuff; goto expand_me;
+         }
+      }
+      else if (concprops & CONCPROP__NEED_END_DMD) {
+         switch (ss->kind) {
+            case s3x1dmd:
+               eptr = &exp_3x1d_3d_stuff; goto expand_me;
          }
       }
       else if (needprops == CONCPROP__NEEDK_1X12) {

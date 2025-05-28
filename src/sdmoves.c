@@ -249,18 +249,18 @@ extern long_boolean do_simple_split(setup *ss, long_boolean prefer_1x4, setup *r
    switch (ss->kind) {
       case s2x4:
          if (prefer_1x4)
-            divided_setup_move(ss, map_lists[s1x4][1]->f[MPKIND__SPLIT][1], phantest_ok, TRUE, result);
+            new_divided_setup_move(ss, MAPCODE(s1x4,2,MPKIND__SPLIT,1), phantest_ok, TRUE, result);
          else
-            divided_setup_move(ss, map_lists[s2x2][1]->f[MPKIND__SPLIT][0], phantest_ok, TRUE, result);
+            new_divided_setup_move(ss, MAPCODE(s2x2,2,MPKIND__SPLIT,0), phantest_ok, TRUE, result);
          return FALSE;
       case s1x8:
-         divided_setup_move(ss, map_lists[s1x4][1]->f[MPKIND__SPLIT][0], phantest_ok, TRUE, result);
+         new_divided_setup_move(ss, MAPCODE(s1x4,2,MPKIND__SPLIT,0), phantest_ok, TRUE, result);
          return FALSE;
       case s_qtag:
-         divided_setup_move(ss, map_lists[sdmd][1]->f[MPKIND__SPLIT][1], phantest_ok, TRUE, result);
+         new_divided_setup_move(ss, MAPCODE(sdmd,2,MPKIND__SPLIT,1), phantest_ok, TRUE, result);
          return FALSE;
       case s_ptpd:
-         divided_setup_move(ss, map_lists[sdmd][1]->f[MPKIND__SPLIT][0], phantest_ok, TRUE, result);
+         new_divided_setup_move(ss, MAPCODE(sdmd,2,MPKIND__SPLIT,0), phantest_ok, TRUE, result);
          return FALSE;
       default:
          return TRUE;
@@ -464,6 +464,11 @@ static coordrec squeezethinggal = {s_galaxy, 3,
    { -6,  -2,   0,   2,   6,   2,   0,  -2},
    {  0,   2,   6,   2,   0,  -2,  -6,  -2}, {0}};
 
+static coordrec squeezethingqtag = {s_qtag, 3,
+   { -2,   2,   6,   2,   2,  -2,  -6,  -2},
+   {  4,   4,   0,   0,  -4,  -4,   0,   0}, {0}};
+
+
 
 Private int start_matrix_call(
    setup *ss,
@@ -485,6 +490,7 @@ Private int start_matrix_call(
       /* Fix up a galaxy or hourglass so that points can squeeze.  They have funny coordinates so that they can't truck or loop. */
       if (ss->kind == s_hrglass) thingyptr = &squeezethingglass;
       else if (ss->kind == s_galaxy) thingyptr = &squeezethinggal;
+      else if (ss->kind == s_qtag) thingyptr = &squeezethingqtag;
    }
 
    if (!thingyptr || !nicethingyptr) fail("Can't do this in this setup.");
@@ -790,6 +796,14 @@ Private void finish_matrix_call(
    }
    else if ((ypar == 0x00440062) && ((signature & (~0x0C202300)) == 0)) {
       checkptr = setup_attrs[s3x4].setup_coords;
+      goto doitrot;
+   }
+   else if ((ypar == 0x00840022) && ((signature & (~0x06001300)) == 0)) {
+      checkptr = setup_attrs[s2x5].setup_coords;
+      goto doit;
+   }
+   else if ((ypar == 0x00220084) && ((signature & (~0x21080840)) == 0)) {
+      checkptr = setup_attrs[s2x5].setup_coords;
       goto doitrot;
    }
    else if ((ypar == 0x00E20004) && ((signature & (~0x09002400)) == 0)) {
@@ -1454,6 +1468,15 @@ Private long_boolean get_real_subcall(
                                              "XXX_is_inherited" top-level call flag is on in the parent, that is,
                                              whether the corresponding bit is on in "callflagsh". */
 
+   uint32 local_number_fields = current_options.number_fields;
+
+   if (mods1 & DFM1_NUM_INSERT_MASK) {
+      local_number_fields <<= 4;
+      local_number_fields += (mods1 & DFM1_NUM_INSERT_MASK) / DFM1_NUM_INSERT_BIT;
+   }
+
+   local_number_fields >>= ((mods1 & DFM1_NUM_SHIFT_MASK) / DFM1_NUM_SHIFT_BIT) * 4;
+
    /* Fill in defaults in case we choose not to get a replacement call. */
 
    cmd_out->parseptr = parseptr;
@@ -1637,22 +1660,28 @@ Private long_boolean get_real_subcall(
       /* Need to present the popup to the operator and find out whether modification is desired. */
 
       modify_popup_kind kind;
+      char pretty_call_name[MAX_TEXT_LINE_LENGTH];
+      parse_block pb;
+
+      pb.options.number_fields = local_number_fields;
+      unparse_call_name(orig_call, pretty_call_name, &pb);
 
       if (this_is_tagger) kind = modify_popup_only_tag;
       else if (this_is_tagger_circcer) kind = modify_popup_only_circ;
       else kind = modify_popup_any;
 
-      if (debug_popup || uims_do_modifier_popup(orig_call->menu_name, kind)) {
+      if (debug_popup || uims_do_modifier_popup(pretty_call_name, kind)) {
          /* User accepted the modification.
             Set up the prompt and get the concepts and call. */
       
-         (void) sprintf (tempstring_text, "REPLACEMENT FOR THE %s", orig_call->menu_name);
+         (void) sprintf (tempstring_text, "REPLACEMENT FOR THE %s", pretty_call_name);
       }
       else {
          /* User declined the modification.  Create a null entry so that we don't query again. */
          *newsearch = get_parse_block();
          (*newsearch)->concept = &marker_concept_mod;
-         (*newsearch)->options.number_fields = mods1;
+         (*newsearch)->options = current_options;
+         (*newsearch)->replacement_key = snumber;
          (*newsearch)->call = orig_call;
          return FALSE;
       }
@@ -1660,7 +1689,9 @@ Private long_boolean get_real_subcall(
 
    *newsearch = get_parse_block();
    (*newsearch)->concept = &marker_concept_mod;
-   (*newsearch)->options.number_fields = mods1;
+   (*newsearch)->options = current_options;
+   (*newsearch)->options.number_fields = local_number_fields;  /* This is so, if we replace a "square thru 3", we will know that it was 3. */
+   (*newsearch)->replacement_key = snumber;
    (*newsearch)->call = orig_call;
 
    /* Set stuff up for reading subcall and its concepts. */
@@ -1696,13 +1727,13 @@ Private long_boolean get_real_subcall(
 
 Private void divide_diamonds(setup *ss, setup *result)
 {
-   int ii;
+   uint32 ii;
 
-   if (ss->kind == s_qtag) ii = 1;
-   else if (ss->kind == s_ptpd) ii = 0;
+   if (ss->kind == s_qtag) ii = MAPCODE(sdmd,2,MPKIND__SPLIT,1);
+   else if (ss->kind == s_ptpd) ii = MAPCODE(sdmd,2,MPKIND__SPLIT,0);
    else fail("Must have diamonds for this concept.");
 
-   divided_setup_move(ss, map_lists[sdmd][1]->f[MPKIND__SPLIT][ii], phantest_ok, FALSE, result);
+   new_divided_setup_move(ss, ii, phantest_ok, FALSE, result);
 }
 
 
@@ -2003,7 +2034,15 @@ Private void do_sequential_call(
          uint32 this_mod1 = this_item->modifiers1;
 
          if ((DFM1_REPEAT_N | DFM1_REPEAT_NM1 | DFM1_REPEAT_N_ALTERNATE) & this_mod1) {
-            total += (current_options.number_fields >> (((DFM1_NUM_SHIFT_MASK & this_mod1) / DFM1_NUM_SHIFT_BIT) * 4)) & 0xF;
+            uint32 local_number_fields = current_options.number_fields;
+
+            if (this_mod1 & DFM1_NUM_INSERT_MASK) {
+               local_number_fields <<= 4;
+               local_number_fields += (this_mod1 & DFM1_NUM_INSERT_MASK) / DFM1_NUM_INSERT_BIT;
+            }
+
+            local_number_fields >>= ((this_mod1 & DFM1_NUM_SHIFT_MASK) / DFM1_NUM_SHIFT_BIT) * 4;
+            total += (local_number_fields >> (((this_mod1 & DFM1_NUM_SHIFT_MASK) / DFM1_NUM_SHIFT_BIT) * 4)) & 0xF;
 
             if (DFM1_REPEAT_N_ALTERNATE & this_mod1) ii++;
             if (DFM1_REPEAT_NM1 & this_mod1) total--;
@@ -2188,19 +2227,26 @@ Private void do_sequential_call(
 
       recompute_id = get_real_subcall(parseptr, this_item, new_final_concepts, callspec, &foo1);
 
-      if (DFM1_REPEAT_N_ALTERNATE & this_mod1)
+      if (this_mod1 & DFM1_REPEAT_N_ALTERNATE)
          (void) get_real_subcall(parseptr, alt_item, new_final_concepts, callspec, &foo2);
 
       if (recompute_id) update_id_bits(result);
 
-      current_options.number_fields >>= ((DFM1_NUM_SHIFT_MASK & this_mod1) / DFM1_NUM_SHIFT_BIT) * 4;
+      /* If this subcall invocation involves inserting or shifting the numbers, do so. */
+
+      if (this_mod1 & DFM1_NUM_INSERT_MASK) {
+         current_options.number_fields <<= 4;
+         current_options.number_fields += (this_mod1 & DFM1_NUM_INSERT_MASK) / DFM1_NUM_INSERT_BIT;
+      }
+
+      current_options.number_fields >>= ((this_mod1 & DFM1_NUM_SHIFT_MASK) / DFM1_NUM_SHIFT_BIT) * 4;
 
       /* Check for special repetition stuff. */
       if ((DFM1_REPEAT_N | DFM1_REPEAT_NM1 | DFM1_REPEAT_N_ALTERNATE) & this_mod1) {
          int count_to_use = current_options.number_fields & 0xF;
 
          number_used = TRUE;
-         if (DFM1_REPEAT_NM1 & this_mod1) count_to_use--;
+         if (this_mod1 & DFM1_REPEAT_NM1) count_to_use--;
 
          if (do_half_of_last_part && !distribute && fetch_index == highlimit) {
             if (count_to_use & 1) fail("Can't fractionalize this call this way.");
@@ -2239,7 +2285,10 @@ do_plain_call:
       result->cmd.prior_elongation_bits = remember_elongation;
 
       /* We don't supply these; they get filled in by the call. */
-      result->cmd.cmd_misc_flags &= ~DFM1_CONCENTRICITY_FLAG_MASK;
+      result->cmd.cmd_misc_flags &= ~(DFM1_CONCENTRICITY_FLAG_MASK | CMD_MISC__NO_CHECK_MOD_LEVEL);
+
+      if (this_mod1 & DFM1_NO_CHECK_MOD_LEVEL)
+         result->cmd.cmd_misc_flags |= CMD_MISC__NO_CHECK_MOD_LEVEL;
 
       if (do_half_of_last_part && *test_index == highlimit)
          result->cmd.cmd_frac_flags = 0x000112UL;
@@ -2375,6 +2424,14 @@ Private calldef_schema fixup_conc_schema(callspec_block *callspec, setup *ss)
          the_schema = schema_conc_star16;
       else
          the_schema = schema_conc_star;
+   }
+   else if (the_schema == schema_maybe_matrix_conc_bar) {
+      if (herit_concepts & INHERITFLAG_12_MATRIX)
+         the_schema = schema_conc_bar12;
+      else if (herit_concepts & INHERITFLAG_16_MATRIX)
+         the_schema = schema_conc_bar16;
+      else
+         the_schema = schema_conc_bar;
    }
 
    return the_schema;
@@ -2573,7 +2630,7 @@ that probably need to be put in. */
 
       if (ss->kind == sdmd) {
          ss->cmd.cmd_final_flags.herit &= ~INHERITFLAG_DIAMOND;
-         divided_setup_move(ss, map_lists[s1x2][1]->f[MPKIND__DMD_STUFF][0], phantest_ok, TRUE, result);
+         new_divided_setup_move(ss, MAPCODE(s1x2,2,MPKIND__DMD_STUFF,0), phantest_ok, TRUE, result);
          return;
       }
       else {
@@ -2722,7 +2779,7 @@ that probably need to be put in. */
    /* If the split concept is still present, do it. */
 
    if (ss->cmd.cmd_final_flags.final & FINAL__SPLIT) {
-      map_thing *split_map;
+      uint32 split_map;
 
       if (ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_MASK)
          fail("Can't do \"invert/central/snag/mystic\" with the \"split\" concept.");
@@ -2733,10 +2790,10 @@ that probably need to be put in. */
       /* We can't handle the mirroring, so undo it. */
       if (mirror) { mirror_this(ss); mirror = FALSE; }
 
-      if (ss->kind == s2x4) split_map = map_lists[s2x2][1]->f[MPKIND__SPLIT][0];
-      else if (ss->kind == s1x8) split_map = map_lists[s1x4][1]->f[MPKIND__SPLIT][0];
-      else if (ss->kind == s_ptpd) split_map = map_lists[sdmd][1]->f[MPKIND__SPLIT][0];
-      else if (ss->kind == s_qtag) split_map = map_lists[sdmd][1]->f[MPKIND__SPLIT][1];
+      if      (ss->kind == s2x4)   split_map = MAPCODE(s2x2,2,MPKIND__SPLIT,0);
+      else if (ss->kind == s1x8)   split_map = MAPCODE(s1x4,2,MPKIND__SPLIT,0);
+      else if (ss->kind == s_ptpd) split_map = MAPCODE(sdmd,2,MPKIND__SPLIT,0);
+      else if (ss->kind == s_qtag) split_map = MAPCODE(sdmd,2,MPKIND__SPLIT,1);
       else if (ss->kind == s2x2) {
          /* "Split" was given while we are already in a 2x2?  The only way that
             can be legal is if the word "split" was meant as a modifier for "split square thru"
@@ -2759,7 +2816,7 @@ that probably need to be put in. */
       /* If the user said "matrix split", the "matrix" flag will be on at this point,
          and the right thing will happen. */
 
-      divided_setup_move(ss, split_map, phantest_ok, TRUE, result);
+      new_divided_setup_move(ss, split_map, phantest_ok, TRUE, result);
       return;
    }
 
@@ -3194,18 +3251,18 @@ extern void move(
          "matrix" is illegal. */
 
       if (check_concepts.final == FINAL__SPLIT && check_concepts.herit == 0) {
-         map_thing *split_map;
+         uint32 split_map;
    
          ss->cmd.cmd_misc_flags |= CMD_MISC__SAID_SPLIT;
 
-         if (ss->kind == s2x4) split_map = map_lists[s2x2][1]->f[MPKIND__SPLIT][0];
-         else if (ss->kind == s1x8) split_map = map_lists[s1x4][1]->f[MPKIND__SPLIT][0];
-         else if (ss->kind == s_ptpd) split_map = map_lists[sdmd][1]->f[MPKIND__SPLIT][0];
-         else if (ss->kind == s_qtag) split_map = map_lists[sdmd][1]->f[MPKIND__SPLIT][1];
+         if      (ss->kind == s2x4)   split_map = MAPCODE(s2x2,2,MPKIND__SPLIT,0);
+         else if (ss->kind == s1x8)   split_map = MAPCODE(s1x4,2,MPKIND__SPLIT,0);
+         else if (ss->kind == s_ptpd) split_map = MAPCODE(sdmd,2,MPKIND__SPLIT,0);
+         else if (ss->kind == s_qtag) split_map = MAPCODE(sdmd,2,MPKIND__SPLIT,1);
          else fail("Can't do split concept in this setup.");
 
          ss->cmd.cmd_final_flags.final &= ~FINAL__SPLIT;
-         divided_setup_move(ss, split_map, phantest_ok, TRUE, result);
+         new_divided_setup_move(ss, split_map, phantest_ok, TRUE, result);
       }
       else {
          if (ss->cmd.cmd_misc_flags & CMD_MISC__MATRIX_CONCEPT)
@@ -3221,7 +3278,7 @@ extern void move(
             ss->cmd.cmd_final_flags.herit &= ~INHERITFLAG_DIAMOND;
 
             if (ss->kind == sdmd)
-               divided_setup_move(ss, map_lists[s1x2][1]->f[MPKIND__DMD_STUFF][0], phantest_ok, TRUE, result);
+               new_divided_setup_move(ss, MAPCODE(s1x2,2,MPKIND__DMD_STUFF,0), phantest_ok, TRUE, result);
             else {
                /* Divide into diamonds and try again.  (Note that we back up the concept pointer.) */
                ss->cmd.parseptr = parseptr;

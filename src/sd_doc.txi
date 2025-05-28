@@ -5,7 +5,7 @@
 @settitle Sd
 @c @subtitle A Square Dance Caller's Helper
 @c
-@set Time-stamp: October 25, 1996
+@set Time-stamp: November 30, 1996
 @tex
 \global\setfont\smallrm\rmshape{8}{1000}
 \global\font\smallsy=cmsy9
@@ -16,7 +16,7 @@
     \kern-0.4pt\hrule}%
   \kern-.06em\raise0.4pt\hbox{$\rangle$}}}}
 @end tex
-@set sd-version 31.79
+@set sd-version 31.80
 @set full-manual
 @c %**end of header
 @iftex
@@ -211,7 +211,7 @@ Concept Notes
 
 @end menu
 
-@include readme.txinfo
+@include readme.txi
 
 @node Getting Started, The Completing Reader for Sdtty, Intro, Top
 @chapter Getting Started
@@ -3028,8 +3028,8 @@ in each of which the call is done independently.
 @item triple C/L/W/B/D/1/3/DS/GT
 @item quadruple C/L/W/B/D/1/3/DS/GT
 These are straightforward.
-@item center triple C/L/W/B (singular)
-@item outside triple C/L/W/B
+@item center triple C/L/W/B/D (singular)
+@item outside triple C/L/W/B/D
 These are done from a setup that can be construed as having a center
 4-person setup with two other 4-person setups on the outside.  The center
 setup can be different from the outside setups, and reasonable independent
@@ -3037,8 +3037,8 @@ shape-changers are allowed.
 
 A suitably populated 4x4 matrix can be construed as a center triple box
 surrounded by outside triple lines or columns.
-@item center phantom C/L/W/B
-@item outside phantom C/L/W/B
+@item center phantom C/L/W/B/D/DS/GT
+@item outside phantom C/L/W/B/D/DS/GT
 These are done from a setup that can be construed as having a center
 8-person setup with two other 4-person setups on the outside.  The center
 setup can be different from the outside setups, and reasonable independent
@@ -3047,6 +3047,11 @@ shape-changers are allowed.
 A common case of this is a 4x4.  The center phantom lines or columns
 can do an 8-person call.  The outer phantom lines or columns can do
 independent 4-person calls.
+@item crazy phantom C/L/W/B/D/DS/GT
+@item reverse crazy phantom C/L/W/B/D/DS/GT
+@item <N/4> crazy phantom C/L/W/B/D/DS/GT
+@item <N/4> reverse crazy phantom C/L/W/B/D/DS/GT
+These are straightforward.
 @item triple C/L/W/B/D/1 working together
 @item triple C/L/W/B working apart
 @item triple L/W/B working forward/backward
@@ -3110,6 +3115,7 @@ The menu for these is brought up by clicking on the ``couples/tandem concepts'' 
 @item wave-based triangles work solid@ @ @ @ @ @ @ @ wave-based triangles work threesome
 @item tandem-based triangles work solid@ @ @ @ @ @ tandem-based triangles work threesome
 @item <ANYONE>-based triangles work solid@ @ @ @ <ANYONE>-based triangles work threesome
+@item 3x1 triangles work solid@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ 3x1 triangles work trianglesome
 These are straightforward.
 
 Any of the above twosome/threesome/whateversome may also be
@@ -3202,6 +3208,9 @@ in a 2x3 matrix, doing a 6-person call.
 @item distorted tidal C/L/W (singular)
 These are done from a 2x8 matrix in which the real people form some
 kind of distorted 1x8.
+@item double bent tidal C/L/W (singular)
+These are done from a 1x8 in which the two people at each end are ``bent''
+90 degrees from the center 4.
 @item <ANYONE> in your distorted C/L/W/B/D (singular)
 These are done from a variety of setups, in which the designated people
 form a recognizable distorted setup.  Reasonable shape-changers are allowed.
@@ -4394,7 +4403,7 @@ change the version string at the top of the file.
 
 @ifset copyleft
 @node Copying, , Versions, Top
-@include gpl.txinfo
+@include gpl.txi
 @end ifset
 
 @page

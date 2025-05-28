@@ -1029,7 +1029,7 @@ extern long_boolean uims_get_call_command(uims_reply *reply_p)
             save1->next = tt;
             tt->concept = &marker_concept_mod;
             tt->call = base_calls[1];   /* "nothing" */
-            tt->options.number_fields = 2*DFM1_CALL_MOD_BIT;  /* "mandatory_anycall" */
+            tt->replacement_key = 2;    /* "mandatory_anycall" */
             parse_state.concept_write_ptr = &tt->subsidiary_root;
             save1 = (parse_block *) 0;
          }

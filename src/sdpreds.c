@@ -436,7 +436,7 @@ Private long_boolean x22_miniwave(setup *real_people, int real_index,
    int this_person, other_index, other_person;
 
    switch (real_people->cmd.cmd_assume.assumption) {
-      case cr_wave_only: return TRUE;
+      case cr_wave_only: case cr_miniwaves: return TRUE;
       case cr_2fl_only: case cr_couples_only: return FALSE;
    }
 
@@ -453,7 +453,7 @@ Private long_boolean x22_couple(setup *real_people, int real_index,
    int this_person, other_index, other_person;
 
    switch (real_people->cmd.cmd_assume.assumption) {
-      case cr_wave_only: return FALSE;
+      case cr_wave_only: case cr_miniwaves: return FALSE;
       case cr_2fl_only: case cr_couples_only: return TRUE;
    }
 
@@ -728,8 +728,11 @@ Private long_boolean cast_normal_or_warn(setup *real_people, int real_index,
    int real_direction, int northified_index, Const long int *extra_stuff)
 {
    if (real_people->cmd.cmd_assume.assumption == cr_wave_only ||
+         real_people->cmd.cmd_assume.assumption == cr_miniwaves ||
          real_people->cmd.cmd_assume.assump_cast)
       return TRUE;
+   else if (real_people->cmd.cmd_assume.assumption == cr_couples_only)
+      return FALSE;
    else {
       int this_person = real_people->people[real_index].id1;
       int other_person = real_people->people[real_index ^ 1].id1;
@@ -891,7 +894,9 @@ Private long_boolean lines_once_rem_couple(setup *real_people, int real_index,
 Private long_boolean x12_beau_or_miniwave(setup *real_people, int real_index,
    int real_direction, int northified_index, Const long int *extra_stuff)
 {
-   if (real_people->cmd.cmd_assume.assumption == cr_wave_only || northified_index == 0)
+   if (real_people->cmd.cmd_assume.assumption == cr_wave_only ||
+         real_people->cmd.cmd_assume.assumption == cr_miniwaves ||
+         northified_index == 0)
       return TRUE;
    else if (real_people->cmd.cmd_assume.assumption == cr_couples_only)
       return FALSE;
@@ -1078,7 +1083,8 @@ Private long_boolean vert1(setup *real_people, int real_index,
 {
    if (!(northified_index & 1))
       return TRUE;
-   else if (real_people->cmd.cmd_assume.assumption == cr_wave_only)
+   else if (real_people->cmd.cmd_assume.assumption == cr_wave_only ||
+         real_people->cmd.cmd_assume.assumption == cr_miniwaves)
       return FALSE;
    else if (real_people->cmd.cmd_assume.assumption == cr_couples_only ||
             real_people->cmd.cmd_assume.assumption == cr_li_lo)
@@ -1096,7 +1102,8 @@ Private long_boolean vert2(setup *real_people, int real_index,
 {
    if (!(northified_index & 1))
       return FALSE;
-   else if (real_people->cmd.cmd_assume.assumption == cr_wave_only)
+   else if (real_people->cmd.cmd_assume.assumption == cr_wave_only ||
+         real_people->cmd.cmd_assume.assumption == cr_miniwaves)
       return TRUE;
    else if (real_people->cmd.cmd_assume.assumption == cr_couples_only ||
             real_people->cmd.cmd_assume.assumption == cr_li_lo)
@@ -1482,6 +1489,18 @@ Private long_boolean check_tbone(setup *real_people, int real_index,
       uint32 zz = real_people->people[z].id1;
       if (zz & BIT_PERSON)
          return (zz ^ real_people->people[real_index].id1) & 1;
+      else if (real_people->kind == s_short6) {
+         switch (real_people->cmd.cmd_assume.assumption) {
+            case cr_diamond_like: return TRUE;
+            case cr_qtag_like:
+            case cr_gen_1_4_tag:
+            case cr_gen_3_4_tag: return FALSE;
+            case cr_jleft:
+            case cr_jright:
+            case cr_ijleft:
+            case cr_ijright: return real_people->cmd.cmd_assume.assump_col != 0;
+         }
+      }
    }
    fail("Can't determine where to go or which way to face.");
    /* NOTREACHED */

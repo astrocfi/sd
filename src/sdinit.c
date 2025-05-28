@@ -54,8 +54,8 @@ Private setup test_setup_lin  = {s2x4, 0, {0}, {{SOUT(5) | HG, 0}, {SOUT(6) | SB
 Private setup test_setup_lout = {s2x4, 0, {0}, {{NORT(6) | SB, 0}, {NORT(5) | HG, 0}, {NORT(4) | HB, 0}, {NORT(7) | SG, 0}, {SOUT(2) | SB, 0}, {SOUT(1) | HG, 0}, {SOUT(0) | HB, 0}, {SOUT(3) | SG, 0}}, 0};
 Private setup test_setup_rwv  = {s2x4, 0, {0}, {{NORT(6) | SB, 0}, {SOUT(5) | HG, 0}, {NORT(4) | HB, 0}, {SOUT(7) | SG, 0}, {SOUT(2) | SB, 0}, {NORT(1) | HG, 0}, {SOUT(0) | HB, 0}, {NORT(3) | SG, 0}}, 0};
 Private setup test_setup_lwv  = {s2x4, 0, {0}, {{SOUT(6) | SB, 0}, {NORT(5) | HG, 0}, {SOUT(4) | HB, 0}, {NORT(7) | SG, 0}, {NORT(2) | SB, 0}, {SOUT(1) | HG, 0}, {NORT(0) | HB, 0}, {SOUT(3) | SG, 0}}, 0};
-Private setup test_setup_r2fl = {s2x4, 0, {0}, {{NORT(6) | SB, 0}, {NORT(5) | HG, 0}, {SOUT(4) | HB, 0}, {SOUT(7) | SG, 0}, {SOUT(2) | SB, 0}, {SOUT(1) | HG, 0}, {NORT(0) | HB, 0}, {NORT(3) | SG, 0}}, 0};
-Private setup test_setup_l2fl = {s2x4, 0, {0}, {{SOUT(6) | SB, 0}, {SOUT(5) | HG, 0}, {NORT(4) | HB, 0}, {NORT(7) | SG, 0}, {NORT(2) | SB, 0}, {NORT(1) | HG, 0}, {SOUT(0) | HB, 0}, {SOUT(3) | SG, 0}}, 0};
+Private setup test_setup_r2fl = {s2x4, 0, {0}, {{NORT(6) | SB, 0}, {NORT(5) | HG, 0}, {SOUT(7) | SG, 0}, {SOUT(4) | HB, 0}, {SOUT(2) | SB, 0}, {SOUT(1) | HG, 0}, {NORT(3) | SG, 0}, {NORT(0) | HB, 0}}, 0};
+Private setup test_setup_l2fl = {s2x4, 0, {0}, {{SOUT(5) | HG, 0}, {SOUT(6) | SB, 0}, {NORT(4) | HB, 0}, {NORT(7) | SG, 0}, {NORT(1) | HG, 0}, {NORT(2) | SB, 0}, {SOUT(0) | HB, 0}, {SOUT(3) | SG, 0}}, 0};
 
 
 

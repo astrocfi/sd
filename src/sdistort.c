@@ -19,7 +19,10 @@
     This is for version 31. */
 
 /* This defines the following functions:
+   initialize_map_tables
+   new_divided_setup_move
    divided_setup_move
+   new_overlapped_setup_move
    overlapped_setup_move
    do_phantom_2x4_concept
    distorted_2x2s_move
@@ -34,6 +37,50 @@
 
 
 
+
+
+/* Must be a power of 2. */
+#define NUM_MAP_HASH_BUCKETS 64
+
+static mapcoder *map_hash_table[NUM_MAP_HASH_BUCKETS];
+
+extern void initialize_map_tables(void)
+{
+   mapcoder *tabp;
+   int i;
+   for (i=0 ; i<NUM_MAP_HASH_BUCKETS ; i++) map_hash_table[i] = (mapcoder *) 0;
+   for (tabp = map_init_table ; tabp->code != ~0 ; tabp++) {
+      uint32 hash_num = ((tabp->code+(tabp->code>>8) * ((unsigned int) 035761254233))) & (NUM_MAP_HASH_BUCKETS-1);
+      tabp->next = map_hash_table[hash_num];
+      map_hash_table[hash_num] = tabp;
+   }
+}
+
+
+
+Private Const map_thing *get_map_from_code(uint32 map_encoding)
+{
+   int mk = (map_encoding & 0x3F0) >> 4;
+
+   if (mk == MPKIND__SPLIT) {
+      int sk = (map_encoding & 0xFFFFFC00) >> 10;
+      if (sk > s2x6) return (Const map_thing *) 0;
+
+      return split_lists[sk][(map_encoding & 0xF)-2];
+   }
+   else {
+      mapcoder *p;
+      uint32 hash_num = ((map_encoding+(map_encoding>>8) * ((unsigned int) 035761254233))) & (NUM_MAP_HASH_BUCKETS-1);
+
+      for (p=map_hash_table[hash_num] ; p ; p=p->next) {
+         if (p->code == map_encoding) return p->the_map;
+      }
+
+      return (Const map_thing *) 0;
+   }
+}
+
+
 Private void innards(
    setup *ss,
    Const map_thing *maps,
@@ -46,7 +93,7 @@ Private void innards(
    Const map_thing *final_map;
    setup z[4];
 
-   int rot = maps->rot;
+   uint32 rot = maps->rot;
    int vert = maps->vert;
    int arity = maps->arity;
    int insize = setup_attrs[maps->inner_kind].setup_limits+1;
@@ -261,8 +308,6 @@ Private void innards(
       final_map = &map_tgl4_2;
    }
    else {
-      map_hunk *hunk = map_lists[z[0].kind][arity-1];
-
       switch (map_kind) {
          case MPKIND__O_SPOTS:
             warn(warn__to_o_spots);
@@ -295,8 +340,7 @@ Private void innards(
             break;
       }
 
-      if (hunk) final_map = hunk->f[map_kind][(z[0].rotation & 1)];
-      else final_map = 0;
+      final_map = get_map_from_code(MAPCODE(z[0].kind,arity,map_kind,z[0].rotation & 1));
    }
 
    got_map:
@@ -328,8 +372,16 @@ Private void innards(
    }
 
    if (!final_map) {
-      if (arity == 1)
-         fail("Don't know how far to re-offset this.");
+      if (arity == 1) {
+         switch (map_kind) {
+            case MPKIND__OFFS_L_HALF:
+            case MPKIND__OFFS_R_HALF:
+            case MPKIND__OFFS_L_FULL:
+            case MPKIND__OFFS_R_FULL:
+               fail("Don't know how far to re-offset this.");
+               break;
+         }
+      }
 
       if (arity == 2 && z[0].kind == s4x4 && map_kind == MPKIND__SPLIT) {
          /* We allow the special case of appending two 4x4's, if the real people
@@ -387,10 +439,8 @@ Private void innards(
 
    if (arity != final_map->arity) fail("Confused about number of setups to divide into.");
 
-   rot = final_map->rot;
-
-   for (j=0 ; j<arity ; j++) {
-      int rrr = 011*((rot>>(j*2)) & 3);
+   for (j=0,rot=final_map->rot ; j<arity ; j++,rot>>=2) {
+      int rrr = 011*(rot & 3);
       for (i=0 ; i<insize ; i++)
          install_rot(result, final_map->maps[i+insize*j], &z[j], i, rrr);
    }
@@ -401,6 +451,22 @@ Private void innards(
 
    canonicalize_rotation(result);
    reinstate_rotation(ss, result);
+}
+
+
+extern void new_divided_setup_move(
+   setup *ss,
+   uint32 map_encoding,
+   phantest_kind phancontrol,
+   long_boolean recompute_id,
+   setup *result)
+{
+   divided_setup_move(
+      ss,
+      get_map_from_code(map_encoding),
+      phancontrol,
+      recompute_id,
+      result);
 }
 
 
@@ -568,6 +634,17 @@ extern void divided_setup_move(
 
 
 
+extern void new_overlapped_setup_move(setup *ss, uint32 map_encoding,
+   int m1, int m2, int m3, setup *result)
+{
+   overlapped_setup_move(
+      ss,
+      get_map_from_code(map_encoding),
+      m1, m2, m3,
+      result);
+}
+
+
 extern void overlapped_setup_move(setup *ss, Const map_thing *maps,
    int m1, int m2, int m3, setup *result)
 {
@@ -669,7 +746,7 @@ extern void do_phantom_2x4_concept(
          }
 
          rot = 0;
-         maps = map_lists[s1x8][1]->f[parseptr->concept->value.arg3][0];
+         maps = get_map_from_code(MAPCODE(s1x8,2,parseptr->concept->value.arg3,0));
          if (!maps) fail("This concept not allowed in this setup.");
          break;
       case s4x4:
@@ -708,8 +785,8 @@ extern void do_phantom_2x4_concept(
                else                      fail("There are no split phantom columns here.");
             }
 
-            if (global_livemask == 07474) maps = map_lists[s2x4][1]->f[MPKIND__OFFS_R_HALF][1];
-            else if (global_livemask == 01717) maps = map_lists[s2x4][1]->f[MPKIND__OFFS_L_HALF][1];
+            if      (global_livemask == 07474) maps = get_map_from_code(MAPCODE(s2x4,2,MPKIND__OFFS_R_HALF,1));
+            else if (global_livemask == 01717) maps = get_map_from_code(MAPCODE(s2x4,2,MPKIND__OFFS_L_HALF,1));
             else fail("Must have a parallelogram for this.");
 
             warn(warn__split_phan_in_pgram);
@@ -1139,6 +1216,7 @@ extern void distorted_move(
    mpkind mk;
 
    map_thing *map_ptr;
+   uint32 mapcode = ~0;
    int rotate_back = 0;
    int livemask = global_livemask;
    int linesp = parseptr->concept->value.arg2;
@@ -1307,10 +1385,10 @@ extern void distorted_move(
          ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
 
       ss->cmd.parseptr = next_parseptr->next;
-      map_ptr = map_lists[s2x4][1]->f[mk][0];
+      mapcode = MAPCODE(s2x4,2,mk,0);
    }
    else
-      map_ptr = map_lists[s2x4][0]->f[mk][1];
+      mapcode = MAPCODE(s2x4,1,mk,1);
 
    do_divided_call:
 
@@ -1320,7 +1398,11 @@ extern void distorted_move(
    if ((linesp & 7) == 3)
       ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
 
-   divided_setup_move(ss, map_ptr, phantest_ok, TRUE, result);
+   if (mapcode == ~0)
+      divided_setup_move(ss, map_ptr, phantest_ok, TRUE, result);
+   else
+      new_divided_setup_move(ss, mapcode, phantest_ok, TRUE, result);
+
    /* The split-axis bits are gone.  If someone needs them, we have work to do. */
    result->result_flags &= ~RESULTFLAG__SPLIT_AXIS_MASK;
 
@@ -1399,7 +1481,7 @@ extern void triple_twin_move(
       else fail("Can't find triple twin lines.");
    }
    
-   divided_setup_move(ss, map_lists[s2x4][2]->f[MPKIND__SPLIT][1],
+   new_divided_setup_move(ss, MAPCODE(s2x4,3,MPKIND__SPLIT,1),
          phantest_not_just_centers, TRUE, result);
 }
 

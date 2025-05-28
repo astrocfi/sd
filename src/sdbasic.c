@@ -21,7 +21,6 @@
 */
 
 #include "sd.h"
-extern map_thing map_qtag_2x3;
 
 
 
@@ -395,8 +394,19 @@ static int qdmtranslateh[32] = {
    4,   5,  6,  7,  0,  9,  0,  8,  0,   0,  0,  0, 11,  0, 10,  0};
 
 static int qdmtranslatev[32] = {
-   0,   0,  0,  0, 11,  0, 10,  0, 12, 13, 14, 15,  0,  1,  0,  0,
-   0,   0,  0,  0,  3,  0,  2,  0,  4,   5,  6,  7,  0,  9,  0,  8};
+   0,  0,  0,  0,  11, 0,  10, 0,  12, 13, 14, 15, 0,  1,  0,  0,
+   0,  0,  0,  0,  3,  0,  2,  0,  4,  5,  6,  7,  0,  9,  0,  8};
+
+
+static int j23translateh[32] = {
+   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  0,  2,  0,  0,
+   0,  0,  0,  0,  0,  0,  3,  0,  0,  0,  0,  4,  0,  5,  0,  0};
+
+static int j23translatev[32] = {
+   0,  0,  0,  4,  0,  5,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+   0,  0,  0,  1,  0,  2,  0,  0,  0,  0,  0,  0,  0,  0,  3,  0};
+
+
 
 static int dmdhyperh[12] = {0, 0, 0, 0, 1, 0, 2, 0, 0, 0, 3, 0};
 static int linehyperh[12] = {0, 1, 0, 0, 0, 0, 2, 3, 0, 0, 0, 0};
@@ -519,13 +529,18 @@ extern void do_stability(uint32 *personp, stability stab, int turning)
 extern restriction_thing *check_restriction(setup *ss, assumption_thing restr, uint32 flags)
 {
    uint32 q0, q1, q2, q3, q4, q5, q6, q7;
-   uint32 qa0[16], qa1[16];
+   uint32 qaa[4];
    uint32 i, j, k, z, t;
    int idx, limit;
    Const veryshort *mp;
    restriction_thing *restr_thing_ptr = (restriction_thing *) 0;
 
    if (restr.assumption == cr_alwaysfail) goto restr_failed;
+
+   if (restr.assumption == cr_nice_diamonds) {
+      restr.assumption = cr_jright;
+      restr.assump_col = 4;
+   }
 
    /* First, check for nice things. */
 
@@ -569,6 +584,25 @@ extern restriction_thing *check_restriction(setup *ss, assumption_thing restr, u
                   q0 = 0; q1 = 0;
                   if ((t = ss->people[3].id1) != 0) { q0 |= (t^1); q1 |= (t^3); }
                   if ((t = ss->people[4].id1) != 0) { q0 |= (t^1); q1 |= (t^3); }
+                  if ((q0&3) && (q1&3)) goto restr_failed;
+                  break;
+               case cr_miniwaves:
+                  /* check for everyone in miniwaves */
+                  q0 = 0; q1 = 0;
+                  if ((t = ss->people[0].id1) != 0) { q0 |= (t^1); q1 |= (t^3); }
+                  if ((t = ss->people[7].id1) != 0) { q0 |= (t^3); q1 |= (t^1); }
+                  if ((q0&3) && (q1&3)) goto restr_failed;
+                  q0 = 0; q1 = 0;
+                  if ((t = ss->people[1].id1) != 0) { q0 |= (t^1); q1 |= (t^3); }
+                  if ((t = ss->people[6].id1) != 0) { q0 |= (t^3); q1 |= (t^1); }
+                  if ((q0&3) && (q1&3)) goto restr_failed;
+                  q0 = 0; q1 = 0;
+                  if ((t = ss->people[2].id1) != 0) { q0 |= (t^1); q1 |= (t^3); }
+                  if ((t = ss->people[5].id1) != 0) { q0 |= (t^3); q1 |= (t^1); }
+                  if ((q0&3) && (q1&3)) goto restr_failed;
+                  q0 = 0; q1 = 0;
+                  if ((t = ss->people[3].id1) != 0) { q0 |= (t^1); q1 |= (t^3); }
+                  if ((t = ss->people[4].id1) != 0) { q0 |= (t^3); q1 |= (t^1); }
                   if ((q0&3) && (q1&3)) goto restr_failed;
                   break;
                case cr_quarterbox_or_col:
@@ -628,24 +662,12 @@ extern restriction_thing *check_restriction(setup *ss, assumption_thing restr, u
    else {
       /* Restriction is "line-like" or special. */
 
-      static Const veryshort mapndq[8] = {1, 1, 0, 2, -1, -1, 2, 0};
-      static Const veryshort mapndd[4] = {2, 1, 0, -1};
-      static Const veryshort mapndp[8] = {2, 1, 0, -1, 0, -1, 2, 1};
-
       static Const veryshort mapwkg8[2] = {2, 6};
       static Const veryshort mapwkg6[2] = {2, 5};
       static Const veryshort mapwkg4[2] = {1, 3};
       static Const veryshort mapwkg2[2] = {0, 1};
 
       switch (restr.assumption) {
-         case cr_nice_diamonds:         /* check for consistent diamonds, so can do "diamond swing thru" */
-            switch (ss->kind) {
-               case s_qtag: mp = mapndq; goto check_nd;
-               case sdmd:   mp = mapndd; goto check_nd;
-               case s_ptpd: mp = mapndp; goto check_nd;
-            }
-
-            break;
          case cr_awkward_centers:       /* check for centers not having left hands */
             switch (ss->kind) {
                case s1x8: mp = mapwkg8; goto check_wk;
@@ -690,6 +712,18 @@ extern restriction_thing *check_restriction(setup *ss, assumption_thing restr, u
                       ((q5&3) && ((~q7)&3) && (q4&3) && ((~q6)&3)))
                      goto restr_failed;
                   break;
+               case cr_miniwaves:
+                  /* check for everyone in miniwaves */
+                  q0 = 0; q1 = 0; q2 = 3; q3 = 3;
+                  q4 = 0; q5 = 0; q7 = 3; q6 = 3;
+                  if ((t = ss->people[0].id1) != 0) { q0 |= t;     q2 &= t;     q1 |= (t^2); q3 &= (t^2); }
+                  if ((t = ss->people[1].id1) != 0) { q0 |= (t^2); q7 &= t;     q1 |= t;     q6 &= (t^2); }
+                  if ((t = ss->people[2].id1) != 0) { q5 |= t;     q7 &= (t^2); q4 |= (t^2); q6 &= t; }
+                  if ((t = ss->people[3].id1) != 0) { q5 |= (t^2); q2 &= (t^2); q4 |= t;     q3 &= t; }
+                  if (((q0&3) && ((~q2)&3) && (q1&3) && ((~q3)&3)) ||
+                      ((q5&3) && ((~q7)&3) && (q4&3) && ((~q6)&3)))
+                     goto restr_failed;
+                  break;
                case cr_leads_only:
                   /* check for everyone a lead, and not T-boned */
                   q0 = 0; q2 = 3;
@@ -719,19 +753,6 @@ extern restriction_thing *check_restriction(setup *ss, assumption_thing restr, u
 
    goto getout;
 
-   check_nd:     /* Check the "nice_diamonds" restriction. */
-
-   k = 0;
-   i = 2;
-
-   for (idx=0 ; idx<=setup_attrs[ss->kind].setup_limits ; idx++) {
-      if ((t = ss->people[idx].id1) != 0) { k |= t+mp[idx]; i &= t+mp[idx]; }
-   }
-   if (k & ~i & 2)
-      goto restr_failed;
-
-   goto getout;
-
    check_wk:   /* check the "awkward_centers" restriction. */
 
    k = 2;
@@ -746,46 +767,60 @@ extern restriction_thing *check_restriction(setup *ss, assumption_thing restr, u
 
    switch (restr_thing_ptr->check) {
       case chk_wave:
-         qa0[0] = 0; qa0[1] = 0;
+         qaa[0] = 0; qaa[1] = 0;
 
          for (idx=0; idx<restr_thing_ptr->size; idx++) {
-            if ((t = ss->people[restr_thing_ptr->map1[idx]].id1) != 0) { qa0[idx&1] |=  t; qa0[(idx&1)^1] |= ~t; }
+            if ((t = ss->people[restr_thing_ptr->map1[idx]].id1) != 0) { qaa[idx&1] |=  t; qaa[(idx&1)^1] |= ~t; }
          }
 
-         if (((qa0[0] | restr.assump_both) & (qa0[1] | (restr.assump_both << 1)) & 2) != 0)
+         if (((qaa[0] | restr.assump_both) & (qaa[1] | (restr.assump_both << 1)) & 2) != 0)
             goto restr_failed;
 
          if (restr_thing_ptr->ok_for_assume) {
-            qa0[0] = 0;
-            qa0[2] = 0;
+            qaa[0] = 0;
+            qaa[2] = 0;
 
             for (idx=0; idx<restr_thing_ptr->size; idx++)
-               qa0[idx&2] |= ss->people[restr_thing_ptr->map1[idx]].id1;
+               qaa[idx&2] |= ss->people[restr_thing_ptr->map1[idx]].id1;
 
             if ((restr.assump_col | restr_thing_ptr->map2[0]) & 4) {
-               qa0[2] >>= 3;
+               qaa[2] >>= 3;
             }
             else if (restr.assump_col == 1) {
-               qa0[0] >>= 3;
-               qa0[2] >>= 3;
+               qaa[0] >>= 3;
+               qaa[2] >>= 3;
             }
       
-            if ((qa0[0]|qa0[2]) & 1) goto restr_failed;
+            if ((qaa[0]|qaa[2]) & 1) goto restr_failed;
          }
 
          goto getout;
-      case chk_1_group:
-         limit = 1;
-         goto check_groups;
-      case chk_2_groups:
-         limit = 2;
-         goto check_groups;
-      case chk_4_groups:
-         limit = 4;
-         goto check_groups;
-      case chk_8_groups:
-         limit = 8;
-         goto check_groups;
+      case chk_groups:
+         limit = restr_thing_ptr->map2[0];
+
+         for (idx=0; idx<limit; idx++) {
+            q0 = 0; q1 = 0;
+
+            for (i=0,j=idx; i<restr_thing_ptr->size; i++,j+=limit) {
+               if ((t = ss->people[restr_thing_ptr->map1[j]].id1) != 0) { q0 |= t; q1 |= ~t; }
+            }
+
+            if (q0&q1&2) goto restr_failed;
+         }
+
+         goto getout;
+      case chk_anti_groups:
+         limit = restr_thing_ptr->map2[0];
+
+         for (idx=0; idx<limit; idx++) {
+            q0 = 0; q1 = 0;
+
+            if ((t = ss->people[restr_thing_ptr->map1[idx]].id1) != 0)       { q0 |= t; q1 |= ~t; }
+            if ((t = ss->people[restr_thing_ptr->map1[idx+limit]].id1) != 0) { q0 |= ~t; q1 |= t; }
+
+            if (q0&q1&2) goto restr_failed;
+         }
+         goto getout;
       case chk_box:
          k = 0; j = 0; i = 0; z = 0;
 
@@ -857,6 +892,12 @@ extern restriction_thing *check_restriction(setup *ss, assumption_thing restr, u
             fail("People are not facing as in 1/4 tags.");
          else if (restr.assumption == cr_gen_3_4_tag)
             fail("People are not facing as in 3/4 tags.");
+         else if (restr.assumption == cr_wave_only && restr.assump_col == 0)
+            fail("People are not in waves.");
+         else if (restr.assumption == cr_all_ns)
+            fail("People are not in lines.");
+         else if (restr.assumption == cr_all_ew)
+            fail("People are not in columns.");
          else
             fail("The people do not satisfy the assumption.");
       default:
@@ -886,12 +927,12 @@ extern restriction_thing *check_restriction(setup *ss, assumption_thing restr, u
          break;
       case cr_couples_only: case cr_3x3couples_only: case cr_4x4couples_only:
          switch (restr.assumption) {
-            case cr_wave_only:
+            case cr_wave_only: case cr_miniwaves:
                fail("An assumed facing direction for phantoms is illegal for this call.");
                break;
          }
          break;
-      case cr_wave_only:
+      case cr_wave_only: case cr_miniwaves:
          switch (restr.assumption) {
             case cr_couples_only: case cr_3x3couples_only: case cr_4x4couples_only:
                fail("An assumed facing direction for phantoms is illegal for this call.");
@@ -901,21 +942,6 @@ extern restriction_thing *check_restriction(setup *ss, assumption_thing restr, u
    }
 
    return restr_thing_ptr;
-
-   check_groups:
-
-   for (idx=0; idx<limit; idx++) {
-      qa0[idx] = 0; qa1[idx] = 0;
-
-      for (i=0,j=idx; i<restr_thing_ptr->size; i++,j+=limit) {
-         if ((t = ss->people[restr_thing_ptr->map1[j]].id1) != 0) { qa0[idx] |= t; qa1[idx] |= ~t; }
-      }
-
-      if (qa0[idx]&qa1[idx]&2)
-         goto restr_failed;
-   }
-
-   goto getout;
 }
 
 
@@ -934,9 +960,15 @@ Private void special_4_way_symm(
    static int table_2x8[16] = {
       12, 13, 14, 15, 31, 27, 23, 19,
       44, 45, 46, 47, 63, 59, 55, 51};
+
    static int table_4dmd[16] = {
       7, 5, 14, 12, 16, 17, 18, 19,
       23, 21, 30, 28, 0, 1, 2, 3};
+
+   static int table_2x3_4dmd[6] = {
+      6, 11, 13, 22, 27, 29};
+
+
    static int line_table[4] = {0, 1, 6, 7};
    static int dmd_table[4] = {0, 4, 6, 10};
 
@@ -970,6 +1002,10 @@ Private void special_4_way_symm(
       case s4dmd:
          result->kind = sx4dmd;
          the_table = table_4dmd;
+         break;
+      case s2x3:
+         result->kind = sx4dmd;
+         the_table = table_2x3_4dmd;
          break;
       default:
          fail("Don't recognize ending setup for this call.");
@@ -1107,6 +1143,7 @@ Private int divide_the_setup(
    long_boolean recompute_anyway;
    long_boolean temp_for_2x2;
    callarray *have_1x2, *have_2x1;
+   uint32 division_code = ~0;
    map_thing *division_maps;
    uint32 newtb = *newtb_p;
    uint32 callflags1 = ss->cmd.callspec->callflags1;
@@ -1147,7 +1184,7 @@ Private int divide_the_setup(
       case s_thar:
          if (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT)
             fail("Can't split the setup.");
-         division_maps = map_lists[s1x2][3]->f[MPKIND__4_EDGES][1];
+         division_code = MAPCODE(s1x2,4,MPKIND__4_EDGES,1);
          goto divide_us_no_recompute;
       case s2x8:
          /* The call has no applicable 2x8 or 8x2 definition. */
@@ -1159,7 +1196,7 @@ Private int divide_the_setup(
             if (
                   (!(newtb & 010) || assoc(b_2x4, ss, calldeflist)) &&
                   (!(newtb & 001) || assoc(b_4x2, ss, calldeflist))) {
-               division_maps = map_lists[s2x4][1]->f[MPKIND__SPLIT][0];
+               division_code = MAPCODE(s2x4,2,MPKIND__SPLIT,0);
                /* I consider it an abomination to call such a thing as "2x8 matrix
                   swing-o-late" from 2x8 lines, expecting people to do the call
                   in split phantom boxes, or "2x8 matrix grand mix", expecting
@@ -1174,7 +1211,7 @@ Private int divide_the_setup(
             else if (
                   (!(newtb & 010) || assoc(b_1x8, ss, calldeflist)) &&
                   (!(newtb & 001) || assoc(b_8x1, ss, calldeflist))) {
-               division_maps = map_lists[s1x8][1]->f[MPKIND__SPLIT][1];
+               division_code = MAPCODE(s1x8,2,MPKIND__SPLIT,1);
                /* See comment above about abomination. */
                warn(warn__split_to_1x8s);
                goto divide_us_no_recompute;
@@ -1188,15 +1225,15 @@ Private int divide_the_setup(
 
          switch (livemask) {
             case 0xF0F0:    /* a parallelogram */
-               division_maps = map_lists[s1x4][1]->f[MPKIND__OFFS_R_FULL][1];
+               division_code = MAPCODE(s1x4,2,MPKIND__OFFS_R_FULL,1);
                warn(warn__each1x4);
                break;
             case 0x0F0F:    /* a parallelogram */
-               division_maps = map_lists[s1x4][1]->f[MPKIND__OFFS_L_FULL][1];
+               division_code = MAPCODE(s1x4,2,MPKIND__OFFS_L_FULL,1);
                warn(warn__each1x4);
                break;
             case 0xC3C3:    /* the outer quadruple boxes */
-               division_maps = map_lists[s2x2][3]->f[MPKIND__SPLIT][0];
+               division_code = MAPCODE(s2x2,4,MPKIND__SPLIT,0);
                warn(warn__each2x2);
                break;
             default:
@@ -1227,7 +1264,7 @@ Private int divide_the_setup(
             if (
                   (!(newtb & 010) || assoc(b_2x3, ss, calldeflist)) &&
                   (!(newtb & 001) || assoc(b_3x2, ss, calldeflist))) {
-               division_maps = map_lists[s2x3][1]->f[MPKIND__SPLIT][0];
+               division_code = MAPCODE(s2x3,2,MPKIND__SPLIT,0);
                /* See comment above about abomination. */
                if (!(callflags1 & CFLAG1_SPLIT_LARGE_SETUPS)) warn(warn__split_to_2x3s);  /* If database said to split, don't give warning. */
                goto divide_us_no_recompute;
@@ -1235,7 +1272,7 @@ Private int divide_the_setup(
             else if (
                   (!(newtb & 010) || assoc(b_1x3, ss, calldeflist) || assoc(b_1x6, ss, calldeflist)) &&
                   (!(newtb & 001) || assoc(b_3x1, ss, calldeflist) || assoc(b_6x1, ss, calldeflist))) {
-               division_maps = map_lists[s1x6][1]->f[MPKIND__SPLIT][1];
+               division_code = MAPCODE(s1x6,2,MPKIND__SPLIT,1);
                /* See comment above about abomination. */
                if (!(callflags1 & CFLAG1_SPLIT_LARGE_SETUPS)) warn(warn__split_to_1x6s);  /* If database said to split, don't give warning. */
                goto divide_us_no_recompute;
@@ -1249,15 +1286,15 @@ Private int divide_the_setup(
 
          switch (livemask) {
             case 07474:    /* a parallelogram */
-               division_maps = map_lists[s1x4][1]->f[MPKIND__OFFS_R_HALF][1];
+               division_code = MAPCODE(s1x4,2,MPKIND__OFFS_R_HALF,1);
                warn(warn__each1x4);
                break;
             case 01717:    /* a parallelogram */
-               division_maps = map_lists[s1x4][1]->f[MPKIND__OFFS_L_HALF][1];
+               division_code = MAPCODE(s1x4,2,MPKIND__OFFS_L_HALF,1);
                warn(warn__each1x4);
                break;
             case 06363: case 06060: case 00303: case 04141: case 02222:    /* the outer triple boxes */
-               division_maps = map_lists[s2x2][2]->f[MPKIND__SPLIT][0];
+               division_code = MAPCODE(s2x2,3,MPKIND__SPLIT,0);
                warn(warn__each2x2);
                break;
             default:
@@ -1271,10 +1308,10 @@ Private int divide_the_setup(
 
          switch (livemask) {
             case 0xF0F0:
-               division_maps = map_lists[s1x4][1]->f[MPKIND__OFFS_L_HALF][0];
+               division_code = MAPCODE(s1x4,2,MPKIND__OFFS_L_HALF,0);
                break;
             case 0x0F0F:
-               division_maps = map_lists[s1x4][1]->f[MPKIND__OFFS_R_HALF][0];
+               division_code = MAPCODE(s1x4,2,MPKIND__OFFS_R_HALF,0);
                break;
             default:
                fail("You must specify a concept.");
@@ -1301,7 +1338,7 @@ Private int divide_the_setup(
          if (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX) {
             if (  (!(newtb & 010) || assoc(b_1x6, ss, calldeflist)) &&
                   (!(newtb & 001) || assoc(b_6x1, ss, calldeflist))) {
-               division_maps = map_lists[s1x6][1]->f[MPKIND__SPLIT][0];
+               division_code = MAPCODE(s1x6,2,MPKIND__SPLIT,0);
                /* See comment above about abomination. */
                warn(warn__split_to_1x6s);
                goto divide_us_no_recompute;
@@ -1318,7 +1355,7 @@ Private int divide_the_setup(
             if (
                   (!(newtb & 010) || assoc(b_1x8, ss, calldeflist)) &&
                   (!(newtb & 001) || assoc(b_8x1, ss, calldeflist))) {
-               division_maps = map_lists[s1x8][1]->f[MPKIND__SPLIT][0];
+               division_code = MAPCODE(s1x8,2,MPKIND__SPLIT,0);
                /* See comment above about abomination. */
                warn(warn__split_to_1x8s);
                goto divide_us_no_recompute;
@@ -1355,13 +1392,13 @@ Private int divide_the_setup(
             if (
                   (!(newtb & 010) || assoc(b_2x6, ss, calldeflist)) &&
                   (!(newtb & 001) || assoc(b_6x2, ss, calldeflist))) {
-               division_maps = map_lists[s2x6][1]->f[MPKIND__SPLIT][1];
+               division_code = MAPCODE(s2x6,2,MPKIND__SPLIT,1);
                goto divide_us_no_recompute;
             }
             else if (
                   (!(newtb & 010) || assoc(b_4x3, ss, calldeflist) || assoc(b_2x3, ss, calldeflist)) &&
                   (!(newtb & 001) || assoc(b_3x4, ss, calldeflist) || assoc(b_3x2, ss, calldeflist))) {
-               division_maps = map_lists[s3x4][1]->f[MPKIND__SPLIT][1];
+               division_code = MAPCODE(s3x4,2,MPKIND__SPLIT,1);
                goto divide_us_no_recompute;
             }
          }
@@ -1371,7 +1408,7 @@ Private int divide_the_setup(
             if (
                   (!(newtb & 010) || assoc(b_3x4, ss, calldeflist) || assoc(b_3x2, ss, calldeflist)) &&
                   (!(newtb & 001) || assoc(b_4x3, ss, calldeflist) || assoc(b_2x3, ss, calldeflist))) {
-               division_maps = map_lists[s3x4][1]->f[MPKIND__SPLIT][0];
+               division_code = MAPCODE(s3x4,2,MPKIND__SPLIT,0);
                goto divide_us_no_recompute;
             }
          }
@@ -1384,9 +1421,9 @@ Private int divide_the_setup(
             from any population at all. */
 
          if ((livemask & 0xAAAA) == 0)
-            division_maps = map_lists[s1x2][3]->f[MPKIND__4_QUADRANTS][0];
+            division_code = MAPCODE(s1x2,4,MPKIND__4_QUADRANTS,0);
          else if ((livemask & 0x5555) == 0)
-            division_maps = map_lists[s1x2][3]->f[MPKIND__4_QUADRANTS][1];
+            division_code = MAPCODE(s1x2,4,MPKIND__4_QUADRANTS,1);
          else if (   (livemask & 0x55AA) == 0 ||
                      (livemask & 0xAA55) == 0 ||
                      (livemask & 0x5AA5) == 0 ||
@@ -1399,8 +1436,8 @@ Private int divide_the_setup(
 
             ss->cmd.cmd_misc_flags &= ~CMD_MISC__MUST_SPLIT;
             scopy = *ss;    /* "Move" can write over its input. */
-            divided_setup_move(ss, map_lists[s1x2][3]->f[MPKIND__4_QUADRANTS][0], phantest_ok, FALSE, &the_results[0]);
-            divided_setup_move(&scopy, map_lists[s1x2][3]->f[MPKIND__4_QUADRANTS][1], phantest_ok, FALSE, &the_results[1]);
+            new_divided_setup_move(ss, MAPCODE(s1x2,4,MPKIND__4_QUADRANTS,0), phantest_ok, FALSE, &the_results[0]);
+            new_divided_setup_move(&scopy, MAPCODE(s1x2,4,MPKIND__4_QUADRANTS,1), phantest_ok, FALSE, &the_results[1]);
             *result = the_results[1];
             result->result_flags = get_multiple_parallel_resultflags(the_results, 2);
             merge_setups(&the_results[0], merge_c1_phantom, result);
@@ -1416,10 +1453,10 @@ Private int divide_the_setup(
 
          switch (livemask) {
             case 01717:
-               division_maps = map_lists[s_trngl4][1]->f[MPKIND__OFFS_L_HALF][0];
+               division_code = MAPCODE(s_trngl4,2,MPKIND__OFFS_L_HALF,0);
                break;
             case 07474:
-               division_maps = map_lists[s_trngl4][1]->f[MPKIND__OFFS_R_HALF][0];
+               division_code = MAPCODE(s_trngl4,2,MPKIND__OFFS_R_HALF,0);
                break;
             default:
                fail("You must specify a concept.");
@@ -1437,7 +1474,7 @@ Private int divide_the_setup(
          *desired_elongation_p = orig_elongation;
 
          /* Tentatively choose a map.  We may change it later to "map_2x2v". */
-         division_maps = map_lists[s1x2][1]->f[MPKIND__SPLIT][1];
+         division_code = MAPCODE(s1x2,2,MPKIND__SPLIT,1);
 
          if ((newtb & 011) == 011) {
             /* The situation is serious.  If the call has both 1x2 and 2x1 definitions,
@@ -1466,12 +1503,12 @@ Private int divide_the_setup(
                      if (selmask == 0 || (selmask & 011) == 011)
                         fail("People are not working with each other in a consistent way.");
                      else if (selmask & 1)
-                        division_maps = &map_2x2v;
+                        { division_code = ~0 ; division_maps = &map_2x2v; }
                   }
                   else {
                      if ((((ss->people[0].id1 | ss->people[3].id1) & 011) != 011) &&
                            (((ss->people[1].id1 | ss->people[2].id1) & 011) != 011))
-                        division_maps = &map_2x2v;
+                        { division_code = ~0 ; division_maps = &map_2x2v; }
                      else if ((((ss->people[0].id1 | ss->people[1].id1) & 011) == 011) ||
                            (((ss->people[2].id1 | ss->people[3].id1) & 011) == 011))
                         fail("Can't figure out who should be working with whom.");
@@ -1544,7 +1581,7 @@ Private int divide_the_setup(
                }
 
                if (foo == 1)
-                  division_maps = &map_2x2v;
+                  { division_code = ~0 ; division_maps = &map_2x2v; }
 
                goto divide_us_no_recompute;
             }
@@ -1591,7 +1628,7 @@ Private int divide_the_setup(
             if (((callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) || (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX)) &&
                   (!(newtb & 010) || assoc(b_3x2, ss, calldeflist)) &&
                   (!(newtb & 001) || assoc(b_2x3, ss, calldeflist))) {
-               division_maps = map_lists[s2x3][1]->f[MPKIND__SPLIT][1];
+               division_code = MAPCODE(s2x3,2,MPKIND__SPLIT,1);
                goto divide_us_no_recompute;
             }
 
@@ -1632,7 +1669,7 @@ Private int divide_the_setup(
                            !assoc(b_2x1, ss, calldeflist) &&
                            !assoc(b_1x1, ss, calldeflist))) fail("Don't know how to do this call in this setup.");
                   if (!matrix_aware) warn(warn__each2x2);
-                  division_maps = map_lists[s2x2][1]->f[(livemask == 0xF3C) ? MPKIND__OFFS_L_HALF : MPKIND__OFFS_R_HALF][0];
+                  division_code = (livemask == 0xF3C) ? MAPCODE(s2x2,2,MPKIND__OFFS_L_HALF,0) : MAPCODE(s2x2,2,MPKIND__OFFS_R_HALF,0);
                   goto divide_us_no_recompute;
                case 0xEBA: case 0xD75:
                   /* We are in "Z"'s.  See if we can do the call in 1x2, 2x1, or 1x1 setups.
@@ -1659,20 +1696,29 @@ Private int divide_the_setup(
                         assoc(b_2x1, ss, calldeflist) ||
                         assoc(b_1x1, ss, calldeflist))) {
                if (!matrix_aware) warn(warn__each1x4);
-               division_maps = map_lists[s1x4][2]->f[MPKIND__SPLIT][1];
+               division_code = MAPCODE(s1x4,3,MPKIND__SPLIT,1);
                goto divide_us_no_recompute;
             }
 
             /* Setup is randomly populated.  See if we have 1x2/1x1 definitions, but no 2x2.
-               If so, divide the 3x4 into 3 1x4's. */
+               If so, divide the 3x4 into 3 1x4's.  We accept 1x2/2x1 definitions if the call is
+               "matrix aware" (it knows that 1x4's are what it wants) or if the facing directions
+               are such that that would win anyway. */
 
             if (  !forbid_little_stuff &&
-                  matrix_aware &&
                   !assoc(b_2x2, ss, calldeflist) &&
-                  (  assoc(b_1x2, ss, calldeflist) ||
-                     assoc(b_2x1, ss, calldeflist) ||
-                     assoc(b_1x1, ss, calldeflist))) {
-               division_maps = map_lists[s1x4][2]->f[MPKIND__SPLIT][1];
+                  (
+                     assoc(b_1x1, ss, calldeflist)
+                           ||
+                     ((!(newtb & 010) || assoc(b_1x2, ss, calldeflist)) &&
+                      (!(newtb & 001) || assoc(b_2x1, ss, calldeflist)))
+                           ||
+                     (matrix_aware &&
+                        (  assoc(b_1x2, ss, calldeflist) ||
+                           assoc(b_2x1, ss, calldeflist)))
+                  )
+            ) {
+               division_code = MAPCODE(s1x4,3,MPKIND__SPLIT,1);
                goto divide_us_no_recompute;
             }
 
@@ -1722,7 +1768,7 @@ Private int divide_the_setup(
 
          switch (livemask) {
             case 0x6666:
-               division_maps = map_lists[s1x2][3]->f[MPKIND__4_EDGES][0];
+               division_code = MAPCODE(s1x2,4,MPKIND__4_EDGES,0);
                goto divide_us_no_recompute;
             case 0x7171:
                division_maps = &map_4x4_ns;
@@ -1794,7 +1840,7 @@ Private int divide_the_setup(
                            !assoc(b_2x1, ss, calldeflist) &&
                            !assoc(b_1x1, ss, calldeflist))) fail("Don't know how to do this call in this setup.");
                   if (!matrix_aware) warn(warn__each2x2);
-                  division_maps = map_lists[s2x2][1]->f[(livemask == 0x4B4B) ? MPKIND__OFFS_L_FULL : MPKIND__OFFS_R_FULL][0];
+                  division_code = (livemask == 0x4B4B) ? MAPCODE(s2x2,2,MPKIND__OFFS_L_FULL,0) : MAPCODE(s2x2,2,MPKIND__OFFS_R_FULL,0);
                   goto divide_us_no_recompute;
                }
          }
@@ -1823,7 +1869,7 @@ Private int divide_the_setup(
                /* Without a lot of examination of facing directions, and whether the call has 1x2 vs. 2x1
                   definitions, and all that, we don't know which axis to use when dividing it.  But any
                   division into 2 2x4's is safe, and code elsewhere will make the tricky decisions later. */
-               division_maps = map_lists[s2x4][1]->f[MPKIND__SPLIT][1];
+               division_code = MAPCODE(s2x4,2,MPKIND__SPLIT,1);
                goto divide_us_no_recompute;
             }
          }
@@ -1831,7 +1877,7 @@ Private int divide_the_setup(
          fail("You must specify a concept.");
       case s_qtag:
          if (assoc(b_dmd, ss, calldeflist) || assoc(b_pmd, ss, calldeflist) || assoc(b_1x1, ss, calldeflist) || assoc(b_1x4, ss, calldeflist)) {
-            division_maps = map_lists[sdmd][1]->f[MPKIND__SPLIT][1];
+            division_code = MAPCODE(sdmd,2,MPKIND__SPLIT,1);
             goto divide_us_no_recompute;
          }
 
@@ -1908,7 +1954,7 @@ Private int divide_the_setup(
          break;
       case s_ptpd:
          if (assoc(b_dmd, ss, calldeflist) || assoc(b_pmd, ss, calldeflist) || assoc(b_1x1, ss, calldeflist)) {
-            division_maps = map_lists[sdmd][1]->f[MPKIND__SPLIT][0];
+            division_code = MAPCODE(sdmd,2,MPKIND__SPLIT,0);
             goto divide_us_no_recompute;
          }
          if (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT)
@@ -1918,12 +1964,12 @@ Private int divide_the_setup(
          /* See if this call has applicable 1x2 or 2x1 definitions, in which case split it 3 ways. */
 
          if (assoc(b_1x2, ss, calldeflist) || assoc(b_2x1, ss, calldeflist) || assoc(b_1x1, ss, calldeflist)) {
-            division_maps = map_lists[s1x2][2]->f[MPKIND__SPLIT][1];
+            division_code = MAPCODE(s1x2,3,MPKIND__SPLIT,1);
             goto divide_us_no_recompute;
          }
          /* If it has 1x3 or 3x1 definitions, split it 2 ways. */
          if (assoc(b_1x3, ss, calldeflist) || assoc(b_3x1, ss, calldeflist)) {
-            division_maps = map_lists[s1x3][1]->f[MPKIND__SPLIT][1];
+            division_code = MAPCODE(s1x3,2,MPKIND__SPLIT,1);
             goto divide_us_no_recompute;
          }
          break;
@@ -2038,19 +2084,23 @@ Private int divide_the_setup(
       case s1x6:
          /* See if this call has a 1x2, 2x1, or 1x1 definition, in which case split it 3 ways. */
          if (assoc(b_1x2, ss, calldeflist) || assoc(b_2x1, ss, calldeflist) || assoc(b_1x1, ss, calldeflist)) {
-            division_maps = map_lists[s1x2][2]->f[MPKIND__SPLIT][0];
+            division_code = MAPCODE(s1x2,3,MPKIND__SPLIT,0);
             goto divide_us_no_recompute;
          }
          /* If it has 1x3 or 3x1 definitions, split it 2 ways. */
          if (assoc(b_1x3, ss, calldeflist) || assoc(b_3x1, ss, calldeflist)) {
-            division_maps = map_lists[s1x3][1]->f[MPKIND__SPLIT][0];
+            division_code = MAPCODE(s1x3,2,MPKIND__SPLIT,0);
+            /* We want to be sure that the operator knows what we are doing, and why, if we divide
+               a 1x6 into 1x3's.  We allow "swing thru" in a wave of 3 or 4 people.  If the operator
+               wants to do a swing thru with all 6 people, use "grand swing thru". */
+            warn(warn__split_1x6);
             goto divide_us_no_recompute;
          }
          break;
       case s1x2:
          /* See if the call has a 1x1 definition, in which case split it and do each part. */
          if (assoc(b_1x1, ss, calldeflist)) {
-            division_maps = map_lists[s1x1][1]->f[MPKIND__SPLIT][0];
+            division_code = MAPCODE(s1x1,2,MPKIND__SPLIT,0);
             goto divide_us_no_recompute;
          }
          break;
@@ -2069,7 +2119,7 @@ Private int divide_the_setup(
          }
          break;
       case s1x8:
-         division_maps = map_lists[s1x4][1]->f[MPKIND__SPLIT][0];
+         division_code = MAPCODE(s1x4,2,MPKIND__SPLIT,0);
 
          /* See if the call has a 1x4, 4x1, 1x2, 2x1, or 1x1 definition, in which case split it and do each part. */
          if (     assoc(b_1x4, ss, calldeflist) || assoc(b_4x1, ss, calldeflist)) {
@@ -2142,7 +2192,7 @@ Private int divide_the_setup(
 
          break;
       case s2x4:
-         division_maps = map_lists[s2x2][1]->f[MPKIND__SPLIT][0];    /* The map we will probably use. */
+         division_code = MAPCODE(s2x2,2,MPKIND__SPLIT,0);    /* The map we will probably use. */
 
          /* See if this call is being done "split" as in "split square thru" or "split dixie style",
             in which case split into boxes. */
@@ -2185,7 +2235,7 @@ Private int divide_the_setup(
 
          if ((!(newtb & 010) || assoc(b_1x4, ss, calldeflist)) &&
                (!(newtb & 1) || assoc(b_4x1, ss, calldeflist))) {
-            division_maps = map_lists[s1x4][1]->f[MPKIND__SPLIT][1];
+            division_code = MAPCODE(s1x4,2,MPKIND__SPLIT,1);
             goto divide_us_no_recompute;
          }
 
@@ -2309,7 +2359,7 @@ Private int divide_the_setup(
             if (*desired_elongation_p == 3)
                *desired_elongation_p = 0;
 
-            division_maps = map_lists[s1x2][1]->f[MPKIND__SPLIT][0];
+            division_code = MAPCODE(s1x2,2,MPKIND__SPLIT,0);
             goto divide_us_no_recompute;
          }
 
@@ -2354,7 +2404,12 @@ Private int divide_the_setup(
    recompute_anyway = (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT) != 0;
    ss->cmd.cmd_misc_flags &= ~CMD_MISC__MUST_SPLIT;
    ss->cmd.prior_elongation_bits = 0;
-   divided_setup_move(ss, division_maps, phantest_ok, recompute_anyway, result);
+
+   if (division_code == ~0)
+      divided_setup_move(ss, division_maps, phantest_ok, recompute_anyway, result);
+   else
+      new_divided_setup_move(ss, division_code, phantest_ok, recompute_anyway, result);
+
    /* This left the RESULTFLAG__SPLIT_AXIS_MASK stuff correct, but we may still need to turn it off. */
    result->result_flags |= force_result_split_axis;
 
@@ -2435,6 +2490,7 @@ extern void basic_move(
    uint32 newtb;
    callarray *calldeflist;
    long_boolean funny;
+   uint32 division_code;
    map_thing *division_maps;
    callarray *linedefinition;
    callarray *coldefinition;
@@ -2620,7 +2676,7 @@ extern void basic_move(
 
    for (qq = callspec->stuff.arr.def_list; qq; qq = qq->next) {
       if (qq->modifier_seth == search_concepts) {
-         if (qq->modifier_level > calling_level) {
+         if (qq->modifier_level > calling_level && !(ss->cmd.cmd_misc_flags & CMD_MISC__NO_CHECK_MOD_LEVEL)) {
             if (allowing_all_concepts)
                warn(warn__bad_modifier_level);
             else
@@ -2659,21 +2715,21 @@ extern void basic_move(
             case s3x4:
                if (z == INHERITFLAG_12_MATRIX || (z == 0 && (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX))) {
                   /* "12 matrix" was specified.  Split it into 1x4's in the appropriate way. */
-                  division_maps = map_lists[s1x4][2]->f[MPKIND__SPLIT][1];
+                  division_code = MAPCODE(s1x4,3,MPKIND__SPLIT,1);
                   goto divide_us;
                }
                break;
             case s2x6:
                if (z == INHERITFLAG_12_MATRIX || (z == 0 && (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX))) {
                   /* "12 matrix" was specified.  Split it into 2x2's in the appropriate way. */
-                  division_maps = map_lists[s2x2][2]->f[MPKIND__SPLIT][0];
+                  division_code = MAPCODE(s2x2,3,MPKIND__SPLIT,0);
                   goto divide_us;
                }
                break;
             case s2x8:
                if (z == INHERITFLAG_16_MATRIX || (z == 0 && (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX))) {
                   /* "16 matrix" was specified.  Split it into 2x2's in the appropriate way. */
-                  division_maps = map_lists[s2x2][3]->f[MPKIND__SPLIT][0];
+                  division_code = MAPCODE(s2x2,4,MPKIND__SPLIT,0);
                   goto divide_us;
                }
                break;
@@ -2684,10 +2740,12 @@ extern void basic_move(
                      the call definition (the "assoc" stuff), we assume the call wants lines, since
                      it seems that that is true for all calls that have the "12_16_matrix_means_split" property. */
    
-                  if (tbonetest & 1)
+                  if (tbonetest & 1) {
+                     division_code = ~0;
                      division_maps = &map_4x4v;
+                  }
                   else
-                     division_maps = map_lists[s1x4][3]->f[MPKIND__SPLIT][1];
+                     division_code = MAPCODE(s1x4,4,MPKIND__SPLIT,1);
    
                   goto divide_us;
                }
@@ -2701,7 +2759,10 @@ extern void basic_move(
 
       final_concepts.herit &= ~search_concepts;
       ss->cmd.cmd_final_flags = final_concepts;
-      divided_setup_move(ss, division_maps, phantest_ok, TRUE, result);
+      if (division_code == ~0)
+         divided_setup_move(ss, division_maps, phantest_ok, TRUE, result);
+      else
+         new_divided_setup_move(ss, division_code, phantest_ok, TRUE, result);
       goto un_mirror;
    }
 
@@ -2905,7 +2966,7 @@ extern void basic_move(
       if ((ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX) && matrix_check_flag != 0) {
          for (qq = callspec->stuff.arr.def_list; qq; qq = qq->next) {
             if (qq->modifier_seth == search_stuff) {
-               if (qq->modifier_level > calling_level) {
+               if (qq->modifier_level > calling_level && !(ss->cmd.cmd_misc_flags & CMD_MISC__NO_CHECK_MOD_LEVEL)) {
                   if (allowing_all_concepts)
                      warn(warn__bad_modifier_level);
                   else
@@ -2993,7 +3054,13 @@ extern void basic_move(
       t.assump_col = 0;
       t.assump_both = 0;
       t.assump_cast = 0;
-      if (linedefinition->restriction != cr_none) (void) check_restriction(ss, t, linedefinition->callarray_flags & CAF__RESTR_MASK);
+
+      if (t.assumption == cr_nice_diamonds && ss->kind == s_qtag) {
+         t.assumption = cr_jright;
+         t.assump_col = 4;
+      }
+
+      if (t.assumption != cr_none) (void) check_restriction(ss, t, linedefinition->callarray_flags & CAF__RESTR_MASK);
       goodies = linedefinition;
    }
 
@@ -3033,7 +3100,8 @@ extern void basic_move(
       t.assump_col = 1;
       t.assump_both = 0;
       t.assump_cast = 0;
-      if (coldefinition->restriction != cr_none) (void) check_restriction(ss, t, coldefinition->callarray_flags & CAF__RESTR_MASK);
+
+      if (t.assumption != cr_none) (void) check_restriction(ss, t, coldefinition->callarray_flags & CAF__RESTR_MASK);
 
       /* If we have linedefinition also, check for consistency. */
 
@@ -3402,14 +3470,26 @@ extern void basic_move(
          }
          else if (result->kind == sx4dmd) {
             /* See if people landed on quad diamond spots. */
-            result->kind = s4dmd;
-            permuter = qdmtranslateh;
 
-            if ((lilresult_mask[0] & 0x50AF50AFUL) == 0) {
+            if ((lilresult_mask[0] & 0xBFD7BFD7UL) == 0) {
+               result->kind = s2x3;
+               permuter = j23translatev;
+               rotator = 1;
+            }
+            else if ((lilresult_mask[0] & 0xD7BFD7BFUL) == 0) {
+               result->kind = s2x3;
+               permuter = j23translateh;
+            }
+            else if ((lilresult_mask[0] & 0x50AF50AFUL) == 0) {
+               result->kind = s4dmd;
                permuter = qdmtranslatev;
                rotator = 1;
             }
-            else if ((lilresult_mask[0] & 0xAF50AF50UL) != 0)
+            else if ((lilresult_mask[0] & 0xAF50AF50UL) == 0) {
+               result->kind = s4dmd;
+               permuter = qdmtranslateh;
+            }
+            else
                fail("Call went to improperly-formed setup.");
          }
          else if (result->kind == s_hyperglass) {

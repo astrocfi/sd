@@ -363,7 +363,7 @@ typedef struct {
    CMD_MISC__NO_STEP_TO_WAVE means that we are at a level of recursion that no longer permits us to do the
    implicit step to a wave or rear back from one that some calls permit at the top level.
 
-   CMD_MISC__DOING_ENDS means that this call is directed only to the ends (and the setup is the ends
+   CMD_MISC__DOING_ENDS means that this call is directed only to the ends
    of the original setup.  If the call turns out to be an 8-person call with distinct
    centers and ends parts, we may want to just apply the ends part.  This is what
    makes "ends detour" work.
@@ -384,7 +384,7 @@ typedef struct {
 #define CMD_MISC__PUT_FRAC_ON_FIRST  0x00080000UL
 #define CMD_MISC__DO_AS_COUPLES      0x00100000UL
 #define CMD_MISC__RESTRAIN_CRAZINESS 0x00200000UL
-/* available:                        0x00400000UL */
+#define CMD_MISC__NO_CHECK_MOD_LEVEL 0x00400000UL
 /* available:                        0x00800000UL */
 /* available:                        0x01000000UL */
 #define CMD_MISC__MUST_SPLIT         0x02000000UL
@@ -637,7 +637,6 @@ typedef struct {
    char name[4];
 } callspec_block;
 
-/* BEWARE!!  This list must track all the "map_hunk" definitions in sdtables.c . */
 typedef enum {
    MPKIND__NONE,
    MPKIND__SPLIT,
@@ -655,11 +654,12 @@ typedef enum {
    MPKIND__4_EDGES,
    MPKIND__ALL_8,
    MPKIND__DMD_STUFF,
-   MPKIND__STAG
+   MPKIND__STAG,
+   MPKIND_DBLBENTCW,
+   MPKIND_DBLBENTCCW
 } mpkind;
-#define NUM_mpkind_KINDS (((int) MPKIND__STAG)+1)
 
-
+#define MAPCODE(setupkind,num,mapkind,rot) ((((int)(setupkind)) << 10) | (((int)(mapkind)) << 4) | (((num)-1) << 1) | (rot))
 
 typedef struct {
    Const veryshort maps[32];
@@ -667,7 +667,7 @@ typedef struct {
    Const int arity;
    Const setup_kind outer_kind;
    Const setup_kind inner_kind;
-   Const int rot;
+   Const uint32 rot;
    Const int vert;
 } map_thing;
 
@@ -771,6 +771,8 @@ typedef enum {
    concept_in_out_line_4,
    concept_in_out_box_3,
    concept_in_out_box_4,
+   concept_in_out_dmd_3,
+   concept_in_out_dmd_4,
    concept_triple_diag,
    concept_triple_diag_together,
    concept_triple_twin,
@@ -784,6 +786,8 @@ typedef enum {
    concept_snag_mystic,
    concept_crazy,
    concept_frac_crazy,
+   concept_phan_crazy,
+   concept_frac_phan_crazy,
    concept_fan,
    concept_c1_phantom,
    concept_grand_working,
@@ -816,6 +820,7 @@ typedef enum {
    concept_fractional,
    concept_rigger,
    concept_common_spot,
+   concept_dblbent,
    concept_diagnose
 } concept_kind;
 
@@ -955,6 +960,7 @@ typedef struct glock {
    struct glock *subsidiary_root; /* for concepts that take a second call, this is its parse root */
    struct glock *gc_ptr;          /* used for reclaiming dead blocks */
    call_conc_option_state options;/* number, selector, direction, etc. */
+   int replacement_key;           /* this is the "DFM1_CALL_MOD_MASK" stuff (shifted down) for a modification block */
 } parse_block;
 
 /* The following items are not actually part of the setup description,
@@ -1122,6 +1128,7 @@ typedef enum {
    warn__check_dmd_qtag,
    warn__check_2x4,
    warn__check_4x4,
+   warn__check_4x4_start,
    warn__check_pgram,
    warn__dyp_resolve_ok,
    warn__ctrs_stay_in_ctr,
@@ -1142,6 +1149,7 @@ typedef enum {
    warn__bad_modifier_level,
    warn__did_not_interact,
    warn__opt_for_normal_cast,
+   warn__split_1x6,
    warn__tasteless_slide_thru  /* If this ceases to be last, look 2 lines below! */
 } warning_index;
 #define NUM_WARNINGS (((int) warn__tasteless_slide_thru)+1)
@@ -1395,6 +1403,9 @@ typedef enum {
    analyzer_6X2,
    analyzer_4X2,
    analyzer_6X2_TGL,
+   analyzer_BAR,
+   analyzer_BAR12,
+   analyzer_BAR16,
    analyzer_STAR12,
    analyzer_STAR16,
    analyzer_SINGLE,
@@ -1411,11 +1422,6 @@ typedef enum {
    analyzer_CTR_DMD
 } analyzer_kind;
 #define NUM_analyzer_KINDS (((int) analyzer_CTR_DMD)+1)
-
-
-typedef struct {
-   map_thing *f[NUM_mpkind_KINDS][2];
-} map_hunk;
 
 
 typedef Const struct {
@@ -1490,6 +1496,8 @@ typedef Const struct {
 #define CONCPROP__NEEDK_TWINQTAG   0x000000E0UL
 
 #define CONCPROP__NEED_ARG2_MATRIX 0x00000200UL
+#define CONCPROP__NEED_CTR_DMD     0x00000400UL
+#define CONCPROP__NEED_END_DMD     0x00000800UL
 #define CONCPROP__NEED_TRIPLE_1X4  0x00010000UL
 #define CONCPROP__NEED_CTR_1X4     0x00020000UL
 #define CONCPROP__NEED_END_1X4     0x00040000UL
@@ -1544,10 +1552,8 @@ typedef enum {
 typedef enum {
    chk_none,
    chk_wave,
-   chk_1_group,
-   chk_2_groups,
-   chk_4_groups,
-   chk_8_groups,
+   chk_groups,
+   chk_anti_groups,
    chk_box,
    chk_dmd_qtag,
    chk_peelable
@@ -1555,7 +1561,7 @@ typedef enum {
 
 typedef struct {
    int size;
-   veryshort map1[16];
+   veryshort map1[17];
    veryshort map2[16];
    veryshort map3[8];
    veryshort map4[8];
@@ -1711,6 +1717,12 @@ typedef struct zilch {
    struct zilch *next;
 } conc_initializer;
 
+typedef struct milch {
+   uint32 code;
+   Const map_thing *the_map;
+   struct milch *next;
+} mapcoder;
+
 typedef struct {
    uint32 newheritmods;
    uint32 newfinalmods;
@@ -1807,10 +1819,6 @@ extern Cstring filename_strings[];                                  /* in SDTABL
 extern dance_level level_threshholds[];                             /* in SDTABLES */
 extern Cstring menu_names[];                                        /* in SDTABLES */
 extern id_bit_table id_bit_table_3x4_h[];                           /* in SDTABLES */
-extern cm_thing map_spec_star12;                                    /* in SDTABLES */
-extern cm_thing map_spec_star12v;                                   /* in SDTABLES */
-extern cm_thing map_spec_star16;                                    /* in SDTABLES */
-extern cm_thing map_spec_star16v;                                   /* in SDTABLES */
 extern cm_thing map2x4_2x4;                                         /* in SDTABLES */
 extern cm_thing map2x4_2x4v;                                        /* in SDTABLES */
 extern cm_thing mapgnd1x2_1x2;                                      /* in SDTABLES */
@@ -1871,6 +1879,7 @@ extern map_thing map_ov_gal_1;                                      /* in SDTABL
 extern map_thing map_tgl4_1;                                        /* in SDTABLES */
 extern map_thing map_tgl4_2;                                        /* in SDTABLES */
 extern map_thing map_2x6_2x3;                                       /* in SDTABLES */
+extern map_thing map_qtag_2x3;                                      /* in SDTABLES */
 extern map_thing map_dbloff1;                                       /* in SDTABLES */
 extern map_thing map_dbloff2;                                       /* in SDTABLES */
 extern map_thing map_trngl_box1;                                    /* in SDTABLES */
@@ -1899,7 +1908,8 @@ extern map_thing map_f2x8_2x8;                                      /* in SDTABL
 extern map_thing map_w4x4_2x8;                                      /* in SDTABLES */
 extern map_thing *maps_3diag[4];                                    /* in SDTABLES */
 extern map_thing *maps_3diagwk[4];                                  /* in SDTABLES */
-extern map_hunk *map_lists[][4];                                    /* in SDTABLES */
+extern mapcoder map_init_table[];                                   /* in SDTABLES */
+extern map_thing *split_lists[][6];                                 /* in SDTABLES */
 
 /*
 extern comment_block *comment_root;
@@ -2057,8 +2067,9 @@ extern void uims_debug_print(Cstring s);		/* Alan's code only */
 extern void initialize_restr_tables(void);
 extern restriction_thing *get_restriction_thing(setup_kind k, assumption_thing t);
 extern void clear_screen(void);
-extern void writestuff(Const char s[]);
 extern void newline(void);
+extern void writestuff(Const char s[]);
+extern void unparse_call_name(callspec_block *call, char *s, parse_block *pb);
 extern void doublespace_file(void);
 extern void exit_program(int code);
 extern void nonreturning fail(Const char s[]);
@@ -2160,12 +2171,24 @@ extern void move(
 
 /* In SDMISC */
 
+extern void initialize_map_tables(void);
+
+extern void new_divided_setup_move(
+   setup *ss,
+   uint32 map_encoding,
+   phantest_kind phancontrol,
+   long_boolean recompute_id,
+   setup *result);
+
 extern void divided_setup_move(
    setup *ss,
    Const map_thing *maps,
    phantest_kind phancontrol,
    long_boolean recompute_id,
    setup *result);
+
+extern void new_overlapped_setup_move(setup *ss, uint32 map_encoding,
+   int m1, int m2, int m3, setup *result);
 
 extern void overlapped_setup_move(setup *ss, Const map_thing *maps,
    int m1, int m2, int m3, setup *result);

@@ -21,7 +21,7 @@
    database format version. */
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 85
+#define DATABASE_FORMAT_VERSION 87
 
 
 
@@ -133,7 +133,7 @@ typedef enum {
    in the call data base. */
 /* BEWARE!!  This list must track the array "estab" in dbcomp.c . */
 /* BEWARE!!  This list must track the array "setup_attrs" in sdtables.c . */
-/* BEWARE!!  This list must track the array "map_lists" in sdtables.c . */
+/* BEWARE!!  This list must track the array "split_lists" in sdtables.c . */
 /* BEWARE!!  The procedure "merge_setups" canonicalizes pairs of setups by their
    order in this list, and will break if it is re-ordered randomly.  See the comments
    there before changing the order of existing setups. In general, keep small setups
@@ -168,6 +168,7 @@ typedef enum {
    s_hyperglass,
    s_crosswave,
    s2x4,
+   s2x5,
    s_rigger,
    s3x4,
    s2x6,
@@ -187,6 +188,9 @@ typedef enum {
    s_wingedstar,
    s_wingedstar12,
    s_wingedstar16,
+   s_barredstar,
+   s_barredstar12,
+   s_barredstar16,
    s_galaxy,
    s3x8,
    s4x6,
@@ -254,6 +258,8 @@ typedef enum {
    b_4x2,
    b_2x3,
    b_3x2,
+   b_2x5,
+   b_5x2,
    b_1x6,
    b_6x1,
    b_3x4,
@@ -393,6 +399,7 @@ typedef enum {
    cr_qtag_like,
    cr_nice_diamonds,
    cr_magic_only,
+   cr_miniwaves,
    cr_peelable_box,
    cr_ends_are_peelable,
    cr_siamese_in_quad,
@@ -434,7 +441,11 @@ typedef enum {
    schema_conc_star,
    schema_conc_star12,
    schema_conc_star16,
+   schema_conc_bar,
+   schema_conc_bar12,
+   schema_conc_bar16,
    schema_maybe_matrix_conc_star,
+   schema_maybe_matrix_conc_bar,
    schema_checkpoint,
    schema_rev_checkpoint,
    schema_ckpt_star,
@@ -494,6 +505,11 @@ typedef enum {
    dfm1_roll_transparent              --  seqdefine: any person who is marked roll-neutral after this call has his previous roll status restored
    dfm1_cpls_unless_single            --  seqdefine: the do this part as couples, unless this call is being done "single"
                                                                and "single_is_inherited" was set
+
+   DFM1_NUM_INSERT_MASK              --  if nonzero, shift that 3-bit number into the number fields
+   DFM1_NO_CHECK_MOD_LEVEL           --  don't check the level of a modifier like "interlocked" -- if the subcall
+                                             says it is only legal at C3, accept it anyway.
+
    INHERITFLAG_DIAMOND               --  concdefine/seqdefine: if original call said "diamond" apply it to this part
    INHERITFLAG_LEFT                  --  concdefine/seqdefine: if original call said "left" apply it to this part
    INHERITFLAG_FUNNY                 --  concdefine/seqdefine: if original call said "funny" apply it to this part
@@ -542,6 +558,10 @@ typedef enum {
 /* This is a 2 bit field -- NUM_SHIFT_BIT tells where its low bit lies. */
 #define DFM1_NUM_SHIFT_MASK               0x000C0000
 #define DFM1_NUM_SHIFT_BIT                0x00040000
+/* This is a 3 bit field -- NUM_INSERT_BIT tells where its low bit lies. */
+#define DFM1_NUM_INSERT_MASK              0x00700000
+#define DFM1_NUM_INSERT_BIT               0x00100000
+#define DFM1_NO_CHECK_MOD_LEVEL           0x00800000
 
 
 typedef enum {

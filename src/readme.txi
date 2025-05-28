@@ -413,5 +413,5 @@ was written by Alan Snyder.
 
 We received helpful feedback and testing from Robert French, Judy
 Anderson, Bill van Melle, Lois Lew, Ron Nicholson, Dave Decot,
-and Kristin Jensen.
+Kristin Jensen, Larry Dunn, and Nick Martellacci.
 @end ifset

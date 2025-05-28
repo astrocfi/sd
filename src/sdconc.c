@@ -62,10 +62,13 @@ Private char *conc_error_messages[] = {
    "Can't find inside triangles in this formation.",                   /* analyzer_6X2_TGL */
    "Can't find 12 matrix centers and ends in this formation.",         /* analyzer_STAR12 */
    "Can't find 16 matrix centers and ends in this formation.",         /* analyzer_STAR16 */
+   "Can't find centers and ends in this formation.",                   /* analyzer_BAR */
+   "Can't find 12 matrix centers and ends in this formation.",         /* analyzer_BAR12 */
+   "Can't find 16 matrix centers and ends in this formation.",         /* analyzer_BAR16 */
    "Can't do single concentric in this formation.",                    /* analyzer_SINGLE */
    "Can't do grand single concentric in this formation.",              /* analyzer_GRANDSINGLE */
-   "Can't find triple lines/columns/boxes in this formation.",         /* analyzer_TRIPLE_LINE */
-   "Can't find phantom lines/columns/boxes in this formation.",        /* analyzer_QUAD_LINE */
+   "Can't find triple lines/columns/boxes/diamonds in this formation.",/* analyzer_TRIPLE_LINE */
+   "Can't find phantom lines/columns/boxes/diamonds in this formation.",/* analyzer_QUAD_LINE */
    "Wrong formation.",                                                 /* analyzer_VERTICAL6 */
    "Wrong formation.",                                                 /* analyzer_LATERAL6 */
    "Wrong formation.",                                                 /* analyzer_INTLK_VERTICAL6 */
@@ -318,6 +321,16 @@ extern void normalize_concentric(
          fix_missing_centers(inners, outers, s_star, s1x4, center_arity);
       }
    }
+   else if (synthesizer == schema_conc_bar12) {
+      if (center_arity == 2) {
+         fix_missing_centers(inners, outers, s_star, s2x3, center_arity);
+      }
+   }
+   else if (synthesizer == schema_conc_bar16) {
+      if (center_arity == 3) {
+         fix_missing_centers(inners, outers, s_star, s2x3, center_arity);
+      }
+   }
    else if (synthesizer == schema_concentric_others) {
       if (center_arity == 2) {
          fix_missing_centers(inners, outers, s1x2, s2x2, center_arity);
@@ -352,6 +365,7 @@ extern void normalize_concentric(
 
       if (     table_synthesizer != schema_in_out_triple &&
                table_synthesizer != schema_in_out_quad &&
+               table_synthesizer != schema_concentric_6_2_tgl &&
                table_synthesizer != schema_intlk_vertical_6 &&
                table_synthesizer != schema_intlk_lateral_6) {
          /* Nonexistent center or ends have been taken care of.  Now figure out how to put
@@ -422,10 +436,17 @@ gotit:
    map_indices = lmap_ptr->maps;
 
    if (table_synthesizer != schema_concentric_others) {   /* ****** This test is a crock!!!!! */
-      if (((result->rotation+outer_elongation) & 2) && lmap_ptr->center_arity == 2) {
-         setup tt = inners[0];
-         inners[0] = inners[1];
-         inners[1] = tt;
+      if ((result->rotation+outer_elongation) & 2) {
+         if (lmap_ptr->center_arity == 2) {
+            setup tt = inners[0];
+            inners[0] = inners[1];
+            inners[1] = tt;
+         }
+         else if (lmap_ptr->center_arity == 3) {
+            setup tt = inners[0];
+            inners[0] = inners[2];
+            inners[2] = tt;
+         }
       }
    }
 
@@ -564,6 +585,12 @@ Private void concentrify(
          analyzer_index = analyzer_STAR12; break;
       case schema_conc_star16:
          analyzer_index = analyzer_STAR16; break;
+      case schema_conc_bar:
+         analyzer_index = analyzer_BAR; break;
+      case schema_conc_bar12:
+         analyzer_index = analyzer_BAR12; break;
+      case schema_conc_bar16:
+         analyzer_index = analyzer_BAR16; break;
       case schema_concentric_diamond_line:
          analyzer_index = analyzer_DIAMOND_LINE; break;
       case schema_concentric_6_2:
@@ -610,6 +637,7 @@ Private void concentrify(
       case schema_maybe_single_cross_concentric:
       case schema_maybe_4x2_concentric:
       case schema_maybe_matrix_conc_star:
+      case schema_maybe_matrix_conc_bar:
          fail("Can't figure out how to specialize concentric -- this shouldn't happen.");
       default:
          fail("Don't understand this concentricity type???.");
@@ -795,6 +823,9 @@ Private void concentrify(
             *xconc_elongation = -1;    /* Can't do this! */
             break;
       }
+   }
+   else if (analyzer == schema_in_out_triple || analyzer == schema_in_out_quad) {
+      *outer_elongation = (lmap_ptr->mapelong) & 1;  /* The map defines it completely. */
    }
    else if (analyzer == schema_concentric_6_2_tgl) {
       if (inners[0].kind == s_bone6)
@@ -1081,6 +1112,11 @@ extern void concentric_move(
             }
          }
 
+         if (modifiers1 & DFM1_NUM_INSERT_MASK) {
+            current_options.number_fields <<= 4;
+            current_options.number_fields += (modifiers1 & DFM1_NUM_INSERT_MASK) / DFM1_NUM_INSERT_BIT;
+         }
+
          current_options.number_fields >>= ((DFM1_NUM_SHIFT_MASK & modifiers1) / DFM1_NUM_SHIFT_BIT) * 4;
 
          if (recompute_id) update_id_bits(begin_ptr);
@@ -1132,6 +1168,11 @@ extern void concentric_move(
                         goto got_new_assumption;
                      }
                   }
+               }
+            }
+            else if ((analyzer == schema_concentric_2_6)) {
+               if (ss->kind == s_qtag && begin_ptr->kind == s_short6 && (doing_ends ^ crossing)) {
+                  goto got_new_assumption;    /* We want to preserve "assume diamond" stuff to the outer 6, so 6x2 acey deucey will work. */
                }
             }
             else if ((analyzer == schema_single_concentric) || (analyzer == schema_single_cross_concentric)) {
@@ -1353,6 +1394,18 @@ extern void concentric_move(
          result_outer.result_flags = 0;
          result_outer.rotation = 0;
       }
+      else if (  analyzer == schema_conc_bar ||
+                 analyzer == schema_conc_bar12 ||
+                 analyzer == schema_conc_bar16) {
+
+         /* This is what makes 12 matrix quarter the deucey work when everyone is
+            in the stars. */
+
+         result_outer.kind = s2x3;
+         clear_people(&result_outer);
+         result_outer.result_flags = 0;
+         result_outer.rotation = 1;
+      }
       else if (analyzer == schema_in_out_triple_squash) {
          result_outer.kind = s2x2;
          clear_people(&result_outer);
@@ -1556,7 +1609,10 @@ extern void concentric_move(
       /* This is ALWAYS vertically oriented.  In any case, we can't do any of the other calculations,
          because the centers and ends have been reversed. */
       final_elongation = 1;
-   else if (analyzer == schema_in_out_triple || analyzer == schema_in_out_quad) {
+   else if (   analyzer == schema_in_out_triple ||
+               analyzer == schema_in_out_quad ||
+               analyzer == schema_conc_bar12 ||
+               analyzer == schema_conc_bar16) {
          ;        /* Take no action. */
    }
    else {
@@ -1758,6 +1814,7 @@ static concmerge_thing map_spnspn = {schema_concentric,     sdmd,        s2x2,  
 static concmerge_thing map_24qtv  = {schema_concentric,     s1x4,        s2x2,     0, 0, {0, 2, 4, 6},               {0, 3, 4, 7}};
 static concmerge_thing map_1x6t1x4= {schema_concentric,     s1x6,        s1x2,     0, 0, {0, 1, 2, 3, 4, 5},         {0, 2}};
 static concmerge_thing map_3d23   = {schema_concentric,     s2x3,        s2x3,     0, 0, {0, 1, 2, 3, 4, 5},         {0, 1, 2, 6, 7, 8}};
+static concmerge_thing map_22_4dm = {schema_nothing,        s4x4,        nothing,  0, 0, {15, 3, 7, 11},             {0}};
 static concmerge_thing map_tgl4l  = {schema_nothing,        s1x4,        nothing,  0, 0, {2, 3, 0, 1},               {0}};
 static concmerge_thing map_tgl4b  = {schema_nothing,        s2x2,        nothing,  0, 0, {0, 1, 2, 3},               {0}};
 static concmerge_thing map_1418a  = {schema_nothing,        s1x8,        nothing,  0, 0, {3, 2, 7, 6},               {0}};
@@ -2116,17 +2173,35 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
       the_map = &map_2218q;
       goto merge_concentric;
    }
-   else if (res2->kind == s3x4 && res1->kind == s2x2 && ((mask2 & 06666) == 0)) {
-      clear_person(res2, 12);     /* Put them in the corners of a butterfly. */
+   else if (res2->kind == s4dmd && res1->kind == s2x2 && ((mask2 & 0xF0F0) == 0)) {
+      swap_people(res2, 0, 12);   /* Put them in the corners of a butterfly. */
+      swap_people(res2, 1, 13);
+      swap_people(res2, 2, 14);
+      swap_people(res2, 0, 3);
+      swap_people(res2, 8, 4);
+      swap_people(res2, 9, 5);
+      swap_people(res2, 10, 6);
+      swap_people(res2, 8, 11);
+      the_map = &map_22_4dm;
+      r = 0;       /* It will get canonicalized. */
+      rot = 0;
+      goto merge_concentric;
+   }
+   else if (res2->kind == s3x4 && res1->kind == s2x2 && ((mask2 & 06060) == 0)) {
+      clear_person(res2, 12);
       clear_person(res2, 13);
       clear_person(res2, 14);
       clear_person(res2, 15);
       swap_people(res2, 0, 3);
       swap_people(res2, 3, 12);
+      swap_people(res2, 1, 13);
+      swap_people(res2, 2, 14);
       swap_people(res2, 4, 6);
       swap_people(res2, 8, 9);
+      swap_people(res2, 5, 7);
+      swap_people(res2, 6, 9);
       the_map = &map_2234b;
-      warn(warn__check_butterfly);
+      warn((mask2 & 06666) ? warn__check_4x4 : warn__check_butterfly);
       r = 0;       /* It will get canonicalized. */
       rot = 0;
       goto merge_concentric;
@@ -2661,12 +2736,10 @@ typedef struct fixerjunk {
    Const struct fixerjunk *nextdmdrot;
    Const struct fixerjunk *next2x2;
    Const struct fixerjunk *next2x2v;
-   Const veryshort nonrot[4][6];
-   Const veryshort yesrot[4][4];
+   Const veryshort nonrot[24];
 } fixer;
 
 
-static Const fixer foocc;
 static Const fixer f1x8aa;
 static Const fixer f1x8ctr;
 static Const fixer foozz;
@@ -2709,156 +2782,158 @@ static Const fixer d4x4d4;
 
 
 
-/*                              ink   outk       rot  el numsetup 1x2         1x2rot      1x4    1x4rot dmd         dmdrot 2x2      2x2v             nonrot            yesrot  */
+/*                              ink   outk       rot  el numsetup 1x2         1x2rot      1x4    1x4rot dmd         dmdrot 2x2      2x2v             nonrot  */
 
-static Const fixer foo33     = {s1x2, s2x4,        0, 0, 2,       &foo33,     0,          0,          0, 0,          0,    0,          0,          {{0, 1}, {5, 4}},   {{7, 6}, {2, 3}}};
-static Const fixer foocc     = {s1x2, s2x4,        0, 0, 2,       &foocc,     0,          0,          0, 0,          0,    0,          0,          {{2, 3}, {7, 6}},   {{0, 1}, {5, 4}}};
-static Const fixer f1x8aa    = {s1x2, s1x8,        0, 0, 2,       &f1x8aa,    &foozz,     0,          0, 0,          0,    0,          0,          {{1, 3}, {7, 5}},   {{-1}}};
-static Const fixer foozz     = {s1x2, s_ptpd,      1, 0, 2,       &foozz,     &f1x8aa,    0,          0, 0,          0,    0,          0,          {{1, 3}, {7, 5}},   {{-1}}};
-static Const fixer foozzd    = {s2x2, s_ptpd,      0, 1, 1,       0,          0,          &f1x8aad,   0, 0,          0,    &foozzd,    &fqtgend,   {{1, 7, 5, 3}},     {{-1}}};
-static Const fixer f3x4left  = {s1x2, s3x4,        0, 0, 2,       &f3x4left,  &f3x4rzz,   0,          0, 0,          0,    0,          0,          {{0, 1}, {7, 6}},   {{-1}}};
-static Const fixer f3x4right = {s1x2, s3x4,        0, 0, 0x100+2, &f3x4right, &f3x4lzz,   0,          0, 0,          0,    0,          0,          {{2, 3}, {9, 8}},   {{-1}}};
-static Const fixer f3x4lzz   = {s1x2, s2x6,        0, 0, 2,       &f3x4lzz,   &f3x4right, 0,          0, 0,          0,    0,          0,          {{0, 1}, {7, 6}},   {{-1}}};
-static Const fixer f3x4rzz   = {s1x2, s2x6,        0, 0, 0x100+2, &f3x4rzz,   &f3x4left,  0,          0, 0,          0,    0,          0,          {{4, 5}, {11, 10}}, {{-1}}};
-static Const fixer f3x1zzd   = {sdmd, s3x1dmd,     0, 0, 1,       0,          0,          0,          0, &f3x1zzd,   0,    0,          0,          {{0, 3, 4, 7}},     {{-1}}};
-static Const fixer f1x3zzd   = {sdmd, s1x3dmd,     0, 0, 1,       0,          0,          &f1x8ctr,   0, &f1x3zzd,   0,    0,          0,          {{0, 3, 4, 7}},     {{-1}}};
-static Const fixer f3x1yyd   = {sdmd, s3x1dmd,     0, 0, 1,       0,          0,          &f1x8aad,   0, &f3x1yyd,   0,    0,          0,          {{1, 3, 5, 7}},     {{-1}}};
-static Const fixer f1x3yyd   = {sdmd, s1x3dmd,     0, 0, 1,       0,          0,          &f1x8ctr,   0, &f1x3yyd,   0,    0,          0,          {{1, 3, 5, 7}},     {{-1}}};
-static Const fixer f1x8aad   = {s1x4, s1x8,        0, 0, 1,       0,          0,          &f1x8aad,   0, &f3x1zzd,   0,    &foozzd,    &foozzd,    {{1, 3, 5, 7}},     {{-1}}};
-static Const fixer fxwv1d    = {sdmd, s_crosswave, 0, 0, 1,       0,          0,          0,          0, &fxwv1d,    0,    0,          0,          {{0, 2, 4, 6}},     {{-1}}};
-static Const fixer fxwv2d    = {sdmd, s_crosswave, 0, 0, 1,       0,          0,          0,          0, &fxwv2d,    0,    0,          0,          {{0, 3, 4, 7}},     {{-1}}};
-static Const fixer fxwv3d    = {sdmd, s_crosswave, 1, 0, 1,       0,          0,          0,          0, &fxwv3d,    0,    0,          0,          {{2, 5, 6, 1}},     {{-1}}};
+static Const fixer foo33a    = {s1x2, s2x4,        0, 0, 2,       0,          0,          0,          0, 0,          0,    0,          0,          {5, 4, 0, 1}};
+static Const fixer foocc     = {s1x2, s2x4,        0, 0, 2,       &foocc,     &foo33a,    0,          0, 0,          0,    0,          0,          {2, 3, 7, 6}};
+static Const fixer foo33     = {s1x2, s2x4,        0, 0, 2,       &foo33,     &foocc,     0,          0, 0,          0,    0,          0,          {0, 1, 5, 4}};
+static Const fixer f1x8aa    = {s1x2, s1x8,        0, 0, 2,       &f1x8aa,    &foozz,     0,          0, 0,          0,    0,          0,          {1, 3, 7, 5}};
+static Const fixer foozz     = {s1x2, s_ptpd,      1, 0, 2,       &foozz,     &f1x8aa,    0,          0, 0,          0,    0,          0,          {1, 3, 7, 5}};
+static Const fixer foozzd    = {s2x2, s_ptpd,      0, 1, 1,       0,          0,          &f1x8aad,   0, 0,          0,    &foozzd,    &fqtgend,   {1, 7, 5, 3}};
+static Const fixer f3x4left  = {s1x2, s3x4,        0, 0, 2,       &f3x4left,  &f3x4rzz,   0,          0, 0,          0,    0,          0,          {0, 1, 7, 6}};
+static Const fixer f3x4right = {s1x2, s3x4,        0, 0, 0x100+2, &f3x4right, &f3x4lzz,   0,          0, 0,          0,    0,          0,          {2, 3, 9, 8}};
+static Const fixer f3x4lzz   = {s1x2, s2x6,        0, 0, 2,       &f3x4lzz,   &f3x4right, 0,          0, 0,          0,    0,          0,          {0, 1, 7, 6}};
+static Const fixer f3x4rzz   = {s1x2, s2x6,        0, 0, 0x100+2, &f3x4rzz,   &f3x4left,  0,          0, 0,          0,    0,          0,          {4, 5, 11, 10}};
+static Const fixer f3x1zzd   = {sdmd, s3x1dmd,     0, 0, 1,       0,          0,          0,          0, &f3x1zzd,   0,    0,          0,          {0, 3, 4, 7}};
+static Const fixer f1x3zzd   = {sdmd, s1x3dmd,     0, 0, 1,       0,          0,          &f1x8ctr,   0, &f1x3zzd,   0,    0,          0,          {0, 3, 4, 7}};
+static Const fixer f3x1yyd   = {sdmd, s3x1dmd,     0, 0, 1,       0,          0,          &f1x8aad,   0, &f3x1yyd,   0,    0,          0,          {1, 3, 5, 7}};
+static Const fixer f1x3yyd   = {sdmd, s1x3dmd,     0, 0, 1,       0,          0,          &f1x8ctr,   0, &f1x3yyd,   0,    0,          0,          {1, 3, 5, 7}};
+static Const fixer f1x8aad   = {s1x4, s1x8,        0, 0, 1,       0,          0,          &f1x8aad,   0, &f3x1zzd,   0,    &foozzd,    &foozzd,    {1, 3, 5, 7}};
+static Const fixer fxwv1d    = {sdmd, s_crosswave, 0, 0, 1,       0,          0,          0,          0, &fxwv1d,    0,    0,          0,          {0, 2, 4, 6}};
+static Const fixer fxwv2d    = {sdmd, s_crosswave, 0, 0, 1,       0,          0,          0,          0, &fxwv2d,    0,    0,          0,          {0, 3, 4, 7}};
+static Const fixer fxwv3d    = {sdmd, s_crosswave, 1, 0, 1,       0,          0,          0,          0, &fxwv3d,    0,    0,          0,          {2, 5, 6, 1}};
 
-static Const fixer fqtgj1    = {s1x2, s_qtag,      1, 0, 2,       &fqtgj1,    0,          0,          0, 0,          0,    0,          0,          {{1, 3}, {7, 5}},   {{-1}}};
-static Const fixer fqtgj2    = {s1x2, s_qtag,      1, 0, 2,       &fqtgj2,    0,          0,          0, 0,          0,    0,          0,          {{0, 7}, {3, 4}},   {{-1}}};
-static Const fixer fqtgjj1   = {s2x2, s_qtag,      0, 0, 1,       0,          0,          0,          0, 0,          0,    &fqtgjj1,   &fqtgjj1,   {{7, 1, 3, 5}},   {{-1}}};
-static Const fixer fqtgjj2   = {s2x2, s_qtag,      0, 0, 1,       0,          0,          0,          0, 0,          0,    &fqtgjj2,   &fqtgjj2,   {{0, 3, 4, 7}},   {{-1}}};
-static Const fixer fgalcv    = {s1x2, s_galaxy,    1, 0, 1,       &fgalcv,    &fgalch,    0,          0, 0,          0,    0,          0,          {{2, 6}},           {{-1}}};
-static Const fixer fgalch    = {s1x2, s_galaxy,    0, 0, 1,       &fgalch,    &fgalcv,    0,          0, 0,          0,    0,          0,          {{0, 4}},           {{-1}}};
-static Const fixer fspindlc  = {s1x2, s_spindle,   1, 0, 2,       &fspindlc,  &f1x3aad,   0,          0, 0,          0,    0,          0,          {{0, 6}, {2, 4}},   {{-1}}};
-static Const fixer fspindlf  = {s1x2, s_spindle,   0, 0, 2,       &fspindlf,  0,          0,          0, 0,          0,    0,          0,          {{1, 2}, {6, 5}},   {{-1}}};
-static Const fixer fspindlg  = {s1x2, s_spindle,   0, 0, 2,       &fspindlg,  0,          0,          0, 0,          0,    0,          0,          {{0, 1}, {5, 4}},   {{-1}}};
-static Const fixer fspindlfd = {s2x2, s_spindle,   0, 0, 1,       0,          0,          0,          0, 0,          0,    &fspindlfd, 0,          {{1, 2, 5, 6}},     {{-1}}};
-static Const fixer fspindlgd = {s2x2, s_spindle,   0, 0, 1,       0,          0,          0,          0, 0,          0,    &fspindlgd, 0,          {{0, 1, 4, 5}},     {{-1}}};
-static Const fixer f1x3aad   = {s1x2, s1x3dmd,     0, 0, 2,       &f1x3aad,   &fspindlc,  0,          0, 0,          0,    0,          0,          {{1, 2}, {6, 5}},   {{-1}}};
-static Const fixer f2x3c     = {s1x2, s2x3,        1, 0, 2,       &f2x3c,     &f1x2aad,   0,          0, 0,          0,    0,          0,          {{0, 5}, {2, 3}},   {{-1}}};
+static Const fixer fqtgj1    = {s1x2, s_qtag,      1, 0, 2,       &fqtgj1,    0,          0,          0, 0,          0,    0,          0,          {1, 3, 7, 5}};
+static Const fixer fqtgj2    = {s1x2, s_qtag,      1, 0, 2,       &fqtgj2,    0,          0,          0, 0,          0,    0,          0,          {0, 7, 3, 4}};
+static Const fixer fqtgjj1   = {s2x2, s_qtag,      0, 0, 1,       0,          0,          0,          0, 0,          0,    &fqtgjj1,   &fqtgjj1,   {7, 1, 3, 5}};
+static Const fixer fqtgjj2   = {s2x2, s_qtag,      0, 0, 1,       0,          0,          0,          0, 0,          0,    &fqtgjj2,   &fqtgjj2,   {0, 3, 4, 7}};
+static Const fixer fgalcv    = {s1x2, s_galaxy,    1, 0, 1,       &fgalcv,    &fgalch,    0,          0, 0,          0,    0,          0,          {2, 6}};
+static Const fixer fgalch    = {s1x2, s_galaxy,    0, 0, 1,       &fgalch,    &fgalcv,    0,          0, 0,          0,    0,          0,          {0, 4}};
+static Const fixer fspindlc  = {s1x2, s_spindle,   1, 0, 2,       &fspindlc,  &f1x3aad,   0,          0, 0,          0,    0,          0,          {0, 6, 2, 4}};
+static Const fixer fspindlf  = {s1x2, s_spindle,   0, 0, 2,       &fspindlf,  0,          0,          0, 0,          0,    0,          0,          {1, 2, 6, 5}};
+static Const fixer fspindlg  = {s1x2, s_spindle,   0, 0, 2,       &fspindlg,  0,          0,          0, 0,          0,    0,          0,          {0, 1, 5, 4}};
+static Const fixer fspindlfd = {s2x2, s_spindle,   0, 0, 1,       0,          0,          0,          0, 0,          0,    &fspindlfd, 0,          {1, 2, 5, 6}};
+static Const fixer fspindlgd = {s2x2, s_spindle,   0, 0, 1,       0,          0,          0,          0, 0,          0,    &fspindlgd, 0,          {0, 1, 4, 5}};
+static Const fixer f1x3aad   = {s1x2, s1x3dmd,     0, 0, 2,       &f1x3aad,   &fspindlc,  0,          0, 0,          0,    0,          0,          {1, 2, 6, 5}};
+static Const fixer f2x3c     = {s1x2, s2x3,        1, 0, 2,       &f2x3c,     &f1x2aad,   0,          0, 0,          0,    0,          0,          {0, 5, 2, 3}};
 
-static Const fixer box3c     = {s1x2, s2x2,        0, 0, 1,       &box3c,     0,          0,          0, 0,          0,    0,          0,          {{0, 1}},   {{-1}}};
-static Const fixer box6c     = {s1x2, s2x2,        1, 0, 1,       &box6c,     0,          0,          0, 0,          0,    0,          0,          {{1, 2}},   {{-1}}};
-static Const fixer box9c     = {s1x2, s2x2,        1, 0, 1,       &box9c,     0,          0,          0, 0,          0,    0,          0,          {{0, 3}},   {{-1}}};
-static Const fixer boxcc     = {s1x2, s2x2,        0, 0, 1,       &boxcc,     0,          0,          0, 0,          0,    0,          0,          {{3, 2}},   {{-1}}};
+static Const fixer box3c     = {s1x2, s2x2,        0, 0, 1,       &box3c,     0,          0,          0, 0,          0,    0,          0,          {0, 1}};
+static Const fixer box6c     = {s1x2, s2x2,        1, 0, 1,       &box6c,     0,          0,          0, 0,          0,    0,          0,          {1, 2}};
+static Const fixer box9c     = {s1x2, s2x2,        1, 0, 1,       &box9c,     0,          0,          0, 0,          0,    0,          0,          {0, 3}};
+static Const fixer boxcc     = {s1x2, s2x2,        0, 0, 1,       &boxcc,     0,          0,          0, 0,          0,    0,          0,          {3, 2}};
 
-static Const fixer f1x2aad   = {s1x2, s_1x2dmd,    0, 0, 2,       &f1x2aad,   &f2x3c,     0,          0, 0,          0,    0,          0,          {{0, 1}, {4, 3}},   {{-1}}};
-static Const fixer f1x3bbd   = {s1x4, s1x3dmd,     0, 0, 1,       0,          0,          &f1x3bbd,   0, 0,          0,    &fspindld,  &fspindld,  {{1, 2, 5, 6}},     {{-1}}};
-static Const fixer fhrglassd = {s2x2, s_hrglass,   0, 2, 1,       0,          0,          0,          0, 0,          0,    0,          0,          {{0, 1, 4, 5}},     {{-1}}};
-static Const fixer fspindld  = {s2x2, s_spindle,   0, 1, 1,       0,          0,          &f1x3bbd,   0, 0,          0,    &fspindld,  &fhrglassd, {{0, 2, 4, 6}},     {{-1}}};
-static Const fixer fptpzzd   = {s1x4, s_ptpd,      0, 0, 1,       0,          0,          &fptpzzd,   0, &fspindlbd, 0,    0,          0,          {{0, 2, 4, 6}},     {{-1}}};
-static Const fixer fspindlbd = {sdmd, s_spindle,   0, 0, 1,       0,          0,          &fptpzzd,   0, &fspindlbd, 0,    0,          0,          {{7, 1, 3, 5}},     {{-1}}};
-static Const fixer d2x4b1    = {s2x2, s4x4,        0, 0, 1,       0,          0,          0,          0, 0,          0,    0,          0,          {{13, 7, 5, 15}},   {{-1}}};
-static Const fixer d2x4b2    = {s2x2, s4x4,        0, 0, 1,       0,          0,          0,          0, 0,          0,    0,          0,          {{11, 14, 3, 6}},   {{-1}}};
-static Const fixer d2x4w1    = {s1x4, s2x4,        0, 0, 1,       0,          0,          &d2x4w1,    0, 0,          0,    &d2x4b1,    &d2x4b1,    {{0, 1, 4, 5}},     {{-1}}};
-static Const fixer d2x4w2    = {s1x4, s2x4,        0, 0, 1,       0,          0,          &d2x4w2,    0, 0,          0,    &d2x4b2,    &d2x4b2,    {{7, 6, 3, 2}},     {{-1}}};
-static Const fixer d2x4d1    = {sdmd, s2x4,        0, 0, 1,       0,          0,          &d2x4x1,    0, &d2x4d1,    0,    &d2x4c1,    &d2x4c1,    {{7, 1, 3, 5}},     {{-1}}};
-static Const fixer d2x4d2    = {sdmd, s2x4,        0, 0, 1,       0,          0,          &d2x4x2,    0, &d2x4d2,    0,    &d2x4c2,    &d2x4c2,    {{0, 2, 4, 6}},     {{-1}}};
-static Const fixer d2x4c1    = {s2x2, s2x4,        0, 0, 1,       0,          0,          &d2x4x1,    0, &d2x4d1,    0,    &d2x4c1,    &d2x4c1,    {{1, 3, 5, 7}},     {{-1}}};
-static Const fixer d2x4c2    = {s2x2, s2x4,        0, 0, 1,       0,          0,          &d2x4x2,    0, &d2x4d2,    0,    &d2x4c2,    &d2x4c2,    {{0, 2, 4, 6}},     {{-1}}};
-static Const fixer d2x4z1    = {s2x2, s4x4,        0, 0, 1,       0,          0,          0,          0, 0,          0,    0,          0,          {{9, 11, 1, 3}},    {{-1}}};
-static Const fixer d2x4z2    = {s2x2, s4x4,        0, 0, 1,       0,          0,          0,          0, 0,          0,    0,          0,          {{10, 15, 2, 7}},   {{-1}}};
-static Const fixer d2x4y1    = {s2x2, s2x4,        0, 0, 1,       0,          0,          &d2x4w1,    &d2x4z1, 0,    0,    &d2x4y1,    &d2x4y1,    {{0, 1, 4, 5}},     {{-1}}};
-static Const fixer d2x4y2    = {s2x2, s2x4,        0, 0, 1,       0,          0,          &d2x4w2,    &d2x4z2, 0,    0,    &d2x4y2,    &d2x4y2,    {{2, 3, 6, 7}},     {{-1}}};
-static Const fixer d2x4x1    = {s1x4, s2x4,        0, 0, 1,       0,          0,          &d2x4x1,    0, &d2x4d1,    0,    &d2x4c1,    &d2x4c1,    {{7, 1, 3, 5}},     {{-1}}};
-static Const fixer d2x4x2    = {s1x4, s2x4,        0, 0, 1,       0,          0,          &d2x4x2,    0, &d2x4d2,    0,    &d2x4c2,    &d2x4c2,    {{0, 6, 4, 2}},     {{-1}}};
-static Const fixer dgalw1    = {s1x4, s_galaxy,    1, 0, 1,       0,          0,          &dgalw1,    0, &dgald1,    0,    0,          0,          {{2, 1, 6, 5}},     {{-1}}};
-static Const fixer dgalw2    = {s1x4, s_galaxy,    1, 0, 1,       0,          0,          &dgalw2,    0, &dgald2,    0,    0,          0,          {{2, 3, 6, 7}},     {{-1}}};
-static Const fixer dgalw3    = {s1x4, s_galaxy,    0, 0, 1,       0,          0,          &dgalw3,    0, &dgald3,    0,    0,          0,          {{0, 1, 4, 5}},     {{-1}}};
-static Const fixer dgalw4    = {s1x4, s_galaxy,    0, 0, 1,       0,          0,          &dgalw4,    0, &dgald4,    0,    0,          0,          {{0, 7, 4, 3}},     {{-1}}};
-static Const fixer dgald1    = {sdmd, s_galaxy,    1, 0, 1,       0,          0,          &dgalw1,    0, &dgald1,    0,    0,          0,          {{2, 5, 6, 1}},     {{-1}}};
-static Const fixer dgald2    = {sdmd, s_galaxy,    1, 0, 1,       0,          0,          &dgalw2,    0, &dgald2,    0,    0,          0,          {{2, 3, 6, 7}},     {{-1}}};
-static Const fixer dgald3    = {sdmd, s_galaxy,    0, 0, 1,       0,          0,          &dgalw3,    0, &dgald3,    0,    0,          0,          {{0, 1, 4, 5}},     {{-1}}};
-static Const fixer dgald4    = {sdmd, s_galaxy,    0, 0, 1,       0,          0,          &dgalw4,    0, &dgald4,    0,    0,          0,          {{0, 3, 4, 7}},     {{-1}}};
-static Const fixer distbone1 = {s1x4, s_bone,      0, 0, 1,       0,          0,          &distbone1, 0, 0,          0,    0,          0,          {{0, 6, 4, 2}},     {{-1}}};
-static Const fixer distbone2 = {s1x4, s_bone,      0, 0, 1,       0,          0,          &distbone2, 0, 0,          0,    0,          0,          {{0, 7, 4, 3}},     {{-1}}};
-static Const fixer distbone5 = {s1x4, s_bone,      0, 0, 1,       0,          0,          &distbone5, 0, 0,          0,    0,          0,          {{5, 6, 1, 2}},     {{-1}}};
-static Const fixer distbone6 = {s1x4, s_bone,      0, 0, 1,       0,          0,          &distbone6, 0, 0,          0,    0,          0,          {{5, 7, 1, 3}},     {{-1}}};
-static Const fixer distrig3  = {sdmd, s_rigger,    0, 0, 1,       0,          0,          &distrig1,  0, &distrig3,  0,    0,          0,          {{7, 0, 3, 4}},     {{-1}}};
-static Const fixer distrig1  = {s1x4, s_rigger,    0, 0, 1,       0,          0,          &distrig1,  0, &distrig3,  0,    0,          0,          {{7, 0, 3, 4}},     {{-1}}};
-static Const fixer distrig4  = {sdmd, s_rigger,    0, 0, 1,       0,          0,          &distrig2,  0, &distrig4,  0,    0,          0,          {{6, 1, 2, 5}},     {{-1}}};
-static Const fixer distrig2  = {s1x4, s_rigger,    0, 0, 1,       0,          0,          &distrig2,  0, &distrig4,  0,    0,          0,          {{6, 5, 2, 1}},     {{-1}}};
-static Const fixer distrig7  = {sdmd, s_rigger,    0, 0, 1,       0,          0,          &distrig5,  0, &distrig7,  0,    0,          0,          {{6, 0, 2, 4}},     {{-1}}};
-static Const fixer distrig5  = {s1x4, s_rigger,    0, 0, 1,       0,          0,          &distrig5,  0, &distrig7,  0,    0,          0,          {{6, 0, 2, 4}},     {{-1}}};
-static Const fixer distrig8  = {sdmd, s_rigger,    0, 0, 1,       0,          0,          &distrig6,  0, &distrig8,  0,    0,          0,          {{7, 1, 3, 5}},     {{-1}}};
-static Const fixer distrig6  = {s1x4, s_rigger,    0, 0, 1,       0,          0,          &distrig6,  0, &distrig8,  0,    0,          0,          {{7, 5, 3, 1}},     {{-1}}};
-static Const fixer disthrg1  = {s1x4, s_hrglass,   1, 0, 1,       0,          0,          &disthrg1,  0, 0,          0,    0,          0,          {{1, 3, 5, 7}},     {{-1}}};
-static Const fixer disthrg2  = {s1x4, s_hrglass,   1, 0, 1,       0,          0,          &disthrg2,  0, 0,          0,    0,          0,          {{0, 3, 4, 7}},     {{-1}}};
+static Const fixer f1x2aad   = {s1x2, s_1x2dmd,    0, 0, 2,       &f1x2aad,   &f2x3c,     0,          0, 0,          0,    0,          0,          {0, 1, 4, 3}};
+static Const fixer f1x3bbd   = {s1x4, s1x3dmd,     0, 0, 1,       0,          0,          &f1x3bbd,   0, 0,          0,    &fspindld,  &fspindld,  {1, 2, 5, 6}};
+static Const fixer fhrglassd = {s2x2, s_hrglass,   0, 2, 1,       0,          0,          0,          0, 0,          0,    0,          0,          {0, 1, 4, 5}};
+static Const fixer fspindld  = {s2x2, s_spindle,   0, 1, 1,       0,          0,          &f1x3bbd,   0, 0,          0,    &fspindld,  &fhrglassd, {0, 2, 4, 6}};
+static Const fixer fptpzzd   = {s1x4, s_ptpd,      0, 0, 1,       0,          0,          &fptpzzd,   0, &fspindlbd, 0,    0,          0,          {0, 2, 4, 6}};
+static Const fixer fspindlbd = {sdmd, s_spindle,   0, 0, 1,       0,          0,          &fptpzzd,   0, &fspindlbd, 0,    0,          0,          {7, 1, 3, 5}};
+static Const fixer d2x4b1    = {s2x2, s4x4,        0, 0, 1,       0,          0,          0,          0, 0,          0,    0,          0,          {13, 7, 5, 15}};
+static Const fixer d2x4b2    = {s2x2, s4x4,        0, 0, 1,       0,          0,          0,          0, 0,          0,    0,          0,          {11, 14, 3, 6}};
+static Const fixer d2x4w1    = {s1x4, s2x4,        0, 0, 1,       0,          0,          &d2x4w1,    0, 0,          0,    &d2x4b1,    &d2x4b1,    {0, 1, 4, 5}};
+static Const fixer d2x4w2    = {s1x4, s2x4,        0, 0, 1,       0,          0,          &d2x4w2,    0, 0,          0,    &d2x4b2,    &d2x4b2,    {7, 6, 3, 2}};
+static Const fixer d2x4d1    = {sdmd, s2x4,        0, 0, 1,       0,          0,          &d2x4x1,    0, &d2x4d1,    0,    &d2x4c1,    &d2x4c1,    {7, 1, 3, 5}};
+static Const fixer d2x4d2    = {sdmd, s2x4,        0, 0, 1,       0,          0,          &d2x4x2,    0, &d2x4d2,    0,    &d2x4c2,    &d2x4c2,    {0, 2, 4, 6}};
+static Const fixer d2x4c1    = {s2x2, s2x4,        0, 0, 1,       0,          0,          &d2x4x1,    0, &d2x4d1,    0,    &d2x4c1,    &d2x4c1,    {1, 3, 5, 7}};
+static Const fixer d2x4c2    = {s2x2, s2x4,        0, 0, 1,       0,          0,          &d2x4x2,    0, &d2x4d2,    0,    &d2x4c2,    &d2x4c2,    {0, 2, 4, 6}};
+static Const fixer d2x4z1    = {s2x2, s4x4,        0, 0, 1,       0,          0,          0,          0, 0,          0,    0,          0,          {9, 11, 1, 3}};
+static Const fixer d2x4z2    = {s2x2, s4x4,        0, 0, 1,       0,          0,          0,          0, 0,          0,    0,          0,          {10, 15, 2, 7}};
+static Const fixer d2x4y1    = {s2x2, s2x4,        0, 0, 1,       0,          0,          &d2x4w1,    &d2x4z1, 0,    0,    &d2x4y1,    &d2x4y1,    {0, 1, 4, 5}};
+static Const fixer d2x4y2    = {s2x2, s2x4,        0, 0, 1,       0,          0,          &d2x4w2,    &d2x4z2, 0,    0,    &d2x4y2,    &d2x4y2,    {2, 3, 6, 7}};
+static Const fixer d2x4x1    = {s1x4, s2x4,        0, 0, 1,       0,          0,          &d2x4x1,    0, &d2x4d1,    0,    &d2x4c1,    &d2x4c1,    {7, 1, 3, 5}};
+static Const fixer d2x4x2    = {s1x4, s2x4,        0, 0, 1,       0,          0,          &d2x4x2,    0, &d2x4d2,    0,    &d2x4c2,    &d2x4c2,    {0, 6, 4, 2}};
+static Const fixer dgalw1    = {s1x4, s_galaxy,    1, 0, 1,       0,          0,          &dgalw1,    0, &dgald1,    0,    0,          0,          {2, 1, 6, 5}};
+static Const fixer dgalw2    = {s1x4, s_galaxy,    1, 0, 1,       0,          0,          &dgalw2,    0, &dgald2,    0,    0,          0,          {2, 3, 6, 7}};
+static Const fixer dgalw3    = {s1x4, s_galaxy,    0, 0, 1,       0,          0,          &dgalw3,    0, &dgald3,    0,    0,          0,          {0, 1, 4, 5}};
+static Const fixer dgalw4    = {s1x4, s_galaxy,    0, 0, 1,       0,          0,          &dgalw4,    0, &dgald4,    0,    0,          0,          {0, 7, 4, 3}};
+static Const fixer dgald1    = {sdmd, s_galaxy,    1, 0, 1,       0,          0,          &dgalw1,    0, &dgald1,    0,    0,          0,          {2, 5, 6, 1}};
+static Const fixer dgald2    = {sdmd, s_galaxy,    1, 0, 1,       0,          0,          &dgalw2,    0, &dgald2,    0,    0,          0,          {2, 3, 6, 7}};
+static Const fixer dgald3    = {sdmd, s_galaxy,    0, 0, 1,       0,          0,          &dgalw3,    0, &dgald3,    0,    0,          0,          {0, 1, 4, 5}};
+static Const fixer dgald4    = {sdmd, s_galaxy,    0, 0, 1,       0,          0,          &dgalw4,    0, &dgald4,    0,    0,          0,          {0, 3, 4, 7}};
+static Const fixer ddmd1     = {sdmd, s_qtag,      0, 0, 1,       0,          0,          0,          0, &ddmd1,     0,    0,          0,          {6, 1, 2, 5}};
+static Const fixer ddmd2     = {sdmd, s_qtag,      0, 0, 1,       0,          0,          0,          0, &ddmd2,     0,    0,          0,          {6, 0, 2, 4}};
+static Const fixer distbone1 = {s1x4, s_bone,      0, 0, 1,       0,          0,          &distbone1, 0, 0,          0,    0,          0,          {0, 6, 4, 2}};
+static Const fixer distbone2 = {s1x4, s_bone,      0, 0, 1,       0,          0,          &distbone2, 0, 0,          0,    0,          0,          {0, 7, 4, 3}};
+static Const fixer distbone5 = {s1x4, s_bone,      0, 0, 1,       0,          0,          &distbone5, 0, 0,          0,    0,          0,          {5, 6, 1, 2}};
+static Const fixer distbone6 = {s1x4, s_bone,      0, 0, 1,       0,          0,          &distbone6, 0, 0,          0,    0,          0,          {5, 7, 1, 3}};
+static Const fixer distrig3  = {sdmd, s_rigger,    0, 0, 1,       0,          0,          &distrig1,  0, &distrig3,  0,    0,          0,          {7, 0, 3, 4}};
+static Const fixer distrig1  = {s1x4, s_rigger,    0, 0, 1,       0,          0,          &distrig1,  0, &distrig3,  0,    0,          0,          {7, 0, 3, 4}};
+static Const fixer distrig4  = {sdmd, s_rigger,    0, 0, 1,       0,          0,          &distrig2,  0, &distrig4,  0,    0,          0,          {6, 1, 2, 5}};
+static Const fixer distrig2  = {s1x4, s_rigger,    0, 0, 1,       0,          0,          &distrig2,  0, &distrig4,  0,    0,          0,          {6, 5, 2, 1}};
+static Const fixer distrig7  = {sdmd, s_rigger,    0, 0, 1,       0,          0,          &distrig5,  0, &distrig7,  0,    0,          0,          {6, 0, 2, 4}};
+static Const fixer distrig5  = {s1x4, s_rigger,    0, 0, 1,       0,          0,          &distrig5,  0, &distrig7,  0,    0,          0,          {6, 0, 2, 4}};
+static Const fixer distrig8  = {sdmd, s_rigger,    0, 0, 1,       0,          0,          &distrig6,  0, &distrig8,  0,    0,          0,          {7, 1, 3, 5}};
+static Const fixer distrig6  = {s1x4, s_rigger,    0, 0, 1,       0,          0,          &distrig6,  0, &distrig8,  0,    0,          0,          {7, 5, 3, 1}};
+static Const fixer disthrg1  = {s1x4, s_hrglass,   1, 0, 1,       0,          0,          &disthrg1,  0, 0,          0,    0,          0,          {1, 3, 5, 7}};
+static Const fixer disthrg2  = {s1x4, s_hrglass,   1, 0, 1,       0,          0,          &disthrg2,  0, 0,          0,    0,          0,          {0, 3, 4, 7}};
 
-/*                              ink   outk       rot  el numsetup 1x2         1x2rot      1x4    1x4rot dmd         dmdrot 2x2      2x2v             nonrot            yesrot  */
+/*                              ink   outk       rot  el numsetup 1x2         1x2rot      1x4    1x4rot dmd         dmdrot 2x2      2x2v             nonrot  */
 
-static Const fixer d4x4l1    = {s1x4, s4x4,        1, 0, 1,       0,          0,          &d4x4l1, &d4x4l4, &d4x4d1, &d4x4d4, 0,       0,          {{0, 3, 8, 11}},     {{-1}}};
-static Const fixer d4x4l2    = {s1x4, s4x4,        0, 0, 1,       0,          0,          &d4x4l2, &d4x4l3, &d4x4d2, &d4x4d3, 0,       0,          {{8, 11, 0, 3}},     {{-1}}};
-static Const fixer d4x4l3    = {s1x4, s4x4,        1, 0, 1,       0,          0,          &d4x4l3, &d4x4l2, &d4x4d3, &d4x4d2, 0,       0,          {{12, 15, 4, 7}},    {{-1}}};
-static Const fixer d4x4l4    = {s1x4, s4x4,        0, 0, 1,       0,          0,          &d4x4l4, &d4x4l1, &d4x4d4, &d4x4d1, 0,       0,          {{12, 15, 4, 7}},    {{-1}}};
+static Const fixer d4x4l1    = {s1x4, s4x4,        1, 0, 1,       0,          0,          &d4x4l1, &d4x4l4, &d4x4d1, &d4x4d4, 0,       0,          {0, 3, 8, 11}};
+static Const fixer d4x4l2    = {s1x4, s4x4,        0, 0, 1,       0,          0,          &d4x4l2, &d4x4l3, &d4x4d2, &d4x4d3, 0,       0,          {8, 11, 0, 3}};
+static Const fixer d4x4l3    = {s1x4, s4x4,        1, 0, 1,       0,          0,          &d4x4l3, &d4x4l2, &d4x4d3, &d4x4d2, 0,       0,          {12, 15, 4, 7}};
+static Const fixer d4x4l4    = {s1x4, s4x4,        0, 0, 1,       0,          0,          &d4x4l4, &d4x4l1, &d4x4d4, &d4x4d1, 0,       0,          {12, 15, 4, 7}};
 
-static Const fixer d4x4d1    = {sdmd, s4x4,        1, 0, 1,       0,          0,          &d4x4l1, &d4x4l4, &d4x4d1, &d4x4d4, 0,       0,          {{0, 7, 8, 15}},     {{-1}}};
-static Const fixer d4x4d2    = {sdmd, s4x4,        0, 0, 1,       0,          0,          &d4x4l2, &d4x4l3, &d4x4d2, &d4x4d3, 0,       0,          {{8, 15, 0, 7}},     {{-1}}};
-static Const fixer d4x4d3    = {sdmd, s4x4,        1, 0, 1,       0,          0,          &d4x4l3, &d4x4l2, &d4x4d3, &d4x4d2, 0,       0,          {{12, 3, 4, 11}},    {{-1}}};
-static Const fixer d4x4d4    = {sdmd, s4x4,        0, 0, 1,       0,          0,          &d4x4l4, &d4x4l1, &d4x4d4, &d4x4d1, 0,       0,          {{12, 3, 4, 11}},    {{-1}}};
+static Const fixer d4x4d1    = {sdmd, s4x4,        1, 0, 1,       0,          0,          &d4x4l1, &d4x4l4, &d4x4d1, &d4x4d4, 0,       0,          {0, 7, 8, 15}};
+static Const fixer d4x4d2    = {sdmd, s4x4,        0, 0, 1,       0,          0,          &d4x4l2, &d4x4l3, &d4x4d2, &d4x4d3, 0,       0,          {8, 15, 0, 7}};
+static Const fixer d4x4d3    = {sdmd, s4x4,        1, 0, 1,       0,          0,          &d4x4l3, &d4x4l2, &d4x4d3, &d4x4d2, 0,       0,          {12, 3, 4, 11}};
+static Const fixer d4x4d4    = {sdmd, s4x4,        0, 0, 1,       0,          0,          &d4x4l4, &d4x4l1, &d4x4d4, &d4x4d1, 0,       0,          {12, 3, 4, 11}};
 
+static Const fixer fcpl12    = {s2x2, s4x4,     0x14, 0, 1,       0,          0,          0,          0, 0,          0,    &fcpl12,    0,          {1, 2, 5, 6}};
+static Const fixer fcpl23    = {s2x2, s4x4,    0x3C0, 0, 1,       0,          0,          0,          0, 0,          0,    &fcpl23,    0,          {13, 14, 1, 2}};
+static Const fixer fcpl34    = {s2x2, s4x4,    0x140, 0, 1,       0,          0,          0,          0, 0,          0,    &fcpl34,    0,          {13, 14, 9, 10}};
+static Const fixer fcpl41    = {s2x2, s4x4,     0x3C, 0, 1,       0,          0,          0,          0, 0,          0,    &fcpl41,    0,          {9, 10, 5, 6}};
 
+static Const fixer foo55d    = {s1x4, s1x8,        0, 0, 1,       0,          0,          &foo55d,    0, &f1x3zzd,   0,    &bar55d,    &bar55d,    {0, 2, 4, 6}};
+static Const fixer fgalctb   = {s2x2, s_galaxy,    0, 0, 1,       0,          0,          0,          0, 0,          0,    &fgalctb,   &fgalctb,   {1, 3, 5, 7}};
+static Const fixer f3x1ctl   = {s1x4, s3x1dmd,     0, 0, 1,       0,          0,          &f3x1ctl,   0, 0,          0,    &fgalctb,   &fgalctb,   {1, 2, 5, 6}};
 
-static Const fixer fcpl12    = {s2x2, s4x4,        0, 0, 1,       0,          0,          0,          0, 0,          0,    &fcpl12,    0,          {{1, 2, 5, 6}},     {{-1}}};
+static Const fixer f3x1d_2   = {s1x2, s3x1dmd,     1, 0, 1,       0,          0,          0,          0, 0,          0,    0,          0,          {3, 7}};
+static Const fixer f1x8_88   = {s1x2, s1x8,        0, 0, 1,       &f1x8_88,   &f3x1d_2,   0,          0, 0,          0,    0,          0,          {3, 7}};
+static Const fixer f1x8_22   = {s1x2, s1x8,        0, 0, 1,       &f1x8_22,   &f3x1d_2,   0,          0, 0,          0,    0,          0,          {1, 5}};
+static Const fixer f1x8_11   = {s1x2, s1x8,        0, 0, 1,       &f1x8_11,   &f3x1d_2,   0,          0, 0,          0,    0,          0,          {0, 4}};
 
+/*                              ink   outk       rot  el numsetup 1x2         1x2rot      1x4    1x4rot dmd         dmdrot 2x2      2x2v             nonrot  */
 
-
-static Const fixer foo55d    = {s1x4, s1x8,        0, 0, 1,       0,          0,          &foo55d,    0, &f1x3zzd,   0,    &bar55d,    &bar55d,    {{0, 2, 4, 6}},     {{-1}}};
-static Const fixer fgalctb   = {s2x2, s_galaxy,    0, 0, 1,       0,          0,          0,          0, 0,          0,    &fgalctb,   &fgalctb,   {{1, 3, 5, 7}},     {{-1}}};
-static Const fixer f3x1ctl   = {s1x4, s3x1dmd,     0, 0, 1,       0,          0,          &f3x1ctl,   0, 0,          0,    &fgalctb,   &fgalctb,   {{1, 2, 5, 6}},     {{-1}}};
-
-static Const fixer f3x1d_2   = {s1x2, s3x1dmd,     1, 0, 1,       0,          0,          0,          0, 0,          0,    0,          0,          {{3, 7}},           {{-1}}};
-static Const fixer f1x8_88   = {s1x2, s1x8,        0, 0, 1,       &f1x8_88,   &f3x1d_2,   0,          0, 0,          0,    0,          0,          {{3, 7}},           {{-1}}};
-static Const fixer f1x8_22   = {s1x2, s1x8,        0, 0, 1,       &f1x8_22,   &f3x1d_2,   0,          0, 0,          0,    0,          0,          {{1, 5}},           {{-1}}};
-static Const fixer f1x8_11   = {s1x2, s1x8,        0, 0, 1,       &f1x8_11,   &f3x1d_2,   0,          0, 0,          0,    0,          0,          {{0, 4}},           {{-1}}};
-
-/*                              ink   outk       rot  el numsetup 1x2         1x2rot      1x4    1x4rot dmd         dmdrot 2x2      2x2v             nonrot            yesrot  */
-
-static Const fixer foo99d    = {s1x4, s1x8,        0, 0, 1,       0,          0,          &foo99d,    0, 0,          0,    &f2x4endd,  &f2x4endd,  {{0, 3, 4, 7}},     {{-1}}};
-static Const fixer foo66d    = {s1x4, s1x8,        0, 0, 1,       0,          0,          &foo66d,    0, 0,          0,    &bar55d,    &bar55d,    {{1, 2, 5, 6}},     {{-1}}};
-static Const fixer f1x8ctr   = {s1x4, s1x8,        0, 0, 1,       0,          0,          &f1x8ctr,   0, 0,          0,    &bar55d,    &bar55d,    {{3, 2, 7, 6}},     {{-1}}};
-static Const fixer fqtgctr   = {s1x4, s_qtag,      0, 0, 1,       0,          0,          &fqtgctr,   0, 0,          0,    &bar55d,    &bar55d,    {{6, 7, 2, 3}},     {{-1}}};
-static Const fixer fxwve     = {s1x4, s_crosswave, 0, 0, 1,       0,          0,          &fxwve,     &f1x8endd, 0,  0,    &f2x4endd,  &f2x4endd,  {{0, 1, 4, 5}},     {{-1}}};
-static Const fixer fboneendd = {s2x2, s_bone,      0, 1, 1,       0,          0,          &f1x8endd,  0, 0,          0,    &fboneendd, &fqtgend,   {{0, 1, 4, 5}},     {{-1}}};
-static Const fixer fqtgend   = {s2x2, s_qtag,      0, 2, 1,       0,          0,          &f1x8endd,  0, 0,          0,    &fqtgend,   &fboneendd, {{0, 1, 4, 5}},     {{-1}}};
-static Const fixer fdrhgl1   = {s2x2, s_dhrglass,  0, 1, 1,       0,          0,          0,          0, 0,          0,    &fdrhgl1,   &fqtgend,   {{0, 1, 4, 5}},     {{-1}}};
-static Const fixer f1x8endd  = {s1x4, s1x8,        0, 0, 1,       0,          0,          &f1x8endd,  &fxwve, 0,     0,    &f2x4endd,  &f2x4endd,  {{0, 1, 4, 5}},     {{-1}}};
-static Const fixer f1x8endo  = {s1x2, s1x8,        0, 0, 2,       &f1x8endo,  &fboneendo, 0,          0, 0,          0,    0,          0,          {{0, 1}, {5, 4}},   {{-1}}};
-static Const fixer fbonectr  = {s1x4, s_bone,      0, 0, 1,       0,          0,          &fbonectr,  0, 0,          0,    &bar55d,    &bar55d,    {{6, 7, 2, 3}},     {{-1}}};
-static Const fixer fbonetgl  = {s_bone6, s_bone,   0, 0, 1,       0,          0,          0,          0, 0,          0,    0,          0,          {{0, 1, 3, 4, 5, 7}}, {{-1}}};
-static Const fixer frigtgl   = {s_short6, s_rigger,1, 0, 1,       0,          0,          0,          0, 0,          0,    0,          0,          {{1, 2, 4, 5, 6, 0}}, {{-1}}};
-static Const fixer fboneendo = {s1x2, s_bone,      1, 0, 2,       &fboneendo, &f1x8endo,  0,          0, 0,          0,    0,          0,          {{0, 5}, {1, 4}},   {{-1}}};
-static Const fixer frigendd  = {s1x4, s_rigger,    0, 0, 1,       0,          0,          &frigendd,  0, 0,          0,    &f2x4endd,  &f2x4endd,  {{6, 7, 2, 3}},     {{-1}}};
-static Const fixer frigctr   = {s2x2, s_rigger,    0, 0, 1,       0,          0,          &f1x8ctr,   0, 0,          0,    &frigctr,   &frigctr,   {{0, 1, 4, 5}},     {{-1}}};
-static Const fixer f2x4ctr   = {s2x2, s2x4,        0, 0, 1,       0,          0,          &fbonectr,  0, 0,          0,    &f2x4ctr,   &f2x4ctr,   {{1, 2, 5, 6}},     {{-1}}};
+static Const fixer foo99d    = {s1x4, s1x8,        0, 0, 1,       0,          0,          &foo99d,    0, 0,          0,    &f2x4endd,  &f2x4endd,  {0, 3, 4, 7}};
+static Const fixer foo66d    = {s1x4, s1x8,        0, 0, 1,       0,          0,          &foo66d,    0, 0,          0,    &bar55d,    &bar55d,    {1, 2, 5, 6}};
+static Const fixer f1x8ctr   = {s1x4, s1x8,        0, 0, 1,       0,          0,          &f1x8ctr,   0, 0,          0,    &bar55d,    &bar55d,    {3, 2, 7, 6}};
+static Const fixer fqtgctr   = {s1x4, s_qtag,      0, 0, 1,       0,          0,          &fqtgctr,   0, 0,          0,    &bar55d,    &bar55d,    {6, 7, 2, 3}};
+static Const fixer fxwve     = {s1x4, s_crosswave, 0, 0, 1,       0,          0,          &fxwve,     &f1x8endd, 0,  0,    &f2x4endd,  &f2x4endd,  {0, 1, 4, 5}};
+static Const fixer fboneendd = {s2x2, s_bone,      0, 1, 1,       0,          0,          &f1x8endd,  0, 0,          0,    &fboneendd, &fqtgend,   {0, 1, 4, 5}};
+static Const fixer fqtgend   = {s2x2, s_qtag,      0, 2, 1,       0,          0,          &f1x8endd,  0, 0,          0,    &fqtgend,   &fboneendd, {0, 1, 4, 5}};
+static Const fixer fdrhgl1   = {s2x2, s_dhrglass,  0, 1, 1,       0,          0,          0,          0, 0,          0,    &fdrhgl1,   &fqtgend,   {0, 1, 4, 5}};
+static Const fixer f1x8endd  = {s1x4, s1x8,        0, 0, 1,       0,          0,          &f1x8endd,  &fxwve, 0,     0,    &f2x4endd,  &f2x4endd,  {0, 1, 4, 5}};
+static Const fixer f1x8endo  = {s1x2, s1x8,        0, 0, 2,       &f1x8endo,  &fboneendo, 0,          0, 0,          0,    0,          0,          {0, 1, 5, 4}};
+static Const fixer fbonectr  = {s1x4, s_bone,      0, 0, 1,       0,          0,          &fbonectr,  0, 0,          0,    &bar55d,    &bar55d,    {6, 7, 2, 3}};
+static Const fixer fbonetgl  = {s_bone6, s_bone,   0, 0, 1,       0,          0,          0,          0, 0,          0,    0,          0,          {0, 1, 3, 4, 5, 7}};
+static Const fixer frigtgl   = {s_short6, s_rigger,1, 0, 1,       0,          0,          0,          0, 0,          0,    0,          0,          {1, 2, 4, 5, 6, 0}};
+static Const fixer fboneendo = {s1x2, s_bone,      1, 0, 2,       &fboneendo, &f1x8endo,  0,          0, 0,          0,    0,          0,          {0, 5, 1, 4}};
+static Const fixer frigendd  = {s1x4, s_rigger,    0, 0, 1,       0,          0,          &frigendd,  0, 0,          0,    &f2x4endd,  &f2x4endd,  {6, 7, 2, 3}};
+static Const fixer frigctr   = {s2x2, s_rigger,    0, 0, 1,       0,          0,          &f1x8ctr,   0, 0,          0,    &frigctr,   &frigctr,   {0, 1, 4, 5}};
+static Const fixer f2x4ctr   = {s2x2, s2x4,        0, 0, 1,       0,          0,          &fbonectr,  0, 0,          0,    &f2x4ctr,   &f2x4ctr,   {1, 2, 5, 6}};
 /* These 6 are unsymmetrical. */
-static Const fixer f2x4far   = {s1x4, s2x4,        0, 0, 1,       0,          0,          &f2x4far,   0, 0,          0,    0,          0,          {{0, 1, 3, 2}},     {{-1}}};
-static Const fixer f2x4near  = {s1x4, s2x4,        0, 0, 1,       0,          0,          &f2x4near,  0, 0,          0,    0,          0,          {{7, 6, 4, 5}},     {{-1}}};
-static Const fixer f2x4left  = {s2x2, s2x4,        0, 0, 1,       0,          0,          0,          0, 0,          0,    &f2x4left,  &f2x4left,  {{0, 1, 6, 7}},     {{-1}}};
-static Const fixer f2x4right = {s2x2, s2x4,        0, 0, 1,       0,          0,          0,          0, 0,          0,    &f2x4right, &f2x4right, {{2, 3, 4, 5}},     {{-1}}};
-static Const fixer f2x4dleft = {s2x2, s2x4,        0, 0, 1,       0,          0,          0,          0, 0,          0,    &f2x4dleft, &f2x4dleft, {{0, 2, 5, 7}},     {{-1}}};
-static Const fixer f2x4dright= {s2x2, s2x4,        0, 0, 1,       0,          0,          0,          0, 0,          0,    &f2x4dright,&f2x4dright,{{1, 3, 4, 6}},     {{-1}}};
+static Const fixer f2x4far   = {s1x4, s2x4,        0, 0, 1,       0,          0,          &f2x4far,   0, 0,          0,    0,          0,          {0, 1, 3, 2}};
+static Const fixer f2x4near  = {s1x4, s2x4,        0, 0, 1,       0,          0,          &f2x4near,  0, 0,          0,    0,          0,          {7, 6, 4, 5}};
+static Const fixer f2x4left  = {s2x2, s2x4,        0, 0, 1,       0,          0,          0,          0, 0,          0,    &f2x4left,  &f2x4left,  {0, 1, 6, 7}};
+static Const fixer f2x4right = {s2x2, s2x4,        0, 0, 1,       0,          0,          0,          0, 0,          0,    &f2x4right, &f2x4right, {2, 3, 4, 5}};
+static Const fixer f2x4dleft = {s2x2, s2x4,        0, 0, 1,       0,          0,          0,          0, 0,          0,    &f2x4dleft, &f2x4dleft, {0, 2, 5, 7}};
+static Const fixer f2x4dright= {s2x2, s2x4,        0, 0, 1,       0,          0,          0,          0, 0,          0,    &f2x4dright,&f2x4dright,{1, 3, 4, 6}};
 
-/*                              ink   outk       rot  el numsetup 1x2         1x2rot      1x4    1x4rot dmd         dmdrot 2x2      2x2v             nonrot            yesrot  */
+/*                              ink   outk       rot  el numsetup 1x2         1x2rot      1x4    1x4rot dmd         dmdrot 2x2      2x2v             nonrot  */
 
-static Const fixer f2x4endd  = {s2x2, s2x4,        0, 1, 1,       0,          0,          &frigendd,  &frigendd, 0,  0,    &f2x4endd,  &fqtgend,   {{0, 3, 4, 7}},     {{-1}}};
-static Const fixer f2x477    = {s2x3, s2x4,        0, 1, 1,       0,          0,          0,          0, 0,          0,    0,          0,          {{0, 1, 2, 4, 5, 6}}, {{-1}}};
-static Const fixer f2x4ee    = {s2x3, s2x4,        0, 1, 1,       0,          0,          0,          0, 0,          0,    0,          0,          {{1, 2, 3, 5, 6, 7}}, {{-1}}};
-static Const fixer f2x4bb    = {s2x3, s2x4,        0, 1, 1,       0,          0,          0,          0, 0,          0,    0,          0,          {{0, 1, 3, 4, 5, 7}}, {{-1}}};
-static Const fixer f2x4dd    = {s2x3, s2x4,        0, 1, 1,       0,          0,          0,          0, 0,          0,    0,          0,          {{0, 2, 3, 4, 6, 7}}, {{-1}}};
+static Const fixer f2x4endd  = {s2x2, s2x4,        0, 1, 1,       0,          0,          &frigendd,  &frigendd, 0,  0,    &f2x4endd,  &fqtgend,   {0, 3, 4, 7}};
+static Const fixer f2x477    = {s2x3, s2x4,        0, 1, 1,       0,          0,          0,          0, 0,          0,    0,          0,          {0, 1, 2, 4, 5, 6}};
+static Const fixer f2x4ee    = {s2x3, s2x4,        0, 1, 1,       0,          0,          0,          0, 0,          0,    0,          0,          {1, 2, 3, 5, 6, 7}};
+static Const fixer f2x4bb    = {s2x3, s2x4,        0, 1, 1,       0,          0,          0,          0, 0,          0,    0,          0,          {0, 1, 3, 4, 5, 7}};
+static Const fixer f2x4dd    = {s2x3, s2x4,        0, 1, 1,       0,          0,          0,          0, 0,          0,    0,          0,          {0, 2, 3, 4, 6, 7}};
 
 
 
-static Const fixer f2x4endo  = {s1x2, s2x4,        1, 0, 2,       &f2x4endo,  &f1x8endo,  0,          0, 0,          0,    0,          0,          {{0, 7}, {3, 4}},   {{-1}}};
-static Const fixer bar55d    = {s2x2, s2x4,        0, 0, 1,       0,          0,          0,          0, 0,          0,    0,          0,          {{1, 2, 5, 6}},     {{-1}}};
-static Const fixer fppaad    = {s1x2, s2x4,        0, 0, 2,       &fppaad,    0,          0,          0, 0,          0,    0,          0,          {{1, 3}, {7, 5}},   {{-1}}};
-static Const fixer fpp55d    = {s1x2, s2x4,        0, 0, 2,       &fpp55d,    0,          0,          0, 0,          0,    0,          0,          {{0, 2}, {6, 4}},   {{-1}}};
+static Const fixer f2x4endo  = {s1x2, s2x4,        1, 0, 2,       &f2x4endo,  &f1x8endo,  0,          0, 0,          0,    0,          0,          {0, 7, 3, 4}};
+static Const fixer bar55d    = {s2x2, s2x4,        0, 0, 1,       0,          0,          0,          0, 0,          0,    0,          0,          {1, 2, 5, 6}};
+static Const fixer fppaad    = {s1x2, s2x4,        0, 0, 2,       &fppaad,    0,          0,          0, 0,          0,    0,          0,          {1, 3, 7, 5}};
+static Const fixer fpp55d    = {s1x2, s2x4,        0, 0, 2,       &fpp55d,    0,          0,          0, 0,          0,    0,          0,          {0, 2, 6, 4}};
 
 
 
@@ -2893,6 +2968,8 @@ static Const sel_item sel_table[] = {
    {LOOKUP_DIST_DMD,           s2x4,        0x55,   &d2x4d2,     (fixer *) 0, -1},
    {LOOKUP_DIST_DMD,           s4x4,        0x8181, &d4x4d1,     &d4x4d2,     0},
    {LOOKUP_DIST_DMD,           s4x4,        0x1818, &d4x4d3,     &d4x4d4,     4},
+   {LOOKUP_DIST_DMD,           s_qtag,      0x66,   &ddmd1,      (fixer *) 0, -1},
+   {LOOKUP_DIST_DMD,           s_qtag,      0x55,   &ddmd2,      (fixer *) 0, -1},
    {LOOKUP_DIST_BOX,           s2x4,        0xAA,   &d2x4c1,     (fixer *) 0, -1},
    {LOOKUP_DIST_BOX,           s2x4,        0x55,   &d2x4c2,     (fixer *) 0, -1},
    {LOOKUP_DIST_BOX,           s2x4,        0x33,   &d2x4y1,     (fixer *) 0, -1},
@@ -2956,12 +3033,20 @@ static Const sel_item sel_table[] = {
    {LOOKUP_IGNORE,             s2x4,        0xEE,   &f2x4ee,     (fixer *) 0, -1},  /* 2x4 with 2 centers ignored.  These 2 *ARE* disconnected (or ignored). */
    {LOOKUP_DISC|LOOKUP_IGNORE, s2x4,        0xBB,   &f2x4bb,     (fixer *) 0, -1},
    {LOOKUP_DISC|LOOKUP_IGNORE, s2x4,        0xDD,   &f2x4dd,     (fixer *) 0, -1},
-
-
-/*
+   {LOOKUP_DISC|LOOKUP_IGNORE|LOOKUP_NONE, s1x8,     0xCC, &f1x8ctr,   (fixer *) 0, -1},
+   {LOOKUP_DISC|LOOKUP_IGNORE|LOOKUP_NONE, s_qtag,   0xCC, &fqtgctr,   (fixer *) 0, -1},
+   {LOOKUP_DISC|LOOKUP_IGNORE|LOOKUP_NONE, s_bone,   0xCC, &fbonectr,  (fixer *) 0, -1},
+   {LOOKUP_DISC|LOOKUP_IGNORE|LOOKUP_NONE, s_rigger, 0x33, &frigctr,   (fixer *) 0, -1},
+   {LOOKUP_DISC|LOOKUP_IGNORE|LOOKUP_NONE, s3x1dmd,  0x66, &f3x1ctl,   (fixer *) 0, -1},
+   {LOOKUP_DISC|LOOKUP_IGNORE|LOOKUP_NONE, s2x4,     0x66, &f2x4ctr,   (fixer *) 0, -1},
+   {LOOKUP_DISC|LOOKUP_IGNORE|LOOKUP_NONE, s2x4,     0x0F, &f2x4far,   (fixer *) 0, -1},
+   {LOOKUP_DISC|LOOKUP_IGNORE|LOOKUP_NONE, s2x4,     0xF0, &f2x4near,  (fixer *) 0, -1},
+   {LOOKUP_DISC|LOOKUP_IGNORE|LOOKUP_NONE, s2x4,     0xC3, &f2x4left,  (fixer *) 0, -1},
+   {LOOKUP_DISC|LOOKUP_IGNORE|LOOKUP_NONE, s2x4,     0x3C, &f2x4right, (fixer *) 0, -1},
    {LOOKUP_NONE,               s4x4,        0x0066, &fcpl12,     (fixer *) 0, -1},
-*/
-
+   {LOOKUP_NONE,               s4x4,        0x6006, &fcpl23,     (fixer *) 0, -1},
+   {LOOKUP_NONE,               s4x4,        0x6600, &fcpl34,     (fixer *) 0, -1},
+   {LOOKUP_NONE,               s4x4,        0x0660, &fcpl41,     (fixer *) 0, -1},
    {LOOKUP_NONE,               s2x4,        0x33,   &foo33,      (fixer *) 0, -1},
    {LOOKUP_NONE,               s2x4,        0xCC,   &foocc,      (fixer *) 0, -1},
    {LOOKUP_NONE,               s2x4,        0x99,   &f2x4endo,   (fixer *) 0, -1},
@@ -3302,6 +3387,7 @@ back_here:
          int numsetups;
          uint32 key;
          setup lilsetup[4], lilresult[4];
+         int map_scanner;
          Const sel_item *p;
          long_boolean feet_warning = FALSE;
 
@@ -3348,34 +3434,13 @@ back_here:
             }
          }
 
-         if (arg2 == 0) {
-            /* A few operations are independent of whether we said "disconnected",
-               because the people are connected anyway. */
+         /* These two have a looser livemask criterion. */
 
-            if (kk == s1x8 && thislivemask == 0xCC)
-               fixp = &f1x8ctr;
-            else if (kk == s_qtag && thislivemask == 0xCC)
-               fixp = &fqtgctr;
-            else if (kk == s_bone && thislivemask == 0xCC)
-               fixp = &fbonectr;
-            else if (kk == s_rigger && thislivemask == 0x33)
-               fixp = &frigctr;
-            else if (kk == s3x1dmd && thislivemask == 0x66)
-               fixp = &f3x1ctl;
-            else if (kk == s2x4 && thislivemask == 0x66)
-               fixp = &f2x4ctr;
-            else if (kk == s2x4 && thislivemask == 0x0F)
-               fixp = &f2x4far;
-            else if (kk == s2x4 && thislivemask == 0xF0)
-               fixp = &f2x4near;
-            else if (kk == s2x4 && the_setups[setupcount^1].kind == s2x4 && (thislivemask & ~0x0F) == 0 && (otherlivemask & 0x0F) == 0)
+         if (key & (LOOKUP_IGNORE|LOOKUP_DISC|LOOKUP_NONE)) {
+            if (kk == s2x4 && the_setups[setupcount^1].kind == s2x4 && (thislivemask & ~0x0F) == 0 && (otherlivemask & 0x0F) == 0)
                fixp = &f2x4far;
             else if (kk == s2x4 && the_setups[setupcount^1].kind == s2x4 && (thislivemask & ~0xF0) == 0  && (otherlivemask & 0xF0) == 0)
                fixp = &f2x4near;
-            else if (kk == s2x4 && thislivemask == 0xC3)
-               fixp = &f2x4left;
-            else if (kk == s2x4 && thislivemask == 0x3C)
-               fixp = &f2x4right;
          }
 
          if (!fixp)
@@ -3384,9 +3449,12 @@ back_here:
          blah:
 
          numsetups = fixp->numsetups & 0xFF;
+         map_scanner = 0;
 
          for (lilcount=0; lilcount<numsetups; lilcount++) {
             uint32 tbone = 0;
+            uint32 frot = fixp->rot;  /* This stays fixed. */
+            uint32 vrot;              /* This shifts down. */
             setup *lilss = &lilsetup[lilcount];
             setup *lilres = &lilresult[lilcount];
 
@@ -3398,8 +3466,8 @@ back_here:
             lilss->kind = fixp->ink;
             lilss->rotation = 0;
 
-            for (k=0; k<=setup_attrs[fixp->ink].setup_limits; k++)
-               tbone |= copy_rot(lilss, k, this_one, fixp->nonrot[lilcount][k], 011*((-fixp->rot) & 3));
+            for (k=0,vrot=frot>>2; k<=setup_attrs[fixp->ink].setup_limits; k++,map_scanner++,vrot>>=2)
+               tbone |= copy_rot(lilss, k, this_one, fixp->nonrot[map_scanner], 011*((-frot-vrot) & 3));
 
             /* If we are picking out a distorted diamond from a 4x4, we can't tell unambiguously how
                to do it unless all 4 people are facing in a sensible way, that is, as if in real diamonds.
@@ -3459,7 +3527,7 @@ back_here:
                nextfixp = 0;    /* Raise an error. */
 
             if (nextfixp) {
-               if (fixp->rot == nextfixp->rot) {
+               if (((fixp->rot ^ nextfixp->rot) & 3) == 0) {
                   the_results[setupcount].rotation--;
 
                   if (fixp->numsetups & 0x100) {
@@ -3473,22 +3541,15 @@ back_here:
 
                fixp = nextfixp;
                the_results[setupcount].kind = fixp->outk;
-
-               for (lilcount=0; lilcount<numsetups; lilcount++) {
-                  if (fixp->rot == 0) {
+               if ((fixp->rot & 3) == 0) {
+                  for (lilcount=0; lilcount<numsetups; lilcount++) {
                      lilresult[lilcount].rotation += 2;
                      canonicalize_rotation(&lilresult[lilcount]);
                   }
-                  scatter(&the_results[setupcount], &lilresult[lilcount], fixp->nonrot[lilcount], setup_attrs[lilresult[0].kind].setup_limits, 011*fixp->rot);
                }
             }
-            else {
-               if (fixp->yesrot[0][0] < 0) goto lose;
-               the_results[setupcount].kind = fixp->outk;
-               the_results[setupcount].rotation++;
-               for (lilcount=0; lilcount<numsetups; lilcount++)
-                  scatter(&the_results[setupcount], &lilresult[lilcount], fixp->yesrot[lilcount], setup_attrs[lilresult[0].kind].setup_limits, 011*fixp->rot);
-            }
+            else
+               goto lose;
          }
          else {
             if (lilresult[0].kind == s1x2)
@@ -3510,9 +3571,15 @@ back_here:
 
             the_results[setupcount].kind = fixp->outk;
             the_results[setupcount].rotation = 0;
+         }
 
-            for (lilcount=0; lilcount<numsetups; lilcount++)
-               scatter(&the_results[setupcount], &lilresult[lilcount], fixp->nonrot[lilcount], setup_attrs[lilresult[0].kind].setup_limits, 011*fixp->rot);
+         map_scanner = 0;
+
+         for (lilcount=0; lilcount<numsetups; lilcount++) {
+            uint32 frot = fixp->rot;  /* This stays fixed. */
+            uint32 vrot;              /* This shifts down. */
+            for (k=0,vrot=frot>>2; k<=setup_attrs[lilresult[0].kind].setup_limits; k++,map_scanner++,vrot>>=2)
+               (void) copy_rot(&the_results[setupcount], fixp->nonrot[map_scanner], &lilresult[lilcount], k, 011*((frot+vrot) & 3));
          }
 
          /* We only give the warning if they in fact went to spots.  Some of the maps

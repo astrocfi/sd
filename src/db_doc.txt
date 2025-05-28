@@ -89,6 +89,15 @@ shown with a map giving the person numbering:
             |_____|_____|_____|_____|
 
 
+             _____ _____ _____ _____ _____
+            |     |     |     |     |     |
+            |  0  |  1  |  2  |  3  |  4  |
+2x5         |_____|_____|_____|_____|_____|
+            |     |     |     |     |     |
+            |  9  |  8  |  7  |  6  |  5  |
+            |_____|_____|_____|_____|_____|
+
+
              _____ _____ _____ _____ _____ _____
             |     |     |     |     |     |     |
             |  0  |  1  |  2  |  3  |  4  |  5  |
@@ -419,7 +428,7 @@ ptpd        |  0  |_____|  2  |  6  |_____|  4  |
                                  |  3  |
                 _____ _____ _____|     |_____ _____ _____
                |     |     |      \   /      |     |     |
-   wingedstar  |  0  |  1  |  2           6  |  5  |  4  |
+wingedstar     |  0  |  1  |  2           6  |  5  |  4  |
                |_____|_____|_____ /   \ _____|_____|_____|
                                  |     |
                                  |  7  |
@@ -451,6 +460,46 @@ wingedstar16   |  0  |  1  |  2           5  |  6          14  | 13          10 
                                  |  4  |           | 15  |           | 11  |
                                  |_____|           |_____|           |_____|
    
+
+
+                _____       _____       _____ 
+               |     |     |     |     |     |
+               |  0  |     |  1  |     |  2  |
+               |_____|_____|     |_____|_____|
+               |     |      \   /      |     |
+barredstar     |  8  |  9           4  |  3  |
+               |_____|_____ /   \ _____|_____|
+               |     |     |     |     |     |
+               |  7  |     |  6  |     |  5  |
+               |_____|     |_____|     |_____|
+   
+                      
+                      
+                _____       _____             _____       _____ 
+               |     |     |     |           |     |     |     |
+               |  0  |     |  1  |           |  2  |     |  3  |
+               |_____|_____|     |_____ _____|     |_____|_____|
+               |     |      \   /      |      \   /      |     |
+barredstar12   | 11  | 12          13  |  6           5  |  4  |
+               |_____|_____ /   \ _____|_____ /   \ _____|_____|
+               |     |     |     |           |     |     |     |
+               | 10  |     |  9  |           |  8  |     |  7  |
+               |_____|     |_____|           |_____|     |_____|
+                      
+                      
+                      
+                _____       _____             _____             _____       _____ 
+               |     |     |     |           |     |           |     |     |     |
+               |  0  |     |  1  |           |  2  |           |  3  |     |  4  |
+               |_____|_____|     |_____ _____|     |_____ _____|     |_____|_____|
+               |     |      \   /      |      \   /      |      \   /      |     |
+barredstar16   | 14  | 15          16  | 17           8  |  7           6  |  5  |
+               |_____|_____ /   \ _____|_____ /   \ _____|_____ /   \ _____|_____|
+               |     |     |     |           |     |           |     |     |     |
+               | 13  |     | 12  |           | 11  |           | 10  |     |  9  |
+               |_____|     |_____|           |_____|           |_____|     |_____|
+
+
 
                    _____             _____
                   |     |           |     |
@@ -2107,6 +2156,7 @@ There are a number of internal ones not shown here.  See the file ~/sd/restricti
    4x4_2fl_only,                 /* 1x8/2x8 - "2-faced lines" of 4 facing one way, 4 the other */
    leads_only,                   /* 2x2 - all people are leads, and not T-boned */
    couples_only,                 /* 1x2 or 1x4 or 1x8 or 2x2 or 2x4 lines, or 2x4 columns - people are in genuine couples, not miniwaves */
+   miniwaves,                    /* 1x2 or 1x4 or 1x8 or 2x2 or 2x4 lines, or 2x4 columns - people are in miniwaves of various handedness */
    3x3couples_only,              /* 1x3/1x6/2x3/2x6/1x12 lines - each group of 3 people are facing the same way.  UNDEFINED IF T-BONED
    4x4couples_only,              /* 1x4/1x8/2x4/2x8/1x16 lines - each group of 4 people are facing the same way.  UNDEFINED IF T-BONED
    awkward_centers,              /* 1x2, 1x4, 1x6, or 1x8 - centers must not have left hands with each other */
@@ -2134,7 +2184,7 @@ There are a number of internal ones not shown here.  See the file ~/sd/restricti
    1fl_only,                     /* 1x3/1x4/1x6/1x8 - a 1FL, that is, all 3/4/6/8 facing same; 2x3/2x4 - individual 1FL's
                                        thar - crossed 2FL's of opposite handedness, ready to move along
    2fl_only,                     /* 1x2 - a couple; 1x4 - a 2FL; 2x4/3x4 - 2FL's; 4x4 - consistent 2FL's; 1x8 - a grand 2FL;
-                                    4x1 - single DPT or single CDPT; qtag - 2FL in center */
+                                    4x1 - single DPT or single CDPT; 4x2 - DPT or CDPT; qtag - 2FL in center */
    couples_only,                 /* 1x2 or 1x4 or 1x8 or 2x2 or 2x4 lines, or 2x4 columns - people are in genuine couples, not miniwaves */
    3x3couples_only,              /* 1x3/1x6/2x3/2x6/1x12 lines - each group of 3 people are facing the same way ; 3x1 columns - same.  UNDEFINED IF T-BONED
    4x4couples_only,              /* 1x4/1x8/2x4/2x8/1x16 lines - each group of 4 people are facing the same way ; 4x1 columns - same.  UNDEFINED IF T-BONED

@@ -287,6 +287,8 @@ char *sstab[] = {
    "4x2",
    "2x3",
    "3x2",
+   "2x5",
+   "5x2",
    "1x6",
    "6x1",
    "3x4",
@@ -364,6 +366,7 @@ char *estab[] = {
    "hyperglass",
    "crosswave",
    "2x4",
+   "2x5",
    "rigger",
    "3x4",
    "2x6",
@@ -383,6 +386,9 @@ char *estab[] = {
    "wingedstar",
    "wingedstar12",
    "wingedstar16",
+   "barredstar",
+   "barredstar12",
+   "barredstar16",
    "galaxy",
    "3x8",
    "4x6",
@@ -423,7 +429,11 @@ char *schematab[] = {
    "conc_star",
    "conc_star12",
    "conc_star16",
+   "conc_bar",
+   "conc_bar12",
+   "conc_bar16",
    "maybematrix_conc_star",
+   "maybematrix_conc_bar",
    "checkpoint",
    "reverse_checkpoint",
    "ckpt_star",
@@ -510,6 +520,7 @@ char *crtab[] = {
    "qtag_like",
    "nice_diamonds",
    "magic_only",
+   "miniwaves",
    "peelable_box",
    "ends_are_peelable",
    "siamese_in_quad",
@@ -551,6 +562,10 @@ char *defmodtab1[] = {
    "cpls_unless_single",
    "shift_one_number",
    "shift_two_numbers",     /* The constant "shift_three_numbers" is elsewhere. */
+   "???",                   /* We get numbers by other means. */
+   "???",
+   "???",
+   "no_check_mod_level",
    ""};
 
 /* This table is keyed to the constants "CFLAG1_***".  These are the
@@ -1186,6 +1201,13 @@ static void write_defmod_flags(void)
             rr1 |= (6*DFM1_CALL_MOD_BIT);
          else if (strcmp(tok_str, "shift_three_numbers") == 0)
             rr1 |= (3*DFM1_NUM_SHIFT_BIT);
+         else if (!strcmp(tok_str, "insert_number")) {
+            int nnn;
+            if (rr1 & DFM1_NUM_INSERT_MASK) errexit("Only one number insertion is allowed");
+            nnn = get_num("Need a number here");
+            if (nnn <= 0 || nnn >= 8) errexit("bad number");
+            rr1 |= nnn*DFM1_NUM_INSERT_BIT;
+         }
          else if ((i = search(defmodtabh)) >= 0) {
             uint32 bit = 1 << i;
 

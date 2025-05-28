@@ -21,7 +21,7 @@
     General Public License if you distribute the file.
 */
 
-#define VERSION_STRING "31.79"
+#define VERSION_STRING "31.80"
 
 /* We cause this string (that is, the concatentaion of these strings) to appear
    in the binary image of the program, so that the "what" and "ident" utilities
@@ -369,6 +369,7 @@ extern parse_block *get_parse_block(void)
    item->options.howmanynumbers = 0;
    item->options.tagger = -1;
    item->options.circcer = -1;
+   item->replacement_key = 0;
    item->subsidiary_root = (parse_block *) 0;
    item->next = (parse_block *) 0;
 
@@ -417,6 +418,7 @@ extern parse_block *copy_parse_tree(parse_block *original_tree)
       new_item->concept = old_item->concept;
       new_item->call = old_item->call;
       new_item->options = old_item->options;
+      new_item->replacement_key = old_item->replacement_key;
 
       if (old_item->subsidiary_root)
          new_item->subsidiary_root = copy_parse_tree(old_item->subsidiary_root);
@@ -459,7 +461,7 @@ Private void reset_parse_tree(
       /* Chop off branches that don't belong. */
 
       if (!old_item->subsidiary_root)
-         new_item->subsidiary_root = 0;
+         new_item->subsidiary_root = (parse_block *) 0;
       else
          reset_parse_tree(old_item->subsidiary_root, new_item->subsidiary_root);
 
@@ -1449,6 +1451,7 @@ void main(int argc, char *argv[])
    initialize_getout_tables();
    initialize_restr_tables();
    initialize_conc_tables();
+   initialize_map_tables();
    initialize_touch_tables();
    
    initialize_menus(glob_call_list_mode);    /* This sets up max_base_calls. */

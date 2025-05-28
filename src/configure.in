@@ -16,8 +16,6 @@ CONFIG_FILES=Makefile
 
 VERSION=`sed -n 's/^#define VERSION_STRING "\(.*\)"$/\1/p' "$srcdir/sdmain.c"`
 AC_SUBST(VERSION)
-PCVERSION=`echo "$VERSION" | sed 's/\.//'`
-AC_SUBST(PCVERSION)
 
 [#] See if this is a build with djgpp for a PC.
 

@@ -30,6 +30,7 @@ and the following external variables:
 #include "sd.h"
 
 
+static uint32 orig_tbonetest;
 uint32 global_tbonetest;
 uint32 global_livemask;
 uint32 global_selectmask;
@@ -162,7 +163,7 @@ Private void do_c1_phantom_move(
       }
       else if (global_livemask == 0xC5C5 || global_livemask == 0x3A3A) {
          /* Split into 4 horizontal strips. */
-         divided_setup_move(ss, map_lists[s1x4][3]->f[MPKIND__SPLIT][1], phantest_ok, TRUE, result);
+         new_divided_setup_move(ss, MAPCODE(s1x4,4,MPKIND__SPLIT,1), phantest_ok, TRUE, result);
       }
       else if (global_livemask == 0xCCCC) {   /* Check for a 4x4 occupied as a "pinwheel", and treat it as phantoms. */
          map_ptr = &map_pinwheel1;
@@ -420,7 +421,7 @@ Private void do_concept_quad_lines(
    if (ss->kind == s4x4) {
       ss->rotation += rot;   /* Just flip the setup around and recanonicalize. */
       canonicalize_rotation(ss);
-      divided_setup_move(ss, map_lists[s1x4][3]->f[MPKIND__SPLIT][1], phantest_ok, TRUE, result);
+      new_divided_setup_move(ss, MAPCODE(s1x4,4,MPKIND__SPLIT,1), phantest_ok, TRUE, result);
       result->rotation -= rot;   /* Flip the setup back. */
    }
    else if (ss->kind == s1x16) {
@@ -429,7 +430,7 @@ Private void do_concept_quad_lines(
          else                      fail("There are no columns of 4 here.");
       }
    
-      divided_setup_move(ss, map_lists[s1x4][3]->f[MPKIND__SPLIT][0], phantest_ok, TRUE, result);
+      new_divided_setup_move(ss, MAPCODE(s1x4,4,MPKIND__SPLIT,0), phantest_ok, TRUE, result);
    }
    else
       fail("Must have a 4x4 or 1x16 setup for this concept.");
@@ -482,7 +483,7 @@ Private void do_concept_quad_lines_tog(
    
       m1 = 0xF0; m2 = 0xFF; m3 = 0x0F;
    
-      overlapped_setup_move(ss, map_lists[s2x4][2]->f[MPKIND__OVERLAP][1],
+      new_overlapped_setup_move(ss, MAPCODE(s2x4,3,MPKIND__OVERLAP,1),
          m1, m2, m3, result);
       result->rotation -= rot;   /* Flip the setup back. */
 
@@ -506,7 +507,7 @@ Private void do_concept_quad_lines_tog(
          m1 = 0x3F; m2 = 0x33; m3 = 0xF3;
       }
    
-      overlapped_setup_move(ss, map_lists[s1x8][2]->f[MPKIND__OVERLAP][0],
+      new_overlapped_setup_move(ss, MAPCODE(s1x8,3,MPKIND__OVERLAP,0),
             m1, m2, m3, result);
    }
    else {
@@ -548,7 +549,7 @@ Private void do_concept_quad_lines_tog(
          if ((ss->people[2].id1  ^ cstuff) & 2) { m1 |= 0x08; m2 &= ~0x10; };
       }
    
-      overlapped_setup_move(ss, map_lists[s2x4][2]->f[MPKIND__OVERLAP][1],
+      new_overlapped_setup_move(ss, MAPCODE(s2x4,3,MPKIND__OVERLAP,1),
          m1, m2, m3, result);
       result->rotation -= rot;   /* Flip the setup back. */
    }
@@ -563,7 +564,7 @@ Private void do_concept_parallelogram(
    mpkind mk;
    parse_block *next_parseptr;
    uint64 junk_concepts;
-   map_thing *map_ptr;
+   uint32 map_code;
    parse_block *standard_concept = (parse_block *) 0;
 
    if (ss->kind == s2x6) {
@@ -651,12 +652,12 @@ Private void do_concept_parallelogram(
          ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
 
       ss->cmd.parseptr = next_parseptr->next;
-      map_ptr = map_lists[s2x4][1]->f[mk][1];
+      map_code = MAPCODE(s2x4,2,mk,1);
    }
    else
-      map_ptr = map_lists[s2x4][0]->f[mk][0];
+      map_code = MAPCODE(s2x4,1,mk,0);
 
-   divided_setup_move(ss, map_ptr, phantest_ok, TRUE, result);
+   new_divided_setup_move(ss, map_code, phantest_ok, TRUE, result);
 }
 
 
@@ -724,7 +725,7 @@ Private void do_concept_quad_boxes_tog(
       m1 = 0xC3 ; m2 = 0xFF; m3 = 0x3C;
    }
 
-   overlapped_setup_move(ss, map_lists[s2x4][2]->f[MPKIND__OVERLAP][0], m1, m2, m3, result);
+   new_overlapped_setup_move(ss, MAPCODE(s2x4,3,MPKIND__OVERLAP,0), m1, m2, m3, result);
 }
 
 
@@ -745,7 +746,7 @@ Private void do_concept_triple_diamonds_tog(
    if (ss->people[1].id1 & 2) { m1 |= 0x02; m2 &= ~0x01; }
    if (ss->people[7].id1 & 2) { m1 |= 0x10; m2 &= ~0x20; }
 
-   overlapped_setup_move(ss, map_lists[s_qtag][1]->f[MPKIND__OVERLAP][0], m1, m2, 0, result);
+   new_overlapped_setup_move(ss, MAPCODE(s_qtag,2,MPKIND__OVERLAP,0), m1, m2, 0, result);
 }
 
 
@@ -780,7 +781,7 @@ Private void do_concept_quad_diamonds_tog(
       if (ss->people[10].id1 & 2) { m1 |= 0x10; m2 &= ~0x20; }
    }
 
-   overlapped_setup_move(ss, map_lists[s_qtag][2]->f[MPKIND__OVERLAP][0], m1, m2, m3, result);
+   new_overlapped_setup_move(ss, MAPCODE(s_qtag,3,MPKIND__OVERLAP,0), m1, m2, m3, result);
 }
 
 
@@ -836,7 +837,7 @@ Private void do_concept_triple_boxes_tog(
       m1 = 0xCF; m2 = 0xFC;
    }
 
-   overlapped_setup_move(ss, map_lists[s2x4][1]->f[MPKIND__OVERLAP][0], m1, m2, 0, result);
+   new_overlapped_setup_move(ss, MAPCODE(s2x4,2,MPKIND__OVERLAP,0), m1, m2, 0, result);
 }
 
 
@@ -850,7 +851,7 @@ Private void do_concept_triple_lines(
    than through global_tbonetest. */
 
 {
-   int mapidx;
+   uint32 map_code;
 
    /* If this was triple columns, we allow stepping to a wave.  This makes it
       possible to do interesting cases of turn and weave, when one column
@@ -858,9 +859,9 @@ Private void do_concept_triple_lines(
       lines, we forbid it. */
 
    if (ss->kind == s3x4)
-      mapidx = 1;
+      map_code = MAPCODE(s1x4,3,MPKIND__SPLIT,1);
    else if (ss->kind == s1x12)
-      mapidx = 0;
+      map_code = MAPCODE(s1x4,3,MPKIND__SPLIT,0);
    else
       fail("Must have a 3x4 or 1x12 setup for this concept.");
 
@@ -877,7 +878,7 @@ Private void do_concept_triple_lines(
       else                      fail("There are no columns of 4 here.");
    }
 
-   divided_setup_move(ss, map_lists[s1x4][2]->f[MPKIND__SPLIT][mapidx], phantest_ok, TRUE, result);
+   new_divided_setup_move(ss, map_code, phantest_ok, TRUE, result);
 }
 
 
@@ -935,7 +936,7 @@ Private void do_concept_triple_lines_tog(
          m1 = 0x3F; m2 = 0xF3;
       }
    
-      overlapped_setup_move(ss, map_lists[s1x8][1]->f[MPKIND__OVERLAP][0],
+      new_overlapped_setup_move(ss, MAPCODE(s1x8,2,MPKIND__OVERLAP,0),
             m1, m2, 0, result);
    }
    else {
@@ -977,7 +978,7 @@ Private void do_concept_triple_lines_tog(
          if ((ss->people[4].id1  ^ cstuff) & 2) { m2 &= ~0x10 ; m1 |= 0x8; };
       }
    
-      overlapped_setup_move(ss, map_lists[s2x4][1]->f[MPKIND__OVERLAP][1],
+      new_overlapped_setup_move(ss, MAPCODE(s2x4,2,MPKIND__OVERLAP,1),
          m1, m2, 0, result);
    }
 }
@@ -1152,7 +1153,7 @@ Private void do_concept_grand_working(
       kk = s1x4;
    }
 
-   overlapped_setup_move(ss, map_lists[kk][arity]->f[MPKIND__OVERLAP][0], m1, m2, m3, result);
+   new_overlapped_setup_move(ss, MAPCODE(kk,arity+1,MPKIND__OVERLAP,0), m1, m2, m3, result);
 }
 
 
@@ -1220,6 +1221,78 @@ Private void do_concept_distorted(
    setup *result)
 {
    distorted_move(ss, parseptr, (disttest_kind) parseptr->concept->value.arg1, result);
+}
+
+
+Private void do_concept_dblbent(
+   setup *ss,
+   parse_block *parseptr,
+   setup *result)
+{
+
+/*
+   Args from the concept are as follows:
+   arg1 =
+      0 - user claims this is some kind of columns
+      1 - user claims this is some kind of lines
+      3 - user claims this is waves
+*/
+
+   uint32 map_code = 0;
+
+   if (global_livemask == 0xCF3) {
+      ss->people[0].id1 = rotccw(ss->people[0].id1);
+      ss->people[1].id1 = rotccw(ss->people[1].id1);
+      ss->people[6].id1 = rotccw(ss->people[6].id1);
+      ss->people[7].id1 = rotccw(ss->people[7].id1);
+      map_code = MAPCODE(s1x8,1,MPKIND_DBLBENTCW,0);
+   }
+   else if (global_livemask == 0xF3C) {
+      ss->people[2].id1 = rotcw(ss->people[2].id1);
+      ss->people[3].id1 = rotcw(ss->people[3].id1);
+      ss->people[8].id1 = rotcw(ss->people[8].id1);
+      ss->people[9].id1 = rotcw(ss->people[9].id1);
+      map_code = MAPCODE(s1x8,1,MPKIND_DBLBENTCCW,0);
+   }
+
+   if (ss->kind != sbigh || map_code == 0) fail("Must have double-bent setup for this concept.");
+
+   switch (parseptr->concept->value.arg1 & 7) {
+      case 0: ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_COLS; break;
+      case 1: ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_LINES; break;
+      case 3: ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES; break;
+   }
+
+   new_divided_setup_move(ss, map_code, phantest_ok, TRUE, result);
+
+   if (result->kind == sbigh) {
+      if (global_livemask == 0xCF3) {
+         result->people[0].id1 = rotcw(result->people[0].id1);
+         result->people[1].id1 = rotcw(result->people[1].id1);
+         result->people[6].id1 = rotcw(result->people[6].id1);
+         result->people[7].id1 = rotcw(result->people[7].id1);
+      }
+      else {
+         result->people[2].id1 = rotccw(result->people[2].id1);
+         result->people[3].id1 = rotccw(result->people[3].id1);
+         result->people[8].id1 = rotccw(result->people[8].id1);
+         result->people[9].id1 = rotccw(result->people[9].id1);
+      }
+   }
+   else if (result->kind == s4x6) {
+      if (global_livemask == 0xCF3) {
+         result->people[0].id1 = rotcw(result->people[0].id1);
+         result->people[1].id1 = rotcw(result->people[1].id1);
+         result->people[12].id1 = rotcw(result->people[12].id1);
+         result->people[13].id1 = rotcw(result->people[13].id1);
+      }
+      else {
+         result->people[4].id1 = rotccw(result->people[4].id1);
+         result->people[5].id1 = rotccw(result->people[5].id1);
+         result->people[16].id1 = rotccw(result->people[16].id1);
+         result->people[17].id1 = rotccw(result->people[17].id1);
+      }
+   }
 }
 
 
@@ -1316,7 +1389,7 @@ Private void do_concept_do_phantom_1x6(
       else                      fail("There are no columns of 6 here.");
    }
 
-   divided_setup_move(ss, map_lists[s1x6][1]->f[MPKIND__SPLIT][1], (phantest_kind) parseptr->concept->value.arg1, TRUE, result);
+   new_divided_setup_move(ss, MAPCODE(s1x6,2,MPKIND__SPLIT,1), (phantest_kind) parseptr->concept->value.arg1, TRUE, result);
 }
 
 
@@ -1330,6 +1403,8 @@ Private void do_concept_do_phantom_1x8(
    than through global_tbonetest. */
 
 {
+   uint32 map_code;
+
    if (ss->kind == s2x8) {
       if ((global_tbonetest & 011) == 011) fail("Can't do this from T-bone setup.");
 
@@ -1341,7 +1416,7 @@ Private void do_concept_do_phantom_1x8(
          else                      fail("There are no grand columns here.");
       }
 
-      divided_setup_move(ss, map_lists[s1x8][1]->f[MPKIND__SPLIT][1], (phantest_kind) parseptr->concept->value.arg1, TRUE, result);
+      map_code = MAPCODE(s1x8,2,MPKIND__SPLIT,1);
    }
    else if (ss->kind == s1x16) {
       if ((global_tbonetest & 011) == 011) fail("Can't do this from T-bone setup.");
@@ -1354,10 +1429,12 @@ Private void do_concept_do_phantom_1x8(
          else                      fail("There are no grand columns here.");
       }
 
-      divided_setup_move(ss, map_lists[s1x8][1]->f[MPKIND__SPLIT][0], (phantest_kind) parseptr->concept->value.arg1, TRUE, result);
+      map_code = MAPCODE(s1x8,2,MPKIND__SPLIT,0);
    }
    else
       fail("Must have a 2x8 or 1x16 setup for this concept.");
+
+   new_divided_setup_move(ss, map_code, (phantest_kind) parseptr->concept->value.arg1, TRUE, result);
 }
 
 
@@ -1366,29 +1443,30 @@ Private void do_concept_once_removed(
    parse_block *parseptr,
    setup *result)
 {
-   map_thing *the_map;
+   uint32 the_map;
 
    switch (ss->kind) {
       case s2x4:
-         the_map = map_lists[s2x2][1]->f[MPKIND__REMOVED][0];
+         the_map = MAPCODE(s2x2,2,MPKIND__REMOVED,0);
          break;
       case s1x8:
-         the_map = map_lists[s1x4][1]->f[MPKIND__REMOVED][0];
+         the_map = MAPCODE(s1x4,2,MPKIND__REMOVED,0);
          break;
       case s1x4:
-         the_map = map_lists[s1x2][1]->f[MPKIND__REMOVED][0];
+         the_map = MAPCODE(s1x2,2,MPKIND__REMOVED,0);
          break;
       case s_rigger:
-         the_map = map_lists[sdmd][1]->f[MPKIND__REMOVED][0];
+         the_map = MAPCODE(sdmd,2,MPKIND__REMOVED,0);
          break;
       case s_bone:    /* This is for you, Clark. */
-         the_map = map_lists[s_trngl4][1]->f[MPKIND__REMOVED][1];
+         the_map = MAPCODE(s_trngl4,2,MPKIND__REMOVED,1);
          break;
       case s_ptpd:    /* This is for you, Clark. */
-         the_map = &map_p8_tgl4;
+         /* It's too bad we can't use the "MAPCODE" mechanism here.  Maybe can fix,
+            since the stuff in "innards" is fussing with these anyway. */
          break;
       case s_qtag:
-         the_map = map_lists[sdmd][1]->f[MPKIND__REMOVED][1];
+         the_map = MAPCODE(sdmd,2,MPKIND__REMOVED,1);
          break;
       default:
          fail("Can't do 'once removed' from this setup.");
@@ -1396,7 +1474,7 @@ Private void do_concept_once_removed(
 
    if (parseptr->concept->value.arg1) {
       /* If this is the "once removed diamonds" concept, we only allow diamonds. */
-      if (the_map->inner_kind != sdmd)
+      if (ss->kind != s_qtag && ss->kind != s_rigger)
          fail("There are no once removed diamonds here.");
    }
    else {
@@ -1407,7 +1485,10 @@ Private void do_concept_once_removed(
          fail("You must use the \"once removed diamonds\" concept here.");
    }
 
-   divided_setup_move(ss, the_map, phantest_ok, TRUE, result);
+   if (ss->kind == s_ptpd)
+      divided_setup_move(ss, &map_p8_tgl4, phantest_ok, TRUE, result);
+   else
+      new_divided_setup_move(ss, the_map, phantest_ok, TRUE, result);
 }
 
 
@@ -1461,7 +1542,7 @@ Private void do_concept_new_stretch(
    parse_block *parseptr,
    setup *result)
 {
-   map_thing *maps;
+   uint32 maps;
    setup tempsetup = *ss;
    int linesp = parseptr->concept->value.arg1;
 
@@ -1493,17 +1574,17 @@ Private void do_concept_new_stretch(
    if (tempsetup.kind == s2x4) {
       swap_people(&tempsetup, 1, 2);
       swap_people(&tempsetup, 5, 6);
-      maps = map_lists[s2x2][1]->f[MPKIND__SPLIT][0];
+      maps = MAPCODE(s2x2,2,MPKIND__SPLIT,0);
    }
    else if (tempsetup.kind == s1x8) {
       swap_people(&tempsetup, 3, 6);
       swap_people(&tempsetup, 2, 7);
-      maps = map_lists[s1x4][1]->f[MPKIND__SPLIT][0];
+      maps = MAPCODE(s1x4,2,MPKIND__SPLIT,0);
    }
    else
       fail("Stretched setup call didn't start in 2x4 or 1x8 setup.");
 
-   divided_setup_move(&tempsetup, maps, phantest_ok, TRUE, result);
+   new_divided_setup_move(&tempsetup, maps, phantest_ok, TRUE, result);
 }
 
 
@@ -1573,9 +1654,22 @@ Private long_boolean fill_active_phantoms_and_move(
             bothp = ss->cmd.cmd_assume.assump_both;
          
             if (ss->cmd.cmd_assume.assump_col & 4) {
+
+
+/* This used to be:
                if ((dirtest[0] & 077) == 011)
                   { pdir = d_north; qdir = d_south; }
                else if ((dirtest[1] & 077) == 011)
+                  { pdir = d_south; qdir = d_north; }
+               else
+                  fail("Live people are not consistent.");
+*/
+
+
+
+               if ((dirtest[0] & 2) == 0 && ((bothp & 2) == 0))
+                  { pdir = d_north; qdir = d_south; }
+               else if ((dirtest[1] & 2) == 0 && ((bothp & 1) == 0))
                   { pdir = d_south; qdir = d_north; }
                else
                   fail("Live people are not consistent.");
@@ -1619,28 +1713,31 @@ Private long_boolean fill_active_phantoms_and_move(
             }
 
             goto finished_filling_in;
-         case chk_1_group:
+         case chk_groups:
             /* Figure out handedness of live people. */
-         
+
+            if (restr_thing_ptr->map2[0] != 1) return TRUE;   /* Huh??  Shouldn't happen. */
+
             for (i=0; i<restr_thing_ptr->size; i++) {
                int p = restr_thing_ptr->map1[i];
-         
-               if (ss->people[p].id1) { dirtest1 |= ss->people[p].id1; dirtest2 |= (ss->people[p].id1 ^ 2); }
+               uint32 pp = ss->people[p].id1;
+
+               if (pp) { dirtest1 |= pp; dirtest2 |= (pp ^ 2); }
             }
-         
+
             if (dirtest1 == 0)
                fail("Need live person to determine handedness.");
-         
+
             if ((dirtest1 & 077) == 010)
                { pdir = d_north; }
             else if ((dirtest2 & 077) == 010)
                { pdir = d_south; }
             else
                fail("Live people are not consistent.");
-         
+
             for (i=0; i<restr_thing_ptr->size; i++) {
                int p = restr_thing_ptr->map1[i];
-         
+
                if (!ss->people[p].id1) {
                   if (phantom_count >= 16)
                      fail("Too many phantoms.");
@@ -1650,6 +1747,46 @@ Private long_boolean fill_active_phantoms_and_move(
                else if (ss->people[p].id1 & BIT_ACT_PHAN)
                   fail("Active phantoms may only be used once.");
             }
+            goto finished_filling_in;
+         case chk_anti_groups:
+            /* Figure out handedness of live people. */
+
+            if (restr_thing_ptr->map2[0] != 1 || restr_thing_ptr->size != 2) return TRUE;   /* Huh??  Shouldn't happen. */
+
+            {
+               uint32 pp;
+
+               pp = ss->people[restr_thing_ptr->map1[0]].id1;
+               if (pp) { dirtest1 |= pp; dirtest2 |= (pp ^ 2); }
+
+               pp = ss->people[restr_thing_ptr->map1[1]].id1;
+               if (pp) { dirtest1 |= (pp ^ 2); dirtest2 |= pp; }
+            }
+
+            if (dirtest1 == 0)
+               fail("Need live person to determine handedness.");
+
+            if ((dirtest1 & 077) == 010)
+               { pdir = d_north; qdir = d_south; }
+            else if ((dirtest2 & 077) == 010)
+               { pdir = d_south; qdir = d_north; }
+            else
+               fail("Live people are not consistent.");
+
+            for (i=0 ; i<2 ; i++) {
+               int p = restr_thing_ptr->map1[i];
+               uint32 pp = ss->people[p].id1;
+
+               if (!pp) {
+                  if (phantom_count >= 16)
+                     fail("Too many phantoms.");
+                  ss->people[p].id1 = (i&1 ? qdir : pdir) | BIT_ACT_PHAN | ((phantom_count++) << 6);
+                  ss->people[p].id2 = 0;
+               }
+               else if (pp & BIT_ACT_PHAN)
+                  fail("Active phantoms may only be used once.");
+            }
+
             goto finished_filling_in;
          case chk_box:
             {
@@ -1840,7 +1977,15 @@ Private void do_concept_assume_waves(
       mean things that are unsuitable for the "assume" concept.  In some setups they
       take no action at all.  So we must check the setups on a case-by-case basis. */
 
-   if (t.assumption == cr_jleft || t.assumption == cr_jright || t.assumption == cr_ijleft || t.assumption == cr_ijright) {
+   if (t.assumption == cr_jleft || t.assumption == cr_jright) {
+      /* These assumptions work independently of the "assump_col" number. */
+      switch (ss->kind) {
+         case s1x4: goto fudge_from_1x4;
+         case s3x4: goto fudge_from_3x4;
+         case s_qtag: case s4dmd: goto check_it;
+      }
+   }
+   else if (t.assumption == cr_ijleft || t.assumption == cr_ijright) {
       /* These assumptions work independently of the "assump_col" number. */
       switch (ss->kind) {
          case s1x4: goto fudge_from_1x4;
@@ -1849,17 +1994,10 @@ Private void do_concept_assume_waves(
       }
    }
    else if (t.assump_col == 2) {
-      /* This is a special assumption -- "assume miniwaves", "assume normal boxes", or "assume inverted boxes". */
+      /* This is a special assumption -- "assume normal boxes", or "assume inverted boxes". */
 
-      if (t.assumption == cr_wave_only) {
-         switch (ss->kind) {     /* "assume miniwaves" or "assume normal boxes" */
-            case s1x2: goto check_it;
-            case s2x2: goto check_it;
-            case s2x4: goto check_it;
-         }
-      }
-      else if (t.assumption == cr_magic_only) {
-         switch (ss->kind) {     /* "assume inverted boxes" */
+      if (t.assumption == cr_wave_only || t.assumption == cr_magic_only) {
+         switch (ss->kind) {
             case s2x2: goto check_it;
             case s2x4: goto check_it;
          }
@@ -1904,9 +2042,9 @@ Private void do_concept_assume_waves(
             case s2x4:  case s3x4:  case s1x8:  case s1x4: goto check_it;
          }
       }
-      else if (t.assumption == cr_couples_only) {
-         switch (ss->kind) {     /* "assume couples" */
-            case s2x2:  case s1x2:  case s1x8:  case s1x16:  case s2x8:  case s1x4: goto check_it;
+      else if (t.assumption == cr_couples_only || t.assumption == cr_miniwaves) {
+         switch (ss->kind) {     /* "assume couples" or "assume miniwaves" */
+            case s2x2:  case s1x2:  case s1x8:  case s1x16:  case s2x8:  case s2x4:  case s1x4: goto check_it;
          }
       }
       else if (t.assumption == cr_magic_only) {
@@ -1928,14 +2066,14 @@ Private void do_concept_assume_waves(
          switch (ss->kind) {
             case s1x4: goto fudge_from_1x4;
             case s3x4: goto fudge_from_3x4;
-            case s_qtag: goto check_it;
+            case s_qtag: case s4dmd: goto check_it;
          }
       }
       else if (t.assumption == cr_qtag_like) {
          switch (ss->kind) {
             case s1x4: goto fudge_from_1x4;
             case s3x4: goto fudge_from_3x4;
-            case s_qtag: goto check_it;
+            case s_qtag: case s4dmd: goto check_it;
          }
       }
    }
@@ -2169,6 +2307,98 @@ Private void do_concept_crazy(
 
    result->result_flags = finalresultflags;
 }
+
+
+Private void do_concept_phan_crazy(
+   setup *ss,
+   parse_block *parseptr,
+   setup *result)
+{
+   int i, craziness;
+   setup tempsetup;
+   setup_command cmd;
+   setup_kind kk;
+   uint32 mapcode;
+   int rot;
+
+   uint32 finalresultflags = 0;
+   int reverseness = (parseptr->concept->value.arg1 >> 3) & 1;
+
+   tempsetup = *ss;
+
+   if (tempsetup.cmd.cmd_final_flags.herit & INHERITFLAG_REVERSE) {
+      if (reverseness) fail("Redundant 'REVERSE' modifiers.");
+      reverseness = 1;
+   }
+
+   tempsetup.cmd.cmd_final_flags.herit &= ~INHERITFLAG_REVERSE;
+   if (tempsetup.cmd.cmd_final_flags.herit | tempsetup.cmd.cmd_final_flags.final)   /* We don't allow other flags, like "cross". */
+      fail("Illegal modifier before \"crazy\".");
+
+   cmd = tempsetup.cmd;    /* We will modify these flags, and, in any case, we need
+                              to rematerialize them at each step. */
+
+   if (parseptr->concept->value.arg1 & 16)
+      craziness = parseptr->options.number_fields;
+   else
+      craziness = 4;
+
+   /* Turn on "verify waves" or whatever, for the first time only. */
+   tempsetup.cmd.cmd_misc_flags |= parseptr->concept->value.arg3;
+
+   /* Decide which way we are going to divide, once only. */
+
+   if ((parseptr->concept->value.arg1 & 7) < 4) {
+      rot = (global_tbonetest ^ parseptr->concept->value.arg1 ^ 1) & 1;
+      if ((global_tbonetest & 011) == 011) fail("People are T-boned -- try using 'standard'.");
+
+      /* We have now processed any "standard" information to determine how to split the setup.
+         If this was done nontrivially, we now have to shut off the test that we will do in the
+         divided setup -- that test would fail.  Also, we do not allow "waves", only "lines" or
+         "columns". */
+
+      if ((orig_tbonetest & 011) == 011) {
+         tempsetup.cmd.cmd_misc_flags &= ~CMD_MISC__VERIFY_MASK;
+         if ((parseptr->concept->value.arg1 & 7) == 3)
+            fail("Don't use 'crazy phantom waves' with standard; use 'crazy phantom lines'.");
+      }
+
+      kk = s4x4;
+      mapcode = MAPCODE(s2x4,2,MPKIND__SPLIT,1);
+   }
+   else if ((parseptr->concept->value.arg1 & 7) == 4) {
+      rot = tempsetup.rotation & 1;
+      kk = s2x8;
+      mapcode = MAPCODE(s2x4,2,MPKIND__SPLIT,0);
+   }
+   else {
+      rot = tempsetup.rotation & 1;
+      kk = s4dmd;
+      mapcode = MAPCODE(s_qtag,2,MPKIND__SPLIT,0);
+   }
+
+   tempsetup.rotation += rot;   /* Just flip the setup around and recanonicalize. */
+   canonicalize_rotation(&tempsetup);
+
+   for (i=0 ; i<craziness; i++) {
+      /* Check the validity of the setup each time. */
+      if (tempsetup.kind != kk || tempsetup.rotation != 0) fail("Can't do crazy phantom in this setup.");
+
+      if ((i ^ reverseness) & 1)        /* Do it in the center. */
+         concentric_move(&tempsetup, (setup_command *) 0, &tempsetup.cmd, schema_in_out_quad, 0, 0, TRUE, result);
+      else                              /* Do it on each side. */
+         new_divided_setup_move(&tempsetup, mapcode, phantest_ok, TRUE, result);
+
+      finalresultflags |= result->result_flags;
+      tempsetup = *result;
+      tempsetup.cmd = cmd;    /* Get a fresh copy of the command for next time. */
+   }
+
+   result->rotation -= rot;   /* Flip the setup back. */
+   /* The split-axis bits are gone.  If someone needs them, we have work to do. */
+   result->result_flags = finalresultflags & ~RESULTFLAG__SPLIT_AXIS_MASK;
+}
+
 
 
 Private void do_concept_fan(
@@ -2882,7 +3112,7 @@ Private void do_concept_quad_boxes(
    setup *result)
 {
    if (ss->kind != s2x8) fail("Must have a 2x8 setup for this concept.");
-   divided_setup_move(ss, map_lists[s2x2][3]->f[parseptr->concept->value.arg1][0], phantest_ok, TRUE, result);
+   new_divided_setup_move(ss, MAPCODE(s2x2,4,parseptr->concept->value.arg1,0), phantest_ok, TRUE, result);
 }
 
 
@@ -2947,6 +3177,7 @@ Private void do_concept_inner_outer(
          break;
       case 16+0: case 16+1: case 16+3:
       case 16+8+0: case 16+8+1: case 16+8+3:
+         /* Center or outside quadruple line/wave/columns. */
          if (ss->kind != s4x4 && ss->kind != s1x16) fail("Need a 1x16 or 4x4 setup for this.");
 
          if ((global_tbonetest & 011) == 011) fail("Can't do this from T-bone setup.");
@@ -2966,6 +3197,7 @@ Private void do_concept_inner_outer(
 
          break;
       case 4:
+         /* Center triple box. */
          if (ss->kind == s2x6)
             break;
          if (ss->kind == sbigrig)
@@ -2986,6 +3218,7 @@ Private void do_concept_inner_outer(
          }
          fail("Need center triple box for this.");
       case 8+4:
+         /* Outside triple boxes. */
          if (ss->kind == s2x6)
             break;
          if (ss->kind == sbigbone)
@@ -2995,7 +3228,34 @@ Private void do_concept_inner_outer(
          fail("Need outer triple boxes for this.");
       case 16+4:
       case 16+8+4:
+         /* Center or outside quadruple boxes. */
          if (ss->kind != s2x8) fail("Need a 2x8 setup for this.");
+         break;
+      case 5:
+         /* Center triple diamond. */
+         if (ss->kind == s3dmd)
+            break;
+         if (ss->kind == s3x1dmd)
+            break;
+         if (ss->kind == s1x3dmd)
+            break;
+         if (ss->kind == s_hrglass)
+            break;
+         if (ss->kind == s_dhrglass)
+            break;
+         fail("Need center triple diamond for this.");
+      case 8+5:
+         /* Outside triple diamonds. */
+         if (ss->kind == s3dmd)
+            break;
+         if (ss->kind == s3x1dmd)
+            break;
+         fail("Need outer triple diamonds for this.");
+      case 16+5:
+      case 16+8+5:
+         /* Center or outside quadruple diamonds. */
+         if (ss->kind != s4dmd) fail("Need quadruple diamonds for this.");
+         ss->cmd.cmd_misc_flags |= parseptr->concept->value.arg3;
          break;
    }
 
@@ -3031,7 +3291,7 @@ Private void do_concept_do_each_1x4(
    parse_block *parseptr,
    setup *result)
 {
-   mpkind mk;
+   uint32 map_code;
 
    if (parseptr->concept->value.arg2) {
       switch (ss->kind) {
@@ -3050,11 +3310,11 @@ Private void do_concept_do_each_1x4(
             break;
          case s2x6:
             if (global_livemask == 0xF3C) {
-               mk = MPKIND__OFFS_R_HALF;
+               map_code = MAPCODE(s1x4,2,MPKIND__OFFS_R_HALF,1);
                goto split_2x6;
             }
             else if (global_livemask == 0x3CF) {
-               mk = MPKIND__OFFS_L_HALF;
+               map_code = MAPCODE(s1x4,2,MPKIND__OFFS_L_HALF,1);
                goto split_2x6;
             }
          /* !!!!!! FALL THROUGH !!!!!! */
@@ -3067,7 +3327,7 @@ Private void do_concept_do_each_1x4(
 
    split_2x6:
 
-   divided_setup_move(ss, map_lists[s1x4][1]->f[mk][1], phantest_ok, TRUE, result);
+   new_divided_setup_move(ss, map_code, phantest_ok, TRUE, result);
 }
 
 
@@ -3081,7 +3341,7 @@ Private void do_concept_triple_boxes(
    if ((ss->cmd.cmd_misc2_flags & CMD_MISC2__MYSTIFY_SPLIT) && parseptr->concept->value.arg1 != MPKIND__SPLIT)
       fail("Mystic not allowed with this concept.");
 
-   divided_setup_move(ss, map_lists[s2x2][2]->f[parseptr->concept->value.arg1][0], phantest_ok, TRUE, result);
+   new_divided_setup_move(ss, MAPCODE(s2x2,3,parseptr->concept->value.arg1,0), phantest_ok, TRUE, result);
 }
 
 
@@ -3124,7 +3384,7 @@ Private void do_concept_triple_diamonds(
 
    if (ss->kind != s3dmd) fail("Must have a triple diamond or 1/4 tag setup for this concept.");
    ss->cmd.cmd_misc_flags |= parseptr->concept->value.arg2;
-   divided_setup_move(ss, map_lists[sdmd][2]->f[MPKIND__SPLIT][1], phantest_ok, TRUE, result);
+   new_divided_setup_move(ss, MAPCODE(sdmd,3,MPKIND__SPLIT,1), phantest_ok, TRUE, result);
 }
 
 
@@ -3137,7 +3397,7 @@ Private void do_concept_quad_diamonds(
 
    if (ss->kind != s4dmd) fail("Must have a quadruple diamond or 1/4 tag setup for this concept.");
    ss->cmd.cmd_misc_flags |= parseptr->concept->value.arg2;
-   divided_setup_move(ss, map_lists[sdmd][3]->f[MPKIND__SPLIT][1], phantest_ok, TRUE, result);
+   new_divided_setup_move(ss, MAPCODE(sdmd,4,MPKIND__SPLIT,1), phantest_ok, TRUE, result);
 }
 
 
@@ -3247,7 +3507,7 @@ Private void do_concept_ferris(
          fail("Incorrect facing directions.");
    }
 
-   divided_setup_move(&temp, map_lists[s1x4][2]->f[MPKIND__SPLIT][1], phantest_ok, TRUE, result);
+   new_divided_setup_move(&temp, MAPCODE(s1x4,3,MPKIND__SPLIT,1), phantest_ok, TRUE, result);
 
    /* Squash phantoms if they are properly placed. */
 
@@ -3287,7 +3547,7 @@ Private void do_concept_overlapped_diamond(
    setup *result)
 {
    setup temp;
-   map_thing *map;
+   uint32 map;
 
    /* Split an 8 person setup. */
    if (setup_attrs[ss->kind].setup_limits == 7) {
@@ -3309,7 +3569,7 @@ Private void do_concept_overlapped_diamond(
          clear_person(&temp, 3);
          clear_person(&temp, 6);
          clear_person(&temp, 7);
-         map = map_lists[sdmd][1]->f[MPKIND__DMD_STUFF][0];
+         map = MAPCODE(sdmd,2,MPKIND__DMD_STUFF,0);
          goto fixup;
       case sdmd:
          if (!(parseptr->concept->value.arg1 & 1))
@@ -3325,7 +3585,7 @@ Private void do_concept_overlapped_diamond(
          clear_person(&temp, 2);
          clear_person(&temp, 5);
          clear_person(&temp, 6);
-         map = map_lists[s1x4][1]->f[MPKIND__DMD_STUFF][0];
+         map = MAPCODE(s1x4,2,MPKIND__DMD_STUFF,0);
          goto fixup;
    }
 
@@ -3335,7 +3595,7 @@ Private void do_concept_overlapped_diamond(
 
    temp.kind = s_thar;
    canonicalize_rotation(&temp);
-   divided_setup_move(&temp, map, phantest_ok, TRUE, result);
+   new_divided_setup_move(&temp, map, phantest_ok, TRUE, result);
 
    if (result->kind == s2x2)
       return;
@@ -3404,7 +3664,7 @@ Private void do_concept_all_8(
             (ss->people[13].id1 != 0 && ((ss->people[13].id1) & 1) != 0))
          fail("Must be in squared set spots.");
 
-      divided_setup_move(ss, map_lists[s2x2][1]->f[MPKIND__ALL_8][0], phantest_ok, TRUE, result);
+      new_divided_setup_move(ss, MAPCODE(s2x2,2,MPKIND__ALL_8,0), phantest_ok, TRUE, result);
 
       if (result->kind == s4x4)
          goto check_col_ending;
@@ -3416,9 +3676,9 @@ Private void do_concept_all_8(
       if (ss->kind == s_thar) {
          /* Either one is legal in a thar. */
          if (key == 1)
-            divided_setup_move(ss, map_lists[s1x4][1]->f[MPKIND__ALL_8][0], phantest_ok, TRUE, result);
+            new_divided_setup_move(ss, MAPCODE(s1x4,2,MPKIND__ALL_8,0), phantest_ok, TRUE, result);
          else
-            divided_setup_move(ss, map_lists[sdmd][1]->f[MPKIND__ALL_8][0], phantest_ok, TRUE, result);
+            new_divided_setup_move(ss, MAPCODE(sdmd,2,MPKIND__ALL_8,0), phantest_ok, TRUE, result);
 
          /* The above stuff did an "elongate perpendicular to the long axis of the 1x4 or diamond"
             operation, also known as an "ends' part of concentric" operation.  Some people believe
@@ -3486,7 +3746,7 @@ Private void do_concept_all_8(
                   (ss->people[14].id1 != 0 && ((ss->people[14].id1 ^ d_west) & d_mask) != 0)))
             fail("Must not be directly back-to-back.");
 
-         divided_setup_move(ss, map_lists[s2x2][1]->f[MPKIND__ALL_8][0], phantest_ok, TRUE, result);
+         new_divided_setup_move(ss, MAPCODE(s2x2,2,MPKIND__ALL_8,0), phantest_ok, TRUE, result);
 
          /* If this ended in a thar, we accept it.  If not, we have the usual lines-to-lines/
             columns-to-columns problem.  We don't know whether to enforce column spots, line spots,
@@ -4263,7 +4523,7 @@ Private void do_concept_concentric(
          }
       
          ss->cmd.parseptr = parseptr;    /* Reset it to execute this same concept again, until it doesn't have to split any more. */
-         divided_setup_move(ss, map_lists[mf->a][1]->f[MPKIND__SPLIT][mf->b], phantest_ok, TRUE, result);
+         new_divided_setup_move(ss, MAPCODE(mf->a,2,MPKIND__SPLIT,mf->b), phantest_ok, TRUE, result);
          break;
       default:
          concentric_move(ss, &ss->cmd, &ss->cmd,
@@ -4483,8 +4743,12 @@ extern long_boolean do_big_concept(
       if (concept_table[substandard_concptptr->concept->kind].concept_prop & CONCPROP__SET_PHANTOMS)
          ss->cmd.cmd_misc_flags |= CMD_MISC__PHANTOMS;
 
-      if (!(ss->cmd.cmd_misc_flags & CMD_MISC__NO_EXPAND_MATRIX))
-         do_matrix_expansion(ss, concept_table[substandard_concptptr->concept->kind].concept_prop, FALSE);
+      if (!(ss->cmd.cmd_misc_flags & CMD_MISC__NO_EXPAND_MATRIX)) {
+         uint32 prop_bits = concept_table[substandard_concptptr->concept->kind].concept_prop;
+         /* If the "arg2_matrix" bit is on, pick up additional matrix descriptor bits from the arg2 word. */
+         if (prop_bits & CONCPROP__NEED_ARG2_MATRIX) prop_bits |= substandard_concptptr->concept->value.arg2;
+         do_matrix_expansion(ss, prop_bits, FALSE);
+      }
 
       ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
 
@@ -4521,6 +4785,7 @@ extern long_boolean do_big_concept(
    
       global_tbonetest = stdtest;
       global_livemask = livemask;
+      orig_tbonetest = tbonetest;
 
       ss->cmd.parseptr = substandard_concptptr->next;
       (concept_table[substandard_concptptr->concept->kind].concept_action)(ss, substandard_concptptr, result);
@@ -4580,6 +4845,8 @@ extern long_boolean do_big_concept(
       }
 
       current_options.who = saved_selector;
+
+      orig_tbonetest = global_tbonetest;
 
       if (!global_tbonetest) {
          result->result_flags = 0;
@@ -4679,6 +4946,8 @@ concept_table_item concept_table[] = {
    /* concept_in_out_line_4 */            {CONCPROP__NEED_ARG2_MATRIX | CONCPROP__STANDARD | Nostep_phantom,                       do_concept_inner_outer},
    /* concept_in_out_box_3 */             {CONCPROP__NEED_ARG2_MATRIX | Nostep_phantom,                                            do_concept_inner_outer},
    /* concept_in_out_box_4 */             {CONCPROP__NEED_ARG2_MATRIX | Nostep_phantom,                                            do_concept_inner_outer},
+   /* concept_in_out_dmd_3 */             {CONCPROP__NEED_ARG2_MATRIX | Nostep_phantom,                                            do_concept_inner_outer},
+   /* concept_in_out_dmd_4 */             {CONCPROP__NEED_ARG2_MATRIX | Nostep_phantom,                                            do_concept_inner_outer},
    /* concept_triple_diag */              {CONCPROP__NEEDK_BLOB | Nostep_phantom | CONCPROP__STANDARD,                             do_concept_triple_diag},
    /* concept_triple_diag_together */     {CONCPROP__NEEDK_BLOB | Nostep_phantom | CONCPROP__GET_MASK,                             do_concept_triple_diag_tog},
    /* concept_triple_twin */              {CONCPROP__NEEDK_4X6 | CONCPROP__NO_STEP | Standard_matrix_phantom,                      triple_twin_move},
@@ -4692,6 +4961,8 @@ concept_table_item concept_table[] = {
    /* concept_snag_mystic */              {CONCPROP__MATRIX_OBLIVIOUS,                                                             do_concept_central},
    /* concept_crazy */                    {CONCPROP__PERMIT_REVERSE,                                                               do_concept_crazy},
    /* concept_frac_crazy */               {CONCPROP__USE_NUMBER | CONCPROP__PERMIT_REVERSE,                                        do_concept_crazy},
+   /* concept_phan_crazy */               {CONCPROP__PERMIT_REVERSE | CONCPROP__NEED_ARG2_MATRIX | CONCPROP__SET_PHANTOMS | CONCPROP__STANDARD, do_concept_phan_crazy},
+   /* concept_frac_phan_crazy */          {CONCPROP__USE_NUMBER | CONCPROP__NEED_ARG2_MATRIX | CONCPROP__PERMIT_REVERSE | CONCPROP__SET_PHANTOMS | CONCPROP__STANDARD, do_concept_phan_crazy},
    /* concept_fan */                      {0,                                                                                      do_concept_fan},
    /* concept_c1_phantom */               {CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__NO_STEP | CONCPROP__GET_MASK,                    do_c1_phantom_move},
    /* concept_grand_working */            {CONCPROP__PERMIT_MATRIX | CONCPROP__SET_PHANTOMS,                                       do_concept_grand_working},
@@ -4724,4 +4995,5 @@ concept_table_item concept_table[] = {
    /* concept_fractional */               {CONCPROP__USE_NUMBER | CONCPROP__USE_TWO_NUMBERS | CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT, do_concept_fractional},
    /* concept_rigger */                   {CONCPROP__NO_STEP,                                                                      do_concept_rigger},
    /* concept_common_spot */              {CONCPROP__NO_STEP,                                                                      common_spot_move},
+   /* concept_dblbent */                  {CONCPROP__NO_STEP | CONCPROP__GET_MASK,                                                 do_concept_dblbent},
    /* concept_diagnose */                 {0,                                                                                      do_concept_diagnose}};
