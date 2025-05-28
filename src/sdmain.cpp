@@ -21,8 +21,8 @@
     General Public License if you distribute the file.
 */
 
-#define VERSION_STRING "34.7f"
-#define TIME_STAMP "wba@alum.mit.edu  30 April 2002 $"
+#define VERSION_STRING "34.7g"
+#define TIME_STAMP "wba@alum.mit.edu  3 May 2002 $"
 
 /* This defines the following functions:
    sd_version_string

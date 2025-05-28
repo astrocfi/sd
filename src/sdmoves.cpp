@@ -5947,7 +5947,10 @@ extern void move(
          p2.subsidiary_root = &p3;
          p3.call = ss->cmd.callspec;
          p3.call_to_print = p3.call;
-         p3.concept = &mark_end_of_list;
+
+         if (p3.concept->kind != concept_another_call_next_mod)
+            p3.concept = &mark_end_of_list;
+
          p3.no_check_call_level = 1;
          p3.options = current_options;
          ss->cmd.parseptr = &p1;
