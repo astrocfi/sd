@@ -1405,18 +1405,18 @@ struct checkitem {
 
 
 static const checkitem checktable[] = {
-   {0x00A60026, 0x08080104, s_nxtrglcw,  ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00A60026, 0x0C008002, s_nxtrglccw, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00630095, 0x00840050, spgdmdcw,  ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00630095, 0x10800A00, spgdmdccw, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00A20026, 0x08008404, s_rigger, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00770077, 0x00418004, s_galaxy, ~0, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00A60026, 0x08080104, s_nxtrglcw,  UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00A60026, 0x0C008002, s_nxtrglccw, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00630095, 0x00840050, spgdmdcw,  UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00630095, 0x10800A00, spgdmdccw, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00A20026, 0x08008404, s_rigger, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00770077, 0x00418004, s_galaxy, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
    // Fudge this to a galaxy.  The center 2 did a squeeze or spread from a spindle.
-   {0x00840066, 0x0C000108, s_galaxy, ~0, 0, warn__check_galaxy, (const coordrec *) 0,
+   {0x00840066, 0x0C000108, s_galaxy, UINT32_C(~0), 0, warn__check_galaxy, (const coordrec *) 0,
     {0, 6, 0, 7,       0, -6, 0, -7,     8, 0, 7, 0,       -8, 0, -7, 0,
      4, 2, 2, 2,       4, -2, 2, -2,     -4, 2, -2, 2,     -4, -2, -2, -2}},
    // Fudge this to quadruple diamonds.  Someone trucked out from a wqtag.
-   {0x00E70055, 0x0900A422, s4dmd, ~0, 0, warn__none, (const coordrec *) 0,
+   {0x00E70055, 0x0900A422, s4dmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0,
     {-4, 5, -5, 5, 4, -5, 5, -5, 127}},
    // Next two: The centers did a 1/2 truck from point-to-point diamonds.  Fudge to a 3x6.
    {0x00930044, 0x01018800, s3x6, 0522522, 0, warn__none, (const coordrec *) 0,
@@ -1432,60 +1432,60 @@ static const checkitem checktable[] = {
      -2, -5, -5, -5,   2, -5, 4, -5,     5, -5, 4, -5}},
 
    // The centers did a 1/2 truck from a 3x6.  Fudge to point-to-point diamonds.
-   {0x00A20026, 0x09080002, nothing, ~0, 0, warn__none, &truck_to_ptpd, {127}},
+   {0x00A20026, 0x09080002, nothing, UINT32_C(~0), 0, warn__none, &truck_to_ptpd, {127}},
 
    // Fudge to 2x4.  People pressed ahead from an alamo ring.
-   {0x00530023, 0x00102090, s2x4,  ~0, 0, warn__none, (const coordrec *) 0,
+   {0x00530023, 0x00102090, s2x4,  UINT32_C(~0), 0, warn__none, (const coordrec *) 0,
     {-5, 2, -6, 2,     -2, 1, -2, 2,     2, 1, 2, 2,       5, 2, 6, 2,
      5, -2, 6, -2,     2, -1, 2, -2,     -2, -1, -2, -2,   -5, -2, -6, -2}},
 
    // OK to here (13).  This has something to do with "initialize_matrix_position_tables".
    // Not sure what that was about.
 
-   {0x00230053, 0x00220009, s2x4,  ~0, 1, warn__none, (const coordrec *) 0,
+   {0x00230053, 0x00220009, s2x4,  UINT32_C(~0), 1, warn__none, (const coordrec *) 0,
     {2, -5, 2, -6,      1, -2, 2, -2,
      1, 2, 2, 2,        2, 5, 2, 6,
      -2, 5, -2, 6,      -1, 2, -2, 2,
      -1, -2, -2, -2,    -2, -5, -2, -6}},
 
-   {0x00770073, 0x0001A005, sdeep2x1dmd,  ~0, 0, warn__none, (const coordrec *) 0,
+   {0x00770073, 0x0001A005, sdeep2x1dmd,  UINT32_C(~0), 0, warn__none, (const coordrec *) 0,
     {7, 2, 6, 2,        7, -2, 6, -2,
      -7, 2, -6, 2,      -7, -2, -6, -2, 127}},
 
-   {0x00730077, 0x00408304, sdeep2x1dmd,  ~0, 1, warn__none, (const coordrec *) 0,
+   {0x00730077, 0x00408304, sdeep2x1dmd,  UINT32_C(~0), 1, warn__none, (const coordrec *) 0,
     {2, 7, 2, 6,        2, -7, 2, -6,
      -2, 7, -2, 6,      -2, -7, -2, -6, 127}},
 
-   {0x00620073, 0x00088306, s4x4,  ~0, 0, warn__none, (const coordrec *) 0,
+   {0x00620073, 0x00088306, s4x4,  UINT32_C(~0), 0, warn__none, (const coordrec *) 0,
     {2, 7, 2, 6,        2, -7, 2, -6,
      -2, 7, -2, 6,      -2, -7, -2, -6, 127}},
 
-   {0x00730073, 0x0000A305, s4x4,  ~0, 0, warn__none, (const coordrec *) 0,
+   {0x00730073, 0x0000A305, s4x4,  UINT32_C(~0), 0, warn__none, (const coordrec *) 0,
     {2, 7, 2, 6,        2, -7, 2, -6,
      -2, 7, -2, 6,      -2, -7, -2, -6,
      7, 2, 6, 2,        7, -2, 6, -2,
      -7, 2, -6, 2,      -7, -2, -6, -2}},
 
    // 1/2 press ahead from LH star promenade.
-   {0x00930093, 0x41020080, s_c1phan, ~0, 0, warn__check_c1_phan, (const coordrec *) 0,
+   {0x00930093, 0x41020080, s_c1phan, UINT32_C(~0), 0, warn__check_c1_phan, (const coordrec *) 0,
     { -2, 9, -3, 13,    -2, 5, -3, 9,
       9, 2, 15, 4,      5, 2, 11, 4,
       2, -9, 4, -14,    2, -5, 4, -10,
       -9, -2, -14, -7,  -5, -2, -10, -7}},
    // 1/2 press ahead from RH star promenade.  Have to list them separately, because can only have 8 specifiers.
-   {0x00930093, 0x00140041, s_c1phan, ~0, 0, warn__check_c1_phan, (const coordrec *) 0,
+   {0x00930093, 0x00140041, s_c1phan, UINT32_C(~0), 0, warn__check_c1_phan, (const coordrec *) 0,
     { -9, 2, -6, 4,     -5, 2, -2, 4,
       2, 9, 4, 7,       2, 5, 4, 3,
       9, -2, 7, -5,     5, -2, 3, -5,
       -2, -9, -5, -6,   -2, -5, -5, -2}},
    // Full press ahead from LH star promenade.  Goes to same setup as 1/2 press ahead.
-   {0x00950095, 0x00810404, s_c1phan, ~0, 0, warn__check_c1_phan, (const coordrec *) 0,
+   {0x00950095, 0x00810404, s_c1phan, UINT32_C(~0), 0, warn__check_c1_phan, (const coordrec *) 0,
     { -4, 9, -3, 13,    -4, 5, -3, 9,
       9, 4, 15, 4,      5, 4, 11, 4,
       4, -9, 4, -14,    4, -5, 4, -10,
       -9, -4, -14, -7,  -5, -4, -10, -7}},
    // As above, RH.
-   {0x00950095, 0x11000800, s_c1phan, ~0, 0, warn__check_c1_phan, (const coordrec *) 0,
+   {0x00950095, 0x11000800, s_c1phan, UINT32_C(~0), 0, warn__check_c1_phan, (const coordrec *) 0,
     { -9, 4, -6, 4,     -5, 4, -2, 4,
       4, 9, 4, 7,       4, 5, 4, 3,
       9, -4, 7, -5,     5, -4, 3, -5,
@@ -1493,280 +1493,283 @@ static const checkitem checktable[] = {
 
    // Next 2 items: fudge to a galaxy.  The points got here by pressing and trucking.
    // Don't need to tell them to check a galaxy -- it's pretty obvious.
-   {0x00660066, 0x08008404, s_galaxy, ~0, 0, warn__none, (const coordrec *) 0,
+   {0x00660066, 0x08008404, s_galaxy, UINT32_C(~0), 0, warn__none, (const coordrec *) 0,
     {0, 6, 0, 7, 0, -6, 0, -7, 6, 0, 7, 0, -6, 0, -7, 0, 127}},
-   {0x00660077, 0x00018404, s_galaxy, ~0, 0, warn__none, (const coordrec *) 0,
+   {0x00660077, 0x00018404, s_galaxy, UINT32_C(~0), 0, warn__none, (const coordrec *) 0,
     {0, 6, 0, 7, 0, -6, 0, -7, 6, 0, 7, 0, -6, 0, -7, 0, 127}},
 
    // Next 2 items: the trailing points pressed ahead from quadruple diamonds,
    // so that only the centers 2 diamonds are now occupied.  Fudge to diamonds.
-   {0x00730055, 0x01008420, nothing, ~0, 0, warn__check_dmd_qtag, &press_4dmd_qtag1, {127}},
-   {0x00710051, 0x01008420, nothing, ~0, 0, warn__check_dmd_qtag, &press_4dmd_qtag1, {127}},
+   {0x00730055, 0x01008420, nothing, UINT32_C(~0), 0, warn__check_dmd_qtag, &press_4dmd_qtag1, {127}},
+   {0x00710051, 0x01008420, nothing, UINT32_C(~0), 0, warn__check_dmd_qtag, &press_4dmd_qtag1, {127}},
    // Next 2 items: same, other way.
-   {0x00730055, 0x21080400, nothing, ~0, 0, warn__check_dmd_qtag, &press_4dmd_qtag2, {127}},
-   {0x00710051, 0x21080400, nothing, ~0, 0, warn__check_dmd_qtag, &press_4dmd_qtag2, {127}},
+   {0x00730055, 0x21080400, nothing, UINT32_C(~0), 0, warn__check_dmd_qtag, &press_4dmd_qtag2, {127}},
+   {0x00710051, 0x21080400, nothing, UINT32_C(~0), 0, warn__check_dmd_qtag, &press_4dmd_qtag2, {127}},
 
    // The points pressed ahead from normal diamonds.  Fudge to quadruple diamonds.
-   {0x00970055, 0x01400480, nothing, ~0, 0, warn__check_quad_dmds, &press_qtag_4dmd1, {127}},
+   {0x00970055, 0x01400480, nothing, UINT32_C(~0), 0, warn__check_quad_dmds, &press_qtag_4dmd1, {127}},
    // Same, other way.
-   {0x00870055, 0x09080400, nothing, ~0, 0, warn__check_quad_dmds, &press_qtag_4dmd2, {127}},
+   {0x00870055, 0x09080400, nothing, UINT32_C(~0), 0, warn__check_quad_dmds, &press_qtag_4dmd2, {127}},
 
    // This must precede the "squeezefinalglass" stuff.
-   {0x00620026, 0x01080002, s_bone6, ~0, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00620026, 0x01080002, s_bone6, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
 
    // People 1/2 pressed ahead from quadruple 3/4 tags.  Fudge to a 4x4.
-   {0x00B10071, 0x01806000, nothing, ~0, 0, warn__none, &press_4dmd_4x4, {127}},
+   {0x00B10071, 0x01806000, nothing, UINT32_C(~0), 0, warn__none, &press_4dmd_4x4, {127}},
 
    // Next 2 items: six poeple did a squeeze from a galaxy.  Fudge to an hourglass.
-   {0x00260062, 0x10100600, nothing, ~0, 0, warn__none, &squeezefinalglass, {127}},
-   {0x00660066, 0x10100600, nothing, ~0, 0, warn__none, &squeezefinalglass, {127}},
+   {0x00260062, 0x10100600, nothing, UINT32_C(~0), 0, warn__none, &squeezefinalglass, {127}},
+   {0x00660066, 0x10100600, nothing, UINT32_C(~0), 0, warn__none, &squeezefinalglass, {127}},
    // Next 2 items: same, other way.
-   {0x00620026, 0x09080002, nothing, ~0, 1, warn__none, &squeezefinalglass, {127}},
-   {0x00660066, 0x09080002, nothing, ~0, 1, warn__none, &squeezefinalglass, {127}},
+   {0x00620026, 0x09080002, nothing, UINT32_C(~0), 1, warn__none, &squeezefinalglass, {127}},
+   {0x00660066, 0x09080002, nothing, UINT32_C(~0), 1, warn__none, &squeezefinalglass, {127}},
 
    // Some points did a squeeze from a galaxy.  Fudge to a spindle.
-   {0x00660026, 0x00008604, s_spindle, ~0, 0, warn__none, (const coordrec *) 0,
+   {0x00660026, 0x00008604, s_spindle, UINT32_C(~0), 0, warn__none, (const coordrec *) 0,
     {6, 0, 8, 0, -6, 0, -8, 0,
      2, 2, 4, 2, 2, -2, 4, -2, -2, 2, -4, 2, -2, -2, -4, -2, 127}},
    // Same, on other orientation.
-   {0x00260066, 0x09008004, s_spindle, ~0, 1, warn__none, (const coordrec *) 0,
+   {0x00260066, 0x09008004, s_spindle, UINT32_C(~0), 1, warn__none, (const coordrec *) 0,
     {0, 6, 0, 8, 0, -6, 0, -8,
      2, 2, 2, 4, -2, 2, -2, 4, 2, -2, 2, -4, -2, -2, -2, -4, 127}},
 
-   {0x01150026, 0x20048202, s1x4dmd, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00D50026, 0x24009102, s1x4p2dmd, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00D50026, 0x22009022, splinepdmd, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00A60055, 0x09000400, splinedmd, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00670046, 0x109408C1, slinedmd, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00660062, 0x1810C244, slinepdmd, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00460086, 0x00242861, sdmdpdmd, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00660095, 0x40050031, s_trngl8,  ~0, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x01150026, 0x20048202, s1x4dmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00D50026, 0x24009102, s1x4p2dmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00D50026, 0x22009022, splinepdmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00A60055, 0x09000400, splinedmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00670046, 0x109408C1, slinedmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00660062, 0x1810C244, slinepdmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00460086, 0x00242861, sdmdpdmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00660095, 0x40050031, s_trngl8,  UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
 
-   {0x00950062, 0x091002C0, sbigdmd, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00550062, 0x091002C0, sbigdmd, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00910022, 0x091002C0, sbigdmd, ~0, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00950062, 0x091002C0, sbigdmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00550062, 0x091002C0, sbigdmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00910022, 0x091002C0, sbigdmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
 
-   {0x00950095, 0x22008080, s_thar, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00530053, 0x00120081, s_alamo, ~0, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00950095, 0x22008080, s_thar, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00530053, 0x00120081, s_alamo, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
 
    // This is a "crosswave" on precise matrix spots.
-   {0x00660084, 0x01040420, nothing, ~0, 1, warn__none, &acc_crosswave, {127}},
+   {0x00660084, 0x01040420, nothing, UINT32_C(~0), 1, warn__none, &acc_crosswave, {127}},
 
-   {0x00950066, 0x28008200, s_crosswave, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00A20026, 0x01040420, s_bone, ~0, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00950066, 0x28008200, s_crosswave, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00A20026, 0x01040420, s_bone, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
    // Pressed in from a bigh.
-   {0x00930026, 0x01000440, s_bone, ~0, 0, warn__none, (const coordrec *) 0,
+   {0x00930026, 0x01000440, s_bone, UINT32_C(~0), 0, warn__none, (const coordrec *) 0,
     {-9, 2, -10, 2, -9, -2, -10, -2, 9, 2, 10, 2, 9, -2, 10, -2}},
-   {0x00260062, 0x08008004, s_short6, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00840026, 0x04000308, s_spindle, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00840046, 0x04210308, sd3x4,  ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00840044, 0x04210308, sd3x4,  ~0, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00260062, 0x08008004, s_short6, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00840026, 0x04000308, s_spindle, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00840046, 0x04210308, sd3x4,  UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00840044, 0x04210308, sd3x4,  UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
 
-   {0x00C40026, 0x06109384, sd4x5,  ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00C40046, 0x06109384, sd4x5,  ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00C40086, 0x06109384, sd4x5,  ~0, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00C40026, 0x06109384, sd4x5,  UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00C40046, 0x06109384, sd4x5,  UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00C40086, 0x06109384, sd4x5,  UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
 
-   {0x00A200A2, 0x101CC4E6, s_bigblob, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00670055, 0x01000420, s_qtag, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00770055, 0x01400420, s_2stars, ~0, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00A200A2, 0x101CC4E6, s_bigblob, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00670055, 0x01000420, s_qtag, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00770055, 0x01400420, s_2stars, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
 
    // Inner wing did a tow-truck-like operation from a rigger, for example,
    // after a sets in motion.  Fudge to a 1/4 tag.  This is serious fudging, and marked as such with the "0x100".
-   {0x00620026, 0x01008404, s_qtag, ~0, 0x100, warn__none, (const coordrec *) 0,
+   {0x00620026, 0x01008404, s_qtag, UINT32_C(~0), 0x100, warn__none, (const coordrec *) 0,
     {-2, 2, -4, 5, 2, 2, 5, 5, 2, -2, 4, -5, -2, -2, -5, -5, 127}},
 
    // Similar to the above, but truck was from a deepxwv.
-   {0x00620066, 0x11100400, s_qtag, ~0, 0, warn__none, (const coordrec *) 0,
+   {0x00620066, 0x11100400, s_qtag, UINT32_C(~0), 0, warn__none, (const coordrec *) 0,
     {-2, 6, -4, 5, 2, 6, 5, 5, 2, -6, 4, -5, -2, -6, -5, -5, 127}},
 
    // Inner people did a 1/2 E.R.A. from a deepxwv.
-   {0x00A60066, 0x08000600, s_crosswave, ~0, 0, warn__none, (const coordrec *) 0,
+   {0x00A60066, 0x08000600, s_crosswave, UINT32_C(~0), 0, warn__none, (const coordrec *) 0,
     {10, 0, 9, 0, 6, 0, 5, 0, -10, 0, -9, 0, -6, 0, -5, 0, 127}},
 
    // Inner wing did a 1/2 tow truck from a crosswave.  We want a thar.
-   {0x00750066, 0x08400220, s_thar, ~0, 0, warn__none, (const coordrec *) 0,
+   {0x00750066, 0x08400220, s_thar, UINT32_C(~0), 0, warn__none, (const coordrec *) 0,
     {-7, 0, -9, 0, -3, 0, -5, 0, 0, 6, 0, 9, 0, 2, 0, 5,
     7, 0, 9, 0, 3, 0, 5, 0, 0, -6, 0, -9, 0, -2, 0, -5}},
 
    // Outer person did a 1/2 tow truck from a thar.  We want a crosswave.
-   {0x00B50095, 0x02400180, s_crosswave, ~0, 0, warn__none, (const coordrec *) 0,
+   {0x00B50095, 0x02400180, s_crosswave, UINT32_C(~0), 0, warn__none, (const coordrec *) 0,
     {-11, 0, -9, 0, -7, 0, -5, 0, 0, 9, 0, 6, 0, 5, 0, 2,
     11, 0, 9, 0, 7, 0, 5, 0, 0, -9, 0, -6, 0, -5, 0, -2}},
 
-   {0x00570067, 0x03100084, s_hsqtag, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00570057, 0x03100084, s_hsqtag, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00750067, 0x28008200, s_dmdlndmd, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00950067, 0x28008200, s_dmdlndmd, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00550067, 0x08410200, s_qtag, ~0, 1, warn__none, (const coordrec *) 0, {127}},
-   {0x00620046, 0x01080842, sd2x5, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00A20046, 0x010C0862, sd2x7, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00660055, 0x01000480, s_2x1dmd, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00950026, 0x20008200, s_1x2dmd, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00D50026, 0x20008202, s1x3dmd, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00A30055, 0x09000420, swqtag, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00A60055, 0x09000420, swqtag, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00A70055, 0x09000420, swqtag, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00950057, 0x20008620, swhrglass, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00660073, 0x00098006, sdeep2x1dmd, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00A60055, 0x09000480, s3x1dmd, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00A30055, 0x29008480, s3dmd, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00A70055, 0x29008480, s3dmd, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00770055, 0x29008480, s3dmd, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00730055, 0x29008480, s3dmd, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00E30055, 0x0940A422, s4dmd, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00B30055, 0x0940A422, s4dmd, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00B10051, 0x0940A422, s4dmd, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00A30055, 0x0940A422, s4dmd, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00D50057, 0x20008202, s_3mdmd, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00B50057, 0x20008202, s_3mdmd, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00B70057, 0x41022480, s_3mptpd, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00E70057, 0x41022480, s_3mptpd, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00D50066, 0x28048202, sbigx, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x01150066, 0x28048202, sbigx, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00D10004, 0x28048202, sbigx, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00910004, 0x28048202, sbigx, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x01110004, 0x28048202, sbigx, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00A20066, 0x18108404, sdeepxwv, ~0, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00570067, 0x03100084, s_hsqtag, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00570057, 0x03100084, s_hsqtag, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00750067, 0x28008200, s_dmdlndmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00950067, 0x28008200, s_dmdlndmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00550067, 0x08410200, s_qtag, UINT32_C(~0), 1, warn__none, (const coordrec *) 0, {127}},
+   {0x00620046, 0x01080842, sd2x5, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00A20046, 0x010C0862, sd2x7, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00660055, 0x01000480, s_2x1dmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00950026, 0x20008200, s_1x2dmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00D50026, 0x20008202, s1x3dmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00A30055, 0x09000420, swqtag, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00A60055, 0x09000420, swqtag, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00A70055, 0x09000420, swqtag, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00950057, 0x20008620, swhrglass, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00660073, 0x00098006, sdeep2x1dmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00A60055, 0x09000480, s3x1dmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00A30055, 0x29008480, s3dmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00A70055, 0x29008480, s3dmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00770055, 0x29008480, s3dmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00730055, 0x29008480, s3dmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00E30055, 0x0940A422, s4dmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00B30055, 0x0940A422, s4dmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00B10051, 0x0940A422, s4dmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00A30055, 0x0940A422, s4dmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00D50057, 0x20008202, s_3mdmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00B50057, 0x20008202, s_3mdmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00B70057, 0x41022480, s_3mptpd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00E70057, 0x41022480, s_3mptpd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00D50066, 0x28048202, sbigx, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x01150066, 0x28048202, sbigx, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00D10004, 0x28048202, sbigx, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00910004, 0x28048202, sbigx, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x01110004, 0x28048202, sbigx, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00A20066, 0x18108404, sdeepxwv, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
    // Someone trucked from a deep2x1dmd to a deepxwv.
-   {0x006600B3, 0x0008800E, nothing, ~0, 1, warn__none, &truck_to_deepxwv, {127}},
-   {0x00F30066, 0x12148904, sbigbigx, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x01130066, 0x12148904, sbigbigx, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x01330066, 0x12148904, sbigbigx, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x01130066, 0x09406600, sbigbigh, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x01130026, 0x09406600, sbigbigh, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00550057, 0x20000620, s_hrglass, ~0, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x006600B3, 0x0008800E, nothing, UINT32_C(~0), 1, warn__none, &truck_to_deepxwv, {127}},
+   {0x00F30066, 0x12148904, sbigbigx, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x01130066, 0x12148904, sbigbigx, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x01330066, 0x12148904, sbigbigx, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x01130066, 0x09406600, sbigbigh, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x01130026, 0x09406600, sbigbigh, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00550057, 0x20000620, s_hrglass, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
    // The checkpointers squeezed or spread from a spindle.  Fudge to an hourglass.
-   {0x00840066, 0x00202208, s_hrglass, ~0, 0, warn__none, (const coordrec *) 0,
+   {0x00840066, 0x00202208, s_hrglass, UINT32_C(~0), 0, warn__none, (const coordrec *) 0,
     {-4, 6, -4, 5, 4, 6, 5, 5, 4, -6, 4, -5, -4, -6, -5, -5, 8, 0, 5, 0, -8, 0, -5, 0, 127}},
-   {0x00A70026, 0x20040220, s_dhrglass, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00930026, 0x01108080, s_ptpd, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00910026, 0x01108080, s_ptpd, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00530026, 0x01108080, s_ptpd, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00620044, 0x11800C40, s3x4, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00440062, 0x0C202300, s3x4, ~0, 1, warn__none, (const coordrec *) 0, {127}},
-   {0x00840022, 0x06001300, s2x5, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00220084, 0x21080840, s2x5, ~0, 1, warn__none, (const coordrec *) 0, {127}},
-   {0x00E20004, 0x09002400, s1x8, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x000400E2, 0x08004202, s1x8, ~0, 1, warn__none, (const coordrec *) 0, {127}},
-   {0x01220004, 0x49002400, s1x10, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x01620004, 0x49012400, s1x12, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x01A20004, 0x49012404, s1x14, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x02E20004, 0x4B012404, s1x14, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x01E20004, 0x49092404, s1x16, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00620022, 0x00088006, s2x4, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00220062, 0x10108004, s2x4, ~0, 1, warn__none, (const coordrec *) 0, {127}},
-   {0x00440022, 0x04000300, s2x3, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00220044, 0x01000840, s2x3, ~0, 1, warn__none, (const coordrec *) 0, {127}},
-   {0x00A20022, 0x000C8026, s2x6, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x002200A2, 0x10108484, s2x6, ~0, 1, warn__none, (const coordrec *) 0, {127}},
-   {0x00C40022, 0x26001B00, s2x7, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00E20022, 0x004C8036, s2x8, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x002200E2, 0x12908484, s2x8, ~0, 1, warn__none, (const coordrec *) 0, {127}},
-   {0x01220022, 0x006C8136, s2x10,~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x01620022, 0x026C81B6, s2x12,~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00A20044, 0x19804E40, s3x6, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00E20044, 0x1D806E41, s3x8, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00840062, 0x4E203380, s4x5, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00620084, 0x31888C60, s4x5, ~0, 1, warn__none, (const coordrec *) 0, {127}},
+   // The outsides cast back from a dhrglass.
+   {0x00670066, 0x20004240, s_hrglass, UINT32_C(~0), 0, warn__none, (const coordrec *) 0,
+    {-6, -6, -5, -5, 6, -6, 4, -5, 6, 6, 5, 5, -6, 6, -4, 5, 127}},
+   {0x00A70026, 0x20040220, s_dhrglass, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00930026, 0x01108080, s_ptpd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00910026, 0x01108080, s_ptpd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00530026, 0x01108080, s_ptpd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00620044, 0x11800C40, s3x4, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00440062, 0x0C202300, s3x4, UINT32_C(~0), 1, warn__none, (const coordrec *) 0, {127}},
+   {0x00840022, 0x06001300, s2x5, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00220084, 0x21080840, s2x5, UINT32_C(~0), 1, warn__none, (const coordrec *) 0, {127}},
+   {0x00E20004, 0x09002400, s1x8, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x000400E2, 0x08004202, s1x8, UINT32_C(~0), 1, warn__none, (const coordrec *) 0, {127}},
+   {0x01220004, 0x49002400, s1x10, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x01620004, 0x49012400, s1x12, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x01A20004, 0x49012404, s1x14, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x02E20004, 0x4B012404, s1x14, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x01E20004, 0x49092404, s1x16, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00620022, 0x00088006, s2x4, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00220062, 0x10108004, s2x4, UINT32_C(~0), 1, warn__none, (const coordrec *) 0, {127}},
+   {0x00440022, 0x04000300, s2x3, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00220044, 0x01000840, s2x3, UINT32_C(~0), 1, warn__none, (const coordrec *) 0, {127}},
+   {0x00A20022, 0x000C8026, s2x6, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x002200A2, 0x10108484, s2x6, UINT32_C(~0), 1, warn__none, (const coordrec *) 0, {127}},
+   {0x00C40022, 0x26001B00, s2x7, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00E20022, 0x004C8036, s2x8, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x002200E2, 0x12908484, s2x8, UINT32_C(~0), 1, warn__none, (const coordrec *) 0, {127}},
+   {0x01220022, 0x006C8136, s2x10,UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x01620022, 0x026C81B6, s2x12,UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00A20044, 0x19804E40, s3x6, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00E20044, 0x1D806E41, s3x8, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00840062, 0x4E203380, s4x5, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00620084, 0x31888C60, s4x5, UINT32_C(~0), 1, warn__none, (const coordrec *) 0, {127}},
    // Fudge this to a 4x5.  People were trucking in a qtag.
-   {0x00670095, 0x10840C40, s4x5, ~0, 1, warn__none, (const coordrec *) 0,
+   {0x00670095, 0x10840C40, s4x5, UINT32_C(~0), 1, warn__none, (const coordrec *) 0,
     {-4, 1, -2, 0, 5, 9, 2, 8, 4, -1, 2, 0, -5, -9, -2, -8,
      -4, 9, -2, 8, 5, 1, 2, 0, 4, -9, 2, -8, -5, -1, -2, 0}},
-   {0x00A20062, 0x109CC067, s4x6, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x006200A2, 0x1918C4C6, s4x6, ~0, 1, warn__none, (const coordrec *) 0, {127}},
-   {0x00C40062, 0x6E001B80, s3oqtg, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00C40062, 0x6E001B80, s3oqtg, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00620062, 0x1018C046, s4x4, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x01040026, 0x04100348, srigger12, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00C40026, 0x04100348, srigger12, ~0, 0, warn__none, (const coordrec *) 0, {127}}, // Only 7 wide, but no setup for that.
-   {0x00930066, 0x01080C40, sbigh, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00910062, 0x01080C40, sbigh, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00910022, 0x01080C40, sbigh, ~0, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00A20062, 0x109CC067, s4x6, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x006200A2, 0x1918C4C6, s4x6, UINT32_C(~0), 1, warn__none, (const coordrec *) 0, {127}},
+   {0x00C40062, 0x6E001B80, s3oqtg, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00C40062, 0x6E001B80, s3oqtg, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00620062, 0x1018C046, s4x4, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x01040026, 0x04100348, srigger12, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00C40026, 0x04100348, srigger12, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}}, // Only 7 wide, but no setup for that.
+   {0x00930066, 0x01080C40, sbigh, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00910062, 0x01080C40, sbigh, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00910022, 0x01080C40, sbigh, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
    // Pressed out from a bone.
-   {0x00A20066, 0x01840421, sbigh, ~0, 0, warn__none, (const coordrec *) 0,
+   {0x00A20066, 0x01840421, sbigh, UINT32_C(~0), 0, warn__none, (const coordrec *) 0,
     {-10, 6, -9, 6, -10, 2, -9, 2, -10, -6, -9, -6, -10, -2, -9, -2,
      10, 6, 9, 6, 10, 2, 9, 2, 10, -6, 9, -6, 10, -2, 9, -2}},
-   {0x00E20026, 0x01440430, sbigbone, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x01620026, 0x4A00A484, sdblbone, ~0, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00E20026, 0x01440430, sbigbone, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x01620026, 0x4A00A484, sdblbone, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
 
    // Next 3 must follow the "bigbone" entry above.
-   {0x00A20026, 0x090C0422, slinebox, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00570066, 0x18118A04, sboxdmd, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00260084, 0x20080861, sboxpdmd, ~0, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00A20026, 0x090C0422, slinebox, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00570066, 0x18118A04, sboxdmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00260084, 0x20080861, sboxpdmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
 
-   {0x01620026, 0x41450430, sdblrig, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x01220026, 0x41450430, sdblrig, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00E20026, 0x0800A404, sbigrig, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x01220026, 0x4800A404, sbigrig, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x01260055, 0x49002480, s5x1dmd, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00E60055, 0x49002480, s5x1dmd, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x01150026, 0x20048212, s1x5dmd, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x01550026, 0x20048212, s1x5dmd, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00E20026, 0x0808A006, swiderigger,~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00460044, 0x41040010, s_323, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00660044, 0x41040410, s_343, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00860044, 0x49650044, s_525, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00440044, 0x49650044, s_525, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00860044, 0x41250410, s_545, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00860044, 0x41250018, sh545, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00840004, 0x00000008, sh545, ~0, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x01620026, 0x41450430, sdblrig, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x01220026, 0x41450430, sdblrig, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00E20026, 0x0800A404, sbigrig, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x01220026, 0x4800A404, sbigrig, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x01260055, 0x49002480, s5x1dmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00E60055, 0x49002480, s5x1dmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x01150026, 0x20048212, s1x5dmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x01550026, 0x20048212, s1x5dmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00E20026, 0x0808A006, swiderigger,UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00460044, 0x41040010, s_323, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00660044, 0x41040410, s_343, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00860044, 0x49650044, s_525, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00440044, 0x49650044, s_525, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00860044, 0x41250410, s_545, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00860044, 0x41250018, sh545, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00840004, 0x00000008, sh545, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
 
-   {0x00A600A6, 0x09006602, sx1x8, ~0, 0, warn__none, (const coordrec *) 0, {2, 0, 6, 4, 127}},
-   {0x00A600E6, 0x09006602, sx1x8, ~0, 0, warn__none, (const coordrec *) 0, {2, 0, 6, 4, 127}},
-   {0x00E600A6, 0x09006602, sx1x8, ~0, 0, warn__none, (const coordrec *) 0, {2, 0, 6, 4, 127}},
-   {0x00E600E6, 0x09006602, sx1x8, ~0, 0, warn__none, (const coordrec *) 0, {2, 0, 6, 4, 127}},
-   {0x006600A6, 0x09004400, sx1x8, ~0, 0, warn__none, (const coordrec *) 0, {2, 0, 6, 4, 127}},
-   {0x006600E6, 0x09006602, sx1x8, ~0, 0, warn__none, (const coordrec *) 0, {2, 0, 6, 4, 127}},
-   {0x00E60066, 0x09006602, sx1x8, ~0, 0, warn__none, (const coordrec *) 0, {2, 0, 6, 4, 127}},
+   {0x00A600A6, 0x09006602, sx1x8, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {2, 0, 6, 4, 127}},
+   {0x00A600E6, 0x09006602, sx1x8, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {2, 0, 6, 4, 127}},
+   {0x00E600A6, 0x09006602, sx1x8, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {2, 0, 6, 4, 127}},
+   {0x00E600E6, 0x09006602, sx1x8, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {2, 0, 6, 4, 127}},
+   {0x006600A6, 0x09004400, sx1x8, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {2, 0, 6, 4, 127}},
+   {0x006600E6, 0x09006602, sx1x8, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {2, 0, 6, 4, 127}},
+   {0x00E60066, 0x09006602, sx1x8, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {2, 0, 6, 4, 127}},
 
-   {0x00860022, 0x02080300, s_ntrglccw,~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00860022, 0x04001202, s_ntrglcw, ~0, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00860022, 0x02080300, s_ntrglccw,UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00860022, 0x04001202, s_ntrglcw, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
 
-   {0x00220022, 0x00008004, s2x2, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00A20004, 0x09000400, s1x6, ~0, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00220022, 0x00008004, s2x2, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00A20004, 0x09000400, s1x6, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
    // Two colliding 1/2 circulates from as-couples T-bone.
-   {0x00930004, 0x21008400, s1x6, ~0, 0, warn__none, (const coordrec *) 0,
+   {0x00930004, 0x21008400, s1x6, UINT32_C(~0), 0, warn__none, (const coordrec *) 0,
     {-9, 0, -10, 0, 9, 0, 10, 0, -5, 0, -6, 0, 5, 0, 6, 0, 127}},
-   {0x00040093, 0x0A000280, s1x6, ~0, 1, warn__none, (const coordrec *) 0,
+   {0x00040093, 0x0A000280, s1x6, UINT32_C(~0), 1, warn__none, (const coordrec *) 0,
     {0, -9, 0, -10, 0, 9, 0, 10, 0, -5, 0, -6, 0, 5, 0, 6, 127}},
-   {0x00620004, 0x01000400, s1x4, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00040062, 0x08000200, s1x4, ~0, 1, warn__none, (const coordrec *) 0, {127}},
-   {0x00550026, 0x20020200, sdmd, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00440004, 0x00020001, s1x3, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00040044, 0x00040001, s1x3, ~0, 1, warn__none, (const coordrec *) 0, {127}},
-   {0x00220004, 0x01000000, s1x2, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00040022, 0x00000200, s1x2, ~0, 1, warn__none, (const coordrec *) 0, {127}},
-   {0x00A20066, 0x09084042, sbigptpd, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00A20026, 0x414C0032, sdblspindle, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x01220026, 0x414C0032, sdblspindle, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00950063, 0x01080C60, s_hqtag, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00930067, 0x01080C60, s_hqtag, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00970067, 0x01080C60, s_hqtag, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00970057, 0x01080C60, s_hqtag, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00930057, 0x01080C60, s_hqtag, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00970055, 0x114008A0, sbighrgl,  ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00E70026, 0x20440230, sbigdhrgl, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00A60026, 0x03080020, s_nptrglcw, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00A60026, 0x01041002, s_nptrglccw, ~0, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00510062, 0x02000004, s2x4, ~0, 1, warn__none, (const coordrec *) 0,
+   {0x00620004, 0x01000400, s1x4, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00040062, 0x08000200, s1x4, UINT32_C(~0), 1, warn__none, (const coordrec *) 0, {127}},
+   {0x00550026, 0x20020200, sdmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00440004, 0x00020001, s1x3, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00040044, 0x00040001, s1x3, UINT32_C(~0), 1, warn__none, (const coordrec *) 0, {127}},
+   {0x00220004, 0x01000000, s1x2, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00040022, 0x00000200, s1x2, UINT32_C(~0), 1, warn__none, (const coordrec *) 0, {127}},
+   {0x00A20066, 0x09084042, sbigptpd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00A20026, 0x414C0032, sdblspindle, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x01220026, 0x414C0032, sdblspindle, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00950063, 0x01080C60, s_hqtag, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00930067, 0x01080C60, s_hqtag, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00970067, 0x01080C60, s_hqtag, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00970057, 0x01080C60, s_hqtag, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00930057, 0x01080C60, s_hqtag, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00970055, 0x114008A0, sbighrgl,  UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00E70026, 0x20440230, sbigdhrgl, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00A60026, 0x03080020, s_nptrglcw, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00A60026, 0x01041002, s_nptrglccw, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00510062, 0x02000004, s2x4, UINT32_C(~0), 1, warn__none, (const coordrec *) 0,
     {-5, 6, -2, 6, 5, 6, 2, 6, -5, -6, -2, -6, 5, -6, 2, -6, 127}},
-   {0x00770077, 0x22808044, s_c1phan, ~0, 0, warn__none, (const coordrec *) 0,
+   {0x00770077, 0x22808044, s_c1phan, UINT32_C(~0), 0, warn__none, (const coordrec *) 0,
     {2, 2, 4, 3, -2, -2, -5, -2, 127}},
-   {0x00770077, 0x02808084, s_c1phan, ~0, 0, warn__none, (const coordrec *) 0,
+   {0x00770077, 0x02808084, s_c1phan, UINT32_C(~0), 0, warn__none, (const coordrec *) 0,
     {-2, 2, -2, 4, 2, -2, 3, -5, 127}},
-   {0x00F700E7, 0x2101180C, s_c1phan, ~0, 0, warn__none, (const coordrec *) 0,
+   {0x00F700E7, 0x2101180C, s_c1phan, UINT32_C(~0), 0, warn__none, (const coordrec *) 0,
     {2, 2, 11, 4, -2, -2, -10, -7, 127}},
-   {0x00F700E7, 0x25019000, s_c1phan, ~0, 0, warn__none, (const coordrec *) 0,
+   {0x00F700E7, 0x25019000, s_c1phan, UINT32_C(~0), 0, warn__none, (const coordrec *) 0,
     {-2, 2, -3, 9, 2, -2, 4, -10, 127}},
-   {0x00840046, 0x42021210, s_23232, ~0, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00840046, 0x42021210, s_23232, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
    {0}};
 
 
 static checkitem c1fixup =
-{0, 0, s_c1phan, ~0, 0, warn__none, (const coordrec *) 0, {127}};
+{0, 0, s_c1phan, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}};
 
 static checkitem s4p2x1fixup =
-{0, 0, s4p2x1dmd, ~0, 0, warn__none, (const coordrec *) 0, {127}};
+{0, 0, s4p2x1dmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}};
 
 
 void initialize_matrix_position_tables()
@@ -1824,7 +1827,7 @@ void initialize_matrix_position_tables()
       ypar |= (xmax << 20) | (xpar << 16) | (ymax << 4);
 
       if (p->ypar != ypar || p->sigcheck != signature)
-         gg->fatal_error_exit(1, "Matrix position table initialization failed");
+         gg77->iob88.fatal_error_exit(1, "Matrix position table initialization failed");
    }
 }
 
@@ -3302,8 +3305,8 @@ extern bool get_real_subcall(
 
    if (current_options.star_turn_option != 0 &&
        (orig_call->the_defn.callflagsf & CFLAG2_IS_STAR_CALL)) {
-      parse_block *xx = parse_block::get_block();
-      xx->concept = &conzept::marker_concept_mod;
+      parse_block *xx = get_parse_block();
+      xx->concept = &concept_marker_concept_mod;
       xx->options = current_options;
       xx->options.star_turn_option = 0;
       xx->replacement_key = 0;
@@ -4732,7 +4735,6 @@ static void do_sequential_call(
 
    revert_weirdness_type doing_weird_revert = weirdness_off;
 
-
    if (!ss->cmd.cmd_fraction.is_null()) {
       if ((zzz.m_do_half_of_last_part | zzz.m_do_last_half_of_first_part) != 0)
          fail("Sorry, can't fractionalize this.");
@@ -4937,11 +4939,6 @@ static void do_sequential_call(
          if (zzz.m_fetch_index != 0)
             foobar.cmd_misc3_flags &= ~CMD_MISC3__NO_ANYTHINGERS_SUBST;
 
-         result->result_flags.misc &= ~RESULTFLAG__NO_REEVALUATE;
-         if ((this_mod1 & DFM1_SEQ_NO_RE_EVALUATE) &&
-             !(result->cmd.cmd_misc2_flags & CMD_MISC2_RESTRAINED_SUPER))
-            result->result_flags.misc |= RESULTFLAG__NO_REEVALUATE;
-
          if (zzz.m_reverse_order) {
             if (this_schema_is_rem_or_alt && zzz.m_fetch_index >= 1) {
                alt_item = this_item;
@@ -4969,6 +4966,11 @@ static void do_sequential_call(
             }
             if (zzz.ran_off_active_section()) break;
          }
+
+         result->result_flags.misc &= ~RESULTFLAG__NO_REEVALUATE;
+         if ((this_mod1 & DFM1_SEQ_NO_RE_EVALUATE) &&
+             !(result->cmd.cmd_misc2_flags & CMD_MISC2_RESTRAINED_SUPER))
+            result->result_flags.misc |= RESULTFLAG__NO_REEVALUATE;
 
          // If an explicit substitution was made, we will recompute the ID bits for the setup.
          // Normally, we don't, which is why "patch the <anyone>" works.  The original
@@ -6417,7 +6419,7 @@ static void move_with_real_call(
       current_options = saved_options;
       *ss = saved_ss;
       result->clear_people();
-      clear_result_flags(result);   // In case we bail out.
+      clear_result_flags(result, RESULTFLAG__REALLY_NO_REEVALUATE);   // In case we bail out.
       uint32 imprecise_rotation_result_flagmisc = 0;
       split_command_kind force_split = split_command_none;
       bool mirror = false;
@@ -7099,7 +7101,7 @@ static void move_with_real_call(
       // A "sequence_starter_promenade" call is only legal if really_inner_move is invoked
       // from the other place, in inner_selective_move, or at the start of a sequence.
       // Otherwise, there seem to be too many dangling loose ends in the logic.
-      if ((callflags1 & CFLAG1_SEQUENCE_STARTER_PROM) != 0 && configuration::history_ptr != 1)
+      if ((callflags1 & CFLAG1_SEQUENCE_STARTER_PROM) != 0 && config_history_ptr != 1)
          fail("You must specify who is to do it.");
 
       really_inner_move(ss, qtfudged, this_defn, the_schema, callflags1, callflagsf,
@@ -7259,13 +7261,13 @@ void move(
          parse_block p3 = *(p2.subsidiary_root);
 
          p1.next = &p2;
-         p2.concept = &conzept::marker_concept_supercall;
+         p2.concept = &concept_marker_concept_supercall;
          p2.subsidiary_root = &p3;
          p3.call = ss->cmd.callspec;
          p3.call_to_print = p3.call;
 
          if (p3.concept->kind != concept_another_call_next_mod) {
-            p3.concept = &conzept::mark_end_of_list;
+            p3.concept = &concept_mark_end_of_list;
             p3.next = (parse_block *) 0;
          }
 
@@ -7639,7 +7641,7 @@ void move(
       uint32 foobar = 0;
       uint32 fooble = 0;
 
-      const conzept::concept_descriptor *ddd = ss->cmd.parseptr->concept;
+      const concept_descriptor *ddd = ss->cmd.parseptr->concept;
 
       if (!(concept_table[ddd->kind].concept_prop & CONCPROP__PERMIT_MODIFIERS)) {
          foobar = INHERITFLAG_HALF | INHERITFLAG_LASTHALF | INHERITFLAG_DIAMOND |
@@ -7751,9 +7753,9 @@ void move(
        (result->result_flags.misc & RESULTFLAG__NEED_DIAMOND) &&
        saved_magic_diamond->concept->arg1 == 0) {
       if (saved_magic_diamond->concept->kind == concept_magic)
-         saved_magic_diamond->concept = &conzept::special_magic;
+         saved_magic_diamond->concept = &concept_special_magic;
       else if (saved_magic_diamond->concept->kind == concept_interlocked)
-         saved_magic_diamond->concept = &conzept::special_interlocked;
+         saved_magic_diamond->concept = &concept_special_interlocked;
    }
 
    return;

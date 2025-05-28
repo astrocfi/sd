@@ -41,10 +41,10 @@
    unparse_call_name
    print_recurse
    clear_screen
-   writechar
+   ui_utils::writechar
    newline
    doublespace_file
-   writestuff
+   ui_utils::writestuff
    parse_block::clear
    parse_block::get_block
    parse_block::get_parse_block_mark
@@ -60,6 +60,9 @@
    initialize_parse
    run_program
 and the following external variables:
+   GLOB_doing_frequency
+   GLOB_stats_filename
+   GLOB_decorated_stats_filename
    global_error_flag
    global_cache_failed_flag
    global_cache_miss_reason
@@ -84,10 +87,18 @@ and the following external variables:
 #include <string.h>
 
 #include "sd.h"
+#include "sdui.h"
 #include "sort.h"
 
 
 // External variables.
+ui_option_type ui_options;
+Cstring cardinals[NUM_CARDINALS+1];
+Cstring ordinals[NUM_CARDINALS+1];
+abridge_mode_t glob_abridge_mode;
+bool GLOB_doing_frequency;
+char GLOB_stats_filename[MAX_TEXT_LINE_LENGTH];
+char GLOB_decorated_stats_filename[MAX_TEXT_LINE_LENGTH];
 error_flag_type global_error_flag;
 bool global_cache_failed_flag;
 // Word 0 is the error code
@@ -95,7 +106,7 @@ bool global_cache_failed_flag;
 // Word 1 is what we wanted at the index.
 // Word 2 is what we got.
 int global_cache_miss_reason[3];
-uims_reply global_reply;
+uims_reply_thing global_reply(ui_user_cancel, 99);
 configuration *clipboard = (configuration *) 0;
 int clipboard_size = 0;
 bool wrote_a_sequence = false;
@@ -105,8 +116,6 @@ char header_comment[MAX_TEXT_LINE_LENGTH];
 bool creating_new_session = false;
 int sequence_number = -1;
 int starting_sequence_number;
-
-static bool global_leave_missing_calls_blank;
 
 // Under DJGPP, the default is always old-style filenames, because
 // the underlying system (DOS or Windows 3.1) presumably can only
@@ -223,6 +232,18 @@ static Cstring sessions_init_table[] = {
    "[Sessions]",
    "+                    C1               1      Sample",
    "",
+   "# \"Enhanced\" accelerator keys can be plain, shifted, control, alt, or control-alt.",
+   "# e1 = page up",
+   "# e2 = page down",
+   "# e3 = end",
+   "# e4 = home",
+   "# e5 = left arrow",
+   "# e6 = up arrow",
+   "# e7 = right arrow",
+   "# e8 = down arrow",
+   "# e13 = insert",
+   "# e14 = delete",
+   "",
    "[Accelerators]",
    (char *) 0};
 
@@ -231,12 +252,6 @@ static Cstring abbreviations_table[] = {
    "u       U-turn back",
    "rlt     right and left thru",
    (char *) 0};
-
-
-/* These variables are are global to this file. */
-
-static bool reply_pending;
-static int clipboard_allocation = 0;
 
 
 // Some things fail under Visual C++ version 5 and version 6.  (Under different
@@ -254,12 +269,12 @@ extern void FuckingThingToTryToKeepTheFuckingStupidMicrosoftCompilerFromScrewing
    help by never putting two blanks together, always putting blanks adjacent
    to the outside of brackets, and never putting blanks adjacent to the
    inside of brackets.  This procedure is part of that mechanism. */
-static void write_blank_if_needed()
+void ui_utils::write_blank_if_needed()
 {
-   if (writechar_block.lastchar != ' ' &&
-       writechar_block.lastchar != '[' &&
-       writechar_block.lastchar != '(' &&
-       writechar_block.lastchar != '-') writechar(' ');
+   if (m_writechar_block.lastchar != ' ' &&
+       m_writechar_block.lastchar != '[' &&
+       m_writechar_block.lastchar != '(' &&
+       m_writechar_block.lastchar != '-') writechar(' ');
 }
 
 /* This examines the indicator character after an "@" escape.  If the escape
@@ -296,7 +311,7 @@ const char *get_escape_string(char c)
 }
 
 
-static void write_nice_number(char indicator, int num)
+void ui_utils::write_nice_number(char indicator, int num)
 {
    if (num < 0) {
       writestuff(get_escape_string(indicator));
@@ -337,9 +352,7 @@ static void write_nice_number(char indicator, int num)
 }
 
 
-
-
-static void writestuff_with_decorations(call_conc_option_state *cptr, Cstring f, bool is_concept)
+void ui_utils::writestuff_with_decorations(const call_conc_option_state *cptr, Cstring f, bool is_concept)
 {
    uint32 index = cptr->number_fields;
    int howmany = cptr->howmanynumbers;
@@ -375,7 +388,7 @@ static void writestuff_with_decorations(call_conc_option_state *cptr, Cstring f,
 }
 
 
-static void printperson(uint32 x)
+void ui_utils::printperson(uint32 x)
 {
    if (x & BIT_PERSON) {
       if (enable_file_writing || ui_options.use_escapes_for_drawing_people == 0) {
@@ -405,12 +418,7 @@ static void printperson(uint32 x)
 }
 
 
-/* These static variables are used by printsetup/print_4_person_setup/do_write. */
-
-static int offs, roti, modulus, personstart;
-static setup *printarg;
-
-static void do_write(Cstring s)
+void ui_utils::do_write(Cstring s)
 {
    char c;
 
@@ -456,7 +464,7 @@ static void do_write(Cstring s)
 
 
 
-static void print_4_person_setup(int ps, small_setup *s, int elong)
+void ui_utils::print_4_person_setup(int ps, small_setup *s, int elong)
 {
    Cstring str;
 
@@ -491,7 +499,7 @@ static void print_4_person_setup(int ps, small_setup *s, int elong)
 
 
 
-static void printsetup(setup *x)
+void ui_utils::printsetup(setup *x)
 {
    Cstring str;
 
@@ -854,13 +862,12 @@ static void printsetup(setup *x)
 }
 
 
-void write_history_line(int history_index,
-                        bool picture,
-                        bool leave_missing_calls_blank,
-                        file_write_flag write_to_file,
-                        const char *header)
+void ui_utils::write_history_line(int history_index,
+                                 bool picture,
+                                 bool leave_missing_calls_blank,
+                                 file_write_flag write_to_file)
 {
-   global_leave_missing_calls_blank = leave_missing_calls_blank;
+   m_leave_missing_calls_blank = leave_missing_calls_blank;
 
    int w, i;
    parse_block *thing;
@@ -973,17 +980,75 @@ void write_history_line(int history_index,
 
 
 
-void unparse_call_name(Cstring name, char *s, call_conc_option_state *options)
+uint32 ui_utils::get_number_fields(int nnumbers, bool odd_number_only, bool forbid_zero)
 {
-   writechar_block_type saved_writeblock = writechar_block;
-   writechar_block.destcurr = s;
-   writechar_block.usurping_writechar = true;
+   int i;
+   uint32 number_fields = matcher_p->m_final_result.match.call_conc_options.number_fields;
+   int howmanynumbers = matcher_p->m_final_result.match.call_conc_options.howmanynumbers;
+   uint32 number_list = 0;
+
+   for (i=0 ; i<nnumbers ; i++) {
+      uint32 this_num;
+
+      if (!matcher_p->m_final_result.valid || (howmanynumbers <= 0)) {
+         this_num = iob88.get_one_number(*matcher_p);
+      }
+      else {
+         this_num = number_fields & NUMBER_FIELD_MASK;
+         number_fields >>= BITS_PER_NUMBER_FIELD;
+         howmanynumbers--;
+      }
+
+      // Check legality.
+      if ((odd_number_only && !(this_num & 1)) ||
+          (forbid_zero && this_num == 0) ||
+          (this_num >= NUM_CARDINALS))
+         return ~0U;
+
+      number_list |= (this_num << (i*BITS_PER_NUMBER_FIELD));
+   }
+
+   return number_list;
+}
+
+
+bool ui_utils::look_up_abbreviations(int which)
+{
+   abbrev_block *asearch = (abbrev_block *) 0;
+
+   if (which == matcher_class::e_match_startup_commands)
+      asearch = matcher_p->m_abbrev_table_start;
+   else if (which == matcher_class::e_match_resolve_commands)
+      asearch = matcher_p->m_abbrev_table_resolve;
+   else if (which >= 0)
+      asearch = matcher_p->m_abbrev_table_normal;
+
+   for ( ; asearch ; asearch = asearch->next) {
+      if (!strcmp(asearch->key, matcher_p->m_user_input)) {
+         char linebuff[INPUT_TEXTLINE_SIZE+1];
+         if (matcher_p->process_accel_or_abbrev(asearch->value, linebuff)) {
+            iob88.dispose_of_abbreviation(linebuff);
+            return true;
+         }
+         break;   // Couldn't be processed.  Stop.  No other abbreviations will match.
+      }
+   }
+
+   return false;
+}
+
+
+void ui_utils::unparse_call_name(Cstring name, char *s, const call_conc_option_state *options)
+{
+   writechar_block_type saved_writeblock = m_writechar_block;
+   m_writechar_block.destcurr = s;
+   m_writechar_block.usurping_writechar = true;
 
    writestuff_with_decorations(options, name, false);
    writechar('\0');
 
-   writechar_block = saved_writeblock;
-   writechar_block.usurping_writechar = false;
+   m_writechar_block = saved_writeblock;
+   m_writechar_block.usurping_writechar = false;
 }
 
 
@@ -995,11 +1060,8 @@ void unparse_call_name(Cstring name, char *s, call_conc_option_state *options)
    This means that this is a circulate-substitute call, and should have any
    @O ... @P stuff elided from it. */
 
-#define PRINT_RECURSE_STAR 1
-#define PRINT_RECURSE_CIRC 2
 
-
-void print_recurse(parse_block *thing, int print_recurse_arg)
+void ui_utils::print_recurse(parse_block *thing, int print_recurse_arg)
 {
    bool use_left_name = false;
    bool use_cross_name = false;
@@ -1020,7 +1082,7 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
 
    while (local_cptr) {
       concept_kind k;
-      const conzept::concept_descriptor *item = local_cptr->concept;
+      const concept_descriptor *item = local_cptr->concept;
       k = item->kind;
 
       if (k == concept_comment) {
@@ -1578,7 +1640,7 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
                   case 'e':
                      if (use_left_name) {
                         while (*np != '@') np++;
-                        if (writechar_block.lastchar == ']') writestuff(" ");
+                        if (m_writechar_block.lastchar == ']') writestuff(" ");
                         writestuff("left");
                         np += 2;
                      }
@@ -1612,8 +1674,8 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
                      break;
                   case 'G':
                      if (use_grand_name) {
-                        if (writechar_block.lastchar != ' ' &&
-                            writechar_block.lastchar != '[') writechar(' ');
+                        if (m_writechar_block.lastchar != ' ' &&
+                            m_writechar_block.lastchar != '[') writechar(' ');
                         writestuff("grand");
                      }
                      break;
@@ -1625,8 +1687,8 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
                      break;
                   case 'M':
                      if (use_magic_name) {
-                        if (writechar_block.lastchar != ' ' &&
-                            writechar_block.lastchar != '[') writechar(' ');
+                        if (m_writechar_block.lastchar != ' ' &&
+                            m_writechar_block.lastchar != '[') writechar(' ');
                         writestuff("magic");
                      }
                      break;
@@ -1638,11 +1700,11 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
                      break;
                   case 'I':
                      if (use_intlk_name) {
-                        if (writechar_block.lastchar == 'a' &&
-                            writechar_block.lastlastchar == ' ')
+                        if (m_writechar_block.lastchar == 'a' &&
+                            m_writechar_block.lastlastchar == ' ')
                            writestuff("n ");
-                        else if (writechar_block.lastchar != ' ' &&
-                                 writechar_block.lastchar != '[')
+                        else if (m_writechar_block.lastchar != ' ' &&
+                                 m_writechar_block.lastchar != '[')
                            writechar(' ');
                         writestuff("interlocked");
                      }
@@ -1673,7 +1735,7 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
                            writestuff("]");
                            pending_subst2 = false;
                         }
-                        else if (savec == 'm' && !global_leave_missing_calls_blank) {
+                        else if (savec == 'm' && !m_leave_missing_calls_blank) {
                            write_blank_if_needed();
                            writestuff("[???]");
                         }
@@ -1710,7 +1772,7 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
                            if (savec == 'T') writestuff(" er's");
                            pending_subst1 = false;
                         }
-                        else if (savec == '0' && !global_leave_missing_calls_blank) {
+                        else if (savec == '0' && !m_leave_missing_calls_blank) {
                            write_blank_if_needed();
                            writestuff("[???]");
                         }
@@ -1720,14 +1782,14 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
                   }
                }
                else {
-                  if (writechar_block.lastchar == ']' && c != ' ' && c != ']')
+                  if (m_writechar_block.lastchar == ']' && c != ' ' && c != ']')
                      writestuff(" ");
 
-                  if ((writechar_block.lastchar != ' ' && writechar_block.lastchar != '[') || c != ' ') writechar(c);
+                  if ((m_writechar_block.lastchar != ' ' && m_writechar_block.lastchar != '[') || c != ' ') writechar(c);
                }
             }
 
-            if (writechar_block.lastchar == ']' && *np && *np != ' ' && *np != ']')
+            if (m_writechar_block.lastchar == ']' && *np && *np != ' ' && *np != ']')
                writestuff(" ");
          }
          else if (print_recurse_arg & PRINT_RECURSE_STAR) {
@@ -1856,26 +1918,24 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
 
 static char current_line[MAX_TEXT_LINE_LENGTH];
 
-static void open_text_line()
+void ui_utils::open_text_line()
 {
-   writechar_block.destcurr = current_line;
-   writechar_block.lastchar = ' ';
-   writechar_block.lastlastchar = ' ';
-   writechar_block.lastblank = (char *) 0;
+   m_writechar_block.destcurr = current_line;
+   m_writechar_block.lastchar = ' ';
+   m_writechar_block.lastlastchar = ' ';
+   m_writechar_block.lastblank = (char *) 0;
 }
 
-// Nonzero arg means to clear only that many lines.
-// Otherwise, clear everything.
-void clear_screen()
+void ui_utils::clear_screen()
 {
    written_history_items = -1;
    text_line_count = 0;
 
-   gg->reduce_line_count(0);
+   iob88.reduce_line_count(0);
    open_text_line();
 }
 
-static void write_header_stuff(bool with_ui_version, uint32 act_phan_flags)
+void ui_utils::write_header_stuff(bool with_ui_version, uint32 act_phan_flags)
 {
    if (!ui_options.diagnostic_mode) {
       // Log creation version info.
@@ -1885,7 +1945,7 @@ static void write_header_stuff(bool with_ui_version, uint32 act_phan_flags)
          writestuff(" : db");
          writestuff(database_version);
          writestuff(" : ui");
-         writestuff(gg->version_string());
+         writestuff(iob88.version_string());
       }
       else {                     // This is the "compact" form that goes into the file.
          writestuff("Sd");
@@ -1912,48 +1972,48 @@ static void write_header_stuff(bool with_ui_version, uint32 act_phan_flags)
 }
 
 
-extern void writechar(char src)
+void ui_utils::writechar(char src)
 {
    // Don't write two consecutive commas.
-   if (src == ',' && src == writechar_block.lastchar) return;
+   if (src == ',' && src == m_writechar_block.lastchar) return;
 
-   writechar_block.lastlastchar = writechar_block.lastchar;
+   m_writechar_block.lastlastchar = m_writechar_block.lastchar;
 
-   *writechar_block.destcurr = writechar_block.lastchar = src;
-   if (src == ' ' && writechar_block.destcurr != current_line)
-      writechar_block.lastblank = writechar_block.destcurr;
+   *m_writechar_block.destcurr = m_writechar_block.lastchar = src;
+   if (src == ' ' && m_writechar_block.destcurr != current_line)
+      m_writechar_block.lastblank = m_writechar_block.destcurr;
 
    // If drawing a picture, don't do automatic line breaks.
 
-   if (writechar_block.destcurr < &current_line[ui_options.max_print_length] ||
-       writechar_block.usurping_writechar ||
+   if (m_writechar_block.destcurr < &current_line[ui_options.max_print_length] ||
+       m_writechar_block.usurping_writechar ||
        ui_options.drawing_picture)
-      writechar_block.destcurr++;
+      m_writechar_block.destcurr++;
    else {
       // Line overflow.  Try to write everything up to the last
       // blank, then fill next line with everything since that blank.
 
       char save_buffer[MAX_TEXT_LINE_LENGTH];
       char *q = save_buffer;
-      char *p = writechar_block.lastblank+1;
+      char *p = m_writechar_block.lastblank+1;
 
       // If we are after a blank, see if we are after a whole bunch of blanks; delete same.
       // This could happen if the only blanks are the indentation at the start of the line.
       // In that case, strip it all away.
-      while (writechar_block.lastblank && writechar_block.lastblank > current_line && writechar_block.lastblank[-1] == ' ')
-         writechar_block.lastblank--;
+      while (m_writechar_block.lastblank && m_writechar_block.lastblank > current_line && m_writechar_block.lastblank[-1] == ' ')
+         m_writechar_block.lastblank--;
 
       // If there is nonblank text before the last blank, write it out and save
       // whatever comes next for the next round.  But if the only blanks are those
       // at the beginning of the line, treat is as though there weren't any blanks
       // at all--break a word.
-      if (writechar_block.lastblank && writechar_block.lastblank > current_line) {
-         while (p <= writechar_block.destcurr) *q++ = *p++;
-         writechar_block.destcurr = writechar_block.lastblank;
+      if (m_writechar_block.lastblank && m_writechar_block.lastblank > current_line) {
+         while (p <= m_writechar_block.destcurr) *q++ = *p++;
+         m_writechar_block.destcurr = m_writechar_block.lastblank;
       }
       else {
          // Must break a word.  Save just the final character that we couldn't fit.
-         *q++ = *writechar_block.destcurr;
+         *q++ = *m_writechar_block.destcurr;
       }
 
       *q = '\0';
@@ -1964,7 +2024,7 @@ extern void writechar(char src)
    }
 }
 
-void newline()
+void ui_utils::newline()
 {
    /* Erase any trailing blanks.  Failure to do so can lead to some
       incredibly obscure bugs when some editors on PC's try to "fix"
@@ -1978,10 +2038,10 @@ void newline()
       is very hard.)  It turns out that some printing software stops,
       as though it reached the end of the file, when it encounters a
       ^Z, so the appended sequences were effectively lost. */
-   while (writechar_block.destcurr != current_line && writechar_block.destcurr[-1] == ' ')
-      writechar_block.destcurr--;
+   while (m_writechar_block.destcurr != current_line && m_writechar_block.destcurr[-1] == ' ')
+      m_writechar_block.destcurr--;
 
-   *writechar_block.destcurr = '\0';
+   *m_writechar_block.destcurr = '\0';
 
    // There will be no special "5" or "6" characters in pictures
    // (ui_options.drawing_picture&1) if:
@@ -1999,7 +2059,7 @@ void newline()
       write_file(current_line);
 
    text_line_count++;
-   gg->add_new_line(current_line,
+   iob88.add_new_line(current_line,
       enable_file_writing ?
                     0 :
                     (ui_options.drawing_picture | (ui_options.squeeze_this_newline << 1)));
@@ -2010,23 +2070,36 @@ void newline()
 
 
 
-void doublespace_file()
+void ui_utils::doublespace_file()
 {
    write_file("");
 }
 
 
-void writestuff(const char *s)
+void ui_utils::writestuff(const char *s)
 {
    while (*s) writechar(*s++);
 }
 
+void ui_utils::show_match_item(int frequency_to_show)
+{
+   if (frequency_to_show >= 0) {
+      char buffer[MAX_TEXT_LINE_LENGTH];
+      sprintf(buffer, "%-4d ", frequency_to_show);
+      writestuff(buffer);
+   }
+
+   if (matcher_p->m_final_result.indent) writestuff("   ");
+   writestuff(matcher_p->m_user_input);
+   writestuff(matcher_p->m_full_extension);
+   newline();
+}
 
 
 parse_block *parse_block::parse_active_list = (parse_block *) 0;
 parse_block *parse_block::parse_inactive_list = (parse_block *) 0;
 
-void parse_block::initialize(const conzept::concept_descriptor *cc)
+void parse_block::initialize(const concept_descriptor *cc)
 {
    more_finalherit_flags.clear_all_herit_and_final_bits();
    concept = cc;
@@ -2040,42 +2113,18 @@ void parse_block::initialize(const conzept::concept_descriptor *cc)
 }
 
 
-parse_block *parse_block::get_block()
+
+void release_parse_blocks_to_mark(parse_block *mark_point)
 {
-   parse_block *item;
+   while (parse_block::parse_active_list && parse_block::parse_active_list != mark_point) {
+      parse_block *item = parse_block::parse_active_list;
 
-   if (parse_inactive_list) {
-      item = parse_inactive_list;
-      parse_inactive_list = item->gc_ptr;
-   }
-   else {
-      item = new parse_block;
-   }
-
-   item->gc_ptr = parse_active_list;
-   parse_active_list = item;
-   item->initialize((conzept::concept_descriptor *) 0);
-   return item;
-}
-
-
-parse_block *parse_block::get_parse_block_mark()
-{
-   return parse_active_list;
-}
-
-
-void parse_block::release_parse_blocks_to_mark(parse_block *mark_point)
-{
-   while (parse_active_list && parse_active_list != mark_point) {
-      parse_block *item = parse_active_list;
-
-      parse_active_list = item->gc_ptr;
-      item->gc_ptr = parse_inactive_list;
-      parse_inactive_list = item;
+      parse_block::parse_active_list = item->gc_ptr;
+      item->gc_ptr = parse_block::parse_inactive_list;
+      parse_block::parse_inactive_list = item;
 
       // Clear pointers so we will notice if it gets erroneously re-used.
-      item->initialize((conzept::concept_descriptor *) 0);
+      item->initialize((concept_descriptor *) 0);
    }
 }
 
@@ -2102,7 +2151,7 @@ extern parse_block *copy_parse_tree(parse_block *original_tree)
 
    if (!original_tree) return NULL;
 
-   new_item = parse_block::get_block();
+   new_item = get_parse_block();
    new_root = new_item;
 
    for (;;) {
@@ -2118,7 +2167,7 @@ extern parse_block *copy_parse_tree(parse_block *original_tree)
 
       if (!original_tree->next) break;
 
-      new_item->next = parse_block::get_block();
+      new_item->next = get_parse_block();
       new_item = new_item->next;
       original_tree = original_tree->next;
    }
@@ -2132,7 +2181,8 @@ extern parse_block *copy_parse_tree(parse_block *original_tree)
 static parse_state_type saved_parse_state;
 static parse_block *saved_command_root;
 
-extern void reset_parse_tree(parse_block *original_tree, parse_block *final_head)
+
+SDLIB_API extern void reset_parse_tree(parse_block *original_tree, parse_block *final_head)
 {
    parse_block *new_item = final_head;
    parse_block *old_item = original_tree;
@@ -2227,7 +2277,7 @@ void string_copy(char **dest, Cstring src)
    The "num_pics" argument tells how many of the last history items
    are to have pictures forced, so we can tell exactly what items
    have pictures. */
-void display_initial_history(int upper_limit, int num_pics)
+void ui_utils::display_initial_history(int upper_limit, int num_pics)
 {
    int j, startpoint;
 
@@ -2256,14 +2306,14 @@ void display_initial_history(int upper_limit, int num_pics)
       // We win.  Back up the text line count to the right place, and rewrite the rest.
 
       text_line_count = configuration::history[written_history_items].text_line;
-      gg->reduce_line_count(text_line_count);
+      iob88.reduce_line_count(text_line_count);
       open_text_line();
       startpoint = written_history_items+1;
    }
    else {
       // We lose, there is nothing we can use.
       if (no_erase_before_this != 0)
-         gg->no_erase_before_n(no_erase_before_this);
+         iob88.no_erase_before_n(no_erase_before_this);
 
       clear_screen();
       write_header_stuff(true, 0);
@@ -2301,8 +2351,8 @@ extern void initialize_parse()
    configuration::next_config().draw_pic = false;
    configuration::next_config().state_is_valid = false;
 
-   if (written_history_items > configuration::history_ptr)
-      written_history_items = configuration::history_ptr;
+   if (written_history_items > config_history_ptr)
+      written_history_items = config_history_ptr;
 
    parse_state.specialprompt[0] = '\0';
    parse_state.topcallflags1 = 0;
@@ -2311,16 +2361,16 @@ extern void initialize_parse()
 
 
 
-static void do_change_outfile(bool signal)
+void ui_utils::do_change_outfile(bool signal)
 {
    char newfile_string[MAX_FILENAME_LENGTH];
    char buffer[MAX_TEXT_LINE_LENGTH];
    sprintf(buffer, "Current sequence output file is \"%s\".", outfile_string);
 
-   if (gg->get_popup_string(buffer,
-                           "*Enter new name (or '+' to base it on today's date)",
-                           "Enter new file name (or '+' to base it on today's date):",
-                           outfile_string, newfile_string) == POPUP_ACCEPT_WITH_STRING && newfile_string[0]) {
+   if (iob88.get_popup_string(buffer,
+                              "*Enter new name (or '+' to base it on today's date)",
+                              "Enter new file name (or '+' to base it on today's date):",
+                              outfile_string, newfile_string) == POPUP_ACCEPT_WITH_STRING && newfile_string[0]) {
       char confirm_message[MAX_FILENAME_LENGTH+25];
       const char *final_message;
 
@@ -2344,9 +2394,10 @@ static void do_change_outfile(bool signal)
 }
 
 
+namespace {
 
 // Returns TRUE if it successfully backed up one parse block.
-static bool backup_one_item()
+bool backup_one_item()
 {
 
    // User wants to undo a call.  The concept parse list is not set up
@@ -2355,7 +2406,7 @@ static bool backup_one_item()
    parse_block **this_ptr = parse_state.concept_write_base;
    if (!this_ptr || !*this_ptr) return false;
 
-   if ((configuration::history_ptr == 1) && configuration::history[1].get_startinfo_specific()->into_the_middle)
+   if ((config_history_ptr == 1) && configuration::history[1].get_startinfo_specific()->into_the_middle)
       this_ptr = &((*this_ptr)->next);
 
    for (;;) {
@@ -2385,9 +2436,10 @@ static bool backup_one_item()
    return false;
 }
 
+}   // End blank namespace.
 
 // Returns true if sequence was written.
-static bool write_sequence_to_file() THROW_DECL
+bool ui_utils::write_sequence_to_file() THROW_DECL
 {
    char date[MAX_TEXT_LINE_LENGTH];
    char second_header[MAX_TEXT_LINE_LENGTH];
@@ -2401,14 +2453,14 @@ static bool write_sequence_to_file() THROW_DECL
    if (header_comment[0]) {
       char buffer[MAX_TEXT_LINE_LENGTH+MAX_FILENAME_LENGTH];
       sprintf(buffer, "Session title is \"%s\".", header_comment);
-      getout_ind = gg->get_popup_string(buffer,
-                                        "You can give an additional comment for just this sequence.",
-                                        "Enter comment:", "", second_header);
+      getout_ind = iob88.get_popup_string(buffer,
+                                          "You can give an additional comment for just this sequence.",
+                                          "Enter comment:", "", second_header);
    }
    else {
-      getout_ind = gg->get_popup_string("",
-                                        "Type comment for this sequence, if desired.",
-                                        "Enter comment:", "", second_header);
+      getout_ind = iob88.get_popup_string("",
+                                          "Type comment for this sequence, if desired.",
+                                          "Enter comment:", "", second_header);
    }
 
    second_header[MAX_TEXT_LINE_LENGTH-1] = 0;
@@ -2473,13 +2525,13 @@ static bool write_sequence_to_file() THROW_DECL
 
    if (sequence_number >= 0) sequence_number++;
 
-   for (j=configuration::whole_sequence_low_lim; j<=configuration::history_ptr; j++)
+   for (j=configuration::whole_sequence_low_lim; j<=config_history_ptr; j++)
       write_history_line(j, false, false, file_write_double);
 
    // Echo the concepts entered so far.
 
    if (parse_state.concept_write_ptr != &configuration::next_config().command_root) {
-      write_history_line(configuration::history_ptr+1, false, false, file_write_double);
+      write_history_line(config_history_ptr+1, false, false, file_write_double);
    }
 
    if (configuration::sequence_is_resolved())
@@ -2507,15 +2559,16 @@ static bool write_sequence_to_file() THROW_DECL
    return true;
 }
 
+namespace {
 
-static uint32 id_fixer_array[16] = {
+uint32 id_fixer_array[16] = {
    07777525252, 07777454545, 07777313131, 07777262626,
    07777522525, 07777453232, 07777314646, 07777265151,
    07777255225, 07777324532, 07777463146, 07777512651,
    07777252552, 07777323245, 07777464631, 07777515126};
 
 
-static selector_kind translate_selector_permutation1(uint32 x)
+selector_kind translate_selector_permutation1(uint32 x)
 {
    switch (x & 077) {
    case 01: return selector_sidecorners;
@@ -2529,7 +2582,7 @@ static selector_kind translate_selector_permutation1(uint32 x)
 }
 
 
-static selector_kind translate_selector_permutation2(uint32 x)
+selector_kind translate_selector_permutation2(uint32 x)
 {
    switch (x & 07) {
    case 04: return selector_headboys;
@@ -2540,8 +2593,10 @@ static selector_kind translate_selector_permutation2(uint32 x)
    }
 }
 
+}   // End blank namespace.
 
-// Returned value with "2" bit on means error occurred and counld not translate.
+
+// Returned value with "2" bit on means error occurred and could not translate.
 // Selectors are messed up.  Should only occur if in unsymmetrical formation
 // in which it can't figure out what is going on.
 // Or if we get "end boys" or something like that, that we can't handle yet.
@@ -2707,24 +2762,24 @@ public:
 typedef SORT<uint32, freqitemforsorting> freqtablesorter;
 
 
-static void do_freq_reset()
+void ui_utils::do_freq_reset()
 {
-   if (gg->yesnoconfirm("Confirmation",
-                        "This will reset the frequency counters for the current session, so that they will start over"
-                        " at zero.  No other aspect of this session will change.",
-                        "Do you really want to do this?",
-                        true, false) == POPUP_ACCEPT) {
+   if (iob88.yesnoconfirm("Confirmation",
+                          "This will reset the frequency counters for the current session, so that they will start over"
+                          " at zero.  No other aspect of this session will change.",
+                          "Do you really want to do this?",
+                          true, false) == POPUP_ACCEPT) {
       int i;
 
       for (i=0 ; i<number_of_calls[call_list_any] ; i++)
          main_call_lists[call_list_any][i]->the_defn.frequency = 0;
 
-      for (i=0 ; i<new_fangled_level_concept_list->the_list_size ; i++)
-         concept_descriptor_table[new_fangled_level_concept_list->the_list[i]].frequency = 0;
+      for (i=0 ; i<matcher_p->m_level_concept_list.the_list_size ; i++)
+         concept_descriptor_table[matcher_p->m_level_concept_list.the_list[i]].frequency = 0;
    }
 }
 
-static void do_freq_start()
+void ui_utils::do_freq_start()
 {
    if (session_index <= 0) {
       writestuff("Frequency counting must be associated with a session.");
@@ -2738,14 +2793,14 @@ static void do_freq_start()
       return;
    }
 
-   if (gg->get_popup_string("*Enter new frequency file:", "",
-                            "Enter frequency file:", "", GLOB_stats_filename) == POPUP_ACCEPT_WITH_STRING)
+   if (iob88.get_popup_string("*Enter new frequency file:", "",
+                              "Enter frequency file:", "", GLOB_stats_filename) == POPUP_ACCEPT_WITH_STRING)
       start_stats_file_from_GLOB_stats_filename();
    else
       GLOB_stats_filename[0] = 0;    // Don't leave garbage in it.
 }
 
-static void do_freq_delete()
+void ui_utils::do_freq_delete()
 {
    if (!GLOB_doing_frequency) {
       writestuff("Frequency counting is not enabled.");
@@ -2753,11 +2808,11 @@ static void do_freq_delete()
       return;
    }
 
-   if (gg->yesnoconfirm("Confirmation",
-                        "This will delete the association of the current session with frequency counters,"
-                        " and delete the counter file itself.  No other aspect of this session will change.",
-                        "Do you really want to do this?",
-                        true, false) == POPUP_ACCEPT) {
+   if (iob88.yesnoconfirm("Confirmation",
+                          "This will delete the association of the current session with frequency counters,"
+                          " and delete the counter file itself.  No other aspect of this session will change.",
+                          "Do you really want to do this?",
+                          true, false) == POPUP_ACCEPT) {
       GLOB_doing_frequency = false;
       remove(GLOB_decorated_stats_filename);
    }
@@ -2765,7 +2820,7 @@ static void do_freq_delete()
 
 
 
-static void do_freq_show(int options)
+void ui_utils::do_freq_show(int options)
 {
    int freq_show_level_tolerance = options & 0xFFFF;
 
@@ -2777,9 +2832,9 @@ static void do_freq_show(int options)
       // The reason for the complement is so that the sort will appear to be stable --
       // items are in decreasing order, so that they are in listed with calls before concepts,
       // in decreasing frequency, and in the order in the original lists.
-      uint32 *table = new uint32[number_of_calls[call_list_any] + new_fangled_level_concept_list->the_list_size];
+      uint32 *table = new uint32[number_of_calls[call_list_any] + matcher_p->m_level_concept_list.the_list_size];
       int i;
-      gg->prepare_for_listing();
+      iob88.prepare_for_listing();
       int how_much_in_table = 0;
 
       for (i=0 ; i<number_of_calls[call_list_any] ; i++) {
@@ -2788,8 +2843,9 @@ static void do_freq_show(int options)
          table[how_much_in_table++] = 0x80000000 | (this_call->the_defn.frequency << 16) | (0xFFFF & ~i);
       }
 
-      for (i=0 ; i<new_fangled_level_concept_list->the_list_size ; i++) {
-         const conzept::concept_descriptor *this_concept = &concept_descriptor_table[new_fangled_level_concept_list->the_list[i]];
+      for (i=0 ; i<matcher_p->m_level_concept_list.the_list_size ; i++) {
+         const concept_descriptor *this_concept =
+            &concept_descriptor_table[matcher_p->m_level_concept_list.the_list[i]];
          table[how_much_in_table++] = (this_concept->frequency << 16) | (0xFFFF & ~i);
       }
 
@@ -2799,21 +2855,22 @@ static void do_freq_show(int options)
       }
 
       for (i=0 ; i<how_much_in_table ; i++) {
-         if (showing_has_stopped) break;
-         GLOB_match.indent = false;
-         GLOB_user_input[0] = 0;
+         if (matcher_p->m_showing_has_stopped) break;
+         matcher_p->m_final_result.indent = false;
+         matcher_p->m_user_input[0] = 0;
          uint32 table_item = table[i];
 
          if (table_item & 0x80000000) {
             const call_with_name *this_call = main_call_lists[call_list_any][~table_item & 0xFFFF];
-            strncpy(GLOB_full_extension, this_call->menu_name, INPUT_TEXTLINE_SIZE);
+            strncpy(matcher_p->m_full_extension, this_call->menu_name, INPUT_TEXTLINE_SIZE);
          }
          else {
-            const conzept::concept_descriptor *this_concept =
-               &concept_descriptor_table[new_fangled_level_concept_list->the_list[~table_item & 0xFFFF]];
-            strncpy(GLOB_full_extension, this_concept->menu_name, INPUT_TEXTLINE_SIZE);
+            const concept_descriptor *this_concept =
+               &concept_descriptor_table[matcher_p->m_level_concept_list.the_list[~table_item & 0xFFFF]];
+            strncpy(matcher_p->m_full_extension, this_concept->menu_name, INPUT_TEXTLINE_SIZE);
          }
-         gg->show_match((table_item >> 16) & 0x7FFF);
+
+         iob88.show_match((table_item >> 16) & 0x7FFF);
       }
 
       delete [] table;
@@ -2821,7 +2878,7 @@ static void do_freq_show(int options)
 }
 
 
-static popup_return do_header_popup(char *dest)
+popup_return ui_utils::do_header_popup(char *dest)
 {
    char myPrompt[MAX_TEXT_LINE_LENGTH];
 
@@ -2830,11 +2887,11 @@ static popup_return do_header_popup(char *dest)
    else
       myPrompt[0] = 0;
 
-   return gg->get_popup_string(myPrompt, "*Enter new title:", "Enter new title:", "", dest);
+   return iob88.get_popup_string(myPrompt, "*Enter new title:", "Enter new title:", "", dest);
 }
 
 
-void run_program()
+void ui_utils::run_program(iobase & ggg)
 {
    no_erase_before_this = 0;
    global_error_flag = (error_flag_type) 0;
@@ -2935,7 +2992,7 @@ void run_program()
 
          if (interactivity == interactivity_database_init ||
              interactivity == interactivity_verify)
-            gg->fatal_error_exit(1, "Unknown error context", error_message1);
+            ggg.fatal_error_exit(1, "Unknown error context", error_message1);
 
          // If this is a real call execution error, save the call that caused it.
 
@@ -2948,17 +3005,17 @@ void run_program()
          }
          if (global_error_flag == error_flag_wrong_command) {
             // Special signal -- user clicked on special thing while trying to get subcall.
-            if ((global_reply == ui_command_select) &&
-                ((uims_menu_index == command_quit) ||
-                 (uims_menu_index == command_undo) ||
-                 (uims_menu_index == command_cut_to_clipboard) ||
-                 (uims_menu_index == command_delete_entire_clipboard) ||
-                 (uims_menu_index == command_delete_one_call_from_clipboard) ||
-                 (uims_menu_index == command_paste_one_call) ||
-                 (uims_menu_index == command_paste_all_calls) ||
-                 (uims_menu_index == command_erase) ||
-                 (uims_menu_index == command_abort)))
-               reply_pending = true;
+            if ((global_reply.majorpart == ui_command_select) &&
+                ((global_reply.minorpart == command_quit) ||
+                 (global_reply.minorpart == command_undo) ||
+                 (global_reply.minorpart == command_cut_to_clipboard) ||
+                 (global_reply.minorpart == command_delete_entire_clipboard) ||
+                 (global_reply.minorpart == command_delete_one_call_from_clipboard) ||
+                 (global_reply.minorpart == command_paste_one_call) ||
+                 (global_reply.minorpart == command_paste_all_calls) ||
+                 (global_reply.minorpart == command_erase) ||
+                 (global_reply.minorpart == command_abort)))
+               m_reply_pending = true;
             goto start_with_pending_reply;
          }
 
@@ -2970,9 +3027,9 @@ void run_program()
 
          if (!ui_options.diagnostic_mode &&
              retain_after_error &&
-             ((configuration::history_ptr != 1) || !configuration::history[1].get_startinfo_specific()->into_the_middle) &&
+             ((config_history_ptr != 1) || !configuration::history[1].get_startinfo_specific()->into_the_middle) &&
              backup_one_item()) {
-            reply_pending = false;
+            m_reply_pending = false;
             // Take out warnings that arose from the failed call,
             // since we aren't going to do that call.
             configuration::init_warnings();
@@ -3006,7 +3063,7 @@ void run_program()
       // Replace all the parse blocks left from the last sequence.
       // But if we have stuff in the clipboard, we save everything.
 
-      if (clipboard_size == 0) parse_block::release_parse_blocks_to_mark((parse_block *) 0);
+      if (clipboard_size == 0) release_parse_blocks_to_mark((parse_block *) 0);
 
       // Update the console window title.
 
@@ -3026,17 +3083,17 @@ void run_program()
             sprintf(title, "%s%s",
                     &old_filename_strings[calling_level][1], numstuff);
 
-         gg->set_window_title(title);
+         ggg.set_window_title(title);
       }
 
       // Query for the starting setup.
 
-      global_reply = gg->get_startup_command();
+      global_reply = ggg.get_startup_command();
 
-      if (global_reply == ui_command_select && uims_menu_index == command_quit) goto normal_exit;
-      if (global_reply != ui_start_select) goto normal_exit;           // Huh?
+      if (global_reply.majorpart == ui_command_select && global_reply.minorpart == command_quit) goto normal_exit;
+      if (global_reply.majorpart != ui_start_select) goto normal_exit;           // Huh?
 
-      switch (uims_menu_index) {
+      switch (global_reply.minorpart) {
       case start_select_toggle_conc:
          allowing_all_concepts = !allowing_all_concepts;
          goto new_sequence;
@@ -3077,19 +3134,19 @@ void run_program()
             ui_options.singing_call_mode = 2;
          goto new_sequence;
       case start_select_select_print_font:
-         if (!gg->choose_font()) {
+         if (!ggg.choose_font()) {
             writestuff("Printing is not supported in this program.");
             newline();
          }
          goto new_sequence;
       case start_select_print_current:
-         if (!gg->print_this()) {
+         if (!ggg.print_this()) {
             writestuff("Printing is not supported in this program.");
             newline();
          }
          goto new_sequence;
       case start_select_print_any:
-         if (!gg->print_any()) {
+         if (!ggg.print_any()) {
             writestuff("Printing is not supported in this program.");
             newline();
          }
@@ -3102,7 +3159,7 @@ void run_program()
             if (session) {
                fclose(session);
 
-               if (gg->yesnoconfirm("Confirmation",
+               if (ggg.yesnoconfirm("Confirmation",
                                     "You already have a session file.",
                                     "Do you really want to delete it and start over?",
                                     true, false) != POPUP_ACCEPT) {
@@ -3209,20 +3266,19 @@ void run_program()
       case start_select_freq_delete:
          do_freq_delete();
          goto new_sequence;
-
       case start_select_exit:
          goto normal_exit;
       }
 
-      // We now know that uims_menu_index is in the range 1 to 5, that is,
+      // We now know that global_reply.minorpart is in the range 1 to 5, that is,
       // start_select_h1p2p ... start_select_as_they_are.  We will put
       // that into the startinfo stuff in the history.
 
-      configuration::initialize_history(uims_menu_index);   // Clear the position history.
+      configuration::initialize_history(global_reply.minorpart);   // Clear the position history.
       configuration::history[1].init_warnings_specific();
       configuration::history[1].init_resolve();
       // Put the people into their starting position.
-      configuration::history[1].state = configuration::history[1].get_startinfo_specific()->the_setup;
+      configuration::history[1].state = *configuration::history[1].get_startinfo_specific()->the_setup_p;
       configuration::history[1].state_is_valid = true;
 
       written_history_items = -1;
@@ -3234,7 +3290,7 @@ void run_program()
 
    start_cycle:
 
-      reply_pending = false;
+      m_reply_pending = false;
 
    start_with_pending_reply:
 
@@ -3253,7 +3309,7 @@ void run_program()
       // and that is right here.  Note that we are about to call "initialize_parse",
       // which destroys any lingering pointers into the history array.
 
-      if (history_allocation < configuration::history_ptr+MAX_RESOLVE_SIZE+2) {
+      if (history_allocation < config_history_ptr+MAX_RESOLVE_SIZE+2) {
          int new_history_allocation = history_allocation * 2 + 5;
          configuration *new_history = new configuration[new_history_allocation];
          memcpy(new_history, configuration::history, history_allocation * sizeof(configuration));
@@ -3266,8 +3322,8 @@ void run_program()
 
       // Check for first call given to heads or sides only.
 
-      if ((configuration::history_ptr == 1) && configuration::history[1].get_startinfo_specific()->into_the_middle)
-         deposit_concept(&conzept::centers_concept);
+      if ((config_history_ptr == 1) && configuration::history[1].get_startinfo_specific()->into_the_middle)
+         deposit_concept(&concept_centers_concept);
 
       // Come here to get a concept or call or whatever from the user.
 
@@ -3275,7 +3331,7 @@ void run_program()
 
    simple_restart:
 
-      if ((!reply_pending) && (!query_for_call())) {
+      if ((!m_reply_pending) && (!query_for_call())) {
          // User specified a call (and perhaps concepts too).
 
          // The call to toplevelmove may make a call to "fail", which will get caught
@@ -3284,7 +3340,7 @@ void run_program()
 
          toplevelmove();
          finish_toplevelmove();
-         configuration::history_ptr++;         // Call successfully completed; save it.
+         config_history_ptr++;         // Call successfully completed; save it.
          goto start_cycle;
       }
 
@@ -3292,16 +3348,16 @@ void run_program()
       // because the operator selected something like "quit", "undo",
       // or "resolve", or because we have such a command already pending.
 
-      reply_pending = false;
+      m_reply_pending = false;
 
-      if (global_reply == ui_command_select) {
-         switch ((command_kind) uims_menu_index) {
+      if (global_reply.majorpart == ui_command_select) {
+         switch ((command_kind) global_reply.minorpart) {
          case command_quit:
-            if (gg->do_abort_popup() != POPUP_ACCEPT)
+            if (ggg.do_abort_popup() != POPUP_ACCEPT)
                goto simple_restart;
             goto normal_exit;
          case command_abort:
-            if (gg->do_abort_popup() != POPUP_ACCEPT)
+            if (ggg.do_abort_popup() != POPUP_ACCEPT)
                goto simple_restart;
             clear_screen();
             goto show_banner;
@@ -3309,28 +3365,28 @@ void run_program()
             while (backup_one_item()) ;   // Repeatedly remove any parse blocks that we have.
             initialize_parse();
 
-            if (configuration::history_ptr <= 1 ||
-                (configuration::history_ptr == 2 && configuration::history[1].get_startinfo_specific()->into_the_middle))
+            if (config_history_ptr <= 1 ||
+                (config_history_ptr == 2 && configuration::history[1].get_startinfo_specific()->into_the_middle))
                specialfail("Can't cut past this point.");
 
-            if (clipboard_allocation <= clipboard_size) {
+            if (m_clipboard_allocation <= clipboard_size) {
                int new_allocation = clipboard_size+1;
                // Increase by 50% beyond what we have now.
                new_allocation += new_allocation >> 1;
-               clipboard_allocation = new_allocation;
+               m_clipboard_allocation = new_allocation;
                configuration *new_clipboard = new configuration[new_allocation];
                memcpy(new_clipboard, clipboard, clipboard_size * sizeof(configuration));
                delete [] clipboard;
                clipboard = new_clipboard;
             }
 
-            clipboard[clipboard_size++] = configuration::history[configuration::history_ptr-1];
+            clipboard[clipboard_size++] = configuration::history[config_history_ptr-1];
             clipboard[clipboard_size-1].command_root = configuration::current_config().command_root;
-            configuration::history_ptr--;
+            config_history_ptr--;
             goto start_cycle;
          case command_delete_entire_clipboard:
             if (clipboard_size != 0) {
-               if (gg->yesnoconfirm("Confirmation", "There are calls in the clipboard.",
+               if (ggg.yesnoconfirm("Confirmation", "There are calls in the clipboard.",
                                     "Do you want to delete all of them?",
                                     false, true) != POPUP_ACCEPT)
                   goto simple_restart;
@@ -3348,8 +3404,8 @@ void run_program()
             while (backup_one_item()) ;   // Repeatedly remove any parse blocks that we have.
             initialize_parse();
 
-            if (configuration::history_ptr >= 1 &&
-                (configuration::history_ptr >= 2 || !configuration::history[1].get_startinfo_specific()->into_the_middle)) {
+            if (config_history_ptr >= 1 &&
+                (config_history_ptr >= 2 || !configuration::history[1].get_startinfo_specific()->into_the_middle)) {
                uint32 status = 0;
 
                while (clipboard_size != 0) {
@@ -3383,7 +3439,7 @@ void run_program()
                   try {
                      toplevelmove();
                      finish_toplevelmove();
-                     configuration::history_ptr++;
+                     config_history_ptr++;
                   }
                   catch(error_flag_type) {
                      // The call failed.
@@ -3398,7 +3454,7 @@ void run_program()
                   interactivity = interactivity_normal;
                   testing_fidelity = false;
                   clipboard_size--;
-                  if ((command_kind) uims_menu_index == command_paste_one_call) break;
+                  if ((command_kind) global_reply.minorpart == command_paste_one_call) break;
                }
 
                if (status & 4) global_error_flag = error_flag_formation_changed;
@@ -3416,14 +3472,14 @@ void run_program()
                    parse_state.parse_stack_index == 0)
                   parse_state.call_list_to_use = parse_state.base_call_list_to_use;
 
-               reply_pending = false;
+               m_reply_pending = false;
                goto simple_restart;
             }
             else if (parse_state.concept_write_base != &configuration::next_config().command_root) {
                // Failed to back up, but some concept exists.  This must have been inside
                // a "checkpoint" or similar complex thing.  Just throw it all away,
                // but do not delete any completed calls.
-               reply_pending = false;
+               m_reply_pending = false;
                goto start_cycle;
             }
             else if (parse_state.concept_write_base != parse_state.concept_write_ptr) {
@@ -3432,7 +3488,7 @@ void run_program()
                // only because it is the "centers" concept for a "heads/sides start".
                if (parse_state.concept_write_base &&
                    &((*parse_state.concept_write_base)->next) == parse_state.concept_write_ptr &&
-                   configuration::history_ptr == 1 &&
+                   config_history_ptr == 1 &&
                    configuration::current_config().get_startinfo_specific()->into_the_middle) {
                   // User typed "undo" at the start of the sequence.
                   // Just abort the sequence.  Don't even ask for permission --
@@ -3441,16 +3497,16 @@ void run_program()
                   goto show_banner;
                }
                else {
-                  reply_pending = false;
+                  m_reply_pending = false;
                   goto start_cycle;
                }
             }
             else {
                // There were no concepts entered.  Throw away the entire preceding line.
-               if (configuration::history_ptr > 1) {
+               if (config_history_ptr > 1) {
                   configuration::current_config().draw_pic = false;
                   configuration::current_config().state_is_valid = false;
-                  configuration::history_ptr--;
+                  config_history_ptr--;
                   // Going to start_cycle will make sure written_history_items
                   // does not exceed history_ptr.
                   goto start_cycle;
@@ -3462,13 +3518,13 @@ void run_program()
                }
             }
          case command_erase:
-            reply_pending = false;
+            m_reply_pending = false;
             goto start_cycle;
          case command_save_pic:
             configuration::current_config().draw_pic = true;
             // We have to back up to BEFORE the item we just changed.
-            if (written_history_items > configuration::history_ptr-1)
-               written_history_items = configuration::history_ptr-1;
+            if (written_history_items > config_history_ptr-1)
+               written_history_items = config_history_ptr-1;
             goto simple_restart;
 
          case command_freq_show:
@@ -3607,45 +3663,46 @@ void run_program()
             // Check that it is really resolved.
 
             if (!configuration::sequence_is_resolved()) {
-               if (gg->yesnoconfirm("Confirmation",
-                       "This sequence is not resolved.",
-                       "Do you want to write it anyway?",
-                       false, true) != POPUP_ACCEPT)
+               if (ggg.yesnoconfirm("Confirmation",
+                                    "This sequence is not resolved.",
+                                    "Do you want to write it anyway?",
+                                    false, true) != POPUP_ACCEPT)
                   specialfail("This sequence is not resolved.");
                configuration::current_config().draw_pic = true;
             }
 
             if (!write_sequence_to_file())
                goto start_cycle; // User cancelled action.
+
             goto new_sequence;
          case command_select_print_font:
-            if (!gg->choose_font())
+            if (!ggg.choose_font())
                specialfail("Printing is not supported in this program.");
             goto start_cycle;
          case command_print_current:
-            if (!gg->print_this())
+            if (!ggg.print_this())
                specialfail("Printing is not supported in this program.");
             goto start_cycle;
          case command_print_any:
-            if (!gg->print_any())
+            if (!ggg.print_any())
                specialfail("Printing is not supported in this program.");
             goto start_cycle;
          case command_help_manual:
-            if (!gg->help_manual())
+            if (!ggg.help_manual())
                specialfail("Manual browsing is not supported in this program.");
             goto start_cycle;
          case command_help_faq:
-            if (!gg->help_faq())
+            if (!ggg.help_faq())
                specialfail("Manual browsing is not supported in this program.");
             goto start_cycle;
          default:     // Should be some kind of search command.
 
             // If it wasn't, we have a serious problem.
-            if (((command_kind) uims_menu_index) < command_resolve) goto normal_exit;
+            if (((command_kind) global_reply.minorpart) < command_resolve) goto normal_exit;
 
          do_a_resolve:
 
-            search_goal = (command_kind) uims_menu_index;
+            search_goal = (command_kind) global_reply.minorpart;
             global_reply = full_resolve();
 
             // If full_resolve refused to operate (for example, we clicked on "reconcile"
@@ -3658,14 +3715,14 @@ void run_program()
             // So a search command (e.g. "pick random call") will cause the last
             // search result to be accepted, and begin another search on top of that result.
 
-            if (global_reply == ui_command_select) {
-               switch ((command_kind) uims_menu_index) {
+            if (global_reply.majorpart == ui_command_select) {
+               switch ((command_kind) global_reply.minorpart) {
                case command_quit:
                case command_abort:
                case command_getout:
                   break;
                default:
-                  if (((command_kind) uims_menu_index) < command_resolve) goto start_cycle;
+                  if (((command_kind) global_reply.minorpart) < command_resolve) goto start_cycle;
                   break;
                }
 
@@ -3675,7 +3732,7 @@ void run_program()
                parse_state.concept_write_base = &configuration::next_config().command_root;
                parse_state.concept_write_ptr = parse_state.concept_write_base;
                *parse_state.concept_write_ptr = (parse_block *) 0;
-               reply_pending = true;
+               m_reply_pending = true;
                // Going to start_with_pending_reply will make sure
                // written_history_items does not exceed history_ptr.
                goto start_with_pending_reply;

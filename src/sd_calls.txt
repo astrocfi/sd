@@ -57,7 +57,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "38.55"
+version "38.56"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve dont_raise_overcast
@@ -5700,7 +5700,7 @@ call "snake" c3x
       array [C1N A1S]
 
 call "patch the @6" c3a
-            visible_fractions diamond_is_legal
+            visible_fractions diamond_is_legal dont_use_in_nice_resolve
    // Selector identities *do not* get re-evaluated between parts of this
    // call, which makes it work.  Compare wave the <anyone>. */
    seq hinge [seq_never_re_evaluate allow_forced_mod inherit_diamond]
@@ -9409,13 +9409,14 @@ call "split cast" c4a
             left_means_mirror yoyo_is_inherited gen_sting_is_inherited
    conc2_4_or_normal
       cast_off_n4      [inherit_yoyo inherit_gensting insert_number 2]
-      hinge_then_trade [inherit_left inherit_yoyo inherit_gensting suppress_elongation_warnings endscando]
+      hinge_then_trade [conc_demand_columns conc_force_spots inherit_left inherit_yoyo inherit_gensting
+                        suppress_elongation_warnings endscando]
 
 call "split cast @b" c4a
             left_means_mirror neednumber
    conc2_4_or_normal
       cast_off_n4       []
-      hinge_then_cast_n [inherit_left suppress_elongation_warnings endscando]
+      hinge_then_cast_n [conc_demand_columns conc_force_spots inherit_left suppress_elongation_warnings endscando]
 
 call "_change the web 1" dontshow tag change_web_1
             fudge_to_q_tag
@@ -10030,6 +10031,9 @@ call "follow your neighbor" plus tag neighbor
       array [CR3S CR2S 0 0]
    setup pmd 2x2 qualifier left wave_only restriction unusual alwaysfail
       array [AL0S 0 0 AL1S]
+            alternate_definition [rewind] c4
+   setup 1x4 2x2 restriction wave_only
+      array [AL3E CR3W CR2W AL2E]
 
 call "cross your neighbor" c1 tag xneighbor
    setup 2x2 1x4 rotate restriction wave_only
@@ -12495,7 +12499,7 @@ call "travel thru" c3a
             rear_back_from_r_wave visible_fractions left_means_mirror
             single_is_inherited bigmatrix_is_inherited nxn_is_inherited
             twisted_is_inherited rewind_is_inherited funny_is_inherited
-   seq passthru [inherit_twisted inherit_bigmatrix inherit_funny]
+   seq passthru [inherit_left inherit_twisted inherit_bigmatrix inherit_funny]
    seq finishtravel [inherit_left inherit_single inherit_bigmatrix
                      inherit_rewind inherit_nxn inherit_funny]
 
@@ -22296,7 +22300,7 @@ call "scoot back" mainstream tag scootback
    setup short6 short6 qualifier left dmd_ctrs_mwv
       array [0 0 A0S A5S A4S 0]
             alternate_definition [half] mainstream
-   setup 2x2 1x4 no_cutting_through rotate qualifier wave_only
+   setup 2x2 1x4 no_cutting_through rotate restriction wave_only
       array [CR0N AL0S AL1S CR1N]
    setup pmd 1x4 qualifier right dmd_ctrs_mwv restriction unusual levelc1
       array [CR1E CR2E 0 0]
@@ -24341,8 +24345,22 @@ call "explode the top, turn the star @9 more than usual" c3a
    seq plodetop4 []
 
 call "_centers bits and pieces part 1" dontshow tag c_bits_pieces1
+   // Doing this call in a reasonably satisfactory way is tricky.
+   // The tests are t54, nf32, ng25, ki05, lg02, lo01, and vg04.
+   // First, if everyone is consistent with a "box circulate" box, do a standard Peel and Trail.
+   setup 2x2 1x4 qualifier wave_only
+      array [AL0S CR2S AL1S CR3S]
+   // Next, if everyone is consistent with a "Reverse the Pass" box, do the same,
+   // even though the result will not be suitable for an Ah So.
+   setup 2x2 1x4 qualifier peelable_box
+      array [AL0S CR2S AL1S CR3S]
+   // Next, if everyone is facing in or everyone is facing out, and the
+   // above clauses don't apply, do the special "touch/lockit/lockit/"
+   // or "turn back and touch" thing.
    setup 2x2 1x4 qualifier in_or_out
       array [AL1S CR2S AL1S CR2S]
+   // Finally, just do a Peel and Trail.  This takes care of T-bones.
+   // The result will not be suitable for an Ah So.
    setup 2x2 1x4 restriction unusual wave_only
       array [AL0S CR2S AL1S CR3S]
 

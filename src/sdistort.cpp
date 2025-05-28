@@ -71,13 +71,13 @@ void tglmap::initialize()
 
    for (tabp = init_table ; tabp->mykey != tgl0 ; tabp++) {
       if (ptrtable[tabp->mykey])
-         gg->fatal_error_exit(1, "Tgl_map table initialization failed", "dup");
+         gg77->iob88.fatal_error_exit(1, "Tgl_map table initialization failed", "dup");
       ptrtable[tabp->mykey] = tabp;
    }
 
    for (i=tgl0+1 ; i<tgl_ENUM_EXTENT ; i++) {
       if (!ptrtable[i])
-         gg->fatal_error_exit(1, "Tgl_map table initialization failed", "undef");
+         gg77->iob88.fatal_error_exit(1, "Tgl_map table initialization failed", "undef");
    }
 }
 
@@ -86,8 +86,11 @@ void tglmap::initialize()
 extern void prepare_for_call_in_series(setup *result, setup *ss, bool dont_clear__no_reeval /* = false */)
 {
    *result = *ss;
-   result->result_flags.misc &= RESULTFLAG__NO_REEVALUATE;     // Clear all except this bit.
-   if (!dont_clear__no_reeval) result->result_flags.misc = 0;  // Or clear them all.
+   // Clear all except these two bits.
+   result->result_flags.misc &= (RESULTFLAG__NO_REEVALUATE|RESULTFLAG__REALLY_NO_REEVALUATE);
+   // Or clear even RESULTFLAG__NO_REEVALUATE, but never RESULTFLAG__REALLY_NO_REEVALUATE.
+   if (!dont_clear__no_reeval)
+      result->result_flags.misc &= RESULTFLAG__REALLY_NO_REEVALUATE;
    result->result_flags.maximize_split_info();
 }
 
@@ -111,7 +114,7 @@ void map::initialize()
 
    for (unsigned int tab1i = 0 ; tab1i < NUM_SPECMAP_KINDS ; tab1i++) {
       if (spec_map_table[tab1i].code != tab1i)
-         gg->fatal_error_exit(1, "Special map table initialization failed");
+         gg77->iob88.fatal_error_exit(1, "Special map table initialization failed");
    }
 
    for (map_thing *tab2p = map_init_table ; tab2p->inner_kind != nothing ; tab2p++) {
@@ -2056,8 +2059,8 @@ extern void distorted_2x2s_move(
    uint32 directions, livemask, misc2_zflag;
    const veryshort *map_ptr = 0;
 
-   const conzept::concept_descriptor *this_concept =
-      (ss->cmd.cmd_misc3_flags & CMD_MISC3__IMPOSE_Z_CONCEPT) ? &conzept::special_z : parseptr->concept;
+   const concept_descriptor *this_concept =
+      (ss->cmd.cmd_misc3_flags & CMD_MISC3__IMPOSE_Z_CONCEPT) ? &concept_special_z : parseptr->concept;
 
    ss->cmd.cmd_misc3_flags &= ~CMD_MISC3__IMPOSE_Z_CONCEPT;
 

@@ -252,7 +252,7 @@ static collision_map collision_map_table[] = {
    // This one is marked as dangerous, meaning it can't be used from
    // merge_setups, but can be used when normalizing the result of basic_move.
    {6, 0x044044, 0x77, 0x44, {0, 1, 2, 4, 5, 6},   {0, 1, 2, 4, 5, 7},   {0, 1, 3, 4, 5, 6},
-    s_crosswave, s_crosswave, 0, warn__ctrs_stay_in_ctr, 0x80000000}, // From inverted lines w/ centers out.
+    s_crosswave, s_crosswave, 0, warn__ctrs_stay_in_ctr, INT32_C(0x80000000)}, // From inverted lines w/ centers out.
 
    {4, 0x044044, 0x55, 0x55, {0, 2, 4, 6},         {0, 2, 5, 7},          {1, 3, 4, 6},
     s_crosswave, s_crosswave, 0, warn__ctrs_stay_in_ctr, 0},      // from trade-by w/ ctrs 1/4 out

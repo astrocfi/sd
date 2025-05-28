@@ -8,13 +8,13 @@
 <body bgcolor="#ffffdd">
 <h1 align=center>Sd - Downloading for PC Compatibles</h1>
 <p>
-Both Sd and Sdtty are available for PC compatibles.&nbsp;
+Both Sd and Sdtty are available for PC compatibles running Windows.&nbsp;
 (Note: <a href="intro.html">summary of availability</a>.)&nbsp;
-They run under the Windows family (Windows 95, 98, ME, 2000,
-NT, XP, Vista, and Windows 7), Linux, Windows 3.1, or DOS.
-If you are running Linux, Windows 3.1 or DOS, only Sdtty is available .
+They run under Windows 95, 98, ME, 2000, NT, XP, Vista, Windows 7, Windows 3.1, or DOS.  They may run under Windows 8.
 <p>
-You can download the file "<code>install.exe</code>" from this Web page
+Sdtty (but not Sd) is available for Linux.
+<p>
+For Windows, you can download the file "<code>install.exe</code>" from this web page
 onto your computer.  It contains both Sd and Sdtty, and a copy of the
 manual and release notes.
 You can also download the documentation files shown below.
@@ -23,10 +23,10 @@ convenient form, that you can browse or download from the
 <a href="readings.html">Documentation</a> page.
 <ol>
 <li>
-Download the file(s) from your Web browser into that folder.&nbsp;
+Download the file(s) from your Web browser.&nbsp;
 <p>
 <strong>WARNING WARNING WARNING WARNING:</strong><br>
-The new installation procedure for Sd and Sdtty is much more
+The new installation procedure for Sd and Sdtty on Windows is much more
 user-friendly than before, but it always installs into the folder
 "<code>C:\Sd</code>".
 (Software that can install to other folders and still make
@@ -45,14 +45,16 @@ file.  Choose the correct one from the list below.
 <p>
 The program is no longer maintained for Windows 3.1 or DOS.
 If you must download install3.exe below, you will get version 34.6.
+<p>
+<strong>You may need to disable anti-virus software when downloading.</strong>
 <hr>
 <ul>
-<li>Download <a href="install.exe">install.exe</a>
-which has Sd and Sdtty for PC compatibles running Windows 95, 98, ME, 2000, NT, or XP.
-<li>Download <a href="install3.exe">install3.exe</a>
-which has Sdtty version 34.6 for PC compatibles running DOS or Windows 3.1.
-<li>Download <a href="linux.tar.gz">linux.tar.gz</a>
-which has Sdtty for PC compatibles running Linux.
+<li>Modern Windows: download <a href="install.exe">install.exe</a>
+which has Sd and Sdtty for PC compatibles running Windows.
+<li>Windows 3.1 or DOS: download <a href="install3.exe">install3.exe</a>
+which has Sdtty version 34.6 for PC compatibles running Windows 3.1 or DOS.
+<li>Linux: download <a href="linux.tgz">linux.tgz</a>
+which has Sdtty for PC compatibles (Intel) running Linux.
 </ul>
 <hr>
 You can also download the documentation files in "bulk" form to your computer.
@@ -84,16 +86,18 @@ or <code>install3.exe</code>
 Do the actual installation by launching that file.
 On Windows 95, 98, ME, NT, 2000, or XP, launching <code>install.exe</code> will
 unpack and install the program and database into the folder C:\sd.
+It will overwrite the previous program, but will not affect other files, such as written sequences.
 On Windows 3.1 or DOS, launching <code>install3.exe</code> will
 unpack and install the program and database into the current folder.
 We recommend doing this in folder C:\sd.
 <p>
-On Linux, the file <code>linux.tar.gz</code> is a gzipped Unix archive.
-Unpack it into the chosen directory.  It will create the "sd" directory
-subordinate to that directory, and place the files in same.
+On Linux, the file <code>linux.tgz</code> is a gzipped Unix archive.
+Unpack it (that is, <code>tar -zxvf linux.tgz</code>) into the chosen directory.
+It will create the "sdtty" executable, along with the calls database.
+It will overwrite the previous program, but will not affect other files, such as written sequences.
 <p>
 <li>
-A Windows explorer will appear, containing useful shortcuts.  You can copy
+On Windows, an explorer will appear, containing useful shortcuts.  You can copy
 any or all of them to the Desktop and/or Start Menu.  Use the right mouse button
 for the copy, and click on "Copy Here" when asked.
 <p>
@@ -108,19 +112,16 @@ Launching any or all of these:
 will unpack the requested documentation files.
 <p>
 <li>
-You may now delete the <code>.exe</code> files or save them for backup purposes.
+You may now delete the <code>.exe</code> or <code>.tgz</code> files or save them for backup purposes.
 <p>
 <li>
 If you are upgrading from a previous version,
 <a href="relnotes.html">read the Release Notes</a>.
 </ol>
-<p>
-You can also order a diskette and nicely printed documentation from the
-authors.
 <hr>
 See also <a href="download-unix.html">Downloading Sd for other varieties of Unix</a>.<br>
 Up to <a href="index.html">Sd home page</a>.<br>
-<em>Time-stamp: "10 June 2002"</em>
+<em>Time-stamp: "30 August 2013"</em>
 </body>
 </html>
 <!--

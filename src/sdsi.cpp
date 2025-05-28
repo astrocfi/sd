@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2012  William B. Ackerman.
+//    Copyright (C) 1990-2013  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -100,6 +100,7 @@ and the following external variables:
 #include <ctype.h>
 
 #include "sd.h"
+#include "sdui.h"
 #include "paths.h"
 
 
@@ -206,7 +207,7 @@ extern void hash_nonrandom_number(int number)
 
 
 
-extern void get_date(char dest[])
+void ui_utils::get_date(char dest[])
 {
    time_t clocktime;
    char *junk;
@@ -235,7 +236,7 @@ char *get_errstring()
 }
 
 
-void open_file()
+void ui_utils::open_file()
 {
    int this_file_position;
    int i;
@@ -570,7 +571,7 @@ void open_file()
 // #define NLSIZE 2
 // etc.....
 
-extern void write_file(const char line[])
+void ui_utils::write_file(const char line[])
 {
    if (file_error) return;    // Don't keep trying after a failure.
 
@@ -593,7 +594,7 @@ extern void write_file(const char line[])
 }
 
 
-extern void close_file()
+void ui_utils::close_file()
 {
    struct stat statbuf;
    char foo[MAX_ERR_LENGTH*10];

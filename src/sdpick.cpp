@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2007  William B. Ackerman.
+//    Copyright (C) 1990-2013  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -44,6 +44,7 @@ and the following external variables:
 */
 
 #include "sd.h"
+#include "sdui.h"
 
 
 // BEWARE!!  This list must track the array "pick_type_table".
@@ -97,7 +98,7 @@ static pick_type current_pick_type = pick_not_in_any_pick_at_all;
 
 static void display_pick()
 {
-   gg->set_pick_string(pick_type_table[current_pick_type].display_string);
+   gg77->iob88.set_pick_string(pick_type_table[current_pick_type].display_string);
 }
 
 
@@ -385,12 +386,12 @@ void do_circcer_iteration(uint32 *circcp)
 // did.  If the iterators are nonzero, we will just repeat that call.
 // Otherwise, we will advance it to the next and use that call.
 
-const conzept::concept_descriptor *pick_concept(bool already_have_concept_in_place)
+const concept_descriptor *pick_concept(bool already_have_concept_in_place)
 {
    bool do_concept = false;
 
    if (interactivity != interactivity_picking)
-      return (conzept::concept_descriptor *) 0;
+      return (concept_descriptor *) 0;
 
    if (current_pick_type == pick_starting_first_scan) {
 
@@ -415,7 +416,7 @@ const conzept::concept_descriptor *pick_concept(bool already_have_concept_in_pla
    }
    else if (pick_type_table[current_pick_type].exhaustive_search) {
       if (already_have_concept_in_place)
-         return (conzept::concept_descriptor *) 0;
+         return (concept_descriptor *) 0;
 
       if ((selector_iterator | direction_iterator | number_iterator |
            tagger_iterator | circcer_iterator) == 0) {
@@ -502,17 +503,17 @@ const conzept::concept_descriptor *pick_concept(bool already_have_concept_in_pla
                           insert a concept. */
          j = generate_random_number(j);
 
-         uims_menu_index = concept_sublists[parse_state.call_list_to_use][j];
-         return &concept_descriptor_table[uims_menu_index];
+         global_reply.minorpart = concept_sublists[parse_state.call_list_to_use][j];
+         return &concept_descriptor_table[global_reply.minorpart];
       }
    }
    else if (pick_type_table[current_pick_type].with_concept &&
             !already_have_concept_in_place) {
-      uims_menu_index = concept_scan_table[concept_scan_index];
-      return &concept_descriptor_table[uims_menu_index];
+      global_reply.minorpart = concept_scan_table[concept_scan_index];
+      return &concept_descriptor_table[global_reply.minorpart];
    }
 
-   return (conzept::concept_descriptor *) 0;
+   return (concept_descriptor *) 0;
 }
 
 

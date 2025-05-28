@@ -1,5 +1,8 @@
 // -*- mode:c++; indent-tabs-mode:nil; c-basic-offset:3; fill-column:88 -*-
 
+#ifndef DATABASE_H
+#define DATABASE_H
+
 // SD -- square dance caller's helper.
 //
 //    Copyright (C) 1990-2013  William B. Ackerman.
@@ -101,13 +104,43 @@
 // 64 bit sytem (the comment does say "at least 32 bits, doesn't it?), but in practice
 // there have been problems.
 
-typedef int int32;
-typedef unsigned int uint32;
-typedef short int int16;
-typedef unsigned short int uint16;
-typedef char veryshort;
-typedef char int8;
-typedef unsigned char uint8;
+// Update, 2013:  We now just use the standard C99 things.
+
+#if defined(_MSC_VER)
+// Modern versions of the Micro$oft compiler probably provide stdint.h, but we're too cheap
+// to buy modern versions, especially since both VC++ version 5 and version 6 generate
+// incorrect code for "snag bits and pieces", and there is no evidence that Micro$oft
+// ever fixed this.  So we stick with version 6 and use it only for its nice debugger.
+typedef int int32_t;
+typedef unsigned int uint32_t;
+typedef short int int16_t;
+typedef unsigned short int uint16_t;
+typedef char int8_t;
+typedef unsigned char uint8_t;
+#define INT8_C(val) ((int8_t) + (val))
+#define UINT8_C(val) ((uint8_t) + (val##U))
+#define INT16_C(val) ((int16_t) + (val))
+#define UINT16_C(val) ((uint16_t) + (val##U))
+#define INT32_C(val) val##L
+#define UINT32_C(val) val##UL
+#else
+// Production builds are done with modern gcc.
+#define __STDC_CONSTANT_MACROS
+#include <stdint.h>
+#endif
+
+
+// The goal is to get rid of the following typedefs,
+// and use the standard type symbols everywhere.
+
+typedef int32_t int32;
+typedef uint32_t uint32;
+typedef int16_t int16;
+typedef uint16_t uint16;
+typedef int8_t veryshort;
+typedef int8_t int8;
+typedef uint8_t uint8;
+// Except this one.
 typedef const char *Cstring;
 
 
@@ -1287,3 +1320,5 @@ enum {
 
 extern bool do_heritflag_merge(uint32 *dest, uint32 source);
 extern int begin_sizes[];
+
+#endif   /* DATABASE_H */

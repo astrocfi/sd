@@ -2,24 +2,13 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2013  William B. Ackerman.
+//    Copyright (C) 1990-2008  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
-//    ===================================================================
-//
-//    If you received this file with express permission from the licensor
-//    to modify and redistribute it it under the terms of the Creative
-//    Commons CC BY-NC-SA 3.0 license, then that license applies.  See
-//    http://creativecommons.org/licenses/by-nc-sa/3.0/
-//
-//    ===================================================================
-//
-//    Otherwise, the GNU General Public License applies.
-//
 //    Sd is free software; you can redistribute it and/or modify it
 //    under the terms of the GNU General Public License as published by
-//    the Free Software Foundation; either version 3 of the License, or
+//    the Free Software Foundation; either version 2 of the License, or
 //    (at your option) any later version.
 //
 //    Sd is distributed in the hope that it will be useful, but WITHOUT
@@ -27,13 +16,11 @@
 //    or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
 //    License for more details.
 //
-//    You should have received a copy of the GNU General Public License,
-//    in the file COPYING.txt, along with Sd.  See
-//    http://www.gnu.org/licenses/
+//    You should have received a copy of the GNU General Public License
+//    along with Sd; if not, write to the Free Software Foundation, Inc.,
+//    59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 //
-//    ===================================================================
-//
-//    This is for version 38.
+//    This is for version 37.
 
 /* This defines the following functions:
    configuration::null_resolve_thing
@@ -51,7 +38,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
-#include "sdui.h"
 #include "sd.h"
 
 
@@ -460,8 +446,6 @@ static const resolve_tester test_c1phan_stuff[] = {
    // From phantoms, all promenade.
    {resolve_prom,           MS, 7,   {11, 9, 7, 5, 3, 1, 15, 13},  0x118833AA},
    {resolve_prom,           MS, 7,   {10, 8, 6, 4, 2, 0, 14, 12},  0x8833AA11},
-   {resolve_revprom,        MS, 7,   {9, 11, 5, 7, 1, 3, 13, 15},  0x33AA1188},
-   {resolve_revprom,        MS, 7,   {8, 10, 4, 6, 0, 2, 12, 14},  0xAA118833},
    {resolve_none, MS, 0x10}};
 
 static const resolve_tester test_galaxy_stuff[] = {
@@ -510,7 +494,6 @@ static const resolve_tester test_2x6_stuff[] = {
    // From outer triple boxes.
    {resolve_rlg,            MS, 3,   {7, 6, 4, 5, 1, 0, 10, 11},   0x8A8AA8A8},
    {resolve_la,             MS, 6,   {7, 5, 4, 0, 1, 11, 10, 6},   0xA8AA8A88},
-   {resolve_prom,           MS, 7,   {7, 6, 4, 5, 1, 0, 10, 11},   0x8888AAAA},
    // From parallelogram waves.
    {resolve_rlg,            MS, 3,   {7, 6, 2, 3, 1, 0, 8, 9},     0x8A8AA8A8},
    {resolve_la,             MS, 6,   {7, 3, 2, 0, 1, 9, 8, 6},     0xA8AA8A88},
@@ -821,7 +804,7 @@ void configuration::calculate_resolve()
 
 
 
-void ui_utils::write_aproximately()
+static void write_aproximately()
 {
    if (configuration::current_config().state.result_flags.misc & RESULTFLAG__IMPRECISE_ROT)
       writestuff("approximately ");
@@ -829,7 +812,7 @@ void ui_utils::write_aproximately()
 
 
 // This assumes that "sequence_is_resolved" passes.
-void ui_utils::write_resolve_text(bool doing_file)
+void write_resolve_text(bool doing_file)
 {
    resolve_indicator & r = configuration::current_resolve();
    int distance = r.distance;
@@ -986,7 +969,7 @@ static bool inner_search(command_kind goal,
    hashed_random_list[0] = 0;
 
    // Mark the parse block allocation, so that we throw away the garbage created by failing attempts.
-   inner_parse_mark = outer_parse_mark = get_parse_block_mark();
+   inner_parse_mark = outer_parse_mark = parse_block::get_parse_block_mark();
 
    // This loop searches through a group of twenty single-call resolves, then a group
    // of twenty two-call resolves, then a group of twenty three-call resolves,
@@ -1007,9 +990,9 @@ static bool inner_search(command_kind goal,
 
    try {
       // Throw away garbage from last attempt.
-      release_parse_blocks_to_mark(inner_parse_mark);
+      parse_block::release_parse_blocks_to_mark(inner_parse_mark);
       testing_fidelity = false;
-      config_history_ptr = history_save;
+      configuration::history_ptr = history_save;
       attempt_count++;
 
       // Check whether we have been trying too long.  If so, give up and report failure.
@@ -1022,7 +1005,7 @@ static bool inner_search(command_kind goal,
 
       if (!(attempt_count & 255) && ((int) (clock()-attempt_start_time)) > CLOCKS_TO_RESOLVE) {
          // Too many tries -- too bad.
-         config_history_ptr = huge_history_ptr;
+         configuration::history_ptr = huge_history_ptr;
 
          // We shouldn't have to do the following stuff.  The searcher should be written
          // such that it doesn't get stuck on a call with any iterator nonzero, because,
@@ -1040,14 +1023,14 @@ static bool inner_search(command_kind goal,
 
       // Now clear any concepts if we are not on the first call of the series.
 
-      if (config_history_ptr != history_insertion_point || goal == command_reconcile)
+      if (configuration::history_ptr != history_insertion_point || goal == command_reconcile)
          initialize_parse();
       else
          restore_parse_state();
 
       // Generate the concepts and call.
 
-      hashed_randoms = hashed_random_list[config_history_ptr - history_insertion_point];
+      hashed_randoms = hashed_random_list[configuration::history_ptr - history_insertion_point];
 
       // Put in a special initial concept if needed to normalize.
 
@@ -1390,8 +1373,8 @@ static bool inner_search(command_kind goal,
       // protect it.
 
 #ifdef EXCESSIVE_RECONCILE_FIXUP
-      configuration::history[config_history_ptr+1].command_root =
-         copy_parse_tree(configuration::history[config_history_ptr+1].command_root);
+      configuration::history[configuration::history_ptr+1].command_root =
+         copy_parse_tree(configuration::history[configuration::history_ptr+1].command_root);
 #else
       configuration::history[huge_history_ptr+1].command_root =
          copy_parse_tree(configuration::history[huge_history_ptr+1].command_root);
@@ -1399,8 +1382,8 @@ static bool inner_search(command_kind goal,
 
       // Save the entire resolve, that is, the calls we inserted, and where we inserted them.
 
-      config_history_ptr++;
-      new_resolve->size = config_history_ptr - history_insertion_point;
+      configuration::history_ptr++;
+      new_resolve->size = configuration::history_ptr - history_insertion_point;
 
       if (goal == command_reconcile) {
          for (j=0; j<8; j++)
@@ -1497,7 +1480,7 @@ static bool inner_search(command_kind goal,
          }
 #endif
 
-         config_history_ptr++;
+         configuration::history_ptr++;
       }
 
       testing_fidelity = false;
@@ -1515,7 +1498,7 @@ static bool inner_search(command_kind goal,
          resolve_kind rk = rr.the_item->k;
          if (resolve_table[rk].not_in_reconcile != 0)
             goto cant_consider_this_call;
-         // Fudge the meaning of "at home" if there is a 1/8 rotation.
+         // Fudge the meaning of "at home" if there is a 1/8 reotation.
          if (rk == resolve_circle && rr.distance != (configuration::current_config().state.eighth_rotation ? 7 : 0))
             goto cant_consider_this_call;
       }
@@ -1525,10 +1508,8 @@ static bool inner_search(command_kind goal,
       for (j=0; j<MAX_RESOLVE_SIZE; j++) {
          new_resolve->stuph[j] = configuration::history[j+history_insertion_point+1];
          if (j < new_resolve->size) {
-            if (new_resolve->stuph[j].command_root == 0 || new_resolve->stuph[j].command_root->concept == 0) {
-               gg77->iob88.serious_error_print("BUG IN RESOLVER!\n");
+            if (new_resolve->stuph[j].command_root == 0 || new_resolve->stuph[j].command_root->concept == 0)
                goto cant_consider_this_call;   // What????  Some kind of bug, apparently.
-            }
          }
       }
 
@@ -1581,8 +1562,8 @@ static bool inner_search(command_kind goal,
          ok_to_save_this: ;
          }
 
-         history_save = config_history_ptr + 1;
-         inner_parse_mark = get_parse_block_mark();
+         history_save = configuration::history_ptr + 1;
+         inner_parse_mark = parse_block::get_parse_block_mark();
          hashed_random_list[history_save - history_insertion_point] = hashed_randoms;
       }
    }
@@ -1603,7 +1584,7 @@ static bool reconcile_command_ok()
 
    // Since we are going to go back 1 call, demand we have at least 3. *****
    // Also, demand no concepts already in place.
-   if ((config_history_ptr < 3) || configuration::concepts_in_place()) return false;
+   if ((configuration::history_ptr < 3) || configuration::concepts_in_place()) return false;
 
    for (k=0; k<8; k++)
       dirmask = (dirmask << 2) | (current_people[k].id1 & 3);
@@ -1685,10 +1666,10 @@ extern int nice_setup_command_ok(void)
 }
 
 
-uims_reply_thing ui_utils::full_resolve()
+uims_reply full_resolve()
 {
    int j, k;
-   uims_reply_thing reply(ui_user_cancel, 99);
+   uims_reply reply;
    int current_resolve_index, max_resolve_index;
    bool show_resolve;
    int current_depth = 0;
@@ -1698,8 +1679,8 @@ uims_reply_thing ui_utils::full_resolve()
 
    // Allocate or reallocate the huge_history_save save array if needed.
 
-   if (huge_history_allocation < config_history_ptr+MAX_RESOLVE_SIZE+2) {
-      int new_history_allocation = config_history_ptr+MAX_RESOLVE_SIZE+2;
+   if (huge_history_allocation < configuration::history_ptr+MAX_RESOLVE_SIZE+2) {
+      int new_history_allocation = configuration::history_ptr+MAX_RESOLVE_SIZE+2;
       // Increase by 50% beyond what we have now.
       new_history_allocation += new_history_allocation >> 1;
       configuration *new_history_save = new configuration[new_history_allocation];
@@ -1719,8 +1700,8 @@ uims_reply_thing ui_utils::full_resolve()
    // Be sure the extra 5 slots in the history array are clean.
 
    for (j=0; j<MAX_RESOLVE_SIZE; j++) {
-      configuration::history[config_history_ptr+j+2].command_root = (parse_block *) 0;
-      configuration::history[config_history_ptr+j+2].init_centersp_specific();
+      configuration::history[configuration::history_ptr+j+2].command_root = (parse_block *) 0;
+      configuration::history[configuration::history_ptr+j+2].init_centersp_specific();
    }
 
    // See if we are in a reasonable position to do the search.
@@ -1756,10 +1737,10 @@ uims_reply_thing ui_utils::full_resolve()
          break;
    }
 
-   for (j=0; j<=config_history_ptr+1; j++)
+   for (j=0; j<=configuration::history_ptr+1; j++)
       huge_history_save[j] = configuration::history[j];
 
-   huge_history_ptr = config_history_ptr;
+   huge_history_ptr = configuration::history_ptr;
    save_parse_state();
 
    restore_parse_state();
@@ -1777,7 +1758,7 @@ uims_reply_thing ui_utils::full_resolve()
       if (find_another_resolve) {
          // Put up the resolve title showing that we are searching.
 
-         gg77->iob88.update_resolve_menu(search_goal, current_resolve_index, max_resolve_index, resolver_display_searching);
+         gg->update_resolve_menu(search_goal, current_resolve_index, max_resolve_index, resolver_display_searching);
 
          restore_parse_state();
 
@@ -1797,9 +1778,9 @@ uims_reply_thing ui_utils::full_resolve()
          }
 
          written_history_items = -1;
-         config_history_ptr = huge_history_ptr;
+         configuration::history_ptr = huge_history_ptr;
 
-         for (j=0; j<=config_history_ptr+1; j++)
+         for (j=0; j<=configuration::history_ptr+1; j++)
             configuration::history[j] = huge_history_save[j];
 
          find_another_resolve = false;
@@ -1847,7 +1828,7 @@ uims_reply_thing ui_utils::full_resolve()
             this_state->calculate_resolve();
          }
 
-         config_history_ptr = huge_history_ptr + this_resolve->size - this_resolve->insertion_width;
+         configuration::history_ptr = huge_history_ptr + this_resolve->size - this_resolve->insertion_width;
 
          // Show the history up to the start of the resolve, forcing a picture on the last item (unless reconciling).
 
@@ -1863,12 +1844,12 @@ uims_reply_thing ui_utils::full_resolve()
          // Show the resolve itself, without its last item.
 
          for (j=huge_history_ptr-this_resolve->insertion_point-this_resolve->insertion_width+1;
-              j<config_history_ptr-this_resolve->insertion_point;
+              j<configuration::history_ptr-this_resolve->insertion_point;
               j++)
             write_history_line(j, false, false, file_write_no);
 
          // Show the last item of the resolve, with a forced picture.
-         write_history_line(config_history_ptr-this_resolve->insertion_point,
+         write_history_line(configuration::history_ptr-this_resolve->insertion_point,
                             search_goal != command_reconcile,
                             false,
                             file_write_no);
@@ -1892,8 +1873,8 @@ uims_reply_thing ui_utils::full_resolve()
          }
 
          // Show whatever comes after the resolve.
-         for (j=config_history_ptr-this_resolve->insertion_point+1; j<=config_history_ptr; j++)
-            write_history_line(j, j==config_history_ptr-this_resolve->insertion_point,
+         for (j=configuration::history_ptr-this_resolve->insertion_point+1; j<=configuration::history_ptr; j++)
+            write_history_line(j, j==configuration::history_ptr-this_resolve->insertion_point,
                                false, file_write_no);
       }
       else if (show_resolve) {
@@ -1930,19 +1911,19 @@ uims_reply_thing ui_utils::full_resolve()
          newline();
       }
 
-      gg77->iob88.update_resolve_menu(search_goal, current_resolve_index, max_resolve_index, big_state);
+      gg->update_resolve_menu(search_goal, current_resolve_index, max_resolve_index, big_state);
 
       show_resolve = true;
 
       for (;;) {          // We ignore any "undo" or "erase" clicks.
-         reply = gg77->iob88.get_resolve_command();
-         if (reply.majorpart != ui_command_select ||
-             (reply.minorpart != command_undo && reply.minorpart != command_erase))
+         reply = gg->get_resolve_command();
+         if (reply != ui_command_select ||
+             (uims_menu_index != command_undo && uims_menu_index != command_erase))
             break;
       }
 
-      if (reply.majorpart == ui_resolve_select) {
-         switch ((resolve_command_kind) reply.minorpart) {
+      if (reply == ui_resolve_select) {
+         switch ((resolve_command_kind) uims_menu_index) {
          case resolve_command_find_another:
             // Increase allocation if necessary.
             if (max_resolve_index >= resolve_allocation) {
@@ -1986,22 +1967,22 @@ uims_reply_thing ui_utils::full_resolve()
             break;
          case resolve_command_abort:
             written_history_items = -1;
-            config_history_ptr = huge_history_ptr;
+            configuration::history_ptr = huge_history_ptr;
 
-            for (j=0; j<=config_history_ptr+1; j++)
+            for (j=0; j<=configuration::history_ptr+1; j++)
                configuration::history[j] = huge_history_save[j];
 
             goto getout;
          case resolve_command_write_this:
-            reply.majorpart = ui_command_select;
-            reply.minorpart = command_getout;
+            reply = ui_command_select;
+            uims_menu_index = command_getout;
             goto getout;
          default:
             // Clicked on "accept choice", or something not on this submenu.
             goto getout;
          }
       }
-      else if ((reply.majorpart == ui_command_select) && (reply.minorpart == command_refresh)) {
+      else if ((reply == ui_command_select) && (uims_menu_index == command_refresh)) {
          // Fall through to redisplay.
          ;
       }
@@ -2012,9 +1993,9 @@ uims_reply_thing ui_utils::full_resolve()
 
       // Restore history for next cycle.
       written_history_items = -1;
-      config_history_ptr = huge_history_ptr;
+      configuration::history_ptr = huge_history_ptr;
 
-      for (j=0; j<=config_history_ptr+1; j++)
+      for (j=0; j<=configuration::history_ptr+1; j++)
          configuration::history[j] = huge_history_save[j];
    }
 

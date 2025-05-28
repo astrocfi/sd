@@ -80,7 +80,6 @@
    do_subcall_query
    find_proper_call_list
 and the following external variables:
-   gg
    text_line_count
    error_message1
    error_message2
@@ -88,7 +87,7 @@ and the following external variables:
    collision_person2
    last_magic_diamond
    configuration::history
-   configuration::history_ptr
+   config_history_ptr
    configuration::whole_sequence_low_lim
    history_allocation
    written_history_items
@@ -127,7 +126,6 @@ and the following external variables:
    number_of_circcers_allocated
    parse_state
    current_options
-   uims_menu_index
    no_search_warnings
    conc_elong_warnings
    dyp_each_warnings
@@ -159,18 +157,18 @@ and the following external variables:
 #include <string.h>
 
 #include "sd.h"
+#include "sdui.h"
 
 
-
-iobase *gg;
+// *** There are more globals proclaimed at line 235.
+ui_utils *gg77;
 int text_line_count = 0;
 char error_message1[MAX_ERR_LENGTH];
 char error_message2[MAX_ERR_LENGTH];
 uint32 collision_person1;
 uint32 collision_person2;
+int config_history_ptr;
 parse_block *last_magic_diamond;
-configuration *configuration::history = (configuration *) 0; // Will be allocated in sdmain.
-int configuration::history_ptr;
 int history_allocation;
 
 /* This tells how much of the history text written to the UI is "safe".  If this
@@ -233,23 +231,19 @@ Cstring getout_strings[] = {
    "all",
    ""};
 
-
+// *** There are more globals proclaimed at line 164.
 uint32 the_topcallflags;
 bool there_is_a_call;
 call_with_name **base_calls;        // Gets allocated as array of pointers in sdinit.
 
-ui_option_type ui_options;
 int configuration::whole_sequence_low_lim;
+configuration *configuration::history = (configuration *) 0; // Will be allocated in sdmain.
 bool enable_file_writing;
-
-Cstring cardinals[NUM_CARDINALS+1];
-Cstring ordinals[NUM_CARDINALS+1];
 
 
 // The variable "last_direction_kind" below, gets manipulated
 // at startup in order to remove the "zig-zag" and "the music" at certain levels.
 
-writechar_block_type writechar_block;
 int num_command_commands;     // Size of the command menu.
 Cstring *command_commands;
 command_kind *command_command_values;
@@ -259,7 +253,6 @@ start_select_kind *startup_command_values;
 int number_of_resolve_commands;
 Cstring *resolve_command_strings;
 resolve_command_kind *resolve_command_values;
-abridge_mode_t glob_abridge_mode;
 int abs_max_calls;
 int max_base_calls;
 Cstring *tagger_menu_list[NUM_TAGGER_CLASSES];
@@ -274,7 +267,6 @@ uint32 number_of_circcers;
 uint32 number_of_circcers_allocated;
 parse_state_type parse_state;
 call_conc_option_state current_options;
-int uims_menu_index;
 warning_info no_search_warnings;
 warning_info conc_elong_warnings;
 warning_info dyp_each_warnings;
@@ -316,6 +308,55 @@ bool verify_used_direction;
 bool verify_used_selector;
 
 
+// A few accessors to let the UI stuff survive.
+uint32 get_concparseflags(const concept_descriptor *foo) { return foo->concparseflags; }
+const char *get_call_name(const call_with_name *foo) { return foo->name; }
+const char *get_call_menu_name(const call_with_name *foo) { return foo->menu_name; }
+dance_level get_concept_level(const concept_descriptor *foo) { return foo->level; }
+Cstring get_concept_name(const concept_descriptor *foo) { return foo->name; }
+Cstring get_concept_menu_name(const concept_descriptor *foo) { return foo->menu_name; }
+concept_kind get_concept_kind(const concept_descriptor *foo) { return foo->kind; }
+const concept_descriptor *access_concept_descriptor_table(int i) { return &concept_descriptor_table[i]; }
+bool get_yield_if_ambiguous_flag(call_with_name *foo) {return (foo->the_defn.callflagsf & CFLAG2_YIELD_IF_AMBIGUOUS) != 0; }
+call_with_name *access_base_calls(int i) { return base_calls[i]; }
+
+void set_parse_block_concept(parse_block *p, const concept_descriptor *concept) { p->concept = concept; }
+void set_parse_block_next(parse_block *p, parse_block *next) { p->next = next; }
+void set_parse_block_call(parse_block *p, call_with_name *call) { p->call = call; }
+void set_parse_block_call_to_print(parse_block *p, call_with_name *call) { p->call_to_print = call; }
+void set_parse_block_replacement_key(parse_block *p, short int key) { p->replacement_key = key; }
+parse_block **get_parse_block_subsidiary_root_addr(parse_block *p) { return &p->subsidiary_root; }
+
+const concept_kind constant_with_concept_diagnose = concept_diagnose;
+const concept_kind constant_with_marker_end_of_list = marker_end_of_list;
+
+
+parse_block *get_parse_block_mark() { return parse_block::parse_active_list; }
+parse_block *get_parse_block()
+{
+   parse_block *item;
+
+   if (parse_block::parse_inactive_list) {
+      item = parse_block::parse_inactive_list;
+      parse_block::parse_inactive_list = item->gc_ptr;
+   }
+   else {
+      item = new parse_block;
+   }
+
+   item->gc_ptr = parse_block::parse_active_list;
+   parse_block::parse_active_list = item;
+   item->initialize((concept_descriptor *) 0);
+   return item;
+}
+
+
+warning_info config_save_warnings()
+{ return configuration::save_warnings(); }
+
+void config_restore_warnings(const warning_info & rhs)
+{ configuration::restore_warnings(rhs); }
+
 
 void expand::compress_setup(const expand::thing & thing, setup *stuff) THROW_DECL
 {
@@ -344,9 +385,9 @@ void expand::expand_setup(const expand::thing & thing, setup *stuff) THROW_DECL
 extern void update_id_bits(setup *ss)
 {
    int i;
-   unsigned short int *face_list = (unsigned short int *) 0;
+   unsigned short int *face_list = (uint16_t *) 0;
 
-   static unsigned short int face_qtg[] = {
+   static uint16_t face_qtg[] = {
       3, d_west, 7, d_east,
       2, d_west, 3, d_east,
       7, d_west, 6, d_east,
@@ -356,9 +397,9 @@ extern void update_id_bits(setup *ss)
       3, d_south, 4, d_north,
       0, d_south, 7, d_north,
       7, d_south, 5, d_north,
-      ~0};
+      UINT16_C(~0)};
 
-   static unsigned short int face_spindle[] = {
+   static uint16_t face_spindle[] = {
       0, d_south, 6, d_north,
       1, d_south, 5, d_north,
       2, d_south, 4, d_north,
@@ -366,15 +407,15 @@ extern void update_id_bits(setup *ss)
       1, d_east, 2, d_west,
       6, d_east, 5, d_west,
       5, d_east, 7, d_west,
-      ~0};
+      UINT16_C(~0)};
 
-   static unsigned short int face_1x4[] = {
+   static uint16_t face_1x4[] = {
       2, d_west, 3, d_east,
       3, d_west, 1, d_east,
       1, d_west, 0, d_east,
-      ~0};
+      UINT16_C(~0)};
 
-   static unsigned short int face_2x4[] = {
+   static uint16_t face_2x4[] = {
       3, d_west, 2, d_east,
       2, d_west, 1, d_east,
       1, d_west, 0, d_east,
@@ -385,21 +426,21 @@ extern void update_id_bits(setup *ss)
       1, d_south, 6, d_north,
       2, d_south, 5, d_north,
       3, d_south, 4, d_north,
-      ~0};
+      UINT16_C(~0)};
 
-   static unsigned short int face_2x2[] = {
+   static uint16_t face_2x2[] = {
       1, d_west, 0, d_east,
       2, d_west, 3, d_east,
       0, d_south, 3, d_north,
       1, d_south, 2, d_north,
-      ~0};
+      UINT16_C(~0)};
 
-   static unsigned short int face_1x3[] = {
+   static uint16_t face_1x3[] = {
       2, d_west, 1, d_east,
       1, d_west, 0, d_east,
-      ~0};
+      UINT16_C(~0)};
 
-   static unsigned short int face_2x3[] = {
+   static uint16_t face_2x3[] = {
       2, d_west, 1, d_east,
       1, d_west, 0, d_east,
       3, d_west, 4, d_east,
@@ -407,9 +448,9 @@ extern void update_id_bits(setup *ss)
       0, d_south, 5, d_north,
       1, d_south, 4, d_north,
       2, d_south, 3, d_north,
-      ~0};
+      UINT16_C(~0)};
 
-   static unsigned short int face_2x6[] = {
+   static uint16_t face_2x6[] = {
       5, d_west, 4, d_east,
       4, d_west, 3, d_east,
       3, d_west, 2, d_east,
@@ -426,9 +467,9 @@ extern void update_id_bits(setup *ss)
       3, d_south, 8, d_north,
       4, d_south, 7, d_north,
       5, d_south, 6, d_north,
-      ~0};
+      UINT16_C(~0)};
 
-   static unsigned short int face_1x8[] = {
+   static uint16_t face_1x8[] = {
       1, d_west, 0, d_east,
       2, d_west, 3, d_east,
       4, d_west, 5, d_east,
@@ -436,9 +477,9 @@ extern void update_id_bits(setup *ss)
       3, d_west, 1, d_east,
       5, d_west, 7, d_east,
       6, d_west, 2, d_east,
-      ~0};
+      UINT16_C(~0)};
 
-   static unsigned short int face_3x4[] = {
+   static uint16_t face_3x4[] = {
       1,  d_west, 0, d_east,
       2,  d_west, 1, d_east,
       3,  d_west, 2, d_east,
@@ -456,9 +497,9 @@ extern void update_id_bits(setup *ss)
       11, d_south, 8, d_north,
       5,  d_south, 7, d_north,
       4,  d_south, 6, d_north,
-      ~0};
+      UINT16_C(~0)};
 
-   static unsigned short int face_4x4[] = {
+   static uint16_t face_4x4[] = {
       13, d_west, 12,  d_east,
       14, d_west, 13,  d_east,
       0,  d_west, 14,  d_east,
@@ -483,9 +524,9 @@ extern void update_id_bits(setup *ss)
       11, d_south,  6, d_north,
       7,  d_south,  5, d_north,
       2,  d_south,  4, d_north,
-      ~0};
+      UINT16_C(~0)};
 
-   static unsigned short int face_c1phan[] = {
+   static uint16_t face_c1phan[] = {
       2,  d_west,   0, d_east,
       5,  d_west,   7, d_east,
       8,  d_west,  10, d_east,
@@ -494,9 +535,9 @@ extern void update_id_bits(setup *ss)
       4,  d_south,  6, d_north,
       11, d_south,  9, d_north,
       14, d_south, 12, d_north,
-      ~0};
+      UINT16_C(~0)};
 
-   static unsigned short int face_4x5[] = {
+   static uint16_t face_4x5[] = {
       1, d_west, 0, d_east,
       2, d_west, 1, d_east,
       3, d_west, 2, d_east,
@@ -528,7 +569,7 @@ extern void update_id_bits(setup *ss)
       17, d_south, 12, d_north,
       18, d_south, 11, d_north,
       19, d_south, 10, d_north,
-      ~0};
+      UINT16_C(~0)};
 
    clear_bits_for_update(ss);
 
@@ -569,7 +610,7 @@ extern void update_id_bits(setup *ss)
    }
 
    if (face_list) {
-      for ( ; *face_list != ((unsigned short) ~0) ; ) {
+      for ( ; *face_list != UINT16_C(~0) ; ) {
          short idx1 = *face_list++;
 
          if ((ss->people[idx1].id1 & d_mask) == *face_list++) {
@@ -3021,30 +3062,66 @@ restriction_test_result verify_restriction(
 }
 
 
+enum {
+   MASK_CTR_2 = ((1 << call_list_any) | (1 << call_list_1x8) |
+                 (1 << call_list_l1x8) | (1 << call_list_l1x8) |
+                 (1 << call_list_gcol) | (1 << call_list_qtag)) >> 1,
+
+   MASK_QUAD_D = ((1 << call_list_any) | (1 << call_list_1x8) |
+                  (1 << call_list_l1x8) | (1 << call_list_l1x8) |
+                  (1 << call_list_gcol)) >> 1,
+
+   MASK_CPLS = ((1 << call_list_any) | (1 << call_list_dpt) |
+                (1 << call_list_cdpt) | (1 << call_list_8ch) |
+                (1 << call_list_tby) | (1 << call_list_lin) |
+                (1 << call_list_lout) | (1 << call_list_r2fl) |
+                (1 << call_list_l2fl) | (1 << call_list_qtag)) >> 1,
+
+   MASK_GOODCPLS = ((1 << call_list_dpt) | (1 << call_list_cdpt) |
+                    (1 << call_list_8ch) | (1 << call_list_tby) |
+                    (1 << call_list_lin) | (1 << call_list_lout) |
+                    (1 << call_list_r2fl) | (1 << call_list_l2fl)) >> 1,
+
+   MASK_TAND = ((1 << call_list_any) | (1 << call_list_dpt) |
+                (1 << call_list_cdpt) | (1 << call_list_rcol) |
+                (1 << call_list_lcol) | (1 << call_list_rwv) |
+                (1 << call_list_lwv) | (1 << call_list_r2fl) |
+                (1 << call_list_l2fl) | (1 << call_list_gcol) |
+                (1 << call_list_qtag)) >> 1,
+
+   MASK_GOODTAND = ((1 << call_list_dpt) | (1 << call_list_cdpt) |
+                    (1 << call_list_rcol) | (1 << call_list_lcol) |
+                    (1 << call_list_rwv) | (1 << call_list_lwv) |
+                    (1 << call_list_r2fl) | (1 << call_list_l2fl)) >> 1,
+
+   MASK_GOODCONC = ((1 << call_list_1x8) | (1 << call_list_l1x8) |
+                    (1 << call_list_dpt) | (1 << call_list_cdpt) |
+                    (1 << call_list_rcol) | (1 << call_list_lcol) |
+                    (1 << call_list_8ch) | (1 << call_list_tby) |
+                    (1 << call_list_lin) | (1 << call_list_lout) |
+                    (1 << call_list_rwv) | (1 << call_list_lwv) |
+                    (1 << call_list_r2fl) | (1 << call_list_l2fl)) >> 1,
+
+   MASK_GOODRMVD = ((1 << call_list_dpt) | (1 << call_list_cdpt) |
+                    (1 << call_list_rcol) | (1 << call_list_lcol) |
+                    (1 << call_list_8ch) | (1 << call_list_tby) |
+                    (1 << call_list_lin) | (1 << call_list_lout) |
+                    (1 << call_list_rwv) | (1 << call_list_lwv) |
+                    (1 << call_list_r2fl) | (1 << call_list_l2fl)) >> 1,
+
+   MASK_2X4 = ((1 << call_list_any) | (1 << call_list_dpt) |
+               (1 << call_list_cdpt) | (1 << call_list_rcol) |
+               (1 << call_list_lcol) | (1 << call_list_8ch) |
+               (1 << call_list_tby) | (1 << call_list_lin) |
+               (1 << call_list_lout) | (1 << call_list_rwv) |
+               (1 << call_list_lwv) | (1 << call_list_r2fl) |
+               (1 << call_list_l2fl)) >> 1,
+
+   MASK_SIAM = ((1 << call_list_any) | (1 << call_list_qtag)) >> 1
+};
+
+
 // This fills in concept_sublist_sizes and concept_sublists.
-
-//     A "1" means the concept is allowed in this setup
-//
-//                                lout, lin, tby
-//                                      |
-//                                      |+- 8ch, Lcol, Rcol
-//                     R2fl, Lwv, Rwv -+||
-//                                     |||+- cdpt, dpt, L1x8
-//                   qtag, gcol, L2fl-+||||
-//                                    |||||+- R1x8, any, junk
-//                                    ||||||
-static const uint32 MASK_CTR_2     = 0600016;
-static const uint32 MASK_QUAD_D    = 0200016;
-static const uint32 MASK_CPLS      = 0547462;
-static const uint32 MASK_GOODCPLS  = 0147460;
-static const uint32 MASK_TAND      = 0770362;
-static const uint32 MASK_GOODTAND  = 0170360;
-static const uint32 MASK_GOODCONC  = 0177774;
-static const uint32 MASK_GOODRMVD  = 0177760;
-static const uint32 MASK_SIAM      = 0400002;
-static const uint32 MASK_2X4       = 0177762;
-
-
 static void initialize_concept_sublists()
 {
    int test_call_list_kind;
@@ -3057,7 +3134,7 @@ static void initialize_concept_sublists()
    // First, just count up all the available concepts.
 
    int all_legal_concepts = 0;
-   const conzept::concept_descriptor *p;
+   const concept_descriptor *p;
 
    for (p = concept_descriptor_table ; p->kind != end_marker ; p++) {
       if (p->level <= calling_level) all_legal_concepts++;
@@ -3081,7 +3158,7 @@ static void initialize_concept_sublists()
            concept_index++) {
          uint32 setup_mask = ~0;      // Default is to accept the concept.
          uint32 good_setup_mask = 0;  // Default for this is not to.
-         const conzept::concept_descriptor *p = &concept_descriptor_table[concept_index];
+         const concept_descriptor *p = &concept_descriptor_table[concept_index];
          if (p->kind == end_marker) break;
          if (p->kind == concept_omit) continue;  // Totally stupid concept!!!!
          if (p->level > calling_level) continue;
@@ -3234,8 +3311,6 @@ void initialize_sdlib()
    expand::initialize();
    initialize_concept_sublists();
 
-   writechar_block.usurping_writechar = false;
-
    int i;
 
    for (i=0 ; i<warn__NUM_WARNINGS ; i++) {
@@ -3319,8 +3394,8 @@ static bool check_for_supercall(parse_block *parseptrcopy)
    return false;
 }
 
-static parse_block pbend(conzept::mark_end_of_list);
-static parse_block pbsuper(conzept::marker_concept_supercall);
+static parse_block pbend(concept_mark_end_of_list);
+static parse_block pbsuper(concept_marker_concept_supercall);
 
 bool check_for_concept_group(
    parse_block *parseptrcopy,
@@ -3353,7 +3428,7 @@ bool check_for_concept_group(
    else
       kk = &pbend;
 
-   const conzept::concept_descriptor *this_concept = kk->concept;
+   const concept_descriptor *this_concept = kk->concept;
    k = this_concept->kind;
 
    if (!retval) {
@@ -3492,12 +3567,12 @@ extern void crash_print(const char *filename, int linenum, int newtb, setup *ss)
       }
    }
 
-   int hsize = configuration::history_ptr+1;
+   int hsize = config_history_ptr+1;
    for (int jjj = 2 ; jjj <= hsize ; jjj++) {
       debug_print_parse_block(0, configuration::history[jjj].command_root, tempstring_text, n);
    }
 
-   gg->serious_error_print(tempstring_text);
+   gg77->iob88.serious_error_print(tempstring_text);
    fail("Crash.");
 }
 
@@ -4518,9 +4593,9 @@ uint32 uncompress_position_number(uint32 datum)
 
 
 
-extern void clear_result_flags(setup *z)
+extern void clear_result_flags(setup *z, uint32 preserve_these /* = 0 */)
 {
-   z->result_flags.misc = 0;
+   z->result_flags.misc &= preserve_these;
    z->result_flags.res_heritflags_to_save_from_mxn_expansion = 0;
    z->result_flags.clear_split_info();
 }
@@ -4732,9 +4807,9 @@ extern setup_kind try_to_expand_dead_conc(const setup & result,
    }
    else if (result.inner.skind == s2x2) {
       if (result.concsetup_outer_elongation == 1)
-         expand::expand_setup(s_2x2_2x4, &lineout);
+         expand::expand_setup(s_2x2_2x4_ctrs, &lineout);
       else if (result.concsetup_outer_elongation == 2)
-         expand::expand_setup(s_2x2_2x4b, &lineout);
+         expand::expand_setup(s_2x2_2x4_ctrsb, &lineout);
       else fail("Can't figure out where the ends went.");
    }
 
@@ -5080,9 +5155,9 @@ extern bool fix_n_results(int arity,
    //   | ?   ?   ?   ? | ?   ?         |               |
    //   |___|___|___|___|___|___|___|___|___|___|___|___|
 
-   static uint16 rotstate_table[8] = {
-      0x111, 0x222, 0x404, 0x808,
-      0x421, 0x812, 0x104, 0x208};
+   static uint16_t rotstate_table[8] = {
+      UINT16_C(0x111), UINT16_C(0x222), UINT16_C(0x404), UINT16_C(0x808),
+      UINT16_C(0x421), UINT16_C(0x812), UINT16_C(0x104), UINT16_C(0x208)};
 
    // There are 3 things that make this task nontrivial.  First, some setups could
    // be "nothing", in which case we turn them into the same type of setup as
@@ -5354,20 +5429,20 @@ extern bool fix_n_results(int arity,
 
          if (rotstates & 0x20) {
             if (i&1) {
-               expand::expand_setup(s_2x2_2x4, &z[i]);
+               expand::expand_setup(s_2x2_2x4_ctrs, &z[i]);
                setfinal = 2;
             }
             else rotstates = 0;   // fail.
          }
          else if (rotstates & 0x10) {
             if (!(i&1)) {
-               expand::expand_setup(s_2x2_2x4b, &z[i]);
+               expand::expand_setup(s_2x2_2x4_ctrsb, &z[i]);
                setfinal = 1;
             }
             else rotstates = 0;   // fail.
          }
          else {
-            expand::expand_setup((rotstates & 2) ? s_2x2_2x4b : s_2x2_2x4, &z[i]);
+            expand::expand_setup((rotstates & 2) ? s_2x2_2x4_ctrsb : s_2x2_2x4_ctrs, &z[i]);
          }
       }
 
@@ -5932,6 +6007,7 @@ void toplevelmove() THROW_DECL
 {
    int i;
 
+   // Must copy this out of the history; it may be modified.
    setup starting_setup = configuration::current_config().state;
    configuration & newhist = configuration::next_config();
    parse_block *conceptptr = newhist.command_root;
@@ -5944,8 +6020,8 @@ void toplevelmove() THROW_DECL
 
    /* Be sure that the amount of written history that we consider to be safely
       written is less than the item we are about to change. */
-   if (written_history_items > configuration::history_ptr)
-      written_history_items = configuration::history_ptr;
+   if (written_history_items > config_history_ptr)
+      written_history_items = config_history_ptr;
 
    starting_setup.cmd.cmd_misc_flags = 0;
    starting_setup.cmd.cmd_misc2_flags = 0;
@@ -5976,7 +6052,7 @@ void toplevelmove() THROW_DECL
 
    if (configuration::current_config().get_startinfo_specific()->into_the_middle) {
 
-      // claim that configuration::history_ptr == 1
+      // claim that config_history_ptr == 1
 
       parse_state.topcallflags1 = 0;
       parse_block *cnext = conceptptr->next;
@@ -5986,14 +6062,14 @@ void toplevelmove() THROW_DECL
              (cnext->call->the_defn.schema == schema_concentric_specialpromenade ||
               cnext->call->the_defn.schema == schema_cross_concentric_specialpromenade)) {
             conceptptr->concept = (configuration::current_config().startinfoindex == start_select_sides_start) ?
-               &conzept::sides_concept : &conzept::heads_concept;
+               &concept_sides_concept : &concept_heads_concept;
             conceptptr->options.who = (selector_kind) conceptptr->concept->arg1;
 
-            starting_setup.kind = configuration::startinfolist[start_select_as_they_are].the_setup.kind;
-            starting_setup.rotation = configuration::startinfolist[start_select_as_they_are].the_setup.rotation;
+            starting_setup.kind = configuration::startinfolist[start_select_as_they_are].the_setup_p->kind;
+            starting_setup.rotation = configuration::startinfolist[start_select_as_they_are].the_setup_p->rotation;
             starting_setup.eighth_rotation = 0;
             memcpy(starting_setup.people,
-                   configuration::startinfolist[start_select_as_they_are].the_setup.people,
+                   configuration::startinfolist[start_select_as_they_are].the_setup_p->people,
                    sizeof(personrec)*MAX_PEOPLE);
          }
          else {
@@ -6142,7 +6218,7 @@ void toplevelmove() THROW_DECL
       else if ((starting_setup.kind == s_bone) && starting_setup.rotation & 1) {
          for (i=0; i<8; i++) {
             if (starting_setup.people[i].id1 & BIT_PERSON) {
-               starting_setup.people[i].id3 |= 
+               starting_setup.people[i].id3 |=
                   (((0x1E >> i) & 1) ? ID3_NEARFOUR : ID3_FARFOUR) |
                   (((0x12 >> i) & 1) ? ID3_NEARTWO : ID3_FARSIX) |
                   (((0x21 >> i) & 1) ? ID3_FARTWO : ID3_NEARSIX) |
@@ -6324,7 +6400,7 @@ void toplevelmove() THROW_DECL
       else if (starting_setup.kind == s_spindle && starting_setup.rotation & 1) {
          for (i=0; i<8; i++) {
             if (starting_setup.people[i].id1 & BIT_PERSON) {
-               starting_setup.people[i].id3 |= 
+               starting_setup.people[i].id3 |=
                   (((0x1C >> i) & 1) ? ID3_NEARTHREE : ID3_FARFIVE) |
                   (((0xC1 >> i) & 1) ? ID3_FARTHREE : ID3_NEARFIVE);
             }
@@ -6470,13 +6546,13 @@ bool deposit_call_tree(modifier_block *anythings, parse_block *save1, int key)
    // concepts or calls for an "anything" subcall.
 
    if (save1) {
-      parse_block *tt = parse_block::get_block();
+      parse_block *tt = get_parse_block();
       // Run to the end of any already-deposited things.  This could happen if the
       // call takes a tagger -- it could have a search chain before we even see it.
       while (save1->next) save1 = save1->next;
       save1->next = tt;
-      save1->concept = &conzept::marker_concept_mod;
-      tt->concept = &conzept::marker_concept_mod;
+      save1->concept = &concept_marker_concept_mod;
+      tt->concept = &concept_marker_concept_mod;
       tt->call = base_calls[(key == DFM1_CALL_MOD_MAND_SECONDARY/DFM1_CALL_MOD_BIT) ?
                            base_call_null_second: base_call_null];
       tt->call_to_print = tt->call;
@@ -6485,7 +6561,7 @@ bool deposit_call_tree(modifier_block *anythings, parse_block *save1, int key)
    }
 
    save1 = (parse_block *) 0;
-   user_match.match.call_conc_options = anythings->call_conc_options;
+   gg77->matcher_p->m_final_result.match.call_conc_options = anythings->call_conc_options;
 
    if (anythings->kind == ui_call_select) {
       if (deposit_call(anythings->call_ptr, &anythings->call_conc_options)) return true;
@@ -6592,7 +6668,7 @@ extern bool do_subcall_query(
    // if necessary.  ***** Someday this null list will always be present.
 
    if (parseptr->concept->kind == marker_end_of_list)
-      parseptr->concept = &conzept::marker_concept_mod;
+      parseptr->concept = &concept_marker_concept_mod;
 
    // Create a reference on the list.  "search" points to the null item at the end.
 
@@ -6621,7 +6697,7 @@ extern bool do_subcall_query(
 
       // Star turn calls can have funny names like "nobox".
 
-      unparse_call_name(
+      gg77->unparse_call_name(
          (orig_call->the_defn.callflagsf & CFLAG2_IS_STAR_CALL) ?
          "turn the star @b" : orig_call->name,
          pretty_call_name, &current_options);
@@ -6637,16 +6713,16 @@ extern bool do_subcall_query(
 
       char tempstuff[200];
       sprintf(tempstuff, line_format, pretty_call_name);
-      if (gg->yesnoconfirm("Replacement", tempstuff, "Do you want to replace it?", false, false)) {
+      if (gg77->iob88.yesnoconfirm("Replacement", tempstuff, "Do you want to replace it?", false, false)) {
          // User accepted the modification.
          // Set up the prompt and get the concepts and call.
-         (void) sprintf(tempstring_text, "REPLACEMENT FOR THE %s", pretty_call_name);
+         sprintf(tempstring_text, "REPLACEMENT FOR THE %s", pretty_call_name);
       }
       else {
          // User declined the modification.  Create a null entry
          // so that we don't query again.
-         *newsearch = parse_block::get_block();
-         (*newsearch)->concept = &conzept::marker_concept_mod;
+         *newsearch = get_parse_block();
+         (*newsearch)->concept = &concept_marker_concept_mod;
          (*newsearch)->options = current_options;
          (*newsearch)->replacement_key = snumber;
          (*newsearch)->call = orig_call;
@@ -6655,8 +6731,8 @@ extern bool do_subcall_query(
       }
    }
 
-   *newsearch = parse_block::get_block();
-   (*newsearch)->concept = &conzept::marker_concept_mod;
+   *newsearch = get_parse_block();
+   (*newsearch)->concept = &concept_marker_concept_mod;
    (*newsearch)->options = current_options;
    (*newsearch)->replacement_key = snumber;
    (*newsearch)->call = orig_call;
@@ -6685,8 +6761,8 @@ extern bool do_subcall_query(
          // User clicked on something unusual like "exit" or "undo".
          // These are generally not allowed.
          // But it might be "pick random call", which we can handle.
-         if (global_reply == ui_command_select &&
-             ((command_kind) uims_menu_index) == command_random_call)
+         if (global_reply.majorpart == ui_command_select &&
+             ((command_kind) global_reply.minorpart) == command_random_call)
             throw error_flag_type(error_flag_user_wants_to_resolve);
 
          throw error_flag_type(error_flag_wrong_command);

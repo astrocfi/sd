@@ -441,14 +441,18 @@ Cstring warning_strings[] = {
    /*  warn__two_faced           */   "*Not a wave -- maybe should say 'two-faced'.",
    /*  warn__cant_track_phantoms */   "*The phantoms may not have been tracked correctly.",
    /*  warn__crazy_tandem_interaction */  "*Using \"crazy\" on decomposed tandem-like operation.",
+   /*  warn__mimic_ambiguity_checked */"*The mimic was ambiguous, but the result is the same either way.",
+   /*  warn__mimic_ambiguity_resolved */"*The mimic was ambiguous, but only one assumption works.",
    /*  warn__diagnostic          */   "*This is a diagnostic warning and should never arise."};
 
 
 
-const expand::thing s_2x2_2x4 = {{1, 2, 5, 6}, s2x2, s2x4, 0};
-const expand::thing s_2x2_2x4b = {{6, 1, 2, 5}, s2x2, s2x4, 1};
+const expand::thing s_2x2_2x4_ctrs = {{1, 2, 5, 6}, s2x2, s2x4, 0};
+const expand::thing s_2x2_2x4_ctrsb = {{6, 1, 2, 5}, s2x2, s2x4, 1};
 const expand::thing s_2x2_2x4_ends = {{0, 3, 4, 7}, s2x2, s2x4, 0};
 const expand::thing s_2x2_2x4_endsb = {{7, 0, 3, 4}, s2x2, s2x4, 1};
+const expand::thing s_1x4_1x8_ctrs = {{3, 2, 7, 6}, s1x4, s1x8, 0};
+const expand::thing s_1x4_1x8_ends = {{0, 1, 4, 5}, s1x4, s1x8, 0};
 const expand::thing s_qtg_2x4 = {{5, -1, -1, 0, 1, -1, -1, 4}, s2x4, s_qtag, 1};
 const expand::thing s_4x4_4x6a = {
    {4, 7, 22, 8, 13, 14, 15, 21, 16, 19, 10, 20, 1, 2, 3, 9}, s4x4, s4x6, 0};
@@ -2926,6 +2930,7 @@ const map::map_thing map::spec_map_table[] = {
 
 static expand::thing rear_thar_stuff = {{9, 10, 13, 14, 1, 2, 5, 6}, s_thar, s4x4, 0};
 static expand::thing rear_alamo_stuff = {{6, 7, 0, 1, 2, 3, 4, 5}, s_thar, s_alamo, 0};
+static expand::thing rear_xwv_stuff = {{7, 0, 1, 2, 3, 4, 5, 6}, s_crosswave, s2x4, 0};
 static expand::thing rear_ohh_stuff = {{-1, 5, 4, -1, -1, 7, 6, -1, -1, 1, 0, -1, -1, 3, 2, -1}, s4x4, s_thar, 0};
 static expand::thing rear_bigd_stuff1 = {{-1, -1, 10, 11, 1, 0, -1, -1, 4, 5, 7, 6}, sbigdmd, s3x4, 1};
 static expand::thing rear_bigd_stuff2 = {{8, 9, 10, 11, -1, -1, 2, 3, 4, 5, -1, -1}, sbigdmd, s3x4, 1};
@@ -3133,6 +3138,8 @@ full_expand::thing touch_init_table1[] = {
    {warn__some_rear_back,  0, &rear_bigd_stuff2,sbigdmd,  0xFF0FF0U,   0x280820U, ~0U},
    // Rear back from thar to alamo 8-chain.
    {warn__rear_back,       0, &rear_thar_stuff, s_thar,     0xFFFFU,     0x278DU, ~0U},
+   // Same, in crosswave.
+   {warn__rear_back,       0, &rear_xwv_stuff, s_crosswave, 0xFFFFU,     0x278DU, ~0U},
 
    // Some rear back from an alamo to a 1/4 tag.
    {warn__some_rear_back,  8, &rear_alamo_stuffa, s_alamo,  0xFFFFU,     0x57FDU, 0x5F5FU},
@@ -7491,6 +7498,16 @@ static const id_bit_table id_bit_table_splinedmd[] = {
    NOBIT(ID2_CTR1X6),
    NOBIT(ID2_NCTR1X6)};
 
+static const id_bit_table id_bit_table_dmdpdmd[] = {
+   NOBIT(ID2_OUTR6),
+   NOBIT(ID2_OUTR6),
+   NOBIT(ID2_CTR2),
+   NOBIT(ID2_OUTR6),
+   NOBIT(ID2_OUTR6),
+   NOBIT(ID2_OUTR6),
+   NOBIT(ID2_OUTR6),
+   NOBIT(ID2_CTR2)};
+
 static const id_bit_table id_bit_table_swingedstar[] = {
    NOBIT(ID2_OUTR2| ID2_CTR1X6 | ID2_OUTRPAIRS),
    NOBIT(ID2_CTR6 | ID2_CTR1X6 | ID2_OUTRPAIRS),
@@ -8708,7 +8725,7 @@ const setup_attr setup_attrs[] = {
     {b_nothing, b_nothing},
     {0, 0},
     false, true,
-    (const id_bit_table *) 0,
+    id_bit_table_dmdpdmd,
     {(Cstring) 0,
      (Cstring) 0}},
    {11,                     // s_hsqtag
@@ -9854,7 +9871,7 @@ select::fixer select::fixer_init_table[] = {
     fx0, fx0,            fx_1x6lowf, fx0,                   fx0, fx_3p1x1lowf,          fx0, fx0},
    {fx_1x3p1lhif, sdmd, s1x3p1dmd,      0, 0, 1, {2, 3, 4, 5},
     fx0, fx0,             fx_1x6hif, fx0,                   fx0, fx_3p1x1lhif,          fx0, fx0},
-   {fx_3p1x1lowf, sdmd, s3p1x1dmd, 0x800002AB, 0, 1, {3, 4, 5, 2},
+   {fx_3p1x1lowf, sdmd, s3p1x1dmd, INT32_C(0x800002AB), 0, 1, {3, 4, 5, 2},
     fx0, fx0,                   fx0, fx_1x6lowf,            fx0, fx_1x3p1lowf,          fx0, fx0},
    {fx_3p1x1lhif, sdmd, s3p1x1dmd,      1, 0, 1, {3, 4, 5, 2},
     fx0, fx0,                   fx0, fx_1x6hif,             fx0, fx_1x3p1lhif,          fx0, fx0},
@@ -10500,16 +10517,16 @@ select::fixer select::fixer_init_table[] = {
    {fx_1x5p1g, s1x4, slinebox,      0, 0, 1, {0, 1, 3, 2},
     fx0, fx0,                   fx0, fx_f2x4far,     fxboxpdmdd, fx_boxdmd,     fx_f2x4left, fx_f2x4left},
 
-   {fx_1x5p1z, sdmd, splinepdmd, 0x80000002, 0, 1, {6, 7, 4, 5},
+   {fx_1x5p1z, sdmd, splinepdmd, INT32_C(0x80000002), 0, 1, {6, 7, 4, 5},
     fx0, fx0,                   fx_1x5p1d, fx0,             fx0, fx0,                   fx0, fx0},
-   {fx_1x5p1y, sdmd, splinepdmd, 0x80000000, 0, 1, {4, 5, 6, 7},
+   {fx_1x5p1y, sdmd, splinepdmd, INT32_C(0x80000000), 0, 1, {4, 5, 6, 7},
     fx0, fx0,                   fx_1x5p1d, fx0,             fx0, fx0,                   fx0, fx0},
 
-   {fx_5p1x1d, sdmd, splinedmd, 0x80000001, 0, 1, {5, 6, 7, 4},
+   {fx_5p1x1d, sdmd, splinedmd, INT32_C(0x80000001), 0, 1, {5, 6, 7, 4},
     fx0, fx0,                   fx_trngl8a, fx_f1x8hif,     fx0, fx_1x5p1d,             fx0, fxlinboxb},
    {fx_plndmda, s1x4, splinedmd,    0, 0, 1, {0, 1, 3, 2},
     fx0, fx0,                   fx0, fx_lndmda,      fxdmdpdmdb, fx_fqtglowf,           fx0, fxboxdmdc},
-   {fx_5p1x1z, sdmd, splinedmd, 0x80000003, 0, 1, {7, 4, 5, 6},
+   {fx_5p1x1z, sdmd, splinedmd, INT32_C(0x80000003), 0, 1, {7, 4, 5, 6},
     fx0, fx0,                   fx_5p1x1d, fx0,             fx0, fx0,                   fx0, fx0},
 
    {fx_linpdma, s1x4, slinepdmd,    0, 0, 0x101, {4, 5, 6, 7},
@@ -10520,21 +10537,21 @@ select::fixer select::fixer_init_table[] = {
     fx0, fx0,           fx_f1x8lowf, fx_f2x4near,           fx0, fx_lndmd9,             fx0, fx_f2x4left},
    {fx_lndmd9, sdmd, slinedmd,            0, 0, 1, {0, 1, 2, 3},
     fx0, fx0,           fx_f2x4near, fx_trngl8b,            fx0, fx_linpdmd,            fx0, fx_f2x4lr},
-   {fx_linpdm8, sdmd, slinepdmd, 0x80000003, 0, 1, {0, 1, 2, 3},
+   {fx_linpdm8, sdmd, slinepdmd, INT32_C(0x80000003), 0, 1, {0, 1, 2, 3},
     fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
-   {fx_lndmd8, sdmd, slinedmd, 0x80000002,   0, 1, {2, 3, 0, 1},
+   {fx_lndmd8, sdmd, slinedmd, INT32_C(0x80000002),   0, 1, {2, 3, 0, 1},
     fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
 
-   {fx_boxdma, s2x2, sboxdmd,   0x80000000, 0, 1, {4, 5, 6, 7},
+   {fx_boxdma, s2x2, sboxdmd,   INT32_C(0x80000000), 0, 1, {4, 5, 6, 7},
     fx0, fx0,                   fx_lndmda, fx0,     fx_fqtglowf, fx0,                   fx0, fx0},
    {fx_boxdmb, sdmd, sboxdmd,       0, 0, 1, {0, 1, 2, 3},
     fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx_f2x4lr},
-   {fx_boxdmc, sdmd, sboxdmd,   0x80000000, 0, 1, {0, 1, 2, 3},
+   {fx_boxdmc, sdmd, sboxdmd,   INT32_C(0x80000000), 0, 1, {0, 1, 2, 3},
     fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
    {fx_boxdmd, sdmd, sboxdmd,       0, 0, 0x203, {0, 1, 2, 3},
     fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
 
-   {fx_boxpdma, s2x2, sboxpdmd,  0x80000000, 0, 1, {4, 5, 6, 7},
+   {fx_boxpdma, s2x2, sboxpdmd,  INT32_C(0x80000000), 0, 1, {4, 5, 6, 7},
     fx0, fx0,                   fx_linpdma, fx0,            fx0, fx0,                   fx0, fx0},
    {fx_boxpdmb, sdmd, sboxpdmd,      0, 0, 1, {0, 1, 2, 3},
     fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
@@ -10559,26 +10576,26 @@ select::fixer select::fixer_init_table[] = {
    {fx_galfrvee, svee, s_galaxy, 0, 0, 1, {0, 1, 2, 3, 4},
     fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
 
-   {fx_trngl8a, s1x4, s_trngl8, 0x80000000, 0, 1, {4, 5, 7, 6},
+   {fx_trngl8a, s1x4, s_trngl8, INT32_C(0x80000000), 0, 1, {4, 5, 7, 6},
     fx0, fx0,                   fx0, fx_f1x8hif,      fx_5p1x1d, fx_1x5p1d,             fx0, fx0},
    {fx_trngl8b, s1x4, s_trngl8,     1, 0, 1, {3, 2, 0, 1},
     fx0, fx0,                   fx0, fx_f2x4near,    fx_linpdmd, fx_lndmd9,     fx_f2x4left, fx_f2x4left},
 
-   {fxdmdpdmda, sdmd, sdmdpdmd, 0x80000000, 0, 1, {4, 5, 6, 7},
+   {fxdmdpdmda, sdmd, sdmdpdmd, INT32_C(0x80000000), 0, 1, {4, 5, 6, 7},
     fx0, fx0,            fx_linpdma, fx_f1x8hif,            fx0, fx_1x5p1d,             fx0, fx0},
    {fxdmdpdmdb, sdmd, sdmdpdmd,     1, 0, 1, {2, 3, 0, 1},
     fx0, fx0,            fx_plndmda, fx0,                   fx0, fx_lndmd9,     fx_f2x4left, fx_f2x4left},
-   {fxdmdpdmdc, sdmd, sdmdpdmd, 0x80000003, 0, 1, {0, 1, 2, 3},
+   {fxdmdpdmdc, sdmd, sdmdpdmd, INT32_C(0x80000003), 0, 1, {0, 1, 2, 3},
     fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
 
    {fxboxdmda,  s2x2, sboxdmd,      0, 0, 1, {4, 5, 6, 7},
     fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
-   {fxboxdmdb,  s2x2, sboxdmd,  0x80000000, 0, 1, {4, 5, 6, 7},
+   {fxboxdmdb,  s2x2, sboxdmd,  INT32_C(0x80000000), 0, 1, {4, 5, 6, 7},
     fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
-   {fxboxdmdc,  s2x2, sboxdmd,  0x80000001, 0, 1, {5, 6, 7, 4},
+   {fxboxdmdc,  s2x2, sboxdmd,  INT32_C(0x80000001), 0, 1, {5, 6, 7, 4},
     fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
 
-   {fxboxpdmda, s2x2, sboxpdmd, 0x80000001, 0, 1, {5, 6, 7, 4},
+   {fxboxpdmda, s2x2, sboxpdmd, INT32_C(0x80000001), 0, 1, {5, 6, 7, 4},
     fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
    {fxboxpdmdb, s2x2, sboxpdmd,     1, 0, 1, {5, 6, 7, 4},
     fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
@@ -10586,7 +10603,7 @@ select::fixer select::fixer_init_table[] = {
     fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
    {fxboxpdmdd, sdmd, sboxpdmd, 0x2AB, 0, 1, {2, 3, 0, 1},
     fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
-   {fxboxpdmde, sdmd, sboxpdmd, 0x80000001, 0, 1, {2, 3, 0, 1},
+   {fxboxpdmde, sdmd, sboxpdmd, INT32_C(0x80000001), 0, 1, {2, 3, 0, 1},
     fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
 
    {fxlinboxa,  s2x2, slinebox,     0, 0, 1, {4, 5, 6, 7},

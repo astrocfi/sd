@@ -96,8 +96,7 @@ and the following other variables:
 
 extern void exit(int code);
 
-#include "sd.h"
-#include "paths.h"
+#include "sdui.h"
 
 // See comments in sdmain.cpp regarding this string.
 static const char id[] = "@(#)$He" "ader: Sd: sdui-tty.c " UI_VERSION_STRING "  " UI_TIME_STAMP;
@@ -135,22 +134,21 @@ int main(int argc, char *argv[])
 
    // Initialize all the callbacks that sdlib will need.
    iofull ggg;
-   gg = &ggg;
 
-   return sdmain(argc, argv);
+   return sdmain(argc, argv, ggg);
 }
 
 
-// This array is the same as GLOB_full_input, but has the original capitalization
-// as typed by the user.  GLOB_full_input is converted to all lower case for
-// ease of searching.
+// This array is the same as m_user_input in the matcher object, but has the original
+// capitalization as typed by the user.  But m_user_input is converted to all
+// lower case for ease of searching.
 static char user_input[INPUT_TEXTLINE_SIZE+1];
 static const char *user_input_prompt;
 static const char *function_key_expansion;
 
 void refresh_input()
 {
-   erase_matcher_input();
+   gg77->matcher_p->erase_matcher_input();
    user_input[0] = '\0';
    function_key_expansion = (const char *) 0;
    clear_line();
@@ -342,6 +340,9 @@ static int tick_displayed;   /* goes from 0 to TICK_STEPS */
 
 static bool ttu_is_initialized = false;
 
+void iofull::set_utils_ptr(ui_utils *utils_ptr) { m_ui_utils_ptr = utils_ptr; }
+ui_utils *iofull::get_utils_ptr() { return m_ui_utils_ptr; }
+
 bool iofull::init_step(init_callback_state s, int n)
 {
    // Some operations (e.g. get_session_info) can return information
@@ -430,12 +431,11 @@ bool iofull::init_step(init_callback_state s, int n)
 void iofull::create_menu(call_list_kind cl)
 {
    call_menu_prompts[cl] = new char[50];  /* *** Too lazy to compute it. */
-   matcher_setup_call_menu(cl);
 
    if (cl == call_list_any)
-      /* The menu name here is "(any setup)".  That may be a sensible
-         name for a menu, but it isn't helpful as a prompt.  So we
-         just use a vanilla prompt. */
+      // The menu name here is "(any setup)".  That may be a sensible
+      // name for a menu, but it isn't helpful as a prompt.  So we
+      // just use a vanilla prompt.
       call_menu_prompts[cl] = (char *) "--> ";
    else
       sprintf(call_menu_prompts[cl], "(%s)--> ", menu_names[cl]);
@@ -476,14 +476,16 @@ static void uims_bell()
 
 static void pack_and_echo_character(char c)
 {
-   /* Really should handle error better -- ring the bell,
-      but this is called inside a loop. */
+   // Really should handle error better -- ring the bell,
+   // but this is called inside a loop.
 
-   if (GLOB_user_input_size < INPUT_TEXTLINE_SIZE) {
-      user_input[GLOB_user_input_size] = c;
-      GLOB_user_input[GLOB_user_input_size++] = tolower(c);
-      user_input[GLOB_user_input_size] = '\0';
-      GLOB_user_input[GLOB_user_input_size] = '\0';
+   matcher_class &matcher = *gg77->matcher_p;
+
+   if (matcher.m_user_input_size < INPUT_TEXTLINE_SIZE) {
+      user_input[matcher.m_user_input_size] = c;
+      matcher.m_user_input[matcher.m_user_input_size++] = tolower(c);
+      user_input[matcher.m_user_input_size] = '\0';
+      matcher.m_user_input[matcher.m_user_input_size] = '\0';
       put_char(c);
    }
 }
@@ -547,27 +549,18 @@ static bool prompt_for_more_output()
 
 void iofull::show_match(int frequency_to_show)
 {
-   if (showing_has_stopped) return;  // Showing has been turned off.
+   if (get_utils_ptr()->matcher_p->m_showing_has_stopped) return;  // Showing has been turned off.
 
    if (match_counter <= text_line_count) {
       match_counter = text_line_count+match_lines-2;
       if (!prompt_for_more_output()) {
          match_counter = text_line_count-1;   // Turn it off.
-         showing_has_stopped = true;
+         get_utils_ptr()->matcher_p->m_showing_has_stopped = true;
          return;
       }
    }
 
-   if (frequency_to_show >= 0) {
-      char buffer[MAX_TEXT_LINE_LENGTH];
-      sprintf(buffer, "%-4d ", frequency_to_show);
-      writestuff(buffer);
-   }
-
-   if (GLOB_match.indent) writestuff("   ");
-   writestuff(GLOB_user_input);
-   writestuff(GLOB_full_extension);
-   newline();
+   get_utils_ptr()->show_match_item(frequency_to_show);
 }
 
 
@@ -577,7 +570,7 @@ void iofull::prepare_for_listing()
    if (match_lines < 2) match_lines = 25;  // The system is screwed up.
    if (ui_options.diagnostic_mode) match_lines = 1000000;
    match_counter = text_line_count+match_lines-2;   // Count for for "--More--" prompt.
-   showing_has_stopped = false;
+   get_utils_ptr()->matcher_p->m_showing_has_stopped = false;
 }
 
 
@@ -587,10 +580,11 @@ static bool get_user_input(const char *prompt, int which)
    char c;
    int nc;
    int matches;
+   matcher_class &matcher = *gg77->matcher_p;
 
-   user_match.valid = false;
+   matcher.m_active_result.valid = false;
    user_input_prompt = prompt;
-   erase_matcher_input();
+   matcher.erase_matcher_input();
    user_input[0] = '\0';
    function_key_expansion = (const char *) 0;
    put_line(user_input_prompt);
@@ -623,11 +617,11 @@ static bool get_user_input(const char *prompt, int which)
             // User clicked the "X" in the upper-right corner, or used the system menu
             // to close the program, or perhaps used the task manager.  In any case,
             // don't close without querying the user.
-            if (which_target == match_startup_commands || gg->do_abort_popup() == POPUP_ACCEPT)
+            if (which_target == matcher_class::e_match_startup_commands || gg77->iob88.do_abort_popup() == POPUP_ACCEPT)
                general_final_exit(0);
          }
 
-         keyptr = fcn_key_table_normal[nc-FCN_KEY_TAB_LOW];
+         keyptr = matcher.m_fcn_key_table_normal[nc-FCN_KEY_TAB_LOW];
 
          // Check for special bindings.
          // These always come from the main binding table, even if
@@ -636,16 +630,16 @@ static bool get_user_input(const char *prompt, int which)
          if (keyptr && keyptr->index < 0) {
             switch (keyptr->index) {
             case special_index_deleteline:
-               erase_matcher_input();
-               strcpy(user_input, GLOB_user_input);
+               matcher.erase_matcher_input();
+               strcpy(user_input, matcher.m_user_input);
                function_key_expansion = (const char *) 0;
                clear_line();                   // Clear the current line.
                put_line(user_input_prompt);    // Redisplay the prompt.
                continue;
             case special_index_deleteword:
-               chars_deleted = delete_matcher_word();
+               chars_deleted = matcher.delete_matcher_word();
                while (chars_deleted-- > 0) rubout();
-               strcpy(user_input, GLOB_user_input);
+               strcpy(user_input, matcher.m_user_input);
                function_key_expansion = (const char *) 0;
                continue;
             case special_index_quote_anything:
@@ -656,12 +650,12 @@ static bool get_user_input(const char *prompt, int which)
             }
          }
 
-         if (which_target == match_startup_commands)
-            keyptr = fcn_key_table_start[nc-FCN_KEY_TAB_LOW];
-         else if (which_target == match_resolve_commands)
-            keyptr = fcn_key_table_resolve[nc-FCN_KEY_TAB_LOW];
+         if (which_target == matcher_class::e_match_startup_commands)
+            keyptr = matcher.m_fcn_key_table_start[nc-FCN_KEY_TAB_LOW];
+         else if (which_target == matcher_class::e_match_resolve_commands)
+            keyptr = matcher.m_fcn_key_table_resolve[nc-FCN_KEY_TAB_LOW];
          else if (which_target == 0)
-            keyptr = fcn_key_table_normal[nc-FCN_KEY_TAB_LOW];
+            keyptr = matcher.m_fcn_key_table_normal[nc-FCN_KEY_TAB_LOW];
          else
             continue;
 
@@ -670,7 +664,7 @@ static bool get_user_input(const char *prompt, int which)
             // the usual way anyway.  This makes the behavior similar to Sd, where
             // the system automatically provides that action.
             if (nc == AFKEY+4) {
-               if (which_target == match_startup_commands || gg->do_abort_popup() == POPUP_ACCEPT)
+               if (which_target == matcher_class::e_match_startup_commands || gg77->iob88.do_abort_popup() == POPUP_ACCEPT)
                   general_final_exit(0);
             }
 
@@ -680,7 +674,7 @@ static bool get_user_input(const char *prompt, int which)
          // If we get here, we have a function key to process from the table.
 
          char linebuff[INPUT_TEXTLINE_SIZE+1];
-         if (process_accel_or_abbrev(*keyptr, linebuff)) {
+         if (matcher.process_accel_or_abbrev(*keyptr, linebuff)) {
             put_line(linebuff);
             put_line("\n");
 
@@ -706,10 +700,10 @@ static bool get_user_input(const char *prompt, int which)
    got_char:
 
       if ((c == '\b') || (c == DEL)) {
-         if (GLOB_user_input_size > 0) {
-            GLOB_user_input_size--;
-            user_input[GLOB_user_input_size] = '\0';
-            GLOB_user_input[GLOB_user_input_size] = '\0';
+         if (matcher.m_user_input_size > 0) {
+            matcher.m_user_input_size--;
+            user_input[matcher.m_user_input_size] = '\0';
+            matcher.m_user_input[matcher.m_user_input_size] = '\0';
             function_key_expansion = (const char *) 0;
             rubout();    // Update the display with the character erased.
          }
@@ -719,8 +713,8 @@ static bool get_user_input(const char *prompt, int which)
          put_char(c);
          put_line("\n");
          current_text_line++;
-         gg->prepare_for_listing();
-         match_user_input(which, true, c == '?', false);
+         gg77->iob88.prepare_for_listing();
+         matcher.match_user_input(which, true, c == '?', false);
          put_line("\n");     // Write a blank line.
          current_text_line++;
          put_line(user_input_prompt);   /* Redisplay the current line. */
@@ -729,8 +723,8 @@ static bool get_user_input(const char *prompt, int which)
       }
       else if (c == ' ' || c == '-') {
          // Extend only to one space or hyphen, inclusive.
-         matches = match_user_input(which, false, false, true);
-         p = GLOB_echo_stuff;
+         matches = matcher.match_user_input(which, false, false, true);
+         p = matcher.m_echo_stuff;
 
          if (*p) {
             while (*p) {
@@ -745,7 +739,7 @@ static bool get_user_input(const char *prompt, int which)
 
             foobar: ;
          }
-         else if (GLOB_space_ok && matches > 1)
+         else if (matcher.m_space_ok && matches > 1)
             pack_and_echo_character(c);
          else if (ui_options.diagnostic_mode)
             goto diagnostic_error;
@@ -756,41 +750,14 @@ static bool get_user_input(const char *prompt, int which)
 
          // Look for abbreviations.
 
-         abbrev_block *asearch = (abbrev_block *) 0;
+         if (gg77->look_up_abbreviations(which))
+            return false;
 
-         if (which == match_startup_commands)
-            asearch = abbrev_table_start;
-         else if (which == match_resolve_commands)
-            asearch = abbrev_table_resolve;
-         else if (which >= 0)
-            asearch = abbrev_table_normal;
+         matches = matcher.match_user_input(which, false, false, true);
 
-         for ( ; asearch ; asearch = asearch->next) {
-            if (!strcmp(asearch->key, GLOB_user_input)) {
-               char linebuff[INPUT_TEXTLINE_SIZE+1];
-               if (process_accel_or_abbrev(asearch->value, linebuff)) {
-                  refresh_input();
-                  put_line(linebuff);
-                  put_line("\n");
-
-                  if (journal_file) {
-                     fputs(linebuff, journal_file);
-                     fputc('\n', journal_file);
-                  }
-
-                  current_text_line++;
-                  return false;
-               }
-               break;   // Couldn't be processed.  Stop.  No other abbreviations will match.
-            }
-         }
-
-         matches = match_user_input(which, false, false, true);
-         user_match = GLOB_match;
-
-         if (!strcmp(GLOB_user_input, "help")) {
+         if (!strcmp(matcher.m_user_input, "help")) {
             put_line("\n");
-            user_match.match.kind = ui_help_simple;
+            matcher.m_active_result.match.kind = ui_help_simple;
             current_text_line++;
             return true;
          }
@@ -800,20 +767,20 @@ static bool get_user_input(const char *prompt, int which)
             by a call.  The "match.next" field indicates that direct parse concepts
             were stacked. */
 
-         if ((matches == 1 || matches - GLOB_yielding_matches == 1 || user_match.exact) &&
-             ((!user_match.match.packed_next_conc_or_subcall &&
-               !user_match.match.packed_secondary_subcall) ||
-              user_match.match.kind == ui_call_select ||
-              user_match.match.kind == ui_concept_select)) {
+         if ((matches == 1 || matches - matcher.m_yielding_matches == 1 || matcher.m_final_result.exact) &&
+             ((!matcher.m_final_result.match.packed_next_conc_or_subcall &&
+               !matcher.m_final_result.match.packed_secondary_subcall) ||
+              matcher.m_final_result.match.kind == ui_call_select ||
+              matcher.m_final_result.match.kind == ui_concept_select)) {
 
-            p = GLOB_echo_stuff;
+            p = matcher.m_echo_stuff;
             while (*p)
                pack_and_echo_character(*p++);
 
             put_line("\n");
 
             if (journal_file) {
-               fputs(GLOB_user_input, journal_file);
+               fputs(matcher.m_user_input, journal_file);
                fputc('\n', journal_file);
             }
 
@@ -839,9 +806,8 @@ static bool get_user_input(const char *prompt, int which)
          current_text_line++;   /* Count that line for erasure. */
       }
       else if (c == '\t' || c == '\033') {
-         match_user_input(which, false, false, true);
-         user_match = GLOB_match;
-         p = GLOB_echo_stuff;
+         matcher.match_user_input(which, false, false, true);
+         p = matcher.m_echo_stuff;
 
          if (*p) {
             while (*p)
@@ -904,36 +870,38 @@ static const char *banner_prompts4[] = {
 
 
 
-uims_reply iofull::get_startup_command()
+uims_reply_thing iofull::get_startup_command()
 {
+   modifier_block &matchmatch = (*gg77->matcher_p).m_final_result.match;
+
    for (;;) {
-      if (!get_user_input("Enter startup command> ", (int) match_startup_commands))
+      if (!get_user_input("Enter startup command> ", (int) matcher_class::e_match_startup_commands))
          break;
 
-      writestuff("The program wants you to start a sequence.  Type, for example, "
-                 "'heads start', and press Enter.  Then type a call, such as "
-                 "'pass the ocean', and press Enter again.");
-      newline();
+      get_utils_ptr()->writestuff("The program wants you to start a sequence.  Type, for example, "
+                                  "'heads start', and press Enter.  Then type a call, such as "
+                                  "'pass the ocean', and press Enter again.");
+      get_utils_ptr()->newline();
    }
 
-   uims_menu_index = user_match.match.index;
+   int index = matchmatch.index;
 
-   if (user_match.match.kind == ui_start_select) {
-      /* Translate the command. */
-      uims_menu_index = (int) startup_command_values[user_match.match.index];
+   if (matchmatch.kind == ui_start_select) {
+      // Translate the command.
+      index = (int) startup_command_values[index];
    }
 
-   return user_match.match.kind;
+   return uims_reply_thing(matchmatch.kind, index);
 }
 
 
 
-// This returns true if it fails, e.g. the user waves the mouse away.
-bool iofull::get_call_command(uims_reply *reply_p)
+// This returns ui_user_cancel if it fails, e.g. the user waves the mouse away.
+uims_reply_thing iofull::get_call_command()
 {
    char prompt_buffer[200];
    const char *prompt_ptr;
-   bool retval = false;
+   modifier_block &matchmatch = (*gg77->matcher_p).m_final_result.match;
 
    if (allowing_modifications != 0)
       parse_state.call_list_to_use = call_list_any;
@@ -988,60 +956,74 @@ bool iofull::get_call_command(uims_reply *reply_p)
 
    if (get_user_input(prompt_ptr, (int) parse_state.call_list_to_use)) {
       // User typed "help".
-      *reply_p = ui_command_select;
-      uims_menu_index = command_help;
-      return false;
+      return uims_reply_thing(ui_command_select, command_help);
    }
 
-   *reply_p = user_match.match.kind;
+   int index = matchmatch.index;
 
-   uims_menu_index = user_match.match.index;
-
-   if (user_match.match.index < 0)
-      /* Special encoding from a function key. */
-      uims_menu_index = -1-user_match.match.index;
-   else if (user_match.match.kind == ui_command_select) {
-      /* Translate the command. */
-      uims_menu_index = (int) command_command_values[user_match.match.index];
+   if (index < 0) {
+      // Special encoding from a function key.
+      return uims_reply_thing(matchmatch.kind, -1-index);
+   }
+   else if (matchmatch.kind == ui_command_select) {
+      // Translate the command.
+      return uims_reply_thing(matchmatch.kind, (int) command_command_values[matchmatch.index]);
    }
    else {
-      call_conc_option_state save_stuff = user_match.match.call_conc_options;
+      call_conc_option_state save_stuff = matchmatch.call_conc_options;
       there_is_a_call = false;
-      retval = deposit_call_tree(&user_match.match, (parse_block *) 0, DFM1_CALL_MOD_MAND_ANYCALL/DFM1_CALL_MOD_BIT);
-      user_match.match.call_conc_options = save_stuff;
+      uims_reply_kind my_reply = matchmatch.kind;
+      bool retval = deposit_call_tree(&matchmatch, (parse_block *) 0, DFM1_CALL_MOD_MAND_ANYCALL/DFM1_CALL_MOD_BIT);
+      matchmatch.call_conc_options = save_stuff;
       if (there_is_a_call) {
          parse_state.topcallflags1 = the_topcallflags;
-         *reply_p = ui_call_select;
+         my_reply = ui_call_select;
       }
-   }
 
-   return retval;
+      return uims_reply_thing(retval ? ui_user_cancel : my_reply, index);
+   }
 }
 
 
-uims_reply iofull::get_resolve_command()
+void iofull::dispose_of_abbreviation(const char *linebuff)
 {
+   refresh_input();
+   put_line(linebuff);
+   put_line("\n");
+
+   if (journal_file) {
+      fputs(linebuff, journal_file);
+      fputc('\n', journal_file);
+   }
+
+   current_text_line++;
+}
+
+
+uims_reply_thing iofull::get_resolve_command()
+{
+   modifier_block &matchmatch = (*gg77->matcher_p).m_final_result.match;
+
    for (;;) {
-      if (!get_user_input("Enter search command> ", (int) match_resolve_commands))
+      if (!get_user_input("Enter search command> ", (int) matcher_class::e_match_resolve_commands))
          break;
 
       if (resolver_happiness == resolver_display_failed)
-         writestuff("The program is trying to resolve, but has failed to find anything."
-                    "  You can type 'find another' to keep trying.");
+         get_utils_ptr()->writestuff("The program is trying to resolve, but has failed to find anything."
+                                     "  You can type 'find another' to keep trying.");
       else
-         writestuff("The program is searching for resolves.  If you like the currently "
-                    "displayed resolve, you can type 'accept' and press Enter."
-                    "  If not, you can type 'find another'.");
+         get_utils_ptr()->writestuff("The program is searching for resolves.  If you like the currently "
+                                     "displayed resolve, you can type 'accept' and press Enter."
+                                     "  If not, you can type 'find another'.");
 
-      newline();
+      get_utils_ptr()->newline();
    }
 
-   if (user_match.match.index < 0)
-      uims_menu_index = -1-user_match.match.index;   /* Special encoding from a function key. */
+   if (matchmatch.index < 0)
+      // Special encoding from a function key.
+      return uims_reply_thing(matchmatch.kind, -1-matchmatch.index);
    else
-      uims_menu_index = (int) resolve_command_values[user_match.match.index];
-
-   return user_match.match.kind;
+      return uims_reply_thing(matchmatch.kind, (int) resolve_command_values[matchmatch.index]);
 }
 
 
@@ -1054,13 +1036,13 @@ popup_return iofull::get_popup_string(Cstring prompt1, Cstring prompt2, Cstring 
    // Sd shows it but Sdtty does not.
 
    if (prompt1 && prompt1[0] && prompt1[0] != '*') {
-      writestuff(prompt1);
-      newline();
+      get_utils_ptr()->writestuff(prompt1);
+      get_utils_ptr()->newline();
    }
 
    if (prompt2 && prompt2[0] && prompt2[0] != '*') {
-      writestuff(prompt2);
-      newline();
+      get_utils_ptr()->writestuff(prompt2);
+      get_utils_ptr()->newline();
    }
 
    char buffer[MAX_TEXT_LINE_LENGTH];
@@ -1112,8 +1094,8 @@ static int confirm(Cstring question)
 int iofull::yesnoconfirm(Cstring /*title*/, Cstring line1, Cstring line2, bool /*excl*/, bool /*info*/)
 {
    if (line1) {
-      writestuff(line1);
-      newline();
+      get_utils_ptr()->writestuff(line1);
+      get_utils_ptr()->newline();
    }
 
    return confirm(line2);
@@ -1133,66 +1115,66 @@ void iofull::update_resolve_menu(command_kind goal, int cur, int max,
    resolver_happiness = state;
 
    create_resolve_menu_title(goal, cur, max, state, title);
-   writestuff(title);
-   newline();
+   get_utils_ptr()->writestuff(title);
+   get_utils_ptr()->newline();
 }
 
-int iofull::do_selector_popup()
+selector_kind iofull::do_selector_popup(matcher_class &matcher)
 {
-   match_result saved_match = user_match;
+   match_result saved_match = matcher.m_final_result;
 
    for (;;) {
-      if (!get_user_input("Enter who> ", (int) match_selectors))
+      if (!get_user_input("Enter who> ", (int) matcher_class::e_match_selectors))
          break;
 
-      writestuff("The program wants you to type a person designator.  "
-                 "Try typing something like 'boys' and pressing Enter.");
-      newline();
+      get_utils_ptr()->writestuff("The program wants you to type a person designator.  "
+                        "Try typing something like 'boys' and pressing Enter.");
+      get_utils_ptr()->newline();
    }
 
    // We skip the zeroth selector, which is selector_uninitialized.
-   int retval = user_match.match.index+1;
-   user_match = saved_match;
+   selector_kind retval = (selector_kind) (matcher.m_final_result.match.index+1);
+   matcher.m_final_result = saved_match;
    return retval;
 }
 
-int iofull::do_direction_popup()
+direction_kind iofull::do_direction_popup(matcher_class &matcher)
 {
-   match_result saved_match = user_match;
+   match_result saved_match = matcher.m_final_result;
 
    for (;;) {
-      if (!get_user_input("Enter direction> ", (int) match_directions))
+      if (!get_user_input("Enter direction> ", (int) matcher_class::e_match_directions))
          break;
 
-      writestuff("The program wants you to type a direction.  "
-                 "Try typing something like 'right' and pressing Enter.");
-      newline();
+      get_utils_ptr()->writestuff("The program wants you to type a direction.  "
+                        "Try typing something like 'right' and pressing Enter.");
+      get_utils_ptr()->newline();
    }
 
    // We skip the zeroth direction, which is direction_uninitialized.
-   int retval = user_match.match.index+1;
-   user_match = saved_match;
-
+   direction_kind retval = (direction_kind) (matcher.m_final_result.match.index+1);
+   matcher.m_final_result = saved_match;
    return retval;
 }
 
 int iofull::do_tagger_popup(int tagger_class)
 {
-   match_result saved_match = user_match;
+   matcher_class &matcher = *gg77->matcher_p;
+   match_result saved_match = matcher.m_final_result;
 
    for (;;) {
-      if (!get_user_input("Enter tagging call> ", ((int) match_taggers) + tagger_class))
+      if (!get_user_input("Enter tagging call> ", ((int) matcher_class::e_match_taggers) + tagger_class))
          break;
 
-      writestuff("The program wants you to type an 'ATC' (tagging) call.  "
-                 "Try typing something like 'vertical tag' and pressing Enter.");
-      newline();
+      get_utils_ptr()->writestuff("The program wants you to type an 'ATC' (tagging) call.  "
+                        "Try typing something like 'vertical tag' and pressing Enter.");
+      get_utils_ptr()->newline();
    }
 
-   saved_match.match.call_conc_options.tagger = user_match.match.call_conc_options.tagger;
-   user_match = saved_match;
-   int retval = user_match.match.call_conc_options.tagger;
-   user_match.match.call_conc_options.tagger = 0;
+   int retval = matcher.m_final_result.match.call_conc_options.tagger;
+   saved_match.match.call_conc_options.tagger = matcher.m_final_result.match.call_conc_options.tagger;
+   matcher.m_final_result = saved_match;
+   matcher.m_final_result.match.call_conc_options.tagger = 0;
    return retval;
 }
 
@@ -1200,77 +1182,54 @@ int iofull::do_tagger_popup(int tagger_class)
 int iofull::do_circcer_popup()
 {
    uint32 retval;
+   matcher_class &matcher = *gg77->matcher_p;
 
    if (interactivity == interactivity_verify) {
       retval = verify_options.circcer;
       if (retval == 0) retval = 1;
    }
-   else if (!user_match.valid || (user_match.match.call_conc_options.circcer == 0)) {
-      match_result saved_match = user_match;
+   else if (!matcher.m_final_result.valid || (matcher.m_final_result.match.call_conc_options.circcer == 0)) {
+      match_result saved_match = matcher.m_final_result;
 
       for (;;) {
-         if (!get_user_input("Enter circulate replacement> ", (int) match_circcer))
+         if (!get_user_input("Enter circulate replacement> ", (int) matcher_class::e_match_circcer))
             break;
 
-         writestuff("The program wants you to type a circulating call as part of "
-                    "a call like 'in roll motivate'.  "
-                    "Try typing something like 'in roll circulate' and pressing Enter.");
-         newline();
+         get_utils_ptr()->writestuff("The program wants you to type a circulating call as part of "
+                           "a call like 'in roll motivate'.  "
+                           "Try typing something like 'in roll circulate' and pressing Enter.");
+         get_utils_ptr()->newline();
       }
 
-      retval = user_match.match.call_conc_options.circcer;
-      user_match = saved_match;
+      retval = matcher.m_final_result.match.call_conc_options.circcer;
+      matcher.m_final_result = saved_match;
    }
    else {
-      retval = user_match.match.call_conc_options.circcer;
-      user_match.match.call_conc_options.circcer = 0;
+      retval = matcher.m_final_result.match.call_conc_options.circcer;
+      matcher.m_final_result.match.call_conc_options.circcer = 0;
    }
 
    return retval;
 }
 
-
-uint32 iofull::get_number_fields(int nnumbers, bool odd_number_only, bool forbid_zero)
+uint32 iofull::get_one_number(matcher_class &matcher)
 {
-   int i;
-   uint32 number_fields = user_match.match.call_conc_options.number_fields;
-   int howmanynumbers = user_match.match.call_conc_options.howmanynumbers;
-   uint32 number_list = 0;
-
-   for (i=0 ; i<nnumbers ; i++) {
-      uint32 this_num;
-
-      if (!user_match.valid || (howmanynumbers <= 0)) {
-         for (;;) {
-            char buffer[200];
-            put_line("How many? ");
-            get_string(buffer, 200);
-            current_text_line++;
-            if (buffer[0] == '!' || buffer[0] == '?') {
-               writestuff("Type a number between 0 and 36");
-               newline();
-            }
-            else if (!buffer[0]) return ~0U;
-            else {
-               this_num = atoi(buffer);
-               break;
-            }
-         }
+   for (;;) {
+      char buffer[200];
+      put_line("How many? ");
+      get_string(buffer, 200);
+      current_text_line++;
+      if (buffer[0] == '!' || buffer[0] == '?') {
+         get_utils_ptr()->writestuff("Type a number between 0 and 36");
+         get_utils_ptr()->newline();
       }
+      else if (!buffer[0]) return ~0U;
       else {
-         this_num = number_fields & NUMBER_FIELD_MASK;
-         number_fields >>= BITS_PER_NUMBER_FIELD;
-         howmanynumbers--;
+         return atoi(buffer);
       }
-
-      if (odd_number_only && !(this_num & 1)) return ~0U;
-      if (forbid_zero && this_num == 0) return ~0U;
-      if (this_num >= NUM_CARDINALS) return ~0U;    // User gave bad answer.
-      number_list |= (this_num << (i*BITS_PER_NUMBER_FIELD));
    }
-
-   return number_list;
 }
+
 
 
 /*

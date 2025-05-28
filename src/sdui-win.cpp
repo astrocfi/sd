@@ -59,8 +59,7 @@
 #include <string.h>
 #include <ctype.h>
 
-#include "sd.h"
-#include "paths.h"
+#include "sdui.h"
 
 static int window_size_args[4] = {780, 560, 10, 20};
 
@@ -182,7 +181,7 @@ static int nActiveTranscriptSize = 500;   // Amount that we tell the scroll
                                           // that we believe the screen holds
 static int pagesize;           // Amount we tell it to scroll if user clicks in dead scroll area
 static int BottomFudge;
-static uims_reply MenuKind;
+static uims_reply_kind MenuKind;
 static DisplayType *DisplayRoot = NULL;
 static DisplayType *CurDisplay = NULL;
 
@@ -204,9 +203,6 @@ static int TranscriptEdge;
 
 
 
-
-static uims_reply my_reply;
-static bool my_retval;
 
 static RECT CallsClientRect;
 static RECT TranscriptClientRect;
@@ -329,16 +325,7 @@ static void erase_questionable_stuff()
 
 void iofull::show_match(int frequency_to_show)
 {
-   if (frequency_to_show >= 0) {
-      char buffer[MAX_TEXT_LINE_LENGTH];
-      sprintf(buffer, "%-4d ", frequency_to_show);
-      writestuff(buffer);
-   }
-
-   if (GLOB_match.indent) writestuff("   ");
-   writestuff(GLOB_user_input);
-   writestuff(GLOB_full_extension);
-   newline();
+   get_utils_ptr()->show_match_item(frequency_to_show);
 }
 
 
@@ -351,11 +338,12 @@ static void check_text_change(bool doing_escape)
    char *p;
    int matches;
    bool changed_editbox = false;
+   matcher_class &matcher = *gg77->matcher_p;
 
    // Find out what the text input box contains now.
 
    GetWindowText(hwndTextInputArea, szLocalString, MAX_TEXT_LINE_LENGTH);
-   nLen = lstrlen(szLocalString) - 1;    // Location of last character.
+   nLen = strlen(szLocalString) - 1;    // Location of last character.
 
    for (nIndex=0 ; nIndex<=nLen ; nIndex++)
       szLocalString[nIndex] = tolower(szLocalString[nIndex]);
@@ -366,9 +354,8 @@ static void check_text_change(bool doing_escape)
 
    if (doing_escape) {
       nLen++;
-      matches = match_user_input(nLastOne, false, false, false);
-      user_match = GLOB_match;
-      p = GLOB_echo_stuff;
+      matches = matcher.match_user_input(nLastOne, false, false, false);
+      p = matcher.m_echo_stuff;
       if (*p) {
          changed_editbox = true;
 
@@ -379,7 +366,7 @@ static void check_text_change(bool doing_escape)
 
       }
    }
-   else if (lstrcmp(szLocalString, GLOB_user_input)) {
+   else if (lstrcmp(szLocalString, matcher.m_user_input)) {
       if (nLen >= 0) {
          char cCurChar = szLocalString[nLen];
 
@@ -399,10 +386,9 @@ static void check_text_change(bool doing_escape)
             if (nLen > -33) {    // Don't do this on a blank line.
                int saved_image_height = nTotalImageHeight;
                DisplayType *my_mark = CurDisplay;
-               lstrcpy(GLOB_user_input, szLocalString);
-               GLOB_user_input_size = lstrlen(GLOB_user_input);
+               matcher.copy_to_user_input(szLocalString);
                // This will call show_match with each match.
-               match_user_input(nLastOne, true, cCurChar == '?', false);
+               matcher.match_user_input(nLastOne, true, cCurChar == '?', false);
                question_stuff_to_erase = my_mark;
                // Restore the scroll position so that the user will see the start,
                // not the end, of what we displayed.
@@ -421,14 +407,13 @@ static void check_text_change(bool doing_escape)
          }
          else if (cCurChar == ' ' || cCurChar == '-') {
             erase_questionable_stuff();
-            lstrcpy(GLOB_user_input, szLocalString);
-            GLOB_user_input[nLen] = '\0';
+            lstrcpy(matcher.m_user_input, szLocalString);
+            matcher.m_user_input[nLen] = '\0';
             // **** do we think nLen has the right stuff here?
-            GLOB_user_input_size = lstrlen(GLOB_user_input);
+            matcher.m_user_input_size = strlen(matcher.m_user_input);
             // Extend only to one space or hyphen, inclusive.
-            matches = match_user_input(nLastOne, false, false, true);
-            user_match = GLOB_match;
-            p = GLOB_echo_stuff;
+            matches = matcher.match_user_input(nLastOne, false, false, true);
+            p = matcher.m_echo_stuff;
 
             if (*p) {
                changed_editbox = true;
@@ -445,7 +430,7 @@ static void check_text_change(bool doing_escape)
                   }
                }
             }
-            else if (!GLOB_space_ok || matches <= 1) {
+            else if (!matcher.m_space_ok || matches <= 1) {
                uims_bell();
                szLocalString[nLen] = '\0';    // Do *not* pack the character.
                changed_editbox = true;
@@ -465,9 +450,9 @@ static void check_text_change(bool doing_escape)
 
  pack_us:
 
-   lstrcpy(GLOB_user_input, szLocalString);
-   GLOB_user_input_size = lstrlen(GLOB_user_input);
-   for (p=GLOB_user_input ; *p ; p++)
+   matcher.copy_to_user_input(szLocalString);
+
+   for (p=matcher.m_user_input ; *p ; p++)
       *p = tolower(*p);
 
    // Write it back to the window.
@@ -517,6 +502,7 @@ static int LookupKeystrokeBinding(
    int nc;
    uint32 ctlbits;
    int newparm = -99;
+   matcher_class &matcher = *gg77->matcher_p;
 
    switch (iMsg) {
    case WM_KEYDOWN:
@@ -680,7 +666,7 @@ static int LookupKeystrokeBinding(
    if (nc < FCN_KEY_TAB_LOW || nc > FCN_KEY_TAB_LAST)
       return 0;      /* How'd this happen?  Ignore it. */
 
-   keyptr = fcn_key_table_normal[nc-FCN_KEY_TAB_LOW];
+   keyptr = matcher.m_fcn_key_table_normal[nc-FCN_KEY_TAB_LOW];
 
    /* Check for special bindings like "delete line" or "page up".
       These always come from the main binding table, even if
@@ -692,10 +678,10 @@ static int LookupKeystrokeBinding(
       /* Look for menu-specific bindings like
          "split phantom boxes" or "find another". */
 
-      if (nLastOne == match_startup_commands)
-         keyptr = fcn_key_table_start[nc-FCN_KEY_TAB_LOW];
-      else if (nLastOne == match_resolve_commands)
-         keyptr = fcn_key_table_resolve[nc-FCN_KEY_TAB_LOW];
+      if (nLastOne == matcher_class::e_match_startup_commands)
+         keyptr = matcher.m_fcn_key_table_start[nc-FCN_KEY_TAB_LOW];
+      else if (nLastOne == matcher_class::e_match_resolve_commands)
+         keyptr = matcher.m_fcn_key_table_resolve[nc-FCN_KEY_TAB_LOW];
       else if (nLastOne < 0)
          keyptr = (modifier_block *) 0;    /* We are scanning for
                                               direction/selector/number/etc. */
@@ -731,15 +717,14 @@ static int LookupKeystrokeBinding(
             break;
          case special_index_deleteword:
             GetWindowText(hwndTextInputArea, szLocalString, MAX_TEXT_LINE_LENGTH);
-            lstrcpy(GLOB_user_input, szLocalString);
-            GLOB_user_input_size = lstrlen(GLOB_user_input);
-            delete_matcher_word();
-            SendMessage(hwndTextInputArea, WM_SETTEXT, 0, (LPARAM) GLOB_user_input);
+            matcher.copy_to_user_input(szLocalString);
+            matcher.delete_matcher_word();
+            SendMessage(hwndTextInputArea, WM_SETTEXT, 0, (LPARAM) matcher.m_user_input);
             SendMessage(hwndTextInputArea, EM_SETSEL, MAX_TEXT_LINE_LENGTH, MAX_TEXT_LINE_LENGTH);
             break;
          case special_index_deleteline:
-            erase_matcher_input();
-            SendMessage(hwndTextInputArea, WM_SETTEXT, 0, (LPARAM) GLOB_user_input);
+            matcher.erase_matcher_input();
+            SendMessage(hwndTextInputArea, WM_SETTEXT, 0, (LPARAM) matcher.m_user_input);
             SendMessage(hwndTextInputArea, EM_SETSEL, MAX_TEXT_LINE_LENGTH, MAX_TEXT_LINE_LENGTH);
             break;
          case special_index_copytext:
@@ -754,19 +739,17 @@ static int LookupKeystrokeBinding(
          case special_index_quote_anything:
             GetWindowText(hwndTextInputArea, szLocalString, MAX_TEXT_LINE_LENGTH);
             lstrcat(szLocalString, "<anything>");
-            lstrcpy(GLOB_user_input, szLocalString);
-            GLOB_user_input_size = lstrlen(GLOB_user_input);
-            SendMessage(hwndTextInputArea, WM_SETTEXT, 0, (LPARAM) GLOB_user_input);
+            matcher.copy_to_user_input(szLocalString);
+            SendMessage(hwndTextInputArea, WM_SETTEXT, 0, (LPARAM) matcher.m_user_input);
             SendMessage(hwndTextInputArea, EM_SETSEL, MAX_TEXT_LINE_LENGTH, MAX_TEXT_LINE_LENGTH);
             break;
          }
       }
       else {
          // This function key specifies a normal "dancing" action.
-         user_match = GLOB_match;
-         user_match.match = *keyptr;
-         user_match.indent = FALSE;
-         user_match.valid = TRUE;
+         matcher.m_final_result.match = *keyptr;
+         matcher.m_final_result.indent = false;
+         matcher.m_final_result.valid = true;
 
          // We have the fully filled in match item.
          // Process it and exit from the command loop.
@@ -878,6 +861,8 @@ static void Transcript_OnPaint(HWND hwnd)
       PaintStruct.rcPaint.bottom = TranscriptClientRect.bottom-TVOFFSET;
 
    SelectFont(PaintDC, GetStockObject(OEM_FIXED_FONT));
+   //SelectFont(PaintDC, GetStockObject(SYSTEM_FIXED_FONT));
+   //SelectFont(PaintDC, GetStockObject(ANSI_FIXED_FONT));
    SetTextColor(PaintDC, plaintext_fg);
    SetBkColor(PaintDC, plaintext_bg);
 
@@ -1196,13 +1181,12 @@ int WINAPI WinMain(
 
    // Initialize all the callbacks that sdlib will need.
    iofull ggg;
-   gg = &ggg;
 
    // Run the Sd program.  The system-supplied variables "__argc"
    // and "__argv" provide the predigested-as-in-traditional-C-programs
    // command-line arguments.
 
-   return sdmain(__argc, __argv);
+   return sdmain(__argc, __argv, ggg);
 }
 
 
@@ -1286,7 +1270,7 @@ BOOL MainWindow_OnCreate(HWND hwnd, LPCREATESTRUCT lpCreateStruct)
 
    if (!hwndProgress||!hwndAcceptButton||!hwndCancelButton||!hwndCallMenu||
        !hwndTextInputArea||!hwndTranscriptArea||!hwndStatusBar) {
-      gg->fatal_error_exit(1, "Can't create windows", 0);
+      gg77->iob88.fatal_error_exit(1, "Can't create windows", 0);
    }
 
    return TRUE;
@@ -1413,6 +1397,7 @@ void MainWindow_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
    int i;
    int matches;
    int nMenuIndex;
+   matcher_class &matcher = *gg77->matcher_p;
 
    switch (id) {
    case ID_HELP_ABOUTSD:
@@ -1422,11 +1407,11 @@ void MainWindow_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
       // The claim is that we can take this clause out, and the normal
       // program mechanism will do the same thing.  That claim isn't yet
       // completely true, so we leave this in for now.
-      gg->help_manual();
+      gg77->iob88.help_manual();
       break;
    case ID_HELP_FAQ:
       // Ditto.
-      gg->help_faq();
+      gg77->iob88.help_faq();
       break;
    case ID_FILE_EXIT:
       SendMessage(hwndMain, WM_CLOSE, 0, 0L);
@@ -1439,7 +1424,7 @@ void MainWindow_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
       check_text_change(true);
       break;
    case CANCEL_BUTTON_INDEX:
-      user_match.match.index = -1;
+      matcher.m_final_result.match.index = -1;
       WaitingForCommand = false;
       break;
    case CALL_MENU_INDEX:
@@ -1468,48 +1453,25 @@ void MainWindow_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 
       if (id != ENTER_INDEX || menu_moved) {
          SendMessage(hwndTextInputArea, WM_SETTEXT, 0, (LPARAM)"");
-         erase_matcher_input();
+         matcher.erase_matcher_input();
       }
 
       // Look for abbreviations.
+      if (gg77->look_up_abbreviations(nLastOne))
+         return;
 
-      {
-         abbrev_block *asearch = (abbrev_block *) 0;
-
-         if (nLastOne == match_startup_commands)
-            asearch = abbrev_table_start;
-         else if (nLastOne == match_resolve_commands)
-            asearch = abbrev_table_resolve;
-         else if (nLastOne >= 0)
-            asearch = abbrev_table_normal;
-
-         for ( ; asearch ; asearch = asearch->next) {
-            if (!strcmp(asearch->key, GLOB_user_input)) {
-               char linebuff[INPUT_TEXTLINE_SIZE+1];
-               if (process_accel_or_abbrev(asearch->value, linebuff)) {
-                  SendMessage(hwndTextInputArea, WM_SETTEXT, 0, (LPARAM)"");  // Erase the edit box.
-                  WaitingForCommand = false;
-                  return;
-               }
-
-               break;   // Couldn't be processed.  Stop.  No other abbreviations will match.
-            }
-         }
-      }
-
-      matches = match_user_input(nLastOne, false, false, false);
-      user_match = GLOB_match;
+      matches = matcher.match_user_input(nLastOne, false, false, false);
 
       /* We forbid a match consisting of two or more "direct parse" concepts, such as
          "grand cross".  Direct parse concepts may only be stacked if they are followed
          by a call.  The "match.next" field indicates that direct parse concepts
          were stacked. */
 
-      if ((matches == 1 || matches - GLOB_yielding_matches == 1 || user_match.exact) &&
-          ((!user_match.match.packed_next_conc_or_subcall &&
-            !user_match.match.packed_secondary_subcall) ||
-           user_match.match.kind == ui_call_select ||
-           user_match.match.kind == ui_concept_select)) {
+      if ((matches == 1 || matches - matcher.m_yielding_matches == 1 || matcher.m_final_result.exact) &&
+          ((!matcher.m_final_result.match.packed_next_conc_or_subcall &&
+            !matcher.m_final_result.match.packed_secondary_subcall) ||
+           matcher.m_final_result.match.kind == ui_call_select ||
+           matcher.m_final_result.match.kind == ui_concept_select)) {
 
          // The matcher found an acceptable (and possibly quite complex)
          // utterance.  Use it directly.
@@ -1525,7 +1487,7 @@ void MainWindow_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
       // clearly meant to accept the currently highlighted item.
 
       if (id == ENTER_INDEX &&
-          (GLOB_user_input[0] != '\0' || !menu_moved)) break;
+          (matcher.m_user_input[0] != '\0' || !menu_moved)) break;
 
       // Or if, for some reason, the menu isn't anywhere, we don't accept it.
 
@@ -1536,16 +1498,16 @@ void MainWindow_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
       // we use it.
 
       i = SendMessage(hwndCallMenu, LB_GETITEMDATA, nMenuIndex, (LPARAM) 0);
-      user_match.match.index = LOWORD(i);
-      user_match.match.kind = (uims_reply) HIWORD(i);
+      matcher.m_final_result.match.index = LOWORD(i);
+      matcher.m_final_result.match.kind = (uims_reply_kind) HIWORD(i);
 
    use_computed_match:
 
-      user_match.match.packed_next_conc_or_subcall = 0;
-      user_match.match.packed_secondary_subcall = 0;
-      user_match.match.call_conc_options = null_options;
-      user_match.real_next_subcall = (match_result *) 0;
-      user_match.real_secondary_subcall = (match_result *) 0;
+      matcher.m_final_result.match.packed_next_conc_or_subcall = 0;
+      matcher.m_final_result.match.packed_secondary_subcall = 0;
+      matcher.m_final_result.match.call_conc_options = null_options;
+      matcher.m_final_result.real_next_subcall = (match_result *) 0;
+      matcher.m_final_result.real_secondary_subcall = (match_result *) 0;
 
       SendMessage(hwndTextInputArea, WM_SETTEXT, 0, (LPARAM)"");  // Erase the edit box.
 
@@ -1553,25 +1515,25 @@ void MainWindow_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
          However, it's not a fully filled in match item from the parser.
          So we need to concoct a low-class match item. */
 
-      if (nLastOne == match_number) {
+      if (nLastOne == matcher_class::e_match_number) {
       }
-      else if (nLastOne == match_circcer) {
-         user_match.match.call_conc_options.circcer =
-            user_match.match.index+1;
+      else if (nLastOne == matcher_class::e_match_circcer) {
+         matcher.m_final_result.match.call_conc_options.circcer =
+            matcher.m_final_result.match.index+1;
       }
-      else if (nLastOne >= match_taggers &&
-               nLastOne < match_taggers+NUM_TAGGER_CLASSES) {
-         user_match.match.call_conc_options.tagger =
-            ((nLastOne-match_taggers) << 5)+user_match.match.index+1;
+      else if (nLastOne >= matcher_class::e_match_taggers &&
+               nLastOne < matcher_class::e_match_taggers+NUM_TAGGER_CLASSES) {
+         matcher.m_final_result.match.call_conc_options.tagger =
+            ((nLastOne-matcher_class::e_match_taggers) << 5)+matcher.m_final_result.match.index+1;
       }
       else {
-         if (user_match.match.kind == ui_concept_select) {
-            user_match.match.concept_ptr =
-               &concept_descriptor_table[user_match.match.index];
+         if (matcher.m_final_result.match.kind == ui_concept_select) {
+            matcher.m_final_result.match.concept_ptr =
+               access_concept_descriptor_table(matcher.m_final_result.match.index);
          }
-         else if (user_match.match.kind == ui_call_select) {
-            user_match.match.call_ptr =
-               main_call_lists[parse_state.call_list_to_use][user_match.match.index];
+         else if (matcher.m_final_result.match.kind == ui_call_select) {
+            matcher.m_final_result.match.call_ptr =
+               main_call_lists[parse_state.call_list_to_use][matcher.m_final_result.match.index];
          }
       }
 
@@ -1587,11 +1549,11 @@ void MainWindow_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
       SendMessage(hwndTextInputArea, WM_PASTE, 0, 0);
       break;
    default:
-      if (nLastOne == match_startup_commands) {
+      if (nLastOne == matcher_class::e_match_startup_commands) {
          for (i=0 ; startup_menu[i].startup_name ; i++) {
             if (id == startup_menu[i].resource_id) {
-               user_match.match.index = i;
-               user_match.match.kind = ui_start_select;
+               matcher.m_final_result.match.index = i;
+               matcher.m_final_result.match.kind = ui_start_select;
                goto use_computed_match;
             }
          }
@@ -1599,8 +1561,8 @@ void MainWindow_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
       else if (nLastOne >= 0) {
          for (i=0 ; command_menu[i].command_name ; i++) {
             if (id == command_menu[i].resource_id) {
-               user_match.match.index = i;
-               user_match.match.kind = ui_command_select;
+               matcher.m_final_result.match.index = i;
+               matcher.m_final_result.match.kind = ui_command_select;
                goto use_computed_match;
             }
          }
@@ -1827,7 +1789,7 @@ LRESULT CALLBACK MainWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
       // We get here if the user presses alt-F4 and we haven't bound it to anything,
       // or if the user selects "exit" from the "file" menu.
 
-      if (MenuKind != ui_start_select && gg->do_abort_popup() != POPUP_ACCEPT)
+      if (MenuKind != ui_start_select && gg77->iob88.do_abort_popup() != POPUP_ACCEPT)
          return 0;  // Queried user; user said no; so we don't shut down.
 
       // Close journal and session files; call general_final_exit,
@@ -1999,7 +1961,7 @@ static void Startup_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
          }
 
          if (session_info & 2)
-            gg->serious_error_print(session_error_msg);
+            gg77->iob88.serious_error_print(session_error_msg);
 
          // If the level never got specified, either from a command line
          // argument or from the session file, put up the level selection
@@ -2281,6 +2243,9 @@ print_default_info printer_default_info = {
    IDC_FILENAME};
 
 
+void iofull::set_utils_ptr(ui_utils *utils_ptr) { m_ui_utils_ptr = utils_ptr; }
+ui_utils *iofull::get_utils_ptr() { return m_ui_utils_ptr; }
+
 bool iofull::init_step(init_callback_state s, int n)
 {
    WNDCLASSEX wndclass;
@@ -2336,7 +2301,7 @@ bool iofull::init_step(init_callback_state s, int n)
          NULL, NULL, GLOBhInstance, NULL);
 
       if (!hwndMain)
-         gg->fatal_error_exit(1, "Can't create main window", 0);
+         fatal_error_exit(1, "Can't create main window", 0);
 
       GLOBprinter = new printer(GLOBhInstance, hwndMain, printer_default_info);
 
@@ -2363,7 +2328,7 @@ bool iofull::init_step(init_callback_state s, int n)
             }
 
             if (session_info & 2)
-               gg->serious_error_print(session_error_msg);
+               serious_error_print(session_error_msg);
          }
       }
       else {
@@ -2442,7 +2407,7 @@ void iofull::final_initialize()
                               FindResource(GLOBhInstance,
                                            MAKEINTRESOURCE(IDB_BITMAP1), RT_BITMAP));
 
-   if (!hRes) gg->fatal_error_exit(1, "Can't load resources", 0);
+   if (!hRes) fatal_error_exit(1, "Can't load resources", 0);
 
    // Map the bitmap file into memory.
    LPBITMAPINFO lpBitsTemp = (LPBITMAPINFO) LockResource(hRes);
@@ -2597,8 +2562,8 @@ void EnterMessageLoop()
 {
    MSG Msg;
 
-   user_match.valid = FALSE;
-   erase_matcher_input();
+   gg77->matcher_p->m_active_result.valid = false;
+   gg77->matcher_p->erase_matcher_input();
    WaitingForCommand = true;
 
    while (GetMessage(&Msg, NULL, 0, 0) && WaitingForCommand) {
@@ -2666,7 +2631,7 @@ void iofull::process_command_line(int *argcp, char ***argvp)
 
          // We allow the user to give two numbers (size only) or 4 numbers (size and position).
          if (nn != 2 && nn != 4) {
-            gg->fatal_error_exit(1, "Bad size argument", argv[argno+1]);
+            fatal_error_exit(1, "Bad size argument", argv[argno+1]);
          }
 
          goto remove_two;
@@ -2694,7 +2659,7 @@ static void scan_menu(Cstring name, HDC hDC, int *nLongest_p, uint32 itemdata)
 {
    SIZE Size;
 
-   GetTextExtentPoint(hDC, name, lstrlen(name), &Size);
+   GetTextExtentPoint(hDC, name, strlen(name), &Size);
    if ((Size.cx > *nLongest_p) && (Size.cx > CallsClientRect.right)) {
       SendMessage(hwndCallMenu, LB_SETHORIZONTALEXTENT, Size.cx, 0L);
       *nLongest_p = Size.cx;
@@ -2720,47 +2685,47 @@ void ShowListBox(int nWhichOne)
 
       int nLongest = 0;
 
-      if (nLastOne == match_number) {
+      if (nLastOne == matcher_class::e_match_number) {
          UpdateStatusBar("<number>");
 
          for (int iu=0 ; iu<NUM_CARDINALS; iu++)
             scan_menu(cardinals[iu], hDC, &nLongest, MAKELONG(iu, 0));
       }
-      else if (nLastOne == match_circcer) {
+      else if (nLastOne == matcher_class::e_match_circcer) {
          UpdateStatusBar("<circulate replacement>");
 
          for (unsigned int iu=0 ; iu<number_of_circcers ; iu++)
-            scan_menu(circcer_calls[iu]->menu_name, hDC, &nLongest, MAKELONG(iu, 0));
+            scan_menu(get_call_menu_name(circcer_calls[iu]), hDC, &nLongest, MAKELONG(iu, 0));
       }
-      else if (nLastOne >= match_taggers &&
-               nLastOne < match_taggers+NUM_TAGGER_CLASSES) {
-         int tagclass = nLastOne - match_taggers;
+      else if (nLastOne >= matcher_class::e_match_taggers &&
+               nLastOne < matcher_class::e_match_taggers+NUM_TAGGER_CLASSES) {
+         int tagclass = nLastOne - matcher_class::e_match_taggers;
 
          UpdateStatusBar("<tagging call>");
 
          for (unsigned int iu=0 ; iu<number_of_taggers[tagclass] ; iu++)
-            scan_menu(tagger_calls[tagclass][iu]->menu_name, hDC, &nLongest, MAKELONG(iu, 0));
+            scan_menu(get_call_menu_name(tagger_calls[tagclass][iu]), hDC, &nLongest, MAKELONG(iu, 0));
       }
-      else if (nLastOne == match_startup_commands) {
+      else if (nLastOne == matcher_class::e_match_startup_commands) {
          UpdateStatusBar("<startup>");
 
          for (int i=0 ; i<num_startup_commands ; i++)
             scan_menu(startup_commands[i],
                       hDC, &nLongest, MAKELONG(i, (int) ui_start_select));
       }
-      else if (nLastOne == match_resolve_commands) {
+      else if (nLastOne == matcher_class::e_match_resolve_commands) {
          for (int i=0 ; i<number_of_resolve_commands ; i++)
             scan_menu(resolve_command_strings[i],
                       hDC, &nLongest, MAKELONG(i, (int) ui_resolve_select));
       }
-      else if (nLastOne == match_directions) {
+      else if (nLastOne == matcher_class::e_match_directions) {
          UpdateStatusBar("<direction>");
 
          for (int i=0 ; i<last_direction_kind ; i++)
             scan_menu(direction_menu_list[i+1],
                       hDC, &nLongest, MAKELONG(i, (int) ui_special_concept));
       }
-      else if (nLastOne == match_selectors) {
+      else if (nLastOne == matcher_class::e_match_selectors) {
          UpdateStatusBar("<selector>");
 
          // Menu is shorter than it appears, because we are skipping first item.
@@ -2774,18 +2739,20 @@ void ShowListBox(int nWhichOne)
          UpdateStatusBar(menu_names[nLastOne]);
 
          for (i=0; i<number_of_calls[nLastOne]; i++)
-            scan_menu(main_call_lists[nLastOne][i]->menu_name,
+            scan_menu(get_call_menu_name(main_call_lists[nLastOne][i]),
                       hDC, &nLongest, MAKELONG(i, (int) ui_call_select));
 
          short int *item;
          int menu_length;
 
-         index_list *list_to_use = allowing_all_concepts ? new_fangled_concept_list : new_fangled_level_concept_list;
+         index_list *list_to_use = allowing_all_concepts ?
+            &gg77->matcher_p->m_concept_list :
+            &gg77->matcher_p->m_level_concept_list;
          item = list_to_use->the_list;
          menu_length = list_to_use->the_list_size;
 
          for (i=0 ; i<menu_length ; i++)
-            scan_menu(concept_descriptor_table[item[i]].menu_name,
+            scan_menu(get_concept_menu_name(access_concept_descriptor_table(item[i])),
                       hDC, &nLongest, MAKELONG(item[i], ui_concept_select));
 
          for (i=0 ;  ; i++) {
@@ -2813,34 +2780,38 @@ void iofull::prepare_for_listing()
 void iofull::create_menu(call_list_kind cl) {}
 
 
-uims_reply iofull::get_startup_command()
+uims_reply_thing iofull::get_startup_command()
 {
+   matcher_class &matcher = *gg77->matcher_p;
    nLastOne = ui_undefined;
    MenuKind = ui_start_select;
-   ShowListBox(match_startup_commands);
+   ShowListBox(matcher_class::e_match_startup_commands);
 
    EnterMessageLoop();
 
-   uims_menu_index = user_match.match.index;
+   int index = matcher.m_final_result.match.index;
 
-   if (uims_menu_index < 0)
-      /* Special encoding from a function key. */
-      uims_menu_index = -1-uims_menu_index;
-   else if (user_match.match.kind == ui_command_select) {
-      /* Translate the command. */
-      uims_menu_index = (int) command_command_values[uims_menu_index];
+   if (index < 0)
+      // Special encoding from a function key.
+      return uims_reply_thing(matcher.m_final_result.match.kind, -1-index);
+   else if (matcher.m_final_result.match.kind == ui_command_select) {
+      // Translate the command.
+   return uims_reply_thing(matcher.m_final_result.match.kind, (int) command_command_values[index]);
    }
-   else if (user_match.match.kind == ui_start_select) {
-      /* Translate the command. */
-      uims_menu_index = (int) startup_command_values[uims_menu_index];
+   else if (matcher.m_final_result.match.kind == ui_start_select) {
+      // Translate the command.
+      return uims_reply_thing(matcher.m_final_result.match.kind, (int) startup_command_values[index]);
    }
 
-   return user_match.match.kind;
+   return uims_reply_thing(matcher.m_final_result.match.kind, index);
 }
 
 
-bool iofull::get_call_command(uims_reply *reply_p)
+// This returns ui_user_cancel if it fails, e.g. the user waves the mouse away.
+uims_reply_thing iofull::get_call_command()
 {
+   matcher_class &matcher = *gg77->matcher_p;
+
  startover:
    if (allowing_modifications)
       parse_state.call_list_to_use = call_list_any;
@@ -2850,58 +2821,64 @@ bool iofull::get_call_command(uims_reply *reply_p)
                                   in case concept levels were toggled. */
    MenuKind = ui_call_select;
    ShowListBox(parse_state.call_list_to_use);
-   my_retval = false;
    EnterMessageLoop();
 
-   my_reply = user_match.match.kind;
-   uims_menu_index = user_match.match.index;
+   int index = matcher.m_final_result.match.index;
 
-   if (uims_menu_index < 0)
-      /* Special encoding from a function key. */
-      uims_menu_index = -1-uims_menu_index;
-   else if (my_reply == ui_command_select) {
-      /* Translate the command. */
-      uims_menu_index = (int) command_command_values[uims_menu_index];
+   if (index < 0) {
+      // Special encoding from a function key.
+      return uims_reply_thing(matcher.m_final_result.match.kind, -1-index);
    }
-   else if (my_reply == ui_special_concept) {
+   else if (matcher.m_final_result.match.kind == ui_command_select) {
+      // Translate the command.
+      return uims_reply_thing(matcher.m_final_result.match.kind, (int) command_command_values[index]);
+   }
+   else if (matcher.m_final_result.match.kind == ui_special_concept) {
+      return uims_reply_thing(matcher.m_final_result.match.kind, index);
    }
    else {
       // Reject off-level concept accelerator key presses.
-      if (!allowing_all_concepts && my_reply == ui_concept_select &&
-          user_match.match.concept_ptr->level > calling_level)
+      if (!allowing_all_concepts && matcher.m_final_result.match.kind == ui_concept_select &&
+          get_concept_level(matcher.m_final_result.match.concept_ptr) > calling_level)
          goto startover;
 
-      call_conc_option_state save_stuff = user_match.match.call_conc_options;
+      call_conc_option_state save_stuff = matcher.m_final_result.match.call_conc_options;
       there_is_a_call = false;
-      my_retval = deposit_call_tree(&user_match.match, (parse_block *) 0, 2);
-      user_match.match.call_conc_options = save_stuff;
+      uims_reply_kind my_reply = matcher.m_final_result.match.kind;
+      bool retval = deposit_call_tree(&matcher.m_final_result.match, (parse_block *) 0, 2);
+      matcher.m_final_result.match.call_conc_options = save_stuff;
       if (there_is_a_call) {
          parse_state.topcallflags1 = the_topcallflags;
          my_reply = ui_call_select;
       }
-   }
 
-   *reply_p = my_reply;
-   return my_retval;
+      return uims_reply_thing(retval ? ui_user_cancel : my_reply, index);
+   }
 }
 
 
-uims_reply iofull::get_resolve_command()
+void iofull::dispose_of_abbreviation(const char *linebuff)
 {
+   SendMessage(hwndTextInputArea, WM_SETTEXT, 0, (LPARAM)"");  // Erase the edit box.
+   WaitingForCommand = false;
+}
+
+
+uims_reply_thing iofull::get_resolve_command()
+{
+   matcher_class &matcher = *gg77->matcher_p;
    UpdateStatusBar(szResolveWndTitle);
 
    nLastOne = ui_undefined;
    MenuKind = ui_resolve_select;
-   ShowListBox(match_resolve_commands);
-   my_retval = false;
+   ShowListBox(matcher_class::e_match_resolve_commands);
    EnterMessageLoop();
 
-   if (user_match.match.index < 0)
-      uims_menu_index = -1-user_match.match.index;   // Special encoding from a function key.
+   if (matcher.m_final_result.match.index < 0)
+      // Special encoding from a function key.
+      return uims_reply_thing(matcher.m_final_result.match.kind, -1-matcher.m_final_result.match.index);
    else
-      uims_menu_index = (int) resolve_command_values[user_match.match.index];
-
-   return user_match.match.kind;
+      return uims_reply_thing(matcher.m_final_result.match.kind, (int) resolve_command_values[matcher.m_final_result.match.index]);
 }
 
 
@@ -2936,10 +2913,10 @@ int iofull::do_abort_popup()
 }
 
 
+// This returns true if it got a real result, false if user cancalled.
 static bool do_popup(int nWhichOne)
 {
-   uims_reply SavedMenuKind = MenuKind;
-   uims_reply SavedMy_reply = my_reply;
+   uims_reply_kind SavedMenuKind = MenuKind;
    nLastOne = ui_undefined;
    MenuKind = ui_call_select;
    InPopup = true;
@@ -2955,32 +2932,31 @@ static bool do_popup(int nWhichOne)
    PositionAcceptButtons();
    ShowWindow(hwndCancelButton, SW_HIDE);
    MenuKind = SavedMenuKind;
-   my_reply = SavedMy_reply;
    // A value of -1 means that the user hit the "cancel" button.
-   return (user_match.match.index >= 0);
+   return (gg77->matcher_p->m_final_result.match.index >= 0);
 }
 
 
-int iofull::do_selector_popup()
+selector_kind iofull::do_selector_popup(matcher_class &matcher)
 {
-   int retval = 0;
-   match_result saved_match = user_match;
-
-   // We skip the zeroth selector, which is selector_uninitialized.
-   if (do_popup((int) match_selectors)) retval = user_match.match.index+1;
-   user_match = saved_match;
+   match_result saved_match = matcher.m_final_result;
+   // We add 1 to the menu position to get the actual selector enum; the enum effectively starts at 1.
+   // Item zero in the enum is selector_uninitialized, which we return if the user cancelled.
+   selector_kind retval = do_popup((int) matcher_class::e_match_selectors) ?
+      (selector_kind) (matcher.m_final_result.match.index+1) : selector_uninitialized;
+   matcher.m_final_result = saved_match;
    return retval;
 }
 
 
-int iofull::do_direction_popup()
+direction_kind iofull::do_direction_popup(matcher_class &matcher)
 {
-   int retval = 0;
-   match_result saved_match = user_match;
-
-   // We skip the zeroth direction, which is direction_uninitialized.
-   if (do_popup((int) match_directions)) retval = user_match.match.index+1;
-   user_match = saved_match;
+   match_result saved_match = matcher.m_final_result;
+   // We add 1 to the menu position to get the actual direction enum; the enum effectively starts at 1.
+   // Item zero in the enum is direction_uninitialized, which we return if the user cancelled.
+   direction_kind retval = do_popup((int) matcher_class::e_match_directions) ?
+      (direction_kind) (matcher.m_final_result.match.index+1) : direction_uninitialized;
+   matcher.m_final_result = saved_match;
    return retval;
 }
 
@@ -2988,21 +2964,22 @@ int iofull::do_direction_popup()
 
 int iofull::do_circcer_popup()
 {
+   matcher_class &matcher = *gg77->matcher_p;
    uint32 retval = 0;
 
    if (interactivity == interactivity_verify) {
       retval = verify_options.circcer;
       if (retval == 0) retval = 1;
    }
-   else if (!user_match.valid || (user_match.match.call_conc_options.circcer == 0)) {
-      match_result saved_match = user_match;
-      if (do_popup((int) match_circcer))
-         retval = user_match.match.call_conc_options.circcer;
-      user_match = saved_match;
+   else if (!matcher.m_final_result.valid || (matcher.m_final_result.match.call_conc_options.circcer == 0)) {
+      match_result saved_match = matcher.m_final_result;
+      if (do_popup((int) matcher_class::e_match_circcer))
+         retval = matcher.m_final_result.match.call_conc_options.circcer;
+      matcher.m_final_result = saved_match;
    }
    else {
-      retval = user_match.match.call_conc_options.circcer;
-      user_match.match.call_conc_options.circcer = 0;
+      retval = matcher.m_final_result.match.call_conc_options.circcer;
+      matcher.m_final_result.match.call_conc_options.circcer = 0;
    }
 
    return retval;
@@ -3012,48 +2989,27 @@ int iofull::do_circcer_popup()
 
 int iofull::do_tagger_popup(int tagger_class)
 {
-   match_result saved_match = user_match;
+   matcher_class &matcher = *gg77->matcher_p;
+   match_result saved_match = matcher.m_final_result;
    saved_match.match.call_conc_options.tagger = 0;
 
-   if (do_popup(((int) match_taggers) + tagger_class))
-      saved_match.match.call_conc_options.tagger = user_match.match.call_conc_options.tagger;
-   user_match = saved_match;
+   if (do_popup(((int) matcher_class::e_match_taggers) + tagger_class))
+      saved_match.match.call_conc_options.tagger = matcher.m_final_result.match.call_conc_options.tagger;
+   matcher.m_final_result = saved_match;
 
-   int retval = user_match.match.call_conc_options.tagger;
-   user_match.match.call_conc_options.tagger = 0;
+   int retval = matcher.m_final_result.match.call_conc_options.tagger;
+   matcher.m_final_result.match.call_conc_options.tagger = 0;
    return retval;
 }
 
 
-uint32 iofull::get_number_fields(int nnumbers, bool odd_number_only, bool forbid_zero)
+uint32 iofull::get_one_number(matcher_class &matcher)
 {
-   int i;
-   uint32 number_fields = user_match.match.call_conc_options.number_fields;
-   int howmanynumbers = user_match.match.call_conc_options.howmanynumbers;
-   uint32 number_list = 0;
-
-   for (i=0 ; i<nnumbers ; i++) {
-      uint32 this_num = 99;
-
-      if (!user_match.valid || (howmanynumbers <= 0)) {
-         match_result saved_match = user_match;
-         if (do_popup((int) match_number))
-            this_num = user_match.match.index;
-         user_match = saved_match;
-      }
-      else {
-         this_num = number_fields & NUMBER_FIELD_MASK;
-         number_fields >>= BITS_PER_NUMBER_FIELD;
-         howmanynumbers--;
-      }
-
-      if (odd_number_only && !(this_num & 1)) return ~0U;
-      if (forbid_zero && this_num == 0) return ~0U;
-      if (this_num >= NUM_CARDINALS) return ~0U;    // User gave bad answer.
-      number_list |= (this_num << (i*BITS_PER_NUMBER_FIELD));
-   }
-
-   return number_list;
+   match_result saved_match = matcher.m_final_result;
+   // Return excessively high value if user cancelled; client will notice.
+   uint32 retval = do_popup((int) matcher_class::e_match_number) ? matcher.m_final_result.match.index : NUM_CARDINALS+99;
+   matcher.m_final_result = saved_match;
+   return retval;
 }
 
 
@@ -3124,8 +3080,8 @@ void iofull::update_resolve_menu(command_kind goal, int cur, int max,
 
    // Put it in the transcript area also, where it's easy to see.
 
-   writestuff(szResolveWndTitle);
-   newline();
+   get_utils_ptr()->writestuff(szResolveWndTitle);
+   get_utils_ptr()->newline();
 }
 
 
@@ -3154,7 +3110,7 @@ void iofull::bad_argument(Cstring s1, Cstring s2, Cstring s3)
    // be parsed, and it consists of a list of all the available levels.
    // In Sd, they were all on the menu.
 
-   gg->fatal_error_exit(1, s1, s2);
+   fatal_error_exit(1, s1, s2);
 }
 
 
@@ -3166,7 +3122,7 @@ void iofull::fatal_error_exit(int code, Cstring s1, Cstring s2)
       s1 = msg;   // Yeah, we can do that.  Yeah, it's sleazy.
    }
 
-   gg->serious_error_print(s1);
+   serious_error_print(s1);
    session_index = 0;  // Prevent attempts to update session file.
    general_final_exit(code);
 }

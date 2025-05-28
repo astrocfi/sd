@@ -46,8 +46,8 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-#define VERSION_STRING "38.55"
-#define TIME_STAMP "wba@alum.mit.edu 24 Aug 2013 $"
+#define VERSION_STRING "38.56"
+#define TIME_STAMP "wba@alum.mit.edu 30 Nov 2013 $"
 
 /* This defines the following functions:
    sd_version_string
@@ -69,6 +69,7 @@ and the following external variables:
 #include <string.h>
 
 #include "sd.h"
+#include "sdui.h"
 #include "paths.h"
 #include "resource.h"
 
@@ -290,12 +291,12 @@ static bool find_tagger(uint32 tagclass, uint32 *tagg, call_with_name **tagger_c
    if (numtaggers == 0) return true;   /* We can't possibly do this. */
 
    if (interactivity == interactivity_normal) {
-      if (user_match.valid &&
-          (user_match.match.call_conc_options.tagger != 0)) {
-         *tagg = user_match.match.call_conc_options.tagger;
-         user_match.match.call_conc_options.tagger = 0;
+      if (gg77->matcher_p->m_final_result.valid &&
+          (gg77->matcher_p->m_final_result.match.call_conc_options.tagger != 0)) {
+         *tagg = gg77->matcher_p->m_final_result.match.call_conc_options.tagger;
+         gg77->matcher_p->m_final_result.match.call_conc_options.tagger = 0;
       }
-      else if ((*tagg = gg->do_tagger_popup(tagclass)) == 0) return true;
+      else if ((*tagg = gg77->iob88.do_tagger_popup(tagclass)) == 0) return true;
 
       if ((*tagg >> 5) != tagclass) fail("bad tagger class???");
       if ((*tagg & 0x1F) > numtaggers) fail("bad tagger index???");
@@ -342,7 +343,7 @@ static bool find_circcer(uint32 *circcp)
    if (number_of_circcers == 0) return true;   // We can't possibly do this.
 
    if (interactivity == interactivity_normal || interactivity == interactivity_verify) {
-      if ((*circcp = gg->do_circcer_popup()) == 0)
+      if ((*circcp = gg77->iob88.do_circcer_popup()) == 0)
          return true;
    }
    else if (interactivity == interactivity_database_init) {
@@ -362,17 +363,18 @@ static bool find_circcer(uint32 *circcp)
 static bool find_selector(selector_kind *sel_p, bool is_for_call)
 {
    if (interactivity == interactivity_normal) {
-      int j;
+      matcher_class &matcher = *gg77->matcher_p;
+      selector_kind sel;
 
-      if (user_match.valid &&
-          (user_match.match.call_conc_options.who != selector_uninitialized)) {
-         j = (int) user_match.match.call_conc_options.who;
-         user_match.match.call_conc_options.who = selector_uninitialized;
+      if (matcher.m_final_result.valid &&
+          (matcher.m_final_result.match.call_conc_options.who != selector_uninitialized)) {
+         sel = matcher.m_final_result.match.call_conc_options.who;
+         matcher.m_final_result.match.call_conc_options.who = selector_uninitialized;
       }
-      else if ((j = gg->do_selector_popup()) == 0)
+      else if ((sel = gg77->iob88.do_selector_popup(matcher)) == selector_uninitialized)
          return true;
 
-      *sel_p = (selector_kind) j;
+      *sel_p = sel;
    }
    else
       *sel_p = do_selector_iteration(is_for_call);
@@ -385,17 +387,18 @@ static bool find_selector(selector_kind *sel_p, bool is_for_call)
 static bool find_direction(direction_kind *dir_p)
 {
    if (interactivity == interactivity_normal) {
-      int j;
+      matcher_class &matcher = *gg77->matcher_p;
+      direction_kind dir;
 
-      if (user_match.valid &&
-          (user_match.match.call_conc_options.where != direction_uninitialized)) {
-         j = (int) user_match.match.call_conc_options.where;
-         user_match.match.call_conc_options.where = direction_uninitialized;
+      if (matcher.m_final_result.valid &&
+          (matcher.m_final_result.match.call_conc_options.where != direction_uninitialized)) {
+         dir = matcher.m_final_result.match.call_conc_options.where;
+         matcher.m_final_result.match.call_conc_options.where = direction_uninitialized;
       }
-      else if ((j = gg->do_direction_popup()) == 0)
+      else if ((dir = gg77->iob88.do_direction_popup(matcher)) == direction_uninitialized)
          return true;
 
-      *dir_p = (direction_kind) j;
+      *dir_p = dir;
    }
    else
       *dir_p = do_direction_iteration();
@@ -410,7 +413,7 @@ static bool find_numbers(int howmanynumbers, bool forbid_zero,
    uint32 odd_number_only, bool allow_iteration, uint32 *number_list)
 {
    if (interactivity == interactivity_normal)
-      *number_list = gg->get_number_fields(howmanynumbers, odd_number_only != 0, forbid_zero);
+      *number_list = gg77->get_number_fields(howmanynumbers, odd_number_only != 0, forbid_zero);
    else
       do_number_iteration(howmanynumbers, odd_number_only, allow_iteration, number_list);
 
@@ -466,17 +469,16 @@ extern bool deposit_call(call_with_name *call, const call_conc_option_state *opt
          return true;
    }
 
-   /* Or circulating call index. */
+   // Or circulating call index.
 
    if (call->the_defn.callflagsf & CFLAGH__CIRC_CALL_RQ_BIT) {
       if (find_circcer(&circc)) return true;
    }
 
-   /* Put in selector, direction, and/or number as required. */
+   // Put in selector, direction, and/or number as required.
 
-   if (call->the_defn.callflagsf & CFLAGH__REQUIRES_SELECTOR) {
+   if (call->the_defn.callflagsf & CFLAGH__REQUIRES_SELECTOR)
       if (find_selector(&sel, true)) return true;
-   }
 
    if (call->the_defn.callflagsf & CFLAGH__REQUIRES_DIRECTION)
       if (find_direction(&dir)) return true;
@@ -487,8 +489,8 @@ extern bool deposit_call(call_with_name *call, const call_conc_option_state *opt
                        &number_list))
          return true;
 
-   new_block = parse_block::get_block();
-   new_block->concept = &conzept::mark_end_of_list;
+   new_block = get_parse_block();
+   new_block->concept = &concept_mark_end_of_list;
    new_block->call = call;
    new_block->call_to_print = call;
    new_block->options = *options;
@@ -499,17 +501,17 @@ extern bool deposit_call(call_with_name *call, const call_conc_option_state *opt
    new_block->options.tagger = 0;
    new_block->options.circcer = 0;
 
-   /* Filling in the tagger requires recursion! */
+   // Filling in the tagger requires recursion!
 
    if (tagg != 0) {
       parse_block **savecwp = parse_state.concept_write_ptr;
 
       new_block->options.tagger = tagg;
-      new_block->concept = &conzept::marker_concept_mod;
-      new_block->next = parse_block::get_block();
-      new_block->next->concept = &conzept::marker_concept_mod;
+      new_block->concept = &concept_marker_concept_mod;
+      new_block->next = get_parse_block();
+      new_block->next->concept = &concept_marker_concept_mod;
 
-      /* Deposit the index of the base tagging call.  This will of course be replaced. */
+      // Deposit the index of the base tagging call.  This will of course be replaced.
 
       new_block->next->call = base_calls[base_call_tagger0];
       new_block->next->call_to_print = base_calls[base_call_tagger0];
@@ -520,17 +522,17 @@ extern bool deposit_call(call_with_name *call, const call_conc_option_state *opt
       parse_state.concept_write_ptr = savecwp;
    }
 
-   /* Filling in the circcer does too, but it isn't serious. */
+   // Filling in the circcer does too, but it isn't serious.
 
    if (circc != 0) {
       parse_block **savecwp = parse_state.concept_write_ptr;
 
       new_block->options.circcer = circc;
-      new_block->concept = &conzept::marker_concept_mod;
-      new_block->next = parse_block::get_block();
-      new_block->next->concept = &conzept::marker_concept_mod;
+      new_block->concept = &concept_marker_concept_mod;
+      new_block->next = get_parse_block();
+      new_block->next->concept = &concept_marker_concept_mod;
 
-      /* Deposit the index of the base circcing call.  This will of course be replaced. */
+      // Deposit the index of the base circcing call.  This will of course be replaced.
 
       new_block->next->call = base_calls[base_call_circcer];
       new_block->next->call_to_print = base_calls[base_call_circcer];
@@ -558,7 +560,7 @@ extern bool deposit_call(call_with_name *call, const call_conc_option_state *opt
    necessary stuff will be chosen by random number.  If it is off, the appropriate
    numbers (as indicated by the "CONCPROP__USE_NUMBER" stuff) must be provided. */
 
-extern bool deposit_concept(const conzept::concept_descriptor *conc)
+extern bool deposit_concept(const concept_descriptor *conc)
 {
    parse_block *new_block;
    selector_kind sel = selector_uninitialized;
@@ -569,13 +571,11 @@ extern bool deposit_concept(const conzept::concept_descriptor *conc)
    // We hash the actual concept pointer, as though it were an integer index.
    hash_nonrandom_number((int) (size_t) conc);
 
-   if (concept_table[conc->kind].concept_prop & CONCPROP__USE_SELECTOR) {
+   if (concept_table[conc->kind].concept_prop & CONCPROP__USE_SELECTOR)
       if (find_selector(&sel, false)) return true;
-   }
 
-   if (concept_table[conc->kind].concept_prop & CONCPROP__USE_DIRECTION) {
+   if (concept_table[conc->kind].concept_prop & CONCPROP__USE_DIRECTION)
       if (find_direction(&dir)) return true;
-   }
 
    if (concept_table[conc->kind].concept_prop & CONCPROP__USE_NUMBER)
       howmanynumbers = 1;
@@ -588,7 +588,7 @@ extern bool deposit_concept(const conzept::concept_descriptor *conc)
       if (find_numbers(howmanynumbers, true, 0, false, &number_list)) return true;
    }
 
-   new_block = parse_block::get_block();
+   new_block = get_parse_block();
    new_block->concept = conc;
    new_block->options.who = sel;
    new_block->options.where = dir;
@@ -618,7 +618,7 @@ extern bool deposit_concept(const conzept::concept_descriptor *conc)
 }
 
 
-static void print_error_person(unsigned int person, bool example)
+void ui_utils::print_error_person(unsigned int person, bool example)
 {
    char person_string[3];
 
@@ -639,19 +639,20 @@ static void print_error_person(unsigned int person, bool example)
 
 
 
-/* False result means OK.  Otherwise, user clicked on something special,
-   such as "abort" or "undo", and the reply tells what it was. */
+// False result means OK.  Otherwise, user clicked on something special,
+// such as "abort" or "undo", and the reply tells what it was.
 
 extern bool query_for_call()
 {
-   uims_reply local_reply;
+   uims_reply_thing global_reply_save = global_reply;
+
    error_flag_type old_error_flag;
    bool refresh_override = false;
    int concepts_deposited = 0;
 
-   recurse_entry:
+ recurse_entry:
 
-   /* We should actually re-use anything there. */
+   // We should actually re-use anything there.
    *parse_state.concept_write_ptr = (parse_block *) 0;
 
    if (allowing_modifications)
@@ -672,22 +673,21 @@ extern bool query_for_call()
           global_error_flag < error_flag_wrong_command ||
           global_error_flag == error_flag_selector_changed ||
           global_error_flag == error_flag_formation_changed) {
-         display_initial_history(configuration::history_ptr,
-                                 (ui_options.diagnostic_mode ? 1 : 2));
+         gg77->display_initial_history(config_history_ptr, (ui_options.diagnostic_mode ? 1 : 2));
 
          if (configuration::sequence_is_resolved()) {
-            newline();
-            writestuff("     resolve is:");
-            newline();
-            write_resolve_text(false);
-            newline();
+            gg77->newline();
+            gg77->writestuff("     resolve is:");
+            gg77->newline();
+            gg77->write_resolve_text(false);
+            gg77->newline();
          }
       }
 
       if (global_error_flag && global_error_flag < error_flag_wrong_command) {
-         writestuff("Can't do this call:");
-         newline();
-         write_history_line(0, false, false, file_write_no);
+         gg77->writestuff("Can't do this call:");
+         gg77->newline();
+         gg77->write_history_line(0, false, false, file_write_no);
       }
 
       if (global_error_flag) {
@@ -696,47 +696,47 @@ extern bool query_for_call()
          case error_flag_1_line:
          case error_flag_no_retry:
             // Commonplace error message.
-            writestuff(error_message1);
+            gg77->writestuff(error_message1);
             break;
          case error_flag_2_line:
-            writestuff(error_message1);
-            newline();
-            writestuff("   ");
-            writestuff(error_message2);
+            gg77->writestuff(error_message1);
+            gg77->newline();
+            gg77->writestuff("   ");
+            gg77->writestuff(error_message2);
             break;
          case error_flag_collision:
             // Very special message -- no text here, two people collided
             // and they are stored in collision_person1 and collision_person2.
-            writestuff("Some people (");
-            print_error_person(collision_person1, false);
-            writestuff(" and ");
-            print_error_person(collision_person2, true);
-            writestuff(") on same spot.");
+            gg77->writestuff("Some people (");
+            gg77->print_error_person(collision_person1, false);
+            gg77->writestuff(" and ");
+            gg77->print_error_person(collision_person2, true);
+            gg77->writestuff(") on same spot.");
             break;
          case error_flag_cant_execute:
             // Very special message -- given text is to be prefixed with description
             // of the perpetrator, who is stored in collision_person1.
-            writestuff("Some person (");
-            print_error_person(collision_person1, true);
-            writestuff(") ");
-            writestuff(error_message1);
+            gg77->writestuff("Some person (");
+            gg77->print_error_person(collision_person1, true);
+            gg77->writestuff(") ");
+            gg77->writestuff(error_message1);
             break;
          case error_flag_selector_changed:
-            writestuff("Warning -- person identifiers were changed.");
+            gg77->writestuff("Warning -- person identifiers were changed.");
             break;
          case error_flag_formation_changed:
-            writestuff("Warning -- the formation has changed.");
+            gg77->writestuff("Warning -- the formation has changed.");
             break;
          case error_flag_wrong_command:
-            writestuff("You can't select that here.");
+            gg77->writestuff("You can't select that here.");
             break;
          case error_flag_OK_but_dont_erase:
             global_error_flag = error_flag_none;
             break;
          }
 
-         newline();
-         newline();
+         gg77->newline();
+         gg77->newline();
       }
 
       old_error_flag = global_error_flag; /* save for refresh command */
@@ -745,18 +745,18 @@ extern bool query_for_call()
       if (clipboard_size != 0) {
          int j;
 
-         writestuff("............................");
-         newline();
+         gg77->writestuff("............................");
+         gg77->newline();
 
          /* Display at most 3 lines. */
          for (j = clipboard_size-1 ; j >= 0 && j >= clipboard_size-3 ; j--) {
-            writestuff("      ");
-            print_recurse(clipboard[j].command_root, 0);
-            newline();
+            gg77->writestuff("      ");
+            gg77->print_recurse(clipboard[j].command_root, 0);
+            gg77->newline();
          }
 
-         writestuff("............................");
-         newline();
+         gg77->writestuff("............................");
+         gg77->newline();
       }
 
       // Display the call index number, and the partially entered call and/or
@@ -781,7 +781,7 @@ extern bool query_for_call()
          // the final result will show the missing subcall as
          // "no one do your part, tally ho but [???]"
 
-         write_history_line(configuration::history_ptr+1, false, true, file_write_no);
+         gg77->write_history_line(config_history_ptr+1, false, true, file_write_no);
       }
       else {
          // No partially entered concepts.  Just do the sequence number.
@@ -789,15 +789,15 @@ extern bool query_for_call()
          if (!ui_options.diagnostic_mode) {
             char indexbuf[200];
             sprintf (indexbuf, "%2d:",
-                     configuration::history_ptr-configuration::whole_sequence_low_lim+2);
-            writestuff(indexbuf);
-            newline();
+                     config_history_ptr-configuration::whole_sequence_low_lim+2);
+            gg77->writestuff(indexbuf);
+            gg77->newline();
          }
       }
 
       if (parse_state.specialprompt[0] != '\0') {
-         writestuff(parse_state.specialprompt);
-         newline();
+         gg77->writestuff(parse_state.specialprompt);
+         gg77->newline();
       }
 
    check_menu:
@@ -808,21 +808,21 @@ extern bool query_for_call()
       // the concepts and call have been deposited with calls to "deposit_call" and
       // "deposit_concept".
 
-      if (gg->get_call_command(&local_reply)) goto recurse_entry;
-
-      if (local_reply == ui_command_select) {
-         switch ((command_kind) uims_menu_index) {
+      global_reply = gg77->iob88.get_call_command();
+      if (global_reply.majorpart == ui_user_cancel) goto recurse_entry;
+      if (global_reply.majorpart == ui_command_select) {
+         switch ((command_kind) global_reply.minorpart) {
             char comment[MAX_TEXT_LINE_LENGTH];
          case command_create_comment:
             {
-               if (gg->get_popup_string("*Enter comment:", "", "Enter comment:", "", comment) ==
+               if (gg77->iob88.get_popup_string("*Enter comment:", "", "Enter comment:", "", comment) ==
                    POPUP_ACCEPT_WITH_STRING) {
                   comment_block *new_comment_block = new comment_block;
                   char *temp_text_ptr = new_comment_block->txt;
                   string_copy(&temp_text_ptr, comment);
 
-                  *parse_state.concept_write_ptr = parse_block::get_block();
-                  (*parse_state.concept_write_ptr)->concept = &conzept::marker_concept_comment;
+                  *parse_state.concept_write_ptr = get_parse_block();
+                  (*parse_state.concept_write_ptr)->concept = &concept_marker_concept_comment;
 
                   (*parse_state.concept_write_ptr)->call = (call_with_name *) new_comment_block;
                   (*parse_state.concept_write_ptr)->call_to_print =
@@ -883,41 +883,40 @@ extern bool query_for_call()
             refresh_override = true;
             goto redisplay;
          default:
-            global_reply = local_reply;         // Save this -- top level will need it.
             return true;
          }
       }
    }
    else {
-
       /* We are operating in automatic mode.
          We must insert a concept or a call.  Decide which.
          We only insert a concept if in random search, and then only occasionally. */
 
-      const conzept::concept_descriptor *concept_to_use = pick_concept(concepts_deposited != 0);
+      const concept_descriptor *concept_to_use = pick_concept(concepts_deposited != 0);
 
       if (concept_to_use) {
          // We give 0 for the number fields.  It gets taken care of later,
          // perhaps not the best way.
-         (void) deposit_concept(concept_to_use);
+         deposit_concept(concept_to_use);
          concepts_deposited++;
-         local_reply = ui_concept_select;
+         global_reply.majorpart = ui_concept_select;
       }
       else {
-         local_reply = ui_call_select;
+         global_reply.majorpart = ui_call_select;
       }
    }
 
-   if (local_reply == ui_concept_select) {
+   if (global_reply.majorpart == ui_concept_select) {
       goto recurse_entry;
    }
-   else if (local_reply != ui_call_select) {
-      global_reply = local_reply;     /* Save this -- top level will need it. */
+   else if (global_reply.majorpart != ui_call_select) {
       return true;
    }
 
    /* We have a call.  Get the actual call and deposit it into the parse tree,
       if we haven't already. */
+
+   global_reply = global_reply_save;
 
    if (interactivity == interactivity_database_init || interactivity == interactivity_verify)
       fail_no_retry("This shouldn't get printed.");
@@ -945,13 +944,13 @@ extern bool query_for_call()
 
       switch (parse_state.parse_stack[parse_state.parse_stack_index].save_concept_kind) {
       case concept_centers_and_ends:
-         (void) strncpy(parse_state.specialprompt, "ENTER CALL FOR ENDS", MAX_TEXT_LINE_LENGTH);
+         strncpy(parse_state.specialprompt, "ENTER CALL FOR ENDS", MAX_TEXT_LINE_LENGTH);
          break;
       case concept_on_your_own:
-         (void) strncpy(parse_state.specialprompt, "ENTER SECOND (CENTERS) CALL", MAX_TEXT_LINE_LENGTH);
+         strncpy(parse_state.specialprompt, "ENTER SECOND (CENTERS) CALL", MAX_TEXT_LINE_LENGTH);
          break;
       default:
-         (void) strncpy(parse_state.specialprompt, "ENTER SECOND CALL", MAX_TEXT_LINE_LENGTH);
+         strncpy(parse_state.specialprompt, "ENTER SECOND CALL", MAX_TEXT_LINE_LENGTH);
          break;
       }
 
@@ -997,11 +996,11 @@ ui_option_type::ui_option_type() :
 {}
 
 
-extern int sdmain(int argc, char *argv[])
+extern int sdmain(int argc, char *argv[], iobase & ggg)
 {
    if (argc >= 2 && strcmp(argv[1], "-help") == 0) {
       printf("Sd version %s : ui%s\n",
-             sd_version_string(), gg->version_string());
+             sd_version_string(), ggg.version_string());
       printf("Usage: sd [flags ...] level\n");
       printf("  legal flags:\n");
       printf("-write_list <filename>      write out list for this level\n");
@@ -1042,7 +1041,7 @@ extern int sdmain(int argc, char *argv[])
       printf("-db <filename>              calls database file (def \"" DATABASE_FILENAME "\")\n");
       printf("-sequence_num <n>           use this initial sequence number\n");
 
-      gg->display_help(); // Get any others that the UI wants to tell us about.
+      ggg.display_help(); // Get any others that the UI wants to tell us about.
       general_final_exit(0);
    }
 
@@ -1069,8 +1068,28 @@ extern int sdmain(int argc, char *argv[])
 
    global_cache_failed_flag = false;
 
+   // The "ui_utils" object is a singleton.  It will be accessed by the global static variable "gg77".
+   // (Declared in sdbase.h, proclaimed in sdtop.cpp.)
+   //
+   // There are two other important global singleton objects inside the "ui_utils" object:
+   //    The "matcher_p" field is a pointer to the matcher, which is in sdmatch.cpp.  We instantiate
+   //       that right here.
+   //    The "iob88" field is a pointer (a reference, to be precise) to the actual user interface.
+   //       This is the base interface class that distinguishes between Sd and Sdtty.
+   //       It is instantiated in the top-level Sd/Sdtty file and passed to us as incoming argument ggg.
+   //
+   // These are all declared in sdbase.h.
+
+   matcher_class global_matcher;
+   ui_utils thingy(&global_matcher, ggg);
+   gg77 = &thingy;
+
+   // In addition to the "ui_utils" object having a reference ("iob88") to the user interface,
+   // the user interface needs a pointer back to the "ui_utils" object.  This is set with "set_utils_ptr".
+   ggg.set_utils_ptr(gg77);
+
    if (!open_session(argc, argv)) {
-      run_program();
+      thingy.run_program(ggg);
       close_session();
    }
 

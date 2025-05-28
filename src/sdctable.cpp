@@ -86,29 +86,29 @@
 // These are all gathered here so that, if the format of a concept_descriptor changes,
 // it will be easy to fix everything.
 
-const conzept::concept_descriptor conzept::centers_concept = {
+const concept_descriptor concept_centers_concept = {
    "centers????", concept_centers_or_ends, 1, l_mainstream, UC_none, selector_centers, false};
-const conzept::concept_descriptor conzept::heads_concept = {
+const concept_descriptor concept_heads_concept = {
    "HEADS", concept_so_and_so_only, 1, l_mainstream, UC_none, selector_heads, false};
-const conzept::concept_descriptor conzept::sides_concept = {
+const concept_descriptor concept_sides_concept = {
    "SIDES", concept_so_and_so_only, 1, l_mainstream, UC_none, selector_sides, false};
-const conzept::concept_descriptor conzept::special_magic = {
+const concept_descriptor concept_special_magic = {
    "MAGIC DIAMOND,",       concept_magic,             L+D, l_c1, UC_none, 1};
-const conzept::concept_descriptor conzept::special_interlocked = {
+const concept_descriptor concept_special_interlocked = {
    "INTERLOCKED DIAMOND,", concept_interlocked,       L+D, l_c1, UC_none, 1};
-const conzept::concept_descriptor conzept::mark_end_of_list = {
+const concept_descriptor concept_mark_end_of_list = {
    "(end)",                 marker_end_of_list,            0, l_dontshow, UC_none};
-const conzept::concept_descriptor conzept::marker_decline = {
+const concept_descriptor concept_marker_decline = {
    "decline???",           concept_mod_declined,          0, l_dontshow, UC_none};
-const conzept::concept_descriptor conzept::marker_concept_mod = {
+const concept_descriptor concept_marker_concept_mod = {
    ">>MODIFIED BY<<",      concept_another_call_next_mod, 0, l_dontshow, UC_none, 0, 0};
-const conzept::concept_descriptor conzept::marker_concept_comment = {
+const concept_descriptor concept_marker_concept_comment = {
    ">>COMMENT<<",          concept_comment,               0, l_dontshow, UC_none};
-const conzept::concept_descriptor conzept::marker_concept_supercall = {
+const concept_descriptor concept_marker_concept_supercall = {
    ">>SUPER<<",            concept_supercall,             0, l_dontshow, UC_none};
-const conzept::concept_descriptor conzept::special_piecewise = {
+const concept_descriptor concept_special_piecewise = {
    ">>SPECIALPIECEWISE<<", concept_meta,                  0, l_dontshow, UC_none, meta_key_piecewise};
-const conzept::concept_descriptor conzept::special_z = {
+const concept_descriptor concept_special_z = {
    ">>SPECIAL_Z<<", concept_misc_distort,                 1, l_dontshow, UC_none, 0, 0, 0, 1};
 
 
@@ -118,9 +118,9 @@ int number_of_calls[call_list_extent];
 dance_level calling_level;
 
 
-const conzept::concept_descriptor *concept_descriptor_table;
+const concept_descriptor *concept_descriptor_table;
 
-conzept::concept_descriptor conzept::unsealed_concept_descriptor_table[] = {
+concept_descriptor conzept::unsealed_concept_descriptor_table[] = {
    {"AS COUPLES",                            concept_tandem,                  D, l_a1,
     UC_cpl, 0, 0,                     0x000, tandem_key_cpls},
    {"TANDEM",                                concept_tandem,                  D, l_c1,

@@ -137,6 +137,8 @@ BUG!!!!!  [H star thru] initially touch by 1/2 x [pass the music] FAILS!
    mingw cleanup   // optional: remove .o files etc. after building
    mingw savesource    // This packs the "official" source distribution.
 
+DO A VIRUS SCAN ON SD.EXE, SDTTY.EXE, SDLIB.DLL, KCALLS.EXE and DEPLOY.EXE!
+
    // Test that Sd comes up.
 
    // Do regression test if desired.
@@ -173,6 +175,7 @@ In \wba\sd\regress:  save _vnnnn
    # All html and txt files get uploaded.
    do_pack        (this depends on all of the above, and the result of "savesource")
 
+DO A VIRUS SCAN ON INSTALL.EXE and PACK.ZIP!
 
 Copy these into an appropriate directory:
    \wba\sd\sd_vnnnn.zip
@@ -188,11 +191,11 @@ Copy these into an appropriate directory:
 On Linux:
 
 Get the source files.
-make -f makefile.linux32
+make -f makefile.linux32 all
 // This should have created sdtty, mkcalls, etc.
 make -f makefile.linux32 tarball
-// This should have created sdtty.tgz
-scp sdtty.tgz ackerman@scotch.ics.uci.edu:~
+// This should have created linux.tgz
+scp linux.tgz ackerman@scotch.ics.uci.edu:~
 
 
 
@@ -267,9 +270,8 @@ To update the poster child:
 Presumably "new_binary" and "do_pack" have been done at this point,
 so that install.exe and pack.zip exist.
 
-Pack.zip contains all files below except linux.tar.gz
-and solaris.tar.gz.
-Note that the files linux.tar.gz and solaris.tar.gz are
+Pack.zip contains all files below except linux.tgz.
+Note that the file linux.tgz is
 produced by other means and must be uploaded separately.
 
 These are the files:
@@ -293,7 +295,6 @@ sd_doc*         *
 Also:
                          tar.gz   zip   exe
 linux   (upload separately) *
-solaris (upload separately) *
 pdfdoc                      *      *
 psdoc                       *      *
 textdoc                     *      *

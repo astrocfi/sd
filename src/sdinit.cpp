@@ -55,6 +55,7 @@ and the following external variables:
 #include <ctype.h>
 
 #include "sd.h"
+#include "sdui.h"
 #include "sort.h"
 #include "mapcachefile.h"
 
@@ -219,18 +220,18 @@ bool iterate_over_sel_dir_num(
 
 static void test_starting_setup(call_list_kind cl, const setup & test_setup)
 {
-   gg->init_step(do_tick, 2);
+   gg77->iob88.init_step(do_tick, 2);
 
    call_index = -1;
    global_callcount = 0;
    /* Mark the parse block allocation, so that we throw away the garbage
       created by failing attempts. */
-   parse_mark = parse_block::get_parse_block_mark();
+   parse_mark = get_parse_block_mark();
 
  try_again:
 
    // Throw away garbage.
-   parse_block::release_parse_blocks_to_mark(parse_mark);
+   release_parse_blocks_to_mark(parse_mark);
    call_index++;
    if (call_index >= number_of_calls[call_list_any]) goto finished;
    test_call = main_call_lists[call_list_any][call_index];
@@ -255,7 +256,7 @@ static void test_starting_setup(call_list_kind cl, const setup & test_setup)
    number_used = false;
    mandatory_call_used = false;
 
-   configuration::history_ptr = 1;
+   config_history_ptr = 1;
 
    configuration::current_config().init_centersp_specific();
    configuration::current_config().state = test_setup;
@@ -610,9 +611,9 @@ static void read_fullword()
 static void database_error_exit(const char *message)
 {
    if (call_root)
-      gg->fatal_error_exit(1, message, call_root->name);
+      gg77->iob88.fatal_error_exit(1, message, call_root->name);
    else
-      gg->fatal_error_exit(1, message);
+      gg77->iob88.fatal_error_exit(1, message);
 }
 
 
@@ -1174,17 +1175,17 @@ extern void prepare_to_read_menus()
    // align stuff from the binary database into the person record.
 
    if ((int) NROLL_BIT < (int) DBSLIDEROLL_BIT)
-      gg->fatal_error_exit(1, "Constants not consistent", "program has been compiled incorrectly.");
+      gg77->iob88.fatal_error_exit(1, "Constants not consistent", "program has been compiled incorrectly.");
    else if ((508205 << 12) != arithtest)
-      gg->fatal_error_exit(1, "Arithmetic is less than 32 bits", "program has been compiled incorrectly.");
+      gg77->iob88.fatal_error_exit(1, "Arithmetic is less than 32 bits", "program has been compiled incorrectly.");
    else if (l_nonexistent_concept > 15)
-      gg->fatal_error_exit(1, "Too many levels", "program has been compiled incorrectly.");
+      gg77->iob88.fatal_error_exit(1, "Too many levels", "program has been compiled incorrectly.");
    else if (NUM_QUALIFIERS > 253)
-      gg->fatal_error_exit(1, "Insufficient qualifier space", "program has been compiled incorrectly.");
+      gg77->iob88.fatal_error_exit(1, "Insufficient qualifier space", "program has been compiled incorrectly.");
    else if (NUM_PLAINMAP_KINDS > 252)
-      gg->fatal_error_exit(1, "Insufficient mapkind space", "program has been compiled incorrectly.");
+      gg77->iob88.fatal_error_exit(1, "Insufficient mapkind space", "program has been compiled incorrectly.");
    else if (sizeof(uint32) > sizeof(void *))    // Need this because of horrible cheating we do with main_call_lists.
-      gg->fatal_error_exit(1, "Incorrect pointer size", "program has been compiled incorrectly.");
+      gg77->iob88.fatal_error_exit(1, "Incorrect pointer size", "program has been compiled incorrectly.");
 
    // We need to take away the "zig-zag" directions if the level is below A2, and "the music" if below C3A.
 
@@ -1422,19 +1423,19 @@ static void rewrite_init_file()
                  MAX_TEXT_LINE_LENGTH);
          strncat(errmsg, get_errstring(), MAX_FILENAME_LENGTH-80);
          strncat(errmsg, ".", MAX_FILENAME_LENGTH);
-         gg->serious_error_print(errmsg);
+         gg77->iob88.serious_error_print(errmsg);
       }
       else {
          if (!(rfile = fopen(SESSION2_FILENAME, "r"))) {
             strncpy(errmsg, "Failed to open '" SESSION2_FILENAME "'.",
                     MAX_TEXT_LINE_LENGTH);
-            gg->serious_error_print(errmsg);
+            gg77->iob88.serious_error_print(errmsg);
          }
          else {
             if (!(wfile = fopen(SESSION_FILENAME, "w"))) {
                strncpy(errmsg, "Failed to open '" SESSION_FILENAME "'.",
                        MAX_TEXT_LINE_LENGTH);
-               gg->serious_error_print(errmsg);
+               gg77->iob88.serious_error_print(errmsg);
             }
             else {
                bool more_stuff = false;
@@ -1526,7 +1527,7 @@ static void rewrite_init_file()
 
                strncpy(errmsg, "Failed to write to '" SESSION_FILENAME "'.",
                        MAX_TEXT_LINE_LENGTH);
-               gg->serious_error_print(errmsg);
+               gg77->iob88.serious_error_print(errmsg);
 
             copy_done:
 
@@ -1583,7 +1584,7 @@ extern void general_final_exit(int code)
    // If we had just been printing command-line help, "ttu_initialize"
    // will not have happened.
 
-   gg->terminate(code);
+   gg77->iob88.terminate(code);
 }
 
 
@@ -1764,7 +1765,7 @@ static void build_database_1(abridge_mode_t abridge_mode)
       if (!base_calls[i]) {
          char msg [50];
          sprintf(msg, "%d", i);
-         gg->fatal_error_exit(1, "Call didn't identify self", msg);
+         gg77->iob88.fatal_error_exit(1, "Call didn't identify self", msg);
       }
    }
 
@@ -1885,51 +1886,39 @@ startinfo configuration::startinfolist[start_select_as_they_are+1];
 
 void configuration::initialize()
 {
-   configuration::startinfolist[0].name = "???";
-   configuration::startinfolist[0].into_the_middle = false;
-   configuration::startinfolist[0].the_setup = setup(nothing, 0,
-                                                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+   configuration::initialize_startinfolist_item(start_select_exit, "???", false, new setup(nothing, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0));
 
-   configuration::startinfolist[start_select_h1p2p].name = "Heads 1P2P";
-   configuration::startinfolist[start_select_h1p2p].into_the_middle = false;
-   configuration::startinfolist[start_select_h1p2p].the_setup = setup(s2x4, 1,
-                                                                      0300|d_south,ID3_G2, 0200|d_south,ID3_B2,
-                                                                      0100|d_south,ID3_G1, 0000|d_south,ID3_B1,
-                                                                      0700|d_north,ID3_G4, 0600|d_north,ID3_B4,
-                                                                      0500|d_north,ID3_G3, 0400|d_north,ID3_B3);
+   configuration::initialize_startinfolist_item(start_select_h1p2p, "Heads 1P2P", false, new setup(s2x4, 1,
+      0300|d_south,ID3_G2, 0200|d_south,ID3_B2,
+      0100|d_south,ID3_G1, 0000|d_south,ID3_B1,
+      0700|d_north,ID3_G4, 0600|d_north,ID3_B4,
+      0500|d_north,ID3_G3, 0400|d_north,ID3_B3));
 
-   configuration::startinfolist[start_select_s1p2p].name = "Sides 1P2P";
-   configuration::startinfolist[start_select_s1p2p].into_the_middle = false;
-   configuration::startinfolist[start_select_s1p2p].the_setup = setup(s2x4, 0,
-                                                                      0500|d_south,ID3_G3, 0400|d_south,ID3_B3,
-                                                                      0300|d_south,ID3_G2, 0200|d_south,ID3_B2,
-                                                                      0100|d_north,ID3_G1, 0000|d_north,ID3_B1,
-                                                                      0700|d_north,ID3_G4, 0600|d_north,ID3_B4);
+   configuration::initialize_startinfolist_item(start_select_s1p2p, "Sides 1P2P", false, new setup(s2x4, 0,
+      0500|d_south,ID3_G3, 0400|d_south,ID3_B3,
+      0300|d_south,ID3_G2, 0200|d_south,ID3_B2,
+      0100|d_north,ID3_G1, 0000|d_north,ID3_B1,
+      0700|d_north,ID3_G4, 0600|d_north,ID3_B4));
 
-   configuration::startinfolist[start_select_heads_start].name = "HEADS";
-   configuration::startinfolist[start_select_heads_start].into_the_middle = true;
-   configuration::startinfolist[start_select_heads_start].the_setup = setup(s2x4, 0,
-                                                                            0600|d_east,ID3_B4,  0500|d_south,ID3_G3,
-                                                                            0400|d_south,ID3_B3, 0300|d_west,ID3_G2,
-                                                                            0200|d_west,ID3_B2,  0100|d_north,ID3_G1,
-                                                                            0000|d_north,ID3_B1, 0700|d_east,ID3_G4);
+   configuration::initialize_startinfolist_item(start_select_heads_start, "HEADS", true, new setup(s2x4, 0,
+      0600|d_east,ID3_B4,  0500|d_south,ID3_G3,
+      0400|d_south,ID3_B3, 0300|d_west,ID3_G2,
+      0200|d_west,ID3_B2,  0100|d_north,ID3_G1,
+      0000|d_north,ID3_B1, 0700|d_east,ID3_G4));
 
-   configuration::startinfolist[start_select_sides_start].name = "SIDES";
-   configuration::startinfolist[start_select_sides_start].into_the_middle = true;
-   configuration::startinfolist[start_select_sides_start].the_setup = setup(s2x4, 1,
-                                                                            0400|d_east,ID3_B3,  0300|d_south,ID3_G2,
-                                                                            0200|d_south,ID3_B2, 0100|d_west,ID3_G1,
-                                                                            0000|d_west,ID3_B1,  0700|d_north,ID3_G4,
-                                                                            0600|d_north,ID3_B4, 0500|d_east,ID3_G3);
+   configuration::initialize_startinfolist_item(start_select_sides_start, "SIDES", true, new setup(s2x4, 1,
+      0400|d_east,ID3_B3,  0300|d_south,ID3_G2,
+      0200|d_south,ID3_B2, 0100|d_west,ID3_G1,
+      0000|d_west,ID3_B1,  0700|d_north,ID3_G4,
+      0600|d_north,ID3_B4, 0500|d_east,ID3_G3));
 
-   configuration::startinfolist[start_select_as_they_are].name = "From squared set";
-   configuration::startinfolist[start_select_as_they_are].into_the_middle = false;
-   configuration::startinfolist[start_select_as_they_are].the_setup = setup(s4x4, 0,
-                                                                            0000|d_north,ID3_B1, 0100|d_north,ID3_G1,
-                                                                            0200|d_west,ID3_B2,  0300|d_west,ID3_G2,
-                                                                            0400|d_south,ID3_B3, 0500|d_south,ID3_G3,
-                                                                            0600|d_east,ID3_B4,  0700|d_east,ID3_G4,
-                                                                            0x9ADE1256);
+   configuration::initialize_startinfolist_item(start_select_as_they_are, "From squared set", false, new setup(s4x4, 0,
+      0000|d_north,ID3_B1, 0100|d_north,ID3_G1,
+      0200|d_west,ID3_B2,  0300|d_west,ID3_G2,
+      0400|d_south,ID3_B3, 0500|d_south,ID3_G3,
+      0600|d_east,ID3_B4,  0700|d_east,ID3_G4,
+      0x9ADE1256));
 }
 
 
@@ -2044,7 +2033,7 @@ bool open_session(int argc, char **argv)
    }
 
    // This lets the user interface intercept command line arguments that it is interested in.
-   gg->process_command_line(&nargs, &args);
+   gg77->iob88.process_command_line(&nargs, &args);
 
    glob_abridge_mode = abridge_mode_none;
    calling_level = l_nonexistent_concept;    /* Mark it uninitialized. */
@@ -2075,25 +2064,25 @@ bool open_session(int argc, char **argv)
          else if (strcmp(&args[argno][1], "sequence_num") == 0) {
             if (argno+1 < nargs) {
                if (sscanf(args[argno+1], "%d", &ui_options.sequence_num_override) != 1)
-                  gg->bad_argument("Bad number", args[argno+1], 0);
+                  gg77->iob88.bad_argument("Bad number", args[argno+1], 0);
             }
          }
          else if (strcmp(&args[argno][1], "session") == 0) {
             if (argno+1 < nargs) {
                if (sscanf(args[argno+1], "%d", &ui_options.force_session) != 1)
-                  gg->bad_argument("Bad number", args[argno+1], 0);
+                  gg77->iob88.bad_argument("Bad number", args[argno+1], 0);
             }
          }
          else if (strcmp(&args[argno][1], "resolve_test") == 0) {
             if (argno+1 < nargs) {
                if (sscanf(args[argno+1], "%d", &ui_options.resolve_test_minutes) != 1)
-                  gg->bad_argument("Bad number", args[argno+1], 0);
+                  gg77->iob88.bad_argument("Bad number", args[argno+1], 0);
             }
          }
          else if (strcmp(&args[argno][1], "print_length") == 0) {
             if (argno+1 < nargs) {
                if (sscanf(args[argno+1], "%d", &ui_options.max_print_length) != 1)
-                  gg->bad_argument("Bad number", args[argno+1], 0);
+                  gg77->iob88.bad_argument("Bad number", args[argno+1], 0);
             }
          }
          else if (strcmp(&args[argno][1], "delete_abridge") == 0)
@@ -2159,15 +2148,15 @@ bool open_session(int argc, char **argv)
          else if (strcmp(&args[argno][1], "old_style_filename") == 0)
             { filename_strings = old_filename_strings; continue; }
          else
-            gg->bad_argument("Unknown flag", args[argno], 0);
+            gg77->iob88.bad_argument("Unknown flag", args[argno], 0);
 
          argno++;
          if (argno >= nargs)
-            gg->bad_argument("This flag must be followed by a number or file name",
+            gg77->iob88.bad_argument("This flag must be followed by a number or file name",
                              args[argno-1], 0);
       }
       else if (!parse_level(args[argno])) {
-         gg->bad_argument("Unknown calling level argument", args[argno],
+         gg77->iob88.bad_argument("Unknown calling level argument", args[argno],
             "Known calling levels: m, p, a1, a2, c1, c2, c3a, c3, c3x, c4a, c4, or c4x.");
       }
    }
@@ -2199,7 +2188,7 @@ bool open_session(int argc, char **argv)
 
    // This could return true, either with session_index<0 for deletion,
    // or because of error, to get immediate exit.
-   if (gg->init_step(get_session_info, 0)) {
+   if (gg77->iob88.init_step(get_session_info, 0)) {
       close_init_file();
       return true;
    }
@@ -2260,7 +2249,7 @@ bool open_session(int argc, char **argv)
       sequence_number = ui_options.sequence_num_override;
 
    if (calling_level == l_nonexistent_concept)
-      gg->init_step(final_level_query, 0);
+      gg77->iob88.init_step(final_level_query, 0);
 
    if (new_outfile_string)
       install_outfile_string(new_outfile_string);
@@ -2278,7 +2267,7 @@ bool open_session(int argc, char **argv)
    for (i=0; concept_descriptor_table[i].kind != marker_end_of_list; i++) {
       if (concept_descriptor_table[i].useful != UC_none) {
          if (useful_concept_indices[concept_descriptor_table[i].useful] >= 0)
-            gg->fatal_error_exit(1, "Concept registered twice.");
+            gg77->iob88.fatal_error_exit(1, "Concept registered twice.");
 
          useful_concept_indices[concept_descriptor_table[i].useful] = i;
       }
@@ -2286,12 +2275,12 @@ bool open_session(int argc, char **argv)
 
    for (i = 1 ; i < UC_extent ; i++) {
      if (useful_concept_indices[i] < 0)
-        gg->fatal_error_exit(1, "Concept failed to register.");
+        gg77->iob88.fatal_error_exit(1, "Concept failed to register.");
    }
 
    starting_sequence_number = sequence_number;
 
-   gg->init_step(init_database1, 0);
+   gg77->iob88.init_step(init_database1, 0);
 
    prepare_to_read_menus();
 
@@ -2308,7 +2297,7 @@ bool open_session(int argc, char **argv)
       database_input_files[1] = fopen(abridge_filename, "w");
 
       if (!database_input_files[1])
-         gg->fatal_error_exit(1, "Can't open abridgement file", abridge_filename);
+         gg77->iob88.fatal_error_exit(1, "Can't open abridgement file", abridge_filename);
    }
 
    {
@@ -2326,17 +2315,17 @@ bool open_session(int argc, char **argv)
       abridge_file = database_input_files[1];
 
       if (!database_file)
-         gg->fatal_error_exit(1, "Can't open database file.");
+         gg77->iob88.fatal_error_exit(1, "Can't open database file.");
 
       if (glob_abridge_mode == abridge_mode_abridging && !abridge_file)
-         gg->fatal_error_exit(1, "Can't open abridgement file", abridge_filename);
+         gg77->iob88.fatal_error_exit(1, "Can't open abridgement file", abridge_filename);
 
       char session_error_msg1[200], session_error_msg2[200];
       session_error_msg1[0] = 0;
       session_error_msg2[0] = 0;
 
       if (read_database_header(session_error_msg1, session_error_msg2))
-         gg->fatal_error_exit(1, session_error_msg1, session_error_msg2);
+         gg77->iob88.fatal_error_exit(1, session_error_msg1, session_error_msg2);
 
       // This actually reads the calls database file and creates the
       // "any" menu.  It calls init_step(init_calibrate_tick), which calibrates
@@ -2475,9 +2464,9 @@ bool open_session(int argc, char **argv)
 
       initialize_sdlib();
 
-      gg->init_step(init_database2, 0);
-      gg->init_step(calibrate_tick, TICK_TOTAL);
-      gg->init_step(do_tick, 2);
+      gg77->iob88.init_step(init_database2, 0);
+      gg77->iob88.init_step(calibrate_tick, TICK_TOTAL);
+      gg77->iob88.init_step(do_tick, 2);
 
       SORT<call_with_name *, DBCOMPARE>::heapsort(main_call_lists[call_list_any], local_callcount);
 
@@ -2489,7 +2478,7 @@ bool open_session(int argc, char **argv)
       //    display in the menus (no "@" signs) and initialize the menus with the
       //    cleaned-up and subsetted text.
 
-      gg->init_step(do_tick, 1);
+      gg77->iob88.init_step(do_tick, 1);
 
       // Do special stuff if we are reading or writing an abridgement file.
 
@@ -2521,7 +2510,7 @@ bool open_session(int argc, char **argv)
             }
 
             if (fclose(abridge_file))
-               gg->fatal_error_exit(1, "Can't close abridgement file");
+               gg77->iob88.fatal_error_exit(1, "Can't close abridgement file");
          }
          else {      // Writing a list of some kind.
             for (i=0; i<number_of_calls[call_list_any]; i++) {
@@ -2530,9 +2519,9 @@ bool open_session(int argc, char **argv)
             }
 
             if (fclose(abridge_file))
-               gg->fatal_error_exit(1, "Can't close abridgement file");
+               gg77->iob88.fatal_error_exit(1, "Can't close abridgement file");
 
-            gg->init_step(tick_end, 0);
+            gg77->iob88.init_step(tick_end, 0);
 
             // That's all!
             close_init_file();
@@ -2547,8 +2536,8 @@ bool open_session(int argc, char **argv)
       //    subsetted text.
 
       // This is the universal menu.
-      gg->create_menu(call_list_any);
-      gg->init_step(do_tick, 1);
+      gg77->iob88.create_menu(call_list_any);
+      gg77->iob88.init_step(do_tick, 1);
 
       // We are going to try to use the cache file, if we have one.
       // The cache file mechanism will check file sizes and creation
@@ -2779,7 +2768,7 @@ bool open_session(int argc, char **argv)
          // We have to do this downward, in case the pointers are bigger than uint32.
          for (i=number_of_calls[cl]-1; i >= 0 ; i--)
             main_call_lists[cl][i] = main_call_lists[call_list_any][((uint32 *) main_call_lists[cl])[i]];
-         gg->create_menu(cl);
+         gg77->iob88.create_menu(cl);
       }
    }
 
@@ -2792,7 +2781,7 @@ bool open_session(int argc, char **argv)
    main_call_lists[call_list_empty] = empty_menu;
    number_of_calls[call_list_empty] = 0;
 
-   gg->init_step(tick_end, 0);
+   gg77->iob88.init_step(tick_end, 0);
    matcher_initialize();
 
    // Read in the "stats" file.
@@ -2842,11 +2831,11 @@ bool open_session(int argc, char **argv)
       }
 
       if (fclose(stats_file))
-         gg->fatal_error_exit(1, "Can't close stats file");
+         gg77->iob88.fatal_error_exit(1, "Can't close stats file");
    }
 
    // Make the status bar show that we are processing accelerators.
-   gg->init_step(do_accelerator, 0);
+   gg77->iob88.init_step(do_accelerator, 0);
 
    {
       bool save_allow = allowing_all_concepts;
@@ -2857,12 +2846,12 @@ bool open_session(int argc, char **argv)
       if (find_init_file_region("[Accelerators]", 14)) {
          char q[INPUT_TEXTLINE_SIZE];
          while (get_accelerator_line(q))
-            do_accelerator_spec(q, true);
+            gg77->matcher_p->do_accelerator_spec(q, true);
       }
       else {
          const Cstring *q;
          for (q = concept_key_table ; *q ; q++)
-            do_accelerator_spec(*q, true);
+            gg77->matcher_p->do_accelerator_spec(*q, true);
       }
 
       // Now do the abbreviations.
@@ -2870,14 +2859,14 @@ bool open_session(int argc, char **argv)
       if (find_init_file_region("[Abbreviations]", 15)) {
          char q[INPUT_TEXTLINE_SIZE];
          while (get_accelerator_line(q))
-            do_accelerator_spec(q, false);
+            gg77->matcher_p->do_accelerator_spec(q, false);
       }
 
       allowing_all_concepts = save_allow;
    }
 
    close_init_file();
-   gg->final_initialize();
+   gg77->iob88.final_initialize();
    return false;
 }
 

@@ -135,13 +135,13 @@ void select::initialize()
 
    for (fixp = fixer_init_table ; fixp->mykey != fx0 ; fixp++) {
       if (fixer_ptr_table[fixp->mykey])
-         gg->fatal_error_exit(1, "Fixer table initialization failed", "dup");
+         gg77->iob88.fatal_error_exit(1, "Fixer table initialization failed", "dup");
       fixer_ptr_table[fixp->mykey] = fixp;
    }
 
    for (i=fx0+1 ; i<fx_ENUM_EXTENT ; i++) {
       if (!fixer_ptr_table[i])
-         gg->fatal_error_exit(1, "Fixer table initialization failed", "undef");
+         gg77->iob88.fatal_error_exit(1, "Fixer table initialization failed", "undef");
    }
 }
 
@@ -3414,7 +3414,9 @@ extern void concentric_move(
          // Save the numbers, in case we have to figure out whether "cast off N/4" changed shape.
          *option_ptr = current_options;
 
-         if (recompute_id && !(save_cmd_misc2_flags & CMD_MISC2__CTR_END_KMASK))
+         if (recompute_id &&
+             !(save_cmd_misc2_flags & CMD_MISC2__CTR_END_KMASK) &&
+             !(ss->result_flags.misc & RESULTFLAG__REALLY_NO_REEVALUATE))
             update_id_bits(begin_ptr);
 
          // Inherit certain assumptions to the child setups.  This is EXTREMELY incomplete.
@@ -5262,7 +5264,7 @@ extern void selective_move(
       cmd2thing.parseptr = foo.m_result_of_skip;
 
       const parse_block *kkk = foo.m_skipped_concept;
-      const conzept::concept_descriptor *kk = kkk->concept;
+      const concept_descriptor *kk = kkk->concept;
       concept_kind k = kk->kind;
 
       if (k == concept_supercall)

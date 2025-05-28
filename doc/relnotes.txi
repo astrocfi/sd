@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 38.55
-@set title2 Database version = 38.55 format = 315
+@set title1 RELEASE NOTES FOR VERSION 38.56
+@set title2 Database version = 38.56 format = 315
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 38.56::
 * 38.55::
 * 38.54::
 * 38.53::
@@ -94,7 +95,7 @@ The files @file{relnotes03.txi} and @file{relnotes98.txi} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 38.55, Top, (dir)
+@node Intro, 38.56, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -105,11 +106,21 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2013 William B. Ackerman
 @sp 3
 @menu
-* 38.55::               Changes in the current version
+* 38.56::               Changes in the current version
 @end menu
 
 @c ************
-@node 38.55, 38.54, Intro, Top
+@node 38.56, 38.55, Intro, Top
+@unnumberedsec Version 38.56 changes
+
+The @strong{finally twice rims trade back} bug was fixed.
+
+The bug in bits and pieces in the presence of phantoms was fixed.
+
+A @strong{cast back} leading to an hourglass works properly.
+
+@c ************
+@node 38.55, 38.54, 38.56, Top
 @unnumberedsec Version 38.55 changes
 
 A serious bug was introduced in version 38.52.  This fixes it.
