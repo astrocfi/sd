@@ -841,6 +841,10 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
                if (!local_cptr->next || !subsidiary_ptr)
                   writestuff_with_decorations(&local_cptr->options, "(for @u part) ");
             }
+            else if (k == concept_special_sequential_4num) {
+               writestuff_with_decorations(&local_cptr->options, item->name);
+               writestuff(" ");
+            }
             else if (k == concept_replace_nth_part ||
                      k == concept_replace_last_part ||
                      k == concept_interrupt_at_fraction) {
@@ -945,12 +949,13 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
             }
             else if (k == concept_sequential)
                writestuff(" ;");
-            else if (k == concept_special_sequential) {
+            else if (k == concept_special_sequential ||
+                     k == concept_special_sequential_4num) {
                if (item->arg1 == 2)
                   writestuff(" :");   // This is "start with".
                else if (item->arg1 == 4)
                   writestuff(" IN");
-               else if (item->arg1 == 5)
+               else if (item->arg1 == 5 || item->arg1 == 6)
                   writestuff(" AND");
                else
                   writestuff(",");

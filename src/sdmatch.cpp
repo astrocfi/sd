@@ -906,8 +906,8 @@ static bool verify_call()
       while (anythings) {
          call_conc_option_state save_stuff = GLOB_match.match.call_conc_options;
 
-            /* First, if we have already deposited a call, and we see more stuff, it must be
-               concepts or calls for an "anything" subcall. */
+         // First, if we have already deposited a call, and we see more stuff, it must be
+         // concepts or calls for an "anything" subcall.
 
          if (save1) {
             parse_block *tt = get_parse_block();

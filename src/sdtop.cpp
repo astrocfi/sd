@@ -44,10 +44,8 @@
    rotperson
    rotcw
    rotccw
-   clear_person
    copy_person
    copy_rot
-   swap_people
    install_person
    install_rot
    scatter
@@ -4202,14 +4200,6 @@ extern uint32 copy_rot(setup *resultpeople, int resultplace, const setup *source
 }
 
 
-extern void swap_people(setup *ss, int oneplace, int otherplace)
-{
-   personrec temp = ss->people[otherplace];
-   ss->people[otherplace] = ss->people[oneplace];
-   ss->people[oneplace] = temp;
-}
-
-
 extern void install_person(setup *resultpeople, int resultplace, const setup *sourcepeople, int sourceplace)
 {
    uint32 newperson = sourcepeople->people[sourceplace].id1;
@@ -4690,8 +4680,8 @@ extern bool fix_n_results(int arity, int goal, setup z[],
             z[i].rotation = z[i].outer.srotation;
             copy_person(&z[i], 0, &z[i], 12);
             copy_person(&z[i], 2, &z[i], 13);
-            clear_person(&z[i], 1);
-            clear_person(&z[i], 3);
+            z[i].clear_person(1);
+            z[i].clear_person(3);
          }
          else
             fail("Don't recognize ending setup for this call.");
@@ -4819,14 +4809,14 @@ extern bool fix_n_results(int arity, int goal, setup z[],
             canonicalize_rotation(&z[i]);
             z[i].kind = kk;
             z[i].rotation = rr;
-            swap_people(&z[i], 3, 6);
-            swap_people(&z[i], 2, 5);
-            swap_people(&z[i], 2, 1);
-            swap_people(&z[i], 1, 0);
-            clear_person(&z[i], 4);
-            clear_person(&z[i], 7);
-            clear_person(&z[i], 0);
-            clear_person(&z[i], 3);
+            z[i].swap_people(3, 6);
+            z[i].swap_people(2, 5);
+            z[i].swap_people(2, 1);
+            z[i].swap_people(1, 0);
+            z[i].clear_person(4);
+            z[i].clear_person(7);
+            z[i].clear_person(0);
+            z[i].clear_person(3);
             canonicalize_rotation(&z[i]);
          }
          else if (z[i].inner.skind == s1x4 && kk == s_qtag) {
@@ -4838,12 +4828,12 @@ extern bool fix_n_results(int arity, int goal, setup z[],
 
             z[i].kind = kk;
             z[i].rotation = rr;
-            swap_people(&z[i], 0, 6);
-            swap_people(&z[i], 1, 7);
-            clear_person(&z[i], 0);
-            clear_person(&z[i], 1);
-            clear_person(&z[i], 4);
-            clear_person(&z[i], 5);
+            z[i].swap_people(0, 6);
+            z[i].swap_people(1, 7);
+            z[i].clear_person(0);
+            z[i].clear_person(1);
+            z[i].clear_person(4);
+            z[i].clear_person(5);
             canonicalize_rotation(&z[i]);
          }
          else if (kk == nothing &&
@@ -4899,9 +4889,9 @@ extern bool fix_n_results(int arity, int goal, setup z[],
       else if (z[i].kind == s1x2 && kk == s1x4) {
          // We have to expand a 1x2 to the center spots of a 1x4.
          (void) copy_person(&z[i], 3, &z[i], 1);
-         clear_person(&z[i], 2);
+         z[i].clear_person(2);
          (void) copy_person(&z[i], 1, &z[i], 0);
-         clear_person(&z[i], 0);
+         z[i].clear_person(0);
       }
 
       z[i].kind = kk;
@@ -5450,10 +5440,10 @@ extern void normalize_setup(setup *ss, normalize_action action, bool noqtagcompr
    if (action == normalize_compress_bigdmd) {
       if (ss->kind == sbigdmd || ss->kind == sbigptpd) {
          // They're the same!
-         if ((livemask & 00003) == 00001) swap_people(ss, 0, 1);
-         if ((livemask & 00060) == 00040) swap_people(ss, 4, 5);
-         if ((livemask & 00300) == 00100) swap_people(ss, 6, 7);
-         if ((livemask & 06000) == 04000) swap_people(ss, 10, 11);
+         if ((livemask & 00003) == 00001) ss->swap_people(0, 1);
+         if ((livemask & 00060) == 00040) ss->swap_people(4, 5);
+         if ((livemask & 00300) == 00100) ss->swap_people(6, 7);
+         if ((livemask & 06000) == 04000) ss->swap_people(10, 11);
          action = simple_normalize;
          goto startover;
       }
@@ -5514,35 +5504,35 @@ extern void normalize_setup(setup *ss, normalize_action action, bool noqtagcompr
 
    if (!did_something && ss->kind == s4x4 && action == normalize_after_exchange_boxes) {
       if (!(tbonetest & 0x1)) {
-         if ((livemask & 0x0030) == 0x0010) swap_people(ss, 4, 5);
-         if ((livemask & 0x0140) == 0x0100) swap_people(ss, 6, 8);
-         if ((livemask & 0x0084) == 0x0004) swap_people(ss, 2, 7);
-         if ((livemask & 0x0A00) == 0x0200) swap_people(ss, 11, 9);
-         if ((livemask & 0x000A) == 0x0002) swap_people(ss, 1, 3);
-         if ((livemask & 0x8400) == 0x0400) swap_people(ss, 15, 10);
-         if ((livemask & 0x4001) == 0x0001) swap_people(ss, 0, 14);
-         if ((livemask & 0x3000) == 0x1000) swap_people(ss, 13, 12);
+         if ((livemask & 0x0030) == 0x0010) ss->swap_people(4, 5);
+         if ((livemask & 0x0140) == 0x0100) ss->swap_people(6, 8);
+         if ((livemask & 0x0084) == 0x0004) ss->swap_people(2, 7);
+         if ((livemask & 0x0A00) == 0x0200) ss->swap_people(11, 9);
+         if ((livemask & 0x000A) == 0x0002) ss->swap_people(1, 3);
+         if ((livemask & 0x8400) == 0x0400) ss->swap_people(15, 10);
+         if ((livemask & 0x4001) == 0x0001) ss->swap_people(0, 14);
+         if ((livemask & 0x3000) == 0x1000) ss->swap_people(13, 12);
          action = simple_normalize;
          goto startover;
       }
       else if (!(tbonetest & 0x8)) {
-         if ((livemask & 0x0003) == 0x0001) swap_people(ss, 0, 1);
-         if ((livemask & 0x0014) == 0x0010) swap_people(ss, 2, 4);
-         if ((livemask & 0x4008) == 0x4000) swap_people(ss, 14, 3);
-         if ((livemask & 0x00A0) == 0x0020) swap_people(ss, 7, 5);
-         if ((livemask & 0xA000) == 0x2000) swap_people(ss, 13, 15);
-         if ((livemask & 0x0840) == 0x0040) swap_people(ss, 11, 6);
-         if ((livemask & 0x1400) == 0x1000) swap_people(ss, 12, 10);
-         if ((livemask & 0x0300) == 0x0100) swap_people(ss, 9, 8);
+         if ((livemask & 0x0003) == 0x0001) ss->swap_people(0, 1);
+         if ((livemask & 0x0014) == 0x0010) ss->swap_people(2, 4);
+         if ((livemask & 0x4008) == 0x4000) ss->swap_people(14, 3);
+         if ((livemask & 0x00A0) == 0x0020) ss->swap_people(7, 5);
+         if ((livemask & 0xA000) == 0x2000) ss->swap_people(13, 15);
+         if ((livemask & 0x0840) == 0x0040) ss->swap_people(11, 6);
+         if ((livemask & 0x1400) == 0x1000) ss->swap_people(12, 10);
+         if ((livemask & 0x0300) == 0x0100) ss->swap_people(9, 8);
          action = simple_normalize;
          goto startover;
       }
    }
    else if (!did_something && ss->kind == s2x6 && action == normalize_after_exchange_boxes) {
-      if ((livemask & 0xC00) == 0x800 && !(ss->people[11].id1 & 0x1)) swap_people(ss, 11, 10);
-      if ((livemask & 0x0C0) == 0x040 && !(ss->people[ 6].id1 & 0x1)) swap_people(ss, 6, 7);
-      if ((livemask & 0x030) == 0x020 && !(ss->people[ 5].id1 & 0x1)) swap_people(ss, 4, 5);
-      if ((livemask & 0x003) == 0x001 && !(ss->people[ 0].id1 & 0x1)) swap_people(ss, 0, 1);
+      if ((livemask & 0xC00) == 0x800 && !(ss->people[11].id1 & 0x1)) ss->swap_people(11, 10);
+      if ((livemask & 0x0C0) == 0x040 && !(ss->people[ 6].id1 & 0x1)) ss->swap_people(6, 7);
+      if ((livemask & 0x030) == 0x020 && !(ss->people[ 5].id1 & 0x1)) ss->swap_people(4, 5);
+      if ((livemask & 0x003) == 0x001 && !(ss->people[ 0].id1 & 0x1)) ss->swap_people(0, 1);
       action = simple_normalize;
       goto startover;
    }

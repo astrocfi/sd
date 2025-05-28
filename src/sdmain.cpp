@@ -31,8 +31,8 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-#define VERSION_STRING "36.58"
-#define TIME_STAMP "wba@alum.mit.edu  9 Apr 2005 $"
+#define VERSION_STRING "36.59"
+#define TIME_STAMP "wba@alum.mit.edu  13 May 2005 $"
 
 /* This defines the following functions:
    sd_version_string
@@ -533,6 +533,8 @@ extern bool deposit_concept(const conzept::concept_descriptor *conc)
       howmanynumbers = 1;
    if (concept_table[conc->kind].concept_prop & CONCPROP__USE_TWO_NUMBERS)
       howmanynumbers = 2;
+   if (concept_table[conc->kind].concept_prop & CONCPROP__USE_FOUR_NUMBERS)
+      howmanynumbers = 4;
 
    if (howmanynumbers != 0) {
       if (find_numbers(howmanynumbers, true, 0, false, &number_list)) return true;

@@ -7695,6 +7695,8 @@ const schema_attr schema_attrs[] = {
    {0,
     schema_nothing},                     // schema_nothing
    {0,
+    schema_nothing},                     // schema_nothing_noroll
+   {0,
     schema_nothing},                     // schema_matrix
    {0,
     schema_nothing},                     // schema_partner_matrix

@@ -1,6 +1,6 @@
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2004  William B. Ackerman.
+//    Copyright (C) 1990-2005  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -69,9 +69,9 @@ extern void canonicalize_rotation(setup *result) THROW_DECL
 
       result->kind = result->outer.skind;
       result->rotation = save_rotation + result->outer.srotation;
-      for (i=0 ; i<12 ; i++) swap_people(result, i, i+12);
+      for (i=0 ; i<12 ; i++) result->swap_people(i, i+12);
       canonicalize_rotation(result);    // Sorrier!
-      for (i=0 ; i<12 ; i++) swap_people(result, i, i+12);
+      for (i=0 ; i<12 ; i++) result->swap_people(i, i+12);
       result->outer.srotation = result->rotation;
 
       result->kind = s_normal_concentric;
@@ -141,7 +141,7 @@ extern void canonicalize_rotation(setup *result) THROW_DECL
 
          // Must turn this setup upside-down.
 
-         swap_people(result, 0, 2);
+         result->swap_people(0, 2);
          (void) copy_rot(result, 0, result, 0, 022);
          (void) copy_rot(result, 1, result, 1, 022);
          (void) copy_rot(result, 2, result, 2, 022);
@@ -161,7 +161,7 @@ extern void canonicalize_rotation(setup *result) THROW_DECL
          offs = (attr::slimit(result)+1) >> 1;     // Half the setup size.
 
          for (i=0; i<offs; i++) {
-            swap_people(result, i, i+offs);
+            result->swap_people(i, i+offs);
             (void) copy_rot(result, i, result, i, 022);
             (void) copy_rot(result, i+offs, result, i+offs, 022);
          }
@@ -1029,6 +1029,49 @@ extern void do_call_in_series(
    minimize_splitting_info(sss, saved_result_flags);
 }
 
+// For each person, we remember the 3 best candidates with whom that person might Jaywalk.
+enum { NUMBER_OF_JAYWALK_CANDIDATES = 3,
+       NUMBER_OF_JAYWALK_VERT_CAND = 2 };
+
+struct jaywalkpersonstruct {
+   int jp;           // Person with whom to Jay Walk.
+   int jp_lateral;
+   int jp_vertical;
+   int jp_eucdist;   // Jaywalk Euclidean distance.
+};
+
+struct matrix_rec {
+   int x;              // This person's coordinates, calibrated so that a matrix
+   int y;              //   position cooresponds to an increase by 4.
+   int nicex;          // This person's "nice" coordinates, used for
+   int nicey;          //   calculating jay walk legality.
+   uint32 id1;         // The actual person, for error printing.
+   bool sel;           // True if this person is selected.  (False if selectors not in use.)
+   bool done;          // Used for loop control on each pass.
+   bool realdone;      // Used for loop control on each pass.
+   // This list is sorted from best (smallest jp_eucdist) to worst.
+   jaywalkpersonstruct jpersons[NUMBER_OF_JAYWALK_CANDIDATES];
+   unsigned int jaywalktargetmask;   // Bits for jaywalkers point back at this person.
+   int boybit;         // 1 if boy, 0 if not (might be neither).
+   int girlbit;        // 1 if girl, 0 if not (might be neither).
+   int dir;            // This person's initial facing direction, 0 to 3.
+   int deltax;         // How this person will move, relative to his own facing
+   int deltay;         //   direction, when call is finally executed.
+   int nearestdrag;    // Something having to do with "drag".
+   int leftidx;        // X-increment of leftmost valid jaywalkee.
+   int leftidxjdist;   // Jdist for same.
+   int rightidx;       // X-increment of rightmost valid jaywalkee.
+   int rightidxjdist;  // Jdist for same.
+   int deltarot;       // How this person will turn.
+   uint32 roll_stability_info; // This person's roll & stability info, from call def'n.
+   int orig_source_idx;
+   matrix_rec *nextse; // Points to next person south (dir even) or east (dir odd.)
+   matrix_rec *nextnw; // Points to next person north (dir even) or west (dir odd.)
+   bool far_squeezer;  // This person's pairing is due to being far from someone.
+   bool tbstopse;      // True if nextse/nextnw is zero because the next spot
+   bool tbstopnw;      //   is occupied by a T-boned person (as opposed to being empty.)
+};
+
 
 
 static int start_matrix_call(
@@ -1084,8 +1127,6 @@ static int start_matrix_call(
          matrix_info[nump].id1 = people->people[nump].id1;
          matrix_info[nump].dir = people->people[nump].id1 & 3;
 
-         matrix_info[nump].jbits = 0;
-
          if (flags & MTX_USE_VEER_DATA) {
             uint32 rollbits = people->people[nump].id1 & ROLL_DIRMASK;
             matrix_info[nump].girlbit = (rollbits == ROLL_IS_L) ? 1 : 0;
@@ -1100,8 +1141,7 @@ static int start_matrix_call(
          matrix_info[nump].nextnw = 0;
          matrix_info[nump].deltax = 0;
          matrix_info[nump].deltay = 0;
-         matrix_info[nump].nearest = 100000;
-         matrix_info[nump].nearestlat = 100000;
+         matrix_info[nump].nearestdrag = 100000;
          matrix_info[nump].deltarot = 0;
          matrix_info[nump].roll_stability_info =
             (NDBROLL_BIT * 3) |
@@ -1110,6 +1150,12 @@ static int start_matrix_call(
          matrix_info[nump].tbstopse = false;
          matrix_info[nump].tbstopnw = false;
          matrix_info[nump].far_squeezer = false;
+
+         for (int i = 0 ; i < NUMBER_OF_JAYWALK_CANDIDATES ; i++) {
+            matrix_info[nump].jpersons[i].jp = -1;
+            matrix_info[nump].jpersons[i].jp_eucdist = 100000;
+         }
+
          nump++;
       }
    }
@@ -1677,14 +1723,14 @@ static void do_pair(
          ppp->deltax = qqq->x;
          ppp->deltay = qqq->y;
          ppp->deltarot = qqq->orig_source_idx;
-         ppp->nearest = qqq->dir;
+         ppp->nearestdrag = qqq->dir;
       }
       else if (qqq->sel) {
          qqq->realdone = true;
          qqq->deltax = ppp->x;
          qqq->deltay = ppp->y;
          qqq->deltarot = ppp->orig_source_idx;
-         qqq->nearest = ppp->dir;
+         qqq->nearestdrag = ppp->dir;
       }
    }
 
@@ -1701,25 +1747,21 @@ static void make_matrix_chains(
    uint32 flags,
    int filter) THROW_DECL       // 1 for E/W chains, 0 for N/S chains.
 {
-   int i, j;
+   int i, j, k, l;
 
    // Find adjacency relationships, and fill in the "se"/"nw" pointers.
 
    for (i=0; i<nump; i++) {
       matrix_rec *mi = &matrix_info[i];
-
       if ((flags & MTX_IGNORE_NONSELECTEES) && (!mi->sel)) continue;
 
       for (j=0; j<nump; j++) {
          matrix_rec *mj = &matrix_info[j];
-         int delx, dely;
-         uint32 dirxor;
-         int ix, jx, iy, jy;
-
          if ((flags & MTX_IGNORE_NONSELECTEES) && (!mj->sel)) continue;
 
          // Find out if these people are adjacent in the right way.
 
+         int ix, jx, iy, jy;
          if (flags & MTX_FIND_JAYWALKERS) {
             jx = mj->nicex;
             ix = mi->nicex;
@@ -1739,41 +1781,69 @@ static void make_matrix_chains(
             iy = mi->y;
          }
 
-         delx = ix - jx;
-         dely = iy - jy;
-
-         dirxor = mi->dir ^ mj->dir;
+         int delx = ix - jx;
+         int dely = iy - jy;
+         uint32 dirxor = mi->dir ^ mj->dir;
 
          if (flags & MTX_FIND_JAYWALKERS) {
-            int jdist = (mi->dir & 1) ? delx : dely;
-            int lateraldist = (mi->dir & 1) ? dely : delx;
+            if (dirxor == 0) continue;   // Can't be facing same direction.
+
+            // Vertdist is the forward distance to the jaywalkee.  We demand
+            // that it be strictly positive.  We also consider only jaywalkees
+            // that are either facing back toward us or are facing lateral but
+            // are in such a position that they can see us (that is, their
+            // vertdist, called "returndist" here, is also positive.)
+
+            int vertdist = (mi->dir & 1) ? delx : dely;
+            if (!(mi->dir & 2)) vertdist = -vertdist;
+            if (vertdist <= 0) continue;
+
             int returndist = (mj->dir & 1) ? delx : dely;
-
-            if (!(mi->dir & 2)) jdist = -jdist;
             if ((mj->dir & 2)) returndist = -returndist;
-            if (lateraldist < 0) lateraldist = -lateraldist;
+            if (returndist <= 0) continue;
 
-            // Jdist is the forward distance to the jaywalkee.  We demand that it be
-            // strictly positive, and minimal with respect to all other jaywalkee
-            // candidates.  We also consider only jaywalkees that are either facing
-            // back toward us or are facing lateral but are in such a position that
-            // they can see us.
+            // We know the jaywalkers can see each other.
 
-            if (jdist > 0 && returndist > 0 && dirxor != 0 &&
-                (jdist <= mi->nearest || lateraldist <= mi->nearestlat)) {
+            int lateraldist = (mi->dir & 1) ? dely : delx;
+            if ((mi->dir + 1) & 2) lateraldist = -lateraldist;
 
-               // If this is truly better than anything we have seen
-               // (vertically strictly better and laterally at least
-               // as good), delete old stuff.
-               if (jdist < mi->nearest && lateraldist <= mi->nearestlat)
-                  mi->jbits = 0;
+            // Compute the Euclidean distance as a measure of badness.
+            // (Actually, the square of the distance.)
 
-               // If this is truly worse than anything we have seen,
-               // do nothing.  Otherwise, save stuff.
-               if (jdist <= mi->nearest || lateraldist < mi->nearestlat) {
-                  mi->jbits |= (1 << j);
-                  if (jdist < mi->nearest) mi->nearest = jdist;
-                  if (lateraldist < mi->nearestlat) mi->nearestlat = lateraldist;
+            int euc_distance = lateraldist;
+            if (euc_distance < 0) euc_distance = -euc_distance;
+            euc_distance = euc_distance*euc_distance + vertdist*vertdist;
+
+            // Find out whether this candidate is one of the best, and, if so,
+            // where she should be in the list.
+
+            for (k=NUMBER_OF_JAYWALK_CANDIDATES-1 ; k>=0 ; k--) {
+               if (euc_distance >= mi->jpersons[k].jp_eucdist) break;
+               if (k < NUMBER_OF_JAYWALK_CANDIDATES-1)
+                  mi->jpersons[k+1] = mi->jpersons[k];
+            }
+
+            if (k < NUMBER_OF_JAYWALK_CANDIDATES-1) {
+               mi->jpersons[k+1].jp = j;
+               mi->jpersons[k+1].jp_lateral = lateraldist;
+               mi->jpersons[k+1].jp_vertical = vertdist;
+               mi->jpersons[k+1].jp_eucdist = euc_distance;
+            }
+
+            // But we only allow the top NUMBER_OF_JAYWALK_VERT_CAND items
+            // when measured by vertical distance.  That is, we consider the best 3
+            // overall candidates, but only the best 2 vertical distances.  Any
+            // candidate that comes in third in vertical distance is just too
+            // far to walk.
+
+            int vert_cutoff = mi->jpersons[NUMBER_OF_JAYWALK_VERT_CAND-1].jp_vertical;
+
+            for (k=NUMBER_OF_JAYWALK_VERT_CAND ; k<NUMBER_OF_JAYWALK_CANDIDATES ; k++) {
+               if (mi->jpersons[NUMBER_OF_JAYWALK_VERT_CAND].jp_vertical > vert_cutoff) {
+                  // Cut out person k.
+                  for (l=k ; l<NUMBER_OF_JAYWALK_CANDIDATES-1 ; l++)
+                     mi->jpersons[l] = mi->jpersons[l+1];
+                  mi->jpersons[NUMBER_OF_JAYWALK_CANDIDATES-1].jp = -1;
                }
             }
          }
@@ -1822,7 +1892,7 @@ static void process_matrix_chains(
 {
    bool another_round = true;
    bool picking_end_jaywalkers = false;
-   int i, j;
+   int i, j, k, l;
 
    // Pick out pairs of people and move them.
 
@@ -1831,18 +1901,44 @@ static void process_matrix_chains(
 
       if (flags & MTX_FIND_JAYWALKERS) {
          // Clear out any bits that aren't bidirectional.
+         // First, mark all targets.
+         // But first, clear the target mask words.
+
+         for (i=0; i<nump; i++)
+            matrix_info[i].jaywalktargetmask = 0;
 
          for (i=0; i<nump; i++) {
             matrix_rec *mi = &matrix_info[i];
             if ((flags & MTX_IGNORE_NONSELECTEES) && (!mi->sel)) continue;
 
-            for (j=0; j<nump; j++) {
-               if (((1<<j) & mi->jbits) && !((1<<i) & matrix_info[j].jbits))
-                  mi->jbits &= ~(1<<j);
+            for (k=0 ; k<NUMBER_OF_JAYWALK_CANDIDATES ; k++) {
+               j = mi->jpersons[k].jp;
+               if (j >= 0)
+                  matrix_info[j].jaywalktargetmask |= 1 << i;
+            }
+         }
+
+         // Delete target pointers that aren't bidirectional.
+
+         for (i=0; i<nump; i++) {
+            matrix_rec *mi = &matrix_info[i];
+            if ((flags & MTX_IGNORE_NONSELECTEES) && (!mi->sel)) continue;
+
+            for (k=0 ; k<NUMBER_OF_JAYWALK_CANDIDATES ; k++) {
+               j = mi->jpersons[k].jp;
+               if (j<0) break;
+               if (!(mi->jaywalktargetmask & (1<<j))) {
+                  // Delete this pointer from i to j, since no pointer from j to i exists.
+                  matrix_info[j].jaywalktargetmask &= ~(1 << i);
+                  for ( ; k<NUMBER_OF_JAYWALK_CANDIDATES-1 ; k++)
+                     mi->jpersons[k] = mi->jpersons[k+1];
+                  mi->jpersons[NUMBER_OF_JAYWALK_CANDIDATES-1].jp = -1;
+               }
             }
 
             // If selected person has no jaywalkee, it is an error.
-            if (!mi->jbits) failp(mi->id1, "can't find person to jaywalk with.");
+            if (mi->jpersons[0].jp < 0)
+               failp(mi->id1, "can't find person to jaywalk with.");
          }
       }
 
@@ -1851,57 +1947,69 @@ static void process_matrix_chains(
 
          if (!mi->done) {
             if (flags & MTX_FIND_JAYWALKERS) {
+               // If no jbits, person wasn't selected.
+               if (mi->jaywalktargetmask != 0) {
+                  if (picking_end_jaywalkers) {
+                     for (k=0 ; k<NUMBER_OF_JAYWALK_CANDIDATES ; k++) {
+                        j = mi->jpersons[k].jp;
+                        if (j<0) break;
+                        matrix_rec *mj = &matrix_info[j];
 
-               if (!picking_end_jaywalkers) {
-                  mi->leftidx = -1;
-                  mi->rightidx = -1;
-               }
-
-               if (mi->jbits) {   // If no jbits, person wasn't selected.
-                  for (j=0; j<nump; j++) {
-                     matrix_rec *mj = &matrix_info[j];
-
-                     if (picking_end_jaywalkers) {
                         // Look for people who have been identified
                         // as extreme jaywalkers with each other.
-                        if (j == mi->leftidx && i == mj->rightidx) {
-                           mi->jbits = (1<<j);    // Separate them from the rest.
-                           mj->jbits = (1<<i);
-                           another_round = true;  //We will move them on a future iteration.
+                        // But only if they are facing opposite directions.
+                        if ((mi->dir ^ mj->dir) == 2 &&
+                            ((j == mi->leftidx && i == mj->rightidx) ||
+                            (j == mi->rightidx && i == mj->leftidx))) {
+                           // Delete all of i's jaywalk candidates except j.
+                           mi->jpersons[0] = mi->jpersons[k];
+                           for (l=1 ; l<NUMBER_OF_JAYWALK_CANDIDATES ; l++)
+                              mi->jpersons[l].jp = -1;
+                           // The symmetry operation will delete the extra
+                           // candidates from j.
+                           another_round = true;  // We will move them on a future iteration.
                         }
                      }
-                     else {
-                        int jdist;
+                  }
+                  else {
+                     // Fill in jaywalkee indices with record-holding lateral distance.
+                     mi->leftidx = -1;
+                     mi->rightidx = -1;
 
-                        // Fill in jaywalkee indices with record-holding lateral distance.
+                     for (k=0 ; k<NUMBER_OF_JAYWALK_CANDIDATES ; k++) {
+                        j = mi->jpersons[k].jp;
+                        if (j<0) break;
 
-                        if ((1<<j) & mi->jbits) {
-                           jdist = (mi->dir & 1) ? mj->nicey : mj->nicex;
-                           if ((mi->dir+1) & 2) jdist = -jdist;
+                        matrix_rec *mj = &matrix_info[j];
 
-                           if (mi->leftidx >= 0) {
-                              int temp = (mi->dir & 1) ?
-                                 matrix_info[mi->leftidx].nicey :
-                                 matrix_info[mi->leftidx].nicex;
-                              if ((mi->dir+1) & 2) temp = -temp;
-                              if (jdist < temp) mi->leftidx = j;
-                           }
-                           else
+                        int jdist = mi->jpersons[k].jp_lateral;
+
+                        // jdist = apparent abs x-coord of j in i's coord sys.
+                        if (mi->leftidx >= 0) {
+                           if (jdist > mi->leftidxjdist) {
                               mi->leftidx = j;
-
-                           if (mi->rightidx >= 0) {
-                              int temp = (mi->dir & 1) ?
-                                 matrix_info[mi->rightidx].nicey :
-                                 matrix_info[mi->rightidx].nicex;
-                              if ((mi->dir+1) & 2) temp = -temp;
-                              if (jdist > temp) mi->rightidx = j;
+                              mi->leftidxjdist = jdist;
                            }
-                           else
+                        }
+                        else {
+                           mi->leftidx = j;
+                           mi->leftidxjdist = jdist;
+                        }
+
+                        if (mi->rightidx >= 0) {
+                           if (jdist < mi->rightidxjdist) {
                               mi->rightidx = j;
+                              mi->rightidxjdist = jdist;
+                           }
+                        }
+                        else {
+                           mi->rightidx = j;
+                           mi->rightidxjdist = jdist;
                         }
 
                         // Look for special case of two people uniquely selecting each other.
-                        if ((1UL<<j) == mi->jbits && (1UL<<i) == mj->jbits) {
+                        if (mi->jpersons[0].jp == j && mi->jpersons[1].jp < 0 &&
+                            mj->jpersons[0].jp == i && mj->jpersons[1].jp < 0) {
                            int delx = mj->x - mi->x;
                            int dely = mj->y - mi->y;
                            int deltarot;
@@ -1920,7 +2028,7 @@ static void process_matrix_chains(
                            mi->roll_stability_info = datum;
                            mi->realdone = true;
 
-                           deltarot = mj->dir - mi->dir + 2;
+                           deltarot = (mj->dir - mi->dir + 2) & 3;
 
                            if (deltarot) {
                               // This person went "around the corner" due to facing
@@ -1950,10 +2058,22 @@ static void process_matrix_chains(
 
                            mi->done = true;
                         }
-                        // Take care of anyone who has unambiguous jaywalkee.  Get that
-                        // jaywalkee's attention by stripping off all his other bits.
-                        else if ((1UL<<j) == mi->jbits) {
-                           mj->jbits = (1<<i);
+                        else if (mi->jpersons[0].jp == j && mi->jpersons[1].jp < 0) {
+                           // Take care of anyone who has unambiguous jaywalkee.  Get that
+                           // jaywalkee's attention by stripping off all his other bits.
+
+                           for (k=0 ; k<NUMBER_OF_JAYWALK_CANDIDATES ; k++) {
+                              l = mj->jpersons[k].jp;
+                              if (l<0) break;
+                              if (l == i) break;
+                           }
+
+                           if (k<NUMBER_OF_JAYWALK_CANDIDATES)
+                              mj->jpersons[0] = mj->jpersons[k];
+
+                           for (k=1 ; k<NUMBER_OF_JAYWALK_CANDIDATES ; k++)
+                              mj->jpersons[k].jp = -1;
+
                            another_round = true;   // We will move them on a future iteration.
                         }
                      }
@@ -2227,7 +2347,7 @@ extern void drag_someone_and_move(setup *ss, parse_block *parseptr, setup *resul
 
    for (i=0; i<nump; i++) {
       if (matrix_info[i].sel)
-         clear_person(&scopy, matrix_info[i].orig_source_idx);
+         scopy.clear_person(matrix_info[i].orig_source_idx);
    }
 
    setup refudged = scopy;
@@ -2270,7 +2390,7 @@ extern void drag_someone_and_move(setup *ss, parse_block *parseptr, setup *resul
          // Find out how much the dragger turned while doing the call.
          // The "before" space is scopy and the "after" space is result,
          // so this doesn't necessarily relate to actual turning.
-         int dragger_turn = (second_matrix_info[kk].dir - matrix_info[i].nearest) & 3;
+         int dragger_turn = (second_matrix_info[kk].dir - matrix_info[i].nearestdrag) & 3;
          if (dragger_turn & 2) {
             origdx = -origdx;
             origdy = -origdy;
@@ -2445,8 +2565,8 @@ extern void anchor_someone_and_move(
 
       Eindex[j] = 99;    // We have someone in this group.
 
-      // The "nearest" field tells what anchored group the person is in.
-      before_matrix_info[i].nearest = j;
+      // The "nearestdrag" field tells what anchored group the person is in.
+      before_matrix_info[i].nearestdrag = j;
 
       if (before_matrix_info[i].sel) {
          if (Bindex[j] >= 0) fail("Need exactly one 'anchored' person in each group.");
@@ -2493,7 +2613,7 @@ extern void anchor_someone_and_move(
 
       for (k=0 ; k<nump ; k++) {
          if (((after_matrix_info[i].id1 ^ before_matrix_info[k].id1) & XPID_MASK) == 0) {
-            j = before_matrix_info[k].nearest;
+            j = before_matrix_info[k].nearestdrag;
             goto found_person;
          }
       }
@@ -2544,7 +2664,7 @@ static void rollmove(
          }
       }
       else
-         clear_person(result, i);
+         result->clear_person(i);
    }
 }
 
@@ -2999,12 +3119,21 @@ static int gcd(int a, int b)
 // In that case, this function returns
 //      "incoming_fracs of reverse order of arg_fracs",
 // that is, the first 1/4 (0114).  If the client retains the
-// CMD_FRAC_REVERSE flag on that, it do the last 1/4 of the call.
-extern uint32 process_spectacularly_new_fractions(int cn, int cd, int dn, int dd,
-                                                  uint32 incoming_fracs,
-                                                  bool make_improper,
-                                                  bool *improper_p) THROW_DECL
+// CMD_FRAC_REVERSE flag on that, it will do the last 1/4 of the call.
+extern uint32 process_stupendously_new_fractions(int start, int end,
+                                                 fraction_invert_flags invert_flags,
+                                                 uint32 incoming_fracs,
+                                                 bool make_improper /* = false */,
+                                                 bool *improper_p /* = 0 */) THROW_DECL
 {
+   int cn = (start) & 0xF;
+   int cd = (start >> 4) & 0xF;
+   int dn = (end) & 0xF;
+   int dd = (end >> 4) & 0xF;
+
+   if (invert_flags & FRAC_INVERT_START) cn = cd-cn;
+   if (invert_flags & FRAC_INVERT_END) dn = dd-dn;
+
    int numer = dn*cd-cn*dd;
    int denom = dd*cd;
    int P = cn*dd;
@@ -4656,10 +4785,10 @@ static bool do_misc_schema(
          (void) copy_person(ss, 4, ss, 2);
          (void) copy_person(ss, 2, ss, 1);
          (void) copy_person(ss, 1, ss, 0);
-         clear_person(ss, 0);
-         clear_person(ss, 3);
-         clear_person(ss, 6);
-         clear_person(ss, 9);
+         ss->clear_person(0);
+         ss->clear_person(3);
+         ss->clear_person(6);
+         ss->clear_person(9);
 
          ss->kind = s3x4;
       }
@@ -5031,10 +5160,14 @@ static void really_inner_move(setup *ss,
 
    switch (the_schema) {
    case schema_nothing:
+   case schema_nothing_noroll:
       if ((ss->cmd.cmd_final_flags.test_heritbits(~(INHERITFLAG_HALF|INHERITFLAG_LASTHALF))) |
           ss->cmd.cmd_final_flags.final)
          fail("Illegal concept for this call.");
       *result = *ss;
+
+      if (the_schema == schema_nothing_noroll) result->suppress_all_rolls();
+
       // This call is a 1-person call, so it can be presumed
       // to have split maximally both ways.
       result->result_flags.maximize_split_info();
@@ -5312,7 +5445,7 @@ static void really_inner_move(setup *ss,
                   if (p & BIT_PERSON) {
                      for (i=0; i<=sizem1; i++) {
                         if (((orig_people.people[i].id1 ^ p) & XPID_MASK) == 0) {
-                           clear_person(&the_setups[orig_people.people[i].id2], j);
+                           the_setups[orig_people.people[i].id2].clear_person(j);
                            goto did_it;
                         }
                      }
@@ -5436,9 +5569,9 @@ static void really_inner_move(setup *ss,
          if (result->people[1].id1 | result->people[2].id1 |
              result->people[5].id1 | result->people[6].id1)
             fail("Internal error: 'O' people wandered into middle.");
-         swap_people(result, 1, 3);
-         swap_people(result, 2, 4);
-         swap_people(result, 3, 7);
+         result->swap_people(1, 3);
+         result->swap_people(2, 4);
+         result->swap_people(3, 7);
          result->kind = s2x2;
          result->result_flags.misc = (result->result_flags.misc & ~3) | (result->rotation+1);
          canonicalize_rotation(result);
@@ -5689,14 +5822,18 @@ static void move_with_real_call(
                uint32 tbonetest = (attr::slimit(ss) >= 0) ? or_all_people(ss) : 99;
 
                if (tbonetest) {
+                  heritflags bit_to_set = (heritflags) 0;
                   if ((ss->cmd.cmd_frac_flags & ~CMD_FRAC_BREAKING_UP) ==
                       CMD_FRAC_HALF_VALUE)
-                     ss->cmd.cmd_final_flags.set_heritbit(INHERITFLAG_HALF);
+                     bit_to_set = INHERITFLAG_HALF;
                   else if ((ss->cmd.cmd_frac_flags & ~CMD_FRAC_BREAKING_UP) ==
-                           CMD_FRAC_LASTHALF_VALUE)
-                     ss->cmd.cmd_final_flags.set_heritbit(INHERITFLAG_LASTHALF);
-                  else
+                           CMD_FRAC_LASTHALF_VALUE) {
+                     bit_to_set = INHERITFLAG_LASTHALF;
+                  }
+
+                  if (bit_to_set == 0 || ss->cmd.cmd_final_flags.test_heritbit(bit_to_set))
                      fail("This call can't be fractionalized this way.");
+                  ss->cmd.cmd_final_flags.set_heritbit(bit_to_set);
                }
 
                ss->cmd.cmd_frac_flags = CMD_FRAC_NULL_VALUE;
@@ -5704,6 +5841,7 @@ static void move_with_real_call(
 
             break;
          case schema_nothing:
+         case schema_nothing_noroll:
          case schema_recenter:
          case schema_roll:
             fail("This call can't be fractionalized.");

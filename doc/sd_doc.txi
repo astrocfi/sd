@@ -1,8 +1,8 @@
 \input texinfo
 @c user documentation for Sd (square dance caller's helper)
 @c
-@set sd-version 36.58
-@set Time-stamp: April 9, 2005
+@set sd-version 36.59
+@set Time-stamp: May 13, 2005
 @c
 @setfilename sd_doc.info
 @c We want the version number to show in the html file.
@@ -4564,7 +4564,7 @@ Something like ``consider the following two calls to be one unit, and do a stabl
 swing thru and turn thru'' might be appropriate.
 @item precede it by@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
 @item follow it by@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
-@item add@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
+@item add@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
 The concepts @code{precede it by} and @code{follow it by} take two subject
 calls.  They perform the first call (first in textual order, that is)
 @i{before} or @i{after}, respectively, the second.
@@ -4730,6 +4730,11 @@ The @kbd{halfway} concept is the same as @kbd{first 1/2}.
 
 @item half and half @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
 This does the first half of the first call, followed by the second half of the second call.
+
+@item <N>/<N> and <N>/<N> @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
+This does the first <first fraction> of the first call, followed by the
+last <second fraction> of the second call.  It is a generalization of
+half and half.
 
 @item replace the <Nth> part@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
 @item replace the last part@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]

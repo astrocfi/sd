@@ -1638,6 +1638,8 @@ conzept::concept_descriptor conzept::unsealed_concept_descriptor_table[] = {
     UC_none, 2},
    {"HALF AND HALF",                         concept_special_sequential,      0, l_c4,
     UC_none, 5},
+   {"@9/@9 AND @9/@9",                       concept_special_sequential_4num, 0, l_c4,
+    UC_none, 6},
    {"INTERRUPT AFTER THE @u PART",           concept_replace_nth_part,        0, l_c1,
     UC_none, 9},
    {"INTERRUPT BEFORE THE LAST PART",        concept_replace_last_part,       0, l_c1,

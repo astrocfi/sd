@@ -1,7 +1,7 @@
 \input texinfo @c %**start of header -*-texinfo-*-
 @setfilename relnotes.info
 @settitle Sd Release Notes
-@c Time-stamp: <9 Apr 2005 wba>
+@c Time-stamp: <13 May 2005 wba>
 @iftex
 @headings off
 @oddheading @| @| @thispage
@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 36.58
-@set title2 Database version = 36.58 format = 229
+@set title1 RELEASE NOTES FOR VERSION 36.59
+@set title2 Database version = 36.59 format = 230
 @set title3 parser version 1.12, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 36.59::
 * 36.58::
 * 36.57::
 * 36.56::
@@ -61,7 +62,7 @@ The files @file{relnotes98.txi} and @file{oldnotes} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 36.58, Top, (dir)
+@node Intro, 36.59, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -72,11 +73,41 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2005 William B. Ackerman
 @sp 3
 @menu
-* 36.58::               Changes in the current version
+* 36.59::               Changes in the current version
 @end menu
 
 @c ************
-@node 36.58, 36.57, Intro, Top
+@node 36.59, 36.58, Intro, Top
+@unnumberedsec Version 36.59 changes
+
+New call: @strong{<anyone> run 1-1/2}.  Without this call, the use of
+the @strong{1-1/2} concept on the call @strong{run} would cause the
+designator (e.g. @strong{centers}) to be re-evaluated after the first
+@strong{run}.  This would lead to things like @strong{centers run 1-1/2}
+behaving in a nonintuitive way.  We believe that the more
+straightforward way is not to re-evaluate in a situation like this.
+This new call does it that way.
+
+The behavior of @strong{roll} after @strong{zip code} and
+@strong{squeeze} was repaired.
+
+The @strong{half and half} concept has been extended to any fractions, including fractions
+that do not add up to 1.  It is entered as in this example:
+@example
+@group
+    1/2 and 2/3
+    contour the line
+    remake the wave
+@end group
+@end example
+
+This takes two calls.  Do the
+first fraction of the first call, and then the last fraction of the second
+call.  So, in this example, do the first 1/2 of @strong{contour the line} and
+then the last 2/3 of @strong{remake the wave}.
+
+@c ************
+@node 36.58, 36.57, 36.59, Top
 @unnumberedsec Version 36.58 changes
 
 The handling of alamo rings is improved.  That is, after something like

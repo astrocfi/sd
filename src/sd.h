@@ -425,6 +425,7 @@ enum concept_kind {
    concept_sequential,
    concept_special_sequential,
    concept_special_sequential_num,
+   concept_special_sequential_4num,
    concept_meta,
    concept_meta_one_arg,
    concept_meta_two_args,
@@ -1314,7 +1315,7 @@ struct resultflag_rec {
 
 /* Warning!  Do not rearrange these fields without good reason.  There are data
    initializers instantiating these in sdinit.cpp (test_setup_*) and in sdtables.cpp
-   (startinfolist) that will need to be rewritten. */
+   (startinfolist) that would need to be rewritten. */
 struct setup {
    setup_kind kind;
    int rotation;
@@ -1333,6 +1334,11 @@ struct setup {
    small_setup inner;
    small_setup outer;
    int concsetup_outer_elongation;
+
+   inline void clear_person(int resultplace);
+   inline void suppress_roll(int place);
+   inline void suppress_all_rolls();
+   inline void swap_people(int oneplace, int otherplace);
 };
 
 
@@ -2057,36 +2063,6 @@ enum warning_index {
    warn__diagnostic,
    warn__NUM_WARNINGS       // Not a real warning; just used for counting.
 };
-
-struct matrix_rec {
-   int x;              // This person's coordinates, calibrated so that a matrix
-   int y;              //   position cooresponds to an increase by 4.
-   int nicex;          // This person's "nice" coordinates, used for
-   int nicey;          //   calculating jay walk legality.
-   uint32 id1;         // The actual person, for error printing.
-   bool sel;           // True if this person is selected.  (False if selectors not in use.)
-   bool done;          // Used for loop control on each pass.
-   bool realdone;      // Used for loop control on each pass.
-   uint32 jbits;       // Bit mask for all possible jaywalkees.
-   int boybit;         // 1 if boy, 0 if not (might be neither).
-   int girlbit;        // 1 if girl, 0 if not (might be neither).
-   int dir;            // This person's initial facing direction, 0 to 3.
-   int deltax;         // How this person will move, relative to his own facing
-   int deltay;         //   direction, when call is finally executed.
-   int nearest;        // Smallest forward distance to a jaywalkee.
-   int nearestlat;     // Smallest lateral distance to a jaywalkee.
-   int leftidx;        // X-increment of leftmost valid jaywalkee.
-   int rightidx;       // X-increment of rightmost valid jaywalkee.
-   int deltarot;       // How this person will turn.
-   uint32 roll_stability_info; // This person's roll & stability info, from call def'n.
-   int orig_source_idx;
-   matrix_rec *nextse; // Points to next person south (dir even) or east (dir odd.)
-   matrix_rec *nextnw; // Points to next person north (dir even) or west (dir odd.)
-   bool far_squeezer;  // This person's pairing is due to being far from someone.
-   bool tbstopse;      // True if nextse/nextnw is zero because the next spot
-   bool tbstopnw;      //   is occupied by a T-boned person (as opposed to being empty.)
-};
-
 
 struct coordrec {
    setup_kind result_kind;
@@ -2853,8 +2829,9 @@ struct resolve_indicator {
 
    CONCPROP__STANDARD means that the concept can be "standard".
 
-   CONCPROP__USE_NUMBER         If a concept takes one number, only CONCPROP__USE_NUMBER is set.
-   CONCPROP__USE_TWO_NUMBERS    If it takes two numbers both bits are set.
+   CONCPROP__USE_NUMBER         Concept takes one number.
+   CONCPROP__USE_TWO_NUMBERS    Concept takes two numbers.
+   CONCPROP__USE_FOUR_NUMBERS   Etc.
 
    CONCPROP__SHOW_SPLIT means that the concept prepares the "split_axis" bits properly
       for transmission back to the client.  Normally this is off, and the split axis bits
@@ -2918,12 +2895,12 @@ enum {
    /* spare:                   0x00010000UL, */
    /* spare:                   0x00020000UL, */
    /* spare:                   0x00040000UL, */
-   /* spare:                   0x00080000UL, */
-   CONCPROP__IS_META         = 0x00100000UL,
-   CONCPROP__GET_MASK        = 0x00200000UL,
-   CONCPROP__STANDARD        = 0x00400000UL,
-   CONCPROP__USE_NUMBER      = 0x00800000UL,
-   CONCPROP__USE_TWO_NUMBERS = 0x01000000UL,
+   CONCPROP__IS_META         = 0x00080000UL,
+   CONCPROP__GET_MASK        = 0x00100000UL,
+   CONCPROP__STANDARD        = 0x00200000UL,
+   CONCPROP__USE_NUMBER      = 0x00400000UL,
+   CONCPROP__USE_TWO_NUMBERS = 0x00800000UL,
+   CONCPROP__USE_FOUR_NUMBERS= 0x01000000UL,
    CONCPROP__MATRIX_OBLIVIOUS= 0x02000000UL,
    CONCPROP__PERMIT_MATRIX   = 0x04000000UL,
    CONCPROP__SHOW_SPLIT      = 0x08000000UL,
@@ -4459,10 +4436,19 @@ extern bool get_real_subcall(
    uint32 extra_heritmask_bits,
    setup_command *cmd_out) THROW_DECL;
 
-extern uint32 process_spectacularly_new_fractions(int cn, int cd, int dn, int dd,
-                                                  uint32 incoming_fracs,
-                                                  bool make_improper = false,
-                                                  bool *improper_p = 0) THROW_DECL;
+// These control inversion of the start and end args.  That is, the position
+// fraction F is turned into 1-F.
+enum fraction_invert_flags {
+   FRAC_INVERT_NONE = 0,
+   FRAC_INVERT_START = 1,
+   FRAC_INVERT_END = 2
+};
+
+extern uint32 process_stupendously_new_fractions(int start, int end,
+                                                 fraction_invert_flags invert_flags,
+                                                 uint32 incoming_fracs,
+                                                 bool make_improper = false,
+                                                 bool *improper_p = 0) THROW_DECL;
 
 extern bool fill_active_phantoms_and_move(setup *ss, setup *result) THROW_DECL;
 
@@ -4714,8 +4700,6 @@ extern uint32 find_calldef(
    int real_direction,
    int northified_index) THROW_DECL;
 
-extern void clear_people(setup *z);
-
 extern void clear_result_flags(setup *z);
 
 inline uint32 rotperson(uint32 n, int amount)
@@ -4726,12 +4710,6 @@ inline uint32 rotcw(uint32 n)
 
 inline uint32 rotccw(uint32 n)
 { if (n == 0) return 0; else return (n + 033) & ~064; }
-
-inline void clear_person(setup *resultpeople, int resultplace)
-{
-   resultpeople->people[resultplace].id1 = 0;
-   resultpeople->people[resultplace].id2 = 0;
-}
 
 
 inline uint32 little_endian_live_mask(const setup *ss)
@@ -4756,12 +4734,39 @@ inline uint32 or_all_people(const setup *ss)
 }
 
 
+extern void clear_people(setup *z);
+
+inline void setup::clear_person(int place)
+{
+   people[place].id1 = 0;
+   people[place].id2 = 0;
+}
+
+inline void setup::suppress_roll(int place)
+{
+   if (people[place].id1)
+      people[place].id1 = (people[place].id1 & (~NROLL_MASK)) | ROLL_IS_M;
+}
+
+inline void setup::suppress_all_rolls()
+{
+   // If we can't determine the setup size, it will be -1,
+   // and the loop below will take no action.
+   for (int k=0; k<=attr::klimit(kind); k++)
+      suppress_roll(k);
+}
+
+
+inline void setup::swap_people(int oneplace, int otherplace)
+{
+   personrec temp = people[otherplace];
+   people[otherplace] = people[oneplace];
+   people[oneplace] = temp;
+}
 
 extern uint32 copy_person(setup *resultpeople, int resultplace, const setup *sourcepeople, int sourceplace);
 
 extern uint32 copy_rot(setup *resultpeople, int resultplace, const setup *sourcepeople, int sourceplace, int rotamount);
-
-extern void swap_people(setup *ss, int oneplace, int otherplace);
 
 extern void install_person(setup *resultpeople, int resultplace, const setup *sourcepeople, int sourceplace);
 

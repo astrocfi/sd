@@ -892,6 +892,7 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
 
    switch (root_to_use->schema) {
    case schema_nothing:
+   case schema_nothing_noroll:
    case schema_roll:
    case schema_recenter:
       break;

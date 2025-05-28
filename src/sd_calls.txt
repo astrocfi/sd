@@ -44,11 +44,15 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "36.58"
+version "36.59"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve
    nulldefine
+
+call "_nothing, and dont roll" dontshow tag nullcall_noroll
+            dont_use_in_resolve
+   nulldefine_noroll
 
 call "_secondary nothing" dontshow tag nullsecond
    nulldefine
@@ -4288,7 +4292,7 @@ call "@eright@f anchor 3/4" c4a
 call "@6 squeeze" c1
             dont_use_in_resolve
    partnermatrix use_selector ignore_nonselectees stop_and_warn_on_tbone find_squeezers
-      [0 0 0 0 CR20S 16 CR20S 16 AL12S 16 AL12S 16
+      [0 0 0 0 ZM20S 16 ZM20S 16 ZM12S 16 ZM12S 16
        0 0 0 0 CR20S 16 CR20S 16 AL12S 16 AL12S 16]
             alternate_definition [half] c1
       [0 0 0 0 CR18S 16 CR18S 16 AL14S 16 AL14S 16  // close: trade but do not slide
@@ -4300,7 +4304,7 @@ call "@6 squeeze" c1
 call "squeeze" c1
             dont_use_in_resolve
    partnermatrix stop_and_warn_on_tbone find_squeezers
-      [CR20S 16 CR20S 16 AL12S 16 AL12S 16 0 0 0 0
+      [ZM20S 16 ZM20S 16 ZM12S 16 ZM12S 16 0 0 0 0
        CR20S 16 CR20S 16 AL12S 16 AL12S 16 0 0 0 0]
             alternate_definition [half] c1
       [CR18S 16 CR18S 16 AL14S 16 AL14S 16 0 0 0 0  // close: trade but do not slide
@@ -4314,7 +4318,7 @@ call "@6 start a squeeze" c1
    /* Beware!  This isn't quite right. */
    setup 4x4 4x4
       preds "???"
-         if select               [AL13S AL15S AL11S AL10S AL6S AL8S CR4S AL9S CR5S CR7S CR3S CR2S CR14S CR0S AL12S CR1S]
+         if select               [AL13S AL15S AL11S ZM10S AL6S ZM8S ZM4S ZM9S CR5S CR7S CR3S ZM2S CR14S ZM0S ZM12S ZM1S]
          if semi_squeezer_select [0 0 0 AL15S 0 AL6S CR5S AL11S 0 0 0 CR7S 0 CR14S AL13S CR3S]
          if always               [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N ZM7N ZM8N ZM9N ZM10N ZM11N ZM12N ZM13N ZM14N ZM15N]
 
@@ -8907,7 +8911,14 @@ call "cross the ocean" c4
    setup 4x1 1x4
       array [CAL3W CR2E 0 0]
 
-call "@6 walk others dodge" mainstream tag starthopping
+call "@6 walk others dodge" mainstream
+            yield_if_ambiguous
+   setup 2x2 2x2
+      preds "Can't tell who is designated."
+         if select [0 0 ZM1N ZM0N]
+         if unselect [ZM1N ZM0N ZM3N ZM2N]
+
+call "_start @6 hop" dontshow tag starthopping
             yield_if_ambiguous
    setup 4x2 2x4
       preds "Can't tell who is designated."
@@ -9640,7 +9651,7 @@ call "_natural 3/4 and 3/4" dontshow tag nat34_34
       array [CCCAL1W AAACR3W AL2N CR2S]
 
 call "_ @D by the right" dontshow tag odd_frac_by_right
-            left_means_mirror neednumber
+            left_means_mirror neednumber split_large_setups
             fractal_is_inherited yoyo_fractal_numbers diamond_is_legal
    setup 1x4 dmd qualifier num 1 left wave_only
       array [0 CR1E ZM2N 0]
@@ -9712,6 +9723,11 @@ call "_ @D by the right" dontshow tag odd_frac_by_right
       array [CR1E CR5E CR3E 0 0 0]
    setup 3x2 1x6 qualifier num 3 right wave_only
       array [CR0W CR2W CR4W 0 0 0]
+
+   setup 4x2 1x8 qualifier num 1 right wave_only
+      array [CR1E CR2E CR7E CR4E 0 0 0 0]
+   setup 4x2 1x8 qualifier num 3 right wave_only
+      array [CR0W CR3W CR6W CR5W 0 0 0 0]
 
    setup 2x2 1x4 rotate qualifier num 1 right wave_only
       array [CR0N 0 0 CR3N]
@@ -10296,14 +10312,14 @@ call "any hand swing the fractions" c1
 // Quarter mix and three quarter mix.
 
 call "@D cross" c3x
-            left_means_mirror neednumber grand_is_inherited visible_fractions
-   seq odd_frac_by_right [inherit_left]
-   seq ctrxrun_in_rw [inherit_left inherit_grand]
+            left_means_mirror neednumber grand_is_inherited bigmatrix_is_inherited visible_fractions
+   seq odd_frac_by_right [inherit_left inherit_bigmatrix]
+   seq ctrxrun_in_rw [inherit_left inherit_bigmatrix inherit_grand]
 
 call "@D mix" c3a
-            left_means_mirror neednumber grand_is_inherited yoyo_is_inherited visible_fractions
-   seq odd_frac_by_right [inherit_left]
-   seq ctrxrun_in_rw [inherit_left inherit_grand]
+            left_means_mirror neednumber grand_is_inherited bigmatrix_is_inherited yoyo_is_inherited visible_fractions
+   seq odd_frac_by_right [inherit_left inherit_bigmatrix]
+   seq ctrxrun_in_rw [inherit_left inherit_bigmatrix inherit_grand]
    seq maybegrandslip_in_lw [inherit_left inherit_grand inherit_yoyo roll_transparent]
 
 call "any hand @D cross" c3x
@@ -11575,6 +11591,18 @@ call "_beaus run" dontshow tag beaurun
    setup 1x2 1x2 rotate qualifier right wave_only
       array [CR0N ZM1W]
 
+call "@6@C run 1-1/2" mainstream
+            yield_if_ambiguous split_large_setups
+   lateral_to_selectees
+   setup 1x2 1x2 rotate qualifier couples_only restriction unusual not_all_sel
+      preds "Need one runner and one runnee."
+         if select [CR1S AL1N]
+         if unselect_near_select [ZM0W ZM0W]
+   setup 1x2 1x2 rotate qualifier miniwaves restriction unusual not_all_sel
+      preds "Need one runner and one runnee."
+         if select [CR1S AL1N]
+         if unselect_near_select [ZM1W ZM1W]
+
 call "@6@C run" mainstream tag anyonerun
             yield_if_ambiguous split_large_setups
    lateral_to_selectees
@@ -11731,6 +11759,18 @@ call "_centers cross run in right wave" dontshow tag ctrxrun_in_rw
       array [ZM1N CR2S CR7S AL0S ZM5N AL6S AL3S CR4S]
    setup 8x1 1x8 restriction unusual alwaysfail
       array [ZM1N    0    0    0 ZM5N    0    0    0]
+            alternate_definition [12matrix grand] c4
+   setup 1x12 1x12
+      array [ZM1N CR3S AL0S CR5S AL2S CR10S ZM7N AL9S CR6S AL11S CR8S AL4S]
+   setup 12x1 1x12 restriction unusual alwaysfail
+      array [ZM1N    0    0    0    0     0 ZM5N    0    0     0    0    0]
+            alternate_definition [16matrix grand] c4
+   setup 1x16 1x16
+      array [ZM1N  CR3S AL0S  CR5S  AL2S  CR7S  AL4S CR14S
+             ZM9N AL11S CR8S AL13S CR10S AL15S CR12S  AL6S]
+   setup 16x1 1x16 restriction unusual alwaysfail
+      array [ZM1N     0    0     0     0     0     0     0
+             ZM5N     0    0     0     0     0     0     0]
             alternate_definition [grand half] c3a
    setup 1x6 2x3
       array [ZM5N CR1E AL0W ZM3N AL1W CR2E]
@@ -17061,7 +17101,7 @@ call "transfer the column" a1 tag transfer
 
 call "box transfer" a2
             dont_use_in_resolve
-   setup 2x2 2x2 restriction wave_only
+   setup 2x2 2x2 restriction forbidden wave_only
       array [CR2W AL3E AM2E CM3W]
             alternate_definition [3x3] c4
    setup 3x2 2x3 rotate restriction forbidden wave_only
@@ -17072,7 +17112,7 @@ call "box transfer" a2
 
 // Both "split" and "box" are legal on Callerlab lists.
 call "split transfer" a2
-   setup 2x2 2x2 restriction wave_only
+   setup 2x2 2x2 restriction forbidden wave_only
       array [CR2W AL3E AM2E CM3W]
             alternate_definition [3x3] c4
    setup 3x2 2x3 rotate restriction forbidden wave_only
@@ -18234,7 +18274,7 @@ call "circulate for coordinate" dontshow tag circ_for_coord
    setup 2x1 1x2 rotate restriction unusual alwaysfail
       array [CM1N 0]
 
-call "1/2 circulate" mainstream tag half_circ
+call "1/2 circulate" mainstream
    seq circulate [force_half]
 
 call "circulate 1-1/2" mainstream
@@ -18934,19 +18974,19 @@ call "centers go as you are, zip code @9-1/2, new centers @0" c2
 
 call "zip code @9" c2
             dont_use_in_resolve neednumber
-   crossconc nullcall [] zipn [conc_demand_columns conc_force_lines]
+   crossconc nullcall_noroll [] zipn [conc_demand_columns conc_force_lines]
 
 call "centers go as you are, zip code @9" c2
             dont_use_in_resolve neednumber
-   crossconc nullcall [] zipnasyouare [conc_demand_lines conc_force_lines]
+   crossconc nullcall_noroll [] zipnasyouare [conc_demand_lines conc_force_lines]
 
 call "zip code @9-1/2" c2
             dont_use_in_resolve neednumber yield_if_ambiguous
-   crossconc nullcall [] zipnandhalf [conc_demand_columns conc_force_lines]
+   crossconc nullcall_noroll [] zipnandhalf [conc_demand_columns conc_force_lines]
 
 call "centers go as you are, zip code @9-1/2" c2
             dont_use_in_resolve neednumber yield_if_ambiguous
-   crossconc nullcall [] zipnandhalfasyouare [conc_demand_lines conc_force_lines]
+   crossconc nullcall_noroll [] zipnandhalfasyouare [conc_demand_lines conc_force_lines]
 
 call "inner code @9" c4x
             dont_use_in_resolve neednumber
@@ -20378,27 +20418,27 @@ call "squeeze the hourglass" c1
    setup hrglass galaxy
       array [0 0 ZM4N 0 0 0 ZM0N 0]
    setup phrglass galaxy
-      array [CR7S CR5S 0 CR6S AL3S AL1S 0 AL2S]
+      array [CR7S CR5S 0 ZM6S AL3S AL1S 0 ZM2S]
 
 call "squeeze the diamond" c1
    setup dmd dmd rotate
       array [CR1E 0 AL3E 0]
    setup pmd dmd rotate
-      array [0 CR2E 0 AL0E]
+      array [0 ZM2E 0 ZM0E]
 
 call "squeeze the galaxy" c1
    setup galaxy hyperglass
       preds "???"
-         if next_galaxyspot_is_tboned [ZM0N CR5S 0 AL2S ZM6N AL11S 0 CR8S]
-                            if always [CR7S CR5S 0 AL2S AL1S AL11S 0 CR8S]
+         if next_galaxyspot_is_tboned [ZM0N ZM5S 0 ZM2S ZM6N ZM11S 0 ZM8S]
+                            if always [CR7S ZM5S 0 ZM2S AL1S ZM11S 0 ZM8S]
 
 call "squeeze the butterfly" c1
    setup 4x4 4x4
-      array [AL13S 0 0 AL10S AL6S 0 0 AL9S CR5S 0 0 CR2S CR14S 0 0 CR1S]
+      array [AL13S 0 0 ZM10S AL6S 0 0 ZM9S CR5S 0 0 ZM2S CR14S 0 0 ZM1S]
 
 call "squeeze the O" c1
    setup 4x4 4x4
-      array [0 AL15S AL11S 0 0 AL8S CR4S 0 0 CR7S CR3S 0 0 CR0S AL12S 0]
+      array [0 AL15S AL11S 0 0 ZM8S ZM4S 0 0 CR7S CR3S 0 0 ZM0S ZM12S 0]
 
 call "flip the hourglass" a2
             fudge_to_q_tag take_right_hands

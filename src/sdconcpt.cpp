@@ -770,9 +770,9 @@ static void do_concept_multiple_lines_tog(
                uint32 person = ss->people[i].id1;
                tbonetest |= person;
                if (person & 1)
-                  clear_person(&vpeople, i);
+                  vpeople.clear_person(i);
                else
-                  clear_person(&hpeople, i);
+                  hpeople.clear_person(i);
             }
          }
 
@@ -2589,13 +2589,13 @@ static void do_concept_old_stretch(
 
       if (((result->people[0].id1 ^ result->people[1].id1) & 2) ||
                (result->result_flags.misc & RESULTFLAG__VERY_ENDS_ODD)) {
-         swap_people(result, 1, 6);
-         swap_people(result, 2, 5);
-         swap_people(result, 3, 7);
+         result->swap_people(1, 6);
+         result->swap_people(2, 5);
+         result->swap_people(3, 7);
       }
       else if (((result->people[2].id1 ^ result->people[3].id1) & 2) ||
                (result->result_flags.misc & RESULTFLAG__VERY_CTRS_ODD)) {
-         swap_people(result, 2, 6);
+         result->swap_people(2, 6);
       }
       else {
          fail("Sorry, can't figure this out.");
@@ -2606,21 +2606,21 @@ static void do_concept_old_stretch(
          fail("1x3 or 3x1 Stretch call not permitted here.");
 
       if (result->kind == s2x4) {
-         swap_people(result, 1, 2);
-         swap_people(result, 5, 6);
+         result->swap_people(1, 2);
+         result->swap_people(5, 6);
       }
       else if (result->kind == s1x8) {
-         swap_people(result, 3, 6);
-         swap_people(result, 2, 7);
+         result->swap_people(3, 6);
+         result->swap_people(2, 7);
       }
       else if (result->kind == s_qtag) {
-         swap_people(result, 3, 7);
+         result->swap_people(3, 7);
       }
       else if (result->kind == s_ptpd) {
-         swap_people(result, 2, 6);
+         result->swap_people(2, 6);
       }
       else if (result->kind == s1x4) {
-         swap_people(result, 1, 3);
+         result->swap_people(1, 3);
       }
       else
          fail("Stretch call didn't go to a legal setup.");
@@ -2680,13 +2680,13 @@ static void do_concept_new_stretch(
           next_parseptr->concept->kind == concept_selbasedtrngl) &&
           junk_concepts.test_herit_and_final_bits() == 0) {
          if (tempsetup.kind == s_hrglass) {
-            swap_people(&tempsetup, 3, 7);
+            tempsetup.swap_people(3, 7);
          }
          else if (tempsetup.kind == s_ptpd &&
                   next_parseptr->concept->kind == concept_randomtrngl &&
                   next_parseptr->concept->arg1 == 2) {
             // We require "inside triangles".
-            swap_people(&tempsetup, 2, 6);
+            tempsetup.swap_people(2, 6);
          }
          else
             fail("Stretched setup call didn't start in appropriate setup.");
@@ -2696,16 +2696,16 @@ static void do_concept_new_stretch(
                junk_concepts.test_herit_and_final_bits() == 0) {
          if (tempsetup.kind == s4x4 && ((global_tbonetest & 011) != 011)) {
             if ((global_tbonetest ^ next_parseptr->concept->arg2) & 1) {
-               swap_people(&tempsetup, 1, 2);
-               swap_people(&tempsetup, 3, 7);
-               swap_people(&tempsetup, 15, 11);
-               swap_people(&tempsetup, 10, 9);
+               tempsetup.swap_people(1, 2);
+               tempsetup.swap_people(3, 7);
+               tempsetup.swap_people(15, 11);
+               tempsetup.swap_people(10, 9);
             }
             else {
-               swap_people(&tempsetup, 13, 14);
-               swap_people(&tempsetup, 15, 3);
-               swap_people(&tempsetup, 11, 7);
-               swap_people(&tempsetup, 6, 5);
+               tempsetup.swap_people(13, 14);
+               tempsetup.swap_people(15, 3);
+               tempsetup.swap_people(11, 7);
+               tempsetup.swap_people(6, 5);
             }
          }
          else
@@ -2719,30 +2719,30 @@ static void do_concept_new_stretch(
    }
 
    if (tempsetup.kind == s2x4) {
-      swap_people(&tempsetup, 1, 2);
-      swap_people(&tempsetup, 5, 6);
+      tempsetup.swap_people(1, 2);
+      tempsetup.swap_people(5, 6);
       maps = MAPCODE(s2x2,2,MPKIND__SPLIT,0);
    }
    else if (tempsetup.kind == s1x8) {
-      swap_people(&tempsetup, 3, 6);
-      swap_people(&tempsetup, 2, 7);
+      tempsetup.swap_people(3, 6);
+      tempsetup.swap_people(2, 7);
       maps = MAPCODE(s1x4,2,MPKIND__SPLIT,0);
    }
    else if (tempsetup.kind == s_qtag) {
-      swap_people(&tempsetup, 3, 7);
+      tempsetup.swap_people(3, 7);
       maps = MAPCODE(sdmd,2,MPKIND__SPLIT,1);
    }
    else if (tempsetup.kind == s_ptpd) {
-      swap_people(&tempsetup, 2, 6);
+      tempsetup.swap_people(2, 6);
       maps = MAPCODE(sdmd,2,MPKIND__SPLIT,0);
    }
    else if (tempsetup.kind == s_bone6) {
-      swap_people(&tempsetup, 2, 5);
+      tempsetup.swap_people(2, 5);
       maps = MAPCODE(s_trngl,2,MPKIND__NONISOTROP1,1);
    }
    else if (tempsetup.kind == s_rigger) {
-      swap_people(&tempsetup, 0, 1);
-      swap_people(&tempsetup, 4, 5);
+      tempsetup.swap_people(0, 1);
+      tempsetup.swap_people(4, 5);
       maps = MAPCODE(s_trngl4,2,MPKIND__SPLIT,1);
    }
    else
@@ -2989,10 +2989,10 @@ static void do_concept_assume_waves(
 
    (void) copy_person(ss, 6, ss, 0);
    (void) copy_person(ss, 7, ss, 1);
-   clear_person(ss, 0);
-   clear_person(ss, 1);
-   clear_person(ss, 4);
-   clear_person(ss, 5);
+   ss->clear_person(0);
+   ss->clear_person(1);
+   ss->clear_person(4);
+   ss->clear_person(5);
 
    ss->kind = s_qtag;
 
@@ -4108,11 +4108,15 @@ static void do_concept_special_sequential(
    //    3 - use (call) for <Nth> part
    //    4 - use (call) in
    //    5 - half and half
+   //    6 - I/J and M/N
 
-   if (parseptr->concept->arg1 == 5) {
+   if (parseptr->concept->arg1 == 5 || parseptr->concept->arg1 == 6) {
       // This is "half and half".
 
       fraction_info zzz(2);
+
+      uint32 given_fractions = (parseptr->concept->arg1 == 6) ? 
+         parseptr->options.number_fields : 0x00002121;
 
       if (ss->cmd.cmd_frac_flags != CMD_FRAC_NULL_VALUE) {
          zzz.get_fraction_info(ss->cmd.cmd_frac_flags,
@@ -4137,14 +4141,16 @@ static void do_concept_special_sequential(
          // The fetch number is 0 or 1.  Depending on which it is,
          // get the proper parse pointer.
          if (fetch_number == 0) {
-            // Doing the first call.  Apply the fraction "first 1/2".
+            // Doing the first call.  Apply the fraction "first 1/2", or whatever.
             result->cmd.cmd_frac_flags =
-               process_spectacularly_new_fractions(0, 1, 1, 2, corefracs);
+               process_stupendously_new_fractions(0x10, given_fractions,
+                                                  FRAC_INVERT_NONE, corefracs);
          }
          else {
-            // Doing the second call.  Apply the fraction "last 1/2".
+            // Doing the second call.  Apply the fraction "last 1/2", or whatever.
             result->cmd.cmd_frac_flags =
-               process_spectacularly_new_fractions(1, 2, 1, 1, corefracs);
+               process_stupendously_new_fractions(given_fractions >> 8, 0x11,
+                                                  FRAC_INVERT_START, corefracs);
             result->cmd.parseptr = parseptr->subsidiary_root;
          }
 
@@ -4403,7 +4409,7 @@ static void do_concept_trace(
    if (ss->kind != s_qtag) fail("Must have a 1/4-tag-like setup for trace.");
 
    // We handle "interlocked trace" in a rather simple-minded way.
-   if (interlock != 0) swap_people(ss, 3, 7);
+   if (interlock != 0) ss->swap_people(3, 7);
 
    ss->cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
 
@@ -4553,7 +4559,7 @@ static void do_concept_trace(
 
    if (interlock != 0) {
       if (result->kind != s_qtag) fail("Can't do this interlocked trace.");
-      swap_people(result, 3, 7);
+      result->swap_people(3, 7);
    }
 
    reinstate_rotation(ss, result);
@@ -5590,13 +5596,13 @@ static void do_concept_all_8(
       in columns.) */
 
    if ((result->people[1].id1 & 010) || (result->people[14].id1 & 1))
-      swap_people(result, 1, 14);
+      result->swap_people(1, 14);
    if ((result->people[2].id1 & 010) || (result->people[5].id1 & 1))
-      swap_people(result, 2, 5);
+      result->swap_people(2, 5);
    if ((result->people[9].id1 & 010) || (result->people[6].id1 & 1))
-      swap_people(result, 9, 6);
+      result->swap_people(9, 6);
    if ((result->people[10].id1 & 010) || (result->people[13].id1 & 1))
-      swap_people(result, 10, 13);
+      result->swap_people(10, 13);
 
    /* Check that we succeeded.  If the call ended T-boned, our zeal to get people
       OUT of each others' way may have left people incorrect. */
@@ -6007,40 +6013,41 @@ static void do_concept_meta(
 
          int code = parseptr->concept->arg2;
 
-         int numer = parseptr->options.number_fields;
-         int denom = numer >> 4;
-         numer &= 0xF;
+         uint32 stuff = (code == 3) ? 0x21 : parseptr->options.number_fields;
+         int numer = stuff & 0xF;
+         int denom = (stuff >> 4) & 0xF;
+
          // Check that user isn't doing something stupid.
-         if (code != 3 && (numer <= 0 || numer >= denom))
+         if (numer <= 0 || numer >= denom)
             fail("Illegal fraction.");
 
          uint32 afracs = ~0UL;
          uint32 bfracs = ~0UL;
          uint32 cfracs = ~0UL;
 
-         if (code == 3) {
-            // This is "halfway".
-            bfracs = process_spectacularly_new_fractions(0, 1, 1, 2, corefracs);
-            cfracs = process_spectacularly_new_fractions(1, 2, 1, 1, corefracs);
-         }
-         else if (code == 2) {
+         if (code == 2) {
             // This is "middle M/N".
-            afracs = process_spectacularly_new_fractions(0, 1,
-                                                         denom-numer, denom<<1, corefracs);
-            bfracs = process_spectacularly_new_fractions(denom-numer, denom<<1,
-                                                         denom+numer, denom<<1, corefracs);
-            cfracs = process_spectacularly_new_fractions(denom+numer, denom<<1,
-                                                         1, 1, corefracs);
+            uint32 middlestuff = stuff + denom*17;
+            afracs = process_stupendously_new_fractions(0x10, middlestuff,
+                                                        FRAC_INVERT_END, corefracs);
+            bfracs = process_stupendously_new_fractions(middlestuff, middlestuff,
+                                                        FRAC_INVERT_START, corefracs);
+            cfracs = process_stupendously_new_fractions(middlestuff, 0x11,
+                                                        FRAC_INVERT_NONE, corefracs);
          }
          else if (code) {
             // This is "last M/N".
-            afracs = process_spectacularly_new_fractions(0, 1, denom-numer, denom, corefracs);
-            bfracs = process_spectacularly_new_fractions(denom-numer, denom, 1, 1, corefracs);
+            afracs = process_stupendously_new_fractions(0x10, stuff,
+                                                        FRAC_INVERT_END, corefracs);
+            bfracs = process_stupendously_new_fractions(stuff, 0x11,
+                                                        FRAC_INVERT_START, corefracs);
          }
          else {
-            // This is "first M/N".
-            bfracs = process_spectacularly_new_fractions(0, 1, numer, denom, corefracs);
-            cfracs = process_spectacularly_new_fractions(numer, denom, 1, 1, corefracs);
+            // This is "halfway" or "first M/N".
+            bfracs = process_stupendously_new_fractions(0x10, stuff,
+                                                        FRAC_INVERT_NONE, corefracs);
+            cfracs = process_stupendously_new_fractions(stuff, 0x11,
+                                                        FRAC_INVERT_NONE, corefracs);
          }
 
          // Do afracs without.
@@ -6526,15 +6533,16 @@ static void do_concept_replace_nth_part(
       break;
    case 2:
       // "Interrupt after M/N".
-      frac_key1 = process_spectacularly_new_fractions(0, 1,
-                                                      parseptr->options.number_fields & 0xF,
-                                                      (parseptr->options.number_fields >> 4) & 0xF,
-                                                      ss->cmd.cmd_frac_flags);
+      frac_key1 = process_stupendously_new_fractions(0x10, parseptr->options.number_fields,
+                                                     FRAC_INVERT_NONE,
+                                                     ss->cmd.cmd_frac_flags);
       frac_key2 = ((frac_key1 & 0xFF)<<8) | 0x0011;
       break;
    case 3:
       // "Sandwich".
-      frac_key1 = process_spectacularly_new_fractions(0, 1, 1, 2, ss->cmd.cmd_frac_flags);
+      frac_key1 = process_stupendously_new_fractions(0x10, 0x21,
+                                                     FRAC_INVERT_NONE,
+                                                     ss->cmd.cmd_frac_flags);
       frac_key2 = ((frac_key1 & 0xFF)<<8) | 0x0011;
       break;
    case 8:
@@ -6826,16 +6834,20 @@ static void do_concept_fractional(
          ((dd-nn) << 12)+(dd << 8)+0x0011 : (nn << 4)+(dd << 0)+0x0100;
    }
 
+   // What a crock!!!!!  Cmd_frac_flags and restrained_fraction need to be reversed!
    int cn = (FOO >> 12) & 0xF;
    int cd = (FOO >> 8) & 0xF;
    int dn = (FOO >> 4) & 0xF;
    int dd = (FOO) & 0xF;
+   uint32 start = cd*16+cn;
+   uint32 end = dd*16+dn;
 
    bool improper = false;
-   uint32 new_fracs = process_spectacularly_new_fractions(cn, cd, dn, dd,
-                                                          ARG4,
-                                                          parseptr->concept->arg1 == 2,
-                                                          &improper);
+   uint32 new_fracs = process_stupendously_new_fractions(start, end,
+                                                         FRAC_INVERT_NONE,
+                                                         ARG4,
+                                                         parseptr->concept->arg1 == 2,
+                                                         &improper);
 
    if (improper) {
       // Do the whole call first, then part of it again.
@@ -6944,9 +6956,9 @@ static void do_concept_so_and_so_begin(
    for (i=0; i<=attr::slimit(ss); i++) {
       if (ss->people[i].id1) {
          if (selectp(ss, i))
-            clear_person(&setup2, i);
+            setup2.clear_person(i);
          else
-            clear_person(&setup1, i);
+            setup1.clear_person(i);
       }
    }
    
@@ -7614,16 +7626,19 @@ concept_table_item concept_table[] = {
     do_concept_sequential},                                 // concept_sequential
    {CONCPROP__SECOND_CALL | CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT,
     do_concept_special_sequential},                         // concept_special_sequential
-   {CONCPROP__USE_NUMBER | CONCPROP__SECOND_CALL |
-    CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT,
+   {CONCPROP__SECOND_CALL | CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT |
+    CONCPROP__USE_NUMBER,
     do_concept_special_sequential},                         // concept_special_sequential_num
+   {CONCPROP__SECOND_CALL | CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT |
+    CONCPROP__USE_FOUR_NUMBERS,
+    do_concept_special_sequential},                         // concept_special_sequential_4num
    {CONCPROP__MATRIX_OBLIVIOUS |
     CONCPROP__SHOW_SPLIT | CONCPROP__PERMIT_REVERSE | CONCPROP__IS_META,
     do_concept_meta},                                       // concept_meta
    {CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__USE_NUMBER |
     CONCPROP__SHOW_SPLIT | CONCPROP__PERMIT_REVERSE | CONCPROP__IS_META,
     do_concept_meta},                                       // concept_meta_one_arg
-   {CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__USE_NUMBER | CONCPROP__USE_TWO_NUMBERS |
+   {CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__USE_TWO_NUMBERS |
     CONCPROP__SHOW_SPLIT | CONCPROP__PERMIT_REVERSE | CONCPROP__IS_META,
     do_concept_meta},                                       // concept_meta_two_args
    {CONCPROP__USE_SELECTOR | CONCPROP__SHOW_SPLIT,
@@ -7632,14 +7647,14 @@ concept_table_item concept_table[] = {
     do_concept_replace_nth_part},                           // concept_replace_nth_part
    {CONCPROP__SECOND_CALL | CONCPROP__SHOW_SPLIT,
     do_concept_replace_nth_part},                           // concept_replace_last_part
-   {CONCPROP__USE_NUMBER | CONCPROP__USE_TWO_NUMBERS |
+   {CONCPROP__USE_TWO_NUMBERS |
     CONCPROP__SECOND_CALL | CONCPROP__SHOW_SPLIT,
     do_concept_replace_nth_part},                           // concept_interrupt_at_fraction
    {CONCPROP__SECOND_CALL | CONCPROP__SHOW_SPLIT,
     do_concept_replace_nth_part},                           // concept_sandwich
    {CONCPROP__SECOND_CALL | CONCPROP__SHOW_SPLIT,
     do_concept_interlace},                                  // concept_interlace
-   {CONCPROP__USE_NUMBER | CONCPROP__USE_TWO_NUMBERS |
+   {CONCPROP__USE_TWO_NUMBERS |
     CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT,
     do_concept_fractional},                                 // concept_fractional
    {CONCPROP__NO_STEP, do_concept_rigger},                  // concept_rigger

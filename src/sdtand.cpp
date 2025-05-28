@@ -1625,7 +1625,7 @@ extern void tandem_couples_move(
             result->rotation = 0;
             result->inner.skind = nothing;
             result->kind = s_normal_concentric;
-            for (i=0 ; i<12 ; i++) swap_people(result, i, i+12);
+            for (i=0 ; i<12 ; i++) result->swap_people(i, i+12);
          }
          else if (ss->kind == s1x4 && result->kind == s2x2) {
             result->result_flags.misc &= ~3;

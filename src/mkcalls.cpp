@@ -868,6 +868,7 @@ char *schematab[] = {
    "???",
    "setup",
    "nulldefine",
+   "nulldefine_noroll",
    "matrix",
    "partnermatrix",
    "rolldefine",
@@ -2658,6 +2659,7 @@ int main(int argc, char *argv[])
          write_array_def(funnyflag);
          break;
       case schema_nothing:
+      case schema_nothing_noroll:
       case schema_roll:
       case schema_recenter:
          get_tok_or_eof();

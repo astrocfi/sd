@@ -1243,7 +1243,7 @@ extern void divided_setup_move(
             (void) copy_rot(&x[j], i, ss, mm, 011*((0-frot-vrot) & 3));
          }
          else
-            clear_person(&x[j], i);
+            x[j].clear_person(i);
          vrot >>= 2;
       }
    }
@@ -1522,10 +1522,10 @@ static void phantom_2x4_move(
 }
 
 
-const expand::thing expand_big2x2_4x4 = {
+static const expand::thing expand_big2x2_4x4 = {
    {12, 0, 4, 8}, 4, s2x2, s4x4, 0};
 
-const expand::thing expand_2x6_4x6 = {
+static const expand::thing expand_2x6_4x6 = {
    {11, 10, 9, 8, 7, 6, 23, 22, 21, 20, 19, 18}, 12, s2x6, s4x6, 0};
 
 
@@ -2644,8 +2644,7 @@ extern void distorted_move(
          int j = inactivemap[i];
          if (j < 0) break;
          (void) copy_person(result, j, &ssave, j);
-         if (result->people[j].id1)
-            result->people[j].id1 = (result->people[j].id1 & (~NROLL_MASK)) | ROLL_IS_M;
+         result->suppress_roll(j);
       }
 
       goto getoutnosplit;
@@ -4033,7 +4032,7 @@ extern void common_spot_move(
                         fail("People moved inconsistently during common-spot call.");
                   }
 
-                  clear_person(&the_results[setup_to_clear], spot_to_clear);
+                  the_results[setup_to_clear].clear_person(spot_to_clear);
                   goto did_it;
                }
             }

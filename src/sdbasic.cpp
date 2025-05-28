@@ -619,9 +619,9 @@ void mirror_this(setup *s) THROW_DECL
 
          s->kind = s->outer.skind;
          s->rotation = s->outer.srotation;
-         for (i=0 ; i<12 ; i++) swap_people(s, i, i+12);
+         for (i=0 ; i<12 ; i++) s->swap_people(i, i+12);
          mirror_this(s);    // Sorrier!
-         for (i=0 ; i<12 ; i++) swap_people(s, i, i+12);
+         for (i=0 ; i<12 ; i++) s->swap_people(i, i+12);
          s->outer.srotation = s->rotation;
 
          s->kind = s_normal_concentric;
@@ -1196,7 +1196,7 @@ static void special_4_way_symm(
 
    for (real_index=0; real_index<begin_size; real_index++) {
       personrec this_person = scopy->people[real_index];
-      clear_person(destination, real_index);
+      destination->clear_person(real_index);
       if (this_person.id1) {
          int real_direction = this_person.id1 & 3;
          int northified_index = (real_index + (((4-real_direction)*begin_size) >> 2)) % begin_size;
@@ -2857,8 +2857,8 @@ static int divide_the_setup(
           (!(newtb & 010) || assoc(b_1x8, ss, calldeflist)) &&
           (!(newtb & 1) || assoc(b_8x1, ss, calldeflist))) {
          ss->kind = s1x8;
-         swap_people(ss, 2, 7);
-         swap_people(ss, 3, 6);
+         ss->swap_people(2, 7);
+         ss->swap_people(3, 6);
          return 2;                        /* And try again. */
       }
       break;
@@ -3127,8 +3127,8 @@ static int divide_the_setup(
                (ss->people[0].id1 | ss->people[1].id1 |
                 ss->people[4].id1 | ss->people[5].id1) == 0) {
          setup sstest = *ss;
-         swap_people(&sstest, 2, 7);
-         swap_people(&sstest, 3, 6);
+         sstest.swap_people(2, 7);
+         sstest.swap_people(3, 6);
          sstest.kind = s_qtag;
 
          if ((!(newtb & 010) ||
@@ -3837,7 +3837,7 @@ extern void basic_move(
 
             if (!(ss->cmd.cmd_final_flags.test_finalbit(FINAL__SPLIT_DIXIE_APPROVED))) {
                int i2 = (i1 + 1) & 3;
-               swap_people(ss, i1, i2);
+               ss->swap_people(i1, i2);
                copy_rot(ss, i1, ss, i1, 033);
                copy_rot(ss, i2, ss, i2, 011);
 
@@ -4865,7 +4865,7 @@ foobar:
             callarray *the_definition;
             uint32 z;
             personrec this_person = ss->people[real_index];
-            clear_person(&newpersonlist, real_index);
+            newpersonlist.clear_person(real_index);
             if (this_person.id1) {
                int final_direction, d2out, thisnumout;
                int real_direction = this_person.id1 & 3;
