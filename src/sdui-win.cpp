@@ -2146,9 +2146,10 @@ struct { int id; const char *message; } dialog_help_list[] = {
     "This accepts whatever session is highlighted (and whatever other\n"
     "things you may have set), and starts Sd."},
    {IDC_START_DELETE_SESSION_CHECKED,
-    "If you check this box and choose a session,\n"
-    "that session will be PERMANENTLY DELETED instead of being used,\n"
-    "and the program will exit immediately.  You should then restart the program."},
+    "If you check this box and choose a session (by double-clicking it or\n"
+    "clicking \"accept\"), that session will be PERMANENTLY DELETED\n"
+    "instead of being used, and the program will exit immediately.\n"
+    "You should then restart the program."},
    {IDC_OUTPUT_NAME,
     "You normally don't need this, since sessions already have output file names.\n"
     "If running without a session, you might want to enter something here.\n"
@@ -2228,7 +2229,7 @@ LRESULT WINAPI Startup_Dialog_WndProc(HWND hwnd, UINT message, WPARAM wParam, LP
       }
       return FALSE;
    default:
-      return FALSE;      /* We do *NOT* call the system default handler. */
+      return FALSE;      // We do *NOT* call the system default handler.
    }
 }
 

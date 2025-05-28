@@ -49,21 +49,20 @@ typedef struct {
 
 typedef struct {
    int perm[8];
-   int accept_extend;
    bool allow_eighth_rotation;
 } reconcile_descriptor;
 
 
 
-static reconcile_descriptor promperm =  {{1, 0, 6, 7, 5, 4, 2, 3}, 0, false};
-static reconcile_descriptor rpromperm = {{0, 1, 7, 6, 4, 5, 3, 2}, 0, false};
-static reconcile_descriptor rlgperm =   {{1, 0, 6, 7, 5, 4, 2, 3}, 2, false};
-static reconcile_descriptor qtagperm =  {{1, 0, 7, 6, 5, 4, 3, 2}, 0, false};
-static reconcile_descriptor homeperm =  {{6, 5, 4, 3, 2, 1, 0, 7}, 0, true};
-static reconcile_descriptor sglperm =   {{7, 6, 5, 4, 3, 2, 1, 0}, 0, true};
-static reconcile_descriptor crossperm = {{5, 4, 3, 2, 1, 0, 7, 6}, 0, false};
-static reconcile_descriptor crossplus = {{5, 4, 3, 2, 1, 0, 7, 6}, 1, false};
-static reconcile_descriptor laperm =    {{1, 3, 6, 0, 5, 7, 2, 4}, 2, false};
+static reconcile_descriptor promperm =  {{1, 0, 6, 7, 5, 4, 2, 3}, false};
+static reconcile_descriptor rpromperm = {{0, 1, 7, 6, 4, 5, 3, 2}, false};
+static reconcile_descriptor rlgperm =   {{1, 0, 6, 7, 5, 4, 2, 3}, false};
+static reconcile_descriptor qtagperm =  {{1, 0, 7, 6, 5, 4, 3, 2}, false};
+static reconcile_descriptor homeperm =  {{6, 5, 4, 3, 2, 1, 0, 7}, true};
+static reconcile_descriptor sglperm =   {{7, 6, 5, 4, 3, 2, 1, 0}, true};
+static reconcile_descriptor crossperm = {{5, 4, 3, 2, 1, 0, 7, 6}, false};
+static reconcile_descriptor crossplus = {{5, 4, 3, 2, 1, 0, 7, 6}, false};
+static reconcile_descriptor laperm =    {{1, 3, 6, 0, 5, 7, 2, 4}, false};
 
 
 static configuration *huge_history_save = (configuration *) 0;
@@ -588,8 +587,8 @@ static bool inner_search(command_kind goal,
             case 2: p2 -= 0600; break;
             }
 
-            if (((p2 >>= 7) & 3) > current_reconciler->accept_extend)
-               goto what_a_loss;
+            // We demand zero promenade distance for reconciles.
+            if ((p2 >>= 7) & 3) goto what_a_loss;
          }
 
          break;

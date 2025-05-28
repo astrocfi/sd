@@ -4171,6 +4171,8 @@ enum specmapkind {
    spcmap_4x4_1x1,
    spcmap_trglbox3x4a,
    spcmap_trglbox3x4b,
+   spcmap_trglbox3x4c,
+   spcmap_trglbox3x4d,
    spcmap_trglbox4x4,
    spcmap_trglbox4x5a,
    spcmap_trglbox4x5b,
@@ -4401,13 +4403,10 @@ extern bool get_real_subcall(
    uint32 extra_heritmask_bits,
    setup_command *cmd_out) THROW_DECL;
 
-extern uint32 process_new_fractions(
-   int numer,
-   int denom,
-   uint32 incoming_fracs,
-   uint32 reverse_orderbit,   // Low bit on means treat as if we mean "do the last M/N".
-   bool allow_improper = false,
-   bool *improper_p = 0) THROW_DECL;
+extern uint32 process_spectacularly_new_fractions(int cn, int cd, int dn, int dd,
+                                                  uint32 incoming_fracs,
+                                                  bool make_improper = false,
+                                                  bool *improper_p = 0) THROW_DECL;
 
 extern bool fill_active_phantoms_and_move(setup *ss, setup *result) THROW_DECL;
 
@@ -4597,6 +4596,9 @@ extern void inner_selective_move(
 
 extern void update_id_bits(setup *ss);
 
+// This gets a ===> BIG-ENDIAN <=== mask of people's facing directions.
+// Each person occupies 2 bits in the resultant masks.  The "livemask"
+// bits are both on if the person is live.
 extern void get_directions(
    setup *ss,
    uint32 & directions,

@@ -2226,6 +2226,10 @@ const map::map_thing map::spec_map_table[] = {
     s2x2,2,MPKIND__NONE,0,        0,  s3x4,      0x000, 0, spcmap_trglbox3x4a},
    {{11, 2, 7, 9,        1, 3, 5, 8},
     s2x2,2,MPKIND__NONE,0,        0,  s3x4,      0x000, 0, spcmap_trglbox3x4b},
+   {{0, 11, 7, 9,        1, 3, 6, 5},
+    s2x2,2,MPKIND__NONE,0,        0,  s3x4,      0x000, 0, spcmap_trglbox3x4c},
+   {{0, 2, 11, 9,        5, 3, 6, 8},
+    s2x2,2,MPKIND__NONE,0,        0,  s3x4,      0x000, 0, spcmap_trglbox3x4d},
    {{12, 14, 15, 9,    13, 0, 2, 3,    7, 1, 4, 6,    10, 11, 5, 8},
     s2x2,4,MPKIND__NONE,0,        0,  s4x4,      0x000, 0, spcmap_trglbox4x4},
    {{9, 7, 12, 16,        2, 6, 19, 17},
@@ -2418,6 +2422,7 @@ static expand::thing step_2x4_rig_stuff = {{7, 0, 1, 2, 3, 4, 5, 6}, 8, nothing,
 static expand::thing step_bone_stuff = {{1, 4, 7, 6, 5, 0, 3, 2}, 8, s_bone, s1x8, 0};
 static expand::thing step_bone_rigstuff = {{7, 2, 4, 1, 3, 6, 0, 5}, 8, s_bone, s_rigger, 0};
 static expand::thing step_rig_stuff = {{2, 7, 4, 5, 6, 3, 0, 1}, 8, nothing, s1x8, 0};
+static expand::thing step_2x1d_stuff = {{0, 1, 5, 3, 4, 2}, 6, s_1x2dmd, s1x6, 0};
 
 static expand::thing step_phan1_stuff = {{-1, 7, -1, 6, -1, 1, -1, 0, -1, 3, -1, 2, -1, 5, -1, 4},
                                         16, nothing, s2x4, 1};
@@ -2597,6 +2602,9 @@ full_expand::thing touch_init_table3[] = {
    // Same, with missing people.
    {warn__some_touch, 0, &step_rig_stuff,     s_rigger,   0xF0F0UL,     0xA802UL, 0xF0F0UL},
    {warn__some_touch, 0, &step_rig_stuff,     s_rigger,   0x0F0FUL,     0xA802UL, 0x0F0FUL},
+
+   // Centers touch from a 1x2dmd to a wave of 6.
+   {warn__some_touch, 0, &step_2x1d_stuff,    s_1x2dmd,   0xFFFUL,      0x2A0UL,  0xFFFUL},
 
    // Check for stepping to a miniwave from people facing.
    {warn__none,       0, &step_1x2_stuff,     s1x2,          0xFUL,        0x7UL, 0xFUL},
@@ -7377,6 +7385,8 @@ const schema_attr schema_attrs[] = {
     schema_grand_single_concentric},     // schema_grand_single_cross_concentric
    {SCA_CENTRALCONC | SCA_SNAGOK | SCA_SPLITOK,
     schema_nothing},                     // schema_single_concentric_together
+   {SCA_CENTRALCONC | SCA_CROSS | SCA_SNAGOK | SCA_SPLITOK,
+    schema_nothing},                     // schema_single_cross_concentric_together
    {0,
     schema_nothing},                     // schema_maybe_matrix_single_concentric_together
    {0,

@@ -29,7 +29,7 @@
    database format version. */
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 223
+#define DATABASE_FORMAT_VERSION 224
 
 // BEWARE!!  These must track the items in "tagtabinit" in mkcalls.cpp .
 enum base_call_index {
@@ -768,6 +768,7 @@ enum calldef_schema {
    schema_grand_single_concentric,
    schema_grand_single_cross_concentric,
    schema_single_concentric_together,
+   schema_single_cross_concentric_together,
    schema_maybe_matrix_single_concentric_together,
    schema_maybe_single_concentric,
    schema_maybe_single_cross_concentric,

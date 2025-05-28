@@ -108,8 +108,7 @@ typedef struct {
    setup_kind final_kind;    /* what setup to change it to */
    int rot;                  /* whether to rotate final setup CW */
    warning_index warning;    /* an optional warning to give */
-   int assume_key;           // special stuff for checking assumptions; sign bit -> dangerous
-                             // 40000000 bit -> allow partial setup
+   int assume_key;           /* special stuff for checking assumptions; sign bit -> dangerous */
 } collision_map;
 
 static collision_map collision_map_table[] = {
@@ -331,14 +330,14 @@ static collision_map collision_map_table[] = {
 
    // Same spot as points of diamonds.
    {6, 0x022022, 0xEE, 0x22, {1, 2, 3, 5, 6, 7},   {0, 2, 3, 7, 8, 9},    {1, 2, 3, 6, 8, 9},
-    s_qtag,      sbigdmd,     1, warn__none, 0x40000000},
+    s_qtag,      sbigdmd,     1, warn__none, 0},
    {6, 0x011011, 0xDD, 0x11, {0, 2, 3, 4, 6, 7},   {11, 2, 3, 4, 8, 9},   {10, 2, 3, 5, 8, 9},
-    s_qtag,      sbigdmd,     1, warn__none, 0x40000000},
+    s_qtag,      sbigdmd,     1, warn__none, 0},
    // Same spot as points of hourglass.
    {6, 0x0220AA, 0xEE, 0x22, {1, 2, 3, 5, 6, 7},   {0, 2, 9, 7, 8, 3},    {1, 2, 9, 6, 8, 3},
-    s_hrglass,   sbighrgl,    1, warn__none, 0x40000000},
+    s_hrglass,   sbighrgl,    1, warn__none, 0},
    {6, 0x011099, 0xDD, 0x11, {0, 2, 3, 4, 6, 7},   {11, 2, 9, 4, 8, 3},   {10, 2, 9, 5, 8, 3},
-    s_hrglass,   sbighrgl,    1, warn__none, 0x40000000},
+    s_hrglass,   sbighrgl,    1, warn__none, 0},
 
    {-1}};
 
@@ -413,23 +412,11 @@ void collision_collector::fix_possible_collision(setup *result) THROW_DECL
    for (i=0; i<MAX_PEOPLE; i++) lowbitmask |= ((spare_setup.people[i].id1) & 1) << i;
 
    for (c_map_ptr = collision_map_table ; c_map_ptr->size >= 0 ; c_map_ptr++) {
-      bool yukk = (result->kind == c_map_ptr->initial_kind) &&
-         ((lowbitmask == c_map_ptr->lmask)) &&
-         (result_mask == c_map_ptr->rmask) &&
-         (collision_mask == c_map_ptr->cmask);
+      if (result->kind == c_map_ptr->initial_kind &&
+          (result_mask & ~c_map_ptr->rmask) == 0 &&
+          ((result_mask | (result_mask << (MAX_PEOPLE/2))) & c_map_ptr->lmask) == lowbitmask &&
+          (result_mask & c_map_ptr->cmask) == collision_mask) {
 
-      // Under certain conditions (absence of people doesn't change the overall setup),
-      // we allow setups in which people are absent.  Of course, there has to be at least
-      // one genuine collision.
-      if (!yukk && ((c_map_ptr->assume_key & 0x40000000) != 0 &&
-                    result->kind == c_map_ptr->initial_kind &&
-                    (result_mask & ~c_map_ptr->rmask) == 0 &&
-                    ((result_mask | (result_mask << (MAX_PEOPLE/2))) & c_map_ptr->lmask) == lowbitmask &&
-                    (result_mask & c_map_ptr->cmask) == collision_mask)) {
-         yukk = true;
-      }
-
-      if (yukk) {
          if (assume_ptr) {
             switch (c_map_ptr->assume_key & 0xFFFF) {
             case 1:

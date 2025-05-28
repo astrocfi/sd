@@ -2273,6 +2273,12 @@ extern void concentric_move(
       else
          analyzer = schema_concentric;
    }
+   else if (analyzer == schema_single_cross_concentric_together) {
+      if (ss->kind == s1x8 || ss->kind == s_ptpd || attr::slimit(ss) == 3)
+         analyzer = schema_single_cross_concentric;
+      else
+         analyzer = schema_cross_concentric;
+   }
 
    begin_inner[0].cmd = ss->cmd;
    begin_inner[1].cmd = ss->cmd;
@@ -3932,8 +3938,8 @@ extern void punt_centers_use_concept(setup *ss, setup *result) THROW_DECL
          else
             // Non-designees do first part only.
             this_one->cmd.cmd_frac_flags =
-               process_new_fractions(denom - numer, denom,
-                                     this_one->cmd.cmd_frac_flags, 0);
+               process_spectacularly_new_fractions(0, 1, denom-numer, denom,
+                                                   this_one->cmd.cmd_frac_flags);
       }
 
       this_one->cmd.cmd_misc_flags |= CMD_MISC__PHANTOMS;
@@ -4049,8 +4055,8 @@ extern void punt_centers_use_concept(setup *ss, setup *result) THROW_DECL
       the_setups[0].cmd = ss->cmd;    // Restore original command stuff.
       the_setups[0].cmd.cmd_assume.assumption = cr_none;  // Assumptions don't carry through.
       the_setups[0].cmd.cmd_frac_flags =
-         process_new_fractions(numer, denom,
-                               the_setups[0].cmd.cmd_frac_flags, 1);
+         process_spectacularly_new_fractions(0, 1, numer, denom,
+                                             the_setups[0].cmd.cmd_frac_flags ^ CMD_FRAC_REVERSE);
       the_setups[0].cmd.parseptr = parseptrcopy->next;    // Skip over the concept.
       uint32 finalresultflagsmisc = the_setups[0].result_flags.misc;
       move(&the_setups[0], false, result);
@@ -4782,6 +4788,7 @@ back_here:
       uint32 thislivemask = livemask[setupcount];
       uint32 otherlivemask = livemask[setupcount^1];
       setup *this_one = &the_setups[setupcount];
+      setup *this_result = &the_results[setupcount];
       setup_kind kk = this_one->kind;
       setup_command *cmdp = (setupcount == 1) ? cmd2 : cmd1;
 
@@ -4801,7 +4808,7 @@ back_here:
             this_one->cmd.cmd_frac_flags = CMD_FRAC_HALF_VALUE;
          }
 
-         move(this_one, false, &the_results[setupcount]);
+         move(this_one, false, this_result);
       }
       else if (indicator >= selective_key_plain &&
                indicator != selective_key_work_concept &&
@@ -4833,8 +4840,8 @@ back_here:
              orig_indicator == selective_key_plain_from_id_bits) {
             if (thislivemask == 0) {
                // No one.
-               the_results[setupcount].kind = nothing;
-               clear_result_flags(&the_results[setupcount]);
+               this_result->kind = nothing;
+               clear_result_flags(this_result);
                goto done_with_this_one;
             }
             else if (thislivemask == (uint32) ((1 << (attr::klimit(kk)+1)) - 1) ||
@@ -4860,7 +4867,7 @@ back_here:
                   break;
                }
 
-               impose_assumption_and_move(this_one, &the_results[setupcount]);
+               impose_assumption_and_move(this_one, this_result);
                goto done_with_this_one;
             }
          }
@@ -4977,32 +4984,32 @@ back_here:
          }
 
          if (doing_iden) {
-            the_results[setupcount] = lilresult[0];
+            *this_result = lilresult[0];
             goto fooble;
          }
 
          if (fix_n_results(numsetups, -1, lilresult, rotstate, pointclip)) goto lose;
          if (!(rotstate & 0xF03)) fail("Sorry, can't do this orientation changer.");
 
-         clear_people(&the_results[setupcount]);
+         clear_people(this_result);
 
-         the_results[setupcount].result_flags =
+         this_result->result_flags =
             get_multiple_parallel_resultflags(lilresult, numsetups);
-         the_results[setupcount].result_flags.misc &= ~3;
+         this_result->result_flags.misc &= ~3;
 
          // If the call just kept a 2x2 in place, and they were the outsides, make
          // sure that the elongation is preserved.
 
          switch (this_one->kind) {
          case s2x2: case s_short6:
-            the_results[setupcount].result_flags.misc |= this_one->cmd.prior_elongation_bits & 3;
+            this_result->result_flags.misc |= this_one->cmd.prior_elongation_bits & 3;
             break;
          case s1x2: case s1x4: case sdmd:
-            the_results[setupcount].result_flags.misc |= 2 - (this_one->rotation & 1);
+            this_result->result_flags.misc |= 2 - (this_one->rotation & 1);
             break;
          }
 
-         the_results[setupcount].rotation = 0;
+         this_result->rotation = 0;
 
          // Ought to make this a method of "select".
 
@@ -5022,7 +5029,7 @@ back_here:
                   goto lose;
 
                if (fixp == select::fixer_ptr_table[select::fx_f323]) {
-                  the_results[setupcount].rotation = 3;
+                  this_result->rotation = 3;
                   nextfixp = select::fixer_ptr_table[select::fx_specspindle];
                }
                else if (fixp == select::fixer_ptr_table[select::fx_f3x4outer]) {
@@ -5080,10 +5087,10 @@ back_here:
                if (!nextfixp) goto lose;
 
                if (((fixp->rot ^ nextfixp->rot) & 3) == 0) {
-                  the_results[setupcount].rotation--;
+                  this_result->rotation--;
 
                   if (fixp->numsetups & 0x100) {
-                     the_results[setupcount].rotation += 2;
+                     this_result->rotation += 2;
 
                      for (lilcount=0; lilcount<numsetups; lilcount++) {
                         lilresult[lilcount].rotation += 2;
@@ -5151,16 +5158,19 @@ back_here:
                if (!nextfixp) {
                   if (lilresult[0].kind == fixp->ink)
                      nextfixp = fixp;
-                  else goto lose;
+                  else if (indicator == selective_key_disc_dist &&
+                           key == LOOKUP_DIST_CLW)
+                     fail("Can't find distorted lines/columns, perhaps you mean offset.");
+                  else
+                     goto lose;
                }
 
                if ((fixp->rot ^ nextfixp->rot) & 1) {
-                  if (fixp->rot & 1) {
-                     the_results[setupcount].rotation = 3;
-                  }
-                  else {
-                     the_results[setupcount].rotation = 1;
-                  }
+                  if (fixp->rot & 1)
+                     this_result->rotation = 3;
+                  else
+                     this_result->rotation = 1;
+
                   for (lilcount=0; lilcount<numsetups; lilcount++) {
                      lilresult[lilcount].rotation += 2;
                      canonicalize_rotation(&lilresult[lilcount]);
@@ -5171,7 +5181,7 @@ back_here:
             fixp = nextfixp;
          }
 
-         the_results[setupcount].kind = fixp->outk;
+         this_result->kind = fixp->outk;
          map_scanner = 0;
          frot = fixp->rot;  // This stays fixed.
          vrot=frot>>2;      // This shifts down.
@@ -5180,7 +5190,7 @@ back_here:
             for (k=0;
                  k<=attr::klimit(lilresult[0].kind);
                  k++,map_scanner++,vrot>>=2)
-               (void) copy_rot(&the_results[setupcount], fixp->nonrot[map_scanner],
+               (void) copy_rot(this_result, fixp->nonrot[map_scanner],
                                &lilresult[lilcount], k, 011*((frot+vrot) & 3));
          }
 
@@ -5195,7 +5205,7 @@ back_here:
 
        fooble:
 
-         reinstate_rotation(this_one, &the_results[setupcount]);
+         reinstate_rotation(this_one, this_result);
       }
       else {
          uint32 doing_mystic = this_one->cmd.cmd_misc2_flags &
@@ -5223,8 +5233,8 @@ back_here:
             this_one->cmd.cmd_misc_flags ^= CMD_MISC__EXPLICIT_MIRROR;
          }
 
-         move(this_one, false, &the_results[setupcount]);
-         if (mirror) mirror_this(&the_results[setupcount]);
+         move(this_one, false, this_result);
+         if (mirror) mirror_this(this_result);
       }
 
    done_with_this_one:

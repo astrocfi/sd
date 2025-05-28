@@ -2923,35 +2923,37 @@ static int gcd(int a, int b)
 */
 
 
-extern uint32 process_new_fractions(
-   int numer,
-   int denom,
-   uint32 incoming_fracs,
-   uint32 reverse_orderbit,   // Low bit on mean treat as if we mean "do the last M/N".
-   bool allow_improper,
-   bool *improper_p) THROW_DECL
+extern uint32 process_spectacularly_new_fractions(int cn, int cd, int dn, int dd,
+                                                  uint32 incoming_fracs,
+                                                  bool make_improper,
+                                                  bool *improper_p) THROW_DECL
 {
+   int numer = dn*cd-cn*dd;
+   int denom = dd*cd;
+   int P = cn*dd;
+
+   if (incoming_fracs & CMD_FRAC_REVERSE)
+      P = (dd-dn)*cd;
+
+   // Check that the user isn't doing something stupid.
+   if (numer <= 0 || numer >= denom)
+      fail("Illegal fraction.");
+
+   // If being asked to do "1-M/N", make the fraction improper.
+   if (make_improper) numer += denom;
+
    int s_numer = (incoming_fracs & 0xF000) >> 12;       // Start point.
    int s_denom = (incoming_fracs & 0xF00) >> 8;
    int e_numer = (incoming_fracs & 0xF0) >> 4;          // Stop point.
    int e_denom = (incoming_fracs & 0xF);
 
-   // Xor the "reverse" bit with the first/last fraction indicator.
-   if ((reverse_orderbit ^ (incoming_fracs / CMD_FRAC_REVERSE)) & 1) {
-      // This is "last fraction".
-      s_numer = s_numer*numer + s_denom*(denom-numer);
-      e_numer = e_numer*numer + e_denom*(denom-numer);
-   }
-   else {
-      // This is "fractional".
-      s_numer *= numer;
-      e_numer *= numer;
-   }
+   s_numer = P*s_denom+numer*s_numer;
+   e_numer = P*e_denom+numer*e_numer;
 
    s_denom *= denom;
    e_denom *= denom;
 
-   if (allow_improper && e_numer > e_denom) {
+   if (make_improper && e_numer > e_denom) {
       if (improper_p) *improper_p = true;
       e_numer -= e_denom;
    }
@@ -5773,11 +5775,18 @@ static void move_with_real_call(
             force_split = split_command_1x4;
             break;
          case schema_single_concentric_together:
+         case schema_single_cross_concentric_together:
+            if (ss->kind == s2x6) {
+               uint32 mask = little_endian_live_mask(ss);
+               if (mask == 01717 || mask == 07474)
+                  force_split = split_command_1x4;
+            }
+            // FALL THROUGH!!!!!
          case schema_concentric_6p_or_sgltogether:
+            // FELL THROUGH!!
             switch (ss->kind) {
             case s1x8: case s_ptpd:
                force_split = split_command_1x4;
-               break;
             }
             break;
          case schema_sgl_in_out_triple_squash:
@@ -6181,7 +6190,8 @@ extern void move(
 
          for ( ; ; z0=&((*z0)->next)) {
             if ((*z0)->concept->kind == concept_crazy ||
-                (*z0)->concept->kind == concept_frac_crazy) {
+                (*z0)->concept->kind == concept_frac_crazy ||
+                (*z0)->concept->kind == concept_sandwich) {
                doing_crazy_concept = z0;
                break;
             }
@@ -6244,6 +6254,13 @@ extern void move(
          ss->cmd.cmd_final_flags.herit = (heritflags) ss->cmd.restrained_super8flags;
       }
 
+      return;
+   }
+
+   if (ss->cmd.restrained_fraction) {
+      conzept::concept_descriptor bar = {"?????", concept_fractional, 0, l_mainstream, UC_none, 90};
+      parse_block foo(&bar);
+      (concept_table[foo.concept->kind].concept_action)(ss, &foo, result);
       return;
    }
 

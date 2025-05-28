@@ -764,6 +764,7 @@ char *schematab[] = {
    "grandsingleconc",
    "grandsinglecrossconc",
    "singleconc_together",
+   "singlecrossconc_together",
    "maybematrix_singleconc_together",
    "maybesingleconc",
    "maybesinglecrossconc",

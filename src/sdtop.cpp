@@ -842,6 +842,9 @@ full_expand::thing *full_expand::search_table_3(setup_kind kind,
 }
 
 
+// This gets a ===> BIG-ENDIAN <=== mask of people's facing directions.
+// Each person occupies 2 bits in the resultant masks.  The "livemask"
+// bits are both on if the person is live.
 extern void get_directions(
    setup *ss,
    uint32 & directions,
@@ -1941,7 +1944,7 @@ restriction_test_result verify_restriction(
       switch (ss->kind) {
       case s1x4: k ^= 0x5; break;
       case s2x4: k ^= 0x99; break;
-      case s_qtag: case s_bone: k ^= 0x33; break;
+      case s_qtag: case s_bone: case s_hrglass: case s_dhrglass: k ^= 0x33; break;
       case s_rigger: k ^= 0xCC; break;
       default: goto bad;
       }
@@ -2015,7 +2018,8 @@ restriction_test_result verify_restriction(
    case cr_siamese_in_quad:
       t ^= 2;
       // FALL THROUGH!!!!!
-   case cr_not_tboned_in_quad:      // WARNING!!  WE FELL THROUGH!!
+   case cr_not_tboned_in_quad:
+      // FELL THROUGH!!
       t ^= 1;
       // This is independent of whether we are line-like or column-like.
       for (idx=0 ; idx<4 ; idx++) {
