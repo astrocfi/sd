@@ -44,7 +44,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "36.1"
+version "36.2"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve
@@ -258,8 +258,7 @@ call "snap the tag" c4 tag snap_the_half_tag
       array [1E 0E 3W 2W]
 
 call "loop and tag" c3 tag loop_and_half_tag
-            left_means_mirror split_large_setups base_tag_call_2
-   split_large_setups
+            left_means_mirror base_tag_call_2
    setup 2x2 2x2        restriction peelable_box
       array [A1E C3W C2W A0E]
             alternate_definition [magic] c4
@@ -6918,12 +6917,13 @@ call "tag the star @a@S" c4a
    seq revert_if_needed [inherit_revert]
    seq extend_n []
 
-/* The main <ATC> mechanism uses the word order "loop and tag N/4".  We provide
-   this for the other common word order "loop and N/4 tag". */
+// The main <ATC> mechanism uses the word order "loop and tag N/4".  We provide
+// this for the other common word order "loop and N/4 tag".
 
 call "loop and @a tag" c3
-            neednumber left_means_mirror cross_is_inherited single_is_inherited nxn_is_inherited
-            split_large_setups bigmatrix_is_inherited revert_is_inherited
+            neednumber left_means_mirror split_large_setups
+            cross_is_inherited single_is_inherited
+            nxn_is_inherited bigmatrix_is_inherited revert_is_inherited
    seq loop_and_half_tag [inherit_left inherit_cross inherit_single
                           inherit_nxn inherit_bigmatrix]
    seq revert_if_needed [inherit_revert inherit_nxn]

@@ -72,27 +72,35 @@ static char szMainWindowName[] = "Sd main window class";
 static char szTranscriptWindowName[] = "Sd transcript window class";
 
 LRESULT CALLBACK MainWndProc(HWND, UINT, WPARAM, LPARAM);
-LRESULT CALLBACK TranscriptWndProc(HWND, UINT, WPARAM, LPARAM);
-LRESULT CALLBACK MyEditProc(HWND, UINT, WPARAM, LPARAM);
-LRESULT CALLBACK MyListProc(HWND, UINT, WPARAM, LPARAM);
-LRESULT CALLBACK MyAcceptProc(HWND, UINT, WPARAM, LPARAM);
-LRESULT CALLBACK MyCancelProc(HWND, UINT, WPARAM, LPARAM);
+LRESULT CALLBACK TranscriptAreaWndProc(HWND, UINT, WPARAM, LPARAM);
+LRESULT CALLBACK TextInputAreaWndProc(HWND, UINT, WPARAM, LPARAM);
+LRESULT CALLBACK CallMenuWndProc(HWND, UINT, WPARAM, LPARAM);
+LRESULT CALLBACK AcceptButtonWndProc(HWND, UINT, WPARAM, LPARAM);
+LRESULT CALLBACK CancelButtonWndProc(HWND, UINT, WPARAM, LPARAM);
 
-static WNDPROC oldEditProc;
-static WNDPROC oldListProc;
-static WNDPROC oldAcceptProc;
-static WNDPROC oldCancelProc;
-
-
+static WNDPROC OldTextInputAreaWndProc;
+static WNDPROC OldCallMenuWndProc;
+static WNDPROC OldAcceptButtonWndProc;
+static WNDPROC OldCancelButtonWndProc;
 
 
-static int wherearewe;
+
+// Under Sdtty, if you type something ambiguous and press ENTER, it
+// isn't accepted.  We want to be keystroke-compatible with Sdtty.
+// BUT: If the user has used any up-down arrows to move around in the
+// menu, and then presses ENTER, we accept the highlighted item, even
+// if it would have been ambiguous to the matcher.  This is obviously
+// what the user wants, and, by using the arrow keys, the user has
+// gone outside of the Sdtty behavior.  This variable keeps track of
+// whether the menu changed.
+
+static bool menu_moved;
 
 
-#define EDIT_INDEX 99
-#define LISTBOX_INDEX 98
+#define TEXT_INPUT_AREA_INDEX 99
+#define CALL_MENU_INDEX 98
 #define PROGRESS_INDEX 96
-#define TRANSCRIPT_INDEX 95
+#define TRANSCRIPT_AREA_INDEX 95
 #define ACCEPT_BUTTON_INDEX 94
 #define CANCEL_BUTTON_INDEX 93
 // Concocted index for user hitting <enter>.
@@ -133,16 +141,16 @@ static printer *GLOBprinter;
 static HWND hwndMain;
 static HWND hwndAcceptButton;
 static HWND hwndCancelButton;
-static HWND hwndEdit;
-static HWND hwndList;
+static HWND hwndTextInputArea;
+static HWND hwndCallMenu;
 static HWND hwndProgress;
-static HWND hwndTranscript;
+static HWND hwndTranscriptArea;
 static HWND hwndStatusBar;
 
 /* If not in a popup, the focus table has
-   hwndEdit, hwndAcceptButton, and hwndTranscript.
+   hwndTextInputArea, hwndAcceptButton, and hwndTranscriptArea.
    If in a popup, it has
-   hwndEdit, hwndAcceptButton, hwndCancelButton, and hwndTranscript.
+   hwndTextInputArea, hwndAcceptButton, hwndCancelButton, and hwndTranscriptArea.
 */
 
 static HWND ButtonFocusTable[4];
@@ -260,7 +268,7 @@ static void update_transcript_scroll()
    Scroll.nPage = (nActiveTranscriptSize/TranscriptTextHeight);
    Scroll.nPos = nImageOffTop;
 
-   SetScrollInfo(hwndTranscript, SB_VERT, &Scroll, TRUE);
+   SetScrollInfo(hwndTranscriptArea, SB_VERT, &Scroll, TRUE);
 }
 
 
@@ -284,8 +292,8 @@ static void Update_text_display()
 
    if (nImageOffTop < 0) nImageOffTop = 0;
    update_transcript_scroll();
-   GetClientRect(hwndTranscript, &ClientRect);
-   InvalidateRect(hwndTranscript, &ClientRect, TRUE);  // Be sure we erase the background.
+   GetClientRect(hwndTranscriptArea, &ClientRect);
+   InvalidateRect(hwndTranscriptArea, &ClientRect, TRUE);  // Be sure we erase the background.
 }
 
 
@@ -318,7 +326,7 @@ void iofull::show_match()
 
 
 
-static void check_text_change(HWND hListbox, HWND hEditbox, bool doing_escape)
+static void check_text_change(bool doing_escape)
 {
    char szLocalString[MAX_TEXT_LINE_LENGTH];
    int nLen;
@@ -327,9 +335,9 @@ static void check_text_change(HWND hListbox, HWND hEditbox, bool doing_escape)
    int matches;
    bool changed_editbox = false;
 
-   // Find out what the edit box contains now.
+   // Find out what the text input box contains now.
 
-   GetWindowText(hEditbox, szLocalString, MAX_TEXT_LINE_LENGTH);
+   GetWindowText(hwndTextInputArea, szLocalString, MAX_TEXT_LINE_LENGTH);
    nLen = lstrlen(szLocalString) - 1;    // Location of last character.
 
    for (nIndex=0 ; nIndex<=nLen ; nIndex++)
@@ -390,7 +398,7 @@ static void check_text_change(HWND hListbox, HWND hEditbox, bool doing_escape)
                if (nImageOffTop > AmountWeHaveToHide) nImageOffTop = AmountWeHaveToHide;
                update_transcript_scroll();
                // Give focus to the transcript, so the user can scroll easily.
-               SetFocus(hwndTranscript);
+               SetFocus(hwndTranscriptArea);
             }
             changed_editbox = true;
          }
@@ -431,11 +439,11 @@ static void check_text_change(HWND hListbox, HWND hEditbox, bool doing_escape)
       }
       else {
          erase_questionable_stuff();
-         goto scroll_listbox;
+         goto scroll_call_menu;
       }
    }
    else {
-      goto scroll_listbox;
+      goto scroll_call_menu;
    }
 
  pack_us:
@@ -448,32 +456,33 @@ static void check_text_change(HWND hListbox, HWND hEditbox, bool doing_escape)
    // Write it back to the window.
 
    if (changed_editbox) {
-      SendMessage(hEditbox, WM_SETTEXT, 0, (LPARAM) szLocalString);
+      SendMessage(hwndTextInputArea, WM_SETTEXT, 0, (LPARAM) szLocalString);
       // This moves the cursor to the end of the text, apparently.
-      SendMessage(hEditbox, EM_SETSEL, MAX_TEXT_LINE_LENGTH - 1, MAX_TEXT_LINE_LENGTH - 1);
+      SendMessage(hwndTextInputArea, EM_SETSEL, MAX_TEXT_LINE_LENGTH - 1, MAX_TEXT_LINE_LENGTH - 1);
    }
 
- scroll_listbox:
+ scroll_call_menu:
 
-   // Search list box for match on current string.
+   // Search call menu for match on current string.
 
-   nIndex = SendMessage(hListbox, LB_SELECTSTRING, (WPARAM) -1, (LPARAM) szLocalString);
+   nIndex = SendMessage(hwndCallMenu, LB_SELECTSTRING, (WPARAM) -1, (LPARAM) szLocalString);
 
    if (nIndex >= 0) {
-      // If possible, scroll the list box so that
+      // If possible, scroll the call menu so that
       // current selection remains centered.
       SendMessage(
-         hListbox, LB_SETTOPINDEX,
+         hwndCallMenu, LB_SETTOPINDEX,
          (nIndex > LISTBOX_SCROLL_POINT) ? nIndex - LISTBOX_SCROLL_POINT : 0,
          0);
+      menu_moved = false;
    }
    else if (!szLocalString[0]) {
       // No match and no string.
-      nIndex = 0;  // Select first entry in list box.
-      SendMessage(hListbox, LB_SETCURSEL, 0, 0L);
+      nIndex = 0;  // Select first entry in call menu.
+      SendMessage(hwndCallMenu, LB_SETCURSEL, 0, 0L);
    }
-
-   wherearewe = nIndex;
+   else
+      menu_moved = false;
 }
 
 
@@ -505,7 +514,7 @@ static int LookupKeystrokeBinding(
          // when "enter" or "escape" is typed.
          return 2;
       }
-      if (wParam == VK_SHIFT || wParam == VK_CONTROL) {
+      else if (wParam == VK_SHIFT || wParam == VK_CONTROL) {
          return 1;    // We are not handling these, but don't change focus.
       }
       else if (wParam == VK_TAB) {
@@ -535,7 +544,7 @@ static int LookupKeystrokeBinding(
             SetFocus(ButtonFocusTable[ButtonFocusIndex]);
          }
          else
-            PostMessage(hwndMain, WM_COMMAND, ESCAPE_INDEX, (LPARAM) hwndList);
+            PostMessage(hwndMain, WM_COMMAND, ESCAPE_INDEX, (LPARAM) hwndCallMenu);
 
          return 2;    // One way or the other, we have handled it.
       }
@@ -597,13 +606,13 @@ static int LookupKeystrokeBinding(
          if (InPopup && ButtonFocusIndex == 2)
             crcode = CANCEL_BUTTON_INDEX;
 
-         SetFocus(hwndEdit);    // Take focus away from the button.
+         SetFocus(hwndTextInputArea);    // Take focus away from the button.
          ButtonFocusIndex = 0;
-         PostMessage(hwndMain, WM_COMMAND, crcode, (LPARAM) hwndList);
+         PostMessage(hwndMain, WM_COMMAND, crcode, (LPARAM) hwndCallMenu);
          return 2;
       }
       else if (wParam == VK_ESCAPE) {
-         PostMessage(hwndMain, WM_COMMAND, ESCAPE_INDEX, (LPARAM) hwndList);
+         PostMessage(hwndMain, WM_COMMAND, ESCAPE_INDEX, (LPARAM) hwndCallMenu);
          return 2;
       }
       else if (wParam == VK_TAB)
@@ -640,7 +649,7 @@ static int LookupKeystrokeBinding(
       ctlbits &= ~2;     // Take out shift bit.
          if (ctlbits == 0) {
             // Plain numeric keypad is same as the digit itself.
-            SendMessage(hwndEdit, WM_CHAR, newparm+200+'0', lParam);
+            SendMessage(hwndTextInputArea, WM_CHAR, newparm+200+'0', lParam);
             return 2;
          }
          else if (ctlbits == 1) newparm += 200+CTLNKP+SPECIAL_KEY_OFFSET;
@@ -690,47 +699,48 @@ static int LookupKeystrokeBinding(
          case special_index_pagedown:
             nIndex += PAGE_LEN-1;     // !!!! FALL THROUGH !!!!
          case special_index_linedown:
+            // !!!! FELL THROUGH !!!!
             // nIndex now tells how far we want to move forward or back in the menu.
             // Change that to the absolute new position, by adding the old position.
-            nIndex += SendMessage(hwndList, LB_GETCURSEL, 0, 0);
+            nIndex += SendMessage(hwndCallMenu, LB_GETCURSEL, 0, 0);
 
             // Clamp to the menu limits.
-            nCount = SendMessage(hwndList, LB_GETCOUNT, 0, 0) - 1;
+            nCount = SendMessage(hwndCallMenu, LB_GETCOUNT, 0, 0) - 1;
             if (nIndex > nCount) nIndex = nCount;
             if (nIndex < 0) nIndex = 0;
-
+            menu_moved = true;
             // Select the new item.
-            SendMessage(hwndList, LB_SETCURSEL, nIndex, 0);
+            SendMessage(hwndCallMenu, LB_SETCURSEL, nIndex, 0);
             break;
          case special_index_deleteword:
-            GetWindowText(hwndEdit, szLocalString, MAX_TEXT_LINE_LENGTH);
+            GetWindowText(hwndTextInputArea, szLocalString, MAX_TEXT_LINE_LENGTH);
             lstrcpy(GLOB_user_input, szLocalString);
             GLOB_user_input_size = lstrlen(GLOB_user_input);
             (void) delete_matcher_word();
-            SendMessage(hwndEdit, WM_SETTEXT, 0, (LPARAM) GLOB_user_input);
-            SendMessage(hwndEdit, EM_SETSEL, MAX_TEXT_LINE_LENGTH, MAX_TEXT_LINE_LENGTH);
+            SendMessage(hwndTextInputArea, WM_SETTEXT, 0, (LPARAM) GLOB_user_input);
+            SendMessage(hwndTextInputArea, EM_SETSEL, MAX_TEXT_LINE_LENGTH, MAX_TEXT_LINE_LENGTH);
             break;
          case special_index_deleteline:
             erase_matcher_input();
-            SendMessage(hwndEdit, WM_SETTEXT, 0, (LPARAM) GLOB_user_input);
-            SendMessage(hwndEdit, EM_SETSEL, MAX_TEXT_LINE_LENGTH, MAX_TEXT_LINE_LENGTH);
+            SendMessage(hwndTextInputArea, WM_SETTEXT, 0, (LPARAM) GLOB_user_input);
+            SendMessage(hwndTextInputArea, EM_SETSEL, MAX_TEXT_LINE_LENGTH, MAX_TEXT_LINE_LENGTH);
             break;
          case special_index_copytext:
-            SendMessage(hwndEdit, WM_COPY, 0, 0);
+            SendMessage(hwndTextInputArea, WM_COPY, 0, 0);
             break;
          case special_index_cuttext:
-            SendMessage(hwndEdit, WM_CUT, 0, 0);
+            SendMessage(hwndTextInputArea, WM_CUT, 0, 0);
             break;
          case special_index_pastetext:
-            SendMessage(hwndEdit, WM_PASTE, 0, 0);
+            SendMessage(hwndTextInputArea, WM_PASTE, 0, 0);
             break;
          case special_index_quote_anything:
-            GetWindowText(hwndEdit, szLocalString, MAX_TEXT_LINE_LENGTH);
+            GetWindowText(hwndTextInputArea, szLocalString, MAX_TEXT_LINE_LENGTH);
             lstrcat(szLocalString, "<anything>");
             lstrcpy(GLOB_user_input, szLocalString);
             GLOB_user_input_size = lstrlen(GLOB_user_input);
-            SendMessage(hwndEdit, WM_SETTEXT, 0, (LPARAM) GLOB_user_input);
-            SendMessage(hwndEdit, EM_SETSEL, MAX_TEXT_LINE_LENGTH, MAX_TEXT_LINE_LENGTH);
+            SendMessage(hwndTextInputArea, WM_SETTEXT, 0, (LPARAM) GLOB_user_input);
+            SendMessage(hwndTextInputArea, EM_SETSEL, MAX_TEXT_LINE_LENGTH, MAX_TEXT_LINE_LENGTH);
             break;
          }
       }
@@ -799,8 +809,8 @@ RGBQUAD icon_color_translate[8];    // Will be filled in during initialization.
 #define TRANSCRIPT_BOTMARGIN 0
 #define TRANSCRIPT_RIGHTMARGIN 0
 
-// Distance from bottom of list box to top of "Accept" button.
-#define LIST_TO_BUTTON 8
+// Distance from bottom of call menu to top of "Accept" button.
+#define MENU_TO_BUTTON 8
 // Distance from top of "Accept" button to bottom of screen.
 #define BUTTONTOP 25
 
@@ -1184,24 +1194,24 @@ BOOL MainWindow_OnCreate(HWND hwnd, LPCREATESTRUCT lpCreateStruct)
 
    ReleaseDC(hwnd, hdc);
 
-   hwndEdit = CreateWindow("edit", NULL,
+   hwndTextInputArea = CreateWindow("edit", NULL,
       /* We use "autoscroll" so that it will scroll if we type in too
          much text, but we don't put up a scroll bar with HSCROLL. */
       WS_CHILD|WS_BORDER|ES_LEFT|ES_AUTOHSCROLL,
       0, 0, 0, 0,
-      hwnd, (HMENU) EDIT_INDEX,
+      hwnd, (HMENU) TEXT_INPUT_AREA_INDEX,
       lpCreateStruct->hInstance, NULL);
 
-   oldEditProc = (WNDPROC) SetWindowLong(hwndEdit, GWL_WNDPROC, (LONG) MyEditProc);
+   OldTextInputAreaWndProc = (WNDPROC) SetWindowLong(hwndTextInputArea, GWL_WNDPROC, (LONG) TextInputAreaWndProc);
 
-   hwndList = CreateWindow("listbox", NULL,
+   hwndCallMenu = CreateWindow("listbox", NULL,
       WS_CHILD|LBS_NOTIFY|WS_VSCROLL|WS_BORDER,
       0, 0, 0, 0,
-      hwnd, (HMENU) LISTBOX_INDEX,
+      hwnd, (HMENU) CALL_MENU_INDEX,
       lpCreateStruct->hInstance, NULL);
 
-   SendMessage(hwndList, WM_SETFONT, (WPARAM) GetStockObject(ANSI_VAR_FONT), 0);
-   oldListProc = (WNDPROC) SetWindowLong(hwndList, GWL_WNDPROC, (LONG) MyListProc);
+   SendMessage(hwndCallMenu, WM_SETFONT, (WPARAM) GetStockObject(ANSI_VAR_FONT), 0);
+   OldCallMenuWndProc = (WNDPROC) SetWindowLong(hwndCallMenu, GWL_WNDPROC, (LONG) CallMenuWndProc);
 
    hwndAcceptButton = CreateWindow("button", "Accept",
       WS_CHILD|BS_DEFPUSHBUTTON,
@@ -1210,7 +1220,7 @@ BOOL MainWindow_OnCreate(HWND hwnd, LPCREATESTRUCT lpCreateStruct)
       lpCreateStruct->hInstance, NULL);
 
    SendMessage(hwndAcceptButton, WM_SETFONT, (WPARAM) GetStockObject(ANSI_VAR_FONT), 0);
-   oldAcceptProc = (WNDPROC) SetWindowLong(hwndAcceptButton, GWL_WNDPROC, (LONG) MyAcceptProc);
+   OldAcceptButtonWndProc = (WNDPROC) SetWindowLong(hwndAcceptButton, GWL_WNDPROC, (LONG) AcceptButtonWndProc);
 
    hwndCancelButton = CreateWindow("button", "Cancel",
       WS_CHILD,
@@ -1219,7 +1229,7 @@ BOOL MainWindow_OnCreate(HWND hwnd, LPCREATESTRUCT lpCreateStruct)
       lpCreateStruct->hInstance, NULL);
 
    SendMessage(hwndCancelButton, WM_SETFONT, (WPARAM) GetStockObject(ANSI_VAR_FONT), 0);
-   oldCancelProc = (WNDPROC) SetWindowLong(hwndCancelButton, GWL_WNDPROC, (LONG) MyCancelProc);
+   OldCancelButtonWndProc = (WNDPROC) SetWindowLong(hwndCancelButton, GWL_WNDPROC, (LONG) CancelButtonWndProc);
 
    hwndProgress = CreateWindow(PROGRESS_CLASS, NULL,
       WS_CHILD|WS_CLIPSIBLINGS,
@@ -1227,11 +1237,11 @@ BOOL MainWindow_OnCreate(HWND hwnd, LPCREATESTRUCT lpCreateStruct)
       hwnd, (HMENU) PROGRESS_INDEX,
       lpCreateStruct->hInstance, NULL);
 
-   hwndTranscript = CreateWindow(
+   hwndTranscriptArea = CreateWindow(
       szTranscriptWindowName, NULL,
       WS_CHILD|WS_VISIBLE|WS_BORDER|WS_CLIPSIBLINGS | WS_VSCROLL,
       0, 0, 0, 0,
-      hwnd, (HMENU) TRANSCRIPT_INDEX,
+      hwnd, (HMENU) TRANSCRIPT_AREA_INDEX,
       lpCreateStruct->hInstance, NULL);
 
    hwndStatusBar = CreateStatusWindow(
@@ -1240,8 +1250,8 @@ BOOL MainWindow_OnCreate(HWND hwnd, LPCREATESTRUCT lpCreateStruct)
       hwnd,
       STATUSBAR_INDEX);
 
-   if (!hwndProgress||!hwndAcceptButton||!hwndCancelButton||!hwndList||
-       !hwndEdit||!hwndTranscript||!hwndStatusBar) {
+   if (!hwndProgress||!hwndAcceptButton||!hwndCancelButton||!hwndCallMenu||
+       !hwndTextInputArea||!hwndTranscriptArea||!hwndStatusBar) {
       gg->fatal_error_exit(1, "Can't create windows", 0);
    }
 
@@ -1252,10 +1262,10 @@ BOOL MainWindow_OnCreate(HWND hwnd, LPCREATESTRUCT lpCreateStruct)
 static void PositionAcceptButtons()
 {
    if (InPopup) {
-      ButtonFocusTable[0] = hwndEdit;
+      ButtonFocusTable[0] = hwndTextInputArea;
       ButtonFocusTable[1] = hwndAcceptButton;
       ButtonFocusTable[2] = hwndCancelButton;
-      ButtonFocusTable[3] = hwndTranscript;
+      ButtonFocusTable[3] = hwndTranscriptArea;
 
       MoveWindow(hwndAcceptButton,
                  (TranscriptEdge/2)-12*AnsiTextWidth, ButtonTopYCoord,
@@ -1266,9 +1276,9 @@ static void PositionAcceptButtons()
                  10*AnsiTextWidth, 7*AnsiTextHeight/4, TRUE);
    }
    else {
-      ButtonFocusTable[0] = hwndEdit;
+      ButtonFocusTable[0] = hwndTextInputArea;
       ButtonFocusTable[1] = hwndAcceptButton;
-      ButtonFocusTable[2] = hwndTranscript;
+      ButtonFocusTable[2] = hwndTranscriptArea;
 
       MoveWindow(hwndAcceptButton,
                  (TranscriptEdge/2)-5*AnsiTextWidth, ButtonTopYCoord,
@@ -1303,18 +1313,18 @@ void MainWindow_OnSize(HWND hwnd, UINT state, int cx, int cy)
    // Y-coordinate of the top of the "accept" and "cancel" buttons.
    ButtonTopYCoord = cy-BUTTONTOP;
 
-   // Y-coordinate of the top of the list box.
+   // Y-coordinate of the top of the call menu.
    Listtop = EDITTOP+21*SystemTextHeight/16+EDITTOLIST;
 
-   MoveWindow(hwndEdit,
+   MoveWindow(hwndTextInputArea,
       LEFTJUNKEDGE, EDITTOP,
       TranscriptEdge-LEFTJUNKEDGE-RIGHTJUNKEDGE, 21*SystemTextHeight/16, TRUE);
 
-   MoveWindow(hwndList,
+   MoveWindow(hwndCallMenu,
       LEFTJUNKEDGE, Listtop,
-      TranscriptEdge-LEFTJUNKEDGE-RIGHTJUNKEDGE, ButtonTopYCoord-LIST_TO_BUTTON-Listtop, TRUE);
+      TranscriptEdge-LEFTJUNKEDGE-RIGHTJUNKEDGE, ButtonTopYCoord-MENU_TO_BUTTON-Listtop, TRUE);
 
-   GetClientRect(hwndList, &CallsClientRect);
+   GetClientRect(hwndCallMenu, &CallsClientRect);
 
    PositionAcceptButtons();
 
@@ -1322,11 +1332,11 @@ void MainWindow_OnSize(HWND hwnd, UINT state, int cx, int cy)
       LEFTJUNKEDGE, cy-PROGRESSHEIGHT-PROGRESSBOT,
       TranscriptEdge-LEFTJUNKEDGE-RIGHTJUNKEDGE, PROGRESSHEIGHT, TRUE);
 
-   MoveWindow(hwndTranscript,
+   MoveWindow(hwndTranscriptArea,
       TranscriptEdge, TRANSCRIPT_TOPMARGIN,
       TranscriptXSize, TranscriptYSize, TRUE);
 
-   GetClientRect(hwndTranscript, &TranscriptClientRect);
+   GetClientRect(hwndTranscriptArea, &TranscriptClientRect);
 
    // Allow TVOFFSET amount of margin at both top and bottom.
    nActiveTranscriptSize = TranscriptYSize-TVOFFSET-TVOFFSET;
@@ -1387,44 +1397,43 @@ void MainWindow_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
    case ID_FILE_EXIT:
       SendMessage(hwndMain, WM_CLOSE, 0, 0L);
       break;
-   case EDIT_INDEX:
+   case TEXT_INPUT_AREA_INDEX:
       if (codeNotify == EN_UPDATE)
-         check_text_change(hwndList, hwndEdit, false);
+         check_text_change(false);
       break;
    case ESCAPE_INDEX:
-      check_text_change(hwndList, hwndEdit, true);
+      check_text_change(true);
       break;
    case CANCEL_BUTTON_INDEX:
       user_match.match.index = -1;
       WaitingForCommand = false;
       break;
-   case LISTBOX_INDEX:
+   case CALL_MENU_INDEX:
       // See whether this an appropriate single-click or double-click.
       if (codeNotify != (ui_options.accept_single_click ?
                          (UINT) LBN_SELCHANGE : (UINT) LBN_DBLCLK))
          break;
-      /* Fall Through! */
+      // !!!! FALL THROUGH !!!!
    case ENTER_INDEX:
    case ACCEPT_BUTTON_INDEX:
-      /* Fell Through! */
+      // !!!! FELL THROUGH !!!!
 
       erase_questionable_stuff();
-      nMenuIndex = SendMessage(hwndList, LB_GETCURSEL, 0, 0L);
+      nMenuIndex = SendMessage(hwndCallMenu, LB_GETCURSEL, 0, 0L);
 
       // If the user moves around in the call menu (listbox) while there is
       // stuff in the edit box, and then types a CR, we need to clear the
       // edit box, so that the listbox selection will be taken exactly.
-      // This is because the wandering around in the list box may have
+      // This is because the wandering around in the call menu may have
       // gone to something that has nothing to do with what was typed
       // in the edit box.  We detect this condition by noticing that the
       // listbox selection has changed from what we left it when we were
-      // last trying to make the list box track the edit box.
+      // last trying to make the call menu track the edit box.
 
       // We also do this if the user selected by clicking the mouse.
 
-      if (id != ENTER_INDEX ||
-          (wherearewe != LB_ERR && wherearewe != nMenuIndex)) {
-         SendMessage(hwndEdit, WM_SETTEXT, 0, (LPARAM)"");
+      if (id != ENTER_INDEX || menu_moved) {
+         SendMessage(hwndTextInputArea, WM_SETTEXT, 0, (LPARAM)"");
          erase_matcher_input();
       }
 
@@ -1444,7 +1453,7 @@ void MainWindow_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
             if (!strcmp(asearch->key, GLOB_user_input)) {
                char linebuff[INPUT_TEXTLINE_SIZE+1];
                if (process_accel_or_abbrev(asearch->value, linebuff)) {
-                  SendMessage(hwndEdit, WM_SETTEXT, 0, (LPARAM)"");  // Erase the edit box.
+                  SendMessage(hwndTextInputArea, WM_SETTEXT, 0, (LPARAM)"");  // Erase the edit box.
                   WaitingForCommand = false;
                   return;
                }
@@ -1471,7 +1480,7 @@ void MainWindow_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
          // The matcher found an acceptable (and possibly quite complex)
          // utterance.  Use it directly.
 
-         SendMessage(hwndEdit, WM_SETTEXT, 0, (LPARAM)"");  // Erase the edit box.
+         SendMessage(hwndTextInputArea, WM_SETTEXT, 0, (LPARAM)"");  // Erase the edit box.
          WaitingForCommand = false;
          return;
       }
@@ -1482,7 +1491,7 @@ void MainWindow_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
       // clearly meant to accept the currently highlighted item.
 
       if (id == ENTER_INDEX &&
-          (GLOB_user_input[0] != '\0' || wherearewe == nMenuIndex)) break;
+          (GLOB_user_input[0] != '\0' || !menu_moved)) break;
 
       // Or if, for some reason, the menu isn't anywhere, we don't accept it.
 
@@ -1492,7 +1501,7 @@ void MainWindow_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
       // double-click of a menu item, that item is clearly what she wants, so
       // we use it.
 
-      i = SendMessage(hwndList, LB_GETITEMDATA, nMenuIndex, (LPARAM) 0);
+      i = SendMessage(hwndCallMenu, LB_GETITEMDATA, nMenuIndex, (LPARAM) 0);
       user_match.match.index = LOWORD(i);
       user_match.match.kind = (uims_reply) HIWORD(i);
 
@@ -1504,7 +1513,7 @@ void MainWindow_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
       user_match.real_next_subcall = (match_result *) 0;
       user_match.real_secondary_subcall = (match_result *) 0;
 
-      SendMessage(hwndEdit, WM_SETTEXT, 0, (LPARAM)"");  // Erase the edit box.
+      SendMessage(hwndTextInputArea, WM_SETTEXT, 0, (LPARAM)"");  // Erase the edit box.
 
       /* We have the needed info.  Process it and exit from the command loop.
          However, it's not a fully filled in match item from the parser.
@@ -1535,13 +1544,13 @@ void MainWindow_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
       WaitingForCommand = false;
       break;
    case ID_COMMAND_COPY_TEXT:
-      SendMessage(hwndEdit, WM_COPY, 0, 0);
+      SendMessage(hwndTextInputArea, WM_COPY, 0, 0);
       break;
    case ID_COMMAND_CUT_TEXT:
-      SendMessage(hwndEdit, WM_CUT, 0, 0);
+      SendMessage(hwndTextInputArea, WM_CUT, 0, 0);
       break;
    case ID_COMMAND_PASTE_TEXT:
-      SendMessage(hwndEdit, WM_PASTE, 0, 0);
+      SendMessage(hwndTextInputArea, WM_PASTE, 0, 0);
       break;
    default:
       if (nLastOne == match_startup_commands) {
@@ -1569,38 +1578,39 @@ void MainWindow_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 
 
 
-LRESULT CALLBACK MyEditProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK TextInputAreaWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 {
-   // If a bound key is sent to the edit box, just act on it.
+   // If a bound key is sent to the text area, just act on it.
    // Don't change the focus.  Just do it.  If it's bound to some
-   // up/down function, the right thing will be done with the list box,
+   // up/down function, the right thing will be done with the call menu,
    // independently of the focus.
 
    if (LookupKeystrokeBinding(iMsg, wParam, lParam, ENTER_INDEX) == 2)
       return 1;
 
    // If it is unbound but is a real up/down arrow key, the user
-   // presumably wants to scroll the edit box anyway.  Send the keystroke
-   // to the list box.
+   // presumably wants to scroll the call menu anyway.  Send the keystroke
+   // to the call menu.  Same for the mouse wheel.
 
-   if (iMsg == WM_KEYDOWN && (HIWORD(lParam) & KF_EXTENDED) &&
-       (wParam == VK_PRIOR || wParam == VK_NEXT ||
-        wParam == VK_UP || wParam == VK_DOWN)) {
-      PostMessage(hwndList, iMsg, wParam, lParam);
+   if ((iMsg == WM_KEYDOWN && (HIWORD(lParam) & KF_EXTENDED) &&
+        (wParam == VK_PRIOR || wParam == VK_NEXT ||
+         wParam == VK_UP || wParam == VK_DOWN)) ||
+       iMsg == WM_MOUSEWHEEL) {
+      PostMessage(hwndCallMenu, iMsg, wParam, lParam);
       return 1;
    }
 
    // Otherwise, it belongs here.  This includes unbound left/right/home/end.
 
-   return CallWindowProc(oldEditProc, hwnd, iMsg, wParam, lParam);
+   return CallWindowProc(OldTextInputAreaWndProc, hwnd, iMsg, wParam, lParam);
 }
 
 
-LRESULT CALLBACK MyListProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK CallMenuWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 {
-   // If a bound key is sent to the list box, just act on it.
+   // If a bound key is sent to the call menu, just act on it.
    // Don't change the focus.  Just do it.  If it's bound to some
-   // up/down function, the right thing will be done with the list box,
+   // up/down function, the right thing will be done with the call menu,
    // independently of the focus.
 
    switch (LookupKeystrokeBinding(iMsg, wParam, lParam, ACCEPT_BUTTON_INDEX)) {
@@ -1610,23 +1620,60 @@ LRESULT CALLBACK MyListProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
       switch (iMsg) {
       case WM_CHAR:
       case WM_SYSCHAR:
-         /* If a character is sent while the list box has the focus, it is
-            obviously intended as input to the edit box.  Change the focus
-            to the edit box and send the character to same. */
-         SetFocus(hwndEdit);
+         // If a character is sent while the call menu has the focus, it is
+         // obviously intended as input to the TextInputArea.  Change the focus
+         // to the TextInputArea box and send the character to same.
+         SetFocus(hwndTextInputArea);
          ButtonFocusIndex = 0;
-         PostMessage(hwndEdit, iMsg, wParam, lParam);
+         PostMessage(hwndTextInputArea, iMsg, wParam, lParam);
          return 1;
+      case WM_MOUSEWHEEL:
+         // The user rolled the mouse wheel while focus was in either the
+         // text input area or the call menu.  (If it was in the text input
+         // area, it was forwarded to us.)
+         // The normal system behavior, if we were simply to forward this to
+         // the old wndproc, would be to scroll the window but not attempt to
+         // keep the highlighted item visible.  We can do better than that.
+         // We will move the highlighted item appropriately.
+
+         // But there's more.  Windows doesn't take any action on a menu
+         // if the control or shift keys are down.  We are going to take
+         // that as a signal that we want to scroll by just 1 instead of 3.
+         bool shift_or_control = LOWORD(wParam) != 0;
+         int numclicks = (((int) (short int) HIWORD(wParam))/WHEEL_DELTA);
+
+         if (!shift_or_control) numclicks *= 3;
+         int newpos = SendMessage(hwndCallMenu, LB_GETCURSEL, 0, 0) - numclicks;
+
+         // Clamp to the menu limits.
+         int nCount = SendMessage(hwndCallMenu, LB_GETCOUNT, 0, 0) - 1;
+         if (newpos > nCount) newpos = nCount;
+         if (newpos < 0) newpos = 0;
+         menu_moved = true;
+         // Select the new item.
+         SendMessage(hwndCallMenu, LB_SETCURSEL, newpos, 0);
+
+         // Then tell the system to scroll the menu, unless shift or control was down,
+         // in which case:
+         // (a) it can't.  We can't tell the system handler to scroll by 1/3 of the usual
+         //    amount.  Believe it or not, it doesn't know how to scroll by one item.
+         //    Instead, it scrolls by 3 items every 3rd time we send this message.  That
+         //    looks really stupid.
+         // (b) Just moving the selection by 1 (which we did above), and not scrolling
+         //    the menu at all (unless it needs to do so to avoid having the selection
+         //    go off the screen), looks nicer anyway.
+         if (shift_or_control) return 1;
+         return CallWindowProc(OldCallMenuWndProc, hwnd, iMsg, wParam, lParam);
       }
    }
 
-   return CallWindowProc(oldListProc, hwnd, iMsg, wParam, lParam);
+   return CallWindowProc(OldCallMenuWndProc, hwnd, iMsg, wParam, lParam);
 }
 
 
 
 
-LRESULT CALLBACK TranscriptWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK TranscriptAreaWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 {
    switch (iMsg) {
       HANDLE_MSG(hwnd, WM_PAINT, Transcript_OnPaint);
@@ -1639,7 +1686,7 @@ LRESULT CALLBACK TranscriptWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM l
       /* User clicked mouse in the transcript area.  Presumably this
          is because she wishes to use the up/down arrow keys for scrolling.
          Take the focus, so that we can do that. */
-      SetFocus(hwndTranscript);
+      SetFocus(hwndTranscriptArea);
       ButtonFocusIndex = ButtonFocusHigh;
       break;
    case WM_KEYDOWN:
@@ -1677,9 +1724,9 @@ LRESULT CALLBACK TranscriptWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM l
                The edit window is a much more plausible recipient.  Set the focus
                there and post the message. */
 
-            SetFocus(hwndEdit);
+            SetFocus(hwndTextInputArea);
             ButtonFocusIndex = 0;
-            PostMessage(hwndEdit, iMsg, wParam, lParam);
+            PostMessage(hwndTextInputArea, iMsg, wParam, lParam);
             return 0;
          }
       }
@@ -1694,21 +1741,21 @@ LRESULT CALLBACK TranscriptWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM l
 }
 
 
-LRESULT CALLBACK MyAcceptProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK AcceptButtonWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 {
    if (LookupKeystrokeBinding(iMsg, wParam, lParam, ACCEPT_BUTTON_INDEX) == 2)
       return 1;
 
-   return CallWindowProc(oldAcceptProc, hwnd, iMsg, wParam, lParam);
+   return CallWindowProc(OldAcceptButtonWndProc, hwnd, iMsg, wParam, lParam);
 }
 
 
-LRESULT CALLBACK MyCancelProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK CancelButtonWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 {
    if (LookupKeystrokeBinding(iMsg, wParam, lParam, CANCEL_BUTTON_INDEX) == 2)
       return 1;
 
-   return CallWindowProc(oldCancelProc, hwnd, iMsg, wParam, lParam);
+   return CallWindowProc(OldCancelButtonWndProc, hwnd, iMsg, wParam, lParam);
 }
 
 
@@ -1728,7 +1775,7 @@ void MainWindow_OnMenuSelect(HWND hwnd, HMENU hmenu, int item, HMENU hmenuPopup,
 
 void MainWindow_OnSetFocus(HWND hwnd, HWND hwndOldFocus)
 {
-   SetFocus(hwndList);    // Is this right?
+   SetFocus(hwndCallMenu);    // Is this right?
 }
 
 
@@ -1830,7 +1877,7 @@ static void Startup_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
    switch (id) {
    case IDC_START_LIST:
 
-      // See if user has double-clicked in the list box.
+      // See if user has double-clicked in the call menu.
       // We don't try to respond to single clicks.  It's too much
       // work to distinguish them from selection changes due to
       // the cursor arrow keys.
@@ -2227,7 +2274,7 @@ bool iofull::init_step(init_callback_state s, int n)
 
       wndclass.cbSize = sizeof(wndclass);
       wndclass.style = 0;
-      wndclass.lpfnWndProc = TranscriptWndProc;
+      wndclass.lpfnWndProc = TranscriptAreaWndProc;
       wndclass.cbClsExtra = 0;
       wndclass.cbWndExtra = 0;
       wndclass.hInstance = GLOBhInstance;
@@ -2492,8 +2539,8 @@ void iofull::final_initialize()
 
    SetTitle();
 
-   ShowWindow(hwndList, SW_SHOWNORMAL);
-   ShowWindow(hwndEdit, SW_SHOWNORMAL);
+   ShowWindow(hwndCallMenu, SW_SHOWNORMAL);
+   ShowWindow(hwndTextInputArea, SW_SHOWNORMAL);
    ShowWindow(hwndAcceptButton, SW_SHOWNORMAL);
 
    UpdateWindow(hwndMain);
@@ -2614,12 +2661,12 @@ static void scan_menu(Cstring name, HDC hDC, int *nLongest_p, uint32 itemdata)
 
    GetTextExtentPoint(hDC, name, lstrlen(name), &Size);
    if ((Size.cx > *nLongest_p) && (Size.cx > CallsClientRect.right)) {
-      SendMessage(hwndList, LB_SETHORIZONTALEXTENT, Size.cx, 0L);
+      SendMessage(hwndCallMenu, LB_SETHORIZONTALEXTENT, Size.cx, 0L);
       *nLongest_p = Size.cx;
    }
 
-   int nMenuIndex = SendMessage(hwndList, LB_ADDSTRING, 0, (LPARAM) name);
-   SendMessage(hwndList, LB_SETITEMDATA, nMenuIndex, (LPARAM) itemdata);
+   int nMenuIndex = SendMessage(hwndCallMenu, LB_ADDSTRING, 0, (LPARAM) name);
+   SendMessage(hwndCallMenu, LB_SETITEMDATA, nMenuIndex, (LPARAM) itemdata);
 }
 
 
@@ -2630,11 +2677,11 @@ void ShowListBox(int nWhichOne)
       HDC hDC;
 
       nLastOne = nWhichOne;
-      wherearewe = 0;
+      menu_moved = false;
 
-      SendMessage(hwndList, LB_RESETCONTENT, 0, 0L);
-      hDC = GetDC(hwndList);
-      SendMessage(hwndList, WM_SETREDRAW, FALSE, 0L);
+      SendMessage(hwndCallMenu, LB_RESETCONTENT, 0, 0L);
+      hDC = GetDC(hwndCallMenu);
+      SendMessage(hwndCallMenu, WM_SETREDRAW, FALSE, 0L);
 
       int nLongest = 0;
 
@@ -2718,14 +2765,14 @@ void ShowListBox(int nWhichOne)
          }
       }
 
-      SendMessage(hwndList, WM_SETREDRAW, TRUE, 0L);
-      InvalidateRect(hwndList, NULL, TRUE);
-      ReleaseDC(hwndList, hDC);
-      SendMessage(hwndList, LB_SETCURSEL, 0, (LPARAM) 0);
+      SendMessage(hwndCallMenu, WM_SETREDRAW, TRUE, 0L);
+      InvalidateRect(hwndCallMenu, NULL, TRUE);
+      ReleaseDC(hwndCallMenu, hDC);
+      SendMessage(hwndCallMenu, LB_SETCURSEL, 0, (LPARAM) 0);
    }
 
    ButtonFocusIndex = 0;
-   SetFocus(hwndEdit);
+   SetFocus(hwndTextInputArea);
 }
 
 

@@ -174,15 +174,15 @@ This assumes that a normal zip file (e.g. r_v348.zip) exists in the sd\regress d
 windows> cd sd
 windows> del *~
 windows> savelinuxsource
-windows> pscp -l wba -pw and9user linuxsource.tar.gz atlas:linuxsource.tar.gz
-windows> pscp -l wba -pw and9user r_XXXXX.zip atlas:r.zip
+windows> pscp -l wba -pw and9user linuxsource.tar.gz an-cs1:linuxsource.tar.gz
+windows> pscp -l wba -pw and9user r_XXXXX.zip an-cs1:r.zip
          (whatever the zip name is.  Just leave the destination as r.zip.)
-windows> use reflection garbage to connect to atlas
-   atlas> scp linuxsource.tar.gz wba@goblin.jaws.umn.edu:linuxsource.tar.gz
+windows> use reflection garbage to connect to an-cs1
+   an-cs1> scp linuxsource.tar.gz wba@goblin.jaws.umn.edu:linuxsource.tar.gz
             (pass=wba;sd)
-   atlas> scp r.zip wba@goblin.jaws.umn.edu:r.zip
+   an-cs1> scp r.zip wba@goblin.jaws.umn.edu:r.zip
             (pass=wba;sd)
-   atlas> ssh goblin.jaws.umn.edu
+   an-cs1> ssh goblin.jaws.umn.edu
             (pass=wba;sd)
       goblin> # Check that the "sd" directory does not exist.
       goblin> # Check that the "regress" directory does not exist.
@@ -221,7 +221,7 @@ windows> use reflection garbage to connect to atlas
       goblin> scp linux.tar.gz ackerman@scotch.ics.uci.edu:linux.tar.gz
             (pass=12b0z0s)
       goblin> exit
-   atlas> exit
+   an-cs1> exit
 windows> exit
 
 -----------------------------------------------------------------
@@ -308,18 +308,30 @@ install                                  *
 
 
 windows> cd sddoc
-windows> ftp atlas
+windows> ftp an-cs1
             (user=wba)
             (pass=x464pq)
 windows> bin
 windows> put pack.zip
 windows> quit
-windows> telnet atlas
-            (user=wba)
-            (pass=x464pq)
-   atlas> scp pack.zip ackerman@scotch.ics.uci.edu:pack.zip
+
+
+NEW STUFF, DAMMIT!!!! NEW STUFF, DAMMIT!!!! NEW STUFF, DAMMIT!!!! NEW STUFF, DAMMIT!!!!
+NEW STUFF, DAMMIT!!!! NEW STUFF, DAMMIT!!!! NEW STUFF, DAMMIT!!!! NEW STUFF, DAMMIT!!!!
+NEW STUFF, DAMMIT!!!! NEW STUFF, DAMMIT!!!! NEW STUFF, DAMMIT!!!! NEW STUFF, DAMMIT!!!!
+NEW STUFF, DAMMIT!!!! NEW STUFF, DAMMIT!!!! NEW STUFF, DAMMIT!!!! NEW STUFF, DAMMIT!!!!
+
+windows> pscp -l wba -pw and9user pack.zip an-cs1:pack.zip
+
+windows> use reflection garbage to connect to an-cs1
+   an-cs1> scp pack.zip wba@goblin.jaws.umn.edu:pack.zip
+            (pass=wba;sd)
+   an-cs1> ssh goblin.jaws.umn.edu
+            (pass=wba;sd)
+
+   goblin> scp pack.zip ackerman@scotch.ics.uci.edu:pack.zip
             (pass=12b0z0s)
-   atlas> ssh -l ackerman scotch.ics.uci.edu
+   goblin> ssh -l ackerman scotch.ics.uci.edu
             (pass=12b0z0s)
           # dir will appear to be /home/ackerman,
           # is actually /home/lynette/public-html/sd,
@@ -328,8 +340,8 @@ windows> telnet atlas
       scotch> unzip pack
       scotch> rm pack.zip
       scotch> exit
-   atlas> rm pack.zip
-   atlas> exit
+   an-cs1> rm pack.zip
+   an-cs1> exit
 windows> exit
 
 -----------------------------------------------------------------

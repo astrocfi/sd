@@ -4768,15 +4768,9 @@ back_here:
 
    saved_warnings = configuration::save_warnings();
 
-   // It will be helpful to have a mask of where the live people are.
-
-   for (setupcount=0; setupcount<2; setupcount++) {
-      for (i=0, j=1, livemask[setupcount] = 0;
-           i<=attr::klimit(the_setups[setupcount].kind);
-           i++, j<<=1) {
-         if (the_setups[setupcount].people[i].id1) livemask[setupcount] |= j;
-      }
-   }
+   // It will be helpful to have masks of where the live people are.
+   livemask[0] = little_endian_live_mask(&the_setups[0]);
+   livemask[1] = little_endian_live_mask(&the_setups[1]);
 
    // Iterate 1 or 2 times, depending on whether the "other" people do a call.
 
