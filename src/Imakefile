@@ -1,6 +1,6 @@
 /*
  * Imakefile for Sd (square dance caller's helper)
- * Time-stamp: <93/06/25 19:02:07 gildea>
+ * Time-stamp: <93/12/07 08:27:21 gildea>
  *
  * Run "xmkmf" to generate a Makefile from this description.
  * Then run "make" to build the Sd system.
@@ -19,33 +19,37 @@ SD_OBJS = sdmain.o sdinit.o sdutil.o sdbasic.o \
 SDX11_SRC = sdui-x11.c
 SDX11_OBJ = sdui-x11.o
 
-SDTTY_SRC = sdui-tty.c sdui-ttu.c
-SDTTY_OBJ = sdui-tty.o sdui-ttu.o
+SDTTY_SRC = sdui-tty.c sdmatch.c sdui-ttu.c
+SDTTY_OBJ = sdui-tty.o sdmatch.o sdui-ttu.o
 
-SRCS2 = mkcalls.c dbcomp.c
-OBJS2 = mkcalls.o dbcomp.o
+MKCALLS_SRCS = mkcalls.c dbcomp.c
+MKCALLS_OBJS = mkcalls.o dbcomp.o
 
-SRCS = $(SD_SRCS) $(SDX11_SRC) $(SDTTY_SRC) $(SRCS2)
-OBJS = $(SD_OBJS) $(SDX11_OBJ) $(SDTTY_OBJ) $(OBJS2)
+SRCS = $(SD_SRCS) $(SDX11_SRC) $(SDTTY_SRC) $(MKCALLS_SRCS)
+OBJS = $(SD_OBJS) $(SDX11_OBJ) $(SDTTY_OBJ) $(MKCALLS_OBJS)
 
 /*
  * building the program and database
  */
 
 AllTarget(sd sd_calls.dat)
+allx11: sd sd_calls.dat
 alltty: sdtty sd_calls.dat
-everything: all alltty
+everything: allx11 alltty
 
-NormalProgramTarget(sd, $(SD_OBJS) $(SDX11_OBJ), XawClientDepLibs, XawClientLibs, /**/)
+NormalProgramTarget(sd,$(SD_OBJS) $(SDX11_OBJ),XawClientDepLibs,XawClientLibs, /**/)
 
-NormalProgramTarget(mkcalls, $(OBJS2), /**/, /**/, /**/)
+NormalProgramTarget(mkcalls,$(MKCALLS_OBJS), /**/, /**/, /**/)
 
 #if defined(SunArchitecture) && OSMajorVersion < 5
 CURSES_LIB = -L/usr/5lib
+TTY_FLAGS = -I/usr/5include
 #endif
 CURSES = $(CURSES_LIB) -lcurses
 
-NormalProgramTarget(sdtty, $(SD_OBJS) $(SDTTY_OBJ), /**/, /**/, $(CURSES))
+SpecialObjectRule(sdui-ttu.o,sdui-ttu.c,$(TTY_FLAGS))
+
+NormalProgramTarget(sdtty,$(SD_OBJS) $(SDTTY_OBJ), /**/, /**/,$(CURSES))
 
 sd_calls.dat: sd_calls.txt mkcalls
 	./mkcalls
@@ -56,43 +60,52 @@ sd_calls.dat: sd_calls.txt mkcalls
 
 info: sd_doc.info
 dvi: sd_doc.dvi
+ps: sd_doc.ps
 
-sd_doc.info sd_doc.dvi: sd_doc.txinfo readme.txinfo install.txinfo
+sd_doc.dvi sd_doc.info sd_doc.txt: sd_doc.txinfo readme.txinfo install.txinfo
 
-.SUFFIXES: .dvi .info .txinfo
+.SUFFIXES: .dvi .info .txt .txinfo
 
-MAKEINFO = makeinfo
+MAKEINFO = makeinfo --no-split
+MAKE_ASCII = $(MAKEINFO) --no-headers
 TXI2DVI = tex
 DVIPS = dvips
 
 .txinfo.dvi:
-	$(TXI2DVI) $?
+	$(TXI2DVI) $<
 
 .txinfo.info:
-	$(MAKEINFO) $?
+	$(MAKEINFO) $<
 
-sd_doc.PS: sd_doc.dvi
+.txinfo.txt:
+	$(MAKE_ASCII) -o $@ $<
+
+sd_doc.ps: sd_doc.dvi
 	$(DVIPS) -o $@ $?
+
+INSTALL: install.txinfo
+	$(MAKE_ASCII) -o $@ --no-validate $(srcdir)/install.txinfo
+
+README: readme.txinfo
+	$(MAKE_ASCII) -o $@ --no-validate $(srcdir)/readme.txinfo
 
 /*
  * miscellaneous
  */
 
-clean::
-	$(RM) sd_calls.dat sd.tar sd.tar.Z
-	$(RM) *.aux *.log *.toc *.dvi *.info *.PS
+docclean:
+	$(RM) *.aux *.log *.toc *.dvi
 	$(RM) *.cp *.cps *.fn *.fns *.ky *.kys *.pg *.pgs *.tp *.tps *.vr *.vrs
 
+clean:: docclean
+clean::
+	$(RM) sd_calls.dat sd.tar sd.tar.Z
+	$(RM) lint.out
 
-DISTFILES = README INSTALL Relnotes oldnotes \
-            Imakefile Makefile.in configure Sd.res sd_calls.txt \
-            COPYING db_doc.txt sd_doc.txinfo install.txinfo \
-            sdmatch.c sdmatch.h
-HSRCS = sd.h database.h paths.h sdui-ttu.h
+distclean: clean
+	$(RM) sequence.*
 
-TAR = tar cvf sd.tar
-
-dist:
-	$(TAR) $(DISTFILES) $(SRCS) sdui-tpc.c $(HSRCS)
+realclean: distclean
+	$(RM) *.info *.PS sd_doc.txt sd_doc.ps
 
 DependTarget()			

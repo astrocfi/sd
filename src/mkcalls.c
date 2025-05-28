@@ -16,7 +16,7 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-    This is for version 28. */
+    This is for version 30. */
 
 /* mkcalls.c */
 
@@ -24,17 +24,29 @@
 
 #include <stdio.h>
 #include <errno.h>
+#include <string.h>
 
-#ifdef _POSIX_SOURCE
+/* ***  This next test used to be
+    ifdef _POSIX_SOURCE
+   We have taken it out and replaced with what you see below.  If this breaks
+   anything, let us know. */
+#if defined(_POSIX_SOURCE) || defined(sun)
 #include <unistd.h>
 #endif
 
 /* We take pity on those poor souls who are compelled to use
     troglodyte development environments. */
 
-#if defined(__STDC__) && !defined(athena_rt) && !defined(athena_vax)
+/* ***  This next test used to be
+    if defined(__STDC__) && !defined(athena_rt) && !defined(athena_vax)
+   We have taken it out and replaced with what you see below.  If this breaks
+   anything, let us know. */
+#if defined(__STDC__) || defined(sun)
 #include <stdlib.h>
 #else
+extern void free(void *ptr);
+extern char *malloc(unsigned int siz);
+extern char *realloc(char *oldp, unsigned int siz);
 extern void exit(int code);
 #endif
 
@@ -44,7 +56,7 @@ extern void exit(int code);
 #define SEEK_SET 0
 #endif
 
-/* This table is a copy of the one in sdtables.c .
+/* This table is a copy of the one in sdtables.c . */
 
 /* BEWARE!!  This list is keyed to the definition of "begin_kind" in sd.h . */
 /*   It must also match the similar table in the sdtables.c. */
@@ -148,25 +160,30 @@ static void db_output_error(void);
 
 static FILE *db_input = NULL;
 static FILE *db_output = NULL;
-static char db_input_filename[200];
-static char db_output_filename[200];
+#define FILENAME_LEN 200
+static char db_input_filename[FILENAME_LEN];
+static char db_output_filename[FILENAME_LEN];
 
 
 void main(int argc, char *argv[])
 {
-   strcpy(db_input_filename, CALLS_FILENAME);
-   strcpy(db_output_filename, DATABASE_FILENAME);
+   if (argc == 2)
+       strncpy(db_input_filename, argv[1], FILENAME_LEN);
+   else
+       strncpy(db_input_filename, CALLS_FILENAME, FILENAME_LEN);
+
+   strncpy(db_output_filename, DATABASE_FILENAME, FILENAME_LEN);
 
    db_input = fopen(db_input_filename, "r");
    if (!db_input) {
-      printf("Can't open input file ");
+      fprintf(stderr, "Can't open input file ");
       perror(db_input_filename);
       exit(1);
    }
 
    if (remove(db_output_filename)) {
       if (errno != ENOENT) {
-	 printf("trouble deleting old output file ");
+	 fprintf(stderr, "trouble deleting old output file ");
 	 perror(db_output_filename);
          /* This one does NOT abort. */
       }
@@ -176,7 +193,7 @@ void main(int argc, char *argv[])
       however, require it for correct handling of binary data. */
    db_output = fopen(db_output_filename, "wb");
    if (!db_output) {
-      printf("Can't open output file ");
+      fprintf(stderr, "Can't open output file ");
       perror(db_output_filename);
       exit(1);
    }
@@ -275,7 +292,7 @@ db_close_output(void)
 static void
 db_input_error(void)
 {
-    printf("Error reading input file ");
+    fprintf(stderr, "Error reading input file ");
     perror(db_input_filename);
     exit(1);
 }
@@ -289,7 +306,7 @@ db_input_error(void)
 static void
 db_output_error(void)
 {
-    printf("Error writing output file ");
+    fprintf(stderr, "Error writing output file ");
     perror(db_output_filename);
     exit(1);
 }

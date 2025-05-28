@@ -660,21 +660,21 @@ Private long_boolean in_out_roll_select(int yes_roll_direction, int cw_end, int 
    }
 }
 
-static int magic_cw_idx[8] = {3, 7, 7, 3, 7, 3, 3, 7};
-static int magic_ccw_idx[8] = {0, 4, 4, 0, 4, 0, 0, 4};
-static int magic_cw_idx_2x3[8] = {2, 5, 2, 5, 2, 5};
-static int magic_ccw_idx_2x3[8] = {0, 3, 0, 3, 0, 3};
-static int cw_idx_2x3[6] = {2, 2, 2, 5, 5, 5};
-static int ccw_idx_2x3[6] = {0, 0, 0, 3, 3, 3};
-static int cw_idx_2x6[12] = {5, 5, 5, 5, 5, 5, 11, 11, 11, 11, 11, 11};
-static int ccw_idx_2x6[12] = {0, 0, 0, 0, 0, 0, 6, 6, 6, 6, 6, 6};
-static int cw_idx_2x8[16] = {7, 7, 7, 7, 7, 7, 15, 15, 15, 15, 15, 15};
-static int ccw_idx_2x8[16] = {0, 0, 0, 0, 0, 0, 0, 0, 8, 8, 8, 8, 8, 8, 8, 8};
+static int magic_cw_idx[8] =      {3,  7,  7,  3,  7,  3,  3,  7};
+static int magic_ccw_idx[8] =     {0,  4,  4,  0,  4,  0,  0,  4};
+static int magic_cw_idx_2x3[8] =  {2,  5,  2,  5,  2,  5};
+static int magic_ccw_idx_2x3[8] = {0,  3,  0,  3,  0,  3};
+static int cw_idx_2x3[6] =        {2,  2,  2,  5,  5,  5};
+static int ccw_idx_2x3[6] =       {0,  0,  0,  3,  3,  3};
+static int cw_idx_2x6[12] =       {5,  5,  5,  5,  5,  5, 11, 11, 11, 11, 11, 11};
+static int ccw_idx_2x6[12] =      {0,  0,  0,  0,  0,  0,  6,  6,  6,  6,  6,  6};
+static int cw_idx_2x8[16] =       {7,  7,  7,  7,  7,  7,  7,  7, 15, 15, 15, 15, 15, 15, 15, 15};
+static int ccw_idx_2x8[16] =      {0,  0,  0,  0,  0,  0,  0,  0,  8,  8,  8,  8,  8,  8,  8,  8};
 
-static int magic_inroll_directions[8] = {012, 010, 010, 012, 010, 012, 012, 010};
-static int inroll_directions_2x3[6] = {012, 012, 012, 010, 010, 010};
-static int inroll_directions_2x6[12] = {012, 012, 012, 012, 012, 012, 010, 010, 010, 010, 010, 010};
-static int inroll_directions_2x8[16] = {012, 012, 012, 012, 012, 012, 012, 012, 010, 010, 010, 010, 010, 010, 010, 010};
+static int magic_inroll_directions[8] =     {012, 010, 010, 012, 010, 012, 012, 010};
+static int inroll_directions_2x3[6] =       {012, 012, 012, 010, 010, 010};
+static int inroll_directions_2x6[12] =      {012, 012, 012, 012, 012, 012, 010, 010, 010, 010, 010, 010};
+static int inroll_directions_2x8[16] =      {012, 012, 012, 012, 012, 012, 012, 012, 010, 010, 010, 010, 010, 010, 010, 010};
 static int magic_inroll_directions_2x3[6] = {012, 010, 012, 010, 012, 010};
 
 
@@ -871,15 +871,15 @@ Private long_boolean outposter_is_cw(setup *real_people, int real_index,
 Private long_boolean outposter_is_ccw(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
-   int outroll_direction = 010 + ((real_index & 4) >> 1);
+   int inroll_direction = 012 - ((real_index & 4) >> 1);
 
    /* Demand that cw_end be looking in -- otherwise "outposter_is_cw"
       would have accepted it if it were legal. */
-   if ((real_people->people[real_index | 3].id1 & 017) != outroll_direction) return FALSE;
+   if ((real_people->people[real_index | 3].id1 & 017) != inroll_direction) return FALSE;
    else {
       /* Now if ccw_end is looking out or is a phantom, it's OK. */
       unsigned int ccw_dir = real_people->people[real_index & 4].id1 & 017;
-      if (ccw_dir == 0 || ccw_dir == 022-outroll_direction) return TRUE;
+      if (ccw_dir == 0 || ccw_dir == 022-inroll_direction) return TRUE;
       return FALSE;
    }
 }

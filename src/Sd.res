@@ -33,16 +33,16 @@
 *command.exit: Exit the program
 *command.undo: Undo last call
 *command.abort: Abort this sequence
-*command.mods: Allow modifications
-*command.comment: Insert a comment ...
-*command.outfile: Change output file ...
-*command.getout: End this sequence ...
-*command.neglect: Show neglected calls ...
-*command.savepic: Save picture
-*command.resolve: Resolve ...
-*command.reconcile: Reconcile ...
-*command.anything: Do anything ...
-*command.nice: Nice setup ...
+*command.allowmods: Allow modifications
+*command.allowconcepts: Toggle concept levels
+*command.comment: Insert a comment
+*command.outfile: Change output file
+*command.getout: End this sequence
+*command.resolve: Resolve
+*command.reconcile: Reconcile
+*command.anything: Pick random call
+*command.nice: Normalize
+*command.savepic: Keep picture
 *resolve.abort: abort the search
 *resolve.find: find another
 *resolve.next: go to next

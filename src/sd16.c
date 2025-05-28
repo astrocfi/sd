@@ -37,7 +37,7 @@ extern void phantom_2x4_move(
 {
    setup resv;
    setup hpeople, vpeople;
-   int i, r;
+   int i;
    int vflag, hflag;
    int finalsetupflags = 0;
    phantest_kind newphantest = phantest;

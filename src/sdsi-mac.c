@@ -16,7 +16,7 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-    This is for version 29. */
+    This is for version 30. */
 
 /* This defines the following functions:
    general_initialize
@@ -107,7 +107,12 @@ extern long int lrand48(void);
    compilation systems that claim to be POSIX compliant, but
    aren't really, and do not have unistd.h. */
 
-#ifndef NO_UNISTD
+/* ***  This next test used to be
+    ifdef _POSIX_SOURCE
+   and, before that, a test for NO_UNISTD, which doesn't work for Think C.
+   We have taken it out and replaced with what you see below.  If this breaks
+   anything, let us know. */
+#if defined(_POSIX_SOURCE) || defined(sun)
 #include <unistd.h>
 #endif
 
@@ -256,7 +261,7 @@ long_boolean file_error;
 static FSSpec output_filespec;     /* the specification of the output file */
 static FSSpec temp_filespec;       /* the specification of the temp file */
 static short temp_file;            /* the temporary file used to write output */
-static long_boolean output_append; /* append to output file */
+static long_boolean output_append = FALSE; /* append to output file */
 
 /* set_output_file is called directly by the UI */
 extern void
@@ -281,7 +286,7 @@ set_output_file_append(const FSSpec *fs)
 extern void
 open_file(void)
 {
-    long time;
+    unsigned long time;
     int result;
 
     file_error = FALSE;
@@ -323,7 +328,8 @@ probe_file(char filename[])
 extern void
 write_file(char line[])
 {
-    int size, result;
+    long size;
+    OSErr result;
     char c = '\r';
 
     if (file_error) {
@@ -413,10 +419,12 @@ extern int parse_number(char junk[])
    return(n);
 }
 
+#ifdef NEGLECT
 extern void fill_in_neglect_percentage(char junk[], int n)
 {
    sprintf(junk, "LEAST RECENTLY USED %d%% OF THE CALLS ARE:", n);
 }
+#endif
 
 /*
  **********************************************************************
@@ -596,7 +604,7 @@ write_to_call_list_file(char name[])
 {
     int result;
     char c;
-    int count;
+    long count;
 
     count = strlen(name);
     result = FSWrite(call_list_file, &count, (Ptr) name);
@@ -837,7 +845,7 @@ mac_fgets(char *s, int n, short file, OSErr *errcodep)
     parm.ioReqCount = n-1;
     parm.ioPosMode = ('\r' << 8) + 128; /* stop at Return character */
     parm.ioPosOffset = 0;
-    result = PBReadSync(&parm);
+    result = PBReadSync((ParmBlkPtr)&parm);
     if (result == eofErr) {
         return NULL;
     }

@@ -147,6 +147,6 @@ stop_alert(int alertID, const char *arg0, const char *arg1)
 
     strcpy((char *) buf0, arg0);
     strcpy((char *) buf1, arg1);
-    ParamText(CtoPstr(buf0), CtoPstr(buf1), "\p", "\p");
+    ParamText(CtoPstr((char *) buf0), CtoPstr((char *) buf1), "\p", "\p");
     wmgr_stop_alert(alertID, 0L);
 }

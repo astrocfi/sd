@@ -1166,7 +1166,7 @@ Private void move_with_real_call(
          /* If the "reverse" flag is still set in final_concepts, it means a genuine
             reverse as in reverse cut/flip the diamond or reverse change-O. */
 
-         basic_move(ss, parseptr, callspec, final_concepts, tbonetest, qtfudged, result);
+         basic_move(ss, parseptr, callspec, final_concepts, tbonetest, qtfudged, mirror, result);
          break;
       default:
    

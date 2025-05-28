@@ -1,18 +1,19 @@
+# Generated automatically from makefile.pc.in by configure.
 # Makefile for Sd (square dance caller's helper)
 # Time-stamp: <93/12/10 19:07:40 gildea>
 
-srcdir = @srcdir@
+srcdir = .
 # VPATH is for GNU make
-VPATH = @srcdir@
+VPATH = .
 
 # This gives the compiler name and any switches that it needs to make
 # it operate the way we want (ANSI language, standards conformance,
 # target hardware, etc.)
 # To get gcc on Athena, "add outland" before running "configure".
-CC = @CC@
+CC = gcc
 
 # This gives any "-D" switches that we always need to send to the compiler.
-DEFS = @DEFS@
+DEFS = 
 
 # This gives the optimization and/or debug info.  These flags presumably
 # don't affect the semantics of the language and run-time environment, so you
@@ -22,25 +23,25 @@ DEFS = @DEFS@
 # this may compromise the ability to debug the program.  In this case, you may
 # need to choose different options, typically "-g", for debugging.
 # Consult your system, compiler, and debugger vendor for further information.
-CDEBUGFLAGS = @CDEBUGFLAGS@
+CDEBUGFLAGS = -O
 
 CFLAGS = $(DEFS) $(CDEBUGFLAGS)
 
 # These are the "-I"  and "-D" flags that we must use for the compilation
 # of the X11 user interface (sdui-x11.c).
-X11_FLAGS = @X11_FLAGS@
+X11_FLAGS = 
 
 # These are the "-I"  and "-D" flags that we must use for the compilation
 # of the system-dependent part of the TTY user interface (sdui-ttu.c).
-TTY_FLAGS = @TTY_FLAGS@
+TTY_FLAGS = 
 
 # These are the library flags that we must use for the final bind of
 # the X11 version of "sd".
-X11_LIBS = @X11_LIBS@
+X11_LIBS = 
 
 # These are the library flags that we must use for the final bind of
 # "sdtty".
-TTY_LIBS = @TTY_LIBS@
+TTY_LIBS = -lpc
 
 SD_SRCS = sdmain.c sdinit.c sdutil.c sdbasic.c \
           sdtables.c sdctable.c sdtop.c sdconcpt.c sdpreds.c sd12.c sd16.c \
@@ -61,9 +62,9 @@ SDTTY_SRC = sdui-tty.c sdmatch.c sdui-ttu.c sdui-tpc.c
 SDTTY_OBJ_UNIX = sdui-tty.o sdmatch.o sdui-ttu.o
 SDTTY_OBJ_PC   = sdui-tty.o sdmatch.o sdui-tpc.o
 # This has the special object files used for building this version of sdtty.
-SDTTY_OBJ = @SDTTY_OBJ@
+SDTTY_OBJ = $(SDTTY_OBJ_PC)
 
-SDTTY_OBJS = @SDTTY_OBJS@
+SDTTY_OBJS = @pcfiles.lnk
 
 MKCALLS_SRCS = mkcalls.c dbcomp.c
 MKCALLS_OBJS = mkcalls.o dbcomp.o
@@ -71,7 +72,7 @@ MKCALLS_OBJS = mkcalls.o dbcomp.o
 SRCS = $(SD_SRCS) $(SDX11_SRC) $(SDTTY_SRC) $(MKCALLS_SRCS)
 OBJS = $(SD_OBJS) $(SDX11_OBJ) $(SDTTY_OBJ) $(MKCALLS_OBJS)
 
-all: @DEFAULT_TARGET@
+all: alltty
 allx11: sd sd_calls.dat
 alltty: sdtty sd_calls.dat
 everything: allx11 sdtty
@@ -81,15 +82,15 @@ sd: $(SD_OBJS) $(SDX11_OBJ)
 
 mkcalls: $(MKCALLS_OBJS)
 	$(CC) $(CFLAGS) -o $@ $(MKCALLS_OBJS)
-@STRIP@
-@AOUT2EXE@
+	strip $@
+	aout2exe $@
 
 # The aout2exe program is for djgpp on DOS
 
 sdtty: $(SD_OBJS) $(SDTTY_OBJ)
 	$(CC) $(CFLAGS) -o $@ $(SDTTY_OBJS) $(TTY_LIBS)
-@STRIP@
-@AOUT2EXE@
+	strip $@
+	aout2exe $@
 
 sd_calls.dat: sd_calls.txt mkcalls
 	./mkcalls $(srcdir)/sd_calls.txt
@@ -221,7 +222,7 @@ pcfiles.lnk: Makefile.in
 	rm -f $@
 	for obj in $(SD_OBJS) $(SDTTY_OBJ_PC); do echo $$obj; done >> $@
 
-LN = @LN_S@
+LN = ln -s
 
 makefile.pc: configure Makefile.in
 	-mv config.status config.status.save

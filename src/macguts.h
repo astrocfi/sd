@@ -49,6 +49,7 @@
 #define DatabaseCompileWriteAlert  221
 #define CallListCreateErrorAlert   222
 #define CallListOpenErrorAlert     223
+#define LogCreateErrorAlert        224
 
 /* resource IDs of dialogs */
 
@@ -63,6 +64,7 @@
 #define ReadingDatabaseDialog 136
 #define SelectDialog          137
 #define QuantifierDialog      138
+#define DirectionDialog       139
 #define PreferencesDialog     140
 #define OldSelectDialog       141
 #define OldQuantifierDialog   142
@@ -75,6 +77,7 @@
 #define SequenceMenu       132
 #define SdMenu             134
 #define ModifyMenu         234
+#define LogMenu            235
 
 /* resource IDs of strings */
 
@@ -96,6 +99,7 @@
 #define GNULicenseString          15
 #define CompileOutputPromptString 16
 #define SaveSequencePromptString  17
+#define NewLogPromptString        18
 
 #define SearchGoalStrings        129
 
@@ -115,9 +119,17 @@ enum {
     saveCommand = 1,
     saveasCommand,
     FILE_MENU_DUMMY_1,
-    appendFileCommand,
+    logCommand,
     FILE_MENU_DUMMY_2,
     quitCommand
+};
+
+/* Log submenu command indices */
+
+enum {
+    logNewCommand = 1,
+    logAppendCommand,
+    logAppendToFileCommand
 };
 
 /* Edit menu command indices */
@@ -383,6 +395,7 @@ void move_controls(int offset);
 void activate_controls(long_boolean activate);
 void flash_control(ControlHandle h, int part_code);
 void output_draw_button_frames(void);
+void set_output_window_title(void);
 
 void set_recpoint_target(int n);
 void input_stuff(char *s, int len);
@@ -405,8 +418,14 @@ typedef enum {
 
 extern char *level_name;
 extern OutputMode output_mode;
+
+extern char sequence_file_name[];
+extern long_boolean output_file_save_ok;
 extern long_boolean dirty;
-extern long_boolean output_file_ok;
+
+extern char log_file_name[];
+extern long_boolean log_file_append_ok;
+
 extern long_boolean writing_sequence;
 extern ControlHandle output_default_control;
 

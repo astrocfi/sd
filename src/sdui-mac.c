@@ -11,7 +11,7 @@
  *  WARRANTY, without even the implied warranty of MERCHANTABILITY or
  *  FITNESS FOR A PARTICULAR PURPOSE.  
  *
- *  For use with version 29 of the Sd program.
+ *  For use with version 30 of the Sd program.
  *
  */
 
@@ -23,7 +23,7 @@
  *
  */
 
-static char *sdui_version = "1.96";
+static char *sdui_version = "2.2";
 
 /* This file defines the following functions:
    uims_process_command_line
@@ -42,7 +42,6 @@ static char *sdui_version = "1.96";
    uims_do_direction_popup
    uims_get_number_fields
    uims_do_modifier_popup
-   uims_do_concept_popup
    uims_add_new_line
    uims_reduce_line_count
    uims_update_resolve_menu
@@ -145,6 +144,39 @@ uims_postinitialize(void)
 
 static match_result user_match;
 
+/* BEWARE!!  The first part of this list is keyed to the definition of
+   "command_kind" in sd.h .
+   There are NUM_COMMAND_KINDS items in that part.  The rest of it
+   corresponds to the special commands defined in sdmatch.h .  There
+   are NUM_SPECIAL_COMMANDS of those items. */
+
+static char *command_list[] = {
+    "quit the program",      /* This is different from sdtty. */
+    "undo last call",
+    "end this sequence",     /* This is different from sdtty. */
+    "insert a comment ...",
+    "save as ...",
+    "*",                     /* "end this sequence" is not used on the Mac. */
+    "resolve ...",
+    "reconcile ...",
+    "pick random call ...",
+    "normalize ...",
+#ifdef NEGLECT
+    "show neglected calls ...",
+#endif
+    "keep picture",
+    "refresh display",
+/* The following items are the special ones. */
+    "modify next call",      /* This is different from sdtty. */
+    "toggle concept levels"
+};
+
+#define NUM_SPECIAL_COMMANDS 2
+#define SPECIAL_COMMAND_ALLOW_MODS 0
+#define SPECIAL_COMMAND_TOGGLE_CONCEPT_LEVELS 1
+
+
+
 /* result is indicated in user_match */
 
 static void
@@ -168,7 +200,7 @@ get_user_command(int which)
             user_match = menu_match;
             return;
         }
-        matches = match_user_input(user_input, which, &user_match, extended_input, (show_function) 0, FALSE);
+        matches = match_user_input(user_input, which, &user_match, command_list, NUM_COMMAND_KINDS+NUM_SPECIAL_COMMANDS, extended_input, (show_function) 0, FALSE);
         if (c == ' ') {
             /* extend only to one space, inclusive */
             p = extended_input;
@@ -205,12 +237,39 @@ get_user_command(int which)
 call_list_kind uims_current_call_menu;
 
 static uims_reply
-get_call_command(call_list_kind call_menu)
+get_call_command(call_list_kind *call_menu)
 {
-    uims_current_call_menu = call_menu;
-    input_set_prompt("Enter concept or call", call_menu_names[call_menu]);
-    get_user_command((int) call_menu);
+    check_menu:
+
+    if (allowing_modifications)
+        *call_menu = call_list_any;
+
+    uims_current_call_menu = *call_menu;
+    input_set_prompt("Enter concept or call", call_menu_names[*call_menu]);
+    get_user_command((int) *call_menu);
     uims_menu_index = user_match.index;
+    
+    /*
+     * User can type "modify next command", but sd doesn't want to hear about it.
+     * It just wants to see the global variable changed.
+     *
+     */
+
+    if (user_match.kind == ui_command_select && uims_menu_index >= NUM_COMMAND_KINDS) {
+        if (uims_menu_index == NUM_COMMAND_KINDS + SPECIAL_COMMAND_ALLOW_MODS) {
+            /* Increment "allowing_modifications" up to a maximum of 2. */
+            if (allowing_modifications != 2) allowing_modifications++;
+            /* This must be called to get the little checkmark in the menus correct */
+            update_modification_state(allowing_modifications);
+        }
+        else {   /* Must be SPECIAL_COMMAND_TOGGLE_CONCEPT_LEVELS. */
+            allowing_all_concepts = !allowing_all_concepts;
+            /* update checkmark in the menus */
+            SetItemMark(sequence_menu, anyConceptCommand, allowing_all_concepts ? 022 : 0);
+        }
+        goto check_menu;
+    }
+       
     if (!dirty) {
         if ((user_match.kind == ui_concept_select) ||
             (user_match.kind == ui_call_select) ||
@@ -224,8 +283,7 @@ get_call_command(call_list_kind call_menu)
 }
 
 extern uims_reply
-uims_get_command(mode_kind mode, call_list_kind call_menu,
-    int modifications_flag)
+uims_get_command(mode_kind mode, call_list_kind *call_menu)
 {
     if (mode == mode_startup) {
         return get_startup_command();
@@ -244,12 +302,14 @@ uims_do_comment_popup(char dest[])
     return get_popup_string("Enter comment:", dest);
 }
 
+#ifdef NEGLECT
 extern int
 uims_do_neglect_popup(char dest[])
 {
     strcpy(dest, "0"); /* cause command to abort */
     return POPUP_ACCEPT_WITH_STRING;
 }
+#endif
 
 extern int
 uims_do_modifier_popup(char callname[], modify_popup_kind kind)
@@ -301,12 +361,12 @@ uims_do_direction_popup(void)
 
 
 extern unsigned int
-uims_get_number_fields(int howmany)
+uims_get_number_fields(int nnumbers)
 {
    int i;
    unsigned int number_list = 0;
 
-   for (i=0 ; i<howmany ; i++) {
+   for (i=0 ; i<nnumbers ; i++) {
       unsigned int this_num;
 
       if (user_match.valid && (user_match.howmanynumbers >= 1)) {
@@ -323,14 +383,6 @@ uims_get_number_fields(int howmany)
    }
 
    return number_list;
-}
-
-
-extern int
-uims_do_concept_popup(int kind)
-{
-    /* should never be called */
-    return 0;
 }
 
 /*

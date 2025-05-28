@@ -16,7 +16,7 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-    This is for version 29. */
+    This is for version 30. */
 
 /* This defines the following functions:
    initialize_menus
@@ -183,7 +183,7 @@ Private parse_block *parse_mark;
 Private int call_index;
 
 
-Private void test_starting_setup(call_list_kind cl, setup test_setup)
+Private void test_starting_setup(call_list_kind cl, Const setup *test_setup)
 {
    callspec_block *test_call;
    real_jmp_buf my_longjmp_buffer;
@@ -232,7 +232,8 @@ Private void test_starting_setup(call_list_kind cl, setup test_setup)
    /* Set the selector (for "so-and-so advance to a column", etc) to "beaux".
       This seems to make most calls work -- note that "everyone run" and
       "no one advance to a column" are illegal.  If "beaux" doesn't work, we will
-      try "ends" (for the call "fold") and then "all" before giving up. */
+      try "ends" (for the call "fold"), "all", and finally "none" (for the call
+      "run"), before giving up. */
    selector_for_initialize = selector_beaux;
 
    try_another_selector:
@@ -244,7 +245,7 @@ Private void test_starting_setup(call_list_kind cl, setup test_setup)
    history_ptr = 1;
 
    history[history_ptr].centersp = 0;
-   history[history_ptr].state = test_setup;
+   history[history_ptr].state = *test_setup;
    initialize_parse();
 
    /* If the call has the "rolldefine" schema, we accept it, since the test setups
@@ -1030,20 +1031,20 @@ extern void initialize_menus(call_list_mode_t call_list_mode)
 
    /* Create the special call menus for restricted setups. */
 
-   test_starting_setup(call_list_1x8, test_setup_1x8);           /* RH grand wave */
-   test_starting_setup(call_list_l1x8, test_setup_l1x8);         /* LH grand wave */
-   test_starting_setup(call_list_dpt, test_setup_dpt);           /* DPT */
-   test_starting_setup(call_list_cdpt, test_setup_cdpt);         /* completed DPT */
-   test_starting_setup(call_list_rcol, test_setup_rcol);         /* RCOL */
-   test_starting_setup(call_list_lcol, test_setup_lcol);         /* LCOL */
-   test_starting_setup(call_list_8ch, test_setup_8ch);           /* 8CH */
-   test_starting_setup(call_list_tby, test_setup_tby);           /* TBY */
-   test_starting_setup(call_list_lin, test_setup_lin);           /* LIN */
-   test_starting_setup(call_list_lout, test_setup_lout);         /* LOUT */
-   test_starting_setup(call_list_rwv, test_setup_rwv);           /* RWV */
-   test_starting_setup(call_list_lwv, test_setup_lwv);           /* LWV */
-   test_starting_setup(call_list_r2fl, test_setup_r2fl);         /* R2FL */
-   test_starting_setup(call_list_l2fl, test_setup_l2fl);         /* L2FL */
+   test_starting_setup(call_list_1x8,  &test_setup_1x8);          /* RH grand wave */
+   test_starting_setup(call_list_l1x8, &test_setup_l1x8);         /* LH grand wave */
+   test_starting_setup(call_list_dpt,  &test_setup_dpt);          /* DPT */
+   test_starting_setup(call_list_cdpt, &test_setup_cdpt);         /* completed DPT */
+   test_starting_setup(call_list_rcol, &test_setup_rcol);         /* RCOL */
+   test_starting_setup(call_list_lcol, &test_setup_lcol);         /* LCOL */
+   test_starting_setup(call_list_8ch,  &test_setup_8ch);          /* 8CH */
+   test_starting_setup(call_list_tby,  &test_setup_tby);          /* TBY */
+   test_starting_setup(call_list_lin,  &test_setup_lin);          /* LIN */
+   test_starting_setup(call_list_lout, &test_setup_lout);         /* LOUT */
+   test_starting_setup(call_list_rwv,  &test_setup_rwv);          /* RWV */
+   test_starting_setup(call_list_lwv,  &test_setup_lwv);          /* LWV */
+   test_starting_setup(call_list_r2fl, &test_setup_r2fl);         /* R2FL */
+   test_starting_setup(call_list_l2fl, &test_setup_l2fl);         /* L2FL */
 
    create_misc_call_lists();
 

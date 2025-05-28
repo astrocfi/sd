@@ -106,6 +106,8 @@ unsigned int collision_person1;
 unsigned int collision_person2;
 long_boolean enable_file_writing;
 
+Private char *ordinals[] = {"1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th"};
+
 /* These variables are used by the text-packing stuff. */
 
 Private char *destcurr;
@@ -193,41 +195,47 @@ extern void writestuff(Const char s[])
 
 Private void writestuff_with_decorations(char s[], long_boolean do_number, long_boolean do_selector, int *num_ptr, char *selname)
 {
-   if (do_number || do_selector) {
-      char *f = s;
-      while (*f) {
-         if (f[0] == '<') {
-            if (do_number && f[1] == 'N') {
-               if (f[2] == '/' && f[3] == '4' && f[4] == '>') {
-                  if ((*num_ptr & 0xF) == 2)
-                     writestuff("1/2");
-                  else {
-                     writechar('0' + (*num_ptr & 0xF));
-                     writestuff("/4");
-                  }
-                  f += 5;
-                  *num_ptr >>= 4;
-                  continue;
-               }
-               else if (f[2] == '>') {
+   Const char *f = s;
+
+   while (*f) {
+      if (f[0] == '<') {
+         if (do_number && f[1] == 'N') {
+            if (f[2] == '/' && f[3] == '4' && f[4] == '>') {
+               if ((*num_ptr & 0xF) == 2)
+                  writestuff("1/2");
+               else {
                   writechar('0' + (*num_ptr & 0xF));
-                  f += 3;
-                  *num_ptr >>= 4;
-                  continue;
+                  writestuff("/4");
                }
+               f += 5;
+               *num_ptr >>= 4;
+               continue;
             }
-            else if (do_selector && f[1] == 'A' && f[2] == 'N' && f[3] == 'Y' && f[4] == 'O' && f[5] == 'N' && f[6] == 'E' && f[7] == '>') {
-               writestuff(selname);
-               f += 8;
+            else if (f[2] == 't' && f[3] == 'h' && f[4] == '>') {
+               writestuff(ordinals[(*num_ptr & 0xF)-1]);
+               f += 5;
+               *num_ptr >>= 4;
+               continue;
+            }
+            else if (f[2] == '>') {
+               writechar('0' + (*num_ptr & 0xF));
+               f += 3;
+               *num_ptr >>= 4;
                continue;
             }
          }
-
-         writechar(*f++);
+         else if (do_selector && f[1] == 'A' && f[2] == 'N' && f[3] == 'Y' && f[4] == 'O' && f[5] == 'N' && f[6] == 'E' && f[7] == '>') {
+            writestuff(selname);
+            f += 8;
+            continue;
+         }
+         else if (f[1] == 'c' && f[2] == 'o' && f[3] == 'n' && f[4] == 'c' && f[5] == 'e' && f[6] == 'p' && f[7] == 't' && f[8] == '>') {
+            f += 9;
+            continue;
+         }
       }
-   }
-   else {
-      writestuff(s);
+
+      writechar(*f++);
    }
 }
 
@@ -370,6 +378,7 @@ char *direction_names[] = {
 
 /* BEWARE!!  These strings are keyed to the definitions of "warn__<whatever>" in sd.h . */
 Private char *warning_strings[] = {
+   /*  warn__none                */   "Unknown warning????",
    /*  warn__do_your_part        */   "Do your part.",
    /*  warn__tbonephantom        */   "This is a T-bone phantom setup call.  Everyone will do their own part.",
    /*  warn__ends_work_to_spots  */   "Ends work to same spots.",
@@ -414,8 +423,6 @@ Private char *warning_strings[] = {
    /*  warn__split_to_2x3s       */   "Do the call in each 2x3.",
    /*  warn__split_to_1x8s       */   "Do the call in each 1x8.",
    /*  warn__split_to_1x6s       */   "Do the call in each 1x6."};
-
-Private char *ordinals[] = {"1st", "2nd", "3rd", "4th", "5th"};
 
 /* Bits that go into argument to print_recurse. */
 #define PRINT_RECURSE_STAR 01
@@ -482,11 +489,7 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
             you_owe_me_a_selector = TRUE;
 
          if (concept_table[k].concept_prop & (CONCPROP__USE_NUMBER | CONCPROP__USE_TWO_NUMBERS)) {
-            if (k != concept_nth_part && k != concept_replace_nth_part) {
-               /* Must be concept_fractional, concept_frac_stable, concept_frac_tandem, concept_some_are_frac_tandem,
-                  concept_so_and_so_frac_stable, or concept_gruesome_frac_tandem. */
-               you_owe_me_a_number = TRUE;
-            }
+            you_owe_me_a_number = TRUE;
          }
 
          next_cptr = static_cptr->next;    /* Now it points to the thing after this concept. */
@@ -547,12 +550,9 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
                else if (k == concept_interlace)
                   writestuff(" WITH");
                else if (k == concept_replace_nth_part) {
-                  if (static_cptr->concept->value.arg1)
-                     writestuff(" BUT INTERRUPT AFTER THE ");
-                  else
-                     writestuff(" BUT REPLACE THE ");
-                  writestuff(ordinals[index-1]);
-                  writestuff(" PART WITH A [");
+                  writestuff(" BUT ");
+                  writestuff_with_decorations(item->name, you_owe_me_a_number, you_owe_me_a_selector, &index, selector_names[selector]);
+                  writestuff(" WITH A [");
                   request_final_space = FALSE;
                }
                else if (k == concept_sequential)
@@ -628,25 +628,13 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
          }
          else if (k == concept_nth_part) {
             if (static_cptr->concept->value.arg1 == 1) {
-               writestuff("SKIP THE ");
-               writestuff(ordinals[index-1]);
-               writestuff(" PART,");
+               comma_after_next_concept = TRUE;           /* "SKIP THE <Nth> PART" */
+               request_final_space = TRUE;
             }
-            else {
-               writestuff("DO THE ");
-               writestuff(ordinals[index-1]);
-               writestuff(" PART");
-               request_comma_after_next_concept = TRUE;
-            }
+            else
+               request_comma_after_next_concept = TRUE;   /* "DO THE <Nth> PART <concept>" */
 
-            request_final_space = TRUE;
-         }
-         else if (k == concept_replace_nth_part) {
-            writestuff("DELAY -- REPLACE THE ");
-            writestuff(ordinals[index-1]);
-            writestuff(" PART");
-            request_comma_after_next_concept = TRUE;
-            request_final_space = TRUE;
+            writestuff_with_decorations(item->name, you_owe_me_a_number, you_owe_me_a_selector, &index, selector_names[selector]);
          }
          else if ((k == concept_meta) && static_cptr->concept->value.arg1 == 3) {
             writestuff("START");
@@ -759,6 +747,8 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
 
          if (localcall) {      /* Call = NIL means we are echoing input and user hasn't entered call yet. */
             char *np;
+            char nn[2];
+            char savec;
 
             if (enable_file_writing) localcall->age = global_age;
             np = localcall->name;
@@ -768,125 +758,123 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
 
             while (*np) {
                if (*np == '@') {
-                  if (np[1] == '6' || np[1] == 'k') {
-                     if (lastchar != ' ' && lastchar != '[') writestuff(" ");
-                     if (np[1] == '6')
-                        writestuff(selector_names[i16junk]);
-                     else
-                        writestuff(selector_singular[i16junk]);
-                     if (np[2] && np[2] != ' ' && np[2] != ']')
-                        writestuff(" ");
-                     np += 2;       /* skip the digit */
-                  }
-                  else if (np[1] == 'h') {    /* Need to plug in a direction. */
-                     if (lastchar != ' ' && lastchar != '[') writestuff(" ");
-                     writestuff(direction_names[idirjunk]);
-                     if (np[2] && np[2] != ' ' && np[2] != ']')
-                        writestuff(" ");
-                     np += 2;       /* skip the indicator */
-                  }
-                  else if (np[1] == '9' || np[1] == 'a' || np[1] == 'b') {
-                     /* Need to plug in a number. */
-                     char nn[2];
+                  savec = np[1];
 
-                     if (lastchar != ' ' && lastchar != ' ' && lastchar != '-') writestuff(" ");
-                     nn[0] = '0' + (number_list & 0xF);
-                     nn[1] = '\0';
-                     if (np[1] == '9')
-                        writestuff(nn);
-                     else if ((number_list & 0xF) == 2)
-                        writestuff("1/2");
-                     else if ((number_list & 0xF) == 4 && np[1] == 'a')
-                        writestuff("full");
-                     else {
-                        writestuff(nn);
-                        writestuff("/4");
-                     }
-
-                     number_list >>= 4;    /* Get ready for next number. */
-                     np += 2;              /* skip the indicator */
-                  }
-                  else if (np[1] == 'e') {
-                     if (use_left_name) {
-                        np += 2;
-                        while (*np != '@') np++;
-                        if (lastchar == ']') writestuff(" ");
-                        writestuff("left");
-                     }
-                     np += 2;
-                  }
-                  else if (np[1] == 'j') {
-                     if (!use_cross_name) {
-                        np += 2;
-                        while (*np != '@') np++;
-                     }
-                     np += 2;
-                  }
-                  else if (np[1] == 'l' || np[1] == '8' || np[1] == 'o')
-                     np += 2;     /* Just skip these -- they end stuff that we could have elided but didn't. */
-                  else if (np[1] == 'c') {
-                     if (print_recurse_arg & (PRINT_RECURSE_TAGREACT | PRINT_RECURSE_TAGENDING)) {
-                        np += 2;
-                        while (*np != '@') np++;
-                     }
-                     else {
-                        if ((lastchar == ' ' || lastchar == '[') && (np[2] == ' ')) np++;
-                     }
-                     np += 2;
-                  }
-                  else if (np[1] == 'n' || np[1] == 'p' || np[1] == 'r' || np[1] == 'm' || np[1] == 't') {
-                     char savec = np[1];
-      
-                     if (subst2_in_use) {
-                        if (np[1] == 'p' || np[1] == 'r') {
-                           np += 2;
-                           while (*np != '@') np++;
-                        }
-                     }
-                     else {
-                        if (np[1] == 'n') {
-                           np += 2;
-                           while (*np != '@') np++;
-                        }
-                     }
-
-                     if (pending_subst2 && savec != 'p' && savec != 'n') {
+                  switch (savec) {
+                     case '6': case 'k':
                         if (lastchar != ' ' && lastchar != '[') writestuff(" ");
-                        writestuff("[");
-                        print_recurse(sub2_ptr, next_recurse2_arg | PRINT_RECURSE_STAR);
-                        writestuff("]");
-      
-                        pending_subst2 = FALSE;
-                     }
-      
-                     np += 2;        /* skip the digit */
-                  }
-                  else {
-                     char savec = np[1];
-      
-                     if (subst1_in_use) {
-                        if (np[1] == '2' || np[1] == '4') {
-                           np += 2;
-                           while (*np != '@') np++;
-                        }
-                     }
-                     else {
-                        if (np[1] == '7') {
-                           np += 2;
-                           while (*np != '@') np++;
-                        }
-                     }
-      
-                     if (pending_subst1 && savec != '4' && savec != '7') {
+                        if (savec == '6')
+                           writestuff(selector_names[i16junk]);
+                        else
+                           writestuff(selector_singular[i16junk]);
+                        if (np[2] && np[2] != ' ' && np[2] != ']')
+                           writestuff(" ");
+                        np += 2;       /* skip the digit */
+                        break;
+                     case 'h':                   /* Need to plug in a direction. */
                         if (lastchar != ' ' && lastchar != '[') writestuff(" ");
-                        writestuff("[");
-                        print_recurse(sub1_ptr, next_recurse1_arg | PRINT_RECURSE_STAR);
-                        writestuff("]");
-      
-                        pending_subst1 = FALSE;
-                     }
-      
-                     np += 2;        /* skip the digit */
+                        writestuff(direction_names[idirjunk]);
+                        if (np[2] && np[2] != ' ' && np[2] != ']')
+                           writestuff(" ");
+                        np += 2;       /* skip the indicator */
+                        break;
+                     case '9': case 'a': case 'b':    /* Need to plug in a number. */
+                        if (lastchar != ' ' && lastchar != ' ' && lastchar != '[' && lastchar != '-') writestuff(" ");
+                        nn[0] = '0' + (number_list & 0xF);
+                        nn[1] = '\0';
+                        if (savec == '9')
+                           writestuff(nn);
+                        else if ((number_list & 0xF) == 2)
+                           writestuff("1/2");
+                        else if ((number_list & 0xF) == 4 && savec == 'a')
+                           writestuff("full");
+                        else {
+                           writestuff(nn);
+                           writestuff("/4");
+                        }
+   
+                        number_list >>= 4;    /* Get ready for next number. */
+                        np += 2;              /* skip the indicator */
+                        break;
+                     case 'e':
+                        if (use_left_name) {
+                           np += 2;
+                           while (*np != '@') np++;
+                           if (lastchar == ']') writestuff(" ");
+                           writestuff("left");
+                        }
+                        np += 2;
+                        break;
+                     case 'j':
+                        if (!use_cross_name) {
+                           np += 2;
+                           while (*np != '@') np++;
+                        }
+                        np += 2;
+                        break;
+                     case 'l': case '8': case 'o':    /* Just skip these -- they end stuff that we could have elided but didn't. */
+                        np += 2;
+                        break;
+                     case 'c':
+                        if (print_recurse_arg & (PRINT_RECURSE_TAGREACT | PRINT_RECURSE_TAGENDING)) {
+                           np += 2;
+                           while (*np != '@') np++;
+                        }
+                        else {
+                           if ((lastchar == ' ' || lastchar == '[') && (np[2] == ' ')) np++;
+                        }
+                        np += 2;
+                        break;
+                     case 'n': case 'p': case 'r': case 'm': case 't':
+                        if (subst2_in_use) {
+                           if (savec == 'p' || savec == 'r') {
+                              np += 2;
+                              while (*np != '@') np++;
+                           }
+                        }
+                        else {
+                           if (savec == 'n') {
+                              np += 2;
+                              while (*np != '@') np++;
+                           }
+                        }
+   
+                        if (pending_subst2 && savec != 'p' && savec != 'n') {
+                           if (lastchar != ' ' && lastchar != '[') writestuff(" ");
+                           writestuff("[");
+                           print_recurse(sub2_ptr, next_recurse2_arg | PRINT_RECURSE_STAR);
+                           writestuff("]");
+         
+                           pending_subst2 = FALSE;
+                        }
+         
+                        np += 2;        /* skip the digit */
+                        break;
+                     default:
+                        if (subst1_in_use) {
+                           if (savec == '2' || savec == '4') {
+                              np += 2;
+                              while (*np != '@') np++;
+                           }
+                        }
+                        else {
+                           if (savec == '7') {
+                              np += 2;
+                              while (*np != '@') np++;
+                           }
+                        }
+         
+                        if (pending_subst1 && savec != '4' && savec != '7') {
+                           if (lastchar != ' ' && lastchar != '[') writestuff(" ");
+                           writestuff("[");
+                           print_recurse(sub1_ptr, next_recurse1_arg | PRINT_RECURSE_STAR);
+                           writestuff("]");
+         
+                           pending_subst1 = FALSE;
+                        }
+         
+                        np += 2;        /* skip the digit */
+                        break;
                   }
                }
                else {
@@ -1038,114 +1026,18 @@ Private void do_write(char s[])
 }
 
 
-Private void print_4_person_setup(int ps, small_setup *s, int elong)
-{
-   roti = (s->srotation & 3);
-   ri = roti * 011;
-   personstart = ps;
-   
-   switch (s->skind) {
-      case s_1x2:
-         modulus = 2;
-         newline();
-         if (roti & 1)
-            do_write4_small("a@b@");
-         else
-            do_write4_small("a  b@");
-         break;
-      case s2x2:
-         modulus = 4;
-         newline();
-         if (roti & 1) {
-            if (elong < 0)
-               do_write4_small("da@cb@");
-            else if ((roti+elong) & 1)
-               do_write4_small("da@@@cb@");
-            else
-               do_write4_small("d    a@c    b@");
-         }
-         else {
-            if (elong < 0)
-               do_write4_small("ab@dc@");
-            else if ((roti+elong) & 1)
-               do_write4_small("ab@@@dc@");
-            else
-               do_write4_small("a    b@d    c@");
-         }
-         break;
-      case s_star:
-         modulus = 4;
-         newline();
-         if (roti & 1)
-            do_write4_small("   a@d  b@   c@");
-         else
-            do_write4_small("   b@a  c@   d@");
-         break;
-      case s1x4:
-         modulus = 4;
-         newline();
-         if (roti & 1)
-            do_write4_small("a@b@d@c@");
-         else
-            do_write4_small("a  b  d  c@");
-         break;
-      case sdmd:
-         modulus = 4;
-         newline();
-         if (roti & 1)
-            do_write4_small("   a@@d  b@@   c@");
-         else
-            do_write4_small("     b@a      c@     d@");
-         break;
-      case s_2x3:
-         modulus = 6;
-         newline();
-         if (roti & 1)
-            do_write4_small("f  a@e  b@d  c@");
-         else
-            do_write4_small("a  b  c@f  e  d@");
-         break;
-      case s_short6:
-         modulus = 6;
-         newline();
-         if (roti & 1)
-            do_write4_small("   fa@e      b@   dc@");
-         else
-            do_write4_small("   b@a  c@f  d@   e@");
-         break;
-      case s_bone6:
-         modulus = 6;
-         newline();
-         if (roti & 1)
-            do_write4_small("ea@  f@  c@db@");
-         else
-            do_write4_small("a        b@    fc@e        d@");
-         break;
-      case s_1x6:
-         modulus = 6;
-         newline();
-         if (roti & 1)
-            do_write4_small("a@b@c@f@e@d@");
-         else
-            do_write4_small("a  b  c  f  e  d@");
-         break;
-      default:
-         writestuff(" ????");
-   }
-}
-
 /* BEWARE!!  This list is keyed to the definition of "setup_kind" in database.h . */
 static char *printing_tables[][2] = {
    {(char *) 0,                                                               (char *) 0},                                                                                                       /* nothing */
    {(char *) 0,                                                               (char *) 0},                                                                                                       /* s_1x1 */
-   {(char *) 0,                                                               (char *) 0},                                                                                                       /* s_1x2 */
+   {"a  b@",                                                                  "a@b@"},                                                                                                           /* s_1x2 */
    {(char *) 0,                                                               (char *) 0},                                                                                                       /* s_1x3 */
    {(char *) 0,                                                               (char *) 0},                                                                                                       /* s2x2 */
-   {(char *) 0,                                                               (char *) 0},                                                                                                       /* sdmd */
+   {"     b@a      c@     d@",                                                "   a@@d  b@@   c@"},                                                                                              /* sdmd */
    {(char *) 0,                                                               (char *) 0},                                                                                                       /* s_star */
    {(char *) 0,                                                               (char *) 0},                                                                                                       /* s_trngl */
-   {(char *) 0,                                                               (char *) 0},                                                                                                       /* s_bone6 */
-   {(char *) 0,                                                               (char *) 0},                                                                                                       /* s_short6 */
+   {"a        b@    fc@e        d@",                                          "ea@  f@  c@db@"},                                                                                                 /* s_bone6 */
+   {"   b@a  c@f  d@   e@",                                                   "   fa@e      b@   dc@"},                                                                                          /* s_short6 */
    {(char *) 0,                                                               (char *) 0},                                                                                                       /* s_qtag */
    {"a                   b@    g h d c@f                   e",                "fa@  g@  h@  d@  c@eb"},                                                                                          /* s_bone */
    {"        a b@gh         dc@        f e",                                  "  g@  h@fa@eb@  d@  c"},                                                                                          /* s_rigger */
@@ -1153,11 +1045,11 @@ static char *printing_tables[][2] = {
    {"   a  b@      d@g        c@      h@   f  e",                             "     g@f      a@   hd@e      b@     c"},                                                                          /* s_hrglass */
    {(char *) 0,                                                               (char *) 0},                                                                                                       /* s_hyperglass */
    {"          c@          d@ab        fe@          h@          g",           "      a@      b@@ghdc@@      f@      e"},                                                                         /* s_crosswave */
-   {(char *) 0,                                                               (char *) 0},                                                                                                       /* s1x4 */
+   {"a  b  d  c@",                                                            "a@b@d@c@"},                                                                                                       /* s1x4 */
    {"a b d c g h f e",                                                        "a@b@d@c@g@h@f@e"},                                                                                                /* s1x8 */
    {"a  b  c  d@@h  g  f  e",                                                 "h  a@@g  b@@f  c@@e  d"},                                                                                         /* s2x4 */
-   {(char *) 0,                                                               (char *) 0},                                                                                                       /* s_2x3 */
-   {(char *) 0,                                                               (char *) 0},                                                                                                       /* s_1x6 */
+   {"a  b  c@f  e  d@",                                                       "f  a@e  b@d  c@"},                                                                                                /* s_2x3 */
+   {"a  b  c  f  e  d@",                                                      "a@b@c@f@e@d@"},                                                                                                   /* s_1x6 */
    {"a  b  c  d@@k  l  f  e@@j  i  h  g",                                     "j  k  a@@i  l  b@@h  f  c@@g  e  d"},                                                                             /* s3x4 */
    {"a  b  c  d  e  f@@l  k  j  i  h  g",                                     "l  a@@k  b@@j  c@@i  d@@h  e@@g  f"},                                                                             /* s2x6 */
    {"a  b  c  d  e  f  g  h@@p  o  n  m  l  k  j  i",                         "p  a@@o  b@@n  c@@m  d@@l  e@@k  f@@j  g@@i  h"},                                                                 /* s2x8 */
@@ -1184,6 +1076,50 @@ static char *printing_tables[][2] = {
    {(char *) 0,                                                               (char *) 0}};                                                                                                      /* s_normal_concentric */
 
 
+Private void print_4_person_setup(int ps, small_setup *s, int elong)
+{
+   modulus = setup_limits[s->skind]+1;
+   roti = (s->srotation & 3);
+   ri = roti * 011;
+   personstart = ps;
+
+   switch (s->skind) {
+      case s2x2:
+         newline();
+         if (roti & 1) {
+            if (elong < 0)
+               do_write4_small("da@cb@");
+            else if ((roti+elong) & 1)
+               do_write4_small("da@@@cb@");
+            else
+               do_write4_small("d    a@c    b@");
+         }
+         else {
+            if (elong < 0)
+               do_write4_small("ab@dc@");
+            else if ((roti+elong) & 1)
+               do_write4_small("ab@@@dc@");
+            else
+               do_write4_small("a    b@d    c@");
+         }
+         break;
+      case s_star:
+         newline();
+         if (roti & 1)
+            do_write4_small("   a@d  b@   c@");
+         else
+            do_write4_small("   b@a  c@   d@");
+         break;
+      case s1x4: case sdmd: case s2x4: case s_2x3: case s_1x6: case s_short6: case s_bone6: case s_1x2:
+         newline();
+         do_write4_small(printing_tables[s->skind][roti & 1]);
+         break;
+      default:
+         writestuff(" ????");
+   }
+   newline();
+}
+
 
 
 Private void printsetup(setup *x)
@@ -1197,8 +1133,8 @@ Private void printsetup(setup *x)
    
    newline();
 
-   str = printing_tables[x->kind][x->rotation & 1];
    personstart = 0;
+   str = printing_tables[x->kind][x->rotation & 1];
 
    if (str) {
       do_write(str);
@@ -1389,7 +1325,7 @@ extern void write_history_line(int history_index, Const char *header, long_boole
 
 extern void warn(warning_index w)
 {
-   history[history_ptr+1].warnings.bits[w>>5] |= 1 << (w & 0x1F);
+   if (w != warn__none) history[history_ptr+1].warnings.bits[w>>5] |= 1 << (w & 0x1F);
 }
 
 

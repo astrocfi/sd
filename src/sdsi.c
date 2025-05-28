@@ -16,7 +16,7 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-    This is for version 29. */
+    This is for version 30. */
 
 /* This defines the following functions:
    general_initialize
@@ -86,7 +86,7 @@ and the following external variables:
 #include <string.h>
 #include <time.h>
 
-/* We take pity on those poor souls who are compelled to XOPEN,
+/* We take pity on those poor souls who are compelled to use XOPEN,
    an otherwise fine standard, that doesn't put prototypes
    into stdlib.h. */
 
@@ -119,7 +119,7 @@ extern long int lrand48(void);
     troglodyte development environments.
     gcc -traditional doesn't define __STDC__ */
 
-#if defined(__STDC__) || defined(sun)
+#if __STDC__ || defined(sun)
 #include <stdlib.h>
 #else
 extern void free(void *ptr);
@@ -128,6 +128,9 @@ extern char *realloc(char *oldp, unsigned int siz);
 extern void exit(int code);
 extern void srand48(long int);
 extern long int lrand48(void);
+#endif
+
+#if !defined(sun) && (!__STDC__ || defined(MSDOS))
 extern char *strerror(int);
 #endif
 
@@ -151,7 +154,6 @@ Private FILE *fildes;
 Private long_boolean file_error;
 Private char fail_message[MAX_ERR_LENGTH];
 Private char fail_errstring[MAX_ERR_LENGTH];
-
 
 Private char *get_errstring(void)
 {
@@ -271,12 +273,12 @@ extern void free_mem(void *ptr)
 
 extern void get_date(char dest[])
 {
-   time_t clock;
+   time_t clocktime;
    char *junk;
    char *dstptr;
 
-   time(&clock);
-   junk = ctime(&clock);
+   time(&clocktime);
+   junk = ctime(&clocktime);
    dstptr = dest;
    string_copy(&dstptr, junk);
    if (dstptr[-1] == '\n') dstptr[-1] = '\0';         /* Stupid UNIX! */
@@ -501,10 +503,12 @@ extern int parse_number(char junk[])
 }
 
 
+#ifdef NEGLECT
 extern void fill_in_neglect_percentage(char junk[], int n)
 {
    sprintf(junk, "LEAST RECENTLY USED %d%% OF THE CALLS ARE:", n);
 }
+#endif
 
 
 Private FILE *call_list_file;

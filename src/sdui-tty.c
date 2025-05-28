@@ -1,7 +1,7 @@
 /* 
  * sdui-tty.c - SD TTY User Interface
  * Originally for Macintosh.  Unix version by gildea.
- * Time-stamp: <93/03/22 18:32:26 gildea>
+ * Time-stamp: <93/12/04 18:39:11 gildea>
  * Copyright (c) 1990,1991,1992,1993 Stephen Gildea, William B. Ackerman, and
  *   Alan Snyder
  *
@@ -181,8 +181,6 @@ text_output_trim(int n)
  * end of text output stuff
  */
 
-Private char **concept_menu_list;
-
 Private char *call_menu_prompts[NUM_CALL_LIST_KINDS];
 
 /*
@@ -348,7 +346,7 @@ prompt_for_more_output(void)
 }
 
 Private void
-show_match(char *user_input, char *extension, Const match_result *mr)
+show_match(char *user_input_str, char *extension, Const match_result *mr)
 {
     if (match_counter < 0) return;  /* Showing has been turned off. */
 
@@ -360,7 +358,7 @@ show_match(char *user_input, char *extension, Const match_result *mr)
         }
     }
     match_counter--;
-    put_line(user_input);
+    put_line(user_input_str);
     put_line(extension);
     put_line("\n");
     current_text_line++;
@@ -375,6 +373,39 @@ show_match(char *user_input, char *extension, Const match_result *mr)
  */
 
 Private match_result user_match;
+
+/* BEWARE!!  The first part of this list is keyed to the definition of
+   "command_kind" in sd.h .
+   There are NUM_COMMAND_KINDS items in that part.  The rest of it
+   corresponds to the special commands defined in sdmatch.h .  There
+   are NUM_SPECIAL_COMMANDS of those items. */
+
+static char *command_list[] = {
+    "exit the program",
+    "undo last call",
+    "abort this sequence",
+    "insert a comment",
+    "change output file",
+    "end this sequence",
+    "resolve",
+    "reconcile",
+    "pick random call",
+    "normalize",
+#ifdef NEGLECT
+    "show neglected calls",
+#endif
+    "keep picture",
+    "refresh display",
+/* The following items are the special ones. */
+    "allow modifications",
+    "toggle concept levels"
+};
+
+#define NUM_SPECIAL_COMMANDS 2
+#define SPECIAL_COMMAND_ALLOW_MODS 0
+#define SPECIAL_COMMAND_TOGGLE_CONCEPT_LEVELS 1
+
+
 
 /* result is indicated in user_match */
 
@@ -410,7 +441,7 @@ get_user_input(char *prompt, int which)
             put_line ("\n");
             current_text_line++;
             start_matches();
-            match_user_input(user_input, which, 0, 0, show_match, FALSE);
+            match_user_input(user_input, which, (match_result *) 0, command_list, NUM_COMMAND_KINDS+NUM_SPECIAL_COMMANDS, (char *) 0, show_match, FALSE);
             put_line ("\n");     /* Write a blank line. */
             current_text_line++;
             put_line(user_input_prompt);   /* Redisplay the current line. */
@@ -418,7 +449,7 @@ get_user_input(char *prompt, int which)
             continue;
         }
 
-        matches = match_user_input(user_input, which, &user_match, extended_input, (show_function) 0, FALSE);
+        matches = match_user_input(user_input, which, &user_match, command_list, NUM_COMMAND_KINDS+NUM_SPECIAL_COMMANDS, extended_input, (show_function) 0, FALSE);
 
         if (c == ' ') {
             /* extend only to one space, inclusive */
@@ -540,11 +571,11 @@ uims_get_command(mode_kind mode, call_list_kind *call_menu)
         uims_menu_index = user_match.index;
 
         if (user_match.kind == ui_command_select && uims_menu_index >= NUM_COMMAND_KINDS) {
-            if (uims_menu_index == NUM_COMMAND_KINDS+SPECIAL_COMMAND_ALLOW_MODS) {
+            if (uims_menu_index == NUM_COMMAND_KINDS + SPECIAL_COMMAND_ALLOW_MODS) {
                 /* Increment "allowing_modifications" up to a maximum of 2. */
                 if (allowing_modifications != 2) allowing_modifications++;
             }
-            else {   /* Must be "allow all concepts". */
+            else {   /* Must be SPECIAL_COMMAND_TOGGLE_CONCEPT_LEVELS. */
                 allowing_all_concepts = !allowing_all_concepts;
             }
             goto check_menu;
@@ -590,6 +621,7 @@ uims_do_getout_popup(char dest[])
     return get_popup_string("Enter label", dest);
 }
 
+#ifdef NEGLECT
 extern int
 uims_do_neglect_popup(char dest[])
 {
@@ -597,6 +629,7 @@ uims_do_neglect_popup(char dest[])
     current_text_line++;
     return get_popup_string("Enter percentage", dest);
 }
+#endif
 
 Private int
 confirm(char *question)
@@ -658,7 +691,7 @@ uims_do_modifier_popup(char callname[], modify_popup_kind kind)
 
 /*
  * UIMS_BEGIN_SEARCH is called at the beginning of each search mode
- * command (resolve, reconcile, nice setup, do anything).
+ * command (resolve, reconcile, nice setup, pick random call).
  */
 
 extern void
@@ -742,13 +775,13 @@ uims_do_direction_popup(void)
 }    
 
 
-extern unsigned int uims_get_number_fields(int howmany)
+extern unsigned int uims_get_number_fields(int nnumbers)
 {
    int i;
    char buffer[200];
    unsigned int number_list = 0;
 
-   for (i=0 ; i<howmany ; i++) {
+   for (i=0 ; i<nnumbers ; i++) {
       unsigned int this_num;
 
       if (user_match.valid && (user_match.howmanynumbers >= 1)) {

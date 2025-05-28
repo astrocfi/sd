@@ -89,26 +89,7 @@ static void strcpy_lower(char *dest, char *source);
 
 /* the following arrays must be coordinated with the sd program */
 
-#ifdef THINK_C
-#define NOMAC "*"
-#else
-#define NOMAC
-#endif
-
-#ifdef THINK_C
-#define IFMAC(x,y) x
-#else
-#define IFMAC(x,y) y
-#endif
-
-/*
- * We inhibit certain commands from matching by prefixing them with
- * an asterisk.
- */
-
-/* the following arrays must be coordinated with the sd program */
-
-/* startup_commands tracks the start_select_kind enumeration */
+/* BEWARE!!  This list is keyed to the definition of "start_select_kind" in sd.h . */
 static char *startup_commands[] = {
     "exit from the program",
     "heads 1p2p",
@@ -118,32 +99,11 @@ static char *startup_commands[] = {
     "just as they are"
 };
 
-/* The first part of this array tracks the "command_kind" enumeration.
-   There are NUM_COMMAND_KINDS items in that part.  The rest of it
-   corresponds to the special commands defined in sdmatch.h .  There
-   are NUM_SPECIAL_COMMANDS of those items. */
+static char **command_commands;   /* This holds the text strings for special commands. */
+static int num_command_commands;  /* And this tells how many there are.  These variables
+                                     are set up by the call to "match_user_input". */
 
-static char *command_commands[] = {
-    "exit the program",
-    "undo last call",
-    IFMAC("end this sequence","abort this sequence"),
-    "insert a comment ...",
-    IFMAC("save as ...","change output file ..."),
-    NOMAC "end this sequence ...",
-    "resolve ...",
-    "reconcile ...",
-    IFMAC("pick random call ...","do anything ..."),
-    IFMAC("normalize setup ...","nice setup ..."),
-    NOMAC "show neglected calls ...",
-    IFMAC("insert picture","save picture"),
-    "refresh display",
-/* The following items are the special ones. */
-    IFMAC("modify next call","allow modifications"),
-    "toggle concept levels"
-};
-
-/* resolve_commands tracks the resolve_command_kind enumeration */
-
+/* BEWARE!!  This list is keyed to the definition of "resolve_command_kind" in sd.h . */
 static char *resolve_commands[] = {
     "abort the search",
     "find another",
@@ -162,8 +122,11 @@ static char *n_patterns[] = {
     "5",
     "6",
     "7",
-    0
+    "8",
+    (char *) 0
 };
+
+Private char *ordinals[] = {"1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th", (char *) 0};
 
 static char *n_4_patterns[] = {
     "1/4",
@@ -171,7 +134,7 @@ static char *n_4_patterns[] = {
     "3/4",
     "4/4",
     "5/4",
-    0
+    (char *) 0
 };
 
 
@@ -191,7 +154,7 @@ static char *n_4_patterns[] = {
 extern void
 matcher_initialize(long_boolean show_commands_last)
 {
-    int concept_number, count;
+    int concept_number;
     concept_descriptor *p;
     concept_item *item, *level_item;
 
@@ -326,11 +289,23 @@ add_call_to_menu(char ***menu, int call_menu_index, int menu_size,
  * will be made to verify that a call is possible in the current
  * setup before showing it.
  *
+ * When searching for calls and concepts, it also searches for the special
+ * commands provided by the "command_list" and "num_commands" arguments.
+ * When such a command is found, we return "ui_command_select" as the kind,
+ * and the index into that array as the index.
+ *
  */
 
 extern int
-match_user_input(char *user_input, int which_commands, match_result *mr,
-                 char *extension, show_function sf, long_boolean show_verify)
+match_user_input(
+    char *user_input,
+    int which_commands,
+    match_result *mr,
+    char **command_list,      /* Text of commands to search for (Mac and Unix versions differ). */
+    int num_commands,         /* How many items in above list. */
+    char *extension,
+    show_function sf,
+    long_boolean show_verify)
 {
     match_state ss;
     input_matcher *f;
@@ -341,6 +316,11 @@ match_user_input(char *user_input, int which_commands, match_result *mr,
     char time_buf[20];
     uims_debug_print("");
 #endif
+
+    if (num_commands) {
+        command_commands = command_list;
+        num_command_commands = num_commands;
+    }
 
     ss.full_input = user_input;
     ss.extended_input = extension;
@@ -407,19 +387,16 @@ resolve_matcher(match_state *sp)
 static void
 call_matcher(match_state *sp)
 {
-    /* search_menu(sp, concept_menu_list, concept_menu_len, ui_concept_select); */
-
     if (!commands_last_option)
-        search_menu(sp, command_commands, NUM_COMMAND_KINDS+NUM_SPECIAL_COMMANDS, ui_command_select);
+        search_menu(sp, command_commands, num_command_commands, ui_command_select);
 
     search_menu(sp,
-        call_menu_lists[current_call_menu], number_of_calls[current_call_menu],
-        ui_call_select);
+        call_menu_lists[current_call_menu], number_of_calls[current_call_menu], ui_call_select);
 
     search_concept(sp);
 
     if (commands_last_option)
-        search_menu(sp, command_commands, NUM_COMMAND_KINDS+NUM_SPECIAL_COMMANDS, ui_command_select);
+        search_menu(sp, command_commands, num_command_commands, ui_command_select);
 }
 
 static void
@@ -547,8 +524,6 @@ match_pattern(match_state *sp, char pattern[], Const match_result *result)
 static void
 match_suffix(match_state *sp, char *user, char *pat, char *patxp, Const match_result *result)
 {
-    int exact;
-
     if (user && (*user == '\0')) {
         /* we have just reached the end of the user input */
         if (*pat == '\0') {
@@ -630,7 +605,6 @@ match_suffix_2(match_state *sp, char *user, char *pat1, char *pat2,
 static int
 match_wildcard(match_state *sp, char *user, char *pat, char *patxp, Const match_result *result)
 {
-    char temp[200];
     char *prefix, *suffix;
     int i;
     match_result new_result;
@@ -670,6 +644,21 @@ match_wildcard(match_state *sp, char *user, char *pat, char *patxp, Const match_
         for (i=1;; ++i) {
             new_result.number_fields += 1 << ((new_result.howmanynumbers-1)*4);
             prefix = n_patterns[i-1];
+            if (prefix == NULL) {
+                break;
+            }
+            match_suffix_2(sp, user, prefix, suffix, patxp, &new_result);
+        }
+        return FALSE;
+    }
+    else if (strncmp(pat, "<nth>", 5)==0) {
+        suffix = pat+5;
+        new_result = *result;
+        new_result.howmanynumbers++;
+
+        for (i=1;; ++i) {
+            new_result.number_fields += 1 << ((new_result.howmanynumbers-1)*4);
+            prefix = ordinals[i-1];
             if (prefix == NULL) {
                 break;
             }
@@ -763,7 +752,6 @@ static long_boolean
 verify_call(call_list_kind cl, int call_index, selector_kind who)
 {
     callspec_block *call;
-    selector_kind sel;
 
     if (who < 0)
         who = selector_uninitialized;
@@ -784,10 +772,21 @@ verify_call(call_list_kind cl, int call_index, selector_kind who)
          * One could argue this is a bug!
          */
         
+        /* sue: new plan: try (beaus, ends, all), just like initialization */
+        
+        if (verify_call_with_selector(call, selector_beaux))
+           return(TRUE);
+        if (verify_call_with_selector(call, selector_ends))
+           return(TRUE);
+        if (verify_call_with_selector(call, selector_all))
+           return(TRUE);
+/* this was the old code...        
+        selector_kind sel;
         for (sel=1; sel<last_selector_kind; ++sel) {
             if (verify_call_with_selector(call, sel))
                 return (TRUE);
         }
+*/
     }
     else {
         return verify_call_with_selector(call, who);

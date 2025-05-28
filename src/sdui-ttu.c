@@ -1,7 +1,7 @@
 /*
  * sdui-ttu.c - helper functions for sdui-tty interface to use the Unix
  * "curses" mechanism.
- * Time-stamp: <93/07/10 16:14:00 wba>
+ * Time-stamp: <93/11/27 11:06:39 gildea>
  * Copyright 1993 Stephen Gildea
  *
  * Permission to use, copy, modify, and distribute this software for
@@ -17,7 +17,16 @@
  */
 
 
+/* The "NO_CURSES" compile-time switch will shut off all attempts to use the "curses"
+   system service, including the inclusion of the "curses.h" include file.  (Whew!)
+   In this case, the program will ignore the "-no_cursor" run-time switch, and will
+   always act as though that switch had been given. */
+
+#ifndef NO_CURSES
 #include <curses.h>
+#else
+#include <stdio.h>
+#endif
 #include <termios.h>   /* We use this stuff if "-no_cursor" was specified. */
 #include <unistd.h>    /* This too. */
 #include <signal.h>
@@ -26,10 +35,14 @@
 #include "sdui-ttu.h"
 
 static int no_line_delete = 0;
-static int no_cursor = 0;
-static int curses_initialized = 0;
 
-static int nlines, ncols;
+#ifdef NO_CURSES
+static int no_cursor = 1;
+#else
+static int no_cursor = 0;
+#endif
+
+static int curses_initialized = 0;
 
 static int current_tty_mode = 0;
 
@@ -93,6 +106,7 @@ extern void ttu_process_command_line(int *argcp, char ***argvp)
 
 extern void ttu_initialize(void)
 {
+#ifndef NO_CURSES
    if (!no_cursor) {
       initscr();    /* Initialize "curses". */
       noecho();     /* Don't echo; we will do it ourselves. */
@@ -105,7 +119,7 @@ extern void ttu_initialize(void)
    
       /* Tell the "curses" system whether we desire to use the line insert/delete
          capabilities of the output device.  The documentation says that, under
-         some cicumstances the use of this capability can be annoying to the user.
+         some circumstances the use of this capability can be annoying to the user.
          We let the user decide.
    
          Note that the second argument to "idlok" is defined in the documentation
@@ -132,10 +146,12 @@ extern void ttu_initialize(void)
       idlok(stdscr, no_line_delete ? FALSE : TRUE);
       curses_initialized = 1;
    }
+#endif
 }
 
 extern void ttu_terminate(void)
 {
+#ifndef NO_CURSES
    if (!no_cursor) {
       if (curses_initialized) {
          endwin();
@@ -143,18 +159,26 @@ extern void ttu_terminate(void)
    }
    else
       csetmode(0);   /* Restore normal input mode. */
+#else
+   csetmode(0);   /* Restore normal input mode. */
+#endif
 }
 
 
 extern int get_lines_for_more(void)
 {
+#ifndef NO_CURSES
    if (!no_cursor)
       return LINES;
    else
       return 24;
+#else
+   return 24;
+#endif
 }
 
 
+#ifndef NO_CURSES
 static void getyx_correctly(int *y, int *x)
 {
    int localy, localx;
@@ -272,10 +296,12 @@ whereas the correct way to document this would have been
    *y = localy;   
    *x = localx;   
 }
+#endif
 
 
 extern void clear_line(void)
 {
+#ifndef NO_CURSES
    if (!no_cursor) {
       int y, x;
 
@@ -292,10 +318,14 @@ extern void clear_line(void)
          leaving a seamless transcript.  This is the best we can do. */
       printf(" XXX\n");
    }
+#else
+      printf(" XXX\n");
+#endif
 }
 
 extern void rubout(void)
 {
+#ifndef NO_CURSES
    if (!no_cursor) {
       int y, x;
       getyx_correctly(&y, &x);
@@ -306,10 +336,14 @@ extern void rubout(void)
    else {
       printf("\b \b");    /* We hope that this works. */
    }
+#else
+   printf("\b \b");    /* We hope that this works. */
+#endif
 }
 
 extern void erase_last_n(int n)
 {
+#ifndef NO_CURSES
    if (!no_cursor) {
       int y, x;
 
@@ -330,10 +364,12 @@ extern void erase_last_n(int n)
       clrtobot();
       refresh();
    }
+#endif
 }
 
 extern void put_line(char the_line[])
 {
+#ifndef NO_CURSES
    if (!no_cursor) {
       addstr(the_line);
       refresh();
@@ -341,10 +377,14 @@ extern void put_line(char the_line[])
    else {
       (void) fputs(the_line, stdout);
    }
+#else
+   (void) fputs(the_line, stdout);
+#endif
 }
 
 extern void put_char(int c)
 {
+#ifndef NO_CURSES
    if (!no_cursor) {
       addch(c);
       refresh();
@@ -352,11 +392,15 @@ extern void put_char(int c)
    else {
       (void) putchar(c);
    }
+#else
+   (void) putchar(c);
+#endif
 }
 
 
 extern int get_char(void)
 {
+#ifndef NO_CURSES
    if (!no_cursor) {
       return getch();      /* A "curses" call. */
    }
@@ -364,11 +408,16 @@ extern int get_char(void)
       csetmode(1);         /* Raw, no echo, single-character mode. */
       return getchar();    /* A "stdio" call. */
    }
+#else
+   csetmode(1);         /* Raw, no echo, single-character mode. */
+   return getchar();    /* A "stdio" call. */
+#endif
 }
 
 
 extern void get_string(char *dest)
 {
+#ifndef NO_CURSES
    if (!no_cursor) {
       echo();
       getstr(dest);
@@ -377,19 +426,26 @@ extern void get_string(char *dest)
    else {
       csetmode(0);         /* Regular full-line mode with system echo. */
       gets(dest);
-
    }
+#else
+   csetmode(0);         /* Regular full-line mode with system echo. */
+   gets(dest);
+#endif
 }
 
 
 extern void bell(void)
 {
+#ifndef NO_CURSES
    if (!no_cursor) {
       beep();
    }
    else {
       (void) putchar('\007');
    }
+#else
+   (void) putchar('\007');
+#endif
 }
 
 /*

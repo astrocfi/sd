@@ -20,7 +20,11 @@ MenuHandle          file_menu;
 MenuHandle          edit_menu;
 MenuHandle          sequence_menu;
 MenuHandle          sd_menu;
-static MenuHandle   modify_menu;
+static MenuHandle   modify_menu; /* submenu */
+static MenuHandle   log_menu;    /* submenu */
+
+static FSSpec sequence_filespec; /* current file for saving sequence */
+static FSSpec log_filespec;      /* current file for appending to log */
 
 static void apple_menu_command(int item);
 static void file_menu_command(int item);
@@ -28,8 +32,11 @@ static void edit_menu_command(int item);
 static void sequence_menu_command(int item);
 static void sd_menu_command(int item);
 static void modify_menu_command(int item);
+static void log_menu_command(int item);
 static void save_call_list_command(void);
-static void append_file_command(void);
+static void log_new_command(void);
+static void log_append_command(void);
+static void log_append_to_file_command(void);
 static void quit_command(void);
 static long_boolean mac_write_sequence_to_file(void);
 static void cant_open_resource_file(void);
@@ -64,9 +71,11 @@ init_menus(void)
     InsertMenu(sequence_menu, 0);
     InsertMenu(sd_menu, 0);
     modify_menu = GetMenu(ModifyMenu);
+    log_menu    = GetMenu(LogMenu);
     InsertMenu(modify_menu, -1);
+    InsertMenu(log_menu, -1);
     DrawMenuBar();
-    SetItemMark(sequence_menu, anyConceptCommand, match_all_concepts ? 022 : 0);
+    SetItemMark(sequence_menu, anyConceptCommand, allowing_all_concepts ? 022 : 0);
 }
 
 /*
@@ -109,7 +118,7 @@ adjust_menus(void)
 
     DisableItem(file_menu, saveCommand);
     DisableItem(file_menu, saveasCommand);
-    DisableItem(file_menu, appendFileCommand);
+    DisableItem(file_menu, logCommand);
 
     DisableItem(sequence_menu, endCommand);
     DisableItem(sequence_menu, resolveCommand);
@@ -181,6 +190,10 @@ menu_command(long menu_result)
             modify_menu_command(item);
             break;
 
+        case LogMenu:
+	    log_menu_command(item);
+	    break;
+
     }
     HiliteMenu(0);
 }
@@ -209,10 +222,11 @@ update_modification_state(int n)
 void
 save_command(void)
 {
-    if (!output_file_ok) {
+    if (!output_file_save_ok) {
         save_as_command();
     }
     else {
+        set_output_file(&sequence_filespec);
         if (mac_write_sequence_to_file()) {
             dirty = FALSE;
         }
@@ -229,24 +243,26 @@ save_as_command(void)
 {
     int result;
     char buf[200];
-    FSSpec output_filespec;
+    FSSpec new_sequence_filespec;
     Str63 prompt;
 
     GetIndString(prompt, MessagesStrings, SaveSequencePromptString);
-    result = get_output_file_name(buf, &output_filespec, prompt);
+    result = get_output_file_name(buf, &new_sequence_filespec, prompt);
     if (result == 0) {
         /* user cancelled */
         return;
     }
-
-    result = mac_create_file(&output_filespec, 'ttxt', 'TEXT');
+    result = mac_create_file(&new_sequence_filespec, 'ttxt', 'TEXT');
     if (result == dupFNErr) {
         result = 0;
     }
     if (result == 0) {
-        set_output_file(&output_filespec);
-        output_file_ok = TRUE;
-        SetWTitle(myWindow, output_filespec.name);
+	sequence_filespec = new_sequence_filespec;
+        output_file_save_ok = TRUE;
+        set_output_file(&sequence_filespec);
+	pstrcpy((StringPtr)sequence_file_name, sequence_filespec.name);
+    PtoCstr((StringPtr)sequence_file_name);
+	set_output_window_title();
         mac_write_sequence_to_file(); /* sets file_error */
         if (!file_error) {
             dirty = FALSE;
@@ -281,7 +297,7 @@ apple_menu_command(int item)
             show_hints();
             break;
         default:
-            GetItem(apple_menu, item, &name);
+            GetItem(apple_menu, item, name);
             OpenDeskAcc(name);
         }
 }
@@ -301,9 +317,6 @@ file_menu_command(int item)
         case saveasCommand:
             save_as_command();
             break;
-        case appendFileCommand:
-            append_file_command();
-            break;
         case quitCommand:
             quit_command();
             break;
@@ -322,27 +335,6 @@ edit_menu_command(int item)
     if (wp != NULL) {
         window_edit(wp, item);
     }
-}
-
-/*
- *  append_file_command
- *
- */
-
-static void
-append_file_command(void)
-{
-    int result;
-    char buf[200];
-    FSSpec output_filespec;
-
-    result = get_input_file_name(buf, &output_filespec, 'TEXT');
-    if (result == 0) {
-        /* user cancelled */
-        return;
-    }
-    set_output_file_append(&output_filespec);
-    mac_write_sequence_to_file(); /* reports errors directly */
 }
 
 /*
@@ -377,7 +369,7 @@ quit_command(void)
 }
 
 /*
- *  modify_command
+ *  modify_menu_command
  *
  */
 
@@ -385,6 +377,117 @@ static void
 modify_menu_command(int item)
 {
     update_modification_state(item-1);
+    stuff_command(ui_command_select, command_refresh); 
+}
+
+/*
+ *  log_menu_command
+ *
+ */
+
+static void
+log_menu_command(int item)
+{
+    switch (item) {
+      case logNewCommand:
+	log_new_command();
+	break;
+      case logAppendCommand:
+	log_append_command();
+	break;
+      case logAppendToFileCommand:
+	log_append_to_file_command();
+	break;
+    }
+}
+
+/*
+ *  log_new_command (append sequence to a new log file)
+ *
+ */
+
+static void
+log_new_command(void)
+{
+    int result;
+    char buf[200];
+    FSSpec new_log_filespec;
+    Str63 prompt;
+
+    GetIndString(prompt, MessagesStrings, NewLogPromptString);
+    result = get_output_file_name(buf, &new_log_filespec, prompt);
+    if (result == 0) {
+        /* user cancelled */
+        return;
+    }
+    result = mac_create_file(&new_log_filespec, 'ttxt', 'TEXT');
+    if (result == dupFNErr) {
+        result = 0;
+    }
+    if (result == 0) {
+	log_filespec = new_log_filespec;
+        log_file_append_ok = TRUE;
+        set_output_file(&log_filespec);
+	pstrcpy((StringPtr)log_file_name, log_filespec.name);
+    PtoCstr((StringPtr)log_file_name);
+	set_output_window_title();
+        mac_write_sequence_to_file(); /* sets file_error */
+        if (!file_error) {
+            dirty = FALSE;
+        }
+    }
+    else {
+        stop_alert(LogCreateErrorAlert, buf, "");
+    }
+}
+/*
+ *  log_append_command (append to current log file)
+ *
+ */
+
+static void
+log_append_command(void)
+{
+    int result;
+    
+    if (!log_file_append_ok) {
+        log_append_to_file_command();
+    }
+    else {
+	set_output_file_append(&log_filespec);
+        if (mac_write_sequence_to_file()) {
+            dirty = FALSE;
+        }
+    }
+}
+
+/*
+ *  log_append_to_file_command (append to existing log file)
+ *
+ */
+
+static void
+log_append_to_file_command(void)
+{
+    int result;
+    char buf[200];
+    FSSpec new_log_filespec;
+
+    result = get_input_file_name(buf, &new_log_filespec, 'TEXT');
+    if (result == 0) {
+        /* user cancelled */
+        return;
+    }
+    log_filespec = new_log_filespec;
+    log_file_append_ok = TRUE;
+    set_output_file_append(&log_filespec);
+    pstrcpy((StringPtr)log_file_name, log_filespec.name);
+    PtoCstr((StringPtr)log_file_name);
+    set_output_window_title();
+    mac_write_sequence_to_file(); /* reports errors directly */
+    if (!file_error) {
+	dirty = FALSE; /* don't ask user to save changes */
+    }
 }
 
 /*
@@ -439,17 +542,14 @@ sequence_menu_command(int item)
         stuff_command(ui_command_select, command_save_pic);
         break;
     case anyConceptCommand:
-        match_all_concepts = !match_all_concepts;
-        SetItemMark(sequence_menu, item, match_all_concepts ? 022 : 0);
+        allowing_all_concepts = !allowing_all_concepts;
+        SetItemMark(sequence_menu, item, allowing_all_concepts ? 022 : 0);
         stuff_command(ui_command_select, command_refresh);
         break;
     case showCoupleNumbersCommand:
         display_numbers = !display_numbers;
         adjust_menus();
         stuff_command(ui_command_select, command_refresh);
-        break;
-    case modifyCommand:
-        stuff_command(ui_command_select, command_allow_modification);
         break;
     case endCommand:
         stuff_command(ui_command_select, command_abort);

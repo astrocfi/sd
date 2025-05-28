@@ -90,7 +90,7 @@ getcommand(char ***av)
         mac_fixup_file(filedesc.vRefNum, (StringPtr)&filedesc.fName, &database_fs);
 
         pstrcpy((StringPtr)buf, filedesc.fName);
-        set_call_database(PtoCstr(buf), &database_fs);
+        set_call_database(PtoCstr((StringPtr)buf), &database_fs);
         if (database_ok) {
             ClrAppFiles(1);
         }
@@ -103,7 +103,7 @@ getcommand(char ***av)
     dp = GetNewDialog(popup_control_available ? LevelDialog : OldLevelDialog,
                       0L, (WindowPtr) -1L);
     if (popup_control_available) {
-        SetCtlValue(ditem(dp, itemLevel), preference_default_level + 1);
+        SetCtlValue((ControlHandle)ditem(dp, itemLevel), preference_default_level + 1);
     }
     else {
         level = preference_default_level;
@@ -151,7 +151,7 @@ getcommand(char ***av)
     argc = 0;
     argv[argc++] = "sd";
     if (popup_control_available) {
-        level = GetCtlValue(ditem(dp,itemLevel))-1;
+        level = GetCtlValue((ControlHandle)ditem(dp,itemLevel))-1;
     }
     level_name = getout_strings[level];
     argv[argc++] = levels[level];
@@ -189,17 +189,17 @@ getcommand(char ***av)
     }
     *av = argv;
 
-    window_close((Window *)&startupDW);
-    display_update();
-    DisposDialog(dp);
     if (!database_ok) {
         select_default_call_database();
     }
-    while (!database_ok) {
-        if (!select_call_database()) {
-            exit_program(0);
-        }
-    }
+    /* User might want to load a new database *or* recompile an existing database.
+       Presenting a message saying "you must recompile", and then putting a dialog
+       box asking for the new compiled database, is not very good. */
+    if (!database_ok)
+        goto restart_dialog;
+    window_close((Window *)&startupDW);
+    display_update();
+    DisposDialog(dp);
     return(argc);
 }
 
@@ -255,7 +255,7 @@ select_default_call_database(void)
     FSSpec database_fs;
 
     strcpy((char *)database_fs.name, DATABASE_FILENAME);
-    CtoPstr(database_fs.name);
+    CtoPstr((char *)database_fs.name);
     database_fs.vRefNum = 0; /* default volume */
     database_fs.parID = 0;   /* default directory */
     set_call_database(DATABASE_FILENAME, &database_fs);
@@ -531,7 +531,7 @@ explode_old_standard_file_reply(SFReply *p, char *buf, FSSpec *fs)
         return FALSE;
     }
     pstrcpy((StringPtr)buf, p->fName);
-    PtoCstr(buf);
+    PtoCstr((unsigned char *)buf);
     return TRUE;
 }
 

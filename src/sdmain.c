@@ -27,7 +27,7 @@
     General Public License if you distribute the file.
 */
 
-#define VERSION_STRING "29.47"
+#define VERSION_STRING "30.0"
 
 /* This defines the following functions:
    sd_version_string
@@ -1319,8 +1319,8 @@ void main(int argc, char *argv[])
                }
                goto start_cycle;
             }
-         case command_neglect:
 #ifdef NEGLECT
+         case command_neglect:
             {
                char percentage_string[MAX_TEXT_LINE_LENGTH];
                uims_reply local_reply;
@@ -1382,8 +1382,6 @@ void main(int argc, char *argv[])
                else
                   goto start_cycle;
             }
-#else
-            specialfail("This command has been removed.");
 #endif
          case command_resolve: case command_reconcile: case command_anything: case command_nice_setup:
             {

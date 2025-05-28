@@ -92,14 +92,13 @@ static void
 label_control(DialogWindow *dwp, ControlHandle h, short part_code)
 {
     Handle dih;
-    char buf[256];
+    Str255 buf;
 
     switch (dwp->item) {
       case labelAccept:
         dih = ditem(label_dialog, labelText);
         GetIText(dih, buf);
-        PtoCstr(buf);
-        strcpy(sequence_label, buf);
+        strcpy(sequence_label, PtoCstr(buf));
         window_close((Window *)dwp);
         break;
       case labelCancel:

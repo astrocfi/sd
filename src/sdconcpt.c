@@ -25,6 +25,7 @@ and the following external variables:
    global_tbonetest
    global_livemask
    global_selectmask
+   global_tboneselect
    concept_table
 */
 
@@ -33,7 +34,7 @@ and the following external variables:
 int global_tbonetest;
 int global_livemask;
 int global_selectmask;
-
+int global_tboneselect;
 
 
 
@@ -334,9 +335,9 @@ Private void do_concept_single_diagonal(
    setup a1;
    setup res1;
 
-   tbonetest = global_tbonetest;
+   tbonetest = global_tboneselect;
 
-   if (!tbonetest) {
+   if (!global_tbonetest) {
       result->kind = nothing;
       return;
    }
@@ -627,7 +628,7 @@ Private void do_concept_quad_lines_tog_end2end(
    than through global_tbonetest. */
 
 {
-   int i, m1, m2, m3, cstuff, linesp;
+   int m1, m2, m3, cstuff, linesp;
 
    cstuff = parseptr->concept->value.arg1;
    /* cstuff =
@@ -998,7 +999,7 @@ Private void do_concept_triple_lines_tog_end2end(
    than through global_tbonetest. */
 
 {
-   int i, m1, m2, cstuff, linesp;
+   int m1, m2, cstuff, linesp;
 
    cstuff = parseptr->concept->value.arg1;
    /* cstuff =
@@ -1772,10 +1773,16 @@ Private void do_concept_checkerboard(
    else
       fail("Can't identify checkerboard people.");
 
+   /* Move the people who simply trade, filling in their roll info. */
+
    (void) copy_rot(result, mape[0+offset], ss, mape[1+offset], 022);
+   if (result->people[mape[0+offset]].id1) result->people[mape[0+offset]].id1 = (result->people[mape[0+offset]].id1 & (~ROLL_MASK)) | ROLLBITL;
    (void) copy_rot(result, mape[1+offset], ss, mape[0+offset], 022);
+   if (result->people[mape[1+offset]].id1) result->people[mape[1+offset]].id1 = (result->people[mape[1+offset]].id1 & (~ROLL_MASK)) | ROLLBITR;
    (void) copy_rot(result, mape[2+offset], ss, mape[3+offset], 022);
+   if (result->people[mape[2+offset]].id1) result->people[mape[2+offset]].id1 = (result->people[mape[2+offset]].id1 & (~ROLL_MASK)) | ROLLBITL;
    (void) copy_rot(result, mape[3+offset], ss, mape[2+offset], 022);
+   if (result->people[mape[3+offset]].id1) result->people[mape[3+offset]].id1 = (result->people[mape[3+offset]].id1 & (~ROLL_MASK)) | ROLLBITR;
 
    a1.kind = (setup_kind) parseptr->concept->value.arg1;
    a1.setupflags = ss->setupflags | SETUPFLAG__DISTORTED;
@@ -1998,24 +2005,28 @@ Private void do_concept_trace(
       (void) copy_person(&a1, 2, ss, 7);
       (void) copy_person(&a1, 3, ss, 6);
       a1.setupflags = ss->setupflags | SETUPFLAG__DISTORTED;
+      update_id_bits(&a1);
       move(&a1, parseptr->next, NULLCALLSPEC, 0, FALSE, &res1);
       finalsetupflags |= res1.setupflags;
 
       (void) copy_person(&a2, 2, ss, 4);
       (void) copy_person(&a2, 3, ss, 5);
       a2.setupflags = ss->setupflags | SETUPFLAG__DISTORTED;
+      update_id_bits(&a2);
       move(&a2, parseptr->subsidiary_root, NULLCALLSPEC, 0, FALSE, &res2);
       finalsetupflags |= res2.setupflags;
 
       (void) copy_person(&a3, 0, ss, 3);
       (void) copy_person(&a3, 1, ss, 2);
       a3.setupflags = ss->setupflags | SETUPFLAG__DISTORTED;
+      update_id_bits(&a3);
       move(&a3, parseptr->next, NULLCALLSPEC, 0, FALSE, &res3);
       finalsetupflags |= res3.setupflags;
 
       (void) copy_person(&a4, 0, ss, 0);
       (void) copy_person(&a4, 1, ss, 1);
       a4.setupflags = ss->setupflags | SETUPFLAG__DISTORTED;
+      update_id_bits(&a4);
       move(&a4, parseptr->subsidiary_root, NULLCALLSPEC, 0, FALSE, &res4);
       finalsetupflags |= res4.setupflags;
    }
@@ -2023,24 +2034,28 @@ Private void do_concept_trace(
       (void) copy_person(&a1, 0, ss, 0);
       (void) copy_person(&a1, 1, ss, 1);
       a1.setupflags = ss->setupflags | SETUPFLAG__DISTORTED;
+      update_id_bits(&a1);
       move(&a1, parseptr->subsidiary_root, NULLCALLSPEC, 0, FALSE, &res1);
       finalsetupflags |= res1.setupflags;
 
       (void) copy_person(&a2, 0, ss, 6);
       (void) copy_person(&a2, 1, ss, 7);
       a2.setupflags = ss->setupflags | SETUPFLAG__DISTORTED;
+      update_id_bits(&a2);
       move(&a2, parseptr->next, NULLCALLSPEC, 0, FALSE, &res2);
       finalsetupflags |= res2.setupflags;
 
       (void) copy_person(&a3, 2, ss, 4);
       (void) copy_person(&a3, 3, ss, 5);
       a3.setupflags = ss->setupflags | SETUPFLAG__DISTORTED;
+      update_id_bits(&a3);
       move(&a3, parseptr->subsidiary_root, NULLCALLSPEC, 0, FALSE, &res3);
       finalsetupflags |= res3.setupflags;
 
       (void) copy_person(&a4, 2, ss, 2);
       (void) copy_person(&a4, 3, ss, 3);
       a4.setupflags = ss->setupflags | SETUPFLAG__DISTORTED;
+      update_id_bits(&a4);
       move(&a4, parseptr->next, NULLCALLSPEC, 0, FALSE, &res4);
       finalsetupflags |= res4.setupflags;
    }
@@ -3143,6 +3158,7 @@ extern long_boolean do_big_concept(
       global_tbonetest = 0;
       global_livemask = 0;
       global_selectmask = 0;
+      global_tboneselect = 0;
       doing_select = concept_table[parseptr->concept->kind].concept_prop & CONCPROP__USE_SELECTOR;
 
       if (doing_select) {
@@ -3154,7 +3170,9 @@ extern long_boolean do_big_concept(
          global_tbonetest |= p;
          if (p) {
             global_livemask |= j;
-            if (doing_select && selectp(ss, i)) global_selectmask |= j;
+            if (doing_select && selectp(ss, i)) {
+               global_selectmask |= j; global_tboneselect |= p;
+            }
          }
       }
 

@@ -569,67 +569,67 @@ extern void distorted_2x2s_move(
 
 {
    /* maps for 4x4 Z's */
-   static int map1[16] = {12, 15, 11, 10, 3, 2, 4, 7, 12, 3, 7, 10, 15, 2, 4, 11};
-   static int map2[16] = {12, 13, 3, 15, 11, 7, 4, 5, 12, 13, 7, 11, 15, 3, 4, 5};
-   static int map3[16] = {14, 1, 2, 3, 10, 11, 6, 9, 11, 1, 2, 6, 10, 14, 3, 9};
-   static int map4[16] = {13, 14, 1, 3, 9, 11, 5, 6, 13, 14, 11, 9, 3, 1, 5, 6};
-   static int map5[16] = {10, 13, 15, 9, 7, 1, 2, 5, 10, 7, 5, 9, 13, 1, 2, 15};
-   static int map6[16] = {13, 14, 15, 10, 7, 2, 5, 6, 13, 14, 2, 7, 10, 15, 5, 6};
-   static int map7[16] = {3, 0, 1, 7, 9, 15, 11, 8, 15, 0, 1, 11, 9, 3, 7, 8};
-   static int map8[16] = {14, 0, 3, 15, 11, 7, 6, 8, 14, 0, 7, 11, 15, 3, 6, 8};
+   static Const int map1[16] = {12, 15, 11, 10, 3, 2, 4, 7, 12, 3, 7, 10, 15, 2, 4, 11};
+   static Const int map2[16] = {12, 13, 3, 15, 11, 7, 4, 5, 12, 13, 7, 11, 15, 3, 4, 5};
+   static Const int map3[16] = {14, 1, 2, 3, 10, 11, 6, 9, 11, 1, 2, 6, 10, 14, 3, 9};
+   static Const int map4[16] = {13, 14, 1, 3, 9, 11, 5, 6, 13, 14, 11, 9, 3, 1, 5, 6};
+   static Const int map5[16] = {10, 13, 15, 9, 7, 1, 2, 5, 10, 7, 5, 9, 13, 1, 2, 15};
+   static Const int map6[16] = {13, 14, 15, 10, 7, 2, 5, 6, 13, 14, 2, 7, 10, 15, 5, 6};
+   static Const int map7[16] = {3, 0, 1, 7, 9, 15, 11, 8, 15, 0, 1, 11, 9, 3, 7, 8};
+   static Const int map8[16] = {14, 0, 3, 15, 11, 7, 6, 8, 14, 0, 7, 11, 15, 3, 6, 8};
 
    /* maps for 3x4 Z's */
-   static int mapa[16] = {10, 1, 11, 9, 5, 3, 4, 7, -1, -1, -1, -1, -1, -1, -1, -1};
-   static int mapb[16] = {-1, -1, -1, -1, -1, -1, -1, -1, 10, 2, 5, 9, 11, 3, 4, 8};
-   static int mapc[16] = {-1, -1, -1, -1, -1, -1, -1, -1, 0, 5, 7, 10, 1, 4, 6, 11};
-   static int mapd[16] = {0, 11, 8, 10, 2, 4, 6, 5, -1, -1, -1, -1, -1, -1, -1, -1};
+   static Const int mapa[16] = {10, 1, 11, 9, 5, 3, 4, 7, -1, -1, -1, -1, -1, -1, -1, -1};
+   static Const int mapb[16] = {-1, -1, -1, -1, -1, -1, -1, -1, 10, 2, 5, 9, 11, 3, 4, 8};
+   static Const int mapc[16] = {-1, -1, -1, -1, -1, -1, -1, -1, 0, 5, 7, 10, 1, 4, 6, 11};
+   static Const int mapd[16] = {0, 11, 8, 10, 2, 4, 6, 5, -1, -1, -1, -1, -1, -1, -1, -1};
 
    /* maps for 2x6 Z's */
-   static int mape[16] = {0, 1, 9, 10, 3, 4, 6, 7, -1, -1, -1, -1, -1, -1, -1, -1};
-   static int mapf[16] = {1, 2, 10, 11, 4, 5, 7, 8, -1, -1, -1, -1, -1, -1, -1, -1};
+   static Const int mape[16] = {0, 1, 9, 10, 3, 4, 6, 7, -1, -1, -1, -1, -1, -1, -1, -1};
+   static Const int mapf[16] = {1, 2, 10, 11, 4, 5, 7, 8, -1, -1, -1, -1, -1, -1, -1, -1};
 
    /* maps for twin parallelograms */
-   static int map_p1[16] = {2, 3, 11, 10, 5, 4, 8, 9, -1, -1, -1, -1, -1, -1, -1, -1};
-   static int map_p2[16] = {0, 1, 4, 5, 10, 11, 6, 7, -1, -1, -1, -1, -1, -1, -1, -1};
+   static Const int map_p1[16] = {2, 3, 11, 10, 5, 4, 8, 9, -1, -1, -1, -1, -1, -1, -1, -1};
+   static Const int map_p2[16] = {0, 1, 4, 5, 10, 11, 6, 7, -1, -1, -1, -1, -1, -1, -1, -1};
 
    /* maps for interlocked boxes/interlocked parallelograms */
-   static int map_b1[16] = {1, 3, 4, 11, 10, 5, 7, 9, 1, 3, 5, 10, 11, 4, 7, 9};
-   static int map_b2[16] = {0, 2, 5, 10, 11, 4, 6, 8, 0, 2, 4, 11, 10, 5, 6, 8};
+   static Const int map_b1[16] = {1, 3, 4, 11, 10, 5, 7, 9, 1, 3, 5, 10, 11, 4, 7, 9};
+   static Const int map_b2[16] = {0, 2, 5, 10, 11, 4, 6, 8, 0, 2, 4, 11, 10, 5, 6, 8};
 
    /* maps for jays */
 
-   static int mapj1[24] = {
+   static Const int mapj1[24] = {
                7, 2, 4, 5, 0, 1, 3, 6,
                6, 3, 4, 5, 0, 1, 2, 7,
                -1, -1, -1, -1, -1, -1, -1, -1};
-   static int mapj2[24] = {
+   static Const int mapj2[24] = {
                6, 3, 4, 5, 0, 1, 2, 7,
                7, 2, 4, 5, 0, 1, 3, 6,
                -1, -1, -1, -1, -1, -1, -1, -1};
-   static int mapj3[24] = {
+   static Const int mapj3[24] = {
                -1, -1, -1, -1, -1, -1, -1, -1,
                7, 2, 4, 5, 0, 1, 3, 6,
                6, 3, 4, 5, 0, 1, 2, 7};
-   static int mapj4[24] = {
+   static Const int mapj4[24] = {
                -1, -1, -1, -1, -1, -1, -1, -1,
                6, 3, 4, 5, 0, 1, 2, 7,
                7, 2, 4, 5, 0, 1, 3, 6};
 
    /* maps for facing/back-to-front/back-to-back parallelograms */
 
-   static int mapk1[24] = {
+   static Const int mapk1[24] = {
                3, 2, 4, 5, 0, 1, 7, 6,
                6, 7, 4, 5, 0, 1, 2, 3,
                -1, -1, -1, -1, -1, -1, -1, -1};
-   static int mapk2[24] = {
+   static Const int mapk2[24] = {
                6, 7, 4, 5, 0, 1, 2, 3,
                3, 2, 4, 5, 0, 1, 7, 6,
                -1, -1, -1, -1, -1, -1, -1, -1};
-   static int mapk3[24] = {
+   static Const int mapk3[24] = {
                -1, -1, -1, -1, -1, -1, -1, -1,
                3, 2, 4, 5, 0, 1, 7, 6,
                6, 7, 4, 5, 0, 1, 2, 3};
-   static int mapk4[24] = {
+   static Const int mapk4[24] = {
                -1, -1, -1, -1, -1, -1, -1, -1,
                6, 7, 4, 5, 0, 1, 2, 3,
                3, 2, 4, 5, 0, 1, 7, 6};
@@ -639,7 +639,7 @@ extern void distorted_2x2s_move(
    int misc_indicator;
    setup a1, a2;
    setup res1, res2;
-   int *map_ptr;
+   Const int *map_ptr;
 
    /* Check for special case of "interlocked parallelogram", which doesn't look like the
       kind of concept we are expecting. */
@@ -731,40 +731,33 @@ extern void distorted_2x2s_move(
          }
          break;
       case 1:
-         {               
-         switch (ss->kind)  /* The concept is some variety of jay */
-            {
-            case s_qtag:
-               if (((ss->people[0].id1&d_mask) == d_south && (ss->people[1].id1&d_mask) == d_south &&
-                  (ss->people[4].id1&d_mask) == d_north && (ss->people[5].id1&d_mask) == d_north)
-                                 || table_offset == 0)
-                  {
-                  if ((ss->people[6].id1&d_mask) == d_north && (ss->people[7].id1&d_mask) == d_south &&
-                        (ss->people[3].id1&d_mask) == d_north && (ss->people[2].id1&d_mask) == d_south)
-                     map_ptr = mapj1;
-                  else if ((ss->people[6].id1&d_mask) == d_south && (ss->people[7].id1&d_mask) == d_north &&
-                        (ss->people[3].id1&d_mask) == d_south && (ss->people[2].id1&d_mask) == d_north)
-                     map_ptr = mapj2;
-                  else goto lose;
-                  }
-               else if ((ss->people[0].id1&d_mask) == d_north && (ss->people[1].id1&d_mask) == d_north &&
-                     (ss->people[4].id1&d_mask) == d_south && (ss->people[5].id1&d_mask) == d_south)
-                  {
-                  if ((ss->people[6].id1&d_mask) == d_north && (ss->people[7].id1&d_mask) == d_south &&
-                        (ss->people[3].id1&d_mask) == d_north && (ss->people[2].id1&d_mask) == d_south)
-                     map_ptr = mapj3;
-                  else if ((ss->people[6].id1&d_mask) == d_south && (ss->people[7].id1&d_mask) == d_north &&
-                        (ss->people[3].id1&d_mask) == d_south && (ss->people[2].id1&d_mask) == d_north)
-                     map_ptr = mapj4;
-                  else goto lose;
-                  }
-               else goto lose;
-               break;
-            default:
-               fail("Must have quarter-tag setup for this concept.");
-            }
-         break;
+         /* The concept is some variety of jay */
+         if (ss->kind != s_qtag)
+            fail("Must have quarter-tag setup for this concept.");
+
+         if (((ss->people[0].id1&d_mask) == d_south && (ss->people[1].id1&d_mask) == d_south &&
+                     (ss->people[4].id1&d_mask) == d_north && (ss->people[5].id1&d_mask) == d_north)
+                           || table_offset == 0) {
+            if ((ss->people[6].id1&d_mask) == d_north && (ss->people[7].id1&d_mask) == d_south &&
+                     (ss->people[3].id1&d_mask) == d_north && (ss->people[2].id1&d_mask) == d_south)
+               map_ptr = mapj1;
+            else if ((ss->people[6].id1&d_mask) == d_south && (ss->people[7].id1&d_mask) == d_north &&
+                     (ss->people[3].id1&d_mask) == d_south && (ss->people[2].id1&d_mask) == d_north)
+               map_ptr = mapj2;
+            else goto lose;
          }
+         else if ((ss->people[0].id1&d_mask) == d_north && (ss->people[1].id1&d_mask) == d_north &&
+               (ss->people[4].id1&d_mask) == d_south && (ss->people[5].id1&d_mask) == d_south) {
+            if ((ss->people[6].id1&d_mask) == d_north && (ss->people[7].id1&d_mask) == d_south &&
+                     (ss->people[3].id1&d_mask) == d_north && (ss->people[2].id1&d_mask) == d_south)
+               map_ptr = mapj3;
+            else if ((ss->people[6].id1&d_mask) == d_south && (ss->people[7].id1&d_mask) == d_north &&
+                     (ss->people[3].id1&d_mask) == d_south && (ss->people[2].id1&d_mask) == d_north)
+               map_ptr = mapj4;
+            else goto lose;
+         }
+         else goto lose;
+         break;
       case 2:
          switch (ss->kind)     /* The concept is twin parallelograms */
             {
@@ -793,33 +786,32 @@ extern void distorted_2x2s_move(
          }
          break;
       case 4:
-         switch (ss->kind) {  /* The concept is facing (or back-to-back, or front-to-back) Pgram */
-            case s_qtag:
-               if ((ss->people[0].id1&d_mask) == d_south && (ss->people[1].id1&d_mask) == d_south &&
-                           (ss->people[4].id1&d_mask) == d_north && (ss->people[5].id1&d_mask) == d_north) {
-                  if ((ss->people[6].id1&d_mask) == d_north && (ss->people[7].id1&d_mask) == d_north &&
-                              (ss->people[3].id1&d_mask) == d_south && (ss->people[2].id1&d_mask) == d_south)
-                     map_ptr = mapk1;
-                  else if ((ss->people[6].id1&d_mask) == d_south && (ss->people[7].id1&d_mask) == d_south &&
-                           (ss->people[3].id1&d_mask) == d_north && (ss->people[2].id1&d_mask) == d_north)
-                     map_ptr = mapk2;
-                  else goto lose;
-               }
-               else if ((ss->people[0].id1&d_mask) == d_north && (ss->people[1].id1&d_mask) == d_north &&
-                        (ss->people[4].id1&d_mask) == d_south && (ss->people[5].id1&d_mask) == d_south) {
-                  if ((ss->people[6].id1&d_mask) == d_north && (ss->people[7].id1&d_mask) == d_north &&
-                           (ss->people[3].id1&d_mask) == d_south && (ss->people[2].id1&d_mask) == d_south)
-                     map_ptr = mapk3;
-                  else if ((ss->people[6].id1&d_mask) == d_south && (ss->people[7].id1&d_mask) == d_south &&
-                           (ss->people[3].id1&d_mask) == d_north && (ss->people[2].id1&d_mask) == d_north)
-                     map_ptr = mapk4;
-                  else goto lose;
-               }
-               else goto lose;
-               break;
-            default:
-               fail("Must have quarter-line setup for this concept.");
+         /* The concept is facing (or back-to-back, or front-to-back) Pgram */
+         if (ss->kind != s_qtag)
+            fail("Must have quarter-line setup for this concept.");
+
+         if (((ss->people[0].id1&d_mask) == d_south && (ss->people[1].id1&d_mask) == d_south &&
+                     (ss->people[4].id1&d_mask) == d_north && (ss->people[5].id1&d_mask) == d_north)
+                           || table_offset == 0) {
+            if ((ss->people[6].id1&d_mask) == d_north && (ss->people[7].id1&d_mask) == d_north &&
+                     (ss->people[3].id1&d_mask) == d_south && (ss->people[2].id1&d_mask) == d_south)
+               map_ptr = mapk1;
+            else if ((ss->people[6].id1&d_mask) == d_south && (ss->people[7].id1&d_mask) == d_south &&
+                     (ss->people[3].id1&d_mask) == d_north && (ss->people[2].id1&d_mask) == d_north)
+               map_ptr = mapk2;
+            else goto lose;
          }
+         else if ((ss->people[0].id1&d_mask) == d_north && (ss->people[1].id1&d_mask) == d_north &&
+                  (ss->people[4].id1&d_mask) == d_south && (ss->people[5].id1&d_mask) == d_south) {
+            if ((ss->people[6].id1&d_mask) == d_north && (ss->people[7].id1&d_mask) == d_north &&
+                     (ss->people[3].id1&d_mask) == d_south && (ss->people[2].id1&d_mask) == d_south)
+               map_ptr = mapk3;
+            else if ((ss->people[6].id1&d_mask) == d_south && (ss->people[7].id1&d_mask) == d_south &&
+                     (ss->people[3].id1&d_mask) == d_north && (ss->people[2].id1&d_mask) == d_north)
+               map_ptr = mapk4;
+            else goto lose;
+         }
+         else goto lose;
          break;
    }
    

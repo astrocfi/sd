@@ -10,15 +10,15 @@ computes the resulting setup and shows it to you.
 
    There are several user interfaces available with Sd.  The standard is
 an X Window System interface.  Also included is a terminal-based user
-interface featuring a completing reader.  Support for Apollo's Domain
-Dialog is available from the authors, but is not part of the
-distribution.
+interface featuring a completing reader that runs on both Unix systems
+and DOS, and a Macintosh interface.  Support for Apollo's Domain Dialog
+is available from the authors, but is not part of the distribution.
 
 Documentation
 =============
 
    The file `INSTALL' contains instructions for building and installing
-Sd.
+Sd and for formatting and printing its documentation.
 
    The file `sd_doc.txinfo' documents using Sd.  The file `db_doc.txt'
 gives internal information on the database format, useful only to
@@ -32,9 +32,12 @@ release.
 Getting Sd
 ==========
 
-   Sd is available via anonymous FTP from the file
-`contrib/c4/sd/sd-nn.tar.Z' (where `nn' changes with the version) on
-host export.lcs.mit.edu.  FTP is the Internet file transfer protocol.
+   Sd is available via anonymous FTP from the directory
+`contrib/c4/sd/' on host ftp.x.org.  FTP is the Internet file transfer
+protocol.  The file `sd-nn.tar.Z' (where `nn' changes with the version)
+is a compressed tar file containing the sources.  The file
+`sdxxxbn.exe' (where `xxx' changes with the version) is a
+self-extracting DOS archive containing a pre-built executable.
 
    If your mailer can interpret MIME messages, we can also send you Sd
 by email.  MIME is a draft Internet standard for structured mail.  It
@@ -44,9 +47,8 @@ Sd.
 How to Contact the Authors
 ==========================
 
-   The Internet mailing list `sd@expo.lcs.mit.edu' is for discussion of
-Sd and announcements of new versions.  Send to
-`sd-request@expo.lcs.mit.edu' to be added.
+   The Internet mailing list `sd@x.org' is for discussion of Sd and
+announcements of new versions.  Send to `sd-request@x.org' to be added.
 
    Please send bug reports and other comments on Sd to the authors at
 the addresses given below.  Be sure to include the version number.
@@ -55,11 +57,11 @@ the addresses given below.  Be sure to include the version number.
      wba@apollo.hp.com
      
      Stephen Gildea
-     gildea@lcs.mit.edu
+     gildea@x.org
 
    If you do not have access to electronic mail, write to
 
      Bill Ackerman
-     5 Parlmont Park Apt 100
+     100 Parlmont Park
      North Billerica MA 01862-2722
 

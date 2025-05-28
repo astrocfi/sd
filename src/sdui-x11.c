@@ -1,7 +1,7 @@
 static char *id="@(#)$Sd: sdui-x11.c  1.15    gildea@lcs.mit.edu  18 Mar 93 $";
-static char *time_stamp = "sdui-x11.c Time-stamp: <93/09/18 20:03:00 wba>";
+static char *time_stamp = "sdui-x11.c Time-stamp: <93/12/04 18:39:21 gildea>";
 /* 
- * sdui-x11.c - SD User Interface for X11
+ * sdui-x11.c - Sd User Interface for X11
  * Copyright 1990,1991,1992,1993 Stephen Gildea and William B. Ackerman
  *
  * Permission to use, copy, modify, and distribute this software for
@@ -12,7 +12,7 @@ static char *time_stamp = "sdui-x11.c Time-stamp: <93/09/18 20:03:00 wba>";
  * or implied warranty.
  *
  * By Stephen Gildea, March 1990.
- * Uses the Athena Widget Set from X11 Release 4 or 5.
+ * Requires the Athena Widget Set from X11 Release 4 or later.
  *
  * For use with version 30 of the Sd program.
  *
@@ -76,7 +76,9 @@ Private Widget confirmpopup, confirmlabel;
 Private Widget choosepopup, choosebox, chooselabel, chooselist;
 Private Widget commentpopup, commentbox, outfilepopup, outfilebox;
 Private Widget getoutpopup, getoutbox;
+#ifdef NEGLECT
 Private Widget neglectpopup, neglectbox;
+#endif
 
 /* This is a special value we use internally. */
 #define UI_SPECIAL_CONCEPT (uims_reply) -2
@@ -97,7 +99,9 @@ typedef enum {
    cmd_button_reconcile,
    cmd_button_anything,
    cmd_button_nice_setup,
+#ifdef NEGLECT
    cmd_button_neglect,
+#endif
    cmd_button_save_pic
 } cmd_button_kind;
 #define NUM_CMD_BUTTON_KINDS (((int) cmd_button_save_pic)+1)
@@ -283,9 +287,6 @@ do_popup(Widget popup_shell)
 Private String empty_string = "";
 Private String *concept_popup_list = NULL;
 
-#define SPECIAL_COMMAND_ALLOW_MODS 0
-#define SPECIAL_COMMAND_ALLOW_ALL_CONCEPTS 1
-
 #define USER_GESTURE_NULL -1
 #define SPECIAL_ALLOW_MODS -2
 #define SPECIAL_ALLOW_ALL_CONCEPTS -3
@@ -305,7 +306,9 @@ static int button_translations[] = {
    command_reconcile,                     /* cmd_button_reconcile */
    command_anything,                      /* cmd_button_anything */
    command_nice_setup,                    /* cmd_button_nice_setup */
+#ifdef NEGLECT
    command_neglect,                       /* cmd_button_neglect */
+#endif
    command_save_pic                       /* cmd_button_save_pic */
 };
 
@@ -576,15 +579,17 @@ Private XtResource command_resources[] = {
     MENU("abort", cmd_list[cmd_button_abort], "Abort this sequence"),
     MENU("allowmods", cmd_list[cmd_button_allow_mods], "Allow modifications"),
     MENU("allowconcepts", cmd_list[cmd_button_allow_concepts], "Toggle concept levels"),
-    MENU("comment", cmd_list[cmd_button_create_comment], "Insert a comment ..."),
-    MENU("outfile", cmd_list[cmd_button_change_outfile], "Change output file ..."),
-    MENU("getout", cmd_list[cmd_button_getout], "End this sequence ..."),
-    MENU("resolve", cmd_list[cmd_button_resolve], "Resolve ..."),
-    MENU("reconcile", cmd_list[cmd_button_reconcile], "Reconcile ..."),
-    MENU("anything", cmd_list[cmd_button_anything], "Do anything ..."),
-    MENU("nice", cmd_list[cmd_button_nice_setup], "Nice setup ..."),
+    MENU("comment", cmd_list[cmd_button_create_comment], "Insert a comment"),
+    MENU("outfile", cmd_list[cmd_button_change_outfile], "Change output file"),
+    MENU("getout", cmd_list[cmd_button_getout], "End this sequence"),
+    MENU("resolve", cmd_list[cmd_button_resolve], "Resolve"),
+    MENU("reconcile", cmd_list[cmd_button_reconcile], "Reconcile"),
+    MENU("anything", cmd_list[cmd_button_anything], "Pick random call"),
+    MENU("nice", cmd_list[cmd_button_nice_setup], "Normalize"),
+#ifdef NEGLECT
     MENU("neglect", cmd_list[cmd_button_neglect], "Show neglected calls ..."),
-    MENU("savepic", cmd_list[cmd_button_save_pic], "Save picture")
+#endif
+    MENU("savepic", cmd_list[cmd_button_save_pic], "Keep picture")
 };
 
 Private XtResource resolve_resources[] = {
@@ -657,7 +662,9 @@ CONST static char *fallback_resources[] = {
     "*Dialog.value*Translations: #override <Key>Return: accept_string()\n",
     "*comment.label: You can insert a comment:",
     "*getout.label: Text to be placed at the beginning of this sequence:",
+#ifdef NEGLECT
     "*neglect.label: Percentage (integer) of neglected calls:",
+#endif
     "*abort.label: Abort",
     "*ok.label: Ok",
     "*abortGetout.label: Abort getout",
@@ -938,6 +945,7 @@ uims_preinitialize(void)
 
     XtRealizeWidget(getoutpopup); /* makes XtPopup faster to do this now */
 
+#ifdef NEGLECT
     /* neglect popup */
 
     neglectpopup = XtVaCreatePopupShell("neglectpopup",
@@ -956,7 +964,7 @@ uims_preinitialize(void)
 		       (XtPointer)POPUP_ACCEPT_WITH_STRING);
 
     XtRealizeWidget(neglectpopup); /* makes XtPopup faster to do this now */
-
+#endif
 
     /* concept popup */
 
@@ -1283,11 +1291,13 @@ uims_do_getout_popup(char dest[])
 }
 
 
+#ifdef NEGLECT
 extern int
 uims_do_neglect_popup(char dest[])
 {
     return get_popup_string(neglectpopup, neglectbox, dest);
 }
+#endif
 
 
 Private int
@@ -1354,7 +1364,7 @@ static search_kind reconcile_goal;
 
 /*
  * UIMS_BEGIN_SEARCH is called at the beginning of each search mode
- * command (resolve, reconcile, nice setup, do anything).
+ * command (resolve, reconcile, nice setup, pick random call).
  */
 
 extern void
@@ -1470,12 +1480,12 @@ uims_do_direction_popup(void)
 Private String quantifier_names[] = {
     " 1 ", " 2 ", " 3 ", " 4 ", " 5 ", NULL};
 
-extern unsigned int uims_get_number_fields(int howmany)
+extern unsigned int uims_get_number_fields(int nnumbers)
 {
    int i;
    unsigned int number_list = 0;
 
-   for (i=0 ; i<howmany ; i++) {
+   for (i=0 ; i<nnumbers ; i++) {
       unsigned int this_num = choose_popup(sd_resources.quantifier_title, quantifier_names);
       if (this_num == 0) return 0;    /* User waved the mouse away. */
       number_list |= (this_num << (i*4));
@@ -1568,8 +1578,12 @@ uims_reduce_line_count(int n)
     XtVaSetValues(txtwin, XtNeditType, XawtextRead, NULL);
 
     line_count = n;
-    line_indexes =
-	get_more_mem(line_indexes, line_count * sizeof(XawTextPosition *));
+    if (line_count == 0) {
+	free_mem(line_indexes);
+	line_indexes = NULL;
+    } else
+	line_indexes =
+	    get_more_mem(line_indexes, line_count * sizeof(XawTextPosition *));
 }
 
 

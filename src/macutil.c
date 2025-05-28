@@ -168,12 +168,12 @@ mac_create_file(const FSSpec *fs, OSType creator, OSType file_type)
             FIparm.ioVRefNum = fs->vRefNum;
             FIparm.ioDirID = fs->parID;
             FIparm.ioFDirIndex = 0;
-            result = PBHGetFInfo(&FIparm, false);
+            result = PBHGetFInfo((HParmBlkPtr)&FIparm, false);
             if (result == 0) {
                 FIparm.ioDirID = fs->parID;
                 FIparm.ioFlFndrInfo.fdType = file_type;
                 FIparm.ioFlFndrInfo.fdCreator = creator;
-                result = PBHSetFInfo(&FIparm, false);
+                result = PBHSetFInfo((HParmBlkPtr)&FIparm, false);
             }
         }
         return result;
@@ -301,7 +301,7 @@ mac_replace_file(const FSSpec *old, const FSSpec *new)
     if (result == paramErr) {
         /* exchange not supported: try renaming instead */
         FSSpec temp = *old;
-        long time;
+        unsigned long time;
 
         GetDateTime(&time);
         sprintf((char *)temp.name, "%d sd old", time);

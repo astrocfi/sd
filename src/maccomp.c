@@ -38,6 +38,7 @@ static void compile_control(DialogWindow *dwp, ControlHandle h, short part_code)
 static void compile_update(DialogWindow *dwp);
 static void compile_database(void);
 static void compile_menu_setup(DialogWindow *dwp);
+static void show_compile_err(char *message);
 
 static DialogWindow compileDW;
 static DialogPtr compile_dialog;
@@ -85,12 +86,12 @@ open_compile_dialog(void)
         db_input_fs.parID = 0;   /* default directory */
         strcpy(db_input_filename, CALLS_FILENAME);
         strcpy((char *)db_input_fs.name, db_input_filename);
-        CtoPstr(db_input_fs.name);
+        CtoPstr((char *)db_input_fs.name);
         db_output_fs.vRefNum = 0; /* default volume */
         db_output_fs.parID = 0;   /* default directory */
         strcpy(db_output_filename, DATABASE_FILENAME);
         strcpy((char *)db_output_fs.name, db_output_filename);
-        CtoPstr(db_output_fs.name);
+        CtoPstr((char *)db_output_fs.name);
     }
     window_select((Window *)&compileDW);
 }
@@ -190,19 +191,8 @@ compile_database(void)
     error_message_p = error_message;
     error_message[0] = '\0';
     if (setjmp(exit_place)) {
-        /* control comes here after a compilation error */
-        char *p = error_message;
-        while (*p) {
-            if (*p == '\n') {
-                *p = '\r';
-            }
-            p++;
-        }
         db_cleanup();
-        if (error_message[0] != '\0') {
-            /* error from dbcomp not yet reported */
-            stop_alert(DatabaseCompileErrorAlert, error_message, "");
-        }
+        show_compile_err(error_message);
         return;
     }
     if (mac_open_file(&db_input_fs, fsRdPerm, &db_input) != 0) {
@@ -217,8 +207,26 @@ compile_database(void)
         db_output_error();
     }
     dbcompile();
+    if (error_message[0] != '\0')
+        show_compile_err(error_message);
     adjust_cursor();
     window_close((Window *)&compileDW);
+}
+
+void
+show_compile_err(char *error_message)
+{
+    char *p = error_message;
+    while (*p) {
+        if (*p == '\n') {
+            *p = '\r';
+        }
+        p++;
+    }
+    if (error_message[0] != '\0') {
+        /* error from dbcomp not yet reported */
+        stop_alert(DatabaseCompileErrorAlert, error_message, "");
+    }
 }
 
 void

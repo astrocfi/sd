@@ -47,10 +47,6 @@ enum {
     match_directions = -4
 };
 
-#define NUM_SPECIAL_COMMANDS 2
-#define SPECIAL_COMMAND_ALLOW_MODS 0
-#define SPECIAL_COMMAND_ALLOW_ALL_CONCEPTS 1
-
 extern void
 matcher_initialize(long_boolean show_commands_last);
 
@@ -58,5 +54,12 @@ extern void
 matcher_add_call_to_menu(call_list_kind cl, int call_menu_index, char name[]);
     
 extern int
-match_user_input(char *user_input, int which_commands, match_result *mr,
-                 char *extension, show_function sf, long_boolean show_verify);
+match_user_input(
+    char *user_input,
+    int which_commands,
+    match_result *mr,
+    char **command_list,      /* Text of commands to search for (Mac and Unix versions differ). */
+    int num_commands,         /* How many items in above list. */
+    char *extension,
+    show_function sf,
+    long_boolean show_verify);

@@ -36,7 +36,7 @@ extern void ttu_process_command_line(int *argcp, char ***argvp)
       if (strcmp(argv[argno], "-no_cursor") == 0) {
          no_cursor = 1;
       }
-      else if (strcmp(argv[argno], "-screensize") == 0 && argno+1 < (*argcp)) {
+      else if (strcmp(argv[argno], "-lines") == 0 && argno+1 < (*argcp)) {
          screen_height = atoi(argv[argno+1]);
          (*argcp) -= 2;      /* Remove two arguments from the list. */
          for (i=argno+1; i<=(*argcp); i++) argv[i-1] = argv[i+1];

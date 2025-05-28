@@ -53,7 +53,7 @@ typedef struct {
 
 
 
-/* These enumerate the setups from which we can perform a "nice setup" search. */
+/* These enumerate the setups from which we can perform a "normalize" search. */
 /* This list tracks the array "nice_setup_info". */
 typedef enum {
    nice_start_4x4,
@@ -128,7 +128,7 @@ Private reconcile_descriptor *current_reconciler;
 
 Private char *title_string[] = {
    "Anything: ",
-   "Nice setup: ",
+   "Normalize: ",
    "Resolve: ",
    "Reconcile: "};
 
@@ -515,30 +515,30 @@ Private long_boolean inner_search(search_kind goal, resolve_rec *new_resolve, in
    
    hashed_randoms = hashed_random_list[history_ptr - history_insertion_point];
 
-   /* Put in a special initial concept if needed to make a nice setup. */
+   /* Put in a special initial concept if needed to normalize. */
 
    if (goal == search_nice_setup) {
-      int i, k;
+      int k, l;
 
       for (k=0 ; k < NUM_NICE_START_KINDS ; k++) {
          if (nice_setup_info[k].kind == history[history_ptr].state.kind) {
-            i = nice_setup_info[k].number_available_now;
-            if (i != 0) goto found_k_and_i;
+            l = nice_setup_info[k].number_available_now;
+            if (l != 0) goto found_k_and_l;
             else goto try_again;  /* This shouldn't happen, because we are screening setups carefully. */
          }
       }
 
       goto try_again;   /* This shouldn't happen. */
 
-      found_k_and_i:
+      found_k_and_l:
 
-      i = generate_random_number(i);
+      l = generate_random_number(l);
 
       /* If the concept is a tandem or as couples type, we really want "phantom" in front of it. */
-      if (concept_descriptor_table[nice_setup_info[k].array_to_use_now[i]].kind == concept_tandem)
+      if (concept_descriptor_table[nice_setup_info[k].array_to_use_now[l]].kind == concept_tandem)
          deposit_concept(&concept_descriptor_table[phantom_concept_index], 0);
 
-      deposit_concept(&concept_descriptor_table[nice_setup_info[k].array_to_use_now[i]], 0);
+      deposit_concept(&concept_descriptor_table[nice_setup_info[k].array_to_use_now[l]], 0);
    }
    
    /* Select the call.  Selecting one that says "don't use in resolve" will signal and go to try_again. */
@@ -767,7 +767,7 @@ Private long_boolean inner_search(search_kind goal, resolve_rec *new_resolve, in
    else if (little_count == 20 || little_count == 40) {
       /* Save current state as a base for future calls. */
 
-      /* But first, if doing a "nice setup" operation, we verify that the setup
+      /* But first, if doing a "normalize" operation, we verify that the setup
          we have arrived at is one from which we know how to do something.  Otherwise,
          there is no point in trying to build on the setup at which we have arrived.
          Also, if the setup has gotten bigger, do not proceed. */

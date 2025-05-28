@@ -27,7 +27,7 @@
    database format version. */
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 42
+#define DATABASE_FORMAT_VERSION 43
 
 
 
@@ -426,7 +426,7 @@ typedef enum {
 */
 
 
-/* BEWARE!!  This list must track the table "defmodtab1" in dbcomp.c .
+/* BEWARE!!  This list must track the table "defmodtab1" in dbcomp.c . */
 /* Start of concentricity flags.  These go in the "modifiers1" word of a by_def_item. */
 
 #define DFM1_CONC_DEMAND_LINES            0x00000001
@@ -441,7 +441,7 @@ typedef enum {
 /* End of concentricity flags.  This constant embraces them. */
 #define DFM1_CONCENTRICITY_FLAG_MASK      0x000000FF
 
-/* BEWARE!!  This list must track the table "defmodtab1" in dbcomp.c .
+/* BEWARE!!  This list must track the table "defmodtab1" in dbcomp.c . */
 /* Start of miscellaneous flags.  These go in the "modifiers1" word of a by_def_item. */
 
 /* This is a 3 bit field -- CALL_MOD_BIT tells where its low bit lies. */
@@ -467,7 +467,9 @@ typedef enum {
    stb_none,      /* unknown */
    stb_z,         /* "Z" - person does not turn */
    stb_a,         /* "A" - person turns anticlockwise from 1 to 4 quadrants */
-   stb_c          /* "C" - person turns clockwise from 1 to 4 quadrants */
+   stb_c,         /* "C" - person turns clockwise from 1 to 4 quadrants */
+   stb_ac,        /* "AC" - person turns anticlockwise once, then clockwise 1 to 4 quadrants */
+   stb_ca         /* "CA" - person turns clockwise once, then anticlockwise 1 to 4 quadrants */
 } stability;
 
 /* These define the format of the short int (16 bits, presumably) items emitted

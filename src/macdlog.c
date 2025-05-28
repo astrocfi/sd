@@ -132,9 +132,9 @@ dialog_key(DialogWindow *dwp, short modifiers, char ch)
 void
 dialog_set_control_value(DialogPtr dp, short index, short value)
 {
-    Handle h;
+    ControlHandle h;
 
-    h = ditem(dp, index);
+    h = (ControlHandle) ditem(dp, index);
     if (h != NULL) {
         SetCtlValue(h, value);
     }
@@ -148,9 +148,9 @@ dialog_set_control_value(DialogPtr dp, short index, short value)
 short
 dialog_get_control_value(DialogPtr dp, short index)
 {
-    Handle h;
+    ControlHandle h;
 
-    h = ditem(dp, index);
+    h = (ControlHandle)ditem(dp, index);
     if (h != NULL) {
         return GetCtlValue(h);
     }
@@ -198,7 +198,7 @@ radio_set(DialogPtr dp, int first, int last, int selected)
     int i;
 
     for (i=first;i<=last;i++) {
-        SetCtlValue(ditem(dp, i), i==selected);
+        SetCtlValue((ControlHandle)ditem(dp, i), i==selected);
     }
 }
 

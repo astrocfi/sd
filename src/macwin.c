@@ -12,7 +12,7 @@
  *  FITNESS FOR A PARTICULAR PURPOSE.  
  *
  */
-
+ 
 #include "macguts.h"
 #include <string.h> /* for strlen, strcpy */
 
@@ -862,7 +862,7 @@ static void
 menu_setup(TextWindow *twp)
 {
     unsigned char buf[100];
-    int *perm_map;
+    void *perm_map;
     long_boolean accept_extend;
 
     EnableItem(apple_menu, hintsCommand);
@@ -890,10 +890,10 @@ menu_setup(TextWindow *twp)
         GetIndString(buf, MessagesStrings,
             concepts_in_place() ? UndoConceptString : UndoCallString);
         SetItem(edit_menu, undoCommand, buf);
-
+        
         EnableItem(file_menu, saveCommand);
         EnableItem(file_menu, saveasCommand);
-        EnableItem(file_menu, appendFileCommand);
+        EnableItem(file_menu, logCommand);
 
         EnableItem(sequence_menu, endCommand);
         if (resolve_command_ok()) {
@@ -984,7 +984,7 @@ is_encoded_picture_line(TEHandle TE, int line)
     int count, i;
     char *p;
 
-    p = &(**TEGetText(TE))[0] + (**TE).lineStarts[line];
+    p = (char *)(*TEGetText(TE)) + (**TE).lineStarts[line];
     count = (**TE).lineStarts[line+1] - (**TE).lineStarts[line];
     if (p[count-1] == '\r') {
         --count;
@@ -1015,7 +1015,7 @@ decode_picture_line(TEHandle TE, int line)
 
     start = (**TE).lineStarts[line];
     end = (**TE).lineStarts[line+1];
-    p = &(**TEGetText(TE))[0];
+    p = (char *)(*TEGetText(TE));
     if (p[end-1] == '\r') {
         --end;
     }

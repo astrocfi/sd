@@ -1,11 +1,13 @@
-		    RELEASE NOTES FOR SD VERSION 29.47
-       Database version = 29.47, format = 42, X11 UI version 1.15.
+		   RELEASE NOTES FOR SD VERSION 30
+		 Database version = 30, format = 43,
+    X11 UI version 1.15, SDTTY UI version 1.6, MAC UI version 2.2.
 
 
 The good news is that there are a lot of new features.  The bad news is
-that there are probably a lot of bugs.  The good news is that automatic
-regression tests have been developed, so that, in the future, bugs that
-get fixed will stay fixed.
+that there may be a lot of bugs.  The good news is that this release has
+been pre-tested for a long time, and is believed to be robust.  The other
+good news is that automatic regression tests have been developed, so that,
+in the future, bugs that get fixed will stay fixed.
 
 New concepts:
    END-TO-END [SPLIT/INTERLOCKED] PHANTOM LINES/COLUMNS
@@ -47,6 +49,18 @@ New concepts:
    GRAND WORKING TOGETHER/APART have been changed to AS CENTERS/AS ENDS.
    BIGBLOCK/STAGGER can now take shapechangers.  Please exercise good taste.
 
+The command formerly known as "nice setup" has been renamed "normalize".
+The command formerly known as "save picture" has been renamed "keep picture".
+The command formerly known as "do anything" has been renamed "pick
+random call".
+
+In sdtty, the concepts containing references to parts of calls are easier
+to enter.  Type the part number in the natural way, as in
+         interrupt after the 2nd part
+         skip the 1st part
+         replace the 3rd part
+         do the 3rd part <concept>
+
 Calls can now take directions.  For example, quarter <direction>, will
 produce a popup asking about the desired direction.  Various calls such
 as "quarter right", "pass right", "face right", "divide the ocean", tunnel",
@@ -65,7 +79,7 @@ type the call naturally, as in "circle by 1/4 x 1/2".
 Finally added the "magic_outroller_is_cw" predicate, so that magic outroll
 circulate now works as well as magic inroll circulate.
 
-Inside triangles can now be found from diamonds.
+Inside triangles can now be found from diamonds.  Thanks, Rob.
 
 The "fractional" and "do the last fraction" concepts are now named differently.
 With the menu-based interface (sd), the concepts are shown as
@@ -78,10 +92,11 @@ in the transcript with the word "(fractional)", to prevent any possibility of
 ambiguity, as in "1/2 (fractional) 1/4 STABLE swing thru."  How you choose to
 read that when calling is up to you.
 
-In/out/zoom roll circulate, and "roll em", now work from 2x3, 2x6, and 2x8 matrices.
+In/out/zoom roll circulate, and "roll em", now work from 2x3, 2x6, and
+2x8 matrices.
 
-Linear cycle and cross linear cycle are now believed to be correctly implemented.
-Same for linear/tagger's flow, with cross/criss-cross.
+Linear cycle and cross linear cycle are now believed to be correctly
+implemented.  Same for linear/tagger's flow, with cross/criss-cross.
 
 The program now understands what "left spin the top" and related calls mean.
 From facing couples, the dancers step to a left-handed wave and do the call.
@@ -96,28 +111,37 @@ conservatism.  If you want to do a shazam from a left-handed setup, you
 must enter "left shazam".  When you call the card, you don't need to read
 the word "left" if you don't want to.
 
-A bug was fixed that had made the interaction of "12 MATRIX", "2X6 MATRIX", "MXN",
-and similar concepts not work correctly.  This may have led people to believe that
-this was formulated incorrectly.  It was just implemented incorrectly.
-Because this stuff is rather confusing, a description of the intended use of these
-concepts is included at the end of these release notes.
+A bug was fixed that had made the interaction of "12 MATRIX", "2X6
+MATRIX", "MXN", and similar concepts not work correctly.  This may
+have led people to believe that this was formulated incorrectly.  It
+was just implemented incorrectly.  Because this stuff is rather
+confusing, a description of the intended use of these concepts is
+included at the end of these release notes.
 
 Split phantom lines and columns can be used from parallelograms.
+Thanks, Lynette.
 
-Fixed the "phantom perk up" bug.
+Fixed the "phantom perk up" bug.  Thanks, Rob.
+
+Fixed the "outpost" big.  Thanks, Sue and Kathy.
+
+Fixed the "couples of four when not facing the same direction" bug.
+Thanks, Larry.
 
 The level of "cross nuclear reaction" is now C3, as it should be.
+Thanks, Kiyoshi.
 
 Fixed the "phantom columns wheel thru from a squared set" bug.
-Fixed the more serious "phantom columns left wheel thru from a squared set" bug.
-(This bug caused the #4 boy to disappear!  We apologize for lawsuits and
-missing person reports that may have arisen from same.)
+Thanks, Eric.  Fixed the more serious "phantom columns left wheel thru
+from a squared set" bug.  (This bug caused the #4 boy to disappear!
+We apologize for lawsuits and missing person reports that may have
+arisen from same.)
 
 Fixed the "stable split phantom boxes roll em", "stable 2x8 matrix roll em"
 and "1/4 split phantom boxes split the difference" bugs, not to mention
 the "2x8 matrix roll em" bug.
 
-The "nice setup" command works from more setups and uses a larger
+The "normalize" command works from more setups and uses a larger
 repertoire of concepts.  It sticks to concepts on the level unless the
 command "toggle concept levels" (see below) was given.
 
@@ -131,14 +155,15 @@ the actual solutions.  Oops.
 Fixed a bug that made it think split phantom columns (yes, columns!)
 relay the top was legal.  You hadn't noticed?  Good.
 
-Perk up now works correctly (finally!) from inverted lines.
+Perk up now works correctly (finally!) from inverted lines.  Thanks, Kiyoshi.
 
-2x2, 3x3, and 4x4 zing were implemented.
+1x2, 2x1, 1x3, 3x1, 2x2, 3x3, and 4x4 zing were implemented.
 
 New calls: [magic] in/out/zoom roll circulate from 2x3 setups.
 Grand follow your neighbor.  Barge the action.  The action and barge
 the action take all the usual star turn and finishing modifications.
-Scamper.  Lead the way.  Courtesy turn.  California twirl.
+Scamper.  Lead the way.  Courtesy turn.  California twirl.  Trim the web.
+Wrap to a whatever.
 
 The call "reset" no longer takes a numeric argument saying how many
 quarters to go.  Instead, use the "fractional" concept with it.
@@ -184,7 +209,15 @@ will be printed on the sequence whenever an off-level concept is used.
 The "toggle concept levels" command toggles the state of this switch.
 It is an icon in the X11 version, and a typed command in sdtty.
 
+The user documentation is included in two pre-formatted versions:
+sd_doc.PS, a PostScript file, and sd_doc.txt, a plain text file.
+
 USER INTERFACE CHANGES:
+
+There is a now a Macintosh version available.  Sources are included in
+the source distribution, and a binary distribution will be included
+with a future release.  This port is still experimental, so expect it
+to change.
 
 The program "sdtty" has been extensively rewritten for PC's and Unix
 systems.

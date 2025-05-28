@@ -79,7 +79,7 @@ dance_level calling_level;
 
 
 /* **** BEWARE!!!!  In addition to the "size" definitions, there are numerous definitions of positions of
-    various concepts for use in the "nice setup" operation. */
+    various concepts for use in the "normalize" operation. */
 
 concept_descriptor concept_descriptor_table[] = {
 
@@ -287,8 +287,8 @@ concept_descriptor concept_descriptor_table[] = {
          {"", concept_comment, l_nonexistent_concept},
          {"", concept_comment, l_nonexistent_concept},
          {"", concept_comment, l_nonexistent_concept},
-   {"DIVIDED DIAMONDS",                      concept_do_divided_diamonds,   l_c3x, {&map_vv_qtg_2, phantest_impossible}},
-   {"DIVIDED 1/4-TAGS",                      concept_do_divided_qtags,      l_c3x, {&map_vv_qtg_2, phantest_impossible}},
+   {"TWIN PHANTOM DIAMONDS",                 concept_do_divided_diamonds,   l_c3x, {&map_vv_qtg_2, phantest_impossible}},
+   {"TWIN PHANTOM 1/4-TAGS",                 concept_do_divided_qtags,      l_c3x, {&map_vv_qtg_2, phantest_impossible}},
          {"", concept_comment, l_nonexistent_concept},
          {"", concept_comment, l_nonexistent_concept},
          {"", concept_comment, l_nonexistent_concept},
@@ -359,10 +359,10 @@ concept_descriptor concept_descriptor_table[] = {
    {"COUPLES <N/4> TWOSOME",                 concept_frac_tandem,           l_c4,         {0, FALSE, 2, 0, 1}},
    {"TANDEM <N/4> TWOSOME",                  concept_frac_tandem,           l_c4,         {0, FALSE, 2, 0, 0}},
    {"SIAMESE <N/4> TWOSOME",                 concept_frac_tandem,           l_c4,         {0, FALSE, 2, 0, 2}},
-   {"COUPLES OF 3 <N/4> THREESOME",          concept_frac_tandem,           l_c4,         {0, FALSE, 2, 0, 5}},
-   {"TANDEMS OF 3 <N/4> THREESOME",          concept_frac_tandem,           l_c4,         {0, FALSE, 2, 0, 4}},
-   {"COUPLES OF 4 <N/4> FOURSOME",           concept_frac_tandem,           l_c4,         {0, FALSE, 2, 0, 7}},
-   {"TANDEMS OF 4 <N/4> FOURSOME",           concept_frac_tandem,           l_c4,         {0, FALSE, 2, 0, 6}},
+   {"COUPLES OF THREE <N/4> THREESOME",      concept_frac_tandem,           l_c4,         {0, FALSE, 2, 0, 5}},
+   {"TANDEMS OF THREE <N/4> THREESOME",      concept_frac_tandem,           l_c4,         {0, FALSE, 2, 0, 4}},
+   {"COUPLES OF FOUR <N/4> FOURSOME",        concept_frac_tandem,           l_c4,         {0, FALSE, 2, 0, 7}},
+   {"TANDEMS OF FOUR <N/4> FOURSOME",        concept_frac_tandem,           l_c4,         {0, FALSE, 2, 0, 6}},
    {"BOXES ARE SOLID <N/4> BOXSOME",         concept_frac_tandem,           l_c4,         {0, FALSE, 2, 0, 8}},
    {"DIAMONDS ARE SOLID <N/4> DIAMONDSOME",  concept_frac_tandem,           l_c4,         {0, FALSE, 2, 0, 9}},
    {"SKEW <N/4> TWOSOME",                    concept_frac_tandem,           l_c4,         {0, FALSE, 2, 0, 3}},
@@ -542,10 +542,10 @@ concept_descriptor concept_descriptor_table[] = {
    {"INTERLACE",                             concept_interlace,             l_c3x},
    {"START <concept>",                       concept_meta,                  l_c2,         {0, 3}},
    {"FINISH",                                concept_meta,                  l_c2,        {0, 4}},
-   {"SKIP THE Nth PART",                     concept_nth_part,              l_c2,         {0, 1}},
-   {"DO THE Nth PART <concept>",             concept_nth_part,              l_c2,         {0, 0}},
-   {"REPLACE THE Nth PART OF X WITH Y",      concept_replace_nth_part,      l_c2,         {0, 0}},
-   {"INTERRUPT X AFTER THE Nth PART WITH Y", concept_replace_nth_part,      l_c2,         {0, 1}},
+   {"SKIP THE <Nth> PART",                   concept_nth_part,              l_c2,         {0, 1}},
+   {"DO THE <Nth> PART <concept>",           concept_nth_part,              l_c2,         {0, 0}},
+   {"REPLACE THE <Nth> PART",                concept_replace_nth_part,      l_c2,         {0, 0}},
+   {"INTERRUPT AFTER THE <Nth> PART",        concept_replace_nth_part,      l_c2,         {0, 1}},
 /* -------- column break -------- */
 #define mm__3_size 37
    {"IN POINT TRIANGLE",                     concept_randomtrngl,           l_c1,         {0, 1}},

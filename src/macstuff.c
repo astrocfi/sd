@@ -21,8 +21,20 @@
 char                *level_name;
 Cursor              edit_cursor;
 Cursor              wait_cursor;
-long_boolean        output_file_ok;
+
+/* sequence file output */
+
+char                sequence_file_name[255];
+long_boolean        output_file_save_ok = FALSE;
 long_boolean        dirty;                /* current sequence needs saving */
+
+/* log file output */
+
+char                log_file_name[255];
+long_boolean        log_file_append_ok = FALSE;
+
+
+
 OutputMode          output_mode;
 ControlHandle       output_default_control;
 long_boolean        reconciling;
@@ -211,18 +223,18 @@ get_startup_command(void)
 {
     short hit;
     WindowPtr w;
-    char buf[200];
+    Str255 buf;
 
     label_clear();
     if (myWindow == NULL) {
         main_window_setup();
         window_select((Window *)&outputTW);
     }
-    output_file_ok = FALSE;
+    output_file_save_ok = FALSE;
     dirty = FALSE;
     text_output_trim(0);
     typescript_flush();
-    SetWTitle(myWindow, "\puntitled");
+    set_output_window_title();
     change_output_mode(StartupMode);
     GetIndString(buf, MessagesStrings, StartSequenceString);
     input_set_prompt(PtoCstr(buf), "");
@@ -496,7 +508,7 @@ flash_control(ControlHandle h, int part_code)
 
 /*
  **********************************************************************
- *  Search Commands (Resolve, Reconcile, Normalize, Do Anything)
+ *  Search Commands (Resolve, Reconcile, Nice Setup, Do Anything)
  **********************************************************************
  */
 
@@ -509,7 +521,7 @@ flash_control(ControlHandle h, int part_code)
 void
 uims_begin_search(search_kind goal)
 {
-    char buf[100];
+    Str255 buf;
 
     reconciling = (goal == search_reconcile);
     resolve_goal = goal;
@@ -950,8 +962,8 @@ static char *
 append_message(char *msgp, int strings_id, int string_index, char *s)
 {
     int c;
-    GetIndString(msgp, strings_id, string_index);
-    PtoCstr(msgp);
+    GetIndString((unsigned char *)msgp, strings_id, string_index);
+    PtoCstr((unsigned char *)msgp);
     msgp = msgp + strlen(msgp);
     while (c = *s++) *msgp++ = c;
     *msgp = '\0';
@@ -993,11 +1005,12 @@ static void
 hints_update(Window* wp)
 {
     WindowPtr w = wp->window;
-    char message[500];
+    char *message;
+    Str255 buf;
     Rect r = w->portRect;
 
-    GetIndString(message, MessagesStrings, HintsString);
-    PtoCstr(message);
+    GetIndString(buf, MessagesStrings, HintsString);
+    message = PtoCstr(buf);
     TextFont(geneva);
     TextSize(10);
     InsetRect(&r, 4, 4);
@@ -1013,7 +1026,7 @@ hints_update(Window* wp)
 void
 database_begin(char *filename)
 {
-    Str255 buf;
+    char buf[255];
     static DialogRecord dr;
     Rect r;
     Handle h;
@@ -1022,7 +1035,7 @@ database_begin(char *filename)
     /* we use a dialog only for the text and rectangles laid out in it */
 
     if (readingDialog == NULL) {
-        strcpy((char *)buf, filename);
+        strcpy(buf, filename);
         ParamText(CtoPstr(buf), "\p", "\p", "\p");
         readingDialog = GetNewDialog(ReadingDatabaseDialog, &dr, 0);
         window_setup(&readingW, readingDialog);
@@ -1242,6 +1255,36 @@ void
 arrow_cursor(void)
 {
     SetCursor(&arrow);
+}
+
+/*
+ **********************************************************************
+ *  OUTPUT WINDOW TITLE
+ **********************************************************************
+ */
+
+void
+set_output_window_title(void)
+{
+    char buf[255];
+
+    if (sequence_file_name[0] == '\0') {
+	if (log_file_name[0] == '\0') {
+	    sprintf(buf, "untitled");
+	}
+	else {
+	    sprintf(buf, "log: %s", log_file_name);
+	}
+    }
+    else {
+	if (log_file_name[0] == '\0') {
+	    sprintf(buf, "%s", sequence_file_name);
+	}
+	else {
+	    sprintf(buf, "%s (log: %s)", sequence_file_name, log_file_name);
+	}
+    }
+    SetWTitle(myWindow, CtoPstr(buf));
 }
 
 /*

@@ -68,11 +68,20 @@ Private tm_thing maps_isearch_twosome[] = {
    {{0, 3},                         {1, 2},                       {0}, {0},    0x5,     0017,         2, 0,  0,  0, 0,  s_1x2, s1x4},
    {{0},                            {1},                          {0}, {0},    0x1,     0003,         1, 0,  0,  0, 0,  s_1x1, s_1x2},           /* 1x2 */  /* this one is known to be good */
    {{0},                            {1},                          {0}, {0},      0,     0003,         1, 1,  0,  0, 0,  s_1x1, s_1x2},           /* ????? */
-   {{0, 3, 5, 6},                   {1, 2, 4, 7},                 {0}, {0},   0x55,     0377,         4, 0,  0,  0, 0,  s1x4,  s1x8},
+   {{0, 3, 5, 6},                   {1, 2, 4, 7},                 {0}, {0},   0x55,     0xFF,         4, 0,  0,  0, 0,  s1x4,  s1x8},
+   {{0, 2, 4, 7, 9, 11},            {1, 3, 5, 6, 8, 10},          {0}, {0},  0x555,    0xFFF,         6, 0,  0,  0, 0,  s_1x6, s1x12},
+   {{0, 2, 6, 4, 9, 11, 15, 13},    {1, 3, 7, 5, 8, 10, 14, 12},  {0}, {0}, 0x5555,   0xFFFF,         8, 0,  0,  0, 0,  s1x8,  s1x16},
    {{15, 14, 12, 13, 8, 9, 11, 10}, {0, 1, 3, 2, 7, 6, 4, 5},     {0}, {0},      0,     0000,         8, 0,  0,  0, 0,  s1x8,  s2x8},
    {{11, 10, 9, 6, 7, 8},           {0, 1, 2, 5, 4, 3},           {0}, {0},      0,     0000,         6, 0,  0,  0, 0,  s_1x6, s2x6},
    {{10, 15, 3, 1, 4, 5, 6, 8},     {12, 13, 14, 0, 2, 7, 11, 9}, {0}, {0},      0,     0000,         8, 0,  0,  0, 0,  s2x4,  s4x4},
    {{14, 3, 7, 5, 8, 9, 10, 12},    {0, 1, 2, 4, 6, 11, 15, 13},  {0}, {0},      0,   0xFFFF,         8, 1,  0,  0, 0,  s2x4,  s4x4},
+   /* When the map following this one gets fixed and uncommented, this one will have to appear first, of course.  Actually, it's
+      trickier than that.  The whole issue of 3x4 vs. qtag operation needs to be straightened out. */
+   {{7, 22, 15, 20, 18, 11, 2, 9},  {6, 23, 14, 21, 19, 10, 3, 8},{0}, {0},      0, 0xFCCFCC,         8, 1,  0,  0, 0,  s_qtag,s4x6},
+/*    Can't do this yet because maps can have only 8 items each.
+   {{11, 10, 9, 8, 7, 6, 12, 13, 14, 15, 16, 17},
+                     {0, 1, 2, 3, 4, 5, 23, 22, 21, 20, 19, 18},  {0}, {0},      0,     0000,        12, 0,  0,  0, 0,  s2x6,  s4x6},
+*/
    {{2, 5, 7, 9, 10, 0},            {3, 4, 6, 8, 11, 1},          {0}, {0},      0,   0x0FFF,         6, 1,  0,  0, 0,  s_2x3, s3x4},
    {{0, 2, 4, 6, 9, 11, 13, 15},    {1, 3, 5, 7, 8, 10, 12, 14},  {0}, {0}, 0x5555,   0xFFFF,         8, 0,  0,  0, 0,  s2x4,  s2x8},
 
@@ -146,6 +155,8 @@ Private tm_thing maps_isearch_threesome[] = {
    {{0, 3, 8, 11},        {1, 4, 7, 10},        {2, 5, 6, 9},          {0},   0x55,    07777,         4, 0,  0,  0, 0,  s2x2,  s2x6},
    {{3, 8, 11, 0},        {4, 7, 10, 1},        {5, 6, 9, 2},          {0},      0,    07777,         4, 1,  0,  0, 0,  s2x2,  s2x6},
    {{0, 3, 8, 11},        {1, 4, 7, 10},        {2, 5, 6, 9},          {0},    0x55,   07777,         4, 0,  0,  0, 0,  s1x4, s1x12},
+   {{3, 8, 21, 14, 17, 18, 11, 0},       {4, 7, 22, 13, 16, 19, 10, 1},
+                                         {5, 6, 23, 12, 15, 20, 9, 2}, {0},      0,0x0FFFFFF,         8, 1,  0,  0, 0,  s2x4,  s4x6},
    {{9, 8, 6, 7},         {10, 11, 4, 5},       {0, 1, 3, 2},          {0},      0,     0000,         4, 0,  0,  0, 0,  s1x4,  s3x4},
    {{0},                            {0},                          {0}, {0},      0,     0000,         0, 0,  0,  0, 0,  nothing,  nothing}};
 
@@ -157,6 +168,8 @@ Private tm_thing maps_isearch_foursome[] = {
    {{0, 4, 11, 15},   {1, 5, 10, 14},   {2, 6, 9, 13},    {3, 7, 8, 12},      0x55,  0x0FFFF,         4, 0,  0,  0, 0,  s2x2,  s2x8},
    {{4, 11, 15, 0},   {5, 10, 14, 1},   {6, 9, 13, 2},    {7, 8, 12, 3},         0,  0x0FFFF,         4, 1,  0,  0, 0,  s2x2,  s2x8},
    {{0, 4, 11, 15},   {1, 5, 10, 14},   {2, 6, 9, 13},    {3, 7, 8, 12},      0x55,  0x0FFFF,         4, 0,  0,  0, 0,  s1x4, s1x16},
+   {{17, 16, 15, 12, 13, 14},       {18, 19, 20, 23, 22, 21},
+        {11, 10, 9, 6, 7, 8},               {0, 1, 2, 5, 4, 3},                  0,     0000,         6, 0,  0,  0, 0,  s_1x6, s4x6},
    {{8, 6, 4, 5},     {9, 11, 2, 7},    {10, 15, 1, 3},   {12, 13, 0, 14},       0,     0000,         4, 0,  0,  0, 0,  s1x4,  s4x4},
    {{12, 10, 8, 9},   {13, 15, 6, 11},  {14, 3, 5, 7},    {0, 1, 4, 2},          0,   0xFFFF,         4, 1,  0,  0, 0,  s1x4,  s4x4},
    {{0},                            {0},                          {0}, {0},      0,     0000,         0, 0,  0,  0, 0,  nothing,  nothing}};
@@ -193,24 +206,24 @@ siamese_item siamese_table[] = {
    {s2x4,        0x00990066, 0x99,   warn__ctrstand_endscpls},
    {s2x4,        0x000000FF, 0x66,   warn__ctrscpls_endstand},
    {s2x4,        0x00660099, 0x66,   warn__ctrscpls_endstand},
-   {s2x4,        0x003300CC, 0xCC,   (warning_index) -1},
-   {s2x4,        0x00CC0033, 0x33,   (warning_index) -1},
-   {s_c1phan,    0x0000AAAA, 0xA0A0, (warning_index) -1},
-   {s_c1phan,    0x00005555, 0x0505, (warning_index) -1},
-   {s_c1phan,    0xAAAA0000, 0x0A0A, (warning_index) -1},
-   {s_c1phan,    0x55550000, 0x5050, (warning_index) -1},
-   {s_c1phan,    0x00005AA5, 0x00A5, (warning_index) -1},  /* These 8 are unsymmetrical. */
-   {s_c1phan,    0x0000A55A, 0xA500, (warning_index) -1},
-   {s_c1phan,    0x000055AA, 0x05A0, (warning_index) -1},
-   {s_c1phan,    0x0000AA55, 0xA005, (warning_index) -1},
-   {s_c1phan,    0x5AA50000, 0x5A00, (warning_index) -1},
-   {s_c1phan,    0xA55A0000, 0x005A, (warning_index) -1},
-   {s_c1phan,    0x55AA0000, 0x500A, (warning_index) -1},
-   {s_c1phan,    0xAA550000, 0x0A50, (warning_index) -1},
-   {s4x4,        0x0000AAAA, 0x0A0A, (warning_index) -1},
-   {s4x4,        0x0000CCCC, 0x8484, (warning_index) -1},
-   {s4x4,        0xAAAA0000, 0xA0A0, (warning_index) -1},
-   {s4x4,        0xCCCC0000, 0x4848, (warning_index) -1},
+   {s2x4,        0x003300CC, 0xCC,   warn__none},
+   {s2x4,        0x00CC0033, 0x33,   warn__none},
+   {s_c1phan,    0x0000AAAA, 0xA0A0, warn__none},
+   {s_c1phan,    0x00005555, 0x0505, warn__none},
+   {s_c1phan,    0xAAAA0000, 0x0A0A, warn__none},
+   {s_c1phan,    0x55550000, 0x5050, warn__none},
+   {s_c1phan,    0x00005AA5, 0x00A5, warn__none},  /* These 8 are unsymmetrical. */
+   {s_c1phan,    0x0000A55A, 0xA500, warn__none},
+   {s_c1phan,    0x000055AA, 0x05A0, warn__none},
+   {s_c1phan,    0x0000AA55, 0xA005, warn__none},
+   {s_c1phan,    0x5AA50000, 0x5A00, warn__none},
+   {s_c1phan,    0xA55A0000, 0x005A, warn__none},
+   {s_c1phan,    0x55AA0000, 0x500A, warn__none},
+   {s_c1phan,    0xAA550000, 0x0A50, warn__none},
+   {s4x4,        0x0000AAAA, 0x0A0A, warn__none},
+   {s4x4,        0x0000CCCC, 0x8484, warn__none},
+   {s4x4,        0xAAAA0000, 0xA0A0, warn__none},
+   {s4x4,        0xCCCC0000, 0x4848, warn__none},
    {s_qtag,      0x003300CC, 0xCC,   warn__ctrscpls_endstand},
    {s_qtag,      0x00CC0033, 0x33,   warn__ctrstand_endscpls},
    {s_rigger,    0x00FF0000, 0x33,   warn__ctrscpls_endstand},
@@ -221,7 +234,7 @@ siamese_item siamese_table[] = {
    {s_bone,      0x000000FF, 0xCC,   warn__ctrscpls_endstand},
    {s_crosswave, 0x00FF0000, 0xCC,   warn__ctrscpls_endstand},
    {s_crosswave, 0x000000FF, 0x33,   warn__ctrstand_endscpls},
-   {nothing,     0,          0,      (warning_index) -1}};
+   {nothing,     0,          0,      warn__none}};
 
 
 Private void initialize_one_table(tm_thing *map_start, int np)
@@ -401,6 +414,8 @@ Private void pack_us(
          b.id1 = 0xFFFFFFFF;
       }
       else {
+         unsigned int u1;
+
          b = s[map_ptr->map2[i]];
          b2 = b;
          b3 = b;
@@ -425,13 +440,16 @@ Private void pack_us(
             }
          }
 
-         if (f.id1 | b.id1 | b2.id1 | b3.id1) {
+         u1 = f.id1 | b.id1 | b2.id1 | b3.id1;
+
+         if (u1) {
             unsigned int vp1, vp2;
          
-            if (twosome >= 2) {
-               if ((f.id1 | b.id1 | b2.id1 | b3.id1) & STABLE_MASK)
-                  fail("Sorry, can't nest fractional stable/twosome.");
-            }
+            if (twosome >= 2 && (u1 & STABLE_MASK))
+               fail("Sorry, can't nest fractional stable/twosome.");
+
+            vp1 = ~0;
+            vp2 = ~0;
 
             /* Create the virtual person.  When both people are present, anding
                the real peoples' id2 bits gets the right bits.  For example,
@@ -439,35 +457,60 @@ Private void pack_us(
                if both real people were boys.  Remove the identity field (700 bits)
                from id1 and replace with a virtual person indicator.  Check that
                direction, roll, and stability parts of id1 are consistent. */
-         
 
+            /* Needless to say, this could use some cleaning up. */
 
+            if (f.id1) {
+               vp1 &= f.id1;
+               vp2 &= f.id2;
 
-
-/* ***** this stuff needs to be reworked for triples and quads. */
-            if (b.id1 & f.id1 & BIT_PERSON) {
-               /* If both people are real, check that they face the same way. */
-               if ((b.id1 ^ f.id1) & 077)
-                  fail("People not facing same way for tandem or as couples.");
-               vp1 = (b.id1 & f.id1 & ~0700) | (i << 6) | BIT_VIRTUAL;
                /* If they have different fractional stability states, just clear them -- they can't do it. */
-               if ((b.id1 ^ f.id1) & STABLE_MASK) vp1 &= ~STABLE_MASK;
+               if ((f.id1 ^ u1) & STABLE_MASK) vp1 &= ~STABLE_MASK;
                /* If they have different roll states, just clear them -- they can't roll. */
-               if ((b.id1 ^ f.id1) & ROLL_MASK) vp1 &= ~ROLL_MASK;
-               vp2 = b.id2 & f.id2;
-
-
-
-
-
-               ptr->id1 = vp1;
-               ptr->id2 = vp2;
+               if ((f.id1 ^ u1) & ROLL_MASK) vp1 &= ~ROLL_MASK;
+               /* Check that all real people face the same way. */
+               if ((f.id1 ^ u1) & 077)
+                  fail("People not facing same way for tandem or as couples.");
             }
-            else {
-               /* If only one person is real, just use him. */
-               ptr->id1 = ((b.id1 | f.id1 | b2.id1 | b3.id1) & ~0700) | (i << 6) | BIT_VIRTUAL;
-               ptr->id2 = b.id2 | f.id2 | b2.id2 | b3.id2;
+            if (b.id1) {
+               vp1 &= b.id1;
+               vp2 &= b.id2;
+
+               /* If they have different fractional stability states, just clear them -- they can't do it. */
+               if ((b.id1 ^ u1) & STABLE_MASK) vp1 &= ~STABLE_MASK;
+               /* If they have different roll states, just clear them -- they can't roll. */
+               if ((b.id1 ^ u1) & ROLL_MASK) vp1 &= ~ROLL_MASK;
+               /* Check that all real people face the same way. */
+               if ((b.id1 ^ u1) & 077)
+                  fail("People not facing same way for tandem or as couples.");
             }
+            if (b2.id1) {
+               vp1 &= b2.id1;
+               vp2 &= b2.id2;
+
+               /* If they have different fractional stability states, just clear them -- they can't do it. */
+               if ((b2.id1 ^ u1) & STABLE_MASK) vp1 &= ~STABLE_MASK;
+               /* If they have different roll states, just clear them -- they can't roll. */
+               if ((b2.id1 ^ u1) & ROLL_MASK) vp1 &= ~ROLL_MASK;
+               /* Check that all real people face the same way. */
+               if ((b2.id1 ^ u1) & 077)
+                  fail("People not facing same way for tandem or as couples.");
+            }
+            if (b3.id1) {
+               vp1 &= b3.id1;
+               vp2 &= b3.id2;
+
+               /* If they have different fractional stability states, just clear them -- they can't do it. */
+               if ((b3.id1 ^ u1) & STABLE_MASK) vp1 &= ~STABLE_MASK;
+               /* If they have different roll states, just clear them -- they can't roll. */
+               if ((b3.id1 ^ u1) & ROLL_MASK) vp1 &= ~ROLL_MASK;
+               /* Check that all real people face the same way. */
+               if ((b3.id1 ^ u1) & 077)
+                  fail("People not facing same way for tandem or as couples.");
+            }
+
+            ptr->id1 = (vp1 & ~0700) | (i << 6) | BIT_VIRTUAL;
+            ptr->id2 = vp2;
 
             if (twosome >= 2)
                ptr->id1 |= STABLE_ENAB | (STABLE_RBIT * fraction);
@@ -600,7 +643,7 @@ extern void tandem_couples_move(
 
       for (ptr = siamese_table; ptr->testkind != nothing; ptr++) {
          if (ptr->testkind == ss->kind && ((ewmask << 16) | nsmask) == ptr->testval) {
-            if (ptr->warning >= 0) warn(ptr->warning);
+            warn(ptr->warning);
             j = ptr->fixup;
             goto foox;
          }
@@ -661,8 +704,9 @@ extern void tandem_couples_move(
       of setup we allow, and whether pairings must be parallel to the long axis. */
 
    if (phantom == 1) {
-      if (ss->kind != s2x8 && ss->kind != s4x4 && ss->kind != s3x4 && ss->kind != s2x6)
-         fail("Must have a 4x4, 2x8, 3x4, or 2x6 setup to do this concept.");
+      if (ss->kind != s2x8 && ss->kind != s4x4 && ss->kind != s3x4 && ss->kind != s2x6 &&
+               ss->kind != s4x6 && ss->kind != s1x12 && ss->kind != s1x16)
+         fail("Can't do couples or tandem concepts in this setup.");
    }
    else if (phantom == 2) {
       if (ss->kind != s2x8 || map->insetup != s2x4)

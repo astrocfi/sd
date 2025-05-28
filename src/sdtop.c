@@ -122,6 +122,16 @@ Private int bit_table_qtag[][4] = {
    {ID2_CENTER|ID2_OUTR6, ID2_CENTER|ID2_OUTR6, ID2_CENTER|ID2_OUTR6, ID2_CENTER|ID2_OUTR6},
    {ID2_CENTER|ID2_CTR2,  ID2_CENTER|ID2_CTR2,  ID2_CENTER|ID2_CTR2,  ID2_CENTER|ID2_CTR2}};
 
+Private int bit_table_crosswave[][4] = {
+   {ID2_END|ID2_BEAU|ID2_OUTR6,       ID2_END|ID2_TRAILER|ID2_OUTR6,  ID2_END|ID2_BELLE|ID2_OUTR6,      ID2_END|ID2_LEAD|ID2_OUTR6},
+   {ID2_END|ID2_BELLE|ID2_OUTR6,      ID2_END|ID2_LEAD|ID2_OUTR6,     ID2_END|ID2_BEAU|ID2_OUTR6,       ID2_END|ID2_TRAILER|ID2_OUTR6},
+   {ID2_CENTER|ID2_LEAD|ID2_OUTR6,    ID2_CENTER|ID2_BEAU|ID2_OUTR6,  ID2_CENTER|ID2_TRAILER|ID2_OUTR6, ID2_CENTER|ID2_BELLE|ID2_OUTR6},
+   {ID2_CENTER|ID2_TRAILER|ID2_CTR2,  ID2_CENTER|ID2_BELLE|ID2_CTR2,  ID2_CENTER|ID2_LEAD|ID2_CTR2,     ID2_CENTER|ID2_BEAU|ID2_CTR2},
+   {ID2_END|ID2_BELLE|ID2_OUTR6,      ID2_END|ID2_LEAD|ID2_OUTR6,     ID2_END|ID2_BEAU|ID2_OUTR6,       ID2_END|ID2_TRAILER|ID2_OUTR6},
+   {ID2_END|ID2_BEAU|ID2_OUTR6,       ID2_END|ID2_TRAILER|ID2_OUTR6,  ID2_END|ID2_BELLE|ID2_OUTR6,      ID2_END|ID2_LEAD|ID2_OUTR6},
+   {ID2_CENTER|ID2_TRAILER|ID2_OUTR6, ID2_CENTER|ID2_BELLE|ID2_OUTR6, ID2_CENTER|ID2_LEAD|ID2_OUTR6,    ID2_CENTER|ID2_BEAU|ID2_OUTR6},
+   {ID2_CENTER|ID2_LEAD|ID2_CTR2,     ID2_CENTER|ID2_BEAU|ID2_CTR2,   ID2_CENTER|ID2_TRAILER|ID2_CTR2,  ID2_CENTER|ID2_BELLE|ID2_CTR2}};
+
 Private int bit_table_hrglass[][4] = {
    {ID2_END|ID2_OUTR6,    ID2_END|ID2_OUTR6,    ID2_END|ID2_OUTR6,    ID2_END|ID2_OUTR6},
    {ID2_END|ID2_OUTR6,    ID2_END|ID2_OUTR6,    ID2_END|ID2_OUTR6,    ID2_END|ID2_OUTR6},
@@ -191,6 +201,8 @@ extern void update_id_bits(setup *ss)
          ptr = bit_table_1x8; break;
       case s_qtag:
          ptr = bit_table_qtag; break;
+      case s_crosswave:
+         ptr = bit_table_crosswave; break;
       case s_hrglass:
          ptr = bit_table_hrglass; break;
       case s_spindle:
@@ -255,17 +267,17 @@ Private expand_thing step_tby_stuff = {{5, 6, 7, 0, 1, 2, 3, 4}, 8, nothing, s_q
 Private expand_thing step_bone_stuff = {{1, 4, 7, 6, 5, 0, 3, 2}, 8, nothing, s1x8, 0};
 Private expand_thing step_rig_stuff = {{2, 7, 4, 5, 6, 3, 0, 1}, 8, nothing, s1x8, 0};
 
-Private full_expand_thing step_1x8_pair      = {(warning_index) 0, 0, &step_1x8_stuff};
-Private full_expand_thing step_1x4_side_pair = {(warning_index) 0, 0, &step_1x4_side_stuff};
-Private full_expand_thing step_1x4_pair      = {(warning_index) 0, 0, &step_1x4_stuff};
-Private full_expand_thing step_2x2v_pair     = {(warning_index) 0, 2*SETUPFLAG__ELONGATE_BIT, &step_2x2v_stuff};
-Private full_expand_thing step_2x2h_pair     = {(warning_index) 0, 1*SETUPFLAG__ELONGATE_BIT, &step_2x2h_stuff};
-Private full_expand_thing step_8ch_pair      = {(warning_index) 0, 0, &step_8ch_stuff};
-Private full_expand_thing step_li_pair       = {(warning_index) 0, 0, &step_li_stuff};
-Private full_expand_thing step_tby_pair      = {(warning_index) 0, 0, &step_tby_stuff};
-Private full_expand_thing step_1x2_pair      = {(warning_index) 0, 0, &step_1x2_stuff};
-Private full_expand_thing step_bone_pair     = {warn__some_touch,  0, &step_bone_stuff};
-Private full_expand_thing step_rig_pair      = {warn__some_touch,  0, &step_rig_stuff};
+Private full_expand_thing step_1x8_pair      = {warn__none,       0, &step_1x8_stuff};
+Private full_expand_thing step_1x4_side_pair = {warn__none,       0, &step_1x4_side_stuff};
+Private full_expand_thing step_1x4_pair      = {warn__none,       0, &step_1x4_stuff};
+Private full_expand_thing step_2x2v_pair     = {warn__none,       2*SETUPFLAG__ELONGATE_BIT, &step_2x2v_stuff};
+Private full_expand_thing step_2x2h_pair     = {warn__none,       1*SETUPFLAG__ELONGATE_BIT, &step_2x2h_stuff};
+Private full_expand_thing step_8ch_pair      = {warn__none,       0, &step_8ch_stuff};
+Private full_expand_thing step_li_pair       = {warn__none,       0, &step_li_stuff};
+Private full_expand_thing step_tby_pair      = {warn__none,       0, &step_tby_stuff};
+Private full_expand_thing step_1x2_pair      = {warn__none,       0, &step_1x2_stuff};
+Private full_expand_thing step_bone_pair     = {warn__some_touch, 0, &step_bone_stuff};
+Private full_expand_thing step_rig_pair      = {warn__some_touch, 0, &step_rig_stuff};
 
 
 
@@ -275,7 +287,7 @@ extern void touch_or_rear_back(
    long_boolean did_mirror,
    int callflags1)
 {
-   int i, j;
+   int i;
    setup stemp;
    full_expand_thing *tptr;
    expand_thing *zptr;
@@ -438,7 +450,7 @@ extern void touch_or_rear_back(
    }
 
    if (!tptr) return;
-   if (tptr->warning) warn(tptr->warning);
+   warn(tptr->warning);
    if ((scopy->setupflags & tptr->forbidden_elongation) && (!(scopy->setupflags & SETUPFLAG__NO_CHK_ELONG)))
       fail("People are too far away to work with each other on this call.");
    zptr = tptr->expand_lists;

@@ -45,6 +45,10 @@
 #endif
 #endif
 
+#ifdef __CODECENTER_4__
+#define CONST_IS_BROKEN		/* in CodeCenter 4.0.2 */
+#endif
+
 /* We will use "Const" with a capital "C" for our attempts at the "const" attribute. */
 #ifndef CONST_IS_BROKEN
 #define Const const
@@ -390,6 +394,7 @@ typedef struct {
 /* BEWARE!!  If change these next definitions, be sure to update the definition of
    "warning_strings" in sdutil.c . */
 typedef enum {
+   warn__none,
    warn__do_your_part,
    warn__tbonephantom,
    warn__ends_work_to_spots,
@@ -420,9 +425,9 @@ typedef enum {
    warn__to_o_spots,
    warn__to_x_spots,
    warn__some_rear_back,
-   warn__not_tbone_person,
-   warn__check_c1_phan,     /* End of the first 31. */
-   warn__check_dmd_qtag,    /* Any below here can't be used in the aggregates below. */
+   warn__not_tbone_person,  /* End of the first 31. */
+   warn__check_c1_phan,     /* Any below here can't be used in the aggregates below. */
+   warn__check_dmd_qtag,
    warn__check_2x4,
    warn__check_pgram,
    warn__dyp_resolve_ok,
@@ -502,10 +507,13 @@ typedef enum {
    into a menu.  For "ui_start_select" it is a start_select_kind.
    For other replies, it is one of the following constants: */
 
+/* BEWARE!!  This list must track the array "startup_commands" in sdmatch.c . */
 /* BEWARE!!  If change this next definition, be sure to update the definition of
    "startinfolist" in sdtables.c, and also necessary stuff in the user interfaces.
    The latter includes the definition of "start_choices" in sd.dps
-   in the Domain/Dialog system, and ???? in the Macintosh system. */
+   in the Domain/Dialog system, and the corresponding CNTLs in *.rsrc
+   in the Macintosh system.  You may also need changes in create_controls() in
+   macstuff.c. */
 typedef enum {
    start_select_exit,        /* Don't start a sequence; exit from the program. */
    start_select_h1p2p,       /* Start with Heads 1P2P. */
@@ -528,13 +536,16 @@ typedef enum {
    command_reconcile,
    command_anything,
    command_nice_setup,
+#ifdef NEGLECT
    command_neglect,
+#endif
    command_save_pic,
    command_refresh
 } command_kind;
 #define NUM_COMMAND_KINDS (((int) command_refresh)+1)
 
 /* For ui_resolve_select: */
+/* BEWARE!!  This list must track the array "resolve_commands" in sdmatch.c . */
 typedef enum {
    resolve_command_abort,
    resolve_command_find_another,
@@ -916,7 +927,8 @@ typedef enum {
 /* BEWARE!!  If change this next definition, be sure to update the definition of
    "selector_names" and "selector_singular" in sdutil.c, and also necessary stuff in the
    user interfaces.  The latter includes the definition of "task$selector_menu" in sd.dps
-   in the Domain/Dialog system, and ???? in the Macintosh system. */
+   in the Domain/Dialog system, and the DITL "Select Dancers" in *.rsrc in
+   the Macintosh system. */
 typedef enum {
    selector_uninitialized,
    selector_boys,
@@ -953,7 +965,8 @@ typedef enum {
 /* BEWARE!!  If change this next definition, be sure to update the definition of
    "direction_names" in sdutil.c, and also necessary stuff in the user interfaces.
    The latter includes the definition of "task$direction_menu" in sd.dps in the
-   Domain/Dialog system, and ???? in the Macintosh system. */
+   Domain/Dialog system, and the DITL "which direction" in *.rsrc in the Macintosh
+   system. */
 typedef enum {
    direction_uninitialized,
    direction_left,
@@ -1119,6 +1132,7 @@ extern char *direction_names[];                                     /* in SDUTIL
 extern int global_tbonetest;                                        /* in SDCONCPT */
 extern int global_livemask;                                         /* in SDCONCPT */
 extern int global_selectmask;                                       /* in SDCONCPT */
+extern int global_tboneselect;                                      /* in SDCONCPT */
 extern concept_table_item concept_table[];                          /* in SDCONCPT */
 
 extern concept_descriptor special_magic;                            /* in SDCTABLE */
@@ -1337,7 +1351,7 @@ extern int uims_do_neglect_popup(char dest[]);
 extern int uims_do_selector_popup(void);
 extern int uims_do_direction_popup(void);
 extern int uims_do_modifier_popup(char callname[], modify_popup_kind kind);
-extern unsigned int uims_get_number_fields(int howmany);
+extern unsigned int uims_get_number_fields(int nnumbers);
 extern void uims_reduce_line_count(int n);
 extern void uims_add_new_line(char the_line[]);
 extern uims_reply uims_get_command(mode_kind mode, call_list_kind *call_menu);
@@ -1415,6 +1429,7 @@ extern void basic_move(
    final_set final_concepts,
    int tbonetest,
    long_boolean fudged,
+   long_boolean mirror,
    setup *result);
 
 /* In SDMOVES */

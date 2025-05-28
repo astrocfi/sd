@@ -125,72 +125,75 @@ typedef struct {
    setup_kind initial_kind;  /* what setup they are collided in */
    setup_kind final_kind;    /* what setup to change it to */
    int rot;                  /* whether to rotate final setup CW */
-   warning_index warning;    /* if >= 0, a warning to give */
+   warning_index warning;    /* an optional warning to give */
 } collision_map;
 
 Private collision_map collision_map_table[] = {
    /* These items handle various types of "1/2 circulate" calls from 2x4's. */
-   {4, 0x0CC0CC, 0xCC, 0xCC, {2, 3, 6, 7},         {0, 3, 5, 6},          {1, 2, 4, 7},           s_crosswave, s1x8,        1, (warning_index) -1},   /* from lines in */
-   {4, 0x000000, 0x33, 0x33, {0, 1, 4, 5},         {0, 3, 5, 6},          {1, 2, 4, 7},           s_crosswave, s1x8,        0, (warning_index) -1},   /* from lines out */
-   {4, 0x022022, 0xAA, 0xAA, {1, 3, 5, 7},         {2, 5, 7, 0},          {3, 4, 6, 1},           s_spindle,   s_crosswave, 0, (warning_index) -1},   /* from trade by */
-   {6, 0x0880CC, 0xDD, 0x88, {0, 2, 3, 4, 6, 7},   {7, 0, 1, 3, 4, 6},    {7, 0, 2, 3, 4, 5},     s_crosswave, s_3x1dmd,    1, (warning_index) -1},   /* from 3&1 lines w/ centers in */
-   {6, 0x000044, 0x77, 0x22, {0, 1, 2, 4, 5, 6},   {0, 1, 3, 4, 6, 7},    {0, 2, 3, 4, 5, 7},     s_crosswave, s_3x1dmd,    0, (warning_index) -1},   /* from 3&1 lines w/ centers out */
-   {6, 0x0440CC, 0xEE, 0x44, {1, 2, 3, 5, 6, 7},   {7, 0, 2, 3, 5, 6},    {7, 1, 2, 3, 4, 6},     s_crosswave, s_3x1dmd,    1, (warning_index) -1},   /* from 3&1 lines w/ ends in */
-   {4, 0x088088, 0x99, 0x99, {0, 3, 4, 7},         {0, 2, 5, 7},          {1, 3, 4, 6},           s_crosswave, s_crosswave, 0, (warning_index) -1},   /* from inverted lines w/ centers in */
-   {4, 0x044044, 0x66, 0x66, {1, 2, 5, 6},         {6, 0, 3, 5},          {7, 1, 2, 4},           s_crosswave, s_crosswave, 1, warn__ctrs_stay_in_ctr},   /* from inverted lines w/ centers out */
-   {4, 0x044044, 0x55, 0x55, {0, 2, 4, 6},         {0, 2, 5, 7},          {1, 3, 4, 6},           s_crosswave, s_crosswave, 0, warn__ctrs_stay_in_ctr},   /* from trade-by w/ ctrs 1/4 out */
+   {4, 0x0CC0CC, 0xCC, 0xCC, {2, 3, 6, 7},         {0, 3, 5, 6},          {1, 2, 4, 7},           s_crosswave, s1x8,        1, warn__none},   /* from lines in */
+   {4, 0x000000, 0x33, 0x33, {0, 1, 4, 5},         {0, 3, 5, 6},          {1, 2, 4, 7},           s_crosswave, s1x8,        0, warn__none},   /* from lines out */
+   {4, 0x022022, 0xAA, 0xAA, {1, 3, 5, 7},         {2, 5, 7, 0},          {3, 4, 6, 1},           s_spindle,   s_crosswave, 0, warn__none},   /* from trade by */
+   {6, 0x0880CC, 0xDD, 0x88, {0, 2, 3, 4, 6, 7},   {7, 0, 1, 3, 4, 6},    {7, 0, 2, 3, 4, 5},     s_crosswave, s_3x1dmd,    1, warn__none},   /* from 3&1 lines w/ centers in */
+   {6, 0x000044, 0x77, 0x22, {0, 1, 2, 4, 5, 6},   {0, 1, 3, 4, 6, 7},    {0, 2, 3, 4, 5, 7},     s_crosswave, s_3x1dmd,    0, warn__none},   /* from 3&1 lines w/ centers out */
+   {6, 0x0440CC, 0xEE, 0x44, {1, 2, 3, 5, 6, 7},   {7, 0, 2, 3, 5, 6},    {7, 1, 2, 3, 4, 6},     s_crosswave, s_3x1dmd,    1, warn__none},   /* from 3&1 lines w/ ends in */
+   {4, 0x088088, 0x99, 0x99, {0, 3, 4, 7},         {0, 2, 5, 7},          {1, 3, 4, 6},           s_crosswave, s_crosswave, 0, warn__none},   /* from inverted lines w/ centers in */
+   {4, 0x044044, 0x66, 0x66, {1, 2, 5, 6},         {6, 0, 3, 5},          {7, 1, 2, 4},           s_crosswave, s_crosswave, 1, warn__ctrs_stay_in_ctr}, /* from inverted lines w/ centers out */
+   {4, 0x044044, 0x55, 0x55, {0, 2, 4, 6},         {0, 2, 5, 7},          {1, 3, 4, 6},           s_crosswave, s_crosswave, 0, warn__ctrs_stay_in_ctr}, /* from trade-by w/ ctrs 1/4 out */
    /* This was put in so that "1/2 circulate" would work from lines in with centers counter rotated. */
-   {4, 0x088088, 0xAA, 0xAA, {1, 3, 5, 7},         {0, 2, 5, 7},          {1, 3, 4, 6},           s_crosswave, s_crosswave, 0, warn__ctrs_stay_in_ctr},   /* from lines in and centers face */
-
-   {6, 0x088088, 0xBB, 0x88, {0, 1, 3, 4, 5, 7},   {0, 1, 2, 4, 5, 7},    {0, 1, 3, 4, 5, 6},     s_crosswave, s_crosswave, 0, (warning_index) -1},
-   {6, 0x0000CC, 0xDD, 0x11, {0, 2, 3, 4, 6, 7},   {0, 2, 3, 5, 6, 7},    {1, 2, 3, 4, 6, 7},     s_crosswave, s_crosswave, 0, (warning_index) -1},
-   {6, 0x000000,  077, 011,  {0, 1, 2, 3, 4, 5},   {0, 3, 2, 5, 7, 6},    {1, 3, 2, 4, 7, 6},     s_1x6,       s1x8,        0, (warning_index) -1},
-   {6, 0x000000,  077, 022,  {0, 1, 2, 3, 4, 5},   {0, 1, 2, 4, 7, 6},    {0, 3, 2, 4, 5, 6},     s_1x6,       s1x8,        0, (warning_index) -1},
-   {6, 0x000000,  077, 044,  {0, 1, 2, 3, 4, 5},   {0, 1, 3, 4, 5, 6},    {0, 1, 2, 4, 5, 7},     s_1x6,       s1x8,        0, (warning_index) -1},
+   {4, 0x088088, 0xAA, 0xAA, {1, 3, 5, 7},         {0, 2, 5, 7},          {1, 3, 4, 6},           s_crosswave, s_crosswave, 0, warn__ctrs_stay_in_ctr}, /* from lines in and centers face */
+   {6, 0x000082, 0xAAA, 0x820, {1, 3, 5, 7, 9, 11},{3, 4, 6, 7, 0, 1},    {3, 4, 5, 7, 0, 2},     s_3dmd,      s_3x1dmd,    0, warn__none},   /* from trade by with some outside quartered out */
+   {6, 0x088088, 0xBB, 0x88, {0, 1, 3, 4, 5, 7},   {0, 1, 2, 4, 5, 7},    {0, 1, 3, 4, 5, 6},     s_crosswave, s_crosswave, 0, warn__none},
+   {6, 0x0000CC, 0xDD, 0x11, {0, 2, 3, 4, 6, 7},   {0, 2, 3, 5, 6, 7},    {1, 2, 3, 4, 6, 7},     s_crosswave, s_crosswave, 0, warn__none},
+   {6, 0x000000,  077, 011,  {0, 1, 2, 3, 4, 5},   {0, 3, 2, 5, 7, 6},    {1, 3, 2, 4, 7, 6},     s_1x6,       s1x8,        0, warn__none},
+   {6, 0x000000,  077, 022,  {0, 1, 2, 3, 4, 5},   {0, 1, 2, 4, 7, 6},    {0, 3, 2, 4, 5, 6},     s_1x6,       s1x8,        0, warn__none},
+   {6, 0x000000,  077, 044,  {0, 1, 2, 3, 4, 5},   {0, 1, 3, 4, 5, 6},    {0, 1, 2, 4, 5, 7},     s_1x6,       s1x8,        0, warn__none},
 
    /* These items handle parallel lines with people wedged on one end, and hence handle flip or cut the hourglass. */
-   {6, 0x000000, 0x77, 0x11, {0, 1, 2, 4, 5, 6},   {0, 2, 3, 7, 8, 9},    {1, 2, 3, 6, 8, 9},     s2x4,        s2x6,        0, (warning_index) -1},
-   {6, 0x000000, 0xEE, 0x88, {1, 2, 3, 5, 6, 7},   {2, 3, 4, 8, 9, 11},   {2, 3, 5, 8, 9, 10},    s2x4,        s2x6,        0, (warning_index) -1},
+   {6, 0x000000, 0x77, 0x11, {0, 1, 2, 4, 5, 6},   {0, 2, 3, 7, 8, 9},    {1, 2, 3, 6, 8, 9},     s2x4,        s2x6,        0, warn__none},
+   {6, 0x000000, 0xEE, 0x88, {1, 2, 3, 5, 6, 7},   {2, 3, 4, 8, 9, 11},   {2, 3, 5, 8, 9, 10},    s2x4,        s2x6,        0, warn__none},
    /* These items handle single lines with people wedged on one end, and hence handle flip or cut the diamond. */
-   {3, 0x000000, 0x0B, 0x01, {0, 1, 3},            {0, 2, 5},             {1, 2, 5},              s1x4,        s_1x6,       0, (warning_index) -1},
-   {3, 0x000000, 0x0E, 0x04, {1, 2, 3},            {2, 4, 5},             {2, 3, 5},              s1x4,        s_1x6,       0, (warning_index) -1},
+   {3, 0x000000, 0x0B, 0x01, {0, 1, 3},            {0, 2, 5},             {1, 2, 5},              s1x4,        s_1x6,       0, warn__none},
+   {3, 0x000000, 0x0E, 0x04, {1, 2, 3},            {2, 4, 5},             {2, 3, 5},              s1x4,        s_1x6,       0, warn__none},
    /* These items handle columns with people wedged everywhere, and hence handle unwraps of facing diamonds etc. */
-   {4, 0x055055, 0x55, 0x55, {0, 2, 4, 6},         {12, 14, 2, 11},       {10, 3, 4, 6},          s2x4,        s4x4,        0, (warning_index) -1},
-   {4, 0x0AA0AA, 0xAA, 0xAA, {1, 3, 5, 7},         {13, 0, 7, 9},         {15, 1, 5, 8},          s2x4,        s4x4,        0, (warning_index) -1},
+   {4, 0x055055, 0x55, 0x55, {0, 2, 4, 6},         {12, 14, 2, 11},       {10, 3, 4, 6},          s2x4,        s4x4,        0, warn__none},
+   {4, 0x0AA0AA, 0xAA, 0xAA, {1, 3, 5, 7},         {13, 0, 7, 9},         {15, 1, 5, 8},          s2x4,        s4x4,        0, warn__none},
+   /* These items handle columns with people wedged in clumps, and hence handle gravitate from lefties etc. */
+   {4, 0x033033, 0x33, 0x33, {0, 1, 4, 5},         {12, 13, 2, 7},        {10, 15, 4, 5},         s2x4,        s4x4,        0, warn__none},
+   {4, 0x0CC0CC, 0xCC, 0xCC, {2, 3, 6, 7},         {14, 0, 11, 9},         {3, 1, 6, 8},          s2x4,        s4x4,        0, warn__none},
 
    /* These items handle the situation from a 2FL/intlkd box circ/split box trade circ. */
 /* Not sure what that comment meant, but we are trying to handle colliding 2FL-type circulates */
-   {2, 0x000000, 0x03, 0x03, {0, 1},               {0, 2},                {1, 3},                 s2x4,        s2x8,        0, (warning_index) -1},
-   {2, 0x000000, 0x0C, 0x0C, {2, 3},               {4, 6},                {5, 7},                 s2x4,        s2x8,        0, (warning_index) -1},
-   {2, 0x000000, 0x30, 0x30, {5, 4},               {11, 9},               {10, 8},                s2x4,        s2x8,        0, (warning_index) -1},
-   {2, 0x000000, 0xC0, 0xC0, {7, 6},               {15, 13},              {14, 12},               s2x4,        s2x8,        0, (warning_index) -1},
+   {2, 0x000000, 0x03, 0x03, {0, 1},               {0, 2},                {1, 3},                 s2x4,        s2x8,        0, warn__none},
+   {2, 0x000000, 0x0C, 0x0C, {2, 3},               {4, 6},                {5, 7},                 s2x4,        s2x8,        0, warn__none},
+   {2, 0x000000, 0x30, 0x30, {5, 4},               {11, 9},               {10, 8},                s2x4,        s2x8,        0, warn__none},
+   {2, 0x000000, 0xC0, 0xC0, {7, 6},               {15, 13},              {14, 12},               s2x4,        s2x8,        0, warn__none},
 /* The preceding lines used to be these, which seems quite wrong:
-   {2, 0x000000, 0x03, 0x03, {0, 1},               {0, 2},                {1, 3},                 s2x4,        s2x4,        0, (warning_index) -1},
-   {2, 0x000000, 0x0C, 0x0C, {2, 3},               {0, 2},                {1, 3},                 s2x4,        s2x4,        0, (warning_index) -1},
-   {2, 0x000000, 0x30, 0x30, {5, 4},               {7, 5},                {6, 4},                 s2x4,        s2x4,        0, (warning_index) -1},
-   {2, 0x000000, 0xC0, 0xC0, {7, 6},               {7, 5},                {6, 4},                 s2x4,        s2x4,        0, (warning_index) -1},
+   {2, 0x000000, 0x03, 0x03, {0, 1},               {0, 2},                {1, 3},                 s2x4,        s2x4,        0, warn__none},
+   {2, 0x000000, 0x0C, 0x0C, {2, 3},               {0, 2},                {1, 3},                 s2x4,        s2x4,        0, warn__none},
+   {2, 0x000000, 0x30, 0x30, {5, 4},               {7, 5},                {6, 4},                 s2x4,        s2x4,        0, warn__none},
+   {2, 0x000000, 0xC0, 0xC0, {7, 6},               {7, 5},                {6, 4},                 s2x4,        s2x4,        0, warn__none},
 */
 
    /* These items handle various types of "1/2 circulate" calls from 2x2's. */
-   {2, 0x000000, 0x05, 0x05, {0, 2},               {0, 3},                {1, 2},                 sdmd,        s1x4,        0, (warning_index) -1},   /* from couples out if it went to diamond */
-   {2, 0x000000, 0x05, 0x05, {0, 2},               {0, 3},                {1, 2},                 s1x4,        s1x4,        0, (warning_index) -1},   /* from couples out if it went to line */
-   {2, 0x00A00A, 0x0A, 0x0A, {1, 3},               {0, 3},                {1, 2},                 sdmd,        s1x4,        1, (warning_index) -1},   /* from couples in if it went to diamond */
-   {2, 0x000000, 0x0A, 0x0A, {1, 3},               {0, 3},                {1, 2},                 s1x4,        s1x4,        0, (warning_index) -1},   /* from couples in if it went to line */
-   {2, 0x000000, 0x06, 0x06, {1, 2},               {0, 3},                {1, 2},                 s1x4,        s1x4,        0, (warning_index) -1},   /* from "head pass thru, all split circulate" */
-   {2, 0x000000, 0x09, 0x09, {0, 3},               {0, 3},                {1, 2},                 s1x4,        s1x4,        0, (warning_index) -1},   /* from "head pass thru, all split circulate" */
+   {2, 0x000000, 0x05, 0x05, {0, 2},               {0, 3},                {1, 2},                 sdmd,        s1x4,        0, warn__none},   /* from couples out if it went to diamond */
+   {2, 0x000000, 0x05, 0x05, {0, 2},               {0, 3},                {1, 2},                 s1x4,        s1x4,        0, warn__none},   /* from couples out if it went to line */
+   {2, 0x00A00A, 0x0A, 0x0A, {1, 3},               {0, 3},                {1, 2},                 sdmd,        s1x4,        1, warn__none},   /* from couples in if it went to diamond */
+   {2, 0x000000, 0x0A, 0x0A, {1, 3},               {0, 3},                {1, 2},                 s1x4,        s1x4,        0, warn__none},   /* from couples in if it went to line */
+   {2, 0x000000, 0x06, 0x06, {1, 2},               {0, 3},                {1, 2},                 s1x4,        s1x4,        0, warn__none},   /* from "head pass thru, all split circulate" */
+   {2, 0x000000, 0x09, 0x09, {0, 3},               {0, 3},                {1, 2},                 s1x4,        s1x4,        0, warn__none},   /* from "head pass thru, all split circulate" */
    /* These items handle "1/2 split trade circulate" from 2x2's. */
-   {3, 0x008008, 0x0D, 0x08, {0, 2, 3},            {0, 2, 1},             {0, 2, 3},              sdmd,        sdmd,        0, (warning_index) -1},
-   {3, 0x002002, 0x07, 0x02, {0, 2, 1},            {0, 2, 1},             {0, 2, 3},              sdmd,        sdmd,        0, (warning_index) -1},
+   {3, 0x008008, 0x0D, 0x08, {0, 2, 3},            {0, 2, 1},             {0, 2, 3},              sdmd,        sdmd,        0, warn__none},
+   {3, 0x002002, 0x07, 0x02, {0, 2, 1},            {0, 2, 1},             {0, 2, 3},              sdmd,        sdmd,        0, warn__none},
    /* These items handle various types of "circulate" calls from 2x2's. */
-   {2, 0x009009, 0x09, 0x09, {0, 3},               {7, 5},                {6, 4},                 s2x2,        s2x4,        1, (warning_index) -1},   /* from box facing all one way */
-   {2, 0x006006, 0x06, 0x06, {1, 2},               {0, 2},                {1, 3},                 s2x2,        s2x4,        1, (warning_index) -1},   /* we need all four cases */
-   {2, 0x000000, 0x0C, 0x0C, {2, 3},               {5, 7},                {4, 6},                 s2x2,        s2x4,        0, (warning_index) -1},   /* sigh */
-   {2, 0x000000, 0x03, 0x03, {0, 1},               {0, 2},                {1, 3},                 s2x2,        s2x4,        0, (warning_index) -1},   /* sigh */
+   {2, 0x009009, 0x09, 0x09, {0, 3},               {7, 5},                {6, 4},                 s2x2,        s2x4,        1, warn__none},   /* from box facing all one way */
+   {2, 0x006006, 0x06, 0x06, {1, 2},               {0, 2},                {1, 3},                 s2x2,        s2x4,        1, warn__none},   /* we need all four cases */
+   {2, 0x000000, 0x0C, 0x0C, {2, 3},               {5, 7},                {4, 6},                 s2x2,        s2x4,        0, warn__none},   /* sigh */
+   {2, 0x000000, 0x03, 0x03, {0, 1},               {0, 2},                {1, 3},                 s2x2,        s2x4,        0, warn__none},   /* sigh */
    /* These items handle more 2x2 stuff, including the "special drop in" that makes chain reaction/motivate etc. work. */
-   {2, 0x005005, 0x05, 0x05, {0, 2},               {7, 2},                {6, 3},                 s2x2,        s2x4,        1, (warning_index) -1},
-   {2, 0x00A00A, 0x0A, 0x0A, {1, 3},               {0, 5},                {1, 4},                 s2x2,        s2x4,        1, (warning_index) -1},
-   {2, 0x000000, 0x05, 0x05, {0, 2},               {0, 5},                {1, 4},                 s2x2,        s2x4,        1, (warning_index) -1},
-   {2, 0x000000, 0x0A, 0x0A, {1, 3},               {2, 7},                {3, 6},                 s2x2,        s2x4,        1, (warning_index) -1},
+   {2, 0x005005, 0x05, 0x05, {0, 2},               {7, 2},                {6, 3},                 s2x2,        s2x4,        1, warn__none},
+   {2, 0x00A00A, 0x0A, 0x0A, {1, 3},               {0, 5},                {1, 4},                 s2x2,        s2x4,        1, warn__none},
+   {2, 0x000000, 0x05, 0x05, {0, 2},               {0, 5},                {1, 4},                 s2x2,        s2x4,        1, warn__none},
+   {2, 0x000000, 0x0A, 0x0A, {1, 3},               {2, 7},                {3, 6},                 s2x2,        s2x4,        1, warn__none},
    {-1}};
 
 
@@ -198,11 +201,12 @@ Private void fix_collision(
    int collision_mask,
    int collision_index,
    int result_mask,
+   long_boolean mirror,
    setup *result)
 
 {
-   int temprot, lowbitmask;
-   int i;
+   unsigned int lowbitmask, flip;
+   int i, temprot;
    collision_map *c_map_ptr;
    setup spare_setup;
 
@@ -232,21 +236,25 @@ Private void fix_collision(
    win:
 
    warn(warn__take_right_hands);
-   if (c_map_ptr->warning >= 0) warn(c_map_ptr->warning);
+   warn(c_map_ptr->warning);
    temprot = ((-c_map_ptr->rot) & 3) * 011;
    result->kind = c_map_ptr->final_kind;
    result->rotation += c_map_ptr->rot;
+
+   /* If this is under a mirror image operation, make them take left hands, by swapping the maps. */
+   flip = mirror ? 2 : 0;
 
    for (i=0; i<c_map_ptr->size; i++) {
       int oldperson;   
 
       oldperson = spare_setup.people[c_map_ptr->source[i]].id1;
-      if (oldperson & 2)
+      if ((oldperson ^ flip) & 2)
          install_rot(result, c_map_ptr->map1[i], &spare_setup, c_map_ptr->source[i], temprot);
       else
          install_rot(result, c_map_ptr->map0[i], &spare_setup, c_map_ptr->source[i], temprot);
+
       oldperson = spare_setup.people[c_map_ptr->source[i]+12].id1;
-      if (oldperson & 2)
+      if ((oldperson ^ flip) & 2)
          install_rot(result, c_map_ptr->map1[i], &spare_setup, c_map_ptr->source[i]+12, temprot);
       else
          install_rot(result, c_map_ptr->map0[i], &spare_setup, c_map_ptr->source[i]+12, temprot);
@@ -306,10 +314,11 @@ Private int fstarhyperh[12] = {0, 0, 0, 1, 0, 0, 2, 0, 0, 3, 0, 0};
 extern void do_stability(unsigned int *personp, unsigned int def_word, int turning)
 {
    int t, at, st, atr;
+   stability k = (stability) ((def_word/DBSTAB_BIT) & 0xF);
 
    t = turning & 3;
 
-   switch ((stability) ((def_word/DBSTAB_BIT) & 0xF)) {
+   switch (k) {
       case stb_z:
          if (t != 0)
             fail("Person turned but was marked 'Z' stability.");
@@ -320,10 +329,37 @@ extern void do_stability(unsigned int *personp, unsigned int def_word, int turni
       case stb_c:
          if (t == 0) t = 4;
          break;
+      case stb_ac:
+         /* Turn one quadrant anticlockwise. */
+         if (((*personp & (STABLE_RBIT*7)) / STABLE_RBIT) > 0) {
+            *personp -= STABLE_RBIT;
+         }
+         else {
+            *personp =
+               (*personp & ~(STABLE_RBIT*7|STABLE_VBIT*3)) |
+               ((*personp - (STABLE_VBIT)) & (STABLE_VBIT*3));
+         }
+         t += 1;   /* And the rest clockwise. */
+         break;
+      case stb_ca:
+         /* Turn one quadrant clockwise. */
+         if (((*personp & (STABLE_RBIT*7)) / STABLE_RBIT) > 0) {
+            *personp -= STABLE_RBIT;
+         }
+         else {
+            *personp =
+               (*personp & ~(STABLE_RBIT*7|STABLE_VBIT*3)) |
+               ((*personp + (STABLE_VBIT)) & (STABLE_VBIT*3));
+         }
+         if (t == 0) t = 4;   /* And the rest anticlockwise. */
+         t -= 5;
+         break;
       default:
          *personp &= ~STABLE_MASK;
-         break;
+         return;
    }
+
+   /* Now t has the number of quadrants the person turned, clockwise or anticlockwise. */
 
    st = (t < 0) ? -1 : 1;
    at = t * st;
@@ -1723,6 +1759,11 @@ static int divide_the_setup(
             division_maps = &map_qtag_f2;
             goto divide_us_no_recompute;
          }
+
+/* ******** Regression test OK to here.  The next thing doesn't work, because the
+   "do your part" junk doesn't work right!  This has been a known problem for some
+   time, of course.  It's about time it got fixed.  It appears to have been broken as far back as 27.8. */
+
          else if ((livemask & 0x77) == 0) {    /* Check for stuff like "center two slide thru". */
             division_maps = &map_qtag_f0;
             goto divide_us_no_recompute;
@@ -2139,8 +2180,8 @@ extern void basic_move(
    final_set final_concepts,
    int tbonetest,
    long_boolean fudged,
+   long_boolean mirror,
    setup *result)
-
 {
    int i, j, k;
    unsigned int newtb;
@@ -3046,7 +3087,7 @@ extern void basic_move(
       if (!funny_ok1 || !funny_ok2) warn(warn__not_funny);
    }
    else {
-      if (collision_mask) fix_collision(collision_mask, collision_index, result_mask, result);
+      if (collision_mask) fix_collision(collision_mask, collision_index, result_mask, mirror, result);
    }
    
    fixup:

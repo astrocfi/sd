@@ -20,15 +20,28 @@
 
 /* dbcomp.c */
 
-#ifdef _POSIX_SOURCE
+/* ***  This next test used to be
+    ifdef _POSIX_SOURCE
+   We have taken it out and replaced with what you see below.  If this breaks
+   anything, let us know. */
+#if defined(_POSIX_SOURCE) || defined(sun)
 #include <unistd.h>
 #endif
 
 /* We take pity on those poor souls who are compelled to use
     troglodyte development environments. */
 
-#if defined(__STDC__) && !defined(athena_rt) && !defined(athena_vax)
+/* ***  This next test used to be
+    if defined(__STDC__) && !defined(athena_rt) && !defined(athena_vax)
+   We have taken it out and replaced with what you see below.  If this breaks
+   anything, let us know. */
+#if defined(__STDC__) || defined(sun)
 #include <stdlib.h>
+#else
+extern void free(void *ptr);
+extern char *malloc(unsigned int siz);
+extern char *realloc(char *oldp, unsigned int siz);
+extern void exit(int code);
 #endif
 
 #include <string.h>
@@ -1003,17 +1016,38 @@ static void write_callarray(int num, int doing_matrix)
       else if (tok_kind == tok_number && tok_value == 0)
          write_halfword(0);
       else if (tok_kind == tok_symbol) {
-         if (letcount > 1) {
-            if      (tok_str[0] == 'Z' || tok_str[0] == 'z') { stab = stb_z; p++; }
-            else if (tok_str[0] == 'A' || tok_str[0] == 'a') { stab = stb_a; p++; }
-            else if (tok_str[0] == 'C' || tok_str[0] == 'c') { stab = stb_c; p++; }
+         while (letcount-p >= 2) {
+            switch (tok_str[p]) {
+               case 'Z': case 'z':
+                  if (stab == stb_none) stab = stb_z;
+                  else errexit("Improper callarray specifier");
+                  break;
+               case 'A': case 'a':
+                  if (stab == stb_none) stab = stb_a;
+                  else if (stab == stb_c) stab = stb_ca;
+                  else errexit("Improper callarray specifier");
+                  break;
+               case 'C': case 'c':
+                  if (stab == stb_none) stab = stb_c;
+                  else if (stab == stb_a) stab = stb_ac;
+                  else errexit("Improper callarray specifier");
+                  break;
+               default:
+                  goto stability_done;
+            }
+            p++;
          }
 
+         stability_done:
+
          if (letcount-p == 2) {
-            if (tok_str[p] == 'L' || tok_str[p] == 'l') dat = 4;
-            else if (tok_str[p] == 'M' || tok_str[p] == 'm') dat = 2;
-            else if (tok_str[p] == 'R' || tok_str[p] == 'r') dat = 1;
-            else errexit("Improper callarray specifier");
+            switch (tok_str[p]) {
+               case 'L': case 'l': dat = 4; break;
+               case 'M': case 'm': dat = 2; break;
+               case 'R': case 'r': dat = 1; break;
+               default:
+                  errexit("Improper callarray specifier");
+            }
          }
          else if (letcount-p != 1)
             errexit("Improper callarray specifier");
