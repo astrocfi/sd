@@ -26,9 +26,10 @@ static char *time_stamp = "sdui-x11.c Time-stamp: <95/11/09 17:48:56 gildea>";
 static char *id="@(#)$He" "ader: Sd: sdui-x11.c  " UI_VERSION_STRING "    gildea@lcs.mit.edu  24 Mar 95 $";
 
 /* This file defines the following functions:
+   uims_version_string
    uims_process_command_line
    uims_display_help
-   uims_version_string
+   uims_display_ui_intro_text
    uims_preinitialize
    uims_create_menu
    uims_postinitialize
@@ -127,8 +128,7 @@ typedef enum {
 
 Private char version_mem[12];
 
-extern char *
-uims_version_string(void)
+extern char *uims_version_string(void)
 {
     strcpy(version_mem, UI_VERSION_STRING);
     strcat(version_mem, "X11");
@@ -772,12 +772,16 @@ extern void uims_display_help(void)
    printf("\nIn addition, the usual X window system flags are supported.\n");
 }
 
+extern void uims_display_ui_intro_text(void)
+{
+   /* We have nothing to say. */
+}
+
 /*
  * The main program calls this before any of the call menus are
  * created, that is, before any calls to uims_create_menu.
  */
-extern void
-uims_preinitialize(void)
+extern void uims_preinitialize(void)
 {
    char icon_name[25];
    String title;

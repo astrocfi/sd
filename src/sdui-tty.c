@@ -37,9 +37,10 @@ static char *id="@(#)$He" "ader: Sd: sdui-tty.c "
    "  wba@apollo.hp.com  28 May 95 $";
 
 /* This file defines the following functions:
+   uims_version_string
    uims_process_command_line
    uims_display_help
-   uims_version_string
+   uims_display_ui_intro_text
    uims_preinitialize
    uims_create_menu
    uims_postinitialize
@@ -109,8 +110,7 @@ and the following data that are used by sdmatch.c :
 
 Private char version_mem[12];
 
-extern char *
-uims_version_string(void)
+extern char *uims_version_string(void)
 {
     (void) sprintf(version_mem, "%stty", UI_VERSION_STRING);
     return version_mem;
@@ -280,8 +280,7 @@ Private char *call_menu_prompts[NUM_CALL_LIST_KINDS];
  * must be made anyway.
  */
  
-extern void
-uims_process_command_line(int *argcp, char ***argvp)
+extern void uims_process_command_line(int *argcp, char ***argvp)
 {
 #ifdef UNIX_STYLE
    ttu_process_command_line(argcp, *argvp);
@@ -299,13 +298,23 @@ extern void uims_display_help(void)
 #endif
 }
 
+extern void uims_display_ui_intro_text(void)
+{
+   writestuff("At any time that you don't know what you can type,");
+   newline();
+   writestuff("type a question mark.  The program will show you all");
+   newline();
+   writestuff("legal choices.");
+   newline();
+   newline();
+}
+
 /*
  * The main program calls this before any of the call menus are
  * created, that is, before any calls to uims_create_menu.
  */
  
-extern void
-uims_preinitialize(void)
+extern void uims_preinitialize(void)
 {
     current_text_line = 0;
     ttu_initialize();
@@ -354,7 +363,6 @@ uims_postinitialize(void)
 #if defined(UNIX_STYLE) && !defined(MSDOS)
     initialize_signal_handlers();
 #endif
-    resolver_is_unwieldy = TRUE;   /* Sorry about that. */
 }
 
 Private void

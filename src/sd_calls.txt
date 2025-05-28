@@ -35,7 +35,7 @@
     General Public License if you distribute the file.
 */
 
-version "31.58"
+version "31.59"
 
 call "(nothing)" mainstream tag nullcall
             dont_use_in_resolve
@@ -1469,14 +1469,14 @@ call "_special drop in" dontshow tag spec_drop_in
 call "switch the wave" a2
    setup 1x4 1x4 restriction wave_only
       array [CR3S AL0S AL1S CR2S]
-            alternate_definition [grand] c3
+            alternate_definition [grand] c4a
    setup 1x8 1x8 restriction wave_only
       array [CR3S AL0S AL1S CR6S AL7S CR4S CR5S AL2S]
 
 call "switch the line" c1
    setup 1x4 1x4
       array [CR3S AL0S AL1S CR2S]
-            alternate_definition [grand] c3
+            alternate_definition [grand] c4a
    setup 1x8 1x8
       array [CR3S AL0S AL1S CR6S AL7S CR4S CR5S AL2S]
 
@@ -1660,7 +1660,7 @@ call "lockit" a1 tag lockit
       array [CR0N 0 AL0S 0]
    setup pmd dmd rotate
       array [0 CR1N 0 AL1S]
-            alternate_definition [cross] c3x
+            alternate_definition [cross] c3
    setup 1x4 1x4 rotate
       array [CR1N CR0N AL1S AL0S]
             alternate_definition [grand] c4
@@ -2738,7 +2738,7 @@ call "turn to a line" c2 tag turntoline
             reverse_means_mirror
    setup 2x2 1x4
       array [CR3S CR2S AL1S AL0S]
-            alternate_definition [single] c3x
+            alternate_definition [single] c3a
    setup 2x1 1x2 rotate
       array [AL0E CR1E]
             alternate_definition [3x3] c4
@@ -3277,7 +3277,7 @@ call "_reflect" dontshow tag reflect
    setup 2x2 2x2
       array [R1E L0W L1W R0E]
 
-call "peel the deal" c3
+call "peel the deal" c4a
    setup 2x2 1x4 restriction peelable_box
       array [AL1E CR3W CR2W AL0E]
             alternate_definition [single] c4
@@ -3290,7 +3290,7 @@ call "peel the deal" c3
    setup 4x2 1x8 rotate restriction peelable_box
       array [AL0N AL1N AL3N AL2N CR6S CR7S CR5S CR4S]
 
-call "trail the deal" c4
+call "trail the deal" c4a
    setup 2x2 1x4 restriction peelable_box
       array [CR3W AL1E AL0E CR2W]
             alternate_definition [single] c4
@@ -3764,7 +3764,7 @@ call "@v back and dodge" c4
    seq tagnullcall0 [inherit_left]
    seq scootndodge []
 
-call "@v back and scatter" c4
+call "@v and scatter" c3
             left_means_mirror first_part_visible
    seq tagnullcall0 [inherit_left]
    seq fudgyscatscoot []    /* Note that we refuse to pass "yoyo". */
@@ -4974,16 +4974,16 @@ call "square thru 4" dontshow tag square_thru_4
       array [0 0 AM2E CM3W]
 
 call "split square thru 2" dontshow tag splitsq2
-   setup 2x2 2x2
-      preds "???"
-         if x22_couple [0 0 ZM1N ZM0N]
-         if always     [0 0 AM0W CM1E]
+   setup 4x2 2x4
+      array [0 0 ZM3N 0 0 ZM4N 0 0]
+   setup 2x4 2x4
+      array [0 0 0 0 ZM2W 0 0 ZM1E]
 
 call "split square thru 4" dontshow tag splitsq4
-   setup 2x2 2x2
-      preds "???"
-         if x22_couple [0 0 ZM3S ZM2S]
-         if always     [0 0 AM2E CM3W]
+   setup 4x2 2x4
+      array [0 0 ZM5S 0 0 ZM2S 0 0]
+   setup 2x4 2x4
+      array [0 0 0 0 ZM4E 0 0 ZM7W]
 
 call "_funny square thru main" dontshow tag funnysquaremain
             left_means_mirror
@@ -5228,11 +5228,6 @@ call "zing" c1 tag zing
             alternate_definition [4x4] c4
    setup 8x2 2x8 restriction peelable_box
       array [CR4E CR5E CR6E CR7E AL3E AL2E AL1E AL0E CR15W CR14W CR13W CR12W AL8W AL9W AL10W AL11W]
-
-call "cross walk and dodge" c3
-   simple_funny
-   setup 2x2 2x2 restriction unusual magic_only
-      array [M1N M0N M0N M1N]
 
 call "1/2 split trade circulate" c2
             dont_use_in_resolve take_right_hands
@@ -5611,10 +5606,10 @@ call "walk and dodge" mainstream tag walkndodge
       to do at mainstream with no concept.  It had the unfortunate
       property of making it impossible to do a plain 4-person version
       in each box while in offset waves.  So I have taken it out. */
-            alternate_definition [cross] c3
+            alternate_definition [cross] c4a
    simple_funny
    setup 2x2 2x2 restriction unusual magic_only
-      array [M1N M0N M0N M1N]
+      array [ZM1N ZM0N ZM0N ZM1N]
             alternate_definition [grand] c3x
    setup 4x2 2x4 restriction unusual wave_only
       array [ZM2N ZM5N ZM3N ZM4N ZM3N ZM4N ZM2N ZM5N]
@@ -6431,17 +6426,17 @@ call "square the bases" c1
    seq splitsq2 [allow_forced_mod]
    seq trade_by [allow_forced_mod]
 
-call "square the bases plus 2" c4
+call "square the bases plus 2" c4a
    seq sqbases1 []
    seq splitsq4 [allow_forced_mod]
    seq trade_by [allow_forced_mod]
 
-/* ****  We need these two calls to make regression tests win,
-   until we figure out the really right way to do this. */
+/* ****  The old stuff:
 call "square the bases (old)" c1
             dont_use_in_resolve
    setup 2x4 2x4 rotate
    array [0 0 0 0 AM5E AL3W CR4W CM2E]
+*/
 
 call "square the bases plus 2 (old)" c4
             dont_use_in_resolve
@@ -6713,7 +6708,6 @@ call "_centers @b / ends move up" dontshow tag quarterdeucey4
    conc_diamond_line armturn_n4 [] spec_drop_in [inherit_12_matrix inherit_16_matrix suppress_elongation_warnings]
 
 call "@B the deucey" c3a
-      /* Actually, 3/4 the deucey is C4.  Too bad. */
             step_to_wave left_means_touch_or_check neednumber 12_matrix_is_inherited 16_matrix_is_inherited
    seq armturn_n4 [inherit_12_matrix inherit_16_matrix]
    seq check1x4 [inherit_12_matrix inherit_16_matrix]
@@ -7975,7 +7969,7 @@ call "4x4 disband" c4
    setup 4x4 4x4 rotate    /* **** Need to put in restrictions, if anyone cares. */
       array [CM9W CM11W CM7W ACR13E CM2W ACR0E CAL12W ACR14E AM9E AM11E AM7E CAL13W AM2E CAL0W ACR12E CAL14W]
 
-call "wind the bobbin" c4a
+call "wind the bobbin" c3a
    setup 4x2 2x4 rotate restriction unusual wave_only
    array [5E 3W 6W 4W 7W 5W 0W 6E]
             alternate_definition [cross] c4a
@@ -8910,7 +8904,7 @@ call "_fudgy boxy scoot back" dontshow tag fudgyboxyscootback
       do the whole thing, with the extend to a wave the way no human would, followed by
       backing up, so that the "scoot reaction" can be done in the presence of lots of
       phantoms.  That is, by having the original lead step back into a wave, he knows
-      what handedness to use for the cahin reaction.  If he just became the point of a
+      what handedness to use for the chain reaction.  If he just became the point of a
       1/4-tag, the centers might be phantoms, and he wouldn't know what to do. */
    setup 2x2 2x2 restriction forbidden wave_only
       array [CR1S AL0S AM3S CM2S]
@@ -9399,7 +9393,7 @@ call "chain reaction" a1
    because we might change it to a revert the tag reaction, which has another
    cast off 3/4. */
 
-call "scoot @Creaction" c3
+call "scoot @Creaction" c3a
             cross_is_inherited yoyo_is_inherited
    seq fudgyboxyscootback [inherit_yoyo]
    seq wvchreact_1 [inherit_cross]
@@ -9431,7 +9425,7 @@ call "scatter scoot chain thru @Creaction" c3
    seq turnstar1_endstrade []
    seq finishwitharmturn []
 
-call "@v @Creaction" c3
+call "@v @Creaction" c3a
             left_means_mirror cross_is_inherited first_part_visible
    seq tagnullcall0 [inherit_left]
    seq boxyscootback []
@@ -9533,7 +9527,7 @@ call "@v and scatter @Creactivate" c4
    seq spindlefudge []
    seq reactivate2 []
 
-call "@v chain thru @Creactivate" c3
+call "@v chain thru @Creactivate" c4
             left_means_mirror cross_is_inherited first_part_visible
    seq tagnullcall0 [inherit_left]
    seq scootchainthru []
@@ -10258,14 +10252,14 @@ call "hinge and circulate @h" c4
 call "_stim part 2" dontshow tag stim2
    conc6_2 armturn_14 [] armturn_14 []
 
-call "@1stimulate the column" c4a
+call "@1stimulate the column" c3
             first_part_visible
    seq colcirc [or_anycall]
    seq half_circ []
    seq stim2 []
    seq finishwithplainmod []
 
-call "@N stimulate the column" c4a
+call "@N stimulate the column" c3
             first_part_visible
    seq circnullcall [or_anycall]
    seq half_circ []
@@ -10534,7 +10528,7 @@ call "relocate the diamonds" c2
       a wave" that ends in a column. */
    conc2_6 armturn_34 [] ctr_rot [inherit_funny]
 
-call "relocate" c2
+call "relocate" c3a
             funny_is_inherited
    conc2_6 armturn_34 [] ctr_rot [inherit_funny]
 

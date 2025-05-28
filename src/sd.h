@@ -817,7 +817,13 @@ typedef enum {
 typedef struct {
    Cstring name;
    Const concept_kind kind;
-   Const uint32 miscflags;   /* 1 bit -> this is a duplicate in menu; 2 bit -> yield if ambiguous. */
+   Const uint32 miscflags;
+      /* 1 bit -> this is a duplicate in menu;
+         2 bit -> yield if ambiguous.
+         4 bit -> parse directly.  It directs the
+            parser to allow this concept (and similar concepts) and the following call to
+            be typed on one line.  One needs to be very careful about avoiding ambiguity
+            when setting this flag. */
    Const dance_level level;
    Const struct {
       Const map_thing *maps;
@@ -1419,11 +1425,6 @@ typedef struct {
       for transmission back to the client.  Normally this is off, and the split axis bits
       will be cleared after execution of the concept.
 
-   CONCPROP__PARSE_DIRECTLY is used only by the parser in sdmatch.c .  It directs the
-      parser to allow this concept (and similar concepts) and the following call to
-      be typed on one line.  One needs to be very careful about avoiding ambiguity
-      when setting this flag.
-
    CONCPROP__NEED_ARG2_MATRIX means that the "arg2" word of the concept_descriptor
       block contains additional bits of the "CONCPROP__NEED_3X8" kind to be sent to
       "do_matrix_expansion".  This is done so that concepts with different matrix
@@ -1462,8 +1463,7 @@ typedef struct {
 #define CONCPROP__SHOW_SPLIT       0x08000000UL
 #define CONCPROP__PERMIT_MYSTIC    0x10000000UL
 #define CONCPROP__PERMIT_REVERSE   0x20000000UL
-#define CONCPROP__PARSE_DIRECTLY   0x40000000UL
-#define CONCPROP__NEED_ARG2_MATRIX 0x80000000UL
+#define CONCPROP__NEED_ARG2_MATRIX 0x40000000UL
 
 typedef enum {    /* These control error messages that arise when we divide a setup
                      into subsetups (e.g. phantom lines) and find that one of
@@ -1877,7 +1877,6 @@ extern int number_for_initialize;                                   /* in SDMAIN
 extern int allowing_modifications;                                  /* in SDMAIN */
 extern long_boolean allowing_all_concepts;                          /* in SDMAIN */
 extern long_boolean using_active_phantoms;                          /* in SDMAIN */
-extern long_boolean resolver_is_unwieldy;                           /* in SDMAIN */
 extern long_boolean diagnostic_mode;                                /* in SDMAIN */
 extern selector_kind current_selector;                              /* in SDMAIN */
 extern direction_kind current_direction;                            /* in SDMAIN */
@@ -1963,9 +1962,10 @@ extern int parse_number(char junk[]);
 
 /* In SDUI */
 
+extern char *uims_version_string(void);
 extern void uims_process_command_line(int *argcp, char ***argvp);
 extern void uims_display_help(void);
-extern char *uims_version_string(void);
+extern void uims_display_ui_intro_text(void);
 extern void uims_preinitialize(void);
 extern void uims_create_menu(call_list_kind cl, callspec_block *call_name_list[]);
 extern void uims_postinitialize(void);

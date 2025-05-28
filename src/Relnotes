@@ -1,7 +1,12 @@
-		   RELEASE NOTES FOR SD VERSION 31.58
-		 Database version = 31.58 format = 72.
+		   RELEASE NOTES FOR SD VERSION 31.59
+		 Database version = 31.59 format = 72.
                 X11 UI version 1.16, SDTTY UI version 1.6.
 
+
+****** Changes as of version 31.59 ******
+
+The database has been updated to reflect the 1995 changes in the
+C3A and C3B lists.
 
 ****** Changes as of version 31.58 ******
 

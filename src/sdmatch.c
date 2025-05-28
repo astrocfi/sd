@@ -873,7 +873,7 @@ static void match_grand(Cstring user, concept_descriptor *grand_concept, char *p
    for (i = 0; i < menu_length; i++) {
       concept_descriptor *this_concept = &concept_descriptor_table[*item];
 
-      if (concept_table[this_concept->kind].concept_prop & CONCPROP__PARSE_DIRECTLY) {
+      if (this_concept->miscflags & 4) {
          new_result.index = *item;
          new_result.yield_depth = result->yield_depth + 1;
          p2b.car = this_concept->name;
@@ -1000,12 +1000,14 @@ static void search_menu(uims_reply kind)
    
       for (i = 0; i < menu_length; i++) {
          concept_descriptor *this_concept = &concept_descriptor_table[*item];
-         concept_descriptor *grand_concept = this_concept;
+         concept_descriptor *grand_concept = (concept_descriptor *) 0;
          *call_menu_ptr = static_ss.call_menu;
          result.index = *item;
          result.yield_depth = (this_concept->miscflags & 2) ? 1 : 0;
-         if (!(concept_table[this_concept->kind].concept_prop & CONCPROP__PARSE_DIRECTLY))
-            grand_concept = (concept_descriptor *) 0;
+
+         if (this_concept->miscflags & 4)
+            grand_concept = this_concept;
+
          match_pattern(this_concept->name, &result, grand_concept);
          item++;
       }

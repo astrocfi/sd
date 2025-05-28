@@ -25,9 +25,10 @@
 #define UI_VERSION_STRING "1.8dialog"
 
 /* This defines the following functions:
+   uims_version_string
    uims_process_command_line
    uims_display_help
-   uims_version_string
+   uims_display_ui_intro_text
    uims_preinitialize
    uims_create_menu
    uims_postinitialize
@@ -397,8 +398,14 @@ extern void uims_process_command_line(int *argcp, char ***argvp)
 
 extern void uims_display_help(void)
 {
-   /* Hence, we have nothing to say. */
+   /* We have nothing to say. */
 }
+
+extern void uims_display_ui_intro_text(void)
+{
+   /* We have nothing to say. */
+}
+
 
 /*
 The main program calls this before any of the call menus are

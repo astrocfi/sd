@@ -1190,7 +1190,7 @@ extern void distorted_move(
                ss->rotation++;
                canonicalize_rotation(ss);
             }
-            map_ptr = &map_o_s2x4_3;
+            map_ptr = (livemask & 1) ? &map_x_s2x4_3 : &map_o_s2x4_3;
             disttest = disttest_offset;  /* We know what we are doing -- shut off the error message. */
             goto do_divided_call;
          }

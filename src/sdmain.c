@@ -27,7 +27,7 @@
     General Public License if you distribute the file.
 */
 
-#define VERSION_STRING "31.58"
+#define VERSION_STRING "31.59"
 
 /* We cause this string (that is, the concatentaion of these strings) to appear
    in the binary image of the program, so that the "what" and "ident" utilities
@@ -90,7 +90,6 @@ and the following external variables:
    allowing_modifications
    allowing_all_concepts
    using_active_phantoms
-   resolver_is_unwieldy
    current_selector
    current_direction
    current_number_fields
@@ -161,7 +160,6 @@ int number_for_initialize;
 int allowing_modifications = 0;
 long_boolean allowing_all_concepts = FALSE;
 long_boolean using_active_phantoms = FALSE;
-long_boolean resolver_is_unwieldy = FALSE;
 long_boolean diagnostic_mode = FALSE;
 selector_kind current_selector;
 direction_kind current_direction;
@@ -1467,13 +1465,7 @@ void main(int argc, char *argv[])
       writestuff("   welcome to redistribute it.");
       newline();
       newline();
-      writestuff("At any time that you don't know what you can type,");
-      newline();
-      writestuff("type a question mark.  The program will show you all");
-      newline();
-      writestuff("legal choices.");
-      newline();
-      newline();
+      uims_display_ui_intro_text();   /* Sdtty shows additional stuff about typing question mark. */
    }
 
    show_banner:
