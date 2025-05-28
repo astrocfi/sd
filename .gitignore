@@ -565,9 +565,21 @@ TSWLatexianTemp*
 
 ## TAR and ZIP
 
+*.gz
 *.tar
 *.tar.gz
 *.tar.bz2
 *.zip
 *.7z
 *.rar
+
+## SD-specific
+
+*.tmp
+sd_calls.*cache
+sd_calls.dat
+sd
+sdtty
+mkcalls
+crfix
+sample.html
