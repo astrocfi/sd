@@ -16,9 +16,16 @@
 
 #include <stdio.h>
 
+// Figure out how to do dll linkage.  If the source file that includes this
+// had "SDLIB_EXPORTS" set (which it will if it's a file for sdlib.dll),
+// make symbols "export" type.  Otherwise, make them "import" type.
+// Unless this isn't for the WIN32 API at all, in which case make the
+// "SDLIB_API" symbol do nothing.
 
-#ifdef WIN32
-#ifndef SDLIB_API
+#if defined(WIN32)
+#if defined(SDLIB_EXPORTS) 
+#define SDLIB_API __declspec(dllexport)
+#else
 #define SDLIB_API __declspec(dllimport)
 #endif
 #else
@@ -35,11 +42,11 @@
 // idea.  Microsoft doesn't even try, and raises a warning (How thoughtful!
 // See flaming below.) if we use them.
 
-//#define USE_THROW
+#define USE_THROW
 
 #if defined USE_THROW
 
-#if defined(WIN32)
+#if defined(_MSC_VER)
 // Microsoft can't be bothered to support C++ exception declarations
 // properly, but this pragma at least makes the compiler not complain.
 // Geez!  If I wanted to use compilers that whine and wail
@@ -62,6 +69,36 @@
 #include "database.h"
 
 #define MAX_PEOPLE 24
+
+
+enum error_flag_type {
+   error_flag_none = 0,          // Must be zero because setjmp returns this.
+                                 // (Of course, we haven't used setjmp since March, 2000.)
+   error_flag_1_line,            // 1-line error message, text is in error_message1.
+   error_flag_2_line,            // 2-line error message, text is in error_message1 and
+                                 // error_message2.
+   error_flag_collision,         // collision error, message is that people collided, they are in
+                                 // collision_person1 and collision_person2.
+   error_flag_cant_execute,      // unable-to-execute error, person is in collision_person1,
+                                 // text is in error_message1.
+
+   // Errors after this can't be restarted by the mechanism that goes on to the
+   // call's next definition when a call execution fails.
+   // "Error_flag_no_retry" is the indicator for this.
+
+   error_flag_no_retry,          // Like error_flag_1_line, but it is instantly fatal.
+
+   // Errors after this did not arise from call execution, so we don't
+   // show the ending formation.  "Error_flag_wrong_command" is the indicator for this.
+
+   error_flag_wrong_command,     // clicked on something inappropriate in subcall reader.
+   error_flag_wrong_resolve_command, // "resolve" or similar command was called
+                                     // in inappropriate context, text is in error_message1.
+   error_flag_show_stats,        // wants to display stale call statistics.
+   error_flag_selector_changed,  // warn that selector was changed during clipboard paste.
+   error_flag_formation_changed  // warn that formation changed during clipboard paste.
+};
+
 
 
 // In several places in this program, we use C-style static aggregate
@@ -124,11 +161,13 @@ class ui_option_type {
                           // are always done with bold colors.
    color_scheme_type color_scheme;
    int no_sound;
+   int force_session;
    int sequence_num_override;
-   long_boolean singlespace_mode;
-   long_boolean nowarn_mode;
-   long_boolean accept_single_click;
-   long_boolean diagnostic_mode;
+   bool singlespace_mode;
+   bool nowarn_mode;
+   bool keep_all_pictures;
+   bool accept_single_click;
+   bool diagnostic_mode;
    int resolve_test_minutes;
    int singing_call_mode;
 
@@ -696,19 +735,19 @@ struct call_with_name {
 
 struct parse_block {
    const conzept::concept_descriptor *concept; // the concept or end marker
-   call_with_name *call;          /* if this is end mark, gives the call; otherwise unused */
-   call_with_name *call_to_print; /* the original call, for printing (sometimes the field
-                                     above gets changed temporarily) */
-   parse_block *next;             /* next concept, or, if this is end mark,
-                                     points to substitution list */
-   parse_block *subsidiary_root;  /* for concepts that take a second call,
-                                     this is its parse root */
-   parse_block *gc_ptr;           /* used for reclaiming dead blocks */
-   call_conc_option_state options;/* number, selector, direction, etc. */
-   short replacement_key;         /* this is the "DFM1_CALL_MOD_MASK" stuff
-                                     (shifted down) for a modification block */
-   short no_check_call_level;     /* if nonzero, don't check whether this call
-                                     is at the level. */
+   call_with_name *call;          // if this is end mark, gives the call; otherwise unused
+   call_with_name *call_to_print; // the original call, for printing (sometimes the field
+                                  // above gets changed temporarily)
+   parse_block *next;             // next concept, or, if this is end mark,
+                                  // points to substitution list
+   parse_block *subsidiary_root;  // for concepts that take a second call,
+                                  // this is its parse root
+   parse_block *gc_ptr;           // used for reclaiming dead blocks
+   call_conc_option_state options;// number, selector, direction, etc.
+   short replacement_key;         // this is the "DFM1_CALL_MOD_MASK" stuff
+                                  // (shifted down) for a modification block
+   short no_check_call_level;     // if nonzero, don't check whether this call
+                                  // is at the level
 };
 
 // For ui_command_select:
@@ -717,9 +756,9 @@ struct parse_block {
 // to the array "title_string" in sdgetout.cpp, and maybe stuff in the UI.
 // For example, see "command_menu" in sdmain.cpp.
 
-/* BEWARE!!  The order is slightly significant -- all search-type commands
-   are >= command_resolve, and all "create some setup" commands
-   are >= command_create_any_lines.  Certain tests are made easier by this. */
+// BEWARE!!  The order is slightly significant -- all search-type commands
+// are >= command_resolve, and all "create some setup" commands
+// are >= command_create_any_lines.  Certain tests are made easier by this.
 enum command_kind {
    command_quit,
    command_undo,
@@ -744,6 +783,7 @@ enum command_kind {
    command_toggle_act_phan,
    command_toggle_retain_after_error,
    command_toggle_nowarn_mode,
+   command_toggle_keepallpic_mode,
    command_toggle_singleclick_mode,
    command_select_print_font,
    command_print_current,
@@ -810,6 +850,7 @@ enum start_select_kind {
    start_select_toggle_act,
    start_select_toggle_retain,
    start_select_toggle_nowarn_mode,
+   start_select_toggle_keepallpic_mode,
    start_select_toggle_singleclick_mode,
    start_select_toggle_singer,
    start_select_toggle_singer_backward,
@@ -1121,6 +1162,8 @@ struct setup_command {
    parse_block **restrained_final;
    uint32 restrained_fraction;
    uint32 restrained_super8flags;
+   bool restrained_do_as_couples;
+   uint32 restrained_super9flags;
    parse_block *skippable_concept;
 };
 
@@ -1215,7 +1258,7 @@ class conc_tables {
 
 struct predicate_descriptor {
    // We wish we could put a "throw" clause on this function, but we can't.
-   long_boolean (*predfunc) (setup *, int, int, int, const long int *);
+   bool (*predfunc) (setup *, int, int, int, const long int *);
    const long int *extra_stuff;
 };
 
@@ -1740,7 +1783,7 @@ class tglmap {
 
 struct startinfo {
    char *name;
-   long_boolean into_the_middle;
+   bool into_the_middle;
    setup the_setup;
 };
 
@@ -1864,31 +1907,31 @@ enum warning_index {
 };
 
 struct matrix_rec {
-   int x;                  // This person's coordinates, calibrated so that a matrix
-   int y;                  //   position cooresponds to an increase by 4.
-   int nicex;              // This person's "nice" coordinates, used for
-   int nicey;              //   calculating jay walk legality.
-   uint32 id1;             // The actual person, for error printing.
-   long_boolean sel;       // True if this person is selected.  (False if selectors not in use.)
-   bool done;              // Used for loop control on each pass.
-   bool realdone;          // Used for loop control on each pass.
-   uint32 jbits;           // Bit mask for all possible jaywalkees.
-   int boybit;             // 1 if boy, 0 if not (might be neither).
-   int girlbit;            // 1 if girl, 0 if not (might be neither).
-   int dir;                // This person's initial facing direction, 0 to 3.
-   int deltax;             // How this person will move, relative to his own facing
-   int deltay;             //   direction, when call is finally executed.
-   int nearest;            // Forward distance to nearest jaywalkee.
-   int leftidx;            // X-increment of leftmost valid jaywalkee.
-   int rightidx;           // X-increment of rightmost valid jaywalkee.
-   int deltarot;           // How this person will turn.
+   int x;              // This person's coordinates, calibrated so that a matrix
+   int y;              //   position cooresponds to an increase by 4.
+   int nicex;          // This person's "nice" coordinates, used for
+   int nicey;          //   calculating jay walk legality.
+   uint32 id1;         // The actual person, for error printing.
+   bool sel;           // True if this person is selected.  (False if selectors not in use.)
+   bool done;          // Used for loop control on each pass.
+   bool realdone;      // Used for loop control on each pass.
+   uint32 jbits;       // Bit mask for all possible jaywalkees.
+   int boybit;         // 1 if boy, 0 if not (might be neither).
+   int girlbit;        // 1 if girl, 0 if not (might be neither).
+   int dir;            // This person's initial facing direction, 0 to 3.
+   int deltax;         // How this person will move, relative to his own facing
+   int deltay;         //   direction, when call is finally executed.
+   int nearest;        // Forward distance to nearest jaywalkee.
+   int leftidx;        // X-increment of leftmost valid jaywalkee.
+   int rightidx;       // X-increment of rightmost valid jaywalkee.
+   int deltarot;       // How this person will turn.
    uint32 roll_stability_info; // This person's roll & stability info, from call def'n.
    int orig_source_idx;
-   matrix_rec *nextse;     // Points to next person south (dir even) or east (dir odd.)
-   matrix_rec *nextnw;     // Points to next person north (dir even) or west (dir odd.)
-   bool far_squeezer;      // This person's pairing is due to being far from someone.
-   bool tbstopse;          // True if nextse/nextnw is zero because the next spot
-   bool tbstopnw;          //   is occupied by a T-boned person (as opposed to being empty.)
+   matrix_rec *nextse; // Points to next person south (dir even) or east (dir odd.)
+   matrix_rec *nextnw; // Points to next person north (dir even) or west (dir odd.)
+   bool far_squeezer;  // This person's pairing is due to being far from someone.
+   bool tbstopse;      // True if nextse/nextnw is zero because the next spot
+   bool tbstopnw;      //   is occupied by a T-boned person (as opposed to being empty.)
 };
 
 
@@ -1946,7 +1989,7 @@ struct setup_attr {
 
    // This is true if the setup has 4-way symmetry.  Such setups will always be
    // canonicalized so that their rotation field will be zero.
-   long_boolean four_way_symmetry;
+   bool four_way_symmetry;
 
       // This is the bit table for filling in the "ID2" bits.
    const id_bit_table *id_bit_table_ptr;
@@ -1978,7 +2021,7 @@ struct writechar_block_type {
    char lastchar;
    char lastlastchar;
    char *lastblank;
-   long_boolean usurping_writechar;
+   bool usurping_writechar;
 };
 
 
@@ -2132,9 +2175,9 @@ struct modifier_block {
 };
 
 struct match_result {
-   long_boolean valid;       // Set to TRUE if a match was found.
-   long_boolean exact;       // Set to TRUE if an exact match was found.
-   long_boolean indent;      // This is a subordinate call; indent it in listing.
+   bool valid;               // Set to true if a match was found.
+   bool exact;               // Set to true if an exact match was found.
+   bool indent;              // This is a subordinate call; indent it in listing.
    modifier_block match;     // The little thing we actually return.
    const match_result *real_next_subcall;
    const match_result *real_secondary_subcall;
@@ -2197,11 +2240,15 @@ enum call_list_kind {
    call_list_extent    // Not a start call_list kind; indicates extent of the enum.
 };
 
-enum call_list_mode_t {
-   call_list_mode_none,
-   call_list_mode_writing,
-   call_list_mode_writing_full,
-   call_list_mode_abridging
+// BEWARE!!  Order is important.  Various comparisons are made.
+enum abridge_mode_t {
+   abridge_mode_none,             // Running, no abridgement.
+   abridge_mode_deleting_abridge, // Like the above, but user has explicitly
+                                  // requested that the abridgement specified for
+                                  // the current session be removed.
+   abridge_mode_abridging,        // Running, with abridgement list.
+   abridge_mode_writing,          // Just writing the list; don't run the program itself.
+   abridge_mode_writing_full      // Same, but write all lower lists as well.
 };
 
 struct parse_stack_item {
@@ -2429,7 +2476,7 @@ enum {
    RESULTFLAG__ACTIVE_PHANTOMS_OFF  = 0x00004000UL,
    RESULTFLAG__EXPAND_TO_2X3        = 0x00008000UL,
 
-// This is a four bit field.
+   // This is a four bit field.
    RESULTFLAG__EXPIRATION_BITS      = 0x000F0000UL,
    RESULTFLAG__YOYO_EXPIRED         = 0x00010000UL,
    RESULTFLAG__TWISTED_EXPIRED      = 0x00020000UL,
@@ -2799,34 +2846,6 @@ struct concept_table_item{
    void (*concept_action)(setup *, parse_block *, setup *);
 };
 
-enum error_flag_type {
-   error_flag_none = 0,          // Must be zero because setjmp returns this.
-                                 // (Of course, we haven't used setjmp since March, 2000.)
-   error_flag_1_line,            // 1-line error message, text is in error_message1.
-   error_flag_2_line,            // 2-line error message, text is in error_message1 and
-                                 // error_message2.
-   error_flag_collision,         // collision error, message is that people collided, they are in
-                                 // collision_person1 and collision_person2.
-   error_flag_cant_execute,      // unable-to-execute error, person is in collision_person1,
-                                 // text is in error_message1.
-
-   // Errors after this can't be restarted by the mechanism that goes on to the
-   // call's next definition when a call execution fails.
-   // "Error_flag_no_retry" is the indicator for this.
-
-   error_flag_no_retry,          // Like error_flag_1_line, but it is instantly fatal.
-
-   // Errors after this did not arise from call execution, so we don't
-   // show the ending formation.  "Error_flag_wrong_command" is the indicator for this.
-
-   error_flag_wrong_command,     // clicked on something inappropriate in subcall reader.
-   error_flag_wrong_resolve_command, // "resolve" or similar command was called
-                                     // in inappropriate context, text is in error_message1.
-   error_flag_show_stats,        // wants to display stale call statistics.
-   error_flag_selector_changed,  // warn that selector was changed during clipboard paste.
-   error_flag_formation_changed  // warn that formation changed during clipboard paste.
-};
-
 
 static const dance_level dixie_grand_level = l_plus;
 static const dance_level extend_34_level = l_plus;
@@ -3166,6 +3185,7 @@ enum {
 
 enum normalize_action {
    simple_normalize,
+   normalize_after_exchange_boxes,
    normalize_before_isolated_call,
    normalize_before_isolate_not_too_strict,
    normalize_to_6,
@@ -3344,8 +3364,8 @@ struct concept_fixer_thing {
 };
 
 enum selective_key {
-   /* Warning!!!!  Order is important!  See all the stupid ways these are used
-      in sdconc.c . */
+   // Warning!!!!  Order is important!  See all the stupid ways these are used
+   // in sdconc.cpp.
    selective_key_dyp,
    selective_key_own,
    selective_key_plain_no_live_subsets,  // there is an
@@ -3425,13 +3445,12 @@ extern SDLIB_API int session_index;                           // in SDSI
 extern int random_number;                                     // in SDSI
 extern SDLIB_API char *database_filename;                     // in SDSI
 extern SDLIB_API char *new_outfile_string;                    // in SDSI
-extern SDLIB_API char *call_list_string;                      // in SDSI
-extern FILE *call_list_file;                                  // in SDSI
+extern SDLIB_API char abridge_filename[MAX_TEXT_LINE_LENGTH]; // in SDSI
 extern long_boolean outfile_special;                          // in SDSI
 
-extern SDLIB_API long_boolean showing_has_stopped;            // in SDMATCH
+extern SDLIB_API bool showing_has_stopped;                    // in SDMATCH
 extern SDLIB_API match_result GLOB_match;                     // in SDMATCH
-extern SDLIB_API int GLOB_space_ok;                           // in SDMATCH
+extern SDLIB_API bool GLOB_space_ok;                          // in SDMATCH
 extern SDLIB_API int GLOB_yielding_matches;                   // in SDMATCH
 extern SDLIB_API char GLOB_user_input[];                      // in SDMATCH
 extern SDLIB_API char GLOB_full_extension[];                  // in SDMATCH
@@ -3521,7 +3540,7 @@ class iobase {
    virtual int do_modifier_popup(Cstring callname, modify_popup_kind kind) = 0;
    virtual int do_comment_popup(char dest[]) = 0;
    virtual uint32 get_number_fields(int nnumbers, long_boolean forbid_zero) = 0;
-   virtual long_boolean get_call_command(uims_reply *reply_p) = 0;
+   virtual bool get_call_command(uims_reply *reply_p) = 0;
    virtual void set_pick_string(const char *string) = 0;
    virtual void display_help() = 0;
    virtual void terminate(int code) = 0;
@@ -3564,7 +3583,7 @@ class iofull : public iobase {
    void set_pick_string(const char *string);
    int do_comment_popup(char dest[]);
    uint32 get_number_fields(int nnumbers, long_boolean forbid_zero);
-   long_boolean get_call_command(uims_reply *reply_p);
+   bool get_call_command(uims_reply *reply_p);
    void display_help();
    void terminate(int code);
    void process_command_line(int *argcp, char ***argvp);
@@ -3606,7 +3625,7 @@ extern SDLIB_API start_select_kind *startup_command_values;         /* in SDTOP 
 extern SDLIB_API int number_of_resolve_commands;                    /* in SDTOP */
 extern SDLIB_API Cstring* resolve_command_strings;                  /* in SDTOP */
 extern SDLIB_API resolve_command_kind *resolve_command_values;      /* in SDTOP */
-extern SDLIB_API call_list_mode_t glob_call_list_mode;              /* in SDTOP */
+extern SDLIB_API abridge_mode_t glob_abridge_mode;                  /* in SDTOP */
 extern SDLIB_API int abs_max_calls;                                 /* in SDTOP */
 extern SDLIB_API int max_base_calls;                                /* in SDTOP */
 extern SDLIB_API Cstring *tagger_menu_list[NUM_TAGGER_CLASSES];     /* in SDTOP */
@@ -3649,7 +3668,7 @@ extern SDLIB_API int global_age;                                    /* in SDUTIL
 extern bool global_leave_missing_calls_blank;                       /* in SDUTIL */
 extern configuration *clipboard;                                    /* in SDUTIL */
 extern int clipboard_size;                                          /* in SDUTIL */
-extern SDLIB_API long_boolean wrote_a_sequence;                     /* in SDUTIL */
+extern SDLIB_API bool wrote_a_sequence;                             /* in SDUTIL */
 extern bool retain_after_error;                                     /* in SDUTIL */
 extern SDLIB_API char outfile_string[MAX_FILENAME_LENGTH];          /* in SDUTIL */
 extern SDLIB_API char header_comment[MAX_TEXT_LINE_LENGTH];         /* in SDUTIL */
@@ -4031,7 +4050,7 @@ extern const clw3_thing clw3_table[];                               /* in SDTABL
 
 /* In SDPREDS */
 
-extern long_boolean selectp(setup *ss, int place) THROW_DECL;
+extern bool selectp(setup *ss, int place) THROW_DECL;
 
 /* In SDGETOUT */
 
@@ -4333,7 +4352,9 @@ extern void selective_move(
    setup *ss,
    parse_block *parseptr,
    selective_key indicator,
-   long_boolean others,
+   int others,  // -1 - only selectees do the call, others can still roll
+                //  0 - only selectees do the call, others can't roll
+                //  1 - both sets
    uint32 arg2,
    uint32 override_selector,
    selector_kind selector_to_use,
@@ -4345,7 +4366,9 @@ extern void inner_selective_move(
    setup_command *cmd1,
    setup_command *cmd2,
    selective_key indicator,
-   long_boolean others,
+   int others,  // -1 - only selectees do the call, others can still roll
+                //  0 - only selectees do the call, others can't roll
+                //  1 - both sets
    uint32 arg2,
    uint32 override_selector,
    selector_kind selector_to_use,
@@ -4472,7 +4495,7 @@ void toplevelmove() THROW_DECL;
 
 void finish_toplevelmove() THROW_DECL;
 
-SDLIB_API long_boolean deposit_call_tree(modifier_block *anythings, parse_block *save1, int key);
+SDLIB_API bool deposit_call_tree(modifier_block *anythings, parse_block *save1, int key);
 
 extern long_boolean do_subcall_query(
    int snumber,
@@ -4606,25 +4629,20 @@ void run_program();
 /* In SDINIT */
 
 
-long_boolean install_outfile_string(char newstring[]);
-SDLIB_API long_boolean get_first_session_line();
-SDLIB_API long_boolean get_next_session_line(char *dest);
-void prepare_to_read_menus();
-SDLIB_API int process_session_info(Cstring *error_msg);
-SDLIB_API void open_call_list_file(char filename[]);
-void just_close_init_file();
-void close_init_file();
-SDLIB_API void general_final_exit(int code);
-long_boolean open_database(char *msg1, char *msg2);
-uint32 read_8_from_database();
-uint32 read_16_from_database();
-void close_database();
-extern long_boolean open_session(int argc, char **argv);
+SDLIB_API bool parse_level(Cstring s);
 void start_sel_dir_num_iterator();
 long_boolean iterate_over_sel_dir_num(
    long_boolean enable_selector_iteration,
    long_boolean enable_direction_iteration,
    long_boolean enable_number_iteration);
+long_boolean install_outfile_string(char newstring[]);
+SDLIB_API bool get_first_session_line();
+SDLIB_API bool get_next_session_line(char *dest);
+void prepare_to_read_menus();
+SDLIB_API int process_session_info(Cstring *error_msg);
+void close_init_file();
+SDLIB_API void general_final_exit(int code);
+extern bool open_session(int argc, char **argv);
 
 /* In SDMATCH */
 
@@ -4733,10 +4751,6 @@ SDLIB_API void get_date(char dest[]);
 extern char *get_errstring();
 SDLIB_API void open_file();
 SDLIB_API void close_file();
-SDLIB_API long_boolean parse_level(Cstring s, dance_level *levelp);
-SDLIB_API char *read_from_call_list_file(char name[], int n);
-SDLIB_API void write_to_call_list_file(const char name[]);
-SDLIB_API void close_call_list_file();
 SDLIB_API void write_file(char line[]);
 
 /* in SDMAIN */

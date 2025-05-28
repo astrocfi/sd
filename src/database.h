@@ -82,7 +82,7 @@ typedef const char *Cstring;
    database format version. */
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 204
+#define DATABASE_FORMAT_VERSION 206
 
 // BEWARE!!  These must track the items in "tagtabinit" in dbcomp.cpp .
 enum base_call_index {
@@ -255,7 +255,8 @@ enum {
    CFLAG2_CAN_BE_FAN                = 0x02000000UL,
    CFLAG2_EQUALIZE                  = 0x04000000UL,
    CFLAG2_ONE_PERSON_CALL           = 0x08000000UL,
-   CFLAG2_YIELD_IF_AMBIGUOUS        = 0x10000000UL
+   CFLAG2_YIELD_IF_AMBIGUOUS        = 0x10000000UL,
+   CFLAG2_DO_EXCHANGE_COMPRESS      = 0x20000000UL
 };
 
 // Beware!!  This list must track the table "matrixcallflagtab" in dbcomp.cpp .
@@ -688,6 +689,8 @@ enum call_restriction {
    cr_diamond_like,
    cr_qtag_like,
    cr_pu_qtag_like,
+   cr_conc_iosame,
+   cr_conc_iodiff,
    cr_reg_tbone,
    cr_gen_qbox,            // Qualifier only.
    cr_nice_diamonds,

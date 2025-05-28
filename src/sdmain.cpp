@@ -21,8 +21,8 @@
     General Public License if you distribute the file.
 */
 
-#define VERSION_STRING "34.8j"
-#define TIME_STAMP "wba@alum.mit.edu  23 February 2003 $"
+#define VERSION_STRING "34.8m"
+#define TIME_STAMP "wba@alum.mit.edu  1 May 2003 $"
 
 /* This defines the following functions:
    sd_version_string
@@ -42,12 +42,6 @@ and the following external variables:
 
 #include <stdio.h>
 #include <string.h>
-
-#ifdef WIN32
-#define SDLIB_API __declspec(dllexport)
-#else
-#define SDLIB_API
-#endif
 
 #include "sd.h"
 #include "paths.h"
@@ -114,6 +108,7 @@ command_list_menu_item command_menu[] = {
    {"toggle minigrand getouts",       command_toggle_minigrand, -1},
    {"toggle retain after error",      command_toggle_retain_after_error, -1},
    {"toggle nowarn mode",             command_toggle_nowarn_mode, -1},
+   {"toggle keep all pictures",       command_toggle_keepallpic_mode, -1},
    {"toggle singleclick mode",        command_toggle_singleclick_mode, -1},
    {"choose font for printing",       command_select_print_font, ID_FILE_CHOOSE_FONT},
    {"print current file",             command_print_current, ID_FILE_PRINTTHIS},
@@ -199,6 +194,7 @@ startup_list_menu_item startup_menu[] = {
    {"toggle singlespace mode",     start_select_toggle_singlespace, -1},
    {"toggle retain after error",   start_select_toggle_retain, -1},
    {"toggle nowarn mode",          start_select_toggle_nowarn_mode, -1},
+   {"toggle keep all pictures",    start_select_toggle_keepallpic_mode, -1},
    {"toggle singleclick mode",     start_select_toggle_singleclick_mode, -1},
    {"toggle singing call",         start_select_toggle_singer, -1},
    {"toggle reverse singing call", start_select_toggle_singer_backward, -1},
@@ -773,6 +769,9 @@ extern long_boolean query_for_call()
          case command_toggle_nowarn_mode:
             ui_options.nowarn_mode = !ui_options.nowarn_mode;
             goto check_menu;
+         case command_toggle_keepallpic_mode:
+            ui_options.keep_all_pictures = !ui_options.keep_all_pictures;
+            goto check_menu;
          case command_toggle_singleclick_mode:
             ui_options.accept_single_click = !ui_options.accept_single_click;
             goto check_menu;
@@ -872,11 +871,13 @@ ui_option_type::ui_option_type() :
    pastel_color(0),
    color_scheme(color_by_gender),
    no_sound(0),
+   force_session(-1000000),
    sequence_num_override(-1),
-   singlespace_mode(FALSE),
-   nowarn_mode(FALSE),
-   accept_single_click(FALSE),
-   diagnostic_mode(FALSE),
+   singlespace_mode(false),
+   nowarn_mode(false),
+   keep_all_pictures(false),
+   accept_single_click(false),
+   diagnostic_mode(false),
    resolve_test_minutes(0),
    singing_call_mode(0),
    use_escapes_for_drawing_people(0),
@@ -896,9 +897,11 @@ extern int sdmain(int argc, char *argv[])
              sd_version_string(), gg->version_string());
       printf("Usage: sd [flags ...] level\n");
       printf("  legal flags:\n");
-      printf("-write_list filename        write out list for this level\n");
-      printf("-write_full_list filename   write this list and all lower\n");
-      printf("-abridge filename           do not use calls in this file\n");
+      printf("-write_list <filename>      write out list for this level\n");
+      printf("-write_full_list <filename> write this list and all lower\n");
+      printf("-abridge <filename>         do not use calls in this file\n");
+      printf("-delete_abridge             delete abridgement from existing session\n");
+      printf("-session <n>                use the indicated session number\n");
       printf("-no_checkers                do not use large \"checkers\" for setup display\n");
       printf("-no_graphics                do not use special characters for setup display\n");
       printf("-reverse_video              (Sd only) display transcript in white-on-black\n");
@@ -912,13 +915,14 @@ extern int sdmain(int argc, char *argv[])
       printf("-no_sound                   do not make any noise when an error occurs\n");
       printf("-no_intensify               show text in the normal shade instead of extra-bright\n");
       printf("-singlespace                single space the output file\n");
+      printf("-keep_all_pictures          keep the picture after every call\n");
       printf("-single_click               (Sd only) act on single mouse clicks on the menu\n");
       printf("-minigrand_getouts          allow \"mini-grand\" (RLG but promenade on 3rd hand) getouts\n");
       printf("-concept_levels             allow concepts from any level\n");
       printf("-no_warnings                do not display or print any warning messages\n");
       printf("-retain_after_error         retain pending concepts after error\n");
       printf("-active_phantoms            use active phantoms for \"assume\" operations\n");
-      printf("-sequence filename          base name for sequence output file (def \""
+      printf("-sequence <filename>        base name for sequence output file (def \""
              SEQUENCE_FILENAME
              "\")\n");
       printf("-old_style_filename         use short file name, as in \""
@@ -927,10 +931,10 @@ extern int sdmain(int argc, char *argv[])
       printf("-new_style_filename         use long file name, as in \""
              SEQUENCE_FILENAME
              "_MS.txt\"\n");
-      printf("-db filename                calls database file (def \""
+      printf("-db <filename>              calls database file (def \""
              DATABASE_FILENAME
              "\")\n");
-      printf("-sequence_num n             use this initial sequence number\n");
+      printf("-sequence_num <n>           use this initial sequence number\n");
 
       gg->display_help(); // Get any others that the UI wants to tell us about.
       general_final_exit(0);
@@ -940,6 +944,7 @@ extern int sdmain(int argc, char *argv[])
    interactivity = interactivity_database_init;
    testing_fidelity = FALSE;
    header_comment[0] = 0;
+   abridge_filename[0] = 0;
    verify_options.who = selector_uninitialized;
    verify_options.number_fields = 0;
    verify_options.howmanynumbers = 0;

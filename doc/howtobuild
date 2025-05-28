@@ -2,7 +2,7 @@
           HOW TO RELEASE A NEW VERSION OF SD
 
      This file is \wba\sddoc\howtobuild.
-        Last modified 19 May 2002.
+        Last modified 1 May 2003.
 
 -----------------------------------------------------------------
 
@@ -82,20 +82,14 @@ Go to sddoc directory and do:
 15 May 02  -  15 Jul 02  #16
 15 Jul 02  -  1  Sep 02  #17
 1  Sep 02  -  16 Jan 03  #18
-16 Jan 03  -             #19
+16 Jan 03  -  1  May 03  #19
+1  May 03  -             #20
 -----------------------------------------------------------------
 
                TESTING AND PRODUCTION BUILD - DJGPP
 
 This is not done any more .....
-###   Build and test the optimized version from GCC:
-###       setopt
-###       [del *.o if necessary to force build]
-###       make
-###       cd regress
-###       del *.tmp
-###       doit
-If this is done, do not distribute this.  It stinks.
+If it is done, do not distribute it.  It stinks.
 
 Build and test the optimized version from DJGPP.
 This should be done on Windows NT4.0, not Windows 2000 or any similar
@@ -278,7 +272,6 @@ pdfdoc                      *      *
 psdoc                       *      *
 textdoc                     *      *
 install                                  *
-install3                                 *
 
 
 cd sddoc
@@ -293,6 +286,22 @@ ftp atlas
 telnet atlas
             (user=wba)
             (pass=x464pq)
+
+
+
+***** NEW stuff:   server is scotch.ics.uci.edu
+
+From atlas, can do
+   ssh -l ackerman scotch.ics.uci.edu
+   (pw = 12b0z0s)
+   dir will appear to be /home/ackerman,
+   is actually /home/lynette/public-html/sd, which is where the web pages are.
+
+Or, presumably, from atlas:
+   scp pack.zip ackerman@scotch.ics.uci.edu:pack.zip
+            (pass=12b0z0s)
+
+
    # send file from atlas to goblin, in /home/wba
    scp pack.zip wba@goblin.jaws.umn.edu:pack.zip
             (pass=wba;sd)

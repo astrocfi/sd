@@ -186,7 +186,7 @@ BEGIN
                     IDC_STATIC,43,9,159,8
     CTEXT           "This program may be freely distributed.",IDC_STATIC,43,
                     19,159,8
-    CTEXT           "SD Version 34.8m:   Copyright © 1990-2003 All rights reserved.",
+    CTEXT           "SD Version 34.8j:   Copyright © 1990-2003 All rights reserved.",
                     IDC_STATIC,13,32,199,8
     CTEXT           "William B. Ackerman and Stephen Gildea",IDC_STATIC,47,
                     42,130,8
@@ -233,10 +233,10 @@ BEGIN
                     BS_CENTER
     CONTROL         "Normal operation",IDC_NORMAL,"Button",
                     BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,263,178,80,10
-    CONTROL         "Write list",IDC_WRITE_LIST,"Button",BS_AUTORADIOBUTTON,
-                    263,193,56,10
-    CONTROL         "Write full list",IDC_WRITE_FULL_LIST,"Button",
-                    BS_AUTORADIOBUTTON,263,208,76,10
+    CONTROL         "Save list",IDC_WRITE_LIST,"Button",BS_AUTORADIOBUTTON,
+                    263,193,52,10
+    CONTROL         "Save full list",IDC_WRITE_FULL_LIST,"Button",
+                    BS_AUTORADIOBUTTON,263,208,72,10
     CONTROL         "Use abridged list",IDC_ABRIDGE,"Button",
                     BS_AUTORADIOBUTTON,263,223,84,10
     CONTROL         "Delete abridgement",IDC_CANCEL_ABRIDGE,"Button",

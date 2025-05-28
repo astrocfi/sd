@@ -13,6 +13,7 @@
     This is for version 32. */
 
 /* This defines the following functions:
+   parse_level
    start_sel_dir_num_iterator
    iterate_over_sel_dir_num
    install_outfile_string
@@ -20,14 +21,8 @@
    get_next_session_line
    prepare_to_read_menus
    process_session_info
-   open_call_list_file
    close_init_file
-   just_close_init_file
    general_final_exit
-   open_database
-   read_8_from_database
-   read_16_from_database
-   close_database
    conzept::translate_concept_names
    open_session
 and the following external variables:
@@ -45,25 +40,21 @@ and the following external variables:
 #include <time.h>
 #include <ctype.h>
 
-#ifdef WIN32
-#define SDLIB_API __declspec(dllexport)
-#else
-#define SDLIB_API
-#endif
-
 #include "sd.h"
+#include "sort.h"
+#include "mapcachefile.h"
 
 selector_kind selector_for_initialize;
 direction_kind direction_for_initialize;
 int number_for_initialize;
 int *color_index_list;
 
-/* Global to this file. */
+// Global to this file.
 
 static call_with_name *empty_menu[] = {(call_with_name *) 0};
 
-/* This gets temporarily allocated.  It persists through the entire initialization. */
-static call_with_name **global_temp_call_list;
+// This gets temporarily allocated.  It persists through the entire initialization.
+static int *global_temp_call_indices;
 static int global_callcount;     /* Index into the above. */
 
 
@@ -114,9 +105,52 @@ static setup test_setup_l2fl = {s2x4, 0, {0}, {{SOUT|G3A, 0}, {SOUT|B4A, 0}, {NO
 static parse_block *parse_mark;
 static int call_index;
 static call_with_name *test_call;
-static long_boolean crossiness;
-static long_boolean magicness;
-static long_boolean intlkness;
+static bool crossiness;
+static bool magicness;
+static bool intlkness;
+
+
+extern bool parse_level(Cstring s)
+{
+   int len = strlen(s);
+   char *minuspos = strchr(s, '-');
+   if (minuspos) len = minuspos-s;
+
+   switch (s[0]) {
+      case 'm': case 'M': calling_level = l_mainstream; return true;
+      case 'p': case 'P': calling_level = l_plus; return true;
+      case 'a': case 'A':
+         if (s[1] == '1' && len == 2) calling_level = l_a1;
+         else if (s[1] == '2' && len == 2) calling_level = l_a2;
+         else if (s[1] == 'l' && s[2] == 'l' && len == 3) calling_level = l_dontshow;
+         else return false;
+         return true;
+      case 'c': case 'C':
+         if (s[1] == '3' && (s[2] == 'a' || s[2] == 'A') && len == 3)
+            calling_level = l_c3a;
+         else if (s[1] == '3' && (s[2] == 'x' || s[2] == 'X') && len == 3)
+            calling_level = l_c3x;
+         else if (s[1] == '4' && (s[2] == 'a' || s[2] == 'A') && len == 3)
+            calling_level = l_c4a;
+         else if (s[1] == '4' && (s[2] == 'x' || s[2] == 'X') && len == 3)
+            calling_level = l_c4x;
+         else {
+            if (len == 2) {
+               switch (s[1]) {
+                  case '1': calling_level = l_c1; return true;
+                  case '2': calling_level = l_c2; return true;
+                  case '3': calling_level = l_c3; return true;
+                  case '4': calling_level = l_c4; return true;
+                  default: return false;
+               }
+            }
+            else return false;
+         }
+         return true;
+      default:
+         return false;
+   }
+}
 
 
 void start_sel_dir_num_iterator()
@@ -236,11 +270,11 @@ static void test_starting_setup(call_list_kind cl, const setup *test_setup)
       try "ends" (for the call "fold"), "all", and finally "none" (for the call
       "run"), before giving up. */
 
-   intlkness = FALSE;
+   intlkness = false;
  try_another_intlk:
-   magicness = FALSE;
+   magicness = false;
  try_another_magic:
-   crossiness = FALSE;
+   crossiness = false;
  try_another_cross:
    start_sel_dir_num_iterator();
  try_another_selector:
@@ -296,34 +330,34 @@ static void test_starting_setup(call_list_kind cl, const setup *test_setup)
    }
    catch(error_flag_type) {
 
-      /* A call failed.  If the call had some mandatory substitution, pass it anyway. */
+      // A call failed.  If the call had some mandatory substitution, pass it anyway.
 
       if (mandatory_call_used) goto accept;
 
-      /* Or a bad choice of selector or number may be the cause.
-         Try different selectors first. */
+      // Or a bad choice of selector or number may be the cause.
+      // Try different selectors first.
 
       if (iterate_over_sel_dir_num(TRUE, TRUE, TRUE))
          goto try_another_selector;
 
-      /* Now try giving the "cross" modifier. */
+      // Now try giving the "cross" modifier.
 
       if ((test_call->the_defn.callflagsf & ESCAPE_WORD__CROSS) && !crossiness) {
-         crossiness = TRUE;
+         crossiness = true;
          goto try_another_cross;
       }
 
-      /* Now try giving the "magic" modifier. */
+      // Now try giving the "magic" modifier.
 
       if ((test_call->the_defn.callflagsf & ESCAPE_WORD__MAGIC) && !magicness) {
-         magicness = TRUE;
+         magicness = true;
          goto try_another_magic;
       }
 
-      /* Now try giving the "interlocked" modifier. */
+      // Now try giving the "interlocked" modifier.
 
       if ((test_call->the_defn.callflagsf & ESCAPE_WORD__INTLK) && !intlkness) {
-         intlkness = TRUE;
+         intlkness = true;
          goto try_another_intlk;
       }
 
@@ -331,215 +365,92 @@ static void test_starting_setup(call_list_kind cl, const setup *test_setup)
       goto try_again;
    }
 
-   /* It seems to have worked, save it.  We don't care about warnings here. */
+   // It seems to have worked, save it.  We don't care about warnings here.
 
  accept:
-   global_temp_call_list[global_callcount] = test_call;
+   global_temp_call_indices[global_callcount] = call_index;
    global_callcount++;
    goto try_again;
 
  finished:
 
-   // Create the call list itself.
+   // Create the call list itself.  First, just fill it with the indices.
+   // This is, of course, illegal, and requires a horrible cast.  But we need
+   // to do this in order to read and write write the cache file in an invariant format.
+   // We will turn them into pointers later.
 
    number_of_calls[cl] = global_callcount;
    main_call_lists[cl] = (call_with_name **) get_mem(global_callcount * sizeof(call_with_name *));
+
    for (i=0; i < global_callcount; i++)
-      main_call_lists[cl][i] = global_temp_call_list[i];
-
-   // Create the menu for it.
-
-   gg->create_menu(cl);
+      main_call_lists[cl][i] = (call_with_name *) global_temp_call_indices[i];
 }
 
 
-
-/* Definition: a region of the array "a" is said to have the "heap" property
-   (or "be a heap") if:
-      Whenever a[i] and a[2i+1] are both in the region, a[i] >= a[2i+1], and
-      Whenever a[i] and a[2i+2] are both in the region, a[i] >= a[2i+2].
-
-   Two special properties are noteworthy:
-      1: If hi <= 2*lo, the region from lo to hi inclusive is automatically a heap,
-         since there are no such pairs lying in the region.
-      2: If the region that is a heap is [0..hi], a[0] is greater than or equal to
-         every other element of the region.  Why?  Because a[0] >= a[1..2],
-         and a[1] >= a[3..4] while a[2] >= a[5..6], so a[1] and a[2]
-         are collectively >= a[3..6], which are >= a[7..14], etc. */
-
-         /* Heapify causes the region between lo-1 and hi-1, inclusive, to be a heap, given that the
-            region from lo to hi-1 was already a heap.  It works as follows:  when we declare
-            "lo-1" to be part of the region, the only way it can fail to be a heap is if a[lo-1]
-            is too small -- it might be less than a[2*lo-1] or a[2*lo].  If this is the case,
-            we swap it with the larger of a[2*lo-1] and a[2*lo-1].  Now whatever we swapped it
-            with got smaller, so it might fail to meet the heap property with respect to the
-            elements farther down the line, so we repeat the process until we are off the end
-            of the region. */
-
-
-/* This pointer to a call array is used by the heapsort routine. */
-
-static call_with_name **the_array;
-
-
-static long_boolean callcompare(call_with_name *x, call_with_name *y)
+static int canonicalize(char * & cp)
 {
-   char *m = x->name;
-   char *n = y->name;
-
    for (;;) {
-      int mc;
-      int nc;
+      int mc = *cp;
 
-      /* First, skip over everything that we need to, in both m and n.
-         This includes blanks, hyphens, and insignificant escape sequences. */
-
-      /* The current order is:
-         <ATC>        (-8)
-         <DIRECTION>  (-7)
-         <ANYONE>     (-6)
-         <ANYCIRC>    (-5)
-         <ANYTHING>   (-4)
-         <N>          (-3)
-         <N/4>        (-2)
-         <Nth>        (-1) */
-
-      mc = *m;
-
-      /* First, skip blanks and hyphens. */
-
-      if (mc == ' ' || mc == '-') { m++; continue; }
-
-      /* Next, skip elided stuff in the "m" stream. */
+      // Skip blanks and hyphens.
+      if (mc == ' ' || mc == '-') { cp++; continue; }
 
       if (mc == '@') {
-         mc = *++m;
-
+         // Turn escape codes into very large numbers,
+         // so they will be listed at the end.
+         mc = *++cp;
          switch (mc) {
-            case 'v': case 'w': case 'x': case 'y':
-               mc = 500-8; break;
-            case 'h':
-               mc = 500-7; break;
-            case '6': case 'k':
-               mc = 500-6; break;
-            case 'N':
-               mc = 500-5; break;
-            case '0': case 'T': case 'm':
-               mc = 500-4; break;
-            case '9':
-               mc = 500-3; break;
-            case 'a': case 'b': case 'B': case 'D':
-               mc = 500-2; break;
-            case 'u':
-               mc = 500-1; break;
-            case '7': case 'n': case 'j': case 'J': case 'E': case 'Q':
-               /* Skip over @7...@8, @n .. @o, and @j...@l stuff. */
-               while (*m++ != '@');
-               /* FALL THROUGH!!!!! */
-            default:
-               m++;
-               continue;
+         case 'v': case 'w': case 'x': case 'y':
+            return 500;   // <ATC>
+         case 'h':
+            return 501;   // <DIRECTION>
+         case '6': case 'k':
+            return 502;   // <ANYONE>
+         case 'N':
+            return 503;   // <ANYCIRC>
+         case '0': case 'T': case 'm':
+            return 504;   // <ANYTHING>
+         case '9':
+            return 505;   // <N>
+         case 'a': case 'b': case 'B': case 'D':
+            return 506;   // <N/4>
+         case 'u':
+            return 507;   // <Nth>
+         case '7': case 'n': case 'j': case 'J': case 'E': case 'Q':
+            // Skip over @7...@8, @n .. @o, and @j...@l stuff.
+            while (*cp++ != '@');
+            // FALL THROUGH!!!!!
+         default:
+            cp++;
+            continue;
          }
       }
-      else if (mc >= 'A' && mc <= 'Z')
-         mc += 'a'-'A';     /* Canonicalize to lower case. */
 
-      /* Now do the "n" stream. */
+      // Canonicalize to lower case.
+      return (mc >= 'A' && mc <= 'Z') ? mc + 'a'-'A' : mc;
+   }
+}
 
+class DBCOMPARE {
+public:
+   static bool inorder(call_with_name *x, call_with_name *y)
+   {
+      char *mp = x->name;
+      char *np = y->name;
 
       for (;;) {
-         nc = *n;
-         if (nc == ' ' || nc == '-') { n++; continue; }
-
-         if (nc == '@') {
-            nc = *++n;
-
-            switch (nc) {
-            case 'v': case 'w': case 'x': case 'y':
-               nc = 500-8; break;
-            case 'h':
-               nc = 500-7; break;
-            case '6': case 'k':
-               nc = 500-6; break;
-            case 'N':
-               nc = 500-5; break;
-            case '0': case 'T': case 'm':
-               nc = 500-4; break;
-            case '9':
-               nc = 500-3; break;
-            case 'a': case 'b': case 'B': case 'D':
-               nc = 500-2; break;
-            case 'u':
-               nc = 500-1; break;
-            case '7': case 'n': case 'j': case 'J': case 'E': case 'Q':
-               /* Skip over @7...@8, @n .. @o, and @j...@l stuff. */
-               while (*n++ != '@');
-               /* FALL THROUGH!!!!! */
-            default:
-               n++;
-               continue;
-            }
-         }
-         else if (nc >= 'A' && nc <= 'Z')
-            nc += 'a'-'A';     /* Canonicalize to lower case. */
-
-         break;
-      } 
-
-      if (!mc) return TRUE;
-      else if (!nc) return FALSE;
-      else if (mc != nc) return (mc < nc);
-      else { m++; n++; }
-   }
-}
-
-static void heapify(int lo, int hi)
-{
-   int j = lo-1;
-
-   for (;;) {
-      call_with_name *temp;
-      int k = j*2+1;
-
-      if (k+1 > hi) return;
-      if (k+1 < hi) {
-         if (callcompare(the_array[k], the_array[k+1])) k++;
+         // First, skip over everything that we need to, in both m and n.
+         // This includes blanks, hyphens, and insignificant escape sequences.
+         int mc = canonicalize(mp);
+         if (!mc) return true;
+         int nc = canonicalize(np);
+         if (!nc) return false;
+         if (mc != nc) return (mc < nc);
+         mp++;
+         np++;
       }
-      if (callcompare(the_array[k], the_array[j])) return;
-      temp = the_array[j];
-      the_array[j] = the_array[k];
-      the_array[k] = temp;
-      j = k;
    }
-}
-
-
-
-static void heapsort(int n)
-{
-   int i;
-
-   /* First, turn the whole array into a heap, building downward from the top, since adding
-      one more item at the bottom is what heapify is good at.  We don't start calling heapify
-      until the low limit is n/2, since heapify wouldn't have anything to do until then. */
-
-   for (i=n/2; i>0; i--) heapify(i, n);
-
-   /* Now we use the property that a[0] has the largest element.  We pull that out and move it
-      to the end.  We declare that item to no longer be part of the region we are interested in.
-      Since we have changed a[0], we call heapify to repair the damage, on the smaller region.
-      We repeat this, pulling out the largest element of the remaining heap (which is always
-      element 0), and letting the heap shrink down to nothing. */
-
-   for (i=n; i>1; i--) {
-      call_with_name *temp;
-
-      temp = the_array[0];
-      the_array[0] = the_array[i-1];
-      the_array[i-1] = temp;
-      heapify(1, i-1);
-   }
-}
+};
 
 
 static void create_misc_call_lists(call_list_kind cl)
@@ -552,7 +463,7 @@ static void create_misc_call_lists(call_list_kind cl)
    for (j=0; j<number_of_calls[call_list_any]; j++) {
       call_with_name *callp = main_call_lists[call_list_any][j];
 
-      if (cl == call_list_gcol) {     /* GCOL */
+      if (cl == call_list_gcol) {     // GCOL
          if (callp->the_defn.schema != schema_by_array || callp->the_defn.compound_part)
             goto accept;    // We don't understand it.
 
@@ -573,7 +484,7 @@ static void create_misc_call_lists(call_list_kind cl)
                goto accept;
          }
       }
-      else {      /* QTAG */
+      else {      // QTAG
          call_with_name *callq = callp;
 
          if (callq->the_defn.schema != schema_by_array || callq->the_defn.compound_part)
@@ -610,31 +521,91 @@ static void create_misc_call_lists(call_list_kind cl)
       continue;
 
    accept:
-      global_temp_call_list[callcount] = callp;
+      global_temp_call_indices[callcount] = j;
       callcount++;
    }
 
-   /* Create the call list itself. */
+   // Create the call list itself.
 
    number_of_calls[cl] = callcount;
    main_call_lists[cl] = (call_with_name **) get_mem(callcount * sizeof(call_with_name *));
 
    for (i=0; i < callcount; i++) {
-      main_call_lists[cl][i] = global_temp_call_list[i];
+      main_call_lists[cl][i] = (call_with_name *) global_temp_call_indices[i];
    }
-
-   // Create the menu for it.
-   gg->create_menu(cl);
 }
 
 
-/* These are used by the database reading stuff. */
+// These are used by the database reading stuff.
 
 static uint32 last_datum, last_12;
 static call_with_name *call_root;
 static callarray *tp;
-/* This shows the highest index we have seen so far.  It must never exceed max_base_calls-1. */
+// This shows the highest index we have seen so far.  It must never exceed max_base_calls-1.
 static int highest_base_call;
+
+static FILE *init_file;
+static int session_linenum = 0;
+
+// 0 for "no session" line, 1 for real ones, 2 for "new session".
+static int session_line_state = 0;
+
+static char rewrite_filename_as_star[2] = { '\0' , '\0' };  // First char could be "*" or "+".
+static FILE *database_file;
+static FILE *abridge_file;
+
+
+static uint32 read_8_from_database()
+{
+   return fgetc(database_file) & 0xFF;
+}
+
+
+static uint32 read_16_from_database()
+{
+   uint32 bar;
+
+   bar = (read_8_from_database() & 0xFF) << 8;
+   bar |= read_8_from_database() & 0xFF;
+   return bar;
+}
+
+
+static bool read_database_header(char *msg1, char *msg2)
+{
+   int format_version, n, j;
+
+   if (read_16_from_database() != DATABASE_MAGIC_NUM) {
+      sprintf(msg1,
+              "Database file \"%s\" has improper format.", database_filename);
+      return true;
+   }
+
+   format_version = read_16_from_database();
+   if (format_version != DATABASE_FORMAT_VERSION) {
+      sprintf(msg1,
+              "Database format version (%d) is not the required one (%d)",
+              format_version, DATABASE_FORMAT_VERSION);
+      strncpy(msg2, "You must recompile the database.", 199);
+      return true;
+   }
+
+   abs_max_calls = read_16_from_database();
+   max_base_calls = read_16_from_database();
+
+   n = read_16_from_database();
+
+   if (n > 80) {
+      strncpy(msg1, "Database version string is too long.", 199);
+      return true;
+   }
+
+   for (j=0; j<n; j++)
+      database_version[j] = (unsigned char) read_8_from_database();
+
+   database_version[j] = '\0';
+   return false;
+}
 
 
 static void read_halfword()
@@ -1062,15 +1033,6 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
 }
 
 
-static FILE *init_file;
-static int session_linenum = 0;
-
-/* 0 for "no session" line, 1 for real ones, 2 for "new session". */
-static int session_line_state = 0;
-
-static char rewrite_filename_as_star[2] = { '\0' , '\0' };  /* First char could be "*" or "+". */
-static FILE *fp;
-
 
 
 /* This makes sure that outfile string is a legal filename, and sets up
@@ -1081,7 +1043,7 @@ static FILE *fp;
 extern long_boolean install_outfile_string(char newstring[])
 {
    char test_string[MAX_FILENAME_LENGTH];
-   long_boolean file_is_ok;
+   bool file_is_ok;
    int j;
 
    rewrite_filename_as_star[0] = '\0';
@@ -1117,9 +1079,9 @@ extern long_boolean install_outfile_string(char newstring[])
       for (;;) {
          (void) strcat(junk2, filename_strings[calling_level]);
 
-         /* If the given filename is "+", accept it immediately.
-            Otherwise, fuss with the generated name until we get a
-            nonexistent file. */
+         // If the given filename is "+", accept it immediately.
+         // Otherwise, fuss with the generated name until we get a
+         // nonexistent file.
 
          if (test_string[0] == '+' || (filetest = fopen(junk2, "r")) == 0) break;
          (void) fclose(filetest);
@@ -1137,7 +1099,7 @@ extern long_boolean install_outfile_string(char newstring[])
       return TRUE;
    }
 
-   /* Now see if we can write to it. */
+   // Now see if we can write to it.
 
 #ifdef POSIX_STYLE
    /* If the file does not exist, we allow it, even though creation may
@@ -1145,11 +1107,11 @@ extern long_boolean install_outfile_string(char newstring[])
       that there is no feasible way to determine whether a given pathname
       could be opened for writing. */
    if (access(test_string, F_OK) || !access(test_string, W_OK))
-      file_is_ok =  TRUE;
+      file_is_ok =  true;
    else
-      file_is_ok =  FALSE;
+      file_is_ok =  false;
 #else
-   file_is_ok =  TRUE;
+   file_is_ok =  true;
 #endif
 
    if (file_is_ok) {
@@ -1185,51 +1147,51 @@ static bool find_init_file_region(Cstring key, int length)
    }
 }
 
-extern long_boolean get_first_session_line()
+extern bool get_first_session_line()
 {
    session_line_state = 0;
 
    // If we are writing a call list file, that's all we do.
 
-   if (glob_call_list_mode == call_list_mode_writing ||
-       glob_call_list_mode == call_list_mode_writing_full)
-      return TRUE;
+   if (glob_abridge_mode >= abridge_mode_writing)
+      return true;
 
    // Or if the file didn't exist, or we are in diagnostic mode.
-   if (!init_file || ui_options.diagnostic_mode) return TRUE;
+   if (!init_file || ui_options.diagnostic_mode) return true;
 
    // Search for the "[Sessions]" indicator.
 
    if (!find_init_file_region("[Sessions]", 10))
-      return TRUE;
+      return true;
 
-   return FALSE;
+   return false;
 }
 
 
-extern long_boolean get_next_session_line(char *dest)
+extern bool get_next_session_line(char *dest)
 {
    int j;
    char line[MAX_FILENAME_LENGTH];
 
    if (session_line_state == 0) {
       session_line_state = 1;
-      sprintf(dest, "  0     (no session)");
-      return TRUE;
+      if (dest) sprintf(dest, "  0     (no session)");
+      return true;
    }
    else if (session_line_state == 2)
-      return FALSE;
+      return false;
 
    if (!fgets(line, MAX_FILENAME_LENGTH, init_file) || line[0] == '\n' || line[0] == '[') {
       session_line_state = 2;
-      sprintf(dest, "%3d     (create a new session)", session_linenum+1);
-      return TRUE;
+      if (dest) sprintf(dest, "%3d     (create a new session)", session_linenum+1);
+      return true;
    }
 
    j = strlen(line);
-   if (j>0) line[j-1] = '\0';   /* Strip off the <NEWLINE> -- we don't want it. */
-   sprintf(dest, "%3d  %s", ++session_linenum, line);
-   return TRUE;
+   if (j>0) line[j-1] = '\0';   // Strip off the <NEWLINE> -- we don't want it.
+   session_linenum++;
+   if (dest) sprintf(dest, "%3d  %s", session_linenum, line);
+   return true;
 }
 
 
@@ -1237,14 +1199,14 @@ extern void prepare_to_read_menus()
 {
    uint32 arithtest = 2081607680;
 
-   /* This "if" should never get executed.  We expect compilers to optimize
-      it away, and perhaps print a warning about it. */
+   // This "if" should never get executed.  We expect compilers to optimize
+   // it away, and perhaps print a warning about it.
 
-   /* Test that the constants ROLL_BIT and DBROLL_BIT are in the right
-      relationship, with ROLL_BIT >= DBROLL_BIT, that is, the roll bits
-      in a person record are to the left of the roll bits in the binary database.
-      This is because of expressions "ROLL_BIT/DBROLL_BIT" in sdbasic.cpp to
-      align stuff from the binary database into the person record. */
+   // Test that the constants ROLL_BIT and DBROLL_BIT are in the right
+   // relationship, with ROLL_BIT >= DBROLL_BIT, that is, the roll bits
+   // in a person record are to the left of the roll bits in the binary database.
+   // This is because of expressions "ROLL_BIT/DBROLL_BIT" in sdbasic.cpp to
+   // align stuff from the binary database into the person record.
 
    if ((int) NROLL_BIT < (int) NDBROLL_BIT)
       gg->fatal_error_exit(1, "Constants not consistent",
@@ -1263,11 +1225,10 @@ extern void prepare_to_read_menus()
       direction_names[direction_zigzag] = (Cstring) 0;
    }
 
-   if (glob_call_list_mode == call_list_mode_none ||
-       glob_call_list_mode == call_list_mode_abridging) {
+   if (glob_abridge_mode < abridge_mode_writing) {
       int i;
 
-      /* Find out how big the command menu needs to be. */
+      // Find out how big the command menu needs to be.
 
       for (num_command_commands = 0 ;
            command_menu[num_command_commands].command_name ;
@@ -1282,7 +1243,7 @@ extern void prepare_to_read_menus()
          command_command_values[i] = command_menu[i].action;
       }
 
-      /* Find out how big the startup menu needs to be. */
+      // Find out how big the startup menu needs to be.
 
       for (num_startup_commands = 0 ;
            startup_menu[num_startup_commands].startup_name ;
@@ -1297,7 +1258,7 @@ extern void prepare_to_read_menus()
          startup_command_values[i] = startup_menu[i].action;
       }
 
-      /* Find out how big the resolve menu needs to be. */
+      // Find out how big the resolve menu needs to be.
 
       for (number_of_resolve_commands = 0 ;
            resolve_menu[number_of_resolve_commands].command_name ;
@@ -1346,32 +1307,54 @@ extern int process_session_info(Cstring *error_msg)
          return 1;
 
       j = strlen(line);
-      if (j>0) line[j-1] = '\0';   /* Strip off the <NEWLINE> -- we don't want it. */
+      if (j>0) line[j-1] = '\0';   // Strip off the <NEWLINE> -- we don't want it.
 
-      num_fields_parsed = sscanf(
-                             line, "%s %s %d %n%s",
-                             filename_string, session_levelstring,
-                             &sequence_number, &ccount,
-                             junk_name);
+      num_fields_parsed = sscanf(line, "%s %s %d %n%s",
+                                 filename_string, session_levelstring,
+                                 &sequence_number, &ccount,
+                                 junk_name);
 
       if (num_fields_parsed < 3) {
          *error_msg = "Bad format in session file.";
          return 3;
       }
 
-      if (!parse_level(session_levelstring, &calling_level)) {
+      if (!parse_level(session_levelstring)) {
          *error_msg = "Bad level given in session file.";
          return 3;
       }
 
+      // Look for an abridge list, immediately after the level,
+      // separated by a minus sign.
+      char *minuspos = strchr(session_levelstring, '-');
+      if (minuspos) {
+         // If there is already a file name, the operator is overriding
+         // the name from the session.  Use the override.  Don't take
+         // the name from the session.
+         if (abridge_filename[0] == 0)
+            strncpy(abridge_filename, minuspos+1, MAX_TEXT_LINE_LENGTH);
+
+         if (abridge_filename[0] != 0) {
+            // The session line specifies an abridgement file.
+            // Use it, unless the user specified "delete_abridgement",
+            // in which case, we specifically don't use it.
+            // In that case, it will be deleted from the session line
+            // when the program exits and the initialization file
+            // is rewritten.
+            glob_abridge_mode =
+               (glob_abridge_mode == abridge_mode_deleting_abridge) ?
+               abridge_mode_none : abridge_mode_abridging;
+         }
+      }
+
       if (num_fields_parsed == 4)
-         strncpy(header_comment, &line[ccount], MAX_TEXT_LINE_LENGTH);
+         strncpy(header_comment, line+ccount, MAX_TEXT_LINE_LENGTH);
       else
          header_comment[0] = 0;
 
       if (!install_outfile_string(filename_string)) {
          *error_msg = "Bad file name in session file, using default instead.";
-         return 2;    /* This return code will not abort the session. */
+         return 2;    // This return code will not abort the session.
       }
    }
    else {
@@ -1381,16 +1364,6 @@ extern int process_session_info(Cstring *error_msg)
    }
 
    return 0;
-}
-
-
-extern void open_call_list_file(char filename[])
-{
-   call_list_file = fopen(filename,
-      (glob_call_list_mode == call_list_mode_abridging) ? "r" : "w");
-
-   if (!call_list_file)
-      gg->fatal_error_exit(1, "Can't open call list file", filename);
 }
 
 
@@ -1409,31 +1382,39 @@ static bool get_accelerator_line(char line[])
 
 extern void close_init_file()
 {
-   if (init_file) (void) fclose(init_file);
+   if (init_file) fclose(init_file);
 }
 
 
 static int write_back_session_line(FILE *wfile)
 {
    char *filename = rewrite_filename_as_star[0] ? rewrite_filename_as_star : outfile_string;
+   char level_and_abridge_name[MAX_TEXT_LINE_LENGTH];
+   strncpy(level_and_abridge_name, getout_strings[calling_level], MAX_TEXT_LINE_LENGTH);
+
+   // If the abridgement is being deleted, don't write the file name.
+   if (glob_abridge_mode != abridge_mode_none && abridge_filename[0]) {
+      strcat(level_and_abridge_name, "-");
+      strcat(level_and_abridge_name, abridge_filename);
+   }
 
    if (header_comment[0])
       return
          fprintf(wfile, "%-20s %-11s %6d      %s\n",
                  filename,
-                 getout_strings[calling_level],
+                 level_and_abridge_name,
                  sequence_number,
                  header_comment);
    else
       return
          fprintf(wfile, "%-20s %-11s %6d\n",
                  filename,
-                 getout_strings[calling_level],
+                 level_and_abridge_name,
                  sequence_number);
 }
 
 
-void just_close_init_file()
+static void rewrite_init_file()
 {
    if (session_index != 0) {
       char line[MAX_FILENAME_LENGTH];
@@ -1456,9 +1437,9 @@ void just_close_init_file()
                printf("Failed to open '" SESSION_FILENAME "'\n");
             }
             else {
-               long_boolean more_stuff = FALSE;
+               bool more_stuff = false;
 
-               /* Search for the "[Sessions]" indicator. */
+               // Search for the "[Sessions]" indicator.
 
                for (;;) {
                   if (!fgets(line, MAX_FILENAME_LENGTH, rfile)) goto copy_done;
@@ -1468,7 +1449,7 @@ void just_close_init_file()
 
                for (i=0 ; ; i++) {
                   if (!fgets(line, MAX_FILENAME_LENGTH, rfile)) break;
-                  if (line[0] == '\n') { more_stuff = TRUE; break; }
+                  if (line[0] == '\n') { more_stuff = true; break; }
 
                   if (i == session_index-1) {
                      if (write_back_session_line(wfile) < 0)
@@ -1514,76 +1495,9 @@ void just_close_init_file()
 
 extern void general_final_exit(int code)
 {
-   just_close_init_file();
+   if (glob_abridge_mode < abridge_mode_writing)
+      rewrite_init_file();
    gg->terminate(code);
-}
-
-extern long_boolean open_database(char *msg1, char *msg2)
-{
-   int format_version, n, j;
-
-   *msg1 = (char) 0;
-   *msg2 = (char) 0;
-
-   /* The "b" in the mode is meaningless and harmless in POSIX.  Some systems,
-      however, require it for correct handling of binary data. */
-   if (!(fp = fopen(database_filename, "rb"))) {
-      strncpy(msg1, "Can't open database file.", 199);
-      return TRUE;
-   }
-
-   if (read_16_from_database() != DATABASE_MAGIC_NUM) {
-      sprintf(msg1,
-              "Database file \"%s\" has improper format.", database_filename);
-      return TRUE;
-   }
-
-   format_version = read_16_from_database();
-   if (format_version != DATABASE_FORMAT_VERSION) {
-      sprintf(msg1,
-              "Database format version (%d) is not the required one (%d)",
-              format_version, DATABASE_FORMAT_VERSION);
-      strncpy(msg2, "You must recompile the database.", 199);
-      return TRUE;
-   }
-
-   abs_max_calls = read_16_from_database();
-   max_base_calls = read_16_from_database();
-
-   n = read_16_from_database();
-
-   if (n > 80) {
-      strncpy(msg1, "Database version string is too long.", 199);
-      return TRUE;
-   }
-
-   for (j=0; j<n; j++)
-      database_version[j] = (unsigned char) read_8_from_database();
-
-   database_version[j] = '\0';
-   return FALSE;
-}
-
-
-extern uint32 read_8_from_database()
-{
-   return fgetc(fp) & 0xFF;
-}
-
-
-extern uint32 read_16_from_database()
-{
-   uint32 bar;
-
-   bar = (read_8_from_database() & 0xFF) << 8;
-   bar |= read_8_from_database() & 0xFF;
-   return bar;
-}
-
-
-extern void close_database()
-{
-   fclose(fp);
 }
 
 
@@ -1599,7 +1513,7 @@ extern void close_database()
          "write_full_list" we do the usual action.
    It also fills in the "base_calls" array with tagged calls, independent of level. */
 
-static void build_database(call_list_mode_t call_list_mode)
+static void build_database(abridge_mode_t abridge_mode)
 {
    int i, char_count;
    int local_callcount;
@@ -1607,7 +1521,7 @@ static void build_database(call_list_mode_t call_list_mode)
    call_with_name **local_call_list;
    dance_level acceptable_level = calling_level;
 
-   if (call_list_mode == call_list_mode_none)
+   if (abridge_mode <= abridge_mode_deleting_abridge)
       acceptable_level = higher_acceptable_level[calling_level];
 
    for (i=0 ; i<NUM_TAGGER_CLASSES ; i++) {
@@ -1618,15 +1532,15 @@ static void build_database(call_list_mode_t call_list_mode)
    number_of_circcers = 0;
    circcer_calls = (call_with_name **) 0;
 
-   /* This list will be permanent. */
+   // This list will be permanent.
    base_calls = (call_with_name **) get_mem(max_base_calls * sizeof(call_with_name *));
 
-   /* These two will be temporary.  The first lasts through the entire initialization
-      process.  The second one only in this procedure. */
-   global_temp_call_list = (call_with_name **) get_mem(abs_max_calls * sizeof(call_with_name *));
+   // These two will be temporary.  The first lasts through the entire initialization
+   // process.  The second one only in this procedure.
+   global_temp_call_indices = (int *) get_mem(abs_max_calls * sizeof(call_with_name *));
    local_call_list = (call_with_name **) get_mem(abs_max_calls * sizeof(call_with_name *));
 
-   /* Clear the tag list.  Calls will fill this in as they announce themselves. */
+   // Clear the tag list.  Calls will fill this in as they announce themselves.
    for (i=0; i < max_base_calls; i++) base_calls[i] = (call_with_name *) 0;
 
    highest_base_call = 0;
@@ -1698,7 +1612,7 @@ static void build_database(call_list_mode_t call_list_mode)
       //    That way, c3x calls will be included.  We will print a warning if they are used.
 
       if (this_level == calling_level ||
-          (call_list_mode != call_list_mode_writing && this_level <= acceptable_level)) {
+          (abridge_mode != abridge_mode_writing && this_level <= acceptable_level)) {
 
          // Process tag base calls specially.
          if (call_root->the_defn.callflags1 & CFLAG1_BASE_TAG_CALL_MASK) {
@@ -1727,7 +1641,7 @@ static void build_database(call_list_mode_t call_list_mode)
                for (int xxx=1 ; xxx<NUM_TAGGER_CLASSES ; xxx++) {
                   call_with_name *new_call =
                      (call_with_name *) get_mem(sizeof(call_with_name) + char_count - 3);
-                  (void) memcpy(new_call, call_root, sizeof(call_with_name) + char_count - 3);
+                  memcpy(new_call, call_root, sizeof(call_with_name) + char_count - 3);
                   /* Fix it up. */
                   new_call->the_defn.callflagsf =
                      (new_call->the_defn.callflagsf & !CFLAGH__TAG_CALL_RQ_MASK) |
@@ -1770,7 +1684,7 @@ static void build_database(call_list_mode_t call_list_mode)
       }
    }
 
-   close_database();
+   fclose(database_file);
 }
 
 
@@ -1794,7 +1708,7 @@ static const char *translate_menu_name(const char *orig_name, uint32 *escape_bit
    int j;
    char c;
    int namelength;
-   long_boolean atsign = FALSE;
+   bool atsign = false;
 
    /* See if the name has an 'at' sign, in which case we have to modify it to
       get the actual menu text.  Also, find out what escape flags we need to set. */
@@ -1804,7 +1718,7 @@ static const char *translate_menu_name(const char *orig_name, uint32 *escape_bit
       c = orig_name[namelength++];
       if (!c) break;
       else if (c == '@') {
-         atsign = TRUE;
+         atsign = true;
          c = orig_name[namelength++];
          if (c == 'e') *escape_bits_p |= ESCAPE_WORD__LEFT;
          else if (c == 'j' || c == 'C') *escape_bits_p |= ESCAPE_WORD__CROSS;
@@ -1910,7 +1824,9 @@ static int couple_colors_rgkb[8] = {2, 2, 3, 3, 1, 1, 5, 5};
 
 int useful_concept_indices[UC_extent];
 
-extern long_boolean open_session(int argc, char **argv)
+
+
+extern bool open_session(int argc, char **argv)
 {
    int i, j;
    uint32 uj;
@@ -1923,7 +1839,7 @@ extern long_boolean open_session(int argc, char **argv)
 
    args = (char **) get_mem(nargs * sizeof(char *));
 
-   (void) memcpy(args, argv, nargs * sizeof(char *));
+   memcpy(args, argv, nargs * sizeof(char *));
 
    /* Read the initialization file, looking for options. */
 
@@ -1963,42 +1879,35 @@ extern long_boolean open_session(int argc, char **argv)
             args = (char **) get_more_mem(args, nargs * sizeof(char *));
             for (i=nargs-1 ; i>insert_pos ; i--) args[i] = args[i-1];
             args[insert_pos] = (char *) get_mem(j);
-            (void) memcpy(args[insert_pos], token, j);
+            memcpy(args[insert_pos], token, j);
             insert_pos++;
             lineptr += newpos;
          }
       }
    }
 
-   /* This lets the user interface intercept command line arguments that it is interested in. */
+   // This lets the user interface intercept command line arguments that it is interested in.
    gg->process_command_line(&nargs, &args);
 
-   glob_call_list_mode = call_list_mode_none;
+   glob_abridge_mode = abridge_mode_none;
    calling_level = l_nonexistent_concept;    /* Mark it uninitialized. */
 
    for (argno=1; argno < nargs; argno++) {
       if (args[argno][0] == '-') {
-
-         /* Special flag: must be one of
-            -write_list <filename>  -- write out the call list for the
-                  indicated level INSTEAD OF running the program
-            -write_full_list <filename>  -- write out the call list for the
-                  indicated level and all lower levels INSTEAD OF running the program
-            -abridge <filename>  -- read in the file, strike all the calls
-                  contained therein off the menus, and proceed.
-            -diagnostic  -- (this is a hidden flag) suppress display of version info */
-
          if (strcmp(&args[argno][1], "write_list") == 0) {
-            glob_call_list_mode = call_list_mode_writing;
-            if (argno+1 < nargs) call_list_string = args[argno+1];
+            glob_abridge_mode = abridge_mode_writing;
+            if (argno+1 < nargs)
+               strncpy(abridge_filename, args[argno+1], MAX_TEXT_LINE_LENGTH);
          }
          else if (strcmp(&args[argno][1], "write_full_list") == 0) {
-            glob_call_list_mode = call_list_mode_writing_full;
-            if (argno+1 < nargs) call_list_string = args[argno+1];
+            glob_abridge_mode = abridge_mode_writing_full;
+            if (argno+1 < nargs)
+               strncpy(abridge_filename, args[argno+1], MAX_TEXT_LINE_LENGTH);
          }
          else if (strcmp(&args[argno][1], "abridge") == 0) {
-            glob_call_list_mode = call_list_mode_abridging;
-            if (argno+1 < nargs) call_list_string = args[argno+1];
+            glob_abridge_mode = abridge_mode_abridging;
+            if (argno+1 < nargs)
+               strncpy(abridge_filename, args[argno+1], MAX_TEXT_LINE_LENGTH);
          }
          else if (strcmp(&args[argno][1], "sequence") == 0) {
 	     if (argno+1 < nargs) new_outfile_string = args[argno+1];
@@ -2012,12 +1921,20 @@ extern long_boolean open_session(int argc, char **argv)
                   gg->bad_argument("Bad number", args[argno+1], 0);
             }
          }
+         else if (strcmp(&args[argno][1], "session") == 0) {
+            if (argno+1 < nargs) {
+               if (sscanf(args[argno+1], "%d", &ui_options.force_session) != 1)
+                  gg->bad_argument("Bad number", args[argno+1], 0);
+            }
+         }
          else if (strcmp(&args[argno][1], "resolve_test") == 0) {
             if (argno+1 < nargs) {
                if (sscanf(args[argno+1], "%d", &ui_options.resolve_test_minutes) != 1)
                   gg->bad_argument("Bad number", args[argno+1], 0);
             }
          }
+         else if (strcmp(&args[argno][1], "delete_abridge") == 0)
+            { glob_abridge_mode = abridge_mode_deleting_abridge; continue; }
          else if (strcmp(&args[argno][1], "no_intensify") == 0)
             { ui_options.no_intensify = 1; continue; }
          else if (strcmp(&args[argno][1], "reverse_video") == 0)
@@ -2038,18 +1955,20 @@ extern long_boolean open_session(int argc, char **argv)
             { ui_options.color_scheme = color_by_corner; continue; }
          else if (strcmp(&args[argno][1], "no_sound") == 0)
             { ui_options.no_sound = 1; continue; }
+         else if (strcmp(&args[argno][1], "keep_all_pictures") == 0)
+            { ui_options.keep_all_pictures = true; continue; }
          else if (strcmp(&args[argno][1], "single_click") == 0)
-            { ui_options.accept_single_click = TRUE; continue; }
+            { ui_options.accept_single_click = true; continue; }
          else if (strcmp(&args[argno][1], "no_checkers") == 0)
             { ui_options.no_graphics = 1; continue; }
          else if (strcmp(&args[argno][1], "no_graphics") == 0)
             { ui_options.no_graphics = 2; continue; }
          else if (strcmp(&args[argno][1], "diagnostic") == 0)
-            { ui_options.diagnostic_mode = TRUE; continue; }
+            { ui_options.diagnostic_mode = true; continue; }
          else if (strcmp(&args[argno][1], "singlespace") == 0)
-            { ui_options.singlespace_mode = TRUE; continue; }
+            { ui_options.singlespace_mode = true; continue; }
          else if (strcmp(&args[argno][1], "no_warnings") == 0)
-            { ui_options.nowarn_mode = TRUE; continue; }
+            { ui_options.nowarn_mode = true; continue; }
          else if (strcmp(&args[argno][1], "concept_levels") == 0)
             { allowing_all_concepts = TRUE; continue; }
          else if (strcmp(&args[argno][1], "minigrand_getouts") == 0)
@@ -2072,7 +1991,7 @@ extern long_boolean open_session(int argc, char **argv)
             gg->bad_argument("This flag must be followed by a number or file name",
                              args[argno-1], 0);
       }
-      else if (!parse_level(args[argno], &calling_level)) {
+      else if (!parse_level(args[argno])) {
          gg->bad_argument("Unknown calling level argument", args[argno],
             "Known calling levels: m, p, a1, a2, c1, c2, c3a, c3, c3x, c4a, c4, or c4x.");
       }
@@ -2092,10 +2011,10 @@ extern long_boolean open_session(int argc, char **argv)
       section of the initialization file, have been processed.  Some of those things
       may still interact with the start-up procedure.  They are:
 
-         glob_call_list_mode [default = call_list_mode_none]
+         glob_abridge_mode   [default = abridge_mode_none]
          calling_level       [default = l_nonexistent_concept]
          new_outfile_string  [default = (char *) 0, this is just a pointer]
-         call_list_string    [default = (char *) 0], this is just a pointer]
+         abridge_filename    [default = 0 in position 0], this is allocated]
          database_filename   [default = "sd_calls.dat", this is just a pointer]
    */
 
@@ -2105,7 +2024,7 @@ extern long_boolean open_session(int argc, char **argv)
    // or because of error, to get immediate exit.
    if (gg->init_step(get_session_info, 0)) {
       close_init_file();
-      return TRUE;
+      return true;
    }
 
    // Set up the color translations based on the user's options.
@@ -2149,11 +2068,6 @@ extern long_boolean open_session(int argc, char **argv)
    if (new_outfile_string)
       (void) install_outfile_string(new_outfile_string);
 
-   // We now have the following things filled in:
-   // session_index
-   // glob_call_list_mode
-
-
    // Translate the concept menu names, and then export the sealed
    // concept list for ordinary folks to see in a constant array.
    conzept::translate_concept_names();
@@ -2190,148 +2104,280 @@ extern long_boolean open_session(int argc, char **argv)
    // Must do before telling the uims so any open failure messages
    // come out first.
 
-   char session_error_msg1[200], session_error_msg2[200];
+   char *sourcenames[2] = {database_filename, abridge_filename};
+   bool binaryfileflags[2] = {true, false};
+   FILE *database_input_files[2];
 
-   if (open_database(session_error_msg1, session_error_msg2))
-      gg->fatal_error_exit(1, session_error_msg1, session_error_msg2);
+   if (glob_abridge_mode >= abridge_mode_writing) {
+      database_input_files[1] = fopen(abridge_filename, "w");
 
-   // This actually reads the calls database file and creates the
-   // "any" menu.  It calls init_step(init_calibrate_tick), which calibrates
-   // the progress bar.
-   build_database(glob_call_list_mode);
-
-   gg->init_step(init_database2, 0);
-   gg->init_step(calibrate_tick, TICK_TOTAL);
-   gg->init_step(do_tick, 2);
-
-   // This is the thing that takes all the time!
-
-   /* Make the translated names for all calls and concepts.  These have the "<...>"
-      phrases, suitable for external display on menus, instead of "@" escapes. */
-
-   for (i=0; i<number_of_calls[call_list_any]; i++)
-      main_call_lists[call_list_any][i]->menu_name =
-         translate_menu_name(main_call_lists[call_list_any][i]->name,
-                             &main_call_lists[call_list_any][i]->the_defn.callflagsf);
-
-   for (i=0 ; i<NUM_TAGGER_CLASSES ; i++) {
-      for (uj=0; uj<number_of_taggers[i]; uj++)
-         tagger_calls[i][uj]->menu_name =
-            translate_menu_name(tagger_calls[i][uj]->name,
-                                &tagger_calls[i][uj]->the_defn.callflagsf);
+      if (!database_input_files[1])
+         gg->fatal_error_exit(1, "Can't open abridgement file", abridge_filename);
    }
 
-   for (uj=0; uj<number_of_circcers; uj++)
-      circcer_calls[uj]->menu_name =
-         translate_menu_name(circcer_calls[uj]->name, &circcer_calls[uj]->the_defn.callflagsf);
+   {
+      char cachename[MAX_TEXT_LINE_LENGTH];
+      strncpy(cachename, getout_strings[calling_level], MAX_TEXT_LINE_LENGTH);
+      strcat(cachename, "cache");
 
-   /* Do the base calls (calls that are used in definitions of other calls).  These may have
-      already been done, if they were on the level. */
-   for (i=1; i <= highest_base_call; i++) {
-      if (!base_calls[i]->menu_name)
-         base_calls[i]->menu_name =
-            translate_menu_name(base_calls[i]->name, &base_calls[i]->the_defn.callflagsf);
-   }
+      MAPPED_CACHE_FILE cache_stuff((glob_abridge_mode == abridge_mode_abridging) ? 2 : 1,
+                                    sourcenames, cachename, 6, binaryfileflags);
 
-   the_array = main_call_lists[call_list_any];
-   heapsort(number_of_calls[call_list_any]);
+      int *mapped_cache = cache_stuff.open_and_map(database_input_files);
 
-   /* Now the permanent array "main_call_lists[call_list_any]" has all the legal calls,
-         including name pointer fields containing the original text with "@" escapes,
-         sorted alphabetically.
-      The remaining tasks are to make the subcall lists for other setups (e.g.
-         those calls legal from columns), and clean up the names that we will actually
-         display in the menus (no "@" signs) and initialize the menus with the
-         cleaned-up and subsetted text. */
+      database_file = database_input_files[0];
+      abridge_file = database_input_files[1];
 
-   gg->init_step(do_tick, 1);
+      if (!database_file)
+         gg->fatal_error_exit(1, "Can't open database file.");
 
-   /* Do special stuff if we are reading or writing a call list file. */
+      if (glob_abridge_mode == abridge_mode_abridging && !abridge_file)
+         gg->fatal_error_exit(1, "Can't open abridgement file", abridge_filename);
 
-   if (glob_call_list_mode != call_list_mode_none) {
-      if (glob_call_list_mode == call_list_mode_abridging) {
-         char abridge_call[100];
+      char session_error_msg1[200], session_error_msg2[200];
+      session_error_msg1[0] = 0;
+      session_error_msg2[0] = 0;
+
+      if (read_database_header(session_error_msg1, session_error_msg2))
+         gg->fatal_error_exit(1, session_error_msg1, session_error_msg2);
+
+      // This actually reads the calls database file and creates the
+      // "any" menu.  It calls init_step(init_calibrate_tick), which calibrates
+      // the progress bar.
+      build_database(glob_abridge_mode);
+
+      gg->init_step(init_database2, 0);
+      gg->init_step(calibrate_tick, TICK_TOTAL);
+      gg->init_step(do_tick, 2);
+
+      // Make the translated names for all calls and concepts.  These have the "<...>"
+      // phrases, suitable for external display on menus, instead of "@" escapes.
+
+      for (i=0; i<number_of_calls[call_list_any]; i++)
+         main_call_lists[call_list_any][i]->menu_name =
+            translate_menu_name(main_call_lists[call_list_any][i]->name,
+                                &main_call_lists[call_list_any][i]->the_defn.callflagsf);
+
+      for (i=0 ; i<NUM_TAGGER_CLASSES ; i++) {
+         for (uj=0; uj<number_of_taggers[i]; uj++)
+            tagger_calls[i][uj]->menu_name =
+               translate_menu_name(tagger_calls[i][uj]->name,
+                                   &tagger_calls[i][uj]->the_defn.callflagsf);
+      }
+
+      for (uj=0; uj<number_of_circcers; uj++)
+         circcer_calls[uj]->menu_name =
+            translate_menu_name(circcer_calls[uj]->name, &circcer_calls[uj]->the_defn.callflagsf);
+
+      // Do the base calls (calls that are used in definitions of other calls).  These may have
+      // already been done, if they were on the level.
+      for (i=1; i <= highest_base_call; i++) {
+         if (!base_calls[i]->menu_name)
+            base_calls[i]->menu_name =
+               translate_menu_name(base_calls[i]->name, &base_calls[i]->the_defn.callflagsf);
+      }
+
+      SORT<call_with_name *, DBCOMPARE>::heapsort(main_call_lists[call_list_any], number_of_calls[call_list_any]);
+
+      // Now the permanent array "main_call_lists[call_list_any]" has all the legal calls,
+      //    including name pointer fields containing the original text with "@" escapes,
+      //    sorted alphabetically.
+      // The remaining tasks are to make the subcall lists for other setups (e.g.
+      //    those calls legal from columns), and clean up the names that we will actually
+      //    display in the menus (no "@" signs) and initialize the menus with the
+      //    cleaned-up and subsetted text.
+
+      gg->init_step(do_tick, 1);
+
+      // Do special stuff if we are reading or writing an abridgement file.
+
+      if (glob_abridge_mode >= abridge_mode_abridging) {
+         if (glob_abridge_mode == abridge_mode_abridging) {
+            char abridge_call[100];
    
-         while (read_from_call_list_file(abridge_call, 99)) {
-            /* Remove the newline character. */
-            abridge_call[strlen(abridge_call)-1] = '\0';
-            /* Search through the call name list for this call.
-               Why don't we use a more efficient search, based on the fact
-               that the call list has been alphabetized?  Because it was
-               alphabetized before the '@' escapes were expanded.  It
-               is no longer in alphabetical order. */
-            for (i=0; i<number_of_calls[call_list_any]; i++) {
-               if (!strcmp(abridge_call, main_call_lists[call_list_any][i]->menu_name)) {
-                  /* Delete this call and move all subsequent calls down one position. */
-                  for (j=i+1; j<number_of_calls[call_list_any]; j++) {
-                     main_call_lists[call_list_any][j-1] = main_call_lists[call_list_any][j];
+            while (fgets(abridge_call, 99, abridge_file)) {
+               // Remove the newline character.
+               abridge_call[strlen(abridge_call)-1] = '\0';
+               // Search through the call name list for this call.
+               // Why don't we use a more efficient search, based on the fact
+               // that the call list has been alphabetized?  Because it was
+               // alphabetized before the '@' escapes were expanded.  It
+               // is no longer in alphabetical order.
+               for (i=0; i<number_of_calls[call_list_any]; i++) {
+                  if (!strcmp(abridge_call, main_call_lists[call_list_any][i]->menu_name)) {
+                     // Delete this call and move all subsequent calls down one position.
+                     for (j=i+1; j<number_of_calls[call_list_any]; j++) {
+                        main_call_lists[call_list_any][j-1] = main_call_lists[call_list_any][j];
+                     }
+                     number_of_calls[call_list_any]--;
+                     break;
                   }
-                  number_of_calls[call_list_any]--;
-                  break;
                }
             }
+
+            if (fclose(abridge_file))
+               gg->fatal_error_exit(1, "Can't close abridgement file");
+         }
+         else {      // Writing a list of some kind.
+            for (i=0; i<number_of_calls[call_list_any]; i++) {
+               fputs(main_call_lists[call_list_any][i]->menu_name, abridge_file);
+               fputs("\n", abridge_file);
+            }
+
+            if (fclose(abridge_file))
+               gg->fatal_error_exit(1, "Can't close abridgement file");
+
+            gg->init_step(tick_end, 0);
+
+            // That's all!
+            close_init_file();
+            return true;
          }
       }
-      else {      // Writing a list of some kind.
-         for (i=0; i<number_of_calls[call_list_any]; i++)
-            write_to_call_list_file(main_call_lists[call_list_any][i]->menu_name);
+
+      // Now the array "main_call_lists[call_list_any]"
+      //    has the stuff for the calls that we will actually use.
+      // The remaining tasks are to make the subcall lists for other setups (e.g.
+      //    those calls legal from columns), and initialize the menus with the
+      //    subsetted text.
+
+      // This is the universal menu.
+      gg->create_menu(call_list_any);
+      gg->init_step(do_tick, 1);
+
+      // Create the special call menus for restricted setups.
+
+      // We are going to try to use the cache file, if we have one.
+      // The cache file mechanism will check file sizes and creation
+      // times for us.  But then we will do some additional checks.
+      // There are 5 words that we use for this:
+      //
+      // (1) The length of the call list that the index arrays point to.
+      //     That is, the total number of calls, taking abridgement into
+      //     account.  This is the most sensitive and important test.
+      //     If the array being indexed into doesn't match, it's not
+      //     likely that the indices will be correct.
+      // (2) The current level.  This really shouldn't fail, since the
+      //     level was encoded into the cache file name.  Furthermore,
+      //     a wrong level should result in a wrong number of calls.
+      //     But we check anyway.
+      // (3) The total number of levels that the program recognizes.
+      //     If we change the enumeration, all bets are off.
+      // (4) The total number of formations for which we make menus.
+      //     If that changes, we can't possibly use the cache.
+      // (5) A quick checksum of the call schemata, after sorting.
+      //     This should catch changes in the sorting method, or in
+      //     the schema assignments.
+      // (6) The database version number.  This really shouldn't fail,
+      //     since a version change requires a database recompilation,
+      //     which changes the file modification time.
+      //     But we check anyway.
+
+      int callchecksum = 1234;
+
+      for (i=0; i<number_of_calls[call_list_any]; i++) {
+         callchecksum = (((int) main_call_lists[call_list_any][i]->the_defn.schema) -
+                         callchecksum * 272279397) & 0x7FFFFFFF;
       }
 
-      // Close the file.  Will exit if it fails.
-      close_call_list_file();
+      call_list_kind cl;
 
-      if (glob_call_list_mode != call_list_mode_abridging)
-         goto just_writing_list;   // That's all!
+      if (mapped_cache &&
+          mapped_cache[0] == number_of_calls[call_list_any] &&
+          mapped_cache[1] == (int) calling_level &&
+          mapped_cache[2] == (int) l_dontshow &&
+          mapped_cache[3] == (int) call_list_extent &&
+          mapped_cache[4] == callchecksum &&
+          mapped_cache[5] == DATABASE_FORMAT_VERSION) {
+         int cache_menu_words = 6;
+
+         for (cl = call_list_1x8; cl < call_list_extent ; cl = (call_list_kind) (cl+1)) {
+            // Read the menu length.
+            number_of_calls[cl] = mapped_cache[cache_menu_words++];
+            main_call_lists[cl] = (call_with_name **) get_mem(number_of_calls[cl] * sizeof(call_with_name *));
+            // Read the menu itself.
+            memcpy(main_call_lists[cl],
+                   mapped_cache+cache_menu_words,
+                   number_of_calls[cl]*sizeof(int));
+            cache_menu_words += number_of_calls[cl];
+         }
+      }
+      else {
+         // The cache didn't work.  We need to make the menus
+         // by testing all calls in all common setups.
+         // This is the thing that takes all the time.
+
+         test_starting_setup(call_list_1x8,  &test_setup_1x8);          /* RH grand wave */
+         test_starting_setup(call_list_l1x8, &test_setup_l1x8);         /* LH grand wave */
+         test_starting_setup(call_list_dpt,  &test_setup_dpt);          /* DPT */
+         test_starting_setup(call_list_cdpt, &test_setup_cdpt);         /* completed DPT */
+         test_starting_setup(call_list_rcol, &test_setup_rcol);         /* RCOL */
+         test_starting_setup(call_list_lcol, &test_setup_lcol);         /* LCOL */
+         test_starting_setup(call_list_8ch,  &test_setup_8ch);          /* 8CH */
+         test_starting_setup(call_list_tby,  &test_setup_tby);          /* TBY */
+         test_starting_setup(call_list_lin,  &test_setup_lin);          /* LIN */
+         test_starting_setup(call_list_lout, &test_setup_lout);         /* LOUT */
+         test_starting_setup(call_list_rwv,  &test_setup_rwv);          /* RWV */
+         test_starting_setup(call_list_lwv,  &test_setup_lwv);          /* LWV */
+         test_starting_setup(call_list_r2fl, &test_setup_r2fl);         /* R2FL */
+         test_starting_setup(call_list_l2fl, &test_setup_l2fl);         /* L2FL */
+         create_misc_call_lists(call_list_gcol);                        /* GCOL */
+         create_misc_call_lists(call_list_qtag);                        /* QTAG */
+
+         // Write the cache file;
+
+         int cache_menu_words = 6;
+
+         for (cl = call_list_1x8; cl < call_list_extent ; cl = (call_list_kind) (cl+1))
+            cache_menu_words += number_of_calls[cl]+1;    // Extra 1 for the menu size
+
+         int *cache_write_segment = cache_stuff.map_for_writing(cache_menu_words*4);
+
+         if (cache_write_segment) {
+            // Write the header.
+            cache_write_segment[0] = number_of_calls[call_list_any];
+            cache_write_segment[1] = (int) calling_level;
+            cache_write_segment[2] = (int) l_dontshow;
+            cache_write_segment[3] = (int) call_list_extent;
+            cache_write_segment[4] = callchecksum;
+            cache_write_segment[5] = DATABASE_FORMAT_VERSION;
+            cache_menu_words = 6;
+
+            for (cl = call_list_1x8; cl < call_list_extent ; cl = (call_list_kind) (cl+1)) {
+               // Write the menu length.
+               cache_write_segment[cache_menu_words++] = number_of_calls[cl];
+
+               // Write the index list.
+               memcpy(cache_write_segment+cache_menu_words,
+                      main_call_lists[cl],
+                      number_of_calls[cl]*sizeof(int));
+               cache_menu_words += number_of_calls[cl];
+            }
+         }
+         else
+            gg->fatal_error_exit(1, "Can't map menu cache file");
+      }
+
+      // Repair the damage to the call lists, that is, turn them from
+      // indices into pointers.  Then create the menus.
+
+      for (cl = call_list_1x8; cl < call_list_extent ; cl = (call_list_kind) (cl+1)) {
+         for (i=0; i < number_of_calls[cl]; i++)
+            main_call_lists[cl][i] = main_call_lists[call_list_any][(int) main_call_lists[cl][i]];
+
+         gg->create_menu(cl);
+      }
    }
 
-   /* Now the array "main_call_lists[call_list_any]"
-         has the stuff for the calls that we will actually use.
-      The remaining tasks are to make the subcall lists for other setups (e.g.
-         those calls legal from columns), and initialize the menus with the
-         subsetted text. */
+   // This was global to the initialization, but it goes away also.
+   free_mem(global_temp_call_indices);
 
-   // This is the universal menu.
-   gg->create_menu(call_list_any);
-   gg->init_step(do_tick, 1);
-
-   // Create the special call menus for restricted setups.
-
-   test_starting_setup(call_list_1x8,  &test_setup_1x8);          /* RH grand wave */
-   test_starting_setup(call_list_l1x8, &test_setup_l1x8);         /* LH grand wave */
-   test_starting_setup(call_list_dpt,  &test_setup_dpt);          /* DPT */
-   test_starting_setup(call_list_cdpt, &test_setup_cdpt);         /* completed DPT */
-   test_starting_setup(call_list_rcol, &test_setup_rcol);         /* RCOL */
-   test_starting_setup(call_list_lcol, &test_setup_lcol);         /* LCOL */
-   test_starting_setup(call_list_8ch,  &test_setup_8ch);          /* 8CH */
-   test_starting_setup(call_list_tby,  &test_setup_tby);          /* TBY */
-   test_starting_setup(call_list_lin,  &test_setup_lin);          /* LIN */
-   test_starting_setup(call_list_lout, &test_setup_lout);         /* LOUT */
-   test_starting_setup(call_list_rwv,  &test_setup_rwv);          /* RWV */
-   test_starting_setup(call_list_lwv,  &test_setup_lwv);          /* LWV */
-   test_starting_setup(call_list_r2fl, &test_setup_r2fl);         /* R2FL */
-   test_starting_setup(call_list_l2fl, &test_setup_l2fl);         /* L2FL */
-   create_misc_call_lists(call_list_gcol);                        /* GCOL */
-   create_misc_call_lists(call_list_qtag);                        /* QTAG */
-
-   /* This was global to the initialization, but it goes away also. */
-   free_mem(global_temp_call_list);
-
-   /* Initialize the special empty call menu */
+   // Initialize the special empty call menu.
 
    main_call_lists[call_list_empty] = empty_menu;
    number_of_calls[call_list_empty] = 0;
 
- just_writing_list: ;
-
    gg->init_step(tick_end, 0);
-
-   // If we wrote a call list file, that's all we do.
-   if (glob_call_list_mode == call_list_mode_writing ||
-       glob_call_list_mode == call_list_mode_writing_full) {
-      close_init_file();
-      return TRUE;
-   }
-
    matcher_initialize();
 
    // Make the status bar show that we are processing accelerators.
@@ -2367,5 +2413,5 @@ extern long_boolean open_session(int argc, char **argv)
 
    close_init_file();
    gg->final_initialize();
-   return FALSE;
+   return false;
 }

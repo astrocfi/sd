@@ -58,12 +58,6 @@ and the following external variables:
 
 #include <string.h>
 
-#ifdef WIN32
-#define SDLIB_API __declspec(dllexport)
-#else
-#define SDLIB_API
-#endif
-
 #include "sd.h"
 
 
@@ -84,7 +78,7 @@ int global_age;
 bool global_leave_missing_calls_blank;
 configuration *clipboard = (configuration *) 0;
 int clipboard_size = 0;
-long_boolean wrote_a_sequence = FALSE;
+bool wrote_a_sequence = false;
 bool retain_after_error = false;
 char outfile_string[MAX_FILENAME_LENGTH] = SEQUENCE_FILENAME;
 char header_comment[MAX_TEXT_LINE_LENGTH];
@@ -214,7 +208,7 @@ static Cstring sessions_init_table[] = {
 
 /* These variables are are global to this file. */
 
-static long_boolean reply_pending;
+static bool reply_pending;
 static int clipboard_allocation = 0;
 
 
@@ -621,9 +615,9 @@ void write_history_line(int history_index,
 
    thing = this_item->command_root;
    
-   /* Need to check for the special case of starting a sequence with heads or sides.
-      If this is the first line of the history, and we started with heads of sides,
-      change the name of this concept from "centers" to the appropriate thing. */
+   // Need to check for the special case of starting a sequence with heads or sides.
+   // If this is the first line of the history, and we started with heads of sides,
+   // change the name of this concept from "centers" to the appropriate thing.
 
    if (history_index == 2 &&
        thing->concept->kind == concept_centers_or_ends &&
@@ -643,8 +637,8 @@ void write_history_line(int history_index,
 
    morefinal:
 
-   /* Check for warnings to print. */
-   /* Do not double space them, even if writing final output. */
+   // Check for warnings to print.
+   // Do not double space them, even if writing final output.
 
    // First, don't print both "bad concept level" and "bad modifier level".
 
@@ -671,7 +665,7 @@ void write_history_line(int history_index,
       }
    }
 
-   if (picture || this_item->draw_pic) {
+   if (picture || this_item->draw_pic || ui_options.keep_all_pictures) {
       printsetup(&this_item->state);
 
       if (this_item->state.result_flags & RESULTFLAG__PLUSEIGHTH_ROT) {
@@ -692,13 +686,13 @@ void unparse_call_name(Cstring name, char *s, call_conc_option_state *options)
 {
    writechar_block_type saved_writeblock = writechar_block;
    writechar_block.destcurr = s;
-   writechar_block.usurping_writechar = TRUE;
+   writechar_block.usurping_writechar = true;
 
    writestuff_with_decorations(options, name);
    writechar('\0');
 
    writechar_block = saved_writeblock;
-   writechar_block.usurping_writechar = FALSE;
+   writechar_block.usurping_writechar = false;
 }
 
 
@@ -718,20 +712,20 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
 {
    parse_block *local_cptr;
    parse_block *next_cptr;
-   long_boolean use_left_name = FALSE;
-   long_boolean use_cross_name = FALSE;
-   long_boolean use_magic_name = FALSE;
-   long_boolean use_grand_name = FALSE;
-   long_boolean use_intlk_name = FALSE;
-   long_boolean allow_deferred_concept = TRUE;
+   bool use_left_name = false;
+   bool use_cross_name = false;
+   bool use_magic_name = false;
+   bool use_grand_name = false;
+   bool use_intlk_name = false;
+   bool allow_deferred_concept = true;
    parse_block *deferred_concept = (parse_block *) 0;
    int deferred_concept_paren = 0;
    int comma_after_next_concept = 0;    /* 1 for comma, 2 for the word "all". */
    int did_comma = 0;                   /* Same as comma_after_next_concept. */
-   long_boolean did_concept = FALSE;
-   long_boolean last_was_t_type = FALSE;
-   long_boolean last_was_l_type = FALSE;
-   long_boolean request_final_space = FALSE;
+   bool did_concept = false;
+   bool last_was_t_type = false;
+   bool last_was_l_type = false;
+   bool request_final_space = false;
 
    local_cptr = thing;
 
@@ -751,9 +745,9 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
          writestuff(fubb->txt);
          writestuff(" } ");
          local_cptr = local_cptr->next;
-         request_final_space = FALSE;
-         last_was_t_type = FALSE;
-         last_was_l_type = FALSE;
+         request_final_space = false;
+         last_was_t_type = false;
+         last_was_l_type = false;
          comma_after_next_concept = 0;
       }
       else if (k > marker_end_of_list) {
@@ -767,29 +761,29 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
          if (item->concparseflags & CONCPARSE_PARSE_F_TYPE) {
             /* This is an "F" type concept. */
             comma_after_next_concept = 1;
-            last_was_t_type = FALSE;
+            last_was_t_type = false;
             force = did_concept && !last_was_l_type;
-            last_was_l_type = FALSE;
-            did_concept = TRUE;
+            last_was_l_type = false;
+            did_concept = true;
          }
          else if (item->concparseflags & CONCPARSE_PARSE_L_TYPE) {
             /* This is an "L" type concept. */
-            last_was_t_type = FALSE;
-            last_was_l_type = TRUE;
+            last_was_t_type = false;
+            last_was_l_type = true;
          }
          else if (item->concparseflags & CONCPARSE_PARSE_G_TYPE) {
             /* This is a "leading T/trailing L" type concept, also known as a "G" concept. */
             force = last_was_t_type && !last_was_l_type;;
-            last_was_t_type = FALSE;
-            last_was_l_type = TRUE;
+            last_was_t_type = false;
+            last_was_l_type = true;
          }
          else {
             /* This is a "T" type concept. */
             if (did_concept && k != concept_tandem_in_setup) comma_after_next_concept = 1;
             force = last_was_t_type && !last_was_l_type;
-            last_was_t_type = TRUE;
-            last_was_l_type = FALSE;
-            did_concept = TRUE;
+            last_was_t_type = true;
+            last_was_l_type = false;
+            did_concept = true;
          }
 
          // We never put a comma before things like "in a 1/4 tag".
@@ -798,7 +792,7 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
 
          next_cptr = local_cptr->next;    /* Now it points to the thing after this concept. */
 
-         request_final_space = FALSE;
+         request_final_space = false;
 
          if (concept_table[k].concept_prop & CONCPROP__SECOND_CALL) {
             parse_block *subsidiary_ptr = local_cptr->subsidiary_root;
@@ -899,11 +893,11 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
                break;
             }
 
-            did_concept = FALSE;                /* We're starting over. */
-            last_was_t_type = FALSE;
-            last_was_l_type = FALSE;
+            did_concept = false;                /* We're starting over. */
+            last_was_t_type = false;
+            last_was_l_type = false;
             comma_after_next_concept = 0;
-            request_final_space = TRUE;
+            request_final_space = true;
 
             if (k == concept_centers_and_ends) {
                if (item->arg2)
@@ -927,7 +921,7 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
                writestuff(" AROUND");
             else if (k == concept_special_sequential_num) {
                writestuff_with_decorations(&local_cptr->options, " FOR THE @u PART: ");
-               request_final_space = FALSE;
+               request_final_space = false;
             }
             else if (k == concept_replace_nth_part ||
                      k == concept_replace_last_part ||
@@ -935,7 +929,7 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
                writestuff(" BUT ");
                writestuff_with_decorations(&local_cptr->options, local_cptr->concept->name);
                writestuff(" WITH A [");
-               request_final_space = FALSE;
+               request_final_space = false;
             }
             else if (k == concept_sequential)
                writestuff(" ;");
@@ -995,27 +989,27 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
             if (target_call &&
                 k == concept_left &&
                 (target_call->the_defn.callflagsf & ESCAPE_WORD__LEFT)) {
-               use_left_name = TRUE;
+               use_left_name = true;
             }
             else if (target_call &&
                      k == concept_magic &&
                      (target_call->the_defn.callflagsf & ESCAPE_WORD__MAGIC)) {
-               use_magic_name = TRUE;
+               use_magic_name = true;
             }
             else if (target_call &&
                      k == concept_grand &&
                      (target_call->the_defn.callflagsf & ESCAPE_WORD__GRAND)) {
-               use_grand_name = TRUE;
+               use_grand_name = true;
             }
             else if (target_call &&
                      k == concept_interlocked &&
                      (target_call->the_defn.callflagsf & ESCAPE_WORD__INTLK)) {
-               use_intlk_name = TRUE;
+               use_intlk_name = true;
             }
             else if (target_call &&
                      k == concept_cross &&
                      (target_call->the_defn.callflagsf & ESCAPE_WORD__CROSS)) {
-               use_cross_name = TRUE;
+               use_cross_name = true;
             }
             else if (allow_deferred_concept &&
                      next_cptr &&
@@ -1024,7 +1018,7 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
                       (k == concept_fractional && item->arg1 == 2))) {
                deferred_concept = local_cptr;
                comma_after_next_concept = 0;
-               did_concept = FALSE;
+               did_concept = false;
 
                // If there is another concept, we need parens.
                if (next_cptr->concept->kind > marker_end_of_list) deferred_concept_paren |= 1;
@@ -1056,7 +1050,7 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
                }
 
                writestuff_with_decorations(&local_cptr->options, local_cptr->concept->name);
-               request_final_space = TRUE;
+               request_final_space = true;
             }
 
             /* For some concepts, we still permit the "defer" stuff.  But don't do it
@@ -1068,16 +1062,16 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
                 k != concept_centers_or_ends &&
                 k != concept_c1_phantom &&
                 k != concept_tandem)
-               allow_deferred_concept = FALSE;
+               allow_deferred_concept = false;
          }
 
          if (comma_after_next_concept == 2) {
             writestuff(", ALL");
-            request_final_space = TRUE;
+            request_final_space = true;
          }
          else if (comma_after_next_concept == 1) {
             writestuff(",");
-            request_final_space = TRUE;
+            request_final_space = true;
          }
 
          did_comma = comma_after_next_concept;
@@ -1588,10 +1582,10 @@ void write_header_stuff(long_boolean with_ui_version, uint32 act_phan_flags)
 
    writestuff("     ");
 
-   /* log level info */
+   // Log level info.
    writestuff(getout_strings[calling_level]);
 
-   if (glob_call_list_mode == call_list_mode_abridging)
+   if (glob_abridge_mode == abridge_mode_abridging)
       writestuff(" (abridged)");
 }
 
@@ -1609,13 +1603,13 @@ extern void writechar(char src)
    if (src == ' ' && writechar_block.destcurr != current_line)
       writechar_block.lastblank = writechar_block.destcurr;
 
-   /* If drawing a picture, don't do automatic line breaks. */
+   // If drawing a picture, don't do automatic line breaks.
 
    if (writechar_block.destcurr < &current_line[MAX_PRINT_LENGTH] || writechar_block.usurping_writechar || ui_options.drawing_picture)
       writechar_block.destcurr++;
    else {
-      /* Line overflow.  Try to write everything up to the last
-         blank, then fill next line with everything since that blank. */
+      // Line overflow.  Try to write everything up to the last
+      // blank, then fill next line with everything since that blank.
 
       char save_buffer[MAX_TEXT_LINE_LENGTH];
       char *q = save_buffer;
@@ -2002,7 +1996,7 @@ static long_boolean backup_one_item()
       if (this_ptr == parse_state.concept_write_ptr) {
          parse_state.concept_write_ptr = last_ptr;
 
-         /* See whether we need to destroy a frame in the parse stack. */
+         // See whether we need to destroy a frame in the parse stack.
          if (parse_state.parse_stack_index != 0 &&
                parse_state.parse_stack[parse_state.parse_stack_index-1].concept_write_save_ptr == last_ptr)
             parse_state.parse_stack_index--;
@@ -2014,14 +2008,14 @@ static long_boolean backup_one_item()
       if ((*last_ptr)->concept->kind <= marker_end_of_list) break;
    }
 
-   /* We did not find our place. */
+   // We did not find our place.
 
    return FALSE;
 }
 
 
-// Returns TRUE if sequence was written.
-static long_boolean write_sequence_to_file() THROW_DECL
+// Returns true if sequence was written.
+static bool write_sequence_to_file() THROW_DECL
 {
    int getout_ind;
    char date[MAX_TEXT_LINE_LENGTH];
@@ -2029,19 +2023,19 @@ static long_boolean write_sequence_to_file() THROW_DECL
    char seqstring[20];
    int j;
 
-   /* Put up the getout popup to see if the user wants to enter a header string. */
+   // Put up the getout popup to see if the user wants to enter a header string.
 
    getout_ind = gg->do_getout_popup(second_header);
 
-   /* Some user interfaces (those with icons) may have an icon to abort the
-      sequence, rather than just decline the comment.  Such an action comes
-      back as "POPUP_DECLINE". */
+   // Some user interfaces (those with icons) may have an icon to abort the
+   // sequence, rather than just decline the comment.  Such an action comes
+   // back as "POPUP_DECLINE".
 
    if (getout_ind == POPUP_DECLINE)
-      return FALSE;    /* User didn't want to end this sequence after all. */
+      return false;    // User didn't want to end this sequence after all.
    else if (getout_ind != POPUP_ACCEPT_WITH_STRING) second_header[0] = '\0';
 
-   /* Open the file and write it. */
+   // Open the file and write it.
 
    clear_screen();
    open_file();
@@ -2066,7 +2060,7 @@ static long_boolean write_sequence_to_file() THROW_DECL
       newline();
    }
 
-   /* Write header comment, if it exists. */
+   // Write header comment, if it exists.
 
    if (header_comment[0]) {
       writestuff("             ");
@@ -2079,7 +2073,7 @@ static long_boolean write_sequence_to_file() THROW_DECL
       writestuff(seqstring);
    }
 
-   /* Write secondary header comment, if it exists. */
+   // Write secondary header comment, if it exists.
 
    if (second_header[0]) {
       writestuff("       ");
@@ -2108,7 +2102,7 @@ static long_boolean write_sequence_to_file() THROW_DECL
    enable_file_writing = FALSE;
    newline();
 
-   close_file();     /* This will signal a "specialfail" if a file error occurs. */
+   close_file();     // This will signal a "specialfail" if a file error occurs.
 
    writestuff("Sequence");
 
@@ -2122,9 +2116,9 @@ static long_boolean write_sequence_to_file() THROW_DECL
    writestuff("\".");
    newline();
 
-   wrote_a_sequence = TRUE;
+   wrote_a_sequence = true;
    global_age++;
-   return TRUE;
+   return true;
 }
 
 
@@ -2342,7 +2336,7 @@ void run_program()
                  (uims_menu_index == command_paste_all_calls) ||
                  (uims_menu_index == command_erase) ||
                  (uims_menu_index == command_abort)))
-               reply_pending = TRUE;
+               reply_pending = true;
             goto start_with_pending_reply;
          }
    
@@ -2356,7 +2350,7 @@ void run_program()
              retain_after_error &&
              ((configuration::history_ptr != 1) || !configuration::history[1].get_startinfo_specific()->into_the_middle) &&
              backup_one_item()) {
-            reply_pending = FALSE;
+            reply_pending = false;
             // Take out warnings that arose from the failed call,
             // since we aren't going to do that call.
             configuration::init_warnings();
@@ -2437,6 +2431,9 @@ void run_program()
          goto new_sequence;
       case start_select_toggle_nowarn_mode:
          ui_options.nowarn_mode = !ui_options.nowarn_mode;
+         goto new_sequence;
+      case start_select_toggle_keepallpic_mode:
+         ui_options.keep_all_pictures = !ui_options.keep_all_pictures;
          goto new_sequence;
       case start_select_toggle_singleclick_mode:
          ui_options.accept_single_click = !ui_options.accept_single_click;
@@ -2550,7 +2547,7 @@ void run_program()
    
    start_cycle:
 
-      reply_pending = FALSE;
+      reply_pending = false;
 
    start_with_pending_reply:
 
@@ -2587,14 +2584,14 @@ void run_program()
 
       initialize_parse();
 
-      /* Check for first call given to heads or sides only. */
+      // Check for first call given to heads or sides only.
    
       if ((configuration::history_ptr == 1) && configuration::history[1].get_startinfo_specific()->into_the_middle)
          deposit_concept(&conzept::centers_concept);
    
-      /* Come here to get a concept or call or whatever from the user. */
+      // Come here to get a concept or call or whatever from the user.
    
-      /* Display the menu and make a choice!!!! */
+      // Display the menu and make a choice!!!!
    
    simple_restart:
 
@@ -2611,11 +2608,11 @@ void run_program()
          goto start_cycle;
       }
    
-      /* If get here, query_for_call exitted without completing its parse, because the operator
-         selected something like "quit", "undo", or "resolve", or because we have such a command
-         already pending. */
+      // If get here, query_for_call exitted without completing its parse,
+      // because the operator selected something like "quit", "undo",
+      // or "resolve", or because we have such a command already pending.
 
-      reply_pending = FALSE;
+      reply_pending = false;
 
       if (global_reply == ui_command_select) {
          switch ((command_kind) uims_menu_index) {
@@ -2629,7 +2626,7 @@ void run_program()
             clear_screen();
             goto show_banner;
          case command_cut_to_clipboard:
-            while (backup_one_item()) ;   /* Repeatedly remove any parse blocks that we have. */
+            while (backup_one_item()) ;   // Repeatedly remove any parse blocks that we have.
             initialize_parse();
 
             if (configuration::history_ptr <= 1 ||
@@ -2641,7 +2638,7 @@ void run_program()
             if (clipboard_allocation < clipboard_size) {
                configuration *t;
                clipboard_allocation = clipboard_size;
-               /* Increase by 50% beyond what we have now. */
+               // Increase by 50% beyond what we have now.
                clipboard_allocation += clipboard_allocation >> 1;
                t = (configuration *)
                   get_more_mem_gracefully(clipboard,
@@ -2669,7 +2666,7 @@ void run_program()
          case command_paste_all_calls:
             if (clipboard_size == 0) specialfail("The clipboard is empty.");
 
-            while (backup_one_item()) ;   /* Repeatedly remove any parse blocks that we have. */
+            while (backup_one_item()) ;   // Repeatedly remove any parse blocks that we have.
             initialize_parse();
 
             if (configuration::history_ptr >= 1 &&
@@ -2685,14 +2682,14 @@ void run_program()
 
                   configuration::next_config() = clipboard[clipboard_size-1];
 
-                  /* Save the entire parse tree, in case it gets damaged
-                     by an aborted selector replacement. */
+                  // Save the entire parse tree, in case it gets damaged
+                  // by an aborted selector replacement.
 
                   saved_root = copy_parse_tree(configuration::next_config().command_root);
 
-                  /* If the setup, population, and facing directions don't match, the
-                     call execution is problematical.  We don't translate selectors.
-                     The operator is responsible for what happens. */
+                  // If the setup, population, and facing directions don't match, the
+                  // call execution is problematical.  We don't translate selectors.
+                  // The operator is responsible for what happens.
 
                   if (nuu->kind != old->kind) {
                      status |= 4;
@@ -2704,8 +2701,8 @@ void run_program()
                   livemask1 = 0;
                   livemask2 = 0;
 
-                  /* Find out whether the formations agree, and gather the information
-                     that we need to translate the selectors. */
+                  // Find out whether the formations agree, and gather the information
+                  // that we need to translate the selectors.
 
                   for (i=0; i<=attr::slimit(old); i++) {
                      uint32 p = old->people[i].id1;
@@ -2722,13 +2719,13 @@ void run_program()
                      directions2 = (directions2<<2) | (q&3);
 
                      mask |= (b|4) << (a*3 + 18);
-                     oldmask ^= mask;     /* The bits that changed. */
-                     /* Demand that, if anything changed at all, some new field got
-                        set.  This has the effect of demanding that existing fields
-                        never change, and that only new fields are created or existing
-                        fields are rewritten with their original data. */
+                     oldmask ^= mask;     // The bits that changed.
+                     // Demand that, if anything changed at all, some new field got
+                     // set.  This has the effect of demanding that existing fields
+                     // never change, and that only new fields are created or existing
+                     // fields are rewritten with their original data.
                      if (oldmask != 0 && (mask & 04444000000) == 0)
-                        mask |= 07777000000;  /* Raise error. */
+                        mask |= 07777000000;  // Raise error.
                      mask &= id_fixer_array[(a<<2) | b];
                   }
 
@@ -2737,9 +2734,9 @@ void run_program()
                      goto doitanyway;
                   }
 
-                  /* Everything matches.  Translate the selectors. */
+                  // Everything matches.  Translate the selectors.
 
-                  /* If error happened, be sure everyone knows about it. */
+                  // If error happened, be sure everyone knows about it.
                   if ((mask & 07777000000) == 07777000000) mask &= ~07777000000;
 
                   status |=
@@ -2789,21 +2786,21 @@ void run_program()
             goto start_cycle;
          case command_undo:
             if (backup_one_item()) {
-               /* We succeeded in backing up by one concept.  Continue from that point.
-                  But if we backed all the way to the beginning, reset the call menu list. */
+               // We succeeded in backing up by one concept.  Continue from that point.
+               // But if we backed all the way to the beginning, reset the call menu list.
 
                if (parse_state.concept_write_base == parse_state.concept_write_ptr &&
                    parse_state.parse_stack_index == 0)
                   parse_state.call_list_to_use = parse_state.base_call_list_to_use;
 
-               reply_pending = FALSE;
+               reply_pending = false;
                goto simple_restart;
             }
             else if (parse_state.concept_write_base != &configuration::next_config().command_root) {
                // Failed to back up, but some concept exists.  This must have been inside
                // a "checkpoint" or similar complex thing.  Just throw it all away,
                // but do not delete any completed calls.
-               reply_pending = FALSE;
+               reply_pending = false;
                goto start_cycle;
             }
             else if (parse_state.concept_write_base != parse_state.concept_write_ptr) {
@@ -2821,7 +2818,7 @@ void run_program()
                   goto show_banner;
                }
                else {
-                  reply_pending = FALSE;
+                  reply_pending = false;
                   goto start_cycle;
                }
             }
@@ -2840,11 +2837,11 @@ void run_program()
                }
             }
          case command_erase:
-            reply_pending = FALSE;
+            reply_pending = false;
             goto start_cycle;
          case command_save_pic:
             configuration::current_config().draw_pic = TRUE;
-            /* We have to back up to BEFORE the item we just changed. */
+            // We have to back up to BEFORE the item we just changed.
             if (written_history_items > configuration::history_ptr-1)
                written_history_items = configuration::history_ptr-1;
             goto simple_restart;
@@ -2939,7 +2936,7 @@ void run_program()
                goto start_cycle;
             }
          case command_getout:
-            /* Check that it is really resolved. */
+            // Check that it is really resolved.
 
             if (!configuration::sequence_is_resolved()) {
                if (gg->do_write_anyway_popup() != POPUP_ACCEPT)
@@ -2948,7 +2945,7 @@ void run_program()
             }
 
             if (!write_sequence_to_file())
-               goto start_cycle; /* user cancelled action */
+               goto start_cycle; // User cancelled action.
             goto new_sequence;
          case command_select_print_font:
             if (!gg->choose_font())
@@ -2966,21 +2963,21 @@ void run_program()
             if (!gg->help_manual())
                specialfail("Manual browsing is not supported in this program.");
             goto start_cycle;
-         default:     /* Should be some kind of search command. */
-            /* If it wasn't, we have a serious problem. */
+         default:     // Should be some kind of search command.
+            // If it wasn't, we have a serious problem.
             if (((command_kind) uims_menu_index) < command_resolve) goto normal_exit;
             search_goal = (command_kind) uims_menu_index;
             global_reply = full_resolve();
 
-            /* If full_resolve refused to operate (for example, we clicked on "reconcile"
-               when in an hourglass), it returned "ui_search_accept", which will cause
-               us simply to go to start_cycle. */
+            // If full_resolve refused to operate (for example, we clicked on "reconcile"
+            // when in an hourglass), it returned "ui_search_accept", which will cause
+            // us simply to go to start_cycle.
 
-            /* If user clicked on something random, treat it as though he clicked on "accept"
-               followed by whatever it was.  This includes "quit", "abort", "end this sequence",
-            and any further search commands.  So a search command (e.g. "pick random call")
-            will cause the last search result to be accepted, and begin another search on top
-            of that result. */
+            // If user clicked on something random, treat it as though he clicked on
+            // "accept" followed by whatever it was.  This includes "quit", "abort",
+            // "end this sequence", and any further search commands.
+            // So a search command (e.g. "pick random call") will cause the last
+            // search result to be accepted, and begin another search on top of that result.
 
             if (global_reply == ui_command_select) {
                switch ((command_kind) uims_menu_index) {
@@ -2998,8 +2995,9 @@ void run_program()
                parse_state.concept_write_base = &configuration::next_config().command_root;
                parse_state.concept_write_ptr = parse_state.concept_write_base;
                *parse_state.concept_write_ptr = (parse_block *) 0;
-               reply_pending = TRUE;
-               /* Going to start_with_pending_reply will make sure written_history_items does not exceed history_ptr. */
+               reply_pending = true;
+               // Going to start_with_pending_reply will make sure
+               // written_history_items does not exceed history_ptr.
                goto start_with_pending_reply;
             }
 

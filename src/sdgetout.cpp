@@ -23,13 +23,6 @@
    initialize_getout_tables
 */
 
-
-#ifdef WIN32
-#define SDLIB_API __declspec(dllexport)
-#else
-#define SDLIB_API
-#endif
-
 #include <stdio.h>
 #include <time.h>
 #include "sd.h"

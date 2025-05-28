@@ -34,7 +34,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#if defined(_MSC_VER)
 #pragma comment(lib, "comdlg32")
+#endif
 
 #include "deploy.h"     // This takes the place of the Visual C++-generated resource.h.
 

@@ -19,12 +19,6 @@
    initialize_tandem_tables
 */
 
-#ifdef WIN32
-#define SDLIB_API __declspec(dllexport)
-#else
-#define SDLIB_API
-#endif
-
 #include "sd.h"
 
 

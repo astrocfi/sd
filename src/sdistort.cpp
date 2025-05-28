@@ -35,13 +35,6 @@
    triangle_move
 */
 
-
-#ifdef WIN32
-#define SDLIB_API __declspec(dllexport)
-#else
-#define SDLIB_API
-#endif
-
 #include "sd.h"
 
 
@@ -3828,6 +3821,9 @@ extern void common_spot_move(
       // Remove the uncommon people from the common results, while checking that
       // they wound up in the same position in all 3 results.
 
+      static veryshort partner_tab_4x4[16] = {
+         14, 3, 7, 1, 5, 4, 8, 2, 6, 11, 15, 9, 13, 12, 0, 10};
+
       for (i=0; i<=attr::klimit(map_ptr->partial_kind); i++) {
          int t = map_ptr->uncommon[i];
          if (t >= 0 && ss->people[t].id1) {
@@ -3839,12 +3835,38 @@ extern void common_spot_move(
             for (k=0; k<=attr::klimit(the_results[0].kind); k++) {
                if (the_results[0].people[k].id1 &&
                    ((the_results[0].people[k].id1 ^ ss->people[t].id1) & PID_MASK) == 0) {
+                  int setup_to_clear = 0;
+                  int spot_to_clear = k;
                   if (((the_results[0].people[k].id1 ^ the_results[1].people[k].id1) |
                        ((the_results[0].people[k].id2 ^ the_results[1].people[k].id2) &
-                        !ID2_BITS_NOT_INTRINSIC)))
-                     fail("People moved inconsistently during common-spot call.");
+                        !ID2_BITS_NOT_INTRINSIC))) {
+                     // They didn't match.  Maybe some people had collided in one setup
+                     // but not the other.  Find where they might have gone.
+                     if (the_results[0].kind == s4x4) {
+                        int j = (the_results[0].people[k].id1 & 1) ? 
+                           (partner_tab_4x4[(k+4) & 15] + 12) & 15 :
+                           partner_tab_4x4[k];
 
-                  clear_person(&the_results[0], k);
+                        if (((the_results[0].people[k].id1 ^ the_results[1].people[j].id1) |
+                             ((the_results[0].people[k].id2 ^ the_results[1].people[j].id2) &
+                              !ID2_BITS_NOT_INTRINSIC))) {
+                           fail("People moved inconsistently during common-spot call.");
+                        }
+
+                        // Be sure one of them really got forced out, and cause the
+                        // other one to be deleted.
+                        if (!the_results[1].people[k].id1) {
+                           if (!the_results[0].people[j].id1)
+                              fail("People moved inconsistently during common-spot call.");
+                           setup_to_clear = 1;
+                           spot_to_clear = j;
+                        }
+                     }
+                     else
+                        fail("People moved inconsistently during common-spot call.");
+                  }
+
+                  clear_person(&the_results[setup_to_clear], spot_to_clear);
                   goto did_it;
                }
             }

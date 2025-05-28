@@ -78,7 +78,7 @@ void iofull::final_initialize()
 
 void iofull::display_help()
 {
-   printf("-lines <N>                  assume this many lines on the screen\n");
+   printf("-lines <n>                  assume this many lines on the screen\n");
    printf("-no_cursor                  do not use screen management functions at all\n");
    printf("-journal <filename>         echo input commands to journal file\n");
 }

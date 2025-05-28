@@ -22,26 +22,6 @@
 @sp 3
 I really liked the choice @kbd{no one do your part, bend the line} -- Justin Legakis
 
-@unnumberedsec Version 34.7 changes
-
-The program can write the output file with extension @file{.txt}
-if it is given the command line argument ``-new_style_filename''.
-Such files will have names like @file{sequence_C1.txt} or
-@file{01sep02_C1.txt}.  You can also get this behavior by adding
-the line ''new_style_filename'' to the ``[options]'' section of
-the sd.ini file, so that it looks like this:
-
-@example
-@group
-[Options]
-new_style_filename
-@end group
-@end example
-
-Having a file name of this form should make the output files
-able to be read and printed by common text editors and word processors,
-and sent as email attachments.
-
 @unnumberedsec How do I change the Sd window size?
 
 Users have different preferences about how big they want the
@@ -242,6 +222,66 @@ typed first.  Hence @kbd{[anything] and roll} always uses brackets.
 So, if you are having trouble of this sort, try adding brackets
 or leaving them out.
 
+@unnumberedsec Why is the Roll direction wrong after Spin Chain and Exchange the Gears?
+
+@code{Sd} defines this call in terms of 3/4 Exchange the Diamonds and Interlocked
+Flip the Diamond, and sets the Roll direction accordingly.  We consider the
+Callerlab definition to be a pathetic attempt to give precision do a definition
+that was never intended to be precise.  Accordingly, we consider attempts to
+deduce Roll direction from the Callerlab definition to be misguided.
+
+@unnumberedsec How can I make Sd doesn't seem to understand ``common spot'' better?
+
+Try saying (to the program, not necessarily to the dancers) ``initially common
+spot''.  This tells @code{Sd} to reassemble the different groups of people
+after the first part of the call.  Otherwise, it keeps the groups separate
+through the whole call, which makes it much harder to figure out what is
+happening.
+
+@unnumberedsec Sd doesn't allow something.  Does that mean it's bogus?
+
+No, no, 1000 times, no!  @code{Sd}, like many other computer programs,
+is an attempt at approximating human knowledge and judgement.  It really
+doesn't come close.
+
+@unnumberedsec Sd allows something.  Does that mean it's legal?
+
+No, no, 1000 times, no!  While we attempt to enforce the ``rules'' of square
+dancing accurately, there are many things that @code{Sd} allows that are not
+legal or appropriate.  You should not use @code{Sd}, or any other choreography
+program, if you do not understand the level that you are calling.  If you
+call beyond your knowledge and ability, the dancers will notice.
+
+@unnumberedsec Why is @code{Sd} so fussy with apostrophes?  Why can't I just type @kbd{lockers choice}?
+
+You can.  You never need to type apostrophes or hyphens.  You can type
+either @kbd{lockers choice} or @kbd{locker's choice}.  You can type either
+@kbd{tandem based triangles} or @kbd{tandem-based triangles}.
+
+@unnumberedsec Why is @code{Sd} so fussy with spaces in call names?  Why can't I just type @kbd{inroll circulate}?
+
+Sorry.  The parser (the part of the program that interprets your keystrokes as
+call and concept names) has a very hard job to do when it completes your
+input.  That is, it lets you type @kbd{fe w} at Mainstream, and figures out that
+you meant @kbd{ferris wheel}.  In order to do this, it must take clues from
+the spaces that you typed.  Unlike apostrophes and hyphens, it can't make
+spaces optional.
+
+We are aware that there are programs that spell some calls with shorter names,
+such as @kbd{inroll circulate}.  We believe that spelling the calls the way they
+are spelled in the Callerlab lists and other commonly accepted literature is
+more important.  You can always define your own ``hot keys'' (accelerator keys)
+or abbreviations for any calls.
+
+@unnumberedsec When I say @kbd{patch the centers}, is it the original centers that do the U-turn back?
+
+Yes.  People's positions are not re-evaluated after the hinge.  We
+believe that this the right way of handling this sort of
+thing in general.  There are exceptions, such as @kbd{tap the
+centers}, but those are best left as exceptions rooted in history.
+
+Actually, this is all screwed up.  I need to check Lynette and Rob's email.
+
 @unnumberedsec How do I do 3x1 triangles circulate?
 
 You try to circulate in 3x1 triangles, by typing @kbd{3x1
@@ -285,6 +325,92 @@ So if you tried just @code{triang}, you might get
 @end group
 @end example
 
+@unnumberedsec How do I do @kbd{line to line but replace the last part with <anything>}?
+
+@code{Sd} recognizes the call @kbd{line to line but <anything>}.  The <anything>
+replaces the final @kbd{pass in}.  (Note that this is an exception to the general
+principle the @kbd{but} calls replace the last thing done in the center.  This
+is one of a handful of exceptions that are justified by longstanding usage.)
+
+Suppose you didn't know that.  You do the usual thing---type something like
+@kbd{line to l?}.  It will list
+
+@example
+@group
+line to line
+line to line but <ANYTHING>
+@end group
+@end example
+
+Of course, when you see the ``<ANYTHING>'', you know that you can type
+square brackets with a call inside.
+
+@unnumberedsec What is the difference between ``initially centers'' and ``centers start''?
+
+A very profound question.  A lot of discussion went on among challenge callers
+over how these should be used.  Of course, before computers were in common use,
+these sorts of things were used in an imprecise way, only in situations in which
+the meaning would be simple and obvious.  As challenge choreography became more
+complex, it became necessary to work out a really precise meaning.
+
+@kbd{Initially <concept>} always means to apply the concept to the first part.
+When you apply the @kbd{centers} concept to something, it means only the centers do
+it, as though they are the only people present.  For example, on @kbd{centers trade}
+from waves, the centers trade with each other.  The ends do not enter into their
+thinking.  So @kbd{initially centers recycle} applies the @kbd{centers} concept
+to the first part or recycle.  As such, the very center 2 are the ones who fold.
+
+@example
+@group
+ 2G^                    3BV         1B>   2G>   1G>   4B>
+     2BV  3G^  1GV  4B^
+ 1B^                    4GV         2B<   3G<   4G<   3B<
+
+                 initially centers, 2/3 recycle
+@end group
+@end example
+
+@kbd{Anyone start} means that the designated people do the first part of the
+call, while the others wait.  Then the ohers join in for the rest of the call.
+When doing the first part, they are aware of the whole setup.
+For example, from C1 phantoms, one could call @kbd{girls start, 1/4 thru}.
+The girls are aware of the rest of the setup (even though the boys aren't precisely
+where they need to be for a 1/4 thru) when they start the call.  Everyone
+joins in after the first part.
+
+@example
+@group
+    3G>
+             2B^   3BV
+    2G<                             2G^   2BV   3G^   3BV
+
+                4G>                 1B^   1GV   4B^   4GV
+ 1B^   4BV
+                1G<
+
+                  girls start 1/4 thru
+@end group
+@end example
+
+So, on @kbd{centers start, recycle}, the centers are aware of the ends, and of
+the general setup that the ends make part of.  The person in the center wave that
+is closer to the ends considers herself to be the ``center'' of the 4-person
+formation doing the recycle.
+
+@example
+@group
+ 2G^                    3BV         1B>   2G>   3G>   2B>
+     1G^  4BV  2B^  3GV
+ 1B^                    4GV         4B<   1G<   4G<   3B<
+
+                 centers start, 2/3 recycle
+@end group
+@end example
+
+@unnumberedsec How do I say something like ``initially use ah so in spin chain the gears''?
+
+Just like that.  Finish writing this.
+
 @unnumberedsec How do I start a sequence with all 4 ladies chain?
 
 This, of course, needs to be written.....
@@ -321,51 +447,73 @@ When calling, you would presumably say [emphasis added]
 "All 4 ladies chain 3/4, *AT* the heads, square thru ...."
 or whatever terminology you like to use.
 
-@unnumberedsec Version 33.15 changes
+@unnumberedsec Why are Sd and Sdtty no longer compiled with Microsoft Visual C++?
 
-The function key control-F11 has been set to perform the @samp{standardize} operation.
+I'm glad you asked.  The Microsoft compiler is not of acceptably high
+quality for the compilation of Sd and Sdtty.  Microsoft may know how to
+write software that propagates email viruses, and they may know how to
+write software that deletes competitors' products, and they may know how
+to write software that makes competing web browsers look defective, but
+they don't know how to write compilers.  Compilations of Sd and Sdtty
+have been observed to crash on ``snag bits and pieces'' from waves.  At
+first this was believed to occur only with Visual C++ version 6, service
+pack 3, which caused me to revert to version 5.
 
-@unnumberedsec Version 33.0 changes
+The bug was eventually tracked down to incorrect restoration of the ECX
+register upon exit from a ``switch'' statement.  Bugs of this type, in
+which the compiler generates incorrect object code without giving any
+warning or error message, are inexcusable.  The bug was reported to
+Microsoft in detail on 17 December 2001.  No reply or fix was
+forthcoming.  Over a year later a followup message was sent to Microsoft
+management asking about it.  They gave me their customer support website
+(http://support.microsoft.com) and phone number (800-936-5800).  Both contact
+points want me to pay them money before I can even find out whether they intend
+to fix this bug.
 
-The call previously known as just @samp{mixed up} has been changed to
-@samp{mixed up square thru}.
+The bug was subsequently observed with version 5 also, creating a
+serious problem.  (No version of Sd or Sdtty exhibiting this bug was
+ever released.)  As of version 35, Gcc is used for the compilation of
+Sd/Sdtty for Windows.  It has always been used for the Linux release, of
+course.
 
-@unnumberedsec Version 32.95 changes
+@unnumberedsec So what software is used in the preparation of Sd and Sdtty?
 
-The program has been tested successfully for year 2000 compliance.
+@example
+  computer:            Compaq Armada 7710MT
+  OS:                  Windows NT4.0 Workstation    commercial
+  editor:              GNU Emacs 20.7               free
+  development system:  MingW 2.0.0-3                free
+  compiler/linker:     GCC 3.2                      free
+  compress utilities:  Winzip 8.0                   commercial
+                       Winzip Self Extractor 2.1    commercial
+                       gzip 1.2.4                   free
+  document preprocessor: texinfo 1999-03-26.17      free
+  document formatter:  MiKTeX 1.20d                 free
+  HTML formatter:      Perl 5.004-02                free
+                       Texi2html 1.51               free
+  postscript viewer:   GSView 2.7                   free
+                       Ghostscript 5.50             free
+  PDF viewer:          Acrobat 4.0                  free
+  HTML viewer:         Netscape 4.76                free
+  Zip disk software:   Iomega 2.8.0.2               commercial
+  mailer for upload:   Netscape 4.76                free
+@end example
 
-@unnumberedsec Version 32.9 changes
+Microsoft Frontpage is not used at any point in the preparation, so there
+is no danger of running afoul of Microsoft's licensing restrictions against
+making web pages that "disparage Microsoft, MSN, MSNBC, Expedia, or their
+products or services".  We don't want to damage Bill Gates' ego.  He'd have to
+buy a new one.
 
-The installation program was improved.  If a previous version of @code{Sd} is
-found in the folder @file{C:\Sd}, you are asked whether to save that version,
-and you are allowed to choose the folder in which to place the saved copy.
+The Compaq Armada on which Sd is developed has no internet connections,
+and runs no mail or internet software, Microsoft or otherwise.  The released
+files are written onto a Zip disk and transferred to another computer for upload.
 
-@unnumberedsec Version 32.81 changes
+@unnumberedsec Is free software actually that much higher in quality than commercial software?
 
-A bug was fixed in the definition of @samp{little more}.  This is a two-part
-call.  The first part is just a @samp{little}, which has the centers
-step and fold while the ends both 1/4 right and counter rotate.
-The second part has the centers circulate while the ends do nothing.
-While people might prefer a different apportioning of the centers'
-and ends' parts for various reasons, this is the way it is defined in
-the Callerlab C2 definitions, the Ceder Chest, and the Ben Rubright
-Pocket Reference.
-
-@unnumberedsec Version 32.67 changes
-
-A bug that caused a failure in tip #8 in the C4 hall at the 1999 National
-Advanced and Challenge Convention was fixed.  We apologize for any
-inconvenience that this may have caused.
-
-@unnumberedsec Version 32.65 changes
-
-There were no profound changes in the ``dancing'' behavior of the
-program, but there were, as usual, numerous minor changes.  Most of the
-significant changes were in the internal organization, to prepare for
-the upcoming release of @code{Sd} for Windows.
-
-@unnumberedsec Version 32.6 changes
-
-Foobar.
+It sure is.  A worldwide network of hobby programmers who take pride in
+their work make vastly better products than big companies that are
+managed by people who want to get the most possible money from the least
+possible work.
 
 @bye

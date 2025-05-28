@@ -103,7 +103,7 @@ void iofull::set_pick_string(const char *string) {}
 
 void iofull::display_help()
 {
-   printf("-lines <N>                  assume this many lines on the screen\n");
+   printf("-lines <n>                  assume this many lines on the screen\n");
    printf("-no_line_delete             do not use the \"line delete\" function for screen management\n");
    printf("-no_cursor                  do not use screen management functions at all\n");
    printf("-journal <filename>         echo input commands to journal file\n");

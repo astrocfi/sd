@@ -1,6 +1,7 @@
 /* SD -- square dance caller's helper.
 
     Copyright (C) 1990-2000  William B. Ackerman.
+    Copyright (C) 1996 Charles Petzold.
 
     This file is unpublished and contains trade secrets.  It is
     to be used by permission only and not to be disclosed to third
@@ -34,7 +35,9 @@ extern void windows_print_any(HWND hwnd, char *szMainTitle, HINSTANCE hInstance)
 void PrintFile(const char *szFileName, HWND hwnd, char *szMainTitle, HINSTANCE hInstance);
 
 
+#if defined(_MSC_VER)
 #pragma comment(lib, "comctl32")
+#endif
 
 
 static LOGFONT lf;
@@ -256,9 +259,11 @@ void PrintFile(const char *szFileName, HWND hwnd, char *szMainTitle, HINSTANCE h
                      bEOF = true;
                      break;
                   }
+
                   // Strip off any <NEWLINE> -- we don't want it.  Note that, since
                   // we are using a POSIX call to read the file, we get POSIX-style
                   // line breaks -- just '\n'.
+
                   int j = strlen(pstrBuffer);
                   if (j>0 && pstrBuffer[j-1] == '\n')
                      pstrBuffer[j-1] = '\0';
@@ -364,6 +369,8 @@ extern void windows_print_any(HWND hwnd, char *szMainTitle, HINSTANCE hInstance)
    char szCurDir[_MAX_PATH];
    char szFileToPrint[_MAX_PATH];
    OPENFILENAME ofn;
+   static const char szFilter[] = "Text Files (*.txt)\0*.txt\0" \
+      "All Files (*.*)\0*.*\0";
 
    (void) GetCurrentDirectory(_MAX_PATH, szCurDir);
 
@@ -377,13 +384,13 @@ extern void windows_print_any(HWND hwnd, char *szMainTitle, HINSTANCE hInstance)
    else      
       ofn.lpstrInitialDir = "";
    ofn.hwndOwner = hwnd;
-   ofn.lpstrFilter = 0;
+   ofn.lpstrFilter = szFilter;
    ofn.lpstrFile = szFileToPrint;
    ofn.nMaxFile = _MAX_PATH;
    ofn.lpstrFileTitle = 0;
    ofn.nMaxFileTitle = 0;
    ofn.Flags = OFN_PATHMUSTEXIST | OFN_HIDEREADONLY | OFN_FILEMUSTEXIST;
-   ofn.lpstrDefExt = "";
+   ofn.lpstrDefExt = "txt";
 
    if (!GetOpenFileName(&ofn))
       return;     // Take no action if we didn't get a file name.

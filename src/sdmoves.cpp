@@ -32,12 +32,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#ifdef WIN32
-#define SDLIB_API __declspec(dllexport)
-#else
-#define SDLIB_API
-#endif
-
 #include "sd.h"
 
 
@@ -1023,7 +1017,7 @@ static int start_matrix_call(
          if (flags & MTX_USE_SELECTOR)
             matrix_info[nump].sel = selectp(people, nump);
          else
-            matrix_info[nump].sel = FALSE;
+            matrix_info[nump].sel = false;
 
          matrix_info[nump].id1 = people->people[nump].id1;
          matrix_info[nump].dir = people->people[nump].id1 & 3;
@@ -4192,7 +4186,7 @@ static long_boolean do_misc_schema(
 
    if (the_schema == schema_select_leads) {
       inner_selective_move(ss, foo1p, &foo2,
-                           selective_key_plain, TRUE, 0, 0,
+                           selective_key_plain, 1, 0, 0,
                            selector_leads,
                            innerdef->modifiers1,
                            outerdef->modifiers1,
@@ -4200,7 +4194,7 @@ static long_boolean do_misc_schema(
    }
    else if (the_schema == schema_select_headliners) {
       inner_selective_move(ss, foo1p, &foo2,
-                           selective_key_plain, TRUE, 0, 0x80000008UL,
+                           selective_key_plain, 1, 0, 0x80000008UL,
                            selector_uninitialized,
                            innerdef->modifiers1,
                            outerdef->modifiers1,
@@ -4208,7 +4202,7 @@ static long_boolean do_misc_schema(
    }
    else if (the_schema == schema_select_sideliners) {
       inner_selective_move(ss, foo1p, &foo2,
-                           selective_key_plain, TRUE, 0, 0x80000001UL,
+                           selective_key_plain, 1, 0, 0x80000001UL,
                            selector_uninitialized,
                            innerdef->modifiers1,
                            outerdef->modifiers1,
@@ -4260,7 +4254,7 @@ static long_boolean do_misc_schema(
       case s_galaxy: resultmask = 0xAA; break;
       }
       inner_selective_move(ss, foo1p, (setup_command *) 0,
-                           selective_key_plain, FALSE, 0, resultmask,
+                           selective_key_plain, 0, 0, resultmask,
                            selector_uninitialized,
                            innerdef->modifiers1,
                            outerdef->modifiers1,
@@ -4275,7 +4269,7 @@ static long_boolean do_misc_schema(
       }
 
       inner_selective_move(ss, foo1p, (setup_command *) 0,
-                           selective_key_plain, FALSE, 0, result_mask,
+                           selective_key_plain, 0, 0, result_mask,
                            selector_uninitialized,
                            innerdef->modifiers1,
                            outerdef->modifiers1,
@@ -4324,7 +4318,7 @@ static long_boolean do_misc_schema(
       }
 
       inner_selective_move(ss, foo1p, (setup_command *) 0,
-                           selective_key_plain, FALSE, 0, resultmask,
+                           selective_key_plain, 0, 0, resultmask,
                            selector_uninitialized,
                            innerdef->modifiers1,
                            outerdef->modifiers1,
@@ -4339,7 +4333,7 @@ static long_boolean do_misc_schema(
       }
 
       inner_selective_move(ss, foo1p, &foo2,
-                           selective_key_plain_no_live_subsets, TRUE, 0, result_mask,
+                           selective_key_plain_no_live_subsets, 1, 0, result_mask,
                            selector_uninitialized,
                            innerdef->modifiers1,
                            outerdef->modifiers1,
@@ -4359,7 +4353,7 @@ static long_boolean do_misc_schema(
    }
    else if (the_schema == schema_select_those_facing) {
       inner_selective_move(ss, foo1p, &foo2,
-                           selective_key_plain_from_id_bits, TRUE, 0, 0,
+                           selective_key_plain_from_id_bits, 1, 0, 0,
                            selector_thosefacing,
                            innerdef->modifiers1,
                            outerdef->modifiers1,
@@ -5142,7 +5136,7 @@ static void really_inner_move(setup *ss,
    if (special_selector == selector_none) fail("Can't do this call in this formation.");
 
    inner_selective_move(ss, &foo1, (setup_command *) 0,
-                        special_indicator, FALSE, 0, 0,
+                        special_indicator, 0, 0, 0,
                         special_selector, special_modifiers, 0, result);
 
  foobarf:
@@ -5187,6 +5181,38 @@ static void really_inner_move(setup *ss,
 }
 
 
+static bool do_forced_couples_stuff(
+   setup *ss,
+   setup *result) THROW_DECL
+{
+   // If we have a pending "centers/ends work <concept>" concept,
+   // we must dispose of it the crude way.
+
+   if (ss->cmd.cmd_misc2_flags & (CMD_MISC2__ANY_WORK | CMD_MISC2__ANY_SNAG)) {
+      punt_centers_use_concept(ss, result);
+      return true;
+   }
+
+   ss->cmd.cmd_misc_flags &= ~CMD_MISC__DO_AS_COUPLES;
+   uint32 mxnflags = ss->cmd.do_couples_her8itflags &
+      (INHERITFLAG_SINGLE | INHERITFLAG_MXNMASK | INHERITFLAG_NXNMASK);
+
+   /* Mxnflags now has the "single" bit, or any "1x3" stuff.  If it is the "single"
+      bit alone, we do the call directly--we don't do "as couples".  Otherwise,
+      we the do call as couples, passing any modifiers. */
+
+   ss->cmd.do_couples_her8itflags &= ~mxnflags;
+
+   if (mxnflags != INHERITFLAG_SINGLE) {
+      tandem_couples_move(ss, selector_uninitialized, 0, 0, 0,
+                          tandem_key_cpls, mxnflags, TRUE, result);
+      return true;
+   }
+
+   return false;
+}
+
+
 
 // This leaves the split axis result bits in absolute orientation.
 
@@ -5196,14 +5222,19 @@ static void move_with_real_call(
    bool did_4x4_expansion,
    setup *result) THROW_DECL
 {
-   /* We have a genuine call.  Presumably all serious concepts have been disposed of
-      (that is, nothing interesting will be found in parseptr -- it might be
-      useful to check that someday) and we just have the callspec and the final
-      concepts. */
+   // We have a genuine call.  Presumably all serious concepts have been disposed of
+   // (that is, nothing interesting will be found in parseptr -- it might be
+   // useful to check that someday) and we just have the callspec and the final
+   // concepts.
 
    if (ss->cmd.cmd_misc_flags & CMD_MISC__RESTRAIN_MODIFIERS) {
       ss->cmd.cmd_misc_flags &= ~CMD_MISC__RESTRAIN_MODIFIERS;
       ss->cmd.cmd_final_flags.set_heritbits(ss->cmd.restrained_super8flags);
+      ss->cmd.do_couples_her8itflags = ss->cmd.restrained_super9flags;
+
+      if (ss->cmd.restrained_do_as_couples) {
+         if (do_forced_couples_stuff(ss, result)) return;
+      }
    }
 
    if (ss->kind == nothing) {
@@ -5889,6 +5920,9 @@ static void move_with_real_call(
 
       really_inner_move(ss, qtfudged, this_defn, the_schema, callflags1, callflagsf,
                         did_4x4_expansion, imprecise_rotation_result_flag, mirror, result);
+
+      if ((callflagsf & CFLAG2_DO_EXCHANGE_COMPRESS))
+         normalize_setup(result, normalize_after_exchange_boxes, false);
    }
    catch(error_flag_type foo) {
       if (foo < error_flag_no_retry && this_defn != deferred_array_defn) {
@@ -6055,6 +6089,10 @@ extern void move(
 
          ss->cmd.cmd_misc_flags |= CMD_MISC__RESTRAIN_MODIFIERS;
          ss->cmd.restrained_super8flags = ss->cmd.cmd_final_flags.herit;
+         ss->cmd.restrained_do_as_couples =
+            (ss->cmd.cmd_misc_flags & CMD_MISC__DO_AS_COUPLES) != 0;
+         ss->cmd.cmd_misc_flags &= ~CMD_MISC__DO_AS_COUPLES;
+         ss->cmd.restrained_super9flags = ss->cmd.do_couples_her8itflags;
          ss->cmd.cmd_final_flags.clear_all_heritbits();
          if (did_crazy_tag_back) {
             ss->cmd.parseptr = *z0;
@@ -6082,31 +6120,7 @@ extern void move(
    }
 
    if (ss->cmd.cmd_misc_flags & CMD_MISC__DO_AS_COUPLES) {
-      uint32 mxnflags;
-
-      /* If we have a pending "centers/ends work <concept>" concept,
-         we must dispose of it the crude way. */
-
-      if (ss->cmd.cmd_misc2_flags & (CMD_MISC2__ANY_WORK | CMD_MISC2__ANY_SNAG)) {
-         punt_centers_use_concept(ss, result);
-         return;
-      }
-
-      ss->cmd.cmd_misc_flags &= ~CMD_MISC__DO_AS_COUPLES;
-      mxnflags = ss->cmd.do_couples_her8itflags &
-         (INHERITFLAG_SINGLE | INHERITFLAG_MXNMASK | INHERITFLAG_NXNMASK);
-
-      /* Mxnflags now has the "single" bit, or any "1x3" stuff.  If it is the "single"
-         bit alone, we do the call directly--we don't do "as couples".  Otherwise,
-         we the do call as couples, passing any modifiers. */
-
-      ss->cmd.do_couples_her8itflags &= ~mxnflags;
-
-      if (mxnflags != INHERITFLAG_SINGLE) {
-         tandem_couples_move(ss, selector_uninitialized, 0, 0, 0,
-                             tandem_key_cpls, mxnflags, TRUE, result);
-         return;
-      }
+      if (do_forced_couples_stuff(ss, result)) return;
    }
 
    if (ss->cmd.callspec) {

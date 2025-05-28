@@ -23,6 +23,7 @@
 #include <shellapi.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 #include "sd.h"
 
@@ -74,7 +75,7 @@ void iofull::set_pick_string(const char *string)
 
 void iofull::display_help()
 {
-   printf("-lines <N>                  assume this many lines on the screen\n");
+   printf("-lines <n>                  assume this many lines on the screen\n");
    printf("-no_console                 do not do any fancy screen processing -- use this\n");
    printf("                                 when input or output is redirected\n");
    printf("-no_cursor                  do not use screen management functions at all\n");

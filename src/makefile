@@ -1,9 +1,9 @@
-# Makefile for Sd/Sdtty for Linux
+# Makefile for Sd/Sdtty for Cygnus gcc.
 
 # This gives the compiler name and any switches that it needs to make
 # it operate the way we want (ANSI language, standards conformance,
 # target hardware, etc.)
-CC = g++
+CC = gcc
 
 # This gives any "-D" switches that we always need to send to the compiler.
 DEFS = -Wall -Wno-switch -Wno-uninitialized -Wno-char-subscripts
@@ -22,119 +22,78 @@ CFLAGS =$(CDEBUGFLAGS) $(DEFS)
 
 # These are the "-I"  and "-D" flags that we must use for the compilation
 # of the X11 user interface (sdui-x11.c).
-X11_FLAGS =
+X11_FLAGS = 
 
 # These are the "-I"  and "-D" flags that we must use for the compilation
 # of the system-dependent part of the TTY user interface (sdui-ttu.cpp).
-# "-DNO_CURSES" - disable compilation with curses.
-#
-TTY_FLAGS =
+TTY_FLAGS = -DNO_CURSES -DNO_IOCTL
 
 # These are the library flags that we must use for the final bind of
 # the X11 version of "sd".
-X11_LIBS =
+X11_LIBS = 
 
 # These are the library flags that we must use for the final bind of
 # "sdtty".
-#
-# There was a time when I thought that libraries might actually work
-# properly on Linux.  After all, the Unix community has had about
-# 30 years to figure out how to do it.  Alas, it isn't so.  Libraries
-# are just as broken on Linux as on HP-UX.  (OK, not *that* broken,
-# but still unacceptable.)  Specifically, a compilation on Debian 3.0
-# wouldn't run on Red Hat 6.2.  Something about curses version 4 vs.
-# version 5.  Haven't these people had long enough to get curses
-# right?  Well, they're actually a long way from getting it right.
-# (Hint: press escape and note that it delays for 1 second before
-# clearing the text line.  The reason has to do with the nonexistent
-# possibility (honest, I'm using a modern keyboard, and I'm pretty
-# sure the OS knows that!) that the terminal is a DEC VT100.)
-# So they're nowhere close to getting it right.  But couldn't
-# they at least get it consistent and compatible?
-# And curses only handles a few function keys, because that's all the
-# VT100 had.  My keyboard has F1 through F12, and can distinguish
-# between normal, control, alt, and control alt.  PC hardware has had
-# this for many years.  Sd and Sdtty on Windoze make use of those,
-# but Linux can't be bothered.
-#
-# Sorry about the flaming, but I'm really tired of this.
-#
-# So we statically bind the curses library.  We do not use "-lcurses".
-#
-# In fact, we statically bind all libraries, because there have been
-# other problems.  The Linux community, like the Unix community
-# before them, just can't get their act together.
-#TTY_LIBS = /usr/lib/libcurses.a
-TTY_LIBS = -static -lcurses
-
-SD_SRCS = sdmain.cpp sdutil.cpp sdbasic.cpp sdinit.cpp \
-          sdtables.cpp sdctable.cpp sdtop.cpp sdconcpt.cpp sdpreds.cpp \
-          sdgetout.cpp sdmoves.cpp sdtand.cpp sdconc.cpp sdistort.cpp \
-          sdpick.cpp sdsi.cpp
+TTY_LIBS =
 
 SD_OBJS = sdmain.o sdutil.o sdbasic.o sdinit.o \
           sdtables.o sdctable.o sdtop.o sdconcpt.o sdpreds.o \
           sdgetout.o sdmoves.o sdtand.o sdconc.o sdistort.o \
           sdpick.o sdsi.o
 
-SDX11_SRC = sdui-x11.c
 SDX11_OBJ = sdui-x11.o
-
-SDTTY_SRCS = sdui-tty.cpp sdmatch.cpp sdui-ttu.cpp
 SDTTY_OBJS = sdui-tty.o sdmatch.o sdui-ttu.o
 
 SDTTY_LINK_OBJS = $(SD_OBJS) $(SDTTY_OBJS)
 
-MKCALLS_SRCS = mkcalls.cpp
-MKCALLS_OBJS = mkcalls.o
+MKCALLS_OBJS = mkcalls.o dbcomp.o
 
-SRCS = $(SD_SRCS) $(SDX11_SRC) $(SDTTY_SRCS) $(MKCALLS_SRCS)
-OBJS = $(SD_OBJS) $(SDX11_OBJ) $(SDTTY_OBJS) $(MKCALLS_OBJS)
 
 all: alltty
-allx11: sd sd_calls.dat
-alltty: sdtty sd_calls.dat
-everything: allx11 sdtty
+allx11: sd.exe sd_calls.dat
+alltty: sdtty.exe sd_calls.dat
+everything: allx11 sdtty.exe
 
-LDPRELIBS =
+LDPRELIBS = 
 LDPOSTLIBS = lib\crt0.o lib\libc.a
 
-sd: $(SD_OBJS) $(SDX11_OBJ)
+sd.exe: $(SD_OBJS) $(SDX11_OBJ)
 	$(CC) $(CFLAGS) -o $@ $(SD_OBJS) $(SDX11_OBJ) $(LDPRELIBS) $(X11_LIBS) $(LDPOSTLIBS)
 
-mkcalls: $(MKCALLS_OBJS)
+mkcalls.exe: $(MKCALLS_OBJS)
 	$(CC) $(CFLAGS) -o $@ $(MKCALLS_OBJS)
 
-sdtty: $(SD_OBJS) $(SDTTY_OBJS)
+sdtty.exe: $(SD_OBJS) $(SDTTY_OBJS)
 	$(CC) $(CFLAGS) -o $@ $(SDTTY_LINK_OBJS) $(TTY_LIBS)
 
-sd_calls.dat: sd_calls.txt mkcalls
-	./mkcalls ./sd_calls.txt
-
-.SUFFIXES: .c .cpp
+sd_calls.dat: sd_calls.txt mkcalls.exe
+	./mkcalls sd_calls.txt
 
 .c.o:
 	$(CC) $(CFLAGS) -c $<
 
 .cpp.o:
-	$(CC) $(CFLAGS) -c $<
+	$(CC) $(CFLAGS) -c $*.cpp
 
 sdui-x11.o: sdui-x11.c
-	$(CC) $(CFLAGS) $(X11_FLAGS) -c $<
+	$(CC) $(CFLAGS) $(X11_FLAGS) -c $*.c
 
 sdui-ttu.o: sdui-ttu.cpp
-	$(CC) $(CFLAGS) $(TTY_FLAGS) -c $<
+	$(CC) $(CFLAGS) $(TTY_FLAGS) -c $*.cpp
 
-mkcalls.o sdmain.o sdsi.o sdui-x11.o: paths.h
+dbcomp.o sdmain.o sdsi.o sdui-x11.o: paths.h
 
-mkcalls.o: database.h
+dbcomp.o: database.h
 
 $(SD_OBJS) $(SDX11_OBJ) $(SDTTY_OBJS): sd.h database.h
 
+.SUFFIXES: .cpp
+
+
+RM = del
+
 clean::
-	-$(RM) *.o sd sdtty mkcalls sd_calls.dat tags
+	-$(RM) *.o sd.exe sdtty.exe mkcalls.exe sd_calls.dat
 
-TAG_FILES = ${SRCS} *.h
-
-tags: ${TAG_FILES}
-	/opt/sfw/bin/ctags ${TAG_FILES}
+distclean: clean
+	-$(RM) *.tar *.tar.Z

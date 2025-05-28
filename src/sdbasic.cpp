@@ -21,12 +21,6 @@
    basic_move
 */
 
-#ifdef WIN32
-#define SDLIB_API __declspec(dllexport)
-#else
-#define SDLIB_API
-#endif
-
 #include "sd.h"
 
 
@@ -153,9 +147,24 @@ static collision_map collision_map_table[] = {
    {4, 0x000000, 0x0F, 0x0F,  {0, 1, 2, 3},         {0, 2, 4, 6},          {1, 3, 5, 7},           s2x4,        s2x8,        0, warn__none, 0},
    {4, 0x000000, 0xF0, 0xF0,  {4, 5, 6, 7},         {9, 11, 13, 15},       {8, 10, 12, 14},        s2x4,        s2x8,        0, warn__none, 0},
 
+   // Collision after column circulate from 3/4 box or similar 3x1-column-type things.
+   {6, 0x0880DD, 0xDD, 0x88,  {0, 2, 3, 4, 6, 7},   {10, 3, 0, 2, 11, 9},  {10, 3, 1, 2, 11, 8},   s2x4,        s4x4,        0, warn__none, 0},
+   {6, 0x0110BB, 0xBB, 0x11,  {0, 1, 3, 4, 5, 7},   {12, 15, 1, 2, 7, 9},  {10, 15, 1, 4, 7, 9},   s2x4,        s4x4,        0, warn__none, 0},
+   {6, 0x022077, 0x77, 0x22,  {0, 1, 2, 4, 5, 6},   {10, 13, 3, 2, 7, 11}, {10, 15, 3, 2, 5, 11},  s2x4,        s4x4,        0, warn__none, 0},
+   {6, 0x0440EE, 0xEE, 0x44,  {1, 2, 3, 5, 6, 7},   {15, 14, 1, 7, 11, 9}, {15, 3, 1, 7, 6, 9},    s2x4,        s4x4,        0, warn__none, 0},
+   // These are used for exchange the boxes 1/4 from magic columns.
+   {6, 0x011077, 0x77, 0x11,  {0, 1, 2, 4, 5, 6},   {12, 15, 3, 2, 7, 11}, {10, 15, 3, 4, 7, 11},  s2x4,        s4x4,        0, warn__none, 0},
+   {6, 0x0880EE, 0xEE, 0x88,  {1, 2, 3, 5, 6, 7},   {15, 3, 0, 7, 11, 9},  {15, 3, 1, 7, 11, 8},   s2x4,        s4x4,        0, warn__none, 0},
+   // These arise in common spot circulate from columns in which the ends are trucked.
+   {4, 0x0880CC, 0xCC, 0x88,  {2, 3, 6, 7},         {3, 0, 11, 9},         {3, 1, 11, 8},          s2x4,        s4x4,        0, warn__none, 0},
+   {4, 0x011033, 0x33, 0x11,  {0, 1, 4, 5},         {12, 15, 2, 7},        {10, 15, 4, 7},         s2x4,        s4x4,        0, warn__none, 0},
+   // These arise in common spot exchange 1/4 from columns in which the ends are trucked.
+   {4, 0x0880AA, 0xAA, 0x88,  {1, 3, 5, 7},         {15, 0, 7, 9},         {15, 1, 7, 8},          s2x4,        s4x4,        0, warn__none, 0},
+   {4, 0x011055, 0x55, 0x11,  {0, 2, 4, 6},         {12, 3, 2, 11},        {10, 3, 4, 11},         s2x4,        s4x4,        0, warn__none, 0},
+
+
    // This one is marked as dangerous, meaning it can't be used from
    // merge_setups, but can be used when normalizing the result of basic_move.
-
    {6, 0x044044, 0x77, 0x44, {0, 1, 2, 4, 5, 6},   {0, 1, 2, 4, 5, 7},   {0, 1, 3, 4, 5, 6},           s_crosswave, s_crosswave, 0, warn__ctrs_stay_in_ctr, 0x80000000}, /* from inverted lines w/ centers out */
 
 
@@ -640,6 +649,7 @@ static const veryshort ftc4x4[24] = {10, 15, 3, 1, 2, 7, 11, 9, 2, 7, 11, 9,
                                10, 15, 3, 1, 10, 15, 3, 1, 2, 7, 11, 9};
 static const veryshort ftcphan[24] = {0, 2, 7, 5, 8, 10, 15, 13, 8, 10, 15, 13,
                                 0, 2, 7, 5, 0, 2, 7, 5, 8, 10, 15, 13};
+static const veryshort ft2x42x6[8] = {1, 2, 3, 4, 7, 8, 9, 10};
 static const veryshort ftl2x4[12] = {6, 11, 15, 13, 14, 3, 7, 5, 6, 11, 15, 13};
 static const veryshort ftcspn[8] = {6, 11, 13, 17, 22, 27, 29, 1};
 static const veryshort ftcbone[8] = {6, 13, 18, 19, 22, 29, 2, 3};
@@ -3160,14 +3170,13 @@ static int divide_the_setup(
       // give preference to 2x2 splitting.  Also give preference
       // if the "split_to_box" flag was given.
 
-      temp_for_2x2 = true;
-
       if (((ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_HORIZ) && !(ss->rotation & 1)) ||
           ((ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_VERT) && (ss->rotation & 1)) ||
           (calldeflist->callarray_flags & CAF__SPLIT_TO_BOX)) {
-         if (assoc(b_2x2, ss, calldeflist))
+         if (assoc(b_2x2, ss, calldeflist) ||
+             ((newtb & 001) == 0 && assoc(b_2x1, ss, calldeflist)) ||
+             ((newtb & 010) == 0 && assoc(b_1x2, ss, calldeflist)))
             goto divide_us_no_recompute;
-         temp_for_2x2 = false;    // So we don't waste time computing it again.
       }
 
       // See if this call has applicable 1x4 or 4x1 definitions,
@@ -3181,7 +3190,7 @@ static int divide_the_setup(
 
       // See if this call has applicable 2x2 definition, in which case split into boxes.
 
-      if (temp_for_2x2 && assoc(b_2x2, ss, calldeflist)) goto divide_us_no_recompute;
+      if (assoc(b_2x2, ss, calldeflist)) goto divide_us_no_recompute;
 
       if (must_do_mystic)
          goto do_mystically;
@@ -3309,8 +3318,8 @@ static int divide_the_setup(
       division_code = MAPCODE(s1x2,5,MPKIND__SPLIT,1);
 
       if (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX) {
-         if (     ((newtb & 001) == 0 && assoc(b_2x1, ss, calldeflist)) ||
-                  ((newtb & 010) == 0 && assoc(b_1x2, ss, calldeflist)))
+         if (((newtb & 001) == 0 && assoc(b_2x1, ss, calldeflist)) ||
+             ((newtb & 010) == 0 && assoc(b_1x2, ss, calldeflist)))
             goto divide_us_no_recompute;
       }
       else if (assoc(b_1x1, ss, calldeflist))
@@ -3542,7 +3551,7 @@ static int divide_the_setup(
 
    conc_cmd = ss->cmd;
    inner_selective_move(ss, &conc_cmd, &conc_cmd, selective_key_dyp,
-                        TRUE, 0, 0, selector_centers, 0, 0, result);
+                        1, 0, 0, selector_centers, 0, 0, result);
    return 1;
 }
 
@@ -4718,8 +4727,8 @@ foobar:
             }
             else {
                if (result->kind == s4x4 && other_kind == s2x4) {
-                  final_translatel = &ftc4x4[0];
                   numoutl = attr::klimit(other_kind)+1;
+                  final_translatel = &ftc4x4[0];
                }
                else if (result->kind == s4x4 && other_kind == s_qtag) {
                   numoutl = attr::klimit(other_kind)+1;
@@ -4734,6 +4743,12 @@ foobar:
                   tempkind = s4x6;
                   final_translatec = ft4x446;
                   final_translatel = ft2646;
+               }
+               else if (result->kind == s2x4 && other_kind == s2x6) {
+                  numoutl = attr::klimit(other_kind)+1;
+                  result->kind = s2x6;
+                  tempkind = s2x6;
+                  final_translatec = ft2x42x6;
                }
                else if (result->kind == s_c1phan && other_kind == s2x4) {
                   numoutl = attr::klimit(other_kind)+1;

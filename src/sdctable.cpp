@@ -36,12 +36,6 @@
    nice_setup_thing_4x6
 */
 
-#ifdef WIN32
-#define SDLIB_API __declspec(dllexport)
-#else
-#define SDLIB_API
-#endif
-
 #include "sd.h"
 
 

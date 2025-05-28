@@ -50,12 +50,6 @@ and the following external variables:
 #include <time.h>
 #endif
 
-#ifdef WIN32
-#define SDLIB_API __declspec(dllexport)
-#else
-#define SDLIB_API
-#endif
-
 #include "sd.h"
 
 
@@ -69,10 +63,10 @@ abbrev_block *abbrev_table_resolve = (abbrev_block *) 0;
 
 match_result user_match;
 
-long_boolean showing_has_stopped;
+bool showing_has_stopped;
 match_result GLOB_match;
 int GLOB_extended_bracket_depth;
-int GLOB_space_ok;
+bool GLOB_space_ok;
 int GLOB_yielding_matches;
 char GLOB_user_input[INPUT_TEXTLINE_SIZE+1];     // the current user input
 char GLOB_full_extension[INPUT_TEXTLINE_SIZE+1];      // the extension for the current pattern
@@ -154,7 +148,6 @@ static int GLOB_only_extension;         // Only want extension, short-circuit th
 static int GLOB_user_bracket_depth;
 static int GLOB_match_count;            /* the number of matches so far */
 static int GLOB_exact_count;            /* the number of exact matches so far */
-static int GLOB_exact_match;            /* true if an exact match has been found */
 static long_boolean GLOB_showing;       /* we are only showing the matching patterns */
 static long_boolean GLOB_verify;        /* true => verify calls before showing */
 static int GLOB_lowest_yield_depth;
@@ -498,7 +491,7 @@ static void hash_me(int bucket, int i)
 bool process_accel_or_abbrev(modifier_block & mb, char linebuff[])
 {
    user_match.match = mb;
-   user_match.indent = FALSE;
+   user_match.indent = false;
    user_match.real_next_subcall = (match_result *) 0;
    user_match.real_secondary_subcall = (match_result *) 0;
 
@@ -534,7 +527,7 @@ bool process_accel_or_abbrev(modifier_block & mb, char linebuff[])
       return false;
    }
 
-   user_match.valid = TRUE;
+   user_match.valid = true;
    return true;
 }
 
@@ -549,7 +542,7 @@ void erase_matcher_input()
 
 int delete_matcher_word()
 {
-   long_boolean deleted_letter = FALSE;
+   bool deleted_letter = false;
    int orig_size = GLOB_user_input_size;
 
    while (GLOB_user_input_size > 0) {
@@ -557,7 +550,7 @@ int delete_matcher_word()
          if (deleted_letter) break;
       }
       else
-         deleted_letter = TRUE;
+         deleted_letter = true;
 
       GLOB_user_input_size--;
       GLOB_user_input[GLOB_user_input_size] = '\0';
@@ -884,13 +877,13 @@ static call_list_kind savecl;
  * current context.
  */
 
-static long_boolean verify_call(void)
+static bool verify_call()
 {
    // If we are not verifying, we return TRUE immediately,
    // thereby causing the item to be listed.
-   if (!GLOB_verify) return TRUE;
+   if (!GLOB_verify) return true;
 
-   long_boolean resultval = TRUE;
+   bool resultval = true;
 
    interactivity = interactivity_verify;   // So deposit_call doesn't ask user for info.
    warning_info saved_warnings = configuration::save_warnings();
@@ -915,7 +908,7 @@ static long_boolean verify_call(void)
    // Do the call.  An error will signal and go to failed.
 
    try {
-      long_boolean theres_a_call_in_here = FALSE;
+      bool theres_a_call_in_here = false;
       parse_block *save1 = (parse_block *) 0;
       modifier_block *anythings = &GLOB_match.match;
 
@@ -947,7 +940,7 @@ static long_boolean verify_call(void)
             verify_options = anythings->call_conc_options;
             if (deposit_call(anythings->call_ptr, &anythings->call_conc_options)) goto failed;
             save1 = *parse_state.concept_write_ptr;
-            theres_a_call_in_here = TRUE;
+            theres_a_call_in_here = true;
          }
          else if (anythings->kind == ui_concept_select) {
             verify_options = anythings->call_conc_options;
@@ -992,7 +985,7 @@ static long_boolean verify_call(void)
    }
 
    failed:
-      resultval = FALSE;
+      resultval = false;
 
    accept:
 
@@ -1114,7 +1107,7 @@ static void record_a_match(void)
 
    if (*GLOB_full_extension == '\0') {
       GLOB_exact_count++;
-      GLOB_match.exact = TRUE;
+      GLOB_match.exact = true;
    }
 
    GLOB_match_count++;
@@ -1306,7 +1299,7 @@ static void match_suffix_2(Cstring user, Cstring pat1, pat2_block *pat2, int pat
             switch (p[1]) {
                case 'S':
                case 'O':
-                  GLOB_space_ok = TRUE;
+                  GLOB_space_ok = true;
                   // FALL THROUGH!
                case 'M':
                case 'I':
@@ -1329,7 +1322,7 @@ static void match_suffix_2(Cstring user, Cstring pat1, pat2_block *pat2, int pat
          while (p[0] == ',' || p[0] == '\'') p++;
 
          if (*p == ' ' || *p == '-')
-            GLOB_space_ok = TRUE;
+            GLOB_space_ok = true;
 
          if (!pat2 && *pat1 == '\0') {
             // Exact match.
@@ -1491,7 +1484,7 @@ static void scan_concepts_and_calls(
    int i;
    int bucket;
    int new_depth;
-   long_boolean using_hash = FALSE;
+   bool using_hash = false;
 
    /* We force any call invoked under a concept to yield if it is ambiguous.  This way,
       if the user types "cross roll", preference will be given to the call "cross roll",
@@ -1500,7 +1493,7 @@ static void scan_concepts_and_calls(
       an ambiguous call/concept utterance.  For example, we do not expect anyone to
       invent a call "and turn" that can be used with the "cross" modifier. */
    new_depth = current_result->yield_depth+1;
-   local_result.indent = FALSE;
+   local_result.indent = false;
    local_result.real_next_subcall = (match_result *) 0;
    local_result.real_secondary_subcall = (match_result *) 0;
 
@@ -1551,7 +1544,7 @@ static void scan_concepts_and_calls(
             (2) match user, that is, match the hash number we just computed.
          */
 
-         using_hash = TRUE;
+         using_hash = true;
       }
    }
 
@@ -1703,7 +1696,7 @@ static void scan_concepts_and_calls(
    current_result = saved_cur_res_ptr;
    current_result->real_next_subcall = save_stuff1;
    current_result->real_secondary_subcall = save_stuff2;
-   current_result->indent = FALSE;
+   current_result->indent = false;
 
    // Clear this stuff -- it points to our local_result.
    *fixme = (match_result *) 0;
@@ -1904,9 +1897,9 @@ static void match_wildcard(
    switch (key) {
    case 'S':
       {
-         long_boolean saved_indent = current_result->indent;
+         bool saved_indent = current_result->indent;
          save_number_fields = current_result->match.call_conc_options.star_turn_option;
-         current_result->indent = TRUE;
+         current_result->indent = true;
          
          current_result->match.call_conc_options.star_turn_option = -1;
          match_suffix_2(user, ", don't turn the star", &p2b, patxi);
@@ -2028,7 +2021,7 @@ static void match_wildcard(
       current_result->match.call_conc_options = null_options;
       current_result->match.concept_ptr = &concept_descriptor_table[concidx];
       current_result->real_next_subcall = &saved_cross_result;
-      current_result->indent = TRUE;
+      current_result->indent = true;
       p2b.car = pat;
 
       current_result = &saved_cross_result;
@@ -2064,11 +2057,11 @@ static void search_menu(uims_reply kind)
    current_result = &active_result;
 
    current_result->recursion_depth = 0;
-   current_result->valid = TRUE;
-   current_result->exact = FALSE;
+   current_result->valid = true;
+   current_result->exact = false;
    current_result->match.kind = kind;
    current_result->match.call_conc_options = null_options;
-   current_result->indent = FALSE;
+   current_result->indent = false;
    current_result->real_next_subcall = (match_result *) 0;
    current_result->real_secondary_subcall = (match_result *) 0;
    current_result->yield_depth = 0;
@@ -2374,14 +2367,13 @@ int match_user_input(
    GLOB_match_count = 0;
    GLOB_exact_count = 0;
    GLOB_lowest_yield_depth = 999;
-   GLOB_exact_match = FALSE;
    GLOB_showing = show;
    GLOB_verify = show_verify;
    GLOB_echo_stuff[0] = 0;   // Needed if no matches or user input is empty.
    GLOB_yielding_matches = 0;
-   GLOB_match.valid = FALSE;
-   GLOB_match.exact = FALSE;
-   GLOB_space_ok = FALSE;
+   GLOB_match.valid = false;
+   GLOB_match.exact = false;
+   GLOB_space_ok = false;
    static_call_menu = which_commands;
 
    // Count the bracket depth of the user's part of the line.

@@ -2993,13 +2993,13 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
                                     As a qualifier, this can take the "live" modifier.
    trailers_only   R/Q              as above, people are trailers.
 
-   couples_only,                    1x2/1x4/1x8, 2x4 (lines/cols), 2x2,
+   couples_only    R/Q              1x2/1x4/1x8, 2x4 (lines/cols), 2x2,
                                        qtag, bone, trngl - people are paired
                                        in genuine couples, not miniwaves.
                                        For qtags, and bones, this applies
                                        just to the centers.  For triangles, it applies
                                        just to the base.
-   miniwaves,                       1x2/1x4/1x6/1x8, 2x4 (lines/cols), dmd, 2x2,
+   miniwaves       R/Q              1x2/1x4/1x6/1x8, 2x4 (lines/cols), dmd, 2x2,
                                        qtag, bone, ptpd, trngl - people are paired
                                        in miniwaves of various handedness.
                                        For diamonds, qtags, and bones, this applies
@@ -3062,12 +3062,22 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
 
    dmd_facing      R/Q              dmd, qtag, ptpd, or c1phan - diamond(s) are actual
                                        diamonds, are facing, and have consistent handedness.
-                                       Restriction or qualifier.  "Right/left" and "live"
-                                       may be used when it is a qualifier -- right/left
-                                       demand that handedness for the ends; the centers
-                                       will be the opposite.  When used in a c1phan,
-                                       the expectation is that people are in stars, and
-                                       "right"/"left" are meaningless.
+                                       "Right/left" and "live" may be used when it
+                                       is a qualifier -- right/left demand that handedness
+                                       for the ends; the centers will be the opposite.
+                                       When used in a c1phan, the expectation is that
+                                       people are in stars, and "right"/"left" are
+                                       meaningless.
+
+   conc_cpls_same  R/Q              2x4 - centers and ends are couples, T-boned to each
+                                       other, but all looking in or all looking out.
+                                       If "in" is given, it is a "heads nothing" setup.
+                                       If "out" is given, it is the opposite.
+
+   conc_cpls_diff  R/Q              2x4 - centers and ends are couples, T-boned to each
+                                       other, and centers and ends are different.
+                                       "In" and "out" refer to the ends.  So "in"
+                                       specifies a "heads pass thru" setup.
 
    nice_wv_triangles R/Q            short6, bone6, trngl - triangle(s) are wave-based and
                                        of consistent handedness.
@@ -3084,11 +3094,11 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
                                        To allow each person to be independent, use the qualifier
                                        (but not restriction) "independent_in_or_out".
 
-   magic_only,                      3x2 or 4x2 - magic column; 2x4 - inverted lines;
+   magic_only        R/Q            3x2 or 4x2 - magic column; 2x4 - inverted lines;
                                        1x4 - single inverted line; 2x2 - inverted box
                                        thar/crosswave - two waves of opposite handedness.
-                                       Restriction or qualifier.  "Right/left/in/out"
-                                       and "live" may be used when it is a qualifier --
+                                       "Right/left/in/out" and "live" may be used when
+                                       it is a qualifier --
                                           2x4 - I/O refers to centers
                                           4x2 - R/L refers to ends
                                           crosswave - R/L refers to handedness of

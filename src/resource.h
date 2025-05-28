@@ -33,8 +33,9 @@
 #define IDC_NORMAL                      1019
 #define IDC_WRITE_LIST                  1020
 #define IDC_WRITE_FULL_LIST             1021
-#define IDC_ABRIDGED                    1022
-#define IDC_CALL_LIST_NAME              1024
+#define IDC_ABRIDGE                     1022
+#define IDC_CANCEL_ABRIDGE              1023
+#define IDC_ABRIDGE_NAME                1024
 #define IDC_START_DELETE_SESSION_CHECKED 1025
 #define IDC_SEQ_NUM_OVERRIDE            1026
 #define IDC_SEQ_NUM_OVERRIDE_SPIN       1027

@@ -33,12 +33,6 @@ and the following external variables:
    search_goal
 */
 
-#ifdef WIN32
-#define SDLIB_API __declspec(dllexport)
-#else
-#define SDLIB_API
-#endif
-
 #include "sd.h"
 
 

@@ -89,7 +89,7 @@ and the following external variables:
    resolve_command_values
    number_of_resolve_commands
    resolve_command_strings
-   glob_call_list_mode
+   glob_abridge_mode
    abs_max_calls
    max_base_calls
    tagger_menu_list
@@ -130,12 +130,6 @@ and the following external variables:
 
 
 #include <string.h>
-
-#ifdef WIN32
-#define SDLIB_API __declspec(dllexport)
-#else
-#define SDLIB_API
-#endif
 
 #include "sd.h"
 
@@ -248,7 +242,7 @@ start_select_kind *startup_command_values;
 int number_of_resolve_commands;
 Cstring *resolve_command_strings;
 resolve_command_kind *resolve_command_values;
-call_list_mode_t glob_call_list_mode;
+abridge_mode_t glob_abridge_mode;
 int abs_max_calls;
 int max_base_calls;
 Cstring *tagger_menu_list[NUM_TAGGER_CLASSES];
@@ -1506,6 +1500,8 @@ restriction_tester::restr_initializer restriction_tester::restr_init_table1[] = 
 restriction_tester::restr_initializer restriction_tester::restr_init_table4[] = {
    {sdmd, cr_jright, 4, {0, 2, 1, 3},                     {0}, {0}, {0}, true,  chk_wave},
    {sdmd, cr_jleft, 4, {0, 2, 3, 1},                      {0}, {0}, {0}, true,  chk_wave},
+   {s2x4, cr_conc_iosame, 8, {6, 1, 0, 3, 5, 2, 7, 4},    {0}, {0}, {0}, true,  chk_wave},
+   {s2x4, cr_conc_iodiff, 8, {1, 6, 0, 3, 2, 5, 7, 4},    {0}, {0}, {0}, true,  chk_wave},
    {s_ptpd, cr_jright, 8, {0, 2, 1, 3, 6, 4, 7, 5},       {0}, {0}, {0}, true,  chk_wave},
    {s_ptpd, cr_jleft, 8, {0, 2, 3, 1, 6, 4, 5, 7},        {0}, {0}, {0}, true,  chk_wave},
    {nothing}};
@@ -1688,6 +1684,10 @@ restriction_test_result verify_restriction(
       // If it does, can get rid of some special code in assoc.
       // B=1 => pts are right-handed; B=2 => pts are left-handed.
       tt.assumption = cr_jleft;
+      tt.assump_col = 4;
+      break;
+   case cr_conc_iosame:
+   case cr_conc_iodiff:
       tt.assump_col = 4;
       break;
    case cr_leads_only:
@@ -2358,7 +2358,6 @@ restriction_test_result verify_restriction(
 
 static void initialize_concept_sublists()
 {
-   int all_legal_concepts;
    int test_call_list_kind;
    concept_kind end_marker = concept_diagnose;
 
@@ -2368,7 +2367,7 @@ static void initialize_concept_sublists()
 
    // First, just count up all the available concepts.
 
-   all_legal_concepts = 0;
+   int all_legal_concepts = 0;
    const conzept::concept_descriptor *p;
 
    for (p = concept_descriptor_table ; p->kind != end_marker ; p++) {
@@ -2388,16 +2387,16 @@ static void initialize_concept_sublists()
    for (test_call_list_kind = (int) call_list_qtag;
         test_call_list_kind >= (int)call_list_any;
         test_call_list_kind--) {
-      int concepts_in_this_setup, good_concepts_in_this_setup;
-      int concept_index;
+      int concept_index, concepts_in_this_setup, good_concepts_in_this_setup;
 
       for (concept_index=0,concepts_in_this_setup=0,good_concepts_in_this_setup=0;
            ;
            concept_index++) {
-         uint32 setup_mask = ~0;      /* Default is to accept the concept. */
-         uint32 good_setup_mask = 0;  /* Default for this is not to. */
+         uint32 setup_mask = ~0;      // Default is to accept the concept.
+         uint32 good_setup_mask = 0;  // Default for this is not to.
          const conzept::concept_descriptor *p = &concept_descriptor_table[concept_index];
          if (p->kind == end_marker) break;
+         if (p->kind == concept_omit) continue;  // Totally stupid concept!!!!
          if (p->level > calling_level) continue;
 
          // This concept is legal at this level.  See if it is appropriate for this setup.
@@ -2524,7 +2523,7 @@ static void initialize_concept_sublists()
       }
    }
 
-   /* "Any" is not considered a good setup. */
+   // "Any" is not considered a good setup.
    good_concept_sublist_sizes[call_list_any] = 0;
 }
 
@@ -2540,7 +2539,7 @@ extern void initialize_sdlib()
    expand::initialize();
    initialize_concept_sublists();
 
-   writechar_block.usurping_writechar = FALSE;
+   writechar_block.usurping_writechar = false;
 
    int i;
 
@@ -2775,8 +2774,8 @@ static void debug_print_parse_block(int level, const parse_block *p, char *temps
              p->options.who,
              p->options.where,
              p->options.howmanynumbers,
-             p->options.number_fields,
-             p->options.tagger);
+             (int) p->options.number_fields,
+             (int) p->options.tagger);
       if (p->subsidiary_root)
          debug_print_parse_block(level+1, p->subsidiary_root, tempstring_text, n);
    }
@@ -3291,6 +3290,8 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
          goto bad;
       case cr_nice_diamonds:
       case cr_dmd_facing:
+      case cr_conc_iosame:
+      case cr_conc_iodiff:
       case cr_nice_wv_triangles:
          goto check_tt;
       case cr_dmd_ctrs_mwv:
@@ -3750,7 +3751,8 @@ extern uint32 find_calldef(
            predlistptr ;
            predlistptr = predlistptr->next) {
          if ((*(predlistptr->pred->predfunc))
-             (scopy, real_index, real_direction, northified_index, predlistptr->pred->extra_stuff)) {
+             (scopy, real_index, real_direction,
+              northified_index, predlistptr->pred->extra_stuff)) {
             calldef_array = predlistptr->arr;
             goto got_it;
          }
@@ -5015,13 +5017,15 @@ extern void normalize_setup(setup *ss, normalize_action action, bool noqtagcompr
    THROW_DECL
 {
    int i;
-   uint32 livemask, j;
+   uint32 livemask, tbonetest, j;
    bool did_something = false;
 
  startover:
 
-   for (i=0, j=1, livemask=0; i<=attr::slimit(ss); i++, j<<=1) {
-      if (ss->people[i].id1) livemask |= j;
+   for (i=0, j=1, livemask=0, tbonetest=0; i<=attr::slimit(ss); i++, j<<=1) {
+      uint32 t = ss->people[i].id1;
+      tbonetest |= t;
+      if (t) livemask |= j;
    }
 
    if (ss->kind == sfat2x8)
@@ -5100,8 +5104,42 @@ extern void normalize_setup(setup *ss, normalize_action action, bool noqtagcompr
       }
    }
 
-   if (!did_something &&
-       ss->kind == s3x4 &&
+   if (!did_something && ss->kind == s4x4 && action == normalize_after_exchange_boxes) {
+      if (!(tbonetest & 0x1)) {
+         if ((livemask & 0x0030) == 0x0010) swap_people(ss, 4, 5);
+         if ((livemask & 0x0140) == 0x0100) swap_people(ss, 6, 8);
+         if ((livemask & 0x0084) == 0x0004) swap_people(ss, 2, 7);
+         if ((livemask & 0x0A00) == 0x0200) swap_people(ss, 11, 9);
+         if ((livemask & 0x000A) == 0x0002) swap_people(ss, 1, 3);
+         if ((livemask & 0x8400) == 0x0400) swap_people(ss, 15, 10);
+         if ((livemask & 0x4001) == 0x0001) swap_people(ss, 0, 14);
+         if ((livemask & 0x3000) == 0x1000) swap_people(ss, 13, 12);
+         action = simple_normalize;
+         goto startover;
+      }
+      else if (!(tbonetest & 0x8)) {
+         if ((livemask & 0x0003) == 0x0001) swap_people(ss, 0, 1);
+         if ((livemask & 0x0014) == 0x0010) swap_people(ss, 2, 4);
+         if ((livemask & 0x4008) == 0x4000) swap_people(ss, 14, 3);
+         if ((livemask & 0x00A0) == 0x0020) swap_people(ss, 7, 5);
+         if ((livemask & 0xA000) == 0x2000) swap_people(ss, 13, 15);
+         if ((livemask & 0x0840) == 0x0040) swap_people(ss, 11, 6);
+         if ((livemask & 0x1400) == 0x1000) swap_people(ss, 12, 10);
+         if ((livemask & 0x0300) == 0x0100) swap_people(ss, 9, 8);
+         action = simple_normalize;
+         goto startover;
+      }
+   }
+   else if (!did_something && ss->kind == s2x6 && action == normalize_after_exchange_boxes) {
+      if ((livemask & 0xC00) == 0x800 && !(ss->people[11].id1 & 0x1)) swap_people(ss, 11, 10);
+      if ((livemask & 0x0C0) == 0x040 && !(ss->people[ 6].id1 & 0x1)) swap_people(ss, 6, 7);
+      if ((livemask & 0x030) == 0x020 && !(ss->people[ 5].id1 & 0x1)) swap_people(ss, 4, 5);
+      if ((livemask & 0x003) == 0x001 && !(ss->people[ 0].id1 & 0x1)) swap_people(ss, 0, 1);
+      action = simple_normalize;
+      goto startover;
+   }
+
+   if (!did_something && ss->kind == s3x4 &&
        !(ss->people[0].id1 | ss->people[3].id1 |
          ss->people[6].id1 | ss->people[9].id1)) {
       expand::compress_setup(&s_qtg_3x4, ss);
@@ -5195,6 +5233,8 @@ void toplevelmove() THROW_DECL
    starting_setup.cmd.skippable_concept = (parse_block *) 0;
    starting_setup.cmd.restrained_concept = (parse_block *) 0;
    starting_setup.cmd.restrained_super8flags = 0;
+   starting_setup.cmd.restrained_do_as_couples = false;
+   starting_setup.cmd.restrained_super9flags = 0;
    starting_setup.cmd.restrained_fraction = 0;
 
    newhist.init_warnings_specific();
@@ -5262,10 +5302,13 @@ void toplevelmove() THROW_DECL
 
          // Skip all simple modifiers.  If we pass a "split" modifier, remember same.
          finaljunk.clear_all_herit_and_final_bits();
-         parse_block *new_parse_scan = process_final_concepts(parse_scan, FALSE, &finaljunk, true, __FILE__, __LINE__);
+         parse_block *new_parse_scan = process_final_concepts(parse_scan, FALSE,
+                                                              &finaljunk, true,
+                                                              __FILE__, __LINE__);
          if (parse_scan != new_parse_scan) {
             parse_scan = new_parse_scan;
-            callflags1_to_examine = parse_scan->call->the_defn.callflags1;
+            if (parse_scan->call)
+               callflags1_to_examine = parse_scan->call->the_defn.callflags1;
             did_something = true;
          }
 
@@ -5284,6 +5327,7 @@ void toplevelmove() THROW_DECL
          // a mandatory substitution, replacing the call "nothing".
          if ((parse_scan->concept->kind == concept_another_call_next_mod ||
               parse_scan->concept->kind == marker_end_of_list) &&
+             parse_scan->call &&
              parse_scan->call->the_defn.schema == schema_sequential) {
             calldefn *seqdef = &parse_scan->call->the_defn;
             by_def_item *part0item = &seqdef->stuff.seq.defarray[0];
@@ -5470,13 +5514,14 @@ void finish_toplevelmove() THROW_DECL
 
    // Remove outboard phantoms from the resulting setup.
    normalize_setup(&newhist.state, simple_normalize, false);
+
    for (int i=0; i<MAX_PEOPLE; i++) newhist.state.people[i].id2 &= ~GLOB_BITS_TO_CLEAR;
    newhist.calculate_resolve();
 }
 
 
-/* This stuff is duplicated in verify_call in sdmatch.c . */
-long_boolean deposit_call_tree(modifier_block *anythings, parse_block *save1, int key)
+// This stuff is duplicated in verify_call in sdmatch.c .
+bool deposit_call_tree(modifier_block *anythings, parse_block *save1, int key)
 {
    /* First, if we have already deposited a call, and we see more stuff, it must be
       concepts or calls for an "anything" subcall. */
@@ -5500,29 +5545,29 @@ long_boolean deposit_call_tree(modifier_block *anythings, parse_block *save1, in
    user_match.match.call_conc_options = anythings->call_conc_options;
 
    if (anythings->kind == ui_call_select) {
-      if (deposit_call(anythings->call_ptr, &anythings->call_conc_options)) return TRUE;
+      if (deposit_call(anythings->call_ptr, &anythings->call_conc_options)) return true;
       save1 = *parse_state.concept_write_ptr;
       if (!there_is_a_call) the_topcallflags = parse_state.topcallflags1;
       there_is_a_call = TRUE;
    }
    else if (anythings->kind == ui_concept_select) {
-      if (deposit_concept(anythings->concept_ptr)) return TRUE;
+      if (deposit_concept(anythings->concept_ptr)) return true;
    }
-   else return TRUE;   /* Huh? */
+   else return true;   /* Huh? */
 
    if (anythings->packed_next_conc_or_subcall) {
       if (deposit_call_tree(anythings->packed_next_conc_or_subcall, save1,
                             DFM1_CALL_MOD_MAND_ANYCALL/DFM1_CALL_MOD_BIT))
-         return TRUE;
+         return true;
    }
 
    if (anythings->packed_secondary_subcall) {
       if (deposit_call_tree(anythings->packed_secondary_subcall, save1,
                             DFM1_CALL_MOD_MAND_SECONDARY/DFM1_CALL_MOD_BIT))
-         return TRUE;
+         return true;
    }
 
-   return FALSE;
+   return false;
 }
 
 

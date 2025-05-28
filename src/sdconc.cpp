@@ -28,12 +28,6 @@
    inner_selective_move
 */
 
-#ifdef WIN32
-#define SDLIB_API __declspec(dllexport)
-#else
-#define SDLIB_API
-#endif
-
 #include "sd.h"
 
 
@@ -565,6 +559,7 @@ extern void normalize_concentric(
          outers->rotation = 0;
          outers->kind = s1x4;
          *i0p = temp;
+         // Compute the rotation again.
          i = (i0p->rotation - outers->rotation) & 3;
          center_arity = 1;
       }
@@ -577,6 +572,7 @@ extern void normalize_concentric(
          outers->rotation = 1;
          outers->kind = s1x4;
          *i0p = temp;
+         // Compute the rotation again.
          i = (i0p->rotation - outers->rotation) & 3;
          center_arity = 1;
       }
@@ -591,10 +587,14 @@ extern void normalize_concentric(
             *i1p = *i0p;
             center_arity = 2;
             table_synthesizer = schema_in_out_triple;
+            // Compute the rotation again.
+            i = (i0p->rotation - outers->rotation) & 3;
          }
          else {
             *i0p = *outers;
             outers->kind = nothing;
+            outers->rotation = 0;
+            // Compute the rotation again.
             i = (i0p->rotation - outers->rotation) & 3;
             center_arity = 1;
          }
@@ -661,6 +661,8 @@ extern void normalize_concentric(
          i1p->kind = s2x3;
          i1p->rotation = 0;
          clear_people(i1p);
+         // Compute the rotation again.
+         i = (i0p->rotation - outers->rotation) & 3;
       }
       else
          fail("Can't figure out what to do.");
@@ -708,6 +710,8 @@ extern void normalize_concentric(
 
       center_arity = 2;
       table_synthesizer = schema_4x4_in_out_triple;
+      // Compute the rotation again.
+      i = (inners[0].rotation - outers->rotation) & 3;
    }
 
    if (table_synthesizer == schema_conc_o) {
@@ -726,7 +730,7 @@ extern void normalize_concentric(
 
    switch (synthesizer) {
    case schema_rev_checkpoint:
-      /* Fix up nonexistent centers or ends, in a rather inept way. */
+      // Fix up nonexistent centers or ends, in a rather inept way.
       if (inners[0].kind == nothing) {
          inners[0].kind = outers->kind;
          inners[0].rotation = outers->rotation;
@@ -743,9 +747,9 @@ extern void normalize_concentric(
       }
       break;
    case schema_ckpt_star:
-      /* There are a few cases of centers or ends being phantoms, in which
-         we nevertheless know what to do, since we know that the setup should
-         be some kind of "winged star". */
+      // There are a few cases of centers or ends being phantoms, in which
+      // we nevertheless know what to do, since we know that the setup should
+      // be some kind of "winged star".
       if (inners[0].kind == nothing && outers->kind == s1x4) {
          inners[0].kind = s_star;
          inners[0].rotation = 0;
@@ -754,7 +758,7 @@ extern void normalize_concentric(
          goto compute_rotation_again;
       }
       else if (inners[0].kind == sdmd && outers->kind == nothing) {
-         /* The test case for this is: RWV:intlkphanbox relay top;splitphanbox flip reaction. */
+         // The test case for this is: RWV:intlkphanbox relay top;splitphanbox flip reaction.
          outers->kind = s1x4;
          outers->rotation = inners[0].rotation;
          outers->result_flags = inners[0].result_flags;
@@ -763,9 +767,9 @@ extern void normalize_concentric(
       }
       break;
    case schema_conc_star:
-      /* There are a few cases of centers or ends being phantoms, in which
-         we nevertheless know what to do, since we know that the setup should
-         be some kind of "winged star". */
+      // There are a few cases of centers or ends being phantoms, in which
+      // we nevertheless know what to do, since we know that the setup should
+      // be some kind of "winged star".
       if (outers->kind == nothing && inners[0].kind == s1x4) {
          outers->kind = s_star;
          outers->rotation = 0;
@@ -871,7 +875,7 @@ extern void normalize_concentric(
 
       break;
    default:
-      /* Fix up nonexistent centers or ends, in a rather inept way. */
+      // Fix up nonexistent centers or ends, in a rather inept way.
       if (inners[0].kind == nothing) {
          if (table_synthesizer == schema_conc_o) {
             inners[0].kind = s2x2;
@@ -911,8 +915,8 @@ extern void normalize_concentric(
           table_synthesizer != schema_intlk_vertical_6 &&
           table_synthesizer != schema_intlk_lateral_6 &&
           table_synthesizer != schema_conc_o) {
-         /* Nonexistent center or ends have been taken care of.  Now figure out how to put
-            the setups together. */
+         // Nonexistent center or ends have been taken care of.
+         // Now figure out how to put the setups together.
 
          switch (outers->kind) {
          case sbigdmd:
@@ -4478,7 +4482,9 @@ extern void selective_move(
    setup *ss,
    parse_block *parseptr,
    selective_key indicator,
-   long_boolean others,
+   int others,  // -1 - only selectees do the call, others can still roll
+                //  0 - only selectees do the call, others can't roll
+                //  1 - both sets
    uint32 arg2,
    uint32 override_selector,
    selector_kind selector_to_use,
@@ -4516,7 +4522,7 @@ extern void selective_move(
    else if (indicator != selective_key_snag_anyone)
       cmd2thing.parseptr = parseptr->subsidiary_root;
 
-   if (others)
+   if (others > 0)
       cmd2ptr = &cmd2thing;
    else
       cmd2ptr = (setup_command *) 0;
@@ -4541,7 +4547,9 @@ extern void inner_selective_move(
    setup_command *cmd1,
    setup_command *cmd2,
    selective_key indicator,
-   long_boolean others,
+   int others,  // -1 - only selectees do the call, others can still roll
+                //  0 - only selectees do the call, others can't roll
+                //  1 - both sets
    uint32 arg2,
    uint32 override_selector,
    selector_kind selector_to_use,
@@ -4575,7 +4583,7 @@ extern void inner_selective_move(
        indicator == selective_key_plain_from_id_bits ||
        indicator == selective_key_plain_no_live_subsets) {
       action = normalize_before_merge;
-      if (!others && sizem1 == 3) {
+      if (others <= 0 && sizem1 == 3) {
          switch (selector_to_use) {
          case selector_center2:
          case selector_verycenters:
@@ -4657,17 +4665,17 @@ extern void inner_selective_move(
 
    // If the call is a "space-invader", and we are simply doing it
    // under a selector, and the call takes no further selector, and
-   // "others" is off, that means the user simply said, for example,
+   // "others" is <=0, that means the user simply said, for example,
    // "boys" and "press ahead" as two seperate actions, rather than
    // using the single call "boys press ahead".  In that case, we
    // simply do whatever "boys press ahead" would have done -- we have
    // the designated (or non-ignored) people do their part in a strict
    // matrix.  We don't do any of the clever stuff that this procedure
-   // generally tries to do.  But if "others" is on, things are more
+   // generally tries to do.  But if "others" is >0, things are more
    // complicated, and the designees have to interact with the
    // non-designees, so we don't take this shortcut.
 
-   if (!others &&
+   if (others <= 0 &&
        cmd1->parseptr &&
        cmd1->parseptr->concept &&
        cmd1->parseptr->concept->kind == marker_end_of_list &&
@@ -4996,7 +5004,7 @@ extern void inner_selective_move(
 
       // This stuff is needed, with the livemask test, for rf01t and rd01t.
 
-      if (!others && livemask[1] != 0) {
+      if (others <= 0 && livemask[1] != 0) {
          switch (selector_to_use) {
          case selector_center2:
          case selector_verycenters:
@@ -5064,7 +5072,7 @@ extern void inner_selective_move(
 back_here:
 
    normalize_setup(&the_setups[0], action, false);
-   if (others)
+   if (others > 0)
       normalize_setup(&the_setups[1], action, false);
 
    saved_warnings = configuration::save_warnings();
@@ -5081,8 +5089,9 @@ back_here:
 
    // Iterate 1 or 2 times, depending on whether the "other" people do a call.
 
-   for (setupcount=0; setupcount<=others; setupcount++) {
-      /* Not clear that this is really right. */
+   for (setupcount=0; ; setupcount++) {
+
+      // Not clear that this is really right.
       uint32 svd_number_fields = current_options.number_fields;
       int svd_num_numbers = current_options.howmanynumbers;
       uint32 thislivemask = livemask[setupcount];
@@ -5150,7 +5159,7 @@ back_here:
                       attr::klimit(kk) > 7) ||
                      ((schema == schema_select_ctr2 ||
                        schema == schema_select_ctr4 ||
-                       schema == schema_select_ctr6) && !others)) {
+                       schema == schema_select_ctr6) && others <= 0)) {
                // Everyone.
                update_id_bits(this_one);
                this_one->cmd.cmd_misc_flags &= ~CMD_MISC__VERIFY_MASK;
@@ -5536,17 +5545,19 @@ back_here:
 
       current_options.number_fields = svd_number_fields;
       current_options.howmanynumbers = svd_num_numbers;
+
+      if (setupcount >= others) break;
    }
 
-   if (!others) {      /* The non-designees did nothing. */
+   if (others <= 0) {      // The non-designees did nothing.
       the_results[1] = the_setups[1];
-       /* Give the people who didn't move the same result flags as those who did.
-         This is important for the "did last part" check. */
+      // Give the people who didn't move the same result flags as those who did.
+      // This is important for the "did last part" check.
       the_results[1].result_flags = the_results[0].result_flags;
       if (livemask[1] == 0) the_results[1].kind = nothing;
 
-      /* Strip out the roll bits -- people who didn't move can't roll. */
-      if (attr::klimit(the_results[1].kind) >= 0) {
+      // Strip out the roll bits -- people who didn't move can't roll.
+      if (others == 0 && attr::klimit(the_results[1].kind) >= 0) {
          for (k=0; k<=attr::klimit(the_results[1].kind); k++) {
             if (the_results[1].people[k].id1)
                the_results[1].people[k].id1 =
@@ -5602,7 +5613,6 @@ back_here:
 
    lose: fail("Can't do this call with these people.");
 
-
    do_concentric_ctrs:
 
    crossconc = 0;
@@ -5616,7 +5626,7 @@ back_here:
        ss->kind != sd2x5 &&
        ss->kind != s2x5 &&
        indicator == selective_key_plain &&
-       !others)
+       others <= 0)
       goto back_here;
 
    if (indicator == selective_key_work_concept || indicator == selective_key_snag_anyone)

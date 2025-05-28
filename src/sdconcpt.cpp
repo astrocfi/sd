@@ -23,18 +23,12 @@ and the following external variables:
    concept_table
 */
 
-/* For sprintf. */
+// For sprintf.
 #include <stdio.h>
-
-#ifdef WIN32
-#define SDLIB_API __declspec(dllexport)
-#else
-#define SDLIB_API
-#endif
 
 #include "sd.h"
 
-#define THIS_IS_TOO_WEIRD
+#define WEIRD_BUT_DO_IT_ANYWAY
 
 #define FRACS(code,n,k) (code|((n)*CMD_FRAC_PART_BIT)|((k)*CMD_FRAC_PART2_BIT))
 
@@ -51,14 +45,14 @@ static void do_concept_expand_some_matrix(
    parse_block *parseptr,
    setup *result) THROW_DECL
 {
-   /* We used to turn on the "FINAL__16_MATRIX" call modifier for 2x8 matrix,
-      but that makes tandem stuff not work (it doesn't like
-      call modifiers preceding it) and 4x4 stuff not work
-      (it wants the matrix expanded, but doesn't want you to say
-      "16 matrix").  So we need to let the CMD_MISC__EXPLICIT_MATRIX
-      bit control the desired effects. */
+   // We used to turn on the "FINAL__16_MATRIX" call modifier for 2x8 matrix,
+   // but that makes tandem stuff not work (it doesn't like
+   // call modifiers preceding it) and 4x4 stuff not work
+   // (it wants the matrix expanded, but doesn't want you to say
+   // "16 matrix").  So we need to let the CMD_MISC__EXPLICIT_MATRIX
+   // bit control the desired effects.
    if (  ss->kind != ((setup_kind) parseptr->concept->arg1) &&
-         /* "16 matrix of parallel diamonds" needs to accept 4dmd or 4ptpd. */
+         // "16 matrix of parallel diamonds" needs to accept 4dmd or 4ptpd.
          (ss->kind != s4ptpd || ((setup_kind) parseptr->concept->arg1) != s4dmd))
       fail("Can't make the required matrix out of this.");
    ss->cmd.cmd_misc_flags |= CMD_MISC__EXPLICIT_MATRIX;
@@ -78,7 +72,7 @@ typedef struct {
 static phan_map map_c1_phan   = {7, s2x4,   {0, 2, 7, 5, 8, 10, 15, 13},    {4, 6, 11, 9, 12, 14, 3, 1}};
 static phan_map map_pinwheel1 = {7, s2x4,   {10, 15, -1, -1, 2, 7, -1, -1}, {14, 3, -1, -1, 6, 11, -1, -1}};
 static phan_map map_pinwheel2 = {7, s2x4,   {-1, -1, 3, 1, -1, -1, 11, 9},  {-1, -1, 7, 5, -1, -1, 15, 13}};
-#ifdef THIS_IS_TOO_WEIRD
+#ifdef WEIRD_BUT_DO_IT_ANYWAY
 static phan_map map_pinwheel3 = {7, s2x4,   {0, 1, -1, -1, 6, 7, -1, -1}, {2, 5, -1, -1, 8, 11, -1, -1}};
 static phan_map map_pinwheel4 = {7, s2x4,   {-1, -1, 2, 3, -1, -1, 8, 9},  {-1, -1, 5, 7, -1, -1, 11, 1}};
 #endif
@@ -90,20 +84,22 @@ static void do_concept_tandem(
    parse_block *parseptr,
    setup *result) THROW_DECL
 {
-   /* The "arg3" field of the concept descriptor contains bit fields as follows:
-      "100" bit:  this takes a selector
-      "F0" field: (fractional) twosome info --
-         0=solid
-         1=twosome
-         2=solid-frac-twosome
-         3=twosome-frac-solid
-      "0F" field:
-         0=normal
-         2=plain-gruesome
-         3=gruesome-with-wave-assumption */
+   // The "arg3" field of the concept descriptor contains bit fields as follows:
+   // "100" bit:  this takes a selector
+   // "F0" field: (fractional) twosome info --
+   //    0=solid
+   //    1=twosome
+   //    2=solid-frac-twosome
+   //    3=twosome-frac-solid
+   // "0F" field:
+   //    0=normal
+   //    2=plain-gruesome
+   //    3=gruesome-with-wave-assumption
+
+   if (ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_TWISTED))
+      fail("Improper concept order.");
 
    // Look for things like "tandem in a 1/4 tag".
-
    if (parseptr->next && parseptr->next->concept->kind == concept_tandem_in_setup) {
       tandem_key master_key = (tandem_key) parseptr->concept->arg4;
 
@@ -169,10 +165,10 @@ static void do_concept_tandem(
    tandem_couples_move(
      ss,
      (parseptr->concept->arg3 & 0x100) ? parseptr->options.who : selector_uninitialized,
-     (parseptr->concept->arg3 & 0xF0) >> 4, /* (fractional) twosome info */
+     (parseptr->concept->arg3 & 0xF0) >> 4, // (fractional) twosome info
      parseptr->options.number_fields,
-     parseptr->concept->arg3 & 0xF,         /* normal/phantom/gruesome etc. */
-     (tandem_key) parseptr->concept->arg4,  /* key */
+     parseptr->concept->arg3 & 0xF,         // normal/phantom/gruesome etc.
+     (tandem_key) parseptr->concept->arg4,  // key
      mxnflags,
      FALSE,
      result);
@@ -200,7 +196,7 @@ static void do_c1_phantom_move(
    if (next_parseptr->concept->kind == concept_tandem ||
        next_parseptr->concept->kind == concept_frac_tandem) {
 
-      /* Find out what kind of tandem call this is. */
+      // Find out what kind of tandem call this is.
 
       uint32 what_we_need = 0;
       uint32 mxnflags = ss->cmd.cmd_final_flags.test_heritbits(INHERITFLAG_SINGLE |
@@ -210,7 +206,7 @@ static void do_c1_phantom_move(
       if (junk_concepts.test_herit_and_final_bits())
          fail("Phantom couples/tandem must not have intervening concepts.");
 
-      /* "Phantom tandem" has a higher level than either "phantom" or "tandem". */
+      // "Phantom tandem" has a higher level than either "phantom" or "tandem".
       if (phantom_tandem_level > calling_level) warn(warn__bad_concept_level);
 
       switch (next_parseptr->concept->arg4) {
@@ -218,12 +214,12 @@ static void do_c1_phantom_move(
       case tandem_key_skew:
          fail("Phantom not allowed with skew or siamese.");
       case tandem_key_box:
-         /* We do not expand the matrix.  The caller must say
-            "2x8 matrix", or whatever, to get that effect. */
+         // We do not expand the matrix.  The caller must say
+         // "2x8 matrix", or whatever, to get that effect.
          break;
       case tandem_key_diamond:
-         /* We do not expand the matrix.  The caller must say
-            "16 matrix or parallel diamonds", or whatever, to get that effect. */
+         // We do not expand the matrix.  The caller must say
+         // "16 matrix or parallel diamonds", or whatever, to get that effect.
          break;
       case tandem_key_tand3:
       case tandem_key_cpls3:
@@ -231,15 +227,15 @@ static void do_c1_phantom_move(
       case tandem_key_tand4:
       case tandem_key_cpls4:
       case tandem_key_siam4:
-         /* We do not expand the matrix.  The caller must say
-            "2x8 matrix", or whatever, to get that effect. */
+         // We do not expand the matrix.  The caller must say
+         // "2x8 matrix", or whatever, to get that effect.
          break;
       default:
-         /* This is plain "phantom tandem", or whatever.  Expand to whatever is in
-            the "arg2" field, or to a 4x4.  The "arg2" check allows the user to say
-            "phantom as couples in a 1/4 tag".  "as couples in a 1/4 tag"
-            would have worked also.
-            But we don't do this if stuff like "1x3" came in. */
+         // This is plain "phantom tandem", or whatever.  Expand to whatever is in
+         // the "arg2" field, or to a 4x4.  The "arg2" check allows the user to say
+         // "phantom as couples in a 1/4 tag".  "as couples in a 1/4 tag"
+         // would have worked also.
+         // But we don't do this if stuff like "1x3" came in.
 
          if (!mxnflags) {
             what_we_need = next_parseptr->concept->arg2;
@@ -270,20 +266,20 @@ static void do_c1_phantom_move(
    ss->cmd.cmd_misc_flags |= CMD_MISC__NO_STEP_TO_WAVE;    // Or this.
 
    if (ss->kind == s4x4 && global_livemask == 0x6666) {
-      /* First, check for everyone on "O" spots.  If so, treat them as though
-         in equivalent C1 phantom spots. */
+      // First, check for everyone on "O" spots.  If so, treat them as though
+      // in equivalent C1 phantom spots.
       map_ptr = &map_o_spots;
    }
    else if (ss->kind == s_c1phan)
-      /* This is a vanilla C1 phantom setup. */
+      // This is a vanilla C1 phantom setup.
       map_ptr = &map_c1_phan;
    else if (ss->kind == s_bone)
-      /* We allow "phantom" in a bone setup to mean two "dunlap" quarter tags. */
+      // We allow "phantom" in a bone setup to mean two "dunlap" quarter tags. 
       map_ptr = &map_qt_phan;
-#ifdef THIS_IS_TOO_WEIRD
+#ifdef WEIRD_BUT_DO_IT_ANYWAY
    else if (ss->kind == s3x4) {
 
-      /* Check for a 3x4 occupied as a distorted "pinwheel", and treat it as phantoms. */
+      // Check for a 3x4 occupied as a distorted "pinwheel", and treat it as phantoms.
 
       if (global_livemask == 04747)
          map_ptr = &map_pinwheel3;
@@ -294,7 +290,7 @@ static void do_c1_phantom_move(
    else if (ss->kind == s4x4) {
       setup temp;
 
-      /* Check for a 4x4 occupied as a "pinwheel", and treat it as phantoms. */
+      // Check for a 4x4 occupied as a "pinwheel", and treat it as phantoms.
 
       if (global_livemask == 0xCCCC) {
          map_ptr = &map_pinwheel1;
@@ -305,8 +301,8 @@ static void do_c1_phantom_move(
          goto use_map;
       }
 
-      /* Next, check for a "phantom turn and deal" sort of thing from stairsteps.
-         Do the call in each line, them remove resulting phantoms carefully. */
+      // Next, check for a "phantom turn and deal" sort of thing from stairsteps.
+      // Do the call in each line, them remove resulting phantoms carefully.
 
       if (global_livemask == 0x5C5C || global_livemask == 0xA3A3) {
          // Split into 4 vertical strips.
@@ -428,7 +424,7 @@ static void do_concept_double_diagonal(
 
       setup ssave = *ss;
 
-      if (ss->kind != sbighrgl) global_livemask = 0;   /* Force error. */
+      if (ss->kind != sbighrgl) global_livemask = 0;   // Force error.
 
       if (global_livemask == 0x3CF) { map_code = spcmap_dhrgl1; }
       else if (global_livemask == 0xF3C) { map_code = spcmap_dhrgl2; }
@@ -457,7 +453,7 @@ static void do_concept_double_diagonal(
       setup ssave = *ss;
       int switcher = (parseptr->concept->arg1 ^ global_tbonetest) & 1;
 
-      if (ss->kind != s4x4 || (global_tbonetest & 011) == 011) global_livemask = 0;   /* Force error. */
+      if (ss->kind != s4x4 || (global_tbonetest & 011) == 011) global_livemask = 0;   // Force error.
 
       if (     global_livemask == 0x2D2D)
          map_code = switcher ? spcmap_diag23a : spcmap_diag23b;
@@ -530,28 +526,28 @@ static void do_concept_double_offset(
    else
       fail("The designated centers are improperly placed.");
 
-   /* Check that the concept is correctly named. */
+   // Check that the concept is correctly named.
 
    switch (parseptr->concept->arg1) {
       case 0:
-         /* Double-offset quarter tag */
-         /* **** need to check people more carefully -- need "signature". */
-         /* Need both tops = 012, both bots = 010. */
+         // Double-offset quarter tag
+         // **** need to check people more carefully -- need "signature".
+         // Need both tops = 012, both bots = 010.
          if ((ctr & 1) != 0)
             fail("Facing directions are incorrect for this concept.");
          break;
       case 1:
-         /* Double-offset three-quarter tag */
-         /* **** need to check people more carefully -- need "signature". */
-         /* Need both tops = 010, both bots = 012. */
+         // Double-offset three-quarter tag
+         // **** need to check people more carefully -- need "signature".
+         // Need both tops = 010, both bots = 012.
          if ((ctr & 1) != 0)
             fail("Facing directions are incorrect for this concept.");
          break;
       case 2:
-         /* Anything goes */
+         // Anything goes
          break;
       case 3:
-         /* Double-offset diamonds */
+         // Double-offset diamonds
          if ((((top | bot) & 010) != 0) || ((ctr & 1) != 0))
             fail("Facing directions are incorrect for this concept.");
          break;
@@ -605,7 +601,7 @@ static void do_concept_quad_lines(
          rot = (global_tbonetest ^ parseptr->concept->arg1 ^ 1) & 1;
          if ((global_tbonetest & 011) == 011) fail("Can't do this from T-bone setup.");
 
-         ss->rotation += rot;   /* Just flip the setup around and recanonicalize. */
+         ss->rotation += rot;   // Just flip the setup around and recanonicalize.
          canonicalize_rotation(ss);
          the_map = MAPCODE(s1x4,4,MPKIND__SPLIT,1);
       }
@@ -639,7 +635,7 @@ static void do_concept_quad_lines(
       ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
 
    divided_setup_move(ss, the_map, phantest_ok, TRUE, result);
-   result->rotation -= rot;   /* Flip the setup back. */
+   result->rotation -= rot;   // Flip the setup back.
 }
 
 
@@ -649,18 +645,18 @@ static void do_4x4_quad_working(setup *ss, int cstuff, setup *result) THROW_DECL
 
    canonicalize_rotation(ss);
 
-   /* Initially assign the centers to the upper (masks[1] or masks[2]) group. */
+   // Initially assign the centers to the upper (masks[1] or masks[2]) group.
    masks[0] = 0xF0; masks[1] = 0xF0; masks[2] = 0xFF;
 
-   /* Look at the center 8 people and put each one in the correct group. */
+   // Look at the center 8 people and put each one in the correct group.
 
    if (cstuff == 8) {
-      masks[0] = 0xFC; masks[1] = 0xCC; masks[2] = 0xCF;   /* clockwise */
+      masks[0] = 0xFC; masks[1] = 0xCC; masks[2] = 0xCF;   // clockwise
    }
    else if (cstuff == 9) {
-      masks[0] = 0xF3; masks[1] = 0x33; masks[2] = 0x3F;   /* counterclockwise */
+      masks[0] = 0xF3; masks[1] = 0x33; masks[2] = 0x3F;   // counterclockwise
    }
-   else {                        /* forward/back/left/right */
+   else {                        // forward/back/left/right
       if ((ss->people[10].id1 ^ cstuff) & 2) { masks[1] |= 0x01; masks[2] &= ~0x80; };
       if ((ss->people[15].id1 ^ cstuff) & 2) { masks[1] |= 0x02; masks[2] &= ~0x40; };
       if ((ss->people[3].id1  ^ cstuff) & 2) { masks[1] |= 0x04; masks[2] &= ~0x20; };
@@ -3039,9 +3035,10 @@ static void do_concept_crazy(
       update_id_bits(&tempsetup);
 
       if ((i ^ reverseness) & 1) {
-         // Do it in the center.
+         // Do it in the center.  The -1 for arg 4 makes it
+         // preserve roll information for the inactives.
          selective_move(&tempsetup, parseptr, selective_key_plain,
-                        0, 0, 0, selector_center4, FALSE, result);
+                        -1, 0, 0, selector_center4, FALSE, result);
       }
       else {
          // Do it on each side.
@@ -4790,7 +4787,9 @@ static void so_and_so_only_move(
    parse_block *parseptr,
    setup *result) THROW_DECL
 {
-   selective_move(ss, parseptr, (selective_key) parseptr->concept->arg1, parseptr->concept->arg2, parseptr->concept->arg3, 0, parseptr->options.who, FALSE, result);
+   selective_move(ss, parseptr, (selective_key) parseptr->concept->arg1,
+                  parseptr->concept->arg2, parseptr->concept->arg3,
+                  0, parseptr->options.who, FALSE, result);
 }
 
 

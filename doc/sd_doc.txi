@@ -1,8 +1,8 @@
 \input texinfo @c %**start of header -*-texinfo-*-
 @c user documentation for Sd (square dance caller's helper)
 @c
-@set sd-version 34.8j
-@set Time-stamp: February 23, 2003
+@set sd-version 34.8m
+@set Time-stamp: May 1, 2003
 @c
 @setfilename sd_doc.info
 @c We want the version number to show in the html file.
@@ -1074,7 +1074,7 @@ The resolver checks all eight people, so it should work.
 If you have not restored symmetry, resolves may be extraordinarily difficult
 to find.
 
-@node The Completing Reader, Resolving and Searching, Calling, Top
+@node The Completing Reader, Abridgement, Calling, Top
 @chapter The Completing Reader
 
 @code{Sd} and @code{Sdtty} use a @dfn{completing reader} for interpreting the
@@ -1282,7 +1282,125 @@ You can omit apostrophes when typing in call and concept names.  For example,
 you can type @code{lockers choice} instead of @code{locker's choice}.
 The calls will always be printed out with the apostrophe.
 
-@node Resolving and Searching, Editing, The Completing Reader, Top
+@node Abridgement, Resolving and Searching, The Completing Reader, Top
+@chapter Abridgement
+
+The program recognizes four operations which allow use of an abridged
+list of calls:
+
+@table @code
+@item Write list (with a filename)
+write out the call list for the indicated level and exit
+@item Write full list (with a filename)
+write out the call list for the indicated level and all lower levels
+and then exit the program.
+@item Use abridged list (with a filename)
+read in the file, strike all the calls contained therein off the menus,
+and proceed.
+@item Delete abridgement
+only meaningful with a session.  It permanently removes the association
+of an abridge list with that session.
+@end table
+
+These may be invoked by checking the appropriate box in the @code{Sd}
+startup dialog, and filling in the file name if required.
+They may also be invoked by starting the program with command-line options:
+@example
+   -write_list @var{filename}
+   -write_full_list @var{filename}
+   -abridge @var{filename}
+   -delete_abridge
+@end example
+The first two operations are used to prepare a call list.  The call list
+for the indicated level, exactly as the calls appear in the menu, will
+be written to the named file.  If @code{-write_list} is used, only the
+calls exactly on that level will be written.  If @code{-write_full_list}
+is used, the lower level calls will be written as well, so the file will
+look exactly like the main call menu.  After performing either of these
+operations, the program exits.
+
+The third special flag is used to read in a list of calls to be avoided.
+Any call listed in the file, in precisely the same format as it was written
+out, will be removed from the internal database prior to running the program.
+Every sequence written under control of such a file will say @samp{(abridged)}
+on its header line.
+
+To write sequences for a group that is learning C2, for example, start
+Sd from the Start Menu and then check the box marked ``Write list'',
+enter the desired filename, click ``accept'', and choose the C2 level.
+
+Or, if you prefer command-line operation, do (with either @code{Sd} or @code{Sdtty}):
+@example
+        sd -write_list mondayC2.txt c2
+@end example
+In all cases, this will write out its C2 list into the file @file{mondayC2.txt}.
+
+Then delete from that file those calls that the group has
+learned, i.e., those calls not to be avoided.  Use a plain text editor,
+such as Emacs or Notepad, for this.
+
+When writing sequences, start Sd from the Start Menu and then check the
+box marked ``Use abridged list'',
+enter the desired filename, click ``accept'', and choose the C2 level.
+
+Or you can do:
+@example
+        sd -abridge mondayC2.txt c2
+@end example
+
+As the group learns new C2 calls, delete the corresponding lines from
+the file @file{mondayC2.txt}.  That file always contains the calls that they don't
+yet know.  When the file goes to zero, they (presumably) know the whole list.
+
+Be aware that the abridgement mechanism works only for calls, not for concepts.
+You must keep track of what concepts not to use.
+
+The lines in the abridgement file must always be in exactly the same format
+as the strings that are written out by the list creation operation.
+The program has no tolerance for creative capitalization, stray
+blanks, or other variations.  Any line in the file that does not match a
+call in the menu is simply ignored.  The order of the lines is not important.
+We recommend using the file exactly as it is written out with the
+``write list'' or ``write full list'' operation, and using an editor
+only for the purpose of deleting lines from it.
+
+The abridgement mechanism, and the session mechanism, work interchangeably
+between @code{Sd} and @code{Sdtty}.  You can use one program to create or
+manipulate abridgement files or sessions, and then use the other program
+to use them.
+
+@section Associating an abridgement file with a session
+
+You can associate abridgement lists with sessions.  To create a new
+session with a given abridgement file, start Sd from the Start Menu and
+then check the box marked ``Use abridged list'', enter the desired
+filename, select the session labeled ``create a new session'', select
+the desired level, and enter the session number when prompted.
+
+Or you can do:
+@example
+        sd -abridge mondayC2.txt c2
+@end example
+and create the session from there.
+
+If you want to associate an abridgement file with an already existing session,
+do the same thing, but select the existing session.  Once the association
+is made, it is permanent--this step will not be required again.  Simply
+selecting the session will get the abridgement list.
+
+@section Deleting an association
+
+You might want to do this after the class has finished learning the
+list, and you want to continue writing material for that session.
+Start Sd from the Start Menu and
+then check the box marked ``Delete abridgement'', and select the desired session.
+
+Or you can do:
+@example
+        sd -delete_abridge
+@end example
+
+@node Resolving and Searching, Editing, Abridgement, Top
 @chapter Resolving and Searching
 
 This chapter describes how to have the program find calls for you to
@@ -1847,7 +1965,10 @@ will not appear in the sequence written to a file.  If you want the
 current position to have its picture written in a file (say, because the
 sequence is very difficult and you believe it may be necessary to say
 something helpful then like ``check a parallelogram with boys in the center
-box'') select the command @code{keep picture}.
+box'') select the command @code{keep picture}.  You may also cause the
+program to keep pictures in the output file for the entire sequence
+by issuing the @code{toggle keep all pictures} command or by placing the
+@code{keep_all_pictures} option in your initialization file.
 
 @node Singing Call Progressions, Changing Modes, Keeping Pictures, Miscellaneous Commands
 @section Singing Call Progressions
@@ -1884,6 +2005,7 @@ or @code{Sdtty} runs.  They are:
    toggle active phantoms
    toggle retain after error
    toggle nowarn mode
+   toggle keep all pictures
    toggle singleclick mode
    toggle minigrand getouts
    toggle singing call
@@ -1920,6 +2042,10 @@ program retains the concepts that you had typed when an error occurs.
 
 The @code{toggle nowarn mode} command changes the suppression
 of warning messages.
+
+The @code{toggle keep all pictures} changes the mode that keeps
+all pictures.  This mode effectively puts a ``keep picture'' command
+at every point in the sequence.
 
 The @code{toggle singleclick mode} changes the acceptance of single
 mouse clicks on menu items.
@@ -2138,6 +2264,11 @@ This is the opposite of @code{retain_after_error}.
 Since this is the usual behavior, you don't need this option.
 It is present only for compatibility with older versions.
 If it is in your @file{sd.ini} file, take it out.
+@item keep_all_pictures
+This keeps a picture after every call, as if the ``keep picture''
+command had been given each time.
+It is the same as giving the @code{toggle keep all pictures}
+command while the program is running.
 @item single_click
 This makes @code{Sd} respond immediately to a single mouse click
 in a menu.  Normally, a double click, or pressing the @samp{Accept} button,
@@ -2439,7 +2570,7 @@ from a few seconds to over a minute.
 * Abridgement::                 Abridgement
 @end menu
 
-@node Command-Line Options, Abridgement,  , Invoking Sd
+@node Command-Line Options,  ,  , Invoking Sd
 @section Command-Line Options
 
 Any of the option keywords that can be placed
@@ -2497,67 +2628,10 @@ name to look up resources under.  default: program name.
 an X resource manager string.
 @end table
 
-@node Abridgement,  , Command-Line Options, Invoking Sd
-@subsection Abridgement
-
-The program recognizes three flags which allow use of an abridged
-list of calls:
-
-@table @code
-@item -write_list @var{filename}
-write out the call list for the indicated level and exit
-@item -write_full_list @var{filename}
-write out the call list for the indicated level and all lower levels
-and then exit the program.
-@item -abridge @var{filename}
-read in the file, strike all the calls contained therein off the menus,
-and proceed.
-@end table
-
-The first two are used to prepare a call list.  The call list for the
-indicated level, exactly as the calls appear in the menu, will be written
-to the named file.  If @code{-write_list} is used, only the calls exactly on
-that level will be written.  If @code{-write_full_list} is used, the lower level
-calls will be written as well, so the file will look exactly like the
-main call menu.  After performing either of these operations, the program
-exits.
-
-The third special flag is used to read in a list of calls to be avoided.
-Any call listed in the file, in precisely the same format as it was written
-out, will be removed from the internal database prior to running the program.
-Every sequence written under control of such a file will say @samp{(abridged)}
-on its header line.
-
-To write sequences for a group that is learning C2, for example, run the
-program with
-@example
-        sd -write_list my_group c2
-@end example
-
-Then delete from the file @file{my_group} those calls that the group has
-learned, i.e., those calls not to be avoided.
-When writing sequences, use the command
-@example
-        sd -abridge my_group c2
-@end example
-
-As the group learns new C2 calls, delete the corresponding lines from
-the file @file{my_group}.  That file always contains the calls that they don't
-yet know.  When the file goes to zero, they know the whole list.
-
-Be aware that the abridgement mechanism works only for calls, not for concepts.
-You must keep track of what concepts not to use.
-
-The lines in the abridgement file must always be in exactly the same format
-as the strings that are written out by the @code{-write_list} or @code{-write_full_list}
-flags.  The program has no tolerance for creative capitalization, stray
-blanks, or other variations.  Any line in the file that does not match a
-call in the menu is simply ignored.  The order of the lines is not important.
-
 @node Terminal Interface, Linguistic Idiosyncrasies, Invoking Sd, Top
 @chapter Terminal Interface
 
-One version of the program, called @code{sdtty},
+One version of the program, called @code{Sdtty},
 uses a character-oriented terminal interface.
 
 @menu

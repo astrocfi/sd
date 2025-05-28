@@ -239,36 +239,48 @@ void iofull::process_command_line(int *argcp, char ***argvp)
 static bool really_open_session()
 {
    Cstring session_error_msg;
-   char line[MAX_FILENAME_LENGTH];
 
-   if (glob_call_list_mode != call_list_mode_none)
-      open_call_list_file(call_list_string);  // Will exit if it fails.
-
-   // Put up the session list.
+   // Process the session list.  If user has specified a
+   // session number from the command line, we don't print
+   // stuff or query anyone, but we still go through the
+   // file.
 
    if (get_first_session_line()) goto no_session;
 
-   printf("Do you want to use one of the following sessions?\n\n");
+   // If user gave a session specification
+   // in the command line, we don't query about the session.
 
-   while (get_next_session_line(line))
-      printf("%s\n", line);
+   if (ui_options.force_session == -1000000) {
+      char line[MAX_FILENAME_LENGTH];
 
-   printf("Enter the number of the desired session:  ");
+      printf("Do you want to use one of the following sessions?\n\n");
 
-   if (!fgets(line, MAX_FILENAME_LENGTH, stdin) ||
-       !line[0] ||
-       line[0] == '\r' ||
-       line[0] == '\n')
+      while (get_next_session_line(line))
+         printf("%s\n", line);
+
+      printf("Enter the number of the desired session:  ");
+
+      if (!fgets(line, MAX_FILENAME_LENGTH, stdin) ||
+          !line[0] ||
+          line[0] == '\r' ||
+          line[0] == '\n')
+         goto no_session;
+
+      if (!sscanf(line, "%d", &session_index)) {
+         session_index = 0;         // User typed garbage -- exit the program immediately.
+         return true;
+      }
+   }
+   else if (ui_options.force_session == -1000000) {
       goto no_session;
-
-   if (!sscanf(line, "%d", &session_index)) {
-      session_index = 0;         // User typed garbage -- exit the program immediately.
-      return true;
+   }
+   else {
+      while (get_next_session_line((char *) 0));   // Need to scan the file anyway.
+      session_index = ui_options.force_session;
    }
 
-   if (session_index < 0) {
+   if (session_index < 0)
       return true;    // Exit the program immediately.  Deletion will take place.
-   }
 
    {
       int session_info = process_session_info(&session_error_msg);
@@ -332,17 +344,16 @@ bool iofull::init_step(init_callback_state s, int n)
          while (size > 0 && (line[size-1] == '\n' || line[size-1] == '\r'))
             line[--size] = '\000';
 
-         (void) parse_level(line, &calling_level);
+         parse_level(line);
       }
 
-      (void) strncat(outfile_string, filename_strings[calling_level], MAX_FILENAME_LENGTH);
+      strncat(outfile_string, filename_strings[calling_level], MAX_FILENAME_LENGTH);
       break;
 
    case init_database1:
       // The level has been chosen.  We are about to open the database.
 
-      if (glob_call_list_mode == call_list_mode_none ||
-          glob_call_list_mode == call_list_mode_abridging) {
+      if (glob_abridge_mode < abridge_mode_writing) {
          current_text_line = 0;
          ttu_initialize();
       }
@@ -474,41 +485,42 @@ static int match_counter;
 static int match_lines;
 
 
-static int prompt_for_more_output()
+static bool prompt_for_more_output()
 {
-    put_line("--More--");
+   put_line("--More--");
 
-    for (;;) {
-        int c = get_char();
-        clear_line();   /* Erase the "more" line; next item goes on that line. */
+   for (;;) {
+      int c = get_char();
+      clear_line();    // Erase the "more" line; next item goes on that line.
 
-        switch (c) {
-        case '\r':
-        case '\n':
-           match_counter = 1; /* show one more line */
-           return TRUE;       /* but otherwise keep going */
-        case '\b':
-        case DEL:
-        case EKEY+14:    /* The "delete" key on a PC. */
-        case 'q':
-        case 'Q':
-           return FALSE; /* stop showing */
-        case ' ':
-           return TRUE;  /* keep going */
-        default:   put_line("Type Space to see more, Return for next line, Delete to stop:  --More--");
-        }
-    }
+      switch (c) {
+      case '\r':
+      case '\n':
+         match_counter = 1; // Show one more line,
+         return true;       // but otherwise keep going.
+      case '\b':
+      case DEL:
+      case EKEY+14:    // The "delete" key on a PC.
+      case 'q':
+      case 'Q':
+         return false; // Stop showing.
+      case ' ':
+         return true;  // Keep going.
+      default:
+         put_line("Type Space to see more, Return for next line, Delete to stop:  --More--");
+      }
+   }
 }
 
 void iofull::show_match()
 {
-   if (showing_has_stopped) return;  /* Showing has been turned off. */
+   if (showing_has_stopped) return;  // Showing has been turned off.
 
    if (match_counter <= 0) {
       match_counter = match_lines - 1;
       if (!prompt_for_more_output()) {
-         match_counter = -1;   /* Turn it off. */
-         showing_has_stopped = TRUE;
+         match_counter = -1;   // Turn it off.
+         showing_has_stopped = true;
          return;
       }
    }
@@ -522,14 +534,14 @@ void iofull::show_match()
 }
 
 
-static long_boolean get_user_input(char *prompt, int which)
+static bool get_user_input(char *prompt, int which)
 {
    char *p;
    char c;
    int nc;
    int matches;
 
-   user_match.valid = FALSE;
+   user_match.valid = false;
    user_input_prompt = prompt;
    erase_matcher_input();
    user_input[0] = '\0';
@@ -624,7 +636,7 @@ static long_boolean get_user_input(char *prompt, int which)
             }
 
             current_text_line++;
-            return FALSE;
+            return false;
          }
 
          continue;   // Couldn't be processed; ignore the key press.
@@ -655,7 +667,7 @@ static long_boolean get_user_input(char *prompt, int which)
          current_text_line++;
          match_lines = ui_options.diagnostic_mode ? 1000000 : get_lines_for_more();
          match_counter = match_lines-1; /* last line used for "--More--" prompt */
-         showing_has_stopped = FALSE;
+         showing_has_stopped = false;
          (void) match_user_input(which, TRUE, c == '?', FALSE);
          put_line("\n");     /* Write a blank line. */
          current_text_line++;
@@ -664,9 +676,8 @@ static long_boolean get_user_input(char *prompt, int which)
          continue;
       }
       else if (c == ' ' || c == '-') {
-         /* extend only to one space or hyphen, inclusive */
+         // Extend only to one space or hyphen, inclusive.
          matches = match_user_input(which, FALSE, FALSE, TRUE);
-         //         user_match = GLOB_match;
          p = GLOB_echo_stuff;
 
          if (*p) {
@@ -678,7 +689,7 @@ static long_boolean get_user_input(char *prompt, int which)
                   goto foobar;
                }
             }
-            continue;   /* Do *not* pack the character. */
+            continue;   // Do *not* pack the character.
 
             foobar: ;
          }
@@ -716,7 +727,7 @@ static long_boolean get_user_input(char *prompt, int which)
                   }
 
                   current_text_line++;
-                  return FALSE;
+                  return false;
                }
                break;   // Couldn't be processed.  Stop.  No other abbreviations will match.
             }
@@ -729,7 +740,7 @@ static long_boolean get_user_input(char *prompt, int which)
             put_line("\n");
             user_match.match.kind = ui_help_simple;
             current_text_line++;
-            return TRUE;
+            return true;
          }
 
          /* We forbid a match consisting of two or more "direct parse" concepts, such as
@@ -755,7 +766,7 @@ static long_boolean get_user_input(char *prompt, int which)
             }
 
             current_text_line++;
-            return FALSE;
+            return false;
          }
 
          if (ui_options.diagnostic_mode)
@@ -802,7 +813,7 @@ static long_boolean get_user_input(char *prompt, int which)
    (void) fputs("\nParsing error during diagnostic.\n", stdout);
    (void) fputs("\nParsing error during diagnostic.\n", stderr);
    general_final_exit(1);
-   return FALSE;
+   return false;
 }
 
 
@@ -867,12 +878,12 @@ uims_reply iofull::get_startup_command()
 
 
 
-// This returns TRUE if it fails, e.g. the user waves the mouse away.
-long_boolean iofull::get_call_command(uims_reply *reply_p)
+// This returns true if it fails, e.g. the user waves the mouse away.
+bool iofull::get_call_command(uims_reply *reply_p)
 {
    char prompt_buffer[200];
    char *prompt_ptr;
-   long_boolean retval = FALSE;
+   bool retval = false;
 
    if (allowing_modifications)
       parse_state.call_list_to_use = call_list_any;

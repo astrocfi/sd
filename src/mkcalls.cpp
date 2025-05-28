@@ -891,6 +891,8 @@ char *qualtab[] = {
    "diamond_like",
    "qtag_like",
    "pu_qtag_like",
+   "conc_cpls_same",
+   "conc_cpls_diff",
    "regular_tbone",
    "gen_qbox",
    "nice_diamonds",
@@ -1059,6 +1061,7 @@ char *flagtab1[] = {
    "equalize",
    "one_person_call",
    "yield_if_ambiguous",
+   "do_exchange_compress",
    ""};
 
 /* The next three tables are all in step with each other, and with the "heritable" flags. */

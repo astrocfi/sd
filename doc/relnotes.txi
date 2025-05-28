@@ -11,7 +11,7 @@
 @c %**end of header
 
 @set title1 RELEASE NOTES FOR SD VERSION 34.8
-@set title2 Database version = 34.8 format = 204
+@set title2 Database version = 34.8 format = 206
 @set title3 parser version 1.12, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -67,6 +67,22 @@ notes relating to even older versions.
 A bug causing occasional crashes while resolving has been fixed.  We thank
 Justin Legakis for helping track this down.
 
+The program now starts ``instantly''.  The action that made startup so
+slow was the creation of the various call menus.  Those menus are now
+stored in ``cache'' files.  These files have names like @file{sd_calls.C1cache}.
+Whenever the database changes, the cache files will be recreated (which
+takes some time.)  If the cache file is up-to-date, it will be used,
+and startup will be very fast.
+
+The program can now keep abridgement files associated with sessions.
+For details about using abridge lists with sessions, see new information
+in the manual.  Briefly, if you have been using an abridge list and want
+to add it to a session, you can check the ``Use abridged list''
+checkbox, and fill in the abridgement file name, when @code{Sd} starts,
+before selecting the session.  The abridgement file will now be
+associated with that session.  The association will be permanent--this
+step will not be required again.
+
 The program now recognizes that @kbd{all 8 recycle} can mean either the
 C1 call done from a 1/4 tag, or the A2 @kbd{all 8} concept applied to
 @kbd{recycle}, which is done from a thar.  Similarly for @kbd{all 8  cross cycle}.
@@ -78,19 +94,24 @@ A bug in the Microsoft Visual C++ compiler, version 5, has been
 discovered, similar to the bug found in version 6.  The version 6 bug
 had caused that compiler to be disqualified for compiling Sd, and all Sd
 compilations to be performed on version 5 instead.  I have run out of
-compilers.  Microsoft quality is simply unacceptable.  The current
-version of Sd is being compiled with version 5, with a software patch to
-prevent the bug from arising.  Non-Microsoft compilers are being
-investigated.  (By the way, very little Microsoft software, other than
-the operating system itself, is used in the preparation of Sd, for just
-these reasons.)
+Microsoft compilers.  Microsoft quality is simply unacceptable.  The
+current version of Sd is being compiled with version 5, with a software
+patch to prevent the bug from arising.  Non-Microsoft compilers are
+being investigated.  (By the way, very little Microsoft software, other
+than the operating system itself, is used in the preparation of Sd, for
+just these reasons.)
+
+The use of the ``gcc'' compiler, which is free, open-source software,
+is being investigated.  Initial results appear very promising.
+
+The program handles @kbd{clover and <anything>} more robustly.
 
 The bug in parsing @kbd{cross over circulate} has been fixed.  We thank the
 person who pointed it out recently, and apologize to the person who
 pointed it out many months ago, whom we did not believe.
 
 A bug in @kbd{reverse cut/flip the 3x1 triangle} was fixed.  We
-apologize to the dancers at a C4 weekend in March 2002 in northern
+apologize to the dancers at a C4 weekend in March 2002 in Northern
 California who were inconvenienced by this.
 
 The program can now do @kbd{1/2 squeeze}.
@@ -124,7 +145,15 @@ stepping to a miniwave on the call @kbd{fan the top}, and it prints an
 appropriate warning.  An example of this would be from a starting DPT
 with the ends quartered left.  The centers would step to right hands
 (even though they normally step to left hands on @kbd{fan the top}),
-and do the call in each diamond.
+and then the call would be done in each diamond.
+
+The program can now keep a picture (that is, write it into the
+transcript file) after every call, as though the ``keep picture''
+command had been given each time.  Use the ``toggle keep all pictures''
+command while the program is running, or give the
+command-line argument ``-keep_all_pictures'', when the program is
+started, or place the item ``keep_all_pictures'' in the ``[options]''
+section of the initialization file.
 
 New program-level options have been added for use with @code{Sd}.
 The ``-maximize'' argument will cause the program to set its window

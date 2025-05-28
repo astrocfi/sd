@@ -41,6 +41,7 @@
 #include <commdlg.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 #include "sd.h"
 #include "paths.h"
@@ -55,9 +56,10 @@ extern void windows_print_any(HWND hwnd, char *szMainTitle, HINSTANCE hInstance)
 void PrintFile(const char *szFileName, HWND hwnd, char *szMainTitle, HINSTANCE hInstance);
 #include "resource.h"
 
-#pragma comment(lib, "comctl32")
 
-static int dammit = 0;
+#if defined(_MSC_VER)
+#pragma comment(lib, "comctl32")
+#endif
 
 /* Privately defined message codes. */
 /* The user-definable message codes begin at 1024, according to winuser.h.
@@ -117,12 +119,8 @@ struct DisplayType {
 #define ui_undefined -999
 
 
-static char szComment         [MAX_TEXT_LINE_LENGTH];
-static char szHeader          [MAX_TEXT_LINE_LENGTH];
 static char szOutFilename     [MAX_TEXT_LINE_LENGTH];
-static char szCallListFilename[MAX_TEXT_LINE_LENGTH];
 static char szDatabaseFilename[MAX_TEXT_LINE_LENGTH];
-static char szSequenceLabel   [MAX_TEXT_LINE_LENGTH];
 static char szResolveWndTitle [MAX_TEXT_LINE_LENGTH];
 static int GLOBStatusBarLength;
 static Cstring szGLOBFirstPane;
@@ -155,23 +153,8 @@ static HWND ButtonFocusTable[4];
 static BOOL InPopup = FALSE;
 static int ButtonFocusIndex = 0;  // What thing (from ButtonFocusTable) has the focus.
 static int ButtonFocusHigh = 2;   // 3 if in popup, else 2
-static BOOL NewMenu = TRUE;
-static BOOL MenuEnabled = FALSE;
-static BOOL FileIsOpen = FALSE;
 static BOOL WaitingForCommand;
-static BOOL DontPrint;
-static DWORD pdFlags;
-static FILE *hInpFile;
 static int nLastOne;
-static int nSequenceNumber;
-static int nDisplayWndWidth;
-static int nDisplayWndHeight;
-static int nVscrollPos;
-static int nVscrollMax;
-static int nVscrollInc;
-static int nHscrollPos;
-static int nHscrollMax;
-static int nHscrollInc;
 static int nTotalImageHeight;   // Total height of the stuff that we would
                                 // like to show in the transcript window.
 static int nImageOffTop = 0;       // Amount of that stuff that is scrolled off the top.
@@ -179,14 +162,6 @@ static int nActiveTranscriptSize = 500;   // Amount that we tell the scroll
                                           // that we believe the screen holds
 static int pagesize;           // Amount we tell it to scroll if user clicks in dead scroll area
 static int BottomFudge;
-static int nYchar;
-static int nXchar;
-static int SpecialConceptMenu;
-static int FontSize;
-static int nConceptListLength;
-static int nLevelConceptListLength;
-static int nConceptTwice = -1;
-static int nConceptSequential = -1;
 static uims_reply MenuKind;
 static DisplayType *DisplayRoot = NULL;
 static DisplayType *CurDisplay = NULL;
@@ -197,8 +172,6 @@ static DisplayType *CurDisplay = NULL;
 #define LISTBOX_SCROLL_POINT 15
 
 
-static int XVal = 10;
-static int YVal = 30;
 static int TranscriptTextWidth;
 static int TranscriptTextHeight;
 static int AnsiTextWidth;
@@ -213,7 +186,7 @@ static int TranscriptEdge;
 
 
 static uims_reply my_reply;
-static long_boolean my_retval;
+static bool my_retval;
 
 static RECT CallsClientRect;
 static RECT TranscriptClientRect;
@@ -1797,15 +1770,14 @@ static enum dialog_menu_type {
 dialog_menu_type;
 
 static bool request_deletion = false;
+static Cstring session_error_msg;
 
 
-/* Process Startup dialog box messages. */
+// Process Startup dialog box messages.
 
 static void Startup_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 {
    int i;
-   int session_info = 0;
-   Cstring session_error_msg;
 
    switch (id) {
    case IDC_START_LIST:
@@ -1821,24 +1793,25 @@ static void Startup_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
       break;
    case IDC_WRITE_LIST:
    case IDC_WRITE_FULL_LIST:
-   case IDC_ABRIDGED:
-      /* User clicked on some call list option.  Enable and seed the file name. */
-      EnableWindow(GetDlgItem(hwnd, IDC_CALL_LIST_NAME), TRUE);
-      GetWindowText(GetDlgItem(hwnd, IDC_CALL_LIST_NAME),
+   case IDC_ABRIDGE:
+      // User clicked on some call list option.  Enable and seed the file name.
+      EnableWindow(GetDlgItem(hwnd, IDC_ABRIDGE_NAME), TRUE);
+      GetWindowText(GetDlgItem(hwnd, IDC_ABRIDGE_NAME),
                     szDatabaseFilename, MAX_TEXT_LINE_LENGTH);
       if (!szDatabaseFilename[0])
-         SetDlgItemText(hwnd, IDC_CALL_LIST_NAME, "call_list");
+         SetDlgItemText(hwnd, IDC_ABRIDGE_NAME, "abridge.txt");
       return;
    case IDC_NORMAL:
-      EnableWindow(GetDlgItem(hwnd, IDC_CALL_LIST_NAME), FALSE);
+   case IDC_CANCEL_ABRIDGE:
+      EnableWindow(GetDlgItem(hwnd, IDC_ABRIDGE_NAME), FALSE);
       return;
    case IDC_USERDEFINED:
-      /* User clicked on a special database file.  Enable and seed the file name. */
+      // User clicked on a special database file.  Enable and seed the file name.
       EnableWindow(GetDlgItem(hwnd, IDC_DATABASE_NAME), TRUE);
       GetWindowText(GetDlgItem(hwnd, IDC_DATABASE_NAME),
                     szDatabaseFilename, MAX_TEXT_LINE_LENGTH);
       if (!szDatabaseFilename[0])
-         SetDlgItemText(hwnd, IDC_DATABASE_NAME, "database");
+         SetDlgItemText(hwnd, IDC_DATABASE_NAME, "database.txt");
       return;
    case IDC_DEFAULT:
       EnableWindow(GetDlgItem(hwnd, IDC_DATABASE_NAME), FALSE);
@@ -1867,10 +1840,10 @@ static void Startup_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 
          session_index = i;
 
-         /* If the user wants that session deleted, do that, and get out
-            immediately.  Setting the number to zero will cause it to
-            be deleted when the session file is updated during program
-            termination. */
+         // If the user wants that session deleted, do that, and get out
+         // immediately.  Setting the number to zero will cause it to
+         // be deleted when the session file is updated during program
+         // termination.
 
          if (IsDlgButtonChecked(hwnd, IDC_START_DELETE_SESSION_CHECKED)) {
             session_index = -session_index;
@@ -1878,17 +1851,26 @@ static void Startup_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
             goto getoutahere;
          }
 
-         /* Analyze the indicated session number. */
+         // If the user selected the button for canceling the abridgement
+         // on the current session, do so.
 
-         session_info = process_session_info(&session_error_msg);
+         if (IsDlgButtonChecked(hwnd, IDC_CANCEL_ABRIDGE))
+            glob_abridge_mode = abridge_mode_deleting_abridge;
+
+         // Analyze the indicated session number.
+
+         int session_info = process_session_info(&session_error_msg);
 
          if (session_info & 1) {
-            /* We are not using a session, either because the user selected
-               "no session", or because of some error in processing the
-               selected session. */
+            // We are not using a session, either because the user selected
+            // "no session", or because of some error in processing the
+            // selected session.
             session_index = 0;
             sequence_number = -1;
          }
+
+         if (session_info & 2)
+            gg->serious_error_print(session_error_msg);
 
          // If the level never got specified, either from a command line
          // argument or from the session file, put up the level selection
@@ -1901,47 +1883,59 @@ static void Startup_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
          }
       }
       else if (dialog_menu_type == dialog_level) {
-         /* Either there was no session file, or there was a session
-            file but the user selected no session or a new session.
-            In the latter case, we went back and asked for the level.
-            So now we have both, and we can proceed. */
+         // Either there was no session file, or there was a session
+         // file but the user selected no session or a new session.
+         // In the latter case, we went back and asked for the level.
+         // So now we have both, and we can proceed.
          calling_level = (dance_level) i;
-         (void) strncat(outfile_string, filename_strings[calling_level], MAX_FILENAME_LENGTH);
+         strncat(outfile_string, filename_strings[calling_level], MAX_FILENAME_LENGTH);
       }
 
-      if (IsDlgButtonChecked(hwnd, IDC_ABRIDGED))
-         glob_call_list_mode = call_list_mode_abridging;
-      else if (IsDlgButtonChecked(hwnd, IDC_WRITE_LIST))
-         glob_call_list_mode = call_list_mode_writing;
-      else if (IsDlgButtonChecked(hwnd, IDC_WRITE_FULL_LIST))
-         glob_call_list_mode = call_list_mode_writing_full;
-      else if (IsDlgButtonChecked(hwnd, IDC_NORMAL))
-         glob_call_list_mode = call_list_mode_none;
+      // If a session was selected, and that session specified
+      // an abridgement file, that file overrides what the buttons
+      // and the abridgement file name edit box specify.
 
-      /* ****** Need to do this later! */
+      if (glob_abridge_mode != abridge_mode_abridging) {
+         if (IsDlgButtonChecked(hwnd, IDC_ABRIDGE))
+            glob_abridge_mode = abridge_mode_abridging;
+         else if (IsDlgButtonChecked(hwnd, IDC_WRITE_LIST))
+            glob_abridge_mode = abridge_mode_writing;
+         else if (IsDlgButtonChecked(hwnd, IDC_WRITE_FULL_LIST))
+            glob_abridge_mode = abridge_mode_writing_full;
+         else if (IsDlgButtonChecked(hwnd, IDC_NORMAL))
+            glob_abridge_mode = abridge_mode_none;
 
-      if (session_info & 2)
-         MessageBox(hwnd, session_error_msg, "Error", MB_OK | MB_ICONEXCLAMATION);
+         // If the user specified a call list file, get the name.
 
+         if (glob_abridge_mode >= abridge_mode_abridging) {
+            char szCallListFilename[MAX_TEXT_LINE_LENGTH];
 
-      /* If the user specified a call list file, get the name. */
+            // This may have come from the command-line switches,
+            // in which case we already have the file name.
 
-      if (glob_call_list_mode != call_list_mode_none) {
+            GetWindowText(GetDlgItem(hwnd, IDC_ABRIDGE_NAME),
+                          szCallListFilename, MAX_TEXT_LINE_LENGTH);
 
-         /* This may have come from the command-line switches,
-            in which case we already have the file name. */
+            if (szCallListFilename[0])
+               strncpy(abridge_filename, szCallListFilename, MAX_TEXT_LINE_LENGTH);
+         }
+      }
+      else if (IsDlgButtonChecked(hwnd, IDC_ABRIDGE)) {
+         // But if the session specified an abridgement file, and the user
+         // also clicked the button for abridgement and gave a file name,
+         // use that file name, overriding what was in the session line.
 
-         GetWindowText(GetDlgItem(hwnd, IDC_CALL_LIST_NAME),
+         char szCallListFilename[MAX_TEXT_LINE_LENGTH];
+
+         GetWindowText(GetDlgItem(hwnd, IDC_ABRIDGE_NAME),
                        szCallListFilename, MAX_TEXT_LINE_LENGTH);
 
          if (szCallListFilename[0])
-            call_list_string = szCallListFilename;
-
-         open_call_list_file(call_list_string);  // Will exit if it fails.
+            strncpy(abridge_filename, szCallListFilename, MAX_TEXT_LINE_LENGTH);
       }
 
-      /* If user specified the output file during startup dialog, install that.
-         It overrides anything from the command line. */
+      // If user specified the output file during startup dialog, install that.
+      // It overrides anything from the command line.
 
       GetWindowText(GetDlgItem(hwnd, IDC_OUTPUT_NAME),
                     szOutFilename, MAX_TEXT_LINE_LENGTH);
@@ -1949,7 +1943,7 @@ static void Startup_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
       if (szOutFilename[0])
          new_outfile_string = szOutFilename;
 
-      /* Handle user-specified database file. */
+      // Handle user-specified database file.
 
       if (IsDlgButtonChecked(hwnd, IDC_USERDEFINED)) {
          GetWindowText(GetDlgItem(hwnd, IDC_DATABASE_NAME),
@@ -1982,25 +1976,25 @@ static BOOL Startup_OnInitDialog(HWND hwnd, HWND hwndFocus, LPARAM lParam)
 
    // Select the default radio buttons.
 
-   switch (glob_call_list_mode) {
-   case call_list_mode_writing:
-      CheckRadioButton(hwnd, IDC_NORMAL, IDC_ABRIDGED, IDC_WRITE_LIST);
-      EnableWindow(GetDlgItem(hwnd, IDC_CALL_LIST_NAME), TRUE);
-      if (call_list_string) SetDlgItemText(hwnd, IDC_CALL_LIST_NAME, call_list_string);
+   switch (glob_abridge_mode) {
+   case abridge_mode_writing:
+      CheckRadioButton(hwnd, IDC_NORMAL, IDC_ABRIDGE, IDC_WRITE_LIST);
+      EnableWindow(GetDlgItem(hwnd, IDC_ABRIDGE_NAME), TRUE);
+      if (abridge_filename) SetDlgItemText(hwnd, IDC_ABRIDGE_NAME, abridge_filename);
       break;
-   case call_list_mode_writing_full:
-      CheckRadioButton(hwnd, IDC_NORMAL, IDC_ABRIDGED, IDC_WRITE_FULL_LIST);
-      EnableWindow(GetDlgItem(hwnd, IDC_CALL_LIST_NAME), TRUE);
-      if (call_list_string) SetDlgItemText(hwnd, IDC_CALL_LIST_NAME, call_list_string);
+   case abridge_mode_writing_full:
+      CheckRadioButton(hwnd, IDC_NORMAL, IDC_ABRIDGE, IDC_WRITE_FULL_LIST);
+      EnableWindow(GetDlgItem(hwnd, IDC_ABRIDGE_NAME), TRUE);
+      if (abridge_filename) SetDlgItemText(hwnd, IDC_ABRIDGE_NAME, abridge_filename);
       break;
-   case call_list_mode_abridging:
-      CheckRadioButton(hwnd, IDC_NORMAL, IDC_ABRIDGED, IDC_ABRIDGED);
-      EnableWindow(GetDlgItem(hwnd, IDC_CALL_LIST_NAME), TRUE);
-      if (call_list_string) SetDlgItemText(hwnd, IDC_CALL_LIST_NAME, call_list_string);
+   case abridge_mode_abridging:
+      CheckRadioButton(hwnd, IDC_NORMAL, IDC_ABRIDGE, IDC_ABRIDGE);
+      EnableWindow(GetDlgItem(hwnd, IDC_ABRIDGE_NAME), TRUE);
+      if (abridge_filename) SetDlgItemText(hwnd, IDC_ABRIDGE_NAME, abridge_filename);
       break;
    default:
-      CheckRadioButton(hwnd, IDC_NORMAL, IDC_ABRIDGED, IDC_NORMAL);
-      SetDlgItemText(hwnd, IDC_CALL_LIST_NAME, "");
+      CheckRadioButton(hwnd, IDC_NORMAL, IDC_ABRIDGE, IDC_NORMAL);
+      SetDlgItemText(hwnd, IDC_ABRIDGE_NAME, "");
       break;
    }
 
@@ -2016,7 +2010,10 @@ static BOOL Startup_OnInitDialog(HWND hwnd, HWND hwndFocus, LPARAM lParam)
 
    SendDlgItemMessage(hwnd, IDC_START_LIST, LB_RESETCONTENT, 0, 0L);
 
-   if (!get_first_session_line()) {
+   // If user specified session number on the command line, we must
+   // just be looking for a level.  So skip the session part.
+
+   if (ui_options.force_session == -1000000 && !get_first_session_line()) {
       char line[MAX_FILENAME_LENGTH];
 
       SetDlgItemText(hwnd, IDC_START_CAPTION, "Choose a session");
@@ -2105,33 +2102,57 @@ bool iofull::init_step(init_callback_state s, int n)
          window_size_args[1],
          NULL, NULL, GLOBhInstance, NULL);
 
-      if (!hwndMain) {
+      if (!hwndMain)
          gg->fatal_error_exit(1, "Can't create main window", 0);
+
+      // If the user specified a specific session, do that session.
+      // If we succeed at it, we won't put up the dialog box at all.
+
+      if (ui_options.force_session != -1000000 &&
+          ui_options.force_session != 0 &&
+          !get_first_session_line()) {
+         while (get_next_session_line((char *) 0));   // Need to scan the file anyway.
+         session_index = ui_options.force_session;
+         if (session_index < 0) {
+            request_deletion = true;
+         }
+         else {
+            int session_info = process_session_info(&session_error_msg);
+
+            if (session_info & 1) {
+               // We are not using a session, either because the user selected
+               // "no session", or because of some error in processing the
+               // selected session.
+               session_index = 0;
+               sequence_number = -1;
+            }
+
+            if (session_info & 2)
+               gg->serious_error_print(session_error_msg);
+         }
+      }
+      else {
+         session_index = 0;
+         sequence_number = -1;
       }
 
-      /* At this point the following may have been filled in from the
-      command-line switches or the "[Options]" stuff in the initialization file:
+      // Now put up the dialog box if we need a session or a level.
+      // If the user requested an explicit session,
+      // we don't do the dialog, since the user is presumably running
+      // from command-line arguments, and doesn't need any of the
+      // info that the dialog would give.
 
-         glob_call_list_mode [default = call_list_mode_none]
-         calling_level       [default = l_nonexistent_concept]
-         new_outfile_string  [default = (char *) 0, this is just a pointer]
-         call_list_string    [default = (char *) 0], this is just a pointer]
-         database_filename   [default = "sd_calls.dat", this is just a pointer]
-
-         The startup screen may get more info.
-      */
-
-      // Put up (and then take down) the dialog box for the startup screen.
-
-      DialogBox(GLOBhInstance, MAKEINTRESOURCE(IDD_START_DIALOG),
-                hwndMain, (DLGPROC) Startup_Dialog_WndProc);
+      if (ui_options.force_session == -1000000) {
+         DialogBox(GLOBhInstance, MAKEINTRESOURCE(IDD_START_DIALOG),
+                   hwndMain, (DLGPROC) Startup_Dialog_WndProc);
+      }
 
       if (request_deletion) return true;
-
       break;
 
    case final_level_query:
       calling_level = l_mainstream;   // User really doesn't want to tell us the level.
+      strncat(outfile_string, filename_strings[calling_level], MAX_FILENAME_LENGTH);
       break;
 
    case init_database1:
@@ -2185,6 +2206,8 @@ void iofull::final_initialize()
    HANDLE hRes = LoadResource(GLOBhInstance,
                               FindResource(GLOBhInstance,
                                            MAKEINTRESOURCE(IDB_BITMAP1), RT_BITMAP));
+
+   if (!hRes) gg->fatal_error_exit(1, "Can't load resources", 0);
 
    // Map the bitmap file into memory.
    LPBITMAPINFO lpBitsTemp = (LPBITMAPINFO) LockResource(hRes);
@@ -2441,7 +2464,6 @@ void ShowListBox(int nWhichOne)
 {
    if (nWhichOne != nLastOne) {
       HDC hDC;
-      int nIndex = 1;
 
       nLastOne = nWhichOne;
       wherearewe = 0;
@@ -2501,9 +2523,11 @@ void ShowListBox(int nWhichOne)
                       hDC, &nLongest, MAKELONG(i, (int) ui_special_concept));
       }
       else {
+         int i;
+
          UpdateStatusBar(menu_names[nLastOne]);
 
-         for (int i=0; i<number_of_calls[nLastOne]; i++)
+         for (i=0; i<number_of_calls[nLastOne]; i++)
             scan_menu(main_call_lists[nLastOne][i]->menu_name,
                       hDC, &nLongest, MAKELONG(i, (int) ui_call_select));
 
@@ -2572,7 +2596,7 @@ uims_reply iofull::get_startup_command()
 }
 
 
-long_boolean iofull::get_call_command(uims_reply *reply_p)
+bool iofull::get_call_command(uims_reply *reply_p)
 {
  startover:
    if (allowing_modifications)
@@ -2583,7 +2607,7 @@ long_boolean iofull::get_call_command(uims_reply *reply_p)
                                   in case concept levels were toggled. */
    MenuKind = ui_call_select;
    ShowListBox(parse_state.call_list_to_use);
-   my_retval = FALSE;
+   my_retval = false;
    EnterMessageLoop();
 
    my_reply = user_match.match.kind;
@@ -2626,7 +2650,7 @@ uims_reply iofull::get_resolve_command()
    nLastOne = ui_undefined;
    MenuKind = ui_resolve_select;
    ShowListBox(match_resolve_commands);
-   my_retval = FALSE;
+   my_retval = false;
    EnterMessageLoop();
 
    if (user_match.match.index < 0)
@@ -2968,7 +2992,7 @@ void iofull::fatal_error_exit(int code, Cstring s1, Cstring s2)
       s1 = msg;   // Yeah, we can do that.  Yeah, it's sleazy.
    }
 
-   MessageBox(hwndMain, s1, "Error", MB_OK | MB_ICONEXCLAMATION);
+   gg->serious_error_print(s1);
    session_index = 0;  // Prevent attempts to update session file.
    general_final_exit(code);
 }

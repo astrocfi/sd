@@ -31,22 +31,9 @@
    open_file
    write_file
    close_file
-   parse_level
-   read_from_call_list_file
-   write_to_call_list_file
-   close_call_list_file
-   install_outfile_string
-   get_next_session_line
-   prepare_to_read_menus
-   initialize_misc_lists
-   open_session
-   process_session_info
-   open_call_list_file
-   close_init_file
-   open_database
-   read_8_from_database
-   read_16_from_database
-   close_database
+   read_from_abridge_file
+   write_to_abridge_file
+   close_abridge_file
 
 and the following external variables:
 
@@ -54,8 +41,7 @@ and the following external variables:
    random_number
    database_filename
    new_outfile_string
-   call_list_string
-   call_list_file
+   abridge_filename
 */
 
 /* You should compile this file (and might as well compile all the others
@@ -98,12 +84,6 @@ and the following external variables:
 #define HAVE_RAND48
 #endif
 
-#if defined(WIN32)
-#define SDLIB_API __declspec(dllexport)
-#else
-#define SDLIB_API
-#endif
-
 #include "sd.h"
 #include "paths.h"
 
@@ -132,8 +112,7 @@ int session_index = 0;        /* If this is nonzero, we have opened a session. *
 int random_number;
 char *database_filename = DATABASE_FILENAME;
 char *new_outfile_string = (char *) 0;
-char *call_list_string = (char *) 0;
-FILE *call_list_file;
+char abridge_filename[MAX_TEXT_LINE_LENGTH];
 long_boolean outfile_special = FALSE;
 
 static bool file_error;
@@ -146,11 +125,11 @@ extern void general_initialize(void)
 {
 /* Sorry, plain POSIX doesn't have the nice rand48 stuff. */
 #ifdef HAVE_RAND48
-   //   srand48((long int) time((time_t *)0));
-   srand48((long int) 10000);
+   srand48((long int) time((time_t *)0));
+   //   srand48((long int) 10000);
 #else
-   //   srand((unsigned int) time((time_t *)0));
-   srand((unsigned int) 10000);
+   srand((unsigned int) time((time_t *)0));
+   //   srand((unsigned int) 10000);
 #endif
 }
 
@@ -663,66 +642,4 @@ extern void close_file()
    (void) strncat(foo, fail_errstring, MAX_ERR_LENGTH);
    (void) strncat(foo, " -- try \"change output file\" operation.", MAX_ERR_LENGTH);
    specialfail(foo);
-}
-
-
-
-extern long_boolean parse_level(Cstring s, dance_level *levelp)
-{
-   char first = tolower(s[0]);
-
-   switch (first) {
-      case 'm': *levelp = l_mainstream; return TRUE;
-      case 'p': *levelp = l_plus; return TRUE;
-      case 'a':
-         if (s[1] == '1' && !s[2]) *levelp = l_a1;
-         else if (s[1] == '2' && !s[2]) *levelp = l_a2;
-         else if (s[1] == 'l' && s[2] == 'l' && !s[3]) *levelp = l_dontshow;
-         else return FALSE;
-         return TRUE;
-      case 'c':
-         if (s[1] == '3' && (s[2] == 'a' || s[2] == 'A') && !s[3])
-            *levelp = l_c3a;
-         else if (s[1] == '3' && (s[2] == 'x' || s[2] == 'X') && !s[3])
-            *levelp = l_c3x;
-         else if (s[1] == '4' && (s[2] == 'a' || s[2] == 'A') && !s[3])
-            *levelp = l_c4a;
-         else if (s[1] == '4' && (s[2] == 'x' || s[2] == 'X') && !s[3])
-            *levelp = l_c4x;
-         else {
-            if (!s[2]) {
-               switch (s[1]) {
-                  case '1': *levelp = l_c1; return TRUE;
-                  case '2': *levelp = l_c2; return TRUE;
-                  case '3': *levelp = l_c3; return TRUE;
-                  case '4': *levelp = l_c4; return TRUE;
-                  default: return FALSE;
-               }
-            }
-            else return FALSE;
-         }
-         return TRUE;
-      default:
-         return FALSE;
-   }
-}
-
-
-extern char *read_from_call_list_file(char name[], int n)
-{
-   return (fgets(name, n, call_list_file));
-}
-
-
-extern void write_to_call_list_file(const char name[])
-{
-   fputs(name, call_list_file);
-   fputs("\n", call_list_file);
-}
-
-
-extern void close_call_list_file(void)
-{
-   if (fclose(call_list_file))
-      gg->fatal_error_exit(1, "Can't close call list file");
 }

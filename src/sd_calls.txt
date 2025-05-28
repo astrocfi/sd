@@ -33,7 +33,7 @@
     General Public License if you distribute the file.
 */
 
-version "34.8j"
+version "34.8m"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve
@@ -1493,10 +1493,14 @@ call "exchange the boxes, first 1/4" dontshow tag exchb1
             take_right_hands
    setup 4x2 4x4 qualifier wave_only
       array [ZM15N ZM5N ZM1N CR2S AL1S ZM2N ZM14N ZM11N]
+   setup 4x2 2x4 qualifier magic_only
+      array [ZM1N ZM5N ZM3N CR4S AL3S ZM4N ZM2N ZM6N]
 
 call "exchange the boxes, second 1/4" dontshow tag exchb2
    setup 4x4 4x4
-      array [0 ZM0N 0 0 0 ZM7N ZM11N ZM10N 0 0 ZM12N ZM1N 0 CR14S AL13S 0]
+      array [AL13S ZM0N 0 ZM0N ZM2N ZM7N ZM11N ZM10N ZM9N 0 ZM12N ZM1N CR14S CR14S AL13S ZM12N]
+   setup 4x2 4x4
+      array [ZM15N ZM5N ZM0N CR2S AL1S ZM4N ZM14N ZM11N]
 
 call "exchange the boxes, third 1/4" dontshow tag exchb3
    setup 4x4 4x4
@@ -1517,19 +1521,21 @@ call "exchange the boxes, fourth 1/4" dontshow tag exchb4
 // "collisions" (that is, the fact of people taking inner and
 // outer tracks) properly from lines.  When a "collision" occurs
 // in an exchange from lines, it could presumably push other people
-// farther out, the way collisions work in general.  We know of no
-// comprehensive, or even plausible, theory of how this should work.
+// farther out, the way collisions work in general.  We handle a few
+// cases of this, using the "do_exchange_compress" mechanism.
+// Only the outer people can participate in this.  I know of no theory
+// that is actually used for the inner people.
 // The array definition is given first, because it is better at knowing
 // whether or not an array expansion is needed after fractional
 // exchanges.  See ug06, vg01, vi05, nf17.
 call "exchange the boxes @a" c3a
-            neednumber
+            neednumber do_exchange_compress
    setup 2x4 2x4 qualifier num 1 none
       array [CR1S AL0S CR3S AL2S ZM3N ZM1N ZM2N ZM0N]
    setup 4x2 2x4 qualifier num 1 none
       array [ZM1N ZM5N ZM3N CR4S AL3S ZM4N ZM2N ZM6N]
-   setup 2x4 2x4 qualifier num 2 none
-      array [CM5S AM7S CM4S AM6S AL2S AL0S CR3S CR1S]
+   setup 2x4 2x6 qualifier num 2 none
+      array [CM8S AM10S CM7S AM9S AL3S AL0S CR5S CR2S]
    setup 4x2 2x4 qualifier num 2 none
       array [ZM5N ZM4N CR4S CM5S AM2S AL3S ZM3N ZM2N]
    setup 2x4 2x4 no_compress qualifier num 3 none
@@ -1544,7 +1550,7 @@ call "exchange the boxes @a" c3a
       array [CCAM3N AM2N CM1N AACM0N AACR7N AL6N CR5N CCAL4N]
    setup 4x2 2x4 qualifier num 4 none
       array [AL3S AM2S CM1S CM0S AM7S AM6S CM5S CR4S]
-            take_right_hands neednumber visible_fractions
+            take_right_hands neednumber visible_fractions do_exchange_compress
    seq_with_fraction exchb1 [normalize]
    seq exchb2 [normalize]
    seq exchb3 [normalize]
@@ -10479,13 +10485,13 @@ call "_funny_right_on finish" dontshow tag funnyrightonfinish
 
 call "funny @eright@f on @9" c4a
             dont_use_in_nice_resolve
-            split_like_square_thru left_means_mirror neednumber twisted_is_inherited
+            split_like_square_thru left_means_mirror neednumber
    seq funnysquaremain [inherit_left repeat_nm1]
    seq funnyrightonfinish [insert_number 3]
 
 call "funny @eright@f on @9 and @b" c4a
             dont_use_in_resolve
-            split_like_square_thru left_means_mirror need_two_numbers twisted_is_inherited
+            split_like_square_thru left_means_mirror need_two_numbers
    seq funnysquaremain [inherit_left repeat_nm1]
    seq funnyrightonfinish [shift_one_number]
 
@@ -10936,7 +10942,7 @@ call "right and left by by by" c4
 
 call "turn and left thru" c3x
             visible_fractions yoyo_is_inherited twisted_is_inherited nxn_is_inherited
-   seq turnthru [inherit_yoyo]
+   seq turnthru [inherit_twisted inherit_yoyo]
    seq courtesy [inherit_twisted inherit_nxn]
 
 call "flutter wheel" mainstream
@@ -11220,15 +11226,25 @@ call "@6@C run" mainstream tag anyonerun
          if unselect_once_rem_from_select   [ZM1N ZM0N ZM3N ZM2N]
    setup 4x1 1x4
       preds "Can't have both people or neither person cross run."
-         if select_once_rem_from_unselect   [0 0 0 0]  /* No one in a column can be active. */
+         if select_once_rem_from_unselect   [0 0 0 0]  // No one in a column can be active.
          if unselect_once_rem_from_select   [ZM1N ZM0N ZM3N ZM2N]
+            alternate_definition [half] mainstream
+   lateral_to_selectees
+   setup 1x2 1x2 rotate qualifier couples_only
+      preds "Need one runner and one runnee."
+         if select_near_unselect [CR0N AL0S]
+         if unselect_near_select [ZM1W ZM1W]
+   setup 1x2 1x2 rotate qualifier miniwaves
+      preds "Need one runner and one runnee."
+         if select_near_unselect [CR0N AL0S]
+         if unselect_near_select [ZM0W ZM0W]
 
 call "centers@C run" mainstream tag ctrrun
    setup 1x4 1x4
       array [ZM1N AL0S ZM3N CR2S]
    setup 4x1 1x4
       array [ZM1N    0 ZM3N    0]
-            alternate_definition [half] c1
+            alternate_definition [half] mainstream
    setup 1x4 2x2
       array [ZM3N AL0W ZM2N CR1E]
             alternate_definition [cross] mainstream
@@ -11497,7 +11513,7 @@ call "bounce the @6" c2
             single_is_inherited nxn_is_inherited diamond_is_legal
    // Selector identities do *not* get re-evaluated between parts of a
    // sequential call, which makes this work.  Compare wave the <anyone>.
-   seq bounce1 [inherit_single inherit_nxn inherit_diamond]
+   seq bounce1 [seq_never_re_evaluate inherit_single inherit_nxn inherit_diamond]
    seq bounce2 [inherit_diamond]
 
 call "more or less bounce the @6" c4
@@ -16479,16 +16495,17 @@ call "fancy" c3a tag fancy
    setup 4x2 2x4 restriction unusual wave_only
       array [CR2S CR5S CR3S CR4S AL3S AL4S AL2S AL5S]
             alternate_definition [3x3] c4
-   setup 6x2 3x4 restriction unusual wave_only
+   // Ambiguous!!!!!
+   setup 6x2 3x4 restriction serious_violation alwaysfail
       array [CR2S CR5S CR7S CR3S CR4S CR6S AL3S AL4S AL6S AL2S AL5S AL7S]
             alternate_definition [4x4] c4
-   setup 8x2 4x4 restriction unusual wave_only
+   setup 8x2 4x4 restriction serious_violation alwaysfail
       array [CR14S CR3S CR7S CR5S CR0S CR1S CR2S CR4S AL0S AL1S AL2S AL4S AL14S AL3S AL7S AL5S]
             alternate_definition [1x3] c4
-   setup 4x2 qtag restriction unusual wave_only
+   setup 4x2 qtag restriction serious_violation alwaysfail
       array [CR1S CR3S CR4S CR2S AL2S AL1S AL3S AL4S]
             alternate_definition [3x1] c4
-   setup 4x2 3x4 restriction unusual wave_only
+   setup 4x2 3x4 restriction serious_violation alwaysfail
       array [CR5S CR3S CR4S CR6S AL3S AL4S AL6S AL5S]
 
 call "_fancy but nothing" dontshow tag fancybut
@@ -17740,6 +17757,7 @@ call "cloverleaf turn, new centers to a wave" c4
    seq clovturn1 [inherit_cross]
    seq clovturn2wv [inherit_cross]
 
+// This does the actual clovering.
 call "_clover and" dontshow tag clover
    setup 2x2 2x2
       array [AL0E CR1W 0 0]
@@ -17747,14 +17765,62 @@ call "_clover and" dontshow tag clover
    setup 2x2 2x2
       array [CR1W AL0E 0 0]
 
-call "clover and @0" a1 tag clover_and
+call "_final clover and @0" dontshow tag final_clover_and_anything
             dont_use_in_resolve cross_is_inherited
-   conc nullcall [mandatory_anycall] clover [inherit_cross conc_demand_columns conc_force_columns]
+   conc nullcall [mandatory_anycall]
+        clover [inherit_cross conc_demand_columns conc_force_columns]
 
-call "clover and nothing" dontshow tag clover_and_nothing
+call "clover and nothing" dontshow tag final_clover_and_nothing
             dont_use_in_resolve cross_is_inherited
-   conc nullcall [] clover [inherit_cross conc_demand_columns conc_force_columns]
+   conc nullcall []
+        clover [inherit_cross conc_demand_columns conc_force_columns]
 
+// This moves the clovering people to the outside.  It has to
+// identify, for example, a "heads pass thru" setup in which
+// the centers are the ones doing the cloverleaf.  If so, it
+// effectively does a slim down.
+call "_prepare to cloverleaf, no sel" dontshow tag prepare_to_clover_no_sel
+   // If all are in column orientation, the ends better be looking out.
+   setup 4x2 2x4 qualifier ntbone none
+      array [   0 ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N    0]
+   // If all couples are facing out, the ends cloverleaf,
+   // but it's actually illegal.
+   setup 4x2 2x4 qualifier out conc_cpls_same restriction serious_violation alwaysfail
+      array [0 0 0 ZM3N ZM4N 0 0 0]
+   setup 2x4 2x4 qualifier out conc_cpls_same restriction serious_violation alwaysfail
+      array [0 ZM1N ZM2N 0 0 0 0 0]
+   // If the centers aren't looking out, they can't cloverleaf.
+   setup 4x2 2x4 qualifier tbone in centers_in_or_out
+      array [   0 ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N    0]
+   setup 2x4 2x4 qualifier tbone in centers_in_or_out
+      array [   0 ZM1N ZM2N    0    0 ZM5N ZM6N    0]
+   // If magic lines with centers looking out, they cloverleaf.
+   setup 2x4 2x4 rotate qualifier ntbone out magic_only
+      array [   0 ZM7W ZM0W    0 ZM2W    0    0 ZM5W]
+   // If the centers are looking out but the ends aren't,
+   // they cloverleaf with no controversy.
+   setup 2x4 2x4 rotate qualifier tbone out centers_in_or_out
+      array [   0 ZM7W ZM0W    0 ZM2W    0    0 ZM5W]
+   setup 4x2 2x4 rotate qualifier tbone out centers_in_or_out
+      array [ZM6W    0    0    0    0    0    0 ZM5W]
+   // If some centers are looking out, but other centers
+   // are looking in, we accept it and take no action.
+   setup 4x2 2x4 qualifier tbone none
+      array [   0 ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N    0]
+   setup 2x4 2x4 qualifier tbone none
+      array [   0 ZM1N ZM2N    0    0 ZM5N ZM6N    0]
+   // The weird cases.
+   setup rigger qtag
+      array [ZM0N ZM1N ZM2N ZM3N    0    0 ZM6N ZM7N]
+   setup prigger qtag
+      array [   0    0 ZM2N ZM3N    0    0 ZM6N ZM7N]
+   setup qtag qtag
+      array [ZM0N ZM1N ZM2N ZM3N    0    0 ZM6N ZM7N]
+   setup pqtag qtag
+      array [   0    0 ZM2N ZM3N    0    0 ZM6N ZM7N]
+
+// This does a similar thing, when the caller has indicated
+// who are supposed to cloverleaf.  It's easier.
 call "_prepare @6 to cloverleaf" dontshow tag prepare_to_clover
    setup 2x4 2x4 qualifier ends_sel
       array [   0 ZM1N ZM2N    0    0 ZM5N ZM6N    0]
@@ -17773,15 +17839,20 @@ call "_prepare @6 to cloverleaf" dontshow tag prepare_to_clover
    setup pqtag qtag qualifier ends_sel
       array [   0    0 ZM2N ZM3N    0    0 ZM6N ZM7N]
 
-call "@6 cloverleaf" mainstream
-            dont_use_in_resolve
+call "@6@C cloverleaf" mainstream
+            dont_use_in_resolve cross_is_inherited
    seq prepare_to_clover []
-   seq clover_and_nothing []
+   seq final_clover_and_nothing [inherit_cross]
 
-call "@6 cloverleaf while the others @0" mainstream
-            dont_use_in_resolve
+call "@6@C cloverleaf while the others @0" mainstream
+            dont_use_in_resolve cross_is_inherited
    seq prepare_to_clover []
-   seq clover_and []
+   seq final_clover_and_anything [inherit_cross]
+
+call "clover and @0" a1
+            dont_use_in_resolve cross_is_inherited
+   seq prepare_to_clover_no_sel []
+   seq final_clover_and_anything [inherit_cross]
 
 call "eight by @0" c3a
             left_means_mirror twisted_is_inherited visible_fractions
@@ -22352,7 +22423,7 @@ call "extend and spin @0" c4
 
 call "_centers turnstyle" dontshow tag central_turnstyle
             left_means_mirror
-   setup 2x1 1x2 qualifier in_or_out
+   setup 2x1 1x2 qualifier in in_or_out
       array [CR0W 0]
    setup 1x2 1x2 rotate qualifier miniwaves
       array [CR1S AL1N]
