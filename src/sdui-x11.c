@@ -1,5 +1,5 @@
 static char *id="@(#)$Sd: sdui-x11.c  1.13    gildea@lcs.mit.edu  18 Mar 93 $";
-static char *time_stamp = "sdui-x11.c Time-stamp: <93/06/03 15:12:30 gildea>";
+static char *time_stamp = "sdui-x11.c Time-stamp: <93/06/25 19:26:09 gildea>";
 /* 
  * sdui-x11.c - SD User Interface for X11
  * Copyright 1990,1991,1992,1993 Stephen Gildea and William B. Ackerman
@@ -14,7 +14,7 @@ static char *time_stamp = "sdui-x11.c Time-stamp: <93/06/03 15:12:30 gildea>";
  * By Stephen Gildea, March 1990.
  * Uses the Athena Widget Set from X11 Release 4 or 5.
  *
- * For use with version 28.7 of the Sd program.
+ * For use with version 29 of the Sd program.
  *
  *  The version of this file is as shown in the third field of the id
  *  string in the first line.  This string gets displayed at program
@@ -428,11 +428,6 @@ Private XtResource choose_resources[] = {
 Private XtResource top_level_resources[] = {
     MENU("sequenceFile", sequence, SEQUENCE_FILENAME),
     MENU("databaseFile", database, DATABASE_FILENAME),
-};
-
-Private XrmOptionDescRec cmd_line_options[] = {
-    {"-sequence", "*sequenceFile", XrmoptionSepArg, NULL},
-    {"-db",       "*databaseFile", XrmoptionSepArg, NULL},
 };
 
 /* OpenWindows 3 defines fallback_resources arg to XtAppInitialize as

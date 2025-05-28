@@ -354,30 +354,30 @@ Private void check_line_restriction(setup *ss, call_restriction restr, unsigned 
             case cr_wave_only:
                /* check for a "real" (walk-and-dodge type) box */
                k = 0; j = 0; i = 3; z = 3;
-               if (t = ss->people[0].id1) { k |= t; i &= t; j |= (t^2); z &= (t^2); }
-               if (t = ss->people[1].id1) { j |= t; i &= t; k |= (t^2); z &= (t^2); }
-               if (t = ss->people[2].id1) { j |= t; z &= t; k |= (t^2); i &= (t^2); }
-               if (t = ss->people[3].id1) { k |= t; z &= t; j |= (t^2); i &= (t^2); }
+               if ((t = ss->people[0].id1) != 0) { k |= t; i &= t; j |= (t^2); z &= (t^2); }
+               if ((t = ss->people[1].id1) != 0) { j |= t; i &= t; k |= (t^2); z &= (t^2); }
+               if ((t = ss->people[2].id1) != 0) { j |= t; z &= t; k |= (t^2); i &= (t^2); }
+               if ((t = ss->people[3].id1) != 0) { k |= t; z &= t; j |= (t^2); i &= (t^2); }
                if ((k&3) && ((~i)&3) && (j&3) && ((~z)&3))
                   goto ldef_failed;
                break;
             case cr_2fl_only: case cr_all_facing_same:
                /* check for a "one-faced" (reverse-the-pass type) box */
                k = 0; j = 0; i = 3; z = 3;
-               if (t = ss->people[0].id1) { k |= t; i &= t; j |= (t^2); z &= (t^2); }
-               if (t = ss->people[1].id1) { k |= t; i &= t; j |= (t^2); z &= (t^2); }
-               if (t = ss->people[2].id1) { k |= t; i &= t; j |= (t^2); z &= (t^2); }
-               if (t = ss->people[3].id1) { k |= t; i &= t; j |= (t^2); z &= (t^2); }
+               if ((t = ss->people[0].id1) != 0) { k |= t; i &= t; j |= (t^2); z &= (t^2); }
+               if ((t = ss->people[1].id1) != 0) { k |= t; i &= t; j |= (t^2); z &= (t^2); }
+               if ((t = ss->people[2].id1) != 0) { k |= t; i &= t; j |= (t^2); z &= (t^2); }
+               if ((t = ss->people[3].id1) != 0) { k |= t; i &= t; j |= (t^2); z &= (t^2); }
                if ((k&3) && ((~i)&3) && (j&3) && ((~z)&3))
                   goto ldef_failed;
                break;
             case cr_magic_only:
                /* check for a "magic" (split-trade-circulate type) box */
                k = 0; j = 0; i = 3; z = 3;
-               if (t = ss->people[0].id1) { k |= t; i &= t; j |= (t^2); z &= (t^2); }
-               if (t = ss->people[1].id1) { j |= t; z &= t; k |= (t^2); i &= (t^2); }
-               if (t = ss->people[2].id1) { k |= t; i &= t; j |= (t^2); z &= (t^2); }
-               if (t = ss->people[3].id1) { j |= t; z &= t; k |= (t^2); i &= (t^2); }
+               if ((t = ss->people[0].id1) != 0) { k |= t; i &= t; j |= (t^2); z &= (t^2); }
+               if ((t = ss->people[1].id1) != 0) { j |= t; z &= t; k |= (t^2); i &= (t^2); }
+               if ((t = ss->people[2].id1) != 0) { k |= t; i &= t; j |= (t^2); z &= (t^2); }
+               if ((t = ss->people[3].id1) != 0) { j |= t; z &= t; k |= (t^2); i &= (t^2); }
                if ((k&3) && ((~i)&3) && (j&3) && ((~z)&3))
                   goto ldef_failed;
                break;
@@ -385,10 +385,10 @@ Private void check_line_restriction(setup *ss, call_restriction restr, unsigned 
                /* check for everyone as a couple */
                q0 = 0; q1 = 0; q2 = 3; q3 = 3;
                q4 = 0; q5 = 0; q7 = 3; q6 = 3;
-               if (t = ss->people[0].id1) { q0 |= t; q2 &= t; q1 |= (t^2); q3 &= (t^2); }
-               if (t = ss->people[1].id1) { q0 |= t; q7 &= t; q1 |= (t^2); q6 &= (t^2); }
-               if (t = ss->people[2].id1) { q5 |= t; q7 &= t; q4 |= (t^2); q6 &= (t^2); }
-               if (t = ss->people[3].id1) { q5 |= t; q2 &= t; q4 |= (t^2); q3 &= (t^2); }
+               if ((t = ss->people[0].id1) != 0) { q0 |= t; q2 &= t; q1 |= (t^2); q3 &= (t^2); }
+               if ((t = ss->people[1].id1) != 0) { q0 |= t; q7 &= t; q1 |= (t^2); q6 &= (t^2); }
+               if ((t = ss->people[2].id1) != 0) { q5 |= t; q7 &= t; q4 |= (t^2); q6 &= (t^2); }
+               if ((t = ss->people[3].id1) != 0) { q5 |= t; q2 &= t; q4 |= (t^2); q3 &= (t^2); }
                if (((q0&3) && ((~q2)&3) && (q1&3) && ((~q3)&3)) ||
                    ((q5&3) && ((~q7)&3) && (q4&3) && ((~q6)&3)))
                   goto ldef_failed;
@@ -397,10 +397,10 @@ Private void check_line_restriction(setup *ss, call_restriction restr, unsigned 
                /* check for a "peelable" (everyone in genuine tandem somehow) box */
                q0 = 0; q1 = 0; q2 = 3; q3 = 3;
                q4 = 0; q5 = 0; q7 = 3; q6 = 3;
-               if (t = ss->people[0].id1) { q0 |= t; q2 &= t; q1 |= (t^2); q3 &= (t^2); }
-               if (t = ss->people[1].id1) { q5 |= t; q2 &= t; q4 |= (t^2); q3 &= (t^2); }
-               if (t = ss->people[2].id1) { q5 |= t; q7 &= t; q4 |= (t^2); q6 &= (t^2); }
-               if (t = ss->people[3].id1) { q0 |= t; q7 &= t; q1 |= (t^2); q6 &= (t^2); }
+               if ((t = ss->people[0].id1) != 0) { q0 |= t; q2 &= t; q1 |= (t^2); q3 &= (t^2); }
+               if ((t = ss->people[1].id1) != 0) { q5 |= t; q2 &= t; q4 |= (t^2); q3 &= (t^2); }
+               if ((t = ss->people[2].id1) != 0) { q5 |= t; q7 &= t; q4 |= (t^2); q6 &= (t^2); }
+               if ((t = ss->people[3].id1) != 0) { q0 |= t; q7 &= t; q1 |= (t^2); q6 &= (t^2); }
                if (((q0&3) && ((~q2)&3) && (q1&3) && ((~q3)&3)) ||
                    ((q5&3) && ((~q7)&3) && (q4&3) && ((~q6)&3)))
                   goto ldef_failed;
@@ -417,65 +417,65 @@ Private void check_line_restriction(setup *ss, call_restriction restr, unsigned 
             case cr_wave_only:
                k = 0;         /* check for parallel waves */
                i = 2;
-               if (t = ss->people[0].id1) { k |=  t; i &=  t; }
-               if (t = ss->people[1].id1) { k |= ~t; i &= ~t; }
-               if (t = ss->people[2].id1) { k |=  t; i &=  t; }
-               if (t = ss->people[3].id1) { k |= ~t; i &= ~t; }
-               if (t = ss->people[4].id1) { k |= ~t; i &= ~t; }
-               if (t = ss->people[5].id1) { k |=  t; i &=  t; }
-               if (t = ss->people[6].id1) { k |= ~t; i &= ~t; }
-               if (t = ss->people[7].id1) { k |=  t; i &=  t; }
+               if ((t = ss->people[0].id1) != 0) { k |=  t; i &=  t; }
+               if ((t = ss->people[1].id1) != 0) { k |= ~t; i &= ~t; }
+               if ((t = ss->people[2].id1) != 0) { k |=  t; i &=  t; }
+               if ((t = ss->people[3].id1) != 0) { k |= ~t; i &= ~t; }
+               if ((t = ss->people[4].id1) != 0) { k |= ~t; i &= ~t; }
+               if ((t = ss->people[5].id1) != 0) { k |=  t; i &=  t; }
+               if ((t = ss->people[6].id1) != 0) { k |= ~t; i &= ~t; }
+               if ((t = ss->people[7].id1) != 0) { k |=  t; i &=  t; }
                if (k & ~i & 2)
                   goto ldef_failed;
                break;
             case cr_all_facing_same:
                q0 = 0; q1 = 0;  /* check for all 8 people in a "one-faced" setup */
-               if (t = ss->people[0].id1) { q0 |= t; q1 |= ~t; }
-               if (t = ss->people[1].id1) { q0 |= t; q1 |= ~t; }
-               if (t = ss->people[2].id1) { q0 |= t; q1 |= ~t; }
-               if (t = ss->people[3].id1) { q0 |= t; q1 |= ~t; }
-               if (t = ss->people[4].id1) { q0 |= t; q1 |= ~t; }
-               if (t = ss->people[5].id1) { q0 |= t; q1 |= ~t; }
-               if (t = ss->people[6].id1) { q0 |= t; q1 |= ~t; }
-               if (t = ss->people[7].id1) { q0 |= t; q1 |= ~t; }
+               if ((t = ss->people[0].id1) != 0) { q0 |= t; q1 |= ~t; }
+               if ((t = ss->people[1].id1) != 0) { q0 |= t; q1 |= ~t; }
+               if ((t = ss->people[2].id1) != 0) { q0 |= t; q1 |= ~t; }
+               if ((t = ss->people[3].id1) != 0) { q0 |= t; q1 |= ~t; }
+               if ((t = ss->people[4].id1) != 0) { q0 |= t; q1 |= ~t; }
+               if ((t = ss->people[5].id1) != 0) { q0 |= t; q1 |= ~t; }
+               if ((t = ss->people[6].id1) != 0) { q0 |= t; q1 |= ~t; }
+               if ((t = ss->people[7].id1) != 0) { q0 |= t; q1 |= ~t; }
                if (q0&q1&2)
                   goto ldef_failed;
                break;
             case cr_1fl_only:
                q0 = 0; q1 = 0; /* check for parallel one-faced lines */
                q2 = 0; q3 = 0;
-               if (t = ss->people[0].id1) { q0 |= t; q1 |= ~t; }
-               if (t = ss->people[1].id1) { q0 |= t; q1 |= ~t; }
-               if (t = ss->people[2].id1) { q0 |= t; q1 |= ~t; }
-               if (t = ss->people[3].id1) { q0 |= t; q1 |= ~t; }
-               if (t = ss->people[4].id1) { q2 |= t; q3 |= ~t; }
-               if (t = ss->people[5].id1) { q2 |= t; q3 |= ~t; }
-               if (t = ss->people[6].id1) { q2 |= t; q3 |= ~t; }
-               if (t = ss->people[7].id1) { q2 |= t; q3 |= ~t; }
+               if ((t = ss->people[0].id1) != 0) { q0 |= t; q1 |= ~t; }
+               if ((t = ss->people[1].id1) != 0) { q0 |= t; q1 |= ~t; }
+               if ((t = ss->people[2].id1) != 0) { q0 |= t; q1 |= ~t; }
+               if ((t = ss->people[3].id1) != 0) { q0 |= t; q1 |= ~t; }
+               if ((t = ss->people[4].id1) != 0) { q2 |= t; q3 |= ~t; }
+               if ((t = ss->people[5].id1) != 0) { q2 |= t; q3 |= ~t; }
+               if ((t = ss->people[6].id1) != 0) { q2 |= t; q3 |= ~t; }
+               if ((t = ss->people[7].id1) != 0) { q2 |= t; q3 |= ~t; }
                if ((q0&q1&2) || (q2&q3&2))
                   goto ldef_failed;
                break;
             case cr_2fl_only:
                k = 0;         /* check for parallel two-faced lines */
                i = 2;
-               if (t = ss->people[0].id1) { k |=  t; i &=  t; }
-               if (t = ss->people[1].id1) { k |=  t; i &=  t; }
-               if (t = ss->people[2].id1) { k |= ~t; i &= ~t; }
-               if (t = ss->people[3].id1) { k |= ~t; i &= ~t; }
-               if (t = ss->people[4].id1) { k |= ~t; i &= ~t; }
-               if (t = ss->people[5].id1) { k |= ~t; i &= ~t; }
-               if (t = ss->people[6].id1) { k |=  t; i &=  t; }
-               if (t = ss->people[7].id1) { k |=  t; i &=  t; }
+               if ((t = ss->people[0].id1) != 0) { k |=  t; i &=  t; }
+               if ((t = ss->people[1].id1) != 0) { k |=  t; i &=  t; }
+               if ((t = ss->people[2].id1) != 0) { k |= ~t; i &= ~t; }
+               if ((t = ss->people[3].id1) != 0) { k |= ~t; i &= ~t; }
+               if ((t = ss->people[4].id1) != 0) { k |= ~t; i &= ~t; }
+               if ((t = ss->people[5].id1) != 0) { k |= ~t; i &= ~t; }
+               if ((t = ss->people[6].id1) != 0) { k |=  t; i &=  t; }
+               if ((t = ss->people[7].id1) != 0) { k |=  t; i &=  t; }
                if (k & ~i & 2)
                   goto ldef_failed;
                break;
             case cr_ends_are_peelable:
                /* check for ends in a "peelable" (everyone in genuine tandem somehow) box */
                q1 = 0; q0 = 0; q5 = 0; q4 = 0;
-               if (t = ss->people[0].id1) { q1 |= t; q0 |= (t^2); }
-               if (t = ss->people[3].id1) { q5 |= t; q4 |= (t^2); }
-               if (t = ss->people[4].id1) { q5 |= t; q4 |= (t^2); }
-               if (t = ss->people[7].id1) { q1 |= t; q0 |= (t^2); }
+               if ((t = ss->people[0].id1) != 0) { q1 |= t; q0 |= (t^2); }
+               if ((t = ss->people[3].id1) != 0) { q5 |= t; q4 |= (t^2); }
+               if ((t = ss->people[4].id1) != 0) { q5 |= t; q4 |= (t^2); }
+               if ((t = ss->people[7].id1) != 0) { q1 |= t; q0 |= (t^2); }
                if (((q1&3) && (q0&3)) || ((q5&3) && (q4&3)))
                   goto ldef_failed;
                break;
@@ -485,14 +485,14 @@ Private void check_line_restriction(setup *ss, call_restriction restr, unsigned 
                q4 = 0; q5 = 0;
                q2 = 0; q3 = 0;
                q6 = 0; q7 = 0;
-               if (t = ss->people[0].id1) { q0 |= t; q1 |= (t^2); }
-               if (t = ss->people[1].id1) { q0 |= t; q1 |= (t^2); }
-               if (t = ss->people[2].id1) { q5 |= t; q4 |= (t^2); }
-               if (t = ss->people[3].id1) { q5 |= t; q4 |= (t^2); }
-               if (t = ss->people[4].id1) { q2 |= t; q3 |= (t^2); }
-               if (t = ss->people[5].id1) { q2 |= t; q3 |= (t^2); }
-               if (t = ss->people[6].id1) { q6 |= t; q7 |= (t^2); }
-               if (t = ss->people[7].id1) { q6 |= t; q7 |= (t^2); }
+               if ((t = ss->people[0].id1) != 0) { q0 |= t; q1 |= (t^2); }
+               if ((t = ss->people[1].id1) != 0) { q0 |= t; q1 |= (t^2); }
+               if ((t = ss->people[2].id1) != 0) { q5 |= t; q4 |= (t^2); }
+               if ((t = ss->people[3].id1) != 0) { q5 |= t; q4 |= (t^2); }
+               if ((t = ss->people[4].id1) != 0) { q2 |= t; q3 |= (t^2); }
+               if ((t = ss->people[5].id1) != 0) { q2 |= t; q3 |= (t^2); }
+               if ((t = ss->people[6].id1) != 0) { q6 |= t; q7 |= (t^2); }
+               if ((t = ss->people[7].id1) != 0) { q6 |= t; q7 |= (t^2); }
                if (((q0&3) && (q1&3)) ||
                    ((q2&3) && (q3&3)) ||
                    ((q6&3) && (q7&3)) ||
@@ -505,24 +505,24 @@ Private void check_line_restriction(setup *ss, call_restriction restr, unsigned 
          switch (restr) {
             case cr_all_facing_same:
                q0 = 0; q1 = 0;  /* check for all 6 people in a "one-faced" setup */
-               if (t = ss->people[0].id1) { q0 |= t; q1 |= ~t; }
-               if (t = ss->people[1].id1) { q0 |= t; q1 |= ~t; }
-               if (t = ss->people[2].id1) { q0 |= t; q1 |= ~t; }
-               if (t = ss->people[3].id1) { q0 |= t; q1 |= ~t; }
-               if (t = ss->people[4].id1) { q0 |= t; q1 |= ~t; }
-               if (t = ss->people[5].id1) { q0 |= t; q1 |= ~t; }
+               if ((t = ss->people[0].id1) != 0) { q0 |= t; q1 |= ~t; }
+               if ((t = ss->people[1].id1) != 0) { q0 |= t; q1 |= ~t; }
+               if ((t = ss->people[2].id1) != 0) { q0 |= t; q1 |= ~t; }
+               if ((t = ss->people[3].id1) != 0) { q0 |= t; q1 |= ~t; }
+               if ((t = ss->people[4].id1) != 0) { q0 |= t; q1 |= ~t; }
+               if ((t = ss->people[5].id1) != 0) { q0 |= t; q1 |= ~t; }
                if (q0&q1&2)
                   goto ldef_failed;
                break;
             case cr_1fl_only:
                q0 = 0; q1 = 0; /* check for parallel one-faced lines of 3 */
                q2 = 0; q3 = 0;
-               if (t = ss->people[0].id1) { q0 |= t; q1 |= ~t; }
-               if (t = ss->people[1].id1) { q0 |= t; q1 |= ~t; }
-               if (t = ss->people[2].id1) { q0 |= t; q1 |= ~t; }
-               if (t = ss->people[3].id1) { q2 |= t; q3 |= ~t; }
-               if (t = ss->people[4].id1) { q2 |= t; q3 |= ~t; }
-               if (t = ss->people[5].id1) { q2 |= t; q3 |= ~t; }
+               if ((t = ss->people[0].id1) != 0) { q0 |= t; q1 |= ~t; }
+               if ((t = ss->people[1].id1) != 0) { q0 |= t; q1 |= ~t; }
+               if ((t = ss->people[2].id1) != 0) { q0 |= t; q1 |= ~t; }
+               if ((t = ss->people[3].id1) != 0) { q2 |= t; q3 |= ~t; }
+               if ((t = ss->people[4].id1) != 0) { q2 |= t; q3 |= ~t; }
+               if ((t = ss->people[5].id1) != 0) { q2 |= t; q3 |= ~t; }
                if ((q0&q1&2) || (q2&q3&2))
                   goto ldef_failed;
                break;
@@ -533,18 +533,18 @@ Private void check_line_restriction(setup *ss, call_restriction restr, unsigned 
             case cr_wave_only:
                k = 0;         /* check for parallel 12-matrix waves */
                i = 2;
-               if (t = ss->people[0].id1)  { k |=  t; i &=  t; }
-               if (t = ss->people[1].id1)  { k |= ~t; i &= ~t; }
-               if (t = ss->people[2].id1)  { k |=  t; i &=  t; }
-               if (t = ss->people[3].id1)  { k |= ~t; i &= ~t; }
-               if (t = ss->people[4].id1)  { k |=  t; i &=  t; }
-               if (t = ss->people[5].id1)  { k |= ~t; i &= ~t; }
-               if (t = ss->people[6].id1)  { k |= ~t; i &= ~t; }
-               if (t = ss->people[7].id1)  { k |=  t; i &=  t; }
-               if (t = ss->people[8].id1)  { k |= ~t; i &= ~t; }
-               if (t = ss->people[9].id1)  { k |=  t; i &=  t; }
-               if (t = ss->people[10].id1) { k |= ~t; i &= ~t; }
-               if (t = ss->people[11].id1) { k |=  t; i &=  t; }
+               if ((t = ss->people[0].id1) != 0)  { k |=  t; i &=  t; }
+               if ((t = ss->people[1].id1) != 0)  { k |= ~t; i &= ~t; }
+               if ((t = ss->people[2].id1) != 0)  { k |=  t; i &=  t; }
+               if ((t = ss->people[3].id1) != 0)  { k |= ~t; i &= ~t; }
+               if ((t = ss->people[4].id1) != 0)  { k |=  t; i &=  t; }
+               if ((t = ss->people[5].id1) != 0)  { k |= ~t; i &= ~t; }
+               if ((t = ss->people[6].id1) != 0)  { k |= ~t; i &= ~t; }
+               if ((t = ss->people[7].id1) != 0)  { k |=  t; i &=  t; }
+               if ((t = ss->people[8].id1) != 0)  { k |= ~t; i &= ~t; }
+               if ((t = ss->people[9].id1) != 0)  { k |=  t; i &=  t; }
+               if ((t = ss->people[10].id1) != 0) { k |= ~t; i &= ~t; }
+               if ((t = ss->people[11].id1) != 0) { k |=  t; i &=  t; }
                if (k & ~i & 2)
                   goto ldef_failed;
                break;
@@ -555,22 +555,22 @@ Private void check_line_restriction(setup *ss, call_restriction restr, unsigned 
             case cr_wave_only:
                k = 0;         /* check for parallel 16-matrix waves */
                i = 2;
-               if (t = ss->people[0].id1)  { k |=  t; i &=  t; }
-               if (t = ss->people[1].id1)  { k |= ~t; i &= ~t; }
-               if (t = ss->people[2].id1)  { k |=  t; i &=  t; }
-               if (t = ss->people[3].id1)  { k |= ~t; i &= ~t; }
-               if (t = ss->people[4].id1)  { k |=  t; i &=  t; }
-               if (t = ss->people[5].id1)  { k |= ~t; i &= ~t; }
-               if (t = ss->people[6].id1)  { k |=  t; i &=  t; }
-               if (t = ss->people[7].id1)  { k |= ~t; i &= ~t; }
-               if (t = ss->people[8].id1)  { k |= ~t; i &= ~t; }
-               if (t = ss->people[9].id1)  { k |=  t; i &=  t; }
-               if (t = ss->people[10].id1) { k |= ~t; i &= ~t; }
-               if (t = ss->people[11].id1) { k |=  t; i &=  t; }
-               if (t = ss->people[12].id1) { k |= ~t; i &= ~t; }
-               if (t = ss->people[13].id1) { k |=  t; i &=  t; }
-               if (t = ss->people[14].id1) { k |= ~t; i &= ~t; }
-               if (t = ss->people[15].id1) { k |=  t; i &=  t; }
+               if ((t = ss->people[0].id1) != 0)  { k |=  t; i &=  t; }
+               if ((t = ss->people[1].id1) != 0)  { k |= ~t; i &= ~t; }
+               if ((t = ss->people[2].id1) != 0)  { k |=  t; i &=  t; }
+               if ((t = ss->people[3].id1) != 0)  { k |= ~t; i &= ~t; }
+               if ((t = ss->people[4].id1) != 0)  { k |=  t; i &=  t; }
+               if ((t = ss->people[5].id1) != 0)  { k |= ~t; i &= ~t; }
+               if ((t = ss->people[6].id1) != 0)  { k |=  t; i &=  t; }
+               if ((t = ss->people[7].id1) != 0)  { k |= ~t; i &= ~t; }
+               if ((t = ss->people[8].id1) != 0)  { k |= ~t; i &= ~t; }
+               if ((t = ss->people[9].id1) != 0)  { k |=  t; i &=  t; }
+               if ((t = ss->people[10].id1) != 0) { k |= ~t; i &= ~t; }
+               if ((t = ss->people[11].id1) != 0) { k |=  t; i &=  t; }
+               if ((t = ss->people[12].id1) != 0) { k |= ~t; i &= ~t; }
+               if ((t = ss->people[13].id1) != 0) { k |=  t; i &=  t; }
+               if ((t = ss->people[14].id1) != 0) { k |= ~t; i &= ~t; }
+               if ((t = ss->people[15].id1) != 0) { k |=  t; i &=  t; }
                if (k & ~i & 2)
                   goto ldef_failed;
                break;
@@ -581,34 +581,34 @@ Private void check_line_restriction(setup *ss, call_restriction restr, unsigned 
             case cr_nice_diamonds:
                k = 0;         /* check for consistent diamonds, so can do "diamond swing thru" */
                i = 2;
-               if (t = ss->people[0].id1) { k |=  t+1; i &=  t+1; }
-               if (t = ss->people[1].id1) { k |=  t+1; i &=  t+1; }
-               if (t = ss->people[4].id1) { k |=  t-1; i &=  t-1; }
-               if (t = ss->people[5].id1) { k |=  t-1; i &=  t-1; }
-               if (t = ss->people[2].id1) { k |=  t; i &=  t; }
-               if (t = ss->people[3].id1) { k |= ~t; i &= ~t; }
-               if (t = ss->people[6].id1) { k |= ~t; i &= ~t; }
-               if (t = ss->people[7].id1) { k |=  t; i &=  t; }
+               if ((t = ss->people[0].id1) != 0) { k |=  t+1; i &=  t+1; }
+               if ((t = ss->people[1].id1) != 0) { k |=  t+1; i &=  t+1; }
+               if ((t = ss->people[4].id1) != 0) { k |=  t-1; i &=  t-1; }
+               if ((t = ss->people[5].id1) != 0) { k |=  t-1; i &=  t-1; }
+               if ((t = ss->people[2].id1) != 0) { k |=  t; i &=  t; }
+               if ((t = ss->people[3].id1) != 0) { k |= ~t; i &= ~t; }
+               if ((t = ss->people[6].id1) != 0) { k |= ~t; i &= ~t; }
+               if ((t = ss->people[7].id1) != 0) { k |=  t; i &=  t; }
                if (k & ~i & 2)
                   goto ldef_failed;
                break;
             case cr_wave_only:
                k = 0;         /* check for wave across the center */
                i = 2;
-               if (t = ss->people[2].id1) { k |=  t; i &=  t; }
-               if (t = ss->people[3].id1) { k |= ~t; i &= ~t; }
-               if (t = ss->people[6].id1) { k |= ~t; i &= ~t; }
-               if (t = ss->people[7].id1) { k |=  t; i &=  t; }
+               if ((t = ss->people[2].id1) != 0) { k |=  t; i &=  t; }
+               if ((t = ss->people[3].id1) != 0) { k |= ~t; i &= ~t; }
+               if ((t = ss->people[6].id1) != 0) { k |= ~t; i &= ~t; }
+               if ((t = ss->people[7].id1) != 0) { k |=  t; i &=  t; }
                if (k & ~i & 2)
                   goto ldef_failed;
                break;
             case cr_2fl_only:
                k = 0;         /* check for two-faced line across the center */
                i = 2;
-               if (t = ss->people[2].id1) { k |= ~t; i &= ~t; }
-               if (t = ss->people[3].id1) { k |= ~t; i &= ~t; }
-               if (t = ss->people[6].id1) { k |=  t; i &=  t; }
-               if (t = ss->people[7].id1) { k |=  t; i &=  t; }
+               if ((t = ss->people[2].id1) != 0) { k |= ~t; i &= ~t; }
+               if ((t = ss->people[3].id1) != 0) { k |= ~t; i &= ~t; }
+               if ((t = ss->people[6].id1) != 0) { k |=  t; i &=  t; }
+               if ((t = ss->people[7].id1) != 0) { k |=  t; i &=  t; }
                if (k & ~i & 2)
                   goto ldef_failed;
                break;
@@ -619,14 +619,14 @@ Private void check_line_restriction(setup *ss, call_restriction restr, unsigned 
             case cr_nice_diamonds:
                k = 0;         /* check for consistent diamonds, so can do "diamond swing thru" */
                i = 2;
-               if (t = ss->people[1].id1) { k |=  t+1; i &=  t+1; }
-               if (t = ss->people[7].id1) { k |=  t+1; i &=  t+1; }
-               if (t = ss->people[5].id1) { k |=  t-1; i &=  t-1; }
-               if (t = ss->people[3].id1) { k |=  t-1; i &=  t-1; }
-               if (t = ss->people[4].id1) { k |=  t; i &=  t; }
-               if (t = ss->people[6].id1) { k |= ~t; i &= ~t; }
-               if (t = ss->people[0].id1) { k |= ~t; i &= ~t; }
-               if (t = ss->people[2].id1) { k |=  t; i &=  t; }
+               if ((t = ss->people[1].id1) != 0) { k |=  t+1; i &=  t+1; }
+               if ((t = ss->people[7].id1) != 0) { k |=  t+1; i &=  t+1; }
+               if ((t = ss->people[5].id1) != 0) { k |=  t-1; i &=  t-1; }
+               if ((t = ss->people[3].id1) != 0) { k |=  t-1; i &=  t-1; }
+               if ((t = ss->people[4].id1) != 0) { k |=  t; i &=  t; }
+               if ((t = ss->people[6].id1) != 0) { k |= ~t; i &= ~t; }
+               if ((t = ss->people[0].id1) != 0) { k |= ~t; i &= ~t; }
+               if ((t = ss->people[2].id1) != 0) { k |=  t; i &=  t; }
                if (k & ~i & 2)
                   goto ldef_failed;
                break;
@@ -637,56 +637,56 @@ Private void check_line_restriction(setup *ss, call_restriction restr, unsigned 
             case cr_wave_only:
                k = 0;         /* check for grand wave */
                i = 2;
-               if (t = ss->people[0].id1) { k |=  t; i &=  t; }
-               if (t = ss->people[1].id1) { k |= ~t; i &= ~t; }
-               if (t = ss->people[2].id1) { k |= ~t; i &= ~t; }
-               if (t = ss->people[3].id1) { k |=  t; i &=  t; }
-               if (t = ss->people[4].id1) { k |= ~t; i &= ~t; }
-               if (t = ss->people[5].id1) { k |=  t; i &=  t; }
-               if (t = ss->people[6].id1) { k |=  t; i &=  t; }
-               if (t = ss->people[7].id1) { k |= ~t; i &= ~t; }
+               if ((t = ss->people[0].id1) != 0) { k |=  t; i &=  t; }
+               if ((t = ss->people[1].id1) != 0) { k |= ~t; i &= ~t; }
+               if ((t = ss->people[2].id1) != 0) { k |= ~t; i &= ~t; }
+               if ((t = ss->people[3].id1) != 0) { k |=  t; i &=  t; }
+               if ((t = ss->people[4].id1) != 0) { k |= ~t; i &= ~t; }
+               if ((t = ss->people[5].id1) != 0) { k |=  t; i &=  t; }
+               if ((t = ss->people[6].id1) != 0) { k |=  t; i &=  t; }
+               if ((t = ss->people[7].id1) != 0) { k |= ~t; i &= ~t; }
                if (k & ~i & 2)
                   goto ldef_failed;
                break;
             case cr_2fl_only:
                k = 0;         /* check for grand two-faced line */
                i = 2;
-               if (t = ss->people[0].id1) { k |=  t; i &=  t; }
-               if (t = ss->people[1].id1) { k |=  t; i &=  t; }
-               if (t = ss->people[2].id1) { k |= ~t; i &= ~t; }
-               if (t = ss->people[3].id1) { k |= ~t; i &= ~t; }
-               if (t = ss->people[4].id1) { k |= ~t; i &= ~t; }
-               if (t = ss->people[5].id1) { k |= ~t; i &= ~t; }
-               if (t = ss->people[6].id1) { k |=  t; i &=  t; }
-               if (t = ss->people[7].id1) { k |=  t; i &=  t; }
+               if ((t = ss->people[0].id1) != 0) { k |=  t; i &=  t; }
+               if ((t = ss->people[1].id1) != 0) { k |=  t; i &=  t; }
+               if ((t = ss->people[2].id1) != 0) { k |= ~t; i &= ~t; }
+               if ((t = ss->people[3].id1) != 0) { k |= ~t; i &= ~t; }
+               if ((t = ss->people[4].id1) != 0) { k |= ~t; i &= ~t; }
+               if ((t = ss->people[5].id1) != 0) { k |= ~t; i &= ~t; }
+               if ((t = ss->people[6].id1) != 0) { k |=  t; i &=  t; }
+               if ((t = ss->people[7].id1) != 0) { k |=  t; i &=  t; }
                if (k & ~i & 2)
                   goto ldef_failed;
                break;
             case cr_4x4_2fl_only:
                k = 0;         /* check for 4x4 two-faced line -- 4 up and 4 down */
                i = 2;
-               if (t = ss->people[0].id1) { k |=  t; i &=  t; }
-               if (t = ss->people[1].id1) { k |=  t; i &=  t; }
-               if (t = ss->people[2].id1) { k |=  t; i &=  t; }
-               if (t = ss->people[3].id1) { k |=  t; i &=  t; }
-               if (t = ss->people[4].id1) { k |= ~t; i &= ~t; }
-               if (t = ss->people[5].id1) { k |= ~t; i &= ~t; }
-               if (t = ss->people[6].id1) { k |= ~t; i &= ~t; }
-               if (t = ss->people[7].id1) { k |= ~t; i &= ~t; }
+               if ((t = ss->people[0].id1) != 0) { k |=  t; i &=  t; }
+               if ((t = ss->people[1].id1) != 0) { k |=  t; i &=  t; }
+               if ((t = ss->people[2].id1) != 0) { k |=  t; i &=  t; }
+               if ((t = ss->people[3].id1) != 0) { k |=  t; i &=  t; }
+               if ((t = ss->people[4].id1) != 0) { k |= ~t; i &= ~t; }
+               if ((t = ss->people[5].id1) != 0) { k |= ~t; i &= ~t; }
+               if ((t = ss->people[6].id1) != 0) { k |= ~t; i &= ~t; }
+               if ((t = ss->people[7].id1) != 0) { k |= ~t; i &= ~t; }
                if (k & ~i & 2)
                   goto ldef_failed;
                break;
             case cr_4x4couples_only:
                /* check for each four people facing same way */
                q0 = 0; q1 = 0; q2 = 0; q3 = 0;
-               if (t = ss->people[0].id1) { q0 |= t; q1 |= ~t; }
-               if (t = ss->people[1].id1) { q0 |= t; q1 |= ~t; }
-               if (t = ss->people[2].id1) { q0 |= t; q1 |= ~t; }
-               if (t = ss->people[3].id1) { q0 |= t; q1 |= ~t; }
-               if (t = ss->people[4].id1) { q2 |= t; q3 |= ~t; }
-               if (t = ss->people[5].id1) { q2 |= t; q3 |= ~t; }
-               if (t = ss->people[6].id1) { q2 |= t; q3 |= ~t; }
-               if (t = ss->people[7].id1) { q2 |= t; q3 |= ~t; }
+               if ((t = ss->people[0].id1) != 0) { q0 |= t; q1 |= ~t; }
+               if ((t = ss->people[1].id1) != 0) { q0 |= t; q1 |= ~t; }
+               if ((t = ss->people[2].id1) != 0) { q0 |= t; q1 |= ~t; }
+               if ((t = ss->people[3].id1) != 0) { q0 |= t; q1 |= ~t; }
+               if ((t = ss->people[4].id1) != 0) { q2 |= t; q3 |= ~t; }
+               if ((t = ss->people[5].id1) != 0) { q2 |= t; q3 |= ~t; }
+               if ((t = ss->people[6].id1) != 0) { q2 |= t; q3 |= ~t; }
+               if ((t = ss->people[7].id1) != 0) { q2 |= t; q3 |= ~t; }
                if (((q0&q1&2)) || ((q2&q3&2)))
                   goto ldef_failed;
                break;
@@ -697,12 +697,12 @@ Private void check_line_restriction(setup *ss, call_restriction restr, unsigned 
             case cr_3x3_2fl_only:
                k = 0;         /* check for 3x3 two-faced line -- 3 up and 3 down */
                i = 2;
-               if (t = ss->people[0].id1) { k |=  t; i &=  t; }
-               if (t = ss->people[1].id1) { k |=  t; i &=  t; }
-               if (t = ss->people[2].id1) { k |=  t; i &=  t; }
-               if (t = ss->people[3].id1) { k |= ~t; i &= ~t; }
-               if (t = ss->people[4].id1) { k |= ~t; i &= ~t; }
-               if (t = ss->people[5].id1) { k |= ~t; i &= ~t; }
+               if ((t = ss->people[0].id1) != 0) { k |=  t; i &=  t; }
+               if ((t = ss->people[1].id1) != 0) { k |=  t; i &=  t; }
+               if ((t = ss->people[2].id1) != 0) { k |=  t; i &=  t; }
+               if ((t = ss->people[3].id1) != 0) { k |= ~t; i &= ~t; }
+               if ((t = ss->people[4].id1) != 0) { k |= ~t; i &= ~t; }
+               if ((t = ss->people[5].id1) != 0) { k |= ~t; i &= ~t; }
                if (k & ~i & 2)
                   goto ldef_failed;
                break;
@@ -710,12 +710,12 @@ Private void check_line_restriction(setup *ss, call_restriction restr, unsigned 
                /* check for each three people facing same way */
                /* check for everyone as a couple */
                q0 = 0; q1 = 0; q2 = 0; q3 = 0;
-               if (t = ss->people[0].id1) { q0 |= t; q1 |= ~t; }
-               if (t = ss->people[1].id1) { q0 |= t; q1 |= ~t; }
-               if (t = ss->people[2].id1) { q0 |= t; q1 |= ~t; }
-               if (t = ss->people[3].id1) { q2 |= t; q3 |= ~t; }
-               if (t = ss->people[4].id1) { q2 |= t; q3 |= ~t; }
-               if (t = ss->people[5].id1) { q2 |= t; q3 |= ~t; }
+               if ((t = ss->people[0].id1) != 0) { q0 |= t; q1 |= ~t; }
+               if ((t = ss->people[1].id1) != 0) { q0 |= t; q1 |= ~t; }
+               if ((t = ss->people[2].id1) != 0) { q0 |= t; q1 |= ~t; }
+               if ((t = ss->people[3].id1) != 0) { q2 |= t; q3 |= ~t; }
+               if ((t = ss->people[4].id1) != 0) { q2 |= t; q3 |= ~t; }
+               if ((t = ss->people[5].id1) != 0) { q2 |= t; q3 |= ~t; }
                if (((q0&q1&2)) || ((q2&q3&2)))
                   goto ldef_failed;
                break;
@@ -726,48 +726,48 @@ Private void check_line_restriction(setup *ss, call_restriction restr, unsigned 
             case cr_wave_only:
                k = 0;         /* check for a wave */
                i = 2;
-               if (t = ss->people[0].id1) { k |=  t; i &=  t; }
-               if (t = ss->people[1].id1) { k |= ~t; i &= ~t; }
-               if (t = ss->people[2].id1) { k |= ~t; i &= ~t; }
-               if (t = ss->people[3].id1) { k |=  t; i &=  t; }
+               if ((t = ss->people[0].id1) != 0) { k |=  t; i &=  t; }
+               if ((t = ss->people[1].id1) != 0) { k |= ~t; i &= ~t; }
+               if ((t = ss->people[2].id1) != 0) { k |= ~t; i &= ~t; }
+               if ((t = ss->people[3].id1) != 0) { k |=  t; i &=  t; }
                if (k & ~i & 2)
                   goto ldef_failed;
                break;
             case cr_2fl_only:
                k = 0;         /* check for a 2-faced line */
                i = 2;
-               if (t = ss->people[0].id1) { k |=  t; i &=  t; }
-               if (t = ss->people[1].id1) { k |=  t; i &=  t; }
-               if (t = ss->people[2].id1) { k |= ~t; i &= ~t; }
-               if (t = ss->people[3].id1) { k |= ~t; i &= ~t; }
+               if ((t = ss->people[0].id1) != 0) { k |=  t; i &=  t; }
+               if ((t = ss->people[1].id1) != 0) { k |=  t; i &=  t; }
+               if ((t = ss->people[2].id1) != 0) { k |= ~t; i &= ~t; }
+               if ((t = ss->people[3].id1) != 0) { k |= ~t; i &= ~t; }
                if (k & ~i & 2)
                   goto ldef_failed;
                break;
             case cr_1fl_only:
                k = 0;         /* check for a 1-faced line */
                i = 0;
-               if (t = ss->people[0].id1) { k |= t; i |= ~t; }
-               if (t = ss->people[1].id1) { k |= t; i |= ~t; }
-               if (t = ss->people[2].id1) { k |= t; i |= ~t; }
-               if (t = ss->people[3].id1) { k |= t; i |= ~t; }
+               if ((t = ss->people[0].id1) != 0) { k |= t; i |= ~t; }
+               if ((t = ss->people[1].id1) != 0) { k |= t; i |= ~t; }
+               if ((t = ss->people[2].id1) != 0) { k |= t; i |= ~t; }
+               if ((t = ss->people[3].id1) != 0) { k |= t; i |= ~t; }
                if (k & i & 2)
                   goto ldef_failed;
                break;
             case cr_couples_only:
                /* check for everyone as a couple */
                q0 = 0; q1 = 0; q2 = 0; q3 = 0;
-               if (t = ss->people[0].id1) { q0 |= t; q1 |= ~t; }
-               if (t = ss->people[1].id1) { q0 |= t; q1 |= ~t; }
-               if (t = ss->people[2].id1) { q2 |= t; q3 |= ~t; }
-               if (t = ss->people[3].id1) { q2 |= t; q3 |= ~t; }
+               if ((t = ss->people[0].id1) != 0) { q0 |= t; q1 |= ~t; }
+               if ((t = ss->people[1].id1) != 0) { q0 |= t; q1 |= ~t; }
+               if ((t = ss->people[2].id1) != 0) { q2 |= t; q3 |= ~t; }
+               if ((t = ss->people[3].id1) != 0) { q2 |= t; q3 |= ~t; }
                if (((q0&q1&2)) || ((q2&q3&2)))
                   goto ldef_failed;
                break;
             case cr_awkward_centers:
                k = 2;         /* check for centers not having left hands */
                i = 2;
-               if (t = ss->people[1].id1) k &= ~t;
-               if (t = ss->people[3].id1) i &= t;
+               if ((t = ss->people[1].id1) != 0) { k &= ~t; }
+               if ((t = ss->people[3].id1) != 0) { i &=  t; }
                if (!((k | i) & 2)) warn(warn__awkward_centers);
                break;
          }
@@ -777,24 +777,24 @@ Private void check_line_restriction(setup *ss, call_restriction restr, unsigned 
             case cr_wave_only:
                k = 0;         /* check for a miniwave */
                i = 2;
-               if (t = ss->people[0].id1) { k |=  t; i &=  t; }
-               if (t = ss->people[1].id1) { k |= ~t; i &= ~t; }
+               if ((t = ss->people[0].id1) != 0) { k |=  t; i &=  t; }
+               if ((t = ss->people[1].id1) != 0) { k |= ~t; i &= ~t; }
                if (k & ~i & 2)
                   goto ldef_failed;
                break;
             case cr_2fl_only: case cr_couples_only:
                k = 0;         /* check for a couple */
                i = 2;
-               if (t = ss->people[0].id1) { k |=  t; i &=  t; }
-               if (t = ss->people[1].id1) { k |=  t; i &=  t; }
+               if ((t = ss->people[0].id1) != 0) { k |=  t; i &=  t; }
+               if ((t = ss->people[1].id1) != 0) { k |=  t; i &=  t; }
                if (k & ~i & 2)
                   goto ldef_failed;
                break;
             case cr_awkward_centers:
                k = 2;         /* check for people not having left hands */
                i = 2;
-               if (t = ss->people[0].id1) k &= ~t;
-               if (t = ss->people[1].id1) i &= t;
+               if ((t = ss->people[0].id1) != 0) { k &= ~t; }
+               if ((t = ss->people[1].id1) != 0) { i &=  t; }
                if (!((k | i) & 2)) warn(warn__awkward_centers);
                break;
          }
@@ -837,28 +837,28 @@ Private void check_column_restriction(setup *ss, call_restriction restr, unsigne
             case cr_wave_only:
                k = 0;         /* check for real columns */
                i = 2;
-               if (t = ss->people[0].id1) { k |=  t; i &=  t; }
-               if (t = ss->people[1].id1) { k |=  t; i &=  t; }
-               if (t = ss->people[2].id1) { k |=  t; i &=  t; }
-               if (t = ss->people[3].id1) { k |=  t; i &=  t; }
-               if (t = ss->people[4].id1) { k |= ~t; i &= ~t; }
-               if (t = ss->people[5].id1) { k |= ~t; i &= ~t; }
-               if (t = ss->people[6].id1) { k |= ~t; i &= ~t; }
-               if (t = ss->people[7].id1) { k |= ~t; i &= ~t; }
+               if ((t = ss->people[0].id1) != 0) { k |=  t; i &=  t; }
+               if ((t = ss->people[1].id1) != 0) { k |=  t; i &=  t; }
+               if ((t = ss->people[2].id1) != 0) { k |=  t; i &=  t; }
+               if ((t = ss->people[3].id1) != 0) { k |=  t; i &=  t; }
+               if ((t = ss->people[4].id1) != 0) { k |= ~t; i &= ~t; }
+               if ((t = ss->people[5].id1) != 0) { k |= ~t; i &= ~t; }
+               if ((t = ss->people[6].id1) != 0) { k |= ~t; i &= ~t; }
+               if ((t = ss->people[7].id1) != 0) { k |= ~t; i &= ~t; }
                if (k & ~i & 2)
                   goto cdef_failed;
                break;
             case cr_magic_only:
                k = 0;         /* check for magic columns */
                i = 2;
-               if (t = ss->people[0].id1) { k |=  t; i &=  t; }
-               if (t = ss->people[1].id1) { k |= ~t; i &= ~t; }
-               if (t = ss->people[2].id1) { k |= ~t; i &= ~t; }
-               if (t = ss->people[3].id1) { k |=  t; i &=  t; }
-               if (t = ss->people[4].id1) { k |= ~t; i &= ~t; }
-               if (t = ss->people[5].id1) { k |=  t; i &=  t; }
-               if (t = ss->people[6].id1) { k |=  t; i &=  t; }
-               if (t = ss->people[7].id1) { k |= ~t; i &= ~t; }
+               if ((t = ss->people[0].id1) != 0) { k |=  t; i &=  t; }
+               if ((t = ss->people[1].id1) != 0) { k |= ~t; i &= ~t; }
+               if ((t = ss->people[2].id1) != 0) { k |= ~t; i &= ~t; }
+               if ((t = ss->people[3].id1) != 0) { k |=  t; i &=  t; }
+               if ((t = ss->people[4].id1) != 0) { k |= ~t; i &= ~t; }
+               if ((t = ss->people[5].id1) != 0) { k |=  t; i &=  t; }
+               if ((t = ss->people[6].id1) != 0) { k |=  t; i &=  t; }
+               if ((t = ss->people[7].id1) != 0) { k |= ~t; i &= ~t; }
                if (k & ~i & 2)
                   goto cdef_failed;
                break;
@@ -868,14 +868,14 @@ Private void check_column_restriction(setup *ss, call_restriction restr, unsigne
                q4 = 0; q5 = 0;
                q2 = 0; q3 = 0;
                q6 = 0; q7 = 0;
-               if (t = ss->people[0].id1) { q0 |= (t^1); q1 |= (t^3); }
-               if (t = ss->people[7].id1) { q0 |= (t^1); q1 |= (t^3); }
-               if (t = ss->people[1].id1) { q5 |= (t^1); q4 |= (t^3); }
-               if (t = ss->people[6].id1) { q5 |= (t^1); q4 |= (t^3); }
-               if (t = ss->people[2].id1) { q2 |= (t^1); q3 |= (t^3); }
-               if (t = ss->people[5].id1) { q2 |= (t^1); q3 |= (t^3); }
-               if (t = ss->people[3].id1) { q6 |= (t^1); q7 |= (t^3); }
-               if (t = ss->people[4].id1) { q6 |= (t^1); q7 |= (t^3); }
+               if ((t = ss->people[0].id1) != 0) { q0 |= (t^1); q1 |= (t^3); }
+               if ((t = ss->people[7].id1) != 0) { q0 |= (t^1); q1 |= (t^3); }
+               if ((t = ss->people[1].id1) != 0) { q5 |= (t^1); q4 |= (t^3); }
+               if ((t = ss->people[6].id1) != 0) { q5 |= (t^1); q4 |= (t^3); }
+               if ((t = ss->people[2].id1) != 0) { q2 |= (t^1); q3 |= (t^3); }
+               if ((t = ss->people[5].id1) != 0) { q2 |= (t^1); q3 |= (t^3); }
+               if ((t = ss->people[3].id1) != 0) { q6 |= (t^1); q7 |= (t^3); }
+               if ((t = ss->people[4].id1) != 0) { q6 |= (t^1); q7 |= (t^3); }
                if (((q0&3) && (q1&3)) ||
                    ((q2&3) && (q3&3)) ||
                    ((q6&3) && (q7&3)) ||
@@ -886,14 +886,14 @@ Private void check_column_restriction(setup *ss, call_restriction restr, unsigne
                /* check for a "peelable" 2x4 column */
                q2 = 3; q3 = 3;
                q7 = 3; q6 = 3;
-               if (t = ss->people[0].id1) { q2 &= t; q3 &= (t^2); }
-               if (t = ss->people[1].id1) { q2 &= t; q3 &= (t^2); }
-               if (t = ss->people[2].id1) { q2 &= t; q3 &= (t^2); }
-               if (t = ss->people[3].id1) { q2 &= t; q3 &= (t^2); }
-               if (t = ss->people[4].id1) { q7 &= t; q6 &= (t^2); }
-               if (t = ss->people[5].id1) { q7 &= t; q6 &= (t^2); }
-               if (t = ss->people[6].id1) { q7 &= t; q6 &= (t^2); }
-               if (t = ss->people[7].id1) { q7 &= t; q6 &= (t^2); }
+               if ((t = ss->people[0].id1) != 0) { q2 &= t; q3 &= (t^2); }
+               if ((t = ss->people[1].id1) != 0) { q2 &= t; q3 &= (t^2); }
+               if ((t = ss->people[2].id1) != 0) { q2 &= t; q3 &= (t^2); }
+               if ((t = ss->people[3].id1) != 0) { q2 &= t; q3 &= (t^2); }
+               if ((t = ss->people[4].id1) != 0) { q7 &= t; q6 &= (t^2); }
+               if ((t = ss->people[5].id1) != 0) { q7 &= t; q6 &= (t^2); }
+               if ((t = ss->people[6].id1) != 0) { q7 &= t; q6 &= (t^2); }
+               if ((t = ss->people[7].id1) != 0) { q7 &= t; q6 &= (t^2); }
                if ((((~q2)&3) && ((~q3)&3)) || (((~q7)&3) && ((~q6)&3)))
                   goto cdef_failed;
                break;
@@ -957,12 +957,12 @@ Private void check_column_restriction(setup *ss, call_restriction restr, unsigne
                /* check for a "peelable" 2x3 column */
                q2 = 3; q3 = 3;
                q7 = 3; q6 = 3;
-               if (t = ss->people[0].id1) { q2 &= t; q3 &= (t^2); }
-               if (t = ss->people[1].id1) { q2 &= t; q3 &= (t^2); }
-               if (t = ss->people[2].id1) { q2 &= t; q3 &= (t^2); }
-               if (t = ss->people[3].id1) { q7 &= t; q6 &= (t^2); }
-               if (t = ss->people[4].id1) { q7 &= t; q6 &= (t^2); }
-               if (t = ss->people[5].id1) { q7 &= t; q6 &= (t^2); }
+               if ((t = ss->people[0].id1) != 0) { q2 &= t; q3 &= (t^2); }
+               if ((t = ss->people[1].id1) != 0) { q2 &= t; q3 &= (t^2); }
+               if ((t = ss->people[2].id1) != 0) { q2 &= t; q3 &= (t^2); }
+               if ((t = ss->people[3].id1) != 0) { q7 &= t; q6 &= (t^2); }
+               if ((t = ss->people[4].id1) != 0) { q7 &= t; q6 &= (t^2); }
+               if ((t = ss->people[5].id1) != 0) { q7 &= t; q6 &= (t^2); }
                if ((((~q2)&3) && ((~q3)&3)) || (((~q7)&3) && ((~q6)&3)))
                   goto cdef_failed;
                break;
@@ -973,18 +973,18 @@ Private void check_column_restriction(setup *ss, call_restriction restr, unsigne
             case cr_wave_only:
                k = 0;         /* check for real 12-matrix columns */
                i = 2;
-               if (t = ss->people[0].id1)  { k |=  t; i &=  t; }
-               if (t = ss->people[1].id1)  { k |=  t; i &=  t; }
-               if (t = ss->people[2].id1)  { k |=  t; i &=  t; }
-               if (t = ss->people[3].id1)  { k |=  t; i &=  t; }
-               if (t = ss->people[4].id1)  { k |=  t; i &=  t; }
-               if (t = ss->people[5].id1)  { k |=  t; i &=  t; }
-               if (t = ss->people[6].id1)  { k |= ~t; i &= ~t; }
-               if (t = ss->people[7].id1)  { k |= ~t; i &= ~t; }
-               if (t = ss->people[8].id1)  { k |= ~t; i &= ~t; }
-               if (t = ss->people[9].id1)  { k |= ~t; i &= ~t; }
-               if (t = ss->people[10].id1) { k |= ~t; i &= ~t; }
-               if (t = ss->people[11].id1) { k |= ~t; i &= ~t; }
+               if ((t = ss->people[0].id1) != 0)  { k |=  t; i &=  t; }
+               if ((t = ss->people[1].id1) != 0)  { k |=  t; i &=  t; }
+               if ((t = ss->people[2].id1) != 0)  { k |=  t; i &=  t; }
+               if ((t = ss->people[3].id1) != 0)  { k |=  t; i &=  t; }
+               if ((t = ss->people[4].id1) != 0)  { k |=  t; i &=  t; }
+               if ((t = ss->people[5].id1) != 0)  { k |=  t; i &=  t; }
+               if ((t = ss->people[6].id1) != 0)  { k |= ~t; i &= ~t; }
+               if ((t = ss->people[7].id1) != 0)  { k |= ~t; i &= ~t; }
+               if ((t = ss->people[8].id1) != 0)  { k |= ~t; i &= ~t; }
+               if ((t = ss->people[9].id1) != 0)  { k |= ~t; i &= ~t; }
+               if ((t = ss->people[10].id1) != 0) { k |= ~t; i &= ~t; }
+               if ((t = ss->people[11].id1) != 0) { k |= ~t; i &= ~t; }
                if (k & ~i & 2)
                   goto cdef_failed;
                break;
@@ -995,22 +995,22 @@ Private void check_column_restriction(setup *ss, call_restriction restr, unsigne
             case cr_wave_only:
                k = 0;         /* check for real 16-matrix columns */
                i = 2;
-               if (t = ss->people[0].id1)  { k |=  t; i &=  t; }
-               if (t = ss->people[1].id1)  { k |=  t; i &=  t; }
-               if (t = ss->people[2].id1)  { k |=  t; i &=  t; }
-               if (t = ss->people[3].id1)  { k |=  t; i &=  t; }
-               if (t = ss->people[4].id1)  { k |=  t; i &=  t; }
-               if (t = ss->people[5].id1)  { k |=  t; i &=  t; }
-               if (t = ss->people[6].id1)  { k |=  t; i &=  t; }
-               if (t = ss->people[7].id1)  { k |=  t; i &=  t; }
-               if (t = ss->people[8].id1)  { k |= ~t; i &= ~t; }
-               if (t = ss->people[9].id1)  { k |= ~t; i &= ~t; }
-               if (t = ss->people[10].id1) { k |= ~t; i &= ~t; }
-               if (t = ss->people[11].id1) { k |= ~t; i &= ~t; }
-               if (t = ss->people[12].id1) { k |= ~t; i &= ~t; }
-               if (t = ss->people[13].id1) { k |= ~t; i &= ~t; }
-               if (t = ss->people[14].id1) { k |= ~t; i &= ~t; }
-               if (t = ss->people[15].id1) { k |= ~t; i &= ~t; }
+               if ((t = ss->people[0].id1) != 0)  { k |=  t; i &=  t; }
+               if ((t = ss->people[1].id1) != 0)  { k |=  t; i &=  t; }
+               if ((t = ss->people[2].id1) != 0)  { k |=  t; i &=  t; }
+               if ((t = ss->people[3].id1) != 0)  { k |=  t; i &=  t; }
+               if ((t = ss->people[4].id1) != 0)  { k |=  t; i &=  t; }
+               if ((t = ss->people[5].id1) != 0)  { k |=  t; i &=  t; }
+               if ((t = ss->people[6].id1) != 0)  { k |=  t; i &=  t; }
+               if ((t = ss->people[7].id1) != 0)  { k |=  t; i &=  t; }
+               if ((t = ss->people[8].id1) != 0)  { k |= ~t; i &= ~t; }
+               if ((t = ss->people[9].id1) != 0)  { k |= ~t; i &= ~t; }
+               if ((t = ss->people[10].id1) != 0) { k |= ~t; i &= ~t; }
+               if ((t = ss->people[11].id1) != 0) { k |= ~t; i &= ~t; }
+               if ((t = ss->people[12].id1) != 0) { k |= ~t; i &= ~t; }
+               if ((t = ss->people[13].id1) != 0) { k |= ~t; i &= ~t; }
+               if ((t = ss->people[14].id1) != 0) { k |= ~t; i &= ~t; }
+               if ((t = ss->people[15].id1) != 0) { k |= ~t; i &= ~t; }
                if (k & ~i & 2)
                   goto cdef_failed;
                break;
@@ -1021,10 +1021,10 @@ Private void check_column_restriction(setup *ss, call_restriction restr, unsigne
             case cr_wave_only:
                k = 0;         /* check for wave across the center */
                i = 2;
-               if (t = ss->people[2].id1) { k |=  t; i &=  t; }
-               if (t = ss->people[3].id1) { k |= ~t; i &= ~t; }
-               if (t = ss->people[6].id1) { k |= ~t; i &= ~t; }
-               if (t = ss->people[7].id1) { k |=  t; i &=  t; }
+               if ((t = ss->people[2].id1) != 0) { k |=  t; i &=  t; }
+               if ((t = ss->people[3].id1) != 0) { k |= ~t; i &= ~t; }
+               if ((t = ss->people[6].id1) != 0) { k |= ~t; i &= ~t; }
+               if ((t = ss->people[7].id1) != 0) { k |=  t; i &=  t; }
                if (k & ~i & 2)
                   goto cdef_failed;
                break;
@@ -2042,7 +2042,7 @@ extern void basic_move(
 
          goto un_mirror;
       case s_qtag:
-         if (assoc(b_dmd, ss, calldeflist) || assoc(b_pmd, ss, calldeflist)) {
+         if (assoc(b_dmd, ss, calldeflist) || assoc(b_pmd, ss, calldeflist) || assoc(b_1x1, ss, calldeflist)) {
             division_maps = (*map_lists[sdmd][1])[MPKIND__SPLIT][1];
             goto divide_us_no_recompute;
          }
@@ -2077,7 +2077,7 @@ extern void basic_move(
          }
          break;
       case s_ptpd:
-         if (assoc(b_dmd, ss, calldeflist) || assoc(b_pmd, ss, calldeflist)) {
+         if (assoc(b_dmd, ss, calldeflist) || assoc(b_pmd, ss, calldeflist) || assoc(b_1x1, ss, calldeflist)) {
             division_maps = (*map_lists[sdmd][1])[MPKIND__SPLIT][0];
             goto divide_us_no_recompute;
          }
@@ -2219,12 +2219,33 @@ extern void basic_move(
       case s1x8:
          /* See if the call has a 1x4, 4x1, 1x2, 2x1, or 1x1 definition, in which case split it and do each part. */
          
-         if (    (assoc(b_1x4, ss, calldeflist) || assoc(b_4x1, ss, calldeflist) ||
+         if (     assoc(b_1x4, ss, calldeflist) || assoc(b_4x1, ss, calldeflist) ||
                   assoc(b_1x2, ss, calldeflist) || assoc(b_2x1, ss, calldeflist) ||
-                  assoc(b_1x1, ss, calldeflist))) {
+                  assoc(b_1x1, ss, calldeflist)) {
             division_maps = (*map_lists[s1x4][1])[MPKIND__SPLIT][0];
             goto divide_us_no_recompute;
          }
+
+         /* We might be doing some kind of "own the so-and-so" operation in which people who are ends of
+            each wave in a 1x8 want to think they are points of diamonds instead.  This could happen,
+            for example, with point-to-point diamonds if we say "own the <points>, flip the diamond by
+            flip the diamond".  Yes, it's stupid.  Now normalize_setup turned the centerless diamonds
+            into a 1x8 (it needs to do that in order for "own the <points>, trade by flip the diamond"
+            to work.  We must turn that 1x8 back into diamonds.  The "own the so-and-so" concept turns
+            on SETUPFLAG__PHANTOMS.  If this flag weren't on, we would have no business saying "I see
+            phantoms in the center 2 spots of my wave, I'm allowed to think of this as a diamond." */
+
+         if ((ss->setupflags & SETUPFLAG__PHANTOMS) &&
+                  (ss->people[1].id1 | ss->people[3].id1 | ss->people[5].id1 | ss->people[7].id1) == 0) {
+            ss->kind = s_ptpd;   /* It makes assoc happier if we do this now. */
+
+            if   (assoc(b_ptpd, ss, calldeflist) || assoc(b_pptpd, ss, calldeflist) ||
+                  assoc(b_dmd, ss, calldeflist) || assoc(b_pmd, ss, calldeflist))
+               goto search_for_call_def;
+
+            ss->kind = s1x8;        /* Too bad; set it back. */
+         }
+
          break;
       case s1x4:
          /* See if the call has a 1x2, 2x1, or 1x1 definition, in which case split it and do each part. */
@@ -2274,6 +2295,8 @@ extern void basic_move(
                fail("Can't handle people in triangle for this call.");
             case s_qtag:
                fail("Can't handle people in quarter tag for this call.");
+            case s_ptpd:
+               fail("Can't handle people in point-to-point diamonds for this call.");
             case s3x4:
                fail("Can't handle people in triple lines for this call.");
             case s_2x3: case s2x4:

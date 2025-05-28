@@ -227,11 +227,20 @@ typedef struct {
    raised if we have people in a facing 2x2 star thru when they are far from the
    ones they are facing.
 
-   SETUPFLAG__PHANTOMS means that we are at a level of recursion in which some phantom concept
-   has been used.  When this is set, the "tandem" or "as couples" concepts will
+   SETUPFLAG__PHANTOMS means that we are at a level of recursion in which some phantom
+   concept has been used, or when "on your own" or "so-and-so do your part" concepts
+   are in use.  It indicates that we shouldn't be surprised if there are phantoms
+   in the setup.  When this is set, the "tandem" or "as couples" concepts will
    forgive phantoms wherever they might appear, so that "split phantom lines tandem
    <call>" is legal.  Otherwise, we would have to say "split phantom lines phantom
-   tandem <call>.
+   tandem <call>.  This flag also allows "basic_move" to be more creative about
+   inferring the starting position for a call.  If I know that I am doing a
+   "so-and-so do your part" operation, it may well be that, even though the setup
+   is, say, point-to-point diamonds, the centers of the diamonds are none of my
+   business (I am a point), and I want to think of the setup as a grand wave,
+   so I can do my part of a grand mix.  The "SETUPFLAG__PHANTOMS" flag makes it
+   possible to do a grand mix from point-to-point diamonds in which the centers
+   are absent.
 
    SETUPFLAG__NO_STEP_TO_WAVE means that we are at a level of recursion that no longer permits us to do the
    implicit step to a wave or rear back from one that some calls permit at the top level.
@@ -487,8 +496,12 @@ typedef enum {
 } resolve_command_kind;
 #define NUM_RESOLVE_COMMAND_KINDS (((int) resolve_command_lower_rec_point)+1)
 
-/* BEWARE!!  There may be tables in the user interface file keyed to this enumeration. */
-/* In particular, this list must track the array "menu_names" in sdtables.c . */
+/* BEWARE!!  There may be tables in the user interface file keyed to this enumeration.
+   In particular, this list must track the array "menu_names" in sdtables.c . */
+/* BEWARE!!  This list is keyed to some messy stuff in the procedure "initialize_concept_sublists".
+   In particular, there are octal constants like "MASK_CTR_2" that contain bits assigned
+   according to these items.  Changing these items is not recommended. */
+
 typedef enum {
    call_list_none, call_list_empty, /* Not real call list kinds; used only for
                                        fictional purposes in the user interface;
@@ -1123,7 +1136,7 @@ extern long_boolean (*pred_table[])(                                /* in PREDS 
    int real_direction,
    int northified_index);
 
-#ifdef __GNUC__
+#if __GNUC__ >= 2
 #define nonreturning volatile
 #else
 #define nonreturning
@@ -1222,6 +1235,7 @@ extern void uims_database_tick(int n);
 extern void uims_database_tick_end(void);
 extern void uims_database_error(char *message, char *call_name);
 extern void uims_bad_argument(char *s1, char *s2, char *s3);
+extern void uims_debug_print(char *s);		/* Alan's code only */
 
 /* In SDUTIL */
 

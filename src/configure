@@ -1,7 +1,7 @@
 #!/bin/sh
 # Guess values for system-dependent variables and create Makefiles.
 # Generated automatically using autoconf version 1.4
-# by gildea@alex.lcs.mit.edu on Thu Jun  3 19:09:07 EDT 1993
+# by gildea@alex.lcs.mit.edu on Fri Jun 25 21:26:12 EDT 1993
 # Copyright (C) 1991, 1992, 1993 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
@@ -120,7 +120,7 @@ case $srcdir in
   *) srcdir=`cd $srcdir; pwd` ;; # Make relative path absolute.
 esac
 
-TIME_STAMP="configure.in Time-stamp: <93/06/03 18:04:55 gildea>"
+TIME_STAMP="configure.in Time-stamp: <93/06/25 21:26:04 gildea>"
 #
 # options:
 #    --with-warnings: of interest to developers only
@@ -219,9 +219,9 @@ else
   DEFS="+O3 +Obb750"
   echo checking for HP compiler
 cat > conftest.c <<EOF
-
+#include <stdio.h>
 int main() { exit(0); }
-int t() {  }
+int t() { printf("hello world\n");  }
 EOF
 if eval $compile; then
   # check whether --with-warnings was given
@@ -233,6 +233,7 @@ fi
      DEFS=
 else
   CC="$CC_save"
+    DEFS=
 fi
 rm -f conftest*
 
@@ -260,44 +261,58 @@ if test -n "$with_pc"; then
   
   
   
+  
   TTY_LIBS=-lpc
   STRIP="strip \$@"
   AOUT2EXE="aout2exe \$@"
     DMAKE_IMPLICIT="\%.o: \%.c; $(CC) $(CFLAGS) -c \$*.c"
 
+
 else
   
   
-  echo "checking for X11 includes"
-  DEFS_save="$DEFS"
-  DEFS=
+
+  if test -z "$found_X11_INCLUDES"; then
+    echo "looking for <X11/Xaw/Paned.h>..."
+  # first try without any -I flag
   cat > conftest.c <<EOF
 #include <X11/Xaw/Paned.h>
 EOF
 err=`eval "($CPP \$DEFS conftest.c >/dev/null) 2>&1"`
 if test -z "$err"; then
-  x_includes=1
+  found_X11_INCLUDES=1
+else
+  found_X11_INCLUDES=""
 fi
 rm -f conftest*
-  if test -z "$x_includes"; then
-    DEFS="-I/usr/include/X11R5"
+  X11_INCLUDES=""
+fi
+DEFS_fi_save="$DEFS"
+for dir in /usr/include/X11R5		/usr/local/include	  
+do
+  if test -n "$found_X11_INCLUDES"; then
+    break
+  else
+    # echo "looking for <X11/Xaw/Paned.h> in $dir"
+    X11_INCLUDES="-I$dir"
+    DEFS="$DEFS_fi_save $X11_INCLUDES"
     cat > conftest.c <<EOF
 #include <X11/Xaw/Paned.h>
 EOF
 err=`eval "($CPP \$DEFS conftest.c >/dev/null) 2>&1"`
 if test -z "$err"; then
-  x_includes=1
+  found_X11_INCLUDES=1
 else
-  DEFS=
+  X11_INCLUDES=""
 fi
 rm -f conftest*
   fi
-    if test -z "$x_includes"; then
-    echo "warning: cannot find X11/Xaw header files"
-  fi
-  X11_INCLUDES="$DEFS"
-  
-  DEFS="$DEFS_save"
+done
+if test -z "$found_X11_INCLUDES"; then
+  echo "warning: cannot find <X11/Xaw/Paned.h> header file"
+fi
+DEFS="$DEFS_fi_save"
+
 
     LIBS_save="${LIBS}"
 LIBS="${LIBS} -lsocket"
@@ -438,7 +453,7 @@ rm -f conftest*
 fi
 
 
-if test -n "$x_libs" -a -n "$x_includes" -a -n "$DISPLAY"; then
+if test -n "$x_libs" -a -n "$found_X11_INCLUDES" -a -n "$DISPLAY"; then
   DEFAULT_TARGET=allx11
 else
   DEFAULT_TARGET=alltty
@@ -488,6 +503,7 @@ TTY_LIBS='$TTY_LIBS'
 STRIP='$STRIP'
 AOUT2EXE='$AOUT2EXE'
 DMAKE_IMPLICIT='$DMAKE_IMPLICIT'
+PC_CLEAN='$PC_CLEAN'
 X11_INCLUDES='$X11_INCLUDES'
 X11_LIBS='$X11_LIBS'
 TTY_DEFS='$TTY_DEFS'
@@ -529,6 +545,7 @@ s%@TTY_LIBS@%$TTY_LIBS%g
 s%@STRIP@%$STRIP%g
 s%@AOUT2EXE@%$AOUT2EXE%g
 s%@DMAKE_IMPLICIT@%$DMAKE_IMPLICIT%g
+s%@PC_CLEAN@%$PC_CLEAN%g
 s%@X11_INCLUDES@%$X11_INCLUDES%g
 s%@X11_LIBS@%$X11_LIBS%g
 s%@TTY_DEFS@%$TTY_DEFS%g

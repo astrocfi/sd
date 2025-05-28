@@ -44,6 +44,8 @@ enum {
     match_selectors = -3
 };
 
+extern long_boolean match_all_concepts; /* TRUE => match concepts regardless of level */
+
 extern void
 matcher_initialize(long_boolean show_commands_last);
 

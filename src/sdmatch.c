@@ -19,18 +19,35 @@
    match_user_input
 */
 
+/* #define TIMING */ /* uncomment to display timing information */
+
 #include "sd.h"
 #include "sdmatch.h"
 #include <string.h> /* for strcpy, strncmp */
 #include <stdio.h>  /* for sprintf */
 #include <ctype.h>  /* for tolower */
 
-static char           **concept_menu_list;
-static int            concept_menu_len;
+#ifdef TIMING
+#include <time.h>
+#endif
+
+long_boolean          match_all_concepts; /* match concepts regardless of level */
+
 static char           *empty_menu[] = {NULL};
 static char           **call_menu_lists[NUM_CALL_LIST_KINDS];
 static call_list_kind current_call_menu;
 static long_boolean   commands_last_option;
+
+typedef struct {
+    int number;            /* index of concept in concept_descriptor_table */
+    char *name;            /* name of concept in all lower case */
+} concept_item;
+
+static concept_item *concept_list; /* all concepts */
+static int concept_list_length;
+
+static concept_item *level_concept_list; /* only concepts valid at current level */
+static int level_concept_list_length;
 
 typedef struct {
     char *full_input;      /* the current user input */
@@ -58,6 +75,8 @@ static void search_concept(match_state *sp);
 static void match_pattern(match_state *sp, char pattern[], match_result *result);
 static void match_suffix(match_state *sp, char *user, char *pat,
                           char *patxp, match_result *result);
+static void match_suffix_2(match_state *sp, char *user, char *pat1, char *pat2,
+                          char *patxp, match_result *result);
 static int  match_wildcard(match_state *sp, char *user, char *pat,
                           char *patxp, match_result *result);
 static void record_a_match(match_state *sp, match_result *result);
@@ -65,6 +84,9 @@ static void strn_gcp(char *s1, char *s2);
 static long_boolean verify_call(call_list_kind cl, int call_index, selector_kind who);
 static long_boolean verify_call_with_selector(callspec_block *call, selector_kind sel);
 static long_boolean try_call_with_selector(callspec_block *call, selector_kind sel);
+
+static char *strdup_lower(char *source);
+static void strcpy_lower(char *dest, char *source);
 
 /* the following arrays must be coordinated with the sd program */
 
@@ -88,30 +110,30 @@ static long_boolean try_call_with_selector(callspec_block *call, selector_kind s
 /* startup_commands tracks the start_select_kind enumeration */
 
 static char *startup_commands[] = {
-    "Exit from the program",
-    "Heads 1P2P",
-    "Sides 1P2P",
-    "Heads start",
-    "Sides start",
-    "Just as they are"
+    "exit from the program",
+    "heads 1p2p",
+    "sides 1p2p",
+    "heads start",
+    "sides start",
+    "just as they are"
 };
 
 /* command_commands tracks the command_kind enumeration */
 
 static char *command_commands[] = {
-    "Exit the program",
-    "Undo last call",
-    IFMAC("End this sequence","Abort this sequence"),
-    "Allow modifications",
-    "Insert a comment ...",
-    IFMAC("Save as ...","Change output file ..."),
-    NOMAC "End this sequence ...",
-    "Resolve ...",
-    "Reconcile ...",
-    IFMAC("Pick random call ...","Do anything ..."),
-    IFMAC("Normalize setup ...","Nice setup ..."),
-    NOMAC "Show neglected calls ...",
-    IFMAC("Insert picture","Save picture")
+    "exit the program",
+    "undo last call",
+    IFMAC("end this sequence","abort this sequence"),
+    IFMAC("modify next call","allow modifications"),
+    "insert a comment ...",
+    IFMAC("save as ...","change output file ..."),
+    NOMAC "end this sequence ...",
+    "resolve ...",
+    "reconcile ...",
+    IFMAC("pick random call ...","do anything ..."),
+    IFMAC("normalize setup ...","nice setup ..."),
+    NOMAC "show neglected calls ...",
+    IFMAC("insert picture","save picture")
 };
 
 /* resolve_commands tracks the resolve_command_kind enumeration */
@@ -121,38 +143,103 @@ static char *resolve_commands[] = {
     "find another",
     "go to next",
     "go to previous",
-    "ACCEPT current choice",
+    "accept current choice",
     "raise reconcile point",
     "lower reconcile point"
 };
 
+static char *n_patterns[] = {
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    0
+};
+
+static char *n_4_patterns[] = {
+    "1/4",
+    "2/4",
+    "3/4",
+    "4/4",
+    "5/4",
+    0
+};
+
+
+
+
 /*
-   Call MATCHER_INITIALIZE first to set up the concept menu.  The concepts are found
-   in the external array concept_descriptor_table+general_concept_offset.
-   The number of concepts in that list is general_concept_size.  For each
-   i, the field concept_descriptor_table[i].name has the text that we
-   should display for the user.  If SHOW_COMMANDS_LAST is true, then the
+   Call MATCHER_INITIALIZE first.  If SHOW_COMMANDS_LAST is true, then the
    commands will be displayed last when matching against a call menu;
    otherwise, they will be displayed first.
+   
+   This function sets up the concept list.  The concepts are found
+   in the external array concept_descriptor_table.  For each
+   i, the field concept_descriptor_table[i].name has the text that we
+   should display for the user.
 */
 
 extern void
 matcher_initialize(long_boolean show_commands_last)
 {
-    int i;
+    int concept_number, count;
+    concept_descriptor *p;
+    concept_item *item, *level_item;
 
     commands_last_option = show_commands_last;
 
     /* initialize our special empty call menu */
+
     call_menu_lists[call_list_empty] = empty_menu;
     number_of_calls[call_list_empty] = 0;
 
-    /* fill in general concept menu */
-    for (i=0; i<general_concept_size; i++)
-        add_call_to_menu(&concept_menu_list, i, general_concept_size,
-            concept_descriptor_table[i+general_concept_offset].name);
+    /* count the number of concepts to put in the lists */
+    
+    concept_list_length = 0;
+    level_concept_list_length = 0;
+    for (concept_number=0;;concept_number++) {
+        p = &concept_descriptor_table[concept_number];
+        if (p->kind == concept_comment) {
+            continue;
+        }
+        if (p->kind == marker_end_of_list) {
+            break;
+        }
+        concept_list_length++;
+        if (p->level <= calling_level) {
+            level_concept_list_length++;
+        }
+    }
 
-    concept_menu_len = general_concept_size;
+    /* create the concept lists */
+
+    concept_list = (concept_item *)get_mem(
+        sizeof(concept_item) * concept_list_length);
+    level_concept_list = (concept_item *)get_mem(
+        sizeof(concept_item) * level_concept_list_length);
+
+    item = concept_list;
+    level_item = level_concept_list;
+    for (concept_number=0;;concept_number++) {
+        p = &concept_descriptor_table[concept_number];
+        if (p->kind == concept_comment) {
+            continue;
+        }
+        if (p->kind == marker_end_of_list) {
+            break;
+        }
+        item->number = concept_number - general_concept_offset; /* kludge */
+        item->name = strdup_lower(p->name);
+        if (p->level <= calling_level) {
+            level_item->number = item->number;
+            level_item->name = item->name;
+            level_item++;
+        }
+        item++;
+    }
 }
 
 /*
@@ -181,7 +268,7 @@ add_call_to_menu(char ***menu, int call_menu_index, int menu_size,
         *menu = (char **)get_mem((unsigned)(menu_size+1) * sizeof(char **));
     }
 
-    (*menu)[call_menu_index] = callname;
+    (*menu)[call_menu_index] = strdup_lower(callname);
 }
 
 /*
@@ -242,6 +329,12 @@ match_user_input(char *user_input, int which_commands, match_result *mr,
     input_matcher *f;
     char *p;
 
+#ifdef TIMING
+    clock_t timer = clock();
+    char time_buf[20];
+    uims_debug_print("");
+#endif
+
     ss.full_input = user_input;
     ss.extended_input = extension;
     ss.match_count = 0;
@@ -252,6 +345,10 @@ match_user_input(char *user_input, int which_commands, match_result *mr,
     ss.result.exact = FALSE;
     ss.space_ok = FALSE;
     ss.verify = show_verify;
+
+    if (extension) { /* needed if no matches or user input is empty */
+        extension[0] = 0;
+    }
 
     /* convert user input to lower case for easier comparison */
     p = user_input;
@@ -271,12 +368,17 @@ match_user_input(char *user_input, int which_commands, match_result *mr,
         return 0;
 
     (*f)(&ss);
-    if (ss.match_count == 0 && extension)
-        extension[0] = 0;
     if (mr) {
         *mr = ss.result;
         mr->space_ok = ss.space_ok;
     }
+
+#ifdef TIMING
+    timer = clock() - timer;
+    sprintf(time_buf, "%.2f", (double)timer / CLOCKS_PER_SEC);
+    uims_debug_print(time_buf);
+#endif
+
     return ss.match_count;
 }
     
@@ -337,61 +439,90 @@ search_menu(match_state *sp, char *menu[], int menu_length, uims_reply kind)
 static void
 search_concept(match_state *sp)
 {
-    int nrows;
-    int rowoff;
-    int kind;
-    int col;
-    int row;
-    char *name;
+    int count;
+    concept_item *item;
     match_result result;
 
     result.valid = TRUE;
     result.exact = FALSE;
-    result.kind = ui_special_concept;
+    result.kind = ui_concept_select;
     result.who = -1;
     result.n = -1;
-    for (kind = 0; concept_offset_tables[kind]; kind++) {
-        /* for each "submenu" */
-        for (col = 0; ; col++) {
-            /* for each "column" in the submenu */
-            nrows = concept_size_tables[kind][col];
-            if (nrows < 0)
-                break;
-            rowoff = concept_offset_tables[kind][col];
-            for (row = 0; row < nrows; row++) {
-                /* for each "row" in the column */
-                name = concept_descriptor_table[rowoff+row].name;
-                if (name[0] == '\0')
-                    continue; /* empty slot in menu */
-                result.index = (((col << 8) + row + 1) << 3) + kind;
-                match_pattern(sp, name, &result);
-            }
-        }
+
+    if (match_all_concepts) {
+        item = concept_list;
+        count = concept_list_length;
+    }
+    else {
+        item = level_concept_list;
+        count = level_concept_list_length;
+    }
+
+    while (--count >= 0) {
+        result.index = item->number;
+        match_pattern(sp, item->name, &result);
+        ++item;
     }
 }
 
 /*
  * Match_pattern tests the user input against a pattern (pattern)
- * that may contain wildcards (such as "<ANYONE>").  Pattern matching is
- * case-insensitive.  If the input is equivalent to a prefix of the pattern,
- * a match is recorded in the search state.  The user input should be in
- * lower case.
+ * that may contain wildcards (such as "<anyone>").  Pattern matching is
+ * case-sensitive.  As currently used, the user input and the pattern
+ * are always given in all lower case.
+ * If the input is equivalent to a prefix of the pattern,
+ * a match is recorded in the search state.
  */
  
 static void
 match_pattern(match_state *sp, char pattern[], match_result *result)
 {
-    if (pattern[0] != '*')
-        match_suffix(sp, sp->full_input, pattern, sp->extension, result);
+    int pch, uch;
+
+    /* the following special cases are purely to improve performance */
+
+    pch = pattern[0];
+    uch = sp->full_input[0];
+
+    if (uch == '\0') {
+        /* null user input matches everything (except a comment) */
+        /* special case: pattern never begins with SPACE */
+        /* special case: ignore wildcards, we know there are multiple matches */
+        
+        if (pch == '*') {
+            return;
+        }
+        /* special case: sp->extension not set */
+        ++sp->match_count;
+	    if (sp->showing) {
+	        if (!sp->verify
+	                 || (result->kind != ui_call_select)
+	                 || verify_call(current_call_menu, result->index, result->who)) {
+                (*sp->sf)("", pattern, result);
+            }
+        }
+        return;
+    }
+
+    if ((uch != pch) && (pch != '<')) {
+        /* fails to match */
+        return;
+    }
+
+    if (pch == '*') {
+        /* a commented out pattern */
+        return;
+    }
+
+    match_suffix(sp, sp->full_input, pattern, sp->extension, result);
 }
 
 /*
  * Match_suffix continues the matching process for a suffix of the current
  * user input (User) and a suffix of the current pattern (Pat).  Patxp is
  * where the next character of the extension of the user input for the current
- * pattern is to be written.  The extension of
- * the current user input is in lower case to allow computation of the longest
- * common extension.
+ * pattern is to be written.
+ *
  */
 
 static void
@@ -422,7 +553,7 @@ match_suffix(match_state *sp, char *user, char *pat, char *patxp, match_result *
         /* user input has run out, just looking for more wildcards */
         if (*pat) {
             /* there is more pattern */
-            *patxp++ = tolower(*pat);
+            *patxp++ = *pat;
             match_suffix(sp, user, pat+1, patxp, result);
         }
         else {
@@ -431,14 +562,49 @@ match_suffix(match_state *sp, char *user, char *pat, char *patxp, match_result *
             record_a_match(sp, result);
         }
     }
-    else if (*user == tolower(*pat)) {
+    else if (*user == *pat) {
         match_suffix(sp, user+1, pat+1, patxp, result);
+    }
+}
+
+
+/*
+ * Match_suffix_2 is like match_suffix, except that the pattern is
+ * supplied in two strings PAT1 and PAT2 that are treated as if they
+ * were logically concatenated.  Also, PAT1 is assumed not to contain
+ * wildcards.
+ *
+ */
+
+static void
+match_suffix_2(match_state *sp, char *user, char *pat1, char *pat2,
+               char *patxp, match_result *result)
+{
+    if (*pat1 == 0) {
+        /* PAT1 has run out, switch to PAT2 */
+        match_suffix(sp, user, pat2, patxp, result);
+    }
+    else if (user && (*user == '\0')) {
+        /* we have just reached the end of the user input */
+        if (*pat1 == ' ')
+            sp->space_ok = TRUE;
+        /* we need to look at the rest of the pattern because
+           if it contains wildcards, then there are multiple matches */
+        match_suffix_2(sp, NULL, pat1, pat2, patxp, result);
+    }
+    else if (user==0) {
+        /* user input has run out, just looking for more wildcards */
+        *patxp++ = *pat1;
+        match_suffix_2(sp, user, pat1+1, pat2, patxp, result);
+    }
+    else if (*user == *pat1) {
+        match_suffix_2(sp, user+1, pat1+1, pat2, patxp, result);
     }
 }
 
 /*
  * Match_wildcard tests for and handles pattern suffixes that being with
- * a wildcard such as "<ANYONE>".  A wildcard is handled only if there is
+ * a wildcard such as "<anyone>".  A wildcard is handled only if there is
  * room in the Result struct to store the associated value.
  */
 
@@ -446,7 +612,7 @@ static int
 match_wildcard(match_state *sp, char *user, char *pat, char *patxp, match_result *result)
 {
     char temp[200];
-    char *suffix;
+    char *prefix, *suffix;
     int i;
     match_result new_result;
 
@@ -457,34 +623,42 @@ match_wildcard(match_state *sp, char *user, char *pat, char *patxp, match_result
         return FALSE;
     }
 
-    if ((strncmp(pat, "<ANYONE>", 8)==0) && (result->who == -1)) {
+    if ((strncmp(pat, "<anyone>", 8)==0) && (result->who == -1)) {
         suffix = pat+8;
         new_result = *result;
         for (i=1; i<=last_selector_kind; ++i) {
-            sprintf(temp, "%s%s", selector_names[i], suffix);
             new_result.who = i;
-            match_suffix(sp, user, temp, patxp, &new_result);
+            prefix = selector_names[i];
+            match_suffix_2(sp, user, prefix, suffix, patxp, &new_result);
         }
         return FALSE;
     }
-    else if ((strncmp(pat, "<N>", 3)==0) && (result->n == -1)) {
+    else if ((strncmp(pat, "<n>", 3)==0) && (result->n == -1)) {
         suffix = pat+3;
         new_result = *result;
-        for (i=1; i<=5; ++i) {
-            sprintf(temp, "%d%s", i, suffix);
+        for (i=1;; ++i) {
             new_result.n = i;
-            match_suffix(sp, user, temp, patxp, &new_result);
+            prefix = n_patterns[i-1];
+            if (prefix == NULL) {
+                break;
+            }
+            match_suffix_2(sp, user, prefix, suffix, patxp, &new_result);
         }
         return FALSE;
     }
-    else if ((strncmp(pat, "<N/4>", 5)==0) && (result->n == -1)) {
+    else if ((strncmp(pat, "<n/4>", 5)==0) && (result->n == -1)) {
         suffix = pat+5;
         new_result = *result;
-        for (i=1; i<=5; ++i) {
-            sprintf(temp, "%d/4%s", i, suffix);
+        for (i=1;; ++i) {
             new_result.n = i;
-            match_suffix(sp, user, temp, patxp, &new_result);
+            prefix = n_4_patterns[i-1];
+            if (prefix == NULL) {
+                break;
+            }
+            match_suffix_2(sp, user, prefix, suffix, patxp, &new_result);
         }
+        new_result.n = 2; /* special case: allow 1/2 for 2/4 */
+        match_suffix_2(sp, user, "1/2", suffix, patxp, &new_result);
         return FALSE;
     }
     else return FALSE;
@@ -492,8 +666,9 @@ match_wildcard(match_state *sp, char *user, char *pat, char *patxp, match_result
 
 /*
  * Record a match.  Extension is how the current input would be extended to
- * match the current pattern, in lower case.  Result is the value of the
- * current pattern.
+ * match the current pattern.  Result is the value of the
+ * current pattern.  Special case: if user input is empty, extension is
+ * not set.
  */
     
 static void
@@ -506,7 +681,6 @@ record_a_match(match_state *sp, match_result *result)
         else
             strn_gcp(sp->extended_input, sp->extension);
     }
-
     if ((sp->match_count == 0) || (*sp->extension == '\0'))
         /* first match or an exact match */
         sp->result = *result;
@@ -629,4 +803,21 @@ try_call_with_selector(callspec_block *call, selector_kind sel)
     parse_state.concept_write_ptr = &((*parse_state.concept_write_ptr)->next);
     toplevelmove(); /* does longjmp if error */
     return TRUE;
+}
+
+/* Utility */
+
+static char *
+strdup_lower(char *source)
+{
+    char *dest;
+    dest = get_mem(strlen(source) + 1);
+    strcpy_lower(dest, source);
+    return dest;
+}
+
+static void
+strcpy_lower(char *dest, char *source)
+{
+    while (*dest++ = tolower(*source++));
 }

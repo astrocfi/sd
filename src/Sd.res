@@ -1,5 +1,5 @@
-! Sd.res - sample user resource file for Sd (square dance caller's helper)
-! Time-stamp: <93/03/17 17:09:11 gildea>
+! Sd.res - sample X11 user resource file for Sd (square dance caller's helper)
+! Time-stamp: <93/06/20 15:42:12 gildea>
 
 !
 ! colors - suggested color customizations for color monitors

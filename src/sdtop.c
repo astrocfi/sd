@@ -697,7 +697,10 @@ Private void normalize_4dmd(setup *stuff)
          would be wrong.  The bug show up in cases like
             1P2P; pass the ocean; swing and mix; follow thru; truck twice;
             split phantom twin boxes sets in motion.
-         So, if people do not have diamond-like orientation, we go into an "H". */
+         So, if people do not have diamond-like orientation, we go into an "H".
+         However, it should be noted that this leads to the following situation:
+         From waves, split phantom lines 3/4 flip the line also goes to an "H".
+         Is that correct?  We seem to have to put up with it. */
 
       if (!(((stuff->people[6].id1 | stuff->people[7].id1 | stuff->people[14].id1 | stuff->people[15].id1) & 1) |
             ((stuff->people[1].id1 | stuff->people[2].id1 | stuff->people[9].id1 | stuff->people[10].id1) & 010))) {
@@ -869,9 +872,11 @@ extern void normalize_setup(setup *ss, normalize_level nlevel)
       }
    }
 
+   /* Before a merge, we remove phantoms very aggressively. */
+
    if (nlevel >= normalize_before_merge) {
-      /* This reduction is necessary to make "ends only rotate 1/4" work from a DPT, yielding a rigger. */
       if ((ss->kind == s2x4) && (!(ss->people[0].id1 | ss->people[3].id1 | ss->people[4].id1 | ss->people[7].id1))) {
+         /* This reduction is necessary to make "ends only rotate 1/4" work from a DPT, yielding a rigger. */
          ss->kind = s2x2;
          (void) copy_person(ss, 0, ss, 1);
          (void) copy_person(ss, 1, ss, 2);
@@ -939,6 +944,11 @@ extern void normalize_setup(setup *ss, normalize_level nlevel)
             clear_person(ss, 3);
             clear_person(ss, 6);
             clear_person(ss, 7);
+         }
+      }
+      else if (ss->kind == s_ptpd) {
+         if (!(ss->people[1].id1 | ss->people[3].id1 | ss->people[5].id1 | ss->people[7].id1)) {
+            ss->kind = s1x8;   /* That's all it takes! */
          }
       }
    }

@@ -1247,10 +1247,22 @@ Private void move_with_real_call(
 
                ss->setupflags |= SETUPFLAG__NO_STEP_TO_WAVE;  /* Can only do it once. */
 
+#ifdef never
+/* **** We want this to be something like:
+               if (new_final_concepts & INHERITFLAG_LEFT) {
+                  if (!mirror) mirror_this(ss);
+                  mirror = TRUE;
+                  new_final_concepts &= ~INHERITFLAG_LEFT;
+               }
+but even that isn't right.  This needs to be reconsidered carefully for
+stuff like "reverse order".
+*/
+#else
                if (final_concepts & INHERITFLAG_LEFT) {
                   mirror = TRUE;
                   mirror_this(ss);
                }
+#endif
 
                if (setup_limits[ss->kind] >= 0)          /* We don't understand absurd setups. */
                   touch_or_rear_back(ss, callspec->callflags1);

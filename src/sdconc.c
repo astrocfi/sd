@@ -1929,16 +1929,17 @@ extern void on_your_own_move(
    clear_person(&setup1, 2);
    clear_person(&setup1, 5);
    clear_person(&setup1, 6);
-   setup1.setupflags = ss->setupflags | SETUPFLAG__DISTORTED;
+   setup1.setupflags = ss->setupflags | SETUPFLAG__DISTORTED | SETUPFLAG__PHANTOMS;
    move(&setup1, parseptr->next, NULLCALLSPEC, 0, FALSE, &res1);
-   
+
    setup2 = *ss;              /* Get inners only. */
    clear_person(&setup2, 0);
    clear_person(&setup2, 3);
    clear_person(&setup2, 4);
    clear_person(&setup2, 7);
-   setup2.setupflags = ss->setupflags | SETUPFLAG__DISTORTED;
+   setup2.setupflags = ss->setupflags | SETUPFLAG__DISTORTED | SETUPFLAG__PHANTOMS;
    move(&setup2, parseptr->subsidiary_root, NULLCALLSPEC, 0, FALSE, result);
+   result->setupflags |= res1.setupflags;
    
    merge_setups(&res1, result);
 }
@@ -1980,8 +1981,8 @@ extern void so_and_so_only_move(
    
    normalize_setup(&setup1, normalize_before_isolated_call);
    normalize_setup(&setup2, normalize_before_isolated_call);
-   setup1.setupflags = ss->setupflags;
-   setup2.setupflags = ss->setupflags;
+   setup1.setupflags = ss->setupflags | SETUPFLAG__PHANTOMS;
+   setup2.setupflags = ss->setupflags | SETUPFLAG__PHANTOMS;
    
    move(&setup1, parseptr->next, NULLCALLSPEC, 0, FALSE, &res1);
    

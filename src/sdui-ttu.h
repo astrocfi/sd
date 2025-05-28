@@ -1,6 +1,6 @@
 /*
  * sdui-ttu.h - header file for sdui-ttu.c
- * Time-stamp: <93/06/03 10:04:24 gildea>
+ * Time-stamp: <93/06/25 19:39:06 gildea>
  * Copyright 1993 Stephen Gildea
  *
  * Permission to use, copy, modify, and distribute this software for
@@ -19,16 +19,6 @@
 
 #define C_ECHO 0		/* normal input mode: echo, line editing */
 #define C_RAW 1			/* raw input mode: no echo, does not block */
-
-/* we don't use this struct */
-struct {
-    int ncols;
-    int nrows;
-    int left;
-    int top;
-    char *title;
-} console_options;
-
 
 extern void cgetxy(int *xp, int *yp, FILE *filep);
 extern void cgotoxy(int x, int y,  FILE *filep);

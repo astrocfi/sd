@@ -1,6 +1,6 @@
 /*
  * sdui-ttu.c - helper functions for Mac tty interface to make it run on Unix.
- * Time-stamp: <93/03/17 16:23:04 gildea>
+ * Time-stamp: <93/06/20 16:41:21 gildea>
  * Copyright 1993 Stephen Gildea
  *
  * Permission to use, copy, modify, and distribute this software for
@@ -177,7 +177,8 @@ void csetmode(int mode, FILE *fp)
 
     tcgetattr(fd, &term);
     if (mode == C_RAW) {
-	orig_eof = term.c_cc[VEOF]; /* VMIN may clobber */
+	if (current_tty_mode == C_ECHO)
+	    orig_eof = term.c_cc[VEOF]; /* VMIN may clobber */
 	term.c_cc[VMIN] = 1;	/* 1 char at a time */
 	term.c_cc[VTIME] = 0;	/* no time limit on input */
 	term.c_lflag &= ~(ICANON|ECHO);

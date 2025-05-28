@@ -16,7 +16,7 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-    This is for version 28. */
+    This is for version 29. */
 
 /* This defines the following functions:
    triangle_move
@@ -40,11 +40,15 @@ Private void ctr_end_triangle_move(
                                              the triangles in an hourglass. */
             break;
          case s_rigger:
-            schema = schema_concentric_6_2;
-            break;
          case s_ptpd:
             schema = schema_concentric_6_2;
             break;
+
+/* ***** We need a new schema: "schema_concentric_6_2_inside_triangles_in_qtag"
+   to handle qtag here.  The existing shema considers the center 6 to be in a 2x3,
+   which, for most purposes, is correct.  The new schema would consider them
+   to be in a bone6. */
+
          default:
             fail("There are no 'inside' triangles.");
       }
@@ -55,9 +59,9 @@ Private void ctr_end_triangle_move(
    else {
       switch (s->kind) {
          case s_ptpd:
-            schema = schema_concentric_2_6;
-            break;
-         case s_spindle: case s_bone:
+         case s_qtag:
+         case s_spindle:
+         case s_bone:
             schema = schema_concentric_2_6;
             break;
          default:

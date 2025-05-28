@@ -1,7 +1,7 @@
 /* 
  * sdui-tty.c - SD TTY User Interface
  * Originally for Macintosh.  Unix version by gildea.
- * Time-stamp: <93/06/03 10:06:02 gildea>
+ * Time-stamp: <93/06/25 19:40:23 gildea>
  * Copyright (c) 1990,1991,1992,1993 Stephen Gildea, William B. Ackerman, and
  *   Alan Snyder
  *
@@ -124,6 +124,17 @@ Private int input_window_height = 24;
  * These functions use the Think-C 5.0 console functions.
  */
 
+#ifdef UNIX_STYLE
+/* we don't use this struct */
+struct {
+    int ncols;
+    int nrows;
+    int left;
+    int top;
+    char *title;
+} console_options;
+#endif
+
 Private void
 input_initialize()
 {
@@ -202,10 +213,14 @@ get_char_input(void)
 {
     int c;
     csetmode(C_RAW, stdin); /* raw input mode, no echo, does not block */
+#ifdef THINK_C			/* Unix or DOS provides its own cursor */
     putchar('_'); /* a cursor */
+#endif
     c = getchar();
     while (c == EOF) c = getchar(); /* busy wait (EOF means no character yet) */
+#ifdef THINK_C
     putchar('\b'); putchar(' '); putchar('\b'); /* erase the cursor */
+#endif
     return c;
 }
 
@@ -537,7 +552,7 @@ prompt_for_more_output(int *pcounter)
 
           case ' ':  return TRUE; /* keep going */
 
-          default:   puts("Type Space to see more, Delete to stop.");
+          default:   puts("Type Space for next page, Return for next line, Delete to stop.");
         }
     }
 }
@@ -948,19 +963,19 @@ uims_get_command(mode_kind mode, call_list_kind call_menu,
     int modifications_flag)
 {
     if (mode == mode_startup) {
-         get_user_input("Enter command>", &start_matcher);
+         get_user_input("Enter command> ", &start_matcher);
          uims_menu_index = user_match.index;
          return user_match.kind;
     }
     else if (mode == mode_resolve) {
-         get_user_input("Enter resolve command>", &resolve_matcher);
+         get_user_input("Enter resolve command> ", &resolve_matcher);
          uims_menu_index = user_match.index;
          return user_match.kind;
     }
     else {
         current_call_menu = call_menu;
         printf("%s\n", call_menu_names[current_call_menu]);
-        get_user_input("Enter call>", &call_matcher);
+        get_user_input("Enter call> ", &call_matcher);
         if (user_match.kind == ui_special_concept) {
             /* right now, just indicate which submenu */
             /* uims_do_concept_popup will be called to get the rest */
@@ -1128,7 +1143,7 @@ uims_do_selector_popup(void)
     }
     else {
         /* We skip the zeroth selector, which is selector_uninitialized. */
-        get_user_input("Enter who>", selector_matcher);
+        get_user_input("Enter who> ", selector_matcher);
         return user_match.index+1;
     }
 }    

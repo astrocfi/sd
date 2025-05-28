@@ -639,7 +639,7 @@ begin_kind keytab[][2] = {
    {b_bone6,         b_pbone6},         /* s_bone6 */
    {b_short6,        b_pshort6},        /* s_short6 */
    {b_qtag,          b_pqtag},          /* s_qtag */
-   {b_nothing,       b_nothing},        /* s_bone */
+   {b_bone,          b_pbone},          /* s_bone */
    {b_rigger,        b_prigger},        /* s_rigger */
    {b_spindle,       b_pspindle},       /* s_spindle */
    {b_hrglass,       b_phrglass},       /* s_hrglass */

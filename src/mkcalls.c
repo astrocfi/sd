@@ -115,7 +115,7 @@ extern void do_exit(void)
 }
 
 
-extern void do_perror(const char *s)
+extern void do_perror(char *s)
 {
    perror(s);
 }
@@ -127,7 +127,7 @@ extern void dbcompile_signoff(int bytes, int calls)
 }
 
 
-extern int do_printf(const char *fmt, ...)
+extern int do_printf(char *fmt, ...)
 {
    int n;
    va_list ap;

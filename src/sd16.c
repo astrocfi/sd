@@ -95,7 +95,7 @@ extern void phantom_2x4_move(
       canonicalize_rotation(&resv);
    }
    else
-      resv.kind == nothing;
+      resv.kind = nothing;
 
    /* Do the N-S facing people. */
 
@@ -104,7 +104,7 @@ extern void phantom_2x4_move(
       finalsetupflags |= result->setupflags;
    }
    else
-      result->kind == nothing;
+      result->kind = nothing;
   
    merge_setups(&resv, result);
    result->setupflags = finalsetupflags;

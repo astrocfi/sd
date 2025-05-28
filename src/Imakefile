@@ -1,6 +1,6 @@
 /*
  * Imakefile for Sd (square dance caller's helper)
- * Time-stamp: <93/05/12 21:37:50 gildea>
+ * Time-stamp: <93/06/25 19:02:07 gildea>
  *
  * Run "xmkmf" to generate a Makefile from this description.
  * Then run "make" to build the Sd system.
@@ -86,13 +86,13 @@ clean::
 
 DISTFILES = README INSTALL Relnotes oldnotes \
             Imakefile Makefile.in configure Sd.res sd_calls.txt \
-            COPYING database.doc sd_doc.txinfo install.txinfo \
-            sdmatch.c sdmatch.h sdsi-mac.c sdui-mac.c          
+            COPYING db_doc.txt sd_doc.txinfo install.txinfo \
+            sdmatch.c sdmatch.h
 HSRCS = sd.h database.h paths.h sdui-ttu.h
 
 TAR = tar cvf sd.tar
 
 dist:
-	$(TAR) $(DISTFILES) $(SRCS) $(HSRCS)
+	$(TAR) $(DISTFILES) $(SRCS) sdui-tpc.c $(HSRCS)
 
 DependTarget()			

@@ -1,5 +1,5 @@
 # Makefile for Sd (square dance caller's helper)
-# Time-stamp: <93/06/03 17:05:35 gildea>
+# Time-stamp: <93/06/30 18:08:08 gildea>
 
 srcdir = @srcdir@
 VPATH = @srcdir@
@@ -37,7 +37,7 @@ SD_OBJS = sdmain.o sdinit.o sdutil.o sdbasic.o \
 SDX11_SRC = sdui-x11.c
 SDX11_OBJ = sdui-x11.o
 
-SDTTY_SRC = sdui-tty.c sdui-ttu.c
+SDTTY_SRC = sdui-tty.c sdui-ttu.c sdui-tpc.c
 SDTTY_OBJ = @SDTTY_OBJ@
 
 SDTTY_OBJS = @SDTTY_OBJS@
@@ -92,6 +92,7 @@ Makefile:: Makefile.in config.status
 
 info: sd_doc.info
 dvi: sd_doc.dvi
+PS: sd_doc.PS
 
 sd_doc.info sd_doc.dvi: sd_doc.txinfo readme.txinfo install.txinfo
 
@@ -141,11 +142,11 @@ LINT = /usr/lang/alint
 lint:
 	$(LINT) -ux $(SD_SRCS) $(SDX11_SRC)
 
-DISTTXT = README INSTALL Relnotes oldnotes \
-            Imakefile Makefile.in configure Sd.res sd_calls.txt \
-            COPYING database.doc sd_doc.txinfo readme.txinfo install.txinfo
+DISTTXT = README INSTALL Relnotes oldnotes COPYING \
+            Imakefile configure Makefile.in Sd.res sd_calls.txt \
+            db_doc.txt sd_doc.txinfo readme.txinfo install.txinfo
 DISTSRCS = sd.h database.h paths.h sdui-ttu.h \
-            sdmatch.c sdmatch.h sdsi-mac.c sdui-mac.c
+            sdmatch.c sdmatch.h
 DISTFILES = $(DISTTXT) $(SD_SRCS) $(SDX11_SRC) $(SDTTY_SRC) \
             $(MKCALLS_SRCS) $(DISTSRCS)
 
@@ -156,5 +157,11 @@ dist: INSTALL README
 
 ls:
 	@echo $(DISTFILES)
+
+bnarc:
+	lharc a sd290bn readme install relnotes oldnotes copying \
+	sd_calls.txt sd_calls.dat db_doc.txt \
+	sdtty.exe mkcalls.exe go32.exe
+	lharc s sd290bn
 
 # end of Makefile from @TIME_STAMP@

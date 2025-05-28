@@ -27,7 +27,7 @@
     General Public License if you distribute the file.
 */
 
-#define VERSION_STRING "28.71"
+#define VERSION_STRING "29.0"
 
 /* This defines the following functions:
    sd_version_string
@@ -1140,6 +1140,31 @@ void main(int argc, char *argv[])
 
    allowing_modifications = 0;
 
+   /* See if we need to increase the size of the history array.
+      We must have history_allocation at least equal to history_ptr+2,
+      so that history items [0..history_ptr+1] will exist.
+      We also need to allow for MAX_RESOLVE_SIZE extra items, so that the
+      resolver can work.  Why don't we just increase the allocation
+      at the start of the resolver if we are too close?  We tried that once.
+      The resolver uses the current parse state, so we can do "TANDEM <resolve>".
+      This means that things like "parse_state.concept_write_base", which point
+      into the history array, must remain valid.  So the resolver can't reallocate
+      the history array.  There is only one place where it is safe to reallocate,
+      and that is right here.  Note that we are about to call "initialize_parse",
+      which destroys any lingering pointers into the history array. */
+
+   if (history_allocation < history_ptr+MAX_RESOLVE_SIZE+2) {
+      configuration * t;
+      history_allocation <<= 1;
+      t = (configuration *) get_more_mem_gracefully(history, history_allocation * sizeof(configuration));
+      if (!t) {
+         history_allocation >>= 1;
+         history_ptr--;
+         specialfail("Not enough memory!");
+      }
+      history = t;
+   }
+
    initialize_parse();
 
    /* Check for first call given to heads or sides only. */
@@ -1170,32 +1195,6 @@ void main(int argc, char *argv[])
       /* Call successfully completed and has been stored in history. */
       
       history_ptr++;
-
-      /* See if we need to increase the size of the history array.
-         We must have history_allocation at least equal to history_ptr+2,
-         so that history items [0..history_ptr+1] will exist.
-         We also need to allow for MAX_RESOLVE_SIZE extra items, so that
-         resolver can work.  Why don't we just increase the allocation
-         at the start of the resolver if we are too close?  We tried that once.
-         The resolver uses the current parse state, so we can do "TANDEM <resolve>".
-         This means that things like "parse_state.concept_write_base", which point
-         into the history array, must remain valid.  So the resolver can't
-         reallocate the history array.  There is only one place where it is safe
-         to reallocate, and that is right here.  Note that we are about to go to
-         "start_cycle", which does an "initialize_parse", and hence destroys any
-         lingering pointers into the history array. */
-
-      if (history_allocation < history_ptr+MAX_RESOLVE_SIZE+2) {
-         configuration * t;
-         history_allocation <<= 1;
-         t = (configuration *) get_more_mem_gracefully(history, history_allocation * sizeof(configuration));
-         if (!t) {
-            history_allocation >>= 1;
-            history_ptr--;
-            specialfail("Not enough memory!");
-         }
-         history = t;
-      }
 
       goto start_cycle;
    }

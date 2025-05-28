@@ -47,9 +47,9 @@
    sdtables.c or sdui-mac.c for the built-in compiler. */
 extern int begin_sizes[];
 extern void do_exit(void);
-extern void do_perror(const char *s);
+extern void do_perror(char *s);
 extern void dbcompile_signoff(int bytes, int calls);
-extern int do_printf(const char *fmt, ...);
+extern int do_printf(char *fmt, ...);
 
 extern void dbcompile(void);
 
@@ -679,8 +679,6 @@ int call_endsetup_in;
 int call_endsetup_out;
 int bmatrix, gmatrix;
 int restrstate;
-int callarray_flags1;
-int callarray_flags2;
 
 
 
@@ -1075,11 +1073,11 @@ static void write_seq_stuff(void)
 }
 
 
-static void write_level_3_group(int predbit)
+static void write_level_3_group(unsigned int arrayflags)
 {
-   write_halfword(0x6000 | predbit | callarray_flags1 | callarray_flags2);
+   write_halfword(0x6000 | arrayflags);
    write_halfword(call_startsetup | (call_qualifier << 8));
-   if (callarray_flags1 & CAF__CONCEND) {
+   if (arrayflags & CAF__CONCEND) {
       write_halfword(call_endsetup_in | (restrstate << 8));
       write_halfword(call_endsetup_out);
    }
@@ -1089,14 +1087,17 @@ static void write_level_3_group(int predbit)
 }
 
 
-static void write_array_def(void)
+static void write_array_def(unsigned int funnyflag)
 {
    int i, iii, jjj;
+   unsigned int callarray_flags1, callarray_flags2;
 
    write_call_header(schema_by_array);
 
    /* Write a level 2 array define group. */
    write_halfword(0x4000);
+   callarray_flags1 = funnyflag;
+
 def2:
    restrstate = 0;
    callarray_flags2 = 0;
@@ -1117,14 +1118,14 @@ def2:
       if (tok_kind != tok_symbol) errexit("Missing indicator");
 
       if (!strcmp(tok_str, "array")) {
-         write_level_3_group(0);             /* Pred flag off. */
+         write_level_3_group(callarray_flags1 | callarray_flags2);             /* Pred flag off. */
          get_tok();
          write_callarray(begin_sizes[call_startsetup], 0);
          get_tok_or_eof();
          break;
       }
       else if (!strcmp(tok_str, "preds")) {
-         write_level_3_group(CAF__PREDS);        /* Pred flag on. */
+         write_level_3_group(CAF__PREDS | callarray_flags1 | callarray_flags2);        /* Pred flag on. */
          get_tok();
          if (tok_kind != tok_string) errexit("Missing string");
          iii = char_ct;
@@ -1212,21 +1213,16 @@ def2:
    if (eof) return;
    if (tok_kind != tok_symbol) errexit("Missing indicator");
 
-   /* If see "setup", just do another basic array. */
+   /* If see something other than "setup", it's either an alternate definition
+      to start another group of arrays, or it's the end of the whole call. */
 
-   if (!strcmp(tok_str, "setup")) {
-      callarray_flags1 = 0;
-      goto def2;
-   }
-
-   /* Otherwise, it's either an alternate definition to start another group
-      of arrays, or it's the end of the whole call.
-      We make use of the fact that the constants "cflag__reverse_means_mirror"
-      etc. all lie in the left half of the word.  Sdinit.c checks that. */
-
-   if (!strcmp(tok_str, "alternate_definition")) {
+   if (strcmp(tok_str, "setup") != 0) {
       int alt_level;
       unsigned int rrr = 0;
+
+      if (strcmp(tok_str, "alternate_definition") != 0) {
+         return;       /* Must have seen next 'call' indicator. */
+      }
 
       get_tok();
       if (tok_kind != tok_lbkt)
@@ -1252,28 +1248,27 @@ def2:
 
       write_halfword(0x4000 | alt_level);
       write_fullword(rrr);
-   }
-   else
-      return;       /* Must have seen next 'call' indicator. */
-
-   /* Saw "alternate_definition", ready to do another group of arrays. */
-
-   get_tok();
-   if (tok_kind != tok_symbol) errexit("Missing indicator");
-
-   callarray_flags1 = 0;
-   if (!strcmp(tok_str, "simple_funny")) {
-      callarray_flags1 = CAF__FACING_FUNNY;
+   
+      /* Now do another group of arrays. */
+   
       get_tok();
       if (tok_kind != tok_symbol) errexit("Missing indicator");
+   
+      callarray_flags1 = 0;
+      if (!strcmp(tok_str, "simple_funny")) {
+         callarray_flags1 = CAF__FACING_FUNNY;
+         get_tok();
+         if (tok_kind != tok_symbol) errexit("Missing indicator");
+      }
+
+      if (strcmp(tok_str, "setup") != 0)
+         errexit("Need \"setup\" indicator");
    }
 
-   if (!strcmp(tok_str, "setup")) {
-      callarray_flags1 = 0;
-      goto def2;
-   }
-   else
-      errexit("Need \"setup\" indicator");
+   /* Must have seen "setup" -- do another basic array. */
+
+   callarray_flags1 = 0;
+   goto def2;
 }
 
 
@@ -1281,6 +1276,7 @@ def2:
 extern void dbcompile(void)
 {
    int i, iii;
+   unsigned int funnyflag;
 
    tagtabmax = 100; /* try to make it reentrant */
    tagtabsize = 2;
@@ -1394,10 +1390,10 @@ extern void dbcompile(void)
 
          /* Process the actual definition.  First, check for the "simple_funny" indicator. */
 
-         callarray_flags1 = 0;
+         funnyflag = 0;
 
          if (!strcmp(tok_str, "simple_funny")) {
-            callarray_flags1 = CAF__FACING_FUNNY;
+            funnyflag = CAF__FACING_FUNNY;
             get_tok();
             if (tok_kind != tok_symbol) errexit("Missing indicator");
          }
@@ -1409,7 +1405,7 @@ extern void dbcompile(void)
 
          ccc = (calldef_schema) iii;
 
-         if (callarray_flags1 != 0 && ccc != schema_by_array)
+         if (funnyflag != 0 && ccc != schema_by_array)
             errexit("Simple_funny out of place");
 
 
@@ -1450,7 +1446,7 @@ extern void dbcompile(void)
                }
                goto startagain;
             case schema_by_array:
-               write_array_def();
+               write_array_def(funnyflag);
                goto startagain;
             case schema_nothing:
                write_call_header(ccc);

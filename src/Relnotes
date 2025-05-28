@@ -1,23 +1,65 @@
-		    RELEASE NOTES FOR SD VERSION 28.71
-       Database version = 28.61, format = 40, X11 UI version 1.13.
+		    RELEASE NOTES FOR SD VERSION 29.0
+       Database version = 29.0, format = 40, X11 UI version 1.13.
 
-Changes since 28.7:
 
-More bugs fixed.  One recently introduced bug in 28.7 could lead to
-incorrect execution of calls from column setups that should be illegal.
-For example, regroup, trip the set, detour, change lanes, etc. could in
-some cases be executed from lines, even though that is not correct.
+BUG WARNING BUG WARNING BUG WARNING BUG WARNING BUG WARNING BUG WARNING
+=======================================================================
+There are two difficult problems that could not be fixed in time for
+this release without serious destabilization of the program:
+
+Do not use both the "left" modifier together with concepts that
+   involve fractionalizing calls, with calls that permit stepping
+   to or rearing back from a wave.  For example, from a "C1 phantom"
+   setup with left-handed miniwaves, do not say "so-and-so begin a
+   left quarter thru".  "Left quarter thru" in normal contexts is
+   OK, and, in a phantom setup with right-handed miniwaves,
+   "so-and-so begin a quarter thru" is OK.
+
+Beware of "reactivate" and other such calls that involve the "ends
+   move up" action when phantoms are present.  In its zeal for not
+   making assumptions about where phantoms go, the program sometimes
+   compresses phantoms out of a setup in cases in which live
+   dancers generally agree where the phantoms are.  This can lead
+   to inappropriate shrink-wrapping for things like "split phantom
+   lines tag reactivate" -- space will not be left for the phantoms.
+=======================================================================
+
+Changes since 28.71:
+
 Some rather bizarre cases of phantom bigblock and similar things were
 fixed.
 
-"Extend" is finally a little bit smarter.
+"Extend" is finally a little bit smarter.  So is percolate.
+
+"Walk and dodge" is legal from columns of 6.  It is also available under
+its more pedantic name, "2x1 walk and dodge".  "3x1 walk and dodge" (from
+columns) and "1x3 walk and dodge" (from appropriate lines of 4) were
+also added.
+
+It is possible to do 1-person calls (e.g. U-turn back) in diamonds,
+quarter-tags, and point-to-point diamonds.
 
 New calls: separate around 1 or 2 to a line, split the outsides around
 1 to a line, 3/4 tag/flip/etc and trade.
 
-Changes since 28.01 to 28.7:
+Flip & cut the galaxy.  (Reverse flip and cut had been present before, they
+are now "reverse" modifiers.)  Squeeze the butterfly or "O".  <anyone> squeeze.
+Beware!  This is not really done correctly.  You must use it with care.
+
+New calls: 2x1/1x2 [magic] quick wrap.
+
+Other call and concept levels updated.  And updated again.  And again.
+Thanks, Kathy.
+
+=======================================================================
+
+Changes since 28.01 to 28.71:
 
 The sdtty version runs under DOS.  See INSTALL for system requirements.
+
+The separate "MxN" versions of calls have been taken out and replaced
+by concepts that may be found in the leftmost column of the "miscellaneous
+concepts" menu.
 
 Call levels relating to C3A and C3 were updated to reflect the recent
 voting in Callerlab.
@@ -46,7 +88,11 @@ when calling the resulting card, though it wouldn't hurt.
 
 Changed the name of the concept formerly called "<anyone> ONLY" to
 "<anyone> DO YOUR PART" to reflect more accurately the way this
-rather unpleasant concept behaves.
+rather unpleasant concept behaves.  Unfortunately, this means that,
+in BBGG waves, for example, you must do "boys do your part, hinge"
+to go into C1 phantoms, whereas the normal thing to say when calling
+would be just "boys hinge".  The same is true when having some people
+hinge to go from C1 phantoms to a 2x4.
 
 Added the call "<anyone> trade".  This is what you should use in general
 for telling people to trade.  The "<anyone> ONLY" concept (now called
@@ -80,21 +126,21 @@ is not implemented.  Remember that, since "<N/4>" does not enter into
 the alphabetization, this call is listed in the menu under "t".
 
 More new calls: snap the tag, and all the usual variants thereof.
-More new calls: 2x1 [magic] quick wrap.
 More new calls: slip the clutch, fractional tops, cross by.
 More new calls: eight chain N.
 
 New calls: [single] rotate from 6x1 and 8x1 columns.  Also, the
 concept "single" is now used to get single rotate -- single rotate is
 not separately listed in the menu.  The call "single file rotate" is
-now listed separately.  This is the 4x1 call.  The calls "little, ends
-go as you are" and "plenty, ends go as you are" were added.
-These are intended to be called from diamonds.  Exactly how you would say these
-calls may depend on the audience.  Many callers and dancers believe that one
-could just say "little" or "plenty" from these setups.  Some very fussy people
-believe that the definition is always quarter right, counter rotate, and roll,
-meaning that one must tell the ends to go as they are in order to get the
-intended effect.
+now listed separately.  This is the 4x1 call.
+
+The calls "little, ends go as you are" and "plenty, ends go as you are" were
+added.  These are intended to be called from diamonds.  Exactly how you would
+say these calls may depend on the audience.  Many callers and dancers believe
+that one could just say "little" or "plenty" from these setups.  Some very
+fussy people believe that the definition is always quarter right, counter rotate,
+and roll, meaning that one must tell the ends to go as they are in order to get
+the intended effect.
 
 More types of resolves recognized, including "at home" from a "heads
 up to the middle" setup.  (It is NOT recognized from a genuine squared
@@ -151,7 +197,7 @@ It can now do two-person calls between people directly lined up in
 a quarter tag.  After "heads spin the top" (which leaves the boys
 facing directly), you can do things like "boys DO YOUR PART, slide thru".
 
-
+=======================================================================
 
 DOCUMENTATION CHANGES:
 
@@ -196,6 +242,8 @@ Added these commands: ^Z (stop), ESC (complete, like TAB),
 FILES:
 
 Renamed "sd.c" to "sdconcpt.c".
+
+Renamed "database.doc" to "db_doc.txt".
 
 New files INSTALL, readme.txinfo, and install.txinfo.
 

@@ -1,4 +1,4 @@
-/* SD -- square dance caller's helper.
+/* calls database source for Sd -- square dance caller's helper.
 
     Copyright (C) 1991, 1992, 1993  William B. Ackerman.
 
@@ -16,6 +16,13 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
+    -----------------------------------------------------------------
+
+    The `mkcalls' program must be run once to compile `sd_calls.txt',
+    this file, into `sd_calls.dat', the binary file used by Sd.
+
+    -----------------------------------------------------------------
+
     The version of this file is as shown immediately below.  This
     string gets encoded into the database file and then displayed
     at program startup, as the "db" part of the complete version.
@@ -28,7 +35,7 @@
     General Public License if you distribute the file.
 */
 
-version "28.61"
+version "29.0"
 
 /* ****************** TEMPORARY HACK FOR TESTING
 
@@ -565,7 +572,7 @@ call "@0 and cross" c4
    seq nullcall [mandatory_anycall]
    seq and_cross []
 
-call "nicely" c4
+call "nicely" c4 tag nicely
             grand_is_inherited visible_fractions
    seq hinge []
    seq and_cross [inherit_grand]
@@ -582,7 +589,7 @@ call "flip the diamond" plus tag flipdiamond
       array [CR1S 0 AL3S 0]
    setup pmd 1x4
       array [0 CR2E 0 AL2W]
-            alternate_definition [reverse] c3x
+            alternate_definition [reverse] c3a
    setup dmd 1x4 rotate
       array [CR1N 0 AL1S 0]
    setup pmd 1x4 rotate
@@ -614,7 +621,7 @@ call "cut the diamond" a1 tag cutdiamond
       array [CR3S 0 AL1S 0]
    setup pmd 1x4
       array [0 CR2E 0 AL2W]
-            alternate_definition [reverse] c3x
+            alternate_definition [reverse] c3a
    setup dmd 1x4 rotate
       array [CR1N 0 AL1S 0]
    setup pmd 1x4 rotate
@@ -1816,6 +1823,20 @@ call "reflect and then revert @0" c4
    seq reflect []
    seq revert []
 
+call "revert, then reflect, then revert @0" c4
+            is_tag_call
+   seq nullcall [mandatory_anycall must_be_tag_call]
+   seq revert []
+   seq reflect []
+   seq revert []
+
+call "reflect, then revert, then reflect @0" c4
+            is_tag_call
+   seq nullcall [mandatory_anycall must_be_tag_call]
+   seq reflect []
+   seq revert []
+   seq reflect []
+
 call "peel the deal" c3
    setup 2x2 1x4 restriction peelable_box
       array [L1E R3W R2W L0E]
@@ -2029,7 +2050,6 @@ call "explode" a1 tag explode
 
 call "explode the line" plus tag explodeline
             parallel_conc_end
-
    setup 1x4 2x2 qualifier miniwaves
       array [1E 1E 0W 0W]
    setup 1x4 2x2 restriction forbidden 1fl_only
@@ -2266,7 +2286,7 @@ call "pair the line" c4
    setup 1x4 2x3 rotate
       array [CR0E CR1E AL5E AL4E]
 
-call "@6 fold" mainstream
+call "@i@6 @j cross @lfold" mainstream
 /* This used to be:
    partnermatrix use_selector stop_and_warn_on_tbone
       [M16N 16 M16N 16 M16N 16 M16N 16 R18S 18 R18S 18 L14S 18 L14S 18]
@@ -2274,13 +2294,13 @@ call "@6 fold" mainstream
 */
    setup 1x4 2x3 rotate
       preds "???"
-         if select      [CR5E    0 AL0E    0]
-         if always      [   0 ZM4W    0 ZM1W]
+         if select [CR5E    0 AL0E    0]
+         if always [   0 ZM4W    0 ZM1W]
             alternate_definition [cross] mainstream
    setup 1x4 2x3 rotate
       preds "???"
-         if select      [CR0E    0 AL5E    0]
-         if always      [   0 ZM4W    0 ZM1W]
+         if select [CR0E    0 AL5E    0]
+         if always [   0 ZM4W    0 ZM1W]
 
 call "loop the loop" c4
    setup 1x4 2x3 rotate
@@ -2898,7 +2918,7 @@ call "turn thru" mainstream tag turnthru
       array [C1E 0]
 
 call "_natural turn thru" dontshow tag natturnthru
-   setup 1x2 1x2 rotate
+   setup 1x2 1x2 rotate restriction forbidden wave_only
       array [C1E A1E]
 
 call "pair off" a1
@@ -3165,7 +3185,15 @@ call "rotate 1/4" c2 tag rot1
       array [L1S L0S L7S L6S L4N L5N L2N L3N]
    setup 2x2 1x4 restriction forbidden couples_only
       array [L1S L0S L2N L3N]
-            alternate_definition [single] c2
+            /* This variant of the call is only C1, so we can do a
+               squared-set single rotate at C1.  The squared-set rotate,
+               legal at C1, invokes this.  Level-checking is not done on
+               invocation, but it is done on alternate definitions of invoked
+               calls.  Declaring the single version of this call to be C1
+               when the call itself is C2 therefore makes this legal from a
+               squared set.  Direct use of single rotate at C1 is not legal,
+               because it won't get past the C2 level in the call header. */
+            alternate_definition [single] c1
    setup 4x2 2x4 rotate
       array [L4W L5W L6E L7E L0E L1E L2W L3W]
    setup 2x4 2x4
@@ -3185,7 +3213,7 @@ call "rotate 1/2" c2 tag rot2
       array [L5N L4N L2N L3N L0S L1S L7S L6S]
    setup 2x2 1x4 rotate restriction forbidden couples_only
       array [L3N L2N L0S L1S]
-            alternate_definition [single] c2
+            alternate_definition [single] c1   /* See comment on "rotate 1/4" above. */
    setup 4x2 2x4
       array [L4W L5W L6E L7E L0E L1E L2W L3W]
    setup 2x4 2x4
@@ -3319,14 +3347,23 @@ call "clean sweep @b" c3x
 call "walk and dodge" mainstream tag walkndodge
    setup 2x2 2x2 restriction unusual wave_only
       array [ZM1N ZM0N ZM1N ZM0N]
+   setup 3x2 2x3 restriction forbidden wave_only
+      array [ZM1N ZM2N ZM3N ZM2N ZM3N ZM4N]
             alternate_definition [grand] c3x
    setup 4x2 2x4 restriction unusual wave_only
       array [ZM2N ZM5N ZM3N ZM4N ZM3N ZM4N ZM2N ZM5N]
-            alternate_definition [3x1] c3x
+            alternate_definition [1x3] c3
    setup 2x4 2x4
       preds "???"
-         if inroller_is_cw [1N 2N 3N  0  0 0 0 0N]
-         if always         [ 0 0N 1N 2N 3N 0 0  0]
+         if inroller_is_cw [ZM1N ZM2N ZM3N  0    0   0 0 ZM0N]
+         if always         [ 0   ZM0N ZM1N ZM2N ZM3N 0 0  0  ]
+            alternate_definition [2x1] mainstream
+   /* Same as walk and dodge without modifiers, for purists. */
+   setup 3x2 2x3 restriction forbidden wave_only
+      array [ZM1N ZM2N ZM3N ZM2N ZM3N ZM4N]
+            alternate_definition [3x1] c3
+   setup 4x2 2x4 restriction forbidden wave_only
+      array [ZM1N ZM2N ZM3N ZM4N ZM3N ZM4N ZM5N ZM6N]
             alternate_definition [3x3] c4
    setup 3x2 2x3 rotate restriction forbidden wave_only
       array [ZM0W ZM1W ZM2W ZM0W ZM1W ZM2W]
@@ -3520,11 +3557,23 @@ call "_quarter wheel" dontshow tag quarterwheel
             reverse_means_mirror parallel_conc_end
    setup 1x4 2x2
       array [0 0 AL1W AL2W]
+            alternate_definition [3x3] c4
+   setup 1x6 2x3 rotate restriction forbidden 3x3couples_only
+      array [0 0 0 AL0S AL1S AL2S]
+            alternate_definition [4x4] c4
+   setup 1x8 2x4 rotate restriction forbidden 4x4couples_only
+      array [0 0 0 0 AL0S AL1S AL3S AL2S]
 
 call "_three quarter wheel" dontshow tag threequarterwheel
             reverse_means_mirror parallel_conc_end
    setup 1x4 2x2
       array [AL0E AL3E 0 0]
+            alternate_definition [3x3] c4
+   setup 1x6 2x3 rotate restriction forbidden 3x3couples_only
+      array [AL5N AL4N AL3N 0 0 0]
+            alternate_definition [4x4] c4
+   setup 1x8 2x4 rotate restriction forbidden 4x4couples_only
+      array [AL7N AL6N AL4N AL5N 0 0 0 0]
 
 call "_finish wheel the ocean" dontshow tag finwheelocean
             reverse_means_mirror
@@ -3586,14 +3635,14 @@ call "wheel to a diamond" c4
    seq finwheeltodiamond [inherit_reverse]
 
 call "quarter wheel the ocean" c3a
-            reverse_means_mirror first_part_visible
-   seq quarterwheel [inherit_reverse]
-   seq finwheelocean [inherit_reverse]
+            reverse_means_mirror 3x3_is_inherited 4x4_is_inherited first_part_visible
+   seq quarterwheel [inherit_reverse inherit_3x3 inherit_4x4]
+   seq finwheelocean [inherit_reverse inherit_3x3 inherit_4x4]
 
 call "quarter wheel the sea" c3a
-            reverse_means_mirror first_part_visible
-   seq quarterwheel [inherit_reverse]
-   seq finwheelsea [inherit_reverse]
+            reverse_means_mirror 3x3_is_inherited 4x4_is_inherited first_part_visible
+   seq quarterwheel [inherit_reverse inherit_3x3 inherit_4x4]
+   seq finwheelsea [inherit_reverse inherit_3x3 inherit_4x4]
 
 call "quarter wheel to a diamond" c4
             reverse_means_mirror first_part_visible
@@ -3601,13 +3650,13 @@ call "quarter wheel to a diamond" c4
    seq finwheeltodiamond [inherit_reverse]
 
 call "three quarter wheel the ocean" c3x
-            reverse_means_mirror first_part_visible
-   seq threequarterwheel [inherit_reverse]
+            reverse_means_mirror 3x3_is_inherited 4x4_is_inherited first_part_visible
+   seq threequarterwheel [inherit_reverse inherit_3x3 inherit_4x4]
    seq finwheelocean [inherit_reverse]
 
 call "three quarter wheel the sea" c3x
-            reverse_means_mirror first_part_visible
-   seq threequarterwheel [inherit_reverse]
+            reverse_means_mirror 3x3_is_inherited 4x4_is_inherited first_part_visible
+   seq threequarterwheel [inherit_reverse inherit_3x3 inherit_4x4]
    seq finwheelsea [inherit_reverse]
 
 call "three quarter wheel to a diamond" c4
@@ -4559,6 +4608,12 @@ call "quick wrap" c3x
             alternate_definition [magic 2x1] c3x
    setup 3x2 2x3 restriction magic_only
       array [CR4W AL3W CR3E AL2W CR2E AL1E]
+            alternate_definition [1x2] c3x
+   setup 3x2 short6 rotate restriction wave_only
+      array [AL0S AL5N CR1N AL1S CR3S CR2N]
+            alternate_definition [magic 1x2] c3x
+   setup 3x2 short6 rotate restriction magic_only
+      array [CR2N AL5N CR1N AL1S CR3S AL0S]
 
 call "dive thru" mainstream
    setup 4x2 2x4
@@ -4679,9 +4734,11 @@ call "push off" c4a
    setup 4x2 2x4
    array [5S 0N 3N 0 0 4S 7S 6S]
 
+/* Needs much more work, including new concentric meta-schema ....
 call "countershake, first part" c4
             left_means_mirror single_is_inherited
    maybesingleconc shakedown [inherit_left inherit_single] quarter_right [inherit_left conc_force_spots]
+*/
 
 call "countershake" c4
             left_means_mirror
@@ -4827,7 +4884,9 @@ call "horseshoe turn" a1
 
 call "with finesse" c4a
    setup 4x2 1x8
-   array [0W 7E 1E 6W 6E 1W 7W 0E]
+      array [0W 7E 1E 6W 6E 1W 7W 0E]
+   setup 3x2 1x6
+      array [0W 1E 5W 5E 1W 0E]
 
 call "polly wally" c3a
             reverse_means_mirror
@@ -5143,7 +5202,7 @@ call "_wheel and" dontshow tag wheel
 call "_8by" dontshow tag 8by
             rear_back_from_r_wave left_means_mirror
    setup 2x2 2x2
-   array [0 0 0E 1E]
+      array [0 0 AL0E AL1E]
 
 call "wheel and @0" c1
             reverse_means_mirror dont_use_in_resolve
@@ -5567,6 +5626,25 @@ call "squeeze the galaxy" c1
          if next_galaxyspot_is_tboned [M0N R5S 0 L2S M6N L11S 0 R8S]
                             if always [R7S R5S 0 L2S L1S L11S 0 R8S]
 
+call "squeeze the butterfly" c1
+   setup 4x4 4x4
+      array [AL13S 0 0 AL10S AL6S 0 0 AL9S CR5S 0 0 CR2S CR14S 0 0 CR1S]
+
+call "squeeze the 'O'" c1
+   setup 4x4 4x4
+      array [0 AL15S AL11S 0 0 AL8S CR4S 0 0 CR7S CR3S 0 0 CR0S AL12S 0]
+
+/* Beware!  This call isn't really right. */
+call "@6 squeeze" c1
+   setup 4x2 4x4
+      preds "???"
+         if select [CR8S CR6S CR5S CR4S AL0S AL14S AL13S AL12S]
+         if always [ZM10N ZM15N ZM3N ZM1N ZM2N ZM7N ZM11N ZM9N]
+   setup 4x4 4x4
+      preds "???"
+         if select [AL13S AL15S AL11S AL10S AL6S AL8S CR4S AL9S CR5S CR7S CR3S CR2S CR14S CR0S AL12S CR1S]
+         if always [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N AL6N ZM7N AL8N AL9N AL10N AL11N AL12N AL13N ZM14N AL15N]
+
 call "flip the hourglass" a2
             fudge_to_q_tag take_right_hands
    setup hrglass 2x4 rotate
@@ -5588,13 +5666,19 @@ call "galaxy circulate" c1
          if next_galaxyspot_is_tboned [R1E R2E 0 L2W L3W M4N 0 M0N]
          if always [M1N R2E 0 L2W M3N M4N 0 M0N]
 
-call "reverse flip the galaxy" c2
+call "flip the galaxy" c2
+   setup galaxy thar
+      array [CR1S CR2E 0 AL2W AL5S ZM4N 0 ZM0N]
+            alternate_definition [reverse] c2
    setup galaxy 2x4
       preds "???"
          if next_galaxyspot_is_tboned [R1E L0S 0 R3S L2W R4S 0 L7S]
          if always                    [M1N L0S 0 R3S M2N R4S 0 L7S]
 
-call "reverse cut the galaxy" c2
+call "cut the galaxy" c2
+   setup galaxy thar
+      array [CR5S CR2E 0 AL2W AL1S ZM4N 0 ZM0N]
+            alternate_definition [reverse] c2
    setup galaxy 2x4
       preds "???"
          if next_galaxyspot_is_tboned [R1E R3S 0 L0S L2W L7S 0 R4S]
@@ -6532,12 +6616,12 @@ call "@2set @3your pace" c4
 
 call "_finish percolate" dontshow tag finpercolate
             dont_use_in_resolve
-   setup 2x4 2x4 rotate restriction wave_only
-   array [7S 7S 0N 0N 5S 1N 6S 2N]
+   conc nicely [] natturnthru [suppress_elongation_warnings]
 
 call "@1percolate" c1
             first_part_visible
    seq circulate [or_anycall]
+   seq half_circ []
    seq finpercolate []
 
 call "_finish perk up" dontshow tag finperk
@@ -6552,7 +6636,7 @@ call "@1perk up" c2
 
 call "_finish cover up" dontshow tag fincover
             dont_use_in_resolve
-   conc recycle [] explode [suppress_elongation_warnings]
+   conc recycle [] about [suppress_elongation_warnings]
 
 call "@1cover up" c3x
             first_part_visible

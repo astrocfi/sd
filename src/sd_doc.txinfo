@@ -1,10 +1,11 @@
 \input texinfo @c %**start of header -*-texinfo-*-
+@c user documentation for Sd (square dance caller's helper)
+@c See the file INSTALL for how to format and view.
 @setfilename sd_doc.info
 @settitle Sd
+@set sd-version 29
+@set Time-stamp: June 30, 1993
 @c %**end of header
-@ifinfo
-sd_doc.txinfo time-stamp: @{93/06/03 19:18:32 gildea@}
-@end ifinfo
 @iftex
 @finalout
 @end iftex
@@ -23,6 +24,10 @@ sd_doc.txinfo time-stamp: @{93/06/03 19:18:32 gildea@}
 @center A Square Dance Caller's Helper
 @sp 10
 @center William B. Ackerman and Stephen Gildea
+@sp 7
+@center @value{Time-stamp:}
+@sp 1
+@center for Sd version @value{sd-version}
 @c
 @page    @c end of title page
 @iftex
@@ -30,9 +35,7 @@ sd_doc.txinfo time-stamp: @{93/06/03 19:18:32 gildea@}
 @vskip 0pt plus 1fill
 @end iftex
 
-This manual documents Sd version 28.7.
-
-Copyright @copyright{} 1992 William B. Ackerman and Stephen Gildea
+Copyright @copyright{} 1992, 1993 William B. Ackerman and Stephen Gildea
 
 @ignore
 Permission is granted to process this file through TeX and print the
@@ -93,11 +96,11 @@ This is the complete table of contents:
 Introduction
 
 * Contact Info::                How to Contact the Authors
-* Acknowledgements::            Acknowlegdements
+* Acknowledgements::            Acknowledgements
 
 Invoking Sd
 
-* Command Switches::            Command Switches
+* Command-Line Options::        Command-Line Options
 * Abridgement::                 Abridgement
 
 Calling
@@ -140,7 +143,7 @@ Call Notes
 * Colliding Recycle::           Colliding Recycle, Ah So, and Cycle and Wheel
 * Rotate from Columns::         Rotate from Columns
 * Yellow Bricking::             @i{<anything> the Yellow Bricking <anything>}
-* Recycle::                     Recycle has two forms in the Dababase
+* Recycle::                     Recycle has two forms in the Database
 
 Concept Notes
 
@@ -159,6 +162,11 @@ Installation
 * Creating Project Files::	  Creating Think C Project Files
 * Compiling a New Release::	  Compiling a New Release
 * Running on Macintosh::	  Running on the Mac
+* Building on DOS::		Building on DOS with gcc
+* Compiling with DJGPP::	  Compiling with GCC on DOS
+* Running on DOS::		  Requirements for running on DOS
+* Document Formatting::		How to format the documentation
+* Manifest::			List of files in the distribution
 
 @end menu
 
@@ -169,7 +177,7 @@ Installation
 @chapter Getting Started
 
 @code{Sd} is typically run by typing its name and the level you want to
-write material for, e.g.,
+write sequences for, e.g.,
 
 @example
 sd c2
@@ -193,14 +201,15 @@ detail.
 @end display
 
 The program is normally invoked with a single argument---the level.
-This is one of @code{m} (mainstream), @code{p} (plus), @code{a1},
-@code{a2}, @code{c1}, @code{c2}, @code{c3a}, @code{c3}, @code{c3x},
-@code{c4a}, or @code{c4}.
+This is one of the following: @code{m} (mainstream), @code{p} (plus),
+@code{a1}, @code{a2}, @code{c1}, @code{c2}, @code{c3a},
+@code{c3}, @code{c3x}, @code{c4a}, or @code{c4}.
 The default is @code{m}.
 This determines the calls and concepts that will be made
 available, according to our best guess of what the levels mean.  Various
-optional arguments are permitted to control the window system, call list
-customization, and other options.  These will be described later.
+optional arguments are permitted to control the window system, 
+customize the list of calls used, and set other options.
+These will be described later.
 
 The call definitions will be read in from the encoded database file
 @file{sd_calls.dat}.  The program will then ponder the database for a few
@@ -208,34 +217,35 @@ seconds while it determines what calls to put on what menus.  This
 takes about (200/MIPS) seconds at C4, correspondingly less at lower levels.
 
 @menu
-* Command Switches::            Command Switches
+* Command-Line Options::        Command-Line Options
 * Abridgement::                 Abridgement
 @end menu
 
-@node Command Switches, Abridgement,  , Invoking Sd
-@section Command Switches
+@node Command-Line Options, Abridgement,  , Invoking Sd
+@section Command-Line Options
 
 Sd accepts all Xt command-line options.  The following are some of the
-more useful options for use with Sd:
+more useful options for use with Sd.  They only work with the X Window
+System interface.
 
 @table @code
 @item -rv
 reverse video
-@item -bg
+@item -bg @i{color}
 background color
-@item -fg
+@item -fg @i{color}
 foreground color
-@item -bd
+@item -bd @i{color}
 border color
-@item -font
+@item -font @i{font}
 font used everywhere
-@item -geometry
+@item -geometry @i{geom-spec}
 geometry in pixels
-@item -title
+@item -title @i{string}
 title for window manager and icon use
-@item -name
+@item -name @i{string}
 name to look up resources under.  default: program name.
-@item -xrm
+@item -xrm @i{resource-line}
 an X resource manager string.
 @end table
 
@@ -251,7 +261,7 @@ appended to this name.  The default is @file{sequence}, so a complete
 file name might be @file{sequence.C1}.
 @end table
 
-There are X resources associated with both switches:
+There are X resources associated with both options:
 @code{Sd.sequenceFile} is equivalent to the @w{@code{-sequence}} switch, and
 @code{Sd.databaseFile} is equivalent to @code{-db}.
 
@@ -260,18 +270,18 @@ command-line switch, you may find it more convenient to set the
 corresponding resource.
 
 
-@node Abridgement,  , Command Switches, Invoking Sd
+@node Abridgement,  , Command-Line Options, Invoking Sd
 @section Abridgement
 
-In addition to the calling level and any X Window System arguments on
-the command line, the program recognizes three special flags:
+The program recognizes three flags which allow use of an abridged
+list of calls:
 
 @table @code
 @item -write_list @var{filename}
-write out the call list for the indicated level instead of running the program.
+write out the call list for the indicated level and exit
 @item -write_full_list @var{filename}
 write out the call list for the indicated level and all lower levels
-instead of running the program.
+and then exit the program.
 @item -abridge @var{filename}
 read in the file, strike all the calls contained therein off the menus,
 and proceed.
@@ -291,14 +301,15 @@ out, will be removed from the internal database prior to running the program.
 Every sequence written under control of such a file will say @samp{(abridged)}
 after its level.
 
-To write material for a group that is learning C2, for example, run the
+To write sequences for a group that is learning C2, for example, run the
 program with
 @example
         sd c2 -write_list my_group
 @end example
 
-Then delete from the file @file{my_group} those calls that the group has learned.
-When writing material, use the command
+Then delete from the file @file{my_group} those calls that the group has
+learned, i.e., those calls not to be avoided.
+When writing sequences, use the command
 @example
         sd c2 -abridge my_group
 @end example
@@ -464,7 +475,8 @@ fraction into the appropriate form, e.g., 2/4 becomes 1/2.
 @node Entering Concepts, Call Modifications, Entering Calls, Calling
 @section Entering Concepts
 
-A call may be preceded by concepts.  These may be nested (@dfn{stacked}) to
+A call may be preceded by concepts, which modify the action of the call.
+These may be nested (@dfn{stacked}) to
 any reasonable depth.  In a perhaps hopeless attempt to keep the concept
 menus from becoming too unwieldy, concepts have been organized into a
 general concept menu and several submenus organized by topics.  The
@@ -478,7 +490,7 @@ matter which one you use.  The submenus are
 @table @code
 @item phantom concepts
 those that involve picking out virtual setups, that may include
-phantoms, from a real formation that is larger than 8 people.  Examples:
+phantoms, from a real formation that is larger than eight people.  Examples:
 @i{split phantom lines}, @i{triple boxes}, @i{triple lines working forward}.
 
 @item couples/tandem concepts
@@ -487,7 +499,7 @@ the obvious thing.
 @item distorted concepts
 those that involve picking out distorted virtual setups, without
 phantoms, by identifying real people out of a formation that is larger
-than 8 people, or the phantom equivalent of same.  Examples:
+than eight people, or the phantom equivalent of same.  Examples:
 @i{parallelogram}, @i{stairstep lines}, @i{bigblock}.
 
 @item 4-person distorted concepts
@@ -503,7 +515,7 @@ When you click on any concept, the universal call menu replaces whatever
 special call menu may have been presented, since the set of legal calls
 becomes highly unpredictable.
 
-Some concepts require a numeric designator (e.g., @i{interrupt after the 3rd
+Some concepts require a numeric designator (e.g., @i{interrupt after the third
 part}) or a people designator (e.g., @i{girls are stable}).  The handling
 is the same as for calls that require these.
 
@@ -618,7 +630,7 @@ the @code{so-and-so do your part} concept to call @i{near column
 pass thru}, etc.  The resultant setup must be reasonable---no shape-changers
 on one side of the set.  Most calls have not been checked for
 robustness in the presence of asymmetrical setups.  Use this with care!
-The resolver checks all 8 people, so it should work.
+The resolver checks all eight people, so it should work.
 If you have not restored symmetry, resolves may be extraordinarily difficult
 to find.
 
@@ -703,8 +715,8 @@ concepts.  So, for example, clicking on @code{once removed} and then
 
 The program searches for resolves by using a random number generator to
 generate up to 5000 random sequences, occasionally inserting concepts.
-It biases the search in favor of short sequences (1 call) rather than
-long ones (3 calls) and in favor of resolves that do not contain @i{all 8
+It biases the search in favor of short sequences (one call) rather than
+long ones (three calls) and in favor of resolves that do not contain @i{all 8
 circulate}.  If, after 5000 attempts, no resolve is found, the @code{find another}
 operation fails.  (This tends to happen if you try to resolve out of an
 hourglass at Mainstream.)  You can click on @code{find another} again to make
@@ -764,7 +776,7 @@ To avoid frustration, make the insertion point be at a place where the
 setup is very simple and a large number of calls are legal.  We recommend
 making the insertion point be at a place where the setup is in waves.
 Remember that, if the insertion point is at an hourglass, the program
-has to find a random sequence of up to 3 calls that goes from an hourglass
+has to find a random sequence of up to three calls that goes from an hourglass
 to another hourglass while miraculously performing the required
 permutation.
 
@@ -875,7 +887,7 @@ Type @kbd{C-u} to clear a partially-typed line.
 Press @kbd{?} to see the possible completions.
 If there are many possibilities, @code{sdtty} will display a page and
 offer a @samp{More} prompt.  Type @key{SPC} to see the next
-page, @key{DEL} to stop.
+page, @key{RET} to see the next line, and @key{DEL} to stop.
 
 Text from a @kbd{%} to the end of line is ignored.  This comment feature
 may be useful when preparing a file to give to @code{sdtty} as input.
@@ -891,7 +903,7 @@ may be useful when preparing a file to give to @code{sdtty} as input.
 * Colliding Recycle::           Colliding Recycle, Ah So, and Cycle and Wheel
 * Rotate from Columns::         Rotate from Columns
 * Yellow Bricking::             @i{<anything> the Yellow Bricking <anything>}
-* Recycle::                     Recycle has two forms in the Dababase
+* Recycle::                     Recycle has two forms in the Database
 @end menu
 
 @node Box the Gnat, Sweeping Direction,  , Call Notes
@@ -904,7 +916,8 @@ call leaves hands sort of joined.  If you call @i{box the gnat} followed by
 @node Sweeping Direction, C1 Single Rotate, Box the Gnat, Call Notes
 @section Sweeping Direction
 
-@i{Sweep 1/4}, @i{with the flow}, and @i{by golly} all assume a sweeping direction.
+@samp{Sweep 1/4}, @samp{with the flow}, and @samp{by golly}
+all assume a sweeping direction.
 The program does not currently remember sweeping direction from the
 preceding call.  Hence, it assumes clockwise.  Click on @code{REVERSE} if you want
 it the other way.
@@ -927,8 +940,8 @@ something like @samp{heads star thru}.
 @section Colliding @i{Recycle}
 
 ``Colliding'' @i{recycle}, @i{ah so}, and @i{cycle and wheel} are not implemented.
-Do not call these if the ends of the line are facing the same way.  @i{Wheel
-and deal} from a one-faced line is okay.
+Do not call these if the ends of the line are facing the same way.
+@samp{Wheel and deal} from a one-faced line is okay.
 
 @node Rotate from Columns, Yellow Bricking, Colliding Recycle, Call Notes
 @section Rotate from Columns
@@ -941,27 +954,27 @@ is in the database at C2.  Don't use it from columns at that level.
 @node Yellow Bricking, Recycle, Rotate from Columns, Call Notes
 @section @i{<anything> the Yellow Bricking <anything>}
 
-To use the second @code{<anything>} in @i{<anything> the yellow bricking
+To use the second @code{<anything>} in @samp{<anything> the yellow bricking
 <anything>}, as in @i{follow the yellow bricking turn and deal}, enable
 simple modifications and click on @code{follow the yellow brick road}.
 
 To use the first @code{<anything>}, as in @i{revert cross loop and tag
-the yellow brick road}, click on @code{tag the yellow brick road}.
+the yellow brick road}, click on @samp{tag the yellow brick road}.
 If simple modifications are enabled, you will be able to turn
 the @i{1/2 tag} into whatever tagging variation you want.
 The philosophy is the same as for things like @i{tagger's dilemma}.
 
 If you want to modify the call both ways, you must enable all modifications
-(click twice on @code{allow modifications}), do @code{tag the yellow brick
+(click twice on @samp{allow modifications}), do @samp{tag the yellow brick
 road}, and use the second modification.  It will come out
 looking ugly.  Sorry.
 
 @node Recycle,  , Yellow Bricking, Call Notes
 @section Recycle
 
-There are two @i{Recycle} calls in the database: @i{recycle} can be done
+There are two @i{Recycle} calls in the database: @samp{recycle} can be done
 from waves, facing couples, right-handed boxes, or a couple facing a
-right-handed minwave.  It can take the @samp{cross}, @samp{single}, or
+right-handed mini-wave.  It can take the @samp{cross}, @samp{single}, or
 @samp{diamond} modifiers.  It is the call that dancers will do when told
 to @i{recycle}, and is the call that is used in @i{cover up} and
 @i{counterpoint}.
@@ -971,8 +984,8 @@ as being fractionalizable in some setups but not others, and the
 facing-couples version of recycle is not fractionalizable.
 To permit fractional use of recycle, as with
 @samp{interlace} or @samp{random}, we have provided a call
-@i{recycle (by parts)}, which can be done only from lines.  Use this call
-(but don't read the "by parts" phrase) when fractions are required.
+@samp{recycle (by parts)}, which can be done only from lines.  Use this call
+(but don't read the ``by parts'' phrase) when fractions are required.
 
 
 @node Concept Notes, Bugs, Call Notes, Top
@@ -1036,7 +1049,7 @@ If the concept was @i{cross concentric}, so these people started in the
 center in a 2x2, they must have the assistance of the original ends.
 The original setup must have been a 2x4, except for weird pinwheel-like
 setups noted below.  Hence it is @i{illegal} to call @i{cross concentric
-square thru 2} from a rigger in which the center box is facing couples
+@w{square thru 2}} from a rigger in which the center box is facing couples
 and the wings have right hands and are expected to rear back.  The
 centers do not know whether they were in lines or columns because the
 ends are not in an acceptable setup.  The centers do @i{not} use the
@@ -1050,9 +1063,7 @@ end person's @i{location,} but not that end person's facing direction.
 If the people who finished on the outside in a 2x2 started
 in a 1x4 or diamond, they use the @dfn{checkpoint rule}---they elongate
 their resulting 2x2 perpendicular to the long axis of @i{their own}
-1x4 or diamond, not the long axis of the set.  Yes, I realize that this
-is controversial and may not be in accordance with Callerlab
-definitions.
+1x4 or diamond, not the long axis of the set.
 
 If the concept was @i{concentric}, so these people started on
 the outside in a 1x4 or diamond, their own long axis is presumably
@@ -1060,7 +1071,7 @@ the same as the long axis of the whole set.
 
 If the concept was @i{cross concentric}, so these people started in
 the center in a 1x4 or diamond, their own long axis might not be the
-long axis of the set.  If we do @i{cross concentric square thru 2}
+long axis of the set.  If we do @i{cross concentric @w{square thru 2}}
 from a crossedwave, so everyone rears back, the original centers
 finish perpendicular to their own 1x4, not the original ends' 1x4.
 They finish in approximately the places where the ends began.
@@ -1112,7 +1123,7 @@ PART WITH A [CHECKPOINT crossfire BY crossfire]
 @end example
 
 Normally, the tandem twosome behavior is not re-evaluated after each
-part of the clean sweep.  But, since the 3rd part was replaced with
+part of the clean sweep.  But, since the third part was replaced with
 something else to which that concept did not apply, the setup is
 re-evaluated before doing the final part.  Note in particular that
 the replacement was @i{normal}---the call having a part replaced was a
@@ -1166,7 +1177,8 @@ If a call that you believe is legal does not appear on the menu,
 click on @code{allow modifications}.  This will bring up the universal call
 menu.  You can then thrash out which of you or the computer is correct.
 
-The program sometimes prints non-fatal @i{warnings}.  These are intended
+The program sometimes prints non-fatal @i{warnings} about calls.
+These are intended
 principally as advice to you, the user of the program, that the call
 you have just entered may not be a reasonable thing to call.  It is not
 necessarily the case that reading the warning aloud when calling the
@@ -1180,7 +1192,7 @@ simply not done at lower levels.  You should use your judgement.
 Warning:  The database is not without errors or misunderstandings in
 nonstandard uses of calls.  The program generally tries to be extremely
 conservative, its author being aware of how annoying it is to have to
-sight out of what seemed to start out as a beautiful card.  However,
+resolve on the fly what seemed to start out as a beautiful card.  However,
 you should not blindly accept what the program does, particularly if
 a call was used in an unusual way.  The management will not be
 responsible for any sequences left unattended.
@@ -1242,7 +1254,7 @@ version of the appropriate line in the @file{.Xresources} file in your home
 directory (assuming you run @code{xrdb .Xresources} from @file{.xsession} or
 whatever your X startup file is called).  You will have to re-run @code{xrdb}
 after editing your @file{.Xresources} file.
-You should add @code{Sd} to the front
+You should add @samp{Sd} to the front
 of any lines you move to your @file{.Xresources} file.
 
 All values in the distributed @file{Sd.res} file except the colors are the
@@ -1264,7 +1276,7 @@ Sd*frame*List*Translations: #override <Btn3Down>: undo()
 The version is a string consisting of parts separated by colons, each
 of which is a string consisting of parts separated by dots.
 
-The authors distribute versions @code{major.minor} form.  For
+The authors distribute versions with a @code{major.minor} form.  For
 example, @code{25.6} has major version @code{25} and minor version @code{6}.
 Minor versions are compatible with each other.  They have the same
 user interface and read the same database format.  No new features
@@ -1689,6 +1701,7 @@ Public License instead of this License.
 @bye
 
 @c Local Variables:
-@c time-stamp-start: "time-stamp: @{"
-@c time-stamp-end: "@}"
+@c time-stamp-start: "Time-stamp: "
+@c time-stamp-end: "$"
+@c time-stamp-format: (time-stamp-month-dd-yyyy)
 @c End:

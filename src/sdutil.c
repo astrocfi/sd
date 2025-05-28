@@ -1278,8 +1278,10 @@ extern void display_initial_history(int upper_limit, int num_pics)
    else {
       /* We lose, there is nothing we can use. */
       clear_screen();
+#ifndef THINK_C			/* Mac interface provides "About Sd" popup instead */
       write_header_stuff();
       newline();
+#endif
       startpoint = 1;
    }
 
@@ -1544,40 +1546,40 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
             case sq_wave_only:                    /* 1x4 or 2x4 - waves; 2x2 - real RH or LH box */
                switch (ss->kind) {
                   case s1x4:
-                     if (t = ss->people[0].id1) { k |=  t; i &=  t; }
-                     if (t = ss->people[1].id1) { k |= ~t; i &= ~t; }
-                     if (t = ss->people[2].id1) { k |= ~t; i &= ~t; }
-                     if (t = ss->people[3].id1) { k |=  t; i &=  t; }
+                     if ((t = ss->people[0].id1) != 0) { k |=  t; i &=  t; }
+                     if ((t = ss->people[1].id1) != 0) { k |= ~t; i &= ~t; }
+                     if ((t = ss->people[2].id1) != 0) { k |= ~t; i &= ~t; }
+                     if ((t = ss->people[3].id1) != 0) { k |=  t; i &=  t; }
                      if (!(k & ~i & 2)) goto good;
                      goto bad;
                   case s2x2:
                      u = ss->people[0].id1 | ss->people[1].id1 | ss->people[2].id1 | ss->people[3].id1;
 
                      if ((u & 1) == 0) {
-                        if (t = ss->people[0].id1) { k |=  t; i &=  t; }
-                        if (t = ss->people[1].id1) { k |= ~t; i &= ~t; }
-                        if (t = ss->people[2].id1) { k |= ~t; i &= ~t; }
-                        if (t = ss->people[3].id1) { k |=  t; i &=  t; }
+                        if ((t = ss->people[0].id1) != 0) { k |=  t; i &=  t; }
+                        if ((t = ss->people[1].id1) != 0) { k |= ~t; i &= ~t; }
+                        if ((t = ss->people[2].id1) != 0) { k |= ~t; i &= ~t; }
+                        if ((t = ss->people[3].id1) != 0) { k |=  t; i &=  t; }
                         if (!(k & ~i & 2)) goto good;
                      }
                      else if ((u & 010) == 0) {
-                        if (t = ss->people[0].id1) { k |=  t; i &=  t; }
-                        if (t = ss->people[1].id1) { k |=  t; i &=  t; }
-                        if (t = ss->people[2].id1) { k |= ~t; i &= ~t; }
-                        if (t = ss->people[3].id1) { k |= ~t; i &= ~t; }
+                        if ((t = ss->people[0].id1) != 0) { k |=  t; i &=  t; }
+                        if ((t = ss->people[1].id1) != 0) { k |=  t; i &=  t; }
+                        if ((t = ss->people[2].id1) != 0) { k |= ~t; i &= ~t; }
+                        if ((t = ss->people[3].id1) != 0) { k |= ~t; i &= ~t; }
                         if (!(k & ~i & 2)) goto good;
                      }
 
                      goto bad;
                   case s2x4:
-                     if (t = ss->people[0].id1) { k |=  t; i &=  t; }
-                     if (t = ss->people[1].id1) { k |= ~t; i &= ~t; }
-                     if (t = ss->people[2].id1) { k |=  t; i &=  t; }
-                     if (t = ss->people[3].id1) { k |= ~t; i &= ~t; }
-                     if (t = ss->people[4].id1) { k |= ~t; i &= ~t; }
-                     if (t = ss->people[5].id1) { k |=  t; i &=  t; }
-                     if (t = ss->people[6].id1) { k |= ~t; i &= ~t; }
-                     if (t = ss->people[7].id1) { k |=  t; i &=  t; }
+                     if ((t = ss->people[0].id1) != 0) { k |=  t; i &=  t; }
+                     if ((t = ss->people[1].id1) != 0) { k |= ~t; i &= ~t; }
+                     if ((t = ss->people[2].id1) != 0) { k |=  t; i &=  t; }
+                     if ((t = ss->people[3].id1) != 0) { k |= ~t; i &= ~t; }
+                     if ((t = ss->people[4].id1) != 0) { k |= ~t; i &= ~t; }
+                     if ((t = ss->people[5].id1) != 0) { k |=  t; i &=  t; }
+                     if ((t = ss->people[6].id1) != 0) { k |= ~t; i &= ~t; }
+                     if ((t = ss->people[7].id1) != 0) { k |=  t; i &=  t; }
                      if (!(k & ~i & 2)) goto good;
                      goto bad;
                   default:
@@ -1589,17 +1591,17 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
                      u = ss->people[0].id1 | ss->people[1].id1 | ss->people[2].id1 | ss->people[3].id1;
 
                      if ((u & 1) == 0) {
-                        if (t = ss->people[0].id1) { k |=  t; i &=  t; }
-                        if (t = ss->people[1].id1) { k |=  t; i &=  t; }
-                        if (t = ss->people[2].id1) { k |= ~t; i &= ~t; }
-                        if (t = ss->people[3].id1) { k |= ~t; i &= ~t; }
+                        if ((t = ss->people[0].id1) != 0) { k |=  t; i &=  t; }
+                        if ((t = ss->people[1].id1) != 0) { k |=  t; i &=  t; }
+                        if ((t = ss->people[2].id1) != 0) { k |= ~t; i &= ~t; }
+                        if ((t = ss->people[3].id1) != 0) { k |= ~t; i &= ~t; }
                         if (!(k & ~i & 2)) goto good;
                      }
                      else if ((u & 010) == 0) {
-                        if (t = ss->people[0].id1) { k |=  t; i &=  t; }
-                        if (t = ss->people[1].id1) { k |= ~t; i &= ~t; }
-                        if (t = ss->people[2].id1) { k |= ~t; i &= ~t; }
-                        if (t = ss->people[3].id1) { k |=  t; i &=  t; }
+                        if ((t = ss->people[0].id1) != 0) { k |=  t; i &=  t; }
+                        if ((t = ss->people[1].id1) != 0) { k |= ~t; i &= ~t; }
+                        if ((t = ss->people[2].id1) != 0) { k |= ~t; i &= ~t; }
+                        if ((t = ss->people[3].id1) != 0) { k |=  t; i &=  t; }
                         if (!(k & ~i & 2)) goto good;
                      }
 
@@ -1610,21 +1612,21 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
             case sq_2fl_only:                     /* 1x4 or 2x4 - 2FL; 4x1 - single DPT or single CDPT */
                switch (ss->kind) {
                   case s1x4:
-                     if (t = ss->people[0].id1) { k |=  t; i &=  t; }
-                     if (t = ss->people[1].id1) { k |=  t; i &=  t; }
-                     if (t = ss->people[2].id1) { k |= ~t; i &= ~t; }
-                     if (t = ss->people[3].id1) { k |= ~t; i &= ~t; }
+                     if ((t = ss->people[0].id1) != 0) { k |=  t; i &=  t; }
+                     if ((t = ss->people[1].id1) != 0) { k |=  t; i &=  t; }
+                     if ((t = ss->people[2].id1) != 0) { k |= ~t; i &= ~t; }
+                     if ((t = ss->people[3].id1) != 0) { k |= ~t; i &= ~t; }
                      if (!(k & ~i & 2)) goto good;
                      goto bad;
                   case s2x4:
-                     if (t = ss->people[0].id1) { k |=  t; i &=  t; }
-                     if (t = ss->people[1].id1) { k |=  t; i &=  t; }
-                     if (t = ss->people[2].id1) { k |= ~t; i &= ~t; }
-                     if (t = ss->people[3].id1) { k |= ~t; i &= ~t; }
-                     if (t = ss->people[4].id1) { k |= ~t; i &= ~t; }
-                     if (t = ss->people[5].id1) { k |= ~t; i &= ~t; }
-                     if (t = ss->people[6].id1) { k |=  t; i &=  t; }
-                     if (t = ss->people[7].id1) { k |=  t; i &=  t; }
+                     if ((t = ss->people[0].id1) != 0) { k |=  t; i &=  t; }
+                     if ((t = ss->people[1].id1) != 0) { k |=  t; i &=  t; }
+                     if ((t = ss->people[2].id1) != 0) { k |= ~t; i &= ~t; }
+                     if ((t = ss->people[3].id1) != 0) { k |= ~t; i &= ~t; }
+                     if ((t = ss->people[4].id1) != 0) { k |= ~t; i &= ~t; }
+                     if ((t = ss->people[5].id1) != 0) { k |= ~t; i &= ~t; }
+                     if ((t = ss->people[6].id1) != 0) { k |=  t; i &=  t; }
+                     if ((t = ss->people[7].id1) != 0) { k |=  t; i &=  t; }
                      if (!(k & ~i & 2)) goto good;
                      goto bad;
                   default:
