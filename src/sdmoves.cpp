@@ -5128,7 +5128,7 @@ void impose_assumption_and_move(setup *ss, setup *result, bool suppress_fudgy_2x
 }
 
 
-static void do_stuff_inside_sequential_call(
+void do_stuff_inside_sequential_call(
    setup *result,
    uint32_t this_mod1,
    call_restriction *fix_next_assumption_p,
@@ -5174,6 +5174,22 @@ static void do_stuff_inside_sequential_call(
                 old_assumption == cr_real_1_4_tag ||
                 old_assumption == cr_real_1_4_line)
                *fix_next_assumption_p = cr_ckpt_miniwaves;
+         }
+         else if (result->cmd.callspec == base_calls[base_call_jaywalk] && result->kind == s_qtag) {
+            if (old_assumption == cr_real_1_4_tag) {
+               *fix_next_assumption_p = cr_real_3_4_tag;
+            }
+            else if (old_assumption == cr_real_1_4_line) {
+               *fix_next_assumption_p = cr_real_3_4_line;
+            }
+            else if (old_assumption == cr_jright && old_assump_both == 2) {
+               *fix_next_assumption_p = cr_jright;
+               *fix_next_assump_both_p = 1;
+            }
+            else if (old_assumption == cr_jleft && old_assump_both == 2) {
+               *fix_next_assumption_p = cr_jleft;
+               *fix_next_assump_both_p = 1;
+            }
          }
          else if (result->cmd.callspec == base_calls[base_call_scootback] ||
                   result->cmd.callspec == base_calls[base_call_qtagscootback]) {
@@ -5941,9 +5957,6 @@ static void do_sequential_call(
          result->cmd.cmd_final_flags.herit.l = (heritflagsl) 0;
       }
 
-
-
-
       // We don't supply these; they get filled in by the call.
       result->cmd.cmd_misc_flags &= ~(DFM1_CONCENTRICITY_FLAG_MASK | CMD_MISC__NO_CHECK_MOD_LEVEL);
 
@@ -5985,12 +5998,19 @@ static void do_sequential_call(
             // but we don't like assumptions in place on setups for which they
             // are meaningless.
 
-            if (fix_next_assump_both == 2 &&
-                (fix_next_assumption == cr_jleft || fix_next_assumption == cr_jright) &&
-                result->kind == s2x4 &&
-                (result->people[1].id1 | result->people[2].id1 |
-                 result->people[5].id1 | result->people[6].id1) == 0) {
-               expand::expand_setup(s_qtg_2x4, result);
+            if (fix_next_assumption == cr_jleft || fix_next_assumption == cr_jright ||
+                fix_next_assumption == cr_real_1_4_tag || fix_next_assumption == cr_real_3_4_tag ||
+                fix_next_assumption == cr_real_1_4_line || fix_next_assumption == cr_real_3_4_line) {
+               if (result->kind == s2x4 &&
+                   (result->people[1].id1 | result->people[2].id1 |
+                    result->people[5].id1 | result->people[6].id1) == 0) {
+                  expand::expand_setup(s_qtg_2x4, result);
+               }
+               else if (result->kind == s3x4 &&
+                        (result->people[0].id1 | result->people[3].id1 |
+                         result->people[6].id1 | result->people[9].id1) == 0) {
+                  expand::compress_setup(s_qtg_3x4, result);
+               }
             }
          }
       }
@@ -7543,8 +7563,12 @@ static void move_with_real_call(
                ss->cmd.cmd_misc2_flags &=
                   ~(CMD_MISC2__DO_CENTRAL | CMD_MISC2__INVERT_CENTRAL | CMD_MISC2__SAID_INVERT);
 
-               if ((schema_attrs[the_schema].attrs &
-                    (SCA_CENTRALCONC|SCA_CROSS)) == SCA_CENTRALCONC) {
+               if (((schema_attrs[the_schema].attrs & (SCA_CENTRALCONC|SCA_CROSS)) == SCA_CENTRALCONC) ||
+                   (((schema_attrs[the_schema].attrs & (SCA_CENTRALCONC|SCA_CROSS)) == (SCA_CENTRALCONC|SCA_CROSS)) &&
+                    two_couple_calling)) {
+                  // As a very special case, we allow the use of "central" with a cross-concentrically-defined
+                  // call, if writing two-couple material.  This would not normally be allowed.
+
                   // We used to include "schema_cross_concentric_6p_or_normal"
                   // in this clause.  It must have been related to some call definition
                   // that wasn't done correctly at that time.  It is no longer needed,
@@ -7558,7 +7582,8 @@ static void move_with_real_call(
                   // to get the ends' part of the inverted call, so we just get the
                   // centers' part as usual.
                   if (inv_bits == CMD_MISC2__INVERT_CENTRAL ||
-                      inv_bits == CMD_MISC2__SAID_INVERT)
+                      inv_bits == CMD_MISC2__SAID_INVERT ||
+                      (schema_attrs[the_schema].attrs & SCA_CROSS) != 0)
                      defptr = &this_defn->stuff.conc.outerdef;
                   else
                      defptr = &this_defn->stuff.conc.innerdef;

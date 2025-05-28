@@ -226,8 +226,8 @@ enum concept_kind {
    concept_triple_twin_nomystic,
    concept_misc_distort,
    concept_misc_distort_matrix,
-   concept_old_stretch,
-   concept_new_stretch,
+   concept_stretch,
+   concept_stretched_setup,
    concept_assume_waves,
    concept_active_phantoms,
    concept_mirror,
@@ -2666,8 +2666,8 @@ enum {
 
 
 enum {
-   PRIOR_ELONG_BASE_FOR_TANDEM = 0x00010000,
-   PRIOR_ELONG_CONC_RULES_CHECK_HORRIBLE = 0x00020000
+   PRIOR_ELONG_BASE_FOR_TANDEM           = 0x00010000,
+   PRIOR_ELONG_CONC_RULES_CHECK_HORRIBLE = 0x00040000
 };
 
 
@@ -4795,6 +4795,7 @@ extern const expand::thing s_2x2_2x4_endsb;
 extern const expand::thing s_1x4_1x8_ctrs;
 extern const expand::thing s_1x4_1x8_ends;
 extern const expand::thing s_1x6_1x8_ctrs;
+extern const expand::thing s_qtg_2x3;
 extern const expand::thing s_qtg_2x4;
 extern const expand::thing s_4x4_4x6a;
 extern const expand::thing s_4x4_4x6b;
@@ -5684,6 +5685,13 @@ bool fill_active_phantoms_and_move(setup *ss, setup *result, bool suppress_fudgy
 void move_perhaps_with_active_phantoms(setup *ss, setup *result, bool suppress_fudgy_2x3_2x6_fixup = false) THROW_DECL;
 
 void impose_assumption_and_move(setup *ss, setup *result, bool suppress_fudgy_2x3_2x6_fixup = false) THROW_DECL;
+
+void do_stuff_inside_sequential_call(setup *result, uint32_t this_mod1,
+                                     call_restriction *fix_next_assumption_p, int *fix_next_assump_col_p,
+                                     int *fix_next_assump_both_p, int *remembered_2x2_elongation_p,
+                                     final_and_herit_flags new_final_concepts, uint32_t cmd_misc_flags,
+                                     bool reverse_order, bool recompute_id, bool qtfudged,
+                                     bool setup_is_elongated) THROW_DECL;
 
 void really_inner_move(
    setup *ss,

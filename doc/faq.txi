@@ -15,18 +15,23 @@ more common things like @strong{heads start}.  You will be given a
 4-dancer setup (facing couples) as though they are the heads of a
 square.  You can call 4-person material at this point.  If you go
 into a wave and call @strong{motivate}, you will be told that it's
-illegal.  You can go into larger setups at any time.  The most common
-way is with an @strong{assume} operation.  The setup will be expanded
-to the eight-person setup that you name, and you can call normally
-that way.  For example, from a single 4-person wave, you can call
-@strong{assume tidal wave relay the shadow}.  The setup will be
-expanded to a 1x8 by placing phantoms outboard, and the call will be
-done in the usual way from there.  You will now be in an eight-person setup.
-You can call @strong{motivate} from there, without saying anything about
-phantoms.  You will now have people as ends of parallel waves.  You can
-then call @strong{switch to a diamond}, also without saying anything about
-phantoms.  Each wave will do the call, and the setup will collapse back
-down to a 4-person wave.
+illegal.
+
+You can go into larger setups at any time.  The most common way is with an
+@strong{assume} operation.  The setup will be expanded to the eight-person setup
+that you name, and you can call normally that way.  For example, from a single
+4-person wave, you can call @strong{assume tidal wave relay the shadow}.  The
+setup will be expanded to a 1x8 by placing phantoms outboard, and the call will
+be done in the usual way from there.  (You can also get into larger setups with
+things like @strong{press} and @strong{truck}.)
+
+You will now be in an eight-person setup.  You can call @strong{motivate} from
+there, without saying anything about phantoms.  Missing people don't particularly
+bother Sd, though you may need to say something like "In your phantom waves, motivate"
+to reassure the dancers.  After doing this, you will have people as ends
+of parallel waves.  You can then call @strong{switch to a diamond}, also without
+saying anything about phantoms.  Each wave will do the call, and the setup will
+collapse back down to a 4-person wave.
 
 Another way to expand out of a 4-person setup might be, from back-to-back
 couples, @strong{assume eight chain rotary spin}.
@@ -39,6 +44,19 @@ setup.  You would type that to the computer; you would presumably not say it
 to the dancers.
 
 There is no @strong{resolve} command.  You need to get the dancers home by calling.
+
+@unnumberedsec How do I call things like @strong{cast a shadow} from a promenade?
+
+Issue @strong{promenade, <anyone> lead for a}, followed by the call you want, as
+in @strong{promenade, sides lead for a cast a shadow}.  You can give this in
+appropriate setups, such as left-handed two-faced lines, or some kind of thar or
+as-couples star or diamond.  You have to do this in the context of a
+@strong{promenade} command.  Sd will have the people move around a suitable
+amount before beginning the call, to model the amount of promenading that will
+take place, so that the final position will be reasonably close.  But it isn't
+exact, of course.
+
+Calls like @strong{pinwheel} and @strong{mix and mingle} work similarly.
 
 @unnumberedsec The program offered something that I've never heard of, or don't understand, or doesn't seem right.  What should I do?
 

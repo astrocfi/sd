@@ -43,6 +43,7 @@
    s_2x2_2x4b
    s_2x2_2x4_ends
    s_2x2_2x4_endsb
+   s_qtg_2x3
    s_qtg_2x4
    s_2x3_qtg
    s_4x4_4x6a
@@ -549,6 +550,7 @@ const expand::thing s_2x2_2x4_endsb = {{7, 0, 3, 4}, s2x2, s2x4, 1};
 const expand::thing s_1x4_1x8_ctrs = {{3, 2, 7, 6}, s1x4, s1x8, 0};
 const expand::thing s_1x4_1x8_ends = {{0, 1, 4, 5}, s1x4, s1x8, 0};
 const expand::thing s_1x6_1x8_ctrs = {{1, 3, 2, 5, 7, 6}, s1x6, s1x8, 0};
+const expand::thing s_qtg_2x3 = {{5, -1, 0, 1, -1, 4}, s2x3, s_qtag, 1};
 const expand::thing s_qtg_2x4 = {{5, -1, -1, 0, 1, -1, -1, 4}, s2x4, s_qtag, 1};
 const expand::thing s_4x4_4x6a = {
    {4, 7, 22, 8, 13, 14, 15, 21, 16, 19, 10, 20, 1, 2, 3, 9}, s4x4, s4x6, 0};
@@ -1469,6 +1471,15 @@ expand::thing expand::init_table[] = {
                                              NEEDMASK(CONCPROP__NEEDK_END_1X4)},
    {{2, 3, 5, 4, 8, 9, 11, 10},
     s1x8,    s1x12, 0, 0U, ~0U, false,
+    warn__none, warn__none, plain_normalize, NEEDMASK(CONCPROP__NEEDK_CTR_1X4) |
+                                             NEEDMASK(CONCPROP__NEEDK_TRIPLE_1X4) |
+                                             NEEDMASK(CONCPROP__NEEDK_END_1X4) |
+                                             NEEDMASK(CONCPROP__NEEDK_1X12) |
+                                             NEEDMASK(CONCPROP__NEEDK_QUAD_1X3) |
+                                             NEEDMASK(CONCPROP__NEEDK_QUAD_1X4) |
+                                             NEEDMASK(CONCPROP__NEEDK_1X16)},
+   {{3, 4, 5, 9, 10, 11},
+    s1x6,    s1x12, 0, 0U, ~0U, false,
     warn__none, warn__none, plain_normalize, NEEDMASK(CONCPROP__NEEDK_CTR_1X4) |
                                              NEEDMASK(CONCPROP__NEEDK_TRIPLE_1X4) |
                                              NEEDMASK(CONCPROP__NEEDK_END_1X4) |

@@ -1634,6 +1634,7 @@ tagtabitem tagtabinit[num_base_call_indices] = {
    {0, "chreact_1"},      // This is used for propagating the hinge info for part 2 of chain reaction.
    {0, "makepass_1"},     // This is used for propagating the cast off 3/4 info for part 2 of make a pass.
    {0, "nuclear_1"},      // Same, for part 2 of nuclear reaction.
+   {0, "jaywalk"},        // Propagating 3/4-tag-ness, and handedness.
    {0, "scootback"},
    {0, "qtagscootback"},
    {0, "scootbacktowave"},

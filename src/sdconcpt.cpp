@@ -1904,6 +1904,9 @@ static void do_concept_multiple_lines(
       }
    }
    else if (parseptr->concept->arg4 == 3) {
+      if (ss->kind == s1x6 || ss->kind == s1x8 || ss->kind == s1x10)
+         do_matrix_expansion(ss, CONCPROP__NEEDK_1X12, false);
+
       if (ss->kind == s3x4)
          code = MAPCODE(s1x4,3,MPKIND__SPLIT,1);
       else if (ss->kind == s1x12)
@@ -2967,7 +2970,7 @@ static void do_concept_diagnose(
 }
 
 
-static void do_concept_old_stretch(
+static void do_concept_stretch(
    setup *ss,
    parse_block *parseptr,
    setup *result) THROW_DECL
@@ -3133,7 +3136,7 @@ static void do_concept_old_stretch(
 }
 
 
-static void do_concept_new_stretch(
+static void do_concept_stretched_setup(
    setup *ss,
    parse_block *parseptr,
    setup *result) THROW_DECL
@@ -3144,20 +3147,20 @@ static void do_concept_new_stretch(
    int linesp = parseptr->concept->arg1;
 
    // linesp =
-   //  16 : any setup
-   //  1  : line
-   //  3  : wave
-   //  4  : column
-   //  18 : box
-   //  19 : diamond spots
-   //  20 : just "stretched", to be used with triangles.
+   //  0x10 : any setup
+   //  1    : line
+   //  3    : wave
+   //  4    : column
+   //  0x12 : box
+   //  0x13 : diamond spots
+   //  0x14 : just "stretched", to be used with triangles.
 
-   if ((linesp == 18 && tempsetup.kind != s2x4) ||
-       (linesp == 19 && tempsetup.kind != s_qtag && tempsetup.kind != s_ptpd) ||
-       (!(linesp&16) && tempsetup.kind != s1x8))
+   if ((linesp == 0x12 && tempsetup.kind != s2x4) ||
+       (linesp == 0x13 && tempsetup.kind != s_qtag && tempsetup.kind != s_ptpd) ||
+       (!(linesp & 0x10) && tempsetup.kind != s1x4 && tempsetup.kind != s1x8))
       fail("Not in correct formation for this concept.");
 
-   if (!(linesp & 16)) {
+   if (!(linesp & 0x10)) {
       if (linesp & 1) {
          if (global_tbonetest & 1) fail("There is no line of 8 here.");
       }
@@ -3171,7 +3174,7 @@ static void do_concept_new_stretch(
 
    tempsetup.cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
 
-   if (linesp == 20) {
+   if (linesp == 0x14) {
       // This was just "stretched".  Demand that the next concept
       // be some kind of triangle designation.
       // Search ahead, skipping comments of course.  This means we
@@ -3229,6 +3232,10 @@ static void do_concept_new_stretch(
       tempsetup.swap_people(1, 2);
       tempsetup.swap_people(5, 6);
       maps = MAPCODE(s2x2,2,MPKIND__SPLIT,0);
+   }
+   else if (tempsetup.kind == s1x4) {
+      tempsetup.swap_people(1, 3);
+      maps = MAPCODE(s1x2,2,MPKIND__SPLIT,0);
    }
    else if (tempsetup.kind == s1x8) {
       tempsetup.swap_people(3, 6);
@@ -3437,6 +3444,11 @@ static void do_concept_assume_waves(
 
          goto check_it;
       }
+      else if (t.assumption == cr_tidal_line) {
+         switch (ss->kind) {
+         case s1x4: case s1x6: case s1x8: goto check_for_1x4_1x6;
+         }
+      }
    }
    else {
       // This is a "line-like" assumption.
@@ -3445,7 +3457,7 @@ static void do_concept_assume_waves(
       case cr_tidal_wave:
       case cr_tidal_line:
          switch (ss->kind) {     // "assume tidal wave/line", 2-couple only
-         case s1x4: case s1x6: goto check_for_1x4_1x6;
+         case s1x4: case s1x6: case s1x8: goto check_for_1x4_1x6;
          }
          break;
       case cr_wave_only:
@@ -3515,7 +3527,8 @@ static void do_concept_assume_waves(
       goto bad_assume;
 
    no_phan_error = false;
-   expand::expand_setup((ss->kind == s1x4) ? s_1x4_1x8_ctrs : s_1x6_1x8_ctrs, ss);
+   if (ss->kind != s1x8)
+      expand::expand_setup((ss->kind == s1x4) ? s_1x4_1x8_ctrs : s_1x6_1x8_ctrs, ss);
 
    goto check_it;
 
@@ -3822,11 +3835,16 @@ static void do_concept_crazy(
          sel.who[0] = selector_center4;
 
          if (attr::klimit(tempsetup.kind) < 7) {
-            if (tempsetup.cmd.prior_elongation_bits & PRIOR_ELONG_BASE_FOR_TANDEM) {
+            if (two_couple_calling) {
                sel.who[0] = selector_center2;
             }
-            else
-               fail("Need an 8-person setup for this.");
+            else {
+               if (tempsetup.cmd.prior_elongation_bits & PRIOR_ELONG_BASE_FOR_TANDEM) {
+                  sel.who[0] = selector_center2;
+               }
+               else
+                  fail("Need an 8-person setup for this.");
+            }
          }
 
          // We might be doing a "finally 1/2 crazy central little more".
@@ -3839,22 +3857,26 @@ static void do_concept_crazy(
       }
       else {
          // Do it on each side.
-
          if (attr::klimit(tempsetup.kind) < 7) {
-            if (tempsetup.kind == s2x2 && (tempsetup.cmd.prior_elongation_bits & (PRIOR_ELONG_BASE_FOR_TANDEM*3))) {
-               tempsetup.cmd.cmd_misc_flags |=
-                  (tempsetup.cmd.prior_elongation_bits & (PRIOR_ELONG_BASE_FOR_TANDEM*2)) ?
-                  CMD_MISC__MUST_SPLIT_VERT :
-                  CMD_MISC__MUST_SPLIT_HORIZ;
+            if (tempsetup.kind == s2x2) {
+               // If we have a clue about splitting info, fill it in.
+               if ((tempsetup.cmd.prior_elongation_bits & (PRIOR_ELONG_BASE_FOR_TANDEM*3)) != 0) {
+                  tempsetup.cmd.cmd_misc_flags |=
+                     (tempsetup.cmd.prior_elongation_bits & (PRIOR_ELONG_BASE_FOR_TANDEM*2)) ?
+                     CMD_MISC__MUST_SPLIT_VERT : CMD_MISC__MUST_SPLIT_HORIZ;
+               }
             }
-            else
-               fail("Need an 8-person setup for this.");
+            else {
+               if (tempsetup.kind != s1x4)
+                  fail("Need an 8-person setup for this.");
+
+               tempsetup.cmd.cmd_misc_flags |=
+                  (tempsetup.rotation & 1) ? CMD_MISC__MUST_SPLIT_VERT : CMD_MISC__MUST_SPLIT_HORIZ;
+            }
          }
          else {
             tempsetup.cmd.cmd_misc_flags |=
-               (tempsetup.rotation & 1) ?
-               CMD_MISC__MUST_SPLIT_VERT :
-               CMD_MISC__MUST_SPLIT_HORIZ;
+               (tempsetup.rotation & 1) ? CMD_MISC__MUST_SPLIT_VERT : CMD_MISC__MUST_SPLIT_HORIZ;
          }
 
          move(&tempsetup, false, result);
@@ -4911,6 +4933,12 @@ static void do_concept_sequential(
 
    prepare_for_call_in_series(result, ss);
 
+   call_restriction fix_next_assumption = cr_none;
+   int fix_next_assump_col = 0;
+   int fix_next_assump_both = 0;
+   int remembered_2x2_elongation = 0;
+   bool use_incoming_assumption = true;  // Normally turned off after first round; only 1st call get the assumption.
+
    for (;;) {
       int fetch_number;
 
@@ -4918,11 +4946,77 @@ static void do_concept_sequential(
       if (zzz.not_yet_in_active_section()) goto go_to_next_cycle;
       if (zzz.ran_off_active_section()) break;
 
+      if (!use_incoming_assumption) {
+         result->cmd.cmd_assume.assumption = fix_next_assumption;
+
+         if (fix_next_assumption != cr_none) {
+            result->cmd.cmd_assume.assump_col = fix_next_assump_col;
+            result->cmd.cmd_assume.assump_both = fix_next_assump_both;
+            result->cmd.cmd_assume.assump_cast = 0;
+            result->cmd.cmd_assume.assump_live = 0;
+            result->cmd.cmd_assume.assump_negate = 0;
+
+            // If we just put in an "assume 1/4 tag" type of thing, we presumably
+            // did a "scoot back to a wave" as part of a "scoot reaction".  Now, if
+            // there were phantoms in the center after the call, the result could
+            // have gotten changed (by the normalization stuff deep within
+            // "fix_n_results" or whatever) to a 2x4.  However, if we are doing a
+            // scoot reaction, we really want the 1/4 tag.  So change it back.
+            // It happens that code in "divide_the_setup" would do this anyway,
+            // but we don't like assumptions in place on setups for which they
+            // are meaningless.
+
+            if (fix_next_assumption == cr_jleft || fix_next_assumption == cr_jright ||
+                fix_next_assumption == cr_real_1_4_tag || fix_next_assumption == cr_real_3_4_tag ||
+                fix_next_assumption == cr_real_1_4_line || fix_next_assumption == cr_real_3_4_line) {
+               if (result->kind == s2x4 &&
+                   (result->people[1].id1 | result->people[2].id1 |
+                    result->people[5].id1 | result->people[6].id1) == 0) {
+                  expand::expand_setup(s_qtg_2x4, result);
+               }
+               else if (result->kind == s2x3 &&
+                   (result->people[1].id1 | result->people[4].id1) == 0) {
+                  expand::expand_setup(s_qtg_2x3, result);
+               }
+               else if (result->kind == s3x4 &&
+                        (result->people[0].id1 | result->people[3].id1 |
+                         result->people[6].id1 | result->people[9].id1) == 0) {
+                  expand::compress_setup(s_qtg_3x4, result);
+               }
+            }
+         }
+      }
+
+      fix_next_assumption = cr_none;
+      fix_next_assump_col = 0;
+      fix_next_assump_both = 0;
+
+      final_and_herit_flags finalheritzero;
+      finalheritzero.herit.initialize_rl(0, 0);
+      finalheritzero.final = (finalflags) 0;
+
       // The fetch number is 0 or 1.  Depending on which it is, get the proper parse pointer.
       if (fetch_number != 0) result->cmd.parseptr = parseptr->subsidiary_root;
 
-      do_call_in_series_simple(result);
+      // And now get the call.  Though it might seem that do_stuff_inside_sequential_call
+      // will get it, the assumption-propagating code requires that it already be in place.
+      result->cmd.callspec = (result->cmd.parseptr->concept == &concept_mark_end_of_list) ? result->cmd.parseptr->call : 0;
+
+      {
+         call_conc_option_state saved_options = current_options;
+         current_options = result->cmd.parseptr->options;
+
+         do_stuff_inside_sequential_call(result, 0,
+                                         &fix_next_assumption, &fix_next_assump_col,
+                                         &fix_next_assump_both, &remembered_2x2_elongation,
+                                         finalheritzero, 0, false, true, false, false);
+
+         current_options = saved_options;
+      }
+
       zzz.m_first_call = false;
+
+      use_incoming_assumption = false;
 
       // If we are being asked to do just one part of a call,
       // exit now.  Also, fill in bits in result->result_flags.
@@ -7774,6 +7868,10 @@ static void do_concept_meta(
 
             do_call_in_series_and_update_bits(result);
 
+            // Is this the right thing to do?  Test pt02 seems to think so.
+            // We really don't completely know how two-couple stuff is supposed to work.
+            if (two_couple_calling) normalize_setup(result, normalize_to_4, true);
+
             // And the rest of the call without it.
             // Try to figure out whether there is more.
 
@@ -9006,9 +9104,17 @@ static void do_concept_concentric(
    setup_command sscmd = ss->cmd;
    calldef_schema schema = (calldef_schema) parseptr->concept->arg1;
 
+   if (schema == schema_cross_concentric && two_couple_calling && attr::klimit(ss->kind) < 7) {
+      schema = schema_single_cross_concentric;
+   }
+
    if (schema == schema_concentric) {
       uint32_t herits =
          ss->cmd.cmd_final_flags.test_heritbits_r(INHERITFLAGR_GRAND|INHERITFLAGR_SINGLE|INHERITFLAGR_CROSS);
+
+      if (two_couple_calling && attr::klimit(ss->kind) < 7) {
+         schema = schema_single_concentric;
+      }
 
       switch (herits) {
       case INHERITFLAGR_CROSS:
@@ -9651,8 +9757,8 @@ const concept_table_item concept_table[] = {
    {CONCPROP__NEED_ARG2_MATRIX, distorted_2x2s_move},       // concept_misc_distort
    {CONCPROP__NEED_ARG2_MATRIX | CONCPROP__PERMIT_MATRIX,
     distorted_2x2s_move},                                   // concept_misc_distort_matrix
-   {0, do_concept_old_stretch},                             // concept_old_stretch
-   {CONCPROP__GET_MASK, do_concept_new_stretch},            // concept_new_stretch
+   {0, do_concept_stretch},                                 // concept_stretch
+   {CONCPROP__GET_MASK, do_concept_stretched_setup},        // concept_stretched_setup
    {CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT,
     do_concept_assume_waves},                               // concept_assume_waves
    {0, do_concept_active_phantoms},                         // concept_active_phantoms

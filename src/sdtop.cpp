@@ -1605,6 +1605,7 @@ private:
       chk_none,
       chk_wave,
       chk_groups,
+      chk_line_col_aspect,
       chk_groups_cpls_in_tbone,
       chk_groups_cpls_in_tbone_either_way,
       chk_anti_groups,
@@ -1850,6 +1851,8 @@ restriction_tester::restr_initializer restriction_tester::restr_init_table0[] = 
     {0}, {0}, {0}, true, chk_wave},
    {s1x8, cr_tidal_wave, 8, {0, 1, 3, 2, 6, 7, 5, 4},
     {0}, {0}, {0}, true, chk_wave},
+   {s1x8, cr_tidal_line, 8, {0, 1, 3, 2, 6, 7, 5, 4},
+    {0}, {0}, {0}, true, chk_line_col_aspect},
    {s1x8, cr_1fl_only, 4, {0, 4, 1, 5, 2, 6, 3, 7},
     {2}, {0}, {0}, true, chk_groups},
    {s1x8, cr_all_facing_same, 8, {0, 1, 2, 3, 4, 5, 6, 7},
@@ -2167,6 +2170,8 @@ restriction_tester::restr_initializer restriction_tester::restr_init_table1[] = 
     {1}, {0}, {0}, true, chk_groups},
    {s1x8, cr_all_facing_same, 8, {0, 1, 2, 3, 4, 5, 6, 7},
     {1}, {0}, {0}, true, chk_groups},
+   {s1x8, cr_tidal_line, 8, {0, 1, 3, 2, 6, 7, 5, 4},
+    {0}, {0}, {0}, true, chk_line_col_aspect},
    {s2x4, cr_li_lo, 8, {0, 1, 2, 3, 5, 4, 7, 6},
     {0}, {0}, {0}, true, chk_wave},
    {s2x4, cr_ctrs_in_out, 4, {1, 2, 6, 5},
@@ -2597,6 +2602,17 @@ restriction_test_result verify_restriction(
    int szlim;
 
    switch (rr->check) {
+   case restriction_tester::chk_line_col_aspect:
+      qa1 = 0;
+
+      for (idx=0; idx<rr->size; idx++) {
+         qa1 |=  ss->people[rr->map1[idx]].id1;
+      }
+
+      if ((qa1 >> (tt.assump_col*3)) & 1)
+         goto bad;
+
+      goto good;
    case restriction_tester::chk_spec_directions:
       qa1 = 0;
       qa0 = 3 & (~tt.assump_both);
@@ -6223,8 +6239,8 @@ bool check_for_centers_concept(uint32_t & callflags1_to_examine,   // We rewrite
              parse_scan->concept->kind == concept_concentric ||
              parse_scan->concept->kind == concept_tandem ||
              parse_scan->concept->kind == concept_frac_tandem ||
-             parse_scan->concept->kind == concept_new_stretch ||
-             parse_scan->concept->kind == concept_old_stretch) {
+             parse_scan->concept->kind == concept_stretched_setup ||
+             parse_scan->concept->kind == concept_stretch) {
             parse_scan = parse_scan->next;
          }
          else if ((parse_scan->concept->kind == concept_special_sequential &&
