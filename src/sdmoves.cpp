@@ -1019,7 +1019,6 @@ static int start_matrix_call(
    setup *people)
 {
    int i;
-   const coordrec *thingyptr, *nicethingyptr;
    int nump = base;
 
    if (base == 0) {
@@ -1027,8 +1026,8 @@ static int start_matrix_call(
       clear_people(people);
    }
 
-   nicethingyptr = setup_attrs[ss->kind].nice_setup_coords;
-   thingyptr = setup_attrs[ss->kind].setup_coords;
+   const coordrec *nicethingyptr = setup_attrs[ss->kind].nice_setup_coords;
+   const coordrec *thingyptr = setup_attrs[ss->kind].setup_coords;
 
    if (flags & (MTX_FIND_SQUEEZERS|MTX_FIND_SPREADERS)) {
       thingyptr = nicethingyptr;
@@ -1375,22 +1374,22 @@ static void finish_matrix_call(
       */
 
       switch (matrix_info[i].dir) {
-         case 0:
-            matrix_info[i].x += matrix_info[i].deltax;
-            matrix_info[i].y += matrix_info[i].deltay;
-            break;
-         case 1:
-            matrix_info[i].x += matrix_info[i].deltay;
-            matrix_info[i].y -= matrix_info[i].deltax;
-            break;
-         case 2:
-            matrix_info[i].x -= matrix_info[i].deltax;
-            matrix_info[i].y -= matrix_info[i].deltay;
-            break;
-         case 3:
-            matrix_info[i].x -= matrix_info[i].deltay;
-            matrix_info[i].y += matrix_info[i].deltax;
-            break;
+      case 0:
+         matrix_info[i].x += matrix_info[i].deltax;
+         matrix_info[i].y += matrix_info[i].deltay;
+         break;
+      case 1:
+         matrix_info[i].x += matrix_info[i].deltay;
+         matrix_info[i].y -= matrix_info[i].deltax;
+         break;
+      case 2:
+         matrix_info[i].x -= matrix_info[i].deltax;
+         matrix_info[i].y -= matrix_info[i].deltay;
+         break;
+      case 3:
+         matrix_info[i].x -= matrix_info[i].deltay;
+         matrix_info[i].y += matrix_info[i].deltax;
+         break;
       }
 
       x = matrix_info[i].x;
@@ -1573,7 +1572,7 @@ static void matrixmove(
 
 
 
-static void do_part_of_pair(matrix_rec *thisrec, int base, Const uint32 *callstuff) THROW_DECL
+static void do_part_of_pair(matrix_rec *thisrec, int base, const uint32 *callstuff) THROW_DECL
 {
    /* This is legal if girlbit or boybit is on (in which case we use the appropriate datum)
          or if the two data are identical so the sex doesn't matter. */
@@ -1592,7 +1591,7 @@ static void do_part_of_pair(matrix_rec *thisrec, int base, Const uint32 *callstu
 static void do_pair(
    matrix_rec *ppp,        /* Selected person */
    matrix_rec *qqq,        /* Unselected person */
-   Const uint32 *callstuff,
+   const uint32 *callstuff,
    uint32 flags,
    int flip,
    int filter) THROW_DECL             /* 1 to do N/S facers, 0 for E/W facers. */
@@ -5066,8 +5065,8 @@ static void really_inner_move(setup *ss,
               (ss->cmd.cmd_final_flags.her8it & INHERITFLAG_MXNMASK) == INHERITFLAGMXNK_3X1)) {
             int i, j;
             uint32 mask = 0;
-            static Const veryshort map_3x1fixa[8] = {0, 1, 2, 4, 6, 7, 8, 10};
-            static Const veryshort map_3x1fixb[8] = {1, 3, 4, 5, 7, 9, 10, 11};
+            static const veryshort map_3x1fixa[8] = {0, 1, 2, 4, 6, 7, 8, 10};
+            static const veryshort map_3x1fixb[8] = {1, 3, 4, 5, 7, 9, 10, 11};
 
             for (i=0, j=1; i<12; i++, j<<=1) {
                if (result->people[i].id1) mask |= j;

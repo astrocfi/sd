@@ -2,17 +2,13 @@
 # Makefile for Sd (square dance caller's helper)
 # Time-stamp: <96/05/05 10:50:56 gildea>
 
-srcdir = .
-# VPATH is for GNU make
-
 # This gives the compiler name and any switches that it needs to make
 # it operate the way we want (ANSI language, standards conformance,
 # target hardware, etc.)
-# To get gcc on Athena, "add outland" before running "configure".
 CC = gcc
 
 # This gives any "-D" switches that we always need to send to the compiler.
-DEFS = 
+DEFS = -Wall -Wno-switch -Wno-uninitialized -Wno-char-subscripts
 
 # This gives the optimization and/or debug info.  These flags presumably
 # don't affect the semantics of the language and run-time environment, so you
@@ -22,12 +18,12 @@ DEFS =
 # this may compromise the ability to debug the program.  In this case, you may
 # need to choose different options, typically "-g", for debugging.
 # Consult your system, compiler, and debugger vendor for further information.
-CDEBUGFLAGS = -O2 -Wall -Wno-switch -Wno-uninitialized -Wno-char-subscripts
+CDEBUGFLAGS = -O2
 
-CFLAGS = $(DEFS) $(CDEBUGFLAGS)
+CFLAGS =$(DEFS) $(CDEBUGFLAGS)
 
 # These are the "-I"  and "-D" flags that we must use for the compilation
-# of the system-dependent part of the TTY user interface (sdui-ttu.cpp).
+# of the system-dependent part of the TTY user interface (sdui-tpc.cpp).
 TTY_FLAGS = 
 
 # These are the library flags that we must use for the final bind of
@@ -36,16 +32,16 @@ TTY_LIBS = -lpc
 
 # Note:  If change this list, make corresponding changes
 # in pcfiles.lst.
-SD_OBJS = sdmain.o sdutil.o sdbasic.o sdinit.o sdtables.o \
-          sdptable.o sdctable.o sdtop.o sdconcpt.o sdpreds.o \
+SD_OBJS = sdmain.o sdutil.o sdbasic.o sdinit.o \
+          sdtables.o sdctable.o sdtop.o sdconcpt.o sdpreds.o \
           sdgetout.o sdmoves.o sdtand.o sdconc.o sdistort.o \
           sdpick.o sdsi.o
 
 # Note:  If change this list, make corresponding changes
 # in pcfiles.lst.
-SDTTY_OBJ   = sdui-tty.o sdmatch.o sdui-tpc.o
+SDTTY_OBJS = sdui-tty.o sdmatch.o sdui-tpc.o
 
-SDTTY_OBJS = @pcfiles.lst
+SDTTY_LINK_OBJS = @pcfiles.lst
 
 MKCALLS_SRCS = mkcalls.cpp dbcomp.cpp
 MKCALLS_OBJS = mkcalls.o dbcomp.o
@@ -56,11 +52,11 @@ all: sdtty.exe sd_calls.dat
 mkcalls.exe: $(MKCALLS_OBJS)
 	$(CC) $(CFLAGS) -o mkcalls.bin $(MKCALLS_OBJS)
 
-sdtty.exe: $(SD_OBJS) $(SDTTY_OBJ)
-	$(CC) $(CFLAGS) -o sdtty.bin $(SDTTY_OBJS) $(TTY_LIBS)
+sdtty.exe: $(SD_OBJS) $(SDTTY_OBJS)
+	$(CC) $(CFLAGS) -o sdtty.bin $(SDTTY_LINK_OBJS) $(TTY_LIBS)
 
 sd_calls.dat: sd_calls.txt mkcalls.exe
-	./mkcalls $(srcdir)/sd_calls.txt
+	./mkcalls ./sd_calls.txt
 
 .c.o:
 	$(CC) $(CFLAGS) -c $<
@@ -68,16 +64,14 @@ sd_calls.dat: sd_calls.txt mkcalls.exe
 .cpp.o:
 	$(CC) $(CFLAGS) -c $<
 
-sdui-ttu.o: sdui-ttu.cpp
-	$(CC) $(CFLAGS) $(TTY_FLAGS) -c $(srcdir)/$*.cpp
-
-sdui-tty.o sdui-ttu.o sdui-tpc.o: sd.h
+sdui-tpc.o: sdui-tpc.cpp
+	$(CC) $(CFLAGS) $(TTY_FLAGS) -c $<
 
 dbcomp.o sdmain.o sdsi.o: paths.h
 
 dbcomp.o: database.h
 
-$(SD_OBJS) $(SDTTY_OBJ): sd.h database.h
+$(SD_OBJS) $(SDTTY_OBJS): sd.h database.h
 
 
 RM = del

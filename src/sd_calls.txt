@@ -33,7 +33,7 @@
     General Public License if you distribute the file.
 */
 
-version "34.7c"
+version "34.7d"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve
@@ -9578,7 +9578,6 @@ call "any hand grand @D mix" c3a
    seq ctrrun [force_cross force_grand]
    seq maybegrandslip [force_grand inherit_yoyo roll_transparent]
 
-// Fixed to be like hocus pocus, see whether it works.
 call "_centers crossback/ends two o's" dontshow tag crossbackandtwoos
             magic_is_inherited
    conc_o crossback []
@@ -9587,6 +9586,11 @@ call "_centers crossback/ends two o's" dontshow tag crossbackandtwoos
             magic_is_inherited yoyo_is_inherited
    conc6p_or_normal crossback []
                     two_o_circs [inherit_magic conc_force_otherway endscando]
+
+call "_centers @m/ends two o's" dontshow tag anythingandtwoos
+            magic_is_inherited
+   conc_o nullsecond [mandatory_secondary_call]
+          two_o_circs_for_frac [inherit_magic conc_force_otherway]
 
 call "_start settle back" dontshow tag settle_back1
             fractal_is_inherited visible_fractions
@@ -9597,6 +9601,11 @@ call "settle back" c3x
             fractal_is_inherited visible_fractions
    seq settle_back1 [inherit_fractal]
    seq crossbackandtwoos []
+
+call "settle back but @m" c3x
+            fractal_is_inherited visible_fractions
+   seq settle_back1 [inherit_fractal]
+   seq anythingandtwoos []
 
 call "short trip" c4a tag longtrip1
    setup 2x4 2x6
@@ -11313,6 +11322,8 @@ call "swap around" a1
             reverse_means_mirror
    setup 2x2 2x2 restriction not_tboned
       array [0 0 ZM1N CR2S]
+   setup 3x2 2x3 qualifier live none restriction controversial alwaysfail
+      array [CR5S 0 0 0 ZM3N ZM4N]
             alternate_definition [singlefile] c4
    setup 4x1 2x2
       array [CR3S ZM2N 0 0]
@@ -13007,6 +13018,9 @@ call "bend the line" mainstream tag bendtheline
             parallel_conc_end
    setup 1x4 2x2 restriction forbidden couples_only
       array [CR0E CR3E AL1W AL2W]
+            alternate_definition [single] c4
+   setup 1x2 1x2
+      array [CR0E AL1W]
             alternate_definition [3x3] mainstream
    setup 1x6 2x3 rotate restriction forbidden 3x3couples_only
       array [CR5N CR4N CR3N AL0S AL1S AL2S]
@@ -13025,6 +13039,9 @@ call "retreat the line" c4
             parallel_conc_end
    setup 1x4 2x2 restriction forbidden couples_only
       array [AL3W AL0W CR2E CR1E]
+            alternate_definition [single] c4
+   setup 1x2 1x2
+      array [AL0W CR1E]
             alternate_definition [3x3] c4
    setup 1x6 2x3 rotate restriction forbidden 3x3couples_only
       array [AL3S AL4S AL5S CR2N CR1N CR0N]

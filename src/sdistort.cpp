@@ -13,6 +13,7 @@
     This is for version 34. */
 
 /* This defines the following functions:
+   initialize_tgl_tables
    prepare_for_call_in_series
    minimize_splitting_info
    initialize_map_tables
@@ -30,6 +31,7 @@
    distorted_move
    triple_twin_move
    do_concept_rigger
+   do_concept_wing
    common_spot_move
    triangle_move
    phantom_2x4_move
@@ -43,6 +45,31 @@
 #endif
 
 #include "sd.h"
+
+
+static tgl_map *tgl_map_ptr_table[tgl_ENUMLAST];
+
+extern void initialize_tgl_tables()
+{
+   int i;
+   tgl_map *tabp;
+
+   for (i=tgl0 ; i<tgl_ENUMLAST ; i++) tgl_map_ptr_table[i] = (tgl_map *) 0;
+
+   for (tabp = tgl_map_init_table ; tabp->mykey != tgl0 ; tabp++) {
+      if (tgl_map_ptr_table[tabp->mykey])
+         (*the_callback_block.uims_database_error_fn)
+            ("Tgl_map table initialization failed: dup.\n", (Cstring) 0);
+      tgl_map_ptr_table[tabp->mykey] = tabp;
+   }
+
+   for (i=tgl0+1 ; i<tgl_ENUMLAST ; i++) {
+      if (!tgl_map_ptr_table[i])
+         (*the_callback_block.uims_database_error_fn)
+            ("Tgl_map table initialization failed: undef.\n", (Cstring) 0);
+   }
+}
+
 
 
 extern void prepare_for_call_in_series(setup *result, setup *ss)
@@ -1087,7 +1114,7 @@ extern void new_divided_setup_move(
 
 extern void divided_setup_move(
    setup *ss,
-   Const map_thing *maps,
+   const map_thing *maps,
    phantest_kind phancontrol,
    long_boolean recompute_id,
    setup *result) THROW_DECL
@@ -1256,7 +1283,7 @@ extern void new_overlapped_setup_move(setup *ss, uint32 map_encoding,
 }
 
 
-extern void overlapped_setup_move(setup *ss, Const map_thing *maps,
+extern void overlapped_setup_move(setup *ss, const map_thing *maps,
    uint32 *masks, setup *result) THROW_DECL
 {
    int i, j, rot;
@@ -3078,18 +3105,172 @@ extern void do_concept_rigger(
 }
 
 
-typedef struct {
+extern void do_concept_wing(
+   setup *ss,
+   parse_block *parseptr,
+   setup *result) THROW_DECL
+{
+   int i;
+   selector_kind saved_selector = current_options.who;
+   current_options.who = parseptr->concept->value.arg1 ? selector_beaus : selector_belles;
+   int shift = parseptr->concept->value.arg1 ? 4 : -4;
+
+   setup normal = *ss;
+   setup winged = *ss;
+
+   clear_people(&normal);
+   clear_people(&winged);
+
+   int sizem1 = setup_attrs[ss->kind].setup_limits;
+   const coordrec *coordptr = setup_attrs[ss->kind].nice_setup_coords;
+   if (!coordptr || sizem1 < 0)
+      fail("Can't do this in this setup.");
+
+   int doffset = 32 - (1 << (coordptr->xfactor-1));
+
+   int all_people = 0;
+   int normal_people = 0;
+   int winged_people = 0;
+
+   // We scan twice -- the first time we put the normal and winged people
+   // into the setup in which they belong.  The second time, we try to
+   // put them in the other setup also.  For the simple cases, we will
+   // succeed with everyone in both scans, and both setups will contain
+   // all the people, corrected for the "wing" position.
+
+   for (bool pass2 = false ; ; pass2 = true) {
+      for (i=0; i<=sizem1; i++) {
+         uint32 this_id1 = ss->people[i].id1;
+         if (this_id1) {
+            if (!pass2) all_people++;
+            if (selectp(ss, i)) {
+               int x = coordptr->xca[i];
+               int y = coordptr->yca[i];
+
+               switch (this_id1 & 3) {
+               case 0: x += shift; break;
+               case 1: y -= shift; break;
+               case 2: x -= shift; break;
+               case 3: y += shift; break;
+               }
+
+               int place = coordptr->diagram[doffset - ((y >> 2) << coordptr->xfactor) + (x >> 2)];
+               if (place < 0) fail("Can't do this.");
+
+               if ((coordptr->xca[place] != x) || (coordptr->yca[place] != y))
+                  fail("Can't do this.");
+
+               if (pass2) {
+                  if (!normal.people[place].id1) {
+                     normal_people++;
+                     (void) copy_person(&normal, place, ss, i);
+                  }
+               }
+               else {
+                  winged_people++;
+                  (void) copy_person(&winged, place, ss, i);
+               }
+            }
+            else {
+               if (pass2) {
+                  if (!winged.people[i].id1) {
+                     winged_people++;
+                     (void) copy_person(&winged, i, ss, i);
+                  }
+               }
+               else {
+                  normal_people++;
+                  (void) copy_person(&normal, i, ss, i);
+               }
+            }
+         }
+      }
+
+      if (pass2) break;
+   }
+
+   current_options.who = saved_selector;
+
+   setup the_results[2];
+
+   // It's possible that one or the other setup will have so few people
+   // (for example, zero) that it won't be able to do the call.
+   // If so, use the other setup.  After checking that it has all people.
+
+   try {
+      update_id_bits(&normal);
+      move(&normal, FALSE, &the_results[0]);
+   }
+   catch(error_flag_type) {
+      if (all_people == normal_people) {
+         *result = the_results[0];
+         return;
+      }
+      fail("Can't do this.");
+   }
+
+   try {
+      update_id_bits(&winged);
+      move(&winged, FALSE, &the_results[1]);
+   }
+   catch(error_flag_type) {
+      if (all_people == winged_people) {
+         *result = the_results[1];
+         return;
+      }
+      fail("Can't do this.");
+   }
+
+   the_results[1].result_flags = get_multiple_parallel_resultflags(the_results, 2);
+
+   // If setups are the same, do the merge, with checking, right here.
+   if (the_results[0].kind == the_results[1].kind &&
+       the_results[0].rotation == the_results[1].rotation) {
+
+      int resm1 = setup_attrs[the_results[0].kind].setup_limits;
+      if (resm1 < 0)
+         fail("Can't do this.");
+
+      for (i=0; i<=resm1; i++) {
+         uint32 r0_id1 = the_results[0].people[i].id1;
+         uint32 r1_id1 = the_results[1].people[i].id1;
+         if (r0_id1 && r1_id1) {
+            if ((r0_id1 ^ r1_id1) & (BIT_PERSON | XPID_MASK | 0x3F))
+               fail("Can't do this.");
+         }
+         else if (r1_id1) {
+            the_results[0].people[i].id1 = r1_id1;
+         }
+      }
+
+      *result = the_results[0];
+      return;
+   }
+
+   // If they are different, we'd better have an exact partitioning
+   // of the people into the two setups.  (Maybe we can do better,
+   // but we can't do better just now.)  Then merge them in the usual way.
+
+   if (all_people != normal_people+winged_people)
+      fail("Can't do this.");
+
+   merge_setups(&the_results[0], merge_after_dyp, &the_results[1]);
+   *result = the_results[1];
+}
+
+
+struct common_spot_map {
    int indicator;
    setup_kind orig_kind;
-   setup_kind partial_kind;  /* what setup they are virtually in */
+   setup_kind partial_kind;  // What setup they are virtually in.
    uint32 forbidden_people;
-   int rot;                  /* whether to rotate partial setup CW */
+   int rot;                  // Whether to rotate partial setup CW.
    int uncommon[12];
    int common0[12];
    uint32 dir0[12];
    int common1[12];
    uint32 dir1[12];
-} common_spot_map;
+};
 
 common_spot_map cmaps[] = {
 
@@ -3582,7 +3763,7 @@ extern void common_spot_move(
 
 static void do_glorious_triangles(
    setup *ss,
-   const tgl_map **map_ptr_table,
+   const tglmapkey *map_ptr_table,
    int indicator,
    setup *result) THROW_DECL
 {
@@ -3592,7 +3773,7 @@ static void do_glorious_triangles(
    setup idle;
    setup res[2];
    const veryshort *mapnums;
-   const tgl_map *map_ptr = map_ptr_table[(indicator >> 6) & 3];
+   const tgl_map *map_ptr = tgl_map_ptr_table[map_ptr_table[(indicator >> 6) & 3]];
 
    if (ss->kind == s_c1phan || ss->kind == sdeepbigqtg) {
       mapnums = map_ptr->mapcp1;
@@ -3602,7 +3783,7 @@ static void do_glorious_triangles(
       mapnums = map_ptr->mapbd1;
       startingrot = 1;
    }
-   else {   /* s_qtag */
+   else {   // s_qtag
       mapnums = map_ptr->mapqt1;
       startingrot = 0;
    }
@@ -3611,7 +3792,7 @@ static void do_glorious_triangles(
    gather(&a1, ss, mapnums, 2, r);
    gather(&a2, ss, &mapnums[3], 2, r^022);
 
-   /* Save the two people who don't move. */
+   // Save the two people who don't move.
    (void) copy_person(&idle, 0, ss, mapnums[6]);
    (void) copy_person(&idle, 1, ss, mapnums[7]);
 
@@ -3645,7 +3826,7 @@ static void do_glorious_triangles(
    res[1].rotation += 2;
    canonicalize_rotation(&res[1]);
 
-   /* Check for non-shape-or-orientation-changing result. */
+   // Check for non-shape-or-orientation-changing result.
 
    if (res[0].kind == s_trngl && res[0].rotation == 0) {
       result->kind = ss->kind;
@@ -3669,7 +3850,7 @@ static void do_glorious_triangles(
    r = ((-res[0].rotation) & 3) * 011;
 
    if (res[0].rotation & 2)
-      result->kind = map_ptr->other->kind;
+      result->kind = tgl_map_ptr_table[map_ptr->otherkey]->kind;
    else
       result->kind = map_ptr->kind;
 
@@ -3678,13 +3859,13 @@ static void do_glorious_triangles(
       if (ss->kind == sdeepbigqtg)
          fail("Sorry, can't do this.");
 
-      /* We know that res[0].rotation != startingrot */
+      // We know that res[0].rotation != startingrot.
       if (startingrot == 1) fail("Sorry, can't do this.");
 
       if (res[0].rotation == 0) {
          if (result->kind == nothing) goto noshapechange;
          result->kind = s_qtag;
-         /* Restore the two people who don't move. */
+         // Restore the two people who don't move.
          (void) copy_person(result, map_ptr->mapqt1[6], &idle, 0);
          (void) copy_person(result, map_ptr->mapqt1[7], &idle, 1);
          scatter(result, &res[0], map_ptr->mapqt1, 2, 0);
@@ -3695,7 +3876,7 @@ static void do_glorious_triangles(
             goto noshapechange;
 
          result->kind = s_c1phan;
-         /* Restore the two people who don't move. */
+         // Restore the two people who don't move.
          (void) copy_rot(result, map_ptr->mapcp1[7], &idle, 0, r);
          (void) copy_rot(result, map_ptr->mapcp1[6], &idle, 1, r);
          scatter(result, &res[0], &map_ptr->mapcp1[3], 2, 0);
@@ -3705,23 +3886,23 @@ static void do_glorious_triangles(
          if (result->kind == nothing || map_ptr->nointlkshapechange)
             goto noshapechange;
 
-         map_ptr = map_ptr->other;
+         map_ptr = tgl_map_ptr_table[map_ptr->otherkey];
 
          if (result->kind == s_c1phan) {
-            /* Restore the two people who don't move. */
+            // Restore the two people who don't move.
             (void) copy_rot(result, map_ptr->mapcp1[6], &idle, 0, r);
             (void) copy_rot(result, map_ptr->mapcp1[7], &idle, 1, r);
    
-            /* Copy the triangles. */
+            // Copy the triangles.
             scatter(result, &res[1], map_ptr->mapcp1, 2, 022);
             scatter(result, &res[0], &map_ptr->mapcp1[3], 2, 0);
          }
          else {
-            /* Restore the two people who don't move. */
+            // Restore the two people who don't move.
             (void) copy_rot(result, map_ptr->mapqt1[7], &idle, 0, r);
             (void) copy_rot(result, map_ptr->mapqt1[6], &idle, 1, r);
 
-            /* Copy the triangles. */
+            // Copy the triangles.
             scatter(result, &res[0], map_ptr->mapqt1, 2, 0);
             scatter(result, &res[1], &map_ptr->mapqt1[3], 2, 022);
          }
@@ -3755,11 +3936,11 @@ static void do_glorious_triangles(
          if (startingrot == 1)
             fail("Can't do this shape-changer.");
 
-         map_ptr = map_ptr->other;
+         map_ptr = tgl_map_ptr_table[map_ptr->otherkey];
 
          result->kind = map_ptr->kind1x3;
 
-         if (map_ptr->switchtgls) {    /* What a crock! */
+         if (map_ptr->switchtgls) {    // What a crock!
             (void) copy_rot(result, map_ptr->map241[6], &idle, 0, r);
             (void) copy_rot(result, map_ptr->map241[7], &idle, 1, r);
 
@@ -3810,7 +3991,7 @@ static void wv_tand_base_move(
    uint32 tbonetest;
    int t;
    calldef_schema schema;
-   const tgl_map **map_ptr_table;
+   const tglmapkey *map_key_table;
 
    switch (s->kind) {
    case s_bone:
@@ -3888,13 +4069,13 @@ static void wv_tand_base_move(
       canonicalize_rotation(s);
 
       if ((global_livemask & 0xAAAA) == 0)
-         map_ptr_table = c1tglmap1;
+         map_key_table = c1tglmap1;
       else if ((global_livemask & 0x5555) == 0)
-         map_ptr_table = c1tglmap2;
+         map_key_table = c1tglmap2;
       else
          goto losing;
 
-      do_glorious_triangles(s, map_ptr_table, indicator, result);
+      do_glorious_triangles(s, map_key_table, indicator, result);
       result->rotation -= t;   // Flip the setup back.
       reinstate_rotation(s, result);
       return;
@@ -3909,13 +4090,13 @@ static void wv_tand_base_move(
       }
 
       if ((global_livemask & 0x3A3A) == 0)
-         map_ptr_table = dbqtglmap1;
+         map_key_table = dbqtglmap1;
       else if ((global_livemask & 0xC5C5) == 0)
-         map_ptr_table = dbqtglmap2;
+         map_key_table = dbqtglmap2;
       else
          goto losing;
 
-      do_glorious_triangles(s, map_ptr_table, indicator, result);
+      do_glorious_triangles(s, map_key_table, indicator, result);
       reinstate_rotation(s, result);
       return;
    default:
@@ -4027,16 +4208,16 @@ extern void triangle_move(
             if ((ss->people[5].id1 & d_mask) == d_west) t |= 2;
          }
    
-         const tgl_map **map_ptr_table;
+         const tglmapkey *map_key_table;
 
          if (t == 1)
-            map_ptr_table = qttglmap1;
+            map_key_table = qttglmap1;
          else if (t == 2)
-            map_ptr_table = qttglmap2;
+            map_key_table = qttglmap2;
          else
             fail("Can't find designated point.");
 
-         do_glorious_triangles(ss, map_ptr_table, indicator, result);
+         do_glorious_triangles(ss, map_key_table, indicator, result);
          reinstate_rotation(ss, result);
       }
       else {
@@ -4046,16 +4227,16 @@ extern void triangle_move(
          /* Only a few cases allow interlocked. */
 
          if (indicator_base == 2 && ss->kind == sbigdmd) {
-            const tgl_map **map_ptr_table;
+            const tglmapkey *map_key_table;
 
             if (global_livemask == 07474)
-               map_ptr_table = bdtglmap1;
+               map_key_table = bdtglmap1;
             else if (global_livemask == 01717)
-               map_ptr_table = bdtglmap2;
+               map_key_table = bdtglmap2;
             else
                fail("Can't find the indicated triangles.");
 
-            do_glorious_triangles(ss, map_ptr_table, indicator, result);
+            do_glorious_triangles(ss, map_key_table, indicator, result);
             reinstate_rotation(ss, result);
 
             return;
@@ -4120,7 +4301,7 @@ extern void phantom_2x4_move(
    setup *ss,
    int lineflag,
    phantest_kind phantest,
-   Const map_thing *maps,
+   const map_thing *maps,
    setup *result) THROW_DECL
 {
    setup hpeople, vpeople;

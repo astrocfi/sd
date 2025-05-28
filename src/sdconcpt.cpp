@@ -6997,6 +6997,7 @@ concept_table_item concept_table[] = {
     CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT,
     do_concept_fractional},                                 // concept_fractional
    {CONCPROP__NO_STEP, do_concept_rigger},                  // concept_rigger
+   {CONCPROP__NO_STEP, do_concept_wing},                    // concept_wing
    {CONCPROP__NO_STEP, common_spot_move},                   // concept_common_spot
    {CONCPROP__USE_SELECTOR | CONCPROP__SHOW_SPLIT,
     drag_someone_and_move},                                 // concept_drag

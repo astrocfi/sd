@@ -39,7 +39,7 @@
 
 #if defined USE_THROW
 
-#if defined(WIN32) && defined(__cplusplus)
+#if defined(WIN32)
 // Microsoft can't be bothered to support C++ exception declarations
 // properly, but this pragma at least makes the compiler not complain.
 // Geez!  If I wanted to use compilers that whine and wail
@@ -70,7 +70,7 @@
 // restriction.  The Intel compiler doesn't know that we are going
 // to do that, so it doesn't understand how these struct definitions
 // with "const" fields are going to work.  So we shut off the warning.
-#if defined(WIN32) && defined(__ICL) && defined(__cplusplus)
+#if defined(WIN32) && defined(__ICL)
 #pragma warning(disable: 411)
 #endif
 
@@ -80,26 +80,19 @@
 #define MAX_PEOPLE 24
 
 
-typedef struct {
+struct uint64 {
    uint32 her8it;
    uint32 final;
-} uint64;
+};
 
-/* We sometimes don't want to use "const" in C++,
-   because initializers are screwed up.
-   In particular, we need this on any structure type
-   that is initialized sometimes in C files (e.g. sdtables.c)
-   and sometimes in C++ files (e.g. the structure "expand_thing"
-   has initializers in sdmoves.cpp as well.)
-*/
-#ifdef __cplusplus
+// We sometimes don't want to use "const" in C++,
+//   because initializers are screwed up.
+//   Maybe someday we will use real class initializers, and
+//   these fields can be constant once again.
 #define C_const
-#else
-#define C_const const
-#endif
 
 
-typedef struct {
+struct ui_option_type {
    int no_graphics;       // 1 = "no_checkers"; 2 = "no_graphics"
    int no_intensify;
    int reverse_video;     // 0 = black-on-white (default); 1 = white-on-black
@@ -122,7 +115,7 @@ typedef struct {
       setups are completely plain ASCII.
 
       1 means use escapes for the people themselves (13 octal followed by a byte of
-      person identifier followed by a byte of direction) byt don't use the special
+      person identifier followed by a byte of direction) but don't use the special
       spacing characters.  All spacing and formatting is done with spaces.
 
       2 means use escapes and other special characters.  Whenever the second arg to
@@ -139,23 +132,23 @@ typedef struct {
    char *direc;           // 3rd char (direction arrow) of what we use to print person.
    int squeeze_this_newline;  // randomly used by printing stuff.
    int drawing_picture;       // randomly used by printing stuff.
-} ui_option_type;
+};
 
 
 // BEWARE!!  This list must track the array "concept_table" in sdconcpt.cpp .
-typedef enum {
+enum concept_kind {
 
-// These next few are not concepts.  Their appearance marks the end of a parse tree.
+   // These next few are not concepts.  Their appearance marks the end of a parse tree.
 
    concept_another_call_next_mod,         // calla modified by callb
    concept_mod_declined,                  // user was queried about modification, and said no.
    marker_end_of_list,                    // normal case
 
-// This is not a concept.  Its appearance indicates a comment is to be placed here.
+   // This is not a concept.  Its appearance indicates a comment is to be placed here.
 
    concept_comment,
 
-// Everything after this is a real concept.
+   // Everything after this is a real concept.
 
    concept_concentric,
    concept_tandem,
@@ -288,15 +281,16 @@ typedef enum {
    concept_interlace,
    concept_fractional,
    concept_rigger,
+   concept_wing,
    concept_common_spot,
    concept_drag,
    concept_dblbent,
    concept_omit,
    concept_supercall,
    concept_diagnose
-} concept_kind;
+};
 
-typedef enum {
+enum mpkind {
    MPKIND__NONE,
    MPKIND__SPLIT,
    MPKIND__REMOVED,
@@ -358,9 +352,9 @@ typedef enum {
    MPKIND__BENT7CCW,
    MPKIND__SPEC_ONCEREM,
    MPKIND__SPEC_TWICEREM
-} mpkind;
+};
 
-typedef struct skrilch {
+struct map_thing {
    C_const veryshort maps[48];  // Darn it!  40 would be enough for all maps but one.
    C_const setup_kind inner_kind;
    C_const int arity;
@@ -371,36 +365,36 @@ typedef struct skrilch {
    C_const uint32 rot;
    C_const uint32 per_person_rot;
    uint32 code;
-   struct skrilch *next;
-} map_thing;
+   map_thing *next;
+};
 
-typedef struct {
+struct clw3_thing {
    C_const setup_kind k;
    C_const uint32 mask;
    C_const uint32 test;
    C_const map_thing *map;
    C_const int rot;
    C_const veryshort inactives[9];
-} clw3_thing;
+};
 
-typedef struct {
+struct concept_descriptor {
    Cstring name;
-   const concept_kind kind;
-   const uint32 concparseflags;   /* See above. */
-   const dance_level level;
-   const struct {
-      const map_thing *maps;
-      const uint32 arg1;
-      const uint32 arg2;
-      const uint32 arg3;
-      const uint32 arg4;
-      const uint32 arg5;
+   C_const concept_kind kind;
+   C_const uint32 concparseflags;   // See above.
+   C_const dance_level level;
+   C_const struct {
+      C_const map_thing *maps;
+      C_const uint32 arg1;
+      C_const uint32 arg2;
+      C_const uint32 arg3;
+      C_const uint32 arg4;
+      C_const uint32 arg5;
    } value;
    Cstring menu_name;
-} concept_descriptor;
+};
 
-/* BEWARE!!  This list must track the array "selector_list" in sdutil.c . */
-typedef enum {
+// BEWARE!!  This list must track the array "selector_list" in sdutil.cpp
+enum selector_kind {
    selector_uninitialized,
    selector_boys,
    selector_girls,
@@ -480,13 +474,13 @@ typedef enum {
    selector_cpls3_4,
    selector_cpls4_1,
    selector_enum_extent    // Not a selector; indicates extent of the enum.
-} selector_kind;
+};
 
 /* BEWARE!!  This list must track the array "direction_names" in sdutil.c .
    It must also track the DITL "which direction" in *.rsrc in the Macintosh system. */
 /* Note also that the "zig-zag" items will get disabled below A2.
    The key for this is "direction_zigzag". */
-typedef enum {
+enum direction_kind {
    direction_uninitialized,
    direction_no_direction,
    direction_left,
@@ -498,11 +492,11 @@ typedef enum {
    direction_zagzig,
    direction_zigzig,
    direction_zagzag
-} direction_kind;
+};
 
 /* BEWARE!!  There is a static initializer for this, "null_options", in sdmain.cpp
    that must be kept up to date. */
-typedef struct {
+struct call_conc_option_state {
    selector_kind who;        /* selector, if any, used by concept or call */
    direction_kind where;     /* direction, if any, used by concept or call */
    uint32 tagger;            /* tagging call indices, if any, used by call.
@@ -512,10 +506,13 @@ typedef struct {
    uint32 number_fields;     /* number, if any, used by concept or call */
    int howmanynumbers;       /* tells how many there are */
    int star_turn_option;     /* For calls with "@S" star turn stuff. */
-} call_conc_option_state;
+};
 
-typedef struct glork {
-   struct glork *next;
+// We need a forward reference.
+struct predptr_pair;
+
+struct callarray {
+   callarray *next;
    uint32 callarray_flags;
    call_restriction restriction;
    uint16 qualifierstuff;   /* See QUALBIT__??? definitions in database.h */
@@ -524,27 +521,27 @@ typedef struct glork {
    uint8 end_setup_in;      /* Only if end_setup = concentric */  /* Must cast to setup_kind! */
    uint8 end_setup_out;     /* Only if end_setup = concentric */  /* Must cast to setup_kind! */
    union {
-      /* Dynamically allocated to whatever size is required. */
+      // Dynamically allocated to whatever size is required.
       uint16 def[4];     /* only if pred = false */
       struct {                   /* only if pred = true */
-         struct predptr_pair_struct *predlist;
-         /* Dynamically allocated to whatever size is required. */
+         predptr_pair *predlist;
+         // Dynamically allocated to whatever size is required.
          char errmsg[4];
       } prd;
    } stuff;
-} callarray;
+};
 
-typedef struct glowk {
+struct calldef_block {
    /* This has individual keys for groups of heritable modifiers.  Hence one
       can't say anything like "alternate_definition [3x3 4x4]".  But of course
       one can mix things from different groups. */
    uint32 modifier_seth;
    callarray *callarray_list;
-   struct glowk *next;
+   calldef_block *next;
    dance_level modifier_level;
-} calldef_block;
+};
 
-typedef struct {
+struct by_def_item {
    short call_id;
    uint32 modifiers1;
 
@@ -564,9 +561,9 @@ typedef struct {
       placed in the field of "modifiersh". */
 
    uint32 modifiersh;
-} by_def_item;
+};
 
-typedef struct structcalldefn {
+struct calldefn {
    uint32 callflags1;    /* The CFLAG1_??? flags. */
    uint32 callflagsh;    /* The mask for the heritable flags. */
    /* Within the "callflagsh" field, the various grouped fields
@@ -577,7 +574,7 @@ typedef struct structcalldefn {
    short int age;
    short int level;
    calldef_schema schema;
-   struct structcalldefn *compound_part;
+   calldefn *compound_part;
    union {
       struct {
          calldef_block *def_list;
@@ -595,9 +592,9 @@ typedef struct structcalldefn {
          by_def_item outerdef;
       } conc;           /* if schema = any of the concentric ones. */
    } stuff;
-} calldefn;
+};
 
-typedef struct {
+struct call_with_name {
    calldefn the_defn;
    /* This is the "pretty" name -- "@" escapes have been changed to things like "<N>".
       If there are no escapes, this just points to the stuff below.
@@ -607,24 +604,24 @@ typedef struct {
    /* Dynamically allocated to whatever size is required, will have trailing null.
       This is the name as it appeared in the database, with "@" escapes. */
    char name[4];
-} call_with_name;
+};
 
-typedef struct glock {
+struct parse_block {
    concept_descriptor *concept;   /* the concept or end marker */
    call_with_name *call;          /* if this is end mark, gives the call; otherwise unused */
    call_with_name *call_to_print; /* the original call, for printing (sometimes the field
                                      above gets changed temporarily) */
-   struct glock *next;            /* next concept, or, if this is end mark,
+   parse_block *next;             /* next concept, or, if this is end mark,
                                      points to substitution list */
-   struct glock *subsidiary_root; /* for concepts that take a second call,
+   parse_block *subsidiary_root;  /* for concepts that take a second call,
                                      this is its parse root */
-   struct glock *gc_ptr;          /* used for reclaiming dead blocks */
+   parse_block *gc_ptr;           /* used for reclaiming dead blocks */
    call_conc_option_state options;/* number, selector, direction, etc. */
    short replacement_key;         /* this is the "DFM1_CALL_MOD_MASK" stuff
                                      (shifted down) for a modification block */
    short no_check_call_level;     /* if nonzero, don't check whether this call
                                      is at the level. */
-} parse_block;
+};
 
 // For ui_command_select:
 
@@ -635,7 +632,7 @@ typedef struct glock {
 /* BEWARE!!  The order is slightly significant -- all search-type commands
    are >= command_resolve, and all "create some setup" commands
    are >= command_create_any_lines.  Certain tests are made easier by this. */
-typedef enum {
+enum command_kind {
    command_quit,
    command_undo,
    command_erase,
@@ -699,7 +696,7 @@ typedef enum {
    command_create_any_tidal,
    command_create_tidal_wave,
    command_kind_enum_extent    // Not a command kind; indicates extent of the enum.
-} command_kind;
+};
 
 
 /* In each case, an integer or enum is deposited into the global variable uims_menu_index.  Its interpretation
@@ -715,7 +712,7 @@ typedef enum {
    in the Domain/Dialog system, and the corresponding CNTLs in *.rsrc
    in the Macintosh system.  You may also need changes in create_controls() in
    macstuff.c. */
-typedef enum {
+enum start_select_kind {
    start_select_exit,        /* Don't start a sequence; exit from the program. */
    start_select_h1p2p,       /* Start with Heads 1P2P. */
    start_select_s1p2p,       /* Etc. */
@@ -738,12 +735,12 @@ typedef enum {
    start_select_change_outfile,
    start_select_change_header_comment,
    start_select_kind_enum_extent    // Not a start select kind; indicates extent of the enum.
-} start_select_kind;
+};
 
 
 /* For ui_resolve_select: */
 /* BEWARE!!  This list must track the array "resolve_resources" in sdui-x11.c . */
-typedef enum {
+enum resolve_command_kind {
    resolve_command_abort,
    resolve_command_find_another,
    resolve_command_goto_next,
@@ -753,33 +750,33 @@ typedef enum {
    resolve_command_lower_rec_point,
    resolve_command_write_this,
    resolve_command_kind_enum_extent    // Not a resolve kind; indicates extent of the enum.
-} resolve_command_kind;
+};
 
 
-typedef struct {
+struct command_list_menu_item {
    Cstring command_name;
    command_kind action;
    int resource_id;
-} command_list_menu_item;
+};
 
-typedef struct {
+struct startup_list_menu_item {
    Cstring startup_name;
    start_select_kind action;
    int resource_id;
-} startup_list_menu_item;
+};
 
-typedef struct {
+struct resolve_list_menu_item {
    Cstring command_name;
    resolve_command_kind action;
-} resolve_list_menu_item;
+};
 
 
 /* This defines a person in a setup.  Unfortunately, there is too much data
    to fit into 32 bits. */
-typedef struct {
+struct personrec {
    uint32 id1;       /* Frequently used bits go here. */
    uint32 id2;       /* Bits used for evaluating predicates. */
-} personrec;
+};
 
 /* Person bits for "id1" field are:
      0x80000000 -
@@ -893,7 +890,7 @@ enum {
    ID2_FACEBACK   = 0x00000001UL
 };
 
-typedef struct gfwzqg {
+struct cm_thing {
    C_const setup_kind bigsetup;
    C_const calldef_schema lyzer;
    C_const veryshort maps[24];
@@ -907,9 +904,9 @@ typedef struct gfwzqg {
    C_const calldef_schema getout_schema;
    uint32 used_mask_analyze;
    uint32 used_mask_synthesize;
-   struct gfwzqg *next_analyze;
-   struct gfwzqg *next_synthesize;
-} cm_thing;
+   cm_thing *next_analyze;
+   cm_thing *next_synthesize;
+};
 
 /* The following items are not actually part of the setup description,
    but are placed here for the convenience of "move" and similar procedures.
@@ -917,7 +914,7 @@ typedef struct gfwzqg {
    Once the call is complete, that is, when printing the setup or storing it
    in a history array, this stuff is meaningless. */
 
-typedef struct {
+struct assumption_thing {
    unsigned int assump_col:  16;  /* Stuff to go with assumption -- col vs. line. */
    unsigned int assump_both:  8;  /* Stuff to go with assumption -- "handedness" enforcement --
                                                 0/1/2 = either/1st/2nd. */
@@ -925,14 +922,14 @@ typedef struct {
    unsigned int assump_live:  1;  /* One means to accept only if everyone is live. */
    unsigned int assump_negate:1;  /* One means to invert the sense of everything. */
    call_restriction assumption;   /* Any "assume waves" type command. */
-} assumption_thing;
+};
 
-typedef struct {
+struct small_setup {
    setup_kind skind;
    int srotation;
-} small_setup;
+};
 
-typedef struct {
+struct setup_command {
    parse_block *parseptr;
    call_with_name *callspec;
    uint64 cmd_final_flags;
@@ -948,13 +945,13 @@ typedef struct {
    uint32 restrained_fraction;
    uint32 restrained_super8flags;
    parse_block *skippable_concept;
-} setup_command;
+};
 
 
 /* Warning!  Do not rearrange these fields without good reason.  There are data
    initializers instantiating these in sdinit.cpp (test_setup_*) and in sdtables.c
    (startinfolist) that will need to be rewritten. */
-typedef struct {
+struct setup {
    setup_kind kind;
    int rotation;
    setup_command cmd;
@@ -971,20 +968,20 @@ typedef struct {
    small_setup inner;
    small_setup outer;
    int concsetup_outer_elongation;
-} setup;
+};
 
-typedef struct {
+struct predicate_descriptor {
    // We wish we could put a "throw" clause on this function, but we can't.
    long_boolean (*predfunc) (setup *, int, int, int, const long int *);
    const long int *extra_stuff;
-} predicate_descriptor;
+};
 
-typedef struct predptr_pair_struct {
+struct predptr_pair {
    predicate_descriptor *pred;
-   struct predptr_pair_struct *next;
+   predptr_pair *next;
    /* Dynamically allocated to whatever size is required. */
    uint16 arr[4];
-} predptr_pair;
+};
 
 
 #define MAPCODE(setupkind,num,mapkind,rot) ((((int)(setupkind)) << 12) | (((int)(mapkind)) << 4) | (((num)-1) << 1) | (rot))
@@ -1011,8 +1008,6 @@ enum {
                       LOOKUP_OFFS_CLW|LOOKUP_STAG_CLW|LOOKUP_DBL_BENT|
                       LOOKUP_MINI_B|LOOKUP_MINI_O)
 };
-
-#ifdef __cplusplus
 
 enum fixerkey {
    fx0,        // The null table entry.
@@ -1337,7 +1332,7 @@ enum fixerkey {
    fx_bar55d,
    fx_fppaad,
    fx_fpp55d,
-   fx_FIXERLAST    // Not actually in the table.
+   fx_ENUMLAST    // Not actually in the table.
 };
 
 
@@ -1369,48 +1364,71 @@ struct sel_item {
    sel_item *next;
 };
 
-#endif
 
-typedef struct qwerty {
-   const setup_kind kind;
-   const setup_kind kind1x3;
-   const struct qwerty *other;
-   const veryshort nointlkshapechange;
-   const veryshort switchtgls;
-   const veryshort mapqt1[8];   /* In quarter-tag: first triangle (upright),
-                                   then second triangle (inverted), then idle. */
-   const veryshort mapcp1[8];   /* In C1 phantom: first triangle (inverted),
-                                   then second triangle (upright), then idle. */
-   const veryshort mapbd1[8];   /* In bigdmd. */
-   const veryshort map241[8];   /* In 2x4. */
-   const veryshort map261[8];   /* In 2x6. */
-} tgl_map;
+enum tglmapkey {
+   tgl0,        // The null table entry.
+   tglmap1b,
+   tglmap2b,
+   tglmap1i,
+   tglmap2i,
+   tglmap1d,
+   tglmap2d,
+   tglmap1m,
+   tglmap2m,
+   tglmap1j,
+   tglmap2j,
+   tglmap1x,
+   tglmap2x,
+   tglmap1y,
+   tglmap2y,
+   tglmap1k,
+   tglmap2k,
+   tglmap2r,
+   tgl_ENUMLAST    // Not actually in the table.
+};
 
-typedef struct {
+
+struct tgl_map {
+   C_const tglmapkey mykey;
+   C_const setup_kind kind;
+   C_const setup_kind kind1x3;
+   C_const tglmapkey otherkey;
+   C_const veryshort nointlkshapechange;
+   C_const veryshort switchtgls;
+   C_const veryshort mapqt1[8];   // In quarter-tag: first triangle (upright),
+                                  // then second triangle (inverted), then idle.
+   C_const veryshort mapcp1[8];   // In C1 phantom: first triangle (inverted),
+                                  // then second triangle (upright), then idle.
+   C_const veryshort mapbd1[8];   // In bigdmd.
+   C_const veryshort map241[8];   // In 2x4.
+   C_const veryshort map261[8];   // In 2x6.
+};
+
+struct startinfo {
    char *name;
    long_boolean into_the_middle;
    setup the_setup;
-} startinfo;
+};
 
-typedef struct {
+struct coordrec {
    C_const setup_kind result_kind;
    C_const int xfactor;
    C_const veryshort xca[24];
    C_const veryshort yca[24];
    C_const veryshort diagram[64];
-} coordrec;
+};
 
 typedef uint32 id_bit_table[4];
 
-typedef struct {
+struct ctr_end_mask_rec {
    C_const uint32 mask_normal;
    C_const uint32 mask_6_2;
    C_const uint32 mask_2_6;
    C_const uint32 mask_ctr_dmd;
-} ctr_end_mask_rec;
+};
 
 
-typedef const struct {
+const struct setup_attr {
    // This is the size of the setup MINUS ONE.
    C_const int setup_limits;
 
@@ -1462,15 +1480,15 @@ typedef const struct {
 
    /* These are the tables that show how to print out the setup. */
    Cstring print_strings[2];
-} setup_attr;
+};
 
-typedef struct {
+struct writechar_block_type {
    char *destcurr;
    char lastchar;
    char lastlastchar;
    char *lastblank;
    long_boolean usurping_writechar;
-} writechar_block_type;
+};
 
 
 /* Probability (out of 8) that a concept will be placed on a randomly generated call. */
@@ -1583,7 +1601,7 @@ typedef struct {
 // These are the values returned in user_match.match.kind
 // by "uims_get_call_command" and similar functions.
 
-typedef enum {
+enum uims_reply {
    ui_special_concept,  // Not a real return; used only for fictional purposes
                         //    in the user interface; never appears in the rest of the program.
    ui_command_select,   // (normal/resolve) User chose one of the special buttons
@@ -1596,7 +1614,7 @@ typedef enum {
    ui_call_select,      // (normal only) User selected a call from the current call menu.
    ui_help_simple,      // (any) user selected "help"
    ui_help_manual       // (any) user selected "help manual"
-} uims_reply;
+};
 
 
 /*
@@ -1611,27 +1629,27 @@ typedef enum {
  *
  */
 
-typedef struct glozk {
+struct modifier_block {
    uims_reply kind;
    long int index;
    call_conc_option_state call_conc_options;  /* Has numbers, selectors, etc. */
    call_with_name *call_ptr;
    concept_descriptor *concept_ptr;
-   struct glozk *packed_next_conc_or_subcall;  /* next concept, or, if this is end mark, points to substitution list */
-   struct glozk *packed_secondary_subcall;     /* points to substitution list for secondary subcall */
-   struct glozk *gc_ptr;                /* used for reclaiming dead blocks */
-} modifier_block;
+   modifier_block *packed_next_conc_or_subcall;  /* next concept, or, if this is end mark, points to substitution list */
+   modifier_block *packed_secondary_subcall; // points to substitution list for secondary subcall
+   modifier_block *gc_ptr;                /* used for reclaiming dead blocks */
+};
 
-typedef struct filch {
+struct match_result {
    long_boolean valid;       // Set to TRUE if a match was found.
    long_boolean exact;       // Set to TRUE if an exact match was found.
    long_boolean indent;      // This is a subordinate call; indent it in listing.
    modifier_block match;     // The little thing we actually return.
-   const struct filch *real_next_subcall;
-   const struct filch *real_secondary_subcall;
+   const match_result *real_next_subcall;
+   const match_result *real_secondary_subcall;
    int recursion_depth;      // How deep in "@0" or "@m" things.
    int yield_depth;          // If nonzero, this yields by that amount.
-} match_result;
+};
 
 enum {
     special_index_lineup = -1,
@@ -1664,7 +1682,7 @@ enum {
    In particular, there are octal constants like "MASK_CTR_2" that contain bits assigned
    according to these items.  Changing these items is not recommended. */
 
-typedef enum {
+enum call_list_kind {
    call_list_none, call_list_empty, /* Not real call list kinds; used only for
                                        fictional purposes in the user interface;
 				       never appear in the rest of the program. */
@@ -1678,22 +1696,22 @@ typedef enum {
    call_list_rwv, call_list_lwv,
    call_list_r2fl, call_list_l2fl,
    call_list_gcol, call_list_qtag
-} call_list_kind;
+};
 #define NUM_CALL_LIST_KINDS (((int) call_list_qtag)+1)
 
-typedef enum {
+enum call_list_mode_t {
    call_list_mode_none,
    call_list_mode_writing,
    call_list_mode_writing_full,
    call_list_mode_abridging
-} call_list_mode_t;
+};
 
-typedef struct {
+struct parse_stack_item {
    parse_block **concept_write_save_ptr;
    concept_kind save_concept_kind;
-} parse_stack_item;
+};
 
-typedef struct {
+struct parse_state_type {
    parse_stack_item parse_stack[40];
    int parse_stack_index;
    parse_block **concept_write_ptr;
@@ -1702,36 +1720,36 @@ typedef struct {
    uint32 topcallflags1;
    call_list_kind call_list_to_use;
    call_list_kind base_call_list_to_use;
-} parse_state_type;
+};
 
-typedef struct {
+struct selector_item {
    Cstring name;
    Cstring sing_name;
    Cstring name_uc;
    Cstring sing_name_uc;
    selector_kind opposite;
-} selector_item;
+};
 
-typedef enum {
+enum mode_kind {
    mode_none,     /* Not a real mode; used only for fictional purposes
                         in the user interface; never appears in the rest of the program. */
    mode_normal,
    mode_startup,
    mode_resolve
-} mode_kind;
+};
 
-typedef enum {
+enum modify_popup_kind {
     modify_popup_any,
     modify_popup_only_tag,
     modify_popup_only_circ
-} modify_popup_kind;
+};
 
-typedef enum {
+enum file_write_flag {
    file_write_no,
    file_write_double
-} file_write_flag;
+};
 
-typedef enum {
+enum interactivity_state {
    interactivity_database_init,
    interactivity_no_query_at_all,    /* Used when pasting from clipboard.  All subcalls,
                                         selectors, numbers, etc. must be filled in already.
@@ -1739,19 +1757,19 @@ typedef enum {
    interactivity_verify,
    interactivity_normal,
    interactivity_picking
-} interactivity_state;
+};
 
-typedef enum {
+enum resolver_display_state {
    resolver_display_ok,
    resolver_display_searching,
    resolver_display_failed
-} resolver_display_state;
+};
 
-typedef enum {
+enum resolve_goodness_test {
    resolve_goodness_only_nice,
    resolve_goodness_always,
    resolve_goodness_maybe
-} resolve_goodness_test;
+};
 
 /* These enumerate the setups from which we can perform a "normalize" search. */
 /* This list tracks the array "nice_setup_info". */
@@ -1771,18 +1789,18 @@ enum nice_start_kind {
    NUM_NICE_START_KINDS   // End mark; not really in the enumeration.
 };
 
-typedef struct {
+struct nice_setup_thing {
    int *full_list;
    int *on_level_list;
    int full_list_size;
-} nice_setup_thing;
+};
 
-typedef struct {
+struct nice_setup_info_item {
    setup_kind kind;
    nice_setup_thing *thing;
    int *array_to_use_now;
    int number_available_now;
-} nice_setup_info_item;
+};
 
 /* Values returned by the various popup routines: */
 #define POPUP_DECLINE 0
@@ -1919,10 +1937,10 @@ static const uint32 RESULTFLAG__NO_REEVALUATE        = 0x02000000UL;
 static const uint32 RESULTFLAG__IMPRECISE_ROT        = 0x04000000UL;
 static const uint32 RESULTFLAG__PLUSEIGHTH_ROT       = 0x08000000UL;
 
-typedef struct glonk {
+struct comment_block {
    char txt[MAX_TEXT_LINE_LENGTH];
-   struct glonk *nxt;
-} comment_block;
+   comment_block *nxt;
+};
 
 /* These bits appear in the "concparseflags" word. */
 /* This is a duplicate, and exists only to make menus nicer.
@@ -1943,8 +1961,8 @@ typedef struct glonk {
 #define CONCPARSE_PARSE_G_TYPE 0x20
 
 
-/* BEWARE!!  This list must track the array "warning_strings" in sdtables.c . */
-typedef enum {
+// BEWARE!!  This list must track the array "warning_strings" in sdtables.cpp
+enum warning_index {
    warn__none,
    warn__do_your_part,
    warn__tbonephantom,
@@ -2047,10 +2065,10 @@ typedef enum {
    warn__compress_carefully,
    warn__diagnostic,
    warn__NUM_WARNINGS       // Not a real warning; just used for counting.
-} warning_index;
+};
 
-/* BEWARE!!  This list must track the array "resolve_table" in sdgetout.c . */
-typedef enum {
+// BEWARE!!  This list must track the array "resolve_table" in sdgetout.cpp
+enum resolve_kind {
    resolve_none,
    resolve_rlg,
    resolve_la,
@@ -2073,12 +2091,12 @@ typedef enum {
    resolve_sglfileprom,
    resolve_revsglfileprom,
    resolve_circle
-} resolve_kind;
+};
 
-typedef struct {
+struct resolve_indicator {
    resolve_kind kind;
    int distance;
-} resolve_indicator;
+};
 
 
 /* These bits are used to allocate flag bits
@@ -2215,7 +2233,6 @@ enum {
    CONCPROP__PERMIT_MODIFIERS= 0x40000000UL
 };
 
-#ifdef __cplusplus
 
 class warning_info {
  public:
@@ -2274,15 +2291,14 @@ struct configuration {           // This record is one state in the evolving seq
                            // only meaningful if "written_history_items" is >= this index.
 };
 
-#endif
 
-typedef struct {
+struct concept_table_item{
    uint32 concept_prop;      /* Takes bits of the form CONCPROP__??? */
    // We wish we could put a "throw" clause on this function, but we can't.
    void (*concept_action)(setup *, parse_block *, setup *);
-} concept_table_item;
+};
 
-typedef enum {
+enum error_flag_type {
    error_flag_none = 0,          /* Must be zero because setjmp returns this. */
    error_flag_1_line,            /* 1-line error message, text is in error_message1. */
    error_flag_2_line,            /* 2-line error message, text is in error_message1 and
@@ -2302,7 +2318,7 @@ typedef enum {
    error_flag_show_stats,        /* wants to display stale call statistics. */
    error_flag_selector_changed,  /* warn that selector was changed during clipboard paste. */
    error_flag_formation_changed  /* warn that formation changed during clipboard paste. */
-} error_flag_type;
+};
 
 #define zig_zag_level l_a2
 #define cross_by_level l_c1
@@ -2660,7 +2676,7 @@ enum {
 // It seems we can't use the modern C++ "enum blah { ..... };"
 // syntax here.  C compilations get unhappy in DJGPP in the
 // appearance of this in "expand_thing".
-typedef enum {
+enum normalize_action {
    simple_normalize,
    normalize_before_isolated_call,
    normalize_before_isolate_not_too_strict,
@@ -2673,17 +2689,16 @@ typedef enum {
    normalize_strict_matrix,
    normalize_compress_bigdmd,
    normalize_recenter
-} normalize_action;
+};
 
-typedef enum {
+enum merge_action {
    merge_strict_matrix,
    merge_c1_phantom,
    merge_c1_phantom_real,
    merge_after_dyp,
    merge_without_gaps
-} merge_action;
+};
 
-#ifdef __cplusplus
 
 struct expand_thing {
    veryshort source_indices[24];
@@ -2717,14 +2732,14 @@ struct full_expand_thing {
    full_expand_thing *next;
 };
 
-#endif
 
-typedef enum {    /* These control error messages that arise when we divide a setup
-                     into subsetups (e.g. phantom lines) and find that one of
-                     the setups is empty.  For example, if we are in normal lines
-                     and select "phantom lines", it will notice that one of the setups
-                     (the outer one) isn't occupied and will give the error message
-                     "Don't use phantom concept if you don't mean it." */
+enum phantest_kind {
+   /* These control error messages that arise when we divide a setup
+      into subsetups (e.g. phantom lines) and find that one of
+      the setups is empty.  For example, if we are in normal lines
+      and select "phantom lines", it will notice that one of the setups
+      (the outer one) isn't occupied and will give the error message
+      "Don't use phantom concept if you don't mean it." */
 
    phantest_ok,               // Anything goes
    phantest_impossible,       // Can't happen in symmetric stuff??
@@ -2738,7 +2753,7 @@ typedef enum {    /* These control error messages that arise when we divide a se
    phantest_2x2_both,
    phantest_2x2_only_two,
    phantest_not_just_centers
-} phantest_kind;
+};
 
 enum disttest_kind {
    disttest_t, disttest_nil, disttest_only_two,
@@ -2772,18 +2787,18 @@ enum restriction_test_result {
 };
 
 
-typedef struct milch {
+struct mapcoder {
    uint32 code;
    const map_thing *the_map;
-   struct milch *next;
-} mapcoder;
+   mapcoder *next;
+};
 
-typedef struct {
+struct concept_fixer_thing {
    uint32 newheritmods;
    uint32 newfinalmods;
    int before;    /* These are indices into concept_descriptor_table. */
    int after;
-} concept_fixer_thing;
+};
 
 enum selective_key {
    /* Warning!!!!  Order is important!  See all the stupid ways these are used
@@ -2902,9 +2917,8 @@ extern int sdtty_no_line_delete;                                    /* in SDUI-T
 // "bool" datatype.  The files that do data initialization don't
 // need function prototypes anyway.
 
-#ifdef __cplusplus
 
-typedef struct {
+struct callbackstuff {
    void * (*get_mem_fn)(uint32 siz);
    void * (*get_more_mem_fn)(void *oldp, uint32 siz);
    void * (*get_mem_gracefully_fn)(uint32 siz);
@@ -2953,7 +2967,7 @@ typedef struct {
    void (*close_database_fn)(void);
    long_boolean (*open_call_list_file_fn)(char filename[]);
    char * (*read_from_call_list_file_fn)(char name[], int n);
-   void (*write_to_call_list_file_fn)(Const char name[]);
+   void (*write_to_call_list_file_fn)(const char name[]);
    long_boolean (*close_call_list_file_fn)(void);
    long_boolean (*sequence_is_resolved_fn)(void);
    long_boolean (*deposit_call_fn)(call_with_name *call, const call_conc_option_state *options);
@@ -2968,7 +2982,7 @@ typedef struct {
    int (*generate_random_number_fn)(int modulus);
    void (*hash_nonrandom_number_fn)(int number);
    int text_line_count;
-} callbackstuff;
+};
 
 /* VARIABLES */
 
@@ -3081,11 +3095,6 @@ extern long_boolean mandatory_call_used;                            /* in SDPRED
 extern predicate_descriptor pred_table[];                           /* in SDPREDS */
 extern int selector_preds;                                          /* in SDPREDS */
 
-#endif
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 extern SDLIB_API ctr_end_mask_rec dead_masks;                       /* in SDTABLES */
 extern SDLIB_API ctr_end_mask_rec masks_for_3x4;                    /* in SDTABLES */
@@ -3096,8 +3105,6 @@ extern SDLIB_API ctr_end_mask_rec masks_for_4x4;                    /* in SDTABL
 extern SDLIB_API setup_attr setup_attrs[];                          /* in SDTABLES */
 extern SDLIB_API int begin_sizes[];                                 /* in SDTABLES */
 extern SDLIB_API startinfo startinfolist[];                         /* in SDTABLES */
-
-#ifdef __cplusplus
 
 extern id_bit_table id_bit_table_2x5_z[];                           /* in SDTABLES */
 extern id_bit_table id_bit_table_2x6_pg[];                          /* in SDTABLES */
@@ -3124,6 +3131,7 @@ extern id_bit_table id_bit_table_3ptpd[];                           /* in SDTABL
 extern id_bit_table id_bit_table_3x6_with_1x6[];                    /* in SDTABLES */
 extern cm_thing conc_init_table[];                                  /* in SDTABLES */
 extern fixer fixer_init_table[];                                    /* in SDTABLES */
+extern tgl_map tgl_map_init_table[];                                /* in SDTABLES */
 
 
 extern full_expand_thing rear_1x2_pair;
@@ -3161,19 +3169,17 @@ extern const coordrec press_4dmd_qtag2;                             /* in SDTABL
 extern const coordrec press_qtag_4dmd1;                             /* in SDTABLES */
 extern const coordrec press_qtag_4dmd2;                             /* in SDTABLES */
 extern const coordrec acc_crosswave;                                /* in SDTABLES */
-extern const tgl_map *c1tglmap1[];                                  /* in SDTABLES */
-extern const tgl_map *c1tglmap2[];                                  /* in SDTABLES */
-extern const tgl_map *dbqtglmap1[];                                 /* in SDTABLES */
-extern const tgl_map *dbqtglmap2[];                                 /* in SDTABLES */
-extern const tgl_map *qttglmap1[];                                  /* in SDTABLES */
-extern const tgl_map *qttglmap2[];                                  /* in SDTABLES */
-extern const tgl_map *bdtglmap1[];                                  /* in SDTABLES */
-extern const tgl_map *bdtglmap2[];                                  /* in SDTABLES */
-extern const tgl_map *rgtglmap1[];                                  /* in SDTABLES */
+extern const tglmapkey c1tglmap1[];                                 /* in SDTABLES */
+extern const tglmapkey c1tglmap2[];                                 /* in SDTABLES */
+extern const tglmapkey dbqtglmap1[];                                /* in SDTABLES */
+extern const tglmapkey dbqtglmap2[];                                /* in SDTABLES */
+extern const tglmapkey qttglmap1[];                                 /* in SDTABLES */
+extern const tglmapkey qttglmap2[];                                 /* in SDTABLES */
+extern const tglmapkey bdtglmap1[];                                 /* in SDTABLES */
+extern const tglmapkey bdtglmap2[];                                 /* in SDTABLES */
+extern const tglmapkey rgtglmap1[];                                 /* in SDTABLES */
 extern sel_item sel_init_table[];                                   /* in SDTABLES */
 extern clw3_thing clw3_table[];                                     /* in SDTABLES */
-
-#endif
 
 extern map_thing map_stairst;                                       /* in SDTABLES */
 extern map_thing map_ladder;                                        /* in SDTABLES */
@@ -3219,12 +3225,6 @@ extern int *concept_offset_tables[];
 extern int *concept_size_tables[];
 extern Cstring concept_menu_strings[];
 
-#ifdef __cplusplus
-}
-#endif
-
-#ifdef __cplusplus
-
 extern SDLIB_API selector_item selector_list[];                     /* in SDTABLES */
 extern SDLIB_API Cstring warning_strings[];                         /* in SDTABLES */
 extern const expand_thing comp_qtag_2x4_stuff;                      /* in SDTABLES */
@@ -3245,8 +3245,6 @@ extern const expand_thing exp_1x2_hrgl_stuff;
 extern const expand_thing exp_dmd_hrgl_stuff;
 extern const expand_thing exp_dmd_hrgl_disc_stuff;
 extern expand_thing expand_init_table[];
-
-#endif
 
 extern const map_thing map_trngl_box1;                              /* in SDTABLES */
 extern const map_thing map_trngl_box2;                              /* in SDTABLES */
@@ -3343,13 +3341,6 @@ extern const map_thing map_stw3b;                                   /* in SDTABL
 extern map_thing map_init_table[];                                  /* in SDTABLES */
 
 
-// This file is used by some plain C files for data initialization.
-// The plain C compiler won't like classes, "throw" declarations or the
-// "bool" datatype.  The files that do data initialization don't
-// need function prototypes anyway.
-
-
-#ifdef __cplusplus
 
 /* In SDPREDS */
 
@@ -3517,6 +3508,8 @@ extern void move(
 
 /* In SDISTORT */
 
+extern void initialize_tgl_tables();
+
 extern void prepare_for_call_in_series(setup *result, setup *ss);
 
 extern void minimize_splitting_info(setup *ss, uint32 other_info);
@@ -3588,6 +3581,11 @@ extern void triple_twin_move(
    setup *result) THROW_DECL;
 
 extern void do_concept_rigger(
+   setup *ss,
+   parse_block *parseptr,
+   setup *result) THROW_DECL;
+
+extern void do_concept_wing(
    setup *ss,
    parse_block *parseptr,
    setup *result) THROW_DECL;
@@ -3717,7 +3715,7 @@ NORETURN1 extern void fail2(const char s1[], const char s2[]) THROW_DECL NORETUR
 
 NORETURN1 extern void failp(uint32 id1, const char s[]) THROW_DECL NORETURN2;
 
-NORETURN1 SDLIB_API void specialfail(Const char s[]) THROW_DECL NORETURN2;
+NORETURN1 SDLIB_API void specialfail(const char s[]) THROW_DECL NORETURN2;
 
 extern void warn(warning_index w);
 
@@ -3902,7 +3900,7 @@ class fraction_info {
 
 /* In SDUTIL */
 
-SDLIB_API Const char *get_escape_string(char c);
+SDLIB_API const char *get_escape_string(char c);
 SDLIB_API void write_history_line(int history_index, const char *header,
                                   long_boolean picture, file_write_flag write_to_file);
 SDLIB_API void unparse_call_name(Cstring name, char *s, call_conc_option_state *options);
@@ -4096,7 +4094,7 @@ extern void print_line(Cstring s);
 extern void init_error(char s[]);
 extern long_boolean parse_level(Cstring s, dance_level *levelp);
 extern char *read_from_call_list_file(char name[], int n);
-extern void write_to_call_list_file(Const char name[]);
+extern void write_to_call_list_file(const char name[]);
 extern long_boolean close_call_list_file(void);
 extern long_boolean install_outfile_string(char newstring[]);
 extern long_boolean get_first_session_line(void);
@@ -4127,5 +4125,3 @@ extern long_boolean deposit_call(call_with_name *call, const call_conc_option_st
 extern long_boolean deposit_concept(concept_descriptor *conc);
 extern int sdmain(int argc, char *argv[]);
 /*NORETURN1*/ extern void exit_program(int code) /*NORETURN2*/;
-
-#endif

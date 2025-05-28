@@ -872,11 +872,11 @@ extern long_boolean check_restriction(
    if (!(restr.assump_col & 1)) {
       // Restriction is "line-like" or special.
 
-      static Const veryshort mapwkg8[3] = {2, 2, 6};
-      static Const veryshort mapwkg6[3] = {2, 2, 5};
-      static Const veryshort mapwkg4[3] = {2, 1, 3};
-      static Const veryshort mapwkg2[3] = {2, 0, 1};
-      static Const veryshort mapwk24[5] = {4, 1, 2, 6, 5};
+      static const veryshort mapwkg8[3] = {2, 2, 6};
+      static const veryshort mapwkg6[3] = {2, 2, 5};
+      static const veryshort mapwkg4[3] = {2, 1, 3};
+      static const veryshort mapwkg2[3] = {2, 0, 1};
+      static const veryshort mapwk24[5] = {4, 1, 2, 6, 5};
 
       switch (restr.assumption) {
       case cr_awkward_centers:       /* check for centers not having left hands */
@@ -1072,7 +1072,7 @@ static void special_4_way_symm(
    int begin_size;
    int real_index;
    int k, result_size, result_quartersize;
-   Const veryshort *the_table = (Const veryshort *) 0;
+   const veryshort *the_table = (const veryshort *) 0;
 
    switch (result->kind) {
    case s2x2: case s_galaxy:
@@ -3453,7 +3453,7 @@ static int divide_the_setup(
          if (!(result->people[2].id1 | result->people[3].id1 | result->people[8].id1 | result->people[11].id1 | result->people[12].id1 | result->people[17].id1)) {
             /* Inner spots are empty. */
             setup temp = *result;
-            static Const veryshort inner_3x6[12] = {0, 1, 4, 5, 6, 7, 9, 10, 13, 14, 15, 16};
+            static const veryshort inner_3x6[12] = {0, 1, 4, 5, 6, 7, 9, 10, 13, 14, 15, 16};
    
             gather(result, &temp, inner_3x6, 11, 0);
             result->kind = s3x4;
@@ -3461,7 +3461,7 @@ static int divide_the_setup(
          else if (!(result->people[0].id1 | result->people[5].id1 | result->people[6].id1 | result->people[9].id1 | result->people[14].id1 | result->people[15].id1)) {
             /* Outer spots are empty. */
             setup temp = *result;
-            static Const veryshort outer_3x6[12] = {1, 2, 3, 4, 7, 8, 10, 11, 12, 13, 16, 17};
+            static const veryshort outer_3x6[12] = {1, 2, 3, 4, 7, 8, 10, 11, 12, 13, 16, 17};
    
             gather(result, &temp, outer_3x6, 11, 0);
             result->kind = s3x4;

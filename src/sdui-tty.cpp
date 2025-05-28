@@ -96,7 +96,7 @@ extern void exit(int code);
 #include "paths.h"
 
 /* See comments in sdmain.c regarding this string. */
-static Const char id[] = "@(#)$He" "ader: Sd: sdui-tty.c " UI_VERSION_STRING "  " UI_TIME_STAMP;
+static const char id[] = "@(#)$He" "ader: Sd: sdui-tty.c " UI_VERSION_STRING "  " UI_TIME_STAMP;
 
 
 #define DEL 0x7F

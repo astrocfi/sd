@@ -44,7 +44,7 @@ extern void ttu_final_option_setup()
    my_pn1 = ui_options.pn1;
    my_pn2 = ui_options.pn2;
 
-   /* Install the pointy triangles. */
+   // Install the pointy triangles.
 
    if (ui_options.no_graphics < 2)
       ui_options.direc = "?\020?\021????\036?\037?????";
@@ -96,38 +96,37 @@ static WORD text_color;
 
 
 
-/* These will get "background_color" added in during initialization. */
+// These will get "background_color" added in during initialization.
 
 static WORD couple_colors[9] = {
-   FOREGROUND_RED                     | FOREGROUND_INTENSITY,  /* red */
-   FOREGROUND_RED                     | FOREGROUND_INTENSITY,  /* red */
-   FOREGROUND_GREEN                   | FOREGROUND_INTENSITY,  /* green */
-   FOREGROUND_GREEN                   | FOREGROUND_INTENSITY,  /* green */
-   FOREGROUND_BLUE                    | FOREGROUND_INTENSITY,  /* blue */
-   FOREGROUND_BLUE                    | FOREGROUND_INTENSITY,  /* blue */
-   FOREGROUND_RED  | FOREGROUND_GREEN | FOREGROUND_INTENSITY,  /* yellow */
-   FOREGROUND_RED  | FOREGROUND_GREEN | FOREGROUND_INTENSITY,  /* yellow */
-   FOREGROUND_RED                     | FOREGROUND_INTENSITY}; /* red */
+   FOREGROUND_RED                     | FOREGROUND_INTENSITY,  // red
+   FOREGROUND_RED                     | FOREGROUND_INTENSITY,  // red
+   FOREGROUND_GREEN                   | FOREGROUND_INTENSITY,  // green
+   FOREGROUND_GREEN                   | FOREGROUND_INTENSITY,  // green
+   FOREGROUND_BLUE                    | FOREGROUND_INTENSITY,  // blue
+   FOREGROUND_BLUE                    | FOREGROUND_INTENSITY,  // blue
+   FOREGROUND_RED  | FOREGROUND_GREEN | FOREGROUND_INTENSITY,  // yellow
+   FOREGROUND_RED  | FOREGROUND_GREEN | FOREGROUND_INTENSITY,  // yellow
+   FOREGROUND_RED                     | FOREGROUND_INTENSITY}; // red
 
-static WORD couple_colors_rgyb[9] = {
-   FOREGROUND_RED                     | FOREGROUND_INTENSITY,  /* red */
-   FOREGROUND_RED                     | FOREGROUND_INTENSITY,  /* red */
-   FOREGROUND_GREEN                   | FOREGROUND_INTENSITY,  /* green */
-   FOREGROUND_GREEN                   | FOREGROUND_INTENSITY,  /* green */
-   FOREGROUND_RED  | FOREGROUND_GREEN | FOREGROUND_INTENSITY,  /* yellow */
-   FOREGROUND_RED  | FOREGROUND_GREEN | FOREGROUND_INTENSITY,  /* yellow */
-   FOREGROUND_BLUE                    | FOREGROUND_INTENSITY,  /* blue */
-   FOREGROUND_BLUE                    | FOREGROUND_INTENSITY,  /* blue */
-   FOREGROUND_RED                     | FOREGROUND_INTENSITY}; /* red */
+static WORD couple_colors_rgyb[8] = {
+   FOREGROUND_RED                     | FOREGROUND_INTENSITY,  // red
+   FOREGROUND_RED                     | FOREGROUND_INTENSITY,  // red
+   FOREGROUND_GREEN                   | FOREGROUND_INTENSITY,  // green
+   FOREGROUND_GREEN                   | FOREGROUND_INTENSITY,  // green
+   FOREGROUND_RED  | FOREGROUND_GREEN | FOREGROUND_INTENSITY,  // yellow
+   FOREGROUND_RED  | FOREGROUND_GREEN | FOREGROUND_INTENSITY,  // yellow
+   FOREGROUND_BLUE                    | FOREGROUND_INTENSITY,  // blue
+   FOREGROUND_BLUE                    | FOREGROUND_INTENSITY}; // blue
 
 
 static WORD person_colors[2] = {
-   FOREGROUND_BLUE | FOREGROUND_INTENSITY,  /* blue */
-   FOREGROUND_RED  | FOREGROUND_INTENSITY}; /* red */
+   FOREGROUND_BLUE | FOREGROUND_INTENSITY,  // blue
+   FOREGROUND_RED  | FOREGROUND_INTENSITY}; // red
 
 static WORD pastel_person_colors[2] = {
-   FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_INTENSITY,  /* bletcherous blue */
-   FOREGROUND_RED  | FOREGROUND_BLUE  | FOREGROUND_INTENSITY}; /* putrid pink */
+   FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_INTENSITY,  // bletcherous blue
+   FOREGROUND_RED  | FOREGROUND_BLUE  | FOREGROUND_INTENSITY}; // putrid pink
 
 
 
@@ -184,9 +183,9 @@ extern void ttu_initialize()
 
    WORD background_color;
 
-   /* Get information about the "buffer", that is, the "pad".  The window itself,
-      and all resizing thereof, is irrelevant.  It will take care of itself, the way
-      it does in any decent operating system (unlike some that I've had to deal with.) */
+   // Get information about the "buffer", that is, the "pad".  The window itself,
+   // and all resizing thereof, is irrelevant.  It will take care of itself, the way
+   // it does in any decent operating system (unlike some that I've had to deal with.)
 
    (void) GetConsoleScreenBufferInfo(consoleStdout, &globalconsoleInfo);
 
@@ -198,8 +197,8 @@ extern void ttu_initialize()
    if (ui_options.reverse_video)
       background_color = 0;
    else {
-      /* If doing color_by_couple or color_by_corner, make the backround light
-         gray instead of white, because yellow doesn't show up well against white. */
+      // If doing color_by_couple or color_by_corner, make the backround light
+      // gray instead of white, because yellow doesn't show up well against white.
       if (ui_options.no_color == 2 ||
           ui_options.no_color == 3 ||
           ui_options.no_color == 4 ||
@@ -225,11 +224,14 @@ extern void ttu_initialize()
    }
 
    for (i=0 ; i<9 ; i++) couple_colors[i] |= background_color;
-   for (i=0 ; i<9 ; i++) couple_colors_rgyb[i] |= background_color;
-   for (i=0 ; i<2 ; i++) person_colors[i] |= background_color;
-   for (i=0 ; i<2 ; i++) pastel_person_colors[i] |= background_color;
+   for (i=0 ; i<8 ; i++) couple_colors_rgyb[i] |= background_color;
+   for (i=0 ; i<2 ; i++) {
+      person_colors[i] |= background_color;
+      pastel_person_colors[i] |= background_color;
+   }
 
-   if (ui_options.reverse_video) background_color |= FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED;
+   if (ui_options.reverse_video)
+      background_color |= FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED;
 
    COORD coord;
    coord.X = 0;
@@ -272,14 +274,6 @@ extern void ttu_terminate()
                                         (finalconsoleInfo.dwSize.Y-finalconsoleInfo.dwCursorPosition.Y)
                                         -finalconsoleInfo.dwCursorPosition.X,
                                         finalconsoleInfo.dwCursorPosition, &numWrite);
-
-
-      /*
-
-      (void) FillConsoleOutputAttribute(consoleStdout,
-         globalconsoleInfo.wAttributes, globalconsoleInfo.dwSize.X * globalconsoleInfo.dwSize.Y,
-         coord, &numWrite);
-      */
 
       (void) SetConsoleTextAttribute(consoleStdout, globalconsoleInfo.wAttributes);
       (void) SetConsoleMode(consoleStdin, oldMode);
@@ -363,18 +357,19 @@ extern void put_line(const char the_line[])
    if (!sdtty_no_console) {
       char c;
 
-      /* We need to watch for escape characters denoting people
-         to be printed in a particularly pretty way. */
+      // We need to watch for escape characters denoting people
+      // to be printed in a particularly pretty way.
 
       while ((c = *the_line++)) {
          if (c == '\013') {
             int c1 = *the_line++;
             int c2 = *the_line++;
-            WORD color;
 
             put_char(' ');
 
             if (ui_options.no_color != 1) {
+               WORD color;
+
                if (ui_options.no_color == 2)
                   color = couple_colors[c1 & 7];
                else if (ui_options.no_color == 4)
@@ -382,7 +377,8 @@ extern void put_line(const char the_line[])
                else if (ui_options.no_color == 3)
                   color = couple_colors[(c1 & 7) + 1];
                else
-                  color = (ui_options.pastel_color ? pastel_person_colors : person_colors)[c1 & 1];
+                  color =
+                     (ui_options.pastel_color ? pastel_person_colors : person_colors)[c1 & 1];
 
                (void) SetConsoleTextAttribute(consoleStdout, color);
             }
@@ -391,13 +387,13 @@ extern void put_line(const char the_line[])
             put_char(my_pn2[c1 & 7]);
             put_char(my_directions[c2 & 017]);
 
-            /* Set back to plain "white". */
+            // Set back to plain "white".
 
             if (ui_options.no_color != 1)
                (void) SetConsoleTextAttribute(consoleStdout, text_color);
          }
          else
-            put_char(c);
+            (void) put_char(c);
       }
    }
    else {
@@ -414,24 +410,24 @@ extern void put_char(int c)
       if (c == '\n') {
          CONSOLE_SCREEN_BUFFER_INFO consoleInfo;
 
-         /* Get information about the "buffer", that is, the "pad".  The window itself,
-            and all resizing thereof, is irrelevant.  It will take care of itself, the way
-            it does in any decent operating system (unlike some that I've had to deal with.) */
+         // Get information about the "buffer", that is, the "pad".  The window itself,
+         // and all resizing thereof, is irrelevant.  It will take care of itself, the way
+         // it does in any decent operating system (unlike some that I've had to deal with.)
 
          (void) GetConsoleScreenBufferInfo(consoleStdout, &consoleInfo);
-         consoleInfo.dwCursorPosition.X = 0;   /* Cursor position within the pad. */
+         consoleInfo.dwCursorPosition.X = 0;   // Cursor position within the pad.
 
          if (consoleInfo.dwSize.Y-1 != consoleInfo.dwCursorPosition.Y)
             consoleInfo.dwCursorPosition.Y++;
          else {
 
-            /* We have run off the end of the pad. */
+            // We have run off the end of the pad.
 
-            SMALL_RECT scrollRect;    /* The portion of the pad that we are
-                                         going to scroll in (all of it.) */
-            COORD coord;              /* How we are going to move it (up one position.) */
-            CHAR_INFO consoleFill;    /* What we are going to put into vacated area
-                                         (blanks, with same color as everything else.) */
+            SMALL_RECT scrollRect;    // The portion of the pad that we are
+                                      // going to scroll in (all of it.)
+            COORD coord;              // How we are going to move it (up one position.)
+            CHAR_INFO consoleFill;    // What we are going to put into vacated area
+                                      // (blanks, with same color as everything else.)
 
             scrollRect.Top = 0;
             scrollRect.Left = 0;
@@ -461,7 +457,7 @@ extern int get_char()
    INPUT_RECORD inputRecord;
 
    if (sdtty_no_console)
-      return getchar();    /* A "stdio" call. */
+      return getchar();    // A "stdio" call.
 
    for ( ;; ) {
       ReadConsoleInput(consoleStdin, &inputRecord, 1, &numRead);
@@ -472,15 +468,15 @@ extern int get_char()
          int key = inputRecord.Event.KeyEvent.wVirtualKeyCode;
          int npdigit;
 
-         /* Canonicalize the control bits -- we don't distinguish
-               between left ALT and right ALT, for example. */
+         // Canonicalize the control bits -- we don't distinguish
+         //    between left ALT and right ALT, for example.
 
          if (ctlbits & CAPSLOCK_ON) ctlbits |= SHIFT_PRESSED;
          if (ctlbits & RIGHT_CTRL_PRESSED) ctlbits |= LEFT_CTRL_PRESSED;
          if (ctlbits & RIGHT_ALT_PRESSED) ctlbits |= LEFT_ALT_PRESSED;
          ctlbits &= ~(CAPSLOCK_ON | RIGHT_CTRL_PRESSED | RIGHT_ALT_PRESSED);
 
-         if (key >= 'A' && key <= 'Z') {    /* Letter key was pressed. */
+         if (key >= 'A' && key <= 'Z') {    // Letter key was pressed.
             ctlbits &= ~SHIFT_PRESSED;
             if (ctlbits == 0) return c;
             else if (ctlbits == LEFT_CTRL_PRESSED)
@@ -492,7 +488,7 @@ extern int get_char()
             else
                continue;
          }
-         else if (key >= '0' && key <= '9') {       /* Digit key. */
+         else if (key >= '0' && key <= '9') {       // Digit key.
             ctlbits &= ~SHIFT_PRESSED;
             if (ctlbits == 0) return c;
             else if (ctlbits == LEFT_CTRL_PRESSED)
@@ -502,43 +498,43 @@ extern int get_char()
             else if (ctlbits == (LEFT_CTRL_PRESSED|LEFT_ALT_PRESSED))
                return key-'0'+CTLALTDIG;
             else
-               continue;   /* Don't know what it is. */
+               continue;   // Don't know what it is.
          }
          else if (key == 0x10 || key == 0x11 || key == 0x12 || key == 0x14)
-            continue;      /* Just an actual shift/control/alt key. */
-         else if (key >= 0x70 && key <= 0x7B) {    /* Function key. */
+            continue;      // Just an actual shift/control/alt key.
+         else if (key >= 0x70 && key <= 0x7B) {    // Function key.
             if (ctlbits == 0)                      return key-0x6F+FKEY;
             else if (ctlbits == SHIFT_PRESSED)     return key-0x6F+SFKEY;
             else if (ctlbits == LEFT_CTRL_PRESSED) return key-0x6F+CFKEY;
             else if (ctlbits == LEFT_ALT_PRESSED)  return key-0x6F+AFKEY;
             else if (ctlbits == (LEFT_CTRL_PRESSED|LEFT_ALT_PRESSED)) return key-0x6F+CAFKEY;
             else
-               continue;   /* Don't know what it is. */
+               continue;   // Don't know what it is.
          }
          else if ((ctlbits & ENHANCED_KEY) && key >= 0x20 && key <= 0x20+15) {
-            /* "Enhanced" key. */
+            // "Enhanced" key.
             if (ctlbits == ENHANCED_KEY)                          return key-0x20+EKEY;
             else if (ctlbits == (ENHANCED_KEY|SHIFT_PRESSED))     return key-0x20+SEKEY;
             else if (ctlbits == (ENHANCED_KEY|LEFT_CTRL_PRESSED)) return key-0x20+CEKEY;
             else if (ctlbits == (ENHANCED_KEY|LEFT_ALT_PRESSED))  return key-0x20+AEKEY;
             else if (ctlbits == (ENHANCED_KEY|LEFT_CTRL_PRESSED|LEFT_ALT_PRESSED)) return key-0x20+CAEKEY;
             else
-               continue;   /* Don't know what it is. */
+               continue;   // Don't know what it is.
          }
-         else if ((key >= 0xBA && key <= 0xBF) ||     /* Random other keys ... */
-                  (key == 0x20) ||                    /* Space. */
-                  (key == 0x09) ||                    /* Tab. */
-                  (key == 0x08) ||                    /* Backspace. */
-                  (key == 0x0D) ||                    /* Enter (CR). */
-                  (key == 0x1B) ||                    /* Escape. */
-                  (key == 0xC0) ||                    /* Random other keys ... */
-                  (key >= 0xDB && key <= 0xDE)) {     /* Random other keys ... */
+         else if ((key >= 0xBA && key <= 0xBF) ||     // Random other keys ...
+                  (key == 0x20) ||                    // Space.
+                  (key == 0x09) ||                    // Tab.
+                  (key == 0x08) ||                    // Backspace.
+                  (key == 0x0D) ||                    // Enter (CR).
+                  (key == 0x1B) ||                    // Escape.
+                  (key == 0xC0) ||                    // Random other keys ...
+                  (key >= 0xDB && key <= 0xDE)) {     // Random other keys ...
             ctlbits &= ~SHIFT_PRESSED;
             if (ctlbits == 0) return c;
             else continue;
          }
-         else if (key == 0x23) npdigit = '1';    /* Numeric keypad -- */
-         else if (key == 0x28) npdigit = '2';    /* just treat as normal digits. */
+         else if (key == 0x23) npdigit = '1';    // Numeric keypad --
+         else if (key == 0x28) npdigit = '2';    // just treat as normal digits.
          else if (key == 0x22) npdigit = '3';
          else if (key == 0x25) npdigit = '4';
          else if (key == 0x0C) npdigit = '5';
@@ -552,7 +548,7 @@ extern int get_char()
          else
             continue;
 
-         /* If we get here, this is a numeric keypad press. */
+         // If we get here, this is a numeric keypad press.
 
          ctlbits &= ~SHIFT_PRESSED;
          if (ctlbits == 0) return npdigit;
@@ -563,7 +559,7 @@ extern int get_char()
          else if (ctlbits == (LEFT_CTRL_PRESSED|LEFT_ALT_PRESSED))
             return npdigit-'0'+CTLALTNKP;
          else
-            continue;   /* Don't know what it is. */
+            continue;   // Don't know what it is.
       }
    }
 }
@@ -580,7 +576,7 @@ extern void get_string(char *dest, int max)
          clear_line();
          continue;
       }
-      else if (key > 0x7F) continue;    /* Ignore special function keys and such. */
+      else if (key > 0x7F) continue;    // Ignore special function keys and such.
       else if (key == '\r' || key == '\n') break;
       else if ((key == '\b') || (key == 0x7F)) {
          if (size > 0) {
@@ -590,7 +586,7 @@ extern void get_string(char *dest, int max)
          continue;
       }
 
-      if (key > 128) continue;   /* This was a function key press. */
+      if (key > 128) continue;   // This was a function key press.
 
       put_char(key);
       dest[size++] = key;

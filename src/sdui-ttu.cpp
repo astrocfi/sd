@@ -29,6 +29,7 @@
 #else
 #include <stdio.h>
 #endif
+#include <stdlib.h>
 #include <termios.h>   /* We use this stuff if "-no_cursor" was specified. */
 #include <unistd.h>    /* This too. */
 #include <signal.h>
@@ -77,6 +78,7 @@ static void csetmode(int mode)             /* 1 means raw, no echo, one characte
 
 extern void ttu_final_option_setup()
 {
+   if (!sdtty_no_console) ui_options.use_escapes_for_drawing_people = 1;
 }
 
 
@@ -372,6 +374,28 @@ extern void erase_last_n(int n)
 #endif
 }
 
+
+static Cstring person_colors[2] = {
+   "34",       // blue
+   "31"};      // red
+
+static Cstring pastel_person_colors[2] = {
+   "36",       // bletcherous blue
+   "35"};      // putrid pink
+
+static Cstring couple_colors[9] = {
+   "31", "31",       // red
+   "32", "32",       // green
+   "34", "34",       // blue
+   "33", "33",       // yellow
+   "31"};            // red for wraparound if coloring by corner
+
+static Cstring couple_colors_rgyb[8] = {
+   "31", "31",       // red
+   "32", "32",       // green
+   "33", "33",       // yellow
+   "34", "34"};      // blue
+
 extern void put_line(const char the_line[])
 {
 #ifndef NO_CURSES
@@ -379,12 +403,59 @@ extern void put_line(const char the_line[])
       addstr(the_line);
       refresh();
    }
+else
+   if (0) {
+   }
+#endif
+   else if (!sdtty_no_console) {
+      char c;
+
+      // We need to watch for escape characters denoting people
+      // to be printed in a particularly pretty way.
+
+      while ((c = *the_line++)) {
+         if (c == '\013') {
+            int c1 = *the_line++;
+            int c2 = *the_line++;
+
+            put_char(' ');
+
+            if (ui_options.no_color != 1) {
+               Cstring color;
+
+               if (ui_options.no_color == 2)
+                  color = couple_colors[c1 & 7];
+               else if (ui_options.no_color == 4)
+                  color = couple_colors_rgyb[c1 & 7];
+               else if (ui_options.no_color == 3)
+                  color = couple_colors[(c1 & 7) + 1];
+               else
+                  color =
+                     (ui_options.pastel_color ? pastel_person_colors : person_colors)[c1 & 1];
+
+
+                  color = person_colors[c1 & 1];
+
+               (void) fputs("\033[1;", stdout);
+               (void) fputs(color, stdout);
+               (void) fputs(";40m", stdout);
+            }
+
+            put_char(ui_options.pn1[c1 & 7]);
+            put_char(ui_options.pn2[c1 & 7]);
+            put_char(ui_options.direc[c2 & 017]);
+
+            if (ui_options.no_color != 1) {
+               (void) fputs("\033[0;37;40m", stdout);
+            }
+         }
+         else
+            (void) put_char(c);
+      }
+   }
    else {
       (void) fputs(the_line, stdout);
    }
-#else
-   (void) fputs(the_line, stdout);
-#endif
 }
 
 extern void put_char(int c)

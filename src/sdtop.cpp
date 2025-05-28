@@ -1710,6 +1710,7 @@ extern void initialize_sdlib(void)
    initialize_sel_tables();
    initialize_fix_tables();
    initialize_conc_tables();
+   initialize_tgl_tables();
    initialize_map_tables();
    initialize_touch_tables();
    initialize_concept_sublists();

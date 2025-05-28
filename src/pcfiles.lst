@@ -3,7 +3,6 @@ sdutil.o
 sdbasic.o
 sdinit.o
 sdtables.o
-sdptable.o
 sdctable.o
 sdtop.o
 sdconcpt.o

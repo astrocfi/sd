@@ -203,6 +203,16 @@
    maps_3diagwk
    fixer_init_table
    sel_init_table
+   tgl_map_init_table
+   c1tglmap1
+   c1tglmap2
+   dbqtglmap1
+   dbqtglmap2
+   qttglmap1
+   qttglmap2
+   bdtglmap1
+   bdtglmap2
+   rgtglmap1
 */
 
 #ifdef WIN32
@@ -7613,3 +7623,149 @@ sel_item sel_init_table[] = {
    {LOOKUP_NONE,               s2x3,         033,   fx_f2x3j1,     fx0, -1},
    {LOOKUP_NONE,               s2x3,         066,   fx_f2x3j2,     fx0, -1},
    {LOOKUP_NONE,               nothing}};
+
+// This has the same issues as the table above.  These items are supposed
+// to reflect the enumeration type "tglmapkey".
+
+tgl_map tgl_map_init_table[] = {
+   // In C1 phantom: first triangle (inverted),
+   // then second triangle (upright), then idle.
+   {tglmap1b, s_c1phan, s2x4, tglmap2b, 0, 0,
+    {4, 3, 2,   0, 7, 6,   1, 5},
+    {6, 8, 10,  14,0, 2,   4, 12},
+    {10, 9, 8,  4, 3, 2,   5, 11},
+    {6, 5, 4, 2, 1, 0, 3, 7},
+    {10, 9, 8, 4, 3, 2, 5, 11}},
+
+   {tglmap2b, s_qtag, s2x4, tglmap1b, 0, 1,
+    {5, 6, 7,   1, 2, 3,   0, 4},
+    {3, 15, 13, 11,7, 5,   1,  9},
+    {1, 2, 3,   7, 8, 9,   0, 6},
+    {7, 6, 5, 3, 2, 1, 0, 4},
+    {1, 2, 3, 7, 8, 9, 0, 6}},
+
+   {tglmap1i, nothing, nothing, tglmap2i, 0, 0,   // Interlocked
+    {0, 0, 0,   0, 0, 0,   0, 0},
+    {4, 8, 10,  12,0, 2,   6, 14},
+    {0, 0, 0,   0, 0, 0,   0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0}},
+
+   {tglmap2i, nothing, nothing,  tglmap1i, 0, 0,   // Interlocked
+    {0, 0, 0,   0, 0, 0,   0, 0},
+    {1, 15, 13, 9, 7, 5,   3, 11},
+    {0, 0, 0,   0, 0, 0,   0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0}},
+
+   // Maps for deepbigqtg setups.
+   {tglmap1d, s2x8, s2x8, tglmap2d, 0, 0,
+    {4, 3, 2,   0, 7, 6,     1, 5},
+    {2, 6, 7,   10,14, 15,   0, 8},
+    {10, 9, 8,  4, 3, 2,     5, 11},
+    {1, 2, 3,   9, 10, 11,   8, 0},
+    {10, 9, 8, 4, 3, 2, 5, 11}},
+
+   {tglmap2d, s2x8, s2x8, tglmap1d, 0, 0,
+    {4, 3, 2,   0, 7, 6,   1, 5},
+    {3, 4, 5,   11,12,13,  1, 9},
+    {10, 9, 8,  4, 3, 2,   5, 11},
+    {14,13,12,  6, 5, 4,   7, 15},
+    {10, 9, 8, 4, 3, 2, 5, 11}},
+
+   {tglmap1m, nothing, s2x8, tglmap2m, 1, 0,   // Interlocked
+    {5, 6, 7,   1, 2, 3,   0, 4},
+    {0, 6, 7,   8,14,15,  2, 10},
+    {1, 2, 3,   7, 8, 9,   0, 6},
+    {7, 6, 5, 3, 2, 1, 0, 4},
+    {1, 2, 3, 7, 8, 9, 0, 6}},
+
+   {tglmap2m, nothing, s2x8, tglmap1m, 1, 0,   // Interlocked
+    {5, 6, 7,   1, 2, 3,   0, 4},
+    {1, 4, 5,   9,12,13,  3, 11},
+    {1, 2, 3,   7, 8, 9,   0, 6},
+    {7, 6, 5, 3, 2, 1, 0, 4},
+    {1, 2, 3, 7, 8, 9, 0, 6}},
+
+   // Interlocked triangles in quarter-tag:
+   {tglmap1j, s_qtag, nothing, tglmap2j, 1, 1,
+    {4, 7, 2,   0, 3, 6,   1, 5},
+    {0, 0, 0,   0, 0, 0,   0, 0},
+    {0, 0, 0,   0, 0, 0,   0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0}},
+
+   {tglmap2j, s_qtag, nothing, tglmap1j, 1, 1,
+    {5, 6, 3,   1, 2, 7,   0, 4},
+    {0, 0, 0,   0, 0, 0,   0, 0},
+    {0, 0, 0,   0, 0, 0,   0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0}},
+
+   // Magic triangles in quarter-tag:
+   {tglmap1x, s_qtag, nothing, tglmap2x, 1, 1,
+    {4, 6, 7,   0, 2, 3,   1, 5},
+    {0, 0, 0,   0, 0, 0,   0, 0},
+    {0, 0, 0,   0, 0, 0,   0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0}},
+
+   {tglmap2x, s_qtag, nothing, tglmap1x, 1, 1,
+    {5, 3, 2,   1, 7, 6,   0, 4},
+    {0, 0, 0,   0, 0, 0,   0, 0},
+    {0, 0, 0,   0, 0, 0,   0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0}},
+
+   // Magic interlocked triangles in quarter-tag:
+   {tglmap1y, s_qtag, nothing, tglmap2y, 1, 1,
+    {4, 6, 3,   0, 2, 7,   1, 5},
+    {0, 0, 0,   0, 0, 0,   0, 0},
+    {0, 0, 0,   0, 0, 0,   0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0}},
+
+   {tglmap2y, s_qtag, nothing, tglmap1y, 1, 1,
+    {5, 7, 2,   1, 3, 6,   0, 4},
+    {0, 0, 0,   0, 0, 0,   0, 0},
+    {0, 0, 0,   0, 0, 0,   0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0}},
+
+   // Interlocked triangles in bigdmd:
+   {tglmap1k, nothing, nothing, tglmap2k, 1, 0,
+    {0, 0, 0,   0, 0, 0,   0, 0},
+    {0, 0, 0,   0, 0, 0,   0, 0},
+    {10, 3, 8,  4, 9, 2,   5, 11},
+    {0},
+    {0}},
+
+   {tglmap2k, nothing, nothing, tglmap1k, 1, 0,
+    {0, 0, 0,   0, 0, 0,   0, 0},
+    {0, 0, 0,   0, 0, 0,   0, 0},
+    {1, 2, 9,   7, 8, 3,   0, 6},
+    {0},
+    {0}},
+
+   {tglmap2r, nothing, nothing, tglmap2r, 1, 0,
+    {0, 0, 0,   0, 0, 0,   0, 0},
+    {0, 0, 0,   0, 0, 0,   0, 0},
+    {7, 1, 4,   3, 5, 0,   2, 6},
+    {0},
+    {0}},
+
+   {tgl0}
+};
+
+
+const tglmapkey c1tglmap1[2] = {tglmap1b, tglmap1i};
+const tglmapkey c1tglmap2[2] = {tglmap2b, tglmap2i};
+
+const tglmapkey dbqtglmap1[2] = {tglmap1d, tglmap1m};
+const tglmapkey dbqtglmap2[2] = {tglmap2d, tglmap2m};
+
+const tglmapkey qttglmap1[4] = {tglmap1b, tglmap1j, tglmap1x, tglmap1y};
+const tglmapkey qttglmap2[4] = {tglmap2b, tglmap2j, tglmap2x, tglmap2y};
+const tglmapkey bdtglmap1[2] = {tglmap1b, tglmap1k};
+const tglmapkey bdtglmap2[2] = {tglmap2b, tglmap2k};
+const tglmapkey rgtglmap1[2] = {tglmap2r, tglmap2r};

@@ -131,14 +131,14 @@ static int wherearewe;
 
 #define DISPLAY_LINE_LENGTH 90
 
-typedef struct DisplayTypetag {
+struct DisplayType {
    char Line [DISPLAY_LINE_LENGTH];
    int in_picture;
    int Height;
    int DeltaToNext;
-   struct DisplayTypetag *Next;
-   struct DisplayTypetag *Prev;
-} DisplayType;
+   DisplayType *Next;
+   DisplayType *Prev;
+};
 
 
 #define ui_undefined -999

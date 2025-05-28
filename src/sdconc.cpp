@@ -82,14 +82,14 @@ extern void initialize_sel_tables()
 }
 
 
-static fixer *fixer_ptr_table[fx_FIXERLAST];
+static fixer *fixer_ptr_table[fx_ENUMLAST];
 
 extern void initialize_fix_tables()
 {
    int i;
    fixer *tabp;
 
-   for (i=fx0 ; i<fx_FIXERLAST ; i++) fixer_ptr_table[i] = (fixer *) 0;
+   for (i=fx0 ; i<fx_ENUMLAST ; i++) fixer_ptr_table[i] = (fixer *) 0;
 
    for (tabp = fixer_init_table ; tabp->mykey != fx0 ; tabp++) {
       if (fixer_ptr_table[tabp->mykey])
@@ -98,7 +98,7 @@ extern void initialize_fix_tables()
       fixer_ptr_table[tabp->mykey] = tabp;
    }
 
-   for (i=fx0+1 ; i<fx_FIXERLAST ; i++) {
+   for (i=fx0+1 ; i<fx_ENUMLAST ; i++) {
       if (!fixer_ptr_table[i])
          (*the_callback_block.uims_database_error_fn)
             ("Fixer table initialization failed: undef.\n", (Cstring) 0);
@@ -3029,6 +3029,11 @@ static concmerge_thing merge_maps[] = {
    {s_qtag,        s1x8, 0x44,  0xCC, 0x10E, 0x0, schema_matrix,         s4dmd,       nothing,  warn__none, 0, 0, {1, 2, -1, 7, 9, 10, -1, 15},    {12, 13, -1, -1, 4, 5, -1, -1}},
    // And this one is used instead.
    {s_qtag,        s1x8, 0x44,  0xCC, 0x0E, 0x0, schema_matrix,         s4dmd,       nothing,  warn__none, 0, 0, {1, 2, -1, 7, 9, 10, -1, 15},    {13, 14, -1, -1, 5, 6, -1, -1}},
+
+   // This one is used for finishing right wing follow to a diamond from
+   // suitable T-bones.  It seems that it should be useful in its own right
+   // for merging diamondlike things, but no other test seems to need it.
+   {s_qtag,        s1x8, 0x33,  0xAA, 0xAE, 0x1, schema_rev_checkpoint, s1x4,       s1x4,  warn__none, 0, 0, {0, 2, 4, 6},    {6, 7, 2, 3}},
 
    {s2x3,     s_hrglass, 022,   0x33, 0x0C, 0x1, schema_concentric,     sdmd,        s2x2,     warn__none, 0, 0, {6, 3, 2, 7},            {0, 2, 3, 5}},
    {s2x3,    s_dhrglass, 022,   0x33, 0x0C, 0x1, schema_concentric,     sdmd,        s2x2,     warn__none, 0, 0, {6, 3, 2, 7},            {0, 2, 3, 5}},

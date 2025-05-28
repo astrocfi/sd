@@ -1036,9 +1036,9 @@ concept_descriptor concept_descriptor_table[] = {
    {"IN A TIDAL LINE",                       concept_tandem_in_setup,           D, l_c3,         {0, CMD_MISC__VERIFY_LINES, CONCPROP__NEEDK_1X16}},
    {"IN A TIDAL COLUMN",                     concept_tandem_in_setup,           D, l_c3,         {0, CMD_MISC__VERIFY_COLS, CONCPROP__NEEDK_2X8}},
 /* -------- column break -------- */
-#define mm__3_size 85
-#define mm__3_3x3 68
-#define mm__3_4x4 69
+#define mm__3_size 87
+#define mm__3_3x3 70
+#define mm__3_4x4 71
    {"INSIDE TRIANGLES",                      concept_randomtrngl,               D, l_c1,         {0, 2}},
    {"INSIDE INTERLOCKED TRIANGLES",          concept_randomtrngl,               D, l_c2,         {0, 0102}},
    {"OUTSIDE TRIANGLES",                     concept_randomtrngl,               D, l_c1,         {0, 3}},
@@ -1084,6 +1084,8 @@ concept_descriptor concept_descriptor_table[] = {
    {"RIGHTRIGGER",                concept_rigger, D, l_c3x, {0, 3}},
    {"BACKRIGGER",                 concept_rigger, D, l_c3x, {0, 16}},
    {"FRONTRIGGER",                concept_rigger, D, l_c3x, {0, 18}},
+   {"RIGHT WING",                 concept_wing,   D, l_c3x, {0, 0}},
+   {"LEFT WING",                  concept_wing,   D, l_c3x, {0, 1}},
          {"", concept_comment, 0, l_nonexistent_concept},
    {"COMMON POINT GALAXY",   concept_common_spot, D, l_c4,  {0,    1, 0}},
    {"COMMON SPOT COLUMNS",   concept_common_spot, D, l_c4,  {0,    2, 0}},
@@ -1451,7 +1453,7 @@ int *concept_size_tables[] = {
    misc_c_sizes,
    0};
 
-Const char *concept_menu_strings[] = {
+const char *concept_menu_strings[] = {
    "PHANTOM LINE/COL concepts",
    "PHANTOM BOX/DMD/QTAG concepts",
    "COUPLES/TANDEM concepts",

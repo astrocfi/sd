@@ -21,8 +21,8 @@
     General Public License if you distribute the file.
 */
 
-#define VERSION_STRING "34.7c"
-#define TIME_STAMP "wba@alum.mit.edu  17 February 2002 $"
+#define VERSION_STRING "34.7d"
+#define TIME_STAMP "wba@alum.mit.edu  6 April 2002 $"
 
 /* This defines the following functions:
    sd_version_string
@@ -67,7 +67,7 @@ and the following external variables:
    not by any utility.  Furthermore, we do not believe that it is proper for
    source control utilities to alter the text in a source file. */
 
-static Const char id[] = "@(#)$He" "ader: Sd: version " VERSION_STRING "  " TIME_STAMP;
+static const char id[] = "@(#)$He" "ader: Sd: version " VERSION_STRING "  " TIME_STAMP;
    
 
 extern char *sd_version_string(void)

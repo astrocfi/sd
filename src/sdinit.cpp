@@ -182,7 +182,7 @@ SDLIB_API long_boolean iterate_over_sel_dir_num(
 
 
 
-static void test_starting_setup(call_list_kind cl, Const setup *test_setup)
+static void test_starting_setup(call_list_kind cl, const setup *test_setup)
 {
    int i;
 
@@ -1212,7 +1212,7 @@ static const char *translate_menu_name(const char *orig_name, uint32 *escape_bit
          c = orig_name[j];
 
          if (c == '@') {
-            Const char *q = get_escape_string(orig_name[++j]);
+            const char *q = get_escape_string(orig_name[++j]);
             if (q && *q) {
                while (*q) temp_ptr[templength++] = *q++;
                continue;

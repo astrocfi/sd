@@ -34,10 +34,10 @@
    do the "const" attribute correctly.  We no longer have
    any patience with such things. */
 
-// In fact, we're getting rid of the capitalized "Const" crap throughout
-// the program.  No one still compiles for Sun garbage, do they?
-// So the next line will be gone soon.
-#define Const const
+// So we used to have a line that said "#define Const const".
+// If your compiler doesn't handle "const" correctly (or any
+// other aspect of ANSI C++, for that matter, that's too bad.
+
 
 
 // We would like "veryshort" to be a signed char, but not all compilers are fully ANSI compliant.
@@ -85,7 +85,7 @@ typedef const char *Cstring;
 #define DATABASE_FORMAT_VERSION 194
 
 /* BEWARE!!  These must track the items in "tagtabinit" in dbcomp.c . */
-typedef enum {
+enum base_call_index {
    base_call_unused,
    base_call_null,
    base_call_null_second,
@@ -116,7 +116,7 @@ typedef enum {
    base_call_revert_if_needed,
    base_call_extend_n,
    base_call_cardinality    // Not an actual enumeration item.
-} base_call_index;
+};
 #define num_base_call_indices (((int) base_call_cardinality))
 
 
@@ -276,7 +276,7 @@ static const uint32 CFLAG2_ONE_PERSON_CALL           = 0x08000000UL;
 /* BEWARE!!  This list must track the table "level_threshholds" in sdtables.c . */
 /* BEWARE!!  This list must track the table "higher_acceptable_level" in sdtables.c . */
 
-typedef enum {
+enum dance_level {
    l_mainstream,
    l_plus,
    l_a1,
@@ -291,7 +291,7 @@ typedef enum {
    l_c4x,
    l_dontshow,
    l_nonexistent_concept
-} dance_level;
+};
 
 /* These are the states that people can be in, and the "ending setups" that can appear
    in the call data base. */
@@ -302,7 +302,7 @@ typedef enum {
    there before changing the order of existing setups. In general, keep small setups
    first, particularly 4-person setups before 8-person setups. */
 
-typedef enum {
+enum setup_kind {
    nothing,
    s1x1,
    s1x2,
@@ -419,14 +419,14 @@ typedef enum {
    sdblspindle,
    s_dead_concentric,
    s_normal_concentric
-} setup_kind;
+};
 
 /* These are the "beginning setups" that can appear in the call data base. */
 /* BEWARE!!  This list must track the array "sstab" in dbcomp.c . */
 /* BEWARE!!  This list must track the array "begin_sizes" in mkcalls.c . */
 /* BEWARE!!  This list must track the array "begin_sizes" in sdtables.c . */
 
-typedef enum {
+enum begin_kind {
    b_nothing,
    b_1x1,
    b_1x2,
@@ -592,7 +592,7 @@ typedef enum {
    b_pdblxwave,
    b_dblspindle,
    b_pdblspindle
-} begin_kind;
+};
 
 /* These bits are used in the "callarray_flags" field of a "callarray".
    There is room for 21 of them. */
@@ -625,7 +625,7 @@ typedef enum {
 #define CAF__PLUSEIGHTH_ROTATION 0x10000
 
 // BEWARE!!  This list must track the array "qualtab" in dbcomp.c
-typedef enum {
+enum call_restriction {
    cr_none,                /* Qualifier only. */
    cr_alwaysfail,          /* Restriction only. */
    cr_wave_only,
@@ -729,13 +729,13 @@ typedef enum {
    cr_jleft,               /* Restriction only. */
    cr_jright,              /* Restriction only. */
    cr_ijleft,              /* Restriction only. */
-   cr_ijright              /* Restriction only. */
-} call_restriction;
-#define NUM_QUALIFIERS (((int) cr_ijright)+1)
+   cr_ijright,             /* Restriction only. */
+   NUM_QUALIFIERS          // Not really in the enumeration.
+};
 
 /* BEWARE!!  This list must track the array "schematab" in dbcomp.c .
    Also, "schema_sequential" must be the start of all the sequential ones. */
-typedef enum {
+enum calldef_schema {
    schema_concentric,
    schema_cross_concentric,
    schema_single_concentric,
@@ -839,7 +839,7 @@ typedef enum {
    schema_split_sequential,
    schema_sequential_with_fraction,
    schema_sequential_with_split_1x8_id
-} calldef_schema;
+};
 
 
 /* BEWARE!!  Some of these flags co-exist with other flags defined elsewhere.
@@ -967,7 +967,7 @@ static const uint32 DFM1_NO_CHECK_MOD_LEVEL           = 0x00800000UL;
 static const uint32 DFM1_FRACTAL_INSERT               = 0x01000000UL;
 
 
-typedef enum {
+enum stability {
    stb_none,      /* unknown */
    stb_z,         /* "Z" - person does not turn */
    stb_a,         /* "A" - person turns anticlockwise from 1 to 4 quadrants */
@@ -982,7 +982,7 @@ typedef enum {
    stb_cccca,     /* "CCCCA" - person turns clockwise 4 times, then anticlockwise 1 to 4 quadrants */
    stb_aa,        /* "AA" - person turns anticlockwise from 5 to 8 quadrants */
    stb_cc         /* "CC" - person turns clockwise from 5 to 8 quadrants */
-} stability;
+};
 
 /* These define the format of the short int (16 bits, presumably) items emitted
    for each person in a by-array call definition.  These will get read into the

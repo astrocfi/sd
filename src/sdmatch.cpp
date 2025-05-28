@@ -948,11 +948,11 @@ static long_boolean verify_call(void)
 }
 
 
-static void copy_sublist(Const match_result *outbar, modifier_block *tails)
+static void copy_sublist(const match_result *outbar, modifier_block *tails)
 {
    if (outbar->real_next_subcall) {
       modifier_block *out;
-      Const match_result *newoutbar = outbar->real_next_subcall;
+      const match_result *newoutbar = outbar->real_next_subcall;
 
       if (modifier_inactive_list) {
          out = modifier_inactive_list;
@@ -972,7 +972,7 @@ static void copy_sublist(Const match_result *outbar, modifier_block *tails)
 
    if (outbar->real_secondary_subcall) {
       modifier_block *out;
-      Const match_result *newoutbar = outbar->real_secondary_subcall;
+      const match_result *newoutbar = outbar->real_secondary_subcall;
 
       if (modifier_inactive_list) {
          out = modifier_inactive_list;
