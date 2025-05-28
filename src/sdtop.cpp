@@ -138,6 +138,7 @@ and the following external variables:
    allow_bend_home_getout
    enforce_overcast_warning
    using_active_phantoms
+   active_phantoms_in_this_sequence
    last_direction_kind
    interactivity
    database_version
@@ -278,6 +279,7 @@ bool allowing_minigrand = false;
 bool allow_bend_home_getout = false;
 bool enforce_overcast_warning = false;
 bool using_active_phantoms = false;
+int active_phantoms_in_this_sequence = 0;
 bool two_couple_calling = false;
 bool expanding_database = false;
 int trace_progress = 0;
@@ -3940,7 +3942,7 @@ extern callarray *assoc(
 
          // The "qualifierstuff" field is one higher than what the database author said.  That is "qualifier num 2"
          // in the database gets 3 in current_options.number_fields.
-         if (((unsigned int) (p->qualifierstuff & QUALBIT__NUM_MASK) / QUALBIT__NUM_BIT) != t+1)
+         if (((uint32_t) (p->qualifierstuff & QUALBIT__NUM_MASK) / QUALBIT__NUM_BIT) != (uint32_t) (t+1))
             continue;
       }
       else {
@@ -6772,7 +6774,7 @@ void toplevelmove() THROW_DECL
    starting_setup.cmd.parseptr = conceptptr;
    starting_setup.cmd.callspec = (call_with_name *) 0;
    starting_setup.cmd.cmd_final_flags.clear_all_herit_and_final_bits();
-   starting_setup.result_flags.misc &= ~RESULTFLAG__DID_MXN_EXPANSION;
+   starting_setup.result_flags.misc &= RESULTFLAG__IMPRECISE_ROT;  // Leave that one on --- it's global.
    starting_setup.cmd.cmd_heritflags_to_save_from_mxn_expansion = 0ULL;
    move(&starting_setup, false, &newhist.state, true);
    newhist.state_is_valid = true;
@@ -6795,9 +6797,9 @@ void toplevelmove() THROW_DECL
       newhist.state.eighth_rotation += newhist.state.inner.seighth_rotation;
    }
 
-   // Once rotation is imprecise, it is always imprecise.  Same for the other flags copied here.
+   // Once rotation is imprecise, it is always imprecise.
    newhist.state.result_flags.misc |= starting_setup.result_flags.misc &
-      (RESULTFLAG__IMPRECISE_ROT|RESULTFLAG__ACTIVE_PHANTOMS_ON|RESULTFLAG__ACTIVE_PHANTOMS_OFF);
+      RESULTFLAG__IMPRECISE_ROT;
 }
 
 

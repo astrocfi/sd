@@ -128,6 +128,16 @@
 
 s_tinyhyperbone -- like s_hyperbone, but all 4 trngl4's are on top of each other.
 
+s_bighyperbone
+            11  6
+            10  7
+               8
+    0  1       9      16 17
+         2  3    15 14
+    5  4      21      13 12
+              20
+            19  22
+            18  23
 */
 
 
@@ -1190,6 +1200,9 @@ static const int8_t tinyhyperboneb[20] = { 3,  0, -1, -1, -1, -1, -1, -1,
                                            1,  2, -1, -1, -1, -1, -1, -1,
                                            3,  0, -1, -1};
 
+static const int8_t bighyperbone[24] = { -1, -1, -1, -1, -1, -1, 0, 1, 2, 3, 10, 11,
+                                         -1, -1, -1, -1, -1, -1, 6, 7, 8, 9, 4, 5};
+
 static const int8_t galhyperv[15] = {0, 7, 5, 6, 0, 0, 0, 3, 1, 2, 0, 4, 0, 7, 5};
 static const int8_t qtghyperh[12] = {6, 7, 0, 0, 0, 1, 2, 3, 4, 0, 0, 5};
 static const int8_t qtghyperv[12] = {0, 0, 5, 6, 7, 0, 0, 0, 1, 2, 3, 4};
@@ -1710,6 +1723,8 @@ static void special_4_way_symm(
 
    static const int8_t table_bigd_x4dmd[12] = {7, 5, 10, 11, 14, 12, 23, 21, 26, 27, 30, 28};
 
+   static const int8_t table_bigb_xbigb[12] = {0, 1, 2, 3, 16, 17, 12, 13, 14, 15, 4, 5};
+
    static const int8_t line_table[4] = {0, 1, 6, 7};
 
    static const int8_t dmd_table[4] = {0, 4, 6, 10};
@@ -1784,6 +1799,10 @@ static void special_4_way_symm(
    case sbigdmd:
       result->kind = sx4dmd;
       the_table = table_bigd_x4dmd;
+      break;
+   case sbigbone:
+      result->kind = s_bighyperbone;
+      the_table = table_bigb_xbigb;
       break;
    default:
       fail("Don't recognize ending setup for this call.");
@@ -5843,6 +5862,19 @@ static uint32_t do_actual_array_call(
             else
                fail("Call went to improperly-formed setup.");
             break;
+         case s_bighyperbone:
+            if ((lilresult_mask[0] & 0x03F03F) == 0) {
+               result->kind = sbigbone;
+               permuter = bighyperbone;
+               rotator = 1;
+            }
+            else if ((lilresult_mask[0] & 0xFC0FC0) == 0) {
+               result->kind = sbigbone;
+               permuter = bighyperbone+6;
+            }
+            else
+               fail("Call went to improperly-formed setup.");
+            break;
          case s_2stars:
             if ((lilresult_mask[0] & 0xCC) == 0) {
                result->kind = s2x2;
@@ -6202,7 +6234,7 @@ extern void basic_move(
    // (1) We want it to be zero in case we bail out.
    // (2) we want the RESULTFLAG__SPLIT_AXIS_MASK stuff to be clear
    //     for the normal case, and have bits only if splitting actually occurs.
-   clear_result_flags(result);
+   clear_result_flags(result, RESULTFLAG__RECTIFY_ACCEPTED);
 
    if (ss->cmd.cmd_misc2_flags & CMD_MISC2__DO_NOT_EXECUTE) {
       result->kind = nothing;
@@ -6367,6 +6399,8 @@ extern void basic_move(
    uint64_t given_funny_flag = ss->cmd.cmd_final_flags.test_heritbits(INHERITFLAG_FUNNY);
 
    heritflags search_concepts_without_funny = ss->cmd.cmd_final_flags.herit & ~INHERITFLAG_FUNNY;
+   if (ss->result_flags.misc & RESULTFLAG__RECTIFY_ACCEPTED)
+      search_concepts_without_funny &= ~INHERITFLAG_RECTIFY;
 
    search_temp_without_funny = 0ULL;
 
@@ -6382,12 +6416,20 @@ foobar:
    for (qq = callspec->stuff.arr.def_list; qq; qq = qq->next) {
       // First, see if we have a match including any incoming "funny" flag.
       if (qq->modifier_seth == search_temp_with_funny) {
+
+         if ((search_temp_with_funny & INHERITFLAG_RECTIFY) != 0)
+            result->result_flags.misc |= RESULTFLAG__RECTIFY_ACCEPTED;
+
          goto use_this_calldeflist;
       }
       // Search again, for a plain definition that has the "CAF__FACING_FUNNY" flag.
       else if (given_funny_flag != 0ULL &&
                qq->modifier_seth == search_temp_without_funny &&
                (qq->callarray_list->callarray_flags & CAF__FACING_FUNNY)) {
+
+         if ((search_temp_without_funny & INHERITFLAG_RECTIFY) != 0)
+            result->result_flags.misc |= RESULTFLAG__RECTIFY_ACCEPTED;
+
          funnybits = given_funny_flag;
          goto use_this_calldeflist;
       }
@@ -6634,55 +6676,28 @@ foobar:
          fail("Triangle concept not allowed here.");
    }
 
-   /* If we found a definition for the setup we are in, we win.
-      This is true even if we only found a definition for the lines version
-      of the setup and not the columns version, or vice-versa.
-      If we need both and don't have both, we will lose. */
+   // If we found a definition for the setup we are in, we win.
+   // This is true even if we only found a definition for the lines version
+   // of the setup and not the columns version, or vice-versa.
+   // If we need both and don't have both, we will lose.
 
    if (linedefinition || coldefinition) {
-      /* Raise a warning if the "split" concept was explicitly used but the
-         call would have naturally split that way anyway. */
-
-      /* ******* we have patched this out, because we aren't convinced that it really
-         works.  How do we make it not complain on "split sidetrack" even though some
-         parts of the call, like the "zig-zag", would complain?  And how do we account
-         for the fact that it is observed not to raise the warning on split sidetrack
-         even though we don't understand why?  By the way, uncertainty about this is what
-         led us to make this a warning.  It was originally an error.  Which is correct?
-         It is probably best to leave it as a warning of the "don't use in resolve" type.
-
-      if (ss->setupflags & CMD_MISC__SAID_SPLIT) {
-         switch (ss->kind) {
-            case s2x2:
-               if (!assoc(b_2x4, ss, calldeflist) && !assoc(b_4x2, ss, calldeflist))
-                  warn(warn__excess_split);
-               break;
-            case s1x4:
-               if (!assoc(b_1x8, ss, calldeflist) && !assoc(b_8x1, ss, calldeflist))
-                  warn(warn__excess_split);
-               break;
-            case sdmd:
-               if (!assoc(b_qtag, ss, calldeflist) && !assoc(b_pqtag, ss, calldeflist) &&
-                        !assoc(b_ptpd, ss, calldeflist) && !assoc(b_pptpd, ss, calldeflist))
-                  warn(warn__excess_split);
-               break;
-         }
-      }
-      */
+      // Raise a warning if the "split" concept was explicitly used but the
+      // call would have naturally split that way anyway.
 
       if (ss->cmd.cmd_final_flags.test_finalbits(FINAL__TRIANGLE|FINAL__LEADTRIANGLE))
          fail("Triangle concept not allowed here.");
 
-      /* We got here if either linedefinition or coldefinition had something.
-         If only one of them had something, but both needed to (because the setup
-         was T-boned) the normal intention is that we proceed anyway, which will
-         raise an error.  However, we check here for the case of a 1x2 setup
-         that has one definition but not the other, and has a 1x1 definition as well.
-         In that case, we split the setup.  This allows T-boned "quarter <direction>".
-         The problem is that "quarter <direction>" has a 1x2 definition (for
-         "quarter in") and a 1x1 definition, but no 2x1 definition.  (If it had
-         a 2x1 definition, then the splitting from a 2x2 would be ambiguous.)
-         So we have to fix that. */
+      // We got here if either linedefinition or coldefinition had something.
+      // If only one of them had something, but both needed to (because the setup
+      // was T-boned) the normal intention is that we proceed anyway, which will
+      // raise an error.  However, we check here for the case of a 1x2 setup
+      // that has one definition but not the other, and has a 1x1 definition as well.
+      // In that case, we split the setup.  This allows T-boned "quarter <direction>".
+      // The problem is that "quarter <direction>" has a 1x2 definition (for
+      // "quarter in") and a 1x1 definition, but no 2x1 definition.  (If it had
+      // a 2x1 definition, then the splitting from a 2x2 would be ambiguous.)
+      // So we have to fix that.
 
       if (ss->kind == s1x2 && (newtb & 011) == 011 && (!linedefinition || !coldefinition))
          goto need_to_divide;

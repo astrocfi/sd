@@ -2212,11 +2212,8 @@ void ui_utils::write_header_stuff(bool with_ui_version, uint32_t act_phan_flags)
       }
    }
 
-   if (act_phan_flags & RESULTFLAG__ACTIVE_PHANTOMS_ON) {
-      if (act_phan_flags & RESULTFLAG__ACTIVE_PHANTOMS_OFF)
-         writestuff(" (AP-)");
-      else
-         writestuff(" (AP)");
+   if (act_phan_flags & 2) {
+      writestuff((act_phan_flags & 1) ? " (AP-)" : " (AP)");
    }
 
    writestuff("     ");
@@ -2768,7 +2765,7 @@ bool ui_utils::write_sequence_to_file() THROW_DECL
    get_date(date);
    writestuff(date);
    writestuff("     ");
-   write_header_stuff(false, configuration::current_config().state.result_flags.misc);
+   write_header_stuff(false, active_phantoms_in_this_sequence);
    newline();
 
    if (!configuration::sequence_is_resolved()) {
@@ -3423,6 +3420,7 @@ void ui_utils::run_program(iobase & ggg)
       configuration::initialize_history(global_reply.minorpart);   // Clear the position history.
       configuration::history[1].init_warnings_specific();
       configuration::history[1].init_resolve();
+      active_phantoms_in_this_sequence = 0;
       // Put the people into their starting position.
       configuration::history[1].state = *configuration::history[1].get_startinfo_specific()->the_setup_p;
       two_couple_calling = (attr::klimit(configuration::history[1].state.kind) < 4);

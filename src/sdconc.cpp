@@ -3554,6 +3554,7 @@ extern void concentric_move(
       uint32_t modifiers1 = doing_ends ? localmodsout1 : localmodsin1;
       setup_command *cmdptr = (doing_ends ^ inverting) ? cmdout : cmdin;
       uint32_t ctr_use_flag = CMD_MISC2__ANY_WORK;
+      result_ptr->result_flags.misc = begin_ptr->result_flags.misc;  // Copy the whole word.
 
       if (doing_ends ^ (((save_cmd_misc2_flags & CMD_MISC2__ANY_WORK_CALL_CROSSED) != 0) ? 1 : 0))
          ctr_use_flag |= CMD_MISC2__ANY_WORK_INVERT;
@@ -3580,6 +3581,7 @@ extern void concentric_move(
          begin_ptr->cmd.cmd_final_flags = cmdptr->cmd_final_flags;
          begin_ptr->cmd.cmd_fraction = cmdptr->cmd_fraction;
          begin_ptr->cmd.restrained_fraction = cmdptr->restrained_fraction;
+         begin_ptr->result_flags.misc = ss->result_flags.misc;  // Copy the whole word. &= ~CMD_MISC__VERIFY_MASK;
          begin_ptr->cmd.cmd_misc_flags &= ~CMD_MISC__VERIFY_MASK;
          begin_ptr->cmd.cmd_misc_flags |= (CMD_MISC__VERIFY_MASK & cmdptr->cmd_misc_flags);
 
@@ -4237,7 +4239,7 @@ extern void concentric_move(
       else if (ss->cmd.cmd_final_flags.bool_test_heritbits(INHERITFLAG_RECTIFY)) {
          localmodsout1 &= ~DFM1_CONC_FORCE_SPOTS;
 
-         if (outer_inners[0].result_flags.misc & RESULTFLAG__RECTIFY_EXPIRED) {
+         if (outer_inners[0].result_flags.misc & RESULTFLAG__RECTIFY_ACCEPTED) {
             // The ends responded to a RECTIFY operation.
 
             // Look at begin_outer.cmd.callspec

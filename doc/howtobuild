@@ -12,10 +12,10 @@ Doing so might cause it to be included in the "do_pack" script.
      This file is \wba\sddoc\howtobuild.
 
 -------------------------------------------------------------------------------
-       MAINTAIN ALL PROGRAM AND DOCUMENTATION SOURCE FILES ON WINDOWS 10.
-       PREFERABLY OWL.
+       MAINTAIN ALL PROGRAM AND DOCUMENTATION SOURCE FILES ON WINDOWS 11.
+       PREFERABLY KANGA.
 
-       ALL DEVELOPMENT, DEBUG, AND TEST OF EVERYTHING IS DONE ON WINDOWS 10.
+       ALL DEVELOPMENT, DEBUG, AND TEST OF EVERYTHING IS DONE ON WINDOWS 11.
 -------------------------------------------------------------------------------
 
        UPDATING VERSION NUMBERS AND MAINTAINING THE PROGRAM.

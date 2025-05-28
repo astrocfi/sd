@@ -1,7 +1,7 @@
 \input texinfo @c %**start of header -*-texinfo-*-
 @setfilename relnotes.info
 @settitle Sd Release Notes
-@c Time-stamp: <24 Mar 2025 wba>
+@c Time-stamp: <25 Apr 2025 wba>
 @iftex
 @headings off
 @oddheading @| @| @thispage
@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 39.73
-@set title2 Database version = 39.73 format = 413
+@set title1 RELEASE NOTES FOR VERSION 39.74
+@set title2 Database version = 39.74 format = 414
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 39.74::
 * 39.73::
 * 39.72::
 * 39.71::
@@ -173,7 +174,7 @@ and @file{relnotes98.txi} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 39.73, Top, (dir)
+@node Intro, 39.74, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -184,11 +185,22 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2025 William B. Ackerman
 @sp 3
 @menu
-* 39.73::               Changes in the current version
+* 39.74::               Changes in the current version
 @end menu
 
 @c ************
-@node 39.73, 39.72, Intro, Top
+@node 39.74, 39.73, Intro, Top
+@unnumberedsec Version 39.74 changes
+
+Numerous bug fixes and improvements.
+@sp 1
+The @strong{rectify} concept was in a state of serious
+disrepair/neglect.  Fixed same.
+@sp 1
+Improvements in triangles, of course.
+
+@c ************
+@node 39.73, 39.72, 39.74, Top
 @unnumberedsec Version 39.73 changes
 
 Corrected behavior of @strong{outsides promenade} when they are in a
@@ -196,7 +208,7 @@ tidal column formation.
 @sp 1
 Corrected handling of the @strong{don't turn the star} directive.
 @sp 1
-Corrected handling of @ONCE REMOVED 3x1 triangles}.
+Corrected handling of @code{ONCE REMOVED} 3x1 triangles.
 @sp 1
 Fixed @code{MAGIC split coordinate}.
 @sp 1
@@ -205,7 +217,7 @@ Fixed @code{MAGIC split coordinate}.
 Improvements in @code{3x3} etc.
 
 @c ************
-@node 39.72, 39.71, 39.72, Top
+@node 39.72, 39.71, 39.73, Top
 @unnumberedsec Version 39.72 changes
 
 The @strong{roll} behavior after @strong{circle to a line} has been

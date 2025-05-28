@@ -45,7 +45,7 @@
 // database format version.
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 413
+#define DATABASE_FORMAT_VERSION 414
 
 
 // We used to do some stuff to cater to compiler vendors (e.g. Sun
@@ -682,6 +682,7 @@ enum setup_kind {
    s_hyperbone, // Ditto.
    s_hyper3x4,  // Ditto.
    s_tinyhyperbone, // Ditto.
+   s_bighyperbone, // Ditto.
    s8x8,      // Ditto.
    sxequlize, // Ditto.
    sx1x6,   

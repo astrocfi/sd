@@ -2777,6 +2777,7 @@ static int matrixmove(
    setup *result) THROW_DECL
 {
    setup people;
+   result->result_flags.misc = ss->result_flags.misc;  // Copy the whole word.
    matrix_rec matrix_info[matrix_info_capacity+1];
    selector_kind saved_selector = current_options.who.who[0];
    int i, nump;
@@ -3002,7 +3003,7 @@ static int matrixmove(
       result->result_flags.maximize_split_info();
 
    reinstate_rotation(ss, result);
-   clear_result_flags(result);
+   clear_result_flags(result, RESULTFLAG__RECTIFY_ACCEPTED);
 
    // If the call just kept a 2x2 in place, and they were the outsides, make
    // sure that the elongation is preserved.
@@ -5415,12 +5416,12 @@ void move_perhaps_with_active_phantoms(setup *ss, setup *result, bool suppress_f
          move(ss, false, result, suppress_fudgy_2x3_2x6_fixup);
       }
       else
-         result->result_flags.misc |= RESULTFLAG__ACTIVE_PHANTOMS_ON;
+         active_phantoms_in_this_sequence |= 2;
    }
    else {
       check_restriction(ss, ss->cmd.cmd_assume, false, 99);
       move(ss, false, result, suppress_fudgy_2x3_2x6_fixup);
-      result->result_flags.misc |= RESULTFLAG__ACTIVE_PHANTOMS_OFF;
+      active_phantoms_in_this_sequence |= 1;
    }
 }
 
@@ -8010,7 +8011,10 @@ static void move_with_real_call(
    heritflags herit_concepts = ss->cmd.cmd_final_flags.herit;
 
    // Deal with RECTIFY substitution.
-   if (ss->cmd.cmd_final_flags.herit & INHERITFLAG_RECTIFY) {
+   if ((ss->cmd.cmd_final_flags.herit & INHERITFLAG_RECTIFY) &&
+       (ss->result_flags.misc & RESULTFLAG__RECTIFY_ACCEPTED) == 0) {
+      bool used_it = true;
+      // Keep this code from changing it back in the future.
       ss->cmd.cmd_final_flags.herit &= ~INHERITFLAG_RECTIFY;
 
       if (ss->cmd.callspec == base_calls[base_call_circulate] ||
@@ -8037,8 +8041,17 @@ static void move_with_real_call(
                ss->cmd.callspec == base_calls[base_call_boxcirc2]) {
          ss->cmd.callspec = base_calls[base_call_splctrrot];
       }
-      else
+      else {
+         used_it = false;
          ss->cmd.cmd_final_flags.herit |= INHERITFLAG_RECTIFY;  // Didn't use it; leave the flag on.
+      }
+
+      if (used_it) {
+         // Not taking any chances with result.  In any case, it gates cleared
+         // around line 8070.
+         ss->result_flags.misc |= RESULTFLAG__RECTIFY_ACCEPTED;
+         result->result_flags.misc |= RESULTFLAG__RECTIFY_ACCEPTED;
+      }
    }
 
    const calldefn *this_defn = &ss->cmd.callspec->the_defn;
@@ -8057,7 +8070,8 @@ static void move_with_real_call(
       current_options = saved_options;
       *ss = saved_ss;
       result->clear_people();
-      clear_result_flags(result, RESULTFLAG__REALLY_NO_REEVALUATE);   // In case we bail out.
+      clear_result_flags(result,
+         RESULTFLAG__REALLY_NO_REEVALUATE|RESULTFLAG__RECTIFY_ACCEPTED);   // In case we bail out.
       uint32_t imprecise_rotation_result_flagmisc = 0;
       split_command_kind force_split = split_command_none;
       bool mirror = false;
@@ -8850,11 +8864,11 @@ static void handle_expiration(setup *ss, uint32_t *bit_to_set)
          *bit_to_set |= RESULTFLAG__TWISTED_EXPIRED;
       }
 
-      if (ss->cmd.cmd_final_flags.bool_test_heritbits(INHERITFLAG_RECTIFY)) {
-         if (ss->cmd.prior_expire_bits & RESULTFLAG__RECTIFY_EXPIRED)
-            ss->cmd.cmd_final_flags.clear_heritbits(INHERITFLAG_RECTIFY);   // Already did that.
-         *bit_to_set |= RESULTFLAG__RECTIFY_EXPIRED;
-      }
+      //      if (ss->cmd.cmd_final_flags.bool_test_heritbits(INHERITFLAG_RECTIFY)) {
+      //         if (ss->cmd.prior_expire_bits & RESULTFLAG__RECTIFY_EXPIRED)
+      //            ss->cmd.cmd_final_flags.clear_heritbits(INHERITFLAG_RECTIFY);   // Already did that.
+      //         *bit_to_set |= RESULTFLAG__RECTIFY_EXPIRED;
+      //      }
 
       // Take care of generous and stingy; they are complicated.
 
@@ -8923,6 +8937,12 @@ void move(
    setup *result,
    bool suppress_fudgy_2x3_2x6_fixup /*= false*/) THROW_DECL
 {
+   // The "result" item is supposed to contain no information when coming in,
+   // and to just be a receptacle for information that gets developed while
+   // doing the operation.  But we need to copy some information from ss
+   // to result right at the start: the RESULTFLAG__RECTIFY_ACCEPTED information.
+   result->result_flags.misc = ss->result_flags.misc;  // Copy the whole word.
+
    // Need this to check for dixie tag 1/4.
    if (current_options.number_fields == 1)
       ss->cmd.cmd_misc3_flags |= CMD_MISC3__PARENT_COUNT_IS_ONE;

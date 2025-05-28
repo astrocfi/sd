@@ -10261,6 +10261,16 @@ const setup_attr setup_attrs[] = {
     (const id_bit_table *) 0,
     {(Cstring) 0,
      (Cstring) 0}},
+   {23,                     // s_bighyperbone
+    (const coordrec *) 0,
+    (const coordrec *) 0,
+    {0, 0, 0, 0},
+    {b_nothing, b_nothing},
+    {0, 0},
+    0U,
+    (const id_bit_table *) 0,
+    {(Cstring) 0,
+     (Cstring) 0}},
    {63,                     // s8x8
     (const coordrec *) 0,
     (const coordrec *) 0,

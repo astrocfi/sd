@@ -2648,6 +2648,19 @@ extern SDLIB_API int number_of_calls[call_list_extent];
 
 
 extern SDLIB_API bool using_active_phantoms;                        /* in SDTOP */
+
+/* If "using_active_phantoms" is enabled (a toggleable user option), the state of
+   "active_phantoms_in_this_sequence" tells whether the state of the "active phantoms"
+   mode flag was used in this sequence.  If it was read and found to be on,
+   active_phantoms_in_this_sequence is set to 2.  If it was read and found to be off,
+   htis is is set to 1.  It is, of course, read any time an "assume <whatever> concept
+   is invoked.  This information is used to tell what kind of annotation to place in the
+   transcript file to tell what assumptions were made.  The reason for having both
+   states separately is that the state of the active phantoms mode can be toggled at
+   arbitrary times, so a single card might have both usages.  In that unusual case, we
+   want to so indicate on the card. */
+
+extern SDLIB_API int active_phantoms_in_this_sequence;              /* in SDTOP */
 extern SDLIB_API bool two_couple_calling;                           /* in SDTOP */
 extern SDLIB_API bool expanding_database;                           /* in SDTOP */
 extern SDLIB_API int trace_progress;                                /* in SDTOP */
@@ -4030,17 +4043,6 @@ struct nice_setup_info_item {
    concept.  Otherwise, we might end up saying "magic diamond single wheel" when
    we should have said "magic diamond, diamond single wheel".
 
-   RESULTFLAG__ACTIVE_PHANTOMS_ON and _OFF tell whether the state of the "active
-   phantoms" mode flag was used in this sequence.  If it was read and found to
-   be on, RESULTFLAG__ACTIVE_PHANTOMS_ON is set.  If it was read and found to
-   be off, RESULTFLAG__ACTIVE_PHANTOMS_OFF is set.  It is, of course, read any
-   time an "assume <whatever> concept is invoked.  This information is used to
-   tell what kind of annotation to place in the transcript file to tell what
-   assumptions were made.  The reason for having both bits is that the state
-   of the active phantoms mode can be toggled at arbitrary times, so a single
-   card might have both usages.  In that unusual case, we want to so indicate
-   on the card.
-
    RESULTFLAG__DID_SHORT6_2X3 means that we fudged a short6 to a 2x3
    (with permission), and, if we are putting back a concentric formation,
    we may need to act accordingly.
@@ -4072,9 +4074,8 @@ enum {
    RESULTFLAG__DID_MXN_EXPANSION    = 0x00000080U,
    RESULTFLAG__COMPRESSED_FROM_2X3  = 0x00000100U,
    RESULTFLAG__EMPTY_1X4_TO_2X2     = 0x00000200U,
-
-   RESULTFLAG__ACTIVE_PHANTOMS_ON   = 0x00000400U,
-   RESULTFLAG__ACTIVE_PHANTOMS_OFF  = 0x00000800U,
+   RESULTFLAG__RECTIFY_ACCEPTED     = 0x00000400U,
+   //   Spare = 0x00000800U,
    RESULTFLAG__EXPAND_TO_2X3        = 0x00001000U,
    RESULTFLAG__PRESERVE_INCOMING_EXPIRATIONS = 0x00002000U,
 
@@ -4102,7 +4103,6 @@ enum {
    RESULTFLAG__FORCE_SPOTS_ALWAYS   = 0x20000000U,
    RESULTFLAG__INVADED_SPACE        = 0x40000000U,
    RESULTFLAG__STOP_OVERCAST_CHECK  = 0x80000000U
-   // No spares!
 };
 
 

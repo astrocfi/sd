@@ -8576,6 +8576,7 @@ static void do_concept_meta(
                   result->update_id_bits();
 
                result->cmd.cmd_misc_flags &= ~CMD_MISC__NO_EXPAND_MATRIX;
+               result->result_flags.misc &= ~RESULTFLAG__RECTIFY_ACCEPTED;
 
                do_call_in_series(result, true, true, false);
 

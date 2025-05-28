@@ -90,7 +90,9 @@ void prepare_for_call_in_series(setup *result, setup *ss,
       result->result_flags.misc &= ~RESULTFLAG__EXPIRATION_BITS;
 
    // And clear all the rest except these few bits.
-   result->result_flags.misc &= (RESULTFLAG__NO_REEVALUATE|RESULTFLAG__REALLY_NO_REEVALUATE|RESULTFLAG__EXPIRATION_BITS);
+   result->result_flags.misc &=
+      (RESULTFLAG__NO_REEVALUATE|RESULTFLAG__REALLY_NO_REEVALUATE|
+       RESULTFLAG__EXPIRATION_BITS|RESULTFLAG__RECTIFY_ACCEPTED);
 
    // Or clear even RESULTFLAG__NO_REEVALUATE if requested, but never RESULTFLAG__REALLY_NO_REEVALUATE.
    if (!dont_clear__no_reeval)
@@ -188,6 +190,10 @@ void remove_tgl_distortion(setup *ss) THROW_DECL
    static const expand::thing thing2x4f = {{6, 7, 1, 2, 3, 5}, s_short6, s2x4, 1};
    static const expand::thing thing2x4g = {{0, 1, 3, 4, 5, 7}, s2x3,     s2x4, 0};
    static const expand::thing thing2x4h = {{0, 2, 3, 4, 6, 7}, s2x3,     s2x4, 0};
+   static const expand::thing thing2x4i = {{0, 1, 2, 4, 5, 6}, s_ntrgl6ccw, s2x4, 0};
+   static const expand::thing thing2x4j = {{1, 2, 3, 5, 6, 7}, s_ntrgl6cw, s2x4, 0};
+   static const expand::thing thing2x4l = {{0, 1, 3, 4, 5, 7}, s_ntrgl6ccw, s2x4, 0};
+   static const expand::thing thing2x4k = {{0, 2, 3, 4, 6, 7}, s_ntrgl6cw, s2x4, 0};
    static const expand::thing thing1x4a = {{0, 1, 3},          s1x3,     s1x4, 0};
    static const expand::thing thing1x4b = {{1, 3, 2},          s1x3,     s1x4, 0};
    static const expand::thing thingqtga = {{6, 7, 1, 2, 3, 5}, s_ntrgl6ccw, s_qtag, 0};
@@ -250,6 +256,36 @@ void remove_tgl_distortion(setup *ss) THROW_DECL
                 (~ss->people[4].id1) & ss->people[5].id1 &
                 ss->people[6].id1 & ss->people[7].id1 & BIT_PERSON) {
                eptr = &thing2x4f;
+            }
+         }
+         else if (ss->people[0].id1 & ss->people[2].id1 &
+                  ss->people[4].id1 & ss->people[6].id1 & 01) {
+            if (ss->people[0].id1 & ss->people[1].id1 &
+                ss->people[2].id1 & (~ss->people[3].id1) &
+                ss->people[4].id1 & ss->people[5].id1 &
+                ss->people[6].id1 & (~ss->people[7].id1) & BIT_PERSON) {
+               eptr = &thing2x4i;
+            }
+            if (ss->people[0].id1 & (~ss->people[1].id1) &
+                ss->people[2].id1 & ss->people[3].id1 &
+                ss->people[4].id1 & (~ss->people[5].id1) &
+                ss->people[6].id1 & ss->people[7].id1 & BIT_PERSON) {
+               eptr = &thing2x4k;
+            }
+         }
+         else if (ss->people[1].id1 & ss->people[3].id1 &
+                  ss->people[5].id1 & ss->people[7].id1 & 01) {
+            if ((~ss->people[0].id1) & ss->people[1].id1 &
+                ss->people[2].id1 & ss->people[3].id1 &
+                (~ss->people[4].id1) & ss->people[5].id1 &
+                ss->people[6].id1 & ss->people[7].id1 & BIT_PERSON) {
+               eptr = &thing2x4j;
+            }
+            if (ss->people[0].id1 & ss->people[1].id1 &
+                (~ss->people[2].id1) & ss->people[3].id1 &
+                ss->people[4].id1 & ss->people[5].id1 &
+                (~ss->people[6].id1) & ss->people[7].id1 & BIT_PERSON) {
+               eptr = &thing2x4l;
             }
          }
       }
@@ -427,6 +463,7 @@ static void multiple_move_innards(
          x[i].rotation = rrr & 3;
          x[i].rotation_offset_from_true_north = ss->rotation_offset_from_true_north;
          x[i].eighth_rotation = 0;
+         x[i].result_flags = ss->result_flags;
          canonicalize_rotation(&x[i]);
          if (rrr & 1)
             x[i].result_flags.swap_split_info_fields();

@@ -361,6 +361,8 @@ extern bool selectp(const setup *ss, int place, int allow_some /*= 0*/) THROW_DE
       else if ((pid2 & (ID2_CTR4|ID2_OUTRPAIRS)) == ID2_OUTRPAIRS) return false;
       else if ((pid2 & (ID2_CTR4|ID2_END)) == ID2_CTR4) return true;
       else if ((pid2 & (ID2_CTR4|ID2_END)) == ID2_END) return false;
+      else if ((pid2 & (ID2_CTR4|ID2_NCTR1X4)) == ID2_CTR4) return true;
+      else if ((pid2 & (ID2_CTR4|ID2_NCTR1X4)) == ID2_NCTR1X4) return false;
       break;
    case selector_outerpairs:
       if (ss->kind == s1x6) {
