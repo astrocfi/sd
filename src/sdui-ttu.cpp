@@ -245,6 +245,8 @@ extern int get_lines_for_more()
       int x, y;
       getmaxyx(stdscr, y, x);		// returns 1 more than desired values
       return y-1;
+#else
+      return get_term_lines();
 #endif
    }
    else {

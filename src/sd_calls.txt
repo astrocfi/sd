@@ -33,7 +33,7 @@
     General Public License if you distribute the file.
 */
 
-version "34.7k"
+version "34.7m"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve
@@ -3753,8 +3753,8 @@ call "sock it to me" c2
             alternate_definition [half] c2
    setup 1x4 2x3
       preds "Can't find an unambiguous socker."
-         if socker_is_left  [CR1W AL5E AL3E AL4E]
-         if socker_is_right [0    CR1W 0    CR2W]
+         if socker_is_left  [CR1E AL5W AL3W AL4W]
+         if socker_is_right [0    CR1E 0    CR2E]
    setup 1x3 trngl
       preds "Can't find an unambiguous socker."
          if socker_is_left_1x3  [CR3E AL5W AL4W]
@@ -7584,8 +7584,8 @@ call "triple cast" c4a
 
 call "split cast" c4a
             left_means_mirror yoyo_is_inherited
-   conc cast_off_12      [inherit_yoyo]
-        hinge_then_trade [inherit_left inherit_yoyo suppress_elongation_warnings]
+   conc2_4_or_normal cast_off_12      [inherit_yoyo]
+                     hinge_then_trade [inherit_left inherit_yoyo suppress_elongation_warnings]
 
 call "_change the web 1" dontshow tag change_web_1
             fudge_to_q_tag
@@ -12265,6 +12265,10 @@ call "_everyone wheel" dontshow tag everyonewheel
    // We allow this for pathological cases, but give a warning.
    setup 1x2 1x2 qualifier couples_only restriction unusual alwaysfail
       array [AL1S AL0S]
+            alternate_definition [grand] c4
+   // Only legal if say "ends start grand wheel the ocean".
+   setup 4x2 2x4 qualifier couples_only
+      array [0 0 0 AL4S AL3S 0 0 0]
             alternate_definition [single] c4
    setup 2x1 1x2
       array [0 AL1S]
@@ -12287,6 +12291,16 @@ call "_ @D wheel" dontshow tag oddfracwheel
       array [AL1S AL0S]
    setup 1x2 1x2 rotate restriction forbidden couples_only qualifier num 3 none
       array [AL0N AL1N]
+            alternate_definition [grand] c4
+   // Only legal if say "ends start grand 1/4 wheel the ocean".
+   setup rigger 2x4 qualifier num 1 none
+      array [0 0 AL3W AL4W 0 0 0 0]
+   setup 1x8 2x4 qualifier num 1 none
+      array [0 0 0 0 AL3W AL4W 0 0]
+   setup rigger 2x4 qualifier num 3 none
+      array [0 0 0 0 0 0 AL0E AL7E]
+   setup 1x8 2x4 qualifier num 3 none
+      array [AL0E AL7E 0 0 0 0 0 0]
             alternate_definition [single] c4
    setup 1x2 1x2 qualifier num 1 none
       array [0 AL1W]
@@ -12329,6 +12343,9 @@ call "_finish wheel the ocean" dontshow tag finwheelocean
       array [0 ZM1N ZM0N ZM3N]
    setup 3x2 2x3 qualifier live none
       array [ZM0N 0 0 0 ZM2N ZM1N]
+            alternate_definition [grand] c4
+   setup 4x2 2x4
+      array [ZM0N 0 0 0 ZM4N ZM3N ZM2N ZM1N]
             alternate_definition [single] c4
    setup 2x1 1x2 rotate
       array [ZM0W 0]
@@ -12361,6 +12378,9 @@ call "_finish wheel the sea" dontshow tag finwheelsea
             reverse_means_mirror split_large_setups
    setup 2x2 2x2 no_cutting_through
       array [0 0 ZM1N ZM2N]
+            alternate_definition [grand] c4
+   setup 4x2 2x4
+      array [ZM7N 0 0 0 0 ZM4N ZM5N ZM6N]
             alternate_definition [single] c4
    setup 2x1 1x2 rotate
       array [ZM1W 0]
@@ -12423,16 +12443,16 @@ call "leads wheel to an hourglass" c4
    seq finwheeltohrglass [inherit_reverse]
 
 call "wheel the ocean" c2
-            reverse_means_mirror single_is_inherited nxn_is_inherited
+            reverse_means_mirror grand_is_inherited single_is_inherited nxn_is_inherited
             mxn_is_inherited bigmatrix_is_inherited visible_fractions
-   seq everyonewheel [inherit_reverse inherit_single inherit_nxn inherit_mxn inherit_bigmatrix]
-   seq finwheelocean [inherit_reverse inherit_single inherit_nxn inherit_mxn inherit_bigmatrix]
+   seq everyonewheel [inherit_reverse inherit_grand inherit_single inherit_nxn inherit_mxn inherit_bigmatrix]
+   seq finwheelocean [inherit_reverse inherit_grand inherit_single inherit_nxn inherit_mxn inherit_bigmatrix]
 
 call "wheel the sea" c2
-            reverse_means_mirror single_is_inherited nxn_is_inherited
+            reverse_means_mirror grand_is_inherited single_is_inherited nxn_is_inherited
             mxn_is_inherited bigmatrix_is_inherited visible_fractions
-   seq everyonewheel [inherit_reverse inherit_single inherit_nxn inherit_mxn inherit_bigmatrix]
-   seq finwheelsea  [inherit_reverse inherit_single inherit_nxn inherit_mxn inherit_bigmatrix]
+   seq everyonewheel [inherit_reverse inherit_grand inherit_single inherit_nxn inherit_mxn inherit_bigmatrix]
+   seq finwheelsea  [inherit_reverse inherit_grand inherit_single inherit_nxn inherit_mxn inherit_bigmatrix]
 
 call "wheel to a@I diamond" c4
             reverse_means_mirror intlk_is_inherited visible_fractions
@@ -12445,21 +12465,21 @@ call "wheel to an hourglass" c4
    seq finwheeltohrglass [inherit_reverse]
 
 call "@D wheel the ocean" c3a
-            reverse_means_mirror neednumber single_is_inherited
+            reverse_means_mirror grand_is_inherited neednumber single_is_inherited
             nxn_is_inherited mxn_is_inherited
             bigmatrix_is_inherited visible_fractions
-   seq oddfracwheel [inherit_reverse inherit_single
+   seq oddfracwheel [inherit_reverse inherit_grand inherit_single
       inherit_nxn inherit_mxn inherit_bigmatrix]
-   seq finwheelocean [inherit_reverse inherit_single
+   seq finwheelocean [inherit_reverse inherit_grand inherit_single
       inherit_nxn inherit_mxn inherit_bigmatrix]
 
 call "@D wheel the sea" c3a
-            reverse_means_mirror neednumber single_is_inherited
+            reverse_means_mirror grand_is_inherited neednumber single_is_inherited
             nxn_is_inherited mxn_is_inherited
             bigmatrix_is_inherited visible_fractions
-   seq oddfracwheel [inherit_reverse inherit_single
+   seq oddfracwheel [inherit_reverse inherit_grand inherit_single
       inherit_nxn inherit_mxn inherit_bigmatrix]
-   seq finwheelsea [inherit_reverse inherit_single
+   seq finwheelsea [inherit_reverse inherit_grand inherit_single
       inherit_nxn inherit_mxn inherit_bigmatrix]
 
 call "@D wheel to a@I diamond" c4
@@ -20598,11 +20618,24 @@ call "@2diamond @3chain thru" a2
    seq ctrs_slip_with_mod [inherit_yoyo roll_transparent]
    seq ctrscastoff_n [inherit_fractal roll_transparent insert_number 3]
 
+call "@2diamond @3chain thru but @m" c4a
+            yoyo_is_inherited intlk_is_inherited magic_is_inherited
+            funny_is_inherited visible_fractions
+   seq diamondcirc [or_anycall inherit_yoyo inherit_intlk inherit_magic inherit_funny]
+   seq ctrs_slip_with_mod [inherit_yoyo roll_transparent]
+   seq ctrs_mandatory_2ndcall [roll_transparent]
+
 call "@0 chain thru" c1
             dont_use_in_resolve yoyo_is_inherited fractal_is_inherited visible_fractions
    seq nullcall [mandatory_anycall]
    seq ctrs_slip_with_mod [inherit_yoyo roll_transparent]
    seq ctrscastoff_n [inherit_fractal roll_transparent insert_number 3]
+
+call "@0 chain thru but @m" c4a
+            dont_use_in_resolve yoyo_is_inherited visible_fractions
+   seq nullcall [mandatory_anycall]
+   seq ctrs_slip_with_mod [inherit_yoyo roll_transparent]
+   seq ctrs_mandatory_2ndcall [roll_transparent]
 
 call "@2hourglass @3yoyo chain thru" c4
             funny_is_inherited fractal_is_inherited visible_fractions

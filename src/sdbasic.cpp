@@ -3181,7 +3181,7 @@ static int divide_the_setup(
          uint32 tbtest;
          setup sstest = *ss;
 
-         expand_setup(&comp_qtag_2x4_stuff, &sstest);
+         expand::expand_setup(&expand::s_qtg_2x4, &sstest);
 
          tbtest =
             sstest.people[0].id1 | sstest.people[1].id1 |
@@ -3409,9 +3409,9 @@ static int divide_the_setup(
                   result->people[6].id1 | result->people[11].id1))
                result->result_flags &= ~RESULTFLAG__EXPAND_TO_2X3;
 
-            static const expand_thing inner_2x6 = {
+            static const expand::thing inner_2x6 = {
                {0, 1, 4, 5, 6, 7, 10, 11}, 8, s2x4, s2x6, 0};
-            compress_setup(&inner_2x6, result);
+            expand::compress_setup(&inner_2x6, result);
          }
       }
       else if (result->kind == s2x10) {
@@ -3421,14 +3421,14 @@ static int divide_the_setup(
             if (!(result->people[3].id1 | result->people[6].id1 |
                   result->people[13].id1 | result->people[16].id1)) {
                // Actually, inner 8 spots are empty.
-               static const expand_thing inner_2x10 = {
+               static const expand::thing inner_2x10 = {
                   {0, 1, 2, 7, 8, 9, 10, 11, 12, 17, 18, 19}, 12, s2x6, s2x10, 0};
-               compress_setup(&inner_2x10, result);
+               expand::compress_setup(&inner_2x10, result);
             }
             else {
-               static const expand_thing inner_2x10 = {
+               static const expand::thing inner_2x10 = {
                   {0, 1, 2, 3, 6, 7, 8, 9, 10, 11, 12, 13, 16, 17, 18, 19}, 16, s2x8, s2x10, 0};
-               compress_setup(&inner_2x10, result);
+               expand::compress_setup(&inner_2x10, result);
             }
          }
          else if (!(result->people[0].id1 | result->people[9].id1 |
@@ -3438,14 +3438,14 @@ static int divide_the_setup(
             if (!(result->people[1].id1 | result->people[8].id1 |
                   result->people[11].id1 | result->people[18].id1)) {
                // Actually, outer 8 spots are empty.
-               static const expand_thing outer_2x10 = {
+               static const expand::thing outer_2x10 = {
                   {2, 3, 4, 5, 6, 7, 12, 13, 14, 15, 16, 17}, 12, s2x6, s2x10, 0};
-               compress_setup(&outer_2x10, result);
+               expand::compress_setup(&outer_2x10, result);
             }
             else {
-               static const expand_thing outer_2x10 = {
+               static const expand::thing outer_2x10 = {
                   {1, 2, 3, 4, 5, 6, 7, 8, 11, 12, 13, 14, 15, 16, 17, 18}, 16, s2x8, s2x10, 0};
-               compress_setup(&outer_2x10, result);
+               expand::compress_setup(&outer_2x10, result);
             }
          }
       }
@@ -3456,9 +3456,9 @@ static int divide_the_setup(
             that we do above in the 2x6. */
          if (!(result->people[0].id1 | result->people[1].id1 |
                result->people[4].id1 | result->people[5].id1)) {
-            static const expand_thing inner_rig = {
+            static const expand::thing inner_rig = {
                {6, 7, -1, 2, 3, -1}, 6, s1x6, s_rigger, 0};
-            compress_setup(&inner_rig, result);
+            expand::compress_setup(&inner_rig, result);
             result->result_flags &= ~RESULTFLAG__EXPAND_TO_2X3;
          }
       }

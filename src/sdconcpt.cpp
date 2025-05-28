@@ -373,8 +373,8 @@ static void do_c1_phantom_move(
    gather(&setup1, ss, map_ptr->map1, map_ptr->sizem1, 0);
    gather(&setup2, ss, map_ptr->map2, map_ptr->sizem1, 033);
    
-   normalize_setup(&setup1, simple_normalize);
-   normalize_setup(&setup2, simple_normalize);
+   normalize_setup(&setup1, simple_normalize, false);
+   normalize_setup(&setup2, simple_normalize, false);
 
    setup1.cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
    setup2.cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
@@ -936,8 +936,10 @@ static void do_concept_multiple_lines_tog(
       tbonetest ^= linesp;
 
       if (ss->kind == s4x4) {
-         expand_setup(
-            ((tbonetest & 1) ? &exp_4x4_4x6_stuff_b : &exp_4x4_4x6_stuff_a), ss);
+         expand::expand_setup(
+            ((tbonetest & 1) ?
+             &expand::s_4x4_4x6b :
+             &expand::s_4x4_4x6a), ss);
          tbonetest = 0;
       }
 
@@ -3835,7 +3837,7 @@ static void do_concept_special_sequential(
          update_id_bits(&tttt);           /* So you can use "leads run", etc. */
       move(&tttt, FALSE, result);
       finalresultflags |= result->result_flags;
-      normalize_setup(result, simple_normalize);
+      normalize_setup(result, simple_normalize, false);
 
       // Do the rest of the original call, if there is more.
 
@@ -3849,7 +3851,7 @@ static void do_concept_special_sequential(
          CMD_FRAC_NULL_VALUE;
       move(&tttt, FALSE, result);
       finalresultflags |= result->result_flags;
-      normalize_setup(result, simple_normalize);
+      normalize_setup(result, simple_normalize, false);
 
       result->result_flags = finalresultflags & ~3;
    }
@@ -4817,15 +4819,15 @@ static void do_concept_ferris(
    parse_block *parseptr,
    setup *result) THROW_DECL
 {
-   const expand_thing *map_ptr = (const expand_thing *) 0;
+   const expand::thing *map_ptr = (const expand::thing *) 0;
 
    if (parseptr->concept->value.arg1) {
       // This is "release".
 
-      static const expand_thing mapr1 = {{10, 2, 3, 5, 4,  8, 9, 11}, 8, s_qtag, s3x4, 0};
-      static const expand_thing mapr2 = {{1,  4, 6, 5, 7, 10, 0, 11}, 8, s_qtag, s3x4, 0};
-      static const expand_thing mapr3 = {{1, 10, 0, 5, 7,  4, 6, 11}, 8, s_qtag, s3x4, 0};
-      static const expand_thing mapr4 = {{4,  2, 9, 5,10,  8, 3, 11}, 8, s_qtag, s3x4, 0};
+      static const expand::thing mapr1 = {{10, 2, 3, 5, 4,  8, 9, 11}, 8, s_qtag, s3x4, 0};
+      static const expand::thing mapr2 = {{1,  4, 6, 5, 7, 10, 0, 11}, 8, s_qtag, s3x4, 0};
+      static const expand::thing mapr3 = {{1, 10, 0, 5, 7,  4, 6, 11}, 8, s_qtag, s3x4, 0};
+      static const expand::thing mapr4 = {{4,  2, 9, 5,10,  8, 3, 11}, 8, s_qtag, s3x4, 0};
 
       if ((ss->kind != s_qtag) || ((global_tbonetest & 1) != 0))
          fail("Must have quarter-tag to do this concept.");
@@ -4866,8 +4868,8 @@ static void do_concept_ferris(
    else {
       // This is "ferris".
 
-      static const expand_thing mapf1 = {{0, 1, 5, 4, 6, 7, 11, 10}, 8, s2x4, s3x4, 0};
-      static const expand_thing mapf2 = {{10, 11, 2, 3, 4, 5, 8, 9}, 8, s2x4, s3x4, 0};
+      static const expand::thing mapf1 = {{0, 1, 5, 4, 6, 7, 11, 10}, 8, s2x4, s3x4, 0};
+      static const expand::thing mapf2 = {{10, 11, 2, 3, 4, 5, 8, 9}, 8, s2x4, s3x4, 0};
 
       if ((ss->kind != s2x4) || ((global_tbonetest & 1) != 0))
          fail("Must have lines to do this concept.");
@@ -4896,7 +4898,7 @@ static void do_concept_ferris(
    if (ss->cmd.cmd_final_flags.her8it | ss->cmd.cmd_final_flags.final)
       fail("Illegal modifier before \"ferris\" or \"release\".");
 
-   expand_setup(map_ptr, ss);
+   expand::expand_setup(map_ptr, ss);
    concentric_move(ss, &ss->cmd, &ss->cmd, schema_in_out_triple_squash, 0, 0, FALSE, ~0UL, result);
 }
 
@@ -4907,11 +4909,11 @@ static void do_concept_overlapped_diamond(
    setup *result) THROW_DECL
 {
    uint32 mapcode;
-   const expand_thing *scatterlist;
-   static const expand_thing list1x4    = {{0, 1, 4, 5}, 4, s1x4, s_thar, 0};
-   static const expand_thing list1x4rot = {{2, 3, 6, 7}, 4, s1x4, s_thar, 3};
-   static const expand_thing listdmd    = {{0, 3, 4, 7}, 4, sdmd, s_thar, 0};
-   static const expand_thing listdmdrot = {{2, 5, 6, 1}, 4, sdmd, s_thar, 3};
+   const expand::thing *scatterlist;
+   static const expand::thing list1x4    = {{0, 1, 4, 5}, 4, s1x4, s_thar, 0};
+   static const expand::thing list1x4rot = {{2, 3, 6, 7}, 4, s1x4, s_thar, 3};
+   static const expand::thing listdmd    = {{0, 3, 4, 7}, 4, sdmd, s_thar, 0};
+   static const expand::thing listdmdrot = {{2, 5, 6, 1}, 4, sdmd, s_thar, 3};
 
    // Split an 8 person setup.
    if (setup_attrs[ss->kind].setup_limits == 7) {
@@ -4943,7 +4945,7 @@ static void do_concept_overlapped_diamond(
       fail("Not in correct setup for overlapped diamond/line concept.");
    }
 
-   expand_setup(scatterlist, ss);
+   expand::expand_setup(scatterlist, ss);
    divided_setup_move(ss, mapcode, phantest_ok, TRUE, result);
 
    if (result->kind == s2x2)
@@ -4966,7 +4968,7 @@ static void do_concept_overlapped_diamond(
    else
       fail("Can't put the setups back together.");
 
-   compress_setup(scatterlist, result);
+   expand::compress_setup(scatterlist, result);
 }
 
 
@@ -5224,7 +5226,7 @@ static void do_concept_meta(
       // The "CMD_FRAC_THISISLAST" bit, if still set, might not tell the truth at this point.
       ss->cmd.cmd_frac_flags &= ~CMD_FRAC_THISISLAST;
       move(ss, false, result);
-      normalize_setup(result, simple_normalize);
+      normalize_setup(result, simple_normalize, false);
       return;
    }
    else if (key == meta_key_like_a) {
@@ -5236,7 +5238,7 @@ static void do_concept_meta(
       ss->cmd.cmd_frac_flags = FRACS(CMD_FRAC_CODE_ONLY,1,0) |
          CMD_FRAC_REVERSE | CMD_FRAC_NULL_VALUE;
       move(ss, false, result);
-      normalize_setup(result, simple_normalize);
+      normalize_setup(result, simple_normalize, false);
       return;
    }
 
@@ -6427,8 +6429,8 @@ static void do_concept_so_and_so_begin(
    
    current_options.who = saved_selector;
    
-   normalize_setup(&setup1, normalize_before_isolated_call);
-   normalize_setup(&setup2, normalize_before_isolated_call);
+   normalize_setup(&setup1, normalize_before_isolated_call, false);
+   normalize_setup(&setup2, normalize_before_isolated_call, false);
 
    // We just feed the "reverse" bit and the fractional stuff (low 16 bits)
    // through.  They have no effect on what we are doing.
@@ -6453,7 +6455,7 @@ static void do_concept_so_and_so_begin(
 
    merge_setups(&the_setups[0], merge_c1_phantom, &the_setups[1]);
    finalresultflags = the_setups[1].result_flags;
-   normalize_setup(&the_setups[1], simple_normalize);
+   normalize_setup(&the_setups[1], simple_normalize, false);
 
    if ((important_bits & CMD_FRAC_CODE_MASK) != CMD_FRAC_CODE_ONLY)
       fail("Can't stack meta or fractional concepts.");
@@ -6476,7 +6478,7 @@ static void do_concept_so_and_so_begin(
       CMD_FRAC_CODE_FROMTOREV | CMD_FRAC_PART_BIT*2 | passed_bits;
    move(&the_setups[1], FALSE, result);
    finalresultflags |= result->result_flags;
-   normalize_setup(result, simple_normalize);
+   normalize_setup(result, simple_normalize, false);
    result->result_flags = finalresultflags & ~3;
 }
 

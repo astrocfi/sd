@@ -53,20 +53,20 @@ typedef struct {
 typedef struct {
    int perm[8];
    int accept_extend;
-   long_boolean allow_eighth_rotation;
+   bool allow_eighth_rotation;
 } reconcile_descriptor;
 
 
 
-static reconcile_descriptor promperm =  {{1, 0, 6, 7, 5, 4, 2, 3}, 0, FALSE};
-static reconcile_descriptor rpromperm = {{0, 1, 7, 6, 4, 5, 3, 2}, 0, FALSE};
-static reconcile_descriptor rlgperm =   {{1, 0, 6, 7, 5, 4, 2, 3}, 2, FALSE};
-static reconcile_descriptor qtagperm =  {{1, 0, 7, 6, 5, 4, 3, 2}, 0, FALSE};
-static reconcile_descriptor homeperm =  {{6, 5, 4, 3, 2, 1, 0, 7}, 0, TRUE};
-static reconcile_descriptor sglperm =   {{7, 6, 5, 4, 3, 2, 1, 0}, 0, TRUE};
-static reconcile_descriptor crossperm = {{5, 4, 3, 2, 1, 0, 7, 6}, 0, FALSE};
-static reconcile_descriptor crossplus = {{5, 4, 3, 2, 1, 0, 7, 6}, 1, FALSE};
-static reconcile_descriptor laperm =    {{1, 3, 6, 0, 5, 7, 2, 4}, 2, FALSE};
+static reconcile_descriptor promperm =  {{1, 0, 6, 7, 5, 4, 2, 3}, 0, false};
+static reconcile_descriptor rpromperm = {{0, 1, 7, 6, 4, 5, 3, 2}, 0, false};
+static reconcile_descriptor rlgperm =   {{1, 0, 6, 7, 5, 4, 2, 3}, 2, false};
+static reconcile_descriptor qtagperm =  {{1, 0, 7, 6, 5, 4, 3, 2}, 0, false};
+static reconcile_descriptor homeperm =  {{6, 5, 4, 3, 2, 1, 0, 7}, 0, true};
+static reconcile_descriptor sglperm =   {{7, 6, 5, 4, 3, 2, 1, 0}, 0, true};
+static reconcile_descriptor crossperm = {{5, 4, 3, 2, 1, 0, 7, 6}, 0, false};
+static reconcile_descriptor crossplus = {{5, 4, 3, 2, 1, 0, 7, 6}, 1, false};
+static reconcile_descriptor laperm =    {{1, 3, 6, 0, 5, 7, 2, 4}, 2, false};
 
 
 static configuration *huge_history_save = (configuration *) 0;
@@ -165,36 +165,43 @@ static Cstring resolve_main_parts[] = {
 
 
 typedef struct {
-   int how_bad;  /* 0 means accept all such resolves.
-                  Otherwise, this is (2**N)-1, and accepts only one out of 2**N of them. */
+   // 0 means accept all such resolves.
+   // Each increase cuts the acceptance probability in half when searching
+   // randomly.  For example, 4 means accept only 1/16 of such resolves,
+   // throwing away the other 15/16.
+   // Special case: 10 means never accept such a resolve in a search.
+   // This is for really bad ones (LA from lines facing out) that we want
+   // to display when they arise while calling, but we don't want to find
+   // in a resolve command.
+   int how_bad;
    first_part_kind first_part;
    main_part_kind main_part;
 } resolve_descriptor;
 
 /* BEWARE!!  This list is keyed to the definition of "resolve_kind" in sd.h . */
 static resolve_descriptor resolve_table[] = {
-   {3,  first_part_none,  main_part_none},     /* resolve_none */
+   {2,  first_part_none,  main_part_none},     /* resolve_none */
    {0,  first_part_none,  main_part_rlg},      /* resolve_rlg */
    {0,  first_part_none,  main_part_la},       /* resolve_la */
    {1,  first_part_ext,   main_part_rlg},      /* resolve_ext_rlg */
    {1,  first_part_ext,   main_part_la},       /* resolve_ext_la */
-   {3,  first_part_slcl,  main_part_rlg},      /* resolve_slipclutch_rlg */
-   {3,  first_part_slcl,  main_part_la},       /* resolve_slipclutch_la */
-   {7,  first_part_circ,  main_part_rlg},      /* resolve_circ_rlg */
-   {7,  first_part_circ,  main_part_la},       /* resolve_circ_la */
-   {7,  first_part_pthru, main_part_rlg},      /* resolve_pth_rlg */
-   {7,  first_part_pthru, main_part_la},       /* resolve_pth_la */
-   {15, first_part_trby,  main_part_rlg},      /* resolve_tby_rlg */
-   {15, first_part_trby,  main_part_la},       /* resolve_tby_la */
+   {2,  first_part_slcl,  main_part_rlg},      /* resolve_slipclutch_rlg */
+   {2,  first_part_slcl,  main_part_la},       /* resolve_slipclutch_la */
+   {3,  first_part_circ,  main_part_rlg},      /* resolve_circ_rlg */
+   {3,  first_part_circ,  main_part_la},       /* resolve_circ_la */
+   {3,  first_part_pthru, main_part_rlg},      /* resolve_pth_rlg */
+   {3,  first_part_pthru, main_part_la},       /* resolve_pth_la */
+   {4,  first_part_trby,  main_part_rlg},      /* resolve_tby_rlg */
+   {4,  first_part_trby,  main_part_la},       /* resolve_tby_la */
    {1,  first_part_xby,   main_part_rlg},      /* resolve_xby_rlg */
    {1,  first_part_xby,   main_part_la},       /* resolve_xby_la */
    {1,  first_part_none,  main_part_dixgnd},   /* resolve_dixie_grand */
-   {3,  first_part_none,  main_part_minigrand},/* resolve_minigrand */
+   {2,  first_part_none,  main_part_minigrand},/* resolve_minigrand */
    {0,  first_part_none,  main_part_prom},     /* resolve_prom */
    {1,  first_part_none,  main_part_revprom},  /* resolve_revprom */
-   {7,  first_part_none,  main_part_sglprom},  /* resolve_sglfileprom */
-   {15, first_part_none,  main_part_rsglprom}, /* resolve_revsglfileprom */
-   {3,  first_part_none,  main_part_circ}};    /* resolve_circle */
+   {3,  first_part_none,  main_part_sglprom},  /* resolve_sglfileprom */
+   {4,  first_part_none,  main_part_rsglprom}, /* resolve_revsglfileprom */
+   {2,  first_part_none,  main_part_circ}};    /* resolve_circle */
 
 
 /* This assumes that "sequence_is_resolved" passes. */
@@ -210,7 +217,7 @@ SDLIB_API void write_resolve_text(long_boolean doing_file)
 
    if (doing_file && !ui_options.singlespace_mode) doublespace_file();
 
-   if (r.kind == resolve_circle) {
+   if (r.the_item->k == resolve_circle) {
       if (distance == 0) {
          if (configuration::current_config().state.result_flags & RESULTFLAG__IMPRECISE_ROT)
             writestuff("approximately ");
@@ -228,7 +235,7 @@ SDLIB_API void write_resolve_text(long_boolean doing_file)
       }
    }
    else {
-      int index = (int) r.kind;
+      resolve_kind index = r.the_item->k;
       first_part_kind first;
       main_part_kind mainpart;
 
@@ -271,8 +278,8 @@ SDLIB_API void write_resolve_text(long_boolean doing_file)
          writestuff("at home)");
       }
       else {
-         if (r.kind == resolve_revprom ||
-             r.kind == resolve_revsglfileprom)
+         if (r.the_item->k == resolve_revprom ||
+             r.the_item->k == resolve_revsglfileprom)
             writestuff(resolve_distances[8 - distance]);
          else
             writestuff(resolve_distances[distance]);
@@ -447,35 +454,34 @@ static long_boolean inner_search(command_kind goal,
       switch (goal) {
       case command_resolve:
          {
-            resolve_kind r = configuration::next_resolve().kind;
+            resolve_kind r = configuration::next_resolve().the_item->k;
 
-            /* Here we bias the search against resolves with circulates (which we
-               consider to be of lower quality) by only sometimes accepting them.
-
-               As more bits are set in the "how_bad" indicator, we ignore a larger
-               fraction of the resolves.  For example, we bias the search VERY HEAVILY
-               against reverse single file promenades, accepting only 1 in 16.
-            */
+            // Here we bias the search against resolves with circulates (which we
+            // consider to be of lower quality) by only sometimes accepting them.
+            //
+            //  As the "how_bad" indicator gets higher, we ignore a larger
+            // fraction of the resolves.  For example, we bias the search VERY HEAVILY
+            // against reverse single file promenades, accepting only 1 in 16.
 
             if (r == resolve_none) goto what_a_loss;
 
             switch (get_resolve_goodness_info()) {
             case resolve_goodness_only_nice:
-               /* Only accept things with "how_bad" = 0, that is, RLG, LA, and prom.
-                  Furthermore, at C2 and above, only accept if promenade distance
-                  is 0 to 3/8. */
+               // Only accept things with "how_bad" = 0, that is, RLG, LA, and prom.
+               // Furthermore, at C2 and above, only accept if promenade distance
+               // is 0 to 3/8.
                if (resolve_table[r].how_bad != 0 ||
                    (calling_level >= l_c2 &&
                     ((configuration::next_resolve().distance & 7) > 3)))
                   goto what_a_loss;
                break;
             case resolve_goodness_always:
-               /* Accept any one-call resolve. */
+               // Accept any one-call resolve.
                break;
             case resolve_goodness_maybe:
-               /* Accept resolves randomly.  The probability that we reject a
-                  resolve increases as the resolve quality goes down. */
-               if (resolve_table[r].how_bad & attempt_count) goto what_a_loss;
+               // Accept resolves randomly.  The probability that we reject a
+               // resolve increases as the resolve quality goes down.
+               if (~(~0 << resolve_table[r].how_bad) & attempt_count) goto what_a_loss;
                break;
             }
          }
@@ -483,10 +489,10 @@ static long_boolean inner_search(command_kind goal,
 
       case command_normalize:
 
-         /* We accept any setup with 8 people in it.  This could conceivably give
-            somewhat unusual setups like dogbones or riggers, but they might be
-            sort of interesting if they arise.  (Actually, it is highly unlikely,
-            given the concepts that we use.) */
+         // We accept any setup with 8 people in it.  This could conceivably give
+         // somewhat unusual setups like dogbones or riggers, but they might be
+         // sort of interesting if they arise.  (Actually, it is highly unlikely,
+         // given the concepts that we use.)
          if (setup_attrs[ns->kind].setup_limits != 7) goto what_a_loss;
          break;
 
@@ -726,7 +732,9 @@ static long_boolean inner_search(command_kind goal,
 
             if (t.id1) {
                if (this_state.state.people[k].id1 !=
-                   ((t.id1 & ~(PID_MASK | ID1_PERM_ALLBITS)) | new_resolve->permute1[(t.id1 & PID_MASK) >> 6] | new_resolve->permute2[(t.id1 & PID_MASK) >> 6]))
+                   ((t.id1 & ~(PID_MASK | ID1_PERM_ALLBITS)) |
+                    new_resolve->permute1[(t.id1 & PID_MASK) >> 6] |
+                    new_resolve->permute2[(t.id1 & PID_MASK) >> 6]))
                   goto try_again;
                if (this_state.state.people[k].id2 != t.id2)
                   goto try_again;

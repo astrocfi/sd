@@ -2768,11 +2768,20 @@ void run_program()
                goto start_cycle;
             }
             else {
-               /* There were no concepts entered.  Throw away the entire preceding line. */
-               if (configuration::history_ptr > 1) configuration::history_ptr--;
-               /* Going to start_cycle will make sure written_history_items
-                  does not exceed history_ptr. */
-               goto start_cycle;
+               // There were no concepts entered.  Throw away the entire preceding line.
+               if (configuration::history_ptr > 1) {
+                  configuration::history_ptr--;
+                  // Going to start_cycle will make sure written_history_items
+                  // does not exceed history_ptr.
+                  goto start_cycle;
+               }
+               else {
+                  // User type "undo" at the start of the sequence.
+                  // Just abort the sequence.  Don't even ask for permission --
+                  // there is nothing of value.
+                  clear_screen();
+                  goto show_banner;
+               }
             }
          case command_erase:
             reply_pending = FALSE;

@@ -912,23 +912,6 @@ enum {
    ID2_FACEBACK   = 0x00000001UL
 };
 
-struct cm_thing {
-   C_const setup_kind bigsetup;
-   C_const calldef_schema lyzer;
-   C_const veryshort maps[24];
-   C_const setup_kind insetup;
-   C_const setup_kind outsetup;
-   C_const int inner_rot;    /* 1 if inner setup is rotated CCW relative to big setup */
-   C_const int outer_rot;    /* 1 if outer setup is rotated CCW relative to big setup */
-   C_const int mapelong;
-   C_const int center_arity;
-   C_const int elongrotallow;
-   C_const calldef_schema getout_schema;
-   uint32 used_mask_analyze;
-   uint32 used_mask_synthesize;
-   cm_thing *next_analyze;
-   cm_thing *next_synthesize;
-};
 
 /* The following items are not actually part of the setup description,
    but are placed here for the convenience of "move" and similar procedures.
@@ -991,6 +974,67 @@ struct setup {
    small_setup outer;
    int concsetup_outer_elongation;
 };
+
+
+class conc_tables {
+
+ private:
+
+   // We make this a struct inside the class, rather than having its
+   // fields just comprise the class itself (note that there are no
+   // fields in this class, and it is never instantiated) so that
+   // we can make "conc_init_table" be a statically initialized array.
+
+   struct cm_thing {
+      setup_kind bigsetup;
+      calldef_schema lyzer;
+      veryshort maps[24];
+      setup_kind insetup;
+      setup_kind outsetup;
+      int inner_rot;    // 1 if inner setup is rotated CCW relative to big setup
+      int outer_rot;    // 1 if outer setup is rotated CCW relative to big setup
+      int mapelong;
+      int center_arity;
+      int elongrotallow;
+      calldef_schema getout_schema;
+      uint32 used_mask_analyze;
+      uint32 used_mask_synthesize;
+      cm_thing *next_analyze;
+      cm_thing *next_synthesize;
+   };
+
+   // Must be a power of 2.
+   enum { NUM_CONC_HASH_BUCKETS = 32 };
+   static cm_thing conc_init_table[];
+   static cm_thing *conc_hash_synthesize_table[NUM_CONC_HASH_BUCKETS];
+   static cm_thing *conc_hash_analyze_table[NUM_CONC_HASH_BUCKETS];
+
+ public:
+
+   static bool analyze_this(
+      setup *ss,
+      setup *inners,
+      setup *outers,
+      int *center_arity_p,
+      int & mapelong,
+      int & inner_rot,
+      int & outer_rot,
+      calldef_schema analyzer);
+
+   static bool synthesize_this(
+      setup *inners,
+      setup *outers,
+      int center_arity,
+      uint32 orig_elong_is_controversial,
+      int i,
+      uint32 matrix_concept,
+      int outer_elongation,
+      calldef_schema synthesizer,
+      setup *result);
+
+   static void initialize();
+};
+
 
 struct predicate_descriptor {
    // We wish we could put a "throw" clause on this function, but we can't.
@@ -1387,44 +1431,84 @@ struct sel_item {
 };
 
 
-enum tglmapkey {
-   tgl0,        // The null table entry.
-   tglmap1b,
-   tglmap2b,
-   tglmap1i,
-   tglmap2i,
-   tglmap1d,
-   tglmap2d,
-   tglmap1m,
-   tglmap2m,
-   tglmap1j,
-   tglmap2j,
-   tglmap1x,
-   tglmap2x,
-   tglmap1y,
-   tglmap2y,
-   tglmap1k,
-   tglmap2k,
-   tglmap2r,
-   tgl_ENUMLAST    // Not actually in the table.
+class tglmap {
+
+ public:
+
+   enum tglmapkey {
+      tgl0,        // The null table entry.
+      tglmap1b,
+      tglmap2b,
+      tglmap1i,
+      tglmap2i,
+      tglmap1d,
+      tglmap2d,
+      tglmap1m,
+      tglmap2m,
+      tglmap1j,
+      tglmap2j,
+      tglmap1x,
+      tglmap2x,
+      tglmap1y,
+      tglmap2y,
+      tglmap1k,
+      tglmap2k,
+      tglmap2r,
+      tgl_ENUMLAST    // Not actually in the table.
+   };
+
+   // We make this a struct inside the class, rather than having its
+   // fields just comprise the class itself (note that there are no
+   // fields in this class, and it is never instantiated) so that
+   // we can make "init_table", and other items, be statically
+   // initialized arrays.
+
+   struct map {
+      tglmapkey mykey;
+      setup_kind kind;
+      setup_kind kind1x3;
+      tglmapkey otherkey;
+      veryshort nointlkshapechange;
+      veryshort switchtgls;
+      veryshort mapqt1[8];   // In quarter-tag: first triangle (upright),
+      // then second triangle (inverted), then idle.
+      veryshort mapcp1[8];   // In C1 phantom: first triangle (inverted),
+      // then second triangle (upright), then idle.
+      veryshort mapbd1[8];   // In bigdmd.
+      veryshort map241[8];   // In 2x4.
+      veryshort map261[8];   // In 2x6.
+   };
+
+ private:
+
+   // The big initialization table, in sdtables.
+   static const map init_table[];
+
+   // The pointer table, constructed during initialization.
+   static const map *ptrtable[tgl_ENUMLAST];
+
+ public:
+
+   static void initialize();             // In sdistort.
+
+   static void do_glorious_triangles(    // In sdistort.
+      setup *ss,
+      const tglmapkey *map_ptr_table,
+      int indicator,
+      setup *result) THROW_DECL;
+
+   // In sdtables.
+   static const tglmapkey c1tglmap1[];
+   static const tglmapkey c1tglmap2[];
+   static const tglmapkey dbqtglmap1[];
+   static const tglmapkey dbqtglmap2[];
+   static const tglmapkey qttglmap1[];
+   static const tglmapkey qttglmap2[];
+   static const tglmapkey bdtglmap1[];
+   static const tglmapkey bdtglmap2[];
+   static const tglmapkey rgtglmap1[];
 };
 
-
-struct tgl_map {
-   C_const tglmapkey mykey;
-   C_const setup_kind kind;
-   C_const setup_kind kind1x3;
-   C_const tglmapkey otherkey;
-   C_const veryshort nointlkshapechange;
-   C_const veryshort switchtgls;
-   C_const veryshort mapqt1[8];   // In quarter-tag: first triangle (upright),
-                                  // then second triangle (inverted), then idle.
-   C_const veryshort mapcp1[8];   // In C1 phantom: first triangle (inverted),
-                                  // then second triangle (upright), then idle.
-   C_const veryshort mapbd1[8];   // In bigdmd.
-   C_const veryshort map241[8];   // In 2x4.
-   C_const veryshort map261[8];   // In 2x6.
-};
 
 struct startinfo {
    char *name;
@@ -1464,14 +1548,14 @@ struct setup_attr {
    // view, not shared by all callers (Hi, Clark!) that the diamond points are NOT
    // as if the ends of lines of 3, and hence can NOT trade with each other by
    // doing a right loop 1.
-   C_const coordrec *setup_coords;
+   const coordrec *setup_coords;
 
    // The above table is not suitable for performing mirror inversion because,
    // for example, the points of diamonds do not reflect onto each other.  This
    // table has unfudged coordinates, in which all the symmetries are observed.
    // This is the table that is used for mirror reversal.  Most of the items in
    // it are the same as those in the table above.
-   C_const coordrec *nice_setup_coords;
+   const coordrec *nice_setup_coords;
 
    // These determine how designators like "side boys" get turned into
    // "center 2", so that so-and-so moves can be done with the much
@@ -1498,7 +1582,7 @@ struct setup_attr {
    C_const long_boolean four_way_symmetry;
 
    /* This is the bit table for filling in the "ID2" bits. */
-   C_const id_bit_table *id_bit_table_ptr;
+   const id_bit_table *id_bit_table_ptr;
 
    /* These are the tables that show how to print out the setup. */
    Cstring print_strings[2];
@@ -2037,6 +2121,7 @@ enum warning_index {
    warn__check_2x4,
    warn__check_hokey_2x4,
    warn__check_4x4,
+   warn__check_4x6,
    warn__check_hokey_4x4,
    warn__check_4x4_start,
    warn__check_centered_qtag,
@@ -2122,8 +2207,41 @@ enum resolve_kind {
    resolve_circle
 };
 
+struct resolve_tester {
+   resolve_kind k;
+   dance_level level_needed;
+   // Add 0x10 bit for singer-only; these must be last.
+   // Also, last item in each table has 0x10 only.
+   // Add 0x20 bit to indicate that we demand only nonzero distances.
+   // Add 0x40 bit to make the resolver never find this, though
+   //    we will display it if user gets here.
+   uint32 distance;
+   veryshort locations[8];
+   uint32 directions;
+};
+
+
 struct resolve_indicator {
-   resolve_kind kind;
+
+   // Without this next thing, we get this error in Visual C++ Professional,
+   // version 5.0, service pack 3:
+   //      sdgetout.cpp
+   //      C:\wba\sd\sdgetout.cpp(542) : fatal error C1001: INTERNAL COMPILER ERROR
+   //        (compiler file 'E:\utc\src\\P2\main.c', line 379)
+   //          Please choose the Technical Support command on the Visual C++
+   //          Help menu, or open the Technical Support help file for more information
+   // Isn't that cool?
+
+   float ICantBelieveWhatABunchOfDunderheadsTheyHaveAtMicrosoft;
+
+   // We only look at the "k" field and the 0x40 bit of the distance
+   // (which tells us not to accept it in any resolve search.)
+   // Note in particular that the low bits of the distance do *not*
+   // contain useful information, because it's just a table item --
+   // It doesn't know anything about the current setup and the
+   // actual person identities.
+   const resolve_tester *the_item;
+   // Use this instead.
    int distance;
 };
 
@@ -2324,6 +2442,9 @@ class configuration {
    long_boolean draw_pic;
    int text_line;          // How many lines of text existed after this item was written,
                            // only meaningful if "written_history_items" is >= this index.
+
+   static const resolve_tester null_resolve;                 /* in SDTOP */
+
  private:
    resolve_indicator resolve_flag;
    warning_info warnings;
@@ -2376,11 +2497,11 @@ class configuration {
    }
    inline bool nontrivial_startinfo_specific() { return startinfoindex != 0; }
    inline startinfo *get_startinfo_specific() { return &startinfolist[startinfoindex]; }
-   inline void init_resolve() { resolve_flag.kind = resolve_none; }
+   inline void init_resolve() { resolve_flag.the_item = &null_resolve; }
    void calculate_resolve();                          // in SDTOP
    inline static resolve_indicator current_resolve() { return current_config().resolve_flag; }
    inline static resolve_indicator next_resolve() { return next_config().resolve_flag; }
-   inline static bool sequence_is_resolved() { return current_resolve().kind != resolve_none; }
+   inline static bool sequence_is_resolved() { return current_resolve().the_item->k != resolve_none; }
 
    inline void restore_warnings_specific(const warning_info & rhs)
       { warnings = rhs; }
@@ -2796,9 +2917,6 @@ enum {
    CMD_MISC2__DO_NOT_EXECUTE    = 0x80000000UL
 };
 
-// It seems we can't use the modern C++ "enum blah { ..... };"
-// syntax here.  C compilations get unhappy in DJGPP in the
-// appearance of this in "expand_thing".
 enum normalize_action {
    simple_normalize,
    normalize_before_isolated_call,
@@ -2823,36 +2941,116 @@ enum merge_action {
 };
 
 
-struct expand_thing {
-   veryshort source_indices[24];
-   int size;
-   setup_kind inner_kind;
-   setup_kind outer_kind;
-   int rot;
-   uint32 lillivemask;
-   uint32 biglivemask;
-   warning_index expwarning;
-   warning_index norwarning;
-   normalize_action action_level;
-   uint32 expandconcpropmask;
-   expand_thing *next_expand;
-   expand_thing *next_compress;
+class expand {
+
+ public:
+
+   // We make this a struct inside the class, rather than having its
+   // fields just comprise the class itself (note that there are no
+   // fields in this class, and it is never instantiated) so that
+   // we can make "init_table", and many other items, be statically
+   // initialized arrays.
+
+   struct thing {
+      veryshort source_indices[24];
+      int size;
+      setup_kind inner_kind;
+      setup_kind outer_kind;
+      int rot;
+      uint32 lillivemask;
+      uint32 biglivemask;
+      warning_index expwarning;
+      warning_index norwarning;
+      normalize_action action_level;
+      uint32 expandconcpropmask;
+      thing *next_expand;
+      thing *next_compress;
+   };
+
+   static void initialize();
+
+   static void compress_setup(const thing *thing, setup *stuff) THROW_DECL;
+
+   static void expand_setup(const thing *thing, setup *stuff) THROW_DECL;
+
+   static bool compress_from_hash_table(setup *ss,
+                                        normalize_action action,
+                                        uint32 livemask,
+                                        bool noqtagcompress) THROW_DECL;
+
+   static bool expand_from_hash_table(setup *ss,
+                                      uint32 needpropbits,
+                                      uint32 livemask) THROW_DECL;
+
+ private:
+
+   // Must be a power of 2.
+   enum { NUM_EXPAND_HASH_BUCKETS = 32 };
+
+   static thing *expand_hash_table[NUM_EXPAND_HASH_BUCKETS];
+   static thing *compress_hash_table[NUM_EXPAND_HASH_BUCKETS];
+
+   static thing init_table[];
+
+   // Various static constant things.  In sdtables.
+
+ public:
+   static const thing s_qtg_2x4;
+   static const thing s_2x3_qtg;
+   static const thing s_2x2_2x4;
+   static const thing s_4x4_4x6a;
+   static const thing s_4x4_4x6b;
+   static const thing s_4x4_4dma;
+   static const thing s_4x4_4dmb;
+   static const thing s_c1phan_4x4a;
+   static const thing s_c1phan_4x4b;
+   static const thing s_dmd_323;
+   static const thing s_1x4_dmd;
+   static const thing s_2x4_qtg;
+   static const thing s_1x2_dmd;
+   static const thing s_qtg_3x4;
+   static const thing s_1x2_hrgl;
+   static const thing s_dmd_hrgl;
+   static const thing s_dmd_hrgl_disc;
 };
 
-struct full_expand_thing {
-   warning_index warning;
-   int forbidden_elongation;   /* Low 2 bits = elongation bits to forbid;
-                                  "4" bit = must set elongation.
-                                  Also, the "8" bit means to use "gather"
-                                  and do this the other way.
-                                  Also, the "16" bit means allow only step
-                                  to a box, not step to a full wave. */
-   expand_thing *expand_lists;
-   setup_kind kind;
-   uint32 live;
-   uint32 dir;
-   uint32 dirmask;
-   full_expand_thing *next;
+class full_expand {
+
+ public:
+
+   // We make this a struct inside the class, rather than having its
+   // fields just comprise the class itself (note that there are no
+   // fields in this class, and it is never instantiated) so that
+   // we can make a number of items be statically initialized arrays.
+
+   struct thing {
+      warning_index warning;
+      // Low 2 bits = elongation bits to forbid;
+      // "4" bit = must set elongation.
+      // Also, the "8" bit means to use "gather" and do this the other way.
+      // Also, the "16" bit means allow only step to a box, not step to a full wave.
+      int forbidden_elongation;
+      expand::thing *expand_lists;
+      setup_kind kind;
+      uint32 live;
+      uint32 dir;
+      uint32 dirmask;
+      thing *next;
+   };
+
+   static void initialize_touch_tables();
+   static thing *search_table_1(setup_kind kind, uint32 livemask, uint32 directions);
+   static thing *search_table_2(setup_kind kind, uint32 livemask, uint32 directions);
+   static thing *search_table_3(setup_kind kind, uint32 livemask, uint32 directions);
+
+ private:
+
+   // Must be a power of 2.
+   enum { NUM_TOUCH_HASH_BUCKETS = 32 };
+
+   static thing *touch_hash_table1[NUM_TOUCH_HASH_BUCKETS];
+   static thing *touch_hash_table2[NUM_TOUCH_HASH_BUCKETS];
+   static thing *touch_hash_table3[NUM_TOUCH_HASH_BUCKETS];
 };
 
 
@@ -3260,7 +3458,7 @@ extern SDLIB_API ctr_end_mask_rec masks_for_3dmd_ctr2;              /* in SDTABL
 extern SDLIB_API ctr_end_mask_rec masks_for_3dmd_ctr4;              /* in SDTABLES */
 extern SDLIB_API ctr_end_mask_rec masks_for_bigh_ctr4;              /* in SDTABLES */
 extern SDLIB_API ctr_end_mask_rec masks_for_4x4;                    /* in SDTABLES */
-extern SDLIB_API setup_attr setup_attrs[];                          /* in SDTABLES */
+extern SDLIB_API const setup_attr setup_attrs[];                    /* in SDTABLES */
 extern SDLIB_API int begin_sizes[];                                 /* in SDTABLES */
 
 extern id_bit_table id_bit_table_2x5_z[];                           /* in SDTABLES */
@@ -3286,27 +3484,25 @@ extern id_bit_table id_bit_table_3dmd_ctr1x4[];                     /* in SDTABL
 extern id_bit_table id_bit_table_4dmd_cc_ee[];                      /* in SDTABLES */
 extern id_bit_table id_bit_table_3ptpd[];                           /* in SDTABLES */
 extern id_bit_table id_bit_table_3x6_with_1x6[];                    /* in SDTABLES */
-extern cm_thing conc_init_table[];                                  /* in SDTABLES */
 extern fixer fixer_init_table[];                                    /* in SDTABLES */
-extern tgl_map tgl_map_init_table[];                                /* in SDTABLES */
 
 
-extern full_expand_thing rear_1x2_pair;
-extern full_expand_thing rear_2x2_pair;
-extern full_expand_thing rear_bone_pair;
-extern full_expand_thing step_8ch_pair;
-extern full_expand_thing step_qtag_pair;
-extern full_expand_thing step_2x2h_pair;
-extern full_expand_thing step_2x2v_pair;
-extern full_expand_thing step_spindle_pair;
-extern full_expand_thing step_dmd_pair;
-extern full_expand_thing step_tgl_pair;
-extern full_expand_thing step_ptpd_pair;
-extern full_expand_thing step_qtgctr_pair;
+extern full_expand::thing rear_1x2_pair;
+extern full_expand::thing rear_2x2_pair;
+extern full_expand::thing rear_bone_pair;
+extern full_expand::thing step_8ch_pair;
+extern full_expand::thing step_qtag_pair;
+extern full_expand::thing step_2x2h_pair;
+extern full_expand::thing step_2x2v_pair;
+extern full_expand::thing step_spindle_pair;
+extern full_expand::thing step_dmd_pair;
+extern full_expand::thing step_tgl_pair;
+extern full_expand::thing step_ptpd_pair;
+extern full_expand::thing step_qtgctr_pair;
 
-extern full_expand_thing touch_init_table1[];
-extern full_expand_thing touch_init_table2[];
-extern full_expand_thing touch_init_table3[];
+extern full_expand::thing touch_init_table1[];
+extern full_expand::thing touch_init_table2[];
+extern full_expand::thing touch_init_table3[];
 #define NEEDMASK(K) (1<<(((uint32) (K))/((uint32) CONCPROP__NEED_LOBIT)))
 
 extern const coordrec tgl3_0;                                       /* in SDTABLES */
@@ -3326,15 +3522,6 @@ extern const coordrec press_4dmd_qtag2;                             /* in SDTABL
 extern const coordrec press_qtag_4dmd1;                             /* in SDTABLES */
 extern const coordrec press_qtag_4dmd2;                             /* in SDTABLES */
 extern const coordrec acc_crosswave;                                /* in SDTABLES */
-extern const tglmapkey c1tglmap1[];                                 /* in SDTABLES */
-extern const tglmapkey c1tglmap2[];                                 /* in SDTABLES */
-extern const tglmapkey dbqtglmap1[];                                /* in SDTABLES */
-extern const tglmapkey dbqtglmap2[];                                /* in SDTABLES */
-extern const tglmapkey qttglmap1[];                                 /* in SDTABLES */
-extern const tglmapkey qttglmap2[];                                 /* in SDTABLES */
-extern const tglmapkey bdtglmap1[];                                 /* in SDTABLES */
-extern const tglmapkey bdtglmap2[];                                 /* in SDTABLES */
-extern const tglmapkey rgtglmap1[];                                 /* in SDTABLES */
 extern sel_item sel_init_table[];                                   /* in SDTABLES */
 
 enum mpkind {
@@ -3547,12 +3734,12 @@ enum specmapkind {
 
 
 struct clw3_thing {
-   C_const setup_kind k;
-   C_const uint32 mask;
-   C_const uint32 test;
-   C_const uint32 map_code;
-   C_const int rot;
-   C_const veryshort inactives[9];
+   setup_kind k;
+   uint32 mask;
+   uint32 test;
+   uint32 map_code;
+   int rot;
+   veryshort inactives[9];
 };
 
 
@@ -3579,27 +3766,9 @@ extern const concept_fixer_thing concept_fixer_table[];
 
 extern SDLIB_API selector_item selector_list[];                     /* in SDTABLES */
 extern SDLIB_API Cstring warning_strings[];                         /* in SDTABLES */
-extern const expand_thing comp_qtag_2x4_stuff;                      /* in SDTABLES */
-extern const expand_thing exp_2x3_qtg_stuff;                        /* in SDTABLES */
-extern const expand_thing exp_2x2_2x4_stuff;                        /* in SDTABLES */
-extern const expand_thing exp_4x4_4x6_stuff_a;                      /* in SDTABLES */
-extern const expand_thing exp_4x4_4x6_stuff_b;                      /* in SDTABLES */
-extern const expand_thing exp_4x4_4dm_stuff_a;                      /* in SDTABLES */
-extern const expand_thing exp_4x4_4dm_stuff_b;                      /* in SDTABLES */
-extern const expand_thing exp_c1phan_4x4_stuff1;                    /* in SDTABLES */
-extern const expand_thing exp_c1phan_4x4_stuff2;                    /* in SDTABLES */
-extern const expand_thing exp_dmd_323_stuff;
-extern const expand_thing exp_1x4_dmd_stuff;
-extern const expand_thing exp_2x4_qtg_stuff;
-extern const expand_thing exp_1x2_dmd_stuff;
-extern const expand_thing exp_qtg_3x4_stuff;
-extern const expand_thing exp_1x2_hrgl_stuff;
-extern const expand_thing exp_dmd_hrgl_stuff;
-extern const expand_thing exp_dmd_hrgl_disc_stuff;
-extern expand_thing expand_init_table[];
 
 extern const map_thing spec_map_table[];                            /* in SDTABLES */
-extern clw3_thing clw3_table[];                                     /* in SDTABLES */
+extern const clw3_thing clw3_table[];                               /* in SDTABLES */
 extern map_thing map_init_table[];                                  /* in SDTABLES */
 
 
@@ -3770,8 +3939,6 @@ extern void move(
 
 /* In SDISTORT */
 
-extern void initialize_tgl_tables();
-
 extern void prepare_for_call_in_series(setup *result, setup *ss);
 
 extern void minimize_splitting_info(setup *ss, uint32 other_info);
@@ -3842,6 +4009,12 @@ extern void common_spot_move(
    parse_block *parseptr,
    setup *result) THROW_DECL;
 
+extern void do_glorious_triangles(
+   setup *ss,
+   const tglmap::tglmapkey *map_ptr_table,
+   int indicator,
+   setup *result) THROW_DECL;
+
 extern void triangle_move(
    setup *ss,
    parse_block *parseptr,
@@ -3885,7 +4058,6 @@ extern uint32 get_multiple_parallel_resultflags(setup outer_inners[], int number
 
 extern void initialize_sel_tables();
 extern void initialize_fix_tables();
-extern void initialize_conc_tables();
 
 extern void normalize_concentric(
    calldef_schema synthesizer,
@@ -3929,10 +4101,6 @@ extern void inner_selective_move(
    setup *result) THROW_DECL;
 
 /* In SDTOP */
-
-extern void compress_setup(const expand_thing *thing, setup *stuff) THROW_DECL;
-
-extern void expand_setup(const expand_thing *thing, setup *stuff) THROW_DECL;
 
 extern void update_id_bits(setup *ss);
 
@@ -4028,14 +4196,14 @@ extern parse_block *really_skip_one_concept(
    uint32 *need_to_restrain_p,   // 1=(if not doing echo), 2=(yes, always)
    parse_block ***parseptr_skip_p) THROW_DECL;
 
-extern long_boolean fix_n_results(int arity, setup_kind goal, setup z[],
+extern long_boolean fix_n_results(int arity, int goal, setup z[],
                                   uint32 & rotstates,
-                                  uint32 & pointclip)
-     THROW_DECL;
+                                  uint32 & pointclip) THROW_DECL;
 
 extern bool warnings_are_unacceptable(bool strict);
 
-extern void normalize_setup(setup *ss, normalize_action action) THROW_DECL;
+extern void normalize_setup(setup *ss, normalize_action action, bool noqtagcompress)
+     THROW_DECL;
 
 SDLIB_API void toplevelmove() THROW_DECL;
 

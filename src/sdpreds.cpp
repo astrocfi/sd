@@ -90,7 +90,7 @@ extern long_boolean selectp(setup *ss, int place) THROW_DECL
       // space.
 
       if (setup_attrs[ss->kind].setup_limits < 8) {
-         id_bit_table *ptr = setup_attrs[ss->kind].id_bit_table_ptr;
+         const id_bit_table *ptr = setup_attrs[ss->kind].id_bit_table_ptr;
 
          if (ptr) {
             switch (current_options.who) {

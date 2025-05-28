@@ -16,7 +16,7 @@
    get_multiple_parallel_resultflags
    initialize_sel_tables
    initialize_fix_tables
-   initialize_conc_tables
+   conc_tables::initialize
    normalize_concentric
    concentric_move
    merge_setups
@@ -36,7 +36,6 @@
 
 
 #define CONTROVERSIAL_CONC_ELONG 0x200
-
 
 extern uint32 get_multiple_parallel_resultflags(setup outer_inners[], int number) THROW_DECL
 {
@@ -103,14 +102,12 @@ extern void initialize_fix_tables()
    }
 }
 
-/* Must be a power of 2. */
-#define NUM_CONC_HASH_BUCKETS 32
 
-static cm_thing *conc_hash_synthesize_table[NUM_CONC_HASH_BUCKETS];
-static cm_thing *conc_hash_analyze_table[NUM_CONC_HASH_BUCKETS];
+conc_tables::cm_thing *conc_tables::conc_hash_synthesize_table[conc_tables::NUM_CONC_HASH_BUCKETS];
+conc_tables::cm_thing *conc_tables::conc_hash_analyze_table[conc_tables::NUM_CONC_HASH_BUCKETS];
 
 
-extern void initialize_conc_tables()
+void conc_tables::initialize()
 {
    cm_thing *tabp;
    int i;
@@ -182,6 +179,220 @@ static void fix_missing_centers(
 
 
 
+bool conc_tables::synthesize_this(
+   setup *inners,
+   setup *outers,
+   int center_arity,
+   uint32 orig_elong_is_controversial,
+   int i,
+   uint32 matrix_concept,
+   int outer_elongation,
+   calldef_schema synthesizer,
+   setup *result)
+{
+   int index;
+
+   if (inners[0].kind == s_trngl) {
+      // For triangles, we use the "2" bit of the rotation, demanding that it be even.
+      if (i&1) fail("Ends can't figure out what spots to finish on.");
+      index = (i&2) >> 1;
+   }
+   else
+      index = i&1;
+
+   uint32 allowmask;
+
+   if (outer_elongation == 3)
+      allowmask = 0x10 << index;
+   else if (outer_elongation <= 0 || outer_elongation > 3)
+      allowmask = 5 << index;
+   else
+      allowmask = 1 << (index + ((((outer_elongation-1) ^ outers->rotation) & 1) << 1));
+
+   if (matrix_concept) allowmask |= 0x40;
+
+   uint32 hash_num =
+      ((outers->kind + (5*(inners[0].kind + 5*synthesizer))) * 25) &
+      (conc_tables::NUM_CONC_HASH_BUCKETS-1);
+
+   const conc_tables::cm_thing *lmap_ptr;
+
+   int q;
+   int inlim, outlim;
+   bool reverse_centers_order = false;
+
+   for (lmap_ptr = conc_tables::conc_hash_synthesize_table[hash_num] ;
+        lmap_ptr ;
+        lmap_ptr = lmap_ptr->next_synthesize) {
+      if (lmap_ptr->outsetup == outers->kind &&
+          lmap_ptr->insetup == inners[0].kind &&
+          lmap_ptr->center_arity == center_arity &&
+          lmap_ptr->getout_schema == synthesizer &&
+          (lmap_ptr->elongrotallow & allowmask) == 0) {
+         // Find out whether inners need to be flipped around.
+         q = i + lmap_ptr->inner_rot - lmap_ptr->outer_rot;
+
+         if (q & 1) fail("Sorry, bug 1 in normalize_concentric.");
+
+         if (synthesizer != schema_concentric_others) {   // This test is a crock!!!!!
+            if ((outers->rotation + lmap_ptr->outer_rot + outer_elongation-1) & 2)
+               reverse_centers_order = true;
+         }
+
+         inlim = setup_attrs[lmap_ptr->insetup].setup_limits+1;
+         outlim = setup_attrs[lmap_ptr->outsetup].setup_limits+1;
+
+         // If inner (that is, outer) setups are triangles, we won't be able to
+         // turn them upside-down.  So accept it.  We don't have multiple maps
+         // for such things in any case.
+
+         if (inlim & 1) goto gotit;
+
+         int inners_xorstuff = 0;
+         if (q & 2) inners_xorstuff = inlim >> 1;
+
+         uint32 synth_mask = 1;
+
+         for (int k=0; k<lmap_ptr->center_arity; k++) {
+            int k_reorder = reverse_centers_order ? lmap_ptr->center_arity-k-1 : k;
+            for (int j=0; j<inlim; j++) {
+               if (inners[k_reorder].people[j^inners_xorstuff].id1 &&
+                   !(lmap_ptr->used_mask_synthesize & synth_mask))
+                  goto not_this_one;
+               synth_mask <<= 1;
+            }
+         }
+
+         for (int m=0; m<outlim; m++) {
+            if (outers->people[m].id1 &&
+                !(lmap_ptr->used_mask_synthesize & synth_mask))
+               goto not_this_one;
+            synth_mask <<= 1;
+         }
+
+         goto gotit;
+      }
+   not_this_one: ;
+   }
+
+   return false;
+
+ gotit:
+
+   q = i + lmap_ptr->inner_rot - lmap_ptr->outer_rot;
+
+   if (orig_elong_is_controversial) {
+      // See if the table selection depended on knowing the actual elongation.
+      if (lmap_ptr->elongrotallow & (5 << index))
+         warn(warn_controversial);
+   }
+
+   if (reverse_centers_order) {
+      if (lmap_ptr->center_arity == 2) {
+         setup tt = inners[0];
+         inners[0] = inners[1];
+         inners[1] = tt;
+      }
+      else if (lmap_ptr->center_arity == 3) {
+         setup tt = inners[0];
+         inners[0] = inners[2];
+         inners[2] = tt;
+      }
+   }
+
+   const veryshort *map_indices = lmap_ptr->maps;
+
+   for (int k=0; k<lmap_ptr->center_arity; k++) {
+      uint32 rr = lmap_ptr->inner_rot;
+
+      // Need to flip alternating triangles upside down.
+      if (lmap_ptr->insetup == s_trngl && (k&1)) rr ^= 2;
+
+      if (q & 2) {
+         inners[k].rotation += 2;
+         canonicalize_rotation(&inners[k]);
+      }
+
+      if (k != 0) {
+         if (((inners[k].rotation ^ inners[k-1].rotation ^ lmap_ptr->inner_rot ^ rr) & 3) != 0)
+            fail("Sorry, bug 2 in normalize_concentric.");
+      }
+
+      install_scatter(result, inlim, map_indices, &inners[k], ((0-rr) & 3) * 011);
+      map_indices += inlim;
+   }
+
+   install_scatter(result, outlim, map_indices, outers,
+                   ((0-lmap_ptr->outer_rot) & 3) * 011);
+
+   result->kind = lmap_ptr->bigsetup;
+   result->rotation = outers->rotation + lmap_ptr->outer_rot;
+   return true;
+}
+
+
+
+bool conc_tables::analyze_this(
+   setup *ss,
+   setup *inners,
+   setup *outers,
+   int *center_arity_p,
+   int & mapelong,
+   int & inner_rot,
+   int & outer_rot,
+   calldef_schema analyzer)
+{
+   uint32 hash_num = ((ss->kind + (5*analyzer)) * 25) &
+      (conc_tables::NUM_CONC_HASH_BUCKETS-1);
+
+   const conc_tables::cm_thing *lmap_ptr;
+
+   for (lmap_ptr = conc_tables::conc_hash_analyze_table[hash_num] ;
+        lmap_ptr ;
+        lmap_ptr = lmap_ptr->next_analyze) {
+      if (lmap_ptr->bigsetup == ss->kind &&
+          lmap_ptr->lyzer == analyzer) {
+
+         for (int k=0; k<=setup_attrs[ss->kind].setup_limits; k++) {
+            if (ss->people[k].id1 && !(lmap_ptr->used_mask_analyze & (1<<k)))
+               goto not_this_one;
+         }
+
+         int inlim = setup_attrs[lmap_ptr->insetup].setup_limits+1;
+         int outlim = setup_attrs[lmap_ptr->outsetup].setup_limits+1;
+
+         *center_arity_p = lmap_ptr->center_arity;
+         outers->kind = lmap_ptr->outsetup;
+         outers->rotation = (-lmap_ptr->outer_rot) & 3;
+
+         gather(outers, ss, &lmap_ptr->maps[inlim*lmap_ptr->center_arity],
+                outlim-1, lmap_ptr->outer_rot * 011);
+
+         for (int m=0; m<lmap_ptr->center_arity; m++) {
+            uint32 rr = lmap_ptr->inner_rot;
+
+            // Need to flip alternating triangles upside down.
+            if (lmap_ptr->insetup == s_trngl && (m&1)) rr ^= 2;
+
+            clear_people(&inners[m]);
+            inners[m].kind = lmap_ptr->insetup;
+            inners[m].rotation = (0-rr) & 3;
+            gather(&inners[m], ss, &lmap_ptr->maps[m*inlim], inlim-1, rr * 011);
+         }
+
+         mapelong = lmap_ptr->mapelong;
+         inner_rot = lmap_ptr->inner_rot;
+         outer_rot = lmap_ptr->outer_rot;
+
+         return true;
+      }
+   not_this_one: ;
+   }
+
+   return false;
+}
+
+
 /* This overwrites its "outer_inners" argument setups. */
 extern void normalize_concentric(
    calldef_schema synthesizer,
@@ -197,17 +408,11 @@ extern void normalize_concentric(
       The "CONTROVERSIAL_CONC_ELONG" is similar, but says that the low 2 bits
       are sort of OK, and that a warning needs to be raised. */
 
-   int i, j, q, k;
-   int index;
-   uint32 hash_num;
-   uint32 allowmask;
-   cm_thing *conc_hash_bucket;
-   const cm_thing *lmap_ptr;
+   int i, j;
    setup *inners = &outer_inners[1];
    setup *outers = &outer_inners[0];
    calldef_schema table_synthesizer = synthesizer;
-   uint32 orig_elong = outer_elongation;   // Save the warning info.
-
+   uint32 orig_elong_is_controversial = outer_elongation & CONTROVERSIAL_CONC_ELONG;
    outer_elongation &= ~CONTROVERSIAL_CONC_ELONG;
 
    clear_people(result);
@@ -581,7 +786,7 @@ extern void normalize_concentric(
                   }
                   // Or the two ends missing.
                   else if (!(outers->people[0].id1 | outers->people[2].id1)) {
-                     compress_setup(&exp_1x4_dmd_stuff, outers);
+                     expand::compress_setup(&expand::s_1x4_dmd, outers);
                      goto compute_rotation_again;
                   }
                   break;
@@ -710,153 +915,27 @@ extern void normalize_concentric(
       break;
    }
 
-   if (inners[0].kind == s_trngl) {
-      // For triangles, we use the "2" bit of the rotation, demanding that it be even.
-      if (i&1) goto elongation_loss;
-      index = (i&2) >> 1;
-   }
-   else
-      index = i&1;
-
-   hash_num =
-      ((outers->kind + (5*(inners[0].kind + 5*table_synthesizer))) * 25) &
-      (NUM_CONC_HASH_BUCKETS-1);
-
-   if (outer_elongation == 3)
-      allowmask = 0x10 << index;
-   else if (outer_elongation <= 0 || outer_elongation > 3)
-      allowmask = 5 << index;
-   else
-      allowmask = 1 << (index + ((((outer_elongation-1) ^ outers->rotation) & 1) << 1));
-
-   if (matrix_concept) allowmask |= 0x40;
-
-   int inlim;
-   int outlim;
-   const veryshort *map_indices;
-   bool reverse_centers_order;
-
-   for (conc_hash_bucket = conc_hash_synthesize_table[hash_num] ;
-        conc_hash_bucket ;
-        conc_hash_bucket = conc_hash_bucket->next_synthesize) {
-      if (conc_hash_bucket->outsetup == outers->kind &&
-          conc_hash_bucket->insetup == inners[0].kind &&
-          conc_hash_bucket->center_arity == center_arity &&
-          conc_hash_bucket->getout_schema == table_synthesizer &&
-          (conc_hash_bucket->elongrotallow & allowmask) == 0) {
-         lmap_ptr = conc_hash_bucket;
-
-         if (orig_elong & CONTROVERSIAL_CONC_ELONG) {
-            // See if the table selection depended on knowing the actual elongation.
-            if (conc_hash_bucket->elongrotallow & (5 << index))
-               warn(warn_controversial);
-         }
-
-         inlim = setup_attrs[lmap_ptr->insetup].setup_limits+1;
-         outlim = setup_attrs[lmap_ptr->outsetup].setup_limits+1;
-         map_indices = lmap_ptr->maps;
-
-         // Find out whether inners need to be flipped around.
-         q = i + lmap_ptr->inner_rot - lmap_ptr->outer_rot;
-
-         if (q & 1) fail("Sorry, bug 1 in normalize_concentric.");
-
-         reverse_centers_order = false;
-
-         if (table_synthesizer != schema_concentric_others) {   // This test is a crock!!!!!
-            if ((outers->rotation + lmap_ptr->outer_rot + outer_elongation-1) & 2)
-               reverse_centers_order = true;
-         }
-
-         // If inner (that is, outer) setups are triangles, we won't be able to
-         // turn them upside-down.  So accept it.  We don't have multiple maps
-         // for such things in any case.
-
-         if (inlim & 1) goto gotit;
-
-         {
-            int inners_xorstuff = 0;
-            if (q & 2) inners_xorstuff = inlim >> 1;
-            uint32 synth_mask = 1;
-
-            int j, k;
-
-            for (k=0; k<lmap_ptr->center_arity; k++) {
-               int k_reorder = k;
-               if (reverse_centers_order) k_reorder = lmap_ptr->center_arity-k-1;
-               for (j=0; j<inlim; j++) {
-                  if (inners[k_reorder].people[j^inners_xorstuff].id1 &&
-                      !(lmap_ptr->used_mask_synthesize & synth_mask))
-                     goto not_this_one;
-                  synth_mask <<= 1;
-               }
-            }
-
-            for (j=0; j<outlim; j++) {
-               if (outers->people[j].id1 &&
-                   !(lmap_ptr->used_mask_synthesize & synth_mask))
-                  goto not_this_one;
-               synth_mask <<= 1;
-            }
-         }
-
-         goto gotit;
-      }
-   not_this_one: ;
-   }
-
-   goto anomalize_it;
-
- gotit:
-
-   if (reverse_centers_order) {
-      if (lmap_ptr->center_arity == 2) {
-         setup tt = inners[0];
-         inners[0] = inners[1];
-         inners[1] = tt;
-      }
-      else if (lmap_ptr->center_arity == 3) {
-         setup tt = inners[0];
-         inners[0] = inners[2];
-         inners[2] = tt;
-      }
-   }
-
-   for (k=0; k<lmap_ptr->center_arity; k++) {
-      uint32 rr = lmap_ptr->inner_rot;
-
-      /* Need to flip alternating triangles upside down. */
-      if (lmap_ptr->insetup == s_trngl && (k&1)) rr ^= 2;
-
-      if (q & 2) {
-         inners[k].rotation += 2;
-         canonicalize_rotation(&inners[k]);
-      }
-
-      if (k != 0) {
-         if (((inners[k].rotation ^ inners[k-1].rotation ^ lmap_ptr->inner_rot ^ rr) & 3) != 0)
-            fail("Sorry, bug 2 in normalize_concentric.");
-      }
-
-      install_scatter(result, inlim, map_indices, &inners[k], ((0-rr) & 3) * 011);
-      map_indices += inlim;
-   }
-
-   install_scatter(result, outlim, map_indices, outers,
-                   ((0-lmap_ptr->outer_rot) & 3) * 011);
-
-   result->kind = lmap_ptr->bigsetup;
-   result->rotation = outers->rotation + lmap_ptr->outer_rot;
+   if (!conc_tables::synthesize_this(
+         inners,
+         outers,
+         center_arity,
+         orig_elong_is_controversial,
+         i,
+         matrix_concept,
+         outer_elongation,
+         table_synthesizer,
+         result))
+      goto anomalize_it;
 
    if (table_synthesizer == schema_conc_o)
-      normalize_setup(result, simple_normalize);
+      normalize_setup(result, simple_normalize, false);
    if (table_synthesizer == schema_sgl_in_out_triple)
-      normalize_setup(result, normalize_to_4);
+      normalize_setup(result, normalize_to_4, false);
 
    canonicalize_rotation(result);
    return;
 
- anomalize_it:            /* Failed, just leave it as it is. */
+ anomalize_it:            // Failed, just leave it as it is.
 
    switch (synthesizer) {
    case schema_rev_checkpoint:
@@ -871,7 +950,8 @@ extern void normalize_concentric(
       fail("Can't figure out this concentric result.");
    }
 
-   if (outer_elongation <= 0 || outer_elongation > 2) goto elongation_loss;
+   if (outer_elongation <= 0 || outer_elongation > 2)
+      fail("Ends can't figure out what spots to finish on.");
 
    result->kind = s_normal_concentric;
    result->inner.skind = inners[0].kind;
@@ -886,12 +966,7 @@ extern void normalize_concentric(
    }
    canonicalize_rotation(result);
    result->result_flags = 0;
-   return;
-
-   elongation_loss:
-   fail("Ends can't figure out what spots to finish on.");
 }
-
 
 
 /* This sets "outer_elongation" to the absolute elongation of the
@@ -927,7 +1002,7 @@ static calldef_schema concentrify(
    int & crossing,   // This is int (0 or 1), not bool.
    setup inners[],
    setup *outers,
-   int *center_arity,
+   int *center_arity_p,
    int *outer_elongation,    /* Set to elongation of original outers, except if
                                 center 6 and outer 2, in which case, if centers
                                 are a bone6, it shows their elongation. */
@@ -935,7 +1010,6 @@ static calldef_schema concentrify(
                                         // elongation of original ends.
 {
    int i, k;
-   uint32 hash_num;
    calldef_schema analyzer_result = analyzer;
    uint32 livemask = 0UL;
 
@@ -1230,7 +1304,7 @@ static calldef_schema concentrify(
       be raised, since the "concthing" entries are zero. */
 
    if (ss->kind == s_normal_concentric || ss->kind == s_dead_concentric) {
-      *center_arity = 1;
+      *center_arity_p = 1;
 
       if (ss->kind == s_dead_concentric) {
          ss->outer.skind = nothing;
@@ -1334,7 +1408,7 @@ static calldef_schema concentrify(
 
    if (analyzer_result == schema_concentric && ss->kind == s3x4) {
       if ((livemask & 03131UL) != 01111UL) {
-         *center_arity = 1;
+         *center_arity_p = 1;
          inners[0].kind = s1x4;
          inners[0].rotation = 0;
          outers->kind = s2x2;
@@ -1428,115 +1502,85 @@ static calldef_schema concentrify(
    else if (analyzer_result == schema_in_out_triple_zcom)
       analyzer_result = schema_in_out_triple;
 
-   hash_num = ((ss->kind + (5*analyzer_result)) * 25) & (NUM_CONC_HASH_BUCKETS-1);
-
-   const cm_thing *lmap_ptr;
-
-   for (lmap_ptr = conc_hash_analyze_table[hash_num] ;
-        lmap_ptr ;
-        lmap_ptr = lmap_ptr->next_analyze) {
-      if (lmap_ptr->bigsetup == ss->kind &&
-          lmap_ptr->lyzer == analyzer_result) {
-
-         for (k=0; k<=setup_attrs[ss->kind].setup_limits; k++) {
-            if (ss->people[k].id1 && !(lmap_ptr->used_mask_analyze & (1<<k)))
-               goto not_this_one;
-         }
-
-         goto gotit;
-      }
-   not_this_one: ;
-   }
-
-   switch (analyzer_result) {
-   case schema_concentric:
-   case schema_conc_bar:
-      fail("Can't find centers and ends in this formation.");
-   case schema_checkpoint:
-      fail("Can't find checkpoint people in this formation.");
-   case schema_concentric_2_6:
-   case schema_concentric_big2_6:
-      fail("Can't find 2 centers and 6 ends in this formation.");
-   case schema_concentric_2_4:
-      fail("Can't find 2 centers and 4 ends in this formation.");
-   case schema_concentric_4_2:
-      fail("Can't find 4 centers and 2 ends in this formation.");
-   case schema_concentric_6_2:
-      fail("Can't find 6 centers and 2 ends in this formation.");
-   case schema_concentric_6p:
-      fail("Can't find centers and ends in this 6-person formation.");
-   case schema_concentric_6_2_tgl:
-      fail("Can't find inside triangles in this formation.");
-   case schema_conc_o:
-      fail("Can't find outside 'O' spots.");
-   case schema_conc_12:
-   case schema_conc_star12:
-   case schema_conc_bar12:
-      fail("Can't find 12 matrix centers and ends in this formation.");
-   case schema_conc_16:
-   case schema_conc_star16:
-   case schema_conc_bar16:
-      fail("Can't find 16 matrix centers and ends in this formation.");
-   case schema_3x3_concentric:
-      fail("Can't find 3x3 centers and ends in this formation.");
-   case schema_4x4_lines_concentric:
-      fail("Can't find 16 matrix center and end lines in this formation.");
-   case schema_4x4_cols_concentric:
-      fail("Can't find 16 matrix center and end columns in this formation.");
-   case schema_1331_concentric:
-   case schema_1313_concentric:
-      fail("Can't find 3x1 concentric formation.");
-   case schema_single_concentric:
-      fail("Can't do single concentric in this formation.");
-   case schema_grand_single_concentric:
-      fail("Can't do grand single concentric in this formation.");
-   case schema_in_out_triple:
-   case schema_sgl_in_out_triple:
-   case schema_3x3_in_out_triple:
-   case schema_4x4_in_out_triple:
-      fail("Can't find triple lines/columns/boxes/diamonds in this formation.");
-   case schema_in_out_quad:
-   case schema_in_out_12mquad:
-      fail("Can't find phantom lines/columns/boxes/diamonds in this formation.");
-   case schema_concentric_diamonds:
-      fail("Can't find concentric diamonds.");
-   case schema_concentric_zs:
-      fail("Can't find concentric Z's.");
-   case schema_concentric_diamond_line:
-      fail("Can't find center line and outer diamond.");
-   default:
-      fail("Wrong formation.");
-   }
-
- gotit:
-
    {
-      int inlim = setup_attrs[lmap_ptr->insetup].setup_limits+1;
-      int outlim = setup_attrs[lmap_ptr->outsetup].setup_limits+1;
+      int mapelong;
+      int inner_rot;
+      int outer_rot;
 
-      *center_arity = lmap_ptr->center_arity;
-      outers->kind = lmap_ptr->outsetup;
-      outers->rotation = (-lmap_ptr->outer_rot) & 3;
-
-      gather(outers, ss, &lmap_ptr->maps[inlim*lmap_ptr->center_arity],
-             outlim-1, lmap_ptr->outer_rot * 011);
-
-      for (k=0; k<lmap_ptr->center_arity; k++) {
-         uint32 rr = lmap_ptr->inner_rot;
-
-         /* Need to flip alternating triangles upside down. */
-         if (lmap_ptr->insetup == s_trngl && (k&1)) rr ^= 2;
-
-         clear_people(&inners[k]);
-         inners[k].kind = lmap_ptr->insetup;
-         inners[k].rotation = (0-rr) & 3;
-         gather(&inners[k], ss, &lmap_ptr->maps[k*inlim], inlim-1, rr * 011);
+      if (!conc_tables::analyze_this(
+            ss,
+            inners,
+            outers,
+            center_arity_p,
+            mapelong,
+            inner_rot,
+            outer_rot,
+            analyzer_result)) {
+         switch (analyzer_result) {
+         case schema_concentric:
+         case schema_conc_bar:
+            fail("Can't find centers and ends in this formation.");
+         case schema_checkpoint:
+            fail("Can't find checkpoint people in this formation.");
+         case schema_concentric_2_6:
+         case schema_concentric_big2_6:
+            fail("Can't find 2 centers and 6 ends in this formation.");
+         case schema_concentric_2_4:
+            fail("Can't find 2 centers and 4 ends in this formation.");
+         case schema_concentric_4_2:
+            fail("Can't find 4 centers and 2 ends in this formation.");
+         case schema_concentric_6_2:
+            fail("Can't find 6 centers and 2 ends in this formation.");
+         case schema_concentric_6p:
+            fail("Can't find centers and ends in this 6-person formation.");
+         case schema_concentric_6_2_tgl:
+            fail("Can't find inside triangles in this formation.");
+         case schema_conc_o:
+            fail("Can't find outside 'O' spots.");
+         case schema_conc_12:
+         case schema_conc_star12:
+         case schema_conc_bar12:
+            fail("Can't find 12 matrix centers and ends in this formation.");
+         case schema_conc_16:
+         case schema_conc_star16:
+         case schema_conc_bar16:
+            fail("Can't find 16 matrix centers and ends in this formation.");
+         case schema_3x3_concentric:
+            fail("Can't find 3x3 centers and ends in this formation.");
+         case schema_4x4_lines_concentric:
+            fail("Can't find 16 matrix center and end lines in this formation.");
+         case schema_4x4_cols_concentric:
+            fail("Can't find 16 matrix center and end columns in this formation.");
+         case schema_1331_concentric:
+         case schema_1313_concentric:
+            fail("Can't find 3x1 concentric formation.");
+         case schema_single_concentric:
+            fail("Can't do single concentric in this formation.");
+         case schema_grand_single_concentric:
+            fail("Can't do grand single concentric in this formation.");
+         case schema_in_out_triple:
+         case schema_sgl_in_out_triple:
+         case schema_3x3_in_out_triple:
+         case schema_4x4_in_out_triple:
+            fail("Can't find triple lines/columns/boxes/diamonds in this formation.");
+         case schema_in_out_quad:
+         case schema_in_out_12mquad:
+            fail("Can't find phantom lines/columns/boxes/diamonds in this formation.");
+         case schema_concentric_diamonds:
+            fail("Can't find concentric diamonds.");
+         case schema_concentric_zs:
+            fail("Can't find concentric Z's.");
+         case schema_concentric_diamond_line:
+            fail("Can't find center line and outer diamond.");
+         default:
+            fail("Wrong formation.");
+         }
       }
 
       /* Set the outer elongation to whatever elongation the outsides really had, as indicated
          by the map. */
 
-      *outer_elongation = lmap_ptr->mapelong;
+      *outer_elongation = mapelong;
       if (outers->rotation & 1) *outer_elongation ^= 3;
 
       /* If the concept is cross-concentric, we have to set the elongation to what
@@ -1558,19 +1602,19 @@ static calldef_schema concentrify(
       case schema_concentric_zs:   // This may not be right.
       case schema_concentric_6p_or_normal:
          if (crossing) {
-            *xconc_elongation = lmap_ptr->inner_rot+1;
+            *xconc_elongation = inner_rot+1;
 
             switch (ss->kind) {
             case s4x4:
-               if (lmap_ptr->insetup == s2x2) *xconc_elongation = 3;
+               if (inners[0].kind == s2x2) *xconc_elongation = 3;
                break;
             case s_galaxy:
                *xconc_elongation = -1;    // Can't do this!
                break;
             case s_rigger:
                *xconc_elongation = -1;
-               if (lmap_ptr->outsetup == s1x4)
-                  *xconc_elongation = (lmap_ptr->outer_rot+1) | CONTROVERSIAL_CONC_ELONG;
+               if (outers->kind == s1x4)
+                  *xconc_elongation = (outer_rot+1) | CONTROVERSIAL_CONC_ELONG;
                break;
             }
          }
@@ -1588,7 +1632,7 @@ static calldef_schema concentrify(
       case schema_in_out_12mquad:
       case schema_in_out_triple_zcom:
       case schema_conc_o:
-         *outer_elongation = lmap_ptr->mapelong;   // The map defines it completely.
+         *outer_elongation = mapelong;   // The map defines it completely.
          break;
       case schema_concentric_6_2_tgl:
          if (inners[0].kind == s_bone6)
@@ -1605,9 +1649,9 @@ static calldef_schema concentrify(
 
    canonicalize_rotation(outers);
    canonicalize_rotation(&inners[0]);
-   if (*center_arity >= 2)
+   if (*center_arity_p >= 2)
       canonicalize_rotation(&inners[1]);
-   if (*center_arity == 3)
+   if (*center_arity_p == 3)
       canonicalize_rotation(&inners[2]);
 
    return analyzer_result;
@@ -2604,9 +2648,9 @@ extern void concentric_move(
                RESULTFLAG__DID_Z_COMPRESSBIT;
             if (z_compress_direction) {
                if (result_ptr->kind == s2x2) {
-                  static const expand_thing fix_cw  = {{1, 2, 4, 5}, 4, s2x2, s2x3, 0};
-                  static const expand_thing fix_ccw = {{0, 1, 3, 4}, 4, s2x2, s2x3, 0};
-                  const expand_thing *fixp;
+                  static const expand::thing fix_cw  = {{1, 2, 4, 5}, 4, s2x2, s2x3, 0};
+                  static const expand::thing fix_ccw = {{0, 1, 3, 4}, 4, s2x2, s2x3, 0};
+                  const expand::thing *fixp;
                   uint32 rotfix = z_compress_direction-1;   // This is 0 for E-W or 1 for N-S
                   result_ptr->rotation -= rotfix;
                   canonicalize_rotation(result_ptr);
@@ -2622,7 +2666,7 @@ extern void concentric_move(
                   else
                      fail("Internal error: Can't figure out how to unwind anisotropic Z's.");
 
-                  expand_setup(fixp, result_ptr);
+                  expand::expand_setup(fixp, result_ptr);
                   result_ptr->rotation += rotfix;
                }
                else
@@ -2708,7 +2752,7 @@ extern void concentric_move(
        analyzer == schema_in_out_quad ||
        analyzer == schema_in_out_12mquad ||
        analyzer == schema_concentric_others) {
-      if (fix_n_results(center_arity, nothing, result_inner, rotstate, pointclip)) {
+      if (fix_n_results(center_arity, -1, result_inner, rotstate, pointclip)) {
          result_inner[0].kind = nothing;
       }
       else if (!(rotstate & 0xF03)) fail("Sorry, can't do this orientation changer.");
@@ -3521,7 +3565,7 @@ static concmerge_thing merge_maps[] = {
    {s1x8,        s_ptpd, 0,     0xAA, 0x2E, 0x1, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {0, -1, 2, -1, 4, -1, 6, -1}, {0}},
    {s1x6,        s_ptpd, 0,     0xAA, 0x0E, 0x1, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {0, -1, 2, -1, 3, -1, 5, -1}, {0}},
 
-   {s2x4,        s_ptpd, 0x66,  0x55, 0x2AD,0x1, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {-1, 6, -1, 5, -1, 2, -1, 1}, {0}},
+   {s2x4,        s_ptpd, 0x66,  0x55, 0xAD, 0x1, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {-1, 6, -1, 5, -1, 2, -1, 1}, {0}},
 
    {s1x4,          s2x4, 0,     0x66, 0x0C, 0x0, schema_concentric,     s1x4,        s2x2,     warn__none, 0, 0, {0, 1, 2, 3},               {0, 3, 4, 7}},
    {s1x4,       s_bone6, 0,      044, 0x0E, 0x0, schema_concentric,     s1x4,        s2x2,     warn__none, 0, 0, {0, 1, 2, 3},               {0, 1, 3, 4}},
@@ -3644,14 +3688,14 @@ extern void merge_setups(setup *ss, merge_action action, setup *result) THROW_DE
    }
 
    canonicalize_rotation(res1);    /* Do we really need to do this before normalize_setup? */
-   normalize_setup(res1, na);
+   normalize_setup(res1, na, res2->kind == nothing);
    canonicalize_rotation(res1);    /* We definitely need to do it now --
                                       a 2x2 might have been created. */
 
    tryagain:
 
    canonicalize_rotation(res2);
-   normalize_setup(res2, na);
+   normalize_setup(res2, na, res1->kind == nothing);
    canonicalize_rotation(res2);
 
    /* Canonicalize the setups according to their kind.  This is a bit sleazy, since
@@ -3688,11 +3732,11 @@ extern void merge_setups(setup *ss, merge_action action, setup *result) THROW_DE
       }
 
       if (res1->rotation == 0 && (mask2 & 0x8E8E) == 0) {
-         expand_setup(&exp_4x4_4dm_stuff_b, res2);
+         expand::expand_setup(&expand::s_4x4_4dmb, res2);
          goto tryagain;
       }
       else if (res1->rotation == 1 && (mask2 & 0xE8E8) == 0) {
-         expand_setup(&exp_4x4_4dm_stuff_a, res2);
+         expand::expand_setup(&expand::s_4x4_4dma, res2);
          goto tryagain;
       }
    }
@@ -4035,8 +4079,8 @@ extern void punt_centers_use_concept(setup *ss, setup *result) THROW_DECL
       ssmask >>= 1;
    }
 
-   normalize_setup(&the_setups[0], normalize_before_isolated_call);
-   normalize_setup(&the_setups[1], normalize_before_isolated_call);
+   normalize_setup(&the_setups[0], normalize_before_isolated_call, false);
+   normalize_setup(&the_setups[1], normalize_before_isolated_call, false);
    warning_info saved_warnings = configuration::save_warnings();
 
    /* Check for "someone work yoyo".  If call is sequential and yoyo is consumed by
@@ -4185,7 +4229,7 @@ extern void punt_centers_use_concept(setup *ss, setup *result) THROW_DECL
       the_setups[0].cmd.parseptr = parseptrcopy->next;      /* Skip over the concept. */
       move(&the_setups[0], FALSE, result);
       finalresultflags |= result->result_flags;
-      normalize_setup(result, simple_normalize);
+      normalize_setup(result, simple_normalize, false);
       result->result_flags = finalresultflags & ~3;
    }
    else if (doing_do_last_frac) {
@@ -4201,7 +4245,7 @@ extern void punt_centers_use_concept(setup *ss, setup *result) THROW_DECL
       the_setups[0].cmd.parseptr = parseptrcopy->next;      /* Skip over the concept. */
       move(&the_setups[0], FALSE, result);
       finalresultflags |= result->result_flags;
-      normalize_setup(result, simple_normalize);
+      normalize_setup(result, simple_normalize, false);
       result->result_flags = finalresultflags & ~3;
    }
 }
@@ -4333,6 +4377,12 @@ extern void inner_selective_move(
    selective_key orig_indicator = indicator;
    normalize_action action = normalize_before_isolated_call;
    bool force_matrix_merge = false;
+
+   if (ss->cmd.cmd_misc2_flags & CMD_MISC2__DO_NOT_EXECUTE) {
+      result->result_flags = 0;
+      result->kind = nothing;
+      return;
+   }
 
    if (indicator == selective_key_plain ||
        indicator == selective_key_plain_from_id_bits ||
@@ -4815,9 +4865,9 @@ extern void inner_selective_move(
 
 back_here:
 
-   normalize_setup(&the_setups[0], action);
+   normalize_setup(&the_setups[0], action, false);
    if (others)
-      normalize_setup(&the_setups[1], action);
+      normalize_setup(&the_setups[1], action, false);
 
    saved_warnings = configuration::save_warnings();
 
@@ -5043,7 +5093,7 @@ back_here:
             goto fooble;
          }
 
-         if (fix_n_results(numsetups, nothing, lilresult, rotstate, pointclip)) goto lose;
+         if (fix_n_results(numsetups, -1, lilresult, rotstate, pointclip)) goto lose;
          if (!(rotstate & 0xF03)) fail("Sorry, can't do this orientation changer.");
 
          clear_people(&the_results[setupcount]);
@@ -5068,9 +5118,9 @@ back_here:
 
          if (lilresult[0].kind == s2x2 && key == LOOKUP_Z) {
             if (lilresult[0].result_flags & RESULTFLAG__DID_Z_COMPRESSMASK) {
-               static const expand_thing fix_cw  = {{1, 2, 4, 5}, 4, s2x2, s2x3, 0};
-               static const expand_thing fix_ccw = {{0, 1, 3, 4}, 4, s2x2, s2x3, 0};
-               expand_setup((thislivemask == 066) ? &fix_cw : &fix_ccw,
+               static const expand::thing fix_cw  = {{1, 2, 4, 5}, 4, s2x2, s2x3, 0};
+               static const expand::thing fix_ccw = {{0, 1, 3, 4}, 4, s2x2, s2x3, 0};
+               expand::expand_setup((thislivemask == 066) ? &fix_cw : &fix_ccw,
                             &lilresult[0]);
             }
          }

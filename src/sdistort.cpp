@@ -13,7 +13,7 @@
     This is for version 34. */
 
 /* This defines the following functions:
-   initialize_tgl_tables
+   tglmap::initialize
    prepare_for_call_in_series
    minimize_splitting_info
    initialize_map_tables
@@ -31,6 +31,7 @@
    do_concept_rigger
    do_concept_wing
    common_spot_move
+   tglmap::do_glorious_triangles
    triangle_move
 */
 
@@ -44,23 +45,23 @@
 #include "sd.h"
 
 
-static tgl_map *tgl_map_ptr_table[tgl_ENUMLAST];
+const tglmap::map *tglmap::ptrtable[tgl_ENUMLAST];
 
-extern void initialize_tgl_tables()
+void tglmap::initialize()
 {
    int i;
-   tgl_map *tabp;
+   const map *tabp;
 
-   for (i=tgl0 ; i<tgl_ENUMLAST ; i++) tgl_map_ptr_table[i] = (tgl_map *) 0;
+   for (i=tgl0 ; i<tgl_ENUMLAST ; i++) ptrtable[i] = (map *) 0;
 
-   for (tabp = tgl_map_init_table ; tabp->mykey != tgl0 ; tabp++) {
-      if (tgl_map_ptr_table[tabp->mykey])
+   for (tabp = init_table ; tabp->mykey != tgl0 ; tabp++) {
+      if (ptrtable[tabp->mykey])
          gg->fatal_error_exit(1, "Tgl_map table initialization failed", "dup");
-      tgl_map_ptr_table[tabp->mykey] = tabp;
+      ptrtable[tabp->mykey] = tabp;
    }
 
    for (i=tgl0+1 ; i<tgl_ENUMLAST ; i++) {
-      if (!tgl_map_ptr_table[i])
+      if (!ptrtable[i])
          gg->fatal_error_exit(1, "Tgl_map table initialization failed", "undef");
    }
 }
@@ -122,18 +123,18 @@ extern void remove_z_distortion(setup *ss) THROW_DECL
 {
    if (!(ss->cmd.cmd_misc2_flags & CMD_MISC2__IN_Z_MASK)) return;
 
-   static const expand_thing fix_cw  = {{1, 2, 4, 5}, 4, s2x2, s2x3, 0};
-   static const expand_thing fix_ccw = {{0, 1, 3, 4}, 4, s2x2, s2x3, 0};
+   static const expand::thing fix_cw  = {{1, 2, 4, 5}, 4, s2x2, s2x3, 0};
+   static const expand::thing fix_ccw = {{0, 1, 3, 4}, 4, s2x2, s2x3, 0};
 
    if (ss->kind != s2x3) fail("Internal error: Can't straighten 'Z'.");
 
-   const expand_thing *fixer =
+   const expand::thing *fixer =
       (ss->cmd.cmd_misc2_flags & (CMD_MISC2__IN_Z_CW|CMD_MISC2__IN_AZ_CW)) ?
       &fix_cw : &fix_ccw;
 
    ss->cmd.cmd_misc2_flags &= ~CMD_MISC2__IN_Z_MASK;
    ss->cmd.cmd_misc2_flags |= CMD_MISC2__DID_Z_COMPRESSBIT << (ss->rotation & 1);
-   compress_setup(fixer, ss);
+   expand::compress_setup(fixer, ss);
    update_id_bits(ss);
 }
 
@@ -144,22 +145,22 @@ extern void remove_tgl_distortion(setup *ss) THROW_DECL
       return;
 
    int rot;
-   const expand_thing *eptr = (expand_thing *) 0;
+   const expand::thing *eptr = (expand::thing *) 0;
 
-   static const expand_thing thing1    = {{0, 1, 3},          3, s_trngl,  sdmd, 3};
-   static const expand_thing thing2    = {{2, 3, 1},          3, s_trngl,  sdmd, 1};
-   static const expand_thing thing1x8a = {{1, 3, 2, 5, 7, 6}, 6, s1x6,     s1x8, 0};
-   static const expand_thing thing1x8b = {{0, 1, 3, 4, 5, 7}, 6, s1x6,     s1x8, 0};
-   static const expand_thing thingptpa = {{1, 7, 6, 5, 3, 2}, 6, s_bone6,  s_ptpd, 0};
-   static const expand_thing thingptpb = {{3, 0, 1, 7, 4, 5}, 6, s_short6, s_ptpd, 1};
-   static const expand_thing thing2x4a = {{1, 2, 3, 5, 6, 7}, 6, s2x3,     s2x4, 0};
-   static const expand_thing thing2x4b = {{0, 1, 2, 4, 5, 6}, 6, s2x3,     s2x4, 0};
-   static const expand_thing thing2x4c = {{0, 3, 2, 4, 7, 6}, 6, s_bone6,  s2x4, 0};
-   static const expand_thing thing2x4d = {{6, 0, 1, 2, 4, 5}, 6, s_short6, s2x4, 1};
-   static const expand_thing thing2x4e = {{0, 3, 5, 4, 7, 1}, 6, s_bone6,  s2x4, 0};
-   static const expand_thing thing2x4f = {{6, 7, 1, 2, 3, 5}, 6, s_short6, s2x4, 1};
-   static const expand_thing thing1x4a = {{0, 1, 3},          3, s1x3,     s1x4, 0};
-   static const expand_thing thing1x4b = {{1, 3, 2},          3, s1x3,     s1x4, 0};
+   static const expand::thing thing1    = {{0, 1, 3},          3, s_trngl,  sdmd, 3};
+   static const expand::thing thing2    = {{2, 3, 1},          3, s_trngl,  sdmd, 1};
+   static const expand::thing thing1x8a = {{1, 3, 2, 5, 7, 6}, 6, s1x6,     s1x8, 0};
+   static const expand::thing thing1x8b = {{0, 1, 3, 4, 5, 7}, 6, s1x6,     s1x8, 0};
+   static const expand::thing thingptpa = {{1, 7, 6, 5, 3, 2}, 6, s_bone6,  s_ptpd, 0};
+   static const expand::thing thingptpb = {{3, 0, 1, 7, 4, 5}, 6, s_short6, s_ptpd, 1};
+   static const expand::thing thing2x4a = {{1, 2, 3, 5, 6, 7}, 6, s2x3,     s2x4, 0};
+   static const expand::thing thing2x4b = {{0, 1, 2, 4, 5, 6}, 6, s2x3,     s2x4, 0};
+   static const expand::thing thing2x4c = {{0, 3, 2, 4, 7, 6}, 6, s_bone6,  s2x4, 0};
+   static const expand::thing thing2x4d = {{6, 0, 1, 2, 4, 5}, 6, s_short6, s2x4, 1};
+   static const expand::thing thing2x4e = {{0, 3, 5, 4, 7, 1}, 6, s_bone6,  s2x4, 0};
+   static const expand::thing thing2x4f = {{6, 7, 1, 2, 3, 5}, 6, s_short6, s2x4, 1};
+   static const expand::thing thing1x4a = {{0, 1, 3},          3, s1x3,     s1x4, 0};
+   static const expand::thing thing1x4b = {{1, 3, 2},          3, s1x3,     s1x4, 0};
 
    switch (ss->kind) {
    case s2x4:
@@ -283,7 +284,7 @@ extern void remove_tgl_distortion(setup *ss) THROW_DECL
  check_and_do:
    if (!eptr) goto losing;
    ss->result_flags &= ~RESULTFLAG__DID_TGL_EXPANSION;
-   compress_setup(eptr, ss);
+   expand::compress_setup(eptr, ss);
    return;
 
  losing: fail("Bad ending setup for triangle-become-box.");
@@ -435,7 +436,7 @@ static void innards(
       whenever the centers are empty.  We tell it not to do that if it will cause problems. */
 
    if (fix_n_results(arity,
-                     map_kind == MPKIND__NONE ? maps->inner_kind : nothing,
+                     (map_kind == MPKIND__NONE && maps->inner_kind == sdmd) ? 9 : -1,
                      z, rotstate, pointclip)) {
       result->kind = nothing;
       result->result_flags = 0;
@@ -1385,10 +1386,10 @@ static void phantom_2x4_move(
 }
 
 
-const expand_thing expand_big2x2_4x4 = {
+const expand::thing expand_big2x2_4x4 = {
    {12, 0, 4, 8}, 4, s2x2, s4x4, 0};
 
-const expand_thing expand_2x6_4x6 = {
+const expand::thing expand_2x6_4x6 = {
    {11, 10, 9, 8, 7, 6, 23, 22, 21, 20, 19, 18}, 12, s2x6, s4x6, 0};
 
 
@@ -1426,7 +1427,7 @@ extern void do_phantom_2x4_concept(
    if (ss->kind == s2x2 &&
        ss->cmd.prior_elongation_bits == 3 &&
        (ss->cmd.cmd_misc_flags & CMD_MISC__DOING_ENDS)) {
-      expand_setup(&expand_big2x2_4x4, ss);
+      expand::expand_setup(&expand_big2x2_4x4, ss);
    }
 
    switch (ss->kind) {
@@ -1492,7 +1493,7 @@ extern void do_phantom_2x4_concept(
          warn(warn__split_phan_in_pgram);
 
          // Change the setup to a 4x6.
-         expand_setup(&expand_2x6_4x6, ss);
+         expand::expand_setup(&expand_2x6_4x6, ss);
          break;              // Note that rot is zero.
       }
       goto lose;
@@ -1806,7 +1807,7 @@ extern void distorted_2x2s_move(
       // Maybe they fit into a 3x6; maybe not.  We expand to a 3x8
       // and then try to cut it back to a 3x6 or whatever.
       do_matrix_expansion(ss, CONCPROP__NEEDK_3X8, FALSE);
-      normalize_setup(ss, simple_normalize);
+      normalize_setup(ss, simple_normalize, false);
    }
 
    for (i=0 ; i<=setup_attrs[ss->kind].setup_limits ; i++) {
@@ -2435,9 +2436,9 @@ extern void distorted_move(
       // This is C/L/W of 3 (not distorted).
 
       int goodcount = 0;
-      clw3_thing *goodmap = (clw3_thing *) 0;
+      const clw3_thing *goodmap = (const clw3_thing *) 0;
 
-      for (clw3_thing *gptr=clw3_table ; gptr->mask ; gptr++) {
+      for (const clw3_thing *gptr=clw3_table ; gptr->mask ; gptr++) {
          if (gptr->k == ss->kind &&
              (global_livemask & gptr->mask) == gptr->test) {
 
@@ -2557,12 +2558,12 @@ extern void distorted_move(
          }
 
          if (ss->kind != s4x4 || (global_tbonetest & 1)) fail("Can't find distorted 1/4 tag.");
-         expand_thing *p;
-         static expand_thing foo1 =
+         const expand::thing *p;
+         static const expand::thing foo1 =
          {{-1, 2, -1, 3, -1, -1, 5, 4, -1, 6, -1, 7, -1, -1, 1, 0},
           16, s4x4, spgdmdccw, 0, 0UL, 0UL,
           warn__none, warn__none, simple_normalize, 0};
-         static expand_thing foo2 =
+         static const expand::thing foo2 =
          {{-1, -1, 2, 1, -1, 4, -1, 3, -1, -1, 6, 5, -1, 0, -1, 7},
           16, s4x4, spgdmdcw, 0, 0UL, 0UL,
           warn__none, warn__none, simple_normalize, 0};
@@ -2573,7 +2574,7 @@ extern void distorted_move(
             p = &foo2;
          else fail("Can't find distorted 1/4 tag.");
 
-         expand_setup(p, ss);
+         expand::expand_setup(p, ss);
          warn(warn__fudgy_half_offset);
 
          // This line taken from do_matrix_expansion.  Would like to do it right.
@@ -2981,7 +2982,9 @@ extern void triple_twin_move(
       if (parseptr->concept->value.arg3 != 0) tbonetest ^= 1;
 
       if (ss->kind == s4x4) {
-         expand_setup(((tbonetest & 1) ? &exp_4x4_4x6_stuff_b : &exp_4x4_4x6_stuff_a), ss);
+         expand::expand_setup(((tbonetest & 1) ?
+                               &expand::s_4x4_4x6b :
+                               &expand::s_4x4_4x6a), ss);
          tbonetest = 0;
       }
 
@@ -3777,10 +3780,10 @@ extern void common_spot_move(
    if (uncommon) {
       if (the_results[0].kind == s_qtag && the_results[1].kind == s2x3 &&
           the_results[0].rotation != the_results[1].rotation)
-         expand_setup(&exp_2x3_qtg_stuff, &the_results[1]);
+         expand::expand_setup(&expand::s_2x3_qtg, &the_results[1]);
       else if (the_results[1].kind == s_qtag && the_results[0].kind == s2x3 &&
                the_results[0].rotation != the_results[1].rotation)
-         expand_setup(&exp_2x3_qtg_stuff, &the_results[0]);
+         expand::expand_setup(&expand::s_2x3_qtg, &the_results[0]);
       else if (the_results[0].kind == s2x4 && the_results[1].kind == s4x4)
          do_matrix_expansion(&the_results[0], CONCPROP__NEEDK_4X4, FALSE);
       else if (the_results[1].kind == s2x4 && the_results[0].kind == s4x4)
@@ -3841,8 +3844,7 @@ extern void common_spot_move(
 }
 
 
-
-static void do_glorious_triangles(
+void tglmap::do_glorious_triangles(
    setup *ss,
    const tglmapkey *map_ptr_table,
    int indicator,
@@ -3854,7 +3856,7 @@ static void do_glorious_triangles(
    setup idle;
    setup res[2];
    const veryshort *mapnums;
-   const tgl_map *map_ptr = tgl_map_ptr_table[map_ptr_table[(indicator >> 6) & 3]];
+   const map *map_ptr = ptrtable[map_ptr_table[(indicator >> 6) & 3]];
 
    if (ss->kind == s_c1phan || ss->kind == sdeepbigqtg) {
       mapnums = map_ptr->mapcp1;
@@ -3888,7 +3890,7 @@ static void do_glorious_triangles(
    move(&a1, FALSE, &res[0]);
    move(&a2, FALSE, &res[1]);
 
-   if (fix_n_results(2, nothing, res, rotstate, pointclip)) {
+   if (fix_n_results(2, -1, res, rotstate, pointclip)) {
       result->kind = nothing;
       result->result_flags = 0;
       return;
@@ -3931,7 +3933,7 @@ static void do_glorious_triangles(
    r = ((-res[0].rotation) & 3) * 011;
 
    if (res[0].rotation & 2)
-      result->kind = tgl_map_ptr_table[map_ptr->otherkey]->kind;
+      result->kind = ptrtable[map_ptr->otherkey]->kind;
    else
       result->kind = map_ptr->kind;
 
@@ -3967,7 +3969,7 @@ static void do_glorious_triangles(
          if (result->kind == nothing || map_ptr->nointlkshapechange)
             goto noshapechange;
 
-         map_ptr = tgl_map_ptr_table[map_ptr->otherkey];
+         map_ptr = ptrtable[map_ptr->otherkey];
 
          if (result->kind == s_c1phan) {
             // Restore the two people who don't move.
@@ -4017,7 +4019,7 @@ static void do_glorious_triangles(
          if (startingrot == 1)
             fail("Can't do this shape-changer.");
 
-         map_ptr = tgl_map_ptr_table[map_ptr->otherkey];
+         map_ptr = ptrtable[map_ptr->otherkey];
 
          result->kind = map_ptr->kind1x3;
 
@@ -4072,7 +4074,7 @@ static void wv_tand_base_move(
    uint32 tbonetest;
    int t;
    calldef_schema schema;
-   const tglmapkey *map_key_table;
+   const tglmap::tglmapkey *map_key_table;
 
    switch (s->kind) {
    case s_bone:
@@ -4092,7 +4094,7 @@ static void wv_tand_base_move(
          // We now know that the desired triangles are the "inside" ones.
 
          if (indicator & 0100) {
-            do_glorious_triangles(s, rgtglmap1, indicator, result);
+            tglmap::do_glorious_triangles(s, tglmap::rgtglmap1, indicator, result);
             reinstate_rotation(s, result);
             return;
          }
@@ -4150,13 +4152,13 @@ static void wv_tand_base_move(
       canonicalize_rotation(s);
 
       if ((global_livemask & 0xAAAA) == 0)
-         map_key_table = c1tglmap1;
+         map_key_table = tglmap::c1tglmap1;
       else if ((global_livemask & 0x5555) == 0)
-         map_key_table = c1tglmap2;
+         map_key_table = tglmap::c1tglmap2;
       else
          goto losing;
 
-      do_glorious_triangles(s, map_key_table, indicator, result);
+      tglmap::do_glorious_triangles(s, map_key_table, indicator, result);
       result->rotation -= t;   // Flip the setup back.
       reinstate_rotation(s, result);
       return;
@@ -4171,13 +4173,13 @@ static void wv_tand_base_move(
       }
 
       if ((global_livemask & 0x3A3A) == 0)
-         map_key_table = dbqtglmap1;
+         map_key_table = tglmap::dbqtglmap1;
       else if ((global_livemask & 0xC5C5) == 0)
-         map_key_table = dbqtglmap2;
+         map_key_table = tglmap::dbqtglmap2;
       else
          goto losing;
 
-      do_glorious_triangles(s, map_key_table, indicator, result);
+      tglmap::do_glorious_triangles(s, map_key_table, indicator, result);
       reinstate_rotation(s, result);
       return;
    default:
@@ -4289,16 +4291,16 @@ extern void triangle_move(
             if ((ss->people[5].id1 & d_mask) == d_west) t |= 2;
          }
    
-         const tglmapkey *map_key_table;
+         const tglmap::tglmapkey *map_key_table;
 
          if (t == 1)
-            map_key_table = qttglmap1;
+            map_key_table = tglmap::qttglmap1;
          else if (t == 2)
-            map_key_table = qttglmap2;
+            map_key_table = tglmap::qttglmap2;
          else
             fail("Can't find designated point.");
 
-         do_glorious_triangles(ss, map_key_table, indicator, result);
+         tglmap::do_glorious_triangles(ss, map_key_table, indicator, result);
          reinstate_rotation(ss, result);
       }
       else {
@@ -4308,22 +4310,22 @@ extern void triangle_move(
          /* Only a few cases allow interlocked. */
 
          if (indicator_base == 2 && ss->kind == sbigdmd) {
-            const tglmapkey *map_key_table;
+            const tglmap::tglmapkey *map_key_table;
 
             if (global_livemask == 07474)
-               map_key_table = bdtglmap1;
+               map_key_table = tglmap::bdtglmap1;
             else if (global_livemask == 01717)
-               map_key_table = bdtglmap2;
+               map_key_table = tglmap::bdtglmap2;
             else
                fail("Can't find the indicated triangles.");
 
-            do_glorious_triangles(ss, map_key_table, indicator, result);
+            tglmap::do_glorious_triangles(ss, map_key_table, indicator, result);
             reinstate_rotation(ss, result);
 
             return;
          }
          else if (indicator == 0102 && ss->kind == s_rigger) {
-            do_glorious_triangles(ss, rgtglmap1, indicator, result);
+            tglmap::do_glorious_triangles(ss, tglmap::rgtglmap1, indicator, result);
             reinstate_rotation(ss, result);
 
             return;

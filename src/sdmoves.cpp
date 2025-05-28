@@ -220,42 +220,42 @@ extern long_boolean divide_for_magic(
    uint32 heritflags_to_check,
    setup *result) THROW_DECL
 {
-   static const expand_thing exp27  = {{1, 3, 4, 5, 7, 9, 10, 11}, 8, s2x4, s2x6, 0, 0, 02727};
-   static const expand_thing exp72  = {{0, 1, 2, 4, 6, 7, 8, 10},  8, s2x4, s2x6, 0, 0, 07272};
-   static const expand_thing exp25  = {{1, 3, 5, 7, 9, 11},        6, s2x3, s2x6, 0, 0, 02525};
-   static const expand_thing exp52  = {{0, 2, 4, 6, 8, 10},        6, s2x3, s2x6, 0, 0, 05252};
-   static const expand_thing exp35  = {{1, 2, 3, 5, 7, 8, 9, 11},  8, s2x4, s2x6, 0, 0, 03535};
-   static const expand_thing exp53  = {{0, 2, 4, 5, 6, 8, 10, 11}, 8, s2x4, s2x6, 0, 0, 05353};
-   static const expand_thing exp56  = {{0, 2, 3, 4, 6, 8, 9, 10},  8, s2x4, s2x6, 0, 0, 05656};
-   static const expand_thing exp65  = {{0, 1, 3, 5, 6, 7, 9, 11},  8, s2x4, s2x6, 0, 0, 06565};
+   static const expand::thing exp27  = {{1, 3, 4, 5, 7, 9, 10, 11}, 8, s2x4, s2x6, 0, 0, 02727};
+   static const expand::thing exp72  = {{0, 1, 2, 4, 6, 7, 8, 10},  8, s2x4, s2x6, 0, 0, 07272};
+   static const expand::thing exp25  = {{1, 3, 5, 7, 9, 11},        6, s2x3, s2x6, 0, 0, 02525};
+   static const expand::thing exp52  = {{0, 2, 4, 6, 8, 10},        6, s2x3, s2x6, 0, 0, 05252};
+   static const expand::thing exp35  = {{1, 2, 3, 5, 7, 8, 9, 11},  8, s2x4, s2x6, 0, 0, 03535};
+   static const expand::thing exp53  = {{0, 2, 4, 5, 6, 8, 10, 11}, 8, s2x4, s2x6, 0, 0, 05353};
+   static const expand::thing exp56  = {{0, 2, 3, 4, 6, 8, 9, 10},  8, s2x4, s2x6, 0, 0, 05656};
+   static const expand::thing exp65  = {{0, 1, 3, 5, 6, 7, 9, 11},  8, s2x4, s2x6, 0, 0, 06565};
 
-   static const expand_thing exp31  = {{1, 2, 5, 7, 8, 11},        6, s2x3, s2x6, 0, 0, 03131};
-   static const expand_thing exp13  = {{2, 4, 5, 8, 10, 11},       6, s2x3, s2x6, 0, 0, 01313};
-   static const expand_thing exp15  = {{2, 3, 5, 8, 9, 11},        6, s2x3, s2x6, 0, 0, 01515};
-   static const expand_thing exp51  = {{0, 2, 5, 6, 8, 11},        6, s2x3, s2x6, 0, 0, 05151};
-   static const expand_thing exp45  = {{0, 3, 5, 6, 9, 11},        6, s2x3, s2x6, 0, 0, 04545};
-   static const expand_thing exp54  = {{0, 2, 3, 6, 8, 9},         6, s2x3, s2x6, 0, 0, 05454};
-   static const expand_thing exp46  = {{0, 3, 4, 6, 9, 10},        6, s2x3, s2x6, 0, 0, 04646};
-   static const expand_thing exp64  = {{0, 1, 3, 6, 7, 9},         6, s2x3, s2x6, 0, 0, 06464};
+   static const expand::thing exp31  = {{1, 2, 5, 7, 8, 11},        6, s2x3, s2x6, 0, 0, 03131};
+   static const expand::thing exp13  = {{2, 4, 5, 8, 10, 11},       6, s2x3, s2x6, 0, 0, 01313};
+   static const expand::thing exp15  = {{2, 3, 5, 8, 9, 11},        6, s2x3, s2x6, 0, 0, 01515};
+   static const expand::thing exp51  = {{0, 2, 5, 6, 8, 11},        6, s2x3, s2x6, 0, 0, 05151};
+   static const expand::thing exp45  = {{0, 3, 5, 6, 9, 11},        6, s2x3, s2x6, 0, 0, 04545};
+   static const expand::thing exp54  = {{0, 2, 3, 6, 8, 9},         6, s2x3, s2x6, 0, 0, 05454};
+   static const expand::thing exp46  = {{0, 3, 4, 6, 9, 10},        6, s2x3, s2x6, 0, 0, 04646};
+   static const expand::thing exp64  = {{0, 1, 3, 6, 7, 9},         6, s2x3, s2x6, 0, 0, 06464};
 
-   static const expand_thing expl13 = {{1, 3, 5, 7, 9, 11},        6, s1x6, s1x12, 0};
-   static const expand_thing expl31 = {{0, 2, 4, 6, 8, 10},        6, s1x6, s1x12, 0};
-   static const expand_thing expg27 = {{1, 3, 5, 4, 7, 9, 11, 10}, 8, s1x8, s1x12, 0};
-   static const expand_thing expg72 = {{0, 1, 4, 2, 6, 7, 10, 8},  8, s1x8, s1x12, 0};
-   static const expand_thing expg35 = {{1, 2, 5, 3, 7, 8, 11, 9},  8, s1x8, s1x12, 0};
-   static const expand_thing expg56 = {{0, 2, 4, 3, 6, 8, 10, 9},  8, s1x8, s1x12, 0};
+   static const expand::thing expl13 = {{1, 3, 5, 7, 9, 11},        6, s1x6, s1x12, 0};
+   static const expand::thing expl31 = {{0, 2, 4, 6, 8, 10},        6, s1x6, s1x12, 0};
+   static const expand::thing expg27 = {{1, 3, 5, 4, 7, 9, 11, 10}, 8, s1x8, s1x12, 0};
+   static const expand::thing expg72 = {{0, 1, 4, 2, 6, 7, 10, 8},  8, s1x8, s1x12, 0};
+   static const expand::thing expg35 = {{1, 2, 5, 3, 7, 8, 11, 9},  8, s1x8, s1x12, 0};
+   static const expand::thing expg56 = {{0, 2, 4, 3, 6, 8, 10, 9},  8, s1x8, s1x12, 0};
 
-   static const expand_thing expsp3 = {{1, 2, 3, 5, 7, 8, 9, 11}, 8, s_spindle, s_d3x4, 0};
-   static const expand_thing exp3d3 = {{10, 11, 0, -1, -1, 2, 4, 5, 6, -1, -1, 8},
+   static const expand::thing expsp3 = {{1, 2, 3, 5, 7, 8, 9, 11}, 8, s_spindle, s_d3x4, 0};
+   static const expand::thing exp3d3 = {{10, 11, 0, -1, -1, 2, 4, 5, 6, -1, -1, 8},
                                  12, s3dmd, s_d3x4, 1};
-   static const expand_thing exp323 = {{10, 11, 0, 2, 4, 5, 6, 8}, 8, s_323, s_d3x4, 1};
+   static const expand::thing exp323 = {{10, 11, 0, 2, 4, 5, 6, 8}, 8, s_323, s_d3x4, 1};
 
-   static const expand_thing expb45 = {{0, 3, 5, 6, 9, 11},        6, s_bone6, s3x4, 0};
-   static const expand_thing expb32 = {{8, 10, 1, 2, 4, 7},        6, s_short6, s3x4, 1};
-   static const expand_thing expl53 = {{0, 2, 4, 5},               4, s1x4, s1x6, 0};
-   static const expand_thing expl35 = {{1, 2, 3, 5},               4, s1x4, s1x6, 0};
-   static const expand_thing expl27 = {{1, 5, 3, 4},               4, s1x4, s1x6, 0};
-   static const expand_thing expl72 = {{0, 1, 4, 2},               4, s1x4, s1x6, 0};
+   static const expand::thing expb45 = {{0, 3, 5, 6, 9, 11},        6, s_bone6, s3x4, 0};
+   static const expand::thing expb32 = {{8, 10, 1, 2, 4, 7},        6, s_short6, s3x4, 1};
+   static const expand::thing expl53 = {{0, 2, 4, 5},               4, s1x4, s1x6, 0};
+   static const expand::thing expl35 = {{1, 2, 3, 5},               4, s1x4, s1x6, 0};
+   static const expand::thing expl27 = {{1, 5, 3, 4},               4, s1x4, s1x6, 0};
+   static const expand::thing expl72 = {{0, 1, 4, 2},               4, s1x4, s1x6, 0};
 
    warning_info saved_warnings;
    int i;
@@ -320,7 +320,7 @@ extern long_boolean divide_for_magic(
       }
       else if (heritflags_to_check == INHERITFLAGMXNK_3X1 ||
                heritflags_to_check == INHERITFLAGMXNK_1X3) {
-         expand_setup(&exp_qtg_3x4_stuff, ss);
+         expand::expand_setup(&expand::s_qtg_3x4, ss);
          goto do_3x3;
       }
       break;
@@ -366,33 +366,33 @@ extern long_boolean divide_for_magic(
             /* These are independent of whether we said "1x3" or "3x1". */
             if (directions == 0x2A80 || directions == 0x802A ||
                 directions == 0x7FD5 || directions == 0xD57F) {
-               expand_setup(&exp27, ss);
+               expand::expand_setup(&exp27, ss);
                goto do_3x3;
             }
             else if (directions == 0xA802 || directions == 0x02A8 ||
                      directions == 0xFD57 || directions == 0x57FD) {
-               expand_setup(&exp72, ss);
+               expand::expand_setup(&exp72, ss);
                goto do_3x3;
             }
             else if (directions == 0x208A || directions == 0x8A20 ||
                      directions == 0x75DF || directions == 0xDF75) {
-               expand_setup(&exp35, ss);
+               expand::expand_setup(&exp35, ss);
                goto do_3x3;
             }
             else if (directions == 0xA208 || directions == 0x08A2 ||
                      directions == 0xF75D || directions == 0x5DF7) {
-               expand_setup(&exp56, ss);
+               expand::expand_setup(&exp56, ss);
                goto do_3x3;
             }
 
             /* These are specific to "1x3" or "3x1". */
             if (directions == 0x55FF || directions == 0x00AA) {
-               expand_setup((heritflags_to_check == INHERITFLAGMXNK_3X1) ? &exp27 : &exp72,
+               expand::expand_setup((heritflags_to_check == INHERITFLAGMXNK_3X1) ? &exp27 : &exp72,
                             ss);
                goto do_3x3;
             }
             else if (directions == 0xFF55 || directions == 0xAA00) {
-               expand_setup((heritflags_to_check == INHERITFLAGMXNK_3X1) ? &exp72 : &exp27,
+               expand::expand_setup((heritflags_to_check == INHERITFLAGMXNK_3X1) ? &exp72 : &exp27,
                             ss);
                goto do_3x3;
             }
@@ -403,33 +403,33 @@ extern long_boolean divide_for_magic(
             /* These are independent of whether we said "1x3" or "3x1". */
             if (directions == 0x2A80 || directions == 0x802A ||
                 directions == 0x7FD5 || directions == 0xD57F) {
-               expand_setup(&expg27, ss);
+               expand::expand_setup(&expg27, ss);
                goto do_3x3;
             }
             else if (directions == 0xA208 || directions == 0x08A2 ||
                      directions == 0xF75D || directions == 0x5DF7) {
-               expand_setup(&expg72, ss);
+               expand::expand_setup(&expg72, ss);
                goto do_3x3;
             }
             else if (directions == 0x208A || directions == 0x8A20 ||
                      directions == 0x75DF || directions == 0xDF75) {
-               expand_setup(&expg35, ss);
+               expand::expand_setup(&expg35, ss);
                goto do_3x3;
             }
             else if (directions == 0xA802 || directions == 0x02A8 ||
                      directions == 0xFD57 || directions == 0x57FD) {
-               expand_setup(&expg56, ss);
+               expand::expand_setup(&expg56, ss);
                goto do_3x3;
             }
 
             /* These are specific to "1x3" or "3x1". */
             if (directions == 0x55FF || directions == 0x00AA) {
-               expand_setup((heritflags_to_check == INHERITFLAGMXNK_3X1) ? &expg27 : &expg72,
+               expand::expand_setup((heritflags_to_check == INHERITFLAGMXNK_3X1) ? &expg27 : &expg72,
                             ss);
                goto do_3x3;
             }
             else if (directions == 0xFF55 || directions == 0xAA00) {
-               expand_setup((heritflags_to_check == INHERITFLAGMXNK_3X1) ? &expg72 : &expg27,
+               expand::expand_setup((heritflags_to_check == INHERITFLAGMXNK_3X1) ? &expg72 : &expg27,
                             ss);
                goto do_3x3;
             }
@@ -444,19 +444,19 @@ extern long_boolean divide_for_magic(
          }
          else if (ss->kind == s_spindle) {
             if (livemask == 0xFF) {
-               expand_setup(&expsp3, ss);
+               expand::expand_setup(&expsp3, ss);
                goto do_3x3;
             }
          }
          else if (ss->kind == s3dmd) {
             if (livemask == 07171) {
-               expand_setup(&exp3d3, ss);
+               expand::expand_setup(&exp3d3, ss);
                goto do_3x3;
             }
          }
          else if (ss->kind == s_323) {
             if (livemask == 0xFF) {
-               expand_setup(&exp323, ss);
+               expand::expand_setup(&exp323, ss);
                goto do_3x3;
             }
          }
@@ -472,22 +472,22 @@ extern long_boolean divide_for_magic(
             /* These are independent of whether we said "1x2" or "2x1". */
             if (directions == 01240 || directions == 04012 ||
                 directions == 03765 || directions == 06537) {
-               expand_setup(&exp25, ss);
+               expand::expand_setup(&exp25, ss);
                goto do_3x3;
             }
             else if (directions == 05002 || directions == 00250 ||
                      directions == 07527 || directions == 02775) {
-               expand_setup(&exp52, ss);
+               expand::expand_setup(&exp52, ss);
                goto do_3x3;
             }
             /* These are specific to "1x2" or "2x1". */
             if (directions == 02577 || directions == 00052) {
-               expand_setup((heritflags_to_check == INHERITFLAGMXNK_2X1) ? &exp25 : &exp52,
+               expand::expand_setup((heritflags_to_check == INHERITFLAGMXNK_2X1) ? &exp25 : &exp52,
                             ss);
                goto do_3x3;
             }
             else if (directions == 07725 || directions == 05200) {
-               expand_setup((heritflags_to_check == INHERITFLAGMXNK_2X1) ? &exp52 : &exp25,
+               expand::expand_setup((heritflags_to_check == INHERITFLAGMXNK_2X1) ? &exp52 : &exp25,
                             ss);
                goto do_3x3;
             }
@@ -499,7 +499,7 @@ extern long_boolean divide_for_magic(
                 directions == 01042 || directions == 04210 ||
                 directions == 03765 || directions == 06537 ||
                 directions == 03567 || directions == 06735) {
-               expand_setup(&expb45, ss);
+               expand::expand_setup(&expb45, ss);
                goto do_3x3;
             }
          }
@@ -510,7 +510,7 @@ extern long_boolean divide_for_magic(
                 directions == 07725 || directions == 02577 ||
                 directions == 03567 || directions == 06735 ||
                 directions == 01042 || directions == 04210) {
-               expand_setup(&expb32, ss);
+               expand::expand_setup(&expb32, ss);
                goto do_3x3;
             }
          }
@@ -520,22 +520,22 @@ extern long_boolean divide_for_magic(
             /* These are independent of whether we said "1x2" or "2x1". */
             if (directions == 01240 || directions == 04012 ||
                 directions == 03765 || directions == 06537) {
-               expand_setup(&expl13, ss);
+               expand::expand_setup(&expl13, ss);
                goto do_3x3;
             }
             else if (directions == 05002 || directions == 00250 ||
                      directions == 07527 || directions == 02775) {
-               expand_setup(&expl31, ss);
+               expand::expand_setup(&expl31, ss);
                goto do_3x3;
             }
             /* These are specific to "1x2" or "2x1". */
             if (directions == 02577 || directions == 00052) {
-               expand_setup((heritflags_to_check == INHERITFLAGMXNK_2X1) ? &expl13 : &expl31,
+               expand::expand_setup((heritflags_to_check == INHERITFLAGMXNK_2X1) ? &expl13 : &expl31,
                             ss);
                goto do_3x3;
             }
             else if (directions == 07725 || directions == 05200) {
-               expand_setup((heritflags_to_check == INHERITFLAGMXNK_2X1) ? &expl31 : &expl13,
+               expand::expand_setup((heritflags_to_check == INHERITFLAGMXNK_2X1) ? &expl31 : &expl13,
                             ss);
                goto do_3x3;
             }
@@ -587,77 +587,77 @@ extern long_boolean divide_for_magic(
    }
 
    if (result->kind == s2x6) {
-      if      (livemask == exp25.biglivemask) compress_setup(&exp25, result);
-      else if (livemask == exp52.biglivemask) compress_setup(&exp52, result);
-      else if (livemask == exp27.biglivemask) compress_setup(&exp27, result);
-      else if (livemask == exp72.biglivemask) compress_setup(&exp72, result);
-      else if (livemask == exp35.biglivemask) compress_setup(&exp35, result);
-      else if (livemask == exp53.biglivemask) compress_setup(&exp53, result);
-      else if (livemask == exp56.biglivemask) compress_setup(&exp56, result);
-      else if (livemask == exp65.biglivemask) compress_setup(&exp65, result);
+      if      (livemask == exp25.biglivemask) expand::compress_setup(&exp25, result);
+      else if (livemask == exp52.biglivemask) expand::compress_setup(&exp52, result);
+      else if (livemask == exp27.biglivemask) expand::compress_setup(&exp27, result);
+      else if (livemask == exp72.biglivemask) expand::compress_setup(&exp72, result);
+      else if (livemask == exp35.biglivemask) expand::compress_setup(&exp35, result);
+      else if (livemask == exp53.biglivemask) expand::compress_setup(&exp53, result);
+      else if (livemask == exp56.biglivemask) expand::compress_setup(&exp56, result);
+      else if (livemask == exp65.biglivemask) expand::compress_setup(&exp65, result);
 
-      else if (livemask == 03131) compress_setup(&exp31, result);
-      else if (livemask == 01313) compress_setup(&exp13, result);
-      else if (livemask == 01515) compress_setup(&exp15, result);
-      else if (livemask == 05151) compress_setup(&exp51, result);
-      else if (livemask == 04545) compress_setup(&exp45, result);
-      else if (livemask == 05454) compress_setup(&exp54, result);
-      else if (livemask == 04646) compress_setup(&exp46, result);
-      else if (livemask == 06464) compress_setup(&exp64, result);
+      else if (livemask == 03131) expand::compress_setup(&exp31, result);
+      else if (livemask == 01313) expand::compress_setup(&exp13, result);
+      else if (livemask == 01515) expand::compress_setup(&exp15, result);
+      else if (livemask == 05151) expand::compress_setup(&exp51, result);
+      else if (livemask == 04545) expand::compress_setup(&exp45, result);
+      else if (livemask == 05454) expand::compress_setup(&exp54, result);
+      else if (livemask == 04646) expand::compress_setup(&exp46, result);
+      else if (livemask == 06464) expand::compress_setup(&exp64, result);
    }
    else if (result->kind == s1x12) {
       if (livemask == 02525) {
-         compress_setup(&expl13, result);
+         expand::compress_setup(&expl13, result);
       }
       else if (livemask == 05252) {
-         compress_setup(&expl31, result);
+         expand::compress_setup(&expl31, result);
       }
       else if (livemask == 02727) {
-         compress_setup(&expg27, result);
+         expand::compress_setup(&expg27, result);
          result->result_flags |= RESULTFLAG__VERY_ENDS_ODD;
       }
       else if (livemask == 07272) {
-         compress_setup(&expg72, result);
+         expand::compress_setup(&expg72, result);
          result->result_flags |= RESULTFLAG__VERY_CTRS_ODD;
       }
       else if (livemask == 03535) {
-         compress_setup(&expg35, result);
+         expand::compress_setup(&expg35, result);
       }
       else if (livemask == 05656) {
-         compress_setup(&expg56, result);
+         expand::compress_setup(&expg56, result);
       }
    }
    else if (result->kind == s3x4) {
       if (livemask == 03333) {
-         compress_setup(&exp_qtg_3x4_stuff, result);
+         expand::compress_setup(&expand::s_qtg_3x4, result);
       }
       else if (livemask == 04545) {
-         compress_setup(&expb45, result);
+         expand::compress_setup(&expb45, result);
       }
       else if (livemask == 03232) {
-         compress_setup(&expb32, result);
+         expand::compress_setup(&expb32, result);
       }
    }
    else if (result->kind == s_d3x4) {
       if (livemask == 05353) {
-         compress_setup(&exp323, result);
+         expand::compress_setup(&exp323, result);
       }
       else if (livemask == 03535) {
-         compress_setup(&expsp3, result);
+         expand::compress_setup(&expsp3, result);
       }
    }
    else if (result->kind == s1x6) {
       if (livemask == 027) {
-         compress_setup(&expl27, result);
+         expand::compress_setup(&expl27, result);
       }
       else if (livemask == 072) {
-         compress_setup(&expl72, result);
+         expand::compress_setup(&expl72, result);
       }
       else if (livemask == 035) {
-         compress_setup(&expl35, result);
+         expand::compress_setup(&expl35, result);
       }
       else if (livemask == 053) {
-         compress_setup(&expl53, result);
+         expand::compress_setup(&expl53, result);
       }
    }
 
@@ -929,7 +929,7 @@ extern void do_call_in_series(
       Only "1x12 matrix" turns on CMD_MISC__EXPLICIT_MATRIX.  Plain "12 matrix will appear
       in the "new_final_concepts" word. */
 
-   if (normalize) normalize_setup(sss, simple_normalize);
+   if (normalize) normalize_setup(sss, simple_normalize, false);
 
    /* To be safe, we should take away the "did last part" bit for the second call,
       but we are fairly sure it won't be on. */
@@ -2117,7 +2117,7 @@ extern void drag_someone_and_move(setup *ss, parse_block *parseptr, setup *resul
    scopy.rotation = 0;
 
    if (scopy.kind == s_qtag) {
-      expand_setup(&exp_qtg_3x4_stuff, &scopy);
+      expand::expand_setup(&expand::s_qtg_3x4, &scopy);
       fudged_start = TRUE;
    }
 
@@ -2154,13 +2154,13 @@ extern void drag_someone_and_move(setup *ss, parse_block *parseptr, setup *resul
 
    setup refudged = scopy;
    if (fudged_start)
-      compress_setup(&exp_qtg_3x4_stuff, &refudged);
+      expand::compress_setup(&expand::s_qtg_3x4, &refudged);
 
    move(&refudged, FALSE, result);
 
    // Expand again if it's another qtag.
    if (result->kind == s_qtag)
-      expand_setup(&exp_qtg_3x4_stuff, result);
+      expand::expand_setup(&expand::s_qtg_3x4, result);
 
    // Now figure out where the people who moved really are.
 
@@ -3461,7 +3461,7 @@ static void do_stuff_inside_sequential_call(
              result->kind == s2x4 &&
              (result->people[1].id1 | result->people[2].id1 |
               result->people[5].id1 | result->people[6].id1) == 0) {
-            expand_setup(&comp_qtag_2x4_stuff, result);
+            expand::expand_setup(&expand::s_qtg_2x4, result);
          }
       }
    }
@@ -4520,7 +4520,7 @@ static long_boolean do_misc_schema(
          just the center 4, so that the illegal information won't affect anything. */
 
       if (normalize_strongly)
-         normalize_setup(result, normalize_after_triple_squash);
+         normalize_setup(result, normalize_after_triple_squash, false);
 
       if (DFM1_SUPPRESS_ELONGATION_WARNINGS & outerdef->modifiers1)
          configuration::clear_multiple_warnings(conc_elong_warnings);
@@ -4810,7 +4810,7 @@ static void really_inner_move(setup *ss,
           ss->cmd.cmd_final_flags.final)
          fail("Illegal concept for this call.");
       *result = *ss;
-      normalize_setup(result, normalize_recenter);
+      normalize_setup(result, normalize_recenter, false);
       if (ss->kind == result->kind)
          fail("This setup can't be recentered.");
       break;
@@ -4820,9 +4820,9 @@ static void really_inner_move(setup *ss,
 
       {
          bool expanded = false;
-         static const expand_thing exp_from_2x2_stuff = {{12, 0, 4, 8}, 4, s2x2, s4x4, 0};
-         static const expand_thing exp_back_to_2x4_stuff = {{0, 3, 4, 7}, 4, s2x2, s2x4, 0};
-         static const expand_thing exp_2x2_2x4r_stuff = {{7, 0, 3, 4}, 4, s2x2, s2x4, 1};
+         static const expand::thing exp_from_2x2_stuff = {{12, 0, 4, 8}, 4, s2x2, s4x4, 0};
+         static const expand::thing exp_back_to_2x4_stuff = {{0, 3, 4, 7}, 4, s2x2, s2x4, 0};
+         static const expand::thing exp_2x2_2x4r_stuff = {{7, 0, 3, 4}, 4, s2x2, s2x4, 1};
 
          if ((TEST_HERITBITS(ss->cmd.cmd_final_flags,INHERITFLAG_REVERSE)) &&
              (callflagsh & INHERITFLAG_REVERSE)) {
@@ -4841,11 +4841,11 @@ static void really_inner_move(setup *ss,
          else if (ss->kind == s2x2 && ss->cmd.prior_elongation_bits != 0) {
             expanded = true;
             if (ss->cmd.prior_elongation_bits == 3)
-               expand_setup(&exp_from_2x2_stuff, ss);
+               expand::expand_setup(&exp_from_2x2_stuff, ss);
             else if (ss->cmd.prior_elongation_bits == 1)
-               expand_setup(&exp_back_to_2x4_stuff, ss);
+               expand::expand_setup(&exp_back_to_2x4_stuff, ss);
             else
-               expand_setup(&exp_2x2_2x4r_stuff, ss);
+               expand::expand_setup(&exp_2x2_2x4r_stuff, ss);
 
             // Since we are reconstructing the original setup,
             // we think it is reasonable to say that the setup is
@@ -4871,13 +4871,13 @@ static void really_inner_move(setup *ss,
                        result->people[10].id1 | result->people[9].id1 |
                        result->people[1].id1 | result->people[2].id1)) {
                result->result_flags |= 3;
-               compress_setup(&exp_from_2x2_stuff, result);
+               expand::compress_setup(&exp_from_2x2_stuff, result);
             }
             else if (result->kind == s2x4 &&
                      !(result->people[1].id1 | result->people[2].id1 |
                        result->people[5].id1 | result->people[6].id1)) {
                result->result_flags |= (result->rotation & 1) + 1;
-               compress_setup(&exp_back_to_2x4_stuff, result);
+               expand::compress_setup(&exp_back_to_2x4_stuff, result);
             }
          }
       }
@@ -4928,7 +4928,7 @@ static void really_inner_move(setup *ss,
       // "continue to exchange the diamonds another 1/4".
 
       if (result->kind == sbigdmd || result->kind == sbigptpd)
-         normalize_setup(result, normalize_compress_bigdmd);
+         normalize_setup(result, normalize_compress_bigdmd, false);
 
       break;
    default:
@@ -5067,7 +5067,7 @@ static void really_inner_move(setup *ss,
                      of the call, and the_setups[1] has original ends, also after completion.
                      We will have the_setups[0] proceed with the rest of the call. */
 
-               normalize_setup(&the_setups[0], normalize_before_isolated_call);
+               normalize_setup(&the_setups[0], normalize_before_isolated_call, false);
                warning_info saved_warnings = configuration::save_warnings();
 
                the_setups[0].cmd = ss->cmd;
@@ -5124,7 +5124,7 @@ static void really_inner_move(setup *ss,
          // working together exchange the diamonds 1/2" situations.
 
          if (result->kind == sbigdmd || result->kind == sbigptpd)
-            normalize_setup(result, normalize_compress_bigdmd);
+            normalize_setup(result, normalize_compress_bigdmd, false);
       }
       else
          if (do_misc_schema(ss, the_schema, callspec, callflags1, &foo1, &special_selector,
@@ -5170,7 +5170,7 @@ static void really_inner_move(setup *ss,
       outer_inners[1].kind = nothing;
       outer_inners[1].result_flags = 0;
       normalize_concentric(schema_conc_o, 1, outer_inners, 1, 0, result);
-      normalize_setup(result, simple_normalize);
+      normalize_setup(result, simple_normalize, false);
       if (result->kind == s2x4) {
          if (result->people[1].id1 | result->people[2].id1 |
              result->people[5].id1 | result->people[6].id1)
@@ -5664,15 +5664,15 @@ static void move_with_real_call(
             bool local_4x4_exp = false;
 
             if (the_schema == schema_conc_o) {
-               static const expand_thing thing1 = {{10, 1, 2, 9},  4, s2x2, s4x4, 0};
-               static const expand_thing thing2 = {{13, 14, 5, 6}, 4, s2x2, s4x4, 0};
+               static const expand::thing thing1 = {{10, 1, 2, 9},  4, s2x2, s4x4, 0};
+               static const expand::thing thing2 = {{13, 14, 5, 6}, 4, s2x2, s4x4, 0};
 
                if (ss->kind != s2x2) fail("Can't find outside 'O' spots.");
 
                if (ss->cmd.prior_elongation_bits == 1)
-                  expand_setup(&thing1, ss);
+                  expand::expand_setup(&thing1, ss);
                else if (ss->cmd.prior_elongation_bits == 2)
-                  expand_setup(&thing2, ss);
+                  expand::expand_setup(&thing2, ss);
                else
                   fail("Can't find outside 'O' spots.");
                local_4x4_exp = true;
@@ -5752,8 +5752,8 @@ static void move_with_real_call(
          }
 
          if (ss->kind == s4x4) {
-            /* The entire rest of the program expects split calls to be done in
-               a C1 phantom setup rather than a 4x4. */
+            // The entire rest of the program expects split calls to be done in
+            // a C1 phantom setup rather than a 4x4.
 
             int i, j;
             uint32 mask = 0;
@@ -5763,8 +5763,10 @@ static void move_with_real_call(
             }
 
             if (mask == 0xAAAA || mask == 0xCCCC) {
-               const expand_thing *t = (mask & 2) ? &exp_c1phan_4x4_stuff1 : &exp_c1phan_4x4_stuff2;
-               compress_setup(t, ss);
+               expand::compress_setup((mask & 2) ?
+                                      &expand::s_c1phan_4x4a :
+                                      &expand::s_c1phan_4x4b,
+                                      ss);
             }
          }
       }

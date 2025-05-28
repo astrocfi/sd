@@ -121,6 +121,7 @@ and the following external variables:
    good_concept_sublist_sizes
    good_concept_sublists
    null_options
+   configuration::null_resolve
    verify_options
    verify_used_number
    verify_used_direction
@@ -323,7 +324,7 @@ long_boolean verify_used_selector;
 
 
 
-extern void compress_setup(const expand_thing *thing, setup *stuff) THROW_DECL
+void expand::compress_setup(const expand::thing *thing, setup *stuff) THROW_DECL
 {
    setup temp = *stuff;
 
@@ -335,7 +336,7 @@ extern void compress_setup(const expand_thing *thing, setup *stuff) THROW_DECL
 }
 
 
-extern void expand_setup(const expand_thing *thing, setup *stuff) THROW_DECL
+void expand::expand_setup(const expand::thing *thing, setup *stuff) THROW_DECL
 {
    setup temp = *stuff;
 
@@ -351,7 +352,7 @@ extern void update_id_bits(setup *ss)
 {
    int i;
    uint32 livemask, j;
-   id_bit_table *ptr;
+   const id_bit_table *ptr;
    unsigned short int *face_list = (unsigned short int *) 0;
 
    static unsigned short int face_qtg[] = {
@@ -696,33 +697,24 @@ extern void update_id_bits(setup *ss)
 
 
 
+full_expand::thing *full_expand::touch_hash_table1[full_expand::NUM_TOUCH_HASH_BUCKETS];
+full_expand::thing *full_expand::touch_hash_table2[full_expand::NUM_TOUCH_HASH_BUCKETS];
+full_expand::thing *full_expand::touch_hash_table3[full_expand::NUM_TOUCH_HASH_BUCKETS];
 
+expand::thing *expand::expand_hash_table[expand::NUM_EXPAND_HASH_BUCKETS];
+expand::thing *expand::compress_hash_table[expand::NUM_EXPAND_HASH_BUCKETS];
 
-
-
-/* Must be a power of 2. */
-#define NUM_TOUCH_HASH_BUCKETS 32
-
-static full_expand_thing *touch_hash_table1[NUM_TOUCH_HASH_BUCKETS];
-static full_expand_thing *touch_hash_table2[NUM_TOUCH_HASH_BUCKETS];
-static full_expand_thing *touch_hash_table3[NUM_TOUCH_HASH_BUCKETS];
-
-#define NUM_EXPAND_HASH_BUCKETS 32
-
-static expand_thing *expand_hash_table[NUM_EXPAND_HASH_BUCKETS];
-static expand_thing *compress_hash_table[NUM_EXPAND_HASH_BUCKETS];
-
-extern void initialize_expand_tables(void)
+void expand::initialize()
 {
-   expand_thing *tabp;
+   thing *tabp;
    int i;
 
    for (i=0 ; i<NUM_EXPAND_HASH_BUCKETS ; i++) {
-      expand_hash_table[i] = (expand_thing *) 0;
-      compress_hash_table[i] = (expand_thing *) 0;
+      expand_hash_table[i] = (thing *) 0;
+      compress_hash_table[i] = (thing *) 0;
    }
 
-   for (tabp = expand_init_table ; tabp->inner_kind != nothing ; tabp++) {
+   for (tabp = init_table ; tabp->inner_kind != nothing ; tabp++) {
       uint32 hash_num = (tabp->inner_kind * 25) & (NUM_EXPAND_HASH_BUCKETS-1);
       tabp->next_expand = expand_hash_table[hash_num];
       expand_hash_table[hash_num] = tabp;
@@ -733,15 +725,15 @@ extern void initialize_expand_tables(void)
    }
 }
 
-static void initialize_touch_tables(void)
+void full_expand::initialize_touch_tables()
 {
-   full_expand_thing *tabp;
+   thing *tabp;
    int i;
 
    for (i=0 ; i<NUM_TOUCH_HASH_BUCKETS ; i++) {
-      touch_hash_table1[i] = (full_expand_thing *) 0;
-      touch_hash_table2[i] = (full_expand_thing *) 0;
-      touch_hash_table3[i] = (full_expand_thing *) 0;
+      touch_hash_table1[i] = (thing *) 0;
+      touch_hash_table2[i] = (thing *) 0;
+      touch_hash_table3[i] = (thing *) 0;
    }
 
    for (tabp = touch_init_table1 ; tabp->kind != nothing ; tabp++) {
@@ -761,11 +753,55 @@ static void initialize_touch_tables(void)
       tabp->next = touch_hash_table3[hash_num];
       touch_hash_table3[hash_num] = tabp;
    }
- 
-   initialize_expand_tables();
 }
 
 
+full_expand::thing *full_expand::search_table_1(setup_kind kind,
+                                                uint32 livemask,
+                                                uint32 directions)
+{
+   uint32 hash_num = ((kind + (5*livemask)) * 25) & (NUM_TOUCH_HASH_BUCKETS-1);
+
+   for (thing *tptr = touch_hash_table1[hash_num] ; tptr ; tptr = tptr->next) {
+      if (tptr->kind == kind &&
+          tptr->live == livemask &&
+          ((tptr->dir ^ directions) & tptr->dirmask) == 0) return tptr;
+   }
+
+   return (thing *) 0;
+}
+
+
+full_expand::thing *full_expand::search_table_2(setup_kind kind,
+                                                uint32 livemask,
+                                                uint32 directions)
+{
+   uint32 hash_num = ((kind + (5*livemask)) * 25) & (NUM_TOUCH_HASH_BUCKETS-1);
+
+   for (thing *tptr = touch_hash_table2[hash_num] ; tptr ; tptr = tptr->next) {
+      if (tptr->kind == kind &&
+          tptr->live == livemask &&
+          ((tptr->dir ^ directions) & tptr->dirmask) == 0) return tptr;
+   }
+
+   return (thing *) 0;
+}
+
+
+full_expand::thing *full_expand::search_table_3(setup_kind kind,
+                                                uint32 livemask,
+                                                uint32 directions)
+{
+   uint32 hash_num = ((kind + (5*livemask)) * 25) & (NUM_TOUCH_HASH_BUCKETS-1);
+
+   for (thing *tptr = touch_hash_table3[hash_num] ; tptr ; tptr = tptr->next) {
+      if (tptr->kind == kind &&
+          tptr->live == livemask &&
+          ((tptr->dir ^ directions) & tptr->dirmask) == 0) return tptr;
+   }
+
+   return (thing *) 0;
+}
 
 
 extern void touch_or_rear_back(
@@ -775,13 +811,13 @@ extern void touch_or_rear_back(
 {
    int i;
    uint32 directions, livemask;
-   const full_expand_thing *tptr;
-   const expand_thing *zptr;
+   const full_expand::thing *tptr;
+   const expand::thing *zptr;
 
-   /* We don't understand absurd setups. */
+   // We don't understand absurd setups.
    if (setup_attrs[scopy->kind].setup_limits < 0) return;
 
-   /* We don't do this if doing the last half of a call. */
+   // We don't do this if doing the last half of a call.
    if (TEST_HERITBITS(scopy->cmd.cmd_final_flags,INHERITFLAG_LASTHALF)) return;
 
    if (!(callflags1 & (CFLAG1_REAR_BACK_FROM_R_WAVE|
@@ -802,17 +838,12 @@ extern void touch_or_rear_back(
       if (p) livemask |= 3;
    }
 
-   /* Check first for rearing back from a wave. */
+   // Check first for rearing back from a wave.
 
    if ((callflags1 & (CFLAG1_REAR_BACK_FROM_R_WAVE|CFLAG1_STEP_TO_WAVE)) ==
        CFLAG1_REAR_BACK_FROM_R_WAVE) {
-      uint32 hash_num = ((scopy->kind + (5*livemask)) * 25) & (NUM_TOUCH_HASH_BUCKETS-1);
-
-      for (tptr = touch_hash_table1[hash_num] ; tptr ; tptr = tptr->next) {
-         if (tptr->kind == scopy->kind &&
-             tptr->live == livemask &&
-             ((tptr->dir ^ directions) & tptr->dirmask) == 0) goto found_tptr;
-      }
+      tptr = full_expand::search_table_1(scopy->kind, livemask, directions);
+      if (tptr) goto found_tptr;
 
       // A few setups are special -- we allow any combination at all in livemask.
 
@@ -840,23 +871,17 @@ extern void touch_or_rear_back(
       }
    }
 
-   /* If we didn't find anything, check for rearing back from a qtag. */
+   // If we didn't find anything, check for rearing back from a qtag.
 
    if ((callflags1 & (CFLAG1_REAR_BACK_FROM_QTAG|CFLAG1_STEP_TO_WAVE)) ==
        CFLAG1_REAR_BACK_FROM_QTAG) {
-      uint32 hash_num = ((scopy->kind + (5*livemask)) * 25) & (NUM_TOUCH_HASH_BUCKETS-1);
-
-      for (tptr = touch_hash_table2[hash_num] ; tptr ; tptr = tptr->next) {
-         if (tptr->kind == scopy->kind &&
-             tptr->live == livemask &&
-             ((tptr->dir ^ directions) & tptr->dirmask) == 0) goto found_tptr;
-      }
+      tptr = full_expand::search_table_2(scopy->kind, livemask, directions);
+      if (tptr) goto found_tptr;
    }
 
    // Finally, try stepping to a wave.
 
    if (callflags1 & CFLAG1_STEP_TO_WAVE) {
-      uint32 hash_num;
 
       // Special stuff:  If lines facing, but people are incomplete,
       // we honor an "assume facing lines" command.
@@ -874,18 +899,11 @@ extern void touch_or_rear_back(
          }
       }
 
-      hash_num = ((scopy->kind + (5*livemask)) * 25) & (NUM_TOUCH_HASH_BUCKETS-1);
+      tptr = full_expand::search_table_3(scopy->kind, livemask, directions);
+      if (tptr) goto found_tptr;
 
-      for (tptr = touch_hash_table3[hash_num] ; tptr ; tptr = tptr->next) {
-         if (tptr->kind == scopy->kind &&
-             tptr->live == livemask &&
-             ((tptr->dir ^ directions) & tptr->dirmask) == 0) {
-            goto found_tptr;
-         }
-      }
-
-      /* A few setups are special -- we allow any combination at all in livemask,
-         though we are careful. */
+      // A few setups are special -- we allow any combination at all in livemask,
+      // though we are careful.
 
       switch (scopy->kind) {
       case s2x4:
@@ -964,8 +982,8 @@ extern void touch_or_rear_back(
       }
    }
 
-   /* We didn't find anything at all.  But we still need to raise an error
-      if the caller said "left spin the top" when we were in a right-hand wave. */
+   // We didn't find anything at all.  But we still need to raise an error
+   // if the caller said "left spin the top" when we were in a right-hand wave.
 
    if ((callflags1 & CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK) && did_mirror) {
       uint32 aa;
@@ -996,12 +1014,7 @@ extern void touch_or_rear_back(
 
    found_tptr:
 
-   /* Check for things that we must not do if "step_to_box" was specified. */
-
-#ifdef NOT_THIS_WAY
-   if ((callflags1 & CFLAG1_STEP_REAR_MASK) != CFLAG1_STEP_TO_WAVE && (tptr->forbidden_elongation & 16))
-      return;
-#endif
+   // Check for things that we must not do if "step_to_box" was specified.
 
    warn(tptr->warning);
 
@@ -1034,6 +1047,31 @@ extern void touch_or_rear_back(
 
 
 
+bool expand::expand_from_hash_table(setup *ss,
+                                    uint32 needpropbits,
+                                    uint32 livemask) THROW_DECL
+{
+
+   uint32 hash_num = (ss->kind * 25) & (NUM_EXPAND_HASH_BUCKETS-1);
+   const thing *eptr;
+
+   for (eptr=expand_hash_table[hash_num] ; eptr ; eptr=eptr->next_expand) {
+      if (eptr->inner_kind == ss->kind &&
+          (eptr->expandconcpropmask & needpropbits) &&
+          (livemask & eptr->lillivemask) == 0) {
+         warn(eptr->expwarning);
+         expand_setup(eptr, ss);
+         return true;
+      }
+   }
+
+   return false;
+}
+
+
+
+
+
 extern void do_matrix_expansion(
    setup *ss,
    uint32 concprops,
@@ -1045,7 +1083,6 @@ extern void do_matrix_expansion(
    for (;;) {
       int i;
       uint32 livemask, j;
-      const expand_thing *eptr;
 
       for (i=0, j=1, livemask=0; i<=setup_attrs[ss->kind].setup_limits; i++, j<<=1) {
          if (ss->people[i].id1) livemask |= j;
@@ -1053,25 +1090,21 @@ extern void do_matrix_expansion(
 
       // Search for simple things in the hash table.
 
-      uint32 hash_num = (ss->kind * 25) & (NUM_EXPAND_HASH_BUCKETS-1);
-
-      for (eptr=expand_hash_table[hash_num] ; eptr ; eptr=eptr->next_expand) {
-         if (eptr->inner_kind == ss->kind &&
-             (eptr->expandconcpropmask & needpropbits) &&
-             (livemask & eptr->lillivemask) == 0) {
-            warn(eptr->expwarning);
-            goto expand_me;
-         }
-      }
+      if (expand::expand_from_hash_table(ss,
+                                         needpropbits,
+                                         livemask))
+         goto expanded;
 
       if (ss->kind == s4x4) {
          if (needpropbits &
              (NEEDMASK(CONCPROP__NEEDK_4D_4PTPD) | NEEDMASK(CONCPROP__NEEDK_4DMD))) {
             if (livemask == 0x1717UL) {
-               eptr = &exp_4x4_4dm_stuff_a; goto expand_me;
+               expand::expand_setup(&expand::s_4x4_4dma, ss);
+               goto expanded;
             }
             else if (livemask == 0x7171UL) {
-               eptr = &exp_4x4_4dm_stuff_b; goto expand_me;
+               expand::expand_setup(&expand::s_4x4_4dmb, ss);
+               goto expanded;
             }
          }
          else if (needpropbits &
@@ -1081,7 +1114,12 @@ extern void do_matrix_expansion(
    
             if (ctrs != 0 && (ctrs & 011) != 011) {
                if (needprops == CONCPROP__NEEDK_TWINQTAG) ctrs ^= 1;
-               eptr = (ctrs & 1) ? &exp_4x4_4x6_stuff_b : &exp_4x4_4x6_stuff_a; goto expand_me;
+               expand::expand_setup(
+                  (ctrs & 1) ?
+                  &expand::s_4x4_4x6b :
+                  &expand::s_4x4_4x6a,
+                  ss);
+               goto expanded;
             }
          }
       }
@@ -1090,11 +1128,7 @@ extern void do_matrix_expansion(
 
       return;
 
-      expand_me:
-
-      /* If get here, we DID see a concept that requires a setup expansion. */
-
-      expand_setup(eptr, ss);
+      expanded:
 
       /* Most global selectors are disabled if we expanded the matrix. */
 
@@ -1705,10 +1739,11 @@ extern void initialize_sdlib(void)
    initialize_restr_tables();
    initialize_sel_tables();
    initialize_fix_tables();
-   initialize_conc_tables();
-   initialize_tgl_tables();
+   conc_tables::initialize();
+   tglmap::initialize();
    initialize_map_tables();
-   initialize_touch_tables();
+   full_expand::initialize_touch_tables();
+   expand::initialize();
    initialize_concept_sublists();
 
    writechar_block.usurping_writechar = FALSE;
@@ -4015,21 +4050,38 @@ extern parse_block *really_skip_one_concept(
 
 
 
-/* Prepare several setups to be assembled into one, by making them all have
-   the same kind and rotation.  If there is a question about what ending
-   setup to opt for (because of lots of phantoms), use "goal". */
+// Prepare several setups to be assembled into one, by making them all have
+// the same kind and rotation.  If there is a question about what ending
+// setup to opt for (because of lots of phantoms), use "goal".
 
-extern long_boolean fix_n_results(int arity, setup_kind goal, setup z[],
+// Goal of -1 means opt for 1x4.
+// Goal of +9 means opt for dmd.
+// Goal of -2 means preserve the internal setups.
+
+// No external client actually uses -2.  We change -1 to -2 here.
+// The program used to work much harder (too hard, in fact) at
+// opting for a 1x4 rather than a diamond.  It's much smarter
+// now, but the old "-1" code is left in for reference.
+// One of the hard test cases is, from a tidal wave,
+// Split Phantom Diamonds Diamond Chain Thru.
+// There is no code to track the phantoms through the cast off 3/4.
+// Instead, merge_setups notices that it is merging "nothing" with
+// diamond points, and changes the diamond points to ends of lines.
+// It's not clear that this is the wisest way to do this.
+
+extern long_boolean fix_n_results(int arity, int goal, setup z[],
                                   uint32 & rotstates,
-                                  uint32 & pointclip)
-   THROW_DECL
+                                  uint32 & pointclip) THROW_DECL
 {
    int i;
-   long_boolean lineflag = FALSE;
-   long_boolean dmdflag = FALSE;
-   long_boolean qtflag = FALSE;
-   long_boolean boxrectflag = FALSE;
-   long_boolean miniflag = FALSE;
+
+   if (goal == -1) goal = -2;
+
+   int lineflag = 0;
+   bool dmdflag = false;
+   bool qtflag = false;
+   bool boxrectflag = false;
+   bool miniflag = false;
    int deadconcindex = -1;
    setup_kind kk = nothing;
    rotstates = 0xFFF;
@@ -4040,17 +4092,17 @@ extern long_boolean fix_n_results(int arity, setup_kind goal, setup z[],
       0x111, 0x222, 0x404, 0x808,
       0x421, 0x812, 0x104, 0x208};
 
-   /* There are 3 things that make this task nontrivial.  First, some setups could
-      be "nothing", in which case we turn them into the same type of setup as
-      their neighbors, with no people.  Second, some types of "grand working"
-      can leave setups confused about whether they are lines or diamonds,
-      because only the ends/points are occupied.  We turn those setups into
-      whatever matches their more-fully-occupied neighbors.  (If completely in
-      doubt, we opt for 1x4's.)  Third, some 1x4's may have been shrunk to 1x2's.
-      This can happen in some cases of "triple box patch the so-and-so", which lead
-      to triple lines in which the outer lines collapsed from 1x4's to 1x2's while
-      the center line is fully occupied.  In this case we repopulate the outer lines
-      to 1x4's. */
+   // There are 3 things that make this task nontrivial.  First, some setups could
+   // be "nothing", in which case we turn them into the same type of setup as
+   // their neighbors, with no people.  Second, some types of "grand working"
+   // can leave setups confused about whether they are lines or diamonds,
+   // because only the ends/points are occupied.  We turn those setups into
+   // whatever matches their more-fully-occupied neighbors.  (If completely in
+   // doubt, we opt for 1x4's.)  Third, some 1x4's may have been shrunk to 1x2's.
+   // This can happen in some cases of "triple box patch the so-and-so", which lead
+   // to triple lines in which the outer lines collapsed from 1x4's to 1x2's while
+   // the center line is fully occupied.  In this case we repopulate the outer lines
+   // to 1x4's.
 
    for (i=0; i<arity; i++) {
 
@@ -4103,32 +4155,33 @@ extern long_boolean fix_n_results(int arity, setup_kind goal, setup z[],
          zisrot = z[i].rotation & 3;
 
          if (z[i].kind == s1x2)
-            miniflag = TRUE;
-         else if ((z[i].kind == s1x4 || z[i].kind == sdmd) &&
-                  (z[i].people[1].id1 | z[i].people[3].id1) == 0)
-            lineflag = TRUE;
+            miniflag = true;
+         else if (z[i].kind == s1x4 && (z[i].people[1].id1 | z[i].people[3].id1) == 0)
+            lineflag |= 1;
+         else if (z[i].kind == sdmd && (z[i].people[1].id1 | z[i].people[3].id1) == 0)
+            lineflag |= 2;
          else {
             if (kk == nothing) kk = z[i].kind;
 
             if (kk != z[i].kind) {
-               /* We may have a minor problem -- differently oriented
-                  2x4's and qtag's with just the ends present might want to be
-                  like each other.  We will turn them into qtags.
-                  Or 1x4's with just the centers present might want
-                  to become diamonds. */
+               // We may have a minor problem -- differently oriented
+               // 2x4's and qtag's with just the ends present might want to be
+               // like each other.  We will turn them into qtags.
+               // Or 1x4's with just the centers present might want
+               // to become diamonds.
 
                if (((kk == s2x4 && z[i].kind == s_qtag) ||
                     (kk == s_qtag && z[i].kind == s2x4))) {
-                  qtflag = TRUE;
+                  qtflag = true;
                   zisrot ^= 1;
                }
                else if (((kk == s2x4 && z[i].kind == s2x2) ||
                          (kk == s2x2 && z[i].kind == s2x4))) {
-                  boxrectflag = TRUE;
+                  boxrectflag = true;
                }
                else if (((kk == s1x4 && z[i].kind == sdmd) ||
                          (kk == sdmd && z[i].kind == s1x4))) {
-                  dmdflag = TRUE;
+                  dmdflag = true;
                   zisrot ^= 1;
                }
                else
@@ -4160,7 +4213,15 @@ extern long_boolean fix_n_results(int arity, setup_kind goal, setup z[],
    if (kk == nothing) {
       // If client really needs a diamond, return a diamond.
       // Otherwise opt for 1x4.
-      if (lineflag) kk = (goal == sdmd) ? sdmd : s1x4;
+      if (lineflag != 0) {
+         if (goal == 9) kk = sdmd;
+         else if (goal == -1) kk = s1x4;
+         else if (lineflag == 1)  // But a goal of -2 means use whatever the setups were.
+            kk = s1x4;
+         else if (lineflag == 2)
+            kk = sdmd;
+         else fail("Can't do this: don't know where the phantoms went.");
+      }
       else if (miniflag) kk = s1x2;
    }
    else if (kk == s2x2) {
@@ -4191,15 +4252,15 @@ extern long_boolean fix_n_results(int arity, setup_kind goal, setup z[],
          int rr;
 
          if (z[i].inner.skind == s2x2 && kk == s2x4) {
-            /* Turn the 2x2 into a 2x4.  Need to make it have same rotation as the others;
-               that is, rotation = rr.  (We know that rr has something in it by now.) */
+            // Turn the 2x2 into a 2x4.  Need to make it have same rotation as the others;
+            // that is, rotation = rr.  (We know that rr has something in it by now.)
 
-            /* We might have a situation with alternating rotations, or we
-               might have homogeneous rotations.  If the state says we could
-               have both, change it to just homogeneous.  That is, we default
-               to same rotation unless live people force mixed rotation. */
+            // We might have a situation with alternating rotations, or we
+            // might have homogeneous rotations.  If the state says we could
+            // have both, change it to just homogeneous.  That is, we default
+            // to same rotation unless live people force mixed rotation.
 
-            if (rotstates & 0x0F) rotstates &= 0x03;     /* That does the defaulting. */
+            if (rotstates & 0x0F) rotstates &= 0x03;     // That does the defaulting.
             if (!rotstates) goto lose;
             rr = (((rotstates & 0x0F0) ? (rotstates >> 4) : rotstates) >> 1) & 1;
 
@@ -4247,12 +4308,12 @@ extern long_boolean fix_n_results(int arity, setup_kind goal, setup z[],
          // Turn the 2x4 into a qtag.
          if (z[i].people[1].id1 | z[i].people[2].id1 |
              z[i].people[5].id1 | z[i].people[6].id1) goto lose;
-         compress_setup(&exp_2x4_qtg_stuff, &z[i]);
+         expand::compress_setup(&expand::s_2x4_qtg, &z[i]);
       }
       else if (dmdflag && z[i].kind == s1x4) {
          // Turn the 1x4 into a diamond.
          if (z[i].people[0].id1 | z[i].people[2].id1) goto lose;
-         compress_setup(&exp_1x4_dmd_stuff, &z[i]);
+         expand::compress_setup(&expand::s_1x4_dmd, &z[i]);
          pointclip |= 1 << i;
       }
       else if (boxrectflag && z[i].kind == s2x2) {
@@ -4261,7 +4322,7 @@ extern long_boolean fix_n_results(int arity, setup_kind goal, setup z[],
             canonicalize_rotation(&z[i]);
          }
 
-         expand_setup(&exp_2x2_2x4_stuff, &z[i]);
+         expand::expand_setup(&expand::s_2x2_2x4, &z[i]);
       }
       else {
          canonicalize_rotation(&z[i]);
@@ -4278,18 +4339,18 @@ extern long_boolean fix_n_results(int arity, setup_kind goal, setup z[],
 
    if (kk == nothing) return TRUE;
 
-   /* If something wasn't sure whether it was points of a diamond or
-      ends of a 1x4, that's OK if something else had a clue. */
-   if (lineflag && kk != s1x4 && kk != sdmd) goto lose;
+   // If something wasn't sure whether it was points of a diamond or
+   // ends of a 1x4, that's OK if something else had a clue.
+   if (lineflag != 0 && kk != s1x4 && kk != sdmd) goto lose;
 
-   /* If something was a 1x2, that's OK if something else was a 1x4. */
+   // If something was a 1x2, that's OK if something else was a 1x4.
    if (miniflag && kk != s1x4 && kk != s1x2) goto lose;
 
    for (i=0; i<arity; i++) {
       if (z[i].kind == nothing)
          clear_people(&z[i]);
       else if (z[i].kind == s1x2 && kk == s1x4) {
-         /* We have to expand a 1x2 to the center spots of a 1x4. */
+         // We have to expand a 1x2 to the center spots of a 1x4.
          (void) copy_person(&z[i], 3, &z[i], 1);
          clear_person(&z[i], 2);
          (void) copy_person(&z[i], 1, &z[i], 0);
@@ -4324,307 +4385,342 @@ extern long_boolean fix_n_results(int arity, setup_kind goal, setup z[],
 }
 
 
-typedef struct {
-   resolve_kind k;
-   dance_level level_needed;
-   short distance;      // Add the 64 bit for singer-only; these must be last.
-   short nonzero_only;  // If this is nonzero, we demand only nonzero distances.
-   int locations[8];
-   uint32 directions;
-} resolve_tester;
+// Some resolves are only legal at certain levels.  We define
+// these short names to keep the table entries from being unwieldy.
+#define MS l_mainstream
+#define XB cross_by_level
+#define DX dixie_grand_level
+#define EX extend_34_level
 
-static resolve_tester test_thar_stuff[] = {
-   {resolve_rlg,            l_mainstream,      2, 0,   {5, 4, 3, 2, 1, 0, 7, 6},     0x8A31A813},    /* RLG from thar. */
-   {resolve_prom,           l_mainstream,      6, 0,   {5, 4, 3, 2, 1, 0, 7, 6},     0x8833AA11},    /* promenade from thar. */
-   {resolve_slipclutch_rlg, l_mainstream,      1, 0,   {5, 2, 3, 0, 1, 6, 7, 4},     0x8138A31A},    /* slip-the-clutch-RLG from thar. */
-   {resolve_la,             l_mainstream,      5, 0,   {5, 2, 3, 0, 1, 6, 7, 4},     0xA31A8138},    /* LA from thar. */
-   {resolve_slipclutch_la,  l_mainstream,      6, 0,   {5, 4, 3, 2, 1, 0, 7, 6},     0xA8138A31},    /* slip-the-clutch-LA from thar. */
-   {resolve_xby_rlg,        cross_by_level,    1, 0,   {4, 3, 2, 1, 0, 7, 6, 5},     0x8138A31A},    /* cross-by-RLG from thar. */
-   {resolve_revprom,        l_mainstream,      4, 0,   {2, 3, 0, 1, 6, 7, 4, 5},     0x118833AA},    /* reverse promenade from thar. */
-   {resolve_xby_la,         cross_by_level,    4, 0,   {2, 3, 0, 1, 6, 7, 4, 5},     0x138A31A8},    /* cross-by-LA from thar. */
-   {resolve_dixie_grand,    dixie_grand_level, 0, 0,   {4, 1, 2, 7, 0, 5, 6, 3},     0xAA118833},    /* dixie grand from thar. */
-   {resolve_none,           l_mainstream,      64}};
+const resolve_tester configuration::null_resolve =
+{resolve_none, MS, 0, {0,0,0,0,0,0,0,0}, 0};
 
-static resolve_tester test_4x4_stuff[] = {
-   {resolve_circle,         l_mainstream,      6, 0,   {2, 1, 14, 13, 10, 9, 6, 5},  0x33AA1188},    /* "circle left/right" from squared-set, normal. */
-   {resolve_circle,         l_mainstream,      7, 0,   {5, 2, 1, 14, 13, 10, 9, 6},  0x833AA118},    /* "circle left/right" from squared-set, sashayed. */
+// Notes for "distance" field:
+// Add 0x10 bit for singer-only; these must be last.
+// Also, last item in each table has 0x10 only.
+// Add 0x20 bit to indicate that we demand only nonzero distances.
+// Add 0x40 bit to make the resolver never find this, though
+//    we will display it if user gets here.
 
-   {resolve_rlg,            l_mainstream,      3, 0,   {5, 2, 1, 14, 13, 10, 9, 6},  0x8A8AA8A8},    /* RLG from vertical 8-chain in "O". */
-   {resolve_rlg,            l_mainstream,      3, 0,   {5, 2, 1, 14, 13, 10, 9, 6},  0x13313113},    /* RLG from horizontal 8-chain in "O". */
-   {resolve_rlg,            l_mainstream,      3, 0,   {5, 2, 1, 14, 13, 10, 9, 6},  0x8A31A813},    /* RLG from squared set, weird 1. */
-   {resolve_rlg,            l_mainstream,      3, 0,   {5, 2, 1, 14, 13, 10, 9, 6},  0x138A31A8},    /* RLG from squared set, weird 2. */
-   {resolve_rlg,            l_mainstream,      3, 0,   {5, 2, 1, 14, 13, 10, 9, 6},  0x1A8138A3},    /* RLG from squared set, around the corner. */
+static const resolve_tester test_thar_stuff[] = {
+   {resolve_rlg,            MS, 2,   {5, 4, 3, 2, 1, 0, 7, 6},     0x8A31A813},
+   {resolve_prom,           MS, 6,   {5, 4, 3, 2, 1, 0, 7, 6},     0x8833AA11},
+   {resolve_slipclutch_rlg, MS, 1,   {5, 2, 3, 0, 1, 6, 7, 4},     0x8138A31A},
+   {resolve_la,             MS, 5,   {5, 2, 3, 0, 1, 6, 7, 4},     0xA31A8138},
+   {resolve_slipclutch_la,  MS, 6,   {5, 4, 3, 2, 1, 0, 7, 6},     0xA8138A31},
+   {resolve_xby_rlg,        XB, 1,   {4, 3, 2, 1, 0, 7, 6, 5},     0x8138A31A},
+   {resolve_revprom,        MS, 4,   {2, 3, 0, 1, 6, 7, 4, 5},     0x118833AA},
+   {resolve_xby_la,         XB, 4,   {2, 3, 0, 1, 6, 7, 4, 5},     0x138A31A8},
+   {resolve_dixie_grand,    DX, 0,   {4, 1, 2, 7, 0, 5, 6, 3},     0xAA118833},
+   {resolve_none, MS, 0x10}};
 
-   {resolve_la,             l_mainstream,      6, 0,   {2, 1, 14, 13, 10, 9, 6, 5},  0x33131131},    /* LA from horizontal 8-chain in "O". */
-   {resolve_la,             l_mainstream,      6, 0,   {2, 1, 14, 13, 10, 9, 6, 5},  0xA8AA8A88},    /* LA from vertical 8-chain in "O". */
-   {resolve_la,             l_mainstream,      6, 0,   {2, 1, 14, 13, 10, 9, 6, 5},  0x38A31A81},    /* LA from squared set, weird 1. */
-   {resolve_la,             l_mainstream,      6, 0,   {2, 1, 14, 13, 10, 9, 6, 5},  0xA31A8138},    /* LA from squared set, weird 2. */
-   {resolve_la,             l_mainstream,      6, 0,   {2, 1, 14, 13, 10, 9, 6, 5},  0xA8138A31},    /* LA from squared set, around the corner. */
+static const resolve_tester test_4x4_stuff[] = {
+   // "circle left/right" from squared-set, normal.
+   {resolve_circle,         MS, 6,   {2, 1, 14, 13, 10, 9, 6, 5},  0x33AA1188},
+   // "circle left/right" from squared-set, sashayed.
+   {resolve_circle,         MS, 7,   {5, 2, 1, 14, 13, 10, 9, 6},  0x833AA118},
 
-   {resolve_rlg,            l_mainstream,      2, 0,   {2, 1, 14, 13, 10, 9, 6, 5},  0x8A31A813},    /* RLG from squared set, facing directly. */
-   {resolve_la,             l_mainstream,      7, 0,   {5, 2, 1, 14, 13, 10, 9, 6},  0x38A31A81},    /* LA from squared set, facing directly. */
+   // From vertical 8-chain in "O".
+   {resolve_rlg,            MS, 3,   {5, 2, 1, 14, 13, 10, 9, 6},  0x8A8AA8A8},
+   {resolve_la,             MS, 6,   {2, 1, 14, 13, 10, 9, 6, 5},  0xA8AA8A88},
 
-   // These 8 are from ladder columns, facing directly.
-   {resolve_rlg,            l_mainstream, 3, 0,   {7, 2, 0, 14, 15, 10, 8, 6},  0x13313113},
-   {resolve_rlg,            l_mainstream, 1, 0,   {3, 14, 12, 10, 11, 6, 4, 2}, 0x8AA8A88A},
-   {resolve_rlg,            l_mainstream, 3, 0,   {5, 4, 1, 3, 13, 12, 9, 11},  0x13313113},
-   {resolve_rlg,            l_mainstream, 1, 0,   {1, 0, 13, 15, 9, 8, 5, 7},   0x8AA8A88A},
-   {resolve_la,             l_mainstream, 6, 0,   {2, 0, 14, 15, 10, 8, 6, 7},  0x33131131},
-   {resolve_la,             l_mainstream, 4, 0,   {14, 12, 10, 11, 6, 4, 2, 3}, 0xAA8A88A8},
-   {resolve_la,             l_mainstream, 6, 0,   {4, 1, 3, 13, 12, 9, 11, 5},  0x33131131},
-   {resolve_la,             l_mainstream, 4, 0,   {0, 13, 15, 9, 8, 5, 7, 1},   0xAA8A88A8},
+   // From horizontal 8-chain in "O".
+   {resolve_rlg,            MS, 3,   {5, 2, 1, 14, 13, 10, 9, 6},  0x13313113},
+   {resolve_la,             MS, 6,   {2, 1, 14, 13, 10, 9, 6, 5},  0x33131131},
+
+   // Weird ones from squared set.
+   {resolve_rlg,            MS, 3,   {5, 2, 1, 14, 13, 10, 9, 6},  0x8A31A813},
+   {resolve_rlg,            MS, 3,   {5, 2, 1, 14, 13, 10, 9, 6},  0x138A31A8},
+   {resolve_la,             MS, 6,   {2, 1, 14, 13, 10, 9, 6, 5},  0x38A31A81},
+   {resolve_la,             MS, 6,   {2, 1, 14, 13, 10, 9, 6, 5},  0xA31A8138},
+
+   // From squared set, around the corner.
+   {resolve_rlg,            MS, 3,   {5, 2, 1, 14, 13, 10, 9, 6},  0x1A8138A3},
+   {resolve_la,             MS, 6,   {2, 1, 14, 13, 10, 9, 6, 5},  0xA8138A31},
+
+   // From squared set, facing directly.
+   {resolve_rlg,            MS, 2,   {2, 1, 14, 13, 10, 9, 6, 5},  0x8A31A813},
+   {resolve_la,             MS, 7,   {5, 2, 1, 14, 13, 10, 9, 6},  0x38A31A81},
+
+   // From ladder columns, facing directly.
+   {resolve_rlg,            MS, 3,   {7, 2, 0, 14, 15, 10, 8, 6},  0x13313113},
+   {resolve_rlg,            MS, 1,   {3, 14, 12, 10, 11, 6, 4, 2}, 0x8AA8A88A},
+   {resolve_rlg,            MS, 3,   {5, 4, 1, 3, 13, 12, 9, 11},  0x13313113},
+   {resolve_rlg,            MS, 1,   {1, 0, 13, 15, 9, 8, 5, 7},   0x8AA8A88A},
+   {resolve_la,             MS, 6,   {2, 0, 14, 15, 10, 8, 6, 7},  0x33131131},
+   {resolve_la,             MS, 4,   {14, 12, 10, 11, 6, 4, 2, 3}, 0xAA8A88A8},
+   {resolve_la,             MS, 6,   {4, 1, 3, 13, 12, 9, 11, 5},  0x33131131},
+   {resolve_la,             MS, 4,   {0, 13, 15, 9, 8, 5, 7, 1},   0xAA8A88A8},
 
    // From pinwheel, facing directly.
-   {resolve_rlg,            l_mainstream, 3, 0,   {7, 2, 3, 14, 15, 10, 11, 6}, 0x138A31A8},
-   {resolve_rlg,            l_mainstream, 3, 0,   {5, 7, 1, 3, 13, 15, 9, 11},  0x8A31A813},
+   {resolve_rlg,            MS, 3,   {7, 2, 3, 14, 15, 10, 11, 6}, 0x138A31A8},
+   {resolve_rlg,            MS, 3,   {5, 7, 1, 3, 13, 15, 9, 11},  0x8A31A813},
 
    // From pinwheel, all in miniwaves.
-   {resolve_rlg,            l_mainstream, 3, 0,   {7, 5, 3, 1, 15, 13, 11, 9},  0x138A31A8},
-   {resolve_rlg,            l_mainstream, 3, 0,   {7, 2, 3, 14, 15, 10, 11, 6}, 0x8A31A813},
+   {resolve_rlg,            MS, 3,   {7, 5, 3, 1, 15, 13, 11, 9},  0x138A31A8},
+   {resolve_rlg,            MS, 3,   {7, 2, 3, 14, 15, 10, 11, 6}, 0x8A31A813},
 
-   {resolve_rlg,            l_mainstream,      3, 0,   {7, 2, 3, 14, 15, 10, 11, 6}, 0x13313113},    /* RLG from pinwheel, some of each. */
-   {resolve_rlg,            l_mainstream,      3, 0,   {7, 2, 3, 14, 15, 10, 11, 6}, 0x8A8AA8A8},    /* RLG from pinwheel, others of each. */
-   {resolve_rlg,            l_mainstream,      3, 0,   {5, 7, 3, 1, 13, 15, 11, 9},  0x8A8AA8A8},    /* RLG from pinwheel, some of each. */
-   {resolve_rlg,            l_mainstream,      3, 0,   {7, 5, 1, 3, 15, 13, 9, 11},  0x13313113},    /* RLG from pinwheel, others of each. */
+   // From pinwheel, some of each.
+   {resolve_rlg,            MS, 3,   {7, 2, 3, 14, 15, 10, 11, 6}, 0x13313113},
+   {resolve_rlg,            MS, 3,   {5, 7, 3, 1, 13, 15, 11, 9},  0x8A8AA8A8},
+
+   // From pinwheel, others of each.
+   {resolve_rlg,            MS, 3,   {7, 2, 3, 14, 15, 10, 11, 6}, 0x8A8AA8A8},
+   {resolve_rlg,            MS, 3,   {7, 5, 1, 3, 15, 13, 9, 11},  0x13313113},
 
    // From clumps.
-   {resolve_rlg,            l_mainstream, 2, 0,   {3, 1, 14, 0, 11, 9, 6, 8},       0x8A8AA8A8},
-   {resolve_rlg,            l_mainstream, 4, 0,   {5, 4, 7, 2, 13, 12, 15, 10},     0x8A8AA8A8},
-   {resolve_rlg,            l_mainstream, 2, 0,   {1, 0, 3, 14, 9, 8, 11, 6},       0x31311313},
-   {resolve_rlg,            l_mainstream, 4, 0,   {7, 5, 2, 4, 15, 13, 10, 12},     0x13133131},
-   {resolve_la,             l_mainstream, 5, 0,   {3, 0, 14, 9, 11, 8, 6, 1},       0xA8AA8A88},
-   {resolve_la,             l_mainstream, 7, 0,   {5, 2, 7, 12, 13, 10, 15, 4},     0xA8AA8A88},
-   {resolve_la,             l_mainstream, 5, 0,   {1, 14, 3, 8, 9, 6, 11, 0},       0x13113133},
-   {resolve_la,             l_mainstream, 7, 0,   {7, 4, 2, 13, 15, 12, 10, 5},     0x31331311},
+   {resolve_rlg,            MS, 2,   {3, 1, 14, 0, 11, 9, 6, 8},   0x8A8AA8A8},
+   {resolve_rlg,            MS, 4,   {5, 4, 7, 2, 13, 12, 15, 10}, 0x8A8AA8A8},
+   {resolve_rlg,            MS, 2,   {1, 0, 3, 14, 9, 8, 11, 6},   0x31311313},
+   {resolve_rlg,            MS, 4,   {7, 5, 2, 4, 15, 13, 10, 12}, 0x13133131},
+   {resolve_la,             MS, 5,   {3, 0, 14, 9, 11, 8, 6, 1},   0xA8AA8A88},
+   {resolve_la,             MS, 7,   {5, 2, 7, 12, 13, 10, 15, 4}, 0xA8AA8A88},
+   {resolve_la,             MS, 5,   {1, 14, 3, 8, 9, 6, 11, 0},   0x13113133},
+   {resolve_la,             MS, 7,   {7, 4, 2, 13, 15, 12, 10, 5}, 0x31331311},
 
    // From blocks.
-   {resolve_rlg,            l_mainstream, 3, 0,   {5, 2, 3, 0, 13, 10, 11, 8},      0x8A8AA8A8},
+   {resolve_rlg,            MS, 3,   {5, 2, 3, 0, 13, 10, 11, 8},  0x8A8AA8A8},
+   {resolve_none, MS, 0x10}};
 
-   {resolve_none,           l_mainstream,      64}};
+static const resolve_tester test_4x6_stuff[] = {
+   {resolve_rlg,            MS, 2,   {23, 6, 3, 2, 11, 18, 15, 14},0x8A31A813},
+   {resolve_la,             MS, 7,   {14, 23, 6, 3, 2, 11, 18, 15},0x38A31A81},
+   {resolve_none, MS, 0x10}};
 
-static resolve_tester test_4x6_stuff[] = {
-   {resolve_rlg,            l_mainstream, 2, 0,   {23, 6, 3, 2, 11, 18, 15, 14},    0x8A31A813},
-   {resolve_la,             l_mainstream, 7, 0,   {14, 23, 6, 3, 2, 11, 18, 15},    0x38A31A81},
-   {resolve_none,           l_mainstream,      64}};
+static const resolve_tester test_c1phan_stuff[] = {
+   // From phantoms, all facing.
+   {resolve_rlg,            MS, 3,   {10, 8, 6, 4, 2, 0, 14, 12},  0x138A31A8},
+   {resolve_rlg,            MS, 3,   {9, 11, 5, 7, 1, 3, 13, 15},  0x8A31A813},
+   // From phantoms, all in miniwaves.
+   {resolve_rlg,            MS, 3,   {11, 9, 7, 5, 3, 1, 15, 13},  0x138A31A8},
+   {resolve_rlg,            MS, 3,   {10, 8, 6, 4, 2, 0, 14, 12},  0x8A31A813},
+   // From phantoms, some of each.
+   {resolve_rlg,            MS, 3,   {10, 8, 6, 4, 2, 0, 14, 12},  0x13313113},
+   {resolve_rlg,            MS, 3,   {9, 11, 7, 5, 1, 3, 15, 13},  0x8A8AA8A8},
+   // From phantoms, others of each.
+   {resolve_rlg,            MS, 3,   {10, 8, 6, 4, 2, 0, 14, 12},  0x8A8AA8A8},
+   {resolve_rlg,            MS, 3,   {11, 9, 5, 7, 3, 1, 13, 15},  0x13313113},
+   {resolve_none, MS, 0x10}};
 
-static resolve_tester test_c1phan_stuff[] = {
-   {resolve_rlg,            l_mainstream,      3, 0,   {10, 8, 6, 4, 2, 0, 14, 12},  0x138A31A8},    /* RLG from phantoms, all facing. */
-   {resolve_rlg,            l_mainstream,      3, 0,   {9, 11, 5, 7, 1, 3, 13, 15},  0x8A31A813},    /* RLG from phantoms, all facing. */
-   {resolve_rlg,            l_mainstream,      3, 0,   {11, 9, 7, 5, 3, 1, 15, 13},  0x138A31A8},    /* RLG from phantoms, all in miniwaves. */
-   {resolve_rlg,            l_mainstream,      3, 0,   {10, 8, 6, 4, 2, 0, 14, 12},  0x8A31A813},    /* RLG from phantoms, all in miniwaves. */
-   {resolve_rlg,            l_mainstream,      3, 0,   {10, 8, 6, 4, 2, 0, 14, 12},  0x13313113},    /* RLG from phantoms, some of each. */
-   {resolve_rlg,            l_mainstream,      3, 0,   {10, 8, 6, 4, 2, 0, 14, 12},  0x8A8AA8A8},    /* RLG from phantoms, others of each. */
-   {resolve_rlg,            l_mainstream,      3, 0,   {9, 11, 7, 5, 1, 3, 15, 13},  0x8A8AA8A8},    /* RLG from phantoms, some of each. */
-   {resolve_rlg,            l_mainstream,      3, 0,   {11, 9, 5, 7, 3, 1, 13, 15},  0x13313113},    /* RLG from phantoms, others of each. */
-   {resolve_none,           l_mainstream,      64}};
+static const resolve_tester test_galaxy_stuff[] = {
+   {resolve_rlg,            MS, 2,   {5, 4, 3, 2, 1, 0, 7, 6},     0x1A313813},
+   {resolve_rlg,            MS, 2,   {5, 4, 3, 2, 1, 0, 7, 6},     0x8A81A8A3},
+   {resolve_none, MS, 0x10}};
 
-static resolve_tester test_galaxy_stuff[] = {
-   {resolve_rlg,            l_mainstream, 2, 0,   {5, 4, 3, 2, 1, 0, 7, 6},     0x1A313813},
-   {resolve_rlg,            l_mainstream, 2, 0,   {5, 4, 3, 2, 1, 0, 7, 6},     0x8A81A8A3},
-   {resolve_none,           l_mainstream,      64}};
+static const resolve_tester test_qtag_stuff[] = {
+   // From 1/4 tag.
+   {resolve_dixie_grand,    DX, 2,   {5, 0, 2, 7, 1, 4, 6, 3},     0x8AAAA888},
+   {resolve_ext_rlg,        MS, 5,   {7, 5, 4, 2, 3, 1, 0, 6},     0xA88A8AA8},
+   {resolve_ext_la,         MS, 6,   {3, 2, 1, 0, 7, 6, 5, 4},     0xA8AA8A88},
+   // From 3/4 tag.
+   {resolve_rlg,            MS, 4,   {5, 4, 3, 2, 1, 0, 7, 6},     0xAA8A88A8},
+   {resolve_la,             MS, 7,   {4, 2, 3, 1, 0, 6, 7, 5},     0xA8A88A8A},
 
-static resolve_tester test_qtag_stuff[] = {
-#ifdef BOGUSDIXIEGRAND
-   // We had this (and two more below) to satisfy test vg07t.  But we now consider it to be
-   // bogus, and have taken it out.  The people must be facing for the first pull-by.
-   // It is only after that that they can start working around the corner.
-   {resolve_dixie_grand,    dixie_grand_level, 2, 0,   {4, 1, 2, 7, 0, 5, 6, 3},     0xA8AA8A88},    /* dixie grand from 3/4 tag. */
-#endif
-   {resolve_dixie_grand,    dixie_grand_level, 2, 0,   {5, 0, 2, 7, 1, 4, 6, 3},     0x8AAAA888},    /* dixie grand from 1/4 tag. */
-   {resolve_rlg,            l_mainstream,      4, 0,   {5, 4, 3, 2, 1, 0, 7, 6},     0xAA8A88A8},    /* RLG from 3/4 tag. */
-   {resolve_ext_rlg,        l_mainstream,      5, 0,   {7, 5, 4, 2, 3, 1, 0, 6},     0xA88A8AA8},    /* extend-RLG from 1/4 tag. */
-   {resolve_rlg,            l_mainstream,      4, 0,   {5, 4, 3, 2, 1, 0, 7, 6},     0x138A31A8},    /* RLG from diamonds with points facing each other. */
-   {resolve_rlg,            l_mainstream,      4, 0,   {5, 4, 3, 2, 1, 0, 7, 6},     0x8A8AA8A8},    /* RLG from "6x2 acey deucey" type of 1/4 tag. */
-   {resolve_la,             l_mainstream,      7, 0,   {4, 2, 3, 1, 0, 6, 7, 5},     0xA8A88A8A},    /* LA from 3/4 tag. */
-   {resolve_ext_la,         l_mainstream,      6, 0,   {3, 2, 1, 0, 7, 6, 5, 4},     0xA8AA8A88},    /* extend-LA from 1/4 tag. */
-   {resolve_la,             l_mainstream,      7, 0,   {4, 2, 3, 1, 0, 6, 7, 5},     0x38A31A81},    /* LA from diamonds with points facing each other. */
-   /* Singers only. */
-   {resolve_rlg,            l_mainstream,   64+4, 0,   {4, 5, 3, 2, 0, 1, 7, 6},     0xAA8A88A8},    /* swing/prom from 3/4 tag, ends sashayed (normal case is above). */
-   {resolve_rlg,            l_mainstream,   64+4, 0,   {5, 4, 2, 3, 1, 0, 6, 7},     0xAAA8888A},    /* swing/prom from 3/4 tag, centers traded, ends normal. */
-   {resolve_rlg,            l_mainstream,   64+4, 0,   {4, 5, 2, 3, 0, 1, 6, 7},     0xAAA8888A},    /* swing/prom from 3/4 tag, centers traded, ends sashayed. */
-   {resolve_none,           l_mainstream,      64}};
+   // From diamonds with points facing each other.
+   {resolve_rlg,            MS, 4,   {5, 4, 3, 2, 1, 0, 7, 6},     0x138A31A8},
+   {resolve_la,             MS, 7,   {4, 2, 3, 1, 0, 6, 7, 5},     0x38A31A81},
 
-static resolve_tester test_2x6_stuff[] = {
-   // RLG/LA from "Z" 8-chain.
-   {resolve_rlg,            l_mainstream,      3, 0,   {7, 6, 4, 3, 1, 0, 10, 9},    0x13313113},
-   {resolve_rlg,            l_mainstream,      3, 0,   {8, 7, 5, 4, 2, 1, 11, 10},   0x13313113},
-   {resolve_la,             l_mainstream,      6, 0,   {6, 4, 3, 1, 0, 10, 9, 7},    0x33131131},
-   {resolve_la,             l_mainstream,      6, 0,   {7, 5, 4, 2, 1, 11, 10, 8},   0x33131131},
-   // RLG/LA from outer triple boxes.
-   {resolve_rlg,            l_mainstream,      3, 0,   {7, 6, 4, 5, 1, 0, 10, 11},   0x8A8AA8A8},
-   {resolve_la,             l_mainstream,      6, 0,   {7, 5, 4, 0, 1, 11, 10, 6},   0xA8AA8A88},
-   // RLG/LA from parallelogram waves.
-   {resolve_rlg,            l_mainstream,      3, 0,   {7, 6, 2, 3, 1, 0, 8, 9},     0x8A8AA8A8},
-   {resolve_la,             l_mainstream,      6, 0,   {7, 3, 2, 0, 1, 9, 8, 6},     0xA8AA8A88},
-   {resolve_rlg,            l_mainstream,      3, 0,   {9, 8, 4, 5, 3, 2, 10, 11},   0x8A8AA8A8},
-   {resolve_la,             l_mainstream,      6, 0,   {9, 5, 4, 2, 3, 11, 10, 8},   0xA8AA8A88},
-   {resolve_none,           l_mainstream,      64}};
+   // From "6x2 acey deucey" type of 1/4 tag.
+   {resolve_rlg,            MS, 4,   {5, 4, 3, 2, 1, 0, 7, 6},     0x8A8AA8A8},
 
-static resolve_tester test_3x4_stuff[] = {
-   // These test for offset waves.
-   {resolve_rlg,            l_mainstream, 3, 0,   {7, 6, 5, 4, 1, 0, 11, 10},   0x8A8AA8A8},
-   {resolve_rlg,            l_mainstream, 3, 0,   {5, 4, 2, 3, 11, 10, 8, 9},   0x8A8AA8A8},
-   {resolve_la,             l_mainstream, 6, 0,   {7, 4, 5, 0, 1, 10, 11, 6},   0xA8AA8A88},
-   {resolve_la,             l_mainstream, 6, 0,   {5, 3, 2, 10, 11, 9, 8, 4},   0xA8AA8A88},
-   // These test for sort of skewed offset 8-chain.
+   // Singers only.
+   // Swing/prom from 3/4 tag, ends sashayed (normal case is above).
+   {resolve_rlg,            MS, 0x14,{4, 5, 3, 2, 0, 1, 7, 6},     0xAA8A88A8},
+   // Swing/prom from 3/4 tag, centers traded, ends normal.
+   {resolve_rlg,            MS, 0x14,{5, 4, 2, 3, 1, 0, 6, 7},     0xAAA8888A},
+   // Swing/prom from 3/4 tag, centers traded, ends sashayed.
+   {resolve_rlg,            MS, 0x14,{4, 5, 2, 3, 0, 1, 6, 7},     0xAAA8888A},
+   {resolve_none, MS, 0x10}};
+
+static const resolve_tester test_2x6_stuff[] = {
+   // From "Z" 8-chain.
+   {resolve_rlg,            MS, 3,   {7, 6, 4, 3, 1, 0, 10, 9},    0x13313113},
+   {resolve_rlg,            MS, 3,   {8, 7, 5, 4, 2, 1, 11, 10},   0x13313113},
+   {resolve_la,             MS, 6,   {6, 4, 3, 1, 0, 10, 9, 7},    0x33131131},
+   {resolve_la,             MS, 6,   {7, 5, 4, 2, 1, 11, 10, 8},   0x33131131},
+   // From outer triple boxes.
+   {resolve_rlg,            MS, 3,   {7, 6, 4, 5, 1, 0, 10, 11},   0x8A8AA8A8},
+   {resolve_la,             MS, 6,   {7, 5, 4, 0, 1, 11, 10, 6},   0xA8AA8A88},
+   // From parallelogram waves.
+   {resolve_rlg,            MS, 3,   {7, 6, 2, 3, 1, 0, 8, 9},     0x8A8AA8A8},
+   {resolve_la,             MS, 6,   {7, 3, 2, 0, 1, 9, 8, 6},     0xA8AA8A88},
+   {resolve_rlg,            MS, 3,   {9, 8, 4, 5, 3, 2, 10, 11},   0x8A8AA8A8},
+   {resolve_la,             MS, 6,   {9, 5, 4, 2, 3, 11, 10, 8},   0xA8AA8A88},
+   {resolve_none, MS, 0x10}};
+
+static const resolve_tester test_3x4_stuff[] = {
+   // From offset waves.
+   {resolve_rlg,            MS, 3,   {7, 6, 5, 4, 1, 0, 11, 10},   0x8A8AA8A8},
+   {resolve_rlg,            MS, 3,   {5, 4, 2, 3, 11, 10, 8, 9},   0x8A8AA8A8},
+   {resolve_la,             MS, 6,   {7, 4, 5, 0, 1, 10, 11, 6},   0xA8AA8A88},
+   {resolve_la,             MS, 6,   {5, 3, 2, 10, 11, 9, 8, 4},   0xA8AA8A88},
+   // From sort of skewed offset 8-chain.
    // These may be a mistake.
-   //   {resolve_rlg,            l_mainstream, 2, 0,   {6, 4, 11, 1, 0, 10, 5, 7},   0x8A8AA8A8},
-   //   {resolve_rlg,            l_mainstream, 2, 0,   {4, 3, 5, 2, 11, 8, 10, 9},   0x8A8AA8A8},
-   //   {resolve_la,             l_mainstream, 5, 0,   {4, 11, 1, 0, 10, 5, 7, 6},   0xA8AA8A88},
-   //   {resolve_la,             l_mainstream, 5, 0,   {3, 2, 5, 10, 9, 8, 11, 4},   0xAA8A88A8},
-   {resolve_rlg,            l_mainstream, 1, 0,   {4, 5, 1, 0, 10, 11, 7, 6},   0x31311313},
-   {resolve_rlg,            l_mainstream, 1, 0,   {3, 2, 11, 10, 9, 8, 5, 4},   0x31311313},
-   {resolve_la,             l_mainstream, 4, 0,   {5, 1, 0, 10, 11, 7, 6, 4},   0x13113133},
-   {resolve_la,             l_mainstream, 4, 0,   {2, 11, 10, 9, 8, 5, 4, 3},   0x13113133},
-   {resolve_none,           l_mainstream, 64}};
+   //   {resolve_rlg,       MS, 2,   {6, 4, 11, 1, 0, 10, 5, 7},   0x8A8AA8A8},
+   //   {resolve_rlg,       MS, 2,   {4, 3, 5, 2, 11, 8, 10, 9},   0x8A8AA8A8},
+   //   {resolve_la,        MS, 5,   {4, 11, 1, 0, 10, 5, 7, 6},   0xA8AA8A88},
+   //   {resolve_la,        MS, 5,   {3, 2, 5, 10, 9, 8, 11, 4},   0xAA8A88A8},
+   {resolve_rlg,            MS, 1,   {4, 5, 1, 0, 10, 11, 7, 6},   0x31311313},
+   {resolve_rlg,            MS, 1,   {3, 2, 11, 10, 9, 8, 5, 4},   0x31311313},
+   {resolve_la,             MS, 4,   {5, 1, 0, 10, 11, 7, 6, 4},   0x13113133},
+   {resolve_la,             MS, 4,   {2, 11, 10, 9, 8, 5, 4, 3},   0x13113133},
+   {resolve_none, MS, 0x10}};
 
-static resolve_tester test_4dmd_stuff[] = {
-   /* These test for people in a miniwave as centers of the outer diamonds,
-      while the others are facing each other as points.  There are three of each
-      to allow for the outsides to be symmetrical (points of the center diamonds)
-      or unsymmetrical (points of a center diamond and the adjacent outer diamond). */
-   {resolve_la,             l_mainstream, 7, 0,   {8, 4, 5, 1, 0, 12, 13, 9},   0x38A31A81},
-   {resolve_la,             l_mainstream, 7, 0,   {9, 4, 5, 2, 1, 12, 13, 10},  0x38A31A81},
-   {resolve_la,             l_mainstream, 7, 0,   {10, 4, 5, 3, 2, 12, 13, 11}, 0x38A31A81},
-   {resolve_rlg,            l_mainstream, 4, 0,   {9, 8, 5, 4, 1, 0, 13, 12},   0x138A31A8},
-   {resolve_rlg,            l_mainstream, 4, 0,   {10, 9, 5, 4, 2, 1, 13, 12},  0x138A31A8},
-   {resolve_rlg,            l_mainstream, 4, 0,   {11, 10, 5, 4, 3, 2, 13, 12}, 0x138A31A8},
-   {resolve_none,           l_mainstream, 64}};
+static const resolve_tester test_4dmd_stuff[] = {
+   // These test for people in a miniwave as centers of the outer diamonds,
+   // while the others are facing each other as points.  There are three of each
+   // to allow for the outsides to be symmetrical (points of the center diamonds)
+   // or unsymmetrical (points of a center diamond and the adjacent outer diamond).
+   {resolve_la,             MS, 7,   {8, 4, 5, 1, 0, 12, 13, 9},   0x38A31A81},
+   {resolve_la,             MS, 7,   {9, 4, 5, 2, 1, 12, 13, 10},  0x38A31A81},
+   {resolve_la,             MS, 7,   {10, 4, 5, 3, 2, 12, 13, 11}, 0x38A31A81},
+   {resolve_rlg,            MS, 4,   {9, 8, 5, 4, 1, 0, 13, 12},   0x138A31A8},
+   {resolve_rlg,            MS, 4,   {10, 9, 5, 4, 2, 1, 13, 12},  0x138A31A8},
+   {resolve_rlg,            MS, 4,   {11, 10, 5, 4, 3, 2, 13, 12}, 0x138A31A8},
+   {resolve_none, MS, 0x10}};
 
-static resolve_tester test_bigdmd_stuff[] = {
-   /* These test for miniwaves in "common point diamonds". */
-   {resolve_rlg,            l_mainstream, 2, 0,   {7, 6, 3, 2, 1, 0, 9, 8},     0x8A31A813},
-   {resolve_rlg,            l_mainstream, 2, 0,   {4, 5, 3, 2, 10, 11, 9, 8},   0x8A31A813},
-   {resolve_la,             l_mainstream, 5, 0,   {7, 2, 3, 0, 1, 8, 9, 6},     0xA31A8138},
-   {resolve_la,             l_mainstream, 5, 0,   {4, 2, 3, 11, 10, 8, 9, 5},   0xA31A8138},
-   {resolve_none,           l_mainstream, 64}};
+static const resolve_tester test_bigdmd_stuff[] = {
+   // From  miniwaves in "common point diamonds".
+   {resolve_rlg,            MS, 2,   {7, 6, 3, 2, 1, 0, 9, 8},     0x8A31A813},
+   {resolve_rlg,            MS, 2,   {4, 5, 3, 2, 10, 11, 9, 8},   0x8A31A813},
+   {resolve_la,             MS, 5,   {7, 2, 3, 0, 1, 8, 9, 6},     0xA31A8138},
+   {resolve_la,             MS, 5,   {4, 2, 3, 11, 10, 8, 9, 5},   0xA31A8138},
+   {resolve_none, MS, 0x10}};
 
-static resolve_tester test_deepqtg_stuff[] = {
-   {resolve_circle,         l_mainstream, 6, 0,   {11, 2, 1, 0, 5, 8, 7, 6},  0x33AA1188},
-   {resolve_circle,         l_mainstream, 7, 0,   {6, 11, 2, 1, 0, 5, 8, 7},  0x833AA118},
-   {resolve_none,           l_mainstream, 64}};
+static const resolve_tester test_deepqtg_stuff[] = {
+   {resolve_circle,         MS, 6,   {11, 2, 1, 0, 5, 8, 7, 6},    0x33AA1188},
+   {resolve_circle,         MS, 7,   {6, 11, 2, 1, 0, 5, 8, 7},    0x833AA118},
+   {resolve_none, MS, 0x10}};
 
-static resolve_tester test_deepxwv_stuff[] = {
-   {resolve_rlg,            l_mainstream, 4, 0,   {5, 8, 7, 6, 11, 2, 1, 0},  0x138A31A8},
-   {resolve_la,             l_mainstream, 7, 0,   {8, 6, 7, 11, 2, 0, 1, 5},  0x38A31A81},
-   {resolve_none,           l_mainstream, 64}};
+static const resolve_tester test_deepxwv_stuff[] = {
+   {resolve_rlg,            MS, 4,   {5, 8, 7, 6, 11, 2, 1, 0},    0x138A31A8},
+   {resolve_la,             MS, 7,   {8, 6, 7, 11, 2, 0, 1, 5},    0x38A31A81},
+   {resolve_none, MS, 0x10}};
 
-static resolve_tester test_3x6_stuff[] = {
-   {resolve_rlg,            l_mainstream, 4, 0,   {12, 11, 7, 6, 3, 2, 16, 15},  0x138A31A8},
-   {resolve_la,             l_mainstream, 7, 0,   {11, 6, 7, 3, 2, 15, 16, 12},  0x38A31A81},
-   {resolve_none,           l_mainstream, 64}};
+static const resolve_tester test_3x6_stuff[] = {
+   {resolve_rlg,            MS, 4,   {12, 11, 7, 6, 3, 2, 16, 15}, 0x138A31A8},
+   {resolve_la,             MS, 7,   {11, 6, 7, 3, 2, 15, 16, 12}, 0x38A31A81},
+   {resolve_none, MS, 0x10}};
 
-static resolve_tester test_spindle_stuff[] = {
+static const resolve_tester test_spindle_stuff[] = {
    // These test for people looking around the corner.
-   {resolve_rlg,            l_mainstream, 3, 0,   {4, 3, 2, 1, 0, 7, 6, 5},     0x13313113},
-   {resolve_rlg,            l_mainstream, 3, 0,   {4, 3, 2, 1, 0, 7, 6, 5},     0x1A313813},
-   {resolve_la,             l_mainstream, 7, 0,   {4, 3, 2, 1, 0, 7, 6, 5},     0x33131131},
-   {resolve_la,             l_mainstream, 7, 0,   {4, 3, 2, 1, 0, 7, 6, 5},     0x38131A31},
-   {resolve_rlg,            l_mainstream, 2, 0,   {3, 2, 1, 0, 7, 6, 5, 4},     0x31311313},
-   {resolve_rlg,            l_mainstream, 2, 0,   {3, 2, 1, 0, 7, 6, 5, 4},     0x8131A313},
-   {resolve_la,             l_mainstream, 6, 0,   {3, 2, 1, 0, 7, 6, 5, 4},     0x33131131},
-   {resolve_la,             l_mainstream, 6, 0,   {3, 2, 1, 0, 7, 6, 5, 4},     0xA3138131},
-   {resolve_circle,         l_mainstream, 7, 0,   {4, 3, 2, 1, 0, 7, 6, 5},     0x83AAA188},
-   {resolve_circle,         l_mainstream, 5, 0,   {3, 2, 1, 0, 7, 6, 5, 4},     0x3AAA1888},
-   {resolve_none,           l_mainstream, 64}};
+   {resolve_rlg,            MS, 3,   {4, 3, 2, 1, 0, 7, 6, 5},     0x13313113},
+   {resolve_rlg,            MS, 3,   {4, 3, 2, 1, 0, 7, 6, 5},     0x1A313813},
+   {resolve_la,             MS, 7,   {4, 3, 2, 1, 0, 7, 6, 5},     0x33131131},
+   {resolve_la,             MS, 7,   {4, 3, 2, 1, 0, 7, 6, 5},     0x38131A31},
+   {resolve_rlg,            MS, 2,   {3, 2, 1, 0, 7, 6, 5, 4},     0x31311313},
+   {resolve_rlg,            MS, 2,   {3, 2, 1, 0, 7, 6, 5, 4},     0x8131A313},
+   {resolve_la,             MS, 6,   {3, 2, 1, 0, 7, 6, 5, 4},     0x33131131},
+   {resolve_la,             MS, 6,   {3, 2, 1, 0, 7, 6, 5, 4},     0xA3138131},
+   {resolve_circle,         MS, 7,   {4, 3, 2, 1, 0, 7, 6, 5},     0x83AAA188},
+   {resolve_circle,         MS, 5,   {3, 2, 1, 0, 7, 6, 5, 4},     0x3AAA1888},
+   {resolve_none, MS, 0x10}};
 
-static resolve_tester test_2x4_stuff[] = {
+static const resolve_tester test_2x4_stuff[] = {
    // 8-chain.
-   {resolve_rlg,            l_mainstream, 3, 0,   {5, 4, 3, 2, 1, 0, 7, 6},     0x13313113},
-   {resolve_minigrand,      l_mainstream, 5, 0,   {5, 0, 3, 6, 1, 4, 7, 2},     0x11333311},
-   {resolve_la,             l_mainstream, 6, 0,   {4, 3, 2, 1, 0, 7, 6, 5},     0x33131131},
-   {resolve_pth_rlg,        l_mainstream, 2, 0,   {5, 2, 3, 0, 1, 6, 7, 4},     0x11313313},
-   {resolve_pth_la,         l_mainstream, 5, 0,   {2, 3, 0, 1, 6, 7, 4, 5},     0x13133131},
-   // trade-by.
-   {resolve_rlg,            l_mainstream, 2, 0,   {4, 3, 2, 1, 0, 7, 6, 5},     0x11313313},
-   {resolve_minigrand,      l_mainstream, 4, 0,   {4, 7, 2, 5, 0, 3, 6, 1},     0x13333111},
-   {resolve_la,             l_mainstream, 7, 0,   {5, 4, 3, 2, 1, 0, 7, 6},     0x31131331},
-   {resolve_tby_rlg,        l_mainstream, 3, 0,   {6, 3, 4, 1, 2, 7, 0, 5},     0x11113333},
-   {resolve_tby_la,         l_mainstream, 0, 0,   {5, 6, 3, 4, 1, 2, 7, 0},     0x31111333},
-   // waves.
-   {resolve_rlg,            l_mainstream, 3, 0,   {5, 4, 2, 3, 1, 0, 6, 7},     0x8A8AA8A8},
-   {resolve_minigrand,      l_mainstream, 5, 0,   {5, 0, 2, 7, 1, 4, 6, 3},     0x8888AAAA},
-   {resolve_la,             l_mainstream, 6, 0,   {5, 3, 2, 0, 1, 7, 6, 4},     0xA8AA8A88},
-   {resolve_ext_rlg,        extend_34_level,2, 0, {5, 3, 2, 0, 1, 7, 6, 4},     0x8A88A8AA},
-   {resolve_circ_rlg,       l_mainstream, 1, 0,   {5, 0, 2, 7, 1, 4, 6, 3},     0x8888AAAA},
-   {resolve_xby_rlg,        cross_by_level, 2, 0, {4, 2, 3, 1, 0, 6, 7, 5},     0x8A88A8AA},
+   {resolve_rlg,            MS, 3,   {5, 4, 3, 2, 1, 0, 7, 6},     0x13313113},
+   {resolve_minigrand,      MS, 5,   {5, 0, 3, 6, 1, 4, 7, 2},     0x11333311},
+   {resolve_la,             MS, 6,   {4, 3, 2, 1, 0, 7, 6, 5},     0x33131131},
+   {resolve_pth_rlg,        MS, 2,   {5, 2, 3, 0, 1, 6, 7, 4},     0x11313313},
+   {resolve_pth_la,         MS, 5,   {2, 3, 0, 1, 6, 7, 4, 5},     0x13133131},
+   {resolve_dixie_grand,    DX, 1,   {4, 1, 2, 7, 0, 5, 6, 3},     0x33111133},
 
-   // RLG from T-bone setup, ends facing.
-   {resolve_rlg,            l_mainstream, 2, 0,   {4, 3, 2, 1, 0, 7, 6, 5},     0x8A31A813},
+   // Trade-by.
+   {resolve_rlg,            MS, 2,   {4, 3, 2, 1, 0, 7, 6, 5},     0x11313313},
+   {resolve_minigrand,      MS, 4,   {4, 7, 2, 5, 0, 3, 6, 1},     0x13333111},
+   {resolve_la,             MS, 7,   {5, 4, 3, 2, 1, 0, 7, 6},     0x31131331},
+   {resolve_tby_rlg,        MS, 3,   {6, 3, 4, 1, 2, 7, 0, 5},     0x11113333},
+   {resolve_tby_la,         MS, 0,   {5, 6, 3, 4, 1, 2, 7, 0},     0x31111333},
+
+   // Waves.
+   {resolve_rlg,            MS, 3,   {5, 4, 2, 3, 1, 0, 6, 7},     0x8A8AA8A8},
+   {resolve_minigrand,      MS, 5,   {5, 0, 2, 7, 1, 4, 6, 3},     0x8888AAAA},
+   {resolve_la,             MS, 6,   {5, 3, 2, 0, 1, 7, 6, 4},     0xA8AA8A88},
+   {resolve_ext_rlg,        EX, 2,   {5, 3, 2, 0, 1, 7, 6, 4},     0x8A88A8AA},
+   {resolve_ext_la,         EX, 7,   {5, 4, 2, 3, 1, 0, 6, 7},     0xA8A88A8A},
+   {resolve_circ_rlg,       MS, 1,   {5, 0, 2, 7, 1, 4, 6, 3},     0x8888AAAA},
+   {resolve_circ_la,        MS, 0,   {5, 7, 2, 4, 1, 3, 6, 0},     0xAAA8888A},
+   {resolve_xby_rlg,        XB, 2,   {4, 2, 3, 1, 0, 6, 7, 5},     0x8A88A8AA},
+   {resolve_xby_la,         XB, 5,   {3, 2, 0, 1, 7, 6, 4, 5},     0xA88A8AA8},
+   {resolve_dixie_grand,    DX, 0x27,{3, 6, 0, 5, 7, 2, 4, 1},     0xAA8888AA},
+
+   // From T-bone setup, ends facing.
+   {resolve_rlg,            MS, 2,   {4, 3, 2, 1, 0, 7, 6, 5},     0x8A31A813},
+   {resolve_la,             MS, 7,   {5, 4, 3, 2, 1, 0, 7, 6},     0x38A31A81},
+
    // RLG from centers facing and ends in miniwaves.
-   {resolve_rlg,            l_mainstream, 2, 0,   {4, 3, 2, 1, 0, 7, 6, 5},     0x31311313},
-   // LA from lines-out.
-   {resolve_la,             l_mainstream, 6, 0,   {4, 3, 2, 1, 0, 7, 6, 5},     0xA8888AAA},
-   // LA from wacky T-bone.
-   {resolve_la,             l_mainstream, 6, 0,   {4, 3, 2, 1, 0, 7, 6, 5},     0x38131A31},
+   {resolve_rlg,            MS, 2,   {4, 3, 2, 1, 0, 7, 6, 5},     0x31311313},
+   // LA from lines-out.  This has been decreed to be a horrible resolve.
+   {resolve_la,             MS, 0x46,{4, 3, 2, 1, 0, 7, 6, 5},     0xA8888AAA},
+   // From wacky T-bone.
+   {resolve_la,             MS, 6,   {4, 3, 2, 1, 0, 7, 6, 5},     0x38131A31},
 
-   // ext-LA from waves.
-   {resolve_ext_la,         extend_34_level,7, 0, {5, 4, 2, 3, 1, 0, 6, 7},     0xA8A88A8A},
-   // circulate-LA from waves.
-   {resolve_circ_la,        l_mainstream, 0, 0,   {5, 7, 2, 4, 1, 3, 6, 0},     0xAAA8888A},
-   // cross-by-LA from waves.
-   {resolve_xby_la,         cross_by_level, 5, 0, {3, 2, 0, 1, 7, 6, 4, 5},     0xA88A8AA8},
-   // LA from T-bone setup, ends facing.
-   {resolve_la,             l_mainstream, 7, 0,   {5, 4, 3, 2, 1, 0, 7, 6},     0x38A31A81},
-   // promenade from 2FL.
-   {resolve_prom,           l_mainstream, 7, 0,   {5, 4, 2, 3, 1, 0, 6, 7},     0x8888AAAA},
-   // reverse promenade from 2FL.
-   {resolve_revprom,        l_mainstream, 5, 0,   {3, 2, 0, 1, 7, 6, 4, 5},     0xAA8888AA},
+   // From 2FL.
+   {resolve_prom,           MS, 7,   {5, 4, 2, 3, 1, 0, 6, 7},     0x8888AAAA},
+   {resolve_revprom,        MS, 5,   {3, 2, 0, 1, 7, 6, 4, 5},     0xAA8888AA},
+
    // "circle left/right" from pseudo squared-set, normal.
-   {resolve_circle,         l_mainstream, 6, 0,   {4, 3, 2, 1, 0, 7, 6, 5},     0x33AA1188},
+   {resolve_circle,         MS, 6,   {4, 3, 2, 1, 0, 7, 6, 5},     0x33AA1188},
    // "circle left/right" from pseudo squared-set, sashayed.
-   {resolve_circle,         l_mainstream, 7, 0,   {5, 4, 3, 2, 1, 0, 7, 6},     0x833AA118},
+   {resolve_circle,         MS, 7,   {5, 4, 3, 2, 1, 0, 7, 6},     0x833AA118},
    // "circle left/right" from lines-in, sashayed.
-   {resolve_circle,         l_mainstream, 6, 1,   {4, 3, 2, 1, 0, 7, 6, 5},     0x8AAAA888},
+   {resolve_circle,         MS, 0x26,{4, 3, 2, 1, 0, 7, 6, 5},     0x8AAAA888},
    // "circle left/right" from lines-in, normal.
-   {resolve_circle,         l_mainstream, 7, 1,   {5, 4, 3, 2, 1, 0, 7, 6},     0x88AAAA88},
-   // dixie grand from DPT.
-   {resolve_dixie_grand,    dixie_grand_level,2,0,{5, 2, 4, 7, 1, 6, 0, 3},     0x33311113},
+   {resolve_circle,         MS, 0x27,{5, 4, 3, 2, 1, 0, 7, 6},     0x88AAAA88},
+   // From DPT.
+   {resolve_dixie_grand,    DX, 2,   {5, 2, 4, 7, 1, 6, 0, 3},     0x33311113},
 
-#ifdef BOGUSDIXIEGRAND
-   // These are bogus because the first move is a direct pull by.  It doesn't
-   // distort to a circle until the second hand.
-   {resolve_dixie_grand,    dixie_grand_level, 2, 0,   {6, 1, 3, 0, 2, 5, 7, 4},     0x33131131},    /* dixie grand from CDPT. */
-   {resolve_dixie_grand,    dixie_grand_level, 2, 0,   {5, 2, 3, 0, 1, 6, 7, 4},     0x33131131},    /* dixie grand from trade-by. */
-#endif
-   {resolve_dixie_grand,    dixie_grand_level, 1, 0,   {4, 1, 2, 7, 0, 5, 6, 3},     0x33111133},    /* dixie grand from 8-chain. */
-   {resolve_dixie_grand,    dixie_grand_level, 7, 1,   {3, 6, 0, 5, 7, 2, 4, 1},     0xAA8888AA},    /* dixie grand from waves. */
-   {resolve_dixie_grand,    dixie_grand_level, 3, 0,   {6, 3, 5, 0, 2, 7, 1, 4},     0x33331111},    /* dixie grand from magic column. */
-   {resolve_dixie_grand,    dixie_grand_level, 1, 0,   {4, 1, 3, 6, 0, 5, 7, 2},     0x33111133},    /* dixie grand from other magic column. */
+   // From magic column.
+   {resolve_dixie_grand,    DX, 3,   {6, 3, 5, 0, 2, 7, 1, 4},     0x33331111},
+   {resolve_dixie_grand,    DX, 1,   {4, 1, 3, 6, 0, 5, 7, 2},     0x33111133},
 
-   {resolve_sglfileprom,    l_mainstream,      7, 0,   {5, 4, 3, 2, 1, 0, 7, 6},     0x11333311},    /* single file promenade from L columns */
-   {resolve_sglfileprom,    l_mainstream,      6, 0,   {4, 3, 2, 1, 0, 7, 6, 5},     0x13333111},    /* single file promenade from L columns */
-   {resolve_sglfileprom,    l_mainstream,      7, 0,   {5, 4, 3, 2, 1, 0, 7, 6},     0x18833AA1},    /* single file promenade from T-bone */
-   {resolve_sglfileprom,    l_mainstream,      6, 0,   {4, 3, 2, 1, 0, 7, 6, 5},     0x8833AA11},    /* single file promenade from T-bone */
-   {resolve_revsglfileprom, l_mainstream,      7, 0,   {5, 4, 3, 2, 1, 0, 7, 6},     0x33111133},    /* reverse single file promenade from R columns */
-   {resolve_revsglfileprom, l_mainstream,      6, 0,   {4, 3, 2, 1, 0, 7, 6, 5},     0x31111333},    /* reverse single file promenade from R columns */
-   {resolve_revsglfileprom, l_mainstream,      7, 0,   {5, 4, 3, 2, 1, 0, 7, 6},     0x3AA11883},    /* reverse single file promenade from T-bone */
-   {resolve_revsglfileprom, l_mainstream,      6, 0,   {4, 3, 2, 1, 0, 7, 6, 5},     0xAA118833},    /* reverse single file promenade from T-bone */
-   {resolve_rlg,            l_mainstream,      3, 0,   {5, 4, 2, 3, 1, 0, 6, 7},     0x138A31A8},    /* RLG, T-bone mixed 8-chain and waves. */
-   {resolve_rlg,            l_mainstream,      3, 0,   {5, 4, 3, 2, 1, 0, 7, 6},     0x8A31A813},    /* RLG, other T-bone mixed 8-chain and waves. */
-   {resolve_la,             l_mainstream,      6, 0,   {4, 3, 2, 1, 0, 7, 6, 5},     0x38A31A81},    /* LA, T-bone mixed 8-chain and waves. */
-   {resolve_la,             l_mainstream,      6, 0,   {5, 3, 2, 0, 1, 7, 6, 4},     0xA31A8138},    /* LA, other T-bone mixed 8-chain and waves. */
-   /* Singers only. */
-   {resolve_rlg,            l_mainstream,   64+3, 0,   {5, 4, 3, 2, 1, 0, 7, 6},     0x8AA8A88A},    /* swing/prom from waves, boys looking in. */
-   {resolve_rlg,            l_mainstream,   64+3, 0,   {4, 5, 2, 3, 0, 1, 6, 7},     0xA88A8AA8},    /* swing/prom from waves, girls looking in. */
-   {resolve_rlg,            l_mainstream,   64+3, 0,   {4, 5, 2, 3, 0, 1, 6, 7},     0xAA8888AA},    /* swing/prom from lines-out. */
-   {resolve_rlg,            l_mainstream,   64+1, 0,   {3, 2, 0, 1, 7, 6, 4, 5},     0xA88A8AA8},    /* same as cross-by-LA from waves (above), but it's mainstream here. */
-   {resolve_rlg,            l_mainstream,   64+3, 0,   {5, 4, 2, 3, 1, 0, 6, 7},     0x13133131},    /* 8-chain, boys in center. */
-   {resolve_rlg,            l_mainstream,   64+1, 0,   {3, 2, 0, 1, 7, 6, 4, 5},     0x31131331},    /* 8-chain, girls in center. */
-   {resolve_rlg,            l_mainstream,   64+2, 0,   {4, 3, 1, 2, 0, 7, 5, 6},     0x11133331},    /* trade-by, ends sashayed. */
-   {resolve_rlg,            l_mainstream,   64+4, 0,   {6, 5, 3, 4, 2, 1, 7, 0},     0x13113133},    /* trade-by, centers sashayed. */
-   {resolve_none,           l_mainstream,      64}};
+   // From columns.
+   {resolve_sglfileprom,    MS, 7,   {5, 4, 3, 2, 1, 0, 7, 6},     0x11333311},
+   {resolve_sglfileprom,    MS, 6,   {4, 3, 2, 1, 0, 7, 6, 5},     0x13333111},
+   {resolve_revsglfileprom, MS, 7,   {5, 4, 3, 2, 1, 0, 7, 6},     0x33111133},
+   {resolve_revsglfileprom, MS, 6,   {4, 3, 2, 1, 0, 7, 6, 5},     0x31111333},
 
-static resolve_tester test_hrgl_stuff[] = {
-   {resolve_rlg,            l_mainstream,      5, 0,   {6, 5, 7, 4, 2, 1, 3, 0},     0xA3138131},
-   {resolve_la,             l_mainstream,      1, 0,   {6, 5, 7, 4, 2, 1, 3, 0},     0x8131A313},
-   {resolve_none,           l_mainstream,      64}};
+   // From T-bone.
+   {resolve_sglfileprom,    MS, 7,   {5, 4, 3, 2, 1, 0, 7, 6},     0x18833AA1},
+   {resolve_sglfileprom,    MS, 6,   {4, 3, 2, 1, 0, 7, 6, 5},     0x8833AA11},
+   {resolve_revsglfileprom, MS, 7,   {5, 4, 3, 2, 1, 0, 7, 6},     0x3AA11883},
+   {resolve_revsglfileprom, MS, 6,   {4, 3, 2, 1, 0, 7, 6, 5},     0xAA118833},
+
+   // From T-bone mixed 8-chain and waves.
+   {resolve_rlg,            MS, 3,   {5, 4, 2, 3, 1, 0, 6, 7},     0x138A31A8},
+   {resolve_rlg,            MS, 3,   {5, 4, 3, 2, 1, 0, 7, 6},     0x8A31A813},
+   {resolve_la,             MS, 6,   {4, 3, 2, 1, 0, 7, 6, 5},     0x38A31A81},
+   {resolve_la,             MS, 6,   {5, 3, 2, 0, 1, 7, 6, 4},     0xA31A8138},
+
+   // Singers only.
+   // Swing/prom from waves, boys looking in.
+   {resolve_rlg,            MS,   0x13,   {5, 4, 3, 2, 1, 0, 7, 6},     0x8AA8A88A},
+   // Swing/prom from waves, girls looking in.
+   {resolve_rlg,            MS,   0x13,   {4, 5, 2, 3, 0, 1, 6, 7},     0xA88A8AA8},
+   // Swing/prom from lines-out.
+   {resolve_rlg,            MS,   0x13,   {4, 5, 2, 3, 0, 1, 6, 7},     0xAA8888AA},
+   // Same as cross-by-LA from waves (above), but it's mainstream here.
+   {resolve_rlg,            MS,   0x11,   {3, 2, 0, 1, 7, 6, 4, 5},     0xA88A8AA8},
+   // 8-chain, boys in center.
+   {resolve_rlg,            MS,   0x13,   {5, 4, 2, 3, 1, 0, 6, 7},     0x13133131},
+   // 8-chain, girls in center.
+   {resolve_rlg,            MS,   0x11,   {3, 2, 0, 1, 7, 6, 4, 5},     0x31131331},
+   // Trade-by, ends sashayed.
+   {resolve_rlg,            MS,   0x12,   {4, 3, 1, 2, 0, 7, 5, 6},     0x11133331},
+   // trade-by, centers sashayed.
+   {resolve_rlg,            MS,   0x14,   {6, 5, 3, 4, 2, 1, 7, 0},     0x13113133},
+   {resolve_none, MS, 0x10}};
+
+static const resolve_tester test_hrgl_stuff[] = {
+   {resolve_rlg,            MS, 5,   {6, 5, 7, 4, 2, 1, 3, 0},     0xA3138131},
+   {resolve_la,             MS, 1,   {6, 5, 7, 4, 2, 1, 3, 0},     0x8131A313},
+   {resolve_none, MS, 0x10}};
 
 
 
 void configuration::calculate_resolve()
 {
-   resolve_tester *testptr;
+   const resolve_tester *testptr;
    int i;
    uint32 singer_offset = 0;
 
@@ -4661,8 +4757,8 @@ void configuration::calculate_resolve()
    case s_galaxy:
       testptr = test_galaxy_stuff; break;
    case s_crosswave: case s_thar:
-      /* This makes use of the fact that the person numbering
-         in crossed lines and thars is identical. */
+      // This makes use of the fact that the person numbering
+      // in crossed lines and thars is identical.
       testptr = test_thar_stuff; break;
    case s_spindle:
       testptr = test_spindle_stuff; break;
@@ -4674,45 +4770,45 @@ void configuration::calculate_resolve()
       uint32 firstperson = state.people[testptr->locations[0]].id1 & 0700;
       if (firstperson & 0100) goto not_this_one;
 
-      /* We run the tests in descending order, because the test for i=0 is especially
-         likely to pass (since the person ID is known to match), and we want to find
-         failures as quickly as possible. */
+      // We run the tests in descending order, because the test for i=0 is especially
+      // likely to pass (since the person ID is known to match), and we want to find
+      // failures as quickly as possible.
 
       for (i=7,directionword=testptr->directions ; i>=0 ; i--,directionword>>=4) {
          uint32 expected_id = (i << 6) + ((i&1) ? singer_offset : 0);
 
-         /* The add of "expected_id" and "firstperson" may overflow out of the "700" bits
-            into the next 2 bits.  (One bit for each add.) */
+         // The adds of "expected_id" and "firstperson" may overflow out of the "700" bits
+         // into the next 2 bits.  (One bit for each add.)
 
-         if ((state.people[testptr->locations[i]].id1                  /* The person under test */
-              ^                                                     /* XOR */
-              (expected_id + firstperson + (directionword & 0xF)))  /* what we check against */
-             &                                                      /* but only test some bits */
-             0777)    /* The bits we check -- the person ID and the direction. */
+         if ((state.people[testptr->locations[i]].id1 ^
+              (expected_id + firstperson + (directionword & 0xF))) &
+             0777)
             goto not_this_one;
       }
 
       if (calling_level < testptr->level_needed ||
           (testptr->k == resolve_minigrand && !allowing_minigrand)) goto not_this_one;
 
-      resolve_flag.kind = testptr->k;
-      resolve_flag.distance = ((state.rotation << 1) + (firstperson >> 6) + testptr->distance) & 7;
-      if (resolve_flag.distance == 0 && testptr->nonzero_only != 0) goto not_this_one;
+      resolve_flag.the_item = testptr;
+      resolve_flag.distance =
+         ((state.rotation << 1) + (firstperson >> 6) + testptr->distance) & 7;
+      if (resolve_flag.distance == 0 && (testptr->distance & 0x20)) goto not_this_one;
       return;
 
       not_this_one: ;
    }
    while (
-            !((++testptr)->distance & 64)    /* always do next one if it doesn't have the singer-only mark. */
-                     ||
-            (singing_call_mode != 0 && testptr->k != resolve_none)  /* Even if it has the mark, do it if    */
-         );                                                         /* this is a singer and it isn't really */
-                                                                    /* the end of the table.                */
+          // always do next one if it doesn't have the singer-only mark.
+          !((++testptr)->distance & 0x10) ||
+          // Even if it has the mark, do it if this is a singer
+          // and it isn't really the end of the table.
+          (singing_call_mode != 0 && testptr->k != resolve_none));
+
    // Too bad.
 
-   no_resolve:
+ no_resolve:
 
-   resolve_flag.kind = resolve_none;
+   resolve_flag.the_item = &null_resolve;
 }
 
 
@@ -4738,6 +4834,33 @@ extern bool warnings_are_unacceptable(bool strict)
    return otherthanbadconc.testmultiple(no_search_warnings);
 }
 
+bool expand::compress_from_hash_table(setup *ss,
+                                      normalize_action action,
+                                      uint32 livemask,
+                                      bool noqtagcompress) THROW_DECL
+{
+   uint32 hash_num = (ss->kind * 25) & (expand::NUM_EXPAND_HASH_BUCKETS-1);
+
+   const thing *cptr;
+
+   for (cptr=compress_hash_table[hash_num] ; cptr ; cptr=cptr->next_compress) {
+      if (cptr->outer_kind == ss->kind &&
+          action >= cptr->action_level &&
+          (cptr->biglivemask & livemask) == 0) {
+
+         // Do not compress qtag to 2x3 is switch is on.
+         if (noqtagcompress && cptr->outer_kind == s_qtag && cptr->inner_kind == s2x3)
+            continue;
+         
+         warn(cptr->norwarning);
+         expand::compress_setup(cptr, ss);
+         return true;
+      }
+   }
+
+   return false;
+}
+
 
 /* The "action" argument tells how hard we work to remove the outside phantoms.
    When merging the results of "on your own" or "own the so-and-so",
@@ -4746,12 +4869,12 @@ extern bool warnings_are_unacceptable(bool strict)
    When preparing for an isolated call, that is, "so-and-so do your part, whatever",
    we work at it a little, so we set action=normalize_before_isolated_call.
    For normal usage, we set action=simple_normalize. */
-extern void normalize_setup(setup *ss, normalize_action action) THROW_DECL
+extern void normalize_setup(setup *ss, normalize_action action, bool noqtagcompress)
+   THROW_DECL
 {
    int i;
    uint32 livemask, j;
    long_boolean did_something = FALSE;
-   const expand_thing *cptr;
 
  startover:
 
@@ -4789,11 +4912,11 @@ extern void normalize_setup(setup *ss, normalize_action action) THROW_DECL
    if (ss->kind == s_323) {
       if (!(ss->people[0].id1 | ss->people[2].id1 |
             ss->people[4].id1 | ss->people[6].id1)) {
-         compress_setup(&exp_dmd_323_stuff, ss);
+         expand::compress_setup(&expand::s_dmd_323, ss);
 
          if (action >= normalize_before_isolated_call) {
             if (ss->kind == sdmd && !(ss->people[0].id1 | ss->people[2].id1)) {
-               compress_setup(&exp_1x2_dmd_stuff, ss);
+               expand::compress_setup(&expand::s_1x2_dmd, ss);
             }
          }
 
@@ -4804,22 +4927,22 @@ extern void normalize_setup(setup *ss, normalize_action action) THROW_DECL
 
    // Next, search for simple things in the hash table.
 
-   uint32 hash_num = (ss->kind * 25) & (NUM_EXPAND_HASH_BUCKETS-1);
+   setup_kind oldk = ss->kind;
 
-   for (cptr=compress_hash_table[hash_num] ; cptr ; cptr=cptr->next_compress) {
-      if (cptr->outer_kind == ss->kind &&
-          action >= cptr->action_level &&
-          (cptr->biglivemask & livemask) == 0) {
-         warn(cptr->norwarning);
-         compress_setup(cptr, ss);
-         did_something = TRUE;
-         // If we compressed a "swqtag" to a "q_tag", take no further action.
-         // Do not further compress to a 2x3.
-         if (cptr->outer_kind == swqtag && cptr->inner_kind == s_qtag)
-            goto kinda_done;
-         goto startover; 
-      }
-   }
+   bool b = expand::compress_from_hash_table(ss,
+                                             action,
+                                             livemask,
+                                             noqtagcompress);
+
+   if (!b) goto difficult;
+
+   did_something = TRUE;
+   // If we compressed a "swqtag" to a "q_tag", take no further action.
+   // Do not further compress to a 2x3.
+   if (oldk == swqtag && ss->kind == s_qtag) goto kinda_done;
+   goto startover; 
+
+ difficult:
 
    // A few difficult cases.
 
@@ -4829,7 +4952,7 @@ extern void normalize_setup(setup *ss, normalize_action action) THROW_DECL
             ss->people[18].id1 | ss->people[17].id1 |
             ss->people[5].id1 | ss->people[6].id1 |
             ss->people[23].id1 | ss->people[12].id1)) {
-         compress_setup(&exp_4x4_4x6_stuff_a, ss);
+         expand::compress_setup(&expand::s_4x4_4x6a, ss);
          did_something = TRUE;
          goto startover; 
       }
@@ -4839,7 +4962,7 @@ extern void normalize_setup(setup *ss, normalize_action action) THROW_DECL
        ss->kind == s3x4 &&
        !(ss->people[0].id1 | ss->people[3].id1 |
          ss->people[6].id1 | ss->people[9].id1)) {
-      compress_setup(&exp_qtg_3x4_stuff, ss);
+      expand::compress_setup(&expand::s_qtg_3x4, ss);
       did_something = TRUE;
       goto startover; 
    }
@@ -4850,19 +4973,19 @@ extern void normalize_setup(setup *ss, normalize_action action) THROW_DECL
       if (action >= normalize_to_2 && (livemask & 0x77) == 0) {
          // Be sure we match what the map says -- that might get checked someday.
          ss->kind = s_hrglass;
-         compress_setup(&exp_1x2_hrgl_stuff, ss);
+         expand::compress_setup(&expand::s_1x2_hrgl, ss);
          did_something = TRUE;
          goto startover; 
       }
       else if ((livemask & 0x33) == 0)  {
          // If normalizing before a merge (which might be from a "disconnected"),
          // and it is a real hourglass, be sure we leave space.
-         const expand_thing *t = (action == normalize_after_disconnected && ss->kind == s_hrglass) ?
-            &exp_dmd_hrgl_disc_stuff : &exp_dmd_hrgl_stuff;
+         const expand::thing *t = (action == normalize_after_disconnected && ss->kind == s_hrglass) ?
+            &expand::s_dmd_hrgl_disc : &expand::s_dmd_hrgl;
 
          // Be sure we match what the map says -- that might get checked someday.
          ss->kind = s_hrglass;
-         compress_setup(t, ss);
+         expand::compress_setup(t, ss);
          did_something = TRUE;
          goto startover; 
       }
@@ -5201,7 +5324,7 @@ SDLIB_API void finish_toplevelmove() THROW_DECL
    configuration & newhist = configuration::next_config();
 
    // Remove outboard phantoms from the resulting setup.
-   normalize_setup(&newhist.state, simple_normalize);
+   normalize_setup(&newhist.state, simple_normalize, false);
    for (int i=0; i<MAX_PEOPLE; i++) newhist.state.people[i].id2 &= ~GLOB_BITS_TO_CLEAR;
    newhist.calculate_resolve();
 }
