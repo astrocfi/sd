@@ -571,15 +571,14 @@ extern long_boolean divide_for_magic(
    if (setup_attrs[ss->kind].setup_limits > 7)
       ss->cmd.cmd_final_flags.her8it |= INHERITFLAG_12_MATRIX;
 
-   saved_warnings = history[history_ptr+1].warnings;
+   saved_warnings = configuration::save_warnings();
    impose_assumption_and_move(ss, result);
 
    // Shut off "each 2x3" types of warnings -- they will arise spuriously
    // while the people do the calls in isolation.
 
-   history[history_ptr+1].warnings.clearmultiple(dyp_each_warnings);
-   history[history_ptr+1].warnings.setmultiple(saved_warnings);
-
+   configuration::clear_multiple_warnings(dyp_each_warnings);
+   configuration::set_multiple_warnings(saved_warnings);
    livemask = 0;
 
    for (i=0; i<=setup_attrs[result->kind].setup_limits; i++) {
@@ -668,7 +667,7 @@ extern long_boolean divide_for_magic(
 
 extern long_boolean do_simple_split(
    setup *ss,
-   uint32 prefer_1x4,   /* 1 means prefer 1x4, 2 means this is 1x8 and do not recompute id. */
+   split_command_kind split_command,
    setup *result) THROW_DECL
 {
    uint32 mapcode;
@@ -677,24 +676,34 @@ extern long_boolean do_simple_split(
    ss->cmd.cmd_misc_flags &= ~CMD_MISC__MUST_SPLIT_MASK;
 
    switch (ss->kind) {
+   case s3x4:
+      if (split_command == split_command_2x3)
+         mapcode = MAPCODE(s2x3,2,MPKIND__SPLIT,1);
+      else
+         return TRUE;
+      break;
    case s2x4:
-      mapcode = prefer_1x4 ?
-         MAPCODE(s1x4,2,MPKIND__SPLIT,1) : MAPCODE(s2x2,2,MPKIND__SPLIT,0);
+      mapcode = (split_command == split_command_none) ?
+         MAPCODE(s2x2,2,MPKIND__SPLIT,0) : MAPCODE(s1x4,2,MPKIND__SPLIT,1);
       break;
    case s2x6:
-      if (prefer_1x4 == 1) {
+      if (split_command == split_command_2x3) {
+         mapcode = MAPCODE(s2x3,2,MPKIND__SPLIT,0);
+         break;
+      }
+      else if (split_command == split_command_1x4) {
          if (ss->people[0].id1 & ss->people[1].id1 &
              ss->people[2].id1 & ss->people[3].id1 &
              ss->people[6].id1 & ss->people[7].id1 &
              ss->people[8].id1 & ss->people[9].id1) {
-            mapcode = MAPCODE(s1x4,2,MPKIND__OFFS_L_HALF, 1);
+            mapcode = MAPCODE(s1x4,2,MPKIND__OFFS_L_HALF,1);
             break;
          }
          else if (ss->people[2].id1 & ss->people[3].id1 &
                   ss->people[4].id1 & ss->people[5].id1 &
                   ss->people[8].id1 & ss->people[9].id1 &
                   ss->people[10].id1 & ss->people[11].id1) {
-            mapcode = MAPCODE(s1x4,2,MPKIND__OFFS_R_HALF, 1);
+            mapcode = MAPCODE(s1x4,2,MPKIND__OFFS_R_HALF,1);
             break;
          }
       }
@@ -702,13 +711,13 @@ extern long_boolean do_simple_split(
       fail("Can't figure out how to split this call.");
    case s1x8:
       mapcode = MAPCODE(s1x4,2,MPKIND__SPLIT,0);
-      if (prefer_1x4 == 2) recompute_id = FALSE;
+      if (split_command == split_command_1x8) recompute_id = FALSE;
       break;
    case s_qtag:
       mapcode = MAPCODE(sdmd,2,MPKIND__SPLIT,1);
       break;
    case s_ptpd:
-      if (prefer_1x4 == 2) recompute_id = FALSE;
+      if (split_command == split_command_1x8) recompute_id = FALSE;
       mapcode = MAPCODE(sdmd,2,MPKIND__SPLIT,0);
       break;
    default:
@@ -793,7 +802,9 @@ extern void do_call_in_series(
       if (prefer_1x4 && qqqq.kind != s2x4 && qqqq.kind != s2x6)
          fail("Can't figure out how to split multiple part call.");
 
-      if (do_simple_split(&qqqq, prefer_1x4, &tempsetup))
+      if (do_simple_split(&qqqq,
+                          prefer_1x4 ? split_command_1x4 : split_command_none,
+                          &tempsetup))
          fail("Can't figure out how to split this multiple part call.");
 
       qqqq.cmd.cmd_misc_flags |= save_split;  /* Put it back in. */
@@ -3199,6 +3210,13 @@ void fraction_info::get_fraction_info(
          fail("Internal error: bad fraction code.");
       }
    }
+   else if (!(frac_flags & CMD_FRAC_REVERSE) &&
+            this->highlimit == 1 &&
+            this->do_half_of_last_part) {
+      // No action; it's OK even if call doesn't have visible fractions.
+      // We would like to handle this properly when reverse order is on,
+      // but we haven't gotten around to it.
+   }
    else if (available_fractions != 1000) {
       // Unless all parts are visible, this is illegal.
       fail("This call can't be fractionalized.");
@@ -4052,6 +4070,12 @@ static void do_sequential_call(
          result->cmd.prior_expire_bits = remember_expire;
       }
 
+      // If doing an explicit substitution, we allow another act of rearing
+      // back or touching.
+      if ((this_mod1 & DFM1_CALL_MOD_MASK) == DFM1_CALL_MOD_MAND_ANYCALL ||
+          (this_mod1 & DFM1_CALL_MOD_MASK) == DFM1_CALL_MOD_MAND_SECONDARY)
+         result->cmd.cmd_misc_flags &= ~CMD_MISC__ALREADY_STEPPED;
+
       result->cmd.prior_elongation_bits = remember_elongation;
 
       result->cmd.cmd_frac_flags = zzz.get_fracs_for_this_part();
@@ -4360,7 +4384,7 @@ static long_boolean do_misc_schema(
    else {
       int rot = 0;
       long_boolean normalize_strongly = FALSE;
-      warning_info saved_warnings = history[history_ptr+1].warnings;
+      warning_info saved_warnings = configuration::save_warnings();
 
       ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;     /* We think this is the
                                                                    right thing to do. */
@@ -4499,8 +4523,9 @@ static long_boolean do_misc_schema(
          normalize_setup(result, normalize_after_triple_squash);
 
       if (DFM1_SUPPRESS_ELONGATION_WARNINGS & outerdef->modifiers1)
-         history[history_ptr+1].warnings.clearmultiple(conc_elong_warnings);
-      history[history_ptr+1].warnings.setmultiple(saved_warnings);
+         configuration::clear_multiple_warnings(conc_elong_warnings);
+
+      configuration::set_multiple_warnings(saved_warnings);
    }
 
    return FALSE;
@@ -4686,6 +4711,17 @@ static calldef_schema get_real_callspec_and_schema(setup *ss,
          return schema_conc_bar16;
       else
          return schema_conc_bar;
+   case schema_maybe_in_out_triple_squash:
+      switch (herit_concepts & (INHERITFLAG_SINGLE | INHERITFLAG_NXNMASK)) {
+      case INHERITFLAG_SINGLE:
+         return schema_sgl_in_out_triple_squash;
+      case INHERITFLAGNXNK_3X3:
+         return schema_3x3_in_out_triple_squash;
+      case INHERITFLAGNXNK_4X4:
+         return schema_4x4_in_out_triple_squash;
+      case 0:
+         return schema_in_out_triple_squash;
+      }
    default:
       return the_schema;
    }
@@ -4987,7 +5023,6 @@ static void really_inner_move(setup *ss,
                int i;
                int m, j;
                uint32 ssmask;
-               warning_info saved_warnings;
                setup the_setups[2], the_results[2], orig_people;
                int sizem1 = setup_attrs[ss->kind].setup_limits;
                int crossconc = (misc2 & CMD_MISC2__INVERT_SNAG) ? 0 : 1;
@@ -5033,7 +5068,7 @@ static void really_inner_move(setup *ss,
                      We will have the_setups[0] proceed with the rest of the call. */
 
                normalize_setup(&the_setups[0], normalize_before_isolated_call);
-               saved_warnings = history[history_ptr+1].warnings;
+               warning_info saved_warnings = configuration::save_warnings();
 
                the_setups[0].cmd = ss->cmd;
                the_setups[0].cmd.cmd_misc_flags |= CMD_MISC__PHANTOMS;
@@ -5044,8 +5079,8 @@ static void really_inner_move(setup *ss,
 
                // Shut off "each 1x4" types of warnings -- they will arise spuriously
                // while the people do the calls in isolation.
-               history[history_ptr+1].warnings.clearmultiple(dyp_each_warnings);
-               history[history_ptr+1].warnings.setmultiple(saved_warnings);
+               configuration::clear_multiple_warnings(dyp_each_warnings);
+               configuration::set_multiple_warnings(saved_warnings);
 
                *result = the_results[1];
                result->result_flags = get_multiple_parallel_resultflags(the_results, 2);
@@ -5187,7 +5222,7 @@ static void move_with_real_call(
    uint32 herit_concepts = ss->cmd.cmd_final_flags.her8it;
    calldefn *this_defn = &ss->cmd.callspec->the_defn;
    calldefn *deferred_array_defn = (calldefn *) 0;
-   warning_info saved_warnings = history[history_ptr+1].warnings;
+   warning_info saved_warnings = configuration::save_warnings();
    setup saved_ss = *ss;
 
  try_next_callspec:
@@ -5196,13 +5231,12 @@ static void move_with_real_call(
 
    try {
       // Previous attempts may have messed things up.
-      history[history_ptr+1].warnings = saved_warnings;
+      configuration::restore_warnings(saved_warnings);
       *ss = saved_ss;
       clear_people(result);
       result->result_flags = 0;   // In case we bail out.
       uint32 imprecise_rotation_result_flag = 0;
-      uint32 force_split = 0;      /* 1 means force split,
-                                      2 means this is 1x8 and do not recompute id. */
+      split_command_kind force_split = split_command_none;
       bool mirror = false;
       uint32 callflags1 = this_defn->callflags1;
       uint32 callflagsh = this_defn->callflagsh;
@@ -5330,7 +5364,7 @@ static void move_with_real_call(
                case schema_select_ctr4:
                   /* Just leave the definition in place.  We will split the 8-person
                   setup into two 4-person setups, and then pick out the center 2 from them. */
-                  force_split = 1;
+                  force_split = split_command_1x4;
                   break;
                default:
                   fail("Can't do \"central\" with this call.");
@@ -5562,13 +5596,20 @@ static void move_with_real_call(
          switch (the_schema) {
          case schema_single_concentric:
          case schema_single_cross_concentric:
-            force_split = 1;
+            force_split = split_command_1x4;
             break;
          case schema_single_concentric_together:
          case schema_concentric_6p_or_sgltogether:
             switch (ss->kind) {
             case s1x8: case s_ptpd:
-               force_split = 1;
+               force_split = split_command_1x4;
+               break;
+            }
+            break;
+         case schema_sgl_in_out_triple_squash:
+            switch (ss->kind) {
+            case s3x4: case s2x6:
+               force_split = split_command_2x3;
                break;
             }
             break;
@@ -5576,14 +5617,14 @@ static void move_with_real_call(
          case schema_select_original_hubs:
             switch (ss->kind) {
             case s1x8: case s_ptpd:
-               force_split = 2;     // 2 tells it not to recompute ID.
+               force_split = split_command_1x8;     // This tells it not to recompute ID.
                break;
             }
             break;
          }
       }
 
-      if (force_split)
+      if (force_split != split_command_none)
          if (!do_simple_split(ss, force_split, result)) return;
 
       /* At this point, we may have mirrored the setup and, of course, left the switch "mirror"
@@ -6299,15 +6340,15 @@ extern void move(
       uint32 extrafinalmods = ss->cmd.cmd_final_flags.final & FINAL__SPLIT;
 
       if (extraheritmods | extrafinalmods) {
-         /* This can only be legal if we find a translation in the table. */
+         // This can only be legal if we find a translation in the table.
 
-         concept_fixer_thing *p;
+         const concept_fixer_thing *p;
 
          for (p=concept_fixer_table ; p->newheritmods | p->newfinalmods ; p++) {
             if (p->newheritmods == extraheritmods && p->newfinalmods == extrafinalmods &&
-                &concept_descriptor_table[p->before] == ss->cmd.parseptr->concept) {
+                &concept_descriptor_table[useful_concept_indices[p->before]] == ss->cmd.parseptr->concept) {
                artificial_parse_block = *ss->cmd.parseptr;
-               artificial_parse_block.concept = &concept_descriptor_table[p->after];
+               artificial_parse_block.concept = &concept_descriptor_table[useful_concept_indices[p->after]];
                ss->cmd.parseptr = &artificial_parse_block;
                parseptrcopy = ss->cmd.parseptr;
                ss->cmd.cmd_final_flags.her8it &= ~extraheritmods;   /* Take out those mods. */
@@ -6340,7 +6381,9 @@ extern void move(
          fooble = ~0UL;
 
          if (ddd->kind == concept_meta) {
-             if (ddd->value.arg1 != meta_key_initially && ddd->value.arg1 != meta_key_finally)
+             if (ddd->value.arg1 != meta_key_initially &&
+                 ddd->value.arg1 != meta_key_finally &&
+                 ddd->value.arg1 != meta_key_initially_and_finally)
             foobar &= ~(INHERITFLAG_MAGIC | INHERITFLAG_INTLK);
          }
 

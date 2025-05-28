@@ -96,45 +96,51 @@ BOOL WINAPI control_c_handler(DWORD ControlInfo)
 static WORD text_color;
 
 
-
-// These will get "background_color" added in during initialization.
-
-static WORD couple_colors[9] = {
-   FOREGROUND_RED                     | FOREGROUND_INTENSITY,  // red
-   FOREGROUND_RED                     | FOREGROUND_INTENSITY,  // red
-   FOREGROUND_GREEN                   | FOREGROUND_INTENSITY,  // green
-   FOREGROUND_GREEN                   | FOREGROUND_INTENSITY,  // green
-   FOREGROUND_BLUE                    | FOREGROUND_INTENSITY,  // blue
-   FOREGROUND_BLUE                    | FOREGROUND_INTENSITY,  // blue
-   FOREGROUND_RED  | FOREGROUND_GREEN | FOREGROUND_INTENSITY,  // yellow
-   FOREGROUND_RED  | FOREGROUND_GREEN | FOREGROUND_INTENSITY,  // yellow
-   FOREGROUND_RED                     | FOREGROUND_INTENSITY}; // red
-
-static WORD couple_colors_rgyb[8] = {
-   FOREGROUND_RED                     | FOREGROUND_INTENSITY,  // red
-   FOREGROUND_RED                     | FOREGROUND_INTENSITY,  // red
-   FOREGROUND_GREEN                   | FOREGROUND_INTENSITY,  // green
-   FOREGROUND_GREEN                   | FOREGROUND_INTENSITY,  // green
-   FOREGROUND_RED  | FOREGROUND_GREEN | FOREGROUND_INTENSITY,  // yellow
-   FOREGROUND_RED  | FOREGROUND_GREEN | FOREGROUND_INTENSITY,  // yellow
-   FOREGROUND_BLUE                    | FOREGROUND_INTENSITY,  // blue
-   FOREGROUND_BLUE                    | FOREGROUND_INTENSITY}; // blue
+static const WORD bgWHT =
+   BACKGROUND_BLUE | BACKGROUND_GREEN | BACKGROUND_RED | BACKGROUND_INTENSITY;
+static const WORD bgGRY =
+   BACKGROUND_BLUE | BACKGROUND_GREEN | BACKGROUND_RED;
+static const WORD fgWHT =
+   FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_INTENSITY;
+static const WORD fgGRY =
+   FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED;
 
 
-static WORD person_colors[2] = {
-   FOREGROUND_BLUE | FOREGROUND_INTENSITY,  // blue
-   FOREGROUND_RED  | FOREGROUND_INTENSITY}; // red
+static WORD color_translate_reverse_video[8] = {
+   0,
+   FOREGROUND_RED  | FOREGROUND_GREEN,                         // 1 - dark yellow
+   FOREGROUND_RED                     | FOREGROUND_INTENSITY,  // 2 - red
+   FOREGROUND_GREEN                   | FOREGROUND_INTENSITY,  // 3 - green
+   FOREGROUND_RED  | FOREGROUND_GREEN | FOREGROUND_INTENSITY,  // 4 - yellow
+   FOREGROUND_BLUE                    | FOREGROUND_INTENSITY,  // 5 - blue
+   FOREGROUND_RED  | FOREGROUND_BLUE  | FOREGROUND_INTENSITY,  // 6 - magenta
+   FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_INTENSITY}; // 7 - cyan
 
-static WORD pastel_person_colors[2] = {
-   FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_INTENSITY,  // bletcherous blue
-   FOREGROUND_RED  | FOREGROUND_BLUE  | FOREGROUND_INTENSITY}; // putrid pink
+static WORD color_translate_normal_video[8] = {
+   0,
+   FOREGROUND_RED  | FOREGROUND_GREEN                        | bgWHT,  // 1 - dark yellow
+   FOREGROUND_RED                     | FOREGROUND_INTENSITY | bgWHT,  // 2 - red
+   FOREGROUND_GREEN                   | FOREGROUND_INTENSITY | bgWHT,  // 3 - green
+   FOREGROUND_RED  | FOREGROUND_GREEN | FOREGROUND_INTENSITY | bgWHT,  // 4 - yellow
+   FOREGROUND_BLUE                    | FOREGROUND_INTENSITY | bgWHT,  // 5 - blue
+   FOREGROUND_RED  | FOREGROUND_BLUE  | FOREGROUND_INTENSITY | bgWHT,  // 6 - magenta
+   FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_INTENSITY | bgWHT}; // 7 - cyan
 
+static WORD color_translate_normal_video_gray[8] = {
+   0,
+   FOREGROUND_RED  | FOREGROUND_GREEN                        | bgGRY,  // 1 - dark yellow
+   FOREGROUND_RED                     | FOREGROUND_INTENSITY | bgGRY,  // 2 - red
+   FOREGROUND_GREEN                   | FOREGROUND_INTENSITY | bgGRY,  // 3 - green
+   FOREGROUND_RED  | FOREGROUND_GREEN | FOREGROUND_INTENSITY | bgGRY,  // 4 - yellow
+   FOREGROUND_BLUE                    | FOREGROUND_INTENSITY | bgGRY,  // 5 - blue
+   FOREGROUND_RED  | FOREGROUND_BLUE  | FOREGROUND_INTENSITY | bgGRY,  // 6 - magenta
+   FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_INTENSITY | bgGRY}; // 7 - cyan
 
+static WORD *color_translate;
 
 extern void ttu_initialize()
 {
    DWORD numWrite;
-   int i;
    bool using_default_screen_size = false;
 
    // Set the default value if the user hasn't explicitly set something.
@@ -182,8 +188,6 @@ extern void ttu_initialize()
       ExitProcess(err);
    }
 
-   WORD background_color;
-
    // Get information about the "buffer", that is, the "pad".  The window itself,
    // and all resizing thereof, is irrelevant.  It will take care of itself, the way
    // it does in any decent operating system (unlike some that I've had to deal with.)
@@ -195,44 +199,32 @@ extern void ttu_initialize()
    if (using_default_screen_size)
       sdtty_screen_height = globalconsoleInfo.srWindow.Bottom-globalconsoleInfo.srWindow.Top+1;
 
-   if (ui_options.reverse_video)
-      background_color = 0;
-   else {
-      // If doing color_by_couple or color_by_corner, make the backround light
-      // gray instead of white, because yellow doesn't show up well against white.
-      if (ui_options.color_scheme == color_by_couple ||
-          ui_options.color_scheme == color_by_corner ||
-          ui_options.color_scheme == color_by_couple_rgyb ||
-          ui_options.no_intensify)
-         background_color = BACKGROUND_BLUE | BACKGROUND_GREEN | BACKGROUND_RED;
-      else
-         background_color = BACKGROUND_BLUE | BACKGROUND_GREEN | BACKGROUND_RED |
-            BACKGROUND_INTENSITY;
-   }
+   WORD screen_color;
 
-   if (!ui_options.no_intensify) {
-      if (ui_options.reverse_video)
-         text_color = FOREGROUND_BLUE | FOREGROUND_GREEN |
-            FOREGROUND_RED | FOREGROUND_INTENSITY;
-      else
-         text_color = background_color;
+   if (ui_options.no_intensify) {
+      if (ui_options.reverse_video) {
+         text_color = fgGRY;
+         color_translate = color_translate_reverse_video;
+         screen_color = fgGRY;
+      }
+      else {
+         text_color = bgGRY;
+         color_translate = color_translate_normal_video_gray;
+         screen_color = bgGRY;
+      }
    }
    else {
-      if (ui_options.reverse_video)
-         text_color = FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED;
-      else
-         text_color = background_color;
+      if (ui_options.reverse_video) {
+         text_color = fgWHT;
+         color_translate = color_translate_reverse_video;
+         screen_color = fgGRY;
+      }
+      else {
+         text_color = bgWHT;
+         color_translate = color_translate_normal_video;
+         screen_color = bgWHT;
+      }
    }
-
-   for (i=0 ; i<9 ; i++) couple_colors[i] |= background_color;
-   for (i=0 ; i<8 ; i++) couple_colors_rgyb[i] |= background_color;
-   for (i=0 ; i<2 ; i++) {
-      person_colors[i] |= background_color;
-      pastel_person_colors[i] |= background_color;
-   }
-
-   if (ui_options.reverse_video)
-      background_color |= FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED;
 
    COORD coord;
    coord.X = 0;
@@ -242,7 +234,7 @@ extern void ttu_initialize()
    //globalconsoleInfo.dwCursorPosition.Y
 
    (void) FillConsoleOutputAttribute(consoleStdout,
-                                     background_color,
+                                     screen_color,
                                      globalconsoleInfo.dwSize.X *
                                      (globalconsoleInfo.dwSize.Y-globalconsoleInfo.dwCursorPosition.Y)
                                      -globalconsoleInfo.dwCursorPosition.X,
@@ -363,30 +355,17 @@ extern void put_line(const char the_line[])
 
       while ((c = *the_line++)) {
          if (c == '\013') {
-            int c1 = *the_line++;
-            int c2 = *the_line++;
+            int personidx = (*the_line++) & 7;
+            int persondir = (*the_line++) & 0xF;
 
             put_char(' ');
 
-            if (ui_options.color_scheme != no_color) {
-               WORD color;
+            if (ui_options.color_scheme != no_color)
+               (void) SetConsoleTextAttribute(consoleStdout, color_translate[color_index_list[personidx]]);
 
-               if (ui_options.color_scheme == color_by_couple)
-                  color = couple_colors[c1 & 7];
-               else if (ui_options.color_scheme == color_by_couple_rgyb)
-                  color = couple_colors_rgyb[c1 & 7];
-               else if (ui_options.color_scheme == color_by_corner)
-                  color = couple_colors[(c1 & 7) + 1];
-               else
-                  color =
-                     (ui_options.pastel_color ? pastel_person_colors : person_colors)[c1 & 1];
-
-               (void) SetConsoleTextAttribute(consoleStdout, color);
-            }
-
-            put_char(my_pn1[c1 & 7]);
-            put_char(my_pn2[c1 & 7]);
-            put_char(my_directions[c2 & 017]);
+            put_char(my_pn1[personidx]);
+            put_char(my_pn2[personidx]);
+            put_char(my_directions[persondir]);
 
             // Set back to plain "white".
 

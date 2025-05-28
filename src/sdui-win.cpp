@@ -158,7 +158,6 @@ static BOOL MenuEnabled = FALSE;
 static BOOL FileIsOpen = FALSE;
 static BOOL WaitingForCommand;
 static BOOL DontPrint;
-static WORD ConceptListIndex[600];
 static DWORD pdFlags;
 static FILE *hInpFile;
 static int nLastOne;
@@ -758,25 +757,6 @@ LRESULT WINAPI AboutWndProc(HWND hDlg, UINT Message, WPARAM wParam, LPARAM lPara
    return FALSE;
 }
 
-
-// Alternating blue and red.
-static int bold_person_colors[8] = {5, 2, 5, 2, 5, 2, 5, 2};
-
-// Alternating bletcherous blue and putrid pink.
-static int pastel_person_colors[8] = {7, 6, 7, 6, 7, 6, 7, 6};
-
-// red, green, blue, dark yellow/black, red for wraparound if coloring by corner
-static int couple_colors_rgbk[9] = {2, 2, 3, 3, 5, 5, 1, 1, 2};
-
-// red, green, blue, yellow, red for wraparound if coloring by corner
-static int couple_colors_rgby[9] = {2, 2, 3, 3, 5, 5, 4, 4, 2};
-
-// red, green, dark yellow/black, blue
-static int couple_colors_rgkb[8] = {2, 2, 3, 3, 1, 1, 5, 5};
-
-// red, green, yellow, blue
-static int couple_colors_rgyb[8] = {2, 2, 3, 3, 4, 4, 5, 5};
-
 static uint32 text_color_translate[8] = {
   RGB(0, 0, 0),      // 0 - not used
   RGB(128, 128, 0),  // 1 - substitute for yellow against bright background
@@ -787,9 +767,8 @@ static uint32 text_color_translate[8] = {
   RGB(255, 0, 255),  // 6 - magenta
   RGB(0, 255, 255)}; // 7 - cyan
 
-// This is used when "no_graphics" has been selected and we are simply
-// writing out text characters to draw the people.  No DIB or palette is used.
-static int *textcolorlist;
+RGBQUAD icon_color_translate[8];    // Will be filled in during initialization.
+
 
 // Margin, in pixels, around the top, right, and bottom of the transcript.
 // That is, this is the amount of gray space from the edge of the black
@@ -835,6 +814,8 @@ static int *textcolorlist;
 // was 10
 #define BMP_PERSON_SPACE 0
 
+static uint32 plaintext_fg, plaintext_bg;
+
 static void Transcript_OnPaint(HWND hwnd)
 {
    PAINTSTRUCT PaintStruct;
@@ -851,18 +832,8 @@ static void Transcript_OnPaint(HWND hwnd)
       PaintStruct.rcPaint.bottom = TranscriptClientRect.bottom-TVOFFSET;
 
    SelectFont(PaintDC, GetStockObject(OEM_FIXED_FONT));
-
-   if (ui_options.reverse_video) {
-      (void) SetBkColor(PaintDC, RGB(0, 0, 0));
-      if (!ui_options.no_intensify)
-         (void) SetTextColor(PaintDC, RGB(255, 255, 255));
-      else
-         (void) SetTextColor(PaintDC, RGB(192, 192, 192));
-   }
-   else {
-      (void) SetBkColor(PaintDC, RGB(255, 255, 255));
-      (void) SetTextColor(PaintDC, RGB(0, 0, 0));
-   }
+   (void) SetTextColor(PaintDC, plaintext_fg);
+   (void) SetBkColor(PaintDC, plaintext_bg);
 
    SelectPalette(PaintStruct.hdc, hPalette, FALSE);
    RealizePalette(PaintStruct.hdc);
@@ -890,11 +861,11 @@ static void Transcript_OnPaint(HWND hwnd)
 
          if (DisplayPtr->in_picture & 1) {
             if (*cp == '\013') {
-               int personidx = *++cp;
-               int persondir = *++cp;
+               int personidx = (*++cp) & 7;
+               int persondir = (*++cp) & 0xF;
 
                if (ui_options.no_graphics == 0) {
-                  xgoodies = (personidx & 7)*BMP_PERSON_SIZE;
+                  xgoodies = personidx*BMP_PERSON_SIZE;
                   ygoodies = BMP_PERSON_SIZE*(persondir & 3);
                   goto do_DIB_thing;
                }
@@ -905,22 +876,19 @@ static void Transcript_OnPaint(HWND hwnd)
                   ExtTextOut(PaintDC, x, Y, ETO_CLIPPED, &PaintStruct.rcPaint, cc, 1, 0);
 
                   if (ui_options.color_scheme != no_color)
-                     (void) SetTextColor(PaintDC, text_color_translate[textcolorlist[personidx & 7]]);
+                     (void) SetTextColor(PaintDC, text_color_translate[color_index_list[personidx]]);
 
-                  cc[0] = ui_options.pn1[personidx & 7];
-                  cc[1] = ui_options.pn2[personidx & 7];
-                  cc[2] = ui_options.direc[persondir & 017];
+                  cc[0] = ui_options.pn1[personidx];
+                  cc[1] = ui_options.pn2[personidx];
+                  cc[2] = ui_options.direc[persondir];
 
                   ExtTextOut(PaintDC, x, Y, ETO_CLIPPED, &PaintStruct.rcPaint, cc, 3, 0);
 
                   // Set back to plain "white".
 
-                  if (ui_options.color_scheme != no_color) {
-                     if (!ui_options.no_intensify)
-                        (void) SetTextColor(PaintDC, RGB(255, 255, 255));
-                     else
-                        (void) SetTextColor(PaintDC, RGB(192, 192, 192));
-                  }
+                  if (ui_options.color_scheme != no_color)
+                     (void) SetTextColor(PaintDC, plaintext_fg);
+
                   xdelta = TranscriptTextWidth*4;
                   continue;
                }
@@ -1417,21 +1385,47 @@ void MainWindow_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
       erase_questionable_stuff();
       nMenuIndex = SendMessage(hwndList, LB_GETCURSEL, 0, 0L);
 
-      /* If the user moves around in the call menu (listbox) while there is
-         stuff in the edit box, and then types a CR, we need to clear the
-         edit box, so that the listbox selection will be taken exactly.
-         This is because the wandering around in the list box may have
-         gone to something that has nothing to do with what was typed
-         in the edit box.  We detect this condition by noticing that the
-         listbox selection has changed from what we left it when we were
-         last trying to make the list box track the edit box. */
+      // If the user moves around in the call menu (listbox) while there is
+      // stuff in the edit box, and then types a CR, we need to clear the
+      // edit box, so that the listbox selection will be taken exactly.
+      // This is because the wandering around in the list box may have
+      // gone to something that has nothing to do with what was typed
+      // in the edit box.  We detect this condition by noticing that the
+      // listbox selection has changed from what we left it when we were
+      // last trying to make the list box track the edit box.
 
-      /* We also do this if the user selected by clicking the mouse. */
+      // We also do this if the user selected by clicking the mouse.
 
       if (id != ENTER_INDEX ||
           (wherearewe != LB_ERR && wherearewe != nMenuIndex)) {
          SendMessage(hwndEdit, WM_SETTEXT, 0, (LPARAM)"");
          erase_matcher_input();
+      }
+
+      // Look for abbreviations.
+
+      {
+         abbrev_block *asearch = (abbrev_block *) 0;
+
+         if (nLastOne == match_startup_commands)
+            asearch = abbrev_table_start;
+         else if (nLastOne == match_resolve_commands)
+            asearch = abbrev_table_resolve;
+         else if (nLastOne >= 0)
+            asearch = abbrev_table_normal;
+
+         for ( ; asearch ; asearch = asearch->next) {
+            if (!strcmp(asearch->key, GLOB_user_input)) {
+               char linebuff[INPUT_TEXTLINE_SIZE+1];
+               if (process_accel_or_abbrev(asearch->value, linebuff)) {
+                  SendMessage(hwndEdit, WM_SETTEXT, 0, (LPARAM)"");  // Erase the edit box.
+                  WaitingForCommand = FALSE;
+                  return;
+               }
+
+               break;   // Couldn't be processed.  Stop.  No other abbreviations will match.
+            }
+         }
       }
 
       matches = match_user_input(nLastOne, FALSE, FALSE, FALSE);
@@ -1451,7 +1445,7 @@ void MainWindow_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
          // The matcher found an acceptable (and possibly quite complex)
          // utterance.  Use it directly.
 
-         SendMessage(hwndEdit, WM_SETTEXT, 0, (LPARAM)"");  /* Erase the edit box. */
+         SendMessage(hwndEdit, WM_SETTEXT, 0, (LPARAM)"");  // Erase the edit box.
          WaitingForCommand = FALSE;
          return;
       }
@@ -1484,7 +1478,7 @@ void MainWindow_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
       user_match.real_next_subcall = (match_result *) 0;
       user_match.real_secondary_subcall = (match_result *) 0;
 
-      SendMessage(hwndEdit, WM_SETTEXT, 0, (LPARAM)"");  /* Erase the edit box. */
+      SendMessage(hwndEdit, WM_SETTEXT, 0, (LPARAM)"");  // Erase the edit box.
 
       /* We have the needed info.  Process it and exit from the command loop.
          However, it's not a fully filled in match item from the parser.
@@ -2038,7 +2032,9 @@ bool iofull::init_step(init_callback_state s, int n)
       wndclass.hIcon = NULL;
       wndclass.hCursor = NULL;
       wndclass.hbrBackground =
-         GetStockBrush(ui_options.reverse_video ? BLACK_BRUSH : WHITE_BRUSH);
+         GetStockBrush(ui_options.reverse_video ?
+                       BLACK_BRUSH :
+                       (ui_options.no_intensify ? LTGRAY_BRUSH : WHITE_BRUSH));
       wndclass.lpszMenuName = NULL;
       wndclass.lpszClassName = szTranscriptWindowName;
       wndclass.hIconSm = wndclass.hIcon;
@@ -2146,8 +2142,7 @@ void iofull::final_initialize()
                  16*sizeof(RGBQUAD) +
                  BMP_PERSON_SIZE*BMP_PERSON_SIZE*20);
 
-   lpBits = (LPTSTR) lpBi;
-   lpBits += lpBi->bmiHeader.biSize + 16*sizeof(RGBQUAD);
+   lpBits = ((LPTSTR) lpBi) + lpBi->bmiHeader.biSize + 16*sizeof(RGBQUAD);
 
    HANDLE hPal = GlobalAlloc(GHND, sizeof(LOGPALETTE) + (16*sizeof(PALETTEENTRY)));
    LPLOGPALETTE lpPal = (LPLOGPALETTE) GlobalLock(hPal);
@@ -2183,109 +2178,84 @@ void iofull::final_initialize()
    //   13 bright magenta
    //   14 bright cyan
    //   15 white
-   //
-   //   The people are "colored" in the DIB file as:
-   //   1B - 9  - bright red
-   //   1G - 1  - dark red
-   //   2B - 10 - bright green
-   //   2G - 2  - dark green
-   //   3B - 11 - bright yellow
-   //   3G - 3  - dark yellow
-   //   4B - 12 - bright blue
-   //   4G - 4  - dark blue
-   //
-   //   Also, the text showing the person number inside
-   //   each glyph is white (15) on black (0).
 
-   if (ui_options.color_scheme == color_by_gender) {
-      if (ui_options.pastel_color) {
-         textcolorlist = pastel_person_colors;
-         lpBi->bmiColors[1]  = lpBi->bmiColors[13];
-         lpBi->bmiColors[9]  = lpBi->bmiColors[14];
+   RGBQUAD glyphtext_fg, glyphtext_bg;
+
+   if (ui_options.reverse_video) {
+      if (ui_options.no_intensify) {
+         glyphtext_fg = lpBitsTemp->bmiColors[7];
+         plaintext_fg = RGB(192, 192, 192);
+         glyphtext_bg = lpBitsTemp->bmiColors[0];
+         plaintext_bg = RGB(0, 0, 0);
       }
       else {
-         textcolorlist = bold_person_colors;
-         lpBi->bmiColors[1]  = lpBi->bmiColors[9];
-         lpBi->bmiColors[9]  = lpBi->bmiColors[12];
+         glyphtext_fg = lpBitsTemp->bmiColors[15];
+         plaintext_fg = RGB(255, 255, 255);
+         glyphtext_bg = lpBitsTemp->bmiColors[0];
+         plaintext_bg = RGB(0, 0, 0);
       }
-
-      lpBi->bmiColors[2]  = lpBi->bmiColors[1];
-      lpBi->bmiColors[3]  = lpBi->bmiColors[1];
-      lpBi->bmiColors[4]  = lpBi->bmiColors[1];
-      lpBi->bmiColors[10] = lpBi->bmiColors[9];
-      lpBi->bmiColors[11] = lpBi->bmiColors[9];
-      lpBi->bmiColors[12] = lpBi->bmiColors[9];
-   }
-   else if (ui_options.color_scheme == color_by_corner) {
-      if (!ui_options.reverse_video)
-         textcolorlist = couple_colors_rgbk+1;
-      else
-         textcolorlist = couple_colors_rgby+1;
-
-      lpBi->bmiColors[1]  = lpBi->bmiColors[10];    // 1G = GRN
-      lpBi->bmiColors[2]  = lpBi->bmiColors[12];    // 2G = BLU
-      lpBi->bmiColors[3]  = lpBi->bmiColors[11];    // 3G = YEL
-      lpBi->bmiColors[4]  = lpBi->bmiColors[9];     // 4G = RED
-      lpBi->bmiColors[9]  = lpBi->bmiColors[4];     // 1B = RED
-      lpBi->bmiColors[10]  = lpBi->bmiColors[10];   // 2B = GRN
-      lpBi->bmiColors[11]  = lpBi->bmiColors[2];    // 3B = BLU
-      lpBi->bmiColors[12]  = lpBi->bmiColors[3];    // 4B = YEL
-   }
-   else if (ui_options.color_scheme == color_by_couple) {
-      // couple colors, rgby
-      if (!ui_options.reverse_video)
-         textcolorlist = couple_colors_rgbk;
-      else
-         textcolorlist = couple_colors_rgby;
-
-      lpBi->bmiColors[1]  = lpBi->bmiColors[9];     // 1G = RED
-      lpBi->bmiColors[2]  = lpBi->bmiColors[10];    // 2G = GRN
-      lpBi->bmiColors[3]  = lpBi->bmiColors[12];    // 3G = BLU
-      lpBi->bmiColors[4]  = lpBi->bmiColors[11];    // 4G = YEL
-      lpBi->bmiColors[9]  = lpBi->bmiColors[1];     // 1B = RED
-      lpBi->bmiColors[10]  = lpBi->bmiColors[2];    // 2B = GRN
-      lpBi->bmiColors[11]  = lpBi->bmiColors[3];    // 3B = BLU
-      lpBi->bmiColors[12]  = lpBi->bmiColors[4];    // 4B = YEL
-   }
-   else if (ui_options.color_scheme == color_by_couple_rgyb) {
-      // couple colors, rgyb
-      if (!ui_options.reverse_video)
-         textcolorlist = couple_colors_rgkb;
-      else
-         textcolorlist = couple_colors_rgyb;
-
-      lpBi->bmiColors[1]  = lpBi->bmiColors[9];     // 1G = RED
-      lpBi->bmiColors[2]  = lpBi->bmiColors[10];    // 2G = GRN
-      lpBi->bmiColors[3]  = lpBi->bmiColors[11];    // 3G = YEL
-      lpBi->bmiColors[4]  = lpBi->bmiColors[12];    // 4G = BLU
-      lpBi->bmiColors[9]  = lpBi->bmiColors[1];     // 1B = RED
-      lpBi->bmiColors[10]  = lpBi->bmiColors[2];    // 2B = GRN
-      lpBi->bmiColors[11]  = lpBi->bmiColors[3];    // 3B = YEL
-      lpBi->bmiColors[12]  = lpBi->bmiColors[4];    // 4B = BLU
    }
    else {
-      // monochrome colors (textcolorlist won't be used in this case)
-      RGBQUAD t = lpBi->bmiColors[ui_options.reverse_video ?
-                                 (ui_options.no_intensify ? 7 : 15) : 0];
-
-      lpBi->bmiColors[1]  = t;
-      lpBi->bmiColors[2]  = t;
-      lpBi->bmiColors[3]  = t;
-      lpBi->bmiColors[4]  = t;
-      lpBi->bmiColors[9]  = t;
-      lpBi->bmiColors[10] = t;
-      lpBi->bmiColors[11] = t;
-      lpBi->bmiColors[12] = t;
+      if (ui_options.no_intensify) {
+         glyphtext_fg = lpBitsTemp->bmiColors[0];
+         plaintext_fg = RGB(0, 0, 0);
+         glyphtext_bg = lpBitsTemp->bmiColors[7];
+         plaintext_bg = RGB(192, 192, 192);;
+      }
+      else {
+         glyphtext_fg = lpBitsTemp->bmiColors[0];
+         plaintext_fg = RGB(0, 0, 0);
+         glyphtext_bg = lpBitsTemp->bmiColors[15];
+         plaintext_bg = RGB(255, 255, 255);
+      }
    }
 
-   if (!ui_options.reverse_video) {
-      RGBQUAD t = lpBi->bmiColors[0];
-      lpBi->bmiColors[0]  = lpBi->bmiColors[15];
-      lpBi->bmiColors[15] = t;
+   if (ui_options.color_scheme == no_color) {
+      icon_color_translate[1] = glyphtext_fg;
+      icon_color_translate[2] = glyphtext_fg;
+      icon_color_translate[3] = glyphtext_fg;
+      icon_color_translate[4] = glyphtext_fg;
+      icon_color_translate[5] = glyphtext_fg;
+      icon_color_translate[6] = glyphtext_fg;
+      icon_color_translate[7] = glyphtext_fg;
    }
-   else if (ui_options.no_intensify) {
-      lpBi->bmiColors[15]  = lpBi->bmiColors[7];
+   else {
+      icon_color_translate[1] = lpBitsTemp->bmiColors[3];   // dark yellow
+      icon_color_translate[2] = lpBitsTemp->bmiColors[9];   // red
+      icon_color_translate[3] = lpBitsTemp->bmiColors[10];  // green
+      icon_color_translate[4] = lpBitsTemp->bmiColors[11];  // yellow
+      icon_color_translate[5] = lpBitsTemp->bmiColors[12];  // blue
+      icon_color_translate[6] = lpBitsTemp->bmiColors[13];  // magenta
+      icon_color_translate[7] = lpBitsTemp->bmiColors[14];  // cyan
    }
+
+   // Now fill in the palette through which the pixels in
+   // the DIB will be translated.
+   // The people are "colored" in the DIB file as (colors in parentheses
+   //     are what the DIB would look like under a normal color map;
+   //     those colors are irrelevant for this program):
+   //   1G - 1  (dark red)
+   //   2G - 2  (dark green)
+   //   3G - 3  (dark yellow)
+   //   4G - 4  (dark blue)
+   //   1B - 9  (bright red)
+   //   2B - 10 (bright green)
+   //   3B - 11 (bright yellow)
+   //   4B - 12 (bright blue)
+   //   Also, the text showing the person number inside
+   //   each glyph is 15 (white) on 0 (black).
+
+   lpBi->bmiColors[1]  = icon_color_translate[color_index_list[1]];
+   lpBi->bmiColors[2]  = icon_color_translate[color_index_list[3]];
+   lpBi->bmiColors[3]  = icon_color_translate[color_index_list[5]];
+   lpBi->bmiColors[4]  = icon_color_translate[color_index_list[7]];
+   lpBi->bmiColors[9]  = icon_color_translate[color_index_list[0]];
+   lpBi->bmiColors[10] = icon_color_translate[color_index_list[2]];
+   lpBi->bmiColors[11] = icon_color_translate[color_index_list[4]];
+   lpBi->bmiColors[12] = icon_color_translate[color_index_list[6]];
+
+   lpBi->bmiColors[0]  = glyphtext_bg;
+   lpBi->bmiColors[15] = glyphtext_fg;
 
    SetTitle();
 
@@ -2336,7 +2306,44 @@ char *iofull::version_string ()
 }
 
 
-void iofull::process_command_line(int *argcp, char ***argvp) {}
+void iofull::process_command_line(int *argcp, char ***argvp)
+{
+   int argno = 1;
+   char **argv = *argvp;
+
+   while (argno < (*argcp)) {
+      int i;
+
+      if (strcmp(argv[argno], "-no_line_delete") == 0)
+         {}
+      else if (strcmp(argv[argno], "-no_cursor") == 0)
+         {}
+      else if (strcmp(argv[argno], "-no_console") == 0)
+         {}
+      else if (strcmp(argv[argno], "-alternate_glyphs_1") == 0) {
+      }
+      else if (strcmp(argv[argno], "-lines") == 0 && argno+1 < (*argcp)) {
+         goto remove_two;
+      }
+      else if (strcmp(argv[argno], "-journal") == 0 && argno+1 < (*argcp)) {
+         goto remove_two;
+      }
+      else {
+         argno++;
+         continue;
+      }
+
+      (*argcp)--;      /* Remove this argument from the list. */
+      for (i=argno+1; i<=(*argcp); i++) argv[i-1] = argv[i];
+      continue;
+
+      remove_two:
+
+      (*argcp) -= 2;      /* Remove two arguments from the list. */
+      for (i=argno+1; i<=(*argcp); i++) argv[i-1] = argv[i+1];
+      continue;
+   }
+}
 
 
 

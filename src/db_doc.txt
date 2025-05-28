@@ -1062,6 +1062,25 @@ bigptpd     |  2  |_____|  3  |  9  |_____|  8  |
 
 
 
+                _____       _____       _____
+               |     |     |     |     |     |
+               |  0  |     |  1  |     |  2  |
+               |_____|     |_____|     |_____|
+               |     |     |     |     |     |
+               |  5  |     |  4  |     |  3  |
+             __|__ __|__ __|__ __|__ __|__ __|__
+            |     |     |     |     |     |     |
+big3dmd     | 15  | 16  | 17  |  8  |  7  |  6  |
+            |_____|_____|_____|_____|_____|_____|
+               |     |     |     |     |     |
+               | 12  |     | 13  |     | 14  |
+               |_____|     |_____|     |_____|
+               |     |     |     |     |     |
+               | 11  |     | 10  |     |  9  |
+               |_____|     |_____|     |_____|
+
+
+
                             _____
                            |     |
              _____ _____   |  2  |   _____ _____
@@ -2698,12 +2717,12 @@ roll_is_ccw
       is clockwise, or the person can't roll, or roll direction from the
       preceding call is ill-defined.
 
-x12_boy_facing_girl
+x12_boy_with_girl
       applies to 1x2 lines or 2x1 columns only.  Returns TRUE if this person
       is an unambiguous boy, and the other person in the column is alive and an
       unambiguous girl.  Facing directions are not checked.
 
-x12_girl_facing_boy
+x12_girl_with_boy
       applies to 1x2 lines or 2x1 columns only.  Returns TRUE if this person
       is an unambiguous girl, and the other person in the column is alive and an
       unambiguous boy.  Facing directions are not checked.

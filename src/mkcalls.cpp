@@ -222,6 +222,10 @@ int begin_sizes[] = {
    12,         /* b_pbigdmd */
    12,         /* b_bigptpd */
    12,         /* b_pbigptpd */
+   18,         /* b_big3dmd */
+   18,         /* b_pbig3dmd */
+   24,         /* b_big4dmd */
+   24,         /* b_pbig4dmd */
    16,         /* b_dblxwave */
    16,         /* b_pdblxwave */
    16,         /* b_dblspindle */

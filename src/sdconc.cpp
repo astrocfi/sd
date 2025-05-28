@@ -375,6 +375,113 @@ extern void normalize_concentric(
       else
          fail("Can't figure out what to do.");
    }
+   else if (synthesizer == schema_sgl_in_out_triple_squash) {
+
+      // Do special stuff to put setups back properly for squashed schema.
+
+      setup *i0p = &inners[0];
+      setup *i1p = &inners[1];
+
+      if (i0p->kind == s1x2) {
+         // Move people to the closer parts of 1x2 setups.
+
+         if (i0p->rotation == 1 && outer_elongation == 2) {
+            if (!(i0p->people[0].id1))
+               swap_people(i0p, 0, 1);
+            if (!(i1p->people[1].id1))
+               swap_people(i1p, 0, 1);
+         }
+         else if (i0p->rotation == 0 && outer_elongation == 1) {
+            if (!(i0p->people[1].id1))
+               swap_people(i0p, 0, 1);
+            if (!(i1p->people[0].id1))
+               swap_people(i1p, 0, 1);
+         }
+
+         center_arity = 2;
+         table_synthesizer = schema_sgl_in_out_triple;
+      }
+      else
+         fail("Can't figure out what to do.");
+   }
+   else if (synthesizer == schema_3x3_in_out_triple_squash) {
+
+      // Do special stuff to put setups back properly for squashed schema.
+
+      setup *i0p = &inners[0];
+      setup *i1p = &inners[1];
+
+      if (i0p->kind == s2x3) {
+         // Move people to the closer parts of 2x3 setups.
+
+         if (i0p->rotation == 0 && outer_elongation == 2) {
+            if (!(i0p->people[0].id1 | i0p->people[1].id1 | i0p->people[2].id1)) {
+               swap_people(i0p, 0, 5);
+               swap_people(i0p, 1, 4);
+               swap_people(i0p, 2, 3);
+            }
+            if (!(i1p->people[3].id1 | i1p->people[4].id1 | i1p->people[5].id1)) {
+               swap_people(i1p, 0, 5);
+               swap_people(i1p, 1, 4);
+               swap_people(i1p, 2, 3);
+            }
+         }
+      }
+      else if (i0p->kind == nothing && outer_elongation == 2) {
+         i0p->kind = s2x3;
+         i0p->rotation = 0;
+         clear_people(i0p);
+         i1p->kind = s2x3;
+         i1p->rotation = 0;
+         clear_people(i1p);
+      }
+      else
+         fail("Can't figure out what to do.");
+
+      center_arity = 2;
+      table_synthesizer = schema_3x3_in_out_triple;
+   }
+   else if (synthesizer == schema_4x4_in_out_triple_squash) {
+
+      // Do special stuff to put setups back properly for squashed schema.
+
+      setup *i0p = &inners[0];
+      setup *i1p = &inners[1];
+
+      if (i0p->kind == s2x4) {
+         // Move people to the closer parts of 2x4 setups.
+
+         if (i0p->rotation == 0 && outer_elongation == 2) {
+            if (!(i0p->people[0].id1 | i0p->people[1].id1 |
+                  i0p->people[2].id1 | i0p->people[3].id1)) {
+               swap_people(i0p, 0, 7);
+               swap_people(i0p, 1, 6);
+               swap_people(i0p, 2, 5);
+               swap_people(i0p, 3, 4);
+            }
+            if (!(i1p->people[4].id1 | i1p->people[5].id1 |
+                  i1p->people[6].id1 | i1p->people[7].id1)) {
+               swap_people(i1p, 0, 7);
+               swap_people(i1p, 1, 6);
+               swap_people(i1p, 2, 5);
+               swap_people(i1p, 3, 4);
+            }
+         }
+      }
+      else if (i0p->kind == nothing && outer_elongation == 2) {
+         i0p->kind = s2x4;
+         i0p->rotation = 0;
+         clear_people(i0p);
+         i1p->kind = s2x4;
+         i1p->rotation = 0;
+         clear_people(i1p);
+      }
+      else
+         fail("Can't figure out what to do.");
+
+      center_arity = 2;
+      table_synthesizer = schema_4x4_in_out_triple;
+   }
 
    if (table_synthesizer == schema_conc_o) {
       if (outers->kind != s4x4)
@@ -567,6 +674,9 @@ extern void normalize_concentric(
       }
 
       if (table_synthesizer != schema_in_out_triple &&
+          table_synthesizer != schema_sgl_in_out_triple &&
+          table_synthesizer != schema_3x3_in_out_triple &&
+          table_synthesizer != schema_4x4_in_out_triple &&
           table_synthesizer != schema_in_out_quad &&
           table_synthesizer != schema_in_out_12mquad &&
           table_synthesizer != schema_concentric_big2_6 &&
@@ -594,14 +704,14 @@ extern void normalize_concentric(
             break;
          }
 
-         table_synthesizer = schema_concentric;   /* They are all in the hash table this way. */
+         table_synthesizer = schema_concentric;   // They are all in the hash table this way.
       }
 
       break;
    }
 
    if (inners[0].kind == s_trngl) {
-      /* For triangles, we use the "2" bit of the rotation, demanding that it be even. */
+      // For triangles, we use the "2" bit of the rotation, demanding that it be even.
       if (i&1) goto elongation_loss;
       index = (i&2) >> 1;
    }
@@ -740,6 +850,8 @@ extern void normalize_concentric(
 
    if (table_synthesizer == schema_conc_o)
       normalize_setup(result, simple_normalize);
+   if (table_synthesizer == schema_sgl_in_out_triple)
+      normalize_setup(result, normalize_to_4);
 
    canonicalize_rotation(result);
    return;
@@ -1024,6 +1136,12 @@ static calldef_schema concentrify(
       break;
    case schema_in_out_triple_squash:
       analyzer_result = schema_in_out_triple; break;
+   case schema_sgl_in_out_triple_squash:
+      analyzer_result = schema_sgl_in_out_triple; break;
+   case schema_3x3_in_out_triple_squash:
+      analyzer_result = schema_3x3_in_out_triple; break;
+   case schema_4x4_in_out_triple_squash:
+      analyzer_result = schema_4x4_in_out_triple; break;
    case schema_concentric:
       if (crossing) {
          if (ss->kind == s4x4 && livemask != 0x9999)
@@ -1373,6 +1491,9 @@ static calldef_schema concentrify(
    case schema_grand_single_concentric:
       fail("Can't do grand single concentric in this formation.");
    case schema_in_out_triple:
+   case schema_sgl_in_out_triple:
+   case schema_3x3_in_out_triple:
+   case schema_4x4_in_out_triple:
       fail("Can't find triple lines/columns/boxes/diamonds in this formation.");
    case schema_in_out_quad:
    case schema_in_out_12mquad:
@@ -1457,11 +1578,17 @@ static calldef_schema concentrify(
 
       case schema_in_out_triple:
       case schema_in_out_triple_squash:
+      case schema_sgl_in_out_triple_squash:
+      case schema_3x3_in_out_triple_squash:
+      case schema_4x4_in_out_triple_squash:
+      case schema_sgl_in_out_triple:
+      case schema_3x3_in_out_triple:
+      case schema_4x4_in_out_triple:
       case schema_in_out_quad:
       case schema_in_out_12mquad:
       case schema_in_out_triple_zcom:
       case schema_conc_o:
-         *outer_elongation = lmap_ptr->mapelong;            /* The map defines it completely. */
+         *outer_elongation = lmap_ptr->mapelong;   // The map defines it completely.
          break;
       case schema_concentric_6_2_tgl:
          if (inners[0].kind == s_bone6)
@@ -1698,6 +1825,12 @@ static bool fix_empty_inners(
        analyzer == schema_conc_star16 ||
        analyzer == schema_in_out_triple_squash ||
        analyzer == schema_in_out_triple ||
+       analyzer == schema_sgl_in_out_triple_squash ||
+       analyzer == schema_sgl_in_out_triple ||
+       analyzer == schema_3x3_in_out_triple_squash ||
+       analyzer == schema_3x3_in_out_triple ||
+       analyzer == schema_4x4_in_out_triple_squash ||
+       analyzer == schema_4x4_in_out_triple ||
        analyzer == schema_in_out_quad ||
        analyzer == schema_in_out_12mquad) {
       // Take no action.
@@ -2114,6 +2247,12 @@ extern void concentric_move(
 
    if (analyzer != schema_in_out_triple_squash &&
        analyzer != schema_in_out_triple &&
+       analyzer != schema_sgl_in_out_triple_squash &&
+       analyzer != schema_3x3_in_out_triple_squash &&
+       analyzer != schema_4x4_in_out_triple_squash &&
+       analyzer != schema_sgl_in_out_triple &&
+       analyzer != schema_3x3_in_out_triple &&
+       analyzer != schema_4x4_in_out_triple &&
        analyzer != schema_in_out_quad &&
        analyzer != schema_in_out_12mquad)
       begin_outer.cmd.cmd_misc_flags |= CMD_MISC__DOING_ENDS;
@@ -2148,6 +2287,12 @@ extern void concentric_move(
    klast = center_arity+1;
 
    if (analyzer == schema_in_out_triple_squash || analyzer == schema_in_out_triple ||
+       analyzer == schema_sgl_in_out_triple_squash ||
+       analyzer == schema_3x3_in_out_triple_squash ||
+       analyzer == schema_4x4_in_out_triple_squash ||
+       analyzer == schema_sgl_in_out_triple ||
+       analyzer == schema_3x3_in_out_triple ||
+       analyzer == schema_4x4_in_out_triple ||
        analyzer == schema_in_out_quad || analyzer == schema_in_out_12mquad) {
       k = -1;
       klast = center_arity;
@@ -2262,6 +2407,12 @@ extern void concentric_move(
 
             if (analyzer != schema_in_out_triple_squash &&
                 analyzer != schema_in_out_triple &&
+                analyzer != schema_sgl_in_out_triple_squash &&
+                analyzer != schema_3x3_in_out_triple_squash &&
+                analyzer != schema_4x4_in_out_triple_squash &&
+                analyzer != schema_sgl_in_out_triple &&
+                analyzer != schema_3x3_in_out_triple &&
+                analyzer != schema_4x4_in_out_triple &&
                 analyzer != schema_in_out_quad &&
                 analyzer != schema_in_out_12mquad &&
                 analyzer != schema_conc_o &&
@@ -2548,6 +2699,12 @@ extern void concentric_move(
 
    if (analyzer == schema_in_out_triple_squash ||
        analyzer == schema_in_out_triple ||
+       analyzer == schema_sgl_in_out_triple_squash ||
+       analyzer == schema_3x3_in_out_triple_squash ||
+       analyzer == schema_4x4_in_out_triple_squash ||
+       analyzer == schema_sgl_in_out_triple ||
+       analyzer == schema_3x3_in_out_triple ||
+       analyzer == schema_4x4_in_out_triple ||
        analyzer == schema_in_out_quad ||
        analyzer == schema_in_out_12mquad ||
        analyzer == schema_concentric_others) {
@@ -2705,6 +2862,12 @@ extern void concentric_move(
 
    if (analyzer != schema_in_out_triple &&
        analyzer != schema_in_out_triple_squash &&
+       analyzer != schema_sgl_in_out_triple_squash &&
+       analyzer != schema_3x3_in_out_triple_squash &&
+       analyzer != schema_4x4_in_out_triple_squash &&
+       analyzer != schema_sgl_in_out_triple &&
+       analyzer != schema_3x3_in_out_triple &&
+       analyzer != schema_4x4_in_out_triple &&
        analyzer != schema_in_out_quad &&
        analyzer != schema_in_out_12mquad &&
        analyzer != schema_conc_o &&
@@ -3784,13 +3947,12 @@ extern void on_your_own_move(
    parse_block *parseptr,
    setup *result) THROW_DECL
 {
-   warning_info saved_warnings;
    setup setup1, setup2, res1;
    setup outer_inners[2];
 
    if (ss->kind != s2x4) fail("Must have 2x4 setup for 'on your own'.");
 
-   saved_warnings = history[history_ptr+1].warnings;
+   warning_info saved_warnings = configuration::save_warnings();
 
    setup1 = *ss;              /* Get outers only. */
    clear_person(&setup1, 1);
@@ -3819,8 +3981,8 @@ extern void on_your_own_move(
 
    // Shut off "superfluous phantom setups" warnings.
 
-   history[history_ptr+1].warnings.clearmultiple(useless_phan_clw_warnings);
-   history[history_ptr+1].warnings.setmultiple(saved_warnings);
+   configuration::clear_multiple_warnings(useless_phan_clw_warnings);
+   configuration::set_multiple_warnings(saved_warnings);
 }
 
 
@@ -3829,7 +3991,6 @@ extern void on_your_own_move(
 extern void punt_centers_use_concept(setup *ss, setup *result) THROW_DECL
 {
    int i, setupcount;
-   warning_info saved_warnings;
    setup the_setups[2], the_results[2];
    int sizem1 = setup_attrs[ss->kind].setup_limits;
    uint32 cmd2word = ss->cmd.cmd_misc2_flags;
@@ -3876,7 +4037,7 @@ extern void punt_centers_use_concept(setup *ss, setup *result) THROW_DECL
 
    normalize_setup(&the_setups[0], normalize_before_isolated_call);
    normalize_setup(&the_setups[1], normalize_before_isolated_call);
-   saved_warnings = history[history_ptr+1].warnings;
+   warning_info saved_warnings = configuration::save_warnings();
 
    /* Check for "someone work yoyo".  If call is sequential and yoyo is consumed by
       first part, then just do this stuff on the first part.  After that, merge
@@ -3960,8 +4121,8 @@ extern void punt_centers_use_concept(setup *ss, setup *result) THROW_DECL
 
    // Shut off "each 1x4" types of warnings -- they will arise spuriously
    // while the people do the calls in isolation.
-   history[history_ptr+1].warnings.clearmultiple(dyp_each_warnings);
-   history[history_ptr+1].warnings.setmultiple(saved_warnings);
+   configuration::clear_multiple_warnings(dyp_each_warnings);
+   configuration::set_multiple_warnings(saved_warnings);
 
    *result = the_results[0];
 
@@ -4658,7 +4819,7 @@ back_here:
    if (others)
       normalize_setup(&the_setups[1], action);
 
-   saved_warnings = history[history_ptr+1].warnings;
+   saved_warnings = configuration::save_warnings();
 
    // It will be helpful to have a mask of where the live people are.
 
@@ -5150,10 +5311,10 @@ back_here:
    // the people do the calls in isolation.
    // Also, shut off "superfluous phantom setups" warnings if this was "own the
    // <anyone> or <anyone> do your part".
-   history[history_ptr+1].warnings.clearmultiple(dyp_each_warnings);
+   configuration::clear_multiple_warnings(dyp_each_warnings);
    if (indicator < selective_key_plain_no_live_subsets)
-      history[history_ptr+1].warnings.clearmultiple(useless_phan_clw_warnings);
-   history[history_ptr+1].warnings.setmultiple(saved_warnings);
+      configuration::clear_multiple_warnings(useless_phan_clw_warnings);
+   configuration::set_multiple_warnings(saved_warnings);
 
    *result = the_results[1];
    result->result_flags = get_multiple_parallel_resultflags(the_results, 2);

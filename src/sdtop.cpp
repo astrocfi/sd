@@ -61,8 +61,9 @@ and the following external variables:
    collision_person1
    collision_person2
    last_magic_diamond
-   history
-   history_ptr
+   configuration::history
+   configuration::history_ptr
+   configuration::whole_sequence_low_lim
    history_allocation
    written_history_items
    written_history_nopic
@@ -71,7 +72,6 @@ and the following external variables:
    there_is_a_call
    base_calls
    ui_options
-   whole_sequence_low_lim
    enable_file_writing
    cardinals
    ordinals
@@ -147,8 +147,8 @@ char error_message2[MAX_ERR_LENGTH];
 uint32 collision_person1;
 uint32 collision_person2;
 parse_block *last_magic_diamond;
-configuration *history = (configuration *) 0; /* allocated in sdmain */
-int history_ptr;
+configuration *configuration::history = (configuration *) 0; /* Will be allocated in sdmain */
+int configuration::history_ptr;
 int history_allocation;
 
 /* This tells how much of the history text written to the UI is "safe".  If this
@@ -194,7 +194,7 @@ long_boolean there_is_a_call;
 call_with_name **base_calls;        /* Gets allocated as array of pointers in sdinit. */
 
 ui_option_type ui_options;
-int whole_sequence_low_lim;
+int configuration::whole_sequence_low_lim;
 long_boolean enable_file_writing;
 
 Cstring cardinals[] = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", (Cstring) 0};
@@ -302,16 +302,16 @@ int hashed_randoms;
    We make an attempt to generate somewhat plausible concepts, depending on the
    setup we are in.  If we just generated evenly weighted concepts from the entire
    concept list, we would hardly ever get a legal one. */
-int concept_sublist_sizes[NUM_CALL_LIST_KINDS];
-short int *concept_sublists[NUM_CALL_LIST_KINDS];
+int concept_sublist_sizes[call_list_extent];
+short int *concept_sublists[call_list_extent];
 /* These two are similar, but contain only "really nice" concepts that
    we are willing to use in exhaustive searches.  Concepts in these
    lists are very "expensive", in that each one causes an exhaustive search
    through all calls (with nearly-exhaustive enumeration of numbers/selectors, etc).
    Also, these concepts will appear in suggested resolves very early on.  So
    we don't want anything the least bit ugly in these lists. */
-int good_concept_sublist_sizes[NUM_CALL_LIST_KINDS];
-short int *good_concept_sublists[NUM_CALL_LIST_KINDS];
+int good_concept_sublist_sizes[call_list_extent];
+short int *good_concept_sublists[call_list_extent];
 const call_conc_option_state null_options = {
    selector_uninitialized,
    direction_uninitialized,
@@ -1529,7 +1529,6 @@ static void initialize_restr_tables(void)
 
 static void initialize_concept_sublists(void)
 {
-   int concept_index;
    int all_legal_concepts;
    int test_call_list_kind;
    concept_kind end_marker = concept_diagnose;
@@ -1540,16 +1539,12 @@ static void initialize_concept_sublists(void)
 
    // First, just count up all the available concepts.
 
-   for (concept_index=0,all_legal_concepts=0 ; ; concept_index++) {
-      const concept_descriptor *p = &concept_descriptor_table[concept_index];
-      if (p->kind == end_marker) break;
-      if ((p->concparseflags & CONCPARSE_MENU_DUP) || p->level > calling_level)
-         continue;
-      all_legal_concepts++;
-   }
+   all_legal_concepts = 0;
+   const concept_descriptor *p;
 
-   // Our friends in the UI will need this.
-   general_concept_size = concept_index - general_concept_offset;
+   for (p = concept_descriptor_table ; p->kind != end_marker ; p++) {
+      if (p->level <= calling_level) all_legal_concepts++;
+   }
 
    concept_sublists[call_list_any] =
       (short int *) get_mem(all_legal_concepts*sizeof(short int));
@@ -1565,6 +1560,7 @@ static void initialize_concept_sublists(void)
         test_call_list_kind >= (int)call_list_any;
         test_call_list_kind--) {
       int concepts_in_this_setup, good_concepts_in_this_setup;
+      int concept_index;
 
       for (concept_index=0,concepts_in_this_setup=0,good_concepts_in_this_setup=0;
            ;
@@ -1573,8 +1569,7 @@ static void initialize_concept_sublists(void)
          uint32 good_setup_mask = 0;  /* Default for this is not to. */
          const concept_descriptor *p = &concept_descriptor_table[concept_index];
          if (p->kind == end_marker) break;
-         if ((p->concparseflags & CONCPARSE_MENU_DUP) || p->level > calling_level)
-            continue;
+         if (p->level > calling_level) continue;
 
          // This concept is legal at this level.  See if it is appropriate for this setup.
          // If we don't know, the default value of setup_mask will make it legal.
@@ -1904,6 +1899,7 @@ extern bool check_for_concept_group(
        k == concept_fractional ||
        (k == concept_meta && parseptrcopy->concept->value.arg1 == meta_key_initially) ||
        (k == concept_meta && parseptrcopy->concept->value.arg1 == meta_key_finally) ||
+       (k == concept_meta && parseptrcopy->concept->value.arg1 == meta_key_initially_and_finally) ||
        (k == concept_meta && parseptrcopy->concept->value.arg1 == meta_key_piecewise) ||
        (k == concept_meta && parseptrcopy->concept->value.arg1 == meta_key_echo) ||
        (k == concept_meta && parseptrcopy->concept->value.arg1 == meta_key_rev_echo) ||
@@ -1960,8 +1956,8 @@ extern bool check_for_concept_group(
 
       if (subkey == meta_key_random || subkey == meta_key_rev_random ||
           subkey == meta_key_piecewise || subkey == meta_key_nth_part_work ||
-          subkey == meta_key_first_frac_work ||
-          subkey == meta_key_initially || subkey == meta_key_finally ||
+          subkey == meta_key_first_frac_work || subkey == meta_key_initially ||
+          subkey == meta_key_finally || subkey == meta_key_initially_and_finally ||
           subkey == meta_key_echo || subkey == meta_key_rev_echo) {
          next_parseptr = parseptr_skip;
          parseptrcopy = next_parseptr;
@@ -2045,11 +2041,10 @@ extern void warn(warning_index w)
    // If this is an "each 1x4" type of warning, and we already have
    // such a warning, don't enter the new one.  The first one takes precedence.
 
-   if (dyp_each_warnings.testbit(w) &&
-       history[history_ptr+1].warnings.testmultiple(dyp_each_warnings))
+   if (dyp_each_warnings.testbit(w) && configuration::test_multiple_warnings(dyp_each_warnings))
          return;
 
-   history[history_ptr+1].warnings.setbit(w);
+   configuration::set_one_warning(w);
 }
 
            
@@ -3581,18 +3576,17 @@ extern uint32 find_calldef(
    int northified_index) THROW_DECL
 {
    unsigned short *calldef_array;
-   predptr_pair *predlistptr;
    uint32 z;
 
    if (tdef->callarray_flags & CAF__PREDS) {
-      predlistptr = tdef->stuff.prd.predlist;
-      while (predlistptr != (predptr_pair *) 0) {
+      for (predptr_pair *predlistptr = tdef->stuff.prd.predlist ;
+           predlistptr ;
+           predlistptr = predlistptr->next) {
          if ((*(predlistptr->pred->predfunc))
              (scopy, real_index, real_direction, northified_index, predlistptr->pred->extra_stuff)) {
             calldef_array = predlistptr->arr;
             goto got_it;
          }
-         predlistptr = predlistptr->next;
       }
       fail(tdef->stuff.prd.errmsg);
    }
@@ -4628,9 +4622,8 @@ static resolve_tester test_hrgl_stuff[] = {
 
 
 
-extern resolve_indicator resolve_p(setup *s)
+void configuration::calculate_resolve()
 {
-   resolve_indicator k;
    resolve_tester *testptr;
    int i;
    uint32 singer_offset = 0;
@@ -4638,7 +4631,7 @@ extern resolve_indicator resolve_p(setup *s)
    if (singing_call_mode == 1) singer_offset = 0600;
    else if (singing_call_mode == 2) singer_offset = 0200;
 
-   switch (s->kind) {
+   switch (state.kind) {
    case s2x4:
       testptr = test_2x4_stuff; break;
    case s3x4:
@@ -4678,7 +4671,7 @@ extern resolve_indicator resolve_p(setup *s)
 
    do {
       uint32 directionword;
-      uint32 firstperson = s->people[testptr->locations[0]].id1 & 0700;
+      uint32 firstperson = state.people[testptr->locations[0]].id1 & 0700;
       if (firstperson & 0100) goto not_this_one;
 
       /* We run the tests in descending order, because the test for i=0 is especially
@@ -4691,7 +4684,7 @@ extern resolve_indicator resolve_p(setup *s)
          /* The add of "expected_id" and "firstperson" may overflow out of the "700" bits
             into the next 2 bits.  (One bit for each add.) */
 
-         if ((s->people[testptr->locations[i]].id1                  /* The person under test */
+         if ((state.people[testptr->locations[i]].id1                  /* The person under test */
               ^                                                     /* XOR */
               (expected_id + firstperson + (directionword & 0xF)))  /* what we check against */
              &                                                      /* but only test some bits */
@@ -4702,10 +4695,10 @@ extern resolve_indicator resolve_p(setup *s)
       if (calling_level < testptr->level_needed ||
           (testptr->k == resolve_minigrand && !allowing_minigrand)) goto not_this_one;
 
-      k.kind = testptr->k;
-      k.distance = ((s->rotation << 1) + (firstperson >> 6) + testptr->distance) & 7;
-      if (k.distance == 0 && testptr->nonzero_only != 0) goto not_this_one;
-      return k;
+      resolve_flag.kind = testptr->k;
+      resolve_flag.distance = ((state.rotation << 1) + (firstperson >> 6) + testptr->distance) & 7;
+      if (resolve_flag.distance == 0 && testptr->nonzero_only != 0) goto not_this_one;
+      return;
 
       not_this_one: ;
    }
@@ -4715,13 +4708,11 @@ extern resolve_indicator resolve_p(setup *s)
             (singing_call_mode != 0 && testptr->k != resolve_none)  /* Even if it has the mark, do it if    */
          );                                                         /* this is a singer and it isn't really */
                                                                     /* the end of the table.                */
-   /* Too bad. */
+   // Too bad.
 
    no_resolve:
 
-   k.kind = resolve_none;
-   k.distance = 0;    /* To get around warnings from buggy and confused compilers. */
-   return k;
+   resolve_flag.kind = resolve_none;
 }
 
 
@@ -4733,7 +4724,7 @@ extern bool warnings_are_unacceptable(bool strict)
    if (!strict) return false;
 
    // We only care about "bad" warnings.
-   if (!history[history_ptr+1].warnings.testmultiple(no_search_warnings)) return false;
+   if (!configuration::test_multiple_warnings(no_search_warnings)) return false;
 
    // If the "allow all concepts" switch isn't on, we lose.
    if (!allowing_all_concepts) return true;
@@ -4742,7 +4733,7 @@ extern bool warnings_are_unacceptable(bool strict)
    // "bad_concept_level", we let it pass.
 
    // So we test for any bad warnings other than "warn__bad_concept_level".
-   warning_info otherthanbadconc = history[history_ptr+1].warnings;
+   warning_info otherthanbadconc = configuration::save_warnings();
    otherthanbadconc.clearbit(warn__bad_concept_level);
    return otherthanbadconc.testmultiple(no_search_warnings);
 }
@@ -4913,9 +4904,9 @@ SDLIB_API void toplevelmove() THROW_DECL
 {
    int i;
 
-   setup starting_setup = history[history_ptr].state;
-   configuration *newhist = &history[history_ptr+1];
-   parse_block *conceptptr = newhist->command_root;
+   setup starting_setup = configuration::current_config().state;
+   configuration & newhist = configuration::next_config();
+   parse_block *conceptptr = newhist.command_root;
 
    // Check for an incomplete parse.  This could happen if we do
    // something like "make a pass but [?".  There's just no way to make sure
@@ -4925,8 +4916,8 @@ SDLIB_API void toplevelmove() THROW_DECL
 
    /* Be sure that the amount of written history that we consider to be safely
       written is less than the item we are about to change. */
-   if (written_history_items > history_ptr)
-      written_history_items = history_ptr;
+   if (written_history_items > configuration::history_ptr)
+      written_history_items = configuration::history_ptr;
 
    starting_setup.cmd.cmd_misc_flags = 0;
    starting_setup.cmd.cmd_misc2_flags = 0;
@@ -4941,12 +4932,12 @@ SDLIB_API void toplevelmove() THROW_DECL
    starting_setup.cmd.restrained_super8flags = 0;
    starting_setup.cmd.restrained_fraction = 0;
 
-   newhist->warnings = warning_info();
+   newhist.init_warnings_specific();
 
    // If we are starting a sequence with the "so-and-so into the center and do whatever"
    // flag on, and this call is a "sequence starter", take special action.
 
-   if (startinfolist[history[history_ptr].centersp].into_the_middle) {
+   if (configuration::current_config().get_startinfo_specific()->into_the_middle) {
 
       // If the call is a special sequence starter (e.g. spin a pulley) remove the implicit
       // "centers" concept and just do it.  The setup in this case will be a squared set
@@ -5053,9 +5044,9 @@ SDLIB_API void toplevelmove() THROW_DECL
    // "concept not allowed at this level" warning) may have already been logged.
    // Set the selectors to "uninitialized", so that, if we do a call like "run", we
    // will query the user to find out who is selected.
-   newhist->centersp = 0;
-   newhist->draw_pic = FALSE;
-   newhist->resolve_flag.kind = resolve_none;
+   newhist.init_centersp_specific();
+   newhist.draw_pic = FALSE;
+   newhist.init_resolve();
    current_options = null_options;
 
    // Put in identification bits for global/unsymmetrical stuff, if possible.
@@ -5175,30 +5166,30 @@ SDLIB_API void toplevelmove() THROW_DECL
    starting_setup.cmd.callspec = (call_with_name *) 0;
    starting_setup.cmd.cmd_final_flags.final = 0;
    starting_setup.cmd.cmd_final_flags.her8it = 0;
-   move(&starting_setup, FALSE, &newhist->state);
-   remove_tgl_distortion(&newhist->state);
+   move(&starting_setup, FALSE, &newhist.state);
+   remove_tgl_distortion(&newhist.state);
 
-   if (newhist->state.kind == s1p5x8)
+   if (newhist.state.kind == s1p5x8)
       fail("Can't go into a 50% offset 1x8.");
-   else if (newhist->state.kind == s1p5x4)
+   else if (newhist.state.kind == s1p5x4)
       fail("Can't go into a 50% offset 1x4.");
-   else if (newhist->state.kind == s_dead_concentric) {
-      newhist->state.kind = newhist->state.inner.skind;
-      newhist->state.rotation += newhist->state.inner.srotation;
+   else if (newhist.state.kind == s_dead_concentric) {
+      newhist.state.kind = newhist.state.inner.skind;
+      newhist.state.rotation += newhist.state.inner.srotation;
    }
 
    // Once rotation is imprecise, it is always imprecise.  Same for the other flags copied here.
-   newhist->state.result_flags |= starting_setup.result_flags &
+   newhist.state.result_flags |= starting_setup.result_flags &
       (RESULTFLAG__IMPRECISE_ROT|RESULTFLAG__ACTIVE_PHANTOMS_ON|RESULTFLAG__ACTIVE_PHANTOMS_OFF);
 
    // But 1/8 rotation stuff cancels in pairs.
-   if (newhist->state.result_flags & starting_setup.result_flags & RESULTFLAG__PLUSEIGHTH_ROT) {
-      newhist->state.result_flags &= ~RESULTFLAG__PLUSEIGHTH_ROT;
-      newhist->state.rotation++;
-      canonicalize_rotation(&newhist->state);
+   if (newhist.state.result_flags & starting_setup.result_flags & RESULTFLAG__PLUSEIGHTH_ROT) {
+      newhist.state.result_flags &= ~RESULTFLAG__PLUSEIGHTH_ROT;
+      newhist.state.rotation++;
+      canonicalize_rotation(&newhist.state);
    }
    else
-      newhist->state.result_flags |= starting_setup.result_flags & RESULTFLAG__PLUSEIGHTH_ROT;
+      newhist.state.result_flags |= starting_setup.result_flags & RESULTFLAG__PLUSEIGHTH_ROT;
 }
 
 
@@ -5207,12 +5198,12 @@ SDLIB_API void toplevelmove() THROW_DECL
 
 SDLIB_API void finish_toplevelmove() THROW_DECL
 {
-   configuration *newhist = &history[history_ptr+1];
+   configuration & newhist = configuration::next_config();
 
    // Remove outboard phantoms from the resulting setup.
-   normalize_setup(&newhist->state, simple_normalize);
-   for (int i=0; i<MAX_PEOPLE; i++) newhist->state.people[i].id2 &= ~GLOB_BITS_TO_CLEAR;
-   newhist->resolve_flag = resolve_p(&newhist->state);
+   normalize_setup(&newhist.state, simple_normalize);
+   for (int i=0; i<MAX_PEOPLE; i++) newhist.state.people[i].id2 &= ~GLOB_BITS_TO_CLEAR;
+   newhist.calculate_resolve();
 }
 
 

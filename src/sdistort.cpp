@@ -1449,7 +1449,7 @@ extern void do_phantom_2x4_concept(
       if (parseptr->concept->value.arg3 != MPKIND__NONE)
          map_code = MAPCODE(s2x4,2,parseptr->concept->value.arg3,1);
       else
-         map_code = parseptr->concept->value.arg0;
+         map_code = parseptr->concept->value.arg4;
 
       // Check for special case of "stagger" or "bigblock", without the word "phantom",
       // when people are not actually on block spots.
@@ -3663,7 +3663,7 @@ extern void common_spot_move(
    setup the_results[2];
    long_boolean not_rh;
    common_spot_map *map_ptr;
-   warning_info saved_warnings = history[history_ptr+1].warnings;
+   warning_info saved_warnings = configuration::save_warnings();
 
    rstuff = parseptr->concept->value.arg1;
    /* rstuff =
@@ -3683,9 +3683,9 @@ extern void common_spot_move(
    if (ss->kind == s_c1phan) {
       do_matrix_expansion(ss, CONCPROP__NEEDK_4X4, FALSE);
       // Shut off any "check a 4x4 matrix" warning that this raised.
-      history[history_ptr+1].warnings.clearbit(warn__check_4x4_start);
+      configuration::clear_one_warning(warn__check_4x4_start);
       // Unless, of course, we already had that warning.
-      history[history_ptr+1].warnings.setmultiple(saved_warnings);
+      configuration::set_multiple_warnings(saved_warnings);
    }
 
    for (i=0, jbit=1, livemask = 0; i<=setup_attrs[ss->kind].setup_limits; i++, jbit<<=1) {
@@ -3835,9 +3835,9 @@ extern void common_spot_move(
 
    // Turn off any "do your part" warnings that arose during execution
    // of the subject call.  The dancers already know.
-   history[history_ptr+1].warnings.clearbit(warn__do_your_part);
+   configuration::clear_one_warning(warn__do_your_part);
    // Restore any warnings from before.
-   history[history_ptr+1].warnings.setmultiple(saved_warnings);
+   configuration::set_multiple_warnings(saved_warnings);
 }
 
 

@@ -52,33 +52,13 @@ struct colorspec {
 
 static colorspec color_translations[8] = {
    {0, "00"},  // 0 - not used
-   {0, "30"},  // 1 - substitute for yellow against bright background (black)
+   {0, "30"},  // 1 - substitute yellow
    {2, "31"},  // 2 - red
    {3, "32"},  // 3 - green
    {4, "33"},  // 4 - yellow
    {5, "34"},  // 5 - blue
    {6, "35"},  // 6 - magenta
    {7, "36"}}; // 7 - cyan
-
-// Alternating blue and red.
-static int bold_person_colors[8] = {5, 2, 5, 2, 5, 2, 5, 2};
-
-// Alternating bletcherous blue and putrid pink.
-static int pastel_person_colors[8] = {7, 6, 7, 6, 7, 6, 7, 6};
-
-// red, green, blue, yellow, red for wraparound if coloring by corner
-static int couple_colors_rgby[9] = {2, 2, 3, 3, 5, 5, 4, 4, 2};
-
-// red, green, blue, substitute yellow, red for wraparound if coloring by corner
-static int couple_colors_rgbk[9] = {2, 2, 3, 3, 5, 5, 1, 1, 2};
-
-// red, green, yellow, blue
-static int couple_colors_rgyb[8] = {2, 2, 3, 3, 4, 4, 5, 5};
-
-// red, green, substitute yellow, blue
-static int couple_colors_rgkb[8] = {2, 2, 3, 3, 1, 1, 5, 5};
-
-static int *textcolorlist;
 
 static void csetmode(int mode)             /* 1 means raw, no echo, one character at a time;
                                                 0 means normal. */
@@ -477,7 +457,7 @@ extern void put_line(const char the_line[])
             addch(' ');
 
             if (ui_options.color_scheme != no_color)
-               color_set(color_translations[textcolorlist[personidx]].curses_index, 0);
+               color_set(color_translations[color_index_list[personidx]].curses_index, 0);
 
             addch(ui_options.pn1[personidx]);
             addch(ui_options.pn2[personidx]);
@@ -517,7 +497,7 @@ extern void put_line(const char the_line[])
 
                if (ui_options.color_scheme != no_color) {
                   (void) fputs("\033[1;", stdout);
-                  (void) fputs(color_translations[textcolorlist[personidx]].vt100_string, stdout);
+                  (void) fputs(color_translations[color_index_list[personidx]].vt100_string, stdout);
 
                   if (ui_options.reverse_video)
                      (void) fputs(";40m", stdout);
@@ -753,33 +733,6 @@ void iofull::final_initialize()
 {
    if (!sdtty_no_console)
       ui_options.use_escapes_for_drawing_people = 1;
-
-   if (ui_options.color_scheme == color_by_gender) {
-      if (ui_options.pastel_color)
-         textcolorlist = pastel_person_colors;
-      else
-         textcolorlist = bold_person_colors;
-   }
-   else if (ui_options.color_scheme != no_color) {
-      if (ui_options.reverse_video) {
-         if (ui_options.color_scheme == color_by_couple)
-            textcolorlist = couple_colors_rgby;
-         else if (ui_options.color_scheme == color_by_couple_rgyb)
-            textcolorlist = couple_colors_rgyb;
-         else
-            textcolorlist = couple_colors_rgby+1;
-      }
-      else {
-         // If white background, yellow doesn't show up well.
-         // Substitute black instead.
-         if (ui_options.color_scheme == color_by_couple)
-            textcolorlist = couple_colors_rgbk;
-         else if (ui_options.color_scheme == color_by_couple_rgyb)
-            textcolorlist = couple_colors_rgkb;
-         else
-            textcolorlist = couple_colors_rgbk+1;
-      }
-   }
 
    initialize_signal_handlers();
 }

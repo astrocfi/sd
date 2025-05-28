@@ -62,6 +62,11 @@ and the following external variables:
 modifier_block *fcn_key_table_normal[FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1];
 modifier_block *fcn_key_table_start[FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1];
 modifier_block *fcn_key_table_resolve[FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1];
+
+abbrev_block *abbrev_table_normal = (abbrev_block *) 0;
+abbrev_block *abbrev_table_start = (abbrev_block *) 0;
+abbrev_block *abbrev_table_resolve = (abbrev_block *) 0;
+
 match_result user_match;
 
 long_boolean showing_has_stopped;
@@ -301,30 +306,33 @@ static int translate_keybind_spec(char key_name[])
 }
 
 
-SDLIB_API void do_accelerator_spec(Cstring qq)
+void do_accelerator_spec(Cstring qq, bool is_accelerator)
 {
    char key_name[MAX_FILENAME_LENGTH];
+   char *key_org;
    char junk_name[MAX_FILENAME_LENGTH];
-   modifier_block **table_thing;
-   modifier_block *newthing;
    int ccount;
-   int matches;
    int menu_type = call_list_any;
    int keybindcode = -1;
 
    if (!qq[0] || qq[0] == '#') return;   /* This is a blank line or a comment. */
 
    if (sscanf(qq, "%s %n%s", key_name, &ccount, junk_name) == 2) {
+      key_org = key_name;
+
       if (key_name[0] == '+') {
          menu_type = match_startup_commands;
-         keybindcode = translate_keybind_spec(&key_name[1]);
+         key_org = &key_name[1];
       }
       else if (key_name[0] == '*') {
          menu_type = match_resolve_commands;
-         keybindcode = translate_keybind_spec(&key_name[1]);
+         key_org = &key_name[1];
       }
+
+      if (is_accelerator)
+         keybindcode = translate_keybind_spec(key_org);
       else
-         keybindcode = translate_keybind_spec(key_name);
+         keybindcode = 0;
    }
 
    if (keybindcode < 0)
@@ -365,46 +373,76 @@ SDLIB_API void do_accelerator_spec(Cstring qq)
    else {
       strcpy(GLOB_user_input, &qq[ccount]);
       GLOB_user_input_size = strlen(GLOB_user_input);
-      matches = match_user_input(menu_type, FALSE, FALSE, FALSE);
+      int matches = match_user_input(menu_type, FALSE, FALSE, FALSE);
       user_match = GLOB_match;
 
       if ((matches != 1 && matches - GLOB_yielding_matches != 1 && !user_match.exact)) {
-         /* Didn't find the target of the key binding.  Below C4X, failure to find
-            something could just mean that it was a call off the list.  At C4X, we
-            take it seriously.  So the initialization file should always be tested at C4X. */
+         // Didn't find the target of the key binding.  Below C4X, failure to find
+         // something could just mean that it was a call off the list.  At C4X, we
+         // take it seriously.  So the initialization file should always be tested at C4X.
          if (calling_level >= l_c4x)
-            gg->fatal_error_exit(1, "Didn't find target of key binding", qq);
+            gg->fatal_error_exit(1, "Didn't find target of accelerator or abbreviation", qq);
 
          return;
       }
 
       if (user_match.match.packed_next_conc_or_subcall ||
           user_match.match.packed_secondary_subcall) {
-         gg->fatal_error_exit(1, "Target of key binding is too complicated", qq);
+         gg->fatal_error_exit(1,
+                              "Target of accelerator or abbreviation is too complicated",
+                              qq);
       }
    }
 
-   if (user_match.match.kind == ui_start_select) {
-      table_thing = &fcn_key_table_start[keybindcode-FCN_KEY_TAB_LOW];
-   }
-   else if (user_match.match.kind == ui_resolve_select) {
-      table_thing = &fcn_key_table_resolve[keybindcode-FCN_KEY_TAB_LOW];
-   }
-   else if (user_match.match.kind == ui_concept_select ||
-            user_match.match.kind == ui_call_select ||
-            user_match.match.kind == ui_command_select) {
-      table_thing = &fcn_key_table_normal[keybindcode-FCN_KEY_TAB_LOW];
-   }
-   else
-      gg->fatal_error_exit(1, "Anomalous key binding", qq);
+   if (is_accelerator) {
+      modifier_block **table_thing;
 
-   newthing = (modifier_block *) get_mem(sizeof(modifier_block));
-   *newthing = user_match.match;
+      if (user_match.match.kind == ui_start_select) {
+         table_thing = &fcn_key_table_start[keybindcode-FCN_KEY_TAB_LOW];
+      }
+      else if (user_match.match.kind == ui_resolve_select) {
+         table_thing = &fcn_key_table_resolve[keybindcode-FCN_KEY_TAB_LOW];
+      }
+      else if (user_match.match.kind == ui_concept_select ||
+               user_match.match.kind == ui_call_select ||
+               user_match.match.kind == ui_command_select) {
+         table_thing = &fcn_key_table_normal[keybindcode-FCN_KEY_TAB_LOW];
+      }
+      else
+         gg->fatal_error_exit(1, "Anomalous accelerator", qq);
 
-   if (*table_thing)
-      gg->fatal_error_exit(1, "Redundant key binding", qq);
+      modifier_block *newthing = (modifier_block *) get_mem(sizeof(modifier_block));
+      *newthing = user_match.match;
 
-   *table_thing = newthing;
+      if (*table_thing)
+         gg->fatal_error_exit(1, "Redundant accelerator", qq);
+
+      *table_thing = newthing;
+   }
+   else  {
+      abbrev_block **table_thing;
+
+      if (user_match.match.kind == ui_start_select) {
+         table_thing = &abbrev_table_start;
+      }
+      else if (user_match.match.kind == ui_resolve_select) {
+         table_thing = &abbrev_table_resolve;
+      }
+      else if (user_match.match.kind == ui_concept_select ||
+               user_match.match.kind == ui_call_select ||
+               user_match.match.kind == ui_command_select) {
+         table_thing = &abbrev_table_normal;
+      }
+      else
+         gg->fatal_error_exit(1, "Anomalous abbreviation", qq);
+
+      abbrev_block *newthing = (abbrev_block *) get_mem(sizeof(abbrev_block));
+      newthing->key = (char *) get_mem(strlen(key_org)+1); 
+      strcpy((char *) newthing->key, key_org);
+      newthing->value = user_match.match;
+      newthing->next = *table_thing;
+      *table_thing = newthing;
+   }
 }
 
 
@@ -453,6 +491,53 @@ static void hash_me(int bucket, int i)
                    call_hash_list_sizes[bucket] * sizeof(short));
    call_hash_lists[bucket][call_hash_list_sizes[bucket]-1] = i;
 }
+
+
+
+// Returns true if it processed the thing.
+SDLIB_API bool process_accel_or_abbrev(modifier_block & mb, char linebuff[])
+{
+   user_match.match = mb;
+   user_match.indent = FALSE;
+   user_match.real_next_subcall = (match_result *) 0;
+   user_match.real_secondary_subcall = (match_result *) 0;
+
+   switch (user_match.match.kind) {
+   case ui_command_select:
+      strcpy(linebuff, command_commands[user_match.match.index]);
+      user_match.match.index = -1-command_command_values[user_match.match.index];
+      break;
+   case ui_resolve_select:
+      strcpy(linebuff, resolve_menu[user_match.match.index].command_name);
+      user_match.match.index = -1-resolve_menu[user_match.match.index].action;
+      break;
+   case ui_start_select:
+      strcpy(linebuff, startup_commands[user_match.match.index]);
+      break;
+   case ui_concept_select:
+      unparse_call_name(user_match.match.concept_ptr->name,
+                        linebuff,
+                        &user_match.match.call_conc_options);
+      // Reject off-level concept accelerator key presses.
+      if (!allowing_all_concepts &&
+          user_match.match.concept_ptr->level > higher_acceptable_level[calling_level])
+         return false;
+      user_match.match.index = 0;
+      break;
+   case ui_call_select:
+      unparse_call_name(user_match.match.call_ptr->name,
+                        linebuff,
+                        &user_match.match.call_conc_options);
+      user_match.match.index = 0;
+      break;
+   default:
+      return false;
+   }
+
+   user_match.valid = TRUE;
+   return true;
+}
+
 
 
 SDLIB_API void erase_matcher_input()
@@ -507,24 +592,18 @@ void matcher_initialize()
    (void) memset(fcn_key_table_resolve, 0,
                  sizeof(modifier_block *) * (FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1));
 
-   /* Count the number of concepts to put in the lists. */
+   // Count the number of concepts to put in the lists.
    
    concept_list_length = 0;
    level_concept_list_length = 0;
-   for (concept_number=0;;concept_number++) {
-      p = &concept_descriptor_table[concept_number];
-      if (p->kind == end_marker) break;
 
-      if (p->kind == concept_comment || (p->concparseflags & CONCPARSE_MENU_DUP))
-         continue;
-
+   for (p=concept_descriptor_table ; p->kind != end_marker ; p++) {
       concept_list_length++;
-
       if (p->level <= higher_acceptable_level[calling_level])
          level_concept_list_length++;
    }
 
-   /* create the concept lists */
+   // Create the concept lists.
 
    concept_list = (short int *)
       get_mem(sizeof(short int) * concept_list_length);
@@ -535,13 +614,7 @@ void matcher_initialize()
    level_item = level_concept_list;
    for (concept_number=0 ; ; concept_number++) {
       p = &concept_descriptor_table[concept_number];
-      if (p->kind == end_marker) {
-         break;
-      }
-      if (p->kind == concept_comment || (p->concparseflags & CONCPARSE_MENU_DUP)) {
-         continue;
-      }
-
+      if (p->kind == end_marker) break;
       *item = concept_number;
       item++;
 
@@ -551,7 +624,7 @@ void matcher_initialize()
       }
    }
 
-   /* Initialize the hash buckets for call names. */
+   // Initialize the hash buckets for call names.
 
    {
       int bucket;
@@ -817,9 +890,9 @@ static long_boolean verify_call(void)
 
    long_boolean resultval = TRUE;
 
-   interactivity = interactivity_verify;   /* so deposit_call doesn't ask user for info */
-   warning_info saved_warnings = history[history_ptr+1].warnings;
-   int old_history_ptr = history_ptr;
+   interactivity = interactivity_verify;   // So deposit_call doesn't ask user for info.
+   warning_info saved_warnings = configuration::save_warnings();
+   int old_history_ptr = configuration::history_ptr;
 
    parse_mark = mark_parse_blocks();
    save_parse_state();
@@ -924,8 +997,8 @@ static long_boolean verify_call(void)
    (void) restore_parse_state();
    release_parse_blocks_to_mark(parse_mark);
 
-   history_ptr = old_history_ptr;
-   history[history_ptr+1].warnings = saved_warnings;
+   configuration::history_ptr = old_history_ptr;
+   configuration::restore_warnings(saved_warnings);
    interactivity = interactivity_normal;
 
    return resultval;
@@ -1854,11 +1927,11 @@ static void match_wildcard(
       crossptr--;
       *crossptr = 0;
       pattern = crossname;
-      concidx = cross_concept_index;
+      concidx = useful_concept_indices[UC_cross];
       goto do_cross_stuff;
    case 'C':
       pattern = " cross";
-      concidx = cross_concept_index;
+      concidx = useful_concept_indices[UC_cross];
       goto do_cross_stuff;
    case 'J':
       crossptr = crossname;
@@ -1867,7 +1940,7 @@ static void match_wildcard(
       crossptr--;
       *crossptr = 0;
       pattern = crossname;
-      concidx = magic_concept_index;
+      concidx = useful_concept_indices[UC_magic];
       goto do_cross_stuff;
    case 'Q':
       crossptr = crossname;
@@ -1876,14 +1949,14 @@ static void match_wildcard(
       crossptr--;
       *crossptr = 0;
       pattern = crossname;
-      concidx = grand_concept_index;
+      concidx = useful_concept_indices[UC_grand];
       goto do_cross_stuff;
    case 'M':
-      concidx = magic_concept_index;
+      concidx = useful_concept_indices[UC_magic];
       pattern = " magic";
       goto do_cross_stuff;
    case 'G':
-      concidx = grand_concept_index;
+      concidx = useful_concept_indices[UC_grand];
       pattern = " grand";
       goto do_cross_stuff;
    case 'E':
@@ -1893,7 +1966,7 @@ static void match_wildcard(
       crossptr--;
       *crossptr = 0;
       pattern = crossname;
-      concidx = intlk_concept_index;
+      concidx = useful_concept_indices[UC_intlk];
       goto do_cross_stuff;
    case 'I':
       {
@@ -1912,14 +1985,14 @@ static void match_wildcard(
          else
             pattern = " interlocked";
 
-         concidx = intlk_concept_index;
+         concidx = useful_concept_indices[UC_intlk];
       }
       goto do_cross_stuff;
    case 'e':
       while (*pat++ != '@');
       pat++;
       pattern = "left";
-      concidx = left_concept_index;
+      concidx = useful_concept_indices[UC_left];
       goto do_cross_stuff;
    }
 

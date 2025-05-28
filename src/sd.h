@@ -303,13 +303,112 @@ enum concept_kind {
    concept_diagnose
 };
 
+// These enumerate the "useful" concepts -- concepts that we will automatically
+// generate for the "normalize" command or when we see something like
+// "switch to an interlocked diamond".  The order of these is not important,
+// though they generally follow the order of the concepts in the main table.
+//
+// The concepts in the main table ("unsealed_concept_descriptor_table") have
+// one of these in their "useful" field to register themselves as available
+// for service as a "useful" concept.
+
+enum useful_concept_enum {
+  UC_none,
+  UC_spl,
+  UC_ipl,
+  UC_pl,
+  UC_pl8,
+  UC_pl6,
+  UC_tl,
+  UC_tlwt,
+  UC_tlwa,
+  UC_tlwf,
+  UC_tlwb,
+  UC_trtl,
+  UC_qlwt,
+  UC_qlwa,
+  UC_qlwf,
+  UC_qlwb,
+  UC_spw,
+  UC_ipw,
+  UC_pw,
+  UC_spc,
+  UC_ipc,
+  UC_pc,
+  UC_pc8,
+  UC_pc6,
+  UC_tc,
+  UC_tcwt,
+  UC_tcwa,
+  UC_tcwr,
+  UC_tcwl,
+  UC_trtc,
+  UC_qcwt,
+  UC_qcwa,
+  UC_qcwr,
+  UC_qcwl,
+  UC_spb,
+  UC_ipb,
+  UC_pb,
+  UC_tb,
+  UC_tbwt,
+  UC_tbwa,
+  UC_tbwf,
+  UC_tbwb,
+  UC_tbwr,
+  UC_tbwl,
+  UC_qbwt,
+  UC_qbwa,
+  UC_qbwf,
+  UC_qbwb,
+  UC_qbwr,
+  UC_qbwl,
+  UC_spd,
+  UC_ipd,
+  UC_pd,
+  UC_spds,
+  UC_ipds,
+  UC_pds,
+  UC_td,
+  UC_tdwt,
+  UC_qd,
+  UC_qdwt,
+  UC_sp1,
+  UC_ip1,
+  UC_p1,
+  UC_sp3,
+  UC_ip3,
+  UC_p3,
+  UC_spgt,
+  UC_ipgt,
+  UC_pgt,
+  UC_cpl,
+  UC_tnd,
+  UC_cpl2s,
+  UC_tnd2s,
+  UC_pofl,
+  UC_pofc,
+  UC_pob,
+  UC_magic,
+  UC_pibl,
+  UC_left,
+  UC_cross,
+  UC_grand,
+  UC_intlk,
+  UC_phan,
+  UC_3x3,
+  UC_4x4,
+  UC_2x8matrix,
+  UC_extent    // Not a selector; indicates extent of the enum.
+};
+
 struct concept_descriptor {
    Cstring name;
    C_const concept_kind kind;
    C_const uint32 concparseflags;   // See above.
    C_const dance_level level;
+   C_const useful_concept_enum useful;
    C_const struct {
-      C_const uint32 arg0;
       C_const uint32 arg1;
       C_const uint32 arg2;
       C_const uint32 arg3;
@@ -420,7 +519,7 @@ enum direction_kind {
    direction_zagzag
 };
 
-/* BEWARE!!  There is a static initializer for this, "null_options", in sdmain.cpp
+/* BEWARE!!  There is a static initializer for this, "null_options", in sdtop.cpp
    that must be kept up to date. */
 struct call_conc_option_state {
    selector_kind who;        /* selector, if any, used by concept or call */
@@ -657,7 +756,7 @@ enum start_select_kind {
    start_select_init_session_file,
    start_select_change_outfile,
    start_select_change_header_comment,
-   start_select_kind_enum_extent    // Not a start select kind; indicates extent of the enum.
+   start_select_kind_enum_extent    // Not a start_select kind; indicates extent of the enum.
 };
 
 
@@ -1225,6 +1324,8 @@ enum fixerkey {
    fx_fdmdnd,
    fx_f3x4ndsd,
    fx_f2x8ndsc,
+   fx_f4x6ndoo,
+   fx_f4x6ndxx,
    fx_f1x8nd96,
    fx_f1x8nd69,
    fx_f1x8nd41,
@@ -1572,6 +1673,12 @@ struct match_result {
    int yield_depth;          // If nonzero, this yields by that amount.
 };
 
+struct abbrev_block {
+   Cstring key;
+   modifier_block value;
+   abbrev_block *next;
+};
+
 enum {
     special_index_lineup = -1,
     special_index_linedown = -2,
@@ -1616,9 +1723,10 @@ enum call_list_kind {
    call_list_lin, call_list_lout,
    call_list_rwv, call_list_lwv,
    call_list_r2fl, call_list_l2fl,
-   call_list_gcol, call_list_qtag
+   call_list_gcol, call_list_qtag,
+
+   call_list_extent    // Not a start call_list kind; indicates extent of the enum.
 };
-#define NUM_CALL_LIST_KINDS (((int) call_list_qtag)+1)
 
 enum call_list_mode_t {
    call_list_mode_none,
@@ -1711,15 +1819,15 @@ enum nice_start_kind {
 };
 
 struct nice_setup_thing {
-   int *full_list;
-   int *on_level_list;
+   const useful_concept_enum *zzzfull_list;
+   useful_concept_enum *zzzon_level_list;
    int full_list_size;
 };
 
 struct nice_setup_info_item {
    setup_kind kind;
    nice_setup_thing *thing;
-   int *array_to_use_now;
+   const useful_concept_enum *array_to_use_now;
    int number_available_now;
 };
 
@@ -1865,20 +1973,18 @@ struct comment_block {
    comment_block *nxt;
 };
 
-/* These bits appear in the "concparseflags" word. */
-/* This is a duplicate, and exists only to make menus nicer.
-   Ignore it when scanning in parser. */
-#define CONCPARSE_MENU_DUP       0x00000001UL
-/* If the parse turns out to be ambiguous, don't use this one --
-   yield to the other one. */
+// These bits appear in the "concparseflags" word.
+
+// If the parse turns out to be ambiguous, don't use this one --
+// yield to the other one.
 #define CONCPARSE_YIELD_IF_AMB   0x00000002UL
-/* Parse directly.  It directs the parser to allow this concept
-   (and similar concepts) and the following call to be typed
-   on one line.  One needs to be very careful about avoiding
-   ambiguity when setting this flag. */
+// Parse directly.  It directs the parser to allow this concept
+// (and similar concepts) and the following call to be typed
+// on one line.  One needs to be very careful about avoiding
+// ambiguity when setting this flag.
 #define CONCPARSE_PARSE_DIRECT   0x00000004UL
-/* These are used by "print_recurse" in sdutil.c to control the printing.
-   They govern the placement of commas. */
+// These are used by "print_recurse" in sdutil.c to control the printing.
+// They govern the placement of commas.
 #define CONCPARSE_PARSE_L_TYPE 0x8
 #define CONCPARSE_PARSE_F_TYPE 0x10
 #define CONCPARSE_PARSE_G_TYPE 0x20
@@ -2168,13 +2274,13 @@ class warning_info {
    warning_info()
       { for (int i=0 ; i<WARNING_WORDS ; i++) bits[i] = 0; }
 
-   bool operator != (const warning_info & rhs)
+   bool operator != (const warning_info & rhs) const
       {
          for (int i=0 ; i<WARNING_WORDS ; i++) { if ((bits[i] != rhs.bits[i])) return true; }
          return false;
       }
 
-   bool operator == (const warning_info & rhs)
+   bool operator == (const warning_info & rhs) const
       {
          for (int i=0 ; i<WARNING_WORDS ; i++) { if ((bits[i] != rhs.bits[i])) return false; }
          return true;
@@ -2207,15 +2313,102 @@ class warning_info {
    uint32 bits[WARNING_WORDS];
 };
 
-struct configuration {           // This record is one state in the evolving sequence.
+// A "configuration" is a state in the evolving sequence.
+// There is a global array of these, making up the sequence itself.
+// It is in the static array "history", running from 1 or 2 up to "history_ptr".
+
+class configuration {
+ public:
    parse_block *command_root;
    setup state;
-   resolve_indicator resolve_flag;
    long_boolean draw_pic;
-   warning_info warnings;
-   int centersp;           // Only nonzero for history[1].
    int text_line;          // How many lines of text existed after this item was written,
                            // only meaningful if "written_history_items" is >= this index.
+ private:
+   resolve_indicator resolve_flag;
+   warning_info warnings;
+
+   // This is the index into the "startinfolist".  It is only nonzero for history[1].
+   // It shows how the sequence starts.
+   int startinfoindex;
+
+   // This constant table has useful info pertaining to the various nonzero
+   // values that might be in "startinfoindex", e.g. sides start or heads 1P2P.
+   static startinfo startinfolist[];                  // in SDTABLES
+
+ public:
+
+   // The sequence being written is in a global array "history".  The item
+   // indexed by "history_ptr" is the "current" configuration, and the next higher
+   // one is the "next" configuration.  Each configuration has:
+   //   "state" -- a formation.  (While doing a call, the "cmd" part of the
+   //              state will have the call do be done *from* that formation,
+   //              which will be initialized from the *next higher* "command_root".)
+   //   "command_root" -- the parse tree for the call that got *to* that formation.
+   //   "warnings" -- the warnings, if any, that were raised by that call.
+   //   "resolve_flag" -- the resolve info, if any, for that formation.  That is,
+   //              the resolve *before* the call was executed.
+   //
+   // While we are working a call, the current configuration (indexed by
+   //   "history_ptr", and given by "current_config") has the formation before
+   //   doing the call.  Its "cmd" part has the actual call.  The next
+   //   configuration (given by "next_config") has the call in its "command_root",
+   //   and receives the result formation, the warnings that the call may have
+   //   raised, and the resolve for that result.
+
+   static configuration *history;                     // in SDTOP
+   static int history_ptr;                            // in SDTOP
+   static int whole_sequence_low_lim;                 // in SDTOP
+
+   inline static configuration & current_config() { return history[history_ptr]; }
+   inline static configuration & next_config() { return history[history_ptr+1]; }
+
+   inline static int concepts_in_place()
+      { return next_config().command_root != 0; }
+
+   inline void init_centersp_specific() { startinfoindex = 0; }
+   inline static void initialize_history(int c) {
+      history_ptr = 1;
+      history[1].startinfoindex = c;
+      history[1].draw_pic = FALSE;
+      whole_sequence_low_lim = 
+         (startinfolist[c].into_the_middle) ? 1 : 2;
+   }
+   inline bool nontrivial_startinfo_specific() { return startinfoindex != 0; }
+   inline startinfo *get_startinfo_specific() { return &startinfolist[startinfoindex]; }
+   inline void init_resolve() { resolve_flag.kind = resolve_none; }
+   void calculate_resolve();                          // in SDTOP
+   inline static resolve_indicator current_resolve() { return current_config().resolve_flag; }
+   inline static resolve_indicator next_resolve() { return next_config().resolve_flag; }
+   inline static bool sequence_is_resolved() { return current_resolve().kind != resolve_none; }
+
+   inline void restore_warnings_specific(const warning_info & rhs)
+      { warnings = rhs; }
+   inline void init_warnings_specific()
+      { warnings = warning_info(); }
+   inline void clear_one_warning_specific(warning_index i)
+      { warnings.clearbit(i); }
+   inline bool test_one_warning_specific(warning_index i) const { return warnings.testbit(i); }
+
+   inline bool warnings_are_different(const configuration & rhs) const
+      { return warnings != rhs.warnings; }
+
+   inline static warning_info save_warnings()
+      { return next_config().warnings; }
+   inline static void restore_warnings(const warning_info & rhs)
+      { next_config().warnings = rhs; }
+   inline static void init_warnings()
+      { next_config().warnings = warning_info(); }
+   inline static void set_one_warning(warning_index i)
+      { next_config().warnings.setbit(i); }
+   inline static void clear_one_warning(warning_index i)
+      { next_config().clear_one_warning_specific(i); }
+   inline static void set_multiple_warnings(const warning_info & rhs)
+      { next_config().warnings.setmultiple(rhs); }
+   inline static void clear_multiple_warnings(const warning_info & rhs)
+      { next_config().warnings.clearmultiple(rhs); }
+   inline static bool test_multiple_warnings(const warning_info & rhs)
+      { return next_config().warnings.testmultiple(rhs); }
 };
 
 
@@ -2719,8 +2912,8 @@ enum restriction_test_result {
 struct concept_fixer_thing {
    uint32 newheritmods;
    uint32 newfinalmods;
-   int before;    /* These are indices into concept_descriptor_table. */
-   int after;
+   useful_concept_enum before;
+   useful_concept_enum after;
 };
 
 enum selective_key {
@@ -2775,6 +2968,7 @@ enum meta_key_kind {
    meta_key_revorder,
    meta_key_like_a,
    meta_key_finally,
+   meta_key_initially_and_finally,
    meta_key_nth_part_work,
    meta_key_first_frac_work,
    meta_key_skip_nth_part,
@@ -2788,6 +2982,14 @@ enum revert_weirdness_type {
    weirdness_off,
    weirdness_flatten_from_3,
    weirdness_otherstuff
+};
+
+
+enum split_command_kind {
+   split_command_none,
+   split_command_1x4,
+   split_command_1x8,
+   split_command_2x3,
 };
 
 
@@ -2817,6 +3019,10 @@ extern SDLIB_API int level_concept_list_length;
 extern SDLIB_API modifier_block *fcn_key_table_normal[FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1];
 extern SDLIB_API modifier_block *fcn_key_table_start[FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1];
 extern SDLIB_API modifier_block *fcn_key_table_resolve[FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1];
+extern SDLIB_API abbrev_block *abbrev_table_normal;
+extern SDLIB_API abbrev_block *abbrev_table_start;
+extern SDLIB_API abbrev_block *abbrev_table_resolve;
+
 extern SDLIB_API match_result user_match;
 
 
@@ -2945,8 +3151,6 @@ extern SDLIB_API char error_message1[MAX_ERR_LENGTH];               /* in SDTOP 
 extern SDLIB_API char error_message2[MAX_ERR_LENGTH];               /* in SDTOP */
 extern SDLIB_API uint32 collision_person1;                          /* in SDTOP */
 extern SDLIB_API uint32 collision_person2;                          /* in SDTOP */
-extern SDLIB_API configuration *history;                            /* in SDTOP */
-extern SDLIB_API int history_ptr;                                   /* in SDTOP */
 extern SDLIB_API int history_allocation;                            /* in SDTOP */
 extern SDLIB_API int written_history_items;                         /* in SDTOP */
 extern SDLIB_API int written_history_nopic;                         /* in SDTOP */
@@ -2956,7 +3160,6 @@ extern SDLIB_API long_boolean there_is_a_call;                      /* in SDTOP 
 
 extern SDLIB_API call_with_name **base_calls;                       /* in SDTOP */
 extern SDLIB_API ui_option_type ui_options;                         /* in SDTOP */
-extern SDLIB_API int whole_sequence_low_lim;                        /* in SDTOP */
 extern SDLIB_API long_boolean enable_file_writing;                  /* in SDTOP */
 extern SDLIB_API Cstring cardinals[];                               /* in SDTOP */
 extern SDLIB_API Cstring ordinals[];                                /* in SDTOP */
@@ -3005,9 +3208,11 @@ extern SDLIB_API dance_level level_threshholds[];                   /* in SDTOP 
 extern SDLIB_API int allowing_modifications;                        /* in SDTOP */
 extern SDLIB_API int hashed_randoms;                                /* in SDTOP */
 
-extern SDLIB_API selector_kind selector_for_initialize;             /* in SDINIT */
-extern SDLIB_API direction_kind direction_for_initialize;           /* in SDINIT */
-extern SDLIB_API int number_for_initialize;                         /* in SDINIT */
+extern int useful_concept_indices[UC_extent];                       /* in SDINIT */
+extern selector_kind selector_for_initialize;                       /* in SDINIT */
+extern direction_kind direction_for_initialize;                     /* in SDINIT */
+extern int number_for_initialize;                                   /* in SDINIT */
+extern SDLIB_API int *color_index_list;                             /* in SDINIT */
 
 extern SDLIB_API error_flag_type global_error_flag;                 /* in SDUTIL */
 extern SDLIB_API uims_reply global_reply;                           /* in SDUTIL */
@@ -3036,10 +3241,10 @@ extern warning_info no_search_warnings;                             /* in SDTOP 
 extern warning_info conc_elong_warnings;                            /* in SDTOP */
 extern warning_info dyp_each_warnings;                              /* in SDTOP */
 extern warning_info useless_phan_clw_warnings;                      /* in SDTOP */
-extern int concept_sublist_sizes[NUM_CALL_LIST_KINDS];              /* in SDTOP */
-extern short int *concept_sublists[NUM_CALL_LIST_KINDS];            /* in SDTOP */
-extern int good_concept_sublist_sizes[NUM_CALL_LIST_KINDS];         /* in SDTOP */
-extern short int *good_concept_sublists[NUM_CALL_LIST_KINDS];       /* in SDTOP */
+extern int concept_sublist_sizes[call_list_extent];                 /* in SDTOP */
+extern short int *concept_sublists[call_list_extent];               /* in SDTOP */
+extern int good_concept_sublist_sizes[call_list_extent];            /* in SDTOP */
+extern short int *good_concept_sublists[call_list_extent];          /* in SDTOP */
 
 extern long_boolean selector_used;                                  /* in SDPREDS */
 extern long_boolean direction_used;                                 /* in SDPREDS */
@@ -3057,7 +3262,6 @@ extern SDLIB_API ctr_end_mask_rec masks_for_bigh_ctr4;              /* in SDTABL
 extern SDLIB_API ctr_end_mask_rec masks_for_4x4;                    /* in SDTABLES */
 extern SDLIB_API setup_attr setup_attrs[];                          /* in SDTABLES */
 extern SDLIB_API int begin_sizes[];                                 /* in SDTABLES */
-extern SDLIB_API startinfo startinfolist[];                         /* in SDTABLES */
 
 extern id_bit_table id_bit_table_2x5_z[];                           /* in SDTABLES */
 extern id_bit_table id_bit_table_2x6_pg[];                          /* in SDTABLES */
@@ -3356,20 +3560,11 @@ struct clw3_thing {
 
 extern concept_descriptor unsealed_concept_descriptor_table[];
 extern SDLIB_API const concept_descriptor *concept_descriptor_table;
-extern SDLIB_API call_with_name **main_call_lists[NUM_CALL_LIST_KINDS];
-extern SDLIB_API int number_of_calls[NUM_CALL_LIST_KINDS];
+extern SDLIB_API call_with_name **main_call_lists[call_list_extent];
+extern SDLIB_API int number_of_calls[call_list_extent];
 extern SDLIB_API dance_level calling_level;
 
 extern SDLIB_API nice_setup_info_item nice_setup_info[];
-extern SDLIB_API int phantom_concept_index;
-extern SDLIB_API int matrix_2x8_concept_index;
-extern SDLIB_API int cross_concept_index;
-extern SDLIB_API int magic_concept_index;
-extern SDLIB_API int intlk_concept_index;
-extern SDLIB_API int left_concept_index;
-extern SDLIB_API int grand_concept_index;
-extern SDLIB_API int general_concept_offset;
-extern SDLIB_API int general_concept_size;
 
 extern SDLIB_API concept_descriptor centers_concept;
 extern concept_descriptor special_magic;
@@ -3380,11 +3575,7 @@ extern SDLIB_API concept_descriptor marker_concept_mod;
 extern SDLIB_API concept_descriptor marker_concept_comment;
 extern concept_descriptor marker_concept_supercall;
 
-extern concept_fixer_thing concept_fixer_table[];
-
-extern int *concept_offset_tables[];
-extern int *concept_size_tables[];
-extern Cstring concept_menu_strings[];
+extern const concept_fixer_thing concept_fixer_table[];
 
 extern SDLIB_API selector_item selector_list[];                     /* in SDTABLES */
 extern SDLIB_API Cstring warning_strings[];                         /* in SDTABLES */
@@ -3531,7 +3722,7 @@ extern long_boolean divide_for_magic(
 
 extern long_boolean do_simple_split(
    setup *ss,
-   uint32 prefer_1x4,   /* 1 means prefer 1x4, 2 means this is 1x8 and do not recompute id. */
+   split_command_kind split_command,
    setup *result) THROW_DECL;
 
 extern void do_call_in_series(
@@ -3842,8 +4033,6 @@ extern long_boolean fix_n_results(int arity, setup_kind goal, setup z[],
                                   uint32 & pointclip)
      THROW_DECL;
 
-extern resolve_indicator resolve_p(setup *s);
-
 extern bool warnings_are_unacceptable(bool strict);
 
 extern void normalize_setup(setup *ss, normalize_action action) THROW_DECL;
@@ -3990,8 +4179,6 @@ SDLIB_API long_boolean get_next_session_line(char *dest);
 SDLIB_API void prepare_to_read_menus();
 SDLIB_API int process_session_info(Cstring *error_msg);
 SDLIB_API void open_call_list_file(char filename[]);
-SDLIB_API long_boolean open_accelerator_region();
-SDLIB_API long_boolean get_accelerator_line(char line[]);
 SDLIB_API void close_init_file();
 SDLIB_API void general_final_exit(int code);
 SDLIB_API long_boolean open_database(char *msg1, char *msg2);
@@ -4007,7 +4194,8 @@ SDLIB_API long_boolean iterate_over_sel_dir_num(
 
 /* In SDMATCH */
 
-SDLIB_API void do_accelerator_spec(Cstring qq);
+void do_accelerator_spec(Cstring qq, bool is_accelerator);
+SDLIB_API bool process_accel_or_abbrev(modifier_block & mb, char linebuff[]);
 SDLIB_API void erase_matcher_input();
 SDLIB_API int delete_matcher_word();
 void matcher_initialize();
@@ -4118,7 +4306,6 @@ SDLIB_API void write_file(char line[]);
 
 /* in SDMAIN */
 
-SDLIB_API long_boolean sequence_is_resolved();
 SDLIB_API long_boolean deposit_call(call_with_name *call, const call_conc_option_state *options);
 SDLIB_API long_boolean deposit_concept(const concept_descriptor *conc);
 SDLIB_API int sdmain(int argc, char *argv[]);

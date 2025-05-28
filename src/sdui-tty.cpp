@@ -154,7 +154,7 @@ void refresh_input()
 
 static int current_text_line;
 
-static char *call_menu_prompts[NUM_CALL_LIST_KINDS];
+static char *call_menu_prompts[call_list_extent];
 
 /* For the "alternate_glyphs_1" command-line switch. */
 static char alt1_names1[] = "        ";
@@ -409,13 +409,6 @@ void iofull::create_menu(call_list_kind cl)
 /* The main program calls this after all the call menus have been created,
    after all calls to create_menu.
    This performs any final initialization required by the interface package.
-
-   It must also perform any required setup of the concept menu.  The
-   concepts are not presented procedurally.  Instead, they can be found
-   in the external array concept_descriptor_table+general_concept_offset.
-   The number of concepts in that list is general_concept_size.  For each
-   i, the field concept_descriptor_table[i].name has the text that we
-   should display for the user.
 */
 
 
@@ -553,7 +546,6 @@ static long_boolean get_user_input(char *prompt, int which)
       nc = get_char();
 
       if (nc >= 128) {
-         char linebuff [INPUT_TEXTLINE_SIZE+1];
          modifier_block *keyptr;
          int chars_deleted;
          int which_target = which;
@@ -614,57 +606,23 @@ static long_boolean get_user_input(char *prompt, int which)
             continue;   /* No binding for this key; ignore it. */
          }
 
-         /* If we get here, we have a function key to process from the table. */
+         // If we get here, we have a function key to process from the table.
 
-         user_match.match = *keyptr;
-         user_match.indent = FALSE;
-         user_match.real_next_subcall = (match_result *) 0;
-         user_match.real_secondary_subcall = (match_result *) 0;
+         char linebuff[INPUT_TEXTLINE_SIZE+1];
+         if (process_accel_or_abbrev(*keyptr, linebuff)) {
+            put_line(linebuff);
+            put_line("\n");
 
-         switch (user_match.match.kind) {
-         case ui_command_select:
-            strcpy(linebuff, command_commands[user_match.match.index]);
-            user_match.match.index = -1-command_command_values[user_match.match.index];
-            break;
-         case ui_resolve_select:
-            strcpy(linebuff, resolve_menu[user_match.match.index].command_name);
-            user_match.match.index = -1-resolve_menu[user_match.match.index].action;
-            break;
-         case ui_start_select:
-            strcpy(linebuff, startup_commands[user_match.match.index]);
-            break;
-         case ui_concept_select:
-            unparse_call_name(user_match.match.concept_ptr->name,
-                              linebuff,
-                              &user_match.match.call_conc_options);
-            // Reject off-level concept accelerator key presses.
-            if (!allowing_all_concepts &&
-                user_match.match.concept_ptr->level > higher_acceptable_level[calling_level])
-               continue;
-            user_match.match.index = 0;
-            break;
-         case ui_call_select:
-            unparse_call_name(user_match.match.call_ptr->name,
-                              linebuff,
-                              &user_match.match.call_conc_options);
-            user_match.match.index = 0;
-            break;
-         default:
-            continue;
+            if (journal_file) {
+               fputs(linebuff, journal_file);
+               fputc('\n', journal_file);
+            }
+
+            current_text_line++;
+            return FALSE;
          }
 
-         user_match.valid = TRUE;
-
-         put_line(linebuff);
-         put_line("\n");
-
-         if (journal_file) {
-            fputs(linebuff, journal_file);
-            fputc('\n', journal_file);
-         }
-
-         current_text_line++;
-         return FALSE;
+         continue;   // Couldn't be processed; ignore the key press.
       }
 
    do_character:
@@ -727,6 +685,38 @@ static long_boolean get_user_input(char *prompt, int which)
             uims_bell();
       }
       else if ((c == '\n') || (c == '\r')) {
+
+         // Look for abbreviations.
+
+         abbrev_block *asearch = (abbrev_block *) 0;
+
+         if (which == match_startup_commands)
+            asearch = abbrev_table_start;
+         else if (which == match_resolve_commands)
+            asearch = abbrev_table_resolve;
+         else if (which >= 0)
+            asearch = abbrev_table_normal;
+
+         for ( ; asearch ; asearch = asearch->next) {
+            if (!strcmp(asearch->key, GLOB_user_input)) {
+               char linebuff[INPUT_TEXTLINE_SIZE+1];
+               if (process_accel_or_abbrev(asearch->value, linebuff)) {
+                  refresh_input();
+                  put_line(linebuff);
+                  put_line("\n");
+
+                  if (journal_file) {
+                     fputs(linebuff, journal_file);
+                     fputc('\n', journal_file);
+                  }
+
+                  current_text_line++;
+                  return FALSE;
+               }
+               break;   // Couldn't be processed.  Stop.  No other abbreviations will match.
+            }
+         }
+
          matches = match_user_input(which, FALSE, FALSE, TRUE);
          user_match = GLOB_match;
 

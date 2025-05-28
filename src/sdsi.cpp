@@ -36,15 +36,12 @@
    write_to_call_list_file
    close_call_list_file
    install_outfile_string
-   get_first_session_line
    get_next_session_line
    prepare_to_read_menus
    initialize_misc_lists
    open_session
    process_session_info
    open_call_list_file
-   open_accelerator_region
-   get_accelerator_line
    close_init_file
    open_database
    read_8_from_database

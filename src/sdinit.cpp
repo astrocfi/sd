@@ -19,6 +19,7 @@ and the following external variables:
    selector_for_initialize
    direction_for_initialize
    number_for_initialize
+   color_index_list
 */
 
 #include <stdlib.h>
@@ -40,6 +41,7 @@ and the following external variables:
 selector_kind selector_for_initialize;
 direction_kind direction_for_initialize;
 int number_for_initialize;
+int *color_index_list;
 
 /* Global to this file. */
 
@@ -67,8 +69,12 @@ enum {
    G4A = 0700|ID1_PERM_NSB|ID1_PERM_NHG|ID1_PERM_NHB|ID1_PERM_HCOR|ID1_PERM_SIDE|ID1_PERM_GIRL
 };
 
-/* In all of these setups in which people are facing, they are normal couples.  This makes initialization of things like star thru,
-   ladies chain, and curlique work.  The setup for starting DPT has the appropriate sex for triple star thru. */
+// In all of these setups in which people are facing, they are normal couples.
+// In general, we use the "Callerlab #0" arrangement for things like lines and waves.
+// This makes initialization work for things like star thru, ladies chain, curlique,
+// and half breed thru from waves.
+//
+// But the setup for starting DPT has the appropriate sex for triple star thru.
 static setup test_setup_1x8  = {s1x8, 0, {0}, {{NORT|B4A, 0}, {SOUT|G3A, 0}, {SOUT|B3A, 0}, {NORT|G4A, 0}, {SOUT|B2A, 0}, {NORT|G1A, 0}, {NORT|B1A, 0}, {SOUT|G2A, 0}}, 0};
 static setup test_setup_l1x8 = {s1x8, 0, {0}, {{SOUT|B4A, 0}, {NORT|G3A, 0}, {NORT|B3A, 0}, {SOUT|G4A, 0}, {NORT|B2A, 0}, {SOUT|G1A, 0}, {SOUT|B1A, 0}, {NORT|G2A, 0}}, 0};
 static setup test_setup_dpt  = {s2x4, 0, {0}, {{EAST|G2A, 0}, {EAST|B3A, 0}, {WEST|G3A, 0}, {WEST|B2A, 0}, {WEST|G4A, 0}, {WEST|B1A, 0}, {EAST|G1A, 0}, {EAST|B4A, 0}}, 0};
@@ -79,8 +85,8 @@ static setup test_setup_8ch  = {s2x4, 0, {0}, {{EAST|B4A, 0}, {WEST|G3A, 0}, {EA
 static setup test_setup_tby  = {s2x4, 0, {0}, {{WEST|G3A, 0}, {EAST|B4A, 0}, {WEST|G4A, 0}, {EAST|B3A, 0}, {EAST|G1A, 0}, {WEST|B2A, 0}, {EAST|G2A, 0}, {WEST|B1A, 0}}, 0};
 static setup test_setup_lin  = {s2x4, 0, {0}, {{SOUT|G2A, 0}, {SOUT|B1A, 0}, {SOUT|G1A, 0}, {SOUT|B2A, 0}, {NORT|G4A, 0}, {NORT|B3A, 0}, {NORT|G3A, 0}, {NORT|B4A, 0}}, 0};
 static setup test_setup_lout = {s2x4, 0, {0}, {{NORT|B4A, 0}, {NORT|G3A, 0}, {NORT|B3A, 0}, {NORT|G4A, 0}, {SOUT|B2A, 0}, {SOUT|G1A, 0}, {SOUT|B1A, 0}, {SOUT|G2A, 0}}, 0};
-static setup test_setup_rwv  = {s2x4, 0, {0}, {{NORT|B4A, 0}, {SOUT|G3A, 0}, {NORT|B3A, 0}, {SOUT|G4A, 0}, {SOUT|B2A, 0}, {NORT|G1A, 0}, {SOUT|B1A, 0}, {NORT|G2A, 0}}, 0};
-static setup test_setup_lwv  = {s2x4, 0, {0}, {{SOUT|B4A, 0}, {NORT|G3A, 0}, {SOUT|B3A, 0}, {NORT|G4A, 0}, {NORT|B2A, 0}, {SOUT|G1A, 0}, {NORT|B1A, 0}, {SOUT|G2A, 0}}, 0};
+static setup test_setup_rwv  = {s2x4, 0, {0}, {{NORT|B4A, 0}, {SOUT|G3A, 0}, {NORT|G4A, 0}, {SOUT|B3A, 0}, {SOUT|B2A, 0}, {NORT|G1A, 0}, {SOUT|G2A, 0}, {NORT|B1A, 0}}, 0};
+static setup test_setup_lwv  = {s2x4, 0, {0}, {{SOUT|B4A, 0}, {NORT|G3A, 0}, {SOUT|G4A, 0}, {NORT|B3A, 0}, {NORT|B2A, 0}, {SOUT|G1A, 0}, {NORT|G2A, 0}, {SOUT|B1A, 0}}, 0};
 static setup test_setup_r2fl = {s2x4, 0, {0}, {{NORT|B4A, 0}, {NORT|G3A, 0}, {SOUT|G4A, 0}, {SOUT|B3A, 0}, {SOUT|B2A, 0}, {SOUT|G1A, 0}, {NORT|G2A, 0}, {NORT|B1A, 0}}, 0};
 static setup test_setup_l2fl = {s2x4, 0, {0}, {{SOUT|G3A, 0}, {SOUT|B4A, 0}, {NORT|B3A, 0}, {NORT|G4A, 0}, {NORT|G1A, 0}, {NORT|B2A, 0}, {SOUT|B1A, 0}, {SOUT|G2A, 0}}, 0};
 
@@ -229,10 +235,10 @@ static void test_starting_setup(call_list_kind cl, const setup *test_setup)
    number_used = FALSE;
    mandatory_call_used = FALSE;
 
-   history_ptr = 1;
+   configuration::history_ptr = 1;
 
-   history[history_ptr].centersp = 0;
-   history[history_ptr].state = *test_setup;
+   configuration::current_config().init_centersp_specific();
+   configuration::current_config().state = *test_setup;
    initialize_parse();
 
    // If the call has the "rolldefine" schema, we accept it, since the test setups
@@ -261,13 +267,13 @@ static void test_starting_setup(call_list_kind cl, const setup *test_setup)
 
    try {
       if (crossiness)
-         (void) deposit_concept(&concept_descriptor_table[cross_concept_index]);
+         (void) deposit_concept(&concept_descriptor_table[useful_concept_indices[UC_cross]]);
 
       if (magicness)
-         (void) deposit_concept(&concept_descriptor_table[magic_concept_index]);
+         (void) deposit_concept(&concept_descriptor_table[useful_concept_indices[UC_magic]]);
 
       if (intlkness)
-         (void) deposit_concept(&concept_descriptor_table[intlk_concept_index]);
+         (void) deposit_concept(&concept_descriptor_table[useful_concept_indices[UC_intlk]]);
 
       if (deposit_call(test_call, &null_options)) goto try_again;
       toplevelmove();
@@ -1100,30 +1106,44 @@ extern long_boolean install_outfile_string(char newstring[])
 }
 
 
-extern long_boolean get_first_session_line()
+static bool find_init_file_region(Cstring key, int length)
 {
    char line[MAX_FILENAME_LENGTH];
 
+   if (!init_file) return false;
+
+   if (fseek(init_file, 0, SEEK_SET))
+      return false;
+
+   // Search for the indicator.
+   // We need to use strncmp, and give an explicit length,
+   // because various operating systems put various types of
+   // newline garbage at the end of the line when we read it
+   // from the file.
+
+   for (;;) {
+      if (!fgets(line, MAX_FILENAME_LENGTH, init_file)) return false;
+      if (!strncmp(line, key, length)) return true;
+   }
+}
+
+extern long_boolean get_first_session_line()
+{
    session_line_state = 0;
 
-   /* If we are writing a call list file, that's all we do. */
+   // If we are writing a call list file, that's all we do.
 
    if (glob_call_list_mode == call_list_mode_writing ||
        glob_call_list_mode == call_list_mode_writing_full)
       return TRUE;
 
-   /* Or if the file didn't exist, or we are in diagnostic mode. */
+   // Or if the file didn't exist, or we are in diagnostic mode.
    if (!init_file || diagnostic_mode) return TRUE;
 
-   /* Search for the "[Sessions]" indicator. */
+   // Search for the "[Sessions]" indicator.
 
-   if (fseek(init_file, 0, SEEK_SET))
+   if (!find_init_file_region("[Sessions]", 10))
       return TRUE;
-
-   for (;;) {
-      if (!fgets(line, MAX_FILENAME_LENGTH, init_file)) return TRUE;
-      if (!strncmp(line, "[Sessions]", 10)) break;
-   }
 
    return FALSE;
 }
@@ -1142,7 +1162,7 @@ extern long_boolean get_next_session_line(char *dest)
    else if (session_line_state == 2)
       return FALSE;
 
-   if (!fgets(line, MAX_FILENAME_LENGTH, init_file) || line[0] == '\n') {
+   if (!fgets(line, MAX_FILENAME_LENGTH, init_file) || line[0] == '\n' || line[0] == '[') {
       session_line_state = 2;
       sprintf(dest, "%3d     (create a new session)", session_linenum+1);
       return TRUE;
@@ -1251,22 +1271,14 @@ extern int process_session_info(Cstring *error_msg)
       char filename_string[MAX_FILENAME_LENGTH];
       char session_levelstring[50];
 
-      /* Find the "[Sessions]" indicator again. */
+      // Find the "[Sessions]" indicator again.
 
-      if (fseek(init_file, 0, SEEK_SET)) {
+      if (!find_init_file_region("[Sessions]", 10)) {
          *error_msg = "Can't find correct position in session file.";
          return 3;
       }
 
-      for (;;) {
-         if (!fgets(line, MAX_FILENAME_LENGTH, init_file)) {
-            *error_msg = "Can't find correct indicator in session file.";
-            return 3;
-         }
-         if (!strncmp(line, "[Sessions]", 10)) break;
-      }
-
-      /* Skip over the lines before the one we want. */
+      // Skip over the lines before the one we want.
 
       for (i=0 ; i<session_index ; i++) {
          if (!fgets(line, MAX_FILENAME_LENGTH, init_file)) break;
@@ -1305,7 +1317,7 @@ extern int process_session_info(Cstring *error_msg)
       }
    }
    else {
-      /* We are creating a new session to be appended to the file. */
+      // We are creating a new session to be appended to the file.
       sequence_number = 1;
       need_new_header_comment = TRUE;
    }
@@ -1324,36 +1336,15 @@ extern void open_call_list_file(char filename[])
 }
 
 
-extern long_boolean open_accelerator_region()
+static bool get_accelerator_line(char line[])
 {
-   char line[MAX_FILENAME_LENGTH];
-
-   if (!init_file) return FALSE;
-
-   if (fseek(init_file, 0, SEEK_SET))
-      return FALSE;
-
-   // Search for the "[Accelerators]" indicator.
-
-   for (;;) {
-      if (!fgets(line, MAX_FILENAME_LENGTH, init_file)) return FALSE;
-      if (!strncmp(line, "[Accelerators]", 14)) return TRUE;
-   }
-}
-
-extern long_boolean get_accelerator_line(char line[])
-{
-   if (!init_file) return FALSE;
-
    for ( ;; ) {
-      int j;
+      if (!fgets(line, MAX_FILENAME_LENGTH, init_file) || line[0] == '\n' || line[0] == '[') return false;
 
-      if (!fgets(line, MAX_FILENAME_LENGTH, init_file) || line[0] == '\n') return FALSE;
+      int j = strlen(line);
+      if (j>0) line[j-1] = '\0';   // Strip off the <NEWLINE> -- we don't want it.
 
-      j = strlen(line);
-      if (j>0) line[j-1] = '\0';   /* Strip off the <NEWLINE> -- we don't want it. */
-
-      if (line[0] != '#') return TRUE;
+      if (line[0] != '#') return true;
    }
 }
 
@@ -1803,6 +1794,42 @@ static const char *translate_menu_name(const char *orig_name, uint32 *escape_bit
 }
 
 
+
+// The internal color scheme is:
+//
+// 0 - not used
+// 1 - substitute yellow
+// 2 - red
+// 3 - green
+// 4 - yellow
+// 5 - blue
+// 6 - magenta
+// 7 - cyan
+//
+// The substitute yellow is for use when normal_video (white background)
+// is selected.  It is dark yellow if available, otherwise black.
+
+// Alternating blue and red.
+static int bold_person_colors[8] = {5, 2, 5, 2, 5, 2, 5, 2};
+
+// Alternating bletcherous blue and putrid pink.
+static int pastel_person_colors[8] = {7, 6, 7, 6, 7, 6, 7, 6};
+
+// Red, green, blue, yellow, red for wraparound if coloring by corner.
+static int couple_colors_rgby[9] = {2, 2, 3, 3, 5, 5, 4, 4, 2};
+
+// Red, green, blue, substitute yellow, red for wraparound if coloring by corner.
+static int couple_colors_rgbk[9] = {2, 2, 3, 3, 5, 5, 1, 1, 2};
+
+// Red, green, yellow, blue.
+static int couple_colors_rgyb[8] = {2, 2, 3, 3, 4, 4, 5, 5};
+
+// Red, green, substitute yellow, blue.
+static int couple_colors_rgkb[8] = {2, 2, 3, 3, 1, 1, 5, 5};
+
+
+int useful_concept_indices[UC_extent];
+
 extern long_boolean open_session(int argc, char **argv)
 {
    int i, j;
@@ -1821,21 +1848,16 @@ extern long_boolean open_session(int argc, char **argv)
    /* Read the initialization file, looking for options. */
 
    init_file = fopen(SESSION_FILENAME, "r");
+   int insert_pos = 1;
 
-   if (init_file) {
-      int insert_pos = 1;
+   // Search for the "[Options]" indicator.
 
-      /* Search for the "[Options]" indicator. */
-
-      for (;;) {
-         if (!fgets(line, MAX_FILENAME_LENGTH, init_file)) goto no_options;
-         if (!strncmp(line, "[Options]", 9)) break;
-      }
-
+   if (find_init_file_region("[Options]", 9)) {
       for (;;) {
          char *lineptr = line;
 
-         if (!fgets(&line[1], MAX_FILENAME_LENGTH, init_file) || line[1] == '\n') break;
+         // Blank line or line starting with left bracket ends the section.
+         if (!fgets(&line[1], MAX_FILENAME_LENGTH, init_file) || line[1] == '\n' || line[1] == '[') break;
 
          j = strlen(&line[1]);
          if (j>0) line[j] = '\0';   /* Strip off the <NEWLINE> -- we don't want it. */
@@ -1866,8 +1888,6 @@ extern long_boolean open_session(int argc, char **argv)
             lineptr += newpos;
          }
       }
-
-      no_options: ;
    }
 
    /* This lets the user interface intercept command line arguments that it is interested in. */
@@ -1998,6 +2018,38 @@ extern long_boolean open_session(int argc, char **argv)
       return TRUE;
    }
 
+   // Set up the color translations based on the user's options.
+
+   if (ui_options.color_scheme == color_by_gender ||
+       ui_options.color_scheme == no_color) {
+      // It doesn't really matter if "no_color" is selected,
+      // as long as we put in something.  The Windows interface
+      // code simply sets the palette so that all colors are
+      // monochrome, and then uses color_index_list.
+      if (ui_options.pastel_color)
+         color_index_list = pastel_person_colors;
+      else
+         color_index_list = bold_person_colors;
+   }
+   else {
+      if (ui_options.reverse_video || ui_options.no_intensify) {
+         if (ui_options.color_scheme == color_by_corner)
+            color_index_list = couple_colors_rgby+1;
+         else if (ui_options.color_scheme == color_by_couple_rgyb)
+            color_index_list = couple_colors_rgyb;
+         else                      // color_by_couple
+            color_index_list = couple_colors_rgby;
+      }
+      else {
+         if (ui_options.color_scheme == color_by_corner)
+            color_index_list = couple_colors_rgbk+1;
+         else if (ui_options.color_scheme == color_by_couple_rgyb)
+            color_index_list = couple_colors_rgkb;
+         else                      // color_by_couple
+            color_index_list = couple_colors_rgbk;
+      }
+   }
+
    if (ui_options.sequence_num_override > 0)
       sequence_number = ui_options.sequence_num_override;
 
@@ -2013,9 +2065,25 @@ extern long_boolean open_session(int argc, char **argv)
 
    uint32 escape_bit_junk;
 
-   for (i=0; unsealed_concept_descriptor_table[i].kind != marker_end_of_list; i++)
+   for (i = 0 ; i < UC_extent ; i++)
+      useful_concept_indices[i] = -1;
+
+   for (i=0; unsealed_concept_descriptor_table[i].kind != marker_end_of_list; i++) {
       unsealed_concept_descriptor_table[i].menu_name =
          translate_menu_name(unsealed_concept_descriptor_table[i].name, &escape_bit_junk);
+
+      if (unsealed_concept_descriptor_table[i].useful != UC_none) {
+         if (useful_concept_indices[unsealed_concept_descriptor_table[i].useful] >= 0)
+            gg->fatal_error_exit(1, "Concept registered twice.");
+
+         useful_concept_indices[unsealed_concept_descriptor_table[i].useful] = i;
+      }
+   }
+
+   for (i = 1 ; i < UC_extent ; i++) {
+     if (useful_concept_indices[i] < 0)
+        gg->fatal_error_exit(1, "Concept failed to register.");
+   }
 
    // "Seal" various statically initialized tables.  It seems that C-style
    // aggregate initializers make C++ compilers unhappy and cantankerous,
@@ -2181,6 +2249,7 @@ extern long_boolean open_session(int argc, char **argv)
 
    matcher_initialize();
 
+   // Make the status bar show that we are processing accelerators.
    gg->init_step(do_accelerator, 0);
 
    {
@@ -2189,15 +2258,23 @@ extern long_boolean open_session(int argc, char **argv)
 
       // Process the keybindings for user-definable calls, concepts, and commands.
 
-      if (open_accelerator_region()) {
+      if (find_init_file_region("[Accelerators]", 14)) {
          char q[INPUT_TEXTLINE_SIZE];
          while (get_accelerator_line(q))
-            do_accelerator_spec(q);
+            do_accelerator_spec(q, true);
       }
       else {
          Cstring *q;
          for (q = concept_key_table ; *q ; q++)
-            do_accelerator_spec(*q);
+            do_accelerator_spec(*q, true);
+      }
+
+      // Now do the abbreviations.
+
+      if (find_init_file_region("[Abbreviations]", 15)) {
+         char q[INPUT_TEXTLINE_SIZE];
+         while (get_accelerator_line(q))
+            do_accelerator_spec(q, false);
       }
 
       allowing_all_concepts = save_allow;

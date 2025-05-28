@@ -1954,11 +1954,8 @@ static int divide_the_setup(
    int i, j;
    uint32 livemask;
    long_boolean recompute_anyway;
-   long_boolean temp_for_2x2;
-   long_boolean temp;
    callarray *have_1x2, *have_2x1;
    uint32 division_code = ~0UL;
-   mpkind map_kind;
    uint32 newtb = *newtb_p;
    uint32 callflags1 = ss->cmd.callspec->the_defn.callflags1;
    uint64 final_concepts = ss->cmd.cmd_final_flags;
@@ -1999,6 +1996,8 @@ static int divide_the_setup(
 
    switch (ss->kind) {
       int tbi, tbo;
+      bool temp;
+      bool temp_for_2x2;
 
    case s_thar:
       if (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK)
@@ -2277,10 +2276,10 @@ static int divide_the_setup(
             return 2;        /* And try again. */
          }
 
-         /* Check whether it has 1x6/6x1 definitions, and divide the setup if so,
-            and if the caller explicitly said "1x12 matrix". */
+         // Check whether it has 1x6/6x1 definitions, and divide the setup if so,
+         // and if the caller explicitly said "1x12 matrix".
 
-         temp = (callflags1 & CFLAG1_SPLIT_LARGE_SETUPS);
+         temp = (callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) != 0;
 
          if (temp ||
              (TEST_HERITBITS(ss->cmd.cmd_final_flags,INHERITFLAG_12_MATRIX)) ||
@@ -2288,8 +2287,8 @@ static int divide_the_setup(
             if ((!(newtb & 010) || assoc(b_1x6, ss, calldeflist)) &&
                 (!(newtb & 001) || assoc(b_6x1, ss, calldeflist))) {
                division_code = MAPCODE(s1x6,2,MPKIND__SPLIT,0);
-               /* See comment above about abomination. */
-               /* If database said to split, don't give warning. */
+               // See comment above about abomination.
+               // If database said to split, don't give warning.
                if (!temp) warn(warn__split_to_1x6s);
                goto divide_us_no_recompute;
             }
@@ -2325,7 +2324,7 @@ static int divide_the_setup(
          // Check whether it has 1x8/8x1 definitions, and divide the setup if so,
          // and if the caller explicitly said "1x16 matrix".
 
-         temp = (callflags1 & CFLAG1_SPLIT_LARGE_SETUPS);
+         temp = (callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) != 0;
 
          if (temp ||
              (TEST_HERITBITS(ss->cmd.cmd_final_flags,INHERITFLAG_16_MATRIX)) ||
@@ -2432,15 +2431,16 @@ static int divide_the_setup(
       goto divide_us_no_recompute;
    case s_c1phan:
 
-      /* Check for "twisted split" stuff. */
+      // Check for "twisted split" stuff.
 
       if ((TEST_HERITBITS(ss->cmd.cmd_final_flags,INHERITFLAG_TWISTED)) &&
           (ss->cmd.cmd_final_flags.final &
            (FINAL__SPLIT_SQUARE_APPROVED | FINAL__SPLIT_DIXIE_APPROVED)) &&
           (livemask == 0xAAAA || livemask == 0x5555)) {
          finalrot = newtb & 1;
-         map_kind = (livemask & 1) ? MPKIND__SPLIT : MPKIND__NONISOTROP1;
-         division_code = MAPCODE(s_trngl4,2,map_kind,0);
+         division_code = (livemask & 1) ?
+            MAPCODE(s_trngl4,2,MPKIND__SPLIT,0) :
+            MAPCODE(s_trngl4,2,MPKIND__NONISOTROP1,0);
          goto divide_us_no_recompute;
       }
 
@@ -2762,8 +2762,7 @@ static int divide_the_setup(
       if (((ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_HORIZ) && !(ss->rotation & 1)) ||
           ((ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_VERT) && (ss->rotation & 1))) {
 
-         if (temp_for_2x2)
-            goto divide_us_no_recompute;
+         if (temp_for_2x2) goto divide_us_no_recompute;
       }
 
       if (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK)
@@ -3086,38 +3085,41 @@ static int divide_the_setup(
       if (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK)
          fail("Can't split the setup.");
 
-      /* If we do not have a 1x4 or 4x1 definition, but we have 1x2, 2x1, or 1x1 definitions,
-         do the call concentrically.  This will have the effect of having each miniwave do it.
-         If we did this when a 1x4 or 4x1 definition existed, it would have the effect of having
-         the people in the outer, disconnected, 1x4 work with each other across the set, which
-         we do not want. */
+      // If we do not have a 1x4 or 4x1 definition, but we have 1x2, 2x1, or 1x1 definitions,
+      // do the call concentrically.  This will have the effect of having each miniwave do it.
+      // If we did this when a 1x4 or 4x1 definition existed, it would have the effect of
+      // having the people in the outer, disconnected, 1x4 work with each other across
+      // the set, which we do not want.
 
       if (must_do_mystic)
          goto do_mystically;
 
-      if (!assoc(b_4x1, ss, calldeflist) && !assoc(b_1x4, ss, calldeflist) &&
-          (assoc(b_2x1, ss, calldeflist) || assoc(b_1x2, ss, calldeflist) || assoc(b_1x1, ss, calldeflist)))
+      if (!assoc(b_4x1, ss, calldeflist) &&
+          !assoc(b_1x4, ss, calldeflist) &&
+          (assoc(b_2x1, ss, calldeflist) ||
+           assoc(b_1x2, ss, calldeflist) ||
+           assoc(b_1x1, ss, calldeflist)))
          goto do_concentrically;
 
       break;
    case s2x4:
-      division_code = MAPCODE(s2x2,2,MPKIND__SPLIT,0);    /* The map we will probably use. */
+      division_code = MAPCODE(s2x2,2,MPKIND__SPLIT,0);    // The map we will probably use.
 
-      /* See if this call is being done "split" as in "split square thru" or
-         "split dixie style", in which case split into boxes. */
+      // See if this call is being done "split" as in "split square thru" or
+      // "split dixie style", in which case split into boxes.
 
       if (final_concepts.final & (FINAL__SPLIT_SQUARE_APPROVED | FINAL__SPLIT_DIXIE_APPROVED))
          goto divide_us_no_recompute;
 
-      /* If this is "run", always split it into boxes.  If they are T-boned,
-         they will figure it out, we hope. */
+      // If this is "run", always split it into boxes.  If they are T-boned,
+      // they will figure it out, we hope.
 
       if (calldeflist->callarray_flags & CAF__LATERAL_TO_SELECTEES)
          goto divide_us_no_recompute;
 
-      /* See if this call has applicable 2x6 or 2x8 definitions and matrix expansion
-         is permitted.  If so, that is what we must do.  But if it has a 4x4 definition
-         also, it is ambiguous, so we can't do it. */
+      // See if this call has applicable 2x6 or 2x8 definitions and matrix expansion
+      // is permitted.  If so, that is what we must do.  But if it has a 4x4 definition
+      // also, it is ambiguous, so we can't do it.
 
       if (!(ss->cmd.cmd_misc_flags & CMD_MISC__NO_EXPAND_MATRIX) &&
           !assoc(b_4x4, ss, calldeflist) &&
@@ -3133,28 +3135,28 @@ static int divide_the_setup(
 
          do_matrix_expansion(ss, CONCPROP__NEEDK_2X6, TRUE);
 
-         /* Should never fail, but we don't want a loop. */
+         // Should never fail, but we don't want a loop.
          if (ss->kind != s2x6) fail("Failed to expand to 2X6.");
 
-         return 2;                        /* And try again. */
+         return 2;                        // And try again.
       }
 
-      /* If we are splitting for "central", "crazy", or "splitseq",
-         give preference to 2x2 splitting.  Also give preference
-         if the "split_to_box" flag was given. */
+      // If we are splitting for "central", "crazy", or "splitseq",
+      // give preference to 2x2 splitting.  Also give preference
+      // if the "split_to_box" flag was given.
 
-      temp_for_2x2 = TRUE;
+      temp_for_2x2 = true;
 
       if (((ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_HORIZ) && !(ss->rotation & 1)) ||
           ((ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_VERT) && (ss->rotation & 1)) ||
           (calldeflist->callarray_flags & CAF__SPLIT_TO_BOX)) {
          if (assoc(b_2x2, ss, calldeflist))
             goto divide_us_no_recompute;
-         temp_for_2x2 = FALSE;    /* So we don't waste time computing it again. */
+         temp_for_2x2 = false;    // So we don't waste time computing it again.
       }
 
-      /* See if this call has applicable 1x4 or 4x1 definitions,
-         in which case split it that way. */
+      // See if this call has applicable 1x4 or 4x1 definitions,
+      // in which case split it that way.
 
       if ((!(newtb & 010) || assoc(b_1x4, ss, calldeflist)) &&
           (!(newtb & 1) || assoc(b_4x1, ss, calldeflist))) {
@@ -3162,16 +3164,16 @@ static int divide_the_setup(
          goto divide_us_no_recompute;
       }
 
-      /* See if this call has applicable 2x2 definition, in which case split into boxes. */
+      // See if this call has applicable 2x2 definition, in which case split into boxes.
 
       if (temp_for_2x2 && assoc(b_2x2, ss, calldeflist)) goto divide_us_no_recompute;
 
       if (must_do_mystic)
          goto do_mystically;
 
-      /* See long comment above for s1x8.  The test cases for this are
-         "own the <points>, trade by flip the diamond", and
-         "own the <points>, flip the diamond by flip the diamond". */
+      // See long comment above for s1x8.  The test cases for this are
+      // "own the <points>, trade by flip the diamond", and
+      // "own the <points>, flip the diamond by flip the diamond".
 
       if ((ss->cmd.cmd_misc_flags & CMD_MISC__PHANTOMS) &&
           (ss->people[1].id1 | ss->people[2].id1 |
@@ -3193,18 +3195,20 @@ static int divide_the_setup(
               assoc(b_dmd, &sstest, calldeflist))) {
             *ss = sstest;
             *newtb_p = tbtest;
-            return 2;                        /* And try again. */
+            return 2;                        // And try again.
          }
       }
 
-      /* Look very carefully at how we split this, so we get the RESULTFLAG__SPLIT_AXIS_MASK stuff right. */
+      // Look very carefully at how we split this, so we get the
+      // RESULTFLAG__SPLIT_AXIS_MASK stuff right.
 
       have_1x2 = assoc(b_1x2, ss, calldeflist);
       have_2x1 = assoc(b_2x1, ss, calldeflist);
 
-      /* See if this call has applicable 1x2 or 2x1 definitions, (but not 2x2), in a non-T-boned setup.
-         If so, split into boxes.  Furthermore, if the split could have been along either axis, we set
-         both RESULTFLAG__SPLIT_AXIS_MASK bits. */
+      // See if this call has applicable 1x2 or 2x1 definitions, (but not 2x2),
+      // in a non-T-boned setup.  If so, split into boxes.  Furthermore,
+      // if the split could have been along either axis, we set both
+      // RESULTFLAG__SPLIT_AXIS_MASK bits.
 
       if (((newtb & 1) == 0 && have_1x2 != 0) || ((newtb & 010) == 0 && have_2x1 != 0))
          goto divide_us_no_recompute;
@@ -3215,10 +3219,11 @@ static int divide_the_setup(
          goto divide_us_no_recompute;
 
       // If we are T-boned and have 1x2 or 2x1 definitions, we need to be careful.
-      tbi = ss->people[1].id1 | ss->people[2].id1 | ss->people[5].id1 | ss->people[6].id1;
-      tbo = ss->people[0].id1 | ss->people[3].id1 | ss->people[4].id1 | ss->people[7].id1;
 
       if ((newtb & 011) == 011) {
+         tbi = ss->people[1].id1 | ss->people[2].id1 | ss->people[5].id1 | ss->people[6].id1;
+         tbo = ss->people[0].id1 | ss->people[3].id1 | ss->people[4].id1 | ss->people[7].id1;
+
          // If the centers and ends are separately consistent, we can do the call
          // concentrically *IF* the appropriate type of definition exists for the ends
          //  to work with the near person rather than the far one.  This is what makes
@@ -3257,11 +3262,31 @@ static int divide_the_setup(
       if ((ss->cmd.cmd_misc_flags & CMD_MISC__PHANTOMS) && (have_1x2 != 0 || have_2x1 != 0))
          goto divide_us_no_recompute;
 
+      // Maybe we should divide concentrically not because the centers and ends
+      // are T-boned, but because they have different properties that are needed
+      // to satisfy qualifiers.  First, check that we failed because of unsatisfied
+      // qualifiers.  This is indicated by failure to get 1x2 or 2x1 definitions
+      // while looking at the setup, but success when we don't look at the setup.
+      // (Recall that qualifiers automatically pass if a null setup pointer is given.)
+      // The test for this is "turn thru" in a 2x4 when some are facing and some
+      // are in miniwaves.  See vg06t.
+
+      if (have_1x2 == 0 && have_2x1 == 0) {
+         // It needs to have both definitions, both failing because of
+         // qualifiers, for a concentric division to be the right thing.
+         if (assoc(b_1x2, (setup *) 0, calldeflist) &&
+             assoc(b_2x1, (setup *) 0, calldeflist) &&
+             (calldeflist->callarray_flags & CAF__SPLIT_TO_BOX) &&
+             !(ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK)) {
+               goto do_concentrically;
+         }
+      }
+
       // We are not T-boned, and there is no 1x2 or 2x1 definition.
       // The only possibility is that there is a 1x1 definition,
       // in which case splitting into boxes will work.
 
-      else if (assoc(b_1x1, ss, calldeflist))
+      if (assoc(b_1x1, ss, calldeflist))
          goto divide_us_no_recompute;
 
       break;
@@ -3501,20 +3526,10 @@ static int divide_the_setup(
    do_mystically:
 
    conc_cmd = ss->cmd;
-
-#ifdef TRY_NEW_MYSTIC
-   update_id_bits(ss);    /* It would be nice if we didn't have to do this. */
-#endif
    inner_selective_move(ss, &conc_cmd, &conc_cmd, selective_key_dyp,
                         TRUE, 0, 0, selector_centers, 0, 0, result);
    return 1;
 }
-
-
-
-static veryshort exp_conc_1x8[] = {3, 2, 7, 6};
-static veryshort exp_conc_qtg[] = {6, 7, 2, 3};
-static veryshort exp_conc_2x2[] = {6, 1, 2, 5, 6};
 
 
 
@@ -3978,21 +3993,21 @@ foobar:
          if (ss->inner.skind == s1x4) {
             stemp.kind = s1x8;
             clear_people(&stemp);
+            static veryshort exp_conc_1x8[] = {3, 2, 7, 6};
             scatter(&stemp, ss, exp_conc_1x8, 3, 0);
 
-            if (  (!(newtb & 010) || assoc(b_1x8, &stemp, calldeflist))
-                                    &&
-                  (!(newtb & 1) || assoc(b_8x1, &stemp, calldeflist))) {
+            if ((!(newtb & 010) || assoc(b_1x8, &stemp, calldeflist)) &&
+                (!(newtb & 1) || assoc(b_8x1, &stemp, calldeflist))) {
                *ss = stemp;
             }
             else {
                stemp.kind = s_qtag;
                clear_people(&stemp);
+               static veryshort exp_conc_qtg[] = {6, 7, 2, 3};
                scatter(&stemp, ss, exp_conc_qtg, 3, 0);
 
-               if (  (!(newtb & 010) || assoc(b_qtag, &stemp, calldeflist))
-                                       &&
-                     (!(newtb & 1) || assoc(b_pqtag, &stemp, calldeflist))) {
+               if ((!(newtb & 010) || assoc(b_qtag, &stemp, calldeflist)) &&
+                   (!(newtb & 1) || assoc(b_pqtag, &stemp, calldeflist))) {
                   *ss = stemp;
                }
             }
@@ -4000,6 +4015,7 @@ foobar:
          else if (ss->inner.skind == s2x2) {
             stemp.kind = s2x4;
             clear_people(&stemp);
+            static veryshort exp_conc_2x2[] = {6, 1, 2, 5, 6};
 
             if (ss->concsetup_outer_elongation == 1) {
                scatter(&stemp, ss, &exp_conc_2x2[1], 3, 0);
@@ -4194,7 +4210,7 @@ foobar:
                ((ss->kind == s2x8 || ss->kind == s4x4 || ss->kind == s1x16) ||
                 (((callspec->callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) ||
                   (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX)) &&
-                 !(search_concepts_without_funny & INHERITFLAG_16_MATRIX) &&
+                 !(search_concepts_without_funny & INHERITFLAG_12_MATRIX) &&
                  (ss->kind == s2x4 || ss->kind == s1x8))))
          matrix_check_flag = INHERITFLAG_16_MATRIX;
 

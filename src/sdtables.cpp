@@ -911,6 +911,14 @@ expand_thing expand_init_table[] = {
     8, s_qtag, swqtag, 0, 0UL, 0x084,
     warn__none, warn__none, simple_normalize, 0},
 
+   {{5, 4, 3, 6, 7, 8, 14, 13, 12, 15, 16, 17},
+    12, s3dmd, sbig3dmd, 0, 0UL, 0007007,
+    warn__none, warn__none, simple_normalize, 0},
+
+   {{7, 6, 5, 4, 8, 9, 10, 11, 19, 18, 17, 16, 20, 21, 22, 23},
+    16, s4dmd, sbig4dmd, 0, 0UL, 0x00F00F,
+    warn__none, warn__none, simple_normalize, 0},
+
    {{7, 8, 9, 2, 3, 4},
     6, s1x6, swqtag, 0, 0UL, 0x63,
     warn__none, warn__none, simple_normalize, 0},
@@ -2880,8 +2888,40 @@ cm_thing conc_init_table[] = {
              s2x2,     sdmd,     1, 0, 1, 2,  0x100, schema_nothing},
    {s3x4,          schema_in_out_triple, {9, 8, 6, 7, 0, 1, 3, 2,    10, 11, 4, 5},
              s1x4,     s1x4,     0, 0, 2, 2,  0x0FB, schema_in_out_triple},
+   {s2x3,      schema_sgl_in_out_triple, {5, 0, 3, 2,       4, 1},
+             s1x2,     s1x2,     1, 1, 1, 2,  0x100, schema_nothing},
+
+
+
+
+
+   {s3x6,      schema_3x3_in_out_triple, {14, 13, 12, 9, 10, 11, 0, 1, 2, 5, 4, 3,
+                                          15, 16, 17, 6, 7, 8},
+             s1x6,     s1x6,     0, 0, 2, 2,  0x100, schema_nothing},
+   {sbig3dmd,            schema_nothing, {12, 13, 14, 9, 10, 11, 0, 1, 2, 3, 4, 5,
+                                          15, 16, 17, 6, 7, 8},
+             s2x3,     s1x6,     0, 0, 2, 2,  0x2FB, schema_3x3_in_out_triple},
+
+
+
+   {s3x8,      schema_4x4_in_out_triple, {19, 18, 16, 17, 12, 13, 15, 14,
+                                          0, 1, 3, 2, 7, 6, 4, 5,
+                                          20, 21, 23, 22, 8, 9, 11, 10},
+             s1x8,     s1x8,     0, 0, 2, 2,  0x100, schema_nothing},
+   {sbig4dmd,            schema_nothing, {16, 17, 18, 19, 12, 13, 14, 15,
+                                          0, 1, 2, 3, 4, 5, 6, 7,
+                                          20, 21, 23, 22, 8, 9, 11, 10},
+             s2x4,     s1x8,     0, 0, 2, 2,  0x2FB, schema_4x4_in_out_triple},
+
+
+
+
+
+
+   {s_1x2dmd,            schema_nothing, {0, 1, 4, 3,       5, 2},
+             s1x2,     s1x2,     0, 1, 1, 2,  0x2F7, schema_sgl_in_out_triple},
    {s_qtag,         Z, {5, 4, 0, 1,     6, 7, 2, 3},
-             s1x2,     s1x4,     0, 0, 2, 2,  0x2FB, schema_in_out_triple},
+             s1x2,     s1x4,     0, 0, 1, 2,  0x2FB, schema_in_out_triple},
    {s4dmd,          Z, {11, 12, 0, 13, 8, 5, 3, 4,    10, -1, -1, 1, 2, -1, -1, 9},
              sdmd,     s2x4,     1, 1, 1, 2,  0x2FB, schema_in_out_quad},
 
@@ -6477,6 +6517,28 @@ setup_attr setup_attrs[] = {
       id_bit_table_bigptpd,
       {  "85f 8858 g@85e 8858 h@7c88d j88i@785b 8858 k@85a 8858 l",
          "65c@@abef@@65d@@65j@@lkhg@@65i"}},
+   /* sbig3dmd */
+      {17,
+      (coordrec *) 0,
+      (coordrec *) 0,
+      {0, 0, 0, 0},
+      {b_big3dmd, b_pbig3dmd},
+      {0, 0},
+      FALSE,
+      (id_bit_table *) 0,
+      {  "5 a 6 b 6 c@@5 f 6 e 6 d@@p q r i h g@@5 m 6 n 6 o@@5 l 6 k 6 j",
+         "6 6  p@7l m  6  f a@76 6  q@@6 6  r@7k n  6  e b@76 6  i@@6 6  h@7j o  6  d c@76 6  g"}},
+   /* sbig4dmd */
+      {23,
+      (coordrec *) 0,
+      (coordrec *) 0,
+      {0, 0, 0, 0},
+      {b_big4dmd, b_pbig4dmd},
+      {0, 0},
+      FALSE,
+      (id_bit_table *) 0,
+      {  "5 a 6 b 6 c 6 d@@5 h 6 g 6 f 6 e@@u v w x l k j i@@5 q 6 r 6 s 6 t@@5 p 6 o 6 n 6 m",
+         "6 6  u@7p q  6  h a@76 6  v@@6 6  w@7o r  6  g b@76 6  x@@6 6  l@7n s  6  f c@76 6  k@@6 6  j@7m t  6  e d@76 6  i"}},
    /* sdblxwave */
       {15,
       (coordrec *) 0,
@@ -6704,6 +6766,10 @@ int begin_sizes[] = {
    12,         /* b_pbigdmd */
    12,         /* b_bigptpd */
    12,         /* b_pbigptpd */
+   18,         /* b_big3dmd */
+   18,         /* b_pbig3dmd */
+   24,         /* b_big4dmd */
+   24,         /* b_pbig4dmd */
    16,         /* b_dblxwave */
    16,         /* b_pdblxwave */
    16,         /* b_dblspindle */
@@ -6723,7 +6789,7 @@ enum {
 };
 
 /* BEWARE!!  This list is keyed to the definition of "start_select_kind" in sd.h. */
-startinfo startinfolist[] = {
+startinfo configuration::startinfolist[] = {
    {
       "???",      /* A non-existent setup. */
       FALSE,                         /* into_the_middle */
@@ -6830,7 +6896,7 @@ clw3_thing clw3_table[] = {
 // tag.  It is the intention that the items below stay synchronized with the
 // enumeration type, but it is not essential.  But if the items below fail to
 // have exactly one item for every required enumeration tag, a run-time
-// initialization error. will occur.
+// initialization error will occur.
 
 fixer fixer_init_table[] = {
    {fx_foo33a, s1x2, s2x4,        0, 0, 2,       fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {5, 4, 0, 1}},
@@ -7202,6 +7268,8 @@ fixer fixer_init_table[] = {
    {fx_fdmdnd, s3x4, s4dmd,         0, 0, 1,       fx0,          fx0,          fx0,           fx0, fx0,          fx0,   fx_fdmdndx,        fx0,     {0, -1, -1, 3, 5, 7, 8, -1, -1, 11, 13, 15}},
    {fx_f3x4ndsd, s2x4, s3x4,        0, 0, 1,       fx0,          fx0,          fx0,           fx0, fx0,          fx0,   fx0,          fx_f2x5rdsd,  {0, 1, 2, 3, 6, 7, 8, 9}},
    {fx_f2x8ndsc, s2x4, s2x8,        0, 0, 1,       fx0,          fx0,          fx0,      fx_f2yyrdsc,fx_f2qt2dsc, fx0,   fx0,          fx_f2zzrdsc,  {0, 3, 4, 7, 8, 11, 12, 15}},
+   {fx_f4x6ndoo, s4x4, s4x6,        0, 0, 1,       fx0,          fx0,          fx0,      fx0,        fx0,         fx0,   fx0,          fx0,     {5, 6, 23, 8, 12, 14, 15, 21, 17, 18, 11, 20, 0, 2, 3, 9}},
+   {fx_f4x6ndxx, s4x4, s4x6,        0, 0, 1,       fx0,          fx0,          fx0,      fx0,        fx0,         fx0,   fx0,          fx0,     {5, 6, 23, 8, 12, 14, 15, 21, 17, 18, 11, 20, 0, 2, 3, 9}},
    {fx_f1x8nd96, s1x4, s1x8,        0, 0, 1,       fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {1, 2, 4, 7}},
    {fx_f1x8nd69, s1x4, s1x8,        0, 0, 1,       fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {0, 3, 5, 6}},
    {fx_f1x8nd41, s1x2, s1x8,        0, 0, 1,       fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {0, 6}},
@@ -7421,6 +7489,8 @@ sel_item sel_init_table[] = {
    {LOOKUP_DISC,                           s2x6,    06363, fx_f2x6ndsd,  fx0, -1},
    {LOOKUP_DISC,                           s3x4,    01717, fx_f3x4ndsd,  fx0, -1},
    {LOOKUP_DISC,                           s2x8,   0x9999, fx_f2x8ndsc,  fx0, -1},
+   {LOOKUP_DISC,                           s4x6, 0x84C84C, fx_f4x6ndoo,  fx0, -1},
+   {LOOKUP_DISC,                           s4x6, 0x321321, fx_f4x6ndxx,  fx0, -1},
    {LOOKUP_DISC,                           s1x8,     0x96, fx_f1x8nd96,  fx0, -1},
    {LOOKUP_DISC,                           s1x8,     0x69, fx_f1x8nd69,  fx0, -1},
    {LOOKUP_DISC,                           s1x8,     0x41, fx_f1x8nd41,  fx0, -1},

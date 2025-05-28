@@ -1917,8 +1917,8 @@ static void do_concept_do_phantom_2x2(
    // Do "blocks" or "4 phantom interlocked blocks", etc.
 
    if (ss->kind != s4x4) fail("Must have a 4x4 setup for this concept.");
-   divided_setup_move(ss, parseptr->concept->value.arg0,
-                      (phantest_kind) parseptr->concept->value.arg1,
+   divided_setup_move(ss, parseptr->concept->value.arg1,
+                      (phantest_kind) parseptr->concept->value.arg2,
                       TRUE, result);
 }
 
@@ -4533,9 +4533,9 @@ static void do_concept_do_both_boxes(
    setup *result) THROW_DECL
 {
    if (ss->kind == s2x4)
-      divided_setup_move(ss, parseptr->concept->value.arg0, phantest_ok, TRUE, result);
-   else if (ss->kind == s3x4 && parseptr->concept->value.arg2)
-      /* distorted_2x2s_move will notice that concept is funny and will do the right thing. */
+      divided_setup_move(ss, parseptr->concept->value.arg1, phantest_ok, TRUE, result);
+   else if (ss->kind == s3x4 && parseptr->concept->value.arg3)
+      // distorted_2x2s_move will notice that concept is funny and will do the right thing.
       distorted_2x2s_move(ss, parseptr, result);
    else
       fail("Need a 2x4 setup to do this concept.");
@@ -4634,7 +4634,7 @@ static void do_concept_do_each_1x4(
 
    split_small:
 
-   (void) do_simple_split(ss, (arg2 != 2), result);
+   (void) do_simple_split(ss, (arg2 != 2) ? split_command_1x4 : split_command_none, result);
    return;
 
    split_big:
@@ -4913,11 +4913,11 @@ static void do_concept_overlapped_diamond(
    static const expand_thing listdmd    = {{0, 3, 4, 7}, 4, sdmd, s_thar, 0};
    static const expand_thing listdmdrot = {{2, 5, 6, 1}, 4, sdmd, s_thar, 3};
 
-   /* Split an 8 person setup. */
+   // Split an 8 person setup.
    if (setup_attrs[ss->kind].setup_limits == 7) {
-      /* Reset it to execute this same concept again, until it doesn't have to split any more. */
+      // Reset it to execute this same concept again, until it doesn't have to split any more.
       ss->cmd.parseptr = parseptr;
-      if (do_simple_split(ss, TRUE, result))
+      if (do_simple_split(ss, split_command_1x4, result))
          fail("Not in correct setup for overlapped diamond/line concept.");
       return;
    }
@@ -5171,6 +5171,7 @@ static void do_concept_meta(
    yescmd = ss->cmd;
 
    if (key != meta_key_initially && key != meta_key_finally &&
+       key != meta_key_initially_and_finally &&
        key != meta_key_piecewise && key != meta_key_nth_part_work &&
        key != meta_key_first_frac_work &&
        key != meta_key_echo && key != meta_key_rev_echo)
@@ -5673,8 +5674,8 @@ static void do_concept_meta(
       }
    case meta_key_initially:
 
-      /* This is "initially": we select the first part with the concept,
-         and then the rest of the call without the concept. */
+      // This is "initially": we select the first part with the concept,
+      // and then the rest of the call without the concept.
 
       if (corefracs == (FRACS(CMD_FRAC_CODE_ONLY,1,0) |
                         CMD_FRAC_BREAKING_UP | CMD_FRAC_NULL_VALUE)) {
@@ -5852,6 +5853,49 @@ static void do_concept_meta(
          result->cmd.cmd_assume.assumption = cr_none;
          result->result_flags |= RESULTFLAG__EXPIRATION_ENAB;
          result->cmd.cmd_misc_flags |= CMD_MISC__PUT_FRAC_ON_FIRST;
+      }
+      else
+         fail("Can't stack meta or fractional concepts.");
+
+      goto do_less;
+
+   case meta_key_initially_and_finally:
+
+      // This is "initially and finally": we select the first part with the concept,
+      // the interior part without the concept,
+      // and then the last part with the concept.
+
+      if (corefracs == CMD_FRAC_NULL_VALUE) {   // The only case we care about.
+
+         // Do the first part with the concept,
+
+         result->cmd = yescmd;
+         result->cmd.cmd_frac_flags =
+            FRACS(CMD_FRAC_CODE_ONLY,1,0) | CMD_FRAC_BREAKING_UP | CMD_FRAC_NULL_VALUE;
+         result->cmd.cmd_misc_flags |= CMD_MISC__PUT_FRAC_ON_FIRST;
+         result->result_flags |= RESULTFLAG__EXPIRATION_ENAB;
+         do_call_in_series_simple(result);
+
+         // the interior of the call without it,
+
+         result->cmd = nocmd;
+         // Assumptions don't carry through.
+         result->cmd.cmd_assume.assumption = cr_none;
+         result->cmd.cmd_frac_flags =
+            FRACS(CMD_FRAC_CODE_FROMTOREV,2,1) | CMD_FRAC_BREAKING_UP | CMD_FRAC_NULL_VALUE;
+         result->cmd.cmd_misc_flags |= CMD_MISC__PUT_FRAC_ON_FIRST;
+         result->result_flags |= RESULTFLAG__EXPIRATION_ENAB;
+         do_call_in_series_simple(result);
+
+         // and the last part with it.
+
+         result->cmd = yescmd;
+         // Assumptions don't carry through.
+         result->cmd.cmd_assume.assumption = cr_none;
+         result->cmd.cmd_frac_flags =
+            FRACS(CMD_FRAC_CODE_ONLYREV,1,0) | CMD_FRAC_BREAKING_UP | CMD_FRAC_NULL_VALUE;
+         result->cmd.cmd_misc_flags |= CMD_MISC__PUT_FRAC_ON_FIRST;
+         result->result_flags |= RESULTFLAG__EXPIRATION_ENAB;
       }
       else
          fail("Can't stack meta or fractional concepts.");
@@ -6437,25 +6481,12 @@ static void do_concept_so_and_so_begin(
 }
 
 
-typedef struct {
-   setup_kind a;
-   int b;
-} map_finder;
-
-
-static map_finder sc_2x4 = {s1x4, 1};
-static map_finder sc_1x8 = {s1x4, 0};
-static map_finder sc_qtg = {sdmd, 1};
-static map_finder sc_ptp = {sdmd, 0};
-
-
 
 static void do_concept_concentric(
    setup *ss,
    parse_block *parseptr,
    setup *result) THROW_DECL
 {
-   map_finder *mf;
    calldef_schema schema = (calldef_schema) parseptr->concept->value.arg1;
 
    if (TEST_HERITBITS(ss->cmd.cmd_final_flags,INHERITFLAG_CROSS)) {
@@ -6516,13 +6547,14 @@ static void do_concept_concentric(
    }
 
    switch (schema) {
+      uint32 map_code;
    case schema_single_concentric:
    case schema_single_cross_concentric:
       switch (ss->kind) {
-      case s2x4:   mf = &sc_2x4; break;
-      case s1x8:   mf = &sc_1x8; break;
-      case s_qtag: mf = &sc_qtg; break;
-      case s_ptpd: mf = &sc_ptp; break;
+      case s2x4:   map_code = MAPCODE(s1x4,2,MPKIND__SPLIT,1); break;
+      case s1x8:   map_code = MAPCODE(s1x4,2,MPKIND__SPLIT,0); break;
+      case s_qtag: map_code = MAPCODE(sdmd,2,MPKIND__SPLIT,1); break;
+      case s_ptpd: map_code = MAPCODE(sdmd,2,MPKIND__SPLIT,0); break;
       case s1x4: case sdmd:
          concentric_move(ss, &ss->cmd, &ss->cmd, schema, 0,
                          DFM1_CONC_CONCENTRIC_RULES, TRUE, ~0UL, result);
@@ -6533,8 +6565,7 @@ static void do_concept_concentric(
       
       // Reset it to execute this same concept again, until it doesn't have to split any more.
       ss->cmd.parseptr = parseptr;
-      divided_setup_move(ss, MAPCODE(mf->a,2,MPKIND__SPLIT,mf->b),
-                         phantest_ok, TRUE, result);
+      divided_setup_move(ss, map_code, phantest_ok, TRUE, result);
       break;
    default:
       concentric_move(ss, &ss->cmd, &ss->cmd, schema, 0,
@@ -7102,7 +7133,7 @@ concept_table_item concept_table[] = {
     CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT,
     do_concept_fractional},                                 // concept_fractional
    {CONCPROP__NO_STEP, do_concept_rigger},                  // concept_rigger
-   {CONCPROP__NO_STEP, do_concept_wing},                    // concept_wing
+   {CONCPROP__NO_STEP | CONCPROP__MATRIX_OBLIVIOUS, do_concept_wing}, // concept_wing
    {CONCPROP__NO_STEP, common_spot_move},                   // concept_common_spot
    {CONCPROP__USE_SELECTOR | CONCPROP__SHOW_SPLIT,
     drag_someone_and_move},                                 // concept_drag

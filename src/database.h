@@ -82,7 +82,7 @@ typedef const char *Cstring;
    database format version. */
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 197
+#define DATABASE_FORMAT_VERSION 199
 
 // BEWARE!!  These must track the items in "tagtabinit" in dbcomp.cpp .
 enum base_call_index {
@@ -300,8 +300,8 @@ enum dance_level {
 
 /* These are the states that people can be in, and the "ending setups" that can appear
    in the call data base. */
-/* BEWARE!!  This list must track the array "estab" in dbcomp.c . */
-/* BEWARE!!  This list must track the array "setup_attrs" in sdtables.c . */
+/* BEWARE!!  This list must track the array "estab" in dbcomp.cpp . */
+/* BEWARE!!  This list must track the array "setup_attrs" in sdtables.cpp . */
 /* BEWARE!!  The procedure "merge_setups" canonicalizes pairs of setups by their
    order in this list, and will break if it is re-ordered randomly.  See the comments
    there before changing the order of existing setups. In general, keep small setups
@@ -420,6 +420,8 @@ enum setup_kind {
    sbigbone,
    sbigdmd,
    sbigptpd,
+   sbig3dmd,
+   sbig4dmd,
    sdblxwave,
    sdblspindle,
    s_dead_concentric,
@@ -427,9 +429,9 @@ enum setup_kind {
 };
 
 /* These are the "beginning setups" that can appear in the call data base. */
-/* BEWARE!!  This list must track the array "sstab" in dbcomp.c . */
-/* BEWARE!!  This list must track the array "begin_sizes" in mkcalls.c . */
-/* BEWARE!!  This list must track the array "begin_sizes" in sdtables.c . */
+/* BEWARE!!  This list must track the array "sstab" in dbcomp.cpp . */
+/* BEWARE!!  This list must track the array "begin_sizes" in mkcalls.cpp . */
+/* BEWARE!!  This list must track the array "begin_sizes" in sdtables.cpp . */
 
 enum begin_kind {
    b_nothing,
@@ -593,6 +595,10 @@ enum begin_kind {
    b_pbigdmd,
    b_bigptpd,
    b_pbigptpd,
+   b_big3dmd,
+   b_pbig3dmd,
+   b_big4dmd,
+   b_pbig4dmd,
    b_dblxwave,
    b_pdblxwave,
    b_dblspindle,
@@ -818,8 +824,15 @@ enum calldef_schema {
    schema_cross_checkpoint,
    schema_rev_checkpoint,
    schema_ckpt_star,
+   schema_maybe_in_out_triple_squash,
    schema_in_out_triple_squash,
+   schema_sgl_in_out_triple_squash,
+   schema_3x3_in_out_triple_squash,
+   schema_4x4_in_out_triple_squash,
    schema_in_out_triple,
+   schema_sgl_in_out_triple,
+   schema_3x3_in_out_triple,
+   schema_4x4_in_out_triple,
    schema_in_out_quad,
    schema_in_out_12mquad,
    schema_in_out_triple_zcom,

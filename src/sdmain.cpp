@@ -21,8 +21,8 @@
     General Public License if you distribute the file.
 */
 
-#define VERSION_STRING "34.7j"
-#define TIME_STAMP "wba@alum.mit.edu  26 May 2002 $"
+#define VERSION_STRING "34.7k"
+#define TIME_STAMP "wba@alum.mit.edu  18 July 2002 $"
 
 /* This defines the following functions:
    sd_version_string
@@ -30,7 +30,6 @@
    deposit_concept
    query_for_call
    sdmain
-   sequence_is_resolved
 and the following external variables:
    menu_names
    command_menu
@@ -593,9 +592,9 @@ extern long_boolean query_for_call()
       if (global_error_flag < error_flag_wrong_command ||
           global_error_flag == error_flag_selector_changed ||
           global_error_flag == error_flag_formation_changed) {
-         display_initial_history(history_ptr, (diagnostic_mode ? 1 : 2));
+         display_initial_history(configuration::history_ptr, (diagnostic_mode ? 1 : 2));
 
-         if (sequence_is_resolved()) {
+         if (configuration::sequence_is_resolved()) {
             newline();
             writestuff("     resolve is:");
             newline();
@@ -683,20 +682,20 @@ extern long_boolean query_for_call()
       /* See if there are partially entered concepts.  If so, print the index number
          and those concepts on a separate line. */
 
-      if (parse_state.concept_write_ptr != &history[history_ptr+1].command_root) {
+      if (parse_state.concept_write_ptr != &configuration::next_config().command_root) {
 
          // This prints the concepts entered so far, with a "header"
          // consisting of the index number.  This partial concept tree
          // is incomplete, so write_history_line has to be (and is) very careful.
 
-         write_history_line(history_ptr+1, false, true, file_write_no);
+         write_history_line(configuration::history_ptr+1, false, true, file_write_no);
       }
       else {
          // No partially entered concepts.  Just do the sequence number.
 
          if (!diagnostic_mode) {
             char indexbuf[200];
-            (void) sprintf (indexbuf, "%2d: ", history_ptr-whole_sequence_low_lim+2);
+            (void) sprintf (indexbuf, "%2d: ", configuration::history_ptr-configuration::whole_sequence_low_lim+2);
             writestuff(indexbuf);
             newline();
          }
@@ -919,7 +918,7 @@ extern int sdmain(int argc, char *argv[])
    verify_options.number_fields = 0;
    verify_options.howmanynumbers = 0;
    history_allocation = 15;
-   history = (configuration *) get_mem(history_allocation * sizeof(configuration));
+   configuration::history = (configuration *) get_mem(history_allocation * sizeof(configuration));
 
    /* Do general initializations, which currently consist only of
       seeding the random number generator. */
@@ -944,10 +943,4 @@ extern int sdmain(int argc, char *argv[])
 
    /* NOTREACHED */
    return 0;
-}
-
-
-extern long_boolean sequence_is_resolved()
-{
-   return history[history_ptr].resolve_flag.kind != resolve_none;
 }
