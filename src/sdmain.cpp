@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2019  William B. Ackerman.
+//    Copyright (C) 1990-2020  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -46,8 +46,8 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-#define VERSION_STRING "39.12"
-#define TIME_STAMP "wba@alum.mit.edu Dec 1 2019 $"
+#define VERSION_STRING "39.13"
+#define TIME_STAMP "wba@alum.mit.edu Feb 24 2020 $"
 
 /* This defines the following functions:
    sd_version_string
@@ -285,9 +285,9 @@ int last_file_position = -1;
 
 
 /* Returns TRUE if it fails, meaning that the user waved the mouse away. */
-static bool find_tagger(uint32 tagclass, uint32 *tagg, call_with_name **tagger_call)
+static bool find_tagger(uint32_t tagclass, uint32_t *tagg, call_with_name **tagger_call)
 {
-   uint32 numtaggers = number_of_taggers[tagclass];
+   uint32_t numtaggers = number_of_taggers[tagclass];
    call_with_name **tagtable = tagger_calls[tagclass];
 
    if (numtaggers == 0) return true;   /* We can't possibly do this. */
@@ -340,7 +340,7 @@ static bool find_tagger(uint32 tagclass, uint32 *tagg, call_with_name **tagger_c
 
 
 /* Returns true if it fails, meaning that the user waved the mouse away. */
-static bool find_circcer(uint32 *circcp)
+static bool find_circcer(uint32_t *circcp)
 {
    if (number_of_circcers == 0) return true;   // We can't possibly do this.
 
@@ -424,7 +424,7 @@ static bool find_direction(direction_kind *dir_p)
 // Returns TRUE if it fails, meaning that the user waved the mouse away,
 // or that the number from a verify iteration violated the "odd only" rule.
 static bool find_numbers(int howmanynumbers, bool forbid_zero,
-   uint32 odd_number_only, bool allow_iteration, uint32 *number_list)
+   uint32_t odd_number_only, bool allow_iteration, uint32_t *number_list)
 {
    if (interactivity == interactivity_normal)
       *number_list = gg77->get_number_fields(howmanynumbers, odd_number_only != 0, forbid_zero);
@@ -451,11 +451,11 @@ extern bool deposit_call(call_with_name *call, const call_conc_option_state *opt
 {
    parse_block *new_block;
    call_with_name *tagger_call;
-   uint32 tagg = 0;
+   uint32_t tagg = 0;
    who_list sel;
    direction_kind dir = direction_uninitialized;
-   uint32 circc = 0;    /* Circulator index (1-based). */
-   uint32 number_list = 0;
+   uint32_t circc = 0;    /* Circulator index (1-based). */
+   uint32_t number_list = 0;
    int howmanynums = (call->the_defn.callflags1 & CFLAG1_NUMBER_MASK) / CFLAG1_NUMBER_BIT;
    if (howmanynums == 7) howmanynums = 0;  // The "optional_special_number" stuff doesn't apply here.
 
@@ -580,7 +580,7 @@ extern bool deposit_concept(const concept_descriptor *conc)
    parse_block *new_block;
    who_list sel;
    direction_kind dir = direction_uninitialized;
-   uint32 number_list = 0;
+   uint32_t number_list = 0;
    int howmanynumbers = 0;
 
    // We hash the actual concept pointer, as though it were an integer index.

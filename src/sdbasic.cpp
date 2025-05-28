@@ -139,17 +139,17 @@ s_tinyhyperbone -- like s_hyperbone, but all 4 trngl4's are on top of each other
 typedef struct {
    int size;                 // how many people in the maps
    // These masks are little-endian.
-   uint32 lmask;             // which people are facing E-W in original double-length setup
-   uint32 rmask;             /* where in original setup can people be found */
-   uint32 cmask;             /* where in original setup have people collided */
-   veryshort source[12];     /* where to get the people */
-   veryshort map0[12];       /* where to put the north (or east)-facer */
-   veryshort map1[12];       /* where to put the south (or west)-facer */
-   setup_kind initial_kind;  /* what setup they are collided in */
-   setup_kind final_kind;    /* what setup to change it to */
-   int rot;                  /* whether to rotate final setup CW */
-   warning_index warning;    /* an optional warning to give */
-   uint32 assume_key;        // special stuff for checking assumptions in low 16 bits, plus these:
+   uint32_t lmask;           // which people are facing E-W in original double-length setup
+   uint32_t rmask;           // where in original setup can people be found
+   uint32_t cmask;           // where in original setup have people collided
+   int8_t source[12];        // where to get the people
+   int8_t map0[12];          // where to put the north (or east)-facer
+   int8_t map1[12];          // where to put the south (or west)-facer
+   setup_kind initial_kind;  // what setup they are collided in
+   setup_kind final_kind;    // what setup to change it to
+   int rot;                  // whether to rotate final setup CW
+   warning_index warning;    // an optional warning to give
+   uint32_t assume_key;      // special stuff for checking assumptions in low 16 bits, plus these:
                              // 0x80000000 bit -> dangerous
                              // 0x40000000 bit -> allow partial setup
                              // 0x20000000 bit -> reject if action = merge_c1_phantom_real_couples
@@ -637,7 +637,7 @@ void collision_collector::install_with_collision(
 
 void collision_collector::fix_possible_collision(setup *result,
                                                  merge_action action /*= merge_strict_matrix*/,
-                                                 uint32 callarray_flags /*= 0*/,
+                                                 uint32_t callarray_flags /*= 0*/,
                                                  setup *ss /*= (setup *) 0*/) THROW_DECL
 {
    if (!m_collision_mask) return;
@@ -645,7 +645,7 @@ void collision_collector::fix_possible_collision(setup *result,
    int i;
    setup spare_setup = *result;
    bool kill_ends = false;
-   uint32 lowbitmask = 0;
+   uint32_t lowbitmask = 0;
    collision_map *c_map_ptr;
 
    result->clear_people();
@@ -758,7 +758,7 @@ void collision_collector::fix_possible_collision(setup *result,
    // If this is under an implicit mirror image operation,
    // make them take left hands, by swapping the maps.
 
-   uint32 flip = m_force_mirror_warn ? 2 : 0;
+   uint32_t flip = m_force_mirror_warn ? 2 : 0;
 
    for (i=0; i<c_map_ptr->size; i++) {
       int oldperson;
@@ -779,8 +779,8 @@ void collision_collector::fix_possible_collision(setup *result,
    }
 
    if (kill_ends) {
-      const veryshort m3276[] = {3, 2, 7, 6};
-      const veryshort m2367[] = {2, 3, 6, 7};
+      const int8_t m3276[] = {3, 2, 7, 6};
+      const int8_t m2367[] = {2, 3, 6, 7};
 
       // The centers are colliding, but the ends are absent, and we have
       // no assumptions to guide us about where they should go.
@@ -810,18 +810,18 @@ void collision_collector::fix_possible_collision(setup *result,
 static void install_mirror_person_in_matrix(int x, int y,
                                             setup *s, const personrec *temp_p,
                                             const coordrec *optr,
-                                            uint32 zmask)
+                                            uint32_t zmask)
 {
    int place = optr->get_index_from_coords(x, y);
    if (place < 0)
       fail("Don't recognize ending setup for this call; not able to do it mirror.");
 
    // Switch the stable bits.
-   uint32 n = temp_p->id1;
+   uint32_t n = temp_p->id1;
 
-   uint32 tl = (n & STABLE_VLMASK) / STABLE_VLBIT;
-   uint32 tr = (n & STABLE_VRMASK) / STABLE_VRBIT;
-   uint32 z = (n & ~(STABLE_VLMASK|STABLE_VRMASK)) | (tl*STABLE_VRBIT) | (tr*STABLE_VLBIT);
+   uint32_t tl = (n & STABLE_VLMASK) / STABLE_VLBIT;
+   uint32_t tr = (n & STABLE_VRMASK) / STABLE_VRBIT;
+   uint32_t z = (n & ~(STABLE_VLMASK|STABLE_VRMASK)) | (tl*STABLE_VRBIT) | (tr*STABLE_VLBIT);
 
    // Switch the slide and roll bits.
    z &= ~((3*NSLIDE_BIT) | (3*NROLL_BIT));
@@ -943,174 +943,174 @@ void mirror_this(setup *s) THROW_DECL
 }
 
 
-static const veryshort ftc2x4[8] = {10, 15, 3, 1, 2, 7, 11, 9};
-static const veryshort ftl2x4[12] = {6, 11, 15, 13, 14, 3, 7, 5, 6, 11, 15, 13};
+static const int8_t ftc2x4[8] = {10, 15, 3, 1, 2, 7, 11, 9};
+static const int8_t ftl2x4[12] = {6, 11, 15, 13, 14, 3, 7, 5, 6, 11, 15, 13};
 
-static const veryshort ftqthbv[8] = {0, 1, 6, 7, 8, 9, 14, 15};
-static const veryshort ftqthbh[12] = {12, 13, 2, 3, 4, 5, 10, 11, 12, 13, 2, 3};
+static const int8_t ftqthbv[8] = {0, 1, 6, 7, 8, 9, 14, 15};
+static const int8_t ftqthbh[12] = {12, 13, 2, 3, 4, 5, 10, 11, 12, 13, 2, 3};
 
-static const veryshort ftc4x4[24] = {10, 15, 3, 1, 2, 7, 11, 9, 2, 7, 11, 9,
-                                     10, 15, 3, 1, 10, 15, 3, 1, 2, 7, 11, 9};
+static const int8_t ftc4x4[24] = {10, 15, 3, 1, 2, 7, 11, 9, 2, 7, 11, 9,
+                                  10, 15, 3, 1, 10, 15, 3, 1, 2, 7, 11, 9};
 
-static const veryshort ftrig12[12] = {9, 10, 11, -1, -1, -1, 3, 4, 5, -1, -1, -1,};
+static const int8_t ftrig12[12] = {9, 10, 11, -1, -1, -1, 3, 4, 5, -1, -1, -1,};
 
-static const veryshort ftcphan[24] = {0, 2, 7, 5, 8, 10, 15, 13, 8, 10, 15, 13,
-                                      0, 2, 7, 5, 0, 2, 7, 5, 8, 10, 15, 13};
-static const veryshort ft2x42x6[8] = {1, 2, 3, 4, 7, 8, 9, 10};
+static const int8_t ftcphan[24] = {0, 2, 7, 5, 8, 10, 15, 13, 8, 10, 15, 13,
+                                   0, 2, 7, 5, 0, 2, 7, 5, 8, 10, 15, 13};
+static const int8_t ft2x42x6[8] = {1, 2, 3, 4, 7, 8, 9, 10};
 
-static const veryshort ftcspn[8] = {6, 11, 13, 17, 22, 27, 29, 1};
-static const veryshort ftcbone[8] = {6, 13, 18, 19, 22, 29, 2, 3};
-static const veryshort ftc2x1dmd[6] = {1, 2, 4, 7, 8, 10};
-static const veryshort ftl2x1dmd[9] = {10, 1, 2, 4, 7, 8, 10, 1, 2};
-static const veryshort qhypergall[8] = {1, 8, 10, -1, 9, 0, 2, -1};
-static const veryshort qhypergalc[8] = {-1, 3, 7, -1, -1, 11, 15, -1};
+static const int8_t ftcspn[8] = {6, 11, 13, 17, 22, 27, 29, 1};
+static const int8_t ftcbone[8] = {6, 13, 18, 19, 22, 29, 2, 3};
+static const int8_t ftc2x1dmd[6] = {1, 2, 4, 7, 8, 10};
+static const int8_t ftl2x1dmd[9] = {10, 1, 2, 4, 7, 8, 10, 1, 2};
+static const int8_t qhypergall[8] = {1, 8, 10, -1, 9, 0, 2, -1};
+static const int8_t qhypergalc[8] = {-1, 3, 7, -1, -1, 11, 15, -1};
 
-static const veryshort ftequalize[8] = {6, 0, 8, 13, 22, 16, 24, 29};
-static const veryshort ftlcwv[12] = {25, 26, 2, 3, 9, 10, 18, 19, 25, 26, 2, 3};
-static const veryshort ftlqtg[12] = {29, 6, 10, 11, 13, 22, 26, 27, 29, 6, 10, 11};
-static const veryshort ftlbigqtg[12] = {28, 7, 10, 11, 12, 23, 26, 27, 28, 7, 10, 11};
-static const veryshort ftlshort6dmd[9] = {4, -1, -1, 1, -1, -1, 4, -1, -1};
-static const veryshort qtlqtg[12] = {1, -1, -1, 4, 5, -1, -1, 0, 1, -1, -1, 4};
-static const veryshort qtlbone[12] = {0, 3, -1, -1, 4, 7, -1, -1, 0, 3, -1, -1};
-static const veryshort qtlbone2[12] = {0, -1, -1, 1, 4, -1, -1, 5, 0, -1, -1, 1};
-static const veryshort qtlxwv[12] = {0, 1, -1, -1, 4, 5, -1, -1, 0, 1, -1, -1};
-static const veryshort qtl1x8[12] = {-1, -1, 5, 7, -1, -1, 1, 3, -1, -1, 5, 7};
-static const veryshort qtlrig[12] = {6, 7, -1, -1, 2, 3, -1, -1, 6, 7, -1, -1};
-static const veryshort qtlgls[12] = {2, 5, 6, 7, 8, 11, 0, 1, 2, 5, 6, 7};
-static const veryshort qtg2x4[12] = {7, 0, -1, -1, 3, 4, -1, -1, 7, 0, -1, -1};
-static const veryshort f2x4qtg[12] = {5, -1, -1, 0, 1, -1, -1, 4, 5, -1, -1, 0};
-static const veryshort f2x4phan[24] = {12, 14, 3, 1, 4, 6, 11, 9, 4, 6, 11, 9,
-                                       12, 14, 3, 1, 12, 14, 3, 1, 4, 6, 11, 9};
-static const veryshort ft4x4bh[16] = {9, 8, 7, -1, 6, -1, -1, -1, 3, 2, 1, -1, 0, -1, -1, -1};
-static const veryshort ftqtgbh[8] = {-1, -1, 10, 11, -1, -1, 4, 5};
-static const veryshort ft3x4bb[12] = {-1, -1, -1, -1, 8, 9, -1, -1, -1, -1, 2, 3};
-static const veryshort ft4x446[16] = {4, 7, 22, 8, 13, 14, 15, 21, 16, 19, 10, 20, 1, 2, 3, 9};
-static const veryshort ft2646[12] = {11, 10, 9, 8, 7, 6, 23, 22, 21, 20, 19, 18};
-static const veryshort galtranslateh[16]  = {-1,  3,  4,  2, -1, -1, -1,  5,
-                                             -1,  7,  0,  6, -1, -1, -1,  1};
-static const veryshort galtranslatev[16]  = {-1, -1, -1,  1, -1,  3,  4,  2,
-                                             -1, -1, -1,  5, -1,  7,  0,  6};
-static const veryshort phantranslateh[16] = { 0, -1,  1,  1, -1,  3,  2,  2,
-                                              4, -1,  5,  5, -1,  7,  6,  6};
-static const veryshort phantranslatev[16] = {-1,  7,  6,  6,  0, -1,  1,  1,
-                                             -1,  3,  2,  2,  4, -1,  5,  5};
-static const veryshort sdmdtranslateh[8] = {0, 0, 0, 1, 2, 0, 0, 3};
-static const veryshort sdmdtranslatev[8] = {0, 3, 0, 0, 0, 1, 2, 0};
-static const veryshort stharlinetranslateh[8] = {0, 1, 0, 0, 2, 3, 0, 0};
-static const veryshort stharlinetranslatev[8] = {0, 0, 0, 1, 0, 0, 2, 3};
+static const int8_t ftequalize[8] = {6, 0, 8, 13, 22, 16, 24, 29};
+static const int8_t ftlcwv[12] = {25, 26, 2, 3, 9, 10, 18, 19, 25, 26, 2, 3};
+static const int8_t ftlqtg[12] = {29, 6, 10, 11, 13, 22, 26, 27, 29, 6, 10, 11};
+static const int8_t ftlbigqtg[12] = {28, 7, 10, 11, 12, 23, 26, 27, 28, 7, 10, 11};
+static const int8_t ftlshort6dmd[9] = {4, -1, -1, 1, -1, -1, 4, -1, -1};
+static const int8_t qtlqtg[12] = {1, -1, -1, 4, 5, -1, -1, 0, 1, -1, -1, 4};
+static const int8_t qtlbone[12] = {0, 3, -1, -1, 4, 7, -1, -1, 0, 3, -1, -1};
+static const int8_t qtlbone2[12] = {0, -1, -1, 1, 4, -1, -1, 5, 0, -1, -1, 1};
+static const int8_t qtlxwv[12] = {0, 1, -1, -1, 4, 5, -1, -1, 0, 1, -1, -1};
+static const int8_t qtl1x8[12] = {-1, -1, 5, 7, -1, -1, 1, 3, -1, -1, 5, 7};
+static const int8_t qtlrig[12] = {6, 7, -1, -1, 2, 3, -1, -1, 6, 7, -1, -1};
+static const int8_t qtlgls[12] = {2, 5, 6, 7, 8, 11, 0, 1, 2, 5, 6, 7};
+static const int8_t qtg2x4[12] = {7, 0, -1, -1, 3, 4, -1, -1, 7, 0, -1, -1};
+static const int8_t f2x4qtg[12] = {5, -1, -1, 0, 1, -1, -1, 4, 5, -1, -1, 0};
+static const int8_t f2x4phan[24] = {12, 14, 3, 1, 4, 6, 11, 9, 4, 6, 11, 9,
+                                    12, 14, 3, 1, 12, 14, 3, 1, 4, 6, 11, 9};
+static const int8_t ft4x4bh[16] = {9, 8, 7, -1, 6, -1, -1, -1, 3, 2, 1, -1, 0, -1, -1, -1};
+static const int8_t ftqtgbh[8] = {-1, -1, 10, 11, -1, -1, 4, 5};
+static const int8_t ft3x4bb[12] = {-1, -1, -1, -1, 8, 9, -1, -1, -1, -1, 2, 3};
+static const int8_t ft4x446[16] = {4, 7, 22, 8, 13, 14, 15, 21, 16, 19, 10, 20, 1, 2, 3, 9};
+static const int8_t ft2646[12] = {11, 10, 9, 8, 7, 6, 23, 22, 21, 20, 19, 18};
+static const int8_t galtranslateh[16]  = {-1,  3,  4,  2, -1, -1, -1,  5,
+                                          -1,  7,  0,  6, -1, -1, -1,  1};
+static const int8_t galtranslatev[16]  = {-1, -1, -1,  1, -1,  3,  4,  2,
+                                          -1, -1, -1,  5, -1,  7,  0,  6};
+static const int8_t phantranslateh[16] = { 0, -1,  1,  1, -1,  3,  2,  2,
+                                           4, -1,  5,  5, -1,  7,  6,  6};
+static const int8_t phantranslatev[16] = {-1,  7,  6,  6,  0, -1,  1,  1,
+                                          -1,  3,  2,  2,  4, -1,  5,  5};
+static const int8_t sdmdtranslateh[8] = {0, 0, 0, 1, 2, 0, 0, 3};
+static const int8_t sdmdtranslatev[8] = {0, 3, 0, 0, 0, 1, 2, 0};
+static const int8_t stharlinetranslateh[8] = {0, 1, 0, 0, 2, 3, 0, 0};
+static const int8_t stharlinetranslatev[8] = {0, 0, 0, 1, 0, 0, 2, 3};
 
-static const veryshort octtranslatev[80] = {
+static const int8_t octtranslatev[80] = {
    0,  0,  0, 15,  0,  0,  0, 14,  0,  0,  0, 13,  0,  0,  0, 12,
    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  2,  3,
    0,  0,  0,  7,  0,  0,  0,  6,  0,  0,  0,  5,  0,  0,  0,  4,
    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  8,  9, 10, 11,
    0,  0,  0, 15,  0,  0,  0, 14,  0,  0,  0, 13,  0,  0,  0, 12};
 
-static const veryshort octt4x6latev[80] = {
+static const int8_t octt4x6latev[80] = {
    0,  0,  0,  0,  0,  0, 17, 18,  0,  0, 16, 19,  0,  0, 15, 20,
    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  2,  0, 11, 10,  9,
    0,  0,  0,  0,  0,  0,  5,  6,  0,  0,  4,  7,  0,  0,  3,  8,
    0,  0,  0,  0,  0,  0,  0,  0,  0, 12, 13, 14,  0, 23, 22, 21,
    0,  0,  0,  0,  0,  0, 17, 18,  0,  0, 16, 19,  0,  0, 15, 20};
 
-static const veryshort hextranslatev[40] = {
+static const int8_t hextranslatev[40] = {
    0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  2,  3,  4,  5,  6,  7,
    0,  0,  0,  0,  0,  0,  0,  0,  8,  9, 10, 11, 12, 13, 14, 15,
    0,  0,  0,  0,  0,  0,  0,  0};
 
-static const veryshort hxwtranslatev[40] = {
+static const int8_t hxwtranslatev[40] = {
    0,  0,  0,  0,  0,  0,  6,  7,  0,  0,  0,  0,  0,  0,  1,  0,
    0,  0,  0,  0,  0,  0,  2,  3,  0,  0,  0,  0,  0,  4,  5,  0,
    0,  0,  0,  0,  0,  0,  6,  7};
 
-static const veryshort hthartranslate[32] = {
+static const int8_t hthartranslate[32] = {
    0,  0,  0,  0,  0,  0,  0,  1,  0,  0,  0,  0,  0,  0,  2,  3,
    0,  0,  0,  0,  0,  0,  4,  5,  0,  0,  0,  0,  0,  0,  6,  7};
 
-static const veryshort h1x6translatev[15] = {
+static const int8_t h1x6translatev[15] = {
    0,  0,  0,  0, 1, 2,
    0,  0,  0,  3, 4, 5,
    0,  0,  0};
 
-static const veryshort h1x8translatev[20] = {
+static const int8_t h1x8translatev[20] = {
    0,  0,  0,  0,  0, 1, 3, 2,
    0,  0,  0,  0,  4, 5, 7, 6,
    0,  0,  0,  0};
 
-static const veryshort hxwvdmdtranslate3012[20] = {
+static const int8_t hxwvdmdtranslate3012[20] = {
    3,  3,  3,  3,  0,  0,  0,  0,
    1,  1,  1,  1,  2,  2,  2,  2,
    3,  3,  3,  3};
 
-static const veryshort h1x6thartranslate[12] = {
+static const int8_t h1x6thartranslate[12] = {
    0,  0,  1,  0,  2,  3,
    0,  4,  5,  0,  6,  7};
 
-static const veryshort h1x6translate2x1d[12] = {
+static const int8_t h1x6translate2x1d[12] = {
    0,  0,  1,  0,  2,  0,
    0,  3,  4,  0,  5,  0};
 
-static const veryshort h1x8thartranslate9999[16] = {
+static const int8_t h1x8thartranslate9999[16] = {
    0,  0,  1,  0,  0,  2,  3,  0,
    0,  4,  5,  0,  0,  6,  7,  0};
 
-static const veryshort h1x8thartranslatec3c3[20] = {
+static const int8_t h1x8thartranslatec3c3[20] = {
    0,  0,  6,  7,  0,  1,  0,  0,
    0,  0,  2,  3,  4,  5,  0,  0,
    0,  0,  6,  7};
 
-static const veryshort dmdhyperv[15] = {0, 3, 0, 0, 0, 0,
-                                        0, 1, 0, 2, 0, 0,
-                                        0, 3, 0};
+static const int8_t dmdhyperv[15] = {0, 3, 0, 0, 0, 0,
+                                     0, 1, 0, 2, 0, 0,
+                                     0, 3, 0};
 
-static const veryshort linehyperh[12] = {0, 1, 0, 0, 0, 0, 2, 3, 0, 0, 0, 0};
-static const veryshort linehyperv[12] = {0, 0, 0, 0, 1, 0, 0, 0, 0, 2, 3, 0};
+static const int8_t linehyperh[12] = {0, 1, 0, 0, 0, 0, 2, 3, 0, 0, 0, 0};
+static const int8_t linehyperv[12] = {0, 0, 0, 0, 1, 0, 0, 0, 0, 2, 3, 0};
 
-static const veryshort hyperbonev[20] = {5, 0, 6, 7, -1, -1, -1, -1,
-                                         1, 4, 2, 3, -1, -1, -1, -1,
-                                         5, 0, 6, 7};
+static const int8_t hyperbonev[20] = {5, 0, 6, 7, -1, -1, -1, -1,
+                                      1, 4, 2, 3, -1, -1, -1, -1,
+                                      5, 0, 6, 7};
 
-static const veryshort hyper3x4v[30] = {3, 2, 1, 0, 4, 5, -1, -1, -1, -1, -1, -1,
-                                        9, 8, 7, 6, 10, 11, -1, -1, -1, -1, -1, -1,
-                                        3, 2, 1, 0, 4, 5};
+static const int8_t hyper3x4v[30] = {3, 2, 1, 0, 4, 5, -1, -1, -1, -1, -1, -1,
+                                     9, 8, 7, 6, 10, 11, -1, -1, -1, -1, -1, -1,
+                                     3, 2, 1, 0, 4, 5};
 
-static const veryshort tinyhyperbonet[20] = {-1, -1, -1, -1, -1, -1, -1, -1,
-                                             -1, -1, -1, -1,  2,  3,  1,  0,
-                                             -1, -1, -1, -1};
+static const int8_t tinyhyperbonet[20] = {-1, -1, -1, -1, -1, -1, -1, -1,
+                                          -1, -1, -1, -1,  2,  3,  1,  0,
+                                          -1, -1, -1, -1};
 
-static const veryshort tinyhyperbonel[20] = {-1, -1,  3,  2, -1, -1, -1, -1,
-                                             -1, -1,  1,  0, -1, -1, -1, -1,
-                                             -1, -1,  3,  2};
+static const int8_t tinyhyperbonel[20] = {-1, -1,  3,  2, -1, -1, -1, -1,
+                                          -1, -1,  1,  0, -1, -1, -1, -1,
+                                          -1, -1,  3,  2};
 
-static const veryshort tinyhyperboneb[20] = { 3,  0, -1, -1, -1, -1, -1, -1,
-                                              1,  2, -1, -1, -1, -1, -1, -1,
-                                              3,  0, -1, -1};
+static const int8_t tinyhyperboneb[20] = { 3,  0, -1, -1, -1, -1, -1, -1,
+                                           1,  2, -1, -1, -1, -1, -1, -1,
+                                           3,  0, -1, -1};
 
-static const veryshort galhyperv[15] = {0, 7, 5, 6, 0, 0, 0, 3, 1, 2, 0, 4, 0, 7, 5};
-static const veryshort qtghyperh[12] = {6, 7, 0, 0, 0, 1, 2, 3, 4, 0, 0, 5};
-static const veryshort qtghyperv[12] = {0, 0, 5, 6, 7, 0, 0, 0, 1, 2, 3, 4};
-static const veryshort starhyperh[12] = {0, 0, 0, 0, 1, 0, 0, 2, 0, 0, 3, 0};
-static const veryshort starhyperh6556[12] = {0, 0, 0, 0, 1, 0, 0, 2, 0, 3, 0, 0};
-static const veryshort starhyperh5665[12] = {0, 0, 0, 1, 0, 0, 2, 0, 0, 0, 3, 0};
-static const veryshort fstarhyperh[12] = {0, 0, 0, 1, 0, 0, 2, 0, 0, 3, 0, 0};
-static const veryshort lilstar1[8] = {0, 2, 0, 0, 3, 0, 0, 1};
-static const veryshort lilstar2[8] = {3, 0, 0, 1, 0, 2, 0, 0};
-static const veryshort lilstar3[8] = {0, 1, 0, 0, 2, 3, 0, 0};
-static const veryshort lilstar4[8] = {0, 0, 2, 3, 0, 0, 0, 1};
-
-
-static const veryshort qtbd1[12] = {5, 9, 6, 7, 9, 0, 1, 9, 2, 3, 9, 4};
-static const veryshort qtbd2[12] = {9, 5, 6, 7, 0, 9, 9, 1, 2, 3, 4, 9};
-static const veryshort qtbd3[12] = {9, 5, 6, 7, 9, 0, 9, 1, 2, 3, 9, 4};
-static const veryshort qtbd4[12] = {5, 9, 6, 7, 0, 9, 1, 9, 2, 3, 4, 9};
-static const veryshort q3x4xx1[12] = {9, 5, 0, 9, 9, 1, 9, 2, 3, 9, 9, 4};
-static const veryshort q3x4xx2[12] = {9, 9, 9, 9, 2, 3, 9, 9, 9, 9, 0, 1};
-static const veryshort q3x4xx3[12] = {9, 9, 2, 2, 9, 9, 3, 3, 9, 9, 0, 1};
-static const veryshort q3x4xx4[12] = {3, 3, 9, 9, 0, 1, 9, 9, 2, 2, 9, 9};
+static const int8_t galhyperv[15] = {0, 7, 5, 6, 0, 0, 0, 3, 1, 2, 0, 4, 0, 7, 5};
+static const int8_t qtghyperh[12] = {6, 7, 0, 0, 0, 1, 2, 3, 4, 0, 0, 5};
+static const int8_t qtghyperv[12] = {0, 0, 5, 6, 7, 0, 0, 0, 1, 2, 3, 4};
+static const int8_t starhyperh[12] = {0, 0, 0, 0, 1, 0, 0, 2, 0, 0, 3, 0};
+static const int8_t starhyperh6556[12] = {0, 0, 0, 0, 1, 0, 0, 2, 0, 3, 0, 0};
+static const int8_t starhyperh5665[12] = {0, 0, 0, 1, 0, 0, 2, 0, 0, 0, 3, 0};
+static const int8_t fstarhyperh[12] = {0, 0, 0, 1, 0, 0, 2, 0, 0, 3, 0, 0};
+static const int8_t lilstar1[8] = {0, 2, 0, 0, 3, 0, 0, 1};
+static const int8_t lilstar2[8] = {3, 0, 0, 1, 0, 2, 0, 0};
+static const int8_t lilstar3[8] = {0, 1, 0, 0, 2, 3, 0, 0};
+static const int8_t lilstar4[8] = {0, 0, 2, 3, 0, 0, 0, 1};
 
 
+static const int8_t qtbd1[12] = {5, 9, 6, 7, 9, 0, 1, 9, 2, 3, 9, 4};
+static const int8_t qtbd2[12] = {9, 5, 6, 7, 0, 9, 9, 1, 2, 3, 4, 9};
+static const int8_t qtbd3[12] = {9, 5, 6, 7, 9, 0, 9, 1, 2, 3, 9, 4};
+static const int8_t qtbd4[12] = {5, 9, 6, 7, 0, 9, 1, 9, 2, 3, 4, 9};
+static const int8_t q3x4xx1[12] = {9, 5, 0, 9, 9, 1, 9, 2, 3, 9, 9, 4};
+static const int8_t q3x4xx2[12] = {9, 9, 9, 9, 2, 3, 9, 9, 9, 9, 0, 1};
+static const int8_t q3x4xx3[12] = {9, 9, 2, 2, 9, 9, 3, 3, 9, 9, 0, 1};
+static const int8_t q3x4xx4[12] = {3, 3, 9, 9, 0, 1, 9, 9, 2, 2, 9, 9};
 
-extern void do_stability(uint32 *personp,
+
+
+extern void do_stability(uint32_t *personp,
                          int field,
                          int turning,
                          bool mirror) THROW_DECL
@@ -1221,12 +1221,12 @@ extern bool check_restriction(
    setup *ss,
    assumption_thing restr,
    bool instantiate_phantoms,
-   uint32 flags) THROW_DECL
+   uint32_t flags) THROW_DECL
 {
-   uint32 q0, q1, q2, q3;
-   uint32 z, t;
+   uint32_t q0, q1, q2, q3;
+   uint32_t z, t;
    int idx;
-   const veryshort *mp;
+   const int8_t *mp;
    bool only_because_of_2faced = false;
    bool retval = true;   // True means we were not able to instantiate phantoms.
                          // It is only meaningful if instantiation was requested.
@@ -1295,11 +1295,11 @@ extern bool check_restriction(
    if (!(restr.assump_col & 1)) {
       // Restriction is "line-like" or special.
 
-      static const veryshort mapwkg8[3] = {2, 2, 6};
-      static const veryshort mapwkg6[3] = {2, 2, 5};
-      static const veryshort mapwkg4[3] = {2, 1, 3};
-      static const veryshort mapwkg2[3] = {2, 0, 1};
-      static const veryshort mapwk24[5] = {4, 1, 2, 6, 5};
+      static const int8_t mapwkg8[3] = {2, 2, 6};
+      static const int8_t mapwkg6[3] = {2, 2, 5};
+      static const int8_t mapwkg4[3] = {2, 1, 3};
+      static const int8_t mapwkg2[3] = {2, 0, 1};
+      static const int8_t mapwk24[5] = {4, 1, 2, 6, 5};
 
       switch (restr.assumption) {
       case cr_awkward_centers:       /* check for centers not having left hands */
@@ -1468,7 +1468,7 @@ extern bool check_restriction(
 // The stability info is in the same location as in the 16 bit word from the database,
 // and is also indicated by DBSTAB_BIT.  The location might be zero.
 
-static uint32 find_calldef(
+static uint32_t find_calldef(
    callarray *tdef,
    setup *scopy,
    int real_index,
@@ -1478,7 +1478,7 @@ static uint32 find_calldef(
    if (!tdef) crash_print(__FILE__, __LINE__, 0, (setup *) 0);
 
    unsigned short *calldef_array;
-   uint32 z;
+   uint32_t z;
 
    if (tdef->callarray_flags & CAF__PREDS) {
       for (predptr_pair *predlistptr = tdef->stuff.prd.predlist ;
@@ -1498,23 +1498,23 @@ static uint32 find_calldef(
 
 got_it:
 
-   z = (uint32) calldef_array[northified_index];
+   z = (uint32_t) calldef_array[northified_index];
    if (!z) failp(scopy->people[real_index].id1, "can't execute their part of this call.");
 
    // Uncompress the destination position.
    int field = uncompress_position_number(z);
 
    // Shift the slide/roll data up into the right place.
-   uint32 rollstuff = (z * (NROLL_BIT/DBSLIDEROLL_BIT)) & (NSLIDE_MASK|NROLL_MASK);
+   uint32_t rollstuff = (z * (NROLL_BIT/DBSLIDEROLL_BIT)) & (NSLIDE_MASK|NROLL_MASK);
 
    // Preserve stability and direction from original.
    return (z & 0xF003) | (field << 2) | rollstuff;
 }
 
 
-static uint32 do_slide_roll(uint32 person_in, uint32 z, int direction)
+static uint32_t do_slide_roll(uint32_t person_in, uint32_t z, int direction)
 {
-   uint32 sliderollstuff = z & (NSLIDE_MASK|NROLL_MASK);
+   uint32_t sliderollstuff = z & (NSLIDE_MASK|NROLL_MASK);
    // If just "L" or "R" (but not "M", that is, not both bits), turn on "moved".
    if ((sliderollstuff+NROLL_BIT) & (NROLL_BIT*2)) sliderollstuff |= PERSON_MOVED;
 
@@ -1528,56 +1528,56 @@ static void special_4_way_symm(
    setup *scopy,
    setup *destination,
    int newplacelist[],
-   uint32 lilresult_mask[],
+   uint32_t lilresult_mask[],
    setup *result) THROW_DECL
 {
-   static const veryshort table_2x4[8] = {10, 15, 3, 1, 2, 7, 11, 9};
+   static const int8_t table_2x4[8] = {10, 15, 3, 1, 2, 7, 11, 9};
 
-   static const veryshort table_2x8[16] = {
+   static const int8_t table_2x8[16] = {
       12, 13, 14, 15, 31, 27, 23, 19,
       44, 45, 46, 47, 63, 59, 55, 51};
 
-   static const veryshort table_3x1d[8] = {
+   static const int8_t table_3x1d[8] = {
       1, 2, 3, 9, 17, 18, 19, 25};
 
-   static const veryshort table_2x6[12] = {
+   static const int8_t table_2x6[12] = {
       13, 14, 15, 31, 27, 23,
       45, 46, 47, 63, 59, 55};
 
-   static const veryshort table_4x6[24] = {
+   static const int8_t table_4x6[24] = {
        9, 10, 11, 30, 26, 22,
       23, 27, 31, 15, 14, 13,
       41, 42, 43, 62, 58, 54,
       55, 59, 63, 47, 46, 45};
 
-   static const veryshort table_1x16[16] = {
+   static const int8_t table_1x16[16] = {
        0,  1,  2,  3,  4,  5,  6,  7,
       16, 17, 18, 19, 20, 21, 22, 23};
 
-   static const veryshort table_x1x8_from_xwv[8] = {0, 2, 5, 7, 8, 10, 13, 15};
+   static const int8_t table_x1x8_from_xwv[8] = {0, 2, 5, 7, 8, 10, 13, 15};
 
-   static const veryshort table_4dmd[16] = {
+   static const int8_t table_4dmd[16] = {
       7, 5, 14, 12, 16, 17, 18, 19,
       23, 21, 30, 28, 0, 1, 2, 3};
 
-   static const veryshort table_hyperbone[8] = {13, 4, 6, 7, 5, 12, 14, 15};
+   static const int8_t table_hyperbone[8] = {13, 4, 6, 7, 5, 12, 14, 15};
 
-   static const veryshort table_hyper3x4[12] = {0, 1, 2, 3, 10, 11, 12, 13, 14, 15, 22, 23};
+   static const int8_t table_hyper3x4[12] = {0, 1, 2, 3, 10, 11, 12, 13, 14, 15, 22, 23};
 
-   static const veryshort table_tinyhyperbone[8] = {3, 2, 0, 1, 11, 10, 8, 9};
+   static const int8_t table_tinyhyperbone[8] = {3, 2, 0, 1, 11, 10, 8, 9};
 
-   static const veryshort table_2x3_4dmd[6] = {6, 11, 13, 22, 27, 29};
+   static const int8_t table_2x3_4dmd[6] = {6, 11, 13, 22, 27, 29};
 
-   static const veryshort table_bigd_x4dmd[12] = {7, 5, 10, 11, 14, 12, 23, 21, 26, 27, 30, 28};
+   static const int8_t table_bigd_x4dmd[12] = {7, 5, 10, 11, 14, 12, 23, 21, 26, 27, 30, 28};
 
-   static const veryshort line_table[4] = {0, 1, 6, 7};
+   static const int8_t line_table[4] = {0, 1, 6, 7};
 
-   static const veryshort dmd_table[4] = {0, 4, 6, 10};
+   static const int8_t dmd_table[4] = {0, 4, 6, 10};
 
    int begin_size;
    int real_index;
    int k, result_size, result_quartersize;
-   const veryshort *the_table = (const veryshort *) 0;
+   const int8_t *the_table = (const int8_t *) 0;
 
    switch (result->kind) {
    case s2x2: case s_galaxy:
@@ -1661,7 +1661,7 @@ static void special_4_way_symm(
       if (this_person.id1) {
          int real_direction = this_person.id1 & 3;
          int northified_index = (real_index + (((4-real_direction)*begin_size) >> 2)) % begin_size;
-         uint32 z = find_calldef(tdef, scopy, real_index, real_direction, northified_index);
+         uint32_t z = find_calldef(tdef, scopy, real_index, real_direction, northified_index);
          k = (z >> 2) & 0x3F;
          if (the_table) k = the_table[k];
          k = (k + real_direction*result_quartersize) % result_size;
@@ -1689,7 +1689,7 @@ static void special_triangle(
    setup *destination,
    int newplacelist[],
    int num,
-   uint32 lilresult_mask[],
+   uint32_t lilresult_mask[],
    setup *result) THROW_DECL
 {
    int real_index;
@@ -1703,7 +1703,7 @@ static void special_triangle(
       newplacelist[real_index] = -1;
       if (this_person.id1) {
          int k;
-         uint32 z;
+         uint32_t z;
          int northified_index = real_index;
          int real_direction = this_person.id1 & 3;
 
@@ -1803,12 +1803,12 @@ static void warn_unless_one_person_call(setup *ss, warning_index w)
 
 
 static bool handle_3x4_division(
-   setup *ss, uint32 callflags1, uint32 newtb, uint32 livemask,
-   uint32 & division_code,            // We write over this.
+   setup *ss, uint32_t callflags1, uint32_t newtb, uint32_t livemask,
+   uint32_t & division_code,            // We write over this.
    callarray *calldeflist, bool matrix_aware, setup *result)
 {
    bool forbid_little_stuff;
-   uint32 nxnbits =
+   uint32_t nxnbits =
       ss->cmd.cmd_final_flags.test_heritbits(INHERITFLAG_NXNMASK|INHERITFLAG_MXNMASK);
 
    /* The call has no applicable 3x4 or 4x3 definition. */
@@ -2009,13 +2009,13 @@ static bool handle_3x4_division(
 
 
 static bool handle_4x4_division(
-   setup *ss, uint32 callflags1, uint32 newtb, uint32 livemask,
-   uint32 & division_code,            // We write over this.
+   setup *ss, uint32_t callflags1, uint32_t newtb, uint32_t livemask,
+   uint32_t & division_code,            // We write over this.
    int & finalrot,                    // We write over this.
    callarray *calldeflist, bool matrix_aware)
 {
    bool forbid_little_stuff;
-   uint32 nxnbits =
+   uint32_t nxnbits =
       ss->cmd.cmd_final_flags.test_heritbits(INHERITFLAG_NXNMASK|INHERITFLAG_MXNMASK);
 
    // The call has no applicable 4x4 definition.
@@ -2046,7 +2046,7 @@ static bool handle_4x4_division(
        nxnbits == INHERITFLAGMXNK_1X3 ||
        nxnbits == INHERITFLAGMXNK_3X1 ||
        nxnbits == INHERITFLAGNXNK_3X3) {
-      uint32 assocstuff = 0;
+      uint32_t assocstuff = 0;
       if (assoc(b_3x2, ss, calldeflist)) assocstuff |= 001;
       if (assoc(b_2x3, ss, calldeflist)) assocstuff |= 010;
 
@@ -2266,8 +2266,8 @@ static bool handle_4x4_division(
 
 
 static bool handle_4x6_division(
-   setup *ss, uint32 callflags1, uint32 newtb, uint32 livemask,
-   uint32 & division_code,            // We write over this.
+   setup *ss, uint32_t callflags1, uint32_t newtb, uint32_t livemask,
+   uint32_t & division_code,            // We write over this.
    callarray *calldeflist, bool matrix_aware)
 {
    // The call has no applicable 4x6 definition.
@@ -2381,8 +2381,8 @@ static bool handle_4x6_division(
 
 
 static bool handle_3x8_division(
-   setup *ss, uint32 callflags1, uint32 newtb, uint32 livemask,
-   uint32 & division_code,            // We write over this.
+   setup *ss, uint32_t callflags1, uint32_t newtb, uint32_t livemask,
+   uint32_t & division_code,            // We write over this.
    callarray *calldeflist, bool matrix_aware)
 {
    // The call has no applicable 3x8 definition.
@@ -2429,8 +2429,8 @@ static bool handle_3x8_division(
 
 
 static bool handle_2x12_division(
-   setup *ss, uint32 callflags1, uint32 newtb, uint32 livemask,
-   uint32 & division_code,            // We write over this.
+   setup *ss, uint32_t callflags1, uint32_t newtb, uint32_t livemask,
+   uint32_t & division_code,            // We write over this.
    callarray *calldeflist, bool matrix_aware)
 {
    bool forbid_little_stuff;
@@ -2488,19 +2488,19 @@ static bool handle_2x12_division(
 
 static int divide_the_setup(
    setup *ss,
-   uint32 *newtb_p,
+   uint32_t *newtb_p,
    callarray *calldeflist,
    int *desired_elongation_p,
    setup *result) THROW_DECL
 {
    int i;
    callarray *have_1x2, *have_2x1;
-   uint32 division_code = ~0U;
-   uint32 newtb = *newtb_p;
-   uint32 callflags1 = ss->cmd.callspec->the_defn.callflags1;
+   uint32_t division_code = ~0U;
+   uint32_t newtb = *newtb_p;
+   uint32_t callflags1 = ss->cmd.callspec->the_defn.callflags1;
    final_and_herit_flags final_concepts = ss->cmd.cmd_final_flags;
    setup_command conc_cmd;
-   uint32 must_do_mystic = ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_KMASK;
+   uint32_t must_do_mystic = ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_KMASK;
    calldef_schema conc_schema = schema_concentric;
    bool matrix_aware =
          (callflags1 & CFLAG1_12_16_MATRIX_MEANS_SPLIT) &&
@@ -2508,11 +2508,11 @@ static int divide_the_setup(
    int finalrot = 0;
    bool maybe_horrible_hinge = false;
 
-   uint32 nxnbits =
+   uint32_t nxnbits =
       ss->cmd.cmd_final_flags.test_heritbits(INHERITFLAG_NXNMASK|INHERITFLAG_MXNMASK);
 
    // It will be helpful to have a mask of where the live people are.
-   uint32 livemask = little_endian_live_mask(ss);
+   uint32_t livemask = little_endian_live_mask(ss);
 
    // Take care of "snag" and "mystic".  "Central" is illegal, and was already caught.
    // We first limit it to just the few setups for which it can possibly be legal, to make
@@ -2535,7 +2535,7 @@ static int divide_the_setup(
    bool specialpass;
 
    switch (ss->kind) {
-      uint32 tbi, tbo;    // Many clauses will use these.
+      uint32_t tbi, tbo;    // Many clauses will use these.
       bool temp;
 
    case s_thar:
@@ -3216,7 +3216,7 @@ static int divide_the_setup(
             // in order to figure out how to divide the setup.
 
             if (calldeflist->callarray_flags & CAF__LATERAL_TO_SELECTEES) {
-               uint32 selmask = 0;
+               uint32_t selmask = 0;
 
                for (i=0 ; i<4 ; i++) if (selectp(ss, i)) selmask |= ss->people[i].id1;
 
@@ -3243,7 +3243,7 @@ static int divide_the_setup(
             // case, the setup elongation flag, if present, must not be
             // inconsistent with our decision.
 
-            uint32 elong = 0;
+            uint32_t elong = 0;
 
             // If this is "run" and people aren't T-boned, just ignore the 2x1 definition.
 
@@ -3265,7 +3265,7 @@ static int divide_the_setup(
                }
             }
             else {
-               uint32 foo = (ss->cmd.prior_elongation_bits | ~elong) & 3;
+               uint32_t foo = (ss->cmd.prior_elongation_bits | ~elong) & 3;
 
                if (foo == 0) {
                   fail("Can't figure out who should be working with whom.");
@@ -3332,7 +3332,7 @@ static int divide_the_setup(
          goto do_mystically;
 
       {
-         uint32 tinytb =
+         uint32_t tinytb =
             ss->people[2].id1 | ss->people[3].id1 |
             ss->people[6].id1 | ss->people[7].id1;
 
@@ -3679,7 +3679,7 @@ static int divide_the_setup(
          if (calling_level < triangle_in_box_level)
             warn_about_concept_level();
 
-         uint32 leading = final_concepts.final;
+         uint32_t leading = final_concepts.final;
 
          if (ss->cmd.cmd_misc3_flags & CMD_MISC3__SAID_TRIANGLE) {
             if (final_concepts.test_finalbit(FINAL__TRIANGLE))
@@ -3942,7 +3942,7 @@ static int divide_the_setup(
 
          expand::expand_setup(s_qtg_2x4, &sstest);
 
-         uint32 tbtest =
+         uint32_t tbtest =
             sstest.people[0].id1 | sstest.people[1].id1 |
             sstest.people[4].id1 | sstest.people[5].id1;
 
@@ -4283,102 +4283,102 @@ static int divide_the_setup(
 
 
 
-static veryshort s1x6translateh[32] = {
+static int8_t s1x6translateh[32] = {
    -1, 0, 1, 2, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
    -1, 3, 4, 5, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
 
-static veryshort s1x6translatev[32] = {
+static int8_t s1x6translatev[32] = {
    -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 1, 2, -1, -1, -1, -1,
    -1, -1, -1, -1, -1, -1, -1, -1, -1, 3, 4, 5, -1, -1, -1, -1};
 
-static veryshort sxwvtranslatev[40] = {
+static int8_t sxwvtranslatev[40] = {
    -1, -1, 6, 7, -1, -1, -1, -1, -1, 0, 1, -1, -1, -1, -1, -1,
    -1, -1, 2, 3, -1, -1, -1, -1, -1, 4, 5, -1, -1, -1, -1, -1,
    -1, -1, 6, 7, -1, -1, -1, -1};
 
-static veryshort shrgltranslatev[40] = {
+static int8_t shrgltranslatev[40] = {
    -1, -1, -1, 7, -1, -1, 5, -1, -1, -1, 6, -1, -1, 0, -1, -1,
    -1, -1, -1, 3, -1, -1, 1, -1, -1, -1, 2, -1, -1, 4, -1, -1,
    -1, -1, -1, 7, -1, -1, 5, -1};
 
-static veryshort sptpdtranslatev[40] = {
+static int8_t sptpdtranslatev[40] = {
    -1, -1, -1, -1, -1,  3, -1, -1, -1,  0, -1,  2, -1, -1,  1, -1,
    -1, -1, -1, -1, -1,  7, -1, -1, -1,  4, -1,  6, -1, -1,  5, -1,
    -1, -1, -1, -1, -1,  3, -1, -1};
 
-static veryshort shypergalv[20] = {
+static int8_t shypergalv[20] = {
    -1, -1, -1, 6, 7, 0, -1, 1, -1, -1, -1, 2, 3, 4, -1, 5, -1, -1, -1, 6};
 
-static veryshort shypergaldhrglv[20] = {
+static int8_t shypergaldhrglv[20] = {
    -1, -1, -1, 7, 5, 0, 6, 3, -1, -1, -1, 3, 1, 4, 2, 7, -1, -1, -1, 7};
 
-static veryshort s3dmftranslateh[32] = {
+static int8_t s3dmftranslateh[32] = {
    -1, 0, 1, 2, -1, -1, -1, -1, -1, 3, -1, -1, -1, -1, -1, -1,
    -1, 4, 5, 6, -1, -1, -1, -1, -1, 7, -1, -1, -1, -1, -1, -1};
 
-static veryshort s3dmftranslatev[32] = {
+static int8_t s3dmftranslatev[32] = {
    -1, 7, -1, -1, -1, -1, -1, -1, -1, 0, 1, 2, -1, -1, -1, -1,
    -1, 3, -1, -1, -1, -1, -1, -1, -1, 4, 5, 6, -1, -1, -1, -1};
 
-static veryshort s3dmntranslateh[32] = {
+static int8_t s3dmntranslateh[32] = {
    -1, 0, 1, 2, -1, -1, -1, -1, -1, -1, 3, -1, -1, -1, -1, -1,
    -1, 4, 5, 6, -1, -1, -1, -1, -1, -1, 7, -1, -1, -1, -1, -1};
 
-static veryshort s3dmntranslatev[32] = {
+static int8_t s3dmntranslatev[32] = {
    -1, -1, 7, -1, -1, -1, -1, -1, -1, 0, 1, 2, -1, -1, -1, -1,
    -1, -1, 3, -1, -1, -1, -1, -1, -1, 4, 5, 6, -1, -1, -1, -1};
 
-static veryshort s_wingedstartranslate[40] = {
+static int8_t s_wingedstartranslate[40] = {
    -1, -1, -1, 7, -1, -1, -1, -1, -1, 0, 1, 2, -1, -1, -1, -1,
    -1, -1, -1, 3, -1, -1, -1, -1, -1, 4, 5, 6, -1, -1, -1, -1,
    -1, -1, -1, 7, -1, -1, -1, -1};
 
-static veryshort jqttranslatev[40] = {
+static int8_t jqttranslatev[40] = {
    -1, -1, -1, -1, -1, -1, 5, -1, -1, 6, -1, 7, -1, 0, -1, -1,
    -1, -1, -1, -1, -1, -1, 1, -1, -1, 2, -1, 3, -1, 4, -1, -1,
    -1, -1, -1, -1, -1, -1, 5, -1};
 
-static veryshort bigdtranslatev[40] = {
+static int8_t bigdtranslatev[40] = {
    -1, -1, 8, 9, 11, -1, 10, -1, -1, -1, -1, -1, -1, 1, -1, 0,
    -1, -1, 2, 3,  5, -1,  4, -1, -1, -1, -1, -1, -1, 7, -1, 6,
    -1, -1, 8, 9, 11, -1, 10, -1};
 
-static veryshort j23translatev[40] = {
+static int8_t j23translatev[40] = {
    0,  0,  0,  4,  0,  5,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
    0,  0,  0,  1,  0,  2,  0,  0,  0,  0,  0,  0,  0,  0,  3,  0,
    0,  0,  0,  4,  0,  5,  0,  0};
 
-static veryshort qdmtranslatev[40] = {
+static int8_t qdmtranslatev[40] = {
    0,  0,  0,  0,  11, 0,  10, 0,   12, 13, 14, 15,  0,  1,  0,  0,
    0,  0,  0,  0,  3,  0,  2,  0,    4,  5,  6,  7,  0,  9,  0,  8,
    0,  0,  0,  0, 11,  0, 10,  0};
 
-static veryshort bonetranslatev[40] = {
+static int8_t bonetranslatev[40] = {
    0,  0,  0,  0,  5,  0, 10,  0,   0,  0,  6,  7,  0,  0,  0,  0,
    0,  0,  0,  0,  1,  0,  0,  0,   0,  0,  2,  3,  0,  0,  0,  4,
    0,  0,  0,  0,  5,  0, 10,  0};
 
-static veryshort qtgtranslateh[40] = {
+static int8_t qtgtranslateh[40] = {
    -1, -1, -1, -1, -1, -1, 5, -1,   -1, -1, 6, 7, -1, 0, -1, -1,
    -1, -1, -1, -1, -1, -1, 1, -1,   -1, -1, 2, 3, -1, 4, -1, -1,
    -1, -1, -1, -1, -1, -1, 5, -1};
 
-static veryshort shrgltranseqlh[40] = {
+static int8_t shrgltranseqlh[40] = {
    7, -1, -1, -1, -1, -1, 5, -1,   3, -1, 6, -1, -1, 0, -1, -1,
    3, -1, -1, -1, -1, -1, 1, -1,   7, -1, 2, -1, -1, 4, -1, -1,
    7, -1, -1, -1, -1, -1, 5, -1};
 
-static veryshort eqlizr[40] = {
+static int8_t eqlizr[40] = {
    6, -1, -1, 5, -1, 7, -1, -1,   -1, -1, -1, -1, -1, -1, 0, -1,
    2, -1, -1, 1, -1, 3, -1, -1,   -1, -1, -1, -1, -1, -1, 4, -1,
    6, -1, -1, 5, -1, 7, -1, -1};
 
-static veryshort eqlizl[40] = {
+static int8_t eqlizl[40] = {
    -1, -1, -1, 6, -1, 7, -1, -1,   1, -1, -1, -1, -1, -1, 0, -1,
    -1, -1, -1, 2, -1, 3, -1, -1,   5, -1, -1, -1, -1, -1, 4, -1,
    -1, -1, -1, 6, -1, 7, -1, -1};
 
-static veryshort starstranslatev[40] = {
+static int8_t starstranslatev[40] = {
    -1, -1, -1, -1, -1, 5, -1, -1,   -1, -1, 6, 7, -1, -1, 0, -1,
    -1, -1, -1, -1, -1, 1, -1, -1,   -1, -1, 2, 3, -1, -1, 4, -1,
    -1, -1, -1, -1, -1, 5, -1, -1};
@@ -4393,7 +4393,7 @@ static veryshort starstranslatev[40] = {
 // we give a different roll direction (3rd argument) in order to make it find a different
 // casting partner.  The written-over 4th argument encodes the location where the turning took place.
 
-static int find_casting_partner(int i, const setup *s, uint32 roll_info_to_use, int & octantmask)
+static int find_casting_partner(int i, const setup *s, uint32_t roll_info_to_use, int & octantmask)
 {
    const coordrec *thingptr = setup_attrs[s->kind].nice_setup_coords;
    if (!thingptr) {
@@ -4448,13 +4448,13 @@ static int find_casting_partner(int i, const setup *s, uint32 roll_info_to_use, 
 
 
 
-static uint32 do_actual_array_call(
+static uint32_t do_actual_array_call(
    setup *ss,
    const calldefn *callspec,
    callarray *linedefinition,
    callarray *coldefinition,
-   uint32 newtb,
-   uint32 funny,
+   uint32_t newtb,
+   uint32_t funny,
    bool mirror,
    bool four_way_startsetup,
    int orig_elongation,
@@ -4463,7 +4463,7 @@ static uint32 do_actual_array_call(
    setup *result) THROW_DECL
 {
    int inconsistent_rotation = 0;
-   uint32 resultflagsmisc = 0;
+   uint32_t resultflagsmisc = 0;
    int inconsistent_setup = 0;
    bool funny_ok1 = false;
    bool funny_ok2 = false;
@@ -4639,7 +4639,7 @@ static uint32 do_actual_array_call(
       for (real_index=0; real_index<8; real_index++) {
          personrec this_person = ss->people[real_index];
          if (this_person.id1) {
-            uint32 z;
+            uint32_t z;
             int real_direction = this_person.id1 & 3;
             int d2 = (this_person.id1 << 1) & 4;
             northified_index = (real_index ^ d2);
@@ -4680,7 +4680,7 @@ static uint32 do_actual_array_call(
       goto fixup;
    }
    else {
-      uint32 lilresult_mask[2];
+      uint32_t lilresult_mask[2];
       setup_kind tempkind;
 
       result->rotation = goodies->callarray_flags & CAF__ROT;
@@ -4709,12 +4709,12 @@ static uint32 do_actual_array_call(
       // Check for people cutting through or working around an elongated 2x2 setup.
 
       if (ss->kind == s2x2) {
-         uint32 groovy_elongation = orig_elongation >> 8;
+         uint32_t groovy_elongation = orig_elongation >> 8;
 
          if ((groovy_elongation & 0x3F) != 0 &&
              (goodies->callarray_flags & CAF__NO_FACING_ENDS)) {
             for (int i=0; i<4; i++) {
-               uint32 p = ss->people[i].id1;
+               uint32_t p = ss->people[i].id1;
                if (p != 0 && ((p-i-1) & 2) != 0 && ((p ^ groovy_elongation) & 1) == 0)
                   fail("Centers aren't staying in the center.");
             }
@@ -4732,14 +4732,14 @@ static uint32 do_actual_array_call(
                check_peeloff_migration = true;
             else if (ss->kind == s2x2) {
                for (int i=0; i<4; i++) {
-                  uint32 p = ss->people[i].id1;
+                  uint32_t p = ss->people[i].id1;
                   if (p != 0 && ((p-i-1) & 2) == 0 && ((p ^ orig_elongation) & 1) == 0)
                      fail("Call has outsides cutting through the middle of the set.");
                }
             }
             else if ((orig_elongation & 0x3F) == 2 - (ss->rotation & 1)) {
                for (int i=0; i<6; i++) {
-                  uint32 p = ss->people[i].id1;
+                  uint32_t p = ss->people[i].id1;
                   if (p != 0) {
                      if (i<3) p ^= 2;
                      if ((p&3) == 0)
@@ -4764,14 +4764,14 @@ static uint32 do_actual_array_call(
       }
       else {
          int halfnumoutl, halfnumoutc, numoutl, numoutc;
-         const veryshort *final_translatec = identity24;
-         const veryshort *final_translatel = identity24;
+         const int8_t *final_translatec = identity24;
+         const int8_t *final_translatel = identity24;
          int rotfudge_line = 0;
          int rotfudge_col = 0;
          numoutl = attr::slimit(result)+1;
          numoutc = numoutl;
          // Handle a result setup with an odd size, e.g. s3x3.
-         uint32 oddness = (numoutl & 1) ? numoutl-1 : 0;
+         uint32_t oddness = (numoutl & 1) ? numoutl-1 : 0;
 
          if (inconsistent_setup) {
             setup_kind other_kind = linedefinition->get_end_setup();
@@ -4782,8 +4782,8 @@ static uint32 do_actual_array_call(
                   setup_kind reskind;
                   setup_kind otherkind;
                   setup_kind finalkind;
-                  const veryshort *final_c;
-                  const veryshort *final_l;
+                  const int8_t *final_c;
+                  const int8_t *final_l;
                   bool onlyifequalize;
                };
 
@@ -4973,7 +4973,7 @@ static uint32 do_actual_array_call(
          halfnumoutc = numoutc >> 1;
 
          for (real_index=0; real_index<num; real_index++) {
-            const veryshort *final_translate;
+            const int8_t *final_translate;
             int kt;
             callarray *the_definition;
             personrec this_person = ss->people[real_index];
@@ -5001,9 +5001,9 @@ static uint32 do_actual_array_call(
 
                final_direction = (final_direction+real_direction) & 3;
 
-               uint32 z = find_calldef(the_definition, ss, real_index, real_direction, northified_index);
+               uint32_t z = find_calldef(the_definition, ss, real_index, real_direction, northified_index);
 
-               uint32 where = (z >> 2) & 0x3F;
+               uint32_t where = (z >> 2) & 0x3F;
 
                if (oddness != 0) {
                   if (where < oddness) {
@@ -5056,7 +5056,7 @@ static uint32 do_actual_array_call(
            result->kind == sx1x8 ||
            result->kind == shypergal ||
            attr::slimit(ss) < attr::slimit(result))) {
-         const veryshort *permuter = (const veryshort *) 0;
+         const int8_t *permuter = (const int8_t *) 0;
          int rotator = 0;
 
          switch (result->kind) {
@@ -5733,7 +5733,7 @@ static uint32 do_actual_array_call(
          }
 
          if (permuter) {
-            uint32 r = 011*((-rotator) & 3);
+            uint32_t r = 011*((-rotator) & 3);
 
             for (real_index=0; real_index<num; real_index++) {
                if (ss->people[real_index].id1) {
@@ -5836,7 +5836,7 @@ static uint32 do_actual_array_call(
        result->kind == s2x2) {
       // We just did a "dixie 1/2 tag" but will want to back up to the 1/4 position.
       // Need to change handedness.
-      uint32 newtb99 = or_all_people(result);
+      uint32_t newtb99 = or_all_people(result);
       if (!(newtb99 & 001)) {
          result->swap_people(0, 1);
          result->swap_people(2, 3);
@@ -5852,7 +5852,7 @@ static uint32 do_actual_array_call(
    // If a star went to a 2x2, set outer_elongation to make people laterally far and vertically close.
    // This is a hack to make Load the Boat work when the outsides are a facing star.
    if (ss->kind == s_star && result->kind == s2x2) {
-      uint32 newtb99 = or_all_people(result);
+      uint32_t newtb99 = or_all_people(result);
       if (!(newtb99 & 001))
          desired_elongation = 1;
       else if (!(newtb99 & 010))
@@ -5883,7 +5883,7 @@ static uint32 do_actual_array_call(
       // ****** make this a nice routine, and use same at sdmoves/1100.
       // Also, use the full XPID_MASK bits, not just 3 bits.
 
-      veryshort where_they_came_from[8];
+      int8_t where_they_came_from[8];
       ::memset(where_they_came_from, -1, sizeof(where_they_came_from));
       for (i=0; i<=attr::slimit(ss); i++) {
          int j = (ss->people[i].id1 >> 6) & 7;
@@ -5897,7 +5897,7 @@ static uint32 do_actual_array_call(
       int octantmask1, octantmask2;
 
       for (i=0; i<=attr::slimit(result); i++) {
-         uint32 p = result->people[i].id1;
+         uint32_t p = result->people[i].id1;
          if (p) {
             int place = find_casting_partner(i, result, result->people[i].id1, octantmask1);
             // Check whether both people agree that casting is taking place.  This requires that they
@@ -5974,17 +5974,17 @@ extern void basic_move(
 {
    int j;
    callarray *calldeflist;
-   uint32 funny;
-   uint32 division_code = ~0U;
+   uint32_t funny;
+   uint32_t division_code = ~0U;
    callarray *linedefinition;
    callarray *coldefinition;
-   uint32 matrix_check_flag = 0;
-   uint32 search_concepts_without_funny,
+   uint32_t matrix_check_flag = 0;
+   uint32_t search_concepts_without_funny,
       search_temp_without_funny, search_temp_with_funny;
    int orig_elongation = 0;
    bool four_way_startsetup;
-   uint32 newtb = tbonetest;
-   uint32 resultflagsmisc = 0;
+   uint32_t newtb = tbonetest;
+   uint32_t resultflagsmisc = 0;
    int desired_elongation = 0;
    calldef_block *qq;
    const calldefn *callspec = the_calldefn;
@@ -6062,14 +6062,14 @@ extern void basic_move(
          // split-dixie-style types of things.
 
          if (ss->cmd.cmd_final_flags.test_finalbits(FINAL__SPLIT_SQUARE_APPROVED | FINAL__SPLIT_DIXIE_APPROVED)) {
-            static uint32 startmasks[4] = {0xAD, 0xBC, 0x70, 0x61};
+            static uint32_t startmasks[4] = {0xAD, 0xBC, 0x70, 0x61};
 
             ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
 
             // Find out what orientation of the split call is consistent with the
             // directions of the live people.  Demand that it be unambiguous.
 
-            uint32 directions, livemask;
+            uint32_t directions, livemask;
             big_endian_get_directions(ss, directions, livemask);
             int i1 = -1;
 
@@ -6138,7 +6138,7 @@ extern void basic_move(
    // except "funny" and "left", but "left" has been taken care of)
    // determine what call definition we will get.
 
-   uint32 given_funny_flag = ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_FUNNY);
+   uint32_t given_funny_flag = ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_FUNNY);
 
    search_concepts_without_funny = ss->cmd.cmd_final_flags.test_heritbits(~INHERITFLAG_FUNNY);
    search_temp_without_funny = 0;
@@ -6189,7 +6189,7 @@ foobar:
    // was what we were looking for, remove those flags and split the setup.
 
    if (callspec->callflags1 & CFLAG1_12_16_MATRIX_MEANS_SPLIT) {
-      uint32 z = search_concepts_without_funny & ~INHERITFLAG_NXNMASK;
+      uint32_t z = search_concepts_without_funny & ~INHERITFLAG_NXNMASK;
 
       switch (ss->kind) {
       case s3x4:
@@ -6569,7 +6569,7 @@ foobar:
          ss->cmd.cmd_misc_flags |= CMD_MISC__EXPLICIT_MATRIX;
       }
       else {
-         uint32 sc = search_concepts_without_funny & INHERITFLAG_NXNMASK;
+         uint32_t sc = search_concepts_without_funny & INHERITFLAG_NXNMASK;
 
          if (((matrix_check_flag & INHERITFLAG_12_MATRIX) &&
               (search_concepts_without_funny & INHERITFLAG_12_MATRIX) &&
@@ -6662,7 +6662,7 @@ foobar:
 
       for (int i=0; i<4; i++) {
          int z = (i-result->rotation+1) & 2;
-         uint32 p = ss->people[i].id1;
+         uint32_t p = ss->people[i].id1;
          if ((((p ^ result->people[z  ].id1) & PID_MASK) != 0) &&
              (((p ^ result->people[z+1].id1) & PID_MASK) != 0))
             fail_no_retry("People are too far apart to work with each other on this call.");

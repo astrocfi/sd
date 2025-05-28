@@ -500,7 +500,7 @@ static int LookupKeystrokeBinding(
 {
    modifier_block *keyptr;
    int nc;
-   uint32 ctlbits;
+   uint32_t ctlbits;
    int newparm = -99;
    matcher_class &matcher = *gg77->matcher_p;
 
@@ -786,7 +786,7 @@ LRESULT WINAPI AboutWndProc(HWND hDlg, UINT Message, WPARAM wParam, LPARAM lPara
    return FALSE;
 }
 
-static uint32 text_color_translate[8] = {
+static uint32_t text_color_translate[8] = {
   RGB(0, 0, 0),      // 0 - not used
   RGB(128, 128, 0),  // 1 - substitute for yellow against bright background
   RGB(255, 0, 0),    // 2 - red
@@ -843,7 +843,7 @@ RGBQUAD icon_color_translate[8];    // Will be filled in during initialization.
 // was 10
 #define BMP_PERSON_SPACE 0
 
-static uint32 plaintext_fg, plaintext_bg;
+static uint32_t plaintext_fg, plaintext_bg;
 
 static void Transcript_OnPaint(HWND hwnd)
 {
@@ -2665,7 +2665,7 @@ void iofull::process_command_line(int *argcp, char ***argvp)
 
 
 
-static void scan_menu(Cstring name, HDC hDC, int *nLongest_p, uint32 itemdata)
+static void scan_menu(Cstring name, HDC hDC, int *nLongest_p, uint32_t itemdata)
 {
    SIZE Size;
 
@@ -2906,7 +2906,7 @@ int iofull::yesnoconfirm(Cstring title, Cstring line1, Cstring line2, bool excl,
       strcpy(finalline, line2);
    }
 
-   uint32 flags = MB_YESNO | MB_DEFBUTTON2;
+   uint32_t flags = MB_YESNO | MB_DEFBUTTON2;
    if (excl) flags |= MB_ICONEXCLAMATION;
    if (info) flags |= MB_ICONINFORMATION;
 
@@ -2975,7 +2975,7 @@ direction_kind iofull::do_direction_popup(matcher_class &matcher)
 int iofull::do_circcer_popup()
 {
    matcher_class &matcher = *gg77->matcher_p;
-   uint32 retval = 0;
+   uint32_t retval = 0;
 
    if (interactivity == interactivity_verify) {
       retval = verify_options.circcer;
@@ -3013,17 +3013,17 @@ int iofull::do_tagger_popup(int tagger_class)
 }
 
 
-uint32 iofull::get_one_number(matcher_class &matcher)
+uint32_t iofull::get_one_number(matcher_class &matcher)
 {
    match_result saved_match = matcher.m_final_result;
    // Return excessively high value if user cancelled; client will notice.
-   uint32 retval = do_popup((int) matcher_class::e_match_number) ? matcher.m_final_result.match.index : NUM_CARDINALS+99;
+   uint32_t retval = do_popup((int) matcher_class::e_match_number) ? matcher.m_final_result.match.index : NUM_CARDINALS+99;
    matcher.m_final_result = saved_match;
    return retval;
 }
 
 
-void iofull::add_new_line(const char the_line[], uint32 drawing_picture)
+void iofull::add_new_line(const char the_line[], uint32_t drawing_picture)
 {
    erase_questionable_stuff();
    lstrcpyn(CurDisplay->Line, the_line, DISPLAY_LINE_LENGTH-1);

@@ -5,7 +5,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2019  William B. Ackerman.
+//    Copyright (C) 1990-2020  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -47,7 +47,7 @@
 // database format version.
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 360
+#define DATABASE_FORMAT_VERSION 362
 
 
 // We used to do some stuff to cater to compiler vendors (e.g. Sun
@@ -76,6 +76,7 @@
 // (But we still leave the ifdef in place; it does no harm.)
 //
 // We no longer take pity on broken compilers or operating systems.
+// We are now using "int8_t" in place of "veryshort".
 
 #ifdef NO_SIGNED_CHAR
 #error "We need to have the char datatype be signed"
@@ -149,7 +150,8 @@
 #endif
 
 // Put other definitions based on known properties of compilers here ....
-
+// Yes, this stuff happens vith Visual C++ 6.0.
+// It does not happen with Mingw G++ 4.8.1 on Windows XP.
 
 #if defined(USE_OWN_INT_MACROS)
 typedef int int32_t;
@@ -178,19 +180,6 @@ typedef unsigned char uint8_t;
 #define UINT32_C(val) ((uint32_t) + (val##UL))
 
 
-
-// The goal is to get rid of the following typedefs, and use the standard
-// type symbols everywhere. That is, things like "uint32" are "legacy code".
-// They will be replaced in due time.
-
-typedef int32_t int32;
-typedef uint32_t uint32;
-typedef int16_t int16;
-typedef uint16_t uint16;
-typedef int8_t veryshort;
-typedef int8_t int8;
-typedef uint8_t uint8;
-// Except this one.
 typedef const char *Cstring;
 
 
@@ -256,7 +245,7 @@ enum base_call_index {
 //
 // These are the infamous "heritable flags".  They are used in generally
 // corresponding ways in the "callflagsh" word of a top level callspec_block,
-// the "modifiersh" word of a "by_def_item", and the "modifier_seth" word of a
+// the "modifiersh" word of a "by_def_item", the "modifier_seth" word of a
 // "calldef_block", and the "cmd_final_flags.herit" of a setup with its command block.
 
 enum heritflags {
@@ -273,10 +262,10 @@ enum heritflags {
    INHERITFLAG_SINGLE     = 0x00000400U,
    INHERITFLAG_SINGLEFILE = 0x00000800U,
    INHERITFLAG_HALF       = 0x00001000U,
-   INHERITFLAG_REWIND     = 0x00002000U,
-   INHERITFLAG_STRAIGHT   = 0x00004000U,
-   INHERITFLAG_TWISTED    = 0x00008000U,
-   INHERITFLAG_LASTHALF   = 0x00010000U,
+   INHERITFLAG_LASTHALF   = 0x00002000U,
+   INHERITFLAG_REWIND     = 0x00004000U,
+   INHERITFLAG_STRAIGHT   = 0x00008000U,
+   INHERITFLAG_TWISTED    = 0x00010000U,
    INHERITFLAG_FRACTAL    = 0x00020000U,
    INHERITFLAG_FAST       = 0x00040000U,
 
@@ -334,9 +323,8 @@ enum heritflags {
    INHERITFLAGRVRTK_RFV   = 0x40000000U,
    INHERITFLAGRVRTK_RVFV  = 0x50000000U,
    INHERITFLAGRVRTK_RFVF  = 0x60000000U,
-   INHERITFLAGRVRTK_RFF   = 0x70000000U
-
-   // one bit remains.
+   INHERITFLAGRVRTK_RFF   = 0x70000000U,
+   INHERITFLAG_QUARTER    = 0x80000000U
 };
 
 
@@ -941,13 +929,14 @@ enum {
    CAF__ROT                     = 0x1,
    CAF__FACING_FUNNY            = 0x2,
    // Next one says this is concentrically defined --- the "end_setup" slot
-   // has the centers' end setup, and there is an extra slot with the ends' end setup.
+   // has the centers' final setup, and there is an extra slot with the ends' final setup.
    CAF__CONCEND                 = 0x4,
    // Next one meaningful only if previous one is set.
    CAF__ROT_OUT                 = 0x8,
+
    // This is a 3 bit field.
    CAF__RESTR_MASK             = 0x70,
-   // These next 6 are the nonzero values it can have.
+   // These next 7 are the nonzero values it can have.
    CAF__RESTR_UNUSUAL          = 0x10,
    CAF__RESTR_FORBID           = 0x20,
    CAF__RESTR_RESOLVE_OK       = 0x30,
@@ -955,6 +944,7 @@ enum {
    CAF__RESTR_BOGUS            = 0x50,
    CAF__RESTR_ASSUME_DPT       = 0x60,
    CAF__RESTR_EACH_1X3         = 0x70,
+
    CAF__PREDS                  = 0x80,
    CAF__NO_CUTTING_THROUGH    = 0x100,
    CAF__NO_FACING_ENDS        = 0x200,
@@ -1373,8 +1363,12 @@ enum mods1_word {
    DFM1_SEQ_REENABLE_ELONG_CHK       = 0x00000008U,
    DFM1_SEQ_REPEAT_N                 = 0x00000010U,
    DFM1_SEQ_REPEAT_NM1               = 0x00000020U,
-   DFM1_SEQ_NORMALIZE                = 0x00000040U,
-   // Beware!!  The above "seq" flags must all lie within DFM1_CONCENTRICITY_FLAG_MASK.
+   DFM1_SEQ_REPEAT_NOVER4            = 0x00000040U,
+   DFM1_SEQ_REPEAT_NOVER2            = 0x00000080U,
+   DFM1_SEQ_NORMALIZE                = 0x00000100U,
+
+
+   // Beware!!  The above "conc" and "seq" flags must all lie within DFM1_CONCENTRICITY_FLAG_MASK.
 
    // End of the separate conc/seq flags.  This constant embraces them.
    // Beware!!  The above "conc" and "seq" flags must lie within this.
@@ -1382,23 +1376,22 @@ enum mods1_word {
    // If this mask is made bigger, be sure the CMD_MISC__ flags (in sd.h)
    // are moved out of the way.  If it is made smaller (to accommodate CMD_MISC__)
    // be sure the conc/seq flags stay inside it.
-   DFM1_CONCENTRICITY_FLAG_MASK      = 0x000000FF,
+   DFM1_CONCENTRICITY_FLAG_MASK      = 0x000001FF,
 
    // BEWARE!!  The following ones must track the table "defmodtab1" in mkcalls.cpp
    // Start of miscellaneous flags.
 
    // This is a 3 bit field -- CALL_MOD_BIT tells where its low bit lies.
-   DFM1_CALL_MOD_MASK                = 0x00000700U,
-   DFM1_CALL_MOD_BIT                 = 0x00000100U,
+   DFM1_CALL_MOD_MASK                = 0x00000E00U,
+   DFM1_CALL_MOD_BIT                 = 0x00000200U,
    // Here are the codes that can be inside.
-   DFM1_CALL_MOD_ANYCALL             = 0x00000100U,
-   DFM1_CALL_MOD_MAND_ANYCALL        = 0x00000200U,
-   DFM1_CALL_MOD_ALLOW_PLAIN_MOD     = 0x00000300U,
-   DFM1_CALL_MOD_ALLOW_FORCED_MOD    = 0x00000400U,
-   DFM1_CALL_MOD_OR_SECONDARY        = 0x00000500U,
-   DFM1_CALL_MOD_MAND_SECONDARY      = 0x00000600U,
+   DFM1_CALL_MOD_ANYCALL             = 0x00000200U,
+   DFM1_CALL_MOD_MAND_ANYCALL        = 0x00000400U,
+   DFM1_CALL_MOD_ALLOW_PLAIN_MOD     = 0x00000600U,
+   DFM1_CALL_MOD_ALLOW_FORCED_MOD    = 0x00000800U,
+   DFM1_CALL_MOD_OR_SECONDARY        = 0x00000A00U,
+   DFM1_CALL_MOD_MAND_SECONDARY      = 0x00000C00U,
 
-   DFM1_ONLY_FORCE_ELONG_IF_EMPTY    = 0x00000800U,
    DFM1_ROLL_TRANSPARENT_IF_Z        = 0x00001000U,
    DFM1_ENDSCANDO                    = 0x00002000U,
    DFM1_FINISH_THIS                  = 0x00004000U,
@@ -1413,7 +1406,8 @@ enum mods1_word {
    DFM1_NUM_INSERT_BIT               = 0x00100000U,
    DFM1_NO_CHECK_MOD_LEVEL           = 0x00800000U,
    DFM1_FRACTAL_INSERT               = 0x01000000U,
-   DFM1_SUPPRESS_ROLL                = 0x02000000U
+   DFM1_SUPPRESS_ROLL                = 0x02000000U,
+   DFM1_ONLY_FORCE_ELONG_IF_EMPTY    = 0x04000000U
 };
 
 enum  {
@@ -1458,7 +1452,7 @@ enum {
 
 // Some external stuff in common.cpp:
 
-extern bool do_heritflag_merge(uint32 *dest, uint32 source);
+extern bool do_heritflag_merge(uint32_t *dest, uint32_t source);
 extern int begin_sizes[];
 
 #endif   /* DATABASE_H */

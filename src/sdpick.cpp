@@ -84,11 +84,11 @@ static int concept_scan_index;
 static int concept_scan_limit;
 static short int *concept_scan_table;
 
-static uint32 selector_iterator = 0;
-static uint32 direction_iterator = 0;
-static uint32 number_iterator = 0;
-static uint32 tagger_iterator = 0;
-static uint32 circcer_iterator = 0;
+static uint32_t selector_iterator = 0;
+static uint32_t direction_iterator = 0;
+static uint32_t number_iterator = 0;
+static uint32_t tagger_iterator = 0;
+static uint32_t circcer_iterator = 0;
 static int resolve_scan_start_point;
 static int resolve_scan_current_point;
 // This is only meaningful if interactivity = interactivity_picking.
@@ -219,9 +219,9 @@ direction_kind do_direction_iteration()
 
 
 void do_number_iteration(int howmanynumbers,
-                         uint32 odd_number_only,
+                         uint32_t odd_number_only,
                          bool allow_iteration,
-                         uint32 *number_list)
+                         uint32_t *number_list)
 {
    int i;
 
@@ -230,7 +230,7 @@ void do_number_iteration(int howmanynumbers,
    if (interactivity == interactivity_database_init ||
        interactivity == interactivity_verify) {
       for (i=0 ; i<howmanynumbers ; i++) {
-         uint32 this_num;
+         uint32_t this_num;
 
          if (verify_options.howmanynumbers == 0) {
             // The second number in the series is always 1.
@@ -255,7 +255,7 @@ void do_number_iteration(int howmanynumbers,
    }
 
    for (i=0 ; i<howmanynumbers ; i++) {
-      uint32 this_num;
+      uint32_t this_num;
 
       if (allow_iteration &&
           pick_type_table[current_pick_type].exhaustive_search) {
@@ -297,12 +297,12 @@ void do_number_iteration(int howmanynumbers,
 }
 
 
-bool do_tagger_iteration(uint32 tagclass,
-                         uint32 *tagg,
-                         uint32 numtaggers,
+bool do_tagger_iteration(uint32_t tagclass,
+                         uint32_t *tagg,
+                         uint32_t numtaggers,
                          call_with_name **tagtable)
 {
-   uint32 tag;
+   uint32_t tag;
 
    if (pick_type_table[current_pick_type].exhaustive_search) {
       tag = tagger_iterator;
@@ -360,7 +360,7 @@ bool do_tagger_iteration(uint32 tagclass,
 }
 
 
-void do_circcer_iteration(uint32 *circcp)
+void do_circcer_iteration(uint32_t *circcp)
 {
    if (pick_type_table[current_pick_type].exhaustive_search) {
       *circcp = circcer_iterator+1;
@@ -519,7 +519,7 @@ const concept_descriptor *pick_concept(bool already_have_concept_in_place)
 call_with_name *do_pick()
 {
    int i;
-   uint32 rejectflag;
+   uint32_t rejectflag;
    call_with_name *result;
 
    if (pick_type_table[current_pick_type].exhaustive_search) {

@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2015  William B. Ackerman.
+//    Copyright (C) 1990-2020  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -966,10 +966,10 @@ const char *defmodtab1[] = {
    "conc_force_spots",
    "conc_concentric_rules",
    "suppress_elongation_warnings",
+   "???",
    "or_anycall",
    "mandatory_anycall",
    "allow_forced_mod",
-   "only_force_elong_if_empty",
    "roll_transparent_if_z",
    "endscando",
    "finish_this_part",
@@ -984,8 +984,8 @@ const char *defmodtab1[] = {
    "no_check_mod_level",
    "???",
    "suppress_roll",
+   "only_force_elong_if_empty",
    ""};
-
 // This table is keyed to the constants "DFM1_SEQ***".  These are the general
 // definition-modifier flags.  They go in the "modifiers1" word of a by_def_item.
 const char *seqmodtab1[] = {
@@ -995,6 +995,8 @@ const char *seqmodtab1[] = {
    "seq_re_enable_elongation_check",
    "repeat_n",
    "repeat_nm1",
+   "repeat_nover4",
+   "repeat_nover2",
    "normalize",
    ""};
 
@@ -1071,12 +1073,25 @@ const char *flagtabh[] = {
    "single_is_inherited",
    "singlefile_is_inherited",
    "half_is_inherited",
+   "lasthalf_is_inherited",
    "rewind_is_inherited",
    "straight_is_inherited",
    "twisted_is_inherited",
-   "lasthalf_is_inherited",
    "fractal_is_inherited",
    "fast_is_inherited",
+   "?",
+   "?",
+   "?",
+   "?",
+   "?",
+   "?",
+   "?",
+   "?",
+   "?",
+   "?",
+   "?",
+   "?",
+   "quarter_is_inherited",
    ""};
 
 // This table is keyed to the constants "INHERITFLAG_???".
@@ -1095,12 +1110,25 @@ const char *altdeftabh[] = {
    "single",
    "singlefile",
    "half",
+   "lasthalf",
    "rewind",
    "straight",
    "twisted",
-   "lasthalf",
    "fractal",
    "fast",
+   "?",
+   "?",
+   "?",
+   "?",
+   "?",
+   "?",
+   "?",
+   "?",
+   "?",
+   "?",
+   "?",
+   "?",
+   "quarter",
    ""};
 
 // See INHERITFLAG_YOYOETCMASK in database.h
@@ -1210,12 +1238,25 @@ const char *defmodtabh[] = {
    "inherit_single",
    "inherit_singlefile",
    "inherit_half",
+   "inherit_lasthalf",
    "inherit_rewind",
    "inherit_straight",
    "inherit_twisted",
-   "inherit_lasthalf",
    "inherit_fractal",
    "inherit_fast",
+   "?",
+   "?",
+   "?",
+   "?",
+   "?",
+   "?",
+   "?",
+   "?",
+   "?",
+   "?",
+   "?",
+   "?",
+   "inherit_quarter",
    ""};
 
 // This table is keyed to the constants "dfm_***".  These are the heritable
@@ -1238,12 +1279,25 @@ const char *forcetabh[] = {
    "force_single",
    "force_singlefile",
    "force_half",
+   "force_lasthalf",
    "force_rewind",
    "force_straight",
    "force_twisted",
-   "force_lasthalf",
    "force_fractal",
    "force_fast",
+   "?",
+   "?",
+   "?",
+   "?",
+   "?",
+   "?",
+   "?",
+   "?",
+   "?",
+   "?",
+   "?",
+   "?",
+   "force_quarter",
    ""};
 
 
@@ -1589,15 +1643,15 @@ char *return_ptr;
 int callcount;
 int filecount;
 int dumbflag;
-uint32 call_flags1;
-uint32 call_flagsh;
-uint32 call_flags1overflow;
-uint32 call_tag;
+uint32_t call_flags1;
+uint32_t call_flagsh;
+uint32_t call_flags1overflow;
+uint32_t call_tag;
 char call_name[100];
 int call_namelen;
 int call_level;
 int call_startsetup;
-uint32 qual_stuff;
+uint32_t qual_stuff;
 int call_endsetup;
 int call_endsetup_in;
 int call_endsetup_out;
@@ -1809,7 +1863,7 @@ static int search(const char *table[])
 
 
 // The returned value fits into 13 bits.
-static uint32 tagsearch(int def)
+static uint32_t tagsearch(int def)
 {
    int i;
 
@@ -1884,20 +1938,20 @@ void db_putc(char ch)
       db_output_error();
 }
 
-static void write_byte(uint32 n)
+static void write_byte(uint32_t n)
 {
    db_putc((char) ((n) & 0xFF));
    filecount += 1;
 }
 
-static void write_halfword(uint32 n)
+static void write_halfword(uint32_t n)
 {
    db_putc((char) ((n>>8) & 0xFF));
    db_putc((char) ((n) & 0xFF));
    filecount += 2;
 }
 
-static void write_fullword(uint32 n)
+static void write_fullword(uint32_t n)
 {
    db_putc((char) ((n>>24) & 0xFF));
    db_putc((char) ((n>>16) & 0xFF));
@@ -1913,8 +1967,8 @@ static void write_fullword(uint32 n)
 static void write_defmod_flags(int is_seq)
 {
    int i;
-   uint32 rr1 = 0;
-   uint32 rrh = 0;
+   uint32_t rr1 = 0;
+   uint32_t rrh = 0;
 
    get_tok();
    if (tok_kind != tok_lbkt)
@@ -1989,7 +2043,7 @@ static void write_defmod_flags(int is_seq)
             rrh |= INHERITFLAG_YOYOETCK_GENEROUS;
          }
          else if ((i = search(defmodtabh)) >= 0) {
-            uint32 bit = 1U << i;
+            uint32_t bit = 1U << i;
 
             // Don't check the left/reverse flags -- they are complicated,
             // so there is no "force" word for them.
@@ -1999,7 +2053,7 @@ static void write_defmod_flags(int is_seq)
             rrh |= bit;
          }
          else {
-            uint32 bit;
+            uint32_t bit;
 
             if ((i = search(forcetabh)) >= 0) bit = (1U << i);
             else if ((i = search(yoyotabforce)) >= 0) bit = INHERITFLAG_YOYOETCBIT * (i+1);
@@ -2042,7 +2096,7 @@ static void write_callarray(int num, bool doing_matrix)
          write_halfword(0);
       else if (tok_kind == tok_symbol) {
          int p;
-         uint32 stab = STB_NONE;
+         uint32_t stab = STB_NONE;
          int repetition = 0;
 
          for (p=0; letcount-p >= 2; p++) {
@@ -2094,7 +2148,7 @@ static void write_callarray(int num, bool doing_matrix)
 
       stability_done:
 
-         uint32 dat = 0;
+         uint32_t dat = 0;
 
          // Read the "slide" indicator.
 
@@ -2182,10 +2236,10 @@ static void write_call_header(calldef_schema schema)
    write_halfword(call_flags1overflow);
    write_fullword(call_flags1);
    write_fullword(call_flagsh);
-   write_halfword((call_namelen << 8) | (uint32) schema);
+   write_halfword((call_namelen << 8) | (uint32_t) schema);
 
    for (j=0; j<call_namelen; j++)
-      write_byte((uint32) call_name[j]);
+      write_byte((uint32_t) call_name[j]);
 
    callcount++;
 }
@@ -2245,7 +2299,7 @@ static void write_pred_clauses()
 }
 
 
-static void write_array_def_block(uint32 callarrayflags)
+static void write_array_def_block(uint32_t callarrayflags)
 {
    // Bits in specifying an array def are very precious, so we use only a single "1" bit
    // to indicate an array def block.
@@ -2293,7 +2347,7 @@ static int scan_for_per_array_def_flags(void)
 
 static void process_alt_def_header()
 {
-   uint32 rrr = 0;
+   uint32_t rrr = 0;
 
    get_tok();
    if (tok_kind != tok_lbkt)
@@ -2303,7 +2357,7 @@ static void process_alt_def_header()
    if (tok_kind != tok_rbkt) {
       for (;;) {
          int i;
-         uint32 bit;
+         uint32_t bit;
 
          if (tok_kind != tok_symbol)
             errexit("Improper alternate_definition key");
@@ -2335,10 +2389,10 @@ static void process_alt_def_header()
 
 
 
-static void write_array_def(uint32 incoming)
+static void write_array_def(uint32_t incoming)
 {
    int jjj;
-   uint32 callarray_flags1, callarray_flags2;
+   uint32_t callarray_flags1, callarray_flags2;
 
    callarray_flags1 = incoming;
 
@@ -2599,7 +2653,7 @@ int main(int argc, char *argv[])
    }
 
    int i, iii;
-   uint32 funnyflag;
+   uint32_t funnyflag;
 
    tagtabsize = num_base_call_indices;
    tagtabmax = 100;
@@ -2630,12 +2684,12 @@ int main(int argc, char *argv[])
    if (tok_kind != tok_string) errexit("Improper version string -- must be in quotes");
    write_halfword(char_ct);
    for (i=0; i<char_ct; i++)
-      db_putc((char) (((uint32) tok_str[i]) & 0xFF));
+      db_putc((char) (((uint32_t) tok_str[i]) & 0xFF));
    filecount += char_ct;
 
    callcount = 0;
    for (;;) {
-      uint32 matrixflags;
+      uint32_t matrixflags;
       int bit;
       calldef_schema ccc;
 
@@ -2681,8 +2735,8 @@ int main(int argc, char *argv[])
       call_flags1overflow = 0;
 
       for (;;) {
-         uint32 flagh_to_set = 0;
-         uint32 flag1_to_set = 0;
+         uint32_t flagh_to_set = 0;
+         uint32_t flag1_to_set = 0;
 
          if ((iii = search(flagtab1f)) >= 0) {
             if (iii >= 32) {
@@ -2692,7 +2746,7 @@ int main(int argc, char *argv[])
                   errexit("Too many secondary flags");
             }
             else {
-               uint32 bit = 1U << iii;
+               uint32_t bit = 1U << iii;
                if ((call_flags1 & CFLAG1_STEP_REAR_MASK) &&
                    (bit & CFLAG1_STEP_REAR_MASK))
                   errexit("Too many touch/rear flags");

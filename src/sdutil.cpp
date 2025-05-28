@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2019  William B. Ackerman.
+//    Copyright (C) 1990-2020  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -392,7 +392,7 @@ ui_option_type::ui_option_type() :
 
 void ui_utils::writestuff_with_decorations(const call_conc_option_state *cptr, Cstring f, bool is_concept)
 {
-   uint32 index = cptr->number_fields;
+   uint32_t index = cptr->number_fields;
    int howmany = cptr->howmanynumbers;
    call_conc_option_state recurse_ptr = *cptr;
    recurse_ptr.who.collapse_down();
@@ -428,7 +428,7 @@ void ui_utils::writestuff_with_decorations(const call_conc_option_state *cptr, C
 }
 
 
-void ui_utils::printperson(uint32 x)
+void ui_utils::printperson(uint32_t x)
 {
    if (x & BIT_PERSON) {
       if (enable_file_writing || ui_options.use_escapes_for_drawing_people == 0) {
@@ -1133,12 +1133,12 @@ void ui_utils::write_history_line(int history_index,
 uint32_t ui_utils::get_number_fields(int nnumbers, bool odd_number_only, bool forbid_zero)
 {
    int i;
-   uint32 number_fields = matcher_p->m_final_result.match.call_conc_options.number_fields;
+   uint32_t number_fields = matcher_p->m_final_result.match.call_conc_options.number_fields;
    int howmanynumbers = matcher_p->m_final_result.match.call_conc_options.howmanynumbers;
-   uint32 number_list = 0;
+   uint32_t number_list = 0;
 
    for (i=0 ; i<nnumbers ; i++) {
-      uint32 this_num;
+      uint32_t this_num;
 
       if (!matcher_p->m_final_result.valid || (howmanynumbers <= 0)) {
          this_num = iob88.get_one_number(*matcher_p);
@@ -1723,7 +1723,7 @@ void ui_utils::print_recurse(parse_block *thing, int print_recurse_arg)
          /* Call = NIL means we are echoing input and user hasn't entered call yet. */
 
          direction_kind idirjunk = local_cptr->options.where;
-         uint32 number_list = local_cptr->options.number_fields;
+         uint32_t number_list = local_cptr->options.number_fields;
          const call_with_name *localcall = local_cptr->call_to_print;
 
          if (localcall) {
@@ -2138,7 +2138,7 @@ void ui_utils::clear_screen()
    open_text_line();
 }
 
-void ui_utils::write_header_stuff(bool with_ui_version, uint32 act_phan_flags)
+void ui_utils::write_header_stuff(bool with_ui_version, uint32_t act_phan_flags)
 {
    if (!ui_options.diagnostic_mode) {
       // Log creation version info.
@@ -2795,14 +2795,14 @@ bool ui_utils::write_sequence_to_file() THROW_DECL
 
 namespace {
 
-uint32 id_fixer_array[16] = {
+uint32_t id_fixer_array[16] = {
    07777525252, 07777454545, 07777313131, 07777262626,
    07777522525, 07777453232, 07777314646, 07777265151,
    07777255225, 07777324532, 07777463146, 07777512651,
    07777252552, 07777323245, 07777464631, 07777515126};
 
 
-selector_kind translate_selector_permutation1(uint32 x)
+selector_kind translate_selector_permutation1(uint32_t x)
 {
    switch (x & 077) {
    case 01: return selector_sidecorners;
@@ -2816,7 +2816,7 @@ selector_kind translate_selector_permutation1(uint32 x)
 }
 
 
-selector_kind translate_selector_permutation2(uint32 x)
+selector_kind translate_selector_permutation2(uint32_t x)
 {
    switch (x & 07) {
    case 04: return selector_headboys;
@@ -2837,10 +2837,10 @@ selector_kind translate_selector_permutation2(uint32 x)
 // Otherwise, "1" bit says at
 // least one selector changed.  Zero means nothing changed.
 
-extern uint32 translate_selector_fields(parse_block *xx, uint32 mask)
+extern uint32_t translate_selector_fields(parse_block *xx, uint32_t mask)
 {
    selector_kind z;
-   uint32 retval = 0;
+   uint32_t retval = 0;
 
    for ( ; xx ; xx=xx->next) {
       switch (xx->options.who.who[0]) {
@@ -2921,7 +2921,7 @@ extern uint32 translate_selector_fields(parse_block *xx, uint32 mask)
 }
 
 // This alters the parse tree in configuration::next_config().command_root.
-extern bool fix_up_call_for_fidelity_test(const setup *old, const setup *nuu, uint32 &global_status)
+extern bool fix_up_call_for_fidelity_test(const setup *old, const setup *nuu, uint32_t &global_status)
 {
    // If the setup, population, and facing directions don't match, the
    // call execution is problematical.  We don't translate selectors.
@@ -2932,21 +2932,21 @@ extern bool fix_up_call_for_fidelity_test(const setup *old, const setup *nuu, ui
       return true;
    }
 
-   uint32 mask = 0777777;
-   uint32 directions1 = 0;
-   uint32 directions2 = 0;
-   uint32 livemask1 = 0;
-   uint32 livemask2 = 0;
+   uint32_t mask = 0777777;
+   uint32_t directions1 = 0;
+   uint32_t directions2 = 0;
+   uint32_t livemask1 = 0;
+   uint32_t livemask2 = 0;
 
    // Find out whether the formations agree, and gather the information
    // that we need to translate the selectors.
 
    for (int i=0; i<=attr::slimit(old); i++) {
-      uint32 q = old->people[i].id1;
-      uint32 p = nuu->people[i].id1;
-      uint32 oldmask = mask;
-      uint32 a = (p >> 6) & 3;
-      uint32 b = (q >> 6) & 3;
+      uint32_t q = old->people[i].id1;
+      uint32_t p = nuu->people[i].id1;
+      uint32_t oldmask = mask;
+      uint32_t a = (p >> 6) & 3;
+      uint32_t b = (q >> 6) & 3;
 
       livemask1 <<= 1;
       livemask2 <<= 1;
@@ -2988,12 +2988,12 @@ extern bool fix_up_call_for_fidelity_test(const setup *old, const setup *nuu, ui
 
 class freqitemforsorting {
 public:
-   static bool inorder(uint32 a, uint32 b)
+   static bool inorder(uint32_t a, uint32_t b)
    { return a > b; }
 };
 
 
-typedef SORT<uint32, freqitemforsorting> freqtablesorter;
+typedef SORT<uint32_t, freqitemforsorting> freqtablesorter;
 
 
 void ui_utils::do_freq_reset()
@@ -3066,7 +3066,7 @@ void ui_utils::do_freq_show(int options)
       // The reason for the complement is so that the sort will appear to be stable --
       // items are in decreasing order, so that they are in listed with calls before concepts,
       // in decreasing frequency, and in the order in the original lists.
-      uint32 *table = new uint32[number_of_calls[call_list_any] + matcher_p->m_level_concept_list.the_list_size];
+      uint32_t *table = new uint32_t[number_of_calls[call_list_any] + matcher_p->m_level_concept_list.the_list_size];
       int i;
       iob88.prepare_for_listing();
       int how_much_in_table = 0;
@@ -3092,7 +3092,7 @@ void ui_utils::do_freq_show(int options)
          if (matcher_p->m_showing_has_stopped) break;
          matcher_p->m_final_result.indent = false;
          matcher_p->m_user_input[0] = 0;
-         uint32 table_item = table[i];
+         uint32_t table_item = table[i];
 
          if (table_item & 0x80000000) {
             const call_with_name *this_call = main_call_lists[call_list_any][~table_item & 0xFFFF];
@@ -3136,7 +3136,7 @@ void ui_utils::run_program(iobase & ggg)
       writestuff("SD -- square dance caller's helper.");
       newline();
       newline();
-      writestuff("Copyright (c) 1990-2019 William B. Ackerman");
+      writestuff("Copyright (c) 1990-2020 William B. Ackerman");
       newline();
       writestuff("   and Stephen Gildea.");
       newline();
@@ -3651,7 +3651,7 @@ void ui_utils::run_program(iobase & ggg)
 
             if (config_history_ptr >= 1 &&
                 (config_history_ptr >= 2 || !configuration::history[1].get_startinfo_specific()->into_the_middle)) {
-               uint32 status = 0;
+               uint32_t status = 0;
 
                while (clipboard_size != 0) {
                   setup *old = &configuration::current_config().state;

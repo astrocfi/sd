@@ -33,14 +33,14 @@
 #define FORBID4 (INHERITFLAG_12_MATRIX|INHERITFLAG_16_MATRIX)
 
 
-bool do_heritflag_merge(uint32 *dest, uint32 source)
+bool do_heritflag_merge(uint32_t *dest, uint32_t source)
 {
-   uint32 revertsource = source & INHERITFLAG_REVERTMASK;
+   uint32_t revertsource = source & INHERITFLAG_REVERTMASK;
 
    if (revertsource) {
       // If the source is a revert/reflect bit, things are complicated.
 
-      uint32 revertdest = *dest & INHERITFLAG_REVERTMASK;
+      uint32_t revertdest = *dest & INHERITFLAG_REVERTMASK;
 
       if (!revertdest) {
          goto good;

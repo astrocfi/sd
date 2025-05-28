@@ -48,16 +48,16 @@ bool mandatory_call_used;
 
 extern bool selectp(const setup *ss, int place, int allow_some /*= 0*/) THROW_DECL
 {
-   uint32 p1, p2, p2bg, p3;
+   uint32_t p1, p2, p2bg, p3;
    selector_kind s;
    int thing_to_test = 0;
    int other_thing_to_test = 0;
    int other_other_thing_to_test = 0;
    int tand_base = 0;
-   uint32 selected_person_mask = ~0U;
+   uint32_t selected_person_mask = ~0U;
 
-   uint32 directions;
-   uint32 livemask;
+   uint32_t directions;
+   uint32_t livemask;
    big_endian_get_directions(ss, directions, livemask);
 
    selector_used = true;
@@ -77,9 +77,9 @@ extern bool selectp(const setup *ss, int place, int allow_some /*= 0*/) THROW_DE
          return false;
    }
 
-   uint32 pid1 = ss->people[place].id1;
-   uint32 pid2 = ss->people[place].id2;
-   uint32 pid3 = ss->people[place].id3;
+   uint32_t pid1 = ss->people[place].id1;
+   uint32_t pid2 = ss->people[place].id2;
+   uint32_t pid3 = ss->people[place].id3;
 
    // Demand that the subject be real, or that
    // we can evaluate based on position alone.
@@ -881,7 +881,7 @@ extern bool selectp(const setup *ss, int place, int allow_some /*= 0*/) THROW_DE
          thing_to_test = ss->people[2].id1 | ss->people[3].id1 | ss->people[8].id1 | ss->people[9].id1;
          if ((thing_to_test & 011) != 011 && ((tand_base ^ thing_to_test) & 1)) {
             // Do top and bottom halves separately, of course.
-            uint32 testbits = 0;
+            uint32_t testbits = 0;
             if (ss->people[1].id1 != 0 && ss->people[4].id1 == 0)
                testbits = 0x00E;
             else if (ss->people[4].id1 != 0 && ss->people[1].id1 == 0)
@@ -976,7 +976,7 @@ extern bool selectp(const setup *ss, int place, int allow_some /*= 0*/) THROW_DE
       thing_to_test = -1;
 
       switch (attr::slimit(ss)) {
-         uint32 A, B, C, D, E, F;
+         uint32_t A, B, C, D, E, F;
       case 5:
          A = (directions >> 4) & 00303;
          B = (directions >> 2) & 00303;
@@ -1143,37 +1143,37 @@ extern bool selectp(const setup *ss, int place, int allow_some /*= 0*/) THROW_DE
 }
 
 
-static const int32 iden_tab[25] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13,
-                                   14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24};
-static const int32 dbl_tab01[5] = {0, 1, 0, 1, 0};
-static const int32 dbl_tab21[5] = {2, 1, 1, 0, 0};
-static const int32 dbl_tab01n[5] = {0, 1, 0, 1, 1};
-static const int32 dbl_tab21n[5] = {2, 1, 1, 0, 1};
-static const int32 x22tabtandem[4]     = {3, 0, 1, 0};
-static const int32 x22tabantitandem[4] = {3, 2, 1, 0};
-static const int32 x22tabfacing[4]     = {3, 2, 1, 0x1B};
-static const int32 x24tabtandem[4]     = {7, 0, 1, 0};
-static const int32 x24tabantitandem[4] = {7, 2, 1, 0};
-static const int32 x24tabfacing[4]     = {7, 2, 1, 0x1B1B};
+static const int32_t iden_tab[25]        = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13,
+                                            14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24};
+static const int32_t dbl_tab01[5]        = {0, 1, 0, 1, 0};
+static const int32_t dbl_tab21[5]        = {2, 1, 1, 0, 0};
+static const int32_t dbl_tab01n[5]       = {0, 1, 0, 1, 1};
+static const int32_t dbl_tab21n[5]       = {2, 1, 1, 0, 1};
+static const int32_t x22tabtandem[4]     = {3, 0, 1, 0};
+static const int32_t x22tabantitandem[4] = {3, 2, 1, 0};
+static const int32_t x22tabfacing[4]     = {3, 2, 1, 0x1B};
+static const int32_t x24tabtandem[4]     = {7, 0, 1, 0};
+static const int32_t x24tabantitandem[4] = {7, 2, 1, 0};
+static const int32_t x24tabfacing[4]     = {7, 2, 1, 0x1B1B};
 
-static const int32 boystuff_no_rh[3]   = {ID2_PERM_BOY,  ID2_PERM_GIRL, 0};
-static const int32 girlstuff_no_rh[3]  = {ID2_PERM_GIRL, ID2_PERM_BOY,  0};
-static const int32 boystuff_rh[3]      = {ID2_PERM_BOY,  ID2_PERM_GIRL, 1};
-static const int32 girlstuff_rh[3]     = {ID2_PERM_GIRL, ID2_PERM_BOY,  1};
-static const int32 samesex[2]          = {0, ID2_PERM_BOY|ID2_PERM_GIRL};
-static const int32 semi_squeeze_tab[8] = {0xD, 0xE, 0x9, 0x9, 0x2, 0xD, 0x2, 0xE};
+static const int32_t boystuff_no_rh[3]   = {ID2_PERM_BOY,  ID2_PERM_GIRL, 0};
+static const int32_t girlstuff_no_rh[3]  = {ID2_PERM_GIRL, ID2_PERM_BOY,  0};
+static const int32_t boystuff_rh[3]      = {ID2_PERM_BOY,  ID2_PERM_GIRL, 1};
+static const int32_t girlstuff_rh[3]     = {ID2_PERM_GIRL, ID2_PERM_BOY,  1};
+static const int32_t samesex[2]          = {0, ID2_PERM_BOY|ID2_PERM_GIRL};
+static const int32_t semi_squeeze_tab[8] = {0xD, 0xE, 0x9, 0x9, 0x2, 0xD, 0x2, 0xE};
 
 
 // Here are the predicates.  They will get put into the array "pred_table".
 
 static bool someone_selected(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff) THROW_DECL
+   int real_direction, int northified_index, const int32_t *extra_stuff) THROW_DECL
 {
    return selectp(real_people, real_index ^ (*extra_stuff));
 }
 
 static bool sum_mod_real(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff) THROW_DECL
+   int real_direction, int northified_index, const int32_t *extra_stuff) THROW_DECL
 {
    int otherindex = (*extra_stuff) - real_index;
    int size = attr::slimit(real_people)+1;
@@ -1183,7 +1183,7 @@ static bool sum_mod_real(setup *real_people, int real_index,
 }
 
 static bool sum_mod_selected(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff) THROW_DECL
+   int real_direction, int northified_index, const int32_t *extra_stuff) THROW_DECL
 {
    int otherindex = (*extra_stuff) - real_index;
    int size = attr::slimit(real_people)+1;
@@ -1195,7 +1195,7 @@ static bool sum_mod_selected(setup *real_people, int real_index,
 
 
 static bool plus_mod_selected(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff) THROW_DECL
+   int real_direction, int northified_index, const int32_t *extra_stuff) THROW_DECL
 {
    int size = attr::slimit(real_people)+1;
    int otherindex = ((real_people->kind == s1x3) && (real_direction & 2)) ?
@@ -1206,7 +1206,7 @@ static bool plus_mod_selected(setup *real_people, int real_index,
 }
 
 static bool plus_mod_selected_real(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff) THROW_DECL
+   int real_direction, int northified_index, const int32_t *extra_stuff) THROW_DECL
 {
    int size = attr::slimit(real_people)+1;
    int otherindex = ((real_people->kind == s1x3) && (real_direction & 2)) ?
@@ -1217,7 +1217,7 @@ static bool plus_mod_selected_real(setup *real_people, int real_index,
 }
 
 static bool plus_mod_real(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff) THROW_DECL
+   int real_direction, int northified_index, const int32_t *extra_stuff) THROW_DECL
 {
    int size = attr::slimit(real_people)+1;
    int otherindex = ((real_people->kind == s1x3) && (real_direction & 2)) ?
@@ -1228,15 +1228,15 @@ static bool plus_mod_real(setup *real_people, int real_index,
 }
 
 
-static const int32 l_4x3_tab[12] = {
+static const int32_t l_4x3_tab[12] = {
    -99, -99, -99, -99, 3, 2, 4, 5, 11, 10, 0, 1};
 
-static const int32 r_4x3_tab[12] = {
+static const int32_t r_4x3_tab[12] = {
    10, 11, 5, 4, 6, 7, -99, -99, -99, -99, 9, 8};
 
 /* ARGSUSED */
 static bool semi_squeezer_select(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff) THROW_DECL
+   int real_direction, int northified_index, const int32_t *extra_stuff) THROW_DECL
 {
    int other_index = ((northified_index ^ extra_stuff[northified_index&7]) + real_index - northified_index) & 0xF;
 
@@ -1246,14 +1246,14 @@ static bool semi_squeezer_select(setup *real_people, int real_index,
 
 /* ARGSUSED */
 static bool unselect(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff) THROW_DECL
+   int real_direction, int northified_index, const int32_t *extra_stuff) THROW_DECL
 {
    return !selectp(real_people, real_index);
 }
 
 /* ARGSUSED */
 static bool select_near_select(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff) THROW_DECL
+   int real_direction, int northified_index, const int32_t *extra_stuff) THROW_DECL
 {
    if (!selectp(real_people, real_index)) return false;
    if (current_options.who.who[0] == selector_all || current_options.who.who[0] == selector_everyone)
@@ -1272,7 +1272,7 @@ static int base_table[12] = {0, 0, 0, 3, 3, 3, 6, 6, 6, 9, 9, 9};
 
 /* ARGSUSED */
 static bool select_near_select_or_phantom(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff) THROW_DECL
+   int real_direction, int northified_index, const int32_t *extra_stuff) THROW_DECL
 {
    int lim, base_person;
 
@@ -1306,7 +1306,7 @@ static bool select_near_select_or_phantom(setup *real_people, int real_index,
 
 /* ARGSUSED */
 static bool select_near_unselect(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff) THROW_DECL
+   int real_direction, int northified_index, const int32_t *extra_stuff) THROW_DECL
 {
    if (!selectp(real_people, real_index)) return false;
    if (current_options.who.who[0] == selector_all || current_options.who.who[0] == selector_everyone)
@@ -1318,7 +1318,7 @@ static bool select_near_unselect(setup *real_people, int real_index,
 
 /* ARGSUSED */
 static bool unselect_near_select(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff) THROW_DECL
+   int real_direction, int northified_index, const int32_t *extra_stuff) THROW_DECL
 {
    if (selectp(real_people, real_index)) return false;
    if (current_options.who.who[0] == selector_none) return false;
@@ -1329,7 +1329,7 @@ static bool unselect_near_select(setup *real_people, int real_index,
 
 /* ARGSUSED */
 static bool unselect_near_unselect(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff) THROW_DECL
+   int real_direction, int northified_index, const int32_t *extra_stuff) THROW_DECL
 {
    int lim, base_person;
 
@@ -1361,7 +1361,7 @@ static bool unselect_near_unselect(setup *real_people, int real_index,
 
 /* ARGSUSED */
 static bool select_once_rem_from_select(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff) THROW_DECL
+   int real_direction, int northified_index, const int32_t *extra_stuff) THROW_DECL
 {
    if (!selectp(real_people, real_index)) return false;
    if (current_options.who.who[0] == selector_all || current_options.who.who[0] == selector_everyone)
@@ -1377,7 +1377,7 @@ static bool select_once_rem_from_select(setup *real_people, int real_index,
 
 /* ARGSUSED */
 static bool select_once_rem_from_unselect(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff) THROW_DECL
+   int real_direction, int northified_index, const int32_t *extra_stuff) THROW_DECL
 {
    if (!selectp(real_people, real_index)) return false;
    if (current_options.who.who[0] == selector_all || current_options.who.who[0] == selector_everyone)
@@ -1407,7 +1407,7 @@ static bool select_once_rem_from_unselect(setup *real_people, int real_index,
 
 /* ARGSUSED */
 static bool unselect_once_rem_from_select(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff) THROW_DECL
+   int real_direction, int northified_index, const int32_t *extra_stuff) THROW_DECL
 {
    if (selectp(real_people, real_index)) return false;
    if (current_options.who.who[0] == selector_none) return false;
@@ -1422,28 +1422,28 @@ static bool unselect_once_rem_from_select(setup *real_people, int real_index,
 
 /* ARGSUSED */
 static bool select_and_roll_is_cw(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff) THROW_DECL
+   int real_direction, int northified_index, const int32_t *extra_stuff) THROW_DECL
 {
    return selectp(real_people, real_index) && (real_people->people[real_index].id1 & ROLL_DIRMASK) == ROLL_IS_R;
 }
 
 /* ARGSUSED */
 static bool select_and_roll_is_ccw(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff) THROW_DECL
+   int real_direction, int northified_index, const int32_t *extra_stuff) THROW_DECL
 {
    return selectp(real_people, real_index) && (real_people->people[real_index].id1 & ROLL_DIRMASK) == ROLL_IS_L;
 }
 
 /* ARGSUSED */
 static bool always(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff)
+   int real_direction, int northified_index, const int32_t *extra_stuff)
 {
    return true;
 }
 
 /* ARGSUSED */
 static bool x22_cpltest(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff)
+   int real_direction, int northified_index, const int32_t *extra_stuff)
 {
    if (extra_stuff[4]) warn(warn_suspect_destroyline);
    int other_index;
@@ -1455,12 +1455,12 @@ static bool x22_cpltest(setup *real_people, int real_index,
 
    other_index = real_index ^ (((real_direction << 1) & 2) ^ extra_stuff[1]);
    return ((real_people->people[real_index].id1 ^
-            real_people->people[other_index].id1) & DIR_MASK) == (uint32) *extra_stuff;
+            real_people->people[other_index].id1) & DIR_MASK) == (uint32_t) *extra_stuff;
 }
 
 /* ARGSUSED */
 static bool whos_on_base(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff)
+   int real_direction, int northified_index, const int32_t *extra_stuff)
 {
    if ((real_people->result_flags.misc & RESULTFLAG__IMPRECISE_ROT) ||
        real_people->eighth_rotation != 0)
@@ -1469,14 +1469,14 @@ static bool whos_on_base(setup *real_people, int real_index,
    if (real_people->kind == s_alamo)
       real_index = 12+(real_index<<1);
 
-   uint32 N = current_options.number_fields & NUMBER_FIELD_MASK;
+   uint32_t N = current_options.number_fields & NUMBER_FIELD_MASK;
    if (N < 1 || N > 4) fail("Number must be between 1 and 4.");
    return ((((real_index + *extra_stuff) >> 2) + N) & 3) == 0;
 }
 
 /* ARGSUSED */
 static bool facing_test(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff)
+   int real_direction, int northified_index, const int32_t *extra_stuff)
 {
    // If the "trailer only" word is nonzero, figure out whether person is a trailer.
    // The word has 2-bit fields in little-endian order, indexed by the person's
@@ -1488,12 +1488,12 @@ static bool facing_test(setup *real_people, int real_index,
 
    int other_index = real_index ^ extra_stuff[(real_direction << 1) & 2];
    return ((real_people->people[real_index].id1 ^
-            real_people->people[other_index].id1) & DIR_MASK) == (uint32) extra_stuff[1];
+            real_people->people[other_index].id1) & DIR_MASK) == (uint32_t) extra_stuff[1];
 }
 
 /* ARGSUSED */
 static bool x14_side_of_line_facing(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff)
+   int real_direction, int northified_index, const int32_t *extra_stuff)
 {
    int end_of_indicated_side = (real_index ^ (extra_stuff[0] << 1)) & 2;
    int indicated_position = end_of_indicated_side + (extra_stuff[0] >> 2);
@@ -1507,7 +1507,7 @@ static bool x14_side_of_line_facing(setup *real_people, int real_index,
       indicated_position = end_of_indicated_side + (z1 ? 1 : 0);
    }
 
-   uint32 person_of_interest = real_people->people[indicated_position].id1;
+   uint32_t person_of_interest = real_people->people[indicated_position].id1;
    if (!(person_of_interest & 8)) return false;
 
    return ((indicated_position ^ person_of_interest ^ extra_stuff[0]) & 2) == 0;
@@ -1515,7 +1515,7 @@ static bool x14_side_of_line_facing(setup *real_people, int real_index,
 
 /* ARGSUSED */
 static bool x12_side_of_line_facing(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff)
+   int real_direction, int northified_index, const int32_t *extra_stuff)
 {
    bool z0 = selectp(real_people, 0);
    bool z1 = selectp(real_people, 1);
@@ -1523,7 +1523,7 @@ static bool x12_side_of_line_facing(setup *real_people, int real_index,
    if (!z0 && !z1) return false;
    int selected_position = z1 ? 1 : 0;
 
-   uint32 selectee = real_people->people[selected_position].id1;
+   uint32_t selectee = real_people->people[selected_position].id1;
    if (!(selectee & 8)) return false;
 
    return (((selected_position << 1) ^ selectee ^ extra_stuff[0]) & 2) == 0;
@@ -1531,7 +1531,7 @@ static bool x12_side_of_line_facing(setup *real_people, int real_index,
 
 /* ARGSUSED */
 static bool kicker_coming(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff)
+   int real_direction, int northified_index, const int32_t *extra_stuff)
 {
    if (real_people->kind == s1x2 || real_people->kind == s_qtag) {
       if ((real_people->people[real_index^1].id1 & 8) != 0 &&
@@ -1567,7 +1567,7 @@ static bool kicker_coming(setup *real_people, int real_index,
 
 /* ARGSUSED */
 static bool cols_someone_in_front(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff)
+   int real_direction, int northified_index, const int32_t *extra_stuff)
 {
    if (real_people->kind == s2x3) {
       if (real_index == 1 || real_index == 4) {
@@ -1592,7 +1592,7 @@ static bool cols_someone_in_front(setup *real_people, int real_index,
 //   3 for "intlk_cast_normal_or_warn"
 /* ARGSUSED */
 static bool x14_once_rem_miniwave(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff)
+   int real_direction, int northified_index, const int32_t *extra_stuff)
 {
    switch (real_people->cmd.cmd_assume.assumption) {
    case cr_wave_only: case cr_li_lo: case cr_1fl_only: return false;
@@ -1620,7 +1620,7 @@ static bool x14_once_rem_miniwave(setup *real_people, int real_index,
 
 /* ARGSUSED */
 static bool x14_once_rem_couple(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff)
+   int real_direction, int northified_index, const int32_t *extra_stuff)
 {
    switch (real_people->cmd.cmd_assume.assumption) {
    case cr_wave_only: case cr_li_lo: case cr_1fl_only: return true;
@@ -1633,7 +1633,7 @@ static bool x14_once_rem_couple(setup *real_people, int real_index,
 
 /* ARGSUSED */
 static bool lines_miniwave(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff)
+   int real_direction, int northified_index, const int32_t *extra_stuff)
 {
    switch (real_people->cmd.cmd_assume.assumption) {
    case cr_wave_only: case cr_magic_only:
@@ -1651,7 +1651,7 @@ static bool lines_miniwave(setup *real_people, int real_index,
 
 /* ARGSUSED */
 static bool lines_couple(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff)
+   int real_direction, int northified_index, const int32_t *extra_stuff)
 {
    switch (real_people->cmd.cmd_assume.assumption) {
    case cr_wave_only: case cr_magic_only:
@@ -1667,22 +1667,22 @@ static bool lines_couple(setup *real_people, int real_index,
    }
 }
 
-static const int32 tab_mwv_in_3n1[8]  = {2, 0, 0, 4, 3, 7, 2};
-static const int32 tab_cpl_in_3n1[8]  = {0, 2, 0, 4, 3, 7, 2};
-static const int32 tab_mwv_out_3n1[8] = {2, 0, 1, 5, 2, 6, 3};
-static const int32 tab_cpl_out_3n1[8] = {0, 2, 1, 5, 2, 6, 3};
+static const int32_t tab_mwv_in_3n1[8]  = {2, 0, 0, 4, 3, 7, 2};
+static const int32_t tab_cpl_in_3n1[8]  = {0, 2, 0, 4, 3, 7, 2};
+static const int32_t tab_mwv_out_3n1[8] = {2, 0, 1, 5, 2, 6, 3};
+static const int32_t tab_cpl_out_3n1[8] = {0, 2, 1, 5, 2, 6, 3};
 
 /* ARGSUSED */
 static bool check_3n1_setup(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff)
+   int real_direction, int northified_index, const int32_t *extra_stuff)
 {
-   uint32 A = extra_stuff[0];
-   uint32 B = extra_stuff[1];
-   uint32 C = extra_stuff[2];
-   uint32 D = extra_stuff[3];
-   uint32 E = extra_stuff[4];
-   uint32 F = extra_stuff[5];
-   uint32 G = extra_stuff[6];
+   uint32_t A = extra_stuff[0];
+   uint32_t B = extra_stuff[1];
+   uint32_t C = extra_stuff[2];
+   uint32_t D = extra_stuff[3];
+   uint32_t E = extra_stuff[4];
+   uint32_t F = extra_stuff[5];
+   uint32_t G = extra_stuff[6];
 
    if (real_people->cmd.cmd_assume.assumption == cr_wave_only ||
        real_people->cmd.cmd_assume.assumption == cr_2fl_only ||
@@ -1723,7 +1723,7 @@ static bool check_3n1_setup(setup *real_people, int real_index,
      3 for "couple_side_of_2n1_line" */
 /* ARGSUSED */
 static bool some_side_of_2n1_line(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff)
+   int real_direction, int northified_index, const int32_t *extra_stuff)
 {
    int k = extra_stuff[0];
    if (real_index == 0 || real_index == 3) k ^= 3;
@@ -1743,7 +1743,7 @@ static bool some_side_of_2n1_line(setup *real_people, int real_index,
 //   7 for "cast_normal_or_nowarn"
 /* ARGSUSED */
 static bool cast_normal_or_whatever(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff)
+   int real_direction, int northified_index, const int32_t *extra_stuff)
 {
    if (real_people->cmd.cmd_assume.assumption == cr_wave_only ||
          real_people->cmd.cmd_assume.assumption == cr_miniwaves ||
@@ -1753,8 +1753,8 @@ static bool cast_normal_or_whatever(setup *real_people, int real_index,
          real_people->cmd.cmd_assume.assumption == cr_2fl_only)
       return (extra_stuff[0] & 1) == 0;
    else {
-      uint32 this_person = real_people->people[real_index].id1;
-      uint32 other_person = real_people->people[real_index ^ 1].id1;
+      uint32_t this_person = real_people->people[real_index].id1;
+      uint32_t other_person = real_people->people[real_index ^ 1].id1;
       if (real_people->kind == s1x6 && real_index >= 2)
          other_person = real_people->people[7 - real_index].id1;
 
@@ -1782,9 +1782,9 @@ static bool cast_normal_or_whatever(setup *real_people, int real_index,
 
 /* ARGSUSED */
 static bool columns_tandem(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff)
+   int real_direction, int northified_index, const int32_t *extra_stuff)
 {
-   uint32 this_person;
+   uint32_t this_person;
    int other_index;
 
    if (real_people->kind == s_qtag) {
@@ -1839,12 +1839,12 @@ static bool columns_tandem(setup *real_people, int real_index,
    }
 
    return ((this_person ^ real_people->people[other_index].id1) & DIR_MASK) ==
-      ((uint32) extra_stuff[0] << 1);
+      ((uint32_t) extra_stuff[0] << 1);
 }
 
 /* ARGSUSED */
 static bool same_in_pair(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff)
+   int real_direction, int northified_index, const int32_t *extra_stuff)
 {
    int this_person;
    int other_person;
@@ -1871,7 +1871,7 @@ static bool same_in_pair(setup *real_people, int real_index,
 
 /* ARGSUSED */
 static bool opp_in_pair(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff)
+   int real_direction, int northified_index, const int32_t *extra_stuff)
 {
    int this_person;
    int other_person;
@@ -1898,7 +1898,7 @@ static bool opp_in_pair(setup *real_people, int real_index,
 
 /* ARGSUSED */
 static bool opp_in_magic(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff)
+   int real_direction, int northified_index, const int32_t *extra_stuff)
 {
    int this_person;
    int other_person;
@@ -1926,7 +1926,7 @@ static bool opp_in_magic(setup *real_people, int real_index,
 
 /* ARGSUSED */
 static bool same_in_magic(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff)
+   int real_direction, int northified_index, const int32_t *extra_stuff)
 {
    int this_person;
    int other_person;
@@ -1954,7 +1954,7 @@ static bool same_in_magic(setup *real_people, int real_index,
 
 /* ARGSUSED */
 static bool once_rem_test(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff)
+   int real_direction, int northified_index, const int32_t *extra_stuff)
 {
    int this_person = real_people->people[real_index].id1;
    int other_person = real_people->people[real_index ^ 2].id1;
@@ -1963,7 +1963,7 @@ static bool once_rem_test(setup *real_people, int real_index,
 
 /* ARGSUSED */
 static bool x12_beau_or_miniwave(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff) THROW_DECL
+   int real_direction, int northified_index, const int32_t *extra_stuff) THROW_DECL
 {
    if (real_people->cmd.cmd_assume.assumption == cr_wave_only ||
          real_people->cmd.cmd_assume.assumption == cr_miniwaves ||
@@ -2007,18 +2007,18 @@ static bool x12_beau_or_miniwave(setup *real_people, int real_index,
    }
 }
 
-static const int32 swingleft_1x3dmd[8] = {-1, 0, 1, -1, 5, 6, -1, 3};
-static const int32 swingleft_1x4[4] = {-1, 0, 3, 1};
-static const int32 swingleft_c1phan[16] = {-1, -1, 0, 1, -1, 7, 4, -1, 10, 11, -1, -1, 14, -1, -1, 13};
-static const int32 swingleft_4x4[16] = {14, 3, 7, 15, 5, 6, 8, 11, -1, -1, -1, 9, -1, 12, 13, 10};
-static const int32 swingleft_2x6[16] = {-1, 0, 1, 2, 3, 4, 7, 8, 9, 10, 11, -1};
-static const int32 swingleft_2x8[16] = {-1, 0, 1, 2, 3, 4, 5, 6, 9, 10, 11, 12, 13, 14, 15, -1};
-static const int32 swingleft_3dmd[12] = {-1, -1, -1, 4, 5, 11, -1, -1, -1, -1, 9, 10};
-static const int32 swingleft_deep2x1dmd[10] = {-1, 0, -1, 1, 3, 6, 8, -1, 9, -1};
-static const int32 swingleft_wqtag[10] = {-1, -1, 3, 4, 9, -1, -1, -1, 7, 8};
+static const int32_t swingleft_1x3dmd[8] = {-1, 0, 1, -1, 5, 6, -1, 3};
+static const int32_t swingleft_1x4[4] = {-1, 0, 3, 1};
+static const int32_t swingleft_c1phan[16] = {-1, -1, 0, 1, -1, 7, 4, -1, 10, 11, -1, -1, 14, -1, -1, 13};
+static const int32_t swingleft_4x4[16] = {14, 3, 7, 15, 5, 6, 8, 11, -1, -1, -1, 9, -1, 12, 13, 10};
+static const int32_t swingleft_2x6[16] = {-1, 0, 1, 2, 3, 4, 7, 8, 9, 10, 11, -1};
+static const int32_t swingleft_2x8[16] = {-1, 0, 1, 2, 3, 4, 5, 6, 9, 10, 11, 12, 13, 14, 15, -1};
+static const int32_t swingleft_3dmd[12] = {-1, -1, -1, 4, 5, 11, -1, -1, -1, -1, 9, 10};
+static const int32_t swingleft_deep2x1dmd[10] = {-1, 0, -1, 1, 3, 6, 8, -1, 9, -1};
+static const int32_t swingleft_wqtag[10] = {-1, -1, 3, 4, 9, -1, -1, -1, 7, 8};
 
 static bool can_swing_left(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff)
+   int real_direction, int northified_index, const int32_t *extra_stuff)
 {
    int t;
    int size = attr::slimit(real_people)+1;
@@ -2084,7 +2084,7 @@ static bool can_swing_left(setup *real_people, int real_index,
 // and opts for L2FL.
 /* ARGSUSED */
 static bool x14_wheel_and_deal(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff)
+   int real_direction, int northified_index, const int32_t *extra_stuff)
 {
    // We assume people have already been checked for coupleness.
 
@@ -2123,7 +2123,7 @@ static bool x14_wheel_and_deal(setup *real_people, int real_index,
 // Test for 3X3 wheel_and_deal to be done 2FL-style, or beau side of 1FL.
 /* ARGSUSED */
 static bool x16_wheel_and_deal(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff) THROW_DECL
+   int real_direction, int northified_index, const int32_t *extra_stuff) THROW_DECL
 {
    // We assume people have already been checked for coupleness.
 
@@ -2154,7 +2154,7 @@ static bool x16_wheel_and_deal(setup *real_people, int real_index,
 // Test for 4X4 wheel_and_deal to be done 2FL-style, or beau side of 1FL.
 /* ARGSUSED */
 static bool x18_wheel_and_deal(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff) THROW_DECL
+   int real_direction, int northified_index, const int32_t *extra_stuff) THROW_DECL
 {
    // We assume people have already been checked for coupleness.
 
@@ -2189,7 +2189,7 @@ static bool x18_wheel_and_deal(setup *real_people, int real_index,
 // we were cycling or wheeling) and then returns true if that end is an extreme beau.
 /* ARGSUSED */
 static bool cycle_and_wheel_1(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff) THROW_DECL
+   int real_direction, int northified_index, const int32_t *extra_stuff) THROW_DECL
 {
    if (northified_index == 0)
       return true;
@@ -2225,7 +2225,7 @@ static bool cycle_and_wheel_1(setup *real_people, int real_index,
    whether he faces the same way as myself. */
 /* ARGSUSED */
 static bool cycle_and_wheel_2(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff)
+   int real_direction, int northified_index, const int32_t *extra_stuff)
 {
    switch (real_people->cmd.cmd_assume.assumption) {
       case cr_1fl_only: case cr_2fl_only: return true;
@@ -2250,7 +2250,7 @@ static bool cycle_and_wheel_2(setup *real_people, int real_index,
 }
 
 static bool vert1(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff)
+   int real_direction, int northified_index, const int32_t *extra_stuff)
 {
    if (!(northified_index & 1))
       return true;
@@ -2269,7 +2269,7 @@ static bool vert1(setup *real_people, int real_index,
 }
 
 static bool vert2(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff)
+   int real_direction, int northified_index, const int32_t *extra_stuff)
 {
    if (!(northified_index & 1))
       return false;
@@ -2289,13 +2289,13 @@ static bool vert2(setup *real_people, int real_index,
 
 /* ARGSUSED */
 static bool inner_active_lines(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff)
+   int real_direction, int northified_index, const int32_t *extra_stuff)
 {
    if ((real_index+3) & 2)
       return northified_index >= 4;     // I am an end.
    else if (real_people->people[real_index ^ 1].id1)
       return                            // I am a center, with a live partner.
-         (uint32) (012 - ((real_index & 4) >> 1)) ==
+         (uint32_t) (012 - ((real_index & 4) >> 1)) ==
          (real_people->people[real_index ^ 1].id1 & 017);
    else if (real_people->cmd.cmd_assume.assumption == cr_wave_only)
       return northified_index < 4;
@@ -2307,13 +2307,13 @@ static bool inner_active_lines(setup *real_people, int real_index,
 
 /* ARGSUSED */
 static bool outer_active_lines(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff)
+   int real_direction, int northified_index, const int32_t *extra_stuff)
 {
    if ((real_index+3) & 2)
       return northified_index < 4;      // I am an end.
    else if (real_people->people[real_index ^ 1].id1)
       return                            // I am a center, with a live partner.
-         (uint32) (010 + ((real_index & 4) >> 1)) ==
+         (uint32_t) (010 + ((real_index & 4) >> 1)) ==
          (real_people->people[real_index ^ 1].id1 & 017);
    else if (real_people->cmd.cmd_assume.assumption == cr_wave_only)
       return northified_index >= 4;
@@ -2326,17 +2326,17 @@ static bool outer_active_lines(setup *real_people, int real_index,
 
 //                               line of 3     line of 4    line of 5    line of 6    line of 7    line of 8
 //                                                                                 (no such thing)
-static const int32 jr1x4[24]  = {2, 0, 0, 2,  1, 0, 0, 2,  3, 0, 0, 2,  1, 0, 0, 2,  7, 7, 7, 7,  1, 0, 0, 2};
-static const int32 sl1x4[24]  = {0, 2, 0, 2,  1, 2, 0, 2,  0, 3, 0, 2,  1, 2, 0, 2,  7, 7, 7, 7,  1, 2, 0, 2};
-static const int32 jl1x4[24]  = {0, 2, 2, 0,  0, 2, 2, 0,  0, 3, 2, 0,  0, 2, 2, 0,  7, 7, 7, 7,  0, 2, 2, 0};
-static const int32 sr1x4[24]  = {2, 0, 2, 0,  0, 0, 2, 0,  3, 0, 2, 0,  0, 0, 2, 0,  7, 7, 7, 7,  0, 0, 2, 0};
+static const int32_t jr1x4[24]  = {2, 0, 0, 2,  1, 0, 0, 2,  3, 0, 0, 2,  1, 0, 0, 2,  7, 7, 7, 7,  1, 0, 0, 2};
+static const int32_t sl1x4[24]  = {0, 2, 0, 2,  1, 2, 0, 2,  0, 3, 0, 2,  1, 2, 0, 2,  7, 7, 7, 7,  1, 2, 0, 2};
+static const int32_t jl1x4[24]  = {0, 2, 2, 0,  0, 2, 2, 0,  0, 3, 2, 0,  0, 2, 2, 0,  7, 7, 7, 7,  0, 2, 2, 0};
+static const int32_t sr1x4[24]  = {2, 0, 2, 0,  0, 0, 2, 0,  3, 0, 2, 0,  0, 0, 2, 0,  7, 7, 7, 7,  0, 0, 2, 0};
 
 static bool judge_check(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff)
+   int real_direction, int northified_index, const int32_t *extra_stuff)
 {
    int sizem1 = attr::slimit(real_people);
    extra_stuff += (sizem1-2) << 2;
-   uint32 this_person = real_people->people[real_index].id1;
+   uint32_t this_person = real_people->people[real_index].id1;
 
    if (sizem1 == 2 || sizem1 == 4) {
       // Lines of 3 or 5 are special.
@@ -2345,12 +2345,12 @@ static bool judge_check(setup *real_people, int real_index,
          f += f>>1;
 
       return
-         (((real_people->people[extra_stuff[0] ^ f].id1 ^ this_person) & 013) == (const uint32) extra_stuff[2])
+         (((real_people->people[extra_stuff[0] ^ f].id1 ^ this_person) & 013) == (const uint32_t) extra_stuff[2])
          &&
-         (((real_people->people[extra_stuff[1] ^ f].id1 ^ this_person) & 013) != (const uint32) extra_stuff[3]);
+         (((real_people->people[extra_stuff[1] ^ f].id1 ^ this_person) & 013) != (const uint32_t) extra_stuff[3]);
    }
 
-   uint32 f = (this_person & 2) ^ extra_stuff[1];
+   uint32_t f = (this_person & 2) ^ extra_stuff[1];
 
    int reverse_count = (sizem1+1) >> 1;
 
@@ -2388,14 +2388,14 @@ static bool judge_check(setup *real_people, int real_index,
 
    // If judge/socker exists in the correct place, and
    // we do not have another judge/socker in the wrong place, OK.
-   if (((real_people->people[reverse_count-f].id1 ^ this_person) & 013) == (uint32) extra_stuff[2] &&
-       ((real_people->people[f].id1 ^ this_person) & 013) != (uint32) extra_stuff[3])
+   if (((real_people->people[reverse_count-f].id1 ^ this_person) & 013) == (uint32_t) extra_stuff[2] &&
+       ((real_people->people[f].id1 ^ this_person) & 013) != (uint32_t) extra_stuff[3])
       return true;
 
    // If correct place is empty, but the person on the other side
    // can't be a judge or socker, OK.
    if (real_people->people[reverse_count-f].id1 == 0 &&
-       ((real_people->people[f].id1 ^ this_person) & 013) != (uint32) extra_stuff[3]) {
+       ((real_people->people[f].id1 ^ this_person) & 013) != (uint32_t) extra_stuff[3]) {
       warn(warn__phantom_judge);
       return true;
    }
@@ -2404,32 +2404,32 @@ static bool judge_check(setup *real_people, int real_index,
 }
 
 
-static veryshort inroll_directions[24] = {
+static int8_t inroll_directions[24] = {
    012, 012, 012, 012, 010, 010, 010, 010,
       3,  3,  3,  3,  7,  7,  7,  7,
       0,  0,  0,  0,  4,  4,  4,  4};
 
-static veryshort magic_inroll_directions[24] = {
+static int8_t magic_inroll_directions[24] = {
    012, 010, 010, 012, 010, 012, 012, 010,
       3,  7,  7,  3,  7,  3,  3,  7,
       0,  4,  4,  0,  4,  0,  0,  4};
 
-static veryshort inroll_directions_2x3[18] = {
+static int8_t inroll_directions_2x3[18] = {
    012, 012, 012, 010, 010, 010,
       2,  2,  2,  5,  5,  5,
       0,  0,  0,  3,  3,  3};
 
-static veryshort magic_inroll_directions_2x3[18] = {
+static int8_t magic_inroll_directions_2x3[18] = {
    012, 010, 012, 010, 012, 010,
       2,  5,  2,  5,  2,  5,
       0,  3,  0,  3,  0,  3};
 
-static veryshort inroll_directions_2x6[36] = {
+static int8_t inroll_directions_2x6[36] = {
    012, 012, 012, 012, 012, 012, 010, 010, 010, 010, 010, 010,
       5,  5,  5,  5,  5,  5, 11, 11, 11, 11, 11, 11,
       0,  0,  0,  0,  0,  0,  6,  6,  6,  6,  6,  6};
 
-static veryshort inroll_directions_2x8[48] = {
+static int8_t inroll_directions_2x8[48] = {
    012, 012, 012, 012, 012, 012, 012, 012, 010, 010, 010, 010, 010, 010, 010, 010,
       7,  7,  7,  7,  7,  7,  7,  7, 15, 15, 15, 15, 15, 15, 15, 15,
       0,  0,  0,  0,  0,  0,  0,  0,  8,  8,  8,  8,  8,  8,  8,  8};
@@ -2443,8 +2443,8 @@ enum inroll_assume_test {
 
 
 struct inroll_action {
-   veryshort *directions;
-   int32 code;
+   int8_t *directions;
+   int32_t code;
    inroll_assume_test ira;
 };
 
@@ -2465,10 +2465,10 @@ static const inroll_action outroller_2x8          = {inroll_directions_2x8,     
 
 
 static bool in_out_roll_select(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff) THROW_DECL
+   int real_direction, int northified_index, const int32_t *extra_stuff) THROW_DECL
 {
    const inroll_action *thing = (const inroll_action *) extra_stuff;
-   const veryshort *directions = thing->directions;
+   const int8_t *directions = thing->directions;
    int code = thing->code;
 
    switch (thing->ira) {
@@ -2532,10 +2532,10 @@ static bool in_out_roll_select(setup *real_people, int real_index,
 
 
 static bool outposter_is_cw(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff)
+   int real_direction, int northified_index, const int32_t *extra_stuff)
 {
-   uint32 outroll_direction;
-   uint32 cw_dir;
+   uint32_t outroll_direction;
+   uint32_t cw_dir;
 
    if (real_people->kind == s2x3) {
       if (real_people->cmd.cmd_assume.assumption == cr_wave_only)
@@ -2582,9 +2582,9 @@ static bool outposter_is_cw(setup *real_people, int real_index,
 
 /* ARGSUSED */
 static bool outposter_is_ccw(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff)
+   int real_direction, int northified_index, const int32_t *extra_stuff)
 {
-   uint32 outroll_direction;
+   uint32_t outroll_direction;
 
    if (real_people->kind == s2x3) {
       if (real_people->cmd.cmd_assume.assumption == cr_wave_only)
@@ -2593,7 +2593,7 @@ static bool outposter_is_ccw(setup *real_people, int real_index,
          return northified_index < 3;
 
       outroll_direction = (real_index >= 3) ? 012 : 010;
-      uint32 ccw_dir = real_people->people[(real_index < 3) ? 0 : 3].id1 & 017;
+      uint32_t ccw_dir = real_people->people[(real_index < 3) ? 0 : 3].id1 & 017;
 
       // Ccw_end exists and is looking out.
       if (ccw_dir == outroll_direction) return true;
@@ -2622,7 +2622,7 @@ static bool outposter_is_ccw(setup *real_people, int real_index,
       if ((real_people->people[real_index | 3].id1 & 017) != outroll_direction) return false;
       else {
          // Now if ccw_end is looking out or is a phantom, it's OK.
-         uint32 ccw_dir = real_people->people[real_index & 4].id1 & 017;
+         uint32_t ccw_dir = real_people->people[real_index & 4].id1 & 017;
          if (ccw_dir == 0 || ccw_dir == 022-outroll_direction) return true;
          return false;
       }
@@ -2631,7 +2631,7 @@ static bool outposter_is_ccw(setup *real_people, int real_index,
 
 /* ARGSUSED */
 static bool raise_some_sglfile(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff)
+   int real_direction, int northified_index, const int32_t *extra_stuff)
 {
    warn(warn_some_singlefile);
    return true;
@@ -2639,7 +2639,7 @@ static bool raise_some_sglfile(setup *real_people, int real_index,
 
 /* ARGSUSED */
 static bool count_cw_people(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff)
+   int real_direction, int northified_index, const int32_t *extra_stuff)
 {
    int i;
    int count = 0;
@@ -2656,14 +2656,14 @@ static bool count_cw_people(setup *real_people, int real_index,
 
 /* ARGSUSED */
 static bool check_4x4_quad(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff)
+   int real_direction, int northified_index, const int32_t *extra_stuff)
 {
    return real_people->people[(real_index+extra_stuff[0]) & 0xF].id1 != 0;
 }
 
 /* ARGSUSED */
 static bool check_facing_dmd_spot(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff)
+   int real_direction, int northified_index, const int32_t *extra_stuff)
 {
    int my_handedness = real_people->people[real_index].id1 ^ real_index;
    int next_index = (real_index + 1 - (my_handedness & 2)) & 3;
@@ -2674,7 +2674,7 @@ static bool check_facing_dmd_spot(setup *real_people, int real_index,
 
 /* ARGSUSED */
 static bool check_qtag_spot_facing_me(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff)
+   int real_direction, int northified_index, const int32_t *extra_stuff)
 {
    if (real_index & 1) {
       int my_handedness = real_people->people[real_index].id1 ^ real_index;
@@ -2695,14 +2695,14 @@ static bool check_qtag_spot_facing_me(setup *real_people, int real_index,
 
 /* ARGSUSED */
 static bool check_tbone(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff) THROW_DECL
+   int real_direction, int northified_index, const int32_t *extra_stuff) THROW_DECL
 {
-   int32 z = extra_stuff[(real_index<<2) + real_direction];
+   int32_t z = extra_stuff[(real_index<<2) + real_direction];
 
    if (z == -2)
       return false;
    else if (z >= 0) {
-      uint32 zz = real_people->people[z].id1;
+      uint32_t zz = real_people->people[z].id1;
       if (zz & BIT_PERSON)
          return ((zz ^ real_people->people[real_index].id1) & 1) != 0;
       else if (real_people->kind == s_short6) {
@@ -2731,7 +2731,7 @@ static bool check_tbone(setup *real_people, int real_index,
          default:
             if (real_index==0) {
                // Try looking at the other base person!
-               uint32 zz = real_people->people[z^3].id1;
+               uint32_t zz = real_people->people[z^3].id1;
                if (zz & BIT_PERSON) {
                   warn(warn__opt_for_not_tboned_base);
                   return ((zz ^ real_people->people[real_index].id1) & 1) != 0;
@@ -2744,16 +2744,20 @@ static bool check_tbone(setup *real_people, int real_index,
    return false;
 }
 
-static const int32 trnglspot_tboned_tab[12] = {-3,  2, -3,  1,    -2, -2,  0, 0,    -2,  0,  0, -2};
-static const int32 six2spot_tboned_tab[24]  = {-2, -2, -2, -2,    -3,  2, -3, 0,    -2, -2, -2, -2,    -2, -2, -2, -2,    -3, 3, -3, 5,    -2, -2, -2, -2};
-static const int32 mag62spot_tboned_tab[24] = {-3, -2, -3, -2,    -3,  3, -3, 5,    -3, -2, -3, -2,    -3, -2, -3, -2,    -3, 2, -3, 0,    -3, -2, -3, -2};
+static const int32_t trnglspot_tboned_tab[12] = {-3,  2, -3,  1,    -2, -2,  0, 0,    -2,  0,  0, -2};
+static const int32_t six2spot_tboned_tab[24]  = {-2, -2, -2, -2,    -3,  2, -3, 0,    -2, -2, -2, -2,
+                                                 -2, -2, -2, -2,    -3, 3, -3, 5,     -2, -2, -2, -2};
+static const int32_t mag62spot_tboned_tab[24] = {-3, -2, -3, -2,    -3,  3, -3, 5,    -3, -2, -3, -2,
+                                                 -3, -2, -3, -2,    -3, 2, -3, 0,     -3, -2, -3, -2};
 
 /* ARGSUSED */
 static bool nextinttrnglspot_is_tboned(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff) THROW_DECL
+   int real_direction, int northified_index, const int32_t *extra_stuff) THROW_DECL
 {
-   static const int32 bb[24] = {-2, -2, 4, 4,     -3, 3, -3, 5,     -2, 4, 4, -2,     1, 1, -2, -2,     -3, 2, -3, 0,     1, -2, -2, 1};
-   static const int32 cc[24] = {2, 2, -2, -2,      5, -2, -2, 5,    0, -3, 4, -3,     -2, -2, 5, 5,     -2, 2, 2, -2,     1, -3, 3, -3};
+   static const int32_t bb[24] = {-2, -2, 4, 4,     -3, 3, -3, 5,     -2, 4, 4, -2,
+                                  1, 1, -2, -2,     -3, 2, -3, 0,     1, -2, -2, 1};
+   static const int32_t cc[24] = {2, 2, -2, -2,     5, -2, -2, 5,     0, -3, 4, -3,
+                                  -2, -2, 5, 5,     -2, 2, 2, -2,     1, -3, 3, -3};
 
    return check_tbone(real_people, real_index, real_direction, northified_index,
          (real_people->kind == s_short6) ? bb : cc);
@@ -2761,9 +2765,10 @@ static bool nextinttrnglspot_is_tboned(setup *real_people, int real_index,
 
 /* ARGSUSED */
 static bool next_galaxyspot_is_tboned(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff) THROW_DECL
+   int real_direction, int northified_index, const int32_t *extra_stuff) THROW_DECL
 {
-   static const int32 aa[32] = {1, -3, 7, -3,     2, 2, 0, 0,     -3, 3, -3, 1,     2, 4, 4, 2,    3, -3, 5, -3,     4, 4, 6, 6,    -3, 5, -3, 7,      0, 6, 6, 0};
+   static const int32_t aa[32] = {1, -3, 7, -3,     2, 2, 0, 0,     -3, 3, -3, 1,     2, 4, 4, 2,
+                                  3, -3, 5, -3,     4, 4, 6, 6 ,    -3, 5, -3, 7,     0, 6, 6, 0};
 
    /* We always return true for centers.  That way
       the centers can reverse flip a galaxy even if the
@@ -2777,7 +2782,7 @@ static bool next_galaxyspot_is_tboned(setup *real_people, int real_index,
 
 /* ARGSUSED */
 static bool column_double_down(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff)
+   int real_direction, int northified_index, const int32_t *extra_stuff)
 {
    return
       (northified_index < 3)              // Unless #1 in column, it's easy.
@@ -2785,17 +2790,17 @@ static bool column_double_down(setup *real_people, int real_index,
       (northified_index > 4)
          ||
       // If #1, my adjacent end must exist and face in.
-      ((uint32) ((((real_index + 2) & 4) >> 1) + 1) == (real_people->people[real_index ^ 7].id1 & 017));
+      ((uint32_t) ((((real_index + 2) & 4) >> 1) + 1) == (real_people->people[real_index ^ 7].id1 & 017));
 }
 
 
 
 /* ARGSUSED */
 static bool apex_test(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff) THROW_DECL
+   int real_direction, int northified_index, const int32_t *extra_stuff) THROW_DECL
 {
-   uint32 unmoving_end = ((real_people->people[0].id1+NROLL_BIT) & (NROLL_BIT*2)) ? 2 : 0;
-   uint32 status;
+   uint32_t unmoving_end = ((real_people->people[0].id1+NROLL_BIT) & (NROLL_BIT*2)) ? 2 : 0;
+   uint32_t status;
 
    if ((real_people->people[0].id1 &
         real_people->people[1].id1 &
@@ -2804,7 +2809,7 @@ static bool apex_test(setup *real_people, int real_index,
 
    status = (real_people->people[1].id1 ^ real_people->people[unmoving_end].id1) & 2;
 
-   if ((uint32) real_index == unmoving_end ||
+   if ((uint32_t) real_index == unmoving_end ||
        (real_index == 1 && (real_people->people[1].id1 & 2) != unmoving_end))
       status |= 1;
 
@@ -2815,7 +2820,7 @@ static bool apex_test(setup *real_people, int real_index,
 
 /* ARGSUSED */
 static bool boygirlp(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff)
+   int real_direction, int northified_index, const int32_t *extra_stuff)
 {
    // If this is a slide thru from a miniwave that is not right-handed, raise a warning.
    if (extra_stuff[2] && northified_index != 0)
@@ -2826,21 +2831,21 @@ static bool boygirlp(setup *real_people, int real_index,
 
 /* ARGSUSED */
 static bool roll_is_cw(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff)
+   int real_direction, int northified_index, const int32_t *extra_stuff)
 {
    return (real_people->people[real_index].id1 & ROLL_DIRMASK) == ROLL_IS_R;
 }
 
 /* ARGSUSED */
 static bool roll_is_ccw(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff)
+   int real_direction, int northified_index, const int32_t *extra_stuff)
 {
    return (real_people->people[real_index].id1 & ROLL_DIRMASK) == ROLL_IS_L;
 }
 
 /* ARGSUSED */
 static bool slide_or_roll_is_cw(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff)
+   int real_direction, int northified_index, const int32_t *extra_stuff)
 {
    // Slide info takes precedence.
    if (real_people->people[real_index].id1 & NSLIDE_MASK)
@@ -2851,7 +2856,7 @@ static bool slide_or_roll_is_cw(setup *real_people, int real_index,
 
 /* ARGSUSED */
 static bool slide_or_roll_is_ccw(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff)
+   int real_direction, int northified_index, const int32_t *extra_stuff)
 {
    // Slide info takes precedence.
    if (real_people->people[real_index].id1 & NSLIDE_MASK)
@@ -2862,7 +2867,7 @@ static bool slide_or_roll_is_ccw(setup *real_people, int real_index,
 
 /* ARGSUSED */
 static bool x12_with_other_sex(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff)
+   int real_direction, int northified_index, const int32_t *extra_stuff)
 {
    int this_person2 = real_people->people[real_index].id2;
    int other_person2 = real_people->people[real_index ^ 1].id2;
@@ -2871,7 +2876,7 @@ static bool x12_with_other_sex(setup *real_people, int real_index,
 
 /* ARGSUSED */
 static bool x22_facing_other_sex(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff)
+   int real_direction, int northified_index, const int32_t *extra_stuff)
 {
    int this_person2 = real_people->people[real_index].id2;
    int other_person2 = real_people->people[real_index ^ (((real_direction<<1) & 2) ^ 3)].id2;
@@ -2880,7 +2885,7 @@ static bool x22_facing_other_sex(setup *real_people, int real_index,
 
 /* ARGSUSED */
 static bool lateral_to_sex(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff)
+   int real_direction, int northified_index, const int32_t *extra_stuff)
 {
    int this_person2 = real_people->people[real_index].id2 & (ID2_PERM_BOY|ID2_PERM_GIRL);
    int t = (real_people->kind == s1x2) ? 0 : (real_direction<<1) & 2;
@@ -2890,13 +2895,13 @@ static bool lateral_to_sex(setup *real_people, int real_index,
 
 /* ARGSUSED */
 static bool directionp(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff)
+   int real_direction, int northified_index, const int32_t *extra_stuff)
 {
    direction_used = true;
    direction_kind d = (direction_kind) extra_stuff[0];
 
    if (current_options.where == direction_the_music) {
-      uint32 r3 = 0;
+      uint32_t r3 = 0;
       switch (d) {
       case direction_no_direction: r3 = ID3_FACEFRONT; break;
       case direction_left: r3 = ID3_FACELEFT; break;
@@ -2914,7 +2919,7 @@ static bool directionp(setup *real_people, int real_index,
 
 /* ARGSUSED */
 static bool dmd_ctrs_rh(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff) THROW_DECL
+   int real_direction, int northified_index, const int32_t *extra_stuff) THROW_DECL
 {
    if (real_people->cmd.cmd_assume.assump_col == 0) {
       switch (real_people->cmd.cmd_assume.assumption) {
@@ -2949,7 +2954,7 @@ static bool dmd_ctrs_rh(setup *real_people, int real_index,
 
 /* ARGSUSED */
 static bool trngl_pt_rh(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff) THROW_DECL
+   int real_direction, int northified_index, const int32_t *extra_stuff) THROW_DECL
 {
    switch (real_people->people[0].id1 & d_mask) {
    case d_west:
@@ -2964,9 +2969,9 @@ static bool trngl_pt_rh(setup *real_people, int real_index,
 
 
 struct simple_qtag_action {
-   int32 ctr_action;    // -1 for true, -2 for false, else required direction xor.
-   int32 end_action;
-   int32 bbbbb;
+   int32_t ctr_action;    // -1 for true, -2 for false, else required direction xor.
+   int32_t end_action;
+   int32_t bbbbb;
 };
 
 struct full_qtag_action {
@@ -3017,7 +3022,7 @@ static const full_qtag_action q_line_back_action = {
 
 /* ARGSUSED */
 static bool q_tag_check(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff)
+   int real_direction, int northified_index, const int32_t *extra_stuff)
 {
    const full_qtag_action *bigactionp = (const full_qtag_action *) extra_stuff;
    const simple_qtag_action *actionp;
@@ -3042,7 +3047,7 @@ static bool q_tag_check(setup *real_people, int real_index,
       // This line is executed if there is no assumption.  It attempts to determine whether the physical setup
       // is a wave or a 2FL by checking just the subject and his partner.  Of course, a more thorough check
       // would be a nice idea.
-      else return ((real_people->people[real_index].id1 ^ real_people->people[real_index ^ 1].id1) & DIR_MASK) == (uint32) actionp->ctr_action;
+      else return ((real_people->people[real_index].id1 ^ real_people->people[real_index ^ 1].id1) & DIR_MASK) == (uint32_t) actionp->ctr_action;
    }
    else {
       // I am on the outside; find the end of the center line nearest me.
@@ -3053,7 +3058,7 @@ static bool q_tag_check(setup *real_people, int real_index,
             return ((((real_index+3) >> 1) ^ real_people->people[real_index].id1) & 2) == ((actionp->end_action == 0) ? 0U : 2U);
 
          if (actionp->bbbbb == 98) {
-            uint32 t;
+            uint32_t t;
 
             both = 0;
 
@@ -3073,7 +3078,7 @@ static bool q_tag_check(setup *real_people, int real_index,
             both >>= 1;
          }
          else if (actionp->bbbbb == 97) {
-            uint32 t;
+            uint32_t t;
 
             both = 0;
 
@@ -3112,9 +3117,9 @@ static bool q_tag_check(setup *real_people, int real_index,
          // "q_line_front" are indistinguishable in an hourglass.
 
          return
-            ((real_people->people[z].id1 & 017) == ((uint32) actionp->end_action ^ (real_index >> 1))) &&
+            ((real_people->people[z].id1 & 017) == ((uint32_t) actionp->end_action ^ (real_index >> 1))) &&
             (real_people->kind == s_hrglass ||
-             (((real_people->people[z].id1 ^ real_people->people[z ^ 1].id1) & DIR_MASK) == (uint32) actionp->bbbbb));
+             (((real_people->people[z].id1 ^ real_people->people[z ^ 1].id1) & DIR_MASK) == (uint32_t) actionp->bbbbb));
       }
    }
 }
@@ -3129,13 +3134,13 @@ static bool q_tag_check(setup *real_people, int real_index,
 
 predicate_descriptor pred_table[] = {
       {someone_selected,               &iden_tab[0]},            // "select"
-      {unselect,                     (const int32 *) 0},         // "unselect"
-      {select_near_select,           (const int32 *) 0},         // "select_near_select"
-      {select_near_select_or_phantom,(const int32 *) 0},         // "select_near_select_or_phantom"
-      {select_near_unselect,         (const int32 *) 0},         // "select_near_unselect"
-      {unselect_near_select,         (const int32 *) 0},         // "unselect_near_select"
-      {unselect_near_unselect,       (const int32 *) 0},         // "unselect_near_unselect"
-      {select_once_rem_from_select,  (const int32 *) 0},         // "select_once_rem_from_select"
+      {unselect,                     (const int32_t *) 0},       // "unselect"
+      {select_near_select,           (const int32_t *) 0},       // "select_near_select"
+      {select_near_select_or_phantom,(const int32_t *) 0},       // "select_near_select_or_phantom"
+      {select_near_unselect,         (const int32_t *) 0},       // "select_near_unselect"
+      {unselect_near_select,         (const int32_t *) 0},       // "unselect_near_select"
+      {unselect_near_unselect,       (const int32_t *) 0},       // "unselect_near_unselect"
+      {select_once_rem_from_select,  (const int32_t *) 0},       // "select_once_rem_from_select"
       {someone_selected,               &iden_tab[2]},            // "conc_from_select"
       {someone_selected,               &iden_tab[3]},            // "other_spindle_cw_select"
       {someone_selected,               &iden_tab[4]},            // "grand_conc_from_select"
@@ -3171,18 +3176,18 @@ predicate_descriptor pred_table[] = {
       {plus_mod_selected_real,        &iden_tab[10]},            // "person_select_real_plus10"
       {plus_mod_selected_real,        &iden_tab[11]},            // "person_select_real_plus11"
       {semi_squeezer_select,          semi_squeeze_tab},         // "semi_squeezer_select"
-      {select_once_rem_from_unselect,(const int32 *) 0},         // "select_once_rem_from_unselect"
-      {unselect_once_rem_from_select,(const int32 *) 0},         // "unselect_once_rem_from_select"
-      {select_and_roll_is_cw,        (const int32 *) 0},         // "select_and_roll_is_cw"
-      {select_and_roll_is_ccw,       (const int32 *) 0},         // "select_and_roll_is_ccw"
+      {select_once_rem_from_unselect,(const int32_t *) 0},       // "select_once_rem_from_unselect"
+      {unselect_once_rem_from_select,(const int32_t *) 0},       // "unselect_once_rem_from_select"
+      {select_and_roll_is_cw,        (const int32_t *) 0},       // "select_and_roll_is_cw"
+      {select_and_roll_is_ccw,       (const int32_t *) 0},       // "select_and_roll_is_ccw"
       {x12_side_of_line_facing,       &iden_tab[0]},             // "1x2_selectee_is_linelike_facing_cw"
       {x12_side_of_line_facing,       &iden_tab[2]},             // "1x2_selectee_is_linelike_facing_ccw"
       {x14_side_of_line_facing,       &iden_tab[9]},             // "1x4_selectee_of_far_side_is_linelike_facing_cw"
       {x14_side_of_line_facing,       &iden_tab[11]},            // "1x4_selectee_of_far_side_is_linelike_facing_ccw"
-      {kicker_coming,                (const int32 *) 0},         // "kicker_coming"
+      {kicker_coming,                (const int32_t *) 0},       // "kicker_coming"
 // End of predicates that force use of selector.
 #define SELECTOR_PREDS 52
-      {always,                       (const int32 *) 0},         // "always"
+      {always,                       (const int32_t *) 0},       // "always"
       {plus_mod_real,                 &iden_tab[1]},             // "person_real_plus1"
       {plus_mod_real,                 &iden_tab[2]},             // "person_real_plus2"
       {plus_mod_real,                 &iden_tab[3]},             // "person_real_plus3"
@@ -3226,11 +3231,11 @@ predicate_descriptor pred_table[] = {
       {x14_side_of_line_facing,       &iden_tab[5]},             // "1x4_center_of_far_side_is_linelike_facing_cw"
       {x14_side_of_line_facing,       &iden_tab[6]},             // "1x4_center_of_this_side_is_linelike_facing_ccw"
       {x14_side_of_line_facing,       &iden_tab[7]},             // "1x4_center_of_far_side_is_linelike_facing_ccw"
-      {cols_someone_in_front,        (const int32 *) 0},         // "columns_someone_in_front"
+      {cols_someone_in_front,        (const int32_t *) 0},       // "columns_someone_in_front"
       {x14_once_rem_miniwave,         &iden_tab[1]},             // "x14_once_rem_miniwave"
-      {x14_once_rem_couple,          (const int32 *) 0},         // "x14_once_rem_couple"
-      {lines_miniwave,               (const int32 *) 0},         // "lines_miniwave"
-      {lines_couple,                 (const int32 *) 0},         // "lines_couple"
+      {x14_once_rem_couple,          (const int32_t *) 0},       // "x14_once_rem_couple"
+      {lines_miniwave,               (const int32_t *) 0},       // "lines_miniwave"
+      {lines_couple,                 (const int32_t *) 0},       // "lines_couple"
       {check_3n1_setup,              tab_mwv_in_3n1},            // "miniwave_side_of_in_3n1_line"
       {check_3n1_setup,              tab_cpl_in_3n1},            // "couple_side_of_in_3n1_line"
       {check_3n1_setup,             tab_mwv_out_3n1},            // "miniwave_side_of_out_3n1_line"
@@ -3248,20 +3253,20 @@ predicate_descriptor pred_table[] = {
       {cast_normal_or_whatever,        &iden_tab[3]},            // "cast_normal_or_warn"
       {cast_normal_or_whatever,        &iden_tab[7]},            // "cast_normal_or_nowarn"
       {x14_once_rem_miniwave,          &iden_tab[3]},            // "intlk_cast_normal_or_warn"
-      {opp_in_magic,                 (const int32 *) 0},         // "lines_magic_miniwave"
-      {same_in_magic,                (const int32 *) 0},         // "lines_magic_couple"
+      {opp_in_magic,                 (const int32_t *) 0},       // "lines_magic_miniwave"
+      {same_in_magic,                (const int32_t *) 0},       // "lines_magic_couple"
       {once_rem_test,                  &iden_tab[2]},            // "lines_once_rem_miniwave"
       {once_rem_test,                  &iden_tab[0]},            // "lines_once_rem_couple"
-      {same_in_pair,                 (const int32 *) 0},         // "lines_tandem"
-      {opp_in_pair,                  (const int32 *) 0},         // "lines_antitandem"
+      {same_in_pair,                 (const int32_t *) 0},       // "lines_tandem"
+      {opp_in_pair,                  (const int32_t *) 0},       // "lines_antitandem"
       {columns_tandem,                 &iden_tab[0]},            // "columns_tandem"
       {columns_tandem,                 &iden_tab[1]},            // "columns_antitandem"
-      {same_in_magic,                (const int32 *) 0},         // "columns_magic_tandem"
-      {opp_in_magic,                 (const int32 *) 0},         // "columns_magic_antitandem"
+      {same_in_magic,                (const int32_t *) 0},       // "columns_magic_tandem"
+      {opp_in_magic,                 (const int32_t *) 0},       // "columns_magic_antitandem"
       {once_rem_test,                  &iden_tab[0]},            // "columns_once_rem_tandem"
       {once_rem_test,                  &iden_tab[2]},            // "columns_once_rem_antitandem"
-      {same_in_pair,                 (const int32 *) 0},         // "columns_couple"
-      {opp_in_pair,                  (const int32 *) 0},         // "columns_miniwave"
+      {same_in_pair,                 (const int32_t *) 0},       // "columns_couple"
+      {opp_in_pair,                  (const int32_t *) 0},       // "columns_miniwave"
       {x12_beau_or_miniwave,           &iden_tab[0]},            // "1x2_beau_or_miniwave"
       {x12_beau_or_miniwave,           &iden_tab[1]},            // "1x2_beau_miniwave_or_warn"
       {x12_beau_or_miniwave,           &iden_tab[2]},            // "1x2_beau_miniwave_for_breaker"
@@ -3270,33 +3275,33 @@ predicate_descriptor pred_table[] = {
       {can_swing_left,                 &iden_tab[1]},            // "can_swing_right"
       {x14_wheel_and_deal,             &iden_tab[1]},            // "1x4_wheel_and_deal"
       {x14_wheel_and_deal,             &iden_tab[0]},            // "1x4_wheel_and_deal_or_1fl"
-      {x16_wheel_and_deal,           (const int32 *) 0},         // "1x6_wheel_and_deal"
-      {x18_wheel_and_deal,           (const int32 *) 0},         // "1x8_wheel_and_deal"
-      {cycle_and_wheel_1,            (const int32 *) 0},         // "cycle_and_wheel_1"
-      {cycle_and_wheel_2,            (const int32 *) 0},         // "cycle_and_wheel_2"
-      {vert1,                        (const int32 *) 0},         // "vert1"
-      {vert2,                        (const int32 *) 0},         // "vert2"
-      {inner_active_lines,           (const int32 *) 0},         // "inner_active_lines"
-      {outer_active_lines,           (const int32 *) 0},         // "outer_active_lines"
+      {x16_wheel_and_deal,           (const int32_t *) 0},       // "1x6_wheel_and_deal"
+      {x18_wheel_and_deal,           (const int32_t *) 0},       // "1x8_wheel_and_deal"
+      {cycle_and_wheel_1,            (const int32_t *) 0},       // "cycle_and_wheel_1"
+      {cycle_and_wheel_2,            (const int32_t *) 0},       // "cycle_and_wheel_2"
+      {vert1,                        (const int32_t *) 0},       // "vert1"
+      {vert2,                        (const int32_t *) 0},       // "vert2"
+      {inner_active_lines,           (const int32_t *) 0},       // "inner_active_lines"
+      {outer_active_lines,           (const int32_t *) 0},       // "outer_active_lines"
       {judge_check,                           jr1x4},            // "judge_is_right"
       {judge_check,                           jl1x4},            // "judge_is_left"
       {judge_check,                           sr1x4},            // "socker_is_right"
       {judge_check,                           sl1x4},            // "socker_is_left"
-      {in_out_roll_select, (const int32 *) &inroller_cw},        // "inroller_is_cw"
-      {in_out_roll_select, (const int32 *) &magic_inroller_cw},  // "magic_inroller_is_cw"
-      {in_out_roll_select, (const int32 *) &outroller_cw},       // "outroller_is_cw"
-      {in_out_roll_select, (const int32 *) &magic_outroller_cw}, // "magic_outroller_is_cw"
-      {in_out_roll_select, (const int32 *) &inroller_cw_2x3},    // "inroller_is_cw_2x3"
-      {in_out_roll_select, (const int32 *) &magic_inroller_cw_2x3}, // "magic_inroller_is_cw_2x3"
-      {in_out_roll_select, (const int32 *) &outroller_cw_2x3},   // "outroller_is_cw_2x3"
-      {in_out_roll_select, (const int32 *) &magic_outroller_cw_2x3}, // "magic_outroller_is_cw_2x3"
-      {in_out_roll_select, (const int32 *) &inroller_2x6},       // "inroller_is_cw_2x6"
-      {in_out_roll_select, (const int32 *) &outroller_2x6},      // "outroller_is_cw_2x6"
-      {in_out_roll_select, (const int32 *) &inroller_2x8},       // "inroller_is_cw_2x8"
-      {in_out_roll_select, (const int32 *) &outroller_2x8},      // "outroller_is_cw_2x8"
-      {outposter_is_cw,              (const int32 *) 0},         // "outposter_is_cw"
-      {outposter_is_ccw,             (const int32 *) 0},         // "outposter_is_ccw"
-      {raise_some_sglfile,           (const int32 *) 0},         // "raise_some_sglfile"
+      {in_out_roll_select, (const int32_t *) &inroller_cw},      // "inroller_is_cw"
+      {in_out_roll_select, (const int32_t *) &magic_inroller_cw}, // "magic_inroller_is_cw"
+      {in_out_roll_select, (const int32_t *) &outroller_cw},     // "outroller_is_cw"
+      {in_out_roll_select, (const int32_t *) &magic_outroller_cw}, // "magic_outroller_is_cw"
+      {in_out_roll_select, (const int32_t *) &inroller_cw_2x3},  // "inroller_is_cw_2x3"
+      {in_out_roll_select, (const int32_t *) &magic_inroller_cw_2x3}, // "magic_inroller_is_cw_2x3"
+      {in_out_roll_select, (const int32_t *) &outroller_cw_2x3}, // "outroller_is_cw_2x3"
+      {in_out_roll_select, (const int32_t *) &magic_outroller_cw_2x3}, // "magic_outroller_is_cw_2x3"
+      {in_out_roll_select, (const int32_t *) &inroller_2x6},     // "inroller_is_cw_2x6"
+      {in_out_roll_select, (const int32_t *) &outroller_2x6},    // "outroller_is_cw_2x6"
+      {in_out_roll_select, (const int32_t *) &inroller_2x8},     // "inroller_is_cw_2x8"
+      {in_out_roll_select, (const int32_t *) &outroller_2x8},    // "outroller_is_cw_2x8"
+      {outposter_is_cw,              (const int32_t *) 0},       // "outposter_is_cw"
+      {outposter_is_ccw,             (const int32_t *) 0},       // "outposter_is_ccw"
+      {raise_some_sglfile,           (const int32_t *) 0},       // "raise_some_sglfile"
       {count_cw_people,                &iden_tab[0]},            // "zero_cw_people"
       {count_cw_people,                &iden_tab[1]},            // "one_cw_person"
       {count_cw_people,                &iden_tab[2]},            // "two_cw_people"
@@ -3308,11 +3313,11 @@ predicate_descriptor pred_table[] = {
       {check_qtag_spot_facing_me,      &iden_tab[1]},            // "next_qtag_spot_faces_me"
       {check_qtag_spot_facing_me,      &iden_tab[3]},            // "next_qtag_spot_faces_away"
       {check_tbone,            trnglspot_tboned_tab},            // "nexttrnglspot_is_tboned"
-      {nextinttrnglspot_is_tboned,   (const int32 *) 0},         // "nextinttrnglspot_is_tboned"
+      {nextinttrnglspot_is_tboned,   (const int32_t *) 0},       // "nextinttrnglspot_is_tboned"
       {check_tbone,             six2spot_tboned_tab},            // "next62spot_is_tboned"
       {check_tbone,            mag62spot_tboned_tab},            // "next_magic62spot_is_tboned"
-      {next_galaxyspot_is_tboned,    (const int32 *) 0},         // "next_galaxyspot_is_tboned"
-      {column_double_down,           (const int32 *) 0},         // "column_double_down"
+      {next_galaxyspot_is_tboned,    (const int32_t *) 0},       // "next_galaxyspot_is_tboned"
+      {column_double_down,           (const int32_t *) 0},       // "column_double_down"
       {apex_test,                      &iden_tab[1]},            // "apex_test_1"
       {apex_test,                      &iden_tab[2]},            // "apex_test_2"
       {apex_test,                      &iden_tab[3]},            // "apex_test_3"
@@ -3320,10 +3325,10 @@ predicate_descriptor pred_table[] = {
       {boygirlp,                    girlstuff_no_rh},            // "girlp"
       {boygirlp,                        boystuff_rh},            // "boyp_rh_slide_thru"
       {boygirlp,                       girlstuff_rh},            // "girlp_rh_slide_thru"
-      {roll_is_cw,                   (const int32 *) 0},         // "roll_is_cw"
-      {roll_is_ccw,                  (const int32 *) 0},         // "roll_is_ccw"
-      {slide_or_roll_is_cw,          (const int32 *) 0},         // "slide_or_roll_is_cw"
-      {slide_or_roll_is_ccw,         (const int32 *) 0},         // "slide_or_roll_is_ccw"
+      {roll_is_cw,                   (const int32_t *) 0},       // "roll_is_cw"
+      {roll_is_ccw,                  (const int32_t *) 0},       // "roll_is_ccw"
+      {slide_or_roll_is_cw,          (const int32_t *) 0},       // "slide_or_roll_is_cw"
+      {slide_or_roll_is_ccw,         (const int32_t *) 0},       // "slide_or_roll_is_ccw"
       {x12_with_other_sex,            boystuff_no_rh},           // "x12_boy_with_girl"
       {x12_with_other_sex,           girlstuff_no_rh},           // "x12_girl_with_boy"
       {x22_facing_other_sex,          boystuff_no_rh},           // "x22_boy_facing_girl"
@@ -3342,11 +3347,11 @@ predicate_descriptor pred_table[] = {
       {directionp,           &iden_tab[direction_no_direction]}, // "no_dir_p"
       {dmd_ctrs_rh,                    &iden_tab[0]},            // "dmd_ctrs_rh"
       {dmd_ctrs_rh,                    &iden_tab[1]},            // "dmd_ctrs_lh"
-      {trngl_pt_rh,                  (const int32 *) 0},         // "trngl_pt_rh"
-      {q_tag_check, (const int32 *) &q_tag_front_action},        // "q_tag_front"
-      {q_tag_check, (const int32 *) &q_tag_back_action},         // "q_tag_back"
-      {q_tag_check, (const int32 *) &q_line_front_action},       // "q_line_front"
-      {q_tag_check, (const int32 *) &q_line_back_action},        // "q_line_back"
+      {trngl_pt_rh,                  (const int32_t *) 0},       // "trngl_pt_rh"
+      {q_tag_check, (const int32_t *) &q_tag_front_action},      // "q_tag_front"
+      {q_tag_check, (const int32_t *) &q_tag_back_action},       // "q_tag_back"
+      {q_tag_check, (const int32_t *) &q_line_front_action},     // "q_line_front"
+      {q_tag_check, (const int32_t *) &q_line_back_action},      // "q_line_back"
       {whos_on_base,                   &iden_tab[0]},            // "base_is_across"
       {whos_on_base,                   &iden_tab[4]},            // "base_is_right"
       {whos_on_base,                   &iden_tab[8]},            // "base_is_here"

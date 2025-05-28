@@ -121,7 +121,7 @@ void select::initialize()
    for (i=0 ; i<NUM_SEL_HASH_BUCKETS ; i++) sel_hash_table[i] = (sel_item *) 0;
 
    for (selp = sel_init_table ; selp->kk != nothing ; selp++) {
-      uint32 hash_num = (5*selp->kk) & (NUM_SEL_HASH_BUCKETS-1);
+      uint32_t hash_num = (5*selp->kk) & (NUM_SEL_HASH_BUCKETS-1);
       selp->next = sel_hash_table[hash_num];
       sel_hash_table[hash_num] = selp;
    }
@@ -143,11 +143,11 @@ void select::initialize()
 }
 
 
-const select::fixer *select::hash_lookup(setup_kind kk, uint32 thislivemask,
+const select::fixer *select::hash_lookup(setup_kind kk, uint32_t thislivemask,
                                          bool allow_phantoms,
-                                         uint32 key, uint32 arg, const setup *ss)
+                                         uint32_t key, uint32_t arg, const setup *ss)
 {
-   uint32 hash_num = (5*kk) & (NUM_SEL_HASH_BUCKETS-1);
+   uint32_t hash_num = (5*kk) & (NUM_SEL_HASH_BUCKETS-1);
 
    for (const sel_item *p = sel_hash_table[hash_num] ; p ; p = p->next) {
       // The livemask must match exactly unless "allow_phantoms" is on.
@@ -188,7 +188,7 @@ void conc_tables::initialize()
       // For synthesize.
 
       if ((tabp->elongrotallow & 0x100) == 0) {
-         uint32 hash_num = ((tabp->outsetup + (5*(tabp->insetup + 5*tabp->getout_schema))) * 25) & (NUM_CONC_HASH_BUCKETS-1);
+         uint32_t hash_num = ((tabp->outsetup + (5*(tabp->insetup + 5*tabp->getout_schema))) * 25) & (NUM_CONC_HASH_BUCKETS-1);
          tabp->next_synthesize = conc_hash_synthesize_table[hash_num];
          conc_hash_synthesize_table[hash_num] = tabp;
       }
@@ -196,7 +196,7 @@ void conc_tables::initialize()
       // For analyze.
 
       if ((tabp->elongrotallow & 0x200) == 0) {
-         uint32 hash_num = ((tabp->bigsetup + (5*tabp->lyzer)) * 25) & (NUM_CONC_HASH_BUCKETS-1);
+         uint32_t hash_num = ((tabp->bigsetup + (5*tabp->lyzer)) * 25) & (NUM_CONC_HASH_BUCKETS-1);
 
          tabp->next_analyze = conc_hash_analyze_table[hash_num];
          conc_hash_analyze_table[hash_num] = tabp;
@@ -260,7 +260,7 @@ bool conc_tables::analyze_this(
    if (analyzer == schema_in_out_center_triple_z)
       analyzer = schema_in_out_triple_zcom;
 
-   uint32 hash_num = ((ss->kind + (5*analyzer)) * 25) &
+   uint32_t hash_num = ((ss->kind + (5*analyzer)) * 25) &
       (conc_tables::NUM_CONC_HASH_BUCKETS-1);
 
    const conc_tables::cm_thing *lmap_ptr;
@@ -287,7 +287,7 @@ bool conc_tables::analyze_this(
                 outlim-1, lmap_ptr->outer_rot * 011);
 
          for (int m=0; m<lmap_ptr->center_arity; m++) {
-            uint32 rr = lmap_ptr->inner_rot;
+            uint32_t rr = lmap_ptr->inner_rot;
 
             // Need to flip alternating triangles upside down.
             if (lmap_ptr->insetup == s_trngl && (m&1)) rr ^= 2;
@@ -315,9 +315,9 @@ bool conc_tables::synthesize_this(
    setup *inners,
    setup *outers,
    int center_arity,
-   uint32 orig_elong_is_controversial,
+   uint32_t orig_elong_is_controversial,
    int relative_rotation,
-   uint32 matrix_concept,
+   uint32_t matrix_concept,
    int outer_elongation,
    calldef_schema synthesizer,
    calldef_schema orig_synthesizer,
@@ -334,7 +334,7 @@ bool conc_tables::synthesize_this(
       index = relative_rotation&1;
 
    // Select maps depending on 1/8 rotation stuff.  It's generally off, so get 0x400 here.
-   uint32 allowmask = ((outers->eighth_rotation&1) + 1) << 10;
+   uint32_t allowmask = ((outers->eighth_rotation&1) + 1) << 10;
 
    if (outer_elongation == 3)
       allowmask |= 0x10 << index;
@@ -347,7 +347,7 @@ bool conc_tables::synthesize_this(
 
    if (orig_synthesizer == schema_rev_checkpoint_concept) allowmask |= 0x80;
 
-   uint32 hash_num =
+   uint32_t hash_num =
       ((outers->kind + (5*(inners[0].kind + 5*synthesizer))) * 25) &
       (conc_tables::NUM_CONC_HASH_BUCKETS-1);
 
@@ -393,7 +393,7 @@ bool conc_tables::synthesize_this(
          int inners_xorstuff = 0;
          if (q & 2) inners_xorstuff = inlim >> 1;
 
-         uint32 synth_mask = 1;
+         uint32_t synth_mask = 1;
 
          for (int k=0; k<lmap_ptr->center_arity; k++) {
             int k_reorder = reverse_centers_order ? lmap_ptr->center_arity-k-1 : k;
@@ -442,10 +442,10 @@ bool conc_tables::synthesize_this(
       }
    }
 
-   const veryshort *map_indices = lmap_ptr->maps;
+   const int8_t *map_indices = lmap_ptr->maps;
 
    for (int k=0; k<lmap_ptr->center_arity; k++) {
-      uint32 rr = lmap_ptr->inner_rot;
+      uint32_t rr = lmap_ptr->inner_rot;
 
       // Need to flip alternating triangles upside down.
       if (lmap_ptr->insetup == s_trngl && (k&1)) rr ^= 2;
@@ -481,7 +481,7 @@ extern void normalize_concentric(
    int center_arity,
    setup outer_inners[],   // Outers in position 0, inners follow.
    int outer_elongation,
-   uint32 matrix_concept,
+   uint32_t matrix_concept,
    setup *result) THROW_DECL
 {
    // If "outer_elongation" < 0, the outsides can't deduce their ending spots on
@@ -495,7 +495,7 @@ extern void normalize_concentric(
    setup *outers = &outer_inners[0];
    calldef_schema table_synthesizer = synthesizer;
    if (synthesizer == schema_rev_checkpoint_concept) table_synthesizer = schema_rev_checkpoint;
-   uint32 orig_elong_is_controversial = outer_elongation & CONTROVERSIAL_CONC_ELONG;
+   uint32_t orig_elong_is_controversial = outer_elongation & CONTROVERSIAL_CONC_ELONG;
    outer_elongation &= ~CONTROVERSIAL_CONC_ELONG;
 
    result->clear_people();
@@ -526,8 +526,8 @@ extern void normalize_concentric(
       setup *i0p = &inners[0];
       setup *i1p = &inners[1];
 
-      uint32 mask0 = little_endian_live_mask(i0p);
-      uint32 mask1 = little_endian_live_mask(i1p);
+      uint32_t mask0 = little_endian_live_mask(i0p);
+      uint32_t mask1 = little_endian_live_mask(i1p);
 
       // Convert from the outsides of a qtag to the outsides of a 2x4.
       // The mask check is so that we won't ever get into a situation in which
@@ -547,7 +547,7 @@ extern void normalize_concentric(
       // in order to check for moving to the far side.
 
       if (ss) {
-         uint32 ssmask = little_endian_live_mask(ss);
+         uint32_t ssmask = little_endian_live_mask(ss);
          if (ss->kind == s3x4) {
             if ((ssmask & 0x30C) == 0) originals_were_on_left = true;
             else if ((ssmask & 0x0C3) == 0) originals_were_on_right = true;
@@ -1001,8 +1001,8 @@ extern void normalize_concentric(
       }
       else if (i0p->kind == s1x2 && i0p->rotation == 0 && outer_elongation == 2) {
          setup temp = *outers;
-         const veryshort v1[] = {3, 2};
-         const veryshort v2[] = {0, 1};
+         const int8_t v1[] = {3, 2};
+         const int8_t v2[] = {0, 1};
          scatter(outers, i0p, v1, 1, 0);
          scatter(outers, i1p, v2, 1, 0);
          outers->rotation = 0;
@@ -1014,8 +1014,8 @@ extern void normalize_concentric(
       }
       else if (i0p->kind == s1x2 && i0p->rotation == 1 && outer_elongation == 1) {
          setup temp = *outers;
-         const veryshort v1[] = {0, 3};
-         const veryshort v2[] = {1, 2};
+         const int8_t v1[] = {0, 3};
+         const int8_t v2[] = {1, 2};
          scatter(outers, i0p, v1, 1, 0);
          scatter(outers, i1p, v2, 1, 0);
          outers->rotation = 0;
@@ -1027,8 +1027,8 @@ extern void normalize_concentric(
       }
       else if (i0p->kind == s1x2 && i0p->rotation == 0 && outer_elongation == 1) {
          setup temp = *outers;
-         const veryshort v1[] = {0, 1};
-         const veryshort v2[] = {3, 2};
+         const int8_t v1[] = {0, 1};
+         const int8_t v2[] = {3, 2};
          scatter(outers, i0p, v1, 1, 0);
          scatter(outers, i1p, v2, 1, 0);
          outers->rotation = 0;
@@ -1041,8 +1041,8 @@ extern void normalize_concentric(
       }
       else if (i0p->kind == s1x2 && i0p->rotation == 1 && outer_elongation == 2) {
          setup temp = *outers;
-         const veryshort v1[] = {3, 2};
-         const veryshort v2[] = {0, 1};
+         const int8_t v1[] = {3, 2};
+         const int8_t v2[] = {0, 1};
          scatter(outers, i0p, v1, 1, 0);
          scatter(outers, i1p, v2, 1, 0);
          outers->rotation = 1;
@@ -1631,7 +1631,7 @@ static calldef_schema concentrify(
    if (ss->kind == s_c1phan) do_matrix_expansion(ss, CONCPROP__NEEDK_4X4, false);
 
    // It will be helpful to have a mask of where the live people are.
-   uint32 livemask = little_endian_live_mask(ss);
+   uint32_t livemask = little_endian_live_mask(ss);
 
    // Need to do this now, so that the "schema_concentric_big2_6" stuff below will be triggered.
    if (analyzer_result == schema_concentric_6p_or_normal_or_2x6_2x3) {
@@ -1738,7 +1738,7 @@ static calldef_schema concentrify(
          analyzer_result = schema_concentric_2_4;
       else if (ss->kind == s_ptpd) {
          // Check for point-to-point diamonds all facing toward other diamond.
-         uint32 dir, live;
+         uint32_t dir, live;
          big_endian_get_directions(ss, dir, live);
          if (((dir ^ 0x55FF) & live) == 0)
             analyzer_result = schema_concentric_2_6;
@@ -1751,7 +1751,7 @@ static calldef_schema concentrify(
    case schema_concentric_touch_by_2_of_3:
       if (ss->kind == s_galaxy) {
          // This code is duplicated in triangle_move.  Make schemata "tall6" and "short6"
-         uint32 tbonetest = ss->people[1].id1 | ss->people[3].id1 |
+         uint32_t tbonetest = ss->people[1].id1 | ss->people[3].id1 |
             ss->people[5].id1 | ss->people[7].id1;
 
          if ((tbonetest & 011) == 011) fail("Can't find tall 6.");
@@ -2047,7 +2047,7 @@ static calldef_schema concentrify(
          else if (ss->inner.skind == s1x2 &&
                   ss->outer.skind == s1x6 &&
                   ss->inner.srotation != ss->outer.srotation) {
-            static const veryshort map44[4] = {12, 13, 15, 16};
+            static const int8_t map44[4] = {12, 13, 15, 16};
 
             inners[0].kind = sdmd;
             outers->kind = s1x4;
@@ -2141,11 +2141,11 @@ static calldef_schema concentrify(
       // Therefore, we translate, based on facing direction.
 
       if (ss->kind == s4x4) {
-         uint32 tbone1 =
+         uint32_t tbone1 =
             ss->people[1].id1 | ss->people[2].id1 | ss->people[9].id1 | ss->people[10].id1 |
             ss->people[3].id1 | ss->people[7].id1 | ss->people[11].id1 | ss->people[15].id1;
 
-         uint32 tbone2 =
+         uint32_t tbone2 =
             ss->people[5].id1 | ss->people[6].id1 | ss->people[13].id1 | ss->people[14].id1 |
             ss->people[3].id1 | ss->people[7].id1 | ss->people[11].id1 | ss->people[15].id1;
 
@@ -2386,7 +2386,7 @@ warning_index concwarndmdtable[] = {warn__dmdconc_perp, warn__xcdmdconc_perpc, w
 static bool fix_empty_outers(
    setup_kind sskind,
    setup_kind & final_outers_start_kind,
-   uint32 & localmods1,
+   uint32_t & localmods1,
    int crossing,
    int begin_outer_elongation,
    int center_arity,
@@ -2481,7 +2481,7 @@ static bool fix_empty_outers(
       }
    }
    else {
-      uint32 orig_elong_flags = result_outer->result_flags.misc & 3;
+      uint32_t orig_elong_flags = result_outer->result_flags.misc & 3;
 
       // We may be in serious trouble -- we have to figure out what setup the ends
       // finish in, and they are all phantoms.
@@ -2790,7 +2790,7 @@ static bool fix_empty_inners(
       // Also, if doing "O" stuff, it's easy.  Do the same thing.
       // Also, if the call was "nothing", or something for which we know the
       // ending setup and orientation, follow same.
-      uint32 orig_elong_flags = result_outer->result_flags.misc & 3;
+      uint32_t orig_elong_flags = result_outer->result_flags.misc & 3;
 
       if (analyzer_result == schema_concentric_6p && ((orig_elong_flags+1) & 2)) {
          result_inner->kind = s1x2;
@@ -3087,11 +3087,11 @@ extern void concentric_move(
    setup_command *cmdin,
    setup_command *cmdout,
    calldef_schema analyzer,
-   uint32 modifiersin1,
-   uint32 modifiersout1,
+   uint32_t modifiersin1,
+   uint32_t modifiersout1,
    bool recompute_id,
    bool enable_3x1_warn,
-   uint32 specialoffsetmapcode,
+   uint32_t specialoffsetmapcode,
    setup *result) THROW_DECL
 {
    if (ss->cmd.cmd_misc2_flags & CMD_MISC2__DO_NOT_EXECUTE) {
@@ -3112,7 +3112,7 @@ extern void concentric_move(
    int begin_outer_elongation;
    int begin_xconc_elongation;
    int center_arity;
-   uint32 rotstate, pointclip;
+   uint32_t rotstate, pointclip;
    calldef_schema analyzer_result;
    int rotate_back = 0;
    int i, k, klast;
@@ -3121,32 +3121,32 @@ extern void concentric_move(
 
    // The original info about the people who STARTED on the inside.
    setup_kind orig_inners_start_kind;
-   uint32 orig_inners_start_dirs;
-   uint32 orig_inners_start_directions[32];
+   uint32_t orig_inners_start_dirs;
+   uint32_t orig_inners_start_directions[32];
 
    // The original info about the people who STARTED on the outside.
    setup_kind orig_outers_start_kind;
-   uint32 orig_outers_start_dirs;
-   uint32 orig_outers_start_directions[32];
+   uint32_t orig_outers_start_dirs;
+   uint32_t orig_outers_start_directions[32];
 
    // The original info about the people who will FINISH on the outside.
    setup_kind final_outers_start_kind;
-   uint32 *final_outers_start_directions;
+   uint32_t *final_outers_start_directions;
 
    // The final info about the people who FINISHED on the outside.
    int final_outers_finish_dirs;
-   uint32 final_outers_finish_directions[32];
-   uint32 ccmask, eemask;
+   uint32_t final_outers_finish_directions[32];
+   uint32_t ccmask, eemask;
 
    const call_conc_option_state save_state = current_options;
-   uint32 save_cmd_misc2_flags = ss->cmd.cmd_misc2_flags;
+   uint32_t save_cmd_misc2_flags = ss->cmd.cmd_misc2_flags;
 
    parse_block *save_skippable_concept = ss->cmd.skippable_concept;
    ss->cmd.skippable_concept = (parse_block *) 0;
-   uint32 save_skippable_heritflags = ss->cmd.skippable_heritflags;
+   uint32_t save_skippable_heritflags = ss->cmd.skippable_heritflags;
    ss->cmd.skippable_heritflags = 0;
 
-   const uint32 scnxn =
+   const uint32_t scnxn =
       ss->cmd.cmd_final_flags.test_heritbits(INHERITFLAG_NXNMASK | INHERITFLAG_MXNMASK);
 
    ss->cmd.cmd_misc2_flags &= ~(0xFFF | CMD_MISC2__ANY_WORK_INVERT |
@@ -3273,8 +3273,8 @@ extern void concentric_move(
    if (save_cmd_misc2_flags & CMD_MISC2__SAID_INVERT)
       inverting ^= 1;
 
-   uint32 localmodsin1 = modifiersin1;
-   uint32 localmodsout1 = modifiersout1;
+   uint32_t localmodsin1 = modifiersin1;
+   uint32_t localmodsout1 = modifiersout1;
 
    if (inverting) {
       localmodsin1 = modifiersout1;
@@ -3286,7 +3286,7 @@ extern void concentric_move(
    for (i=0, k=1, eemask=0;
         i<=attr::klimit(begin_outer.kind);
         i++, k<<=1) {
-      uint32 q = begin_outer.people[i].id1;
+      uint32_t q = begin_outer.people[i].id1;
       orig_outers_start_dirs |= q;
       if (q) {
          eemask |= k;
@@ -3300,7 +3300,7 @@ extern void concentric_move(
    for (i=0, k=1, ccmask=0;
         i<=attr::klimit(begin_inner[0].kind);
         i++, k<<=1) {
-      uint32 q = begin_inner[0].people[i].id1;
+      uint32_t q = begin_inner[0].people[i].id1;
       orig_inners_start_dirs |= q;
       if (q) {
          ccmask |= k;
@@ -3322,7 +3322,7 @@ extern void concentric_move(
          begin_inner[1] = temptemp;
       }
 
-      uint32 ttt = ccmask;
+      uint32_t ttt = ccmask;
       ccmask = eemask;
       eemask = ttt;
       final_outers_start_kind = orig_inners_start_kind;
@@ -3384,7 +3384,7 @@ extern void concentric_move(
    // if "cmdin" (which contains the *outsides'* command in such a case) is
    // null.  That is we allow it only for stuff like "center phantom columns".
 
-   uint32 matrix_concept = ss->cmd.cmd_misc_flags & CMD_MISC__MATRIX_CONCEPT;
+   uint32_t matrix_concept = ss->cmd.cmd_misc_flags & CMD_MISC__MATRIX_CONCEPT;
    begin_outer.cmd.cmd_misc_flags &= ~CMD_MISC__MATRIX_CONCEPT;
 
    if (matrix_concept && (cmdin || k == 0))
@@ -3404,9 +3404,9 @@ extern void concentric_move(
       setup *begin_ptr = doing_ends ? &begin_outer : &begin_inner[k];
       setup *result_ptr = doing_ends ? &outer_inners[0] : &outer_inners[k+1];
       call_conc_option_state *option_ptr = doing_ends ? &outer_inner_options[0] : &outer_inner_options[k+1];
-      uint32 modifiers1 = doing_ends ? localmodsout1 : localmodsin1;
+      uint32_t modifiers1 = doing_ends ? localmodsout1 : localmodsin1;
       setup_command *cmdptr = (doing_ends ^ inverting) ? cmdout : cmdin;
-      uint32 ctr_use_flag = CMD_MISC2__ANY_WORK;
+      uint32_t ctr_use_flag = CMD_MISC2__ANY_WORK;
 
       if (doing_ends ^ (((save_cmd_misc2_flags & CMD_MISC2__ANY_WORK_CALL_CROSSED) != 0) ? 1 : 0))
          ctr_use_flag |= CMD_MISC2__ANY_WORK_INVERT;
@@ -3426,7 +3426,7 @@ extern void concentric_move(
          begin_ptr->cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
 
       if (cmdptr) {
-         uint32 mystictest;
+         uint32_t mystictest;
          bool demand_no_z_stuff = false;
          begin_ptr->cmd.parseptr = cmdptr->parseptr;
          begin_ptr->cmd.callspec = cmdptr->callspec;
@@ -3458,8 +3458,8 @@ extern void concentric_move(
 
          // Check for operating on a Z.
 
-         uint32 z_compress_direction99rot = begin_ptr->rotation;
-         uint32 z_compress_direction99skew;
+         uint32_t z_compress_direction99rot = begin_ptr->rotation;
+         uint32_t z_compress_direction99skew;
 
          if (begin_ptr->kind == s2x3 &&
              (analyzer == schema_concentric_zs ||
@@ -3740,8 +3740,8 @@ extern void concentric_move(
             setup1.clear_people();
             setup2.clear_people();
 
-            static const veryshort sss1[4] = {10, 1, 2, 9};
-            static const veryshort sss2[4] = {13, 14, 5, 6};
+            static const int8_t sss1[4] = {10, 1, 2, 9};
+            static const int8_t sss2[4] = {13, 14, 5, 6};
             gather(&setup1, begin_ptr, sss1, 3, 0);
             gather(&setup2, begin_ptr, sss2, 3, 0);
             setup1.cmd.prior_elongation_bits = 1;
@@ -3774,8 +3774,8 @@ extern void concentric_move(
             result_ptr->clear_people();
 
             for (int k=0; k<4; k++) {
-               const veryshort *place0;
-               const veryshort *place1;
+               const int8_t *place0;
+               const int8_t *place1;
 
                if (localmodsout1 & DFM1_CONC_FORCE_SPOTS) {
                   place0 = sss1;
@@ -3818,7 +3818,7 @@ extern void concentric_move(
          if (modifiers1 & DFM1_SUPPRESS_ROLL)
             result_ptr->suppress_all_rolls(false);
 
-         uint32 z_compress_direction =
+         uint32_t z_compress_direction =
             (result_ptr->result_flags.misc & RESULTFLAG__DID_Z_COMPRESSMASK) /
             RESULTFLAG__DID_Z_COMPRESSBIT;
 
@@ -4070,12 +4070,12 @@ extern void concentric_move(
    // to the demand info for the call that the original ends did.  Where this comes from
    // depends on whether the schema is cross concentric.
 
-   uint32 localmods1 = crossing ? localmodsin1 : localmodsout1;
+   uint32_t localmods1 = crossing ? localmodsin1 : localmodsout1;
 
    // Will only be used if begin_outer_elongation = 1 or 2.
-   uint32 elongshift = 3*(begin_outer_elongation - 1);    // So this will be 0 or 3.
-   uint32 linesfailbit = 1 << elongshift;                 // And these will be 1 or 8.
-   uint32 columnsfailbit = 8 >> elongshift;
+   uint32_t elongshift = 3*(begin_outer_elongation - 1);    // So this will be 0 or 3.
+   uint32_t linesfailbit = 1 << elongshift;                 // And these will be 1 or 8.
+   uint32_t columnsfailbit = 8 >> elongshift;
 
    setup_command *outercmd = (inverting) ? cmdin : cmdout;
 
@@ -4122,7 +4122,7 @@ extern void concentric_move(
    // But we don't do this if we are inverting the centers and ends.
 
    if (!inverting) {
-      uint32 mymods = crossing ? localmodsout1 : localmodsin1;
+      uint32_t mymods = crossing ? localmodsout1 : localmodsin1;
 
       if (orig_inners_start_kind == s2x2) {
          switch (mymods & (DFM1_CONC_DEMAND_LINES | DFM1_CONC_DEMAND_COLUMNS)) {
@@ -4567,7 +4567,7 @@ void merge_table::initialize()
    for (i=0 ; i<NUM_MERGE_HASH_BUCKETS ; i++) merge_hash_tables[i] = (concmerge_thing *) 0;
 
    for (tabp = merge_init_table ; tabp->k1 != nothing ; tabp++) {
-      uint32 hash_num = ((tabp->k1 + (5*tabp->k2)) * 25) & (NUM_MERGE_HASH_BUCKETS-1);
+      uint32_t hash_num = ((tabp->k1 + (5*tabp->k2)) * 25) & (NUM_MERGE_HASH_BUCKETS-1);
 
       tabp->next = merge_hash_tables[hash_num];
       merge_hash_tables[hash_num] = tabp;
@@ -4656,8 +4656,8 @@ void merge_table::merge_setups(setup *ss,
          res1 = temp;
       }
 
-      uint32 mask1 = little_endian_live_mask(res1);
-      uint32 mask2 = little_endian_live_mask(res2);
+      uint32_t mask1 = little_endian_live_mask(res1);
+      uint32_t mask2 = little_endian_live_mask(res2);
 
       if (res1->kind == s_qtag && res2->kind == s2x3 && !(mask1 & 0xCC)) {
          expand::compress_from_hash_table(res1, plain_normalize, mask1, false);
@@ -4713,7 +4713,7 @@ void merge_table::merge_setups(setup *ss,
    }
 
    if (rose_from_dead && res1->kind == s1x4 && res2->kind == s4x4) {
-      uint32 mask = little_endian_live_mask(res2);
+      uint32_t mask = little_endian_live_mask(res2);
 
       if (res1->rotation == 0 && (mask & 0x8E8E) == 0) {
          expand::expand_setup(s_4x4_4dmb, res2);
@@ -4762,13 +4762,13 @@ void merge_table::merge_setups(setup *ss,
       res2->eighth_rotation = 0;
       canonicalize_rotation(res1);
       canonicalize_rotation(res2);
-      uint32 mask1 = little_endian_live_mask(res1);
-      uint32 mask2 = little_endian_live_mask(res2);
+      uint32_t mask1 = little_endian_live_mask(res1);
+      uint32_t mask2 = little_endian_live_mask(res2);
 
       r = res1->rotation & 3;
       rot = r * 011;
 
-      uint32 rotmaskreject = (1<<r);
+      uint32_t rotmaskreject = (1<<r);
       if (action != merge_without_gaps) rotmaskreject |= 0x10;
       if (action == merge_without_gaps) rotmaskreject |= 0x400;
       if (action == merge_strict_matrix || action == merge_for_own) rotmaskreject |= 0x20;
@@ -4780,7 +4780,7 @@ void merge_table::merge_setups(setup *ss,
       setup_kind res1k = res1->kind;
       setup_kind res2k = res2->kind;
 
-      uint32 hash_num = ((res1k + (5*res2k)) * 25) & (merge_table::NUM_MERGE_HASH_BUCKETS-1);
+      uint32_t hash_num = ((res1k + (5*res2k)) * 25) & (merge_table::NUM_MERGE_HASH_BUCKETS-1);
 
       const merge_table::concmerge_thing *the_map;
 
@@ -4845,8 +4845,8 @@ void merge_table::merge_setups(setup *ss,
 
          if ((action_suggests_4x4 && !going_to_stars && !conflict_at_4x4) ||
              go_to_4x4_anyway || going_to_o) {
-            static const veryshort matrixmap1[8] = {14, 3, 7, 5, 6, 11, 15, 13};
-            static const veryshort matrixmap2[8] = {10, 15, 3, 1, 2, 7, 11, 9};
+            static const int8_t matrixmap1[8] = {14, 3, 7, 5, 6, 11, 15, 13};
+            static const int8_t matrixmap2[8] = {10, 15, 3, 1, 2, 7, 11, 9};
             // Make this an instance of expand_setup.
             result->kind = s4x4;
             result->clear_people();
@@ -4867,8 +4867,8 @@ void merge_table::merge_setups(setup *ss,
             the_map = &merge_table::map_24r24d;
          }
          else if (mask1 == 0x66 && mask2 == 0x66) {
-            static const veryshort alamomap1[8] = {-1, 2, 3, -1, -1, 6, 7, -1};
-            static const veryshort alamomap2[8] = {-1, 0, 1, -1, -1, 4, 5, -1};
+            static const int8_t alamomap1[8] = {-1, 2, 3, -1, -1, 6, 7, -1};
+            static const int8_t alamomap2[8] = {-1, 0, 1, -1, -1, 4, 5, -1};
             result->kind = s_alamo;
             result->clear_people();
             scatter(result, res1, alamomap1, 7, 011);
@@ -4876,12 +4876,12 @@ void merge_table::merge_setups(setup *ss,
             goto final_getout;
          }
          else {
-            static const veryshort phanmap1[8] = {4, 6, 11, 9, 12, 14, 3, 1};
-            static const veryshort phanmap2[8] = {0, 2, 7, 5, 8, 10, 15, 13};
-            uint32 t1 = mask2 & 0x33;
-            uint32 t2 = mask2 & 0xCC;
-            uint32 t3 = mask1 & 0x33;
-            uint32 t4 = mask1 & 0xCC;
+            static const int8_t phanmap1[8] = {4, 6, 11, 9, 12, 14, 3, 1};
+            static const int8_t phanmap2[8] = {0, 2, 7, 5, 8, 10, 15, 13};
+            uint32_t t1 = mask2 & 0x33;
+            uint32_t t2 = mask2 & 0xCC;
+            uint32_t t3 = mask1 & 0x33;
+            uint32_t t4 = mask1 & 0xCC;
 
             result->kind = s_c1phan;
             result->clear_people();
@@ -4931,7 +4931,7 @@ void merge_table::merge_setups(setup *ss,
 
          // But first, watch for case of a 4x4 vs. a C1 phantom.  Just throw people onto the 4x4 and hope for the best.
          if (res1->kind == s4x4 && res2->kind == s_c1phan) {
-            static veryshort fixup[16] = {10, 13, 15, 15, 14, 1, 3, 3, 2, 5, 7, 7, 6, 9, 11, 11};
+            static int8_t fixup[16] = {10, 13, 15, 15, 14, 1, 3, 3, 2, 5, 7, 7, 6, 9, 11, 11};
             setup temp = *res2;
             res2->kind = s4x4;
             res2->clear_people();
@@ -5092,9 +5092,9 @@ void infer_assumption(setup *ss)
    int sizem1 = attr::slimit(ss);
 
    if (ss->cmd.cmd_assume.assumption == cr_none && sizem1 >= 0) {
-      uint32 directions, livemask;
+      uint32_t directions, livemask;
       big_endian_get_directions(ss, directions, livemask);
-      if (livemask == (uint32) (1<<((sizem1+1)<<1))-1) {
+      if (livemask == (uint32_t) (1<<((sizem1+1)<<1))-1) {
          assumption_thing tt;
          tt.assump_col = 0;
          tt.assump_both = 0;
@@ -5194,7 +5194,7 @@ extern void punt_centers_use_concept(setup *ss, setup *result) THROW_DECL
    int i, setupcount;
    setup the_setups[2], the_results[2];
    int sizem1 = attr::slimit(ss);
-   uint32 cmd2word = ss->cmd.cmd_misc2_flags;
+   uint32_t cmd2word = ss->cmd.cmd_misc2_flags;
    int crossconc = (cmd2word & CMD_MISC2__ANY_WORK_INVERT) ? 1 : 0;
    bool doing_yoyo = false;
    bool doing_do_last_frac = false;
@@ -5220,7 +5220,7 @@ extern void punt_centers_use_concept(setup *ss, setup *result) THROW_DECL
    the_setups[0] = *ss;              // designees
    the_setups[1] = *ss;              // non-designees
 
-   uint32 ssmask = setup_attrs[ss->kind].setup_conc_masks.mask_normal;
+   uint32_t ssmask = setup_attrs[ss->kind].setup_conc_masks.mask_normal;
 
    if (cmd2word & (CMD_MISC2__ANY_WORK | CMD_MISC2__ANY_SNAG)) {
       switch ((calldef_schema) (cmd2word & 0xFFF)) {
@@ -5414,7 +5414,7 @@ extern void punt_centers_use_concept(setup *ss, setup *result) THROW_DECL
          CMD_FRAC_BREAKING_UP | CMD_FRAC_FORCE_VIS |
          FRACS(CMD_FRAC_CODE_FROMTOREV,2,0));
       the_setups[0].cmd.parseptr = parseptrcopy->next;      // Skip over the concept.
-      uint32 finalresultflagsmisc = the_setups[0].result_flags.misc;
+      uint32_t finalresultflagsmisc = the_setups[0].result_flags.misc;
       move(&the_setups[0], false, result);
       finalresultflagsmisc |= result->result_flags.misc;
       normalize_setup(result, simple_normalize, false);
@@ -5432,7 +5432,7 @@ extern void punt_centers_use_concept(setup *ss, setup *result) THROW_DECL
                                                        the_setups[0].cmd.cmd_fraction);
       the_setups[0].cmd.cmd_fraction.flags = 0;
       the_setups[0].cmd.parseptr = parseptrcopy->next;    // Skip over the concept.
-      uint32 finalresultflagsmisc = the_setups[0].result_flags.misc;
+      uint32_t finalresultflagsmisc = the_setups[0].result_flags.misc;
       move(&the_setups[0], false, result);
       finalresultflagsmisc |= result->result_flags.misc;
       normalize_setup(result, simple_normalize, false);
@@ -5486,8 +5486,8 @@ extern void selective_move(
                 //  0 - only selectees do the call, others can't roll
                 //  1 - both sets
                 //  9 - same sex disconnected - both sets, same call, there is no selector
-   uint32 arg2,
-   uint32 override_selector,
+   uint32_t arg2,
+   uint32_t override_selector,
    const who_list &selector_to_use,
    bool concentric_rules,
    setup *result) THROW_DECL
@@ -5544,7 +5544,7 @@ extern void selective_move(
                                                  INHERITFLAG_NXNMASK |
                                                  INHERITFLAG_TWISTED) == 0) {
          // Save a few things in case we have to try a second theory.
-         uint32 save_flags = ss->cmd.cmd_misc_flags;
+         uint32_t save_flags = ss->cmd.cmd_misc_flags;
          parse_block *save_parse = ss->cmd.parseptr;
          ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
          ss->cmd.parseptr = cmd2thing.parseptr;  // Skip the concept.
@@ -5617,25 +5617,25 @@ extern void inner_selective_move(
                 //  0 - only selectees do the call, others can't roll
                 //  1 - both sets
                 //  9 - same sex disconnected - both sets, same call, there is no selector
-   uint32 arg2,
+   uint32_t arg2,
    bool demand_both_setups_live,
-   uint32 override_selector,
+   uint32_t override_selector,
    const who_list &selector_to_use,
-   uint32 modsa1,
-   uint32 modsb1,
+   uint32_t modsa1,
+   uint32_t modsb1,
    setup *result) THROW_DECL
 {
    int i, k;
    int setupcount;
    bool crossconc;
-   uint32 livemask[2];
-   uint32 j;
-   uint32 rotstate, pointclip;
+   uint32_t livemask[2];
+   uint32_t j;
+   uint32_t rotstate, pointclip;
    warning_info saved_warnings;
    calldef_schema schema;
    bool enable_3x1_warn = true;
    setup the_setups[2], the_results[2];
-   uint32 bigend_ssmask, bigend_llmask;
+   uint32_t bigend_ssmask, bigend_llmask;
    int sizem1 = attr::slimit(ss);
    selective_key orig_indicator = indicator;
    normalize_action action = normalize_before_isolated_call;
@@ -5644,7 +5644,7 @@ extern void inner_selective_move(
    bool doing_special_promenade_thing = false;
    int tglindicator = 0;
    bool special_tgl_ignore = false;
-   uint32 mask = ~(~0 << (sizem1+1));
+   uint32_t mask = ~(~0 << (sizem1+1));
    const ctr_end_mask_rec *ctr_end_masks_to_use = &dead_masks;
    selector_kind local_selector = selector_to_use.who[0];
    if (local_selector == selector_outsides)
@@ -5863,9 +5863,9 @@ extern void inner_selective_move(
       // The livemasks tell where the real selected people and the real unselected people, respectively, are.
       // But that's where the girls are.  We need to know where the girl-based triangles are.
       // That requires moving some bits between the two masks, to bring in the apex.
-      uint32 bothlivemask = livemask[0] << 16 | livemask[1];
-      uint32 delta = 0;
-      uint32 apex_people = 0;
+      uint32_t bothlivemask = livemask[0] << 16 | livemask[1];
+      uint32_t delta = 0;
+      uint32_t apex_people = 0;
       if (local_selector == selector_anyone_base_tgl) {
          // Anyone-based triangle, not interlocked.
          switch (ss->kind) {
@@ -6033,7 +6033,7 @@ extern void inner_selective_move(
       the_setups[0] = *ss;              // designees
       the_setups[1] = *ss;              // non-designees
 
-      uint32 base_people = 0;
+      uint32_t base_people = 0;
 
       for (i=0, j=1; i<=sizem1; i++, j<<=1) {
          if (ss->people[i].id1) {
@@ -6129,44 +6129,44 @@ extern void inner_selective_move(
    if (orig_indicator == selective_key_lead_for_a || orig_indicator == selective_key_promenade_and_lead_for_a) {
       // This is "so-and-so lead for a cast a shadow".
 
-      static const veryshort map_prom_1[16] =
+      static const int8_t map_prom_1[16] =
       {6, 7, 1, 0, 2, 3, 5, 4, 011, 011, 022, 022, 011, 011, 022, 022};
-      static const veryshort map_prom_2[16] =
+      static const int8_t map_prom_2[16] =
       {4, 5, 7, 6, 0, 1, 3, 2, 022, 022, 033, 033, 022, 022, 033, 033};
-      static const veryshort map_prom_3[16] =
+      static const int8_t map_prom_3[16] =
       {0, 1, 3, 2, 4, 5, 7, 6, 000, 000, 011, 011, 000, 000, 011, 011};
-      static const veryshort map_prom_4[16] =
+      static const int8_t map_prom_4[16] =
       {6, 7, 1, 0, 2, 3, 5, 4, 011, 011, 022, 022, 011, 011, 022, 022};
 
-      static const veryshort map_2fl_1[16] =
+      static const int8_t map_2fl_1[16] =
       {4, 5, 6, 7, 0, 1, 2, 3, 022, 022, 022, 022, 022, 022, 022, 022};
-      static const veryshort map_2fl_2[16] =
+      static const int8_t map_2fl_2[16] =
       {7, 6, 1, 0, 3, 2, 5, 4, 000, 000, 022, 022, 000, 000, 022, 022};
 
-      static const veryshort map_phan_1[16] =
+      static const int8_t map_phan_1[16] =
       {13, 15, 3, 1, 5, 7, 11, 9, 000, 000, 011, 011, 000, 000, 011, 011};
-      static const veryshort map_phan_2[16] =
+      static const int8_t map_phan_2[16] =
       {9, 11, 15, 13, 1, 3, 7, 5, 011, 011, 022, 022, 011, 011, 022, 022};
-      static const veryshort map_phan_3[16] =
+      static const int8_t map_phan_3[16] =
       {8, 10, 14, 12, 0, 2, 6, 4, 022, 022, 033, 033, 022, 022, 033, 033};
-      static const veryshort map_phan_4[16] =
+      static const int8_t map_phan_4[16] =
       {12, 14, 2, 0, 4, 6, 10, 8, 011, 011, 022, 022, 011, 011, 022, 022};
 
-      static const veryshort map_4x4_1[16] =
+      static const int8_t map_4x4_1[16] =
       {9, 11, 7, 5, 9, 11, 15, 13, 000, 000, 011, 011, 000, 000, 011, 011};
-      static const veryshort map_4x4_2[16] =
+      static const int8_t map_4x4_2[16] =
       {13, 15, 11, 9, 5, 7, 11, 9, 011, 011, 022, 022, 011, 011, 022, 022};
-      static const veryshort map_4x4_3[16] =
+      static const int8_t map_4x4_3[16] =
       {2, 7, 11, 6, 10, 15, 3, 14, 022, 022, 033, 033, 022, 022, 033, 033};
-      static const veryshort map_4x4_4[16] =
+      static const int8_t map_4x4_4[16] =
       {6, 11, 15, 10, 14, 3, 7, 2, 011, 011, 022, 022, 011, 011, 022, 022};
 
       the_setups[0] = *ss;        // Use this all over again.
       the_setups[0].clear_people();
       the_setups[0].kind = s2x4;
 
-      const veryshort *map_prom;
-      uint32 dirmask, junk;
+      const int8_t *map_prom;
+      uint32_t dirmask, junk;
       big_endian_get_directions(ss, dirmask, junk);
 
       if (ss->kind == s2x4 && orig_indicator == selective_key_promenade_and_lead_for_a) {
@@ -6477,7 +6477,7 @@ extern void inner_selective_move(
                call_conc_option_state saved_options = current_options;
                current_options = parseptrcopy->options;
 
-               uint32 override =
+               uint32_t override =
                   (callspec->stuff.conc.outerdef.call_id == base_call_plainprom ||
                    callspec->stuff.conc.outerdef.call_id == base_call_plainpromeighths) ?
                   DFM1_CONC_FORCE_COLUMNS : 0;
@@ -7014,7 +7014,7 @@ extern void inner_selective_move(
       if (ss->kind == s_galaxy && bigend_ssmask == 0x77) goto do_concentric_ctrs;
    }
    else if (orig_indicator == selective_key_disc_dist) {
-      uint32 mask = ~(~0 << (sizem1+1));
+      uint32_t mask = ~(~0 << (sizem1+1));
 
       if (setup_attrs[ss->kind].setup_conc_masks.mask_ctr_dmd) {
          if (bigend_ssmask == mask-setup_attrs[ss->kind].setup_conc_masks.mask_ctr_dmd) {
@@ -7060,10 +7060,10 @@ extern void inner_selective_move(
    for (setupcount=0; ; setupcount++) {
 
       // Not clear that this is really right.
-      uint32 svd_number_fields = current_options.number_fields;
+      uint32_t svd_number_fields = current_options.number_fields;
       int svd_num_numbers = current_options.howmanynumbers;
-      uint32 thislivemask = livemask[setupcount];
-      uint32 otherlivemask = livemask[setupcount^1];
+      uint32_t thislivemask = livemask[setupcount];
+      uint32_t otherlivemask = livemask[setupcount^1];
       setup *this_one = &the_setups[setupcount];
       setup *this_result = &the_results[setupcount];
       setup_kind kk = this_one->kind;
@@ -7119,8 +7119,8 @@ extern void inner_selective_move(
                indicator != selective_key_work_no_concentric) {
          int lilcount;
          int numsetups;
-         uint32 key;
-         uint32 frot, vrot;
+         uint32_t key;
+         uint32_t frot, vrot;
          setup lilsetup[4], lilresult[4];
          int map_scanner;
          bool feet_warning = false;
@@ -7148,7 +7148,7 @@ extern void inner_selective_move(
                clear_result_flags(this_result);
                goto done_with_this_one;
             }
-            else if (thislivemask == (uint32) ((1U << (attr::klimit(kk)+1)) - 1) ||
+            else if (thislivemask == (uint32_t) ((1U << (attr::klimit(kk)+1)) - 1) ||
                      (otherlivemask == 0 && kk != s4x5) ||
                      orig_indicator == selective_key_plain_from_id_bits ||
                      (orig_indicator == selective_key_ignore && kk != s_c1phan && attr::klimit(kk) > 7) ||
@@ -7168,6 +7168,14 @@ extern void inner_selective_move(
                case selector_center_col: case selector_center_col_of_6:
                   this_one->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_COLS;
                   break;
+               }
+
+               // If we did something just above, change a wingedstar to a 1x6.
+               if ((this_one->cmd.cmd_misc_flags & CMD_MISC__VERIFY_MASK) &&
+                   this_one->kind == s_wingedstar &&
+                   (thislivemask & 0x88) == 0) {
+                  static const expand::thing foo = {{0, 1, 2, 4, 5, 6}, s1x6, s_wingedstar, 0};
+                  expand::compress_setup(foo, this_one);
                }
 
                impose_assumption_and_move(this_one, this_result);
@@ -7494,7 +7502,7 @@ extern void inner_selective_move(
          vrot=frot>>2;      // This shifts down.
 
          for (lilcount=0; lilcount<numsetups; lilcount++) {
-            uint32 tbone = 0;
+            uint32_t tbone = 0;
             setup *lilss = &lilsetup[lilcount];
             setup *lilres = &lilresult[lilcount];
 
@@ -7881,7 +7889,7 @@ extern void inner_selective_move(
          reinstate_rotation(this_one, this_result);
       }
       else {
-         uint32 doing_mystic = this_one->cmd.cmd_misc2_flags &
+         uint32_t doing_mystic = this_one->cmd.cmd_misc2_flags &
             (CMD_MISC2__CTR_END_MASK & ~CMD_MISC2__SAID_INVERT);
          bool mirror = false;
 
@@ -8051,7 +8059,7 @@ extern void inner_selective_move(
    // a "promenade" type of call.  It's OK; no map code comes anywhere near -1.
 
    {
-      uint32 specialoffsetmapcode = doing_special_promenade_thing ? ~1U : ~0U;
+      uint32_t specialoffsetmapcode = doing_special_promenade_thing ? ~1U : ~0U;
 
       concentric_move(ss,
                       crossconc ? cmd2 : cmd1,

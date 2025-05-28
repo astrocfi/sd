@@ -619,7 +619,7 @@ void matcher_initialize()
    // Initialize the hash buckets for selectors, concepts, and calls.
 
    int bucket;
-   uint32 ku;
+   uint32_t ku;
 
    // First, do the selectors.  Before that, be sure "<anyone>" is hashed.
    // These list all the buckets that selectors can go to.
@@ -1626,7 +1626,7 @@ void matcher_class::match_wildcard(
    Cstring prefix;
    Cstring *number_table;
    int i;
-   uint32 iu;
+   uint32_t iu;
    char crossname[80];
    char *crossptr;
    int concidx;
@@ -1725,7 +1725,7 @@ void matcher_class::match_wildcard(
       case 'N':
          if (m_current_result->match.call_conc_options.circcer == 0) {
             char circname[80];
-            uint32 save_circcer = m_current_result->match.call_conc_options.circcer;
+            uint32_t save_circcer = m_current_result->match.call_conc_options.circcer;
 
             for (iu=0; iu<number_of_circcers; ++iu) {
                const char *fromptr = get_call_name(circcer_calls[iu]);
@@ -1764,7 +1764,7 @@ void matcher_class::match_wildcard(
              *user == 'q' || *user == 'h' ||
              *user == 't' || *user == 'f') {
             int save_howmanynumbers = m_current_result->match.call_conc_options.howmanynumbers;
-            uint32 save_number_fields = m_current_result->match.call_conc_options.number_fields;
+            uint32_t save_number_fields = m_current_result->match.call_conc_options.number_fields;
 
             m_current_result->match.call_conc_options.howmanynumbers++;
 
@@ -1816,7 +1816,7 @@ void matcher_class::match_wildcard(
    case 'S':
       {
          bool saved_indent = m_current_result->indent;
-         uint32 save_number_fields = m_current_result->match.call_conc_options.star_turn_option;
+         uint32_t save_number_fields = m_current_result->match.call_conc_options.star_turn_option;
          m_current_result->indent = true;
 
          m_current_result->match.call_conc_options.star_turn_option = -1;
@@ -1916,7 +1916,7 @@ void matcher_class::match_wildcard(
 
    {
       int save_howmanynumbers = m_current_result->match.call_conc_options.howmanynumbers;
-      uint32 save_number_fields = m_current_result->match.call_conc_options.number_fields;
+      uint32_t save_number_fields = m_current_result->match.call_conc_options.number_fields;
 
       m_current_result->match.call_conc_options.howmanynumbers++;
 

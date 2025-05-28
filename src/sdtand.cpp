@@ -1,4 +1,4 @@
-// -*- mode:c++; indent-tabs-mode:nil; c-basic-offset:3; fill-column:88 -*-
+// -*- MODE:c++; indent-tabs-mode:nil; c-basic-offset:3; fill-column:88 -*-
 
 // SD -- square dance caller's helper.
 //
@@ -49,7 +49,7 @@
 
 
 struct tm_thing {
-   veryshort maps[32];
+   int8_t maps[32];
 
    // Laterally grouped people in inside numbering.
    // These are pairs; only low bit of each pair is used (except triangles.)
@@ -58,10 +58,10 @@ struct tm_thing {
    // (That is, the other bits are zero.)
    // For triangles the highest bit is also used.  For "1/8 twosome" things,
    // the lowest bit is used.
-   uint32 ilatmask3high;
-   uint32 ilatmask3low;
+   uint32_t ilatmask3high;
+   uint32_t ilatmask3low;
 
-   uint32 olatmask;
+   uint32_t olatmask;
    int limit;
    int rot;
 
@@ -73,13 +73,13 @@ struct tm_thing {
 
    // Relative to insetup numbering, those people that are NOT paired.
    // These are triads; only low bit of each triad is used; others are zero.
-   uint32 insinglemaskhigh;
-   uint32 insinglemasklow;
+   uint32_t insinglemaskhigh;
+   uint32_t insinglemasklow;
 
    // Relative to outsetup numbering, those people that are NOT paired.
-   uint32 outsinglemask;
+   uint32_t outsinglemask;
 
-   uint32 outunusedmask;
+   uint32_t outunusedmask;
    bool map_is_eighth_twosome;
 };
 
@@ -102,8 +102,8 @@ public:
                 int key) THROW_DECL;
 
    void unpack_us(const tm_thing *map_ptr,
-                  uint32 orbitmask3high,
-                  uint32 orbitmask3low,
+                  uint32_t orbitmask3high,
+                  uint32_t orbitmask3low,
                   setup *result) THROW_DECL;
 
 
@@ -112,7 +112,7 @@ public:
    setup m_virtual_setup[2];       // If melded, use both.  Otherwise only m_virtual_setup[0].
    setup virtual_result;
    int m_vertical_people[MAX_PEOPLE];    // 1 if original people were near/far; 0 if lateral.
-   uint32 single_mask;
+   uint32_t single_mask;
    bool m_phantom_pairing_ok;
    bool m_no_unit_symmetry;
    bool m_melded;
@@ -679,8 +679,8 @@ static tm_thing maps_isearch_fudgy2x6[] = {
 
 struct siamese_item {
    setup_kind testkind;
-   uint32 testval; // High 16 = people facing E/W (little-endian), low 16 = people facing N/S.
-   uint32 fixup;   // High bit means phantom pairing is OK.
+   uint32_t testval; // High 16 = people facing E/W (little-endian), low 16 = people facing N/S.
+   uint32_t fixup;   // High bit means phantom pairing is OK.
    warning_index warning;
 };
 
@@ -795,13 +795,13 @@ static void initialize_one_table(tm_thing *map_start, int m_people_per_group)
       map_search->outsinglemask = 0;
       map_search->map_is_eighth_twosome = false;
 
-      uint32 osidemask = 0;
+      uint32_t osidemask = 0;
       // All 1's for people in outer setup.
       int outsize = attr::klimit(map_search->outsetup)+1;
       // Yes, we could handle this better on a 64-bit system.
       map_search->outunusedmask = outsize >= 32 ? 0xFFFFFFFF : ((1U << outsize)-1);
 
-      uint32 very_special = (((setup_attrs[map_search->outsetup].setup_props & SPROP_4_WAY_SYMMETRY) != 0) &&
+      uint32_t very_special = (((setup_attrs[map_search->outsetup].setup_props & SPROP_4_WAY_SYMMETRY) != 0) &&
                              ((setup_attrs[map_search->insetup].setup_props & SPROP_NO_SYMMETRY) != 0) &&
                              (map_search->rot & 1) != 0) ? ((1U << outsize)-1) : 0;
 
@@ -827,7 +827,7 @@ static void initialize_one_table(tm_thing *map_start, int m_people_per_group)
             // ******** here is where we check for twosome map.
 
             int lowbitpos = i*3;
-            uint32 ilatlowbit = (lowbitpos >= 32) ?
+            uint32_t ilatlowbit = (lowbitpos >= 32) ?
                map_search->ilatmask3high >> (lowbitpos-32) :
                map_search->ilatmask3low >> lowbitpos;
 
@@ -837,7 +837,7 @@ static void initialize_one_table(tm_thing *map_start, int m_people_per_group)
                map_search->map_is_eighth_twosome = true;
 
             int midbitpos = lowbitpos+1;
-            uint32 ilatmidbit = (midbitpos >= 32) ?
+            uint32_t ilatmidbit = (midbitpos >= 32) ?
                map_search->ilatmask3high >> (midbitpos-32) :
                map_search->ilatmask3low >> midbitpos;
 
@@ -882,12 +882,12 @@ extern void initialize_tandem_tables()
 
 void tandrec::unpack_us(
    const tm_thing *map_ptr,
-   uint32 orbitmask3high,
-   uint32 orbitmask3low,
+   uint32_t orbitmask3high,
+   uint32_t orbitmask3low,
    setup *result) THROW_DECL
 {
    int i, j;
-   uint32 sglhigh, sgllow, ohigh, olow, r;
+   uint32_t sglhigh, sgllow, ohigh, olow, r;
 
    r = (map_ptr->rot&3)*011;
 
@@ -897,7 +897,7 @@ void tandrec::unpack_us(
 
    personrec hyperarray[32];
    ::memset(hyperarray, 0, sizeof(hyperarray));
-   uint32 hyperarrayoccupation = 0;
+   uint32_t hyperarrayoccupation = 0;
 
    for (i=0,
            sglhigh=map_ptr->insinglemaskhigh,
@@ -912,7 +912,7 @@ void tandrec::unpack_us(
            olow >>= 3,
            olow |= ohigh << 29,
            ohigh >>= 3) {
-      uint32 z = rotperson(virtual_result.people[i].id1, r);
+      uint32_t z = rotperson(virtual_result.people[i].id1, r);
       if (z != 0) {
          int ii = (z >> 6) & 7;
 
@@ -952,56 +952,56 @@ void tandrec::unpack_us(
       }
    }
 
-   static const veryshort fixer_4x8a_4x4[24] = {
+   static const int8_t fixer_4x8a_4x4[24] = {
       5, 10, 29, 11, 18, 19, 20, 28,
       21, 26, 13, 27, 2, 3, 4, 12,
       -1, -1, -1, -1, -1, -1, -1, -1};
 
-   static const veryshort fixer_4x8a_2x8[24] = {
+   static const int8_t fixer_4x8a_2x8[24] = {
       15, 14, 13, 12, 11, 10, 9, 8,
       31, 30, 29, 28, 27, 26, 25, 24,
       -1, -1, -1, -1, -1, -1, -1, -1};
 
-   static const veryshort fixer_4x8b_2x4h[24] = {
+   static const int8_t fixer_4x8b_2x4h[24] = {
       14, 13, 10, 9, 30, 29, 26, 25,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1};
 
-   static const veryshort fixer_4x8b_2x4v[24] = {
+   static const int8_t fixer_4x8b_2x4v[24] = {
       4, 11, 28, 19, 20, 27, 12, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1};
 
-   static const veryshort fixer_2x4_3x8[24] = {
+   static const int8_t fixer_2x4_3x8[24] = {
       2, 3, 4, 5, 14, 15, 16, 17,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1};
 
-   static const veryshort fixer_1x8_3x8[24] = {
+   static const int8_t fixer_1x8_3x8[24] = {
       20, 21, 23, 22, 8, 9, 11, 10,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1};
 
-   static const veryshort fixer_2x8_2x16[24] = {
+   static const int8_t fixer_2x8_2x16[24] = {
       4, 5, 6, 7, 8, 9, 10, 11,
       20, 21, 22, 23, 24, 25, 26, 27,
       -1, -1, -1, -1, -1, -1, -1, -1};
 
-   static const veryshort fixer_2x12_2x24[24] = {
+   static const int8_t fixer_2x12_2x24[24] = {
       2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13,
       18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29};
 
-   static const veryshort lilstar1[8] = {6, 7, 1, 4, 0, 0, 0, 0};
-   static const veryshort lilstar2[8] = {2, 3, 5, 0, 0, 0, 0, 0};
-   static const veryshort lilstar3[8] = {0, 1, 4, 5, 0, 0, 0, 0};
-   static const veryshort lilstar4[8] = {6, 7, 2, 3, 0, 0, 0, 0};
+   static const int8_t lilstar1[8] = {6, 7, 1, 4, 0, 0, 0, 0};
+   static const int8_t lilstar2[8] = {2, 3, 5, 0, 0, 0, 0, 0};
+   static const int8_t lilstar3[8] = {0, 1, 4, 5, 0, 0, 0, 0};
+   static const int8_t lilstar4[8] = {6, 7, 2, 3, 0, 0, 0, 0};
 
    result->kind = map_ptr->outsetup;
    result->rotation = virtual_result.rotation - (map_ptr->rot&3);
    result->eighth_rotation = virtual_result.eighth_rotation;
    result->result_flags = virtual_result.result_flags;
 
-   const veryshort *my_huge_map = (const veryshort *) 0;
+   const int8_t *my_huge_map = (const int8_t *) 0;
    int rot = 0;
 
    if (result->kind == shyper4x8a) {
@@ -1110,7 +1110,7 @@ bool tandrec::pack_us(
    int key) THROW_DECL
 {
    int i, j;
-   uint32 mhigh, mlow, sglhigh, sgllow;
+   uint32_t mhigh, mlow, sglhigh, sgllow;
    int virt_index = -1;
 
    m_virtual_setup[0].clear_people();
@@ -1140,8 +1140,8 @@ bool tandrec::pack_us(
       // of people working together.
 
       personrec fb[8];    // Will receive the people being assembled.
-      uint32 vp1, vp2, vp3;
-      uint32 vp1a, vp2a, vp3a;
+      uint32_t vp1, vp2, vp3;
+      uint32_t vp1a, vp2a, vp3a;
       vp1a = 0;   // Do we need these?
       vp2a = 0;
       vp3a = 0;
@@ -1171,8 +1171,8 @@ bool tandrec::pack_us(
       }
       else {
          // This person is paired; pick up the other real people.
-         uint32 orpeople1 = fb[0].id1;
-         uint32 andpeople1 = fb[0].id1;
+         uint32_t orpeople1 = fb[0].id1;
+         uint32_t andpeople1 = fb[0].id1;
 
          for (j=1 ; j<m_people_per_group ; j++) {
             fb[j].id1 = 0;
@@ -1349,12 +1349,12 @@ extern void tandem_couples_move(
                           // "4" bit on --> this is a "melded (phantom)" thing
                           // "8" bit on --> this is a plain "melded" thing
    tandem_key key,
-   uint32 mxn_bits,
+   uint32_t mxn_bits,
    bool phantom_pairing_ok,
    setup *result) THROW_DECL
 {
    ss->clear_all_overcasts();
-   uint32 dynamic = twosome >> 2;
+   uint32_t dynamic = twosome >> 2;
    twosome &= 3;
 
    if (ss->cmd.cmd_misc2_flags & CMD_MISC2__DO_NOT_EXECUTE) {
@@ -1369,7 +1369,7 @@ extern void tandem_couples_move(
    const tm_thing *incoming_map;
    const tm_thing *map_search;
    int i, people_per_group;
-   uint32 jbit;
+   uint32_t jbit;
    bool fractional = false;
    int fraction_in_eighths = 0;
    bool fraction_eighth_part = false;
@@ -1385,7 +1385,7 @@ extern void tandem_couples_move(
    int finalcount;
    setup ttt[8];
 
-   uint32 special_mask = 0;
+   uint32_t special_mask = 0;
    result->clear_people();
    remove_z_distortion(ss);
 
@@ -1396,7 +1396,7 @@ extern void tandem_couples_move(
    // The prior_elongation_bits come in as absolute.  But everything in this routine is
    // relative, so it needs to be compensated.
 
-   uint32 prior = ss->cmd.prior_elongation_bits;
+   uint32_t prior = ss->cmd.prior_elongation_bits;
 
    if (ss->rotation & 1) {
       if (((prior+1) & 2) != 0)
@@ -1478,7 +1478,7 @@ extern void tandem_couples_move(
       {
          // ****** Maybe all this could be done in terms of "do_1x3_type_expansion".
 
-         uint32 livemaskl, livemaskr, directionsl, directionsr;
+         uint32_t livemaskl, livemaskr, directionsl, directionsr;
          big_endian_get_directions(ss, directionsr, livemaskr, &directionsl, &livemaskl);
 
          if (mxn_bits == INHERITFLAGMXNK_2X1 || mxn_bits == INHERITFLAGMXNK_1X2) {
@@ -1617,7 +1617,7 @@ extern void tandem_couples_move(
       no_unit_symmetry = true;
    }
    else if (key >= tandem_key_outpoint_tgls) {
-      uint32 tbonetest;
+      uint32_t tbonetest;
       int t;
       people_per_group = 3;
       our_map_table = maps_isearch_tglsome;
@@ -1778,9 +1778,9 @@ extern void tandem_couples_move(
    tandrec tandstuff(phantom_pairing_ok, no_unit_symmetry, melded);
    tandstuff.single_mask = 0;
 
-   uint32 nsmask = 0;
-   uint32 ewmask = 0;
-   uint32 allmask = 0;
+   uint32_t nsmask = 0;
+   uint32_t ewmask = 0;
+   uint32_t allmask = 0;
 
    if (key == tandem_key_overlap_siam) {
       if ((ss->kind != s2x4 && ss->kind != s_qtag && ss->kind != s_bone && ss->kind != s1x8) || phantom != 0)
@@ -1802,7 +1802,7 @@ extern void tandem_couples_move(
       current_options.who = selector;
 
    for (i=0, jbit=1; i<=attr::slimit(ss); i++, jbit<<=1) {
-      uint32 p = ss->people[i].id1;
+      uint32_t p = ss->people[i].id1;
       if (p) {
          allmask |= jbit;
          // We allow a "special" mask to override the selector.
@@ -1855,7 +1855,7 @@ extern void tandem_couples_move(
 
    warning_index siamese_warning = warn__none;
    bool doing_siamese = false;
-   uint32 saveew, savens;
+   uint32_t saveew, savens;
 
    if (key == tandem_key_box || key == tandem_key_skew) {
       ewmask = allmask;
@@ -2080,14 +2080,14 @@ extern void tandem_couples_move(
       else
          ptr = siamese_table_of_2;
 
-      uint32 A = allmask & 0xFFFF;
-      uint32 AA = (A << 16) | A;
-      uint32 EN = ((ewmask & 0xFFFF) << 16) | (nsmask & 0xFFFF);
+      uint32_t A = allmask & 0xFFFF;
+      uint32_t AA = (A << 16) | A;
+      uint32_t EN = ((ewmask & 0xFFFF) << 16) | (nsmask & 0xFFFF);
 
       for (; ptr->testkind != nothing; ptr++) {
          if (ptr->testkind == ss->kind && ((EN ^ ptr->testval) & AA) == 0) {
             siamese_warning = ptr->warning;
-            uint32 siamese_fixup = ptr->fixup & 0xFFFFFF;
+            uint32_t siamese_fixup = ptr->fixup & 0xFFFFFF;
             // We seem to have a match.  However, it still might be wrong.
             ewmask ^= (siamese_fixup & allmask);
             nsmask ^= (siamese_fixup & allmask);
@@ -2100,7 +2100,7 @@ extern void tandem_couples_move(
    }
    else if (key & 1) {
       // Couples -- swap masks.  Tandem -- do nothing.
-      uint32 temp = ewmask;
+      uint32_t temp = ewmask;
       ewmask = nsmask;
       nsmask = temp;
    }
@@ -2246,7 +2246,7 @@ extern void tandem_couples_move(
    if (key & 2) {
       key = (tandem_key) (key & ~2);    // Turn off siamese -- it's now effectively as couples
       key = (tandem_key) (key | 1);
-      uint32 temp(ewmask);
+      uint32_t temp(ewmask);
       ewmask = nsmask;
       nsmask = temp;
    }
@@ -2271,7 +2271,7 @@ extern void tandem_couples_move(
 
    if (melded) {
       tttcount = -1;
-      uint32 rotstate, pointclip;
+      uint32_t rotstate, pointclip;
 
       update_id_bits(&tandstuff.m_virtual_setup[1]);
 
@@ -2338,16 +2338,16 @@ extern void tandem_couples_move(
          fail("Don't recognize ending position from this tandem or as couples call.");
 
       // Bits appear in this 64-bit item in triples!  All 3 bits are the same.
-      uint32 sglmask3high = 0;
-      uint32 sglmask3low = 0;
+      uint32_t sglmask3high = 0;
+      uint32_t sglmask3low = 0;
 
       // Bits appear in this 64-bit item in triples!  All 3 bits are the same.
-      uint32 livemask3high = 0;
-      uint32 livemask3low = 0;
+      uint32_t livemask3high = 0;
+      uint32_t livemask3low = 0;
 
       // Bits appear in this 64-bit item in triples!  The 3 bits give the orbit in eighths.
-      uint32 orbitmask3high = 0;
-      uint32 orbitmask3low = 0;
+      uint32_t orbitmask3high = 0;
+      uint32_t orbitmask3low = 0;
 
       // Compute orbitmask3, livemask3, and sglmask3.
       // Since we are synthesizing bit masks, we scan in reverse order to make things easier.
@@ -2366,7 +2366,7 @@ extern void tandem_couples_move(
          orbitmask3high |= orbitmask3low >> 29;
          orbitmask3low <<= 3;
 
-         uint32 p = tandstuff.virtual_result.people[i].id1;
+         uint32_t p = tandstuff.virtual_result.people[i].id1;
 
          if (p) {
             int vpi = (p >> 6) & 7;
@@ -2383,7 +2383,7 @@ extern void tandem_couples_move(
 
                int orbit_in_eighths = (p + tandstuff.virtual_result.rotation - tandstuff.m_saved_rotations[vpi]) << 1;
 
-               uint32 stable_stuff_in_eighths = ((p & STABLE_VRMASK) / STABLE_VRBIT) - ((p & STABLE_VLMASK) / STABLE_VLBIT);
+               uint32_t stable_stuff_in_eighths = ((p & STABLE_VRMASK) / STABLE_VRBIT) - ((p & STABLE_VLMASK) / STABLE_VLBIT);
 
                if (twosome == 3) {
                   // This is "twosome to solid" -- they orbit by whatever the excess is after the stability expires.
@@ -2426,22 +2426,22 @@ extern void tandem_couples_move(
          }
       }
 
-      uint32 orbitcomhigh = orbitmask3high ^ 0155555U;
-      uint32 orbitcomlow = orbitmask3low ^ 026666666666U;
-      uint32 hmask3high = orbitcomhigh & livemask3high & ~sglmask3high;
-      uint32 hmask3low = orbitcomlow & livemask3low & ~sglmask3low;
+      uint32_t orbitcomhigh = orbitmask3high ^ 0155555U;
+      uint32_t orbitcomlow = orbitmask3low ^ 026666666666U;
+      uint32_t hmask3high = orbitcomhigh & livemask3high & ~sglmask3high;
+      uint32_t hmask3low = orbitcomlow & livemask3low & ~sglmask3low;
 
       // Bits appear here in triples!  Only low bit of each triple is used.
-      uint32 sglmaskhigh = sglmask3high & 022222U;
-      uint32 sglmasklow = sglmask3low & 011111111111U;
+      uint32_t sglmaskhigh = sglmask3high & 022222U;
+      uint32_t sglmasklow = sglmask3low & 011111111111U;
 
       // Bits appear here in triples!  Only low two bits of each triple are used.
-      uint32 livemaskhigh = livemask3high & 066666U;
-      uint32 livemasklow = livemask3low & 033333333333U;
+      uint32_t livemaskhigh = livemask3high & 066666U;
+      uint32_t livemasklow = livemask3low & 033333333333U;
 
       // Pick out only low two bits for map search, and only bits of live paired people.
-      uint32 hmaskhigh = hmask3high & 066666U;
-      uint32 hmasklow = hmask3low & 033333333333U;
+      uint32_t hmaskhigh = hmask3high & 066666U;
+      uint32_t hmasklow = hmask3low & 033333333333U;
 
       if (tandstuff.m_no_unit_symmetry) {
          livemaskhigh = livemask3high;
@@ -2567,7 +2567,7 @@ extern void tandem_couples_move(
       // as honorary 1x8's, as do 1x6's, 1x4's and 1x2's.  They will all merge just fine, even when
       // done in a haphazard fashion.
       for (i=0 ; i<=tttcount ; i++) {
-         uint32 the_mask = little_endian_live_mask(&ttt[i]);
+         uint32_t the_mask = little_endian_live_mask(&ttt[i]);
 
          if (ttt[i].kind == s2x4) {
             if (ttt[i].rotation & 1) {
@@ -2671,8 +2671,8 @@ extern void tandem_couples_move(
 }
 
 
-static void fixup_mimic(setup *result, const uint16 split_info[2],
-                 uint32 division_code, const setup *orig_before_press) THROW_DECL
+static void fixup_mimic(setup *result, const uint16_t split_info[2],
+                 uint32_t division_code, const setup *orig_before_press) THROW_DECL
 {
    int orig_width = -1;
    int orig_height = -1;
@@ -2691,29 +2691,29 @@ static void fixup_mimic(setup *result, const uint16 split_info[2],
    }
 
    const expand::thing *compress_map = (const expand::thing *) 0;
-   const veryshort *srclist = (veryshort *) 0;
-   const veryshort *dstlist;
-   const uint32 *census_ptr = (uint32 *) 0;
+   const int8_t *srclist = (int8_t *) 0;
+   const int8_t *dstlist;
+   const uint32_t *census_ptr = (uint32_t *) 0;
 
-   static const veryshort listfor1x1[] = {(veryshort) s1x1, 0, 1,   0, -1};
-   static const veryshort listfor1x2[] = {(veryshort) s1x2, 0, 2,   0, 1, -1};
-   static const veryshort listfor1x2V[]= {(veryshort) s1x2, 1, 1,   0, 1, -1};
-   static const veryshort listfor1x4[] = {(veryshort) s1x4, 0, 4,   0, 1, 3, 2, -1};
-   static const veryshort listfor1x8[] = {(veryshort) s1x8, 0, 8,   0, 1, 3, 2, 6, 7, 5, 4, -1};
-   static const veryshort listfor2x2[] = {(veryshort) s2x2, 0, 2,   0, 1, 3, 2, -1};
-   static const veryshort listfor2x2V[]= {(veryshort) s2x2, 1, 2,   0, 3, 1, 2, -1};
-   static const veryshort listfordmd[] = {(veryshort) sdmd, 0, 1,   0, 1, 2, 3, -1};
-   static const veryshort listforrig[] = {(veryshort) s_rigger,0,2, 6, 7, 0, 1, 3, 2, 5, 4, -1};
-   static const veryshort listfor2x4[] = {(veryshort) s2x4, 0, 4,   0, 1, 2, 3, 7, 6, 5, 4, -1};
-   static const veryshort listfor1x4V[]= {(veryshort) s1x4, 1, 1,   0, 1, 3, 2, -1};
-   static const veryshort listfor2x4V[]= {(veryshort) s2x4, 1, 2,   0, 7, 1, 6, 2, 5, 3, 4, -1};
-   static const veryshort listfor2x8[] = {(veryshort) s2x8, 0, 8,
+   static const int8_t listfor1x1[] = {(int8_t) s1x1, 0, 1,   0, -1};
+   static const int8_t listfor1x2[] = {(int8_t) s1x2, 0, 2,   0, 1, -1};
+   static const int8_t listfor1x2V[]= {(int8_t) s1x2, 1, 1,   0, 1, -1};
+   static const int8_t listfor1x4[] = {(int8_t) s1x4, 0, 4,   0, 1, 3, 2, -1};
+   static const int8_t listfor1x8[] = {(int8_t) s1x8, 0, 8,   0, 1, 3, 2, 6, 7, 5, 4, -1};
+   static const int8_t listfor2x2[] = {(int8_t) s2x2, 0, 2,   0, 1, 3, 2, -1};
+   static const int8_t listfor2x2V[]= {(int8_t) s2x2, 1, 2,   0, 3, 1, 2, -1};
+   static const int8_t listfordmd[] = {(int8_t) sdmd, 0, 1,   0, 1, 2, 3, -1};
+   static const int8_t listforrig[] = {(int8_t) s_rigger,0,2, 6, 7, 0, 1, 3, 2, 5, 4, -1};
+   static const int8_t listfor2x4[] = {(int8_t) s2x4, 0, 4,   0, 1, 2, 3, 7, 6, 5, 4, -1};
+   static const int8_t listfor1x4V[]= {(int8_t) s1x4, 1, 1,   0, 1, 3, 2, -1};
+   static const int8_t listfor2x4V[]= {(int8_t) s2x4, 1, 2,   0, 7, 1, 6, 2, 5, 3, 4, -1};
+   static const int8_t listfor2x8[] = {(int8_t) s2x8, 0, 8,
                                           0, 1, 2, 3, 4, 5, 6, 7,
                                           15, 14, 13, 12, 11, 10, 9, 8, -1};
-   static const veryshort listfor4x4[] = {(veryshort) s4x4, 0, 4,
+   static const int8_t listfor4x4[] = {(int8_t) s4x4, 0, 4,
                                           12, 13, 14, 0, 10, 15, 3, 1,
                                           9, 11, 7, 2, 8, 6, 5, 4, -1};
-   static const veryshort listfor4x4V[]= {(veryshort) s4x4, 1, 4,
+   static const int8_t listfor4x4V[]= {(int8_t) s4x4, 1, 4,
                                           12, 10, 9, 8, 13, 15, 11, 6,
                                           14, 3, 7, 5, 0, 1, 2, 4, -1};
 
@@ -2743,40 +2743,40 @@ static void fixup_mimic(setup *result, const uint16 split_info[2],
    static const expand::thing exp_bone_endR = {{5, 0, 1, 4}, s2x2, s_bone, 1};
 
    // High 2 hex digits for top row and bottom row, next 4 nibbles for columns left to right.
-   static const uint32 census_2x4[] = {0x1040, 0x1010, 0x1004, 0x1001,
+   static const uint32_t census_2x4[] = {0x1040, 0x1010, 0x1004, 0x1001,
                                        0x0101, 0x0104, 0x0110, 0x0140};
 
    // High 2 hex digits for rows top and bottom, next 2 for columns left and right.
-   static const uint32 census_2x2[] = {
+   static const uint32_t census_2x2[] = {
       0x1010, 0x1001, 0x0101, 0x0110};
 
    // High 4 hex digits for rows top to bottom, next 4 for columns left to right.
-   static const uint32 census_4x4[] = {
+   static const uint32_t census_4x4[] = {
       0x10000001, 0x01000001, 0x00100001, 0x01000010,
       0x00010001, 0x00010010, 0x00010100, 0x00100010,
       0x00011000, 0x00101000, 0x01001000, 0x00100100,
       0x10001000, 0x10000100, 0x10000010, 0x01000100};
 
    // High 2 hex digits for rows top and bottom, next 8 nibbles for columns left to right.
-   static const uint32 census_2x8[] = {
+   static const uint32_t census_2x8[] = {
       0x104000, 0x101000, 0x100400, 0x100100,
       0x100040, 0x100010, 0x100004, 0x100001,
       0x010001, 0x010004, 0x010010, 0x010040,
       0x010100, 0x010400, 0x011000, 0x014000};
 
    // High 4 hex digits for rows around the diamond, next 6 nibbles for columns left to right.
-   static const uint32 census_rig[] = {
+   static const uint32_t census_rig[] = {
       0x0100040, 0x0100010, 0x0010001, 0x0010004,
       0x0001010, 0x0001040, 0x1000400, 0x1000100};
 
    // High 4 hex digits for pairs left to right, next 6 nibbles for columns left to right.
-   static const uint32 census_bone[] = {
+   static const uint32_t census_bone[] = {
       0x1000400, 0x0001001, 0x0010004, 0x0010010,
       0x0001001, 0x1000400, 0x0100100, 0x0100040};
 
-   uint32 finals = little_endian_live_mask(result);
+   uint32_t finals = little_endian_live_mask(result);
    setup temp1 = *result;
-   uint32 row_column_census = 0;
+   uint32_t row_column_census = 0;
 
    switch (result->kind) {
    case s2x4:
@@ -3089,11 +3089,11 @@ struct mimic_info{
 
 static void small_mimic_move(setup *ss,
                              mimic_info & MI,
-                             uint32 division_code,
+                             uint32_t division_code,
                              setup *result) THROW_DECL
 {
    setup temp1 = *ss;
-   uint32 ilatmask3low = 0;
+   uint32_t ilatmask3low = 0;
 
    tandrec ttt(false, true, false);
    ttt.m_people_per_group = 2;
@@ -3104,7 +3104,7 @@ static void small_mimic_move(setup *ss,
 
    for (int k=attr::slimit(ss); k>=0; k--) {
       ilatmask3low <<= 3;
-      uint32 p = ss->people[k].id1;
+      uint32_t p = ss->people[k].id1;
       int the_real_index = ((p+MI.lateral+(MI.fwd<<1)) >> 1) & 1;
 
       // Set the person number fields to the identity map.
@@ -3180,12 +3180,12 @@ void mimic_move(
 
    ss->cmd.cmd_misc3_flags &= ~CMD_MISC3__DOING_ENDS;
 
-   uint32 directions;
-   uint32 livemask;
+   uint32_t directions;
+   uint32_t livemask;
    big_endian_get_directions(ss, directions, livemask);
    directions &= 0x55555555;
 
-   if (livemask != (uint32) (1U << ((attr::slimit(ss)<<1)+2)) - 1)
+   if (livemask != (uint32_t) (1U << ((attr::slimit(ss)<<1)+2)) - 1)
       fail_no_retry("Phantoms not allowed.");
 
    // What we do is very different for centers/ends vs. other designators.
@@ -3220,7 +3220,7 @@ void mimic_move(
          if ((MI.setup_hint & MIMIC_SETUP_BOXES) != 0)
             fail("Don't specify this setup.");
 
-         uint32 tbonetest = or_all_people(ss);
+         uint32_t tbonetest = or_all_people(ss);
          orig_hint = MI.setup_hint;
 
          for (trial_number=0 ; trial_number<2 ; trial_number++) {
@@ -3436,7 +3436,7 @@ void mimic_move(
    // Find out whether this is a call like "counter rotate", which would give deceptive results
    // if we were allowed to do it in smaller setups.  Counter rotate can be done in a 1x2 miniwave,
    // but we don't want to be deceived by that.  Get the "flags2" word of the call definition.
-   uint32 flags2 = 0;
+   uint32_t flags2 = 0;
 
    if (ss->cmd.callspec)
       flags2 = ss->cmd.callspec->the_defn.callflagsf;
@@ -3491,7 +3491,7 @@ void mimic_move(
    setup aa = *ss;
    aa.cmd.parseptr = parseptr;
    aa.cmd.prior_elongation_bits = 0;
-   uint32 division_code = ~0U;
+   uint32_t division_code = ~0U;
 
    // If we're already in a 2-person setup, and subdivision failed, we must be able to do it directly.
    if (ss->kind == s1x2 && MI.groupsize <= 2) {
@@ -3766,8 +3766,8 @@ bool process_brute_force_mxn(
 
    tandrec ttt(true, false, false);
    const tm_thing *map_ptr;
-   uint32 directions;
-   uint32 livemask;
+   uint32_t directions;
+   uint32_t livemask;
    big_endian_get_directions(ss, directions, livemask);
 
    int rotfix = 0;
@@ -4001,15 +4001,15 @@ bool process_brute_force_mxn(
 
    // Figure out what happened.
 
-   uint32 aaa;
-   uint32 bbb;
+   uint32_t aaa;
+   uint32_t bbb;
 
    switch (ttt.virtual_result.kind) {
    case s2x2:
       {
          int kid = ttt.virtual_result.people[0].id1 & 0700;
          bool left_column_reversed = (kid >= 0100*map_ptr->limit);
-         uint32 otherid = left_column_reversed ? kid - 0100*map_ptr->limit : kid + 0100*map_ptr->limit;
+         uint32_t otherid = left_column_reversed ? kid - 0100*map_ptr->limit : kid + 0100*map_ptr->limit;
 
          if ((ttt.virtual_result.people[3].id1 & 0700) != otherid) {
             // Paired people are horizontal.  Just flip the setup around and recanonicalize.
@@ -4066,7 +4066,7 @@ bool process_brute_force_mxn(
       {
          int kid = ttt.virtual_result.people[0].id1 & 0700;
          bool left_side_reversed = (kid >= 0100*map_ptr->limit);
-         uint32 otherid = left_side_reversed ? kid - 0100*map_ptr->limit : kid + 0100*map_ptr->limit;
+         uint32_t otherid = left_side_reversed ? kid - 0100*map_ptr->limit : kid + 0100*map_ptr->limit;
 
          if ((ttt.virtual_result.people[1].id1 & 0700) == otherid) {
             // Paired people are together.
@@ -4147,7 +4147,7 @@ bool process_brute_force_mxn(
       {
          int kid = ttt.virtual_result.people[0].id1 & 0700;
          bool left_side_reversed = (kid >= 0100*map_ptr->limit);
-         uint32 otherid = left_side_reversed ? kid - 0100*map_ptr->limit : kid + 0100*map_ptr->limit;
+         uint32_t otherid = left_side_reversed ? kid - 0100*map_ptr->limit : kid + 0100*map_ptr->limit;
 
          if (!ttt.virtual_result.people[0].id1 || (ttt.virtual_result.people[5].id1 & 0700) == otherid) {
             // This is the only way people can be paired.
@@ -4214,7 +4214,7 @@ bool process_brute_force_mxn(
       {
          int kid = ttt.virtual_result.people[0].id1 & 0700;
          bool top_group_reversed = (kid >= 0100*map_ptr->limit);
-         uint32 otherid = top_group_reversed ? kid - 0100*map_ptr->limit : kid + 0100*map_ptr->limit;
+         uint32_t otherid = top_group_reversed ? kid - 0100*map_ptr->limit : kid + 0100*map_ptr->limit;
 
          if (!ttt.virtual_result.people[0].id1 || (ttt.virtual_result.people[1].id1 & 0700) == otherid) {
             // This is the only way people can be paired.

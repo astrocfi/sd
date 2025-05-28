@@ -535,7 +535,7 @@ Cstring warning_strings[] = {
    /*  warn__two_faced           */   "*Not a wave -- maybe should say 'two-faced'.",
    /*  warn__cant_track_phantoms */   "*The phantoms may not have been tracked correctly.",
    /*  warn__6peoplestretched    */   "*6 people stretched.",
-   /*  warn__did_weird_stretch_response */"*Forced a smaller setup for 'stretch', this may be controversial.",
+   /*  warn__did_weird_stretch_response */"*Forced a smaller setup for 'stretch'.",
    /*  warn__mimic_ambiguity_checked */"*The mimic was ambiguous, but the result is the same either way.",
    /*  warn__mimic_ambiguity_resolved */"*The mimic was ambiguous, but only one assumption works.",
    /*  warn__diagnostic          */   "*This is a diagnostic warning and should never arise."};
@@ -579,8 +579,8 @@ const expand::thing s_bigbone_dblrig = {{0, 1, 3, 2, 12, 13, 8, 9, 11, 10, 4, 5}
                                         sbigbone, sdblrig, 0};
 
 
-const veryshort identity24[24] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
-                                  12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23};
+const int8_t identity24[24] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
+                               12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23};
 
 
 // This isn't declared const!  Why not?  Because there are pointers
@@ -788,9 +788,6 @@ expand::thing expand::init_table[] = {
    {{1, 2, 3, 5, 6, 7},
     s_wingedstar6, s_wingedstar, 0, 0U, 0x11, false,
     warn__none, warn__none, normalize_to_6, 0},
-   {{1, 2, 5, 6},
-    s1x4,     s_wingedstar, 0, 0U, 0x99, false,
-    warn__none, warn__none, normalize_to_4, 0},
 
    {{11, 5},
     s1x2, s_hsqtag, 0, 0U, 03737, false,
@@ -1045,10 +1042,6 @@ expand::thing expand::init_table[] = {
 
    {{0, 1, 2, 4, 5, 6},
     s1x6, s3x1dmd, 0, 0U, 0x88, false,
-    warn__none, warn__none, normalize_to_6, 0},
-
-   {{0, 1, 2, 4, 5, 6},
-    s1x6, s_wingedstar, 0, 0U, 0x88, false,
     warn__none, warn__none, normalize_to_6, 0},
 
    {{6, 7, 2, 3},
@@ -1584,7 +1577,7 @@ expand::thing expand::init_table[] = {
 
 
 
-// Maps are identified by a "code" number, which is a uint32.
+// Maps are identified by a "code" number, which is a uint32_t.
 // Whenever a procedure needs to specify a "map_thing", it produces
 // the code number for it.  The maps themselves are in tables
 // "map_init_table" and "spec_map_table" in this file.
@@ -1755,122 +1748,122 @@ map::map_thing map::map_init_table[] = {
     s1x6,1,MPKIND__BENT0CCW,0,    warn__none, sbigptpd,   0x000, 0x3CF},
 
    {{0, 1, 3, 2,        4, 5, 10, 11,      9, 8, 6, 7},
-    s1x4,3,MPKIND__HET_SPLIT,1,  warn__none,  sbigh,     (((veryshort) s1x4) << 24) | 0x011, 0},
+    s1x4,3,MPKIND__HET_SPLIT,1,  warn__none,  sbigh,     (((int8_t) s1x4) << 24) | 0x011, 0},
    {{0, 1, 3, 2,        4, 5, 10, 11,      9, 8, 6, 7},
-    s1x4,3,MPKIND__HET_SPLIT,0,  warn__none,  sbigx,     (((veryshort) s1x4) << 24) | 0x004, 0},
+    s1x4,3,MPKIND__HET_SPLIT,0,  warn__none,  sbigx,     (((int8_t) s1x4) << 24) | 0x004, 0},
    {{0, 10, 8, 9,       11, 1, 5, 7,       2, 3, 6, 4},
-    sdmd,3,MPKIND__HET_SPLIT,1,  warn__none,  s_3mdmd,   (((veryshort) sdmd) << 24) | 0x011, 0},
+    sdmd,3,MPKIND__HET_SPLIT,1,  warn__none,  s_3mdmd,   (((int8_t) sdmd) << 24) | 0x011, 0},
    {{9, 0, 10, 8,       1, 5, 7, 11,       4, 2, 3, 6},
-    sdmd,3,MPKIND__HET_SPLIT,0,  warn__none,  s_3mptpd,  (((veryshort) sdmd) << 24) | 0x004, 0},
+    sdmd,3,MPKIND__HET_SPLIT,0,  warn__none,  s_3mptpd,  (((int8_t) sdmd) << 24) | 0x004, 0},
 
    {{0, 1, 3, 2,        4, 5, 7, 6,      11, 10, 8, 9,        15, 14, 12, 13},
-    s1x4,4,MPKIND__HET_SPLIT,1,  warn__none, sbigbigh,  (((veryshort) s1x4) << 24) | 0x011, 0},
+    s1x4,4,MPKIND__HET_SPLIT,1,  warn__none, sbigbigh,  (((int8_t) s1x4) << 24) | 0x011, 0},
    {{0, 1, 3, 2,        4, 5, 7, 6,      11, 10, 8, 9,        15, 14, 12, 13},
-    s1x4,4,MPKIND__HET_SPLIT,0,  warn__none, sbigbigx,  (((veryshort) s1x4) << 24) | 0x044, 0},
+    s1x4,4,MPKIND__HET_SPLIT,0,  warn__none, sbigbigx,  (((int8_t) s1x4) << 24) | 0x044, 0},
    {{0, 13, 11, 12,     14, 1, 15, 10,          3, 4, 8, 5,     7, 2, 6, 9},
-    sdmd,4,MPKIND__HET_SPLIT,1,  warn__none, s_4mdmd,   (((veryshort) sdmd) << 24) | 0x011, 0},
+    sdmd,4,MPKIND__HET_SPLIT,1,  warn__none, s_4mdmd,   (((int8_t) sdmd) << 24) | 0x011, 0},
    {{12, 0, 13, 11,     1, 15, 10, 14,          5, 3, 4, 8,     2, 6, 9, 7},
-    sdmd,4,MPKIND__HET_SPLIT,0,  warn__none, s_4mptpd,  (((veryshort) sdmd) << 24) | 0x044, 0},
+    sdmd,4,MPKIND__HET_SPLIT,0,  warn__none, s_4mptpd,  (((int8_t) sdmd) << 24) | 0x044, 0},
 
    {{0, 1, 2,           7, 3,            6, 5, 4},
-    s1x3,3,MPKIND__HET_SPLIT,0,  warn__none,  s_323,    (((veryshort) s1x2) << 24) | 0x000, 0},
+    s1x3,3,MPKIND__HET_SPLIT,0,  warn__none,  s_323,    (((int8_t) s1x2) << 24) | 0x000, 0},
 
    // See t60@6140.
    {{11, 10, 7, 6, 23, 22, 19, 18,    15, 20, 9, 2, 3, 8, 21, 14},
-    s2x4,2,MPKIND__HET_CONCPHAN,0, warn__none, s4x6,    (((veryshort) s2x4) << 24) | 0x10001, 0xFFFFFFFF},
+    s2x4,2,MPKIND__HET_CONCPHAN,0, warn__none, s4x6,    (((int8_t) s2x4) << 24) | 0x10001, 0xFFFFFFFF},
 
    {{0, 3, 4, 5, 8, 11, 12, 13,       14, 1, 15, 10, 6, 9, 7, 2},
-    s_qtag,2,MPKIND__HET_CONCPHAN,0, warn__none, s_4mdmd, (((veryshort) s_ptpd) << 24) | 0x000, 0},
+    s_qtag,2,MPKIND__HET_CONCPHAN,0, warn__none, s_4mdmd, (((int8_t) s_ptpd) << 24) | 0x000, 0},
    {{12, 0, 13, 11, 4, 8, 5, 3,       1, 2, 6, 7, 9, 10, 14, 15},
-    s_ptpd,2,MPKIND__HET_CONCPHAN,0, warn__none, s_4mptpd, (((veryshort) s_qtag) << 24) | 0x000, 0},
+    s_ptpd,2,MPKIND__HET_CONCPHAN,0, warn__none, s_4mptpd, (((int8_t) s_qtag) << 24) | 0x000, 0},
 
    {{1, 0,                             2, 3},
-    s1x2,2,MPKIND__HET_SPLIT,0,   warn__none, s_trngl4, (((veryshort) s1x2) << 24) | 0x0001, 0},
+    s1x2,2,MPKIND__HET_SPLIT,0,   warn__none, s_trngl4, (((int8_t) s1x2) << 24) | 0x0001, 0},
    {{2, 3,                             1, 0},
-    s1x2,2,MPKIND__HET_SPLIT,1,   warn__none, s_trngl4, (((veryshort) s1x2) << 24) | 0x20004, 0},
+    s1x2,2,MPKIND__HET_SPLIT,1,   warn__none, s_trngl4, (((int8_t) s1x2) << 24) | 0x20004, 0},
    {{0, 1,                             2, 3},
-    s1x2,2,MPKIND__HET_SPLIT,0,   warn__none, s_trngl4, (((veryshort) s1x2) << 24) | 0x10004, 0xFF},
+    s1x2,2,MPKIND__HET_SPLIT,0,   warn__none, s_trngl4, (((int8_t) s1x2) << 24) | 0x10004, 0xFF},
    {{3, 2,                             1, 0},
-    s1x2,2,MPKIND__HET_SPLIT,1,   warn__none, s_trngl4, (((veryshort) s1x2) << 24) | 0x30001, 0x55},
+    s1x2,2,MPKIND__HET_SPLIT,1,   warn__none, s_trngl4, (((int8_t) s1x2) << 24) | 0x30001, 0x55},
 
    {{6, 7,      0, 5,      3, 2,     1, 4},
-    s1x2,4,MPKIND__HET_SPLIT,0,   warn__none, s_rigger, (((veryshort) s1x2) << 24) | 0x0044, 0},
+    s1x2,4,MPKIND__HET_SPLIT,0,   warn__none, s_rigger, (((int8_t) s1x2) << 24) | 0x0044, 0},
    {{0, 5,      6, 7,      1, 4,     3, 2},
-    s1x2,4,MPKIND__HET_SPLIT,1,   warn__none, s_bone,   (((veryshort) s1x2) << 24) | 0x0011, 0},
+    s1x2,4,MPKIND__HET_SPLIT,1,   warn__none, s_bone,   (((int8_t) s1x2) << 24) | 0x0011, 0},
 
    {{3, 2, 0, 1,                       4, 5, 7, 6},
-    s1x4,2,MPKIND__HET_SPLIT,0,   warn__none, s_trngl8, (((veryshort) s1x4) << 24) | 0x0001, 0},
+    s1x4,2,MPKIND__HET_SPLIT,0,   warn__none, s_trngl8, (((int8_t) s1x4) << 24) | 0x0001, 0},
    {{4, 5, 7, 6,                       3, 2, 0, 1},
-    s1x4,2,MPKIND__HET_SPLIT,1,   warn__none, s_trngl8, (((veryshort) s1x4) << 24) | 0x20004, 0},
+    s1x4,2,MPKIND__HET_SPLIT,1,   warn__none, s_trngl8, (((int8_t) s1x4) << 24) | 0x20004, 0},
 
    {{0, 1, 3, 2,                       4, 5, 7, 6},
-    s1x4,2,MPKIND__HET_SPLIT,0,   warn__none, s_trngl8, (((veryshort) s1x4) << 24) | 0x10004, 0xFFFF},
+    s1x4,2,MPKIND__HET_SPLIT,0,   warn__none, s_trngl8, (((int8_t) s1x4) << 24) | 0x10004, 0xFFFF},
    {{7, 6, 4, 5,                       3, 2, 0, 1},
-    s1x4,2,MPKIND__HET_SPLIT,1,   warn__none, s_trngl8, (((veryshort) s1x4) << 24) | 0x30001, 0x5555},
+    s1x4,2,MPKIND__HET_SPLIT,1,   warn__none, s_trngl8, (((int8_t) s1x4) << 24) | 0x30001, 0x5555},
 
    {{2, 3, 0, 1,                       4, 5, 6, 7},
-    sdmd,2,MPKIND__HET_SPLIT,0,   warn__none, sdmdpdmd, (((veryshort) sdmd) << 24) | 0x001, 0},
+    sdmd,2,MPKIND__HET_SPLIT,0,   warn__none, sdmdpdmd, (((int8_t) sdmd) << 24) | 0x001, 0},
    {{4, 5, 6, 7,                       2, 3, 0, 1},
-    sdmd,2,MPKIND__HET_SPLIT,1,   warn__none, sdmdpdmd, (((veryshort) sdmd) << 24) | 0x20004, 0},
+    sdmd,2,MPKIND__HET_SPLIT,1,   warn__none, sdmdpdmd, (((int8_t) sdmd) << 24) | 0x20004, 0},
 
    {{0, 1, 2, 7,                       3, 4, 5, 6},
-    s_trngl4,2,MPKIND__HET_SPLIT,1,   warn__none, slinejbox, (((veryshort) s2x2) << 24) | 0x001, 0},
+    s_trngl4,2,MPKIND__HET_SPLIT,1,   warn__none, slinejbox, (((int8_t) s2x2) << 24) | 0x001, 0},
    {{0, 1, 3, 2,                       4, 5, 6, 7},
-    s1x4,2,MPKIND__HET_SPLIT,0,   warn__none, slinevbox, (((veryshort) s_trngl4) << 24) | 0x004, 0},
+    s1x4,2,MPKIND__HET_SPLIT,0,   warn__none, slinevbox, (((int8_t) s_trngl4) << 24) | 0x004, 0},
    {{3, 2, 1, 0,                       4, 5, 6, 7},
-    s_trngl4,2,MPKIND__HET_SPLIT,1,   warn__none, slineybox, (((veryshort) s2x2) << 24) | 0x003, 0},
+    s_trngl4,2,MPKIND__HET_SPLIT,1,   warn__none, slineybox, (((int8_t) s2x2) << 24) | 0x003, 0},
    {{0, 1, 3, 2,                       5, 6, 7, 4},
-    s1x4,2,MPKIND__HET_SPLIT,0,   warn__none, slinefbox, (((veryshort) s_trngl4) << 24) | 0x00C, 0},
+    s1x4,2,MPKIND__HET_SPLIT,0,   warn__none, slinefbox, (((int8_t) s_trngl4) << 24) | 0x00C, 0},
 
    {{4, 5, 3,                          1, 2, 0},
-    s_trngl,2,MPKIND__HET_SPLIT,1,      warn__none, s_short6, (((veryshort) s_trngl) << 24) | 0x108, 0},
+    s_trngl,2,MPKIND__HET_SPLIT,1,      warn__none, s_short6, (((int8_t) s_trngl) << 24) | 0x108, 0},
    {{4, 5, 3,                          1, 2, 0},
-    s_trngl,2,MPKIND__HET_SPLIT,1,      warn__none, s_short6, (((veryshort) s_trngl) << 24) | 0x1010D, 0xFFF},
+    s_trngl,2,MPKIND__HET_SPLIT,1,      warn__none, s_short6, (((int8_t) s_trngl) << 24) | 0x1010D, 0xFFF},
 
    {{5, 4, 0,                          2, 1, 3},
-    s_trngl,2,MPKIND__HET_SPLIT,1, warn__none, s_bone6, (((veryshort) s_trngl) << 24) | 0x107, 0},
+    s_trngl,2,MPKIND__HET_SPLIT,1, warn__none, s_bone6, (((int8_t) s_trngl) << 24) | 0x107, 0},
    {{2, 1, 3,                          5, 4, 0},
-    s_trngl,2,MPKIND__HET_SPLIT,1, warn__none, s_bone6, (((veryshort) s_trngl) << 24) | 0x10102, 0xFFF},
+    s_trngl,2,MPKIND__HET_SPLIT,1, warn__none, s_bone6, (((int8_t) s_trngl) << 24) | 0x10102, 0xFFF},
 
    {{5, 0, 1,                          2, 3, 4},
-    s_trngl,2,MPKIND__HET_SPLIT,0,   warn__none, s_ntrgl6ccw, (((veryshort) s_trngl) << 24) | 0x30107, 0x555},
+    s_trngl,2,MPKIND__HET_SPLIT,0,   warn__none, s_ntrgl6ccw, (((int8_t) s_trngl) << 24) | 0x30107, 0x555},
    {{0, 4, 5,                          3, 1, 2},
-    s_trngl,2,MPKIND__HET_SPLIT,0,   warn__none, s_ntrgl6cw,  (((veryshort) s_trngl) << 24) | 0x102, 0},
+    s_trngl,2,MPKIND__HET_SPLIT,0,   warn__none, s_ntrgl6cw,  (((int8_t) s_trngl) << 24) | 0x102, 0},
    {{5, 0, 1,                          2, 3, 4},
-    s_trngl,2,MPKIND__HET_SPLIT,0,   warn__none, s_ntrgl6ccw, (((veryshort) s_trngl) << 24) | 0x108, 0},
+    s_trngl,2,MPKIND__HET_SPLIT,0,   warn__none, s_ntrgl6ccw, (((int8_t) s_trngl) << 24) | 0x108, 0},
    {{0, 4, 5,                          3, 1, 2},
-    s_trngl,2,MPKIND__HET_SPLIT,0,   warn__none, s_ntrgl6cw,  (((veryshort) s_trngl) << 24) | 0x3010D, 0x555},
+    s_trngl,2,MPKIND__HET_SPLIT,0,   warn__none, s_ntrgl6cw,  (((int8_t) s_trngl) << 24) | 0x3010D, 0x555},
    {{0, 1, 2,                          3, 4, 5},
-    s_trngl,2,MPKIND__HET_SPLIT,1,   warn__none, sdbltrngl,    (((veryshort) s_trngl) << 24) | 0x005, 0},
+    s_trngl,2,MPKIND__HET_SPLIT,1,   warn__none, sdbltrngl,    (((int8_t) s_trngl) << 24) | 0x005, 0},
 
    // Need both of these.  The first to keep "fix_n_results" from getting bent out of shape when
    // it sees that the setup isn't really symmetric, and the second because it will get turned
    // into MPKIND__SPLIT when it sees that the two triangles are the same after all.
    {{0, 1, 2, 3,                       4, 5, 6, 7},
-    s_trngl4,2,MPKIND__HET_SPLIT,1,  warn__none, sdbltrngl4,  (((veryshort) s_trngl4) << 24) | 0x005, 0},
+    s_trngl4,2,MPKIND__HET_SPLIT,1,  warn__none, sdbltrngl4,  (((int8_t) s_trngl4) << 24) | 0x005, 0},
    {{4, 5, 6, 7,                       0, 1, 2, 3},
-    s_trngl4,2,MPKIND__HET_SPLIT,1,  warn__none, sdbltrngl4,  (((veryshort) s_trngl4) << 24) | 0x2000F, 0xAAAA},
+    s_trngl4,2,MPKIND__HET_SPLIT,1,  warn__none, sdbltrngl4,  (((int8_t) s_trngl4) << 24) | 0x2000F, 0xAAAA},
 
    {{6, 7, 0, 5,                       2, 3, 4, 1},
-    s_trngl4,2,MPKIND__HET_SPLIT,1,     warn__none, s_rigger, (((veryshort) s_trngl4) << 24) | 0x00D, 0},
+    s_trngl4,2,MPKIND__HET_SPLIT,1,     warn__none, s_rigger, (((int8_t) s_trngl4) << 24) | 0x00D, 0},
    {{7, 6, 5, 0,                       3, 2, 1, 4},
-    s_trngl4,2,MPKIND__HET_SPLIT,1,     warn__none, s_bone,   (((veryshort) s_trngl4) << 24) | 0x007, 0},
+    s_trngl4,2,MPKIND__HET_SPLIT,1,     warn__none, s_bone,   (((int8_t) s_trngl4) << 24) | 0x007, 0},
    {{13, 15, 11, 9,                    5, 7, 3, 1},
-    s_trngl4,2,MPKIND__HET_SPLIT,0,   warn__none, s_c1phan,   (((veryshort) s_trngl4) << 24) | 0x00D, 0},
+    s_trngl4,2,MPKIND__HET_SPLIT,0,   warn__none, s_c1phan,   (((int8_t) s_trngl4) << 24) | 0x00D, 0},
    {{8, 10, 12, 14,                    0, 2, 4, 6},
-    s_trngl4,2,MPKIND__HET_SPLIT,0,   warn__none, s_c1phan,   (((veryshort) s_trngl4) << 24) | 0x007, 0},
+    s_trngl4,2,MPKIND__HET_SPLIT,0,   warn__none, s_c1phan,   (((int8_t) s_trngl4) << 24) | 0x007, 0},
 
    {{12, 14, 0, 2,                     4, 6, 8, 10},
-    s_trngl4,2,MPKIND__HET_SPLIT,0,   warn__none, s_c1phan,   (((veryshort) s_trngl4) << 24) | 0x008, 0},
+    s_trngl4,2,MPKIND__HET_SPLIT,0,   warn__none, s_c1phan,   (((int8_t) s_trngl4) << 24) | 0x008, 0},
    {{1, 3, 15, 13,                     9, 11, 7, 5},
-    s_trngl4,2,MPKIND__HET_SPLIT,0,   warn__none, s_c1phan,   (((veryshort) s_trngl4) << 24) | 0x002, 0},
+    s_trngl4,2,MPKIND__HET_SPLIT,0,   warn__none, s_c1phan,   (((int8_t) s_trngl4) << 24) | 0x002, 0},
 
    {{12, 14, 0, 2,                     9, 11, 7, 5},
-    s_trngl4,2,MPKIND__HET_SPLIT,0,   warn__none, s_c1phan,   (((veryshort) s_trngl4) << 24) | 0x000, 0},
+    s_trngl4,2,MPKIND__HET_SPLIT,0,   warn__none, s_c1phan,   (((int8_t) s_trngl4) << 24) | 0x000, 0},
    {{1, 3, 15, 13,                     4, 6, 8, 10},
-    s_trngl4,2,MPKIND__HET_SPLIT,0,   warn__none, s_c1phan,   (((veryshort) s_trngl4) << 24) | 0x00A, 0},
+    s_trngl4,2,MPKIND__HET_SPLIT,0,   warn__none, s_c1phan,   (((int8_t) s_trngl4) << 24) | 0x00A, 0},
    {{13, 15, 11, 9,                    0, 2, 4, 6},
-    s_trngl4,2,MPKIND__HET_SPLIT,0,   warn__none, s_c1phan,   (((veryshort) s_trngl4) << 24) | 0x005, 0},
+    s_trngl4,2,MPKIND__HET_SPLIT,0,   warn__none, s_c1phan,   (((int8_t) s_trngl4) << 24) | 0x005, 0},
 
    {{-1, -1, -1, -1,   1, 2, 3, 0,       15, 12, 13, 14,   -1, -1, -1, -1,
      7, 4, 5, 6,       -1, -1, -1, -1,   -1, -1, -1, -1,     9, 10, 11, 8},
@@ -2169,9 +2162,9 @@ map::map_thing map::map_init_table[] = {
     s2x2,2,MPKIND__OFFS_R_FULL,1, warn__none,  s4x4,      0x005, 0},
 
    {{5, 0, 1,                     2, 3, 4},
-    s_trngl,2,MPKIND__HET_OFFS_L_HALF,0, warn__none,s_nftrgl6ccw, (((veryshort) s_trngl) << 24) | 0x8, 0},
+    s_trngl,2,MPKIND__HET_OFFS_L_HALF,0, warn__none,s_nftrgl6ccw, (((int8_t) s_trngl) << 24) | 0x8, 0},
    {{0, 4, 5,                     3, 1, 2},
-    s_trngl,2,MPKIND__HET_OFFS_R_HALF,0, warn__none,s_nftrgl6cw, (((veryshort) s_trngl) << 24) | 0x2, 0},
+    s_trngl,2,MPKIND__HET_OFFS_R_HALF,0, warn__none,s_nftrgl6cw, (((int8_t) s_trngl) << 24) | 0x2, 0},
 
    // For the 45 degree couples hinge stuff.
 
@@ -2285,14 +2278,14 @@ map::map_thing map::map_init_table[] = {
     sdmd,2,MPKIND__OFFS_R_FULL,0, warn__none,  s2x2dmd,      0x000, 0},
 
    {{6, 7, 8, 9,                       0, 1, 2, 3},
-    s_trngl4,2,MPKIND__HET_OFFS_L_HALF,0, warn__none,  sbigdmd, (((veryshort) s_trngl4) << 24) | 0x7, 0},
+    s_trngl4,2,MPKIND__HET_OFFS_L_HALF,0, warn__none,  sbigdmd, (((int8_t) s_trngl4) << 24) | 0x7, 0},
    {{11, 10, 9, 8,                     5, 4, 3, 2},
-    s_trngl4,2,MPKIND__HET_OFFS_R_HALF,0, warn__none,  sbigdmd, (((veryshort) s_trngl4) << 24) | 0xD, 0},
+    s_trngl4,2,MPKIND__HET_OFFS_R_HALF,0, warn__none,  sbigdmd, (((int8_t) s_trngl4) << 24) | 0xD, 0},
 
    {{11, 7, 2, 4,                      3, 15, 10, 12},
-    s_trngl4,2,MPKIND__HET_OFFS_L_HALF,0,warn__check_hokey_4x4,s4x4,(((veryshort) s_trngl4) << 24) | 0xD, 0},
+    s_trngl4,2,MPKIND__HET_OFFS_L_HALF,0,warn__check_hokey_4x4,s4x4,(((int8_t) s_trngl4) << 24) | 0xD, 0},
    {{7, 11, 8, 9,                      15, 3, 0, 1},
-    s_trngl4,2,MPKIND__HET_OFFS_R_HALF,0,warn__check_hokey_4x4,s4x4,(((veryshort) s_trngl4) << 24) | 0x7, 0},
+    s_trngl4,2,MPKIND__HET_OFFS_R_HALF,0,warn__check_hokey_4x4,s4x4,(((int8_t) s_trngl4) << 24) | 0x7, 0},
 
    {{11, 7, 2, 4, 5, 6,                12, 13, 14, 3, 15, 10},
     s2x3,2,MPKIND__OFFS_L_THIRD,1, warn__none,  s4x4,      0x000, 0},
@@ -2661,46 +2654,46 @@ map::map_thing map::map_init_table[] = {
     s_qtag,2,MPKIND__REMOVED,1,   warn__none,  s4x6,      0x005, 0},
 
    {{0, 1, 3, 2,             4, 5, 6, 7},
-    s1x4,2,MPKIND__HET_SPLIT,0, warn__none, slinebox,  (((veryshort) s2x2) << 24) | 0x00, 0},
+    s1x4,2,MPKIND__HET_SPLIT,0, warn__none, slinebox,  (((int8_t) s2x2) << 24) | 0x00, 0},
    {{6, 7, 4, 5,             3, 2, 0, 1},
-    s2x2,2,MPKIND__HET_SPLIT,0, warn__none, slinebox,  (((veryshort) s1x4) << 24) | 0x20000, 0xAAAA},
+    s2x2,2,MPKIND__HET_SPLIT,0, warn__none, slinebox,  (((int8_t) s1x4) << 24) | 0x20000, 0xAAAA},
 
    {{5, 6, 7, 4,             2, 3, 0, 1},
-    s2x2,2,MPKIND__HET_SPLIT,0, warn__none, sboxdmd,   (((veryshort) sdmd) << 24) | 0x04, 0x5555},
+    s2x2,2,MPKIND__HET_SPLIT,0, warn__none, sboxdmd,   (((int8_t) sdmd) << 24) | 0x04, 0x5555},
    {{0, 1, 2, 3,             4, 5, 6, 7},
-    sdmd,2,MPKIND__HET_SPLIT,1, warn__none, sboxdmd,   (((veryshort) s2x2) << 24) | 0x00, 0x0000},
+    sdmd,2,MPKIND__HET_SPLIT,1, warn__none, sboxdmd,   (((int8_t) s2x2) << 24) | 0x00, 0x0000},
 
    {{0, 1, 3, 2,             5, 6, 7, 4},
-    s1x4,2,MPKIND__HET_SPLIT,0, warn__none, splinedmd, (((veryshort) sdmd) << 24) | 0x004, 0},
+    s1x4,2,MPKIND__HET_SPLIT,0, warn__none, splinedmd, (((int8_t) sdmd) << 24) | 0x004, 0},
    {{7, 4, 5, 6,             3, 2, 0, 1},
-    sdmd,2,MPKIND__HET_SPLIT,1, warn__none, splinedmd, (((veryshort) s1x4) << 24) | 0x20001, 0xAAAA},
+    sdmd,2,MPKIND__HET_SPLIT,1, warn__none, splinedmd, (((int8_t) s1x4) << 24) | 0x20001, 0xAAAA},
 
    {{6, 7, 4, 5,             2, 3, 0, 1},
-    s1x4,2,MPKIND__HET_SPLIT,1, warn__none, slinedmd, (((veryshort) sdmd) << 24) | 0x30005, 0x5555},
+    s1x4,2,MPKIND__HET_SPLIT,1, warn__none, slinedmd, (((int8_t) sdmd) << 24) | 0x30005, 0x5555},
    {{0, 1, 2, 3,             4, 5, 6, 7},
-    sdmd,2,MPKIND__HET_SPLIT,1, warn__none, slinedmd, (((veryshort) s1x4) << 24) | 0x10005, 0xFFFF},
+    sdmd,2,MPKIND__HET_SPLIT,1, warn__none, slinedmd, (((int8_t) s1x4) << 24) | 0x10005, 0xFFFF},
 
    {{0, 2, 4, 6,             7, 1, 3, 5},
-    s2x2,2,MPKIND__HET_CO_ONCEREM,0, warn__none, s_spindle, (((veryshort) sdmd) << 24) | 0x000, 0},
+    s2x2,2,MPKIND__HET_CO_ONCEREM,0, warn__none, s_spindle, (((int8_t) sdmd) << 24) | 0x000, 0},
    {{7, 1, 3, 5,             0, 2, 4, 6},
-    sdmd,2,MPKIND__HET_CO_ONCEREM,0, warn__none, s_spindle, (((veryshort) s2x2) << 24) | 0x000, 0},
+    sdmd,2,MPKIND__HET_CO_ONCEREM,0, warn__none, s_spindle, (((int8_t) s2x2) << 24) | 0x000, 0},
    {{1, 3, 5, 7,                       0, 2, 4, 6},
-    sdmd,2,MPKIND__HET_CO_ONCEREM,0, warn__none, s1x3dmd,   (((veryshort) s1x4) << 24) | 0x000, 0},
+    sdmd,2,MPKIND__HET_CO_ONCEREM,0, warn__none, s1x3dmd,   (((int8_t) s1x4) << 24) | 0x000, 0},
    {{0, 2, 4, 6,                       1, 3, 5, 7},
-    s1x4,2,MPKIND__HET_CO_ONCEREM,0, warn__none, s1x3dmd,   (((veryshort) sdmd) << 24) | 0x000, 0},
+    s1x4,2,MPKIND__HET_CO_ONCEREM,0, warn__none, s1x3dmd,   (((int8_t) sdmd) << 24) | 0x000, 0},
 
    {{0, 2, 5, 3,                       1, 4, 6, 7},
-    sdmd,2,MPKIND__HET_ONCEREM,0, warn__none, sdbltrngl4,   (((veryshort) s_trngl4) << 24) | 0x004, 0},
+    sdmd,2,MPKIND__HET_ONCEREM,0, warn__none, sdbltrngl4,   (((int8_t) s_trngl4) << 24) | 0x004, 0},
 
    {{1, 7, 5, 3,                       0, 6, 2, 4},
-    s2x2,3,MPKIND__HET_TWICEREM,0,   warn__none,  s_ptpd,   (((veryshort) s1x2) << 24) | 0x000, 0},
+    s2x2,3,MPKIND__HET_TWICEREM,0,   warn__none,  s_ptpd,   (((int8_t) s1x2) << 24) | 0x000, 0},
    {{6, 7, 2, 3,                       5, 4, 0, 1},
-    s1x4,3,MPKIND__HET_TWICEREM,1, warn__none,  s_qtag,     (((veryshort) s1x2) << 24) | 0x10015, 0xFFFF},
+    s1x4,3,MPKIND__HET_TWICEREM,1, warn__none,  s_qtag,     (((int8_t) s1x2) << 24) | 0x10015, 0xFFFF},
 
    {{2, 7, 5, 0,                       6, 3, 1, 4},
-    s_trngl4,2,MPKIND__HET_ONCEREM,1, warn__none, s_bone, (((veryshort) s_trngl4) << 24) | 0x107, 0},
+    s_trngl4,2,MPKIND__HET_ONCEREM,1, warn__none, s_bone, (((int8_t) s_trngl4) << 24) | 0x107, 0},
    {{0, 2, 7, 5,                       4, 6, 3, 1},
-    s_trngl4,2,MPKIND__HET_ONCEREM,1, warn__none, s_ptpd, (((veryshort) s_trngl4) << 24) | 0x10D, 0},
+    s_trngl4,2,MPKIND__HET_ONCEREM,1, warn__none, s_ptpd, (((int8_t) s_trngl4) << 24) | 0x10D, 0},
 
    {{2, 4, 0,                          5, 1, 3},
     s_trngl,2,MPKIND__REMOVED,1,  warn__none,  s_bone6,   0x107, 0},
@@ -5327,8 +5320,10 @@ merge_table::concmerge_thing merge_table::merge_init_table[] = {
    {s1x6, s_wingedstar6, 0,        0, 0x0E, 0x0, schema_matrix,         s_wingedstar,nothing,  warn__none, 0, 0, {0, 1, 2, 4, 5, 6},       {1, 2, 3, 5, 6, 7}},
    {s1x4,      s_1x2dmd, 0,      044, 0x0D, 0x0, schema_matrix,         s_crosswave, nothing,  warn__none, 0, 0, {2, 3, 6, 7},               {0, 1, -1, 4, 5, -1}},
    {s1x4,      s_1x2dmd, 0,      044, 0x0E, 0x0, schema_matrix,         s1x8,        nothing,  warn__none, 0, 0, {3, 2, 7, 6},               {0, 1, -1, 4, 5, -1}},
+   {s2x2,      s_1x2dmd, 0,      022, 0x0E, 0x0, schema_matrix,         s_spindle,   nothing,  warn__none, 0, 0, {0, 2, 4, 6},               {7, -1, 1, 3, -1, 5}},
    {s1x6,       s3x1dmd, 0,        0, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {0, 1, 2, 4, 5, 6},         {0}},
    {s1x6,  s_wingedstar, 0,        0, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {0, 1, 2, 4, 5, 6},         {0}},
+   {s2x3,  s_wingedstar, 022,   0x66, 0x0E, 0x0, schema_matrix,         s_spindle,   nothing,  warn__none, 0, 0, {0, -1, 2, 4, -1, 6},       {7, -1, -1, 1, 3, -1, -1, 5}},
    {s1x4,       s3x1dmd, 0,     0x66, 0x2D, 0x1, schema_matrix,         s3x1dmd,     nothing,  warn__none, 0, 0, {7, -1, -1, 0, 3, -1, -1, 4}, {1, 2, 5, 6}},
    {s1x4,       s3x1dmd, 0,        0, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {1, 2, 5, 6},               {0}},
 
@@ -10034,7 +10029,7 @@ const setup_attr setup_attrs[] = {
     {0x55, 0, 0x11, 0x55},
     {b_323, b_p323},
     {0, 0},
-    0U,
+    SPROP_FIND_NEAR_PEOPLE,
     id_bit_table_323,
     {"   a  b  c@@   5 h  d@@   g  f  e",
      "g6a@76h@7f6b@76d@7e6c"}},
@@ -10637,7 +10632,7 @@ const schema_attr schema_attrs[] = {
 
 
 // BEWARE!!  This list is keyed to the definition of "meta_key_kind" in sd.h .
-const uint32 meta_key_props[] = {
+const uint32_t meta_key_props[] = {
    MKP_RESTRAIN_1 | MKP_RESTRAIN_2,   // meta_key_random
    MKP_RESTRAIN_1 | MKP_RESTRAIN_2,   // meta_key_rev_random
    MKP_RESTRAIN_1 | MKP_RESTRAIN_2,   // meta_key_piecewise
@@ -10971,6 +10966,8 @@ select::fixer select::fixer_init_table[] = {
     fx0, fx0,    fx0, fx0,             fx0, fx0,             fx0, fx0},
    {fx_fwstyyd, s_star, s_wingedstar6,0, 0, 1,         {0, 2, 3, 5},
     fx0, fx0,    fx0, fx0,             fx0, fx0,             fx0, fx0},
+   {fx_fwstxxd, s1x2, s_wingedstar6,  0, 0, 2,         {0, 1, 4, 3},
+    fx0, fx_fspindlc, fx0, fx0,        fx0, fx0,             fx0, fx0},
    {fx_f1x4xv, s1x4, s_crosswave,    1, 0, 1,          {2, 3, 6, 7},
     fx0, fx0,    fx0, fx0,             fx0, fx0,             fx0, fx0},
    {fx_f1x3yyd, sdmd, s1x3dmd,       0, 0, 1, {1, 3, 5, 7},
@@ -11663,6 +11660,11 @@ select::fixer select::fixer_init_table[] = {
    {fx_galfrvee, svee, s_galaxy, 0, 0, 1, {0, 1, 2, 3, 4},
     fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
 
+   {fx323frln, s1x3, s_323, 0, 0, 1, {0, 1, 2},
+    fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
+   {fx323nrln, s1x3, s_323, 0, 0, 1, {6, 5, 4},
+    fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
+
    {fx_trngl8a, s1x4, s_trngl8,  UINT32_C(0x80000000), 0, 1, {4, 5, 7, 6},
     fx0, fx0,                   fx0, fx_f1x8hif,      fx_5p1x1d, fx_1x5p1d,             fx0, fx0},
    {fx_trngl8b, s1x4, s_trngl8,     1, 0, 1, {3, 2, 0, 1},
@@ -12319,6 +12321,8 @@ select::sel_item select::sel_init_table[] = {
    {LOOKUP_NONE,                      s_galaxy,    0xF1,   fx_galnrvee,   fx0, -1},
    {LOOKUP_NONE,                      s_galaxy,    0x1F,   fx_galfrvee,   fx0, -1},
 
+   {LOOKUP_NONE,                      s_323,       0x70,   fx323nrln,     fx0, -1},
+   {LOOKUP_NONE,                      s_323,       0x07,   fx323frln,     fx0, -1},
    {LOOKUP_NONE,                      s_323,       0x33,   fx323a,        fx0, -1},
    {LOOKUP_NONE,                      s_323,       0x66,   fx323b,        fx0, -1},
    {LOOKUP_NONE,                      s_ntrglcw,   0xCC,   fxntrgla,      fx0, -1},
@@ -12355,6 +12359,7 @@ select::sel_item select::sel_init_table[] = {
    {LOOKUP_NONE,                      s3x4,        03131,  fx_f3x4outer,  fx0, -1},
    {LOOKUP_NONE,                      s3dmd,       00707,  fx_f3dmouter,  fx0, -1},
    {LOOKUP_NONE,                      s3ptpd,      06060,  fx_f3ptpdin,   fx0, -1},
+   {LOOKUP_NONE,                      s_wingedstar6,033,   fx_fwstxxd,    fx0, -1},
    {LOOKUP_NONE,                      s_spindle12, 0x318,  fx_sp12wing,   fx0, -1},
    {LOOKUP_NONE,                      spgdmdcw,    0xCC,   fx_fpgdmdcw,   fx0, -1},
    {LOOKUP_NONE,                      spgdmdccw,   0xCC,   fx_fpgdmdccw,  fx0, -1},

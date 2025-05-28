@@ -1184,7 +1184,7 @@ int iofull::do_tagger_popup(int tagger_class)
 
 int iofull::do_circcer_popup()
 {
-   uint32 retval;
+   uint32_t retval;
    matcher_class &matcher = *gg77->matcher_p;
 
    if (interactivity == interactivity_verify) {
@@ -1215,7 +1215,7 @@ int iofull::do_circcer_popup()
    return retval;
 }
 
-uint32 iofull::get_one_number(matcher_class &matcher)
+uint32_t iofull::get_one_number(matcher_class &matcher)
 {
    for (;;) {
       char buffer[200];
@@ -1241,7 +1241,7 @@ uint32 iofull::get_one_number(matcher_class &matcher)
  * is volatile, so we must copy it if we need it to stay around.
  */
 
-void iofull::add_new_line(const char the_line[], uint32 drawing_picture)
+void iofull::add_new_line(const char the_line[], uint32_t drawing_picture)
 {
     put_line(the_line);
     put_line("\n");

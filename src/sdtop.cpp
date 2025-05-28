@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2013  William B. Ackerman.
+//    Copyright (C) 1990-2020  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -20,7 +20,7 @@
 //    along with Sd; if not, write to the Free Software Foundation, Inc.,
 //    59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 //
-//    This is for version 37.
+//    This is for version 39.
 
 /* This defines the following functions:
    expand::compress_setup
@@ -167,8 +167,8 @@ ui_utils *gg77 = 0;
 int text_line_count = 0;
 char error_message1[MAX_ERR_LENGTH];
 char error_message2[MAX_ERR_LENGTH];
-uint32 collision_person1;
-uint32 collision_person2;
+uint32_t collision_person1;
+uint32_t collision_person2;
 int config_history_ptr;
 parse_block *last_magic_diamond;
 int history_allocation;
@@ -234,7 +234,7 @@ Cstring getout_strings[] = {
    ""};
 
 // *** There are more globals proclaimed at line 164.
-uint32 the_topcallflags;
+uint32_t the_topcallflags;
 bool there_is_a_call;
 call_with_name **base_calls;        // Gets allocated as array of pointers in sdinit.
 
@@ -263,10 +263,10 @@ Cstring *direction_menu_list;
 Cstring *circcer_menu_list;
 call_with_name **tagger_calls[NUM_TAGGER_CLASSES];
 call_with_name **circcer_calls;
-uint32 number_of_taggers[NUM_TAGGER_CLASSES];
-uint32 number_of_taggers_allocated[NUM_TAGGER_CLASSES];
-uint32 number_of_circcers;
-uint32 number_of_circcers_allocated;
+uint32_t number_of_taggers[NUM_TAGGER_CLASSES];
+uint32_t number_of_taggers_allocated[NUM_TAGGER_CLASSES];
+uint32_t number_of_circcers;
+uint32_t number_of_circcers_allocated;
 parse_state_type parse_state;
 call_conc_option_state current_options;
 warning_info no_search_warnings;
@@ -309,7 +309,7 @@ bool verify_used_selector;
 
 
 // A few accessors to let the UI stuff survive.
-uint32 get_concparseflags(const concept_descriptor *foo) { return foo->concparseflags; }
+uint32_t get_concparseflags(const concept_descriptor *foo) { return foo->concparseflags; }
 const char *get_call_name(const call_with_name *foo) { return foo->name; }
 const char *get_call_menu_name(const call_with_name *foo) { return foo->menu_name; }
 dance_level get_concept_level(const concept_descriptor *foo) { return foo->level; }
@@ -581,7 +581,7 @@ extern void update_id_bits(setup *ss)
 
    clear_bits_for_update(ss);
 
-   uint32 livemask = little_endian_live_mask(ss);
+   uint32_t livemask = little_endian_live_mask(ss);
 
    const id_bit_table *ptr = setup_attrs[ss->kind].id_bit_table_ptr;
 
@@ -644,7 +644,7 @@ extern void update_id_bits(setup *ss)
       // 8-person setup.  So this code makes the 4-person version illegal, so it will go
       // to the 8-person version.
 
-      uint32 cant_do_it_mask = (setup_attrs[ss->kind].bounding_box[1] == 1) ? 0x8 : 0;
+      uint32_t cant_do_it_mask = (setup_attrs[ss->kind].bounding_box[1] == 1) ? 0x8 : 0;
 
       for (i=0 ; i<=attr::slimit(ss) ; i++) {
          if (ss->people[i].id1 && !(ss->people[i].id2 & ID2_FACING) &&
@@ -881,7 +881,7 @@ void expand::initialize()
    }
 
    for (tabp = init_table ; tabp->inner_kind != nothing ; tabp++) {
-      uint32 hash_num = (tabp->inner_kind * 25) & (NUM_EXPAND_HASH_BUCKETS-1);
+      uint32_t hash_num = (tabp->inner_kind * 25) & (NUM_EXPAND_HASH_BUCKETS-1);
       tabp->next_expand = expand_hash_table[hash_num];
       expand_hash_table[hash_num] = tabp;
 
@@ -903,19 +903,19 @@ void full_expand::initialize_touch_tables()
    }
 
    for (tabp = touch_init_table1 ; tabp->kind != nothing ; tabp++) {
-      uint32 hash_num = ((tabp->kind + (5*tabp->live)) * 25) & (NUM_TOUCH_HASH_BUCKETS-1);
+      uint32_t hash_num = ((tabp->kind + (5*tabp->live)) * 25) & (NUM_TOUCH_HASH_BUCKETS-1);
       tabp->next = touch_hash_table1[hash_num];
       touch_hash_table1[hash_num] = tabp;
    }
 
    for (tabp = touch_init_table2 ; tabp->kind != nothing ; tabp++) {
-      uint32 hash_num = ((tabp->kind + (5*tabp->live)) * 25) & (NUM_TOUCH_HASH_BUCKETS-1);
+      uint32_t hash_num = ((tabp->kind + (5*tabp->live)) * 25) & (NUM_TOUCH_HASH_BUCKETS-1);
       tabp->next = touch_hash_table2[hash_num];
       touch_hash_table2[hash_num] = tabp;
    }
 
    for (tabp = touch_init_table3 ; tabp->kind != nothing ; tabp++) {
-      uint32 hash_num = ((tabp->kind + (5*tabp->live)) * 25) & (NUM_TOUCH_HASH_BUCKETS-1);
+      uint32_t hash_num = ((tabp->kind + (5*tabp->live)) * 25) & (NUM_TOUCH_HASH_BUCKETS-1);
       tabp->next = touch_hash_table3[hash_num];
       touch_hash_table3[hash_num] = tabp;
    }
@@ -923,10 +923,10 @@ void full_expand::initialize_touch_tables()
 
 
 full_expand::thing *full_expand::search_table_1(setup_kind kind,
-                                                uint32 livemask,
-                                                uint32 directions)
+                                                uint32_t livemask,
+                                                uint32_t directions)
 {
-   uint32 hash_num = ((kind + (5*livemask)) * 25) & (NUM_TOUCH_HASH_BUCKETS-1);
+   uint32_t hash_num = ((kind + (5*livemask)) * 25) & (NUM_TOUCH_HASH_BUCKETS-1);
 
    for (thing *tptr = touch_hash_table1[hash_num] ; tptr ; tptr = tptr->next) {
       if (tptr->kind == kind &&
@@ -939,10 +939,10 @@ full_expand::thing *full_expand::search_table_1(setup_kind kind,
 
 
 full_expand::thing *full_expand::search_table_2(setup_kind kind,
-                                                uint32 livemask,
-                                                uint32 directions)
+                                                uint32_t livemask,
+                                                uint32_t directions)
 {
-   uint32 hash_num = ((kind + (5*livemask)) * 25) & (NUM_TOUCH_HASH_BUCKETS-1);
+   uint32_t hash_num = ((kind + (5*livemask)) * 25) & (NUM_TOUCH_HASH_BUCKETS-1);
 
    for (thing *tptr = touch_hash_table2[hash_num] ; tptr ; tptr = tptr->next) {
       if (tptr->kind == kind &&
@@ -955,11 +955,11 @@ full_expand::thing *full_expand::search_table_2(setup_kind kind,
 
 
 full_expand::thing *full_expand::search_table_3(setup_kind kind,
-                                                uint32 livemask,
-                                                uint32 directions,
-                                                uint32 touchflags)
+                                                uint32_t livemask,
+                                                uint32_t directions,
+                                                uint32_t touchflags)
 {
-   uint32 hash_num = ((kind + (5*livemask)) * 25) & (NUM_TOUCH_HASH_BUCKETS-1);
+   uint32_t hash_num = ((kind + (5*livemask)) * 25) & (NUM_TOUCH_HASH_BUCKETS-1);
 
    for (thing *tptr = touch_hash_table3[hash_num] ; tptr ; tptr = tptr->next) {
       // If it has the evil "32" bit on, don't allow it except for special
@@ -981,18 +981,18 @@ full_expand::thing *full_expand::search_table_3(setup_kind kind,
 // bits are both on if the person is live.
 extern void big_endian_get_directions(
    const setup *ss,
-   uint32 & directions,
-   uint32 & livemask,
-   uint32 * high_directions_p /* = 0 */,    // These are optional, for setups larger than 16 people.
-   uint32 * high_livemask_p /* = 0 */)
+   uint32_t & directions,
+   uint32_t & livemask,
+   uint32_t * high_directions_p /* = 0 */,    // These are optional, for setups larger than 16 people.
+   uint32_t * high_livemask_p /* = 0 */)
 {
    directions = 0;
    livemask = 0;
-   uint32 high_directions = 0;
-   uint32 high_livemask = 0;
+   uint32_t high_directions = 0;
+   uint32_t high_livemask = 0;
 
    for (int i=0; i<=attr::slimit(ss); i++) {
-      uint32 p = ss->people[i].id1;
+      uint32_t p = ss->people[i].id1;
       high_livemask <<= 2;
       high_directions <<= 2;
       high_livemask |= (livemask >> 30) & 3;
@@ -1012,7 +1012,7 @@ extern void touch_or_rear_back(
    bool did_mirror,
    int callflags1) THROW_DECL
 {
-   uint32 directions, livemask;
+   uint32_t directions, livemask;
    const full_expand::thing *tptr;
    const expand::thing *zptr;
 
@@ -1029,7 +1029,7 @@ extern void touch_or_rear_back(
 
    big_endian_get_directions(scopy, directions, livemask);
 
-   uint32 touchflags = (callflags1 & CFLAG1_STEP_REAR_MASK);
+   uint32_t touchflags = (callflags1 & CFLAG1_STEP_REAR_MASK);
    call_restriction new_assume = cr_none;
 
    switch (touchflags) {
@@ -1212,8 +1212,8 @@ extern void touch_or_rear_back(
    if (callflags1 & CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK) {
       big_endian_get_directions(scopy, directions, livemask);    // Need to do this again.
 
-      uint32 rtest = ~0U;
-      uint32 rothertest = ~0U;
+      uint32_t rtest = ~0U;
+      uint32_t rothertest = ~0U;
 
       switch (scopy->kind) {
       case s2x2:
@@ -1373,10 +1373,10 @@ extern void touch_or_rear_back(
 
 bool expand::compress_from_hash_table(setup *ss,
                                       normalize_action action,
-                                      uint32 livemask,
+                                      uint32_t livemask,
                                       bool noqtagcompress) THROW_DECL
 {
-   uint32 hash_num = (ss->kind * 25) & (expand::NUM_EXPAND_HASH_BUCKETS-1);
+   uint32_t hash_num = (ss->kind * 25) & (expand::NUM_EXPAND_HASH_BUCKETS-1);
 
    const thing *cptr;
 
@@ -1405,10 +1405,10 @@ bool expand::compress_from_hash_table(setup *ss,
 
 
 bool expand::expand_from_hash_table(setup *ss,
-                                    uint32 needpropbits,
-                                    uint32 livemask) THROW_DECL
+                                    uint32_t needpropbits,
+                                    uint32_t livemask) THROW_DECL
 {
-   uint32 hash_num = (ss->kind * 25) & (NUM_EXPAND_HASH_BUCKETS-1);
+   uint32_t hash_num = (ss->kind * 25) & (NUM_EXPAND_HASH_BUCKETS-1);
    const thing *eptr;
 
    for (eptr=expand_hash_table[hash_num] ; eptr ; eptr=eptr->next_expand) {
@@ -1430,15 +1430,15 @@ bool expand::expand_from_hash_table(setup *ss,
 
 extern void do_matrix_expansion(
    setup *ss,
-   uint32 concprops,
+   uint32_t concprops,
    bool recompute_id) THROW_DECL
 {
-   uint32 needprops = concprops & CONCPROP__NEED_MASK;
+   uint32_t needprops = concprops & CONCPROP__NEED_MASK;
    if (needprops == 0) return;
-   uint32 needpropbits = NEEDMASK(needprops);
+   uint32_t needpropbits = NEEDMASK(needprops);
 
    for (;;) {
-      uint32 livemask = little_endian_live_mask(ss);
+      uint32_t livemask = little_endian_live_mask(ss);
 
       // Search for simple things in the hash table.
 
@@ -1485,7 +1485,7 @@ extern void do_matrix_expansion(
             // If we get no clue from the occupation, try to deduce the
             // answer from the facing directions of the "points".
 
-            uint32 ctrs = ss->people[3].id1 | ss->people[7].id1 |
+            uint32_t ctrs = ss->people[3].id1 | ss->people[7].id1 |
                ss->people[11].id1 | ss->people[15].id1;
 
             if (ctrs != 0 && (ctrs & 011) != 011) {
@@ -1494,7 +1494,7 @@ extern void do_matrix_expansion(
                goto expanded;
             }
 #else
-            uint32 ctrs = ss->people[3].id1 | ss->people[7].id1 |
+            uint32_t ctrs = ss->people[3].id1 | ss->people[7].id1 |
                ss->people[11].id1 | ss->people[15].id1;
 
             if (ctrs != 0 && (ctrs & 011) != 011) {
@@ -1579,10 +1579,10 @@ private:
       setup_kind k;
       call_restriction restr;
       int size;
-      veryshort map1[17];
-      veryshort map2[17];
-      veryshort map3[8];
-      veryshort map4[8];
+      int8_t map1[17];
+      int8_t map2[17];
+      int8_t map3[8];
+      int8_t map4[8];
       bool ok_for_assume;
       chk_type check;
       restr_initializer *next;
@@ -2290,25 +2290,25 @@ void restriction_tester::initialize_tables()
    }
 
    for (tabp = restr_init_table0 ; tabp->k != nothing ; tabp++) {
-      uint32 hash_num = ((tabp->k + (5*tabp->restr)) * 25) & (NUM_RESTR_HASH_BUCKETS-1);
+      uint32_t hash_num = ((tabp->k + (5*tabp->restr)) * 25) & (NUM_RESTR_HASH_BUCKETS-1);
       tabp->next = restr_hash_table0[hash_num];
       restr_hash_table0[hash_num] = tabp;
    }
 
    for (tabp = restr_init_table1 ; tabp->k != nothing ; tabp++) {
-      uint32 hash_num = ((tabp->k + (5*tabp->restr)) * 25) & (NUM_RESTR_HASH_BUCKETS-1);
+      uint32_t hash_num = ((tabp->k + (5*tabp->restr)) * 25) & (NUM_RESTR_HASH_BUCKETS-1);
       tabp->next = restr_hash_table1[hash_num];
       restr_hash_table1[hash_num] = tabp;
    }
 
    for (tabp = restr_init_table4 ; tabp->k != nothing ; tabp++) {
-      uint32 hash_num = ((tabp->k + (5*tabp->restr)) * 25) & (NUM_RESTR_HASH_BUCKETS-1);
+      uint32_t hash_num = ((tabp->k + (5*tabp->restr)) * 25) & (NUM_RESTR_HASH_BUCKETS-1);
       tabp->next = restr_hash_table4[hash_num];
       restr_hash_table4[hash_num] = tabp;
    }
 
    for (tabp = restr_init_table9 ; tabp->k != nothing ; tabp++) {
-      uint32 hash_num = ((tabp->k + (5*tabp->restr)) * 25) & (NUM_RESTR_HASH_BUCKETS-1);
+      uint32_t hash_num = ((tabp->k + (5*tabp->restr)) * 25) & (NUM_RESTR_HASH_BUCKETS-1);
       tabp->next = restr_hash_table9[hash_num];
       restr_hash_table9[hash_num] = tabp;
    }
@@ -2319,8 +2319,8 @@ restriction_tester::restr_initializer *restriction_tester::get_restriction_thing
    setup_kind k, assumption_thing t)
 {
    restr_initializer **hash_table;
-   uint32 hash_num = ((k + (5*t.assumption)) * 25) & (NUM_RESTR_HASH_BUCKETS-1);
-   uint32 col = t.assump_col;
+   uint32_t hash_num = ((k + (5*t.assumption)) * 25) & (NUM_RESTR_HASH_BUCKETS-1);
+   uint32_t col = t.assump_col;
 
    // Check for a few special cases that need to be translated.
 
@@ -2361,7 +2361,7 @@ restriction_tester::restr_initializer *restriction_tester::get_restriction_thing
 }
 
 
-void create_active_phantom(personrec *person_p, uint32 dir, int *phantom_count_p)
+void create_active_phantom(personrec *person_p, uint32_t dir, int *phantom_count_p)
 {
    if (!person_p->id1) {
       if (*phantom_count_p >= 16) fail("Too many phantoms.");
@@ -2381,12 +2381,12 @@ restriction_test_result verify_restriction(
    bool *failed_to_instantiate) THROW_DECL
 {
    int idx, limit, i, j;
-   uint32 t = 0;
-   uint32 qa0, qa1, qa2, qa3;
-   uint32 qaa[4];
-   uint32 pdir, qdir, pdirodd, qdirodd;
-   uint32 dirtest2[2];
-   const veryshort *p, *q;
+   uint32_t t = 0;
+   uint32_t qa0, qa1, qa2, qa3;
+   uint32_t qaa[4];
+   uint32_t pdir, qdir, pdirodd, qdirodd;
+   uint32_t dirtest2[2];
+   const int8_t *p, *q;
    int phantom_count = 0;
    unsigned int live_test = tt.assump_live;  // We might clear this later.
    restriction_tester::restr_initializer *rr;
@@ -2514,7 +2514,7 @@ restriction_test_result verify_restriction(
          qa0 = 0; qa1 = 0; qa2 = 0; qa3 = 0;
          // Test one quadrant.
          for (ii=0 ; ii<perquad ; ii++) {
-            uint32 tp;
+            uint32_t tp;
             if ((tp = ss->people[perquad*idx+ii].id1) != 0) {
                qa0 |= (tp^1);
                qa1 |= (tp^3);
@@ -2535,7 +2535,7 @@ restriction_test_result verify_restriction(
 
    *failed_to_instantiate = true;
 
-   veryshort *map1item;
+   int8_t *map1item;
    int szlim;
 
    switch (rr->check) {
@@ -2548,8 +2548,8 @@ restriction_test_result verify_restriction(
       qa3 = rr->map2[1];
 
       while (*p>=0) {
-         uint32 t1 = ss->people[*(p++)].id1;
-         uint32 t2 = ss->people[*(p++)].id1;
+         uint32_t t1 = ss->people[*(p++)].id1;
+         uint32_t t2 = ss->people[*(p++)].id1;
          qa1 |= t1 | t2;
          if (t1 && (t1 & 3)!=qa2) qa0 &= ~2;
          if (t2 && (t2 & 3)!=qa3) qa0 &= ~2;
@@ -2592,7 +2592,7 @@ restriction_test_result verify_restriction(
          goto bad;
 
       if (rr->ok_for_assume) {
-         uint32 qab[4];
+         uint32_t qab[4];
          qab[0] = 0;
          qab[2] = 0;
 
@@ -2631,7 +2631,7 @@ restriction_test_result verify_restriction(
             }
 
             for (i=0; i<rr->size; i++) {
-               uint32 dir = (i&1) ? ((i&2) ? qdirodd : qdir) : ((i&2) ? pdirodd : pdir);
+               uint32_t dir = (i&1) ? ((i&2) ? qdirodd : qdir) : ((i&2) ? pdirodd : pdir);
                create_active_phantom(&ss->people[rr->map1[i]], dir, &phantom_count);
             }
          }
@@ -2688,7 +2688,7 @@ restriction_test_result verify_restriction(
    case restriction_tester::chk_box_dbl:
       // Check everyone's lateral partner, independently of headlinerness.
       for (idx=0 ; idx<=attr::slimit(ss) ; idx++) {
-         uint32 u;
+         uint32_t u;
 
          if ((t = ss->people[idx].id1) & 010) p = rr->map1;
          else if ((t = ss->people[idx].id1) & 1) p = rr->map2;
@@ -2780,10 +2780,10 @@ restriction_test_result verify_restriction(
       limit = rr->map2[0];
 
       {
-         uint32 allqa0 = 0;
-         uint32 allqa2 = 0;
-         uint32 allcol = 0;
-         uint32 allrow = 0;
+         uint32_t allqa0 = 0;
+         uint32_t allqa2 = 0;
+         uint32_t allcol = 0;
+         uint32_t allrow = 0;
          for (idx=0; idx<limit; idx++) {
             qa0 = 0; qa1 = 0; qa2 = 0; qa3 = 0;
 
@@ -2987,7 +2987,7 @@ restriction_test_result verify_restriction(
       for (idx=0 ; idx<8 ; idx++) { if (ss->people[idx].id1 & 1) goto bad; }
 
       if (rr->ok_for_assume) {
-         uint32 qab[4];
+         uint32_t qab[4];
          qab[0] = 0;
          qab[2] = 0;
 
@@ -3008,14 +3008,14 @@ restriction_test_result verify_restriction(
             }
 
             for (i=0; i<rr->size; i++) {
-               uint32 dir = (i&1) ?
+               uint32_t dir = (i&1) ?
                   ((i&2) ? qdirodd : qdir) :
                   ((i&2) ? pdirodd : pdir);
                create_active_phantom(&ss->people[rr->map1[i]], dir, &phantom_count);
             }
 
             for (i=0; i<rr->map2[0]; i++) {
-               uint32 dir = (i&1) ? d_south : d_north;
+               uint32_t dir = (i&1) ? d_south : d_north;
                create_active_phantom(&ss->people[rr->map2[i+1]], dir, &phantom_count);
             }
          }
@@ -3029,8 +3029,8 @@ restriction_test_result verify_restriction(
 
       for (i=0; i<2; i++) {
          if ((t = ss->people[i].id1)) {
-            uint32 t2 = ss->people[i].id2;
-            uint32 northified = (i ^ (t>>1)) & 1;
+            uint32_t t2 = ss->people[i].id2;
+            uint32_t northified = (i ^ (t>>1)) & 1;
             dirtest2[i] = t2;
             if (t2 & ID2_PERM_BOY) qaa[northified] |= 2;
             else if (t2 & ID2_PERM_GIRL) qaa[northified^1] |= 2;
@@ -3062,38 +3062,38 @@ restriction_test_result verify_restriction(
          // center, but no ends.  Too bad.
          switch (ss->cmd.cmd_assume.assumption) {
          case cr_wave_only:
-            if ((ss->people[0].id1 & 013) == (uint32) rr->map2[1] ||
-                (ss->people[1].id1 & 013) == (uint32) rr->map2[0] ||
-                (ss->people[2].id1 & 013) == (uint32) rr->map2[1] ||
-                (ss->people[3].id1 & 013) == (uint32) rr->map2[0] ||
-                (ss->people[4].id1 & 013) == (uint32) rr->map2[0] ||
-                (ss->people[5].id1 & 013) == (uint32) rr->map2[1] ||
-                (ss->people[6].id1 & 013) == (uint32) rr->map2[0] ||
-                (ss->people[7].id1 & 013) == (uint32) rr->map2[1])
+            if ((ss->people[0].id1 & 013) == (uint32_t) rr->map2[1] ||
+                (ss->people[1].id1 & 013) == (uint32_t) rr->map2[0] ||
+                (ss->people[2].id1 & 013) == (uint32_t) rr->map2[1] ||
+                (ss->people[3].id1 & 013) == (uint32_t) rr->map2[0] ||
+                (ss->people[4].id1 & 013) == (uint32_t) rr->map2[0] ||
+                (ss->people[5].id1 & 013) == (uint32_t) rr->map2[1] ||
+                (ss->people[6].id1 & 013) == (uint32_t) rr->map2[0] ||
+                (ss->people[7].id1 & 013) == (uint32_t) rr->map2[1])
                goto good;
             break;
          case cr_2fl_only:
-            if ((ss->people[0].id1 & 013) == (uint32) rr->map2[1] ||
-                (ss->people[2].id1 & 013) == (uint32) rr->map2[0] ||
-                (ss->people[1].id1 & 013) == (uint32) rr->map2[1] ||
-                (ss->people[3].id1 & 013) == (uint32) rr->map2[0] ||
-                (ss->people[4].id1 & 013) == (uint32) rr->map2[0] ||
-                (ss->people[6].id1 & 013) == (uint32) rr->map2[1] ||
-                (ss->people[5].id1 & 013) == (uint32) rr->map2[0] ||
-                (ss->people[7].id1 & 013) == (uint32) rr->map2[1])
+            if ((ss->people[0].id1 & 013) == (uint32_t) rr->map2[1] ||
+                (ss->people[2].id1 & 013) == (uint32_t) rr->map2[0] ||
+                (ss->people[1].id1 & 013) == (uint32_t) rr->map2[1] ||
+                (ss->people[3].id1 & 013) == (uint32_t) rr->map2[0] ||
+                (ss->people[4].id1 & 013) == (uint32_t) rr->map2[0] ||
+                (ss->people[6].id1 & 013) == (uint32_t) rr->map2[1] ||
+                (ss->people[5].id1 & 013) == (uint32_t) rr->map2[0] ||
+                (ss->people[7].id1 & 013) == (uint32_t) rr->map2[1])
                goto good;
             break;
          }
       }
 
-      if ((ss->people[rr->map1[0]].id1 & 013) == (uint32) rr->map2[0] &&
-          (ss->people[rr->map1[1]].id1 & 013) == (uint32) rr->map2[1] &&
-          (ss->people[rr->map1[2]].id1 & 013) != (uint32) rr->map2[2] &&
-          (ss->people[rr->map1[3]].id1 & 013) != (uint32) rr->map2[3])
+      if ((ss->people[rr->map1[0]].id1 & 013) == (uint32_t) rr->map2[0] &&
+          (ss->people[rr->map1[1]].id1 & 013) == (uint32_t) rr->map2[1] &&
+          (ss->people[rr->map1[2]].id1 & 013) != (uint32_t) rr->map2[2] &&
+          (ss->people[rr->map1[3]].id1 & 013) != (uint32_t) rr->map2[3])
          goto good;
 
-      if ((ss->people[rr->map1[4]].id1 & 013) == (uint32) rr->map2[4] &&
-          (ss->people[rr->map1[5]].id1 & 013) == (uint32) rr->map2[5] &&
+      if ((ss->people[rr->map1[4]].id1 & 013) == (uint32_t) rr->map2[4] &&
+          (ss->people[rr->map1[5]].id1 & 013) == (uint32_t) rr->map2[5] &&
           (ss->people[rr->map1[6]].id1 & 013) == 0 &&
           (ss->people[rr->map1[7]].id1 & 013) == 0)
          goto good;
@@ -3209,8 +3209,8 @@ static void initialize_concept_sublists()
       for (concept_index=0,concepts_in_this_setup=0,good_concepts_in_this_setup=0;
            ;
            concept_index++) {
-         uint32 setup_mask = ~0;      // Default is to accept the concept.
-         uint32 good_setup_mask = 0;  // Default for this is not to.
+         uint32_t setup_mask = ~0;      // Default is to accept the concept.
+         uint32_t good_setup_mask = 0;  // Default for this is not to.
          const concept_descriptor *p = &concept_descriptor_table[concept_index];
          if (p->kind == end_marker) break;
          if (p->kind == concept_omit) continue;  // Totally stupid concept!!!!
@@ -3671,7 +3671,7 @@ extern void fail2(const char s1[], const char s2[]) THROW_DECL
 }
 
 
-extern void failp(uint32 id1, const char s[]) THROW_DECL
+extern void failp(uint32_t id1, const char s[]) THROW_DECL
 {
    collision_person1 = id1;
    strncpy(error_message1, s, MAX_ERR_LENGTH);
@@ -3729,7 +3729,7 @@ extern callarray *assoc(
    bool *specialpass /* = (bool *) 0 */) THROW_DECL
 {
    for (callarray *p = spec ; p ; p = p->next) {
-      uint32 k, t, u, w, mask;
+      uint32_t k, t, u, w, mask;
       assumption_thing tt;
       int plaini;
       bool booljunk;
@@ -3839,7 +3839,7 @@ extern callarray *assoc(
       }
 
       call_restriction ssA = ss->cmd.cmd_assume.assumption;
-      uint32 ssB = ss->cmd.cmd_assume.assump_both;
+      uint32_t ssB = ss->cmd.cmd_assume.assump_both;
       setup_kind ssK = ss->kind;
 
       call_restriction this_qualifier = (call_restriction) (p->qualifierstuff & QUALBIT__QUAL_CODE);
@@ -4424,7 +4424,7 @@ extern callarray *assoc(
       case cr_ctr_pts_rh:
       case cr_ctr_pts_lh:
          {
-            uint32 z = 1;
+            uint32_t z = 1;
 
             switch (ssA) {
             case cr_jright: case cr_ijright:
@@ -4440,11 +4440,11 @@ extern callarray *assoc(
                }
             }
 
-            uint32 t1;
-            uint32 t2;
-            uint32 ndir = d_north;
-            uint32 sdir = d_south;
-            uint32 tb;
+            uint32_t t1;
+            uint32_t t2;
+            uint32_t ndir = d_north;
+            uint32_t sdir = d_south;
+            uint32_t tb;
             bool b1 = true;
             bool b2 = true;
 
@@ -4634,7 +4634,7 @@ extern callarray *assoc(
       tt.assumption = cr_wave_only;
 
       switch (ssK) {
-         uint32 vv;
+         uint32_t vv;
       case s3x4:         // This only handles lines; not columns --
                          // we couldn't have "wavy" columns that were symmetric.
       case s_bone6:
@@ -4736,7 +4736,7 @@ extern callarray *assoc(
 
 
 
-uint32 uncompress_position_number(uint32 datum)
+uint32_t uncompress_position_number(uint32_t datum)
 {
    int field = ((datum >> 2) & 0x1F) - 1;
    return (field <= 24) ? field : (field-12) << 1;
@@ -4744,7 +4744,7 @@ uint32 uncompress_position_number(uint32 datum)
 
 
 
-extern void clear_result_flags(setup *z, uint32 preserve_these /* = 0 */)
+extern void clear_result_flags(setup *z, uint32_t preserve_these /* = 0 */)
 {
    z->result_flags.misc &= preserve_these;
    z->result_flags.res_heritflags_to_save_from_mxn_expansion = 0;
@@ -4752,15 +4752,15 @@ extern void clear_result_flags(setup *z, uint32 preserve_these /* = 0 */)
 }
 
 setup::setup(setup_kind k, int r,
-             uint32 P0, uint32 I0,
-             uint32 P1, uint32 I1,
-             uint32 P2, uint32 I2,
-             uint32 P3, uint32 I3,
-             uint32 P4, uint32 I4,
-             uint32 P5, uint32 I5,
-             uint32 P6, uint32 I6,
-             uint32 P7, uint32 I7,
-             uint32 little_endian_wheretheygo /* = 0x76543210 */) :
+             uint32_t P0, uint32_t I0,
+             uint32_t P1, uint32_t I1,
+             uint32_t P2, uint32_t I2,
+             uint32_t P3, uint32_t I3,
+             uint32_t P4, uint32_t I4,
+             uint32_t P5, uint32_t I5,
+             uint32_t P6, uint32_t I6,
+             uint32_t P7, uint32_t I7,
+             uint32_t little_endian_wheretheygo /* = 0x76543210 */) :
    kind(k), rotation(r), eighth_rotation(0)
 {
    clear_people();
@@ -4790,16 +4790,16 @@ setup::setup(setup_kind k, int r,
 
 
 
-extern uint32 copy_person(setup *resultpeople, int resultplace, const setup *sourcepeople, int sourceplace)
+extern uint32_t copy_person(setup *resultpeople, int resultplace, const setup *sourcepeople, int sourceplace)
 {
    resultpeople->people[resultplace] = sourcepeople->people[sourceplace];
    return resultpeople->people[resultplace].id1;
 }
 
 
-extern uint32 copy_rot(setup *resultpeople, int resultplace, const setup *sourcepeople, int sourceplace, int rotamount)
+extern uint32_t copy_rot(setup *resultpeople, int resultplace, const setup *sourcepeople, int sourceplace, int rotamount)
 {
-   uint32 newperson = sourcepeople->people[sourceplace].id1;
+   uint32_t newperson = sourcepeople->people[sourceplace].id1;
 
    if (newperson) newperson = (newperson + rotamount) & ~064;
    resultpeople->people[resultplace].id2 = sourcepeople->people[sourceplace].id2;
@@ -4810,7 +4810,7 @@ extern uint32 copy_rot(setup *resultpeople, int resultplace, const setup *source
 
 extern void install_person(setup *resultpeople, int resultplace, const setup *sourcepeople, int sourceplace)
 {
-   uint32 newperson = sourcepeople->people[sourceplace].id1;
+   uint32_t newperson = sourcepeople->people[sourceplace].id1;
 
    if (resultpeople->people[resultplace].id1 == 0)
       resultpeople->people[resultplace] = sourcepeople->people[sourceplace];
@@ -4826,7 +4826,7 @@ extern void install_person(setup *resultpeople, int resultplace, const setup *so
 
 extern void install_rot(setup *resultpeople, int resultplace, const setup *sourcepeople, int sourceplace, int rotamount) THROW_DECL
 {
-   uint32 newperson = sourcepeople->people[sourceplace].id1;
+   uint32_t newperson = sourcepeople->people[sourceplace].id1;
 
    if (newperson) {
       if (resultplace < 0) fail(resultplace == -2 ?
@@ -4850,7 +4850,7 @@ extern void install_rot(setup *resultpeople, int resultplace, const setup *sourc
 
 
 extern void scatter(setup *resultpeople, const setup *sourcepeople,
-                    const veryshort *resultplace, int countminus1, int rotamount) THROW_DECL
+                    const int8_t *resultplace, int countminus1, int rotamount) THROW_DECL
 {
    int k, idx;
    for (k=0; k<=countminus1; k++) {
@@ -4867,7 +4867,7 @@ extern void scatter(setup *resultpeople, const setup *sourcepeople,
 
 
 extern void gather(setup *resultpeople, const setup *sourcepeople,
-                   const veryshort *resultplace, int countminus1, int rotamount)
+                   const int8_t *resultplace, int countminus1, int rotamount)
 {
    int k, idx;
    for (k=0; k<=countminus1; k++) {
@@ -4879,7 +4879,7 @@ extern void gather(setup *resultpeople, const setup *sourcepeople,
 }
 
 
-extern void install_scatter(setup *resultpeople, int num, const veryshort *placelist,
+extern void install_scatter(setup *resultpeople, int num, const int8_t *placelist,
                             const setup *sourcepeople, int rot) THROW_DECL
 {
    for (int j=0; j<num; j++)
@@ -4916,7 +4916,7 @@ bool clean_up_unsymmetrical_setup(setup *ss)
 {
    static expand::thing thing_splinedmd_1x8 = {{0, 1, 3, 2, -1, -1, -1, -1}, splinedmd, s1x8, 0};
    static expand::thing thing_splinedmd_qtag = {{-1, -1, -1, -1, 3, 1, 2, 4}, splinedmd, s_qtag, 0};
-   uint32 livemask = little_endian_live_mask(ss);
+   uint32_t livemask = little_endian_live_mask(ss);
 
    switch (ss->kind) {
    case splinedmd:
@@ -4999,9 +4999,9 @@ parse_block *process_final_concepts(
 {
    for ( ; cptr ; cptr=cptr->next) {
       finalflags the_final_bit = (finalflags) 0;
-      uint32 forbidfinalbit = 0;
+      uint32_t forbidfinalbit = 0;
       heritflags heritsetbit = (heritflags) 0;
-      uint32 forbidheritbit = 0;
+      uint32_t forbidheritbit = 0;
 
       switch (cptr->concept->kind) {
       case concept_comment:
@@ -5123,7 +5123,7 @@ parse_block *process_final_concepts(
          if (final_concepts->test_heritbits(forbidheritbit))
             fail("Illegal order of call modifiers.");
 
-         if (do_heritflag_merge((uint32 *) &final_concepts->herit, heritsetbit))
+         if (do_heritflag_merge((uint32_t *) &final_concepts->herit, heritsetbit))
             fail("Illegal combination of call modifiers.");
       }
       else {
@@ -5278,9 +5278,9 @@ bool fix_n_results(
    int arity,
    int goal,
    setup z[],
-   uint32 & rotstates,
-   uint32 & pointclip,
-   uint32 fudgystupidrot,
+   uint32_t & rotstates,
+   uint32_t & pointclip,
+   uint32_t fudgystupidrot,
    bool allow_hetero_and_notify /* = false */) THROW_DECL
 {
    int i;
@@ -5335,7 +5335,7 @@ bool fix_n_results(
    // the center line is fully occupied.  In this case we repopulate the outer lines
    // to 1x4's.
 
-   uint32 eighth_rot_flag = ~0U;
+   uint32_t eighth_rot_flag = ~0U;
 
    for (i=0; i<arity; i++) {
       // First, check that all setups have the same "eighth rotation" stuff,
@@ -5399,7 +5399,7 @@ bool fix_n_results(
          else if (eighth_rot_flag ^ z[i].eighth_rotation)
             goto lose;
 
-         uint32 dmdqtagfudge = 0;
+         uint32_t dmdqtagfudge = 0;
 
          // Unfortunately, this code wants all setups to be oriented the
          // same way, so that it will know how to make empty setups look like their brethren.
@@ -5753,7 +5753,7 @@ const expand::thing s_dmd_323 = {{5, 7, 1, 3}, sdmd, s_323, 1};
 // For normal usage, we set action=simple_normalize.
 void normalize_setup(setup *ss, normalize_action action, bool noqtagcompress) THROW_DECL
 {
-   uint32 livemask, tbonetest;
+   uint32_t livemask, tbonetest;
    bool did_something = false;
 
  startover:
@@ -6052,7 +6052,7 @@ void check_concept_parse_tree(parse_block *conceptptr, bool strict) THROW_DECL
    }
 }
 
-bool check_for_centers_concept(uint32 & callflags1_to_examine,     // We rewrite this.
+bool check_for_centers_concept(uint32_t & callflags1_to_examine,   // We rewrite this.
                                parse_block * & parse_scan,         // This too.
                                const setup_command *the_cmd) THROW_DECL
 {
@@ -6179,14 +6179,14 @@ bool check_for_centers_concept(uint32 & callflags1_to_examine,     // We rewrite
 }
 
 
-static void check_near_far(setup *ss, int Vsize, uint32 *Vtable,
-                           int howmany, bool speciallateral, uint32 flag, bool do_near)
+static void check_near_far(setup *ss, int Vsize, uint32_t *Vtable,
+                           int howmany, bool speciallateral, uint32_t flag, bool do_near)
 {
    if (howmany >= Vsize)
       return;
 
    int j, k, lowlim, hilim;
-   uint32 h_boxlist[8], v_boxlist[8];
+   uint32_t h_boxlist[8], v_boxlist[8];
 
    int h_boxpop = 0;
    int v_boxpop = 0;
@@ -6237,8 +6237,8 @@ static void check_near_far(setup *ss, int Vsize, uint32 *Vtable,
    h_out: ;
    }
 
-   uint32 colbits = do_near ? ID3_NEARCOL : ID3_FARCOL;
-   uint32 linebits = do_near ? ID3_NEARLINE : ID3_FARLINE;
+   uint32_t colbits = do_near ? ID3_NEARCOL : ID3_FARCOL;
+   uint32_t linebits = do_near ? ID3_NEARLINE : ID3_FARLINE;
 
    if (speciallateral) {
       if (ss->rotation & 1) {
@@ -6252,8 +6252,8 @@ static void check_near_far(setup *ss, int Vsize, uint32 *Vtable,
    }
 
    // The C1 phantom setup has unusually wide press/truck distances.
-   uint32 htrucksize = (ss->kind == s_c1phan) ? 0xC00 : 0x400;
-   uint32 vtrucksize = (ss->kind == s_c1phan) ? 0x800 : 0x400;
+   uint32_t htrucksize = (ss->kind == s_c1phan) ? 0xC00 : 0x400;
+   uint32_t vtrucksize = (ss->kind == s_c1phan) ? 0x800 : 0x400;
 
    // If the designated 4 people are in a 2x2 box, say so.
    // Two people vertically and two horizontally, and, since
@@ -6281,7 +6281,7 @@ static void check_near_far(setup *ss, int Vsize, uint32 *Vtable,
 
       // It's a line if (dirs & 010) == 0
       // It's a col  if (dirs & 001) == 0
-      uint32 bits = ((dirs & 001) == 0) ? colbits : (((dirs & 010) == 0) ? linebits : 0);
+      uint32_t bits = ((dirs & 001) == 0) ? colbits : (((dirs & 010) == 0) ? linebits : 0);
       for (k=lowlim; k < hilim  ; k++)
          ss->people[Vtable[k] & 0xFF].id3 |= bits;
    }
@@ -6299,15 +6299,15 @@ static void check_near_far(setup *ss, int Vsize, uint32 *Vtable,
 
       // It's a line if (dirs & 001) == 0
       // It's a col  if (dirs & 010) == 0
-      uint32 bits = ((dirs & 010) == 0) ? colbits : (((dirs & 001) == 0) ? linebits : 0);
+      uint32_t bits = ((dirs & 010) == 0) ? colbits : (((dirs & 001) == 0) ? linebits : 0);
       for (k=lowlim; k < hilim  ; k++)
          ss->people[Vtable [k] & 0xFF].id3 |= bits;
    }
 }
 
 
-static void check_near_far_wrapper(setup *ss, int Vsize, uint32 *Vtable,
-                                   int howmany, bool speciallateral, uint32 nearflag, uint32 farflag)
+static void check_near_far_wrapper(setup *ss, int Vsize, uint32_t *Vtable,
+                                   int howmany, bool speciallateral, uint32_t nearflag, uint32_t farflag)
 {
    check_near_far(ss, Vsize, Vtable, howmany, speciallateral, nearflag, true);
    check_near_far(ss, Vsize, Vtable, howmany, speciallateral, farflag, false);
@@ -6347,11 +6347,11 @@ extern void put_in_absolute_proximity_and_facing_bits(setup *ss)
       if (ss->kind == s_c1phan) {
          // We don't allow random populations; dancers might find it ambiguous.
          // So, in each quadrant, we require 2 people, in local opposite places.
-         uint32 livemask = little_endian_live_mask(ss);
-         uint32 q1 = livemask & 0xF;
-         uint32 q2 = (livemask >> 4) & 0xF;
-         uint32 q3 = (livemask >> 8) & 0xF;
-         uint32 q4 = (livemask >> 12) & 0xF;
+         uint32_t livemask = little_endian_live_mask(ss);
+         uint32_t q1 = livemask & 0xF;
+         uint32_t q2 = (livemask >> 4) & 0xF;
+         uint32_t q3 = (livemask >> 8) & 0xF;
+         uint32_t q4 = (livemask >> 12) & 0xF;
          if (q1 != 5 && q1 != 0xA) return;
          if (q2 != 5 && q2 != 0xA) return;
          if (q3 != 5 && q3 != 0xA) return;
@@ -6381,7 +6381,7 @@ extern void put_in_absolute_proximity_and_facing_bits(setup *ss)
       //
       // The tables are sorted from lower to higher, so far people are in lower slots.
       //
-      uint32 Vtable[MAX_PEOPLE], Htable[MAX_PEOPLE];
+      uint32_t Vtable[MAX_PEOPLE], Htable[MAX_PEOPLE];
       int Vsize = 0;
       int Hsize = 0;
 
@@ -6389,11 +6389,11 @@ extern void put_in_absolute_proximity_and_facing_bits(setup *ss)
          if (ss->people[i].id1 & BIT_PERSON) {
             // By adding 64 and truncating, we are turning them into unsigned
             // 8-bit numbers, so we can just concatenate them and compare both at once.
-            uint32 Vcoord = 
+            uint32_t Vcoord = 
                ((ss->rotation & 1) ?
                 setup_attrs[ss->kind].nice_setup_coords->xca[i] :
                 -setup_attrs[ss->kind].nice_setup_coords->yca[i]) + 128;
-            uint32 Hcoord = 
+            uint32_t Hcoord = 
                ((ss->rotation & 1) ?
                 -setup_attrs[ss->kind].nice_setup_coords->yca[i] :
                 setup_attrs[ss->kind].nice_setup_coords->xca[i]) + 128;

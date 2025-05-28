@@ -167,7 +167,7 @@ extern void hash_nonrandom_number(int number)
 //   // of the C++ language, of course.  It is left here as a memorial to the types
 //   // of things people had to do when dealing with buggy compilers or libraries.
 //
-//   extern void *get_mem(uint32 siz)
+//   extern void *get_mem(uint32_t siz)
 //   {
 //      // Using "calloc" instead of "malloc" clears the memory.
 //      // We claim this isn't necessary; our code, being correctly written,
@@ -192,7 +192,7 @@ extern void hash_nonrandom_number(int number)
 //
 //   // Of course, we no longer take pity on broken compilers or operating systems.
 //
-//   extern void *get_more_mem(void *oldp, uint32 siz)
+//   extern void *get_more_mem(void *oldp, uint32_t siz)
 //   {
 //      void *buf;
 //
@@ -578,7 +578,7 @@ void ui_utils::write_file(const char line[])
 {
    if (file_error) return;    // Don't keep trying after a failure.
 
-   uint32 size = strlen(line);
+   uint32_t size = strlen(line);
 
    if (size != 0) {
       if ((fwrite(line, 1, size, fildes) != size) || ferror(fildes)) {

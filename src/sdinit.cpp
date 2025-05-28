@@ -81,7 +81,7 @@ call_conc_option_state null_options;
 
 // This gets temporarily allocated.  It persists through the entire initialization.
 //
-static uint32 *global_temp_call_indices;
+static uint32_t *global_temp_call_indices;
 static int global_callcount;     /* Index into the above. */
 
 
@@ -285,8 +285,8 @@ static void test_starting_setup(call_list_kind cl, const setup & test_setup)
    // "hinge by I x J x K" work from columns.  But if the indicated number is 7,
    // that doesn't count.  So we do the calculation by adding 1, letting it
    // wrap around, and checking that the result is >= 4.
-   if (((test_call->the_defn.callflags1+1) & ((uint32) CFLAG1_NUMBER_MASK)) >=
-       4*((uint32) CFLAG1_NUMBER_BIT))
+   if (((test_call->the_defn.callflags1+1) & ((uint32_t) CFLAG1_NUMBER_MASK)) >=
+       4*((uint32_t) CFLAG1_NUMBER_BIT))
       goto accept;
 
    // If the call has the "matrix" schema, and it is sex-dependent, we accept it,
@@ -380,7 +380,7 @@ static void test_starting_setup(call_list_kind cl, const setup & test_setup)
 
    memcpy(main_call_lists[cl],
           global_temp_call_indices,
-          global_callcount*sizeof(uint32));
+          global_callcount*sizeof(uint32_t));
 }
 
 
@@ -487,7 +487,7 @@ static void create_misc_call_lists(call_list_kind cl)
             goto accept;    // We don't understand it.
 
          callarray *deflist = callq->the_defn.stuff.arr.def_list->callarray_list;
-         uint32 touch_flags = callq->the_defn.callflags1 & CFLAG1_STEP_REAR_MASK;
+         uint32_t touch_flags = callq->the_defn.callflags1 & CFLAG1_STEP_REAR_MASK;
 
          switch (touch_flags) {
          case CFLAG1_REAR_BACK_FROM_QTAG:
@@ -529,13 +529,13 @@ static void create_misc_call_lists(call_list_kind cl)
 
    memcpy(main_call_lists[cl],
           global_temp_call_indices,
-          callcount*sizeof(uint32));
+          callcount*sizeof(uint32_t));
 }
 
 
 // These are used by the database reading stuff.
 
-static uint32 last_datum, last_12;
+static uint32_t last_datum, last_12;
 static call_with_name *call_root;
 static callarray *tp;
 // This shows the highest index we have seen so far.  It must never exceed max_base_calls-1.
@@ -553,15 +553,15 @@ static FILE *abridge_file;
 static FILE *stats_file = (FILE *) 0;
 
 
-static uint32 read_8_from_database()
+static uint32_t read_8_from_database()
 {
    return fgetc(database_file) & 0xFF;
 }
 
 
-static uint32 read_16_from_database()
+static uint32_t read_16_from_database()
 {
-   uint32 bar;
+   uint32_t bar;
 
    bar = (read_8_from_database() & 0xFF) << 8;
    bar |= read_8_from_database() & 0xFF;
@@ -615,7 +615,7 @@ static void read_halfword()
 
 static void read_fullword()
 {
-   uint32 t = read_16_from_database();
+   uint32_t t = read_16_from_database();
    last_datum = t << 16 | read_16_from_database();
 }
 
@@ -654,12 +654,12 @@ static void read_array_def_blocks(calldef_block *where_to_put)
 
    while (last_datum & 0x8000) {
       begin_kind this_start_setup;
-      uint32 this_qualifierstuff;
+      uint32_t this_qualifierstuff;
       call_restriction this_restriction;
       setup_kind end_setup;
       setup_kind end_setup_out;
       int this_start_size;
-      uint32 these_flags;
+      uint32_t these_flags;
       int extra;
       const char *prederrmsg;
 
@@ -714,16 +714,16 @@ static void read_array_def_blocks(calldef_block *where_to_put)
       current_call_block = tp;
       tp->callarray_flags = these_flags;
       tp->qualifierstuff = this_qualifierstuff;
-      tp->start_setup = (uint8) this_start_setup;
+      tp->start_setup = (uint8_t) this_start_setup;
       tp->restriction = this_restriction;
 
       if (these_flags & CAF__CONCEND) {      // See if "concendsetup" was used.
-         tp->end_setup = (uint8) s_normal_concentric;
-         tp->end_setup_in = (uint8) end_setup;
-         tp->end_setup_out = (uint8) end_setup_out;
+         tp->end_setup = (uint8_t) s_normal_concentric;
+         tp->end_setup_in = (uint8_t) end_setup;
+         tp->end_setup_out = (uint8_t) end_setup_out;
       }
       else {
-         tp->end_setup = (uint8) end_setup;
+         tp->end_setup = (uint8_t) end_setup;
       }
 
       if (these_flags & CAF__PREDS) {
@@ -771,7 +771,7 @@ static void read_array_def_blocks(calldef_block *where_to_put)
 
             for (j=0; j < this_start_size; j++) {
                read_halfword();
-               temp_predlist->array_pred_def[j] = (uint16) last_datum;
+               temp_predlist->array_pred_def[j] = (uint16_t) last_datum;
             }
 
             temp_predlist->next = this_predlist;
@@ -793,7 +793,7 @@ static void read_array_def_blocks(calldef_block *where_to_put)
       else {
          for (j=0; j < this_start_size; j++) {
             read_halfword();
-            tp->stuff.array_no_pred_def[j] = (uint16) last_datum;
+            tp->stuff.array_no_pred_def[j] = (uint16_t) last_datum;
          }
          read_halfword();
       }
@@ -879,14 +879,14 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
 
    int j;
    int lim = 16;
-   uint32 left_half;
+   uint32_t left_half;
 
    read_halfword();
 
    switch (root_to_use->schema) {
    case schema_alias:
       check_tag(last_12);
-      root_to_use->stuff.conc.innerdef.call_id = (uint16) last_12;
+      root_to_use->stuff.conc.innerdef.call_id = (uint16_t) last_12;
       read_halfword();
       break;
    case schema_nothing:
@@ -913,7 +913,7 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
             root_to_use->callflags1 |= CFLAG1_NUMBER_BIT;
 
          matrix_def_block *this_matrix_block =
-            (matrix_def_block *) ::operator new(sizeof(matrix_def_block) + sizeof(uint32)*(lim-2));
+            (matrix_def_block *) ::operator new(sizeof(matrix_def_block) + sizeof(uint32_t)*(lim-2));
          root_to_use->stuff.matrix.matrix_def_list = this_matrix_block;
 
          this_matrix_block->modifier_level = calling_level;
@@ -923,7 +923,7 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
       next_matrix_clause:
 
          for (j=0; j<lim; j++) {
-            uint32 firstpart;
+            uint32_t firstpart;
 
             read_halfword();
             firstpart = last_datum & 0xFFFF;
@@ -942,7 +942,7 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
          // Check for compound definition, that is, level 2 group.
          if ((last_datum & 0xE000) == 0x4000) {
             this_matrix_block->next = (matrix_def_block *)
-               ::operator new(sizeof(matrix_def_block) + sizeof(uint32)*(lim-2));
+               ::operator new(sizeof(matrix_def_block) + sizeof(uint32_t)*(lim-2));
 
             this_matrix_block = this_matrix_block->next;
             this_matrix_block->modifier_level = (dance_level) (last_datum & 0xFFF);
@@ -995,7 +995,7 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
 
          while ((last_datum & 0xE000) == 0x4000) {
             check_tag(last_12);
-            templist[next_definition_index].call_id = (uint16) last_12;
+            templist[next_definition_index].call_id = (uint16_t) last_12;
             read_fullword();
             templist[next_definition_index].modifiers1 = (mods1_word) last_datum;
             read_fullword();
@@ -1017,14 +1017,14 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
          database_error_exit("database phase error 7");
 
       check_tag(last_12);
-      root_to_use->stuff.conc.innerdef.call_id = (uint16) last_12;
+      root_to_use->stuff.conc.innerdef.call_id = (uint16_t) last_12;
       read_fullword();
       root_to_use->stuff.conc.innerdef.modifiers1 = (mods1_word) last_datum;
       read_fullword();
       root_to_use->stuff.conc.innerdef.modifiersh = last_datum;
       read_halfword();
       check_tag(last_12);
-      root_to_use->stuff.conc.outerdef.call_id = (uint16) last_12;
+      root_to_use->stuff.conc.outerdef.call_id = (uint16_t) last_12;
       read_fullword();
       root_to_use->stuff.conc.outerdef.modifiers1 = (mods1_word) last_datum;
       read_fullword();
@@ -1043,13 +1043,13 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
       calldefn *recursed_call_root = new calldefn;
 
       read_halfword();       // Get level (not really) and 16 bits of "callflags2" stuff.
-      uint32 saveflags1overflow = last_datum;
+      uint32_t saveflags1overflow = last_datum;
       read_fullword();       // Get top level flags, first word.
                              // This is the "callflags1" stuff.
-      uint32 saveflags1 = last_datum;
+      uint32_t saveflags1 = last_datum;
       read_fullword();       // Get top level flags, second word.
                              // This is the "heritflags" stuff.
-      uint32 saveflagsh = last_datum;
+      uint32_t saveflagsh = last_datum;
       read_halfword();       // Get char count (ignore same) and schema.
       call_schema = (calldef_schema) (last_datum & 0xFF);
       recursed_call_root->frequency = 0;
@@ -1226,7 +1226,7 @@ extern void prepare_to_read_menus()
       gg77->iob88.fatal_error_exit(1, "Insufficient setupkind space", "program has been compiled incorrectly.");
    else if (NUM_PLAINMAP_KINDS > 252)
       gg77->iob88.fatal_error_exit(1, "Insufficient mapkind space", "program has been compiled incorrectly.");
-   else if (sizeof(uint32) > sizeof(void *)) // Need this because of horrible cheating we do with main_call_lists.
+   else if (sizeof(uint32_t) > sizeof(void *)) // Need this because of horrible cheating we do with main_call_lists.
       gg77->iob88.fatal_error_exit(1, "Incorrect pointer size", "program has been compiled incorrectly.");
    else if (UINT16_C(0xFFFFFFFF) != 0xFFFF)  // Must have UINT16_C convert to uint16_t, chopping bits as needed.
       gg77->iob88.fatal_error_exit(1, "Incorrect type coercion 1", "program has been compiled incorrectly.");
@@ -1721,10 +1721,10 @@ static void build_database_1(abridge_mode_t abridge_mode)
    base_calls = new call_with_name *[max_base_calls];
 
    // This one is temporary.  It lasts through the entire initialization process.
-   // It has the indices, packed as uint32 (which we know is <= the size of a pointer)
+   // It has the indices, packed as uint32_t (which we know is <= the size of a pointer)
    // which we will, in a shameless case of misusing the type system, copy onto some of
    // the main_call_lists arrays.  Those arrays are supposed to contain "call_with_name *" items.
-   global_temp_call_indices = new uint32[abs_max_calls];
+   global_temp_call_indices = new uint32_t[abs_max_calls];
    // This one is also temporary to the initialization.
    local_call_list = new call_with_name *[abs_max_calls];
 
@@ -1752,15 +1752,15 @@ static void build_database_1(abridge_mode_t abridge_mode)
       dance_level this_calls_level = (dance_level) (read_8_from_database() & 0xFF);
 
       read_halfword();       // Get 16 bits of "callflags1"  overflow stuff.
-      uint32 saveflags1overflow = last_datum;
+      uint32_t saveflags1overflow = last_datum;
 
       read_fullword();       // Get top level flags, first word.
                              // This is the "callflags1" stuff.
-      uint32 saveflags1 = last_datum;
+      uint32_t saveflags1 = last_datum;
 
       read_fullword();       // Get top level flags, second word.
                              // This is the "heritflags" stuff.
-      uint32 saveflagsh = last_datum;
+      uint32_t saveflagsh = last_datum;
 
       read_halfword();       // Get char count and schema.
       call_schema = (calldef_schema) (last_datum & 0xFF);
@@ -1875,7 +1875,7 @@ static void build_database_1(abridge_mode_t abridge_mode)
    simply re-uses the stored string where it can, and allocates fresh memory
    if a substitution took place. */
 
-static const char *translate_menu_name(const char *orig_name, uint32 *escape_bits_p)
+static const char *translate_menu_name(const char *orig_name, uint32_t *escape_bits_p)
 {
    int j;
    char c;
@@ -1946,7 +1946,7 @@ static const char *translate_menu_name(const char *orig_name, uint32 *escape_bit
 void conzept::translate_concept_names()
 {
    int i;
-   uint32 escape_bit_junk;
+   uint32_t escape_bit_junk;
 
    for (i=0; conzept::unsealed_concept_descriptor_table[i].kind != marker_end_of_list; i++) {
       unsealed_concept_descriptor_table[i].menu_name =
@@ -2051,7 +2051,7 @@ void start_stats_file_from_GLOB_stats_filename()
 bool open_session(int argc, char **argv)
 {
    int i, j;
-   uint32 uj;
+   uint32_t uj;
    int argno;
    char line[MAX_FILENAME_LENGTH+1];
 
@@ -2407,7 +2407,7 @@ bool open_session(int argc, char **argv)
       char cachename[MAX_TEXT_LINE_LENGTH];
       strncpy(cachename, getout_strings[calling_level], MAX_TEXT_LINE_LENGTH);
       strcat(cachename, "cache");
-      uint32 escape_bit_junk;
+      uint32_t escape_bit_junk;
 
       MAPPED_CACHE_FILE cache_stuff((glob_abridge_mode == abridge_mode_abridging) ? 2 : 1,
                                     sourcenames, database_input_files,
@@ -2528,7 +2528,7 @@ bool open_session(int argc, char **argv)
 
       // Create the tagger menu lists.
 
-      uint32 ui;
+      uint32_t ui;
 
       for (i=0 ; i<NUM_TAGGER_CLASSES ; i++) {
          tagger_menu_list[i] = new Cstring [number_of_taggers[i]+1];
@@ -2876,9 +2876,9 @@ bool open_session(int argc, char **argv)
       // indices into pointers.  Then create the menus.
 
       for (cl = call_list_1x8; cl < call_list_extent ; cl = (call_list_kind) (cl+1)) {
-         // We have to do this downward, in case the pointers are bigger than uint32.
+         // We have to do this downward, in case the pointers are bigger than uint32_t.
          for (i=number_of_calls[cl]-1; i >= 0 ; i--)
-            main_call_lists[cl][i] = main_call_lists[call_list_any][((uint32 *) main_call_lists[cl])[i]];
+            main_call_lists[cl][i] = main_call_lists[call_list_any][((uint32_t *) main_call_lists[cl])[i]];
          gg77->iob88.create_menu(cl);
       }
    }

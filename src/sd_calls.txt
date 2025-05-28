@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2019  William B. Ackerman.
+//    Copyright (C) 1990-2020  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -57,7 +57,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "39.12"
+version "39.13"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve dont_raise_overcast
@@ -123,7 +123,7 @@ call "tag" mainstream tag plain_tag
       predscantdo
          if miniwave_side_of_out_3n1_line [C1E A0W A1W C2E]
          if couple_side_of_out_3n1_line   [C0E C1E A2W A1W]
-            alternate_definition [3x1] c4    /* Same as 1x3. */
+            alternate_definition [3x1] c4    // Same as 1x3.
    setup 1x4 2x3
       predscantdo
          if miniwave_side_of_out_3n1_line [C1E A0W A1W C2E]
@@ -2633,6 +2633,18 @@ call "swing and circle @a" c1    // If modified, center 4 do the modification.
             yoyo_is_inherited gen_sting_is_inherited magic_is_inherited
    seq swing_and_circle [repeat_n inherit_yoyo inherit_gensting inherit_magic]
 
+call "swing and circle @9/16" c1
+            neednumber visible_fractions distribute_repetitions yield_if_ambiguous
+            step_to_qtag left_means_touch_or_check
+            yoyo_is_inherited gen_sting_is_inherited magic_is_inherited
+   seq swing_and_circle [repeat_nover4 inherit_yoyo inherit_gensting inherit_magic]
+
+call "swing and circle @9/8" c1
+            neednumber visible_fractions distribute_repetitions yield_if_ambiguous
+            step_to_qtag left_means_touch_or_check
+            yoyo_is_inherited gen_sting_is_inherited magic_is_inherited
+   seq swing_and_circle [repeat_nover2 inherit_yoyo inherit_gensting inherit_magic]
+
 call "@0 and circle @a" c2
             neednumber visible_fractions distribute_repetitions yield_if_ambiguous
    seq anything_and_circle [repeat_n]
@@ -4404,6 +4416,7 @@ call "run wild 3/4" c4a
    seq crossroll [inherit_grand inherit_nxn inherit_mxn force_half]
 
 call "any hand slip" dontshow tag any_hand_slip
+            diamond_is_legal
    setup 1x4 1x4
       array [ZM0N CR3S ZM2N AL1S]
    setup thar thar
@@ -4439,8 +4452,14 @@ call "any hand slip" dontshow tag any_hand_slip
             alternate_definition [16matrix] c3a
    setup 1x8 1x8
       array [ZM0N CR3S CR6S AL1S ZM4N AL7S AL2S CR5S]
+            alternate_definition [diamond] c4
+   setup qtag qtag restriction forbidden nice_diamonds
+      array [0 0 ZM2N AL7S 0 0 ZM6N CR3S]
+   setup pqtag qtag restriction forbidden nice_diamonds
+      array [ZM0N ZM1N 0 0 ZM4N ZM5N 0 0]
 
 call "slip" a2
+            diamond_is_legal
    setup 1x4 1x4 restriction dmd_ctrs_mwv
       array [ZM0N CR3S ZM2N AL1S]
             alternate_definition [yoyo] c4
@@ -4466,6 +4485,11 @@ call "slip" a2
             alternate_definition [16matrix] c3a
    setup 1x8 1x8
       array [ZM0N CR3S CR6S AL1S ZM4N AL7S AL2S CR5S]
+            alternate_definition [diamond] c4
+   setup qtag qtag restriction forbidden nice_diamonds
+      array [0 0 ZM2N AL7S 0 0 ZM6N CR3S]
+   setup pqtag qtag restriction forbidden nice_diamonds
+      array [ZM0N ZM1N 0 0 ZM4N ZM5N 0 0]
 
 call "slip for catch" dontshow tag slipforcatch
             diamond_is_legal
@@ -4729,7 +4753,7 @@ call "spread" plus tag spread
    // of all the other considerations, the definition from a 1-faced
    // box is clear: leads spread and trailers step between them.
    // So we check for the unsymmetrical case of everyone facing the same
-   // way, along with the cases of a DPT and a CDPT.  
+   // way, along with the cases of a DPT and a CDPT.
    setup 4x2 2x4 rotate qualifier all_facing_same
       array [ZM6W ZM7W ZM1W ZM0W ZM3W ZM2W ZM4W ZM5W]
    setup 4x2 2x4 rotate qualifier 2fl_only     // DPT or CDPT
@@ -4741,7 +4765,7 @@ call "spread" plus tag spread
 
    // If in an 8-chain, the centers spread, and we mark it as controversial.
    setup 4x2 2x4 rotate qualifier ntbone in in_or_out restriction controversial alwaysfail
-      array [ZM6W ZM7W ZM0W 0 0 ZM3W ZM4W ZM5W]
+      array [ZM6W 0 ZM0W 0 0 ZM3W 0 ZM5W]
 
    // Otherwise, we allow it.  This is really not right.  We should be
    // requiring the caller to designate some people, and require them
@@ -4799,9 +4823,8 @@ call "@0 and the @6 spread" plus
    seq selected_spread [seq_re_evaluate]
 
 call "swing" a2 tag swing
-            12_16_matrix_means_split
-            parallel_conc_end    /* For the "half" version. */
-   setup 1x4 1x4 restriction miniwaves   /* See comment at spin chain the line. */
+            12_16_matrix_means_split diamond_is_legal parallel_conc_end   // For the "half" version.
+   setup 1x4 1x4 restriction miniwaves   // See comment at spin chain the line.
       array [CR1S AL0S AL3S CR2S]
             alternate_definition [half] a2
    setup 1x4 2x2 restriction miniwaves
@@ -4838,6 +4861,12 @@ call "swing" a2 tag swing
       array [CR0E AL0W CR1E AL2W CR2E AL1W]
    setup 1x8 2x4 restriction wave_only
       array [CR0E AL0W AL1W CR1E AL3W CR3E CR2E AL2W]
+            alternate_definition [diamond] c4
+   setup qtag qtag restriction forbidden nice_diamonds
+      array [0 0 AL3S CR2S 0 0 CR7S AL6S]
+   setup pqtag qtag restriction forbidden nice_diamonds
+      array [CR5S CR4S 0 0 AL1S AL0S 0 0]
+
 
 // On the plain call "slither", the ends are prevented from
 // rolling, because they participated in the call, but did not turn.
@@ -5343,7 +5372,7 @@ call "cross the top" c4
 
 call "spin the yoyo" c4x
             dont_use_in_resolve
-            step_to_wave left_means_touch_or_check fractal_is_inherited gen_sting_is_inherited 
+            step_to_wave left_means_touch_or_check fractal_is_inherited gen_sting_is_inherited
    seq armturn_n4 [inherit_fractal inherit_gensting insert_number 3]
    seq fanthetop [inherit_gensting inherit_fractal]
 
@@ -8700,8 +8729,6 @@ call "tag the line 0/4" mainstream
 
 // The following 2 calls (tagnullcall1) work with "flip", "tag", and "vertical tag".
 
-// Actually, the 3/4 fraction is plus, but we are in violation
-// of such numerical niceties in many places.
 call "@w the line @a" mainstream
             neednumber yield_if_ambiguous left_means_mirror single_is_inherited
             singlefile_is_inherited nxn_is_inherited mxn_is_inherited revert_is_inherited
@@ -12078,6 +12105,26 @@ call "_natural 3/4 and 3/4" dontshow tag nat34_34
    setup 2x2 dmd rotate restriction wave_only
       array [CCCAL1W AAACR3W AL2N CR2S]
 
+call "_ @B by the right for swing fractions" dontshow tag odd_frac_by_right_for_swgfrac
+            left_means_mirror neednumber split_large_setups fractional_numbers
+            gen_sting_is_inherited fractal_is_inherited diamond_is_legal
+   // We hate to do this kind of "subclass" overloading, and hope that it isn't
+   // opening a huge can of worms.  Time will tell.
+   setup 1x8 spindle qualifier num 1 left wave_only
+      array [0 CR0E CR1E 0 ZM3N 0 0 CR2E]
+   setup 1x8 spindle qualifier num 3 left wave_only
+      array [0 CR6W CR5W 0 ZM3N 0 0 CR4W]
+   // Need these to go to squared set instead of alamo.
+   setup thar 4x4 qualifier num 1 right wave_only
+      array [CR10E 0 0 0 0 CR1E 0 0]
+   setup thar 4x4 qualifier num 3 right wave_only
+      array [CR9W 0 0 0 0 CR2W 0 0]
+   // The main "base class" definition.
+            left_means_mirror neednumber split_large_setups fractional_numbers
+            gen_sting_is_inherited fractal_is_inherited yoyo_fractal_numbers diamond_is_legal
+   seq odd_frac_by_right [inherit_left inherit_diamond inherit_fractal
+                          inherit_gensting roll_transparent]
+
 call "_ @B by the right" dontshow tag odd_frac_by_right
             left_means_mirror neednumber split_large_setups fractional_numbers
             gen_sting_is_inherited fractal_is_inherited yoyo_fractal_numbers diamond_is_legal
@@ -12533,7 +12580,7 @@ call "_ @B by the right" dontshow tag odd_frac_by_right
    setup 1x3dmd  ptpd qualifier num 3 none
       array [0 CR3W 0 0 ZM4N 0 CR5W 0]
    setup p1x3dmd ptpd qualifier num 3 none
-      array [0 0 0 CR2W 0 0 0 0]       
+      array [0 0 0 CR2W 0 0 0 0]
 
    setup 3x2 1x6 qualifier num 1 right wave_only
       array [CR1E CR5E CR3E 0 0 0]
@@ -12576,7 +12623,7 @@ call "_ @B by the right" dontshow tag odd_frac_by_right
    setup ptpd 1x3dmd  qualifier num 1 left dmd_facing
       array [0 0 CR3E 0 ZM4N 0 0 0]
    setup pptpd 1x3dmd qualifier num 1 left dmd_facing
-      array [0 CR2E 0 0 0 0 0 CR5E]       
+      array [0 CR2E 0 0 0 0 0 CR5E]
    setup ptpd ptpd    qualifier num 2 left dmd_facing
       array [0 0 CR6S 0 ZM4N 0 0 0]
    setup pptpd ptpd   qualifier num 2 left dmd_facing
@@ -12584,7 +12631,7 @@ call "_ @B by the right" dontshow tag odd_frac_by_right
    setup ptpd 1x3dmd  qualifier num 3 left dmd_facing
       array [0 0 CR7W 0 ZM4N 0 0 0]
    setup pptpd 1x3dmd qualifier num 3 left dmd_facing
-      array [0 CR1W 0 0 0 0 0 CR6W]       
+      array [0 CR1W 0 0 0 0 0 CR6W]
    setup 1x8 1x8 qualifier num 2 left wave_only
       array [0 CR3S CR6S 0 ZM4N 0 0 CR5S]   // Cross the center line.
 
@@ -12688,7 +12735,7 @@ call "_half by the right" dontshow tag 1_2_by_right
          if can_swing_right [0     0    0    CR1S 0    CR4S CR5S CR2S CR6S CR11S CR15S CR7S  CR13S CR14S CR0S  CR3S]
          if always          [ZM0N  ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N ZM7N ZM8N ZM9N  ZM10N ZM11N ZM12N ZM13N ZM14N ZM15N]
 
-// See the note below, addressing the same issue.  Search for "or other things of that ilk".
+   // See the note below, addressing the same issue.  Search for "or other things of that ilk".
 
    setup 2x6 2x6 qualifier didnt_say_matrix
       predscantdo
@@ -12767,9 +12814,9 @@ call "_half by the right" dontshow tag 1_2_by_right
       array [CR1S CR2S CR3S CR4S CR5S CR6S CR7S ZM7N
              ZM8N CR8S CR9S CR10S CR11S CR12S CR13S CR14S]
             alternate_definition [diamond] c3a
-   setup qtag qtag restriction nice_diamonds
+   setup qtag qtag restriction forbidden nice_diamonds
       array [0 0 ZM2N CR2S 0 0 CR7S CR3S]
-   setup pqtag qtag
+   setup pqtag qtag restriction forbidden nice_diamonds
       array [CR5S CR4S 0 0 ZM4N ZM5N 0 0]
             alternate_definition [yoyo] c4
    setup 2x2 1x4 rotate qualifier right wave_only
@@ -13017,6 +13064,12 @@ call "_half by the left" dontshow tag 1_2_by_left
       array [ZM4W 0 AL5S 0 AL0S 0]
    setup 1x8 spindle qualifier right wave_only
       array [ZM7N 0 0 AL0W 0 AL2W AL1W 0]
+   setup 1x4 2x2 qualifier left wave_only
+      array [0 AL0W AL1W 0]
+   setup 1x4 dmd qualifier right wave_only
+      array [AL0W 0 0 AL1W]
+   setup 4x2 1x8 qualifier left wave_only
+      array [0 0 0 0 AL4W AL7W AL2W AL1W]
    setup short6 1x6 rotate
       array [0    ZM0W AL1S AL5S ZM3W 0]
    setup pshort6 2x1dmd
@@ -13030,6 +13083,16 @@ call "_half by the left" dontshow tag 1_2_by_left
       array [ZM4W 0 AL5S 0 AL0S 0]
    setup 1x8 spindle qualifier right wave_only
       array [ZM7N 0 0 AL0W 0 AL2W AL1W 0]
+   setup 1x4 2x2 qualifier left wave_only
+      array [0 AL0W AL1W 0]
+   setup 1x4 dmd qualifier right wave_only
+      array [AL0W 0 0 AL1W]
+   setup 4x2 1x8 qualifier left wave_only
+      array [0 0 0 0 AL4W AL7W AL2W AL1W]
+   setup short6 1x6 rotate
+      array [0    ZM0W AL1S AL5S ZM3W 0]
+   setup pshort6 2x1dmd
+      array [0    ZM2N 0    AL3W ZM5W AL1W]
             alternate_definition [12matrix grand] c3a
    setup 1x12 1x12 restriction wave_only
       array [ZM0N AL0S AL1S AL2S AL3S AL4S AL7S AL8S AL9S AL10S AL11S AL5S]
@@ -13341,11 +13404,16 @@ call "any hand remake the diamond" a2
 call "swing the fractions" c1
             left_means_mirror diamond_is_legal yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
             visible_fractions
-   seq odd_frac_by_right [inherit_left inherit_diamond inherit_gensting inherit_fractal insert_number 1]
-   seq half_left_for_swing_fractions [inherit_left inherit_diamond inherit_yoyo inherit_gensting roll_transparent]
-   seq odd_frac_by_right [inherit_left inherit_diamond inherit_gensting inherit_fractal insert_number 3 roll_transparent]
-   seq half_left_for_swing_fractions [inherit_left inherit_diamond inherit_yoyo inherit_gensting roll_transparent]
-   seq odd_frac_by_right [inherit_left inherit_diamond inherit_gensting inherit_fractal insert_number 1 roll_transparent]
+   seq odd_frac_by_right_for_swgfrac [inherit_left inherit_diamond
+                                      inherit_gensting inherit_fractal insert_number 1]
+   seq half_left_for_swing_fractions [inherit_left inherit_diamond
+                                      inherit_yoyo inherit_gensting roll_transparent]
+   seq odd_frac_by_right_for_swgfrac [inherit_left inherit_diamond
+                                      inherit_gensting inherit_fractal insert_number 3 roll_transparent]
+   seq half_left_for_swing_fractions [inherit_left inherit_diamond
+                                      inherit_yoyo inherit_gensting roll_transparent]
+   seq odd_frac_by_right_for_swgfrac [inherit_left inherit_diamond
+                                      inherit_gensting inherit_fractal insert_number 1 roll_transparent]
             // Try again, allowing exquisite fractions (mostly.)
             left_means_mirror yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited visible_fractions
    seq turn_by_right_by_eighths [inherit_left inherit_yoyo inherit_gensting inherit_fractal insert_number 2]
@@ -14277,6 +14345,16 @@ call "any hand turn thru" mainstream tag natturnthru
             alternate_definition [stingy] c3
    setup 1x2 1x2 restriction forbidden wave_only
       array [CM1E AM0W]
+            alternate_definition [half] mainstream
+   split_to_box
+   setup 2x1 1x2 rotate qualifier in in_or_out
+      array [CR1E 0]
+   setup 1x2 1x2 restriction forbidden wave_only
+      array [CR1S AL0S]
+            alternate_definition [lasthalf] mainstream
+   split_to_box
+   setup 1x2 1x2 rotate qualifier right miniwaves
+      array [ZM0W ZM0W]
 
 call "pair off" a1
    setup 2x2 2x2
@@ -14449,15 +14527,15 @@ call "courtesy turn" mainstream
    setup 2x2 2x2 qualifier in in_or_out restriction controversial alwaysfail
       array [AL1S AL0S AL3S AL2S]
 
+   // Leftie box, girls looking out
+   setup 2x2 2x2 qualifier left miniwaves
+      predscantdo
+         if boyp  [0 0 AL3N 0]
+         if girlp [0 AL0S 0 0]
+
    // These next few things involve the doctrine of "Turn however far
    // (180 to 360 degrees, that is) until the couple is facing the direction
    // from which the woman appeared to come."  As such, they are gender-sensitive.
-
-   // LH wave, boys on the end.
-   setup 1x4 2x2 qualifier left wave_only
-      predscantdo
-         if boyp  [0    0 AAL2W 0]
-         if girlp [0 AL3E     0 0]
 
    // LH column, if girls are #1 and #2, go to a starting DPT.
    // Other arrangements are similarly tricky.
@@ -14497,6 +14575,12 @@ call "courtesy turn" mainstream
             alternate_definition [twisted] c4
    setup 1x2 1x2 rotate restriction forbidden couples_only
       array [AL0N AL1N]
+            reverse_means_mirror
+   // LH wave, boys on the end.
+   setup 1x4 2x2 qualifier left wave_only
+      predscantdo
+         if boyp  [0    0 AAL2W 0]
+         if girlp [0 AL3E     0 0]
 
 call "courtesy turn and roll" dontshow tag courtesy_and_roll
             dont_use_in_nice_resolve
@@ -15302,7 +15386,7 @@ call "ends@C kickoff" c2 tag endskick
 call "@6@C kick off" c2
    alias designeeskick
 
-call "centers@C kick off" c2 
+call "centers@C kick off" c2
    alias centerskick
 
 call "ends@C kick off" c2
@@ -18761,10 +18845,10 @@ call "_ends nightmare" dontshow tag enight
       array [AL3E AM0W AM3W ACR0E]
 
 call "swing slip slide thru" dontshow tag swingslipslidethru
-            visible_fractions yoyo_is_inherited gen_sting_is_inherited step_to_wave
-   seq swing [inherit_yoyo inherit_gensting]
-   seq any_hand_slip [roll_transparent]
-   seq slidethru_in_miniwave []
+            visible_fractions yoyo_is_inherited gen_sting_is_inherited step_to_wave diamond_is_legal
+   seq swing [inherit_yoyo inherit_gensting inherit_diamond]
+   seq any_hand_slip [roll_transparent inherit_diamond]
+   seq slidethru_in_miniwave [inherit_diamond]
 
 call "swing slip slide thru but @m" dontshow tag swingslipslidethrubut2nd
             visible_fractions yoyo_is_inherited gen_sting_is_inherited step_to_wave
@@ -18773,11 +18857,11 @@ call "swing slip slide thru but @m" dontshow tag swingslipslidethrubut2nd
    seq nullsecond [mandatory_secondary_call]
 
 call "swing back the windmill" dontshow tag swingbackwindmill
-            visible_fractions yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
-   seq swing [inherit_yoyo inherit_gensting allow_forced_mod]
-   seq any_hand_slip [roll_transparent]
-   seq any_hand_slip [roll_transparent]
-   seq cast_off_n4_with_warn [insert_number 3 inherit_fractal inherit_gensting allow_forced_mod]
+            visible_fractions yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited diamond_is_legal
+   seq swing [inherit_yoyo inherit_gensting allow_forced_mod inherit_diamond]
+   seq any_hand_slip [roll_transparent inherit_diamond]
+   seq any_hand_slip [roll_transparent inherit_diamond]
+   seq cast_off_n4_with_warn [insert_number 3 inherit_fractal inherit_gensting allow_forced_mod inherit_diamond]
 
 call "swing back the windmill but @m" dontshow tag swingbackwindmillbut2nd
             visible_fractions yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
@@ -18787,9 +18871,9 @@ call "swing back the windmill but @m" dontshow tag swingbackwindmillbut2nd
    seq nullsecond [mandatory_secondary_call]
 
 call "delight" c3a tag delight
-            step_to_qtag yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
-   conc swingbackwindmill [inherit_yoyo inherit_gensting inherit_fractal allow_forced_mod]
-        elight [conc_demand_columns conc_force_spots]
+            step_to_qtag yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited diamond_is_legal
+   conc swingbackwindmill [inherit_yoyo inherit_gensting inherit_fractal allow_forced_mod inherit_diamond]
+        elight [conc_demand_columns conc_force_spots inherit_diamond]
 
 call "delight but @m" c3a tag delightbut
             step_to_qtag yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
@@ -18797,9 +18881,9 @@ call "delight but @m" c3a tag delightbut
         elight [conc_demand_columns conc_force_spots]
 
 call "dilemma" c3a tag dilemma
-            step_to_qtag yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
-   conc swingbackwindmill [inherit_yoyo inherit_gensting inherit_fractal allow_forced_mod]
-        elemma [conc_demand_columns conc_force_spots]
+            step_to_qtag yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited diamond_is_legal
+   conc swingbackwindmill [inherit_yoyo inherit_gensting inherit_fractal allow_forced_mod inherit_diamond]
+        elemma [conc_demand_columns conc_force_spots inherit_diamond]
 
 call "dilemma but @m" c3a tag dilemmabut
             step_to_qtag yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
@@ -18807,16 +18891,18 @@ call "dilemma but @m" c3a tag dilemmabut
         elemma [conc_demand_columns conc_force_spots]
 
 call "dream" c4a tag dream
-            yoyo_is_inherited gen_sting_is_inherited
-   conc swingslipslidethru [inherit_yoyo inherit_gensting] edream [conc_demand_columns conc_force_spots]
+            yoyo_is_inherited gen_sting_is_inherited diamond_is_legal
+   conc swingslipslidethru [inherit_yoyo inherit_gensting inherit_diamond]
+        edream [conc_demand_columns conc_force_spots inherit_diamond]
 
 call "dream but @m" c4a
             yoyo_is_inherited gen_sting_is_inherited
    conc swingslipslidethrubut2nd [inherit_yoyo inherit_gensting] edream [conc_demand_columns conc_force_spots]
 
 call "nightmare" c4a tag nightmare
-            yoyo_is_inherited gen_sting_is_inherited
-   conc swingslipslidethru [inherit_yoyo inherit_gensting] enight [conc_demand_columns conc_force_spots]
+            yoyo_is_inherited gen_sting_is_inherited diamond_is_legal
+   conc swingslipslidethru [inherit_yoyo inherit_gensting inherit_diamond]
+        enight [conc_demand_columns conc_force_spots inherit_diamond]
 
 call "nightmare but @m" c4a
             yoyo_is_inherited gen_sting_is_inherited
@@ -21191,7 +21277,7 @@ call "_transfer and part 1" dontshow tag transf1
       array [ZM5W ZM7W ZM0W CR2S AL6N ZM1W ZM3W ZM4W]
             alternate_definition [3x1] c2
    setup 4x2 3x4 rotate
-      array [ZM11W CR3S CR4S CR6S AL0N AL10N AL9N ZM5W]
+      array [ZM11W CR3S CR4S CR6S AL9N AL10N AL0N ZM5W]
             alternate_definition [1x2] c4
    setup 3x2 short6
       array [ZM0N ZM2N CR4W AL1E ZM3N ZM5N]
@@ -22383,7 +22469,7 @@ call "circulate for tally ho" dontshow tag circulate_for_tally_ho
    setup 2x4 1x8 rotate qualifier explicit out in_or_out
       array [CR0N CR3N AL2S AL1S 0 0 0 0]
    // Things get very tricky here.  The problem is that, from facing lines,
-   // or anything that reasonbaly looks like facing lines, we want the half
+   // or anything that reasonably looks like facing lines, we want the half
    // circulate to collide in a tidal wave.  Similarly for back-to-back lines.
    //
    // But if one line is phantoms, as in split phantom lines tally ho from
@@ -22412,9 +22498,13 @@ call "circulate for tally ho" dontshow tag circulate_for_tally_ho
       array [0 0 0 0 0 0 ZM3N ZM4N ZM5N ZM2N ZM1N ZM0N]
    setup 2x6 1x6 rotate qualifier out 1fl_only
       array [CR0N CR1N CR2N AL2S AL1S AL0S 0 0 0 0 0 0]
+   // The usual interpretation if waves.
+   setup 2x4 crosswave rotate qualifier wave_only
+      array [CR0N CR1N AL1S AL0S ZM2W ZM3W ZM7W ZM6W]
+   // But if back-to-back and not recognizable as waves, do this.
    setup 2x4 1x8 rotate qualifier out 1fl_only
       array [CR0N CR3N AL2S AL1S 0 0 0 0]
-   // Followed by the usual interpretation.
+   // The usual interpretation.
    setup 2x4 crosswave rotate
       array [CR0N CR1N AL1S AL0S ZM2W ZM3W ZM7W ZM6W]
    // Handle similar things for 2x2 facing in or out.
@@ -27682,8 +27772,9 @@ call "cross trade and wheel" c2
 call "hinge and trade" c4a tag hingentrade
             visible_fractions single_is_inherited grand_is_inherited
             yoyo_is_inherited gen_sting_is_inherited dont_raise_overcast
-   seq hinge_with_warn [cpls_unless_single inherit_yoyo inherit_gensting]
-   seq maybegrandslip [cpls_unless_single inherit_grand roll_transparent]
+            diamond_is_legal
+   seq hinge_with_warn [cpls_unless_single inherit_yoyo inherit_gensting inherit_diamond]
+   seq maybegrandslip [cpls_unless_single inherit_grand roll_transparent inherit_diamond]
    seq roll [cpls_unless_single]
 
 call "_hinge & circ part 2" dontshow tag hc2
@@ -27972,7 +28063,7 @@ call "_percolate part 3 but @m" dontshow tag percolate3butany
 // Of course, we put the version that allows replacement first.
 call "@1percolate" c1
             left_means_mirror fractal_is_inherited yoyo_is_inherited gen_sting_is_inherited
-            twisted_is_inherited first_two_parts_visible funny_is_inherited
+            twisted_is_inherited visible_fractions funny_is_inherited
    seq circulate [or_anycall inherit_left inherit_funny inherit_twisted]
    seq circulate [inherit_funny force_half inherit_left]
    seq percolate3 [inherit_left inherit_funny inherit_fractal inherit_yoyo inherit_gensting]
