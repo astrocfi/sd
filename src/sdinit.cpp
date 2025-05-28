@@ -2137,6 +2137,8 @@ bool open_session(int argc, char **argv)
             { allowing_all_concepts = true; continue; }
          else if (strcmp(&args[argno][1], "minigrand_getouts") == 0)
             { allowing_minigrand = true; continue; }
+         else if (strcmp(&args[argno][1], "warn_on_overflow") == 0)
+            { enforce_overcast_warning = true; continue; }
          else if (strcmp(&args[argno][1], "active_phantoms") == 0)
             { using_active_phantoms = true; continue; }
          else if (strcmp(&args[argno][1], "discard_after_error") == 0)

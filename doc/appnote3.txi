@@ -622,7 +622,7 @@ Hence we have:
 @end example
 @sp 1
 When the call is a space-invader (e.g. @samp{press} or @samp{truck}), the
-@samp{ignore} concept can't mean to do work around the others as though they
+@samp{ignore} concept can't mean to work around the others as though they
 weren't there.  Space-invading calls work in absolute position.
 
 When some people are ignored for a space-invading call, they simply don't

@@ -455,7 +455,7 @@ bool conc_tables::synthesize_this(
 
 // This overwrites its "outer_inners" argument setups.
 extern void normalize_concentric(
-   setup *ss,              // The "dyp_squash" schemata need to see this; it's allowed to be null.
+   const setup *ss,        // The "dyp_squash" schemata need to see this; it's allowed to be null.
    calldef_schema synthesizer,
    int center_arity,
    setup outer_inners[],   // Outers in position 0, inners follow.
@@ -3005,6 +3005,8 @@ extern void concentric_move(
    orig_inners_start_kind = begin_inner[0].kind;
    orig_inners_start_rot = begin_inner[0].rotation;
 
+   bool suppress_overcasts = crossing != 0 || (schema_attrs[analyzer].attrs & SCA_NO_OVERCAST) != 0;
+
    if (crossing) {
       setup temptemp = begin_inner[0];
       begin_inner[0] = begin_outer;
@@ -3458,16 +3460,22 @@ extern void concentric_move(
             }
          }
          else {
+            if (doing_ends || suppress_overcasts)
+               begin_ptr->clear_all_overcasts();
+
             if (specialoffsetmapcode != ~0UL) {
                divided_setup_move(begin_ptr, specialoffsetmapcode,
                                   phantest_only_one, true, result_ptr);
             }
             else
                impose_assumption_and_move(begin_ptr, result_ptr);
+
+            if (doing_ends || suppress_overcasts)
+               result_ptr->clear_all_overcasts();
          }
 
          if (modifiers1 & DFM1_SUPPRESS_ROLL)
-            result_ptr->suppress_all_rolls();
+            result_ptr->suppress_all_rolls(false);
 
          if (demand_no_z_stuff && (result_ptr->result_flags.misc & RESULTFLAG__DID_Z_COMPRESSMASK))
             fail("Can't do this call from a \"Z\".");
@@ -3531,8 +3539,8 @@ extern void concentric_move(
             localmodsout1 |= DFM1_CONC_FORCE_SPOTS;
          }
 
-         // Strip out the roll bits -- people who didn't move can't roll.
-         result_ptr->suppress_all_rolls();
+         // Strip out the roll bits -- people who didn't move can't roll.  Unless this is roll-transparent.
+         result_ptr->suppress_all_rolls((begin_ptr->cmd.cmd_misc3_flags & CMD_MISC3__ROLL_TRANSP) != 0);
       }
 
       if (analyzer == schema_concentric_to_outer_diamond &&
@@ -4740,13 +4748,13 @@ extern void punt_centers_use_concept(setup *ss, setup *result) THROW_DECL
    // the setups and finish the call normally.
 
    if ((cmd2word & CMD_MISC2__ANY_WORK) &&
-       ss->cmd.parseptr->concept->kind == concept_yoyo &&
+       (ss->cmd.parseptr->concept->kind == concept_yoyo || ss->cmd.parseptr->concept->kind == concept_generous) &&
        ss->cmd.parseptr->next->concept->kind == marker_end_of_list &&
        (ss->cmd.parseptr->next->call->the_defn.schema == schema_sequential ||
         ss->cmd.parseptr->next->call->the_defn.schema == schema_sequential_alternate ||
         ss->cmd.parseptr->next->call->the_defn.schema == schema_sequential_remainder) &&
-       (ss->cmd.parseptr->next->call->the_defn.callflagsh & INHERITFLAG_YOYO) &&
-       (ss->cmd.parseptr->next->call->the_defn.stuff.seq.defarray[0].modifiersh & INHERITFLAG_YOYO) &&
+       (ss->cmd.parseptr->next->call->the_defn.callflagsh & INHERITFLAG_YOYOETCMASK) &&
+       (ss->cmd.parseptr->next->call->the_defn.stuff.seq.defarray[0].modifiersh & INHERITFLAG_YOYOETCMASK) &&
        ss->cmd.cmd_fraction.is_null()) {
       doing_yoyo = true;
       ss->cmd.cmd_fraction.set_to_null_with_flags(
@@ -6244,9 +6252,9 @@ back_here:
       the_results[1].result_flags = the_results[0].result_flags;
       if (livemask[1] == 0) the_results[1].kind = nothing;
 
-      // Strip out the roll bits -- people who didn't move can't roll.
+      // Strip out the roll bits -- people who didn't move can't roll.  Unless this is roll-transparent.
       if (others == 0) {
-         the_results[1].suppress_all_rolls();
+         the_results[1].suppress_all_rolls((the_setups[1].cmd.cmd_misc3_flags & CMD_MISC3__ROLL_TRANSP) != 0);
       }
    }
 

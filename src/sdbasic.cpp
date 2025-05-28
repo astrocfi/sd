@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2009  William B. Ackerman.
+//    Copyright (C) 1990-2010  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -20,7 +20,7 @@
 //    along with Sd; if not, write to the Free Software Foundation, Inc.,
 //    59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 //
-//    This is for version 37.
+//    This is for version 38.
 
 /* This defines the following functions:
    collision_collector::install_with_collision
@@ -4159,696 +4159,106 @@ static veryshort starstranslatev[40] = {
    -1, -1, -1, -1, -1, 5, -1, -1};
 
 
-/* For this routine, we know that callspec is a real call, with an array definition schema.
-   Also, result->people have been cleared. */
+// Two people are "casting partners" if they are adjacent in a miniwave relationship
+// and their roll directions are toward each other.  This is a necessary (but not sufficient)
+// condition for them to have engaged in some kind of casting with each other.
+//
+// This routine finds the casting partner, if any, of a given person.  Well, actually,
+// that's true only if we give it the subject's actual roll direction.  In some cases
+// we give a different roll direction (3rd argument) in order to make it find a different
+// casting partner.  The written-over 4th argument encodes the location where the turning took place.
+
+static int find_casting_partner(int i, const setup *s, uint32 roll_info_to_use, int & octantmask)
+{
+   const coordrec *thingptr = setup_attrs[s->kind].nice_setup_coords;
+   if (!thingptr) {
+      return -1;
+   }
+
+   int dir = s->people[i].id1 & 3;
+
+   if ((roll_info_to_use & ROLL_DIRMASK) == ROLL_IS_L)
+      dir ^= 2;
+   else if ((roll_info_to_use & ROLL_DIRMASK) != ROLL_IS_R) {
+      return -1;
+   }
+
+   int x = thingptr->xca[i];
+   int y = thingptr->yca[i];
+   int oldx = x;
+   int oldy = y;
+
+   switch (dir) {
+   case 0: x += 4; break;
+   case 1: y -= 4; break;
+   case 2: x -= 4; break;
+   default: y += 4; break;
+   }
+
+   // Find the person with whom he would have been casting.
+   // Don't check whether that person agrees that casting is taking place;
+   // that will be checked elsewhere.
+
+   int doffset = 32 - (1 << (thingptr->xfactor-1));
+   int place = thingptr->diagram[doffset - ((y >> 2) << thingptr->xfactor) + (x >> 2)];
+   if ((thingptr->xca[place] != x) || (thingptr->yca[place] != y)) {
+      return -1;
+   }
+
+   // Get the center point between them, and its octant.
+
+   oldx += x;
+   oldy += y;
+
+   octantmask = 0;
+
+   if (oldx > 0) octantmask |= 8;
+   if (oldx < 0) octantmask |= 4;
+   if (oldy > 0) octantmask |= 2;
+   if (oldy < 0) octantmask |= 1;
+
+   for (int j=s->rotation & 3 ; j>0 ; j--)
+      octantmask = ((octantmask & 3) << 2) | (octantmask >> 3) | ((octantmask & 4) >> 1);
+
+   return place;
+}
 
 
-extern void basic_move(
+
+static uint32 do_actual_array_call(
    setup *ss,
-   calldefn *the_calldefn,
-   int tbonetest,
-   bool fudged,
+   const calldefn *callspec,
+   callarray *linedefinition,
+   callarray *coldefinition,
+   uint32 newtb,
+   uint32 funny,
    bool mirror,
+   bool four_way_startsetup,
+   int orig_elongation,
+   int & desired_elongation,
+   bool & check_peeloff_migration,
    setup *result) THROW_DECL
 {
-   int j, k;
-   callarray *calldeflist;
-   uint32 funny;
-   uint32 division_code = ~0UL;
-   callarray *linedefinition;
-   callarray *coldefinition;
-   uint32 matrix_check_flag = 0;
-   callarray *goodies;
-   uint32 search_concepts_without_funny,
-      search_temp_without_funny, search_temp_with_funny;
-   int real_index, northified_index;
-   int num, halfnum, final_numout;
-   setup newpersonlist;
-   int newplacelist[MAX_PEOPLE];
-   int orig_elongation = 0;
-   int inconsistent_rotation, inconsistent_setup;
-   bool four_way_startsetup;
-   uint32 newtb = tbonetest;
+   int inconsistent_rotation = 0;
    uint32 resultflagsmisc = 0;
-   int desired_elongation = 0;
+   int inconsistent_setup = 0;
    bool funny_ok1 = false;
    bool funny_ok2 = false;
    bool other_elongate = false;
-   calldef_block *qq;
-   const calldefn *callspec = the_calldefn;
+   callarray *goodies;
+   int real_index, northified_index;
+   int num, halfnum, final_numout;
+   int i, j, k;
+   setup newpersonlist;
+   int newplacelist[MAX_PEOPLE];
 
-   bool check_peeloff_migration = false;
    newpersonlist.clear_people();
 
-   // We don't allow "central" or "invert" with array-defined calls.
-   // We might allow "snag" or "mystic".
-
-   if (ss->cmd.cmd_misc2_flags & (CMD_MISC2__SAID_INVERT | CMD_MISC2__DO_CENTRAL))
-      fail("Can't do \"central\" or \"invert\" with this call.");
-
-   // Do this now, for 2 reasons:
-   // (1) We want it to be zero in case we bail out.
-   // (2) we want the RESULTFLAG__SPLIT_AXIS_MASK stuff to be clear
-   //     for the normal case, and have bits only if splitting actually occurs.
-   clear_result_flags(result);
-
-   if (ss->cmd.cmd_misc2_flags & CMD_MISC2__DO_NOT_EXECUTE) {
-      result->kind = nothing;
-      return;
-   }
-
-   /* We demand that the final concepts that remain be only the following ones. */
-
-   if (ss->cmd.cmd_final_flags.test_finalbits(
-         ~(FINAL__SPLIT_SQUARE_APPROVED | FINAL__SPLIT_DIXIE_APPROVED |
-           FINAL__TRIANGLE | FINAL__LEADTRIANGLE)))
-      fail("This concept not allowed here.");
-
-   /* Set up the result elongation that we will need if the result is
-      a 2x2 or short6.  This comes from the original 2x2 elongation, or is set
-      perpendicular to the original 1x4/diamond elongation.  If the call has the
-      "parallel_conc_end" flag set, invert that elongation.
-
-      We will override all this if we divide a 1x4 or 2x2 into 1x2's.
-
-      What this means is that the default for a 2x2->2x2 or short6->short6 call
-      is to work to "same absolute elongation".  For a 2x2 that is of course the same
-      as working to footprints.  For a short6 it works to footprints if the call
-      doesn't rotate, and does something a little bit weird if it does.  In either
-      case the "parallel_conc_end" flag inverts that.
-
-      The reason for putting up with this rather weird behavior is to make counter
-      rotate work for 2x2 and short6 setups.  The call has the "parallel_conc_end" flag
-      set, so that "ends counter rotate" will do the correct (anti-footprint) thing.
-      The "parallel_conc_end" flag applies only to an entire call, not to a specific
-      by-array definition, so it is set for counter rotate from a short6 also.
-      Counter rotate for a short6 rotates the setup, of course, and we want it to do
-      the correct shape-preserving thing, which requires that the absolute elongation
-      change when "parallel_conc_end" is set.  So the default is that, in the absence
-      of "parallel_conc_end", the absolute elongation stays the same, even though that
-      changes the shape for a rotating short6 call. */
-
-   switch (ss->kind) {
-   case s2x2: case s2x3: case s_short6: case s_bone6:
-      orig_elongation = ss->cmd.prior_elongation_bits;
-      break;
-   case s1x2: case s1x4: case sdmd:
-      orig_elongation = 2 - (ss->rotation & 1);
-      break;
-   }
-
-   desired_elongation = orig_elongation & 3;
-
-   // Attend to a few details, but only if there are real people present.
-
-   if (newtb) {
-      switch (ss->kind) {
-      case s2x2:
-         // Now we do a special check for split-square-thru or
-         // split-dixie-style types of things.
-
-         if (ss->cmd.cmd_final_flags.test_finalbits(FINAL__SPLIT_SQUARE_APPROVED | FINAL__SPLIT_DIXIE_APPROVED)) {
-            static uint32 startmasks[4] = {0xAD, 0xBC, 0x70, 0x61};
-
-            ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
-
-            // Find out what orientation of the split call is consistent with the
-            // directions of the live people.  Demand that it be unambiguous.
-
-            uint32 directions, livemask;
-            big_endian_get_directions(ss, directions, livemask);
-            int i1 = -1;
-
-            for (int i=0 ; i<4 ; i++) {
-               if (((directions ^ startmasks[i]) & livemask) == 0) {
-                  // Be sure it isn't ambiguous.
-                  if (i1 >= 0) fail("People are not in correct position for split call.");
-                  i1 = i;
-               }
-            }
-
-            if (i1 < 0) fail("People are not in correct position for split call.");
-
-            // Now do the required transformation, if it is a "split square thru" type.
-            // For "split dixie style" stuff, do nothing -- the database knows what to do.
-
-            if (!(ss->cmd.cmd_final_flags.test_finalbit(FINAL__SPLIT_DIXIE_APPROVED))) {
-               int i2 = (i1 + 1) & 3;
-               ss->swap_people(i1, i2);
-               copy_rot(ss, i1, ss, i1, 033);
-               copy_rot(ss, i2, ss, i2, 011);
-
-               // Repair the damage.
-               newtb = ss->people[0].id1 | ss->people[1].id1 | ss->people[2].id1 | ss->people[3].id1;
-            }
-         }
-         break;
-      case s_trngl4:
-         // The same, with twisted.
-
-         if (ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_TWISTED) &&
-             (ss->cmd.cmd_final_flags.test_finalbits(FINAL__SPLIT_SQUARE_APPROVED | FINAL__SPLIT_DIXIE_APPROVED))) {
-            ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
-
-            if (((ss->people[0].id1 & d_mask) != d_north) ||
-                ((ss->people[1].id1 & d_mask) != d_south) ||
-                ((ss->people[2].id1 & d_mask) != d_south) ||
-                ((ss->people[3].id1 & d_mask) != d_south))
-               fail("People are not in correct position for split call.");
-
-            // Now do the required transformation, if it is a "split square thru" type.
-            // For "split dixie style" stuff, do nothing -- the database knows what to do.
-
-            if (!(ss->cmd.cmd_final_flags.test_finalbit(FINAL__SPLIT_DIXIE_APPROVED))) {
-               copy_rot(ss, 0, ss, 0, 011);
-               copy_rot(ss, 1, ss, 1, 011);
-               copy_rot(ss, 2, ss, 2, 011);
-               copy_rot(ss, 3, ss, 3, 033);
-               ss->rotation--;
-               ss->kind = s1x4;
-               canonicalize_rotation(ss);
-
-               // Repair the damage.
-               newtb = ss->people[0].id1 | ss->people[1].id1 | ss->people[2].id1 | ss->people[3].id1;
-            }
-         }
-         break;
-      case s_qtag:
-         if (fudged && !(callspec->callflags1 & CFLAG1_FUDGE_TO_Q_TAG))
-            fail("Can't do this call from arbitrary 3x4 setup.");
-         break;
-      }
-   }
-
-   // Many of the remaining final concepts (all of the heritable ones
-   // except "funny" and "left", but "left" has been taken care of)
-   // determine what call definition we will get.
-
-   uint32 given_funny_flag = ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_FUNNY);
-
-   search_concepts_without_funny = ss->cmd.cmd_final_flags.test_heritbits(~INHERITFLAG_FUNNY);
-   search_temp_without_funny = 0;
-
-foobar:
-
-   search_temp_without_funny |= search_concepts_without_funny;
-   search_temp_with_funny = search_temp_without_funny | given_funny_flag;
-
-   funny = 0;   // Will have the bit if we are supposed to use the "CAF__FACING_FUNNY" stuff.
-
-   for (qq = callspec->stuff.arr.def_list; qq; qq = qq->next) {
-      // First, see if we have a match including any incoming "funny" flag.
-      if (qq->modifier_seth == search_temp_with_funny) {
-         goto use_this_calldeflist;
-      }
-      // Search again, for a plain definition that has the "CAF__FACING_FUNNY" flag.
-      else if (given_funny_flag &&
-               qq->modifier_seth == search_temp_without_funny &&
-               (qq->callarray_list->callarray_flags & CAF__FACING_FUNNY)) {
-         funny = given_funny_flag;
-         goto use_this_calldeflist;
-      }
-   }
-
-   /* We didn't find anything. */
-
-   if (matrix_check_flag != 0) goto need_to_divide;
-
-   if (ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_MASK)
-      fail("Can't do \"snag/mystic\" with this call.");
-
-   // Perhaps the concept "magic" or "interlocked" was given, and the call
-   // has no special definition for same, but wants us to divide the setup
-   // magically or interlockedly.  Or a similar thing with 12 matrix.
-
-   // First, check for "magic" and "interlocked" stuff, and do those divisions if so.
-   result->result_flags.res_heritflags_to_save_from_mxn_expansion = 0;
-   if (divide_for_magic(ss,
-                        search_concepts_without_funny & ~(INHERITFLAG_DIAMOND | INHERITFLAG_SINGLE |
-                                                          INHERITFLAG_SINGLEFILE | INHERITFLAG_CROSS |
-                                                          INHERITFLAG_GRAND | INHERITFLAG_REVERTMASK),
-                        result))
-      goto un_mirror;
-
-   // Now check for 12 matrix or 16 matrix things.  If the call has the
-   // "12_16_matrix_means_split" flag, and that (plus possible 3x3/4x4 stuff)
-   // was what we were looking for, remove those flags and split the setup.
-
-   if (callspec->callflags1 & CFLAG1_12_16_MATRIX_MEANS_SPLIT) {
-      uint32 z = search_concepts_without_funny & ~INHERITFLAG_NXNMASK;
-
-      switch (ss->kind) {
-      case s3x4:
-         if (z == INHERITFLAG_12_MATRIX ||
-             (z == 0 && (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX))) {
-            // "12 matrix" was specified.  Split it into 1x4's in the appropriate way.
-            division_code = MAPCODE(s1x4,3,MPKIND__SPLIT,1);
-         }
-         break;
-      case s1x12:
-         if (z == INHERITFLAG_12_MATRIX ||
-             (z == 0 && (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX))) {
-            // "12 matrix" was specified.  Split it into 1x4's in the appropriate way.
-            division_code = MAPCODE(s1x4,3,MPKIND__SPLIT,0);
-         }
-         break;
-      case s3dmd:
-         if (z == INHERITFLAG_12_MATRIX ||
-             (z == 0 && (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX))) {
-            // "12 matrix" was specified.  Split it into diamonds in the appropriate way.
-            division_code = MAPCODE(sdmd,3,MPKIND__SPLIT,1);
-
-         }
-         break;
-      case s4dmd:
-         if (z == INHERITFLAG_16_MATRIX ||
-             (z == 0 && (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX))) {
-            // "16 matrix" was specified.  Split it into diamonds in the appropriate way.
-            division_code = MAPCODE(sdmd,4,MPKIND__SPLIT,1);
-         }
-         break;
-      case s2x6:
-         if (z == INHERITFLAG_12_MATRIX ||
-             (z == 0 && (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX))) {
-            // "12 matrix" was specified.  Split it into 2x2's in the appropriate way.
-            division_code = MAPCODE(s2x2,3,MPKIND__SPLIT,0);
-         }
-         break;
-      case s2x8:
-         if (z == INHERITFLAG_16_MATRIX ||
-             (z == 0 && (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX))) {
-            // "16 matrix" was specified.  Split it into 2x2's in the appropriate way.
-            division_code = MAPCODE(s2x2,4,MPKIND__SPLIT,0);
-         }
-         break;
-      case s4x4:
-         if (z == INHERITFLAG_16_MATRIX ||
-             (z == 0 && (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX))) {
-            /* "16 matrix" was specified.  Split it into 1x4's in the appropriate way. */
-            /* But which way is appropriate?  A 4x4 is ambiguous. */
-            /* Being rather lazy, we just look to see whether the call is "pass thru",
-               which is the only one that wants tandems rather than couples.
-               Really ought to try splitting to 2x2's and see what happens. */
-
-            int zxy = (callspec == &base_calls[base_call_passthru]->the_defn) ? 1 : 0;
-
-            if ((newtb ^ zxy) & 1) {
-               // If the setup is empty and newtb is zero, it doesn't matter what we do.
-               division_code = spcmap_4x4v;
-            }
-            else
-               division_code = MAPCODE(s1x4,4,MPKIND__SPLIT,1);
-         }
-         break;
-      }
-
-      if (division_code != ~0UL) {
-         warn(warn__really_no_eachsetup);   // This will shut off all future "do it in each XYZ" warnings.
-         goto divide_us;
-      }
-   }
-
-   calldeflist = 0;
-
-   goto try_to_find_deflist;
-
- divide_us:
-
-   ss->cmd.cmd_final_flags.clear_heritbits(search_concepts_without_funny);
-   divided_setup_move(ss, division_code, phantest_ok, true, result);
-
-   goto un_mirror;
-
- use_this_calldeflist:
-
-   calldeflist = qq->callarray_list;
-   if (qq->modifier_level > calling_level &&
-       !(ss->cmd.cmd_misc_flags & CMD_MISC__NO_CHECK_MOD_LEVEL)) {
-      if (allowing_all_concepts)
-         warn(warn__bad_modifier_level);
-      else
-         fail("Use of this modifier on this call is not allowed at this level.");
-   }
-
-   /* We now have an association list (setups ==> definition arrays) in calldeflist.
-      Search it for an entry matching the setup we have, or else divide the setup
-         until we find something.
-      If we can't handle the starting setup, perhaps we need to look for "12 matrix" or
-         "16 matrix" call definitions. */
-
-   search_for_call_def:
-
-   linedefinition = (callarray *) 0;
-   coldefinition = (callarray *) 0;
-
-   /* If we have to split the setup for "crazy", "central", or "splitseq", we
-      specifically refrain from finding a call definition.  The same is true if
-      we have "snag" or "mystic". */
-
-   if (calldeflist &&
-       !(ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK) &&
-       !(ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_MASK)) {
-
-      /* If we came in with a "dead concentric" or its equivalent, try to turn it
-         into a real setup, depending on what the call is looking for.  If we fail
-         to do so, setup_limits will be negative and an error will arise shortly. */
-
-      if ((ss->kind == s_dead_concentric) ||
-          (ss->kind == s_normal_concentric && ss->outer.skind == nothing)) {
-         newtb = 0;
-         for (j=0; j<=attr::klimit(ss->inner.skind); j++)
-            newtb |= ss->people[j].id1;
-
-         setup linetemp;
-         setup qtagtemp;
-         setup dmdtemp;
-         setup_kind k = try_to_expand_dead_conc(*ss, (const call_with_name *) 0, linetemp, qtagtemp, dmdtemp);
-
-         if (k == s1x4) {
-            if ((!(newtb & 010) || assoc(b_1x8, &linetemp, calldeflist)) &&
-                (!(newtb & 1) || assoc(b_8x1, &linetemp, calldeflist))) {
-               *ss = linetemp;
-            }
-            else {
-               if ((!(newtb & 010) || assoc(b_qtag, &qtagtemp, calldeflist)) &&
-                   (!(newtb & 1) || assoc(b_pqtag, &qtagtemp, calldeflist))) {
-                  *ss = qtagtemp;
-               }
-            }
-
-            newtb = or_all_people(ss);
-         }
-         else if (k == s2x2) {
-            *ss = linetemp;
-            newtb = or_all_people(ss);
-         }
-      }
-
-      begin_kind key1 = setup_attrs[ss->kind].keytab[0];
-      begin_kind key2 = setup_attrs[ss->kind].keytab[1];
-
-      four_way_startsetup = false;
-
-      if (key1 != b_nothing && key2 != b_nothing) {
-         if (key1 == key2) {     /* This is for things like 2x2 or 1x1. */
-            linedefinition = assoc(key1, ss, calldeflist);
-            coldefinition = linedefinition;
-            four_way_startsetup = true;
-         }
-         else {
-            /* If the setup is empty, get whatever definitions we can get, so that
-               we can find the "CFLAG1_PARALLEL_CONC_END" bit,
-               also known as the "other_elongate" bit. */
-
-            if (ss->cmd.cmd_misc2_flags & CMD_MISC2__IN_Z_MASK) {
-               /* See if the call has a 2x3 definition (we know the setup is a 2x3)
-                  that goes to a setup of size 4.  That is, see if this is "Z axle".
-                  If so, turn off the special "Z" flags and forget about it.
-                  Otherwise, change to a 2x2 and try again. */
-               if (!newtb || (newtb & 010)) linedefinition = assoc(key1, ss, calldeflist);
-               if (!newtb || (newtb & 1)) coldefinition = assoc(key2, ss, calldeflist);
-
-               if ((linedefinition &&
-                    (attr::klimit(linedefinition->get_end_setup()) == 3 ||
-                     (callspec->callflags1 & CFLAG1_PRESERVE_Z_STUFF))) ||
-                   (coldefinition &&
-                    (attr::klimit(coldefinition->get_end_setup()) == 3 ||
-                     (callspec->callflags1 & CFLAG1_PRESERVE_Z_STUFF)))) {
-                  ss->cmd.cmd_misc2_flags &= ~CMD_MISC2__IN_Z_MASK;
-               }
-               else {
-                  remove_z_distortion(ss);
-                  newtb = or_all_people(ss);
-                  linedefinition = assoc(b_2x2, ss, calldeflist);
-                  coldefinition = linedefinition;
-                  four_way_startsetup = true;
-               }
-            }
-            else {
-               if (!newtb || (newtb & 010)) linedefinition = assoc(key1, ss, calldeflist);
-               if (!newtb || (newtb & 1)) coldefinition = assoc(key2, ss, calldeflist);
-            }
-         }
-      }
-   }
-
-   if (attr::slimit(ss) < 0) fail("Setup is extremely bizarre.");
-
-   switch (ss->kind) {
-   case s_short6:
-   case s_bone6:
-   case s_trngl:
-   case s_ntrgl6cw:
-   case s_ntrgl6ccw:
-      break;
-   default:
-      if (ss->cmd.cmd_final_flags.test_finalbits(FINAL__TRIANGLE|FINAL__LEADTRIANGLE))
-         fail("Triangle concept not allowed here.");
-   }
-
-   /* If we found a definition for the setup we are in, we win.
-      This is true even if we only found a definition for the lines version
-      of the setup and not the columns version, or vice-versa.
-      If we need both and don't have both, we will lose. */
-
-   if (linedefinition || coldefinition) {
-      /* Raise a warning if the "split" concept was explicitly used but the
-         call would have naturally split that way anyway. */
-
-      /* ******* we have patched this out, because we aren't convinced that it really
-         works.  How do we make it not complain on "split sidetrack" even though some
-         parts of the call, like the "zig-zag", would complain?  And how do we account
-         for the fact that it is observed not to raise the warning on split sidetrack
-         even though we don't understand why?  By the way, uncertainty about this is what
-         led us to make this a warning.  It was originally an error.  Which is correct?
-         It is probably best to leave it as a warning of the "don't use in resolve" type.
-
-      if (ss->setupflags & CMD_MISC__SAID_SPLIT) {
-         switch (ss->kind) {
-            case s2x2:
-               if (!assoc(b_2x4, ss, calldeflist) && !assoc(b_4x2, ss, calldeflist))
-                  warn(warn__excess_split);
-               break;
-            case s1x4:
-               if (!assoc(b_1x8, ss, calldeflist) && !assoc(b_8x1, ss, calldeflist))
-                  warn(warn__excess_split);
-               break;
-            case sdmd:
-               if (!assoc(b_qtag, ss, calldeflist) && !assoc(b_pqtag, ss, calldeflist) &&
-                        !assoc(b_ptpd, ss, calldeflist) && !assoc(b_pptpd, ss, calldeflist))
-                  warn(warn__excess_split);
-               break;
-         }
-      }
-      */
-
-      if (ss->cmd.cmd_final_flags.test_finalbits(FINAL__TRIANGLE|FINAL__LEADTRIANGLE))
-         fail("Triangle concept not allowed here.");
-
-      /* We got here if either linedefinition or coldefinition had something.
-         If only one of them had something, but both needed to (because the setup
-         was T-boned) the normal intention is that we proceed anyway, which will
-         raise an error.  However, we check here for the case of a 1x2 setup
-         that has one definition but not the other, and has a 1x1 definition as well.
-         In that case, we split the setup.  This allows T-boned "quarter <direction>".
-         The problem is that "quarter <direction>" has a 1x2 definition (for
-         "quarter in") and a 1x1 definition, but no 2x1 definition.  (If it had
-         a 2x1 definition, then the splitting from a 2x2 would be ambiguous.)
-         So we have to fix that. */
-
-      if (ss->kind == s1x2 && (newtb & 011) == 011 && (!linedefinition || !coldefinition))
-         goto need_to_divide;
-
-      goto do_the_call;
-   }
-
- try_to_find_deflist:
-
-   /* We may have something in "calldeflist" corresponding to the modifiers on this call,
-      but there was nothing listed under that definition matching the starting setup. */
-
-   /* First, see if adding a "12 matrix" or "16 matrix" modifier to the call will help.
-      We need to be very careful about this.  The code below will divide, for example,
-      a 2x6 into 2x3's if CMD_MISC__EXPLICIT_MATRIX is on (that is, if the caller
-      said "2x6 matrix") and the call has a 2x3 definition.  This is what makes
-      "2x6 matrix double play" work correctly from parallelogram columns, while
-      just "double play" is not legal.  We take the position that the division of the
-      2x6 into 2x3's only occurs if the caller said "2x6 matrix".  But the call
-      "circulate" has a 2x3 column definition for the case with no 12matrix modifier
-      (so that "center 6, circulate" will work), and a 2x6 definition if the 12matrix
-      modifier is given.  We want the 12-person version of the circulate to happen
-      if the caller said either "12 matrix" or "2x6 matrix".  If "2x6 matrix" was
-      used, we will get here with nothing in coldefinition.  We must notice that
-      doing the call search again with the "12 matrix" modifier set will get us the
-      12-person call definition.
-
-      If we didn't do this check, then a 2x6 parallelogram column, for example,
-      would be split into 2x3's in the code below, if a 2x3 definition existed
-      for the call.  This would mean that, if we said "2x6 matrix circulate",
-      we would split the setup and do the circulate in each 2x3, which is not
-      what people want.
-
-      What actually goes on here is even more complicated now.  We want to allow the
-      concept "12 matrix" to cause division of the set.  This means that we not only
-      allow an explicit matrix ("2x6 matrix") to be treated as a "12 matrix", the way
-      we always have, but we allow it to go the other way.  That is, under certain
-      conditions we will turn a "12 matrix" to get turned into an explicit matrix
-      concept.  We do this special action only when all else has failed.
-
-      We do this only once.  Because of all the goto's that we execute as we
-      try various things, there is danger of looping.  To make sure that this happens
-      only once, we set "matrix_check_flag" nonzero when we do it, and only do it if
-      that flag is zero.
-
-      We don't do this if "snag" or "mystic" was given.  In those cases, we know exactly
-      why there is no definition, and we need to call "divide_the_setup" to fix it. */
-
-   if (matrix_check_flag == 0 && !(ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_MASK)) {
-      if (!(search_concepts_without_funny & INHERITFLAG_16_MATRIX) &&
-          ((ss->kind == s2x6 || ss->kind == s3x4 || ss->kind == sd3x4 ||
-            ss->kind == s1x12 || ss->kind == sdeepqtg) ||
-           (((callspec->callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) ||
-             (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX)) &&
-            !(search_concepts_without_funny & INHERITFLAG_16_MATRIX) &&
-            (ss->kind == s2x3 || ss->kind == s1x6))))
-         matrix_check_flag = INHERITFLAG_12_MATRIX;
-      else if (!(search_concepts_without_funny & INHERITFLAG_12_MATRIX) &&
-               ((ss->kind == s2x8 || ss->kind == s4x4 || ss->kind == s1x16) ||
-                (((callspec->callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) ||
-                  (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX)) &&
-                 !(search_concepts_without_funny & INHERITFLAG_12_MATRIX) &&
-                 (ss->kind == s2x4 || ss->kind == s1x8))))
-         matrix_check_flag = INHERITFLAG_16_MATRIX;
-
-      /* But we might not have set "matrix_check_flag" nonzero!  How are we going to
-         prevent looping?  The answer is that we won't execute the goto unless we did
-         set set it nonzero. */
-
-      if (!(ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX) &&
-          calldeflist == 0 &&
-          (matrix_check_flag & ~search_concepts_without_funny) == 0) {
-
-         /* Here is where we do the very special stuff.  We turn a "12 matrix" concept
-            into an explicit matrix.  Note that we only do it if we would have lost
-            anyway about 25 lines below (note that "calldeflist" is zero, and
-            the search again stuff won't be executed unless CMD_MISC__EXPLICIT_MATRIX is on,
-            which it isn't.)  So we turn on the CMD_MISC__EXPLICIT_MATRIX bit,
-            and we turn off the INHERITFLAG_12_MATRIX or INHERITFLAG_16_MATRIX bit. */
-
-         if (matrix_check_flag == 0) {
-            /* We couldn't figure out from the setup what the matrix is,
-               so we have to expand it. */
-
-            if (!(ss->cmd.cmd_misc_flags & CMD_MISC__NO_EXPAND_MATRIX)) {
-               if (search_concepts_without_funny & INHERITFLAG_12_MATRIX) {
-                  do_matrix_expansion(
-                     ss,
-                     (ss->kind == s2x4) ? CONCPROP__NEEDK_2X6 : CONCPROP__NEEDK_TRIPLE_1X4,
-                     true);
-
-                  if (ss->kind != s2x6 && ss->kind != s3x4 && ss->kind != s1x12)
-                     fail("Can't expand to a 12 matrix.");
-                  matrix_check_flag = INHERITFLAG_12_MATRIX;
-               }
-               else if (search_concepts_without_funny & INHERITFLAG_16_MATRIX) {
-                  if (ss->kind == s2x6)
-                     do_matrix_expansion(ss, CONCPROP__NEEDK_2X8, true);
-                  else if (ss->kind == s_alamo)
-                     do_matrix_expansion(ss, CONCPROP__NEEDK_4X4, true);
-                  else if (ss->kind != s2x4)
-                     do_matrix_expansion(ss, CONCPROP__NEEDK_1X16, true);
-
-                  // Take no action (and hence cause an error) if the setup was a 2x4.
-                  // If someone wants to say "16 matrix 4x4 peel off" from normal columns,
-                  // that person needs more help than we can give.
-
-                  if (ss->kind != s2x8 && ss->kind != s4x4 && ss->kind != s1x16)
-                     fail("Can't expand to a 16 matrix."); 
-                  matrix_check_flag = INHERITFLAG_16_MATRIX;
-               }
-            }
-         }
-
-         search_concepts_without_funny &= ~matrix_check_flag;
-         ss->cmd.cmd_final_flags.clear_heritbits(matrix_check_flag);
-         search_temp_without_funny = 0;
-         ss->cmd.cmd_misc_flags |= CMD_MISC__EXPLICIT_MATRIX;
-      }
-      else {
-         uint32 sc = search_concepts_without_funny & INHERITFLAG_NXNMASK;
-
-         if (((matrix_check_flag & INHERITFLAG_12_MATRIX) &&
-              (search_concepts_without_funny & INHERITFLAG_12_MATRIX) &&
-              (sc == INHERITFLAGNXNK_3X3 || sc == INHERITFLAGNXNK_6X6)) ||
-             ((matrix_check_flag & INHERITFLAG_16_MATRIX) &&
-              (search_concepts_without_funny & INHERITFLAG_16_MATRIX) &&
-              (sc == INHERITFLAGNXNK_4X4 || sc == INHERITFLAGNXNK_8X8))) {
-            search_concepts_without_funny &= ~matrix_check_flag;
-            ss->cmd.cmd_final_flags.clear_heritbits(matrix_check_flag);
-            search_temp_without_funny = 0;
-         }
-         else
-            search_temp_without_funny = matrix_check_flag;
-      }
-
-      if ((ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX) && matrix_check_flag != 0)
-         goto foobar;
-   }
-
-   // We need to divide the setup.
-
- need_to_divide:
-
-   if (!newtb) {
-      if (callspec->callflags1 & CFLAG1_PARALLEL_CONC_END) {
-         if ((desired_elongation+1) & 2)
-            desired_elongation ^= 3;
-      }
-
-      result->kind = nothing;
-      goto un_mirror;
-   }
-
-   if (!calldeflist)
-      fail("Can't do this call with this modifier.");
-
-   j = divide_the_setup(ss, &newtb, calldeflist, &desired_elongation, result);
-   if (j == 1)
-      goto un_mirror;     // It divided and did the call.  We are done.
-   else if (j == 2) goto search_for_call_def;      /* It did some necessary expansion
-                                                      or transformation, but did not
-                                                      do the call.  Try again. */
-
-   // If doing an "own the anyone", we might have to fix up a bizarre unsymmetrical setup.
-
-   if (clean_up_unsymmetrical_setup(ss))
-      goto search_for_call_def;
-
-   if (ss->kind == s_ntrgl6cw || ss->kind == s_ntrgl6ccw) {
-      // If the problem was that we had a "nonisotropic triangle" setup
-      // and neither the call definition nor the splitting can handle it,
-      // we give a warning and fudge to a 2x3.
-      // Note that the "begin_kind" fields for these setups are "nothing".
-      // It is simply not possible for a call definition to specify a
-      // starting setup of nonisotropic triangles.
-      ss->kind = s2x3;
-      warn(warn__may_be_fudgy);
-      goto search_for_call_def;
-   }
-
-   /* If we get here, linedefinition and coldefinition are both zero, and we will fail. */
-
-   /* We are about to do the call by array! */
-
- do_the_call:
-
-   /* This shouldn't happen, but we are being very careful here. */
+   // This shouldn't happen, but we are being very careful here.
    if (ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_MASK)
       fail("Can't do \"snag/mystic\" with this call.");
 
    ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
-   inconsistent_rotation = 0;
-   inconsistent_setup = 0;
 
    if ((coldefinition && (coldefinition->callarray_flags & CAF__PLUSEIGHTH_ROTATION)) ||
        (linedefinition && (linedefinition->callarray_flags & CAF__PLUSEIGHTH_ROTATION)))
@@ -4863,13 +4273,13 @@ foobar:
       desired_elongation ^= 3;
 
    if (!newtb) {
-      result->kind = nothing;   /* Note that we get the benefit of the
-                                   "CFLAG1_PARALLEL_CONC_END" stuff here.  */
-      goto un_mirror;           /* This means that a counter rotate in
-                                   an empty 1x2 will still change shape. */
+      result->kind = nothing;   // Note that we get the benefit of the
+                                // "CFLAG1_PARALLEL_CONC_END" stuff here.
+      return 0;                 // This means that a counter rotate in
+                                // an empty 1x2 will still change shape.
    }
 
-   /* Check that "linedefinition" has been set up if we will need it. */
+   // Check that "linedefinition" has been set up if we will need it.
 
    goodies = (callarray *) 0;
 
@@ -4924,7 +4334,7 @@ foobar:
       goodies = linedefinition;
    }
 
-   /* Check that "coldefinition" has been set up if we will need it. */
+   // Check that "coldefinition" has been set up if we will need it.
 
    if ((newtb & 1) && (!four_way_startsetup)) {
       assumption_thing t;
@@ -4967,10 +4377,10 @@ foobar:
          check_restriction(ss, t, false,
                            coldefinition->callarray_flags & CAF__RESTR_MASK);
 
-      /* If we have linedefinition also, check for consistency. */
+      // If we have linedefinition also, check for consistency.
 
       if (goodies) {
-         /* ***** should also check the other stupid fields! */
+         // ***** should also check the other stupid fields!
          inconsistent_rotation =
             (goodies->callarray_flags ^ coldefinition->callarray_flags) & CAF__ROT;
          if (goodies->get_end_setup() != coldefinition->get_end_setup())
@@ -4985,7 +4395,7 @@ foobar:
    result->kind = goodies->get_end_setup();
 
    if (result->kind == s_normal_concentric) {
-      /* ***** this requires an 8-person call definition */
+      // ***** this requires an 8-person call definition
       setup outer_inners[2];
       int outer_elongation;
       setup p1;
@@ -5027,9 +4437,9 @@ foobar:
       outer_inners[0].rotation = (goodies->callarray_flags & CAF__ROT_OUT) ? 1 : 0;
       outer_inners[1].rotation = goodies->callarray_flags & CAF__ROT;
 
-      /* For calls defined by array with concentric end setup, the "other_elongate" flag,
-         which comes from "CFLAG1_PARALLEL_CONC_END" or "CAF__OTHER_ELONGATE",
-         turns on the outer elongation. */
+      // For calls defined by array with concentric end setup, the "other_elongate" flag,
+      // which comes from "CFLAG1_PARALLEL_CONC_END" or "CAF__OTHER_ELONGATE",
+      // turns on the outer elongation.
       outer_elongation = outer_inners[0].rotation;
       if (other_elongate) outer_elongation ^= 1;
 
@@ -5147,6 +4557,20 @@ foobar:
                   else {
                      final_translatel = &ftlcwv[4];
                      rotfudge_line = 1;
+                  }
+               }
+               else if (result->kind == s2x4 && other_kind == s_hrglass) {
+                  result->rotation = linedefinition->callarray_flags & CAF__ROT;
+                  result->kind = s_hrglass;
+                  tempkind = s_hrglass;
+
+                  if (goodies->callarray_flags & CAF__ROT) {
+                     final_translatec = &qtlqtg[4];
+                     rotfudge_col = 1;
+                  }
+                  else {
+                     final_translatec = &qtlqtg[0];
+                     rotfudge_col = 3;
                   }
                }
                else if (result->kind == s2x4 && other_kind == s_qtag) {
@@ -5383,18 +4807,19 @@ foobar:
          }
       }
 
-      /* If the result setup size is larger than the starting setup size, we assume that this call
-         has a concocted result setup (e.g. squeeze the galaxy, unwrap the galaxy, change your
-         image), and we try to compress it.  We claim that, if the result size given
-         in the calls database is bigger than the starting size, as it is for those calls, we
-         don't really want that big setup, but want to compress it immediately if possible.
-         Q: Why don't we just let the natural setup normalization that will occur later do this
-         for us?  A: That only happens at the top level.  In this case, we consider the compression
-         to be part of doing the call.  If we someday were able to do a reverse flip of split
-         phantom galaxies, we would want each galaxy to compress itself to a 2x4 before
-         reassembling them.
-      When we do a 16-matrix circulate in a 4x4 start setup, we do NOT want to compress
-         the 4x4 to a 2x4!!!!!  This is why we compare the beginning and ending setup sizes. */
+      // If the result setup size is larger than the starting setup size, we assume that this call
+      // has a concocted result setup (e.g. squeeze the galaxy, unwrap the galaxy, change your
+      // image), and we try to compress it.  We claim that, if the result size given
+      // in the calls database is bigger than the starting size, as it is for those calls, we
+      // don't really want that big setup, but want to compress it immediately if possible.
+      // Q: Why don't we just let the natural setup normalization that will occur later do this for us?
+      // A: That only happens at the top level.  In this case, we consider the compression
+      //          to be part of doing the call.  If we someday were able to do a reverse flip of split
+      // phantom galaxies, we would want each galaxy to compress itself to a 2x4 before
+      // reassembling them.
+      //
+      // When we do a 16-matrix circulate in a 4x4 start setup, we do NOT want to compress
+      //  the 4x4 to a 2x4!!!!!  This is why we compare the beginning and ending setup sizes.
 
       if (!(goodies->callarray_flags & CAF__NO_COMPRESS) &&
           (result->kind == s_hyperglass ||
@@ -5408,7 +4833,7 @@ foobar:
 
          switch (result->kind) {
          case s4x4:
-            /* See if people landed on 2x4 spots. */
+            // See if people landed on 2x4 spots.
             if ((lilresult_mask[0] & 0x7171) == 0) {
                result->kind = s2x4;
                permuter = galtranslateh;
@@ -5833,75 +5258,75 @@ foobar:
             break;
          case s_hyperglass:
 
-            /* Investigate possible diamonds and 1x4's.  If enough centers
-               and ends (points) are present to determine unambiguously what
-               result setup we must create, we of course do so.  Otherwise, if
-               the centers are missing but points are present, we give preference
-               to making a 1x4, no matter what the call definition said the ending
-               setup was.  But if centers are present and the points are missing,
-               we go do diamonds if the original call definition wanted diamonds. */
+            // Investigate possible diamonds and 1x4's.  If enough centers
+            // and ends (points) are present to determine unambiguously what
+            // result setup we must create, we of course do so.  Otherwise, if
+            // the centers are missing but points are present, we give preference
+            // to making a 1x4, no matter what the call definition said the ending
+            // setup was.  But if centers are present and the points are missing,
+            // we go do diamonds if the original call definition wanted diamonds.
 
             if ((lilresult_mask[0] & 05757) == 0 && tempkind == sdmd) {
-               result->kind = sdmd;     /* Only centers present, and call wanted diamonds. */
+               result->kind = sdmd;     // Only centers present, and call wanted diamonds.
                permuter = dmdhyperv+3;
             }
             else if ((lilresult_mask[0] & 07575) == 0 && tempkind == sdmd) {
-               result->kind = sdmd;     /* Only centers present, and call wanted diamonds. */
+               result->kind = sdmd;     // Only centers present, and call wanted diamonds.
                permuter = dmdhyperv;
                rotator = 1;
             }
             else if ((lilresult_mask[0] & 05656) == 0 &&
                      (goodies->callarray_flags & CAF__REALLY_WANT_DIAMOND)) {
-               result->kind = sdmd;     /* Setup is consistent with diamonds,
-                                           though maybe centers are absent,
-                                           but user specifically requested diamonds. */
+               result->kind = sdmd;     // Setup is consistent with diamonds,
+                                        //  though maybe centers are absent,
+                                        // but user specifically requested diamonds.
                permuter = dmdhyperv+3;
             }
             else if ((lilresult_mask[0] & 06565) == 0 &&
                      (goodies->callarray_flags & CAF__REALLY_WANT_DIAMOND)) {
-               result->kind = sdmd;     /* Setup is consistent with diamonds,
-                                           though maybe centers are absent,
-                                           but user specifically requested diamonds. */
+               result->kind = sdmd;     // Setup is consistent with diamonds,
+                                        // though maybe centers are absent,
+                                        // but user specifically requested diamonds.
                permuter = dmdhyperv;
                rotator = 1;
             }
             else if ((lilresult_mask[0] & 07474) == 0) {
-               result->kind = s1x4;     /* Setup is consistent with lines,
-                                           though maybe centers are absent. */
+               result->kind = s1x4;     // Setup is consistent with lines,
+                                        // though maybe centers are absent.
                permuter = linehyperh;
             }
             else if ((lilresult_mask[0] & 04747) == 0) {
-               result->kind = s1x4;     /* Setup is consistent with lines,
-                                           though maybe centers are absent. */
+               result->kind = s1x4;     // Setup is consistent with lines,
+                                        // though maybe centers are absent.
                permuter = linehyperv;
                rotator = 1;
             }
             else if ((lilresult_mask[0] & 05656) == 0) {
-               result->kind = sdmd;     /* Setup is consistent with diamonds,
-                                           though maybe centers are absent. */
+               result->kind = sdmd;     // Setup is consistent with diamonds,
+                                        // though maybe centers are absent.
                permuter = dmdhyperv+3;
             }
             else if ((lilresult_mask[0] & 06565) == 0) {
-               result->kind = sdmd;     /* Setup is consistent with diamonds,
-                                           though maybe centers are absent. */
+               result->kind = sdmd;     // Setup is consistent with diamonds,
+                                        // though maybe centers are absent.
                permuter = dmdhyperv;
                rotator = 1;
             }
             else if ((lilresult_mask[0] & 01212) == 0) {
-               result->kind = s_hrglass;    /* Setup is an hourglass. */
+               result->kind = s_hrglass;    // Setup is an hourglass.
                permuter = galhyperv+3;
             }
             else if ((lilresult_mask[0] & 02121) == 0) {
-               result->kind = s_hrglass;    /* Setup is an hourglass. */
+               result->kind = s_hrglass;    // Setup is an hourglass.
                permuter = galhyperv;
                rotator = 1;
             }
             else if ((lilresult_mask[0] & 03030) == 0) {
-               result->kind = s_qtag;    /* Setup is qtag/diamonds. */
+               result->kind = s_qtag;    // Setup is qtag/diamonds.
                permuter = qtghyperh;
             }
             else if ((lilresult_mask[0] & 00303) == 0) {
-               result->kind = s_qtag;    /* Setup is qtag/diamonds. */
+               result->kind = s_qtag;    // Setup is qtag/diamonds.
                permuter = qtghyperv;
                rotator = 1;
             }
@@ -5910,9 +5335,9 @@ foobar:
                permuter = starhyperh;
             }
             else if ((lilresult_mask[0] & 06666) == 0) {
-               result->kind = s_star;        /* Actually, this is a star with all people
-                                                sort of far away from the center.  We may
-                                                need to invent a new setup, "farstar". */
+               result->kind = s_star;        // Actually, this is a star with all people
+                                             // sort of far away from the center.  We may
+                                             // need to invent a new setup, "farstar".
                permuter = fstarhyperh;
             }
             else
@@ -6008,22 +5433,22 @@ foobar:
                fail("Call went to improperly-formed setup.");
             break;
          case sbigdmd:
-            if ((lilresult_mask[0] & 02222) == 0) {        /* All outside */
+            if ((lilresult_mask[0] & 02222) == 0) {        // All outside.
                result->kind = s_qtag;
                permuter = qtbd1;
                rotator = 1;
             }
-            else if ((lilresult_mask[0] & 04141) == 0) {   /* All inside */
+            else if ((lilresult_mask[0] & 04141) == 0) {   // All inside.
                result->kind = s_qtag;
                permuter = qtbd2;
                rotator = 1;
             }
-            else if ((lilresult_mask[0] & 02121) == 0) {   /* Some inside, some outside */
+            else if ((lilresult_mask[0] & 02121) == 0) {   // Some inside, some outside.
                result->kind = s_qtag;
                permuter = qtbd3;
                rotator = 1;
             }
-            else if ((lilresult_mask[0] & 04242) == 0) {   /* Some inside, some outside */
+            else if ((lilresult_mask[0] & 04242) == 0) {   // Some inside, some outside.
                result->kind = s_qtag;
                permuter = qtbd4;
                rotator = 1;
@@ -6172,12 +5597,12 @@ foobar:
        result->kind == s2x2) {
       // We just did a "dixie 1/2 tag" but will want to back up to the 1/4 position.
       // Need to change handedness.
-      uint32 newtb = or_all_people(result);
-      if (!(newtb & 001)) {
+      uint32 newtb99 = or_all_people(result);
+      if (!(newtb99 & 001)) {
          result->swap_people(0, 1);
          result->swap_people(2, 3);
       }
-      else if (!(newtb & 010)) {
+      else if (!(newtb99 & 010)) {
          result->swap_people(0, 3);
          result->swap_people(2, 1);
       }
@@ -6189,7 +5614,782 @@ foobar:
 
    reinstate_rotation(ss, result);
 
-   un_mirror:
+   // Handle the "casting overflow" calculation.
+   //
+   // The "OVERCAST_BIT" on a person means:
+   //   This person has an adjacent casting partner, their roll directions are
+   //   toward each other, and, prior to the just completed call they were in an
+   //   adjacent casting partner relationship, though perhaps not with correct
+   //   roll direction.
+   //
+   // So, for example, the centers of the wave resulting from "criss cross your neighbor"
+   //   are adjacent, with roll direction toward each other, but the bit is not on, because
+   //   they were not adjacent before the call.
+
+   if (!ss->cmd.callspec || (ss->cmd.callspec->the_defn.callflagsf & CFLAG2_OVERCAST_TRANSPARENT) == 0) {
+      // Save the original locations.
+      // ****** make this a nice routine, and use same at sdmoves/1100.
+      // Also, use the full XPID_MASK bits, not just 3 bits.
+
+      veryshort where_they_came_from[8];
+      ::memset(where_they_came_from, -1, sizeof(where_they_came_from));
+      for (i=0; i<=attr::slimit(ss); i++) {
+         int j = (ss->people[i].id1 >> 6) & 7;
+         if (where_they_came_from[j] != -1) {
+            result->clear_all_overcasts();
+            goto overcast_done;
+         }
+         where_they_came_from[j] = i;
+      }
+
+      int octantmask1, octantmask2;
+
+      for (i=0; i<=attr::slimit(result); i++) {
+         uint32 p = result->people[i].id1;
+         if (p) {
+            int place = find_casting_partner(i, result, result->people[i].id1, octantmask1);
+            // Check whether both people agree that casting is taking place.  This requires that they
+            // have the same roll direction and are facing opposite directions.
+            if (place < 0 || ((p ^ result->people[place].id1) & (ROLL_DIRMASK | 3)) != 2) {
+               result->people[i].id1 &= ~OVERCAST_BIT;
+               continue;
+            }
+
+            // We now know that the two people are adjacent, in a miniwave, and rolling
+            // toward each other at the end of the call.
+            // Were they adjacent and in a miniwave before the call?
+            // In the same general area?
+
+            int f2 = where_they_came_from[(p >> 6) & 7];
+            int f8 = where_they_came_from[(result->people[place].id1 >> 6) & 7];
+            if (f2 >= 0) {
+               int zz1 = find_casting_partner(f2, ss, result->people[i].id1, octantmask2);
+               if (zz1 >= 0 &&
+                   zz1 == f8 &&
+                   octantmask1 == octantmask2 &&
+                   ((ss->people[f2].id1 ^ ss->people[zz1].id1) & 3) == 2) {
+                  // They were also adjacent prior to the call, and in a miniwave.
+                  // So we will turn on both of their overcast bits now.  But we raise the warning
+                  // only if they both had their overcast bits on before, and their roll directions
+                  // matched their current roll directions.
+                  if ((ss->cmd.cmd_misc3_flags & CMD_MISC3__STOP_OVERCAST_CHECK) == 0) {
+                     if (ss->people[f2].id1 & ss->people[zz1].id1 & OVERCAST_BIT) {
+                        // They both had the flag on before.  But for each other?  That is,
+                        // are their roll directions back then same as they are now?
+
+                        if (((p ^ ss->people[f2].id1) & ROLL_DIRMASK) == 0) {
+                           // My roll dir now is same as it was.
+                           if (enforce_overcast_warning &&
+                               ((result->people[place].id1 ^ ss->people[f8].id1) & ROLL_DIRMASK) == 0) {
+                              // Other person -- same.  Check whether the call prevents this.
+                              if (!ss->cmd.callspec ||
+                                  (ss->cmd.callspec->the_defn.callflagsf & CFLAG2_NO_RAISE_OVERCAST) == 0)
+                                 warn(warn__overcast);
+                           }
+                        }
+                     }
+                  }
+                  result->people[i].id1 |= OVERCAST_BIT;
+               }
+               else {
+                  result->people[i].id1 &= ~OVERCAST_BIT;
+               }
+            }
+            else {
+               result->people[i].id1 &= ~OVERCAST_BIT;
+            }
+         }
+      }
+   }
+   else
+      return resultflagsmisc;
+
+ overcast_done:
+
+   return resultflagsmisc | RESULTFLAG__STOP_OVERCAST_CHECK;
+}
+
+
+// For this routine, we know that callspec is a real call, with an array definition schema.
+// Also, result->people have been cleared.
+extern void basic_move(
+   setup *ss,
+   calldefn *the_calldefn,
+   int tbonetest,
+   bool fudged,
+   bool mirror,
+   setup *result) THROW_DECL
+{
+   int j;
+   callarray *calldeflist;
+   uint32 funny;
+   uint32 division_code = ~0UL;
+   callarray *linedefinition;
+   callarray *coldefinition;
+   uint32 matrix_check_flag = 0;
+   uint32 search_concepts_without_funny,
+      search_temp_without_funny, search_temp_with_funny;
+   int orig_elongation = 0;
+   bool four_way_startsetup;
+   uint32 newtb = tbonetest;
+   uint32 resultflagsmisc = 0;
+   int desired_elongation = 0;
+   calldef_block *qq;
+   const calldefn *callspec = the_calldefn;
+
+   bool check_peeloff_migration = false;
+
+   // We don't allow "central" or "invert" with array-defined calls.
+   // We might allow "snag" or "mystic".
+
+   if (ss->cmd.cmd_misc2_flags & (CMD_MISC2__SAID_INVERT | CMD_MISC2__DO_CENTRAL))
+      fail("Can't do \"central\" or \"invert\" with this call.");
+
+   // Do this now, for 2 reasons:
+   // (1) We want it to be zero in case we bail out.
+   // (2) we want the RESULTFLAG__SPLIT_AXIS_MASK stuff to be clear
+   //     for the normal case, and have bits only if splitting actually occurs.
+   clear_result_flags(result);
+
+   if (ss->cmd.cmd_misc2_flags & CMD_MISC2__DO_NOT_EXECUTE) {
+      result->kind = nothing;
+      return;
+   }
+
+   /* We demand that the final concepts that remain be only the following ones. */
+
+   if (ss->cmd.cmd_final_flags.test_finalbits(
+         ~(FINAL__SPLIT_SQUARE_APPROVED | FINAL__SPLIT_DIXIE_APPROVED |
+           FINAL__TRIANGLE | FINAL__LEADTRIANGLE)))
+      fail("This concept not allowed here.");
+
+   /* Set up the result elongation that we will need if the result is
+      a 2x2 or short6.  This comes from the original 2x2 elongation, or is set
+      perpendicular to the original 1x4/diamond elongation.  If the call has the
+      "parallel_conc_end" flag set, invert that elongation.
+
+      We will override all this if we divide a 1x4 or 2x2 into 1x2's.
+
+      What this means is that the default for a 2x2->2x2 or short6->short6 call
+      is to work to "same absolute elongation".  For a 2x2 that is of course the same
+      as working to footprints.  For a short6 it works to footprints if the call
+      doesn't rotate, and does something a little bit weird if it does.  In either
+      case the "parallel_conc_end" flag inverts that.
+
+      The reason for putting up with this rather weird behavior is to make counter
+      rotate work for 2x2 and short6 setups.  The call has the "parallel_conc_end" flag
+      set, so that "ends counter rotate" will do the correct (anti-footprint) thing.
+      The "parallel_conc_end" flag applies only to an entire call, not to a specific
+      by-array definition, so it is set for counter rotate from a short6 also.
+      Counter rotate for a short6 rotates the setup, of course, and we want it to do
+      the correct shape-preserving thing, which requires that the absolute elongation
+      change when "parallel_conc_end" is set.  So the default is that, in the absence
+      of "parallel_conc_end", the absolute elongation stays the same, even though that
+      changes the shape for a rotating short6 call. */
+
+   switch (ss->kind) {
+   case s2x2: case s2x3: case s_short6: case s_bone6:
+      orig_elongation = ss->cmd.prior_elongation_bits;
+      break;
+   case s1x2: case s1x4: case sdmd:
+      orig_elongation = 2 - (ss->rotation & 1);
+      break;
+   }
+
+   desired_elongation = orig_elongation & 3;
+
+   // Attend to a few details, but only if there are real people present.
+
+   if (newtb) {
+      switch (ss->kind) {
+      case s2x2:
+         // Now we do a special check for split-square-thru or
+         // split-dixie-style types of things.
+
+         if (ss->cmd.cmd_final_flags.test_finalbits(FINAL__SPLIT_SQUARE_APPROVED | FINAL__SPLIT_DIXIE_APPROVED)) {
+            static uint32 startmasks[4] = {0xAD, 0xBC, 0x70, 0x61};
+
+            ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
+
+            // Find out what orientation of the split call is consistent with the
+            // directions of the live people.  Demand that it be unambiguous.
+
+            uint32 directions, livemask;
+            big_endian_get_directions(ss, directions, livemask);
+            int i1 = -1;
+
+            for (int i=0 ; i<4 ; i++) {
+               if (((directions ^ startmasks[i]) & livemask) == 0) {
+                  // Be sure it isn't ambiguous.
+                  if (i1 >= 0) fail("People are not in correct position for split call.");
+                  i1 = i;
+               }
+            }
+
+            if (i1 < 0) fail("People are not in correct position for split call.");
+
+            // Now do the required transformation, if it is a "split square thru" type.
+            // For "split dixie style" stuff, do nothing -- the database knows what to do.
+
+            if (!(ss->cmd.cmd_final_flags.test_finalbit(FINAL__SPLIT_DIXIE_APPROVED))) {
+               int i2 = (i1 + 1) & 3;
+               ss->swap_people(i1, i2);
+               copy_rot(ss, i1, ss, i1, 033);
+               copy_rot(ss, i2, ss, i2, 011);
+
+               // Repair the damage.
+               newtb = ss->people[0].id1 | ss->people[1].id1 | ss->people[2].id1 | ss->people[3].id1;
+            }
+         }
+         break;
+      case s_trngl4:
+         // The same, with twisted.
+
+         if (ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_TWISTED) &&
+             (ss->cmd.cmd_final_flags.test_finalbits(FINAL__SPLIT_SQUARE_APPROVED | FINAL__SPLIT_DIXIE_APPROVED))) {
+            ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
+
+            if (((ss->people[0].id1 & d_mask) != d_north) ||
+                ((ss->people[1].id1 & d_mask) != d_south) ||
+                ((ss->people[2].id1 & d_mask) != d_south) ||
+                ((ss->people[3].id1 & d_mask) != d_south))
+               fail("People are not in correct position for split call.");
+
+            // Now do the required transformation, if it is a "split square thru" type.
+            // For "split dixie style" stuff, do nothing -- the database knows what to do.
+
+            if (!(ss->cmd.cmd_final_flags.test_finalbit(FINAL__SPLIT_DIXIE_APPROVED))) {
+               copy_rot(ss, 0, ss, 0, 011);
+               copy_rot(ss, 1, ss, 1, 011);
+               copy_rot(ss, 2, ss, 2, 011);
+               copy_rot(ss, 3, ss, 3, 033);
+               ss->rotation--;
+               ss->kind = s1x4;
+               canonicalize_rotation(ss);
+
+               // Repair the damage.
+               newtb = ss->people[0].id1 | ss->people[1].id1 | ss->people[2].id1 | ss->people[3].id1;
+            }
+         }
+         break;
+      case s_qtag:
+         if (fudged && !(callspec->callflags1 & CFLAG1_FUDGE_TO_Q_TAG))
+            fail("Can't do this call from arbitrary 3x4 setup.");
+         break;
+      }
+   }
+
+   // Many of the remaining final concepts (all of the heritable ones
+   // except "funny" and "left", but "left" has been taken care of)
+   // determine what call definition we will get.
+
+   uint32 given_funny_flag = ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_FUNNY);
+
+   search_concepts_without_funny = ss->cmd.cmd_final_flags.test_heritbits(~INHERITFLAG_FUNNY);
+   search_temp_without_funny = 0;
+
+foobar:
+
+   search_temp_without_funny |= search_concepts_without_funny;
+   search_temp_with_funny = search_temp_without_funny | given_funny_flag;
+
+   funny = 0;   // Will have the bit if we are supposed to use the "CAF__FACING_FUNNY" stuff.
+
+   for (qq = callspec->stuff.arr.def_list; qq; qq = qq->next) {
+      // First, see if we have a match including any incoming "funny" flag.
+      if (qq->modifier_seth == search_temp_with_funny) {
+         goto use_this_calldeflist;
+      }
+      // Search again, for a plain definition that has the "CAF__FACING_FUNNY" flag.
+      else if (given_funny_flag &&
+               qq->modifier_seth == search_temp_without_funny &&
+               (qq->callarray_list->callarray_flags & CAF__FACING_FUNNY)) {
+         funny = given_funny_flag;
+         goto use_this_calldeflist;
+      }
+   }
+
+   /* We didn't find anything. */
+
+   if (matrix_check_flag != 0) goto need_to_divide;
+
+   if (ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_MASK)
+      fail("Can't do \"snag/mystic\" with this call.");
+
+   // Perhaps the concept "magic" or "interlocked" was given, and the call
+   // has no special definition for same, but wants us to divide the setup
+   // magically or interlockedly.  Or a similar thing with 12 matrix.
+
+   // First, check for "magic" and "interlocked" stuff, and do those divisions if so.
+   result->result_flags.res_heritflags_to_save_from_mxn_expansion = 0;
+   if (divide_for_magic(ss,
+                        search_concepts_without_funny & ~(INHERITFLAG_DIAMOND | INHERITFLAG_SINGLE |
+                                                          INHERITFLAG_SINGLEFILE | INHERITFLAG_CROSS |
+                                                          INHERITFLAG_GRAND | INHERITFLAG_REVERTMASK),
+                        result))
+      goto un_mirror;
+
+   // Now check for 12 matrix or 16 matrix things.  If the call has the
+   // "12_16_matrix_means_split" flag, and that (plus possible 3x3/4x4 stuff)
+   // was what we were looking for, remove those flags and split the setup.
+
+   if (callspec->callflags1 & CFLAG1_12_16_MATRIX_MEANS_SPLIT) {
+      uint32 z = search_concepts_without_funny & ~INHERITFLAG_NXNMASK;
+
+      switch (ss->kind) {
+      case s3x4:
+         if (z == INHERITFLAG_12_MATRIX ||
+             (z == 0 && (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX))) {
+            // "12 matrix" was specified.  Split it into 1x4's in the appropriate way.
+            division_code = MAPCODE(s1x4,3,MPKIND__SPLIT,1);
+         }
+         break;
+      case s1x12:
+         if (z == INHERITFLAG_12_MATRIX ||
+             (z == 0 && (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX))) {
+            // "12 matrix" was specified.  Split it into 1x4's in the appropriate way.
+            division_code = MAPCODE(s1x4,3,MPKIND__SPLIT,0);
+         }
+         break;
+      case s3dmd:
+         if (z == INHERITFLAG_12_MATRIX ||
+             (z == 0 && (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX))) {
+            // "12 matrix" was specified.  Split it into diamonds in the appropriate way.
+            division_code = MAPCODE(sdmd,3,MPKIND__SPLIT,1);
+
+         }
+         break;
+      case s4dmd:
+         if (z == INHERITFLAG_16_MATRIX ||
+             (z == 0 && (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX))) {
+            // "16 matrix" was specified.  Split it into diamonds in the appropriate way.
+            division_code = MAPCODE(sdmd,4,MPKIND__SPLIT,1);
+         }
+         break;
+      case s2x6:
+         if (z == INHERITFLAG_12_MATRIX ||
+             (z == 0 && (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX))) {
+            // "12 matrix" was specified.  Split it into 2x2's in the appropriate way.
+            division_code = MAPCODE(s2x2,3,MPKIND__SPLIT,0);
+         }
+         break;
+      case s2x8:
+         if (z == INHERITFLAG_16_MATRIX ||
+             (z == 0 && (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX))) {
+            // "16 matrix" was specified.  Split it into 2x2's in the appropriate way.
+            division_code = MAPCODE(s2x2,4,MPKIND__SPLIT,0);
+         }
+         break;
+      case s4x4:
+         if (z == INHERITFLAG_16_MATRIX ||
+             (z == 0 && (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX))) {
+            /* "16 matrix" was specified.  Split it into 1x4's in the appropriate way. */
+            /* But which way is appropriate?  A 4x4 is ambiguous. */
+            /* Being rather lazy, we just look to see whether the call is "pass thru",
+               which is the only one that wants tandems rather than couples.
+               Really ought to try splitting to 2x2's and see what happens. */
+
+            int zxy = (callspec == &base_calls[base_call_passthru]->the_defn) ? 1 : 0;
+
+            if ((newtb ^ zxy) & 1) {
+               // If the setup is empty and newtb is zero, it doesn't matter what we do.
+               division_code = spcmap_4x4v;
+            }
+            else
+               division_code = MAPCODE(s1x4,4,MPKIND__SPLIT,1);
+         }
+         break;
+      }
+
+      if (division_code != ~0UL) {
+         warn(warn__really_no_eachsetup);   // This will shut off all future "do it in each XYZ" warnings.
+         goto divide_us;
+      }
+   }
+
+   calldeflist = 0;
+
+   goto try_to_find_deflist;
+
+ divide_us:
+
+   ss->cmd.cmd_final_flags.clear_heritbits(search_concepts_without_funny);
+   divided_setup_move(ss, division_code, phantest_ok, true, result);
+   goto un_mirror;
+
+ use_this_calldeflist:
+
+   calldeflist = qq->callarray_list;
+   if (qq->modifier_level > calling_level &&
+       !(ss->cmd.cmd_misc_flags & CMD_MISC__NO_CHECK_MOD_LEVEL)) {
+      if (allowing_all_concepts)
+         warn(warn__bad_modifier_level);
+      else
+         fail("Use of this modifier on this call is not allowed at this level.");
+   }
+
+   /* We now have an association list (setups ==> definition arrays) in calldeflist.
+      Search it for an entry matching the setup we have, or else divide the setup
+         until we find something.
+      If we can't handle the starting setup, perhaps we need to look for "12 matrix" or
+         "16 matrix" call definitions. */
+
+   search_for_call_def:
+
+   linedefinition = (callarray *) 0;
+   coldefinition = (callarray *) 0;
+
+   /* If we have to split the setup for "crazy", "central", or "splitseq", we
+      specifically refrain from finding a call definition.  The same is true if
+      we have "snag" or "mystic". */
+
+   if (calldeflist &&
+       !(ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK) &&
+       !(ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_MASK)) {
+
+      /* If we came in with a "dead concentric" or its equivalent, try to turn it
+         into a real setup, depending on what the call is looking for.  If we fail
+         to do so, setup_limits will be negative and an error will arise shortly. */
+
+      if ((ss->kind == s_dead_concentric) ||
+          (ss->kind == s_normal_concentric && ss->outer.skind == nothing)) {
+         newtb = 0;
+         for (j=0; j<=attr::klimit(ss->inner.skind); j++)
+            newtb |= ss->people[j].id1;
+
+         setup linetemp;
+         setup qtagtemp;
+         setup dmdtemp;
+         setup_kind k = try_to_expand_dead_conc(*ss, (const call_with_name *) 0, linetemp, qtagtemp, dmdtemp);
+
+         if (k == s1x4) {
+            if ((!(newtb & 010) || assoc(b_1x8, &linetemp, calldeflist)) &&
+                (!(newtb & 1) || assoc(b_8x1, &linetemp, calldeflist))) {
+               *ss = linetemp;
+            }
+            else {
+               if ((!(newtb & 010) || assoc(b_qtag, &qtagtemp, calldeflist)) &&
+                   (!(newtb & 1) || assoc(b_pqtag, &qtagtemp, calldeflist))) {
+                  *ss = qtagtemp;
+               }
+            }
+
+            newtb = or_all_people(ss);
+         }
+         else if (k == s2x2) {
+            *ss = linetemp;
+            newtb = or_all_people(ss);
+         }
+      }
+
+      begin_kind key1 = setup_attrs[ss->kind].keytab[0];
+      begin_kind key2 = setup_attrs[ss->kind].keytab[1];
+
+      four_way_startsetup = false;
+
+      if (key1 != b_nothing && key2 != b_nothing) {
+         if (key1 == key2) {     /* This is for things like 2x2 or 1x1. */
+            linedefinition = assoc(key1, ss, calldeflist);
+            coldefinition = linedefinition;
+            four_way_startsetup = true;
+         }
+         else {
+            /* If the setup is empty, get whatever definitions we can get, so that
+               we can find the "CFLAG1_PARALLEL_CONC_END" bit,
+               also known as the "other_elongate" bit. */
+
+            if (ss->cmd.cmd_misc2_flags & CMD_MISC2__IN_Z_MASK) {
+               /* See if the call has a 2x3 definition (we know the setup is a 2x3)
+                  that goes to a setup of size 4.  That is, see if this is "Z axle".
+                  If so, turn off the special "Z" flags and forget about it.
+                  Otherwise, change to a 2x2 and try again. */
+               if (!newtb || (newtb & 010)) linedefinition = assoc(key1, ss, calldeflist);
+               if (!newtb || (newtb & 1)) coldefinition = assoc(key2, ss, calldeflist);
+
+               if ((linedefinition &&
+                    (attr::klimit(linedefinition->get_end_setup()) == 3 ||
+                     (callspec->callflags1 & CFLAG1_PRESERVE_Z_STUFF))) ||
+                   (coldefinition &&
+                    (attr::klimit(coldefinition->get_end_setup()) == 3 ||
+                     (callspec->callflags1 & CFLAG1_PRESERVE_Z_STUFF)))) {
+                  ss->cmd.cmd_misc2_flags &= ~CMD_MISC2__IN_Z_MASK;
+               }
+               else {
+                  remove_z_distortion(ss);
+                  newtb = or_all_people(ss);
+                  linedefinition = assoc(b_2x2, ss, calldeflist);
+                  coldefinition = linedefinition;
+                  four_way_startsetup = true;
+               }
+            }
+            else {
+               if (!newtb || (newtb & 010)) linedefinition = assoc(key1, ss, calldeflist);
+               if (!newtb || (newtb & 1)) coldefinition = assoc(key2, ss, calldeflist);
+            }
+         }
+      }
+   }
+
+   if (attr::slimit(ss) < 0) fail("Setup is extremely bizarre.");
+
+   switch (ss->kind) {
+   case s_short6:
+   case s_bone6:
+   case s_trngl:
+   case s_ntrgl6cw:
+   case s_ntrgl6ccw:
+      break;
+   default:
+      if (ss->cmd.cmd_final_flags.test_finalbits(FINAL__TRIANGLE|FINAL__LEADTRIANGLE))
+         fail("Triangle concept not allowed here.");
+   }
+
+   /* If we found a definition for the setup we are in, we win.
+      This is true even if we only found a definition for the lines version
+      of the setup and not the columns version, or vice-versa.
+      If we need both and don't have both, we will lose. */
+
+   if (linedefinition || coldefinition) {
+      /* Raise a warning if the "split" concept was explicitly used but the
+         call would have naturally split that way anyway. */
+
+      /* ******* we have patched this out, because we aren't convinced that it really
+         works.  How do we make it not complain on "split sidetrack" even though some
+         parts of the call, like the "zig-zag", would complain?  And how do we account
+         for the fact that it is observed not to raise the warning on split sidetrack
+         even though we don't understand why?  By the way, uncertainty about this is what
+         led us to make this a warning.  It was originally an error.  Which is correct?
+         It is probably best to leave it as a warning of the "don't use in resolve" type.
+
+      if (ss->setupflags & CMD_MISC__SAID_SPLIT) {
+         switch (ss->kind) {
+            case s2x2:
+               if (!assoc(b_2x4, ss, calldeflist) && !assoc(b_4x2, ss, calldeflist))
+                  warn(warn__excess_split);
+               break;
+            case s1x4:
+               if (!assoc(b_1x8, ss, calldeflist) && !assoc(b_8x1, ss, calldeflist))
+                  warn(warn__excess_split);
+               break;
+            case sdmd:
+               if (!assoc(b_qtag, ss, calldeflist) && !assoc(b_pqtag, ss, calldeflist) &&
+                        !assoc(b_ptpd, ss, calldeflist) && !assoc(b_pptpd, ss, calldeflist))
+                  warn(warn__excess_split);
+               break;
+         }
+      }
+      */
+
+      if (ss->cmd.cmd_final_flags.test_finalbits(FINAL__TRIANGLE|FINAL__LEADTRIANGLE))
+         fail("Triangle concept not allowed here.");
+
+      /* We got here if either linedefinition or coldefinition had something.
+         If only one of them had something, but both needed to (because the setup
+         was T-boned) the normal intention is that we proceed anyway, which will
+         raise an error.  However, we check here for the case of a 1x2 setup
+         that has one definition but not the other, and has a 1x1 definition as well.
+         In that case, we split the setup.  This allows T-boned "quarter <direction>".
+         The problem is that "quarter <direction>" has a 1x2 definition (for
+         "quarter in") and a 1x1 definition, but no 2x1 definition.  (If it had
+         a 2x1 definition, then the splitting from a 2x2 would be ambiguous.)
+         So we have to fix that. */
+
+      if (ss->kind == s1x2 && (newtb & 011) == 011 && (!linedefinition || !coldefinition))
+         goto need_to_divide;
+
+      goto do_the_call;
+   }
+
+ try_to_find_deflist:
+
+   /* We may have something in "calldeflist" corresponding to the modifiers on this call,
+      but there was nothing listed under that definition matching the starting setup. */
+
+   /* First, see if adding a "12 matrix" or "16 matrix" modifier to the call will help.
+      We need to be very careful about this.  The code below will divide, for example,
+      a 2x6 into 2x3's if CMD_MISC__EXPLICIT_MATRIX is on (that is, if the caller
+      said "2x6 matrix") and the call has a 2x3 definition.  This is what makes
+      "2x6 matrix double play" work correctly from parallelogram columns, while
+      just "double play" is not legal.  We take the position that the division of the
+      2x6 into 2x3's only occurs if the caller said "2x6 matrix".  But the call
+      "circulate" has a 2x3 column definition for the case with no 12matrix modifier
+      (so that "center 6, circulate" will work), and a 2x6 definition if the 12matrix
+      modifier is given.  We want the 12-person version of the circulate to happen
+      if the caller said either "12 matrix" or "2x6 matrix".  If "2x6 matrix" was
+      used, we will get here with nothing in coldefinition.  We must notice that
+      doing the call search again with the "12 matrix" modifier set will get us the
+      12-person call definition.
+
+      If we didn't do this check, then a 2x6 parallelogram column, for example,
+      would be split into 2x3's in the code below, if a 2x3 definition existed
+      for the call.  This would mean that, if we said "2x6 matrix circulate",
+      we would split the setup and do the circulate in each 2x3, which is not
+      what people want.
+
+      What actually goes on here is even more complicated now.  We want to allow the
+      concept "12 matrix" to cause division of the set.  This means that we not only
+      allow an explicit matrix ("2x6 matrix") to be treated as a "12 matrix", the way
+      we always have, but we allow it to go the other way.  That is, under certain
+      conditions we will turn a "12 matrix" to get turned into an explicit matrix
+      concept.  We do this special action only when all else has failed.
+
+      We do this only once.  Because of all the goto's that we execute as we
+      try various things, there is danger of looping.  To make sure that this happens
+      only once, we set "matrix_check_flag" nonzero when we do it, and only do it if
+      that flag is zero.
+
+      We don't do this if "snag" or "mystic" was given.  In those cases, we know exactly
+      why there is no definition, and we need to call "divide_the_setup" to fix it. */
+
+   if (matrix_check_flag == 0 && !(ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_MASK)) {
+      if (!(search_concepts_without_funny & INHERITFLAG_16_MATRIX) &&
+          ((ss->kind == s2x6 || ss->kind == s3x4 || ss->kind == sd3x4 ||
+            ss->kind == s1x12 || ss->kind == sdeepqtg) ||
+           (((callspec->callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) ||
+             (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX)) &&
+            !(search_concepts_without_funny & INHERITFLAG_16_MATRIX) &&
+            (ss->kind == s2x3 || ss->kind == s1x6))))
+         matrix_check_flag = INHERITFLAG_12_MATRIX;
+      else if (!(search_concepts_without_funny & INHERITFLAG_12_MATRIX) &&
+               ((ss->kind == s2x8 || ss->kind == s4x4 || ss->kind == s1x16) ||
+                (((callspec->callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) ||
+                  (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX)) &&
+                 !(search_concepts_without_funny & INHERITFLAG_12_MATRIX) &&
+                 (ss->kind == s2x4 || ss->kind == s1x8))))
+         matrix_check_flag = INHERITFLAG_16_MATRIX;
+
+      /* But we might not have set "matrix_check_flag" nonzero!  How are we going to
+         prevent looping?  The answer is that we won't execute the goto unless we did
+         set set it nonzero. */
+
+      if (!(ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX) &&
+          calldeflist == 0 &&
+          (matrix_check_flag & ~search_concepts_without_funny) == 0) {
+
+         /* Here is where we do the very special stuff.  We turn a "12 matrix" concept
+            into an explicit matrix.  Note that we only do it if we would have lost
+            anyway about 25 lines below (note that "calldeflist" is zero, and
+            the search again stuff won't be executed unless CMD_MISC__EXPLICIT_MATRIX is on,
+            which it isn't.)  So we turn on the CMD_MISC__EXPLICIT_MATRIX bit,
+            and we turn off the INHERITFLAG_12_MATRIX or INHERITFLAG_16_MATRIX bit. */
+
+         if (matrix_check_flag == 0) {
+            /* We couldn't figure out from the setup what the matrix is,
+               so we have to expand it. */
+
+            if (!(ss->cmd.cmd_misc_flags & CMD_MISC__NO_EXPAND_MATRIX)) {
+               if (search_concepts_without_funny & INHERITFLAG_12_MATRIX) {
+                  do_matrix_expansion(
+                     ss,
+                     (ss->kind == s2x4) ? CONCPROP__NEEDK_2X6 : CONCPROP__NEEDK_TRIPLE_1X4,
+                     true);
+
+                  if (ss->kind != s2x6 && ss->kind != s3x4 && ss->kind != s1x12)
+                     fail("Can't expand to a 12 matrix.");
+                  matrix_check_flag = INHERITFLAG_12_MATRIX;
+               }
+               else if (search_concepts_without_funny & INHERITFLAG_16_MATRIX) {
+                  if (ss->kind == s2x6)
+                     do_matrix_expansion(ss, CONCPROP__NEEDK_2X8, true);
+                  else if (ss->kind == s_alamo)
+                     do_matrix_expansion(ss, CONCPROP__NEEDK_4X4, true);
+                  else if (ss->kind != s2x4)
+                     do_matrix_expansion(ss, CONCPROP__NEEDK_1X16, true);
+
+                  // Take no action (and hence cause an error) if the setup was a 2x4.
+                  // If someone wants to say "16 matrix 4x4 peel off" from normal columns,
+                  // that person needs more help than we can give.
+
+                  if (ss->kind != s2x8 && ss->kind != s4x4 && ss->kind != s1x16)
+                     fail("Can't expand to a 16 matrix."); 
+                  matrix_check_flag = INHERITFLAG_16_MATRIX;
+               }
+            }
+         }
+
+         search_concepts_without_funny &= ~matrix_check_flag;
+         ss->cmd.cmd_final_flags.clear_heritbits(matrix_check_flag);
+         search_temp_without_funny = 0;
+         ss->cmd.cmd_misc_flags |= CMD_MISC__EXPLICIT_MATRIX;
+      }
+      else {
+         uint32 sc = search_concepts_without_funny & INHERITFLAG_NXNMASK;
+
+         if (((matrix_check_flag & INHERITFLAG_12_MATRIX) &&
+              (search_concepts_without_funny & INHERITFLAG_12_MATRIX) &&
+              (sc == INHERITFLAGNXNK_3X3 || sc == INHERITFLAGNXNK_6X6)) ||
+             ((matrix_check_flag & INHERITFLAG_16_MATRIX) &&
+              (search_concepts_without_funny & INHERITFLAG_16_MATRIX) &&
+              (sc == INHERITFLAGNXNK_4X4 || sc == INHERITFLAGNXNK_8X8))) {
+            search_concepts_without_funny &= ~matrix_check_flag;
+            ss->cmd.cmd_final_flags.clear_heritbits(matrix_check_flag);
+            search_temp_without_funny = 0;
+         }
+         else
+            search_temp_without_funny = matrix_check_flag;
+      }
+
+      if ((ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX) && matrix_check_flag != 0)
+         goto foobar;
+   }
+
+   // We need to divide the setup.
+
+ need_to_divide:
+
+   if (!newtb) {
+      if (callspec->callflags1 & CFLAG1_PARALLEL_CONC_END) {
+         if ((desired_elongation+1) & 2)
+            desired_elongation ^= 3;
+      }
+
+      result->kind = nothing;
+      goto un_mirror;
+   }
+
+   if (!calldeflist)
+      fail("Can't do this call with this modifier.");
+
+   j = divide_the_setup(ss, &newtb, calldeflist, &desired_elongation, result);
+   if (j == 1)
+      goto un_mirror;     // It divided and did the call.  We are done.
+   else if (j == 2) goto search_for_call_def;      /* It did some necessary expansion
+                                                      or transformation, but did not
+                                                      do the call.  Try again. */
+
+   // If doing an "own the anyone", we might have to fix up a bizarre unsymmetrical setup.
+
+   if (clean_up_unsymmetrical_setup(ss))
+      goto search_for_call_def;
+
+   if (ss->kind == s_ntrgl6cw || ss->kind == s_ntrgl6ccw) {
+      // If the problem was that we had a "nonisotropic triangle" setup
+      // and neither the call definition nor the splitting can handle it,
+      // we give a warning and fudge to a 2x3.
+      // Note that the "begin_kind" fields for these setups are "nothing".
+      // It is simply not possible for a call definition to specify a
+      // starting setup of nonisotropic triangles.
+      ss->kind = s2x3;
+      warn(warn__may_be_fudgy);
+      goto search_for_call_def;
+   }
+
+   /* If we get here, linedefinition and coldefinition are both zero, and we will fail. */
+
+   /* We are about to do the call by array! */
+
+ do_the_call:
+
+   resultflagsmisc = do_actual_array_call(
+      ss, callspec, linedefinition, coldefinition, newtb,
+      funny, mirror, four_way_startsetup, orig_elongation, desired_elongation,
+      check_peeloff_migration, result);
+
+   // If the invocation of this call is "roll transparent", restore roll info
+   // from before the call for those people that are marked as roll-neutral.
+   fix_roll_transparency_stupidly(ss, result);
+
+ un_mirror:
 
    canonicalize_rotation(result);
 

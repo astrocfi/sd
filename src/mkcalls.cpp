@@ -58,209 +58,6 @@
 
 // Of course, we no longer take pity on troglodyte development environments.
 
-// This table is a copy of the one in sdtables.cpp .
-
-// BEWARE!!  This list is keyed to the definition of "begin_kind" in sd.h .
-//   It must also match the similar table in the sdtables.cpp .
-int begin_sizes[] = {
-   0,          /* b_nothing */
-   1,          /* b_1x1 */
-   2,          /* b_1x2 */
-   2,          /* b_2x1 */
-   3,          /* b_1x3 */
-   3,          /* b_3x1 */
-   4,          /* b_2x2 */
-   4,          /* b_dmd */
-   4,          /* b_pmd */
-   4,          /* b_star */
-   6,          /* b_trngl */
-   6,          /* b_ptrngl */
-   8,          /* b_trngl4 */
-   8,          /* b_ptrngl4 */
-   16,         /* b_trngl8 */
-   16,         /* b_ptrngl8 */
-   6,          /* b_bone6 */
-   6,          /* b_pbone6 */
-   6,          /* b_short6 */
-   6,          /* b_pshort6 */
-   6,          /* b_1x2dmd */
-   6,          /* b_p1x2dmd */
-   6,          /* b_2x1dmd */
-   6,          /* b_p2x1dmd */
-   6,          /* b_wingedstar6 */
-   6,          /* b_pwingedstar6 */
-   8,          /* b_qtag */
-   8,          /* b_pqtag */
-   8,          /* b_bone */
-   8,          /* b_pbone */
-   8,          /* b_rigger */
-   8,          /* b_prigger */
-   9,          /* b_3x3 */
-   8,          /* b_2stars */
-   8,          /* b_p2stars */
-   8,          /* b_spindle */
-   8,          /* b_pspindle */
-   8,          /* b_hrglass */
-   8,          /* b_phrglass */
-   8,          /* b_dhrglass */
-   8,          /* b_pdhrglass */
-   8,          /* b_crosswave */
-   8,          /* b_pcrosswave */
-   4,          /* b_1x4 */
-   4,          /* b_4x1 */
-   8,          /* b_1x8 */
-   8,          /* b_8x1 */
-   8,          /* b_2x4 */
-   8,          /* b_4x2 */
-   6,          /* b_2x3 */
-   6,          /* b_3x2 */
-  10,          /* b_2x5 */
-  10,          /* b_5x2 */
-  10,          /* b_d2x5 */
-  10,          /* b_d5x2 */
-  10,          /* b_wqtag */
-  10,          /* b_pwqtag */
-  10,          /* b_deep2x1dmd */
-  10,          /* b_pdeep2x1dmd */
-  10,          /* b_whrglass */
-  10,          /* b_pwhrglass */
-   6,          /* b_1x6 */
-   6,          /* b_6x1 */
-   12,         /* b_3x4 */
-   12,         /* b_4x3 */
-   12,         /* b_2x6 */
-   12,         /* b_6x2 */
-   14,         /* b_2x7 */
-   14,         /* b_7x2 */
-   14,         /* b_d2x7 */
-   14,         /* b_d7x2 */
-   18,         /* b_2x9 */
-   18,         /* b_9x2 */
-   12,         /* b_d3x4 */
-   12,         /* b_d4x3 */
-   20,         /* b_d4x5 */
-   20,         /* b_d5x4 */
-   16,         /* b_2x8 */
-   16,         /* b_8x2 */
-   16,         /* b_4x4 */
-   10,         /* b_1x10 */
-   10,         /* b_10x1 */
-   12,         /* b_1x12 */
-   12,         /* b_12x1 */
-   14,         /* b_1x14 */
-   14,         /* b_14x1 */
-   16,         /* b_1x16 */
-   16,         /* b_16x1 */
-   16,         /* b_c1phan */
-   8,          /* b_galaxy */
-   18,         /* b_3x6 */
-   18,         /* b_6x3 */
-   24,         /* b_3x8 */
-   24,         /* b_8x3 */
-   20,         /* b_4x5 */
-   20,         /* b_5x4 */
-   24,         /* b_4x6 */
-   24,         /* b_6x4 */
-   20,         /* b_2x10 */
-   20,         /* b_10x2 */
-   24,         /* b_2x12 */
-   24,         /* b_12x2 */
-   12,         /* b_deepqtg */
-   12,         /* b_pdeepqtg */
-   16,         /* b_deepbigqtg */
-   16,         /* b_pdeepbigqtg */
-   12,         /* b_widerigger */
-   12,         /* b_pwiderigger */
-   12,         /* b_rigger12 */
-   12,         /* b_prigger12 */
-   12,         /* b_deepxwv */
-   12,         /* b_pdeepxwv */
-   20,         /* b_3oqtg */
-   20,         /* b_p3oqtg */
-   8,          /* b_thar */
-   8,          /* b_alamo */
-   8,          /* b_ptpd */
-   8,          /* b_pptpd */
-   8,          /* b_1x3dmd */
-   8,          /* b_p1x3dmd */
-   8,          /* b_3x1dmd */
-   8,          /* b_p3x1dmd */
-   12,         /* b_3dmd */
-   12,         /* b_p3dmd */
-   16,         /* b_4dmd */
-   16,         /* b_p4dmd */
-   12,         /* b_3ptpd */
-   12,         /* b_p3ptpd */
-   16,         /* b_4ptpd */
-   16,         /* b_p4ptpd */
-   16,         /* b_hqtag */
-   16,         /* b_phqtag */
-   12,         /* b_hsqtag */
-   12,         /* b_phsqtag */
-   8,          /* b_wingedstar */
-   8,          /* b_pwingedstar */
-   8,          /* b_323 */
-   8,          /* b_p323 */
-   10,         /* b_343 */
-   10,         /* b_p343 */
-   12,         /* b_525 */
-   12,         /* b_p525 */
-   14,         /* b_545 */
-   14,         /* b_p545 */
-   14,         /* bh545 */
-   14,         /* bhp545 */
-   12,         /* b_23232 */
-   12,         /* b_p23232 */
-   12,         /* b_3mdmd */
-   12,         /* b_p3mdmd */
-   12,         /* b_3mptpd */
-   12,         /* b_p3mptpd */
-   16,         /* b_4mdmd */
-   16,         /* b_p4mdmd */
-   16,         /* b_4mptpd */
-   16,         /* b_p4mptpd */
-   10,         /* b_1x4dmd */
-   10,         /* b_p1x4dmd */
-   12,         /* b_bigh */
-   12,         /* b_pbigh */
-   12,         /* b_bigx */
-   12,         /* b_pbigx */
-   16,         /* b_bigbigh */
-   16,         /* b_pbigbigh */
-   16,         /* b_bigbigx */
-   16,         /* b_pbigbigx */
-   12,         /* b_bigrig */
-   12,         /* b_pbigrig */
-   12,         /* b_bighrgl */
-   12,         /* b_pbighrgl */
-   12,         /* b_bigdhrgl */
-   12,         /* b_pbigdhrgl */
-   12,         /* b_bigbone */
-   12,         /* b_pbigbone */
-   12,         /* b_dblbone6 */
-   12,         /* b_pdblbone6 */
-   12,         /* b_bigdmd */
-   12,         /* b_pbigdmd */
-   12,         /* b_bigptpd */
-   12,         /* b_pbigptpd */
-   12,         /* b_5x1dmd */
-   12,         /* b_p5x1dmd */
-   12,         /* b_1x5dmd */
-   12,         /* b_p1x5dmd */
-   18,         /* b_big3dmd */
-   18,         /* b_pbig3dmd */
-   24,         /* b_big4dmd */
-   24,         /* b_pbig4dmd */
-   16,         /* b_dblxwave */
-   16,         /* b_pdblxwave */
-   16,         /* b_dblspindle */
-   16,         /* b_pdblspindle */
-   16,         /* b_dblbone */
-   16,         /* b_pdblbone */
-   16,         /* b_dblrig */
-   16};        /* b_pdblrig */
-
-
 
 FILE *db_input = NULL;
 FILE *db_output = NULL;
@@ -1182,6 +979,8 @@ const char *flagtab1f[] = {
    "do_exchange_compress",
    "anyone_who_moves_cant_roll",
    "fractional_numbers",
+   "dont_raise_overcast",
+   "overcast_transparent",
    ""};
 
 // The next three tables are all in step with each other, and with the "heritable" flags.
@@ -1202,13 +1001,12 @@ const char *flagtabh[] = {
    "single_is_inherited",
    "singlefile_is_inherited",
    "half_is_inherited",
-   "yoyo_is_inherited",
+   "rewind_is_inherited",
    "straight_is_inherited",
    "twisted_is_inherited",
    "lasthalf_is_inherited",
    "fractal_is_inherited",
    "fast_is_inherited",
-   "rewind_is_inherited",
    ""};
 
 // This table is keyed to the constants "INHERITFLAG_???".
@@ -1227,13 +1025,18 @@ const char *altdeftabh[] = {
    "single",
    "singlefile",
    "half",
-   "yoyo",
+   "rewind",
    "straight",
    "twisted",
    "lasthalf",
    "fractal",
    "fast",
-   "rewind",
+   ""};
+
+const char *yoyotabplain[] = {
+   "yoyo",
+   "generous",
+   "stingy",
    ""};
 
 const char *mxntabplain[] = {
@@ -1265,6 +1068,12 @@ const char *reverttabplain[] = {
    "revertreflectrevert",
    "reflectrevertreflect",
    "reflectreflect",
+   ""};
+
+const char *yoyotabforce[] = {
+   "force_yoyo",
+   "force_generous",
+   "force_stingy",
    ""};
 
 const char *mxntabforce[] = {
@@ -1315,13 +1124,12 @@ const char *defmodtabh[] = {
    "inherit_single",
    "inherit_singlefile",
    "inherit_half",
-   "inherit_yoyo",
+   "inherit_rewind",
    "inherit_straight",
    "inherit_twisted",
    "inherit_lasthalf",
    "inherit_fractal",
    "inherit_fast",
-   "inherit_rewind",
    ""};
 
 // This table is keyed to the constants "dfm_***".  These are the heritable
@@ -1344,13 +1152,12 @@ const char *forcetabh[] = {
    "force_single",
    "force_singlefile",
    "force_half",
-   "force_yoyo",
+   "force_rewind",
    "force_straight",
    "force_twisted",
    "force_lasthalf",
    "force_fractal",
    "force_fast",
-   "force_rewind",
    ""};
 
 
@@ -1978,70 +1785,7 @@ static void write_fullword(uint32 n)
 }
 
 
-// WARNING!!!!  This procedure appears verbatim in sdutil.c and dbcomp.c.
-
-// These combinations are not allowed.
-
-#define FORBID1 (INHERITFLAG_FRACTAL|INHERITFLAG_YOYO)
-#define FORBID2 (INHERITFLAG_SINGLEFILE|INHERITFLAG_SINGLE)
-#define FORBID3 (INHERITFLAG_MXNMASK|INHERITFLAG_NXNMASK)
-#define FORBID4 (INHERITFLAG_12_MATRIX|INHERITFLAG_16_MATRIX)
-
-
-static bool do_heritflag_merge(uint32 *dest, uint32 source)
-{
-   if (source & INHERITFLAG_REVERTMASK) {
-      // If the source is a revert/reflect bit, things are complicated.
-      if (!(*dest & INHERITFLAG_REVERTMASK)) {
-         goto good;
-      }
-      else if (source == INHERITFLAGRVRTK_REVERT && *dest == INHERITFLAGRVRTK_REFLECT) {
-         *dest &= ~INHERITFLAG_REVERTMASK;
-         *dest |= INHERITFLAGRVRTK_RFV;
-         return false;
-      }
-      else if (source == INHERITFLAGRVRTK_REFLECT && *dest == INHERITFLAGRVRTK_REVERT) {
-         *dest &= ~INHERITFLAG_REVERTMASK;
-         *dest |= INHERITFLAGRVRTK_RVF;
-         return false;
-      }
-      else if (source == INHERITFLAGRVRTK_REFLECT && *dest == INHERITFLAGRVRTK_REFLECT) {
-         *dest &= ~INHERITFLAG_REVERTMASK;
-         *dest |= INHERITFLAGRVRTK_RFF;
-         return false;
-      }
-      else if (source == INHERITFLAGRVRTK_REVERT && *dest == INHERITFLAGRVRTK_RVF) {
-         *dest &= ~INHERITFLAG_REVERTMASK;
-         *dest |= INHERITFLAGRVRTK_RVFV;
-         return false;
-      }
-      else if (source == INHERITFLAGRVRTK_REFLECT && *dest == INHERITFLAGRVRTK_RFV) {
-         *dest &= ~INHERITFLAG_REVERTMASK;
-         *dest |= INHERITFLAGRVRTK_RFVF;
-         return false;
-      }
-      else
-         return true;
-   }
-
-   // Check for plain redundancy.  If this is a bit in one of the complex
-   // fields, this simple test may not catch the error, but the next one will.
-
-   if ((*dest & source))
-      return true;
-
-   if (((*dest & FORBID1) && (source & FORBID1)) ||
-       ((*dest & FORBID2) && (source & FORBID2)) ||
-       ((*dest & FORBID3) && (source & FORBID3)) ||
-       ((*dest & FORBID4) && (source & FORBID4)))
-      return true;
-
-   good:
-
-   *dest |= source;
-
-   return false;
-}
+// Do_heritflag_merge is in common.cpp.
 
 
 static void write_defmod_flags(int is_seq)
@@ -2110,6 +1854,18 @@ static void write_defmod_flags(int is_seq)
 
             rrh |= INHERITFLAG_REVERTMASK;
          }
+         else if (!strcmp(tok_str, "inherit_yoyo")) {
+            if (INHERITFLAG_YOYOETCK_YOYO & ~call_flagsh)
+               errexit("Can't use an \"inherit\" flag unless corresponding top level flag is on");
+
+            rrh |= INHERITFLAG_YOYOETCK_YOYO;
+         }
+         else if (!strcmp(tok_str, "inherit_gensting")) {
+            if (INHERITFLAG_YOYOETCK_GENEROUS & ~call_flagsh)
+               errexit("Can't use an \"inherit\" flag unless corresponding top level flag is on");
+
+            rrh |= INHERITFLAG_YOYOETCK_GENEROUS;
+         }
          else if ((i = search(defmodtabh)) >= 0) {
             uint32 bit = 1 << i;
 
@@ -2124,6 +1880,7 @@ static void write_defmod_flags(int is_seq)
             uint32 bit;
 
             if ((i = search(forcetabh)) >= 0) bit = (1 << i);
+            else if ((i = search(yoyotabforce)) >= 0) bit = INHERITFLAG_YOYOETCBIT * (i+1);
             else if ((i = search(mxntabforce)) >= 0) bit = INHERITFLAG_MXNBIT * (i+1);
             else if ((i = search(nxntabforce)) >= 0) bit = INHERITFLAG_NXNBIT * (i+1);
             else if ((i = search(reverttabforce)) >= 0) bit = INHERITFLAG_REVERTBIT * (i+1);
@@ -2395,6 +2152,7 @@ static void process_alt_def_header()
             errexit("Improper alternate_definition key");
 
          if ((i = search(altdeftabh)) >= 0) bit = (1 << i);
+         else if ((i = search(yoyotabplain)) >= 0) bit = INHERITFLAG_YOYOETCBIT * (i+1);
          else if ((i = search(mxntabplain)) >= 0) bit = INHERITFLAG_MXNBIT * (i+1);
          else if ((i = search(nxntabplain)) >= 0) bit = INHERITFLAG_NXNBIT * (i+1);
          else if ((i = search(reverttabplain)) >= 0) bit = INHERITFLAG_REVERTBIT * (i+1);
@@ -2801,6 +2559,10 @@ int main(int argc, char *argv[])
             call_flags1 |= (3*CFLAG1_NUMBER_BIT);
          else if (!strcmp(tok_str, "base_tag_call_2"))
             flag1_to_set = (3*CFLAG1_BASE_TAG_CALL_BIT);
+         else if (!strcmp(tok_str, "yoyo_is_inherited"))        // These two sort of cheat.
+            flagh_to_set = INHERITFLAG_YOYOETCK_YOYO;           // Set the "yoyo" bit.
+         else if (!strcmp(tok_str, "gen_sting_is_inherited"))
+            flagh_to_set = INHERITFLAG_YOYOETCK_GENEROUS;       // Set the other bit, which is called "generous".
          else if (!strcmp(tok_str, "mxn_is_inherited"))
             flagh_to_set = INHERITFLAG_MXNMASK;
          else if (!strcmp(tok_str, "nxn_is_inherited"))

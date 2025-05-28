@@ -28,7 +28,7 @@ SD_LIBS = C:\MinGW\lib\libcomctl32.a -L. -lsdlib
 SDLIB_OBJS = sdmain.o sdutil.o sdbasic.o sdinit.o \
              sdtables.o sdctable.o sdtop.o sdconcpt.o sdpreds.o \
              sdgetout.o sdmoves.o sdtand.o sdconc.o sdistort.o \
-             mapcachefile.o sdpick.o sdsi.o sdmatch.o
+             mapcachefile.o sdpick.o sdsi.o sdmatch.o common.o
 
 HFILES = sd.h database.h paths.h mapcachefile.h sort.h \
              deploy.h resource.h sdprint.h
@@ -44,7 +44,7 @@ SDTTY_OBJS = sdui-tty.o sdui-wincon.o
 
 SD_OBJS = sdprint.o sdui-win.o
 
-MKCALLS_OBJS = mkcalls.o
+MKCALLS_OBJS = mkcalls.o common.o
 
 all: sdtty.exe sd.exe mkcalls.exe deploy.exe sd_calls.dat
 
@@ -97,6 +97,9 @@ sd_calls.dat: sd_calls.txt mkcalls.exe
 mkcalls.o: mkcalls.cpp
 	$(CC) $(CFLAGS) -c $<
 
+common.o: common.cpp
+	$(CC) $(CFLAGS) -c $<
+
 deploy.o: deploy.cpp
 	$(CC) $(CFLAGS) -c $<
 
@@ -116,7 +119,7 @@ sdprint.o: sdprint.cpp
 
 mkcalls.o sdmain.o sdsi.o: paths.h
 
-mkcalls.o: database.h
+common.o mkcalls.o: database.h
 
 sdinit.cpp: mapcachefile.h sort.h
 

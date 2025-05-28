@@ -5,7 +5,7 @@ Doing so would cause it to be included in the "do_pack" script.
           HOW TO RELEASE A NEW VERSION OF SD
 
      This file is \wba\sddoc\howtobuild.
-        Last modified 9 May 2009.
+        Last modified 9 Jan 2010.
 
 -----------------------------------------------------------------
 
@@ -15,7 +15,8 @@ Be sure the version numbers and dates are correct in:
     [sd]    sdmain.cpp   (version # is visible)
     [sd]    sd.rc        (SD & UI version #'s are visible in "about" dialog)
     [sd]    sd_calls.txt (version # is visible)
-    [sd]       [When rolling the year, fix copyright notice in sdutil.cpp]
+    [sd]       [When rolling the year, fix copyright notices in sd.rc,
+                              sdutil.cpp, about.lst, and relnotes.txi]
     [sddoc] title.lst    (version # is visible)
     [sddoc] about.lst    (version # and year are visible)
     [sddoc] sd_doc.txi         (version # and date are visible)
@@ -40,7 +41,6 @@ cygwinB19.dll into the \bin directory.
 Go to sddoc directory and do:
 
     setmingw
-    settex     # Yes!  Still need this!
     clean clean
     do_plain
     do_ps
@@ -80,7 +80,9 @@ Go to sddoc directory and do:
 10 Mar 09  -   9 May 09  #34
  9 May 09  -   6 Jun 09  #35
  6 Jun 09  -   1 Sep 09  #37
- 1 Sep 09  -             #38
+ 1 Sep 09  -  19 Sep 09  #38
+19 Sep 09  -   9 Jan 10  #39
+ 9 Jan 10  -             #40
 (#25, #26, #29, #30, #36 are also available.)
 -----------------------------------------------------------------
 
@@ -249,6 +251,7 @@ readings        *
 download-pc     *
 index           *
 intro           *
+compilerbugs    *
 faq             *
 sessions_toc    *
 sd_doc*         *

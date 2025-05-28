@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 38.0
-@set title2 Database version = 38.0 format = 285
+@set title1 RELEASE NOTES FOR VERSION 38.3
+@set title2 Database version = 38.3 format = 293
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,11 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 38.3::
+* 38.2::
+* 38.1::
+* 38.02::
+* 38.01::
 * 38.0::
 * 37.84::
 * 37.83::
@@ -65,7 +70,7 @@ The files @file{relnotes03.txi} and @file{relnotes98.txi} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 38.0, Top, (dir)
+@node Intro, 38.3, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -73,14 +78,107 @@ notes relating to even older versions.
 
 @w{ }@c the @* above makes the @sp below fail without this line  1998-05
 @sp 2
-@noindent Copyright @copyright{} 1996-2009 William B. Ackerman
+@noindent Copyright @copyright{} 1996-2010 William B. Ackerman
 @sp 3
 @menu
-* 38.0::               Changes in the current version
+* 38.3::               Changes in the current version
 @end menu
 
 @c ************
-@node 38.0, 37.84, Intro, Top
+@node 38.3, 38.2, Intro, Top
+@unnumberedsec Version 38.3 changes
+
+In accordance with the new Callerlab lists, @strong{with the flow} has been moved from C2 to C1,
+and @strong{interlocked triangles} have been moved from C1 to C2.
+
+New concepts: @strong{stingy}, and @strong{generous}.  These decrease by 1, or increase by 1, respectively,
+the first arm-turn cast appearing in the call.
+
+The program has the ability to issue warnings on "overflow", that is, turning with the same hand
+on consecutive calls.  @i{The test is extremely sensitive.}  It can be triggered by any amount of
+turning at the end of one call and at the beginning, even if the total amount is only 1/4 + 1/4.
+It can be triggered by @strong{swing thru} followed by @strong{acey deucey}.
+It is disabled by default.  You may turn it on with the "toggle overflow warning" command while
+the program is running, or by placing the "-warn_on_overflow" switch in the command-line startup
+(for example, in a startup icon) or in the "[Options]" section of the "sd.ini" file.
+
+@c ************
+@node 38.2, 38.1, 38.3, Top
+@unnumberedsec Version 38.2 changes
+
+The handling of @strong{1/2 ripoff} is slightly different.  When done from a left-handed box,
+the people sliding over stay in the center, facing each other directly.  The people doing the 1/2 zoom
+become points of the generalized diamond.
+
+The concepts like @strong{parallelogram triple boxes} and @strong{offset lines split phantom lines}
+were changed.  The offset percentage is measured at the beginning, before placing phantoms.  The
+offset is removed, phantoms are placed, and the call is done.  Phantoms are stripped from the result
+at that point, if possible, and then the offset, as a percent of the result of the stripping, is applied.
+
+The @strong{3x0}, @strong{0x3}, @strong{4x0}, and @strong{0x4} concepts are supported.
+
+The call @strong{dixie style to a wave} can be done from a single file starting double pass thru (4x1)
+setup, without saying @strong{single file}.  Be aware that, from an 8-person starting double pass thru
+(Heads Star Thru) formation, this might be considered ambiguous by actual dancers, because of the
+possibility that only the centers are supposed to do it.  Of course, if you just want the centers to do it,
+say so.
+
+@c ************
+@node 38.1, 38.02, 38.2, Top
+@unnumberedsec Version 38.1 changes
+
+There is a new option at startup: "-hide_couple_numbers", intended for practice at sight-resolving from
+the colors of the 4 couples.
+When this option is used, the couple numbers are not shown in the diagrams.  Only the genders are shown
+(with "B" and "G" or the appropriately shaped icon) and the colors.  Furthermore, the colors of the
+four couples may be set randomly with the "randomize couple colors" command, to simulate the start of
+a new tip.  This gives one practice at memorizing
+the primary and secondary couples based only on their color, and resolving based only on that information.
+The startup icon "SD hidecouple" has been created for this.  This may be copied to the desktop or start menu.
+
+The manner in which dancers pass each other during circulates from T-boned lines has been refined.  Any original end
+will pass outside of any original center, and, if the call is 1/2 circulate, they will take hands accordingly.
+Previously, an end facing in and a center facing out were considered to be on the same path, so that they
+would pass right shoulders and take right hands if the call was 1/2 circulate.  I thank David Heffron for
+bringing this issue to my attention.
+
+The @strong{concentric Z's} concept should be used in preference to the concepts @strong{concentric} and
+@strong{Z}.
+
+The @strong{crazy Z's} concept has been added.  It may be used instead of the concept combination
+@strong{crazy} and @strong{Z}, though it is not necessary.
+
+There is a better handling of calls like @strong{relay the top} and @strong{motivate} if the first
+cast off 3/4 is done by phantoms.  It assumes that the formation is waves at that point.
+
+There are two new concepts: @strong{intermediate diamond} and @strong{outside diamond}.  They are to be
+used from a "3x1 diamond" setup (after 1/2 acey deucey from waves), and they identify various diamonds.
+One can also use @strong{center diamond}.
+
+A bug in @strong{phantom columns own <anyone>} was fixed.  You know who you are.
+
+@c ************
+@node 38.02, 38.01, 38.1, Top
+@unnumberedsec Version 38.02 changes
+
+The handling if @strong{1/2 make magic} was improved.
+
+The handling of @strong{1/4 in} and @strong{1/4 out} was improved.
+
+The handling if @strong{interlocked triangles} was improved.
+
+@c ************
+@node 38.01, 38.0, 38.02, Top
+@unnumberedsec Version 38.01 changes
+
+The handling of @strong{slant <anything> and <anything>} was improved.
+
+The program can handle @strong{1/2 make magic}.
+
+A bug was fixed in @strong{mark time}.
+
+@c ************
+@node 38.0, 37.84, 38.01, Top
 @unnumberedsec Version 38.0 changes
 
 The handling of @strong{slant <anything> and <anything>} is more powerful, and follows the

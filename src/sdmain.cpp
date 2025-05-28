@@ -33,8 +33,8 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-#define VERSION_STRING "38.2"
-#define TIME_STAMP "wba@alum.mit.edu  9 January 2010 $"
+#define VERSION_STRING "38.3"
+#define TIME_STAMP "wba@alum.mit.edu  9 May 2010 $"
 
 /* This defines the following functions:
    sd_version_string
@@ -133,6 +133,7 @@ command_list_menu_item command_menu[] = {
    {"toggle concept levels",          command_toggle_conc_levels, ID_COMMAND_TOGGLE_CONC},
    {"toggle active phantoms",         command_toggle_act_phan, ID_COMMAND_TOGGLE_PHAN},
    {"toggle minigrand getouts",       command_toggle_minigrand, -1},
+   {"toggle overflow warning",        command_toggle_overflow_warn, -1},
    {"toggle retain after error",      command_toggle_retain_after_error, -1},
    {"toggle nowarn mode",             command_toggle_nowarn_mode, -1},
    {"toggle keep all pictures",       command_toggle_keepallpic_mode, -1},
@@ -235,6 +236,7 @@ startup_list_menu_item startup_menu[] = {
    {"toggle concept levels",       start_select_toggle_conc, ID_COMMAND_TOGGLE_CONC},
    {"toggle active phantoms",      start_select_toggle_act, ID_COMMAND_TOGGLE_PHAN},
    {"toggle minigrand getouts",    start_select_toggle_minigrand, -1},
+   {"toggle overflow warning",     start_select_toggle_overflow_warn, -1},
    {"toggle singlespace mode",     start_select_toggle_singlespace, -1},
    {"toggle retain after error",   start_select_toggle_retain, -1},
    {"toggle nowarn mode",          start_select_toggle_nowarn_mode, -1},
@@ -831,6 +833,9 @@ extern bool query_for_call()
          case command_toggle_minigrand:
             allowing_minigrand = !allowing_minigrand;
             goto check_menu;
+         case command_toggle_overflow_warn:
+            enforce_overcast_warning = !enforce_overcast_warning;
+            goto check_menu;
          case command_toggle_act_phan:
             using_active_phantoms = !using_active_phantoms;
             goto check_menu;
@@ -1013,6 +1018,7 @@ extern int sdmain(int argc, char *argv[])
       printf("-keep_all_pictures          keep the picture after every call\n");
       printf("-single_click               (Sd only) act on single mouse clicks on the menu\n");
       printf("-minigrand_getouts          allow \"mini-grand\" (RLG but promenade on 3rd hand) getouts\n");
+      printf("-warn_on_overflow           issue warning if same turning on consecutive calls\n");
       printf("-concept_levels             allow concepts from any level\n");
       printf("-no_warnings                do not display or print any warning messages\n");
       printf("-retain_after_error         retain pending concepts after error\n");

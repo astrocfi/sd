@@ -1,8 +1,8 @@
 \input texinfo
 @c user documentation for Sd (square dance caller's helper)
 @c
-@set sd-version 38.0
-@set Time-stamp: September 1, 2009
+@set sd-version 38.3
+@set Time-stamp: May 9, 2010
 @c
 @setfilename sd_doc.info
 @c We want the version number to show in the html file.
@@ -4064,6 +4064,10 @@ independently, do the call.
 @item reverse crazy diagonal boxes
 @item <N/4> crazy diagonal boxes
 @item <N/4> reverse crazy diagonal boxes
+@item crazy Z's
+@item reverse crazy Z's
+@item <N/4> crazy Z's
+@item <N/4> reverse crazy Z's
 These are straightforward.
 @item triple C/L/W/B/D/1T/1L working together
 @item triple C/L/W/B working apart
@@ -4506,6 +4510,10 @@ This inverts the centers' and ends' parts of the call.
 @item fan
 @item yoyo
 @item fractal
+@item generous
+This increases by one the amount of the first arm-turn in the call.
+@item stingy
+This decreases by one the amount of the first arm-turn in the call.
 @item straight
 @item twisted
 @item central
@@ -4884,6 +4892,8 @@ and/or @samp{magic}.
 @item grand single cross concentric
 @item concentric diamonds
 @item cross concentric diamonds
+@item concentric Z's
+@item cross concentric Z's
 @item 3x3 concentric
 @item 3x3 cross concentric
 @item 4x4 concentric
@@ -5079,29 +5089,18 @@ end person's @emph{location,} but not that end person's facing direction.
 @item
 If the people who finished on the outside in a 2x2 started
 in a 1x4 or diamond, they use the @dfn{checkpoint rule}---they elongate
-their resulting 2x2 perpendicular to the long axis.  In order to handle
-all cases correctly, it is important to be very careful in choosing what
-that long axis is.  As a good approximation, it is the long axis of
-the whole set.
+their resulting 2x2 perpendicular to their original long axis.
 
 If the concept was @i{concentric}, so these people started on
 the outside in a 1x4 or diamond, they use their own long axis, which is
 the same as the long axis of the whole set.
 
-If the concept was @i{cross concentric}, so these people started in
-the center in a 1x4 or diamond, what they do depends on what setup the
-original ends began in.  If the original ends began in a 1x4 or diamond,
-the axis of that 1x4 or diamond is the same as the axis of the whole set.
-The original centers elongate their 2x2 perpendicular to that.  This rule
-applies, for example, when @samp{centers lockit; cross concentric recycle}
-is called from a tidal wave.
-
-If the concept was @i{cross concentric} and the original ends began in
-a 2x2, the original centers @emph{ignore} the elongation of that 2x2.  Instead,
-they elongate their resulting 2x2 perpendicular to @i{their own axis}, that
-is, the axis of the 1x4 or diamond in which they began.  This rule applies,
-for example, when @samp{cross concentric recycle} or @samp{center 2 shazam;
-cross concentric diamond recycle} is called from a quarter-tag.
+If the concept was @i{cross concentric}, so these people started in the
+center in a 1x4 or diamond, they elongate their resulting 2x2
+perpendicular to @i{their own axis}, that is, the axis of the 1x4 or
+diamond in which they began.  This rule applies, for example, when
+@samp{cross concentric recycle} or @samp{center 2 shazam; cross
+concentric diamond recycle} is called from a quarter-tag.
 @end enumerate
 
 @node Assume Waves, Assuming a Quarter-Tag, Concentric, Concept Notes

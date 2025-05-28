@@ -293,6 +293,77 @@ static const expand::thing expl56 = {{1, 2, 3, 5},               s1x4, s1x6, 0, 
 static const expand::thing expl72 = {{1, 5, 3, 4},               s1x4, s1x6, 0, 0, 072};
 static const expand::thing expl27 = {{0, 1, 4, 2},               s1x4, s1x6, 0, 0, 027};
 
+void fix_roll_transparency_stupidly(const setup *ss, setup *result)
+{
+   // Can only do this if we understand the setups, as indicated by the "slimit" being defined.
+   if ((ss->cmd.cmd_misc3_flags & (CMD_MISC3__ROLL_TRANSP|CMD_MISC3__ROLL_TRANSP_IF_Z)) != 0 &&
+       (attr::slimit(result) >= 0) &&
+       (attr::slimit(ss) >= 0)) {
+
+      // We may turn on the "moving_people_cant_roll" flag.  But only if the
+      // the starting and ending setups are the same.  (If they aren't the same,
+      // we can't tell whether people moved.)  In this case, we only perform
+      // the special "roll_transparent" operation for people who didn't move
+      // to a different location.  For people who moved, we leave their
+      // roll-neutral status in place.
+      //
+      // This is required for "and cross" in such things as percolate.
+      // Everyone has hinged and therefore has roll direction.  The "and
+      // cross" is invoked with "roll_transparent" on, so that the people
+      // who don't move on the "and cross" will still be able to roll.
+      // But the people who crossed need to preserve their "ZM" status
+      // and not have it reset to the previous call.
+
+      bool moving_people_cant_roll = ss->cmd.callspec &&
+         (ss->cmd.callspec->the_defn.callflagsf & CFLAG2_IF_MOVE_CANT_ROLL) != 0 &&
+         result->kind == ss->kind;
+
+      for (int u=0; u<=attr::slimit(result); u++) {
+         uint32 *thispid1 = &result->people[u].id1;
+
+         if (*thispid1) {
+            uint32 rollinfo = *thispid1 & ROLL_DIRMASK;
+
+            // Look for people marked "M", that is, roll-neutral.
+            // But if in "DFM1_ROLL_TRANSPARENT_IF_Z" mode, also look for people marked undefined,
+            // and force them to "M" rather than being transparent.
+            if ((ss->cmd.cmd_misc3_flags & CMD_MISC3__ROLL_TRANSP_IF_Z) != 0 && rollinfo == 0) {
+               *thispid1 |= ROLL_IS_M;
+            }
+            else if (rollinfo == ROLL_DIRMASK) {
+               // This person is roll-neutral.  Reinstate his original roll info.
+               // But do *NOT* restore his "this person moved" bit from its
+               // previous state.  Leave it in its current state.
+
+               // But we do *NOT* do this if the before and after setups
+               // were the same, the call was marked "moving_people_cant_roll",
+               // and the person finished on a different spot.
+
+               // Find this person in the starting setup.
+               int v;
+               for (v=0; v<=attr::slimit(ss); v++) {
+                  if (((*thispid1 ^ ss->people[v].id1) & (XPID_MASK|BIT_PERSON)) == 0) {
+                     break;
+                  }
+               }
+
+               if (v > attr::slimit(ss))
+                  fail("INTERNAL ERROR: LOST SOMEONE!!!!!");
+
+               *thispid1 &= ~ROLL_DIRMASK;
+
+               if (moving_people_cant_roll && (u != v)) {
+                  *thispid1 |= ROLL_IS_M;  // This person moved.  Take away his rollability.
+               }
+               else {
+                  *thispid1 |= (ss->people[v].id1 & ROLL_DIRMASK);   // Restore rollability from original.
+               }
+            }
+         }
+      }
+   }
+}
+
 
 extern void remove_mxn_spreading(setup *ss) THROW_DECL
 {
@@ -940,7 +1011,6 @@ extern bool do_simple_split(
 extern uint32 do_call_in_series(
    setup *sss,
    bool dont_enforce_consistent_split,
-   uint32 roll_transparent_bits,
    bool normalize,
    bool qtfudged) THROW_DECL
 {
@@ -1064,84 +1134,10 @@ extern uint32 do_call_in_series(
       }
    }
 
-   // If the invocation of this call is "roll transparent", restore roll info
-   // from before the call for those people that are marked as roll-neutral.
-
-   // Can only do this if we understand the setups, as indicated by the "slimit"
-   // being defined.
-
-   if ((roll_transparent_bits & (DFM1_ROLL_TRANSPARENT|DFM1_ROLL_TRANSPARENT_IF_Z)) != 0 &&
-       (attr::slimit(&tempsetup) >= 0) &&
-       (attr::slimit(sss) >= 0)) {
-
-      // We may turn on the "moving_people_cant_roll" flag.  But only if the
-      // the starting and ending setups are the same.  (If they aren't the same,
-      // we can't tell whether people moved.)  In this case, we only perform
-      // the special "roll_transparent" operation for people who didn't move
-      // to a different location.  For people who moved, we leave their
-      // roll-neutral status in place.
-      //
-      // This is required for "and cross" in such things as percolate.
-      // Everyone has hinged and therefore has roll direction.  The "and
-      // cross" is invoked with "roll_transparent" on, so that the people
-      // who don't move on the "and cross" will still be able to roll.
-      // But the people who crossed need to preserve their "ZM" status
-      // and not have it reset to the previous call.
-
-      bool moving_people_cant_roll = false;
-
-      if (sss->cmd.callspec &&
-          (sss->cmd.callspec->the_defn.callflagsf & CFLAG2_IF_MOVE_CANT_ROLL) != 0 &&
-          tempsetup.kind == sss->kind)
-         moving_people_cant_roll = true;
-
-      int u, v;
-
-      for (u=0; u<=attr::slimit(&tempsetup); u++) {
-         uint32 *thispid1 = &tempsetup.people[u].id1;
-         if (*thispid1) {
-            uint32 rollinfo = *thispid1 & ROLL_DIRMASK;
-
-            // Look for people marked "M", that is, roll-neutral.
-            // But if in "DFM1_ROLL_TRANSPARENT_IF_Z" mode, also look for people marked undefined,
-            // and force them to "M" rather than being transparent.
-            if ((roll_transparent_bits & DFM1_ROLL_TRANSPARENT_IF_Z) != 0 && rollinfo == 0) {
-               *thispid1 |= ROLL_IS_M;
-            }
-            else if (rollinfo == ROLL_DIRMASK) {
-               // This person is roll-neutral.  Reinstate his original roll info,
-               // by searching for him in the starting setup.
-               // But do *NOT* restore his "this person moved" bit from its
-               // previous state.  Leave it in its current state.
-
-               if (!moving_people_cant_roll)
-                  *thispid1 &= ~ROLL_DIRMASK;
-
-               for (v=0; v<=attr::slimit(sss); v++) {
-                  // But we do *NOT* do this if the before and after setups
-                  // were the same, the call was marked "moving_people_cant_roll",
-                  // and the person finished on a different spot.
-
-                  if (((*thispid1 ^ sss->people[v].id1) & XPID_MASK) == 0) {
-                     if (moving_people_cant_roll) {
-                        *thispid1 &= ~ROLL_DIRMASK;
-                        if (u == v)
-                           *thispid1 |= (sss->people[v].id1 & ROLL_DIRMASK);
-                        else
-                           *thispid1 |= ROLL_IS_M;  // This person moved.
-                     }
-                     else {
-                        *thispid1 |= (sss->people[v].id1 & ROLL_DIRMASK);
-                     }
-                  }
-               }
-            }
-         }
-      }
-   }
-
    uint32 save_expire = sss->cmd.prior_expire_bits;
+   setup_command savecmd = sss->cmd;
    *sss = tempsetup;
+   sss->cmd = savecmd = sss->cmd;
    sss->cmd.prior_expire_bits = save_expire;
    sss->cmd.cmd_misc_flags = qqqq.cmd.cmd_misc_flags;   // But pick these up from the call.
    sss->cmd.cmd_misc_flags &= ~CMD_MISC__DISTORTED;     // But not this one!
@@ -1216,6 +1212,17 @@ extern uint32 do_call_in_series(
 
    sss->result_flags.misc &= ~(RESULTFLAG__PART_COMPLETION_BITS|RESULTFLAG__PLUSEIGHTH_ROT);
    sss->result_flags.misc |= tempsetup.result_flags.misc;
+
+   // Here is where we implement the policy that the internal boundaries between subcalls
+   // are not checked for overcast.  But there is an exception:  If a subcall is marked
+   // "roll transparent", the boundary between it and the following call is checked.
+   // This is to handle the various transparent "check a wave" types of things that are
+   // used as the first subcall.  Whatever follows them is considered the first subcall,
+   // and is subject to checking.
+
+   if (!(qqqq.cmd.cmd_misc3_flags & (CMD_MISC3__ROLL_TRANSP|CMD_MISC3__ROLL_TRANSP_IF_Z)))
+      sss->result_flags.misc |= RESULTFLAG__STOP_OVERCAST_CHECK;
+
    sss->result_flags.misc &= ~3;
 
    sss->cmd.cmd_heritflags_to_save_from_mxn_expansion = tempsetup.result_flags.res_heritflags_to_save_from_mxn_expansion;
@@ -3040,8 +3047,19 @@ static void do_inheritance(setup_command *cmd,
                      INHERITFLAG_HALF |
                      INHERITFLAG_LASTHALF);
 
-   /* Now turn on any "force" flags.  These are indicated by "modifiersh" on
-      and "callflagsh" off. */
+   // Fix special case of yoyo/generous/stingy.
+   if ((cmd->cmd_final_flags.herit & INHERITFLAG_YOYOETCMASK) == INHERITFLAG_YOYOETCMASK) {
+      // Incoming concept was "stingy",  Need to check just that bit in defptr->modifiersh.
+      if (defptr->modifiersh & INHERITFLAG_YOYOETCK_GENEROUS)
+         // Inheritance of stingy/generous was on; set both bits.
+         temp_concepts |= INHERITFLAG_YOYOETCMASK;
+      else
+         // Inheritance of stingy/generous was off; clear both bits.
+         temp_concepts &= ~INHERITFLAG_YOYOETCMASK;
+   }
+
+   // Now turn on any "force" flags.  These are indicated by "modifiersh" on
+   // and "callflagsh" off.
 
    if (temp_concepts & defptr->modifiersh & ~callflagsh & (INHERITFLAG_HALF | INHERITFLAG_LASTHALF))
       fail("Can't do this with this fraction.");   /* "force_half" was used when we already had "half" coming in. */
@@ -4205,7 +4223,7 @@ static void do_stuff_inside_sequential_call(
       }
       else if (result->cmd.callspec == base_calls[base_call_scoottowave]) {
          if (result->kind == s2x4 &&
-             !result->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_YOYO)) {
+             !result->cmd.cmd_final_flags.test_heritbits(INHERITFLAG_YOYOETCMASK)) {
             if ((result->people[0].id1 & d_mask) == d_north ||
                 (result->people[1].id1 & d_mask) == d_south ||
                 (result->people[2].id1 & d_mask) == d_north ||
@@ -4367,10 +4385,14 @@ static void do_stuff_inside_sequential_call(
       result->cmd.do_couples_her8itflags = new_final_concepts.herit;
    }
 
+   if ((this_mod1 & DFM1_ROLL_TRANSPARENT) != 0)
+      result->cmd.cmd_misc3_flags |= CMD_MISC3__ROLL_TRANSP;
+   if ((this_mod1 & DFM1_ROLL_TRANSPARENT_IF_Z) != 0)
+      result->cmd.cmd_misc3_flags |= CMD_MISC3__ROLL_TRANSP_IF_Z;
+
    uint32 stuff = do_call_in_series(
                      result,
                      reverse_order,
-                     this_mod1,
                      ((cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX) == 0 &&
                       (new_final_concepts.test_heritbits(INHERITFLAG_12_MATRIX|INHERITFLAG_16_MATRIX)) == 0 &&
                       (recompute_id || (this_mod1 & DFM1_SEQ_NORMALIZE) != 0)),
@@ -4846,6 +4868,8 @@ static void do_sequential_call(
          result->cmd = ss->cmd;
          result->cmd.prior_expire_bits = remember_expire;
          result->cmd.cmd_heritflags_to_save_from_mxn_expansion = remember_save_3x1_herit;
+         if (result->result_flags.misc & RESULTFLAG__STOP_OVERCAST_CHECK)
+            result->cmd.cmd_misc3_flags |= CMD_MISC3__STOP_OVERCAST_CHECK;
       }
 
       // If doing an explicit substitution, we allow another act of rearing
@@ -5574,6 +5598,9 @@ static void really_inner_move(setup *ss,
                               bool mirror,
                               setup *result) THROW_DECL
 {
+   if (callflagsf & CFLAG2_NO_RAISE_OVERCAST)
+      ss->clear_all_overcasts();
+
    selector_kind special_selector = selector_none;
    selective_key special_indicator = selective_key_plain;
    uint32 special_modifiers = 0;
@@ -5609,8 +5636,7 @@ static void really_inner_move(setup *ss,
       }
    }
 
-   /* We can't handle the mirroring (or "Z" distortion) unless the schema is by_array,
-      so undo it. */
+   // We can't handle the mirroring (or "Z" distortion) unless the schema is by_array, so undo it.
 
    if (the_schema != schema_by_array) {
       if (mirror) { mirror_this(ss); mirror = false; }
@@ -5636,8 +5662,7 @@ static void really_inner_move(setup *ss,
           ss->cmd.cmd_final_flags.final)
          fail("Illegal concept for this call.");
       *result = *ss;
-
-      if (the_schema == schema_nothing_noroll) result->suppress_all_rolls();
+      result->suppress_all_rolls(the_schema == schema_nothing);
 
       // This call is a 1-person call, so it can be presumed
       // to have split maximally both ways.
@@ -5727,6 +5752,10 @@ static void really_inner_move(setup *ss,
          else
             matrixmove(ss, flags, callstuff, result);
 
+         // If the invocation of this call is "roll transparent", restore roll info
+         // from before the call for those people that are marked as roll-neutral.
+         fix_roll_transparency_stupidly(ss, result);
+
          result->result_flags.misc |= RESULTFLAG__INVADED_SPACE;
 
          if (expanded) {
@@ -5755,6 +5784,7 @@ static void really_inner_move(setup *ss,
             }
          }
       }
+
       break;
    case schema_roll:
       if (ss->cmd.cmd_final_flags.test_for_any_herit_or_final_bit())
@@ -5768,8 +5798,8 @@ static void really_inner_move(setup *ss,
       break;
    case schema_by_array:
 
-         /* Dispose of the "left" concept first -- it can only mean mirror.  If it is on,
-            mirroring may already have taken place. */
+      // Dispose of the "left" concept first -- it can only mean mirror.  If it is on,
+      // mirroring may already have taken place.
 
       if (ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_LEFT)) {
          /* ***** why isn't this particular error test taken care of more generally elsewhere? */
@@ -5824,11 +5854,20 @@ static void really_inner_move(setup *ss,
       // If it doesn't accept them, it is an error unless the concepts are
       // the special ones "magic" and/or "interlocked", which we can dispose
       // of by doing the call in the appropriate magic/interlocked setup.
+      // We can also take care of things like "3x1" by expanding the setup and
+      // letting the call deal with the resulting "3x3".  In both cases,
+      // "divide_for_magic" will deal with it.
 
       uint32 extra_heritmask_bits = 0;
 
       {
-         uint32 unaccepted_flags = ss->cmd.cmd_final_flags.test_heritbits(~(callflagsh|INHERITFLAG_HALF|INHERITFLAG_LASTHALF));
+         uint32 unaccepted_flags =
+            ss->cmd.cmd_final_flags.test_heritbits(~(callflagsh|INHERITFLAG_HALF|INHERITFLAG_LASTHALF));
+
+         // Another special case:  Inheritance of yoyo/stingy/generous is weird.
+         if (ss->cmd.cmd_final_flags.test_heritbits(INHERITFLAG_YOYOETCMASK) == INHERITFLAG_YOYOETCMASK &&
+             (callflagsh & INHERITFLAG_YOYOETCMASK) == INHERITFLAG_YOYOETCK_GENEROUS)
+            unaccepted_flags &= ~INHERITFLAG_YOYOETCMASK;
 
          // Special case:  Some calls do not specify "magic" inherited
          // to their children, but can nevertheless be executed magically.
@@ -5869,10 +5908,12 @@ static void really_inner_move(setup *ss,
                extra_heritmask_bits = unaccepted_flags;
             }
             else {
-               if (divide_for_magic(ss, unaccepted_flags, result))
-                  return;
-               else
+               if (!divide_for_magic(ss, unaccepted_flags, result))
                   fail("Can't do this call with this concept.");
+
+               if (callflagsf & CFLAG2_NO_RAISE_OVERCAST)
+                  result->clear_all_overcasts();
+               return;
             }
          }
       }
@@ -6062,6 +6103,9 @@ static void really_inner_move(setup *ss,
          canonicalize_rotation(result);
       }
    }
+
+   if (callflagsf & CFLAG2_NO_RAISE_OVERCAST)
+      result->clear_all_overcasts();
 }
 
 
@@ -6170,10 +6214,19 @@ static void move_with_real_call(
                current_options.number_fields ^= 2;
             ss->cmd.cmd_final_flags.clear_heritbit(INHERITFLAG_FRACTAL);
          }
-         else if (ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_YOYO)) {
+         else if ((ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_YOYOETCMASK)) == INHERITFLAG_YOYOETCK_YOYO) {
             if ((current_options.number_fields & NUMBER_FIELD_MASK) == 2)
                current_options.number_fields++;
-            ss->cmd.cmd_final_flags.clear_heritbit(INHERITFLAG_YOYO);
+            ss->cmd.cmd_final_flags.clear_heritbits(INHERITFLAG_YOYOETCMASK);
+         }
+         else if ((ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_YOYOETCMASK)) == INHERITFLAG_YOYOETCK_GENEROUS) {
+            current_options.number_fields++;
+            ss->cmd.cmd_final_flags.clear_heritbits(INHERITFLAG_YOYOETCMASK);
+         }
+         else if ((ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_YOYOETCMASK)) == INHERITFLAG_YOYOETCK_STINGY &&
+                  current_options.number_fields > 0) {
+            current_options.number_fields--;
+            ss->cmd.cmd_final_flags.clear_heritbits(INHERITFLAG_YOYOETCMASK);
          }
       }
 
@@ -6423,9 +6476,11 @@ static void move_with_real_call(
                resflagsmisc |= RESULTFLAG__NEED_DIAMOND;
 
             ss->cmd.cmd_final_flags.clear_heritbit(INHERITFLAG_DIAMOND);
+            ss->clear_all_overcasts();
             divided_setup_move(ss, MAPCODE(s1x2,2,MPKIND__DMD_STUFF,0),
                                phantest_ok, true, result);
             result->result_flags.misc |= resflagsmisc;
+            result->clear_all_overcasts();
             return;
          }
          else {
@@ -7073,10 +7128,20 @@ extern void move(
             resultflags_to_put_inmisc |= RESULTFLAG__TWISTED_EXPIRED;
          }
 
-         if (ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_YOYO)) {
-            if (ss->cmd.prior_expire_bits & RESULTFLAG__YOYO_EXPIRED)
-               ss->cmd.cmd_final_flags.clear_heritbit(INHERITFLAG_YOYO);
-            resultflags_to_put_inmisc |= RESULTFLAG__YOYO_EXPIRED;
+         // Take care of generous and stingy; they are complicated.
+
+         switch (ss->cmd.cmd_final_flags.test_heritbits(INHERITFLAG_YOYOETCMASK)) {
+         case INHERITFLAG_YOYOETCK_YOYO:
+            if (ss->cmd.prior_expire_bits & RESULTFLAG__YOYO_ONLY_EXPIRED)
+               ss->cmd.cmd_final_flags.clear_heritbits(INHERITFLAG_YOYOETCMASK);
+            resultflags_to_put_inmisc |= RESULTFLAG__YOYO_ONLY_EXPIRED;
+            break;
+         case INHERITFLAG_YOYOETCK_STINGY:
+         case INHERITFLAG_YOYOETCK_GENEROUS:
+            if (ss->cmd.prior_expire_bits & RESULTFLAG__GEN_STING_EXPIRED)
+               ss->cmd.cmd_final_flags.clear_heritbits(INHERITFLAG_YOYOETCMASK);
+            resultflags_to_put_inmisc |= RESULTFLAG__GEN_STING_EXPIRED;
+            break;
          }
 
          if (ss->cmd.cmd_final_flags.test_finalbit(FINAL__SPLIT_SQUARE_APPROVED)) {
@@ -7129,10 +7194,22 @@ extern void move(
          resultflags_to_put_inmisc |= RESULTFLAG__TWISTED_EXPIRED;
       }
 
-      if (ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_YOYO)) {
-         if (ss->cmd.prior_expire_bits & RESULTFLAG__YOYO_EXPIRED)
-            ss->cmd.cmd_final_flags.clear_heritbit(INHERITFLAG_YOYO);
-         resultflags_to_put_inmisc |= RESULTFLAG__YOYO_EXPIRED;
+      if (ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_TWISTED)) {
+         if (ss->cmd.prior_expire_bits & RESULTFLAG__TWISTED_EXPIRED)
+            ss->cmd.cmd_final_flags.clear_heritbit(INHERITFLAG_TWISTED);   // Already did that.
+         resultflags_to_put_inmisc |= RESULTFLAG__TWISTED_EXPIRED;
+      }
+
+      if (ss->cmd.cmd_final_flags.test_heritbits(INHERITFLAG_YOYOETCK_YOYO)) {
+         if (ss->cmd.prior_expire_bits & RESULTFLAG__YOYO_ONLY_EXPIRED)
+            ss->cmd.cmd_final_flags.clear_heritbits(INHERITFLAG_YOYOETCK_YOYO);
+         resultflags_to_put_inmisc |= RESULTFLAG__YOYO_ONLY_EXPIRED;
+      }
+
+      if (ss->cmd.cmd_final_flags.test_heritbits(INHERITFLAG_YOYOETCK_GENEROUS)) { // Takes care of generous and stingy/
+         if (ss->cmd.prior_expire_bits & RESULTFLAG__GEN_STING_EXPIRED)
+            ss->cmd.cmd_final_flags.clear_heritbits(INHERITFLAG_YOYOETCK_GENEROUS);
+         resultflags_to_put_inmisc |= RESULTFLAG__GEN_STING_EXPIRED;
       }
 
       // This used to be "FINAL_SPLIT" for some reason that we can't figure out now.

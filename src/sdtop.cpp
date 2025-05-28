@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2009  William B. Ackerman.
+//    Copyright (C) 1990-2010  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -125,6 +125,7 @@ and the following external variables:
    useless_phan_clw_warnings
    allowing_all_concepts
    allowing_minigrand
+   enforce_overcast_warning
    using_active_phantoms
    last_direction_kind
    interactivity
@@ -271,6 +272,7 @@ warning_info dyp_each_warnings;
 warning_info useless_phan_clw_warnings;
 bool allowing_all_concepts = false;
 bool allowing_minigrand = false;
+bool enforce_overcast_warning = false;
 bool using_active_phantoms = false;
 int last_direction_kind = direction_zagzag;
 interactivity_state interactivity = interactivity_normal;
@@ -1230,6 +1232,7 @@ extern void touch_or_rear_back(
    // Assumptions are no longer valid, except for a few special cases.
    scopy->cmd.cmd_assume.assumption = new_assume;
    canonicalize_rotation(scopy);
+   scopy->clear_all_overcasts();
 
    goto do_the_leftie_test;
 }
@@ -1658,7 +1661,8 @@ restriction_tester::restr_initializer restriction_tester::restr_init_table0[] = 
     {1, 3, 0}, {0}, {0}, false, chk_spec_directions},
    {s_rigger,  cr_extend_inloutr, 8, {5, 0, 4, 1, 6, 3, 7, 2, -1},
     {1, 3, 0}, {0}, {0}, false, chk_spec_directions},
-
+   {s_hrglass, cr_magic_only, 4, {6, 2, 7, 3},
+    {0}, {0}, {0}, false, chk_wave},
    {s1x8, cr_wave_only, 8, {0, 1, 3, 2, 6, 7, 5, 4},
     {0}, {0}, {0}, true, chk_wave},
    {s1x8, cr_1fl_only, 4, {0, 4, 1, 5, 2, 6, 3, 7},
@@ -2616,7 +2620,7 @@ restriction_test_result verify_restriction(
                else if (local_negate || tt.assump_live) goto bad;    // All live people were demanded.
                if ((t = ss->people[rr->map1[idx*limit+i]].id1) != 0) { qa2 |= t; qa3 |= ~t; }
             }
-            
+
             if ((qa0 & 9) == 9 || (qa2 & 9) == 9) goto bad;  // People are T-boned.
 
             allqa0 |= qa0;          // If allqa0 & 8, some column fails (but rows might be OK.)
@@ -4362,7 +4366,7 @@ extern callarray *assoc(
       case s1x12: case s1x14: case s1x16:
       case s2x2: case s3x4: case s4x4: case s_thar: case s_crosswave: case s_qtag:
       case s3x1dmd: case s_2x1dmd: case sbigdmd:
-      case s_trngl: case s_bone: case s_alamo:
+      case s_trngl: case s_bone: case s_alamo: case s_hrglass:
          /* FELL THROUGH!!! */
          goto check_tt;
       case sdmd: case s_ptpd:
@@ -4624,82 +4628,7 @@ extern setup_kind try_to_expand_dead_conc(const setup & result,
 }
 
 
-
-/* WARNING!!!!  This procedure appears verbatim in sdtop.c and dbcomp.c . */
-
-/* These combinations are not allowed. */
-
-#define FORBID1 (INHERITFLAG_FRACTAL|INHERITFLAG_YOYO)
-#define FORBID2 (INHERITFLAG_SINGLEFILE|INHERITFLAG_SINGLE)
-#define FORBID3 (INHERITFLAG_MXNMASK|INHERITFLAG_NXNMASK)
-#define FORBID4 (INHERITFLAG_12_MATRIX|INHERITFLAG_16_MATRIX)
-
-
-static bool do_heritflag_merge(final_and_herit_flags *dest, uint32 source)
-{
-   uint32 revertsource = source & INHERITFLAG_REVERTMASK;
-
-   if (revertsource) {
-      // If the source is a revert/reflect bit, things are complicated.
-
-      uint32 revertdest = dest->test_heritbit(INHERITFLAG_REVERTMASK);
-
-      if (!revertdest) {
-         goto good;
-      }
-      else if (revertsource == INHERITFLAGRVRTK_REVERT &&
-               revertdest == INHERITFLAGRVRTK_REFLECT) {
-         dest->clear_heritbit(INHERITFLAG_REVERTMASK);
-         dest->set_heritbit(INHERITFLAGRVRTK_RFV);
-         return false;
-      }
-      else if (revertsource == INHERITFLAGRVRTK_REFLECT &&
-               revertdest == INHERITFLAGRVRTK_REVERT) {
-         dest->clear_heritbit(INHERITFLAG_REVERTMASK);
-         dest->set_heritbit(INHERITFLAGRVRTK_RVF);
-         return false;
-      }
-      else if (revertsource == INHERITFLAGRVRTK_REFLECT &&
-               revertdest == INHERITFLAGRVRTK_REFLECT) {
-         dest->clear_heritbit(INHERITFLAG_REVERTMASK);
-         dest->set_heritbit(INHERITFLAGRVRTK_RFF);
-         return false;
-      }
-      else if (revertsource == INHERITFLAGRVRTK_REVERT &&
-               revertdest == INHERITFLAGRVRTK_RVF) {
-         dest->clear_heritbit(INHERITFLAG_REVERTMASK);
-         dest->set_heritbit(INHERITFLAGRVRTK_RVFV);
-         return false;
-      }
-      else if (revertsource == INHERITFLAGRVRTK_REFLECT &&
-               revertdest == INHERITFLAGRVRTK_RFV) {
-         dest->clear_heritbit(INHERITFLAG_REVERTMASK);
-         dest->set_heritbit(INHERITFLAGRVRTK_RFVF);
-         return false;
-      }
-      else
-         return true;
-   }
-
-   // Check for plain redundancy.  If this is a bit in one of the complex
-   // fields, this simple test may not catch the error, but the next one will.
-
-   if (dest->test_heritbits(source))
-      return true;
-
-   if ((dest->test_heritbits(FORBID1) && (source & FORBID1)) ||
-       (dest->test_heritbits(FORBID2) && (source & FORBID2)) ||
-       (dest->test_heritbits(FORBID3) && (source & FORBID3)) ||
-       (dest->test_heritbits(FORBID4) && (source & FORBID4)))
-      return true;
-
-   good:
-
-   dest->set_heritbits(source);
-
-   return false;
-}
-
+// Do_heritflag_merge is in common.cpp.
 
 
 // Take a concept pointer and scan for all "final" concepts,
@@ -4768,7 +4697,11 @@ extern parse_block *process_final_concepts(
       case concept_left:
          heritsetbit = INHERITFLAG_LEFT; break;
       case concept_yoyo:
-         heritsetbit = INHERITFLAG_YOYO; break;
+         heritsetbit = INHERITFLAG_YOYOETCK_YOYO; break;
+      case concept_generous:
+         heritsetbit = INHERITFLAG_YOYOETCK_GENEROUS; break;
+      case concept_stingy:
+         heritsetbit = INHERITFLAG_YOYOETCK_STINGY; break;
       case concept_fractal:
          heritsetbit = INHERITFLAG_FRACTAL; break;
       case concept_straight:
@@ -4842,7 +4775,7 @@ extern parse_block *process_final_concepts(
          if (final_concepts->test_heritbits(forbidheritbit))
             fail("Illegal order of call modifiers.");
 
-         if (do_heritflag_merge(final_concepts, heritsetbit))
+         if (do_heritflag_merge((uint32 *) &final_concepts->herit, heritsetbit))
             fail("Illegal combination of call modifiers.");
       }
       else {
@@ -4913,7 +4846,7 @@ skipped_concept_info::skipped_concept_info(parse_block *incoming) THROW_DECL
    // is a modifier or a "real" concept.
 
    if (junk_concepts.final == 0 &&
-       (junk_concepts.herit & (INHERITFLAG_YOYO | INHERITFLAG_LEFT | INHERITFLAG_FRACTAL)) != 0) {
+       (junk_concepts.herit & (INHERITFLAG_YOYOETCMASK | INHERITFLAG_LEFT | INHERITFLAG_FRACTAL)) != 0) {
       m_heritflag = junk_concepts.herit;
       return;
    }
@@ -5002,6 +4935,7 @@ extern bool fix_n_results(int arity,
    bool dmdflag = false;
    bool qtflag = false;
    bool boxrectflag = false;
+   int setfinal = 0;
    bool miniflag = false;
    int deadconcindex = -1;
    setup_kind kk = nothing;
@@ -5282,11 +5216,31 @@ extern bool fix_n_results(int arity,
       }
       else if (boxrectflag && z[i].kind == s2x2) {
          canonicalize_rotation(&z[i]);
-         expand::expand_setup(((rotstates & ~0x30) == 0) ? s_2x2_2x4b : s_2x2_2x4, &z[i]);
+
+         if (rotstates & 0x20) {
+            if (i&1) {
+               expand::expand_setup(s_2x2_2x4, &z[i]);
+               setfinal = 2;
+            }
+            else rotstates = 0;   // fail.
+         }
+         else if (rotstates & 0x10) {
+            if (!(i&1)) {
+               expand::expand_setup(s_2x2_2x4b, &z[i]);
+               setfinal = 1;
+            }
+            else rotstates = 0;   // fail.
+         }
+         else {
+            expand::expand_setup((rotstates & 2) ? s_2x2_2x4b : s_2x2_2x4, &z[i]);
+         }
       }
 
       canonicalize_rotation(&z[i]);
    }
+
+   if (setfinal != 0)
+      rotstates = setfinal;
 
    if (deadconcindex >= 0) {
       kk = z[deadconcindex].kind;

@@ -3022,6 +3022,9 @@ void run_program()
       case start_select_toggle_minigrand:
          allowing_minigrand = !allowing_minigrand;
          goto new_sequence;
+      case start_select_toggle_overflow_warn:
+         enforce_overcast_warning = !enforce_overcast_warning;
+         goto new_sequence;
       case start_select_toggle_act:
          using_active_phantoms = !using_active_phantoms;
          goto new_sequence;

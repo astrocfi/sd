@@ -66,7 +66,7 @@ TTY_LIBS = -static
 SDLIB_OBJS = sdmain.o sdutil.o sdbasic.o sdinit.o \
              sdtables.o sdctable.o sdtop.o sdconcpt.o sdpreds.o \
              sdgetout.o sdmoves.o sdtand.o sdconc.o sdistort.o \
-             mapcachefile.o sdpick.o sdsi.o sdmatch.o
+             mapcachefile.o sdpick.o sdsi.o sdmatch.o common.o
 
 HFILES = sd.h database.h paths.h mapcachefile.h sort.h \
              deploy.h resource.h sdprint.h

@@ -437,6 +437,9 @@ static const resolve_tester test_c1phan_stuff[] = {
    // From phantoms, others of each.
    {resolve_rlg,            MS, 3,   {10, 8, 6, 4, 2, 0, 14, 12},  0x8A8AA8A8},
    {resolve_rlg,            MS, 3,   {11, 9, 5, 7, 3, 1, 13, 15},  0x13313113},
+   // From phantoms, all promenade.
+   {resolve_prom,           MS, 7,   {11, 9, 7, 5, 3, 1, 15, 13},  0x118833AA},
+   {resolve_prom,           MS, 7,   {10, 8, 6, 4, 2, 0, 14, 12},  0x8833AA11},
    {resolve_none, MS, 0x10}};
 
 static const resolve_tester test_galaxy_stuff[] = {
@@ -685,6 +688,8 @@ static const resolve_tester test_2x4_stuff[] = {
 static const resolve_tester test_hrgl_stuff[] = {
    {resolve_rlg,            MS, 5,   {6, 5, 7, 4, 2, 1, 3, 0},     0xA3138131},
    {resolve_la,             MS, 1,   {6, 5, 7, 4, 2, 1, 3, 0},     0x8131A313},
+   {resolve_dixie_grand,    DX, 4,   {6, 4, 5, 3, 2, 0, 1, 7},     0x8133A311},
+   {resolve_dixie_grand,    DX, 4,   {5, 2, 7, 0, 1, 6, 3, 4},     0x38331A11},
    {resolve_none, MS, 0x10}};
 
 

@@ -66,12 +66,12 @@ TTY_LIBS =
 SD_SRCS = sdmain.cpp sdutil.cpp sdbasic.cpp sdinit.cpp \
           sdtables.cpp sdctable.cpp sdtop.cpp sdconcpt.cpp sdpreds.cpp \
           sdgetout.cpp sdmoves.cpp sdtand.cpp sdconc.cpp sdistort.cpp \
-          sdpick.cpp sdsi.cpp mapcachefile.cpp
+          sdpick.cpp sdsi.cpp mapcachefile.cpp common.cpp
 
 SD_OBJS = sdmain.o sdutil.o sdbasic.o sdinit.o \
           sdtables.o sdctable.o sdtop.o sdconcpt.o sdpreds.o \
           sdgetout.o sdmoves.o sdtand.o sdconc.o sdistort.o \
-          sdpick.o sdsi.o mapcachefile.o
+          sdpick.o sdsi.o mapcachefile.o common.o
 
 SDX11_SRC = sdui-x11.c
 SDX11_OBJ = sdui-x11.o
@@ -81,8 +81,8 @@ SDTTY_OBJS = sdui-tty.o sdmatch.o sdui-ttu.o
 
 SDTTY_LINK_OBJS = $(SD_OBJS) $(SDTTY_OBJS)
 
-MKCALLS_SRCS = mkcalls.cpp
-MKCALLS_OBJS = mkcalls.o
+MKCALLS_SRCS = mkcalls.cpp common.cpp
+MKCALLS_OBJS = mkcalls.o common.o
 
 SRCS = $(SD_SRCS) $(SDX11_SRC) $(SDTTY_SRCS) $(MKCALLS_SRCS)
 OBJS = $(SD_OBJS) $(SDX11_OBJ) $(SDTTY_OBJS) $(MKCALLS_OBJS)

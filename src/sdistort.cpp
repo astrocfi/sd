@@ -578,15 +578,20 @@ static void innards(
       }
 
       if ((arity != 2 || (z[0].kind != s_trngl && z[0].kind != s_trngl4)) && (rotstate & 0xF03) == 0) {
-         if (map_kind == MPKIND__SPLIT) {
+         if (map_kind == MPKIND__SPLIT || map_kind == MPKIND__CONCPHAN) {
             if (!(rotstate & 0x0F0))
                fail("Can't do this orientation changer.");
-            map_kind = MPKIND__NONISOTROP2;
+            map_kind = MPKIND__NONISOTROP2;   // See t60 and rf01.
          }
-         else if (map_kind == MPKIND__OVERLAP) {
-            // Would like to set MPKIND__OVLP_NONISOTROP2, but this doesn't seem to be a good idea.
-            // This might occur if we have overlap of 2x4's facing differently.  Unfortunately,
-            // what "50% offset" means isn't well defined.
+         else if (map_kind != MPKIND__DMD_STUFF &&
+                  map_kind != MPKIND__ALL_8 &&
+                  map_kind != MPKIND__4_QUADRANTS &&
+                  map_kind != MPKIND__TRIPLETRADEINWINGEDSTAR6 &&
+                  map_kind != MPKIND__NONE) {
+            // This stuff might not be correct.  We are trying to let the above map kinds go through,
+            // since they can handle non-isotropic setups.  But we raise an error on any other maps,
+            // since they can't handle it.  The above map kinds are known to work -- they all arise
+            // in regression tests.  It may be that more map kinds need to be added to the above list.
             fail("Can't do this orientation changer.");
          }
       }
@@ -1392,7 +1397,7 @@ extern void divided_setup_move(
 
    // Now we reinstate the incoming rotation, which we have completely ignored up until
    // now.  This will give the result "absolute" orientation.  (That is, absolute
-   // relative to the incoming "ss->rotation".  Some procedure (like a recursive call
+   // relative to the incoming "ss->rotation".  Some procedures (like a recursive call
    // from ourselves) could have stripped that out.)
 
    // This call will swap the SPLIT_AXIS fields if necessary, so that those fields
@@ -1410,6 +1415,7 @@ extern void overlapped_setup_move(
    setup *result,
    unsigned int noexpand_bits_to_set /* = CMD_MISC__NO_EXPAND_1 | CMD_MISC__NO_EXPAND_2 */ ) THROW_DECL
 {
+   ss->clear_all_overcasts();
    int i, j, rot;
    uint32 k;
    setup x[8];
@@ -1441,6 +1447,7 @@ extern void overlapped_setup_move(
            noexpand_bits_to_set, false, x, result);
    reinstate_rotation(ss, result);
    result->result_flags.clear_split_info();
+   result->clear_all_overcasts();
 }
 
 
@@ -1554,6 +1561,8 @@ extern void do_phantom_2x4_concept(
    parse_block *parseptr,
    setup *result) THROW_DECL
 {
+   ss->clear_all_overcasts();
+
    // This concept is "standard", which means that it can look at global_tbonetest
    // and global_livemask, but may not look at anyone's facing direction other
    // than through global_tbonetest.
@@ -1611,6 +1620,7 @@ extern void do_phantom_2x4_concept(
          if (global_livemask != 0x2D2D && global_livemask != 0xD2D2) {
             warn(warn__not_on_block_spots);
             distorted_move(ss, parseptr, disttest_any, result);
+            result->clear_all_overcasts();
             return;
          }
       }
@@ -1622,6 +1632,7 @@ extern void do_phantom_2x4_concept(
                           (phantest_kind) parseptr->concept->arg1,
                           map_code,
                           result);
+         result->clear_all_overcasts();
          return;
       }
 
@@ -1664,6 +1675,7 @@ extern void do_phantom_2x4_concept(
    result->rotation -= rot;   // Flip the setup back.
    // The split-axis bits are gone.  If someone needs them, we have work to do.
    result->result_flags.clear_split_info();
+   result->clear_all_overcasts();
    return;
 
  lose:
@@ -1676,6 +1688,7 @@ extern void do_phantom_stag_qtg_concept(
    parse_block *parseptr,
    setup *result) THROW_DECL
 {
+   ss->clear_all_overcasts();
    int rot = ss->people[0].id1 | ss->people[4].id1 | ss->people[8].id1 | ss->people[12].id1;
 
    if (ss->kind != s4x4)
@@ -1701,9 +1714,10 @@ extern void do_phantom_stag_qtg_concept(
       true,
       result);
 
-   result->rotation -= rot;   /* Flip the setup back. */
-   /* The split-axis bits are gone.  If someone needs them, we have work to do. */
+   result->rotation -= rot;   // Flip the setup back.
+   // The split-axis bits are gone.  If someone needs them, we have work to do.
    result->result_flags.clear_split_info();
+   result->clear_all_overcasts();
 }
 
 
@@ -1712,6 +1726,7 @@ extern void do_phantom_diag_qtg_concept(
    parse_block *parseptr,
    setup *result) THROW_DECL
 {
+   ss->clear_all_overcasts();
    uint32 mapcode;
    int rot = 0;
 
@@ -1756,6 +1771,7 @@ extern void do_phantom_diag_qtg_concept(
 
    // The split-axis bits are gone.  If someone needs them, we have work to do.
    result->result_flags.clear_split_info();
+   result->clear_all_overcasts();
 }
 
 
@@ -1852,6 +1868,8 @@ extern void distorted_2x2s_move(
    parse_block *parseptr,
    setup *result) THROW_DECL
 {
+   ss->clear_all_overcasts();
+
    // Maps for jays. These have the extra 24 to handle going to 1x4's.
 
    static const veryshort mapj1[48] = {
@@ -2478,6 +2496,7 @@ extern void distorted_2x2s_move(
    ss->cmd.cmd_misc2_flags |= misc2_zflag;
    if (table_offset != 0) goto lose;
    divided_setup_move(ss, MAPCODE(s2x3,arity,MPKIND__LILZCOM,1), phantest_ok, true, result);
+   result->clear_all_overcasts();
 }
 
 
@@ -2487,6 +2506,7 @@ extern void distorted_move(
    disttest_kind disttest,
    setup *result) THROW_DECL
 {
+   ss->clear_all_overcasts();
 
 /*
    Args from the concept are as follows:
@@ -2809,6 +2829,7 @@ extern void distorted_move(
             phantom_2x4_move(ss, linesp & 1, phantest_only_one,
                              MAPCODE(s2x4,2,MPKIND__OFFS_BOTH_FULL,0),
                              result);
+            result->clear_all_overcasts();
             return;
          }
 
@@ -3047,6 +3068,7 @@ extern void distorted_move(
       canonicalize_rotation(result);
    }
 
+   result->clear_all_overcasts();
    return;
 
  whuzzzzz:
@@ -3078,6 +3100,7 @@ extern void triple_twin_move(
    parse_block *parseptr,
    setup *result) THROW_DECL
 {
+   ss->clear_all_overcasts();
    uint32 tbonetest = global_tbonetest;
    uint32 mapcode;
    phantest_kind phan = (phantest_kind) parseptr->concept->arg4;
@@ -3216,6 +3239,7 @@ extern void triple_twin_move(
       ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
 
    divided_setup_move(ss, mapcode, phan, true, result);
+   result->clear_all_overcasts();
 }
 
 
@@ -3225,6 +3249,7 @@ extern void do_concept_rigger(
    parse_block *parseptr,
    setup *result) THROW_DECL
 {
+   ss->clear_all_overcasts();
    /* First 8 are for rigger; second 8 are for 1/4-tag, next 16 are for crosswave. */
    /* A huge coincidence is at work here -- the first two parts of the maps are the same. */
    static const veryshort map1[38] = {
@@ -3371,6 +3396,7 @@ extern void do_concept_rigger(
    result->rotation = res1.rotation;
    result->result_flags = res1.result_flags;
    reinstate_rotation(ss, result);
+   result->clear_all_overcasts();
 }
 
 
@@ -3379,6 +3405,7 @@ void do_concept_wing(
    parse_block *parseptr,
    setup *result) THROW_DECL
 {
+   ss->clear_all_overcasts();
    int rstuff = parseptr->concept->arg1;
 
    if ((ss->cmd.cmd_misc2_flags & CMD_MISC2__SAID_INVERT) && rstuff == 2) {
@@ -3565,6 +3592,7 @@ void do_concept_wing(
 
    merge_setups(&the_results[0], merge_after_dyp, &the_results[1]);
    *result = the_results[1];
+   result->clear_all_overcasts();
 }
 
 
@@ -3904,6 +3932,7 @@ extern void common_spot_move(
    parse_block *parseptr,
    setup *result) THROW_DECL
 {
+   ss->clear_all_overcasts();
    int i, k, r;
    bool uncommon = false;
    setup the_results[2];
@@ -4015,8 +4044,10 @@ extern void common_spot_move(
 
    update_id_bits(&a0);
    impose_assumption_and_move(&a0, &the_results[0]);
+   the_results[0].clear_all_overcasts();
    update_id_bits(&a1);
    impose_assumption_and_move(&a1, &the_results[1]);
+   the_results[1].clear_all_overcasts();
 
    if (uncommon) {
       if (the_results[0].kind == s_qtag && the_results[1].kind == s2x3 &&
@@ -4106,6 +4137,7 @@ extern void common_spot_move(
    configuration::clear_one_warning(warn__do_your_part);
    // Restore any warnings from before.
    configuration::set_multiple_warnings(saved_warnings);
+   result->clear_all_overcasts();
 }
 
 
@@ -4629,6 +4661,7 @@ extern void triangle_move(
    parse_block *parseptr,
    setup *result) THROW_DECL
 {
+   ss->clear_all_overcasts();
    uint32 tbonetest;
    calldef_schema schema;
    int indicator = parseptr->concept->arg1;
@@ -4829,4 +4862,5 @@ extern void triangle_move(
    // if it arose during a triangle call.
    configuration::clear_one_warning(warn__split_to_1x3s);
    configuration::set_multiple_warnings(saved_warnings);
+   result->clear_all_overcasts();
 }

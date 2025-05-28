@@ -29,7 +29,7 @@
 // database format version.
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 292
+#define DATABASE_FORMAT_VERSION 293
 
 // BEWARE!!  These must track the items in "tagtabinit" in mkcalls.cpp .
 enum base_call_index {
@@ -83,7 +83,7 @@ enum base_call_index {
 
 // BEWARE!!  This list must track the tables "flagtabh", "defmodtabh",
 // "forcetabh", and "altdeftabh" in mkcalls.cpp .  The "K" items also track
-// the tables "mxntabforce", "nxntabforce", "nxntabplain", "mxntabplain",
+// the tables "yoyotabforce", "mxntabforce", "nxntabforce", "yoyotabplain", "mxntabplain", "nxntabplain",
 // "reverttabplain", and "reverttabforce" in mkcalls.cpp .
 //
 // These are the infamous "heritable flags".  They are used in generally
@@ -105,58 +105,65 @@ enum heritflags {
    INHERITFLAG_SINGLE     = 0x00000400UL,
    INHERITFLAG_SINGLEFILE = 0x00000800UL,
    INHERITFLAG_HALF       = 0x00001000UL,
-   INHERITFLAG_YOYO       = 0x00002000UL,
+   INHERITFLAG_REWIND     = 0x00002000UL,
    INHERITFLAG_STRAIGHT   = 0x00004000UL,
    INHERITFLAG_TWISTED    = 0x00008000UL,
    INHERITFLAG_LASTHALF   = 0x00010000UL,
    INHERITFLAG_FRACTAL    = 0x00020000UL,
    INHERITFLAG_FAST       = 0x00040000UL,
-   INHERITFLAG_REWIND     = 0x00080000UL,
+
+   // This is a 2 bit field.
+   INHERITFLAG_YOYOETCMASK      = 0x00180000UL,
+   // This is its low bit.
+   INHERITFLAG_YOYOETCBIT       = 0x00080000UL,
+   // These 3 things are the choices available inside.
+   // Warning!  We sort of cheat on inheritance.  The low bit ("yoyo") means inherit yoyo,
+   // and the high bit ("generous") means inherit both generous and stingy.
+   INHERITFLAG_YOYOETCK_YOYO    = 0x00080000UL,
+   INHERITFLAG_YOYOETCK_GENEROUS= 0x00100000UL,
+   INHERITFLAG_YOYOETCK_STINGY  = 0x00180000UL,
 
    // This is a 4 bit field.
-   INHERITFLAG_MXNMASK    = 0x00F00000UL,
+   INHERITFLAG_MXNMASK    = 0x01E00000UL,
    // This is its low bit.
-   INHERITFLAG_MXNBIT     = 0x00100000UL,
-
+   INHERITFLAG_MXNBIT     = 0x00200000UL,
    // These 8 things are some of the 15 choices available inside.
-   INHERITFLAGMXNK_1X2    = 0x00100000UL,
-   INHERITFLAGMXNK_2X1    = 0x00200000UL,
-   INHERITFLAGMXNK_1X3    = 0x00300000UL,
-   INHERITFLAGMXNK_3X1    = 0x00400000UL,
-   INHERITFLAGMXNK_0X3    = 0x00500000UL,
-   INHERITFLAGMXNK_3X0    = 0x00600000UL,
-   INHERITFLAGMXNK_0X4    = 0x00700000UL,
-   INHERITFLAGMXNK_4X0    = 0x00800000UL,
+   INHERITFLAGMXNK_1X2    = 0x00200000UL,
+   INHERITFLAGMXNK_2X1    = 0x00400000UL,
+   INHERITFLAGMXNK_1X3    = 0x00600000UL,
+   INHERITFLAGMXNK_3X1    = 0x00800000UL,
+   INHERITFLAGMXNK_0X3    = 0x00A00000UL,
+   INHERITFLAGMXNK_3X0    = 0x00C00000UL,
+   INHERITFLAGMXNK_0X4    = 0x00E00000UL,
+   INHERITFLAGMXNK_4X0    = 0x01000000UL,
 
    // This is a 3 bit field.
-   INHERITFLAG_NXNMASK    = 0x07000000UL,
+   INHERITFLAG_NXNMASK    = 0x0E000000UL,
    // This is its low bit.
-   INHERITFLAG_NXNBIT     = 0x01000000UL,
-
+   INHERITFLAG_NXNBIT     = 0x02000000UL,
    // These 7 things are the choices available inside.
-   INHERITFLAGNXNK_2X2    = 0x01000000UL,
-   INHERITFLAGNXNK_3X3    = 0x02000000UL,
-   INHERITFLAGNXNK_4X4    = 0x03000000UL,
-   INHERITFLAGNXNK_5X5    = 0x04000000UL,
-   INHERITFLAGNXNK_6X6    = 0x05000000UL,
-   INHERITFLAGNXNK_7X7    = 0x06000000UL,
-   INHERITFLAGNXNK_8X8    = 0x07000000UL,
+   INHERITFLAGNXNK_2X2    = 0x02000000UL,
+   INHERITFLAGNXNK_3X3    = 0x04000000UL,
+   INHERITFLAGNXNK_4X4    = 0x06000000UL,
+   INHERITFLAGNXNK_5X5    = 0x08000000UL,
+   INHERITFLAGNXNK_6X6    = 0x0A000000UL,
+   INHERITFLAGNXNK_7X7    = 0x0C000000UL,
+   INHERITFLAGNXNK_8X8    = 0x0E000000UL,
 
    // This is a 3 bit field.
-   INHERITFLAG_REVERTMASK = 0x38000000UL,
+   INHERITFLAG_REVERTMASK = 0x70000000UL,
    // This is its low bit.
-   INHERITFLAG_REVERTBIT  = 0x08000000UL,
-
+   INHERITFLAG_REVERTBIT  = 0x10000000UL,
    // These 7 things are the choices available inside.
-   INHERITFLAGRVRTK_REVERT= 0x08000000UL,
-   INHERITFLAGRVRTK_REFLECT=0x10000000UL,
-   INHERITFLAGRVRTK_RVF   = 0x18000000UL,
-   INHERITFLAGRVRTK_RFV   = 0x20000000UL,
-   INHERITFLAGRVRTK_RVFV  = 0x28000000UL,
-   INHERITFLAGRVRTK_RFVF  = 0x30000000UL,
-   INHERITFLAGRVRTK_RFF   = 0x38000000UL
+   INHERITFLAGRVRTK_REVERT= 0x10000000UL,
+   INHERITFLAGRVRTK_REFLECT=0x20000000UL,
+   INHERITFLAGRVRTK_RVF   = 0x30000000UL,
+   INHERITFLAGRVRTK_RFV   = 0x40000000UL,
+   INHERITFLAGRVRTK_RVFV  = 0x50000000UL,
+   INHERITFLAGRVRTK_RFVF  = 0x60000000UL,
+   INHERITFLAGRVRTK_RFF   = 0x70000000UL
 
-   // Two bits remain.
+   // one bit remains.
 };
 
 
@@ -224,7 +231,9 @@ enum {
    CFLAG2_DO_EXCHANGE_COMPRESS      = 0x01000000UL,
    CFLAG2_IF_MOVE_CANT_ROLL         = 0x02000000UL,
    CFLAG2_FRACTIONAL_NUMBERS        = 0x04000000UL,
-   // 5 spares.
+   CFLAG2_NO_RAISE_OVERCAST         = 0x08000000UL,
+   CFLAG2_OVERCAST_TRANSPARENT      = 0x10000000UL
+   // 3 spares.
 };
 
 // Beware!!  This list must track the table "matrixcallflagtab" in mkcalls.cpp .
@@ -473,9 +482,8 @@ enum setup_kind {
 };
 
 // These are the "beginning setups" that can appear in the call data base.
-// BEWARE!!  This list must track the array "sstab" in mkcalls.cpp .
-// BEWARE!!  This list must track the array "begin_sizes" in mkcalls.cpp .
-// BEWARE!!  This list must track the array "begin_sizes" in sdtables.cpp .
+// BEWARE!!  This list must track the array "sstab" in mkcalls.cpp.
+// BEWARE!!  This list must track the array "begin_sizes" in common.cpp.
 
 enum begin_kind {
    b_nothing,
@@ -1170,3 +1178,8 @@ enum {
    DBSLIDE_BIT     = 0x0400,
    DBSLIDEROLL_BIT = 0x0080
 };
+
+// Some external stuff in common.cpp:
+
+extern bool do_heritflag_merge(unsigned long int *dest, unsigned long int source);
+extern int begin_sizes[];

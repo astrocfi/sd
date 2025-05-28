@@ -364,6 +364,8 @@ enum concept_kind {
    concept_singlefile,
    concept_interlocked,
    concept_yoyo,
+   concept_generous,
+   concept_stingy,
    concept_fractal,
    concept_fast,
    concept_straight,
@@ -1227,6 +1229,7 @@ enum command_kind {
    command_all_mods,
    command_toggle_conc_levels,
    command_toggle_minigrand,
+   command_toggle_overflow_warn,
    command_toggle_act_phan,
    command_toggle_retain_after_error,
    command_toggle_nowarn_mode,
@@ -1303,6 +1306,7 @@ enum start_select_kind {
    start_select_toggle_conc,
    start_select_toggle_singlespace,
    start_select_toggle_minigrand,
+   start_select_toggle_overflow_warn,
    start_select_toggle_act,
    start_select_toggle_retain,
    start_select_toggle_nowarn_mode,
@@ -1381,7 +1385,9 @@ struct personrec {
 // It changes frequently as the person moves around.
 
 enum {
-   // Highest 2 bits are unused.
+   // Highest bit is unused.  (But there are more bits in id2 and id3.)
+
+   OVERCAST_BIT     = 0x40000000UL,  // person is in danger of turning overflow
 
    // These comprise a 2 bit field for slide info.
    NSLIDE_MASK      = 0x30000000UL,  // mask of the field
@@ -1674,7 +1680,8 @@ struct setup {
    void clear_people();     // in sdtop.cpp.
    inline void clear_person(int resultplace);
    inline void suppress_roll(int place);
-   inline void suppress_all_rolls();
+   inline void suppress_all_rolls(bool just_clear_the_moved_bit);
+   inline void clear_all_overcasts();
    inline void swap_people(int oneplace, int otherplace);
    inline void rotate_person(int where, int rotamount);
 
@@ -2442,6 +2449,7 @@ enum warning_index {
    warn__unusual_or_2faced,
    warn__tbonephantom,
    warn__awkward_centers,
+   warn__overcast,
    warn__bad_concept_level,
    warn__not_funny,
    warn__hard_funny,
@@ -2703,7 +2711,8 @@ enum {
    SCA_DETOUR          = 0x00000010UL,
    SCA_SPLITOK         = 0x00000020UL,
    SCA_INV_SUP_ELWARN  = 0x00000040UL,
-   SCA_CONC_REV_ORDER  = 0x00000080UL
+   SCA_CONC_REV_ORDER  = 0x00000080UL,
+   SCA_NO_OVERCAST     = 0x00000100UL
 };
 
 struct schema_attr {
@@ -3167,14 +3176,15 @@ enum {
 
    RESULTFLAG__NEED_DIAMOND         = 0x00000040UL,
    RESULTFLAG__DID_MXN_EXPANSION    = 0x00000080UL,
-   // Skipped 5 bits here
-   RESULTFLAG__ACTIVE_PHANTOMS_ON   = 0x00002000UL,
-   RESULTFLAG__ACTIVE_PHANTOMS_OFF  = 0x00004000UL,
-   RESULTFLAG__EXPAND_TO_2X3        = 0x00008000UL,
+   // Skipped 4 bits here
+   RESULTFLAG__ACTIVE_PHANTOMS_ON   = 0x00001000UL,
+   RESULTFLAG__ACTIVE_PHANTOMS_OFF  = 0x00002000UL,
+   RESULTFLAG__EXPAND_TO_2X3        = 0x00004000UL,
 
-   // This is a four bit field.
-   RESULTFLAG__EXPIRATION_BITS      = 0x000F0000UL,
-   RESULTFLAG__YOYO_EXPIRED         = 0x00010000UL,
+   // This is a 5 bit field.
+   RESULTFLAG__EXPIRATION_BITS      = 0x000F8000UL,
+   RESULTFLAG__YOYO_ONLY_EXPIRED    = 0x00008000UL,
+   RESULTFLAG__GEN_STING_EXPIRED    = 0x00010000UL,
    RESULTFLAG__TWISTED_EXPIRED      = 0x00020000UL,
    RESULTFLAG__SPLIT_EXPIRED        = 0x00040000UL,
    RESULTFLAG__EXPIRATION_ENAB      = 0x00080000UL,
@@ -3192,7 +3202,8 @@ enum {
    RESULTFLAG__PLUSEIGHTH_ROT       = 0x08000000UL,
    RESULTFLAG__DID_SHORT6_2X3       = 0x10000000UL,
    RESULTFLAG__FORCE_SPOTS_ALWAYS   = 0x20000000UL,
-   RESULTFLAG__INVADED_SPACE        = 0x40000000UL
+   RESULTFLAG__INVADED_SPACE        = 0x40000000UL,
+   RESULTFLAG__STOP_OVERCAST_CHECK  = 0x80000000UL
 };
 
 
@@ -3821,7 +3832,12 @@ enum {
    CMD_MISC3__NO_ANYTHINGERS_SUBST = 0x00000400UL,    // Treat "<anything> motivate" as plain motivate.
    CMD_MISC3__PARENT_COUNT_IS_ONE  = 0x00000800UL,
    CMD_MISC3__IMPOSE_Z_CONCEPT     = 0x00001000UL,
-   CMD_MISC3__DONE_WITH_REST_SUPER = 0x00002000UL
+   CMD_MISC3__DONE_WITH_REST_SUPER = 0x00002000UL,
+   CMD_MISC3__STOP_OVERCAST_CHECK  = 0x00004000UL,    // Off at start of utterance, gets turned on after first part.
+                                                      // This is how we enforce the "no overcast warnings for actions
+                                                      // internal to a compound call" rule.
+   CMD_MISC3__ROLL_TRANSP          = 0x00008000UL,
+   CMD_MISC3__ROLL_TRANSP_IF_Z     = 0x00010000UL
 };
 
 enum normalize_action {
@@ -4310,6 +4326,7 @@ extern SDLIB_API parse_state_type parse_state;                      /* in SDTOP 
 extern SDLIB_API call_conc_option_state current_options;            /* in SDTOP */
 extern SDLIB_API bool allowing_all_concepts;                        /* in SDTOP */
 extern SDLIB_API bool allowing_minigrand;                           /* in SDTOP */
+extern SDLIB_API bool enforce_overcast_warning;                     /* in SDTOP */
 extern SDLIB_API bool using_active_phantoms;                        /* in SDTOP */
 extern SDLIB_API const call_conc_option_state null_options;         /* in SDTOP */
 extern SDLIB_API call_conc_option_state verify_options;             /* in SDTOP */
@@ -4607,7 +4624,6 @@ enum specmapkind {
    spcmap_ladder,
    spcmap_but_o,
    spcmap_blocks,
-   spcmap_2x4_diagonal,
    spcmap_2x4_int_pgram,
    spcmap_2x4_trapezoid,
    spcmap_trngl_box1,
@@ -4889,17 +4905,28 @@ inline void setup::clear_person(int place)
 inline void setup::suppress_roll(int place)
 {
    if (people[place].id1)
-      people[place].id1 = (people[place].id1 & (~NROLL_MASK)) | ROLL_IS_M;
+      people[place].id1 = (people[place].id1 & (~(NROLL_MASK|OVERCAST_BIT))) | ROLL_IS_M;
 }
 
-inline void setup::suppress_all_rolls()
+inline void setup::suppress_all_rolls(bool just_clear_the_moved_bit)
 {
    // If we can't determine the setup size, it will be -1,
    // and the loop below will take no action.
-   for (int k=0; k<=attr::klimit(kind); k++)
-      suppress_roll(k);
+   for (int k=0; k<=attr::klimit(kind); k++) {
+      if (just_clear_the_moved_bit) {
+         people[k].id1 = people[k].id1 & (~(PERSON_MOVED|OVERCAST_BIT));
+      }
+      else {
+         suppress_roll(k);
+      }
+   }
 }
 
+inline void setup::clear_all_overcasts()
+{
+   for (int k=0; k<=attr::klimit(kind); k++)
+      people[k].id1 &= ~OVERCAST_BIT;
+}
 
 inline void setup::swap_people(int oneplace, int otherplace)
 {
@@ -5160,6 +5187,8 @@ extern void canonicalize_rotation(setup *result) THROW_DECL;
 
 extern void reinstate_rotation(const setup *ss, setup *result) THROW_DECL;
 
+extern void fix_roll_transparency_stupidly(const setup *ss, setup *result);
+
 extern void remove_mxn_spreading(setup *ss) THROW_DECL;
 
 extern bool do_1x3_type_expansion(setup *ss, uint32 heritflags_to_check, bool splitting) THROW_DECL;
@@ -5177,7 +5206,6 @@ extern bool do_simple_split(
 extern uint32 do_call_in_series(
    setup *sss,
    bool dont_enforce_consistent_split,
-   uint32 roll_transparent_bits,
    bool normalize,
    bool qtfudged) THROW_DECL;
 
@@ -5384,7 +5412,7 @@ extern resultflag_rec get_multiple_parallel_resultflags(setup outer_inners[], in
 extern void initialize_fix_tables();
 
 extern void normalize_concentric(
-   setup *ss,              // The "dyp_squash" schemata need to see this; it's allowed to be null.
+   const setup *ss,        // The "dyp_squash" schemata need to see this; it's allowed to be null.
    calldef_schema synthesizer,
    int center_arity,
    setup outer_inners[],   // Outers in position 0, inners follow.

@@ -4,16 +4,17 @@
 ..\sd\sdlib.dll
 ..\sd\sd_calls.txt
 ..\sd\sd_calls.dat
-..\sd\SD.lnk
-..\sd\SD plain.lnk
-..\sd\SDTTY.lnk
-..\sd\SDTTY plain.lnk
-"..\sd\SD nocheckers.lnk"
-"..\sd\SD couple.lnk"
 "..\sd\Edit sd.ini.lnk"
-"..\sd\Sd manual.lnk"
-"..\sd\Release Notes.lnk"
 ..\sd\Faq.lnk
+"..\sd\Release Notes.lnk"
+"..\sd\SD couple.lnk"
+"..\sd\SD hidecouple.lnk"
+"..\sd\Sd manual.lnk"
+"..\sd\SD nocheckers.lnk"
+..\sd\SD plain.lnk
+..\sd\SD.lnk
+..\sd\SDTTY plain.lnk
+..\sd\SDTTY.lnk
 sd_doc.html
 relnotes.html
 appnote1.html

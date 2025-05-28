@@ -3647,12 +3647,14 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
                                        1x4 - single inverted line; 2x2 - inverted box.
                                        Thar/crosswave - two waves of opposite handedness.
                                        Alamo - miniwave boxes of opposite handedness.
+                                       Hourglass - the diamond is facing.  Points are not checked.
                                        "Right/left/in/out" and "live" may be used when
                                        it is a qualifier --
                                           2x4 - I/O refers to centers
                                           4x2 - R/L refers to ends
                                           crosswave - R/L refers to handedness of
                                              outer disconnected wave.
+                                          hourglass - R/L refers to points of the diamond.
 
    explodable,                      1x4 - centers facing the same way
    reverse_explodable,              1x4 - ends facing the same way

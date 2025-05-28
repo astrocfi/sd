@@ -751,7 +751,7 @@ void tandrec::unpack_us(
    // We will then reduce it to the actual setup.
 
    personrec hyperarray[32];
-   memset(hyperarray, 0, sizeof(personrec)*32);
+   ::memset(hyperarray, 0, sizeof(hyperarray));
    uint32 hyperarrayoccupation = 0;
 
    for (i=0,
@@ -1152,6 +1152,7 @@ extern void tandem_couples_move(
    bool phantom_pairing_ok,
    setup *result) THROW_DECL
 {
+   ss->clear_all_overcasts();
    uint32 dynamic = twosome >> 2;
    twosome &= 3;
 
@@ -2128,6 +2129,8 @@ extern void tandem_couples_move(
       *result = extra_siamese_result[1];
       merge_setups(&extra_siamese_result[0], merge_strict_matrix, result);
    }
+
+   result->clear_all_overcasts();
 }
 
 // Forward decl!
