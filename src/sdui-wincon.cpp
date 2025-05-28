@@ -1,7 +1,5 @@
-/* -*- mode:C; c-basic-offset:3; indent-tabs-mode:nil; -*- */
-
 /*
- * sdui-tpc.c - helper functions for Mac tty interface for port to DOS.
+ * sdui-wincon.cpp
  * Time-stamp: <93/07/19 19:38:40 wba>
  * Copyright (c) 1990-1995 Stephen Gildea and William B. Ackerman
  *
@@ -17,11 +15,14 @@
  * Uses "console application" mechanism of Visual C++.
  */
 
+#define STRICT
+#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include "database.h"
+
+#include "basetype.h"
 #include "sdui.h"
 #include "sdmatch.h"
 

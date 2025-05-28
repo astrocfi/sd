@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-1998  William B. Ackerman.
+    Copyright (C) 1990-1999  William B. Ackerman.
 
     This file is unpublished and contains trade secrets.  It is
     to be used by permission only and not to be disclosed to third
@@ -12,44 +12,30 @@
 
     This is for version 32. */
 
-/* We would like to not need to customize things for different "dialects" of
-   ANSI C, because we would like to think that there are no "dialects".  But, alas,
-   there are two issues:
-   (1) Some versions of GNU C (gcc) recognize the "volatile" keyword on a procedure
-      as indicating that its call-return behavior is anomalous, and generate
-      better code with that knowledge.  We can take advantage of that for some
-      of our functions that never return, so we define a keyword "nonreturning".
-   (2) Some compilers trying to pass for ANSI C have been observed failing
-      to handle the "const" attribute.  (Yes, an ANSI C compiler that doesn't handle
-      "const" is an oxymoron.)  We grudgingly accept such compilers if the
-      "CONST_IS_BROKEN" symbol is defined.  We allow that to be set by a Makefile,
-      and we set it ourselves for those compilers that we know about. */
 
-/* Default is that "nonreturning" is meaningless. */
-#define nonreturning
+/* We customize the necessary declarations for functions
+   that don't return.  Alas, this requires something in front
+   and something in back. */
 
-#ifdef __GNUC__
-#if __GNUC__ >= 2
-/* GNU C versions 2 or greater recognize volatile procedures. */
-#undef nonreturning
-#define nonreturning __attribute__ ((noreturn))
+#if defined(__GNUC__)
+#define NORETURN1
+#define NORETURN2 __attribute__ ((noreturn))
+#elif defined(WIN32)
+// This declspec only works for VC++ version 6.
+#define NORETURN1 /*__declspec(noreturn)*/
+#define NORETURN2
 #else
-/* GNU C versions less than 2 can't do "const". */
-#define CONST_IS_BROKEN
-#endif
-#endif
-
-#ifdef __CODECENTER_4__
-#define CONST_IS_BROKEN		/* in CodeCenter 4.0.2 */
+#define NORETURN1
+#define NORETURN2
 #endif
 
-/* We will use "Const" with a capital "C" for our attempts at the "const" attribute. */
-#ifndef CONST_IS_BROKEN
+/* We used to do some stuff to cater to compiler vendors
+   (e.g. Sun Microsystems) that couldn't be bothered to
+   do the "const" attribute correctly.  We no longer have
+   any patience with such things. */
+
 #define Const const
-#else
-/* Too bad.  Define it as nothing. */
-#define Const
-#endif
+
 
 /* We use "Private" on procedures and "static" on variables.  It makes things clearer. */
 #define Private static
@@ -96,7 +82,7 @@ typedef Const char *Cstring;
    database format version. */
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 147
+#define DATABASE_FORMAT_VERSION 148
 
 /* BEWARE!!  These must track the items in "tagtabinit" in dbcomp.c . */
 typedef enum {
@@ -639,6 +625,7 @@ typedef enum {
    cr_diamond_like,
    cr_qtag_like,
    cr_pu_qtag_like,
+   cr_reg_tbone,
    cr_gen_qbox,            /* Qualifier only. */
    cr_nice_diamonds,       /* Restriction only. */
    cr_magic_only,

@@ -1,4 +1,4 @@
-\input whatever @c %**start of header -*-texinfo-*-
+\input texinfo @c %**start of header -*-texinfo-*-
 @setfilename relnotes.info
 @settitle Sd Release Notes
 @c Time-stamp: <1998-08-15 10:20:00 wba>
@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR SD VERSION 32.8
-@set title2 Database version = 32.8 format = 147
+@set title1 RELEASE NOTES FOR SD VERSION 32.9
+@set title2 Database version = 32.9 format = 148
 @set title3 X11 UI version 1.17, SDTTY UI version 1.11, SD UI version 4.8
 
 @node Top, Intro, (dir), (dir)
@@ -23,7 +23,8 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
-* 32.8::
+* 32.9::
+* 32.81::
 * 32.67::
 * 32.65::
 * 32.6::
@@ -62,7 +63,7 @@ Changes as of the following versions:
 The file @file{oldnotes} has notes relating to still older versions.
 @end menu
 
-@node Intro, 32.8, Top, (dir)
+@node Intro, 32.9, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -73,12 +74,101 @@ The file @file{oldnotes} has notes relating to still older versions.
 @noindent Copyright @copyright{} 1996-1999 William B. Ackerman
 @sp 3
 @menu
-* 32.8::               Changes in the current version
+* 32.9::               Changes in the current version
 @end menu
 
 @c ************
-@node 32.8, 32.67, Intro, Top
-@unnumberedsec Version 32.8 changes
+@node 32.9, 32.81, Intro, Top
+@unnumberedsec Version 32.9 changes
+
+The installation program was improved.  If a previous version of @code{Sd} is
+found in the folder @file{C:\Sd}, you are asked whether to save that version,
+and you are allowed to choose the folder in which to place the saved copy.
+
+The program was migrated from C to C++.  Not because of any
+liking for ``object-oriented programming'', but because C++ is,
+in a great many ways, a better language than C.
+
+The programs now use Dynamically Linked Libraries (DLLs) on Windows 95/98/NT.
+
+The @samp{little more} fractionalization issue was addressed.  New calls,
+@samp{little more (nonstandard)} and @samp{little more, ends face <direction> (nonstandard)}
+were added.  The first part of these calls has the ends quarter right (or a
+specified direction) while the centers step and fold.  In the second part, the
+ends counter rotate while the ends circulate.  Callers are reminded that this
+nonstandard usage is not correct according to the Callerlab C2 definitions, the Big Five,
+the Ceder Chest, and the Ben Rubright Pocket Reference.
+
+The "everyone disconnected" concept was improved.  It is now
+possible to do "everyone disconnected mini busy" from a suitable 2x6 or 2x8.
+
+The calls @samp{finish advance to a column}, @samp{beaus advance to a column},
+and @samp{belles advance to a column} have versions with the suffix @samp{(matrix)},
+as in @samp{beaus advance to a column (matrix)}.  Use these versions when
+modifiers such as @samp{3x3} are desired.  These versions are not fully fractionalizable.
+The normal versions are fully fractionalizable, as before.
+You do not need these versions with the @samp{single} modifier.
+
+The program can see a few more resolves than before.
+
+A number of rather useless warning messages were removed.
+
+A careless bug in the handling of @code{<anyone> work <meta-concept>
+<concept>} was fixed.  It is now possible, for example, to do
+@code{centers work initially tandem, nice and easy}.
+
+The program can see 3x1 triangles in a larger variety of setups than before.
+In suitably occupied 4x6, 3x8, or 2x12 matrices, it can see
+a 1x4 or 2x2 virtual setup of 3x1 triangles.  Only 2 of those triangles
+are occupied, of course.
+
+A rather serious bug involving complex interactions of
+meta-concepts with modifiers like @code{cross} or @code{reflected},
+and calls that use such modifiers in their definitions, was fixed.
+It is surprising that this bug was never revealed by any of the
+hundreds of tips at C4 conventions and weekends that the program
+is routinely ``trained'' on.
+
+Fixed a bug in @samp{roll} after certain calls such as @code{remake}.
+I thank Andy Shore for bringing this to my attention.
+
+Fixed a bug in menu operation in the presence of partly typed-in
+calls to Sd.  I thank Uwe Themann for bringing this to my attention.
+
+Fixed a bug in multi-part calls in which an early part is defined
+as-couples and a later part is a space-invader.
+
+Fixed a difficult problem with concepts like @code{piecewise}, @code{twisted},
+and @code{yoyo}.  It is now possible to do things like @samp{piecewise yoyo swing thru}
+correctly.
+
+Fixed a bug in @samp{finally cover up but [chisel thru]}.
+
+The usual dozens of minor changes and improvements were made.
+
+In @code{Sd}, the confirmation popup that appears when you attempt
+to exit the program while a sequence is in progress no longer has ``OK''
+set as the default button.  This will prevent accidental deletion
+of a sequence through careless typing of @key{alt-F4} and @key{ENTER}.
+You must either explicitly click on ``OK'' or type @key{TAB}
+to select that button and then press @key{ENTER}.
+
+We thank the callers at a C4 weekend earlier this year for allowing
+taping.
+
+@c ************
+@node 32.81, 32.67, 32.9, Top
+@unnumberedsec Version 32.81 changes
+
+A bug was fixed in the definition of @samp{little more}.  This is a two-part
+call.  The first part is just a @samp{little}, which has the centers
+step and fold while the ends both 1/4 right and counter rotate.
+The second part has the centers circulate while the ends do nothing.
+While people might prefer a different apportioning of the centers'
+and ends' parts for various reasons, this is the way it is defined in
+the Callerlab C2 definitions, the Ceder Chest, and the Ben Rubright
+Pocket Reference.
+
 
 This release contains @code{Sd} as well as @code{Sdtty} for Windows.
 The installation procedure has been radically revised to be more
@@ -121,7 +211,7 @@ considers really good resolves, it will go back to the ones that it
 threw away and show them to you.
 
 @c ************
-@node 32.67, 32.65, 32.8, Top
+@node 32.67, 32.65, 32.81, Top
 @unnumberedsec Version 32.67 changes
 
 A bug that caused a failure in tip #8 in the C4 hall at the 1999 National

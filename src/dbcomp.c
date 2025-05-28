@@ -1,5 +1,3 @@
-/* -*- mode:C; c-basic-offset:3; indent-tabs-mode:nil; -*- */
-
 /* SD -- square dance caller's helper.
 
     Copyright (C) 1990-1999  William B. Ackerman.
@@ -601,6 +599,7 @@ char *qualtab[] = {
    "diamond_like",
    "qtag_like",
    "pu_qtag_like",
+   "regular_tbone",
    "gen_qbox",
    "nice_diamonds",
    "magic_only",
@@ -937,6 +936,7 @@ char *predtab[] = {
    "person_select_sum11",
    "person_select_sum15",
    "person_select_plus4",
+   "person_select_plus6",
    "person_select_plus8",
    "person_select_plus12",
    "semi_squeezer_select",

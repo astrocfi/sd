@@ -13,7 +13,6 @@
     This is for version 32. */
 
 /* This defines the following functions:
-   resolve_p
    write_resolve_text
    full_resolve
    concepts_in_place
@@ -24,7 +23,9 @@
    initialize_getout_tables
 */
 
-#include "sd.h"
+
+#include "sdprog.h"
+
 
 /* This is the number of resolves that we try in response to each
    "find another" command, before reporting failure.  For a long time, it was 5000. */
@@ -40,46 +41,6 @@ typedef struct {
    int rotchange;
 } resolve_rec;
 
-
-
-/* These enumerate the setups from which we can perform a "normalize" search. */
-/* This list tracks the array "nice_setup_info". */
-typedef enum {
-   nice_start_4x4,
-   nice_start_3x4,
-   nice_start_2x8,
-   nice_start_2x6,
-   nice_start_1x10,
-   nice_start_1x12,
-   nice_start_1x14,
-   nice_start_1x16,
-   nice_start_3dmd,
-   nice_start_4dmd,
-   nice_start_4x6
-} nice_start_kind;
-#define NUM_NICE_START_KINDS (((int) nice_start_4x6)+1)
-
-typedef struct {
-   setup_kind kind;
-   nice_setup_thing *thing;
-   int *array_to_use_now;
-   int number_available_now;
-} nice_setup_info_item;
-
-/* This array tracks the enumeration "nice_start_kind". */
-static nice_setup_info_item nice_setup_info[] = {
-   {s4x4,   &nice_setup_thing_4x4,  (int *) 0, 0},
-   {s3x4,   &nice_setup_thing_3x4,  (int *) 0, 0},
-   {s2x8,   &nice_setup_thing_2x8,  (int *) 0, 0},
-   {s2x6,   &nice_setup_thing_2x6,  (int *) 0, 0},
-   {s1x10,  &nice_setup_thing_1x12, (int *) 0, 0},  /* Note overuse. */
-   {s1x12,  &nice_setup_thing_1x12, (int *) 0, 0},
-   {s1x14,  &nice_setup_thing_1x16, (int *) 0, 0},  /* Note overuse. */
-   {s1x16,  &nice_setup_thing_1x16, (int *) 0, 0},
-   {s3dmd,  &nice_setup_thing_3dmd, (int *) 0, 0},
-   {s4dmd,  &nice_setup_thing_4dmd, (int *) 0, 0},
-   {s4x6,   &nice_setup_thing_4x6,  (int *) 0, 0}
-};
 
 
 typedef struct {
@@ -132,262 +93,6 @@ static Cstring title_string[] = {
 
 Private void display_reconcile_history(int current_depth, int n);
 
-
-
-typedef struct {
-  resolve_kind k;
-  dance_level level_needed;
-  short distance;      /* Add the 64 bit for singer-only; these must be last. */
-  short nonzero_only;  /* If this is nonzero, we demand only nonzero distances. */
-  int locations[8];
-  uint32 directions;
-} resolve_tester;
-
-static resolve_tester test_thar_stuff[] = {
-   {resolve_rlg,            l_mainstream,      2, 0,   {5, 4, 3, 2, 1, 0, 7, 6},     0x8A31A813},    /* RLG from thar. */
-   {resolve_prom,           l_mainstream,      6, 0,   {5, 4, 3, 2, 1, 0, 7, 6},     0x8833AA11},    /* promenade from thar. */
-   {resolve_slipclutch_rlg, l_mainstream,      1, 0,   {5, 2, 3, 0, 1, 6, 7, 4},     0x8138A31A},    /* slip-the-clutch-RLG from thar. */
-   {resolve_la,             l_mainstream,      5, 0,   {5, 2, 3, 0, 1, 6, 7, 4},     0xA31A8138},    /* LA from thar. */
-   {resolve_slipclutch_la,  l_mainstream,      6, 0,   {5, 4, 3, 2, 1, 0, 7, 6},     0xA8138A31},    /* slip-the-clutch-LA from thar. */
-   {resolve_xby_rlg,        cross_by_level,    1, 0,   {4, 3, 2, 1, 0, 7, 6, 5},     0x8138A31A},    /* cross-by-RLG from thar. */
-   {resolve_revprom,        l_mainstream,      4, 0,   {2, 3, 0, 1, 6, 7, 4, 5},     0x118833AA},    /* reverse promenade from thar. */
-   {resolve_xby_la,         cross_by_level,    4, 0,   {2, 3, 0, 1, 6, 7, 4, 5},     0x138A31A8},    /* cross-by-LA from thar. */
-   {resolve_none,           l_mainstream,      64}};
-
-static resolve_tester test_4x4_stuff[] = {
-   {resolve_circle,         l_mainstream,      6, 0,   {2, 1, 14, 13, 10, 9, 6, 5},  0x33AA1188},    /* "circle left/right" from squared-set, normal. */
-   {resolve_circle,         l_mainstream,      7, 0,   {5, 2, 1, 14, 13, 10, 9, 6},  0x833AA118},    /* "circle left/right" from squared-set, sashayed. */
-   {resolve_rlg,            l_mainstream,      3, 0,   {5, 2, 1, 14, 13, 10, 9, 6},  0x8A8AA8A8},    /* RLG from vertical 8-chain in "O". */
-   {resolve_rlg,            l_mainstream,      3, 0,   {5, 2, 1, 14, 13, 10, 9, 6},  0x13313113},    /* RLG from horizontal 8-chain in "O". */
-   {resolve_la,             l_mainstream,      6, 0,   {2, 1, 14, 13, 10, 9, 6, 5},  0x33131131},    /* LA from horizontal 8-chain in "O". */
-   {resolve_la,             l_mainstream,      6, 0,   {2, 1, 14, 13, 10, 9, 6, 5},  0xA8AA8A88},    /* LA from vertical 8-chain in "O". */
-   {resolve_rlg,            l_mainstream,      2, 0,   {2, 1, 14, 13, 10, 9, 6, 5},  0x8A31A813},    /* RLG from squared set, facing directly. */
-   {resolve_la,             l_mainstream,      7, 0,   {5, 2, 1, 14, 13, 10, 9, 6},  0x38A31A81},    /* LA from squared set, facing directly. */
-   {resolve_rlg,            l_mainstream,      3, 0,   {5, 2, 1, 14, 13, 10, 9, 6},  0x1A8138A3},    /* RLG from squared set, around the corner. */
-   {resolve_la,             l_mainstream,      6, 0,   {2, 1, 14, 13, 10, 9, 6, 5},  0xA8138A31},    /* LA from squared set, around the corner. */
-   {resolve_rlg,            l_mainstream,      3, 0,   {7, 2, 3, 14, 15, 10, 11, 6}, 0x138A31A8},    /* RLG from pinwheel, all facing. */
-   {resolve_rlg,            l_mainstream,      3, 0,   {5, 7, 1, 3, 13, 15, 9, 11},  0x8A31A813},    /* RLG from pinwheel, all facing. */
-   {resolve_rlg,            l_mainstream,      3, 0,   {7, 5, 3, 1, 15, 13, 11, 9},  0x138A31A8},    /* RLG from pinwheel, all in miniwaves. */
-   {resolve_rlg,            l_mainstream,      3, 0,   {7, 2, 3, 14, 15, 10, 11, 6}, 0x8A31A813},    /* RLG from pinwheel, all in miniwaves. */
-   {resolve_rlg,            l_mainstream,      3, 0,   {7, 2, 3, 14, 15, 10, 11, 6}, 0x13313113},    /* RLG from pinwheel, some of each. */
-   {resolve_rlg,            l_mainstream,      3, 0,   {7, 2, 3, 14, 15, 10, 11, 6}, 0x8A8AA8A8},    /* RLG from pinwheel, others of each. */
-   {resolve_rlg,            l_mainstream,      3, 0,   {5, 7, 3, 1, 13, 15, 11, 9},  0x8A8AA8A8},    /* RLG from pinwheel, some of each. */
-   {resolve_rlg,            l_mainstream,      3, 0,   {7, 5, 1, 3, 15, 13, 9, 11},  0x13313113},    /* RLG from pinwheel, others of each. */
-   {resolve_none,           l_mainstream,      64}};
-
-static resolve_tester test_c1phan_stuff[] = {
-   {resolve_rlg,            l_mainstream,      3, 0,   {10, 8, 6, 4, 2, 0, 14, 12},  0x138A31A8},    /* RLG from phantoms, all facing. */
-   {resolve_rlg,            l_mainstream,      3, 0,   {9, 11, 5, 7, 1, 3, 13, 15},  0x8A31A813},    /* RLG from phantoms, all facing. */
-   {resolve_rlg,            l_mainstream,      3, 0,   {11, 9, 7, 5, 3, 1, 15, 13},  0x138A31A8},    /* RLG from phantoms, all in miniwaves. */
-   {resolve_rlg,            l_mainstream,      3, 0,   {10, 8, 6, 4, 2, 0, 14, 12},  0x8A31A813},    /* RLG from phantoms, all in miniwaves. */
-   {resolve_rlg,            l_mainstream,      3, 0,   {10, 8, 6, 4, 2, 0, 14, 12},  0x13313113},    /* RLG from phantoms, some of each. */
-   {resolve_rlg,            l_mainstream,      3, 0,   {10, 8, 6, 4, 2, 0, 14, 12},  0x8A8AA8A8},    /* RLG from phantoms, others of each. */
-   {resolve_rlg,            l_mainstream,      3, 0,   {9, 11, 7, 5, 1, 3, 15, 13},  0x8A8AA8A8},    /* RLG from phantoms, some of each. */
-   {resolve_rlg,            l_mainstream,      3, 0,   {11, 9, 5, 7, 3, 1, 13, 15},  0x13313113},    /* RLG from phantoms, others of each. */
-   {resolve_none,           l_mainstream,      64}};
-
-static resolve_tester test_qtag_stuff[] = {
-   {resolve_dixie_grand,    dixie_grand_level, 2, 0,   {5, 0, 2, 7, 1, 4, 6, 3},     0x8AAAA888},    /* dixie grand from 1/4 tag. */
-   {resolve_rlg,            l_mainstream,      4, 0,   {5, 4, 3, 2, 1, 0, 7, 6},     0xAA8A88A8},    /* RLG from 3/4 tag. */
-   {resolve_ext_rlg,        l_mainstream,      5, 0,   {7, 5, 4, 2, 3, 1, 0, 6},     0xA88A8AA8},    /* extend-RLG from 1/4 tag. */
-   {resolve_rlg,            l_mainstream,      4, 0,   {5, 4, 3, 2, 1, 0, 7, 6},     0x138A31A8},    /* RLG from diamonds with points facing each other. */
-   {resolve_rlg,            l_mainstream,      4, 0,   {5, 4, 3, 2, 1, 0, 7, 6},     0x8A8AA8A8},    /* RLG from "6x2 acey deucey" type of 1/4 tag. */
-   {resolve_la,             l_mainstream,      7, 0,   {4, 2, 3, 1, 0, 6, 7, 5},     0xA8A88A8A},    /* LA from 3/4 tag. */
-   {resolve_ext_la,         l_mainstream,      6, 0,   {3, 2, 1, 0, 7, 6, 5, 4},     0xA8AA8A88},    /* extend-LA from 1/4 tag. */
-   {resolve_la,             l_mainstream,      7, 0,   {4, 2, 3, 1, 0, 6, 7, 5},     0x38A31A81},    /* LA from diamonds with points facing each other. */
-   /* Singers only. */
-   {resolve_rlg,            l_mainstream,   64+4, 0,   {4, 5, 3, 2, 0, 1, 7, 6},     0xAA8A88A8},    /* swing/prom from 3/4 tag, ends sashayed (normal case is above). */
-   {resolve_rlg,            l_mainstream,   64+4, 0,   {5, 4, 2, 3, 1, 0, 6, 7},     0xAAA8888A},    /* swing/prom from 3/4 tag, centers traded, ends normal. */
-   {resolve_rlg,            l_mainstream,   64+4, 0,   {4, 5, 2, 3, 0, 1, 6, 7},     0xAAA8888A},    /* swing/prom from 3/4 tag, centers traded, ends sashayed. */
-   {resolve_none,           l_mainstream,      64}};
-
-static resolve_tester test_2x6_stuff[] = {
-   {resolve_rlg,            l_mainstream,      3, 0,   {7, 6, 4, 3, 1, 0, 10, 9},    0x13313113},    /* RLG from "Z" 8-chain. */
-   {resolve_rlg,            l_mainstream,      3, 0,   {8, 7, 5, 4, 2, 1, 11, 10},   0x13313113},    /* RLG from "Z" 8-chain. */
-   {resolve_la,             l_mainstream,      6, 0,   {6, 4, 3, 1, 0, 10, 9, 7},    0x33131131},    /* LA from "Z" 8-chain. */
-   {resolve_la,             l_mainstream,      6, 0,   {7, 5, 4, 2, 1, 11, 10, 8},   0x33131131},    /* LA from "Z" 8-chain. */
-   {resolve_rlg,            l_mainstream,      3, 0,   {7, 6, 4, 5, 1, 0, 10, 11},   0x8A8AA8A8},    /* RLG from outer triple boxes. */
-   {resolve_la,             l_mainstream,      6, 0,   {7, 5, 4, 0, 1, 11, 10, 6},   0xA8AA8A88},    /* LA from outer triple boxes. */
-   {resolve_none,           l_mainstream,      64}};
-
-static resolve_tester test_3x4_stuff[] = {
-   /* These test for offset waves. */
-   {resolve_rlg,            l_mainstream, 3, 0,   {7, 6, 5, 4, 1, 0, 11, 10},   0x8A8AA8A8},
-   {resolve_rlg,            l_mainstream, 3, 0,   {5, 4, 2, 3, 11, 10, 8, 9},   0x8A8AA8A8},
-   {resolve_la,             l_mainstream, 6, 0,   {7, 4, 5, 0, 1, 10, 11, 6},   0xA8AA8A88},
-   {resolve_la,             l_mainstream, 6, 0,   {5, 3, 2, 10, 11, 9, 8, 4},   0xA8AA8A88},
-   {resolve_none,           l_mainstream, 64}};
-
-static resolve_tester test_4dmd_stuff[] = {
-   /* These test for people in a miniwave as centers of the outer diamonds,
-      while the others are facing each other as points.  There are three of each
-      to allow for the outsides to be symmetrical (points of the center diamonds)
-      or unsymmetrical (points of a center diamond and the adjacent outer diamond). */
-   {resolve_la,             l_mainstream, 7, 0,   {8, 4, 5, 1, 0, 12, 13, 9},   0x38A31A81},
-   {resolve_la,             l_mainstream, 7, 0,   {9, 4, 5, 2, 1, 12, 13, 10},  0x38A31A81},
-   {resolve_la,             l_mainstream, 7, 0,   {10, 4, 5, 3, 2, 12, 13, 11}, 0x38A31A81},
-   {resolve_rlg,            l_mainstream, 4, 0,   {9, 8, 5, 4, 1, 0, 13, 12},   0x138A31A8},
-   {resolve_rlg,            l_mainstream, 4, 0,   {10, 9, 5, 4, 2, 1, 13, 12},  0x138A31A8},
-   {resolve_rlg,            l_mainstream, 4, 0,   {11, 10, 5, 4, 3, 2, 13, 12}, 0x138A31A8},
-   {resolve_none,           l_mainstream, 64}};
-
-static resolve_tester test_bigdmd_stuff[] = {
-   /* These test for miniwaves in "common point diamonds". */
-   {resolve_rlg,            l_mainstream, 2, 0,   {7, 6, 3, 2, 1, 0, 9, 8},     0x8A31A813},
-   {resolve_rlg,            l_mainstream, 2, 0,   {4, 5, 3, 2, 10, 11, 9, 8},   0x8A31A813},
-   {resolve_la,             l_mainstream, 5, 0,   {7, 2, 3, 0, 1, 8, 9, 6},     0xA31A8138},
-   {resolve_la,             l_mainstream, 5, 0,   {4, 2, 3, 11, 10, 8, 9, 5},   0xA31A8138},
-   {resolve_none,           l_mainstream, 64}};
-
-static resolve_tester test_spindle_stuff[] = {
-   /* These test for people looking around the corner. */
-   {resolve_rlg,            l_mainstream, 3, 0,   {4, 3, 2, 1, 0, 7, 6, 5},     0x13313113},
-   {resolve_la,             l_mainstream, 7, 0,   {4, 3, 2, 1, 0, 7, 6, 5},     0x33131131},
-   {resolve_none,           l_mainstream, 64}};
-
-static resolve_tester test_2x4_stuff[] = {
-   /* 8-chain. */
-   {resolve_rlg,            l_mainstream, 3, 0,   {5, 4, 3, 2, 1, 0, 7, 6},     0x13313113},
-   {resolve_la,             l_mainstream, 6, 0,   {4, 3, 2, 1, 0, 7, 6, 5},     0x33131131},
-   {resolve_pth_rlg,        l_mainstream, 2, 0,   {5, 2, 3, 0, 1, 6, 7, 4},     0x11313313},
-   {resolve_pth_la,         l_mainstream, 5, 0,   {2, 3, 0, 1, 6, 7, 4, 5},     0x13133131},
-
-   /* trade-by. */
-   {resolve_rlg,            l_mainstream, 2, 0,   {4, 3, 2, 1, 0, 7, 6, 5},     0x11313313},
-   {resolve_la,             l_mainstream, 7, 0,   {5, 4, 3, 2, 1, 0, 7, 6},     0x31131331},
-   {resolve_tby_rlg,        l_mainstream, 3, 0,   {6, 3, 4, 1, 2, 7, 0, 5},     0x11113333},
-   {resolve_tby_la,         l_mainstream, 0, 0,   {5, 6, 3, 4, 1, 2, 7, 0},     0x31111333},
-
-   /* waves. */
-   {resolve_rlg,            l_mainstream, 3, 0,   {5, 4, 2, 3, 1, 0, 6, 7},     0x8A8AA8A8},
-   {resolve_la,             l_mainstream, 6, 0,   {5, 3, 2, 0, 1, 7, 6, 4},     0xA8AA8A88},
-
-   {resolve_ext_rlg,        extend_34_level, 2, 0,   {5, 3, 2, 0, 1, 7, 6, 4},     0x8A88A8AA},    /* extend-RLG from waves. */
-   {resolve_circ_rlg,       l_mainstream, 1, 0,   {5, 0, 2, 7, 1, 4, 6, 3},     0x8888AAAA},    /* circulate-RLG from waves. */
-   {resolve_xby_rlg,        cross_by_level, 2, 0,   {4, 2, 3, 1, 0, 6, 7, 5},     0x8A88A8AA},    /* cross-by-RLG from waves. */
-   {resolve_rlg,            l_mainstream, 2, 0,   {4, 3, 2, 1, 0, 7, 6, 5},     0x8A31A813},    /* RLG from T-bone setup, ends facing. */
-   {resolve_rlg,            l_mainstream, 2, 0,   {4, 3, 2, 1, 0, 7, 6, 5},     0x31311313},    /* RLG from centers facing and ends in miniwaves. */
-   {resolve_la,             l_mainstream, 6, 0,   {4, 3, 2, 1, 0, 7, 6, 5},     0xA8888AAA},    /* LA from lines-out. */
-   {resolve_ext_la,         extend_34_level,   7, 0,   {5, 4, 2, 3, 1, 0, 6, 7},     0xA8A88A8A},    /* ext-LA from waves. */
-   {resolve_circ_la,        l_mainstream,      0, 0,   {5, 7, 2, 4, 1, 3, 6, 0},     0xAAA8888A},    /* circulate-LA from waves. */
-   {resolve_xby_la,         cross_by_level,    5, 0,   {3, 2, 0, 1, 7, 6, 4, 5},     0xA88A8AA8},    /* cross-by-LA from waves. */
-   {resolve_la,             l_mainstream,      7, 0,   {5, 4, 3, 2, 1, 0, 7, 6},     0x38A31A81},    /* LA from T-bone setup, ends facing. */
-   {resolve_prom,           l_mainstream,      7, 0,   {5, 4, 2, 3, 1, 0, 6, 7},     0x8888AAAA},    /* promenade from 2FL. */
-   {resolve_revprom,        l_mainstream,      5, 0,   {3, 2, 0, 1, 7, 6, 4, 5},     0xAA8888AA},    /* reverse promenade from 2FL. */
-   {resolve_circle,         l_mainstream,      6, 0,   {4, 3, 2, 1, 0, 7, 6, 5},     0x33AA1188},    /* "circle left/right" from pseudo squared-set, normal. */
-   {resolve_circle,         l_mainstream,      7, 0,   {5, 4, 3, 2, 1, 0, 7, 6},     0x833AA118},    /* "circle left/right" from pseudo squared-set, sashayed. */
-   {resolve_circle,         l_mainstream,      6, 1,   {4, 3, 2, 1, 0, 7, 6, 5},     0x8AAAA888},    /* "circle left/right" from lines-in, sashayed. */
-   {resolve_circle,         l_mainstream,      7, 1,   {5, 4, 3, 2, 1, 0, 7, 6},     0x88AAAA88},    /* "circle left/right" from lines-in, normal. */
-   {resolve_dixie_grand,    dixie_grand_level, 2, 0,   {5, 2, 4, 7, 1, 6, 0, 3},     0x33311113},    /* dixie grand from DPT. */
-   {resolve_dixie_grand,    dixie_grand_level, 3, 0,   {6, 3, 5, 0, 2, 7, 1, 4},     0x33331111},    /* dixie grand from magic column. */
-   {resolve_dixie_grand,    dixie_grand_level, 1, 0,   {4, 1, 3, 6, 0, 5, 7, 2},     0x33111133},    /* dixie grand from other magic column. */
-   {resolve_sglfileprom,    l_mainstream,      7, 0,   {5, 4, 3, 2, 1, 0, 7, 6},     0x11333311},    /* single file promenade from L columns */
-   {resolve_sglfileprom,    l_mainstream,      6, 0,   {4, 3, 2, 1, 0, 7, 6, 5},     0x13333111},    /* single file promenade from L columns */
-   {resolve_sglfileprom,    l_mainstream,      7, 0,   {5, 4, 3, 2, 1, 0, 7, 6},     0x18833AA1},    /* single file promenade from T-bone */
-   {resolve_sglfileprom,    l_mainstream,      6, 0,   {4, 3, 2, 1, 0, 7, 6, 5},     0x8833AA11},    /* single file promenade from T-bone */
-   {resolve_revsglfileprom, l_mainstream,      7, 0,   {5, 4, 3, 2, 1, 0, 7, 6},     0x33111133},    /* reverse single file promenade from R columns */
-   {resolve_revsglfileprom, l_mainstream,      6, 0,   {4, 3, 2, 1, 0, 7, 6, 5},     0x31111333},    /* reverse single file promenade from R columns */
-   {resolve_revsglfileprom, l_mainstream,      7, 0,   {5, 4, 3, 2, 1, 0, 7, 6},     0x3AA11883},    /* reverse single file promenade from T-bone */
-   {resolve_revsglfileprom, l_mainstream,      6, 0,   {4, 3, 2, 1, 0, 7, 6, 5},     0xAA118833},    /* reverse single file promenade from T-bone */
-   {resolve_rlg,            l_mainstream,      3, 0,   {5, 4, 2, 3, 1, 0, 6, 7},     0x138A31A8},    /* RLG, T-bone mixed 8-chain and waves. */
-   {resolve_rlg,            l_mainstream,      3, 0,   {5, 4, 3, 2, 1, 0, 7, 6},     0x8A31A813},    /* RLG, other T-bone mixed 8-chain and waves. */
-   {resolve_la,             l_mainstream,      6, 0,   {4, 3, 2, 1, 0, 7, 6, 5},     0x38A31A81},    /* LA, T-bone mixed 8-chain and waves. */
-   {resolve_la,             l_mainstream,      6, 0,   {5, 3, 2, 0, 1, 7, 6, 4},     0xA31A8138},    /* LA, other T-bone mixed 8-chain and waves. */
-   /* Singers only. */
-   {resolve_rlg,            l_mainstream,   64+3, 0,   {5, 4, 3, 2, 1, 0, 7, 6},     0x8AA8A88A},    /* swing/prom from waves, boys looking in. */
-   {resolve_rlg,            l_mainstream,   64+3, 0,   {4, 5, 2, 3, 0, 1, 6, 7},     0xA88A8AA8},    /* swing/prom from waves, girls looking in. */
-   {resolve_rlg,            l_mainstream,   64+3, 0,   {4, 5, 2, 3, 0, 1, 6, 7},     0xAA8888AA},    /* swing/prom from lines-out. */
-   {resolve_rlg,            l_mainstream,   64+1, 0,   {3, 2, 0, 1, 7, 6, 4, 5},     0xA88A8AA8},    /* same as cross-by-LA from waves (above), but it's mainstream here. */
-   {resolve_rlg,            l_mainstream,   64+3, 0,   {5, 4, 2, 3, 1, 0, 6, 7},     0x13133131},    /* 8-chain, boys in center. */
-   {resolve_rlg,            l_mainstream,   64+1, 0,   {3, 2, 0, 1, 7, 6, 4, 5},     0x31131331},    /* 8-chain, girls in center. */
-   {resolve_rlg,            l_mainstream,   64+2, 0,   {4, 3, 1, 2, 0, 7, 5, 6},     0x11133331},    /* trade-by, ends sashayed. */
-   {resolve_rlg,            l_mainstream,   64+4, 0,   {6, 5, 3, 4, 2, 1, 7, 0},     0x13113133},    /* trade-by, centers sashayed. */
-   {resolve_none,           l_mainstream,      64}};
-
-
-
-extern resolve_indicator resolve_p(setup *s)
-{
-   resolve_indicator k;
-   resolve_tester *testptr;
-   int i;
-   uint32 singer_offset = 0;
-
-   if (singing_call_mode == 1) singer_offset = 0600;
-   else if (singing_call_mode == 2) singer_offset = 0200;
-
-   switch (s->kind) {
-   case s2x4:
-      testptr = test_2x4_stuff; break;
-   case s3x4:
-      testptr = test_3x4_stuff; break;
-   case s2x6:
-      testptr = test_2x6_stuff; break;
-   case s_qtag:
-      testptr = test_qtag_stuff; break;
-   case s4dmd:
-      testptr = test_4dmd_stuff; break;
-   case sbigdmd:
-      testptr = test_bigdmd_stuff; break;
-   case s4x4:
-      testptr = test_4x4_stuff; break;
-   case s_c1phan:
-      testptr = test_c1phan_stuff; break;
-   case s_crosswave: case s_thar:
-      /* This makes use of the fact that the person numbering
-         in crossed lines and thars is identical. */
-      testptr = test_thar_stuff; break;
-   case s_spindle:
-      testptr = test_spindle_stuff; break;
-   default: goto no_resolve;
-   }
-
-   do {
-      uint32 directionword;
-      uint32 firstperson = s->people[testptr->locations[0]].id1 & 0700;
-      if (firstperson & 0100) goto not_this_one;
-
-      /* We run the tests in descending order, because the test for i=0 is especially
-         likely to pass (since the person ID is known to match), and we want to find
-         failures as quickly as possible. */
-
-      for (i=7,directionword=testptr->directions ; i>=0 ; i--,directionword>>=4) {
-         uint32 expected_id = (i << 6) + ((i&1) ? singer_offset : 0);
-
-         /* The add of "expected_id" and "firstperson" may overflow out of the "700" bits
-            into the next 2 bits.  (One bit for each add.) */
-
-         if ((s->people[testptr->locations[i]].id1                  /* The person under test */
-              ^                                                     /* XOR */
-              (expected_id + firstperson + (directionword & 0xF)))  /* what we check against */
-             &                                                      /* but only test some bits */
-             0777)    /* The bits we check -- the person ID and the direction. */
-            goto not_this_one;
-      }
-
-      if (calling_level < testptr->level_needed) goto not_this_one;
-
-      k.kind = testptr->k;
-      k.distance = ((s->rotation << 1) + (firstperson >> 6) + testptr->distance) & 7;
-      if (k.distance == 0 && testptr->nonzero_only != 0) goto not_this_one;
-      return k;
-
-      not_this_one: ;
-   }
-   while (
-            !((++testptr)->distance & 64)    /* always do next one if it doesn't have the singer-only mark. */
-                     ||
-            (singing_call_mode != 0 && testptr->k != resolve_none)  /* Even if it has the mark, do it if    */
-         );                                                         /* this is a singer and it isn't really */
-                                                                    /* the end of the table.                */
-   /* Too bad. */
-
-   no_resolve:
-
-   k.kind = resolve_none;
-   k.distance = 0;    /* To get around warnings from buggy and confused compilers. */
-   return k;
-}
 
 
 static char *resolve_distances[] = {
@@ -559,6 +264,7 @@ extern void write_resolve_text(long_boolean doing_file)
 }
 
 
+
 /* These variables are actually local to inner_search, but they are
    expected to be preserved across the longjmp, so they must be static. */
 
@@ -579,7 +285,7 @@ Private long_boolean inner_search(command_kind goal, resolve_rec *new_resolve, i
    long_boolean retval;
    int i, j;
    setup *ns;
-   uint32 directions, p, q, w, ww;
+   uint32 directions, p, q;
    real_jmp_buf my_longjmp_buffer;
 
    history_insertion_point = huge_history_ptr;
@@ -706,26 +412,7 @@ Private long_boolean inner_search(command_kind goal, resolve_rec *new_resolve, i
    finish_toplevelmove();
 
    /* We don't like certain warnings either. */
-
-   w = 0;     /* Will become nonzero if any bad warning other than "warn__bad_concept_level" appears. */
-   ww = 0;    /* Will become nonzero if any bad warning appears. */
-
-   for (i=0 ; i<WARNING_WORDS ; i++) {
-      uint32 warn_word = history[history_ptr+1].warnings.bits[i] & no_search_warnings.bits[i];
-      ww |= warn_word;
-      if (i == (warn__bad_concept_level > 5))
-         w |= warn_word & ~(1 << (warn__bad_concept_level & 0x1F));
-      else
-         w |= warn_word;
-   }
-
-   /* But if we are doing a "standardize", we let ALL warnings pass.  We particularly
-      want weird T-bone and other unusual sort of things. */
-
-   if (goal != command_standardize && ww) {
-      /* But if "allow all concepts" was given, and that's the only bad warning, we let it pass. */
-      if (!allowing_all_concepts || w != 0) goto try_again;
-   }
+   if (warnings_are_unacceptable(goal != command_standardize)) goto try_again;
 
    /* See if we have already seen this sequence. */
 
@@ -1580,3 +1267,4 @@ extern void initialize_getout_tables(void)
       }
    }
 }
+

@@ -9,7 +9,7 @@
                     UPDATING VERSION NUMBERS
 
 Be sure the version numbers and dates are correct in:
-    [sd]    sdmain.c     (version # is visible)
+    [sd]    sdmain.cpp   (version # is visible)
     [sd]    sd.rc        (SD & UI version #'s are visible in "about" dialog)
     [sd]    sd_calls.txt (version # is visible)
     [sddoc] title.lst    (version # is visible)
@@ -103,8 +103,8 @@ BE SURE THAT THE ENVIRONMENT FROM "SETDJGPP" IS NOT IN EFFECT AT THIS POINT!
 
 Presumably "do_binary3" and "new_binary" have been done
 at this point, so that these files exist:
-      install3.exe,  bin3.{txt}    (DJGPP build of sdtty)
-      install.exe,  bin.{txt}      (VC++ build of sdtty and sd)
+      install3.exe,  bin3.txt    (DJGPP build of sdtty)
+      install.exe,  bin.txt      (VC++ build of sdtty and sd)
 
 Go to sddoc directory and do:
 
@@ -119,7 +119,6 @@ Go to sddoc directory and do:
 This creates these files, all in the sddoc directory:
 
     bin.txt       \
-    binw.txt      |
     bin3.txt      |
     plain.txt     |
     ps.txt        |   These files get mailed
@@ -129,9 +128,8 @@ This creates these files, all in the sddoc directory:
     dnu.txt       |   (HP-UX only)
     hpux.txt      /   (HP-UX only)
 
-    install.exe     \
-    install3.exe     |
-    installw.exe     |    These files are used locally for
+    install3.exe    \
+    install.exe      |    These files are used locally for
     textdoc.exe      |    installation or copying onto diskettes.
     pdfdoc.exe       |
     psdoc.exe       /

@@ -1,6 +1,6 @@
 //Microsoft Developer Studio generated resource script.
 //
-#include "resource.h"
+#include "deploy.h"
 
 #define APSTUDIO_READONLY_SYMBOLS
 /////////////////////////////////////////////////////////////////////////////
@@ -23,15 +23,22 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
 /////////////////////////////////////////////////////////////////////////////
 //
-// Icon
+// Dialog
 //
 
-// Icon with lowest ID value placed first to ensure application icon
-// remains consistent on all systems.
-IDI_ICON1               ICON    DISCARDABLE     "sdtty.ico"
-IDI_ICON2               ICON    DISCARDABLE     "sd.ico"
-IDI_ICON3               ICON    DISCARDABLE     "sdry.ico"
-IDI_ICON4               ICON    DISCARDABLE     "sdby.ico"
+DEPLOY DIALOG DISCARDABLE  150, 150, 289, 114
+STYLE WS_MINIMIZEBOX | WS_CAPTION | WS_SYSMENU
+CAPTION "Install Sd"
+CLASS "deploy"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,213,10,61,14,WS_GROUP
+    PUSHBUTTON      "Cancel",IDCANCEL,213,84,61,14
+    PUSHBUTTON      "Save old version",IDC_BUTTON1,213,47,61,14,NOT 
+                    WS_VISIBLE
+    LTEXT           "",IDC_MAINCAPTION,7,9,193,69
+END
+
 
 #ifdef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////

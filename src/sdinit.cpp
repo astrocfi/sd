@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-1998  William B. Ackerman.
+    Copyright (C) 1990-1999  William B. Ackerman.
 
     This file is unpublished and contains trade secrets.  It is
     to be used by permission only and not to be disclosed to third
@@ -18,7 +18,8 @@
 */
 
 #include <string.h>
-#include "sd.h"
+#include "sdprog.h"
+
 
 /* Global to this file. */
 
@@ -126,7 +127,7 @@ Private Const char *translate_menu_name(Const char *orig_name, uint32 *escape_bi
 
       tempname[templength] = '\0';
       /* Must copy the text into some fresh memory, being careful about overflow. */
-      new_ptr = get_mem(templength+1);
+      new_ptr = (char *) get_mem(templength+1);
       for (j=0; j<=templength; j++) new_ptr[j] = tempname[j];
       return new_ptr;
    }
@@ -881,9 +882,9 @@ Private void read_in_call_definition(void)
                check_tag(last_12);
                templist[next_definition_index].call_id = (uint16) last_12;
                read_fullword();
-               templist[next_definition_index].modifiers1 = (defmodset) last_datum;
+               templist[next_definition_index].modifiers1 = last_datum;
                read_fullword();
-               templist[next_definition_index++].modifiersh = (defmodset) last_datum;
+               templist[next_definition_index++].modifiersh = last_datum;
                read_halfword();
             }
 
@@ -902,16 +903,16 @@ Private void read_in_call_definition(void)
          check_tag(last_12);
          call_root->stuff.conc.innerdef.call_id = (uint16) last_12;
          read_fullword();
-         call_root->stuff.conc.innerdef.modifiers1 = (defmodset) last_datum;
+         call_root->stuff.conc.innerdef.modifiers1 = last_datum;
          read_fullword();
-         call_root->stuff.conc.innerdef.modifiersh = (defmodset) last_datum;
+         call_root->stuff.conc.innerdef.modifiersh = last_datum;
          read_halfword();
          check_tag(last_12);
          call_root->stuff.conc.outerdef.call_id = (uint16) last_12;
          read_fullword();
-         call_root->stuff.conc.outerdef.modifiers1 = (defmodset) last_datum;
+         call_root->stuff.conc.outerdef.modifiers1 = last_datum;
          read_fullword();
-         call_root->stuff.conc.outerdef.modifiersh = (defmodset) last_datum;
+         call_root->stuff.conc.outerdef.modifiersh = last_datum;
          read_halfword();
          break;
    }
@@ -1073,11 +1074,11 @@ extern void build_database(call_list_mode_t call_list_mode)
 
             /* All classes go into list 0.  Additionally, the other classes go into their own list. */
             number_of_taggers[tagclass]++;
-            tagger_calls[tagclass] = get_more_mem(tagger_calls[tagclass], number_of_taggers[tagclass]*sizeof(callspec_block *));
+            tagger_calls[tagclass] = (callspec_block **) get_more_mem(tagger_calls[tagclass], number_of_taggers[tagclass]*sizeof(callspec_block *));
             tagger_calls[tagclass][number_of_taggers[tagclass]-1] = call_root;
             if (tagclass != 0) {
                number_of_taggers[0]++;
-               tagger_calls[0] = get_more_mem(tagger_calls[0], number_of_taggers[0]*sizeof(callspec_block *));
+               tagger_calls[0] = (callspec_block **) get_more_mem(tagger_calls[0], number_of_taggers[0]*sizeof(callspec_block *));
                tagger_calls[0][number_of_taggers[0]-1] = call_root;
             }
             else if (call_root->callflagsf & CFLAGH__TAG_CALL_RQ_MASK) {
@@ -1095,7 +1096,7 @@ extern void build_database(call_list_mode_t call_list_mode)
                      (new_call->callflagsf & !CFLAGH__TAG_CALL_RQ_MASK) |
                      CFLAGH__TAG_CALL_RQ_BIT*(xxx+1);
                   number_of_taggers[xxx]++;
-                  tagger_calls[xxx] =
+                  tagger_calls[xxx] = (callspec_block **)
                      get_more_mem(tagger_calls[xxx],
                                   number_of_taggers[xxx]*sizeof(callspec_block *));
                   tagger_calls[xxx][number_of_taggers[xxx]-1] = new_call;
@@ -1106,7 +1107,7 @@ extern void build_database(call_list_mode_t call_list_mode)
             /* But circ calls are treated normally, as well as being put on the special list. */
             if (call_root->callflags1 & CFLAG1_BASE_CIRC_CALL) {
                number_of_circcers++;
-               circcer_calls =
+               circcer_calls = (callspec_block **)
                   get_more_mem(circcer_calls, number_of_circcers*sizeof(callspec_block *));
                circcer_calls[number_of_circcers-1] = call_root;
             }

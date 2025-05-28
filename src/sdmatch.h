@@ -13,6 +13,9 @@
  *
  */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 
 typedef struct {
@@ -43,3 +46,7 @@ EXPORT int match_user_input(
    int which_commands,
    long_boolean show,
    long_boolean show_verify);
+
+#ifdef __cplusplus
+}
+#endif

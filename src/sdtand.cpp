@@ -1,8 +1,6 @@
-/* -*- mode:C; c-basic-offset:3; indent-tabs-mode:nil; -*- */
-
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-1997  William B. Ackerman.
+    Copyright (C) 1990-1999  William B. Ackerman.
 
     This file is unpublished and contains trade secrets.  It is
     to be used by permission only and not to be disclosed to third
@@ -21,7 +19,14 @@
    initialize_tandem_tables
 */
 
+#ifdef WIN32
+#define SDLIB_API __declspec(dllexport)
+#else
+#define SDLIB_API
+#endif
+
 #include "sd.h"
+
 
 typedef struct {
    personrec real_saved_people[8][MAX_PEOPLE];
@@ -56,6 +61,7 @@ typedef struct {
 Private tm_thing maps_isearch_twosome[] = {
 
 /*         map1                              map2                map3  map4   ilatmask olatmask    limit rot            insetup outsetup */
+
 
    {{7, 6, 4, 5,                     0, 1, 3, 2},                                0,     0000,         4, 0,  0,  0, 0,  s1x4,  s2x4},            /* "2x4_4" - see below */
    {{0, 2, 5, 7,                     1, 3, 4, 6},                             0x55,     0xFF,         4, 0,  0,  0, 0,  s2x2,  s2x4},
@@ -189,6 +195,8 @@ Private tm_thing maps_isearch_twosome[] = {
    /* This map must be very late, after the two that do 2x4->4x4
       and the one that does 2x4->2x8. */
    {{3, 5, 14, 8, 9, 12, 7, 2,      1, 4, 15, 10, 11, 13, 6, 0},            0x4141,   0xF0F0,         8, 1,  0,  0, 0,  s2x4,  sdeepbigqtg},
+
+   {{9, 8, 23, 22, 14, 15, 18, 19,       2, 3, 6, 7, 21, 20, 11, 10},            0,     0000,         8, 0,  0,  0, 0,  s_rigger, s4x6},
 
    {{0}, 0, 0, 0, 0,  0,  0, 0, nothing, nothing}};
 
@@ -325,6 +333,16 @@ Private tm_thing maps_isearch_3x1tglsome[] = {
    {{0, 4,             7, 3,             5, 1,             6, 2},              0xD,     0xFF,         2, 0,  0,  0, 0,  s1x2,  s_qtag},
    {{9, 3,             10, 4,            11, 5,            1, 7},              0x8,     0000,         2, 0,  0,  0, 0,  s1x2,  s2x6},
    {{0, 6,             1, 7,             2, 8,             10, 4},             0x2,     0000,         2, 0,  0,  0, 0,  s1x2,  s2x6},
+
+   {{9, 6, 21, 18,     10, 7, 22, 19,    11, 8, 23, 20,    1, 4, 13, 16},      0x0A,    0000,         4, 0,  0,  0, 0,  s2x2,  s4x6},
+   {{0, 3, 12, 15,     1, 4, 13, 16,     2, 5, 14, 17,     10, 7, 22, 19},     0xA0,    0000,         4, 0,  0,  0, 0,  s2x2,  s4x6},
+
+   {{19, 3, 7, 15,     20, 23, 8, 11,    0, 16, 12, 4,     21, 22, 9, 10},     0x7D,   0xF99F99,      4, 0,  0,  0, 0,  s1x4,  s3x8},
+   {{1, 17, 13, 5,     21, 22, 9, 10,    18, 2, 6, 14,     20, 23, 8, 11},     0xD7,   0xF66F66,      4, 0,  0,  0, 0,  s1x4,  s3x8},
+
+   {{0, 18, 12, 6,     1, 19, 13, 7,     2, 20, 14, 8,     22, 4, 10, 16},     0x28,   0000,          4, 0,  0,  0, 0,  s1x4,  s2x12},
+   {{21, 3, 9, 15,     22, 4, 10, 16,    23, 5, 11, 17,    1, 19, 13, 7},      0x82,   0000,          4, 0,  0,  0, 0,  s1x4,  s2x12},
+
    {{0}, 0, 0, 0, 0,  0,  0, 0, nothing, nothing}};
 
 Private tm_thing maps_isearch_ysome[] = {
@@ -346,11 +364,13 @@ typedef struct {
   warning_index warning;
 } siamese_item;
 
-siamese_item siamese_table[] = {
+siamese_item siamese_table_of_2[] = {
    {s2x4,        0x00FF0000UL, 0x99UL,   warn__ctrstand_endscpls},
    {s2x4,        0x00990066UL, 0x99UL,   warn__ctrstand_endscpls},
    {s2x4,        0x000000FFUL, 0x66UL,   warn__ctrscpls_endstand},
    {s2x4,        0x00660099UL, 0x66UL,   warn__ctrscpls_endstand},
+   {s2x4,        0x00F0000FUL, 0x0FUL,   warn__none},  // unsymm
+   {s2x4,        0x000F00F0UL, 0xF0UL,   warn__none},  // unsymm
    {s1x8,        0x00CC0033UL, 0x33UL,   warn__ctrstand_endscpls},
    {s1x8,        0x003300CCUL, 0xCCUL,   warn__ctrscpls_endstand},
    {s2x4,        0x003300CCUL, 0xCCUL,   warn__none},
@@ -410,6 +430,15 @@ siamese_item siamese_table[] = {
    {sdeepbigqtg, 0x3A3AC5C5UL, 0xCACAUL, warn__none},
    {nothing,     0,            0,        warn__none}};
 
+siamese_item siamese_table_of_3[] = {
+   {s2x6,        0x01C70E38UL, 0xE38UL,  warn__none},
+   {s2x6,        0x0E3801C7UL, 0x1C7UL,  warn__none},
+   {nothing,     0,            0,        warn__none}};
+
+siamese_item siamese_table_of_4[] = {
+   {s2x8,        0x0F0FF0F0UL, 0xF0F0UL, warn__none},
+   {s2x8,        0xF0F00F0FUL, 0x0F0FUL, warn__none},
+   {nothing,     0,            0,        warn__none}};
 
 Private void initialize_one_table(tm_thing *map_start, int np)
 {
@@ -450,8 +479,10 @@ Private void initialize_one_table(tm_thing *map_start, int np)
       map_search->outunusedmask = alloutmask;
 
       /* We can't encode the virtual person number in the required 3-bit field if this is > 8. */
-      if (map_search->limit != setup_attrs[map_search->insetup].setup_limits+1) uims_database_error("Tandem table initialization failed: limit wrong.\n", (Cstring) 0);
-      if (map_search->olatmask != osidemask) uims_database_error("Tandem table initialization failed: Smask.\n", (Cstring) 0);
+      if (map_search->limit != setup_attrs[map_search->insetup].setup_limits+1)
+         (*the_callback_block.uims_database_error_fn)("Tandem table initialization failed: limit wrong.\n", (Cstring) 0);
+      if (map_search->olatmask != osidemask)
+         (*the_callback_block.uims_database_error_fn)("Tandem table initialization failed: Smask.\n", (Cstring) 0);
    }
 }
 
@@ -542,7 +573,10 @@ Private void unpack_us(
    Real_saved_people[0] gets person on left (lat=1) near person (lat=0).
    Real_saved_people[last] gets person on right (lat=1) or far person (lat=0). */
 
-Private void pack_us(
+// Returns TRUE if it found people facing the wrong way.  This can happen if we are
+// trying siamese and we shouldn't be.
+
+Private long_boolean pack_us(
    personrec *s,
    tm_thing *map_ptr,
    int fraction,
@@ -637,7 +671,7 @@ Private void pack_us(
                   if ((fb[j].id1 ^ orpeople) & ROLL_MASK) vp1 &= ~ROLL_MASK;
                   /* Check that all real people face the same way. */
                   if ((fb[j].id1 ^ orpeople) & 077)
-                     fail("People not facing same way for tandem or as couples.");
+                     return TRUE;
                }
             }
          }
@@ -678,6 +712,8 @@ Private void pack_us(
          ptr->id2 = 0;
       }
    }
+
+   return FALSE;
 }
 
 
@@ -688,7 +724,7 @@ extern void tandem_couples_move(
    int twosome,           /* solid=0 / twosome=1 / solid-to-twosome=2 / twosome-to-solid=3 */
    int fraction,          /* number, if doing fractional twosome/solid */
    int phantom,           /* normal=0 phantom=1 general-gruesome=2 gruesome-with-wave-check=3 */
-   int key,               /* See definitions of tandem_key_**** in sd.h */
+   tandem_key key,
    uint32 mxn_bits,
    long_boolean phantom_pairing_ok,
    setup *result)
@@ -720,8 +756,16 @@ extern void tandem_couples_move(
    if (mxn_bits != 0) {
       uint32 directions = 0;
       uint32 livemask = 0;
+      tandem_key transformed_key = key;
 
-      if ((key & ~1) != 0) fail("Can't do this combination of concepts.");
+      if (key == tandem_key_tand3 || key == tandem_key_tand4)
+         transformed_key = tandem_key_tand;
+      else if (key == tandem_key_cpls3 || key == tandem_key_cpls4)
+         transformed_key = tandem_key_cpls;
+      else if (key == tandem_key_siam3 || key == tandem_key_siam4)
+         transformed_key = tandem_key_siam;
+
+      if ((transformed_key & ~1) != 0) fail("Can't do this combination of concepts.");
 
       switch (mxn_bits) {
       case INHERITFLAGNXNK_3X3:
@@ -754,7 +798,7 @@ extern void tandem_couples_move(
          our_map_table = maps_isearch_twosome;
 
          if (ss->kind == s2x3 || ss->kind == s1x6) {
-            if (key == 0) directions ^= 0x555;
+            if (transformed_key == tandem_key_tand) directions ^= 0x555;
 
             if (((directions ^ 0x0A8) & livemask) == 0 ||
                 ((directions ^ 0xA02) & livemask) == 0)
@@ -782,7 +826,7 @@ extern void tandem_couples_move(
       else if (mxn_bits == INHERITFLAGMXNK_3X1 || mxn_bits == INHERITFLAGMXNK_1X3) {
          np = 3;
          our_map_table = maps_isearch_threesome;
-         if (key == 0) directions ^= 0x5555;
+         if (transformed_key == tandem_key_tand) directions ^= 0x5555;
 
          if (ss->kind == s2x4) {
             if (((directions ^ 0x02A8) & livemask) == 0 ||
@@ -830,6 +874,11 @@ extern void tandem_couples_move(
    
             if (special_mask != 0x11 && special_mask != 0x44) special_mask = 0;
          }
+         else if (ss->kind == s3x1dmd) {
+            if (((directions ^ 0x00A8) & 0xFCFC & livemask) == 0 ||
+                ((directions ^ 0xA800) & 0xFCFC & livemask) == 0)
+               special_mask |= 0x88;
+         }
       }
       else
          fail("Can't do this combination of concepts.");
@@ -840,7 +889,8 @@ extern void tandem_couples_move(
 
       /* This will make it look like "as couples" or "tandem", as needed,
          for swapping masks, but won't trip the assumption transformation stuff. */
-      key |= 64;
+      // It will also turn "threesome" into "twosome", as required by the rest of the code.
+      key = (tandem_key) (transformed_key | 64);
    }
    else if (key == tandem_key_ys) {
       np = 4;
@@ -1031,6 +1081,12 @@ extern void tandem_couples_move(
    if (fractional && fraction > 4)
       fail("Can't do fractional twosome more than 4/4.");
 
+   uint32 siamese_fixup(0);
+   warning_index siamese_warning = warn__none;
+   siamese_item *ptr;
+   long_boolean doing_siamese(FALSE);
+   uint32 saveew, savens;
+
    if (key == tandem_key_box || key == tandem_key_skew) {
       ewmask = allmask;
       nsmask = 0;
@@ -1082,7 +1138,7 @@ extern void tandem_couples_move(
             fail("Can't find these triangles.");
       }
       else if (key == tandem_key_3x1tgls) {
-         if (ss->kind == s2x6) {
+         if (ss->kind == s2x6 || ss->kind == s4x6 || ss->kind == s2x12) {
             ewmask = 0;
             nsmask = allmask;
          }
@@ -1137,33 +1193,42 @@ extern void tandem_couples_move(
       }
    }
    else if (key & 2) {
-      /* Siamese. */
-      uint32 j;
 
-      siamese_item *ptr;
+      // Siamese.  Usually, we will insist on a true siamese separation.
+      // But, if we fail, it may be because we are doing things "random
+      // siamese" or whatever.  In that case, we will allow a pure
+      // couples or tandem separation.
 
-      for (ptr = siamese_table; ptr->testkind != nothing; ptr++) {
-         if (ptr->testkind == ss->kind && ((((ewmask << 16) | nsmask) ^ ptr->testval) & ((allmask << 16) | allmask)) == 0) {
-            warn(ptr->warning);
-            j = ptr->fixup & 0xFFFFFF;
-            goto foox;
+      doing_siamese = TRUE;
+      saveew = ewmask;
+      savens = nsmask;
+
+      if (key == tandem_key_siam3)
+         ptr = siamese_table_of_3;
+      else if (key == tandem_key_siam4)
+         ptr = siamese_table_of_4;
+      else
+         ptr = siamese_table_of_2;
+
+      for (; ptr->testkind != nothing; ptr++) {
+         if (ptr->testkind == ss->kind &&
+             ((((ewmask << 16) | nsmask) ^ ptr->testval) & ((allmask << 16) | allmask)) == 0) {
+            siamese_warning = ptr->warning;
+            siamese_fixup = ptr->fixup & 0xFFFFFF;
+            goto try_siamese;   // We seem to have a match.  However, it still might be wrong.
          }
       }
 
-      fail("Can't do Siamese in this setup.");
-
-   foox:
-
-      ewmask ^= (j & allmask);
-      nsmask ^= (j & allmask);
-      if (ptr->fixup & 0x80000000UL) tandstuff.phantom_pairing_ok = TRUE;
+      goto siamese_failed;
    }
    else if (key & 1) {
       /* Couples -- swap masks.  Tandem -- do nothing. */
-      uint32 j = ewmask;
+      uint32 temp(ewmask);
       ewmask = nsmask;
-      nsmask = j;
+      nsmask = temp;
    }
+
+ try_this:
 
    /* Now ewmask and nsmask have the info about who is paired with whom. */
    ewmask &= ~tandstuff.single_mask;         /* Clear out unpaired people. */
@@ -1181,9 +1246,20 @@ extern void tandem_couples_move(
       }
       map_search++;
    }
-   fail("Can't do this tandem or couples call in this setup or with these people selected.");
 
-   fooy:
+   if (!doing_siamese)
+      fail("Can't do this tandem or couples call in this setup or with these people selected.");
+
+   goto siamese_failed;
+
+ try_siamese:
+
+   ewmask ^= (siamese_fixup & allmask);
+   nsmask ^= (siamese_fixup & allmask);
+   if (ptr->fixup & 0x80000000UL) tandstuff.phantom_pairing_ok = TRUE;
+   goto try_this;
+
+ fooy:
 
    /* We also use the subtle aspects of the phantom indicator to tell what kind
       of setup we allow, and whether pairings must be parallel to the long axis. */
@@ -1237,10 +1313,45 @@ extern void tandem_couples_move(
    tandstuff.virtual_setup.cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
    */
    if (phantom == 3) tandstuff.virtual_setup.cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
-   pack_us(ss->people, map, fraction, twosome, key, &tandstuff);
 
+   if (!pack_us(ss->people, map, fraction, twosome, key, &tandstuff))
+      goto got_good_separation;
+
+   // Or failure to pack people properly may just be because we are taking
+   // "siamese" too seriously.
+
+   if (!doing_siamese)
+      fail("People not facing same way for tandem or as couples.");
+
+ siamese_failed:
+
+   // We allow pointless siamese if this is a part of a call that is being done
+   // "piecewise" or "random" or whatever.
+   if (!(ss->cmd.cmd_frac_flags & CMD_FRAC_BREAKING_UP))
+      fail("Can't do Siamese in this setup.");
+
+   nsmask = savens;
+   ewmask = saveew;
+
+
+   if (key & 2) {
+      key = (tandem_key) (key & ~2);    // Turn off siamese -- it's now effectively as couples
+      key = (tandem_key) (key | 1);
+      uint32 temp(ewmask);
+      ewmask = nsmask;
+      nsmask = temp;
+   }
+   else if (key & 1)
+      key = (tandem_key) (key & ~1);    // Try tandem
+   else
+      fail("Can't do this tandem or couples call in this setup or with these people selected.");
+
+   goto try_this;
+
+ got_good_separation:
+
+   warn(siamese_warning);
    update_id_bits(&tandstuff.virtual_setup);
-
    impose_assumption_and_move(&tandstuff.virtual_setup, &tandstuff.virtual_result);
 
    /* If this is a concentric setup with dead outsides, we can still handle it.

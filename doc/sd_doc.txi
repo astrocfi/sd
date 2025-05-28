@@ -1,12 +1,12 @@
-\input whatever @c %**start of header -*-texinfo-*-
+\input texinfo @c %**start of header -*-texinfo-*-
 @c user documentation for Sd (square dance caller's helper)
 @c See the file INSTALL for how to format and view.
 @setfilename sd_doc.info
 @settitle Sd
 @c @subtitle A Square Dance Caller's Helper
 @c
-@set Time-stamp: July 25, 1999
-@set sd-version 32.8
+@set Time-stamp: October 16, 1999
+@set sd-version 32.9
 @set full-manual
 @c %**end of header
 @iftex
@@ -59,7 +59,27 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
 NONINFRINGMENT.
 
 @page	@c end of copyright page
+
 @headings double
+
+@ifclear html
+@iftex
+@c make an even number of pages so the TOC comes out
+@c correctly with two-sided printing.
+@ifodd@pageno@else
+@ @page
+@fi
+@end iftex
+
+@contents
+@iftex
+@c make an even number of pages of TOC
+@ifodd@pageno@else
+@page
+@ @c
+@fi
+@end iftex
+@end ifclear
 
 @node Top, Intro, (dir), (dir)
 
@@ -191,14 +211,12 @@ Call Notes
 * Face <DIRECTION>::            Face <DIRECTION>
 * Grand Chain 8::               Grand Chain 8
 * Percolate and Cover Up::      Percolate, Perk Up, and Cover Up
-* Countershake/Recoil/Easy Does It:: These have alternate forms in the Database
-* Mini Busy::                   Mini Busy
+* Calls with special (matrix) versions:: These have alternate forms in the Database
 * <ANYONE> Run the Wheel::      <ANYONE> Run the Wheel
 * Bridge the Gap::              Bridge the Gap
-* Hocus Pocus::                 Hocus Pocus
 * Funny Square Thru::           Funny Square Thru
 * Rotate from Columns::         Rotate from Columns
-* Recycle/Cross Cycle/Scoot and Weave/Couple Up/<ANYONE> tie:: These have two forms in the Database
+* Calls with special (parts) versions:: These have alternate forms in the Database
 * Adjust Alamo to Other Pairing:: Adjust Alamo to Other Pairing
 * Going Through Impossible Situations:: Going Through Impossible Situations
 * Changing between a 4x4 matrix and a Phantom Setup:: Changing between a 4x4 matrix and a Phantom Setup
@@ -309,7 +327,7 @@ A special ``startup'' menu is displayed when the program starts, and after each
 sequence has been completed and written to a file.
 It provides a number of miscellaneous commands, including
 commands to change various modes such as the @code{active phantoms}
-mode or the @code{singing call} mode.  @xref{Miscellaneous Commands} for further
+mode or the @code{singing call} mode.  @xref{Miscellaneous Commands}, for further
 discussion of these.  The startup menu also allows you
 to @code{exit from the program} and return to your computer's operating
 system.
@@ -361,7 +379,7 @@ The @code{just as they are} selection starts the sequence on squared set spots,
 without having the heads or sides begin.  This is generally useful only if
 the @i{all 4 couples} concept is to be used.  After using this, you typically
 need to have the heads or sides (or headliners or sideliners, in some
-cases) press ahead.
+cases) press ahead, in order to continue the sequence.
 
 @node Entering Calls, Entering Concepts, Starting a Sequence, Calling
 @section Entering Calls
@@ -453,7 +471,7 @@ only way---click on the call, and then select the
 direction from the new menu that will appear.
 If you decide you don't want that call, click the @samp{Cancel} button.
 
-The menu lists all possible directions, including some that may not be possible
+The menu lists all possible directions, including some that may not be legal
 in the given context.
 
 @subsubheading Numbers
@@ -808,6 +826,8 @@ concepts that you want.  To get the @code{boys} concept, you must click on
 @code{<ANYONE>} and then make the appropriate selection.
 To get the @code{1/2} concept, you must click on
 @code{<N>/<N>} and then make the appropriate selections.
+If you want the @i{1/2 stable} concept instead, click on @code{<N/4> stable},
+and then select @code{2}.
 
 When @code{Sd} resolves an ambiguity, it shows how it did so through
 the judicious use of commas.  For example, the preceding operation will
@@ -868,7 +888,7 @@ is the same as for calls that require these.
 The program recognizes the level at which concepts are legal, but lets you
 override this if you wish.  The @code{toggle concept levels} command toggles
 (turns on or off) the state of off-level concept permission.
-@xref{Changing Modes} and @ref{Using Off-Level Concepts}.
+@xref{Changing Modes}, and @ref{Using Off-Level Concepts}.
 
 When you select any concept, the universal call menu replaces whatever
 special call menu may have been presented, since the set of legal calls
@@ -959,7 +979,7 @@ call with the replacement call in brackets, as in
    fascinating [ah so]
 @end group
 @end example
-@noindent @xref{Call Variations} for more details about this.
+@noindent @xref{Call Variations}, for more details about this.
 
 When either level of modifications is selected in @code{Sd},
 the status line above
@@ -1791,7 +1811,7 @@ in the input prompt in @code{Sdtty}, or the status bar at the bottom
 in @code{Sd}.
 
 The @code{toggle concept levels} command changes the legality of concepts
-that are not on the specified calling level.  @xref{Entering Concepts}
+that are not on the specified calling level.  @xref{Entering Concepts},
 and @ref{Using Off-Level Concepts}.
 
 The @code{toggle active phantoms} command changes the persistence of
@@ -2423,7 +2443,7 @@ at all times, by using whatever Operating System facilities it thinks are
 appropriate.  If, for any reason, this doesn't work properly for you,
 you can place the @code{no_cursor} option in your initialization file, or the
 @code{-no_cursor} command-line switch at program startup.
-@xref{Option Control} and @ref{Command-Line Options}.
+@xref{Option Control}, and @ref{Command-Line Options}.
 This will cause @code{Sdtty} to treat the computer's display as
 if it were a dumb typewriter.  When started in this way, the part of
 the transcript that has changed with each command is simply redisplayed.
@@ -2513,7 +2533,7 @@ but there is no @code{[Accelerators]} section in it, the key bindings
 will be set to the default bindings shown above.  If you have in
 initialization file with an @code{[Accelerators]} section, the default
 bindings will @emph{not} be used.  The contents of the @code{[Accelerators]}
-section will be used instead.   @xref{Accelerator Key Control} for information
+section will be used instead.   @xref{Accelerator Key Control}, for information
 about setting up an @code{[Accelerators]} section in your initialization
 file.
 
@@ -2614,8 +2634,8 @@ of concepts that would not normally be legal.
 The @code{toggle concept levels} command toggles
 (turns on or off) the state of this option.
 @xref{Changing Modes}.  It can also be turned on when the program begins,
-either by giving a command-line option (@xref{Command-Line Options}) or
-through the use of the initialization file (@xref{Option Control}).
+either by giving a command-line option (see @ref{Command-Line Options}) or
+through the use of the initialization file (see @ref{Option Control}).
 
 If you have a line of 6 (or 8) people, and you want them to do a @samp{1/2 tag},
 use the @code{3x3} (or @code{4x4}) concept.  Of course, if you were calling
@@ -2665,14 +2685,12 @@ This section documents these calls.
 * Face <DIRECTION>::            Face <DIRECTION>
 * Grand Chain 8::               Grand Chain 8
 * Percolate and Cover Up::      Percolate, Perk Up, and Cover Up
-* Countershake/Recoil/Easy Does It:: These have alternate forms in the Database
-* Mini Busy::                   Mini Busy
+* Calls with special (matrix) versions:: These have alternate forms in the Database
 * <ANYONE> Run the Wheel::      <ANYONE> Run the Wheel
 * Bridge the Gap::              Bridge the Gap
-* Hocus Pocus::                 Hocus Pocus
 * Funny Square Thru::           Funny Square Thru
 * Rotate from Columns::         Rotate from Columns
-* Recycle/Cross Cycle/Scoot and Weave/Couple Up/<ANYONE> tie:: These have alternate forms in the Database
+* Calls with special (parts) versions:: These have alternate forms in the Database
 * Adjust Alamo to Other Pairing:: Adjust Alamo to Other Pairing
 * Going Through Impossible Situations:: Going Through Impossible Situations
 * Changing between a 4x4 matrix and a Phantom Setup:: Changing between a 4x4 matrix and a Phantom Setup
@@ -2965,7 +2983,7 @@ Use this call when you want just the centers or ends to do their part,
 or you are using some concept like @samp{central}.  In other circumstances,
 just @samp{grand chain 8} should work.
 
-@node Percolate and Cover Up, Countershake/Recoil/Easy Does It, Grand Chain 8, Call Notes
+@node Percolate and Cover Up, Calls with special (matrix) versions, Grand Chain 8, Call Notes
 @section Percolate, Perk Up, and Cover Up
 
 When performed from some formations (but not waves), these calls have the
@@ -2979,8 +2997,12 @@ and @samp{cover up (centers and ends)} when using the @samp{central} concept.
 @code{Sd} will, of course, check that the facing directions are such that
 the dancers would have stayed in the center had all 8 people done the call.
 
-@node Countershake/Recoil/Easy Does It, Mini Busy, Percolate and Cover Up, Call Notes
-@section Countershake, Recoil, Easy Does It
+@node Calls with special (matrix) versions, <ANYONE> Run the Wheel, Percolate and Cover Up, Call Notes
+@section Calls with special ``(matrix)'' versions
+
+A few calls need to have different versions in the database for various
+reasons.  This is usually because they are sometimes used in ways that use incompatible
+attributes, such as fractionalization and various geometric peculiarities.
 
 The definition that @code{Sd} uses for these calls attempts to be completely
 correct with respect to subtleties in the definition.  For example, fractions
@@ -2991,13 +3013,25 @@ call is used with certain modifiers such as @samp{single} or @samp{3x3}.  In suc
 as in @samp{recoil (matrix)}.  These alternate forms compromise the definition
 as needed to make the call work with the modifier.
 
+@subsection Recoil
+
 The call @samp{recoil (matrix)} sacrifices fractionalization, and
-can only be done when people are facing in, but it can be done with the
-@samp{3x3} modifier from facing lines of 3.
+can only be done when people are facing in, but it can be done with, for
+example, the @samp{3x3} modifier from facing lines of 3.
+
+@subsection Easy Does It
 
 The call @samp{easy does it (matrix)} sacrifices fractionalization and the
-knowledge of the centers' and ends' parts, but it can be done with the
-@samp{3x3} modifier from suitable 2x6 matrix two-faced lines.
+knowledge of the centers' and ends' parts, but it can be done with, for
+example, the @samp{3x3} modifier from suitable 2x6 matrix two-faced lines.
+
+@subsection Walk the Plank
+
+The call @samp{walk the plank (matrix)} sacrifices fractionalization and the
+ability to use the real definition from unusual positions, but it can
+be done with, for example the @samp{3x3} modifier from 2x6 matrix columns.
+
+@subsection Countershake
 
 The call @samp{countershake (matrix)} sacrifices fractionalization and the
 ability to use the real definition from unusual positions, but it can
@@ -3013,8 +3047,7 @@ the fractions are not synchronized with each other, and the definitions
 of the various parts are not consistent.  You need @samp{countershake (matrix)}
 for this.
 
-@node Mini Busy, <ANYONE> Run the Wheel, Countershake/Recoil/Easy Does It, Call Notes
-@section Mini Busy
+@subsection Mini Busy
 
 This call is defined with three parts: @samp{1/2 Press Ahead}, @samp{center 2
 hinge while the outer triple lines 1/2 tag}, and @samp{centers flip the diamond
@@ -3024,7 +3057,22 @@ Sometimes one wants to use this call in a way that violates this definition
 but allows modifiers such as @samp{single} or @samp{3x3}.  Use the call
 @samp{mini busy (matrix)} for this.  It is not fractionalizable.
 
-@node <ANYONE> Run the Wheel, Bridge the Gap, Mini Busy, Call Notes
+@subsection Advance to a Column
+
+The calls @samp{finish advance to a column}, @samp{beaus advance to a column},
+and @samp{belles advance to a column} are normally fractionalizable, but can't
+take modifiers like @samp{3x3}, because they cause the setup to go through
+intermediate states which violate the fractional definition.  Use the call names
+with @samp{(matrix)} to get these usages.  Such calls have limited ability to
+be fractionalized.
+
+The @samp{(matrix)} version is not needed for the @samp{single} modifier.
+
+The call @samp{<anyone> advance to a column} designating someone other than
+@samp{beaus} or @samp{belles}, does not need the @samp{(matrix)} modifier,
+because such calls can't be used with modifiers such as @samp{3x3} anyway.
+
+@node <ANYONE> Run the Wheel, Bridge the Gap, Calls with special (matrix) versions, Call Notes
 @section @code{ANYONE} Run the Wheel
 
 As originally defined, this is a rather remarkable ``space invader''
@@ -3036,7 +3084,7 @@ concepts like @samp{parallelogram}, the original space-invading call
 is called @samp{<anyone> run the wheel (matrix)}.  The non-space-invading
 version is called just @samp{<anyone> run the wheel}.
 
-@node Bridge the Gap, Hocus Pocus, <ANYONE> Run the Wheel, Call Notes
+@node Bridge the Gap, Funny Square Thru, <ANYONE> Run the Wheel, Call Notes
 @section Bridge the Gap
 
 The call @samp{bridge the gap} is defined as a ``space invader'' call.
@@ -3056,8 +3104,67 @@ defined as @samp{tandem twosome fan thru to a wave}, and is only legal
 in a (virtual) starting double pass thru.  The call @samp{bridge the gap}
 is the actual space-invader call.
 
-@node Hocus Pocus, Funny Square Thru, Bridge the Gap, Call Notes
-@section Hocus Pocus
+@node Funny Square Thru, Rotate from Columns, Bridge the Gap, Call Notes
+@section Funny Square Thru
+
+Because of the peculiarity of this call, this call was not implemented
+with the @samp{funny} concept.  Instead, it is a call by itself.
+This means that, in @code{Sdtty}, you type @code{funny square thru <n>}
+on one line, rather than pressing
+@key{ENTER}
+after the word @code{funny}.
+In @code{Sd}, the call menu will have @code{funny square thru <n>}.
+
+@node Rotate from Columns, Calls with special (parts) versions, Funny Square Thru, Call Notes
+@section Rotate from Columns
+
+Remember that @i{rotate} and @i{single rotate} from columns are legal only
+at C3, but from lines they are legal at C2.  Since the program has no
+knowledge of different starting setups implying different levels, the call
+is in the database at C2.  Don't use it from columns at that level.
+
+@node Calls with special (parts) versions, Adjust Alamo to Other Pairing, Rotate from Columns, Call Notes
+@section Calls with special ``(parts)'' versions
+
+A few calls need to have different versions in the database for various
+reasons.  This is usually because they are sometimes used in ways that use incompatible
+attributes, such as fractionalization and various geometric peculiarities.
+
+@subsection Recycle
+
+There are two @i{recycle} calls in the database: @samp{recycle} can be done
+from waves, facing couples, right-handed boxes, or a couple facing a
+right-handed mini-wave.  It can take the @samp{cross}, @samp{single}, or
+@samp{diamond} modifiers.  It is the call that dancers will do when told
+to @i{recycle}, and is the call that is used in @i{cover up} and
+@i{counterpoint}.
+
+Unfortunately, there is no mechanism for the program to recognize a call
+as being fractionalizable in some setups but not others, and the
+facing-couples version of recycle is not fractionalizable.
+To permit fractional use of recycle, as with
+@samp{interlace} or @samp{random}, we have provided a call
+@samp{recycle (parts)}, which can be done only from waves.  Use this call
+(but don't read the ``parts'' word) when fractions are required.
+
+@subsection Cross Cycle, Scoot and Weave, Couple Up, Anyone tie
+
+The calls @samp{cross cycle}, @samp{scoot and weave}, @samp{couple up}, and @samp{<anyone> tie}
+have similar problems.  When you want to perform some concept that requires
+dividing them into parts, you must use the version of the call that has the
+word ``(parts)'' after it.  When you do this, certain other aspects of the
+call (such as the ability to to it from all positions) are compromised.
+Hence they should only be used when fractionalization is required.
+
+@subsection Invert the Column
+
+The call @samp{invert the column} is similar.  If you want to interrupt it, for
+example, use the call @samp{invert the column (parts)}.  This call has 4 parts.
+However, if you only want fractional invert the column, just say @samp{invert the
+column 3/4}.  The call @samp{invert the column (parts)} is only needed when
+interruptions or complex meta-concepts are used.
+
+@subsection Hocus Pocus
 
 There is a call @samp{hocus pocus (parts)} in the database.
 It understands the fact that the outsides' part of this call
@@ -3076,57 +3183,7 @@ be used with concepts like @samp{split phantom columns}, to get the correct phan
 behavior.  In the call @samp{hocus pocus (parts)}, all bets are off regarding
 the phantoms' action.
 
-@node Funny Square Thru, Rotate from Columns, Hocus Pocus, Call Notes
-@section Funny Square Thru
-
-Because of the peculiarity of this call, this call was not implemented
-with the @samp{funny} concept.  Instead, it is a call by itself.
-This means that, in @code{Sdtty}, you type @code{funny square thru <n>}
-on one line, rather than pressing
-@key{ENTER}
-after the word @code{funny}.
-In @code{Sd}, the call menu will have @code{funny square thru <n>}.
-
-@node Rotate from Columns, Recycle/Cross Cycle/Scoot and Weave/Couple Up/<ANYONE> tie, Funny Square Thru, Call Notes
-@section Rotate from Columns
-
-Remember that @i{rotate} and @i{single rotate} from columns are legal only
-at C3, but from lines they are legal at C2.  Since the program has no
-knowledge of different starting setups implying different levels, the call
-is in the database at C2.  Don't use it from columns at that level.
-
-@node Recycle/Cross Cycle/Scoot and Weave/Couple Up/<ANYONE> tie, Adjust Alamo to Other Pairing, Rotate from Columns, Call Notes
-@section Recycle, Cross Cycle, Scoot and Weave, Couple Up, Anyone Tie
-
-There are two @i{recycle} calls in the database: @samp{recycle} can be done
-from waves, facing couples, right-handed boxes, or a couple facing a
-right-handed mini-wave.  It can take the @samp{cross}, @samp{single}, or
-@samp{diamond} modifiers.  It is the call that dancers will do when told
-to @i{recycle}, and is the call that is used in @i{cover up} and
-@i{counterpoint}.
-
-Unfortunately, there is no mechanism for the program to recognize a call
-as being fractionalizable in some setups but not others, and the
-facing-couples version of recycle is not fractionalizable.
-To permit fractional use of recycle, as with
-@samp{interlace} or @samp{random}, we have provided a call
-@samp{recycle (parts)}, which can be done only from waves.  Use this call
-(but don't read the ``parts'' word) when fractions are required.
-
-The calls @samp{cross cycle}, @samp{scoot and weave}, @samp{couple up}, and @samp{<anyone> tie}
-have similar problems.  When you want to perform some concept that requires
-dividing them into parts, you must use the version of the call that has the
-word ``(parts)'' after it.  When you do this, certain other aspects of the
-call (such as the ability to to it from all positions) are compromised.
-Hence they should only be used when fractionalization is required.
-
-The cal @samp{invert the column} is similar.  If you want to interrupt it, for
-example, use the call @samp{invert the column (parts)}.  This call has 4 parts.
-However, if you only want fractional invert the column, just say @samp{invert the
-column 3/4}.  The call @samp{invert the column (parts)} is only needed when
-interruptions or complex meta-concepts are used.
-
-@node Adjust Alamo to Other Pairing, Going Through Impossible Situations, Recycle/Cross Cycle/Scoot and Weave/Couple Up/<ANYONE> tie, Call Notes
+@node Adjust Alamo to Other Pairing, Going Through Impossible Situations, Calls with special (parts) versions, Call Notes
 @section Adjust Alamo to Other Pairing
 
 The program's notion of where people are in an alamo ring is rather imprecise.
@@ -5247,6 +5304,13 @@ If a call that you believe is legal does not appear on the menu,
 click on @code{allow modifications}.  This will bring up the universal call
 menu.  You can then thrash out which of you or the computer is correct.
 
+If you use a call with fractions or with some modifier such as @samp{3x3},
+and the program doesn't allow it, check for a special version of the
+call.  These versions are followed by parenthesized words such as
+``(matrix)'' or ``(parts)''.  To find out whether such a special version
+exists for the call you are interested in, type the name of the call
+followed by a question mark.
+
 The program sometimes gives non-fatal @i{warnings} about calls.
 These are intended
 principally as advice to you, the user of the program, that the call
@@ -5290,9 +5354,9 @@ underscore.  Also, when the @code{all} level is selected, all
 sequentially-defined calls are fractionalizable, even if they aren't in
 practice.
 
-The font for the text output window must be fixed-width so the
-formation pictures are legible.  If you do not get this by default,
-set this X resource:
+With the X Window System interface, the font for the text output window
+must be fixed-width so the formation pictures are legible.
+If you do not get this by default, set this X resource:
 
 @example
 Sd*text*font: -misc-fixed-medium-r-normal--13-*-*-*-c-70-iso8859-1
@@ -5347,26 +5411,6 @@ Sd*frame*List*Translations: #override <Btn3Down>: undo()
 @node Copying, , Customization, Top
 @include gpl.txi
 @end ifset
-
-@page
-@ifclear html
-@iftex
-@c make an even number of pages so the TOC comes out
-@c correctly with two-sided printing.
-@ifodd@pageno@else
-@ @page
-@fi
-@end iftex
-
-@contents
-@iftex
-@c make an even number of pages of TOC
-@ifodd@pageno@else
-@page
-@ @c
-@fi
-@end iftex
-@end ifclear
 
 @bye
 

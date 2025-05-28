@@ -96,7 +96,7 @@ and the following other variables:
 
 extern void exit(int code);
 
-#include "sd.h"
+#include "sdprog.h"
 #include "paths.h"
 #include "sdmatch.h"
 
@@ -275,7 +275,9 @@ extern void uims_display_ui_intro_text(void)
 }
 
 
+extern "C" {
 FILE *call_list_file;
+}
 
 
 extern long_boolean uims_open_session(int argc, char **argv)
@@ -390,7 +392,6 @@ extern long_boolean uims_open_session(int argc, char **argv)
 
    call_menu_prompts[call_list_empty] = "--> ";   /* This prompt should never be used. */
 
-   initialize_concept_sublists();
    initialize_misc_lists();
    matcher_initialize();
 
@@ -1058,7 +1059,16 @@ Private int get_popup_string(char prompt[], char dest[])
 
 extern int uims_do_comment_popup(char dest[])
 {
-    return get_popup_string("Enter comment", dest);
+   int retval = get_popup_string("Enter comment", dest);
+
+   if (retval) {
+      if (journal_file) {
+         fputs(dest, journal_file);
+         fputc('\n', journal_file);
+      }
+   }
+
+   return retval;
 }
 
 extern int uims_do_outfile_popup(char dest[])

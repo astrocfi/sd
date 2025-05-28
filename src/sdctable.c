@@ -48,6 +48,12 @@
    concept_menu_strings
 */
 
+#ifdef WIN32
+#define SDLIB_API __declspec(dllexport)
+#else
+#define SDLIB_API
+#endif
+
 #include "sd.h"
 
 
@@ -66,6 +72,14 @@
 #define L CONCPARSE_PARSE_L_TYPE
 #define F CONCPARSE_PARSE_F_TYPE
 #define G CONCPARSE_PARSE_G_TYPE
+
+
+concept_descriptor centers_concept = {
+   "centers????",
+   concept_centers_or_ends,
+   TRUE,
+   l_mainstream,
+   {0, selector_centers, FALSE}};
 
 concept_descriptor special_magic          = {"MAGIC DIAMOND,",       concept_magic,             L+U+D, l_c1, {0, 1}};
 concept_descriptor special_interlocked    = {"INTERLOCKED DIAMOND,", concept_interlocked,       L+U+D, l_c1, {0, 1}};
@@ -1297,50 +1311,67 @@ static int nice_setup_concept_4x6[] = {
    -1};
 
 
-nice_setup_thing nice_setup_thing_4x4 = {
+static nice_setup_thing nice_setup_thing_4x4 = {
    nice_setup_concept_4x4,
    (int *) 0,     /* Will be filled in during initialization. */
    sizeof(nice_setup_concept_4x4)};
 
-nice_setup_thing nice_setup_thing_3x4 = {
+static nice_setup_thing nice_setup_thing_3x4 = {
    nice_setup_concept_3x4,
    (int *) 0,     /* Will be filled in during initialization. */
    sizeof(nice_setup_concept_3x4)};
 
-nice_setup_thing nice_setup_thing_2x8 = {
+static nice_setup_thing nice_setup_thing_2x8 = {
    nice_setup_concept_2x8,
    (int *) 0,     /* Will be filled in during initialization. */
    sizeof(nice_setup_concept_2x8)};
 
-nice_setup_thing nice_setup_thing_2x6 = {
+static nice_setup_thing nice_setup_thing_2x6 = {
    nice_setup_concept_2x6,
    (int *) 0,     /* Will be filled in during initialization. */
    sizeof(nice_setup_concept_2x6)};
 
-nice_setup_thing nice_setup_thing_1x12 = {
+static nice_setup_thing nice_setup_thing_1x12 = {
    nice_setup_concept_1x12,
    (int *) 0,     /* Will be filled in during initialization. */
    sizeof(nice_setup_concept_1x12)};
 
-nice_setup_thing nice_setup_thing_1x16 = {
+static nice_setup_thing nice_setup_thing_1x16 = {
    nice_setup_concept_1x16,
    (int *) 0,     /* Will be filled in during initialization. */
    sizeof(nice_setup_concept_1x16)};
 
-nice_setup_thing nice_setup_thing_3dmd = {
+static nice_setup_thing nice_setup_thing_3dmd = {
    nice_setup_concept_3dmd,
    (int *) 0,     /* Will be filled in during initialization. */
    sizeof(nice_setup_concept_3dmd)};
 
-nice_setup_thing nice_setup_thing_4dmd = {
+static nice_setup_thing nice_setup_thing_4dmd = {
    nice_setup_concept_4dmd,
    (int *) 0,     /* Will be filled in during initialization. */
    sizeof(nice_setup_concept_4dmd)};
 
-nice_setup_thing nice_setup_thing_4x6 = {
+static nice_setup_thing nice_setup_thing_4x6 = {
    nice_setup_concept_4x6,
    (int *) 0,     /* Will be filled in during initialization. */
    sizeof(nice_setup_concept_4x6)};
+
+
+/* This array tracks the enumeration "nice_start_kind". */
+nice_setup_info_item nice_setup_info[] = {
+   {s4x4,   &nice_setup_thing_4x4,  (int *) 0, 0},
+   {s3x4,   &nice_setup_thing_3x4,  (int *) 0, 0},
+   {s2x8,   &nice_setup_thing_2x8,  (int *) 0, 0},
+   {s2x6,   &nice_setup_thing_2x6,  (int *) 0, 0},
+   {s1x10,  &nice_setup_thing_1x12, (int *) 0, 0},  /* Note overuse. */
+   {s1x12,  &nice_setup_thing_1x12, (int *) 0, 0},
+   {s1x14,  &nice_setup_thing_1x16, (int *) 0, 0},  /* Note overuse. */
+   {s1x16,  &nice_setup_thing_1x16, (int *) 0, 0},
+   {s3dmd,  &nice_setup_thing_3dmd, (int *) 0, 0},
+   {s4dmd,  &nice_setup_thing_4dmd, (int *) 0, 0},
+   {s4x6,   &nice_setup_thing_4x6,  (int *) 0, 0}
+};
+
 
 
 int phantom_concept_index = mm_1_offset + mm__1_phan;

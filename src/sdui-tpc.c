@@ -1,5 +1,3 @@
-/* -*- mode:C; c-basic-offset:3; indent-tabs-mode:nil; -*- */
-
 /*
  * sdui-tpc.c - helper functions for Mac tty interface for port to DOS.
  * Time-stamp: <93/07/19 19:38:40 wba>
@@ -28,7 +26,7 @@
 #include <termios.h>   /* We use this stuff if "-no_cursor" was specified. */
 #include <unistd.h>    /* This too. */
 #endif
-#include "database.h"
+#include "basetype.h"
 #include "sdui.h"
 
 

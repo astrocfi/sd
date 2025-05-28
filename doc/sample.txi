@@ -1,4 +1,4 @@
-\input whatever @c %**start of header -*-texinfo-*-
+\input texinfo @c %**start of header -*-texinfo-*-
 @setfilename sample.info
 @settitle Sd - Sample
 @iftex

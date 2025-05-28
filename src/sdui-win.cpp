@@ -25,7 +25,7 @@
     This is for version 32. */
 
 
-static char *sdui_version = "4.8";
+static char *sdui_version = "4.9";
 
 
 /* This file defines the following functions:
@@ -62,16 +62,20 @@ static char *sdui_version = "4.8";
    uims_final_exit
 */
 
+#define STRICT
+#define WIN32_LEAN_AND_MEAN
 #include <stdio.h>
 #include <windows.h>
 #include <windowsx.h>
 #include <commctrl.h>
 #include <stdlib.h>
 #include <string.h>
+
 #include "paths.h"
-#include "database.h"
+#include "basetype.h"
 #include "sdui.h"
 #include "sdmatch.h"
+
 #include "resource.h"
 
 #pragma comment(lib, "comctl32")
@@ -88,8 +92,9 @@ static int dammit = 0;
    Windows command user segment. */
 #define SPECIAL_KEY_OFFSET (CM_REINIT-128+1)
 
-// ***** Declared specially in sdsi.c!
+extern "C" {
 FILE *call_list_file;
+}
 
 static char szMainWindowName[] = "Sd main window class";
 static char szTranscriptWindowName[] = "Sd transcript window class";
@@ -155,9 +160,6 @@ static LPTSTR lpBits;       // Address of the pixel data in same.
 
 static HINSTANCE GLOBhInstance;
 static int GLOBiCmdShow;
-static LRESULT Status;
-static LOGFONT LogFont;
-static CHOOSEFONT cf;
 
 static HWND hwndMain;
 static HWND hwndAcceptButton;
@@ -1381,7 +1383,7 @@ void MainWindow_OnSize(HWND hwnd, UINT state, int cx, int cy)
 
 
 
- 
+
 void MainWindow_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 {
    int i;
@@ -1404,8 +1406,8 @@ void MainWindow_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
       WaitingForCommand = FALSE;
       break;
    case LISTBOX_INDEX:
-      // See whether this an appropriate single-click of double-click.
-      if (codeNotify != LBN_DBLCLK && (!accept_single_click || codeNotify != LBN_SELCHANGE))
+      // See whether this an appropriate single-click or double-click.
+      if (codeNotify != (accept_single_click ? (UINT) LBN_SELCHANGE : (UINT) LBN_DBLCLK))
          break;
       /* Fall Through! */
    case ENTER_INDEX:
@@ -1423,7 +1425,11 @@ void MainWindow_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
          in the edit box.  We detect this condition by noticing that the
          listbox selection has changed from what we left it when we were
          last trying to make the list box track the edit box. */
-      if (wherearewe != LB_ERR && wherearewe != nMenuIndex) {
+
+      /* We also do this if the user selected by clicking the mouse. */
+
+      if (id != ENTER_INDEX ||
+          (wherearewe != LB_ERR && wherearewe != nMenuIndex)) {
          SendMessage(hwndEdit, WM_SETTEXT, 0, (LPARAM)"");
          static_ss.full_input[0] = '\0';
          static_ss.full_input_size = 0;
@@ -1469,7 +1475,7 @@ void MainWindow_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
  
       i = SendMessage(hwndList, LB_GETITEMDATA, nMenuIndex, (LPARAM)0);
       user_match.match.index = LOWORD(i);
-      user_match.match.kind = HIWORD(i);
+      user_match.match.kind = (uims_reply) HIWORD(i);
 
    use_computed_match:
 
@@ -1726,13 +1732,13 @@ LRESULT CALLBACK MainWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 
 static void setup_level_menu(HWND hDlg)
 {
-   dance_level lev;
+   int lev;
 
    SetDlgItemText(hDlg, IDC_START_CAPTION, "Choose a level");
 
    SendDlgItemMessage(hDlg, IDC_START_LIST, LB_RESETCONTENT, 0, 0L);
 
-   for (lev=l_mainstream ; ; lev++) {
+   for (lev=(int)l_mainstream ; ; lev++) {
       Cstring this_string = getout_strings[lev];
       if (!this_string[0]) break;
       SendDlgItemMessage(hDlg, IDC_START_LIST, LB_ADDSTRING, 0, (LPARAM) this_string);
@@ -2103,7 +2109,6 @@ extern long_boolean uims_open_session(int argc, char **argv)
       exit_program(1);
    }
 
-   initialize_concept_sublists();
    initialize_misc_lists();
    matcher_initialize();
 
@@ -2239,28 +2244,16 @@ extern long_boolean uims_open_session(int argc, char **argv)
    }
    else if (no_color == 1) {
       // monochrome colors (colorlist won't be used in this case)
-      if (no_intensify) {
-         // dull monochrome colors
-         lpBi->bmiColors[1]  = lpBi->bmiColors[7];
-         lpBi->bmiColors[2]  = lpBi->bmiColors[7];
-         lpBi->bmiColors[3]  = lpBi->bmiColors[7];
-         lpBi->bmiColors[4]  = lpBi->bmiColors[7];
-         lpBi->bmiColors[9]  = lpBi->bmiColors[7];
-         lpBi->bmiColors[10] = lpBi->bmiColors[7];
-         lpBi->bmiColors[11] = lpBi->bmiColors[7];
-         lpBi->bmiColors[12] = lpBi->bmiColors[7];
-      }
-      else {
-         // intense monochrome colors
-         lpBi->bmiColors[1]  = lpBi->bmiColors[15];
-         lpBi->bmiColors[2]  = lpBi->bmiColors[15];
-         lpBi->bmiColors[3]  = lpBi->bmiColors[15];
-         lpBi->bmiColors[4]  = lpBi->bmiColors[15];
-         lpBi->bmiColors[9]  = lpBi->bmiColors[15];
-         lpBi->bmiColors[10] = lpBi->bmiColors[15];
-         lpBi->bmiColors[11] = lpBi->bmiColors[15];
-         lpBi->bmiColors[12] = lpBi->bmiColors[15];
-      }
+      RGBQUAD t = lpBi->bmiColors[reverse_video ? (no_intensify ? 7 : 15) : 0];
+
+      lpBi->bmiColors[1]  = t;
+      lpBi->bmiColors[2]  = t;
+      lpBi->bmiColors[3]  = t;
+      lpBi->bmiColors[4]  = t;
+      lpBi->bmiColors[9]  = t;
+      lpBi->bmiColors[10] = t;
+      lpBi->bmiColors[11] = t;
+      lpBi->bmiColors[12] = t;
    }
    else {
       // gender colors
@@ -2299,7 +2292,7 @@ extern long_boolean uims_open_session(int argc, char **argv)
 
    /* Initialize the display window linked list */
 
-   DisplayRoot = get_mem(sizeof(DisplayType));
+   DisplayRoot = (DisplayType *) get_mem(sizeof(DisplayType));
    DisplayRoot->Line[0] = -1;
    DisplayRoot->Next = NULL;
    DisplayRoot->Prev = NULL;
@@ -2377,11 +2370,8 @@ void ShowListBox(int nWhichOne)
 
       if (nLastOne == match_number) {
          int iu;
-         uims_reply kind;
 
          UpdateStatusBar("<number>");
-
-         kind = 0;
 
          for (iu=0 ; iu<NUM_CARDINALS; iu++) {
             Cstring name = cardinals[iu];
@@ -2395,16 +2385,13 @@ void ShowListBox(int nWhichOne)
 
             nMenuIndex = SendMessage(hwndList, LB_ADDSTRING, 0, (LPARAM) name);
             SendMessage(hwndList, LB_SETITEMDATA, nMenuIndex,
-                        (LPARAM) MAKELONG(iu, kind));
+                        (LPARAM) MAKELONG(iu, 0));
          }
       }
       else if (nLastOne == match_circcer) {
          unsigned int iu;
-         uims_reply kind;
 
          UpdateStatusBar("<circulate replacement>");
-
-         kind = 0;
 
          for (iu=0 ; iu<number_of_circcers ; iu++) {
             Cstring name = circcer_calls[iu]->menu_name;
@@ -2418,19 +2405,15 @@ void ShowListBox(int nWhichOne)
 
             nMenuIndex = SendMessage(hwndList, LB_ADDSTRING, 0, (LPARAM) name);
             SendMessage(hwndList, LB_SETITEMDATA, nMenuIndex,
-                        (LPARAM) MAKELONG(iu, kind));
+                        (LPARAM) MAKELONG(iu, 0));
          }
       }
       else if (nLastOne >= match_taggers &&
                nLastOne < match_taggers+NUM_TAGGER_CLASSES) {
+         unsigned int iu;
          int tagclass = nLastOne - match_taggers;
 
-         unsigned int iu;
-         uims_reply kind;
-
          UpdateStatusBar("<tagging call>");
-
-         kind = 0;
 
          for (iu=0 ; iu<number_of_taggers[tagclass] ; iu++) {
             Cstring name = tagger_calls[tagclass][iu]->menu_name;
@@ -2444,16 +2427,14 @@ void ShowListBox(int nWhichOne)
 
             nMenuIndex = SendMessage(hwndList, LB_ADDSTRING, 0, (LPARAM) name);
             SendMessage(hwndList, LB_SETITEMDATA, nMenuIndex,
-                        (LPARAM) MAKELONG(iu, kind));
+                        (LPARAM) MAKELONG(iu, 0));
          }
       }
       else if (nLastOne == match_startup_commands) {
          Cstring *menu;
-         uims_reply kind;
 
          UpdateStatusBar("<startup>");
 
-         kind = ui_start_select;
          menu = startup_commands;
          menu_length = NUM_START_SELECT_KINDS;
 
@@ -2469,15 +2450,11 @@ void ShowListBox(int nWhichOne)
 
             nMenuIndex = SendMessage(hwndList, LB_ADDSTRING, 0, (LPARAM) name);
             SendMessage(hwndList, LB_SETITEMDATA, nMenuIndex,
-                        (LPARAM) MAKELONG(i, kind));
+                        (LPARAM) MAKELONG(i, (int) ui_start_select));
          }
       }
       else if (nLastOne == match_resolve_commands) {
-         Cstring *menu;
-         uims_reply kind;
-
-         kind = ui_resolve_select;
-         menu = resolve_command_strings;
+         Cstring *menu = resolve_command_strings;
          menu_length = number_of_resolve_commands;
 
          for (i=0 ; i<menu_length ; i++) {
@@ -2492,16 +2469,14 @@ void ShowListBox(int nWhichOne)
 
             nMenuIndex = SendMessage(hwndList, LB_ADDSTRING, 0, (LPARAM) name);
             SendMessage(hwndList, LB_SETITEMDATA, nMenuIndex,
-                        (LPARAM) MAKELONG(i, kind));
+                        (LPARAM) MAKELONG(i, (int) ui_resolve_select));
          }
       }
       else if (nLastOne == match_directions) {
          Cstring *menu;
-         uims_reply kind;
 
          UpdateStatusBar("<direction>");
 
-         kind = ui_special_concept;
          menu = &direction_names[1];
          menu_length = last_direction_kind;
 
@@ -2517,17 +2492,14 @@ void ShowListBox(int nWhichOne)
 
             nMenuIndex = SendMessage(hwndList, LB_ADDSTRING, 0, (LPARAM) name);
             SendMessage(hwndList, LB_SETITEMDATA, nMenuIndex,
-                        (LPARAM) MAKELONG(i, kind));
+                        (LPARAM) MAKELONG(i, (int) ui_special_concept));
          }
       }
       else if (nLastOne == match_selectors) {
-         Cstring *menu;
-         uims_reply kind;
+         Cstring *menu = selector_menu_list;
 
          UpdateStatusBar("<selector>");
 
-         kind = ui_special_concept;
-         menu = selector_menu_list;
          menu_length = last_selector_kind;
 
          for (i=0 ; i<menu_length ; i++) {
@@ -2542,15 +2514,11 @@ void ShowListBox(int nWhichOne)
 
             nMenuIndex = SendMessage(hwndList, LB_ADDSTRING, 0, (LPARAM) name);
             SendMessage(hwndList, LB_SETITEMDATA, nMenuIndex,
-                        (LPARAM) MAKELONG(i, kind));
+                        (LPARAM) MAKELONG(i, (int) ui_special_concept));
          }
       }
       else {
-         uims_reply kind;
-
          UpdateStatusBar(menu_names[nLastOne]);
-
-         kind = ui_call_select;
 
          for (i = 0; i < number_of_calls[nLastOne]; i++) {
             Cstring name = main_call_lists[nLastOne][i]->menu_name;
@@ -2564,7 +2532,7 @@ void ShowListBox(int nWhichOne)
 
             nMenuIndex = SendMessage(hwndList, LB_ADDSTRING, 0, (LPARAM) name);
             SendMessage(hwndList, LB_SETITEMDATA, nMenuIndex,
-                        (LPARAM) MAKELONG(i, kind));
+                        (LPARAM) MAKELONG(i, (int) ui_call_select));
          }
 
          if (allowing_all_concepts) {
@@ -2783,7 +2751,7 @@ extern int uims_do_session_init_popup(void)
 {
    if (MessageBox(hwndMain, "You already have a session file.\n"
                   "Do you really want to delete it and start over?",
-                  "Confirmation", MB_YESNO) == IDYES)
+                  "Confirmation", MB_ICONEXCLAMATION | MB_OKCANCEL | MB_DEFBUTTON2) == IDOK)
       return 1;
    else
       return 0;
@@ -2793,7 +2761,7 @@ extern int uims_do_session_init_popup(void)
 extern int uims_do_abort_popup(void)
 {
    if (MessageBox(hwndMain, "Do you really want to abort this sequence?",
-                  "Confirmation", MB_YESNO) == IDYES)
+                  "Confirmation", MB_ICONEXCLAMATION | MB_OKCANCEL | MB_DEFBUTTON2) == IDOK)
       return POPUP_ACCEPT;
    else
       return POPUP_DECLINE;
@@ -2997,7 +2965,7 @@ extern void uims_add_new_line(char the_line[], uint32 drawing_picture)
    }
 
    if (!CurDisplay->Next) {
-      CurDisplay->Next = get_mem(sizeof(DisplayType));
+      CurDisplay->Next = (DisplayType *) get_mem(sizeof(DisplayType));
       CurDisplay->Next->Prev = CurDisplay;
       CurDisplay = CurDisplay->Next;
       CurDisplay->Next = NULL;

@@ -14,16 +14,51 @@
  * By Stephen Gildea <gildea@lcs.mit.edu> January 1993
  */
 
+/* The Sd program reads this binary file for its calls database */
+#ifndef DATABASE_FILENAME
+#define DATABASE_FILENAME "sd_calls.dat"
+#endif
+
+/* The source form of the calls database.  The mkcalls program compiles it. */
+#ifndef CALLS_FILENAME
+#define CALLS_FILENAME "sd_calls.txt"
+#endif
+
+/* The output filename prefix.  ".level" is added to the name. */
+#ifndef SEQUENCE_FILENAME
+#define SEQUENCE_FILENAME "sequence"
+#endif
+
+/* The file containing the user's current working sessions. */
+#ifndef SESSION_FILENAME
+#define SESSION_FILENAME "sd.ini"
+#endif
+
+/* The temporary file used when rewriting the above. */
+#ifndef SESSION2_FILENAME
+#define SESSION2_FILENAME "sd2.ini"
+#endif
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#ifdef WIN32
+#ifndef SDLIB_API
+#define SDLIB_API __declspec(dllimport)
+#endif
+#else
+#define SDLIB_API
+#endif
+
 #ifdef __CPLUSPLUS
-#define EXPORT extern "C" __declspec (dllexport)
+#define EXPORT /*extern "C"*/ SDLIB_API
 #define MAYBECALLBACK CALLBACK
 #else
 #define EXPORT extern
 #define MAYBECALLBACK
 #endif
-
-#define NULLCONCEPTPTR (concept_descriptor *) 0
-#define NULLCALLSPEC (callspec_block *) 0
 
 #define MAX_ERR_LENGTH 200
 #define MAX_FILENAME_LENGTH 260
@@ -95,225 +130,6 @@
 #define NUM_TAGGER_CLASSES 4
 
 
-/* BEWARE!!  This list must track the array "concept_table" in sdconcpt.c . */
-typedef enum {
-
-/* These next few are not concepts.  Their appearance marks the end of a parse tree. */
-
-   concept_another_call_next_mod,         /* calla modified by callb */
-   concept_mod_declined,                  /* user was queried about modification, and said no. */
-   marker_end_of_list,                    /* normal case */
-
-/* This is not a concept.  Its appearance indicates a comment is to be placed here. */
-
-   concept_comment,
-
-/* Everything after this is a real concept. */
-
-   concept_concentric,
-   concept_tandem,
-   concept_some_are_tandem,
-   concept_frac_tandem,
-   concept_some_are_frac_tandem,
-   concept_gruesome_tandem,
-   concept_gruesome_frac_tandem,
-   concept_checkerboard,
-   concept_sel_checkerboard,
-   concept_anchor,
-   concept_reverse,
-   concept_left,
-   concept_grand,
-   concept_magic,
-   concept_cross,
-   concept_single,
-   concept_singlefile,
-   concept_interlocked,
-   concept_yoyo,
-   concept_fractal,
-   concept_straight,
-   concept_twisted,
-   concept_12_matrix,
-   concept_16_matrix,
-   concept_revert,
-   concept_1x2,
-   concept_2x1,
-   concept_2x2,
-   concept_1x3,
-   concept_3x1,
-   concept_3x3,
-   concept_4x4,
-   concept_5x5,
-   concept_6x6,
-   concept_7x7,
-   concept_8x8,
-   concept_create_matrix,
-   concept_funny,
-   concept_randomtrngl,
-   concept_selbasedtrngl,
-   concept_split,
-   concept_each_1x4,
-   concept_diamond,
-   concept_triangle,
-   concept_leadtriangle,
-   concept_do_both_boxes,
-   concept_once_removed,
-   concept_do_phantom_2x2,
-   concept_do_phantom_boxes,
-   concept_do_phantom_diamonds,
-   concept_do_phantom_1x6,
-   concept_do_phantom_triple_1x6,
-   concept_do_phantom_1x8,
-   concept_do_phantom_triple_1x8,
-   concept_do_phantom_2x4,
-   concept_do_phantom_stag_qtg,
-   concept_do_phantom_diag_qtg,
-   concept_do_phantom_2x3,
-   concept_divided_2x4,
-   concept_divided_2x3,
-   concept_do_divided_diamonds,
-   concept_distorted,
-   concept_single_diagonal,
-   concept_double_diagonal,
-   concept_parallelogram,
-   concept_triple_lines,
-   concept_multiple_lines_tog,
-   concept_multiple_lines_tog_std,
-   concept_triple_1x8_tog,
-   concept_quad_lines,
-   concept_quad_boxes,
-   concept_quad_boxes_together,
-   concept_triple_boxes,
-   concept_triple_boxes_together,
-   concept_triple_diamonds,
-   concept_triple_diamonds_together,
-   concept_quad_diamonds,
-   concept_quad_diamonds_together,
-   concept_in_out_std,
-   concept_in_out_nostd,
-   concept_triple_diag,
-   concept_triple_diag_together,
-   concept_triple_twin,
-   concept_misc_distort,
-   concept_old_stretch,
-   concept_new_stretch,
-   concept_assume_waves,
-   concept_active_phantoms,
-   concept_mirror,
-   concept_central,
-   concept_snag_mystic,
-   concept_crazy,
-   concept_frac_crazy,
-   concept_phan_crazy,
-   concept_frac_phan_crazy,
-   concept_fan,
-   concept_c1_phantom,
-   concept_grand_working,
-   concept_centers_or_ends,
-   concept_so_and_so_only,
-   concept_some_vs_others,
-   concept_stable,
-   concept_so_and_so_stable,
-   concept_frac_stable,
-   concept_so_and_so_frac_stable,
-   concept_emulate,
-   concept_standard,
-   concept_matrix,
-   concept_double_offset,
-   concept_checkpoint,
-   concept_on_your_own,
-   concept_trace,
-   concept_outeracting,
-   concept_ferris,
-   concept_overlapped_diamond,
-   concept_all_8,
-   concept_centers_and_ends,
-   concept_twice,
-   concept_n_times,
-   concept_sequential,
-   concept_special_sequential,
-   concept_meta,
-   concept_meta_one_arg,
-   concept_so_and_so_begin,
-   concept_replace_nth_part,
-   concept_replace_last_part,
-   concept_interrupt_at_fraction,
-   concept_sandwich,
-   concept_interlace,
-   concept_fractional,
-   concept_rigger,
-   concept_common_spot,
-   concept_dblbent,
-   concept_supercall,
-   concept_diagnose
-} concept_kind;
-
-typedef enum {
-   MPKIND__NONE,
-   MPKIND__SPLIT,
-   MPKIND__REMOVED,
-   MPKIND__TWICE_REMOVED,
-   MPKIND__THRICE_REMOVED,
-   MPKIND__OVERLAP,
-   MPKIND__INTLK,
-   MPKIND__CONCPHAN,
-   MPKIND__NONISOTROPIC,
-   MPKIND__NONISOTROP1,
-   MPKIND__OFFS_L_HALF,
-   MPKIND__OFFS_R_HALF,
-   MPKIND__OFFS_L_FULL,
-   MPKIND__OFFS_R_FULL,
-   MPKIND__OFFS_L_HALF_SPECIAL,
-   MPKIND__OFFS_R_HALF_SPECIAL,
-   MPKIND__OFFS_L_FULL_SPECIAL,
-   MPKIND__OFFS_R_FULL_SPECIAL,
-   MPKIND__LILZCCW,
-   MPKIND__LILZCW,
-   MPKIND__LILAZCCW,
-   MPKIND__LILAZCW,
-   MPKIND__LILZCOM,
-   MPKIND__O_SPOTS,
-   MPKIND__X_SPOTS,
-   MPKIND__4_QUADRANTS,
-   MPKIND__4_EDGES,
-   MPKIND__ALL_8,
-   MPKIND__DMD_STUFF,
-   MPKIND__STAG,
-   MPKIND__DIAGQTAG,
-   MPKIND_DBLBENTCW,
-   MPKIND_DBLBENTCCW,
-   MPKIND__SPEC_ONCEREM,
-   MPKIND__SPEC_TWICEREM
-} mpkind;
-
-typedef struct skrilch {
-   Const veryshort maps[40];
-   Const mpkind map_kind;
-   Const short int warncode;
-   Const short int arity;
-   Const setup_kind outer_kind;
-   Const setup_kind inner_kind;
-   Const uint32 rot;
-   Const int vert;
-   uint32 code;
-   struct skrilch *next;
-} map_thing;
-
-typedef struct {
-   Cstring name;
-   Const concept_kind kind;
-   Const uint32 concparseflags;   /* See above. */
-   Const dance_level level;
-   Const struct {
-      Const map_thing *maps;
-      Const uint32 arg1;
-      Const uint32 arg2;
-      Const uint32 arg3;
-      Const uint32 arg4;
-      Const uint32 arg5;
-   } value;
-   Cstring menu_name;
-} concept_descriptor;
-
 /* These are the values returned by "uims_get_command". */
 
 typedef enum {
@@ -326,210 +142,6 @@ typedef enum {
    ui_call_select       /* (normal only) User selected a call from the current call menu. */
 } uims_reply;
 
-/* BEWARE!!  This list must track the array "selector_list" in sdutil.c . */
-typedef enum {
-   selector_uninitialized,
-   selector_boys,
-   selector_girls,
-   selector_heads,
-   selector_sides,
-   selector_headcorners,
-   selector_sidecorners,
-   selector_headboys,
-   selector_headgirls,
-   selector_sideboys,
-   selector_sidegirls,
-   selector_centers,
-   selector_ends,
-   selector_leads,
-   selector_trailers,
-   selector_lead_ends,
-   selector_lead_ctrs,
-   selector_trail_ends,
-   selector_trail_ctrs,
-   selector_end_boys,
-   selector_end_girls,
-   selector_center_boys,
-   selector_center_girls,
-   selector_beaus,
-   selector_belles,
-   selector_center2,
-   selector_verycenters,
-   selector_center6,
-   selector_outer2,
-   selector_veryends,
-   selector_outer6,
-   selector_ctrdmd,
-   selector_ctr_1x4,
-   selector_ctr_1x6,
-   selector_outer1x3s,
-   selector_center4,
-   selector_outerpairs,
-#ifdef TGL_SELECTORS
-   /* Taken out.  Not convinced these are right.  See also sdutil.c, sdpreds.c . */
-   selector_wvbasetgl,
-   selector_tndbasetgl,
-   selector_insidetgl,
-   selector_outsidetgl,
-   selector_inpttgl,
-   selector_outpttgl,
-#endif
-   selector_headliners,
-   selector_sideliners,
-   selector_thosefacing,
-   selector_everyone,
-   selector_all,
-   selector_none,
-   /* Start of unsymmetrical selectors. */
-#define unsymm_selector_start ((int) selector_nearline)
-   selector_nearline,
-   selector_farline,
-   selector_nearcolumn,
-   selector_farcolumn,
-   selector_nearbox,
-   selector_farbox,
-   selector_facingfront,
-   selector_facingback,
-   selector_boy1,
-   selector_girl1,
-   selector_cpl1,
-   selector_boy2,
-   selector_girl2,
-   selector_cpl2,
-   selector_boy3,
-   selector_girl3,
-   selector_cpl3,
-   selector_boy4,
-   selector_girl4,
-   selector_cpl4,
-   selector_cpls1_2,
-   selector_cpls2_3,
-   selector_cpls3_4,
-   selector_cpls4_1
-} selector_kind;
-#define last_selector_kind ((int) selector_cpls4_1)
-
-/* BEWARE!!  This list must track the array "direction_names" in sdutil.c .
-   It must also track the DITL "which direction" in *.rsrc in the Macintosh system. */
-/* Note also that the "zig-zag" items will get disabled below A2.
-   The key for this is "direction_zigzag". */
-typedef enum {
-   direction_uninitialized,
-   direction_no_direction,
-   direction_left,
-   direction_right,
-   direction_in,
-   direction_out,
-   direction_back,
-   direction_zigzag,
-   direction_zagzig,
-   direction_zigzig,
-   direction_zagzag
-} direction_kind;
-
-/* BEWARE!!  There is a static initializer for this, "null_options", in sdmain.c
-   that must be kept up to date. */
-typedef struct {
-   selector_kind who;        /* selector, if any, used by concept or call */
-   direction_kind where;     /* direction, if any, used by concept or call */
-   uint32 tagger;            /* tagging call indices, if any, used by call.
-                                If nonzero, this is 3 bits for the 0-based tagger class
-                                and 5 bits for the 1-based tagger call */
-   uint32 circcer;           /* circulating call index, if any, used by call */
-   uint32 number_fields;     /* number, if any, used by concept or call */
-   int howmanynumbers;       /* tells how many there are */
-   int star_turn_option;     /* For calls with "@S" star turn stuff. */
-} call_conc_option_state;
-
-typedef struct glork {
-   struct glork *next;
-   uint32 callarray_flags;
-   call_restriction restriction;
-   uint16 qualifierstuff;   /* See QUALBIT__??? definitions in database.h */
-   uint8 start_setup;       /* Must cast to begin_kind! */
-   uint8 end_setup;         /* Must cast to setup_kind! */
-   uint8 end_setup_in;      /* Only if end_setup = concentric */  /* Must cast to setup_kind! */
-   uint8 end_setup_out;     /* Only if end_setup = concentric */  /* Must cast to setup_kind! */
-   union {
-      /* Dynamically allocated to whatever size is required. */
-      uint16 def[4];     /* only if pred = false */
-      struct {                   /* only if pred = true */
-         struct predptr_pair_struct *predlist;
-         /* Dynamically allocated to whatever size is required. */
-         char errmsg[4];
-      } prd;
-   } stuff;
-} callarray;
-
-typedef struct glowk {
-   /* This has individual keys for groups of heritable modifiers.  Hence one
-      can't say anything like "alternate_definition [3x3 4x4]".  But of course
-      one can mix things from different groups. */
-   uint32 modifier_seth;
-   callarray *callarray_list;
-   struct glowk *next;
-   dance_level modifier_level;
-} calldef_block;
-
-typedef struct {
-   short call_id;
-   uint32 modifiers1;
-
-   /* The "modifiersh" field of an invocation of a subcall tells what
-      incoming modifiers will be passed to the subcall.  What the bits mean
-      depends on whether the call's top-level "callflagsh" bit is on.
-
-      If the bit is on in "callflagsh", the corresponding bit in "modifiersh"
-      says to pass the modifier, if present, on to the subcall.  If this is
-      a group (e.g. INHERITFLAG_MXNMASK), and it is on in "callflagsh", the
-      entire field in "modifiersh" must be on or off.  It will be on if the
-      subcall involcation is marked "inherit_mxn" or wahatever.
-
-      If the bit is off in "callflagsh", the corresponding bit in "modifiersh"
-      says to force the modifier.  In this case groups are treated as individual
-      modifiers.  An individual switch like "force_3x3" causes that key to be
-      placed in the field of "modifiersh". */
-
-   uint32 modifiersh;
-} by_def_item;
-
-typedef struct {
-   uint32 callflags1;    /* The CFLAG1_??? flags. */
-   uint32 callflagsh;    /* The mask for the heritable flags. */
-   /* Within the "callflagsh" field, the various grouped fields
-      (e.g. INHERITFLAG_MXNMASK) are uniform -- either all the bits are
-      on or they are all off.  A call can only inherit the entire group,
-      by saying "mxn_is_inherited". */
-   uint32 callflagsf;    /* The ESCAPE_WORD__???  and CFLAGH__??? flags. */
-   short int age;
-   short int level;
-   calldef_schema schema;
-   union {
-      struct {
-         calldef_block *def_list;
-      } arr;            /* if schema = schema_by_array */
-      struct {
-         uint32 flags;
-         uint32 *stuff;
-      } matrix;         /* if schema = schema_matrix or schema_partner_matrix */
-      struct {
-         int howmanyparts;
-         by_def_item *defarray;  /* Dynamically allocated, there are "howmanyparts" of them. */
-      } def;            /* if schema = schema_by_def */
-      struct {
-         by_def_item innerdef;
-         by_def_item outerdef;
-      } conc;           /* if schema = any of the concentric ones. */
-   } stuff;
-   /* This is the "pretty" name -- "@" escapes have been changed to things like "<N>".
-      If there are no escapes, this just points to the stuff below.
-      If escapes are present, it points to allocated storage elsewhere.
-      Either way, it persists throughout the program. */
-   Cstring menu_name;
-   /* Dynamically allocated to whatever size is required, will have trailing null.
-      This is the name as it appeared in the database, with "@" escapes. */
-   char name[4];
-} callspec_block;
 
 /*
  * A match_result describes the result of matching a string against
@@ -619,23 +231,6 @@ typedef enum {
    call_list_mode_abridging
 } call_list_mode_t;
 
-typedef struct glock {
-   concept_descriptor *concept;   /* the concept or end marker */
-   callspec_block *call;          /* if this is end mark, gives the call; otherwise unused */
-   callspec_block *call_to_print; /* the original call, for printing (sometimes the field
-                                     above gets changed temporarily) */
-   struct glock *next;            /* next concept, or, if this is end mark,
-                                     points to substitution list */
-   struct glock *subsidiary_root; /* for concepts that take a second call,
-                                     this is its parse root */
-   struct glock *gc_ptr;          /* used for reclaiming dead blocks */
-   call_conc_option_state options;/* number, selector, direction, etc. */
-   short replacement_key;         /* this is the "DFM1_CALL_MOD_MASK" stuff
-                                     (shifted down) for a modification block */
-   short no_check_call_level;     /* if nonzero, don't check whether this call
-                                     is at the level. */
-} parse_block;
-
 typedef struct {
    parse_block **concept_write_save_ptr;
    concept_kind save_concept_kind;
@@ -708,99 +303,6 @@ typedef enum {
 } start_select_kind;
 #define NUM_START_SELECT_KINDS (((int) start_select_change_header_comment)+1)
 
-/* For ui_command_select: */
-/* BEWARE!!  This next definition must be keyed to the array "title_string"
-   in sdgetout.c, and maybe stuff in the UI.  For example, see "command_menu"
-   in sdtables.c. */
-/* BEWARE!!  The order is slightly significant -- all search-type commands
-   are >= command_resolve, and all "create some setup" commands
-   are >= command_create_any_lines.  Certain tests are made easier by this. */
-typedef enum {
-   command_quit,
-   command_undo,
-   command_erase,
-   command_abort,
-   command_create_comment,
-   command_change_outfile,
-   command_change_header,
-   command_getout,
-   command_cut_to_clipboard,
-   command_delete_entire_clipboard,
-   command_delete_one_call_from_clipboard,
-   command_paste_one_call,
-   command_paste_all_calls,
-#ifdef NEGLECT
-   command_neglect,
-#endif
-   command_save_pic,
-   command_help,
-   command_simple_mods,
-   command_all_mods,
-   command_toggle_conc_levels,
-   command_toggle_act_phan,
-   command_toggle_retain_after_error,
-   command_toggle_nowarn_mode,
-   command_toggle_singleclick_mode,
-   command_refresh,
-   command_resolve,            /* Search commands start here */
-   command_normalize,
-   command_standardize,
-   command_reconcile,
-   command_random_call,
-   command_simple_call,
-   command_concept_call,
-   command_level_call,
-   command_8person_level_call,
-   command_create_any_lines,   /* Create setup commands start here */
-   command_create_waves,
-   command_create_2fl,
-   command_create_li,
-   command_create_lo,
-   command_create_inv_lines,
-   command_create_3and1_lines,
-   command_create_any_col,
-   command_create_col,
-   command_create_magic_col,
-   command_create_dpt,
-   command_create_cdpt,
-   command_create_tby,
-   command_create_8ch,
-   command_create_any_qtag,
-   command_create_qtag,
-   command_create_3qtag,
-   command_create_qline,
-   command_create_3qline,
-   command_create_dmd,
-   command_create_any_tidal,
-   command_create_tidal_wave
-} command_kind;
-#define NUM_COMMAND_KINDS (((int) command_create_tidal_wave)+1)
-
-/* For ui_resolve_select: */
-/* BEWARE!!  This list must track the array "resolve_resources" in sdui-x11.c . */
-typedef enum {
-   resolve_command_abort,
-   resolve_command_find_another,
-   resolve_command_goto_next,
-   resolve_command_goto_previous,
-   resolve_command_accept,
-   resolve_command_raise_rec_point,
-   resolve_command_lower_rec_point,
-   resolve_command_write_this
-} resolve_command_kind;
-#define NUM_RESOLVE_COMMAND_KINDS (((int) resolve_command_write_this)+1)
-
-typedef struct {
-   Cstring command_name;
-   command_kind action;
-   int resource_id;
-} command_list_menu_item;
-
-typedef struct {
-   Cstring command_name;
-   resolve_command_kind action;
-} resolve_list_menu_item;
-
 typedef enum {
    file_write_no,
    file_write_double
@@ -827,56 +329,51 @@ typedef enum {
 #define POPUP_ACCEPT  1
 #define POPUP_ACCEPT_WITH_STRING 2
 
-EXPORT Cstring concept_key_table[];                                 /* in SDTABLES */
-
-/* In SDPICK */
-
-EXPORT void initialize_concept_sublists(void);
+extern Cstring concept_key_table[];                                 /* in SDSI */
+extern Cstring getout_strings[];                                    /* in SDUTIL */
+extern Cstring filename_strings[];                                  /* in SDUTIL */
 
 /* In SDGETOUT */
 
-EXPORT void create_resolve_menu_title(
+extern void create_resolve_menu_title(
    command_kind goal,
    int cur,
    int max,
    resolver_display_state state,
    char *title);
 
+/* In SDINIT */
+
+extern void build_database(call_list_mode_t call_list_mode);
+extern void initialize_menus(call_list_mode_t call_list_mode);
+
 /* In SDSI */
 
-EXPORT void *get_mem(uint32 siz);
+extern void *get_mem(uint32 siz);
 extern void *get_mem_gracefully(uint32 siz);
 extern void *get_more_mem(void *oldp, uint32 siz);
 extern void *get_more_mem_gracefully(void *oldp, uint32 siz);
 extern void free_mem(void *ptr);
-
-/* In SDINIT */
-
-EXPORT void build_database(call_list_mode_t call_list_mode);
-EXPORT void initialize_menus(call_list_mode_t call_list_mode);
-
-/* In SDSI */
-
 extern long_boolean parse_level(Cstring s, dance_level *levelp);
 extern char *read_from_call_list_file(char name[], int n);
 extern void write_to_call_list_file(Const char name[]);
 extern long_boolean close_call_list_file(void);
-EXPORT long_boolean install_outfile_string(char newstring[]);
-EXPORT long_boolean get_first_session_line(void);
-EXPORT long_boolean get_next_session_line(char *dest);
-EXPORT void prepare_to_read_menus(void);
-EXPORT void initialize_misc_lists(void);
-EXPORT long_boolean open_database(char *msg1, char *msg2);
+extern long_boolean install_outfile_string(char newstring[]);
+extern long_boolean get_first_session_line(void);
+extern long_boolean get_next_session_line(char *dest);
+extern void prepare_to_read_menus(void);
+extern void initialize_misc_lists(void);
+extern long_boolean open_database(char *msg1, char *msg2);
 extern uint32 read_8_from_database(void);
 extern uint32 read_16_from_database(void);
 extern void close_database(void);
 
 /* In SDUTIL */
 
-EXPORT void exit_program(int code) nonreturning;
-EXPORT long_boolean deposit_call_tree(modifier_block *anythings, parse_block *save1, int key);
-EXPORT uint32 the_topcallflags;
-EXPORT long_boolean there_is_a_call;
+NORETURN1 extern void exit_program(int code) NORETURN2;
+extern long_boolean deposit_call_tree(modifier_block *anythings, parse_block *save1, int key);
+extern uint32 the_topcallflags;
+extern long_boolean there_is_a_call;
 
 
 /* In SDUI */
@@ -922,113 +419,110 @@ extern void uims_database_error(Cstring message, Cstring call_name);
 extern void uims_bad_argument(Cstring s1, Cstring s2, Cstring s3);
 extern void uims_debug_print(Cstring s);		/* Alan's code only */
 extern void uims_fatal_error(Cstring pszLine1, Cstring pszLine2);
-extern void uims_final_exit(int code) nonreturning;
+NORETURN1 extern void uims_final_exit(int code) NORETURN2;
 
-EXPORT Cstring menu_names[];                                        /* in SDTABLES */
+extern int use_escapes_for_drawing_people;                          /* in SDUTIL */
+extern char *pn1;                                                   /* in SDUTIL */
+extern char *pn2;                                                   /* in SDUTIL */
+extern char *direc;                                                 /* in SDUTIL */
 
-EXPORT int use_escapes_for_drawing_people;                          /* in SDUTIL */
-EXPORT char *pn1;                                                   /* in SDUTIL */
-EXPORT char *pn2;                                                   /* in SDUTIL */
-EXPORT char *direc;                                                 /* in SDUTIL */
-
-EXPORT interactivity_state interactivity;                           /* in SDMAIN */
+extern interactivity_state interactivity;                           /* in SDMAIN */
 extern long_boolean testing_fidelity;                               /* in SDMAIN */
 extern selector_kind selector_for_initialize;                       /* in SDMAIN */
 extern int number_for_initialize;                                   /* in SDMAIN */
 extern Cstring *tagger_menu_list[NUM_TAGGER_CLASSES];
-EXPORT Cstring *selector_menu_list;
+extern Cstring *selector_menu_list;
 extern Cstring *circcer_menu_list;
-EXPORT call_conc_option_state verify_options;                       /* in SDMAIN */
+extern call_conc_option_state verify_options;                       /* in SDMAIN */
 extern long_boolean verify_used_number;                             /* in SDMAIN */
 extern long_boolean verify_used_selector;                           /* in SDMAIN */
-EXPORT int allowing_modifications;                                  /* in SDMAIN */
-EXPORT long_boolean allowing_all_concepts;                          /* in SDMAIN */
-EXPORT long_boolean using_active_phantoms;                          /* in SDMAIN */
+extern int allowing_modifications;                                  /* in SDMAIN */
 #ifdef OLD_ELIDE_BLANKS_JUNK
 extern long_boolean elide_blanks;                                   /* in SDMAIN */
 #endif
 extern long_boolean retain_after_error;                             /* in SDMAIN */
-EXPORT int singing_call_mode;                                       /* in SDMAIN */
-extern long_boolean diagnostic_mode;                                /* in SDMAIN */
-extern call_conc_option_state current_options;                      /* in SDMAIN */
+extern SDLIB_API long_boolean diagnostic_mode;                      /* in SDTOP */
+extern SDLIB_API int singing_call_mode;                             /* in SDTOP */
+extern SDLIB_API call_conc_option_state current_options;            /* in SDTOP */
+extern SDLIB_API long_boolean allowing_all_concepts;                          /* in SDMAIN */
+extern SDLIB_API long_boolean using_active_phantoms;                          /* in SDMAIN */
 
-EXPORT int session_index;                                           /* in SDSI */
+extern int session_index;                                           /* in SDSI */
 extern int num_command_commands;                                    /* in SDSI */
 extern Cstring *command_commands;                                   /* in SDSI */
-EXPORT command_kind *command_command_values;                        /* in SDSI */
-EXPORT int number_of_resolve_commands;                              /* in SDSI */
-EXPORT Cstring* resolve_command_strings;                            /* in SDSI */
-EXPORT resolve_command_kind *resolve_command_values;                /* in SDSI */
-EXPORT int no_graphics;                                             /* in SDSI */
-EXPORT int no_intensify;                                            /* in SDSI */
-EXPORT int reverse_video;                                           /* in SDSI */
-EXPORT int pastel_color;                                            /* in SDSI */
-EXPORT int no_color;                                                /* in SDSI */
-EXPORT int no_sound;                                                /* in SDSI */
+extern command_kind *command_command_values;                        /* in SDSI */
+extern int number_of_resolve_commands;                              /* in SDSI */
+extern Cstring* resolve_command_strings;                            /* in SDSI */
+extern resolve_command_kind *resolve_command_values;                /* in SDSI */
+extern int no_graphics;                                             /* in SDSI */
+extern int no_intensify;                                            /* in SDSI */
+extern int reverse_video;                                           /* in SDSI */
+extern int pastel_color;                                            /* in SDSI */
+extern int no_color;                                                /* in SDSI */
+extern int no_sound;                                                /* in SDSI */
 extern int random_number;                                           /* in SDSI */
 extern int hashed_randoms;                                          /* in SDSI */
-EXPORT char *database_filename;                                     /* in SDSI */
-EXPORT char *new_outfile_string;                                    /* in SDSI */
-EXPORT char *call_list_string;                                      /* in SDSI */
+extern char *database_filename;                                     /* in SDSI */
+extern char *new_outfile_string;                                    /* in SDSI */
+extern char *call_list_string;                                      /* in SDSI */
 
-EXPORT command_list_menu_item command_menu[];                       /* in SDTABLES */
-extern resolve_list_menu_item resolve_menu[];                       /* in SDTABLES */
-EXPORT Cstring startup_commands[];                                  /* in SDTABLES */
-EXPORT Cstring getout_strings[];                                    /* in SDTABLES */
-EXPORT Cstring filename_strings[];                                  /* in SDTABLES */
-extern dance_level level_threshholds[];                             /* in SDTABLES */
-extern dance_level higher_acceptable_level[];                       /* in SDTABLES */
+extern SDLIB_API selector_item selector_list[];                               /* in SDTABLES */
 
-EXPORT Const call_conc_option_state null_options;                   /* in SDMAIN */
-EXPORT concept_descriptor concept_descriptor_table[];               /* in SDCTABLE */
-EXPORT callspec_block **main_call_lists[NUM_CALL_LIST_KINDS];       /* in SDCTABLE */
-EXPORT int number_of_calls[NUM_CALL_LIST_KINDS];                    /* in SDCTABLE */
-EXPORT dance_level calling_level;                                   /* in SDCTABLE */
+extern Const call_conc_option_state null_options;                   /* in SDMAIN */
+extern SDLIB_API concept_descriptor concept_descriptor_table[];               /* in SDCTABLE */
+extern SDLIB_API callspec_block **main_call_lists[NUM_CALL_LIST_KINDS];       /* in SDCTABLE */
+extern SDLIB_API int number_of_calls[NUM_CALL_LIST_KINDS];                    /* in SDCTABLE */
+extern SDLIB_API dance_level calling_level;                                   /* in SDCTABLE */
 
 extern long_boolean enable_file_writing;                            /* in SDUTIL */
 extern long_boolean singlespace_mode;                               /* in SDUTIL */
-EXPORT long_boolean nowarn_mode;                                    /* in SDUTIL */
-EXPORT long_boolean accept_single_click;                            /* in SDUTIL */
-EXPORT Cstring cardinals[];                                         /* in SDUTIL */
-extern Cstring ordinals[];                                          /* in SDUTIL */
-extern selector_item selector_list[];                               /* in SDUTIL */
-EXPORT Cstring direction_names[];                                   /* in SDUTIL */
-EXPORT int last_direction_kind;                                     /* in SDUTIL */
+extern long_boolean nowarn_mode;                                    /* in SDUTIL */
+extern long_boolean accept_single_click;                            /* in SDUTIL */
+extern Cstring menu_names[];                                        /* in SDUTIL */
+extern command_list_menu_item command_menu[];                       /* in SDUTIL */
+extern resolve_list_menu_item resolve_menu[];                       /* in SDUTIL */
+extern Cstring startup_commands[];                                  /* in SDUTIL */
+extern SDLIB_API Cstring cardinals[];                                         /* in SDUTIL */
+extern SDLIB_API Cstring ordinals[];                                          /* in SDUTIL */
+extern SDLIB_API Cstring direction_names[];                                   /* in SDUTIL */
+extern int last_direction_kind;                                     /* in SDUTIL */
 
-EXPORT int *concept_list;        /* indices of all concepts */
-EXPORT int concept_list_length;
-EXPORT int *level_concept_list; /* indices of concepts valid at current level */
-EXPORT int level_concept_list_length;
+extern int *concept_list;        /* indices of all concepts */
+extern int concept_list_length;
+extern int *level_concept_list; /* indices of concepts valid at current level */
+extern int level_concept_list_length;
 
-EXPORT modifier_block *fcn_key_table_normal[FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1];
-EXPORT modifier_block *fcn_key_table_start[FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1];
-EXPORT modifier_block *fcn_key_table_resolve[FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1];
-EXPORT match_result user_match;
+extern modifier_block *fcn_key_table_normal[FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1];
+extern modifier_block *fcn_key_table_start[FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1];
+extern modifier_block *fcn_key_table_resolve[FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1];
+extern match_result user_match;
 
+extern SDLIB_API concept_descriptor centers_concept;                          /* in SDCTABLE */
 extern concept_descriptor special_magic;                            /* in SDCTABLE */
 extern concept_descriptor special_interlocked;                      /* in SDCTABLE */
-extern concept_descriptor mark_end_of_list;                         /* in SDCTABLE */
+extern SDLIB_API concept_descriptor mark_end_of_list;                         /* in SDCTABLE */
 extern concept_descriptor marker_decline;                           /* in SDCTABLE */
-extern concept_descriptor marker_concept_mod;                       /* in SDCTABLE */extern concept_descriptor marker_concept_comment;                   /* in SDCTABLE */
+extern SDLIB_API concept_descriptor marker_concept_mod;                       /* in SDCTABLE */
+extern SDLIB_API concept_descriptor marker_concept_comment;                   /* in SDCTABLE */
 extern concept_descriptor marker_concept_supercall;                 /* in SDCTABLE */
 
 extern int abs_max_calls;                                           /* in SDMAIN */
 extern int max_base_calls;                                          /* in SDMAIN */
-extern callspec_block **base_calls;                                 /* in SDMAIN */
-EXPORT uint32 number_of_taggers[NUM_TAGGER_CLASSES];                /* in SDMAIN */
-EXPORT callspec_block **tagger_calls[NUM_TAGGER_CLASSES];           /* in SDMAIN */
-EXPORT uint32 number_of_circcers;                                   /* in SDMAIN */
-EXPORT callspec_block **circcer_calls;                              /* in SDMAIN */
-EXPORT char outfile_string[];                                       /* in SDMAIN */
-EXPORT char header_comment[];                                       /* in SDMAIN */
+extern SDLIB_API callspec_block **base_calls;                       /* in SDTOP */
+extern uint32 number_of_taggers[NUM_TAGGER_CLASSES];                /* in SDMAIN */
+extern SDLIB_API callspec_block **tagger_calls[NUM_TAGGER_CLASSES];           /* in SDMAIN */
+extern uint32 number_of_circcers;                                   /* in SDMAIN */
+extern SDLIB_API callspec_block **circcer_calls;                              /* in SDMAIN */
+extern char outfile_string[];                                       /* in SDMAIN */
+extern char header_comment[];                                       /* in SDMAIN */
 extern long_boolean need_new_header_comment;                        /* in SDMAIN */
-EXPORT call_list_mode_t glob_call_list_mode;                        /* in SDMAIN */
-EXPORT int sequence_number;                                         /* in SDMAIN */
-EXPORT int starting_sequence_number;                                /* in SDMAIN */
+extern call_list_mode_t glob_call_list_mode;                        /* in SDMAIN */
+extern int sequence_number;                                         /* in SDMAIN */
+extern int starting_sequence_number;                                /* in SDMAIN */
 extern int last_file_position;                                      /* in SDMAIN */
 extern int global_age;                                              /* in SDMAIN */
-EXPORT parse_state_type parse_state;                                /* in SDMAIN */
-EXPORT int uims_menu_index;                                         /* in SDMAIN */
+extern parse_state_type parse_state;                                /* in SDMAIN */
+extern int uims_menu_index;                                         /* in SDMAIN */
 extern long_boolean uims_menu_cross;                                /* in SDMAIN */
 extern long_boolean uims_menu_magic;                                /* in SDMAIN */
 extern long_boolean uims_menu_intlk;                                /* in SDMAIN */
@@ -1041,12 +535,12 @@ extern int whole_sequence_low_lim;                                  /* in SDMAIN
 /* in SDSI */
 
 extern long_boolean open_session(int argc, char **argv);
-EXPORT int process_session_info(Cstring *error_msg);
-EXPORT long_boolean open_call_list_file(char filename[]);
-EXPORT long_boolean open_accelerator_region(void);
-EXPORT long_boolean get_accelerator_line(char line[]);
-EXPORT void close_init_file(void);
-EXPORT void final_exit(int code) nonreturning;
+extern int process_session_info(Cstring *error_msg);
+extern long_boolean open_call_list_file(char filename[]);
+extern long_boolean open_accelerator_region(void);
+extern long_boolean get_accelerator_line(char line[]);
+extern void close_init_file(void);
+NORETURN1 extern void final_exit(int code) NORETURN2;
 
 
 /* in SDMAIN */
@@ -1055,7 +549,7 @@ extern long_boolean deposit_call(
    callspec_block *call,
    Const call_conc_option_state *options);
 extern long_boolean deposit_concept(concept_descriptor *conc);
-EXPORT int MAYBECALLBACK sdmain(int argc, char *argv[]);
+extern int MAYBECALLBACK sdmain(int argc, char *argv[]);
 extern parse_block *get_parse_block(void);
 
 extern void ttu_final_option_setup(int *use_escapes_for_drawing_people_p,
@@ -1124,3 +618,7 @@ extern void ttu_bell(void);
 
 extern void initialize_signal_handlers(void);
 extern void refresh_input(void);
+
+#ifdef __cplusplus
+}
+#endif

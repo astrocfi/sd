@@ -51,8 +51,8 @@ The knowledge of calls and concepts that this program can provide is
 only a tiny part what you need to learn in order to be a good caller
 or dancer.  To call successfully, you need to master many skills,
 such as timing, flow, judging difficulty, floor interaction, and choosing
-precisely the right words to say.  This last skill is as improtant at high levels
-as at low levels.  Subtle differences in the words you choose,
+precisely the right words to say.  This last skill is as important at high
+levels as at low levels.  Subtle differences in the words you choose,
 and their timing and inflection, can have a tremendous influence on the
 success of the dancers.  Sd attempts to print the correct words in all
 cases, but you will only succeed if you have a deep understanding of
@@ -180,6 +180,7 @@ A somewhat different version runs on Unix systems running the X Window System in
 @menu
 * Getting Sd or Sdtty::         Getting Sd or Sdtty
 * Documentation::               Documentation
+* Software Safety::             Software Safety
 * A Few Technical Details::     A Few Technical Details
 * Installing on a PC::          Installing on a PC
 * Licensing Terms::             Licensing Terms
@@ -245,7 +246,7 @@ If your mailer can interpret MIME messages, we can also send you Sd
 by email.  MIME is a draft Internet standard for structured mail, and
 it includes support for mailing large binary files.
 
-@node Documentation, A Few Technical Details, Getting Sd or Sdtty, Intro
+@node Documentation, Software Safety, Getting Sd or Sdtty, Intro
 @unnumberedsec Documentation
 
 If you are on the Internet, you can browse or download @code{Sd}/@code{Sdtty}
@@ -283,7 +284,20 @@ There are also some documents describing a few special features in more detail.
 Printed copies of the manual are available from the authors, or may be
 printed from the file @file{sd_doc.ps}.
 
-@node A Few Technical Details, Installing on a PC, Documentation, Intro
+@node Software Safety, A Few Technical Details, Documentation, Intro
+@unnumberedsec Software Safety
+
+The computer on which @code{Sd} and @code{Sdtty} and their documentation
+are developed has no Internet or modem connections at all.
+No mail is sent or received, and no web browsing is done, on this computer.
+Only software from trustworthy sources is installed.  Each version of
+the program is digitally signed, using a 512-bit secret PGP/RSA key,
+and then transferred to another computer by removable disk.  The files
+are then mailed to the web server.  Before placing it on the web, the
+server authenticates the signature and verifies, with the PGP signature
+algorithm, that the files were not tampered with in transit.
+
+@node A Few Technical Details, Installing on a PC, Software Safety, Intro
 @unnumberedsec A Few Technical Details
 
 Although it is a ``Windows application'', @code{Sdtty} does not use the
@@ -335,8 +349,10 @@ the start menu and giving the location of the @file{install.exe}
 file.  For example, you can install from a diskette by selecting
 ``Run'' and typing ``A:install.exe''.
 
-The installation will delete any pre-existing software in the
-@file{C:\Sd} folder, but will not damage or delete any sequence
+If any pre-existing calling program files were in the @file{C:\Sd} folder,
+they will be saved in a folder with a name like @file{C:\Sd_pre3281}
+before the new version is
+installed.  The installation will not damage or delete any sequence
 transcript files or initialization files.
 
 If you have downloaded the documentation files in ``bulk'' form in
@@ -379,10 +395,10 @@ You can, of course, copy the shortcuts anywhere, and edit them with the ``Proper
 operation of the Windows Explorer.  Among the things you can do is put command-line
 arguments into them.  For example, you can make another copy of the @code{Sd} icon
 on the Desktop (under a different name), and arrange for the program, when launched
-with that icon, to run in inverse video mode.  Run the ``Properties'' operation
+with that icon, to run in reverse video mode.  Run the ``Properties'' operation
 on the copied icon, and change the @file{Target} specification on the
 @file{Shortcut} page from ``@code{C:\sd\sd.exe}'' to
-``@code{C:\sd\sd.exe -inverse_video}''.
+``@code{C:\sd\sd.exe -reverse_video}''.
 
 @node Licensing Terms, Author Contact, Installing on a PC, Intro
 @unnumberedsec Licensing Terms

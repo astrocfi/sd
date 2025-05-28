@@ -2103,12 +2103,18 @@ columns_magic_tandem
       Returns FALSE if that person is a phantom or faces the
       opposite way or is T-boned.
 
+      Also: in 3x2 column, tests "magic" other person in column.  For center,
+      tests end person in the direction that the person under test is facing.
+
 columns_magic_antitandem
       applies to 4x2 columns only.  Returns TRUE if the magic tandem
       partner of the person under test (the person in the opposite
       corner of the same box) is alive and facing the opposite direction.
       Returns FALSE if that person is a phantom or faces the same
       way or is T-boned.
+
+      Also: in 3x2 column, tests "magic" other person in column.  For center,
+      tests end person in the direction that the person under test is facing.
 
 columns_once_rem_tandem
       applies to 4x2 columns only.  Returns TRUE if the person
@@ -2572,6 +2578,7 @@ There are a number of internal ones not shown here.  See the file ~/sd/restricti
                                     1x8 - a grand 2FL; 4x1 - single DPT or single CDPT;
                                     qtag - 2FL in center; 2x2 - "1-faced" box;
                                     4x4 - consistent 2FL's; 4x2 columns - a DPT or CDPT;
+                                    trngl - all 3 facing the same way.
    3x3_2fl_only,                 /* 1x6/2x6 - "2-faced lines" of 3 facing one way, 3 the other */
    4x4_2fl_only,                 /* 1x8/2x8 - "2-faced lines" of 4 facing one way, 4 the other */
    leads_only,                   /* 2x2 - all people are leads, and not T-boned */
@@ -2591,44 +2598,56 @@ There are a number of internal ones not shown here.  See the file ~/sd/restricti
                                        So this includes waves, inverted lines, columns,
                                        magic columns, diamonds, wave-based triangles...
    3x3couples_only,                 1x3/1x6/2x3/2x6/1x12 lines - each group of 3 people are
-                                    facing the same way and are line-like,
+                                       facing the same way and are line-like,
    4x4couples_only,                 1x4/1x8/2x4/2x8/1x16 lines - each group of 4 people are
-                                    facing the same way and are line-like,
+                                       facing the same way and are line-like,
    awkward_centers,                 1x2, 1x4, 1x6, 2x4, or 1x8 - centers must not have
-                                    left hands with each other
+                                       left hands with each other
    diamond_like,                    dmd, qtag or ptpd - points look sideways, and centers
-                                    are line-like
+                                       are line-like
    qtag_like,                       dmd/qtag/ptpd/3dmd/4dmd - points look in or out,
-                                    and centers are line-like
+                                       and centers are line-like
    pu_qtag_like,                    dmd/qtag/ptpd/3dmd/4dmd - points look sideways,
-                                    and centers are column-like
-   nice_diamonds,                   dmd, qtag or ptpd - diamond(s) have consistent handedness,
-                                    assuming they are diamonds and not qtags
+                                       and centers are column-like
+   regular_tbone                    2x2/1x4/2x4 - demands that the box (or each box, if this is
+                                       a 2x4) be a "regular T-bone".  It must be locally
+                                       symmetric, 2 people looking in and 2 looking out.
+                                       That is, it must be the usual
+                                       "split circulate and roll" formation.
+                                       From a 1x4, it demands a similar regularity and
+                                       symmetry.  The ends must be symmetric to each other
+                                       and T-boned to the centers, who must be symmetric.
+                                       Also, the ends must be column-like and the centers
+                                       must be line-like.
+   nice_diamonds,                   dmd, qtag or ptpd - diamond(s) are actual diamonds, and
+                                       have consistent handedness.
+   dmd_facing,                      dmd, qtag or ptpd - diamond(s) are actual diamonds, are
+                                       facing, and have consistent handedness.
    in_or_out,                       2x2/2x4 - all facing in or all facing out of box of 4.
-                                    4x2/4x1/2x1 - [single] 8 chain or trade by
-                                    (one or the other; we don't care which)
-                                    The 2x2/2x4/4x2 versions of these require that people
-                                    not be T-boned -- they must face in or out as couples.
-                                    To allow each person to be independent, use the qualifier
-                                    (but not restriction) "independent_in_or_out".
+                                       4x2/4x1/2x1 - [single] 8 chain or trade by
+                                       (one or the other; we don't care which)
+                                       The 2x2/2x4/4x2 versions of these require that people
+                                       not be T-boned -- they must face in or out as couples.
+                                       To allow each person to be independent, use the qualifier
+                                       (but not restriction) "independent_in_or_out".
    magic_only,                      3x2 or 4x2 - magic column; 2x4 - inverted lines;
-                                    1x4 - single inverted line; 2x2 - inverted box
-                                    thar/crosswave - two waves of opposite handedness
+                                       1x4 - single inverted line; 2x2 - inverted box
+                                       thar/crosswave - two waves of opposite handedness
    explodable,                      1x4 - centers facing the same way
    reverse_explodable,              1x4 - ends facing the same way
    peelable_box,                    2x2, 3x2, 4x2, 5x2, 6x2 or 8x2 - all people in each
-                                    column are facing same way
+                                       column are facing same way
    ends_are_peelable,               2x4 - ends are a box with each person in genuine tandem
    siamese_in_quad                  Any 2x4 or 4x2 - the people in each quadrant, if they
-                                    exist, face the same way.  C1 phantom - the same.
+                                       exist, face the same way.  C1 phantom - the same.
    not_tboned,                      2x2 - people must not be T-boned
    opposite_sex,                    2x1 - people must be opposite sexes facing each other
    quarterbox_or_col,               4x2/3x2 - acceptable setup for "quick step" or
-                                    "triple cross".  This ignores any people in line-like
-                                    orientation.
+                                       "triple cross".  This ignores any people in line-like
+                                       orientation.
    quarterbox_or_magic_col,         4x2/3x2 - acceptable setup for "magic quick step" or
-                                    "make magic".  This ignores any people in line-like
-                                    orientation.
+                                       "make magic".  This ignores any people in line-like
+                                       orientation.
 
                            APPENDIX C -- QUALIFIERS
 
@@ -2656,9 +2675,9 @@ There are a number of internal ones not shown here.  See the file ~/sd/restricti
                                                 of OPPOSITE handedness (sorry)
                                              bone6 - ends tandem in wave of correct handedness
 
-   all_facing_same,                 Same as corresponding restriction, above.
-   1fl_only,                        Same as corresponding restriction, above.
-   2fl_only,                        Same as corresponding restriction, above.
+   all_facing_same,                 Same as corresponding restriction, above, with "live".
+   1fl_only,                        Same as corresponding restriction, above, with "live".
+   2fl_only,                        Same as corresponding restriction, above, with "live".
                                        This can take the "live" and/or "left/right/in/out"
                                        mofifiers:
 
@@ -2666,12 +2685,19 @@ There are a number of internal ones not shown here.  See the file ~/sd/restricti
                                        qtag - applies to center 2FL
                                        4x2 - I/O means starting/completed DPT
 
-   3x3_2fl_only,                    Same as corresponding restriction, above.
-   4x4_2fl_only,                    Same as corresponding restriction, above.
+   3x3_2fl_only,                    Same as corresponding restriction, above, with "live".
+   4x4_2fl_only,                    Same as corresponding restriction, above, with "live".
    couples_only,                    Same as corresponding restriction, above.
-   3x3couples_only,                 Same as corresponding restriction, above.
-   4x4couples_only,                 Same as corresponding restriction, above.
-   magic_only,                      Same as corresponding restriction, above.
+                                    The "live" modifier might not work for 2x2 -- check!
+   3x3couples_only,                 Same as corresponding restriction, above, with "live".
+   4x4couples_only,                 Same as corresponding restriction, above, with "live".
+
+
+   leads_only     same / live
+   trailers_only
+
+
+   magic_only,                      Same as corresponding restriction, above, with "live".
                                        This can take the "live" and/or "left/right/in/out"
                                        mofifiers:
                                           2x4 - I/O refers to centers
@@ -2685,7 +2711,8 @@ There are a number of internal ones not shown here.  See the file ~/sd/restricti
                                     Also, if "in" or "out" is given, the "live" modifier
                                     requires at least one live end to make the distinction
                                     definitive.  It does not require all live people.
-                       NOTE that "gen_n_4_tag" is identical to "qtag_like"
+                                    NOTE that "gen_n_4_tag" is identical to "qtag_like"
+
    gen_n_4_tag                      dmd/qtag/3dmd/4dmd - this is a "general 1/4 tag",
                                     in which the ends could individually be facing either
                                     in or out, and the centers form some kind of line.
@@ -2695,11 +2722,19 @@ There are a number of internal ones not shown here.  See the file ~/sd/restricti
                                     one live end, so that the in/out test is definitive.
                                     It does not test for all live people the way it does
                                     in some other cases.
-   pu_qtag_like,                    Same as corresponding restriction, above.  Right/left refer
+
+   pu_qtag_like                     Same as corresponding restriction, above.  Right/left refer
                                        to points.  The "live" modifier demands that there be
                                        be at least one definitive person to test right or left.
                                        It does not demand all people live.  It is meaningless
                                        if left or right isn't specified.
+
+   regular_tbone                    Same as corresponding restriction, above.
+                                       The "live" modifier demands that there all people
+                                       be present.  The "in" or "out" modifiers may be used
+                                       only with 1x4 setups.  They control the ends of the
+                                       1x4.  They must looking into or out of the 1x4 column.
+
    gen_qbox                         2x4/4x2 - demands that everyone be column-like.  This is
                                        intended to be used with the "left" or "right" modifiers.
                                        It demands that the center 4 have that handedness.  When
@@ -2710,9 +2745,12 @@ There are a number of internal ones not shown here.  See the file ~/sd/restricti
                                        demand that they be column-like.  Hence, a 1/4 box,
                                        3/4 box, column, or magic column will satisfy this,
                                        as long as the centers have the indicated handedness.
-   in_or_out,                       Same as corresponding restriction, above.
+   in_or_out,                       Same as corresponding restriction, above, with "live".
                                        This can take the "live" and/or "in" or "out" mofifiers
                                        to specify, for example, an 8 chain or a trade by.
+
+   centers_in_or_out      Really ought to document this!   Live
+
    independent_in_or_out,           2x2/2x4/4x2 - like "in_or_out", but does not require
                                     people to be coupled.  They can be arbitrarily T-boned,
                                     and it just tests that each person is a leader or trailer
@@ -2721,8 +2759,21 @@ There are a number of internal ones not shown here.  See the file ~/sd/restricti
    miniwaves,                       Same as corresponding restriction, above.
    not_miniwaves,                   True if all people are live, and the miniwaves restriction,
                                     above, FAILS.
+
+
+   dmd_intlk          Really ought to document this!   Live
+   dmd_not_intlk      Really ought to document this!   Live
+
+
    dmd_same_point,                  dmd - centers would circulate to same point
-   dmd_facing,                      dmd - diamond is fully occupied and fully facing
+
+   nice_diamonds                    Same as corresponding restriction, above.
+                                       This can take the "live" and/or "left/right"
+                                       mofifiers -- left/right demands that handedness.
+   dmd_facing                       Same as corresponding restriction, above.
+                                       This can take the "live" and/or "left/right"
+                                       mofifiers -- left/right demands that handedness
+                                       for the ends; the centers will be the opposite.
    true_Z_cw, true_Z_ccw,           2x3, 3x4, 2x6, 4x6, 3x8 - each 2x3 setup is a genuine Z.
                                     In a 2x3 setup it also demands that the shear direction
                                     be as shown.  In the larger setups either qualifier

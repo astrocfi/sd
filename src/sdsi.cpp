@@ -16,7 +16,7 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-    This is for version 30. */
+    This is for version 32. */
 
 /* This defines the following functions:
    general_initialize
@@ -66,7 +66,7 @@ and the following external variables:
    command_command_values
    number_of_resolve_commands
    resolve_command_strings
-   startup_commands
+   concept_key_table
    no_graphics
    no_intensify
    reverse_video
@@ -124,8 +124,14 @@ and the following external variables:
       appearing in the XOPEN manual into ANSI C.  We can't
       imagine why anyone would ever use the prototypes
       in the prehistoric nomenclature. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 extern void srand48(long int);
 extern long int lrand48(void);
+#ifdef __cplusplus
+}
+#endif
 #endif
 
 #if defined(_SYS5_SOURCE) || defined(_XOPEN_SOURCE) || defined(_AES_SOURCE) || defined(sun)
@@ -151,16 +157,32 @@ extern long int lrand48(void);
 #if __STDC__ || defined(sun)
 #include <stdlib.h>
 #else
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 extern void free(void *ptr);
 extern char *malloc(unsigned int siz);
 extern char *realloc(char *oldp, unsigned int siz);
 extern void srand48(long int);
 extern long int lrand48(void);
+#ifdef __cplusplus
+}
+#endif
+
 #endif
 
 #if defined(WIN32)
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 extern void srand(long int);
 extern long int rand(void);
+#ifdef __cplusplus
+}
+#endif
+
 #endif
 
 #if !defined(sun) && (!__STDC__ || defined(MSDOS))
@@ -179,7 +201,7 @@ extern char *strerror(int);
    started taking these standards as semi-seriously as they do now, it was
    MUCH HARDER to make a program portable than what you just saw. */
 
-#include "sd.h"
+#include "sdprog.h"
 #include "paths.h"
 
 
@@ -197,6 +219,73 @@ command_kind *command_command_values;
 int number_of_resolve_commands;
 Cstring *resolve_command_strings;
 resolve_command_kind *resolve_command_values;
+
+/* e1 = page up
+   e2 = page down
+   e3 = end
+   e4 = home
+   e5 = left arrow
+   e6 = up arrow
+   e7 = right arrow
+   e8 = down arrow
+   e13 = insert
+   e14 = delete */
+
+Cstring concept_key_table[] = {
+   /* These are the standard bindings. */
+   "cu     deleteline",
+   "cx     deleteword",
+   "e6     lineup",
+   "e8     linedown",
+   "e1     pageup",
+   "e2     pagedown",
+   "+f1    heads start",
+   "+sf1   sides start",
+   "+cf1   just as they are",
+   "f2     two calls in succession",
+   "sf2    twice",
+   "f3     pick random call",
+   "sf3    pick concept call",
+   "cf3    pick simple call",
+   "f4     resolve",
+   "sf4    reconcile",
+   "cf4    normalize",
+   "f5     refresh display",
+   "sf5    keep picture",
+   "cf5    insert a comment",
+   "e13    insert a comment",   /* insert */
+   "f6     simple modifications",
+   "sf6    allow modifications",
+   "cf6    centers",
+   "f7     toggle concept levels",
+   "+f7    toggle concept levels",
+   "sf7    toggle active phantoms",
+   "+sf7   toggle active phantoms",
+   "f8     quoteanything",
+   "sf8    cut to clipboard",
+   "cf8    paste one call",
+   "f9     undo last call",
+   "+f9    exit from the program",
+   "*f9    abort the search",
+   "sf9    undo last call",
+   "+sf9   exit from the program",
+   "*sf9   abort the search",
+   "f10    write this sequence",
+   "*f10   write this sequence",
+   "sf10   change output file",
+   "+sf10  change output file",
+   "f11    pick level call",
+   "sf11   pick 8 person level call",
+   "*f12   find another",
+   "*sf12  accept current choice",
+   "*cf12  previous",
+   "*af12  next",
+   "*se6   raise reconcile point",  /* shift up arrow */
+   "*e5    previous",               /* left arrow */
+   "*e7    next",                   /* right arrow */
+   "*se8   lower reconcile point",  /* shift down arrow */
+   (char *) 0};
+
 int no_graphics = 0;     /* 1 = "no_checkers"; 2 = "no_graphics" */
 int no_intensify = 0;
 int reverse_video = 0;   /* 0 = black-on-white (default); 1 = white-on-black */
@@ -309,11 +398,13 @@ extern void *get_more_mem(void *oldp, uint32 siz)
 
 /* This will not fail catastrophically, but may return nil pointer
    on nonzero request.  Client must check and react accordingly. */
+/* An older version of this actually called "malloc" or "realloc"
+   depending on whether the incoming pointer was nil.  There was
+   a comment pointing out that this was because
+   "SunOS 4 realloc doesn't handle NULL".  Isn't that funny? */
 extern void *get_more_mem_gracefully(void *oldp, uint32 siz)
 {
-   if (!oldp)
-      return malloc(siz);	/* SunOS 4 realloc doesn't handle NULL */
-   return realloc(oldp, siz);
+   return realloc((char *) oldp, siz);
 }
 
 
@@ -771,11 +862,6 @@ extern long_boolean parse_level(Cstring s, dance_level *levelp)
 }
 
 
-
-
-extern FILE *call_list_file;
-
-
 extern char *read_from_call_list_file(char name[], int n)
 {
    return (fgets(name, n, call_list_file));
@@ -1016,16 +1102,6 @@ extern void prepare_to_read_menus(void)
          resolve_command_values[i] = resolve_menu[i].action;
       }
    }
-
-
-   /* A few other modules want to initialize some static tables. */
-
-   initialize_tandem_tables();
-   initialize_getout_tables();
-   initialize_restr_tables();
-   initialize_conc_tables();
-   initialize_map_tables();
-   initialize_touch_tables();
 }
 
 

@@ -1,7 +1,7 @@
 /*
    sdmatch.c - command matching support
 
-    Copyright (C) 1990-1998  William B. Ackerman.
+    Copyright (C) 1990-1999  William B. Ackerman.
 
     This file is unpublished and contains trade secrets.  It is
     to be used by permission only and not to be disclosed to third
@@ -34,8 +34,6 @@
 
 /* #define TIMING */ /* uncomment to display timing information */
 
-#include "sd.h"
-#include "sdmatch.h"
 #include <string.h> /* for strcpy */
 #include <stdio.h>  /* for sprintf */
 #include <ctype.h>  /* for tolower */
@@ -43,6 +41,10 @@
 #ifdef TIMING
 #include <time.h>
 #endif
+
+#include "sdprog.h"
+#include "sdmatch.h"
+
 
 
 modifier_block *fcn_key_table_normal[FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1];
@@ -1921,7 +1923,7 @@ Private void search_menu(uims_reply kind)
          callspec_block *cb;
 
          if (GLOB_verify && verify_has_stopped) break;  /* Don't waste time after user stops us. */
-         parse_state.call_list_to_use = static_call_menu;
+         parse_state.call_list_to_use = (call_list_kind) static_call_menu;
          cb = main_call_lists[static_call_menu][i];
          everyones_real_result.match.call_ptr = cb;
          everyones_real_result.yield_depth = (cb->callflags1 & CFLAG1_YIELD_IF_AMBIGUOUS) ? 1 : 0;
@@ -1943,7 +1945,7 @@ Private void search_menu(uims_reply kind)
    
       for (i = 0; i < menu_length; i++) {
          concept_descriptor *this_concept = &concept_descriptor_table[*item];
-         parse_state.call_list_to_use = static_call_menu;
+         parse_state.call_list_to_use = (call_list_kind) static_call_menu;
          everyones_real_result.match.concept_ptr = this_concept;
          everyones_real_result.yield_depth = (this_concept->concparseflags & CONCPARSE_YIELD_IF_AMB) ? 1 : 0;
          match_pattern(this_concept->name, this_concept);

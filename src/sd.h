@@ -14,156 +14,141 @@
 
 #include <stdio.h>
 #include <setjmp.h>
-#include "database.h"
+
+#include "basetype.h"
 #include "sdui.h"
 
 
-#define MAX_PEOPLE 24
-/* Actually, we don't make a resolve bigger than 3.  This is how much space
-   we allocate for things.  Just being careful. */
-#define MAX_RESOLVE_SIZE 5
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-/* Probability (out of 8) that a concept will be placed on a randomly generated call. */
-#define CONCEPT_PROBABILITY 2
-/* We use lots more concepts for "standardize", since it is much less likely (though
-   by no means impossible) that a plain call will do the job. */
-#define STANDARDIZE_CONCEPT_PROBABILITY 6
+#include "sdcom.h"
 
-/* This defines a person in a setup.  Unfortunately, there is too much data to fit into 32 bits. */
-typedef struct {
-   uint32 id1;       /* Frequently used bits go here. */
-   uint32 id2;       /* Bits used for evaluating predicates. */
-} personrec;
-
-/* Person bits for "id1" field are:
-     0x80000000 -
-     0x40000000 - not side girl    **** these 10 bits are "permanent" -- they never change in a person
-     0x20000000 - not side boy
-     0x10000000 - not head girl
-     0x08000000 - not head boy
-     0x04000000 - head corner
-     0x02000000 - side corner
-     0x01000000 - head
-     0x00800000 - side
-     0x00400000 - boy
-     0x00200000 - girl             **** end of permanent bits
-      4 000 000 - roll direction is CCW
-      2 000 000 - roll direction is neutral
-      1 000 000 - roll direction is CW
-        400 000 - fractional stability enabled
-        200 000 - stability "v" field -- 2 bits
-        100 000 -     "
-         40 000 - stability "r" field -- 3 bits
-         20 000 -     "
-         10 000 -     "
-          4 000 - live person (just so at least one bit is always set)
-          2 000 - active phantom (see below, under XPID_MASK)
-          1 000 - virtual person (see below, under XPID_MASK)
-            700 - these 3 bits identify actual person
-             60 - these 2 bits must be clear for rotation
-             10 - part of rotation (facing north/south)
-              4 - bit must be clear for rotation
-              2 - part of rotation
-              1 - part of rotation (facing east/west)
-*/
-
-#define ID1_PERM_NSG           0x40000000UL
-#define ID1_PERM_NSB           0x20000000UL
-#define ID1_PERM_NHG           0x10000000UL
-#define ID1_PERM_NHB           0x08000000UL
-#define ID1_PERM_HCOR          0x04000000UL
-#define ID1_PERM_SCOR          0x02000000UL
-#define ID1_PERM_HEAD          0x01000000UL
-#define ID1_PERM_SIDE          0x00800000UL
-#define ID1_PERM_BOY           0x00400000UL
-#define ID1_PERM_GIRL          0x00200000UL
-
-#define ID1_PERM_ALLBITS       0x7FE00000UL
-
-/* These are a 3 bit field -- ROLL_BIT tells where its low bit lies. */
-#define ROLL_MASK   07000000UL
-#define ROLL_BIT    01000000UL
-#define ROLLBITL    04000000UL
-#define ROLLBITM    02000000UL
-#define ROLLBITR    01000000UL
-
-/* These are a 6 bit field. */
-#define STABLE_MASK  0770000UL
-#define STABLE_ENAB  0400000UL
-#define STABLE_VBIT  0100000UL
-#define STABLE_RBIT  0010000UL
-
-#define BIT_PERSON   0004000UL
-#define BIT_ACT_PHAN 0002000UL
-#define BIT_TANDVIRT 0001000UL
-
-/* Person ID.  These bit positions are extremely hard wired into, among other
-   things, the resolver and the printer. */
-#define PID_MASK  0700UL
-
-/* Extended person ID.  These 5 bits identify who the person is for the purpose
-   of most manipulations.  0 to 7 are normal live people (the ones who squared up).
-   8 to 15 are virtual people assembled for tandem or couples.  16 to 31 are
-   active (but nevertheless identifiable) phantoms.  This means that, when
-   BIT_ACT_PHAN is on, it usurps the meaning of BIT_TANDVIRT. */
-#define XPID_MASK 03700UL
-
-#define d_mask  04013UL
-#define d_north 04010UL
-#define d_south 04012UL
-#define d_east  04001UL
-#define d_west  04003UL
+#define EXPIRATION_STATE_BITS (RESULTFLAG__YOYO_FINISHED|RESULTFLAG__TWISTED_FINISHED|RESULTFLAG__SPLIT_FINISHED)
 
 
-#define ID2_HEADLINE   0x80000000UL
-#define ID2_SIDELINE   0x40000000UL
-#define ID2_CTR2       0x20000000UL
-#define ID2_BELLE      0x10000000UL
-#define ID2_BEAU       0x08000000UL
-#define ID2_CTR6       0x04000000UL
-#define ID2_OUTR2      0x02000000UL
-#define ID2_OUTR6      0x01000000UL
-#define ID2_TRAILER    0x00800000UL
-#define ID2_LEAD       0x00400000UL
-#define ID2_CTRDMD     0x00200000UL
-#define ID2_NCTRDMD    0x00100000UL
-#define ID2_CTR1X4     0x00080000UL
-#define ID2_NCTR1X4    0x00040000UL
-#define ID2_CTR1X6     0x00020000UL
-#define ID2_NCTR1X6    0x00010000UL
-#define ID2_OUTR1X3    0x00008000UL
-#define ID2_NOUTR1X3   0x00004000UL
-#define ID2_FACING     0x00002000UL
-#define ID2_NOTFACING  0x00001000UL
-#define ID2_CENTER     0x00000800UL
-#define ID2_END        0x00000400UL
-#define ID2_NEARCOL    0x00000200UL
-#define ID2_NEARLINE   0x00000100UL
-#define ID2_NEARBOX    0x00000080UL
-#define ID2_FARCOL     0x00000040UL
-#define ID2_FARLINE    0x00000020UL
-#define ID2_FARBOX     0x00000010UL
-#define ID2_CTR4       0x00000008UL
-#define ID2_OUTRPAIRS  0x00000004UL
-#define ID2_FACEFRONT  0x00000002UL
-#define ID2_FACEBACK   0x00000001UL
-
-/* These are the bits that get filled in by "update_id_bits". */
-#define BITS_TO_CLEAR (ID2_LEAD|ID2_TRAILER|ID2_BEAU|ID2_BELLE| \
-ID2_FACING|ID2_NOTFACING|ID2_CENTER|ID2_END|ID2_CTR2|ID2_CTR6|ID2_OUTR2|ID2_OUTR6| \
-ID2_CTRDMD|ID2_NCTRDMD|ID2_CTR1X4|ID2_NCTR1X4|ID2_CTR1X6|ID2_NCTR1X6| \
-ID2_OUTR1X3|ID2_NOUTR1X3|ID2_CTR4|ID2_OUTRPAIRS)
+/* It should be noted that the CMD_MISC__??? and RESULTFLAG__XXX bits have
+   nothing to do with each other.  It is not intended that
+   the flags resulting from one call be passed to the next.  In fact, that
+   would be incorrect.  The CMD_MISC__??? bits should start at zero at the
+   beginning of each call, and accumulate stuff as the call goes deeper into
+   recursion.  The RESULTFLAG__??? bits should, in general, be the OR of the
+   bits of the components of a compound call, though this may not be so for
+   the elongation bits at the bottom of the word. */
 
 
-/* These are the really global position bits.  They get filled in only at the top level. */
-#define GLOB_BITS_TO_CLEAR (ID2_NEARCOL|ID2_NEARLINE|ID2_NEARBOX|ID2_FARCOL|ID2_FARLINE|ID2_FARBOX|ID2_FACEFRONT|ID2_FACEBACK|ID2_HEADLINE|ID2_SIDELINE)
 
+#define TEST_HERITBITS(x,y) ((x).her8it & (y))
 
 
 typedef struct {
-   setup_kind skind;
-   int srotation;
-} small_setup;
+   long_boolean reverse_order;
+   long_boolean first_call;
+   int instant_stop;
+   uint32 do_half_of_last_part;
+   uint32 do_last_half_of_first_part;
+   int highlimit;
+   int subcall_index;
+   int subcall_incr;
+} fraction_info;
+
+
+/* Meanings of the items in a "setup_command" structure:
+
+   parseptr
+      The full parse tree for the concept(s)/call(s) we are trying to do.
+      While we traverse the big concepts in this tree, the "callspec" and
+      "cmd_final_flags" are typically zero.  They only come into use when
+      we reach the end of a subtree of big concepts, at which point we read
+      the remaining "small" (or "final") concepts and the call name out of
+      the end of the concept parse tree.
+
+   callspec
+      The call, after we reach the end of the parse tree.
+
+   cmd_final_flags
+      The various "final concept" flags with names INHERITFLAG_??? and FINAL__???.
+      The INHERITFLAG_??? bits contain the final concepts like "single" that
+      can be inherited from one part of a call definition to another.  The
+      FINAL__??? bits contain other miscellaneous final concepts.
+
+   cmd_misc_flags
+      Other miscellaneous info controlling the execution of the call,
+      with names like CMD_MISC__???.
+
+   cmd_misc2_flags
+      Even more miscellaneous info controlling the execution of the call,
+      with names like CMD_MISC2__???.
+
+   do_couples_heritflags
+      These are "heritable" flags that tell what single/3x3/etc modifiers
+      are to be used in determining what to do when CMD_MISC__DO_AS_COUPLES
+      is specified.
+
+   cmd_frac_flags
+      If nonzero, fractionalization info controlling the execution of the call.
+      See the comments in front of "get_fraction_info" in sdmoves.c for details.
+
+   cmd_assume
+      Any "assume waves" type command.
+
+   skippable_concept
+      For "<so-and-so> work <concept>", this is the concept to be skipped by some people.
+
+   prior_elongation_bits;
+      This tells, for a 2x2 setup prior to having a call executed, how that
+      2x2 is elongated (due to these people being the outsides) in the east-west
+      or north-south direction.  Since 2x2's are always totally canonical, the
+      interpretation of the elongation direction is always absolute.  A 1 means
+      the elongation is east-west.  A 2 means the elongation is north-south.
+      A zero means there was no elongation. */
+
+
+#define CMD_FRAC_NULL_VALUE      0x00000111
+#define CMD_FRAC_HALF_VALUE      0x00000112
+#define CMD_FRAC_LASTHALF_VALUE  0x00001211
+
+#define CMD_FRAC_PART_BIT        0x00010000
+#define CMD_FRAC_PART_MASK       0x000F0000
+#define CMD_FRAC_REVERSE         0x00100000
+/* This is a 3 bit field. */
+#define CMD_FRAC_CODE_MASK       0x00E00000
+
+/* Here are the codes that can be inside.  We require that CMD_FRAC_CODE_ONLY be zero.
+   We require that the PART_MASK field be nonzero (we use 1-based part numbering)
+   when these are in use.  If the PART_MASK field is zero, the code must be zero
+   (that is, CMD_FRAC_CODE_ONLY), and this stuff is not in use. */
+
+#define CMD_FRAC_CODE_ONLY           0x00000000
+#define CMD_FRAC_CODE_ONLYREV        0x00200000
+#define CMD_FRAC_CODE_FROMTO         0x00400000
+#define CMD_FRAC_CODE_FROMTOREV      0x00600000
+#define CMD_FRAC_CODE_FROMTOREVREV   0x00800000
+#define CMD_FRAC_CODE_FROMTOMOST     0x00A00000
+#define CMD_FRAC_CODE_LATEFROMTOREV  0x00C00000
+
+#define CMD_FRAC_PART2_BIT       0x01000000
+#define CMD_FRAC_PART2_MASK      0x07000000
+#define CMD_FRAC_IMPROPER_BIT    0x08000000
+#define CMD_FRAC_BREAKING_UP     0x10000000
+#define CMD_FRAC_FORCE_VIS       0x20000000
+#define CMD_FRAC_LASTHALF_ALL    0x40000000
+#define CMD_FRAC_FIRSTHALF_ALL   0x80000000
+
+
+/* These flags go along for the ride, in some parts of the code (BUT NOT
+   THE CALLFLAGSF WORD OF A CALLSPEC!), in the same word as the heritable flags,
+   but are not part of the inheritance mechanism.  We use symbols that have been
+   graciously provided for us from database.h to tell us what bits may be safely
+   used next to the heritable flags. */
+
+#define FINAL__SPLIT                      CFLAGHSPARE_1
+#define FINAL__SPLIT_SQUARE_APPROVED      CFLAGHSPARE_2
+#define FINAL__SPLIT_DIXIE_APPROVED       CFLAGHSPARE_3
+#define FINAL__MUST_BE_TAG                CFLAGHSPARE_4
+#define FINAL__TRIANGLE                   CFLAGHSPARE_5
+#define FINAL__LEADTRIANGLE               CFLAGHSPARE_6
 
 /* Flags that reside in the "cmd_misc_flags" word of a setup BEFORE a call is executed.
 
@@ -306,7 +291,6 @@ static Const uint32 CMD_MISC__MUST_SPLIT_MASK    = (CMD_MISC__MUST_SPLIT_HORIZ|C
 #define             CMD_MISC__VERIFY_COLS          0x00003000UL
 
 
-
 /* Flags that reside in the "cmd_misc2_flags" word of a setup BEFORE a call is executed. */
 
 /* The following are used for the "<anyone> work <concept>" or "snag the <anyone>" mechanism:
@@ -390,634 +374,69 @@ static Const uint32 CMD_MISC2__ANY_WORK_INVERT   = 0x00200000UL;
 #define             CMD_MISC2__CTR_END_MASK        0x1FC00000UL
 static Const uint32 CMD_MISC2_RESTRAINED_SUPER   = 0x20000000UL;
 
+typedef enum {
+   simple_normalize,
+   normalize_before_isolated_call,
+   normalize_to_6,
+   normalize_to_4,
+   normalize_to_2,
+   normalize_after_triple_squash,
+   normalize_before_merge
+} normalize_action;
 
-/* Flags that reside in the "result_flags" word of a setup AFTER a call is executed.
+typedef enum {
+   merge_strict_matrix,
+   merge_c1_phantom,
+   merge_c1_phantom_nowarn,
+   merge_c1phan_nocompress,
+   merge_without_gaps
+} merge_action;
 
-   The low two bits tell, for a 2x2 setup after
-   having a call executed, how that 2x2 is elongated in the east-west or
-   north-south direction.  Since 2x2's are always totally canonical, the
-   interpretation of the elongation direction is always absolute.  A 1 in this
-   field means the elongation is east-west.  A 2 means the elongation is
-   north-south.  A zero means the elongation is unknown.  These bits will be set
-   whenever we know which elongation is preferred.  This will be the case if the
-   setup was an elongated 2x2 prior to the call (because they are the ends), or
-   the setup was a 1x4 prior to the call.  So, for example, after any recycle
-   from a wave, these bits will be set to indicate that the dancers want to
-   elongate the 2x2 perpendicular to their original wave.  These bits will be
-   looked at only if the call was directed to the ends (starting from a grand
-   wave, for example.)  Furthermore, the bits will be overridden if the
-   "concentric" or "checkpoint" concepts were used, or if the ends did this
-   as part of a concentrically defined call for which some forcing modifier
-   such as "force_columns" was used.  Note that these two bits are in the same
-   format as the "cmd.prior_elongation" field of a setup before the call is
-   executed.  In many case, that field can be simply copied into the "result_flags"
-   field.
-
-   RESULTFLAG__DID_LAST_PART means that, when a sequentially defined call was executed
-   with the "cmd_frac_flags" word nonzero, so that just one part was done,
-   that part was the last part.  Hence, if we are doing a call with some "piecewise"
-   or "random" concept, we do the parts of the call one at a time, with appropriate
-   concepts on each part, until it comes back with this flag set.  This is used with
-   RESULTFLAG__PARTS_ARE_KNOWN.
-
-   RESULTFLAG__PARTS_ARE_KNOWN means that the bit in RESULTFLAG__DID_LAST_PART is
-   valid.  Sometimes we are unable to obtain information about parts, because
-   no one is doing the call.  This can legally happen, for example, on "interlocked
-   parallelogram leads shakedown while the trailers star thru" from waves.  In each
-   virtual 2x2 setup one or the other of the calls is being done by no one.
-
-   RESULTFLAG__EXPAND_TO_2X3 means that a call was executed that takes a four person
-   starting setup (typically a line) and yields a 2x3 result setup.  Two of those
-   result spots will be phantoms, of course.  When recombining a divided setup in
-   which such a call was executed, if the recombination wuold yield a 2x6, and if
-   the center 4 spots would be empty, this flag directs divided_setup_move to
-   collapse the setup to a 2x4.  This is what makes calls like "pair the line"
-   and "step and slide" behave correctly from parallel lines and from a grand line.
-
-   RESULTFLAG__NEED_DIAMOND means that a call has been executed with the "magic" or
-   "interlocked" modifier, and it really should be changed to the "magic diamond"
-   concept.  Otherwise, we might end up saying "magic diamond single wheel" when
-   we should have said "magic diamond, diamond single wheel".
-
-   RESULTFLAG__SPLIT_AXIS_MASK has info saying whether the call was split
-   vertically (2) or horizontally (1) in "absolute space".  We can't say for
-   sure whether the orientation is absolute, since a client may have stripped
-   out rotation info.  What we mean is that it is relative to the incoming setup
-   including the effect of its rotation field.  So, if the incoming setup was
-   a 2x4 with rotation=0, that is, horizontally oriented in "absolute space",
-   1 means it was done in 2x2's (split horizontally) and 2 means it was done
-   in 1x4's (split vertically).  If the incoming setup was a 2x4 with
-   rotation=1, that is, vertically oriented in "absolute space", 1 means it
-   was done in 1x4's (split horizontally) and 2 means it was done in 2x2's
-   (split vertically).  3 means that the call was a 1 or 2 person call, that
-   could be split either way, so we have no information.
-
-   RESULTFLAG__ACTIVE_PHANTOMS_ON and _OFF tell whether the state of the "active
-   phantoms" mode flag was used in this sequence.  If it was read and found to
-   be on, RESULTFLAG__ACTIVE_PHANTOMS_ON is set.  If it was read and found to
-   be off, RESULTFLAG__ACTIVE_PHANTOMS_OFF is set.  It is, of course, read any
-   time an "assume <whatever> concept is invoked.  This information is used to
-   tell what kind of annotation to place in the transcript file to tell what
-   assumptions were made.  The reason for having both bits is that the state
-   of the active phantoms mode can be toggled at arbitrary times, so a single
-   card might have both usages.  In that unusual case, we want to so indicate
-   on the card.
+/* We sometimes don't want to use "const" in C++,
+   because initializers are screwed up.
+   In particular, we need this on any structure type
+   that is initialized sometimes in C files (e.g. sdtables.c)
+   and sometimes in C++ files (e.g. the structure "expand_thing"
+   has initializers in sdmoves.cpp as well.)
 */
-
-/* The two low bits are used for result elongation, so we start with 0x00000004. */
-#define RESULTFLAG__DID_LAST_PART        0x00000004UL
-#define RESULTFLAG__PARTS_ARE_KNOWN      0x00000008UL
-#define RESULTFLAG__EXPAND_TO_2X3        0x00000010UL
-#define RESULTFLAG__NEED_DIAMOND         0x00000020UL
-#define RESULTFLAG__IMPRECISE_ROT        0x00000040UL
-/* This is a six bit field. */
-#define RESULTFLAG__SPLIT_AXIS_FIELDMASK 0x00001F80UL
-#define RESULTFLAG__SPLIT_AXIS_XMASK     0x00000380UL
-#define RESULTFLAG__SPLIT_AXIS_XBIT      0x00000080UL
-#define RESULTFLAG__SPLIT_AXIS_YMASK     0x00001C00UL
-#define RESULTFLAG__SPLIT_AXIS_YBIT      0x00000400UL
-#define RESULTFLAG__SPLIT_AXIS_SEPARATION  3
-
-static Const uint32 RESULTFLAG__ACTIVE_PHANTOMS_ON  = 0x00002000UL;
-static Const uint32 RESULTFLAG__ACTIVE_PHANTOMS_OFF = 0x00004000UL;
-static Const uint32 RESULTFLAG__SECONDARY_DONE      = 0x00008000UL;
-static Const uint32 RESULTFLAG__YOYO_FINISHED       = 0x00010000UL;
-static Const uint32 RESULTFLAG__TWISTED_FINISHED    = 0x00020000UL;
-static Const uint32 RESULTFLAG__SPLIT_FINISHED      = 0x00040000UL;
-static Const uint32 RESULTFLAG__NO_REEVALUATE       = 0x00080000UL;
-static Const uint32 RESULTFLAG__DID_Z_COMPRESSION   = 0x00100000UL;
-static Const uint32 RESULTFLAG__VERY_ENDS_ODD       = 0x00200000UL;
-static Const uint32 RESULTFLAG__VERY_CTRS_ODD       = 0x00400000UL;
-
-#define EXPIRATION_STATE_BITS (RESULTFLAG__YOYO_FINISHED|RESULTFLAG__TWISTED_FINISHED|RESULTFLAG__SPLIT_FINISHED)
-
-
-/* It should be noted that the CMD_MISC__??? and RESULTFLAG__XXX bits have
-   nothing to do with each other.  It is not intended that
-   the flags resulting from one call be passed to the next.  In fact, that
-   would be incorrect.  The CMD_MISC__??? bits should start at zero at the
-   beginning of each call, and accumulate stuff as the call goes deeper into
-   recursion.  The RESULTFLAG__??? bits should, in general, be the OR of the
-   bits of the components of a compound call, though this may not be so for
-   the elongation bits at the bottom of the word. */
-
-
-
-#define TEST_HERITBITS(x,y) ((x).her8it & (y))
-
-typedef struct {
-   uint32 her8it;
-   uint32 final;
-} uint64;
-
-#define MAPCODE(setupkind,num,mapkind,rot) ((((int)(setupkind)) << 10) | (((int)(mapkind)) << 4) | (((num)-1) << 1) | (rot))
-
-
-typedef struct gfwzqg {
-   Const setup_kind bigsetup;
-   Const calldef_schema lyzer;
-   Const veryshort maps[24];
-   Const short inlimit;
-   Const short outlimit;
-   Const setup_kind insetup;
-   Const setup_kind outsetup;
-   Const int bigsize;
-   Const int inner_rot;    /* 1 if inner setup is rotated CCW relative to big setup */
-   Const int outer_rot;    /* 1 if outer setup is rotated CCW relative to big setup */
-   Const int mapelong;
-   Const int center_arity;
-   Const int elongrotallow;
-   Const calldef_schema getout_schema;
-   uint32 used_mask_analyze;
-   uint32 used_mask_synthesize;
-   struct gfwzqg *next_analyze;
-   struct gfwzqg *next_synthesize;
-} cm_thing;
-
-
-typedef enum {
-   meta_key_random,
-   meta_key_rev_random,   /* Must follow meta_key_random. */
-   meta_key_piecewise,
-   meta_key_initially,
-   meta_key_finish,
-   meta_key_revorder,
-   meta_key_like_a,
-   meta_key_finally,
-   meta_key_nth_part_work,
-   meta_key_skip_nth_part,
-   meta_key_shift_n,
-   meta_key_shifty,
-   meta_key_echo,
-   meta_key_rev_echo,   /* Must follow meta_key_echo. */
-   meta_key_shift_half,
-   meta_key_shift_n_half
-} meta_key_kind;
-
-
-/* These bits appear in the "concparseflags" word. */
-/* This is a duplicate, and exists only to make menus nicer.
-   Ignore it when scanning in parser. */
-#define CONCPARSE_MENU_DUP       0x00000001UL
-/* If the parse turns out to be ambiguous, don't use this one --
-   yield to the other one. */
-#define CONCPARSE_YIELD_IF_AMB   0x00000002UL
-/* Parse directly.  It directs the parser to allow this concept
-   (and similar concepts) and the following call to be typed
-   on one line.  One needs to be very careful about avoiding
-   ambiguity when setting this flag. */
-#define CONCPARSE_PARSE_DIRECT   0x00000004UL
-/* These are used by "print_recurse" in sdutil.c to control the printing.
-   They govern the placement of commas. */
-#define CONCPARSE_PARSE_L_TYPE 0x8
-#define CONCPARSE_PARSE_F_TYPE 0x10
-#define CONCPARSE_PARSE_G_TYPE 0x20
-
-
-/* The following items are not actually part of the setup description,
-   but are placed here for the convenience of "move" and similar procedures.
-   They contain information about the call to be executed in this setup.
-   Once the call is complete, that is, when printing the setup or storing it
-   in a history array, this stuff is meaningless. */
-
-typedef struct {
-   unsigned int assump_col:  16;  /* Stuff to go with assumption -- col vs. line. */
-   unsigned int assump_both:  8;  /* Stuff to go with assumption -- "handedness" enforcement --
-                                                0/1/2 = either/1st/2nd. */
-   unsigned int assump_cast:  6;  /* Nonzero means there is an "assume normal casts" assumption. */
-   unsigned int assump_live:  1;  /* One means to accept only if everyone is live. */
-   unsigned int assump_negate:1;  /* One means to invert the sense of everything. */
-   call_restriction assumption;   /* Any "assume waves" type command. */
-} assumption_thing;
-
-
-typedef struct {
-   long_boolean reverse_order;
-   long_boolean first_call;
-   int instant_stop;
-   uint32 do_half_of_last_part;
-   uint32 do_last_half_of_first_part;
-   int highlimit;
-   int subcall_index;
-   int subcall_incr;
-} fraction_info;
-
-
-/* Meanings of the items in a "setup_command" structure:
-
-   parseptr
-      The full parse tree for the concept(s)/call(s) we are trying to do.
-      While we traverse the big concepts in this tree, the "callspec" and
-      "cmd_final_flags" are typically zero.  They only come into use when
-      we reach the end of a subtree of big concepts, at which point we read
-      the remaining "small" (or "final") concepts and the call name out of
-      the end of the concept parse tree.
-
-   callspec
-      The call, after we reach the end of the parse tree.
-
-   cmd_final_flags
-      The various "final concept" flags with names INHERITFLAG_??? and FINAL__???.
-      The INHERITFLAG_??? bits contain the final concepts like "single" that
-      can be inherited from one part of a call definition to another.  The
-      FINAL__??? bits contain other miscellaneous final concepts.
-
-   cmd_misc_flags
-      Other miscellaneous info controlling the execution of the call,
-      with names like CMD_MISC__???.
-
-   cmd_misc2_flags
-      Even more miscellaneous info controlling the execution of the call,
-      with names like CMD_MISC2__???.
-
-   do_couples_heritflags
-      These are "heritable" flags that tell what single/3x3/etc modifiers
-      are to be used in determining what to do when CMD_MISC__DO_AS_COUPLES
-      is specified.
-
-   cmd_frac_flags
-      If nonzero, fractionalization info controlling the execution of the call.
-      See the comments in front of "get_fraction_info" in sdmoves.c for details.
-
-   cmd_assume
-      Any "assume waves" type command.
-
-   skippable_concept
-      For "<so-and-so> work <concept>", this is the concept to be skipped by some people.
-
-   prior_elongation_bits;
-      This tells, for a 2x2 setup prior to having a call executed, how that
-      2x2 is elongated (due to these people being the outsides) in the east-west
-      or north-south direction.  Since 2x2's are always totally canonical, the
-      interpretation of the elongation direction is always absolute.  A 1 means
-      the elongation is east-west.  A 2 means the elongation is north-south.
-      A zero means there was no elongation. */
-
-
-#define CMD_FRAC_NULL_VALUE      0x00000111
-#define CMD_FRAC_HALF_VALUE      0x00000112
-#define CMD_FRAC_LASTHALF_VALUE  0x00001211
-
-#define CMD_FRAC_PART_BIT        0x00010000
-#define CMD_FRAC_PART_MASK       0x000F0000
-#define CMD_FRAC_REVERSE         0x00100000
-/* This is a 3 bit field. */
-#define CMD_FRAC_CODE_MASK       0x00E00000
-
-/* Here are the codes that can be inside.  We require that CMD_FRAC_CODE_ONLY be zero.
-   We require that the PART_MASK field be nonzero (we use 1-based part numbering)
-   when these are in use.  If the PART_MASK field is zero, the code must be zero
-   (that is, CMD_FRAC_CODE_ONLY), and this stuff is not in use. */
-
-#define CMD_FRAC_CODE_ONLY           0x00000000
-#define CMD_FRAC_CODE_ONLYREV        0x00200000
-#define CMD_FRAC_CODE_FROMTO         0x00400000
-#define CMD_FRAC_CODE_FROMTOREV      0x00600000
-#define CMD_FRAC_CODE_FROMTOREVREV   0x00800000
-#define CMD_FRAC_CODE_FROMTOMOST     0x00A00000
-#define CMD_FRAC_CODE_LATEFROMTOREV  0x00C00000
-
-#define CMD_FRAC_PART2_BIT       0x01000000
-#define CMD_FRAC_PART2_MASK      0x07000000
-#define CMD_FRAC_IMPROPER_BIT    0x08000000
-#define CMD_FRAC_BREAKING_UP     0x10000000
-#define CMD_FRAC_FORCE_VIS       0x20000000
-#define CMD_FRAC_LASTHALF_ALL    0x40000000
-#define CMD_FRAC_FIRSTHALF_ALL   0x80000000
-
-
-typedef struct {
-   parse_block *parseptr;
-   callspec_block *callspec;
-   uint64 cmd_final_flags;
-   uint32 cmd_frac_flags;
-   uint32 cmd_misc_flags;
-   uint32 cmd_misc2_flags;
-   uint32 do_couples_her8itflags;
-   assumption_thing cmd_assume;
-   uint32 prior_elongation_bits;
-   uint32 prior_expire_bits;
-   parse_block *restrained_concept;
-   uint32 restrained_fraction;
-   uint32 restrained_super8flags;
-   parse_block *skippable_concept;
-} setup_command;
-
-
-/* Warning!  Do not rearrange these fields without good reason.  There are data
-   initializers instantiating these in sdinit.c (test_setup_*) and in sdtables.c
-   (startinfolist) that will need to be rewritten. */
-typedef struct {
-   setup_kind kind;
-   int rotation;
-   setup_command cmd;
-   personrec people[MAX_PEOPLE];
-
-   /* The following item is not actually part of the setup description, but contains
-      miscellaneous information left by "move" and similar procedures, for the
-      convenience of whatever called same. */
-   uint32 result_flags;           /* Miscellaneous info, with names like RESULTFLAG__???. */
-
-   /* The following three items are only used if the setup kind is "s_normal_concentric".  Note in particular that
-      "outer_elongation" is thus underutilized, and that a lot of complexity goes into storing similar information
-      (in two different places!) in the "prior_elongation_bits" and "result_flags" words. */
-   small_setup inner;
-   small_setup outer;
-   int concsetup_outer_elongation;
-} setup;
-
-typedef struct {
-   long_boolean (*predfunc) (setup *, int, int, int, Const long int *);
-   Const long int *extra_stuff;
-} predicate_descriptor;
-
-typedef struct predptr_pair_struct {
-   predicate_descriptor *pred;
-   struct predptr_pair_struct *next;
-   /* Dynamically allocated to whatever size is required. */
-   uint16 arr[4];
-} predptr_pair;
-
-/* BEWARE!!  This list must track the array "warning_strings" in sdutil.c . */
-typedef enum {
-   warn__none,
-   warn__do_your_part,
-   warn__tbonephantom,
-   warn__awkward_centers,
-   warn__bad_concept_level,
-   warn__not_funny,
-   warn__hard_funny,
-   warn__rear_back,
-   warn__awful_rear_back,
-   warn__excess_split,
-   warn__lineconc_perp,
-   warn__dmdconc_perp,
-   warn__lineconc_par,
-   warn__dmdconc_par,
-   warn__xclineconc_perpc,
-   warn__xcdmdconc_perpc,
-   warn__xclineconc_perpe,
-   warn__ctrstand_endscpls,
-   warn__ctrscpls_endstand,
-   warn__each2x2,
-   warn__each1x4,
-   warn__each1x2,
-   warn__take_right_hands,
-   warn__ctrs_are_dmd,
-   warn__full_pgram,
-   warn__offset_gone,
-   warn__overlap_gone,
-   warn__to_o_spots,
-   warn__to_x_spots,
-   warn__check_butterfly,
-   warn__check_galaxy,
-   warn__some_rear_back,
-   warn__not_tbone_person,
-   warn__check_c1_phan,
-   warn__check_dmd_qtag,
-   warn__check_quad_dmds,
-   warn__check_3x4,
-   warn__check_2x4,
-   warn__check_4x4,
-   warn__check_hokey_4x4,
-   warn__check_4x4_start,
-   warn__check_pgram,
-   warn__ctrs_stay_in_ctr,
-   warn__check_c1_stars,
-   warn__check_gen_c1_stars,
-   warn__bigblock_feet,
-   warn__bigblockqtag_feet,
-   warn__diagqtag_feet,
-   warn__adjust_to_feet,
-   warn__some_touch,
-   warn__split_to_2x4s,
-   warn__split_to_2x3s,
-   warn__split_to_1x8s,
-   warn__split_to_1x6s,
-   warn__take_left_hands,
-   warn__evil_interlocked,
-   warn__split_phan_in_pgram,
-   warn__bad_interlace_match,
-   warn__not_on_block_spots,
-   warn__stupid_phantom_clw,
-   warn__bad_modifier_level,
-   warn__bad_call_level,
-   warn__did_not_interact,
-   warn__opt_for_normal_cast,
-   warn__opt_for_normal_hinge,
-   warn__opt_for_2fl,
-   warn_partial_solomon,
-   warn_same_z_shear,
-   warn__like_linear_action,
-   warn__no_z_action,
-   warn__phantoms_thinner,
-   warn__hokey_jay_shapechanger,
-   warn__split_1x6,
-   warn_interlocked_to_6,
-   warn__colocated_once_rem,
-   warn_big_outer_triangles,
-   warn_hairy_fraction,
-   warn_bad_collision,
-   warn__dyp_resolve_ok,
-   warn__unusual,
-   warn_controversial,
-   warn_serious_violation,
-   warn_bogus_yoyo_rims_hubs,
-   warn_pg_in_2x6,
-   warn__tasteless_com_spot,
-   warn__tasteless_slide_thru  /* If this ceases to be last, look 2 lines below! */
-} warning_index;
-#define NUM_WARNINGS (((int) warn__tasteless_slide_thru)+1)
-
-/* BEWARE!!  This list must track the array "resolve_table" in sdgetout.c . */
-typedef enum {
-   resolve_none,
-   resolve_rlg,
-   resolve_la,
-   resolve_ext_rlg,
-   resolve_ext_la,
-   resolve_slipclutch_rlg,
-   resolve_slipclutch_la,
-   resolve_circ_rlg,
-   resolve_circ_la,
-   resolve_pth_rlg,
-   resolve_pth_la,
-   resolve_tby_rlg,
-   resolve_tby_la,
-   resolve_xby_rlg,
-   resolve_xby_la,
-   resolve_dixie_grand,
-   resolve_prom,
-   resolve_revprom,
-   resolve_sglfileprom,
-   resolve_revsglfileprom,
-   resolve_circle
-} resolve_kind;
-
-typedef struct {
-   resolve_kind kind;
-   int distance;
-} resolve_indicator;
-
-
-/* These bits are used to allocate flag bits
-   that appear in the "callflagsf" word of a top level callspec_block
-   and the "cmd_final_flags.final" of a setup with its command block. */
-
-/* A 3-bit field. */
-#define CFLAGH__TAG_CALL_RQ_MASK          0x00000007UL
-#define CFLAGH__TAG_CALL_RQ_BIT           0x00000001UL
-#define CFLAGH__REQUIRES_SELECTOR         0x00000008UL
-#define CFLAGH__REQUIRES_DIRECTION        0x00000010UL
-#define CFLAGH__CIRC_CALL_RQ_BIT          0x00000020UL
-#define CFLAGH__ODD_NUMBER_ONLY           0x00000040UL
-#define CFLAGHSPARE_1                     0x00000080UL
-#define CFLAGHSPARE_2                     0x00000100UL
-#define CFLAGHSPARE_3                     0x00000200UL
-#define CFLAGHSPARE_4                     0x00000400UL
-#define CFLAGHSPARE_5                     0x00000800UL
-#define CFLAGHSPARE_6                     0x00001000UL
-/* We need to leave the top 8 bits free in order to accomodate the "CFLAG2" bits. */
-
-
-/* These flags go along for the ride, in some parts of the code (BUT NOT
-   THE CALLFLAGSF WORD OF A CALLSPEC!), in the same word as the heritable flags,
-   but are not part of the inheritance mechanism.  We use symbols that have been
-   graciously provided for us from database.h to tell us what bits may be safely
-   used next to the heritable flags. */
-
-#define FINAL__SPLIT                      CFLAGHSPARE_1
-#define FINAL__SPLIT_SQUARE_APPROVED      CFLAGHSPARE_2
-#define FINAL__SPLIT_DIXIE_APPROVED       CFLAGHSPARE_3
-#define FINAL__MUST_BE_TAG                CFLAGHSPARE_4
-#define FINAL__TRIANGLE                   CFLAGHSPARE_5
-#define FINAL__LEADTRIANGLE               CFLAGHSPARE_6
-
-/* These flags, and "CFLAGH__???" flags, go along for the ride, in the callflagsf
-   word of a callspec.  We use symbols that have been graciously
-   provided for us from database.h to tell us what bits may be safely used next
-   to the heritable flags.  Note that these bits overlap the FINAL__?? bits above.
-   These are used in the callflagsf word of a callspec.  The FINAL__?? bits are
-   used elsewhere.  They don't mix. */
-
-#define ESCAPE_WORD__LEFT                 CFLAGHSPARE_1
-#define ESCAPE_WORD__CROSS                CFLAGHSPARE_2
-#define ESCAPE_WORD__MAGIC                CFLAGHSPARE_3
-#define ESCAPE_WORD__INTLK                CFLAGHSPARE_4
-
-typedef struct glonk {
-   char txt[MAX_TEXT_LINE_LENGTH];
-   struct glonk *nxt;
-} comment_block;
-
-typedef struct flonk {
-   char txt[80];
-   struct flonk *nxt;
-} outfile_block;
-
-typedef uint32 defmodset;
-
-
-/* These flags go into the "concept_prop" field of a "concept_table_item".
-
-   CONCPROP__SECOND_CALL means that the concept takes a second call, so a sublist must
-      be created, with a pointer to same just after the concept pointer.
-
-   CONCPROP__USE_SELECTOR means that the concept requires a selector, which must be
-      inserted into the concept list just after the concept pointer.
-
-   CONCPROP__NEED_4X4   mean that the concept requires the indicated setup, and, at
-   CONCPROP__NEED_2X8   the top level, the existing setup should be expanded as needed.
-      etc....
-
-   CONCPROP__SET_PHANTOMS means that phantoms are in use under this concept, so that,
-      when looking for tandems or couples, we shouldn't be disturbed if we
-      pair someone with a phantom.  It is what makes "split phantom lines tandem"
-      work, so that "split phantom lines phantom tandem" is unnecessary.
-
-   CONCPROP__NO_STEP means that stepping to a wave or rearing back from one is not
-      allowed under this concept.
-
-   CONCPROP__GET_MASK means that tbonetest & livemask need to be computed before executing the concept.
-
-   CONCPROP__STANDARD means that the concept can be "standard".
-
-   CONCPROP__USE_NUMBER         If a concept takes one number, only CONCPROP__USE_NUMBER is set.
-   CONCPROP__USE_TWO_NUMBERS    If it takes two numbers both bits are set.
-
-   CONCPROP__SHOW_SPLIT means that the concept prepares the "split_axis" bits properly
-      for transmission back to the client.  Normally this is off, and the split axis bits
-      will be cleared after execution of the concept.
-
-   CONCPROP__NEED_ARG2_MATRIX means that the "arg2" word of the concept_descriptor
-      block contains additional bits of the "CONCPROP__NEED_3X8" kind to be sent to
-      "do_matrix_expansion".  This is done so that concepts with different matrix
-      expansion bits can share the same concept type.
-*/
-
-
-
-#define CONCPROP__SECOND_CALL      0x00000001UL
-#define CONCPROP__USE_SELECTOR     0x00000002UL
-#define CONCPROP__SET_PHANTOMS     0x00000004UL
-#define CONCPROP__NO_STEP          0x00000008UL
-
-/* A bit mask for the "NEEDK" bits. */
-#define CONCPROP__NEED_MASK        0x000001F0UL
-
-#define CONCPROP__NEEDK_4X4        0x00000010UL
-#define CONCPROP__NEEDK_2X8        0x00000020UL
-#define CONCPROP__NEEDK_2X6        0x00000030UL
-#define CONCPROP__NEEDK_4DMD       0x00000040UL
-#define CONCPROP__NEEDK_BLOB       0x00000050UL
-#define CONCPROP__NEEDK_4X6        0x00000060UL
-#define CONCPROP__NEEDK_3X8        0x00000070UL
-#define CONCPROP__NEEDK_3DMD       0x00000080UL
-#define CONCPROP__NEEDK_1X10       0x00000090UL
-#define CONCPROP__NEEDK_1X12       0x000000A0UL
-#define CONCPROP__NEEDK_3X4        0x000000B0UL
-#define CONCPROP__NEEDK_1X16       0x000000C0UL
-#define CONCPROP__NEEDK_QUAD_1X4   0x000000D0UL
-#define CONCPROP__NEEDK_TWINDMD    0x000000E0UL
-#define CONCPROP__NEEDK_TWINQTAG   0x000000F0UL
-#define CONCPROP__NEEDK_CTR_DMD    0x00000100UL
-#define CONCPROP__NEEDK_END_DMD    0x00000110UL
-#define CONCPROP__NEEDK_TRIPLE_1X4 0x00000120UL
-#define CONCPROP__NEEDK_CTR_1X4    0x00000130UL
-#define CONCPROP__NEEDK_END_1X4    0x00000140UL
-#define CONCPROP__NEEDK_CTR_2X2    0x00000150UL
-#define CONCPROP__NEEDK_END_2X2    0x00000160UL
-#define CONCPROP__NEEDK_3X4_D3X4   0x00000170UL
-#define CONCPROP__NEEDK_3X6        0x00000180UL
-#define CONCPROP__NEEDK_4D_4PTPD   0x00000190UL
-#define CONCPROP__NEEDK_4X5        0x000001A0UL
-#define CONCPROP__NEEDK_2X12       0x000001B0UL
-
-#define CONCPROP__NEED_ARG2_MATRIX 0x00000200UL                                   
-/* spare:                          0x00000400UL */
-/* spare:                          0x00000800UL */
-/* spare:                          0x00010000UL */
-/* spare:                          0x00020000UL */
-/* spare:                          0x00040000UL */
-/* spare:                          0x00080000UL */
-/* spare:                          0x00100000UL */
-#define CONCPROP__GET_MASK         0x00200000UL
-#define CONCPROP__STANDARD         0x00400000UL
-#define CONCPROP__USE_NUMBER       0x00800000UL
-#define CONCPROP__USE_TWO_NUMBERS  0x01000000UL
-#define CONCPROP__MATRIX_OBLIVIOUS 0x02000000UL
-#define CONCPROP__PERMIT_MATRIX    0x04000000UL
-#define CONCPROP__SHOW_SPLIT       0x08000000UL
-#define CONCPROP__PERMIT_MYSTIC    0x10000000UL
-#define CONCPROP__PERMIT_REVERSE   0x20000000UL
-
-typedef struct {
-   Const veryshort source_indices[24];
-   Const int size;
-   Const setup_kind inner_kind;
-   Const setup_kind outer_kind;
-   Const int rot;
+#ifdef __cplusplus
+#define C_const
+#else
+#define C_const const
+#endif
+
+typedef struct grylch {
+   C_const veryshort source_indices[24];
+   C_const int size;
+   C_const setup_kind inner_kind;
+   C_const setup_kind outer_kind;
+   C_const int rot;
+   C_const uint32 lillivemask;
+   C_const uint32 biglivemask;
+   C_const warning_index expwarning;
+   C_const warning_index norwarning;
+   C_const normalize_action action_level;
+   C_const uint32 expandconcpropmask;
+   struct grylch *next_expand;
+   struct grylch *next_compress;
 } expand_thing;
+
+typedef struct grilch {
+   C_const warning_index warning;
+   C_const int forbidden_elongation;   /* Low 2 bits = elongation bits to forbid;
+                                        "4" bit = must set elongation.
+                                        Also, the "8" bit means to use "gather"
+                                        and do this the other way.
+                                        Also, the "16" bit means allow only step
+                                        to a box, not step to a full wave. */
+   C_const expand_thing *expand_lists;
+   C_const setup_kind kind;
+   C_const uint32 live;
+   C_const uint32 dir;
+   C_const uint32 dirmask;
+   struct grilch *next;
+} full_expand_thing;
+
 
 typedef enum {    /* These control error messages that arise when we divide a setup
                      into subsetups (e.g. phantom lines) and find that one of
@@ -1040,40 +459,8 @@ typedef enum {    /* These control error messages that arise when we divide a se
 } phantest_kind;
 
 typedef enum {
-   /* Warning!!!!  Order is important!  See all the stupid ways these are used
-      in sdconc.c . */
-   selective_key_dyp,
-   selective_key_own,
-   selective_key_plain,
-   selective_key_disc_dist,
-   selective_key_ignore,
-   selective_key_work_concept,
-   selective_key_lead_for_a,
-   selective_key_work_no_concentric,
-   selective_key_snag_anyone,
-   selective_key_plain_from_id_bits
-} selective_key;
-
-typedef enum {
    disttest_t, disttest_nil, disttest_only_two,
    disttest_any, disttest_offset, disttest_z} disttest_kind;
-
-typedef enum {
-   simple_normalize,
-   normalize_before_isolated_call,
-   normalize_to_6,
-   normalize_to_4,
-   normalize_to_2,
-   normalize_after_triple_squash,
-   normalize_before_merge
-} normalize_action;
-
-typedef enum {
-   merge_strict_matrix,
-   merge_c1_phantom,
-   merge_c1_phantom_nowarn,
-   merge_without_gaps
-} merge_action;
 
 typedef enum {
    chk_none,
@@ -1090,177 +477,13 @@ typedef enum {
    chk_spec_directions
 } chk_type;
 
-typedef struct {
-   int size;
-   veryshort map1[17];
-   veryshort map2[17];
-   veryshort map3[8];
-   veryshort map4[8];
-   long_boolean ok_for_assume;
-   chk_type check;
-} restriction_thing;
-
-
-typedef struct fixerjunk {
-   Const setup_kind ink;
-   Const setup_kind outk;
-   Const int rot;
-   Const short prior_elong;
-   Const short numsetups;
-   Const struct fixerjunk *next1x2;
-   Const struct fixerjunk *next1x2rot;
-   Const struct fixerjunk *next1x4;
-   Const struct fixerjunk *next1x4rot;
-   Const struct fixerjunk *nextdmd;
-   Const struct fixerjunk *nextdmdrot;
-   Const struct fixerjunk *next2x2;
-   Const struct fixerjunk *next2x2v;
-   Const veryshort nonrot[24];
-} fixer;
-
-#define LOOKUP_NONE     0x1
-#define LOOKUP_DIST_DMD 0x2
-#define LOOKUP_DIST_BOX 0x4
-#define LOOKUP_DIST_CLW 0x8
-#define LOOKUP_DIAG_CLW 0x10
-#define LOOKUP_OFFS_CLW 0x20
-#define LOOKUP_DISC     0x40
-#define LOOKUP_IGNORE   0x80
-#define LOOKUP_Z        0x100
-
-
-typedef struct dirbtek {
-   Const uint32 key;
-   Const setup_kind kk;
-   Const uint32 thislivemask;
-   Const fixer *fixp;
-   Const fixer *fixp2;
-   Const int use_fixp2;
-   struct dirbtek *next;
-} sel_item;
-
-
-/* This allows 96 warnings. */
-/* BEWARE!!  If this is changed, this initializers for things like "no_search_warnings"
-   in sdamin.c will need to be updated. */
-#define WARNING_WORDS 3
-
-typedef struct {
-   uint32 bits[WARNING_WORDS];
-} warning_info;
-
-typedef struct {           /* This record is one state in the evolving sequence. */
-   parse_block *command_root;
-   setup state;
-   resolve_indicator resolve_flag;
-   long_boolean draw_pic;
-   warning_info warnings;
-   int centersp;           /* only nonzero for history[1] */
-   int text_line;          /* how many lines of text existed after this item was written,
-                              only meaningful if "written_history_items" is >= this index */
-} configuration;
-
-typedef struct {
-   uint32 concept_prop;      /* Takes bits of the form CONCPROP__??? */
-   void (*concept_action)(setup *, parse_block *, setup *);
-} concept_table_item;
-
-typedef struct {
-   char *name;
-   long_boolean into_the_middle;
-   setup the_setup;
-} startinfo;
 
 typedef enum {
-   error_flag_none = 0,          /* Must be zero because setjmp returns this. */
-   error_flag_1_line,            /* 1-line error message, text is in error_message1. */
-   error_flag_2_line,            /* 2-line error message, text is in error_message1 and
-                                    error_message2. */
-   error_flag_collision,         /* collision error, message is that people collided, they are in
-                                    collision_person1 and collision_person2. */
-   error_flag_wrong_resolve_command, /* "resolve" or similar command was called
-                                         in inappropriate context, text is in error_message1. */
-   error_flag_wrong_command,     /* clicked on something inappropriate in subcall reader. */
-   error_flag_cant_execute,      /* unable-to-execute error, person is in collision_person1,
-                                    text is in error_message1. */
-   error_flag_show_stats,        /* wants to display stale call statistics. */
-   error_flag_selector_changed,  /* warn that selector was changed during clipboard paste. */
-   error_flag_formation_changed  /* warn that formation changed during clipboard paste. */
-} error_flag_type;
+   restriction_passes,
+   restriction_fails,
+   restriction_no_item
+} restriction_test_result;
 
-typedef struct {
-   int *full_list;
-   int *on_level_list;
-   int full_list_size;
-} nice_setup_thing;
-
-typedef Const struct {
-   Const setup_kind result_kind;
-   Const int xfactor;
-   Const veryshort xca[24];
-   Const veryshort yca[24];
-   Const veryshort diagram[64];
-} coordrec;
-
-typedef uint32 id_bit_table[4];
-
-typedef Const struct {
-   /* This is the size of the setup MINUS ONE. */
-   Const int setup_limits;
-
-   /* These "coordrec" items have the fudged coordinates that are used for doing
-      press/truck calls.  For some setups, the coordinates of some people are
-      deliberately moved away from the obvious precise matrix spots so that
-      those people can't press or truck.  For example, the lateral spacing of
-      diamond points is not an integer.  If a diamond point does any truck or loop
-      call, he/she will not end up on the other diamond point spot (or any other
-      spot in the formation), so the call will not be legal.  This enforces our
-      view, not shared by all callers (Hi, Clark!) that the diamond points are NOT
-      as if the ends of lines of 3, and hence can NOT trade with each other by
-      doing a right loop 1. */
-   coordrec *setup_coords;
-
-   /* The above table is not suitable for performing mirror inversion because,
-      for example, the points of diamonds do not reflect onto each other.  This
-      table has unfudged coordinates, in which all the symmetries are observed.
-      This is the table that is used for mirror reversal.  Most of the items in
-      it are the same as those in the table above. */
-   coordrec *nice_setup_coords;
-
-   /* These determine how designators like "side boys" get turned into
-      "center 2", so that so-and-so moves can be done with the much
-      more powerful concentric mechanism. */
-
-   Const uint32 mask_normal;
-   Const uint32 mask_6_2;
-   Const uint32 mask_2_6;
-   Const uint32 mask_ctr_dmd;
-
-   /* These show the beginning setups that we look for in a by-array call
-      definition in order to do a call in this setup. */
-   Const begin_kind keytab[2];
-
-   /* In the bounding boxes, we do not fill in the "length" of a diamond, nor
-      the "height" of a qtag.  Everyone knows that the number must be 3, but it
-      is not really accepted that one can use that in instances where precision
-      is required.  That is, one should not make "matrix" calls depend on this
-      number.  Witness all the "diamond to quarter tag adjustment" stuff that
-      callers worry about, and the ongoing controversy about which way a quarter
-      tag setup is elongated, even though everyone knows that it is 4 wide and 3
-      deep, and that it is generally recognized, by the mathematically erudite,
-      that 4 is greater than 3. */
-   Const short int bounding_box[2];
-
-   /* This is true if the setup has 4-way symmetry.  Such setups will always be
-      canonicalized so that their rotation field will be zero. */
-   Const long_boolean four_way_symmetry;
-
-   /* This is the bit table for filling in the "ID2" bits. */
-   id_bit_table *id_bit_table_ptr;
-
-   /* These are the tables that show how to print out the setup. */
-   Cstring print_strings[2];
-} setup_attr;
 
 typedef struct milch {
    uint32 code;
@@ -1276,71 +499,73 @@ typedef struct {
 } concept_fixer_thing;
 
 typedef enum {
-   resolve_goodness_only_nice,
-   resolve_goodness_always,
-   resolve_goodness_maybe
-} resolve_goodness_test;
+   /* Warning!!!!  Order is important!  See all the stupid ways these are used
+      in sdconc.c . */
+   selective_key_dyp,
+   selective_key_own,
+   selective_key_plain,
+   selective_key_disc_dist,
+   selective_key_ignore,
+   selective_key_work_concept,
+   selective_key_lead_for_a,
+   selective_key_work_no_concentric,
+   selective_key_snag_anyone,
+   selective_key_plain_from_id_bits
+} selective_key;
 
+typedef enum {
+   tandem_key_tand = 0,
+   tandem_key_cpls = 1,
+   tandem_key_siam = 2,
+   tandem_key_tand3 = 4,
+   tandem_key_cpls3 = 5,
+   tandem_key_siam3 = 6,
+   tandem_key_tand4 = 8,
+   tandem_key_cpls4 = 9,
+   tandem_key_siam4 = 10,
+   tandem_key_box = 16,
+   tandem_key_diamond = 17,
+   tandem_key_skew = 18,
+   tandem_key_outpoint_tgls = 20,
+   tandem_key_inpoint_tgls = 21,
+   tandem_key_inside_tgls = 22,
+   tandem_key_outside_tgls = 23,
+   tandem_key_wave_tgls = 26,
+   tandem_key_tand_tgls = 27,
+   tandem_key_anyone_tgls = 30,
+   tandem_key_3x1tgls = 31,
+   tandem_key_ys = 32
+} tandem_key;
 
-#define zig_zag_level l_a2
-#define cross_by_level l_c1
-#define dixie_grand_level l_plus
-#define extend_34_level l_plus
-#define phantom_tandem_level l_c4a
-#define intlk_triangle_level l_c2
-#define beau_belle_level l_a2
-
-typedef struct {           /* This is done to preserve the encapsulation of type "jmp_buf".                  */
-   jmp_buf the_buf;        /*   We are going to use pointers to these things.  If we simply used             */
-} real_jmp_buf;            /*   pointers to jmp_buf, the semantics would not be transparent if jmp_buf       */
-                           /*   were defined as an array.  The semantics of pointers to arrays are different */
-                           /*   from those of pointers to other types, and are not transparent.              */
-                           /*   In particular, we would need to look inside the include file to see what     */
-                           /*   underlying type jmp_buf is an array of, which would violate the principle    */
-                           /*   of type encapsulation.                                                       */
+typedef enum {
+   meta_key_random,
+   meta_key_rev_random,   /* Must follow meta_key_random. */
+   meta_key_piecewise,
+   meta_key_initially,
+   meta_key_finish,
+   meta_key_revorder,
+   meta_key_like_a,
+   meta_key_finally,
+   meta_key_nth_part_work,
+   meta_key_skip_nth_part,
+   meta_key_shift_n,
+   meta_key_shifty,
+   meta_key_echo,
+   meta_key_rev_echo,   /* Must follow meta_key_echo. */
+   meta_key_shift_half,
+   meta_key_shift_n_half
+} meta_key_kind;
 
 
 /* VARIABLES */
 
-extern real_jmp_buf longjmp_buffer;                                 /* in SDUTIL */
-extern real_jmp_buf *longjmp_ptr;                                   /* in SDUTIL */
-extern configuration *history;                                      /* in SDUTIL */
-extern int history_allocation;                                      /* in SDUTIL */
-extern int history_ptr;                                             /* in SDUTIL */
-extern int written_history_items;                                   /* in SDUTIL */
-extern int written_history_nopic;                                   /* in SDUTIL */
-extern parse_block *last_magic_diamond;                             /* in SDUTIL */
-extern char error_message1[MAX_ERR_LENGTH];                         /* in SDUTIL */
-extern char error_message2[MAX_ERR_LENGTH];                         /* in SDUTIL */
-extern uint32 collision_person1;                                    /* in SDUTIL */
-extern uint32 collision_person2;                                    /* in SDUTIL */
-extern Cstring warning_strings[];                                   /* in SDUTIL */
-
+extern parse_block *last_magic_diamond;                             /* in SDTOP */
 extern uint32 global_tbonetest;                                     /* in SDCONCPT */
 extern uint32 global_livemask;                                      /* in SDCONCPT */
 extern uint32 global_selectmask;                                    /* in SDCONCPT */
 extern uint32 global_tboneselect;                                   /* in SDCONCPT */
-extern concept_table_item concept_table[];                          /* in SDCONCPT */
-
 extern concept_fixer_thing concept_fixer_table[];                   /* in SDCTABLE */
-extern nice_setup_thing nice_setup_thing_4x4;                       /* in SDCTABLE */
-extern nice_setup_thing nice_setup_thing_3x4;                       /* in SDCTABLE */
-extern nice_setup_thing nice_setup_thing_2x8;                       /* in SDCTABLE */
-extern nice_setup_thing nice_setup_thing_2x6;                       /* in SDCTABLE */
-extern nice_setup_thing nice_setup_thing_1x12;                      /* in SDCTABLE */
-extern nice_setup_thing nice_setup_thing_1x16;                      /* in SDCTABLE */
-extern nice_setup_thing nice_setup_thing_3dmd;                      /* in SDCTABLE */
-extern nice_setup_thing nice_setup_thing_4dmd;                      /* in SDCTABLE */
-extern nice_setup_thing nice_setup_thing_4x6;                       /* in SDCTABLE */
-extern int phantom_concept_index;                                   /* in SDCTABLE */
-extern int matrix_2x8_concept_index;                                /* in SDCTABLE */
-extern int cross_concept_index;                                     /* in SDCTABLE */
-extern int magic_concept_index;                                     /* in SDCTABLE */
-extern int intlk_concept_index;                                     /* in SDCTABLE */
-extern int left_concept_index;                                      /* in SDCTABLE */
-extern int grand_concept_index;                                     /* in SDCTABLE */
-extern int general_concept_offset;                                  /* in SDCTABLE */
-extern int general_concept_size;                                    /* in SDCTABLE */
+
 extern int *concept_offset_tables[];                                /* in SDCTABLE */
 extern int *concept_size_tables[];                                  /* in SDCTABLE */
 extern Cstring concept_menu_strings[];                              /* in SDCTABLE */
@@ -1353,6 +578,7 @@ extern id_bit_table id_bit_table_bigdhrgl_wings[];                  /* in SDTABL
 extern id_bit_table id_bit_table_3x4_offset[];                      /* in SDTABLES */
 extern id_bit_table id_bit_table_3x4_h[];                           /* in SDTABLES */
 extern id_bit_table id_bit_table_3x4_ctr6[];                        /* in SDTABLES */
+extern id_bit_table id_bit_table_butterfly[];                       /* in SDTABLES */
 extern id_bit_table id_bit_table_525_nw[];                          /* in SDTABLES */
 extern id_bit_table id_bit_table_525_ne[];                          /* in SDTABLES */
 extern id_bit_table id_bit_table_343_outr[];                        /* in SDTABLES */
@@ -1364,14 +590,72 @@ extern id_bit_table id_bit_table_3dmd_ctr1x6[];                     /* in SDTABL
 extern id_bit_table id_bit_table_3dmd_ctr1x4[];                     /* in SDTABLES */
 extern id_bit_table id_bit_table_3ptpd[];                           /* in SDTABLES */
 extern cm_thing conc_init_table[];                                  /* in SDTABLES */
-extern Const fixer f2x4far;                                         /* in SDTABLES */
-extern Const fixer f2x4near;                                        /* in SDTABLES */
 extern Const fixer fdhrgl;                                          /* in SDTABLES */
 extern Const fixer f323;                                            /* in SDTABLES */
+extern Const fixer f2x4far;                                         /* in SDTABLES */
+extern Const fixer f2x4near;                                        /* in SDTABLES */
+extern Const fixer f4dmdiden;                                       /* in SDTABLES */
+extern Const fixer fixmumble;                                       /* in SDTABLES */
+extern Const fixer fixfrotz;                                        /* in SDTABLES */
+extern Const fixer fixwhuzzis;                                      /* in SDTABLES */
+extern Const fixer fixgizmo;                                        /* in SDTABLES */
+
+
+extern expand_thing comp_qtag_2x4_stuff;                            /* in SDTOP */
+extern expand_thing exp_2x3_qtg_stuff;                              /* in SDTOP */
+extern expand_thing exp_4x4_4x6_stuff_a;                            /* in SDTOP */
+extern expand_thing exp_4x4_4x6_stuff_b;                            /* in SDTOP */
+extern expand_thing exp_4x4_4dm_stuff_a;                            /* in SDTOP */
+extern expand_thing exp_4x4_4dm_stuff_b;                            /* in SDTOP */
+extern expand_thing exp_c1phan_4x4_stuff1;                          /* in SDTOP */
+extern expand_thing exp_c1phan_4x4_stuff2;                          /* in SDTOP */
+
+extern expand_thing exp_dmd_323_stuff;
+extern expand_thing exp_1x2_dmd_stuff;
+extern expand_thing exp_qtg_3x4_stuff;
+extern expand_thing exp_1x2_hrgl_stuff;
+extern expand_thing exp_dmd_hrgl_stuff;
+
+extern full_expand_thing rear_1x2_pair;
+extern full_expand_thing rear_2x2_pair;
+extern full_expand_thing rear_bone_pair;
+extern full_expand_thing step_8ch_pair;
+extern full_expand_thing step_qtag_pair;
+extern full_expand_thing step_2x2h_pair;
+extern full_expand_thing step_2x2v_pair;
+extern full_expand_thing step_spindle_pair;
+extern full_expand_thing step_dmd_pair;
+extern full_expand_thing step_qtgctr_pair;
+
+extern full_expand_thing touch_init_table1[];
+extern full_expand_thing touch_init_table2[];
+extern full_expand_thing touch_init_table3[];
+#define NEEDMASK(K) (1<<((K)/(CONCPROP__NEED_LOBIT)))
+extern expand_thing expand_init_table[];
+
+extern Const coordrec tgl3_0;                                       /* in SDTABLES */
+extern Const coordrec tgl3_1;                                       /* in SDTABLES */
+extern Const coordrec tgl4_0;                                       /* in SDTABLES */
+extern Const coordrec tgl4_1;                                       /* in SDTABLES */
+extern Const coordrec squeezethingglass;                            /* in SDTABLES */
+extern Const coordrec squeezethinggal;                              /* in SDTABLES */
+extern Const coordrec squeezethingqtag;                             /* in SDTABLES */
+extern Const coordrec squeezething4dmd;                             /* in SDTABLES */
+extern Const coordrec squeezefinalglass;                            /* in SDTABLES */
+extern Const coordrec press_4dmd_4x4;                               /* in SDTABLES */
+extern Const coordrec press_4dmd_qtag1;                             /* in SDTABLES */
+extern Const coordrec press_4dmd_qtag2;                             /* in SDTABLES */
+extern Const coordrec press_qtag_4dmd1;                             /* in SDTABLES */
+extern Const coordrec press_qtag_4dmd2;                             /* in SDTABLES */
+extern Const coordrec acc_crosswave;                                /* in SDTABLES */
+extern Const tgl_map *c1tglmap1[];                                  /* in SDTABLES */
+extern Const tgl_map *c1tglmap2[];                                  /* in SDTABLES */
+extern Const tgl_map *qttglmap1[];                                  /* in SDTABLES */
+extern Const tgl_map *qttglmap2[];                                  /* in SDTABLES */
+extern Const tgl_map *bdtglmap1[];                                  /* in SDTABLES */
+extern Const tgl_map *bdtglmap2[];                                  /* in SDTABLES */
+extern Const tgl_map *rgtglmap1[];                                  /* in SDTABLES */
 extern sel_item sel_init_table[];                                   /* in SDTABLES */
-extern setup_attr setup_attrs[];                                    /* in SDTABLES */
-extern int begin_sizes[];                                           /* in SDTABLES */
-extern startinfo startinfolist[];                                   /* in SDTABLES */
 extern map_thing map_p8_tgl4;                                       /* in SDTABLES */
 extern map_thing map_spndle_once_rem;                               /* in SDTABLES */
 extern map_thing map_1x3dmd_once_rem;                               /* in SDTABLES */
@@ -1411,6 +695,7 @@ extern map_thing map_tgl4_1;                                        /* in SDTABL
 extern map_thing map_tgl4_2;                                        /* in SDTABLES */
 extern map_thing map_qtag_2x3;                                      /* in SDTABLES */
 extern map_thing map_2x3_rmvr;                                      /* in SDTABLES */
+extern map_thing map_2x3_rmvs;                                      /* in SDTABLES */
 extern map_thing map_dbloff1;                                       /* in SDTABLES */
 extern map_thing map_dbloff2;                                       /* in SDTABLES */
 extern map_thing map_dhrgl1;                                        /* in SDTABLES */
@@ -1455,153 +740,20 @@ extern map_thing *maps_3diagwk[4];                                  /* in SDTABL
 extern mapcoder map_init_table[];                                   /* in SDTABLES */
 extern map_thing map_init_table2[];                                 /* in SDTABLES */
 extern map_thing *split_lists[][6];                                 /* in SDTABLES */
+extern warning_info no_search_warnings;                             /* in SDTOP */
+extern warning_info conc_elong_warnings;                            /* in SDTOP */
+extern warning_info dyp_each_warnings;                              /* in SDTOP */
+extern warning_info useless_phan_clw_warnings;                      /* in SDTOP */
 
 
-/*
-extern comment_block *comment_root;
-extern comment_block *comment_last;
-*/
 
-extern warning_info no_search_warnings;                             /* in SDMAIN */
-extern warning_info conc_elong_warnings;                            /* in SDMAIN */
-extern warning_info dyp_each_warnings;                              /* in SDMAIN */
-extern warning_info useless_phan_clw_warnings;                      /* in SDMAIN */
-
-extern command_kind search_goal;                                    /* in SDPICK */
-
-extern long_boolean selector_used;                                  /* in SDPREDS */
-extern long_boolean number_used;                                    /* in SDPREDS */
-extern long_boolean mandatory_call_used;                            /* in SDPREDS */
-extern predicate_descriptor pred_table[];                           /* in SDPREDS */
-extern int selector_preds;                                          /* in SDPREDS */
-
-extern  expand_thing comp_qtag_2x4_stuff;                           /* in SDTOP */
-extern  expand_thing exp_2x3_qtg_stuff;                             /* in SDTOP */
-extern  expand_thing exp_4x4_4x6_stuff_a;                           /* in SDTOP */
-extern  expand_thing exp_4x4_4x6_stuff_b;                           /* in SDTOP */
-extern  expand_thing exp_4x4_4dm_stuff_a;                           /* in SDTOP */
-extern  expand_thing exp_4x4_4dm_stuff_b;                           /* in SDTOP */
-extern  expand_thing exp_c1phan_4x4_stuff1;                         /* in SDTOP */
-extern  expand_thing exp_c1phan_4x4_stuff2;                         /* in SDTOP */
-
-
-/* In SDMAIN */
-
-extern char *sd_version_string(void);
-extern parse_block *mark_parse_blocks(void);
-extern void release_parse_blocks_to_mark(parse_block *mark_point);
-extern void initialize_parse(void);
-extern parse_block *copy_parse_tree(parse_block *original_tree);
-extern void save_parse_state(void);
-extern long_boolean restore_parse_state(void);
-extern long_boolean query_for_call(void);
-extern void write_header_stuff(long_boolean with_ui_version, uint32 act_phan_flags);
-extern long_boolean sequence_is_resolved(void);
-
-/* In SDPICK */
-
-extern void reset_internal_iterators(void);
-extern selector_kind do_selector_iteration(long_boolean allow_iteration);
-extern direction_kind do_direction_iteration(void);
-extern void do_number_iteration(int howmanynumbers,
-                                uint32 odd_number_only,
-                                long_boolean allow_iteration,
-                                uint32 *number_list);
-extern void do_circcer_iteration(uint32 *circcp);
-extern long_boolean do_tagger_iteration(uint32 tagclass,
-                                        uint32 *tagg,
-                                        uint32 numtaggers,
-                                        callspec_block **tagtable);
-extern callspec_block *do_pick(void);
-extern concept_descriptor *pick_concept(long_boolean already_have_concept_in_place);
-extern resolve_goodness_test get_resolve_goodness_info(void);
-extern long_boolean pick_allow_multiple_items(void);
-extern void start_pick(void);
-extern void end_pick(void);
-extern long_boolean forbid_call_with_mandatory_subcall(void);
-extern long_boolean allow_random_subcall_pick(void);
 
 /* In SDPREDS */
 
 extern long_boolean selectp(setup *ss, int place);
 
-/* In SDSI */
-
-extern void general_initialize(void);
-extern int generate_random_number(int modulus);
-extern void hash_nonrandom_number(int number);
-extern void get_date(char dest[]);
-extern void unparse_number(int arg, char dest[]);
-extern void open_file(void);
-extern void write_file(char line[]);
-extern void close_file(void);
-extern void print_line(Cstring s);
-extern void print_id_error(int n);
-extern void init_error(char s[]) nonreturning;
-extern void add_resolve_indices(char junk[], int cur, int max);
-extern void fill_in_neglect_percentage(char junk[], int n);
-extern int parse_number(char junk[]);
-
-/* In SDUTIL */
-
-extern void initialize_restr_tables(void);
-extern restriction_thing *get_restriction_thing(setup_kind k, assumption_thing t);
-extern void clear_screen(void);
-extern void newline(void);
-extern void writestuff(Const char s[]);
-extern void unparse_call_name(Cstring name, char *s, call_conc_option_state *options);
-extern void doublespace_file(void);
-extern void fail(Const char s[]) nonreturning;
-extern void fail2(Const char s1[], Const char s2[]) nonreturning;
-extern void failp(uint32 id1, Const char s[]) nonreturning;
-extern void specialfail(Const char s[]) nonreturning;
-extern Const char *get_escape_string(char c);
-extern void string_copy(char **dest, Cstring src);
-extern void print_recurse(parse_block *thing, int print_recurse_arg);
-extern void display_initial_history(int upper_limit, int num_pics);
-extern void write_history_line(int history_index, Const char *header, long_boolean picture, file_write_flag write_to_file);
-extern void warn(warning_index w);
-extern call_list_kind find_proper_call_list(setup *s);
-extern Const restriction_thing *get_rh_test(setup_kind kind);
-extern long_boolean verify_restriction(
-   setup *ss,
-   restriction_thing *rr,
-   assumption_thing tt,
-   long_boolean instantiate_phantoms,
-   long_boolean *failed_to_instantiate);
-extern callarray *assoc(begin_kind key, setup *ss, callarray *spec);
-extern uint32 find_calldef(
-   callarray *tdef,
-   setup *scopy,
-   int real_index,
-   int real_direction,
-   int northified_index);
-extern void clear_people(setup *z);
-extern uint32 rotperson(uint32 n, int amount);
-extern uint32 rotcw(uint32 n);
-extern uint32 rotccw(uint32 n);
-extern void clear_person(setup *resultpeople, int resultplace);
-extern uint32 copy_person(setup *resultpeople, int resultplace, setup *sourcepeople, int sourceplace);
-extern uint32 copy_rot(setup *resultpeople, int resultplace, setup *sourcepeople, int sourceplace, int rotamount);
-extern void swap_people(setup *ss, int oneplace, int otherplace);
-extern void install_person(setup *resultpeople, int resultplace, setup *sourcepeople, int sourceplace);
-extern void install_rot(setup *resultpeople, int resultplace, setup *sourcepeople, int sourceplace, int rotamount);
-extern void scatter(setup *resultpeople, setup *sourcepeople, Const veryshort *resultplace, int countminus1, int rotamount);
-extern void gather(setup *resultpeople, setup *sourcepeople, Const veryshort *resultplace, int countminus1, int rotamount);
-extern parse_block *process_final_concepts(
-   parse_block *cptr,
-   long_boolean check_errors,
-   uint64 *final_concepts);
-extern parse_block *really_skip_one_concept(
-   parse_block *incoming,
-   concept_kind *k_p,
-   uint32 *need_to_restrain_p,   /* 1=(if not doing echo), 2=(yes, always) */
-   parse_block **parseptr_skip_p);
-extern long_boolean fix_n_results(int arity, setup_kind goal, setup z[], uint32 *rotstatep);
-
 /* In SDGETOUT */
 
-extern resolve_indicator resolve_p(setup *s);
 extern void write_resolve_text(long_boolean doing_file);
 extern uims_reply full_resolve(void);
 extern int concepts_in_place(void);
@@ -1641,7 +793,6 @@ extern void basic_move(
 
 /* In SDMOVES */
 
-extern void canonicalize_rotation(setup *result);
 extern void reinstate_rotation(setup *ss, setup *result);
 
 extern long_boolean divide_for_magic(
@@ -1783,40 +934,13 @@ extern long_boolean do_big_concept(
 
 /* In SDTAND */
 
-#define tandem_key_tand 0
-#define tandem_key_cpls 1
-#define tandem_key_siam 2
-#define tandem_key_tand3 4
-#define tandem_key_cpls3 5
-#define tandem_key_siam3 6
-#define tandem_key_tand4 8
-#define tandem_key_cpls4 9
-#define tandem_key_siam4 10
-#define tandem_key_box 16
-#define tandem_key_diamond 17
-#define tandem_key_skew 18
-#define tandem_key_outpoint_tgls 20
-#define tandem_key_inpoint_tgls 21
-#define tandem_key_inside_tgls 22
-#define tandem_key_outside_tgls 23
-#define tandem_key_wave_tgls 26
-#define tandem_key_tand_tgls 27
-#define tandem_key_anyone_tgls 30
-#define tandem_key_3x1tgls 31
-#define tandem_key_ys 32
-
 extern void tandem_couples_move(
    setup *ss,
    selector_kind selector,
    int twosome,           /* solid=0 / twosome=1 / solid-to-twosome=2 / twosome-to-solid=3 */
    int fraction,          /* number, if doing fractional twosome/solid */
    int phantom,           /* normal=0 phantom=1 general-gruesome=2 gruesome-with-wave-check=3 */
-   int key,               /* tandem of 2 = 0 / couples of 2 = 1 / siamese of 2 = 2
-                             tandem of 3 = 4 / couples of 3 = 5 / siamese of 3 = 6
-                             tandem of 4 = 8 / couples of 4 = 9 / siamese of 4 = 10
-                             10: box
-                             11: diamond
-                          */
+   tandem_key key,
    uint32 mxn_bits,
    long_boolean phantom_pairing_ok,
    setup *result);
@@ -1838,6 +962,7 @@ extern void concentric_move(
 extern uint32 get_multiple_parallel_resultflags(setup outer_inners[], int number);
 
 extern void initialize_conc_tables(void);
+extern void initialize_sel_tables(void);
 
 extern void normalize_concentric(
    calldef_schema synthesizer,
@@ -1881,13 +1006,11 @@ extern void inner_selective_move(
 
 /* In SDTOP */
 
-extern void compress_setup(expand_thing *thing, setup *stuff);
+extern void compress_setup(const expand_thing *thing, setup *stuff);
 
-extern void expand_setup(expand_thing *thing, setup *stuff);
+extern void expand_setup(const expand_thing *thing, setup *stuff);
 
 extern void update_id_bits(setup *ss);
-
-extern void initialize_touch_tables(void);
 
 extern void touch_or_rear_back(
    setup *scopy,
@@ -1899,8 +1022,42 @@ extern void do_matrix_expansion(
    uint32 concprops,
    long_boolean recompute_id);
 
+NORETURN1 extern void fail2(Const char s1[], Const char s2[]) NORETURN2;
+NORETURN1 extern void failp(uint32 id1, Const char s[]) NORETURN2;
+extern void warn(warning_index w);
+
+extern restriction_test_result verify_restriction(
+   setup *ss,
+   assumption_thing tt,
+   long_boolean instantiate_phantoms,
+   long_boolean *failed_to_instantiate);
+
+extern uint32 find_calldef(
+   callarray *tdef,
+   setup *scopy,
+   int real_index,
+   int real_direction,
+   int northified_index);
+extern void clear_people(setup *z);
+extern uint32 rotcw(uint32 n);
+extern uint32 rotccw(uint32 n);
+extern void clear_person(setup *resultpeople, int resultplace);
+extern uint32 copy_person(setup *resultpeople, int resultplace, setup *sourcepeople, int sourceplace);
+extern uint32 copy_rot(setup *resultpeople, int resultplace, setup *sourcepeople, int sourceplace, int rotamount);
+extern void swap_people(setup *ss, int oneplace, int otherplace);
+extern void install_person(setup *resultpeople, int resultplace, setup *sourcepeople, int sourceplace);
+extern void install_rot(setup *resultpeople, int resultplace, setup *sourcepeople, int sourceplace, int rotamount);
+extern void scatter(setup *resultpeople, setup *sourcepeople, Const veryshort *resultplace, int countminus1, int rotamount);
+extern void gather(setup *resultpeople, setup *sourcepeople, Const veryshort *resultplace, int countminus1, int rotamount);
+extern parse_block *really_skip_one_concept(
+   parse_block *incoming,
+   concept_kind *k_p,
+   uint32 *need_to_restrain_p,   /* 1=(if not doing echo), 2=(yes, always) */
+   parse_block **parseptr_skip_p);
+extern long_boolean fix_n_results(int arity, setup_kind goal, setup z[], uint32 *rotstatep);
+
 extern void normalize_setup(setup *ss, normalize_action action);
 
-extern void toplevelmove(void);
-
-extern void finish_toplevelmove(void);
+#ifdef __cplusplus
+}
+#endif

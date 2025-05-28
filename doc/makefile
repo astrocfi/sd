@@ -19,12 +19,10 @@ TOCFRONT = perl tocfront
 all: sessions.all sd_doc.all demo.all relnotes.all sample.html readme install
 
 .txi.dvi:
-	copy texinfo.tex whatever.tex
 	$(TXI2DVI) $<
 	$(TXI2DVI) $<
 
 .txi.pdf:
-	copy pdftexinfo.tex whatever.tex
 	$(TXI2PDF) $<
 	$(TXI2PDF) $<
 
@@ -54,12 +52,6 @@ sd_doc.html: readme.txi
 sd_doc.info: readme.txi
 
 sd_doc.txt: readme.txi
-
-sd_toc.pso: sd_doc.dvi
-	$(DVIPS) -t letter -o $@ $<
-
-sd_doc.ps: sd_toc.ps
-	$(TOCFRONT) $< > $@
 
 sd_doc_toc.html: sd_doc.txi
 	$(TXI2HTML) -split_node -menu sd_doc.txi
