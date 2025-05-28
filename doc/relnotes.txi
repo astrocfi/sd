@@ -1,7 +1,7 @@
 \input texinfo @c %**start of header -*-texinfo-*-
 @setfilename relnotes.info
 @settitle Sd Release Notes
-@c Time-stamp: <8 Feb 2014 wba>
+@c Time-stamp: <12 Apr 2015 wba>
 @iftex
 @headings off
 @oddheading @| @| @thispage
@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 38.69
-@set title2 Database version = 38.69 format = 320
+@set title1 RELEASE NOTES FOR VERSION 38.80
+@set title2 Database version = 38.80 format = 326
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,17 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 38.80::
+* 38.79::
+* 38.78::
+* 38.77::
+* 38.76::
+* 38.75::
+* 38.74::
+* 38.73::
+* 38.72::
+* 38.71::
+* 38.70::
 * 38.69::
 * 38.68::
 * 38.67::
@@ -108,7 +119,7 @@ The files @file{relnotes03.txi} and @file{relnotes98.txi} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 38.69, Top, (dir)
+@node Intro, 38.80, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -116,14 +127,140 @@ notes relating to even older versions.
 
 @w{ }@c the @* above makes the @sp below fail without this line  1998-05
 @sp 2
-@noindent Copyright @copyright{} 1996-2014 William B. Ackerman
+@noindent Copyright @copyright{} 1996-2015 William B. Ackerman
 @sp 3
 @menu
-* 38.69::               Changes in the current version
+* 38.80::               Changes in the current version
 @end menu
 
 @c ************
-@node 38.69, 38.68, Intro, Top
+@node 38.80, 38.79, Intro, Top
+@unnumberedsec Version 38.80 changes
+
+Fix to @code{bounce} and @code{1/2 circulate}.
+
+@c ************
+@node 38.79, 38.78, 38.80, Top
+@unnumberedsec Version 38.79 changes
+
+Better handling of setups on a 45 degree angle, and the fractional calls
+that get into and out of such setups.  This handles the 45 degree things
+that were called in the competition at the 2015 National Square Dance
+Convention, and the logical consequences of them.  Such manipulations
+will be marked "controversial".  If you don't agree with these, you are
+welcome not to use them.
+
+A new command-line switch has been added, to facilitate running on operating systems in which
+one does not have control over the program's current directory.  The output files are normally written to
+the current directory.  This can be changed with the "-output_prefix <directory>" switch when
+invoking Sd or Sdtty.  The given directory argument will be prepended to the transcript filename
+(e.g. 01mar15_c2.txt).  The given directory argument should be a fully qualified pathname, followed
+by the appropriate separator character: "/" or "\".  So an argument of "-output_prefix /home/wba/sd/"
+will cause the transcript file to be "/home/wba/sd/01mar15_c2.txt".
+
+The command "change output prefix" may be given while the program is running, having the
+same effect.
+
+This switch may also be put in the "[options]" section of the initialization file, "sd.ini",
+without the leading hyphen.
+
+@c ************
+@node 38.78, 38.77, 38.79, Top
+@unnumberedsec Version 38.78 changes
+
+Can handle difficult fractions leading to 45-degree setups, as in @code{5/8 left swing thru}
+or @code{3/4 left swing the fractions}.
+
+@c ************
+@node 38.77, 38.76, 38.78, Top
+@unnumberedsec Version 38.77 changes
+
+Improved ability to handle @code{squeeze}.
+
+Fix @code{reverse dixie style} in a left-handed 1/4-tag.
+
+@c ************
+@node 38.76, 38.75, 38.77, Top
+@unnumberedsec Version 38.76 changes
+
+Revamped the way @code{Z}'s are handled.  Sd can now correctly do things like @code{Z counter rotate} and @code{Z axle}
+regardless of the Z's orientation.
+
+Made @code{checkmate the column} legal in an 8-chain setup.
+
+@c ************
+@node 38.75, 38.74, 38.76, Top
+@unnumberedsec Version 38.75 changes
+
+The bug in @code{Z counter rotate} was fixed.  That is, it applies the
+actual @code{Z} concept.  To rotate the Z rigidly as a 2x3, use
+@code{EACH Z counter rotate}.  @code{Z} names a concept.  @code{EACH Z}
+names a formation.
+
+Improved tha @code{jay} concept to allow 3x4 matrix positions.
+
+@c ************
+@node 38.74, 38.73, 38.75, Top
+@unnumberedsec Version 38.74 changes
+
+Improved the @code{stretch} concept and the @code{blocks} concept.
+
+@c ************
+@node 38.73, 38.72, 38.74, Top
+@unnumberedsec Version 38.73 changes
+
+Fixed bug in @code{lift off}.
+
+@c ************
+@node 38.72, 38.71, 38.73, Top
+@unnumberedsec Version 38.72 changes
+
+Moved @code{triple boxes working together}, and similar concepts, from C4A to C3.
+
+New concepts: Now that there is support for recognizable last parts of
+calls, these concepts have been added: @strong{skip the last part},
+@strong{use for the last part}.  An example of the second of these is
+@strong{use recycle for the last part: swing the fractions}.  To do this,
+enter the concept @strong{use for the last part}, and follow the prompts.
+
+Fixed bug in @strong{crazy} identification in a Dunlap Hourglass.
+
+Fixed bug in @strong{once removed} with colliding calls.
+
+@strong{Lift off} is now supported if the couple facing out have pressed ahead to squared-set spots.
+
+Fixed complex cases of @code{remake}.
+
+Fixed bug in @code{FRACTAL spin chain the line}.
+
+@c ************
+@node 38.71, 38.70, 38.72, Top
+@unnumberedsec Version 38.71 changes
+
+Fixed embarrassing bug involving disappearance of the #2 boy.
+
+Improved ability to @strong{jay walk} and @strong{U-turn back}.
+
+Improved ability to handle parts.  The program now knows about calls (like @strong{relay the deucey})
+that have a recognizable first part and a recognizable last part, but no usable fractionalization in between.
+
+@c ************
+@node 38.70, 38.69, 38.71, Top
+@unnumberedsec Version 38.70 changes
+
+The call @strong{do the centers part of load the boat} is now recognized as a call in its own right, at Plus.
+No other @strong{do the centers part of ...} calls are planned, because the capacity for abuse is too high.
+If you really want such a thing, toggle concept levels and use the @strong{central} concept
+
+New tagging ending: @strong{<ATC> er's motion}.  Tag all the way through; first go left, next go right, as in the
+end of @strong{sets in motion}.
+
+The @strong{mimic} concept was improved.
+
+There is more support for unsymmetrical couples and siamese operations.
+
+@c ************
+@node 38.69, 38.68, 38.70, Top
 @unnumberedsec Version 38.69 changes
 
 Minor tweak.

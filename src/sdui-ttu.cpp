@@ -242,17 +242,8 @@ extern int get_char()
    // on the screen until "read" reads a character.
 
    int nc = getchar();
+
    if (nc == 0x1B) {
-
-
-
-
-
-
-
-
-
-
 
       /*
       char foob[20];
@@ -265,11 +256,6 @@ extern int get_char()
       printf("Result of read is: buffer is 0x%X 0x%X 0x%X 0x%X 0x%X.\n",
              foob[0], foob[1], foob[2], foob[3], foob[4]);
       */
-
-
-
-
-
 
       int ec = getchar();
 
@@ -327,24 +313,16 @@ extern int get_char()
                      nc = FCN_KEY_TAB_LOW+8;
                   else if (ec1 == '2' && ec2 == '1')
                      nc = FCN_KEY_TAB_LOW+9;
-                  else if (ec1 == '2' && ec2 == '4')
-                     nc = FCN_KEY_TAB_LOW+11;
                }
             }
          }
       }
-      else if (ec >= 'a' && ec <= 'z') {
-         nc = ALTLET+ec-'a';
+      else if (ec >= 0x61 && ec <= 0x7A) {
+         nc = ec+ALTLET-0x20;     // alt letter; comes across as lower case letter after the escape.
       }
       else if (ec >= 0x01 && ec <= 0x1A) {
-         nc = CTLLET+ec-'a';
+         nc = CTLALTLET+0x40+ec;  // ctl-alt letter; comes across as control letter after the escape.
       }
-
-
-
-
-
-
    }
 
    // Turn control characters (other than ones

@@ -7,7 +7,7 @@ Sd: a checker-moving program that is <strong>powerful</strong>,
 <strong>reliable</strong>.
 </p>
 <p align="center">
-<strong>The current version of Sd/Sdtty is 38.69</strong>, released on August 18, 2014.
+<strong>The current version of Sd/Sdtty is 38.80</strong>, released on August 24, 2015.
 <br>
 <p align="center">
 Sdtty will now be released, reasonably regularly, for Linux.  If this doesn't work for your particular system,
@@ -71,9 +71,8 @@ Be running the latest, fully-functional version
 Or download the program for other varieties of
 <a href="download-unix.html">Unix</a>.
 <br>
-A Macintosh version of Sdtty (for Mac OS X) is available
-<a href="http://squarez.com/sd/sdtty.dmg">here</a>.
-It might not be fully up-to-date at all times.
+You should be able to compile a version for a Mac by downloading the sources
+and typing "make" in a terminal window.
 <br>&nbsp;<!--blank line--><br>
 </dd>
 <dt>

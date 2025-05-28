@@ -723,13 +723,14 @@ extern void put_char(int c);
 
 /* Get one character from input, no echo, no waiting for <newline>.
    Return large number for function keys and alt alphabetics:
-      128+N for plain function key (F1 = 129)
-      144+N for shifted
-      160+N for control
-      176+N for alt function key
-      192..217 for ctl letter (ctl-A = 192)
-      218..243 for alt letter (alt-A = 218)
-      244..269 for ctl-alt letter (ctl-alt-A = 244) */
+      128+N for plain function key         (F1 = 129)
+      144+N for shifted                   (sF1 = 145)
+      160+N for control                   (cF1 = 161)
+      176+N for alt function key          (aF1 = 177)
+      192+N for control-alt function key (caF1 = 193)
+      348..373 for ctl letter             (c-A = 348)
+      374..399 for alt letter             (a-A = 374)
+      400..425 for ctl-alt letter        (ca-A = 400) */
 
 extern int get_char();
 

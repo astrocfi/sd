@@ -379,6 +379,15 @@ The program only recognizes the designators @strong{boys} and @strong{girls}.
 The only exception is the call @strong{ladies chain}.  Of course, you can
 use whatever designation you want when calling.
 
+@unnumberedsec Why does an opening like @strong{heads single rotate 1/4} do the "correct" thing (having the heads do their single rotate on the outside while the sides move in) at C1, but not at C2 and above?
+
+The call that you want is @strong{heads single rotate 1/4 while the others <anything>}, as in
+@strong{heads single rotate 1/4 while the others [swing thru]}.  At C1 there is no other @strong{rotate}
+call available, so it does the right thing automatically.  But at C2 and above, the call @strong{rotate}
+is legal in its own right as a plain 4-person call.  If you start a sequence by telling the heads to do
+some legal 4-person call, they will go into the middle and do it.  You have to alert Sd that you want
+the special action by saying @strong{... while the others ...}.
+
 @unnumberedsec Why, from a setup in which each gender has a straightforward @strong{cross over circulate} path (heads pass the ocean, extend, split circulate, switch the wave), can't it do @strong{boys cross over circulate}?
 
 What "boys" (or girls, heads, sides, etc.) means is more complicated than most people realize.  The designators take on different meanings in different contexts---boys run, boys trade, boys kickoff, boys hinge, boys u-turn-back, boys press ahead, have to be handled differently.  The general rule for a plain @strong{boys <some call that doesn't have special properties>} is to find the largest setups that are compact and free of holes or distortions, and do the call in each of those setups.  From parallel BBGG waves, there are two such setups---two miniwaves of two people each.  Sd can do a @strong{boys hinge} from there, because it can do a hinge in each of those two-person setups.  But it can't do @strong{boys circulate} or @strong{boys swing thru}.

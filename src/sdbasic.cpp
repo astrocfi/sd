@@ -4228,6 +4228,11 @@ static veryshort shrgltranslatev[40] = {
    -1, -1, -1, 3, -1, -1, 1, -1, -1, -1, 2, -1, -1, 4, -1, -1,
    -1, -1, -1, 7, -1, -1, 5, -1};
 
+static veryshort sptpdtranslatev[40] = {
+   -1, -1, -1, -1, -1,  3, -1, -1, -1,  0, -1,  2, -1, -1,  1, -1,
+   -1, -1, -1, -1, -1,  7, -1, -1, -1,  4, -1,  6, -1, -1,  5, -1,
+   -1, -1, -1, -1, -1,  3, -1, -1};
+
 static veryshort shypergalv[20] = {
    -1, -1, -1, 6, 7, 0, -1, 1, -1, -1, -1, 2, 3, 4, -1, 5, -1, -1, -1, 6};
 
@@ -5315,7 +5320,6 @@ static uint32 do_actual_array_call(
                result->kind = sbigdmd;
                permuter = bigdtranslatev+8;
             }
-
             else if ((lilresult_mask[0] & 0xF3F9F3F9) == 0) {
                // Check horiz xwv spots.
                result->kind = s_crosswave;
@@ -5376,6 +5380,17 @@ static uint32 do_actual_array_call(
                // Check vert hourglass spots.
                result->kind = s_hrglass;
                permuter = shrgltranslatev;
+               rotator = 1;
+            }
+            else if ((lilresult_mask[0] & 0xDFB5DFB5) == 0) {
+               // Check horiz ptpd spots.
+               result->kind = s_ptpd;
+               permuter = sptpdtranslatev+8;
+            }
+            else if ((lilresult_mask[0] & 0xB5DFB5DF) == 0) {
+               // Check vert ptpd spots.
+               result->kind = s_ptpd;
+               permuter = sptpdtranslatev;
                rotator = 1;
             }
             else

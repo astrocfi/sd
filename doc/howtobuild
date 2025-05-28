@@ -93,9 +93,11 @@ Go to sddoc directory and do:
 16 Jun 12  -   7 Jul 13  #46
  7 Jul 13  -  24 Aug 13  #36
 24 Aug 13  -  26 Jul 14  #45
-26 Jul 14                #48
+26 Jul 14  -  21 May 15  #48
+21 May 15  -  13 Jun 15  #29
+13 Jun 15                #49
 
-(#25, #26, #29, #30, #47 are also available.)
+(#25, #26, #48, #30, #47 are also available.)
 Also, do [DPT] initially touch by 1/2 x [split sidetrack]
 BUG!!!!!  [H star thru] initially touch by 1/2 x [pass the music] FAILS!
 -----------------------------------------------------------------
@@ -187,6 +189,7 @@ On Linux:
 Copy the above files into ~.
 
 cd ~
+cp sd/sd.ini .
 rm sd/*
 rm sd/regress/*
 rm sddoc/*
@@ -197,20 +200,25 @@ rm staging/*
 cd staging
 unzip -a ../sd_vnnnn
 mv * ../sd
-unzip -a r_vnnnn
+unzip -a ../r_vnnnn
 mv * ../sd/regress
-unzip -a doc_vnnnn
+unzip -a ../doc_vnnnn
 mv * ../sddoc
 cd ~/sd
+cp ../sd.ini .
 make -f makefile.linux64 clean
 make -f makefile.linux64 all
 cd regress
 chmod 775 *.sh
 ./doit.sh
+cd ..
 
 make -f makefile.linux64 tarball
-scp linux.tgz USERNAME@www.challengedance.org:public_html/sd
-(U=USERNAME, P=PASSWORD)
+sftp USERNAME@www.challengedance.org
+(P=PASSWORD)
+cd public_html/sd
+put linux.tgz
+
 
 -----------------------------------------------------------------
 
