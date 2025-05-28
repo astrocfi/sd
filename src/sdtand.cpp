@@ -415,19 +415,30 @@ static tm_thing maps_isearch_threesome[] = {
    {{6, 5, 2, 4,           -1, 7, -1, 3,         -1, 0, -1, 1},              0,0,      0000,      4, 0,  s1x4,  s_qtag},
    {{0}, 0,0, 0, 0, 0,  nothing, nothing}};
 
-static tm_thing maps_isearch_foursome[] = {
+static tm_thing maps_isearch_mimictwo[] = {
+   //       maps                                                      ilatmaskH/L    olatmask   limit rot insetup outsetup
+   {{0, 1,             3, 2},                                              0,022,      0xF,       2, 0,  s1x2,  s1x4},
+   {{0, 1, 6, 7,       2, 3, 4, 5},                                      0,02222,     0xFF,       4, 0,  s2x2,  s2x4},
+   {{0}, 0,0, 0, 0, 0,  nothing, nothing}};
 
-//   map1              map2              map3              map4               ilatmask olatmask    limit rot            insetup outsetup
-   {{0, 6,             1, 7,             3, 5,             2, 4},              0,022,    0x0FF,         2, 0,  s1x2,  s1x8},
-   {{0, 7,             1, 6,             2, 5,             3, 4},                0,0,    0x0FF,         2, 1,  s1x2,  s2x4},
-   {{0, 4, 11, 15,     1, 5, 10, 14,     2, 6, 9, 13,      3, 7, 8, 12},      0,02222,  0x0FFFF,         4, 0,  s2x2,  s2x8},
-   {{4, 11, 15, 0,     5, 10, 14, 1,     6, 9, 13, 2,      7, 8, 12, 3},         0,0,  0x0FFFF,         4, 1,  s2x2,  s2x8},
-   {{0, 7, 11, 12,     1, 6, 10, 13,     2, 5, 9, 14,      3, 4, 8, 15},         0,0,  0x0FFFF,         4, 1,  sdmd,  s4dmd},
-   {{0, 4, 11, 15,     1, 5, 10, 14,     2, 6, 9, 13,      3, 7, 8, 12},      0,02222,  0x0FFFF,         4, 0,  s1x4,  s1x16},
+static tm_thing maps_isearch_mimicfour[] = {
+   //       maps                                                      ilatmaskH/L    olatmask   limit rot insetup outsetup
+   {{0, 1, 2, 3,       6, 7, 4, 5},                                      0,02222,     0xFF,       4, 0,  s1x4,  s1x8},
+   {{0, 1, 2, 3, 12, 13, 14, 15,     4, 5, 6, 7, 8, 9, 10, 11},    0,  022222222,   0xFFFF,       8, 0,  s2x4,  s2x8},
+   {{0}, 0,0, 0, 0, 0,  nothing, nothing}};
+
+static tm_thing maps_isearch_foursome[] = {
+   //       maps                                                      ilatmaskH/L    olatmask   limit rot insetup outsetup
+   {{0, 6,             1, 7,             3, 5,             2, 4},          0,022,    0x0FF,       2, 0,  s1x2,  s1x8},
+   {{0, 7,             1, 6,             2, 5,             3, 4},            0,0,    0x0FF,       2, 1,  s1x2,  s2x4},
+   {{0, 4, 11, 15,     1, 5, 10, 14,     2, 6, 9, 13,      3, 7, 8, 12}, 0,02222,  0x0FFFF,       4, 0,  s2x2,  s2x8},
+   {{4, 11, 15, 0,     5, 10, 14, 1,     6, 9, 13, 2,      7, 8, 12, 3},     0,0,  0x0FFFF,       4, 1,  s2x2,  s2x8},
+   {{0, 7, 11, 12,     1, 6, 10, 13,     2, 5, 9, 14,      3, 4, 8, 15},     0,0,  0x0FFFF,       4, 1,  sdmd,  s4dmd},
+   {{0, 4, 11, 15,     1, 5, 10, 14,     2, 6, 9, 13,      3, 7, 8, 12}, 0,02222,  0x0FFFF,       4, 0,  s1x4,  s1x16},
    {{17, 16, 15, 12, 13, 14,         18, 19, 20, 23, 22, 21,
-         11, 10, 9, 6, 7, 8,                 0, 1, 2, 5, 4, 3},                  0,0,     0000,         6, 0,  s1x6,  s4x6},
-   {{8, 6, 4, 5,       9, 11, 2, 7,      10, 15, 1, 3,     12, 13, 0, 14},       0,0,     0000,         4, 0,  s1x4,  s4x4},
-   {{12, 10, 8, 9,     13, 15, 6, 11,    14, 3, 5, 7,      0, 1, 4, 2},          0,0,   0xFFFF,         4, 1,  s1x4,  s4x4},
+         11, 10, 9, 6, 7, 8,                 0, 1, 2, 5, 4, 3},              0,0,     0000,       6, 0,  s1x6,  s4x6},
+   {{8, 6, 4, 5,       9, 11, 2, 7,      10, 15, 1, 3,     12, 13, 0, 14},   0,0,     0000,       4, 0,  s1x4,  s4x4},
+   {{12, 10, 8, 9,     13, 15, 6, 11,    14, 3, 5, 7,      0, 1, 4, 2},      0,0,   0xFFFF,       4, 1,  s1x4,  s4x4},
    {{0}, 0,0, 0, 0, 0,  nothing, nothing}};
 
 static tm_thing maps_isearch_sixsome[] = {
@@ -737,6 +748,8 @@ extern void initialize_tandem_tables()
    initialize_one_table(maps_isearch_tglsome, 3);
    initialize_one_table(maps_isearch_3x1tglsome, 4);
    initialize_one_table(maps_isearch_ysome, 4);
+   initialize_one_table(maps_isearch_mimictwo, 2);
+   initialize_one_table(maps_isearch_mimicfour, 2);
 }
 
 
@@ -2123,129 +2136,122 @@ extern void tandem_couples_move(
    result->clear_all_overcasts();
 }
 
-// Forward decl!
-void recursively_fix(setup *result, const uint16 split_info[2], const setup *orig_before_press) THROW_DECL;
 
-
-void recurse(uint32 code, setup *result, const uint16 split_info[2], 
-             const setup *orig_before_press)
+void fixup_mimic(setup *result, const uint16 split_info[2],
+                 uint32 division_code, const setup *orig_before_press) THROW_DECL
 {
-   int s, i;
-   setup aa[4];
+   int orig_width = -1;
+   int orig_height = -1;
 
-   const map::map_thing *splitme = map::get_map_from_code(code);
+   if (orig_before_press) {
+      orig_width = setup_attrs[orig_before_press->kind].bounding_box[orig_before_press->rotation ^ result->rotation];
+      orig_height = setup_attrs[orig_before_press->kind].bounding_box[orig_before_press->rotation ^ result->rotation ^ 1];
 
-   if (!splitme)
-      fail("Sorry, can't handle this result setup.");
-
-   int vert = (splitme->rot ^ splitme->vert) & 1;
-
-   uint32 frot = splitme->rot;
-
-   int ssize = attr::klimit(splitme->inner_kind)+1;
-   for (s=0 ; s<splitme->arity ; s++,frot>>=2) {
-      aa[s].clear_people();
-      for (i=0 ; i<ssize ; i++)
-         copy_rot(&aa[s], i, result, splitme->maps[i+ssize*s], 011*((0-frot) & 3));
-
-      aa[s].kind = splitme->inner_kind;
-      aa[s].rotation = frot & 3;
-      aa[s].eighth_rotation = 0;
-      recursively_fix(&aa[s], split_info, orig_before_press);
-   }
-
-   for (s=1 ; s<splitme->arity ; s++) {
-      if (aa[0].kind != aa[s].kind || aa[0].rotation != aa[s].rotation)
-         fail("Sorry, can't handle this result setup.");
-   }
-
-   // Now reassemble them.
-   uint32 mapcode = MAPCODE(aa[0].kind,splitme->arity,splitme->map_kind,(aa[0].rotation^vert)&1);
-
-   const map::map_thing *final_map = map::get_map_from_code(mapcode);
-   if (!final_map)
-      fail("Sorry, can't handle this result setup.");
-
-   result->rotation = (aa[0].rotation & 1) - (final_map->rot & 1);
-   result->eighth_rotation = 0;
-   result->clear_people();
-   ssize = attr::klimit(final_map->inner_kind)+1;
-
-   if (vert && (aa[0].rotation & 1)) {
-      if (((final_map->rot+1) & 2) == 0) {
-         for (i=0; i<splitme->arity; i++) {
-            aa[i].rotation += 2;
-            canonicalize_rotation(&aa[i]);
-         }
-      }
-
-      if ((final_map->rot & 1) == 0)
-         result->rotation += 2;
-   }
-
-   const veryshort *getptr;
-   uint32 vrot;
-   getptr = final_map->maps;
-   vrot = final_map->per_person_rot;
-   uint32 rot;
-   int j;
-
-   for (j=0,rot=final_map->rot ; j<final_map->arity ; j++,rot>>=2) {
-      for (i=0 ; i<ssize ; i++) {
-         install_rot(result, *getptr++, &aa[j], i, 011*((rot+vrot) & 3));
-         vrot >>= 2;
+      // Diamonds don't have long-axis bounding box defined, for reasons that don't concern us here.
+      if (orig_before_press->kind == sdmd) {
+         if ((orig_before_press->rotation ^ result->rotation) == 1)
+            orig_height = 3;
+         else 
+            orig_width = 3;
       }
    }
 
-   result->kind = final_map->outer_kind;
-}
-
-
-
-void recursively_fix(setup *result, const uint16 split_info[2], const setup *orig_before_press) THROW_DECL
-{
    const expand::thing *compress_map = (const expand::thing *) 0;
    const veryshort *srclist = (veryshort *) 0;
    const veryshort *dstlist;
+   const uint32 *census_ptr = (uint32 *) 0;
 
-   static veryshort listfor1x1[] = {(veryshort) s1x1, 1, 0};
-   static veryshort listfor1x2[] = {(veryshort) s1x2, 2, 0, 1};
-   static veryshort listfor1x4[] = {(veryshort) s1x4, 4, 0, 1, 3, 2};
-   static veryshort listfor1x8[] = {(veryshort) s1x8, 8, 0, 1, 3, 2, 6, 7, 5, 4};
+   static const veryshort listfor1x1[] = {(veryshort) s1x1, 0, 1,   0, -1};
+   static const veryshort listfor1x2[] = {(veryshort) s1x2, 0, 2,   0, 1, -1};
+   static const veryshort listfor1x2V[]= {(veryshort) s1x2, 1, 1,   0, 1, -1};
+   static const veryshort listfor1x4[] = {(veryshort) s1x4, 0, 4,   0, 1, 3, 2, -1};
+   static const veryshort listfor1x8[] = {(veryshort) s1x8, 0, 8,   0, 1, 3, 2, 6, 7, 5, 4, -1};
+   static const veryshort listfor2x2[] = {(veryshort) s2x2, 0, 2,   0, 1, 3, 2, -1};
+   static const veryshort listfor2x2V[]= {(veryshort) s2x2, 1, 2,   0, 3, 1, 2, -1};
+   static const veryshort listfordmd[] = {(veryshort) sdmd, 0, 1,   0, 1, 2, 3, -1};
+   static const veryshort listforrig[] = {(veryshort) s_rigger,0,2, 6, 7, 0, 1, 3, 2, 5, 4, -1};
+   static const veryshort listfor2x4[] = {(veryshort) s2x4, 0, 4,   0, 1, 2, 3, 7, 6, 5, 4, -1};
+   static const veryshort listfor1x4V[]= {(veryshort) s1x4, 1, 1,   0, 1, 3, 2, -1};
+   static const veryshort listfor2x4V[]= {(veryshort) s2x4, 1, 2,   0, 7, 1, 6, 2, 5, 3, 4, -1};
+   static const veryshort listfor2x8[] = {(veryshort) s2x8, 0, 8,
+                                          0, 1, 2, 3, 4, 5, 6, 7,
+                                          15, 14, 13, 12, 11, 10, 9, 8, -1};
+   static const veryshort listfor4x4[] = {(veryshort) s4x4, 0, 4,
+                                          12, 13, 14, 0, 10, 15, 3, 1,
+                                          9, 11, 7, 2, 8, 6, 5, 4, -1};
+   static const veryshort listfor4x4V[]= {(veryshort) s4x4, 1, 4,
+                                          12, 10, 9, 8, 13, 15, 11, 6,
+                                          14, 3, 7, 5, 0, 1, 2, 4, -1};
 
-   static expand::thing exp09_2x2_1x2 = {{3, 0}, s1x2, s2x2, 1};
-   static expand::thing exp03_2x2_1x2 = {{0, 1}, s1x2, s2x2, 0};
-   static expand::thing exp0C_2x2_1x2 = {{3, 2}, s1x2, s2x2, 0};
-   static expand::thing exp06_2x2_1x2 = {{2, 1}, s1x2, s2x2, 1};
+   static const expand::thing expAA_2x4_dmd = {{7, 1, 3, 5}, sdmd, s2x4, 0};
+   static const expand::thing exp55_2x4_dmd = {{0, 2, 4, 6}, sdmd, s2x4, 0};
 
-   static expand::thing exp33_2x4_2x2 = {{0, 1, 4, 5}, s2x2, s2x4, 0};
-   static expand::thing expCC_2x4_2x2 = {{2, 3, 6, 7}, s2x2, s2x4, 0};
-   static expand::thing exp33_2x4_1x4 = {{0, 1, 4, 5}, s1x4, s2x4, 0};
-   static expand::thing expCC_2x4_1x4 = {{7, 6, 3, 2}, s1x4, s2x4, 0};
-   static expand::thing exp55_2x4_dmd = {{0, 2, 4, 6}, sdmd, s2x4, 0};
-   static expand::thing expAA_2x4_dmd = {{7, 1, 3, 5}, sdmd, s2x4, 0};
-   static expand::thing exp55_2x4_2x2 = {{0, 2, 4, 6}, s2x2, s2x4, 0};
-   static expand::thing expAA_2x4_2x2 = {{1, 3, 5, 7}, s2x2, s2x4, 0};
-   static expand::thing exp55_2x4_1x4 = {{0, 6, 4, 2}, s1x4, s2x4, 0};
-   static expand::thing expAA_2x4_1x4 = {{7, 1, 3, 5}, s1x4, s2x4, 0};
-   static expand::thing exp66_2x4_2x2 = {{1, 2, 5, 6}, s2x2, s2x4, 0};
-   static expand::thing expC3_2x4_2x2 = {{0, 1, 6, 7}, s2x2, s2x4, 0};
-   static expand::thing exp3C_2x4_2x2 = {{2, 3, 4, 5}, s2x2, s2x4, 0};
-   static expand::thing exp0F_2x4_1x4 = {{0, 1, 3, 2}, s1x4, s2x4, 0};
-   static expand::thing expF0_2x4_1x4 = {{7, 6, 4, 5}, s1x4, s2x4, 0};
+   static const expand::thing expCC_qtg_line = {{6, 7, 2, 3}, s1x4, s_qtag, 0};
 
-   static expand::thing expCC_qtg_line = {{6, 7, 2, 3}, s1x4, s_qtag, 0};
+   static const expand::thing exp55_xwv_dmd = {{0, 2, 4, 6}, sdmd, s_crosswave, 0};
+   static const expand::thing expAA_xwv_dmd = {{1, 3, 5, 7}, sdmd, s_crosswave, 0};
+   static const expand::thing exp99_xwv_dmd = {{0, 3, 4, 7}, sdmd, s_crosswave, 0};
+   static const expand::thing exp66_xwv_dmd = {{1, 2, 5, 6}, sdmd, s_crosswave, 0};
 
-   static expand::thing exp55_xwv_dmd = {{0, 2, 4, 6}, sdmd, s_crosswave, 0};
-   static expand::thing expAA_xwv_dmd = {{1, 3, 5, 7}, sdmd, s_crosswave, 0};
-   static expand::thing exp99_xwv_dmd = {{0, 3, 4, 7}, sdmd, s_crosswave, 0};
-   static expand::thing exp66_xwv_dmd = {{1, 2, 5, 6}, sdmd, s_crosswave, 0};
+   static const expand::thing exp55_qtg_dmd = {{4, 6, 0, 2}, sdmd, s_qtag, 1};
+   static const expand::thing expAA_qtg_dmd = {{5, 7, 1, 3}, sdmd, s_qtag, 1};
+   static const expand::thing exp99_qtg_dmd = {{4, 7, 0, 3}, sdmd, s_qtag, 1};
+   static const expand::thing exp66_qtg_dmd = {{5, 6, 1, 2}, sdmd, s_qtag, 1};
+
+   // High 2 hex digits for top row and bottom row, next 4 nibbles for columns left to right.
+   static const uint32 census_2x4[] = {0x1040, 0x1010, 0x1004, 0x1001,
+                                       0x0101, 0x0104, 0x0110, 0x0140};
+
+   // High 2 hex digits for rows top and bottom, next 2 for columns left and right.
+   static const uint32 census_2x2[] = {
+      0x1010, 0x1001, 0x0101, 0x0110};
+
+   // High 4 hex digits for rows top to bottom, next 4 for columns left to right.
+   static const uint32 census_4x4[] = {
+      0x10000001, 0x01000001, 0x00100001, 0x01000010,
+      0x00010001, 0x00010010, 0x00010100, 0x00100010,
+      0x00011000, 0x00101000, 0x01001000, 0x00100100,
+      0x10001000, 0x10000100, 0x10000010, 0x01000100};
+
+   // High 2 hex digits for rows top and bottom, next 8 nibbles for columns left to right.
+   static const uint32 census_2x8[] = {
+      0x104000, 0x101000, 0x100400, 0x100100,
+      0x100040, 0x100010, 0x100004, 0x100001,
+      0x010001, 0x010004, 0x010010, 0x010040,
+      0x010100, 0x010400, 0x011000, 0x014000};
+
+   // High 4 hex digits for rows around the diamond, next 6 nibbles for columns left to right.
+   static const uint32 census_rig[] = {
+      0x0100040, 0x0100010, 0x0010001, 0x0010004,
+      0x0001010, 0x0001040, 0x1000400, 0x1000100};
 
    uint32 finals = little_endian_live_mask(result);
    setup temp1 = *result;
-   uint16 new_split_info[2];
-   new_split_info[0] = 0;
-   new_split_info[1] = 0;
+   uint32 row_column_census = 0;
+
+   switch (result->kind) {
+   case s2x4:
+      census_ptr = census_2x4;
+      break;
+   case s2x2:
+      census_ptr = census_2x2;
+      break;
+   case s4x4:
+      census_ptr = census_4x4;
+      break;
+   case s2x8:
+      census_ptr = census_2x8;
+      break;
+   case s_rigger:
+      census_ptr = census_rig;
+      break;
+   }
+
+   if (census_ptr) {
+      for (int i=0 ; i<=attr::slimit(result); i++) {
+         if (result->people[i].id1) row_column_census += census_ptr[i];
+      }
+   }
 
    switch (result->kind) {
    case s1x2:
@@ -2261,153 +2267,182 @@ void recursively_fix(setup *result, const uint16 split_info[2], const setup *ori
       srclist = listfor1x8;
       break;
    case s2x4:
-      if ((split_info[0] == 1 && split_info[1] == 0) ||
-          (split_info[0] >= 3 && split_info[1] >= 1)) {
-         // Split it into 2 2x2's.  This includes the case of a 1-person call.  The latter ought to
-         // split into 8 1x1's, but we do this and hope for the best.
-         if (orig_before_press->kind == s2x2)
-            new_split_info[1] = 1;
-         else if (orig_before_press->kind == s1x4)
-            new_split_info[0] = 1;
-
-         recurse(MAPCODE(s2x2,2,MPKIND__SPLIT,0),
-                 result, new_split_info, (const setup *) 0);
-         reinstate_rotation(&temp1, result);
-         return;
+      if (orig_width == 2 && orig_height == 2) {
+         // Came in as a 2x2, can it go out as a 2x2?
+         if ((row_column_census & 0xFF00) == 0x2200) {
+            // Yes.
+            dstlist = listfor2x2;
+            srclist = listfor2x4;
+            break;
+         }
+         else if ((row_column_census & 0xFF) == 0x55) {
+            // No, must go out as a 1x4.
+            dstlist = listfor1x4V;
+            srclist = listfor2x4V;
+            break;
+         }
       }
-      else if (split_info[0] == 1 && split_info[1] == 1) {
-         // Split it into 4 1x2's in quadrants.
-         recurse(MAPCODE(s1x2,4,MPKIND__SPLIT_OTHERWAY_TOO,0),
-                 result, split_info, (const setup *) 0);
-         reinstate_rotation(&temp1, result);
-         return;
+      else if (orig_width == 4 && orig_height == 1) {
+         // Came in as a 1x4 oriented the same way, can it go out as a 1x4?
+         if ((row_column_census & 0xFF) == 0x55) {
+            // Yes.
+            dstlist = listfor1x4V;
+            srclist = listfor2x4V;
+            break;
+         }
+         else if ((row_column_census & 0xFF00) == 0x2200) {
+            // No, must go out as a 2x2.
+            dstlist = listfor2x2;
+            srclist = listfor2x4;
+            break;
+         }
       }
-      else if (split_info[0] == 3 && split_info[1] == 0) {
-         // Split it into 4 1x2's arrayed left-to-right.
-         recurse(MAPCODE(s1x2,4,MPKIND__SPLIT,1),
-                 result, split_info, (const setup *) 0);
-         reinstate_rotation(&temp1, result);
-         return;
+      else if (orig_width == 1 && orig_height == 4) {
+         // Came in as a 1x4 oriented the other way, go out as a 2x2 if possible.
+         if ((row_column_census & 0xFF00) == 0x2200) {
+            dstlist = listfor2x2;
+            srclist = listfor2x4;
+            break;
+         }
+         else if ((row_column_census & 0xFF) == 0x55) {
+            // Must go out as a 1x4.
+            dstlist = listfor1x4V;
+            srclist = listfor2x4V;
+            break;
+         }
       }
-      else if (split_info[0] >= 3 && split_info[1] >= 1) {
-         // Split it 8 ways.
-         recurse(MAPCODE(s1x1,8,MPKIND__SPLIT_OTHERWAY_TOO,0),
-                 result, split_info, (const setup *) 0);
-         reinstate_rotation(&temp1, result);
-         return;
+      else if (orig_width == 3 && orig_height == 2) {
+         // Came in as a diamond oriented the same way, prefer a diamond.
+         if (finals == 0xAA) {
+            compress_map = &expAA_2x4_dmd;
+            break;
+         }
+         else if (finals == 0x55) {
+            compress_map = &exp55_2x4_dmd;
+            break;
+         }
+      }
+      else if (orig_width == 2 && orig_height == 3) {
+         // Came in as a diamond oriented the other way, go out as a 2x2 if possible.
+         if ((row_column_census & 0xFF00) == 0x2200) {
+            dstlist = listfor2x2;
+            srclist = listfor2x4;
+            break;
+         }
+      }
+      else if (orig_width < orig_height) {
+         // Came in oriented the other way, go out as a 2x2 if possible.
+         if ((row_column_census & 0xFF00) == 0x2200) {
+            dstlist = listfor2x2;
+            srclist = listfor2x4;
+            break;
+         }
       }
       else {
-         if (orig_before_press &&
-             ((orig_before_press->rotation ^ result->rotation) & 1) == 0) {
-            if (orig_before_press->kind == s1x4)
-               finals += 0x100;
-            else if (orig_before_press->kind == sdmd)
-               finals += 0x200;
+         // Came in oriented the same way, go out as a 2x2 if possible.
+         if ((row_column_census & 0xFF00) == 0x2200) {
+            dstlist = listfor2x2;
+            srclist = listfor2x4;
+            break;
          }
-
-         switch (finals)
-         {
-         case 0x033: compress_map = &exp33_2x4_2x2; break;
-         case 0x133: compress_map = &exp33_2x4_1x4; break;
-         case 0x0CC: compress_map = &expCC_2x4_2x2; break;
-         case 0x1CC: compress_map = &expCC_2x4_1x4; break;
-
-         case 0x055: compress_map = &exp55_2x4_2x2; break;
-         case 0x155: compress_map = &exp55_2x4_1x4; break;
-         case 0x255: compress_map = &exp55_2x4_dmd; break;
-
-         case 0x0AA: compress_map = &expAA_2x4_2x2; break;
-         case 0x1AA: compress_map = &expAA_2x4_1x4; break;
-         case 0x2AA: compress_map = &expAA_2x4_dmd; break;
-
-         case 0x066: case 0x166: compress_map = &exp66_2x4_2x2; break;
-         case 0x099: case 0x199: compress_map = &s_2x2_2x4_ends; break;
-         case 0x0C3: case 0x1C3: compress_map = &expC3_2x4_2x2; break;
-         case 0x03C: case 0x13C: compress_map = &exp3C_2x4_2x2; break;
-         case 0x00F: case 0x10F: compress_map = &exp0F_2x4_1x4; break;
-         case 0x0F0: case 0x1F0: compress_map = &expF0_2x4_1x4; break;
+         else if ((row_column_census & 0xFF) == 0x55) {
+            // No, must go out as a 1x4.
+            dstlist = listfor1x4V;
+            srclist = listfor2x4V;
+            break;
          }
       }
 
       break;
 
+   case s4x4:
+      if (row_column_census == 0x22222222U) {
+         // It can be compressed either way.  Use the incoming elongation to make a choice.
+         if (orig_width > orig_height) {
+            dstlist = listfor2x4V;
+            srclist = listfor4x4V;
+         }
+         else if (orig_width < orig_height) {
+            dstlist = listfor2x4V;
+            srclist = listfor4x4;
+         }
+      }
+      else if ((row_column_census & 0xFFFF0000U) == 0x22220000U) {
+         dstlist = listfor2x4V;
+         srclist = listfor4x4;
+      }
+      else if ((row_column_census & 0x0000FFFFU) == 0x00002222U) {
+         dstlist = listfor2x4V;
+         srclist = listfor4x4V;
+      }
+
+      break;
    case s2x2:
-      // If it is unambiguous, just do it.
-
-      switch (finals)
-      {
-      case 0x9: compress_map = &exp09_2x2_1x2; break;
-      case 0x3: compress_map = &exp03_2x2_1x2; break;
-      case 0xC: compress_map = &exp0C_2x2_1x2; break;
-      case 0x6: compress_map = &exp06_2x2_1x2; break;
+      if (orig_before_press && orig_before_press->kind == s1x2) {
+         dstlist = listfor1x2V;
+         if (row_column_census == 0x1111) {
+            // People are in the corners, this could compress either way, choose the way that preserves elongation.
+            srclist = (orig_height == 2) ? listfor2x2 : listfor2x2V;
+         }
+         else if ((row_column_census & 0xFF00U) == 0x1100U)
+            srclist = listfor2x2;
+         else if ((row_column_census & 0xFFU) == 0x11U)
+            srclist = listfor2x2V;
       }
 
-      if (compress_map) break;
-
-      // If we are being told to compress in a certain way, do so.
-      if (split_info[0] == 0 && split_info[1] == 1) {
-         // Split it vertically into lateral 1x2's
-         recurse(MAPCODE(s1x2,2,MPKIND__SPLIT,1),
-                 result, new_split_info, (const setup *) 0);
-         reinstate_rotation(&temp1, result);
-         return;
-      }
-      else if (split_info[0] == 1 && split_info[1] == 0) {
-         // Split it horizontally into vertical 1x2's
-         recurse(spcmap_2x2v,
-                 result, new_split_info, (const setup *) 0);
-         reinstate_rotation(&temp1, result);
-         return;
-      }
-
-      // If no splitting info, but original was a 1x2, prefer that.
-      if (orig_before_press && orig_before_press->kind == s1x2 && (orig_before_press->rotation & 1) == 1) {
-         // Split it vertically into lateral 1x2's
-         recurse(MAPCODE(s1x2,2,MPKIND__SPLIT,1),
-                 result, new_split_info, (const setup *) 0);
-         reinstate_rotation(&temp1, result);
-         return;
-      }
-      else if (orig_before_press && orig_before_press->kind == s1x2 && (orig_before_press->rotation & 1) == 0) {
-         // Split it horizontally into vertical 1x2's
-         recurse(spcmap_2x2v,
-                 result, new_split_info, (const setup *) 0);
-         reinstate_rotation(&temp1, result);
-         return;
-      }
-
-      break;    // This will make it fail.
-
+      break;
    case s_crosswave:
-      switch (finals)
-      {
+      switch (finals) {
       case 0x55: compress_map = &exp55_xwv_dmd; break;
       case 0xAA: compress_map = &expAA_xwv_dmd; break;
       case 0x66: compress_map = &exp66_xwv_dmd; break;
       case 0x99: compress_map = &exp99_xwv_dmd; break;
       }
+
       break;
    case s_rigger:
-      {
-         recurse(MAPCODE(s1x2,4,MPKIND__SPLIT_WITH_45_ROTATION_OTHERWAY_TOO,0),
-                 result, new_split_info, (const setup *) 0);
-         reinstate_rotation(&temp1, result);
-         return;
+      if (orig_before_press &&
+          orig_before_press->kind == sdmd &&
+          orig_before_press->rotation == result->rotation &&
+          (row_column_census & 0xFFFF000U) == 0x1111000U &&
+          ((row_column_census & 0x0F0U) == 0x050U ||   // Handle various unsymmetrical things.
+           (row_column_census & 0x0F0U) == 0x080U ||
+           (row_column_census & 0x0F0U) == 0x020U) &&
+          ((row_column_census & 0x00FU) == 0x001U || (row_column_census & 0x00FU) == 0x004U) &&
+          ((row_column_census & 0xF00U) == 0x100U || (row_column_census & 0xF00U) == 0x400U)) {
+         dstlist = listfordmd;
+         srclist = listforrig;
       }
 
       break;
    case s_qtag:
-      switch (finals)
-      {
-      case 0xCC: compress_map = &expCC_qtg_line; break;
+      if (finals == 0xCC) {
+         compress_map = &expCC_qtg_line; break;  // It's just the center line.
+         break;
       }
 
-      if (compress_map) break;
+      if (orig_before_press && orig_before_press->kind == sdmd && (orig_before_press->rotation ^ result->rotation) == 1) {
+         switch (finals) {
+         case 0x55: compress_map = &exp55_qtg_dmd; break;
+         case 0xAA: compress_map = &expAA_qtg_dmd; break;
+         case 0x66: compress_map = &exp66_qtg_dmd; break;
+         case 0x99: compress_map = &exp99_qtg_dmd; break;
+         }
+      }
 
-      recurse(MAPCODE(s1x2,4,MPKIND__SPLIT_WITH_45_ROTATION_OTHERWAY_TOO,1),
-              result, new_split_info, (const setup *) 0);
-      reinstate_rotation(&temp1, result);
-      return;
+      break;
+   case s2x8:
+      if (orig_width == 4 && orig_height == 2 && (row_column_census & 0xFF0000) == 0x440000) {
+         // Four on top row, four on bottom, and came from a properly oriented 2x4.
+         // Collapse the result to a 2x4.
+         dstlist = listfor2x4;
+         srclist = listfor2x8;
+         break;
+      }
+      else if (orig_width == 2 && orig_height == 4) {
+         // Result must collapse to a 2x4.  ***** do something???
+      }
+
       break;
    case s_dead_concentric:
       result->kind = result->inner.skind;
@@ -2422,20 +2457,31 @@ void recursively_fix(setup *result, const uint16 split_info[2], const setup *ori
    if (compress_map)
       expand::compress_setup(*compress_map, result);
    else if (srclist) {
-      result->kind = (setup_kind) dstlist[0];
+      result->kind = (setup_kind) *dstlist++;
+      srclist++;
+      int rot = (*dstlist++) - (*srclist++);   // Get the rotations.
       result->clear_people();
-      int wp = 0;
-      for (int rp = 0 ; rp < srclist[1] ; rp++) {
-         if (temp1.people[srclist[rp+2]].id1) {
-            if (wp == dstlist[1])
-               fail("Sorry, can't recompress.");
-            copy_person(result, dstlist[wp+2], &temp1, srclist[rp+2]);
-            wp++;
+      int srclim = *srclist++;    // Get the group sizes.
+      int dstlim = *dstlist++;
+      int wp;
+      do {
+         wp = 0;
+         for (int rp = 0 ; rp < srclim ; rp++) {
+            int rpp = rot ? srclim-1-rp : rp;
+            if (temp1.people[srclist[rpp]].id1) {
+               if (wp == dstlim)
+                  fail("Sorry, can't recompress.");
+               copy_rot(result, dstlist[wp], &temp1, srclist[rpp], 033*rot);
+               wp++;
+            }
          }
-      }
+         if (wp != dstlim) fail("Can't recompress.");
+         // Go to the next group.
+         srclist += srclim;
+         dstlist += dstlim;
+      } while (*srclist >= 0);
 
-      if (wp != dstlist[1])
-         fail("Can't recompress.");
+      result->rotation += rot;
    }
    else
       fail("Can't recompress.");
@@ -2444,137 +2490,132 @@ void recursively_fix(setup *result, const uint16 split_info[2], const setup *ori
 }
 
 
+struct mimic_info{
+   int groupsize;
+   int lateral;    // 1 if selector is beaus/belles/etc., 0 if leads/trailers/etc.
+   int fwd;        // 1 if leads/belles/etc., 0 if beaus/trailers/etc.
+   int setup_hint; // Zero, or exactly one bit like MIMIC_SETUP_LINES etc.
+};
+
+
+static void small_mimic_move(setup *ss,
+                             mimic_info & MI,
+                             uint32 division_code,
+                             setup *result) THROW_DECL
+{
+   setup temp1 = *ss;
+   uint32 ilatmask3low = 0;
+
+   tandrec ttt(false, true);
+   ttt.m_people_per_group = 2;
+   ttt.virtual_result = temp1;
+
+   // ****** Problem:  We should check consistency of facing direction
+   // when doing leftmost/etc 2 or 4.
+
+   for (int k=attr::slimit(ss); k>=0; k--) {
+      ilatmask3low <<= 3;
+      uint32 p = ss->people[k].id1;
+      int the_real_index = ((p+MI.lateral+(MI.fwd<<1)) >> 1) & 1;
+
+      // Set the person number fields to the identity map.
+      ttt.virtual_result.people[k].id1 = (p & ~0700) | (k<<6);
+      ilatmask3low |= (p & 1) << 1;
+      ilatmask3low ^= (MI.lateral<<1);
+      ttt.m_real_saved_people[the_real_index].people[k] = ss->people[k];
+      ttt.m_real_saved_people[the_real_index^1].clear_person(k);
+   }
+
+   tm_thing *map_search =
+      (MI.groupsize == 4) ? maps_isearch_mimicfour :
+      (MI.groupsize == 2) ? maps_isearch_mimictwo :
+      maps_isearch_twosome;
+
+   while (map_search->outsetup != nothing) {
+      if ((map_search->insetup == ss->kind) &&
+          map_search->insinglemaskhigh == 0 &&
+          map_search->insinglemasklow == 0 &&
+          (map_search->ilatmask3high) == 0 &&
+          (map_search->ilatmask3low) == ilatmask3low)
+         break;
+
+      map_search++;
+   }
+
+   if (map_search->outsetup == nothing)
+      fail("Can't do this.");
+
+   ttt.unpack_us(map_search, 0, 0, &temp1);
+   if (MI.setup_hint & MIMIC_SETUP_WAVES) temp1.cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
+
+   if (division_code != ~0U)
+      divided_setup_move(&temp1, division_code, phantest_ok, true, result);
+   else
+      impose_assumption_and_move(&temp1, result);
+
+   if (result->rotation & 1)
+      result->result_flags.swap_split_info_fields();
+
+   fixup_mimic(result, result->result_flags.split_info, division_code, ss);
+
+   // Whatever was going on with splitting is no longer relevant.
+   result->result_flags.clear_split_info();
+}
+
+
 void mimic_move(
    setup *ss,
    parse_block *parseptr,
    setup *result) THROW_DECL
 {
-   if (attr::slimit(ss) > 3) {
-      // We need to divide the setup.  Stuff our concept block back into the parse tree.
-      // Based on what we know "do_big_concept" does, the following will always be OK,
-      // but we take no chances.
-      if (ss->cmd.parseptr != parseptr->next)
-         fail("Sorry, command tree is too complicated.");
-      setup aa = *ss;
-      aa.cmd.parseptr = parseptr;
-
-      try {
-         if (do_simple_split(&aa, split_command_none, result))
-            fail("Can't split this.");
-         return;
-      }
-      catch(error_flag_type e) {
-         if (e == error_flag_no_retry)
-            throw e;
-      }
-
-      aa = *ss;
-      aa.cmd.parseptr = parseptr;
-
-      // Try a 2x4 -> 1x4 split.
-      if (ss->kind == s2x4) {
-         try {
-            if (do_simple_split(&aa, split_command_1x4, result))
-               fail("Can't split this.");
-            warn(warn__each1x4);
-            return;
-         }
-         catch(error_flag_type e) {
-            if (e == error_flag_no_retry)
-               throw e;
-         }
-      }
-
-      // Try more esoteric splits.
-      if (ss->kind == s_qtag || ss->kind == s_rigger || ss->kind == s_crosswave || ss->kind == s2x4) {
-         concentric_move(&aa, &aa.cmd, &aa.cmd, schema_in_out_triple, 0, 0, false, false, ~0U, result);
-         return;
-      }
-
-      fail("Can't do this.");
-   }
+   selector_kind who = parseptr->options.who;
+   bool centers = false;
+   int i;
+   mimic_info MI;
+   MI.lateral = 0;
+   MI.groupsize = 1;
+   MI.fwd = 0;
+   MI.setup_hint = parseptr->concept->arg1;
 
    if (little_endian_live_mask(ss) != (uint32) (1U << (attr::slimit(ss)+1)) - 1)
       fail_no_retry("Phantoms not allowed.");
 
    // What we do is very different for centers/ends vs. other designators.
 
-   switch (parseptr->options.who) {
-   case selector_trailers:
-   case selector_beaus:
-   case selector_leads:
-   case selector_belles:
-      {
-         setup temp1 = *ss;
-         uint32 ilatmask3low = 0;
-
-         tandrec ttt(false, true);
-         ttt.m_people_per_group = 2;
-         ttt.virtual_result = temp1;
-
-         for (int k=attr::slimit(ss); k>=0; k--) {
-            ilatmask3low <<= 3;
-            uint32 p = ss->people[k].id1;
-
-            // Set the person number fields to the identity map.
-            ttt.virtual_result.people[k].id1 = (p & ~0700) | (k<<6);
-            ilatmask3low |= (p & 1) << 1;
-
-            int the_real_index;
-
-            switch (parseptr->options.who) {
-            case selector_trailers:
-               the_real_index = ((p+0) >> 1) & 1;
-               break;
-            case selector_beaus:
-               ilatmask3low ^= 2;
-               the_real_index = ((p+1) >> 1) & 1;
-               break;
-            case selector_leads:
-               the_real_index = ((p+2) >> 1) & 1;
-               break;
-            case selector_belles:
-               ilatmask3low ^= 2;
-               the_real_index = ((p+3) >> 1) & 1;
-               break;
-            }
-
-            ttt.m_real_saved_people[the_real_index].people[k] = ss->people[k];
-            ttt.m_real_saved_people[the_real_index^1].clear_person(k);
-         }
-
-         tm_thing *map_search = maps_isearch_twosome;
-         while (map_search->outsetup != nothing) {
-            if ((map_search->insetup == ss->kind) &&
-                map_search->insinglemaskhigh == 0 &&
-                map_search->insinglemasklow == 0 &&
-                (map_search->ilatmask3high) == 0 &&
-                (map_search->ilatmask3low) == ilatmask3low)
-               break;
-
-            map_search++;
-         }
-
-         if (map_search->outsetup == nothing)
-            fail("Can't do this.");
-
-         ttt.unpack_us(map_search, 0, 0, &temp1);
-
-         move(&temp1, false, result);
-      }
-      break;
+   switch (who) {
    case selector_centers:
-   case selector_centers_of_lines:
-   case selector_centers_of_columns:
-      {
-         if (ss->kind != s2x2)
-            fail("Can't do this.");
+      centers = true;
+   case selector_ends:
+      if (attr::slimit(ss) > 3) {
+         // We need to divide the setup.  Stuff our concept block back into the parse tree.
+         // Based on what we know "do_big_concept" does, the following will always be OK,
+         // but we take no chances.
+         if (ss->cmd.parseptr != parseptr->next)
+            fail("Sorry, command tree is too complicated.");
+         setup aa = *ss;
+         aa.cmd.parseptr = parseptr;
 
-         uint32 tbonetest = or_all_people(ss);
+         try {
+            if (do_simple_split(&aa, split_command_none, result))
+               fail("Can't split this.");
+            return;
+         }
+         catch(error_flag_type e) {
+            if (e == error_flag_no_retry) throw e;
+         }
 
-         if (parseptr->options.who == selector_centers_of_columns)
-            tbonetest ^= 011;
+         fail("Can't do this.");
+      }
 
+      if (ss->kind != s2x2)
+         fail("Can't do this.");
+
+      uint32 tbonetest = or_all_people(ss);
+
+      if (MI.setup_hint & MIMIC_SETUP_COLUMNS)
+         tbonetest ^= 011;
+
+      if (centers) {
          if ((tbonetest & 010) == 0) {
             expand::expand_setup(s_2x2_2x4b, ss);
          }
@@ -2586,19 +2627,7 @@ void mimic_move(
 
          move(ss, false, result);
       }
-      break;
-   case selector_ends:
-   case selector_ends_of_lines:
-   case selector_ends_of_columns:
-      {
-         if (ss->kind != s2x2)
-            fail("Can't do this.");
-
-         uint32 tbonetest = or_all_people(ss);
-
-         if (parseptr->options.who == selector_ends_of_columns)
-            tbonetest ^= 011;
-
+      else {
          if ((tbonetest & 010) == 0) {
             expand::expand_setup(s_2x2_2x4_endsb, ss);
          }
@@ -2608,23 +2637,322 @@ void mimic_move(
             expand::expand_setup(s_2x2_2x4_ends, ss);
          }
 
-         ss->cmd.cmd_misc_flags |= (parseptr->options.who == selector_ends_of_columns) ?
+         ss->cmd.cmd_misc_flags |= (MI.setup_hint & MIMIC_SETUP_COLUMNS) ?
             CMD_MISC__VERIFY_COLS : CMD_MISC__VERIFY_LINES;
 
          impose_assumption_and_move(ss, result);
       }
+
+      if (result->rotation & 1)
+         result->result_flags.swap_split_info_fields();
+
+      fixup_mimic(result, result->result_flags.split_info, ~0U, ss);
+
+      // Whatever was going on with splitting is no longer relevant.
+      result->result_flags.clear_split_info();
+      return;
+   }
+
+   // Here is where we do the beau/belle stuff.
+
+   switch (who) {
+   case selector_beaus:
+   case selector_belles:
+      MI.lateral = 1;
+   case selector_leads:
+   case selector_trailers:
+      break;
+   case selector_leftmosttwo:
+   case selector_rightmosttwo:
+      MI.lateral = 1;
+   case selector_firsttwo:
+   case selector_lasttwo:
+      MI.groupsize = 2;
+      break;
+   case selector_leftmostfour:
+   case selector_rightmostfour:
+      MI.lateral = 1;
+   case selector_firstfour:
+   case selector_lastfour:
+      MI.groupsize = 4;
       break;
    default:
       fail("This designator is not allowed.");
    }
 
-   if (result->rotation & 1)
-      result->result_flags.swap_split_info_fields();
+   switch (who) {
+   case selector_belles:
+   case selector_leads:
+   case selector_rightmosttwo:
+   case selector_firsttwo:
+   case selector_rightmostfour:
+   case selector_firstfour:
+      MI.fwd = 1;
+      break;
+   }
 
-   recursively_fix(result, result->result_flags.split_info, ss);
+   // Look for 2-person underlying calls that we can do with a single person.
+   // Break up the incoming setup, whatever it is, into 1-person setups.
+   // We don't have splitting maps for these, so do it by hand.
 
-   // Whatever was going on with splitting is no longer relevant.
-   result->result_flags.clear_split_info();
+   int sizem1 = attr::slimit(ss);
+   *result = *ss;
+   result->clear_people();
+   clear_result_flags(result);
+
+   // But don't do it if user requested any setup.
+   if (MI.groupsize <= 1 && MI.setup_hint == 0) {
+      try {
+         for (i=0 ; i<=sizem1; i++) {
+            if (ss->people[i].id1) {
+               setup tt = *ss;
+               tt.kind = s1x1;
+               tt.rotation = 0;
+               copy_person(&tt, 0, ss, i);
+               update_id_bits(&tt);
+               setup uu;
+               small_mimic_move(&tt, MI, ~0U, &uu);
+               if (uu.kind != s1x1) fail("Catch me.");
+               copy_person(result, i, &uu, 0);
+            }
+         }
+
+         return;
+      }
+      catch(error_flag_type e) {
+         if (e == error_flag_no_retry) throw e;
+      }
+   }
+
+   // Well, that didn't work.  Look for 4-person underlying calls that we can do with 2 people.
+   // That is, split the setup into 2-person setups, in which people face consistently.
+   // The people in each group must not be T-boned.  Also, if the group size is 2 or more,
+   // the people in each group must face the same way.
+
+   // The way we will divide the setup and recurse requires that we stuff our concept block
+   // back into the parse tree.  Based on what we know "do_big_concept" does, the following
+   // will always be OK, but we take no chances.
+   if (ss->cmd.parseptr != parseptr->next)
+      fail("Sorry, command tree is too complicated.");
+
+   uint32 directions;
+   uint32 livemask;
+   big_endian_get_directions(ss, directions, livemask);
+   directions &= 0x55555555;
+
+   setup aa = *ss;
+   aa.cmd.parseptr = parseptr;
+   aa.cmd.prior_elongation_bits = 0;
+   uint32 division_code = ~0U;
+
+   // If we're already in a 2-person setup, and subdivision failed, we must be able to do it directly.
+   if (ss->kind == s1x2 && MI.groupsize <= 2) {
+      small_mimic_move(ss, MI, ~0U, result);
+      return;
+   }
+
+   if (MI.groupsize <= 2) {
+      try {
+         // Don't split into 1x2's if user requested C/L/W.
+         if ((MI.setup_hint & (MIMIC_SETUP_LINES|MIMIC_SETUP_WAVES|MIMIC_SETUP_COLUMNS)) == 0) {
+            switch (ss->kind) {
+            case s1x4:
+               division_code = MAPCODE(s1x2,2,MPKIND__SPLIT,0);
+               break;
+            case s1x8:
+               division_code = MAPCODE(s1x2,4,MPKIND__SPLIT,0);
+               break;
+            case s2x2:
+               {
+                  int ew = MI.lateral;
+                  if (directions == 0x55) ew ^= 1;
+                  else if (directions != 0) fail("Can't figure out who should be working with whom.");
+                  division_code = (ew & 1) ? spcmap_2x2v : MAPCODE(s1x2,2,MPKIND__SPLIT,1);
+               }
+               break;
+            case s_crosswave:
+               division_code = MAPCODE(s1x2,4,MPKIND__NONISOTROPDMD,1);
+               break;
+            case s_rigger:
+               division_code = MAPCODE(s1x2,4,MPKIND__DMD_STUFF,0);
+               break;
+            case s_qtag:
+               division_code = MAPCODE(s1x2,4,MPKIND__DMD_STUFF,1);
+               break;
+            case s2x4:
+               if ((directions == 0x5555 && MI.lateral == 0) || (directions == 0x0000 && MI.lateral == 1)) {
+                  division_code = MAPCODE(s1x2,4,MPKIND__SPLIT_OTHERWAY_TOO,0);
+               }
+               else if ((directions == 0x5555 && MI.lateral == 1) || (directions == 0x0000 && MI.lateral == 0)) {
+                  division_code = MAPCODE(s1x2,4,MPKIND__SPLIT,1);
+               }
+               else if ((directions == 0x4141 && MI.lateral == 0) || (directions == 0x1414 && MI.lateral == 1)) {
+                  division_code = MAPCODE(s1x2,4,MPKIND__NONISOTROPDMD,0);
+               }
+
+               break;
+            }
+
+            if (division_code != ~0U) {
+               divided_setup_move(&aa, division_code, phantest_ok, true, result);
+               warn(warn__each1x2);
+               return;
+            }
+         }
+      }
+      catch(error_flag_type e) {
+         if (e == error_flag_no_retry) throw e;
+      }
+   }
+
+   if (MI.groupsize == 4) {
+      // If we're already in a 4-person setup, do it directly.
+      if ((attr::slimit(ss) == 3) && MI.groupsize <= 4) {
+         small_mimic_move(ss, MI, ~0U, result);
+         return;
+      }
+
+      // If user requested boxes, can't do a big division of a 2x4.
+      if ((MI.setup_hint & MIMIC_SETUP_BOXES) == 0) {
+         try {
+            warning_index www = warn__none;
+
+            if (ss->kind == s1x8) {
+               www = warn__each1x4;
+               division_code = MAPCODE(s1x4,2,MPKIND__SPLIT,0);
+            }
+            else if (ss->kind == s2x4) {
+               www = warn__each1x4;
+               division_code = MAPCODE(s1x4,2,MPKIND__SPLIT,1);
+            }
+
+            if (division_code != ~0U) {
+               divided_setup_move(&aa, division_code, phantest_ok, true, result);
+               warn(www);
+               return;
+            }
+         }
+         catch(error_flag_type e) {
+            if (e == error_flag_no_retry) throw e;
+         }
+      }
+   }
+
+   // If we're already in a 4-person setup, and subdivision failed, we must be able to do it directly.
+   if (attr::slimit(ss) <= 3) {
+      small_mimic_move(ss, MI, ~0U, result);
+      return;
+   }
+
+   // Well, that didn't work.  Look for 8-person underlying calls that we can do with 4 people.
+   // That is, split the setup into 4-person setups, in which people face consistently.
+   // The people in each group must not be T-boned.  Also, if the group size is 2 or more,
+   // the people in each group must face the same way.
+
+   aa = *ss;
+   aa.cmd.parseptr = parseptr;
+   aa.cmd.prior_elongation_bits = 0;
+   division_code = ~0U;
+   warning_index www = warn__none;
+
+   if (MI.groupsize <= 2) {
+
+      // We have the usual problem with splitting a 2x4.  Try this first,
+      // with its own catch handler.
+      try {
+         bool dontdoit = false;
+
+         if (ss->kind == s2x4) {
+            // Honor any "leads of lines" specifications.
+            if (MI.setup_hint & (MIMIC_SETUP_LINES|MIMIC_SETUP_WAVES)) {
+               if (((directions ^ MI.lateral) & 1) == 0)
+                  dontdoit = true;
+            }
+            else if (MI.setup_hint & MIMIC_SETUP_COLUMNS) {
+               if (((directions ^ MI.lateral) & 1) != 0)
+                  dontdoit = true;
+            }
+
+            if (!dontdoit) {
+               division_code = MAPCODE(s2x2,2,MPKIND__SPLIT,0);
+               www = warn__each2x2;
+            }
+         }
+
+         if (division_code != ~0U) {
+            divided_setup_move(&aa, division_code, phantest_ok, true, result);
+            warn(www);
+            return;
+         }
+      }
+      catch(error_flag_type e) {
+         if (e == error_flag_no_retry) throw e;
+      }
+
+      try {
+         bool dontdoit = false;
+
+         if (ss->kind == s1x8) {
+            division_code = MAPCODE(s1x4,2,MPKIND__SPLIT,0);
+            www = warn__each1x4;
+         }
+         else if (ss->kind == s2x4) {
+            // Honor any "leads of lines" specifications.
+            if (MI.setup_hint & (MIMIC_SETUP_LINES|MIMIC_SETUP_WAVES)) {
+               if (((directions ^ MI.lateral) & 1) != 0)
+                  dontdoit = true;
+            }
+            else if (MI.setup_hint & MIMIC_SETUP_COLUMNS) {
+               if (((directions ^ MI.lateral) & 1) == 0)
+                  dontdoit = true;
+            }
+
+            if (!dontdoit) {
+               division_code = MAPCODE(s1x4,2,MPKIND__SPLIT,1);
+               www = warn__each1x4;
+            }
+         }
+         else if (ss->kind == s_qtag) {
+            division_code = MAPCODE(sdmd,2,MPKIND__SPLIT,1);
+            www = warn__eachdmd;
+         }
+         else if (ss->kind == s_ptpd) {
+            division_code = MAPCODE(sdmd,2,MPKIND__SPLIT,0);
+            www = warn__eachdmd;
+         }
+
+         if (division_code != ~0U) {
+            divided_setup_move(&aa, division_code, phantest_ok, true, result);
+            warn(www);
+            return;
+         }
+      }
+      catch(error_flag_type e) {
+         if (e == error_flag_no_retry) throw e;
+      }
+   }
+
+   // Just try the whole thing.
+
+   if (MI.groupsize == 4 && ss->kind == s2x4) {
+      // First, with no concepts.
+      try {
+         ss->cmd.cmd_misc_flags |=
+            CMD_MISC__EXPLICIT_MATRIX|CMD_MISC__NO_EXPAND_AT_ALL|
+            CMD_MISC__PHANTOMS|CMD_MISC__NO_STEP_TO_WAVE;
+         small_mimic_move(ss, MI, ~0U, result);
+         return;
+      }
+      catch(error_flag_type e) {
+         if (e == error_flag_no_retry) throw e;
+      }
+
+      // Finally, with an implict "split phantom boxes".
+      small_mimic_move(ss, MI, MAPCODE(s2x4,2,MPKIND__SPLIT,0), result);
+      return;
+   }
+
+   fail("Can't do this \"mimic\" call.");
 }
 
 bool process_brute_force_mxn(

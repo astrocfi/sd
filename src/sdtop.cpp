@@ -4948,7 +4948,6 @@ extern bool fix_n_results(int arity,
    int deadconcindex = -1;
    setup_kind kk = nothing;
    rotstates = 0xFFF;
-   if (goal == 7) rotstates = 0x030;
    pointclip = 0;
 
    // The "rotstates" word collects information about the rotations
@@ -4960,18 +4959,18 @@ extern bool fix_n_results(int arity,
    // The meaning is (sort of) as follows.
    //
    //      even setups (we start counting with 0,
-   //            which is even) have rot=1,
-   //              odd ones have rot=0
+   //            which is even) have rot=1, odd ones have rot=0
    //                             |
    //                             |   even have rot=0, odd have rot=1
    //                             |   |
-   //                             |   |           all have rot=1
-   //                             |   |           |
-   //                             |   |           |   all have rot=0
-   //                             |   |           |   |
-   //                             V   V           V   V
+   //                             |   |   all have rot=3
+   //                             |   |   |   all have rot=2
+   //                             |   |   |   |   all have rot=1
+   //                             |   |   |   |   |   all have rot=0
+   //                             |   |   |   |   |   |
+   //                             V   V   V   V   V   V
    //    <for triangles>
-   //   | ?   ?   ?   ? | ?   ?         | ?   ?         |
+   //   | ?   ?   ?   ? | ?   ?         |               |
    //   |___|___|___|___|___|___|___|___|___|___|___|___|
 
    static uint16 rotstate_table[8] = {
@@ -5073,7 +5072,7 @@ extern bool fix_n_results(int arity,
          // Except for the 3 maps noted in the next sentence, all maps with the "100" bit on
          // have inner kind = s_trngl/s_trngl4 and rotation = 102, 108, 107, or 10D,
          // and no maps have just 02, 08, 07, or 0D.
-         // The 3 exceptions have MPKIND__DMD_STUFF and rot = 104.
+         // The 3 exceptions have MPKIND__NONISOTROPDMD and rot = 104.
 
          if (z[i].kind == s1x2)
             miniflag = true;
@@ -5276,6 +5275,12 @@ extern bool fix_n_results(int arity,
 
    // We know rotstates has a nonzero bit in an appropriate field.
    // This will guide us in setting the rotations of empty setups.
+
+   // Goal=7 means that we prefer alternating rotations, if we have a choice.
+   // (That is, if some setups are "nothing".)  If we have bits on in both the
+   // 0x03 region and the 0x30 region, we have a choice.
+   if (goal == 7 && (rotstates & 0x30) != 0)
+      rotstates &= 0x30;
 
    for (i=0; i<arity; i++) {
       if (z[i].kind == nothing) {

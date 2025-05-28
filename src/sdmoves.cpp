@@ -6564,7 +6564,7 @@ static void move_with_real_call(
 
             ss->cmd.cmd_final_flags.clear_heritbit(INHERITFLAG_DIAMOND);
             ss->clear_all_overcasts();
-            divided_setup_move(ss, MAPCODE(s1x2,2,MPKIND__DMD_STUFF,0),
+            divided_setup_move(ss, MAPCODE(s1x2,2,MPKIND__NONISOTROPDMD,0),
                                phantest_ok, true, result);
             result->result_flags.misc |= resflagsmisc;
             result->clear_all_overcasts();
@@ -6657,9 +6657,21 @@ static void move_with_real_call(
          But don't do it if something like "magic" is still unprocessed. */
 
       if ((ss->cmd.cmd_final_flags.test_heritbits(~(callflagsh|INHERITFLAG_HALF|INHERITFLAG_LASTHALF))) == 0) {
+         // Some schemata change if the given number is odd.  For touch by N x <call>.
+         if (current_options.howmanynumbers != 0 && (current_options.number_fields & 1)) {
+            if (the_schema == schema_single_concentric_together_if_odd)
+               the_schema = schema_single_concentric_together;
+            else if (the_schema == schema_single_cross_concentric_together_if_odd)
+               the_schema = schema_single_cross_concentric_together;
+         }
+
          switch (the_schema) {
          case schema_single_concentric:
          case schema_single_cross_concentric:
+            force_split = split_command_1x4;
+            break;
+         case schema_single_concentric_together_if_odd:
+         case schema_single_cross_concentric_together_if_odd:
             force_split = split_command_1x4;
             break;
          case schema_single_concentric_together:
@@ -7574,7 +7586,7 @@ void move(
                uint32 resflagsmisc = 0;
                if (ss->cmd.cmd_misc3_flags & CMD_MISC3__NEED_DIAMOND)
                   resflagsmisc |= RESULTFLAG__NEED_DIAMOND;
-               divided_setup_move(ss, MAPCODE(s1x2,2,MPKIND__DMD_STUFF,0),
+               divided_setup_move(ss, MAPCODE(s1x2,2,MPKIND__NONISOTROPDMD,0),
                                   phantest_ok, true, result);
                result->result_flags.misc |= resflagsmisc;
             }

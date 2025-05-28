@@ -549,7 +549,7 @@ static bool multiple_move_innards(
    // This includes the possibility that they may be oriented inconsistently.  For
    // example, if we split a bone6 into triangles, those triangles have opposite
    // orientation.  The incoming map caused that to be so.  There are other cases in
-   // which the incoming map might cause this: maps with kind = MPKIND__DMD_STUFF or
+   // which the incoming map might cause this: maps with kind = MPKIND__NONISOTROPDMD or
    // MPKIND__4_EDGES_FROM_4X4, for example.
 
    if (map_kind == MPKIND__X_SPOTS && arity == 2 && 
@@ -563,6 +563,34 @@ static bool multiple_move_innards(
       return false;
    }
 
+   // If "all 8" results in a 2x2 and a 1x4, "fix_n_results" won't be able to handle it.
+   // Just merge the setups, with the 1x4 in the center.  They think they are in a thar,
+   // wheareas the 2x2 people think thay are out on squared set spots.
+   if (arity == 2 && eighth_rot_flag == 0 && map_kind == MPKIND__ALL_8) {
+      if (z[0].kind == s2x2 && z[1].kind == s1x4 && z[1].rotation == 0) {
+         normalize_concentric((const setup *) 0, schema_concentric, 1, z, 1, 0, result);
+         return false;
+      }
+      else if (z[0].kind == s1x4 && z[1].kind == s2x2 && z[0].rotation == 1) {
+         z[2] = z[0];
+         z[0] = z[1];
+         z[1] = z[2];
+         normalize_concentric((const setup *) 0, schema_concentric, 1, z, 2, 0, result);
+         return false;
+      }
+   }
+
+   // This stuff might not be correct.  We are trying to let these map kinds go through,
+   // since they can handle non-isotropic setups.  But we raise an error on any other maps,
+   // since they can't handle it.  These map kinds are known to work -- they all arise
+   // in regression tests.  It may be that more map kinds need to be added to this list.
+   bool funnymap =
+      map_kind == MPKIND__NONISOTROPDMD ||
+      map_kind == MPKIND__ALL_8 ||
+      map_kind == MPKIND__4_QUADRANTS ||
+      map_kind == MPKIND__4_QUADRANTS_WITH_45_ROTATION ||
+      map_kind == MPKIND__TRIPLETRADEINWINGEDSTAR6;
+
    // These two special map kinds involve different setups, so "fix_n_results" can't be used.
    if (map_kind != MPKIND__SPEC_ONCEREM && map_kind != MPKIND__SPEC_TWICEREM) {
 
@@ -572,9 +600,7 @@ static bool multiple_move_innards(
       // whenever the centers are empty.  We tell it not to do that if it will cause problems.
 
       if (fix_n_results(arity,
-                        (map_kind == MPKIND__NONE && maps->inner_kind == sdmd) ? 9 :
-                        (map_kind == MPKIND__DMD_STUFF && maps->inner_kind == s1x2) ? 7 :
-                        -1,
+                        (map_kind == MPKIND__NONE && maps->inner_kind == sdmd) ? 9 : funnymap ? 7 : -1,
                         arity == 4 && map_kind == MPKIND__SPLIT,    // For now!
                         z, rotstate, pointclip, rot)) {
          result->kind = nothing;
@@ -605,23 +631,36 @@ static bool multiple_move_innards(
          }
       }
 
-      if ((arity != 2 || (z[0].kind != s_trngl && z[0].kind != s_trngl4)) && (rotstate & 0xF03) == 0) {
-         if (map_kind == MPKIND__SPLIT || map_kind == MPKIND__CONCPHAN) {
-            if (!(rotstate & 0x0F0))
+      if (arity != 2 || (z[0].kind != s_trngl && z[0].kind != s_trngl4)) {
+         if ((rotstate & 0xF03) == 0) {
+            // Rotations are alternating.  Aside from the two map kinds just below,
+            // we demand funnymap on.  These are the maps that want alternating rotations.
+            if (map_kind == MPKIND__SPLIT || map_kind == MPKIND__CONCPHAN) {
+               if (!(rotstate & 0x0F0))
+                  fail("Can't do this orientation changer.");
+               map_kind = MPKIND__NONISOTROP2;   // See t60 and rf01.
+            }
+            else if (arity == 4 && map_kind == MPKIND__DMD_STUFF) {
+               if (!(rotstate & 0x0F0))
+                  fail("Can't do this orientation changer.");
+
+               if (vert) {
+                  z[1].rotation += 2;
+                  canonicalize_rotation(&z[1]);
+                  z[3].rotation += 2;
+                  canonicalize_rotation(&z[3]);
+               }
+
+               map_kind = MPKIND__NONISOTROPDMD;
+            }
+            else if (!funnymap && map_kind != MPKIND__NONE)
                fail("Can't do this orientation changer.");
-            map_kind = MPKIND__NONISOTROP2;   // See t60 and rf01.
          }
-         else if (map_kind != MPKIND__DMD_STUFF &&
-                  map_kind != MPKIND__ALL_8 &&
-                  map_kind != MPKIND__4_QUADRANTS &&
-                  map_kind != MPKIND__4_QUADRANTS_WITH_45_ROTATION &&
-                  map_kind != MPKIND__TRIPLETRADEINWINGEDSTAR6 &&
-                  map_kind != MPKIND__NONE) {
-            // This stuff might not be correct.  We are trying to let the above map kinds go through,
-            // since they can handle non-isotropic setups.  But we raise an error on any other maps,
-            // since they can't handle it.  The above map kinds are known to work -- they all arise
-            // in regression tests.  It may be that more map kinds need to be added to the above list.
-            fail("Can't do this orientation changer.");
+         else {
+            // Rotations are uniform.  The funny maps don't want that.
+            // Well, the "MPKIND__NONISOTROPDMD" ones don't.
+            if (map_kind == MPKIND__NONISOTROPDMD)
+               map_kind = MPKIND__DMD_STUFF;
          }
       }
    }
@@ -1104,6 +1143,7 @@ static bool multiple_move_innards(
       // if the actual setups are stacked vertically and are rotated.
 	   
       if (vert && (z[0].rotation & 1)) {
+         //dont do this if MPKIND__NONISOTROPDMD and final_map->rot & 100
          if (((final_map->rot+1) & 2) == 0) {
             for (i=0; i<arity; i++) {
                z[i].rotation += 2;

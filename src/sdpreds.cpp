@@ -954,10 +954,8 @@ static bool unselect_near_unselect(setup *real_people, int real_index,
 {
    int lim, base_person;
 
-   if (selectp(real_people, real_index))
-      return false;
-   else if (current_options.who == selector_none)
-      return true;
+   if (selectp(real_people, real_index)) return false;
+   else if (current_options.who == selector_none) return true;
 
    if (attr::slimit(real_people) == 11) {
       base_person = base_table[real_index];

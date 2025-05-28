@@ -204,22 +204,22 @@ selector_item selector_list[] = {
    {"center line of 6",  "center line of 6", "CENTER LINE OF 6",  "CENTER LINE OF 6", selector_uninitialized},
    {"center column of 6","center column of 6","CENTER COLUMN OF 6","CENTER COLUMN OF 6",selector_uninitialized},
    {"outer pairs",  "outer pair",  "OUTER PAIRS",  "OUTER PAIR",  selector_center4},
-   {"centers of lines","center of lines","CENTERS OF LINES","CENTER OF LINES",selector_uninitialized},
-   {"ends of lines","end of lines","ENDS OF LINES","END OF LINES",selector_uninitialized},
-   {"centers of columns","center of columns","CENTERS OF COLUMNS","CENTER OF COLUMNS",selector_uninitialized},
-   {"ends of columns","end of columns","ENDS OF COLUMNS","END OF COLUMNS",selector_uninitialized},
    {"first 1",      "first 1",     "FIRST 1",      "FIRST 1",     selector_uninitialized},
    {"last 1",       "last 1",      "LAST 1",       "LAST 1",      selector_uninitialized},
    {"first 2",      "first 2",     "FIRST 2",      "FIRST 2",     selector_uninitialized},
    {"last 2",       "last 2",      "LAST 2",       "LAST 2",      selector_uninitialized},
    {"first 3",      "first 3",     "FIRST 3",      "FIRST 3",     selector_uninitialized},
    {"last 3",       "last 3",      "LAST 3",       "LAST 3",      selector_uninitialized},
+   {"first 4",      "first 4",     "FIRST 4",      "FIRST 4",     selector_uninitialized},
+   {"last 4",       "last 4",      "LAST 4",       "LAST 4",      selector_uninitialized},
    {"leftmost 1",   "leftmost 1",  "LEFTMOST 1",   "LEFTMOST 1",  selector_uninitialized},
    {"rightmost 1",  "rightmost 1", "RIGHTMOST 1",  "RIGHTMOST 1", selector_uninitialized},
    {"leftmost 2",   "leftmost 2",  "LEFTMOST 2",   "LEFTMOST 2",  selector_uninitialized},
    {"rightmost 2",  "rightmost 2", "RIGHTMOST 2",  "RIGHTMOST 2", selector_uninitialized},
    {"leftmost 3",   "leftmost 3",  "LEFTMOST 3",   "LEFTMOST 3",  selector_uninitialized},
    {"rightmost 3",  "rightmost 3", "RIGHTMOST 3",  "RIGHTMOST 3", selector_uninitialized},
+   {"leftmost 4",   "leftmost 4",  "LEFTMOST 4",   "LEFTMOST 4",  selector_uninitialized},
+   {"rightmost 4",  "rightmost 4", "RIGHTMOST 4",  "RIGHTMOST 4", selector_uninitialized},
    {"headliners",   "headliner",   "HEADLINERS",   "HEADLINER",   selector_sideliners},
    {"sideliners",   "sideliner",   "SIDELINERS",   "SIDELINER",   selector_headliners},
    {"those facing", "those facing","THOSE FACING", "THOSE FACING",selector_uninitialized},
@@ -1193,8 +1193,15 @@ expand::thing expand::init_table[] = {
    {{11, 10, 9, 8, 7, 6, 23, 22, 21, 20, 19, 18},
     s2x6, s4x6, 0, 0U, 0x03F03F, false,
     warn__none, warn__none, plain_normalize, NEEDMASK(CONCPROP__NEEDK_4X6) |
-                                              NEEDMASK(CONCPROP__NEEDK_TWINDMD) |
-                                              NEEDMASK(CONCPROP__NEEDK_TWINQTAG)},
+                                             NEEDMASK(CONCPROP__NEEDK_TWINDMD) |
+                                             NEEDMASK(CONCPROP__NEEDK_TWINQTAG)},
+
+   {{11, -1, -1, 9, 8, -1, -1, 6, 23, -1, -1, 21, 20, -1, -1, 18},
+    s2x8, s4x6, 0, 0x6666, ~0U, false,
+    warn__none, warn__none, plain_normalize, NEEDMASK(CONCPROP__NEEDK_4X6) |
+                                             NEEDMASK(CONCPROP__NEEDK_TWINDMD) |
+                                             NEEDMASK(CONCPROP__NEEDK_TWINQTAG)},
+
    // order of these next 3 items must be as shown: must be 1x8, 3x6, 3x4!!!!
    {{20, 21, 23, 22, 8, 9, 11, 10},
     s1x8, s3x8, 0, 0U, 0x0FF0FF, false,
@@ -1618,20 +1625,31 @@ map::map_thing map::map_init_table[] = {
    {{11, 10, 2, 6, 7, 9,               0, 1, 3, 5, 4, 8},
     s_1x2dmd,2,MPKIND__MAGICINTLKDMD,1,0,sbigdmd,0x000, 0},
 
-   {{0, 3, 4, 7, 2, 5, 6, 1},
-    sdmd,2,MPKIND__DMD_STUFF,0,   0,  s_thar,    0x004, 0},
-   {{0, 3, 4, 7, 2, 5, 6, 1},
-    sdmd,2,MPKIND__DMD_STUFF,1,   0,  s_thar,    0x104, 0},
+   {{0, 3, 4, 7,           2, 5, 6, 1},
+    sdmd,2,MPKIND__NONISOTROPDMD,0,   0,  s_thar,    0x004, 0},
+   {{0, 3, 4, 7,           2, 5, 6, 1},
+    sdmd,2,MPKIND__NONISOTROPDMD,1,   0,  s_thar,    0x104, 0},
    {{0, 2,                 1, 3},
-    s1x2,2,MPKIND__DMD_STUFF,0,   0,  sdmd,      0x004, 0},
+    s1x2,2,MPKIND__NONISOTROPDMD,0,   0,  sdmd,      0x004, 0},
    {{1, 3,                 0, 2},
-    s1x2,2,MPKIND__DMD_STUFF,1,   0,  sdmd,      0x001, 0},
-   {{0, 1, 2, 3, 0, 1, 2, 3},
+    s1x2,2,MPKIND__NONISOTROPDMD,1,   0,  sdmd,      0x001, 0},
+   {{0, 1, 2, 3,           0, 1, 2, 3},
+    s2x2,2,MPKIND__NONISOTROPDMD,0,   0,  s2x2,      0x000, 0},
+   {{0, 1, 4, 5,           2, 3, 6, 7},
+    s1x4,2,MPKIND__NONISOTROPDMD,0,   0,  s_thar,    0x004, 0},
+   {{0, 1, 4, 5,           2, 3, 6, 7},
+    s1x4,2,MPKIND__NONISOTROPDMD,1,   0,  s_thar,    0x104, 0},
+   {{1, 2,                 3, 4,                 6, 5,               0, 7},
+    s1x2,4,MPKIND__NONISOTROPDMD,0, 0,    s2x4,      0x144, 0},
+   {{2, 3,                 5, 4,               7, 6,                 0, 1},
+    s1x2,4,MPKIND__NONISOTROPDMD,1, 0,  s_crosswave, 0x11, 0},
+   {{0, 1,                 3, 2,                 5, 4,               6, 7},
+    s1x2,4,MPKIND__DMD_STUFF,0, 0,    s_rigger,      0, 0},
+   {{6, 7,                 0, 1,                 3, 2,               5, 4},
+    s1x2,4,MPKIND__DMD_STUFF,1, 0,    s_qtag,      0, 0},
+   // Same as nonisotropic one, above.  2x2's are always isotropic.
+   {{0, 1, 2, 3,           0, 1, 2, 3},
     s2x2,2,MPKIND__DMD_STUFF,0,   0,  s2x2,      0x000, 0},
-   {{0, 1, 4, 5, 2, 3, 6, 7},
-    s1x4,2,MPKIND__DMD_STUFF,0,   0,  s_thar,    0x004, 0},
-   {{0, 1, 4, 5, 2, 3, 6, 7},
-    s1x4,2,MPKIND__DMD_STUFF,1,   0,  s_thar,    0x104, 0},
 
    {{13, 14, 5, 6,         10, 1, 2, 9},
     s2x2,2,MPKIND__ALL_8,0,       0,  s4x4,      0x000, 0},
@@ -2803,6 +2821,10 @@ static expand::thing rear_alamo_stuff = {{6, 7, 0, 1, 2, 3, 4, 5}, s_thar, s_ala
 static expand::thing rear_ohh_stuff = {{-1, 5, 4, -1, -1, 7, 6, -1, -1, 1, 0, -1, -1, 3, 2, -1}, s4x4, s_thar, 0};
 static expand::thing rear_bigd_stuff1 = {{-1, -1, 10, 11, 1, 0, -1, -1, 4, 5, 7, 6}, sbigdmd, s3x4, 1};
 static expand::thing rear_bigd_stuff2 = {{8, 9, 10, 11, -1, -1, 2, 3, 4, 5, -1, -1}, sbigdmd, s3x4, 1};
+static expand::thing rear_alamo_stuffa = {{0, 1, 3, 2, 4, 5, 7, 6}, s_qtag, s_alamo, 0};
+static expand::thing rear_alamo_stuffb = {{6, 7, 1, 0, 2, 3, 5, 4}, s_qtag, s_alamo, 1};
+static expand::thing rear_sqset_stuffa = {{10, 9, 13, -1, -1, 6, 2, 1, 5, -1, -1, 14}, sdeepxwv, s4x4, 0};
+static expand::thing rear_sqset_stuffb = {{6, 5, 9, -1, -1, 2, 14, 13, 1, -1, -1, 10}, sdeepxwv, s4x4, 1};
 static expand::thing rear_bone_stuffa = {{0, 5, 7, 6, 4, 1, 3, 2}, s1x8, s_bone, 0};
 static expand::thing rear_bone_stuffb = {{0, 3, 2, 5, 4, 7, 6, 1}, s_bone, s2x4, 0};
 static expand::thing rear_bone_stuffc = {{6, 3, 1, 4, 2, 7, 5, 0}, s_bone, s_rigger, 0};
@@ -2996,6 +3018,14 @@ full_expand::thing touch_init_table1[] = {
    {warn__some_rear_back,  0, &rear_bigd_stuff2,sbigdmd,  0xFF0FF0U,   0x280820U, ~0U},
    // Rear back from thar to alamo 8-chain.
    {warn__rear_back,       0, &rear_thar_stuff, s_thar,     0xFFFFU,     0x278DU, ~0U},
+
+   // Some rear back from an alamo to a 1/4 tag.
+   {warn__some_rear_back,  8, &rear_alamo_stuffa, s_alamo,  0xFFFFU,     0x57FDU, 0x5F5FU},
+   {warn__some_rear_back,  8, &rear_alamo_stuffb, s_alamo,  0xFFFFU,     0x2080U, 0xF5F5U},
+
+   // Some rear back from a squared set to a "deepxwv".
+   {warn__some_rear_back,  8, &rear_sqset_stuffa, s4x4, 0x3C3C3C3CU, 0x1C143414U, 0x3C143C14U},
+   {warn__some_rear_back,  8, &rear_sqset_stuffb, s4x4, 0x3C3C3C3CU, 0x00200008U, 0x143C143CU},
 
    // Check for certain people rearing back from C1 phantoms.
    {warn__some_rear_back,  0, &rear_c1a_stuff,s_c1phan, 0xCCCCCCCCU, 0x884C00C4U, ~0U},
@@ -4212,7 +4242,7 @@ merge_table::concmerge_thing merge_table::merge_init_table[] = {
    {s2x4,       s_23232,  0x33, 03636, 0x0E, 0x0, schema_matrix,        s_c1phan,    nothing,  warn__may_be_fudgy, 0, 0, {-1, -1, 7, 5, -1, -1, 15, 13}, {1, -1, -1, -1, -1, 11, 9, -1, -1, -1, -1, 3}},
    {s2x4,       s_23232,  0x33, 03535, 0x0D, 0x0, schema_matrix,        s_c1phan,    nothing,  warn__may_be_fudgy, 0, 0, {-1, -1, 11, 9, -1, -1, 3, 1}, {-1, 4, -1, -1, -1, 6, -1, 12, -1, -1, -1, 14}},
    {s2x4,       s_23232,  0xCC, 03636, 0x0D, 0x0, schema_matrix,        s_c1phan,    nothing,  warn__may_be_fudgy, 0, 0, {4, 6, -1, -1, 12, 14, -1, -1}, {1, -1, -1, -1, -1, 11, 9, -1, -1, -1, -1, 3}},
-
+   {s1x2,        s_ptpd,     0, 0x44, 0x0C, 0x0, schema_concentric_2_6,     s1x2,   s_short6,  warn__none, 0, 1, {0, 1}, {7, 4, 5, 3, 0, 1}},
    {s1x8,        s_ptpd,  0xA0, 0x0A, 0x0E, 0x0, schema_matrix,       splinepdmd,    nothing,  warn__none, 0, 0, {0, 1, 3, 2, 6, -1, 4, -1}, {0, -1, 3, -1, 6, 7, 4, 5}},
    {s1x8,        s_ptpd,  0x0A, 0xA0, 0x0E, 0x0, schema_matrix,       splinepdmd,    nothing,  warn__none, 0, 2, {6, -1, 4, -1, 0, 1, 3, 2}, {6, 7, 4, 5, 0, -1, 3, -1}},
 
@@ -9321,8 +9351,11 @@ const schema_attr schema_attrs[] = {
     schema_concentric_touch_by_1_of_3},  // schema_cross_concentric_touch_by_1_of_3
    {0,
     schema_nothing},                     // schema_concentric_touch_by_2_of_3
+   {0,
+    schema_nothing},                     // schema_single_concentric_together_if_odd
    {SCA_CROSS | SCA_COPY_LYZER,
-    schema_concentric_touch_by_2_of_3}, // schema_cross_concentric_touch_by_2_of_3
+    schema_single_concentric_together_if_odd},  // schema_single_cross_concentric_together_if_odd
+
    {SCA_CENTRALCONC | SCA_SNAGOK | SCA_DETOUR | SCA_INV_SUP_ELWARN,
     schema_nothing},                     // schema_concentric_6p
    {SCA_CENTRALCONC | SCA_SNAGOK | SCA_DETOUR | SCA_INV_SUP_ELWARN,

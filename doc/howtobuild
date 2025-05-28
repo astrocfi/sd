@@ -279,6 +279,7 @@ New way, Dec 10, 2010, uses psftp, no email
 
 Start psftp (under "putty" group.)
 open scotch.ics.uci.edu
+(U=ackerman, P=x464pq)
 lcd \wba\sddoc
 put pack.zip
   This is silent and not helpful.  It takes a while.  Run putty,

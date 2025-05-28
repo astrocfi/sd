@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 38.39
-@set title2 Database version = 38.39 format = 303
+@set title1 RELEASE NOTES FOR VERSION 38.40
+@set title2 Database version = 38.40 format = 304
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 38.40::
 * 38.39::
 * 38.38::
 * 38.37::
@@ -78,7 +79,7 @@ The files @file{relnotes03.txi} and @file{relnotes98.txi} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 38.39, Top, (dir)
+@node Intro, 38.40, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -89,11 +90,32 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2011 William B. Ackerman
 @sp 3
 @menu
-* 38.39::               Changes in the current version
+* 38.40::               Changes in the current version
 @end menu
 
 @c ************
-@node 38.39, 38.38, Intro, Top
+@node 38.40, 38.39, Intro, Top
+@unnumberedsec Version 38.40 changes
+
+The calls @strong{square the bases, new centers to a wave} and
+@strong{percolate, <anyone> to a wave} were moved from C2 to C1.
+
+There is better handling of the @strong{all 8} concept.
+
+The @strong{stingy}, @strong{generous} and @strong{fractal} concepts were improved.
+
+The handling of @strong{percolate} and @strong{perk up} in the presence of phantoms was improved.
+
+The @strong{touch by} bug was fixed.
+
+The @strong{3x2 acey deucey} bug was fixed.
+
+The @strong{2x6 matrix grand swing thru} bug was fixed.
+
+The @strong{side boys run in a dog-bone} bug was fixed.
+
+@c ************
+@node 38.39, 38.38, 38.40, Top
 @unnumberedsec Version 38.39 changes
 
 Many more improvements were made to the @strong{stingy} and @strong{generous} concepts.

@@ -44,7 +44,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "38.39"
+version "38.40"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve dont_raise_overcast
@@ -3315,8 +3315,8 @@ call "hinge (special)" dontshow tag hinge_for_nicely
             left_means_mirror
    setup 1x2 1x2 rotate
       preds "???"
-         if 1x2_beau_or_miniwave [CR0N AL0S]
-         if always               [0    AL1S]
+         if 1x2_beau_miniwave_or_warn [CR0N AL0S]
+         if always                    [0    AL1S]
             alternate_definition [fractal] c4
    setup 1x2 1x2 rotate restriction forbidden wave_only
       array [CR1S AL1N]
@@ -9363,8 +9363,8 @@ call "touch by @b X @b X @b X @b" c3a
 call "touch by @b X @0" c3a
             left_means_mirror neednumber
             yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
-   singlecrossconc_together nullcall [mandatory_anycall]
-                            lftble_touch_n_4 [inherit_left inherit_yoyo inherit_fractal inherit_gensting]
+   singlecrossconc_together_if_odd nullcall [mandatory_anycall]
+                                   lftble_touch_n_4 [inherit_left inherit_yoyo inherit_fractal inherit_gensting]
 
 call "touch by @0 X @b" c3a
             left_means_mirror neednumber
@@ -11379,9 +11379,14 @@ call "_half by the right" dontshow tag 1_2_by_right
             alternate_definition [12matrix grand] c3a
    setup 1x12 1x12 restriction wave_only
       array [CR1S CR2S CR3S CR4S CR5S CR11S ZM6N CR6S CR7S CR8S CR9S CR10S]
+   setup 2x6 2x6 restriction wave_only
+      array [CR1S CR2S CR3S CR4S CR5S ZM5N ZM6N CR6S CR7S CR8S CR9S CR10S]
             alternate_definition [16matrix grand] c3a
    setup 1x16 1x16 restriction wave_only
       array [CR1S CR2S CR3S CR4S CR5S CR6S CR7S CR15S
+             ZM8N CR8S CR9S CR10S CR11S CR12S CR13S CR14S]
+   setup 2x8 2x8 restriction wave_only
+      array [CR1S CR2S CR3S CR4S CR5S CR6S CR7S ZM7N
              ZM8N CR8S CR9S CR10S CR11S CR12S CR13S CR14S]
             alternate_definition [diamond] c3a
    setup qtag qtag restriction nice_diamonds
@@ -11547,10 +11552,15 @@ call "_half by the left" dontshow tag 1_2_by_left
             alternate_definition [12matrix grand] c3a
    setup 1x12 1x12 restriction wave_only
       array [ZM0N AL0S AL1S AL2S AL3S AL4S AL7S AL8S AL9S AL10S AL11S AL5S]
+   setup 2x6 2x6 restriction wave_only
+      array [ZM0N AL0S AL1S AL2S AL3S AL4S AL7S AL8S AL9S AL10S AL11S ZM11N]
             alternate_definition [16matrix grand] c3a
    setup 1x16 1x16 restriction wave_only
       array [ZM0N AL0S AL1S AL2S AL3S AL4S AL5S AL6S
              AL9S AL10S AL11S AL12S AL13S AL14S AL15S AL7S]
+   setup 2x8 2x8 restriction wave_only
+      array [ZM0N AL0S AL1S AL2S AL3S AL4S AL5S AL6S
+             AL9S AL10S AL11S AL12S AL13S AL14S AL15S ZM15N]
             alternate_definition [diamond] c3a
    setup qtag qtag restriction nice_diamonds
       array [0 0 AL3S AL7S 0 0 ZM6N AL6S]
@@ -12155,7 +12165,7 @@ call "spin chain the line" c3a
 call "_spin chain the line part 2" dontshow tag spinchainpart2
             yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
    checkpoint_mystic_ok any_hand_slip [inherit_yoyo inherit_gensting]
-                        cast_off_n4 [conc_force_otherway suppress_roll suppress_elongation_warnings
+                        cast_off_n4_with_warn [conc_force_otherway suppress_roll suppress_elongation_warnings
                                      insert_number 3 inherit_fractal inherit_gensting]
 
 call "swing chain the line" c4
@@ -13234,6 +13244,16 @@ call "@6@C run" mainstream tag anyonerun
       preds "Can't have both people run."
          if unselect_near_select [ZM1N ZM0N]
          if unselect_near_unselect [ZM0N ZM1N]
+   setup bone bone restriction unusual not_all_sel
+      preds "Can't have both people run."
+         if select                 [   0    0 AL3S CR2S    0    0 CR7S AL6S]
+         if unselect_near_select   [ZM0N ZM1N ZM3N ZM2N ZM4N ZM5N ZM7N ZM6N]
+         if unselect               [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N ZM7N]
+   setup pbone bone restriction unusual not_all_sel
+      preds "Can't have both people run."
+         if select                 [CR5S CR4S    0    0 AL1S AL0S    0    0]
+         if unselect_near_select   [ZM5N ZM4N ZM2N ZM3N ZM1N ZM0N ZM6N ZM7N]
+         if unselect               [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N ZM7N]
             alternate_definition [half] mainstream
    lateral_to_selectees
    setup 1x2 1x2 rotate restriction unusual not_all_sel
@@ -16034,7 +16054,7 @@ call "square the bases" c1
    seq splitsq2 [inherit_left allow_forced_mod]
    seq trade_by [inherit_left allow_forced_mod]
 
-call "square the bases, new centers to a wave" c2
+call "square the bases, new centers to a wave" c1
             left_means_mirror twisted_is_inherited visible_fractions
    seq sqbases1 [inherit_left inherit_twisted]
    seq splitsq2 [inherit_left allow_forced_mod]
@@ -16502,6 +16522,13 @@ call "_centers load the boat but @m" dontshow tag cloadboatbut
    seq trade_w_tbone []
    seq nullsecond [mandatory_secondary_call]
 
+call "_centers load the boat 7/8" dontshow tag cloadboat78
+            visible_fractions
+   seq passthru []
+   seq quarterout []
+   seq trade_w_tbone []
+   seq passthru [force_half]
+
 call "_ends load the boat" dontshow tag eloadboat
             visible_fractions twisted_is_inherited
    seq passoneperson [inherit_twisted]
@@ -16531,6 +16558,12 @@ call "load the boat" plus
    seq boat2 [inherit_twisted]  // Of course, twisted will expire before we get here.
    seq boat3 [inherit_twisted]
    seq boat4 [inherit_twisted]
+
+// Of course you can call this below C1 by saying something like "centers work 7/8".
+call "load the boat, centers to a wave" c1
+            visible_fractions
+   conc cloadboat78 []
+        eloadboat [endscando conc_demand_lines suppress_elongation_warnings]
 
 call "@0 the boat" plus
             visible_fractions
@@ -20972,7 +21005,7 @@ call "_ends shadow box" dontshow tag endsshadow
 
 call "detour" c2 tag detour
             fractal_is_inherited gen_sting_is_inherited
-   conc ctr_rot [conc_force_otherway]
+   conc ctr_rot [inherit_fractal inherit_gensting conc_force_otherway]
         endsdetour [inherit_fractal inherit_gensting conc_demand_lines conc_force_spots endscando]
 
 call "team up" c3a
@@ -22693,21 +22726,21 @@ call "counterpoint" c4a
       ctr_rot [inherit_single inherit_nxn conc_force_otherway]
 
 call "@2turn @3the key" c3
-            visible_fractions diamond_is_legal yoyo_is_inherited gen_sting_is_inherited
+            visible_fractions diamond_is_legal yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
    seq trade [or_anycall inherit_diamond inherit_yoyo inherit_gensting]
    seq ctr_rot [allow_forced_mod inherit_diamond]
-   seq hinge [allow_forced_mod inherit_diamond inherit_gensting]
+   seq hinge [allow_forced_mod inherit_diamond inherit_fractal inherit_gensting]
 
 call "@0 the key" c3
-            visible_fractions diamond_is_legal gen_sting_is_inherited
+            visible_fractions diamond_is_legal fractal_is_inherited gen_sting_is_inherited
    seq nullcall [mandatory_anycall]
    seq ctr_rot [allow_forced_mod inherit_diamond]
-   seq hinge [allow_forced_mod inherit_diamond inherit_gensting]
+   seq hinge [allow_forced_mod inherit_diamond inherit_fractal inherit_gensting]
 
 call "the key" c3
-            visible_fractions diamond_is_legal gen_sting_is_inherited
+            visible_fractions diamond_is_legal fractal_is_inherited gen_sting_is_inherited
    seq ctr_rot [allow_forced_mod inherit_diamond]
-   seq hinge [allow_forced_mod inherit_diamond inherit_gensting]
+   seq hinge [allow_forced_mod inherit_diamond inherit_fractal inherit_gensting]
 
 call "_clear the way ends to centers" dontshow tag clearwayec
             left_means_mirror
@@ -25425,7 +25458,7 @@ call "_percolate part 3, @6 to a wave" dontshow tag percolate3_sometowave
             yoyo_is_inherited gen_sting_is_inherited
    conc nicely [] somedontturnthru [allow_forced_mod inherit_yoyo inherit_gensting endscando conc_force_spots suppress_elongation_warnings]
 
-call "@1percolate, @6 to a wave" c2
+call "@1percolate, @6 to a wave" c1
             yoyo_is_inherited gen_sting_is_inherited twisted_is_inherited first_two_parts_visible funny_is_inherited
    seq circulate [or_anycall inherit_funny inherit_twisted]
    seq circulate [force_half]
@@ -25445,7 +25478,7 @@ call "@N percolate, @6 to a wave" c2
 
 call "turn up" dontshow tag hinge_circ_trade
             visible_fractions yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
-   seq hinge [allow_forced_mod inherit_fractal]
+   seq hinge_with_warn [allow_forced_mod inherit_fractal]
    seq circulate []
    seq trade [allow_forced_mod inherit_yoyo inherit_gensting]
 

@@ -2332,7 +2332,7 @@ static void do_concept_do_phantom_diamonds(
 }
 
 
-static void do_concept_do_divided_diamonds(
+static void do_concept_do_twinphantom_diamonds(
    setup *ss,
    parse_block *parseptr,
    setup *result) THROW_DECL
@@ -2340,7 +2340,7 @@ static void do_concept_do_divided_diamonds(
    // See "do_triple_formation" for meaning of arg3.
 
    if (ss->kind != s4x6 || (global_livemask & 0x02D02D) != 0)
-      fail("Must have a divided diamond or 1/4 tag setup for this concept.");
+      fail("Must have twin phantom diamond or 1/4 tag setup for this concept.");
 
    ss->cmd.cmd_misc_flags |= parseptr->concept->arg3;
 
@@ -5893,7 +5893,7 @@ static void do_concept_overlapped_diamond(
          fail("Must be in a diamond.");
 
       scatterlist = &list1x4;
-      mapcode = MAPCODE(sdmd,2,MPKIND__DMD_STUFF,0);
+      mapcode = MAPCODE(sdmd,2,MPKIND__NONISOTROPDMD,0);
       break;
    case sdmd:
       if (!(parseptr->concept->arg1 & 1))
@@ -5902,7 +5902,7 @@ static void do_concept_overlapped_diamond(
          ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
 
       scatterlist = &listdmd;
-      mapcode = MAPCODE(s1x4,2,MPKIND__DMD_STUFF,0);
+      mapcode = MAPCODE(s1x4,2,MPKIND__NONISOTROPDMD,0);
       break;
    default:
       fail("Not in correct setup for overlapped diamond/line concept.");
@@ -6074,35 +6074,49 @@ static void do_concept_all_8(
          fail("Must be in a thar or squared-set spots.");
    }
 
-   /* If this ended in a thar, we accept it.  If not, we have the usual lines-to-lines/
-      columns-to-columns problem.  We don't know whether to enforce column spots, line spots,
-      perpendicular to the lines they had after stepping to a wave (if indeed they did so;
-      we don't know), to footprints from before stepping to a wave, or what.  So the only case
-      we allow is columns-to-columns. */
+   // If this ended in a thar, we accept it.  If not, we have the usual lines-to-lines/
+   // columns-to-columns problem.  We don't know whether to enforce column spots, line spots,
+   // perpendicular to the lines they had after stepping to a wave (if indeed they did so;
+   // we don't know), to footprints from before stepping to a wave, or what.  So the only case
+   // we allow is columns-to-columns.
 
-   if (result->kind == s_thar)
-      return;
-   else if (result->kind != s4x4)
+   switch (result->kind) {
+   case s_thar:
+      break;   // No action needed.
+   case s4x4:
+      // Make sure the "anything-to-columns" rule is applied.
+      if ((result->people[1].id1 & 010) || (result->people[14].id1 & 1))
+         result->swap_people(1, 14);
+      if ((result->people[2].id1 & 010) || (result->people[5].id1 & 1))
+         result->swap_people(2, 5);
+      if ((result->people[9].id1 & 010) || (result->people[6].id1 & 1))
+         result->swap_people(9, 6);
+      if ((result->people[10].id1 & 010) || (result->people[13].id1 & 1))
+         result->swap_people(10, 13);
+
+      // Check that we succeeded.  If the call ended T-boned, our zeal to get people
+      // out of each others' way may have left people incorrect.
+
+      if (((result->people[1].id1 | result->people[2].id1 | result->people[9].id1 | result->people[10].id1) & 010) ||
+          ((result->people[14].id1 | result->people[5].id1 | result->people[6].id1 | result->people[13].id1) & 1))
+         fail("People must end as if on column spots.");
+
+      break;
+   case s_bone:
+      // Make sure the "anything-to-columns" rule is applied for the ends.
+      if ((result->people[0].id1 & 010) & (result->people[1].id1 & 010) &
+          (result->people[4].id1 & 010) & (result->people[5].id1 & 010)) {
+         result->kind = s_qtag;   // Change it to a qtag.  This is all that's required.
+      }
+      else if ((result->people[0].id1 & 1) & (result->people[1].id1 & 1) &
+               (result->people[4].id1 & 1) & (result->people[5].id1 & 1)) {
+         // No action needed.
+      }
+
+      break;
+   default:
       fail("Ending position is not defined.");
-
-   /* Now make sure the "columns-to-columns" rule is applied.  (We know everyone started
-      in columns.) */
-
-   if ((result->people[1].id1 & 010) || (result->people[14].id1 & 1))
-      result->swap_people(1, 14);
-   if ((result->people[2].id1 & 010) || (result->people[5].id1 & 1))
-      result->swap_people(2, 5);
-   if ((result->people[9].id1 & 010) || (result->people[6].id1 & 1))
-      result->swap_people(9, 6);
-   if ((result->people[10].id1 & 010) || (result->people[13].id1 & 1))
-      result->swap_people(10, 13);
-
-   /* Check that we succeeded.  If the call ended T-boned, our zeal to get people
-      OUT of each others' way may have left people incorrect. */
-
-   if (     ((result->people[1].id1 | result->people[2].id1 | result->people[9].id1 | result->people[10].id1) & 010) ||
-            ((result->people[14].id1 | result->people[5].id1 | result->people[6].id1 | result->people[13].id1) & 1))
-      fail("People must end as if on column spots.");
+   }
 }
 
 
@@ -7899,7 +7913,7 @@ extern bool do_big_concept(
 
    if (this_kind == concept_multiple_diamonds ||
        this_kind == concept_in_out_nostd ||
-       this_kind == concept_do_divided_diamonds ||
+       this_kind == concept_do_twinphantom_diamonds ||
        this_kind == concept_phan_crazy ||
        this_kind == concept_frac_phan_crazy ||
        this_kind == concept_do_phantom_stag_qtg ||
@@ -8295,7 +8309,7 @@ const concept_table_item concept_table[] = {
     do_phantom_diag_qtg_concept},                           // concept_do_phantom_diag_qtg
    {CONCPROP__NEED_ARG2_MATRIX | CONCPROP__NO_STEP | CONCPROP__GET_MASK |
     Nostandard_matrix_phantom,
-    do_concept_do_divided_diamonds},                        // concept_do_divided_diamonds
+    do_concept_do_twinphantom_diamonds},                    // concept_do_twinphantom_diamonds
    {CONCPROP__NO_STEP | CONCPROP__GET_MASK |
     Nostandard_matrix_phantom,
     do_concept_do_divided_bones},                           // concept_do_divided_bones

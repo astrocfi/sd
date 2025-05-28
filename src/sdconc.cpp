@@ -3045,7 +3045,10 @@ extern void concentric_move(
          ss->cmd.cmd_misc2_flags &= ~CMD_MISC2__CTR_END_MASK;
    }
 
-   if (analyzer == schema_single_concentric_together) {
+   if (analyzer == schema_single_cross_concentric_together_if_odd) {
+      analyzer = schema_single_cross_concentric;     // Setup was already split.
+   }
+   else if (analyzer == schema_single_concentric_together) {
       if (ss->kind == s1x8 || ss->kind == s_ptpd || attr::slimit(ss) == 3)
          analyzer = schema_single_concentric;
       else if (ss->kind == s_bone6)
@@ -6214,9 +6217,7 @@ extern void inner_selective_move(
             select::hash_lookup(kk, thislivemask, allow_phantoms, key, arg2, this_one);
 
          if (!fixp) {
-
             // These two have a looser livemask criterion.
-
             if (key & (LOOKUP_IGNORE|LOOKUP_DISC|LOOKUP_NONE)) {
                if (kk == s2x4 && the_setups[setupcount^1].kind == s2x4) {
                   if ((thislivemask & ~0x0F) == 0 && (otherlivemask & 0x0F) == 0)
@@ -6231,9 +6232,38 @@ extern void inner_selective_move(
                   }
                }
             }
+         }
 
-            if (!fixp)
+         if (!fixp) {
+            // The only way we can save the day is to have each person do the call alone.
+            // We don't have maps for all possible combinations of this, so we do it by hand.
+            *this_result = *this_one;
+            this_result->clear_people();
+            clear_result_flags(this_result);
+            int sizem1 = attr::slimit(this_one);
+
+            try {
+               for (i=0 ; i<=sizem1; i++) {
+                  if (this_one->people[i].id1) {
+                     setup tt = *this_one;
+                     tt.kind = s1x1;
+                     tt.rotation = 0;
+                     update_id_bits(&tt);
+                     copy_person(&tt, 0, this_one, i);
+                     setup uu;
+                     move(&tt, false, &uu);
+                     if (uu.kind != s1x1)
+                        fail("Can't do this with these people designated.");
+                     copy_person(this_result, i, &uu, 0);
+                  }
+               }
+            }
+            catch(error_flag_type) {
+               // This is the error message we want.
                fail("Can't do this with these people designated.");
+            }
+
+            goto done_with_this_one;
          }
 
          numsetups = fixp->numsetups & 0xFF;

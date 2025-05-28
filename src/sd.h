@@ -129,6 +129,15 @@ enum error_flag_type {
 };
 
 
+enum {
+   MIMIC_SETUP_LINES   = 0x00000001U,
+   MIMIC_SETUP_COLUMNS = 0x00000002U,
+   MIMIC_SETUP_WAVES   = 0x00000004U,
+   MIMIC_SETUP_BOXES   = 0x00000008U
+};
+
+
+
 enum { MAX_ERR_LENGTH = 200 };
 
 class saved_error_info {
@@ -355,7 +364,7 @@ enum concept_kind {
    concept_do_phantom_2x4,
    concept_do_phantom_stag_qtg,
    concept_do_phantom_diag_qtg,
-   concept_do_divided_diamonds,
+   concept_do_twinphantom_diamonds,
    concept_do_divided_bones,
    concept_distorted,
    concept_single_diagonal,
@@ -649,22 +658,22 @@ enum selector_kind {
    selector_center_line_of_6,
    selector_center_col_of_6,
    selector_outerpairs,
-   selector_centers_of_lines,
-   selector_ends_of_lines,
-   selector_centers_of_columns,
-   selector_ends_of_columns,
    selector_firstone,
    selector_lastone,
    selector_firsttwo,
    selector_lasttwo,
    selector_firstthree,
    selector_lastthree,
+   selector_firstfour,
+   selector_lastfour,
    selector_leftmostone,
    selector_rightmostone,
    selector_leftmosttwo,
    selector_rightmosttwo,
    selector_leftmostthree,
    selector_rightmostthree,
+   selector_leftmostfour,
+   selector_rightmostfour,
    selector_headliners,
    selector_sideliners,
    selector_thosefacing,
@@ -4548,6 +4557,7 @@ enum mpkind {
    MPKIND__4_EDGES,
    MPKIND__ALL_8,
    MPKIND__DMD_STUFF,
+   MPKIND__NONISOTROPDMD,
    MPKIND__STAG,
    MPKIND__OX,
    MPKIND__DIAGQTAG,
