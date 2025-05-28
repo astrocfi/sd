@@ -63,7 +63,7 @@ static const char time_stamp[] = "sdui-x11.c Time-stamp: <1997-10-14 17:51:42 gi
    uims_bad_argument
 */
 
-#include "sdui.h"
+#include "sd.h"
 #include "paths.h"
 #include <stdio.h>
 #include <X11/Intrinsic.h>
@@ -132,7 +132,7 @@ typedef enum {
  * We return the "1.6X11" part.
  */
 
-Private char version_mem[12];
+static char version_mem[12];
 
 extern char *uims_version_string(void)
 {
@@ -142,16 +142,16 @@ extern char *uims_version_string(void)
 }
 
 
-Private long_boolean ui_task_in_progress = FALSE;
+static long_boolean ui_task_in_progress = FALSE;
 
 /*
  * Since callbacks and actions can't return values, narrow the use of
  * global variables with these two routines.
  */
 
-Private int callback_value_storage; /* used only by two routines below */
+static int callback_value_storage; /* used only by two routines below */
 
-Private void
+static void
 callback_return(int return_value)
 {
     ui_task_in_progress = FALSE;
@@ -159,7 +159,7 @@ callback_return(int return_value)
 }
 
 /* Serial number ensures each event generates at most one action */
-Private unsigned long action_event_serial;
+static unsigned long action_event_serial;
 
 typedef enum {
     inside_nothing,
@@ -168,7 +168,7 @@ typedef enum {
 } ui_context;
 
 /* Ensures commands aren't selected while a popup is up. */
-Private ui_context inside_what = inside_nothing;
+static ui_context inside_what = inside_nothing;
 
 /*
  * Modification of XtAppMainLoop that returns to the caller
@@ -176,7 +176,7 @@ Private ui_context inside_what = inside_nothing;
  * allows the main program to call the user interface as a
  * subroutine, whereas XtAppMainLoop assumes the other way around.
  */
-Private int
+static int
 read_user_gesture(XtAppContext app)
 {
     XEvent event;
@@ -202,7 +202,7 @@ read_user_gesture(XtAppContext app)
  * Not necessary any more with mouse-tracking highlighting,
  * but is it desirable?  Perhaps it provides more feedback.
  */
-Private void
+static void
 unhighlight_lists(void)
 {
     XawListUnhighlight(cmdmenu);
@@ -218,9 +218,9 @@ unhighlight_lists(void)
  * Sets the external variable uims_menu_index.
  */
 
-Private XtAppContext xtcontext;
+static XtAppContext xtcontext;
 
-Private void
+static void
 position_near_mouse(Widget popupshell)
 {
     Window root, child;
@@ -277,7 +277,7 @@ position_near_mouse(Widget popupshell)
 }
 
 
-Private int
+static int
 do_popup(Widget popup_shell)
 {
     int value;
@@ -301,8 +301,8 @@ do_popup(Widget popup_shell)
     return value;
 }    
 
-Private String empty_string = "";
-Private Cstring *concept_popup_list = NULL;
+static String empty_string = "";
+static Cstring *concept_popup_list = NULL;
 
 #define USER_GESTURE_NULL -1
 #define SPECIAL_SIMPLE_MODS -2
@@ -344,7 +344,7 @@ static int button_translations[] = {
 
 
 /* ARGSUSED */
-Private void
+static void
 command_or_menu_chosen(Widget w, XtPointer client_data, XtPointer call_data)
 {
     XawListReturnStruct *item = (XawListReturnStruct *) call_data;
@@ -429,7 +429,7 @@ command_or_menu_chosen(Widget w, XtPointer client_data, XtPointer call_data)
 /* undo action timeout proc.  Gets called after the UNDO entry
    has flashed for an appropriate amount of time. */
 /* ARGSUSED */
-Private void 
+static void 
 cmdmenu_unhighlight(XtPointer client_data, XtIntervalId *intrvl)
 {
     XawListUnhighlight(cmdmenu);
@@ -438,7 +438,7 @@ cmdmenu_unhighlight(XtPointer client_data, XtIntervalId *intrvl)
 /* Simulates a click on the specified command menu item.
    Compare with command_or_menu_chosen above. */
 
-Private void
+static void
 cmdmenu_action_internal(int command)
 {
     unhighlight_lists();
@@ -450,13 +450,13 @@ cmdmenu_action_internal(int command)
     callback_return(ui_command_select); /* return which menu */
 }
 
-Private Atom wm_delete_window;
-Private Atom wm_protocols;
+static Atom wm_delete_window;
+static Atom wm_protocols;
 
 /* normally invoked only in response to a WM request */
 
 /* ARGSUSED */
-Private void
+static void
 quit_action(Widget w, XEvent *event, String *params, Cardinal *num_params)
 {
     if (event->type == ClientMessage  &&  event->xclient.message_type == wm_protocols)
@@ -466,12 +466,12 @@ quit_action(Widget w, XEvent *event, String *params, Cardinal *num_params)
     cmdmenu_action_internal(command_quit);
 }
 
-Private mode_kind visible_mode = mode_none;
+static mode_kind visible_mode = mode_none;
 
 /* Special action defined because it is handy to bind to MB3. */
 
 /* ARGSUSED */
-Private void
+static void
 undo_action(Widget w, XEvent *event, String *params, Cardinal *num_params)
 {
     if (inside_what == inside_get_command) {
@@ -487,7 +487,7 @@ undo_action(Widget w, XEvent *event, String *params, Cardinal *num_params)
 /* popup actions */
 
 /* ARGSUSED */
-Private void
+static void
 popup_yes_action(Widget w, XEvent *event, String *params, Cardinal *num_params)
 {
     if (event->xany.serial >= action_event_serial) {
@@ -496,7 +496,7 @@ popup_yes_action(Widget w, XEvent *event, String *params, Cardinal *num_params)
 }
 
 /* ARGSUSED */
-Private void
+static void
 popup_no_action(Widget w, XEvent *event, String *params, Cardinal *num_params)
 {
     if (event->xany.serial >= action_event_serial) {
@@ -505,7 +505,7 @@ popup_no_action(Widget w, XEvent *event, String *params, Cardinal *num_params)
 }
 
 /* ARGSUSED */
-Private void
+static void
 accept_string_action(Widget w, XEvent *event, String *params, Cardinal *num_params)
 {
     callback_return(POPUP_ACCEPT_WITH_STRING);
@@ -515,7 +515,7 @@ accept_string_action(Widget w, XEvent *event, String *params, Cardinal *num_para
 /* popup callbacks */
 
 /* ARGSUSED */
-Private void
+static void
 choose_pick(Widget w, XtPointer client_data, XtPointer call_data)
 {
     XawListReturnStruct *item = (XawListReturnStruct *) call_data;
@@ -526,7 +526,7 @@ choose_pick(Widget w, XtPointer client_data, XtPointer call_data)
 }
 
 /* ARGSUSED */
-Private void
+static void
 dialog_callback(Widget w, XtPointer client_data, XtPointer call_data)
 {
     if (inside_what == inside_popup) {
@@ -534,7 +534,7 @@ dialog_callback(Widget w, XtPointer client_data, XtPointer call_data)
     }
 }
 
-Private XtActionsRec actionTable[] = {
+static XtActionsRec actionTable[] = {
     {"popup_yes", popup_yes_action},
     {"popup_no", popup_no_action},
     {"accept_string", accept_string_action},
@@ -547,25 +547,25 @@ Private XtActionsRec actionTable[] = {
    Making <BtnUp> null is necessary to prevent Down,Motion,Up from
    generating two Notify events. */
 
-Private String list_translations =
+static String list_translations =
     "<Motion>: Set() \n\
      <LeaveWindow>: Unset() \n\
      <Btn1Down>: Set()Notify() \n\
      <BtnUp>: \n";
 
-Private String confirm_translations =
+static String confirm_translations =
     "<BtnDown>:	popup_yes()\n\
      <LeaveWindow>: popup_no()\n\
      <UnmapNotify>: popup_no()\n";
 
-Private String choose_translations =
+static String choose_translations =
     "<LeaveWindow>: popup_no()\n\
      <UnmapNotify>: popup_no()\n";
 
-Private String unmap_no_translation =
+static String unmap_no_translation =
     "<UnmapNotify>: popup_no()\n";
 
-Private String message_trans =
+static String message_trans =
     "<ClientMessage>WM_PROTOCOLS: quit()\n";
 
 typedef struct _SdResources {
@@ -592,7 +592,7 @@ typedef struct _SdResources {
     String circcer_title;
 } SdResources;
 
-Private SdResources sd_resources;
+static SdResources sd_resources;
 
 /* General program resources */
 
@@ -603,7 +603,7 @@ Private SdResources sd_resources;
 /* The following arrays must be coordinated with the Sd program */
 
 /* BEWARE!!  This list is keyed to the definition of "start_select_kind" in sd.h . */
-Private XtResource startup_resources[] = {
+static XtResource startup_resources[] = {
     MENU("exit", start_list[start_select_exit], "Exit from the program"),
     MENU("heads1P2P", start_list[start_select_h1p2p], "Heads 1P2P"),
     MENU("sides1P2P", start_list[start_select_s1p2p], "Sides 1P2P"),
@@ -623,7 +623,7 @@ Private XtResource startup_resources[] = {
 };
 
 /* BEWARE!!  This list is keyed to the definition of "cmd_button_kind" above. */
-Private XtResource command_resources[] = {
+static XtResource command_resources[] = {
     MENU("exit", cmd_list[cmd_button_quit], "Exit the program"),
     MENU("undo", cmd_list[cmd_button_undo], "Undo last call"),
     MENU("abort", cmd_list[cmd_button_abort], "Abort this sequence"),
@@ -647,7 +647,7 @@ Private XtResource command_resources[] = {
     MENU("savepic", cmd_list[cmd_button_save_pic], "Keep picture")
 };
 
-Private XtResource resolve_resources[] = {
+static XtResource resolve_resources[] = {
     MENU("abort", resolve_list[resolve_command_abort], "abort the search"),
     MENU("find", resolve_list[resolve_command_find_another], "find another"),
     MENU("next", resolve_list[resolve_command_goto_next], "go to next"),
@@ -658,7 +658,7 @@ Private XtResource resolve_resources[] = {
     MENU("writethis", resolve_list[resolve_command_write_this], "write this sequence")
 };
 
-Private XtResource enabledmods_resources[] = {
+static XtResource enabledmods_resources[] = {
     MENU("none",      modifications_allowed[0],  ""),
     MENU("none_ap",   modifications_allowed[1],  "[AP]"),
     MENU("none_ac",   modifications_allowed[2],  "[all concepts]"),
@@ -673,7 +673,7 @@ Private XtResource enabledmods_resources[] = {
     MENU("all_cp",    modifications_allowed[11], "[all concepts,AP,all modifications]")
 };
 
-Private XtResource confirm_resources[] = {
+static XtResource confirm_resources[] = {
     MENU("writeAnyway", write_anyway_query, "Do you want to write this sequence anyway?"),
     MENU("deleteClipboard", delete_clip_query, "Do you want to delete the entire clipboard?"),
     MENU("abort", abort_query, "Do you really want to abort this sequence?"),
@@ -684,17 +684,17 @@ Private XtResource confirm_resources[] = {
     MENU("modifyLineTwo", modify_line_two, "Do you want to replace it?")
 };
 
-Private XtResource outfile_resources[] = {
+static XtResource outfile_resources[] = {
     MENU("format", outfile_format,
 	 "Sequence output file is \"%s\".  Enter new name:"),
 };
 
-Private XtResource header_resources[] = {
+static XtResource header_resources[] = {
     MENU("format", title_format,
 	 "Current title is \"%s\".  Enter new title:"),
 };
 
-Private XtResource choose_resources[] = {
+static XtResource choose_resources[] = {
     MENU("who", selector_title, "  Who?  "),
     MENU("direction", direction_title, "Direction?"),
     MENU("tagger", tagger_title, "Tagging call?"),
@@ -702,7 +702,7 @@ Private XtResource choose_resources[] = {
     MENU("howMany", quantifier_title, "How many?")
 };
 
-Private XtResource top_level_resources[] = {
+static XtResource top_level_resources[] = {
     MENU("sequenceFile", sequence, SEQUENCE_FILENAME),
     MENU("databaseFile", database, DATABASE_FILENAME),
 };
@@ -1114,7 +1114,7 @@ extern void uims_preinitialize(void)
     XtRealizeWidget(conceptpopup);
 }
 
-Private void
+static void
 add_call_to_menu(Cstring **menu, int call_menu_index, int menu_size, Cstring callname)
 {
     if (call_menu_index == 0) {	/* first item in this menu; set it up */
@@ -1124,15 +1124,15 @@ add_call_to_menu(Cstring **menu, int call_menu_index, int menu_size, Cstring cal
     (*menu)[call_menu_index] = callname;
 }
 
-Private Cstring *concept_menu_list;
-Private int concept_menu_len;
+static Cstring *concept_menu_list;
+static int concept_menu_len;
 
-Private Cstring *call_menu_lists[NUM_CALL_LIST_KINDS];
-Private Cstring call_menu_names[NUM_CALL_LIST_KINDS];
+static Cstring *call_menu_lists[NUM_CALL_LIST_KINDS];
+static Cstring call_menu_names[NUM_CALL_LIST_KINDS];
 
 
-Private call_list_kind longest_title = call_list_empty;
-Private int longest_title_length = 0;
+static call_list_kind longest_title = call_list_empty;
+static int longest_title_length = 0;
 
 /*
  * Create a menu containing number_of_calls[cl] items.
@@ -1158,12 +1158,12 @@ extern void uims_create_menu(call_list_kind cl)
    }
 }
 
-Private call_list_kind visible_call_menu = call_list_none;
+static call_list_kind visible_call_menu = call_list_none;
 
 /*
  * display the requested call menu on the screen
  */
-Private void
+static void
 set_call_menu(call_list_kind call_menu, call_list_kind title)
 {
     int menu_num = (int) call_menu;
@@ -1182,7 +1182,7 @@ set_call_menu(call_list_kind call_menu, call_list_kind title)
  * list (space added to the right of the only column) to the width
  * of the scrollbar.
  */
-Private void
+static void
 widen_viewport(Widget vw, Widget childw)
 {
     Widget scrollbar = XtNameToWidget(vw, XtEvertical);
@@ -1202,7 +1202,7 @@ widen_viewport(Widget vw, Widget childw)
     XtVaSetValues(childw, XtNcolumnSpacing, scrollwidth+scrollborder, NULL);
 }
 
-Private Cstring empty_menu[] = {NULL};
+static Cstring empty_menu[] = {NULL};
 
 /* The main program calls this after all the call menus have been created,
    after all calls to uims_create_menu.
@@ -1262,7 +1262,7 @@ extern void uims_set_window_title(char s[])
 }
 
 
-Private void switch_from_startup_mode(void)
+static void switch_from_startup_mode(void)
 {
     XawListChange(cmdmenu, sd_resources.cmd_list, NUM_CMD_BUTTON_KINDS, 0, FALSE);
     XtRemoveAllCallbacks(cmdmenu, XtNcallback);
@@ -1272,7 +1272,7 @@ Private void switch_from_startup_mode(void)
     XawListChange(conceptmenu, (char **) concept_menu_list, concept_menu_len, 0, TRUE);
 }
 
-Private void
+static void
 switch_to_resolve_mode(void)
 {
     if (visible_mode == mode_startup)
@@ -1540,7 +1540,7 @@ extern uims_reply uims_get_resolve_command(void)
 
 
 
-Private int get_popup_string(Widget popup, Widget dialog, char dest[])
+static int get_popup_string(Widget popup, Widget dialog, char dest[])
 {
     int value;
 
@@ -1595,7 +1595,7 @@ uims_do_neglect_popup(char dest[])
 #endif
 
 
-Private int confirm(String question)
+static int confirm(String question)
 {
     XtVaSetValues(confirmlabel, XtNlabel, question, NULL);
     return do_popup(confirmpopup);
@@ -1656,7 +1656,7 @@ extern int uims_do_modifier_popup(Cstring callname, modify_popup_kind kind)
  * This function only works in the limited domain that it is being
  * used in here.
  */
-Private void
+static void
 update_display(Widget w)
 {
     XEvent event;
@@ -1682,7 +1682,7 @@ extern void uims_update_resolve_menu(command_kind goal, int cur, int max, resolv
 }
 
 
-Private int
+static int
 choose_popup(String label, Cstring names[])
 {
     Dimension labelwidth, listwidth;
@@ -1786,9 +1786,9 @@ extern uint32 uims_get_number_fields(int nnumbers, long_boolean forbid_zero)
 
 /* variables used by the next two routines */
 
-Private XawTextPosition *line_indexes = NULL; /* end position of each line */
-Private int line_count = 0;	/* size of line_indexes */
-Private XawTextBlock text_block;
+static XawTextPosition *line_indexes = NULL; /* end position of each line */
+static int line_count = 0;	/* size of line_indexes */
+static XawTextBlock text_block;
 
 /*
  * add a line to the text output area.

@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-1999  William B. Ackerman.
+    Copyright (C) 1990-2000  William B. Ackerman.
 
     This file is unpublished and contains trade secrets.  It is
     to be used by permission only and not to be disclosed to third
@@ -10,7 +10,7 @@
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-    This is for version 32. */
+    This is for version 34. */
 
 /* This file contains stuff for tandem and as-couples moves. */
 
@@ -331,9 +331,11 @@ static tm_thing maps_isearch_tglsome[] = {
    {{6, 0, 2, 4,       -1, 3, -1, 7,     -1, 1, -1, 5},                       0x08,        0,         4, 0,  0,  0, 0,  sdmd,  s_hrglass},
    {{0, 3, 4, 7,       6, -1, 2, -1,     5, -1, 1, -1},                       0x31,     0x77,         4, 0,  0,  0, 0,  sdmd,  s_hrglass},
 
-   // These two need to show a "fudgy" warning"
+   // These four need to show a "fudgy" warning.
    {{6, 1, 2, 5,       0, -1, 4, -1,     7, -1, 3, -1},                       0x20,        0,         4, 0,  0,  0, 0,  sdmd,  s2x4},
    {{0, 2, 4, 6,       7, -1, 3, -1,     1, -1, 5, -1},                       0x02,        0,         4, 0,  0,  0, 0,  sdmd,  s2x4},
+   {{7, 0, 3, 4,       -1, 6, -1, 2,     -1, 1, -1, 5},                       0x08,        0,         4, 0,  0,  0, 0,  s1x4,  s_spindle},
+   {{7, 5, 3, 1,       -1, 0, -1, 4,     -1, 6, -1, 2},                       0x80,        0,         4, 0,  0,  0, 0,  s1x4,  s_spindle},
 
    {{0, 3, 4, 7,       -1, 2, -1, 6,     -1, 1, -1, 5},                       0x80,        0,         4, 0,  0,  0, 0,  sdmd,  s_galaxy},
    {{2, 5, 6, 1,       -1, 4, -1, 0,     -1, 3, -1, 7},                       0x08,     0xBB,         4, 1,  0,  0, 0,  sdmd,  s_galaxy},
@@ -878,6 +880,9 @@ extern void tandem_couples_move(
          }
          else if (ss->kind == s3x4 && livemask == 0x3CF3CF) {
             special_mask = 0x410;
+         }
+         else if (ss->kind == s3dmd && livemask == 0xFC3FC3) {
+            special_mask = 0x820;
          }
          else if (ss->kind == s_qtag) {
             special_mask = 0x44;

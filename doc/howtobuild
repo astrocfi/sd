@@ -16,7 +16,7 @@ Be sure the version numbers and dates are correct in:
     [sddoc] about.lst    (version # is visible)
     [sddoc] sd_doc.txi         (version # and date are visible)
     [sddoc] relnotes.txi       (version #, database format version #,
-                               UI version #, and date are visible.
+                               and UI version # are visible.
                                Also, check its claimed database format
                                version against database.h)
     [sddoc] index2.htmli       (version # and date are visible)
@@ -40,6 +40,9 @@ Then choose the poster child.  Do "do_index <number>".
 It is important that this be done before "new_binary" is run, because
 the manual is now wrapped into the binary distribution file.
 
+BE SURE THAT THE "CYGWIN" LIBRARY IS IN THE PATH!!!
+The "uufix" program requires it.
+
 Go to sddoc directory and do:
 
     do_plain
@@ -55,7 +58,10 @@ Go to sddoc directory and do:
 -----------------------------------------------------------------
                 POSTER CHILD LOG
 10 Jun 00  -  21 Aug 00   #4
-21 Aug 00                 #5
+21 Aug 00  -  14 Sep 00   #5
+14 Sep 00  -  09 Oct 00   #8
+09 Oct 00  -  11 Dec 00   #9
+11 Dec 00                 #7
 -----------------------------------------------------------------
 
                TESTING AND PRODUCTION BUILD - DJGPP

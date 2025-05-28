@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-1999  William B. Ackerman.
+    Copyright (C) 1990-2000  William B. Ackerman.
 
     This file is unpublished and contains trade secrets.  It is
     to be used by permission only and not to be disclosed to third
@@ -10,7 +10,7 @@
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-    This is for version 32. */
+    This is for version 34. */
 
 /* This defines the following function:
    do_big_concept
@@ -383,7 +383,7 @@ static void do_c1_phantom_move(
 
    *result = the_setups[1];
    result->result_flags = get_multiple_parallel_resultflags(the_setups, 2);
-   merge_setups(&the_setups[0], merge_c1_phantom_nowarn, result);
+   merge_setups(&the_setups[0], merge_c1_phantom_real, result);
 }
 
 
@@ -393,24 +393,13 @@ static void do_concept_single_diagonal(
    parse_block *parseptr,
    setup *result) THROW_DECL
 {
-   if (parseptr->concept->value.arg1 & 8) {
-      /* Concept identified specific people. */
-      selective_move(ss, parseptr, selective_key_disc_dist, 0,
-                     16+(parseptr->concept->value.arg1 & 7),
-                     0, parseptr->options.who, FALSE, result);
-      return;
-   }
-
-   /* The concept didn't say who are on the diagonal--deduce what the mask would have been,
-      based on the full population of the 4x4, which must be blocks. */
-
    if (ss->kind != s4x4) fail("Need a 4x4 for this.");
 
    if (global_livemask != 0x2D2D && global_livemask != 0xD2D2)
       fail("People must be in blocks -- try specifying the people who should do the call.");
 
    selective_move(ss, parseptr, selective_key_disc_dist, 0,
-                  16+(parseptr->concept->value.arg1 & 7),
+                  parseptr->concept->value.arg1,
                   global_livemask & 0x9999, selector_uninitialized, FALSE, result);
 }
 
@@ -2003,63 +1992,119 @@ static void do_concept_dblbent(
       0 - user claims this is some kind of columns
       1 - user claims this is some kind of lines
       3 - user claims this is waves
+   8 bit -- this is double bent tidal
+   16 bit -- this is bent box
 */
 
    uint32 map_code = 0;
+   uint32 arg1 = parseptr->concept->value.arg1;
 
-   if (global_livemask == 0xCF3) {
-      ss->people[0].id1 = rotccw(ss->people[0].id1);
-      ss->people[1].id1 = rotccw(ss->people[1].id1);
-      ss->people[6].id1 = rotccw(ss->people[6].id1);
-      ss->people[7].id1 = rotccw(ss->people[7].id1);
-      map_code = MAPCODE(s1x8,1,MPKIND_DBLBENTCW,0);
+   if (arg1 & 16) {
+      //Bent boxes.
+      if (ss->kind == s3x6) {
+         if (global_livemask == 0x2170B)
+            map_code = MAPCODE(s2x2,2,MPKIND__BENT0CW,0);
+         else if (global_livemask == 0x26934)
+            map_code = MAPCODE(s2x2,2,MPKIND__BENT0CCW,0);
+         else if (global_livemask == 0x0B259)
+            map_code = MAPCODE(s2x2,2,MPKIND__BENT1CW,0);
+         else if (global_livemask == 0x0CC66)
+            map_code = MAPCODE(s2x2,2,MPKIND__BENT1CCW,0);
+      }
+      else if (ss->kind == s4x6) {
+         if (global_livemask == 0x981981)
+            map_code = MAPCODE(s2x2,2,MPKIND__BENT2CW,0);
+         else if (global_livemask == 0x660660)
+            map_code = MAPCODE(s2x2,2,MPKIND__BENT2CCW,0);
+         else if (global_livemask == 0xD08D08)
+            map_code = MAPCODE(s2x2,2,MPKIND__BENT3CW,0);
+         else if (global_livemask == 0x2C42C4)
+            map_code = MAPCODE(s2x2,2,MPKIND__BENT3CCW,0);
+         else if (global_livemask == 0x303303)
+            map_code = MAPCODE(s2x2,2,MPKIND__BENT4CW,0);
+         else if (global_livemask == 0x330330)
+            map_code = MAPCODE(s2x2,2,MPKIND__BENT4CCW,0);
+         else if (global_livemask == 0x858858)
+            map_code = MAPCODE(s2x2,2,MPKIND__BENT5CW,0);
+         else if (global_livemask == 0x846846)
+            map_code = MAPCODE(s2x2,2,MPKIND__BENT5CCW,0);
+      }
+      else if (ss->kind == sbigh) {
+         if (global_livemask == 0xCF3)
+            map_code = MAPCODE(s2x2,2,MPKIND__BENT6CW,0);
+         else if (global_livemask == 0xF3C)
+            map_code = MAPCODE(s2x2,2,MPKIND__BENT6CCW,0);
+      }
+      else if (ss->kind == sdeepxwv) {
+         if (global_livemask == 0xCF3)
+            map_code = MAPCODE(s2x2,2,MPKIND__BENT7CW,0);
+         else if (global_livemask == 0x3CF)
+            map_code = MAPCODE(s2x2,2,MPKIND__BENT7CCW,0);
+      }
    }
-   else if (global_livemask == 0xF3C) {
-      ss->people[2].id1 = rotcw(ss->people[2].id1);
-      ss->people[3].id1 = rotcw(ss->people[3].id1);
-      ss->people[8].id1 = rotcw(ss->people[8].id1);
-      ss->people[9].id1 = rotcw(ss->people[9].id1);
-      map_code = MAPCODE(s1x8,1,MPKIND_DBLBENTCCW,0);
+   else if (!(arg1 & 8)) {
+      //Bent C/L/W's.
+      if (ss->kind == s3x6) {
+         if (global_livemask == 0x2170B)
+            map_code = MAPCODE(s1x4,2,MPKIND__BENT2CW,0);
+         else if (global_livemask == 0x26934)
+            map_code = MAPCODE(s1x4,2,MPKIND__BENT2CCW,0);
+         else if (global_livemask == 0x0B259)
+            map_code = MAPCODE(s1x4,2,MPKIND__BENT3CW,0);
+         else if (global_livemask == 0x0CC66)
+            map_code = MAPCODE(s1x4,2,MPKIND__BENT3CCW,0);
+      }
+      else if (ss->kind == s4x6) {
+         if (global_livemask == 0x981981)
+            map_code = MAPCODE(s1x4,2,MPKIND__BENT0CW,0);
+         else if (global_livemask == 0x660660)
+            map_code = MAPCODE(s1x4,2,MPKIND__BENT0CCW,0);
+         else if (global_livemask == 0xD08D08)
+            map_code = MAPCODE(s1x4,2,MPKIND__BENT1CW,0);
+         else if (global_livemask == 0x2C42C4)
+            map_code = MAPCODE(s1x4,2,MPKIND__BENT1CCW,0);
+         else if (global_livemask == 0x303303)
+            map_code = MAPCODE(s1x4,2,MPKIND__BENT6CW,0);
+         else if (global_livemask == 0x330330)
+            map_code = MAPCODE(s1x4,2,MPKIND__BENT6CCW,0);
+         else if (global_livemask == 0x858858)
+            map_code = MAPCODE(s1x4,2,MPKIND__BENT7CW,0);
+         else if (global_livemask == 0x846846)
+            map_code = MAPCODE(s1x4,2,MPKIND__BENT7CCW,0);
+      }
+      else if (ss->kind == sbigh) {
+         if (global_livemask == 0xCF3)
+            map_code = MAPCODE(s1x4,2,MPKIND__BENT4CW,0);
+         else if (global_livemask == 0xF3C)
+            map_code = MAPCODE(s1x4,2,MPKIND__BENT4CCW,0);
+      }
+      else if (ss->kind == sdeepxwv) {
+         if (global_livemask == 0xCF3)
+            map_code = MAPCODE(s1x4,2,MPKIND__BENT5CW,0);
+         else if (global_livemask == 0x3CF)
+            map_code = MAPCODE(s1x4,2,MPKIND__BENT5CCW,0);
+      }
+   }
+   else {
+      // Double bent tidal C/L/W.
+      if (ss->kind == sbigh) {
+         if (global_livemask == 0xCF3)
+            map_code = MAPCODE(s1x8,1,MPKIND__BENT4CW,0);
+         else if (global_livemask == 0xF3C)
+            map_code = MAPCODE(s1x8,1,MPKIND__BENT4CCW,0);
+      }
    }
 
-   if (ss->kind != sbigh || map_code == 0) fail("Must have double-bent setup for this concept.");
+   if (!map_code)
+      fail("Can't do this concept in this formation.");
 
-   switch (parseptr->concept->value.arg1 & 7) {
-      case 0: ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_COLS; break;
-      case 1: ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_LINES; break;
-      case 3: ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES; break;
+   switch (arg1 & 7) {
+   case 0: ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_COLS; break;
+   case 1: ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_LINES; break;
+   case 3: ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES; break;
    }
 
    new_divided_setup_move(ss, map_code, phantest_ok, TRUE, result);
-
-   if (result->kind == sbigh) {
-      if (global_livemask == 0xCF3) {
-         result->people[0].id1 = rotcw(result->people[0].id1);
-         result->people[1].id1 = rotcw(result->people[1].id1);
-         result->people[6].id1 = rotcw(result->people[6].id1);
-         result->people[7].id1 = rotcw(result->people[7].id1);
-      }
-      else {
-         result->people[2].id1 = rotccw(result->people[2].id1);
-         result->people[3].id1 = rotccw(result->people[3].id1);
-         result->people[8].id1 = rotccw(result->people[8].id1);
-         result->people[9].id1 = rotccw(result->people[9].id1);
-      }
-   }
-   else if (result->kind == s4x6) {
-      if (global_livemask == 0xCF3) {
-         result->people[0].id1 = rotcw(result->people[0].id1);
-         result->people[1].id1 = rotcw(result->people[1].id1);
-         result->people[12].id1 = rotcw(result->people[12].id1);
-         result->people[13].id1 = rotcw(result->people[13].id1);
-      }
-      else {
-         result->people[4].id1 = rotccw(result->people[4].id1);
-         result->people[5].id1 = rotccw(result->people[5].id1);
-         result->people[16].id1 = rotccw(result->people[16].id1);
-         result->people[17].id1 = rotccw(result->people[17].id1);
-      }
-   }
 }
 
 
@@ -2602,7 +2647,7 @@ static void do_concept_mirror(
    parse_block *parseptr,
    setup *result) THROW_DECL
 {
-   /* This is treated differently from "left" or "reverse" in that the code in sdmoves.c
+   /* This is treated differently from "left" or "reverse" in that the code in sdmoves.cpp
       that handles the latter communicates it to the "take right hands" and "rear back
       from right hands" stuff, and we do not.  This means that people will physically
       take left hands when they meet.  This seems to be the consensus of what "mirror"
@@ -3084,14 +3129,12 @@ static void do_concept_phan_crazy(
    parse_block *parseptr,
    setup *result) THROW_DECL
 {
-   int i, craziness;
+   int i;
    setup tempsetup;
    setup_command cmd;
    setup_kind kk;
-   uint32 mapcode;
-   int rot;
+   int rot = (global_tbonetest ^ parseptr->concept->value.arg1) & 1;
 
-   uint32 finalresultflags = 0;
    int reverseness = (parseptr->concept->value.arg1 >> 3) & 1;
 
    if (TEST_HERITBITS(ss->cmd.cmd_final_flags,INHERITFLAG_REVERSE)) {
@@ -3099,27 +3142,43 @@ static void do_concept_phan_crazy(
       reverseness = 1;
    }
    ss->cmd.cmd_final_flags.her8it &= ~INHERITFLAG_REVERSE;
-   /* We don't allow other flags, like "cross". */
+   // We don't allow other flags, like "cross".
    if (ss->cmd.cmd_final_flags.her8it | ss->cmd.cmd_final_flags.final)
       fail("Illegal modifier before \"crazy\".");
 
+   int craziness = (parseptr->concept->value.arg1 & 16) ?
+      parseptr->options.number_fields : 4;
+
    tempsetup = *ss;
 
-   cmd = tempsetup.cmd;    /* We will modify these flags, and, in any case, we need
-                              to rematerialize them at each step. */
+   cmd = tempsetup.cmd;    // We will modify these flags, and, in any case,
+                           // we need to rematerialize them at each step.
 
-   if (parseptr->concept->value.arg1 & 16)
-      craziness = parseptr->options.number_fields;
-   else
-      craziness = 4;
+   const map_thing *offsetmap1;
+   uint32 specialmapcode = ~0UL;
 
-   /* Turn on "verify waves" or whatever, for the first time only. */
+   phantest_kind phanstuff = phantest_ok;
+
+   // Turn on "verify waves" or whatever, for the first time only.
    tempsetup.cmd.cmd_misc_flags |= parseptr->concept->value.arg3;
 
-   /* Decide which way we are going to divide, once only. */
+   if (parseptr->concept->value.arg1 & 64) {
+      // This is crazy offset.  A 2x8 setup is reasonable.
+      // Unfortunately, there is no concept property flag
+      // that calls for a 4x4 or a 2x8.  The flag for this
+      // concept just called for a 4x4.  That did no harm, but
+      // we have to consider expanding to a 2x8.  If the current
+      // setup is not a 4x4, we try to make a 2x8.  If that fails,
+      // there will be trouble ahead.
+      if (tempsetup.kind != s4x4)
+         do_matrix_expansion(&tempsetup, CONCPROP__NEEDK_2X8, FALSE);
+   }
+
+   // Decide which way we are going to divide, once only.
 
    if ((parseptr->concept->value.arg1 & 7) < 4) {
-      rot = (global_tbonetest ^ parseptr->concept->value.arg1 ^ 1) & 1;
+      // This is {crazy phantom / crazy offset} C/L/W.  64 bit tells which.
+
       if ((global_tbonetest & 011) == 011) fail("People are T-boned -- try using 'standard'.");
 
       /* We have now processed any "standard" information to determine how to split the setup.
@@ -3134,54 +3193,96 @@ static void do_concept_phan_crazy(
       }
 
       kk = s4x4;
-      mapcode = MAPCODE(s2x4,2,MPKIND__SPLIT,1);
+
+      if (parseptr->concept->value.arg1 & 64) {   // Crazy offset C/L/W.
+         phanstuff = phantest_only_one_pair;
+         specialmapcode = MAPCODE(s1x4,2,MPKIND__OFFS_BOTH_SINGLEV,1);
+
+         // Look for the case of crazy offset CLW in a 2x8.
+         if (tempsetup.kind != s4x4) {
+            kk = s2x8;
+            rot = tempsetup.rotation & 1;
+            offsetmap1 = get_map_from_code(MAPCODE(s1x4,4,MPKIND__OFFS_BOTH_SINGLEV,0));
+         }
+         else
+            offsetmap1 = get_map_from_code(MAPCODE(s1x4,4,MPKIND__OFFS_BOTH_SINGLEH,1));
+      }
+      else
+         offsetmap1 = &map_vsplit_f;
    }
    else if ((parseptr->concept->value.arg1 & 7) == 4) {
-      rot = tempsetup.rotation & 1;
-      kk = s2x8;
-      mapcode = MAPCODE(s2x4,2,MPKIND__SPLIT,0);
+      // This is {crazy phantom / crazy diagonal} boxes.  64 bit tells which.
+
+      kk = s4x4;
+
+      if (parseptr->concept->value.arg1 & 64) {   // Crazy diagonal boxes.
+         specialmapcode = MAPCODE(s2x2,2,MPKIND__OFFS_BOTH_SINGLEV,0);
+
+         if (tempsetup.kind != s4x4) {
+            kk = s2x8;
+            rot = tempsetup.rotation & 1;
+            offsetmap1 = get_map_from_code(MAPCODE(s2x2,4,MPKIND__OFFS_BOTH_SINGLEH,0));
+         }
+         else {
+            // We do an incredibly simple test of which way the 4x4 is oriented.
+            // A rigorous test of the exact occupation will be made later.
+            rot = ((global_livemask == 0x3A3A) || (global_livemask == 0xC5C5)) ?
+               1 : 0;
+            offsetmap1 = get_map_from_code(MAPCODE(s2x2,4,MPKIND__OFFS_BOTH_SINGLEV,0));
+         }
+      }
+      else {
+         kk = s2x8;
+         rot = tempsetup.rotation & 1;
+         offsetmap1 = get_map_from_code(MAPCODE(s2x4,2,MPKIND__SPLIT,0));
+      }
    }
    else {
       rot = tempsetup.rotation & 1;
       kk = s4dmd;
-      mapcode = MAPCODE(s_qtag,2,MPKIND__SPLIT,0);
+      offsetmap1 = get_map_from_code(MAPCODE(s_qtag,2,MPKIND__SPLIT,0));
    }
 
    tempsetup.rotation += rot;   /* Just flip the setup around and recanonicalize. */
    canonicalize_rotation(&tempsetup);
 
+   uint32 finalresultflags = 0;
+
    for (i=0 ; i<craziness; i++) {
-      // Check the validity of the setup each time.
-      if (tempsetup.kind != kk || tempsetup.rotation != 0)
+      // Check the validity of the setup each time for boxes/diamonds,
+      // or first time only for C/L/W.
+
+      if ((i==0 || ((parseptr->concept->value.arg1 & 7) >= 4 &&
+                    !(parseptr->concept->value.arg1 & 64))) &&
+          (tempsetup.kind != kk || tempsetup.rotation != 0))
          fail("Can't do crazy phantom or offset in this setup.");
 
       if ((i ^ reverseness) & 1) {        // Do it in the center.
-         if (parseptr->concept->value.arg1 & 64) { // Crazy offset C/L/W.
-            setup save = tempsetup;   // Save the outer people.
-            clear_person(&save, 10);
-            clear_person(&save, 15);
-            clear_person(&save, 3);
-            clear_person(&save, 1);
-            clear_person(&save, 2);
-            clear_person(&save, 7);
-            clear_person(&save, 11);
-            clear_person(&save, 9);
-            divided_setup_move(&tempsetup, &map_crazy_offset2,
-                               phantest_only_one, TRUE, result);
-            // The outer people have now been dropped from result.
-            merge_setups(&save, merge_strict_matrix, result);
-         }
-         else
+         // Do special stuff for crazy offset.
+         if (parseptr->concept->value.arg1 & 64) {
+            if (tempsetup.kind != s2x8 && tempsetup.kind != s4x4)
+               fail("Can't do crazy offset with this shape-changer.");
+
+            tempsetup.rotation++;
+            canonicalize_rotation(&tempsetup);
             concentric_move(&tempsetup, (setup_command *) 0, &tempsetup.cmd,
-                            schema_in_out_quad, 0, 0, TRUE, result);
+                            schema_in_out_quad, 0, 0, TRUE,
+                            specialmapcode,
+                            result);
+            result->rotation--;
+            canonicalize_rotation(result);
+         }
+         else {
+            tempsetup.rotation++;
+            canonicalize_rotation(&tempsetup);
+            concentric_move(&tempsetup, (setup_command *) 0, &tempsetup.cmd,
+                            schema_in_out_quad, 0, 0, TRUE, ~0UL, result);
+            result->rotation--;
+            canonicalize_rotation(result);
+         }
       }
-      else {                              // Do it on each side.
-         if (parseptr->concept->value.arg1 & 64)   // Crazy offset C/L/W.
-            divided_setup_move(&tempsetup, &map_crazy_offset1,
-                               phantest_only_one_pair, TRUE, result);
-         else
-            new_divided_setup_move(&tempsetup, mapcode, phantest_ok, TRUE, result);
-      }
+      else                              // Do it on each side.
+         divided_setup_move(&tempsetup, offsetmap1, phanstuff, TRUE, result);
 
       finalresultflags |= result->result_flags;
       tempsetup = *result;
@@ -3206,7 +3307,7 @@ static void do_concept_fan(
       It needs to be cleaned up and thought about. */
 
    uint64 new_final_concepts;
-   Const parse_block *parseptrcopy;
+   const parse_block *parseptrcopy;
    call_with_name *callspec;
 
    new_final_concepts.her8it = 0;
@@ -3330,6 +3431,7 @@ static void do_concept_stable(
 }
 
 
+
 static void do_concept_emulate(
    setup *ss,
    parse_block *parseptr,
@@ -3382,38 +3484,41 @@ static void do_concept_checkerboard(
    parse_block *parseptr,
    setup *result) THROW_DECL
 {
-   /* arg1 = setup (1x4/2x2/dmd)
-      arg2 = 0 : checkersetup
-             1 : shadow setup
-             2 : orbitsetup
-             3 : twin orbitsetup
-             add 8 for selected people (checker only) */
+   // arg1 = setup (1x4/2x2/dmd)
+   // arg2 = 0 : checkersetup
+   //        1 : shadow setup
+   //        2 : orbitsetup
+   //        3 : twin orbitsetup
+   //        add 8 for selected people (checker only)
 
-   static Const veryshort mape[20] = {0, 2, 4, 6, 1, 3, 5, 7, 0, 1, 4, 5, 2, 3, 6, 7, 0, 3, 4, 7};
-   static Const veryshort mapl[16] = {7, 1, 3, 5, 0, 6, 4, 2, 7, 6, 3, 2, 0, 1, 4, 5};
-   static Const veryshort mapb[20] = {1, 3, 5, 7, 0, 2, 4, 6, 2, 3, 6, 7, 0, 1, 4, 5, 1, 2, 5, 6};
-   static Const veryshort mapd[16] = {7, 1, 3, 5, 0, 2, 4, 6, -1, -1, -1, -1, -1, -1, -1, -1};
-   static Const veryshort wave_tester[8] = {011, 012, 011, 012, 012, 011, 012, 011};
-   static Const veryshort twof_tester[8] = {011, 011, 012, 012, 012, 012, 011, 011};
+   static const veryshort mape[20] = {0, 2, 4, 6, 1, 3, 5, 7, 0, 1,
+                                      4, 5, 2, 3, 6, 7, 0, 3, 4, 7};
+   static const veryshort mapl[16] = {7, 1, 3, 5, 0, 6, 4, 2,
+                                      7, 6, 3, 2, 0, 1, 4, 5};
+   static const veryshort mapb[20] = {1, 3, 5, 7, 0, 2, 4, 6, 2, 3,
+                                      6, 7, 0, 1, 4, 5, 1, 2, 5, 6};
+   static const veryshort mapd[16] = {7, 1, 3, 5, 0, 2, 4, 6,
+                                      7, 2, 3, 6, 0, 1, 4, 5};
+   static const veryshort wave_tester[8] = {011, 012, 011, 012, 012, 011, 012, 011};
 
    int i, rot;
    int offset = 0;
    uint32 t;
    setup a1;
    setup res1;
-   Const veryshort *map_ptr;
+   const veryshort *map_ptr;
    setup_kind kn = (setup_kind) parseptr->concept->value.arg1;
 
    clear_people(result);
 
    if (parseptr->concept->value.arg2 == 1) {
-      /* This is "shadow <setup>" */
+      // This is "shadow <setup>"
 
       setup_command subsid_cmd;
 
-      if (     (kn != s2x2 || ss->kind != s2x4) &&
-               (kn != s1x4 || (ss->kind != s_qtag && ss->kind != s_bone)) &&
-               (kn != sdmd || (ss->kind != s_hrglass && ss->kind != s_dhrglass)))
+      if ((kn != s2x2 || ss->kind != s2x4) &&
+          (kn != s1x4 || (ss->kind != s_qtag && ss->kind != s_bone)) &&
+          (kn != sdmd || (ss->kind != s_hrglass && ss->kind != s_dhrglass)))
          fail("Not in correct setup for 'shadow line/box/diamond' concept.");
 
       subsid_cmd = ss->cmd;
@@ -3423,16 +3528,16 @@ static void do_concept_checkerboard(
       subsid_cmd.cmd_final_flags.her8it = 0;
       subsid_cmd.cmd_final_flags.final = 0;
       concentric_move(ss, &ss->cmd, &subsid_cmd, schema_concentric, 0,
-                      DFM1_CONC_DEMAND_LINES | DFM1_CONC_FORCE_COLUMNS, TRUE, result);
+                      DFM1_CONC_DEMAND_LINES | DFM1_CONC_FORCE_COLUMNS, TRUE, ~0UL, result);
       return;
    }
 
-   /* This is "checker/orbit <setup>" */
+   // This is "checker/orbit <setup>"
 
    if (ss->kind != s2x4) fail("Must have a 2x4 setup for 'checker' concept.");
 
    if (parseptr->concept->value.arg2 & 8) {
-      /* This is "so-and-so preferred for the trade, checkerboard". */
+      // This is "so-and-so preferred for the trade, checkerboard".
       if      (global_selectmask == 0x55)
          offset = 0;
       else if (global_selectmask == 0xAA)
@@ -3448,28 +3553,27 @@ static void do_concept_checkerboard(
    else {
       uint32 directions = 0;
       uint32 wave_test = 0;
-      uint32 twof_test = 0;
 
       for (i=0; i<8; i++) {
          uint32 p = ss->people[i].id1 & d_mask;
 
          directions = directions<<4;
-         if (p == d_north) { directions |= 0x8; wave_test |= wave_tester[i]; twof_test |= twof_tester[i]; }
+         if (p == d_north) { directions |= 0x8; wave_test |= wave_tester[i]; }
          if (p != d_north) directions |= 0x4;
-         if (p == d_south) { directions |= 0x2; wave_test |= ~wave_tester[i]; twof_test |= ~twof_tester[i]; }
+         if (p == d_south) { directions |= 0x2; wave_test |= ~wave_tester[i]; }
          if (p != d_south) directions |= 0x1;
       }
 
       if      ((directions & 0x84842121) == 0x84842121)
-         offset = 0;
+         offset = 0;   // outfacers are as if in RWV
       else if ((directions & 0x48481212) == 0x48481212)
-         offset = 4;
+         offset = 4;   // outfacers are as if in LWV
       else if ((directions & 0x88442211) == 0x88442211)
-         offset = 8;
+         offset = 8;   // outfacers are as if in R2FL
       else if ((directions & 0x44881122) == 0x44881122)
-         offset = 12;
+         offset = 12;  // outfacers are as if in L2FL
       else if ((directions & 0x84482112) == 0x84482112)
-         offset = 16;
+         offset = 16;  // outfacers are ends
       else if (ss->cmd.cmd_assume.assumption == cr_wave_only &&
                ss->cmd.cmd_assume.assump_col == 0 &&
                ss->cmd.cmd_assume.assump_negate == 0) {
@@ -3487,66 +3591,90 @@ static void do_concept_checkerboard(
    if (offset == 16 && kn != s2x2)
       fail("Can't identify checkerboard people.");
 
-   if (      ((t = ss->people[mape[0+offset]].id1) && (t & d_mask) != d_north) ||
-             ((t = ss->people[mape[1+offset]].id1) && (t & d_mask) != d_north) ||
-             ((t = ss->people[mape[2+offset]].id1) && (t & d_mask) != d_south) ||
-             ((t = ss->people[mape[3+offset]].id1) && (t & d_mask) != d_south))
-         fail("Selected people are not facing out.");
+   if (((t = ss->people[mape[0+offset]].id1) && (t & d_mask) != d_north) ||
+       ((t = ss->people[mape[1+offset]].id1) && (t & d_mask) != d_north) ||
+       ((t = ss->people[mape[2+offset]].id1) && (t & d_mask) != d_south) ||
+       ((t = ss->people[mape[3+offset]].id1) && (t & d_mask) != d_south))
+      fail("Selected people are not facing out.");
 
    if ((parseptr->concept->value.arg2 & 7) == 2) {
-      /* orbitboard */
+      // orbitboard
       if (offset > 4) fail("Can't find orbiting people.");
-      /* Move the people who simply orbit, filling in their roll info. */
+      // Move the people who simply orbit, filling in their roll info.
 
       (void) copy_rot(result, mape[2+offset], ss, mape[1+offset], 0);
-      if (result->people[mape[2+offset]].id1) result->people[mape[2+offset]].id1 = (result->people[mape[2+offset]].id1 & (~ROLL_MASK)) | ROLLBITR;
+      if (result->people[mape[2+offset]].id1)
+         result->people[mape[2+offset]].id1 = 
+            (result->people[mape[2+offset]].id1 & (~ROLL_MASK)) | ROLLBITR;
       (void) copy_rot(result, mape[1+offset], ss, mape[0+offset], 022);
-      if (result->people[mape[1+offset]].id1) result->people[mape[1+offset]].id1 = (result->people[mape[1+offset]].id1 & (~ROLL_MASK)) | ROLLBITR;
+      if (result->people[mape[1+offset]].id1)
+         result->people[mape[1+offset]].id1 =
+            (result->people[mape[1+offset]].id1 & (~ROLL_MASK)) | ROLLBITR;
       (void) copy_rot(result, mape[0+offset], ss, mape[3+offset], 0);
-      if (result->people[mape[0+offset]].id1) result->people[mape[0+offset]].id1 = (result->people[mape[0+offset]].id1 & (~ROLL_MASK)) | ROLLBITR;
+      if (result->people[mape[0+offset]].id1)
+         result->people[mape[0+offset]].id1 =
+            (result->people[mape[0+offset]].id1 & (~ROLL_MASK)) | ROLLBITR;
       (void) copy_rot(result, mape[3+offset], ss, mape[2+offset], 022);
-      if (result->people[mape[3+offset]].id1) result->people[mape[3+offset]].id1 = (result->people[mape[3+offset]].id1 & (~ROLL_MASK)) | ROLLBITR;
+      if (result->people[mape[3+offset]].id1)
+         result->people[mape[3+offset]].id1 =
+            (result->people[mape[3+offset]].id1 & (~ROLL_MASK)) | ROLLBITR;
    }
    else if ((parseptr->concept->value.arg2 & 7) == 3) {
-      /* twin orbitboard */
+      // twin orbitboard
       if (offset > 4) fail("Can't find orbiting people.");
-      /* Move the people who simply orbit, filling in their roll info. */
+      // Move the people who simply orbit, filling in their roll info.
 
       (void) copy_rot(result, mape[2+offset], ss, mape[1+offset], 0);
-      if (result->people[mape[2+offset]].id1) result->people[mape[2+offset]].id1 = (result->people[mape[2+offset]].id1 & (~ROLL_MASK)) | ROLLBITR;
+      if (result->people[mape[2+offset]].id1)
+         result->people[mape[2+offset]].id1 =
+            (result->people[mape[2+offset]].id1 & (~ROLL_MASK)) | ROLLBITR;
       (void) copy_rot(result, mape[3+offset], ss, mape[0+offset], 0);
-      if (result->people[mape[3+offset]].id1) result->people[mape[3+offset]].id1 = (result->people[mape[3+offset]].id1 & (~ROLL_MASK)) | ROLLBITL;
+      if (result->people[mape[3+offset]].id1)
+         result->people[mape[3+offset]].id1 =
+            (result->people[mape[3+offset]].id1 & (~ROLL_MASK)) | ROLLBITL;
       (void) copy_rot(result, mape[0+offset], ss, mape[3+offset], 0);
-      if (result->people[mape[0+offset]].id1) result->people[mape[0+offset]].id1 = (result->people[mape[0+offset]].id1 & (~ROLL_MASK)) | ROLLBITR;
+      if (result->people[mape[0+offset]].id1)
+         result->people[mape[0+offset]].id1 =
+            (result->people[mape[0+offset]].id1 & (~ROLL_MASK)) | ROLLBITR;
       (void) copy_rot(result, mape[1+offset], ss, mape[2+offset], 0);
-      if (result->people[mape[1+offset]].id1) result->people[mape[1+offset]].id1 = (result->people[mape[1+offset]].id1 & (~ROLL_MASK)) | ROLLBITL;
+      if (result->people[mape[1+offset]].id1)
+         result->people[mape[1+offset]].id1 =
+            (result->people[mape[1+offset]].id1 & (~ROLL_MASK)) | ROLLBITL;
    }
    else {
-      /* checkerboard */
-      /* Move the people who simply trade, filling in their roll info. */
+      // checkerboard/box/diamond
+      // Move the people who simply trade, filling in their roll info.
 
       (void) copy_rot(result, mape[0+offset], ss, mape[1+offset], 022);
-      if (result->people[mape[0+offset]].id1) result->people[mape[0+offset]].id1 = (result->people[mape[0+offset]].id1 & (~ROLL_MASK)) | ROLLBITL;
+      if (result->people[mape[0+offset]].id1)
+         result->people[mape[0+offset]].id1 =
+            (result->people[mape[0+offset]].id1 & (~ROLL_MASK)) | ROLLBITL;
       (void) copy_rot(result, mape[1+offset], ss, mape[0+offset], 022);
-      if (result->people[mape[1+offset]].id1) result->people[mape[1+offset]].id1 = (result->people[mape[1+offset]].id1 & (~ROLL_MASK)) | ROLLBITR;
+      if (result->people[mape[1+offset]].id1)
+         result->people[mape[1+offset]].id1 =
+            (result->people[mape[1+offset]].id1 & (~ROLL_MASK)) | ROLLBITR;
       (void) copy_rot(result, mape[2+offset], ss, mape[3+offset], 022);
-      if (result->people[mape[2+offset]].id1) result->people[mape[2+offset]].id1 = (result->people[mape[2+offset]].id1 & (~ROLL_MASK)) | ROLLBITL;
+      if (result->people[mape[2+offset]].id1)
+         result->people[mape[2+offset]].id1 =
+            (result->people[mape[2+offset]].id1 & (~ROLL_MASK)) | ROLLBITL;
       (void) copy_rot(result, mape[3+offset], ss, mape[2+offset], 022);
-      if (result->people[mape[3+offset]].id1) result->people[mape[3+offset]].id1 = (result->people[mape[3+offset]].id1 & (~ROLL_MASK)) | ROLLBITR;
+      if (result->people[mape[3+offset]].id1)
+         result->people[mape[3+offset]].id1 =
+            (result->people[mape[3+offset]].id1 & (~ROLL_MASK)) | ROLLBITR;
    }
 
    a1 = *ss;
 
    switch (kn) {
-      case s1x4:
-         map_ptr = mapl;
-         break;
-      case s2x2:
-         map_ptr = mapb;
-         break;
-      case sdmd:
-         map_ptr = mapd;
-         break;
+   case s1x4:
+      map_ptr = mapl;
+      break;
+   case s2x2:
+      map_ptr = mapb;
+      break;
+   case sdmd:
+      map_ptr = mapd;
+      break;
    }
 
    map_ptr += offset;
@@ -3561,9 +3689,9 @@ static void do_concept_checkerboard(
    update_id_bits(&a1);
    move(&a1, FALSE, &res1);
 
-   /* Look at the rotation coming out of the move.  If the setup is 1x4, we require it to be
-      even (checkerboard lockit not allowed).  Otherwise, allow any rotation.  This means
-      we allow diamonds that are oriented rather peculiarly! */
+   // Look at the rotation coming out of the move.  If the setup is 1x4, we require it to be
+   // even (checkerboard lockit not allowed).  Otherwise, allow any rotation.  This means
+   // we allow diamonds that are oriented rather peculiarly!
 
    if ((res1.rotation != 0) && res1.kind == s1x4)
       fail("'Checker' call went to 1x4 setup oriented wrong way.");
@@ -3574,17 +3702,17 @@ static void do_concept_checkerboard(
       fail("Don't recognize ending setup after 'checker' call.");
 
    switch (res1.kind) {
-      case s1x4:
-         map_ptr = mapl;
-         break;
-      case s2x2:
-         map_ptr = mapb;
-         break;
-      case sdmd:
-         map_ptr = mapd;
-         break;
-      default:
-         fail("Don't recognize ending setup after 'checker' call.");
+   case s1x4:
+      map_ptr = mapl;
+      break;
+   case s2x2:
+      map_ptr = mapb;
+      break;
+   case sdmd:
+      map_ptr = mapd;
+      break;
+   default:
+      fail("Don't recognize ending setup after 'checker' call.");
    }
 
    map_ptr += offset;
@@ -3599,7 +3727,7 @@ static void do_concept_checkerboard(
 }
 
 
-Private void do_concept_checkpoint(
+static void do_concept_checkpoint(
    setup *ss,
    parse_block *parseptr,
    setup *result)
@@ -3627,36 +3755,52 @@ Private void do_concept_checkpoint(
          on the call. */
 
    if (reverseness)
-      concentric_move(ss, &ss->cmd, &subsid_cmd, schema_rev_checkpoint, 0, 0, TRUE, result);
+      concentric_move(ss, &ss->cmd, &subsid_cmd, schema_rev_checkpoint,
+                      0, 0, TRUE, ~0UL, result);
    else
-      concentric_move(ss, &subsid_cmd, &ss->cmd, schema_checkpoint, 0, DFM1_CONC_FORCE_OTHERWAY, TRUE, result);
+      concentric_move(ss, &subsid_cmd, &ss->cmd, schema_checkpoint,
+                      0, DFM1_CONC_FORCE_OTHERWAY, TRUE, ~0UL, result);
 }
 
 
 
-typedef struct {
-   fraction_info fracs;
-   int repetitions;
-} repetitionrec;
-
-
-
-static long_boolean do_call_under_repetition(repetitionrec *yyy, setup *ss, setup *result) THROW_DECL
+static long_boolean do_call_under_repetition(
+   fraction_info *yyy,
+   int & fetch_number,
+   setup *ss,
+   setup *result) THROW_DECL
 {
    uint32 save_elongation = result->cmd.prior_elongation_bits;   /* Save it temporarily. */
    uint32 save_expire = result->cmd.prior_expire_bits;           /* Save it temporarily. */
 
-   if (yyy->fracs.subcall_index*yyy->fracs.subcall_incr >= yyy->fracs.highlimit)
-      return TRUE;
+   if (yyy->reverse_order) {
+      if (yyy->fetch_index < 0) return TRUE;
+   }
+   else {
+      if (yyy->fetch_index >= yyy->fetch_total) return TRUE;
+   }
 
-   if (yyy->fracs.subcall_index >= yyy->repetitions)
-      fail("The indicated part number doesn't exist.");
+   yyy->demand_this_part_exists();
 
    result->cmd = ss->cmd;      /* The call we wish to execute. */
 
-   if (yyy->fracs.do_half_of_last_part != 0 &&
-       yyy->fracs.subcall_index+1 == yyy->fracs.highlimit)
-      result->cmd.cmd_frac_flags = yyy->fracs.do_half_of_last_part;
+   result->cmd.prior_elongation_bits = save_elongation;
+   result->cmd.prior_expire_bits = save_expire;
+   if (!(result->result_flags & RESULTFLAG__NO_REEVALUATE))
+      update_id_bits(result);
+
+   /* We don't supply these; they get filled in by the call. */
+   result->cmd.cmd_misc_flags &= ~DFM1_CONCENTRICITY_FLAG_MASK;
+   if (!yyy->first_call) {
+      result->cmd.cmd_misc_flags |= CMD_MISC__NO_CHK_ELONG;
+      result->cmd.cmd_assume.assumption = cr_none;
+   }
+
+   // Move this stuff out, after the increment.
+
+   if (yyy->do_half_of_last_part != 0 &&
+       yyy->fetch_index+1 == yyy->highlimit)
+      result->cmd.cmd_frac_flags = yyy->do_half_of_last_part;
    else if (result->cmd.restrained_fraction) {
       result->cmd.cmd_frac_flags = result->cmd.restrained_fraction;
       result->cmd.restrained_fraction = 0;
@@ -3664,17 +3808,7 @@ static long_boolean do_call_under_repetition(repetitionrec *yyy, setup *ss, setu
    else
       result->cmd.cmd_frac_flags = CMD_FRAC_NULL_VALUE;  /* No fractions to constituent call. */
 
-   /* We don't supply these; they get filled in by the call. */
-   result->cmd.cmd_misc_flags &= ~DFM1_CONCENTRICITY_FLAG_MASK;
-   if (!yyy->fracs.first_call) {
-      result->cmd.cmd_misc_flags |= CMD_MISC__NO_CHK_ELONG;
-      result->cmd.cmd_assume.assumption = cr_none;
-   }
-
-   result->cmd.prior_elongation_bits = save_elongation;
-   result->cmd.prior_expire_bits = save_expire;
-   if (!(result->result_flags & RESULTFLAG__NO_REEVALUATE))
-      update_id_bits(result);
+   fetch_number = yyy->fetch_index;
    return FALSE;
 }
 
@@ -3690,51 +3824,41 @@ static void do_concept_sequential(
    parse_block *parseptr,
    setup *result) THROW_DECL
 {
-   repetitionrec yyy;
-   int instant_stop;
+   fraction_info zzz(2);
 
    if (ss->cmd.cmd_frac_flags != CMD_FRAC_NULL_VALUE) {
-      (void) get_fraction_info(ss->cmd.cmd_frac_flags,
-                               3*CFLAG1_VISIBLE_FRACTION_BIT,
-                               2, FALSE, &yyy.fracs);
-      if (yyy.fracs.reverse_order) yyy.fracs.highlimit = 1-yyy.fracs.highlimit;
-      instant_stop = yyy.fracs.instant_stop;
-   }
-   else {     /* No fractions. */
-      yyy.fracs.reverse_order = FALSE;
-      instant_stop = 99;
-      yyy.fracs.do_half_of_last_part = 0;
-      yyy.fracs.do_last_half_of_first_part = 0;
-      yyy.fracs.highlimit = 2;
-      yyy.fracs.subcall_index = 0;
-      yyy.fracs.subcall_incr = 1;
+      zzz.get_fraction_info(ss->cmd.cmd_frac_flags,
+                            3*CFLAG1_VISIBLE_FRACTION_BIT,
+                            weirdness_off);
    }
 
-   yyy.repetitions = 2;
-   yyy.fracs.first_call = yyy.fracs.reverse_order ? FALSE : TRUE;
+   zzz.first_call = zzz.reverse_order ? FALSE : TRUE;
 
    prepare_for_call_in_series(result, ss);
 
    for (;;) {
-      if (do_call_under_repetition(&yyy, ss, result)) break;
+      int fetch_number;
 
-      if (yyy.fracs.subcall_index != 0) result->cmd.parseptr = parseptr->subsidiary_root;
+      if (do_call_under_repetition(&zzz, fetch_number, ss, result)) break;
+      if (zzz.not_yet_in_active_section()) goto go_to_next_cycle;
+      if (zzz.ran_off_active_section()) break;
+
+      // The fetch number is 0 or 1.  Depending on which it is, get the proper parse pointer.
+      if (fetch_number != 0) result->cmd.parseptr = parseptr->subsidiary_root;
+
       do_call_in_series_simple(result);
-      yyy.fracs.subcall_index += yyy.fracs.subcall_incr;
-      yyy.fracs.first_call = FALSE;
+      zzz.first_call = FALSE;
 
-      /* If we are being asked to do just one part of a call (from cmd_frac_flags),
-         exit now.  Also, see if we just did the last part. */
+      // If we are being asked to do just one part of a call,
+      // exit now.  Also, fill in bits in result->result_flags.
 
-      if (instant_stop != 99) {
-         /* Check whether we honored the last possible request.  That is,
-            whether we did the last part of the call in forward order, or
-            the first part in reverse order. */
-         result->result_flags |= RESULTFLAG__PARTS_ARE_KNOWN;
-         if (instant_stop >= yyy.fracs.highlimit)
-            result->result_flags |= RESULTFLAG__DID_LAST_PART;
-         break;
-      }
+      if (zzz.query_instant_stop(result->result_flags)) break;
+
+   go_to_next_cycle:
+
+      // Increment for next cycle.
+      zzz.fetch_index += zzz.subcall_incr;
+      zzz.client_index += zzz.subcall_incr;
    }
 }
 
@@ -3825,8 +3949,9 @@ static void do_concept_twice(
       arg1 = 0 :  number of repetitions is hardwired and is in arg2.
       arg1 = 1 :  number of repetitions was specified by user. */
 
-   repetitionrec yyy;
-   int instant_stop;
+   fraction_info zzz((parseptr->concept->value.arg1) ?
+                     parseptr->options.number_fields :
+                     parseptr->concept->value.arg2);
    setup offline_split_info;
 
    /* We do not accumulate the splitting information as the calls progress.
@@ -3835,59 +3960,50 @@ static void do_concept_twice(
 
    prepare_for_call_in_series(&offline_split_info, ss);
 
-   if (parseptr->concept->value.arg1)
-      yyy.repetitions = parseptr->options.number_fields;
-   else
-      yyy.repetitions = parseptr->concept->value.arg2;
-
    /* If fractions come in but the craziness is restrained, just pass the fractions on.
       This is what makes "random twice mix" work.  The "random" concept wants to reach through
       the "twice" concept and do the numbered parts of the mix, not the numbered parts of the
       twiceness.  But if the craziness is unrestrained, which is the usual case, we act on
       the fractions.  This makes "interlace twice this with twice that" work. */
 
-   (void) get_fraction_info(ss->cmd.cmd_frac_flags,
-                     3*CFLAG1_VISIBLE_FRACTION_BIT,
-                     yyy.repetitions,
-                     FALSE,
-                     &yyy.fracs);
+   zzz.get_fraction_info(ss->cmd.cmd_frac_flags,
+                         3*CFLAG1_VISIBLE_FRACTION_BIT,
+                         weirdness_off);
 
-   if (yyy.fracs.reverse_order) yyy.fracs.highlimit = yyy.repetitions-yyy.fracs.highlimit-1;
-   instant_stop = yyy.fracs.instant_stop;
-
-   yyy.fracs.first_call = yyy.fracs.reverse_order ? FALSE : TRUE;
+   zzz.first_call = zzz.reverse_order ? FALSE : TRUE;
 
    *result = *ss;
    result->result_flags = 0;
 
    for (;;) {
-      if (do_call_under_repetition(&yyy, ss, result)) break;
+      int fetch_number;
 
-      /* Do *NOT* try to maintain consistent splitting across repetitions when doing "twice". */
+      if (do_call_under_repetition(&zzz, fetch_number, ss, result)) break;
+      if (zzz.not_yet_in_active_section()) goto go_to_next_cycle;
+      if (zzz.ran_off_active_section()) break;
+
+      // Do *NOT* try to maintain consistent splitting across repetitions when doing "twice".
       result->result_flags |= RESULTFLAG__SPLIT_AXIS_FIELDMASK;
 
-      /* We do *not* remember the yoyo/twisted expiration stuff. */
+      // We do *not* remember the yoyo/twisted expiration stuff.
       result->result_flags &= ~RESULTFLAG__EXPIRATION_BITS;
 
       do_call_in_series_simple(result);
 
-      /* Record the minimum in each direction. */
+      // Record the minimum in each direction.
       minimize_splitting_info(&offline_split_info, result->result_flags);
-      yyy.fracs.subcall_index += yyy.fracs.subcall_incr;
-      yyy.fracs.first_call = FALSE;
+      zzz.first_call = FALSE;
 
-      /* If we are being asked to do just one part of a call (from cmd_frac_flags),
-         exit now.  Also, see if we just did the last part. */
+      // If we are being asked to do just one part of a call,
+      // exit now.  Also, fill in bits in result->result_flags.
 
-      if (instant_stop != 99) {
-         /* Check whether we honored the last possible request.  That is,
-            whether we did the last part of the call in forward order, or
-            the first part in reverse order. */
-         result->result_flags |= RESULTFLAG__PARTS_ARE_KNOWN;
-         if (instant_stop >= yyy.fracs.highlimit)
-            result->result_flags |= RESULTFLAG__DID_LAST_PART;
-         break;
-      }
+      if (zzz.query_instant_stop(result->result_flags)) break;
+
+   go_to_next_cycle:
+
+      // Increment for next cycle.
+      zzz.fetch_index += zzz.subcall_incr;
+      zzz.client_index += zzz.subcall_incr;
    }
 
    result->result_flags &= ~RESULTFLAG__SPLIT_AXIS_FIELDMASK;
@@ -3904,11 +4020,11 @@ static void do_concept_trace(
    uint32 finalresultflags;
    setup a[4], res[4];
    setup outer_inners[2];
-   Const veryshort *tracearray;
+   const veryshort *tracearray;
 
-   static Const veryshort tracearray1[16] =
+   static const veryshort tracearray1[16] =
    {-1, -1, 7, 6, -1, -1, 4, 5, 3, 2, -1, -1, 0, 1, -1, -1};
-   static Const veryshort tracearray2[16] =
+   static const veryshort tracearray2[16] =
    {0, 1, -1, -1, 6, 7, -1, -1, -1, -1, 4, 5, -1, -1, 2, 3};
 
    if (ss->kind != s_qtag) fail("Must have a 1/4-tag-like setup for trace.");
@@ -4055,7 +4171,8 @@ static void do_concept_trace(
       }
    }
 
-   normalize_concentric(schema_concentric, 1, outer_inners, ((~outer_inners[0].rotation) & 1) + 1, result);
+   normalize_concentric(schema_concentric, 1, outer_inners,
+                        ((~outer_inners[0].rotation) & 1) + 1, 0, result);
    result->result_flags = finalresultflags;
    reinstate_rotation(ss, result);
 }
@@ -4068,8 +4185,8 @@ static void do_concept_outeracting(
 {
    setup temp;
 
-   static Const veryshort mapo1[8] = {7, 0, 2, 5, 3, 4, 6, 1};
-   static Const veryshort mapo2[8] = {7, 0, 1, 6, 3, 4, 5, 2};
+   static const veryshort mapo1[8] = {7, 0, 2, 5, 3, 4, 6, 1};
+   static const veryshort mapo2[8] = {7, 0, 1, 6, 3, 4, 5, 2};
 
    temp = *ss;
    temp.kind = s2x4;
@@ -4111,8 +4228,9 @@ static void do_concept_inner_outer(
    int i;
    calldef_schema sch;
    int rot = 0;
+   int arg1 = parseptr->concept->value.arg1;
 
-   switch (parseptr->concept->value.arg1 & 0x70) {
+   switch (arg1 & 0x70) {
    case 0:      /* triple CLW */
    case 0x20:   /* triple twin CLW */
    case 0x30:   /* triple twin CLW of 3 */
@@ -4126,55 +4244,47 @@ static void do_concept_inner_outer(
       break;
    }
 
-   switch (parseptr->concept->value.arg1) {
+   switch (arg1) {
    case 0: case 1: case 3:
-      /* Center triple line/wave/column. */
+      // Center triple line/wave/column.
       switch (ss->kind) {
       case s3x4: case s1x12:
          if ((global_tbonetest & 011) == 011) fail("Can't do this from T-bone setup.");
 
-         if (!((parseptr->concept->value.arg1 ^ global_tbonetest) & 1)) {
+         if (!((arg1 ^ global_tbonetest) & 1)) {
             if (global_tbonetest & 1) fail("There are no triple lines here.");
             else                      fail("There are no triple columns here.");
          }
          goto ready;
       case sbigh: case sbigx: case sbigdmd: case sbigbone:
-         switch (parseptr->concept->value.arg1 & 7) {
-         case 0: ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_COLS; break;
-         case 1: ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_LINES; break;
-         }
-         goto ready;
+         goto verify_clw;
       }
 
       fail("Need a triple line/column setup for this.");
    case 8+0: case 8+1: case 8+3:
-      /* Outside triple lines/waves/columns. */
+      // Outside triple lines/waves/columns.
       switch (ss->kind) {
       case s3x4: case s1x12:
          if ((global_tbonetest & 011) == 011) fail("Can't do this from T-bone setup.");
 
-         if (!((parseptr->concept->value.arg1 ^ global_tbonetest) & 1)) {
+         if (!((arg1 ^ global_tbonetest) & 1)) {
             if (global_tbonetest & 1) fail("There are no triple lines here.");
             else                      fail("There are no triple columns here.");
          }
          goto ready;
       case sbigh: case sbigx: case sbigrig:
-         switch (parseptr->concept->value.arg1 & 7) {
-         case 0: ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_COLS; break;
-         case 1: ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_LINES; break;
-         }
-         goto ready;
+         goto verify_clw;
       }
 
       fail("Need a triple line/column setup for this.");
    case 32+0: case 32+1: case 32+3:
    case 32+8+0: case 32+8+1: case 32+8+3:
-      /* Center/outside triple twin lines/waves/columns. */
+      // Center/outside triple twin lines/waves/columns.
       if (ss->kind != s4x6) fail("Need a 4x6 setup for this.");
 
       if ((global_tbonetest & 011) == 011) fail("Can't do this from T-bone setup.");
 
-      if ((parseptr->concept->value.arg1 ^ global_tbonetest) & 1) {
+      if ((arg1 ^ global_tbonetest) & 1) {
          if (global_tbonetest & 1) fail("There are no triple twin lines here.");
          else                      fail("There are no triple twin columns here.");
       }
@@ -4182,12 +4292,12 @@ static void do_concept_inner_outer(
       goto ready;
    case 48+0: case 48+1: case 48+3:
    case 48+8+0: case 48+8+1: case 48+8+3:
-      /* Center/outside triple twin lines/waves/columns of 3. */
+      // Center/outside triple twin lines/waves/columns of 3.
       if (ss->kind != s3x6) fail("Need a 4x6 setup for this.");
 
       if ((global_tbonetest & 011) == 011) fail("Can't do this from T-bone setup.");
 
-      if ((parseptr->concept->value.arg1 ^ global_tbonetest) & 1) {
+      if ((arg1 ^ global_tbonetest) & 1) {
          if (global_tbonetest & 1) fail("There are no triple twin lines of 3 here.");
          else                      fail("There are no triple twin columns of 3here.");
       }
@@ -4195,29 +4305,28 @@ static void do_concept_inner_outer(
       goto ready;
    case 16+0: case 16+1: case 16+3:
    case 16+8+0: case 16+8+1: case 16+8+3:
-      /* Center or outside phantom lines/waves/columns. */
+      // Center or outside phantom lines/waves/columns.
 
       if (ss->kind == s4x4) {
          uint32 tbone = global_tbonetest;
-         /* If everyone is consistent (or "standard" was used to make it appear so),
-            it's easy. */
+         // If everyone is consistent (or "standard" was used
+         // to make it appear so), it's easy.
          if ((tbone & 011) == 011) {
-            /* If not, we need to look carefully. */
-
+            // If not, we need to look carefully.
             tbone =
                ss->people[1].id1 | ss->people[2].id1 |
                ss->people[5].id1 | ss->people[6].id1 |
                ss->people[9].id1 | ss->people[10].id1 |
                ss->people[13].id1 | ss->people[14].id1;
 
-            if (parseptr->concept->value.arg1 & 8) {
-               /* This is outside phantom C/L/W. */
+            if (arg1 & 8) {
+               // This is outside phantom C/L/W.
                tbone |=
                   ss->people[0].id1 | ss->people[4].id1 |
                   ss->people[8].id1 | ss->people[12].id1;
             }
             else {
-               /* This is center phantom C/L/W. */
+               // This is center phantom C/L/W.
                tbone |=
                   ss->people[3].id1 | ss->people[7].id1 |
                   ss->people[11].id1 | ss->people[15].id1;
@@ -4225,19 +4334,16 @@ static void do_concept_inner_outer(
             if ((tbone & 011) == 011) fail("Can't do this from T-bone setup.");
          }
 
-         rot = (tbone ^ parseptr->concept->value.arg1 ^ 1) & 1;
+         rot = (tbone ^ arg1 ^ 1) & 1;
 
-         ss->rotation += rot;   /* Just flip the setup around and recanonicalize. */
+         ss->rotation += rot;   // Just flip the setup around and recanonicalize.
          canonicalize_rotation(ss);
       }
       else if (ss->kind == s1x16 || ss->kind == sbigbigh || ss->kind == sbigbigx) {
          /* Shouldn't we do this for 4x4 also?  It seems that one ought to say
             "standard in outside phantom 1x4's" rather than "... in lines"
             if they are T-boned.  There is something in t34t that would break, however. */
-         switch (parseptr->concept->value.arg1 & 7) {
-         case 0: ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_COLS; break;
-         case 1: ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_LINES; break;
-         }
+         goto verify_clw;
       }
       else
          fail("Need quadruple 1x4's for this.");
@@ -4245,33 +4351,27 @@ static void do_concept_inner_outer(
       break;
    case 64+0: case 64+1:
    case 64+8+0: case 64+8+1:
-      /* Center or outside phantom lines/columns (no wave). */
-
-      if (ss->kind == s3x4 || ss->kind == s_d3x4 || ss->kind == s3dmd) {
-         switch (parseptr->concept->value.arg1 & 7) {
-         case 0: ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_COLS; break;
-         case 1: ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_LINES; break;
-         }
-      }
+      // Center or outside phantom lines/columns (no wave).
+      if (ss->kind == s3x4 || ss->kind == s_d3x4 || ss->kind == s3dmd)
+         goto verify_clw;
       else
          fail("Need quadruple 1x3's for this.");
-
       break;
    case 4:
-      /* Center triple box. */
+      // Center triple box.
       switch (ss->kind) {
       case s2x6: case sbigrig:
          goto ready;
       case s4x4:
          if (ss->people[1].id1 | ss->people[2].id1 | ss->people[9].id1 | ss->people[10].id1) {
-            /* The outer lines/columns are to the left and right.  That's not canonical.
-               We want them at top and bottom.  So we flip the setup. */
+            // The outer lines/columns are to the left and right.  That's not canonical.
+            // We want them at top and bottom.  So we flip the setup.
             rot = 1;
             ss->rotation++;
             canonicalize_rotation(ss);
          }
 
-         /* Now the people had better be clear from the side centers. */
+         // Now the people had better be clear from the side centers.
 
          if (!(ss->people[1].id1 | ss->people[2].id1 | ss->people[9].id1 | ss->people[10].id1))
             goto ready;
@@ -4279,7 +4379,7 @@ static void do_concept_inner_outer(
 
       fail("Need center triple box for this.");
    case 8+4:
-      /* Outside triple boxes. */
+      // Outside triple boxes.
       switch (ss->kind) {
       case s2x6: case sbigbone: case sbigdmd:
       case sbighrgl: case sbigdhrgl:
@@ -4289,11 +4389,11 @@ static void do_concept_inner_outer(
       fail("Need outer triple boxes for this.");
    case 16+4:
    case 16+8+4:
-      /* Center or outside quadruple boxes. */
+      // Center or outside quadruple boxes.
       if (ss->kind != s2x8) fail("Need a 2x8 setup for this.");
       goto ready;
    case 5:
-      /* Center triple diamond. */
+      // Center triple diamond.
       switch (ss->kind) {
       case s3dmd: case s3ptpd: case s_3mdmd: case s_3mptpd: case s3x1dmd: case s1x3dmd:
       case s_hrglass: case s_dhrglass: case sbighrgl: case sbigdhrgl:
@@ -4302,7 +4402,7 @@ static void do_concept_inner_outer(
 
       fail("Need center triple diamond for this.");
    case 8+5:
-      /* Outside triple diamonds. */
+      // Outside triple diamonds.
       switch (ss->kind) {
       case s3dmd: case s3ptpd: case s_3mdmd: case s_3mptpd: case s3x1dmd: case s1x3dmd:
          goto ready;
@@ -4311,7 +4411,7 @@ static void do_concept_inner_outer(
       fail("Need outer triple diamonds for this.");
    case 16+5:
    case 16+8+5:
-      /* Center or outside quadruple diamonds. */
+      // Center or outside quadruple diamonds.
       if (ss->kind != s4dmd &&
           ss->kind != s4ptpd &&
           ss->kind != s_4mptpd &&
@@ -4320,7 +4420,7 @@ static void do_concept_inner_outer(
       break;
    case 6:
    case 8+6:
-      /* Center/outside triple Z's. */
+      // Center/outside triple Z's.
 
       sch = schema_in_out_triple_zcom;
 
@@ -4335,7 +4435,7 @@ static void do_concept_inner_outer(
             /* Of course, this is kind of stupid.  Why would you say "outer
                triple Z's" if the outer Z's weren't recognizeable, and you
                simply wanted them to be imputed from the center Z? */
-            if (parseptr->concept->value.arg1 & 8)
+            if (arg1 & 8)
                warn(warn_same_z_shear);  /* Outer Z's are ambiguous --
                                             make them look like inner ones. */
          }
@@ -4349,7 +4449,7 @@ static void do_concept_inner_outer(
                goto do_real_z_stuff;
             }
             else if ((livemask & 0420420) == 0) {
-               misc2_zflag = CMD_MISC2__IN_AZ_CW;   /* Z's are anisotropic. */
+               misc2_zflag = CMD_MISC2__IN_AZ_CW;   // Z's are anisotropic.
                goto do_real_z_stuff;
             }
 
@@ -4360,7 +4460,7 @@ static void do_concept_inner_outer(
                goto do_real_z_stuff;
             }
             else if ((livemask & 0210210) == 0) {
-               misc2_zflag = CMD_MISC2__IN_AZ_CCW;   /* Z's are anisotropic. */
+               misc2_zflag = CMD_MISC2__IN_AZ_CCW;   // Z's are anisotropic.
                goto do_real_z_stuff;
             }
 
@@ -4368,7 +4468,7 @@ static void do_concept_inner_outer(
          }
          break;
       case s2x5:
-         if (parseptr->concept->value.arg1 & 8) break;
+         if (arg1 & 8) break;
          switch (livemask) {
          case 0x2F7:
             misc2_zflag = CMD_MISC2__IN_Z_CW;
@@ -4379,7 +4479,7 @@ static void do_concept_inner_outer(
          }
          break;
       case sd2x5:
-         if (parseptr->concept->value.arg1 & 8) break;
+         if (arg1 & 8) break;
          switch (livemask) {
          case 0x3DE:
             misc2_zflag = CMD_MISC2__IN_Z_CW;
@@ -4395,16 +4495,24 @@ static void do_concept_inner_outer(
 
  ready:
 
-   if ((parseptr->concept->value.arg1 & 7) == 3)
+   if ((arg1 & 7) == 3)
       ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
 
-   if (parseptr->concept->value.arg1 & 8)
-      concentric_move(ss, &ss->cmd, (setup_command *) 0, sch, 0, 0, TRUE, result);
+   if (arg1 & 8)
+      concentric_move(ss, &ss->cmd, (setup_command *) 0, sch, 0, 0, TRUE, ~0UL, result);
    else
-      concentric_move(ss, (setup_command *) 0, &ss->cmd, sch, 0, 0, TRUE, result);
+      concentric_move(ss, (setup_command *) 0, &ss->cmd, sch, 0, 0, TRUE, ~0UL, result);
 
-   result->rotation -= rot;   /* Flip the setup back. */
+   result->rotation -= rot;   // Flip the setup back.
    return;
+
+ verify_clw:
+
+   switch (arg1 & 7) {
+   case 0: ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_COLS; break;
+   case 1: ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_LINES; break;
+   }
+   goto ready;
 
  do_real_z_stuff:
 
@@ -4548,6 +4656,18 @@ static void do_concept_triple_boxes(
 }
 
 
+
+static void do_concept_centers_and_ends(
+   setup *ss,
+   parse_block *parseptr,
+   setup *result) THROW_DECL
+{
+   selective_move(ss, parseptr, selective_key_plain, 1, 0, 0,
+                  (selector_kind) parseptr->concept->value.arg1,
+                  parseptr->concept->value.arg2, result);
+}
+
+
 static void do_concept_centers_or_ends(
    setup *ss,
    parse_block *parseptr,
@@ -4559,15 +4679,52 @@ static void do_concept_centers_or_ends(
 }
 
 
-
-static void do_concept_centers_and_ends(
+static void do_concept_mini_but_o(
    setup *ss,
    parse_block *parseptr,
    setup *result) THROW_DECL
 {
-   selective_move(ss, parseptr, selective_key_plain, 1, 0, 0,
-                  (selector_kind) parseptr->concept->value.arg1,
-                  parseptr->concept->value.arg2, result);
+   int rot = 0;
+   uint32 is_an_o = parseptr->concept->value.arg1;
+   uint32 mask = 0;
+
+   switch (ss->kind) {
+   case s_galaxy:
+      if (is_an_o) {
+         rot = ss->people[1].id1 | ss->people[3].id1 |
+            ss->people[5].id1 | ss->people[7].id1;
+
+         if ((rot & 011) == 011) fail("mini-O is ambiguous.");
+         rot &= 1;
+         ss->rotation += rot;
+         canonicalize_rotation(ss);
+         mask = 0xBB;
+      }
+
+      break;
+   case s_hrglass:
+      if (!is_an_o) mask = 0xBB;
+      break;
+   case s_ptpd:
+      if (!is_an_o) mask = 0xEE;
+      break;
+   case s_rigger:
+      if (is_an_o) mask = 0xBB;
+      break;
+   case s3x4:
+      if (is_an_o) mask = 02626;
+      break;
+   }
+
+   if (mask == 0) fail("Can't do this concept in this setup.");
+
+   // Adding 2 to the lookup key makes it check for columns.
+   selective_move(ss, parseptr, selective_key_mini_but_o, 0,
+                  is_an_o ? LOOKUP_MINI_O+2 : LOOKUP_MINI_B+2,
+                  mask, selector_none, FALSE, result);
+
+   result->rotation -= rot;   // Flip the setup back.
+   return;
 }
 
 
@@ -4641,43 +4798,58 @@ static void do_concept_ferris(
    parse_block *parseptr,
    setup *result) THROW_DECL
 {
-   setup temp;
-
-   temp = *ss;
-   temp.kind = s3x4;
-   clear_people(&temp);
+   const veryshort *map_ptr;
 
    if (parseptr->concept->value.arg1) {
       // This is "release".
+
+      static const veryshort mapr1[8] = {10, 2, 3, 5, 4,  8, 9, 11};
+      static const veryshort mapr2[8] = {1,  4, 6, 5, 7, 10, 0, 11};
+      static const veryshort mapr3[8] = {1, 10, 0, 5, 7,  4, 6, 11};
+      static const veryshort mapr4[8] = {4,  2, 9, 5,10,  8, 3, 11};
+
       if ((ss->kind != s_qtag) || ((global_tbonetest & 1) != 0))
          fail("Must have quarter-tag to do this concept.");
 
-      uint32 whatcanitbe = 0;
+      uint32 whatcanitbe = ~0;
       uint32 t;
 
-      if ((t = ss->people[1].id1) && ((t ^ d_south) & d_mask)) whatcanitbe |= 1;
-      if ((t = ss->people[5].id1) && ((t ^ d_north) & d_mask)) whatcanitbe |= 1;
-      if ((t = ss->people[2].id1) && ((t ^ d_south) & d_mask)) whatcanitbe |= 1;
-      if ((t = ss->people[6].id1) && ((t ^ d_north) & d_mask)) whatcanitbe |= 1;
-
-      if ((t = ss->people[0].id1) && ((t ^ d_south) & d_mask)) whatcanitbe |= 2;
-      if ((t = ss->people[4].id1) && ((t ^ d_north) & d_mask)) whatcanitbe |= 2;
-      if ((t = ss->people[2].id1) && ((t ^ d_north) & d_mask)) whatcanitbe |= 2;
-      if ((t = ss->people[6].id1) && ((t ^ d_south) & d_mask)) whatcanitbe |= 2;
-
-      if (whatcanitbe == 2) {
-         static const veryshort mapr1[8] = {1, 4, 6, 5, 7, 10, 0, 11};
-         scatter(&temp, ss, mapr1, 7, 0);
+      if (ss->cmd.cmd_final_flags.her8it & INHERITFLAG_MAGIC) {
+         if ((t = ss->people[0].id1) && ((t ^ d_south) & d_mask)) whatcanitbe &= 0x4;
+         if ((t = ss->people[4].id1) && ((t ^ d_north) & d_mask)) whatcanitbe &= 0x4;
+         if ((t = ss->people[2].id1) && ((t ^ d_south) & d_mask)) whatcanitbe &= 0x4;
+         if ((t = ss->people[6].id1) && ((t ^ d_north) & d_mask)) whatcanitbe &= 0x4;
+         if ((t = ss->people[1].id1) && ((t ^ d_south) & d_mask)) whatcanitbe &= 0x8;
+         if ((t = ss->people[5].id1) && ((t ^ d_north) & d_mask)) whatcanitbe &= 0x8;
+         if ((t = ss->people[2].id1) && ((t ^ d_north) & d_mask)) whatcanitbe &= 0x8;
+         if ((t = ss->people[6].id1) && ((t ^ d_south) & d_mask)) whatcanitbe &= 0x8;
       }
-      else if (whatcanitbe == 1) {
-         static const veryshort mapr2[8] = {10, 2, 3, 5, 4, 8, 9, 11};
-         scatter(&temp, ss, mapr2, 7, 0);
+      else {
+         if ((t = ss->people[1].id1) && ((t ^ d_south) & d_mask)) whatcanitbe &= 0x1;
+         if ((t = ss->people[5].id1) && ((t ^ d_north) & d_mask)) whatcanitbe &= 0x1;
+         if ((t = ss->people[2].id1) && ((t ^ d_south) & d_mask)) whatcanitbe &= 0x1;
+         if ((t = ss->people[6].id1) && ((t ^ d_north) & d_mask)) whatcanitbe &= 0x1;
+         if ((t = ss->people[0].id1) && ((t ^ d_south) & d_mask)) whatcanitbe &= 0x2;
+         if ((t = ss->people[4].id1) && ((t ^ d_north) & d_mask)) whatcanitbe &= 0x2;
+         if ((t = ss->people[2].id1) && ((t ^ d_north) & d_mask)) whatcanitbe &= 0x2;
+         if ((t = ss->people[6].id1) && ((t ^ d_south) & d_mask)) whatcanitbe &= 0x2;
       }
-      else
-         fail("Incorrect facing directions.");
+
+      switch (whatcanitbe) {
+      case 0x1: map_ptr = mapr1; break;
+      case 0x2: map_ptr = mapr2; break;
+      case 0x4: map_ptr = mapr3; break;
+      case 0x8: map_ptr = mapr4; break;
+      default: fail("Incorrect facing directions.");
+      }
+
+      ss->cmd.cmd_final_flags.her8it &= ~INHERITFLAG_MAGIC;
    }
    else {
       // This is "ferris".
+
+      static const veryshort mapf1[8] = {0, 1, 5, 4, 6, 7, 11, 10};
+      static const veryshort mapf2[8] = {10, 11, 2, 3, 4, 5, 8, 9};
 
       if ((ss->kind != s2x4) || ((global_tbonetest & 1) != 0))
          fail("Must have lines to do this concept.");
@@ -4691,25 +4863,28 @@ static void do_concept_ferris(
       t.assump_live = 0;
       t.assump_negate = 0;
 
-      if (verify_restriction(ss, t, FALSE, &retvaljunk) == restriction_passes) {
-         static const veryshort mapf1[8] = {0, 1, 5, 4, 6, 7, 11, 10};
-         scatter(&temp, ss, mapf1, 7, 0);
-      }
+      if (verify_restriction(ss, t, FALSE, &retvaljunk) == restriction_passes)
+         map_ptr = mapf1;
       else {
          t.assump_both = 2;    // left 2FL
-         if (verify_restriction(ss, t, FALSE, &retvaljunk) == restriction_passes) {
-            static const veryshort mapf2[8] = {10, 11, 2, 3, 4, 5, 8, 9};
-            scatter(&temp, ss, mapf2, 7, 0);
-         }
-         else
+         if (!verify_restriction(ss, t, FALSE, &retvaljunk) == restriction_passes)
             fail("Incorrect facing directions.");
+         map_ptr = mapf2;
       }
    }
 
-   new_divided_setup_move(&temp, MAPCODE(s1x4,3,MPKIND__SPLIT,1), phantest_ok, TRUE, result);
+   setup temp = *ss;
+   ss->kind = s3x4;
+   clear_people(ss);
+   scatter(ss, &temp, map_ptr, 7, 0);
+
+   // Be sure there aren't any modifiers other than "magic release".
+   if (ss->cmd.cmd_final_flags.her8it | ss->cmd.cmd_final_flags.final)
+      fail("Illegal modifier before \"ferris\" or \"release\".");
+
+   new_divided_setup_move(ss, MAPCODE(s1x4,3,MPKIND__SPLIT,1), phantest_ok, TRUE, result);
 
    // Squash phantoms if they are properly placed.
-
    if (result->kind == s2x6) {
       if (!(result->people[0].id1 | result->people[5].id1 |
             result->people[6].id1 | result->people[11].id1)) {
@@ -4802,7 +4977,7 @@ static void do_concept_all_8(
    parse_block *parseptr,
    setup *result) THROW_DECL
 {
-   static Const veryshort expander[8] = {10, 13, 14, 1, 2, 5, 6, 9};
+   static const veryshort expander[8] = {10, 13, 14, 1, 2, 5, 6, 9};
 
    int key = parseptr->concept->value.arg1;
 
@@ -6156,10 +6331,10 @@ typedef struct {
 } map_finder;
 
 
-Private map_finder sc_2x4 = {s1x4, 1};
-Private map_finder sc_1x8 = {s1x4, 0};
-Private map_finder sc_qtg = {sdmd, 1};
-Private map_finder sc_ptp = {sdmd, 0};
+static map_finder sc_2x4 = {s1x4, 1};
+static map_finder sc_1x8 = {s1x4, 0};
+static map_finder sc_qtg = {sdmd, 1};
+static map_finder sc_ptp = {sdmd, 0};
 
 
 
@@ -6235,7 +6410,7 @@ static void do_concept_concentric(
             case s_ptpd: mf = &sc_ptp; break;
             case s1x4: case sdmd:
                concentric_move(ss, &ss->cmd, &ss->cmd,
-                     schema, 0, DFM1_CONC_CONCENTRIC_RULES, TRUE, result);
+                     schema, 0, DFM1_CONC_CONCENTRIC_RULES, TRUE, ~0UL, result);
                return;
             default:
                fail("Can't figure out how to do single concentric here.");
@@ -6246,7 +6421,8 @@ static void do_concept_concentric(
          break;
       default:
          concentric_move(ss, &ss->cmd, &ss->cmd,
-               schema, 0, DFM1_CONC_CONCENTRIC_RULES, TRUE, result);
+               schema, 0, DFM1_CONC_CONCENTRIC_RULES, TRUE, ~0UL, result);
+
          /* 8-person concentric operations do not show the split. */
          result->result_flags &= ~RESULTFLAG__SPLIT_AXIS_FIELDMASK;
          break;
@@ -6283,8 +6459,8 @@ static void do_concept_matrix(
    setup *result) THROW_DECL
 {
    ss->cmd.cmd_misc_flags |= CMD_MISC__MATRIX_CONCEPT;
-   /* The above flag will raise an error in all contexts except those few to which
-      this concept may be applied. */
+   // The above flag will raise an error in all contexts except
+   // those few to which this concept may be applied.
    move(ss, FALSE, result);
 }
 
@@ -6365,7 +6541,8 @@ extern long_boolean do_big_concept(
    this_is_ok: ;
    }
 
-   if ((ss->cmd.cmd_misc_flags & CMD_MISC__MATRIX_CONCEPT) && !(this_table_item->concept_prop & CONCPROP__PERMIT_MATRIX))
+   if ((ss->cmd.cmd_misc_flags & CMD_MISC__MATRIX_CONCEPT) &&
+       !(this_table_item->concept_prop & CONCPROP__PERMIT_MATRIX))
       fail("\"Matrix\" concept must be followed by applicable concept.");
 
    concept_func = this_table_item->concept_action;
@@ -6494,7 +6671,8 @@ extern long_boolean do_big_concept(
 
    if (!(ss->cmd.cmd_misc_flags & CMD_MISC__NO_EXPAND_MATRIX)) {
       uint32 prop_bits = this_table_item->concept_prop;
-      /* If the "arg2_matrix" bit is on, pick up additional matrix descriptor bits from the arg2 word. */
+      // If the "arg2_matrix" bit is on, pick up additional
+      // matrix descriptor bits from the arg2 word.
       if (prop_bits & CONCPROP__NEED_ARG2_MATRIX) prop_bits |= this_concept->value.arg2;
       do_matrix_expansion(ss, prop_bits, FALSE);
    }
@@ -6639,7 +6817,7 @@ concept_table_item concept_table[] = {
    {CONCPROP__NO_STEP | CONCPROP__GET_MASK | CONCPROP__PERMIT_MODIFIERS | CONCPROP__USE_SELECTOR,
     triangle_move},                                         /* concept_selbasedtrngl */
    {0, 0},                                                  /* concept_split */
-   {CONCPROP__NO_STEP | CONCPROP__SHOW_SPLIT | CONCPROP__PERMIT_MATRIX | CONCPROP__GET_MASK,
+   {CONCPROP__SHOW_SPLIT | CONCPROP__PERMIT_MATRIX | CONCPROP__GET_MASK,
     do_concept_do_each_1x4},                                /* concept_each_1x4 */
    {0, 0},                                                  /* concept_diamond */
    {0, 0},                                                  /* concept_triangle */
@@ -6696,9 +6874,9 @@ concept_table_item concept_table[] = {
     do_concept_quad_diamonds_tog},                          /* concept_quad_diamonds_together */
    {CONCPROP__NEED_ARG2_MATRIX | Nostep_phantom | CONCPROP__GET_MASK,
     do_concept_do_triangular_boxes},                        /* concept_triangular_boxes */
-   {CONCPROP__NEED_ARG2_MATRIX | CONCPROP__STANDARD | Nostep_phantom,
+   {CONCPROP__NEED_ARG2_MATRIX | CONCPROP__STANDARD | CONCPROP__PERMIT_MATRIX | Nostep_phantom,
     do_concept_inner_outer},                                /* concept_in_out_std */
-   {CONCPROP__NEED_ARG2_MATRIX | Nostep_phantom,
+   {CONCPROP__NEED_ARG2_MATRIX | CONCPROP__PERMIT_MATRIX | Nostep_phantom,
     do_concept_inner_outer},                                /* concept_in_out_nostd */
    /* concept_triple_diag */              {CONCPROP__NEEDK_BLOB | Nostep_phantom | CONCPROP__STANDARD,                             do_concept_triple_diag},
    /* concept_triple_diag_together */     {CONCPROP__NEEDK_BLOB | Nostep_phantom | CONCPROP__GET_MASK,                             do_concept_triple_diag_tog},
@@ -6754,14 +6932,15 @@ concept_table_item concept_table[] = {
    {CONCPROP__SECOND_CALL | CONCPROP__NO_STEP,
     do_concept_trace},                                      /* concept_trace */
    {CONCPROP__NO_STEP,
-    do_concept_outeracting},                                /* concept_outeracting */
-   {CONCPROP__NO_STEP | CONCPROP__GET_MASK,
-    do_concept_ferris},                                     /* concept_ferris */
-   {CONCPROP__NO_STEP, do_concept_overlapped_diamond},      /* concept_overlapped_diamond */
-   {0, do_concept_all_8},                                   /* concept_all_8 */
-   {CONCPROP__SECOND_CALL, do_concept_centers_and_ends},    /* concept_centers_and_ends */
+    do_concept_outeracting},                                // concept_outeracting
+   {CONCPROP__NO_STEP | CONCPROP__GET_MASK | CONCPROP__PERMIT_MODIFIERS,
+    do_concept_ferris},                                     // concept_ferris
+   {CONCPROP__NO_STEP, do_concept_overlapped_diamond},      // concept_overlapped_diamond
+   {0, do_concept_all_8},                                   // concept_all_8
+   {CONCPROP__SECOND_CALL, do_concept_centers_and_ends},    // concept_centers_and_ends
+   {0, do_concept_mini_but_o},                              // concept_mini_but_o
    {CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT,
-    do_concept_twice},                                      /* concept_twice */
+    do_concept_twice},                                      // concept_twice
    {CONCPROP__USE_NUMBER | CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT,
     do_concept_twice},                                      /* concept_n_times */
    {CONCPROP__SECOND_CALL | CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT,
@@ -6793,7 +6972,7 @@ concept_table_item concept_table[] = {
    {CONCPROP__NO_STEP, do_concept_rigger},                  /* concept_rigger */
    {CONCPROP__NO_STEP, common_spot_move},                   /* concept_common_spot */
    {CONCPROP__USE_SELECTOR | CONCPROP__SHOW_SPLIT,
-    drag_someone_and_move},                                       /* concept_drag */
+    drag_someone_and_move},                                 /* concept_drag */
    {CONCPROP__NO_STEP | CONCPROP__GET_MASK,
     do_concept_dblbent},                                    /* concept_dblbent */
    {0, 0},                                                  /* concept_supercall */

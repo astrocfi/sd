@@ -98,7 +98,7 @@ static Cstring title_string[] = {
    "Create Setup: ",
 };
 
-Private void display_reconcile_history(int current_depth, int n);
+static void display_reconcile_history(int current_depth, int n);
 
 
 
@@ -140,6 +140,7 @@ typedef enum {
    main_part_rlg,
    main_part_la,
    main_part_dixgnd,
+   main_part_minigrand,
    main_part_prom,
    main_part_revprom,
    main_part_sglprom,
@@ -154,6 +155,7 @@ static Cstring resolve_main_parts[] = {
    "right and left grand",
    "left allemande",
    "dixie grand, left allemande",
+   "mini-grand",
    "promenade",
    "reverse promenade",
    "single file promenade",
@@ -187,6 +189,7 @@ static resolve_descriptor resolve_table[] = {
    {1,  first_part_xby,   main_part_rlg},      /* resolve_xby_rlg */
    {1,  first_part_xby,   main_part_la},       /* resolve_xby_la */
    {1,  first_part_none,  main_part_dixgnd},   /* resolve_dixie_grand */
+   {3,  first_part_none,  main_part_minigrand},/* resolve_minigrand */
    {0,  first_part_none,  main_part_prom},     /* resolve_prom */
    {1,  first_part_none,  main_part_revprom},  /* resolve_revprom */
    {7,  first_part_none,  main_part_sglprom},  /* resolve_sglfileprom */
@@ -275,15 +278,15 @@ SDLIB_API void write_resolve_text(long_boolean doing_file)
 /* These variables are actually local to inner_search, but they are
    expected to be preserved across the throw, so they must be static. */
 
-Private int perm_indices[8];
-Private int attempt_count, little_count;
-Private int hashed_random_list[5];
-Private parse_block *inner_parse_mark, *outer_parse_mark;
-Private int history_insertion_point;    /* Where our resolve should lie in the history.
+static int perm_indices[8];
+static int attempt_count, little_count;
+static int hashed_random_list[5];
+static parse_block *inner_parse_mark, *outer_parse_mark;
+static int history_insertion_point;    /* Where our resolve should lie in the history.
                                           This is normally the end of the history, but
                                           may be earlier if doing a reconcile.  We clobber
                                           everything in the given history past this point. */
-Private int history_save;               /* Where we are inserting calls now.  This moves
+static int history_save;               /* Where we are inserting calls now.  This moves
                                           forward as we build multiple-call resolves. */
 
 
@@ -1094,7 +1097,7 @@ SDLIB_API uims_reply full_resolve(void)
    return reply;
 }
 
-Private void display_reconcile_history(int current_depth, int n)
+static void display_reconcile_history(int current_depth, int n)
 {
    int j;
 

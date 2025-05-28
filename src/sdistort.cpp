@@ -10,7 +10,7 @@
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-    This is for version 33. */
+    This is for version 34. */
 
 /* This defines the following functions:
    prepare_for_call_in_series
@@ -18,6 +18,7 @@
    initialize_map_tables
    remove_z_distortion
    remove_tgl_distortion
+   get_map_from_code
    new_divided_setup_move
    divided_setup_move
    new_overlapped_setup_move
@@ -67,23 +68,23 @@ extern void minimize_splitting_info(setup *ss, uint32 other_info)
 }
 
 
-/* Must be a power of 2. */
-#define NUM_MAP_HASH_BUCKETS 64
+// Must be a power of 2.
+static const uint32 NUM_MAP_HASH_BUCKETS = 128;
 
 static map_thing *map_hash_table2[NUM_MAP_HASH_BUCKETS];
 
 extern void initialize_map_tables(void)
 {
-   map_thing *tab2p;
-   int i;
-
-   for (i=0 ; i<NUM_MAP_HASH_BUCKETS ; i++)
+   for (unsigned int i=0 ; i<NUM_MAP_HASH_BUCKETS ; i++)
       map_hash_table2[i] = (map_thing *) 0;
 
-   for (tab2p = map_init_table2 ; tab2p->outer_kind != nothing ; tab2p++) {
+   for (map_thing *tab2p = map_init_table2 ; tab2p->outer_kind != nothing ; tab2p++) {
+      uint32 code = MAPCODE(tab2p->inner_kind,tab2p->arity,tab2p->map_kind,tab2p->vert);
+      tab2p->code = code;
       uint32 hash_num =
-         ((tab2p->code+(tab2p->code>>8) * ((unsigned int) 035761254233))) &
+         (((code+(code>>8)) * ((unsigned int) 035761254233)) >> 13) &
          (NUM_MAP_HASH_BUCKETS-1);
+
       tab2p->next = map_hash_table2[hash_num];
       map_hash_table2[hash_num] = tab2p;
    }
@@ -92,26 +93,20 @@ extern void initialize_map_tables(void)
 
 extern void remove_z_distortion(setup *ss) THROW_DECL
 {
-   if (!(ss->cmd.cmd_misc2_flags & CMD_MISC2__IN_Z_MASK))
-      return;
+   if (!(ss->cmd.cmd_misc2_flags & CMD_MISC2__IN_Z_MASK)) return;
 
-   setup stemp;
-   static const veryshort fix_cw[]  = {1, 2, 4, 5};
-   static const veryshort fix_ccw[] = {0, 1, 3, 4};
+   static const expand_thing fix_cw  = {{1, 2, 4, 5}, 4, s2x2, s2x3, 0};
+   static const expand_thing fix_ccw = {{0, 1, 3, 4}, 4, s2x2, s2x3, 0};
 
-   if (ss->kind != s2x3)
-      fail("Internal error: Can't straighten 'Z'.");
+   if (ss->kind != s2x3) fail("Internal error: Can't straighten 'Z'.");
 
-   stemp = *ss;
-   ss->kind = s2x2;
-   gather(ss, &stemp,
-          (ss->cmd.cmd_misc2_flags & (CMD_MISC2__IN_Z_CW|CMD_MISC2__IN_AZ_CW)) ?
-          fix_cw : fix_ccw,
-          3, 0);
+   const expand_thing *fixer =
+      (ss->cmd.cmd_misc2_flags & (CMD_MISC2__IN_Z_CW|CMD_MISC2__IN_AZ_CW)) ?
+      &fix_cw : &fix_ccw;
 
    ss->cmd.cmd_misc2_flags &= ~CMD_MISC2__IN_Z_MASK;
-   ss->cmd.cmd_misc2_flags |= CMD_MISC2__DID_Z_COMPRESSION;
-   canonicalize_rotation(ss);
+   ss->cmd.cmd_misc2_flags |= CMD_MISC2__DID_Z_COMPRESSBIT << (ss->rotation & 1);
+   compress_setup(fixer, ss);
    update_id_bits(ss);
 }
 
@@ -258,32 +253,23 @@ extern void remove_tgl_distortion(setup *ss) THROW_DECL
 }
 
 
-static Const map_thing *get_map_from_code(uint32 map_encoding)
+extern const map_thing *get_map_from_code(uint32 map_encoding)
 {
-   int mk = (map_encoding & 0x3F0) >> 4;
-   map_thing *q;
-
-   if (mk == MPKIND__SPLIT && !(map_encoding & 8)) {
-      int sk = (map_encoding & 0xFFFFFC00) >> 10;
-      if (sk <= s2x6)
-         return split_lists[sk][(map_encoding & 0xF)-2];
-   }
-
    uint32 hash_num =
-      ((map_encoding+(map_encoding>>8) * ((unsigned int) 035761254233))) &
+      (((map_encoding+(map_encoding>>8)) * ((unsigned int) 035761254233)) >> 13) &
       (NUM_MAP_HASH_BUCKETS-1);
 
-   for (q=map_hash_table2[hash_num] ; q ; q=q->next) {
+   for (map_thing *q=map_hash_table2[hash_num] ; q ; q=q->next) {
       if (q->code == map_encoding) return q;
    }
 
-   return (Const map_thing *) 0;
+   return (const map_thing *) 0;
 }
 
 
 static void innards(
    setup_command *sscmd,
-   Const map_thing *maps,
+   const map_thing *maps,
    long_boolean recompute_id,
    assumption_thing new_assume,
    long_boolean do_second_only,
@@ -293,12 +279,13 @@ static void innards(
    int i, j;
    uint32 main_rotation;
    uint32 rotstate;
-   Const map_thing *final_map = (map_thing *) 0;
-   Const veryshort *getptr;
+   const map_thing *final_map = (map_thing *) 0;
+   uint32 vrot;
+   const veryshort *getptr;
    setup z[8];
 
    uint32 rot = maps->rot;
-   int vert = maps->vert;
+   int vert = (maps->vert ^ rot) & 1;
    int arity = maps->arity;
    int insize = setup_attrs[maps->inner_kind].setup_limits+1;
    long_boolean nonisotropic_1x2 = FALSE;
@@ -306,6 +293,7 @@ static void innards(
    long_boolean no_reuse_map = FALSE;
    uint32 mysticflag = sscmd->cmd_misc2_flags;
    mpkind map_kind = maps->map_kind;
+   if (map_kind == MPKIND__NONISOTROP1) map_kind = MPKIND__SPLIT;
 
    clear_people(result);
    sscmd->cmd_misc2_flags &= ~(CMD_MISC2__MYSTIFY_SPLIT | CMD_MISC2__MYSTIFY_INVERT);
@@ -459,7 +447,7 @@ static void innards(
    result->result_flags = get_multiple_parallel_resultflags(z, arity);
 
    if (map_kind == MPKIND__LILZCOM) {
-      if (result->result_flags & RESULTFLAG__DID_Z_COMPRESSION) {
+      if (result->result_flags & RESULTFLAG__DID_Z_COMPRESSMASK) {
          /* **** Actually, should just forcibly reinstate the Z's,
             the same as is done in sdconc.c at about 1679. */
          if (sscmd->cmd_misc2_flags & CMD_MISC2__IN_Z_CW)
@@ -717,57 +705,63 @@ static void innards(
    }
 
    switch (map_kind) {
-      case MPKIND__O_SPOTS:
-         warn(warn__to_o_spots);
-         break;
-      case MPKIND__X_SPOTS:
-         warn(warn__to_x_spots);
-         break;
-      case MPKIND__STAG:
-         if (z[0].kind == s_qtag)
-            warn(warn__bigblockqtag_feet);
-         else
-            warn(warn__bigblock_feet);
-         break;
-      case MPKIND__DIAGQTAG:
-         warn(warn__diagqtag_feet);
-         break;
-      case MPKIND__INTLK:
-         if ((z[0].kind == s3x4 || z[0].kind == s_qtag) && z[0].rotation == 1 && arity == 2) {
-            map_kind = MPKIND__REMOVED;
-            warn(warn_interlocked_to_6);
-         }
-         break;
-      case MPKIND__SPLIT:
-         /* If we went from a 4-person setup to a 1x6, we are expanding due to collisions.
-            If no one is present at the potential collision spots in the inboard side, assume
-            that there was no collision there, and leave just one phantom instead of two. */
-         if (z[0].kind == s1x6 && z[0].rotation == 0 && arity == 2 &&
+   case MPKIND__O_SPOTS:
+      warn(warn__to_o_spots);
+      break;
+   case MPKIND__X_SPOTS:
+      warn(warn__to_x_spots);
+      break;
+   case MPKIND__STAG:
+      if (z[0].kind == s_qtag)
+         warn(warn__bigblockqtag_feet);
+      else
+         warn(warn__bigblock_feet);
+      break;
+   case MPKIND__DIAGQTAG:
+   case MPKIND__DIAGQTAG4X6:
+      warn(warn__diagqtag_feet);
+      break;
+   case MPKIND__INTLK:
+      if ((z[0].kind == s3x4 || z[0].kind == s_qtag) && z[0].rotation == 1 && arity == 2) {
+         map_kind = MPKIND__REMOVED;
+         warn(warn_interlocked_to_6);
+      }
+      break;
+   case MPKIND__SPLIT:
+      /* If we went from a 4-person setup to a 1x6, we are expanding due to collisions.
+         If no one is present at the potential collision spots in the inboard side, assume
+         that there was no collision there, and leave just one phantom instead of two. */
+      if (z[0].kind == s1x6 && z[0].rotation == 0 && arity == 2 &&
+          insize == 4 &&
+          !(z[0].people[3].id1 | z[0].people[4].id1 | z[1].people[0].id1 | z[1].people[1].id1)) {
+         final_map = &map_1x8_1x6;
+         result->rotation = z[0].rotation;
+         goto got_map;
+      }
+      else if (z[0].kind == s_1x2dmd && z[0].rotation == 0 && arity == 2 &&
                insize == 4 &&
-               !(z[0].people[3].id1 | z[0].people[4].id1 | z[1].people[0].id1 | z[1].people[1].id1)) {
-            final_map = &map_1x8_1x6;
-            result->rotation = z[0].rotation;
-            goto got_map;
-         }
-         else if (z[0].kind == s_1x2dmd && z[0].rotation == 0 && arity == 2 &&
-               insize == 4 &&
-               !(z[0].people[3].id1 | z[0].people[4].id1 | z[1].people[0].id1 | z[1].people[1].id1)) {
-            final_map = &map_rig_1x6;
-            result->rotation = z[0].rotation;
-            goto got_map;
-         }
-         break;
+               !(z[0].people[3].id1 | z[0].people[4].id1 |
+                 z[1].people[0].id1 | z[1].people[1].id1)) {
+         final_map = &map_rig_1x6;
+         result->rotation = z[0].rotation;
+         goto got_map;
+      }
+      break;
    }
 
    result->rotation = z[0].rotation;
 
-   if (arity == 2 && z[0].kind == s2x3 && (z[0].rotation & 1) != 0 && rot == 0 && map_kind == MPKIND__REMOVED) {
+   if (map_kind == MPKIND__REMOVED && arity == 2 &&
+       z[0].kind == s2x3 && (z[0].rotation & 1) != 0 && rot == 0) {
       final_map = &map_2x3_rmvr;
       result->rotation = z[0].rotation-1;
       goto got_map;
    }
 
-   if (arity == 2 && z[0].kind == s_trngl4 && (z[0].rotation & 1) == 0 && ((z[0].rotation ^ z[1].rotation) & 2)) {
+   if (arity == 2 &&
+       z[0].kind == s_trngl4 &&
+       (z[0].rotation & 1) == 0 &&
+       ((z[0].rotation ^ z[1].rotation) & 2)) {
       if ((z[0].rotation + rot) & 2) {
          if (map_kind == MPKIND__OFFS_L_HALF) {
             final_map = &map_lh_zzztgl;
@@ -775,14 +769,14 @@ static void innards(
             goto got_map;
          }
          else if (map_kind == MPKIND__OFFS_R_HALF) {
-            final_map = get_map_from_code(MAPCODE(s_trngl4,2,MPKIND__OFFS_R_HALF, 1));
+            final_map = get_map_from_code(MAPCODE(s_trngl4,2,MPKIND__OFFS_R_HALF,0));
             result->rotation = z[0].rotation-1+(rot&2);
             goto got_map;
          }
       }
       else {
          if (map_kind == MPKIND__OFFS_L_HALF) {
-            final_map = get_map_from_code(MAPCODE(s_trngl4,2,MPKIND__OFFS_L_HALF, 1));
+            final_map = get_map_from_code(MAPCODE(s_trngl4,2,MPKIND__OFFS_L_HALF,0));
             result->rotation = z[0].rotation+1+(rot&2);
             goto got_map;
          }
@@ -828,8 +822,7 @@ static void innards(
       }
    }
 
-   if (arity == 2 &&
-       map_kind == MPKIND__REMOVED &&
+   if (map_kind == MPKIND__REMOVED && arity == 2 &&
        (z[0].rotation & 1) &&
        (z[0].kind == s_trngl4 ||z[0].kind == s_trngl) == 1) {
       if (z[0].rotation & 2) {
@@ -892,19 +885,30 @@ static void innards(
       if (arity == 2 && z[0].kind == s4x4 && map_kind == MPKIND__SPLIT) {
          /* We allow the special case of appending two 4x4's, if the real people
             (this includes active phantoms!) can fit inside a 4x4 or 2x8. */
-         if (  z[0].people[0].id1 | z[0].people[4].id1 | z[0].people[5].id1 | z[0].people[6].id1 |
-               z[0].people[8].id1 | z[0].people[12].id1 | z[0].people[13].id1 | z[0].people[14].id1 |
-               z[1].people[0].id1 | z[1].people[4].id1 | z[1].people[5].id1 | z[1].people[6].id1 |
-               z[1].people[8].id1 | z[1].people[12].id1 | z[1].people[13].id1 | z[1].people[14].id1)
+         if (z[0].people[0].id1 | z[0].people[4].id1 |
+             z[0].people[5].id1 | z[0].people[6].id1 |
+             z[0].people[8].id1 | z[0].people[12].id1 |
+             z[0].people[13].id1 | z[0].people[14].id1 |
+             z[1].people[0].id1 | z[1].people[4].id1 |
+             z[1].people[5].id1 | z[1].people[6].id1 |
+             z[1].people[8].id1 | z[1].people[12].id1 |
+             z[1].people[13].id1 | z[1].people[14].id1)
             final_map = &map_w4x4_4x4;
          else
             final_map = &map_f2x8_4x4;
       }
-      else if (arity == 2 && z[0].kind == s2x8 && z[0].rotation == 1 && map_kind == MPKIND__SPLIT) {
-         if (  z[1].people[8].id1 | z[1].people[9].id1 | z[1].people[10].id1 | z[1].people[11].id1 |
-               z[1].people[12].id1 | z[1].people[13].id1 | z[1].people[14].id1 | z[1].people[15].id1 |
-               z[0].people[0].id1 | z[0].people[1].id1 | z[0].people[2].id1 | z[0].people[3].id1 |
-               z[0].people[4].id1 | z[0].people[5].id1 | z[0].people[6].id1 | z[0].people[7].id1)
+      else if (arity == 2 &&
+               z[0].kind == s2x8 &&
+               z[0].rotation == 1 &&
+               map_kind == MPKIND__SPLIT) {
+         if (z[1].people[8].id1 | z[1].people[9].id1 |
+             z[1].people[10].id1 | z[1].people[11].id1 |
+             z[1].people[12].id1 | z[1].people[13].id1 |
+             z[1].people[14].id1 | z[1].people[15].id1 |
+             z[0].people[0].id1 | z[0].people[1].id1 |
+             z[0].people[2].id1 | z[0].people[3].id1 |
+             z[0].people[4].id1 | z[0].people[5].id1 |
+             z[0].people[6].id1 | z[0].people[7].id1)
             final_map = &map_w4x4_2x8;
          else
             final_map = &map_f2x8_2x8;
@@ -920,7 +924,10 @@ static void innards(
 
    if ((z[0].rotation & 1) && (final_map->rot & 1))
       result->rotation = 0;
-   else if (arity == 2 && z[0].rotation == 2 && z[1].rotation == 0 && (final_map->rot & 0xF) == 0x2)
+   else if (arity == 2 &&
+            z[0].rotation == 2 &&
+            z[1].rotation == 0 &&
+            (final_map->rot & 0xF) == 0x2)
       result->rotation = 0;
 
    result->rotation -= vert;
@@ -981,15 +988,16 @@ static void innards(
  no_emergency:
 
    getptr = final_map->maps;
+   vrot = final_map->per_person_rot;
 
    for (j=0,rot=final_map->rot ; j<arity ; j++,rot>>=2) {
-      int rrr = 011*(rot & 3);
-
       if (j == 1 && final_map->map_kind == MPKIND__SPEC_TWICEREM)
          insize = setup_attrs[*getptr++].setup_limits+1;
 
-      for (i=0 ; i<insize ; i++)
-         install_rot(result, *getptr++, &z[j], i, rrr);
+      for (i=0 ; i<insize ; i++) {
+         install_rot(result, *getptr++, &z[j], i, 011*((rot+vrot) & 3));
+         vrot >>= 2;
+      }
    }
 
    result->kind = final_map->outer_kind;
@@ -1026,23 +1034,20 @@ extern void divided_setup_move(
    int i, j;
    int vflags[8];
    setup x[8];
-   setup_kind kn, kn2;
-   int insize;
-   int rot;
-   int arity;
-
-   assumption_thing t = ss->cmd.cmd_assume;
+   setup_kind kn2;
 
    if (!maps) fail("Can't do this concept in this setup.");
 
+   assumption_thing t = ss->cmd.cmd_assume;
+   setup_kind kn = maps->inner_kind;
+   int insize = setup_attrs[kn].setup_limits+1;
    const veryshort *getptr = maps->maps;
+   uint32 rot = maps->rot;
+   uint32 vrot = maps->per_person_rot;
+   int arity = maps->arity;
+   uint32 frot;
 
-   kn = maps->inner_kind;
-   insize = setup_attrs[kn].setup_limits+1;
-   rot = maps->rot;
-   arity = maps->arity;
-
-   for (j=0; j<arity; j++) {
+   for (j=0,frot=rot; j<arity; j++,frot>>=2) {
       vflags[j] = 0;
 
       if (j == 1 && maps->map_kind == MPKIND__SPEC_TWICEREM) {
@@ -1054,21 +1059,15 @@ extern void divided_setup_move(
          int mm = *getptr++;
          if (mm >= 0) {
             vflags[j] |= ss->people[mm].id1;
-            (void) copy_rot(&x[j], i, ss, mm, 011*((-(rot>>(j*2))) & 3));
+            (void) copy_rot(&x[j], i, ss, mm, 011*((0-frot-vrot) & 3));
          }
          else
             clear_person(&x[j], i);
+         vrot >>= 2;
       }
    }
 
    switch (phancontrol) {
-#ifdef NOCANDO
-/* So "phantest_impossible" is obsolete and should be replaced with "phantest_ok". */
-      case phantest_impossible:
-         if (!(vflags[0] && vflags[1]))
-            fail("This is impossible in a symmetric setup!!!!");
-         break;
-#endif
       case phantest_both:
          if (!(vflags[0] && vflags[1]))
             /* Only one of the two setups is occupied. */
@@ -1153,17 +1152,20 @@ extern void divided_setup_move(
       the incoming rotation into account. */
 
    if (maps->map_kind == MPKIND__SPLIT ||
-            (arity == 2 &&
-              (maps->map_kind == MPKIND__OFFS_L_HALF ||
-               maps->map_kind == MPKIND__OFFS_R_HALF ||
-               maps->map_kind == MPKIND__OFFS_L_FULL ||
-               maps->map_kind == MPKIND__OFFS_R_FULL))) {
-      if (maps->vert & 1) {
-         if ((result->result_flags & RESULTFLAG__SPLIT_AXIS_YMASK) != RESULTFLAG__SPLIT_AXIS_YMASK)
+       maps->map_kind == MPKIND__NONISOTROP1 ||
+       (arity == 2 &&
+        (maps->map_kind == MPKIND__OFFS_L_HALF ||
+         maps->map_kind == MPKIND__OFFS_R_HALF ||
+         maps->map_kind == MPKIND__OFFS_L_FULL ||
+         maps->map_kind == MPKIND__OFFS_R_FULL))) {
+      if ((maps->vert ^ maps->rot) & 1) {
+         if ((result->result_flags & RESULTFLAG__SPLIT_AXIS_YMASK) !=
+             RESULTFLAG__SPLIT_AXIS_YMASK)
             result->result_flags += RESULTFLAG__SPLIT_AXIS_YBIT;
       }
       else {
-         if ((result->result_flags & RESULTFLAG__SPLIT_AXIS_XMASK) != RESULTFLAG__SPLIT_AXIS_XMASK)
+         if ((result->result_flags & RESULTFLAG__SPLIT_AXIS_XMASK) !=
+             RESULTFLAG__SPLIT_AXIS_XMASK)
             result->result_flags += RESULTFLAG__SPLIT_AXIS_XBIT;
       }
    }
@@ -1395,35 +1397,49 @@ extern void do_phantom_diag_qtg_concept(
    parse_block *parseptr,
    setup *result) THROW_DECL
 {
-   int rot =   ss->people[1].id1 | ss->people[2].id1 | ss->people[5].id1 | ss->people[6].id1 |
-               ss->people[9].id1 | ss->people[10].id1 | ss->people[13].id1 | ss->people[14].id1;
+   uint32 mapcode;
+   int rot = 0;
 
-   if (ss->kind != s4x4)
-      fail("Need a 4x4 setup to do this concept.");
+   if (ss->kind == s4x4) {
+      rot =
+         ss->people[1].id1 | ss->people[2].id1 | ss->people[5].id1 | ss->people[6].id1 |
+         ss->people[9].id1 | ss->people[10].id1 | ss->people[13].id1 | ss->people[14].id1;
 
-   if (!(rot & 011))
-      fail("Can't figure this out -- not enough live people.");
+      if (!(rot & 011))
+         fail("Can't figure this out -- not enough live people.");
+      else if ((rot & 011) == 011)
+         fail("Can't figure this out -- facing directions are too weird.");
 
-   if ((rot & 011) == 011)
-      fail("Can't figure this out -- facing directions are too weird.");
+      rot = (rot ^ parseptr->concept->value.arg2) & 1;
 
-   rot = (rot ^ parseptr->concept->value.arg2) & 1;
+      ss->rotation += rot;   // Just flip the setup around and recanonicalize.
+      canonicalize_rotation(ss);
 
-   /* The thing to verify, like CMD_MISC__VERIFY_1_4_TAG. */
+      mapcode = MAPCODE(s_qtag,2,MPKIND__DIAGQTAG,1);
+   }
+   else if (ss->kind == s4x6) {
+      int dir =
+         ss->people[6].id1 | ss->people[11].id1 | ss->people[18].id1 | ss->people[23].id1;
+
+      if ((dir & 011) == 011 ||
+          !((dir ^ parseptr->concept->value.arg2) & 1))
+         fail("Can't figure this out -- facing directions are too weird.");
+
+      mapcode = MAPCODE(s_qtag,2,MPKIND__DIAGQTAG4X6,0);
+   }
+   else
+      fail("Can't do this concept in this setup.");
+
+   // The thing to verify, like CMD_MISC__VERIFY_1_4_TAG.
    ss->cmd.cmd_misc_flags |= parseptr->concept->value.arg3;
 
-   ss->rotation += rot;   /* Just flip the setup around and recanonicalize. */
-   canonicalize_rotation(ss);
+   new_divided_setup_move(ss, mapcode,
+                          (phantest_kind) parseptr->concept->value.arg1,
+                          TRUE, result);
 
-   new_divided_setup_move(
-      ss, 
-      MAPCODE(s_qtag,2,MPKIND__DIAGQTAG,1),
-      (phantest_kind) parseptr->concept->value.arg1,
-      TRUE,
-      result);
+   result->rotation -= rot;   // Flip the setup back.
 
-   result->rotation -= rot;   /* Flip the setup back. */
-   /* The split-axis bits are gone.  If someone needs them, we have work to do. */
+   // The split-axis bits are gone.  If someone needs them, we have work to do.
    result->result_flags &= ~RESULTFLAG__SPLIT_AXIS_FIELDMASK;
 }
 
@@ -1521,56 +1537,9 @@ extern void distorted_2x2s_move(
    parse_block *parseptr,
    setup *result) THROW_DECL
 {
-   // maps for 4x4 Z's
-   static Const veryshort map1[16] = {12, 15, 11, 10, 3, 2, 4, 7, 12, 3, 7, 10, 15, 2, 4, 11};
-   static Const veryshort map2[16] = {12, 13, 3, 15, 11, 7, 4, 5, 12, 13, 7, 11, 15, 3, 4, 5};
-   static Const veryshort map3[16] = {14, 1, 2, 3, 10, 11, 6, 9, 11, 1, 2, 6, 10, 14, 3, 9};
-   static Const veryshort map4[16] = {13, 14, 1, 3, 9, 11, 5, 6, 13, 14, 11, 9, 3, 1, 5, 6};
-   static Const veryshort map5[16] = {10, 13, 15, 9, 7, 1, 2, 5, 10, 7, 5, 9, 13, 1, 2, 15};
-   static Const veryshort map6[16] = {13, 14, 15, 10, 7, 2, 5, 6, 13, 14, 2, 7, 10, 15, 5, 6};
-   static Const veryshort map7[16] = {3, 0, 1, 7, 9, 15, 11, 8, 15, 0, 1, 11, 9, 3, 7, 8};
-   static Const veryshort map8[16] = {14, 0, 3, 15, 11, 7, 6, 8, 14, 0, 7, 11, 15, 3, 6, 8};
+   // Maps for jays. These have the extra 24 to handle going to 1x4's.
 
-   // maps for 4x6 Z's
-   static const veryshort map46a[9] = {11, 1, 10, 18, 22, 6, 23, 13, -1};
-   static const veryshort map46b[9] = {11, 19, 16, 18, 4, 6, 23, 7, -1};
-   static const veryshort map46c[9] = {0, 10, 19, 11, 7, 23, 12, 22, -1};
-   static const veryshort map46d[9] = {18, 10, 19, 17, 7, 5, 6, 22, -1};
-   static const veryshort map46e[9] = {18, 19, 15, 16, 3, 4, 6, 7, -1};
-   static const veryshort map46f[9] = {19, 20, 16, 17, 4, 5, 7, 8, -1};
-   static const veryshort map46g[9] = {1, 2, 10, 11, 22, 23, 13, 14, -1};
-   static const veryshort map46h[9] = {0, 1, 9, 10, 21, 22, 12, 13, -1};
-
-   // maps for 3x4 Z's
-   static Const veryshort mapb[16] = {-1, -1, -1, -1, -1, -1, -1, -1, 10, 2, 5, 9, 11, 3, 4, 8};
-   static Const veryshort mapc[16] = {-1, -1, -1, -1, -1, -1, -1, -1, 0, 5, 7, 10, 1, 4, 6, 11};
-
-   // maps for 2x6 Z's
-   static Const veryshort mape[16] = {0, 1, 9, 10, 3, 4, 6, 7, -1, -1, -1, -1, -1, -1, -1, -1};
-   static Const veryshort mapf[16] = {1, 2, 10, 11, 4, 5, 7, 8, -1, -1, -1, -1, -1, -1, -1, -1};
-
-   // maps for 3x6 Z's
-   static const veryshort mapg[16] = {0, 16, 13, 15, 4, 6, 9, 7, -1, -1, -1, -1, -1, -1, -1, -1};
-   static const veryshort maph[16] = {15, 1, 16, 14, 7, 5, 6, 10, -1, -1, -1, -1, -1, -1, -1, -1};
-   static const veryshort mapi[16] = {16,17, 13, 14, 4, 5, 7, 8, -1, -1, -1, -1, -1, -1, -1, -1};
-   static const veryshort mapj[16] = {0, 1, 17, 16, 8, 7, 9, 10, -1, -1, -1, -1, -1, -1, -1, -1};
-
-   // maps for 2x3 Z
-   static Const veryshort mape1[8] = {0, 1, 3, 4, -1, -1, -1, -1};
-   static Const veryshort mapf1[8] = {1, 2, 4, 5, -1, -1, -1, -1};
-
-   /* maps for twin parallelograms */
-   static Const veryshort map_p1[16] = {2, 3, 11, 10, 5, 4, 8, 9, -1, -1, -1, -1, -1, -1, -1, -1};
-   static Const veryshort map_p2[16] = {0, 1, 4, 5, 10, 11, 6, 7, -1, -1, -1, -1, -1, -1, -1, -1};
-
-   /* maps for interlocked boxes/interlocked parallelograms */
-   static Const veryshort map_b1[16] = {1, 3, 4, 11, 10, 5, 7, 9, 1, 3, 5, 10, 11, 4, 7, 9};
-   static Const veryshort map_b2[16] = {0, 2, 5, 10, 11, 4, 6, 8, 0, 2, 4, 11, 10, 5, 6, 8};
-
-   /* Maps for jays.
-      These have the extra 24 to handle going to 1x4's. */
-
-   static Const veryshort mapj1[48] = {
+   static const veryshort mapj1[48] = {
                7, 2, 4, 5, 0, 1, 3, 6,
                6, 3, 4, 5, 0, 1, 2, 7,
                -1, -1, -1, -1, -1, -1, -1, -1,
@@ -1578,7 +1547,7 @@ extern void distorted_2x2s_move(
                5, 4, 2, 3, 6, 7, 1, 0,
                -1, -1, -1, -1, -1, -1, -1, -1};
 
-   static Const veryshort mapj2[48] = {
+   static const veryshort mapj2[48] = {
                6, 3, 4, 5, 0, 1, 2, 7,
                7, 2, 4, 5, 0, 1, 3, 6,
                -1, -1, -1, -1, -1, -1, -1, -1,
@@ -1586,7 +1555,7 @@ extern void distorted_2x2s_move(
                0, 1, 2, 3, 6, 7, 4, 5,
                -1, -1, -1, -1, -1, -1, -1, -1};
 
-   static Const veryshort mapj3[48] = {
+   static const veryshort mapj3[48] = {
                -1, -1, -1, -1, -1, -1, -1, -1,
                7, 2, 4, 5, 0, 1, 3, 6,
                6, 3, 4, 5, 0, 1, 2, 7,
@@ -1594,7 +1563,7 @@ extern void distorted_2x2s_move(
                0, 1, 2, 3, 6, 7, 4, 5,
                5, 4, 2, 3, 6, 7, 1, 0};
 
-   static Const veryshort mapj4[48] = {
+   static const veryshort mapj4[48] = {
                -1, -1, -1, -1, -1, -1, -1, -1,
                6, 3, 4, 5, 0, 1, 2, 7,
                7, 2, 4, 5, 0, 1, 3, 6,
@@ -1602,24 +1571,24 @@ extern void distorted_2x2s_move(
                5, 4, 2, 3, 6, 7, 1, 0,
                0, 1, 2, 3, 6, 7, 4, 5};
 
-   /* Maps for facing/back-to-front/back-to-back parallelograms.
-      These have the extra 24 to handle going to 1x4's. */
+   // Maps for facing/back-to-front/back-to-back parallelograms.
+   // These have the extra 24 to handle going to 1x4's.
 
-   static Const veryshort mapk1[48] = {
+   static const veryshort mapk1[48] = {
                3, 2, 4, 5, 0, 1, 7, 6,
                6, 7, 4, 5, 0, 1, 2, 3,
                -1, -1, -1, -1, -1, -1, -1, -1,
                0, 1, 2, 3, 6, 7, 4, 5,
                5, 4, 2, 3, 6, 7, 1, 0,
                -1, -1, -1, -1, -1, -1, -1, -1};
-   static Const veryshort mapk2[48] = {
+   static const veryshort mapk2[48] = {
                6, 7, 4, 5, 0, 1, 2, 3,
                3, 2, 4, 5, 0, 1, 7, 6,
                -1, -1, -1, -1, -1, -1, -1, -1,
                5, 4, 2, 3, 6, 7, 1, 0,
                0, 1, 2, 3, 6, 7, 4, 5,
                -1, -1, -1, -1, -1, -1, -1, -1};
-   static Const veryshort mapk3[48] = {
+   static const veryshort mapk3[48] = {
                -1, -1, -1, -1, -1, -1, -1, -1,
                3, 2, 4, 5, 0, 1, 7, 6,
                6, 7, 4, 5, 0, 1, 2, 3,
@@ -1627,7 +1596,7 @@ extern void distorted_2x2s_move(
                0, 1, 2, 3, 6, 7, 4, 5,
                5, 4, 2, 3, 6, 7, 1, 0};
 
-   static Const veryshort mapk4[48] = {
+   static const veryshort mapk4[48] = {
                -1, -1, -1, -1, -1, -1, -1, -1,
                6, 7, 4, 5, 0, 1, 2, 3,
                3, 2, 4, 5, 0, 1, 7, 6,
@@ -1639,12 +1608,12 @@ extern void distorted_2x2s_move(
    setup inputs[4];
    setup results[4];
    uint32 directions, livemask, misc2_zflag;
-   Const veryshort *map_ptr;
+   const veryshort *map_ptr;
 
    concept_descriptor *this_concept = parseptr->concept;
 
-   /* Check for special case of "interlocked parallelogram", which doesn't look like the
-      kind of concept we are expecting. */
+   // Check for special case of "interlocked parallelogram",
+   // which doesn't look like the kind of concept we are expecting.
 
    if (this_concept->kind == concept_do_both_boxes) {
       table_offset = 8;
@@ -1655,17 +1624,18 @@ extern void distorted_2x2s_move(
       misc_indicator = this_concept->value.arg1;
    }
 
-   /* misc_indicator    concept
-           0         some kind of "Z"
-           1         some kind of "Jay"
-           2       twin parallelograms (the physical setup is like offset lines)
-           3       interlocked boxes/Pgrams (the physical setup is like Z's)
-           4         some kind of parallelogram (as from "heads travel thru")
-           5       distorted blocks */
+   // misc_indicator
+   //      0       some kind of "Z"
+   //      1       some kind of "Jay"
+   //      2       twin parallelograms (the physical setup is like offset lines)
+   //      3       interlocked boxes/Pgrams (the physical setup is like Z's)
+   //      4       some kind of parallelogram (as from "heads travel thru")
+   //      5       distorted blocks
+   //      6       Z diamond(s)
 
-   /* table_offset is 0, 8, or 12.  It selects the appropriate part of the maps. */
-   /* For "Z"      :   0 == normal, 8 == interlocked. */
-   /* For Jay/Pgram:   0 == normal, 8 == back-to-front, 16 == back-to-back. */
+   // Table_offset is 0, 8, or 12.  It selects the appropriate part of the maps.
+   // For "Z"      :   0 == normal, 8 == interlocked.
+   // For Jay/Pgram:   0 == normal, 8 == back-to-front, 16 == back-to-back.
 
    directions = 0;
    livemask = 0;
@@ -1686,17 +1656,19 @@ extern void distorted_2x2s_move(
       if (p) livemask |= 1;
    }
 
+   setup_kind inner_kind = s2x2;
+
    switch (misc_indicator) {
    case 0:
-      /* The concept is some variety of "Z" */
+      // The concept is some variety of "Z".
       arity = this_concept->value.arg4;
 
       if (arity == 3) {
          switch (ss->kind) {
          case s3x6:
+            // If outer Z's are ambiguous, make them look like inner ones.
             if ((livemask & 0630630) == 0)
-               warn(warn_same_z_shear);  /* Outer Z's are ambiguous --
-                                            make them look like inner ones. */
+               warn(warn_same_z_shear);
 
             if ((livemask & 0250250) == 0) {
                misc2_zflag = CMD_MISC2__IN_Z_CW;
@@ -1722,6 +1694,162 @@ extern void distorted_2x2s_move(
       else {
          switch (ss->kind) {
          case s4x4:
+            {
+               // Maps for 4x4 Z's.
+               static const veryshort map1[16] =
+               {12, 15, 11, 10, 3, 2, 4, 7, 12, 3, 7, 10, 15, 2, 4, 11};
+               static const veryshort map2[16] =
+               {12, 13, 3, 15, 11, 7, 4, 5, 12, 13, 7, 11, 15, 3, 4, 5};
+               static const veryshort map3[16] =
+               {14, 1, 2, 3, 10, 11, 6, 9, 11, 1, 2, 6, 10, 14, 3, 9};
+               static const veryshort map4[16] =
+               {13, 14, 1, 3, 9, 11, 5, 6, 13, 14, 11, 9, 3, 1, 5, 6};
+               static const veryshort map5[16] =
+               {10, 13, 15, 9, 7, 1, 2, 5, 10, 7, 5, 9, 13, 1, 2, 15};
+               static const veryshort map6[16] =
+               {13, 14, 15, 10, 7, 2, 5, 6, 13, 14, 2, 7, 10, 15, 5, 6};
+               static const veryshort map7[16] =
+               {3, 0, 1, 7, 9, 15, 11, 8, 15, 0, 1, 11, 9, 3, 7, 8};
+               static const veryshort map8[16] =
+               {14, 0, 3, 15, 11, 7, 6, 8, 14, 0, 7, 11, 15, 3, 6, 8};
+
+               arity = 2;
+               if (     (livemask & 0xC6C6) == 0) map_ptr = map1;
+               else if ((livemask & 0xE2E2) == 0) map_ptr = map2;
+               else if ((livemask & 0x8D8D) == 0) map_ptr = map3;
+               else if ((livemask & 0xA9A9) == 0) map_ptr = map4;
+               else if ((livemask & 0x9A9A) == 0) map_ptr = map5;
+               else if ((livemask & 0xD8D8) == 0) map_ptr = map6;
+               else if ((livemask & 0x2E2E) == 0) map_ptr = map7;
+               else if ((livemask & 0x6C6C) == 0) map_ptr = map8;
+               else goto lose;
+            }
+            break;
+         case s4x6:
+            arity = 2;
+            {
+               // Maps for 4x6 Z's.
+               static const veryshort map46a[9] = {11, 1, 10, 18, 22, 6, 23, 13, -1};
+               static const veryshort map46b[9] = {11, 19, 16, 18, 4, 6, 23, 7, -1};
+               static const veryshort map46c[9] = {0, 10, 19, 11, 7, 23, 12, 22, -1};
+               static const veryshort map46d[9] = {18, 10, 19, 17, 7, 5, 6, 22, -1};
+               static const veryshort map46e[9] = {18, 19, 15, 16, 3, 4, 6, 7, -1};
+               static const veryshort map46f[9] = {19, 20, 16, 17, 4, 5, 7, 8, -1};
+               static const veryshort map46g[9] = {1, 2, 10, 11, 22, 23, 13, 14, -1};
+               static const veryshort map46h[9] = {0, 1, 9, 10, 21, 22, 12, 13, -1};
+
+               if (     (livemask & 0xBDCBDC) == 0) map_ptr = map46a;
+               else if ((livemask & 0xF4EF4E) == 0) map_ptr = map46b;
+               else if ((livemask & 0x7EC7EC) == 0) map_ptr = map46c;
+               else if ((livemask & 0xF8DF8D) == 0) map_ptr = map46d;
+               else if ((livemask & 0xE4FE4F) == 0) map_ptr = map46e;
+               else if ((livemask & 0xF27F27) == 0) map_ptr = map46f;
+               else if ((livemask & 0x9FC9FC) == 0) map_ptr = map46g;
+               else if ((livemask & 0x3F93F9) == 0) map_ptr = map46h;
+               else goto lose;
+            }
+            break;
+         case s3x4:
+            arity = 2;  // Might have just said "Z", which would set arity
+                        // to 1.  We can nevertheless find the two Z's.
+            {
+               // Maps for 3x4 Z's.
+               static const veryshort mapb[16] =
+               {-1, -1, -1, -1, -1, -1, -1, -1, 10, 2, 5, 9, 11, 3, 4, 8};
+               static const veryshort mapc[16] =
+               {-1, -1, -1, -1, -1, -1, -1, -1, 0, 5, 7, 10, 1, 4, 6, 11};
+
+               if (     (livemask & 05050) == 0) {
+                  misc2_zflag = CMD_MISC2__IN_Z_CCW;
+                  goto do_real_z_stuff;
+               }
+               else if ((livemask & 02424) == 0) {
+                  misc2_zflag = CMD_MISC2__IN_Z_CW;
+                  goto do_real_z_stuff;
+               }
+               else if ((livemask & 06060) == 0) map_ptr = mapb;
+               else if ((livemask & 01414) == 0) map_ptr = mapc;
+               else goto lose;
+            }
+            break;
+         case s2x6:
+            arity = 2;  // Might have just said "Z", which would set arity
+                        // to 1.  We can nevertheless find the two Z's.
+            {
+               // Maps for 2x6 Z's.
+               static const veryshort mape[16] =
+               {0, 1, 9, 10, 3, 4, 6, 7, -1, -1, -1, -1, -1, -1, -1, -1};
+               static const veryshort mapf[16] =
+               {1, 2, 10, 11, 4, 5, 7, 8, -1, -1, -1, -1, -1, -1, -1, -1};
+
+               if (     (livemask & 01111) == 0) map_ptr = mape;
+               else if ((livemask & 04444) == 0) map_ptr = mapf;
+               else goto lose;
+            }
+            break;
+         case s3x6:
+            arity = 2;
+            {
+               // Maps for 3x6 Z's.
+               static const veryshort mapg[16] =
+               {0, 16, 13, 15, 4, 6, 9, 7, -1, -1, -1, -1, -1, -1, -1, -1};
+               static const veryshort maph[16] =
+               {15, 1, 16, 14, 7, 5, 6, 10, -1, -1, -1, -1, -1, -1, -1, -1};
+               static const veryshort mapi[16] =
+               {16,17, 13, 14, 4, 5, 7, 8, -1, -1, -1, -1, -1, -1, -1, -1};
+               static const veryshort mapj[16] =
+               {0, 1, 17, 16, 8, 7, 9, 10, -1, -1, -1, -1, -1, -1, -1, -1};
+
+               if (     livemask == 0426426) map_ptr = mapg;
+               else if (livemask == 0216216) map_ptr = maph;
+               else if (livemask == 0033033) map_ptr = mapi;
+               else if (livemask == 0603603) map_ptr = mapj;
+               else goto lose;
+            }
+            break;
+         case s2x3:
+            if (arity != 1) fail("Use the 'Z' concept here.");
+            {
+               // Maps for single 2x3 Z.
+               static const veryshort mape1[8] = {0, 1, 3, 4, -1, -1, -1, -1};
+               static const veryshort mapf1[8] = {1, 2, 4, 5, -1, -1, -1, -1};
+
+               if (     (livemask & 011) == 0) map_ptr = mape1;
+               else if ((livemask & 044) == 0) map_ptr = mapf1;
+               else goto lose;
+            }
+            break;
+         default:
+            fail("Must have 3x4, 2x6, 3x6, 2x3, 4x4, 4x6, or split 1/4 tags for this concept.");
+         }
+      }
+      break;
+   case 6:
+      // The concept is Z diamond(s)
+      arity = this_concept->value.arg4;
+
+      switch (ss->kind) {
+         /*
+      case s4x4:
+         {
+            // Maps for 4x4 Z's.
+            static const veryshort map1[16] =
+            {12, 15, 11, 10, 3, 2, 4, 7, 12, 3, 7, 10, 15, 2, 4, 11};
+            static const veryshort map2[16] =
+            {12, 13, 3, 15, 11, 7, 4, 5, 12, 13, 7, 11, 15, 3, 4, 5};
+            static const veryshort map3[16] =
+            {14, 1, 2, 3, 10, 11, 6, 9, 11, 1, 2, 6, 10, 14, 3, 9};
+            static const veryshort map4[16] =
+            {13, 14, 1, 3, 9, 11, 5, 6, 13, 14, 11, 9, 3, 1, 5, 6};
+            static const veryshort map5[16] =
+            {10, 13, 15, 9, 7, 1, 2, 5, 10, 7, 5, 9, 13, 1, 2, 15};
+            static const veryshort map6[16] =
+            {13, 14, 15, 10, 7, 2, 5, 6, 13, 14, 2, 7, 10, 15, 5, 6};
+            static const veryshort map7[16] =
+            {3, 0, 1, 7, 9, 15, 11, 8, 15, 0, 1, 11, 9, 3, 7, 8};
+            static const veryshort map8[16] =
+            {14, 0, 3, 15, 11, 7, 6, 8, 14, 0, 7, 11, 15, 3, 6, 8};
+
             arity = 2;
             if (     (livemask & 0xC6C6) == 0) map_ptr = map1;
             else if ((livemask & 0xE2E2) == 0) map_ptr = map2;
@@ -1732,9 +1860,21 @@ extern void distorted_2x2s_move(
             else if ((livemask & 0x2E2E) == 0) map_ptr = map7;
             else if ((livemask & 0x6C6C) == 0) map_ptr = map8;
             else goto lose;
-            break;
-         case s4x6:
-            arity = 2;
+         }
+         break;
+      case s4x6:
+         arity = 2;
+         {
+            // Maps for 4x6 Z's.
+            static const veryshort map46a[9] = {11, 1, 10, 18, 22, 6, 23, 13, -1};
+            static const veryshort map46b[9] = {11, 19, 16, 18, 4, 6, 23, 7, -1};
+            static const veryshort map46c[9] = {0, 10, 19, 11, 7, 23, 12, 22, -1};
+            static const veryshort map46d[9] = {18, 10, 19, 17, 7, 5, 6, 22, -1};
+            static const veryshort map46e[9] = {18, 19, 15, 16, 3, 4, 6, 7, -1};
+            static const veryshort map46f[9] = {19, 20, 16, 17, 4, 5, 7, 8, -1};
+            static const veryshort map46g[9] = {1, 2, 10, 11, 22, 23, 13, 14, -1};
+            static const veryshort map46h[9] = {0, 1, 9, 10, 21, 22, 12, 13, -1};
+
             if (     (livemask & 0xBDCBDC) == 0) map_ptr = map46a;
             else if ((livemask & 0xF4EF4E) == 0) map_ptr = map46b;
             else if ((livemask & 0x7EC7EC) == 0) map_ptr = map46c;
@@ -1744,46 +1884,74 @@ extern void distorted_2x2s_move(
             else if ((livemask & 0x9FC9FC) == 0) map_ptr = map46g;
             else if ((livemask & 0x3F93F9) == 0) map_ptr = map46h;
             else goto lose;
-            break;
-         case s3x4:
-            arity = 2;  /* Might have just said "Z", which would set arity
-                           to 1.  We can nevertheless find the two Z's. */
-            if (     (livemask & 05050) == 0) {
-               misc2_zflag = CMD_MISC2__IN_Z_CCW;
-               goto do_real_z_stuff;
-            }
-            else if ((livemask & 02424) == 0) {
-               misc2_zflag = CMD_MISC2__IN_Z_CW;
-               goto do_real_z_stuff;
-            }
-            else if ((livemask & 06060) == 0) map_ptr = mapb;
-            else if ((livemask & 01414) == 0) map_ptr = mapc;
+         }
+         break;
+         */
+      case s3x4:
+         {
+            static const veryshort mapzda[9] = {1, 3, 4, 5, 7, 9, 10, 11, -1};
+            static const veryshort mapzdb[9] = {0, 2, 4, 5, 6, 8, 10, 11, -1};
+            inner_kind = s_qtag;
+            arity = 1;  // Whatever the user called it, we are going to a single setup.
+            if (     (livemask & 05050) == 0) map_ptr = mapzda;
+            else if ((livemask & 02424) == 0) map_ptr = mapzdb;
             else goto lose;
-         case s2x6:
-            arity = 2;  /* Might have just said "Z", which would set arity
-                           to 1.  We can nevertheless find the two Z's. */
+         }
+         break;
+         /*
+      case s2x6:
+         arity = 2;  // Might have just said "Z", which would set arity
+                     // to 1.  We can nevertheless find the two Z's.
+         {
+            // Maps for 2x6 Z's.
+            static const veryshort mape[16] =
+            {0, 1, 9, 10, 3, 4, 6, 7, -1, -1, -1, -1, -1, -1, -1, -1};
+            static const veryshort mapf[16] =
+            {1, 2, 10, 11, 4, 5, 7, 8, -1, -1, -1, -1, -1, -1, -1, -1};
+
             if (     (livemask & 01111) == 0) map_ptr = mape;
             else if ((livemask & 04444) == 0) map_ptr = mapf;
             else goto lose;
-            break;
-         case s3x6:
-            arity = 2;
+         }
+         break;
+      case s3x6:
+         arity = 2;
+         {
+            // Maps for 3x6 Z's.
+            static const veryshort mapg[16] =
+            {0, 16, 13, 15, 4, 6, 9, 7, -1, -1, -1, -1, -1, -1, -1, -1};
+            static const veryshort maph[16] =
+            {15, 1, 16, 14, 7, 5, 6, 10, -1, -1, -1, -1, -1, -1, -1, -1};
+            static const veryshort mapi[16] =
+            {16,17, 13, 14, 4, 5, 7, 8, -1, -1, -1, -1, -1, -1, -1, -1};
+            static const veryshort mapj[16] =
+            {0, 1, 17, 16, 8, 7, 9, 10, -1, -1, -1, -1, -1, -1, -1, -1};
+
             if (     livemask == 0426426) map_ptr = mapg;
             else if (livemask == 0216216) map_ptr = maph;
             else if (livemask == 0033033) map_ptr = mapi;
             else if (livemask == 0603603) map_ptr = mapj;
             else goto lose;
-            break;
-         case s2x3:
-            if (arity != 1) fail("Use the 'Z' concept here.");
+         }
+         break;
+         */
+      case s2x3:
+         if (arity != 1) fail("Use the 'Z diamond' concept here.");
+         {
+            // Maps for single 2x3 Z.
+            static const veryshort mape1[8] = {0, 1, 3, 4};
+            static const veryshort mapf1[8] = {5, 1, 2, 4};
+
+            inner_kind = sdmd;
             if (     (livemask & 011) == 0) map_ptr = mape1;
             else if ((livemask & 044) == 0) map_ptr = mapf1;
             else goto lose;
-            break;
-         default:
-            fail("Must have 3x4, 2x6, 3x6, 2x3, 4x4, 4x6, or split 1/4 tags for this concept.");
          }
+         break;
+      default:
+         fail("Must have 3x4, 2x6, 3x6, 2x3, 4x4, 4x6, or split 1/4 tags for this concept.");
       }
+
       break;
    case 1:
       /* The concept is some variety of jay */
@@ -1810,11 +1978,18 @@ extern void distorted_2x2s_move(
       else goto lose;
       break;
    case 2:
-      switch (ss->kind) {     /* The concept is twin parallelograms */
+      switch (ss->kind) {     // The concept is twin parallelograms.
       case s3x4:
-         if (     (livemask & 06060) == 0) map_ptr = map_p1;
-         else if ((livemask & 01414) == 0) map_ptr = map_p2;
-         else goto lose;
+         {
+            static const veryshort map_p1[16] =
+            {2, 3, 11, 10, 5, 4, 8, 9, -1, -1, -1, -1, -1, -1, -1, -1};
+            static const veryshort map_p2[16] =
+            {0, 1, 4, 5, 10, 11, 6, 7, -1, -1, -1, -1, -1, -1, -1, -1};
+
+            if (     (livemask & 06060) == 0) map_ptr = map_p1;
+            else if ((livemask & 01414) == 0) map_ptr = map_p2;
+            else goto lose;
+         }
          break;
       default:
          fail("Must have 3x4 setup for this concept.");
@@ -1823,9 +1998,16 @@ extern void distorted_2x2s_move(
    case 3:
       switch (ss->kind) {   /* The concept is interlocked boxes or interlocked parallelograms */
       case s3x4:
-         if (     (livemask & 05050) == 0) map_ptr = map_b1;
-         else if ((livemask & 02424) == 0) map_ptr = map_b2;
-         else goto lose;
+         {
+            static const veryshort map_b1[16] =
+            {1, 3, 4, 11, 10, 5, 7, 9, 1, 3, 5, 10, 11, 4, 7, 9};
+            static const veryshort map_b2[16] =
+            {0, 2, 5, 10, 11, 4, 6, 8, 0, 2, 4, 11, 10, 5, 6, 8};
+
+            if (     (livemask & 05050) == 0) map_ptr = map_b1;
+            else if ((livemask & 02424) == 0) map_ptr = map_b2;
+            else goto lose;
+         }
          break;
       default:
          fail("Must have 3x4 setup for this concept.");
@@ -1863,15 +2045,17 @@ extern void distorted_2x2s_move(
          rotss.rotation++;
          canonicalize_rotation(&rotss);
       
-         /* Search for the live people, in rows first. */
+         // Search for the live people, in rows first.
 
-         if (!full_search(4, 4, TRUE, 2, the_map, list_foo_in, list_4x4_out, ss)) rows = 0;
+         if (!full_search(4, 4, TRUE, 2, the_map, list_foo_in, list_4x4_out, ss))
+            rows = 0;
 
-         /* Now search in columns, and store the result starting at 8. */
+         // Now search in columns, and store the result starting at 8.
 
-         if (!full_search(4, 4, TRUE, 2, the_map, list_bar_in, list_4x4_out, &rotss)) columns = 0;
+         if (!full_search(4, 4, TRUE, 2, the_map, list_bar_in, list_4x4_out, &rotss))
+            columns = 0;
 
-         /* At this point, exactly one of "rows" and "columns" should be equal to 1. */
+         // At this point, exactly one of "rows" and "columns" should be equal to 1.
 
          if (rows+columns != 1)
             fail("Can't identify distorted blocks.");
@@ -1914,15 +2098,15 @@ extern void distorted_2x2s_move(
 
    for (i=0 ; i<arity ; i++) {
       inputs[i] = *ss;
-      gather(&inputs[i], ss, map_ptr, 3, 0);
+      gather(&inputs[i], ss, map_ptr, setup_attrs[inner_kind].setup_limits, 0);
       inputs[i].rotation = 0;
-      inputs[i].kind = s2x2;
+      inputs[i].kind = inner_kind;
       inputs[i].cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
       inputs[i].cmd.cmd_assume.assumption = cr_none;
       update_id_bits(&inputs[i]);
       move(&inputs[i], FALSE, &results[i]);
 
-      if (results[i].kind != s2x2) {
+      if (results[i].kind != inner_kind || results[i].rotation != 0) {
          if (results[i].kind != s1x4 ||
              results[i].rotation != 1 ||
              (misc_indicator != 1 && misc_indicator != 4))
@@ -1930,9 +2114,9 @@ extern void distorted_2x2s_move(
          scatter(result, &results[i], &map_ptr[24], 3, 0);
       }
       else
-         scatter(result, &results[i], map_ptr, 3, 0);
+         scatter(result, &results[i], map_ptr, setup_attrs[inner_kind].setup_limits, 0);
 
-      map_ptr += 4;
+      map_ptr += setup_attrs[inner_kind].setup_limits+1;
    }
 
    result->kind = ss->kind;
@@ -1987,6 +2171,8 @@ extern void distorted_move(
       user claims this is distorted 1/4 tags or diamonds or whatever
    linesp & 32 != 0:
       user claims this is C/L/W of 3 (not distorted)
+   linesp & 64 != 0:
+      user claims this is staggered C/L/W of 3
 
    Global_tbonetest has the OR of all the people, or all the standard people if
       this is "standard", so it is what we look at to interpret the
@@ -1995,7 +2181,7 @@ extern void distorted_move(
 
 
    veryshort the_map[8];
-   Const parse_block *next_parseptr;
+   const parse_block *next_parseptr;
    uint64 junk_concepts;
    int rot, rotz;
    setup_kind k;
@@ -2143,6 +2329,34 @@ extern void distorted_move(
 
       goto getoutnosplit;
    }
+   else if (linesp & 64) {
+      // This is staggered C/L/W of 3.  We allow only a few patterns.
+      // There is no general way to scan the columns unambiguously.
+
+      if (ss->kind == s4x4) {
+         if (!((linesp ^ global_tbonetest) & 1)) {
+            /* What a crock -- this is all backwards. */
+            rotate_back = 1;     /* (Well, actually everything else is backwards.) */
+            ss->rotation++;
+            canonicalize_rotation(ss);
+            livemask = ((livemask << 4) & 0xFFFF) | (livemask >> 12);
+         }
+
+         // We know what we are doing -- shut off the error message.
+         disttest = disttest_offset;
+
+         if (livemask == 0xD0D0) {
+            map_ptr = &map_stw3a;
+            goto do_divided_call;
+         }
+         else if (livemask == 0x2929) {
+            map_ptr = &map_stw3b;
+            goto do_divided_call;
+         }
+      }
+
+      fail("Can't do this concept in this setup.");
+   }
    else {
       // Look for singular "offset C/L/W" in a 2x4.
 
@@ -2193,8 +2407,7 @@ extern void distorted_move(
 
          if (livemask == 0x6666 || livemask == 0x9999) {
             if (!((linesp ^ global_tbonetest) & 1)) {
-               /* What a crock -- this is all backwards. */
-               rotate_back = 1;     /* (Well, actually everything else is backwards.) */
+               rotate_back = 1;
                ss->rotation++;
                canonicalize_rotation(ss);
             }
@@ -2525,20 +2738,23 @@ extern void do_concept_rigger(
    parse_block *parseptr,
    setup *result) THROW_DECL
 {
-   /* First 8 are for rigger; second 8 are for 1/4-tag, final 16 are for crosswave. */
+   /* First 8 are for rigger; second 8 are for 1/4-tag, next 16 are for crosswave. */
    /* A huge coincidence is at work here -- the first two parts of the maps are the same. */
-   static Const veryshort map1[32] = {
+   static const veryshort map1[38] = {
          0, 1, 3, 2, 4, 5, 7, 6, 0, 1, 3, 2, 4, 5, 7, 6,
-         13, 15, 1, 3, 5, 7, 9, 11, 14, 0, 2, 4, 6, 8, 10, 12};
-   static Const veryshort map2[32] = {
+         13, 15, 1, 3, 5, 7, 9, 11, 14, 0, 2, 4, 6, 8, 10, 12,
+         4, 5, 0, 1, 2, 3};        // For 2x3.
+   static const veryshort map2[38] = {
          2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7, 0, 1,
-         0, 2, 4, 6, 8, 10, 12, 14, 1, 7, 5, 11, 9, 15, 13, 3};
+         0, 2, 4, 6, 8, 10, 12, 14, 1, 7, 5, 11, 9, 15, 13, 3,
+         5, 0, 1, 2, 3, 4};        // For 2x3.
 
    int rstuff, indicator, base;
    setup a1;
    setup res1;
-   Const veryshort *map_ptr;
+   const veryshort *map_ptr;
    setup_kind startkind;
+   int rot = 0;
 
    rstuff = parseptr->concept->value.arg1;
 
@@ -2552,8 +2768,6 @@ extern void do_concept_rigger(
       Note that outrigger and frontrigger are nearly the same, as are inrigger and backrigger.
       They differ only in allowable starting setup.  So, after checking the setup, we look
       only at the low 2 bits. */
-
-   clear_people(&a1);
 
    if (ss->kind == s_rigger) {
       if (rstuff >= 16) fail("This variety of 'rigger' not permitted in this setup.");
@@ -2590,14 +2804,28 @@ extern void do_concept_rigger(
       base = 16;
       startkind = s_c1phan;
    }
+   else if (ss->kind == s_short6) {
+      if (rstuff >= 16) fail("This variety of 'rigger' not permitted in this setup.");
+
+      if (!(ss->people[1].id1 & BIT_PERSON) ||
+            ((ss->people[1].id1 ^ ss->people[4].id1) & d_mask) != 2)
+         fail("'Rigger' people are not facing consistently!");
+
+      indicator = ((ss->people[4].id1 + 1) ^ rstuff) & 3;
+      base = 32;
+      rot = 1;
+      startkind = s2x3;
+   }
    else
-      fail("Must have a 'rigger' or quarter-tag setup to do this concept.");
+      fail("Can't do this concept in this setup.");
 
    if (indicator & 1)
       fail("'Rigger' direction is inappropriate.");
 
    map_ptr = indicator ? map1 : map2;
-   scatter(&a1, ss, &map_ptr[base], 7, 0);
+
+   clear_people(&a1);
+   scatter(&a1, ss, &map_ptr[base], setup_attrs[ss->kind].setup_limits, rot*033);
    a1.kind = startkind;
    a1.rotation = 0;
    a1.cmd = ss->cmd;
@@ -2643,12 +2871,16 @@ extern void do_concept_rigger(
          result->kind = base ? s_qtag : s_rigger;
       }
    }
+   else if (startkind == s2x3) {
+      if (res1.kind != s2x3 || ((res1.rotation) & 1)) fail("Can't do this.");
+      result->kind = s_short6;
+   }
    else {
       if (res1.kind != s2x4) fail("Can't do this.");
       result->kind = base ? s_qtag : s_rigger;
    }
 
-   gather(result, &res1, &map_ptr[base], 7, 0);
+   gather(result, &res1, &map_ptr[base], setup_attrs[res1.kind].setup_limits, rot*011);
    result->rotation = res1.rotation;
    result->result_flags = res1.result_flags;
    reinstate_rotation(ss, result);
@@ -3076,29 +3308,35 @@ extern void common_spot_move(
    impose_assumption_and_move(&a1, &the_results[1]);
 
    if (uncommon) {
-
-      if (the_results[0].kind == s_qtag && the_results[1].kind == s2x3 && the_results[0].rotation != the_results[1].rotation)
+      if (the_results[0].kind == s_qtag && the_results[1].kind == s2x3 &&
+          the_results[0].rotation != the_results[1].rotation)
          expand_setup(&exp_2x3_qtg_stuff, &the_results[1]);
-      else if (the_results[1].kind == s_qtag && the_results[0].kind == s2x3 && the_results[0].rotation != the_results[1].rotation)
+      else if (the_results[1].kind == s_qtag && the_results[0].kind == s2x3 &&
+               the_results[0].rotation != the_results[1].rotation)
          expand_setup(&exp_2x3_qtg_stuff, &the_results[0]);
+      else if (the_results[0].kind == s2x4 && the_results[1].kind == s4x4)
+         do_matrix_expansion(&the_results[0], CONCPROP__NEEDK_4X4, FALSE);
+      else if (the_results[1].kind == s2x4 && the_results[0].kind == s4x4)
+         do_matrix_expansion(&the_results[1], CONCPROP__NEEDK_4X4, FALSE);
 
-      if (the_results[0].kind != the_results[1].kind || the_results[0].rotation != the_results[1].rotation)
+      if (the_results[0].kind != the_results[1].kind ||
+          the_results[0].rotation != the_results[1].rotation)
          fail("This common spot call is very problematical.");
 
-      /* Remove the uncommon people from the common results, while checking that
-         they wound up in the same position in all 3 results. */
+      // Remove the uncommon people from the common results, while checking that
+      // they wound up in the same position in all 3 results.
 
       for (i=0; i<=setup_attrs[map_ptr->partial_kind].setup_limits; i++) {
          int t = map_ptr->uncommon[i];
          if (t >= 0 && ss->people[t].id1) {
 
             /* These bits are not a property just of the person and his position
-               in the formation -- they depend on other people's facing directin. */
+               in the formation -- they depend on other people's facing direction. */
 #define ID2_BITS_NOT_INTRINSIC (ID2_FACING | ID2_NOTFACING)
 
             for (k=0; k<=setup_attrs[the_results[0].kind].setup_limits; k++) {
-               if (     the_results[0].people[k].id1 &&
-                        ((the_results[0].people[k].id1 ^ ss->people[t].id1) & PID_MASK) == 0) {
+               if (the_results[0].people[k].id1 &&
+                   ((the_results[0].people[k].id1 ^ ss->people[t].id1) & PID_MASK) == 0) {
                   if (((the_results[0].people[k].id1 ^ the_results[1].people[k].id1) |
                        ((the_results[0].people[k].id2 ^ the_results[1].people[k].id2) &
                         !ID2_BITS_NOT_INTRINSIC)))
@@ -3109,7 +3347,7 @@ extern void common_spot_move(
                }
             }
             fail("Lost someone during common-spot call.");
-            did_it: ;
+         did_it: ;
          }
       }
 
@@ -3381,7 +3619,8 @@ static void wv_tand_base_move(
 
       if (s->kind == s_bone) {
          if (indicator & 0100) fail("Can't do this concept in this setup.");
-         concentric_move(s, (setup_command *) 0, &s->cmd, schema_concentric_2_6, 0, 0, TRUE, result);
+         concentric_move(s, (setup_command *) 0, &s->cmd, schema_concentric_2_6,
+                         0, 0, TRUE, ~0UL, result);
          return;
       }
       else {
@@ -3480,7 +3719,7 @@ static void wv_tand_base_move(
       fail("Can't do this concept in this setup.");
    }
 
-   concentric_move(s, &s->cmd, (setup_command *) 0, schema, 0, 0, TRUE, result);
+   concentric_move(s, &s->cmd, (setup_command *) 0, schema, 0, 0, TRUE, ~0UL, result);
    return;
 
  losing:
@@ -3555,7 +3794,7 @@ extern void triangle_move(
 
       /* For galaxies, the schema is now in terms of the absolute orientation. */
 
-      concentric_move(ss, &ss->cmd, (setup_command *) 0, schema, 0, 0, TRUE, result);
+      concentric_move(ss, &ss->cmd, (setup_command *) 0, schema, 0, 0, TRUE, ~0UL, result);
    }
    else {
       /* Set this so we can do "peel and trail" without saying "triangle" again. */
@@ -3645,7 +3884,7 @@ extern void triangle_move(
                   fail("There are no 'inside' triangles.");
             }
    
-            concentric_move(ss, &ss->cmd, (setup_command *) 0, schema, 0, 0, TRUE, result);
+            concentric_move(ss, &ss->cmd, (setup_command *) 0, schema, 0, 0, TRUE, ~0UL, result);
          }
          else {
             switch (ss->kind) {
@@ -3661,7 +3900,7 @@ extern void triangle_move(
                   fail("There are no 'outside' triangles.");
             }
    
-            concentric_move(ss, (setup_command *) 0, &ss->cmd, schema, 0, 0, TRUE, result);
+            concentric_move(ss, (setup_command *) 0, &ss->cmd, schema, 0, 0, TRUE, ~0UL, result);
          }
       }
    }

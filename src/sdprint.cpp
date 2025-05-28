@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-1999  William B. Ackerman.
+    Copyright (C) 1990-2000  William B. Ackerman.
 
     This file is unpublished and contains trade secrets.  It is
     to be used by permission only and not to be disclosed to third
@@ -10,12 +10,10 @@
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-    This is for version 32. */
+    This is for version 34. */
 
 /* This defines the following functions:
    uims_choose_font
-   uims_print_this
-   uims_print_any
 */
 
 #define STRICT
@@ -28,14 +26,12 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "paths.h"
-#include "basetype.h"
-#include "sdui.h"
 #include "resource.h"
 void windows_init_printer_font(HWND hwnd, HDC hdc);
-extern void windows_print_this(HWND hwnd, char *szMainTitle, HINSTANCE hInstance);
+extern void windows_print_this(HWND hwnd, char *szMainTitle, HINSTANCE hInstance,
+                               const char *filename);
 extern void windows_print_any(HWND hwnd, char *szMainTitle, HINSTANCE hInstance);
-void PrintFile(char *szFileName, HWND hwnd, char *szMainTitle, HINSTANCE hInstance);
+void PrintFile(const char *szFileName, HWND hwnd, char *szMainTitle, HINSTANCE hInstance);
 
 
 #pragma comment(lib, "comctl32")
@@ -118,7 +114,10 @@ BOOL CALLBACK PrintAbortProc(HDC hPrinterDC, int iCode)
 }
 
 
-void PrintFile(char *szFileName, HWND hwnd, char *szMainTitle, HINSTANCE hInstance)
+// We make this really large.  Memory is cheap.  Bugs aren't.
+#define PRINT_LINE_LENGTH 500
+
+void PrintFile(const char *szFileName, HWND hwnd, char *szMainTitle, HINSTANCE hInstance)
 {
    BOOL            bSuccess;
    TEXTMETRIC      tm;
@@ -251,8 +250,8 @@ void PrintFile(char *szFileName, HWND hwnd, char *szMainTitle, HINSTANCE hInstan
                   if (fgetpos(fildes, &fposLineStart))
                      break;
 
-                  char pstrBuffer[INPUT_TEXTLINE_SIZE+1];
-                  if (!fgets(pstrBuffer, INPUT_TEXTLINE_SIZE, fildes)) {
+                  char pstrBuffer[PRINT_LINE_LENGTH+1];
+                  if (!fgets(pstrBuffer, PRINT_LINE_LENGTH, fildes)) {
                      bEOF = true;
                      break;
                   }
@@ -329,7 +328,7 @@ void PrintFile(char *szFileName, HWND hwnd, char *szMainTitle, HINSTANCE hInstan
 
 
 
-extern long_boolean uims_choose_font()
+extern bool uims_choose_font()
 {
    // This operation will take place in the context of the display
    // rather than the printer, but we have to do it that way, because
@@ -354,9 +353,10 @@ extern long_boolean uims_choose_font()
 }
 
 
-extern void windows_print_this(HWND hwnd, char *szMainTitle, HINSTANCE hInstance)
+extern void windows_print_this(HWND hwnd, char *szMainTitle, HINSTANCE hInstance,
+                               const char *filename)
 {
-   PrintFile(outfile_string, hwnd, szMainTitle, hInstance);
+   PrintFile(filename, hwnd, szMainTitle, hInstance);
 }
 
 

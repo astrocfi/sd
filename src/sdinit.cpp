@@ -42,8 +42,8 @@ int number_for_initialize;
 static call_with_name *empty_menu[] = {(call_with_name *) 0};
 
 /* This gets temporarily allocated.  It persists through the entire initialization. */
-Private call_with_name **global_temp_call_list;
-Private int global_callcount;     /* Index into the above. */
+static call_with_name **global_temp_call_list;
+static int global_callcount;     /* Index into the above. */
 
 #define WEST (d_west|ROLLBITL)
 #define EAST (d_east|ROLLBITL)
@@ -62,20 +62,20 @@ Private int global_callcount;     /* Index into the above. */
 
 /* In all of these setups in which people are facing, they are normal couples.  This makes initialization of things like star thru,
    ladies chain, and curlique work.  The setup for starting DPT has the appropriate sex for triple star thru. */
-Private setup test_setup_1x8  = {s1x8, 0, {0}, {{NORT|B4A, 0}, {SOUT|G3A, 0}, {SOUT|B3A, 0}, {NORT|G4A, 0}, {SOUT|B2A, 0}, {NORT|G1A, 0}, {NORT|B1A, 0}, {SOUT|G2A, 0}}, 0};
-Private setup test_setup_l1x8 = {s1x8, 0, {0}, {{SOUT|B4A, 0}, {NORT|G3A, 0}, {NORT|B3A, 0}, {SOUT|G4A, 0}, {NORT|B2A, 0}, {SOUT|G1A, 0}, {SOUT|B1A, 0}, {NORT|G2A, 0}}, 0};
-Private setup test_setup_dpt  = {s2x4, 0, {0}, {{EAST|G2A, 0}, {EAST|B3A, 0}, {WEST|G3A, 0}, {WEST|B2A, 0}, {WEST|G4A, 0}, {WEST|B1A, 0}, {EAST|G1A, 0}, {EAST|B4A, 0}}, 0};
-Private setup test_setup_cdpt = {s2x4, 0, {0}, {{WEST|G4A, 0}, {WEST|G3A, 0}, {EAST|B3A, 0}, {EAST|B4A, 0}, {EAST|G2A, 0}, {EAST|G1A, 0}, {WEST|B1A, 0}, {WEST|B2A, 0}}, 0};
-Private setup test_setup_rcol = {s2x4, 0, {0}, {{EAST|B4A, 0}, {EAST|G3A, 0}, {EAST|B3A, 0}, {EAST|G4A, 0}, {WEST|B2A, 0}, {WEST|G1A, 0}, {WEST|B1A, 0}, {WEST|G2A, 0}}, 0};
-Private setup test_setup_lcol = {s2x4, 0, {0}, {{WEST|G2A, 0}, {WEST|B1A, 0}, {WEST|G1A, 0}, {WEST|B2A, 0}, {EAST|G4A, 0}, {EAST|B3A, 0}, {EAST|G3A, 0}, {EAST|B4A, 0}}, 0};
-Private setup test_setup_8ch  = {s2x4, 0, {0}, {{EAST|B4A, 0}, {WEST|G3A, 0}, {EAST|B3A, 0}, {WEST|G4A, 0}, {WEST|B2A, 0}, {EAST|G1A, 0}, {WEST|B1A, 0}, {EAST|G2A, 0}}, 0};
-Private setup test_setup_tby  = {s2x4, 0, {0}, {{WEST|G3A, 0}, {EAST|B4A, 0}, {WEST|G4A, 0}, {EAST|B3A, 0}, {EAST|G1A, 0}, {WEST|B2A, 0}, {EAST|G2A, 0}, {WEST|B1A, 0}}, 0};
-Private setup test_setup_lin  = {s2x4, 0, {0}, {{SOUT|G2A, 0}, {SOUT|B1A, 0}, {SOUT|G1A, 0}, {SOUT|B2A, 0}, {NORT|G4A, 0}, {NORT|B3A, 0}, {NORT|G3A, 0}, {NORT|B4A, 0}}, 0};
-Private setup test_setup_lout = {s2x4, 0, {0}, {{NORT|B4A, 0}, {NORT|G3A, 0}, {NORT|B3A, 0}, {NORT|G4A, 0}, {SOUT|B2A, 0}, {SOUT|G1A, 0}, {SOUT|B1A, 0}, {SOUT|G2A, 0}}, 0};
-Private setup test_setup_rwv  = {s2x4, 0, {0}, {{NORT|B4A, 0}, {SOUT|G3A, 0}, {NORT|B3A, 0}, {SOUT|G4A, 0}, {SOUT|B2A, 0}, {NORT|G1A, 0}, {SOUT|B1A, 0}, {NORT|G2A, 0}}, 0};
-Private setup test_setup_lwv  = {s2x4, 0, {0}, {{SOUT|B4A, 0}, {NORT|G3A, 0}, {SOUT|B3A, 0}, {NORT|G4A, 0}, {NORT|B2A, 0}, {SOUT|G1A, 0}, {NORT|B1A, 0}, {SOUT|G2A, 0}}, 0};
-Private setup test_setup_r2fl = {s2x4, 0, {0}, {{NORT|B4A, 0}, {NORT|G3A, 0}, {SOUT|G4A, 0}, {SOUT|B3A, 0}, {SOUT|B2A, 0}, {SOUT|G1A, 0}, {NORT|G2A, 0}, {NORT|B1A, 0}}, 0};
-Private setup test_setup_l2fl = {s2x4, 0, {0}, {{SOUT|G3A, 0}, {SOUT|B4A, 0}, {NORT|B3A, 0}, {NORT|G4A, 0}, {NORT|G1A, 0}, {NORT|B2A, 0}, {SOUT|B1A, 0}, {SOUT|G2A, 0}}, 0};
+static setup test_setup_1x8  = {s1x8, 0, {0}, {{NORT|B4A, 0}, {SOUT|G3A, 0}, {SOUT|B3A, 0}, {NORT|G4A, 0}, {SOUT|B2A, 0}, {NORT|G1A, 0}, {NORT|B1A, 0}, {SOUT|G2A, 0}}, 0};
+static setup test_setup_l1x8 = {s1x8, 0, {0}, {{SOUT|B4A, 0}, {NORT|G3A, 0}, {NORT|B3A, 0}, {SOUT|G4A, 0}, {NORT|B2A, 0}, {SOUT|G1A, 0}, {SOUT|B1A, 0}, {NORT|G2A, 0}}, 0};
+static setup test_setup_dpt  = {s2x4, 0, {0}, {{EAST|G2A, 0}, {EAST|B3A, 0}, {WEST|G3A, 0}, {WEST|B2A, 0}, {WEST|G4A, 0}, {WEST|B1A, 0}, {EAST|G1A, 0}, {EAST|B4A, 0}}, 0};
+static setup test_setup_cdpt = {s2x4, 0, {0}, {{WEST|G4A, 0}, {WEST|G3A, 0}, {EAST|B3A, 0}, {EAST|B4A, 0}, {EAST|G2A, 0}, {EAST|G1A, 0}, {WEST|B1A, 0}, {WEST|B2A, 0}}, 0};
+static setup test_setup_rcol = {s2x4, 0, {0}, {{EAST|B4A, 0}, {EAST|G3A, 0}, {EAST|B3A, 0}, {EAST|G4A, 0}, {WEST|B2A, 0}, {WEST|G1A, 0}, {WEST|B1A, 0}, {WEST|G2A, 0}}, 0};
+static setup test_setup_lcol = {s2x4, 0, {0}, {{WEST|G2A, 0}, {WEST|B1A, 0}, {WEST|G1A, 0}, {WEST|B2A, 0}, {EAST|G4A, 0}, {EAST|B3A, 0}, {EAST|G3A, 0}, {EAST|B4A, 0}}, 0};
+static setup test_setup_8ch  = {s2x4, 0, {0}, {{EAST|B4A, 0}, {WEST|G3A, 0}, {EAST|B3A, 0}, {WEST|G4A, 0}, {WEST|B2A, 0}, {EAST|G1A, 0}, {WEST|B1A, 0}, {EAST|G2A, 0}}, 0};
+static setup test_setup_tby  = {s2x4, 0, {0}, {{WEST|G3A, 0}, {EAST|B4A, 0}, {WEST|G4A, 0}, {EAST|B3A, 0}, {EAST|G1A, 0}, {WEST|B2A, 0}, {EAST|G2A, 0}, {WEST|B1A, 0}}, 0};
+static setup test_setup_lin  = {s2x4, 0, {0}, {{SOUT|G2A, 0}, {SOUT|B1A, 0}, {SOUT|G1A, 0}, {SOUT|B2A, 0}, {NORT|G4A, 0}, {NORT|B3A, 0}, {NORT|G3A, 0}, {NORT|B4A, 0}}, 0};
+static setup test_setup_lout = {s2x4, 0, {0}, {{NORT|B4A, 0}, {NORT|G3A, 0}, {NORT|B3A, 0}, {NORT|G4A, 0}, {SOUT|B2A, 0}, {SOUT|G1A, 0}, {SOUT|B1A, 0}, {SOUT|G2A, 0}}, 0};
+static setup test_setup_rwv  = {s2x4, 0, {0}, {{NORT|B4A, 0}, {SOUT|G3A, 0}, {NORT|B3A, 0}, {SOUT|G4A, 0}, {SOUT|B2A, 0}, {NORT|G1A, 0}, {SOUT|B1A, 0}, {NORT|G2A, 0}}, 0};
+static setup test_setup_lwv  = {s2x4, 0, {0}, {{SOUT|B4A, 0}, {NORT|G3A, 0}, {SOUT|B3A, 0}, {NORT|G4A, 0}, {NORT|B2A, 0}, {SOUT|G1A, 0}, {NORT|B1A, 0}, {SOUT|G2A, 0}}, 0};
+static setup test_setup_r2fl = {s2x4, 0, {0}, {{NORT|B4A, 0}, {NORT|G3A, 0}, {SOUT|G4A, 0}, {SOUT|B3A, 0}, {SOUT|B2A, 0}, {SOUT|G1A, 0}, {NORT|G2A, 0}, {NORT|B1A, 0}}, 0};
+static setup test_setup_l2fl = {s2x4, 0, {0}, {{SOUT|G3A, 0}, {SOUT|B4A, 0}, {NORT|B3A, 0}, {NORT|G4A, 0}, {NORT|G1A, 0}, {NORT|B2A, 0}, {SOUT|B1A, 0}, {SOUT|G2A, 0}}, 0};
 
 
 
@@ -86,7 +86,7 @@ Private setup test_setup_l2fl = {s2x4, 0, {0}, {{SOUT|G3A, 0}, {SOUT|B4A, 0}, {N
    simply re-uses the stored string where it can, and allocates fresh memory
    if a substitution took place. */
 
-Private Const char *translate_menu_name(Const char *orig_name, uint32 *escape_bits_p)
+static const char *translate_menu_name(Const char *orig_name, uint32 *escape_bits_p)
 {
    int j;
    char c;
@@ -157,12 +157,12 @@ Private Const char *translate_menu_name(Const char *orig_name, uint32 *escape_bi
 
 /* These variables are actually local to test_starting_setup, but they are
    expected to be preserved across the longjmp, so they must be static. */
-Private parse_block *parse_mark;
-Private int call_index;
+static parse_block *parse_mark;
+static int call_index;
 static call_with_name *test_call;
-Private long_boolean crossiness;
-Private long_boolean magicness;
-Private long_boolean intlkness;
+static long_boolean crossiness;
+static long_boolean magicness;
+static long_boolean intlkness;
 
 
 SDLIB_API void start_sel_dir_num_iterator()
@@ -253,7 +253,7 @@ SDLIB_API long_boolean iterate_over_sel_dir_num(
 
 
 
-Private void test_starting_setup(call_list_kind cl, Const setup *test_setup)
+static void test_starting_setup(call_list_kind cl, Const setup *test_setup)
 {
    int i;
 
@@ -416,10 +416,10 @@ Private void test_starting_setup(call_list_kind cl, Const setup *test_setup)
 
 /* This pointer to a call array is used by the heapsort routine. */
 
-Private call_with_name **the_array;
+static call_with_name **the_array;
 
 
-Private long_boolean callcompare(call_with_name *x, call_with_name *y)
+static long_boolean callcompare(call_with_name *x, call_with_name *y)
 {
    char *m = x->name;
    char *n = y->name;
@@ -530,7 +530,7 @@ Private long_boolean callcompare(call_with_name *x, call_with_name *y)
    }
 }
 
-Private void heapify(int lo, int hi)
+static void heapify(int lo, int hi)
 {
    int j = lo-1;
 
@@ -552,7 +552,7 @@ Private void heapify(int lo, int hi)
 
 
 
-Private void heapsort(int n)
+static void heapsort(int n)
 {
    int i;
 
@@ -579,7 +579,7 @@ Private void heapsort(int n)
 }
 
 
-Private void create_misc_call_lists(call_list_kind cl)
+static void create_misc_call_lists(call_list_kind cl)
 {
    int j;
    int i, callcount;

@@ -10,7 +10,7 @@
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-    This is for version 33. */
+    This is for version 34. */
 
 /* This defines the following functions:
    get_escape_string
@@ -615,7 +615,7 @@ SDLIB_API void write_history_line(int history_index, const char *header,
       this_item->warnings.bits[warn__split_to_1x6s>>5] &= ~(1 << (warn__split_to_1x6s & 0x1F));
 
    if (!ui_options.nowarn_mode) {
-      for (w=0 ; w<NUM_WARNINGS ; w++) {
+      for (w=0 ; w<warn__NUM_WARNINGS ; w++) {
          if ((1 << (w & 0x1F)) & this_item->warnings.bits[w>>5]) {
             writestuff("  Warning:  ");
             writestuff(&warning_strings[w][1]);
@@ -1487,6 +1487,9 @@ static char current_line[MAX_TEXT_LINE_LENGTH];
 
 extern void writechar(char src)
 {
+   // Don't write two consecutive commas.
+   if (src == ',' && src == writechar_block.lastchar) return;
+
    writechar_block.lastlastchar = writechar_block.lastchar;
 
    *writechar_block.destcurr = (writechar_block.lastchar = src);
@@ -2306,6 +2309,12 @@ SDLIB_API void run_program()
       switch (uims_menu_index) {
       case start_select_toggle_conc:
          allowing_all_concepts = !allowing_all_concepts;
+         goto new_sequence;
+      case start_select_toggle_singlespace:
+         ui_options.singlespace_mode = !ui_options.singlespace_mode;
+         goto new_sequence;
+      case start_select_toggle_minigrand:
+         allowing_minigrand = !allowing_minigrand;
          goto new_sequence;
       case start_select_toggle_act:
          using_active_phantoms = !using_active_phantoms;

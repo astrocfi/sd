@@ -16,7 +16,7 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-    This is for version 33. */
+    This is for version 34. */
 
 /* This defines the following functions:
    general_initialize
@@ -53,7 +53,6 @@
    read_8_from_database
    read_16_from_database
    close_database
-   fill_in_neglect_percentage
    parse_number
 
 and the following external variables:
@@ -187,8 +186,7 @@ extern char *strerror(int);
    started taking these standards as semi-seriously as they do now, it was
    MUCH HARDER to make a program portable than what you just saw. */
 
-#include "basetype.h"
-#include "sdui.h"
+#include "sd.h"
 #include "paths.h"
 
 
@@ -219,14 +217,14 @@ char *new_outfile_string = (char *) 0;
 char *call_list_string = (char *) 0;
 FILE *call_list_file;
 
-Private FILE *fp;
-Private FILE *fildes;
-Private long_boolean file_error;
-Private char fail_message[MAX_ERR_LENGTH];
-Private char fail_errstring[MAX_ERR_LENGTH];
-Private long_boolean outfile_special = FALSE;
+static FILE *fp;
+static FILE *fildes;
+static long_boolean file_error;
+static char fail_message[MAX_ERR_LENGTH];
+static char fail_errstring[MAX_ERR_LENGTH];
+static long_boolean outfile_special = FALSE;
 
-Private char *get_errstring(void)
+static char *get_errstring(void)
 {
 #if defined(sun) || defined(athena_vax)
    extern int sys_nerr;
@@ -959,7 +957,7 @@ extern void prepare_to_read_menus(void)
       init_error("constants not consistent -- program has been compiled incorrectly.");
    else if ((508205 << 12) != arithtest)
       init_error("arithmetic is less than 32 bits -- program has been compiled incorrectly.");
-   else if (NUM_WARNINGS > (WARNING_WORDS << 5))
+   else if (warn__NUM_WARNINGS > (WARNING_WORDS << 5))
       init_error("insufficient warning bit space -- program has been compiled incorrectly.");
    else if (NUM_QUALIFIERS > 125)
       init_error("insufficient qualifier space -- program has been compiled incorrectly.");
@@ -1205,6 +1203,8 @@ extern long_boolean open_session(int argc, char **argv)
             { ui_options.nowarn_mode = TRUE; continue; }
          else if (strcmp(&args[argno][1], "concept_levels") == 0)
             { allowing_all_concepts = TRUE; continue; }
+         else if (strcmp(&args[argno][1], "minigrand_getouts") == 0)
+            { allowing_minigrand = TRUE; continue; }
          else if (strcmp(&args[argno][1], "active_phantoms") == 0)
             { using_active_phantoms = TRUE; continue; }
          else if (strcmp(&args[argno][1], "discard_after_error") == 0)
@@ -1386,7 +1386,7 @@ extern void close_init_file(void)
 }
 
 
-Private int write_back_session_line(FILE *wfile)
+static int write_back_session_line(FILE *wfile)
 {
    char *filename = rewrite_filename_as_star[0] ? rewrite_filename_as_star : outfile_string;
 

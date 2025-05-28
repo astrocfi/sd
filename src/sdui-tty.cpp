@@ -23,7 +23,7 @@
  * Type TAB to complete as much as possible.
  * Type Control-U to clear the line.
  *
- * For use with version 33 of the Sd program.
+ * For use with version 34 of the Sd program.
  *
  * The version of this file is as shown immediately below.  This string
  * gets displayed at program startup, as the "ui" part of the complete
@@ -92,8 +92,7 @@ and the following other variables:
 
 extern void exit(int code);
 
-#include "basetype.h"
-#include "sdui.h"
+#include "sd.h"
 #include "paths.h"
 
 /* See comments in sdmain.c regarding this string. */
@@ -145,8 +144,8 @@ int main(int argc, char *argv[])
  * User Input functions
  */
 
-/* This array is the same as static_ss.full_input, but has the original capitalization
-   as typed by the user.  Static_ss.full_input is converted to all lower case for
+/* This array is the same as GLOB_full_input, but has the original capitalization
+   as typed by the user.  GLOB_full_input is converted to all lower case for
    ease of searching. */
 static char user_input[INPUT_TEXTLINE_SIZE+1];
 static char *user_input_prompt;
@@ -154,9 +153,8 @@ static char *function_key_expansion;
 
 void refresh_input(void)
 {
+   erase_matcher_input();
    user_input[0] = '\0';
-   static_ss.full_input[0] = '\0';
-   static_ss.full_input_size = 0;
    function_key_expansion = (char *) 0;
    clear_line(); /* clear the current line */
    put_line(user_input_prompt);
@@ -489,26 +487,26 @@ extern void uims_bell(void)
 }
 
 
-Private void pack_and_echo_character(char c)
+static void pack_and_echo_character(char c)
 {
    /* Really should handle error better -- ring the bell,
       but this is called inside a loop. */
 
-   if (static_ss.full_input_size < INPUT_TEXTLINE_SIZE) {
-      user_input[static_ss.full_input_size] = c;
-      static_ss.full_input[static_ss.full_input_size++] = tolower(c);
-      user_input[static_ss.full_input_size] = '\0';
-      static_ss.full_input[static_ss.full_input_size] = '\0';
+   if (GLOB_full_input_size < INPUT_TEXTLINE_SIZE) {
+      user_input[GLOB_full_input_size] = c;
+      GLOB_full_input[GLOB_full_input_size++] = tolower(c);
+      user_input[GLOB_full_input_size] = '\0';
+      GLOB_full_input[GLOB_full_input_size] = '\0';
       put_char(c);
    }
 }
 
 /* This tells how many more lines of matches (the stuff we print in response
    to a question mark) we can print before we have to say "--More--" to
-   get permission from the user to continue.  If verify_has_stopped goes on, the
+   get permission from the user to continue.  If showing_has_stopped goes on, the
    user has given a negative reply to one of our queries, and so we don't
    print any more stuff. */
-Private int match_counter;
+static int match_counter;
 
 /* This is what we reset the counter to whenever the user confirms.  That
    is, it is the number of lines we print per "screenful".  On a VT-100-like
@@ -520,24 +518,10 @@ Private int match_counter;
    of course) scrolling).  But on printing devices or workstations we still
    do the output in screenful-like blocks, because the user may not want
    to see an enormous amount of output. */
-Private int match_lines;
+static int match_lines;
 
-Private void start_matches(void)
-{
-   /*
-    * Find the number of lines on the screen.
-    * Used only for grouping "screenfuls" with "--more--" stuff
-    * when showing long lists of choices after '?' is typed.
-    * In other cases, we just assume the output mechanism can intelligently
-    * handle what we send to it.
-    */
 
-   match_lines = get_lines_for_more();
-   match_counter = match_lines-1; /* last line used for "--More--" prompt */
-   verify_has_stopped = FALSE;
-}
-
-Private int prompt_for_more_output(void)
+static int prompt_for_more_output(void)
 {
     put_line("--More--");
 
@@ -565,21 +549,21 @@ Private int prompt_for_more_output(void)
 
 extern void show_match(void)
 {
-   if (verify_has_stopped) return;  /* Showing has been turned off. */
+   if (showing_has_stopped) return;  /* Showing has been turned off. */
 
    if (match_counter <= 0) {
       match_counter = match_lines - 1;
       if (!prompt_for_more_output()) {
          match_counter = -1;   /* Turn it off. */
-         verify_has_stopped = TRUE;
+         showing_has_stopped = TRUE;
          return;
       }
    }
    match_counter--;
 
-   if (static_ss.result.indent) put_line("   ");
-   put_line(static_ss.full_input);
-   put_line(static_ss.extension);
+   if (GLOB_match.indent) put_line("   ");
+   put_line(GLOB_full_input);
+   put_line(GLOB_extension);
    put_line("\n");
    current_text_line++;
 }
@@ -594,9 +578,8 @@ static long_boolean get_user_input(char *prompt, int which)
 
    user_match.valid = FALSE;
    user_input_prompt = prompt;
+   erase_matcher_input();
    user_input[0] = '\0';
-   static_ss.full_input[0] = '\0';
-   static_ss.full_input_size = 0;
    function_key_expansion = (char *) 0;
    put_line(user_input_prompt);
 
@@ -617,6 +600,7 @@ static long_boolean get_user_input(char *prompt, int which)
       if (nc >= 128) {
          char linebuff [INPUT_TEXTLINE_SIZE+1];
          modifier_block *keyptr;
+         int chars_deleted;
          int which_target = which;
 
          if (which_target > 0) which_target = 0;
@@ -631,31 +615,18 @@ static long_boolean get_user_input(char *prompt, int which)
             we are doing something else, like a resolve. */
 
          if (keyptr && keyptr->index < 0) {
-            long_boolean deleted_letter = FALSE;
-
             switch (keyptr->index) {
             case special_index_deleteline:
-               user_input[0] = '\0';
-               static_ss.full_input[0] = '\0';
-               static_ss.full_input_size = 0;
-
+               erase_matcher_input();
+               strcpy(user_input, GLOB_full_input);
                function_key_expansion = (char *) 0;
                clear_line();           /* Clear the current line */
                put_line(user_input_prompt);    /* Redisplay the prompt. */
                continue;
             case special_index_deleteword:
-               while (static_ss.full_input_size > 0) {
-                  if (user_input[static_ss.full_input_size-1] == ' ') {
-                     if (deleted_letter) break;
-                  }
-                  else
-                     deleted_letter = TRUE;
-
-                  static_ss.full_input_size--;
-                  user_input[static_ss.full_input_size] = '\0';
-                  static_ss.full_input[static_ss.full_input_size] = '\0';
-                  rubout(); /* Update the display. */
-               }
+               chars_deleted = delete_matcher_word();
+               while (chars_deleted-- > 0) rubout();
+               strcpy(user_input, GLOB_full_input);
                function_key_expansion = (char *) 0;
                continue;
             case special_index_quote_anything:
@@ -711,6 +682,10 @@ static long_boolean get_user_input(char *prompt, int which)
             unparse_call_name(user_match.match.concept_ptr->name,
                               linebuff,
                               &user_match.match.call_conc_options);
+            // Reject off-level concept accelerator key presses.
+            if (!allowing_all_concepts &&
+                user_match.match.concept_ptr->level > higher_acceptable_level[calling_level])
+               continue;
             user_match.match.index = 0;
             break;
          case ui_call_select:
@@ -744,13 +719,13 @@ static long_boolean get_user_input(char *prompt, int which)
       if (function_key_expansion)
          goto start_expand;
 
-      got_char:
+   got_char:
 
       if ((c == '\b') || (c == DEL)) {
-         if (static_ss.full_input_size > 0) {
-            static_ss.full_input_size--;
-            user_input[static_ss.full_input_size] = '\0';
-            static_ss.full_input[static_ss.full_input_size] = '\0';
+         if (GLOB_full_input_size > 0) {
+            GLOB_full_input_size--;
+            user_input[GLOB_full_input_size] = '\0';
+            GLOB_full_input[GLOB_full_input_size] = '\0';
             function_key_expansion = (char *) 0;
             rubout(); /* Update the display. */
          }
@@ -760,8 +735,10 @@ static long_boolean get_user_input(char *prompt, int which)
          put_char(c);
          put_line("\n");
          current_text_line++;
-         start_matches();
-         (void) match_user_input(which, TRUE, c == '?');
+         match_lines = get_lines_for_more();
+         match_counter = match_lines-1; /* last line used for "--More--" prompt */
+         showing_has_stopped = FALSE;
+         (void) match_user_input(which, TRUE, c == '?', FALSE);
          put_line("\n");     /* Write a blank line. */
          current_text_line++;
          put_line(user_input_prompt);   /* Redisplay the current line. */
@@ -770,23 +747,24 @@ static long_boolean get_user_input(char *prompt, int which)
       }
       else if (c == ' ' || c == '-') {
          /* extend only to one space or hyphen, inclusive */
-         matches = match_user_input(which, FALSE, FALSE);
-         user_match = static_ss.result;
-         p = static_ss.extended_input;
+         matches = match_user_input(which, FALSE, FALSE, TRUE);
+         //         user_match = GLOB_match;
+         p = GLOB_extended_input;
 
          if (*p) {
             while (*p) {
                if (*p != ' ' && *p != '-')
                   pack_and_echo_character(*p++);
-               else
+               else {
+                  pack_and_echo_character(c);
                   goto foobar;
+               }
             }
             continue;   /* Do *not* pack the character. */
 
             foobar: ;
-            pack_and_echo_character(c);
          }
-         else if (static_ss.space_ok && matches > 1)
+         else if (GLOB_space_ok && matches > 1)
             pack_and_echo_character(c);
          else if (diagnostic_mode)
             goto diagnostic_error;
@@ -794,10 +772,10 @@ static long_boolean get_user_input(char *prompt, int which)
             uims_bell();
       }
       else if ((c == '\n') || (c == '\r')) {
-         matches = match_user_input(which, FALSE, FALSE);
-         user_match = static_ss.result;
+         matches = match_user_input(which, FALSE, FALSE, FALSE);
+         user_match = GLOB_match;
 
-         if (!strcmp(static_ss.full_input, "help")) {
+         if (!strcmp(GLOB_full_input, "help")) {
             put_line("\n");
             user_match.match.kind = ui_help_simple;
             current_text_line++;
@@ -809,20 +787,20 @@ static long_boolean get_user_input(char *prompt, int which)
             by a call.  The "match.next" field indicates that direct parse concepts
             were stacked. */
 
-         if ((matches == 1 || matches - static_ss.yielding_matches == 1 || user_match.exact) &&
+         if ((matches == 1 || matches - GLOB_yielding_matches == 1 || user_match.exact) &&
              ((!user_match.match.packed_next_conc_or_subcall &&
                !user_match.match.packed_secondary_subcall) ||
               user_match.match.kind == ui_call_select ||
               user_match.match.kind == ui_concept_select)) {
 
-            p = static_ss.extended_input;
+            p = GLOB_extended_input;
             while (*p)
                pack_and_echo_character(*p++);
 
             put_line("\n");
 
             if (journal_file) {
-               fputs(static_ss.full_input, journal_file);
+               fputs(GLOB_full_input, journal_file);
                fputc('\n', journal_file);
             }
 
@@ -848,9 +826,9 @@ static long_boolean get_user_input(char *prompt, int which)
          current_text_line++;   /* Count that line for erasure. */
       }
       else if (c == '\t' || c == '\033') {
-         (void) match_user_input(which, FALSE, FALSE);
-         user_match = static_ss.result;
-         p = static_ss.extended_input;
+         (void) match_user_input(which, FALSE, FALSE, FALSE);
+         user_match = GLOB_match;
+         p = GLOB_extended_input;
 
          if (*p) {
             while (*p)
@@ -901,8 +879,14 @@ static char *banner_prompts2[] = {
 
 static char *banner_prompts3[] = {
     "",
-    "singer",
-    "reverse singer",
+    "SC",
+    "RSC",
+    "??"};
+
+static char *banner_prompts4[] = {
+    "",
+    "MG",
+    "??",
     "??"};
 
 
@@ -939,7 +923,6 @@ extern long_boolean uims_get_call_command(uims_reply *reply_p)
 {
    char prompt_buffer[200];
    char *prompt_ptr;
-   int banner_mode;
    long_boolean retval = FALSE;
 
    if (allowing_modifications)
@@ -950,10 +933,11 @@ extern long_boolean uims_get_call_command(uims_reply *reply_p)
 
    /* Put any necessary special things into the prompt. */
 
-   banner_mode = (singing_call_mode << 6) |
-                 (using_active_phantoms << 4) |
-                 (allowing_all_concepts << 2) |
-                 (allowing_modifications);
+   int banner_mode = (allowing_minigrand << 8) |
+      (singing_call_mode << 6) |
+      (using_active_phantoms << 4) |
+      (allowing_all_concepts << 2) |
+      (allowing_modifications);
 
    if (banner_mode != 0) {
       int i;
@@ -961,9 +945,7 @@ extern long_boolean uims_get_call_command(uims_reply *reply_p)
 
       (void) strcat(prompt_buffer, "[");
 
-      for (i=0 ; i<4 ; i++,banner_mode>>=2) {
-
-
+      for (i=0 ; i<5 ; i++,banner_mode>>=2) {
          if (banner_mode&3) {
 
             if (comma) (void) strcat(prompt_buffer, ",");
@@ -982,6 +964,10 @@ extern long_boolean uims_get_call_command(uims_reply *reply_p)
 
             if (i==3) {
                (void) strcat(prompt_buffer, banner_prompts3[banner_mode&3]);
+            }
+
+            if (i==4) {
+               (void) strcat(prompt_buffer, banner_prompts4[banner_mode&3]);
             }
 
             comma |= banner_mode&3;
@@ -1053,7 +1039,7 @@ extern uims_reply uims_get_resolve_command(void)
 }
 
 
-Private int get_popup_string(char prompt[], char dest[])
+static int get_popup_string(char prompt[], char dest[])
 {
     char buffer[200];
 
@@ -1113,7 +1099,7 @@ extern int uims_do_neglect_popup(char dest[])
 }
 #endif
 
-Private int confirm(char *question)
+static int confirm(char *question)
 {
    int c;
 
@@ -1391,15 +1377,15 @@ extern void uims_reduce_line_count(int n)
 }
 
 
-extern long_boolean uims_choose_font()
+extern bool uims_choose_font()
 { return FALSE; }
 
 
-extern long_boolean uims_print_this()
+extern bool uims_print_this()
 { return FALSE; }
 
 
-extern long_boolean uims_print_any()
+extern bool uims_print_any()
 { return FALSE; }
 
 
@@ -1418,11 +1404,11 @@ extern void uims_terminate(void)
  * ticks to add.
  */
 
-Private int db_tick_max;
-Private int db_tick_cur;   /* goes from 0 to db_tick_max */
+static int db_tick_max;
+static int db_tick_cur;   /* goes from 0 to db_tick_max */
 
 #define TICK_STEPS 52
-Private int tick_displayed;   /* goes from 0 to TICK_STEPS */
+static int tick_displayed;   /* goes from 0 to TICK_STEPS */
 
 extern void uims_database_tick_max(int n)
 {

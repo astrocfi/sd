@@ -394,9 +394,10 @@ directory.
 When the installation is complete, the programs will be in the @file{Sd}
 subfolder of the @file{Programs} folder of the Start Menu.  The installation
 procedure also leaves an Explorer open on the shortcut icons.
-There are 3 icons: one for @code{Sd}, one for @code{Sdtty},
-and one for editing the initialization
-file.  You may copy any or all of these from the open Explorer to the Desktop
+There are several icons for starting @code{Sd} or @code{Sdtty} with various
+color schemes, for browsing the manual or release notes,
+and for editing the initialization file.  You may copy any or all of these
+from the open Explorer to the Desktop
 and/or the Start Menu.  To do this, perform a drag-and-drop operation,
 using the right mouse button.  If the system asks, select ``Copy Here''.
 To place icons in on the Desktop, just perform a right-mouse drag-and-drop

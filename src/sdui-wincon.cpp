@@ -24,8 +24,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "basetype.h"
-#include "sdui.h"
+#include "sd.h"
 
 
 
@@ -263,10 +262,10 @@ extern void ttu_terminate(void)
 }
 
 
-extern long_boolean uims_help_manual()
+extern bool uims_help_manual()
 {
    (void) ShellExecute(NULL, "open", "c:\\sd\\sd_doc.html", NULL, NULL, SW_SHOWNORMAL);
-   return TRUE;
+   return true;
 }
 
 

@@ -430,31 +430,31 @@ extern long_boolean selectp(setup *ss, int place) THROW_DECL
 }
 
 
-static Const long int iden_tab[16] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
-static Const long int dbl_tab01[4] = {0, 1, FALSE, TRUE};
-static Const long int dbl_tab03[2] = {0, 3};
-static Const long int dbl_tab23[2] = {2, 3};
-static Const long int dbl_tab21[4] = {2, 1, TRUE, FALSE};
+static const long int iden_tab[16] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+static const long int dbl_tab01[4] = {0, 1, FALSE, TRUE};
+static const long int dbl_tab03[2] = {0, 3};
+static const long int dbl_tab23[2] = {2, 3};
+static const long int dbl_tab21[4] = {2, 1, TRUE, FALSE};
 
-static Const long int boystuff_no_rh[3]  = {ID1_PERM_BOY,  ID1_PERM_GIRL, 0};
-static Const long int girlstuff_no_rh[3] = {ID1_PERM_GIRL, ID1_PERM_BOY,  0};
-static Const long int boystuff_rh[3]     = {ID1_PERM_BOY,  ID1_PERM_GIRL, 1};
-static Const long int girlstuff_rh[3]    = {ID1_PERM_GIRL, ID1_PERM_BOY,  1};
-static Const long int semi_squeeze_tab[8] = {0xD, 0xE, 0x9, 0x9, 0x2, 0xD, 0x2, 0xE};
+static const long int boystuff_no_rh[3]  = {ID1_PERM_BOY,  ID1_PERM_GIRL, 0};
+static const long int girlstuff_no_rh[3] = {ID1_PERM_GIRL, ID1_PERM_BOY,  0};
+static const long int boystuff_rh[3]     = {ID1_PERM_BOY,  ID1_PERM_GIRL, 1};
+static const long int girlstuff_rh[3]    = {ID1_PERM_GIRL, ID1_PERM_BOY,  1};
+static const long int semi_squeeze_tab[8] = {0xD, 0xE, 0x9, 0x9, 0x2, 0xD, 0x2, 0xE};
 
 
 /* Here are the predicates.  They will get put into the array "pred_table". */
 
 /* ARGSUSED */
 static long_boolean someone_selected(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff) THROW_DECL
+   int real_direction, int northified_index, const long int *extra_stuff) THROW_DECL
 {
    return selectp(real_people, real_index ^ (*extra_stuff));
 }
 
 /* ARGSUSED */
 static long_boolean sum_mod_selected(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff) THROW_DECL
+   int real_direction, int northified_index, const long int *extra_stuff) THROW_DECL
 {
    int otherindex = (*extra_stuff) - real_index;
    int size = setup_attrs[real_people->kind].setup_limits+1;
@@ -464,7 +464,7 @@ static long_boolean sum_mod_selected(setup *real_people, int real_index,
 
 /* ARGSUSED */
 static long_boolean sum_mod_selected_for_12p(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff) THROW_DECL
+   int real_direction, int northified_index, const long int *extra_stuff) THROW_DECL
 {
    int otherindex = (*extra_stuff) - real_index;
    if ((real_index % 6) >= 3) otherindex += 4;
@@ -475,7 +475,7 @@ static long_boolean sum_mod_selected_for_12p(setup *real_people, int real_index,
 
 /* ARGSUSED */
 static long_boolean plus_mod_selected(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff) THROW_DECL
+   int real_direction, int northified_index, const long int *extra_stuff) THROW_DECL
 {
    int otherindex = real_index + (*extra_stuff);
    int size = setup_attrs[real_people->kind].setup_limits+1;
@@ -485,7 +485,7 @@ static long_boolean plus_mod_selected(setup *real_people, int real_index,
 
 /* ARGSUSED */
 static long_boolean semi_squeezer_select(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff) THROW_DECL
+   int real_direction, int northified_index, const long int *extra_stuff) THROW_DECL
 {
    int other_index = ((northified_index ^ extra_stuff[northified_index&7]) + real_index - northified_index) & 0xF;
 
@@ -495,14 +495,14 @@ static long_boolean semi_squeezer_select(setup *real_people, int real_index,
 
 /* ARGSUSED */
 static long_boolean unselect(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff) THROW_DECL
+   int real_direction, int northified_index, const long int *extra_stuff) THROW_DECL
 {
    return !selectp(real_people, real_index);
 }
 
 /* ARGSUSED */
 static long_boolean select_near_select(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff) THROW_DECL
+   int real_direction, int northified_index, const long int *extra_stuff) THROW_DECL
 {
    if (!selectp(real_people, real_index)) return FALSE;
    if (current_options.who == selector_all || current_options.who == selector_everyone)
@@ -516,7 +516,7 @@ static int base_table[12] = {0, 0, 0, 3, 3, 3, 6, 6, 6, 9, 9, 9};
 
 /* ARGSUSED */
 static long_boolean select_near_select_or_phantom(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff) THROW_DECL
+   int real_direction, int northified_index, const long int *extra_stuff) THROW_DECL
 {
    int lim, base_person;
 
@@ -550,7 +550,7 @@ static long_boolean select_near_select_or_phantom(setup *real_people, int real_i
 
 /* ARGSUSED */
 static long_boolean select_near_unselect(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff) THROW_DECL
+   int real_direction, int northified_index, const long int *extra_stuff) THROW_DECL
 {
    if (!selectp(real_people, real_index)) return FALSE;
    if (current_options.who == selector_all || current_options.who == selector_everyone)
@@ -562,7 +562,7 @@ static long_boolean select_near_unselect(setup *real_people, int real_index,
 
 /* ARGSUSED */
 static long_boolean unselect_near_select(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff) THROW_DECL
+   int real_direction, int northified_index, const long int *extra_stuff) THROW_DECL
 {
    if (selectp(real_people, real_index)) return FALSE;
    if (current_options.who == selector_none) return FALSE;
@@ -573,7 +573,7 @@ static long_boolean unselect_near_select(setup *real_people, int real_index,
 
 /* ARGSUSED */
 static long_boolean unselect_near_unselect(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff) THROW_DECL
+   int real_direction, int northified_index, const long int *extra_stuff) THROW_DECL
 {
    int lim, base_person;
 
@@ -607,7 +607,7 @@ static long_boolean unselect_near_unselect(setup *real_people, int real_index,
 
 /* ARGSUSED */
 static long_boolean select_once_rem_from_select(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff) THROW_DECL
+   int real_direction, int northified_index, const long int *extra_stuff) THROW_DECL
 {
    if (!selectp(real_people, real_index)) return FALSE;
    if (current_options.who == selector_all || current_options.who == selector_everyone)
@@ -625,7 +625,7 @@ static long_boolean select_once_rem_from_select(setup *real_people, int real_ind
 
 /* ARGSUSED */
 static long_boolean select_once_rem_from_unselect(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff) THROW_DECL
+   int real_direction, int northified_index, const long int *extra_stuff) THROW_DECL
 {
    if (!selectp(real_people, real_index)) return FALSE;
    if (current_options.who == selector_all || current_options.who == selector_everyone)
@@ -641,7 +641,7 @@ static long_boolean select_once_rem_from_unselect(setup *real_people, int real_i
 
 /* ARGSUSED */
 static long_boolean unselect_once_rem_from_select(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff) THROW_DECL
+   int real_direction, int northified_index, const long int *extra_stuff) THROW_DECL
 {
    if (selectp(real_people, real_index)) return FALSE;
    if (current_options.who == selector_none) return FALSE;
@@ -656,28 +656,28 @@ static long_boolean unselect_once_rem_from_select(setup *real_people, int real_i
 
 /* ARGSUSED */
 static long_boolean select_and_roll_is_cw(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff) THROW_DECL
+   int real_direction, int northified_index, const long int *extra_stuff) THROW_DECL
 {
    return selectp(real_people, real_index) && (real_people->people[real_index].id1 & ROLLBITR) != 0;
 }
 
 /* ARGSUSED */
 static long_boolean select_and_roll_is_ccw(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff) THROW_DECL
+   int real_direction, int northified_index, const long int *extra_stuff) THROW_DECL
 {
    return selectp(real_people, real_index) && (real_people->people[real_index].id1 & ROLLBITL) != 0;
 }
 
 /* ARGSUSED */
 static long_boolean always(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff)
+   int real_direction, int northified_index, const long int *extra_stuff)
 {
    return TRUE;
 }
 
 /* ARGSUSED */
 static long_boolean x22_cpltest(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff)
+   int real_direction, int northified_index, const long int *extra_stuff)
 {
    int other_index;
 
@@ -693,7 +693,7 @@ static long_boolean x22_cpltest(setup *real_people, int real_index,
 
 /* ARGSUSED */
 static long_boolean x22_facing_test(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff)
+   int real_direction, int northified_index, const long int *extra_stuff)
 {
    int other_index = real_index ^ (((real_direction << 1) & 2) ^ extra_stuff[1]);
    return ((real_people->people[real_index].id1 ^
@@ -702,7 +702,7 @@ static long_boolean x22_facing_test(setup *real_people, int real_index,
 
 /* ARGSUSED */
 static long_boolean cols_someone_in_front(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff)
+   int real_direction, int northified_index, const long int *extra_stuff)
 {
    if (real_people->kind == s2x3) {
       if (real_index == 1 || real_index == 4) {
@@ -724,7 +724,7 @@ static long_boolean cols_someone_in_front(setup *real_people, int real_index,
 
 /* ARGSUSED */
 static long_boolean x14_once_rem_miniwave(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff)
+   int real_direction, int northified_index, const long int *extra_stuff)
 {
    switch (real_people->cmd.cmd_assume.assumption) {
    case cr_wave_only: case cr_li_lo: case cr_1fl_only: return FALSE;
@@ -752,7 +752,7 @@ static long_boolean x14_once_rem_miniwave(setup *real_people, int real_index,
 
 /* ARGSUSED */
 static long_boolean x14_once_rem_couple(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff)
+   int real_direction, int northified_index, const long int *extra_stuff)
 {
    switch (real_people->cmd.cmd_assume.assumption) {
    case cr_wave_only: case cr_li_lo: case cr_1fl_only: return TRUE;
@@ -765,7 +765,7 @@ static long_boolean x14_once_rem_couple(setup *real_people, int real_index,
 
 /* ARGSUSED */
 static long_boolean lines_miniwave(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff)
+   int real_direction, int northified_index, const long int *extra_stuff)
 {
    switch (real_people->cmd.cmd_assume.assumption) {
    case cr_wave_only: case cr_magic_only:
@@ -783,7 +783,7 @@ static long_boolean lines_miniwave(setup *real_people, int real_index,
 
 /* ARGSUSED */
 static long_boolean lines_couple(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff)
+   int real_direction, int northified_index, const long int *extra_stuff)
 {
    switch (real_people->cmd.cmd_assume.assumption) {
    case cr_wave_only: case cr_magic_only:
@@ -799,14 +799,14 @@ static long_boolean lines_couple(setup *real_people, int real_index,
    }
 }
 
-static Const long int tab_mwv_in_3n1[8]  = {2, 0, 0, 4, 3, 7, 2};
-static Const long int tab_cpl_in_3n1[8]  = {0, 2, 0, 4, 3, 7, 2};
-static Const long int tab_mwv_out_3n1[8] = {2, 0, 1, 5, 2, 6, 3};
-static Const long int tab_cpl_out_3n1[8] = {0, 2, 1, 5, 2, 6, 3};
+static const long int tab_mwv_in_3n1[8]  = {2, 0, 0, 4, 3, 7, 2};
+static const long int tab_cpl_in_3n1[8]  = {0, 2, 0, 4, 3, 7, 2};
+static const long int tab_mwv_out_3n1[8] = {2, 0, 1, 5, 2, 6, 3};
+static const long int tab_cpl_out_3n1[8] = {0, 2, 1, 5, 2, 6, 3};
 
 /* ARGSUSED */
 static long_boolean check_3n1_setup(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff)
+   int real_direction, int northified_index, const long int *extra_stuff)
 {
    uint32 A = extra_stuff[0];
    uint32 B = extra_stuff[1];
@@ -855,7 +855,7 @@ static long_boolean check_3n1_setup(setup *real_people, int real_index,
      3 for "couple_side_of_2n1_line" */
 /* ARGSUSED */
 static long_boolean some_side_of_2n1_line(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff)
+   int real_direction, int northified_index, const long int *extra_stuff)
 {
    int k = extra_stuff[0];
    if (real_index == 0 || real_index == 3) k ^= 3;
@@ -874,7 +874,7 @@ static long_boolean some_side_of_2n1_line(setup *real_people, int real_index,
      3 for "cast_normal_or_warn" */
 /* ARGSUSED */
 static long_boolean cast_normal_or_whatever(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff)
+   int real_direction, int northified_index, const long int *extra_stuff)
 {
    if (real_people->cmd.cmd_assume.assumption == cr_wave_only ||
          real_people->cmd.cmd_assume.assumption == cr_miniwaves ||
@@ -912,7 +912,7 @@ static long_boolean cast_normal_or_whatever(setup *real_people, int real_index,
 
 /* ARGSUSED */
 static long_boolean columns_tandem(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff)
+   int real_direction, int northified_index, const long int *extra_stuff)
 {
    uint32 this_person;
    int other_index;
@@ -959,7 +959,7 @@ static long_boolean columns_tandem(setup *real_people, int real_index,
 
 /* ARGSUSED */
 static long_boolean same_in_pair(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff)
+   int real_direction, int northified_index, const long int *extra_stuff)
 {
    int this_person;
    int other_person;
@@ -978,7 +978,7 @@ static long_boolean same_in_pair(setup *real_people, int real_index,
 
 /* ARGSUSED */
 static long_boolean opp_in_pair(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff)
+   int real_direction, int northified_index, const long int *extra_stuff)
 {
    int this_person;
    int other_person;
@@ -997,7 +997,7 @@ static long_boolean opp_in_pair(setup *real_people, int real_index,
 
 /* ARGSUSED */
 static long_boolean opp_in_magic(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff)
+   int real_direction, int northified_index, const long int *extra_stuff)
 {
    int this_person;
    int other_person;
@@ -1025,7 +1025,7 @@ static long_boolean opp_in_magic(setup *real_people, int real_index,
 
 /* ARGSUSED */
 static long_boolean same_in_magic(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff)
+   int real_direction, int northified_index, const long int *extra_stuff)
 {
    int this_person;
    int other_person;
@@ -1053,7 +1053,7 @@ static long_boolean same_in_magic(setup *real_people, int real_index,
 
 /* ARGSUSED */
 static long_boolean once_rem_test(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff)
+   int real_direction, int northified_index, const long int *extra_stuff)
 {
    int this_person = real_people->people[real_index].id1;
    int other_person = real_people->people[real_index ^ 2].id1;
@@ -1062,7 +1062,7 @@ static long_boolean once_rem_test(setup *real_people, int real_index,
 
 /* ARGSUSED */
 static long_boolean x12_beau_or_miniwave(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff) THROW_DECL
+   int real_direction, int northified_index, const long int *extra_stuff) THROW_DECL
 {
    if (real_people->cmd.cmd_assume.assumption == cr_wave_only ||
          real_people->cmd.cmd_assume.assumption == cr_miniwaves ||
@@ -1105,7 +1105,7 @@ static const long int swingleft_deep2x1dmd[10] = {-1, 0, -1, 1, 3, 6, 8, -1, 9, 
 static const long int swingleft_wqtag[10] = {-1, -1, 3, 4, 9, -1, -1, -1, 7, 8};
 
 static long_boolean can_swing_left(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff)
+   int real_direction, int northified_index, const long int *extra_stuff)
 {
    int t;
 
@@ -1140,7 +1140,7 @@ static long_boolean can_swing_left(setup *real_people, int real_index,
    and opts for L2FL. */
 /* ARGSUSED */
 static long_boolean x14_wheel_and_deal(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff)
+   int real_direction, int northified_index, const long int *extra_stuff)
 {
    /* We assume people have already been checked for coupleness. */
 
@@ -1181,7 +1181,7 @@ static long_boolean x14_wheel_and_deal(setup *real_people, int real_index,
 /* Test for 3X3 wheel_and_deal to be done 2FL-style, or beau side of 1FL. */
 /* ARGSUSED */
 static long_boolean x16_wheel_and_deal(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff) THROW_DECL
+   int real_direction, int northified_index, const long int *extra_stuff) THROW_DECL
 {
    /* We assume people have already been checked for coupleness. */
 
@@ -1212,7 +1212,7 @@ static long_boolean x16_wheel_and_deal(setup *real_people, int real_index,
 /* Test for 4X4 wheel_and_deal to be done 2FL-style, or beau side of 1FL. */
 /* ARGSUSED */
 static long_boolean x18_wheel_and_deal(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff) THROW_DECL
+   int real_direction, int northified_index, const long int *extra_stuff) THROW_DECL
 {
    /* We assume people have already been checked for coupleness. */
 
@@ -1247,7 +1247,7 @@ static long_boolean x18_wheel_and_deal(setup *real_people, int real_index,
    we were cycling or wheeling) and then returns true if that end is an extreme beau. */
 /* ARGSUSED */
 static long_boolean cycle_and_wheel_1(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff) THROW_DECL
+   int real_direction, int northified_index, const long int *extra_stuff) THROW_DECL
 {
    if (northified_index == 0)
       return TRUE;
@@ -1283,7 +1283,7 @@ static long_boolean cycle_and_wheel_1(setup *real_people, int real_index,
    whether he faces the same way as myself. */
 /* ARGSUSED */
 static long_boolean cycle_and_wheel_2(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff)
+   int real_direction, int northified_index, const long int *extra_stuff)
 {
    switch (real_people->cmd.cmd_assume.assumption) {
       case cr_1fl_only: case cr_2fl_only: return TRUE;
@@ -1308,7 +1308,7 @@ static long_boolean cycle_and_wheel_2(setup *real_people, int real_index,
 }
 
 static long_boolean vert1(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff)
+   int real_direction, int northified_index, const long int *extra_stuff)
 {
    if (!(northified_index & 1))
       return TRUE;
@@ -1327,7 +1327,7 @@ static long_boolean vert1(setup *real_people, int real_index,
 }
 
 static long_boolean vert2(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff)
+   int real_direction, int northified_index, const long int *extra_stuff)
 {
    if (!(northified_index & 1))
       return FALSE;
@@ -1347,7 +1347,7 @@ static long_boolean vert2(setup *real_people, int real_index,
 
 /* ARGSUSED */
 static long_boolean inner_active_lines(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff)
+   int real_direction, int northified_index, const long int *extra_stuff)
 {
    if ((real_index+3) & 2)
       return(northified_index >= 4);     /* I am an end */
@@ -1365,7 +1365,7 @@ static long_boolean inner_active_lines(setup *real_people, int real_index,
 
 /* ARGSUSED */
 static long_boolean outer_active_lines(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff)
+   int real_direction, int northified_index, const long int *extra_stuff)
 {
    if ((real_index+3) & 2)
       return(northified_index < 4);      /* I am an end */
@@ -1382,7 +1382,7 @@ static long_boolean outer_active_lines(setup *real_people, int real_index,
 }
 
 static long_boolean judge_is_right_1x3(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff)
+   int real_direction, int northified_index, const long int *extra_stuff)
 {
    int this_person = real_people->people[real_index].id1;
    int f = this_person & 2;
@@ -1394,7 +1394,7 @@ static long_boolean judge_is_right_1x3(setup *real_people, int real_index,
 }
 
 static long_boolean judge_is_left_1x3(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff)
+   int real_direction, int northified_index, const long int *extra_stuff)
 {
    int this_person = real_people->people[real_index].id1;
    int f = this_person & 2;
@@ -1406,7 +1406,7 @@ static long_boolean judge_is_left_1x3(setup *real_people, int real_index,
 }
 
 static long_boolean socker_is_right_1x3(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff)
+   int real_direction, int northified_index, const long int *extra_stuff)
 {
    int this_person = real_people->people[real_index].id1;
    int f = this_person & 2;
@@ -1418,7 +1418,7 @@ static long_boolean socker_is_right_1x3(setup *real_people, int real_index,
 }
 
 static long_boolean socker_is_left_1x3(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff)
+   int real_direction, int northified_index, const long int *extra_stuff)
 {
    int this_person = real_people->people[real_index].id1;
    int f = this_person & 2;
@@ -1429,24 +1429,24 @@ static long_boolean socker_is_left_1x3(setup *real_people, int real_index,
       (((real_people->people[f ^ 2].id1 ^ this_person) & 013) != 2));     /* we do not have another socker to my right */
 }
 
-static Const long int jr1x4[4]  = {1, 0, 0, 2};
-static Const long int sl1x4[4]  = {1, 2, 0, 2};
-static Const long int jl1x4[4]  = {0, 2, 2, 0};
-static Const long int sr1x4[4]  = {0, 0, 2, 0};
+static const long int jr1x4[4]  = {1, 0, 0, 2};
+static const long int sl1x4[4]  = {1, 2, 0, 2};
+static const long int jl1x4[4]  = {0, 2, 2, 0};
+static const long int sr1x4[4]  = {0, 0, 2, 0};
 
-static Const long int jr1x6[4]  = {1, 0, 0, 2};
-static Const long int sl1x6[4]  = {1, 2, 0, 2};
-static Const long int jl1x6[4]  = {0, 2, 2, 0};
-static Const long int sr1x6[4]  = {0, 0, 2, 0};
+static const long int jr1x6[4]  = {1, 0, 0, 2};
+static const long int sl1x6[4]  = {1, 2, 0, 2};
+static const long int jl1x6[4]  = {0, 2, 2, 0};
+static const long int sr1x6[4]  = {0, 0, 2, 0};
 
-static Const long int jr1x8[4]  = {1, 0, 0, 2};
-static Const long int sl1x8[4]  = {1, 2, 0, 2};
-static Const long int jl1x8[4]  = {0, 2, 2, 0};
-static Const long int sr1x8[4]  = {0, 0, 2, 0};
+static const long int jr1x8[4]  = {1, 0, 0, 2};
+static const long int sl1x8[4]  = {1, 2, 0, 2};
+static const long int jl1x8[4]  = {0, 2, 2, 0};
+static const long int sr1x8[4]  = {0, 0, 2, 0};
 
 /* ARGSUSED */
 static long_boolean judge_check_1x4(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff)
+   int real_direction, int northified_index, const long int *extra_stuff)
 {
    uint32 this_person = real_people->people[real_index].id1;
    uint32 f;
@@ -1470,7 +1470,7 @@ static long_boolean judge_check_1x4(setup *real_people, int real_index,
 
 /* ARGSUSED */
 static long_boolean judge_check_1x6(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff)
+   int real_direction, int northified_index, const long int *extra_stuff)
 {
    uint32 this_person = real_people->people[real_index].id1;
    uint32 f;
@@ -1494,7 +1494,7 @@ static long_boolean judge_check_1x6(setup *real_people, int real_index,
 
 /* ARGSUSED */
 static long_boolean judge_check_1x8(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff)
+   int real_direction, int northified_index, const long int *extra_stuff)
 {
    uint32 this_person = real_people->people[real_index].id1;
    uint32 f;
@@ -1577,7 +1577,7 @@ static C_const inroll_action outroller_2x8          = {inroll_directions_2x8,   
 
 /* ARGSUSED */
 static long_boolean in_out_roll_select(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff) THROW_DECL
+   int real_direction, int northified_index, const long int *extra_stuff) THROW_DECL
 {
    /* "Yes_roll_direction" is the facing direction that constitutes what we are
       looking for (inroller or outroller as the case may be). */
@@ -1654,7 +1654,7 @@ static long_boolean in_out_roll_select(setup *real_people, int real_index,
 
 /* ARGSUSED */
 static long_boolean outposter_is_cw(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff)
+   int real_direction, int northified_index, const long int *extra_stuff)
 {
    uint32 outroll_direction;
    uint32 cw_dir;
@@ -1682,7 +1682,7 @@ static long_boolean outposter_is_cw(setup *real_people, int real_index,
 
 /* ARGSUSED */
 static long_boolean outposter_is_ccw(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff)
+   int real_direction, int northified_index, const long int *extra_stuff)
 {
    uint32 inroll_direction;
 
@@ -1711,7 +1711,7 @@ static long_boolean outposter_is_ccw(setup *real_people, int real_index,
 
 /* ARGSUSED */
 static long_boolean count_cw_people(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff)
+   int real_direction, int northified_index, const long int *extra_stuff)
 {
    int i;
    int count = 0;
@@ -1731,7 +1731,7 @@ static long_boolean count_cw_people(setup *real_people, int real_index,
 
 /* ARGSUSED */
 static long_boolean check_tbone(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff) THROW_DECL
+   int real_direction, int northified_index, const long int *extra_stuff) THROW_DECL
 {
    long int z = extra_stuff[(real_index<<2) + real_direction];
 
@@ -1765,16 +1765,16 @@ static long_boolean check_tbone(setup *real_people, int real_index,
    return FALSE;
 }
 
-static Const long int trnglspot_tboned_tab[12] = {-3,  2, -3,  1,    -2, -2,  0, 0,    -2,  0,  0, -2};
-static Const long int six2spot_tboned_tab[24]  = {-2, -2, -2, -2,    -3,  2, -3, 0,    -2, -2, -2, -2,    -2, -2, -2, -2,    -3, 3, -3, 5,    -2, -2, -2, -2};
-static Const long int mag62spot_tboned_tab[24] = {-3, -2, -3, -2,    -3,  3, -3, 5,    -3, -2, -3, -2,    -3, -2, -3, -2,    -3, 2, -3, 0,    -3, -2, -3, -2};
+static const long int trnglspot_tboned_tab[12] = {-3,  2, -3,  1,    -2, -2,  0, 0,    -2,  0,  0, -2};
+static const long int six2spot_tboned_tab[24]  = {-2, -2, -2, -2,    -3,  2, -3, 0,    -2, -2, -2, -2,    -2, -2, -2, -2,    -3, 3, -3, 5,    -2, -2, -2, -2};
+static const long int mag62spot_tboned_tab[24] = {-3, -2, -3, -2,    -3,  3, -3, 5,    -3, -2, -3, -2,    -3, -2, -3, -2,    -3, 2, -3, 0,    -3, -2, -3, -2};
 
 /* ARGSUSED */
 static long_boolean nextinttrnglspot_is_tboned(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff) THROW_DECL
+   int real_direction, int northified_index, const long int *extra_stuff) THROW_DECL
 {
-   static Const long int bb[24] = {-2, -2, 4, 4,     -3, 3, -3, 5,     -2, 4, 4, -2,     1, 1, -2, -2,     -3, 2, -3, 0,     1, -2, -2, 1};
-   static Const long int cc[24] = {2, 2, -2, -2,      5, -2, -2, 5,    0, -3, 4, -3,     -2, -2, 5, 5,     -2, 2, 2, -2,     1, -3, 3, -3};
+   static const long int bb[24] = {-2, -2, 4, 4,     -3, 3, -3, 5,     -2, 4, 4, -2,     1, 1, -2, -2,     -3, 2, -3, 0,     1, -2, -2, 1};
+   static const long int cc[24] = {2, 2, -2, -2,      5, -2, -2, 5,    0, -3, 4, -3,     -2, -2, 5, 5,     -2, 2, 2, -2,     1, -3, 3, -3};
 
    return check_tbone(real_people, real_index, real_direction, northified_index,
          (real_people->kind == s_short6) ? bb : cc);
@@ -1782,9 +1782,9 @@ static long_boolean nextinttrnglspot_is_tboned(setup *real_people, int real_inde
 
 /* ARGSUSED */
 static long_boolean next_galaxyspot_is_tboned(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff) THROW_DECL
+   int real_direction, int northified_index, const long int *extra_stuff) THROW_DECL
 {
-   static Const long int aa[32] = {1, -3, 7, -3,     2, 2, 0, 0,     -3, 3, -3, 1,     2, 4, 4, 2,    3, -3, 5, -3,     4, 4, 6, 6,    -3, 5, -3, 7,      0, 6, 6, 0};
+   static const long int aa[32] = {1, -3, 7, -3,     2, 2, 0, 0,     -3, 3, -3, 1,     2, 4, 4, 2,    3, -3, 5, -3,     4, 4, 6, 6,    -3, 5, -3, 7,      0, 6, 6, 0};
 
    /* We always return true for centers.  That way
       the centers can reverse flip a galaxy even if the
@@ -1798,7 +1798,7 @@ static long_boolean next_galaxyspot_is_tboned(setup *real_people, int real_index
 
 /* ARGSUSED */
 static long_boolean column_double_down(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff)
+   int real_direction, int northified_index, const long int *extra_stuff)
 {
    return
       (northified_index < 3)              /* unless #1 in column, it's easy */
@@ -1813,7 +1813,7 @@ static long_boolean column_double_down(setup *real_people, int real_index,
 
 /* ARGSUSED */
 static long_boolean apex_test(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff) THROW_DECL
+   int real_direction, int northified_index, const long int *extra_stuff) THROW_DECL
 {
    uint32 unmoving_end = (real_people->people[0].id1 & (ROLLBITR|ROLLBITL)) ? 2 : 0;
    uint32 status;
@@ -1836,7 +1836,7 @@ static long_boolean apex_test(setup *real_people, int real_index,
 
 /* ARGSUSED */
 static long_boolean boygirlp(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff)
+   int real_direction, int northified_index, const long int *extra_stuff)
 {
    /* If this is a slide thru from a miniwave that is not right-handed, raise a warning. */
    if (extra_stuff[2] && northified_index != 0)
@@ -1847,21 +1847,21 @@ static long_boolean boygirlp(setup *real_people, int real_index,
 
 /* ARGSUSED */
 static long_boolean roll_is_cw(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff)
+   int real_direction, int northified_index, const long int *extra_stuff)
 {
    return (real_people->people[real_index].id1 & ROLLBITR) != 0;
 }
 
 /* ARGSUSED */
 static long_boolean roll_is_ccw(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff)
+   int real_direction, int northified_index, const long int *extra_stuff)
 {
    return (real_people->people[real_index].id1 & ROLLBITL) != 0;
 }
 
 /* ARGSUSED */
 static long_boolean x12_facing_other_sex(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff)
+   int real_direction, int northified_index, const long int *extra_stuff)
 {
    int this_person = real_people->people[real_index].id1;
    int other_person = real_people->people[real_index ^ 1].id1;
@@ -1870,7 +1870,7 @@ static long_boolean x12_facing_other_sex(setup *real_people, int real_index,
 
 /* ARGSUSED */
 static long_boolean x22_facing_other_sex(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff)
+   int real_direction, int northified_index, const long int *extra_stuff)
 {
    int this_person = real_people->people[real_index].id1;
    int other_person = real_people->people[real_index ^ (((real_direction << 1) & 2) ^ 3)].id1;
@@ -1893,7 +1893,7 @@ static direction_kind direction_list[] = {
 
 /* ARGSUSED */
 static long_boolean directionp(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff)
+   int real_direction, int northified_index, const long int *extra_stuff)
 {
    direction_used = TRUE;
    return current_options.where == direction_list[extra_stuff[0]];
@@ -1903,7 +1903,7 @@ static long_boolean directionp(setup *real_people, int real_index,
 
 /* ARGSUSED */
 static long_boolean dmd_ctrs_rh(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff) THROW_DECL
+   int real_direction, int northified_index, const long int *extra_stuff) THROW_DECL
 {
    if (real_people->cmd.cmd_assume.assump_col == 0) {
       switch (real_people->cmd.cmd_assume.assumption) {
@@ -1938,7 +1938,7 @@ static long_boolean dmd_ctrs_rh(setup *real_people, int real_index,
 
 /* ARGSUSED */
 static long_boolean trngl_pt_rh(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff) THROW_DECL
+   int real_direction, int northified_index, const long int *extra_stuff) THROW_DECL
 {
    if ((real_people->people[0].id1 & d_mask) == d_west)
       return TRUE;
@@ -2004,7 +2004,7 @@ static full_qtag_action q_line_back_action = {
 
 /* ARGSUSED */
 static long_boolean q_tag_check(setup *real_people, int real_index,
-   int real_direction, int northified_index, Const long int *extra_stuff)
+   int real_direction, int northified_index, const long int *extra_stuff)
 {
    full_qtag_action *bigactionp = (full_qtag_action *) extra_stuff;
    simple_qtag_action *actionp;
@@ -2118,13 +2118,13 @@ static long_boolean q_tag_check(setup *real_people, int real_index,
 
 predicate_descriptor pred_table[] = {
       {someone_selected,               &iden_tab[0]},            /* "select" */
-      {unselect,                     (Const long int *) 0},      /* "unselect" */
-      {select_near_select,           (Const long int *) 0},      /* "select_near_select" */
-      {select_near_select_or_phantom,(Const long int *) 0},      /* "select_near_select_or_phantom" */
-      {select_near_unselect,         (Const long int *) 0},      /* "select_near_unselect" */
-      {unselect_near_select,         (Const long int *) 0},      /* "unselect_near_select" */
-      {unselect_near_unselect,       (Const long int *) 0},      /* "unselect_near_unselect" */
-      {select_once_rem_from_select,  (Const long int *) 0},      /* "select_once_rem_from_select" */
+      {unselect,                     (const long int *) 0},      /* "unselect" */
+      {select_near_select,           (const long int *) 0},      /* "select_near_select" */
+      {select_near_select_or_phantom,(const long int *) 0},      /* "select_near_select_or_phantom" */
+      {select_near_unselect,         (const long int *) 0},      /* "select_near_unselect" */
+      {unselect_near_select,         (const long int *) 0},      /* "unselect_near_select" */
+      {unselect_near_unselect,       (const long int *) 0},      /* "unselect_near_unselect" */
+      {select_once_rem_from_select,  (const long int *) 0},      /* "select_once_rem_from_select" */
       {someone_selected,               &iden_tab[2]},            /* "conc_from_select" */
       {someone_selected,               &iden_tab[3]},            /* "other_spindle_cw_select" */
       {someone_selected,               &iden_tab[4]},            /* "grand_conc_from_select" */
@@ -2142,22 +2142,22 @@ predicate_descriptor pred_table[] = {
       {plus_mod_selected,             &iden_tab[12]},            /* "person_select_plus12" */
       {sum_mod_selected_for_12p,      &iden_tab[15]},            /* "person_select12_sum15" */
       {semi_squeezer_select,       semi_squeeze_tab},            /* "semi_squeezer_select" */
-      {select_once_rem_from_unselect,(Const long int *) 0},      /* "select_once_rem_from_unselect" */
-      {unselect_once_rem_from_select,(Const long int *) 0},      /* "unselect_once_rem_from_select" */
-      {select_and_roll_is_cw,        (Const long int *) 0},      /* "select_and_roll_is_cw" */
-      {select_and_roll_is_ccw,       (Const long int *) 0},      /* "select_and_roll_is_ccw" */
+      {select_once_rem_from_unselect,(const long int *) 0},      /* "select_once_rem_from_unselect" */
+      {unselect_once_rem_from_select,(const long int *) 0},      /* "unselect_once_rem_from_select" */
+      {select_and_roll_is_cw,        (const long int *) 0},      /* "select_and_roll_is_cw" */
+      {select_and_roll_is_ccw,       (const long int *) 0},      /* "select_and_roll_is_ccw" */
 /* End of predicates that force use of selector. */
 #define PREDS_BEFORE_THIS_POINT 23
-      {always,                       (Const long int *) 0},      /* "always" */
+      {always,                       (const long int *) 0},      /* "always" */
       {x22_cpltest,                    dbl_tab21},               /* "x22_miniwave" */
       {x22_cpltest,                    dbl_tab01},               /* "x22_couple" */
       {x22_facing_test,                dbl_tab23},               /* "x22_facing_someone" */
       {x22_facing_test,                dbl_tab03},               /* "x22_tandem_with_someone" */
-      {cols_someone_in_front,        (Const long int *) 0},      /* "columns_someone_in_front" */
+      {cols_someone_in_front,        (const long int *) 0},      /* "columns_someone_in_front" */
       {x14_once_rem_miniwave,         &iden_tab[1]},             /* "x14_once_rem_miniwave" */
-      {x14_once_rem_couple,          (Const long int *) 0},      /* "x14_once_rem_couple" */
-      {lines_miniwave,               (Const long int *) 0},      /* "lines_miniwave" */
-      {lines_couple,                 (Const long int *) 0},      /* "lines_couple" */
+      {x14_once_rem_couple,          (const long int *) 0},      /* "x14_once_rem_couple" */
+      {lines_miniwave,               (const long int *) 0},      /* "lines_miniwave" */
+      {lines_couple,                 (const long int *) 0},      /* "lines_couple" */
       {check_3n1_setup,              tab_mwv_in_3n1},            /* "miniwave_side_of_in_3n1_line" */
       {check_3n1_setup,              tab_cpl_in_3n1},            /* "couple_side_of_in_3n1_line" */
       {check_3n1_setup,             tab_mwv_out_3n1},            /* "miniwave_side_of_out_3n1_line" */
@@ -2176,41 +2176,41 @@ predicate_descriptor pred_table[] = {
 
       {x14_once_rem_miniwave,          &iden_tab[3]},            /* "intlk_cast_normal_or_warn" */
 
-      {opp_in_magic,                 (Const long int *) 0},      /* "lines_magic_miniwave" */
-      {same_in_magic,                (Const long int *) 0},      /* "lines_magic_couple" */
+      {opp_in_magic,                 (const long int *) 0},      /* "lines_magic_miniwave" */
+      {same_in_magic,                (const long int *) 0},      /* "lines_magic_couple" */
       {once_rem_test,                  &iden_tab[2]},            /* "lines_once_rem_miniwave" */
       {once_rem_test,                  &iden_tab[0]},            /* "lines_once_rem_couple" */
-      {same_in_pair,                 (Const long int *) 0},      /* "lines_tandem" */
-      {opp_in_pair,                  (Const long int *) 0},      /* "lines_antitandem" */
+      {same_in_pair,                 (const long int *) 0},      /* "lines_tandem" */
+      {opp_in_pair,                  (const long int *) 0},      /* "lines_antitandem" */
       {columns_tandem,                 &iden_tab[0]},            /* "columns_tandem" */
       {columns_tandem,                 &iden_tab[1]},            /* "columns_antitandem" */
-      {same_in_magic,                (Const long int *) 0},      /* "columns_magic_tandem" */
-      {opp_in_magic,                 (Const long int *) 0},      /* "columns_magic_antitandem" */
+      {same_in_magic,                (const long int *) 0},      /* "columns_magic_tandem" */
+      {opp_in_magic,                 (const long int *) 0},      /* "columns_magic_antitandem" */
       {once_rem_test,                  &iden_tab[0]},            /* "columns_once_rem_tandem" */
       {once_rem_test,                  &iden_tab[2]},            /* "columns_once_rem_antitandem" */
-      {same_in_pair,                 (Const long int *) 0},      /* "columns_couple" */
-      {opp_in_pair,                  (Const long int *) 0},      /* "columns_miniwave" */
+      {same_in_pair,                 (const long int *) 0},      /* "columns_couple" */
+      {opp_in_pair,                  (const long int *) 0},      /* "columns_miniwave" */
       {x12_beau_or_miniwave,           &iden_tab[0]},            /* "1x2_beau_or_miniwave" */
       {x12_beau_or_miniwave,           &iden_tab[1]},            /* "1x2_beau_miniwave_or_warn" */
       {x12_beau_or_miniwave,           &iden_tab[2]},            /* "1x2_beau_miniwave_for_breaker" */
-      {can_swing_left,               (Const long int *) 0},      /* "can_swing_left" */
-      {x14_wheel_and_deal,           (Const long int *) 0},      /* "1x4_wheel_and_deal" */
-      {x16_wheel_and_deal,           (Const long int *) 0},      /* "1x6_wheel_and_deal" */
-      {x18_wheel_and_deal,           (Const long int *) 0},      /* "1x8_wheel_and_deal" */
-      {cycle_and_wheel_1,            (Const long int *) 0},      /* "cycle_and_wheel_1" */
-      {cycle_and_wheel_2,            (Const long int *) 0},      /* "cycle_and_wheel_2" */
-      {vert1,                        (Const long int *) 0},      /* "vert1" */
-      {vert2,                        (Const long int *) 0},      /* "vert2" */
-      {inner_active_lines,           (Const long int *) 0},      /* "inner_active_lines" */
-      {outer_active_lines,           (Const long int *) 0},      /* "outer_active_lines" */
+      {can_swing_left,               (const long int *) 0},      /* "can_swing_left" */
+      {x14_wheel_and_deal,           (const long int *) 0},      /* "1x4_wheel_and_deal" */
+      {x16_wheel_and_deal,           (const long int *) 0},      /* "1x6_wheel_and_deal" */
+      {x18_wheel_and_deal,           (const long int *) 0},      /* "1x8_wheel_and_deal" */
+      {cycle_and_wheel_1,            (const long int *) 0},      /* "cycle_and_wheel_1" */
+      {cycle_and_wheel_2,            (const long int *) 0},      /* "cycle_and_wheel_2" */
+      {vert1,                        (const long int *) 0},      /* "vert1" */
+      {vert2,                        (const long int *) 0},      /* "vert2" */
+      {inner_active_lines,           (const long int *) 0},      /* "inner_active_lines" */
+      {outer_active_lines,           (const long int *) 0},      /* "outer_active_lines" */
       {judge_check_1x4,                       jr1x4},            /* "judge_is_right" */
       {judge_check_1x4,                       jl1x4},            /* "judge_is_left" */
       {judge_check_1x4,                       sr1x4},            /* "socker_is_right" */
       {judge_check_1x4,                       sl1x4},            /* "socker_is_left" */
-      {judge_is_right_1x3,           (Const long int *) 0},      /* "judge_is_right_1x3" */
-      {judge_is_left_1x3,            (Const long int *) 0},      /* "judge_is_left_1x3" */
-      {socker_is_right_1x3,          (Const long int *) 0},      /* "socker_is_right_1x3" */
-      {socker_is_left_1x3,           (Const long int *) 0},      /* "socker_is_left_1x3" */
+      {judge_is_right_1x3,           (const long int *) 0},      /* "judge_is_right_1x3" */
+      {judge_is_left_1x3,            (const long int *) 0},      /* "judge_is_left_1x3" */
+      {socker_is_right_1x3,          (const long int *) 0},      /* "socker_is_right_1x3" */
+      {socker_is_left_1x3,           (const long int *) 0},      /* "socker_is_left_1x3" */
       {judge_check_1x6,                       jr1x6},            /* "judge_is_right_1x6" */
       {judge_check_1x6,                       jl1x6},            /* "judge_is_left_1x6" */
       {judge_check_1x6,                       sr1x6},            /* "socker_is_right_1x6" */
@@ -2219,30 +2219,30 @@ predicate_descriptor pred_table[] = {
       {judge_check_1x8,                       jl1x8},            /* "judge_is_left_1x8" */
       {judge_check_1x8,                       sr1x8},            /* "socker_is_right_1x8" */
       {judge_check_1x8,                       sl1x8},            /* "socker_is_left_1x8" */
-      {in_out_roll_select, (Const long int *) &inroller_cw},     /* "inroller_is_cw" */
-      {in_out_roll_select, (Const long int *) &magic_inroller_cw}, /* "magic_inroller_is_cw" */
-      {in_out_roll_select, (Const long int *) &outroller_cw},    /* "outroller_is_cw" */
-      {in_out_roll_select, (Const long int *) &magic_outroller_cw}, /* "magic_outroller_is_cw" */
-      {in_out_roll_select, (Const long int *) &inroller_cw_2x3}, /* "inroller_is_cw_2x3" */
-      {in_out_roll_select, (Const long int *) &magic_inroller_cw_2x3}, /* "magic_inroller_is_cw_2x3" */
-      {in_out_roll_select, (Const long int *) &outroller_cw_2x3},/* "outroller_is_cw_2x3" */
-      {in_out_roll_select, (Const long int *) &magic_outroller_cw_2x3}, /* "magic_outroller_is_cw_2x3" */
-      {in_out_roll_select, (Const long int *) &inroller_2x6},   /* "inroller_is_cw_2x6" */
-      {in_out_roll_select, (Const long int *) &outroller_2x6},  /* "outroller_is_cw_2x6" */
-      {in_out_roll_select, (Const long int *) &inroller_2x8},   /* "inroller_is_cw_2x8" */
-      {in_out_roll_select, (Const long int *) &outroller_2x8},  /* "outroller_is_cw_2x8" */
-      {outposter_is_cw,              (Const long int *) 0},      /* "outposter_is_cw" */
-      {outposter_is_ccw,             (Const long int *) 0},      /* "outposter_is_ccw" */
+      {in_out_roll_select, (const long int *) &inroller_cw},     /* "inroller_is_cw" */
+      {in_out_roll_select, (const long int *) &magic_inroller_cw}, /* "magic_inroller_is_cw" */
+      {in_out_roll_select, (const long int *) &outroller_cw},    /* "outroller_is_cw" */
+      {in_out_roll_select, (const long int *) &magic_outroller_cw}, /* "magic_outroller_is_cw" */
+      {in_out_roll_select, (const long int *) &inroller_cw_2x3}, /* "inroller_is_cw_2x3" */
+      {in_out_roll_select, (const long int *) &magic_inroller_cw_2x3}, /* "magic_inroller_is_cw_2x3" */
+      {in_out_roll_select, (const long int *) &outroller_cw_2x3},/* "outroller_is_cw_2x3" */
+      {in_out_roll_select, (const long int *) &magic_outroller_cw_2x3}, /* "magic_outroller_is_cw_2x3" */
+      {in_out_roll_select, (const long int *) &inroller_2x6},   /* "inroller_is_cw_2x6" */
+      {in_out_roll_select, (const long int *) &outroller_2x6},  /* "outroller_is_cw_2x6" */
+      {in_out_roll_select, (const long int *) &inroller_2x8},   /* "inroller_is_cw_2x8" */
+      {in_out_roll_select, (const long int *) &outroller_2x8},  /* "outroller_is_cw_2x8" */
+      {outposter_is_cw,              (const long int *) 0},      /* "outposter_is_cw" */
+      {outposter_is_ccw,             (const long int *) 0},      /* "outposter_is_ccw" */
       {count_cw_people,                &iden_tab[0]},            /* "zero_cw_people" */
       {count_cw_people,                &iden_tab[1]},            /* "one_cw_person" */
       {count_cw_people,                &iden_tab[2]},            /* "two_cw_people" */
       {count_cw_people,                &iden_tab[3]},            /* "three_cw_people" */
       {check_tbone,            trnglspot_tboned_tab},            /* "nexttrnglspot_is_tboned" */
-      {nextinttrnglspot_is_tboned,   (Const long int *) 0},    /* "nextinttrnglspot_is_tboned" */
+      {nextinttrnglspot_is_tboned,   (const long int *) 0},    /* "nextinttrnglspot_is_tboned" */
       {check_tbone,             six2spot_tboned_tab},            /* "next62spot_is_tboned" */
       {check_tbone,            mag62spot_tboned_tab},          /* "next_magic62spot_is_tboned" */
-      {next_galaxyspot_is_tboned,    (Const long int *) 0},     /* "next_galaxyspot_is_tboned" */
-      {column_double_down,           (Const long int *) 0},      /* "column_double_down" */
+      {next_galaxyspot_is_tboned,    (const long int *) 0},     /* "next_galaxyspot_is_tboned" */
+      {column_double_down,           (const long int *) 0},      /* "column_double_down" */
       {apex_test,                      &iden_tab[1]},            /* "apex_test_1" */
       {apex_test,                      &iden_tab[2]},            /* "apex_test_2" */
       {apex_test,                      &iden_tab[3]},            /* "apex_test_3" */
@@ -2250,8 +2250,8 @@ predicate_descriptor pred_table[] = {
       {boygirlp,                    girlstuff_no_rh},            /* "girlp" */
       {boygirlp,                        boystuff_rh},            /* "boyp_rh_slide_thru" */
       {boygirlp,                       girlstuff_rh},            /* "girlp_rh_slide_thru" */
-      {roll_is_cw,                   (Const long int *) 0},      /* "roll_is_cw" */
-      {roll_is_ccw,                  (Const long int *) 0},      /* "roll_is_ccw" */
+      {roll_is_cw,                   (const long int *) 0},      /* "roll_is_cw" */
+      {roll_is_ccw,                  (const long int *) 0},      /* "roll_is_ccw" */
       {x12_facing_other_sex,          boystuff_no_rh},           /* "x12_boy_facing_girl" */
       {x12_facing_other_sex,         girlstuff_no_rh},           /* "x12_girl_facing_boy" */
       {x22_facing_other_sex,          boystuff_no_rh},           /* "x22_boy_facing_girl" */
@@ -2268,10 +2268,10 @@ predicate_descriptor pred_table[] = {
       {directionp,                     &iden_tab[9]},            /* "no_dir_p" */
       {dmd_ctrs_rh,                    &iden_tab[0]},            /* "dmd_ctrs_rh" */
       {dmd_ctrs_rh,                    &iden_tab[1]},            /* "dmd_ctrs_lh" */
-      {trngl_pt_rh,                  (Const long int *) 0},      /* "trngl_pt_rh" */
-      {q_tag_check, (Const long int *) &q_tag_front_action},     /* "q_tag_front" */
-      {q_tag_check, (Const long int *) &q_tag_back_action},      /* "q_tag_back" */
-      {q_tag_check, (Const long int *) &q_line_front_action},    /* "q_line_front" */
-      {q_tag_check, (Const long int *) &q_line_back_action}};    /* "q_line_back" */
+      {trngl_pt_rh,                  (const long int *) 0},      /* "trngl_pt_rh" */
+      {q_tag_check, (const long int *) &q_tag_front_action},     /* "q_tag_front" */
+      {q_tag_check, (const long int *) &q_tag_back_action},      /* "q_tag_back" */
+      {q_tag_check, (const long int *) &q_line_front_action},    /* "q_line_front" */
+      {q_tag_check, (const long int *) &q_line_back_action}};    /* "q_line_back" */
 
 int selector_preds = PREDS_BEFORE_THIS_POINT;

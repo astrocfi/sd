@@ -2721,7 +2721,7 @@ There are a number of internal ones not shown here.  See the file ~/sd/restricti
                                     thar/crosswave - same handedness waves
    wave_unless_say_2faced           not implemented
    all_facing_same                  1x2/2x1/2x2/2x3/3x2/2x4/4x2/1x4/4x1/1x6/6x1/1x8/8x1
-                                    all people in the setup facing the same way */
+                                    all people in the setup facing the same way
    1fl_only                         1x3/1x4/1x6/1x8 - a 1FL, that is, all 3/4/6/8 facing same;
 
 
@@ -2901,6 +2901,9 @@ There are a number of internal ones not shown here.  See the file ~/sd/restricti
                                        be present.  The "in" or "out" modifiers may be used
                                        only with 1x4 setups.  They control the ends of the
                                        1x4.  They must looking into or out of the 1x4 column.
+
+   siamese_in_quad                  Same as corresponding restriction, above.
+   not_tboned_in_quad               Same as corresponding restriction, above.
 
    gen_qbox                         2x4/4x2 - demands that everyone be column-like.  This is
                                        intended to be used with the "left" or "right" modifiers.

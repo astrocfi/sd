@@ -221,10 +221,6 @@ occupy the center, and the Solomon rule
 @footnote{The Solomon rule(I Kings 3:16-28) says that cutting
 people in half is generally not a good way to solve a problem.}
 @end iftex
-@ifset html
-@footnote{The Solomon rule(I Kings 3:16-28) says that cutting
-people in half is generally not a good way to solve a problem.}
-@end ifset
 says we can't put half of each
 in the center.  We either put in zero people or two.  The rule is that
 we always put someone in, unless we have run out of people.  So, in

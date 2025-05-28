@@ -269,13 +269,15 @@ extern long_boolean divide_for_magic(
    switch (ss->kind) {
    case s2x4:
       if (heritflags_to_check == INHERITFLAG_MAGIC) {
-         /* "Magic" was specified.  Split it into 1x4's in the appropriate magical way. */
+         // "Magic" was specified.  Split it into 1x4's
+         // in the appropriate magical way.
          division_maps = &map_2x4_magic;
          goto divide_us;
       }
       break;
    case s_qtag:
-      /* Indicate that we have done a diamond division and the concept name needs to be changed. */
+      // Indicate that we have done a diamond division
+      // and the concept name needs to be changed.
       resflags = RESULTFLAG__NEED_DIAMOND;
 
       if (heritflags_to_check == INHERITFLAG_MAGIC) {
@@ -659,6 +661,7 @@ extern long_boolean do_simple_split(
       mapcode = MAPCODE(sdmd,2,MPKIND__SPLIT,1);
       break;
    case s_ptpd:
+      if (prefer_1x4 == 2) recompute_id = FALSE;
       mapcode = MAPCODE(sdmd,2,MPKIND__SPLIT,0);
       break;
    default:
@@ -693,7 +696,7 @@ extern void do_call_in_series(
    long_boolean dont_enforce_consistent_split,
    long_boolean roll_transparent,
    long_boolean normalize,
-   long_boolean qtfudged) THROW_DECL
+   bool qtfudged) THROW_DECL
 {
    uint32 current_elongation = 0;
    uint32 saved_result_flags = sss->result_flags;
@@ -941,34 +944,38 @@ typedef struct gloop {
 } matrix_rec;
 
 
-Private int start_matrix_call(
+static int start_matrix_call(
    const setup *ss,
    matrix_rec matrix_info[],
+   int base,
    uint32 flags,
    setup *people)
 {
    int i;
    const coordrec *thingyptr, *nicethingyptr;
-   int nump = 0;
+   int nump = base;
 
-   *people = *ss;    /* Get the setup kind, so selectp will be happier. */
-   clear_people(people);
+   if (base == 0) {
+      *people = *ss;    /* Get the setup kind, so selectp will be happier. */
+      clear_people(people);
+   }
 
    nicethingyptr = setup_attrs[ss->kind].nice_setup_coords;
    thingyptr = setup_attrs[ss->kind].setup_coords;
 
    if (flags & (MTX_FIND_SQUEEZERS|MTX_FIND_SPREADERS)) {
       thingyptr = nicethingyptr;
-      /* Fix up a galaxy or hourglass so that points can squeeze.
-         They have funny coordinates so that they can't truck or loop. */
+      // Fix up a galaxy or hourglass so that points can squeeze.
+      // They have funny coordinates so that they can't truck or loop.
       if (ss->kind == s_hrglass) thingyptr = &squeezethingglass;
       else if (ss->kind == s_galaxy) thingyptr = &squeezethinggal;
       else if (ss->kind == s_qtag) thingyptr = &squeezethingqtag;
       else if (ss->kind == s4dmd) thingyptr = &squeezething4dmd;
    }
 
-   if (!thingyptr || !nicethingyptr) fail("Can't do this in this setup.");
-   if (setup_attrs[ss->kind].setup_limits < 0) fail("Can't do this in this setup.");        /* this is actually superfluous */
+   // Third clause in this is actually superfluous.
+   if (!thingyptr || !nicethingyptr || setup_attrs[ss->kind].setup_limits < 0)
+      fail("Can't do this in this setup.");
 
    for (i=0; i<=setup_attrs[ss->kind].setup_limits; i++) {
       if (ss->people[i].id1) {
@@ -1022,17 +1029,236 @@ Private int start_matrix_call(
 }
 
 
+struct checkitem {
+   uint32 ypar;
+   uint32 sigcheck;
+   setup_kind new_setup;
+   int new_rot;
+   warning_index warning;
+   const coordrec *new_checkptr;
+   veryshort fixer[32];
+};
+
+
+const checkitem checktable[] = {
+   {0x00A20026, 0x08008404, s_rigger, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00770077, 0x00418004, s_galaxy, 0, warn__none, (const coordrec *) 0, {127}},
+   // Fudge this to a galaxy.  The center 2 did a squeeze or spread from a spindle.
+   {0x00840066, 0x0C000108, s_galaxy, 0, warn__check_galaxy, (const coordrec *) 0,
+    {0, 6, 0, 7, 0, -6, 0, -7, 8, 0, 7, 0, -8, 0, -7, 0,
+     4, 2, 2, 2, 4, -2, 2, -2, -4, 2, -2, 2, -4, -2, -2, -2}},
+   // Fudge this to quadruple diamonds.  Someone trucked out from a wqtag.
+   {0x00E70055, 0x01002420, s4dmd, 0, warn__none, (const coordrec *) 0,
+    {-4, 5, -5, 5, 4, -5, 5, -5, 127}},
+   // Next two: The centers did a 1/2 truck from point-to-point diamonds.  Fudge to a 3x6.
+   {0x00930044, 0x21018800, s3x6, 0, warn__none, (const coordrec *) 0,
+    {-9, 0, -10, 0, 9, 0, 10, 0, -5, 0, -6, 0, 5, 0, 6, 0,
+     -5, -4, -6, -4, -5, 4, -6, 4, 5, -4, 6, -4, 5, 4, 6, 4}},
+   {0x00510044, 0x21018800, s3x6, 0, warn__none, (const coordrec *) 0,
+    {-9, 0, -10, 0, 9, 0, 10, 0, -5, 0, -6, 0, 5, 0, 6, 0,
+     -5, -4, -6, -4, -5, 4, -6, 4, 5, -4, 6, -4, 5, 4, 6, 4}},
+   // Next three: The points did a 1/2 press ahead from triple diamonds.  Fudge to a qtag.
+   {0x00630055, 0x01420421, s_qtag, 0, warn__none, (const coordrec *) 0,
+    {-2, 5, -4, 5, -5, 5, -4, 5, 2, 5, 5, 5, 5, 5, 5, 5, 
+     -2, -5, -5, -5, -5, -5, -5, -5, 2, -5, 4, -5, 5, -5, 4, -5}},
+   {0x00530051, 0x01420421, s_qtag, 0, warn__none, (const coordrec *) 0,
+    {-2, 5, -4, 5, -5, 5, -4, 5, 2, 5, 5, 5, 5, 5, 5, 5, 
+     -2, -5, -5, -5, -5, -5, -5, -5, 2, -5, 4, -5, 5, -5, 4, -5}},
+   {0x00510051, 0x01420421, s_qtag, 0, warn__none, (const coordrec *) 0,
+    {-2, 5, -4, 5, -5, 5, -4, 5, 2, 5, 5, 5, 5, 5, 5, 5, 
+     -2, -5, -5, -5, -5, -5, -5, -5, 2, -5, 4, -5, 5, -5, 4, -5}},
+   // The centers did a 1/2 truck from a 3x6.  Fudge to point-to-point diamonds.
+   {0x00A20026, 0x09080002, nothing, 0, warn__none, &truck_to_ptpd, {127}},
+
+   // Next 2 items: fudge to a galaxy.  The points got here by pressing and trucking.
+   // Don't need to tell them to check a galaxy -- it's pretty obvious.
+   {0x00660066, 0x08008404, s_galaxy, 0, warn__none, (const coordrec *) 0,
+    {0, 6, 0, 7, 0, -6, 0, -7, 6, 0, 7, 0, -6, 0, -7, 0, 127}},
+   {0x00660077, 0x00018404, s_galaxy, 0, warn__none, (const coordrec *) 0,
+    {0, 6, 0, 7, 0, -6, 0, -7, 6, 0, 7, 0, -6, 0, -7, 0, 127}},
+
+   // Next 2 items: the trailing points pressed ahead from quadruple diamonds,
+   // so that only the centers 2 diamonds are now occupied.  Fudge to diamonds.
+   {0x00730055, 0x01008420, nothing, 0, warn__check_dmd_qtag, &press_4dmd_qtag1, {127}},
+   {0x00710051, 0x01008420, nothing, 0, warn__check_dmd_qtag, &press_4dmd_qtag1, {127}},
+   // Next 2 items: same, other way.
+   {0x00730055, 0x21080400, nothing, 0, warn__check_dmd_qtag, &press_4dmd_qtag2, {127}},
+   {0x00710051, 0x21080400, nothing, 0, warn__check_dmd_qtag, &press_4dmd_qtag2, {127}},
+
+   // The points pressed ahead from normal diamonds.  Fudge to quadruple diamonds.
+   {0x00970055, 0x01400480, nothing, 0, warn__check_quad_dmds, &press_qtag_4dmd1, {127}},
+   // Same, other way.
+   {0x00870055, 0x09080400, nothing, 0, warn__check_quad_dmds, &press_qtag_4dmd2, {127}},
+
+   // This must precede the "squeezefinalglass" stuff.
+   {0x00620026, 0x01080002, s_bone6, 0, warn__none, (const coordrec *) 0, {127}},
+
+   // People 1/2 pressed ahead from quadruple 3/4 tags.  Fudge to a 4x4.
+   {0x00B10071, 0x01806000, nothing, 0, warn__none, &press_4dmd_4x4, {127}},
+
+   // Next 2 items: six poeple did a squeeze from a galaxy.  Fudge to an hourglass.
+   {0x00260062, 0x10100600, nothing, 0, warn__none, &squeezefinalglass, {127}},
+   {0x00660066, 0x10100600, nothing, 0, warn__none, &squeezefinalglass, {127}},
+   // Next 2 items: same, other way.
+   {0x00620026, 0x09080002, nothing, 1, warn__none, &squeezefinalglass, {127}},
+   {0x00660066, 0x09080002, nothing, 1, warn__none, &squeezefinalglass, {127}},
+
+   // Some points did a squeeze from a galaxy.  Fudge to a spindle.
+   {0x00660026, 0x00008604, s_spindle, 0, warn__none, (const coordrec *) 0,
+    {6, 0, 8, 0, -6, 0, -8, 0,
+     2, 2, 4, 2, 2, -2, 4, -2, -2, 2, -4, 2, -2, -2, -4, -2, 127}},
+   // Same, on other orientation.
+   {0x00260066, 0x09008004, s_spindle, 1, warn__none, (const coordrec *) 0,
+    {0, 6, 0, 8, 0, -6, 0, -8,
+     2, 2, 2, 4, -2, 2, -2, 4, 2, -2, 2, -4, -2, -2, -2, -4, 127}},
+
+   {0x00950062, 0x091002C0, sbigdmd, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00550062, 0x091002C0, sbigdmd, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00950095, 0x22008080, s_thar, 0, warn__none, (const coordrec *) 0, {127}},
+
+   // This is a "crosswave" on precise matrix spots.
+   {0x00660084, 0x01040420, nothing, 1, warn__none, &acc_crosswave, {127}},
+
+   {0x00950066, 0x28008200, s_crosswave, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00A20026, 0x01040420, s_bone, 0, warn__none, (const coordrec *) 0, {127}},
+   // Pressed in from a bigh.
+   {0x00930026, 0x01000440, s_bone, 0, warn__none, (const coordrec *) 0,
+    {-9, 2, -10, 2, -9, -2, -10, -2, 9, 2, 10, 2, 9, -2, 10, -2}},
+   {0x00260062, 0x08008004, s_short6, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00840026, 0x04000308, s_spindle, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00840046, 0x04210308, s_d3x4, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00840044, 0x04210308, s_d3x4, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00A200A2, 0x101CC4E6, s_bigblob, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00670055, 0x01000420, s_qtag, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00770055, 0x01400420, s_2stars, 0, warn__none, (const coordrec *) 0, {127}},
+
+   // Someone did a truck-like operation from a rigger, for example,
+   // after a sets in motion.  Fudge to a 1/4 tag.
+   {0x00620026, 0x01008404, s_qtag, 0, warn__none, (const coordrec *) 0,
+    {-2, 2, -4, 5, 2, 2, 5, 5, 2, -2, 4, -5, -2, -2, -5, -5, 127}},
+
+   // Similar to the above, but truck was from a deepxwv.
+   {0x00620066, 0x11100400, s_qtag, 0, warn__none, (const coordrec *) 0,
+    {-2, 6, -4, 5, 2, 6, 5, 5, 2, -6, 4, -5, -2, -6, -5, -5, 127}},
+
+   {0x00550067, 0x08410200, s_qtag, 1, warn__none, (const coordrec *) 0, {127}},
+   {0x00620046, 0x01080842, sd2x5, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00660055, 0x01000480, s_2x1dmd, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00D50026, 0x20008202, s1x3dmd, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00A30055, 0x09000420, swqtag, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00A60055, 0x09000420, swqtag, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00A70055, 0x09000420, swqtag, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00950057, 0x20008620, swhrglass, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00660073, 0x00098006, sdeep2x1dmd, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00A60055, 0x09000480, s3x1dmd, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00A70055, 0x29008480, s3dmd, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00770055, 0x29008480, s3dmd, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00730055, 0x29008480, s3dmd, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00E30055, 0x0940A422, s4dmd, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00B30055, 0x0940A422, s4dmd, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00B10051, 0x0940A422, s4dmd, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00A30055, 0x0940A422, s4dmd, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00D50057, 0x20008202, s_3mdmd, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00B50057, 0x20008202, s_3mdmd, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00B70057, 0x41022480, s_3mptpd, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00E70057, 0x41022480, s_3mptpd, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00D50066, 0x28048202, sbigx, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x01150066, 0x28048202, sbigx, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00D10004, 0x28048202, sbigx, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00910004, 0x28048202, sbigx, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x01110004, 0x28048202, sbigx, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00E20026, 0x0808A006, swiderigger, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00A20066, 0x18108404, sdeepxwv, 0, warn__none, (const coordrec *) 0, {127}},
+   // Someone trucked from a deep2x1dmd to a deepxwv.
+   {0x006600B3, 0x0008800E, nothing, 1, warn__none, &truck_to_deepxwv, {127}},
+   {0x00F30066, 0x12148904, sbigbigx, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x01130066, 0x12148904, sbigbigx, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x01330066, 0x12148904, sbigbigx, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x01130066, 0x09406600, sbigbigh, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x01130026, 0x09406600, sbigbigh, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00550057, 0x20000620, s_hrglass, 0, warn__none, (const coordrec *) 0, {127}},
+   // The checkpointers squeezed or spread from a spindle.  Fudge to an hourglass.  
+   {0x00840066, 0x00202208, s_hrglass, 0, warn__none, (const coordrec *) 0,
+    {-4, 6, -4, 5, 4, 6, 5, 5, 4, -6, 4, -5, -4, -6, -5, -5, 8, 0, 5, 0, -8, 0, -5, 0, 127}},
+   {0x00A70026, 0x20040220, s_dhrglass, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00930026, 0x01108080, s_ptpd, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00910026, 0x01108080, s_ptpd, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00530026, 0x01108080, s_ptpd, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00620044, 0x11800C40, s3x4, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00440062, 0x0C202300, s3x4, 1, warn__none, (const coordrec *) 0, {127}},
+   {0x00840022, 0x06001300, s2x5, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00220084, 0x21080840, s2x5, 1, warn__none, (const coordrec *) 0, {127}},
+   {0x00E20004, 0x09002400, s1x8, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x000400E2, 0x08004202, s1x8, 1, warn__none, (const coordrec *) 0, {127}},
+   {0x01220004, 0x49002400, s1x10, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x01620004, 0x49012400, s1x12, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x01A20004, 0x49012404, s1x14, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x01E20004, 0x49092404, s1x16, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00620022, 0x00088006, s2x4, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00220062, 0x10108004, s2x4, 1, warn__none, (const coordrec *) 0, {127}},
+   {0x00440022, 0x04000300, s2x3, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00220044, 0x01000840, s2x3, 1, warn__none, (const coordrec *) 0, {127}},
+   {0x00A20022, 0x000C8026, s2x6, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x002200A2, 0x10108484, s2x6, 1, warn__none, (const coordrec *) 0, {127}},
+   {0x00C40022, 0x26001B00, s2x7, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00E20022, 0x004C8036, s2x8, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x002200E2, 0x12908484, s2x8, 1, warn__none, (const coordrec *) 0, {127}},
+   {0x00A20044, 0x19804E40, s3x6, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00E20044, 0x1D806E41, s3x8, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00840062, 0x4E203380, s4x5, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00620084, 0x31888C60, s4x5, 1, warn__none, (const coordrec *) 0, {127}},
+   {0x00A20062, 0x109CC067, s4x6, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x006200A2, 0x1918C4C6, s4x6, 1, warn__none, (const coordrec *) 0, {127}},
+   {0x00C40062, 0x6E001B80, s3oqtg, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00C40062, 0x6E001B80, s3oqtg, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00620062, 0x1018C046, s4x4, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00930066, 0x01080C40, sbigh, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00910062, 0x01080C40, sbigh, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00910022, 0x01080C40, sbigh, 0, warn__none, (const coordrec *) 0, {127}},
+   // Pressed out from a bone.
+   {0x00A20066, 0x01840421, sbigh, 0, warn__none, (const coordrec *) 0,
+    {-10, 6, -9, 6, -10, 2, -9, 2, -10, -6, -9, -6, -10, -2, -9, -2, 
+     10, 6, 9, 6, 10, 2, 9, 2, 10, -6, 9, -6, 10, -2, 9, -2}},
+   {0x00E20026, 0x01440430, sbigbone, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00460044, 0x41040010, s_323, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00660044, 0x41040410, s_343, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00860044, 0x49650044, s_525, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00440044, 0x49650044, s_525, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00860044, 0x41250410, s_545, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00860044, 0x41250018, sh545, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00840004, 0x00000008, sh545, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00220022, 0x00008004, s2x2, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00A20004, 0x09000400, s1x6, 0, warn__none, (const coordrec *) 0, {127}},
+   // Colliding 1/2 circulate from as-couples T-bone.
+   {0x00930004, 0x21008400, s1x6, 0, warn__none, (const coordrec *) 0,
+    {-9, 0, -10, 0, 9, 0, 10, 0, -5, 0, -6, 0, 5, 0, 6, 0, 127}},
+   {0x00620004, 0x01000400, s1x4, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00040062, 0x08000200, s1x4, 1, warn__none, (const coordrec *) 0, {127}},
+   {0x00550026, 0x20020200, sdmd, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00440004, 0x00020001, s1x3, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00040044, 0x00040001, s1x3, 1, warn__none, (const coordrec *) 0, {127}},
+   {0x00220004, 0x01000000, s1x2, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00040022, 0x00000200, s1x2, 1, warn__none, (const coordrec *) 0, {127}},
+   {0}};
+
+
+static checkitem c1fixup =
+{0, 0, s_c1phan, 0, warn__none, (const coordrec *) 0, {127}};
+
+
 static void finish_matrix_call(
    matrix_rec matrix_info[],
    int nump,
-   long_boolean do_roll_stability,
+   bool do_roll_stability,
+   bool allow_collisions,
    setup *people,
    setup *result) THROW_DECL
 {
-   int i, place;
-   int xmax, xpar, ymax, ypar, x, y, k, doffset;
-   uint32 signature;
+   int i;
+   int xmax, ymax, x, y, k;
+   uint32 signature, xpar, ypar;
    const coordrec *checkptr;
+   clear_people(result);
 
    xmax = xpar = ymax = ypar = signature = 0;
 
@@ -1047,12 +1273,14 @@ static void finish_matrix_call(
          at one time, but now it makes all press and truck calls illegal in C1 phantoms.  The
          table for C1 phantoms has been carefully chosen to make things legal only within one's
          own miniwave, but it requires odd numbers.  Perhaps we need to double the resolution
-         of things in matrix_info[i].x or y, but that should wait until after version 28 is released. */
+         of things in matrix_info[i].x or y, but that should wait until after version 28
+         is released. */
 
-/* So this is patched out.  The same problem holds for bigdmds.
-      if (((matrix_info[i].x | matrix_info[i].y) & 1) && (matrix_info[i].deltax | matrix_info[i].deltay))
-         fail("Someone's ending position is not well defined.");
-*/
+      /* So this is patched out.  The same problem holds for bigdmds.
+         if (((matrix_info[i].x | matrix_info[i].y) & 1) &&
+             (matrix_info[i].deltax | matrix_info[i].deltay))
+            fail("Someone's ending position is not well defined.");
+      */
 
       switch (matrix_info[i].dir) {
          case 0:
@@ -1092,611 +1320,84 @@ static void finish_matrix_call(
 
    ypar |= (xmax << 20) | (xpar << 16) | (ymax << 4);
 
-   result->rotation = 0;
+   // First, take care of simple things from the table.
 
-   if ((ypar == 0x00A20026) && ((signature & (~0x08008404)) == 0)) {
-      checkptr = setup_attrs[s_rigger].setup_coords;
-      goto doit;
-   }
-   else if ((ypar == 0x00770077) && ((signature & (~0x00418004)) == 0)) {
-      checkptr = setup_attrs[s_galaxy].setup_coords;
-      goto doit;
-   }
-   else if ((ypar == 0x00840066) && ((signature & (~0x0C000108)) == 0)) {
-      /* Fudge this to a galaxy.  The center 2 did a squeeze or spread from a spindle. */
+   const checkitem *p;
 
+   for (p = checktable ; p->ypar ; p++) {
+      if (p->ypar == ypar && (~p->sigcheck & signature) == 0)
+         goto found_item;
+   }
+
+   // C1 phantoms are messy -- the max coordinates can vary a lot.
+   // Depending on how the setup is actually occupied, xmax and ymax may vary.
+   // For now, we only look at the signature.
+   if ((signature & (~0x278198CC)) == 0)
+      p = &c1fixup;
+   else
+      fail("Can't figure out result setup.");
+
+ found_item:
+
+   // Perform any required fixups, moving people around before
+   // sending them to be placed in the final setup.  That final
+   // setup placement can be very picky.
+   if (p->fixer[0] != 127) {
       for (i=0; i<nump; i++) {
-         if      (matrix_info[i].x ==  0 && matrix_info[i].y ==  6) { matrix_info[i].y =  7; }
-         else if (matrix_info[i].x ==  0 && matrix_info[i].y == -6) { matrix_info[i].y = -7; }
-         else if (matrix_info[i].x ==  8 && matrix_info[i].y ==  0) { matrix_info[i].x =  7; }
-         else if (matrix_info[i].x == -8 && matrix_info[i].y ==  0) { matrix_info[i].x = -7; }
-         else if (   (matrix_info[i].x == 4 || matrix_info[i].x == -4) &&
-                     (matrix_info[i].y == 2 || matrix_info[i].y == -2))
-            { matrix_info[i].x >>= 1; }
-      }
-
-      warn(warn__check_galaxy);
-      checkptr = setup_attrs[s_galaxy].setup_coords;
-      goto doit;
-   }
-   else if ((ypar == 0x00E70055) && ((signature & (~0x01002420)) == 0)) {
-      // Fudge this to quadruple diamonds.  Someone trucked out from a wqtag.
-
-      for (i=0; i<nump; i++) {
-         if      (matrix_info[i].x == -4 && matrix_info[i].y ==  5) { matrix_info[i].x = -5; }
-         else if (matrix_info[i].x ==  4 && matrix_info[i].y == -5) { matrix_info[i].x =  5; }
-      }
-
-      checkptr = setup_attrs[s4dmd].setup_coords;
-      goto doit;
-   }
-   else if (((ypar == 0x00930044) && ((signature & (~0x21018800)) == 0))) {
-      /* Fudge this to a 3x6.  The centers did a 1/2 truck from point-to-point diamonds. */
-
-      for (i=0; i<nump; i++) {
-         if      (matrix_info[i].x == -9)
-            { matrix_info[i].x = -10; }
-         else if (matrix_info[i].x == 9)
-            { matrix_info[i].x = 10; }
-         else if (matrix_info[i].x == -5)
-            { matrix_info[i].x = -6; }
-         else if (matrix_info[i].x == 5)
-            { matrix_info[i].x = 6; }
-      }
-
-      checkptr = setup_attrs[s3x6].setup_coords;
-      goto doit;
-   }
-   else if (((ypar == 0x00630055) && ((signature & (~0x01420421)) == 0))) {
-      /* Fudge this to a qtag.  The points did a 1/2 press ahead from triple diamonds. */
-
-      for (i=0; i<nump; i++) {
-         if (matrix_info[i].y != 0) {
-            if (matrix_info[i].x == -2)
-               { matrix_info[i].x = -5; }
-            else if (matrix_info[i].x == 2)
-               { matrix_info[i].x = 5; }
-
-            if (matrix_info[i].x == -5 && matrix_info[i].y > 0)
-               { matrix_info[i].x = -4; }
-            else if (matrix_info[i].x == 5 && matrix_info[i].y < 0)
-               { matrix_info[i].x = 4; }
+         for (k=0; k<32 && p->fixer[k]!=127; k+=4) {
+            if (matrix_info[i].x == p->fixer[k] && matrix_info[i].y == p->fixer[k+1]) {
+               matrix_info[i].x = p->fixer[k+2];
+               matrix_info[i].y = p->fixer[k+3];
+               break;
+            }
          }
       }
-
-      checkptr = setup_attrs[s_qtag].setup_coords;
-      goto doit;
-   }
-   else if (((ypar == 0x00A20026) && ((signature & (~0x09080002)) == 0))) {
-      // Fudge this to point-to-point diamonds.  The centers did a 1/2 truck from a 3x6.
-
-      checkptr = setup_attrs[s_ptpd].setup_coords;
-      checkptr = &truck_to_ptpd;
-      goto doit;
-   }
-   else if ((ypar == 0x00660066) && ((signature & (~0x08008404)) == 0)) {
-      /* Fudge this to a galaxy.  The points got here by pressing and trucking. */
-
-      for (i=0; i<nump; i++) {
-         if      (matrix_info[i].x ==  0 && matrix_info[i].y ==  6) { matrix_info[i].y =  7; }
-         else if (matrix_info[i].x ==  0 && matrix_info[i].y == -6) { matrix_info[i].y = -7; }
-         else if (matrix_info[i].x ==  6 && matrix_info[i].y ==  0) { matrix_info[i].x =  7; }
-         else if (matrix_info[i].x == -6 && matrix_info[i].y ==  0) { matrix_info[i].x = -7; }
-      }
-
-      /* Don't need to tell them to check a galaxy -- it's pretty obvious. */
-      checkptr = setup_attrs[s_galaxy].setup_coords;
-      goto doit;
-   }
-   else if ((ypar == 0x00730055 || ypar == 0x00710051) && ((signature & (~0x01008420)) == 0)) {
-      /* Fudge this to diamonds.  The trailing points pressed ahead from quadruple diamonds,
-         so that only the centers 2 diamonds are now occupied. */
-      warn(warn__check_dmd_qtag);
-      checkptr = &press_4dmd_qtag1;
-      goto doit;
-   }
-   else if ((ypar == 0x00730055 || ypar == 0x00710051) && ((signature & (~0x21080400)) == 0)) {
-      /* Same, other way. */
-      warn(warn__check_dmd_qtag);
-      checkptr = &press_4dmd_qtag2;
-      goto doit;
-   }
-   else if ((ypar == 0x00970055) && ((signature & (~0x01400480)) == 0)) {
-      /* Fudge this to quadruple diamonds.  The points pressed ahead from normal diamonds. */
-      warn(warn__check_quad_dmds);
-      checkptr = &press_qtag_4dmd1;
-      goto doit;
-   }
-   else if ((ypar == 0x00870055) && ((signature & (~0x09080400)) == 0)) {
-      /* Same, other way. */
-      warn(warn__check_quad_dmds);
-      checkptr = &press_qtag_4dmd2;
-      goto doit;
-   }
-   else if (ypar == 0x00620026 && ((signature & (~0x01080002)) == 0)) {
-      // This must precede the "squeezefinalglass" stuff.
-      checkptr = setup_attrs[s_bone6].setup_coords;
-      goto doit;
-   }
-   else if ((ypar == 0x00B10071) && ((signature & (~0x01806000)) == 0)) {
-      /* Fudge this to a 4x4.  People 1/2 pressed ahead from quadruple 3/4 tags. */
-      checkptr = &press_4dmd_4x4;
-      goto doit;
-   }
-   else if ((ypar == 0x00260062 || ypar == 0x00660066) && ((signature & (~0x10100600)) == 0)) {
-      /* Fudge this to an hourglass.  Six poeple did a squeeze from a galaxy. */
-      checkptr = &squeezefinalglass;
-      goto doit;
-   }
-   else if ((ypar == 0x00620026 || ypar == 0x00660066) && ((signature & (~0x09080002)) == 0)) {
-      /* Same, on other orientation. */
-      checkptr = &squeezefinalglass;
-      goto doitrot;
-   }
-   else if ((ypar == 0x00660026) && ((signature & (~0x00008604)) == 0)) {
-      /* Fudge this to a spindle.  Some points did a squeeze from a galaxy. */
-
-      for (i=0; i<nump; i++) {
-         if      (matrix_info[i].x ==  6 && matrix_info[i].y ==  0)
-            { matrix_info[i].x =  8; }
-         else if (matrix_info[i].x == -6 && matrix_info[i].y ==  0)
-            { matrix_info[i].x = -8; }
-         else if ((matrix_info[i].x == 2 || matrix_info[i].x == -2) &&
-                  (matrix_info[i].y == 2 || matrix_info[i].y == -2))
-            { matrix_info[i].x <<= 1; }
-      }
-
-      checkptr = setup_attrs[s_spindle].setup_coords;
-      goto doit;
-   }
-   else if ((ypar == 0x00260066) && ((signature & (~0x09008004)) == 0)) {
-      /* Same, on other orientation. */
-
-      for (i=0; i<nump; i++) {
-         if      (matrix_info[i].x ==  0 && matrix_info[i].y ==  6) { matrix_info[i].y =  8; }
-         else if (matrix_info[i].x ==  0 && matrix_info[i].y == -6) { matrix_info[i].y = -8; }
-         else if (   (matrix_info[i].x == 2 || matrix_info[i].x == -2) &&
-                     (matrix_info[i].y == 2 || matrix_info[i].y == -2)) { matrix_info[i].y <<= 1; }
-      }
-
-      checkptr = setup_attrs[s_spindle].setup_coords;
-      goto doitrot;
-   }
-   else if ((ypar == 0x00950062 || ypar == 0x00550062) && ((signature & (~0x091002C0)) == 0)) {
-      checkptr = setup_attrs[sbigdmd].setup_coords;
-      goto doit;
-   }
-   else if ((ypar == 0x00950095) && ((signature & (~0x22008080)) == 0)) {
-      checkptr = setup_attrs[s_thar].setup_coords;
-      goto doit;
-   }
-   else if ((ypar == 0x00660084) && ((signature & (~0x01040420)) == 0)) {
-      /* This is a "crosswave" on precise matrix spots. */
-      checkptr = &acc_crosswave;
-      goto doitrot;
-   }
-   else if ((ypar == 0x00950066) && ((signature & (~0x28008200)) == 0)) {
-      checkptr = setup_attrs[s_crosswave].setup_coords;
-      goto doit;
-   }
-   else if ((ypar == 0x00A20026) && ((signature & (~0x01040420)) == 0)) {
-      checkptr = setup_attrs[s_bone].setup_coords;
-      goto doit;
-   }
-   else if ((ypar == 0x00260062) && ((signature & (~0x08008004)) == 0)) {
-      checkptr = setup_attrs[s_short6].setup_coords;
-      goto doit;
-   }
-   else if ((ypar == 0x00840026) && ((signature & (~0x04000308)) == 0)) {
-      checkptr = setup_attrs[s_spindle].setup_coords;
-      goto doit;
-   }
-   else if ((ypar == 0x00840046) && ((signature & (~0x04210308)) == 0)) {
-      checkptr = setup_attrs[s_d3x4].setup_coords;
-      goto doit;
-   }
-   else if ((ypar == 0x00A200A2) && ((signature & (~0x101CC4E6)) == 0)) {
-      checkptr = setup_attrs[s_bigblob].setup_coords;
-      goto doit;
-   }
-   else if ((ypar == 0x00670055) && ((signature & (~0x01000420)) == 0)) {
-      checkptr = setup_attrs[s_qtag].setup_coords;
-      goto doit;
-   }
-   else if ((ypar == 0x00770055) && ((signature & (~0x01400420)) == 0)) {
-      checkptr = setup_attrs[s_2stars].setup_coords;
-      goto doit;
-   }
-   else if ((ypar == 0x00620026) && ((signature & (~0x01008404)) == 0)) {
-      // Fudge this to a 1/4 tag.  Someone did a truck-like operation from a rigger,
-      // for example, after a sets in motion.
-
-      for (i=0; i<nump; i++) {
-         if      (matrix_info[i].x == -2 && matrix_info[i].y ==  2) { matrix_info[i].x = -4; matrix_info[i].y =  5; }
-         else if (matrix_info[i].x ==  2 && matrix_info[i].y ==  2) { matrix_info[i].x =  5; matrix_info[i].y =  5; }
-         else if (matrix_info[i].x ==  2 && matrix_info[i].y == -2) { matrix_info[i].x =  4; matrix_info[i].y = -5; }
-         else if (matrix_info[i].x == -2 && matrix_info[i].y == -2) { matrix_info[i].x = -5; matrix_info[i].y = -5; }
-      }
-
-      checkptr = setup_attrs[s_qtag].setup_coords;
-      goto doit;
-   }
-   else if ((ypar == 0x00620066) && ((signature & (~0x11100400)) == 0)) {
-      // Fudge this to a 1/4 tag.  Similar to the above, but truck was from a deepxwv.
-
-      for (i=0; i<nump; i++) {
-         if      (matrix_info[i].x == -2 && matrix_info[i].y ==  6) { matrix_info[i].x = -4; matrix_info[i].y =  5; }
-         else if (matrix_info[i].x ==  2 && matrix_info[i].y ==  6) { matrix_info[i].x =  5; matrix_info[i].y =  5; }
-         else if (matrix_info[i].x ==  2 && matrix_info[i].y == -6) { matrix_info[i].x =  4; matrix_info[i].y = -5; }
-         else if (matrix_info[i].x == -2 && matrix_info[i].y == -6) { matrix_info[i].x = -5; matrix_info[i].y = -5; }
-      }
-
-      checkptr = setup_attrs[s_qtag].setup_coords;
-      goto doit;
-   }
-   else if ((ypar == 0x00550067) && ((signature & (~0x08410200)) == 0)) {
-      checkptr = setup_attrs[s_qtag].setup_coords;
-      goto doitrot;
-   }
-   else if ((ypar == 0x00620046) && ((signature & (~0x01080842)) == 0)) {
-      checkptr = setup_attrs[sd2x5].setup_coords;
-      goto doit;
-   }
-   else if ((ypar == 0x00660055) && ((signature & (~0x01000480)) == 0)) {
-      checkptr = setup_attrs[s_2x1dmd].setup_coords;
-      goto doit;
-   }
-   else if ((ypar == 0x00D50026) && ((signature & (~0x20008202)) == 0)) {
-      checkptr = setup_attrs[s1x3dmd].setup_coords;
-      goto doit;
-   }
-   else if (((ypar == 0x00A30055) ||
-             (ypar == 0x00A60055) ||
-             (ypar == 0x00A70055)) &&
-            ((signature & (~0x09000420)) == 0)) {
-      checkptr = setup_attrs[swqtag].setup_coords;
-      goto doit;
-   }
-   else if ((ypar == 0x00660073) && ((signature & (~0x00098006)) == 0)) {
-      checkptr = setup_attrs[sdeep2x1dmd].setup_coords;
-      goto doit;
-   }
-   else if ((ypar == 0x00A60055) && ((signature & (~0x09000480)) == 0)) {
-      checkptr = setup_attrs[s3x1dmd].setup_coords;
-      goto doit;
-   }
-   /* Depending on how the setup is actually occupied, xmax and ymax may vary.
-      ***** We need to work this out carefully.  Maybe parity should be high
-      and max low so that range checking will suffice.
-      For now, we just mask out max, and look at par. */
-   else if (((ypar & 0x00070007) == 0x00070007) && ((signature & (~0x278198CC)) == 0)) {
-      checkptr = setup_attrs[s_c1phan].setup_coords;
-      goto doit;
-   }
-   /* If certain far out people are missing, xmax will be different, but we will
-       still need to go to a 3dmd. */
-   else if (((ypar == 0x00A70055) ||
-             (ypar == 0x00770055) ||
-             (ypar == 0x00730055)) &&
-            ((signature & (~0x29008480)) == 0)) {
-      checkptr = setup_attrs[s3dmd].setup_coords;
-      goto doit;
-   }
-   /* If certain far out people are missing, xmax will be different, but we will
-       still need to go to a 4dmd. */
-   else if (((ypar == 0x00E30055) ||
-             (ypar == 0x00B30055) ||
-             (ypar == 0x00B10051) ||
-             (ypar == 0x00A30055)) &&
-            ((signature & (~0x0940A422)) == 0)) {
-      checkptr = setup_attrs[s4dmd].setup_coords;
-      goto doit;
-   }
-   /* Similarly. */
-   else if (((ypar == 0x00D50057) ||
-             (ypar == 0x00B50057)) &&
-            ((signature & (~0x20008202)) == 0)) {
-      checkptr = setup_attrs[s_3mdmd].setup_coords;
-      goto doit;
-   }
-   else if (((ypar == 0x00B70057) ||
-             (ypar == 0x00E70057)) &&
-            ((signature & (~0x41022480)) == 0)) {
-      checkptr = setup_attrs[s_3mptpd].setup_coords;
-      goto doit;
-   }
-   else if (((ypar == 0x00D50066) || (ypar == 0x01150066)) &&
-            ((signature & (~0x28048202)) == 0)) {
-      checkptr = setup_attrs[sbigx].setup_coords;
-      goto doit;
-   }
-   else if ((ypar == 0x00A20066) && ((signature & (~0x18108404)) == 0)) {
-      checkptr = setup_attrs[sdeepxwv].setup_coords;
-      goto doit;
-   }
-   else if ((ypar == 0x006600B3) && ((signature & (~0x0008800E)) == 0)) {
-      // Someone trucked from a deep2x1dmd to a deepxwv.
-      checkptr = &truck_to_deepxwv;
-      goto doitrot;
-   }
-   else if (((ypar == 0x00F30066) || (ypar == 0x01130066) || (ypar == 0x01330066)) &&
-            ((signature & (~0x12148904)) == 0)) {
-      checkptr = setup_attrs[sbigbigx].setup_coords;
-      goto doit;
-   }
-   else if (((ypar == 0x01130066) || (ypar == 0x01130026)) &&
-            ((signature & (~0x09406600)) == 0)) {
-      checkptr = setup_attrs[sbigbigh].setup_coords;
-      goto doit;
-   }
-   else if ((ypar == 0x00550057) && ((signature & (~0x20000620)) == 0)) {
-      checkptr = setup_attrs[s_hrglass].setup_coords;
-      goto doit;
-   }
-   else if ((ypar == 0x00840066) && ((signature & (~0x00202208)) == 0)) {
-      /* Fudge this to an hourglass.  Someone had the checkpointers squeeze or spread
-         from a spindle. */
-
-      for (i=0; i<nump; i++) {
-         if      (matrix_info[i].x == -4 && matrix_info[i].y ==  6) {                        matrix_info[i].y =  5; }
-         else if (matrix_info[i].x ==  4 && matrix_info[i].y ==  6) { matrix_info[i].x =  5; matrix_info[i].y =  5; }
-         else if (matrix_info[i].x ==  4 && matrix_info[i].y == -6) {                        matrix_info[i].y = -5; }
-         else if (matrix_info[i].x == -4 && matrix_info[i].y == -6) { matrix_info[i].x = -5; matrix_info[i].y = -5; }
-         else if (matrix_info[i].x ==  8 && matrix_info[i].y ==  0) { matrix_info[i].x =  5;                        }
-         else if (matrix_info[i].x == -8 && matrix_info[i].y ==  0) { matrix_info[i].x = -5;                        }
-      }
-
-      checkptr = setup_attrs[s_hrglass].setup_coords;
-      goto doit;
-   }
-   else if ((ypar == 0x00A70026) && ((signature & (~0x20040220)) == 0)) {
-      checkptr = setup_attrs[s_dhrglass].setup_coords;
-      goto doit;
-   }
-   else if ((ypar == 0x00930026 || ypar == 0x00910026 || ypar == 0x00530026) &&
-            ((signature & (~0x01108080)) == 0)) {
-      checkptr = setup_attrs[s_ptpd].setup_coords;
-      goto doit;
-   }
-   else if ((ypar == 0x00620044) && ((signature & (~0x11800C40)) == 0)) {
-      checkptr = setup_attrs[s3x4].setup_coords;
-      goto doit;
-   }
-   else if ((ypar == 0x00440062) && ((signature & (~0x0C202300)) == 0)) {
-      checkptr = setup_attrs[s3x4].setup_coords;
-      goto doitrot;
-   }
-   else if ((ypar == 0x00840022) && ((signature & (~0x06001300)) == 0)) {
-      checkptr = setup_attrs[s2x5].setup_coords;
-      goto doit;
-   }
-   else if ((ypar == 0x00220084) && ((signature & (~0x21080840)) == 0)) {
-      checkptr = setup_attrs[s2x5].setup_coords;
-      goto doitrot;
-   }
-   else if ((ypar == 0x00E20004) && ((signature & (~0x09002400)) == 0)) {
-      checkptr = setup_attrs[s1x8].setup_coords;
-      goto doit;
-   }
-   else if ((ypar == 0x000400E2) && ((signature & (~0x08004202)) == 0)) {
-      checkptr = setup_attrs[s1x8].setup_coords;
-      goto doitrot;
-   }
-   else if ((ypar == 0x01220004) && ((signature & (~0x49002400)) == 0)) {
-      checkptr = setup_attrs[s1x10].setup_coords;
-      goto doit;
-   }
-   else if ((ypar == 0x01620004) && ((signature & (~0x49012400)) == 0)) {
-      checkptr = setup_attrs[s1x12].setup_coords;
-      goto doit;
-   }
-   else if ((ypar == 0x01A20004) && ((signature & (~0x49012404)) == 0)) {
-      checkptr = setup_attrs[s1x14].setup_coords;
-      goto doit;
-   }
-   else if ((ypar == 0x01E20004) && ((signature & (~0x49092404)) == 0)) {
-      checkptr = setup_attrs[s1x16].setup_coords;
-      goto doit;
-   }
-   else if ((ypar == 0x00620022) && ((signature & (~0x00088006)) == 0)) {
-      checkptr = setup_attrs[s2x4].setup_coords;
-      goto doit;
-   }
-   else if ((ypar == 0x00220062) && ((signature & (~0x10108004)) == 0)) {
-      checkptr = setup_attrs[s2x4].setup_coords;
-      goto doitrot;
-   }
-   else if ((ypar == 0x00440022) && ((signature & (~0x04000300)) == 0)) {
-      checkptr = setup_attrs[s2x3].setup_coords;
-      goto doit;
-   }
-   else if ((ypar == 0x00220044) && ((signature & (~0x01000840)) == 0)) {
-      checkptr = setup_attrs[s2x3].setup_coords;
-      goto doitrot;
-   }
-   else if ((ypar == 0x00A20022) && ((signature & (~0x000C8026)) == 0)) {
-      checkptr = setup_attrs[s2x6].setup_coords;
-      goto doit;
-   }
-   else if ((ypar == 0x002200A2) && ((signature & (~0x10108484)) == 0)) {
-      checkptr = setup_attrs[s2x6].setup_coords;
-      goto doitrot;
-   }
-   else if ((ypar == 0x00C40022) && ((signature & (~0x26001B00)) == 0)) {
-      checkptr = setup_attrs[s2x7].setup_coords;
-      goto doit;
-   }
-   else if ((ypar == 0x00E20022) && ((signature & (~0x004C8036)) == 0)) {
-      checkptr = setup_attrs[s2x8].setup_coords;
-      goto doit;
-   }
-   else if ((ypar == 0x002200E2) && ((signature & (~0x12908484)) == 0)) {
-      checkptr = setup_attrs[s2x8].setup_coords;
-      goto doitrot;
-   }
-   else if ((ypar == 0x00A20044) && ((signature & (~0x19804E40)) == 0)) {
-      checkptr = setup_attrs[s3x8].setup_coords;   /* Actually a 3x6. */
-      goto doit;
-   }
-   else if ((ypar == 0x00E20044) && ((signature & (~0x1D806E41)) == 0)) {
-      checkptr = setup_attrs[s3x8].setup_coords;
-      goto doit;
-   }
-   else if ((ypar == 0x00840062) && ((signature & (~0x4E203380)) == 0)) {
-      checkptr = setup_attrs[s4x5].setup_coords;
-      goto doit;
-   }
-   else if ((ypar == 0x00620084) && ((signature & (~0x31888C60)) == 0)) {
-      checkptr = setup_attrs[s4x5].setup_coords;
-      goto doitrot;
-   }
-   else if ((ypar == 0x00A20062) && ((signature & (~0x109CC067)) == 0)) {
-      checkptr = setup_attrs[s4x6].setup_coords;
-      goto doit;
-   }
-   else if ((ypar == 0x006200A2) && ((signature & (~0x1918C4C6)) == 0)) {
-      checkptr = setup_attrs[s4x6].setup_coords;
-      goto doitrot;
-   }
-   else if ((ypar == 0x00C40062) && ((signature & (~0x6E001B80)) == 0)) {
-      checkptr = setup_attrs[s3oqtg].setup_coords;
-      goto doit;
-   }
-   else if ((ypar == 0x00620062) && ((signature & (~0x1018C046)) == 0)) {
-      checkptr = setup_attrs[s4x4].setup_coords;
-      goto doit;
-   }
-   else if ((ypar == 0x00930066) && ((signature & (~0x01080C40)) == 0)) {
-      checkptr = setup_attrs[sbigh].setup_coords;
-      goto doit;
-   }
-   else if ((ypar == 0x00E20026) && ((signature & (~0x01440430)) == 0)) {
-      checkptr = setup_attrs[sbigbone].setup_coords;
-      goto doit;
-   }
-   else if ((ypar == 0x00460044) && ((signature & (~0x41040010)) == 0)) {
-      checkptr = setup_attrs[s_323].setup_coords;
-      goto doit;
-   }
-   else if ((ypar == 0x00660044) && ((signature & (~0x41040410)) == 0)) {
-      checkptr = setup_attrs[s_343].setup_coords;
-      goto doit;
-   }
-   else if ((ypar == 0x00860044) && ((signature & (~0x49250010)) == 0)) {
-      checkptr = setup_attrs[s_525].setup_coords;
-      goto doit;
-   }
-   else if ((ypar == 0x00860044) && ((signature & (~0x41250410)) == 0)) {
-      checkptr = setup_attrs[s_545].setup_coords;
-      goto doit;
-   }
-   else if ((ypar == 0x00860044) && ((signature & (~0x41250018)) == 0)) {
-      checkptr = setup_attrs[sh545].setup_coords;
-      goto doit;
-   }
-   /* **** These last ones are sort of a crock.  They are designed to make
-      matrix calls work in distorted or virtual setups in some circumstances
-      (i.e. if no one changes coordinates.)  However, they won't work in the
-      presence of unsymmetrical phantoms.  What we really should do is, if
-      the setup is virtual/distorted (or maybe the test should be if no one
-      moved) just force people back to the same setup they started in. */
-   else if ((ypar == 0x00220022) && ((signature & (~0x00008004)) == 0)) {
-      checkptr = setup_attrs[s2x2].setup_coords;
-      goto doit;
-   }
-   else if ((ypar == 0x00620004) && ((signature & (~0x01000400)) == 0)) {
-      checkptr = setup_attrs[s1x4].setup_coords;
-      goto doit;
-   }
-   else if ((ypar == 0x00040062) && ((signature & (~0x08000200)) == 0)) {
-      checkptr = setup_attrs[s1x4].setup_coords;
-      goto doitrot;
-   }
-   else if ((ypar == 0x00550026) && ((signature & (~0x20020200)) == 0)) {
-      checkptr = setup_attrs[sdmd].setup_coords;
-      goto doit;
-   }
-   else if ((ypar == 0x00220004) && ((signature & (~0x01000000)) == 0)) {
-      checkptr = setup_attrs[s1x2].setup_coords;
-      goto doit;
-   }
-   else if ((ypar == 0x00040022) && ((signature & (~0x00000200)) == 0)) {
-      checkptr = setup_attrs[s1x2].setup_coords;
-      goto doitrot;
    }
 
-   fail("Can't handle this result matrix.");
+   warn(p->warning);
 
- doit:
+   if (p->new_setup == nothing)
+      checkptr = p->new_checkptr;
+   else
+      checkptr = setup_attrs[p->new_setup].setup_coords;
 
-   doffset = 32 - (1 << (checkptr->xfactor-1));
-
-   for (i=0; i<nump; i++) {
-      people->people[i].id1 =
-         rotperson(people->people[i].id1, matrix_info[i].deltarot*011);
-
-      place = checkptr->diagram[doffset -
-                               ((matrix_info[i].y >> 2) << checkptr->xfactor) +
-                               (matrix_info[i].x >> 2)];
-      if (place < 0) fail("Person has moved into a grossly ill-defined location.");
-
-      if ((checkptr->xca[place] != matrix_info[i].x) ||
-          (checkptr->yca[place] != matrix_info[i].y))
-      fail("Person has moved into a slightly ill-defined location.");
-
-      install_person(result, place, people, i);
-
-      if (do_roll_stability) {
-         result->people[place].id1 &= ~ROLL_MASK;
-         result->people[place].id1 |=
-            ((matrix_info[i].roll_stability_info * (ROLL_BIT/DBROLL_BIT)) & ROLL_MASK);
-
-         if (result->people[place].id1 & STABLE_ENAB)
-            do_stability(
-               &result->people[place].id1,
-               (stability) ((matrix_info[i].roll_stability_info/DBSTAB_BIT) & 0xF),
-               matrix_info[i].deltarot);
-      }
-   }
-
+   result->rotation = p->new_rot;
    result->kind = checkptr->result_kind;
-   return;
 
- doitrot:
+   int doffset = 32 - (1 << (checkptr->xfactor-1));
 
-   result->rotation = 1;
-   doffset = 32 - (1 << (checkptr->xfactor-1));
+   collision_collector CC(allow_collisions);
 
    for (i=0; i<nump; i++) {
-      people->people[i].id1 =
-         rotperson(people->people[i].id1, matrix_info[i].deltarot*011);
+      int mx, my;
+      matrix_rec *mp = &matrix_info[i];
 
-      place = checkptr->diagram[doffset -
-                               ((matrix_info[i].x >> 2) << checkptr->xfactor) +
-                               ((-matrix_info[i].y) >> 2)];
+      if (result->rotation) { mx = -mp->y; my = mp->x; }
+      else { mx = mp->x; my = mp->y; }
+
+      int place = checkptr->diagram[doffset - ((my >> 2) << checkptr->xfactor) + (mx >> 2)];
       if (place < 0) fail("Person has moved into a grossly ill-defined location.");
 
-      if ((checkptr->xca[place] != -matrix_info[i].y) ||
-          (checkptr->yca[place] != matrix_info[i].x))
+      if ((checkptr->xca[place] != mx) || (checkptr->yca[place] != my))
          fail("Person has moved into a slightly ill-defined location.");
 
-      install_rot(result, place, people, i, 033);
+      int rot = ((mp->deltarot-result->rotation) & 3)*011;
+      CC.install_with_collision(result, place, people, i, rot);
 
       if (do_roll_stability) {
          result->people[place].id1 &= ~ROLL_MASK;
          result->people[place].id1 |=
-            ((matrix_info[i].roll_stability_info * (ROLL_BIT/DBROLL_BIT)) & ROLL_MASK);
+            ((mp->roll_stability_info * (ROLL_BIT/DBROLL_BIT)) & ROLL_MASK);
 
          if (result->people[place].id1 & STABLE_ENAB)
             do_stability(
                &result->people[place].id1,
-               (stability) ((matrix_info[i].roll_stability_info/DBSTAB_BIT) & 0xF),
-               matrix_info[i].deltarot);
+               (stability) ((mp->roll_stability_info/DBSTAB_BIT) & 0xF),
+               mp->deltarot);
       }
    }
 
-   result->kind = checkptr->result_kind;
-   return;
+   CC.fix_possible_collision(result);
 }
 
 
@@ -1715,7 +1416,7 @@ static void matrixmove(
 
    alldelta = 0;
 
-   nump = start_matrix_call(ss, matrix_info, flags, &people);
+   nump = start_matrix_call(ss, matrix_info, 0, flags, &people);
 
    for (i=0; i<nump; i++) {
       matrix_rec *thisrec = &matrix_info[i];
@@ -1759,7 +1460,7 @@ static void matrixmove(
       /* This call split the setup in every possible way. */
       result->result_flags |= RESULTFLAG__SPLIT_AXIS_FIELDMASK;
 
-   finish_matrix_call(matrix_info, nump, TRUE, &people, result);
+   finish_matrix_call(matrix_info, nump, true, false, &people, result);
    reinstate_rotation(ss, result);
 
    /* If the call just kept a 2x2 in place, and they were the outsides, make
@@ -1899,20 +1600,23 @@ static void make_matrix_chains(
 
          if (flags & MTX_FIND_JAYWALKERS) {
             int jdist = (mi->dir & 1) ? delx : dely;
+            int returndist = (mj->dir & 1) ? delx : dely;
+
             if (!(mi->dir & 2)) jdist = -jdist;
+            if ((mj->dir & 2)) returndist = -returndist;
 
-            /* Jdist is the forward distance to the jaywalkee.  We demand that it be
-               strictly positive, and minimal with respect to all other jaywalkee
-               candidates.  We also consider only jaywalkees that are either facing
-               back toward us or are facing lateral but are in such a position that
-               they can see us. */
+            // Jdist is the forward distance to the jaywalkee.  We demand that it be
+            // strictly positive, and minimal with respect to all other jaywalkee
+            // candidates.  We also consider only jaywalkees that are either facing
+            // back toward us or are facing lateral but are in such a position that
+            // they can see us.
 
-            if (jdist > 0 && jdist <= mi->nearest && dirxor != 0) {
-/**** that dirxor test isn't really good enough */
+            if (jdist > 0 && returndist > 0 && jdist <= mi->nearest && dirxor != 0) {
                if (jdist < mi->nearest) {
-                  /* This jaywalkee is closer than any others that we have seen; drop all others. */
+                  // This jaywalkee is closer than any others that we have seen;
+                  // drop all others.
                   mi->jbits = 0;
-                  mi->nearest = jdist;  /* This is the new nearest distance. */
+                  mi->nearest = jdist;  // This is the new nearest distance.
                }
                mi->jbits |= (1 << j);
             }
@@ -1920,13 +1624,10 @@ static void make_matrix_chains(
          else {
             if (dely != (finding_far_squeezers ? 12 : 4) || delx != 0) continue;
 
-            /* Now, if filter = 1, person j is just east of person i.
-               If filter = 0, person j is just south of person i. */
+            // Now, if filter = 1, person j is just east of person i.
+            // If filter = 0, person j is just south of person i.
 
-            if (flags & MTX_TBONE_IS_OK) {
-               /* Make the chain independently of facing direction. */
-            }
-            else {
+            if (!(flags & MTX_TBONE_IS_OK)) {
                if ((mi->dir ^ filter) & 1) {
                   if (dirxor & 1) {
                      if (!(flags & MTX_STOP_AND_WARN_ON_TBONE)) fail("People are T-boned.");
@@ -2181,7 +1882,7 @@ static void partner_matrixmove(
    if ((ss->cmd.cmd_misc_flags & CMD_MISC__DISTORTED) && !(flags & MTX_FIND_JAYWALKERS))
       fail("This call not allowed in distorted or virtual setup.");
 
-   nump = start_matrix_call(ss, matrix_info, flags, &people);
+   nump = start_matrix_call(ss, matrix_info, 0, flags, &people);
 
    /* Make the lateral chains first. */
 
@@ -2220,11 +1921,77 @@ static void partner_matrixmove(
       }
    }
 
-   finish_matrix_call(matrix_info, nump, TRUE, &people, result);
+   finish_matrix_call(matrix_info, nump, true, false, &people, result);
    reinstate_rotation(ss, result);
    result->result_flags = 0;
 }
 
+
+// This treats res2 as though it had rotation zero.
+// Res1 is allowed to have rotation.
+extern void brute_force_merge(const setup *res1, const setup *res2,
+                              bool allow_collisions, setup *result) THROW_DECL
+{
+   int i;
+   int r = res1->rotation & 3;
+
+   // First, check if the setups are nice enough for the matrix stuff,
+   // as indicated by having both "setup_coords" and "nice_setup_coords".
+   // If they match each other but aren't nice, we will do it the
+   // extremely brute force way.
+
+   if (res1->kind != res2->kind || r != 0 ||
+       (setup_attrs[res1->kind].nice_setup_coords &&
+        setup_attrs[res1->kind].setup_coords) ||
+       res1->kind == s_trngl4 ||
+       res1->kind == s_trngl) {
+
+      // We know that start_matrix_call will raise an error if its incoming
+      // setup is not of the sort that canonicalizes to rotation 0 or 1.
+      // (This includes trngl and trngl4.)
+      // Therefore, we know that r is 0 or 1.  That is, it will be if we
+      // get past start_matrix_call.
+
+      setup people;
+      matrix_rec matrix_info[9];
+
+      int nump = start_matrix_call(res1, matrix_info, 0, 0, &people);
+
+      if (r) {
+         for (i=0 ; i<nump ; i++) {
+            matrix_info[i].deltarot++;
+            int tt = matrix_info[i].y;
+            matrix_info[i].y = -matrix_info[i].x;
+            matrix_info[i].x = tt;
+         }
+      }
+
+      nump = start_matrix_call(res2, matrix_info, nump, 0, &people);
+
+      // Note that, because we set deltarot above, we must NOT turn on the
+      // "do_roll_stability" argument here.  It would treat the rotation
+      // as though the person had actually done a call.
+      finish_matrix_call(matrix_info, nump, false, allow_collisions, &people, result);
+      return;
+   }
+
+   int rot = r * 011;
+   int lim1 = setup_attrs[res1->kind].setup_limits+1;
+   collision_collector CC(allow_collisions);
+
+   if (lim1 <= 0) fail("Can't figure out result setup.");
+
+   *result = *res2;
+
+   CC.note_prefilled_result(result);
+
+   for (i=0; i<lim1; i++) {
+      if (res1->people[i].id1)
+         CC.install_with_collision(result, i, res1, i, rot);
+   }
+
+   CC.fix_possible_collision(result);
+}
 
 
 extern void drag_someone_and_move(setup *ss, parse_block *parseptr, setup *result)
@@ -2247,7 +2014,7 @@ extern void drag_someone_and_move(setup *ss, parse_block *parseptr, setup *resul
       fudged_start = TRUE;
    }
 
-   int nump = start_matrix_call(&scopy, matrix_info,
+   int nump = start_matrix_call(&scopy, matrix_info, 0,
                                 MTX_USE_SELECTOR | MTX_STOP_AND_WARN_ON_TBONE, &people);
    current_options.who = saved_selector;
 
@@ -2290,7 +2057,7 @@ extern void drag_someone_and_move(setup *ss, parse_block *parseptr, setup *resul
 
    // Now figure out where the people who moved really are.
 
-   int second_nump = start_matrix_call(result, second_matrix_info,
+   int second_nump = start_matrix_call(result, second_matrix_info, 0,
                                        MTX_STOP_AND_WARN_ON_TBONE, &second_people);
 
    int final_2nd_nump = second_nump;
@@ -2344,10 +2111,8 @@ extern void drag_someone_and_move(setup *ss, parse_block *parseptr, setup *resul
       second_matrix_info[i].deltarot = 0;
    }
 
-   clear_people(result);
-
-   ss->rotation += result->rotation;    // finish_matrix_call will clear result->rotation.
-   finish_matrix_call(second_matrix_info, final_2nd_nump, TRUE, &second_people, result);
+   ss->rotation += result->rotation;
+   finish_matrix_call(second_matrix_info, final_2nd_nump, true, false, &second_people, result);
    reinstate_rotation(ss, result);
    result->result_flags = 0;
 }
@@ -2391,7 +2156,8 @@ extern void anchor_someone_and_move(
    move(ss, FALSE, result);
    numgroups = 0;
 
-   nump = start_matrix_call(&saved_start_people, before_matrix_info, MTX_USE_SELECTOR, &people);
+   nump = start_matrix_call(&saved_start_people, before_matrix_info, 0,
+                            MTX_USE_SELECTOR, &people);
    current_options.who = saved_selector;
 
    for (i=0 ; i<nump ; i++) {
@@ -2439,7 +2205,7 @@ extern void anchor_someone_and_move(
    // If the result is a "1p5x8", we do special stuff.
    if (result->kind == s1p5x8) result->kind = s2x8;
 
-   nump = start_matrix_call(result, after_matrix_info, 0, &people);
+   nump = start_matrix_call(result, after_matrix_info, 0, 0, &people);
 
    for (i=0 ; i<nump ; i++) {
       if (result->rotation) {
@@ -2482,8 +2248,7 @@ extern void anchor_someone_and_move(
       after_matrix_info[i].dir = 0;
    }
 
-   clear_people(result);
-   finish_matrix_call(after_matrix_info, nump, FALSE, &people, result);
+   finish_matrix_call(after_matrix_info, nump, false, false, &people, result);
    reinstate_rotation(&saved_start_people, result);
    result->result_flags = 0;
 }
@@ -2527,7 +2292,9 @@ static void rollmove(
 
 
 static void do_inheritance(setup_command *cmd,
-   const calldefn *parent_call, const by_def_item *defptr) THROW_DECL
+                           const calldefn *parent_call,
+                           const by_def_item *defptr,
+                           uint32 extra_heritmask_bits) THROW_DECL
 {
    /* Strip out those concepts that do not have the "dfm__xxx" flag set saying that
       they are to be inherited to this part of the call.  BUT: the "INHERITFLAG_LEFT"
@@ -2556,7 +2323,11 @@ static void do_inheritance(setup_command *cmd,
 
    /* But "half" and "lasthalf" are ALWAYS inherited.  (They can be forced, too.) */
 
-   temp_concepts &= (~cmd->cmd_final_flags.her8it | defptr->modifiersh | INHERITFLAG_HALF | INHERITFLAG_LASTHALF);
+   temp_concepts &= (~cmd->cmd_final_flags.her8it |
+                     defptr->modifiersh |
+                     extra_heritmask_bits |
+                     INHERITFLAG_HALF |
+                     INHERITFLAG_LASTHALF);
 
    /* Now turn on any "force" flags.  These are indicated by "modifiersh" on
       and "callflagsh" off. */
@@ -2600,6 +2371,7 @@ static long_boolean get_real_subcall(
    const by_def_item *item,
    setup_command *cmd_in,
    const calldefn *parent_call,
+   uint32 extra_heritmask_bits,
    setup_command *cmd_out) THROW_DECL         /* We fill in just the parseptr, callspec,
                                       cmd_final_flags fields. */
 {
@@ -2630,7 +2402,7 @@ static long_boolean get_real_subcall(
    /* If this context requires a tagging or scoot call, pass that fact on. */
    if (this_is_tagger) cmd_out->cmd_final_flags.final |= FINAL__MUST_BE_TAG;
 
-   do_inheritance(cmd_out, parent_call, item);
+   do_inheritance(cmd_out, parent_call, item, extra_heritmask_bits);
 
    /* Do the substitutions called for by star turn replacements (from "@S" escape codes.) */
 
@@ -2927,19 +2699,19 @@ static int gcd(int a, int b)
    The output of this procedure, after digesting the above, is a "fraction_info"
    structure, whose important items are:
 
-      subcall_index - the first part of the target call that we are to execute.
+      fetch_index - the first part of the target call that we are to execute.
          This is now in ZERO-BASED numbering, as befits the sequential-definition
          array.
       highlimit - if going forward, this is the (zero-based) part JUST AFTER the
-         last part that we are to execute.  We will execute (highlimit-subcall_index)
+         last part that we are to execute.  We will execute (highlimit-fetch_index)
          parts.  If going backward, this is the (zero-based) LAST PART that we will
-         execute.  We will execute (subcall_index-highlimit+1) parts.  Note the
+         execute.  We will execute (fetch_index-highlimit+1) parts.  Note the
          assymetry.  Sorry.
 
    So, to execute all of a 10 part call in forward order, we will have
-      subcall_index = 0    and    highlimit = 10
+      fetch_index = 0    and    highlimit = 10
    To execute it in reverse order, we will have
-      subcall_index = 9    and    highlimit = 0
+      fetch_index = 9    and    highlimit = 0
 
    The "instant_stop" and "do_half_of_last_part" flags do various things.
 */
@@ -3000,16 +2772,12 @@ extern uint32 process_new_fractions(
 }
 
 
-extern long_boolean get_fraction_info(
+void fraction_info::get_fraction_info(
    uint32 frac_flags,
    uint32 callflags1,
-   int total,
-   long_boolean doing_weird_revert,
-   fraction_info *zzz) THROW_DECL
+   revert_weirdness_type doing_weird_revert) THROW_DECL
 {
-   long_boolean retval = FALSE;
    int e_numer, e_denom, s_numer, s_denom, this_part, divisor, test_num;
-   int subcall_index, highlimit;
    uint32 last_half_stuff = 0;
    uint32 first_half_stuff = 0;
 
@@ -3018,10 +2786,10 @@ extern long_boolean get_fraction_info(
    if (available_fractions == 3 || (frac_flags & CMD_FRAC_FORCE_VIS))
       available_fractions = 1000;     /* 3 means all parts. */
 
-   zzz->reverse_order = FALSE;
-   zzz->instant_stop = 0;
-   zzz->do_half_of_last_part = 0;
-   zzz->do_last_half_of_first_part = 0;
+   this->reverse_order = FALSE;
+   this->instant_stop = 0;
+   this->do_half_of_last_part = 0;
+   this->do_last_half_of_first_part = 0;
 
    this_part = (frac_flags & CMD_FRAC_PART_MASK) / CMD_FRAC_PART_BIT;
    s_numer = (frac_flags & 0xF000) >> 12;      /* Start point. */
@@ -3030,63 +2798,63 @@ extern long_boolean get_fraction_info(
    e_denom = (frac_flags & 0xF);
 
    if (s_numer >= s_denom) fail("Fraction must be proper.");
-   subcall_index = total * s_numer;
-   test_num = subcall_index / s_denom;
+   int my_start_point = this->client_total * s_numer;
+   test_num = my_start_point / s_denom;
 
-   if (test_num*s_denom != subcall_index) {
-      divisor = (test_num == 0) ? gcd(subcall_index, s_denom) : gcd(s_denom, subcall_index);
+   if (test_num*s_denom != my_start_point) {
+      divisor = (test_num == 0) ? gcd(my_start_point, s_denom) : gcd(s_denom, my_start_point);
       s_denom /= divisor;
-      subcall_index /= divisor;
-      last_half_stuff = subcall_index - test_num * s_denom;   /* We will need this if we have
+      my_start_point /= divisor;
+      last_half_stuff = my_start_point - test_num * s_denom;   /* We will need this if we have
                                                                  to reverse the order. */
-      zzz->do_last_half_of_first_part = (last_half_stuff << 12) | (s_denom << 8) | 0x11;
-      if (zzz->do_last_half_of_first_part != CMD_FRAC_LASTHALF_VALUE)
+      this->do_last_half_of_first_part = (last_half_stuff << 12) | (s_denom << 8) | 0x11;
+      if (this->do_last_half_of_first_part != CMD_FRAC_LASTHALF_VALUE)
          warn(warn_hairy_fraction);
    }
 
-   subcall_index = test_num;
+   my_start_point = test_num;
 
    if (e_numer <= 0) fail("Fraction must be proper.");
-   highlimit = total * e_numer;
-   test_num = highlimit / e_denom;
+   this->highlimit = this->client_total * e_numer;
+   test_num = this->highlimit / e_denom;
 
-   if (test_num*e_denom != highlimit) {
-      divisor = (test_num == 0) ? gcd(highlimit, e_denom) : gcd(e_denom, highlimit);
-      highlimit /= divisor;
+   if (test_num*e_denom != this->highlimit) {
+      divisor = (test_num == 0) ? gcd(this->highlimit, e_denom) : gcd(e_denom, this->highlimit);
+      this->highlimit /= divisor;
       e_denom /= divisor;
-      first_half_stuff = highlimit-e_denom*test_num;
-      zzz->do_half_of_last_part = 0x0100 | (first_half_stuff << 4) | e_denom;
-      if (zzz->do_half_of_last_part != CMD_FRAC_HALF_VALUE)
+      first_half_stuff = this->highlimit-e_denom*test_num;
+      this->do_half_of_last_part = 0x0100 | (first_half_stuff << 4) | e_denom;
+      if (this->do_half_of_last_part != CMD_FRAC_HALF_VALUE)
          warn(warn_hairy_fraction);
       test_num++;
    }
 
-   highlimit = test_num;
+   this->highlimit = test_num;
 
-   /* Now subcall_index is the start point, and highlimit is the end point. */
+   // Now my_start_point is the start point, and this->highlimit is the end point.
 
-   if (subcall_index >= highlimit || highlimit > total)
+   if (my_start_point >= this->highlimit || this->highlimit > this->client_total)
       fail("Fraction must be proper.");
 
    /* Check for "reverse order" */
    if (frac_flags & CMD_FRAC_REVERSE) {
-      uint32 orig_last = zzz->do_last_half_of_first_part;
+      uint32 orig_last = this->do_last_half_of_first_part;
       long_boolean dont_clobber = FALSE;
 
-      zzz->reverse_order = TRUE;
-      subcall_index = total-1-subcall_index;
-      highlimit = total-highlimit;
+      this->reverse_order = TRUE;
+      my_start_point = this->client_total-1-my_start_point;
+      this->highlimit = this->client_total-this->highlimit;
 
-      if (zzz->do_half_of_last_part) {
-         zzz->do_last_half_of_first_part =
+      if (this->do_half_of_last_part) {
+         this->do_last_half_of_first_part =
             ((e_denom - first_half_stuff) << 12) | (e_denom << 8) | 0x11;
-         zzz->do_half_of_last_part = 0;
+         this->do_half_of_last_part = 0;
          dont_clobber = TRUE;
       }
 
       if (orig_last) {
-         zzz->do_half_of_last_part = 0x0100 | ((s_denom - last_half_stuff) << 4) | s_denom;
-         if (!dont_clobber) zzz->do_last_half_of_first_part = 0;
+         this->do_half_of_last_part = 0x0100 | ((s_denom - last_half_stuff) << 4) | s_denom;
+         if (!dont_clobber) this->do_last_half_of_first_part = 0;
       }
    }
 
@@ -3094,91 +2862,77 @@ extern long_boolean get_fraction_info(
       int highdel;
       uint32 kvalue = ((frac_flags & CMD_FRAC_PART2_MASK) / CMD_FRAC_PART2_BIT);
 
-      /* In addition to everything else, we are picking out a specific part
-         of whatever series we have decided upon. */
+      // In addition to everything else, we are picking out a specific part
+      // of whatever series we have decided upon.
 
-      if (zzz->do_half_of_last_part | zzz->do_last_half_of_first_part)
+      if (this->do_half_of_last_part | this->do_last_half_of_first_part)
          fail("This call can't be fractionalized with this fraction.");
 
       switch (frac_flags & CMD_FRAC_CODE_MASK) {
       case CMD_FRAC_CODE_ONLY:
-         zzz->instant_stop = 1;
-         subcall_index += zzz->reverse_order ? (1-this_part) : (this_part-1);
+         this->instant_stop = 1;
+         my_start_point += this->reverse_order ? (1-this_part) : (this_part-1);
 
-         if (doing_weird_revert &&
-             !zzz->reverse_order &&
-             highlimit == total &&
-             total == 3 &&    // Sorry, not doing tag the star just yet.
-             subcall_index == total-3) {
-            // We are getting the first part of 2.
-            available_fractions = 1;
-            retval = TRUE;
-         }
-
-         /* Be sure that enough parts are visible. */
-         if (subcall_index >= available_fractions)
+         // Be sure that enough parts are visible.
+         if (my_start_point >= available_fractions)
             fail("This call can't be fractionalized.");
-         if (subcall_index >= total)
+         if (my_start_point >= this->client_total)
             fail("The indicated part number doesn't exist.");
 
-         /* If "K" (the secondary part number) is nonzero,
-            shorten highlimit by that amount. */
-         if (zzz->reverse_order) {
-            highlimit += kvalue;
-            if (highlimit > subcall_index)
+         // If "K" (the secondary part number) is nonzero,
+         // shorten this->highlimit by that amount.
+         if (this->reverse_order) {
+            this->highlimit += kvalue;
+            if (this->highlimit > my_start_point)
                fail("The indicated part number doesn't exist.");
          }
          else {
-            highlimit -= kvalue;
-            if (highlimit <= subcall_index)
+            this->highlimit -= kvalue;
+            if (this->highlimit <= my_start_point)
                fail("The indicated part number doesn't exist.");
          }
 
          break;
       case CMD_FRAC_CODE_ONLYREV:
-         zzz->instant_stop = 1;
-         subcall_index = zzz->reverse_order ? (highlimit-1+this_part) : (highlimit-this_part);
-
-         if (doing_weird_revert && total == 3) {   // Sorry, not doing tag the star just yet.
-            if (subcall_index == 2) subcall_index = 1;
-            available_fractions = 3;
-            retval = TRUE;
-         }
+         this->instant_stop = 1;
+         my_start_point = this->reverse_order ?
+            (this->highlimit-1+this_part) : (this->highlimit-this_part);
 
          // Be sure that enough parts are visible.
-         if (subcall_index >= available_fractions)
+         if (my_start_point >= available_fractions)
             fail("This call can't be fractionalized.");
-         if (subcall_index >= total) fail("The indicated part number doesn't exist.");
+         if (my_start_point >= this->client_total)
+            fail("The indicated part number doesn't exist.");
          break;
       case CMD_FRAC_CODE_FROMTO:
 
          /* We are doing parts from (K+1) through N. */
 
-         if (zzz->reverse_order) {
-            highdel = subcall_index-this_part+1;
+         if (this->reverse_order) {
+            highdel = my_start_point-this_part+1;
 
-            if (highdel < highlimit   )
+            if (highdel < this->highlimit   )
                fail("This call can't be fractionalized this way.");
 
-            highlimit = highdel;
-            subcall_index -= kvalue;
+            this->highlimit = highdel;
+            my_start_point -= kvalue;
 
-            if (subcall_index > available_fractions)
+            if (my_start_point > available_fractions)
                fail("This call can't be fractionalized.");
-            if (subcall_index > total)
+            if (my_start_point > this->client_total)
                fail("The indicated part number doesn't exist.");
          }
          else {
-            highdel = highlimit-subcall_index-this_part;
+            highdel = this->highlimit-my_start_point-this_part;
             if (highdel < 0)
                fail("This call can't be fractionalized this way.");
 
-            highlimit -= highdel;
-            subcall_index += kvalue;
+            this->highlimit -= highdel;
+            my_start_point += kvalue;
 
-            if (highlimit > available_fractions || subcall_index > available_fractions)
+            if (this->highlimit > available_fractions || my_start_point > available_fractions)
                fail("This call can't be fractionalized.");
-            if (highlimit > total || subcall_index > total)
+            if (this->highlimit > this->client_total || my_start_point > this->client_total)
                fail("The indicated part number doesn't exist.");
          }
 
@@ -3187,48 +2941,35 @@ extern long_boolean get_fraction_info(
 
          /* We are doing parts from N through (end-K). */
 
-         if (zzz->reverse_order) {
+         if (this->reverse_order) {
             int lowdel = 1-this_part;
 
-            highlimit += kvalue;
-            subcall_index += lowdel;
+            this->highlimit += kvalue;
+            my_start_point += lowdel;
 
             /* Be sure that enough parts are visible, and that we are within bounds.
                If lowdel is zero, we weren't cutting the upper limit, so it's
                allowed to be beyond the limit of part visibility. */
 
-            if (subcall_index > total)
+            if (my_start_point > this->client_total)
                fail("The indicated part number doesn't exist.");
 
-            if ((subcall_index >= available_fractions && lowdel != 0) ||
-                highlimit > available_fractions)
+            if ((my_start_point >= available_fractions && lowdel != 0) ||
+                this->highlimit > available_fractions)
                fail("This call can't be fractionalized.");
          }
          else {
-            highlimit -= kvalue;
-            subcall_index += this_part-1;
-
-            if (doing_weird_revert && total == 3) {   // Sorry, not doing tag the star just yet.
-               if (highlimit == 3 && subcall_index == 1) {
-                  available_fractions = 3;
-                  highlimit--;   // We are getting the second part of 2.
-                  retval = TRUE;
-               }
-               else if (highlimit == 2 && subcall_index == 0) {
-                  available_fractions = 3;
-                  highlimit--;   // We are getting the second part of 2.
-                  retval = TRUE;
-               }
-            }
+            this->highlimit -= kvalue;
+            my_start_point += this_part-1;
 
             /* Be sure that enough parts are visible, and that we are within bounds.
                If kvalue is zero, we weren't cutting the upper limit, so it's
                allowed to be beyond the limit of part visibility. */
 
-            if ((highlimit > available_fractions && kvalue != 0) ||
-                subcall_index > available_fractions)
+            if ((this->highlimit > available_fractions && kvalue != 0) ||
+                my_start_point > available_fractions)
                fail("This call can't be fractionalized.");
-            if (highlimit > total || subcall_index > total)
+            if (this->highlimit > this->client_total || my_start_point > this->client_total)
                fail("The indicated part number doesn't exist.");
          }
 
@@ -3237,35 +2978,35 @@ extern long_boolean get_fraction_info(
 
          /* We are doing parts from (end-N+1 through (end-K). */
 
-         if (zzz->reverse_order) {
-            int highdel = subcall_index+1-highlimit-this_part;
+         if (this->reverse_order) {
+            int highdel = my_start_point+1-this->highlimit-this_part;
 
-            highlimit += kvalue;
-            subcall_index -= highdel;
+            this->highlimit += kvalue;
+            my_start_point -= highdel;
 
             /* Be sure that enough parts are visible, and that we are within bounds.
                If lowhdel is zero, we weren't cutting the upper limit, so it's
                allowed to be beyond the limit of part visibility. */
 
-            if (subcall_index > total)
+            if (my_start_point > this->client_total)
                fail("The indicated part number doesn't exist.");
 
-            if ((subcall_index >= available_fractions && highdel != 0) ||
-                highlimit > available_fractions)
+            if ((my_start_point >= available_fractions && highdel != 0) ||
+                this->highlimit > available_fractions)
                fail("This call can't be fractionalized.");
          }
          else {
-            subcall_index = highlimit-this_part;
-            highlimit -= kvalue;
+            my_start_point = this->highlimit-this_part;
+            this->highlimit -= kvalue;
 
             /* Be sure that enough parts are visible, and that we are within bounds.
                If kvalue is zero, we weren't cutting the upper limit, so it's
                allowed to be beyond the limit of part visibility. */
 
-            if ((highlimit > available_fractions && kvalue != 0) ||
-                subcall_index > available_fractions)
+            if ((this->highlimit > available_fractions && kvalue != 0) ||
+                my_start_point > available_fractions)
                fail("This call can't be fractionalized.");
-            if (highlimit > total || subcall_index > total)
+            if (this->highlimit > this->client_total || my_start_point > this->client_total)
                fail("The indicated part number doesn't exist.");
          }
 
@@ -3274,39 +3015,39 @@ extern long_boolean get_fraction_info(
 
          /* We are doing parts from (K+1) through N, but only doing half of part N. */
 
-         if (zzz->reverse_order) {
-            highdel = (subcall_index-this_part+1);
+         if (this->reverse_order) {
+            highdel = (my_start_point-this_part+1);
 
-            if (highdel < highlimit)
+            if (highdel < this->highlimit)
                fail("This call can't be fractionalized this way.");
 
-            highlimit = highdel;
-            subcall_index -= kvalue;
-            zzz->do_last_half_of_first_part = CMD_FRAC_HALF_VALUE;
+            this->highlimit = highdel;
+            my_start_point -= kvalue;
+            this->do_last_half_of_first_part = CMD_FRAC_HALF_VALUE;
 
-            if (subcall_index > available_fractions)
+            if (my_start_point > available_fractions)
                fail("This call can't be fractionalized.");
-            if (subcall_index > total)
+            if (my_start_point > this->client_total)
                fail("The indicated part number doesn't exist.");
             /* Be sure that we actually do the part that we take half of. */
-            if (subcall_index < highlimit)
+            if (my_start_point < this->highlimit)
                fail("This call can't be fractionalized this way.");
          }
          else {
-            highdel = highlimit-subcall_index-this_part;
+            highdel = this->highlimit-my_start_point-this_part;
             if (highdel < 0)
                fail("This call can't be fractionalized this way.");
 
-            highlimit -= highdel;
-            subcall_index += kvalue;
-            zzz->do_half_of_last_part = CMD_FRAC_HALF_VALUE;
+            this->highlimit -= highdel;
+            my_start_point += kvalue;
+            this->do_half_of_last_part = CMD_FRAC_HALF_VALUE;
 
-            if (highlimit > available_fractions || subcall_index > available_fractions)
+            if (this->highlimit > available_fractions || my_start_point > available_fractions)
                fail("This call can't be fractionalized.");
-            if (highlimit > total || subcall_index > total)
+            if (this->highlimit > this->client_total || my_start_point > this->client_total)
                fail("The indicated part number doesn't exist.");
             /* Be sure that we actually do the part that we take half of. */
-            if (subcall_index >= highlimit)
+            if (my_start_point >= this->highlimit)
                fail("This call can't be fractionalized this way.");
          }
 
@@ -3315,43 +3056,43 @@ extern long_boolean get_fraction_info(
 
          /* Like FROMTOREV, but get a late start on the first part. */
 
-         if (zzz->reverse_order) {
+         if (this->reverse_order) {
             int lowdel = 1-this_part;
 
-            highlimit += kvalue;
-            subcall_index += lowdel;
-            zzz->do_half_of_last_part = CMD_FRAC_LASTHALF_VALUE;
+            this->highlimit += kvalue;
+            my_start_point += lowdel;
+            this->do_half_of_last_part = CMD_FRAC_LASTHALF_VALUE;
 
             /* Be sure that enough parts are visible, and that we are within bounds.
                If lowdel is zero, we weren't cutting the upper limit, so it's
                allowed to be beyond the limit of part visibility. */
 
-            if (subcall_index > total)
+            if (my_start_point > this->client_total)
                fail("The indicated part number doesn't exist.");
 
-            if ((subcall_index >= available_fractions && lowdel != 0) ||
-                highlimit > available_fractions)
+            if ((my_start_point >= available_fractions && lowdel != 0) ||
+                this->highlimit > available_fractions)
                fail("This call can't be fractionalized.");
             /* Be sure that we actually do the part that we take half of. */
-            if (subcall_index < highlimit)
+            if (my_start_point < this->highlimit)
                fail("This call can't be fractionalized this way.");
          }
          else {
-            highlimit -= kvalue;
-            subcall_index += this_part-1;
-            zzz->do_last_half_of_first_part = CMD_FRAC_LASTHALF_VALUE;
+            this->highlimit -= kvalue;
+            my_start_point += this_part-1;
+            this->do_last_half_of_first_part = CMD_FRAC_LASTHALF_VALUE;
 
             /* Be sure that enough parts are visible, and that we are within bounds.
                If kvalue is zero, we weren't cutting the upper limit, so it's
                allowed to be beyond the limit of part visibility. */
 
-            if ((highlimit > available_fractions && kvalue != 0) ||
-                subcall_index > available_fractions)
+            if ((this->highlimit > available_fractions && kvalue != 0) ||
+                my_start_point > available_fractions)
                fail("This call can't be fractionalized.");
-            if (highlimit > total || subcall_index > total)
+            if (this->highlimit > this->client_total || my_start_point > this->client_total)
                fail("The indicated part number doesn't exist.");
             /* Be sure that we actually do the part that we take half of. */
-            if (subcall_index >= highlimit)
+            if (my_start_point >= this->highlimit)
                fail("This call can't be fractionalized with this fraction.");
          }
          break;
@@ -3365,37 +3106,82 @@ extern long_boolean get_fraction_info(
    }
 
    if (frac_flags & CMD_FRAC_FIRSTHALF_ALL) {
-      int diff = highlimit - subcall_index;
+      int diff = this->highlimit - my_start_point;
 
-      if (zzz->reverse_order | zzz->do_half_of_last_part | zzz->do_last_half_of_first_part)
+      if (this->reverse_order | this->do_half_of_last_part | this->do_last_half_of_first_part)
          fail("Can't do this fractional \"snag\".");
 
-      if (zzz->instant_stop || diff <= 0 || (diff & 1))
+      if (this->instant_stop || diff <= 0 || (diff & 1))
          fail("Can't do this fractional \"snag\".");
-      highlimit -= diff >> 1;
+      this->highlimit -= diff >> 1;
    }
    else if (frac_flags & CMD_FRAC_LASTHALF_ALL) {
-      int diff = highlimit - subcall_index;
+      int diff = this->highlimit - my_start_point;
 
-      if (zzz->reverse_order | zzz->do_half_of_last_part | zzz->do_last_half_of_first_part)
+      if (this->reverse_order | this->do_half_of_last_part | this->do_last_half_of_first_part)
          fail("Can't do this fractional \"snag\".");
 
-      if (zzz->instant_stop || diff <= 0 || (diff & 1))
+      if (this->instant_stop || diff <= 0 || (diff & 1))
          fail("Can't do this fractional \"snag\".");
-      subcall_index += diff >> 1;
+      my_start_point += diff >> 1;
    }
 
-   zzz->subcall_index = subcall_index;
-   zzz->highlimit = highlimit;
-   zzz->subcall_incr = zzz->reverse_order ? -1 : 1;
-   if (zzz->instant_stop != 0)
-      zzz->instant_stop = zzz->subcall_index*zzz->subcall_incr+1;
+   this->subcall_incr = this->reverse_order ? -1 : 1;
+   if (this->instant_stop != 0)
+      this->instant_stop = my_start_point*this->subcall_incr+1;
    else
-      zzz->instant_stop = 99;
+      this->instant_stop = 99;
 
-   return retval;
+   if (this->reverse_order) {
+      this->end_point = this->highlimit;
+      this->highlimit = 1-this->highlimit;
+   }
+   else {
+      this->end_point = this->highlimit-1;
+   }
+
+   this->fetch_index = my_start_point;
+   this->client_index = my_start_point;
+   this->start_point = my_start_point;
 }
 
+
+uint32 fraction_info::get_fracs_for_this_part()
+{
+   if (reverse_order) {
+      if (do_half_of_last_part != 0 && client_index == start_point)
+         return do_half_of_last_part;
+      else if (do_last_half_of_first_part != 0 && client_index == end_point)
+         return do_last_half_of_first_part;
+      else
+         return CMD_FRAC_NULL_VALUE;
+   }
+   else {
+      if (do_half_of_last_part != 0 && client_index == highlimit-1)
+         return do_half_of_last_part;
+      else if (do_last_half_of_first_part != 0 && client_index == start_point)
+         return do_last_half_of_first_part;
+      else
+         return CMD_FRAC_NULL_VALUE;
+   }
+}
+
+
+bool fraction_info::query_instant_stop(uint32 & result_flag_word)
+{
+   if (instant_stop != 99) {
+      // Check whether we honored the last possible request.  That is,
+      // whether we did the last part of the call in forward order, or
+      // the first part in reverse order.
+      result_flag_word |= RESULTFLAG__PARTS_ARE_KNOWN;
+      if (instant_stop >= highlimit)
+         result_flag_word |= RESULTFLAG__DID_LAST_PART;
+      if (instant_stop == highlimit-1)
+         result_flag_word |= RESULTFLAG__DID_NEXTTOLAST_PART;
+      return true;
+   }
+   else return false;
+}
 
 
 /* This returns TRUE if it can't do it because the assumption isn't specific enough.
@@ -3495,45 +3281,275 @@ extern void impose_assumption_and_move(setup *ss, setup *result) THROW_DECL
 
 
 
+static void do_stuff_inside_sequential_call(
+   setup *result,
+   uint32 this_mod1,
+   long_boolean first_call,    /* First call in logical definition. */
+   long_boolean first_time,    /* First thing we are doing, in temporal sequence. */
+   call_restriction *fix_next_assumption_p,
+   int *fix_next_assump_col_p,
+   int *fix_next_assump_both_p,
+   int *remembered_2x2_elongation_p,
+   uint64 new_final_concepts,
+   uint32 cmd_misc_flags,
+   long_boolean reverse_order,
+   long_boolean recompute_id,
+   bool qtfudged,
+   long_boolean setup_is_elongated) THROW_DECL
+{
+   /* We don't supply these; they get filled in by the call. */
+   result->cmd.cmd_misc_flags &= ~(DFM1_CONCENTRICITY_FLAG_MASK | CMD_MISC__NO_CHECK_MOD_LEVEL);
+
+   if (this_mod1 & DFM1_NO_CHECK_MOD_LEVEL)
+      result->cmd.cmd_misc_flags |= CMD_MISC__NO_CHECK_MOD_LEVEL;
+
+   if (this_mod1 & DFM1_FINISH_THIS) {
+      if (result->cmd.cmd_frac_flags != CMD_FRAC_NULL_VALUE)
+         fail("Can't fractionalize this call this way.");
+
+      result->cmd.cmd_frac_flags = 
+         CMD_FRAC_CODE_FROMTOREV | CMD_FRAC_PART_BIT*2 | CMD_FRAC_NULL_VALUE;
+   }
+
+   if (!first_call) {    // Is this right, or should we be using "first_time" here also?
+      /* Stop checking unless we are really serious. */
+      if (!setup_is_elongated)
+         result->cmd.cmd_misc_flags |= CMD_MISC__NO_CHK_ELONG;
+
+      result->cmd.cmd_misc2_flags &= ~CMD_MISC2__IN_Z_MASK;
+   }
+
+   if (!first_time) {
+      result->cmd.cmd_assume.assumption = *fix_next_assumption_p;
+
+      if (*fix_next_assumption_p != cr_none) {
+         result->cmd.cmd_assume.assump_col = *fix_next_assump_col_p;
+         result->cmd.cmd_assume.assump_both = *fix_next_assump_both_p;
+         result->cmd.cmd_assume.assump_cast = 0;
+         result->cmd.cmd_assume.assump_live = 0;
+         result->cmd.cmd_assume.assump_negate = 0;
+
+         /* If we just put in an "assume 1/4 tag" type of thing, we presumably
+            did a "scoot back to a wave" as part of a "scoot reaction".  Now, if
+            there were phantoms in the center after the call, the result could
+            have gotten changed (by the normalization stuff deep within
+            "fix_n_results" or whatever) to a 2x4.  However, if we are doing a
+            scoot reaction, we really want the 1/4 tag.  So change it back.
+            It happens that code in "divide_the_setup" would do this anyway,
+            but we don't like assumptions in place on setups for which they
+            are meaningless. */
+
+         if (*fix_next_assump_both_p == 2 &&
+             (*fix_next_assumption_p == cr_jleft || *fix_next_assumption_p == cr_jright) &&
+             result->kind == s2x4 &&
+             (result->people[1].id1 | result->people[2].id1 |
+              result->people[5].id1 | result->people[6].id1) == 0) {
+            expand_setup(&comp_qtag_2x4_stuff, result);
+         }
+      }
+   }
+
+   *fix_next_assumption_p = cr_none;
+   *fix_next_assump_col_p = 0;
+   *fix_next_assump_both_p = 0;
+
+   call_restriction old_assumption = result->cmd.cmd_assume.assumption;
+   int old_assump_col = result->cmd.cmd_assume.assump_col;
+   int old_assump_both = result->cmd.cmd_assume.assump_both;
+
+   setup_kind oldk = result->kind;
+
+   if (oldk == s2x2 && (result->cmd.prior_elongation_bits & 3) != 0)
+      *remembered_2x2_elongation_p = result->cmd.prior_elongation_bits & 3;
+
+   //   int remembered_2x2_elongation = 0;
+
+   /* We need to manipulate some assumptions -- there are a few cases in
+      dancers really do track an awareness of the formation. */
+
+   if (!(TEST_HERITBITS(result->cmd.cmd_final_flags,(INHERITFLAG_HALF | INHERITFLAG_LASTHALF))) &&
+       result->cmd.cmd_frac_flags == CMD_FRAC_NULL_VALUE) {
+
+      if (result->cmd.callspec == base_calls[base_call_chreact_1]) {
+
+         /* If we are starting a chain reaction, and the assumption was some form
+            of 1/4 tag or 1/4 line (all of the above indicate such a thing --
+            the outsides are a couple looking in), then, whether it was a plain
+            chain reaction or a cross chain reaction, the result will have the
+            checkpointers in miniwaves.  Pass that assumption on, so that they can hinge. */
+
+         if (((old_assumption == cr_jleft ||
+               old_assumption == cr_ijleft ||
+               old_assumption == cr_jright ||
+               old_assumption == cr_ijright) && old_assump_both == 2) ||
+             (old_assumption == cr_qtag_like && old_assump_both == 1) ||
+             old_assumption == cr_real_1_4_tag ||
+             old_assumption == cr_real_1_4_line)
+            *fix_next_assumption_p = cr_ckpt_miniwaves;
+      }
+      else if (result->cmd.callspec == base_calls[base_call_scoottowave]) {
+         if (result->kind == s2x4 &&
+             !(result->cmd.cmd_final_flags.her8it & INHERITFLAG_YOYO)) {
+            if ((result->people[0].id1 & d_mask) == d_north ||
+                (result->people[1].id1 & d_mask) == d_south ||
+                (result->people[2].id1 & d_mask) == d_north ||
+                (result->people[3].id1 & d_mask) == d_south ||
+                (result->people[4].id1 & d_mask) == d_south ||
+                (result->people[5].id1 & d_mask) == d_north ||
+                (result->people[6].id1 & d_mask) == d_south ||
+                (result->people[7].id1 & d_mask) == d_north) {
+               *fix_next_assumption_p = cr_jleft;               
+               *fix_next_assump_both_p = 2;
+            }
+            else if ((result->people[0].id1 & d_mask) == d_south ||
+                     (result->people[1].id1 & d_mask) == d_north ||
+                     (result->people[2].id1 & d_mask) == d_south ||
+                     (result->people[3].id1 & d_mask) == d_north ||
+                     (result->people[4].id1 & d_mask) == d_north ||
+                     (result->people[5].id1 & d_mask) == d_south ||
+                     (result->people[6].id1 & d_mask) == d_north ||
+                     (result->people[7].id1 & d_mask) == d_south) {
+               *fix_next_assumption_p = cr_jright;               
+               *fix_next_assump_both_p = 2;
+            }
+         }
+      }
+      else if (result->cmd.callspec == base_calls[base_call_makepass_1]) {
+
+         /* If we are starting a "make a pass", and the assumption was some form
+            of 1/4 tag, then we will have a 2-faced line in the center.  Pass that
+            assumption on, so that they can cast off 3/4.  If it was a 1/4 line,
+            the result will be a wave in the center. */
+
+         if (((old_assumption == cr_jleft || old_assumption == cr_jright) &&
+              old_assump_both == 2) ||
+             old_assumption == cr_real_1_4_tag)
+            *fix_next_assumption_p = cr_ctr_couples;
+         else if (((old_assumption == cr_ijleft || old_assumption == cr_ijright) &&
+                   old_assump_both == 2) ||
+                  old_assumption == cr_real_1_4_line)
+            *fix_next_assumption_p = cr_ctr_miniwaves;
+         else if (old_assumption == cr_qtag_like &&
+                  old_assump_both == 1 &&
+                  oldk == s_qtag &&
+                  (result->people[2].id1 & d_mask & ~2) == d_north &&
+                  ((result->people[2].id1 ^ result->people[6].id1) & d_mask) == 2 &&
+                  ((result->people[3].id1 ^ result->people[7].id1) & d_mask) == 2) {
+            if (((result->people[2].id1 ^ result->people[3].id1) & d_mask) == 0)
+               *fix_next_assumption_p = cr_ctr_miniwaves;
+            else if (((result->people[2].id1 ^ result->people[3].id1) & d_mask) == 2)
+               *fix_next_assumption_p = cr_ctr_couples;
+         }
+      }
+      else if (result->cmd.callspec == base_calls[base_call_circulate]) {
+
+         /* If we are doing a circulate in columns, and the assumption was
+               "8 chain" or "trade by", change it to the other assumption.
+               Similarly for facing lines and back-to-back lines. */
+
+         if (old_assumption == cr_li_lo &&
+             (old_assump_col & (~1)) == 0 &&
+             ((old_assump_both - 1) & (~1)) == 0) {
+            *fix_next_assumption_p = cr_li_lo;
+            *fix_next_assump_col_p = old_assump_col;
+            *fix_next_assump_both_p = old_assump_both ^ 3;
+         }
+      }
+      else if (result->cmd.callspec == base_calls[base_call_slither] &&
+               old_assump_col == 0 &&
+               old_assump_both == 0) {
+         switch (old_assumption) {
+         case cr_2fl_only:
+            *fix_next_assumption_p = cr_wave_only;
+            break;
+         case cr_wave_only:
+            *fix_next_assumption_p = cr_2fl_only;
+            break;
+         case cr_miniwaves:
+            *fix_next_assumption_p = cr_couples_only;
+            break;
+         case cr_couples_only:
+            *fix_next_assumption_p = cr_miniwaves;
+            break;
+         }
+      }
+      else if (result->cmd.callspec == base_calls[base_call_lockit] &&
+               old_assump_col == 0 &&
+               old_assump_both == 0) {
+         switch (old_assumption) {
+         case cr_2fl_only:
+         case cr_wave_only:
+            *fix_next_assumption_p = old_assumption;
+            break;
+         }
+      }
+      else if (result->cmd.callspec == base_calls[base_call_disband1] &&
+               result->kind == s2x4 &&
+               old_assump_col == 1 &&
+               old_assump_both == 0) {
+         switch (old_assumption) {
+         case cr_wave_only:
+            *fix_next_assumption_p = cr_magic_only;
+            *fix_next_assump_col_p = 1;
+            break;
+         case cr_magic_only:
+            *fix_next_assumption_p = cr_wave_only;
+            *fix_next_assump_col_p = 1;
+            break;
+         }
+      }
+      else if (result->cmd.callspec == base_calls[base_call_check_cross_counter]) {
+         /* Just pass everything directly -- this call does nothing. */
+         *fix_next_assumption_p = old_assumption;
+         *fix_next_assump_col_p = old_assump_col;
+         *fix_next_assump_both_p = old_assump_both;
+      }
+   }
+
+   if (DFM1_CPLS_UNLESS_SINGLE & this_mod1) {
+      result->cmd.cmd_misc_flags |= CMD_MISC__DO_AS_COUPLES;
+      result->cmd.do_couples_her8itflags = new_final_concepts.her8it;
+   }
+
+   do_call_in_series(
+      result,
+      reverse_order,
+      DFM1_ROLL_TRANSPARENT & this_mod1,
+      (!(cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX) &&
+       !(TEST_HERITBITS(new_final_concepts,(INHERITFLAG_12_MATRIX|INHERITFLAG_16_MATRIX))) &&
+       (recompute_id | (this_mod1 & DFM1_SEQ_NORMALIZE))),
+      qtfudged);
+
+   if (oldk != s2x2 && result->kind == s2x2 && *remembered_2x2_elongation_p != 0) {
+      result->result_flags = (result->result_flags & ~3) | *remembered_2x2_elongation_p;
+      result->cmd.prior_elongation_bits = (result->cmd.prior_elongation_bits & ~3) | *remembered_2x2_elongation_p;
+   }
+}
+
+
 static void do_sequential_call(
    setup *ss,
    const calldefn *callspec,
-   long_boolean qtfudged,
-   long_boolean *mirror_p,
+   bool qtfudged,
+   bool *mirror_p,
+   uint32 extra_heritmask_bits,
    setup *result) THROW_DECL
 {
-
-   int fetch_index;
-   int dist_index;
    int i;
    uint64 new_final_concepts = ss->cmd.cmd_final_flags;
-   int *test_index = &fetch_index;
    parse_block *parseptr = ss->cmd.parseptr;
    uint32 callflags1 = callspec->callflags1;
-   fraction_info zzz;
    long_boolean first_call = TRUE;    /* First call in logical definition. */
    long_boolean first_time = TRUE;    /* First thing we are doing, in temporal sequence. */
    call_restriction fix_next_assumption = cr_none;
    int fix_next_assump_col = 0;
    int fix_next_assump_both = 0;
-   int realtotal = callspec->stuff.seq.howmanyparts;
-   int total = realtotal;
-   int start_point;    /* Where we start, in the absence of special stuff. */
-   int end_point;  /* Where we end, in the absence of special stuff. */
    long_boolean distribute = FALSE;
    /* This tells whether the setup was genuinely elongated when it came in.
       We keep track of pseudo-elongation during the call even when it wasn't,
       but sometimes we really need to know. */
    long_boolean setup_is_elongated =
       (ss->kind == s2x2 || ss->kind == s_short6) && (ss->cmd.prior_elongation_bits & 0x3F) != 0;
-   int remembered_2x2_elongation = 0;
-   int subpart_count = 0;
-
-   zzz.instant_stop = 99;  /* If not 99, says to stop instantly after doing one part,
-                              and to report (in RESULTFLAG__PART_COMPLETION_BITS bit)
-                              whether that part was the last part. */
-   zzz.do_half_of_last_part = 0;
-   zzz.do_last_half_of_first_part = 0;
 
    /* If a restrained concept is in place, it is waiting for the call to be pulled apart
       into its pieces.  That is about to happen.  Turn off the restraint flag.
@@ -3543,33 +3559,40 @@ static void do_sequential_call(
 
    if (callflags1 & CFLAG1_DISTRIBUTE_REPETITIONS) distribute = TRUE;
 
+   fraction_info zzz(callspec->stuff.seq.howmanyparts);
+
    if (distribute) {
       int ii;
-      total = 0;
+      int delta = 0;
+
       for (ii=0 ; ii<callspec->stuff.seq.howmanyparts ; ii++) {
          by_def_item *this_item = &callspec->stuff.seq.defarray[ii];
          uint32 this_mod1 = this_item->modifiers1;
 
-         if ((DFM1_SEQ_REPEAT_N | DFM1_SEQ_REPEAT_NM1 | DFM1_SEQ_REPEAT_N_ALTERNATE) &
-             this_mod1) {
-            uint32 local_number_fields = current_options.number_fields;
+         if (this_mod1 &
+             (DFM1_SEQ_REPEAT_N | DFM1_SEQ_REPEAT_NM1 | DFM1_SEQ_REPEAT_N_ALTERNATE)) {
+            uint32 this_count = current_options.number_fields & 0xF;
 
-            total += local_number_fields & 0xF;
+            delta += this_count-1;  // Why -1?  Because we're counting *extra* parts.
 
-            if (this_mod1 & DFM1_SEQ_REPEAT_N_ALTERNATE) ii++;
+            if (this_mod1 & DFM1_SEQ_REPEAT_N_ALTERNATE) {
+               ii++;
+               delta--;
+            }
+
             if (this_mod1 & DFM1_SEQ_DO_HALF_MORE) {
-               total++;
+               delta++;
                zzz.do_half_of_last_part = CMD_FRAC_HALF_VALUE;
             }
+
             if (this_mod1 & DFM1_SEQ_REPEAT_NM1) {
-               if ((local_number_fields & 0xF) == 0) fail("Can't give number zero.");
-               total--;
+               if (this_count == 0) fail("Can't give number zero.");
+               delta--;
             }
          }
-         else
-            total++;
       }
-      test_index = &dist_index;
+
+      zzz.fudge_client_total(delta);
    }
 
    /* Check for special behavior of "sequential_with_fraction". */
@@ -3593,48 +3616,81 @@ static void do_sequential_call(
       ss->cmd.cmd_frac_flags = (ss->cmd.cmd_frac_flags & ~0xFFFF) | new_fracs;
    }
 
-   zzz.reverse_order = FALSE;
-   zzz.subcall_incr = 1;
-   zzz.highlimit = total;
-   zzz.subcall_index = 0;
-
    /* If the "cmd_frac_flags" word is not null, we are being asked to do something special.
       Otherwise, the defaults that we have placed into zzz will be used. */
+
+   revert_weirdness_type doing_weird_revert = weirdness_off;
 
    if (ss->cmd.cmd_frac_flags != CMD_FRAC_NULL_VALUE) {
       if ((zzz.do_half_of_last_part | zzz.do_last_half_of_first_part) != 0)
          fail("Sorry, can't fractionalize this.");
 
-      long_boolean doing_weird_revert = FALSE;
+      uint32 revertflags = ss->cmd.cmd_final_flags.her8it & INHERITFLAG_REVERTMASK;
 
-      // Watch for "reflected 1/2 tag" stuff.
-      if (total == 3 &&    // Sorry, can't do tag the star.
-          ((ss->cmd.cmd_final_flags.her8it & INHERITFLAG_REVERTMASK) ==
-           INHERITFLAGRVRTK_REVERT ||
-           (ss->cmd.cmd_final_flags.her8it & INHERITFLAG_REVERTMASK) ==
-           INHERITFLAGRVRTK_REFLECT) &&
+      // Watch for "revert flip the line 1/2" stuff.
+      // We look for a 3 part call, with fractions not visible, whose
+      // 2nd part is "revert_if_needed" and whose 3rd part is "extend_n".
+      // We further demand that the "n" for the extend is 2 (that is, there
+      // will be no extend), and that a plain "revert" or "reflect" has been
+      // given.  If this is found, we know that it is something like
+      // "revert flip the line 1/2", and that it really has 2 parts -- the "flip 1/2"
+      // and the "revert".  (The final "extend" isn't a part, since the tagging
+      // amount is 1/2.)  In this case, we signal "get_fraction_info" to
+      // do the right thing.
+
+      // Also, look for call whose first part is "_real @v tag base".
+
+      if (zzz.client_total == 3 &&    // Sorry, can't do tag the star.
+          (revertflags == INHERITFLAGRVRTK_REVERT ||
+           revertflags == INHERITFLAGRVRTK_REFLECT) &&
           (callflags1 & CFLAG1_NUMBER_MASK) == CFLAG1_NUMBER_BIT &&
           current_options.howmanynumbers == 1 &&
           current_options.number_fields == 2 &&
           (callflags1 & CFLAG1_VISIBLE_FRACTION_MASK) == 0 &&
-          callspec->stuff.seq.defarray[total-2].call_id == base_call_revert_if_needed &&
-          callspec->stuff.seq.defarray[total-1].call_id == base_call_extend_n) {
-         doing_weird_revert = TRUE;
+          callspec->stuff.seq.defarray[1].call_id == base_call_revert_if_needed &&
+          callspec->stuff.seq.defarray[2].call_id == base_call_extend_n) {
+         zzz.client_total = 2;
+         callflags1 |= CFLAG1_VISIBLE_FRACTION_MASK;
+         doing_weird_revert = weirdness_flatten_from_3;
+      }
+      else if (callspec->stuff.seq.defarray[0].call_id == base_call_basetag0 &&
+          (revertflags == INHERITFLAGRVRTK_REVERT ||
+           revertflags == INHERITFLAGRVRTK_REFLECT)) {
+         zzz.client_total++;    // Treat it as though it had an extra part
+         callflags1 &= ~CFLAG1_VISIBLE_FRACTION_MASK;  // and 2 parts are visible.
+         callflags1 |= CFLAG1_VISIBLE_FRACTION_BIT*2;
+         doing_weird_revert = weirdness_otherstuff;
       }
 
-      if (get_fraction_info(ss->cmd.cmd_frac_flags,
-                            callflags1, total, doing_weird_revert, &zzz)) {
-         total--;
-         realtotal--;
+      zzz.get_fraction_info(ss->cmd.cmd_frac_flags,
+                            callflags1, weirdness_off);
+
+      // If distribution is on, we have to do some funny stuff.
+      // We will scan the fetch array in its entirety, using the
+      // client counts to control what we actually process.
+
+      if (distribute || doing_weird_revert != weirdness_off) {
+         if (zzz.reverse_order) {
+            zzz.client_index = zzz.client_total-1;
+            zzz.fetch_index = zzz.fetch_total-1;
+         }
+         else {
+            zzz.client_index = 0;
+            zzz.fetch_index = 0;
+         }
       }
 
-      if (zzz.reverse_order) {
-         zzz.highlimit = 1-zzz.highlimit;
-      }
       if (zzz.reverse_order && zzz.instant_stop == 99) first_call = FALSE;
    }
 
-   start_point = zzz.subcall_index;
+
+   /* We will let "zzz.fetch_index" scan the actual call definition:
+         forward - from 0 to zzz.fetch_total-1 inclusive
+         reverse - from zzz.fetch_total-1 down to 0 inclusive.
+      While doing this, we will let "zzz.client_index" scan the parts of the
+      call as seen by the fracionalization stuff.  If we are not distributing
+      parts, "zzz.client_index" will be the same as "zzz.fetch_index".  Otherwise,
+      it will show the distributed subparts. */
 
    if (new_final_concepts.final & FINAL__SPLIT) {
       if (callflags1 & CFLAG1_SPLIT_LIKE_SQUARE_THRU)
@@ -3646,31 +3702,38 @@ static void do_sequential_call(
    if (!first_time && ss->kind != s2x2 && ss->kind != s_short6)
       ss->cmd.prior_elongation_bits = 0;
 
-   /* Did we neglect to do the touch/rear back stuff because fractionalization was enabled?
-      If so, now is the time to correct that.  We only do it for the first part, and only if
-      doing parts in forward order. */
+   // Did we neglect to do the touch/rear back stuff because fractionalization was enabled?
+   // If so, now is the time to correct that.  We only do it for the first part, and only if
+   // doing parts in forward order.
 
-   /* Test for all this is "random left, swing thru".
-      The test cases for this stuff are such things as "left swing thru". */
+   // Test for all this is "random left, swing thru".
+   // The test cases for this stuff are such things as "left swing thru".
 
-   if (     !(ss->cmd.cmd_misc_flags & (CMD_MISC__NO_STEP_TO_WAVE | CMD_MISC__ALREADY_STEPPED)) &&
-            (start_point == 0) &&
-            !zzz.do_last_half_of_first_part &&
-            !zzz.reverse_order &&
-            (callflags1 & CFLAG1_STEP_REAR_MASK)) {
+   if (!(ss->cmd.cmd_misc_flags & (CMD_MISC__NO_STEP_TO_WAVE | CMD_MISC__ALREADY_STEPPED)) &&
+       zzz.this_starts_at_beginning() &&
+       (callflags1 & CFLAG1_STEP_REAR_MASK)) {
 
       if (TEST_HERITBITS(new_final_concepts,INHERITFLAG_LEFT)) {
          if (!*mirror_p) mirror_this(ss);
-         *mirror_p = TRUE;
+         *mirror_p = true;
       }
 
       ss->cmd.cmd_misc_flags |= CMD_MISC__ALREADY_STEPPED;  /* Can only do it once. */
       touch_or_rear_back(ss, *mirror_p, callflags1);
    }
 
-   if (callspec->schema == schema_sequential_with_split_1x8_id && ss->kind == s1x8) {
-      for (i=0; i<8; i++) {
-         if (ss->people[i].id1) ss->people[i].id2 |= (i&1) ? ID2_CENTER : ID2_END;
+   if (callspec->schema == schema_sequential_with_split_1x8_id) {
+      if (ss->kind == s1x8) {
+         for (i=0; i<8; i++) {
+            if (ss->people[i].id1) ss->people[i].id2 |= (i&1) ? ID2_CENTER : ID2_END;
+         }
+      }
+      else if (ss->kind == s3x4) {
+         for (i=0; i<12; i++) {
+            uint32 jjj = i+1;
+            if (jjj>6) jjj+=2;
+            if (ss->people[i].id1) ss->people[i].id2 |= (jjj&2) ? ID2_CENTER : ID2_END;
+         }
       }
    }
 
@@ -3680,45 +3743,27 @@ static void do_sequential_call(
       only to facilitate the action of "touch_or_rear_back". */
 
    if (*mirror_p) mirror_this(ss);
-   *mirror_p = FALSE;
+   *mirror_p = false;
 
    prepare_for_call_in_series(result, ss);
 
-   /* Iterate over the parts of the call.
-      We will let "fetch_index" scan the actual call definition:
-         forward - from 0 to realtotal-1 inclusive
-         reverse - from realtotal-1 down to 0 inclusive.
-      While doing this, we will let "test_index" scan the parts of the
-      call as seen by the fracionalization stuff.  If we are not distributing
-      parts, "test_index" will be the same as "fetch_index".  Otherwise,
-      it will show the distributed subparts. */
-
-   if (zzz.reverse_order) {
-      fetch_index = distribute ? realtotal-1 : start_point;
-      dist_index = total-1;
-      end_point = -zzz.highlimit+1;
-   }
-   else {
-      fetch_index = distribute ? 0 : start_point;
-      dist_index = 0;
-      end_point = zzz.highlimit-1;
-   }
-
    int use_alternate(0);
    uint32 remember_elongation(0);
+   int remembered_2x2_elongation(0);
+   int subpart_count(0);
 
    for (;;) {
       by_def_item *this_item;
       uint32 this_mod1;
       setup_command foo1, foo2;
-      by_def_item *alt_item;
       setup_command foobar;
-      setup_kind oldk;
+      setup_command *fooptr;
+      by_def_item *alt_item;
       long_boolean recompute_id = FALSE;
       uint32 saved_number_fields = current_options.number_fields;
       int saved_num_numbers = current_options.howmanynumbers;
 
-      /* Now the "index" values (fetch_index and dist_index) contain the
+      /* Now the "index" values (zzz.fetch_index and zzz.client_index) contain the
          number of parts we have completed.  That is, they point (in 0-based
          numbering) to what we are about to do.  Also, if "subpart_count" is
          nonzero, it has the number of extra repetitions of what we just did
@@ -3729,91 +3774,91 @@ static void do_sequential_call(
                              // of this that we will still have to do after
                              // we do the repetition that we are about to do.
          use_alternate ^= 1;
-         dist_index += zzz.subcall_incr;
+         if (!distribute) zzz.client_index -= zzz.subcall_incr;
+
+         // The client index moves forward, but the fetch index does not.
+         // So we back up the fetch index to compensate for the incrementing
+         // that will happen at the end.  Yuck.
+
+         zzz.fetch_index -= zzz.subcall_incr;
          goto do_plain_call;
       }
 
       if (zzz.reverse_order) {
-         if (fetch_index < 0) break;
-         else if (fetch_index == 0) recompute_id = TRUE;
+         if (zzz.fetch_index < 0) break;
+         else if (zzz.fetch_index == 0) recompute_id = TRUE;
       }
       else {
-         if (fetch_index >= realtotal) break;
+         if (zzz.fetch_index >= zzz.fetch_total) break;
       }
 
-      if (fetch_index >= realtotal || fetch_index < 0)
-         fail("The indicated part number doesn't exist.");
-      this_item = &callspec->stuff.seq.defarray[fetch_index];
+      zzz.demand_this_part_exists();
+
+      this_item = &callspec->stuff.seq.defarray[zzz.fetch_index];
       this_mod1 = this_item->modifiers1;
 
       if ((this_mod1 & DFM1_SEQ_NO_RE_EVALUATE) &&
           !(result->cmd.cmd_misc2_flags & CMD_MISC2_RESTRAINED_SUPER))
          result->result_flags |= RESULTFLAG__NO_REEVALUATE;
 
-      fetch_index += zzz.subcall_incr;
-      dist_index += zzz.subcall_incr;
-
       if (zzz.reverse_order) {
-         if (fetch_index >= 0 &&
-             (DFM1_SEQ_REPEAT_N_ALTERNATE &
-              callspec->stuff.seq.defarray[fetch_index].modifiers1)) {
+         if (zzz.fetch_index >= 1 &&
+             (callspec->stuff.seq.defarray[zzz.fetch_index-1].modifiers1 & DFM1_SEQ_REPEAT_N_ALTERNATE)) {
             alt_item = this_item;
-            this_item = &callspec->stuff.seq.defarray[fetch_index];
+            this_item = &callspec->stuff.seq.defarray[zzz.fetch_index-1];
+            zzz.fetch_index--;     // BTW, we require (in the database) that "distribute" be on.
             this_mod1 = this_item->modifiers1;
-            fetch_index--;
          }
       }
       else {
-         if (DFM1_SEQ_REPEAT_N_ALTERNATE & this_mod1) {
-            alt_item = &callspec->stuff.seq.defarray[fetch_index];
-            fetch_index++;
+         if (this_mod1 & DFM1_SEQ_REPEAT_N_ALTERNATE) {
+            alt_item = &callspec->stuff.seq.defarray[zzz.fetch_index+1];
+            zzz.fetch_index++;     // BTW, we require (in the database) that "distribute" be on.
          }
       }
 
-      /* If we are not distributing, perform the range test now, so we don't
-         query the user needlessly about parts of calls that we won't do. */
+      // If we are not distributing, perform the range test now, so we don't
+      // query the user needlessly about parts of calls that we won't do.
 
       if (!distribute) {
-         if (zzz.reverse_order) {
-            if (*test_index+1 > start_point)
-               continue;
-            if (*test_index+1 < end_point)
-               break;
+         if (zzz.not_yet_in_active_section()) {
+            if (doing_weird_revert == weirdness_otherstuff && zzz.client_index == 0)
+               zzz.fetch_index--;
+            goto go_to_next_cycle;
          }
-         else {
-            if (*test_index-1 < start_point)
-               continue;
-            if (*test_index-1 > end_point)
-               break;
-         }
+         if (zzz.ran_off_active_section()) break;
       }
 
-      /* If an explicit substitution was made, we will recompute the ID bits for the setup.
-         Normally, we don't, which is why "patch the <anyone>" works.  The original
-         evaluation of the designees is retained after the first part of the call.
-         But if the user does something like "circle by 1/4 x [leads run]", we
-         want to re-evaluate who the leads are. */
+      // If an explicit substitution was made, we will recompute the ID bits for the setup.
+      // Normally, we don't, which is why "patch the <anyone>" works.  The original
+      // evaluation of the designees is retained after the first part of the call.
+      // But if the user does something like "circle by 1/4 x [leads run]", we
+      // want to re-evaluate who the leads are.
 
       foobar = ss->cmd;
       foobar.cmd_final_flags = new_final_concepts;
 
-      result->cmd.prior_expire_bits |= RESULTFLAG__EXPIRATION_ENAB;    // Turn on the expiration mechanism.
+      // Turn on the expiration mechanism.
+      result->cmd.prior_expire_bits |= RESULTFLAG__EXPIRATION_ENAB;
+
       {
-         long_boolean zzy = get_real_subcall(parseptr, this_item, &foobar, callspec, &foo1);
+         long_boolean zzy = get_real_subcall(parseptr, this_item, &foobar,
+                                             callspec, extra_heritmask_bits, &foo1);
          // Well, not if this is an explicit substitution.
          if (zzy)
             result->cmd.prior_expire_bits &= ~RESULTFLAG__EXPIRATION_ENAB;
          recompute_id |= zzy;
       }
 
-      /* We allow stepping (or rearing back) again. */
+      // We allow stepping (or rearing back) again.
       if (this_mod1 & DFM1_PERMIT_TOUCH_OR_REAR_BACK)
          ss->cmd.cmd_misc_flags &= ~CMD_MISC__ALREADY_STEPPED;
 
       if (this_mod1 & DFM1_SEQ_REPEAT_N_ALTERNATE)
-         (void) get_real_subcall(parseptr, alt_item, &foobar, callspec, &foo2);
+         (void) get_real_subcall(parseptr, alt_item, &foobar,
+                                 callspec, extra_heritmask_bits, &foo2);
 
-      /* We also re-evaluate if the invocation flag "seq_re_evaluate" is on. */
+      // We also re-evaluate if the invocation flag "seq_re_evaluate" is on.
 
       if (recompute_id || (this_mod1 & DFM1_SEQ_RE_EVALUATE)) update_id_bits(result);
 
@@ -3833,14 +3878,17 @@ static void do_sequential_call(
          if (this_mod1 & DFM1_SEQ_REPEAT_NM1) count_to_use--;
          if (count_to_use < 0) fail("Can't give number zero.");
 
-         if (zzz.do_half_of_last_part != 0 && !distribute && fetch_index == zzz.highlimit) {
+         if (zzz.do_half_of_last_part != 0 && !distribute &&
+             zzz.fetch_index+zzz.subcall_incr == zzz.highlimit) {
             if (count_to_use & 1) fail("Can't fractionalize this call this way.");
             count_to_use >>= 1;
          }
 
          use_alternate = zzz.reverse_order && !(count_to_use & 1);
          subpart_count = count_to_use;
-         if (subpart_count == 0) goto done_with_big_cycle;
+         if (subpart_count == 0) {
+            goto done_with_big_cycle;
+         }
          subpart_count--;
       }
 
@@ -3848,23 +3896,17 @@ static void do_sequential_call(
 
    do_plain_call:
 
-      /* The index point AFTER what we are about to do (0-based numbering, of course),
-         so index-1 (or index+1) point to what we are about to do.  Subpart_count has the
-         number of ADDITION repetitions of what we are about to do, after we finish the
-         upcoming one. */
+      /* The index points to what we are about to do (0-based numbering, of course).
+         Subpart_count has the number of ADDITIONAL repetitions of what we are about to do,
+         after we finish the upcoming one. */
 
-      if (zzz.reverse_order) {
-         if (*test_index+1 > start_point)
-            continue;
-         if (*test_index+1 < end_point)
-            break;
+      if (zzz.not_yet_in_active_section()) {
+         if (doing_weird_revert == weirdness_otherstuff && zzz.client_index == 1)
+            zzz.fetch_index--;
+
+         goto go_to_next_cycle;
       }
-      else {
-         if (*test_index-1 < start_point)
-            continue;
-         if (*test_index-1 > end_point)
-            break;
-      }
+      if (zzz.ran_off_active_section()) break;
 
       {
          uint32 remember_expire = result->cmd.prior_expire_bits;
@@ -3874,269 +3916,45 @@ static void do_sequential_call(
 
       result->cmd.prior_elongation_bits = remember_elongation;
 
-      /* We don't supply these; they get filled in by the call. */
-      result->cmd.cmd_misc_flags &= ~(DFM1_CONCENTRICITY_FLAG_MASK | CMD_MISC__NO_CHECK_MOD_LEVEL);
+      result->cmd.cmd_frac_flags = zzz.get_fracs_for_this_part();
 
-      if (this_mod1 & DFM1_NO_CHECK_MOD_LEVEL)
-         result->cmd.cmd_misc_flags |= CMD_MISC__NO_CHECK_MOD_LEVEL;
-
-      if (zzz.reverse_order) {
-         if (zzz.do_half_of_last_part != 0 && *test_index+1 == start_point)
-            result->cmd.cmd_frac_flags = zzz.do_half_of_last_part;
-         else if (zzz.do_last_half_of_first_part != 0 && *test_index+1 == end_point)
-            result->cmd.cmd_frac_flags = zzz.do_last_half_of_first_part;
-         else
-            result->cmd.cmd_frac_flags = CMD_FRAC_NULL_VALUE;
-      }
-      else {
-         if (zzz.do_half_of_last_part != 0 && *test_index == zzz.highlimit)
-            result->cmd.cmd_frac_flags = zzz.do_half_of_last_part;
-         else if (zzz.do_last_half_of_first_part != 0 && *test_index-1 == start_point)
-            result->cmd.cmd_frac_flags = zzz.do_last_half_of_first_part;
-         else
-            result->cmd.cmd_frac_flags = CMD_FRAC_NULL_VALUE;
-      }
-
-      if (this_mod1 & DFM1_FINISH_THIS) {
-         if (result->cmd.cmd_frac_flags == CMD_FRAC_NULL_VALUE)
-            result->cmd.cmd_frac_flags = 
-               CMD_FRAC_CODE_FROMTOREV | CMD_FRAC_PART_BIT*2 | CMD_FRAC_NULL_VALUE;
-         else
-            fail("Can't fractionalize this call this way.");
-      }
-
-      if (!first_call) {    /* Is this right, or should we be using "first_time" here also? */
-         /* Stop checking unless we are really serious. */
-         if (!setup_is_elongated)
-            result->cmd.cmd_misc_flags |= CMD_MISC__NO_CHK_ELONG;
-
-         result->cmd.cmd_misc2_flags &= ~CMD_MISC2__IN_Z_MASK;
-      }
-
-      if (!first_time) {
-         result->cmd.cmd_assume.assumption = fix_next_assumption;
-
-         if (fix_next_assumption != cr_none) {
-            result->cmd.cmd_assume.assump_col = fix_next_assump_col;
-            result->cmd.cmd_assume.assump_both = fix_next_assump_both;
-            result->cmd.cmd_assume.assump_cast = 0;
-            result->cmd.cmd_assume.assump_live = 0;
-            result->cmd.cmd_assume.assump_negate = 0;
-
-            /* If we just put in an "assume 1/4 tag" type of thing, we presumably
-               did a "scoot back to a wave" as part of a "scoot reaction".  Now, if
-               there were phantoms in the center after the call, the result could
-               have gotten changed (by the normalization stuff deep within
-               "fix_n_results" or whatever) to a 2x4.  However, if we are doing a
-               scoot reaction, we really want the 1/4 tag.  So change it back.
-               It happens that code in "divide_the_setup" would do this anyway,
-               but we don't like assumptions in place on setups for which they
-               are meaningless. */
-
-            if (fix_next_assump_both == 2 &&
-                (fix_next_assumption == cr_jleft || fix_next_assumption == cr_jright) &&
-                result->kind == s2x4 &&
-                (result->people[1].id1 | result->people[2].id1 |
-                 result->people[5].id1 | result->people[6].id1) == 0) {
-               expand_setup(&comp_qtag_2x4_stuff, result);
-            }
+      if (doing_weird_revert == weirdness_otherstuff) {
+         if (zzz.client_index == 0) {
+            zzz.fetch_index--;
+            result->cmd.cmd_frac_flags = CMD_FRAC_HALF_VALUE|CMD_FRAC_FORCE_VIS;
+         }
+         else if (zzz.client_index == 1) {
+            result->cmd.cmd_frac_flags = CMD_FRAC_LASTHALF_VALUE|CMD_FRAC_FORCE_VIS;
          }
       }
 
-      fix_next_assumption = cr_none;
-      fix_next_assump_col = 0;
-      fix_next_assump_both = 0;
+      if (this_mod1 & DFM1_SEQ_REPEAT_N_ALTERNATE && use_alternate)
+         fooptr = &foo2;
+      else
+         fooptr = &foo1;
 
-      if ((DFM1_SEQ_REPEAT_N_ALTERNATE & this_mod1) && use_alternate) {
-         result->cmd.parseptr = foo2.parseptr;
-         result->cmd.callspec = foo2.callspec;
-         result->cmd.cmd_final_flags = foo2.cmd_final_flags;
+      result->cmd.parseptr = fooptr->parseptr;
+      result->cmd.callspec = fooptr->callspec;
+      result->cmd.cmd_final_flags = fooptr->cmd_final_flags;
 
-      }
-      else {
-         result->cmd.parseptr = foo1.parseptr;
-         result->cmd.callspec = foo1.callspec;
-         result->cmd.cmd_final_flags = foo1.cmd_final_flags;
-      }
-
-      oldk = result->kind;
-
-      if (oldk == s2x2 && (result->cmd.prior_elongation_bits & 3) != 0)
-         remembered_2x2_elongation = result->cmd.prior_elongation_bits & 3;
-
-      /* We need to manipulate some assumptions -- there are a few cases in
-         dancers really do track an awareness of the formation. */
-
-      if (!(TEST_HERITBITS(result->cmd.cmd_final_flags,(INHERITFLAG_HALF | INHERITFLAG_LASTHALF))) &&
-          result->cmd.cmd_frac_flags == CMD_FRAC_NULL_VALUE) {
-
-         if (result->cmd.callspec == base_calls[base_call_chreact_1]) {
-
-            /* If we are starting a chain reaction, and the assumption was some form
-               of 1/4 tag or 1/4 line (all of the above indicate such a thing --
-               the outsides are a couple looking in), then, whether it was a plain
-               chain reaction or a cross chain reaction, the result will have the
-               checkpointers in miniwaves.  Pass that assumption on, so that they can hinge. */
-
-            if (     ((    result->cmd.cmd_assume.assumption == cr_jleft ||
-                           result->cmd.cmd_assume.assumption == cr_ijleft ||
-                           result->cmd.cmd_assume.assumption == cr_jright ||
-                           result->cmd.cmd_assume.assumption == cr_ijright) &&
-                      result->cmd.cmd_assume.assump_both == 2)
-                     ||
-                     (result->cmd.cmd_assume.assumption == cr_qtag_like &&
-                      result->cmd.cmd_assume.assump_both == 1)
-                     ||
-                     result->cmd.cmd_assume.assumption == cr_real_1_4_tag
-                     ||
-                     result->cmd.cmd_assume.assumption == cr_real_1_4_line)
-               fix_next_assumption = cr_ckpt_miniwaves;
-         }
-         else if (result->cmd.callspec == base_calls[base_call_scoottowave]) {
-            if (result->kind == s2x4 &&
-                !(result->cmd.cmd_final_flags.her8it & INHERITFLAG_YOYO)) {
-               if ((result->people[0].id1 & d_mask) == d_north ||
-                   (result->people[1].id1 & d_mask) == d_south ||
-                   (result->people[2].id1 & d_mask) == d_north ||
-                   (result->people[3].id1 & d_mask) == d_south ||
-                   (result->people[4].id1 & d_mask) == d_south ||
-                   (result->people[5].id1 & d_mask) == d_north ||
-                   (result->people[6].id1 & d_mask) == d_south ||
-                   (result->people[7].id1 & d_mask) == d_north) {
-                  fix_next_assumption = cr_jleft;               
-                  fix_next_assump_both = 2;
-               }
-               else if ((result->people[0].id1 & d_mask) == d_south ||
-                        (result->people[1].id1 & d_mask) == d_north ||
-                        (result->people[2].id1 & d_mask) == d_south ||
-                        (result->people[3].id1 & d_mask) == d_north ||
-                        (result->people[4].id1 & d_mask) == d_north ||
-                        (result->people[5].id1 & d_mask) == d_south ||
-                        (result->people[6].id1 & d_mask) == d_north ||
-                        (result->people[7].id1 & d_mask) == d_south) {
-                  fix_next_assumption = cr_jright;               
-                  fix_next_assump_both = 2;
-               }
-            }
-         }
-         else if (result->cmd.callspec == base_calls[base_call_makepass_1]) {
-
-            /* If we are starting a "make a pass", and the assumption was some form
-               of 1/4 tag, then we will have a 2-faced line in the center.  Pass that
-               assumption on, so that they can cast off 3/4.  If it was a 1/4 line,
-               the result will be a wave in the center. */
-
-            if (((result->cmd.cmd_assume.assumption == cr_jleft ||
-                  result->cmd.cmd_assume.assumption == cr_jright) &&
-                 result->cmd.cmd_assume.assump_both == 2) ||
-                result->cmd.cmd_assume.assumption == cr_real_1_4_tag)
-               fix_next_assumption = cr_ctr_couples;
-            else if (((result->cmd.cmd_assume.assumption == cr_ijleft ||
-                       result->cmd.cmd_assume.assumption == cr_ijright) &&
-                      result->cmd.cmd_assume.assump_both == 2) ||
-                     result->cmd.cmd_assume.assumption == cr_real_1_4_line)
-               fix_next_assumption = cr_ctr_miniwaves;
-            else if (result->cmd.cmd_assume.assumption == cr_qtag_like &&
-                     result->cmd.cmd_assume.assump_both == 1 &&
-                     oldk == s_qtag &&
-                     (result->people[2].id1 & d_mask & ~2) == d_north &&
-                     ((result->people[2].id1 ^ result->people[6].id1) & d_mask) == 2 &&
-                     ((result->people[3].id1 ^ result->people[7].id1) & d_mask) == 2) {
-               if (((result->people[2].id1 ^ result->people[3].id1) & d_mask) == 0)
-                  fix_next_assumption = cr_ctr_miniwaves;
-               else if (((result->people[2].id1 ^ result->people[3].id1) & d_mask) == 2)
-                  fix_next_assumption = cr_ctr_couples;
-            }
-         }
-         else if (result->cmd.callspec == base_calls[base_call_circulate]) {
-
-            /* If we are doing a circulate in columns, and the assumption was
-               "8 chain" or "trade by", change it to the other assumption.
-               Similarly for facing lines and back-to-back lines. */
-
-            if (result->cmd.cmd_assume.assumption == cr_li_lo &&
-                (result->cmd.cmd_assume.assump_col & (~1)) == 0 &&
-                ((result->cmd.cmd_assume.assump_both - 1) & (~1)) == 0) {
-               fix_next_assumption = cr_li_lo;
-               fix_next_assump_col = result->cmd.cmd_assume.assump_col;
-               fix_next_assump_both = result->cmd.cmd_assume.assump_both ^ 3;
-            }
-         }
-         else if (result->cmd.callspec == base_calls[base_call_slither] &&
-                  result->cmd.cmd_assume.assump_col == 0 &&
-                  result->cmd.cmd_assume.assump_both == 0) {
-            switch (result->cmd.cmd_assume.assumption) {
-            case cr_2fl_only:
-               fix_next_assumption = cr_wave_only;
-               break;
-            case cr_wave_only:
-               fix_next_assumption = cr_2fl_only;
-               break;
-            case cr_miniwaves:
-               fix_next_assumption = cr_couples_only;
-               break;
-            case cr_couples_only:
-               fix_next_assumption = cr_miniwaves;
-               break;
-            }
-         }
-         else if (result->cmd.callspec == base_calls[base_call_lockit] &&
-                  result->cmd.cmd_assume.assump_col == 0 &&
-                  result->cmd.cmd_assume.assump_both == 0) {
-            switch (result->cmd.cmd_assume.assumption) {
-            case cr_2fl_only:
-            case cr_wave_only:
-               fix_next_assumption = result->cmd.cmd_assume.assumption;
-               break;
-            }
-         }
-         else if (result->cmd.callspec == base_calls[base_call_disband1] &&
-                  result->kind == s2x4 &&
-                  result->cmd.cmd_assume.assump_col == 1 &&
-                  result->cmd.cmd_assume.assump_both == 0) {
-            switch (result->cmd.cmd_assume.assumption) {
-            case cr_wave_only:
-               fix_next_assumption = cr_magic_only;
-               fix_next_assump_col = 1;
-               break;
-            case cr_magic_only:
-               fix_next_assumption = cr_wave_only;
-               fix_next_assump_col = 1;
-               break;
-            }
-         }
-         else if (result->cmd.callspec == base_calls[base_call_check_cross_counter]) {
-            /* Just pass everything directly -- this call does nothing. */
-            fix_next_assumption = result->cmd.cmd_assume.assumption;
-            fix_next_assump_col = result->cmd.cmd_assume.assump_col;
-            fix_next_assump_both = result->cmd.cmd_assume.assump_both;
-         }
-      }
-
-      if (DFM1_CPLS_UNLESS_SINGLE & this_mod1) {
-         result->cmd.cmd_misc_flags |= CMD_MISC__DO_AS_COUPLES;
-         result->cmd.do_couples_her8itflags = new_final_concepts.her8it;
-      }
-
-      do_call_in_series(
-         result,
+      do_stuff_inside_sequential_call(
+         result, this_mod1, first_call, first_time,
+         &fix_next_assumption,
+         &fix_next_assump_col,
+         &fix_next_assump_both,
+         &remembered_2x2_elongation,
+         new_final_concepts,
+         ss->cmd.cmd_misc_flags,
          zzz.reverse_order,
-         DFM1_ROLL_TRANSPARENT & this_mod1,
-         (!(ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX) &&
-          !(TEST_HERITBITS(new_final_concepts,(INHERITFLAG_12_MATRIX|INHERITFLAG_16_MATRIX))) &&
-          (recompute_id | (this_mod1 & DFM1_SEQ_NORMALIZE))),
-         qtfudged);
-
-      if (oldk != s2x2 && result->kind == s2x2 && remembered_2x2_elongation != 0) {
-         result->result_flags = (result->result_flags & ~3) | remembered_2x2_elongation;
-         result->cmd.prior_elongation_bits = (result->cmd.prior_elongation_bits & ~3) | remembered_2x2_elongation;
-      }
+         recompute_id,
+         qtfudged,
+         setup_is_elongated);
 
       remember_elongation = result->cmd.prior_elongation_bits;
 
-      if (subpart_count && !distribute) continue;
+      if (subpart_count && !distribute) goto go_to_next_cycle;
 
-done_with_big_cycle:
+   done_with_big_cycle:
 
       /* We allow expansion on the first part, and then shut it off for later parts.
          This is required for things like 12 matrix grand swing thru from a 1x8 or 1x10. */
@@ -4159,7 +3977,7 @@ done_with_big_cycle:
       current_options.number_fields = saved_number_fields;
       current_options.howmanynumbers = saved_num_numbers;
 
-      qtfudged = FALSE;
+      qtfudged = false;
 
       new_final_concepts.final &=
          ~(FINAL__SPLIT | FINAL__SPLIT_SQUARE_APPROVED | FINAL__SPLIT_DIXIE_APPROVED);
@@ -4167,20 +3985,16 @@ done_with_big_cycle:
       first_call = FALSE;
       first_time = FALSE;
 
-      /* If we are being asked to do just one part of a call (from cmd_frac_flags),
-         exit now.  Also, see if we just did the last part. */
+      // If we are being asked to do just one part of a call,
+      // exit now.  Also, fill in bits in result->result_flags.
 
-      if (zzz.instant_stop != 99) {
-         /* Check whether we honored the last possible request.  That is,
-            whether we did the last part of the call in forward order, or
-            the first part in reverse order. */
-         result->result_flags |= RESULTFLAG__PARTS_ARE_KNOWN;
-         if (zzz.instant_stop >= zzz.highlimit)
-            result->result_flags |= RESULTFLAG__DID_LAST_PART;
-         if (zzz.instant_stop == zzz.highlimit-1)
-            result->result_flags |= RESULTFLAG__DID_NEXTTOLAST_PART;
-         break;
-      }
+      if (zzz.query_instant_stop(result->result_flags)) break;
+
+   go_to_next_cycle:
+
+      // Increment for next cycle.
+      zzz.fetch_index += zzz.subcall_incr;
+      zzz.client_index += zzz.subcall_incr;
    }
 
    // Pick up the concentricity command stuff from the last thing we did,
@@ -4191,7 +4005,7 @@ done_with_big_cycle:
 }
 
 
-long_boolean do_misc_schema(
+static long_boolean do_misc_schema(
    setup *ss,
    calldef_schema the_schema,
    calldefn *callspec,
@@ -4228,10 +4042,10 @@ long_boolean do_misc_schema(
    }
 
    (void) get_real_subcall(parseptr, innerdef,
-                           &ss->cmd, callspec, foo1p);
+                           &ss->cmd, callspec, 0, foo1p);
 
    (void) get_real_subcall(parseptr, outerdef,
-                           &ss->cmd, callspec, &foo2);
+                           &ss->cmd, callspec, 0, &foo2);
 
    foo1p->cmd_frac_flags = ss->cmd.cmd_frac_flags;
    foo2.cmd_frac_flags = ss->cmd.cmd_frac_flags;
@@ -4529,13 +4343,10 @@ long_boolean do_misc_schema(
          break;
       }
 
-      concentric_move(
-                      ss, foo1p, &foo2,
-                      the_schema,
+      concentric_move(ss, foo1p, &foo2, the_schema,
                       innerdef->modifiers1,
                       outerdef->modifiers1,
-                      TRUE,
-                      result);
+                      TRUE, ~0UL, result);
 
       result->rotation -= rot;   /* Flip the setup back. */
 
@@ -4638,6 +4449,10 @@ static calldef_schema get_real_callspec_and_schema(setup *ss,
               (INHERITFLAG_SINGLE | INHERITFLAG_NXNMASK | INHERITFLAG_MXNMASK)) {
       case INHERITFLAG_SINGLE:
          return schema_single_concentric;
+      case INHERITFLAGMXNK_1X3:
+         return schema_concentric_6_2;
+      case INHERITFLAGMXNK_3X1:
+         return schema_concentric_2_6;
       case INHERITFLAGNXNK_3X3:
          return schema_3x3_concentric;
       case INHERITFLAGNXNK_4X4:
@@ -4685,6 +4500,8 @@ static calldef_schema get_real_callspec_and_schema(setup *ss,
          return schema_conc_16;
       else if (herit_concepts & INHERITFLAG_GRAND)
          return schema_concentric_others;
+      else if (herit_concepts & INHERITFLAG_DIAMOND)
+         return schema_concentric_2_6;
       else
          return schema_single_concentric_together;
    case schema_maybe_matrix_conc:
@@ -4716,13 +4533,13 @@ static calldef_schema get_real_callspec_and_schema(setup *ss,
 }
 
 static void really_inner_move(setup *ss,
-                              long_boolean qtfudged,
+                              bool qtfudged,
                               calldefn *callspec,
                               calldef_schema the_schema,
                               uint32 callflags1,
-                              long_boolean did_4x4_expansion,
+                              bool did_4x4_expansion,
                               uint32 imprecise_rotation_result_flag,
-                              long_boolean mirror,
+                              bool mirror,
                               setup *result) THROW_DECL
 {
    selector_kind special_selector = selector_none;
@@ -4763,11 +4580,10 @@ static void really_inner_move(setup *ss,
       so undo it. */
 
    if (the_schema != schema_by_array) {
-      if (mirror) { mirror_this(ss); mirror = FALSE; }
+      if (mirror) { mirror_this(ss); mirror = false; }
    }
 
    setup_command foo1;
-   uint32 unaccepted_flags;
 
    if ((callflags1 & CFLAG1_FUNNY_MEANS_THOSE_FACING) &&
        (TEST_HERITBITS(ss->cmd.cmd_final_flags,INHERITFLAG_FUNNY))) {
@@ -4806,7 +4622,7 @@ static void really_inner_move(setup *ss,
       if ((TEST_HERITBITS(ss->cmd.cmd_final_flags,INHERITFLAG_REVERSE)) &&
           (callflagsh & INHERITFLAG_REVERSE)) {
          mirror_this(ss);
-         mirror = TRUE;
+         mirror = true;
          ss->cmd.cmd_final_flags.her8it &= ~INHERITFLAG_REVERSE;
       }
 
@@ -4848,7 +4664,7 @@ static void really_inner_move(setup *ss,
          /* ***** why isn't this particular error test taken care of more generally elsewhere? */
          if (!(callflagsh & INHERITFLAG_LEFT)) fail("Can't do this call 'left'.");
          if (!mirror) mirror_this(ss);
-         mirror = TRUE;
+         mirror = true;
          ss->cmd.cmd_final_flags.her8it &= ~INHERITFLAG_LEFT;
       }
 
@@ -4859,7 +4675,7 @@ static void really_inner_move(setup *ss,
          /* This "reverse" just means mirror. */
          if (mirror) fail("Can't do this call 'left' and 'reverse'.");
          mirror_this(ss);
-         mirror = TRUE;
+         mirror = true;
          ss->cmd.cmd_final_flags.her8it &= ~INHERITFLAG_REVERSE;
       }
 
@@ -4886,14 +4702,57 @@ static void really_inner_move(setup *ss,
       // the special ones "magic" and/or "interlocked", which we can dispose
       // of by doing the call in the appropriate magic/interlocked setup.
 
-      unaccepted_flags = ss->cmd.cmd_final_flags.her8it &
-         (~(callflagsh|INHERITFLAG_HALF|INHERITFLAG_LASTHALF));
+      uint32 extra_heritmask_bits = 0;
 
-      if (unaccepted_flags != 0) {
-         if (divide_for_magic(ss, unaccepted_flags, result))
-            return;
-         else
-            fail("Can't do this call with this concept.");
+      {
+         uint32 unaccepted_flags = ss->cmd.cmd_final_flags.her8it &
+            (~(callflagsh|INHERITFLAG_HALF|INHERITFLAG_LASTHALF));
+
+         // Special case:  Some calls do not specify "magic" inherited
+         // to their children, but can nevertheless be executed magically.
+         // In such a case, the whole setup is divided into magic lines
+         // or whatever, in the call to "divide_for_magic" below, and the
+         // call itself never sees the magic.  It only sees the single
+         // line that has been preprocessed.  Alter the Wave is such a call.
+         // It wouldn't know how to do the star turns magically.
+         // However, we might want to do a "finally magic alter the wave",
+         // meaning that the Flip the Diamond is to be magic, which it can
+         // certainly handle.  So we want to say that we can force the inheritance
+         // for this part, even though the call itself doesn't want us to.
+         // What is the justification for this?  Well, if we are doing a
+         // "CMD_FRAC_CODE_ONLY" type of thing, we have effectively said
+         // "Give me the Nth part of this call, and apply magic to it."
+         // It is perfectly reasonable to say that, when I request
+         // a specific part of a call, I want it unencumbered by its
+         // context in the entire call.  When I request the 4th part of
+         // Alter the Wave, I want a Flip the Diamond.  I take responsibility
+         // for any concepts that I apply to it.
+         //
+         // So, in this case, we don't do the magic division here.  We
+         // bypass it, and arrange for the picking out of the subcall
+         // to act as though it were heritable, even if it normally
+         // wouldn't be.
+         //
+         // This stuff applies to interlocked and similar things also.
+
+         if (unaccepted_flags != 0) {
+            if ((unaccepted_flags &
+                 ~(INHERITFLAG_INTLK | INHERITFLAG_MAGIC |
+                   INHERITFLAG_MXNMASK | INHERITFLAG_NXNMASK |
+                   INHERITFLAG_SINGLEFILE)) == 0 &&
+                the_schema == schema_sequential &&
+                (ss->cmd.cmd_frac_flags & CMD_FRAC_PART_MASK) != 0 &&
+                (((ss->cmd.cmd_frac_flags & CMD_FRAC_CODE_MASK) == CMD_FRAC_CODE_ONLY) ||
+                 ((ss->cmd.cmd_frac_flags & CMD_FRAC_CODE_MASK) == CMD_FRAC_CODE_ONLYREV))) {
+               extra_heritmask_bits = unaccepted_flags;
+            }
+            else {
+               if (divide_for_magic(ss, unaccepted_flags, result))
+                  return;
+               else
+                  fail("Can't do this call with this concept.");
+            }
+         }
       }
 
       if (the_schema >= schema_sequential) {
@@ -4987,7 +4846,7 @@ static void really_inner_move(setup *ss,
 
          }
          else
-            do_sequential_call(ss, callspec, qtfudged, &mirror, result);
+            do_sequential_call(ss, callspec, qtfudged, &mirror, extra_heritmask_bits, result);
 
          if (the_schema == schema_split_sequential && result->kind == s2x6 && 
              ((ss->cmd.cmd_final_flags.her8it & INHERITFLAG_MXNMASK) == INHERITFLAGMXNK_1X3 ||
@@ -5053,8 +4912,9 @@ static void really_inner_move(setup *ss,
       result->result_flags |= RESULTFLAG__SPLIT_AXIS_FIELDMASK;
 
    result->result_flags |= imprecise_rotation_result_flag;
-   if (ss->cmd.cmd_misc2_flags & CMD_MISC2__DID_Z_COMPRESSION)
-      result->result_flags |= RESULTFLAG__DID_Z_COMPRESSION;
+   result->result_flags |=
+      ((ss->cmd.cmd_misc2_flags & CMD_MISC2__DID_Z_COMPRESSMASK) / CMD_MISC2__DID_Z_COMPRESSBIT) *
+      RESULTFLAG__DID_Z_COMPRESSBIT;
 
    /* Reflect back if necessary. */
    if (mirror) mirror_this(result);
@@ -5065,7 +4925,7 @@ static void really_inner_move(setup *ss,
       outer_inners[0] = *result;
       outer_inners[1].kind = nothing;
       outer_inners[1].result_flags = 0;
-      normalize_concentric(schema_conc_o, 1, outer_inners, 1, result);
+      normalize_concentric(schema_conc_o, 1, outer_inners, 1, 0, result);
       if (result->kind == s2x4) {
          if (result->people[1].id1 | result->people[2].id1 | result->people[5].id1 | result->people[6].id1)
             fail("Internal error: 'O' people wandered into middle.");
@@ -5085,8 +4945,8 @@ static void really_inner_move(setup *ss,
 
 static void move_with_real_call(
    setup *ss,
-   long_boolean qtfudged,
-   long_boolean did_4x4_expansion,
+   bool qtfudged,
+   bool did_4x4_expansion,
    setup *result) THROW_DECL
 {
    /* We have a genuine call.  Presumably all serious concepts have been disposed of
@@ -5132,7 +4992,7 @@ static void move_with_real_call(
       uint32 imprecise_rotation_result_flag = 0;
       uint32 force_split = 0;      /* 1 means force split,
                                       2 means this is 1x8 and do not recompute id. */
-      long_boolean mirror = FALSE;
+      bool mirror = false;
       uint32 callflags1 = this_defn->callflags1;
 
       calldef_schema the_schema =
@@ -5237,7 +5097,7 @@ static void move_with_real_call(
                       ~(FINAL__SPLIT | FINAL__SPLIT_SQUARE_APPROVED | FINAL__SPLIT_DIXIE_APPROVED))
                      fail("This concept not allowed here.");
 
-                  do_inheritance(&ss->cmd, this_defn, defptr);
+                  do_inheritance(&ss->cmd, this_defn, defptr, 0);
                   process_number_insertion(defptr->modifiers1);
 
                   switch (defptr->modifiers1 & DFM1_CALL_MOD_MASK) {
@@ -5428,7 +5288,7 @@ static void move_with_real_call(
                                             CMD_MISC__MUST_SPLIT_MASK))) {
                if (TEST_HERITBITS(ss->cmd.cmd_final_flags,INHERITFLAG_LEFT)) {
                   mirror_this(ss);
-                  mirror = TRUE;
+                  mirror = true;
                }
       
                ss->cmd.cmd_misc_flags |= CMD_MISC__ALREADY_STEPPED;  /* Can only do it once. */
@@ -5441,7 +5301,7 @@ static void move_with_real_call(
       
                if (callflags1 & CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK) {
                   if (mirror) mirror_this(ss);
-                  mirror = FALSE;
+                  mirror = false;
                }
             }
    
@@ -5487,7 +5347,7 @@ static void move_with_real_call(
          case schema_select_original_hubs:
             switch (ss->kind) {
             case s1x8: case s_ptpd:
-               force_split = 2;     /* What a crock!!!!! ****** */
+               force_split = 2;     // 2 tells it not to recompute ID.
                break;
             }
             break;
@@ -5531,7 +5391,7 @@ static void move_with_real_call(
             ss->cmd.cmd_misc_flags |=
                (this_defn->stuff.conc.outerdef.modifiers1 & DFM1_CONCENTRICITY_FLAG_MASK);
 
-            long_boolean local_4x4_exp = FALSE;
+            bool local_4x4_exp = false;
 
             if (the_schema == schema_conc_o) {
                static expand_thing thing1 = {{10, 1, 2, 9},  4, s2x2, s4x4, 0};
@@ -5545,10 +5405,10 @@ static void move_with_real_call(
                   expand_setup(&thing2, ss);
                else
                   fail("Can't find outside 'O' spots.");
-               local_4x4_exp = TRUE;
+               local_4x4_exp = true;
             }
 
-            do_inheritance(&ss->cmd, this_defn, &this_defn->stuff.conc.outerdef);
+            do_inheritance(&ss->cmd, this_defn, &this_defn->stuff.conc.outerdef, 0);
             move_with_real_call(ss, qtfudged, local_4x4_exp, result);
             return;
          }
@@ -5633,7 +5493,7 @@ static void move_with_real_call(
             }
 
             if (mask == 0xAAAA || mask == 0xCCCC) {
-               expand_thing *t = (mask & 2) ? &exp_c1phan_4x4_stuff1 : &exp_c1phan_4x4_stuff2;
+               const expand_thing *t = (mask & 2) ? &exp_c1phan_4x4_stuff1 : &exp_c1phan_4x4_stuff2;
                compress_setup(t, ss);
             }
          }
@@ -5719,7 +5579,7 @@ static void move_with_real_call(
          ss->cmd.cmd_misc_flags |= (CMD_MISC__SAID_SPLIT | CMD_MISC__NO_EXPAND_MATRIX);
 
          // We can't handle the mirroring, so undo it.
-         if (mirror) { mirror_this(ss); mirror = FALSE; }
+         if (mirror) { mirror_this(ss); mirror = false; }
 
          if      (ss->kind == s2x4)   split_map = MAPCODE(s2x2,2,MPKIND__SPLIT,0);
          else if (ss->kind == s1x8)   split_map = MAPCODE(s1x4,2,MPKIND__SPLIT,0);
@@ -5811,7 +5671,7 @@ static void move_with_real_call(
 
 extern void move(
    setup *ss,
-   long_boolean qtfudged,
+   bool qtfudged,
    setup *result) THROW_DECL
 {
    parse_block *saved_magic_diamond = (parse_block *) 0;
@@ -5870,7 +5730,6 @@ extern void move(
          if (saved_old_call) ss->cmd.parseptr->options = current_options;
          ss->cmd.callspec = (call_with_name *) 0;
          while (z1->concept->kind > marker_end_of_list) z1 = z1->next;
-
          if (saved_old_call != base_calls[base_call_basetag0]) {
             if (z1->concept->kind == concept_another_call_next_mod) {
                z1 = z1->next->subsidiary_root;
@@ -5958,7 +5817,7 @@ extern void move(
          }
       }
 
-      move_with_real_call(ss, qtfudged, FALSE, result);
+      move_with_real_call(ss, qtfudged, false, result);
       goto getout;
    }
 
@@ -6037,6 +5896,8 @@ extern void move(
          case schema_concentric_6p:
          case schema_concentric_6p_or_sgltogether:
          case schema_concentric_6p_or_normal:
+         case schema_maybe_nxn_1331_lines_concentric:
+         case schema_maybe_nxn_1331_cols_concentric:
          case schema_conc_o:
             break;
          default:
@@ -6094,7 +5955,7 @@ extern void move(
           !parseptrcopy->no_check_call_level)
          warn(warn__bad_call_level);
 
-      move_with_real_call(ss, qtfudged, FALSE, result);
+      move_with_real_call(ss, qtfudged, false, result);
       remove_tgl_distortion(result);
       current_options = saved_options;
    }
@@ -6280,7 +6141,8 @@ extern void move(
    if (saved_magic_diamond &&
        (result->result_flags & RESULTFLAG__NEED_DIAMOND) &&
        saved_magic_diamond->concept->value.arg1 == 0) {
-      if (saved_magic_diamond->concept->kind == concept_magic) saved_magic_diamond->concept = &special_magic;
+      if (saved_magic_diamond->concept->kind == concept_magic)
+         saved_magic_diamond->concept = &special_magic;
       else if (saved_magic_diamond->concept->kind == concept_interlocked)
          saved_magic_diamond->concept = &special_interlocked;
    }

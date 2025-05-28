@@ -16,7 +16,7 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-    This is for version 33. */
+    This is for version 34. */
 
 /* This defines the following functions:
    compress_setup
@@ -47,6 +47,7 @@
    install_rot
    scatter
    gather
+   install_scatter
    process_final_concepts
    really_skip_one_concept
    fix_n_results
@@ -112,6 +113,7 @@ and the following external variables:
    dyp_each_warnings
    useless_phan_clw_warnings
    allowing_all_concepts
+   allowing_minigrand
    using_active_phantoms
    last_direction_kind
    interactivity
@@ -270,6 +272,7 @@ warning_info conc_elong_warnings = {{0, 0, 0}};
 warning_info dyp_each_warnings = {{0, 0, 0}};
 warning_info useless_phan_clw_warnings = {{0, 0, 0}};
 long_boolean allowing_all_concepts = FALSE;
+long_boolean allowing_minigrand = FALSE;
 long_boolean using_active_phantoms = FALSE;
 int last_direction_kind = direction_zagzag;
 interactivity_state interactivity = interactivity_normal;
@@ -527,6 +530,15 @@ extern void update_id_bits(setup *ss)
        only if those assumptions are satisfied. */
 
    switch (ss->kind) {
+   case s2x5:
+      // We recognize "centers" or "center 4" if they are a Z within the center 6.
+      if (livemask == 0x3BDUL || livemask == 0x2F7UL)
+         ptr = id_bit_table_2x5_z;
+      break;
+   case sd2x5:
+      // We recognize "centers" or "center 4" if they are a Z within the center 6.
+      if (livemask != 0x37BUL && livemask != 0x1EFUL) ptr = (id_bit_table *) 0;
+      break;
    case s2x6:
       /* **** This isn't really right -- it would allow "outer pairs bingo".
          We really should only allow 2-person calls, unless we say
@@ -583,19 +595,22 @@ extern void update_id_bits(setup *ss)
       break;
    case s3x4:
 
-      /* There are three special things we can recognize from here.
-            If the setup is populated as an "H", we use a special table
-            (*NOT* the usual one picked up from the setup_attrs list)
-            that knows about the center 2 and the outer 6 and all that.
-            If the center 2x3 is occupied, we use a table for that.
-            If the setup is populated as offset lines/columns/whatever,
-            we use the table from the setup_attrs list, that knows about
-            the "outer pairs".
-            If all else fails, we use the default table. */
+      // There are three special things we can recognize from here.
+      // If the setup is populated as an "H", we use a special table
+      // (*NOT* the usual one picked up from the setup_attrs list)
+      // that knows about the center 2 and the outer 6 and all that.
+      // If the center 2x3 is occupied, we use a table for that.
+      // If the setup is populated as offset lines/columns/whatever,
+      // we use the table from the setup_attrs list, that knows about
+      // the "outer pairs".
+      // If the corners are occupied but the ends of the center line
+      // are not, use a table that recognizes those corners as "ends".
+      // If all else fails, we use the default table. */
 
       if (livemask == 07171UL) ptr = id_bit_table_3x4_h;
       else if ((livemask & 04646UL) == 04646UL) ptr = id_bit_table_3x4_ctr6;
       else if (livemask == 07474UL || livemask == 06363UL) ptr = id_bit_table_3x4_offset;
+      else if ((livemask & 03131UL) == 01111UL) ptr = id_bit_table_3x4_corners;
       break;
    case s_d3x4:
       if ((livemask & 01616UL) != 01616UL) ptr = (id_bit_table *) 0;
@@ -723,7 +738,7 @@ static void initialize_touch_tables(void)
 
 extern void touch_or_rear_back(
    setup *scopy,
-   long_boolean did_mirror,
+   bool did_mirror,
    int callflags1) THROW_DECL
 {
    int i;
@@ -1079,6 +1094,7 @@ typedef struct grzlch {
 
 
 static restr_initializer restr_init_table0[] = {
+   {s1x2, cr_opposite_sex, 2, {0}, {0}, {0}, {1}, FALSE, chk_sex},
    {s4x4,      cr_wave_only,    1,   {0, 0, 0, 2, 0, 2, 0, 2, 2, 2, 2, 0, 2, 0, 2, 0},
                                  {2, 0, 2, 0, 0, 0, 0, 2, 0, 2, 0, 2, 2, 2, 2, 0}, {0}, {0}, TRUE,  chk_box},
    {s4x4,      cr_2fl_only,     1,    {0, 0, 0, 0, 0, 0, 2, 0, 2, 2, 2, 2, 2, 2, 0, 2},
@@ -1192,7 +1208,7 @@ static restr_initializer restr_init_table0[] = {
    {s1x2, cr_all_facing_same, 2, {0, 1},                                          {1}, {0}, {0}, TRUE,  chk_groups},
    {s1x2, cr_miniwaves, 1, {0, 1},                                                {1}, {0}, {0}, TRUE,  chk_anti_groups},
    {s2x2, cr_couples_only, 0, {1, 0, 3, 2},                              {3, 2, 1, 0}, {0}, {0}, FALSE, chk_box_dbl},
-   {s2x2, cr_miniwaves, 2, {1, 0, 3, 2},                                 {3, 2, 1, 0}, {0}, {0}, FALSE, chk_box_dbl},
+   {s2x2, cr_miniwaves, 2, {1, 0, 3, 2, 3, 0, 0, 3},         {3, 2, 1, 0, 3, 3, 0, 0}, {0}, {0}, FALSE, chk_box_dbl},
    {s2x2, cr_peelable_box, 0, {3, 2, 1, 0},                              {1, 0, 3, 2}, {0}, {0}, FALSE, chk_box_dbl},
    {s2x4, cr_peelable_box, 2, {0, 1, 2, 3, 7, 6, 5, 4},                           {4}, {0}, {0}, FALSE, chk_groups},
    {s2x4, cr_reg_tbone, 1, { 3, 2, 0, 1, 1, 0, 2, 3},        {0, 3, 1, 2, 2, 1, 3, 0}, {0}, {0}, FALSE, chk_box},
@@ -1219,6 +1235,7 @@ static restr_initializer restr_init_table0[] = {
    {nothing}};
 
 static restr_initializer restr_init_table1[] = {
+   {s1x2, cr_opposite_sex, 2, {0}, {0}, {0}, {0}, FALSE, chk_sex},
    {s2x4, cr_quarterbox_or_col, 0, {3, 0, 1, 2}, {3, 4, 5, 6},       {3, 1, 2, 3}, {3, 5, 6, 7}, FALSE, chk_qbox},
    {s2x4, cr_quarterbox_or_magic_col, 0, {3, 1, 2, 7}, {3, 3, 5, 6}, {3, 1, 2, 4}, {3, 0, 5, 6}, FALSE, chk_qbox},
    {s2x3, cr_quarterbox_or_col, 0, {2, 0, 1}, {2, 3, 4}, {2, 1, 2}, {2, 4, 5},                   FALSE, chk_qbox},
@@ -1577,7 +1594,7 @@ extern void initialize_sdlib(void)
 
    int i;
 
-   for (i=0 ; i<NUM_WARNINGS ; i++) {
+   for (i=0 ; i<warn__NUM_WARNINGS ; i++) {
       char c = warning_strings[i][0];
       if (c == '*' || c == '#')
          no_search_warnings.bits[i>>5] |= 1 << (i & 0x1F);
@@ -1711,7 +1728,6 @@ extern long_boolean check_for_concept_group(
 #ifdef NEW_ECHO
 #endif
 
-   if (allowing_all_concepts | 1) {
    if (k == concept_supercall ||
        k == concept_fractional ||
        (k == concept_meta && parseptrcopy->concept->value.arg1 == meta_key_initially) ||
@@ -1722,15 +1738,6 @@ extern long_boolean check_for_concept_group(
 
        (k == concept_meta && parseptrcopy->concept->value.arg1 == meta_key_finish))
       *need_to_restrain_p |= 1;
-   }
-   else {
-   if (k == concept_supercall ||
-       k == concept_fractional ||
-       (k == concept_meta && parseptrcopy->concept->value.arg1 == meta_key_initially) ||
-       (k == concept_meta && parseptrcopy->concept->value.arg1 == meta_key_finally) ||
-       (k == concept_meta && parseptrcopy->concept->value.arg1 == meta_key_finish))
-      *need_to_restrain_p |= 1;
-   }
 
 
    // If skipping "phantom", maybe it's "phantom tandem", so we need to skip both.
@@ -2131,7 +2138,7 @@ extern restriction_test_result verify_restriction(
       }
 
       goto good;
-   case chk_box_dbl:   /* Check everyone's lateral partner, independently of headlinerness. */
+   case chk_box_dbl:   // Check everyone's lateral partner, independently of headlinerness.
       for (idx=0 ; idx<=setup_attrs[ss->kind].setup_limits ; idx++) {
          uint32 u;
 
@@ -2139,7 +2146,13 @@ extern restriction_test_result verify_restriction(
          else if ((t = ss->people[idx].id1) & 1) p = rr->map2;
          else continue;
 
-         if ((u = ss->people[p[idx]].id1) && ((t ^ u ^ rr->size) & 3)) goto bad;
+         p += idx;
+
+         if ((u = ss->people[p[0]].id1) && ((t ^ u ^ rr->size) & 3)) goto bad;
+
+         if (rr->restr == cr_miniwaves) {
+            if (((((t>>1)&1)+1) ^ p[4]) & tt.assump_both) goto bad;
+         }
       }
 
       goto good;
@@ -2445,6 +2458,27 @@ extern restriction_test_result verify_restriction(
       }
 
       goto good;
+   case chk_sex:
+      qaa[0] = tt.assump_both;
+      qaa[1] = tt.assump_both << 1;
+
+      for (i=0; i<2; i++) {
+         if ((t = ss->people[i].id1)) {
+            uint32 northified = (i ^ (t>>1)) & 1;
+            dirtest[i] = t;
+            if (t & ID1_PERM_BOY) qaa[northified] |= 2;
+            else if (t & ID1_PERM_GIRL) qaa[northified^1] |= 2;
+            else goto bad;
+         }
+      }
+
+      if ((dirtest[0] & dirtest[1]) & (ID1_PERM_BOY | ID1_PERM_GIRL))
+         goto bad;
+
+      // If this is a couple, check the "left" or "right" bits.
+      if (rr->map4[0] && (qaa[0] & qaa[1] & 2)) goto bad;
+
+      goto good;
    default:
       goto bad;    /* Shouldn't happen. */
    }
@@ -2570,6 +2604,13 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
             goto fix_col_line_stuff;
          default:
             goto good;           /* We don't understand the setup -- we'd better accept it. */
+         }
+      case cr_opposite_sex: 
+         switch (ss->kind) {
+         case s1x2:
+            goto fix_col_line_stuff;
+         default:
+            goto good;           // Accept this all the way down to 1x2.
          }
       case cr_indep_in_out:
          switch (ss->kind) {
@@ -2946,6 +2987,22 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
       case cr_ctr_pts_rh:
       case cr_ctr_pts_lh:
          {
+            uint32 z = 1;
+
+            switch (ss->cmd.cmd_assume.assumption) {
+            case cr_jright: case cr_ijright:
+               z = 2;
+            case cr_jleft: case cr_ijleft:
+               if (z & ss->cmd.cmd_assume.assump_both) {
+                  if (this_qualifier == cr_ctr_pts_rh) goto bad;
+                  else goto good;
+               }
+               else if ((z ^ 3) & ss->cmd.cmd_assume.assump_both) {
+                  if (this_qualifier == cr_ctr_pts_rh) goto good;
+                  else goto bad;
+               }
+            }
+
             call_restriction kkk;      /* gets set to the qualifier corresponding to
                                           what we have. */
             uint32 t1;
@@ -3335,6 +3392,13 @@ extern void gather(setup *resultpeople, const setup *sourcepeople,
 }
 
 
+extern void install_scatter(setup *resultpeople, int num, const veryshort *placelist,
+                            const setup *sourcepeople, int rot) THROW_DECL
+{
+   for (int j=0; j<num; j++)
+      (void) install_rot(resultpeople, placelist[j], sourcepeople, j, rot);
+}
+
 
 /* WARNING!!!!  This procedure appears verbatim in sdutil.c and dbcomp.c . */
 
@@ -3653,6 +3717,7 @@ extern long_boolean fix_n_results(int arity, setup_kind goal, setup z[], uint32 
    long_boolean lineflag = FALSE;
    long_boolean dmdflag = FALSE;
    long_boolean qtflag = FALSE;
+   long_boolean boxrectflag = FALSE;
    long_boolean miniflag = FALSE;
    int deadconcindex = -1;
    setup_kind kk = nothing;
@@ -3731,6 +3796,11 @@ extern long_boolean fix_n_results(int arity, setup_kind goal, setup z[], uint32 
                   qtflag = TRUE;
                   zisrot ^= 1;
                }
+               else if (((kk == s2x4 && z[i].kind == s2x2) ||
+                         (kk == s2x2 && z[i].kind == s2x4))) {
+                  warn(warn__hokey_jay_shapechanger);  // For now.
+                  boxrectflag = TRUE;
+               }
                else if (((kk == s1x4 && z[i].kind == sdmd) ||
                          (kk == sdmd && z[i].kind == s1x4))) {
                   dmdflag = TRUE;
@@ -3744,26 +3814,36 @@ extern long_boolean fix_n_results(int arity, setup_kind goal, setup z[], uint32 
          /* If the setups are "trngl" or "trngl4", the rotations have
             to alternate by 180 degrees. */
 
-         if (z[i].kind == s_trngl || z[i].kind == s_trngl4)
-            rotstates &= 0xF00;
-         else
-            rotstates &= 0x033;
-
-         {
+         if (z[i].kind == s2x2)
+            rotstates &= 0x0FF;
+         else {
             int shit = i;
-
             if (arity == 4 && (i&2)) shit ^= 1;
+
+            if (z[i].kind == s_trngl || z[i].kind == s_trngl4)
+               rotstates &= 0xF00;
+            else
+               rotstates &= 0x033;
 
             rotstates &= rotstate_table[((shit & 3) << 2) | zisrot];
          }
       }
    }
 
+   if (boxrectflag) kk = s2x4;
+
    if (kk == nothing) {
       /* If client really needs a diamond, return a diamond.
          Otherwise opt for 1x4. */
       if (lineflag) kk = (goal == sdmd) ? sdmd : s1x4;
       else if (miniflag) kk = s1x2;
+   }
+   else if (kk == s2x2) {
+      rotstates &= 0x011;
+      // If the arity is 3 or more, we shut off the second digit.
+      // The second digit is for things that are presumed to be nonisotropic.
+      // A bunch of 2x2's can't be nonisotropic.
+      if (arity >=2) rotstates &= 1;
    }
 
    if (arity == 1) rotstates &= 0x3;
@@ -3775,7 +3855,7 @@ extern long_boolean fix_n_results(int arity, setup_kind goal, setup z[], uint32 
       rotstates ^= 3;
       kk = sdmd;
    }
-   if (qtflag && kk == s2x4) {
+   else if (qtflag && kk == s2x4) {
       rotstates ^= 3;
       kk = s_qtag;
    }
@@ -3830,36 +3910,32 @@ extern long_boolean fix_n_results(int arity, setup_kind goal, setup z[], uint32 
             canonicalize_rotation(&z[i]);
          }
          else if (kk == nothing &&
-                  (  deadconcindex < 0 ||
-                     (  z[i].inner.skind == z[deadconcindex].inner.skind &&
-                        z[i].inner.srotation == z[deadconcindex].inner.srotation))) {
+                  (deadconcindex < 0 ||
+                   (z[i].inner.skind == z[deadconcindex].inner.skind &&
+                    z[i].inner.srotation == z[deadconcindex].inner.srotation))) {
             deadconcindex = i;
          }
          else
             fail("Can't do this: don't know where the phantoms went.");
       }
       else if (qtflag && z[i].kind == s2x4) {
-         /* Turn the 2x4 into a qtag. */
+         // Turn the 2x4 into a qtag.
          if (z[i].people[1].id1 | z[i].people[2].id1 |
              z[i].people[5].id1 | z[i].people[6].id1) goto lose;
-
-         z[i].kind = s_qtag;
-         z[i].rotation++;
-         (void) copy_rot(&z[i], 5, &z[i], 0, 033);
-         (void) copy_rot(&z[i], 0, &z[i], 3, 033);
-         (void) copy_rot(&z[i], 1, &z[i], 4, 033);
-         (void) copy_rot(&z[i], 4, &z[i], 7, 033);
-         clear_person(&z[i], 3);
-         clear_person(&z[i], 7);
+         compress_setup(&exp_2x4_qtg_stuff, &z[i]);
       }
       else if (dmdflag && z[i].kind == s1x4) {
-         /* Turn the 1x4 into a diamond. */
+         // Turn the 1x4 into a diamond.
          if (z[i].people[0].id1 | z[i].people[2].id1) goto lose;
+         compress_setup(&exp_1x4_dmd_stuff, &z[i]);
+      }
+      else if (boxrectflag && z[i].kind == s2x2) {
+         if (rotstates & 2) {
+            z[i].rotation--;
+            canonicalize_rotation(&z[i]);
+         }
 
-         z[i].kind = sdmd;
-         z[i].rotation--;
-         (void) copy_rot(&z[i], 1, &z[i], 1, 011);
-         (void) copy_rot(&z[i], 3, &z[i], 3, 011);
+         expand_setup(&exp_2x2_2x4_stuff, &z[i]);
       }
       else {
          canonicalize_rotation(&z[i]);
@@ -3867,14 +3943,6 @@ extern long_boolean fix_n_results(int arity, setup_kind goal, setup z[], uint32 
       }
 
       canonicalize_rotation(&z[i]);
-#ifdef DOESNT_DO
-      /* They're not alternating any more. */
-
-      if (rotstates & 0x0F0) {
-         if (i&1) rotstates ^= 0x030;
-         rotstates >>= 4;
-      }
-#endif
    }
   
    if (deadconcindex >= 0) {
@@ -3968,10 +4036,25 @@ static resolve_tester test_4x4_stuff[] = {
 
    {resolve_rlg,            l_mainstream,      2, 0,   {2, 1, 14, 13, 10, 9, 6, 5},  0x8A31A813},    /* RLG from squared set, facing directly. */
    {resolve_la,             l_mainstream,      7, 0,   {5, 2, 1, 14, 13, 10, 9, 6},  0x38A31A81},    /* LA from squared set, facing directly. */
-   {resolve_rlg,            l_mainstream,      3, 0,   {7, 2, 3, 14, 15, 10, 11, 6}, 0x138A31A8},    /* RLG from pinwheel, all facing. */
-   {resolve_rlg,            l_mainstream,      3, 0,   {5, 7, 1, 3, 13, 15, 9, 11},  0x8A31A813},    /* RLG from pinwheel, all facing. */
-   {resolve_rlg,            l_mainstream,      3, 0,   {7, 5, 3, 1, 15, 13, 11, 9},  0x138A31A8},    /* RLG from pinwheel, all in miniwaves. */
-   {resolve_rlg,            l_mainstream,      3, 0,   {7, 2, 3, 14, 15, 10, 11, 6}, 0x8A31A813},    /* RLG from pinwheel, all in miniwaves. */
+
+   // These 8 are from ladder columns, facing directly.
+   {resolve_rlg,            l_mainstream, 3, 0,   {7, 2, 0, 14, 15, 10, 8, 6},  0x13313113},
+   {resolve_rlg,            l_mainstream, 1, 0,   {3, 14, 12, 10, 11, 6, 4, 2}, 0x8AA8A88A},
+   {resolve_rlg,            l_mainstream, 3, 0,   {5, 4, 1, 3, 13, 12, 9, 11},  0x13313113},
+   {resolve_rlg,            l_mainstream, 1, 0,   {1, 0, 13, 15, 9, 8, 5, 7},   0x8AA8A88A},
+   {resolve_la,             l_mainstream, 6, 0,   {2, 0, 14, 15, 10, 8, 6, 7},  0x33131131},
+   {resolve_la,             l_mainstream, 4, 0,   {14, 12, 10, 11, 6, 4, 2, 3}, 0xAA8A88A8},
+   {resolve_la,             l_mainstream, 6, 0,   {4, 1, 3, 13, 12, 9, 11, 5},  0x33131131},
+   {resolve_la,             l_mainstream, 4, 0,   {0, 13, 15, 9, 8, 5, 7, 1},   0xAA8A88A8},
+
+   // From pinwheel, facing directly.
+   {resolve_rlg,            l_mainstream, 3, 0,   {7, 2, 3, 14, 15, 10, 11, 6}, 0x138A31A8},
+   {resolve_rlg,            l_mainstream, 3, 0,   {5, 7, 1, 3, 13, 15, 9, 11},  0x8A31A813},
+
+   // From pinwheel, all in miniwaves.
+   {resolve_rlg,            l_mainstream, 3, 0,   {7, 5, 3, 1, 15, 13, 11, 9},  0x138A31A8},
+   {resolve_rlg,            l_mainstream, 3, 0,   {7, 2, 3, 14, 15, 10, 11, 6}, 0x8A31A813},
+
    {resolve_rlg,            l_mainstream,      3, 0,   {7, 2, 3, 14, 15, 10, 11, 6}, 0x13313113},    /* RLG from pinwheel, some of each. */
    {resolve_rlg,            l_mainstream,      3, 0,   {7, 2, 3, 14, 15, 10, 11, 6}, 0x8A8AA8A8},    /* RLG from pinwheel, others of each. */
    {resolve_rlg,            l_mainstream,      3, 0,   {5, 7, 3, 1, 13, 15, 11, 9},  0x8A8AA8A8},    /* RLG from pinwheel, some of each. */
@@ -4104,26 +4187,28 @@ static resolve_tester test_spindle_stuff[] = {
    {resolve_none,           l_mainstream, 64}};
 
 static resolve_tester test_2x4_stuff[] = {
-   /* 8-chain. */
+   // 8-chain.
    {resolve_rlg,            l_mainstream, 3, 0,   {5, 4, 3, 2, 1, 0, 7, 6},     0x13313113},
+   {resolve_minigrand,      l_mainstream, 5, 0,   {5, 0, 3, 6, 1, 4, 7, 2},     0x11333311},
    {resolve_la,             l_mainstream, 6, 0,   {4, 3, 2, 1, 0, 7, 6, 5},     0x33131131},
    {resolve_pth_rlg,        l_mainstream, 2, 0,   {5, 2, 3, 0, 1, 6, 7, 4},     0x11313313},
    {resolve_pth_la,         l_mainstream, 5, 0,   {2, 3, 0, 1, 6, 7, 4, 5},     0x13133131},
-
-   /* trade-by. */
+   // trade-by.
    {resolve_rlg,            l_mainstream, 2, 0,   {4, 3, 2, 1, 0, 7, 6, 5},     0x11313313},
+   {resolve_minigrand,      l_mainstream, 4, 0,   {4, 7, 2, 5, 0, 3, 6, 1},     0x13333111},
    {resolve_la,             l_mainstream, 7, 0,   {5, 4, 3, 2, 1, 0, 7, 6},     0x31131331},
    {resolve_tby_rlg,        l_mainstream, 3, 0,   {6, 3, 4, 1, 2, 7, 0, 5},     0x11113333},
    {resolve_tby_la,         l_mainstream, 0, 0,   {5, 6, 3, 4, 1, 2, 7, 0},     0x31111333},
-
-   /* waves. */
+   // waves.
    {resolve_rlg,            l_mainstream, 3, 0,   {5, 4, 2, 3, 1, 0, 6, 7},     0x8A8AA8A8},
+   {resolve_minigrand,      l_mainstream, 5, 0,   {5, 0, 2, 7, 1, 4, 6, 3},     0x8888AAAA},
    {resolve_la,             l_mainstream, 6, 0,   {5, 3, 2, 0, 1, 7, 6, 4},     0xA8AA8A88},
+   {resolve_ext_rlg,        extend_34_level, 2, 0,   {5, 3, 2, 0, 1, 7, 6, 4},  0x8A88A8AA},
+   {resolve_circ_rlg,       l_mainstream, 1, 0,   {5, 0, 2, 7, 1, 4, 6, 3},     0x8888AAAA},
+   {resolve_xby_rlg,        cross_by_level, 2, 0,   {4, 2, 3, 1, 0, 6, 7, 5},   0x8A88A8AA},
 
-   {resolve_ext_rlg,        extend_34_level, 2, 0,   {5, 3, 2, 0, 1, 7, 6, 4},     0x8A88A8AA},    /* extend-RLG from waves. */
-   {resolve_circ_rlg,       l_mainstream, 1, 0,   {5, 0, 2, 7, 1, 4, 6, 3},     0x8888AAAA},    /* circulate-RLG from waves. */
-   {resolve_xby_rlg,        cross_by_level, 2, 0,   {4, 2, 3, 1, 0, 6, 7, 5},     0x8A88A8AA},    /* cross-by-RLG from waves. */
-   {resolve_rlg,            l_mainstream, 2, 0,   {4, 3, 2, 1, 0, 7, 6, 5},     0x8A31A813},    /* RLG from T-bone setup, ends facing. */
+   /* RLG from T-bone setup, ends facing. */
+   {resolve_rlg,            l_mainstream, 2, 0,   {4, 3, 2, 1, 0, 7, 6, 5},     0x8A31A813},
    {resolve_rlg,            l_mainstream, 2, 0,   {4, 3, 2, 1, 0, 7, 6, 5},     0x31311313},    /* RLG from centers facing and ends in miniwaves. */
    {resolve_la,             l_mainstream, 6, 0,   {4, 3, 2, 1, 0, 7, 6, 5},     0xA8888AAA},    /* LA from lines-out. */
    {resolve_ext_la,         extend_34_level,   7, 0,   {5, 4, 2, 3, 1, 0, 6, 7},     0xA8A88A8A},    /* ext-LA from waves. */
@@ -4248,7 +4333,8 @@ extern resolve_indicator resolve_p(setup *s)
             goto not_this_one;
       }
 
-      if (calling_level < testptr->level_needed) goto not_this_one;
+      if (calling_level < testptr->level_needed ||
+          (testptr->k == resolve_minigrand && !allowing_minigrand)) goto not_this_one;
 
       k.kind = testptr->k;
       k.distance = ((s->rotation << 1) + (firstperson >> 6) + testptr->distance) & 7;
@@ -4413,7 +4499,7 @@ extern void normalize_setup(setup *ss, normalize_action action) THROW_DECL
       else if ((livemask & 0x33) == 0)  {
          // If normalizing before a merge (which might be from a "disconnected"),
          // and it is a real hourglass, be sure we leave space.
-         expand_thing *t = (action == normalize_after_disconnected && ss->kind == s_hrglass) ?
+         const expand_thing *t = (action == normalize_after_disconnected && ss->kind == s_hrglass) ?
             &exp_dmd_hrgl_disc_stuff : &exp_dmd_hrgl_stuff;
 
          // Be sure we match what the map says -- that might get checked someday.
