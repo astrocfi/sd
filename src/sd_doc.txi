@@ -4,8 +4,8 @@
 @setfilename sd_doc.info
 @settitle Sd
 @c @subtitle A Square Dance Caller's Helper
-@set Time-stamp: Mar 16, 1995
-@set sd-version 30.89
+@set Time-stamp: Apr 20, 1995
+@set sd-version 31.0
 @set full-manual
 @c %**end of header
 @iftex
@@ -46,9 +46,9 @@ identical to this one except for the removal of this paragraph (this
 paragraph not being relevant to the printed manual).
 
 @end ignore
-Permission is granted to make and distribute copies of this manual
+Permission is granted to make and distribute verbatim copies of this manual
 provided the copyright notice and this permission notice are preserved
-on all copies.
+intact on all copies.
 
 The authors disclaim all liability for your use of this software and 
 documentation and make no representation as to the suitability of the 
@@ -63,7 +63,8 @@ NONINFRINGMENT.
 @node Top, Intro, (dir), (dir)
 
 @menu
-This file documents Sd, a square dance caller's helper.
+This file documents Sd, a square dance caller's helper,
+version @value{sd-version}.
 
 To get started quickly, type @key{1} to go to @dots{}
 
@@ -176,7 +177,7 @@ Concept Notes
 * Assume Waves::                Assume Waves
 * Diamond::                     Diamond
 * Implied Piecewise::           Implied Piecewise
-* Twice::                       Twice
+* Fractional and N Times::      Fractional and N Times
 * Precede it or Follow it::     Precede it or Follow it
 * Designating Certain People::  Designating Certain People
 * Finish and Like a::           Finish and Like a
@@ -255,7 +256,9 @@ get away with in a given context.
 Typing @key{<ESCAPE>} (or @key{<ALT MODE>} on some keyboards) or
 @key{<TAB>} will complete the entire line, just like @key{<RET>}, but
 will not actually process the line.  If you like what you see, you can
-then press @key{<RET>} to execute the call.
+then press @key{<RET>} to execute the call.  If the line is ambiguous,
+the program will print as much of the line as it can.  When used effectively,
+this can save you a lot of typing.
 
 At any time, you can type a question mark.  This will make @code{sdtty} print out
 all legal completions of the line that has been entered so far.  If what you
@@ -274,6 +277,61 @@ as it was before you typed the question mark.
 @code{Sdtty}'s completing reader is completely indifferent to the capitalization of
 what you type.  It capitalizes its output according to its own notions of
 aesthetics and ambiguity avoidance.
+
+The @code{sdtty} completion mechanism, especially the @code{<ESCAPE>}
+(or @code{<ALT MODE>} or @code{<TAB>}) key, can save you a lot of typing.
+For example, typing
+@example
+      heads do your part <RET>
+@end example
+is probably more than you want to do.  If you type just
+@example
+      heads do
+@end example
+the line will be almost unambiguous---there are only two possible commands
+that start this way.  By typing a question mark, @code{sdtty} will show them
+to you.  They are
+@example
+      heads do your part
+@end example
+and
+@example
+      heads do your part (while the others)
+@end example
+What these concepts actually mean will be discussed at length in
+@ref{Designating Certain People}.  For now, we are just discussing how to
+type them.
+
+These commands don't differ until the @samp{t} in @samp{part}.  If you type
+@code{<RET>} after @samp{part}, @code{sdtty} will know that you want the
+first of these commands.  If you type a space and then a @code{<RET>},
+@code{sdtty} will know that you want the second.  Does this mean that you
+must type the whole command up to @samp{part}, followed by a space or @code{<RET>}?
+No.  Just type @samp{heads do}, and then press @code{<ESCAPE>}.
+@code{Sdtty} will display @samp{heads do your part}, since that is the text
+that is common to both commands.  At that point, you may press @code{<RET>}
+to get the @samp{heads do your part} concept.  Or you could type space
+and then @code{<RET>} to get the @samp{heads do your part (while the others)}
+concept.  You could, of course, type the complete phrase @samp{(while the others)}
+after the space, but there is no need to.  Once you type the space, @code{sdtty}
+knows exactly which command you want.
+
+What would happen if you tried to shorten the command still further by typing
+just @samp{heads d} instead of @samp{heads do}?  Below C2 this would work
+just fine.  At C2 and above, an ambiguity would exist because of the
+@samp{heads disconnected} concept.  Typing a question mark after @samp{heads d}
+will show you the ambiguity.  In general, typing a question mark will help guide
+you in minimizing the amount of typing you must do.  With practice, you will
+be able to enter your favorite calls and concepts with minimal typing.
+
+Here is another example.  To enter @samp{criss cross the shadow} or
+@samp{criss cross your neighbor}, it is not necessary to type
+@samp{criss cross t} or @samp{criss cross y}.  You can just type @samp{cri}
+followed by @code{<ESCAPE>}.  The program will print everything up to the
+point of ambiguity, which, at C2, is @samp{criss cross }.  At that point,
+you just need to type @samp{t} or @samp{y}, followed by @code{<RET>}.
+Above C2, there are more possible calls, but typing @samp{cri}
+followed by @code{<ESCAPE>} is still a good way to proceed.
 
 @node Invoking Sd, Calling, The Completing Reader for Sdtty, Top
 @chapter Invoking Sd via Command Line
@@ -1644,7 +1702,7 @@ In general, if you don't think you can clearly express to the dancers
 what you want, don't call it.
 
 A number of concepts are particularly vulnerable to this phenomenon.
-See @ref{Twice}, @ref{Precede it or Follow it}, and @ref{Designating Certain People}.
+See @ref{Fractional and N Times}, @ref{Precede it or Follow it}, and @ref{Designating Certain People}.
 
 Callers often use phrases such as @samp{finish @dots{}} or @samp{like a @dots{}}
 in imprecise ways.  Sd uses a very precise definition
@@ -1763,7 +1821,7 @@ To permit fractional use of recycle, as with
 * Assume Waves::                Assume Waves
 * Diamond::                     Diamond
 * Implied Piecewise::           Implied Piecewise
-* Twice::                       Twice
+* Fractional and N Times::      Fractional and N Times
 * Precede it or Follow it::     Precede it or Follow it
 * Designating Certain People::  Designating Certain People
 * Finish and Like a::           Finish and Like a
@@ -1859,6 +1917,7 @@ are facing.  They are
 @example
    @code{assume waves}
    @code{assume miniwaves}
+   @code{assume couples}
    @code{assume two-faced lines}
    @code{assume one-faced lines}
    @code{assume inverted lines}
@@ -2019,14 +2078,14 @@ want the diamond concept, as in @i{diamond single wheel} or @i{diamond swing
 thru}.  There are cases in which it may seem that the word @i{diamond}
 ought to be added after clicking on @code{interlocked} and/or
 @code{magic}.  The program will insert the extra word @i{diamond} for
-you.  (At least, that is the intention.)  So, for example, clicking on
+you.  So, for example, clicking on
 @code{magic} and then @code{alter the diamond} will get @samp{magic
 diamond, alter the diamond}, and clicking on @code{magic},
 @code{interlocked}, @code{diamond}, @code{as couples}, and @code{quarter
 right} will get @samp{magic interlocked diamond, diamond as couples
 quarter right}.
 
-@node Implied Piecewise, Twice, Diamond, Concept Notes
+@node Implied Piecewise, Fractional and N Times, Diamond, Concept Notes
 @section Implied Piecewise
 
 Some of the replacement/interruption meta-concepts push the
@@ -2070,17 +2129,40 @@ If you think that some instance of a replacement or interruption will
 cause confusion on the dance floor because of this sort of issue,
 you should not use it.
 
-@node Twice, Precede it or Follow it, Implied Piecewise, Concept Notes
-@section Twice
+@node Fractional and N Times, Precede it or Follow it, Implied Piecewise, Concept Notes
+@section Fractional and N Times
+
+The @code{M/N} concept, where @code{M} and @code{N} are numbers, causes that
+fraction of the subject call to be executed, as in @samp{3/5 swing the fractions}.
+In @code{sdtty}, just type in the numbers directly, as in @code{3/5}.
+This is considered a concept, so the fraction is entered on a line by itself.
+In @code{sd}, the concept is listed as @code{<M/N>}.  A popup will appear asking
+for the numbers.  Enter two of them.
+
+The @code{1-M/N} concept causes the subject call to be executed once and the indicated
+fraction of a second time, as in @samp{1-1/2 split circulate}.
+
+Not all calls are fractionalizable in this way.  Also, the exact way you should
+say the fraction might vary according to the call or your individual taste.
+It will always appear before the call in the transcript, but you might want to
+say the fraction after the call, as in @samp{swing the fractions four fifths} or
+@samp{split circulate once and a half}.
 
 The @code{twice} concept simply causes the subject call to be executed
 twice.  This is a notion familiar at all levels from Mainstream
 (@samp{spin chain thru, the girls double circulate}) to C4 (@samp{piecewise
-twice, recoil}).  No universally recognized words for this exist,
-so the program uses the generic phrase @code{twice}.  When calling,
-use whatever words you think are appropriate.
+twice, recoil}).
 
-@node Precede it or Follow it, Designating Certain People, Twice, Concept Notes
+The @code{<N> Times} concept causes the subject call to be executed that number
+of times.  In @code{sdtty}, just type in the number directly, as in @code{3 times}.
+In @code{sd}, the concept is listed as @code{<N> times}.  A popup will appear
+asking for the number.
+
+No universally recognized words for these exist, so the program uses the generic
+phrases noted above.  When calling, use whatever words you think are appropriate,
+such as @samp{twice}, @samp{thrice}, @samp{circulate two positions}, or whatever.
+
+@node Precede it or Follow it, Designating Certain People, Fractional and N Times, Concept Notes
 @section Precede it or Follow it
 
 The concepts @code{precede it by} and @code{follow it by} take two subject
@@ -2121,10 +2203,7 @@ In general, be aware that the choice of words and punctuation that the program
 uses for these concepts is determined by the need to avoid ambiguity, and may
 not be the words that you should use when calling.  For example, if the program
 prints out @samp{boys, hinge}, it may be more natural to say just
-@samp{boys hinge} without any pause.  Similarly, if the program prints out
-@samp{boys do your part, transfer the column while the others switch the wave},
-it may be more natural to say @samp{everyone do your part, boys transfer the
-column while the girls switch the wave}.  As in all aspects of calling, choose
+@samp{boys hinge} without any pause.  As in all aspects of calling, choose
 your words carefully.
 
 @subsection So-And-So
@@ -2201,9 +2280,9 @@ this concept.
 The concepts are:
 
 @example
-   @code{<so-and-so> do your part, <call>}
+   @code{<so-and-so> do your part <call>}
          or
-   @code{<so-and-so> do your part, <call> while the others <other call>}
+   @code{<so-and-so> do your part <call> while the others <other call>}
 @end example
 
 This means that the non-designated dancers leave the room and re-form their own
@@ -2223,6 +2302,11 @@ in the center.
 
 From boy-girl-boy-girl waves, @code{boys do your part, hinge} creates a mess.
 No sensible dancer would consider it acceptable.  Do not use such things.
+
+The second form of this concept will be printed in the final transcript
+as @code{do your part, <so-and-so> <call> while the others <other call>}.
+You must still enter it as shown above, with the designator first and
+the phrase @samp{do your part} second.
 
 @subsection Own the So-And-So
 
@@ -2540,8 +2624,10 @@ change the version string at the top of the file.
 
 @bye
 
+@c We only use the first three letters of the month because
+@c makeinfo 1.55 bombs on longer strings.
 @c Local Variables:
 @c time-stamp-start: "Time-stamp: "
 @c time-stamp-end: "$"
-@c time-stamp-format: "%b %d, %y"
+@c time-stamp-format: "%3b %d, %y"
 @c End:

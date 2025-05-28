@@ -79,6 +79,8 @@ int begin_sizes[] = {
    6,          /* b_pbone6 */
    6,          /* b_short6 */
    6,          /* b_pshort6 */
+   6,          /* b_1x2dmd */
+   6,          /* b_p1x2dmd */
    8,          /* b_qtag */
    8,          /* b_pqtag */
    8,          /* b_bone */
@@ -120,6 +122,8 @@ int begin_sizes[] = {
    16,         /* b_16x1 */
    16,         /* b_c1phan */
    8,          /* b_galaxy */
+   24,         /* b_3x8 */
+   24,         /* b_8x3 */
    24,         /* b_4x6 */
    24,         /* b_6x4 */
    8,          /* b_thar */

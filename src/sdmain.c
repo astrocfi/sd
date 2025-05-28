@@ -27,7 +27,7 @@
     General Public License if you distribute the file.
 */
 
-#define VERSION_STRING "30.89"
+#define VERSION_STRING "31.0"
 
 /* We cause this string (that is, the concatentaion of these strings) to appear
    in the binary image of the program, so that the "what" and "ident" utilities
@@ -1332,6 +1332,8 @@ void main(int argc, char *argv[])
                ((history_ptr != 1) || !startinfolist[history[1].centersp].into_the_middle) &&
                backup_one_item()) {
          reply_pending = FALSE;
+         history[history_ptr+1].warnings.bits[0] = 0;         /* Take out warnings that arose from the failed call, */
+         history[history_ptr+1].warnings.bits[1] = 0;         /* since we aren't going to do that call. */
          goto simple_restart;
       }
       goto start_cycle;      /* Failed, reinitialize the whole line. */
@@ -1490,16 +1492,26 @@ void main(int argc, char *argv[])
             goto show_banner;
          case command_undo:
             if (backup_one_item()) {
+               /* We succeeded in backing up by one concept.  Continue from that point. */
                reply_pending = FALSE;
                goto simple_restart;
             }
+            else if (parse_state.concept_write_base != parse_state.concept_write_ptr ||
+                     parse_state.concept_write_base != &history[history_ptr+1].command_root) {
+               /* Failed to back up, but some concept exists.  This must have been inside
+                  a "checkpoint" or similar complex thing.  Just throw it all away,
+                  but do not delete any completed calls. */
+               reply_pending = FALSE;
+               goto start_cycle;
+            }
             else {
-               /* Failed, undo the whole line. */
+               /* There were no concepts entered.  Throw away the entire preceding line. */
                if (history_ptr > 1) history_ptr--;
                /* Going to start_cycle will make sure written_history_items does not exceed history_ptr. */
                goto start_cycle;
             }
          case command_erase:
+            reply_pending = FALSE;
             goto start_cycle;
          case command_save_pic:
             history[history_ptr].draw_pic = TRUE;

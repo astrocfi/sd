@@ -105,6 +105,19 @@ shown with a map giving the person numbering:
             |     |     |     |     |     |     |     |     |
             | 15  | 14  | 13  | 12  | 11  | 10  |  9  |  8  |
             |_____|_____|_____|_____|_____|_____|_____|_____|
+
+
+             _____ _____ _____ _____ _____ _____ _____ _____
+            |     |     |     |     |     |     |     |     |
+            |  0  |  1  |  2  |  3  |  4  |  5  |  6  |  7  |
+            |_____|_____|_____|_____|_____|_____|_____|_____|
+            |     |     |     |     |     |     |     |     |
+3x8         | 20  | 21  | 22  | 23  | 11  | 10  |  9  |  8  |
+            |_____|_____|_____|_____|_____|_____|_____|_____|
+            |     |     |     |     |     |     |     |     |
+            | 19  | 18  | 17  | 16  | 15  | 14  | 13  | 12  |
+            |_____|_____|_____|_____|_____|_____|_____|_____|
+
 
                    _____
              _____|     |_____
@@ -333,6 +346,15 @@ ptpd        |  0  |_____|  2  |  6  |_____|  4  |
                   |_____|           |_____|
 
 
+                         _____
+             _____ _____|     |_____ _____
+            |     |     |  2  |     |     |
+1x2dmd      |  0  |  1  |_____|  4  |  3  |
+            |_____|_____|     |_____|_____|
+                        |  5  |
+                        |_____|
+
+
                             _____
                            |     |
                            |  3  |
@@ -452,7 +474,7 @@ thar        |  0  |  1           5  |  4  |      (4 way symmetry)
              __|__ __|__ __|__ __|__
             |     |     |     |     |
 bigdmd      |  0  |  9  |  3  |  6  |
-            |_____|_____|_____|_____|
+ (old)      |_____|_____|_____|_____|
                |     |     |     |
                | 11  |     |  8  |
                |_____|     |_____|
@@ -461,6 +483,20 @@ bigdmd      |  0  |  9  |  3  |  6  |
                |_____|     |_____|
 
 
+
+                         _____
+             _____ _____|     |_____ _____
+            |     |     |  2  |     |     |
+            |  0  |  1  |_____|  4  |  5  |
+            |_____|_____|     |_____|_____|
+                        |  3  |
+bigdmd                  |_____|
+ (new)       _____ _____|     |_____ _____
+            |     |     |  9  |     |     |
+            | 11  | 10  |_____|  7  |  6  |
+            |_____|_____|     |_____|_____|
+                        |  8  |
+                        |_____|
 
 
 
@@ -1751,16 +1787,20 @@ x22_girl_facing_boy
       person is not checked.
 
 dmd_ctrs_rh
-      applies to a diamond, single general 1/4-tag, or a spindle.
+      applies to a diamond, single general 1/4-tag, or a short6 or spindle.
       Returns TRUE if the center two people or the diamond or 1/4 tag are in a
       right-handed miniwave.  Returns FALSE if they are in a left-handed
-      miniwave.  For a spindle, tests whether all 3 miniwaves have right
-      or left handedness, respectively.  This predicate is lax in the
-      presences of phantoms -- one live person in the center is sufficient
+      miniwave.  For a short6 or spindle, tests whether all 2 or 3 miniwaves
+      have right or left handedness, respectively.  This predicate is lax in the
+      presence of phantoms -- one live person in the center is sufficient
       to make the test.  Raises an error if the centers are all phantoms or
       if they are not in a miniwave or consistent miniwaves.  This predicate is
       unusual in that it does not look specifically at the person under
       test.  It evaluates the setup as a whole.
+
+dmd_ctrs_lh
+      Returns the boolean negation of what dmd_ctrs_rh would return.  It raises
+      an error under the same circulmstances as dmd_ctrs_rh.
 
 trngl_pt_rh
       Applies to a triangle.  This is strict relative to the point.
@@ -1818,7 +1858,7 @@ q_tag_back
       the end of that line is facing the away from subject.  It returns
       FALSE otherwise.  For example, for an outside beau in a 1/4-tag or
       1/4-line, it returns TRUE only if the setup is a right-handed 1/4-tag,
-      and FALSE if it is left-handed or is a 1/4-line. 
+      and FALSE if it is left-handed or is a 1/4-line.
 
 q_line_front
       This is just like "q_tag_front" except that it tests for a 1/4-line
@@ -1845,19 +1885,88 @@ q_line_back
       the end of that line is facing the away from subject.  It returns
       FALSE otherwise.  For example, for an outside beau in a 1/4-tag or
       1/4-line, it returns TRUE only if the setup is a right-handed 1/4-line,
-      and FALSE if it is left-handed or is a 1/4-tag. 
+      and FALSE if it is left-handed or is a 1/4-tag.
 
                            APPENDIX B -- RESTRICTIONS
 
+/* These restrictions are "overloaded" -- their meaning depends on the starting setup. */
 
-                           APPENDIX C -- TOP LEVEL FLAGS
+   alwaysfail,                   /* any setup - this always fails (presumably to give the "unusual position" warning) */
+   wave_only,                    /* 1x2 - a miniwave; 1x4 - a wave; 2x4/3x4/2x6/2x8 - waves; 1x6-1x16 - a grand wave;
+                                    2x2 - real box; 4x4 - consistent waves; qtag - wave in center; pqtag - wave in center
+                                    (use only if center people have no legal move from pqtag, only from qtag); 3x2/4x2/6x2/8x2 - column */
+   wave_unless_say_2faced,
+   all_facing_same,              /* 2x2/2x3/2x4/1x4/1x6/1x8 - all people in the setup facing the same way */
+   1fl_only,                     /* 1x4/1x6/1x8 - a 1FL; 2x3/2x4 - individual 1FL's */
+   2fl_only,                     /* 1x2 - a couple; 1x4 - a 2FL; 2x4/3x4 - 2FL's; 1x8 - a grand 2FL; 2x2 - "1-faced" box;
+                                    4x4 - consistent 2FL's; 2x4 columns - a DPT or CDPT; qtag - 2FL in center */
+   3x3_2fl_only,                 /* 1x6 - 3 facing one way, 3 the other */
+   4x4_2fl_only,                 /* 1x8 - 4 facing one way, 4 the other */
+   leads_only,                   /* 2x2 - all people are leads, and not T-boned */
+   couples_only,                 /* 1x2 or 1x4 or 1x8 or 2x2 or 2x4 lines, or 2x4 columns - people are in genuine couples, not miniwaves */
+   3x3couples_only,              /* 1x6 lines - each group of 3 people are facing the same way */
+   4x4couples_only,              /* 1x8 lines - each group of 4 people are facing the same way */
+   awkward_centers,              /* 1x2, 1x4, 1x6, or 1x8 - centers must not have left hands with each other */
+   diamond_like,                 /* dmd, qtag or ptpd - in some kind of diamond(s), as opposed to single quarter-tag(s), i.e. points look sideways */
+   qtag_like,                    /* dmd, qtag or ptpd - in some kind of single quarter-tag(s), as opposed to diamond(s), i.e. points look in or out */
+   nice_diamonds,                /* dmd, qtag or ptpd - diamond(s) have consistent handedness, assuming they are diamonds and not qtags */
+   magic_only,                   /* 2x2 - split-trade-circulate type of box; 3x2 or 4x2 - magic column; 2x4 - inverted lines; 1x4 - single inverted line */
+   peelable_box,                 /* 2x2, 3x2, 4x2, 6x2 or 8x2 - all people in each column are facing same way */
+   ends_are_peelable,            /* 2x4 - ends are a box with each person in genuine tandem */
+   not_tboned,                   /* 2x2 - people must not be T-boned */
+   opposite_sex,                 /* 2x1 - people must be opposite sexes facing each other */
+   quarterbox_or_col,            /* 4x2 - acceptable setup for "triple cross" */
+   quarterbox_or_magic_col,      /* 4x2 - acceptable setup for "make magic" */
+   gen_1_4_tag,                  /* SPECIAL -- used for "assume" stuff */
+   gen_3_4_tag,                  /* SPECIAL -- used for "assume" stuff */
+   jleft,                        /* SPECIAL -- used for "assume" stuff */
+   jright,                       /* SPECIAL -- used for "assume" stuff */
+   ijleft,                       /* SPECIAL -- used for "assume" stuff */
+   ijright,                      /* SPECIAL -- used for "assume" stuff */
+   li_lo                         /* SPECIAL -- used for "assume" stuff */
+
+                           APPENDIX C -- QUALIFIERS
+
+   wave_only,                    /* 1x4 or 2x4 - waves; 2x2 - real RH or LH box */
+   1fl_only,                     /* ??? */
+   2fl_only,                     /* 1x4 or 2x4 - 2FL; 4x1 - single DPT or single CDPT */
+   in_or_out,                    /* 2x2 - all facing in or all facing out */
+   miniwaves,                    /* 1x2, 1x4, 1x8, 2x4, 2x2, dmd, qtag, trngl - people
+                                    are paired in miniwaves of various handedness.
+                                    For diamonds and qtags, this applies just to the centers.
+                                    For triangles, it applies just to the base.
+                                    So this includes waves, inverted lines, columns,
+                                    magic columns, diamonds, wave-based triangles... */
+   right_wave,                   /* As above, but all the miniwaves must be right-handed */
+   left_wave,                    /* As above, but all the miniwaves must be left-handed */
+   1_4_tag,                      /* dmd, qtag - this is a 1/4 tag, i.e. points are looking in */
+   3_4_tag,                      /* dmd, qtag - this is a 3/4 tag, i.e. points are looking out */
+   dmd_same_point,               /* dmd - centers would circulate to same point */
+   dmd_facing,                   /* dmd - diamond is fully occupied and fully facing */
+   true_Z,                       /* 2x3, 3x4, 2x6 - setup is a genuine Z */
+   ctrwv_end2fl,                 /* crosswave - center line is wave, end line is 2fl */
+   ctr2fl_endwv,                 /* crosswave - center line is 2fl, end line is wave */
+   split_dixie,                  /* 2x2 - invoked with "split" for dixie style */
+   not_split_dixie,              /* 2x2 - invoked without "split" for dixie style */
+   8_chain,                      /* 4x1 - setup is single 8 chain */
+   trade_by,                     /* 4x1 - setup is single trade by */
+   dmd_ctrs_rh,                  /* dmd, qtag, ptpd, short6, spindle - the centers (2, 4, or 6 of them)
+                                    are consistently in right-handed miniwaves */
+   dmd_ctrs_lh,                  /* dmd, qtag, ptpd, short6, spindle - the centers (2, 4, or 6 of them)
+                                    are consistently in left-handed miniwaves */
+   dmd_ctrs_1f,                  /* dmd - the centers (2 of them) are in a couple */
+   said_triangle,                /* short6/pshort6 - caller said the word "triangle" */
+   didnt_say_triangle            /* short6/pshort6 - caller didn't say the word "triangle" */
+
+
+                           APPENDIX D -- TOP LEVEL FLAGS
 
 step_to_wave
 rear_back_from_r_wave
 rear_back_from_qtag
 dont_use_in_resolve
 neednumber
-need_two_numbers 
+need_two_numbers
 need_three_numbers
 need_four_numbers
 sequence_starter
@@ -1970,7 +2079,7 @@ singlefile_is_inherited
 
 
 
-                           APPENDIX D -- INVOCATION FLAGS
+                           APPENDIX E -- INVOCATION FLAGS
 
 These will be documented more methodically someday.
 
@@ -2096,7 +2205,7 @@ inherit_single
 
 
 
-                           APPENDIX E -- ESCAPE CODES IN CALL NAMES
+                           APPENDIX F -- ESCAPE CODES IN CALL NAMES
 
                   These are not in any particularly logical order.
 

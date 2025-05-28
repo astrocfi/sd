@@ -27,18 +27,19 @@
    database format version. */
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 56
+#define DATABASE_FORMAT_VERSION 58
 
 
 
 
 /* BEWARE!!  These must track the items in tagtabinit in dbcomp.c . */
 #define BASE_CALL_CAST_3_4   2
+#define BASE_CALL_ENDS_SHADOW 3
 /* These 4 must be consecutive. */
-#define BASE_CALL_TAGGER0    3
-#define BASE_CALL_TAGGER1    4
-#define BASE_CALL_TAGGER2    5
-#define BASE_CALL_TAGGER3    6
+#define BASE_CALL_TAGGER0    4
+#define BASE_CALL_TAGGER1    5
+#define BASE_CALL_TAGGER2    6
+#define BASE_CALL_TAGGER3    7
 
 
 /* BEWARE!!  This list must track the tables "flagtabh", "defmodtabh",
@@ -69,8 +70,9 @@
 #define INHERITFLAG_4X4                   0x00020000UL
 #define INHERITFLAG_SINGLEFILE            0x00040000UL
 #define INHERITFLAG_HALF                  0x00080000UL
+#define INHERITFLAG_YOYO                  0x00100000UL
 
-#define HERITABLE_FLAG_MASK               0x000FFFFFUL
+#define HERITABLE_FLAG_MASK               0x001FFFFFUL
 
 /* These spare bits are used in the include file sd.h to allocate flag bits
    that will share a word with the heritable flags.  Those flag bits are
@@ -82,23 +84,23 @@
    we know we are in serious trouble. */
 
 /* A 3-bit field. */
-#define CFLAGH__TAG_CALL_RQ_MASK          0x00700000UL
-#define CFLAGH__TAG_CALL_RQ_BIT           0x00100000UL
-#define CFLAGH__REQUIRES_SELECTOR         0x00800000UL
-#define CFLAGH__REQUIRES_DIRECTION        0x01000000UL
-#define INHERITSPARE_1                    0x02000000UL
-#define INHERITSPARE_2                    0x04000000UL
-#define INHERITSPARE_3                    0x08000000UL
-#define INHERITSPARE_4                    0x10000000UL
-#define INHERITSPARE_5                    0x20000000UL
-#define INHERITSPARE_6                    0x40000000UL
-#define INHERITSPARE_7                    0x80000000UL
+#define CFLAGH__TAG_CALL_RQ_MASK          0x00E00000UL
+#define CFLAGH__TAG_CALL_RQ_BIT           0x00200000UL
+#define CFLAGH__REQUIRES_SELECTOR         0x01000000UL
+#define CFLAGH__REQUIRES_DIRECTION        0x02000000UL
+#define INHERITSPARE_1                    0x04000000UL
+#define INHERITSPARE_2                    0x08000000UL
+#define INHERITSPARE_3                    0x10000000UL
+#define INHERITSPARE_4                    0x20000000UL
+#define INHERITSPARE_5                    0x40000000UL
+#define INHERITSPARE_6                    0x80000000UL
 
 /* BEWARE!!  This list must track the table "flagtab1" in dbcomp.c .
    These flags go into the "callflags1" word of a callspec_block. */
 
-#define CFLAG1_VISIBLE_FRACTIONS          0x00000001UL
-#define CFLAG1_FIRST_PART_VISIBLE         0x00000002UL
+/* This is a 2 bit field -- VISIBLE_FRACTION_BIT tells where its low bit lies. */
+#define CFLAG1_VISIBLE_FRACTION_MASK      0x00000003UL
+#define CFLAG1_VISIBLE_FRACTION_BIT       0x00000001UL
 #define CFLAG1_12_16_MATRIX_MEANS_SPLIT   0x00000004UL
 #define CFLAG1_IMPRECISE_ROTATION         0x00000008UL
 #define CFLAG1_SPLIT_LIKE_DIXIE_STYLE     0x00000010UL
@@ -116,9 +118,9 @@
 #define CFLAG1_NUMBER_BIT                 0x00004000UL
 #define CFLAG1_SEQUENCE_STARTER           0x00020000UL
 #define CFLAG1_SPLIT_LIKE_SQUARE_THRU     0x00040000UL
-#define CFLAG1_FINISH_MEANS_SKIP_FIRST    0x00080000UL
+/*   spare                                0x00080000UL */
 #define CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK  0x00100000UL
-#define CFLAG1_CAN_BE_FAN_OR_YOYO         0x00200000UL
+#define CFLAG1_CAN_BE_FAN                 0x00200000UL
 #define CFLAG1_NO_CUTTING_THROUGH         0x00400000UL
 #define CFLAG1_NO_ELONGATION_ALLOWED      0x00800000UL
 /* This is a 3 bit field -- BASE_TAG_CALL_BIT tells where its low bit lies. */
@@ -170,6 +172,7 @@ typedef enum {
    s_trngl4,
    s_bone6,
    s_short6,
+   s_1x2dmd,
    s_qtag,
    s_bone,
    s_rigger,
@@ -201,6 +204,7 @@ typedef enum {
    s_wingedstar12,
    s_wingedstar16,
    s_galaxy,
+   s3x8,
    s4x6,
    s_thar,
    sx4dmd,   /* These are too big to actually represent -- */
@@ -236,6 +240,8 @@ typedef enum {
    b_pbone6,
    b_short6,
    b_pshort6,
+   b_1x2dmd,
+   b_p1x2dmd,
    b_qtag,
    b_pqtag,
    b_bone,
@@ -277,6 +283,8 @@ typedef enum {
    b_16x1,
    b_c1phan,
    b_galaxy,
+   b_3x8,
+   b_8x3,
    b_4x6,
    b_6x4,
    b_thar,
@@ -314,71 +322,67 @@ typedef enum {
 /* BEWARE!!  This list must track the array "qualtab" in dbcomp.c . */
 
 typedef enum {
-   sq_none,
-   sq_wave_only,                    /* 1x4 or 2x4 - waves; 2x2 - real RH or LH box */
-   sq_2fl_only,                     /* 1x4 or 2x4 - 2FL; 4x1 - single DPT or single CDPT */
-   sq_in_or_out,                    /* 2x2 - all facing in or all facing out */
-   sq_miniwaves,                    /* 1x2, 1x4, 1x8, 2x4, 2x2, dmd, qtag, trngl - people
-                                       are paired in miniwaves of various handedness.
-                                       For diamonds and qtags, this applies just to the centers.
-                                       For triangles, it applies just to the base.
-                                       So this includes waves, inverted lines, columns,
-                                       magic columns, diamonds, wave-based triangles... */
-   sq_rwave_only,                   /* As above, but all the miniwaves must be right-handed */
-   sq_lwave_only,                   /* As above, but all the miniwaves must be left-handed */
-   sq_1_4_tag,                      /* dmd, qtag - this is a 1/4 tag, i.e. points are looking in */
-   sq_3_4_tag,                      /* dmd, qtag - this is a 3/4 tag, i.e. points are looking out */
-   sq_dmd_same_pt,                  /* dmd - centers would circulate to same point */
-   sq_dmd_facing,                   /* dmd - diamond is fully occupied and fully facing */
-   sq_true_Z,                       /* 2x3, 3x4, 2x6 - setup is a genuine Z */
-   sq_ctrwv_end2fl,                 /* crosswave - center line is wave, end line is 2fl */
-   sq_ctr2fl_endwv,                 /* crosswave - center line is 2fl, end line is wave */
-   sq_split_dixie,                  /* 2x2 - invoked with "split" for dixie style */
-   sq_not_split_dixie,              /* 2x2 - invoked without "split" for dixie style */
-   sq_8_chain,                      /* 4x1 - setup is single 8 chain */
-   sq_trade_by,                     /* 4x1 - setup is single trade by */
-   sq_said_tgl,                     /* short6/pshort6 - caller said the word "triangle" */
-   sq_didnt_say_tgl                 /* short6/pshort6 - caller didn't say the word "triangle" */
+   sq_none,                /* See dbdoc.txt for explanation of these. */
+   sq_wave_only,
+   sq_1fl_only,
+   sq_2fl_only,
+   sq_in_or_out,
+   sq_miniwaves,
+   sq_rwave_only,
+   sq_lwave_only,
+   sq_1_4_tag,
+   sq_3_4_tag,
+   sq_dmd_same_pt,
+   sq_dmd_facing,
+   sq_true_Z,
+   sq_ctrwv_end2fl,
+   sq_ctr2fl_endwv,
+   sq_split_dixie,
+   sq_not_split_dixie,
+   sq_8_chain,
+   sq_trade_by,
+   sq_dmd_ctrs_rh,
+   sq_dmd_ctrs_lh,
+   sq_dmd_ctrs_1f,
+   sq_said_tgl,
+   sq_didnt_say_tgl
 } search_qualifier;
 
 /* These restrictions are "overloaded" -- their meaning depends on the starting setup. */
 /* BEWARE!!  This list must track the array "crtab" in dbcomp.c . */
 
 typedef enum {
-   cr_none,
-   cr_alwaysfail,                   /* any setup - this always fails (presumably to give the "unusual position" warning) */
-   cr_wave_only,                    /* 1x2 - a miniwave; 1x4 - a wave; 2x4/3x4/2x6/2x8 - waves; 1x6-1x16 - a grand wave;
-                                       2x2 - real box; 4x4 - consistent waves; qtag - wave in center; pqtag - wave in center
-                                       (use only if center people have no legal move from pqtag, only from qtag); 3x2/4x2/6x2/8x2 - column */
+   cr_none,                /* See dbdoc.txt for explanation of these. */
+   cr_alwaysfail,
+   cr_wave_only,
    cr_wave_unless_say_2faced,
-   cr_all_facing_same,              /* 2x2/2x3/2x4/1x4/1x6/1x8 - all people in the setup facing the same way */
-   cr_1fl_only,                     /* 1x4/1x6/1x8 - a 1FL; 2x3/2x4 - individual 1FL's */
-   cr_2fl_only,                     /* 1x2 - a couple; 1x4 - a 2FL; 2x4/3x4 - 2FL's; 1x8 - a grand 2FL; 2x2 - "1-faced" box;
-                                       4x4 - consistent 2FL's; 2x4 columns - a DPT or CDPT; qtag - 2FL in center */
-   cr_3x3_2fl_only,                 /* 1x6 - 3 facing one way, 3 the other */
-   cr_4x4_2fl_only,                 /* 1x8 - 4 facing one way, 4 the other */
-   cr_leads_only,                   /* 2x2 - all people are leads, and not T-boned */
-   cr_couples_only,                 /* 1x2 or 1x4 or 2x2 or 2x4 lines, or 2x4 columns - people are in genuine couples, not miniwaves */
-   cr_3x3couples_only,              /* 1x6 lines - each group of 3 people are facing the same way */
-   cr_4x4couples_only,              /* 1x8 lines - each group of 4 people are facing the same way */
-   cr_awkward_centers,              /* 1x2, 1x4, 1x6, or 1x8 - centers must not have left hands with each other */
-   cr_diamond_like,                 /* dmd, qtag or ptpd - in some kind of diamond(s), as opposed to single quarter-tag(s), i.e. points look sideways */
-   cr_qtag_like,                    /* dmd, qtag or ptpd - in some kind of single quarter-tag(s), as opposed to diamond(s), i.e. points look in or out */
-   cr_nice_diamonds,                /* dmd, qtag or ptpd - diamond(s) have consistent handedness, assuming they are diamonds and not qtags */
-   cr_magic_only,                   /* 2x2 - split-trade-circulate type of box; 3x2 or 4x2 - magic column; 2x4 - inverted lines; 1x4 - single inverted line */
-   cr_peelable_box,                 /* 2x2, 3x2, 4x2, 6x2 or 8x2 - all people in each column are facing same way */
-   cr_ends_are_peelable,            /* 2x4 - ends are a box with each person in genuine tandem */
-   cr_not_tboned,                   /* 2x2 - people must not be T-boned */
-   cr_opposite_sex,                 /* 2x1 - people must be opposite sexes facing each other */
-   cr_quarterbox_or_col,            /* 4x2 - acceptable setup for "triple cross" */
-   cr_quarterbox_or_magic_col,      /* 4x2 - acceptable setup for "make magic" */
-   cr_gen_1_4_tag,                  /* SPECIAL -- used for "assume" stuff */
-   cr_gen_3_4_tag,                  /* SPECIAL -- used for "assume" stuff */
-   cr_jleft,                        /* SPECIAL -- used for "assume" stuff */
-   cr_jright,                       /* SPECIAL -- used for "assume" stuff */
-   cr_ijleft,                       /* SPECIAL -- used for "assume" stuff */
-   cr_ijright,                      /* SPECIAL -- used for "assume" stuff */
-   cr_li_lo                         /* SPECIAL -- used for "assume" stuff */
+   cr_all_facing_same,
+   cr_1fl_only,
+   cr_2fl_only,
+   cr_3x3_2fl_only,
+   cr_4x4_2fl_only,
+   cr_leads_only,
+   cr_couples_only,
+   cr_3x3couples_only,
+   cr_4x4couples_only,
+   cr_awkward_centers,
+   cr_diamond_like,
+   cr_qtag_like,
+   cr_nice_diamonds,
+   cr_magic_only,
+   cr_peelable_box,
+   cr_ends_are_peelable,
+   cr_not_tboned,
+   cr_opposite_sex,
+   cr_quarterbox_or_col,
+   cr_quarterbox_or_magic_col,
+   cr_gen_1_4_tag,
+   cr_gen_3_4_tag,
+   cr_jleft,
+   cr_jright,
+   cr_ijleft,
+   cr_ijright,
+   cr_li_lo
 } call_restriction;
 
 /* BEWARE!!  This list must track the array "schematab" in dbcomp.c . */
@@ -501,9 +505,9 @@ typedef enum {
 #define DFM1_NUM_SHIFT_MASK               0x000C0000
 #define DFM1_NUM_SHIFT_BIT                0x00040000
 
-/* The first 10 predicates (in "pred_table" in preds.c and "predtab" in dbcomp.c)
+/* The first 12 predicates (in "pred_table" in preds.c and "predtab" in dbcomp.c)
    take selectors.  The following constant indicates that. */
-#define SELECTOR_PREDS 10
+#define SELECTOR_PREDS 12
 
 typedef enum {
    stb_none,      /* unknown */

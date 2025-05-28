@@ -1,5 +1,5 @@
 ! Sd.res - sample X11 user resource file for Sd (square dance caller's helper)
-! Time-stamp: <93/06/20 15:42:12 gildea>
+! Time-stamp: <95/04/16 00:20:55 gildea>
 
 !
 ! colors - suggested color customizations for color monitors
@@ -16,7 +16,7 @@
 *frame.internalBorderWidth: 2
 *List.Cursor: left_ptr
 *Viewport*font: -misc-fixed-medium-r-semicondensed--13-*-*-*-c-60-iso8859-1
-*conceptpopup*font: -misc-fixed-medium-r-semicondensed--13-*-*-*-c-60-iso8859-1
+*conceptpopup*font: -misc-fixed-medium-r-normal--10-*-*-*-c-60-iso8859-1
 *showGrip: False
 *defaultColumns: 1
 *forceColumns: True
@@ -52,9 +52,18 @@
 *resolve.accept: ACCEPT current choice
 *resolve.raiseRec: raise reconcile point
 *resolve.lowerRec: lower reconcile point
-*enabledmods.none: No call modifications enabled
-*enabledmods.simple: Simple modifications enabled for this call
-*enabledmods.all: All modifications enabled for this call
+*enabledmods.none: 
+*enabledmods.none_ap: [AP]
+*enabledmods.none_ac: [all concepts]
+*enabledmods.none_cp: [all concepts,AP]
+*enabledmods.simple: [simple modifications]
+*enabledmods.simple_ap: [AP,simple modifications]
+*enabledmods.simple_ac: [all concepts,simple modifications]
+*enabledmods.simple_cp: [all concepts,AP,simple modifications]
+*enabledmods.all_ap: [all modifications]
+*enabledmods.all_ac: [AP,all modifications]
+*enabledmods.all: [all concepts,all modifications]
+*enabledmods.all_cp: [all concepts,AP,all modifications]
 *text*displayCaret: false
 *text*scrollVertical: always
 *text*wrap: word

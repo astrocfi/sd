@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-1994  William B. Ackerman.
+    Copyright (C) 1990-1995  William B. Ackerman.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -157,6 +157,9 @@ Private collision_map collision_map_table[] = {
    /* These items handle single lines with people wedged on one end, and hence handle flip or cut the diamond. */
    {3, 0x000000, 0x0B, 0x01, {0, 1, 3},            {0, 2, 5},             {1, 2, 5},              s1x4,        s1x6,        0, warn__none},
    {3, 0x000000, 0x0E, 0x04, {1, 2, 3},            {2, 4, 5},             {2, 3, 5},              s1x4,        s1x6,        0, warn__none},
+   /* These items handle single diamonds with people wedged on one end, and hence handle diamond circulate. */
+   {3, 0x00000A, 0x0E, 0x04, {1, 2, 3},            {2, 4, 5},             {2, 3, 5},              sdmd,    s_1x2dmd,        0, warn__none},
+   {3, 0x00000A, 0x0B, 0x01, {0, 1, 3},            {0, 2, 5},             {1, 2, 5},              sdmd,    s_1x2dmd,        0, warn__none},
    /* These items handle columns with people wedged everywhere, and hence handle unwraps of facing diamonds etc. */
    {4, 0x055055, 0x55, 0x55, {0, 2, 4, 6},         {12, 14, 2, 11},       {10, 3, 4, 6},          s2x4,        s4x4,        0, warn__none},
    {4, 0x0AA0AA, 0xAA, 0xAA, {1, 3, 5, 7},         {13, 0, 7, 9},         {15, 1, 5, 8},          s2x4,        s4x4,        0, warn__none},
@@ -200,14 +203,19 @@ Private collision_map collision_map_table[] = {
    {2, 0x000000, 0x06, 0x06, {1, 2},               {2, 5},                {3, 4},                 s2x2,        s2x4,        0, warn__none},   /* we need all four cases */
    {2, 0x003003, 0x03, 0x03, {1, 0},               {0, 7},                {1, 6},                 s2x2,        s2x4,        1, warn__none},   /* sigh */
    {2, 0x00C00C, 0x0C, 0x0C, {2, 3},               {2, 5},                {3, 4},                 s2x2,        s2x4,        1, warn__none},   /* sigh */
+
+   /* These items handle circulate in a short6, and hence handle collisions in 6X2 acey deucey. */
+   {4, 0x12, 0x1B, 0x09, {0, 1, 3, 4},             {0, 2, 7, 8},           {1, 2, 6, 8},          s_short6,    sbigdmd,     0, warn__none},
+   {4, 0x12, 0x36, 0x24, {1, 2, 4, 5},             {2, 4, 8, 11},          {2, 5, 8, 10},         s_short6,    sbigdmd,     0, warn__none},
+
    /* These items handle more 2x2 stuff, including the "special drop in" that makes chain reaction/motivate etc. work. */
    {2, 0x005005, 0x05, 0x05, {0, 2},               {7, 2},                {6, 3},                 s2x2,        s2x4,        1, warn__none},
    {2, 0x00A00A, 0x0A, 0x0A, {1, 3},               {0, 5},                {1, 4},                 s2x2,        s2x4,        1, warn__none},
    {2, 0x000000, 0x05, 0x05, {0, 2},               {0, 5},                {1, 4},                 s2x2,        s2x4,        1, warn__none},
    {2, 0x000000, 0x0A, 0x0A, {1, 3},               {2, 7},                {3, 6},                 s2x2,        s2x4,        1, warn__none},
    /* Same spot as points of diamonds. */
-   {6, 0x022022, 0xEE, 0x22, {1, 2, 3, 5, 6, 7},   {4, 6, 3, 11, 0, 9},   {5, 6, 3, 10, 0, 9},    s_qtag,      sbigdmd,     0, warn__none},
-   {6, 0x011011, 0xDD, 0x11, {0, 2, 3, 4, 6, 7},   {1, 6, 3, 8, 0, 9},    {2, 6, 3, 7, 0, 9},     s_qtag,      sbigdmd,     0, warn__none},
+   {6, 0x022022, 0xEE, 0x22, {1, 2, 3, 5, 6, 7},   {0, 2, 3, 7, 8, 9},    {1, 2, 3, 6, 8, 9},     s_qtag,      sbigdmd,     1, warn__none},
+   {6, 0x011011, 0xDD, 0x11, {0, 2, 3, 4, 6, 7},   {11, 2, 3, 4, 8, 9},   {10, 2, 3, 5, 8, 9},    s_qtag,      sbigdmd,     1, warn__none},
    {-1}};
 
 
@@ -332,10 +340,10 @@ Private int starhyperh[12] =  {0, 0, 0, 0, 1, 0, 0, 2, 0, 0, 3, 0};
 Private int fstarhyperh[12] = {0, 0, 0, 1, 0, 0, 2, 0, 0, 3, 0, 0};
 
 
-Private int qtbd1[12] = {6, 0, 9, 3, 1, 9, 2, 4, 9, 7, 5, 9};
-Private int qtbd2[12] = {6, 9, 0, 3, 9, 1, 2, 9, 4, 7, 9, 5};
-Private int qtbd3[12] = {6, 0, 9, 3, 9, 1, 2, 4, 9, 7, 9, 5};
-Private int qtbd4[12] = {6, 9, 0, 3, 1, 9, 2, 9, 4, 7, 5, 9};
+Private int qtbd1[12] = {5, 9, 6, 7, 9, 0, 1, 9, 2, 3, 9, 4};
+Private int qtbd2[12] = {9, 5, 6, 7, 0, 9, 9, 1, 2, 3, 4, 9};
+Private int qtbd3[12] = {9, 5, 6, 7, 9, 0, 9, 1, 2, 3, 9, 4};
+Private int qtbd4[12] = {5, 9, 6, 7, 0, 9, 1, 9, 2, 3, 4, 9};
 
 
 
@@ -437,9 +445,10 @@ extern void do_stability(uint32 *personp, stability stab, int turning)
 
 extern restriction_thing *check_restriction(setup *ss, assumption_thing restr, uint32 flags)
 {
-   unsigned int q0, q1, q2, q3, q4, q5, q6, q7;
-   unsigned int i, j, k, z, t;
-   int idx;
+   uint32 q0, q1, q2, q3, q4, q5, q6, q7;
+   uint32 qa0[16], qa1[16];
+   uint32 i, j, k, z, t;
+   int idx, limit;
    restriction_thing *restr_thing_ptr = (restriction_thing *) 0;
 
    if (restr.assumption == cr_alwaysfail) goto restr_failed;
@@ -681,8 +690,8 @@ extern restriction_thing *check_restriction(setup *ss, assumption_thing restr, u
             goto restr_failed;
 
          if (restr_thing_ptr->ok_for_assume) {
-            uint32 q0 = 0;
-            uint32 q1 = 0;
+            q0 = 0;
+            q1 = 0;
       
             for (i=0; i<restr_thing_ptr->size; i+=2) {
                q0 |= ss->people[restr_thing_ptr->map1[i]].id1 | ss->people[restr_thing_ptr->map2[i]].id1;
@@ -702,46 +711,17 @@ extern restriction_thing *check_restriction(setup *ss, assumption_thing restr, u
 
          goto getout;
       case chk_1_group:
-         q0 = 0; q1 = 0;
-
-         for (idx=0; idx<restr_thing_ptr->size; idx++) {
-            if ((t = ss->people[restr_thing_ptr->map1[idx]].id1) != 0) { q0 |= t; q1 |= ~t; }
-         }
-
-         if ((q0&q1&2) == 0)
-            goto getout;
-
-         break;
+         limit = 1;
+         goto check_groups;
       case chk_2_groups:
-         q0 = 0; q1 = 0;
-         q2 = 0; q3 = 0;
-
-         for (idx=0; idx<restr_thing_ptr->size; idx++) {
-            if ((t = ss->people[restr_thing_ptr->map1[idx]].id1) != 0) { q0 |= t; q1 |= ~t; }
-            if ((t = ss->people[restr_thing_ptr->map2[idx]].id1) != 0) { q2 |= t; q3 |= ~t; }
-         }
-
-         if ((q0&q1&2) == 0 && (q2&q3&2) == 0)
-            goto getout;
-
-         break;
+         limit = 2;
+         goto check_groups;
       case chk_4_groups:
-         q0 = 0; q1 = 0;
-         q4 = 0; q5 = 0;
-         q2 = 0; q3 = 0;
-         q6 = 0; q7 = 0;
-
-         for (idx=0; idx<restr_thing_ptr->size; idx++) {
-            if ((t = ss->people[restr_thing_ptr->map1[idx]].id1) != 0) { q0 |= t; q1 |= ~t; }
-            if ((t = ss->people[restr_thing_ptr->map2[idx]].id1) != 0) { q2 |= t; q3 |= ~t; }
-            if ((t = ss->people[restr_thing_ptr->map3[idx]].id1) != 0) { q4 |= t; q5 |= ~t; }
-            if ((t = ss->people[restr_thing_ptr->map4[idx]].id1) != 0) { q6 |= t; q7 |= ~t; }
-         }
-
-         if ((q0&q1&2) == 0 && (q2&q3&2) == 0 && (q4&q5&2) == 0 && (q6&q7&2) == 0)
-            goto getout;
-
-         break;
+         limit = 4;
+         goto check_groups;
+      case chk_8_groups:
+         limit = 8;
+         goto check_groups;
       case chk_box:
          k = 0; j = 0; i = 3; z = 3;
 
@@ -857,6 +837,21 @@ extern restriction_thing *check_restriction(setup *ss, assumption_thing restr, u
    }
 
    return restr_thing_ptr;
+
+   check_groups:
+
+   for (idx=0; idx<limit; idx++) {
+      qa0[idx] = 0; qa1[idx] = 0;
+
+      for (i=0,j=idx; i<restr_thing_ptr->size; i++,j+=limit) {
+         if ((t = ss->people[restr_thing_ptr->map1[j]].id1) != 0) { qa0[idx] |= t; qa1[idx] |= ~t; }
+      }
+
+      if (qa0[idx]&qa1[idx]&2)
+         goto restr_failed;
+   }
+
+   goto getout;
 }
 
 
@@ -1000,22 +995,18 @@ Private void special_1x3(
 
 {
    int real_index;
-   int real_direction, northified_index;
-   uint32 z;
-   int k;
    int num = 3;
    int numout = setup_attrs[result->kind].setup_limits+1;
 
    for (real_index=0; real_index<num; real_index++) {
-      uint32 z;
       personrec this_person = scopy->people[real_index];
       newpersonlist[real_index].id1 = 0;
       newpersonlist[real_index].id2 = 0;
       if (this_person.id1) {
          int real_direction = this_person.id1 & 3;
-         northified_index = (real_direction & 2) ? num-1-real_index : real_index;
-         z = find_calldef((real_direction & 1) ? cdef : ldef, scopy, real_index, real_direction, northified_index);
-         k = (z >> 4) & 017;
+         int northified_index = (real_direction & 2) ? num-1-real_index : real_index;
+         uint32 z = find_calldef((real_direction & 1) ? cdef : ldef, scopy, real_index, real_direction, northified_index);
+         int k = (z >> 4) & 017;
          if (real_direction & 2) k = numout-1-k;
          newpersonlist[real_index].id1 = (this_person.id1 & ~(ROLL_MASK | 077)) |
                ((z + real_direction * 011) & 013) |
@@ -1289,10 +1280,10 @@ Private int divide_the_setup(
          /* The only way this can be legal is if people are in genuine "T" spots. */
 
          switch (livemask) {
-            case 07171:
+            case 01717:
                division_maps = (*map_lists[s_trngl4][1])[MPKIND__OFFS_L_HALF][0];
                break;
-            case 01717:
+            case 07474:
                division_maps = (*map_lists[s_trngl4][1])[MPKIND__OFFS_R_HALF][0];
                break;
             default:
@@ -3054,11 +3045,11 @@ extern void basic_move(
             result->kind = s2x8;
             permuter = octtranslateh;
 
-            if ((lilresult_mask[0] & 0x0FFF7777) == 0 && (lilresult_mask[1] & 0x0FFF7777) == 0) {
+            if ((lilresult_mask[0] & 0x0FFF7777UL) == 0 && (lilresult_mask[1] & 0x0FFF7777UL) == 0) {
                permuter = octtranslatev;
                rotator = 1;
             }
-            else if ((lilresult_mask[0] & 0x77770FFF) != 0 || (lilresult_mask[1] & 0x77770FFF) != 0)
+            else if ((lilresult_mask[0] & 0x77770FFFUL) != 0 || (lilresult_mask[1] & 0x77770FFFUL) != 0)
                fail("Call went to improperly-formed setup.");
          }
          else if (result->kind == sx4dmd) {
@@ -3066,11 +3057,11 @@ extern void basic_move(
             result->kind = s4dmd;
             permuter = qdmtranslateh;
 
-            if ((lilresult_mask[0] & 0x50AF50AF) == 0) {
+            if ((lilresult_mask[0] & 0x50AF50AFUL) == 0) {
                permuter = qdmtranslatev;
                rotator = 1;
             }
-            else if ((lilresult_mask[0] & 0xAF50AF50) != 0)
+            else if ((lilresult_mask[0] & 0xAF50AF50UL) != 0)
                fail("Call went to improperly-formed setup.");
          }
          else if (result->kind == s_hyperglass) {
@@ -3132,21 +3123,25 @@ extern void basic_move(
                fail("Call went to improperly-formed setup.");
          }
          else if (result->kind == sbigdmd) {
-            if ((lilresult_mask[0] & 04444) == 0) {   /* All outside */
+            if ((lilresult_mask[0] & 02222) == 0) {   /* All outside */
                result->kind = s_qtag;
                permuter = qtbd1;
+               rotator = 1;
             }
-            else if ((lilresult_mask[0] & 02222) == 0) {   /* All inside */
+            else if ((lilresult_mask[0] & 04141) == 0) {   /* All inside */
                result->kind = s_qtag;
                permuter = qtbd2;
+               rotator = 1;
             }
-            else if ((lilresult_mask[0] & 02424) == 0) {   /* Some inside, some outside */
+            else if ((lilresult_mask[0] & 02121) == 0) {   /* Some inside, some outside */
                result->kind = s_qtag;
                permuter = qtbd3;
+               rotator = 1;
             }
             else if ((lilresult_mask[0] & 04242) == 0) {   /* Some inside, some outside */
                result->kind = s_qtag;
                permuter = qtbd4;
+               rotator = 1;
             }
          }
          else if (result->kind == s2x3) {

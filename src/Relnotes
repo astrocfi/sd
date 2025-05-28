@@ -1,8 +1,56 @@
-		   RELEASE NOTES FOR SD VERSION 30.89
-		 Database version = 30.88 format = 56.
-    X11 UI version 1.16, SDTTY UI version 1.6, MAC UI version 2.2.
+		   RELEASE NOTES FOR SD VERSION 31.0
+		 Database version = 31.0 format = 56.
+    X11 UI version 1.17, SDTTY UI version 1.6, MAC UI version 2.2.
+
+****** Changes as of version 31.0 ******
+
+It can do various complex yoyo scoot reaction types
+of things from appropriate T-bone setups, as in
+"yoyo scatter scoot chain thru cross nuclear reaction".
+
+New concepts:  shadow box, a few cases of common spot.
+
+New concept:  <N> times.  Just do the call that many times.  "Twice"
+still exists as a synonym for "2 times".
+
+The spelling of "yo-yo" has been changed to "yoyo".
+
+Some concept menus were reorganized.  They should fit on the screen now.
+
+Minor changes to X11 interface.  Make concept popups use a smaller
+font so they fit on the screen better.
+
+In the X11 UI, the banner above the text area now shows, in addition
+to the state of the allowing modifications flag, whether concepts from
+all levels are allowed and whether we have Active Phantoms.
+
+The spelling of "criss-cross" has been changed to "criss cross".
+The latter phrase occurs in some C2 calls.  The Callerlab C2
+list and C2 definitions disagreed with each other on the spelling.
+The Callerlab challenge committee has agreed to fix this, using the
+non-hyphenated spelling consistently.
 
 ****** Changes as of version 30.88 ******
+
+****** NOTE ******  Change in user behavior!
+
+When an error occurs in the execution of a call, the program tries
+to leave in place any concepts that were associated with that call.
+That is, after printing the error message, the program will behave
+as though you had typed those concepts.  The assumption here is
+that only the call was mistaken, and you really wanted the concepts
+and do not wish to have to enter them again.  If you don't want those
+concepts, you can remove them one by one with the "undo" command.
+Or you can use the newly added command "erase entered concepts"
+to get rid of all of them at once.
+
+The tagging call stuff that was begun in version 30.87(experimental)
+was completed.
+
+The calls "sweep 1/4", "with the flow", "by golly", etc. were
+made to use roll direction as a guide to determine what to do.
+This is a somewhat unsatisfactory solution to the problem.
+Be careful not to misuse these.
 
 The sdtty parser can now read the modifiers "grand", "interlocked",
 "cross", and "magic" on the same line as the call.  So you can type,
@@ -30,9 +78,7 @@ the old way, as a single concept name, or by entering "reverse" followed by
 The bug involving the simultaneous use of the "-sequence" and "-abridge"
 switched has been fixed.
 
-****** Changes as of version 30.87 ******
-
-+++++++ WARNING!!!!!! +++++++
+****** Changes as of version 30.87(experimental) ******
 
 This is very experimental.  It has a very incomplete version of
 some MAJOR changes in the way tagging calls are done.  It is being

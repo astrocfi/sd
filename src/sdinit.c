@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-1994  William B. Ackerman.
+    Copyright (C) 1990-1995  William B. Ackerman.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -100,8 +100,6 @@ Private Const char *translate_menu_name(Const char *orig_name, uint32 *escape_bi
       templength = 0;
 
       for (j = 0; j < namelength; j++) {
-         char *p;
-
          c = orig_name[j];
 
          if (c == '@') {
@@ -977,7 +975,7 @@ Private void build_database(call_list_mode_t call_list_mode)
       call_root->callflags1 = saveflags1;
       call_root->callflagsh = saveflagsh;
       /* If we are operating at the "all" level, make fractions visible everywhere, to aid in debugging. */
-      if (calling_level == l_dontshow) call_root->callflags1 |= CFLAG1_VISIBLE_FRACTIONS | CFLAG1_FIRST_PART_VISIBLE;
+      if (calling_level == l_dontshow) call_root->callflags1 |= 3*CFLAG1_VISIBLE_FRACTION_BIT;
 
       /* Now read in the name itself. */
 
@@ -1148,7 +1146,6 @@ extern void initialize_menus(call_list_mode_t call_list_mode)
    if (call_list_mode != call_list_mode_none) {
       if (call_list_mode == call_list_mode_abridging) {
          char abridge_call[100];
-         int j;
    
          while (read_from_call_list_file(abridge_call, 99)) {
             /* Remove the newline character. */
@@ -1171,7 +1168,6 @@ extern void initialize_menus(call_list_mode_t call_list_mode)
          }
       }
       else {      /* Writing a list of some kind. */
-         int i;
          for (i=0; i<number_of_calls[call_list_any]; i++) {
             write_to_call_list_file(main_call_lists[call_list_any][i]->menu_name);
          }

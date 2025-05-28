@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-1994  William B. Ackerman.
+    Copyright (C) 1990-1995  William B. Ackerman.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -51,7 +51,9 @@ Private expand_thing exp_2x4_2x6_stuff     = {{1, 2, 3, 4, 7, 8, 9, 10}, 8, s2x4
 Private expand_thing exp_qtg_3x4_stuff     = {{1, 2, 4, 5, 7, 8, 10, 11}, 8, nothing, s3x4, 0};
 Private expand_thing exp_2x6_2x8_stuff     = {{1, 2, 3, 4, 5, 6, 9, 10, 11, 12, 13, 14}, 12, s2x6, s2x8, 0};
 Private expand_thing exp_1x8_1x12_stuff    = {{2, 3, 5, 4, 8, 9, 11, 10}, 8, nothing, s1x12, 0};
-Private expand_thing exp_qtag_bigdmd_stuff = {{2, 5, 6, 3, 8, 11, 0, 9}, 8, s_qtag, sbigdmd, 0};
+Private expand_thing exp_3x4_3x8_stuff     = {{2, 3, 4, 5, 10, 11, 14, 15, 16, 17, 22, 23}, 12, s3x4, s3x8, 0};
+Private expand_thing exp_1x8_3x8_stuff     = {{20, 21, 23, 22, 8, 9, 11, 10}, 8, s1x8, s3x8, 0};
+Private expand_thing exp_qtag_bigdmd_stuff = {{10, 1, 2, 3, 4, 7, 8, 9}, 8, s_qtag, sbigdmd, 1};
 Private expand_thing exp_1x10_1x12_stuff   = {{1, 2, 3, 4, 5, 7, 8, 9, 10, 11}, 10, s1x10, s1x12, 0};
 Private expand_thing exp_1x12_1x14_stuff   = {{1, 2, 3, 4, 5, 6, 8, 9, 10, 11, 12, 13}, 12, s1x12, s1x14, 0};
 Private expand_thing exp_1x14_1x16_stuff   = {{1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 14, 15}, 14, s1x14, s1x16, 0};
@@ -69,8 +71,18 @@ Private void compress_setup(expand_thing *thing, setup *stuff)
    setup temp = *stuff;
 
    stuff->kind = thing->inner_kind;
-   for (i=0; i<thing->size; i++) {
-      (void) copy_person(stuff, i, &temp, thing->source_indices[i]);
+
+   if (thing->rot) {
+      for (i=0; i<thing->size; i++) {
+         (void) copy_rot(stuff, i, &temp, thing->source_indices[i], 011);
+      }
+      stuff->rotation--;
+      canonicalize_rotation(stuff);
+   }
+   else {
+      for (i=0; i<thing->size; i++) {
+         (void) copy_person(stuff, i, &temp, thing->source_indices[i]);
+      }
    }
 }
 
@@ -182,15 +194,15 @@ Private uint32 bit_table_dhrglass[][4] = {
    {ID2_CENTER|ID2_CTR2|ID2_TRAILER,ID2_CENTER|ID2_CTR2|ID2_BELLE,ID2_CENTER|ID2_CTR2|ID2_LEAD,     ID2_CENTER|ID2_CTR2|ID2_BEAU}};
 
 Private uint32 bit_table_bigdmd[][4] = {
-   {ID2_CTR4,      ID2_CTR4,      ID2_CTR4,      ID2_CTR4},
    {ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS},
    {ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS},
    {ID2_CTR4,      ID2_CTR4,      ID2_CTR4,      ID2_CTR4},
-   {ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS},
-   {ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS},
    {ID2_CTR4,      ID2_CTR4,      ID2_CTR4,      ID2_CTR4},
    {ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS},
    {ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS},
+   {ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS},
+   {ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS},
+   {ID2_CTR4,      ID2_CTR4,      ID2_CTR4,      ID2_CTR4},
    {ID2_CTR4,      ID2_CTR4,      ID2_CTR4,      ID2_CTR4},
    {ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS},
    {ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS}};
@@ -308,8 +320,8 @@ Private expand_thing rear_wave_stuff = {{3, 0, 1, 2}, 4, nothing, s2x2, 0};
 Private expand_thing rear_thar_stuff = {{9, 10, 13, 14, 1, 2, 5, 6}, 8, nothing, s4x4, 0};
 Private expand_thing rear_ohh_stuff = {{-1, 5, 4, -1, -1, 7, 6, -1, -1, 1, 0, -1, -1, 3, 2, -1}, 16, nothing, s_thar, 0};
 Private expand_thing rear_bone_stuff = {{0, 3, 2, 5, 4, 7, 6, 1}, 8, nothing, s2x4, 0};
-Private expand_thing rear_bigd_stuff1 = {{10, 0, 1, 5, -1, -1, 4, 6, 7, 11, -1, -1}, 12, nothing, s3x4, 0};
-Private expand_thing rear_bigd_stuff2 = {{10, -1, -1, 5, 2, 3, 4, -1, -1, 11, 8, 9}, 12, nothing, s3x4, 0};
+Private expand_thing rear_bigd_stuff1 = {{-1, -1, 10, 11, 1, 0, -1, -1, 4, 5, 7, 6}, 12, nothing, s3x4, 1};
+Private expand_thing rear_bigd_stuff2 = {{8, 9, 10, 11, -1, -1, 2, 3, 4, 5, -1, -1}, 12, nothing, s3x4, 1};
 Private expand_thing rear_wing_stuff = {{1, 2, 3, 4, 5, 6, 7, 0}, 8, nothing, s2x4, 0};
 Private expand_thing rear_tgl4a_stuff = {{2, 3, 0, 1}, 4, nothing, s2x2, 0};
 Private expand_thing rear_tgl4b_stuff = {{2, 3, 1, 0}, 4, nothing, s1x4, 1};
@@ -365,8 +377,8 @@ Private expand_thing step_li_stuff = {{1, 2, 7, 4, 5, 6, 3, 0}, 8, nothing, s1x8
 Private expand_thing step_tby_stuff = {{5, 6, 7, 0, 1, 2, 3, 4}, 8, nothing, s_qtag, 1};
 Private expand_thing step_bone_stuff = {{1, 4, 7, 6, 5, 0, 3, 2}, 8, nothing, s1x8, 0};
 Private expand_thing step_rig_stuff = {{2, 7, 4, 5, 6, 3, 0, 1}, 8, nothing, s1x8, 0};
-Private expand_thing step_bigd_stuff1 = {{9, -1, -1, 2, 0, 1, 3, -1, -1, 8, 6, 7}, 12, nothing, s2x6, 1};
-Private expand_thing step_bigd_stuff2 = {{9, 11, 10, 2, -1, -1, 3, 5, 4, 8, -1, -1}, 12, nothing, s2x6, 1};
+Private expand_thing step_bigd_stuff1 = {{0, 1, 3, 2, -1, -1, 6, 7, 9, 8, -1, -1}, 12, nothing, s2x6, 0};
+Private expand_thing step_bigd_stuff2 = {{-1, -1, 3, 2, 4, 5, -1, -1, 9, 8, 10, 11}, 12, nothing, s2x6, 0};
 Private expand_thing step_tgl4_stuff = {{2, 3, 0, 1}, 4, nothing, s1x4, 1};
 
 Private full_expand_thing step_1x8_pair      = {warn__none,       0, &step_1x8_stuff};
@@ -451,11 +463,11 @@ extern void touch_or_rear_back(
             to allow funny square thru. */
          tptr = &rear_wing_pair;
       }
-      else if (scopy->kind == sbigdmd && livemask == 0xFF0FF0UL && ((directions == 0x1E0B40UL) || (directions == 0x5D0F70UL))) {
+      else if (scopy->kind == sbigdmd && livemask == 0x0FF0FFUL && ((directions == 0x0520F8UL) || (directions == 0x082028UL))) {
          /* Some people rear back from horrible "T"'s to couples facing or "split square thru" setup. */
          tptr = &rear_bigd_pair1;
       }
-      else if (scopy->kind == sbigdmd && livemask == 0xC3FC3FUL && ((directions == 0x80702DUL) || (directions == 0x417C3DUL))) {
+      else if (scopy->kind == sbigdmd && livemask == 0xFF0FF0UL && ((directions == 0x2F0850UL) || (directions == 0x280820UL))) {
          /* Some people rear back from horrible "T"'s to couples facing or "split square thru" setup. */
          tptr = &rear_bigd_pair2;
       }
@@ -554,10 +566,10 @@ extern void touch_or_rear_back(
             break;
          case sbigdmd:
             /* Some people touch from horrible "T"'s. */
-            if (livemask == 0xC3FC3FUL && directions == 0x417C3DUL) {
+            if (livemask == 0xFF0FF0UL && directions == 0x280820UL) {
                tptr = &step_bigd_pair1;
             }
-            else if (livemask == 0xFF0FF0UL && directions == 0x5D0F70UL) {
+            else if (livemask == 0x0FF0FFUL && directions == 0x082028UL) {
                tptr = &step_bigd_pair2;
             }
             break;
@@ -591,7 +603,7 @@ extern void touch_or_rear_back(
             else if ((livemask == 0x33UL) && (directions == 0x13UL))
                tptr = &step_1x4_side_pair;
             else if ((callflags1 & CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK) && did_mirror) {
-               if ((directions & livemask) != (0x22UL & livemask))
+               if ((directions & livemask) != (0x28UL & livemask))
                   fail("Setup is not left-handed.");
             }
             break;
@@ -601,6 +613,12 @@ extern void touch_or_rear_back(
             }
             else if ((callflags1 & CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK) && did_mirror) {
                if ((directions & livemask) != (0x2882UL & livemask))
+                  fail("Setup is not left-handed.");
+            }
+            break;
+         case s_qtag:
+            if ((callflags1 & CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK) && did_mirror) {
+               if ((directions & livemask & 0x0F0F) != (0x0802UL & livemask))
                   fail("Setup is not left-handed.");
             }
             break;
@@ -669,7 +687,7 @@ extern void do_matrix_expansion(
          }
       }
 
-      if (concprops & (CONCPROP__NEED_3X4 | CONCPROP__NEED_3X4_1X12)) {
+      if (concprops & (CONCPROP__NEED_3X4 | CONCPROP__NEED_3X8 | CONCPROP__NEED_3X4_1X12)) {
          if (ss->kind == s_qtag) {
             eptr = &exp_qtg_3x4_stuff; goto expand_me;
          }
@@ -707,20 +725,28 @@ extern void do_matrix_expansion(
          }
       }
       else if (concprops & CONCPROP__NEED_2X8) {
-         switch (ss->kind) {         /* Need to expand to a 2x8. */
+         switch (ss->kind) {
             case s2x4:
                eptr = &exp_2x4_2x8_stuff; goto expand_me;
             case s2x6:
                eptr = &exp_2x6_2x8_stuff; goto expand_me;
          }
       }
+      else if (concprops & CONCPROP__NEED_3X8) {
+         switch (ss->kind) {
+            case s3x4:
+               eptr = &exp_3x4_3x8_stuff; goto expand_me;
+            case s1x8:
+               eptr = &exp_1x8_3x8_stuff; goto expand_me;
+         }
+      }
       else if (concprops & CONCPROP__NEED_2X6) {
-         if (ss->kind == s2x4) {         /* Need to expand to a 2x6. */
+         if (ss->kind == s2x4) {
             eptr = &exp_2x4_2x6_stuff; goto expand_me;
          }
       }
       else if (concprops & CONCPROP__NEED_4X6) {
-         if (ss->kind == s2x6) {         /* Need to expand to a 4x6. */
+         if (ss->kind == s2x6) {
             eptr = &exp_2x6_4x6_stuff; goto expand_me;
          }
       }
@@ -973,6 +999,18 @@ Private void normalize_4dmd(setup *stuff)
       (void) copy_person(stuff, 8, &temp, 11);
 
       canonicalize_rotation(stuff);
+
+/* or should this be changed to:
+      stuff->kind = s3x4;
+      (void) copy_person(stuff, 0, &temp, 0);
+      (void) copy_person(stuff, 1, &temp, 1);
+      (void) copy_person(stuff, 2, &temp, 2);
+      (void) copy_person(stuff, 3, &temp, 3);
+      (void) copy_person(stuff, 6, &temp, 8);
+      (void) copy_person(stuff, 7, &temp, 9);
+      (void) copy_person(stuff, 8, &temp, 10);
+      (void) copy_person(stuff, 9, &temp, 11);
+????? */
    }
 }
 
@@ -1065,7 +1103,7 @@ extern void normalize_setup(setup *ss, normalize_action action)
    }
 
    if (ss->kind == sbigdmd) {         /* This might leave a qtag, which might be reduced further. */
-      if (!(ss->people[1].id1 | ss->people[4].id1 | ss->people[7].id1 | ss->people[10].id1)) {
+      if (!(ss->people[0].id1 | ss->people[5].id1 | ss->people[6].id1 | ss->people[11].id1)) {
          compress_setup(&exp_qtag_bigdmd_stuff, ss);
       }
    }
@@ -1097,6 +1135,19 @@ extern void normalize_setup(setup *ss, normalize_action action)
    else if (ss->kind == s2x8) {  /* This might leave a 2x6, which could then be reduced to 2x4, below. */
       if (!(ss->people[7].id1 | ss->people[8].id1 | ss->people[0].id1 | ss->people[15].id1)) {
          compress_setup(&exp_2x6_2x8_stuff, ss);
+      }
+   }
+   else if (ss->kind == s3x8) {
+      if (!(   ss->people[0].id1  | ss->people[1].id1  | ss->people[6].id1  | ss->people[7].id1 |
+               ss->people[20].id1 | ss->people[21].id1 | ss->people[9].id1  | ss->people[8].id1 |
+               ss->people[19].id1 | ss->people[18].id1 | ss->people[13].id1 | ss->people[12].id1)) {
+         compress_setup(&exp_3x4_3x8_stuff, ss);
+      }
+      else if (!(   ss->people[0].id1  | ss->people[1].id1  | ss->people[2].id1  | ss->people[3].id1 |
+                    ss->people[4].id1  | ss->people[4].id1  | ss->people[6].id1  | ss->people[7].id1 |
+                    ss->people[12].id1 | ss->people[13].id1 | ss->people[14].id1 | ss->people[15].id1 |
+                    ss->people[16].id1 | ss->people[17].id1 | ss->people[18].id1 | ss->people[19].id1)) {
+         compress_setup(&exp_1x8_3x8_stuff, ss);
       }
    }
 
@@ -1237,37 +1288,22 @@ In any case, let's try it without this.
       else if (ss->kind == sbigdmd) {
          /* If only the center 1x4 is present, turn it into a 3x4.  If only the "wings" are
             present, turn it into a 2x6. */
-         if (!(   ss->people[1].id1 | ss->people[2].id1 | ss->people[4].id1 | ss->people[5].id1 |
-                  ss->people[7].id1 | ss->people[8].id1 | ss->people[10].id1 | ss->people[11].id1)) {
+         if (!(   ss->people[0].id1 | ss->people[1].id1 | ss->people[4].id1 | ss->people[5].id1 |
+                  ss->people[6].id1 | ss->people[7].id1 | ss->people[10].id1 | ss->people[11].id1)) {
             ss->kind = s3x4;
-            (void) copy_person(ss, 10, ss, 0);
-            (void) copy_person(ss, 11, ss, 9);
-            (void) copy_person(ss, 5, ss, 3);
-            (void) copy_person(ss, 4, ss, 6);
-            clear_person(ss, 0);
-            clear_person(ss, 1);
+            ss->rotation++;
+            (void) copy_rot(ss, 10, ss, 2, 033);
+            (void) copy_rot(ss, 11, ss, 3, 033);
+            (void) copy_rot(ss, 4, ss, 8, 033);
+            (void) copy_rot(ss, 5, ss, 9, 033);
             clear_person(ss, 2);
             clear_person(ss, 3);
-            clear_person(ss, 6);
-            clear_person(ss, 7);
             clear_person(ss, 8);
             clear_person(ss, 9);
-         }
-         else if (!(ss->people[0].id1 | ss->people[3].id1 | ss->people[6].id1 | ss->people[9].id1)) {
-            setup temp = *ss;
-
-            clear_people(ss);
-            ss->kind = s2x6;
-            ss->rotation++;
-            (void) copy_rot(ss, 0, &temp, 4, 033);
-            (void) copy_rot(ss, 1, &temp, 5, 033);
-            (void) copy_rot(ss, 4, &temp, 8, 033);
-            (void) copy_rot(ss, 5, &temp, 7, 033);
-            (void) copy_rot(ss, 6, &temp, 10, 033);
-            (void) copy_rot(ss, 7, &temp, 11, 033);
-            (void) copy_rot(ss, 10, &temp, 2, 033);
-            (void) copy_rot(ss, 11, &temp, 1, 033);
             canonicalize_rotation(ss);
+         }
+         else if (!(ss->people[2].id1 | ss->people[3].id1 | ss->people[8].id1 | ss->people[9].id1)) {
+            ss->kind = s2x6;     /* That's all! */
          }
       }
       else if (ss->kind == s_ptpd) {

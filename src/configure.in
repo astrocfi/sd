@@ -1,4 +1,4 @@
-AC_REVISION(Time-stamp: "95/03/15 21:08:30 gildea")
+AC_REVISION(Time-stamp: "95/03/27 17:01:31 gildea")
 # configure script for Sd (square dance caller's helper)
 #
 # options:
@@ -6,9 +6,18 @@ AC_REVISION(Time-stamp: "95/03/15 21:08:30 gildea")
 #		(not implemented for all compilers)
 #    --with-pc: generate makefile for use on IBM-PC running DOS
 #		with dmake and djgpp C compiler
+#    --with-bindist: do more configuration to allow creation
+#		of a binary distribution.  Of interest to developers only.
 #
 AC_INIT(sdmain.c)
 CONFIG_FILES=Makefile
+
+[#] Extract the version number from the source
+
+VERSION=`sed -n 's/^#define VERSION_STRING "\(.*\)"$/\1/p' "$srcdir/sdmain.c"`
+AC_SUBST(VERSION)
+PCVERSION=`echo "$VERSION" | sed 's/\.//'`
+AC_SUBST(PCVERSION)
 
 [#] See if this is a build with djgpp for a PC.
 
@@ -42,6 +51,7 @@ dnl This rule is for dmake on DOS, in case not installed for djgpp
 echo "making ${CONFIG_FILES} for Unix"
 AC_CHECKING(for compiler type)
 
+AC_WITH(cc,CC=cc)
 AC_GCC_TRADITIONAL
 CDEBUGFLAGS=-O
 
@@ -91,22 +101,66 @@ fi
 if test -n "$no_x"; then
   echo "note: cannot find X11 headers and libraries"
 fi
+
+[#] get system name and tar flags for making binary distribution
+
+dnl this is optional because we don't distribute config.guess
+AC_WITH(bindist,[
+AC_CHECKING(system type)
+dnl figure out the host type for naming the binary tar file
+dnl AC_CANONICAL_HOST
+dnl SYSTEM=$host_os
+SYSTEM=`config.guess | sed -e 's/.*-//' -e 's/\..*//'`
+AC_SUBST(SYSTEM)
+BINDIST_RULE="bindist: $(BIN_TARFILE).Z"
+AC_SUBST(BINDIST_RULE)
+dnl figure out how to not use shared X libraries, because
+dnl I have much newer ones than most people.
+case "$CC" in
+    gcc*)
+	STATIC=-static
+        ;;
+    *)
+	case "$SYSTEM" in
+	    sunos4)
+		STATIC=-Bstatic
+		DYNAMIC=-Bdynamic
+		;;
+	    solaris2)
+		STATIC=-Bstatic
+		DYNAMIC="-Bdynamic -lintl -lw -ldl"
+		;;
+	    irix*)
+		dnl use vendor libraries
+		x_flags=
+		;;
+	esac
+esac
+AC_SUBST(STATIC)
+AC_SUBST(DYNAMIC)
+],[
+SYSTEM=unknown
+BINDIST_RULE=
+STATIC=
+])
+
+dnl for SVR4, check for existence of these libraries, add them to LIBS if found
+SYSLIBS=
+AC_HAVE_LIBRARY(socket, SYSLIBS="-lsocket")
+AC_HAVE_LIBRARY(nsl, SYSLIBS="$SYSLIBS -lnsl")
+
 dnl for X11R6, check for new support libraries
-LIBS="$x_flags"
+LIBS="$x_flags $SYSLIBS"
 R6LIBS=
 AC_HAVE_LIBRARY(ICE, LIBS="$LIBS -lICE"; R6LIBS="-lICE")
 AC_HAVE_LIBRARY(SM, R6LIBS="-lSM $R6LIBS")
-dnl for SVR4, check for existence of these libraries, add them to LIBS if found
-LIBS=
-AC_HAVE_LIBRARY(socket, LIBS="$LIBS -lsocket")
-AC_HAVE_LIBRARY(nsl, LIBS="$LIBS -lnsl")
 
-X11_LIBS="$x_flags -lXaw -lXmu -lXt $R6LIBS -lXext -lX11 $LIBS"
+X11_LIBS="$x_flags -lXaw -lXmu -lXt $R6LIBS -lXext -lX11 $SYSLIBS"
 
 if test -n "$x_libraries"; then
   dnl SunOS 5 needs -R with shared libraries
   AC_CHECKING(whether -R$x_libraries is needed)
-  LIBS="$X11_LIBS"
+  LIBS="$STATIC $X11_LIBS"
   AC_TEST_PROGRAM([main(){XDisplayName(0); exit(0);}],
     ,[# losing, try adding -R
     LIBS="$LIBS -R$x_libraries"
@@ -182,6 +236,21 @@ SDTTY_OBJS="$(SD_OBJS) $(SDTTY_OBJ)"
 
 AC_LN_S		dnl set the definition of "LN_S".
 AC_SET_MAKE	dnl set MAKE variable if necessary
+
+dnl System V has the "h" flag backward.
+rm -f conftest.l1
+touch conftest.l2
+$LN_S conftest.l2 conftest.l1
+if tar cfh conftest.tar conftest.l1 2>/dev/null &&
+   tar tf conftest.tar | grep -v link > /dev/null
+then
+    TARFLAGS=cvfh
+else
+    TARFLAGS=cvfL
+fi
+rm -f conftest.l1 conftest.l2 conftest.tar
+AC_SUBST(TARFLAGS)
+
 
 dnl since user chose configure over xmkmf, lean towards non-X
 if test -z "$no_x" -a -n "$DISPLAY"; then

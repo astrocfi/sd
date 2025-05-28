@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-1994  William B. Ackerman.
+    Copyright (C) 1990-1995  William B. Ackerman.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -81,16 +81,20 @@ Private restriction_thing all_same_8    = {8, {0, 1, 2, 3, 4, 5, 6, 7},    {0}, 
 
 Private restriction_thing two_faced_1x6 = {3, {0, 1, 2},                   {3, 4, 5},                      {0}, {0}, FALSE, chk_wave};           /* check for 3x3 two-faced line -- 3 up and 3 down */
 Private restriction_thing two_faced_1x8 = {4, {0, 1, 6, 7},                {3, 2, 5, 4},                   {0}, {0}, FALSE, chk_wave};           /* check for grand two-faced line */
-Private restriction_thing one_faced_2x3 = {3, {0, 1, 2},                   {3, 4, 5},                      {0}, {0}, FALSE, chk_2_groups};       /* check for parallel one-faced lines of 3 */
-Private restriction_thing one_faced_2x4 = {4, {0, 1, 2, 3},                {4, 5, 6, 7},                   {0}, {0}, FALSE, chk_2_groups};       /* check for parallel one-faced lines */
-Private restriction_thing cpls_2x4      = {2, {0, 1},                      {2, 3},                   {4, 5}, {6, 7}, FALSE, chk_4_groups};       /* check for everyone as a couple */
-Private restriction_thing cpls_1x4      = {2, {0, 1},                      {2, 3},                         {0}, {0}, FALSE, chk_2_groups};       /* check for everyone as a couple */
-Private restriction_thing cpls_2x6      = {3, {0, 1, 2},                   {3, 4, 5},        {6, 7, 8}, {9, 10, 11}, FALSE, chk_4_groups};       /* check for each three people facing same way */
-Private restriction_thing cpls_2x8      = {4, {0, 1, 2, 3},                {4, 5, 6, 7}, {8, 9, 10, 11}, {12, 13, 14, 15}, FALSE, chk_4_groups}; /* check for each four people facing same way */
-Private restriction_thing cpls_3x3_1x6  = {3, {0, 1, 2},                   {3, 4, 5},                      {0},  {0}, FALSE, chk_2_groups};      /* check for each three people facing same way */
-Private restriction_thing cpls_4x4_1x8  = {4, {0, 1, 2, 3},                {4, 5, 6, 7},                   {0}, {0}, FALSE, chk_2_groups};       /* check for each four people facing same way */
+Private restriction_thing one_faced_2x3 = {3, {0, 3, 1, 4, 2, 5},                                     {0}, {0}, {0}, FALSE, chk_2_groups};       /* check for parallel one-faced lines of 3 */
+Private restriction_thing one_faced_2x4 = {4, {0, 4, 1, 5, 2, 6, 3, 7},                               {0}, {0}, {0}, FALSE, chk_2_groups};       /* check for parallel one-faced lines */
+Private restriction_thing cpls_2x4      = {2, {0, 2, 4, 6, 1, 3, 5, 7},                               {0}, {0}, {0}, FALSE, chk_4_groups};       /* check for everyone as a couple */
+Private restriction_thing cpls_4x2      = {2, {0, 1, 2, 3, 7, 6, 5, 4},                               {0}, {0}, {0}, FALSE, chk_4_groups};       /* check for everyone as a couple */
+Private restriction_thing cpls_1x4      = {2, {0, 2, 1, 3},                                           {0}, {0}, {0}, FALSE, chk_2_groups};       /* check for everyone as a couple */
+Private restriction_thing cpls_1x8      = {2, {0, 2, 4, 6, 1, 3, 5, 7},                               {0}, {0}, {0}, FALSE, chk_4_groups};       /* check for everyone as a couple */
+Private restriction_thing cpls_2x8      = {2, {0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15}, {0}, {0}, {0}, FALSE, chk_8_groups};       /* check for everyone as a couple */
+Private restriction_thing cpls_1x16     = {2, {0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15}, {0}, {0}, {0}, FALSE, chk_8_groups};       /* check for everyone as a couple */
+Private restriction_thing cpls_2x6      = {3, {0, 3, 6, 9, 1, 4, 7, 10, 2, 5, 8, 11},                 {0}, {0}, {0}, FALSE, chk_4_groups};       /* check for each three people facing same way */
+Private restriction_thing cplsof4_2x8   = {4, {0, 4, 8, 12, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15}, {0}, {0}, {0}, FALSE, chk_4_groups};       /* check for each four people facing same way */
+Private restriction_thing cpls_3x3_1x6  = {3, {0, 3, 1, 4, 2, 5},                                     {0}, {0}, {0}, FALSE, chk_2_groups};       /* check for each three people facing same way */
+Private restriction_thing cpls_4x4_1x8  = {4, {0, 4, 1, 5, 2, 6, 3, 7},                               {0}, {0}, {0}, FALSE, chk_2_groups};       /* check for each four people facing same way */
 Private restriction_thing two_faced_4x4_1x8 = {4, {0, 1, 2, 3},            {4, 5, 6, 7},                   {0}, {0}, FALSE, chk_wave};           /* check for 4x4 two-faced line -- 4 up and 4 down */
-Private restriction_thing two_faced_1x4 = {2, {0, 1},                      {2, 3},                         {0}, {0}, TRUE, chk_wave};            /* check for 2-faced lines */
+Private restriction_thing two_faced_1x4 = {2, {0, 1},                      {2, 3},                         {0}, {0}, TRUE,  chk_wave};           /* check for 2-faced lines */
 Private restriction_thing two_faced_2x6 = {6, {0, 1, 2, 9, 10, 11},        {3, 4, 5, 6, 7, 8},             {0}, {0}, FALSE, chk_wave};           /* check for parallel consistent 3x3 two-faced lines */
 Private restriction_thing two_faced_4x4_2x8 = {8, {0, 1, 2, 3, 12, 13, 14, 15}, {4, 5, 6, 7, 8, 9, 10, 11},{0}, {0}, FALSE, chk_wave};           /* check for parallel consistent 4x4 two-faced lines */
 
@@ -180,6 +184,8 @@ extern restriction_thing *get_restriction_thing(setup_kind k, assumption_thing t
             restr_thing_ptr = &one_faced_2x4;
          else if (t.assumption == cr_couples_only && t.assump_col == 0)
             restr_thing_ptr = &cpls_2x4;
+         else if (t.assumption == cr_couples_only && t.assump_col == 1)
+            restr_thing_ptr = &cpls_4x2;
          break;
       case s3x4:
          if (t.assumption == cr_wave_only && t.assump_col == 0)
@@ -234,6 +240,8 @@ extern restriction_thing *get_restriction_thing(setup_kind k, assumption_thing t
             restr_thing_ptr = &cpls_4x4_1x8;
          else if (t.assumption == cr_4x4_2fl_only && t.assump_col == 0)
             restr_thing_ptr = &two_faced_4x4_1x8;
+         else if (t.assumption == cr_couples_only && t.assump_col == 0)
+            restr_thing_ptr = &cpls_1x8;
          break;
       case s1x10:
          if (t.assumption == cr_wave_only && t.assump_col == 0)
@@ -262,6 +270,8 @@ extern restriction_thing *get_restriction_thing(setup_kind k, assumption_thing t
       case s1x16:
          if (t.assumption == cr_wave_only && t.assump_col == 0)
             restr_thing_ptr = &wave_1x16;
+         else if (t.assumption == cr_couples_only && t.assump_col == 0)
+            restr_thing_ptr = &cpls_1x16;
          break;
       case s2x8:
          if (t.assumption == cr_wave_only && t.assump_col == 0)
@@ -273,6 +283,8 @@ extern restriction_thing *get_restriction_thing(setup_kind k, assumption_thing t
          else if (t.assumption == cr_4x4_2fl_only && t.assump_col == 0)
             restr_thing_ptr = &two_faced_4x4_2x8;
          else if (t.assumption == cr_4x4couples_only && t.assump_col == 0)
+            restr_thing_ptr = &cplsof4_2x8;
+         else if (t.assumption == cr_couples_only && t.assump_col == 0)
             restr_thing_ptr = &cpls_2x8;
          break;
       case s_qtag:
@@ -402,12 +414,28 @@ Private void do_concept_expand_4x4_matrix(
 {
    if (ss->kind != s4x4) fail("Can't make a 4x4 matrix out of this.");
    ss->cmd.cmd_misc_flags |= CMD_MISC__EXPLICIT_MATRIX;
-   /* We used to turn on the "FINAL__16_MATRIX" call modifier,
-      but that makes tandem stuff not work (it doesn't like
-      call modifiers preceding it) and 4x4 stuff not work
-      (it wants the matrix expanded, but doesn't want you to say
-      "16 matrix").  So we need to let the CMD_MISC__EXPLICIT_MATRIX
-      bit control the desired effects. */
+   move(ss, FALSE, result);
+}
+
+
+Private void do_concept_expand_3x8_matrix(
+   setup *ss,
+   parse_block *parseptr,
+   setup *result)
+{
+   if (ss->kind != s3x8) fail("Can't make a 3x8 matrix out of this.");
+   ss->cmd.cmd_misc_flags |= CMD_MISC__EXPLICIT_MATRIX;
+   move(ss, FALSE, result);
+}
+
+
+Private void do_concept_expand_4x6_matrix(
+   setup *ss,
+   parse_block *parseptr,
+   setup *result)
+{
+   if (ss->kind != s4x6) fail("Can't make a 4x6 matrix out of this.");
+   ss->cmd.cmd_misc_flags |= CMD_MISC__EXPLICIT_MATRIX;
    move(ss, FALSE, result);
 }
 
@@ -419,12 +447,6 @@ Private void do_concept_expand_4dm_matrix(
 {
    if (ss->kind != s4dmd) fail("Can't make quadruple diamonds out of this.");
    ss->cmd.cmd_misc_flags |= CMD_MISC__EXPLICIT_MATRIX;
-   /* We used to turn on the "FINAL__16_MATRIX" call modifier,
-      but that makes tandem stuff not work (it doesn't like
-      call modifiers preceding it) and 4x4 stuff not work
-      (it wants the matrix expanded, but doesn't want you to say
-      "16 matrix").  So we need to let the CMD_MISC__EXPLICIT_MATRIX
-      bit control the desired effects. */
    move(ss, FALSE, result);
 }
 
@@ -685,7 +707,22 @@ Private void do_concept_single_diagonal(
    a1.rotation = 0;
    a1.cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
    update_id_bits(&a1);
-   move(&a1, FALSE, &res1);
+
+   if (parseptr->concept->value.arg1 == 3) {
+      if (a1.cmd.cmd_assume.assumption != cr_none)
+         fail("Redundant or conflicting assumptions.");
+
+      a1.cmd.cmd_assume.assump_col = 0;
+      a1.cmd.cmd_assume.assump_both = 0;
+      a1.cmd.cmd_assume.assumption = cr_wave_only;
+
+      move_perhaps_with_active_phantoms(
+            &a1,
+            check_restriction(&a1, a1.cmd.cmd_assume, 99),
+            &res1);
+   }
+   else
+      move(&a1, FALSE, &res1);
 
    *result = *ss;
 
@@ -737,6 +774,9 @@ Private void do_concept_double_diagonal(
    else {
       if (tbonetest & 1) fail("There are no diagonal columns here.");
    }
+
+   if (parseptr->concept->value.arg1 == 3)
+      ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
 
    divided_setup_move(ss, map_ptr, phantest_ok, TRUE, result);
 }
@@ -2093,6 +2133,11 @@ Private void do_concept_assume_waves(
             case s2x4:  case s3x4:  case s1x8:  case s1x4: goto check_it;
          }
       }
+      else if (t.assumption == cr_couples_only) {
+         switch (ss->kind) {     /* "assume couples" */
+            case s2x2:  case s1x2:  case s1x8:  case s1x16:  case s2x8:  case s1x4: goto check_it;
+         }
+      }
       else if (t.assumption == cr_magic_only) {
          switch (ss->kind) {     /* "assume inverted lines" */
             case s2x4:  case s1x4: goto check_it;
@@ -2216,41 +2261,42 @@ Private void do_concept_crazy(
       craziness.  But if the craziness is unrestrained, which is the usual case, we act on
       the fractions.  This makes "interlace crazy this with reverse crazy that" work. */
 
-   if (cmd.cmd_frac_flags != 0 && (cmd.cmd_misc_flags & CMD_MISC__RESTRAIN_CRAZINESS) == 0) {
+   if (cmd.cmd_frac_flags && (cmd.cmd_misc_flags & CMD_MISC__RESTRAIN_CRAZINESS) == 0) {
+
       /* The fractions were meant for us, not the subject call. */
 
-      if (cmd.cmd_frac_flags & 0x00200000) {
-         /* New regime. */
+      int this_part = ((cmd.cmd_frac_flags >> 16) & 0xF) - 1;
 
-         if ((cmd.cmd_frac_flags & 0x0030FFFF) != 0x00200111)  /* Demand that only "N" be present. */
+      switch (cmd.cmd_frac_flags & 0xF0FFFF) {
+         case 0x00000111:
+            /* Request is to do just part this_part+1. */
+            if (this_part >= 0) {
+               i = this_part;
+               /* We are taking the part number indication. */
+               highlimit = this_part+1;          /* This will make us do just the selected part. */
+               finalresultflags |= RESULTFLAG__PARTS_ARE_KNOWN;
+               if (highlimit == craziness) finalresultflags |= RESULTFLAG__DID_LAST_PART;
+               cmd.cmd_frac_flags = 0;   /* No fractions for subject, we have consumed them. */
+            }
+            break;
+         case 0x00400111:
+            /* Request is to do everything up through part this_part+1. */
+            if (this_part >= 0) {
+               /* We are taking the part number indication. */
+               highlimit = this_part+1;          /* This will make us do up through the selected part. */
+               cmd.cmd_frac_flags = 0;   /* No fractions for subject, we have consumed them. */
+            }
+            break;
+         case 0x00200111:
+            /* Request is to do everything strictly after part this_part+1. */
+            if (this_part >= 0) {
+               /* We are taking the part number indication. */
+               i = this_part+1;          /* This will make us do after the selected part. */
+               cmd.cmd_frac_flags = 0;   /* No fractions for subject, we have consumed them. */
+            }
+            break;
+         default:
             fail("\"crazy\" is not allowed with fractional or reverse-order concepts.");
-   
-         i = ((cmd.cmd_frac_flags >> 16) & 15) - 1;
-   
-         if (i < 0)
-            i = 0;     /* We aren't doing parts after all. */
-         else {
-            /* We are taking the part number indication. */
-            highlimit = i+1;          /* This will make us do just the selected part. */
-            finalresultflags |= RESULTFLAG__PARTS_ARE_KNOWN;
-            if (highlimit == craziness) finalresultflags |= RESULTFLAG__DID_LAST_PART;
-            cmd.cmd_frac_flags = 0;   /* No fractions for subject, we have consumed them. */
-         }
-      }
-      else {
-         /* We handle a few things in the old regime, pending switchover to the new regime.
-            This is to allow things like "do the 3rd part stable, crazy mix". */
-
-         if ((cmd.cmd_frac_flags & 0770) == 0) {
-            highlimit = cmd.cmd_frac_flags & 7;  /* Do first N parts. */
-         }
-         else if ((cmd.cmd_frac_flags & 0770) == 0100) {
-            i = cmd.cmd_frac_flags & 7;  /* Do stuff after part N. */
-         }
-         else
-            fail("Sorry, can't do \"crazy\" with this fractionalization concept.");
-
-         cmd.cmd_frac_flags = 0;   /* No fractions for subject, we have consumed them. */
       }
    }
 
@@ -2298,15 +2344,12 @@ Private void do_concept_fan_or_yoyo(
    parseptrcopy = process_final_concepts(parseptr->next, TRUE, &new_final_concepts);
 
    if (new_final_concepts || parseptrcopy->concept->kind > marker_end_of_list)
-      fail("Can't do \"fan\" or \"yoyo\" followed by another concept or modifier.");
+      fail("Can't do \"fan\" followed by another concept or modifier.");
 
    callspec = parseptrcopy->call;
 
-   if (!callspec || !(callspec->callflags1 & CFLAG1_CAN_BE_FAN_OR_YOYO))
-      fail("Can't do \"fan\" or \"yoyo\" with this call.");
-
-   if (ss->cmd.cmd_frac_flags)
-      fail("This call can't be fractionalized.");
+   if (!callspec || !(callspec->callflags1 & CFLAG1_CAN_BE_FAN))
+      fail("Can't do \"fan\" with this call.");
 
    /* Step to a wave if necessary.  This is actually only needed for the "yoyo" concept.
       The "fan" concept could take care of itself later.  However, we do them both here. */
@@ -2319,34 +2362,19 @@ Private void do_concept_fan_or_yoyo(
 
    tempsetup = *ss;
 
-   /* If this is "yoyo", do an "arm turn 3/4". */
-   if (parseptr->concept->value.arg1 != 0) {
-      uint32 saved_number_fields = current_number_fields;
-      selector_kind saved_selector = current_selector;
-      direction_kind saved_direction = current_direction;
+   /* Normally, set the fractionalize field to [1 0 1] to start with the second part.
+      But if we have been requested to do a specific part number of "fan <call>",
+      just add one to the part number and do the call. */
 
-      current_selector = parseptrcopy->selector;
-      current_direction = parseptrcopy->direction;
-      current_number_fields = parseptrcopy->number;
-
-      /* Do "arm turn 3/4". */
-      tempsetup.cmd = ss->cmd;
-      tempsetup.cmd.prior_elongation_bits = 0;
-      tempsetup.cmd.parseptr = parseptrcopy;
-      tempsetup.cmd.callspec = base_calls[BASE_CALL_CAST_3_4];
-      move(&tempsetup, FALSE, result);
-      finalresultflags |= result->result_flags;
-      tempsetup = *result;
-
-      current_selector = saved_selector;
-      current_direction = saved_direction;
-      current_number_fields = saved_number_fields;
-   }
-
-   /* Now just skip the first part of the call. */
-   /* Set the fractionalize field to [1 0 1]. */
    tempsetup.cmd = ss->cmd;
-   tempsetup.cmd.cmd_frac_flags |= (64 | 1);
+
+   if ((tempsetup.cmd.cmd_frac_flags & 0xF0FFFF) == 0x000111 && tempsetup.cmd.cmd_frac_flags != 0x000111)
+      tempsetup.cmd.cmd_frac_flags += 0x010000;
+   else if (tempsetup.cmd.cmd_frac_flags)
+      fail("Sorry, this concept can't be fractionalized this way.");
+   else
+      tempsetup.cmd.cmd_frac_flags = 0x210111;
+
    tempsetup.cmd.prior_elongation_bits = 0;
    move(&tempsetup, FALSE, result);
    finalresultflags |= result->result_flags;
@@ -2428,64 +2456,83 @@ Private void do_concept_checkerboard(
    parse_block *parseptr,
    setup *result)
 {
-   static int mape[16] = {0, 2, 4, 6, 1, 3, 5, 7};
-   static int mapl[16] = {7, 1, 3, 5, 0, 6, 4, 2};
-   static int mapb[16] = {1, 3, 5, 7, 0, 2, 4, 6};
-   static int mapd[16] = {7, 1, 3, 5, 0, 2, 4, 6};
+   static veryshort mape[16] = {0, 2, 4, 6, 1, 3, 5, 7};
+   static veryshort mapl[16] = {7, 1, 3, 5, 0, 6, 4, 2};
+   static veryshort mapb[16] = {1, 3, 5, 7, 0, 2, 4, 6};
+   static veryshort mapd[16] = {7, 1, 3, 5, 0, 2, 4, 6};
 
    int i, rot, offset;
    setup a1;
    setup res1;
-   int *map_ptr;
+   veryshort *map_ptr;
+   setup_kind kn = (setup_kind) parseptr->concept->value.arg1;
 
    clear_people(result);
 
-   if (ss->kind != s2x4) fail("Must have a 2x4 setup for 'checker' concept.");
+   if (parseptr->concept->value.arg2) {
+      /* This is "shadow <setup>" */
 
-   if ((ss->people[0].id1 & d_mask) == d_north && (ss->people[1].id1 & d_mask) != d_north &&
-         (ss->people[2].id1 & d_mask) == d_north && (ss->people[3].id1 & d_mask) != d_north &&
-         (ss->people[4].id1 & d_mask) == d_south && (ss->people[5].id1 & d_mask) != d_south &&
-         (ss->people[6].id1 & d_mask) == d_south && (ss->people[7].id1 & d_mask) != d_south)
-      offset = 0;
-   else if ((ss->people[0].id1 & d_mask) != d_north && (ss->people[1].id1 & d_mask) == d_north &&
-         (ss->people[2].id1 & d_mask) != d_north && (ss->people[3].id1 & d_mask) == d_north &&
-         (ss->people[4].id1 & d_mask) != d_south && (ss->people[5].id1 & d_mask) == d_south &&
-         (ss->people[6].id1 & d_mask) != d_south && (ss->people[7].id1 & d_mask) == d_south)
-      offset = 4;
-   else
-      fail("Can't identify checkerboard people.");
+      setup_command subsid_cmd;
 
-   /* Move the people who simply trade, filling in their roll info. */
+      if (kn != s2x2) fail("Sorry, can only do 'shadow box'.");
 
-   (void) copy_rot(result, mape[0+offset], ss, mape[1+offset], 022);
-   if (result->people[mape[0+offset]].id1) result->people[mape[0+offset]].id1 = (result->people[mape[0+offset]].id1 & (~ROLL_MASK)) | ROLLBITL;
-   (void) copy_rot(result, mape[1+offset], ss, mape[0+offset], 022);
-   if (result->people[mape[1+offset]].id1) result->people[mape[1+offset]].id1 = (result->people[mape[1+offset]].id1 & (~ROLL_MASK)) | ROLLBITR;
-   (void) copy_rot(result, mape[2+offset], ss, mape[3+offset], 022);
-   if (result->people[mape[2+offset]].id1) result->people[mape[2+offset]].id1 = (result->people[mape[2+offset]].id1 & (~ROLL_MASK)) | ROLLBITL;
-   (void) copy_rot(result, mape[3+offset], ss, mape[2+offset], 022);
-   if (result->people[mape[3+offset]].id1) result->people[mape[3+offset]].id1 = (result->people[mape[3+offset]].id1 & (~ROLL_MASK)) | ROLLBITR;
+      if (ss->kind != s2x4) fail("Must have a 2x4 setup for 'shadow box' concept.");
 
-   a1 = *ss;
+      subsid_cmd = ss->cmd;
+      subsid_cmd.parseptr = (parse_block *) 0;
+      subsid_cmd.callspec = base_calls[BASE_CALL_ENDS_SHADOW];
+      concentric_move(ss, &ss->cmd, &subsid_cmd, schema_concentric, 0, DFM1_CONC_DEMAND_LINES | DFM1_CONC_FORCE_COLUMNS, result);
+      return;
+   }
+   else {
+      /* This is "checker <setup>" */
 
-   a1.kind = (setup_kind) parseptr->concept->value.arg1;
-   a1.cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
-   a1.rotation = 0;
+      if (ss->kind != s2x4) fail("Must have a 2x4 setup for 'checker' concept.");
+   
+      if ((ss->people[0].id1 & d_mask) == d_north && (ss->people[1].id1 & d_mask) != d_north &&
+            (ss->people[2].id1 & d_mask) == d_north && (ss->people[3].id1 & d_mask) != d_north &&
+            (ss->people[4].id1 & d_mask) == d_south && (ss->people[5].id1 & d_mask) != d_south &&
+            (ss->people[6].id1 & d_mask) == d_south && (ss->people[7].id1 & d_mask) != d_south)
+         offset = 0;
+      else if ((ss->people[0].id1 & d_mask) != d_north && (ss->people[1].id1 & d_mask) == d_north &&
+            (ss->people[2].id1 & d_mask) != d_north && (ss->people[3].id1 & d_mask) == d_north &&
+            (ss->people[4].id1 & d_mask) != d_south && (ss->people[5].id1 & d_mask) == d_south &&
+            (ss->people[6].id1 & d_mask) != d_south && (ss->people[7].id1 & d_mask) == d_south)
+         offset = 4;
+      else
+         fail("Can't identify checkerboard people.");
+   
+      /* Move the people who simply trade, filling in their roll info. */
+   
+      (void) copy_rot(result, mape[0+offset], ss, mape[1+offset], 022);
+      if (result->people[mape[0+offset]].id1) result->people[mape[0+offset]].id1 = (result->people[mape[0+offset]].id1 & (~ROLL_MASK)) | ROLLBITL;
+      (void) copy_rot(result, mape[1+offset], ss, mape[0+offset], 022);
+      if (result->people[mape[1+offset]].id1) result->people[mape[1+offset]].id1 = (result->people[mape[1+offset]].id1 & (~ROLL_MASK)) | ROLLBITR;
+      (void) copy_rot(result, mape[2+offset], ss, mape[3+offset], 022);
+      if (result->people[mape[2+offset]].id1) result->people[mape[2+offset]].id1 = (result->people[mape[2+offset]].id1 & (~ROLL_MASK)) | ROLLBITL;
+      (void) copy_rot(result, mape[3+offset], ss, mape[2+offset], 022);
+      if (result->people[mape[3+offset]].id1) result->people[mape[3+offset]].id1 = (result->people[mape[3+offset]].id1 & (~ROLL_MASK)) | ROLLBITR;
 
-   switch (a1.kind) {
-      case s1x4:
-         map_ptr = mapl;
-         break;
-      case s2x2:
-         map_ptr = mapb;
-         break;
-      case sdmd:
-         map_ptr = mapd;
-         break;
+      a1 = *ss;
+
+      switch (kn) {
+         case s1x4:
+            map_ptr = mapl;
+            break;
+         case s2x2:
+            map_ptr = mapb;
+            break;
+         case sdmd:
+            map_ptr = mapd;
+            break;
+      }
+   
+      for (i=0; i<4; i++) (void) copy_person(&a1, i, ss, map_ptr[i+offset]);
    }
 
-   for (i=0; i<4; i++) (void) copy_person(&a1, i, ss, map_ptr[i+offset]);
-
+   a1.kind = kn;
+   a1.cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
+   a1.rotation = 0;
    a1.cmd.cmd_assume.assumption = cr_none;
    update_id_bits(&a1);
    move(&a1, FALSE, &res1);
@@ -2553,26 +2600,77 @@ Private void do_concept_sequential(
    parse_block *parseptr,
    setup *result)
 {
-   int call_index;
+   int highlimit;
+   int subcall_incr;
+   int subcall_index;
+   int instant_stop;
+   long_boolean first_call;
+   long_boolean reverse_order;
+   long_boolean do_half_of_last_part;
 
-   if (ss->cmd.cmd_frac_flags != 0)
-      fail("Can't stack meta or fractional concepts.");
+   if (ss->cmd.cmd_frac_flags) {
+      fraction_info zzz = get_fraction_info(ss->cmd.cmd_frac_flags, 3*CFLAG1_VISIBLE_FRACTION_BIT, 2);
+      reverse_order = zzz.reverse_order;
+      do_half_of_last_part = zzz.do_half_of_last_part;
+      highlimit = zzz.highlimit;
+      if (reverse_order) highlimit = highlimit-1;
+      subcall_index = zzz.subcall_index;
+      subcall_incr = reverse_order ? -1 : 1;
+      instant_stop = zzz.instant_stop ? subcall_index*subcall_incr+1 : 99;
+   }
+   else {     /* No fractions. */
+      reverse_order = FALSE;
+      instant_stop = 99;
+      do_half_of_last_part = FALSE;
+      highlimit = 2;
+      subcall_index = 0;
+      subcall_incr = 1;
+   }
+
+   first_call = reverse_order ? FALSE : TRUE;
 
    *result = *ss;
    result->result_flags = RESULTFLAG__SPLIT_AXIS_MASK;   /* Seed the result. */
 
-   for (call_index=0; call_index<2; call_index++) {
+   for (;;) {
       unsigned int save_elongation = result->cmd.prior_elongation_bits;   /* Save it temporarily. */
+
+      if (subcall_index*subcall_incr >= highlimit) break;
+      if (subcall_index >= 2) fail("The indicated part number doesn't exist.");
+
       result->cmd = ss->cmd;      /* The call we wish to execute (we will fix it up shortly). */
 
-      if (call_index != 0) {
-         result->cmd.cmd_frac_flags = 0;  /* No fractions to 2nd call. */
-         result->cmd.parseptr = parseptr->subsidiary_root;
+      if (do_half_of_last_part && subcall_index+1 == highlimit)
+         result->cmd.cmd_frac_flags = 0x000112;
+      else
+         result->cmd.cmd_frac_flags = 0;  /* No fractions to constituent call. */
+
+      /* We don't supply these; they get filled in by the call. */
+      result->cmd.cmd_misc_flags &= ~DFM1_CONCENTRICITY_FLAG_MASK;
+      if (!first_call) {
+         result->cmd.cmd_misc_flags |= CMD_MISC__NO_CHK_ELONG;
+         result->cmd.cmd_assume.assumption = cr_none;
       }
 
+      if (subcall_index != 0) result->cmd.parseptr = parseptr->subsidiary_root;
       result->cmd.prior_elongation_bits = save_elongation;
       update_id_bits(result);
       do_call_in_series(result, FALSE, TRUE, FALSE);
+      subcall_index += subcall_incr;
+      first_call = FALSE;
+
+      /* If we are being asked to do just one part of a call (from cmd_frac_flags),
+         exit now.  Also, see if we just did the last part. */
+
+      if (ss->cmd.cmd_frac_flags && instant_stop != 99) {
+         /* Check whether we honored the last possible request.  That is,
+            whether we did the last part of the call in forward order, or
+            the first part in reverse order. */
+         result->result_flags |= RESULTFLAG__PARTS_ARE_KNOWN;
+         if (instant_stop >= highlimit)
+            result->result_flags |= RESULTFLAG__DID_LAST_PART;
+         break;
+      }
    }
 }
 
@@ -2621,16 +2719,98 @@ Private void do_concept_twice(
    parse_block *parseptr,
    setup *result)
 {
-   unsigned int save_elongation;
+   /* This includes "twice" and "N times", which means it can either take a hard-wired
+      number or a number form whatever.
+      arg1 = 0 :  number of repetitions is hardwired and is in arg2.
+      arg1 = 1 :  number of repetitions was specified by user. */
+
+   int highlimit;
+   int repetitions;
+   int subcall_incr;
+   int subcall_index;
+   int instant_stop;
+   long_boolean first_call;
+   long_boolean reverse_order;
+   long_boolean do_half_of_last_part;
+   uint32 subject_fractions;
+
+   if (parseptr->concept->value.arg1)
+      repetitions = parseptr->number;
+   else
+      repetitions = parseptr->concept->value.arg2;
+
+   /* If fractions come in but the craziness is restrained, just pass the fractions on.
+      This is what makes "random twice mix" work.  The "random" concept wants to reach through
+      the "twice" concept and do the numbered parts of the mix, not the numbered parts of the
+      twiceness.  But if the craziness is unrestrained, which is the usual case, we act on
+      the fractions.  This makes "interlace twice this with twice that" work. */
+
+   if (ss->cmd.cmd_frac_flags && (ss->cmd.cmd_misc_flags & CMD_MISC__RESTRAIN_CRAZINESS) == 0) {
+      /* The fractions were meant for us, not the subject call. */
+      fraction_info zzz = get_fraction_info(ss->cmd.cmd_frac_flags, 3*CFLAG1_VISIBLE_FRACTION_BIT, repetitions);
+      reverse_order = zzz.reverse_order;
+      do_half_of_last_part = zzz.do_half_of_last_part;
+      highlimit = zzz.highlimit;
+      if (reverse_order) highlimit = highlimit-1;
+      subcall_index = zzz.subcall_index;
+      subcall_incr = reverse_order ? -1 : 1;
+      instant_stop = zzz.instant_stop ? subcall_index*subcall_incr+1 : 99;
+      subject_fractions = 0;
+   }
+   else {     /* No fractions, or, at least, no fraction for us. */
+      reverse_order = FALSE;
+      instant_stop = 99;
+      do_half_of_last_part = FALSE;
+      highlimit = repetitions;
+      subcall_index = 0;
+      subcall_incr = 1;
+      subject_fractions = ss->cmd.cmd_frac_flags;   /* Pass any fractions through. */
+   }
+
+   first_call = reverse_order ? FALSE : TRUE;
 
    *result = *ss;
    result->result_flags = RESULTFLAG__SPLIT_AXIS_MASK;   /* Seed the result. */
-   do_call_in_series(result, FALSE, TRUE, FALSE);
 
-   save_elongation = result->cmd.prior_elongation_bits;   /* Save it temporarily. */
-   result->cmd = ss->cmd;      /* The call we wish to execute. */
-   result->cmd.prior_elongation_bits = save_elongation;
-   do_call_in_series(result, FALSE, TRUE, FALSE);
+   for (;;) {
+      unsigned int save_elongation = result->cmd.prior_elongation_bits;   /* Save it temporarily. */
+
+      if (subcall_index*subcall_incr >= highlimit) break;
+      if (subcall_index >= repetitions) fail("The indicated part number doesn't exist.");
+
+      result->cmd = ss->cmd;      /* The call we wish to execute. */
+
+      if (do_half_of_last_part && subcall_index+1 == highlimit)
+         result->cmd.cmd_frac_flags = 0x000112;
+      else
+         result->cmd.cmd_frac_flags = subject_fractions;  /* Fractions for subject call. */
+
+      /* We don't supply these; they get filled in by the call. */
+      result->cmd.cmd_misc_flags &= ~DFM1_CONCENTRICITY_FLAG_MASK;
+      if (!first_call) {
+         result->cmd.cmd_misc_flags |= CMD_MISC__NO_CHK_ELONG;
+         result->cmd.cmd_assume.assumption = cr_none;
+      }
+
+      result->cmd.prior_elongation_bits = save_elongation;
+      update_id_bits(result);
+      do_call_in_series(result, FALSE, TRUE, FALSE);
+      subcall_index += subcall_incr;
+      first_call = FALSE;
+
+      /* If we are being asked to do just one part of a call (from cmd_frac_flags),
+         exit now.  Also, see if we just did the last part. */
+
+      if (ss->cmd.cmd_frac_flags && instant_stop != 99) {
+         /* Check whether we honored the last possible request.  That is,
+            whether we did the last part of the call in forward order, or
+            the first part in reverse order. */
+         result->result_flags |= RESULTFLAG__PARTS_ARE_KNOWN;
+         if (instant_stop >= highlimit)
+            result->result_flags |= RESULTFLAG__DID_LAST_PART;
+         break;
+      }
+   }
 }
 
 
@@ -3442,11 +3622,9 @@ Private void do_concept_meta(
          saying that this was invoked with "finish", so that the flag will be checked. */
 
       if (ss->cmd.cmd_frac_flags == 0)
-         ss->cmd.cmd_frac_flags = 0301;
-      else if (ss->cmd.cmd_frac_flags == 0301)
-         ss->cmd.cmd_frac_flags = 0102;
-      else if ((ss->cmd.cmd_frac_flags & 0770) == 0100)
-         ss->cmd.cmd_frac_flags++;
+         ss->cmd.cmd_frac_flags = 0x210111;
+      else if ((ss->cmd.cmd_frac_flags & 0xF0FFFF) == 0x200111)
+         ss->cmd.cmd_frac_flags += 0x010000;
       else
          fail("Can't stack meta or fractional concepts.");
 
@@ -3457,15 +3635,14 @@ Private void do_concept_meta(
    else if (key == 5) {
       /* This is "reverse order". */
 
-      if (!(ss->cmd.cmd_frac_flags & 0x00200000)) {
-         /* We don't allow stacking with the old regime. */
-         if (ss->cmd.cmd_frac_flags)
-            fail("Can't stack meta or fractional concepts.");
-   
-         ss->cmd.cmd_frac_flags = 0x00200111UL;
-      }
+      if (!ss->cmd.cmd_frac_flags)
+         ss->cmd.cmd_frac_flags = 0x000111UL;
 
-      ss->cmd.cmd_frac_flags ^= 0x00100000UL;
+      /* We don't allow the new-fangled stuff. */
+      if ((ss->cmd.cmd_frac_flags & 0xE00000) != 0)
+         fail("Can't stack meta or fractional concepts.");
+
+      ss->cmd.cmd_frac_flags ^= 0x100000UL;
       move(ss, FALSE, result);
       return;
    }
@@ -3474,7 +3651,7 @@ Private void do_concept_meta(
 
       if (ss->cmd.cmd_frac_flags)
          fail("Can't stack meta or fractional concepts.");
-      ss->cmd.cmd_frac_flags |= 0x00310111UL;
+      ss->cmd.cmd_frac_flags = 0x110111;
       move(ss, FALSE, result);
       normalize_setup(result, simple_normalize);
       return;
@@ -3512,15 +3689,15 @@ Private void do_concept_meta(
       if (concept_table[k].concept_action == 0)
          fail("Sorry, can't do this with this concept.");
 
-      if (k == concept_crazy || k == concept_frac_crazy)
+      if (k == concept_crazy || k == concept_frac_crazy || k == concept_twice)
          craziness_restraint = CMD_MISC__RESTRAIN_CRAZINESS;
 
       subject_props = concept_table[k].concept_prop;
    }
 
    if (key == 3) {
-      /* Key = 3 is special: we select the first part with the concept, using a
-         fractionalize field of [0 0 1], and then the rest of the call without the
+      /* Key = 3 is special: we select the first part with the concept,
+         and then the rest of the call without the
          concept, using a fractionalize field of [1 0 1]. */
 
       setup tttt = *result;
@@ -3534,9 +3711,9 @@ Private void do_concept_meta(
          fail("Can't use a concept that takes a second call.");
 
       /* Do the call with the concept. */
-      /* Set the fractionalize field to [0 0 1].  This will execute the first part of the call. */
+      /* Set the fractionalize field to execute the first part of the call. */
       tttt.cmd = ss->cmd;
-      tttt.cmd.cmd_frac_flags |= 1;
+      tttt.cmd.cmd_frac_flags = 0x410111;
       tttt.cmd.cmd_misc_flags |= craziness_restraint;
       tttt.cmd.parseptr = parseptrcopy;
       move(&tttt, FALSE, result);
@@ -3545,9 +3722,9 @@ Private void do_concept_meta(
 
       tttt = *result;
       /* Do the call without the concept. */
-      /* Set the fractionalize field to [1 0 1].  This will execute the rest of the call. */
+      /* Set the fractionalize field to execute the rest of the call. */
       tttt.cmd = ss->cmd;
-      tttt.cmd.cmd_frac_flags |= 65;
+      tttt.cmd.cmd_frac_flags = 0x210111;
       tttt.cmd.parseptr = parseptrcopy->next;
       move(&tttt, FALSE, result);
       finalresultflags |= result->result_flags;
@@ -3566,8 +3743,8 @@ Private void do_concept_meta(
          fail("Can't stack meta or fractional concepts.");
 
       /* Initialize. */
-      if ((ss->cmd.cmd_frac_flags & 0x00200000) == 0)
-         ss->cmd.cmd_frac_flags = 0x00200111;
+      if (!ss->cmd.cmd_frac_flags)
+         ss->cmd.cmd_frac_flags = 0x000111;
    
       index = 0;
 
@@ -3634,6 +3811,9 @@ Private void do_concept_nth_part(
       fractionalization bits, and we use the old regime so that no future mixing
       can take place. */
 
+/* ****** The above is complete bullshit, of course. */
+
+
    if (ss->cmd.cmd_frac_flags)
       fail("Can't stack meta or fractional concepts.");
 
@@ -3648,9 +3828,9 @@ Private void do_concept_nth_part(
    
       if (parseptr->number > 1) {
          tttt = *result;
-         /* Set the fractionalize field to [0 0 parts-to-do-first]. */
+         /* Set the fractionalize field to do the first few parts of the call. */
          tttt.cmd = ss->cmd;
-         tttt.cmd.cmd_frac_flags |= (parseptr->number-1);
+         tttt.cmd.cmd_frac_flags = ((parseptr->number-1) << 16) | 0x400111;
          move(&tttt, FALSE, result);
          finalresultflags |= result->result_flags;
          normalize_setup(result, simple_normalize);
@@ -3660,7 +3840,7 @@ Private void do_concept_nth_part(
       tttt = *result;
       /* Set the fractionalize field to [1 0 parts-to-do-first+1]. */
       tttt.cmd = ss->cmd;
-      tttt.cmd.cmd_frac_flags |= (64|parseptr->number);
+      tttt.cmd.cmd_frac_flags = 0x200111 | (parseptr->number << 16);
       move(&tttt, FALSE, result);
       finalresultflags |= result->result_flags;
       normalize_setup(result, simple_normalize);
@@ -3684,14 +3864,14 @@ Private void do_concept_nth_part(
       if (concept_table[parseptrcopy->concept->kind].concept_prop & CONCPROP__SECOND_CALL)
          fail("Can't use a concept that takes a second call.");
    
-      /* Do the initial part, if any. */
+      /* Do the initial part, if any, without the concept. */
    
       if (parseptr->number > 1) {
          tttt = *result;
-         /* Skip over the concept. */
-         /* Set the fractionalize field to [0 0 parts-to-do-normally]. */
+
+         /* Set the fractionalize field to do the first few parts of the call. */
          tttt.cmd = ss->cmd;
-         tttt.cmd.cmd_frac_flags |= (parseptr->number-1);
+         tttt.cmd.cmd_frac_flags = ((parseptr->number-1) << 16) | 0x400111;
          tttt.cmd.parseptr = parseptrcopy->next;
          move(&tttt, FALSE, result);
          finalresultflags |= result->result_flags;
@@ -3705,7 +3885,7 @@ Private void do_concept_nth_part(
       /* Set the fractionalize field to do the Nth part, using the new regime. */
       tttt.cmd = ss->cmd;
       tttt.cmd.parseptr = parseptrcopy;
-      tttt.cmd.cmd_frac_flags = 0x00200111 | (parseptr->number << 16);
+      tttt.cmd.cmd_frac_flags = 0x000111 | (parseptr->number << 16);
       move(&tttt, FALSE, result);
       finalresultflags |= result->result_flags;
       normalize_setup(result, simple_normalize);
@@ -3721,7 +3901,7 @@ Private void do_concept_nth_part(
          /* Set the fractionalize field to [1 0 parts-to-do-normally+1]. */
          tttt.cmd = ss->cmd;
          tttt.cmd.parseptr = parseptrcopy->next;
-         tttt.cmd.cmd_frac_flags |= (64|parseptr->number);
+         tttt.cmd.cmd_frac_flags = 0x200111 | (parseptr->number << 16);
          move(&tttt, FALSE, result);
          finalresultflags |= result->result_flags;
          normalize_setup(result, simple_normalize);
@@ -3746,7 +3926,7 @@ Private void do_concept_replace_nth_part(
 
    *result = *ss;
 
-   /* Do the initial part, if any. */
+   /* Do the initial part, if any, without the concept. */
 
    if (parseptr->concept->value.arg1)
       stopindex = parseptr->number;      /* Interrupt after Nth part. */
@@ -3755,10 +3935,11 @@ Private void do_concept_replace_nth_part(
 
    if (stopindex > 0) {
       tttt = *result;
-      /* Skip over the concept. */
       /* Set the fractionalize field to [0 0 parts-to-do-normally]. */
       tttt.cmd = ss->cmd;
-      tttt.cmd.cmd_frac_flags |= stopindex;
+
+
+      tttt.cmd.cmd_frac_flags = 0x400111 | (stopindex << 16);
       move(&tttt, FALSE, result);
       finalresultflags |= result->result_flags;
       normalize_setup(result, simple_normalize);
@@ -3780,7 +3961,7 @@ Private void do_concept_replace_nth_part(
    /* Skip over the concept. */
    /* Set the fractionalize field to [1 0 parts-to-do-normally+1]. */
    tttt.cmd = ss->cmd;
-   tttt.cmd.cmd_frac_flags |= (64|parseptr->number);
+   tttt.cmd.cmd_frac_flags = 0x200111 | (parseptr->number << 16);
    move(&tttt, FALSE, result);
    finalresultflags |= result->result_flags;
    normalize_setup(result, simple_normalize);
@@ -3806,8 +3987,8 @@ Private void do_concept_interlace(
       fail("Can't stack meta or fractional concepts.");
 
    /* Initialize. */
-   if ((ss->cmd.cmd_frac_flags & 0x00200000) == 0)
-      ss->cmd.cmd_frac_flags = 0x00200111;
+   if (!ss->cmd.cmd_frac_flags)
+      ss->cmd.cmd_frac_flags = 0x000111;
 
    *result = *ss;
    result->result_flags = RESULTFLAG__SPLIT_AXIS_MASK;   /* Seed the result. */
@@ -3893,13 +4074,13 @@ Private void do_concept_fractional(
       do_call_in_series(result, FALSE, TRUE, FALSE);
    }
 
-   if (!(ss->cmd.cmd_frac_flags & 0x00200000)) {
-      /* We don't allow stacking with the old regime. */
-      if (ss->cmd.cmd_frac_flags)
-         fail("Can't stack meta or fractional concepts.");
+   /* Initialize. */
+   if (!ss->cmd.cmd_frac_flags)
+      ss->cmd.cmd_frac_flags = 0x000111;
 
-      ss->cmd.cmd_frac_flags = 0x00200111;
-   }
+   /* We don't allow the new-fangled stuff. */
+   if ((ss->cmd.cmd_frac_flags & 0xE00000) != 0)
+      fail("Can't stack meta or fractional concepts.");
 
    /* Check that user isn't doing something stupid. */
    if (numer <= 0 || numer >= denom)
@@ -3991,8 +4172,8 @@ Private void do_concept_so_and_so_begin(
    
    normalize_setup(&setup1, normalize_before_isolated_call);
    normalize_setup(&setup2, normalize_before_isolated_call);
-   /* Set the fractionalize field to [0 0 1].  This will execute the first part of the call. */
-   setup1.cmd.cmd_frac_flags |= 1;
+   /* Set the fractionalize field to execute the first part of the call. */
+   setup1.cmd.cmd_frac_flags = 0x410111;
 
    /* The selected people execute the first part of the call. */
 
@@ -4000,7 +4181,7 @@ Private void do_concept_so_and_so_begin(
    the_setups[1] = setup2;
 
     /* Give the people who didn't move the same result flags as those who did.
-      This is imprtant for the "did last part" check. */
+      This is important for the "did last part" check. */
    the_setups[1].result_flags = the_setups[0].result_flags;
    the_setups[1].result_flags = get_multiple_parallel_resultflags(the_setups, 2);
 
@@ -4010,8 +4191,8 @@ Private void do_concept_so_and_so_begin(
    normalize_setup(&the_setups[1], simple_normalize);
    the_setups[1].cmd = ss->cmd;   /* Just in case it got messed up, which shouldn't have happened. */
 
-   /* Set the fractionalize field to [1 0 1].  This will execute the rest of the call. */
-   the_setups[1].cmd.cmd_frac_flags |= 65;
+   /* Set the fractionalize field to execute the rest of the call. */
+   the_setups[1].cmd.cmd_frac_flags = 0x210111;
    move(&the_setups[1], FALSE, result);
    finalresultflags |= result->result_flags;
    normalize_setup(result, simple_normalize);
@@ -4345,27 +4526,30 @@ concept_table_item concept_table[] = {
    /* concept_checkerboard */             {0,                                                                                      do_concept_checkerboard},
    /* concept_reverse */                  {0,                                                                                      0},
    /* concept_left */                     {0,                                                                                      0},
-   /* concept_grand */                    {0,                                                                                      0},
-   /* concept_magic */                    {0,                                                                                      0},
-   /* concept_cross */                    {0,                                                                                      0},
-   /* concept_single */                   {0,                                                                                      0},
-   /* concept_singlefile */               {0,                                                                                      0},
-   /* concept_interlocked */              {0,                                                                                      0},
+   /* concept_grand */                    {CONCPROP__PARSE_DIRECTLY,                                                               0},
+   /* concept_magic */                    {CONCPROP__PARSE_DIRECTLY,                                                               0},
+   /* concept_cross */                    {CONCPROP__PARSE_DIRECTLY,                                                               0},
+   /* concept_single */                   {CONCPROP__PARSE_DIRECTLY,                                                               0},
+   /* concept_singlefile */               {CONCPROP__PARSE_DIRECTLY,                                                               0},
+   /* concept_interlocked */              {CONCPROP__PARSE_DIRECTLY,                                                               0},
+   /* concept_yoyo */                     {CONCPROP__PARSE_DIRECTLY,                                                               0},
    /* concept_12_matrix */                {0,                                                                                      0},
    /* concept_16_matrix */                {0,                                                                                      0},
-   /* concept_1x2 */                      {0,                                                                                      0},
-   /* concept_2x1 */                      {0,                                                                                      0},
-   /* concept_2x2 */                      {0,                                                                                      0},
-   /* concept_1x3 */                      {0,                                                                                      0},
-   /* concept_3x1 */                      {0,                                                                                      0},
-   /* concept_3x3 */                      {0,                                                                                      0},
-   /* concept_4x4 */                      {0,                                                                                      0},
+   /* concept_1x2 */                      {CONCPROP__PARSE_DIRECTLY,                                                               0},
+   /* concept_2x1 */                      {CONCPROP__PARSE_DIRECTLY,                                                               0},
+   /* concept_2x2 */                      {CONCPROP__PARSE_DIRECTLY,                                                               0},
+   /* concept_1x3 */                      {CONCPROP__PARSE_DIRECTLY,                                                               0},
+   /* concept_3x1 */                      {CONCPROP__PARSE_DIRECTLY,                                                               0},
+   /* concept_3x3 */                      {CONCPROP__PARSE_DIRECTLY,                                                               0},
+   /* concept_4x4 */                      {CONCPROP__PARSE_DIRECTLY,                                                               0},
    /* concept_1x12_matrix */              {CONCPROP__NEED_1X12 | CONCPROP__NO_STEP | CONCPROP__SET_PHANTOMS,                       do_concept_expand_1x12_matrix},
    /* concept_1x16_matrix */              {CONCPROP__NEED_1X16 | CONCPROP__NO_STEP | CONCPROP__SET_PHANTOMS,                       do_concept_expand_1x16_matrix},
    /* concept_2x6_matrix */               {CONCPROP__NEED_2X6 | CONCPROP__NO_STEP | CONCPROP__SET_PHANTOMS,                        do_concept_expand_2x6_matrix},
    /* concept_2x8_matrix */               {CONCPROP__NEED_2X8 | CONCPROP__NO_STEP | CONCPROP__SET_PHANTOMS,                        do_concept_expand_2x8_matrix},
    /* concept_3x4_matrix */               {CONCPROP__NEED_3X4 | CONCPROP__NO_STEP | CONCPROP__SET_PHANTOMS,                        do_concept_expand_3x4_matrix},
    /* concept_4x4_matrix */               {CONCPROP__NEED_4X4 | CONCPROP__NO_STEP | CONCPROP__SET_PHANTOMS,                        do_concept_expand_4x4_matrix},
+   /* concept_3x8_matrix */               {CONCPROP__NEED_3X8 | CONCPROP__NO_STEP | CONCPROP__SET_PHANTOMS,                        do_concept_expand_3x8_matrix},
+   /* concept_4x6_matrix */               {CONCPROP__NEED_4X6 | CONCPROP__NO_STEP | CONCPROP__SET_PHANTOMS,                        do_concept_expand_4x6_matrix},
    /* concept_4dmd_matrix */              {CONCPROP__NEED_4DMD | CONCPROP__NO_STEP | CONCPROP__SET_PHANTOMS,                       do_concept_expand_4dm_matrix},
    /* concept_funny */                    {0,                                                                                      0},
    /* concept_randomtrngl */              {CONCPROP__NO_STEP | CONCPROP__GET_MASK,                                                 triangle_move},
@@ -4422,8 +4606,8 @@ concept_table_item concept_table[] = {
    /* concept_c1_phantom */               {CONCPROP__NO_STEP | CONCPROP__GET_MASK,                                                 do_c1_phantom_move},
    /* concept_grand_working */            {CONCPROP__PERMIT_MATRIX | CONCPROP__SET_PHANTOMS,                                       do_concept_grand_working},
    /* concept_centers_or_ends */          {0,                                                                                      do_concept_centers_or_ends},
-   /* concept_so_and_so_only */           {CONCPROP__USE_SELECTOR | CONCPROP__NO_STEP,                                             so_and_so_only_move},
-   /* concept_some_vs_others */           {CONCPROP__USE_SELECTOR | CONCPROP__SECOND_CALL | CONCPROP__NO_STEP,                     so_and_so_only_move},
+   /* concept_so_and_so_only */           {CONCPROP__USE_SELECTOR,                                                                 so_and_so_only_move},
+   /* concept_some_vs_others */           {CONCPROP__USE_SELECTOR | CONCPROP__SECOND_CALL,                                         so_and_so_only_move},
    /* concept_stable */                   {CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT,                                      do_concept_stable},
    /* concept_so_and_so_stable */         {CONCPROP__USE_SELECTOR | CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT,             do_concept_stable},
    /* concept_frac_stable */              {CONCPROP__USE_NUMBER | CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT,               do_concept_stable},
@@ -4439,6 +4623,7 @@ concept_table_item concept_table[] = {
    /* concept_all_8 */                    {0,                                                                                      do_concept_all_8},
    /* concept_centers_and_ends */         {CONCPROP__SECOND_CALL,                                                                  do_concept_centers_and_ends},
    /* concept_twice */                    {CONCPROP__SHOW_SPLIT,                                                                   do_concept_twice},
+   /* concept_n_times */                  {CONCPROP__USE_NUMBER | CONCPROP__SHOW_SPLIT,                                            do_concept_twice},
    /* concept_sequential */               {CONCPROP__SECOND_CALL | CONCPROP__SHOW_SPLIT,                                           do_concept_sequential},
    /* concept_special_sequential */       {CONCPROP__SECOND_CALL | CONCPROP__SHOW_SPLIT,                                           do_concept_special_sequential},
    /* concept_meta */                     {CONCPROP__SHOW_SPLIT,                                                                   do_concept_meta},
@@ -4448,4 +4633,5 @@ concept_table_item concept_table[] = {
    /* concept_interlace */                {CONCPROP__SECOND_CALL | CONCPROP__SHOW_SPLIT,                                           do_concept_interlace},
    /* concept_fractional */               {CONCPROP__USE_NUMBER | CONCPROP__USE_TWO_NUMBERS | CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT, do_concept_fractional},
    /* concept_rigger */                   {CONCPROP__NO_STEP,                                                                      do_concept_rigger},
+   /* concept_common_spot */              {CONCPROP__NO_STEP,                                                                      common_spot_move},
    /* concept_diagnose */                 {0,                                                                                      do_concept_diagnose}};

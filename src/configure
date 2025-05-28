@@ -1,5 +1,5 @@
 #!/bin/sh
-# From configure.in Time-stamp: 95/03/15 21:08:30 gildea
+# From configure.in Time-stamp: 95/03/27 17:01:31 gildea
 
 # configure script for Sd (square dance caller's helper)
 #
@@ -8,6 +8,8 @@
 #		(not implemented for all compilers)
 #    --with-pc: generate makefile for use on IBM-PC running DOS
 #		with dmake and djgpp C compiler
+#    --with-bindist: do more configuration to allow creation
+#		of a binary distribution.  Of interest to developers only.
 #
 #!/bin/sh
 # Guess values for system-dependent variables and create Makefiles.
@@ -328,6 +330,13 @@ ac_compile='${CC-cc} $CFLAGS $LDFLAGS conftest.${ac_ext} -o conftest $LIBS >/dev
 
 CONFIG_FILES=Makefile
 
+# Extract the version number from the source
+
+VERSION=`sed -n 's/^#define VERSION_STRING "\(.*\)"$/\1/p' "$srcdir/sdmain.c"`
+
+PCVERSION=`echo "$VERSION" | sed 's/\.//'`
+
+
 # See if this is a build with djgpp for a PC.
 
 # check whether --with-pc or --without-pc was given.
@@ -357,6 +366,12 @@ else
 # ****** Beginning of Unix section ******
 echo "making ${CONFIG_FILES} for Unix"
 test -n "$silent" || echo "checking for compiler type"
+
+# check whether --with-cc or --without-cc was given.
+withval="$with_cc"
+if test -n "$withval"; then
+  CC=cc
+fi
 
 if test -z "$CC"; then
   # Extract the first word of `gcc', so it can be a program name with args.
@@ -727,7 +742,98 @@ fi
 if test -n "$no_x"; then
   echo "note: cannot find X11 headers and libraries"
 fi
-LIBS="$x_flags"
+
+# get system name and tar flags for making binary distribution
+
+# check whether --with-bindist or --without-bindist was given.
+withval="$with_bindist"
+if test -n "$withval"; then
+  
+test -n "$silent" || echo "checking system type"
+SYSTEM=`config.guess | sed -e 's/.*-//' -e 's/\..*//'`
+
+BINDIST_RULE="bindist: $(BIN_TARFILE).Z"
+
+case "$CC" in
+    gcc*)
+	STATIC=-static
+        ;;
+    *)
+	case "$SYSTEM" in
+	    sunos4)
+		STATIC=-Bstatic
+		DYNAMIC=-Bdynamic
+		;;
+	    solaris2)
+		STATIC=-Bstatic
+		DYNAMIC="-Bdynamic -lintl -lw -ldl"
+		;;
+	    irix*)
+				x_flags=
+		;;
+	esac
+esac
+
+
+
+else
+  
+SYSTEM=unknown
+BINDIST_RULE=
+STATIC=
+
+fi
+
+
+SYSLIBS=
+ac_save_LIBS="${LIBS}"
+LIBS="${LIBS} -lsocket"
+ac_have_lib=""
+test -n "$silent" || echo "checking for -lsocket"
+cat > conftest.${ac_ext} <<EOF
+#include "confdefs.h"
+
+int main() { return 0; }
+int t() { main();; return 0; }
+EOF
+if eval $ac_compile; then
+  rm -rf conftest*
+  ac_have_lib="1"
+
+fi
+rm -f conftest*
+LIBS="${ac_save_LIBS}"
+if test -n "${ac_have_lib}"; then
+   :; SYSLIBS="-lsocket"
+else
+   :; 
+fi
+
+ac_save_LIBS="${LIBS}"
+LIBS="${LIBS} -lnsl"
+ac_have_lib=""
+test -n "$silent" || echo "checking for -lnsl"
+cat > conftest.${ac_ext} <<EOF
+#include "confdefs.h"
+
+int main() { return 0; }
+int t() { main();; return 0; }
+EOF
+if eval $ac_compile; then
+  rm -rf conftest*
+  ac_have_lib="1"
+
+fi
+rm -f conftest*
+LIBS="${ac_save_LIBS}"
+if test -n "${ac_have_lib}"; then
+   :; SYSLIBS="$SYSLIBS -lnsl"
+else
+   :; 
+fi
+
+
+LIBS="$x_flags $SYSLIBS"
 R6LIBS=
 ac_save_LIBS="${LIBS}"
 LIBS="${LIBS} -lICE"
@@ -775,59 +881,12 @@ else
    :; 
 fi
 
-LIBS=
-ac_save_LIBS="${LIBS}"
-LIBS="${LIBS} -lsocket"
-ac_have_lib=""
-test -n "$silent" || echo "checking for -lsocket"
-cat > conftest.${ac_ext} <<EOF
-#include "confdefs.h"
 
-int main() { return 0; }
-int t() { main();; return 0; }
-EOF
-if eval $ac_compile; then
-  rm -rf conftest*
-  ac_have_lib="1"
-
-fi
-rm -f conftest*
-LIBS="${ac_save_LIBS}"
-if test -n "${ac_have_lib}"; then
-   :; LIBS="$LIBS -lsocket"
-else
-   :; 
-fi
-
-ac_save_LIBS="${LIBS}"
-LIBS="${LIBS} -lnsl"
-ac_have_lib=""
-test -n "$silent" || echo "checking for -lnsl"
-cat > conftest.${ac_ext} <<EOF
-#include "confdefs.h"
-
-int main() { return 0; }
-int t() { main();; return 0; }
-EOF
-if eval $ac_compile; then
-  rm -rf conftest*
-  ac_have_lib="1"
-
-fi
-rm -f conftest*
-LIBS="${ac_save_LIBS}"
-if test -n "${ac_have_lib}"; then
-   :; LIBS="$LIBS -lnsl"
-else
-   :; 
-fi
-
-
-X11_LIBS="$x_flags -lXaw -lXmu -lXt $R6LIBS -lXext -lX11 $LIBS"
+X11_LIBS="$x_flags -lXaw -lXmu -lXt $R6LIBS -lXext -lX11 $SYSLIBS"
 
 if test -n "$x_libraries"; then
     test -n "$silent" || echo "checking whether -R$x_libraries is needed"
-  LIBS="$X11_LIBS"
+  LIBS="$STATIC $X11_LIBS"
   cat > conftest.${ac_ext} <<EOF
 #include "confdefs.h"
 main(){XDisplayName(0); exit(0);}
@@ -961,6 +1020,20 @@ if test -n "$ac_maketemp"; then SET_MAKE=
 else SET_MAKE="MAKE=${MAKE-make}"; fi
 rm -f conftestmake
 	
+rm -f conftest.l1
+touch conftest.l2
+$LN_S conftest.l2 conftest.l1
+if tar cfh conftest.tar conftest.l1 2>/dev/null &&
+   tar tf conftest.tar | grep -v link > /dev/null
+then
+    TARFLAGS=cvfh
+else
+    TARFLAGS=cvfL
+fi
+rm -f conftest.l1 conftest.l2 conftest.tar
+
+
+
 if test -z "$no_x" -a -n "$DISPLAY"; then
   DEFAULT_TARGET=allx11
 else
@@ -1040,12 +1113,19 @@ do
 done
 
 trap 'rm -f Makefile; exit 1' 1 2 15
+VERSION='$VERSION'
+PCVERSION='$PCVERSION'
 STRIP='$STRIP'
 AOUT2EXE='$AOUT2EXE'
 CC='$CC'
 CPP='$CPP'
+SYSTEM='$SYSTEM'
+BINDIST_RULE='$BINDIST_RULE'
+STATIC='$STATIC'
+DYNAMIC='$DYNAMIC'
 LN_S='$LN_S'
 SET_MAKE='$SET_MAKE'
+TARFLAGS='$TARFLAGS'
 CONFIG_FILES='$CONFIG_FILES'
 CDEBUGFLAGS='$CDEBUGFLAGS'
 DEFS='$DEFS'
@@ -1105,12 +1185,19 @@ for ac_file in .. ${CONFIG_FILES}; do if test "x$ac_file" != x..; then
 $ac_prsub
 $ac_vpsub
 $extrasub
+s%@VERSION@%$VERSION%g
+s%@PCVERSION@%$PCVERSION%g
 s%@STRIP@%$STRIP%g
 s%@AOUT2EXE@%$AOUT2EXE%g
 s%@CC@%$CC%g
 s%@CPP@%$CPP%g
+s%@SYSTEM@%$SYSTEM%g
+s%@BINDIST_RULE@%$BINDIST_RULE%g
+s%@STATIC@%$STATIC%g
+s%@DYNAMIC@%$DYNAMIC%g
 s%@LN_S@%$LN_S%g
 s%@SET_MAKE@%$SET_MAKE%g
+s%@TARFLAGS@%$TARFLAGS%g
 s%@CONFIG_FILES@%$CONFIG_FILES%g
 s%@CDEBUGFLAGS@%$CDEBUGFLAGS%g
 s%@DEFS@%$DEFS%g

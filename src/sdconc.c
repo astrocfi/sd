@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-1994  William B. Ackerman.
+    Copyright (C) 1990-1995  William B. Ackerman.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -57,8 +57,8 @@ Private cm_thing map_3line =  {{0, 1, 3, 2}, {10, 11, 4, 5},             4, 4, s
 
 Private cm_thing map1x4_2x4 =        {{10, 11, 4, 5},
                                              {0, 1, 2, 3, 6, 7, 8, 9},   4, 8, s3x4,           s1x4,     s2x4,     12, 0, 0, 0};
-Private cm_thing oddmap1x4_2x4 =     {{0, 9, 6, 3},
-                                             {10, 11, 2, 1, 4, 5, 8, 7}, 4, 8, sbigdmd,        s1x4,     s2x4,     12, 0, 1, 0};
+Private cm_thing oddmap1x4_2x4 =     {{8, 9, 2, 3},
+                                             {0, 1, 4, 5, 6, 7, 10, 11}, 4, 8, sbigdmd,        s1x4,     s2x4,     12, 1, 0, 0};
 Private cm_thing map1x2_1x2 =        {{1, 3},       {0, 2},              2, 2, s1x4,           s1x2,     s1x2,     4,  0, 0, 0};
 Private cm_thing oddmap1x2_1x2 =     {{3, 1},       {0, 2},              2, 2, sdmd,           s1x2,     s1x2,     4,  1, 0, 0};
 /* The map "oddmapdmd_dmd", with its loss of elongation information for the outer diamond, is necessary to make the call
@@ -139,6 +139,8 @@ Private cm_thing oddmap1x2_short6 = {{5, 7, 0, 1, 3, 4}, {6, 2},         6, 2, s
 Private cm_thing oddmap2x3_1x2 = {{11, 5}, {9, 10, 0, 3, 4, 6},          2, 6, s3x4,           s1x2,     s2x3,     12, 0, 1, 0};
 Private cm_thing oddmapshort6_1x2h = {{2, 6}, {3, 0, 1, 7, 4, 5},        2, 6, s_ptpd,         s1x2,     s_short6, 8,  0, 1, 1};
 Private cm_thing oddmapshort6_1x2v = {{7, 3}, {5, 6, 0, 1, 2, 4},        2, 6, s_qtag,         s1x2,     s_short6, 8,  0, 1, 0};
+Private cm_thing oddmapbigdmd_1x2v = {{9, 3},
+                          {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11},        2,12, sbigdmd,         s1x2,     sbigdmd,12,  1, 0, 1};
 Private cm_thing oddmap1x2_short6_rc = {{5, 6, 0, 1, 2, 4}, {7, 3},      6, 2, s_rigger,       s_short6, s1x2,     8,  1, 0, 0};
 Private cm_thing map2x4_2x2 = {{2, 3, 8, 9},
                                         {0, 1, 4, 5, 6, 7, 10, 11},      4, 8, s2x6,           s2x2,     s2x4,     12, 0, 0, 9};
@@ -164,6 +166,7 @@ Private cm_thing *concmap2x2_2x2[4]       = {&map2x2_2x2v,         &oddmap2x2_2x
 Private cm_thing *concmap2x2_1x4[4]       = {&map2x2_1x4v,         &oddmap2x2_1x4v,      &map2x2_1x4h,     &oddmap2x2_1x4h};
 Private cm_thing *concmap2x2_dmd[4]       = {&map2x2_dmdv,         &oddmap2x2_dmd,       &map2x2_dmd,      &oddmap2x2_dmdv};
 Private cm_thing *concmapshort6_1x2[4]    = {&mapshort6_1x2v,      &oddmapshort6_1x2v,   &mapshort6_1x2h,  &oddmapshort6_1x2h};
+Private cm_thing *concmapbigdmd_1x2[4]    = {0,                    &oddmapbigdmd_1x2v,   0,                0};
 Private cm_thing *concmapminrig_1x2[4]    = {&mapminrig_1x2,       &oddmapminrig_1x2,    &mapminrig_1x2,   &oddmapminrig_1x2};
 Private cm_thing *concmap1x2_1x6[4]       = {&map1x2_1x6,          &oddmap1x2_1x6,       &map1x2_1x6,      &oddmap1x2_1x6};
 Private cm_thing *concmap1x2_bone6[4]     = {&map1x2_bone6,        &oddmap1x2_bone6,     &map1x2_bone6,    &oddmap1x2_bone6};
@@ -403,7 +406,7 @@ extern void normalize_concentric(
                      result->inner.srotation = inners[0].rotation;
                      result->outer.skind = outers->kind;
                      result->outer.srotation = outers->rotation;
-                     result->outer_elongation = 0;
+                     result->concsetup_outer_elongation = 0;
                      result->kind = s_normal_concentric;
                      if (i == 0) {
                         install_person(result, 0, outers, 1);
@@ -617,6 +620,12 @@ extern void normalize_concentric(
                case s1x2: map_ptr = concmapshort6_1x2; break;
             }
             break;
+         case sbigdmd:
+            switch (inners[0].kind) {
+               case s1x2:
+                  if (!(outers->people[3].id1 | outers->people[9].id1)) map_ptr = concmapbigdmd_1x2; break;
+            }
+            break;
          case sminirigger:
             switch (inners[0].kind) {
                case s1x2: map_ptr = concmapminrig_1x2; break;
@@ -762,7 +771,7 @@ gotit:
    result->inner.srotation = inners[0].rotation;
    result->outer.skind = outers->kind;
    result->outer.srotation = outers->rotation;
-   result->outer_elongation = outer_elongation ^ outers->rotation;
+   result->concsetup_outer_elongation = outer_elongation ^ outers->rotation;
    for (j=0; j<12; j++) {
       (void) copy_person(result, j, &inners[0], j);
       (void) copy_person(result, j+12, outers, j);
@@ -1055,7 +1064,14 @@ Private void concentrify(
             }
             break;
          case analyzer_NORMAL:
-            if (ss->inner.skind == sdmd && ss->inner.srotation == ss->outer.srotation) {
+            if (ss->outer.skind == nothing) {
+               inners[0].kind = ss->inner.skind;
+               outers->kind = nothing;
+               for (i=0; i<4; i++) (void) copy_person(&inners[0], i, ss, i);
+               *outer_elongation = ss->concsetup_outer_elongation;
+               goto finish;
+            }
+            else if (ss->inner.skind == sdmd && ss->inner.srotation == ss->outer.srotation) {
                inners[0].kind = sdmd;
                outers->kind = ss->outer.skind;
                for (i=0; i<4; i++) {
@@ -1065,7 +1081,7 @@ Private void concentrify(
 
                /* We allow a diamond inside a box with wrong elongation (if elongation were good, it would be an hourglass.) */
                if (ss->outer.skind == s2x2) {
-                  *outer_elongation = (ss->outer.srotation ^ ss->outer_elongation) & 1;
+                  *outer_elongation = (ss->outer.srotation ^ ss->concsetup_outer_elongation) & 1;
                   goto finish;
                }
                /* And a diamond inside a line with wrong elongation (if elongation were good, it would be a 3x1 diamond.) */
@@ -1387,7 +1403,18 @@ extern void concentric_move(
    if (cmdin) {
       for (k=0; k<center_arity; k++) {
          update_id_bits(&begin_inner[k]);
-         begin_inner[k].cmd.cmd_assume.assumption = cr_none;
+
+         /* Inherit certain assumptions to the child setups.  This is EXTREMELY incomplete. */
+
+         if ((analyzer == schema_single_concentric) || (analyzer == schema_single_cross_concentric)) {
+            if (ss->kind == s1x4 && begin_inner[k].kind == s1x2 && (begin_inner[k].cmd.cmd_assume.assumption == cr_2fl_only || begin_inner[k].cmd.cmd_assume.assumption == cr_wave_only))
+               begin_inner[k].cmd.cmd_assume.assumption = cr_wave_only;
+            else
+               begin_inner[k].cmd.cmd_assume.assumption = cr_none;
+         }
+         else
+            begin_inner[k].cmd.cmd_assume.assumption = cr_none;
+
          current_number_fields >>= ((DFM1_NUM_SHIFT_MASK & modifiersin1) / DFM1_NUM_SHIFT_BIT) * 4;
          begin_inner[k].cmd.parseptr = cmdin->parseptr;
          begin_inner[k].cmd.callspec = cmdin->callspec;
@@ -1395,7 +1422,7 @@ extern void concentric_move(
 
          /* Handle "snag" for centers. */
          if ((snagflag & (CMD_MISC__CENTRAL_MASK | CMD_MISC__INVERT_CENTRAL)) == CMD_MISC__CENTRAL_SNAG) {
-            begin_inner[k].cmd.cmd_frac_flags = 0x00200112;
+            begin_inner[k].cmd.cmd_frac_flags = 0x000112;
          }
 
          /* Handle "mystic" for centers. */
@@ -1458,7 +1485,18 @@ extern void concentric_move(
 
       current_number_fields >>= ((DFM1_NUM_SHIFT_MASK & modifiersout1) / DFM1_NUM_SHIFT_BIT) * 4;
       update_id_bits(&begin_outer);
-      begin_outer.cmd.cmd_assume.assumption = cr_none;
+
+      /* Inherit certain assumptions to the child setups.  This is EXTREMELY incomplete. */
+
+      if ((analyzer == schema_single_concentric) || (analyzer == schema_single_cross_concentric)) {
+         if (ss->kind == s1x4 && begin_outer.kind == s1x2 && (begin_outer.cmd.cmd_assume.assumption == cr_2fl_only || begin_outer.cmd.cmd_assume.assumption == cr_wave_only))
+            begin_outer.cmd.cmd_assume.assumption = cr_wave_only;
+         else
+            begin_outer.cmd.cmd_assume.assumption = cr_none;
+      }
+      else
+         begin_outer.cmd.cmd_assume.assumption = cr_none;
+
       /* This call to "move" will fill in good stuff (viz. the DFM1_CONCENTRICITY_FLAG_MASK)
          into begin_outer.cmd.cmd_misc_flags, which we will use below to do various "force_lines",
          "demand_columns", etc. things. */
@@ -1468,7 +1506,7 @@ extern void concentric_move(
 
       /* Handle "invert snag" for ends. */
       if ((snagflag & (CMD_MISC__CENTRAL_MASK | CMD_MISC__INVERT_CENTRAL)) == (CMD_MISC__CENTRAL_SNAG | CMD_MISC__INVERT_CENTRAL))
-         begin_outer.cmd.cmd_frac_flags = 0x00200112;
+         begin_outer.cmd.cmd_frac_flags = 0x000112;
 
       /* Handle "invert mystic" for ends. */
       if ((snagflag & (CMD_MISC__CENTRAL_MASK | CMD_MISC__INVERT_CENTRAL)) == (CMD_MISC__CENTRAL_MYSTIC | CMD_MISC__INVERT_CENTRAL)) {
@@ -1635,10 +1673,12 @@ extern void concentric_move(
          /* If setup is 2x2 and a command "force spots" or "force otherway" was given, we can
             honor it, even though there are no people present in the outer setup. */
 
-         if (     final_outers_start_kind != s2x2 ||
-                  result_outer.kind != s2x2 ||
-                  !(localmods1 & (DFM1_CONC_FORCE_SPOTS | DFM1_CONC_FORCE_OTHERWAY))) {
-
+         if (     final_outers_start_kind == s2x2 &&
+                  result_outer.kind == s2x2 &&
+                  (localmods1 & (DFM1_CONC_FORCE_SPOTS | DFM1_CONC_FORCE_OTHERWAY))) {
+            ;        /* Take no further action. */
+         }
+         else {
             /* Otherwise, we can save the day only if we
                can convince ourselves that they did the call "nothing".  We make use
                of the fact that "concentrify" did NOT flush them, so we still know
@@ -1670,8 +1710,8 @@ extern void concentric_move(
                result->inner.srotation = result_inner[0].rotation;
                result->outer.skind = nothing;
                result->outer.srotation = 0;
-               result->outer_elongation = 0;
-               result->result_flags = 0;
+               /* We remember a vague awareness of where the outside would have been. */
+               result->concsetup_outer_elongation = begin_outer_elongation;
                goto getout;
             }
          }
@@ -1710,6 +1750,13 @@ extern void concentric_move(
          result_inner[0].result_flags = 0;
          result_inner[0].rotation = result_outer.rotation;
       }
+      /* A similar thing, for single concentric. */
+      else if (result_outer.kind == s1x2 && analyzer == schema_single_concentric) {
+         result_inner[0].kind = s1x2;
+         clear_people(&result_inner[0]);
+         result_inner[0].result_flags = 0;
+         result_inner[0].rotation = result_outer.rotation;
+      }
       else {
          /* The centers are just gone!  It is quite possible that "fix_n_results"
             may be able to repair this damage by copying some info from another setup.
@@ -1723,7 +1770,7 @@ extern void concentric_move(
          result->outer.srotation = result_outer.rotation;
          result->inner.skind = nothing;
          result->inner.srotation = 0;
-         result->outer_elongation = 0;
+         result->concsetup_outer_elongation = 0;
 
          for (j=0; j<12; j++) (void) copy_person(result, j+12, &result_outer, j);
          result->result_flags = 0;
@@ -1918,7 +1965,7 @@ extern void concentric_move(
                fail("Don't recognize starting setup.");
          }
       }
-      else if (result_outer.kind == s_short6) {
+      else if (result_outer.kind == s_short6 || result_outer.kind == sbigdmd) {
          /* If it both started and ended in a short6, take the info from the way the call was executed.
             Otherwise, take it from the way concentrify thought the ends were initially elongated. */
          if (final_outers_start_kind == s_short6)
@@ -2244,6 +2291,17 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
       normalize_concentric(schema_concentric, 1, outer_inners, 0, result);
       return;
    }
+   else if (res2->kind == s1x8 && res1->kind == s2x2 && action == merge_without_gaps &&
+            (!(res2->people[1].id1 | res2->people[2].id1 | res2->people[5].id1 | res2->people[6].id1))) {
+      res2->kind = s1x4;
+      (void) copy_person(res2, 1, res2, 3);
+      (void) copy_person(res2, 2, res2, 4);
+      (void) copy_person(res2, 3, res2, 7);
+      outer_inners[0] = *res2;
+      outer_inners[1] = *res1;
+      normalize_concentric(schema_concentric, 1, outer_inners, 0, result);
+      return;
+   }
    else if (res1->kind == s_rigger &&
             (!(res1->people[0].id1 | res1->people[1].id1 | res1->people[4].id1 | res1->people[5].id1))) {
       res1->kind = s1x4;
@@ -2262,6 +2320,18 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
       outer_inners[0] = *res2;
       outer_inners[1] = *res1;
       normalize_concentric(schema_concentric, 1, outer_inners, 0, result);
+      return;
+   }
+   else if (res2->kind == s1x8 && res1->kind == s1x2 &&
+            (!(res2->people[2].id1 | res2->people[6].id1))) {
+      res2->kind = s1x6;
+      (void) copy_person(res2, 2, res2, 3);         /* careful -- order is important */
+      (void) copy_person(res2, 3, res2, 4);
+      (void) copy_person(res2, 4, res2, 5);
+      (void) copy_person(res2, 5, res2, 7);
+      outer_inners[0] = *res2;
+      outer_inners[1] = *res1;
+      normalize_concentric(schema_concentric_2_6, 1, outer_inners, 0, result);
       return;
    }
    else if (res2->kind == s2x4 && res1->kind == s1x4 &&
@@ -2312,6 +2382,21 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
       install_person(result, 7, res2, 6);
       (void) copy_person(result, 2, res1, 0);
       (void) copy_person(result, 6, res1, 1);
+      return;
+   }
+   else if (res2->kind == s2x4 && res1->kind == s1x8 && r == 0 && action == merge_without_gaps &&
+            (!(res1->people[0].id1 | res1->people[3].id1 | res1->people[4].id1 | res1->people[7].id1 |
+            res2->people[1].id1 | res2->people[2].id1 | res2->people[5].id1 | res2->people[6].id1))) {
+      *result = *res2;
+      result->kind = s_ptpd;
+      (void) copy_person(result, 1, res2, 0);
+      (void) copy_person(result, 5, res2, 4);
+      (void) copy_person(result, 3, res2, 7);
+      (void) copy_person(result, 7, res2, 3);
+      (void) copy_person(result, 0, res1, 1);
+      (void) copy_person(result, 2, res1, 2);
+      (void) copy_person(result, 4, res1, 5);
+      (void) copy_person(result, 6, res1, 6);
       return;
    }
    else if (res2->kind == s_crosswave && res1->kind == s1x2 && (r&1)) {
@@ -2419,6 +2504,45 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
       install_person(result, 1, res2, 3);
       install_person(result, 4, res2, 4);
       install_person(result, 5, res2, 7);
+      return;
+   }
+   else if (res2->kind == s2x6 && res1->kind == s_qtag && (r&1) &&
+            (!(res2->people[2].id1 | res2->people[3].id1 | res2->people[8].id1 | res2->people[9].id1 |
+               res1->people[0].id1 | res1->people[1].id1 | res1->people[4].id1 | res1->people[5].id1))) {
+      *result = *res2;
+      result->kind = sbigdmd;
+
+      if (r&2) {
+         (void) copy_rot(result, 2,  res1, 2,  rot);
+         (void) copy_rot(result, 3,  res1, 3,  rot);
+         (void) copy_rot(result, 8,  res1, 6,  rot);
+         (void) copy_rot(result, 9,  res1, 7,  rot);
+      }
+      else {
+         (void) copy_rot(result, 8,  res1, 2,  rot);
+         (void) copy_rot(result, 9,  res1, 3,  rot);
+         (void) copy_rot(result, 2,  res1, 6,  rot);
+         (void) copy_rot(result, 3,  res1, 7,  rot);
+      }
+      return;
+   }
+   else if (res2->kind == s2x6 && res1->kind == s1x4 && (r&1) &&
+            (!(res2->people[2].id1 | res2->people[3].id1 | res2->people[8].id1 | res2->people[9].id1))) {
+      *result = *res2;
+      result->kind = sbigdmd;
+
+      if (r&2) {
+         (void) copy_rot(result, 2,  res1, 2,  rot);
+         (void) copy_rot(result, 3,  res1, 3,  rot);
+         (void) copy_rot(result, 8,  res1, 0,  rot);
+         (void) copy_rot(result, 9,  res1, 1,  rot);
+      }
+      else {
+         (void) copy_rot(result, 8,  res1, 2,  rot);
+         (void) copy_rot(result, 9,  res1, 3,  rot);
+         (void) copy_rot(result, 2,  res1, 0,  rot);
+         (void) copy_rot(result, 3,  res1, 1,  rot);
+      }
       return;
    }
    else if (res2->kind == s2x6 && res1->kind == s2x4 && r == 0) {
@@ -2660,6 +2784,19 @@ static Const fixer f1x8ctr = {
    (struct fixerjunk *) 0,   /* next1x4rot */
    &bar55d,                  /* next2x2    */
    {{3, 2, 7, 6}},
+   {{-1}}};
+
+static Const fixer fqtgctr = {
+   s1x4,
+   s_qtag,
+   0,
+   1,
+   (struct fixerjunk *) 0,   /* next1x2    */
+   (struct fixerjunk *) 0,   /* next1x2rot */
+   &fqtgctr,                 /* next1x4    */
+   (struct fixerjunk *) 0,   /* next1x4rot */
+   &bar55d,                  /* next2x2    */
+   {{6, 7, 2, 3}},
    {{-1}}};
 
 static Const fixer f1x8endd = {
@@ -2911,7 +3048,8 @@ extern void so_and_so_only_move(
 {
    selector_kind saved_selector;
    int i, k, setupcount;
-   uint32 livemask, j;
+   uint32 livemask[2];
+   uint32 j;
    warning_info saved_warnings;
    setup the_setups[2], the_results[2];
 
@@ -2970,24 +3108,21 @@ extern void so_and_so_only_move(
    normalize_setup(&the_setups[1], (indicator == 4) ? normalize_before_merge : normalize_before_isolated_call);
    saved_warnings = history[history_ptr+1].warnings;
 
+   /* It will be helpful to have a mask of where the live people are. */
+
+   for (setupcount=0; setupcount<2; setupcount++) {
+      for (i=0, j=1, livemask[setupcount] = 0; i<=setup_attrs[the_setups[setupcount].kind].setup_limits; i++, j<<=1) {
+         if (the_setups[setupcount].people[i].id1) livemask[setupcount] |= j;
+      }
+   }
+
+
+
    /* Iterate 1 or 2 times, depending on whether the "other" people do a call. */
 
    for (setupcount=0; setupcount<=others; setupcount++) {
-
-#ifdef dontneedthisnomore
-      /* We need to be careful not to allow a situation in which no one does a call.
-         The reason is that we must not lose the required information for the
-         "did last part" check -- failure to do this can lead to an infinite loop.
-         So someone must actually do a call, and the resultflags from that must get
-         transmitted as the final resultflags. */
-
-      if ((nonempty_setups & (setupcount+1)) == 0) {
-         /* No one working in this iteration.  Indicate so, and see if we can fix it later. */
-         the_results[setupcount].kind = nothing;
-         the_results[setupcount].result_flags = 0;
-         continue;
-      }
-#endif
+      uint32 thislivemask = livemask[setupcount];
+      uint32 otherlivemask = livemask[setupcount^1];
 
       the_setups[setupcount].cmd = ss->cmd;
       the_setups[setupcount].cmd.cmd_misc_flags |= CMD_MISC__PHANTOMS;
@@ -2999,82 +3134,82 @@ extern void so_and_so_only_move(
          int numsetups;
          setup lilsetup[4], lilresult[4];
 
-         /* It will be helpful to have a mask of where the live people are. */
-
-         for (i=0, j=1, livemask = 0; i<=setup_attrs[the_setups[setupcount].kind].setup_limits; i++, j<<=1) {
-            if (the_setups[setupcount].people[i].id1) livemask |= j;
-         }
-
          /* A few operations are independent of whether we said "disconnected",
             because the people are connected anyway. */
 
-         if (the_setups[setupcount].kind == s1x8 && livemask == 0xCC)
+         if (the_setups[setupcount].kind == s1x8 && thislivemask == 0xCC)
             fixp = &f1x8ctr;
-         else if (the_setups[setupcount].kind == s_bone && livemask == 0xCC)
+         else if (the_setups[setupcount].kind == s_qtag && thislivemask == 0xCC)
+            fixp = &fqtgctr;
+         else if (the_setups[setupcount].kind == s_bone && thislivemask == 0xCC)
             fixp = &fbonectr;
-         else if (the_setups[setupcount].kind == s_rigger && livemask == 0x33)
+         else if (the_setups[setupcount].kind == s_rigger && thislivemask == 0x33)
             fixp = &frigctr;
-         else if (the_setups[setupcount].kind == s2x4 && livemask == 0x66)
+         else if (the_setups[setupcount].kind == s2x4 && thislivemask == 0x66)
             fixp = &f2x4ctr;
-         else if (the_setups[setupcount].kind == s2x4 && livemask == 0x0F)  /* unsymmetrical */
+         else if (the_setups[setupcount].kind == s2x4 && thislivemask == 0x0F)  /* unsymmetrical */
             fixp = &f2x4far;
-         else if (the_setups[setupcount].kind == s2x4 && livemask == 0xF0)  /* unsymmetrical */
+         else if (the_setups[setupcount].kind == s2x4 && thislivemask == 0xF0)  /* unsymmetrical */
             fixp = &f2x4near;
-         else if (the_setups[setupcount].kind == s2x4 && livemask == 0xC3)  /* unsymmetrical */
+         else if (the_setups[setupcount].kind == s2x4 && the_setups[setupcount^1].kind == s2x4 && (thislivemask & ~0x0F) == 0 && (otherlivemask & 0x0F) == 0)
+            fixp = &f2x4far;
+         else if (the_setups[setupcount].kind == s2x4 && the_setups[setupcount^1].kind == s2x4 && (thislivemask & ~0xF0) == 0  && (otherlivemask & 0xF0) == 0)
+            fixp = &f2x4near;
+         else if (the_setups[setupcount].kind == s2x4 && thislivemask == 0xC3)  /* unsymmetrical */
             fixp = &f2x4left;
-         else if (the_setups[setupcount].kind == s2x4 && livemask == 0x3C)  /* unsymmetrical */
+         else if (the_setups[setupcount].kind == s2x4 && thislivemask == 0x3C)  /* unsymmetrical */
             fixp = &f2x4right;
          else if (indicator >= 6) {
             /* Search for "disconnected" stuff. */
-            if (the_setups[setupcount].kind == s1x8 && livemask == 0xAA)
+            if (the_setups[setupcount].kind == s1x8 && thislivemask == 0xAA)
                fixp = &f1x8aad;
-            else if (the_setups[setupcount].kind == s1x8 && livemask == 0x55)
+            else if (the_setups[setupcount].kind == s1x8 && thislivemask == 0x55)
                fixp = &foo55d;
-            else if (the_setups[setupcount].kind == s1x8 && livemask == 0x99)
+            else if (the_setups[setupcount].kind == s1x8 && thislivemask == 0x99)
                fixp = &foo99d;
-            else if (the_setups[setupcount].kind == s1x8 && livemask == 0x66)
+            else if (the_setups[setupcount].kind == s1x8 && thislivemask == 0x66)
                fixp = &foo66d;
-            else if (the_setups[setupcount].kind == s1x8 && livemask == 0x33)
+            else if (the_setups[setupcount].kind == s1x8 && thislivemask == 0x33)
                fixp = &f1x8endd;
-            else if (the_setups[setupcount].kind == s_bone && livemask == 0x33)
+            else if (the_setups[setupcount].kind == s_bone && thislivemask == 0x33)
                fixp = &fboneendd;
-            else if (the_setups[setupcount].kind == s2x4 && livemask == 0xAA)
+            else if (the_setups[setupcount].kind == s2x4 && thislivemask == 0xAA)
                fixp = &fppaad;
-            else if (the_setups[setupcount].kind == s2x4 && livemask == 0x55)
+            else if (the_setups[setupcount].kind == s2x4 && thislivemask == 0x55)
                fixp = &fpp55d;
-            else if (the_setups[setupcount].kind == s2x4 && livemask == 0x99)
+            else if (the_setups[setupcount].kind == s2x4 && thislivemask == 0x99)
                fixp = &f2x4endd;
-            else if (the_setups[setupcount].kind == s_ptpd && livemask == 0xAA)
+            else if (the_setups[setupcount].kind == s_ptpd && thislivemask == 0xAA)
                fixp = &foozzd;
             else
                fail("Can't do this with these people designated.");
          }
          else {
             /* Search for "so-and-so only" stuff. */
-            if (livemask == 0) {
+            if (thislivemask == 0) {
                /* Check for special case of no one. */
                the_results[setupcount].kind = nothing;
                the_results[setupcount].result_flags = 0;
                continue;
             }
-            else if (livemask == ((1 << (setup_attrs[the_setups[setupcount].kind].setup_limits+1)) - 1)) {
+            else if (thislivemask == ((1 << (setup_attrs[the_setups[setupcount].kind].setup_limits+1)) - 1)) {
                /* And special case of everyone. */
                move(&the_setups[setupcount], FALSE, &the_results[setupcount]);
                continue;
             }
-            else if (the_setups[setupcount].kind == s2x4 && livemask == 0x33)
+            else if (the_setups[setupcount].kind == s2x4 && thislivemask == 0x33)
                fixp = &foo33;
-            else if (the_setups[setupcount].kind == s2x4 && livemask == 0xCC)
+            else if (the_setups[setupcount].kind == s2x4 && thislivemask == 0xCC)
                fixp = &foocc;
-            else if (the_setups[setupcount].kind == s2x4 && livemask == 0x99)
+            else if (the_setups[setupcount].kind == s2x4 && thislivemask == 0x99)
                fixp = &f2x4endo;
-            else if (the_setups[setupcount].kind == s1x8 && livemask == 0xAA)
+            else if (the_setups[setupcount].kind == s1x8 && thislivemask == 0xAA)
                fixp = &f1x8aa;
-            else if (the_setups[setupcount].kind == s1x8 && livemask == 0x33)
+            else if (the_setups[setupcount].kind == s1x8 && thislivemask == 0x33)
                fixp = &f1x8endo;
-            else if (the_setups[setupcount].kind == s_bone && livemask == 0x33)
+            else if (the_setups[setupcount].kind == s_bone && thislivemask == 0x33)
                fixp = &fboneendo;
-            else if (the_setups[setupcount].kind == s_ptpd && livemask == 0xAA)
+            else if (the_setups[setupcount].kind == s_ptpd && thislivemask == 0xAA)
                fixp = &foozz;
             else
                fail("Can't do this with these people designated.");

@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-1994  William B. Ackerman.
+    Copyright (C) 1990-1995  William B. Ackerman.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -267,6 +267,8 @@ char *sstab[] = {
    "pbone6",
    "short6",
    "pshort6",
+   "1x2dmd",
+   "p1x2dmd",
    "qtag",
    "pqtag",
    "bone",
@@ -308,6 +310,8 @@ char *sstab[] = {
    "16x1",
    "c1phan",
    "galaxy",
+   "3x8",
+   "8x3",
    "4x6",
    "6x4",
    "thar",
@@ -337,6 +341,7 @@ char *estab[] = {
    "trngl4",
    "bone6",
    "short6",
+   "1x2dmd",
    "qtag",
    "bone",
    "rigger",
@@ -368,6 +373,7 @@ char *estab[] = {
    "wingedstar12",
    "wingedstar16",
    "galaxy",
+   "3x8",
    "4x6",
    "thar",
    "???",
@@ -415,6 +421,7 @@ char *schematab[] = {
 char *qualtab[] = {
    "none",
    "wave_only",
+   "1fl_only",
    "2fl_only",
    "in_or_out",
    "miniwaves",
@@ -431,6 +438,9 @@ char *qualtab[] = {
    "not_split_dixie",
    "8_chain",
    "trade_by",
+   "dmd_ctrs_rh",
+   "dmd_ctrs_lh",
+   "dmd_ctrs_1f",
    "said_triangle",
    "didnt_say_triangle",
    ""};
@@ -499,8 +509,8 @@ char *defmodtab1[] = {
    general top-level call flags.  They go into the "callflags1" word. */
 
 char *flagtab1[] = {
-   "visible_fractions",
    "first_part_visible",
+   "first_two_parts_visible",
    "12_16_matrix_means_split",
    "imprecise_rotation",
    "split_like_dixie_style",
@@ -518,9 +528,9 @@ char *flagtab1[] = {
    "need_four_numbers",
    "sequence_starter",
    "split_like_square_thru",
-   "finish_means_skip_first_part",
+   "???",
    "left_means_touch_or_check",
-   "can_be_fan_or_yoyo",
+   "can_be_fan",
    "no_cutting_through",
    "no_elongation_allowed",
    "base_tag_call_0",
@@ -554,6 +564,7 @@ char *flagtabh[] = {
    "4x4_is_inherited",
    "singlefile_is_inherited",
    "half_is_inherited",
+   "yoyo_is_inherited",
    ""};
 
 /* This table is keyed to the constants "cflag__???".
@@ -579,6 +590,7 @@ char *altdeftabh[] = {
    "4x4",
    "singlefile",
    "half",
+   "yoyo",
    ""};
 
 /* This table is keyed to the constants "dfm_***".  These are the heritable
@@ -605,6 +617,7 @@ char *defmodtabh[] = {
    "inherit_4x4",
    "inherit_singlefile",
    "inherit_half",
+   "inherit_yoyo",
    ""};
 
 /* This table is keyed to the constants "dfm_***".  These are the heritable
@@ -634,6 +647,7 @@ char *forcetabh[] = {
    "force_4x4",
    "force_singlefile",
    "force_half",
+   "force_yoyo",
    ""};
 
 
@@ -648,7 +662,7 @@ char *matrixcallflagtab[] = {
 
 /* BEWARE!!  This list must track the array "pred_table" in sdpreds.c . */
 
-/* The first 10 of these (the constant to use is SELECTOR_PREDS) take a predicate.
+/* The first 12 of these (the constant to use is SELECTOR_PREDS) take a predicate.
    Any call that uses one of these predicates in its definition will cause a
    popup to appear asking "who?". */
 
@@ -663,6 +677,8 @@ char *predtab[] = {
    "conc_from_select",
    "select_once_rem_from_unselect",
    "unselect_once_rem_from_select",
+   "select_and_roll_is_cw",
+   "select_and_roll_is_ccw",
    "always",
    "x22_miniwave",
    "x22_couple",
@@ -742,6 +758,7 @@ char *predtab[] = {
    "zagzagp",
    "no_dir_p",
    "dmd_ctrs_rh",
+   "dmd_ctrs_lh",
    "trngl_pt_rh",
    "q_tag_front",
    "q_tag_back",
@@ -770,16 +787,18 @@ int tagtabmax = 100;              /* Amount of space allocated for tagtab; must 
 
 tagtabitem *tagtab;      /* The dynamically allocated tag list. */
 
+/* BEWARE!!  These must track the definitions BASE_CALL_??? in database.h . */
 tagtabitem tagtabinit[] = {
       {1, "+++"},            /* Must be unused -- call #0 signals end of list in sequential encoding. */
       {0, "nullcall"},       /* Must be #1 -- the database initializer uses call #1 for any mandatory
                                     modifier, e.g. "clover and [anything]" is executed as
                                     "clover and [call #1]". */
-      {0, "armturn_34"},     /* Must be #2 -- this is used for "yo-yo". */
-      {0, "tagnullcall0"},   /* Must be #3. */
-      {0, "tagnullcall1"},   /* Must be #4. */
-      {0, "tagnullcall2"},   /* Must be #5. */
-      {0, "tagnullcall3"}};  /* Must be #6. */
+      {0, "armturn_34"},     /* This is used for "yo-yo". */
+      {0, "endsshadow"},     /* This is used for "shadow <setup>". */
+      {0, "tagnullcall0"},   /* These 4 must be consecutive. */
+      {0, "tagnullcall1"},
+      {0, "tagnullcall2"},
+      {0, "tagnullcall3"}};
 
 int eof;
 int chars_left;
@@ -1557,6 +1576,9 @@ extern void dbcompile(void)
             else {
                if ((iii = search(flagtab1)) >= 0)
                   call_flags1 |= (1 << iii);
+
+               else if (strcmp(tok_str, "visible_fractions") == 0)
+                  call_flags1 |= (3*CFLAG1_VISIBLE_FRACTION_BIT);
                else if (strcmp(tok_str, "need_three_numbers") == 0)
                   call_flags1 |= (3*CFLAG1_NUMBER_BIT);
                else if (strcmp(tok_str, "base_tag_call_2") == 0)

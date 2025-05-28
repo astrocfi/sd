@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-1994  William B. Ackerman.
+    Copyright (C) 1990-1995  William B. Ackerman.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -602,7 +602,7 @@ typedef struct {
 
 typedef struct {
    veryshort mapin[8];
-   veryshort mapout[8];
+   veryshort mapout[12];
    short inlimit;
    short outlimit;
    setup_kind bigsetup;
@@ -646,6 +646,7 @@ typedef enum {
    concept_single,
    concept_singlefile,
    concept_interlocked,
+   concept_yoyo,
    concept_12_matrix,
    concept_16_matrix,
    concept_1x2,
@@ -661,6 +662,8 @@ typedef enum {
    concept_2x8_matrix,
    concept_3x4_matrix,
    concept_4x4_matrix,
+   concept_3x8_matrix,
+   concept_4x6_matrix,
    concept_4dmd_matrix,
    concept_funny,
    concept_randomtrngl,
@@ -734,6 +737,7 @@ typedef enum {
    concept_all_8,
    concept_centers_and_ends,
    concept_twice,
+   concept_n_times,
    concept_sequential,
    concept_special_sequential,
    concept_meta,
@@ -743,6 +747,7 @@ typedef enum {
    concept_interlace,
    concept_fractional,
    concept_rigger,
+   concept_common_spot,
    concept_diagnose
 } concept_kind;
 
@@ -844,6 +849,15 @@ typedef struct {
 } assumption_thing;
 
 
+typedef struct {
+   unsigned int reverse_order: 1;
+   unsigned int instant_stop: 1;
+   unsigned int do_half_of_last_part: 1;
+   unsigned int highlimit: 13;
+   unsigned int subcall_index: 16;
+} fraction_info;
+
+
 /* Meanings of the items in a "setup_command" structure:
 
    parseptr
@@ -940,7 +954,7 @@ typedef struct {
 
 
 /* Warning!  Do not rearrange these fields without good reason.  There are data
-   initializers instantiating these in sdinit.c (test_setup_???) and in sdtables.c
+   initializers instantiating these in sdinit.c (test_setup_*) and in sdtables.c
    (startinfolist) that will need to be rewritten. */
 typedef struct {
    setup_kind kind;
@@ -958,7 +972,7 @@ typedef struct {
       (in two different places!) in the "prior_elongation_bits" and "result_flags" words. */
    small_setup inner;
    small_setup outer;
-   int outer_elongation;
+   int concsetup_outer_elongation;
 } setup;
 
 typedef long_boolean (*predicate_ptr)(
@@ -1234,6 +1248,11 @@ typedef cm_thing *cm_hunk[];
    CONCPROP__SHOW_SPLIT means that the concept prepares the "split_axis" bits properly
       for transmission back to the client.  Normally this is off, and the split axis bits
       will be cleared after execution of the concept.
+
+   CONCPROP__PARSE_DIRECTLY is used only by the parser in sdmatch.c .  It directs the
+      parser to allow this concept (and similar concepts) and the following call to
+      be typed on one line.  One needs to be very careful about avoiding ambiguity
+      when setting this flag.
 */
 
 
@@ -1246,23 +1265,25 @@ typedef cm_thing *cm_hunk[];
 #define CONCPROP__NEED_4DMD        0x00000020UL
 #define CONCPROP__NEED_BLOB        0x00000040UL
 #define CONCPROP__NEED_4X6         0x00000080UL
-#define CONCPROP__SET_PHANTOMS     0x00000100UL
-#define CONCPROP__NO_STEP          0x00000200UL
-#define CONCPROP__GET_MASK         0x00000400UL
-#define CONCPROP__STANDARD         0x00000800UL
-#define CONCPROP__USE_NUMBER       0x00001000UL
-#define CONCPROP__USE_TWO_NUMBERS  0x00002000UL
-#define CONCPROP__NEED_3DMD        0x00004000UL
-#define CONCPROP__NEED_1X12        0x00008000UL
-#define CONCPROP__NEED_3X4         0x00010000UL
-#define CONCPROP__NEED_1X16        0x00020000UL
-#define CONCPROP__NEED_4X4_1X16    0x00040000UL
-#define CONCPROP__NEED_3X4_1X12    0x00080000UL
-#define CONCPROP__MATRIX_OBLIVIOUS 0x00100000UL
-#define CONCPROP__PERMIT_MATRIX    0x00200000UL
-#define CONCPROP__SHOW_SPLIT       0x00400000UL
-#define CONCPROP__PERMIT_MYSTIC    0x00800000UL
-#define CONCPROP__PERMIT_REVERSE   0x01000000UL
+#define CONCPROP__NEED_3X8         0x00000100UL
+#define CONCPROP__SET_PHANTOMS     0x00000200UL
+#define CONCPROP__NO_STEP          0x00000400UL
+#define CONCPROP__GET_MASK         0x00000800UL
+#define CONCPROP__STANDARD         0x00001000UL
+#define CONCPROP__USE_NUMBER       0x00002000UL
+#define CONCPROP__USE_TWO_NUMBERS  0x00004000UL
+#define CONCPROP__NEED_3DMD        0x00008000UL
+#define CONCPROP__NEED_1X12        0x00010000UL
+#define CONCPROP__NEED_3X4         0x00020000UL
+#define CONCPROP__NEED_1X16        0x00040000UL
+#define CONCPROP__NEED_4X4_1X16    0x00080000UL
+#define CONCPROP__NEED_3X4_1X12    0x00100000UL
+#define CONCPROP__MATRIX_OBLIVIOUS 0x00200000UL
+#define CONCPROP__PERMIT_MATRIX    0x00400000UL
+#define CONCPROP__SHOW_SPLIT       0x00800000UL
+#define CONCPROP__PERMIT_MYSTIC    0x01000000UL
+#define CONCPROP__PERMIT_REVERSE   0x02000000UL
+#define CONCPROP__PARSE_DIRECTLY   0x04000000UL
 
 typedef enum {    /* These control error messages that arise when we divide a setup
                      into subsetups (e.g. phantom lines) and find that one of
@@ -1306,6 +1327,7 @@ typedef enum {
    chk_1_group,
    chk_2_groups,
    chk_4_groups,
+   chk_8_groups,
    chk_box,
    chk_dmd_qtag,
    chk_peelable
@@ -1845,6 +1867,8 @@ extern void do_call_in_series(
    long_boolean normalize,
    long_boolean qtfudged);
 
+extern fraction_info get_fraction_info(uint32 frac_flags, uint32 callflags1, int total);
+
 extern void move(
    setup *ss,
    long_boolean qtfudged,
@@ -1891,6 +1915,11 @@ extern void triple_twin_move(
    setup *result);
 
 extern void do_concept_rigger(
+   setup *ss,
+   parse_block *parseptr,
+   setup *result);
+
+extern void common_spot_move(
    setup *ss,
    parse_block *parseptr,
    setup *result);

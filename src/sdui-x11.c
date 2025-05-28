@@ -1,4 +1,4 @@
-static char *time_stamp = "sdui-x11.c Time-stamp: <94/09/03 20:22:00 wba>";
+static char *time_stamp = "sdui-x11.c Time-stamp: <95/03/24 16:07:52 gildea>";
 /* 
  * sdui-x11.c - Sd User Interface for X11
  * Copyright 1990,1991,1992,1993 Stephen Gildea and William B. Ackerman
@@ -20,10 +20,10 @@ static char *time_stamp = "sdui-x11.c Time-stamp: <94/09/03 20:22:00 wba>";
  * version.
  */
 
-#define UI_VERSION_STRING "1.16"
+#define UI_VERSION_STRING "1.17"
 
 /* See comments in sdmain.c regarding this string. */
-static char *id="@(#)$He" "ader: Sd: sdui-x11.c  " UI_VERSION_STRING "    gildea@lcs.mit.edu  23 Aug 94 $";
+static char *id="@(#)$He" "ader: Sd: sdui-x11.c  " UI_VERSION_STRING "    gildea@lcs.mit.edu  24 Mar 95 $";
 
 /* This file defines the following functions:
    uims_process_command_line
@@ -304,7 +304,7 @@ static int button_translations[] = {
    command_quit,                          /* cmd_button_quit */
    command_undo,                          /* cmd_button_undo */
    command_abort,                         /* cmd_button_abort */
-   SPECIAL_SIMPLE_MODS,                    /* cmd_button_simple_mods */
+   SPECIAL_SIMPLE_MODS,                   /* cmd_button_simple_mods */
    SPECIAL_ALLOW_MODS,                    /* cmd_button_allow_mods */
    SPECIAL_ALLOW_ALL_CONCEPTS,            /* cmd_button_allow_concepts */
    SPECIAL_ALLOW_ACT_PHANTOMS,            /* cmd_button_active_phantoms */
@@ -377,8 +377,8 @@ command_or_menu_chosen(Widget w, XtPointer client_data, XtPointer call_data)
                 }
             }
         
-            XtVaSetValues(conceptlist, XtNdefaultColumns, maxcolumn, NULL);
             XawListChange(conceptlist, (char **) concept_popup_list, entries, 0, TRUE);
+            XtVaSetValues(conceptlist, XtNdefaultColumns, maxcolumn, NULL);
             value = do_popup(conceptpopup);
         
             if (value == 0)
@@ -556,7 +556,7 @@ typedef struct _SdResources {
     String modify_scoot_format;
     String modify_line_two;
     String outfile_format;
-    String modifications_allowed[3];
+    String modifications_allowed[12];
     String start_list[NUM_START_SELECT_KINDS];
     String cmd_list[NUM_CMD_BUTTON_KINDS];
     String resolve_list[NUM_RESOLVE_COMMAND_KINDS];
@@ -615,9 +615,18 @@ Private XtResource resolve_resources[] = {
 };
 
 Private XtResource enabledmods_resources[] = {
-    MENU("none", modifications_allowed[0], "No call modifications enabled"),
-    MENU("simple", modifications_allowed[1], "Simple modifications enabled for this call"),
-    MENU("all", modifications_allowed[2], "All modifications enabled for this call")
+    MENU("none",      modifications_allowed[0],  ""),
+    MENU("none_ap",   modifications_allowed[1],  "[AP]"),
+    MENU("none_ac",   modifications_allowed[2],  "[all concepts]"),
+    MENU("none_cp",   modifications_allowed[3],  "[all concepts,AP]"),
+    MENU("simple",    modifications_allowed[4],  "[simple modifications]"),
+    MENU("simple_ap", modifications_allowed[5],  "[AP,simple modifications]"),
+    MENU("simple_ac", modifications_allowed[6],  "[all concepts,simple modifications]"),
+    MENU("simple_cp", modifications_allowed[7],  "[all concepts,AP,simple modifications]"),
+    MENU("all_ap",    modifications_allowed[8],  "[all modifications]"),
+    MENU("all_ac",    modifications_allowed[9],  "[AP,all modifications]"),
+    MENU("all",       modifications_allowed[10], "[all concepts,all modifications]"),
+    MENU("all_cp",    modifications_allowed[11], "[all concepts,AP,all modifications]")
 };
 
 Private XtResource confirm_resources[] = {
@@ -658,7 +667,7 @@ CONST static char *fallback_resources[] = {
     "*frame.internalBorderWidth: 2", /* clearer which list scrollbar with */
     "*List.Cursor: left_ptr",	/* so list cursors get colored */
     "*Viewport*font: fixed",	/* keep the call/concept menus narrow */
-    "*conceptpopup*font: fixed", /* keep the popup concept menus smaller */
+    "*conceptpopup*font: 6x10", /* keep the popup concept menus smaller */
     "*showGrip: False",		/* no grip on Paned widgets */
     "*defaultColumns: 1",	/* Lists are forced to 1 column */
     "*forceColumns: True",
@@ -1172,22 +1181,30 @@ switch_to_resolve_mode(void)
     visible_mode = mode_resolve;
 }
 
-Private int visible_modifications = -1;
+static int last_banner = -1;
 
 
 extern uims_reply uims_get_startup_command(void)
 {
+   int banner_mode;
+
    try_again:
 
    /* Update the text area */
    XawTextEnableRedisplay(txtwin);
 
-   if (visible_modifications != allowing_modifications) {
+   /* See if the banner needs to be updated. */
+
+   banner_mode = (allowing_modifications << 2) |
+                 (allowing_all_concepts ? 2 : 0) |
+                 (using_active_phantoms ? 1 : 0);
+
+   if (last_banner != banner_mode) {
       XtVaSetValues(statuswin,
                  XtNlabel,
-                 sd_resources.modifications_allowed[allowing_modifications],
+                 sd_resources.modifications_allowed[banner_mode],
                  NULL);
-      visible_modifications = allowing_modifications;
+      last_banner = banner_mode;
    }
 
    if (visible_mode != mode_startup) {
@@ -1239,18 +1256,25 @@ extern uims_reply uims_get_startup_command(void)
 extern long_boolean uims_get_call_command(call_list_kind *call_menu, uims_reply *reply_p)
 {
    int local_reply;
+   int banner_mode;
 
    try_again:
 
    /* Update the text area */
    XawTextEnableRedisplay(txtwin);
 
-   if (visible_modifications != allowing_modifications) {
+   /* See if the banner needs to be updated. */
+
+   banner_mode = (allowing_modifications << 2) |
+                 (allowing_all_concepts ? 2 : 0) |
+                 (using_active_phantoms ? 1 : 0);
+
+   if (last_banner != banner_mode) {
       XtVaSetValues(statuswin,
                  XtNlabel,
-                 sd_resources.modifications_allowed[allowing_modifications],
+                 sd_resources.modifications_allowed[banner_mode],
                  NULL);
-      visible_modifications = allowing_modifications;
+      last_banner = banner_mode;
    }
 
    if (allowing_modifications)
@@ -1333,17 +1357,23 @@ extern long_boolean uims_get_call_command(call_list_kind *call_menu, uims_reply 
 
 extern uims_reply uims_get_resolve_command(void)
 {
+   int banner_mode;
+
    try_again:
 
    /* Update the text area */
    XawTextEnableRedisplay(txtwin);
 
-   if (visible_modifications != allowing_modifications) {
+   banner_mode = (allowing_modifications << 2) |
+                 (allowing_all_concepts ? 2 : 0) |
+                 (using_active_phantoms ? 1 : 0);
+
+   if (last_banner != banner_mode) {
       XtVaSetValues(statuswin,
                  XtNlabel,
-                 sd_resources.modifications_allowed[allowing_modifications],
+                 sd_resources.modifications_allowed[banner_mode],
                  NULL);
-      visible_modifications = allowing_modifications;
+      last_banner = banner_mode;
    }
 
    if (visible_mode != mode_resolve)
@@ -1734,7 +1764,7 @@ uims_terminate(void)
 }
 
 /*
- * The following two functions allow the UI to put up a progress
+ * The following functions allow the UI to put up a progress
  * indicator while the call database is being read (and processed).
  *
  * uims_database_tick_max is called before reading the database

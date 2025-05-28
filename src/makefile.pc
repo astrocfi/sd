@@ -1,6 +1,6 @@
 # Generated automatically from makefile.pc.in by configure.
 # Makefile for Sd (square dance caller's helper)
-# Time-stamp: <95/03/15 21:19:10 gildea>
+# Time-stamp: <95/03/27 14:06:02 gildea>
 
 srcdir = .
 # VPATH is for GNU make
@@ -76,8 +76,11 @@ allx11: sd sd_calls.dat
 alltty: sdtty sd_calls.dat
 everything: allx11 sdtty
 
+LDPRELIBS = 
+LDPOSTLIBS = 
+
 sd: $(SD_OBJS) $(SDX11_OBJ)
-	$(CC) $(CFLAGS) -o $@ $(SD_OBJS) $(SDX11_OBJ) $(X11_LIBS)
+	$(CC) $(CFLAGS) -o $@ $(SD_OBJS) $(SDX11_OBJ) $(LDPRELIBS) $(X11_LIBS) $(LDPOSTLIBS)
 
 mkcalls: $(MKCALLS_OBJS)
 	$(CC) $(CFLAGS) -o $@ $(MKCALLS_OBJS)
@@ -114,12 +117,12 @@ $(SD_OBJS) $(SDX11_OBJ) $(SDTTY_OBJ): sd.h database.h
 $(SDTTY_OBJ): sdmatch.h
 
 configure: configure.in
-	-autoconf
+	-cd "$(srcdir)" && autoconf
 
-Makefile:: configure
-	$(srcdir)/configure
+config.status: configure sdmain.c
+	./config.status --recheck
 
-Makefile:: Makefile.in config.status
+Makefile: Makefile.in config.status
 	./config.status
 
 info: sd_doc.info
@@ -179,13 +182,13 @@ docclean:
 
 clean:: docclean
 clean::
-	-$(RM) *.o sd sdtty mkcalls
-	-$(RM) sd_calls.dat sd.tar sd.tar.Z
+	-$(RM) *.o sd sdtty mkcalls sd_calls.dat
 	-$(RM) lint.out
 
 distclean: clean
 	-$(RM) sequence.*
 	-$(RM) *~ core
+	-$(RM) *.tar *.tar.Z
 
 realclean: distclean
 	-$(RM) *.info *.PS *.html sd_doc.txt sd_doc.ps
@@ -196,7 +199,7 @@ lint:
 	$(LINT) -ux $(SD_SRCS) $(SDX11_SRC)
 
 DISTTXT = README INSTALL Relnotes oldnotes COPYING \
-            Imakefile Makefile.in configure configure.in Sd.res sd_calls.txt \
+            Imakefile Makefile.in configure.in configure Sd.res sd_calls.txt \
             db_doc.txt sd_doc.PS sd_doc.txt
 DISTSRCS = sd.h database.h paths.h sdui-ttu.h sdmatch.h
 MACFILES = MacSd.p.Hqx MacSd.p.rsrc.Hqx Macwdef.p.Hqx \
@@ -207,23 +210,39 @@ MACFILES = MacSd.p.Hqx MacSd.p.rsrc.Hqx Macwdef.p.Hqx \
 PCFILES = pcfiles.lnk makefile.pc
 DISTFILES = $(DISTTXT) $(DOCSRCS) $(SRCS) $(DISTSRCS) $(MACFILES) $(PCFILES)
 
-TAR = tar cvf sd.tar
+TAR = tar
+TARFLAGS = 
+DIST_TARFILE = sd-31.0.tar
 COMPRESS = compress
 
 dist: dist-files
-	$(TAR) $(DISTFILES)
-	$(COMPRESS) sd.tar
+	$(TAR) $(TARFLAGS) $(DIST_TARFILE) $(DISTFILES)
+	$(RM) $(DIST_TARFILE).Z
+	$(COMPRESS) $(DIST_TARFILE)
 
 dist-files: configure INSTALL README sd_doc.txt sd_doc.PS pc-files
 
 ls:
 	@echo $(DISTFILES)
 
-sd300bn: sdtty mkcalls sd_calls.dat
+pcdist: sd310bn
+
+sd310bn: sdtty mkcalls sd_calls.dat
 	lha a $@ readme relnotes oldnotes copying
 	lha a $@ sd_calls.txt sd_calls.dat db_doc.txt
 	lha a $@ sdtty.exe mkcalls.exe go32.exe sd_doc.txt sd_doc.ps
 	lha s $@
+
+BIN_TARFILE = sd-31.0-.tar
+
+
+
+$(BIN_TARFILE).Z: Makefile sd sdtty mkcalls sd_calls.dat README sd_doc.txt sd_doc.PS
+	$(TAR) $(TARFLAGS) $(BIN_TARFILE) README Relnotes oldnotes COPYING \
+	 sd_calls.txt sd_calls.dat db_doc.txt \
+	 sd sdtty mkcalls Sd.res sd_doc.txt sd_doc.PS
+	$(RM) $@
+	-$(COMPRESS) $(BIN_TARFILE)
 
 pc-files: pcfiles.lnk makefile.pc
 

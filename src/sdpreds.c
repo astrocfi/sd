@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-1994  William B. Ackerman.
+    Copyright (C) 1990-1995  William B. Ackerman.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -274,6 +274,20 @@ Private long_boolean unselect_once_rem_from_select(setup *real_people, int real_
 }
 
 /* ARGSUSED */
+Private long_boolean select_and_roll_is_cw(setup *real_people, int real_index,
+   int real_direction, int northified_index)
+{
+   return selectp(real_people, real_index) && (real_people->people[real_index].id1 & ROLLBITR) != 0;
+}
+
+/* ARGSUSED */
+Private long_boolean select_and_roll_is_ccw(setup *real_people, int real_index,
+   int real_direction, int northified_index)
+{
+   return selectp(real_people, real_index) && (real_people->people[real_index].id1 & ROLLBITL) != 0;
+}
+
+/* ARGSUSED */
 Private long_boolean always(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
@@ -370,17 +384,6 @@ Private long_boolean lines_couple(setup *real_people, int real_index,
 }
 
 /* ARGSUSED */
-Private long_boolean columns_tandem(setup *real_people, int real_index,
-   int real_direction, int northified_index)
-{
-   int this_person = real_people->people[real_index].id1;
-   int other_person = real_people->people[real_index ^ 1].id1;
-   if (real_people->kind == s1x6 && real_index >= 2)
-      other_person = real_people->people[7 - real_index].id1;
-   return ((this_person ^ other_person) & DIR_MASK) == 0;
-}
-
-/* ARGSUSED */
 Private long_boolean lines_miniwave(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
@@ -448,18 +451,47 @@ Private long_boolean cast_normal_or_warn(setup *real_people, int real_index,
          case 0:
             return FALSE;
          default:
-            warn(warn__opt_for_normal_cast);
+            /* Don't give the warning if person would have known what to do anyway. */
+            if (real_index != 1 && real_index != ((real_people->kind == s1x6) ? 4 : 3))
+               warn(warn__opt_for_normal_cast);
             return TRUE;
       }
    }
 }
 
 /* ARGSUSED */
+Private long_boolean columns_tandem(setup *real_people, int real_index,
+   int real_direction, int northified_index)
+{
+   int this_person;
+   int other_person;
+
+   switch (real_people->cmd.cmd_assume.assumption) {
+      case cr_wave_only: case cr_2fl_only: return TRUE;
+      case cr_magic_only: case cr_li_lo: return FALSE;
+   }
+
+   this_person = real_people->people[real_index].id1;
+   other_person = real_people->people[real_index ^ 1].id1;
+   if (real_people->kind == s1x6 && real_index >= 2)
+      other_person = real_people->people[7 - real_index].id1;
+   return ((this_person ^ other_person) & DIR_MASK) == 0;
+}
+
+/* ARGSUSED */
 Private long_boolean columns_antitandem(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
-   int this_person = real_people->people[real_index].id1;
-   int other_person = real_people->people[real_index ^ 1].id1;
+   int this_person;
+   int other_person;
+
+   switch (real_people->cmd.cmd_assume.assumption) {
+      case cr_magic_only: case cr_li_lo: return TRUE;
+      case cr_wave_only: case cr_2fl_only: return FALSE;
+   }
+
+   this_person = real_people->people[real_index].id1;
+   other_person = real_people->people[real_index ^ 1].id1;
    if (real_people->kind == s1x6 && real_index >= 2)
       other_person = real_people->people[7 - real_index].id1;
    return ((this_person ^ other_person) & DIR_MASK) == 2;
@@ -469,8 +501,18 @@ Private long_boolean columns_antitandem(setup *real_people, int real_index,
 Private long_boolean same_in_pair(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
-   int this_person = real_people->people[real_index].id1;
-   int other_person = real_people->people[real_index ^ 7].id1;
+   int this_person;
+   int other_person;
+
+   if (real_people->cmd.cmd_assume.assump_col == 1) {
+      switch (real_people->cmd.cmd_assume.assumption) {
+         case cr_2fl_only: case cr_li_lo: return TRUE;
+         case cr_wave_only: case cr_magic_only: return FALSE;
+      }
+   }
+
+   this_person = real_people->people[real_index].id1;
+   other_person = real_people->people[real_index ^ 7].id1;
    return(((this_person ^ other_person) & DIR_MASK) == 0);
 }
 
@@ -478,8 +520,18 @@ Private long_boolean same_in_pair(setup *real_people, int real_index,
 Private long_boolean opp_in_pair(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
-   int this_person = real_people->people[real_index].id1;
-   int other_person = real_people->people[real_index ^ 7].id1;
+   int this_person;
+   int other_person;
+
+   if (real_people->cmd.cmd_assume.assump_col == 1) {
+      switch (real_people->cmd.cmd_assume.assumption) {
+         case cr_wave_only: case cr_magic_only: return TRUE;
+         case cr_2fl_only: case cr_li_lo: return FALSE;
+      }
+   }
+
+   this_person = real_people->people[real_index].id1;
+   other_person = real_people->people[real_index ^ 7].id1;
    return(((this_person ^ other_person) & DIR_MASK) == 2);
 }
 
@@ -487,8 +539,18 @@ Private long_boolean opp_in_pair(setup *real_people, int real_index,
 Private long_boolean opp_in_magic(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
-   int this_person = real_people->people[real_index].id1;
-   int other_person = real_people->people[real_index ^ 6].id1;
+   int this_person;
+   int other_person;
+
+   if (real_people->cmd.cmd_assume.assump_col == 1) {
+      switch (real_people->cmd.cmd_assume.assumption) {
+         case cr_wave_only: case cr_li_lo: return TRUE;
+         case cr_2fl_only: case cr_magic_only: return FALSE;
+      }
+   }
+
+   this_person = real_people->people[real_index].id1;
+   other_person = real_people->people[real_index ^ 6].id1;
    return(((this_person ^ other_person) & DIR_MASK) == 2);
 }
 
@@ -496,8 +558,18 @@ Private long_boolean opp_in_magic(setup *real_people, int real_index,
 Private long_boolean same_in_magic(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
-   int this_person = real_people->people[real_index].id1;
-   int other_person = real_people->people[real_index ^ 6].id1;
+   int this_person;
+   int other_person;
+
+   if (real_people->cmd.cmd_assume.assump_col == 1) {
+      switch (real_people->cmd.cmd_assume.assumption) {
+         case cr_2fl_only: case cr_magic_only: return TRUE;
+         case cr_wave_only: case cr_li_lo: return FALSE;
+      }
+   }
+
+   this_person = real_people->people[real_index].id1;
+   other_person = real_people->people[real_index ^ 6].id1;
    return(((this_person ^ other_person) & DIR_MASK) == 0);
 }
 
@@ -1324,19 +1396,22 @@ Private long_boolean no_dir_p(setup *real_people, int real_index,
 
 
 
-Private long_boolean check_handedness(veryshort *p1, veryshort *p2, personrec ppp[])
+Private long_boolean check_handedness(short *p1, short *p2, personrec ppp[])
 {
    uint32 z = 0;
-   int i;
    long_boolean b1 = TRUE;
    long_boolean b2 = TRUE;
+   short d1 = *(p1++);
+   short d2 = *(p2++);
 
-   for (i=0 ; p1[i]>=0 ; i++) {
-      z |= ppp[p1[i]].id1 | ppp[p2[i]].id1;
-      if (ppp[p1[i]].id1 && (ppp[p1[i]].id1 & d_mask)!=d_east) b1 = FALSE;
-      if (ppp[p2[i]].id1 && (ppp[p2[i]].id1 & d_mask)!=d_west) b1 = FALSE;
-      if (ppp[p1[i]].id1 && (ppp[p1[i]].id1 & d_mask)!=d_west) b2 = FALSE;
-      if (ppp[p2[i]].id1 && (ppp[p2[i]].id1 & d_mask)!=d_east) b2 = FALSE;
+   while (*p1>=0) {
+      uint32 t1 = ppp[*(p1++)].id1;
+      uint32 t2 = ppp[*(p2++)].id1;
+      z |= t1 | t2;
+      if (t1 && (t1 & d_mask)!=d1) b1 = FALSE;
+      if (t2 && (t2 & d_mask)!=d2) b1 = FALSE;
+      if (t1 && (t1 & d_mask)!=d2) b2 = FALSE;
+      if (t2 && (t2 & d_mask)!=d1) b2 = FALSE;
    }
 
    if (z) {
@@ -1348,6 +1423,14 @@ Private long_boolean check_handedness(veryshort *p1, veryshort *p2, personrec pp
    /* NOTREACHED */
 }
 
+static short spindle1[] = {d_east, 0, 1, 2, -1};
+static short spindle2[] = {d_west, 6, 5, 4, -1};
+
+static short short1[] = {d_north, 0, 5, -1};
+static short short2[] = {d_south, 2, 3, -1};
+
+static short dmd1[] = {d_east, 1, -1};
+static short dmd2[] = {d_west, 3, -1};
 
 
 
@@ -1355,16 +1438,24 @@ Private long_boolean check_handedness(veryshort *p1, veryshort *p2, personrec pp
 Private long_boolean dmd_ctrs_rh(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
-   static veryshort spindle1[] = {0, 1, 2, -1};
-   static veryshort spindle2[] = {4, 5, 6, -1};
-
-   static veryshort dmd1[] = {1, -1};
-   static veryshort dmd2[] = {3, -1};
-
    if (real_people->kind == s_spindle)
       return check_handedness(spindle1, spindle2, real_people->people);
+   else if (real_people->kind == s_short6)
+      return check_handedness(short1, short2, real_people->people);
    else    /* Required to be diamond or single general 1/4 tag. */
       return check_handedness(dmd1, dmd2, real_people->people);
+}
+
+/* ARGSUSED */
+Private long_boolean dmd_ctrs_lh(setup *real_people, int real_index,
+   int real_direction, int northified_index)
+{
+   if (real_people->kind == s_spindle)
+      return !check_handedness(spindle1, spindle2, real_people->people);
+   else if (real_people->kind == s_short6)
+      return !check_handedness(short1, short2, real_people->people);
+   else    /* Required to be diamond or single general 1/4 tag. */
+      return !check_handedness(dmd1, dmd2, real_people->people);
 }
 
 /* ARGSUSED */
@@ -1384,9 +1475,12 @@ Private long_boolean trngl_pt_rh(setup *real_people, int real_index,
 Private long_boolean q_tag_front(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
-   if (real_index & 2)
+   if (real_index & 2) {
       /* I am in the center line, see if I have a miniwave. */
-      return(((real_people->people[real_index].id1 ^ real_people->people[real_index ^ 1].id1) & DIR_MASK) == 2);
+      if (real_people->cmd.cmd_assume.assumption == cr_jleft || real_people->cmd.cmd_assume.assumption == cr_jright)
+         return TRUE;
+      return ((real_people->people[real_index].id1 ^ real_people->people[real_index ^ 1].id1) & DIR_MASK) == 2;
+   }
    else {
       /* I am on the outside; find the end of the center line nearest me. */
       int z;
@@ -1400,9 +1494,12 @@ Private long_boolean q_tag_front(setup *real_people, int real_index,
 Private long_boolean q_tag_back(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
-   if (real_index & 2)
+   if (real_index & 2) {
       /* I am in the center line, see if I have a miniwave. */
-      return(((real_people->people[real_index].id1 ^ real_people->people[real_index ^ 1].id1) & DIR_MASK) == 2);
+      if (real_people->cmd.cmd_assume.assumption == cr_jleft || real_people->cmd.cmd_assume.assumption == cr_jright)
+         return TRUE;
+      return ((real_people->people[real_index].id1 ^ real_people->people[real_index ^ 1].id1) & DIR_MASK) == 2;
+   }
    else {
       /* I am on the outside; find the end of the center line nearest me. */
       int z;
@@ -1416,12 +1513,29 @@ Private long_boolean q_tag_back(setup *real_people, int real_index,
 Private long_boolean q_line_front(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
-   if (real_index & 2)
+   if (real_index & 2) {
       /* I am in the center line, see if I have a couple. */
-      return(((real_people->people[real_index].id1 ^ real_people->people[real_index ^ 1].id1) & DIR_MASK) == 0);
+      if (real_people->cmd.cmd_assume.assumption == cr_ijleft || real_people->cmd.cmd_assume.assumption == cr_ijright)
+         return TRUE;
+      return ((real_people->people[real_index].id1 ^ real_people->people[real_index ^ 1].id1) & DIR_MASK) == 0;
+   }
    else {
       /* I am on the outside; find the end of the center line nearest me. */
       int z;
+
+      if (real_people->cmd.cmd_assume.assumption == cr_ijleft) {
+         if (real_people->cmd.cmd_assume.assump_col == 4)
+            return ((((real_index+3) >> 1) ^ real_people->people[real_index].id1) & 2) != 0;
+         else
+            return ((real_index ^ real_people->cmd.cmd_assume.assump_both) & 1) == 0;
+      }
+      else if (real_people->cmd.cmd_assume.assumption == cr_ijright) {
+         if (real_people->cmd.cmd_assume.assump_col == 4)
+            return ((((real_index+3) >> 1) ^ real_people->people[real_index].id1) & 2) == 0;
+         else
+            return ((real_index ^ real_people->cmd.cmd_assume.assump_both) & 1) != 0;
+      }
+
       if (real_index & 1) z = real_index ^ 3; else z = real_index ^ 6;
       return(((real_people->people[z].id1 & 017) == (010 + (real_index >> 1))) &&
             (((real_people->people[z].id1 ^ real_people->people[z ^ 1].id1) & DIR_MASK) == 0));
@@ -1432,12 +1546,29 @@ Private long_boolean q_line_front(setup *real_people, int real_index,
 Private long_boolean q_line_back(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
-   if (real_index & 2)
+   if (real_index & 2) {
       /* I am in the center line, see if I have a couple. */
-      return(((real_people->people[real_index].id1 ^ real_people->people[real_index ^ 1].id1) & DIR_MASK) == 0);
+      if (real_people->cmd.cmd_assume.assumption == cr_ijleft || real_people->cmd.cmd_assume.assumption == cr_ijright)
+         return TRUE;
+      return ((real_people->people[real_index].id1 ^ real_people->people[real_index ^ 1].id1) & DIR_MASK) == 0;
+   }
    else {
       /* I am on the outside; find the end of the center line nearest me. */
       int z;
+
+      if (real_people->cmd.cmd_assume.assumption == cr_ijleft) {
+         if (real_people->cmd.cmd_assume.assump_col == 4)
+            return ((((real_index+3) >> 1) ^ real_people->people[real_index].id1) & 2) == 0;
+         else
+            return ((real_index ^ real_people->cmd.cmd_assume.assump_both) & 1) != 0;
+      }
+      else if (real_people->cmd.cmd_assume.assumption == cr_ijright) {
+         if (real_people->cmd.cmd_assume.assump_col == 4)
+            return ((((real_index+3) >> 1) ^ real_people->people[real_index].id1) & 2) != 0;
+         else
+            return ((real_index ^ real_people->cmd.cmd_assume.assump_both) & 1) == 0;
+      }
+
       if (real_index & 1) z = real_index ^ 3; else z = real_index ^ 6;
       return(((real_people->people[z].id1 & 017) == (012 - (real_index >> 1))) &&
             (((real_people->people[z].id1 ^ real_people->people[z ^ 1].id1) & DIR_MASK) == 0));
@@ -1446,7 +1577,7 @@ Private long_boolean q_line_back(setup *real_people, int real_index,
 
 /* BEWARE!!  This list must track the array "predtab" in dbcomp.c . */
 
-/* The first 10 of these (the constant to use is SELECTOR_PREDS) take a predicate.
+/* The first 12 of these (the constant to use is SELECTOR_PREDS) take a predicate.
    Any call that uses one of these predicates in its definition will cause a
    popup to appear asking "who?". */
 
@@ -1465,6 +1596,8 @@ long_boolean (*pred_table[])(
       conc_from_select,                /* "conc_from_select" */
       select_once_rem_from_unselect,   /* "select_once_rem_from_unselect" */
       unselect_once_rem_from_select,   /* "unselect_once_rem_from_select" */
+      select_and_roll_is_cw,           /* "select_and_roll_is_cw" */
+      select_and_roll_is_ccw,          /* "select_and_roll_is_ccw" */
       always,                          /* "always" */
       x22_miniwave,                    /* "x22_miniwave" */
       x22_couple,                      /* "x22_couple" */
@@ -1544,6 +1677,7 @@ long_boolean (*pred_table[])(
       zagzagp,                         /* "zagzagp" */
       no_dir_p,                        /* "no_dir_p" */
       dmd_ctrs_rh,                     /* "dmd_ctrs_rh" */
+      dmd_ctrs_lh,                     /* "dmd_ctrs_lh" */
       trngl_pt_rh,                     /* "trngl_pt_rh" */
       q_tag_front,                     /* "q_tag_front" */
       q_tag_back,                      /* "q_tag_back" */

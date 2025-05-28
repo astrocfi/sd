@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-1994  William B. Ackerman.
+    Copyright (C) 1990-1995  William B. Ackerman.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -24,6 +24,7 @@
    divide_for_magic
    do_simple_split
    do_call_in_series
+   get_fraction_info
    move
 */
 
@@ -566,7 +567,7 @@ Private void finish_matrix_call(
       checkptr = setup_attrs[s_galaxy].setup_coords;
       goto doit;
    }
-   else if ((ypar == 0x00630095) && ((signature & (~0x01C00430)) == 0)) {
+   else if ((ypar == 0x00950063) && ((signature & (~0x08400320)) == 0)) {
       checkptr = setup_attrs[sbigdmd].setup_coords;
       goto doit;
    }
@@ -697,6 +698,10 @@ Private void finish_matrix_call(
    else if ((ypar == 0x002200E2) && ((signature & (~0x12908484)) == 0)) {
       checkptr = setup_attrs[s2x8].setup_coords;
       goto doitrot;
+   }
+   else if ((ypar == 0x00E20044) && ((signature & (~0x1D806E41)) == 0)) {
+      checkptr = setup_attrs[s3x8].setup_coords;
+      goto doit;
    }
    else if ((ypar == 0x00A20062) && ((signature & (~0x109CC067)) == 0)) {
       checkptr = setup_attrs[s4x6].setup_coords;
@@ -1133,6 +1138,100 @@ Private void divide_diamonds(setup *ss, setup *result)
 }
 
 
+extern fraction_info get_fraction_info(uint32 frac_flags, uint32 callflags1, int total)
+{
+   fraction_info retval;
+   int numer, denom, s_numer, s_denom, this_part, test_size;
+   int subcall_index, highlimit;
+
+   retval.reverse_order = 0;
+   retval.instant_stop = 0;
+   retval.do_half_of_last_part = 0;
+
+   this_part = (frac_flags & 0xF0000) >> 16;
+   s_numer = (frac_flags & 0xF000) >> 12;      /* Start point. */
+   s_denom = (frac_flags & 0xF00) >> 8;
+   numer = (frac_flags & 0xF0) >> 4;           /* Stop point. */
+   denom = (frac_flags & 0xF);
+
+   if (s_numer >= s_denom) fail("Fraction must be proper.");
+   subcall_index = total * s_numer;
+   if ((subcall_index % s_denom) != 0) fail("This call can't be fractionalized with this fraction.");
+   subcall_index = subcall_index / s_denom;
+
+   if (numer <= 0) fail("Fraction must be proper.");
+   highlimit = total * numer;
+   test_size = highlimit / denom;
+
+   if (test_size*denom == highlimit)
+      highlimit = test_size;
+   else {
+      if (2*test_size*denom + denom == 2*highlimit) {
+         highlimit = test_size+1;
+         retval.do_half_of_last_part = 1;
+      }
+      else
+         fail("This call can't be fractionalized with this fraction.");
+   }
+
+   /* Now subcall_index is the start point, and highlimit is the end point. */
+
+   if (subcall_index >= highlimit || highlimit > total)
+      fail("Fraction must be proper.");
+
+   /* Check for "reverse order" */
+   if (frac_flags & 0x100000) {
+      subcall_index = total-1-subcall_index;
+      retval.reverse_order = TRUE;
+      if (retval.do_half_of_last_part) fail("This call can't be fractionalized with this fraction.");
+   }
+
+   if (this_part != 0) {
+      /* In addition to everything else, we are picking out a specific part
+         of whatever series we have decided upon. */
+
+      if (retval.do_half_of_last_part) fail("This call can't be fractionalized with this fraction.");
+      subcall_index += (retval.reverse_order) ? (1-this_part) : (this_part-1);
+
+      retval.instant_stop = 1;
+
+      /* Be sure that enough parts are visible. */
+      if (     (callflags1 & CFLAG1_VISIBLE_FRACTION_MASK) != 3*CFLAG1_VISIBLE_FRACTION_BIT &&
+               (subcall_index+1 > (callflags1 & CFLAG1_VISIBLE_FRACTION_MASK) / CFLAG1_VISIBLE_FRACTION_BIT))
+         fail("This call can't be fractionalized.");
+
+      if (subcall_index >= total) fail("The indicated part number doesn't exist.");
+
+      if ((frac_flags & 0xE00000) == 0x400000) {
+         /* We are not just doing part N, we are doing parts up through N. */
+         if (retval.reverse_order)
+            fail("Sorry, can't do this with reverse order.");
+         subcall_index = 0;     /* Start at the beginning. */
+         highlimit = this_part;
+         retval.instant_stop = 0;
+      }
+      else if ((frac_flags & 0xE00000) == 0x200000) {
+         /* We are not just doing part N, we are doing parts strictly after N. */
+         if (retval.reverse_order)
+            fail("Sorry, can't do this with reverse order.");
+         subcall_index++;  /* Strictly after. */
+         retval.instant_stop = 0;
+      }
+   }
+   else {
+      /* Unless all parts are visible, this is illegal. */
+      if ((callflags1 & CFLAG1_VISIBLE_FRACTION_MASK) != 3*CFLAG1_VISIBLE_FRACTION_BIT)
+         fail("This call can't be fractionalized.");
+   }
+
+   retval.subcall_index = subcall_index;
+   retval.highlimit = highlimit;
+
+   return retval;
+}
+
+
+
 /* This leaves the split axis result bits in absolute orientation. */
 
 Private void move_with_real_call(
@@ -1157,6 +1256,13 @@ Private void move_with_real_call(
 
    clear_people(result);
    result->result_flags = 0;   /* In case we bail out. */
+
+   if (ss->kind == nothing) {
+      if (ss->cmd.cmd_frac_flags)
+         fail("Can't fractionalize a call if no one is doing it.");
+      result->kind = nothing;
+      return;
+   }
 
    /* We have a genuine call.  Presumably all serious concepts have been disposed of
       (that is, nothing interesting will be found in parseptr -- it might be
@@ -1252,14 +1358,14 @@ that probably need to be put in. */
       }
    }
 
-   /* Do some quick error checking for visible fractions.  For now, either flag is acceptable.  Later, we will
-      distinguish between the "visible_fractions" and "first_part_visible" flags. */
+   /* Do some quick error checking for visible fractions.  For now, any flag is acceptable.  Later, we will
+      distinguish among the various flags. */
 
    if (ss->cmd.cmd_frac_flags) {
       switch (the_schema) {
          case schema_by_array:
             /* We allow the fraction "1/2" to be given.  Basic_move will handle it. */
-            if (ss->cmd.cmd_frac_flags != 0x00200112)
+            if (ss->cmd.cmd_frac_flags != 0x000112)
                fail("This call can't be fractionalized this way.");
             ss->cmd.cmd_frac_flags = 0;
             final_concepts |= INHERITFLAG_HALF;
@@ -1268,7 +1374,7 @@ that probably need to be put in. */
             fail("This call can't be fractionalized.");
             break;
          case schema_sequential: case schema_split_sequential:
-            if (!(callspec->callflags1 & (CFLAG1_VISIBLE_FRACTIONS | CFLAG1_FIRST_PART_VISIBLE)))
+            if (!(callspec->callflags1 & CFLAG1_VISIBLE_FRACTION_MASK))
                fail("This call can't be fractionalized.");
             break;
          default:
@@ -1276,13 +1382,13 @@ that probably need to be put in. */
             /* Must be some form of concentric.  We allow visible fractions, and take no action in that case.
                This means that any fractions will be sent to constituent calls. */
 
-            if (!(callspec->callflags1 & (CFLAG1_VISIBLE_FRACTIONS | CFLAG1_FIRST_PART_VISIBLE))) {
+            if (!(callspec->callflags1 & CFLAG1_VISIBLE_FRACTION_MASK)) {
 
                /* Otherwise, we allow the fraction "1/2" to be given, if the top-level heritablilty
                   flag allows it.  We turn the fraction into a "final concept". */
 
                if (!(callspec->callflagsh & INHERITFLAG_HALF) ||
-                     (ss->cmd.cmd_frac_flags != 0x00200112))
+                     (ss->cmd.cmd_frac_flags != 0x000112))
                   fail("This call can't be fractionalized this way.");
                ss->cmd.cmd_frac_flags = 0;
                final_concepts |= INHERITFLAG_HALF;
@@ -1436,8 +1542,10 @@ that probably need to be put in. */
 
    if (final_concepts & FINAL__SPLIT) {
       ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
-      if (callspec->callflags1 & CFLAG1_SPLIT_LIKE_SQUARE_THRU)
+      if (callspec->callflags1 & CFLAG1_SPLIT_LIKE_SQUARE_THRU) {
          final_concepts = (final_concepts | FINAL__SPLIT_SQUARE_APPROVED) & (~FINAL__SPLIT);
+         if ((current_number_fields & 0xF) == 1) fail("Can't split square thru 1.");
+      }
       else if (callspec->callflags1 & CFLAG1_SPLIT_LIKE_DIXIE_STYLE)
          final_concepts = (final_concepts | FINAL__SPLIT_DIXIE_APPROVED) & (~FINAL__SPLIT);
    }
@@ -1450,7 +1558,9 @@ that probably need to be put in. */
       cause splitting to take place. */
 
    if (the_schema == schema_split_sequential) {
-      if (setup_attrs[ss->kind].setup_limits == 7)
+      if (      setup_attrs[ss->kind].setup_limits == 7 ||
+               (setup_attrs[ss->kind].setup_limits == 11 && (final_concepts & INHERITFLAG_3X3)) ||
+               (setup_attrs[ss->kind].setup_limits == 15 && (final_concepts & INHERITFLAG_4X4)))
          ss->cmd.cmd_misc_flags |= CMD_MISC__MUST_SPLIT;
       else if (setup_attrs[ss->kind].setup_limits != 3)
          fail("Need a 4 or 8 person setup for this.");
@@ -1617,16 +1727,15 @@ that probably need to be put in. */
 
          if (the_schema == schema_sequential || the_schema == schema_split_sequential) {
             int highlimit;
-            int subcall_incr = 1;   /* Will be -1 if doing call in reverse order. */
-            int subcall_index = 0;  /* Where we start, in the absence of special stuff. */
-            int instant_stop = 99;  /* If >= 0, says to stop instantly after doing one part, and to report
+            int subcall_incr;       /* Will be -1 if doing call in reverse order. */
+            int subcall_index;      /* Where we start, in the absence of special stuff. */
+            int instant_stop;       /* If >= 0, says to stop instantly after doing one part, and to report
                                        (in RESULTFLAG__DID_LAST_PART bit) if that part was the last part. */
-            long_boolean first_call = TRUE;
+            long_boolean reverse_order;
+            long_boolean do_half_of_last_part;
+            long_boolean first_call;
             int total = callspec->stuff.def.howmanyparts;
-            long_boolean reverse_order = FALSE;
-            long_boolean do_half_of_last_part = FALSE;
 
-            highlimit = total;
             qtf = qtfudged;
 
             if (new_final_concepts & FINAL__SPLIT) {
@@ -1634,134 +1743,32 @@ that probably need to be put in. */
                   new_final_concepts |= FINAL__SPLIT_SQUARE_APPROVED;
                else if (callspec->callflags1 & CFLAG1_SPLIT_LIKE_DIXIE_STYLE)
                   new_final_concepts |= FINAL__SPLIT_DIXIE_APPROVED;
+
             }
 
             /* If the "cmd_frac_flags" word is nonzero, we are being asked to do something special.
-               Just what that is depends on whether the "old regime" or the "new regime" is in use,
-               which is determined by the 0x00200000 bit.  See comments in sd.h for "cmd_frac_flags". */
+               See comments in sd.h for "cmd_frac_flags". */
 
             if (ss->cmd.cmd_frac_flags) {
-               if (ss->cmd.cmd_frac_flags & 0x00200000) {
-                  /* New regime. */
-
-                  int numer, denom, s_numer, s_denom, this_part, test_size;
-
-                  this_part = (ss->cmd.cmd_frac_flags & 0xF0000) >> 16;
-                  s_numer = (ss->cmd.cmd_frac_flags & 0xF000) >> 12;      /* Start point. */
-                  s_denom = (ss->cmd.cmd_frac_flags & 0xF00) >> 8;
-                  numer = (ss->cmd.cmd_frac_flags & 0xF0) >> 4;          /* Stop point. */
-                  denom = (ss->cmd.cmd_frac_flags & 0xF);
-
-                  if (s_numer >= s_denom) fail("Fraction must be proper.");
-                  subcall_index = total * s_numer;
-                  if ((subcall_index % s_denom) != 0) fail("This call can't be fractionalized with this fraction.");
-                  subcall_index = subcall_index / s_denom;
-
-                  if (numer <= 0) fail("Fraction must be proper.");
-                  highlimit = total * numer;
-                  test_size = highlimit / denom;
-
-                  if (test_size*denom == highlimit)
-                     highlimit = test_size;
-                  else {
-                     if (2*test_size*denom + denom == 2*highlimit) {
-                        highlimit = test_size+1;
-                        do_half_of_last_part = TRUE;
-                     }
-                     else
-                        fail("This call can't be fractionalized with this fraction.");
-                  }
-
-                  /* Now subcall_index is the start point, and highlimit is the end point. */
-
-                  if (subcall_index >= highlimit || highlimit > total)
-                     fail("Fraction must be proper.");
-
-                  /* Check for "reverse order" */
-                  if (ss->cmd.cmd_frac_flags & 0x00100000) {
-                     subcall_index = total-1-subcall_index;
-                     highlimit = 1-total+highlimit;
-                     reverse_order = TRUE;
-                     first_call = FALSE;
-                     subcall_incr = -1;
-                     if (do_half_of_last_part) fail("This call can't be fractionalized with this fraction.");
-                  }
-
-                  if (this_part != 0) {
-                     /* In addition to everything else, we are picking out a specific part
-                        of whatever series we have decided upon. */
-
-                     if (do_half_of_last_part) fail("This call can't be fractionalized with this fraction.");
-                     subcall_index += subcall_incr*(this_part-1);
-                     instant_stop = subcall_index*subcall_incr+1;
-
-                     /* If only first part is visible, this is illegal unless we are doing first part. */
-                     if (!(callspec->callflags1 & CFLAG1_VISIBLE_FRACTIONS) && (subcall_index != 0))
-                        fail("This call can't be fractionalized.");
-                  }
-                  else {
-                     /* If only first part is visible, this is illegal. */
-                     if (!(callspec->callflags1 & CFLAG1_VISIBLE_FRACTIONS))
-                        fail("This call can't be fractionalized.");
-                  }
-               }
-               else {
-                  /* old regime */
-
-                  int key   = (ss->cmd.cmd_frac_flags & 0700) >> 6;
-                  int denom = (ss->cmd.cmd_frac_flags & 070) >> 3;
-                  int numer = ss->cmd.cmd_frac_flags & 07;
-
-                  if (key == 2) {
-                     /* Just do the "numer" part of the call (or that part counting from end), and tell if it was last. */
-                     if (numer > total) fail("The indicated part number doesn't exist.");
-                     reverse_order = (denom != 0);
-                     if (reverse_order) first_call = FALSE;
-                     subcall_index = reverse_order ? total-numer : numer-1;
-                     instant_stop = numer;
-                     /* If only first part is visible, this is illegal unless we are doing first part. */
-                     if (!(callspec->callflags1 & CFLAG1_VISIBLE_FRACTIONS) && (subcall_index != 0))
-                        fail("This call can't be fractionalized.");
-                  }
-                  else {
-                     /* Do parts up to (key = 0) or after (key = 1 or 3) the indicated part.
-                        The indicated part may be an absolute part number (denom=0) or a fraction. */
-
-                     int indicated_part;
-
-                     if (key == 3 && !(callspec->callflags1 & CFLAG1_FINISH_MEANS_SKIP_FIRST))
-                        fail("This call can't be 'finished'.");
-   
-                     if (denom) {
-                        /* Amount to do was given as a fraction. */
-                        if (numer >= denom) fail("Fraction must be proper.");
-                        indicated_part = total * numer;
-                        if ((indicated_part % denom) != 0) fail("This call can't be fractionalized with this fraction.");
-                        indicated_part = indicated_part / denom;
-                        /* If only first part is visible, this is illegal. */
-                        if (!(callspec->callflags1 & CFLAG1_VISIBLE_FRACTIONS))
-                           fail("This call can't be fractionalized.");
-                     }
-                     else {
-                        indicated_part = numer;
-                        /* If only first part is visible, this is illegal unless we are breaking just after the first part. */
-                        if (!(callspec->callflags1 & CFLAG1_VISIBLE_FRACTIONS) && (indicated_part != 1))
-                           fail("This call can't be fractionalized.");
-                     }
-
-                     if (key != 0) {
-                        /* Do the last section of the call, starting just after indicated_part. */
-                        subcall_index = indicated_part;
-                        if (subcall_index > total) fail("The indicated part number doesn't exist.");
-                     }
-                     else {
-                        /* Do the first section of the call, up to the indicated_part. */
-                        highlimit = indicated_part;
-                        if (highlimit > total) fail("The indicated part number doesn't exist.");
-                     }
-                  }
-               }
+               fraction_info zzz = get_fraction_info(ss->cmd.cmd_frac_flags, callspec->callflags1, total);
+               reverse_order = zzz.reverse_order;
+               do_half_of_last_part = zzz.do_half_of_last_part;
+               highlimit = zzz.highlimit;
+               if (reverse_order) highlimit = 1-total+highlimit;
+               subcall_index = zzz.subcall_index;
+               subcall_incr = (reverse_order) ? -1 : 1;
+               instant_stop = zzz.instant_stop ? subcall_index*subcall_incr+1 : 99;
             }
+            else {     /* No fractions. */
+               reverse_order = FALSE;
+               instant_stop = 99;
+               do_half_of_last_part = FALSE;
+               highlimit = total;
+               subcall_index = 0;
+               subcall_incr = 1;
+            }
+
+            first_call = reverse_order ? FALSE : TRUE;
 
             if (ss->kind != s2x2 && ss->kind != s_short6) ss->cmd.prior_elongation_bits = 0;
 
@@ -1813,6 +1820,8 @@ that probably need to be put in. */
                int count_to_use;
 
                if (subcall_index*subcall_incr >= highlimit) break;
+
+               if (subcall_index >= total) fail("The indicated part number doesn't exist.");
 
                this_item = &callspec->stuff.def.defarray[subcall_index];
 
@@ -1905,7 +1914,7 @@ that probably need to be put in. */
                   result->cmd = ss->cmd;
 
                   if (do_half_of_last_part && subcall_index+1 == highlimit)
-                     result->cmd.cmd_frac_flags = 0x00200112;
+                     result->cmd.cmd_frac_flags = 0x000112;
                   else
                      result->cmd.cmd_frac_flags = 0;
 

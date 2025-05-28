@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-1994  William B. Ackerman.
+    Copyright (C) 1990-1995  William B. Ackerman.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -552,7 +552,7 @@ extern void string_copy(char **dest, Cstring src)
 
 Private void print_recurse(parse_block *thing, int print_recurse_arg)
 {
-   parse_block *static_cptr;
+   parse_block *local_cptr;
    parse_block *next_cptr;
    long_boolean use_left_name = FALSE;
    long_boolean use_cross_name = FALSE;
@@ -560,24 +560,24 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
    long_boolean use_intlk_name = FALSE;
    long_boolean comma_after_next_concept = FALSE;
 
-   static_cptr = thing;
+   local_cptr = thing;
 
-   while (static_cptr) {
+   while (local_cptr) {
       int i;
       concept_kind k;
       concept_descriptor *item;
 
-      item = static_cptr->concept;
+      item = local_cptr->concept;
       k = item->kind;
 
       if (k == concept_comment) {
          comment_block *fubb;
 
-         fubb = (comment_block *) static_cptr->call;
+         fubb = (comment_block *) local_cptr->call;
          writestuff("{ ");
          writestuff(fubb->txt);
          writestuff(" } ");
-         static_cptr = static_cptr->next;
+         local_cptr = local_cptr->next;
       }
       else if (k > marker_end_of_list) {
          /* This is a concept. */
@@ -585,10 +585,31 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
          long_boolean request_final_space = FALSE;
          long_boolean request_comma_after_next_concept = FALSE;
 
-         next_cptr = static_cptr->next;    /* Now it points to the thing after this concept. */
+         /* Some concepts look better with a comma after them. */
+
+         if (     k == concept_so_and_so_stable ||
+                  k == concept_so_and_so_frac_stable ||
+                  k == concept_so_and_so_begin ||
+                  k == concept_fractional ||
+                  k == concept_twice ||
+                  k == concept_n_times ||
+                  k == concept_some_are_tandem ||
+                  k == concept_some_are_frac_tandem ||
+                  (    (k == concept_tandem ||           /* The arg4 test picks out the more esoteric */
+                        k == concept_frac_tandem) &&     /* things like "<some setup> work solid". */
+                     local_cptr->concept->value.arg4 >= 10) ||
+                  (     k == concept_nth_part &&
+                     local_cptr->concept->value.arg1 == 1) ||   /* "SKIP THE <Nth> PART" */
+                  (    (k == concept_so_and_so_only ||           /* The arg1 test picks out "do your part". */
+                        k == concept_some_vs_others) &&
+                     local_cptr->concept->value.arg1 < 2)) {
+            comma_after_next_concept = TRUE;
+         }
+
+         next_cptr = local_cptr->next;    /* Now it points to the thing after this concept. */
 
          if (concept_table[k].concept_prop & CONCPROP__SECOND_CALL) {
-            parse_block *subsidiary_ptr = static_cptr->subsidiary_root;
+            parse_block *subsidiary_ptr = local_cptr->subsidiary_root;
 
             if (k == concept_centers_and_ends) {
                if ((i = item->value.arg1) == 2)
@@ -599,26 +620,28 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
                   writestuff("CENTERS ");
             }
             else if (k == concept_some_vs_others) {
-               if ((i = item->value.arg1) == 1)
-                  writestuff_with_decorations(static_cptr, "@6 DO YOUR PART, ");
+               if ((i = item->value.arg1) == 1) {
+                  writestuff_with_decorations(local_cptr, "DO YOUR PART, @6 ");
+                  comma_after_next_concept = FALSE;   /* We want a comma after the "do your part" only, not after the "others". */
+               }
                else if (i == 3)
-                  writestuff_with_decorations(static_cptr, "OWN THE @6, ");
+                  writestuff_with_decorations(local_cptr, "OWN THE @6, ");
                else if (i == 5)
-                  writestuff_with_decorations(static_cptr, "@6, ");
+                  writestuff_with_decorations(local_cptr, "@6, ");
                else
-                  writestuff_with_decorations(static_cptr, "@6 DISCONNECTED ");
+                  writestuff_with_decorations(local_cptr, "@6 DISCONNECTED ");
             }
             else if (k == concept_sequential) {
                writestuff("(");
             }
             else if (k == concept_replace_nth_part) {
                writestuff("DELAY: ");
-               if (!static_cptr->next || !subsidiary_ptr) {
-                  if (static_cptr->concept->value.arg1)
+               if (!local_cptr->next || !subsidiary_ptr) {
+                  if (local_cptr->concept->value.arg1)
                      writestuff("(interrupting after the ");
                   else
                      writestuff("(replacing the ");
-                  writestuff(ordinals[static_cptr->number-1]);
+                  writestuff(ordinals[local_cptr->number-1]);
                   writestuff(" part) ");
                }
             }
@@ -627,7 +650,7 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
                writestuff(" ");
             }
 
-            print_recurse(static_cptr->next, 0);
+            print_recurse(local_cptr->next, 0);
 
             if (!subsidiary_ptr) break;         /* Can happen if echoing incomplete input. */
 
@@ -643,7 +666,7 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
                writestuff(" WITH");
             else if (k == concept_replace_nth_part) {
                writestuff(" BUT ");
-               writestuff_with_decorations(static_cptr, (Const char *) 0);
+               writestuff_with_decorations(local_cptr, (Const char *) 0);
                writestuff(" WITH A [");
                request_final_space = FALSE;
             }
@@ -657,10 +680,10 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
             next_cptr = subsidiary_ptr;
          }
          else if (k == concept_selbasedtrngl) {
-            writestuff_with_decorations(static_cptr, (Const char *) 0);
+            writestuff_with_decorations(local_cptr, (Const char *) 0);
             request_final_space = TRUE;
          }
-         else if (static_cptr && (k == concept_left || k == concept_cross || k == concept_magic || k == concept_interlocked)) {
+         else if (local_cptr && (k == concept_left || k == concept_cross || k == concept_magic || k == concept_interlocked)) {
 
             /* These concepts want to take special action if there are no following concepts and
                certain escape characters are found in the name of the following call. */
@@ -730,41 +753,23 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
             }
          }
          else if (k == concept_nth_part) {
-            if (static_cptr->concept->value.arg1 == 1) {
-               comma_after_next_concept = TRUE;           /* "SKIP THE <Nth> PART" */
-               request_final_space = TRUE;
+            if (local_cptr->concept->value.arg1 == 1) {
+               request_final_space = TRUE;         /* "SKIP THE <Nth> PART" */
             }
             else
                request_comma_after_next_concept = TRUE;   /* "DO THE <Nth> PART <concept>" */
 
-            writestuff_with_decorations(static_cptr, (Const char *) 0);
+            writestuff_with_decorations(local_cptr, (Const char *) 0);
          }
-         else if ((k == concept_meta) && static_cptr->concept->value.arg1 == 3) {
+         else if ((k == concept_meta) && local_cptr->concept->value.arg1 == 3) {
             writestuff("START");
             request_comma_after_next_concept = TRUE;
             request_final_space = TRUE;
          }
          else {
-            writestuff_with_decorations(static_cptr, (Const char *) 0);
+            writestuff_with_decorations(local_cptr, (Const char *) 0);
             request_final_space = TRUE;
          }
-
-         /* Some concepts look better with a comma after them. */
-
-         if (     k == concept_so_and_so_stable ||
-                  k == concept_so_and_so_frac_stable ||
-                  k == concept_so_and_so_begin ||
-                  k == concept_fractional ||
-                  k == concept_twice ||
-                  k == concept_some_are_tandem ||
-                  k == concept_some_are_frac_tandem ||
-                  (    (k == concept_tandem ||           /* The arg4 test picks out all but the */
-                        k == concept_frac_tandem) &&     /*simple "as couples" and "tandem" concepts. */
-                     static_cptr->concept->value.arg4 >= 10)) {
-            comma_after_next_concept = TRUE;
-         }
-
-         static_cptr = next_cptr;
 
          if (comma_after_next_concept)
             writestuff(", ");
@@ -773,13 +778,15 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
 
          comma_after_next_concept = request_comma_after_next_concept;
 
+         local_cptr = next_cptr;
+
          if (k == concept_sequential) {
-            print_recurse(static_cptr, PRINT_RECURSE_STAR);
+            print_recurse(local_cptr, PRINT_RECURSE_STAR);
             writestuff(")");
             return;
          }
          else if (k == concept_replace_nth_part) {
-            print_recurse(static_cptr, PRINT_RECURSE_STAR);
+            print_recurse(local_cptr, PRINT_RECURSE_STAR);
             writestuff("]");
             return;
          }
@@ -795,13 +802,13 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
          long_boolean pending_subst1, subst1_in_use, this_is_subst1;
          long_boolean pending_subst2, subst2_in_use, this_is_subst2;
 
-         selector_kind i16junk = static_cptr->selector;
-         direction_kind idirjunk = static_cptr->direction;
-         uint32 number_list = static_cptr->number;
+         selector_kind i16junk = local_cptr->selector;
+         direction_kind idirjunk = local_cptr->direction;
+         uint32 number_list = local_cptr->number;
          unsigned int next_recurse1_arg = 0;
          unsigned int next_recurse2_arg = 0;
-         callspec_block *localcall = static_cptr->call;
-         parse_block *save_cptr = static_cptr;
+         callspec_block *localcall = local_cptr->call;
+         parse_block *save_cptr = local_cptr;
 
          subst1_in_use = FALSE;
          subst2_in_use = FALSE;
@@ -1181,12 +1188,13 @@ static char *printing_tables[][2] = {
    {(char *) 0,                                                               (char *) 0},                                                                                                       /* s_trngl4 */
    {"a        b@    fc@e        d@",                                          "ea@  f@  c@db@"},                                                                                                 /* s_bone6 */
    {"   b@a  c@f  d@   e@",                                                   "   fa@e      b@   dc@"},                                                                                          /* s_short6 */
+   {"           c@a  b      e  d@           f@",                              "   a@@   b@@f  c@@   e@@   d@"},                                                                                  /* s_1x2dmd */
    {(char *) 0,                                                               (char *) 0},                                                                                                       /* s_qtag */
    {"a                   b@    g h d c@f                   e",                "fa@  g@  h@  d@  c@eb"},                                                                                          /* s_bone */
    {"        a b@gh         dc@        f e",                                  "  g@  h@fa@eb@  d@  c"},                                                                                          /* s_rigger */
    {"    a b c@h              d@    g f e",                                   "  h@ga@fb@ec@  d"},                                                                                               /* s_spindle */
    {"   a  b@      d@g        c@      h@   f  e",                             "     g@f      a@   hd@e      b@     c"},                                                                          /* s_hrglass */
-   {"a      d      b@     g      c@f      h      e",                          "f  a@@   g@@h  d@@   c@@e  b"},                                                                                  /* s_dhrglass */
+   {"a      d      b@     g      c@f      h      e",                          "f  a@@   g@@h  d@@   c@@e  b"},                                                                                   /* s_dhrglass */
    {(char *) 0,                                                               (char *) 0},                                                                                                       /* s_hyperglass */
    {"          c@          d@ab        fe@          h@          g",           "      a@      b@@ghdc@@      f@      e"},                                                                         /* s_crosswave */
    {"a b d c g h f e",                                                        "a@b@d@c@g@h@f@e"},                                                                                                /* s1x8 */
@@ -1212,13 +1220,14 @@ static char *printing_tables[][2] = {
    {"             d       f@a b c  e k  i h g@             l       j",        "   a@@   b@@   c@l  d@   e@   k@j  f@   i@@   h@@   g"},                                                          /* s_wingedstar12 */
    {"             d       h       m@a b c  f g  o n  k j i@             e       p       l",  "   a@@   b@@   c@e  d@   f@   g@p  h@   o@   n@l  m@   k@@   j@@   i"},                            /* s_wingedstar16 */
    {"     c@   bd@a      e@   hf@     g",                                     (char *) 0},                                                                                                       /* s_galaxy */
+   {"a  b  c  d  e  f  g  h@@u  v  w  x  l  k  j  i@@t  s  r  q  p  o  n  m", "t  u  a@@s  v  b@@r  w  c@@q  x  d@@p  l  e@@o  k  f@@n  j  g@@m  i  h"},                                         /* s3x8 */
    {"a  b  c  d  e  f@@l  k  j  i  h  g@@s  t  u  v  w  x@@r  q  p  o  n  m", "r  s  l  a@@q  t  k  b@@p  u  j  c@@o  v  i  d@@n  w  h  e@@m  x  g  f"},                                         /* s4x6 */
    {"      c@      d@abfe@      h@      g",                                   (char *) 0},                                                                                                       /* s_thar */
    {(char *) 0,                                                               (char *) 0},                                                                                                       /* s_x4dmd */
    {(char *) 0,                                                               (char *) 0},                                                                                                       /* s_8x8 */
    {(char *) 0,                                                               (char *) 0},                                                                                                       /* sfat2x8 */
    {(char *) 0,                                                               (char *) 0},                                                                                                       /* swide4x4 */
-   {"   b      e@   c      f@a j d g@   l      i@   k      h",                "          a@k l        c b@          j@@          d@h i        f e@          g"},                                 /* sbigdmd */
+   {"          c@a b        e f@          d@@          j@l k        h g@          i", "   l      a@   k      b@i j d c@   h      e@   g      f"},                                                /* sbigdmd */
    {(char *) 0,                                                               (char *) 0},                                                                                                       /* sminirigger */
    {(char *) 0,                                                               (char *) 0}};                                                                                                      /* s_normal_concentric */
 
@@ -1313,7 +1322,7 @@ Private void printsetup(setup *x)
             print_4_person_setup(0, &(x->inner), -1);
             writestuff(" ends:");
             newline();
-            print_4_person_setup(12, &(x->outer), x->outer_elongation);
+            print_4_person_setup(12, &(x->outer), x->concsetup_outer_elongation);
             break;
          default:
             writestuff("???? UNKNOWN SETUP ????");
@@ -1616,6 +1625,14 @@ extern call_list_kind find_proper_call_list(setup *s)
 
    return call_list_any;
 }
+
+
+static short spindle1[] = {d_east, d_west, 0, 6, 1, 5, 2, 4, -1};
+static short short1[] = {d_north, d_south, 0, 2, 5, 3, -1};
+static short dmd1[] = {d_east, d_west, 1, 3, -1};
+static short qtag1[] = {d_north, d_south, 3, 2, 6, 7, -1};
+static short ptpd1[] = {d_east, d_west, 1, 3, 7, 5, -1};
+
 
 
 extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
@@ -2148,6 +2165,63 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
          case sq_didnt_say_tgl:
             if (ss->cmd.cmd_misc_flags & CMD_MISC__SAID_TRIANGLE) goto bad;
             goto good;
+
+
+         case sq_dmd_ctrs_rh:
+         case sq_dmd_ctrs_lh:
+         case sq_dmd_ctrs_1f:
+            {            /* -1: no centers  /  sq_dmd_ctrs_1f: centers 1-faced  /  sq_dmd_ctrs_lh: left  /  sq_dmd_ctrs_rh: right */
+               short *p1;
+               short d1;
+               short d2;
+               search_qualifier kkk;
+               uint32 z = 0;
+               long_boolean b1 = TRUE;
+               long_boolean b2 = TRUE;
+            
+               switch (ss->kind) {
+                  case s_spindle:
+                     p1 = spindle1;
+                     break;
+                  case s_short6:
+                     p1 = short1;
+                     break;
+                  case sdmd:
+                     p1 = dmd1;
+                     break;
+                  case s_qtag:
+                     p1 = qtag1;
+                     break;
+                  case s_ptpd:
+                     p1 = ptpd1;
+                     break;
+                  default:
+                     goto bad;
+               }
+
+               d1 = *(p1++);
+               d2 = *(p1++);
+            
+               while (*p1>=0) {
+                  uint32 t1 = ss->people[*(p1++)].id1;
+                  uint32 t2 = ss->people[*(p1++)].id1;
+                  z |= t1 | t2;
+                  if (t1 && (t1 & d_mask)!=d1) b1 = FALSE;
+                  if (t2 && (t2 & d_mask)!=d2) b1 = FALSE;
+                  if (t1 && (t1 & d_mask)!=d2) b2 = FALSE;
+                  if (t2 && (t2 & d_mask)!=d1) b2 = FALSE;
+               }
+            
+               if (z) {
+                  if (b1) kkk = sq_dmd_ctrs_rh;
+                  else if (b2) kkk = sq_dmd_ctrs_lh;
+                  else kkk = sq_dmd_ctrs_1f;
+               }
+               else
+                  goto bad;
+
+               if ((search_qualifier) p->qualifier == kkk) goto good;
+            }
       }
 
       bad: ;
@@ -2315,8 +2389,7 @@ extern parse_block *process_final_concepts(
       switch (tptr->concept->kind) {
          case concept_comment:
             goto get_next;               /* Need to skip these. */
-         case concept_triangle:
-            bit_to_set = FINAL__TRIANGLE; break;
+         case concept_triangle: bit_to_set = FINAL__TRIANGLE; break;
          case concept_magic:
             last_magic_diamond = tptr;
             bit_to_set = INHERITFLAG_MAGIC;
@@ -2332,6 +2405,7 @@ extern parse_block *process_final_concepts(
             bit_to_forbid = INHERITFLAG_SINGLE;
             break;
          case concept_cross: bit_to_set = INHERITFLAG_CROSS; break;
+         case concept_yoyo: bit_to_set = INHERITFLAG_YOYO; break;
          case concept_single:
             bit_to_set = INHERITFLAG_SINGLE;
             bit_to_forbid = INHERITFLAG_SINGLEFILE;
