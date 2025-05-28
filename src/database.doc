@@ -365,10 +365,10 @@ ptpd        |  0  |_____|  2  |  6  |_____|  4  |
                                _____
                               |     |
                               |  3  |
-             _____ _____ _____|_____|_____ _____ _____
-            |     |     |     |     |     |     |     |
-wingedstar  |  0  |  1  |  2  |     |  6  |  5  |  4  |
-            |_____|_____|_____|_____|_____|_____|_____|
+             _____ _____ _____|     |_____ _____ _____
+            |     |     |      \   /      |     |     |
+wingedstar  |  0  |  1  |  2           6  |  5  |  4  |
+            |_____|_____|_____ /   \ _____|_____|_____|
                               |     |
                               |  7  |
                               |_____|
@@ -381,10 +381,10 @@ wingedstar  |  0  |  1  |  2  |     |  6  |  5  |  4  |
               |  2  |   |_____|   |  5  |
               |_____|   |     |   |_____|
                         |  4  |
-             _____ _____|_____|_____ _____
-            |     |     |     |     |     |
-hyperglass  |  0  |  1  |     |  7  |  6  |      (4 way symmetry)
-            |_____|_____|_____|_____|_____|    (internal use only!)
+             _____ _____|     |_____ _____
+            |     |      \   /      |     |
+hyperglass  |  0  |  1           7  |  6  |      (4 way symmetry)
+            |_____|_____ /   \ _____|_____|    (internal use only!)
                         |     |
                _____    | 10  |    _____
               |     |   |_____|   |     |
@@ -1206,6 +1206,28 @@ To summarize some general properties of predicates:
 
 The existing predicates are listed in the appendix.
 
+                  RESTRICTIONS
+
+A restriction is given only for calls defined by array, either with or without
+predicates.  It appears after the "setup" keyword and the starting and ending
+setups, and the "rotation" keyword, if any.  Only one restriction may be given
+with a "setup" specification.
+
+A restriction consists of the word "restriction", an optional action keyword,
+and the restriction name.  The action keyword tells what is to be done if the
+restriction is violated, as follows:
+   no keyword -- the warning "do your part" is given, and the call is not
+               considered acceptable when searching for resolves, "do
+               anythings", etc.
+   "resolve_ok" -- as above, but the call is still acceptable for resolves.
+   "unusual" -- the warning "This is an unusual setup for this call" is given,
+               and the call is not considered acceptable when searching for
+               resolves.  This should be used to alert the user of the program
+               that this may not be an appropriate use of the call, but
+               telling the dancers to do their own part isn't the right fix.
+   "forbidden" -- an error is given.  The call is simply not permitted.
+
+
 
 
 
@@ -1625,9 +1647,14 @@ q_line_back
       1/4-line, it returns TRUE only if the setup is a right-handed 1/4-line,
       and FALSE if it is left-handed or is a 1/4-tag. 
 
-                           APPENDIX B -- ESCAPE CODES IN CALL NAMES
+                           APPENDIX B -- RESTRICTIONS
 
-                  These are not in a particularly logical order.
+
+
+
+                           APPENDIX C -- ESCAPE CODES IN CALL NAMES
+
+                  These are not in any particularly logical order.
 
 @0        - for call with mandatory substitution (e.g. "clover and ...") put
                       subcall here.

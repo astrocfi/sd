@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990  William B. Ackerman.
+    Copyright (C) 1990, 1991, 1992, 1993  William B. Ackerman.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-    This is for version 27. */
+    This is for version 28. */
 
 /* This defines the following functions:
    clear_screen
@@ -53,6 +53,7 @@ and the following external variables:
    longjmp_buffer
    longjmp_ptr
    history
+   history_allocation
    history_ptr
    written_history_items
    written_history_nopic
@@ -79,7 +80,8 @@ and the following external variables:
 
 real_jmp_buf longjmp_buffer;
 real_jmp_buf *longjmp_ptr;
-configuration history[100];
+configuration *history = (configuration *) 0; /* allocated in sdmain */
+int history_allocation = 0; /* How many items are currently allocated in "history". */
 int history_ptr;
 
 /* This tells how much of the history text written to the UI is "safe".  If this
@@ -367,7 +369,9 @@ static char *warning_strings[] = {
    /*  warn__check_c1_phan       */   "Check a 'C1 phantom' setup.",
    /*  warn__check_dmd_qtag      */   "Fudge to a diamond/quarter-tag setup.",
    /*  warn__check_2x4           */   "Check a 2x4 setup.",
-   /*  warn__check_pgram         */   "Opt for a parallelogram."};
+   /*  warn__check_pgram         */   "Opt for a parallelogram.",
+   /*  warn__dyp_resolve_ok      */   "Do your part.",
+   /*  warn__ctrs_stay_in_ctr    */   "Centers stay in the center."};
 
 static char *ordinals[] = {"1st", "2nd", "3rd", "4th", "5th"};
 
@@ -424,7 +428,7 @@ static void print_recurse(int print_recurse_arg)
             if (kk <= marker_end_of_list) {
                break;
             }
-            else if (kk != concept_left && kk != concept_cross) {
+            else if (kk != concept_left && kk != concept_single && kk != concept_cross) {
                print_recurse_arg &= ~(PRINT_RECURSE_TAGREACT | PRINT_RECURSE_TAGENDING);
                break;
             }
@@ -458,7 +462,7 @@ static void print_recurse(int print_recurse_arg)
          if ((concept_table[k].concept_prop & (CONCPROP__USE_NUMBER | CONCPROP__USE_TWO_NUMBERS)) &&
                      k != concept_nth_part && k != concept_replace_nth_part) {
             if (k == concept_frac_stable || k == concept_frac_tandem || k == concept_some_are_frac_tandem ||
-                     k == concept_phantom_frac_tandem || k == concept_so_and_so_frac_stable || k == concept_gruesome_frac_tandem) {
+                     k == concept_so_and_so_frac_stable || k == concept_gruesome_frac_tandem) {
                you_owe_me_a_number = TRUE;
             }
             else {
@@ -1198,6 +1202,12 @@ static void printsetup(setup *x)
             do_write("   a@@   b@@   c@l  d@   e@   k@j  f@   i@@   h@@   g");
          else
             do_write("             d       f@a b c  e k  i h g@             l       j");
+         break;
+      case s_wingedstar16:
+         if (x->rotation & 1)
+            do_write("   a@@   b@@   c@e  d@   f@   g@p  h@   o@   n@l  m@   k@@   j@@   i");
+         else
+            do_write("             d       h       m@a b c  f g  o n  k j i@             e       p       l");
          break;
       case s_4dmd:
          if (x->rotation & 1)
@@ -2105,7 +2115,13 @@ extern parse_block *process_final_concepts(
          case concept_left:
             bit_to_set = FINAL__LEFT; break;
          case concept_12_matrix:
+            if (check_errors && *final_concepts)
+               fail("Matrix modifier must appear first.");
             bit_to_set = FINAL__12_MATRIX; break;
+         case concept_16_matrix:
+            if (check_errors && *final_concepts)
+               fail("Matrix modifier must appear first.");
+            bit_to_set = FINAL__16_MATRIX; break;
          case concept_diamond:
             if (check_errors && (*final_concepts & FINAL__SINGLE))
                fail("Modifiers specified in illegal order.");

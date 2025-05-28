@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990, 1991, 1992  William B. Ackerman.
+    Copyright (C) 1990, 1991, 1992, 1993  William B. Ackerman.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@
    database format version. */
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 32
+#define DATABASE_FORMAT_VERSION 34
 
 /* BEWARE!!  This list must track the tables "flagtab" and "nexttab"" in mkcalls.c .
    Because the constants are not defined contiguously, there are spacer items
@@ -61,19 +61,19 @@
 #define cflag__12_16_matrix_means_split   0x00040000
 /* space left for                         0x00080000 */
 /* space left for                         0x00100000 */
-/* space left for                         0x00200000 */
-#define cflag__diamond_is_inherited       0x00400000
-#define cflag__reverse_means_mirror       0x00800000
-#define cflag__left_means_mirror          0x01000000
-#define cflag__funny_is_inherited         0x02000000
-#define cflag__intlk_is_inherited         0x04000000
-#define cflag__magic_is_inherited         0x08000000
-#define cflag__grand_is_inherited         0x10000000
-#define cflag__12_matrix_is_inherited     0x20000000
+#define cflag__diamond_is_inherited       0x00200000
+#define cflag__reverse_means_mirror       0x00400000
+#define cflag__left_means_mirror          0x00800000
+#define cflag__funny_is_inherited         0x01000000
+#define cflag__intlk_is_inherited         0x02000000
+#define cflag__magic_is_inherited         0x04000000
+#define cflag__grand_is_inherited         0x08000000
+#define cflag__12_matrix_is_inherited     0x10000000
+#define cflag__16_matrix_is_inherited     0x20000000
 #define cflag__cross_is_inherited         0x40000000
 #define cflag__single_is_inherited        0x80000000
 
-#define HERITABLE_FLAG_MASK               0xFFC00000
+#define HERITABLE_FLAG_MASK               0xFFE00000
 
 /* Beware!!  This list must track the table "matrixcallflagtab" in mkcalls.c . */
 
@@ -136,6 +136,7 @@ typedef enum {
    s2x6,
    s2x8,
    s4x4,
+   s_x1x6,  /* Crossed 1x6's -- internal use only. */
    s1x10,
    s1x12,
    s1x14,
@@ -152,7 +153,7 @@ typedef enum {
    s_galaxy,
    s4x6,
    s_thar,
-   s_6x6,    /* These are too big to actaully represent -- */
+   s_x4dmd,  /* These are too big to actually represent -- */
    s_8x8,    /* we don't let them out of their cage. */
    s_normal_concentric
 } setup_kind;
@@ -241,8 +242,12 @@ typedef enum {
 #define CAF__CONCEND 0x4
 /* Next one meaningful only if previous one is set. */
 #define CAF__ROT_OUT 0x8
+/* This is a 2 bit field. */
+#define CAF__RESTR_MASK 0x30
+/* These next 3 are the nonzero values it can have. */
 #define CAF__RESTR_UNUSUAL 0x10
 #define CAF__RESTR_FORBID 0x20
+#define CAF__RESTR_RESOLVE_OK 0x30
 #define CAF__PREDS 0x40
 
 /* These qualifiers are "overloaded" -- their meaning depends on the starting setup. */
@@ -274,9 +279,9 @@ typedef enum {
 typedef enum {
    cr_none,
    cr_alwaysfail,                   /* any setup - this always fails (presumably to give the "unusual position" warning) */
-   cr_wave_only,                    /* 1x2 - a miniwave; 1x4 - a wave; 2x4 - waves; 1x8 - a grand wave; 2x2 - real box;
+   cr_wave_only,                    /* 1x2 - a miniwave; 1x4 - a wave; 2x4/2x6/2x8 - waves; 1x8 - a grand wave; 2x2 - real box;
                                        qtag - wave in center; pqtag - wave in center (use only if center people have no legal
-                                       move from pqtag, only from qtag); 4x2 or 3x2 - column */
+                                       move from pqtag, only from qtag); 3x2/4x2/6x2/8x2 - column */
    cr_wave_unless_say_2faced,
    cr_all_facing_same,              /* 2x2, 2x3, or 2x4 - all people facing the same way. */
    cr_1fl_only,                     /* 1x4 - a 1FL; 2x3 or 2x4 - 1FL's */
@@ -292,6 +297,7 @@ typedef enum {
    cr_peelable_box,                 /* 2x2 or 3x2 or 4x2 - all people in each column are facing same way */
    cr_ends_are_peelable,            /* 2x4 - ends are a box with each person in genuine tandem */
    cr_not_tboned,                   /* 2x2 - people must not be T-boned */
+   cr_opposite_sex,                 /* 2x1 - people must be opposite sexes facing each other */
    cr_quarterbox_or_col,            /* 4x2 - acceptable setup for "triple cross" */
    cr_quarterbox_or_magic_col       /* 4x2 - acceptable setup for "make magic" */
 } call_restriction;
@@ -372,6 +378,7 @@ typedef enum {
    dfm_inherit_magic                 --  concdefine/seqdefine: if original call said "magic" apply it to this part
    dfm_inherit_grand                 --  concdefine/seqdefine: if original call said "grand" apply it to this part
    dfm_inherit_12_matrix             --  concdefine/seqdefine: if original call said "12matrix" apply it to this part
+   dfm_inherit_16_matrix             --  concdefine/seqdefine: if original call said "16matrix" apply it to this part
    dfm_inherit_cross                 --  concdefine/seqdefine: if original call said "cross" apply it to this part
    dfm_inherit_single                --  concdefine/seqdefine: if original call said "single" apply it to this part
 */
@@ -409,18 +416,18 @@ typedef enum {
 
 /* space left for                         0x00080000 */
 /* space left for                         0x00100000 */
-/* space left for                         0x00200000 */
 
 /* Start of inheritance flags. */
 
-#define dfm_inherit_diamond               0x00400000
-#define dfm_inherit_reverse               0x00800000
-#define dfm_inherit_left                  0x01000000
-#define dfm_inherit_funny                 0x02000000
-#define dfm_inherit_intlk                 0x04000000
-#define dfm_inherit_magic                 0x08000000
-#define dfm_inherit_grand                 0x10000000
-#define dfm_inherit_12_matrix             0x20000000
+#define dfm_inherit_diamond               0x00200000
+#define dfm_inherit_reverse               0x00400000
+#define dfm_inherit_left                  0x00800000
+#define dfm_inherit_funny                 0x01000000
+#define dfm_inherit_intlk                 0x02000000
+#define dfm_inherit_magic                 0x04000000
+#define dfm_inherit_grand                 0x08000000
+#define dfm_inherit_12_matrix             0x10000000
+#define dfm_inherit_16_matrix             0x20000000
 #define dfm_inherit_cross                 0x40000000
 #define dfm_inherit_single                0x80000000
 

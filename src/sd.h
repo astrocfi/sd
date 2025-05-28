@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990, 1991, 1992  William B. Ackerman.
+    Copyright (C) 1990, 1991, 1992, 1993  William B. Ackerman.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-    This is for version 27. */
+    This is for version 28. */
 
 #define TRUE 1
 #define FALSE 0
@@ -35,6 +35,9 @@ typedef short veryshort;
 #define MAX_ERR_LENGTH 200
 #define MAX_FILENAME_LENGTH 260
 #define MAX_PEOPLE 24
+/* Actually, we don't make a resolve bigger than 3.  This is how much space
+   we allocate for things.  Just being careful. */
+#define MAX_RESOLVE_SIZE 5
 
 /* Probability (out of 8) that a concept will be placed on a randomly generated call. */
 #define CONCEPT_PROBABILITY 2
@@ -231,6 +234,11 @@ typedef struct {
    SETUPFLAG__NO_STEP_TO_WAVE means that we are at a level of recursion that no longer permits us to do the
    implicit step to a wave or rear back from one that some calls permit at the top level.
 
+   SETUPFLAG__EXPLICIT_MATRIX means that the caller said "4x4 matrix" or "2x6 matrix" or whatever,
+   so we got to this matrix explicitly.  This enables natural splitting of the setup, e.g. form
+   a parallelogram, "2x6 matrix 1x2 checkmate" is legal -- the 2x6 gets divided naturally
+   into 2x3's.
+
    SETUPFLAG__NO_EXPAND_MATRIX means that we are at a level of recursion that no longer permits us to do the
    implicit expansion of the matrix (e.g. add outboard phantoms to turn a 2x4 into a 2x6
    if the concept "triple box" is used) that some concepts perform at the top level.
@@ -241,6 +249,7 @@ typedef struct {
    makes "ends detour" work.
 */
 
+#define SETUPFLAG__EXPLICIT_MATRIX    0x00000800
 #define SETUPFLAG__NO_EXPAND_MATRIX   0x00001000
 #define SETUPFLAG__DISTORTED          0x00002000
 #define SETUPFLAG__OFFSET_Z           0x00004000
@@ -388,6 +397,8 @@ typedef struct {
 #define warn__check_dmd_qtag      32
 #define warn__check_2x4           33
 #define warn__check_pgram         34
+#define warn__dyp_resolve_ok      35
+#define warn__ctrs_stay_in_ctr    36
 
 
 /* BEWARE!!  The warning numbers in this set must all be <= 31.  This is a
@@ -533,14 +544,15 @@ typedef enum {
 #define FINAL__TRIANGLE              0x00000020
 #define FINAL__SPLIT_SEQ_DONE        0x00000040
 
-#define FINAL__DIAMOND               0x00400000
-#define FINAL__REVERSE               0x00800000
-#define FINAL__LEFT                  0x01000000
-#define FINAL__FUNNY                 0x02000000
-#define FINAL__INTERLOCKED           0x04000000
-#define FINAL__MAGIC                 0x08000000
-#define FINAL__GRAND                 0x10000000
-#define FINAL__12_MATRIX             0x20000000
+#define FINAL__DIAMOND               0x00200000
+#define FINAL__REVERSE               0x00400000
+#define FINAL__LEFT                  0x00800000
+#define FINAL__FUNNY                 0x01000000
+#define FINAL__INTERLOCKED           0x02000000
+#define FINAL__MAGIC                 0x04000000
+#define FINAL__GRAND                 0x08000000
+#define FINAL__12_MATRIX             0x10000000
+#define FINAL__16_MATRIX             0x20000000
 #define FINAL__CROSS                 0x40000000
 #define FINAL__SINGLE                0x80000000
 
@@ -691,11 +703,9 @@ typedef enum {
    concept_concentric,
    concept_single_concentric,
    concept_tandem,
-   concept_phantom_tandem,
    concept_gruesome_tandem,
    concept_some_are_tandem,
    concept_frac_tandem,
-   concept_phantom_frac_tandem,
    concept_gruesome_frac_tandem,
    concept_some_are_frac_tandem,
    concept_checkerboard,
@@ -707,6 +717,11 @@ typedef enum {
    concept_single,
    concept_interlocked,
    concept_12_matrix,
+   concept_16_matrix,
+   concept_2x6_matrix,
+   concept_2x8_matrix,
+   concept_4x4_matrix,
+   concept_4dmd_matrix,
    concept_funny,
    concept_randomtrngl,
    concept_selbasedtrngl,
@@ -770,6 +785,7 @@ typedef enum {
    concept_interlace,
    concept_fractional,
    concept_rigger,
+   concept_slider,
    concept_callrigger
 } concept_kind;
 
@@ -977,7 +993,8 @@ typedef struct {           /* This is done to preserve the encapsulation of type
 
 extern real_jmp_buf longjmp_buffer;                                 /* in SDUTIL */
 extern real_jmp_buf *longjmp_ptr;                                   /* in SDUTIL */
-extern configuration history[];                                     /* in SDUTIL */
+extern configuration *history;                                      /* in SDUTIL */
+extern int history_allocation;                                      /* in SDUTIL */
 extern int history_ptr;                                             /* in SDUTIL */
 extern int written_history_items;                                   /* in SDUTIL */
 extern int written_history_nopic;                                   /* in SDUTIL */
@@ -994,14 +1011,26 @@ extern int global_livemask;                                         /* in SD */
 extern int global_selectmask;                                       /* in SD */
 extern concept_table_item concept_table[];                          /* in SD */
 
-extern int general_concept_size;                                    /* in SDTABLES */
-extern int general_concept_offset;                                  /* in SDTABLES */
-extern int *concept_offset_tables[];                                /* in SDTABLES */
-extern int *concept_size_tables[];                                  /* in SDTABLES */
-extern char *concept_menu_strings[];                                /* in SDTABLES */
-extern callspec_block **main_call_lists[NUM_CALL_LIST_KINDS];       /* in SDTABLES */
-extern int number_of_calls[NUM_CALL_LIST_KINDS];                    /* in SDTABLES */
-extern level calling_level;                                         /* in SDTABLES */
+extern concept_descriptor special_magic;                            /* in SDCTABLE */
+extern concept_descriptor special_interlocked;                      /* in SDCTABLE */
+extern concept_descriptor mark_end_of_list;                         /* in SDCTABLE */
+extern concept_descriptor marker_decline;                           /* in SDCTABLE */
+extern concept_descriptor marker_concept_mod;                       /* in SDCTABLE */
+extern concept_descriptor marker_concept_modreact;                  /* in SDCTABLE */
+extern concept_descriptor marker_concept_modtag;                    /* in SDCTABLE */
+extern concept_descriptor marker_concept_force;                     /* in SDCTABLE */
+extern concept_descriptor marker_concept_comment;                   /* in SDCTABLE */
+extern callspec_block **main_call_lists[NUM_CALL_LIST_KINDS];       /* in SDCTABLE */
+extern int number_of_calls[NUM_CALL_LIST_KINDS];                    /* in SDCTABLE */
+extern level calling_level;                                         /* in SDCTABLE */
+extern concept_descriptor concept_descriptor_table[];               /* in SDCTABLE */
+extern int nice_setup_concept[];                                    /* in SDCTABLE */
+extern int general_concept_offset;                                  /* in SDCTABLE */
+extern int general_concept_size;                                    /* in SDCTABLE */
+extern int *concept_offset_tables[];                                /* in SDCTABLE */
+extern int *concept_size_tables[];                                  /* in SDCTABLE */
+extern char *concept_menu_strings[];                                /* in SDCTABLE */
+
 extern char *getout_strings[];                                      /* in SDTABLES */
 extern char *filename_strings[];                                    /* in SDTABLES */
 extern char *resolve_names[];                                       /* in SDTABLES */
@@ -1013,11 +1042,9 @@ extern coordrec *nice_setup_coords[];                               /* in SDTABL
 extern int setup_limits[];                                          /* in SDTABLES */
 extern int begin_sizes[];                                           /* in SDTABLES */
 extern startinfo startinfolist[];                                   /* in SDTABLES */
-
 extern map_thing map_b6_trngl;                                      /* in SDTABLES */
 extern map_thing map_s6_trngl;                                      /* in SDTABLES */
 extern map_thing map_2x2v;                                          /* in SDTABLES */
-extern map_thing map_4x4v;                                          /* in SDTABLES */
 extern map_thing map_2x4_magic;                                     /* in SDTABLES */
 extern map_thing map_qtg_magic;                                     /* in SDTABLES */
 extern map_thing map_qtg_intlk;                                     /* in SDTABLES */
@@ -1025,9 +1052,35 @@ extern map_thing map_qtg_magic_intlk;                               /* in SDTABL
 extern map_thing map_ptp_magic;                                     /* in SDTABLES */
 extern map_thing map_ptp_intlk;                                     /* in SDTABLES */
 extern map_thing map_ptp_magic_intlk;                               /* in SDTABLES */
+extern map_thing map_2x4_diagonal;                                  /* in SDTABLES */
+extern map_thing map_2x4_int_pgram;                                 /* in SDTABLES */
+extern map_thing map_2x4_trapezoid;                                 /* in SDTABLES */
+extern map_thing map_3x4_2x3_intlk;                                 /* in SDTABLES */
+extern map_thing map_3x4_2x3_conc;                                  /* in SDTABLES */
 extern map_thing map_4x4_ns;                                        /* in SDTABLES */
 extern map_thing map_4x4_ew;                                        /* in SDTABLES */
+extern map_thing map_phantom_box;                                   /* in SDTABLES */
+extern map_thing map_intlk_phantom_box;                             /* in SDTABLES */
+extern map_thing map_phantom_dmd;                                   /* in SDTABLES */
+extern map_thing map_intlk_phantom_dmd;                             /* in SDTABLES */
+extern map_thing map_split_f;                                       /* in SDTABLES */
+extern map_thing map_intlk_f;                                       /* in SDTABLES */
+extern map_thing map_full_f;                                        /* in SDTABLES */
+extern map_thing map_stagger;                                       /* in SDTABLES */
+extern map_thing map_stairst;                                       /* in SDTABLES */
+extern map_thing map_ladder;                                        /* in SDTABLES */
+extern map_thing map_but_o;                                         /* in SDTABLES */
+extern map_thing map_o_s2x4_3;                                      /* in SDTABLES */
+extern map_thing map_x_s2x4_3;                                      /* in SDTABLES */
 extern map_thing map_offset;                                        /* in SDTABLES */
+extern map_thing map_4x4v;                                          /* in SDTABLES */
+extern map_thing map_blocks;                                        /* in SDTABLES */
+extern map_thing map_trglbox;                                       /* in SDTABLES */
+extern map_thing map_hv_2x4_2;                                      /* in SDTABLES */
+extern map_thing map_3x4_2x3;                                       /* in SDTABLES */
+extern map_thing map_4x6_2x4;                                       /* in SDTABLES */
+extern map_thing map_hv_qtg_2;                                      /* in SDTABLES */
+extern map_thing map_2x6_2x3;                                       /* in SDTABLES */
 extern map_thing map_ov_s2x4_k;                                     /* in SDTABLES */
 extern map_thing map_dbloff1;                                       /* in SDTABLES */
 extern map_thing map_dbloff2;                                       /* in SDTABLES */
@@ -1043,18 +1096,6 @@ extern map_thing map_dmd_1x1;                                       /* in SDTABL
 extern map_thing *maps_3diag[4];                                    /* in SDTABLES */
 extern map_thing *maps_3diagwk[4];                                  /* in SDTABLES */
 extern map_hunk *map_lists[][4];                                    /* in SDTABLES */
-
-extern concept_descriptor special_magic;                            /* in SDTABLES */
-extern concept_descriptor special_interlocked;                      /* in SDTABLES */
-extern concept_descriptor mark_end_of_list;                         /* in SDTABLES */
-extern concept_descriptor marker_decline;                           /* in SDTABLES */
-extern concept_descriptor marker_concept_mod;                       /* in SDTABLES */
-extern concept_descriptor marker_concept_modreact;                  /* in SDTABLES */
-extern concept_descriptor marker_concept_modtag;                    /* in SDTABLES */
-extern concept_descriptor marker_concept_force;                     /* in SDTABLES */
-extern concept_descriptor marker_concept_comment;                   /* in SDTABLES */
-extern concept_descriptor concept_descriptor_table[];               /* in SDTABLES */
-extern int nice_setup_concept[];                                    /* in SDTABLES */
 
 /*
 extern comment_block *comment_root;
@@ -1123,6 +1164,7 @@ extern void general_initialize(void);
 extern int generate_random_number(int modulus);
 extern long_boolean generate_random_concept_p(void);
 extern void *get_mem(unsigned int siz);
+extern void *get_more_mem(void *oldp, unsigned int siz);
 extern void free_mem(void *ptr);
 extern void get_date(char dest[]);
 extern void unparse_number(int arg, char dest[]);
@@ -1147,7 +1189,7 @@ extern long_boolean close_call_list_file(void);
 
 /* In SDUI */
 
-extern void uims_process_command_line(int *argcp, char *argv[]);
+extern void uims_process_command_line(int *argcp, char ***argvp);
 extern void uims_preinitialize(void);
 extern void uims_add_call_to_menu(call_list_kind cl, int call_menu_index, char name[]);
 extern void uims_finish_call_menu(call_list_kind cl, char menu_name[]);
@@ -1225,7 +1267,7 @@ extern uims_reply full_resolve(search_kind goal);
 /* In SDBASIC */
 
 extern void mirror_this(setup *s);
-
+extern void do_stability(unsigned int *personp, unsigned int def_word, int turning);
 extern void basic_move(
    setup *ss,
    parse_block *parseptr,
@@ -1270,6 +1312,11 @@ extern void do_concept_rigger(
    parse_block *parseptr,
    setup *result);
 
+extern void do_concept_slider(
+   setup *ss,
+   parse_block *parseptr,
+   setup *result);
+
 extern void do_concept_callrigger(
    setup *ss,
    parse_block *parseptr,
@@ -1278,7 +1325,7 @@ extern void do_concept_callrigger(
 /* In SD12 */
 
 extern void triangle_move(
-   setup *s,
+   setup *ss,
    parse_block *parseptr,
    setup *result);
 
@@ -1358,8 +1405,8 @@ extern void touch_or_rear_back(
    setup *scopy,
    int callflags);
 
-extern void do_matrix_expansion(setup *ss, concept_kind ckind);
+extern void do_matrix_expansion(setup *ss, unsigned int concprops);
 
-extern void normalize_setup(setup *ss, normalize_level level);
+extern void normalize_setup(setup *ss, normalize_level nlevel);
 
 extern void toplevelmove(void);

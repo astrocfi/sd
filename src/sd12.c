@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990, 1991, 1992  William B. Ackerman.
+    Copyright (C) 1990, 1991, 1992, 1993  William B. Ackerman.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-    This is version 24.0. */
+    This is for version 28. */
 
 /* This defines the following functions:
    triangle_move
@@ -84,13 +84,13 @@ typedef struct qwerty {
    struct qwerty *other;
    } tgl_map;
 
-/* These need to be external so that they can refer to each other. */
-extern tgl_map map1b;
-extern tgl_map map2b;
+/* These need to be predeclared so that they can refer to each other. */
+static tgl_map map1b;
+static tgl_map map2b;
 
 /*                 mapqt1     mapqt2   mapqti    mapcp1        mapcp2      mapcpi    map241     map242   map24i   kind     other */
-tgl_map map1b = {{4, 3, 2}, {0, 7, 6}, {1, 5}, {6,  8, 10}, {14,  0,  2}, {4, 12}, {6, 5, 4}, {2, 1, 0}, {3, 7}, s_c1phan, &map2b};
-tgl_map map2b = {{5, 6, 7}, {1, 2, 3}, {0, 4}, {3, 15, 13}, {11,  7,  5}, {1,  9}, {7, 6, 5}, {3, 2, 1}, {0, 4}, s_qtag,   &map1b};
+static tgl_map map1b = {{4, 3, 2}, {0, 7, 6}, {1, 5}, {6,  8, 10}, {14,  0,  2}, {4, 12}, {6, 5, 4}, {2, 1, 0}, {3, 7}, s_c1phan, &map2b};
+static tgl_map map2b = {{5, 6, 7}, {1, 2, 3}, {0, 4}, {3, 15, 13}, {11,  7,  5}, {1,  9}, {7, 6, 5}, {3, 2, 1}, {0, 4}, s_qtag,   &map1b};
 
 
 static void do_glorious_triangles(
@@ -275,7 +275,6 @@ static void wv_tand_base_move(
                t = 1;
             else if (global_selectmask != (global_livemask & 0xA5A5))
                fail("Can't find the indicated triangles.");
-            parseptr = parseptr->next;           /* Skip over the selector. */
          }
          else {
             t = parseptr->concept->value.arg1 & 1;
@@ -351,10 +350,9 @@ static void tall_short_6_move(
 
 
 extern void triangle_move(
-   setup *s,
+   setup *ss,
    parse_block *parseptr,
    setup *result)
-
 {
    int i;
    setup a1, a2;
@@ -374,70 +372,70 @@ extern void triangle_move(
 
    if (parseptr->concept->value.arg1 >= 6) {
       /* Set this so we can do "peel and trail" without saying "triangle" again. */
-      s->setupflags |= SETUPFLAG__SAID_TRIANGLE;
-      wv_tand_base_move(s, parseptr, result);
+      ss->setupflags |= SETUPFLAG__SAID_TRIANGLE;
+      wv_tand_base_move(ss, parseptr, result);
       return;
    }
    else if (parseptr->concept->value.arg1 >= 4) {
-      tall_short_6_move(s, parseptr, result);
+      tall_short_6_move(ss, parseptr, result);
       return;
    }
    else if (parseptr->concept->value.arg1 >= 2) {
       /* Set this so we can do "peel and trail" without saying "triangle" again. */
-      s->setupflags |= SETUPFLAG__SAID_TRIANGLE;
-      ctr_end_triangle_move(s, parseptr, result);
+      ss->setupflags |= SETUPFLAG__SAID_TRIANGLE;
+      ctr_end_triangle_move(ss, parseptr, result);
       return;
    }
 
    /* arg1 = 1 for in point, 0 for out point */
 
    /* Set this so we can do "peel and trail" without saying "triangle" again. */
-   s->setupflags |= SETUPFLAG__SAID_TRIANGLE;
+   ss->setupflags |= SETUPFLAG__SAID_TRIANGLE;
 
-   if (s->kind != s_qtag) fail("Must have diamonds.");
+   if (ss->kind != s_qtag) fail("Must have diamonds.");
 
    if (parseptr->concept->value.arg1) {
       if (
-            (s->people[0].id1 & d_mask) == d_east &&
-            (s->people[1].id1 & d_mask) != d_west &&
-            (s->people[4].id1 & d_mask) == d_west &&
-            (s->people[5].id1 & d_mask) != d_east)
+            (ss->people[0].id1 & d_mask) == d_east &&
+            (ss->people[1].id1 & d_mask) != d_west &&
+            (ss->people[4].id1 & d_mask) == d_west &&
+            (ss->people[5].id1 & d_mask) != d_east)
          map_ptr = &map1b;
       else if (
-            (s->people[0].id1 & d_mask) != d_east &&
-            (s->people[1].id1 & d_mask) == d_west &&
-            (s->people[4].id1 & d_mask) != d_west &&
-            (s->people[5].id1 & d_mask) == d_east)
+            (ss->people[0].id1 & d_mask) != d_east &&
+            (ss->people[1].id1 & d_mask) == d_west &&
+            (ss->people[4].id1 & d_mask) != d_west &&
+            (ss->people[5].id1 & d_mask) == d_east)
          map_ptr = &map2b;
       else
          fail("Can't find designated point.");
    }
    else {
       if (
-            (s->people[0].id1 & d_mask) == d_west &&
-            (s->people[1].id1 & d_mask) != d_east &&
-            (s->people[4].id1 & d_mask) == d_east &&
-            (s->people[5].id1 & d_mask) != d_west)
+            (ss->people[0].id1 & d_mask) == d_west &&
+            (ss->people[1].id1 & d_mask) != d_east &&
+            (ss->people[4].id1 & d_mask) == d_east &&
+            (ss->people[5].id1 & d_mask) != d_west)
          map_ptr = &map1b;
       else if (
-            (s->people[0].id1 & d_mask) != d_west &&
-            (s->people[1].id1 & d_mask) == d_east &&
-            (s->people[4].id1 & d_mask) != d_east &&
-            (s->people[5].id1 & d_mask) == d_west)
+            (ss->people[0].id1 & d_mask) != d_west &&
+            (ss->people[1].id1 & d_mask) == d_east &&
+            (ss->people[4].id1 & d_mask) != d_east &&
+            (ss->people[5].id1 & d_mask) == d_west)
          map_ptr = &map2b;
       else
          fail("Can't find designated point.");
    }
 
    for (i=0; i<3; i++) {
-      (void) copy_person(&a1, i, s, map_ptr->mapqt1[i]);
-      (void) copy_rot(&a2, i, s, map_ptr->mapqt2[i], 022);
+      (void) copy_person(&a1, i, ss, map_ptr->mapqt1[i]);
+      (void) copy_rot(&a2, i, ss, map_ptr->mapqt2[i], 022);
    }
 
    /* Save the two people who don't move. */
-   (void) copy_person(&idle, 0, s, map_ptr->mapqti[0]);
-   (void) copy_person(&idle, 1, s, map_ptr->mapqti[1]);
+   (void) copy_person(&idle, 0, ss, map_ptr->mapqti[0]);
+   (void) copy_person(&idle, 1, ss, map_ptr->mapqti[1]);
 
-   do_glorious_triangles(s, &a1, &a2, &idle, 0, map_ptr, parseptr->next, result);
-   reinstate_rotation(s, result);
+   do_glorious_triangles(ss, &a1, &a2, &idle, 0, map_ptr, parseptr->next, result);
+   reinstate_rotation(ss, result);
 }

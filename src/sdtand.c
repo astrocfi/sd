@@ -16,7 +16,7 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-    This is for version 27. */
+    This is for version 28. */
 
 /* This file contains stuff for tandem and as-couples moves. */
 
@@ -30,16 +30,21 @@
 typedef struct {
    personrec real_front_people[MAX_PEOPLE];
    personrec real_back_people[MAX_PEOPLE];
+   personrec real_second_people[MAX_PEOPLE];
+   personrec real_third_people[MAX_PEOPLE];
    setup virtual_setup;
    setup virtual_result;
    int vertical_people[MAX_PEOPLE];    /* 1 if original people were near/far; 0 if lateral */
    int twosomep[MAX_PEOPLE];           /* 0: solid / 1: twosome / 2: solid-to-twosome / 3: twosome-to-solid */
    unsigned int single_mask;
-   } tandrec;
+   int np;
+} tandrec;
 
 typedef struct {
    int map1[8];
    int map2[8];
+   int map3[8];
+   int map4[8];
    unsigned int sidewaysmask;       /* lateral pairs in inside numbering -- only alternate bits used! */
    unsigned int outsidemask;
    int limit;
@@ -49,88 +54,166 @@ typedef struct {
    unsigned int outunusedmask;
    setup_kind insetup;
    setup_kind outsetup;
-   } tm_thing;
+} tm_thing;
 
 
-static tm_thing maps_isearch[] = {
+static tm_thing maps_isearch_twosome[] = {
 
-/*         map1                              map2                  sidemask outsidemask limit rot            insetup outsetup            old name */
-   {{7, 6, 4, 5},                   {0, 1, 3, 2},                     0,     0000,         4, 0,  0,  0, 0,  s1x4,  s2x4},            /* "2x4_4" - see below */
-   {{0, 2, 5, 7},                   {1, 3, 4, 6},                  0x55,     0377,         4, 0,  0,  0, 0,  s2x2,  s2x4},
-   {{2, 5, 7, 0},                   {3, 4, 6, 1},                     0,     0377,         4, 1,  0,  0, 0,  s2x2,  s2x4},
-   {{3, 2},                         {0, 1},                           0,     0000,         2, 0,  0,  0, 0,  s_1x2, s2x2},
-   {{0, 3},                         {1, 2},                           0,     0017,         2, 1,  0,  0, 0,  s_1x2, s2x2},
-   {{0, 3},                         {1, 2},                         0x5,     0017,         2, 0,  0,  0, 0,  s_1x2, s1x4},
-   {{0},                            {1},                            0x1,     0003,         1, 0,  0,  0, 0,  s_1x1, s_1x2},           /* 1x2 */  /* this one is known to be good */
-   {{0},                            {1},                              0,     0003,         1, 1,  0,  0, 0,  s_1x1, s_1x2},           /* ????? */
-   {{0, 3, 5, 6},                   {1, 2, 4, 7},                  0x55,     0377,         4, 0,  0,  0, 0,  s1x4,  s1x8},
-   {{15, 14, 12, 13, 8, 9, 11, 10}, {0, 1, 3, 2, 7, 6, 4, 5},         0,     0000,         8, 0,  0,  0, 0,  s1x8,  s2x8},
-   {{11, 10, 9, 6, 7, 8},           {0, 1, 2, 5, 4, 3},               0,     0000,         6, 0,  0,  0, 0,  s_1x6, s2x6},
-   {{10, 15, 3, 1, 4, 5, 6, 8},     {12, 13, 14, 0, 2, 7, 11, 9},     0,     0000,         8, 0,  0,  0, 0,  s2x4,  s4x4},
-   {{14, 3, 7, 5, 8, 9, 10, 12},    {0, 1, 2, 4, 6, 11, 15, 13},      0,   0xFFFF,         8, 1,  0,  0, 0,  s2x4,  s4x4},
-   {{2, 5, 7, 9, 10, 0},            {3, 4, 6, 8, 11, 1},              0,   0x0FFF,         6, 1,  0,  0, 0,  s_2x3, s3x4},
-   {{0, 2, 4, 6, 9, 11, 13, 15},    {1, 3, 5, 7, 8, 10, 12, 14}, 0x5555,   0xFFFF,         8, 0,  0,  0, 0,  s2x4,  s2x8},
+/*         map1                              map2                map3  map4   sidemask outsidemask limit rot            insetup outsetup            old name */
+   {{7, 6, 4, 5},                   {0, 1, 3, 2},                 {0}, {0},      0,     0000,         4, 0,  0,  0, 0,  s1x4,  s2x4},            /* "2x4_4" - see below */
+   {{0, 2, 5, 7},                   {1, 3, 4, 6},                 {0}, {0},   0x55,     0377,         4, 0,  0,  0, 0,  s2x2,  s2x4},
+   {{2, 5, 7, 0},                   {3, 4, 6, 1},                 {0}, {0},      0,     0377,         4, 1,  0,  0, 0,  s2x2,  s2x4},
+   {{3, 2},                         {0, 1},                       {0}, {0},      0,     0000,         2, 0,  0,  0, 0,  s_1x2, s2x2},
+   {{0, 3},                         {1, 2},                       {0}, {0},      0,     0017,         2, 1,  0,  0, 0,  s_1x2, s2x2},
+   {{0, 3},                         {1, 2},                       {0}, {0},    0x5,     0017,         2, 0,  0,  0, 0,  s_1x2, s1x4},
+   {{0},                            {1},                          {0}, {0},    0x1,     0003,         1, 0,  0,  0, 0,  s_1x1, s_1x2},           /* 1x2 */  /* this one is known to be good */
+   {{0},                            {1},                          {0}, {0},      0,     0003,         1, 1,  0,  0, 0,  s_1x1, s_1x2},           /* ????? */
+   {{0, 3, 5, 6},                   {1, 2, 4, 7},                 {0}, {0},   0x55,     0377,         4, 0,  0,  0, 0,  s1x4,  s1x8},
+   {{15, 14, 12, 13, 8, 9, 11, 10}, {0, 1, 3, 2, 7, 6, 4, 5},     {0}, {0},      0,     0000,         8, 0,  0,  0, 0,  s1x8,  s2x8},
+   {{11, 10, 9, 6, 7, 8},           {0, 1, 2, 5, 4, 3},           {0}, {0},      0,     0000,         6, 0,  0,  0, 0,  s_1x6, s2x6},
+   {{10, 15, 3, 1, 4, 5, 6, 8},     {12, 13, 14, 0, 2, 7, 11, 9}, {0}, {0},      0,     0000,         8, 0,  0,  0, 0,  s2x4,  s4x4},
+   {{14, 3, 7, 5, 8, 9, 10, 12},    {0, 1, 2, 4, 6, 11, 15, 13},  {0}, {0},      0,   0xFFFF,         8, 1,  0,  0, 0,  s2x4,  s4x4},
+   {{2, 5, 7, 9, 10, 0},            {3, 4, 6, 8, 11, 1},          {0}, {0},      0,   0x0FFF,         6, 1,  0,  0, 0,  s_2x3, s3x4},
+   {{0, 2, 4, 6, 9, 11, 13, 15},    {1, 3, 5, 7, 8, 10, 12, 14},  {0}, {0}, 0x5555,   0xFFFF,         8, 0,  0,  0, 0,  s2x4,  s2x8},
 
    /* Next one is for centers in tandem in lines, making a virtual bone6. */
-   {{0, 3, 5, 4, 7, 6},             {-1, -1, 2, -1, -1, 1},           0,     0000,         6, 0,  0,  0, 0,  s_bone6, s2x4},
+   {{0, 3, 5, 4, 7, 6},             {-1, -1, 2, -1, -1, 1},       {0}, {0},      0,     0000,         6, 0,  0,  0, 0,  s_bone6, s2x4},
    /* Next two are for certain ends in tandem in an H, making a virtual bone6. */
-   {{10, 3, 5, 6, 9, 11},           {0, -1, -1, 4, -1, -1},           0,     0000,         6, 0,  0,  0, 0,  s_bone6, s3x4},
-   {{0, 4, 5, 6, 9, 11},            {-1, 3, -1, -1, 10, -1},          0,     0000,         6, 0,  0,  0, 0,  s_bone6, s3x4},
+   {{10, 3, 5, 6, 9, 11},           {0, -1, -1, 4, -1, -1},       {0}, {0},      0,     0000,         6, 0,  0,  0, 0,  s_bone6, s3x4},
+   {{0, 4, 5, 6, 9, 11},            {-1, 3, -1, -1, 10, -1},      {0}, {0},      0,     0000,         6, 0,  0,  0, 0,  s_bone6, s3x4},
    /* Next one is for ends in tandem in lines, making a virtual short6. */
-   {{2, 4, 5, 6, 7, 1},             {-1, 3, -1, -1, 0, -1},       0x104,     0000,         6, 1,  0,  0, 0,  s_short6, s2x4},
+   {{2, 4, 5, 6, 7, 1},             {-1, 3, -1, -1, 0, -1},       {0}, {0},  0x104,     0000,         6, 1,  0,  0, 0,  s_short6, s2x4},
    /* Next two are for certain center column people in tandem in a 1/4 tag, making a virtual short6. */
-   {{3, 2, 4, 5, 6, 0},             {1, -1, -1, 7, -1, -1},       0x041,     0000,         6, 1,  0,  0, 0,  s_short6, s_qtag},
-   {{1, 2, 4, 5, 6, 7},             {-1, -1, 3, -1, -1, 0},       0x410,     0000,         6, 1,  0,  0, 0,  s_short6, s_qtag},
+   {{3, 2, 4, 5, 6, 0},             {1, -1, -1, 7, -1, -1},       {0}, {0},  0x041,     0000,         6, 1,  0,  0, 0,  s_short6, s_qtag},
+   {{1, 2, 4, 5, 6, 7},             {-1, -1, 3, -1, -1, 0},       {0}, {0},  0x410,     0000,         6, 1,  0,  0, 0,  s_short6, s_qtag},
    /* Next three are for various people in tandem in columns of 8, making virtual columns of 6. */
-   {{0, 2, 3, 5, 6, 7},             {1, -1, -1, 4, -1, -1},       0x041,     0063,         6, 0,  0,  0, 0,  s_2x3, s2x4},
-   {{0, 1, 3, 4, 6, 7},             {-1, 2, -1, -1, 5, -1},       0x104,     0146,         6, 0,  0,  0, 0,  s_2x3, s2x4},
-   {{0, 1, 2, 4, 5, 7},             {-1, -1, 3, -1, -1, 6},       0x410,     0314,         6, 0,  0,  0, 0,  s_2x3, s2x4},
+   {{0, 2, 3, 5, 6, 7},             {1, -1, -1, 4, -1, -1},       {0}, {0},  0x041,     0063,         6, 0,  0,  0, 0,  s_2x3, s2x4},
+   {{0, 1, 3, 4, 6, 7},             {-1, 2, -1, -1, 5, -1},       {0}, {0},  0x104,     0146,         6, 0,  0,  0, 0,  s_2x3, s2x4},
+   {{0, 1, 2, 4, 5, 7},             {-1, -1, 3, -1, -1, 6},       {0}, {0},  0x410,     0314,         6, 0,  0,  0, 0,  s_2x3, s2x4},
    /* Next three are for various people as couples in a C1 phantom or 1/4 tag, making virtual columns of 6. */
-   {{3, 7, 5, 9, 15, 13},           {1, -1, -1, 11, -1, -1},          0,     0000,         6, 0,  0,  0, 0,  s_2x3, s_c1phan},
-   {{1, 3, 4, 5, 6, 0},             {-1, 2, -1, -1, 7, -1},           0,     0314,         6, 1,  0,  0, 0,  s_2x3, s_qtag},
-   {{0, 2, 6, 8, 10, 12},           {-1, -1, 4, -1, -1, 14},          0,     0000,         6, 0,  0,  0, 0,  s_2x3, s_c1phan},
+   {{3, 7, 5, 9, 15, 13},           {1, -1, -1, 11, -1, -1},      {0}, {0},      0,     0000,         6, 0,  0,  0, 0,  s_2x3, s_c1phan},
+   {{1, 3, 4, 5, 6, 0},             {-1, 2, -1, -1, 7, -1},       {0}, {0},      0,     0314,         6, 1,  0,  0, 0,  s_2x3, s_qtag},
+   {{0, 2, 6, 8, 10, 12},           {-1, -1, 4, -1, -1, 14},      {0}, {0},      0,     0000,         6, 0,  0,  0, 0,  s_2x3, s_c1phan},
    /* Next three are for various people in tandem in a rigger or PTP diamonds, making a virtual line of 6. */
-   {{6, 7, 5, 2, 3, 4},             {-1, -1, 0, -1, -1, 1},           0,     0000,         6, 0,  0,  0, 0,  s_1x6, s_rigger},
-   {{0, 3, 2, 4, 5, 6},             {-1, 1, -1, -1, 7, -1},           0,     0000,         6, 0,  0,  0, 0,  s_1x6, s_ptpd},
-   {{5, 6, 7, 4, 2, 3},             {0, -1, -1, 1, -1, -1},           0,     0000,         6, 0,  0,  0, 0,  s_1x6, s_bone},
+   {{6, 7, 5, 2, 3, 4},             {-1, -1, 0, -1, -1, 1},       {0}, {0},      0,     0000,         6, 0,  0,  0, 0,  s_1x6, s_rigger},
+   {{0, 3, 2, 4, 5, 6},             {-1, 1, -1, -1, 7, -1},       {0}, {0},      0,     0000,         6, 0,  0,  0, 0,  s_1x6, s_ptpd},
+   {{5, 6, 7, 4, 2, 3},             {0, -1, -1, 1, -1, -1},       {0}, {0},      0,     0000,         6, 0,  0,  0, 0,  s_1x6, s_bone},
 
-   {{0, 3, 5, 6},                   {1, 2, 4, 7},                     0,     0377,         4, 1,  0,  0, 0,  sdmd,  s_qtag},
-   {{3, 7, 9, 13},                  {1, 5, 11, 15},                0x44,   0xA0A0,         4, 0,  0,  0, 0,  s2x2,  s_c1phan},        /* xyz      */  
-   {{0, 6, 10, 12},                 {2, 4, 8, 14},                 0x11,   0x0505,         4, 0,  0,  0, 0,  s2x2,  s_c1phan},        /* pqr      */  
-   {{15, 3, 5, 9},                  {13, 1, 7, 11},                0x44,   0x0A0A,         4, 0,  0,  0, 0,  s2x2,  s4x4},      /* These do C1-phantom-like stuff from fudgy 4x4 */
-   {{10, 3, 7, 6},                  {15, 14, 2, 11},               0x11,   0x8484,         4, 0,  0,  0, 0,  s2x2,  s4x4},      /* They must follow the pair just above. */
-   {{6, 0, 3, 5},                   {7, 1, 2, 4},                  0x55,     0377,         4, 0,  0,  0, 0,  sdmd,  s_rigger},
-   {{6, 5, 3, 4},                   {7, 0, 2, 1},                  0x11,     0314,         4, 0,  0,  0, 0,  s1x4,  s_rigger},       /* must be after "2x4_4" */
-   {{5, 6, 4, 3},                   {0, 7, 1, 2},                  0x44,     0314,         4, 0,  0,  0, 0,  s1x4,  s_bone},
-   {{0, 3, 5, 6},                   {1, 2, 4, 7},                  0x11,     0063,         4, 0,  0,  0, 0,  sdmd,  s_crosswave},     /* crosswave*/  
-   {{7, 1, 4, 6},                   {0, 2, 3, 5},                  0x44,     0146,         4, 0,  0,  0, 0,  sdmd,  s2x4},         /* must be after "2x4_4" */
+   {{0, 3, 5, 6},                   {1, 2, 4, 7},                 {0}, {0},      0,     0377,         4, 1,  0,  0, 0,  sdmd,  s_qtag},
+   {{3, 7, 9, 13},                  {1, 5, 11, 15},               {0}, {0},   0x44,   0xA0A0,         4, 0,  0,  0, 0,  s2x2,  s_c1phan},        /* xyz      */  
+   {{0, 6, 10, 12},                 {2, 4, 8, 14},                {0}, {0},   0x11,   0x0505,         4, 0,  0,  0, 0,  s2x2,  s_c1phan},        /* pqr      */  
+   {{15, 3, 5, 9},                  {13, 1, 7, 11},               {0}, {0},   0x44,   0x0A0A,         4, 0,  0,  0, 0,  s2x2,  s4x4},      /* These do C1-phantom-like stuff from fudgy 4x4 */
+   {{10, 3, 7, 6},                  {15, 14, 2, 11},              {0}, {0},   0x11,   0x8484,         4, 0,  0,  0, 0,  s2x2,  s4x4},      /* They must follow the pair just above. */
+   {{6, 0, 3, 5},                   {7, 1, 2, 4},                 {0}, {0},   0x55,     0377,         4, 0,  0,  0, 0,  sdmd,  s_rigger},
+   {{6, 5, 3, 4},                   {7, 0, 2, 1},                 {0}, {0},   0x11,     0314,         4, 0,  0,  0, 0,  s1x4,  s_rigger},       /* must be after "2x4_4" */
+   {{5, 6, 4, 3},                   {0, 7, 1, 2},                 {0}, {0},   0x44,     0314,         4, 0,  0,  0, 0,  s1x4,  s_bone},
+   {{0, 3, 5, 6},                   {1, 2, 4, 7},                 {0}, {0},   0x11,     0063,         4, 0,  0,  0, 0,  sdmd,  s_crosswave},     /* crosswave*/  
+   {{7, 1, 4, 6},                   {0, 2, 3, 5},                 {0}, {0},   0x44,     0146,         4, 0,  0,  0, 0,  sdmd,  s2x4},         /* must be after "2x4_4" */
    /* Next one is for so-and-so in tandem in a bone6, making a virtual line of 4. */
-   {{4, 5, 3, 2},                   {0, -1, 1, -1},                   0,     0000,         4, 0,  0,  0, 0,  s1x4,  s_bone6},
+   {{4, 5, 3, 2},                   {0, -1, 1, -1},               {0}, {0},      0,     0000,         4, 0,  0,  0, 0,  s1x4,  s_bone6},
    /* Next one is for so-and-so in tandem in a short6, making a virtual line of 4. */
-   {{1, 0, 4, 5},                   {-1, 2, -1, 3},                   0,     0055,         4, 1,  0,  0, 0,  s1x4,  s_short6},
+   {{1, 0, 4, 5},                   {-1, 2, -1, 3},               {0}, {0},      0,     0055,         4, 1,  0,  0, 0,  s1x4,  s_short6},
    /* Next three are for so-and-so as couples in a line of 8, making a virtual line of 6. */
-   {{0, 1, 3, 4, 5, 6},             {-1, -1, 2, -1, -1, 7},       0x410,     0314,         6, 0,  0,  0, 0,  s_1x6, s1x8},
-   {{0, 1, 2, 4, 7, 6},             {-1, 3, -1, -1, 5, -1},       0x104,     0252,         6, 0,  0,  0, 0,  s_1x6, s1x8},
-   {{0, 3, 2, 5, 7, 6},             {1, -1, -1, 4, -1, -1},       0x041,     0063,         6, 0,  0,  0, 0,  s_1x6, s1x8},
+   {{0, 1, 3, 4, 5, 6},             {-1, -1, 2, -1, -1, 7},       {0}, {0},  0x410,     0314,         6, 0,  0,  0, 0,  s_1x6, s1x8},
+   {{0, 1, 2, 4, 7, 6},             {-1, 3, -1, -1, 5, -1},       {0}, {0},  0x104,     0252,         6, 0,  0,  0, 0,  s_1x6, s1x8},
+   {{0, 3, 2, 5, 7, 6},             {1, -1, -1, 4, -1, -1},       {0}, {0},  0x041,     0063,         6, 0,  0,  0, 0,  s_1x6, s1x8},
    /* Next two are for so-and-so as couples in a line of 6, making a virtual line of 4. */
-   {{0, 1, 3, 5},                   {-1, 2, -1, 4},                0x44,     0066,         4, 0,  0,  0, 0,  s1x4,  s_1x6},
-   {{0, 2, 4, 5},                   {1, -1, 3, -1},                0x11,     0033,         4, 0,  0,  0, 0,  s1x4,  s_1x6},
+   {{0, 1, 3, 5},                   {-1, 2, -1, 4},               {0}, {0},   0x44,     0066,         4, 0,  0,  0, 0,  s1x4,  s_1x6},
+   {{0, 2, 4, 5},                   {1, -1, 3, -1},               {0}, {0},   0x11,     0033,         4, 0,  0,  0, 0,  s1x4,  s_1x6},
    /* Next 4 are for so-and-so in tandem from a column of 6, making a virtual column of 4.  The first two are the real maps,
       and the other two take care of the reorientation that sometimes happens when coming out of a 2x2. */
-   {{0, 1, 3, 5},                   {-1, 2, -1, 4},                0x44,     0066,         4, 0,  0,  0, 0,  s2x2,  s_2x3},
-   {{0, 2, 4, 5},                   {1, -1, 3, -1},                0x11,     0033,         4, 0,  0,  0, 0,  s2x2,  s_2x3},
-   {{1, 3, 5, 0},                   {2, -1, 4, -1},                   0,     0066,         4, 1,  0,  0, 0,  s2x2,  s_2x3},
-   {{2, 4, 5, 0},                   {-1, 3, -1, 1},                   0,     0033,         4, 1,  0,  0, 0,  s2x2,  s_2x3},
-   {{0, 2, 4, 7, 9, 11},            {1, 3, 5, 6, 8, 10},          0x555,   0x0FFF,         6, 0,  0,  0, 0,  s_2x3, s2x6},
+   {{0, 1, 3, 5},                   {-1, 2, -1, 4},               {0}, {0},   0x44,     0066,         4, 0,  0,  0, 0,  s2x2,  s_2x3},
+   {{0, 2, 4, 5},                   {1, -1, 3, -1},               {0}, {0},   0x11,     0033,         4, 0,  0,  0, 0,  s2x2,  s_2x3},
+   {{1, 3, 5, 0},                   {2, -1, 4, -1},               {0}, {0},      0,     0066,         4, 1,  0,  0, 0,  s2x2,  s_2x3},
+   {{2, 4, 5, 0},                   {-1, 3, -1, 1},               {0}, {0},      0,     0033,         4, 1,  0,  0, 0,  s2x2,  s_2x3},
+   {{0, 2, 4, 7, 9, 11},            {1, 3, 5, 6, 8, 10},          {0}, {0},  0x555,   0x0FFF,         6, 0,  0,  0, 0,  s_2x3, s2x6},
 
-   {{0},                            {0},                              0,     0000,         0, 0,  0,  0, 0,  nothing,  nothing}};
+   {{0},                            {0},                          {0}, {0},      0,     0000,         0, 0,  0,  0, 0,  nothing,  nothing}};
 
 
-extern void initialize_tandem_tables(void)
+static tm_thing maps_isearch_threesome[] = {
+
+/*         map1                              map2                map3  map4   sidemask outsidemask limit rot            insetup outsetup */
+   {{0, 5},               {1, 4},               {2, 3},                {0},    0x5,      077,         2, 0,  0,  0, 0,  s_1x2, s_1x6},
+   {{0, 5},               {1, 4},               {2, 3},                {0},      0,      077,         2, 1,  0,  0, 0,  s_1x2, s_2x3},
+   {{0, 3, 8, 11},        {1, 4, 7, 10},        {2, 5, 6, 9},          {0},   0x55,    07777,         4, 0,  0,  0, 0,  s2x2,  s2x6},
+   {{3, 8, 11, 0},        {4, 7, 10, 1},        {5, 6, 9, 2},          {0},      0,    07777,         4, 1,  0,  0, 0,  s2x2,  s2x6},
+   {{0, 3, 8, 11},        {1, 4, 7, 10},        {2, 5, 6, 9},          {0},    0x55,   07777,         4, 0,  0,  0, 0,  s1x4, s1x12},
+   {{9, 8, 6, 7},         {10, 11, 4, 5},       {0, 1, 3, 2},          {0},      0,     0000,         4, 0,  0,  0, 0,  s1x4,  s3x4},
+   {{0},                            {0},                          {0}, {0},      0,     0000,         0, 0,  0,  0, 0,  nothing,  nothing}};
+
+static tm_thing maps_isearch_foursome[] = {
+
+/*         map1                              map2                map3  map4   sidemask outsidemask limit rot            insetup outsetup */
+   {{0, 6},           {1, 7},           {3, 5},           {2, 4},              0x5,    0x0FF,         2, 0,  0,  0, 0,  s_1x2, s1x8},
+   {{0, 7},           {1, 6},           {2, 5},           {3, 4},                0,    0x0FF,         2, 1,  0,  0, 0,  s_1x2, s2x4},
+   {{0, 4, 11, 15},   {1, 5, 10, 14},   {2, 6, 9, 13},    {3, 7, 8, 12},      0x55,  0x0FFFF,         4, 0,  0,  0, 0,  s2x2,  s2x8},
+   {{4, 11, 15, 0},   {5, 10, 14, 1},   {6, 9, 13, 2},    {7, 8, 12, 3},         0,  0x0FFFF,         4, 1,  0,  0, 0,  s2x2,  s2x8},
+   {{0, 4, 11, 15},   {1, 5, 10, 14},   {2, 6, 9, 13},    {3, 7, 8, 12},      0x55,  0x0FFFF,         4, 0,  0,  0, 0,  s1x4, s1x16},
+   {{8, 6, 4, 5},     {9, 11, 2, 7},    {10, 15, 1, 3},   {12, 13, 0, 14},       0,     0000,         4, 0,  0,  0, 0,  s1x4,  s4x4},
+   {{12, 10, 8, 9},   {13, 15, 6, 11},  {14, 3, 5, 7},    {0, 1, 4, 2},          0,   0xFFFF,         4, 1,  0,  0, 0,  s1x4,  s4x4},
+   {{0},                            {0},                          {0}, {0},      0,     0000,         0, 0,  0,  0, 0,  nothing,  nothing}};
+
+static tm_thing maps_isearch_boxsome[] = {
+
+/*         map1                              map2                map3  map4   sidemask outsidemask limit rot            insetup outsetup */
+   {{0, 2},           {1, 3},           {7, 5},           {6, 4},              0x5,    0x0FF,         2, 0,  0,  0, 0,  s_1x2, s2x4},
+   {{7, 5},           {0, 2},           {6, 4},           {1, 3},                0,        0,         2, 0,  0,  0, 0,  s_1x2, s2x4},
+   {{0, 2, 6, 4},     {1, 3, 7, 5},     {15, 13, 9, 11},  {14, 12, 8, 10},    0x55,  0x0FFFF,         4, 0,  0,  0, 0,  s1x4,  s2x8},
+   {{15, 13, 9, 11},  {0, 2, 6, 4},     {14, 12, 8, 10},  {1, 3, 7, 5},          0,        0,         4, 0,  0,  0, 0,  s1x4,  s2x8},
+   {{12, 14, 7, 9},   {13, 0, 2, 11},   {10, 3, 5, 8},    {15, 1, 4, 6},      0x55,  0x0FFFF,         4, 0,  0,  0, 0,  s2x2,  s4x4},
+   {{10, 3, 5, 8},    {12, 14, 7, 9},   {15, 1, 4, 6},   {13, 0, 2, 11},         0,        0,         4, 0,  0,  0, 0,  s2x2,  s4x4},
+   {{0},              {0},              {0},              {0},                   0,     0000,         0, 0,  0,  0, 0,  nothing,  nothing}};
+
+static tm_thing maps_isearch_dmdsome[] = {
+
+/*         map1                              map2                map3  map4   sidemask outsidemask limit rot            insetup outsetup */
+   {{0, 6},           {1, 7},           {3, 5},           {2, 4},              0x5,    0x0FF,         2, 0,  0,  0, 0,  s_1x2, s_ptpd},
+   {{5, 4},           {6, 3},           {7, 2},           {0, 1},                0,        0,         2, 0,  0,  0, 0,  s_1x2, s_qtag},
+   {{11, 10, 8, 9},   {12, 14, 5, 7},   {13, 15, 4, 6},   {0, 1, 3, 2},          0,        0,         4, 0,  0,  0, 0,  s1x4,  s_4dmd},
+   {{0},              {0},              {0},              {0},                   0,     0000,         0, 0,  0,  0, 0,  nothing,  nothing}};
+
+
+typedef struct {
+   setup_kind testkind;
+   unsigned int testval;
+   unsigned int fixup;
+   int warning;
+} siamese_item;
+
+siamese_item siamese_table[] = {
+   {s2x4,        0x00FF0000, 0x99, warn__ctrstand_endscpls},
+   {s2x4,        0x00990066, 0x99, warn__ctrstand_endscpls},
+   {s2x4,        0x000000FF, 0x66, warn__ctrscpls_endstand},
+   {s2x4,        0x00660099, 0x66, warn__ctrscpls_endstand},
+   {s2x4,        0x003300CC, 0xCC, -1},
+   {s2x4,        0x00CC0033, 0x33, -1},
+   {s_c1phan,    0x0000AAAA, 0xA0A0, -1},
+   {s_c1phan,    0x00005555, 0x0505, -1},
+   {s_c1phan,    0xAAAA0000, 0x0A0A, -1},
+   {s_c1phan,    0x55550000, 0x5050, -1},
+   {s4x4,        0x0000AAAA, 0x0A0A, -1},
+   {s4x4,        0x0000CCCC, 0x8484, -1},
+   {s4x4,        0xAAAA0000, 0xA0A0, -1},
+   {s4x4,        0xCCCC0000, 0x4848, -1},
+   {s_qtag,      0x003300CC, 0xCC, warn__ctrscpls_endstand},
+   {s_qtag,      0x00CC0033, 0x33, warn__ctrstand_endscpls},
+   {s_rigger,    0x00FF0000, 0x33, warn__ctrscpls_endstand},
+   {s_rigger,    0x00CC0033, 0x33, warn__ctrscpls_endstand},
+   {s_rigger,    0x000000FF, 0xCC, warn__ctrstand_endscpls},
+   {s_rigger,    0x003300CC, 0xCC, warn__ctrstand_endscpls},
+   {s_bone,      0x00FF0000, 0x33, warn__ctrstand_endscpls},
+   {s_bone,      0x000000FF, 0xCC, warn__ctrscpls_endstand},
+   {s_crosswave, 0x00FF0000, 0xCC, warn__ctrscpls_endstand},
+   {s_crosswave, 0x000000FF, 0x33, warn__ctrstand_endscpls},
+   {nothing, 0, 0, -1}};
+
+
+static void initialize_one_table(tm_thing *map_start, int np)
 {
    tm_thing *map_search;
 
-   for (map_search = maps_isearch; map_search->outsetup != nothing; map_search++) {
+   for (map_search = map_start; map_search->outsetup != nothing; map_search++) {
       int i;
       unsigned int m;
       unsigned int imask = 0;
@@ -148,9 +231,18 @@ extern void initialize_tandem_tables(void)
          }
          else {
             alloutmask &= ~(1 << map_search->map2[i]);
+            if (np >= 3)
+               alloutmask &= ~(1 << map_search->map3[i]);
+            if (np >= 4)
+               alloutmask &= ~(1 << map_search->map4[i]);
+
             if (((map_search->sidewaysmask >> (i*2)) ^ map_search->rot) & 1) {
                osidemask |= 1 << map_search->map1[i];
                osidemask |= 1 << map_search->map2[i];
+               if (np >= 3)
+                  osidemask |= 1 << map_search->map3[i];
+               if (np >= 4)
+                  osidemask |= 1 << map_search->map4[i];
             }
          }
       }
@@ -164,6 +256,16 @@ extern void initialize_tandem_tables(void)
       if (map_search->limit > 8) fail("Tandem table initialization failed: limit too big.");
       if (map_search->outsidemask != osidemask) fail("Tandem table initialization failed: Smask.");
    }
+}
+
+
+extern void initialize_tandem_tables(void)
+{
+   initialize_one_table(maps_isearch_twosome, 2);
+   initialize_one_table(maps_isearch_threesome, 3);
+   initialize_one_table(maps_isearch_foursome, 4);
+   initialize_one_table(maps_isearch_boxsome, 4);
+   initialize_one_table(maps_isearch_dmdsome, 4);
 }
 
 
@@ -187,8 +289,7 @@ static void unpack_us(
 
       if (m & 1) {
          /* Unpack single person. */
-         if (z == 0) clear_person(result, map_ptr->map1[i]);
-         else {
+         if (z != 0) {
             personrec f;
             int ii = (z & 0700) >> 6;
             f = tandstuff->real_front_people[ii];
@@ -198,26 +299,42 @@ static void unpack_us(
       }
       else {
          /* Unpack tandem/couples person. */
-         personrec f, b;
+         personrec f, b, b2, b3;
 
-         if (z == 0) {
-            clear_person(result, map_ptr->map1[i]);
-            clear_person(result, map_ptr->map2[i]);
-         }
-         else {
+         if (z != 0) {
             int ii = (z >> 6) & 7;
             f = tandstuff->real_front_people[ii];
             b = tandstuff->real_back_people[ii];
+            b2 = tandstuff->real_second_people[ii];
+            b3 = tandstuff->real_third_people[ii];
+
             if (f.id1) f.id1 = (f.id1 & ~(ROLL_MASK|STABLE_MASK|077)) | (z & (ROLL_MASK|STABLE_MASK|013));
             if (b.id1) b.id1 = (b.id1 & ~(ROLL_MASK|STABLE_MASK|077)) | (z & (ROLL_MASK|STABLE_MASK|013));
+            if (b2.id1) b2.id1 = (b2.id1 & ~(ROLL_MASK|STABLE_MASK|077)) | (z & (ROLL_MASK|STABLE_MASK|013));
+            if (b3.id1) b3.id1 = (b3.id1 & ~(ROLL_MASK|STABLE_MASK|077)) | (z & (ROLL_MASK|STABLE_MASK|013));
 
             if ((o + map_ptr->rot + 1) & 2) {
-               result->people[map_ptr->map1[i]] = b;
-               result->people[map_ptr->map2[i]] = f;
+               if (tandstuff->np >= 4) {
+                  result->people[map_ptr->map1[i]] = b3;
+                  result->people[map_ptr->map2[i]] = b2;
+                  result->people[map_ptr->map3[i]] = b;
+                  result->people[map_ptr->map4[i]] = f;
+               }
+               else if (tandstuff->np >= 3) {
+                  result->people[map_ptr->map1[i]] = b2;
+                  result->people[map_ptr->map2[i]] = b;
+                  result->people[map_ptr->map3[i]] = f;
+               }
+               else {
+                  result->people[map_ptr->map1[i]] = b;
+                  result->people[map_ptr->map2[i]] = f;
+               }
             }
             else {
                result->people[map_ptr->map1[i]] = f;
                result->people[map_ptr->map2[i]] = b;
+               if (tandstuff->np >= 3) result->people[map_ptr->map3[i]] = b2;
+               if (tandstuff->np >= 4) result->people[map_ptr->map4[i]] = b3;
             }
          }
       }
@@ -254,7 +371,8 @@ static void pack_us(
    tandstuff->virtual_setup.kind = map_ptr->insetup;
 
    for (i=0, m=map_ptr->sidewaysmask, sgl=map_ptr->insinglemask; i<map_ptr->limit; i++, m>>=2, sgl>>=2) {
-      personrec f, b;
+      personrec f, b, b2, b3;
+
       personrec *ptr = &tandstuff->virtual_setup.people[i];
 
       f = s[map_ptr->map1[i]];
@@ -268,15 +386,21 @@ static void pack_us(
       }
       else {
          b = s[map_ptr->map2[i]];
+         b2 = b;
+         b3 = b;
+         if (tandstuff->np >= 3) b2 = s[map_ptr->map3[i]];
+         if (tandstuff->np >= 4) b3 = s[map_ptr->map4[i]];
 
-         if (!(tandstuff->virtual_setup.setupflags & SETUPFLAG__PHANTOMS) && ((b.id1 ^ f.id1) & BIT_PERSON))
-            fail("Use phantom tandem/phantom couples concept instead.");
+         if (!(tandstuff->virtual_setup.setupflags & SETUPFLAG__PHANTOMS)) {
+            if ((((f.id1 ^ b.id1) | (f.id1 ^ b2.id1) | (f.id1 ^ b3.id1)) & BIT_PERSON))
+               fail("Use phantom tandem/phantom couples concept instead.");
+         }
          
-         if (b.id1 | f.id1) {
-            unsigned int vp1;
+         if (f.id1 | b.id1 | b2.id1 | b3.id1) {
+            unsigned int vp1, vp2;
          
             if (twosome >= 2) {
-               if ((b.id1 | f.id1) & STABLE_MASK)
+               if ((f.id1 | b.id1 | b2.id1 | b3.id1) & STABLE_MASK)
                   fail("Sorry, can't nest fractional stable/twosome.");
             }
 
@@ -287,6 +411,11 @@ static void pack_us(
                from id1 and replace with a virtual person indicator.  Check that
                direction, roll, and stability parts of id1 are consistent. */
          
+
+
+
+
+/* ***** this stuff needs to be reworked for triples and quads. */
             if (b.id1 & f.id1 & BIT_PERSON) {
                /* If both people are real, check that they face the same way. */
                if ((b.id1 ^ f.id1) & 077)
@@ -296,12 +425,19 @@ static void pack_us(
                if ((b.id1 ^ f.id1) & STABLE_MASK) vp1 &= ~STABLE_MASK;
                /* If they have different roll states, just clear them -- they can't roll. */
                if ((b.id1 ^ f.id1) & ROLL_MASK) vp1 &= ~ROLL_MASK;
+               vp2 = b.id2 & f.id2;
+
+
+
+
+
                ptr->id1 = vp1;
-               ptr->id2 = b.id2 & f.id2;
+               ptr->id2 = vp2;
             }
             else {
-               ptr->id1 = ((b.id1 | f.id1) & ~0700) | (i << 6) | BIT_VIRTUAL;
-               ptr->id2 = b.id2 | f.id2;
+               /* If only one person is real, just use him. */
+               ptr->id1 = ((b.id1 | f.id1 | b2.id1 | b3.id1) & ~0700) | (i << 6) | BIT_VIRTUAL;
+               ptr->id2 = b.id2 | f.id2 | b2.id2 | b3.id2;
             }
 
             if (twosome >= 2)
@@ -321,6 +457,8 @@ static void pack_us(
 
       tandstuff->real_front_people[i] = f;
       tandstuff->real_back_people[i] = b;
+      tandstuff->real_second_people[i] = b2;
+      tandstuff->real_third_people[i] = b3;
    }
 }
 
@@ -345,16 +483,18 @@ extern void tandem_couples_move(
    tm_thing *map;
    tm_thing *map_search;
    unsigned int nsmask, ewmask, allmask;
-   int i;
+   int i, np;
    unsigned int j, jbit;
    unsigned int hmask;
    unsigned int orbitmask;
    unsigned int sglmask;
    unsigned int livemask;
    long_boolean fractional = FALSE;
+   tm_thing *our_map_table;
 
    conceptptrcopy = parseptr;
    tandstuff.single_mask = 0;
+   clear_people(result);
 
    if (setup_limits[ss->kind] < 0) fail("Can't do tandem/couples concept from this position.");
 
@@ -401,90 +541,39 @@ extern void tandem_couples_move(
    if (fractional && fraction > 4)
       fail("Can't do fractional twosome more than 4/4.");
 
+   if (tnd_cpl_siam == 9) {
+      np = 4;
+      our_map_table = maps_isearch_dmdsome;
+   }
+   else if (tnd_cpl_siam == 8) {
+      np = 4;
+      our_map_table = maps_isearch_boxsome;
+   }
+   else if (tnd_cpl_siam >= 6) {
+      np = 4;
+      our_map_table = maps_isearch_foursome;
+   }
+   else if (tnd_cpl_siam >= 4) {
+      np = 3;
+      our_map_table = maps_isearch_threesome;
+   }
+   else {
+      np = 2;
+      our_map_table = maps_isearch_twosome;
+   }
 
-   if (tnd_cpl_siam > 2)
+   if (tnd_cpl_siam == 3)
       fail("Sorry, can't do skew/skewsome.");
-   else if (tnd_cpl_siam > 1) {
+   else if (tnd_cpl_siam == 2) {
       /* Siamese. */
-      switch (ss->kind) {
-         case s_c1phan:
-            switch ((ewmask << 16) | nsmask) {
-               case 0x0000AAAA:
-                  j = 0xA0A0; goto foox;
-               case 0x00005555:
-                  j = 0x0505; goto foox;
-               case 0xAAAA0000:
-                  j = 0x0A0A; goto foox;
-               case 0x55550000:
-                  j = 0x5050; goto foox;
-            }
-            break;
-         case s4x4:
-            switch ((ewmask << 16) | nsmask) {
-               case 0x0000AAAA:
-                  j = 0x0A0A; goto foox;
-               case 0x0000CCCC:
-                  j = 0x8484; goto foox;
-               case 0xAAAA0000:
-                  j = 0xA0A0; goto foox;
-               case 0xCCCC0000:
-                  j = 0x4848; goto foox;
-            }
-            break;
-         case s_qtag:
-            switch ((ewmask << 8) | nsmask) {
-               case 0x33CC:
-                  warn(warn__ctrscpls_endstand);
-                  j = 0xCC; goto foox;
-               case 0xCC33:
-                  warn(warn__ctrstand_endscpls);
-                  j = 0x33; goto foox;
-            }
-            break;
-         case s_rigger:
-            switch ((ewmask << 8) | nsmask) {
-               case 0xFF00: case 0xCC33:
-                  warn(warn__ctrscpls_endstand);
-                  j = 0x33; goto foox;
-               case 0x00FF: case 0x33CC:
-                  warn(warn__ctrstand_endscpls);
-                  j = 0xCC; goto foox;
-            }
-            break;
-         case s_bone:
-            switch ((ewmask << 8) | nsmask) {
-               case 0xFF00:
-                  warn(warn__ctrstand_endscpls);
-                  j = 0x33; goto foox;
-               case 0x00FF:
-                  warn(warn__ctrscpls_endstand);
-                  j = 0xCC; goto foox;
-            }
-            break;
-         case s_crosswave:
-            switch ((ewmask << 8) | nsmask) {
-               case 0xFF00:
-                  warn(warn__ctrscpls_endstand);
-                  j = 0xCC; goto foox;
-               case 0x00FF:
-                  warn(warn__ctrstand_endscpls);
-                  j = 0x33; goto foox;
-            }
-            break;
-         case s2x4:
-            switch ((ewmask << 8) | nsmask) {
-               case 0xFF00: case 0x9966:
-                  warn(warn__ctrstand_endscpls);
-                  j = 0x99; goto foox;
-               case 0x00FF: case 6699:
-                  warn(warn__ctrscpls_endstand);
-                  j = 0x66; goto foox;
-               case 0x33CC:
-                  j = 0xCC; goto foox;
-               case 0xCC33:
-                  j = 0x33; goto foox;
-            }
-            break;
+      siamese_item *ptr;
+
+      for (ptr = siamese_table; ptr->testkind != nothing; ptr++) {
+         if (ptr->testkind == ss->kind && ((ewmask << 16) | nsmask) == ptr->testval) {
+            if (ptr->warning >= 0) warn(ptr->warning);
+            j = ptr->fixup;
+            goto foox;
+         }
       }
 
       fail("Can't do Siamese in this setup.");
@@ -492,6 +581,20 @@ extern void tandem_couples_move(
       foox:
       ewmask ^= j;
       nsmask ^= j;
+   }
+   else if (tnd_cpl_siam == 8) {
+      ewmask = allmask;
+      nsmask = 0;
+   }
+   else if (tnd_cpl_siam == 9) {
+      if (ss->kind == s_ptpd) {
+         ewmask = allmask;
+         nsmask = 0;
+      }
+      else {
+         ewmask = 0;
+         nsmask = allmask;
+      }
    }
    else if (tnd_cpl_siam & 1) {
       /* Couples -- swap masks.  Tandem -- do nothing. */
@@ -504,7 +607,7 @@ extern void tandem_couples_move(
    ewmask &= ~tandstuff.single_mask;         /* Clear out unpaired people. */
    nsmask &= ~tandstuff.single_mask;
 
-   map_search = maps_isearch;
+   map_search = our_map_table;
    while (map_search->outsetup != nothing) {
       if ((map_search->outsetup == ss->kind) &&
             (map_search->outsinglemask == tandstuff.single_mask) &&
@@ -532,6 +635,7 @@ extern void tandem_couples_move(
          fail("Can't do gruesome concept in this setup.");
    }
 
+   tandstuff.np = np;
    tandstuff.virtual_setup.setupflags = ss->setupflags | SETUPFLAG__DISTORTED;
    pack_us(ss->people, map, fraction, twosome, &tandstuff);
    update_id_bits(&tandstuff.virtual_setup);
@@ -554,20 +658,19 @@ extern void tandem_couples_move(
       orbitmask <<= 2;
 
       if (p) {
-         int vpi;
-
-         if (fractional) {
-            if (!(p & STABLE_ENAB))
-               fail("fractional twosome not supported for this call.");
-         }
-
-         vpi = (p >> 6) & 7;
+         int vpi = (p >> 6) & 7;
          livemask |= 1;
+
          if (tandstuff.real_back_people[vpi].id1 == 0xFFFFFFFF) {
             sglmask |= 1;
          }
          else {
             unsigned int orbit;
+
+            if (fractional) {
+               if (!(p & STABLE_ENAB))
+                  fail("fractional twosome not supported for this call.");
+            }
 
             orbit = p - tandstuff.virtual_setup.rotation +
                   tandstuff.virtual_result.rotation - tandstuff.virtual_setup.people[vpi].id1;
@@ -590,10 +693,10 @@ extern void tandem_couples_move(
       }
    }
 
-   hmask = (~orbitmask) & livemask & ~sglmask & 0x55555555;    /* Pick out only low bits for map search,
-                                                               and only bits of live paired people. */
+   /* Pick out only low bits for map search, and only bits of live paired people. */
+   hmask = (~orbitmask) & livemask & ~sglmask & 0x55555555;
 
-   map_search = maps_isearch;
+   map_search = our_map_table;
    while (map_search->outsetup != nothing) {
       if ((map_search->insetup == tandstuff.virtual_result.kind) &&
             (map_search->insinglemask == sglmask) &&

@@ -3,7 +3,7 @@
 @settitle Sd
 @c %**end of header
 @ifinfo
-sd_doc.txinfo time-stamp: @{92/11/22 21:47:33 gildea@}
+sd_doc.txinfo time-stamp: @{93/02/10 18:37:18 gildea@}
 @end ifinfo
 @iftex
 @finalout
@@ -24,7 +24,7 @@ sd_doc.txinfo time-stamp: @{92/11/22 21:47:33 gildea@}
 @vskip 0pt plus 1fill
 @end iftex
 
-This manual documents Sd version 27.
+This manual documents Sd version 28.
 
 Copyright @copyright{} 1992 William B. Ackerman and Stephen Gildea
 
@@ -65,7 +65,8 @@ This is the summary table of contents:
 * Concept Notes::               Concept Notes
 * Bugs and Misfeatures::        Known Bugs and Misfeatures (very incomplete)
 * Miscellaneous Advice::        Miscellaneous Advice and Warnings
-
+* Customization::               Customization with X Resources
+* Versions::                    Version Numbers
 
 This is the complete table of contents:
 
@@ -114,6 +115,7 @@ Call Notes
 * Colliding Recycle::           Colliding Recycle, Ah So, and Cycle and Wheel
 * Rotate from Columns::         Rotate from Columns
 * Yellow Bricking::             @i{<anything> the Yellow Bricking <anything>}
+* Recycle::                     Recycle has two forms in the Dababase
 
 Concept Notes
 
@@ -180,7 +182,7 @@ takes about (200/MIPS) seconds at C4, correspondingly less at lower levels.
 * Abridgement::                 Abridgement
 @end menu
 
-@node Command Switches, Abridgement, Starting Sd, Starting Sd
+@node Command Switches, Abridgement,  , Starting Sd
 @section Command Switches
 
 Sd accepts all Xt command-line options.  The following are some of the
@@ -227,7 +229,7 @@ command-line switch, you may find it more convenient to set the
 corresponding resource.
 
 
-@node Abridgement, Calling , Command Switches, Starting Sd
+@node Abridgement,  , Command Switches, Starting Sd
 @section Abridgement
 
 In addition to the calling level and any X Window System arguments on
@@ -298,7 +300,7 @@ generate a sequence of calls of your choosing.
 * Asymmetric Selectors::        How to Write Asymmetric Sequences
 @end menu
 
-@node The Startup Screen, Entering Calls, Calling, Calling
+@node The Startup Screen, Entering Calls,  , Calling
 @section The Startup Screen
 
 The startup menu is displayed when the program starts and after each
@@ -314,7 +316,7 @@ chosen item, and pressing Mouse Button 1 (typically the left button).
 * Just As They Are::            starting with a squared set
 @end menu
 
-@node Heads/Sides Start, 1P2P Lines, The Startup Screen, The Startup Screen
+@node Heads/Sides Start, 1P2P Lines,  , The Startup Screen
 @subsection Heads/Sides Start
 
 If you click on @code{heads start} or @code{sides start}, the sequence will begin
@@ -345,7 +347,7 @@ thru})} and circle up 4}.
 
 Whether you consider 1P2P openings to be overused is up to you.
 
-@node Just As They Are, Entering Calls, 1P2P Lines, The Startup Screen
+@node Just As They Are,  , 1P2P Lines, The Startup Screen
 @subsection Just As They Are
 
 The @code{just as they are} button starts the sequence on squared set spots,
@@ -367,7 +369,7 @@ discussed in the next section.)
 * Variations on Calls::         How to write variations on calls
 @end menu
 
-@node Call Menus, The Scroll Bar, Entering Calls, Entering Calls
+@node Call Menus, The Scroll Bar,  , Entering Calls
 @subsection Call Menus
 
 The call menu is the long menu near the center of the screen.  There are
@@ -403,7 +405,7 @@ percentage down the menu that is equal to the percentage that the cursor
 is down from the top of the scroll bar.  If the mouse is moved while the
 middle mouse button is held down, the menu will scroll in real time.
 
-@node Variations on Calls, Entering Concepts, The Scroll Bar, Entering Calls
+@node Variations on Calls,  , The Scroll Bar, Entering Calls
 @subsection Variations on Calls
 
 Some calls require a numeric designator (e.g., @i{square thru 3}) or a people
@@ -576,7 +578,7 @@ Note in particular that the @samp{single} concept for @samp{rotate} gets the
 call @samp{single file rotate}, which is a 1x4 column call.
 
 
-@node Asymmetric Selectors, Resolving and Searching, Single/Cross/Left, Calling
+@node Asymmetric Selectors,  , Single/Cross/Left, Calling
 @section Asymmetric Selectors
 
 The people selector popup contains various asymmetric selectors such as
@@ -603,7 +605,7 @@ accomplish various goals.
 * Reconcile::                   The @code{Reconcile} operation.
 @end menu
 
-@node Resolving, Making Nice Setups, Resolving and Searching, Resolving and Searching
+@node Resolving, Making Nice Setups,  , Resolving and Searching
 @section Resolving
 
 Whenever the setup is in a resolved state, whether intentionally or
@@ -699,7 +701,7 @@ more concepts are already entered, in which case it will search for legal calls
 that involve those concepts.  Hence, this operation is useful for finding
 cute uses of difficult concepts such as @i{checkpoint}, @i{trace}, or @i{on your own}.
 
-@node Reconcile, Miscellaneous Commands, Do Anything, Resolving and Searching
+@node Reconcile,  , Do Anything, Resolving and Searching
 @section The @code{Reconcile} operation
 
 Clicking on @code{reconcile} invokes an operation like resolving, but it puts
@@ -762,7 +764,7 @@ sequences.
 * Saving Pictures::             Saving Pictures
 @end menu
 
-@node Writing Out the Sequence, Changing the Output File, Miscellaneous Commands, Miscellaneous Commands
+@node Writing Out the Sequence, Changing the Output File,  , Miscellaneous Commands
 @section Writing Out the Sequence
 
 At any time when the sequence is resolved (for example, after a successful
@@ -807,7 +809,7 @@ concepts have been entered, only the last concept will be erased.
 
 TBA
 
-@node Saving Pictures, Call Notes, Inserting Comments, Miscellaneous Commands
+@node Saving Pictures,  , Inserting Comments, Miscellaneous Commands
 @section Saving Pictures
 
 The program shows pictures in the transcript for the current position
@@ -829,9 +831,10 @@ box'') click on @code{save picture}.
 * Colliding Recycle::           Colliding Recycle, Ah So, and Cycle and Wheel
 * Rotate from Columns::         Rotate from Columns
 * Yellow Bricking::             @i{<anything> the Yellow Bricking <anything>}
+* Recycle::                     Recycle has two forms in the Dababase
 @end menu
 
-@node Box the Gnat, Sweeping Direction, Call Notes, Call Notes
+@node Box the Gnat, Sweeping Direction,  , Call Notes
 @section @i{Box the Gnat}
 
 @i{Box the gnat} is equivalent to @i{touch 1/2}.  Common usage of this
@@ -875,7 +878,7 @@ at C3, but from lines it is legal at C2.  Since the program has no
 knowledge of different starting setups implying different levels, the call
 is in the database at C2.  Don't use it from columns at that level.
 
-@node Yellow Bricking, Concept Notes, Rotate from Columns, Call Notes
+@node Yellow Bricking, Recycle, Rotate from Columns, Call Notes
 @section @i{<anything> the Yellow Bricking <anything>}
 
 To use the second @code{<anything>} in @i{<anything> the yellow bricking
@@ -893,6 +896,24 @@ If you want to modify both, you must enable all modifications
 road}, and use the second modification.  It will come out
 looking ugly.  Sorry.
 
+@node Recycle,  , Yellow Bricking, Call Notes
+@section Recycle
+
+There are two @i{Recycle} calls in the database: @i{recycle} can be done
+from waves, facing couples, right-handed boxes, or a couple facing a
+right-handed minwave.  It can take the @samp{cross}, @samp{single}, or
+@samp{diamond} modifiers.  It is the call that dancers will do when told
+to @i{recycle}, and is the call that is used in @i{cover up} and
+@i{counterpoint}.
+
+Unfortunately, there is no mechanism for the program to recognize a call
+as being fractionalizable in some setups but not others, and the
+facing-couples version of recycle is not fractionalizable.
+To permit fractional use of recycle, as with
+@samp{interlace} or @samp{random}, we have provided a call
+@i{recycle (by parts)}, which can be done only from lines.  Use this call
+(but don't read the "by parts" phrase) when fractions are required.
+
 
 @node Concept Notes, Bugs and Misfeatures, Call Notes, Top
 @chapter Concept Notes
@@ -907,7 +928,7 @@ looking ugly.  Sorry.
 * So-And-So Only::              So-And-So Only
 @end menu
 
-@node Gruesome, Divided, Concept Notes, Concept Notes
+@node Gruesome, Divided,  , Concept Notes
 @section Gruesome
 
 In this program, @dfn{gruesome} simply means
@@ -1044,7 +1065,7 @@ PART WITH A [SINGLE CROSS CONCENTRIC turn thru]
 @end example
 
 
-@node So-And-So Only, Bugs and Misfeatures, Implied Piecewise, Concept Notes
+@node So-And-So Only,  , Implied Piecewise, Concept Notes
 @section So-And-So Only
 
 This concept means that the designees do their part of the call in the
@@ -1068,7 +1089,7 @@ this.
 
 This chapter is very incomplete.
 
-@node Miscellaneous Advice,  , Known Bugs and Misfeatures, Top
+@node Miscellaneous Advice, Customization, Bugs and Misfeatures, Top
 @chapter Miscellaneous Advice and Warnings
 
 If a call that you believe is legal does not appear on the menu,
@@ -1106,6 +1127,79 @@ definitions of other calls are legal.  They typically begin with an
 underscore.  Also, when the @code{all} level is selected, all
 sequentially-defined calls are fractionalizable, even if they aren't in
 practice.
+
+The font for the text output window must be fixed-width so the
+formation pictures are legible.  If you do not get this by default,
+set this X resource:
+
+@example
+Sd*text*font: -misc-fixed-medium-r-normal--13-*-*-*-c-70-iso8859-1
+@end example
+
+@node Customization, Versions, Miscellaneous Advice, Top
+@chapter Customization
+
+The file @file{Sd.res} is a sample X user resource file for the program.  It
+contains values for a number of parameters, including most of the
+text on the screen which is not fetched from the calls database.
+Install @file{Sd.res} as @file{$HOME/Sd} to use these resources.
+
+People who have many user resource files for different applications
+may wish to store them in a directory other than their home directory.
+To do so, set the environment variable @code{XAPPLRESDIR} to the directory
+where your resource files are.  For example, one of the authors uses
+the subdirectory @file{app-resources}, and his .cshrc contains this line:
+
+@example
+setenv XAPPLRESDIR ~/app-resources
+@end example
+
+To use a different value for any of these parameters, either edit the
+resource file or load the changed value into your X server's resource
+database.  To modify the server resource database, put a modified
+version of the appropriate line in the @file{.Xresources} file in your home
+directory (assuming you run @code{xrdb .Xresources} from @file{.xsession} or
+whatever your X startup file is called).  You will have to re-run @code{xrdb}
+after editing your @file{.Xresources} file.
+You should add @code{Sd} to the front
+of any lines you move to your @file{.Xresources} file.
+
+All values in the distributed @file{Sd.res} file except the colors are the
+defaults and are in the file for illustration only.  You can remove
+them if you wish your installed user resource file to contain only the
+resources you change.
+
+To have mouse button 3 invoke the Undo operation, as one of the
+authors does, set these resources:
+
+@example
+Sd*frame*Label*Translations: #override <Btn3Down>: undo()
+Sd*frame*List*Translations: #override <Btn3Down>: undo()
+@end example
+
+@node Versions, , Customization, Top
+@chapter Versions
+
+The version is a string consisting of parts separated by colons, each
+of which is a string consisting of parts separated by dots.
+
+The authors distribute versions of the form @code{major.minor}.  For
+example, 25.6 has major version number 25 and minor version 6.
+Minor versions are compatible with each other.  They have the same
+user interface and read the same database format.  No new features
+are introduced in new minor versions.
+
+If you customize any part of Sd for your own use, or fix bugs, please
+assign the result a new version by appending to the current version.
+This will help in keeping track of bug reports.  The version string is
+defined near the top of the file @file{sdmain.c}.  For example, you might
+set it to @code{25.6.joe1} for your private version.  By leaving the
+original two numbers, we can correlate possible problems with the
+fileset on which the private version was based.
+
+The calls database also has a version.  Unlike the program version,
+the major and minor parts of the database version must be numeric,
+and there can be no additional parts.
 
 @page
 @contents

@@ -1,45 +1,84 @@
 /*
  * Imakefile for Sd (square dance caller's helper)
- * Time-stamp: <92/11/22 21:53:36 gildea>
+ * Time-stamp: <93/02/16 17:42:37 gildea>
  *
  * Run "xmkmf" to generate a Makefile from this description.
  * Then run "make" to build the Sd system.
  */
 
-SD_SRCS = sdmain.c sdinit.c sdutil.c sdbasic.c sdtables.c \
-          sdtop.c sd.c sdpreds.c sd12.c sd16.c \
+SD_SRCS = sdmain.c sdinit.c sdutil.c sdbasic.c \
+          sdtables.c sdctable.c sdtop.c sd.c sdpreds.c sd12.c sd16.c \
           sdgetout.c sdmoves.c sdtand.c sdconc.c sdistort.c \
-          sdsi.c sdui-x11.c
+          sdsi.c
 
-SD_OBJS = sdmain.o sdinit.o sdutil.o sdbasic.o sdtables.o \
-          sdtop.o sd.o sdpreds.o sd12.o sd16.o \
+SD_OBJS = sdmain.o sdinit.o sdutil.o sdbasic.o \
+          sdtables.o sdctable.o sdtop.o sd.o sdpreds.o sd12.o sd16.o \
           sdgetout.o sdmoves.o sdtand.o sdconc.o sdistort.o \
-          sdsi.o sdui-x11.o
+          sdsi.o
+
+SDX11_SRC = sdui-x11.c
+SDX11_OBJ = sdui-x11.o
+
+SDTTY_SRC = sdui-tty.c sdui-ttu.c
+SDTTY_OBJ = sdui-tty.o sdui-ttu.o
 
 SRCS2 = mkcalls.c
 OBJS2 = mkcalls.o
 
-SRCS = $(SD_SRCS) $(SRCS2)
-OBJS = $(SD_OBJS) $(OBJS2)
+SRCS = $(SD_SRCS) $(SDX11_SRC) $(SDTTY_SRC) $(SRCS2)
+OBJS = $(SD_OBJS) $(SDX11_OBJ) $(SDTTY_OBJ) $(OBJS2)
 
-AllTarget(sd mkcalls sd_calls.dat)
+/*
+ * building the program and database
+ */
 
-NormalProgramTarget(sd, $(SD_OBJS), XawClientDepLibs, XawClientLibs, /**/)
+AllTarget(sd sd_calls.dat)
+alltty: sdtty sd_calls.dat
+
+NormalProgramTarget(sd, $(SD_OBJS) $(SDX11_OBJ), XawClientDepLibs, XawClientLibs, /**/)
 
 NormalProgramTarget(mkcalls, $(OBJS2), /**/, /**/, /**/)
+
+#if defined(SunArchitecture) && OSMajorVersion < 5
+CURSES_LIB = -L/usr/5lib
+#endif
+CURSES = $(CURSES_LIB) -lcurses
+
+NormalProgramTarget(sdtty, $(SD_OBJS) $(SDTTY_OBJ), /**/, /**/, $(CURSES))
 
 sd_calls.dat: sd_calls.txt mkcalls
 	./mkcalls
 
+/*
+ * printing the documenmtation
+ */
+
+.SUFFIXES: .dvi .info .txinfo
+
+.txinfo.dvi:
+	tex $?
+
+.txinfo.info:
+	makeinfo $?
+
+sd_doc.PS: sd_doc.dvi
+	dvips -o $@ $?
+
+/*
+ * miscellaneous
+ */
+
 clean::
-	$(RM) sd_calls.dat sd.tar
+	$(RM) sd_calls.dat sd.tar sd.tar.Z
+	$(RM) *.aux *.log *.toc *.dvi *.info *.PS
+	$(RM) *.cp *.cps *.fn *.fns *.ky *.kys *.pg *.pgs *.tp *.tps *.vr *.vrs
 
 
 DISTFILES = README Relnotes relnotes.archive Imakefile Makefile Sd.res \
             sd_calls.txt COPYING database.doc sd_doc.txinfo
-DISTSRCS = sd.h database.h paths.h
+HSRCS = sd.h database.h paths.h sdui-ttu.h
 
 distrib:
-	tar cvf sd.tar $(DISTFILES) $(SD_SRCS) $(DISTSRCS) $(SRCS2)
+	tar cvf sd.tar $(DISTFILES) $(SRCS) $(HSRCS)
 
 DependTarget()			

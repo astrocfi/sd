@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990, 1991, 1992  William B. Ackerman.
+    Copyright (C) 1990, 1991, 1992, 1993  William B. Ackerman.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-    This is for version 27. */
+    This is for version 28. */
 
 /* This defines the following functions:
    resolve_p
@@ -31,34 +31,28 @@
 #define ID_BITS_2 017770000
 
 
-static configuration huge_history_save[100];              /* **** for now */
-static int huge_history_ptr;
-
-
-
-
-
-/* maximum number of resolves we allow the guy to ponder. */
-#define max_resolves 50
-
 /* maximum number of hashes we remember to avoid duplicates.
    This may be bigger because we remember hashes of things the
    guy threw away, so as not to annoy him too much. */
-#define avoid_list_max 100
-
-/* maximum length of anything we search for (actually the limit is 3) */
-#define STUPH_SIZE 5
+#define AVOID_LIST_MAX 100
 
 typedef struct {
-   configuration stuph[STUPH_SIZE];
+   configuration stuph[MAX_RESOLVE_SIZE];
    int size;
    int insertion_point;
    int permute1[8];
    int permute2[8];
    int rotchange;
-   } resolve_rec;
+} resolve_rec;
 
-static int avoid_list[avoid_list_max];
+static configuration *huge_history_save = (configuration *) 0;
+static int huge_history_allocation = 0;
+static int huge_history_ptr;
+
+static resolve_rec *all_resolves = (resolve_rec *) 0;
+static int resolve_allocation = 0;
+
+static int avoid_list[AVOID_LIST_MAX];
 static int avoid_list_size;
 static int perm_array[8];
 static setup_kind goal_kind;
@@ -69,15 +63,6 @@ static char *title_string[] = {
    "Nice setup: ",
    "Resolve: ",
    "Reconcile: "};
-
-
-
-static void config_copy_for_buggy_compiler(configuration *a, configuration *b)
-{
-   (*b) = (*a);
-}
-
-
 
 
 
@@ -117,6 +102,20 @@ extern resolve_indicator resolve_p(setup *s)
                      ((s->people[5].id1 ^ s->people[4].id1) & 0777) == 0100) {
                   k.kind = resolve_rlg;
                   k.distance = (s->rotation << 1) + (s->people[5].id1 >> 6) + 4;
+                  return(k);
+               }
+               break;
+            case 0112:
+               if (          /* Look for LA from 3/4 tag. */
+                     ((s->people[1].id1 - s->people[2].id1) & 0777) == 0200 &&
+                     ((s->people[6].id1 - s->people[1].id1) & 0777) == 0202 &&
+                     ((s->people[5].id1 - s->people[6].id1) & 0777) == 0200 &&
+                     ((s->people[3].id1 ^ s->people[1].id1) & 0777) == 0102 &&
+                     ((s->people[6].id1 ^ s->people[0].id1) & 0777) == 0102 &&
+                     ((s->people[4].id1 ^ s->people[2].id1) & 0777) == 0102 &&
+                     ((s->people[5].id1 ^ s->people[7].id1) & 0777) == 0102) {
+                  k.kind = resolve_la;
+                  k.distance = (s->rotation << 1) + (s->people[5].id1 >> 6);
                   return(k);
                }
                break;
@@ -265,6 +264,18 @@ extern resolve_indicator resolve_p(setup *s)
                   k.distance = (s->rotation << 1) + (s->people[5].id1 >> 6) + 7;
                   return(k);
                }
+               else if (            /* Look for LA from T-bone setup, ends facing. */
+                     ((s->people[3].id1 - s->people[5].id1) & 0777) == 0207 &&
+                     ((s->people[1].id1 - s->people[3].id1) & 0777) == 0167 &&
+                     ((s->people[7].id1 - s->people[1].id1) & 0777) == 0207 &&
+                     ((s->people[5].id1 ^ s->people[4].id1) & 0777) == 0113 &&
+                     ((s->people[2].id1 ^ s->people[3].id1) & 0777) == 0111 &&
+                     ((s->people[1].id1 ^ s->people[0].id1) & 0777) == 0113 &&
+                     ((s->people[6].id1 ^ s->people[7].id1) & 0777) == 0111) {
+                  k.kind = resolve_la;
+                  k.distance = (s->rotation << 1) + (s->people[5].id1 >> 6) + 7;
+                  return(k);
+               }
                else if (       /* Look for trade-by-LA from trade-by. */
                      ((s->people[3].id1 - s->people[5].id1) & 0777) == 0176 &&
                      ((s->people[1].id1 - s->people[3].id1) & 0777) == 0200 &&
@@ -355,6 +366,18 @@ extern resolve_indicator resolve_p(setup *s)
                      ((s->people[4].id1 ^ s->people[3].id1) & 0777) == 0100 &&
                      ((s->people[2].id1 ^ s->people[1].id1) & 0777) == 0102 &&
                      ((s->people[7].id1 ^ s->people[0].id1) & 0777) == 0100 &&
+                     ((s->people[6].id1 ^ s->people[5].id1) & 0777) == 0102) {
+                  k.kind = resolve_rlg;
+                  k.distance = (s->rotation << 1) + (s->people[5].id1 >> 6) + 3;
+                  return(k);
+               }
+               else if (            /* Look for RLG from T-bone setup, ends facing. */
+                     ((s->people[2].id1 - s->people[4].id1) & 0777) == 0173 &&
+                     ((s->people[0].id1 - s->people[2].id1) & 0777) == 0207 &&
+                     ((s->people[6].id1 - s->people[0].id1) & 0777) == 0167 &&
+                     ((s->people[4].id1 ^ s->people[3].id1) & 0777) == 0102 &&
+                     ((s->people[2].id1 ^ s->people[1].id1) & 0777) == 0102 &&
+                     ((s->people[7].id1 ^ s->people[0].id1) & 0777) == 0102 &&
                      ((s->people[6].id1 ^ s->people[5].id1) & 0777) == 0102) {
                   k.kind = resolve_rlg;
                   k.distance = (s->rotation << 1) + (s->people[5].id1 >> 6) + 3;
@@ -540,7 +563,7 @@ static long_boolean inner_search(search_kind goal, resolve_rec *new_resolve, lon
    /* Do the call.  An error will signal and go to try_again. */
    
    toplevelmove();
-   
+
    if (history[history_ptr+1].warnings.bits[0] & Warnings_That_Preclude_Searching) goto try_again;      /* We don't like certain warnings either. */
    
    /* See if we have already seen this sequence. */
@@ -622,14 +645,22 @@ static long_boolean inner_search(search_kind goal, resolve_rec *new_resolve, lon
    }
 
    /* The call (or sequence thereof) seems to satisfy our criterion.  Just to be
-      sure, we have to examine all future calls, to make sure that, aside from
-      the permutation that gets performed, they will be executed the same way. */
+      sure, we have to examine all future calls (for a reconcile -- for other stuff
+      there are no future calls), to make sure that, aside from the permutation
+      that gets performed, they will be executed the same way. */
    
    /* But first, we make the dynamic part of the parse state be a copy of what we
       had, since we are repeatedly overwriting existing blocks. */
 
-   history[history_ptr+1].command_root = copy_parse_tree(history[history_ptr+1].command_root);
+   /* The solution that we have found consists of the parse blocks hanging off of
+      huge_history_ptr+1 ... history_ptr inclusive.  We have to make sure that they will
+      be safe forever.  (That is, until we have exited the entire resolve operation.)
+      For the most part, this follows from the fact that we will not re-use any
+      already-in-use parse blocks.  But the tree hanging off of huge_history_ptr+1
+      gets destructively reset to the initial state by restore_parse_state, so we must
+      protect it. */
 
+   history[huge_history_ptr+1].command_root = copy_parse_tree(history[huge_history_ptr+1].command_root);
 
    /* Save the entire resolve, that is, the calls we inserted, and where we inserted them. */
 
@@ -663,7 +694,8 @@ static long_boolean inner_search(search_kind goal, resolve_rec *new_resolve, lon
 
       /* Copy the whole thing into the history, chiefly to get the call and concepts. */
       written_history_items = -1;
-      config_copy_for_buggy_compiler(&huge_history_save[j+huge_history_ptr+1-new_resolve->insertion_point], &history[history_ptr+1]);
+
+      history[history_ptr+1] = huge_history_save[j+huge_history_ptr+1-new_resolve->insertion_point];
 
       /* Now execute the call again, from the new starting configuration. */
       /* This might signal and go to try_again. */
@@ -706,10 +738,10 @@ static long_boolean inner_search(search_kind goal, resolve_rec *new_resolve, lon
    
    /* We win.  Really save it and exit.  History_ptr has been clobbered. */
 
-   for (j=0; j<STUPH_SIZE; j++)
+   for (j=0; j<MAX_RESOLVE_SIZE; j++)
       new_resolve->stuph[j] = history[j+history_insertion_point+1];
    
-   if (avoid_list_size < avoid_list_max)
+   if (avoid_list_size < AVOID_LIST_MAX)
       avoid_list[avoid_list_size++] = hashed_randoms;
 
    retval = TRUE;
@@ -756,19 +788,42 @@ extern uims_reply full_resolve(search_kind goal)
    char junk[MAX_TEXT_LINE_LENGTH];
    char *titleptr;
    int current_resolve_index, max_resolve_index;
-   resolve_rec all_resolves[max_resolves];
    long_boolean show_resolve;
+   personrec *current_people = history[history_ptr].state.people;
+   setup_kind current_kind = history[history_ptr].state.kind;
    long_boolean accept_extend = FALSE;
    int current_depth = 0;
    long_boolean find_another_resolve = TRUE;
+   int *perm_map;
+
+   /* Allocate or reallocate the huge_history_save save array if needed. */
+
+   if (huge_history_allocation < history_ptr+MAX_RESOLVE_SIZE+2) {
+      huge_history_allocation = (history_ptr+MAX_RESOLVE_SIZE+2) << 1;   /* Twice what we actually need now. */
+      huge_history_save = (configuration *) get_more_mem(huge_history_save, huge_history_allocation * sizeof(configuration));
+   }
+
+   /* Do the resolve array. */
+
+   if (all_resolves == 0) {
+      resolve_allocation = 10;
+      all_resolves = (resolve_rec *) get_mem(resolve_allocation * sizeof(resolve_rec));
+   }
+
+   /* Be sure the extra 5 slots in the history array are clean. */
+
+   for (j=0; j<MAX_RESOLVE_SIZE; j++) {
+      history[history_ptr+j+2].command_root = (parse_block *) 0;
+      history[history_ptr+j+2].centersp = 0;
+   }
 
    /* See if we are in a reasonable position to do the search. */
 
    switch (goal) {
       case search_resolve:
-         if (history[history_ptr].state.kind != s2x4 &&
-               history[history_ptr].state.kind != s1x8 &&
-               history[history_ptr].state.kind != s_qtag)
+         if (current_kind != s2x4 &&
+               current_kind != s1x8 &&
+               current_kind != s_qtag)
             specialfail("Not in acceptable setup for resolve.");
          break;
       case search_reconcile:
@@ -780,46 +835,34 @@ extern uims_reply full_resolve(search_kind goal)
             specialfail("Can't do this when concepts are selected.");
 
          dirmask = 0;
-         for (k=0; k<8; k++) {
-            dirmask = (dirmask << 2) | (history[history_ptr].state.people[k].id1 & 3);
-         }
+         for (k=0; k<8; k++)
+            dirmask = (dirmask << 2) | (current_people[k].id1 & 3);
 
-         if (history[history_ptr].state.kind == s2x4 && dirmask == 0xA00A) {
-            /* L2FL, looking for promenade. */
-            for (j=0; j<8; j++)
-               perm_array[j] = history[history_ptr].state.people[promperm[j]].id1 & 0700;
-         }
-         else if (history[history_ptr].state.kind == s_qtag && dirmask == 0x08A2) {
-            /* RQTAG, looking for RLG. */
-            for (j=0; j<8; j++)
-               perm_array[j] = history[history_ptr].state.people[qtagperm[j]].id1 & 0700;
-         }
-         else if (history[history_ptr].state.kind == s_qtag && dirmask == 0x78D2) {
-            /* diamonds with points facing, looking for RLG. */
-            for (j=0; j<8; j++)
-               perm_array[j] = history[history_ptr].state.people[qtagperm[j]].id1 & 0700;
-         }
-         else if (history[history_ptr].state.kind == s_crosswave && dirmask == 0x278D) {
-            /* crossed waves, looking for RLG. */
-            for (j=0; j<8; j++)
-               perm_array[j] = history[history_ptr].state.people[crossperm[j]].id1 & 0700;
-         }
-         else if (history[history_ptr].state.kind == s2x4 && dirmask == 0x2288) {
+         if (current_kind == s2x4 && dirmask == 0xA00A)
+            perm_map = promperm;            /* L2FL, looking for promenade. */
+         else if (current_kind == s_qtag && dirmask == 0x08A2)
+            perm_map = qtagperm;            /* RQTAG, looking for RLG. */
+         else if (current_kind == s_qtag && dirmask == 0x78D2)
+            perm_map = qtagperm;            /* diamonds with points facing, looking for RLG. */
+         else if (current_kind == s_crosswave && dirmask == 0x278D)
+            perm_map = crossperm;            /* crossed waves, looking for RLG. */
+         else if (current_kind == s2x4 && dirmask == 0x2288) {
             /* Rwave, looking for RLG, we turn on "accept_extend" to tell it
                to measure couple number only approximately. */
             accept_extend = TRUE;
-            for (j=0; j<8; j++)
-               perm_array[j] = history[history_ptr].state.people[promperm[j]].id1 & 0700;
+            perm_map = promperm;
          }
-         else if (history[history_ptr].state.kind == s2x4 && dirmask == 0x8822) {
+         else if (current_kind == s2x4 && dirmask == 0x8822) {
             /* Lwave, looking for LA, we turn on "accept_extend" to tell it
                to measure couple number only approximately. */
             accept_extend = TRUE;
-            for (j=0; j<8; j++)
-               perm_array[j] = history[history_ptr].state.people[laperm[j]].id1 & 0700;
+            perm_map = laperm;
          }
          else
             specialfail("Not in acceptable setup for reconcile.");
+
+         for (j=0; j<8; j++)
+            perm_array[j] = current_people[perm_map[j]].id1 & 0700;
 
          current_depth = 1;
          find_another_resolve = FALSE;       /* We initially don't look for resolves; we wait for the user
@@ -828,7 +871,7 @@ extern uims_reply full_resolve(search_kind goal)
       case search_anything:
          break;
       case search_nice_setup:
-         if (history[history_ptr].state.kind != s4x4)
+         if (current_kind != s4x4)
             specialfail("Sorry, can only do this in 4x4 setup.");
          /* Demand no concepts already in place. */
          if (history[history_ptr+1].command_root)
@@ -836,8 +879,8 @@ extern uims_reply full_resolve(search_kind goal)
          break;
    }
 
-   for (j=0; j<100; j++)
-      config_copy_for_buggy_compiler(&history[j], &huge_history_save[j]);
+   for (j=0; j<=history_ptr+1; j++)
+      huge_history_save[j] = history[j];
 
    huge_history_ptr = history_ptr;
    save_parse_state();
@@ -902,10 +945,11 @@ extern uims_reply full_resolve(search_kind goal)
          }
 
          written_history_items = -1;
-         for (j=0; j<100; j++)
-            config_copy_for_buggy_compiler(&huge_history_save[j], &history[j]);
-
          history_ptr = huge_history_ptr;
+   
+         for (j=0; j<=history_ptr+1; j++)
+            history[j] = huge_history_save[j];
+
          find_another_resolve = FALSE;
       }
       else {
@@ -935,13 +979,12 @@ extern uims_reply full_resolve(search_kind goal)
          /* Copy the inserted calls. */
          written_history_items = -1;
          for (j=0; j<this_resolve->size; j++)
-            config_copy_for_buggy_compiler(&this_resolve->stuph[j],
-                           &history[j+huge_history_ptr+1-this_resolve->insertion_point]);
+            history[j+huge_history_ptr+1-this_resolve->insertion_point] = this_resolve->stuph[j];
 
          /* Copy and repair the calls after the insertion. */
          for (j=0; j<this_resolve->insertion_point; j++) {
             this_state = &history[j+huge_history_ptr+1-this_resolve->insertion_point+this_resolve->size];
-            config_copy_for_buggy_compiler(&huge_history_save[j+huge_history_ptr+1-this_resolve->insertion_point], this_state);
+            *this_state = huge_history_save[j+huge_history_ptr+1-this_resolve->insertion_point];
             this_state->state.rotation += this_resolve->rotchange;
             canonicalize_rotation(&this_state->state);
 
@@ -1004,7 +1047,7 @@ extern uims_reply full_resolve(search_kind goal)
       }
 
       show_resolve = TRUE;
-      for (;;) {		/* We ignore any "undo" clicks. */
+      for (;;) {          /* We ignore any "undo" clicks. */
          reply = uims_get_command(mode_resolve, call_list_any, FALSE);
          if ((reply != ui_command_select) || (uims_menu_index != command_undo)) break;
       }
@@ -1012,8 +1055,13 @@ extern uims_reply full_resolve(search_kind goal)
       if (reply == ui_resolve_select) {
          switch ((resolve_command_kind) uims_menu_index) {
             case resolve_command_find_another:
-               if (max_resolve_index < max_resolves)
-                  find_another_resolve = TRUE;             /* will get it next time around */
+
+               if (resolve_allocation <= max_resolve_index) {   /* Increase allocation if necessary. */
+                  resolve_allocation <<= 1;
+                  all_resolves = (resolve_rec *) get_more_mem(all_resolves, resolve_allocation * sizeof(resolve_rec));
+               }
+
+               find_another_resolve = TRUE;             /* will get it next time around */
                break;
             case resolve_command_goto_next:
                if (current_resolve_index < max_resolve_index)
@@ -1035,11 +1083,11 @@ extern uims_reply full_resolve(search_kind goal)
                break;
             case resolve_command_abort:
                written_history_items = -1;
-               for (j=0; j<100; j++) {
-                  config_copy_for_buggy_compiler(&huge_history_save[j], &history[j]);
-               }
-      
                history_ptr = huge_history_ptr;
+
+               for (j=0; j<=history_ptr+1; j++)
+                  history[j] = huge_history_save[j];
+
                return(reply);
             default:
                /* Clicked on "accept choice", or something not on this submenu. */
@@ -1053,10 +1101,9 @@ extern uims_reply full_resolve(search_kind goal)
 
       /* Restore history for next cycle. */
       written_history_items = -1;
-      for (j=0; j<100; j++) {
-            config_copy_for_buggy_compiler(&huge_history_save[j], &history[j]);
-      }
-
       history_ptr = huge_history_ptr;
+
+      for (j=0; j<=history_ptr+1; j++)
+         history[j] = huge_history_save[j];
    }
 }

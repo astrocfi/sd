@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990, 1991, 1992  William B. Ackerman.
+    Copyright (C) 1990, 1991, 1992, 1993  William B. Ackerman.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -16,13 +16,14 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-    This is version 24.0. */
+    This is for version 28. */
 
 /* This defines the following functions:
    distorted_2x2s_move
    distorted_move
    triple_twin_move
    do_concept_rigger
+   do_concept_slider
    do_concept_callrigger
 */
 
@@ -624,12 +625,12 @@ extern void do_concept_rigger(
    setup *result)
 
 {
-   /* First half is for wing; second half is for 1/4-tag. */
+   /* First half is for rigger; second half is for 1/4-tag. */
    /* A huge coincidence is at work here -- the two halves of the maps are the same. */
    static int map1[16] = {0, 1, 3, 2, 4, 5, 7, 6, 0, 1, 3, 2, 4, 5, 7, 6};
    static int map2[16] = {6, 7, 0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5};
 
-   int rstuff, i, indicator;
+   int rstuff, i, indicator, base;
    setup a1;
    setup res1;
    int *map_ptr;
@@ -639,17 +640,39 @@ extern void do_concept_rigger(
       outrigger   : 0
       leftrigger  : 1
       inrigger    : 2
-      rightrigger : 3 */
+      rightrigger : 3
+      backrigger  : 16
+      frontrigger : 18
+      Note that outrigger and frontrigger are nearly the same, as are inrigger and backrigger.
+      They differ only in allowable starting setup.  So, after checking the setup, we look
+      only at the low 2 bits. */
 
-   if (ss->kind != s_rigger) fail("Must have a 'rigger' setup to do this concept.");
+   if (ss->kind == s_rigger) {
+      if (rstuff >= 16) fail("This variety of 'rigger' not permitted in this setup.");
 
-   if (!(ss->people[2].id1 & ss->people[6].id1 & BIT_PERSON))
-      fail("Can't tell which way 'rigger' people are facing.");
+      if (!(ss->people[2].id1 & ss->people[6].id1 & BIT_PERSON))
+         fail("Can't tell which way 'rigger' people are facing.");
+   
+      if (((ss->people[2].id1 ^ ss->people[6].id1) & 3) != 2)
+         fail("'Rigger' people are not facing consistently!");
 
-   if (((ss->people[2].id1 ^ ss->people[6].id1) & 3) != 2)
-      fail("'Rigger' people are not facing consistently!");
+      indicator = (ss->people[6].id1 ^ rstuff) & 3;
+      base = 0;
+   }
+   else if (ss->kind == s_qtag) {
+      if (rstuff < 16 && !(rstuff & 1)) fail("This variety of 'rigger' not permitted in this setup.");
 
-   indicator = (ss->people[6].id1 ^ rstuff) & 3;
+      if (!(ss->people[0].id1 & BIT_PERSON) ||
+            (((ss->people[0].id1 ^ ss->people[1].id1) & d_mask) != 0) ||
+            (((ss->people[4].id1 ^ ss->people[5].id1) & d_mask) != 0) ||
+            (((ss->people[0].id1 ^ ss->people[5].id1) & d_mask) != 2))
+         fail("'Rigger' people are not facing consistently!");
+
+      indicator = (ss->people[0].id1 ^ rstuff ^ 3) & 3;
+      base = 8;
+   }
+   else
+      fail("Must have a 'rigger' or quarter-tag setup to do this concept.");
 
    if (indicator & 1)
       fail("'Rigger' direction is inappropriate.");
@@ -659,7 +682,7 @@ extern void do_concept_rigger(
    else
        map_ptr = map2;
 
-   for (i=0; i<8; i++) (void) copy_person(&a1, i, ss, map_ptr[i]);
+   for (i=0; i<8; i++) (void) copy_person(&a1, i, ss, map_ptr[i+base]);
    
    a1.kind = s2x4;
    a1.rotation = 0;
@@ -668,21 +691,86 @@ extern void do_concept_rigger(
    
    if (res1.kind != s2x4) fail("Can only do 2x4 -> 2x4 calls.");
 
-   if ((res1.rotation) & 1) {
-      result->rotation = res1.rotation;
-      for (i=0; i<8; i++) (void) copy_person(result, map_ptr[i+8], &res1, i);
-      result->kind = s_qtag;
-   }
-   else {
-      result->rotation = res1.rotation;
-      for (i=0; i<8; i++) (void) copy_person(result, map_ptr[i], &res1, i);
-      result->kind = s_rigger;
-   }
+   if ((res1.rotation) & 1) base ^= 8;
    
+   for (i=0; i<8; i++) (void) copy_person(result, map_ptr[i+base], &res1, i);
+
+   result->kind = base ? s_qtag : s_rigger;
+   result->rotation = res1.rotation;
    result->setupflags = res1.setupflags;
    reinstate_rotation(ss, result);
 }
 
+
+extern void do_concept_slider(
+   setup *ss,
+   parse_block *parseptr,
+   setup *result)
+{
+   /* First half is for bone; second half is for 1/4-tag. */
+   static int map1[16] = {0, 6, 7, 1, 4, 2, 3, 5, 1, 7, 2, 4, 5, 3, 6, 0};
+   static int map2[16] = {0, 3, 2, 1, 4, 7, 6, 5, 1, 2, 7, 4, 5, 6, 3, 0};
+
+   int rstuff, i, indicator, base, rot1, rot2;
+   setup a1;
+   setup res1;
+   int *map_ptr;
+
+   rstuff = parseptr->concept->value.arg1;
+   /* rstuff =
+      backslider  : 0
+      rightslider : 1
+      frontslider : 2
+      leftslider  : 3
+   */
+
+   if (ss->kind == s_bone) {
+      base = 0;
+      rot1 = 0;
+   }
+   else if (ss->kind == s_qtag) {
+      base = 8;
+      rot1 = 033;
+   }
+   else
+      fail("Must have a 'dog-bone' or quarter-tag setup to do this concept.");
+
+   if (!(ss->people[2].id1 & ss->people[6].id1 & BIT_PERSON))
+      fail("Can't tell which way 'slider' people are facing.");
+
+   if (((ss->people[2].id1 ^ ss->people[6].id1) & 3) != 2)
+      fail("'Slider' people are not facing consistently!");
+
+   indicator = (ss->people[6].id1 ^ rstuff) & 3;
+
+   if (indicator & 1)
+      fail("'Slider' direction is inappropriate.");
+
+   if (indicator)
+       map_ptr = map1;
+   else
+       map_ptr = map2;
+
+   for (i=0; i<8; i++) (void) copy_rot(&a1, i, ss, map_ptr[i+base], rot1);
+
+   a1.rotation = 0;
+   a1.kind = s2x4;
+   a1.setupflags = ss->setupflags | SETUPFLAG__DISTORTED;
+   move(&a1, parseptr->next, NULLCALLSPEC, 0, FALSE, &res1);
+   
+   if (res1.kind != s2x4) fail("Can only do 2x4 -> 2x4 calls.");
+
+   if ((res1.rotation) & 1) base ^= 8;
+   
+   if (base) rot2 = 011; else rot2 = 0;
+
+   for (i=0; i<8; i++) (void) copy_rot(result, map_ptr[i+base], &res1, i, rot2);
+
+   result->kind = base ? s_qtag : s_bone;
+   result->rotation = (res1.rotation-rot1-rot2) & 3;
+   result->setupflags = res1.setupflags;
+   reinstate_rotation(ss, result);
+}
 
 
 typedef struct {

@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990, 1991, 1992  William B. Ackerman.
+    Copyright (C) 1990, 1991, 1992, 1993  William B. Ackerman.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-    This is for version 27. */
+    This is for version 28. */
 
 /* mkcalls.c */
 
@@ -44,13 +44,6 @@ extern void exit(int code);
 
 #include "database.h"
 #include "paths.h"
-
-/* This is the number of "base" (tagged) calls that our internal tables
-   can handle.  Making this number enormous only uses up space in this program,
-   in the array "tagtab".  Space is not wasted in the sd program itself,
-   because we encode into the database the number of tagged calls that
-   we actually used. */
-#define DATABASE_MAX_BASE_CALLS 1000
 
 typedef enum {
    tok_string, tok_symbol, tok_lbkt, tok_rbkt, tok_number} toktype;
@@ -213,7 +206,7 @@ new points can roll.
 typedef struct {
    int def;
    char s[80];
-   } tagtabitem;
+} tagtabitem;
 
 
 /* This table is keyed to "level". */
@@ -318,6 +311,7 @@ char *estab[] = {
    "2x6",
    "2x8",
    "4x4",
+   "???",
    "1x10",
    "1x12",
    "1x14",
@@ -403,6 +397,7 @@ char *crtab[] = {
    "peelable_box",
    "ends_are_peelable",
    "not_tboned",
+   "opposite_sex",
    "quarterbox_or_col",
    "quarterbox_or_magic_col",
    ""};
@@ -430,7 +425,6 @@ char *defmodtab[] = {
    "cpls_unless_single",
    "??",
    "??",
-   "??",
    "inherit_diamond",
    "inherit_reverse",
    "inherit_left",
@@ -439,6 +433,7 @@ char *defmodtab[] = {
    "inherit_magic",
    "inherit_grand",
    "inherit_12_matrix",
+   "inherit_16_matrix",
    "inherit_cross",
    "inherit_single",
    ""};
@@ -466,7 +461,6 @@ char *flagtab[] = {
    "12_16_matrix_means_split",
    "??",
    "??",
-   "??",
    "diamond_is_legal",
    "reverse_means_mirror",
    "left_means_mirror",
@@ -475,6 +469,7 @@ char *flagtab[] = {
    "magic_is_inherited",
    "grand_is_inherited",
    "12_matrix_is_inherited",
+   "16_matrix_is_inherited",
    "cross_is_inherited",
    "single_is_inherited",
    ""};
@@ -482,7 +477,7 @@ char *flagtab[] = {
 /* This table is keyed to the constants "cflag__???".
    Notice that it looks like the end of flagtab, with an offset defined here. */
 
-#define NEXTTAB_OFFSET 22
+#define NEXTTAB_OFFSET 21
 
 char *nexttab[] = {
    "diamond",
@@ -493,6 +488,7 @@ char *nexttab[] = {
    "magic",
    "grand",
    "12matrix",
+   "16matrix",
    "cross",
    "single",
    ""};
@@ -579,49 +575,7 @@ char *predtab[] = {
    "q_line_back",
    ""};
 
-int tagtabsize = 2;
-
-tagtabitem tagtab[DATABASE_MAX_BASE_CALLS] = {
-      {1, "+++"},         /* Must be unused -- call #0 signals end of list in sequential encoding. */
-      {0, "nullcall"}};   /* Must be next -- the database initializer uses call #1 for any mandatory
-                                    modifier, e.g. "clover and [anything]" is executed as
-                                    "clover and [call #1]". */
-
-int eof;
-int chars_left;
-char *lineptr;
-int linelen;
-int lineno;
-int tok_value;
-int letcount;
-toktype tok_kind;
-char tok_str[80];
-int char_ct;
-
-FILE *infile;
-FILE *outfile;
-char line[200];
-char ch;
-char *return_ptr;
-int callcount;
-int filecount;
-int dumbflag;
-int call_flags;
-int call_tag;
-char call_name[80];
-int call_namelen;
-int call_level;
-int call_startsetup;
-int call_qualifier;
-int call_endsetup;
-int call_endsetup_in;
-int call_endsetup_out;
-int bmatrix, gmatrix;
-int restrstate;
-int callarray_flags1;
-int callarray_flags2;
-
-/* BEWARE!!  This list is keyed to the definition of "begin_kind" in SD.H. */
+/* BEWARE!!  This list is keyed to the definition of "begin_kind" in sd.h . */
 /*   It must also match the similar table in the sdtables.c. */
 int begin_sizes[] = {
    0,          /* b_nothing */
@@ -691,6 +645,67 @@ int begin_sizes[] = {
    16,         /* b_4dmd */
    16};        /* b_p4dmd */
 
+
+/* The "tag table" is the table that we use to bind together things like
+
+            "seq flipdiamond []"
+
+   in a definition, and
+
+            call "flip the diamond" plus tag flipdiamond
+
+   in another definition.  We keep a list of the strings, and turn
+   each tag into a number that is its index in the list.  The binary
+   database deals with these numbers.  The main sd program will make
+   its own copy of the table, containing pointers to the actual call
+   descriptors. */
+
+int tagtabsize = 2;      /* Number of items we currently have in tagtab -- we initially have two; see below. */
+int tagtabmax = 100;     /* Amount of space allocated for tagtab; must be >= tagtabsize at all times, obviously. */
+
+tagtabitem *tagtab;      /* The dynamically allocated tag list. */
+
+tagtabitem tagtabinit[] = {
+      {1, "+++"},         /* Must be unused -- call #0 signals end of list in sequential encoding. */
+      {0, "nullcall"}};   /* Must be next -- the database initializer uses call #1 for any mandatory
+                                    modifier, e.g. "clover and [anything]" is executed as
+                                    "clover and [call #1]". */
+
+int eof;
+int chars_left;
+char *lineptr;
+int linelen;
+int lineno;
+int tok_value;
+int letcount;
+toktype tok_kind;
+char tok_str[80];
+int char_ct;
+
+FILE *infile;
+FILE *outfile;
+char line[200];
+char ch;
+char *return_ptr;
+int callcount;
+int filecount;
+int dumbflag;
+int call_flags;
+int call_tag;
+char call_name[80];
+int call_namelen;
+int call_level;
+int call_startsetup;
+int call_qualifier;
+int call_endsetup;
+int call_endsetup_in;
+int call_endsetup_out;
+int bmatrix, gmatrix;
+int restrstate;
+int callarray_flags1;
+int callarray_flags2;
+
+
 static void errexit(char s[])
 {
    char my_line[80];
@@ -736,7 +751,7 @@ static int get_char(void)
          {
          if (feof(infile)) {
             eof = 1;
-            return(1);
+            return 1;
          }
          else {
             perror("Can't read input file");
@@ -747,13 +762,13 @@ static int get_char(void)
       }
    ch = *return_ptr++;
    chars_left--;
-   return(0);
+   return 0;
 }
 
 static int symchar(void)
 {
-   if (ch == '[' || ch == ']' || ch == ',' || ch == ':' || (int)ch <= 32) return(0);
-   else return(1);
+   if (ch == '[' || ch == ']' || ch == ',' || ch == ':' || (int)ch <= 32) return 0;
+   else return 1;
 }
 
 static void get_tok_or_eof(void)
@@ -861,9 +876,9 @@ static int search(char *table[])
    i = -1;
    while (*table[++i]) {
       if (strcmp(tok_str, table[i]) == 0)
-         return(i);
+         return i;
    }
-   return(-1);
+   return -1;
 }
 
 
@@ -875,8 +890,11 @@ static int tagsearch(int def)
       if (!strcmp(tok_str, tagtab[i].s)) goto done;
    }
    i = tagtabsize++;
-   if (i >= DATABASE_MAX_BASE_CALLS)
-      errexit("Too many call tags -- must recompile with larger value of DATABASE_MAX_BASE_CALLS");
+   if (i >= tagtabmax) {
+      tagtabmax <<= 1;
+      tagtab = (tagtabitem *)realloc(tagtab, tagtabmax * sizeof(tagtabitem));
+      if (!tagtab) errexit("Out of memory!!!!!!");
+   }
    strcpy(tagtab[i].s, tok_str);
    tagtab[i].def = 0;
 
@@ -885,7 +903,7 @@ static int tagsearch(int def)
       if (tagtab[i].def) errexit("Multiple definition of a call tag");
       tagtab[i].def = 1;
    }
-   return(i);
+   return i;
 }
 
 
@@ -900,7 +918,7 @@ static int get_num(char s[])
 {
    get_tok();
    if ((tok_kind != tok_number)) errexit(s);
-   return(tok_value);
+   return tok_value;
 }
 
 
@@ -927,7 +945,7 @@ static int dfmsearch(void)
       }
    }
 
-   return(rrr);
+   return rrr;
 }
 
 
@@ -1179,6 +1197,11 @@ def2:
             get_tok();
             if ((tok_kind != tok_symbol)) errexit("Improper restriction specifier");
          }
+         else if (!strcmp(tok_str, "resolve_ok")) {
+            callarray_flags2 |= CAF__RESTR_RESOLVE_OK;
+            get_tok();
+            if ((tok_kind != tok_symbol)) errexit("Improper restriction specifier");
+         }
 
          if ((restrstate = search(crtab)) < 0) errexit("Unknown restriction specifier");
       }
@@ -1301,18 +1324,26 @@ void main(void)
       }
    }
 
-   outfile = fopen(DATABASE_FILENAME, "w");
+   /* The "b" in the mode is meaningless and harmless in POSIX.  Some systems,
+      however, require it for correct handling of binary data. */
+   outfile = fopen(DATABASE_FILENAME, "wb");
    if (!outfile) {
       printf("Can't open output file\n");
       perror(DATABASE_FILENAME);
       exit(1);
    }
 
+   tagtab = (tagtabitem *)malloc(tagtabmax * sizeof(tagtabitem));
+   memcpy(tagtab, tagtabinit, sizeof(tagtabinit));   /* initialize first two entries in tagtab */
+
    filecount = 0;
 
    write_halfword(DATABASE_MAGIC_NUM);
    write_halfword(DATABASE_FORMAT_VERSION);
-   write_halfword(0);      /* These will get fixed later, when we know what to write. */
+   /* Next two halfwords in the file will be the call count and the tag table size.
+      The latter tells sd how much memory to allocate internally for its reconstruction
+      of the tag table. */
+   write_halfword(0);
    write_halfword(0);
 
    get_tok();

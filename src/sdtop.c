@@ -16,7 +16,7 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-    This is for version 27. */
+    This is for version 28. */
 
 /* This defines the following functions:
    update_id_bits
@@ -142,6 +142,17 @@ static int bit_table_spindle[][4] = {
    {ID2_CTR6,    ID2_CTR6,   ID2_CTR6,   ID2_CTR6},
    {ID2_OUTR2,   ID2_OUTR2,  ID2_OUTR2,  ID2_OUTR2}};
 
+static int bit_table_rigger[][4] = {
+   {ID2_CTR6|ID2_CENTER|ID2_LEAD|ID2_BEAU,     ID2_CTR6|ID2_CENTER|ID2_TRAILER|ID2_BEAU,  ID2_CTR6|ID2_CENTER|ID2_TRAILER|ID2_BELLE, ID2_CTR6|ID2_CENTER|ID2_LEAD|ID2_BELLE},
+   {ID2_CTR6|ID2_CENTER|ID2_LEAD|ID2_BELLE,    ID2_CTR6|ID2_CENTER|ID2_LEAD|ID2_BEAU,     ID2_CTR6|ID2_CENTER|ID2_TRAILER|ID2_BEAU,  ID2_CTR6|ID2_CENTER|ID2_TRAILER|ID2_BELLE},
+   {ID2_OUTR2|ID2_END|ID2_BELLE,               ID2_OUTR2|ID2_END|ID2_LEAD,                ID2_OUTR2|ID2_END|ID2_BEAU,                ID2_OUTR2|ID2_END|ID2_TRAILER},
+   {ID2_CTR6|ID2_END|ID2_BEAU,                 ID2_CTR6|ID2_END|ID2_TRAILER,              ID2_CTR6|ID2_END|ID2_BELLE,                ID2_CTR6|ID2_END|ID2_LEAD},
+   {ID2_CTR6|ID2_CENTER|ID2_TRAILER|ID2_BELLE, ID2_CTR6|ID2_CENTER|ID2_LEAD|ID2_BELLE,    ID2_CTR6|ID2_CENTER|ID2_LEAD|ID2_BEAU,     ID2_CTR6|ID2_CENTER|ID2_TRAILER|ID2_BEAU},
+   {ID2_CTR6|ID2_CENTER|ID2_TRAILER|ID2_BEAU,  ID2_CTR6|ID2_CENTER|ID2_TRAILER|ID2_BELLE, ID2_CTR6|ID2_CENTER|ID2_LEAD|ID2_BELLE,    ID2_CTR6|ID2_CENTER|ID2_LEAD|ID2_BEAU},
+   {ID2_OUTR2|ID2_END|ID2_BEAU,                ID2_OUTR2|ID2_END|ID2_TRAILER,             ID2_OUTR2|ID2_END|ID2_BELLE,               ID2_OUTR2|ID2_END|ID2_LEAD},
+   {ID2_CTR6|ID2_END|ID2_BELLE,                ID2_CTR6|ID2_END|ID2_LEAD,                 ID2_CTR6|ID2_END|ID2_BEAU,                 ID2_CTR6|ID2_END|ID2_TRAILER}};
+
+
 #define BITS_TO_CLEAR (ID2_LEAD|ID2_TRAILER|ID2_BEAU|ID2_BELLE|ID2_CENTER|ID2_END|ID2_CTR2|ID2_CTR6|ID2_OUTR2|ID2_OUTR6)
 #define UNSYM_BITS_TO_CLEAR (ID2_NEARCOL|ID2_NEARLINE|ID2_NEARBOX|ID2_FARCOL|ID2_FARLINE|ID2_FARBOX)
 
@@ -175,6 +186,8 @@ extern void update_id_bits(setup *ss)
          ptr = bit_table_hrglass; break;
       case s_spindle:
          ptr = bit_table_spindle; break;
+      case s_rigger:
+         ptr = bit_table_rigger; break;
       default:
          return;
    }
@@ -411,17 +424,20 @@ extern void touch_or_rear_back(
 
 
 
-extern void do_matrix_expansion(setup *ss, concept_kind ckind)
+extern void do_matrix_expansion(setup *ss, unsigned int concprops)
 {
    int i, j;
    expand_thing *eptr;
    setup stemp;
-   unsigned int concprops = concept_table[ckind].concept_prop;
 
    for (;;) {
       if (concprops & (CONCPROP__NEED_4X4 | CONCPROP__NEED_BLOB | CONCPROP__NEED_4X6)) {
          if (ss->kind == s2x4) {
             eptr = &exp_2x4_4x4_stuff; goto expand_me;
+         }
+/* ***** This is a kludge to make threesome work!!!! */
+         else if (ss->kind == s_qtag) {
+            eptr = &exp_qtg_3x4_stuff; goto expand_me;
          }
       }
    

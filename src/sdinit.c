@@ -230,6 +230,9 @@ static void test_starting_setup(call_list_kind cl, setup test_setup)
    selector_used = FALSE;
 
    history_ptr = 1;
+
+   history[history_ptr].centersp = 0;
+   history[history_ptr].state = test_setup;
    initialize_parse();
 
    /* If the call has the "rolldefine" schema, we accept it, since the test setups
@@ -238,7 +241,6 @@ static void test_starting_setup(call_list_kind cl, setup test_setup)
    if (test_call->schema == schema_roll) goto accept;
 
    (void) deposit_call(test_call);
-   history[history_ptr].state = test_setup;
    history[history_ptr+1].warnings.bits[0] = 0;
    history[history_ptr+1].warnings.bits[1] = 0;
    toplevelmove();
@@ -915,6 +917,7 @@ extern void initialize_menus(call_list_mode_t call_list_mode)
          cflag__magic_is_inherited        != dfm_inherit_magic ||
          cflag__grand_is_inherited        != dfm_inherit_grand ||
          cflag__12_matrix_is_inherited    != dfm_inherit_12_matrix ||
+         cflag__16_matrix_is_inherited    != dfm_inherit_16_matrix ||
          cflag__cross_is_inherited        != dfm_inherit_cross ||
          cflag__single_is_inherited       != dfm_inherit_single ||
          cflag__diamond_is_inherited      != FINAL__DIAMOND ||
@@ -925,6 +928,7 @@ extern void initialize_menus(call_list_mode_t call_list_mode)
          cflag__magic_is_inherited        != FINAL__MAGIC ||
          cflag__grand_is_inherited        != FINAL__GRAND ||
          cflag__12_matrix_is_inherited    != FINAL__12_MATRIX ||
+         cflag__16_matrix_is_inherited    != FINAL__16_MATRIX ||
          cflag__cross_is_inherited        != FINAL__CROSS ||
          cflag__single_is_inherited       != FINAL__SINGLE ||
    

@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990, 1991, 1992  William B. Ackerman.
+    Copyright (C) 1990, 1991, 1992, 1993  William B. Ackerman.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
     The version of this file is as shown immediately below.  This string
     gets displayed at program startup. */
 
-#define VERSION_STRING "27.90"
+#define VERSION_STRING "28.0"
 
 /* This defines the following functions:
    main
@@ -271,6 +271,7 @@ extern void initialize_parse(void)
    parse_state.concept_write_ptr = parse_state.concept_write_base;
    *parse_state.concept_write_ptr = (parse_block *) 0;
    parse_state.call_list_to_use = find_proper_call_list(&history[history_ptr].state);
+   history[history_ptr+1].centersp = 0;
    history[history_ptr+1].warnings.bits[0] = 0;
    history[history_ptr+1].warnings.bits[1] = 0;
    history[history_ptr+1].draw_pic = FALSE;
@@ -835,7 +836,7 @@ static int mark_aged_calls(
    /* The buckets are now filled. */
 
    sum = 0;
-   for (j=-1; j<32; j++) {
+   for (j = -1; j < 32; j++) {
       if ((sum + age_buckets[j+1]) > d) break;
       sum += age_buckets[j+1];
    }
@@ -887,7 +888,7 @@ void main(int argc, char *argv[])
 
    /* This lets the X user interface intercept command line arguments that it is
       interested in. */
-   uims_process_command_line(&argc, argv);
+   uims_process_command_line(&argc, &argv);
 
    /* Do general initializations, which currently consist only of
       seeding the random number generator. */
@@ -963,6 +964,16 @@ void main(int argc, char *argv[])
    not_interactive = TRUE;
    parse_active_list = (parse_block *) 0;
    parse_inactive_list = (parse_block *) 0;
+
+   if (history == 0) {
+      int n;
+      char *p;
+      history_allocation = 55;    /* To test reallocation. */
+      n = history_allocation * sizeof(configuration);
+      p = (char *) get_mem(n);
+      history = (configuration *) p;
+      while (--n>=0) *p++ = -1; /* clear memory (well, set it, so we can see if there is a problem) */
+   }
    
    initialize_menus(call_list_mode);    /* This sets up max_base_calls. */
 
@@ -1020,7 +1031,7 @@ void main(int argc, char *argv[])
 
    writestuff("SD -- square dance caller's helper.");
    newline();
-   writestuff("Copyright (c) 1991, 1992 William B. Ackerman and Stephen Gildea.");
+   writestuff("Copyright (c) 1991, 1992, 1993 William B. Ackerman and Stephen Gildea.");
    newline();
    newline();
    writestuff("SD comes with ABSOLUTELY NO WARRANTY; for details see the license.");
@@ -1084,13 +1095,13 @@ void main(int argc, char *argv[])
    /* Come here to read a bunch of concepts and a call and add an item to the history. */
    
    start_cycle:
-   
+
    reply_pending = FALSE;
 
    start_with_pending_reply:
 
    allowing_modifications = 0;
-   
+
    initialize_parse();
 
    /* Check for first call given to heads or sides only. */
@@ -1121,6 +1132,25 @@ void main(int argc, char *argv[])
       /* Call successfully completed and has been stored in history. */
       
       history_ptr++;
+
+      /* See if we need to increase the size of the history array.
+         We must have history_allocation at least equal to history_ptr+2,
+         so that history items [0..history_ptr+1] will exist.
+         We also need to allow for MAX_RESOLVE_SIZE extra items, so that
+         resolver can work.  Why don't we just increase the allocation
+         at the start of the resolver if we are too close?  We tried that once,
+         The resolver uses the current parse state, so we can do "TANDEM <resolve>".
+         This means that things like "parse_state.concept_write_base", which point
+         into the history array, must remain valid.  So the resolver can't
+         reallocate the history array.  There is only one place where it is safe
+         to reallocate, and that is right here.  Note that we are about to go to
+         "start_cycle", which does an "initialize_parse". */
+
+      if (history_allocation < history_ptr+MAX_RESOLVE_SIZE+2) {
+         history_allocation <<= 1;
+         history = (configuration *) get_more_mem(history, history_allocation * sizeof(configuration));
+      }
+
       goto start_cycle;
    }
    

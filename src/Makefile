@@ -1,4 +1,5 @@
 # sample Makefile for Sd (square dance caller's helper)
+# Time-stamp: <93/02/25 20:40:41 gildea>
 
 # If your X system was compiled with an ANSI C compiler,
 # you should run "xmkmf", which will use the Imakefile and your
@@ -11,6 +12,7 @@ CC=gcc
 CFLAGS=$(CDEBUGFLAGS) -traditional
 # Note: the "-traditional" above is needed only if "fixincludes" has
 # not been run on your machine.
+# With gcc 1.40 on our Ultrix 4.2 cannot specify -traditional.
 
 # CDEBUGFLAGS is used by both cc and ld.
 # If you want a smaller executable and are willing to lose the ability
@@ -28,39 +30,72 @@ UICFLAGS = -Wswitch
 #PEDCFLAGS2 = $(PEDCFLAGS) $(PEDANTICW) -Wmissing-prototypes -Wnested-externs
 # for HP Snake: +w1 -z
 
-SDUI_OBJ = sdui-x11.o
-SDUI_SRC = sdui-x11.c
-
 # Libraries the UI needs to be linked with.  If your X11 libraries aren't
-# installed, you may want to add some -L<dir> flags to LDFLAGS below
+# installed, you may want to add some -L<dir> flags to SDX11_LIBS below
 # to specify the library directories explicitly.
-SDUI_LIBS = -lXaw -lXmu -lXt -lXext -lX11
+SDX11_LIBS = -lXaw -lXmu -lXt -lXext -lX11
+
+# SunOS 4 puts the correct curses library in a funny directory.
+SDTTY_LIBS = -L/usr/5lib -lcurses
+# on PC, link gppconio
+#SDTTY_LIBS = -lpc
 
 # override unnecessary SunOS 4.0 stuff:
 #TARGET_ARCH=
 
-SD_OBJS = sdmain.o sdinit.o sdutil.o sdbasic.o sdtables.o \
-          sdtop.o sd.o sdpreds.o sd12.o sd16.o \
-          sdgetout.o sdmoves.o sdtand.o sdconc.o sdistort.o \
-          sdsi.o
-
-SD_SRCS = sdmain.c sdinit.c sdutil.c sdbasic.c sdtables.c \
-          sdtop.c sd.c sdpreds.c sd12.c sd16.c \
+SD_SRCS = sdmain.c sdinit.c sdutil.c sdbasic.c \
+          sdtables.c sdctable.c sdtop.c sd.c sdpreds.c sd12.c sd16.c \
           sdgetout.c sdmoves.c sdtand.c sdconc.c sdistort.c \
           sdsi.c
 
-all: sd mkcalls sd_calls.dat
+SD_OBJS = sdmain.o sdinit.o sdutil.o sdbasic.o \
+          sdtables.o sdctable.o sdtop.o sd.o sdpreds.o sd12.o sd16.o \
+          sdgetout.o sdmoves.o sdtand.o sdconc.o sdistort.o \
+          sdsi.o
 
-sd: $(SD_OBJS) $(SDUI_OBJ)
-	$(CC) $(LDFLAGS) -o $@ $(SD_OBJS) $(SDUI_OBJ) $(SDUI_LIBS)
+SDX11_SRC = sdui-x11.c
+SDX11_OBJ = sdui-x11.o
 
+# for PC use sdui-tpc.c, for Unix use sdui-ttu.c
+SDTTY_SRC = sdui-tty.c sdui-ttu.c
+SDTTY_OBJ = sdui-tty.o sdui-ttu.o
+
+all: sd sd_calls.dat
+alltty: sdtty sd_calls.dat
+
+sd: $(SD_OBJS) $(SDX11_OBJ)
+	$(CC) $(LDFLAGS) -o $@ $(SD_OBJS) $(SDX11_OBJ) $(SDX11_LIBS)
+
+sdtty: $(SD_OBJS) $(SDTTY_OBJ)
+	$(CC) $(LDFLAGS) -o $@ $(SD_OBJS) $(SDTTY_OBJ) $(SDTTY_LIBS)
+
+# PC version
+#sdtty: $(SD_OBJS) $(SDTTY_OBJ)
+#	$(CC) $(LDFLAGS) -o $@ sd*.o $(SDTTY_LIBS)
+#	strip $*
+#	aout2exe $*
+ 
 mkcalls: mkcalls.o
 	$(CC) $(LDFLAGS) -o $@ mkcalls.o
 
 sd_calls.dat: sd_calls.txt mkcalls
 	./mkcalls
 
-.SUFFIXES: .o .c .PS .dvi .info .txinfo
+# this rule and the aout2exe program are for qmake on the PC
+.c.o:
+	$(CC) $(CFLAGS) -c $*.c
+
+sdui-x11.o: sdui-x11.c
+	$(CC) $(CFLAGS) $(UICFLAGS) -c sdui-x11.c
+
+mkcalls.o sdmain.o sdsi.o sdui-x11.o: paths.h
+
+mkcalls.o: database.h
+
+$(SD_OBJS) $(SDX11_OBJ): sd.h database.h
+
+
+.SUFFIXES: .dvi .info .txinfo
 
 .txinfo.dvi:
 	tex $?
@@ -81,25 +116,19 @@ sd_doc.PS: sd_doc-sorted.dvi
 	dvips -U -o sd_doc.PS sd_doc-sorted.dvi
 
 
-sdui-x11.o: sdui-x11.c
-	$(CC) $(CFLAGS) $(UICFLAGS) -c sdui-x11.c
-
-mkcalls.o sdmain.o sdsi.o sdui-x11.o: paths.h
-
-mkcalls.o sdmove.o sdbasic.o sd16.o: database.h
-
-$(SD_OBJS): sd.h database.h
-
-
 clean::
-	rm -f *~ core *.o sd mkcalls sd_calls.dat sd.tar
+	rm -f *~ core *.o sd mkcalls sd_calls.dat sd.tar sd.tar.Z
 
 lint:
-	/usr/lang/alint -ux $(SD_SRCS) $(SDUI_SRC)
+	/usr/lang/alint -ux $(SD_SRCS) $(SDX11_SRC)
 
-DISTFILES = README Relnotes relnotes.archive Imakefile Makefile Sd.res \
+DISTTXT = README Relnotes relnotes.archive Imakefile Makefile Sd.res \
             sd_calls.txt COPYING database.doc sd_doc.txinfo
-DISTSRCS = sd.h database.h paths.h mkcalls.c
+DISTSRCS = sd.h database.h paths.h sdui-ttu.h mkcalls.c
+DISTFILES = $(DISTTXT) $(SD_SRCS) $(SDX11_SRC) $(SDTTY_SRC) $(DISTSRCS)
 
 distrib:
-	tar cvf sd.tar $(DISTFILES) $(SD_SRCS) $(SDUI_SRC) $(DISTSRCS)
+	tar cvf sd.tar $(DISTFILES)
+
+ls:
+	@echo $(DISTFILES)

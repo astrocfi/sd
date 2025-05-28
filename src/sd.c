@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990, 1991, 1992  William B. Ackerman.
+    Copyright (C) 1990, 1991, 1992, 1993  William B. Ackerman.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-    This is for version 25. */
+    This is for version 28. */
 
 /* This defines the following function:
    do_big_concept
@@ -36,12 +36,138 @@ int global_selectmask;
 
 
 
+static void do_concept_expand_2x6_matrix(
+   setup *ss,
+   parse_block *parseptr,
+   setup *result)
+
+{
+   if (ss->kind != s2x6) fail("Can't make a 2x6 matrix out of this.");
+   ss->setupflags |= SETUPFLAG__EXPLICIT_MATRIX;
+   move(ss, parseptr->next, NULLCALLSPEC, 0, FALSE, result);
+}
+
+
+static void do_concept_expand_2x8_matrix(
+   setup *ss,
+   parse_block *parseptr,
+   setup *result)
+
+{
+   if (ss->kind != s2x8) fail("Can't make a 2x8 matrix out of this.");
+   ss->setupflags |= SETUPFLAG__EXPLICIT_MATRIX;
+   /* We used to turn on the "FINAL__16_MATRIX" call modifier,
+      but that makes tandem stuff not work (it doesn't like
+      call modifiers preceding it) and 4x4 stuff not work
+      (it wants the matrix expanded, but doesn't want you to say
+      "16 matrix").  So we need to let the SETUPFLAG__EXPLICIT_MATRIX
+      bit control the desired effects. */
+   move(ss, parseptr->next, NULLCALLSPEC, 0, FALSE, result);
+}
+
+
+static void do_concept_expand_4x4_matrix(
+   setup *ss,
+   parse_block *parseptr,
+   setup *result)
+
+{
+   if (ss->kind != s4x4) fail("Can't make a 4x4 matrix out of this.");
+   ss->setupflags |= SETUPFLAG__EXPLICIT_MATRIX;
+   /* We used to turn on the "FINAL__16_MATRIX" call modifier,
+      but that makes tandem stuff not work (it doesn't like
+      call modifiers preceding it) and 4x4 stuff not work
+      (it wants the matrix expanded, but doesn't want you to say
+      "16 matrix").  So we need to let the SETUPFLAG__EXPLICIT_MATRIX
+      bit control the desired effects. */
+   move(ss, parseptr->next, NULLCALLSPEC, 0, FALSE, result);
+}
+
+
+static void do_concept_expand_4dm_matrix(
+   setup *ss,
+   parse_block *parseptr,
+   setup *result)
+
+{
+   if (ss->kind != s_4dmd) fail("Can't make quadruple diamonds out of this.");
+   ss->setupflags |= SETUPFLAG__EXPLICIT_MATRIX;
+   /* We used to turn on the "FINAL__16_MATRIX" call modifier,
+      but that makes tandem stuff not work (it doesn't like
+      call modifiers preceding it) and 4x4 stuff not work
+      (it wants the matrix expanded, but doesn't want you to say
+      "16 matrix").  So we need to let the SETUPFLAG__EXPLICIT_MATRIX
+      bit control the desired effects. */
+   move(ss, parseptr->next, NULLCALLSPEC, 0, FALSE, result);
+}
+
+
 static void do_c1_phantom_move(
    setup *ss,
    parse_block *parseptr,
    setup *result)
 
 {
+   parse_block *next_parseptr;
+   final_set junk_concepts;
+
+   if (ss->setupflags & SETUPFLAG__DISTORTED)
+      fail("Can't specify phantom in virtual or distorted setup.");
+
+   /* See if this is a "phantom tandem" (or whatever) by searching ahead, skipping comments of course.
+      This means we must skip modifiers too, so we check that there weren't any. */
+
+   next_parseptr = process_final_concepts(parseptr->next, FALSE, &junk_concepts);
+
+   if (next_parseptr->concept->kind == concept_tandem || next_parseptr->concept->kind == concept_frac_tandem) {
+      /* Find out what kind of tandem call this is. */
+
+      unsigned int what_we_need = 0;
+
+      if (junk_concepts != 0)
+         fail("Phantom couples/tandem must not have intervening concpets.");
+
+      switch (next_parseptr->concept->value.arg4) {
+         case 2: case 3:
+            fail("Phantom not allowed with skew or siamese.");
+         case 8:     /* Box/boxsome */
+            /* We do not expand the matrix.  The caller must say
+               "2x8 matrix", or whatever, to get that effect. */
+            break;
+         case 9:     /* Diamond/diamondsome */
+            /* We do not expand the matrix.  The caller must say
+               "16 matrix or parallel diamonds", or whatever, to get that effect. */
+            break;
+         case 4: case 5:   /* Couples/tandems of 3. */
+         case 6: case 7:   /* Couples/tandems of 4. */
+            /* We do not expand the matrix.  The caller must say
+               "2x8 matrix", or whatever, to get that effect. */
+            break;
+         default:
+            /* This is plain "phantom tandem", or whatever.  Expansion to 4x4 is required. */
+            what_we_need = CONCPROP__NEED_4X4;
+            break;
+      }
+
+      if (what_we_need != 0)
+         do_matrix_expansion(ss, what_we_need);
+
+      ss->setupflags |= SETUPFLAG__NO_EXPAND_MATRIX | SETUPFLAG__PHANTOMS;
+
+      tandem_couples_move(ss, next_parseptr->next, NULLCALLSPEC, 0,
+            next_parseptr->concept->value.arg1 ? next_parseptr->selector : selector_uninitialized,
+            next_parseptr->concept->value.arg2,    /* normal=FALSE, twosome=TRUE */
+            next_parseptr->number,
+            1,                                     /* for phantom */
+            next_parseptr->concept->value.arg4,    /* tandem=0 couples=1 siamese=2 */
+            result);
+
+      return;
+   }
+
+   /* We didn't do this before. */
+   ss->setupflags |= SETUPFLAG__NO_EXPAND_MATRIX;
+
    if (ss->kind == s_c1phan) {
       setup setup1, setup2, res1;
 
@@ -80,6 +206,10 @@ static void do_c1_phantom_move(
       merge_setups(&res1, result);
    }
    else if (ss->kind == s4x4) {
+
+      /* This must be a "phantom turn and deal" sort of thing from stairsteps.
+         Do the call in each line, them remove resulting phantoms carefully. */
+
       if (global_livemask == 0x5C5C || global_livemask == 0xA3A3) {
          /* Split into 4 vertical strips. */
          divided_setup_move(ss, parseptr->next, NULLCALLSPEC, 0,
@@ -137,6 +267,8 @@ static void do_c1_phantom_move(
    else
       fail("Inappropriate setup for phantom concept.");
 }
+
+
 
 
 static map_thing map_diag2a            = {{5, 7, 21, 15, 17, 19, 9, 3},   {0},                            {0}, {0}, MPKIND__NONE,        1,  s4x6,   s2x4,      1, 0};
@@ -1455,6 +1587,7 @@ static void do_concept_trace(
    /* Process people going into the center. */
 
    inners.rotation = 0;
+   inners.setupflags = 0;
 
    if   ((res1.kind == s2x2 && (res1.people[2].id1 | res1.people[3].id1)) ||
          (res2.kind == s2x2 && (res2.people[0].id1 | res2.people[1].id1)) ||
@@ -1520,6 +1653,7 @@ static void do_concept_trace(
    /* Process people going to the outside. */
 
    outers.rotation = 0;
+   outers.setupflags = 0;
 
    if   ((res1.kind == s2x2 && (res1.people[0].id1 | res1.people[1].id1)) ||
          (res2.kind == s2x2 && (res2.people[2].id1 | res2.people[3].id1)) ||
@@ -2299,6 +2433,7 @@ static void do_concept_tandem(
 }
 
 
+/* ARGSUSED */
 static void do_concept_standard(
    setup *ss,
    parse_block *parseptr,
@@ -2354,7 +2489,7 @@ extern long_boolean do_big_concept(
          ss->setupflags |= SETUPFLAG__PHANTOMS;
 
       if (!(ss->setupflags & SETUPFLAG__NO_EXPAND_MATRIX)) {
-         do_matrix_expansion(ss, parseptr_realconcept->concept->kind);
+         do_matrix_expansion(ss, concept_table[parseptr_realconcept->concept->kind].concept_prop);
       }
 
       ss->setupflags |= SETUPFLAG__NO_EXPAND_MATRIX;
@@ -2398,10 +2533,12 @@ extern long_boolean do_big_concept(
    }
 
    if (!(ss->setupflags & SETUPFLAG__NO_EXPAND_MATRIX)) {
-      do_matrix_expansion(ss, parseptr->concept->kind);
+      do_matrix_expansion(ss, concept_table[parseptr->concept->kind].concept_prop);
    }
 
-   ss->setupflags |= SETUPFLAG__NO_EXPAND_MATRIX;
+   /* We can no longer do any matrix expansion, unless this is "phantom" and "tandem", in which case we continue to allow it. */
+   if (parseptr->concept->kind != concept_c1_phantom)
+      ss->setupflags |= SETUPFLAG__NO_EXPAND_MATRIX;
 
    /* See if this concept can be invoked with "standard".  If so, it wants
       tbonetest and livemask computed, and expects the former to indicate
@@ -2459,11 +2596,9 @@ concept_table_item concept_table[] = {
    {0,                                                                                      do_concept_concentric},           /* concept_concentric */
    {0,                                                                                      do_concept_single_concentric},    /* concept_single_concentric */
    {0,                                                                                      do_concept_tandem},               /* concept_tandem */
-   {CONCPROP__NEED_4X4 | CONCPROP__SET_PHANTOMS,                                            do_concept_tandem},               /* concept_phantom_tandem */
    {CONCPROP__NEED_2X8 | CONCPROP__SET_PHANTOMS,                                            do_concept_tandem},               /* concept_gruesome_tandem */
    {CONCPROP__USE_SELECTOR,                                                                 do_concept_tandem},               /* concept_some_are_tandem */
    {CONCPROP__USE_NUMBER,                                                                   do_concept_tandem},               /* concept_frac_tandem */
-   {CONCPROP__USE_NUMBER | CONCPROP__NEED_4X4 | CONCPROP__SET_PHANTOMS,                     do_concept_tandem},               /* concept_phantom_frac_tandem */
    {CONCPROP__USE_NUMBER | CONCPROP__NEED_2X8 | CONCPROP__SET_PHANTOMS,                     do_concept_tandem},               /* concept_gruesome_frac_tandem */
    {CONCPROP__USE_NUMBER | CONCPROP__USE_SELECTOR,                                          do_concept_tandem},               /* concept_some_are_frac_tandem */
    {0,                                                                                      do_concept_checkerboard},         /* concept_checkerboard */
@@ -2472,9 +2607,14 @@ concept_table_item concept_table[] = {
    {0,                                                                                      0},                               /* concept_grand */
    {0,                                                                                      0},                               /* concept_magic */
    {0,                                                                                      0},                               /* concept_cross */
-   {0,                                                                                      0},                               /* concept_singlefile */
+   {0,                                                                                      0},                               /* concept_single */
    {0,                                                                                      0},                               /* concept_interlocked */
    {0,                                                                                      0},                               /* concept_12_matrix */
+   {0,                                                                                      0},                               /* concept_16_matrix */
+   {CONCPROP__NEED_2X6 | CONCPROP__SET_PHANTOMS | CONCPROP__NO_STEP,                        do_concept_expand_2x6_matrix},    /* concept_2x6_matrix */
+   {CONCPROP__NEED_2X8 | CONCPROP__SET_PHANTOMS | CONCPROP__NO_STEP,                        do_concept_expand_2x8_matrix},    /* concept_2x8_matrix */
+   {CONCPROP__NEED_4X4 | CONCPROP__SET_PHANTOMS | CONCPROP__NO_STEP,                        do_concept_expand_4x4_matrix},    /* concept_4x4_matrix */
+   {CONCPROP__NEED_4DMD | CONCPROP__SET_PHANTOMS | CONCPROP__NO_STEP,                       do_concept_expand_4dm_matrix},    /* concept_4dmd_matrix */
    {0,                                                                                      0},                               /* concept_funny */
    {CONCPROP__NO_STEP | CONCPROP__GET_MASK,                                                 triangle_move},                   /* concept_randomtrngl */
    {CONCPROP__NO_STEP | CONCPROP__GET_MASK | CONCPROP__USE_SELECTOR,                        triangle_move},                   /* concept_selbasedtrngl */
@@ -2538,4 +2678,5 @@ concept_table_item concept_table[] = {
    {CONCPROP__SECOND_CALL,                                                                  do_concept_interlace},            /* concept_interlace */
    {CONCPROP__USE_NUMBER | CONCPROP__USE_TWO_NUMBERS,                                       do_concept_fractional},           /* concept_fractional */
    {CONCPROP__NO_STEP,                                                                      do_concept_rigger},               /* concept_rigger */
+   {CONCPROP__NO_STEP,                                                                      do_concept_slider},               /* concept_slider */
    {CONCPROP__SECOND_CALL | CONCPROP__NO_STEP,                                              do_concept_callrigger}};          /* concept_callrigger */

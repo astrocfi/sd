@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990, 1991, 1992  William B. Ackerman.
+    Copyright (C) 1990, 1991, 1992, 1993  William B. Ackerman.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -16,13 +16,14 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-    This is for version 25. */
+    This is for version 28. */
 
 /* This defines the following functions:
    general_initialize
    generate_random_number
    generate_random_concept_p
    get_mem
+   get_more_mem
    free_mem
    get_date
    open_file
@@ -50,27 +51,81 @@ and the following external variables:
    database_filename
 */
 
+/* You should compile this file (and might as well compile all the others
+   too) with some indicator symbol defined that tells what language system
+   semantics are to be provided.  This program requires at least POSIX.
+   A better random number generator mechanism (48 bits) is provided under
+   System 5 (_SYS5_SOURCE), OSF (_AES_SOURCE), XOPEN (_XOPEN_SOURCE), or
+   some proprietary systems, so you should define such a symbol if your
+   system provides those semantics.  If not, you should just turn on
+   _POSIX_SOURCE.  Normally, this is done on the compiler invocation line
+   (in the Makefile, or whatever) with some incantation like "-D_AES_SOURCE".
 
-#define _POSIX_SOURCE
+   We recommend _AES_SOURCE over _XOPEN_SOURCE, since the latter doesn't
+   seem to recognize that 20th century programmers use include files with
+   prototypes for library functions in them.  Under OSF/AES, the file
+   stdlib.h has the necessary stuff.  Under XOPEN, you are expected to
+   copy the prototypes by hand from the printed manual into your program.
+   For those who absolutely must use XOPEN, we have done the necessary
+   copying below.
+
+   On HP-UX, we recommend turning on _AES_SOURCE for the reason given
+   above.  You could also turn on _HPUX_SOURCE to get the routines,
+   if you have no aversion to proprietary system semantics.
+
+   On SUN-OS, giving no symbol will get SUN-OS semantics, which gets the
+   48-bit routines, if you have no aversion to proprietary system semantics.
+   This is what the "defined(sun)" is for.
+*/
 
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>
 #include <time.h>
+
+/* We take pity on those poor souls who are compelled to XOPEN,
+   an otherwise fine standard, that doesn't put prototypes
+   into stdlib.h. */
+
+#if defined(_XOPEN_SOURCE)
+   /* We have taken the liberty of translating the prototypes
+      appearing in the XOPEN manual into ANSI C.  We can't
+      imagine why anyone would ever use the prototypes
+      in the prehistoric nomenclature. */
+extern void srand48(long int);
+extern long int lrand48(void);
+#endif
+
+#if defined(_SYS5_SOURCE) || defined(_XOPEN_SOURCE) || defined(_AES_SOURCE) || defined(sun)
+#define HAVE_RAND48
+#endif
+
+/* We also take pity on those poor souls who are compelled to use
+   compilation systems that claim to be POSIX compliant, but
+   aren't really, and do not have unistd.h. */
+
+#ifndef NO_UNISTD
 #include <unistd.h>
+#endif
 
-/* We take pity on those poor souls who are compelled to use
-    troglodyte development environments. */
+/* Or those who are otherwise compelled to use
+    troglodyte development environments.
+    gcc -traditional doesn't define __STDC__ */
 
-#ifdef __STDC__
+#if defined(__STDC__) || defined(sun)
 #include <stdlib.h>
 #else
 extern void free(void *ptr);
 extern char *malloc(unsigned int siz);
+extern char *realloc(char *oldp, unsigned int siz);
 extern void exit(int code);
 extern void srand48(long int);
 extern long int lrand48(void);
 #endif
+
+/* I think we have everything now.  Isn't portability fun?  Before people
+   started taking these standards as semi-seriously as they do now, it was
+   MUCH HARDER to make a program portable than what you just saw. */
 
 #include "sd.h"
 #include "paths.h"
@@ -106,7 +161,12 @@ static char *get_errstring(void)
 
 extern void general_initialize(void)
 {
-   srand48(time((long int *)0));
+/* Sorry, plain POSIX doesn't have the nice rand48 stuff. */
+#ifdef HAVE_RAND48
+   srand48((long int) time((time_t *)0));
+#else
+   srand((unsigned int) time((time_t *)0));
+#endif
 }
 
 
@@ -114,7 +174,13 @@ extern int generate_random_number(int modulus)
 {
    int j;
 
-   random_number = lrand48();
+/* Sorry, plain POSIX doesn't have the nice rand48 stuff. */
+#ifdef HAVE_RAND48
+   random_number = (int) lrand48();
+#else
+   random_number = (int) rand();
+#endif
+
    j = random_number % modulus;
    last_hashed_randoms = hashed_randoms;       /* save in case we need to undo it */
    hashed_randoms = hashed_randoms*37+j;
@@ -148,12 +214,28 @@ extern void *get_mem(unsigned int siz)
    void *buf;
 
    buf = malloc(siz);
-   if (!buf) {
+   if (!buf && siz != 0) {
       fprintf(stderr, "Can't allocate %d bytes of memory.\n", siz);
       perror("malloc");
       exit_program(2);
    }
-   return(buf);
+   return buf;
+}
+
+
+extern void *get_more_mem(void *oldp, unsigned int siz)
+{
+   void *buf;
+
+   if (!oldp)
+      return get_mem(siz);	/* SunOS 4 realloc doesn't handle NULL */
+   buf = realloc(oldp, siz);
+   if (!buf && siz != 0) {
+      fprintf(stderr, "Can't allocate %d bytes of memory.\n", siz);
+      perror("realloc");
+      exit_program(2);
+   }
+   return buf;
 }
 
 
@@ -165,7 +247,7 @@ extern void free_mem(void *ptr)
 
 extern void get_date(char dest[])
 {
-   long int clock;
+   time_t clock;
    char *junk;
    char *dstptr;
 
@@ -229,10 +311,14 @@ extern long_boolean probe_file(char filename[])
       not be possible because of directory permissions.  It is unfortunate
       that there is no feasible way to determine whether a given pathname
       could be opened for writing. */
+#ifndef NO_UNISTD
    if (access(filename, F_OK) || !access(filename, W_OK))
       return (TRUE);
    else
       return (FALSE);
+#else
+   return (TRUE);
+#endif
 }
 
 
@@ -319,7 +405,9 @@ extern void open_database(void)
 {
    int format_version, n;
 
-   if (!(fp = fopen(database_filename, "r"))) {
+   /* The "b" in the mode is meaningless and harmless in POSIX.  Some systems,
+      however, require it for correct handling of binary data. */
+   if (!(fp = fopen(database_filename, "rb"))) {
       fprintf(stderr, "Can't open database file.\n");
       perror(database_filename);
       exit_program(1);

@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990, 1991, 1992  William B. Ackerman.
+    Copyright (C) 1990, 1991, 1992, 1993  William B. Ackerman.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-    This is for version 27. */
+    This is for version 28. */
 
 /* This defines the following functions:
    canonicalize_rotation
@@ -25,8 +25,6 @@
 */
 
 #include "sd.h"
-
-
 
 
 extern void canonicalize_rotation(setup *result) {
@@ -252,6 +250,12 @@ static void finish_matrix_call(
          trucking.  He is only allowed to turn.  That is, we will require deltax and
          deltay to be zero.  An example of this situation is the points of a galaxy. */
 
+      /* ****** This seems to be too restrictive.  There may have been good reason for doing this
+         at one time, but now it makes all press and truck calls illegal in C1 phantoms.  The
+         table for C1 phantoms has been carefully chosen to make things legal only within one's
+         own minwave, but it requires odd numbers.  Perhaps we need to double the resolution
+         of things in matrix_info[i].x or y, but that should wait until after version 28 is released. */
+
       if (((matrix_info[i].x | matrix_info[i].y) & 1) && (matrix_info[i].deltax | matrix_info[i].deltay))
          fail("Someone's ending position is not well defined.");
 
@@ -327,6 +331,13 @@ static void finish_matrix_call(
       checkptr = setup_coords[s_3x1dmd];
       goto doit;
    }
+   /* Depending on how the setup is actually occupied, xmax and ymax may vary.
+      ***** We need to work this out carefully.  Maybe parity should be high
+      and max low so that range checking will suffice. */
+   else if (((ypar == 0x00A300A3) || (ypar == 0x00B300B3)) && ((signature & (~0x38003B87)) == 0)) {
+      checkptr = setup_coords[s_c1phan];
+      goto doit;
+   }
    /* If certain far out people are missing, xmax will be different, but we will
        still need to go to a 3dmd. */
    else if (((ypar == 0x00A70055) || (ypar == 0x00770055) || (ypar == 0x00730055)) && ((signature & (~0x29008480)) == 0)) {
@@ -341,6 +352,10 @@ static void finish_matrix_call(
    }
    else if ((ypar == 0x00550057) && ((signature & (~0x20000620)) == 0)) {
       checkptr = setup_coords[s_hrglass];
+      goto doit;
+   }
+   else if ((ypar == 0x00930035) && ((signature & (~0x05200100)) == 0)) {
+      checkptr = setup_coords[s_ptpd];
       goto doit;
    }
    else if ((ypar == 0x00620044) && ((signature & (~0x11800C40)) == 0)) {
@@ -755,7 +770,8 @@ static void rollmove(
    setup *result)
 
 {
-   int i, rot;
+   int i;
+   unsigned int rot, st;
 
    if (setup_limits[ss->kind] < 0) fail("Can't roll in this setup.");
    
@@ -765,16 +781,20 @@ static void rollmove(
    for (i=0; i<=setup_limits[ss->kind]; i++) {
       if (ss->people[i].id1) {
          rot = 0;
+         st = ((unsigned int) stb_z)*DBSTAB_BIT; 
          if (!(callspec->callflags & cflag__requires_selector) || selectp(ss, i)) {
             switch (ss->people[i].id1 & ROLL_MASK) {
-               case ROLLBITL: rot = 033; break;
+               case ROLLBITL: rot = 033, st = ((unsigned int) stb_a)*DBSTAB_BIT; break;
                case ROLLBITM: break;
-               case ROLLBITR: rot = 011; break;
+               case ROLLBITR: rot = 011; st = ((unsigned int) stb_c)*DBSTAB_BIT; break;
                default: fail("Roll not supported after previous call.");
             }
          }
          install_rot(result, i, ss, i, rot);
-         result->people[i].id1 &= ~STABLE_MASK;   /* For now, can't do fractional stable on this kind of call. */
+
+         if (result->people[i].id1 & STABLE_ENAB) {
+            do_stability(&result->people[i].id1, st, rot);
+         }
       }
       else
          clear_person(result, i);
@@ -843,7 +863,12 @@ static void move_with_real_call(
    if (the_schema == schema_maybe_single_concentric)
       the_schema = (final_concepts & FINAL__SINGLE) ? schema_single_concentric : schema_concentric;
    else if (the_schema == schema_maybe_matrix_conc_star)
-      the_schema = (final_concepts & FINAL__12_MATRIX) ? schema_conc_star12 : schema_conc_star;
+      if (final_concepts & FINAL__12_MATRIX)
+         the_schema = schema_conc_star12;
+      else if (final_concepts & FINAL__16_MATRIX)
+         the_schema = schema_conc_star16;
+      else
+         the_schema = schema_conc_star;
 
    /* Do some quick error checking for visible fractions.  For now, either flag is acceptable.  Later, we will
       distinguish between the "visible_fractions" and "first_part_visible" flags. */
@@ -920,7 +945,7 @@ static void move_with_real_call(
       This is only legal if the flag forbidding same is off.
       Furthermore, if certain modifiers have been given, we don't allow it. */
 
-   if (final_concepts & (FINAL__MAGIC | FINAL__INTERLOCKED | FINAL__12_MATRIX | FINAL__FUNNY))
+   if (final_concepts & (FINAL__MAGIC | FINAL__INTERLOCKED | FINAL__12_MATRIX | FINAL__16_MATRIX | FINAL__FUNNY))
       ss->setupflags |= SETUPFLAG__NO_STEP_TO_WAVE;
 
    /* But, alas, if fractionalization is on, we can't do it yet, because we don't
@@ -958,7 +983,12 @@ static void move_with_real_call(
          if (the_schema == schema_maybe_single_concentric)
             the_schema = (final_concepts & FINAL__SINGLE) ? schema_single_concentric : schema_concentric;
          else if (the_schema == schema_maybe_matrix_conc_star)
-            the_schema = (final_concepts & FINAL__12_MATRIX) ? schema_conc_star12 : schema_conc_star;
+            if (final_concepts & FINAL__12_MATRIX)
+               the_schema = schema_conc_star12;
+            else if (final_concepts & FINAL__16_MATRIX)
+               the_schema = schema_conc_star16;
+            else
+               the_schema = schema_conc_star;
       }
    }
 
