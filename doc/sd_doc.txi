@@ -1,8 +1,8 @@
-\input texinfo @c %**start of header -*-texinfo-*-
+\input texinfo
 @c user documentation for Sd (square dance caller's helper)
 @c
-@set sd-version 35.1
-@set Time-stamp: Feb 29, 2004
+@set sd-version 36.0
+@set Time-stamp: May 16, 2004
 @c
 @setfilename sd_doc.info
 @c We want the version number to show in the html file.
@@ -50,19 +50,24 @@ processors and print the results, provided the printed document carries
 copying permission notice identical to this one except for the removal
 of this paragraph (this paragraph not being relevant to the printed
 manual).
-
 @end ignore
-Permission is granted to make and distribute verbatim copies of this manual
-provided the copyright notice and this permission notice are preserved
-intact on all copies.
+
+Permission is granted to make and distribute verbatim copies of this manual.
 
 @iftex
-The authors disclaim all liability for your use of this software and
-documentation and make no representation as to the suitability of the
-software for any purpose.  THE SOFTWARE IS PROVIDED ``AS IS'' WITHOUT
-WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO,
-WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-NONINFRINGMENT.
+Sd is free software; you can redistribute it and/or modify it
+under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+Sd is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
+License for more details.
+
+You should have received a copy of the GNU General Public License
+along with Sd; if not, write to the Free Software Foundation, Inc.,
+59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 @end iftex
 
 @page	@c end of copyright page
@@ -121,9 +126,6 @@ This is the summary table of contents:
 * Concept Notes::               Concept Notes
 * Misc Advice::                 Miscellaneous Advice and Warnings
 * Customization::               Customization with X Resources
-@ifset copyleft
-* Copying::                     The GNU General Public License
-@end ifset
 
 This is the complete table of contents:
 
@@ -241,7 +243,490 @@ Concept Notes
 
 @end menu
 
-@include readme.txi
+@node Intro, Getting Started, Top, Top
+@unnumbered Introduction
+
+Sd is a square dance caller's helper.  The program assists you in
+writing sequences
+for Western square dancing by doing the checker pushing.  You tell the
+program what call you want to call next, and it computes the resulting
+setup and shows it to you.
+
+@ifset full-manual
+Sd is intended to be used to write challenge-level dances where the
+sequences are often complex and the checker pushing tedious and
+error-prone.  Most challenge callers write out the sequences they will
+call before they get to the dance, unlike Mainstream callers, who
+often invent the sequences on the fly from the stage.
+
+@unnumberedsec What Sd Is Not
+
+Sd knows nothing about timing, body flow, or esthetics.
+
+This program is not appropriate for Traditional square dancing.  A good
+Traditional square dance sequence requires, among other things, extremely
+accurate control of timing and phrasing.  The program is not capable of
+this.
+
+Since the emphasis here is on checker pushing, you will find various
+Mainstream staples missing, such as Circle Left, Grand Square, and
+Do-Si-Do.  Since these calls are @dfn{zeros}, there is no
+reason to have them in a checker-pushing program.  However, if you
+wish to write sequences containing calls such as these, you can use the
+@code{insert a comment} command to write them into the sequence.
+
+In short, if you are writing a Traditional or Mainstream dance,
+you may find that this program is not for you.
+
+It is most emphatically not the goal of Sd to present a polished
+graphical display of the dancers, or to show animation.  The goal
+is to write sequences so that you can create pleasing animation among
+live people.  If you want to enjoy the esthetic visual patterns
+created by square dance choreography, we recommend that you turn
+off your computer and go to a dance.
+
+The use of this program is not a good way to learn to call or to improve
+your calling or dancing skills.  In fact, reliance on a computer program
+to write material could easily make you a worse caller, or interfere
+with your attempts to improve your calling skills.
+
+The knowledge of calls and concepts that this program can provide is
+only a tiny part what you need to learn in order to be a good caller
+or dancer.  To call successfully, you need to master many skills,
+such as timing, flow, judging difficulty, floor interaction, and choosing
+precisely the right words to say.  This last skill is as important at high
+levels as at low levels.  Subtle differences in the words you choose,
+and their timing and inflection, can have a tremendous influence on the
+success of the dancers.  Sd attempts to print the correct words in all
+cases, but you will only succeed if you have a deep understanding of
+what the words mean and how they should be delivered.  That understanding
+can only be obtained through a great deal of experience calling at that level.
+
+If you do not have a good understanding of a call or concept, such that
+you could explain it to a dancer after the tip is over, you should not use it.
+Do not rely on Sd to provide the necessary insight into challenge dancing.
+
+For beginning callers in particular, the best thing to do
+is to receive instruction from a qualified teacher or coach, and to practice.
+
+We recognize that people sometimes have to learn a level in a tape group without
+benefit of any human expertise at that level, and that such people may have
+no choice but to rely on a computer program as one of their sources of
+information.  This is an undesirable situation, and we believe that computer
+programs should not be used as references except in emergencies.  There is an
+enormous body of knowledge about the accepted usage of various calls and concepts.
+That body of knowledge is generally possessed by all competent dancers and callers
+at a given level.  No computer program can possibly possess that knowledge.
+In particular, computer programs should not be used for resolving controversial
+issues.
+
+This is not to say that computers have no place in the education and training
+of callers.  A number of caller training programs have been written that
+may help you develop such skills as formation management and sight resolving.
+Sd is not suitable for this.
+
+@unnumberedsec Quality and Correctness
+
+Quality, correctness, and reliability are fundamental and extremely important
+design objectives of Sd.  Before any version is released, it passes
+very rigorous diagnostic tests.  These tests include verification of large amounts
+of C4 material from recent National Advanced and Challenge Conventions, and
+other C4 weekends.
+The elusive but ever-sought-after goal is to make a program that
+
+@itemize @bullet
+@item
+never makes mistakes,
+@item
+is able to write virtually all of the non-bogus material called
+by the top challenge callers, whatever computer program they may have
+used, and
+@item
+is developed and tested carefully, so users can be assured that this
+ability will be maintained in all future releases.
+@end itemize
+
+@unnumberedsec Authenticity of Calls and Concepts
+
+We have endeavored to use the current Callerlab lists and definitions as
+the source for call and concept names and definitions wherever possible.
+Where this is not possible, either because Callerlab does not publish
+lists or definitions at all levels, or because a definition is unclear
+in some area, we have used other well-respected encyclopedias, along with our
+best attempts to make things clear and sensible.  Particularly at extremely
+high challenge levels, where there are no standardization bodies to rein in
+callers' tendencies to change the definitions or usage of calls, concepts,
+and fundamental assumptions, it is not always possible to do this to
+everyone's satisfaction.
+
+Spelling variations that would be insignificant in normal calling become
+a serious problem for computer programs.  We have attempted to use the
+spelling in official lists where possible, but sometimes even these
+lists are careless.  In such cases, we have attempted to correct the errors
+where possible, using a variety of sources.  Priority is given to those
+sources that have shown the greatest care in their editing.
+
+@unnumberedsec Deviations from Official Lists
+
+It is a known fact that challenge callers routinely call various ``popular''
+calls that are not on the official or semi-official lists.  In an attempt to
+allow this, while maintaining the appearance of strict compliance with
+the lists, Sd has two special levels @code{c3x} and @code{c4x}.  These contain
+the calls that are currently believed to be called at C3 and C4 but are
+not yet on the semi-official C3 list or the various informal C4 compilations
+of ``commonly used'' calls.
+
+It is generally @emph{not necessary} to run the program at either of these
+levels.  When you run at C3, C3X calls may be used.
+When you run at C4, C4X calls may be used.  Whenever such a call is
+used, a warning is printed.  (If you explicitly run the program at
+C3X or C4X, you may use the calls without getting a warning.)
+
+@unnumberedsec Misuse of Computers 
+
+The phenomenon of ``clueless clicking'', that is, using a computer to generate
+challenge choreography that one doesn't really understand, is by now well-known.
+There are very few more effective ways to exhibit your ignorance
+and incompetence as a caller.  High level challenge dancers are extremely
+sophisticated in their ability to detect this.
+
+If dancers didn't understand what you meant by something that you called,
+they may ask you about it after the tip is over.  The answer ``I meant whatever
+the computer did'' is @emph{never} an acceptable answer to such a question.
+If you can't give an answer in terms of your understanding of how the calls
+and concepts really work, or if you don't agree with the program's interpretation,
+you shouldn't be calling that material.
+
+@unnumberedsec Judgement, Controversy, and Warning Messages
+
+Not all callers exercise good judgement in their calling, and occasionally
+some controversial, or even illegal, things are called.  It is not possible
+for a computer program to enforce good judgement or good taste.  Sd
+nevertheless sometimes prints warning messages of various types to alert
+less-experienced callers that something might be unusually difficult or
+controversial, or might violate some definition or some commonly accepted notion.
+
+@noindent These warning messages are intended for callers less competent than you.
+Ignore them.
+
+You can prevent the program from displaying or printing these warning messages
+by giving the @code{toggle nowarn mode} command.  This turns on (or turns
+off if it was already on) the ``no warnings'' mode.  @xref{Changing Modes}.
+You can also place a line ``@code{no_warnings}'' in the
+``@code{options}'' section of the @file{sd.ini} initialization file
+(@pxref{Option Control}) or start the program with a command-line option
+``@code{-no_warnings}'' (note the leading hyphen).  @xref{Command-Line Options}.
+
+@unnumberedsec Variations of the Program
+@end ifset
+
+Several user interfaces are available.  They come in two general types,
+and the program name is different for these types.
+
+@code{Sdtty} is the name of the program that uses a character-oriented keyboard
+interface.  Calls are selected by typing their names.
+@code{Sdtty} runs on Unix-like systems and under
+DOS, Windows 3.1, Windows 95, Windows 98, and NT on PC's.
+
+@code{Sd} is the name of the program that uses menus and a @dfn{graphical user
+interface}.  Calls may be selected by clicking with the mouse on the chosen
+menu item.  You may also type calls in from the keyboard.  In fact, @code{Sd}
+is keyboard-compatible with @code{Sdtty}---you can use it almost exactly the
+same way.  @code{Sd} runs on Windows 95, Windows 98, and NT on PC's.
+A somewhat different version runs on Unix systems running the X Window System interface.
+
+@menu
+* Getting Sd or Sdtty::         Getting Sd or Sdtty
+* Documentation::               Documentation
+* Software Safety::             Software Safety
+* A Few Technical Details::     A Few Technical Details
+* Installing on a PC::          Installing on a PC
+* Licensing Terms::             Licensing Terms
+* Author Contact::              How to Contact the Authors
+* Acknowledgements::            Acknowledgements
+@end menu
+
+@node Getting Sd or Sdtty, Documentation,  , Intro
+@unnumberedsec Getting Sd or Sdtty
+
+The most straightforward way to obtain @code{Sd} or @code{Sdtty} is to
+download the program from
+@ifclear html
+@t{http://www.lynette.org/sd/}
+@end ifclear
+@ifset html
+@t{<A HREF="http://www.lynette.org/sd/">http://www.lynette.org/sd/</A>}
+@end ifset
+on the World Wide Web.  The reference manual and other documentation may be
+browsed there or downloaded for your local use as well.
+
+You can obtain Sdtty for PC-compatible computers,
+on a 3.5-inch HD diskette, with printed documentation.
+The price is $4 (price valid for 2000).
+@ifset full-manual
+@xref{Author Contact}.
+@end ifset
+
+@node Documentation, Software Safety, Getting Sd or Sdtty, Intro
+@unnumberedsec Documentation
+
+If you are on the Internet, you can browse or download @code{Sd}/@code{Sdtty}
+documentation from
+@ifclear html
+@t{http://www.lynette.org/sd/readings.html}
+@end ifclear
+@ifset html
+@t{<A HREF="http://www.lynette.org/sd/readings.html">http://www.lynette.org/sd/readings.html</A>}
+@end ifset
+on the World Wide Web.  The documentation is the same for the two programs.
+
+Documentation
+files are provided in several formats.  There is @file{html} format for browsing,
+Postscript format for downloading and printing, @file{PDF} (Acrobat) format for browsing or
+printing, and plain text format for downloading.  You can also download
+``gzipped'' Unix archives of the various files in Unix format.
+
+The file @file{sd_doc} is this manual.
+@c The file
+@c @file{db_doc.txt} gives internal information on the database format,
+@c useful only to people editing the calls database.
+
+See the file @file{relnotes} for information about what is new in
+the most recent release.
+
+There are also some documents describing a few special features in more detail.
+
+Printed copies of the manual are available from the authors, or may be
+printed from the file @file{sd_doc.ps}.
+
+@node Software Safety, A Few Technical Details, Documentation, Intro
+@unnumberedsec Software Safety
+
+The computer on which @code{Sd} and @code{Sdtty} and their documentation
+are developed has no Internet or modem connections at all.
+No mail is sent or received, and no web browsing is done, on this computer.
+Only software from trustworthy sources is installed.  Each version of
+the program is digitally signed, using a 512-bit secret PGP/RSA key,
+and then transferred to another computer by Zip disk.  The files
+are then mailed to the web server.  Before placing it on the web, the
+server authenticates the signature and verifies, with the PGP signature
+algorithm, that the files were not tampered with in transit.
+
+Prior to May, 2000, the computer from which the web updates take place had
+Microsoft Outlook installed, but not used.  (Netscape Communicator is used
+as my mailer, because of its technical and ethical superiority. 
+Outlook had been installed only because of the policy of my employer.)
+
+The "Love Bug" virus of May, 2000 demonstrated that Microsoft
+is unable or unwilling to make its email software adhere to the most basic
+common-sense principles of safety.  Accordingly, Outlook and the Visual Basic
+scripting / virus-propagating mechanism (wscript.exe) have been removed
+from that computer.  No Microsoft email or virus-propagating products
+exist anywhere on the @code{Sd} development path.
+
+Various terms in the preceding paragraphs are trademarks of various corporations.
+
+@node A Few Technical Details, Installing on a PC, Software Safety, Intro
+@unnumberedsec A Few Technical Details
+
+Although it is a ``Windows application'', @code{Sdtty} does not use the
+mouse while running.  It looks rather like the Command Prompt window.
+
+@code{Sd} runs only on Windows 95, Windows 98, and NT 4.0.
+
+Users of DOS, Windows 3.1, or NT 3.51 can only run @code{Sdtty}, and need to run a
+special version, identified by the installation
+file being @file{install3.exe} instead of @file{install.exe}.  (If you use DOS,
+Windows 3.1, or NT 3.51, be sure to download the correct version of the program from the
+web, or request the correct version when ordering it on diskette.)
+
+@code{Sd} and @code{Sdtty} are identical in their behavior with respect
+to square dance calling.
+
+@code{Sd} and @code{Sdtty} are believed to be
+insensitive to slight inaccuracies in floating-point division.
+It should operate correctly with early Pentium chips.
+
+The program is mostly "Year 2000 Compliant", but some care will be
+needed.  File names created with the special names @code{*} and @code{+}
+contain only the last two digits of the year.  We therefore recommend that you
+delete old files at least every 75 years or so.
+
+The date printed at the top of each sequence contains the full
+4-digit year, so there should be little danger of calling a 100-year-old
+card without realizing it.  Callers are nevertheless urged to be careful,
+since some dancers have extraordinarily long memories.
+
+@node Installing on a PC, Licensing Terms, A Few Technical Details, Intro
+@unnumberedsec Installing on a PC
+
+@code{Sd} and @code{Sdtty} are two separate programs, that are both installed
+simultaneously.  Whether you obtain them from the World Wide Web
+or by diskette, they are provided in the file @file{install.exe}.
+The two programs will share the same initialization file, and hence will
+use the same sessions, options, and accelerator keys.
+@quotation
+(If you are running DOS, Windows 3.1, or NT 3.51, you can only use
+@code{Sdtty}, and you must obtain the file @file{install3.exe}.)
+@end quotation
+
+To install the programs, execute (``launch'')
+the file @file{install.exe}.  You can do this
+by double-clicking it in the Windows Explorer, by launching it
+during a Web download, or by starting the ``Run'' operation from
+the start menu and giving the location of the @file{install.exe}
+file.  For example, you can install from a diskette by selecting
+``Run'' and typing ``A:install.exe''.
+
+If any pre-existing calling program files were in the @file{C:\Sd} folder,
+they will be saved in a folder with a name like @file{C:\Sd_pre3281}
+before the new version is
+installed.  The installation will not damage or delete any sequence
+transcript files or initialization files.
+
+If you have downloaded the documentation files in ``bulk'' form in
+self-extracting zipped archives, you can launch them also.  The files
+are @file{textdoc.exe}, @file{psdoc.exe}, and @file{pdfdoc.exe}.
+Launch them in the same way as @file{install.exe}.
+They will unpack the appropriate text, Postscript, or PDF files into the
+directory.
+
+When the installation is complete, the programs will be in the @file{Sd}
+subfolder of the @file{Programs} folder of the Start Menu.  The installation
+procedure also leaves an Explorer open on the shortcut icons.
+There are several icons for starting @code{Sd} or @code{Sdtty} with various
+color schemes, for browsing the manual or release notes,
+and for editing the initialization file.  You may copy any or all of these
+from the open Explorer to the Desktop
+and/or the Start Menu.  To do this, perform a drag-and-drop operation,
+using the right mouse button.  If the system asks, select ``Copy Here''.
+To place icons in on the Desktop, just perform a right-mouse drag-and-drop
+to any unused place on the Desktop.  To place icons in the Start Menu, just
+drop them on the actual ``Start'' button in the lower left corner.  When
+finished, close the Explorer by clicking the ``X'' in the upper-right corner.
+
+@quotation
+(If you are running DOS, Windows 3.1, or NT 3.51, you must place the
+@file{install3.exe} in the folder in which you want @code{Sdtty} to
+operate (typically @file{C:\sd}), and launch it there.  You can create a
+shortcut icon by copying the file
+@file{SDTTY.PIF} to the appropriate place.  Use the PIF editor to modify it
+if necessary.)
+@end quotation
+
+You may delete the
+@file{install.exe} file at this point, along with
+any documentaion archives, perhaps saving copies on diskette.
+
+You do not need to copy the shortcuts again when upgrading to a new version.
+Installing a new version requires only obtaining and launching @file{install.exe}.
+
+You can, of course, copy the shortcuts anywhere, and edit them with the ``Properties''
+operation of the Windows Explorer.  Among the things you can do is put command-line
+arguments into them.  For example, you can make another copy of the @code{Sd} icon
+on the Desktop (under a different name), and arrange for the program, when launched
+with that icon, to run in reverse video mode.  Run the ``Properties'' operation
+on the copied icon, and change the @file{Target} specification on the
+@file{Shortcut} page from ``@code{C:\sd\sd.exe}'' to
+``@code{C:\sd\sd.exe -reverse_video}''.
+
+@node Licensing Terms, Author Contact, Installing on a PC, Intro
+@unnumberedsec Licensing Terms
+
+@code{Sd} and @code{Sdtty} are ``free software'' programs, licensed
+under the GNU General Public License, which is in the file
+@file{COPYING.txt} in the distribution.  You can also get it by
+writing to the Free Software Foundation, Inc.,
+59 Temple Place, Suite 330, Boston, MA 02111-1307 USA.
+
+In short, this means that it is perfectly legal and ethical to copy and
+redistribute the program, documentation, and source files.  You are, of
+course, not required to download the source files when you obtain a copy
+of @code{Sd} from the web page.  If you want to make the program
+available to someone else, and you do it by giving them the URL for
+downloading, that is OK.  However, if you distribute the program by
+other means, such as giving someone a copy that you have placed on a CD
+or diskette, you must either place the source files on the disk also, or
+tell the person the URL (http://www.lynette.org/sd/) from which they can
+download them.
+
+Also, if you redistribute @code{Sd} on your own web page or similar
+mechanism, you must make the source files available there.
+
+If you modify the program, the terms of the license are very strict.
+Programs constructed from modified source files may never be duplicated
+or redistributed by anyone, even just in executable form, without obeying the
+conditions of the license and copyright.  Read the license carefully.
+
+Note in particular that any modified program based on @code{Sd} or
+@code{Sdtty} must obey the licensing terms every time it is
+redistributed by anyone.  This requires redistribution of all of the
+source files, or otherwise complying with section 3 of the license.
+
+The Windows installation program @file{install.exe} contains licensed
+commercial decompression software.  The licensing terms prohibit
+extracting or reverse-engineering that software.
+
+@ifset full-manual
+This document
+@end ifset
+@ifclear full-manual
+The reference manual
+@end ifclear
+is distributed in both formatted and plain-text form, in the files
+@file{sd_doc.ps} and @file{sd_doc.txt}, respectively.  Some other
+documents are also distributed with the program.  Permission is given to
+distribute verbatim copies of these documents, either by photocopier or
+by computer, but modification of them is forbidden by copyright law.
+
+@node Author Contact, Acknowledgements, Licensing Terms, Intro
+@unnumberedsec How to Contact the Authors
+
+Please send any praise, bug reports, or other comments on Sd
+to the authors at the addresses given below.
+Be sure to include the version number.
+
+@c don't use mailto URL's to try to cut down on spam
+@display
+William Ackerman
+wba@@alum.mit.edu
+
+@ifclear html
+Stephen Gildea
+@end ifclear
+@ifset html
+<A HREF="http://www.gildea.com/stephen/">Stephen Gildea</A>
+@end ifset
+gildea@@.stop.mail-abuse.org
+@end display
+
+If you do not have access to electronic mail, write to
+
+@display
+@group
+Bill Ackerman
+100 Parlmont Park
+North Billerica MA 01862-2722
+@end group
+@end display
+
+@ifset full-manual
+@node Acknowledgements, , Author Contact, Intro
+@unnumberedsec Acknowledgements
+
+Thanks to Kathy Godfrey, Sue Curtis, Chris Stacy, and Lynette Bellini
+for their help, encouragement, suggestions, contributions of calls,
+feedback, testing, and many other contributions.
+
+The non-windowed interface for @code{Sdtty} (@pxref{Terminal Interface})
+was contributed by Alan Snyder.
+
+The @code{Sd} interface for Windows was contributed by Robert Cays.
+
+We received helpful feedback and testing from Robert French, Judy
+Anderson, Bill van Melle, Tom Rinker, Lois Lew, Ron Nicholson, Dave Decot,
+Kristin Jensen, Larry Dunn, and Nick Martellacci.
+@end ifset
 
 @node Getting Started, Calling, Intro, Top
 @chapter Getting Started
@@ -4316,7 +4801,12 @@ See @ref{Concentric}.
 @item frontrigger
 @item right wing
 @item left wing
-These are straightforward.
+@item mystic wing
+@item invert mystic wing
+@item other wing
+These are straightforward.  ``Mystic wing'' is right wing for the outer 4 and
+left wing for the center 4.  ``Other wing'' is right wing for the belles and
+left wing for the beaus.
 @item common point galaxy
 @item common spot/point diamonds
 @item common spot/point hourglass
@@ -5531,12 +6021,7 @@ If you do not get this by default, set this X resource:
 Sd*text*font: -misc-fixed-medium-r-normal--13-*-*-*-c-70-iso8859-1
 @end example
 
-@ifset copyleft
-@node Customization, Copying, Misc Advice, Top
-@end ifset
-@ifclear copyleft
 @node Customization, , Misc Advice, Top
-@end ifclear
 @chapter Customization with X Resources
 
 The file @file{Sd.res} is a sample X user resource file for the program.  It
@@ -5567,19 +6052,6 @@ whatever your X startup file is called).  You will have to re-run @code{xrdb}
 after editing your @file{.Xresources} file.
 You should add @samp{Sd} to the front
 of any lines you move to your @file{.Xresources} file.
-
-To have mouse button 3 invoke the Undo operation, as one of the
-authors does, set these resources:
-
-@example
-Sd*frame*Label*Translations: #override <Btn3Down>: undo()
-Sd*frame*List*Translations: #override <Btn3Down>: undo()
-@end example
-
-@ifset copyleft
-@node Copying, , Customization, Top
-@include gpl.txi
-@end ifset
 
 @bye
 

@@ -1,15 +1,36 @@
 #ifndef SORT_H
 #define SORT_H
 
-//  Copyright (C) 2003  William B. Ackerman.
+// SD -- square dance caller's helper.
 //
+//    Copyright (C) 1990-2004  William B. Ackerman.
+//
+//    This file is part of "Sd".
+//
+//    Sd is free software; you can redistribute it and/or modify it
+//    under the terms of the GNU General Public License as published by
+//    the Free Software Foundation; either version 2 of the License, or
+//    (at your option) any later version.
+//
+//    Sd is distributed in the hope that it will be useful, but WITHOUT
+//    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+//    or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
+//    License for more details.
+//
+//    You should have received a copy of the GNU General Public License
+//    along with Sd; if not, write to the Free Software Foundation, Inc.,
+//    59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+//
+//    This is for version 36.
+
+
 // This is a template for a general sort procedure, using the
 // "heapsort" algorithm.  It is typically used thusly:
 //
 //  Assume MYCLASS is the data type of the items in the array
 //  to be sorted.  Make up names "MYCOMPARE" and "MYSORT".
 //
-//  Give the following two declarations:
+//  After including this file, give the following two declarations:
 //
 //  ==========================================================
 //  class MYCOMPARE {
@@ -59,6 +80,8 @@
 //  unsigned int my_array[1000];
 //
 //  RIGHTHALFSORT::heapsort(my_array, 1000);
+
+// ********** End of client documentation. **********
 
 
 // The notation and general algorithm is from "The Design and Analysis of

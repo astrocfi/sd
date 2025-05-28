@@ -1,4 +1,4 @@
-# Makefile for Sd/Sdtty for Linux
+# Makefile for Sd/Sdtty for Linux.  Intended to be used with GCC, of course.
 
 # This gives the compiler name and any switches that it needs to make
 # it operate the way we want (ANSI language, standards conformance,
@@ -21,18 +21,10 @@ CDEBUGFLAGS = -O4
 CFLAGS =$(CDEBUGFLAGS) $(DEFS)
 
 # These are the "-I"  and "-D" flags that we must use for the compilation
-# of the X11 user interface (sdui-x11.c).
-X11_FLAGS =
-
-# These are the "-I"  and "-D" flags that we must use for the compilation
 # of the system-dependent part of the TTY user interface (sdui-ttu.cpp).
 # "-DNO_CURSES" - disable compilation with curses.
 #
 TTY_FLAGS =
-
-# These are the library flags that we must use for the final bind of
-# the X11 version of "sd".
-X11_LIBS =
 
 # These are the library flags that we must use for the final bind of
 # "sdtty".
@@ -68,45 +60,28 @@ X11_LIBS =
 # to give the library pathname.
 TTY_LIBS = -static -lcurses
 
-SD_SRCS = sdmain.cpp sdutil.cpp sdbasic.cpp sdinit.cpp \
-          sdtables.cpp sdctable.cpp sdtop.cpp sdconcpt.cpp sdpreds.cpp \
-          sdgetout.cpp sdmoves.cpp sdtand.cpp sdconc.cpp sdistort.cpp \
-          sdpick.cpp sdsi.cpp mapcachefile.cpp
+SDLIB_OBJS = sdmain.o sdutil.o sdbasic.o sdinit.o \
+             sdtables.o sdctable.o sdtop.o sdconcpt.o sdpreds.o \
+             sdgetout.o sdmoves.o sdtand.o sdconc.o sdistort.o \
+             mapcachefile.o sdpick.o sdsi.o sdmatch.o
 
-SD_OBJS = sdmain.o sdutil.o sdbasic.o sdinit.o \
-          sdtables.o sdctable.o sdtop.o sdconcpt.o sdpreds.o \
-          sdgetout.o sdmoves.o sdtand.o sdconc.o sdistort.o \
-          sdpick.o sdsi.o mapcachefile.o
+HFILES = sd.h database.h paths.h mapcachefile.h sort.h \
+             deploy.h resource.h sdprint.h
 
-SDX11_SRC = sdui-x11.c
-SDX11_OBJ = sdui-x11.o
+MAKEFILES = makefile.linux makefile.mingw makefile.mac makefile.solaris
 
-SDTTY_SRCS = sdui-tty.cpp sdmatch.cpp sdui-ttu.cpp
-SDTTY_OBJS = sdui-tty.o sdmatch.o sdui-ttu.o
+SDTTY_OBJS = sdui-tty.o sdui-ttu.o
 
-SDTTY_LINK_OBJS = $(SD_OBJS) $(SDTTY_OBJS)
+SDTTY_LINK_OBJS = $(SDLIB_OBJS) $(SDTTY_OBJS)
 
-MKCALLS_SRCS = mkcalls.cpp
 MKCALLS_OBJS = mkcalls.o
 
-SRCS = $(SD_SRCS) $(SDX11_SRC) $(SDTTY_SRCS) $(MKCALLS_SRCS)
-OBJS = $(SD_OBJS) $(SDX11_OBJ) $(SDTTY_OBJS) $(MKCALLS_OBJS)
-
-all: alltty
-allx11: sd sd_calls.dat
-alltty: sdtty sd_calls.dat
-everything: allx11 sdtty
-
-LDPRELIBS =
-LDPOSTLIBS = lib\crt0.o lib\libc.a
-
-sd: $(SD_OBJS) $(SDX11_OBJ)
-	$(CC) $(CFLAGS) -o $@ $(SD_OBJS) $(SDX11_OBJ) $(LDPRELIBS) $(X11_LIBS) $(LDPOSTLIBS)
+all: sdtty mkcalls sd_calls.dat
 
 mkcalls: $(MKCALLS_OBJS)
 	$(CC) $(CFLAGS) -o $@ $(MKCALLS_OBJS)
 
-sdtty: $(SD_OBJS) $(SDTTY_OBJS)
+sdtty: $(SDLIB_OBJS) $(SDTTY_OBJS)
 	$(CC) $(CFLAGS) -o $@ $(SDTTY_LINK_OBJS) $(TTY_LIBS)
 
 sd_calls.dat: sd_calls.txt mkcalls
@@ -120,15 +95,12 @@ sd_calls.dat: sd_calls.txt mkcalls
 .cpp.o:
 	$(CC) $(CFLAGS) -c $<
 
-sdui-x11.o: sdui-x11.c
-	$(CC) $(CFLAGS) $(X11_FLAGS) -c $<
-
 sdui-ttu.o: sdui-ttu.cpp
 	$(CC) $(CFLAGS) $(TTY_FLAGS) -c $<
 
 # Miscellaneous file dependencies.
 
-mkcalls.o sdmain.o sdsi.o sdui-x11.o: paths.h
+mkcalls.o sdmain.o sdsi.o: paths.h
 
 mkcalls.o: database.h
 
@@ -136,12 +108,13 @@ sdinit.cpp: mapcachefile.h sort.h
 
 mapcachefile.cpp: mapcachefile.h
 
-$(SD_OBJS) $(SDX11_OBJ) $(SDTTY_OBJS): sd.h database.h
+$(SDLIB_OBJS) $(SDTTY_OBJS): sd.h database.h paths.h
 
 clean::
 	-$(RM) *.o sd sdtty mkcalls sd_calls.dat tags
 
-TAG_FILES = ${SRCS} *.h
-
-tags: ${TAG_FILES}
-	/opt/sfw/bin/ctags ${TAG_FILES}
+savesource::
+	tar cvf sd_source $(SDLIB_OBJS:.o=.cpp) $(SDTTY_OBJS:.o=.cpp) \
+               $(MKCALLS_OBJS:.o=.cpp) $(HFILES) \
+               sdui-ttu.cpp $(MAKEFILES) \
+               sd_calls.txt db_doc.txt COPYING.txt

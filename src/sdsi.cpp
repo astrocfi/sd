@@ -23,10 +23,7 @@
    generate_random_number
    hash_nonrandom_number
    get_mem
-   get_mem_gracefully
    get_more_mem
-   get_more_mem_gracefully
-   free_mem
    get_date
    open_file
    write_file
@@ -43,6 +40,11 @@ and the following external variables:
    new_outfile_string
    abridge_filename
 */
+
+// We used to have the following obsolete comment relating to the problems
+// with stdlib.h.  See also the editorializing in mkcalls.cpp.
+
+// Of course, we no longer take pity on troglodyte development environments.
 
 /* You should compile this file (and might as well compile all the others
    too) with some indicator symbol defined that tells what language system
@@ -78,7 +80,7 @@ and the following external variables:
 #include <errno.h>
 #include <string.h>
 #include <time.h>
-#include <ctype.h>  /* for tolower */
+#include <ctype.h>
 
 #include "sd.h"
 #include "paths.h"
@@ -145,7 +147,7 @@ extern void hash_nonrandom_number(int number)
 
 extern void *get_mem(uint32 siz)
 {
-   void *buf = get_mem_gracefully(siz);
+   void *buf = malloc(siz);
 
    if (!buf && siz != 0) {
       char msg [50];
@@ -157,25 +159,18 @@ extern void *get_mem(uint32 siz)
 }
 
 
-/* This will not fail catastrophically, but may return nil pointer
-   on nonzero request.  Client must check and react accordingly. */
-extern void *get_mem_gracefully(uint32 siz)
-{
-   return malloc(siz);
-}
+// An older version of this actually called "malloc" or "realloc"
+// depending on whether the incoming pointer was nil.  There was a
+// comment pointing out that this was because "SunOS 4 realloc doesn't
+// handle NULL".  Isn't that funny?
 
-
-/* An older version of this, and "get_more_mem_gracefully", actually
-   called "malloc" or "realloc" depending on whether the incoming
-   pointer was nil.  There was a comment pointing out that this
-   was because "SunOS 4 realloc doesn't handle NULL".
-   Isn't that funny? */
+// Of course, we no longer take pity on broken compilers or operating systems.
 
 extern void *get_more_mem(void *oldp, uint32 siz)
 {
    void *buf;
 
-   buf = get_more_mem_gracefully(oldp, siz);
+   buf = realloc(oldp, siz);
    if (!buf && siz != 0) {
       char msg [50];
       sprintf(msg, "Can't allocate %d bytes of memory.", (int) siz);
@@ -185,18 +180,6 @@ extern void *get_more_mem(void *oldp, uint32 siz)
 }
 
 
-/* This will not fail catastrophically, but may return nil pointer
-   on nonzero request.  Client must check and react accordingly. */
-extern void *get_more_mem_gracefully(void *oldp, uint32 siz)
-{
-   return realloc((char *) oldp, siz);
-}
-
-
-extern void free_mem(void *ptr)
-{
-   free(ptr);
-}
 
 
 extern void get_date(char dest[])
@@ -226,6 +209,14 @@ char *get_errstring()
 }
 
 
+// There is some obsolete stuff below.  This dates from early versions of the
+// program, which were compiled with DJGPP and ran on Windows 3.1.  As you will
+// see from the comments below, getting file manipulation to work was rather
+// frustrating back then.
+//
+// In this case, I am preserving not only the comments, but the code.  I'm
+// not 100% sure that it is safe to simplify this, and it seems to work.
+
 void open_file()
 {
    int this_file_position;
@@ -233,8 +224,8 @@ void open_file()
 
    file_error = false;
 
-   /* If this is a "special" file (indicated by ending with a colon),
-      we simply open it and write. */
+   // If this is a "special" file (indicated by ending with a colon),
+   // we simply open it and write.
 
    if (outfile_special) {
       if (!(fildes = fopen(outfile_string, "w"))) {
@@ -391,7 +382,7 @@ void open_file()
 
    /* Wait!  The OS is so convinced that it knows better than we what
       should be in a file, that, in addition to silently putting in this
-      character and making the print software silently ignore everything
+      ^Z character and making the print software silently ignore everything
       in the file that occurs after it, IT MAKES IT INVISIBLE TO US!!!!!
       WE CAN'T EVEN SEE THE %$%^#%^@&*$%^#!@ CONTROL Z!!!!!!
       That is, the system won't let us see it if we open the file in
@@ -560,18 +551,23 @@ extern void write_file(char line[])
    uint32 size;
 
 #if defined(__CYGWIN__)
-   // Yes.  Cygwin, even though it is are Unix-like, recognizes
-   // that it is running on a PC-like file system, and tries to obey
-   // the newline conventions of same.  So we write PC-style newlines.
+   // Cygwin seems to want us to write 2-character ("\r\n") line breaks.
+   // They are being such good doobies about the fact that they are running
+   // on Windows instead of Unix, and that Windows uses the "\r\n" convention
+   // for its native file format, that they seem to have lost sight of the
+   // fact that, when a POSIX file is being written in text mode, one
+   // *ALWAYS* uses the 1-character ("\n") convention in the fwrite calls.
+   // The library will take care of converting to native format.
    // Actually, as noted above, Cygwin is broken, and I have no idea
-   // how to write line breaks.
+   // how to write line breaks.  But I'm leaving this code in.
+   //
+   // We no longer take pity on broken compilers or operating systems.
    char nl[] = "\r\n";
 #define NLSIZE 2
 #else
-   // Windows and Linux (and even DJGPP) know how the convention for
-   // writing line breaks -- if the file has been opened in text mode,
-   // write a "newline" (which is literally what Unix file systems
-   // want), and the right thing will happen.
+   // This is the way it's supposed to be.  Line breaks in text files
+   // are *ALWAYS* read and written as the single "\n" character.
+   // Windows and Linux (and even DJGPP) know that.
    char nl[] = "\n";
 #define NLSIZE 1
 #endif
@@ -583,7 +579,7 @@ extern void write_file(char line[])
       if ((fwrite(line, 1, size, fildes) != size) || ferror(fildes)) {
          (void) strncpy(fail_errstring, get_errstring(), MAX_ERR_LENGTH);
          (void) strncpy(fail_message, "write", MAX_ERR_LENGTH);
-         file_error = true;      // Indicate that sequence will not get written.
+         file_error = true;      // Indicate that the sequence will not get written.
          return;
       }
    }
@@ -591,7 +587,7 @@ extern void write_file(char line[])
    if ((fwrite(nl, 1, NLSIZE, fildes) != NLSIZE) || ferror(fildes)) {
       (void) strncpy(fail_errstring, get_errstring(), MAX_ERR_LENGTH);
       (void) strncpy(fail_message, "write", MAX_ERR_LENGTH);
-      file_error = true;      // Indicate that sequence will not get written.
+      file_error = true;      // Indicate that the sequence will not get written.
    }
 }
 

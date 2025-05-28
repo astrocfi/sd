@@ -1,49 +1,60 @@
-/* SD -- square dance caller's helper.
-
-    Copyright (C) 1990-2003  William B. Ackerman.
-
-    This file is unpublished and contains trade secrets.  It is
-    to be used by permission only and not to be disclosed to third
-    parties without the express permission of the copyright holders.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-
-    This is for version 34. */
+// SD -- square dance caller's helper.
+//
+//    Copyright (C) 1990-2004  William B. Ackerman.
+//
+//    This file is part of "Sd".
+//
+//    Sd is free software; you can redistribute it and/or modify it
+//    under the terms of the GNU General Public License as published by
+//    the Free Software Foundation; either version 2 of the License, or
+//    (at your option) any later version.
+//
+//    Sd is distributed in the hope that it will be useful, but WITHOUT
+//    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+//    or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
+//    License for more details.
+//
+//    You should have received a copy of the GNU General Public License
+//    along with Sd; if not, write to the Free Software Foundation, Inc.,
+//    59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+//
+//    This is for version 36.
 
 #include <stdio.h>
 #include <errno.h>
+
+// We used to take pity on those poor souls who are compelled to use
+// troglodyte development environments.  So we used to have the conditional
+// "#if __STDC__ || defined(sun)" on the "#include <stdlib.h> line just below.
+// Prior to that, the conditional had been
+// "#if defined(__STDC__) && !defined(athena_rt) && !defined(athena_vax)"
+//
+// If that conditional failed, we used to put in explicit prototypes for
+// malloc, realloc, free, and exit.  Explicitly in the C namespace, of course.
+// The brokenness of some Unix-like development environments used to be
+// positively staggering!  You were expected to manually type in prototypes
+// instead of including the appropriate header file.
+
+// Of course, we no longer take pity on troglodyte development environments.
+
+#include <stdlib.h>
 #include <string.h>
 #include "paths.h"
 #include "database.h"
 
-// We take pity on those poor souls who are compelled to use
-// troglodyte development environments.
-
-#if __STDC__ || defined(sun)
-#include <stdlib.h>
-#else
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-extern void free(void *ptr);
-extern char *malloc(unsigned int siz);
-extern char *realloc(char *oldp, unsigned int siz);
-extern void exit(int code);
-#ifdef __cplusplus
-}
-#endif
-
-#endif
-
 // Some systems can't be bothered to adhere to the standards for
 // stdlib.h.  We name no names, but the company that inflicted this
 // particular version of Unix on the world recently acquired Compaq.
-#ifndef SEEK_SET
-#define SEEK_SET 0
-#endif
+// So we used to have the following code to define SEEK_SET explicitly.
+// To zero.  That was apparently the value one was supposed to use on
+// that manufacturer's systems.  I don't remember how one was supposed
+// to figure that out.  But it certainly wasn't by including stdlib.h.
+//
+// #ifndef SEEK_SET
+// #define SEEK_SET 0
+// #endif
+
+// Of course, we no longer take pity on troglodyte development environments.
 
 // This table is a copy of the one in sdtables.cpp .
 
@@ -237,34 +248,6 @@ FILE *db_output = NULL;
 #define FILENAME_LEN 200
 char db_input_filename[FILENAME_LEN];
 char db_output_filename[FILENAME_LEN];
-
-
-/* We take pity on those poor souls who are compelled to use
-    troglodyte development environments. */
-
-// ***  This next test used to be:
-//    if defined(__STDC__) && !defined(athena_rt) && !defined(athena_vax)
-//   We have taken it out and replaced with what you see below.  If this breaks
-//   anything, let us know. */
-
-#if __STDC__ || defined(sun)
-#include <stdlib.h>
-#else
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-extern void free(void *ptr);
-extern char *malloc(unsigned int siz);
-extern char *realloc(char *oldp, unsigned int siz);
-extern void exit(int code);
-#ifdef __cplusplus
-}
-#endif
-
-#endif
-
-#include <string.h>
 
 /* We would like to think that we will always be able to count on compilers to do the
    right thing with "int" and "long int" and so on.  What we would really like is
@@ -941,6 +924,7 @@ char *qualtab[] = {
    "split_dixie",
    "not_split_dixie",
    "dmd_ctrs_mwv",
+   "spd_base_mwv",
    "qtag_mwv",
    "qtag_mag_mwv",
    "dmd_ctrs_1f",
@@ -1793,22 +1777,16 @@ void db_output_error()
 }
 
 
+// There is a gross bug in the DJGPP library.  When figuring the return value,
+// fputc sign-extends the input datum and returns that as an int.  This means
+// that, if we try to write 0xFF, we get back -1, which is the error condition.
+// So, under DJGPP, we used to have to use errno as the sole means of telling
+// whether an error occurred.  Of course, we no longer compile with DJGPP, and
+// no longer take pity on buggy compilers.
 void db_putc(char ch)
 {
-/* There is a gross bug in the DJGPP library.  When figuring the return value,
-   fputc sign-extends the input datum and returns that as an int.  This means
-   that, if we try to write 0xFF, we get back -1, which is the error condition.
-   So we have to use errno as the sole means of telling whether an error occurred. */
-#if defined(MSDOS)
-   errno = 0;
-   (void) fputc(ch, db_output);
-   if (errno)
+   if (fputc(ch, db_output) == EOF)
       db_output_error();
-#else
-   if (fputc(ch, db_output) == EOF) {
-       db_output_error();
-   }
-#endif
 }
 
 

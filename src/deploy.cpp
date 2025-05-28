@@ -1,29 +1,26 @@
-/* SD -- square dance caller's helper.
+// SD -- square dance caller's helper.
+//
+//    Copyright (C) 1990-2004  William B. Ackerman.
+//
+//    This file is part of "Sd".
+//
+//    Sd is free software; you can redistribute it and/or modify it
+//    under the terms of the GNU General Public License as published by
+//    the Free Software Foundation; either version 2 of the License, or
+//    (at your option) any later version.
+//
+//    Sd is distributed in the hope that it will be useful, but WITHOUT
+//    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+//    or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
+//    License for more details.
+//
+//    You should have received a copy of the GNU General Public License
+//    along with Sd; if not, write to the Free Software Foundation, Inc.,
+//    59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+//
+//    This is for version 36.
 
-    Copyright (C) 1990-1999  William B. Ackerman.
-
-    This file is unpublished and contains trade secrets.  It is
-    to be used by permission only and not to be disclosed to third
-    parties without the express permission of the copyright holders.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-
-    sdui-win.c - SD -- Microsoft Windows User Interface
-
-    Copyright (C) 1995, Robert E. Cays
-
-    Permission to use, copy, modify, and distribute this software for
-    any purpose is hereby granted without fee, provided that the above
-    copyright notice and this permission notice appear in all copies.
-    The author makes no representations about the suitability of this
-    software for any purpose.  It is provided "as is" WITHOUT ANY
-    WARRANTY, without even the implied warranty of MERCHANTABILITY or
-    FITNESS FOR A PARTICULAR PURPOSE.
-
-    This is for version 32. */
-
+//    sdui-win.c - SD -- Microsoft Windows User Interface
 
 #define STRICT
 #define WIN32_LEAN_AND_MEAN
@@ -77,7 +74,7 @@ char *file_list[] = {
    "sample1.ini",
    "sample2.ini",
    "sample3.ini",
-   "readme",
+   "COPYING.txt",
    (char *) 0};
 
 char *save_list[] = {

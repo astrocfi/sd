@@ -1,4 +1,4 @@
-# Makefile for Sd/Sdtty for MingW (GCC on Windows)
+# Makefile for Sd/Sdtty for MingW (GCC on Windows).
 
 # This gives the compiler name and any switches that it needs to make
 # it operate the way we want (ANSI language, standards conformance,
@@ -29,6 +29,16 @@ SDLIB_OBJS = sdmain.o sdutil.o sdbasic.o sdinit.o \
              sdtables.o sdctable.o sdtop.o sdconcpt.o sdpreds.o \
              sdgetout.o sdmoves.o sdtand.o sdconc.o sdistort.o \
              mapcachefile.o sdpick.o sdsi.o sdmatch.o
+
+HFILES = sd.h database.h paths.h mapcachefile.h sort.h \
+             deploy.h resource.h sdprint.h
+
+ICONS = sd.ico sdbg.ico sdbw.ico sdby.ico sdcpl.ico sdgy.ico sdry.ico sdtty.ico
+
+SHORTCUTS = "Edit sd.ini.lnk" Faq.lnk "Release Notes.lnk" "SD couple.lnk" "Sd manual.lnk" \
+             "SD nocheckers.lnk" "SD plain.lnk" SD.lnk "SDTTY plain.lnk" SDTTY.lnk
+
+MAKEFILES = makefile.linux makefile.mingw makefile.mac makefile.solaris
 
 SDTTY_OBJS = sdui-tty.o sdui-wincon.o
 
@@ -110,12 +120,24 @@ mkcalls.o: database.h
 
 sdinit.cpp: mapcachefile.h sort.h
 
+sdui-win.o: sdprint.h
+
 mapcachefile.cpp: mapcachefile.h
 
-$(SDLIB_OBJS) $(SDTTY_OBJS): sd.h database.h
+sdprint.o: sdprint.h
+
+$(SDLIB_OBJS) $(SDTTY_OBJS): sd.h database.h paths.h
 
 clean::
-	del *.o deploy.exe sd.exe sdtty.exe mkcalls.exe sd_calls.dat libsdlib.a sdlib.dll
+	-del *.o deploy.exe sd.exe sdtty.exe mkcalls.exe sd_calls.dat \
+               libsdlib.a sdlib.dll ..\sddoc\sd_source.zip
 
 cleanup::
-	del *.o libsdlib.a
+	-del *.o libsdlib.a
+
+savesource::
+	-del ..\sddoc\sd_source.zip
+	zip ..\sddoc\sd_source $(SDLIB_OBJS:.o=.cpp) $(SDTTY_OBJS:.o=.cpp) \
+               $(SD_OBJS:.o=.cpp) $(MKCALLS_OBJS:.o=.cpp) deploy.cpp $(HFILES) \
+               sd.rc sdtty.rc deploy.rc sdui-ttu.cpp $(ICONS) $(SHORTCUTS) \
+               sd.bmp $(MAKEFILES) sd_calls.txt db_doc.txt COPYING.txt

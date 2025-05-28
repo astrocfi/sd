@@ -1,16 +1,24 @@
-/* SD -- square dance caller's helper.
-
-    Copyright (C) 1990-2003  William B. Ackerman.
-
-    This file is unpublished and contains trade secrets.  It is
-    to be used by permission only and not to be disclosed to third
-    parties without the express permission of the copyright holders.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-
-    This is for version 34. */
+// SD -- square dance caller's helper.
+//
+//    Copyright (C) 1990-2004  William B. Ackerman.
+//
+//    This file is part of "Sd".
+//
+//    Sd is free software; you can redistribute it and/or modify it
+//    under the terms of the GNU General Public License as published by
+//    the Free Software Foundation; either version 2 of the License, or
+//    (at your option) any later version.
+//
+//    Sd is distributed in the hope that it will be useful, but WITHOUT
+//    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+//    or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
+//    License for more details.
+//
+//    You should have received a copy of the GNU General Public License
+//    along with Sd; if not, write to the Free Software Foundation, Inc.,
+//    59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+//
+//    This is for version 36.
 
 /* This defines the following functions:
    compress_setup
@@ -1329,6 +1337,10 @@ restriction_tester::restr_initializer restriction_tester::restr_init_table0[] = 
     {0, 2, 0}, {0}, {0}, false, chk_spec_directions},
    {s_spindle, cr_dmd_ctrs_mwv, 6, {0, 6, 1, 5, 2, 4, -1},
     {1, 3, 0}, {0}, {0}, false, chk_spec_directions},
+   {s_spindle, cr_spd_base_mwv, 4, {0, 6, 2, 4, -1},
+    {1, 3, 0}, {0}, {0}, false, chk_spec_directions},
+   {s1x3dmd, cr_spd_base_mwv, 4, {1, 2, 6, 5, -1},
+    {0, 2, 0}, {0}, {0}, false, chk_spec_directions},
    {s_short6,  cr_dmd_ctrs_mwv, 4, {0, 2, 5, 3, -1},
     {0, 2, 0}, {0}, {0}, false, chk_spec_directions},
    {sdmd,      cr_dmd_ctrs_mwv, 2, {1, 3, -1},
@@ -2854,14 +2866,14 @@ extern void initialize_sdlib()
    // Create the selector menu list.  It is one item shorter than the enumeration,
    // because we skip the first item in the enumeration.
 
-   selector_menu_list = (Cstring *) get_mem((selector_ENUM_EXTENT) * sizeof(char *));
+   selector_menu_list = (Cstring *) get_mem((selector_INVISIBLE_START) * sizeof(char *));
 
-   for (i=0; i<selector_ENUM_EXTENT-1; i++)
+   for (i=0; i<selector_INVISIBLE_START-1; i++)
       selector_menu_list[i] = selector_list[i+1].name;
 
-   selector_menu_list[selector_ENUM_EXTENT-1] = (Cstring) 0;
+   selector_menu_list[selector_INVISIBLE_START-1] = (Cstring) 0;
 
-   /* Create the circcer list. */
+   // Create the circcer list.
 
    circcer_menu_list = (Cstring *) get_mem((number_of_circcers+1) * sizeof(char *));
 
@@ -3590,6 +3602,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
       case cr_conc_iosame:
       case cr_conc_iodiff:
       case cr_nice_wv_triangles:
+      case cr_spd_base_mwv:
          goto check_tt;
       case cr_dmd_ctrs_mwv:
          switch (ssA) {
@@ -5077,6 +5090,7 @@ static const resolve_tester test_2x4_stuff[] = {
    // From T-bone setup, ends facing.
    {resolve_rlg,            MS, 2,   {4, 3, 2, 1, 0, 7, 6, 5},     0x8A31A813},
    {resolve_la,             MS, 7,   {5, 4, 3, 2, 1, 0, 7, 6},     0x38A31A81},
+   {resolve_dixie_grand,    DX, 2,   {5, 2, 3, 0, 1, 6, 7, 4},     0x33AA1188},
 
    // RLG from centers facing and ends in miniwaves.
    {resolve_rlg,            MS, 2,   {4, 3, 2, 1, 0, 7, 6, 5},     0x31311313},

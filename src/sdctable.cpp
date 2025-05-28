@@ -1,16 +1,24 @@
-/* SD -- square dance caller's helper.
-
-    Copyright (C) 1990-2003  William B. Ackerman.
-
-    This file is unpublished and contains trade secrets.  It is
-    to be used by permission only and not to be disclosed to third
-    parties without the express permission of the copyright holders.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-
-    This is for version 34. */
+// SD -- square dance caller's helper.
+//
+//    Copyright (C) 1990-2004  William B. Ackerman.
+//
+//    This file is part of "Sd".
+//
+//    Sd is free software; you can redistribute it and/or modify it
+//    under the terms of the GNU General Public License as published by
+//    the Free Software Foundation; either version 2 of the License, or
+//    (at your option) any later version.
+//
+//    Sd is distributed in the hope that it will be useful, but WITHOUT
+//    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+//    or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
+//    License for more details.
+//
+//    You should have received a copy of the GNU General Public License
+//    along with Sd; if not, write to the Free Software Foundation, Inc.,
+//    59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+//
+//    This is for version 36.
 
 /* This defines the following external variables:
    special_magic
@@ -1710,6 +1718,10 @@ conzept::concept_descriptor conzept::unsealed_concept_descriptor_table[] = {
     UC_none, 0},
    {"LEFT WING",                             concept_wing,                    D, l_c3x,
     UC_none, 1},
+   {"MYSTIC WING",                           concept_wing,                    D, l_c4,
+    UC_none, 2},
+   {"OTHER WING",                            concept_wing,                    D, l_c4,
+    UC_none, 4},
    {"COMMON POINT GALAXY",                   concept_common_spot,             D, l_c4,
     UC_none, 1, 0},
    {"COMMON SPOT COLUMNS",                   concept_common_spot,             D, l_c4,

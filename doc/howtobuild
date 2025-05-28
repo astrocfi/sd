@@ -2,7 +2,7 @@
           HOW TO RELEASE A NEW VERSION OF SD
 
      This file is \wba\sddoc\howtobuild.
-        Last modified 11 Oct 2003.
+        Last modified 18 Apr 2004.
 
 -----------------------------------------------------------------
 
@@ -109,11 +109,16 @@ Go to sddoc directory and do:
 
                TESTING AND PRODUCTION BUILD - MINGW
 
+   THE DOCUMENTATION MUST HAVE BEEN PREPARED BEFORE DOING THIS!
+   This is because the html files from document preparation are
+   needed by this step.
+
    In directory sd:
    setmingw
    mingw clean
    mingw all
    mingw cleanup   // optional: remove .o files etc. after building
+   mingw savesource
 
    // Do regression test if desired.
    // Be sure to test resolver:
@@ -121,20 +126,34 @@ Go to sddoc directory and do:
    // Then perform a resolve.  Also do "heads start" and "pick random call".
    // Can do it on two processors with different arguments to get different
    // deterministic random numbers.
-   cd ..\sddoc
-   new_binary     (this depends on all documentation, binaries, and database)
-   del foo*       // be sure not to upload junk
-   REMEMBER TO KEEP THE SDDOC DIRECTORY CLEAR OF SUPERFLUOUS HTML AND TXT FILES!
-   All html and txt files get uploaded.
-   do_pack        (this depends on all of the above)
 
 -----------------------------------------------------------------
 
                         SAVING SOURCES
 
+BE SURE TO DELETE *~ and funny .h, .cpp, .cmd, and makefile files
+BEFORE DOING THIS.  WHATEVER IS IN THE DIRECTORY GETS PUT ON THE WEB PAGE.
+
 In \wba\sd:          save _vnnnn    (e.g.  save _v3201 -- No periods)
 In \wba\sddoc:       save _vnnnn
 In \wba\sd\regress:  save _vnnnn
+
+-----------------------------------------------------------------
+
+                        FINAL PREPARATION
+
+   THE DOCUMENTATION MUST HAVE BEEN PREPARED, AND THE SOURCES SAVED,
+   BEFORE DOING THIS!  This is because the html files from document
+   preparation, and the source files from a source save, are needed
+   by this step.
+
+   cd sddoc
+   new_binary     (this depends on all documentation, binaries, and database)
+   del foo*       // be sure not to upload junk
+   REMEMBER TO KEEP THE SDDOC DIRECTORY CLEAR OF SUPERFLUOUS HTML AND TXT FILES!
+   All html and txt files get uploaded.
+   do_pack        (this depends on all of the above, and the result of a source save)
+
 
 Copy these files onto a zip disk:
    \wba\sd\sd_vnnnn.zip
@@ -147,21 +166,15 @@ Copy these files onto a zip disk:
 
                PRODUCTION BUILD AND TESTING - Linux
 
-This assumes that a normal zip file (e.g. r_v348.zip) exists in the sd directory.
+This assumes that a normal zip file (e.g. r_v348.zip) exists in the sd\regress directory.
 
 windows> cd sd
 windows> del *~
 windows> savelinuxsource
-windows> ftp atlas
-            (user=wba)
-            (pass=x464pq)
-windows> bin
-windows> put linuxsource.tar.gz
-windows> put r_XXXXX.zip r.zip   (whatever the zip name is.  Just leave it as r.zip after this point.)
-windows> quit
-windows> telnet atlas
-            (user=wba)
-            (pass=x464pq)
+windows> pscp -l wba -pw and9user linuxsource.tar.gz atlas:linuxsource.tar.gz
+windows> pscp -l wba -pw and9user r_XXXXX.zip atlas:r.zip
+         (whatever the zip name is.  Just leave the destination as r.zip.)
+windows> use reflection garbage to connect to atlas
    atlas> scp linuxsource.tar.gz wba@goblin.jaws.umn.edu:linuxsource.tar.gz
             (pass=wba;sd)
    atlas> scp r.zip wba@goblin.jaws.umn.edu:r.zip
@@ -174,10 +187,6 @@ windows> telnet atlas
       goblin> tar xovf linuxsource.tar
       goblin> cd sd
       goblin> make -f makefile.linux
-      goblin> cp sdtty ..
-      goblin> cp mkcalls ..
-      goblin> cp sd_calls.txt ..
-      goblin> cp sd_calls.dat ..
       goblin> rm *.o *.c *.h *.cpp *.a
       goblin> rm *cache
       goblin> rm sample*
@@ -185,6 +194,8 @@ windows> telnet atlas
       goblin> rm db_doc.txt
       goblin> ls -l
           ## Only the files mkcalls, sd_calls.dat, sd_calls.txt, and sdtty should exist.
+          ## This is important, because everything here will be put into the distribution.
+      goblin> cp * ..
       goblin> cd ..
       goblin> mkdir regress
       goblin> cd regress
@@ -214,11 +225,8 @@ windows> exit
 
 BE SURE THAT THE ENVIRONMENT FROM "SETDJGPP" IS NOT IN EFFECT AT THIS POINT!
 
-Presumably "do_binary3", "new_binary", and "do_linux" have been done
-at this point, so that these files exist:
-      install3.exe,  bin3.txt    (DJGPP build of sdtty)
-      install.exe,   bin.txt     (VC++ build of sdtty and sd)
-                     binu.txt    (Linux build of sdtty)
+Presumably "new_binary" has been done at this point, so that this file exists:
+      install.exe     (mingw build of sdtty and sd)
 
 These files should exist, all in the sddoc directory:
 
@@ -253,14 +261,20 @@ To update the poster child:
 
              UPLOADING TO LYNETTE'S WEB SITE
 
-The script "do_pack" will pack all files below except linux.tar.gz
-and solaris.tar.gz into pack.zip for transport to Philips.
-Note that the files linux.tar.gz and solaris.tar.gz are
-produced by other means and must be uploaded separately.
+Presumably "new_binary" has been done at this point, so that this file exists:
+      install.exe     (mingw build of sdtty and sd)
 
 BEWARE:  Be sure to delete extraneous .html files, since the "do_pack"
 script simply copies them all.  Note that things like "foo.html" sometimes
 arise when making poster children.
+
+cd sddoc
+do_pack
+
+This will pack all files below except linux.tar.gz
+and solaris.tar.gz into pack.zip for transport to Philips.
+Note that the files linux.tar.gz and solaris.tar.gz are
+produced by other means and must be uploaded separately.
 
 These are the files:
                html   pdf   ps   txt
@@ -286,6 +300,7 @@ solaris (upload separately) *
 pdfdoc                      *      *
 psdoc                       *      *
 textdoc                     *      *
+sd_source                          *
 install                                  *
 
 

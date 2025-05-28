@@ -11,7 +11,7 @@ TXI2HTML = makeinfo --html
 
 .SUFFIXES: .dvi .info .txt .txi .pdf .html .ps .pso .all
 
-all: sessions.all sd_doc.all demo.all relnotes.all relnotes98.all sample.html readme install
+all: sessions.all sd_doc.all demo.all relnotes.all relnotes98.all sample.html install
 
 .txi.dvi:
 	$(TXI2DVI) $<
@@ -38,21 +38,8 @@ all: sessions.all sd_doc.all demo.all relnotes.all relnotes98.all sample.html re
 
 # Special ones:
 
-sd_doc.pdf: readme.txi
-
-sd_doc.dvi: readme.txi
-
-sd_doc.html: readme.txi
-
-sd_doc.info: readme.txi
-
-sd_doc.txt: readme.txi
-
 install: install.txi
 	$(MAKE_ASCII) --no-validate -o $@ $(srcdir)/install.txi
-
-readme: readme.txi
-	$(MAKE_ASCII) --no-validate -o $@ $(srcdir)/readme.txi
 
 
 
@@ -87,7 +74,7 @@ clean::
 	-$(RM) *.aux *.log *.toc *.dvi *.ps *.pso *.pdf *.info *.msg
 	-$(RM) *.cp *.cps *.fn *.fns *.ky *.kys *.pg *.pgs
 	-$(RM) *.tp *.tps *.vr *.vrs
-	-$(RM) readme install
+	-$(RM) install
 	-$(RM) faq.html appnote*.html
 	-$(RM) sd_doc*.html sd_doc.txt
 	-$(RM) sessions*.html sessions.txt
@@ -103,8 +90,8 @@ distclean: clean
 realclean: distclean
 	-$(RM) *.info *.PS sd_doc.txt sd_doc.ps
 
-DOCSRCS = sd_doc.txi readme.txi install.txi gpl.txi
-DISTTXT = readme install oldnotes COPYING sample1.ini sample2.ini demo.ps demo.txt sessions.ps sessions.txt \
+DOCSRCS = sd_doc.txi install.txi gpl.txi
+DISTTXT = install oldnotes COPYING sample1.ini sample2.ini demo.ps demo.txt sessions.ps sessions.txt \
             relnotes.ps relnotes.txt \
             relnotes98.ps relnotes98.txt \
             Imakefile Makefile.in configure.in configure Sd.res sd_calls.txt \
@@ -122,11 +109,11 @@ dist: dist-files
 	$(RM) $(DIST_TARFILE).Z
 	$(COMPRESS) $(DIST_TARFILE)
 
-dist-files: configure Makefile install readme sd_doc.txt sd_doc.PS \
+dist-files: configure Makefile install sd_doc.txt sd_doc.PS \
             demo.ps demo.txt sessions.ps sessions.txt relnotes.ps relnotes98.ps relnotes.txt relnotes98.txt pc-files
 
 pcdist: sdtty.exe mkcalls.exe sd_calls.dat
-	lha a $@ readme oldnotes
+	lha a $@ oldnotes
 	lha a $@ sdtty.exe mkcalls.exe cwsdpmi.exe sdtty.pif
 	lha a $@ sample1.ini sample2.ini demo.txt demo.ps sessions.txt sessions.ps relnotes.txt relnotes98.txt relnotes.ps relnotes98.ps
 	lha a $@ sd_calls.txt sd_calls.dat
@@ -137,7 +124,7 @@ BIN_TARFILE = sd-31.79-.tar
 
 
 
-TARFILES1 = readme oldnotes
+TARFILES1 = oldnotes
 TARFILES2 = sd sdtty mkcalls \
 	 sample1.ini sample2.ini demo.ps demo.txt sessions.ps sessions.txt \
          relnotes.ps relnotes.txt \

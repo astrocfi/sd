@@ -114,6 +114,14 @@ have different icons to start Sd, and you want to control the window
 size separately for each icon, follow the instructions in the
 ``command-line options'' section of the manual.
 
+@unnumberedsec How can I uninstall @code{Sd}?
+
+@code{Sd} has no complex interactions with other software, and does not
+need to ``register itself'' as an installed program.  As such, it will
+not appear on the menu for uninstalling software.  If you want to
+uninstall it, all you need to do is delete the C:\sd folder, and delete
+whatever startup icons you may have placed.
+
 @unnumberedsec How can I define ``hot keys''?
 
 Edit (with a plain text editor such as Emacs or Notepad -- do not use a

@@ -1,16 +1,24 @@
-/* SD -- square dance caller's helper.
-
-    Copyright (C) 1990-2004  William B. Ackerman.
-
-    This file is unpublished and contains trade secrets.  It is
-    to be used by permission only and not to be disclosed to third
-    parties without the express permission of the copyright holders.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-
-    This is for version 35. */
+// SD -- square dance caller's helper.
+//
+//    Copyright (C) 1990-2004  William B. Ackerman.
+//
+//    This file is part of "Sd".
+//
+//    Sd is free software; you can redistribute it and/or modify it
+//    under the terms of the GNU General Public License as published by
+//    the Free Software Foundation; either version 2 of the License, or
+//    (at your option) any later version.
+//
+//    Sd is distributed in the hope that it will be useful, but WITHOUT
+//    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+//    or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
+//    License for more details.
+//
+//    You should have received a copy of the GNU General Public License
+//    along with Sd; if not, write to the Free Software Foundation, Inc.,
+//    59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+//
+//    This is for version 36.
 
 /* These are written as the first two halfwords of the binary database file.
    The format version is not related to the version of the program or database.
@@ -21,7 +29,7 @@
    database format version. */
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 221
+#define DATABASE_FORMAT_VERSION 222
 
 // BEWARE!!  These must track the items in "tagtabinit" in mkcalls.cpp .
 enum base_call_index {
@@ -393,10 +401,10 @@ enum setup_kind {
    s_normal_concentric
 };
 
-/* These are the "beginning setups" that can appear in the call data base. */
-/* BEWARE!!  This list must track the array "sstab" in mkcalls.cpp . */
-/* BEWARE!!  This list must track the array "begin_sizes" in mkcalls.cpp . */
-/* BEWARE!!  This list must track the array "begin_sizes" in sdtables.cpp . */
+// These are the "beginning setups" that can appear in the call data base.
+// BEWARE!!  This list must track the array "sstab" in mkcalls.cpp .
+// BEWARE!!  This list must track the array "begin_sizes" in mkcalls.cpp .
+// BEWARE!!  This list must track the array "begin_sizes" in sdtables.cpp .
 
 enum begin_kind {
    b_nothing,
@@ -664,6 +672,7 @@ enum call_restriction {
    cr_split_dixie,         // Qualifier only.
    cr_not_split_dixie,     // Qualifier only.
    cr_dmd_ctrs_mwv,        // Qualifier only.
+   cr_spd_base_mwv,        // Qualifier only.
    cr_qtag_mwv,            // Qualifier only.
    cr_qtag_mag_mwv,        // Qualifier only.
    cr_dmd_ctrs_1f,         // Qualifier only.
@@ -733,7 +742,22 @@ enum call_restriction {
    NUM_QUALIFIERS          // Not really in the enumeration.
 };
 
+// Schemata with "maybe" in their names will be translated to other
+// schemata based on the modifiers with which they are used.  This is
+// done by "get_real_callspec_and_schema", which happens early in
+// "move_with_real_call".  For example, the "single" modifier on a
+// call will turn "schema_maybe_single_concentric" into
+// "schema_single_concentric".
+
+// After the above, schemata with "or" in their names will be
+// translated to other schemata based on the setup.  For example,
+// "schema_concentric_2_4_or_normal" will be turned into
+// "schema_concentric_2_4" (2 centers and 4 outsides) if the setup has
+// 6 spots, and into "schema_single_concentric" if the setup has 4
+// spots.
+
 // BEWARE!!  This list must track the array "schematab" in mkcalls.cpp .
+// BEWARE!!  This list must track the array "schema_attrs" in sdtables.cpp .
 // Also, "schema_sequential" must be the start of all the sequential ones.
 enum calldef_schema {
    schema_concentric,
@@ -835,17 +859,17 @@ enum calldef_schema {
    schema_select_who_did,
    schema_select_who_didnt,
    schema_select_who_did_and_didnt,
-   schema_lateral_6,             /* Not for public use! */
-   schema_vertical_6,            /* Not for public use! */
-   schema_intlk_lateral_6,       /* Not for public use! */
-   schema_intlk_vertical_6,      /* Not for public use! */
+   schema_lateral_6,             // Not for public use!
+   schema_vertical_6,            // Not for public use!
+   schema_intlk_lateral_6,       // Not for public use!
+   schema_intlk_vertical_6,      // Not for public use!
    schema_by_array,
    schema_nothing,
    schema_matrix,
    schema_partner_matrix,
    schema_roll,
    schema_recenter,
-   schema_sequential,            /* All after this point are sequential. */
+   schema_sequential,            // All after this point are sequential.
    schema_split_sequential,
    schema_sequential_with_fraction,
    schema_sequential_with_split_1x8_id

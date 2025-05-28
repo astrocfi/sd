@@ -1,16 +1,24 @@
-/* SD -- square dance caller's helper.
-
-    Copyright (C) 1990-2003  William B. Ackerman.
-
-    This file is unpublished and contains trade secrets.  It is
-    to be used by permission only and not to be disclosed to third
-    parties without the express permission of the copyright holders.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-
-    This is for version 34. */
+// SD -- square dance caller's helper.
+//
+//    Copyright (C) 1990-2004  William B. Ackerman.
+//
+//    This file is part of "Sd".
+//
+//    Sd is free software; you can redistribute it and/or modify it
+//    under the terms of the GNU General Public License as published by
+//    the Free Software Foundation; either version 2 of the License, or
+//    (at your option) any later version.
+//
+//    Sd is distributed in the hope that it will be useful, but WITHOUT
+//    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+//    or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
+//    License for more details.
+//
+//    You should have received a copy of the GNU General Public License
+//    along with Sd; if not, write to the Free Software Foundation, Inc.,
+//    59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+//
+//    This is for version 36.
 
 /* This defines the following functions:
    collision_collector::install_with_collision
@@ -213,9 +221,9 @@ static collision_map collision_map_table[] = {
    {2, 0x000000, 0xC0, 0xC0, {7, 6},               {7, 5},                {6, 4},                 s2x4,        s2x4,        0, warn__none, 0},
 */
 
-                  /* The warning "warn_bad_collision" in the warning field is special -- it means give that warning if it appears illegal.
-                           If it doesn't appear illegal, don't say anything at all (other than the usual "take right hands".)
-                           If anything appears illegal but does not have "warn_bad_collision" in this field, it is an ERROR. */
+/* The warning "warn_bad_collision" in the warning field is special -- it means give that warning if it appears illegal.
+   If it doesn't appear illegal, don't say anything at all (other than the usual "take right hands".)
+   If anything appears illegal but does not have "warn_bad_collision" in this field, it is an ERROR. */
    {4, 0x000000, 0xAA, 0x0AA, {1, 3, 5, 7},        {2, 6, 11, 15},        {3, 7, 10, 14},         s2x4,        s2x8,        0, warn_bad_collision, 0},
    {4, 0x000000, 0x55, 0x055, {0, 2, 4, 6},        {0, 4, 9, 13},         {1, 5, 8, 12},          s2x4,        s2x8,        0, warn_bad_collision, 0},
    {4, 0x000000, 0x33, 0x033, {0, 1, 4, 5},        {0, 2, 9, 11},         {1, 3, 8, 10},          s2x4,        s2x8,        0, warn_bad_collision, 0},
@@ -258,6 +266,9 @@ static collision_map collision_map_table[] = {
 
    // These items handle horrible lockit collisions in the middle
    // (from inverted lines, for example).
+   // Of course, such a collision is ILLEGAL in the center of a lockit or fan the top.
+   // (This sort of thing was called at NACC in 1996, but is simply bogus now.)
+   // However, we *DO* allow it when reassembling "own the anyone" operations.
    {2, 0x000000, 0x06, 0x06, {1, 2},               {3, 5},                {2, 4},
     s1x4,        s1x8,        0, warn_bad_collision, 0},
    {2, 0x000000, 0x09, 0x09, {0, 3},               {0, 6},                {1, 7},
@@ -266,6 +277,11 @@ static collision_map collision_map_table[] = {
     s1x4,        s1x8,        0, warn_bad_collision, 0},
    {2, 0x000000, 0x0C, 0x0C, {3, 2},               {6, 5},                {7, 4},
     s1x4,        s1x8,        0, warn_bad_collision, 0},
+
+   {3, 0x000000, 0x0D, 0x08, {0, 3, 2},               {0, 5, 3},                {0, 4, 3},
+    s1x4,        s1x6,        0, warn_bad_collision, 0},
+   {3, 0x000000, 0x07, 0x02, {0, 1, 2},               {0, 1, 3},                {0, 2, 3},
+    s1x4,        s1x6,        0, warn_bad_collision, 0},
 
    {6, 0x000033, 0xBB, 0x88, {0, 1, 3, 4, 5, 7},   {0, 1, 3, 4, 5, 6},    {0, 1, 2, 4, 5, 7},
     s_qtag,      s_qtag,      0, warn_bad_collision, 0},
@@ -351,15 +367,23 @@ void collision_collector::install_with_collision(
 
       // Under certain circumstances (if callflags1 was manually overridden),
       // we need to keep track of who collides, and set things appropriately.
+      // If we have "ends take right hands" and the setup is a 2x2, we consider it
+      // to be perfectly legal.  This makes 2/3 recycle work from an inverted line.
       if ((callflags1 & CFLAG1_TAKE_RIGHT_HANDS) ||
           ((callflags1 & CFLAG1_ENDS_TAKE_RIGHT_HANDS) &&
            (((result->kind == s1x4 || result->kind == sdmd) && !(resultplace&1)) ||
             (result->kind == s2x4 && !((resultplace+1)&2)) ||
-            (result->kind == s_qtag && !(resultplace&2))))) {
+            (result->kind == s_qtag && !(resultplace&2)) ||
+            result->kind == s2x2))) {
          // Collisions are legal.
       }
+      else if (callflags1 & CFLAG1_ENDS_TAKE_RIGHT_HANDS)
+         // If the specific violation was that "ends take right hands" was on, but
+         // the centers are taking right hands, it is extremely serious.
+         collision_appears_illegal |= 4;
       else
-         collision_appears_illegal = 2;
+         // Otherwise it is serious.
+         collision_appears_illegal |= 2;
    }
 
    (void) copy_rot(result, destination, sourcepeople, sourceplace, rot);
@@ -369,133 +393,145 @@ void collision_collector::install_with_collision(
 
 void collision_collector::fix_possible_collision(setup *result) THROW_DECL
 {
-   if (collision_mask) {
-      int i;
-      setup spare_setup = *result;
-      bool kill_ends = false;
-      bool controversial = false;
-      uint32 lowbitmask = 0;
-      collision_map *c_map_ptr;
+   if (!collision_mask) return;
 
-      clear_people(result);
+   int i;
+   setup spare_setup = *result;
+   bool kill_ends = false;
+   uint32 lowbitmask = 0;
+   collision_map *c_map_ptr;
 
-      for (i=0; i<MAX_PEOPLE; i++) lowbitmask |= ((spare_setup.people[i].id1) & 1) << i;
+   clear_people(result);
 
-      for (c_map_ptr = collision_map_table ; c_map_ptr->size >= 0 ; c_map_ptr++) {
-         if ((result->kind == c_map_ptr->initial_kind) &&
-             ((lowbitmask == c_map_ptr->lmask)) &&
-             (result_mask == c_map_ptr->rmask) &&
-             (collision_mask == c_map_ptr->cmask)) {
+   for (i=0; i<MAX_PEOPLE; i++) lowbitmask |= ((spare_setup.people[i].id1) & 1) << i;
 
-            if (assume_ptr) {
-               switch (c_map_ptr->assume_key & 0xFFFF) {
-               case 1:
-                  if (assume_ptr->assumption != cr_li_lo ||
-                      assume_ptr->assump_col != 1 ||
-                      assume_ptr->assump_both != 2)
-                     kill_ends = true;
-                  break;
-               case 2:
-                  if (assume_ptr->assumption != cr_li_lo ||
-                      assume_ptr->assump_col != 0 ||
-                      assume_ptr->assump_both != 1)
-                     kill_ends = true;
-                  break;
-               case 3:
-                  if (assume_ptr->assumption != cr_li_lo ||
-                      assume_ptr->assump_col != 0 ||
-                      assume_ptr->assump_both != 2)
-                     kill_ends = true;
-                  break;
-               }
+   for (c_map_ptr = collision_map_table ; c_map_ptr->size >= 0 ; c_map_ptr++) {
+      if ((result->kind == c_map_ptr->initial_kind) &&
+          ((lowbitmask == c_map_ptr->lmask)) &&
+          (result_mask == c_map_ptr->rmask) &&
+          (collision_mask == c_map_ptr->cmask)) {
+
+         if (assume_ptr) {
+            switch (c_map_ptr->assume_key & 0xFFFF) {
+            case 1:
+               if (assume_ptr->assumption != cr_li_lo ||
+                   assume_ptr->assump_col != 1 ||
+                   assume_ptr->assump_both != 2)
+                  kill_ends = true;
+               break;
+            case 2:
+               if (assume_ptr->assumption != cr_li_lo ||
+                   assume_ptr->assump_col != 0 ||
+                   assume_ptr->assump_both != 1)
+                  kill_ends = true;
+               break;
+            case 3:
+               if (assume_ptr->assumption != cr_li_lo ||
+                   assume_ptr->assump_col != 0 ||
+                   assume_ptr->assump_both != 2)
+                  kill_ends = true;
+               break;
             }
-
-            if (collision_appears_illegal == 2 ||
-                (collision_appears_illegal == 1 && (c_map_ptr->assume_key & 0x80000000)))
-               controversial = true;
-
-            if (!controversial || c_map_ptr->warning == warn_bad_collision)
-               goto win;
          }
-      }
 
-      // Don't recognize the pattern, report this as normal collision.
-      throw error_flag_type(error_flag_collision);
+         // In some cases, we want to ignore a table entry and keep searching,
+         // rather than accept the table entry and deal with the warnings that it raises.
+         // So we only do the "goto win" in certain circumstances.
 
-   win:
+         if (c_map_ptr->warning == warn_bad_collision)
+            goto win;   // Entries with this warning always know exactly what they are doing.
 
-      if (m_doing_half_override) {
-         if (cmd_misc_flags & CMD_MISC__EXPLICIT_MIRROR)
-            warn(warn__take_right_hands);
+         if ((collision_appears_illegal & 6) ||
+             ((collision_appears_illegal & 1) &&
+              (c_map_ptr->assume_key & 0x80000000)))
+            continue;
          else
-            warn(warn__left_half_pass);
+            goto win;
+      }
+   }
+
+   // Don't recognize the pattern, report this as normal collision.
+   throw error_flag_type(error_flag_collision);
+
+ win:
+
+   if ((collision_appears_illegal & 4) &&
+       c_map_ptr->warning == warn_bad_collision)
+      warn(warn_very_bad_collision);
+
+   if ((collision_appears_illegal & 2) ||
+       ((collision_appears_illegal & 1) && (c_map_ptr->assume_key & 0x80000000)) ||
+       c_map_ptr->warning != warn_bad_collision)
+      warn(c_map_ptr->warning);
+
+   if (m_doing_half_override) {
+      if (cmd_misc_flags & CMD_MISC__EXPLICIT_MIRROR)
+         warn(warn__take_right_hands);
+      else
+         warn(warn__left_half_pass);
+   }
+   else {
+      if (cmd_misc_flags & CMD_MISC__EXPLICIT_MIRROR)
+         warn(warn__take_left_hands);
+      else
+         warn(warn__take_right_hands);
+   }
+
+   int temprot = ((-c_map_ptr->rot) & 3) * 011;
+   result->kind = c_map_ptr->final_kind;
+   result->rotation += c_map_ptr->rot;
+
+   // If this is under an implicit mirror image operation,
+   // make them take left hands, by swapping the maps.
+
+   uint32 flip = m_force_mirror_warn ? 2 : 0;
+
+   for (i=0; i<c_map_ptr->size; i++) {
+      int oldperson;
+
+      oldperson = spare_setup.people[c_map_ptr->source[i]].id1;
+      install_rot(result,
+                  (((oldperson ^ flip) & 2) ? c_map_ptr->map1 : c_map_ptr->map0)[i],
+                  &spare_setup,
+                  c_map_ptr->source[i],
+                  temprot);
+
+      oldperson = spare_setup.people[c_map_ptr->source[i]+12].id1;
+      install_rot(result,
+                  (((oldperson ^ flip) & 2) ? c_map_ptr->map1 : c_map_ptr->map0)[i],
+                  &spare_setup,
+                  c_map_ptr->source[i]+12,
+                  temprot);
+   }
+
+   if (kill_ends) {
+      const veryshort m3276[] = {3, 2, 7, 6};
+      const veryshort m2367[] = {2, 3, 6, 7};
+
+      // The centers are colliding, but the ends are absent, and we have
+      // no assumptions to guide us about where they should go.
+      if ((result->kind != s_crosswave && result->kind != s1x8) ||
+          (result->people[0].id1 |
+           result->people[1].id1 |
+           result->people[4].id1 |
+           result->people[5].id1))
+         fail("Need an assumption in order to take right hands at collision.");
+
+      spare_setup = *result;
+
+      if (result->kind == s_crosswave) {
+         gather(result, &spare_setup, m2367, 3, 033);
+         result->rotation++;
       }
       else {
-         if (cmd_misc_flags & CMD_MISC__EXPLICIT_MIRROR)
-            warn(warn__take_left_hands);
-         else
-            warn(warn__take_right_hands);
+         gather(result, &spare_setup, m3276, 3, 0);
       }
 
-      if (c_map_ptr->warning != warn_bad_collision || controversial)
-         warn(c_map_ptr->warning);
-
-      int temprot = ((-c_map_ptr->rot) & 3) * 011;
-      result->kind = c_map_ptr->final_kind;
-      result->rotation += c_map_ptr->rot;
-
-      // If this is under an implicit mirror image operation,
-      // make them take left hands, by swapping the maps.
-
-      uint32 flip = m_force_mirror_warn ? 2 : 0;
-
-      for (i=0; i<c_map_ptr->size; i++) {
-         int oldperson;
-
-         oldperson = spare_setup.people[c_map_ptr->source[i]].id1;
-         install_rot(result,
-                     (((oldperson ^ flip) & 2) ? c_map_ptr->map1 : c_map_ptr->map0)[i],
-                     &spare_setup,
-                     c_map_ptr->source[i],
-                     temprot);
-
-         oldperson = spare_setup.people[c_map_ptr->source[i]+12].id1;
-         install_rot(result,
-                     (((oldperson ^ flip) & 2) ? c_map_ptr->map1 : c_map_ptr->map0)[i],
-                     &spare_setup,
-                     c_map_ptr->source[i]+12,
-                     temprot);
-      }
-
-      if (kill_ends) {
-         const veryshort m3276[] = {3, 2, 7, 6};
-         const veryshort m2367[] = {2, 3, 6, 7};
-
-         // The centers are colliding, but the ends are absent, and we have
-         // no assumptions to guide us about where they should go.
-         if ((result->kind != s_crosswave && result->kind != s1x8) ||
-             (result->people[0].id1 |
-              result->people[1].id1 |
-              result->people[4].id1 |
-              result->people[5].id1))
-            fail("Need an assumption in order to take right hands at collision.");
-
-         spare_setup = *result;
-
-         if (result->kind == s_crosswave) {
-            gather(result, &spare_setup, m2367, 3, 033);
-            result->rotation++;
-         }
-         else {
-            gather(result, &spare_setup, m3276, 3, 0);
-         }
-
-         result->kind = s_dead_concentric;
-         result->inner.srotation = result->rotation;
-         result->inner.skind = s1x4;
-         result->rotation = 0;
-         result->concsetup_outer_elongation = 0;
-      }
+      result->kind = s_dead_concentric;
+      result->inner.srotation = result->rotation;
+      result->inner.skind = s1x4;
+      result->rotation = 0;
+      result->concsetup_outer_elongation = 0;
    }
 }
 

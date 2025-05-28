@@ -182,24 +182,26 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "About Sd"
 FONT 8, "MS Sans Serif"
 BEGIN
-    ICON            IDI_ICON1,IDC_STATIC,11,6,20,20
+    ICON            IDI_ICON1,IDC_STATIC,11,12,20,20
     CTEXT           "Sd -- Square Dance Caller's Helper for Windows ®",
                     IDC_STATIC,43,9,159,8
-    CTEXT           "This program may be freely distributed.",IDC_STATIC,43,
-                    19,159,8
-    CTEXT           "SD Version 35.1:   Copyright © 1990-2004 All rights reserved.",
-                    IDC_STATIC,13,32,199,8
+    CTEXT           "This program may be distributed under certain",
+                    IDC_STATIC,53,19,144,8
+    CTEXT           "conditions; for details see the file COPYING.txt.",
+                    IDC_STATIC,53,29,148,8
+    CTEXT           "SD Version 36.0:   Copyright © 1990-2004 All rights reserved.",
+                    IDC_STATIC,13,42,199,8
     CTEXT           "William B. Ackerman and Stephen Gildea",IDC_STATIC,47,
-                    42,130,8
+                    52,130,8
     CTEXT           "Parser Version 1.12:    Copyright © 1992-1993 All rights reserved.",
-                    IDC_STATIC,12,52,205,8
-    CTEXT           "Alan Snyder",IDC_STATIC,93,62,39,8
+                    IDC_STATIC,12,62,205,8
+    CTEXT           "Alan Snyder",IDC_STATIC,93,72,39,8
     CTEXT           "GUI Version 4.10:    Copyright © 1995 All rights reserved.",
-                    IDC_STATIC,24,72,180,8
-    CTEXT           "Robert E. Cays",IDC_STATIC,88,82,48,8
-    DEFPUSHBUTTON   "OK",IDOK,97,108,32,14,WS_GROUP
-    CTEXT           "Copyright © 1996 Charles Petzold",IDC_STATIC,59,92,107,
+                    IDC_STATIC,24,82,180,8
+    CTEXT           "Robert E. Cays",IDC_STATIC,88,92,48,8
+    CTEXT           "Copyright © 1996 Charles Petzold",IDC_STATIC,59,102,107,
                     8
+    DEFPUSHBUTTON   "OK",IDOK,97,118,32,14,WS_GROUP
 END
 
 IDD_START_DIALOG DIALOG DISCARDABLE  5, 5, 373, 286

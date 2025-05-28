@@ -1,39 +1,50 @@
 /* -*- mode:text; indent-tabs-mode:nil; -*- */
 
-/* calls database source for Sd -- square dance caller's helper.
+// SD -- square dance caller's helper.
+//
+//    Copyright (C) 1990-2004  William B. Ackerman.
+//
+//    This file is part of "Sd".
+//
+//    Sd is free software; you can redistribute it and/or modify it
+//    under the terms of the GNU General Public License as published by
+//    the Free Software Foundation; either version 2 of the License, or
+//    (at your option) any later version.
+//
+//    Sd is distributed in the hope that it will be useful, but WITHOUT
+//    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+//    or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
+//    License for more details.
+//
+//    You should have received a copy of the GNU General Public License
+//    along with Sd; if not, write to the Free Software Foundation, Inc.,
+//    59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+//
+//    This is for version 36.
 
-    Copyright (C) 1990-2004  William B. Ackerman.
 
-    All rights reserved.  Permission is granted to compile this file,
-    or a modification thereof, for use with the calling program
-    with which it is distributed.
+//    Calls database source for Sd -- square dance caller's helper.
+//
+//    -----------------------------------------------------------------
+//
+//    The `mkcalls' program must be run once to compile `sd_calls.txt',
+//    this file, into `sd_calls.dat', the binary file used by Sd.
+//
+//    -----------------------------------------------------------------
+//
+//    The version of this file is as shown below.  This string gets
+//    encoded into the database file and then displayed at program
+//    startup, and written to every sequence, as the "db" part of the
+//    complete version.
+//
+//    ATTENTION!  If you modify the database, we recommend that
+//    you change the version string below to identify the change.
+//    This will facilitate tracking errors, since the database version
+//    will be written onto every sequence.  Changing the version
+//    string is also required by paragraphs 2(a) and 2(c) of the GNU
+//    General Public License if you distribute the file.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    -----------------------------------------------------------------
-
-    The `mkcalls' program must be run once to compile `sd_calls.txt',
-    this file, into `sd_calls.dat', the binary file used by Sd.
-
-    -----------------------------------------------------------------
-
-    The version of this file is as shown below.  This string gets
-    encoded into the database file and then displayed at program
-    startup, and written to every sequence, as the "db" part of the
-    complete version.
-
-    ATTENTION!  If you modify the database, we recommend that
-    you change the version string below to identify the change.
-    This will facilitate tracking errors, since the database version
-    will be written onto every sequence.  Changing the version
-    string is also required by paragraphs 2(a) and 2(c) of the GNU
-    General Public License if you distribute the file.
-*/
-
-version "35.1"
+version "36.0"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve
@@ -3840,8 +3851,13 @@ call "_finish spin the windmill, circ @9 times" dontshow tag finish_windmill
         circ_n_times [conc_demand_lines conc_force_lines endscando]
 
 call "_finish @0 the windmill, circ @9" dontshow tag finish_any_windmill
-            neednumber
-   conc ctr_any_windmill []
+            neednumber fractal_is_inherited
+   conc ctr_any_windmill [inherit_fractal]
+        circ_n_times [conc_demand_lines conc_force_lines endscando]
+
+call "_finish nothing the windmill, circ @9" dontshow tag finish_nothing_windmill
+            neednumber fractal_is_inherited
+   conc cast_off_n4_with_warn [inherit_fractal insert_number 3]
         circ_n_times [conc_demand_lines conc_force_lines endscando]
 
 call "_finish spin the windmill, circ @9-1/2 times" dontshow tag finish_windmill_and_a_half
@@ -3860,9 +3876,15 @@ call "spin the windmill, outsides @h" a2
    seq finish_windmill [inherit_left inherit_yoyo inherit_fractal insert_number 2]
 
 call "@0 the windmill, outsides @h" c1
-            sequence_starter
+   // This one if the <anything> is a 4-person call for the centers.
+            sequence_starter fractal_is_inherited
    seq set_windmill_direction []
-   seq finish_any_windmill [insert_number 2]
+   seq finish_any_windmill [inherit_fractal insert_number 2]
+   // This one if the <anything> is an 8-person call.
+            sequence_starter fractal_is_inherited
+   seq nullcall [mandatory_anycall]
+   seq set_windmill_direction []
+   seq finish_nothing_windmill [inherit_fractal insert_number 2]
 
 call "spin the windmill, outsides @h and go @9 positions" a2
             sequence_starter neednumber left_means_mirror yoyo_is_inherited
@@ -4883,6 +4905,9 @@ call "wheel around" mainstream
             alternate_definition [half] mainstream
    setup 1x2 1x2 rotate restriction forbidden all_facing_same
       array [AL1S AL0S]
+            alternate_definition [lasthalf] mainstream
+   setup 1x2 1x2 rotate restriction forbidden all_facing_same
+      array [AL1S AL0S]
             alternate_definition [half single] c4
    setup 1x1 1x1
       array [AL0W]
@@ -5614,10 +5639,13 @@ call "_quarter out" dontshow tag quarterout
 
 call "half sashay" mainstream tag half_sashay
             reverse_means_mirror
-   setup 1x2 1x2 restriction forbidden couples_only
+   setup 1x2 1x2 restriction forbidden all_facing_same
       array [ZM1N ZM0N]
             alternate_definition [half] mainstream
-   setup 1x2 1x2 rotate restriction forbidden couples_only
+   setup 1x2 1x2 rotate restriction forbidden all_facing_same
+      array [ZM1W ZM0W]
+            alternate_definition [lasthalf] mainstream
+   setup 2x1 1x2 rotate restriction forbidden all_facing_same
       array [ZM1W ZM0W]
             alternate_definition [single] c4
    setup 1x1 1x1
@@ -9056,7 +9084,7 @@ call "dixie grand" plus
    setup 4x2 4x4 qualifier ntbone out in_or_out restriction controversial alwaysfail
       array [ 0   2E  0   6S   13S 0  1W 0]
    setup 4x2 4x4 qualifier tbone none
-      array [ 0    0  2E   0   0  1W  0  0]
+      array [ 0   2E  2E   0   0  1W  1W 0]
    setup 2x4 4x4 qualifier tbone none
       array [ 0    0   0   0 13W   0  0 14E]
    setup 4x4 4x4
@@ -17832,9 +17860,9 @@ call "_box circulate, maybe diamond" dontshow tag box_circulate_maybe_diamond
 
 call "column circulate" mainstream tag colcirc
             take_right_hands
-   /* This is for compound calls that start with circulate, and
-      are expected to be in columns, such as "walk the plank".
-      We allow line or box versions, but make them "unusual". */
+   // This is for compound calls that start with circulate, and
+   // are expected to be in columns, such as "walk the plank".
+   // We allow line or box versions, but make them "unusual".
    simple_funny
    setup 4x2 2x4
       array [ZM1N ZM2N ZM3N CR4S AL3S ZM4N ZM5N ZM6N]
@@ -17865,6 +17893,11 @@ call "column circulate" mainstream tag colcirc
       array [ZM0N ZM1N ZM2N CR3E AL3W ZM4N ZM5N ZM6N]
    setup 3x2 short6 rotate
       array [ZM5W ZM0W CR1N AL1S ZM2W ZM3W]
+            alternate_definition [lasthalf] mainstream
+   setup pspindle 2x4
+      array [ZM1N ZM2N ZM3N 0 ZM4N ZM5N ZM6N 0]
+   setup spindle 2x4
+      array [0 0 0 AL3W 0 0 0 CR0E]
             alternate_definition [magic half] c1
    simple_funny
    setup 4x2 spindle
@@ -20368,10 +20401,12 @@ call "_reactivate part 2" dontshow tag reactivate2
 
 call "_reactivate to a diamond part 2" dontshow tag reactivate2dmd
             ends_take_right_hands
+   setup pspindle qtag qualifier spd_base_mwv
+      array [CR6W CM5S CR3W    0 AL3E AM0S AL6E    0]
+   setup pspindle qtag
+      array [CR6W CM5S CR3W    0 AL2E AM0S AL7E    0]
    setup spindle qtag
       array [   0    0    0 AL1W    0    0    0 CR0E]
-   setup pspindle qtag
-      array [CR6W CM5S CR3W    0 AL3E AM0S AL6E    0]
 
 call "_backemup" dontshow tag backemup
    setup 2x4 qtag restriction forbidden wave_only
@@ -21108,6 +21143,29 @@ call "contour the line" c4
    seq box_circ_1_w_3x3 [inherit_single inherit_bigmatrix inherit_nxn]
    seq box_circ_2_w_3x3 [inherit_single inherit_bigmatrix inherit_nxn]
    seq hinge_with_warn [inherit_left]
+
+call "_centers big time" dontshow tag ctrs_big_time
+            visible_fractions left_means_mirror
+   seq shakedown [allow_plain_mod]
+   seq pass_ocean [allow_plain_mod]
+
+call "_centers big time but @0" dontshow tag ctrs_big_time_but
+            visible_fractions left_means_mirror
+   seq shakedown [allow_plain_mod]
+   seq nullcall [mandatory_anycall]
+
+call "_circ 1.5" dontshow tag circ_1p5
+            visible_fractions left_means_mirror
+   seq circulate []
+   seq circulate [force_half]
+
+call "big time" c4
+            visible_fractions left_means_mirror
+   conc ctrs_big_time [] circ_1p5 [inherit_left endscando]
+
+call "big time but @0" c4
+            visible_fractions left_means_mirror
+   conc ctrs_big_time_but [] circ_1p5 [inherit_left endscando]
 
 call "_hinge/half circ" dontshow tag hinge_and_half_circ
             left_means_mirror
@@ -22485,12 +22543,16 @@ call "_coordinate to a diamond part 3" dontshow tag coord3d
             take_right_hands
    setup spindle qtag
       array [0 0 0 AL1W 0 0 0 CR0E]
-   setup pspindle qtag
+   setup pspindle qtag qualifier spd_base_mwv
       array [CR7E ZM1N CR2E 0 AL2W ZM4N AL7W 0]
+   setup pspindle qtag
+      array [CR7E ZM1N CR2E 0 AL3W ZM4N AL6W 0]
    setup 1x8 2x4 rotate
       array [CR7N CR6N ZM7W AL6S AL0S AL1S ZM0W CR1N]
-   setup 1x3dmd 2x4 rotate
+   setup 1x3dmd 2x4 rotate qualifier spd_base_mwv
       array [CR7N CR6N AL6S 0 AL0S AL1S CR1N 0]
+   setup 1x3dmd 2x4 rotate
+      array [CR7N CR6N AL5S 0 AL0S AL2S CR1N 0]
    setup p1x3dmd 2x4 rotate
       array [0 0 0 ZM0W 0 0 0 ZM3W]
 
@@ -22787,7 +22849,8 @@ call "central perk up" c4
    seq hinge_circ_trade [inherit_yoyo inherit_fractal]
 
 call "_finish cover up" dontshow tag fincover
-   conc recycle [allow_plain_mod] about [suppress_elongation_warnings]
+            diamond_is_legal
+   conc recycle [allow_plain_mod inherit_diamond] about [suppress_elongation_warnings]
 
 call "_finish cover up but @m" dontshow tag fincoverbut2nd
    conc nullsecond [mandatory_secondary_call] about [suppress_elongation_warnings]
@@ -22797,29 +22860,30 @@ call "_finish cover up but @m" dontshow tag fincoverbut2nd
 // that centers stay centers and ends stay ends.
 // Of course, we put the version that allows replacement first.
 call "@1cover up" c4a
-            twisted_is_inherited visible_fractions
-   seq circulate [or_anycall inherit_twisted]
-   seq circulate [force_half]
-   seq fincover []
+            diamond_is_legal twisted_is_inherited visible_fractions
+   // You have to say "finally diamond cover up", of course.
+   seq circulate [or_anycall inherit_twisted inherit_diamond]
+   seq circulate [force_half inherit_diamond]
+   seq fincover [inherit_diamond]
    // People sometimes do "central cover up"-types of things, so we have to
    // recognize that the circulate and 1/2 circulate are sometimes concentric,
    // at the cost of not being able to do other things that might also be interesting.
-            visible_fractions
-   seq conccirculate []
-   seq conccirculate [force_half]
-   seq fincover []
+            diamond_is_legal visible_fractions
+   seq conccirculate [inherit_diamond]
+   seq conccirculate [force_half inherit_diamond]
+   seq fincover [inherit_diamond]
 
 call "@T cover up" c4a
-            visible_fractions
+            diamond_is_legal visible_fractions
    seq nullcall [mandatory_anycall]
-   seq circulate [force_half]
-   seq fincover []
+   seq circulate [force_half inherit_diamond]
+   seq fincover [inherit_diamond]
 
 call "@N cover up" c4a
-            visible_fractions
-   seq circnullcall [or_anycall]
-   seq circulate [force_half]
-   seq fincover []
+            diamond_is_legal visible_fractions
+   seq circnullcall [or_anycall inherit_diamond]
+   seq circulate [force_half inherit_diamond]
+   seq fincover [inherit_diamond]
 
 call "@1cover up but @m" c4a
             twisted_is_inherited visible_fractions

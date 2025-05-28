@@ -1,7 +1,7 @@
 \input texinfo @c %**start of header -*-texinfo-*-
 @setfilename relnotes.info
 @settitle Sd Release Notes
-@c Time-stamp: <23 February 2003 wba>
+@c Time-stamp: <16 May 2004 wba>
 @iftex
 @headings off
 @oddheading @| @| @thispage
@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR SD VERSION 35.1
-@set title2 Database version = 35.1 format = 221
+@set title1 RELEASE NOTES FOR SD VERSION 36.0
+@set title2 Database version = 36.0 format = 222
 @set title3 parser version 1.12, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 36.0::
 * 35.1::
 * 35.0::
 * 34.81::
@@ -49,7 +50,7 @@ The files @file{relnotes98.txi} and @file{oldnotes} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 35.1, Top, (dir)
+@node Intro, 36.0, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -60,11 +61,32 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2004 William B. Ackerman
 @sp 3
 @menu
-* 35.1::               Changes in the current version
+* 36.0::               Changes in the current version
 @end menu
 
 @c ************
-@node 35.1, 35.0, Intro, Top
+@node 36.0, 35.1, Intro, Top
+@unnumberedsec Version 36.0 changes
+
+The program is now licensed under the GNU General Public License,
+and is distributed with source files.
+
+This may impose a slight additional burden on you, the user.  You are,
+of course, not required to download the source files when you obtain a
+copy of @code{Sd} from the web page.  If you want to make the program
+available to someone else, and you do it by giving them the URL for
+downloading, that is OK.  However, if you distribute the program by
+other means, such as giving someone a copy that you have placed on a CD
+or diskette, you must either place the source files on the disk also, or
+tell the person the URL from which they can download them.
+
+Also, if you redistribute @code{Sd} on a web page or similar mechanism,
+you must make the source files available there.
+
+New concepts: mystic wing, invert mystic wing, other wing.
+
+@c ************
+@node 35.1, 35.0, 36.0, Top
 @unnumberedsec Version 35.1 changes
 
 The definition of @strong{recycle} has been changed.  The third part is

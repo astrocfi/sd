@@ -33,18 +33,17 @@ helper computer program simulator checker, sdtty">
 <!--VVVVVVVVVVVVVVVVVVV -->
 <!--^^^^^^^^^^^^^^^^^^^ -->
 <!--Begin poster-child. -->
-<!--This is poster21.htmli. -->
-<pre>
-           4B&#62;   1B&#62;
+<PRE>
+                                            2G&#62;   1G&#62;
+                   2BV   1BV
+                      3G&#62;                   2B&#60;   1B&#60;
+                2G&#62;         4G&#60;     --&#62;
+                      1G&#60;                   3B&#62;   4B&#62;
+                   3B^   4B^
+                                            3G&#60;   4G&#60;
 
-           4G&#60;   1G&#60;
-                              3B^  3GV  4G^  2BV  4B^  2GV  1G^  1BV
-           3G&#62;   2G&#62;
-
-           3B&#60;   2B&#60;
-
-              RANDOM FINISH, 2/3, REVERSE ORDER, hot foot spin
-</pre>
+          1/2 REVERSE CRAZY YOYO scoot chain thru to a wave
+</PRE>
 <!--End poster-child. -->
 <!--VVVVVVVVVVVVVVVVVVV -->
 <!--^^^^^^^^^^^^^^^^^^^ -->
@@ -55,45 +54,14 @@ Sd: a checker-moving program that is <strong>powerful</strong>,
 <strong>sophisticated</strong>, <strong>accurate</strong> and
 <strong>reliable</strong>.
 </p>
-<p align="center">
-<strong>The current version of Sd/Sdtty is 36.0</strong>, released on May 16, 2004.
 <br>
 <p align="center">
-The Windows versions of Sd and Sdtty are now compiled with MinGW/Gcc.
-<p align="center">
-There is a new "Frequently Asked Questions" (FAQ) file.
-See the hyperlink below.
-<p align="center">
-Sd and Sdtty are now distributed under the GNU General Public License.
-Source files are available below.
+<strong>The current version of Sd/Sdtty is 34.2</strong>, released on July 30, 2000.
+<p>
+This version no longer needs the special "helper" calls like "recycle (parts)"
+or "scoot and weave (parts)".  Just type the plain call name in all cases.
 <p>
 <dl>
-<dt>
-<font size="+1">Hints for inexperienced users:</font></dt>
-<dd>
-(1) You may find that Sd is more user-friendly than Sdtty, particularly if you
-are having trouble with sessions or abridgement files.  It will show you the
-startup options more clearly.  You can type commands at Sd the same way you
-type at Sdtty.  It just looks different.
-<p>
-(2) If in doubt about how to enter some complex call, type part of the call
-and a question mark.  For example, if you want to know how to modify the star
-turn on a chain reaction, type "chain reac?".  Then, following its hint,
-type "tion, turn the star 1/2".
-<p>
-(3) You may have heard that Sd lets you type complex calls directly, using brackets,
-as in "catch [motivate] 3".  This is true, but you may find it unwieldy,
-especially if you have been using SRC Sd and are accustomed to entering
-things piecemeal.  You can still do it that way.  Remember to type "&lt;anything&gt;",
-not just "&lt;any&gt;".  For example, type "catch &lt;anything&gt; 3".  (Not sure
-about that?  Type "catch?")  Then type the "motivate".
-<br>&nbsp;<!--blank line--><br>
-</dd>
-<dt>
-<font size="+1"><a href="faq.html">Frequently Asked Questions</a></font></dt>
-<dd>
-<br>&nbsp;<!--blank line--><br>
-</dd>
 <dt>
 <font size="+1"><a href="sample.html">Show off!</a></font></dt>
 <dd>
@@ -103,7 +71,7 @@ A sample of fun things Sd can do.
 <dt>
 <font size="+1"><a href="intro.html">Background</a></font></dt>
 <dd>
-Background and availability info, and information about Microsoft compiler bugs.
+Background and availability info.
 <br>&nbsp;<!--blank line--><br>
 </dd>
 <dt>
@@ -111,41 +79,45 @@ Background and availability info, and information about Microsoft compiler bugs.
 <dd>
 Be running the latest, fully-functional version
 <a href="download-pc.html">on your own PC</a>
-(Windows or Linux) in minutes.
+in minutes.
 <br>
-Or download the program for other varieties of
-<a href="download-unix.html">Unix</a>.
-<br>
-A Macintosh version of Sdtty (for Mac OS X) is available
-<a href="http://squarez.com/sd/sdtty.dmg">here</a>.
-It might not be fully up-to-date at all times.
+Or download the program or documentation
+<a href="download-unix.html">for Unix</a>.
 <br>&nbsp;<!--blank line--><br>
 </dd>
 <dt>
 <font size="+1"><a href="readings.html">Documentation</a></font></dt>
 <dd>
 Browse or download documents about Sd,
-including the entire <a href="sd_doc.html">users manual</a>.
+including the entire <a href="manual/">users manual</a>.
 <br>&nbsp;<!--blank line--><br>
 </dd>
 <dt>
-<font size="+1"><a href="sd_source.zip">Source Code</a></font></dt>
+<font size="+1">Mailing List</font></dt>
 <dd>
-This is the source code for Sd and Sdtty.
-It is distributed under the GNU General Public License.
+To add yourself to the mailing list to receive announcements
+of new versions, send a message to
+<a href="mailto:sd-request@lists.best.com">&lt;sd-request@lists.best.com&gt;</a>.
+Put the single lower-case word "subscribe" in the message body.
 <br>&nbsp;<!--blank line--><br>
+</dd>
+<dt>
+<font size="+1"><a href="tip.html">Tip of the Day</a></font></dt>
+<dd>
+A short hint or discussion about some point of using Sd.&nbsp;
+A new tip daily.
 </dd>
 </dl>
 <p>
-Want to report a bug or ask a question?&nbsp;
+Want to report a bug or share a tip?&nbsp;
 Email
 <a href="mailto:wba@alum.mit.edu">&lt;wba@alum.mit.edu&gt;</a>.
 <hr>
 For general info on square dancing, see the
-<a href="http://www.dosado.com/">Western Square Dancing</a>
+<a href="http://www.doSAdo.com/">Western Square Dancing</a>
 site.
 <br>
-<em>Time-stamp: "11 August 2002"</em>
+<em>Time-stamp: "3 February 2000"</em>
 <!-- end of body text -->
 </td>
 <td bgcolor="#ff9900">&nbsp;</td>

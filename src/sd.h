@@ -1,18 +1,24 @@
-/* SD -- square dance caller's helper.
-
-    Copyright (C) 1990-2003  William B. Ackerman.
-    Copyright (C) 1993  Stephen Gildea
-    Copyright (C) 1993  Alan Snyder
-
-    This file is unpublished and contains trade secrets.  It is
-    to be used by permission only and not to be disclosed to third
-    parties without the express permission of the copyright holders.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-
-    This is for version 34. */
+// SD -- square dance caller's helper.
+//
+//    Copyright (C) 1990-2004  William B. Ackerman.
+//
+//    This file is part of "Sd".
+//
+//    Sd is free software; you can redistribute it and/or modify it
+//    under the terms of the GNU General Public License as published by
+//    the Free Software Foundation; either version 2 of the License, or
+//    (at your option) any later version.
+//
+//    Sd is distributed in the hope that it will be useful, but WITHOUT
+//    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+//    or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
+//    License for more details.
+//
+//    You should have received a copy of the GNU General Public License
+//    along with Sd; if not, write to the Free Software Foundation, Inc.,
+//    59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+//
+//    This is for version 36.
 
 #include <stdio.h>
 
@@ -86,11 +92,13 @@
 
 // We used to do some stuff to cater to compiler vendors (e.g. Sun
 // Microsystems) that couldn't be bothered to do the "const" attribute
-// correctly.  We no longer have any patience with such things.
+// correctly.
 //
 // So we used to have a line that said "#define Const const".  But not
 // any longer.  If your compiler doesn't handle "const" correctly (or
 // any other aspect of ANSI C++, for that matter), that's too bad.
+//
+// We no longer take pity on broken compilers.
 
 
 // We would like "veryshort" to be a signed char, but not all
@@ -100,10 +108,14 @@
 // checked this for us.
 //
 // Baloney!  We no longer use a configure script.  We are aware of the
-// fact that there is a whole "industry" dedicated to the job of
-// figuring out what hideous brokenness any given Unix system is
-// inflicting on us today, but we have no patience for that kind of
-// crap.  If your compiler or OS can't handle this, tough.
+// fact that there is a whole "industry" (config/autoconf/etc.)
+// dedicated to the job of figuring out what hideous brokenness any
+// given Unix implementation is inflicting on us today, but we have no
+// patience for that kind of garbage.  If your compiler or OS can't
+// handle this, tough.
+//
+// We no longer take pity on broken compilers or operating systems.
+
 #ifdef NO_SIGNED_CHAR
 typedef short veryshort;
 #else
@@ -658,7 +670,11 @@ enum selector_kind {
    selector_cpls2_3,
    selector_cpls3_4,
    selector_cpls4_1,
-   selector_ENUM_EXTENT    // Not a selector; indicates extent of the enum.
+   // Start of invisible selectors.
+   selector_INVISIBLE_START,   selector_mysticbeaus = selector_INVISIBLE_START,
+   selector_mysticbelles,
+   // Not a selector; indicates extent of the enum.
+   selector_ENUM_EXTENT
 };
 
 // BEWARE!!  This list must track the array "direction_names" in sdutil.cpp .
@@ -1995,6 +2011,7 @@ enum warning_index {
    warn_big_outer_triangles,
    warn_hairy_fraction,
    warn_bad_collision,
+   warn_very_bad_collision,
    warn__dyp_resolve_ok,
    warn__unusual,
    warn_controversial,
@@ -2181,6 +2198,27 @@ struct setup_attr {
 
 
 extern const setup_attr setup_attrs[];    // In sdtables.
+
+
+// These are the "schema_attr" bits.
+enum {
+   SCA_CENTRALCONC     = 0x00000001UL,
+   SCA_CROSS           = 0x00000002UL,
+   SCA_COPY_LYZER      = 0x00000004UL,
+   SCA_SNAGOK          = 0x00000008UL,
+   SCA_DETOUR          = 0x00000010UL,
+   SCA_SPLITOK         = 0x00000020UL,
+   SCA_INV_SUP_ELWARN  = 0x00000040UL,
+   SCA_CONC_REV_ORDER  = 0x00000080UL
+};
+
+struct schema_attr {
+   uint32 attrs;
+   calldef_schema uncrossed;
+};
+
+
+extern const schema_attr schema_attrs[];    // In sdtables.
 
 // This class just exists for the purpose of reading out the setup_limits.
 // It had much more glorious plans at one time.
@@ -3371,8 +3409,12 @@ enum normalize_action {
    normalize_recenter
 };
 
+// Beware!  There are >= tests lying around, so order is important.
+// In particular, sdconc (search for "brute_force_merge" has a test
+// "action >= merge_strict_matrix_but_colliding_merge".
 enum merge_action {
    merge_strict_matrix,
+   merge_strict_matrix_but_colliding_merge,
    merge_c1_phantom,
    merge_c1_phantom_real,
    merge_after_dyp,
@@ -4921,10 +4963,7 @@ extern void general_initialize();
 SDLIB_API int generate_random_number(int modulus);
 SDLIB_API void hash_nonrandom_number(int number);
 SDLIB_API void *get_mem(uint32 siz);
-SDLIB_API void *get_mem_gracefully(uint32 siz);
 SDLIB_API void *get_more_mem(void *oldp, uint32 siz);
-SDLIB_API void *get_more_mem_gracefully(void *oldp, uint32 siz);
-SDLIB_API void free_mem(void *ptr);
 SDLIB_API void get_date(char dest[]);
 extern char *get_errstring();
 SDLIB_API void open_file();

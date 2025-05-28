@@ -1,28 +1,38 @@
-/* SD -- square dance caller's helper.
+// SD -- square dance caller's helper.
+//
+//    Copyright (C) 1990-2004  William B. Ackerman.
+//
+//    This file is part of "Sd".
+//
+//    Sd is free software; you can redistribute it and/or modify it
+//    under the terms of the GNU General Public License as published by
+//    the Free Software Foundation; either version 2 of the License, or
+//    (at your option) any later version.
+//
+//    Sd is distributed in the hope that it will be useful, but WITHOUT
+//    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+//    or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
+//    License for more details.
+//
+//    You should have received a copy of the GNU General Public License
+//    along with Sd; if not, write to the Free Software Foundation, Inc.,
+//    59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+//
+//    This is for version 36.
 
-    Copyright (C) 1990-2004  William B. Ackerman.
 
-    This file is unpublished and contains trade secrets.  It is
-    to be used by permission only and not to be disclosed to third
-    parties without the express permission of the copyright holders.
+//    The version of this file is as shown immediately below.  This string
+//    gets displayed at program startup.
+//
+//    ATTENTION!  If you modify the program, we recommend that
+//    you change the version string below to identify the change.
+//    This will facilitate tracking errors, since the program version
+//    will be written onto every sequence.  Changing the version
+//    string is also required by paragraphs 2(a) and 2(c) of the GNU
+//    General Public License if you distribute the file.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-
-    The version of this file is as shown immediately below.  This string
-    gets displayed at program startup.
-
-    ATTENTION!  If you modify the program, we recommend that
-    you change the version string below to identify the change.
-    This will facilitate tracking errors, since the program version
-    will be written onto every sequence.  Changing the version
-    string is also required by paragraphs 2(a) and 2(c) of the GNU
-    General Public License if you distribute the file.
-*/
-
-#define VERSION_STRING "35.1"
-#define TIME_STAMP "wba@alum.mit.edu  22 Feb 2004 $"
+#define VERSION_STRING "36.0"
+#define TIME_STAMP "wba@alum.mit.edu  17 apr 2004 $"
 
 /* This defines the following functions:
    sd_version_string
@@ -65,11 +75,15 @@ and the following external variables:
 // not by any utility.  In particular, we do not believe that it is proper for
 // source control utilities to alter the text in a source file.
 
-// (Actually, we are fucking sick and tired of totally brain-dead garbage left
-// over from that piece-of-crap operating system that was conceived 30 years
-// ago for the purpose of writing a spacewar game.  We wish Unix would come
-// at least into the 20th century, if not the 21st, and that the retro mindset
-// that it created not continue to plague the computer world 30 years later.)
+// (Actually, we are sick and tired of totally brain-dead garbage left over from
+// that piece-of-crap operating system that was conceived 30 years ago for the
+// purpose of writing a spacewar game.  We wish Unix would come at least into
+// the 20th century, if not the 21st, and that the retro mindset that it created
+// not continue to plague the computer world 30 years later.)
+
+// Sorry.  The above paragraph was written in a fit of rage.  We recognize that
+// Unix is not entirely evil.  The development of GNU and Linux, in particular,
+// have done much to compensate for some of the earlier problems.
 
 static const char id[] = "@(#)$He" "ader: Sd: version " VERSION_STRING "  " TIME_STAMP;
 

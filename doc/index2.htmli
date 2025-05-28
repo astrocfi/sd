@@ -7,13 +7,16 @@ Sd: a checker-moving program that is <strong>powerful</strong>,
 <strong>reliable</strong>.
 </p>
 <p align="center">
-<strong>The current version of Sd/Sdtty is 35.1</strong>, released on February 29, 2003.
+<strong>The current version of Sd/Sdtty is 36.0</strong>, released on May 16, 2004.
 <br>
 <p align="center">
 The Windows versions of Sd and Sdtty are now compiled with MinGW/Gcc.
 <p align="center">
 There is a new "Frequently Asked Questions" (FAQ) file.
 See the hyperlink below.
+<p align="center">
+Sd and Sdtty are now distributed under the GNU General Public License.
+Source files are available below.
 <p>
 <dl>
 <dt>
@@ -63,6 +66,10 @@ Be running the latest, fully-functional version
 <br>
 Or download the program for other varieties of
 <a href="download-unix.html">Unix</a>.
+<br>
+A Macintosh version of Sdtty (for Mac OS X) is available
+<a href="http://squarez.com/sd/sdtty.dmg">here</a>.
+It might not be fully up-to-date at all times.
 <br>&nbsp;<!--blank line--><br>
 </dd>
 <dt>
@@ -70,6 +77,13 @@ Or download the program for other varieties of
 <dd>
 Browse or download documents about Sd,
 including the entire <a href="sd_doc.html">users manual</a>.
+<br>&nbsp;<!--blank line--><br>
+</dd>
+<dt>
+<font size="+1"><a href="sd_source.zip">Source Code</a></font></dt>
+<dd>
+This is the source code for Sd and Sdtty.
+It is distributed under the GNU General Public License.
 <br>&nbsp;<!--blank line--><br>
 </dd>
 </dl>

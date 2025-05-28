@@ -3304,7 +3304,8 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
                                     If any of the base people are tandem-based, this fails.
                                     For bone6, it checks triangle base, i.e. outsides.
                                     For short6, it checks the center 4 as bases of triangles.
-                                    For 2x3, it checks center 2, who are of course in
+                                    For spindle, it checks the center 6.
+                                    For 2x3, it checks the center 2, who are of course in
                                     column-like orientation.
                                     For 2x4, the center 4 must be in line-like orientation.
                                     For 1x8, it checks the centers of each side.  They must
@@ -3331,6 +3332,11 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
                   that check individual triangles.  Of course, if they see an unsymmetrical
                   bone6, both the RH and LH versions will pass, so that splitting will
                   take place.
+
+   spd_base_mwv            Q        spindle, 1x3dmd - for a spindle, it is like "dmd_ctrs_mwv"
+                                    above, but tests only the outer 4 of the center 2x3.
+                                    The very center 2 are ignored.  For a 1x3dmd, does an
+                                    analogous thing with pairs (1,2) and (5,6).
 
    dmd_ctrs_1f             Q        dmd, 1x4, 1x8 - the centers (2 or 4 of them) are
                                     in a couple.  For 1x8, it checks the centers of

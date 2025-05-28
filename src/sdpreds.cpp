@@ -1,16 +1,25 @@
-/* SD -- square dance caller's helper.
+// SD -- square dance caller's helper.
+//
+//    Copyright (C) 1990-2004  William B. Ackerman.
+//
+//    This file is part of "Sd".
+//
+//    Sd is free software; you can redistribute it and/or modify it
+//    under the terms of the GNU General Public License as published by
+//    the Free Software Foundation; either version 2 of the License, or
+//    (at your option) any later version.
+//
+//    Sd is distributed in the hope that it will be useful, but WITHOUT
+//    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+//    or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
+//    License for more details.
+//
+//    You should have received a copy of the GNU General Public License
+//    along with Sd; if not, write to the Free Software Foundation, Inc.,
+//    59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+//
+//    This is for version 36.
 
-    Copyright (C) 1990-2002  William B. Ackerman.
-
-    This file is unpublished and contains trade secrets.  It is
-    to be used by permission only and not to be disclosed to third
-    parties without the express permission of the copyright holders.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-
-    This is for version 34. */
 
 /* This defines the following function:
    selectp
@@ -109,7 +118,7 @@ extern bool selectp(setup *ss, int place) THROW_DECL
                pid2 = ptr[place][0] &
                   BITS_TO_CLEAR &
                   ~(ID2_FACING|ID2_NOTFACING|ID2_LEAD|ID2_TRAILER|ID2_BEAU|ID2_BELLE);
-               goto foo;
+               goto do_switch;
             }
          }
       }
@@ -117,7 +126,7 @@ extern bool selectp(setup *ss, int place) THROW_DECL
       fail("Can't decide who are selected.");
    }
 
- foo:
+ do_switch:
 
    switch (current_options.who) {
    case selector_boys:
@@ -210,6 +219,18 @@ extern bool selectp(setup *ss, int place) THROW_DECL
       p2 = pid2 & (ID2_BEAU|ID2_BELLE);
       if      (p2 == ID2_BEAU)  s = selector_beaus;
       else if (p2 == ID2_BELLE) s = selector_belles;
+      else break;
+      goto eq_return;
+   case selector_mysticbeaus:
+   case selector_mysticbelles:
+      p2 = pid2 & (ID2_BEAU|ID2_BELLE|ID2_CTR4|ID2_END);
+      p1 = pid2 & (ID2_BEAU|ID2_BELLE|ID2_OUTRPAIRS);
+      if      (p2 == (ID2_END|ID2_BEAU) ||
+               p2 == (ID2_CTR4|ID2_BELLE)) s = selector_mysticbeaus;
+      else if (p2 == (ID2_END|ID2_BELLE) ||
+               p2 == (ID2_CTR4|ID2_BEAU)) s = selector_mysticbelles;
+      else if (p1 == (ID2_OUTRPAIRS|ID2_BEAU)) s = selector_mysticbeaus;
+      else if (p1 == (ID2_OUTRPAIRS|ID2_BELLE)) s = selector_mysticbelles;
       else break;
       goto eq_return;
    case selector_center2:
@@ -438,9 +459,8 @@ extern bool selectp(setup *ss, int place) THROW_DECL
    }
 
    fail("Can't decide who are selected.");
-   /* NOTREACHED */
 
-   eq_return:
+ eq_return:
 
    return (current_options.who == s);
 }

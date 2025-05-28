@@ -1,16 +1,24 @@
-/* SD -- square dance caller's helper.
-
-    Copyright (C) 1990-2003  William B. Ackerman.
-
-    This file is unpublished and contains trade secrets.  It is
-    to be used by permission only and not to be disclosed to third
-    parties without the express permission of the copyright holders.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-
-    This is for version 32. */
+// SD -- square dance caller's helper.
+//
+//    Copyright (C) 1990-2004  William B. Ackerman.
+//
+//    This file is part of "Sd".
+//
+//    Sd is free software; you can redistribute it and/or modify it
+//    under the terms of the GNU General Public License as published by
+//    the Free Software Foundation; either version 2 of the License, or
+//    (at your option) any later version.
+//
+//    Sd is distributed in the hope that it will be useful, but WITHOUT
+//    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+//    or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
+//    License for more details.
+//
+//    You should have received a copy of the GNU General Public License
+//    along with Sd; if not, write to the Free Software Foundation, Inc.,
+//    59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+//
+//    This is for version 36.
 
 /* This defines the following functions:
    parse_level
@@ -246,8 +254,6 @@ bool iterate_over_sel_dir_num(
 
 static void test_starting_setup(call_list_kind cl, const setup *test_setup)
 {
-   int i;
-
    gg->init_step(do_tick, 2);
 
    call_index = -1;
@@ -382,8 +388,9 @@ static void test_starting_setup(call_list_kind cl, const setup *test_setup)
    number_of_calls[cl] = global_callcount;
    main_call_lists[cl] = (call_with_name **) get_mem(global_callcount * sizeof(call_with_name *));
 
-   for (i=0; i < global_callcount; i++)
-      main_call_lists[cl][i] = (call_with_name *) global_temp_call_indices[i];
+   memcpy(main_call_lists[cl],
+          global_temp_call_indices,
+          global_callcount*sizeof(call_with_name *));
 }
 
 
@@ -456,9 +463,8 @@ public:
 static void create_misc_call_lists(call_list_kind cl)
 {
    int j;
-   int i, callcount;
 
-   callcount = 0;
+   int callcount = 0;
 
    for (j=0; j<number_of_calls[call_list_any]; j++) {
       call_with_name *callp = main_call_lists[call_list_any][j];
@@ -530,9 +536,9 @@ static void create_misc_call_lists(call_list_kind cl)
    number_of_calls[cl] = callcount;
    main_call_lists[cl] = (call_with_name **) get_mem(callcount * sizeof(call_with_name *));
 
-   for (i=0; i < callcount; i++) {
-      main_call_lists[cl][i] = (call_with_name *) global_temp_call_indices[i];
-   }
+   memcpy(main_call_lists[cl],
+          global_temp_call_indices,
+          callcount*sizeof(call_with_name *));
 }
 
 
@@ -1671,10 +1677,12 @@ static void build_database(abridge_mode_t abridge_mode)
 
    number_of_calls[call_list_any] = local_callcount;
    main_call_lists[call_list_any] = (call_with_name **) get_mem(local_callcount * sizeof(call_with_name *));
-   for (i=0; i < local_callcount; i++) {
-      main_call_lists[call_list_any][i] = local_call_list[i];
-   }
-   free_mem(local_call_list);
+
+   memcpy(main_call_lists[call_list_any],
+          local_call_list,
+          local_callcount*sizeof(call_with_name *));
+
+   free(local_call_list);
 
    for (i=1; i <= highest_base_call; i++) {
       if (!base_calls[i]) {
@@ -2368,13 +2376,12 @@ extern bool open_session(int argc, char **argv)
       for (cl = call_list_1x8; cl < call_list_extent ; cl = (call_list_kind) (cl+1)) {
          for (i=0; i < number_of_calls[cl]; i++)
             main_call_lists[cl][i] = main_call_lists[call_list_any][(int) main_call_lists[cl][i]];
-
          gg->create_menu(cl);
       }
    }
 
    // This was global to the initialization, but it goes away also.
-   free_mem(global_temp_call_indices);
+   free(global_temp_call_indices);
 
    // Initialize the special empty call menu.
 

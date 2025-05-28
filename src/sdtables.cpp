@@ -1,16 +1,24 @@
-/* SD -- square dance caller's helper.
-
-    Copyright (C) 1990-2002  William B. Ackerman.
-
-    This file is unpublished and contains trade secrets.  It is
-    to be used by permission only and not to be disclosed to third
-    parties without the express permission of the copyright holders.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-
-    This is for version 34. */
+// SD -- square dance caller's helper.
+//
+//    Copyright (C) 1990-2004  William B. Ackerman.
+//
+//    This file is part of "Sd".
+//
+//    Sd is free software; you can redistribute it and/or modify it
+//    under the terms of the GNU General Public License as published by
+//    the Free Software Foundation; either version 2 of the License, or
+//    (at your option) any later version.
+//
+//    Sd is distributed in the hope that it will be useful, but WITHOUT
+//    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+//    or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
+//    License for more details.
+//
+//    You should have received a copy of the GNU General Public License
+//    along with Sd; if not, write to the Free Software Foundation, Inc.,
+//    59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+//
+//    This is for version 36.
 
 /* This defines the following external variables:
    selector_list
@@ -96,6 +104,7 @@
    id_bit_table_wqtag_hollow
    id_bit_table_3x6_with_1x6
    setup_attrs
+   concept_attrs
    map::spec_map_table
    dead_masks
    masks_for_3x4
@@ -189,12 +198,10 @@ selector_item selector_list[] = {
    {"near box",     "near box",    "NEAR BOX",     "NEAR BOX",    selector_uninitialized},
    {"far box",      "far box",     "FAR BOX",      "FAR BOX",     selector_uninitialized},
    {"those facing the caller", "those facing the caller",
-   "THOSE FACING THE CALLER", "THOSE FACING THE CALLER",         selector_uninitialized},
-
+    "THOSE FACING THE CALLER", "THOSE FACING THE CALLER",         selector_uninitialized},
    {"those facing away from the caller", "those facing away from the caller",
-   "THOSE FACING AWAY FROM THE CALLER", "THOSE FACING AWAY FROM THE CALLER",
+    "THOSE FACING AWAY FROM THE CALLER", "THOSE FACING AWAY FROM THE CALLER",
                                                                   selector_uninitialized},
-
    {"#1 boy",       "#1 boy",      "#1 BOY",       "#1 BOY",      selector_uninitialized},
    {"#1 girl",      "#1 girl",     "#1 GIRL",      "#1 GIRL",     selector_uninitialized},
    {"#1 couple",    "#1 couple",   "#1 COUPLE",    "#1 COUPLE",   selector_uninitialized},
@@ -207,10 +214,16 @@ selector_item selector_list[] = {
    {"#4 boy",       "#4 boy",      "#4 BOY",       "#4 BOY",      selector_uninitialized},
    {"#4 girl",      "#4 girl",     "#4 GIRL",      "#4 GIRL",     selector_uninitialized},
    {"#4 couple",    "#4 couple",   "#4 COUPLE",    "#4 COUPLE",   selector_uninitialized},
-   {"couples 1 and 2", "couple 1 and 2", "COUPLES 1 AND 2", "COUPLE 1 AND 2", selector_uninitialized},
-   {"couples 2 and 3", "couple 2 and 3", "COUPLES 2 AND 3", "COUPLE 2 AND 3", selector_uninitialized},
-   {"couples 3 and 4", "couple 3 and 4", "COUPLES 3 AND 4", "COUPLE 3 AND 4", selector_uninitialized},
-   {"couples 1 and 4", "couple 1 and 4", "COUPLES 1 AND 4", "COUPLE 1 AND 4", selector_uninitialized},
+   {"couples 1 and 2", "couple 1 and 2", "COUPLES 1 AND 2", "COUPLE 1 AND 2",
+                                                                  selector_uninitialized},
+   {"couples 2 and 3", "couple 2 and 3", "COUPLES 2 AND 3", "COUPLE 2 AND 3",
+                                                                  selector_uninitialized},
+   {"couples 3 and 4", "couple 3 and 4", "COUPLES 3 AND 4", "COUPLE 3 AND 4",
+                                                                  selector_uninitialized},
+   {"couples 1 and 4", "couple 1 and 4", "COUPLES 1 AND 4", "COUPLE 1 AND 4",
+                                                                  selector_uninitialized},
+   {"Mbeaus???",    "Mbeaus???",   "MBEAUS???",    "MBEAUS???",   selector_uninitialized},
+   {"Mbelles???",   "Mbelles???",  "MBELLES???",   "MBELLES???",  selector_uninitialized},
    {(Cstring) 0,    (Cstring) 0,   (Cstring) 0,    (Cstring) 0,   selector_uninitialized}};
 
 // BEWARE!!  These strings are keyed to the definition of "warning_index" in sd.h .
@@ -311,6 +324,7 @@ Cstring warning_strings[] = {
    /*  warn_big_outer_triangles  */   "*The outside triangles are very large.",
    /*  warn_hairy_fraction       */   " Fraction is very complicated.",
    /*  warn_bad_collision        */   "*This collision may be controversial.",
+   /*  warn_very_bad_collision   */   "*This collision appears to be improper.",
    /*  warn__dyp_resolve_ok      */   " Do your part.",
    /*  warn__unusual             */   "*This is an unusual setup for this call.",
    /*  warn_controversial        */   "*This may be controversial.",
@@ -1422,10 +1436,10 @@ map::map_thing map::map_init_table[] = {
    {{3, 4, 7, 8, 12, 13, 16, 17},
     s_qtag,1,MPKIND__OFFS_R_HALF,0, 7,  s3x6,    0x000, 0},
 
-   {{-1, -1, 0, 1, 2, 3, -1, -1, 5, 6, 7, 8},
-    s2x6,1,MPKIND__OFFS_L_HALF,0, 5,  s2x5,      0x000, 0},
-   {{1, 2, 3, 4, -1, -1, 6, 7, 8, 9, -1, -1},
-    s2x6,1,MPKIND__OFFS_R_HALF,0, 5,  s2x5,      0x000, 0},
+   {{0, 1, 2, 3, 4, 5, 9, 10, 11, 12, 13, 14},
+    s2x6,1,MPKIND__OFFS_L_HALF,0, 5,  s2x9,      0x000, 0},
+   {{3, 4, 5, 6, 7, 8, 12, 13, 14, 15, 16, 17},
+    s2x6,1,MPKIND__OFFS_R_HALF,0, 5,  s2x9,      0x000, 0},
 
    {{0, 1, 2, 3, 4, 5, 6, 7},
     s1x8,1,MPKIND__OFFS_L_HALF,0, 2,  s1x8,      0x000, 0},
@@ -6063,7 +6077,7 @@ static const id_bit_table id_bit_table_4x5[] = {
 //     (Exactly same as 5 if doing checkers.)
 // 9 - space equivalent to 3/4 glyph.
 
-// BEWARE!!  This list is keyed to the definition of "setup_kind" in database.h
+// BEWARE!!  This list is keyed to the definition of "setup_kind" in database.h .
 const setup_attr setup_attrs[] = {
    {-1,                       // setup_limits
     (const coordrec *) 0,     // setup_coords
@@ -7295,6 +7309,237 @@ const setup_attr setup_attrs[] = {
     (const id_bit_table *) 0,
     {(Cstring) 0,
      (Cstring) 0}}};
+
+
+// BEWARE!!  This list is keyed to the definition of "calldef_schema" in database.h .
+const schema_attr schema_attrs[] = {
+   {SCA_CENTRALCONC | SCA_SNAGOK | SCA_DETOUR | SCA_INV_SUP_ELWARN,
+    schema_nothing},                     // schema_concentric
+   {SCA_CENTRALCONC | SCA_CROSS | SCA_COPY_LYZER | SCA_SNAGOK,
+    schema_concentric},                  // schema_cross_concentric
+   {SCA_CENTRALCONC | SCA_SNAGOK | SCA_SPLITOK,
+    schema_nothing},                     // schema_single_concentric
+   {SCA_CENTRALCONC | SCA_CROSS | SCA_COPY_LYZER | SCA_SNAGOK,
+    schema_single_concentric},           // schema_single_cross_concentric
+   {0,
+    schema_nothing},                     // schema_grand_single_concentric
+   {SCA_CENTRALCONC | SCA_CROSS | SCA_COPY_LYZER,
+    schema_grand_single_concentric},     // schema_grand_single_cross_concentric
+   {SCA_CENTRALCONC | SCA_SNAGOK | SCA_SPLITOK,
+    schema_nothing},                     // schema_single_concentric_together
+   {0,
+    schema_nothing},                     // schema_maybe_matrix_single_concentric_together
+   {0,
+    schema_nothing},                     // schema_maybe_single_concentric
+   {SCA_CROSS,
+    schema_nothing},                     // schema_maybe_single_cross_concentric
+   {0,
+    schema_nothing},                     // schema_maybe_grand_single_concentric
+   {SCA_CROSS,
+    schema_nothing},                     // schema_maybe_grand_single_cross_concentric
+   {0,
+    schema_nothing},                     // schema_maybe_special_single_concentric
+   {0,
+    schema_nothing},                     // schema_maybe_special_single_concentric_or_2_4
+   {0,
+    schema_nothing},                     // schema_grand_single_or_matrix_concentric
+   {0,
+    schema_nothing},                     // schema_3x3_concentric
+   {0,
+    schema_nothing},                     // schema_4x4_lines_concentric
+   {0,
+    schema_nothing},                     // schema_4x4_cols_concentric
+   {0,
+    schema_nothing},                     // schema_maybe_nxn_lines_concentric
+   {0,
+    schema_nothing},                     // schema_maybe_nxn_cols_concentric
+   {0,
+    schema_nothing},                     // schema_maybe_nxn_1331_lines_concentric
+   {0,
+    schema_nothing},                     // schema_maybe_nxn_1331_cols_concentric
+   {0,
+    schema_nothing},                     // schema_1331_concentric
+   {0,
+    schema_nothing},                     // schema_1313_concentric
+   {SCA_CENTRALCONC | SCA_SNAGOK | SCA_DETOUR | SCA_INV_SUP_ELWARN,
+    schema_nothing},                     // schema_1221_concentric
+   {0,
+    schema_nothing},                     // schema_concentric_diamond_line
+   {0,
+    schema_nothing},                     // schema_concentric_diamonds
+   {SCA_CROSS | SCA_COPY_LYZER,
+    schema_concentric_diamonds},         // schema_cross_concentric_diamonds
+   {0,
+    schema_nothing},                     // schema_concentric_zs
+   {SCA_CROSS | SCA_COPY_LYZER,
+    schema_concentric_zs},               // schema_cross_concentric_zs
+   {SCA_SNAGOK,
+    schema_nothing},                     // schema_concentric_or_diamond_line
+   {SCA_CENTRALCONC | SCA_SNAGOK | SCA_DETOUR | SCA_INV_SUP_ELWARN,
+    schema_nothing},                     // schema_concentric_or_6_2_line
+   {0,
+    schema_nothing},                     // schema_concentric_6_2
+   {SCA_CROSS,
+    schema_concentric_6_2},              // schema_cross_concentric_6_2
+   {0,
+    schema_nothing},                     // schema_concentric_6_2_line
+   {SCA_SNAGOK,
+    schema_nothing},                     // schema_concentric_2_6
+   {SCA_CROSS,
+    schema_concentric_2_6},              // schema_cross_concentric_2_6
+   {0,
+    schema_nothing},                     // schema_concentric_2_4
+   {SCA_CROSS,
+    schema_concentric_2_4},              // schema_cross_concentric_2_4
+   {SCA_CENTRALCONC | SCA_SNAGOK | SCA_INV_SUP_ELWARN,
+    schema_nothing},                     // schema_concentric_2_4_or_normal
+   {SCA_CENTRALCONC | SCA_SNAGOK | SCA_DETOUR | SCA_INV_SUP_ELWARN,
+    schema_nothing},                     // schema_concentric_4_2
+   {SCA_CENTRALCONC | SCA_CROSS,
+    schema_concentric_4_2},              // schema_cross_concentric_4_2
+   {SCA_CENTRALCONC | SCA_SNAGOK | SCA_DETOUR | SCA_INV_SUP_ELWARN,
+    schema_nothing},                     // schema_concentric_4_2_or_normal
+   {0,
+    schema_nothing},                     // schema_concentric_8_4
+   {0,
+    schema_nothing},                     // schema_concentric_big2_6
+   {0,
+    schema_nothing},                     // schema_concentric_2_6_or_2_4
+   {SCA_CROSS,
+    schema_concentric_2_6_or_2_4},       // schema_cross_concentric_2_6_or_2_4
+   {0,
+    schema_nothing},                     // schema_concentric_innermost
+   {SCA_CROSS | SCA_COPY_LYZER,
+    schema_concentric_innermost},        // schema_cross_concentric_innermost
+   {0,
+    schema_nothing},                     // schema_concentric_double_innermost
+   {SCA_CROSS | SCA_COPY_LYZER,
+    schema_concentric_double_innermost}, // schema_cross_concentric_double_innermost
+   {SCA_CENTRALCONC | SCA_SNAGOK | SCA_DETOUR | SCA_INV_SUP_ELWARN,
+    schema_nothing},                     // schema_concentric_6p
+   {SCA_CENTRALCONC | SCA_SNAGOK | SCA_DETOUR | SCA_INV_SUP_ELWARN,
+    schema_nothing},                     // schema_concentric_6p_or_normal
+   {SCA_CENTRALCONC | SCA_SNAGOK,
+    schema_nothing},                     // schema_concentric_6p_or_sgltogether
+   {SCA_CROSS | SCA_COPY_LYZER | SCA_SNAGOK,
+    schema_concentric_6p_or_normal},     // schema_cross_concentric_6p_or_normal
+   {0,
+    schema_nothing},                     // schema_concentric_others
+   {0,
+    schema_nothing},                     // schema_concentric_6_2_tgl
+   {0,
+    schema_nothing},                     // schema_concentric_to_outer_diamond
+   {0,
+    schema_nothing},                     // schema_conc_12
+   {0,
+    schema_nothing},                     // schema_conc_16
+   {0,
+    schema_nothing},                     // schema_conc_star
+   {0,
+    schema_nothing},                     // schema_conc_star12
+   {0,
+    schema_nothing},                     // schema_conc_star16
+   {0,
+    schema_nothing},                     // schema_conc_bar
+   {0,
+    schema_nothing},                     // schema_conc_bar12
+   {0,
+    schema_nothing},                     // schema_conc_bar16
+   {SCA_SNAGOK | SCA_DETOUR | SCA_INV_SUP_ELWARN,
+    schema_nothing},                     // schema_conc_o
+   {0,
+    schema_nothing},                     // schema_maybe_matrix_conc
+   {0,
+    schema_nothing},                     // schema_maybe_matrix_conc_star
+   {0,
+    schema_nothing},                     // schema_maybe_matrix_conc_bar
+   {0,
+    schema_nothing},                     // schema_checkpoint
+   {SCA_CROSS | SCA_COPY_LYZER,
+    schema_checkpoint},                  // schema_cross_checkpoint
+   {SCA_DETOUR,
+    schema_nothing},                     // schema_rev_checkpoint
+   {0,
+    schema_checkpoint},                  // schema_ckpt_star
+   {0,
+    schema_nothing},                     // schema_maybe_in_out_triple_squash
+   {SCA_CONC_REV_ORDER,
+    schema_in_out_triple},               // schema_in_out_triple_squash
+   {SCA_CONC_REV_ORDER,
+    schema_sgl_in_out_triple},           // schema_sgl_in_out_triple_squash
+   {SCA_CONC_REV_ORDER,
+    schema_3x3_in_out_triple},           // schema_3x3_in_out_triple_squash
+   {SCA_CONC_REV_ORDER,
+    schema_4x4_in_out_triple},           // schema_4x4_in_out_triple_squash
+   {SCA_CONC_REV_ORDER,
+    schema_nothing},                     // schema_in_out_triple
+   {SCA_CONC_REV_ORDER,
+    schema_nothing},                     // schema_sgl_in_out_triple
+   {SCA_CONC_REV_ORDER,
+    schema_nothing},                     // schema_3x3_in_out_triple
+   {SCA_CONC_REV_ORDER,
+    schema_nothing},                     // schema_4x4_in_out_triple
+   {SCA_CONC_REV_ORDER,
+    schema_nothing},                     // schema_in_out_quad
+   {SCA_CONC_REV_ORDER,
+    schema_nothing},                     // schema_in_out_12mquad
+   {0,
+    schema_nothing},                     // schema_in_out_triple_zcom
+   {0,
+    schema_nothing},                     // schema_select_leads
+   {0,
+    schema_nothing},                     // schema_select_headliners
+   {0,
+    schema_nothing},                     // schema_select_sideliners
+   {SCA_SNAGOK | SCA_SPLITOK,
+    schema_nothing},                     // schema_select_original_rims
+   {SCA_SNAGOK | SCA_SPLITOK,
+    schema_nothing},                     // schema_select_original_hubs
+   {0,
+    schema_nothing},                     // schema_select_those_facing_both_live
+   {SCA_SNAGOK | SCA_SPLITOK,
+    schema_nothing},                     // schema_select_ctr2
+   {SCA_SNAGOK | SCA_SPLITOK,
+    schema_nothing},                     // schema_select_ctr4
+   {SCA_SNAGOK | SCA_SPLITOK,
+    schema_nothing},                     // schema_select_ctr6
+   {SCA_SNAGOK | SCA_SPLITOK,
+    schema_nothing},                     // schema_select_who_can
+   {SCA_SNAGOK | SCA_SPLITOK,
+    schema_nothing},                     // schema_select_who_did
+   {SCA_SNAGOK | SCA_SPLITOK,
+    schema_nothing},                     // schema_select_who_didnt
+   {0,
+    schema_nothing},                     // schema_select_who_did_and_didnt
+   {0,
+    schema_nothing},                     // schema_lateral_6
+   {0,
+    schema_nothing},                     // schema_vertical_6
+   {0,
+    schema_nothing},                     // schema_intlk_lateral_6
+   {0,
+    schema_nothing},                     // schema_intlk_vertical_6
+   {SCA_SNAGOK,
+    schema_nothing},                     // schema_by_array
+   {0,
+    schema_nothing},                     // schema_nothing
+   {0,
+    schema_nothing},                     // schema_matrix
+   {0,
+    schema_nothing},                     // schema_partner_matrix
+   {0,
+    schema_nothing},                     // schema_roll
+   {0,
+    schema_nothing},                     // schema_recenter
+   {SCA_SNAGOK,
+    schema_nothing},                     // schema_sequential
+   {0,
+    schema_nothing},                     // schema_split_sequential
+   {SCA_SNAGOK,
+    schema_nothing},                     // schema_sequential_with_fraction
+   {SCA_SNAGOK,
+    schema_nothing},                     // schema_sequential_with_split_1x8_id
+};
 
 
 /* In the print_strings tables below, characters have the following meanings:

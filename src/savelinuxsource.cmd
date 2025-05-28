@@ -1,8 +1,6 @@
 REM        This saves the source files in a manner suitable
 REM           for transmission to Linux.
 REM
-REM     Setcygnus must be used.
-REM
 md sd
 for %%f in (*.cpp) do crunfix %%f .\sd\%%f
 for %%f in (*.c) do crunfix %%f .\sd\%%f

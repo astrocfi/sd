@@ -1,6 +1,29 @@
 #ifndef MAPPED_CACHE_FILE_H
 #define MAPPED_CACHE_FILE_H
 
+// SD -- square dance caller's helper.
+//
+//    Copyright (C) 1990-2004  William B. Ackerman.
+//
+//    This file is part of "Sd".
+//
+//    Sd is free software; you can redistribute it and/or modify it
+//    under the terms of the GNU General Public License as published by
+//    the Free Software Foundation; either version 2 of the License, or
+//    (at your option) any later version.
+//
+//    Sd is distributed in the hope that it will be useful, but WITHOUT
+//    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+//    or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
+//    License for more details.
+//
+//    You should have received a copy of the GNU General Public License
+//    along with Sd; if not, write to the Free Software Foundation, Inc.,
+//    59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+//
+//    This is for version 36.
+
+
 // This implements the handling of a pair of files, typically a
 // "source" text file containing, say, a dictionary, and a "cache"
 // file containing the result of pre-processing that dictionary.  The
@@ -22,12 +45,12 @@
 // file length, the source file modification time, and a measurement
 // of the system's endian-ness to determine whether the source file is
 // stale.  Those items are stored in the first few words of the cache
-// file, and are invisible to the client.  The version number is
+// file, and are invisible to you, the client.  The version number is
 // normally a constant in your program.  Whenever you change your
 // program so that the format of the information in the cache file
 // might be incompatible, increase the version number.  This will
-// cause all extant cache files to be considered stale.  You may also,
-// of course, delete cache files at any time.
+// cause all extant cache files to be considered stale.  A user may
+// also, of course, delete cache files at any time.
 
 // The constructor takes the number of source files (typically 1), the
 // array of source file names, the array of POSIX file descriptors to

@@ -1,16 +1,24 @@
-/* SD -- square dance caller's helper.
-
-    Copyright (C) 1990-2003  William B. Ackerman.
-
-    This file is unpublished and contains trade secrets.  It is
-    to be used by permission only and not to be disclosed to third
-    parties without the express permission of the copyright holders.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-
-    This is for version 34. */
+// SD -- square dance caller's helper.
+//
+//    Copyright (C) 1990-2004  William B. Ackerman.
+//
+//    This file is part of "Sd".
+//
+//    Sd is free software; you can redistribute it and/or modify it
+//    under the terms of the GNU General Public License as published by
+//    the Free Software Foundation; either version 2 of the License, or
+//    (at your option) any later version.
+//
+//    Sd is distributed in the hope that it will be useful, but WITHOUT
+//    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+//    or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
+//    License for more details.
+//
+//    You should have received a copy of the GNU General Public License
+//    along with Sd; if not, write to the Free Software Foundation, Inc.,
+//    59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+//
+//    This is for version 36.
 
 /* This defines the following functions:
    get_multiple_parallel_resultflags
@@ -1083,114 +1091,22 @@ static calldef_schema concentrify(
 
    uint32 livemask = little_endian_live_mask(ss);
 
-   // First, translate the analyzer into a form that encodes only what we need to know.
+   // First, translate the analyzer into a form that encodes only what we
+   //  need to know.  Extract the "cross concentric" info while doing this.
 
-   crossing = 0;
+   crossing = (schema_attrs[analyzer_result].attrs & SCA_CROSS) ? 1 : 0;
 
-   switch (analyzer_result) {
-   case schema_single_cross_concentric:
-      analyzer = schema_single_concentric;
-      analyzer_result = schema_single_concentric;
-      crossing = 1;
-      break;
-   case schema_cross_concentric_2_4:
-      analyzer_result = schema_concentric_2_4;
-      crossing = 1;
-      break;
-   case schema_cross_concentric_4_2:
-      analyzer_result = schema_concentric_4_2;
-      crossing = 1;
-      break;
-   case schema_cross_concentric_2_6_or_2_4:
-      analyzer_result = schema_concentric_2_6_or_2_4;
-      crossing = 1;
-      break;
-   case schema_cross_concentric_2_6:
-      analyzer_result = schema_concentric_2_6;
-      crossing = 1;
-      break;
-   case schema_cross_concentric_6_2:
-      analyzer_result = schema_concentric_6_2;
-      crossing = 1;
-      break;
-   case schema_grand_single_cross_concentric:
-      analyzer = schema_grand_single_concentric;
-      analyzer_result = schema_grand_single_concentric;
-      crossing = 1;
-      break;
-   case schema_cross_concentric_innermost:
-      analyzer = schema_concentric_innermost;
-      analyzer_result = schema_concentric_innermost;
-      crossing = 1;
-      break;
-   case schema_cross_concentric_double_innermost:
-      analyzer = schema_concentric_double_innermost;
-      analyzer_result = schema_concentric_double_innermost;
-      crossing = 1;
-      break;
-   case schema_cross_checkpoint:
-      analyzer = schema_checkpoint;
-      analyzer_result = schema_checkpoint;
-      crossing = 1;
-      break;
-   case schema_cross_concentric_6p_or_normal:
-      analyzer = schema_concentric_6p_or_normal;
-      analyzer_result = schema_concentric_6p_or_normal;
-      crossing = 1;
-      break;
-   case schema_cross_concentric_diamonds:
-      analyzer = schema_concentric_diamonds;
-      analyzer_result = schema_concentric_diamonds;
-      crossing = 1;
-      break;
-   case schema_cross_concentric_zs:
-      analyzer = schema_concentric_zs;
-      analyzer_result = schema_concentric_zs;
-      crossing = 1;
-      break;
-   case schema_cross_concentric:
-      analyzer = schema_concentric;
-      analyzer_result = schema_concentric;
-      crossing = 1;
-      break;
+   // Sometimes we want to copy the new schema only to "analyzer_result",
+   // and sometimes we also want to copy it to "analyzer".  The purpose
+   // of this distinction is lost in the mists of ancient history.
+
+   if (schema_attrs[analyzer_result].uncrossed != schema_nothing) {
+      if (schema_attrs[analyzer_result].attrs & SCA_COPY_LYZER)
+         analyzer = schema_attrs[analyzer_result].uncrossed;
+      analyzer_result = schema_attrs[analyzer_result].uncrossed;
    }
 
    switch (analyzer_result) {
-      // Completely straightforward ones.
-   case schema_single_concentric:
-   case schema_concentric_4_2:
-   case schema_grand_single_concentric:
-   case schema_lateral_6:
-   case schema_vertical_6:
-   case schema_intlk_lateral_6:
-   case schema_intlk_vertical_6:
-   case schema_checkpoint:
-   case schema_conc_12:
-   case schema_conc_16:
-   case schema_conc_star12:
-   case schema_conc_star16:
-   case schema_conc_bar:
-   case schema_conc_bar12:
-   case schema_conc_bar16:
-   case schema_3x3_concentric:
-   case schema_4x4_lines_concentric:
-   case schema_4x4_cols_concentric:
-   case schema_in_out_triple:
-   case schema_in_out_triple_zcom:
-   case schema_in_out_quad:
-   case schema_in_out_12mquad:
-   case schema_concentric_6_2:
-   case schema_concentric_6p:
-   case schema_1221_concentric:
-   case schema_concentric_others:
-   case schema_concentric_6_2_tgl:
-   case schema_concentric_diamonds:
-   case schema_concentric_2_4:
-   case schema_concentric_8_4:
-   case schema_concentric_zs:
-      break;
-   case schema_ckpt_star:
-      analyzer_result = schema_checkpoint; break;
    case schema_conc_o:
       if (ss->kind == s_c1phan) do_matrix_expansion(ss, CONCPROP__NEEDK_4X4, false);
       break;
@@ -1272,14 +1188,6 @@ static calldef_schema concentrify(
       else
          analyzer_result = schema_concentric;
       break;
-   case schema_in_out_triple_squash:
-      analyzer_result = schema_in_out_triple; break;
-   case schema_sgl_in_out_triple_squash:
-      analyzer_result = schema_sgl_in_out_triple; break;
-   case schema_3x3_in_out_triple_squash:
-      analyzer_result = schema_3x3_in_out_triple; break;
-   case schema_4x4_in_out_triple_squash:
-      analyzer_result = schema_4x4_in_out_triple; break;
    case schema_concentric:
       if (crossing) {
          if (ss->kind == s4x4 && livemask != 0x9999)
@@ -1357,6 +1265,46 @@ static calldef_schema concentrify(
       else if (ss->kind != s_qtag && ss->kind != s_spindle && ss->kind != s3x1dmd)
          analyzer_result = schema_1313_concentric;
       break;
+   case schema_single_concentric:      // Completely straightforward ones.
+   case schema_concentric_4_2:
+   case schema_grand_single_concentric:
+   case schema_lateral_6:
+   case schema_vertical_6:
+   case schema_intlk_lateral_6:
+   case schema_intlk_vertical_6:
+   case schema_checkpoint:
+   case schema_ckpt_star:
+   case schema_conc_12:
+   case schema_conc_16:
+   case schema_conc_star12:
+   case schema_conc_star16:
+   case schema_conc_bar:
+   case schema_conc_bar12:
+   case schema_conc_bar16:
+   case schema_3x3_concentric:
+   case schema_4x4_lines_concentric:
+   case schema_4x4_cols_concentric:
+   case schema_in_out_triple:
+   case schema_in_out_triple_squash:
+   case schema_4x4_in_out_triple:
+   case schema_4x4_in_out_triple_squash:
+   case schema_3x3_in_out_triple:
+   case schema_3x3_in_out_triple_squash:
+   case schema_sgl_in_out_triple:
+   case schema_sgl_in_out_triple_squash:
+   case schema_in_out_triple_zcom:
+   case schema_in_out_quad:
+   case schema_in_out_12mquad:
+   case schema_concentric_6_2:
+   case schema_concentric_6p:
+   case schema_1221_concentric:
+   case schema_concentric_others:
+   case schema_concentric_6_2_tgl:
+   case schema_concentric_diamonds:
+   case schema_concentric_2_4:
+   case schema_concentric_8_4:
+   case schema_concentric_zs:
+      break;
    default:
       fail("Internal error: Don't understand this concentricity type.");
    }
@@ -1429,22 +1377,6 @@ static calldef_schema concentrify(
             for (i=0; i<(MAX_PEOPLE/2); i++) {
                (void) copy_person(&inners[0], i, ss, i);
                (void) copy_person(outers, i, ss, i+(MAX_PEOPLE/2));
-            }
-
-            /* ***** Claim these two won't happen, because of dhrglass and 1x3dmd! */
-
-            /* We allow a diamond inside a box with wrong elongation
-               (if elongation were good, it would be an hourglass.) */
-            if (ss->outer.skind == s2x2) {
-               *outer_elongation = ss->concsetup_outer_elongation;
-               if (ss->outer.srotation & 1) *outer_elongation ^= 3;
-               goto finish;
-            }
-            /* And a diamond inside a line with wrong elongation
-               (if elongation were good, it would be a 3x1 diamond.) */
-            if (ss->outer.skind == s1x4) {
-               *outer_elongation = (ss->outer.srotation & 1) + 1;
-               goto finish;
             }
          }
          else if (ss->inner.skind == s1x2 &&
@@ -2424,16 +2356,7 @@ extern void concentric_move(
 
    // If the call turns out to be "detour", this will make it do just the ends part.
 
-   if (analyzer != schema_in_out_triple_squash &&
-       analyzer != schema_in_out_triple &&
-       analyzer != schema_sgl_in_out_triple_squash &&
-       analyzer != schema_3x3_in_out_triple_squash &&
-       analyzer != schema_4x4_in_out_triple_squash &&
-       analyzer != schema_sgl_in_out_triple &&
-       analyzer != schema_3x3_in_out_triple &&
-       analyzer != schema_4x4_in_out_triple &&
-       analyzer != schema_in_out_quad &&
-       analyzer != schema_in_out_12mquad)
+   if (!(schema_attrs[analyzer].attrs & SCA_CONC_REV_ORDER))
       begin_outer.cmd.cmd_misc_flags |= CMD_MISC__DOING_ENDS;
 
    // There are two special pieces of information we now have that will help us decide
@@ -2454,25 +2377,20 @@ extern void concentric_move(
    // (Normally, center_arity=1, so we have just k=0).  There is just one instance
    // of doing the ends' part, indicated by k not in [0..center_arity-1].
 
-   // Now this is made complicated by the fact that we sometimes want to do things
-   // in a different order.  Usually, we want to do the centers first and the ends
-   // later, but, when the schema is triple lines, we want to do the ends first and
-   // the centers later.  This has to do with the order in which we query the user
-   // for "slant <anything> and <anything>".  So, in the normal case, we let k run from
-   // 0 to center_arity, inclusive, with the final value for the ends.  When the schema
-   // is triple lines, we let k run from zero to center_arity-1, with zero for the ends.
+   // Now this is made complicated by the fact that we sometimes want to do
+   // things in a different order.  Usually, we want to do the centers first and
+   // the ends later, but, when the schema is triple lines or something similar,
+   // we want to do the ends first and the centers later.  This has to do with
+   // the order in which we query the user for "slant <anything> and
+   // <anything>".  So, in the normal case, we let k run from 0 to center_arity,
+   // inclusive, with the final value for the ends.  When the schema is triple
+   // lines, we let k run from -1 to center_arity-1, with the initial value for
+   // the ends.
 
    k = 0;
    klast = center_arity+1;
 
-   if (analyzer == schema_in_out_triple_squash || analyzer == schema_in_out_triple ||
-       analyzer == schema_sgl_in_out_triple_squash ||
-       analyzer == schema_3x3_in_out_triple_squash ||
-       analyzer == schema_4x4_in_out_triple_squash ||
-       analyzer == schema_sgl_in_out_triple ||
-       analyzer == schema_3x3_in_out_triple ||
-       analyzer == schema_4x4_in_out_triple ||
-       analyzer == schema_in_out_quad || analyzer == schema_in_out_12mquad) {
+   if (schema_attrs[analyzer].attrs & SCA_CONC_REV_ORDER) {
       k = -1;
       klast = center_arity;
 
@@ -2483,17 +2401,15 @@ extern void concentric_move(
       }
    }
 
-   // We only allow the "matrix" concept for a few schemata, and only
-   // if "cmdin" (which contains the *outsides'* command) is null.
-   // That is we allow it only for stuff like "center phantom columns".
+   // We only allow the "matrix" concept for the "REV_ORDER" schemata, and only
+   // if "cmdin" (which contains the *outsides'* command in such a case) is
+   // null.  That is we allow it only for stuff like "center phantom columns".
 
    uint32 matrix_concept = ss->cmd.cmd_misc_flags & CMD_MISC__MATRIX_CONCEPT;
    begin_outer.cmd.cmd_misc_flags &= ~CMD_MISC__MATRIX_CONCEPT;
 
-   if (cmdin || k == 0) {
-      if (matrix_concept)
-         fail("\"Matrix\" concept must be followed by applicable concept.");
-   }
+   if (matrix_concept && (cmdin || k == 0))
+      fail("\"Matrix\" concept must be followed by applicable concept.");
 
    for (; k<klast; k++) {
       int doing_ends = (k<0) || (k==center_arity);
@@ -3031,10 +2947,10 @@ extern void concentric_move(
       if (q) final_outers_finish_directions[(q >> 6) & 037] = q;
    }
 
-   /* Now final_outers_finish_dirs tells whether outer peoples' orientations changed.
-      This is only meaningful if outer setup is 2x2.  Note that, if the setups
-      are 2x2's, canonicalization sets their rotation to zero, so the
-      tbonetest quantities refer to absolute orientation. */
+   // Now final_outers_finish_dirs tells whether outer peoples' orientations
+   // changed.  This is only meaningful if outer setup is 2x2.  Note that, if
+   // the setups are 2x2's, canonicalization sets their rotation to zero, so the
+   // tbonetest quantities refer to absolute orientation.
 
    // Deal with empty setups.
 
@@ -3458,7 +3374,7 @@ extern void merge_setups(setup *ss, merge_action action, setup *result) THROW_DE
    }
    else if (action == merge_c1_phantom_real)
       na = normalize_before_isolate_not_too_strict;
-   else if (action == merge_strict_matrix)
+   else if (action == merge_strict_matrix || action == merge_strict_matrix_but_colliding_merge)
       na = normalize_strict_matrix;
    else if (action == merge_without_gaps)
       na = normalize_after_disconnected;
@@ -3535,7 +3451,8 @@ extern void merge_setups(setup *ss, merge_action action, setup *result) THROW_DE
 
    if (res2->kind == s_normal_concentric &&
        res2->inner.skind == nothing &&
-       action != merge_strict_matrix) {
+       action != merge_strict_matrix &&
+       action != merge_strict_matrix_but_colliding_merge) {
       res2->kind = res2->outer.skind;
       res2->rotation += res2->outer.srotation;
       canonicalize_rotation(res2);
@@ -3567,7 +3484,7 @@ extern void merge_setups(setup *ss, merge_action action, setup *result) THROW_DE
 
    rotmaskreject = (1<<r);
    if (action != merge_without_gaps) rotmaskreject |= 0x10;
-   if (action == merge_strict_matrix) rotmaskreject |= 0x20;
+   if (action == merge_strict_matrix || action == merge_strict_matrix_but_colliding_merge) rotmaskreject |= 0x20;
    if (!perp_2x4_1x8) rotmaskreject |= 0x40;
    if (!perp_2x4_ptp) rotmaskreject |= 0x200;
    if (action == merge_c1_phantom_real) rotmaskreject |= 0x80;
@@ -3611,6 +3528,7 @@ extern void merge_setups(setup *ss, merge_action action, setup *result) THROW_DE
 
       action_suggests_4x4 =
          action == merge_strict_matrix ||
+         action == merge_strict_matrix_but_colliding_merge ||
          (action == merge_without_gaps &&
           ((mask1 != 0x33 && mask1 != 0xCC) || (mask2 != 0x33 && mask2 != 0xCC)));
 
@@ -3679,7 +3597,7 @@ extern void merge_setups(setup *ss, merge_action action, setup *result) THROW_DE
    // The only remaining hope is that the setups match and we can blindly combine them.
    // Our 180 degree rotation wouldn't work for triangles.
 
-   brute_force_merge(res1, res2, action >= merge_c1_phantom, result);
+   brute_force_merge(res1, res2, action >= merge_strict_matrix_but_colliding_merge, result);
    goto final_getout;
 
  merge_concentric:
@@ -3781,7 +3699,7 @@ extern void on_your_own_move(
 
    warning_info saved_warnings = configuration::save_warnings();
 
-   setup1 = *ss;              /* Get outers only. */
+   setup1 = *ss;              // Get outers only.
    clear_person(&setup1, 1);
    clear_person(&setup1, 2);
    clear_person(&setup1, 5);
@@ -3790,7 +3708,7 @@ extern void on_your_own_move(
    setup1.cmd.cmd_misc_flags |= CMD_MISC__DISTORTED | CMD_MISC__PHANTOMS;
    move(&setup1, false, &res1);
 
-   setup2 = *ss;              /* Get inners only. */
+   setup2 = *ss;              // Get inners only.
    clear_person(&setup2, 0);
    clear_person(&setup2, 3);
    clear_person(&setup2, 4);
@@ -3916,7 +3834,7 @@ void infer_assumption(setup *ss)
 
 
 
-/* We know that the setup has well-defined size, and that the conctable masks are good. */
+// We know that the setup has well-defined size, and that the conctable masks are good.
 extern void punt_centers_use_concept(setup *ss, setup *result) THROW_DECL
 {
    int i, setupcount;
@@ -3975,9 +3893,9 @@ extern void punt_centers_use_concept(setup *ss, setup *result) THROW_DECL
    normalize_setup(&the_setups[1], normalize_before_isolated_call, false);
    warning_info saved_warnings = configuration::save_warnings();
 
-   /* Check for "someone work yoyo".  If call is sequential and yoyo is consumed by
-      first part, then just do this stuff on the first part.  After that, merge
-      the setups and finish the call normally. */
+   // Check for "someone work yoyo".  If call is sequential and yoyo is consumed by
+   // first part, then just do this stuff on the first part.  After that, merge
+   // the setups and finish the call normally.
 
    if ((cmd2word & CMD_MISC2__ANY_WORK) &&
        ss->cmd.parseptr->concept->kind == concept_yoyo &&
@@ -4009,10 +3927,10 @@ extern void punt_centers_use_concept(setup *ss, setup *result) THROW_DECL
       if (doing_do_last_frac) {
          if (setupcount == 0) {
             the_results[0] = *this_one;
-            continue;                                 /* Designees do nothing. */
+            continue;                                 // Designees do nothing.
          }
          else
-            /* Non-designees do first part only. */
+            // Non-designees do first part only.
             this_one->cmd.cmd_frac_flags =
                process_new_fractions(denom - numer, denom,
                                      this_one->cmd.cmd_frac_flags, 0);
@@ -4075,11 +3993,11 @@ extern void punt_centers_use_concept(setup *ss, setup *result) THROW_DECL
               (result->people[2].id1 & the_results[1].people[2].id1) |
               (result->people[5].id1 & the_results[1].people[5].id1) |
               (result->people[6].id1 & the_results[1].people[6].id1))) {
-            /* We are doing something like "snag pair the line".  The centers
-            didn't know which way the ends went, so they punted, moved into
-            the center, and cleared the bit to say they really didn't know
-            that this was right.  We now have the information, and it isn't
-            good -- there is a collision.  We need to move the_results[0] outward. */
+            // We are doing something like "snag pair the line".  The centers
+            // didn't know which way the ends went, so they punted, moved into
+            // the center, and cleared the bit to say they really didn't know
+            // that this was right.  We now have the information, and it isn't
+            // good -- there is a collision.  We need to move the_results[0] outward.
             swap_people(result, 0, 1);
             swap_people(result, 3, 2);
             swap_people(result, 4, 5);
@@ -4116,10 +4034,10 @@ extern void punt_centers_use_concept(setup *ss, setup *result) THROW_DECL
 
    if (doing_yoyo) {
       the_setups[0] = *result;
-      the_setups[0].cmd = ss->cmd;    /* Restore original command stuff (though we clobbered fractionalization info). */
-      the_setups[0].cmd.cmd_assume.assumption = cr_none;  /* Assumptions don't carry through. */
+      the_setups[0].cmd = ss->cmd;    // Restore original command stuff (though we clobbered fractionalization info).
+      the_setups[0].cmd.cmd_assume.assumption = cr_none;  // Assumptions don't carry through.
       the_setups[0].cmd.cmd_frac_flags = CMD_FRAC_BREAKING_UP | CMD_FRAC_FORCE_VIS | CMD_FRAC_CODE_FROMTOREV | (CMD_FRAC_PART_BIT*2) | CMD_FRAC_NULL_VALUE;
-      the_setups[0].cmd.parseptr = parseptrcopy->next;      /* Skip over the concept. */
+      the_setups[0].cmd.parseptr = parseptrcopy->next;      // Skip over the concept.
       uint32 finalresultflagsmisc = the_setups[0].result_flags.misc;
       move(&the_setups[0], false, result);
       finalresultflagsmisc |= result->result_flags.misc;
@@ -4128,7 +4046,7 @@ extern void punt_centers_use_concept(setup *ss, setup *result) THROW_DECL
    }
    else if (doing_do_last_frac) {
       the_setups[0] = *result;
-      the_setups[0].cmd = ss->cmd;    /* Restore original command stuff. */
+      the_setups[0].cmd = ss->cmd;    // Restore original command stuff.
       the_setups[0].cmd.cmd_assume.assumption = cr_none;  // Assumptions don't carry through.
       the_setups[0].cmd.cmd_frac_flags =
          process_new_fractions(numer, denom,
@@ -4144,8 +4062,8 @@ extern void punt_centers_use_concept(setup *ss, setup *result) THROW_DECL
 
 
 
-/* This does the various types of "so-and-so do this, perhaps while the others do that"
-   concepts. */
+// This does the various types of "so-and-so do this, perhaps while the others
+// do that" concepts.
 
 /* indicator =
    selective_key_dyp                   -  <> do your part
@@ -4193,7 +4111,6 @@ extern void selective_move(
    setup *result) THROW_DECL
 {
    setup_command cmd1thing, cmd2thing;
-   setup_command *cmd2ptr;
 
    cmd1thing = ss->cmd;
    cmd2thing = ss->cmd;
@@ -4267,15 +4184,10 @@ extern void selective_move(
    else if (indicator != selective_key_snag_anyone)
       cmd2thing.parseptr = parseptr->subsidiary_root;
 
-   if (others > 0)
-      cmd2ptr = &cmd2thing;
-   else
-      cmd2ptr = (setup_command *) 0;
-
    inner_selective_move(
       ss,
       &cmd1thing,
-      cmd2ptr,
+      (others > 0) ? &cmd2thing : (setup_command *) 0,
       indicator,
       others,
       arg2,
@@ -4352,8 +4264,8 @@ extern void inner_selective_move(
    saved_selector = current_options.who;
    current_options.who = selector_to_use;
 
-   the_setups[0] = *ss;              /* designees */
-   the_setups[1] = *ss;              /* non-designees */
+   the_setups[0] = *ss;              // designees
+   the_setups[1] = *ss;              // non-designees
 
    if (sizem1 < 0) fail("Can't identify people in this setup.");
 
@@ -4365,11 +4277,11 @@ extern void inner_selective_move(
       if (ss->people[i].id1) {
          int q = 0;
 
-         /* We allow the designators "centers" and "ends" while in a 1x8, which
-            would otherwise not be allowed.  The reason we don't allow it in
-            general is that people would carelessly say "centers kickoff" in a 1x8
-            when they should realy say "each 1x4, centers kickoff".  But we assume
-            that they will not misuse the term here. */
+         // We allow the designators "centers" and "ends" while in a 1x8, which
+         // would otherwise not be allowed.  The reason we don't allow it in
+         // general is that people would carelessly say "centers kickoff" in a
+         // 1x8 when they should realy say "each 1x4, centers kickoff".  But we
+         // assume that they will not misuse the term here.
 
          if (ss->kind == s1x8 && current_options.who == selector_centers) {
             if (i&2) q = 1;
@@ -4379,11 +4291,11 @@ extern void inner_selective_move(
          }
          else if (override_selector) {
             if (override_selector & 0x80000000UL) {
-               /* It is a headliner/sideliner mask. */
+               // It is a headliner/sideliner mask.
                if (override_selector & 011 & ss->people[i].id1) q = 1;
             }
             else {
-               /* It is a little-endian mask of the people to select. */
+               // It is a little-endian mask of the people to select.
                if (override_selector & j) q = 1;
             }
          }
@@ -4475,7 +4387,7 @@ extern void inner_selective_move(
       static const veryshort map_4x4_4[16] =
       {6, 11, 15, 10, 14, 3, 7, 2, 011, 011, 022, 022, 011, 011, 022, 022};
 
-      the_setups[0] = *ss;        /* Use this all over again. */
+      the_setups[0] = *ss;        // Use this all over again.
       clear_people(&the_setups[0]);
       the_setups[0].kind = s2x4;
 
@@ -4658,10 +4570,10 @@ extern void inner_selective_move(
       ctr_end_masks_to_use = &setup_attrs[ss->kind].setup_conc_masks;
    }
 
-   /* See if the user requested "centers" (or the equivalent people under some other
-      designation), and just do it with the concentric_move stuff if so.
-      The concentric_move stuff is much more sophisticated about a lot of things than
-      what we would otherwise do. */
+   // See if the user requested "centers" (or the equivalent people under some
+   // other designation), and just do it with the concentric_move stuff if so.
+   // The concentric_move stuff is much more sophisticated about a lot of things
+   // than what we would otherwise do.
 
    if (force_matrix_merge) {
    }
@@ -4885,7 +4797,7 @@ back_here:
       this_one->cmd.cmd_misc_flags |= CMD_MISC__PHANTOMS;
 
       if (indicator == selective_key_snag_anyone) {
-         /* Snag the <anyone>. */
+         // Snag the <anyone>.
          if (setupcount == 0) {
             if (this_one->cmd.cmd_frac_flags != CMD_FRAC_NULL_VALUE)
                fail("Can't do fractional \"snag\".");
@@ -5275,12 +5187,12 @@ back_here:
                                &lilresult[lilcount], k, 011*((frot+vrot) & 3));
          }
 
-         /* We only give the warning if they in fact went to spots.  Some of the maps
-            create a result setup of 4x4.  For these maps, the dancers are not actually
-            going to spots, but are going back to the quadrants the belong in.
-            This is a "put the offset back" type of adjustment.  There don't seem to be
-            any generally recognized words that one says to cause this to happen.
-            We hope the dancers will know what to do. */
+         // We only give the warning if they in fact went to spots.  Some of the
+         // maps create a result setup of 4x4.  For these maps, the dancers are
+         // not actually going to spots, but are going back to the quadrants the
+         // belong in.  This is a "put the offset back" type of adjustment.
+         // There don't seem to be any generally recognized words that one says
+         // to cause this to happen.  We hope the dancers will know what to do.
 
          if (feet_warning && fixp->outk != s4x4) warn(warn__adjust_to_feet);
 
@@ -5355,9 +5267,6 @@ back_here:
    *result = the_results[1];
    result->result_flags = get_multiple_parallel_resultflags(the_results, 2);
 
-   /* For "own the <anyone>", we use strict matrix spots for the merge.
-      Otherwise, we allow a little breathing. */
-
    {
       merge_action ma = merge_c1_phantom;
 
@@ -5367,8 +5276,9 @@ back_here:
          if (ss->kind != s_c1phan)
             ma = merge_strict_matrix;
       }
-      else if (indicator == selective_key_own ||
-               indicator == selective_key_mini_but_o)
+      else if (indicator == selective_key_own)
+         ma = merge_strict_matrix_but_colliding_merge;
+      else if (indicator == selective_key_mini_but_o)
          ma = merge_strict_matrix;
       else if (indicator == selective_key_dyp ||
                indicator == selective_key_plain_from_id_bits)
@@ -5449,7 +5359,7 @@ back_here:
          break;
    }
 
-   if (!ssmask) goto back_here;    /* We don't know how to find centers and ends. */
+   if (!ssmask) goto back_here;    // We don't know how to find centers and ends.
 
    if (ss->cmd.cmd_misc2_flags & (CMD_MISC2__ANY_WORK | CMD_MISC2__ANY_SNAG))
       fail("Can't stack \"<anyone> work <concept>\" concepts.");
@@ -5460,8 +5370,8 @@ back_here:
    ss->cmd.cmd_misc2_flags |= (0xFFF & ((int) schema));
    if (crossconc) ss->cmd.cmd_misc2_flags |= CMD_MISC2__ANY_WORK_INVERT;
 
-   /* If we aren't already looking for something,
-      check whether to put on a new assumption. */
+   // If we aren't already looking for something,
+   // check whether to put on a new assumption.
 
    if (ss->kind == s2x4 && ss->cmd.cmd_assume.assumption == cr_none) {
       assumption_thing restr;

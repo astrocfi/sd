@@ -35,24 +35,41 @@ You can be running Sd on your PC in minutes.&nbsp;
 Sd and/or Sdtty are available on some other Unix systems.&nbsp;
 <a href="download-unix.html">Download Sd for other varieties of Unix</a>.
 <p>
-Sd and Sdtty are not available for the Macintosh.
+Sdtty is available for Mac OS X 
+<a href="http://squarez.com/sd/sdtty.dmg">here</a>.
+<p align="center">
+<strong>YET ANOTHER COMPILER BUG ALERT!!!!!</strong>
+<p>
+Microsoft Visual C++, professional edition, version 5.0 also exhibits
+the "snag bits and pieces" bug described below.  This means that there
+are <strong>no</strong> Microsoft compilers that can correctly compile
+Sd.  A temporary patch has been put into the code to prevent it from
+affecting users.  Future versions of Sd will probably be compiled with
+gcc.
 <p align="center">
 <strong>ANOTHER COMPILER BUG ALERT!!!!!</strong>
 <p>
-Microsoft Visual C++, professional edition, version 5.0 also exhibits the
-bug described below.  This means that there are <strong>no</strong> Microsoft compilers
-that can correctly compile Sd.  A temporary patch has been put into the code to prevent
-it from affecting users.  Future versions of Sd will probably be compiled with gcc.
+In addition to the bug described below, Visual C++, version 5.0, service pack 3
+has exhibited other inexcusable bugs, such as this:
+<pre>
+fatal error C1001: INTERNAL COMPILER ERROR
+compiler file E:\utc\src\\P2\main.c line 379
+</pre>
+This was reported to Microsoft on 12 Aug 2002.  No action was taken.
+Any decent and professional company or organization takes reports
+of internal compiler errors very seriously.
 <p>
 <p align="center">
 <strong>COMPILER BUG ALERT!!!!!</strong>
 <p>
-Microsoft Visual C++, professional edition, version 6.0, service pack 5, has a
-bug that renders it unfit for compiling Sd or Sdtty.  See the
-<a href="relnotes.html">release notes</a>
-for version 34.7 for technical details of the bug.  This bug
-does not affect users, because this compiler has never been
-used, and never will be used, for compiling the distributed version of Sd.
+Microsoft Visual C++, professional edition, version 6.0, service pack
+5, has a bug that renders it unfit for compiling Sd or Sdtty.  See the
+<a href="relnotes.html">release notes</a> for version 34.7 for
+technical details of the bug.  (Briefly, the compiled program would
+crash on a "snag bits and pieces".)  This bug does not affect users,
+because this compiler has never been used, and never will be used, for
+compiling the distributed version of Sd.
+
 <p>
 This bug was reported to Microsoft on 17 December 2001.
 More than one year later, the following mail was sent to Microsoft management:
