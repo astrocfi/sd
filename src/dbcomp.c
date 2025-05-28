@@ -398,6 +398,7 @@ char *estab[] = {
    "???",
    "???",
    "???",
+   "???",
    "bigh",
    "bigx",
    "bigrig",
@@ -481,6 +482,8 @@ char *qualtab[] = {
    "not_split_dixie",
    "8_chain",
    "trade_by",
+   "facing_in",
+   "facing_out",
    "dmd_ctrs_rh",
    "dmd_ctrs_lh",
    "dmd_ctrs_1f",
@@ -491,6 +494,7 @@ char *qualtab[] = {
    "occupied_as_h",
    "occupied_as_qtag",
    "occupied_as_3x1tgl",
+   "ends_looking_out",
    "ripple_one_end",
    "ripple_both_ends",
    "ripple_centers",
@@ -512,6 +516,7 @@ char *crtab[] = {
    "3x3_2fl_only",
    "4x4_2fl_only",
    "leads_only",
+   "trailers_only",
    "couples_only",
    "3x3couples_only",
    "4x4couples_only",
@@ -521,6 +526,8 @@ char *crtab[] = {
    "nice_diamonds",
    "magic_only",
    "miniwaves",
+   "explodable",
+   "reverse_explodable",
    "peelable_box",
    "ends_are_peelable",
    "siamese_in_quad",
@@ -1549,6 +1556,9 @@ def2:
       }
       else if (!strcmp(tok_str, "vacate_center")) {
          callarray_flags1 |= CAF__VACATE_CENTER;
+      }
+      else if (!strcmp(tok_str, "other_elongate")) {
+         callarray_flags1 |= CAF__OTHER_ELONGATE;
       }
       else if ((!(callarray_flags1 & CAF__CONCEND)) && (!strcmp(tok_str, "concendsetup"))) {
          if (call_endsetup != (int)s_normal_concentric)

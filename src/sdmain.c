@@ -21,26 +21,8 @@
     General Public License if you distribute the file.
 */
 
-#define VERSION_STRING "31.81"
-
-/* We cause this string (that is, the concatentaion of these strings) to appear
-   in the binary image of the program, so that the "what" and "ident" utilities
-   can print the version.
-
-   We do not endorse those programs, or any probabilistic identification
-   mechanism -- we are simply trying to be helpful to those people who use them.
-   It is regrettable that those two identification mechanisms are different
-   and superficially incompatible, and that many existing programs only comply
-   with one or the other of them, but not both.  By choosing the contents of
-   the string carefully, we believe we comply with both.
-
-   We specifically break up the "Header" word to prevent utilities like RCS or
-   SCCS, if anyone should use them to store this source file, from attempting
-   to modify this.  Version control for this program is performed manually,
-   not by any utility.  Furthermore, we do not believe that it is proper for
-   source control utilities to alter the text in a source file. */
-
-static char *id="@(#)$He" "ader: Sd: version " VERSION_STRING "  wba@apollo.hp.com  19 Dec 95 $";
+#define VERSION_STRING "31.82"
+#define TIME_STAMP "wba@apollo.hp.com  19 Dec 95 $"
 
 /* This defines the following functions:
    sd_version_string
@@ -101,6 +83,25 @@ and the following external variables:
 #include <string.h>
 #include "sd.h"
 #include "paths.h"
+
+/* We cause this string (that is, the concatentaion of these strings) to appear
+   in the binary image of the program, so that the "what" and "ident" utilities
+   can print the version.
+
+   We do not endorse those programs, or any probabilistic identification
+   mechanism -- we are simply trying to be helpful to those people who use them.
+   It is regrettable that those two identification mechanisms are different
+   and superficially incompatible, and that many existing programs only comply
+   with one or the other of them, but not both.  By choosing the contents of
+   the string carefully, we believe we comply with both.
+
+   We specifically break up the "Header" word to prevent utilities like RCS or
+   SCCS, if anyone should use them to store this source file, from attempting
+   to modify this.  Version control for this program is performed manually,
+   not by any utility.  Furthermore, we do not believe that it is proper for
+   source control utilities to alter the text in a source file. */
+
+static Const char id[] = "@(#)$He" "ader: Sd: version " VERSION_STRING "  " TIME_STAMP;
    
 
 extern char *sd_version_string(void)
@@ -1533,7 +1534,7 @@ void main(int argc, char *argv[])
       writestuff("SD -- square dance caller's helper.");
       newline();
       newline();
-      writestuff("Copyright (c) 1991-1996 William B. Ackerman");
+      writestuff("Copyright (c) 1991-1997 William B. Ackerman");
       newline();
       writestuff("   and Stephen Gildea.");
       newline();

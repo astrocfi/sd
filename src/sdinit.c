@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-1995  William B. Ackerman.
+    Copyright (C) 1990-1996  William B. Ackerman.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -33,31 +33,37 @@ static callspec_block *empty_menu[] = {(callspec_block *) 0};
 Private callspec_block **global_temp_call_list;
 Private int global_callcount;     /* Index into the above. */
 
-#define SB (ID1_PERM_SIDE|ID1_PERM_BOY)
-#define HB (ID1_PERM_HEAD|ID1_PERM_BOY)
-#define SG (ID1_PERM_SIDE|ID1_PERM_GIRL)
-#define HG (ID1_PERM_HEAD|ID1_PERM_GIRL)
-#define WEST(x) (d_west|ROLLBITL|(x)<<6)
-#define EAST(x) (d_east|ROLLBITL|(x)<<6)
-#define NORT(x) (d_north|ROLLBITL|(x)<<6)
-#define SOUT(x) (d_south|ROLLBITL|(x)<<6)
+#define WEST (d_west|ROLLBITL)
+#define EAST (d_east|ROLLBITL)
+#define NORT (d_north|ROLLBITL)
+#define SOUT (d_south|ROLLBITL)
+
+/* The following 8 definitions are taken verbatim from sdtables.c . */
+#define B1A (0000 | ID1_PERM_NSG|ID1_PERM_NSB|ID1_PERM_NHG|ID1_PERM_HCOR|ID1_PERM_HEAD|ID1_PERM_BOY)
+#define G1A (0100 | ID1_PERM_NSG|ID1_PERM_NSB|ID1_PERM_NHB|ID1_PERM_SCOR|ID1_PERM_HEAD|ID1_PERM_GIRL)
+#define B2A (0200 | ID1_PERM_NSG|ID1_PERM_NHG|ID1_PERM_NHB|ID1_PERM_SCOR|ID1_PERM_SIDE|ID1_PERM_BOY)
+#define G2A (0300 | ID1_PERM_NSB|ID1_PERM_NHG|ID1_PERM_NHB|ID1_PERM_HCOR|ID1_PERM_SIDE|ID1_PERM_GIRL)
+#define B3A (0400 | ID1_PERM_NSG|ID1_PERM_NSB|ID1_PERM_NHG|ID1_PERM_HCOR|ID1_PERM_HEAD|ID1_PERM_BOY)
+#define G3A (0500 | ID1_PERM_NSG|ID1_PERM_NSB|ID1_PERM_NHB|ID1_PERM_SCOR|ID1_PERM_HEAD|ID1_PERM_GIRL)
+#define B4A (0600 | ID1_PERM_NSG|ID1_PERM_NHG|ID1_PERM_NHB|ID1_PERM_SCOR|ID1_PERM_SIDE|ID1_PERM_BOY)
+#define G4A (0700 | ID1_PERM_NSB|ID1_PERM_NHG|ID1_PERM_NHB|ID1_PERM_HCOR|ID1_PERM_SIDE|ID1_PERM_GIRL)
 
 /* In all of these setups in which people are facing, they are normal couples.  This makes initialization of things like star thru,
    ladies chain, and curlique work.  The setup for starting DPT has the appropriate sex for triple star thru. */
-Private setup test_setup_1x8  = {s1x8, 0, {0}, {{NORT(6) | SB, 0}, {SOUT(5) | HG, 0}, {SOUT(4) | HB, 0}, {NORT(7) | SG, 0}, {SOUT(2) | SB, 0}, {NORT(1) | HG, 0}, {NORT(0) | HB, 0}, {SOUT(3) | SG, 0}}, 0};
-Private setup test_setup_l1x8 = {s1x8, 0, {0}, {{SOUT(6) | SB, 0}, {NORT(5) | HG, 0}, {NORT(4) | HB, 0}, {SOUT(7) | SG, 0}, {NORT(2) | SB, 0}, {SOUT(1) | HG, 0}, {SOUT(0) | HB, 0}, {NORT(3) | SG, 0}}, 0};
-Private setup test_setup_dpt  = {s2x4, 0, {0}, {{EAST(3) | SG, 0}, {EAST(4) | HB, 0}, {WEST(5) | HG, 0}, {WEST(2) | SB, 0}, {WEST(7) | SG, 0}, {WEST(0) | HB, 0}, {EAST(1) | HG, 0}, {EAST(6) | SB, 0}}, 0};
-Private setup test_setup_cdpt = {s2x4, 0, {0}, {{WEST(7) | SG, 0}, {WEST(5) | HG, 0}, {EAST(4) | HB, 0}, {EAST(6) | SB, 0}, {EAST(3) | SG, 0}, {EAST(1) | HG, 0}, {WEST(0) | HB, 0}, {WEST(2) | SB, 0}}, 0};
-Private setup test_setup_rcol = {s2x4, 0, {0}, {{EAST(6) | SB, 0}, {EAST(5) | HG, 0}, {EAST(4) | HB, 0}, {EAST(7) | SG, 0}, {WEST(2) | SB, 0}, {WEST(1) | HG, 0}, {WEST(0) | HB, 0}, {WEST(3) | SG, 0}}, 0};
-Private setup test_setup_lcol = {s2x4, 0, {0}, {{WEST(6) | SB, 0}, {WEST(5) | HG, 0}, {WEST(4) | HB, 0}, {WEST(7) | SG, 0}, {EAST(2) | SB, 0}, {EAST(1) | HG, 0}, {EAST(0) | HB, 0}, {EAST(3) | SG, 0}}, 0};
-Private setup test_setup_8ch  = {s2x4, 0, {0}, {{EAST(6) | SB, 0}, {WEST(5) | HG, 0}, {EAST(4) | HB, 0}, {WEST(7) | SG, 0}, {WEST(2) | SB, 0}, {EAST(1) | HG, 0}, {WEST(0) | HB, 0}, {EAST(3) | SG, 0}}, 0};
-Private setup test_setup_tby  = {s2x4, 0, {0}, {{WEST(5) | HG, 0}, {EAST(6) | SB, 0}, {WEST(7) | SG, 0}, {EAST(4) | HB, 0}, {EAST(1) | HG, 0}, {WEST(2) | SB, 0}, {EAST(3) | SG, 0}, {WEST(0) | HB, 0}}, 0};
-Private setup test_setup_lin  = {s2x4, 0, {0}, {{SOUT(5) | HG, 0}, {SOUT(6) | SB, 0}, {SOUT(7) | SG, 0}, {SOUT(4) | HB, 0}, {NORT(1) | HG, 0}, {NORT(2) | SB, 0}, {NORT(3) | SG, 0}, {NORT(0) | HB, 0}}, 0};
-Private setup test_setup_lout = {s2x4, 0, {0}, {{NORT(6) | SB, 0}, {NORT(5) | HG, 0}, {NORT(4) | HB, 0}, {NORT(7) | SG, 0}, {SOUT(2) | SB, 0}, {SOUT(1) | HG, 0}, {SOUT(0) | HB, 0}, {SOUT(3) | SG, 0}}, 0};
-Private setup test_setup_rwv  = {s2x4, 0, {0}, {{NORT(6) | SB, 0}, {SOUT(5) | HG, 0}, {NORT(4) | HB, 0}, {SOUT(7) | SG, 0}, {SOUT(2) | SB, 0}, {NORT(1) | HG, 0}, {SOUT(0) | HB, 0}, {NORT(3) | SG, 0}}, 0};
-Private setup test_setup_lwv  = {s2x4, 0, {0}, {{SOUT(6) | SB, 0}, {NORT(5) | HG, 0}, {SOUT(4) | HB, 0}, {NORT(7) | SG, 0}, {NORT(2) | SB, 0}, {SOUT(1) | HG, 0}, {NORT(0) | HB, 0}, {SOUT(3) | SG, 0}}, 0};
-Private setup test_setup_r2fl = {s2x4, 0, {0}, {{NORT(6) | SB, 0}, {NORT(5) | HG, 0}, {SOUT(7) | SG, 0}, {SOUT(4) | HB, 0}, {SOUT(2) | SB, 0}, {SOUT(1) | HG, 0}, {NORT(3) | SG, 0}, {NORT(0) | HB, 0}}, 0};
-Private setup test_setup_l2fl = {s2x4, 0, {0}, {{SOUT(5) | HG, 0}, {SOUT(6) | SB, 0}, {NORT(4) | HB, 0}, {NORT(7) | SG, 0}, {NORT(1) | HG, 0}, {NORT(2) | SB, 0}, {SOUT(0) | HB, 0}, {SOUT(3) | SG, 0}}, 0};
+Private setup test_setup_1x8  = {s1x8, 0, {0}, {{NORT|B4A, 0}, {SOUT|G3A, 0}, {SOUT|B3A, 0}, {NORT|G4A, 0}, {SOUT|B2A, 0}, {NORT|G1A, 0}, {NORT|B1A, 0}, {SOUT|G2A, 0}}, 0};
+Private setup test_setup_l1x8 = {s1x8, 0, {0}, {{SOUT|B4A, 0}, {NORT|G3A, 0}, {NORT|B3A, 0}, {SOUT|G4A, 0}, {NORT|B2A, 0}, {SOUT|G1A, 0}, {SOUT|B1A, 0}, {NORT|G2A, 0}}, 0};
+Private setup test_setup_dpt  = {s2x4, 0, {0}, {{EAST|G2A, 0}, {EAST|B3A, 0}, {WEST|G3A, 0}, {WEST|B2A, 0}, {WEST|G4A, 0}, {WEST|B1A, 0}, {EAST|G1A, 0}, {EAST|B4A, 0}}, 0};
+Private setup test_setup_cdpt = {s2x4, 0, {0}, {{WEST|G4A, 0}, {WEST|G3A, 0}, {EAST|B3A, 0}, {EAST|B4A, 0}, {EAST|G2A, 0}, {EAST|G1A, 0}, {WEST|B1A, 0}, {WEST|B2A, 0}}, 0};
+Private setup test_setup_rcol = {s2x4, 0, {0}, {{EAST|B4A, 0}, {EAST|G3A, 0}, {EAST|B3A, 0}, {EAST|G4A, 0}, {WEST|B2A, 0}, {WEST|G1A, 0}, {WEST|B1A, 0}, {WEST|G2A, 0}}, 0};
+Private setup test_setup_lcol = {s2x4, 0, {0}, {{WEST|G2A, 0}, {WEST|B1A, 0}, {WEST|G1A, 0}, {WEST|B2A, 0}, {EAST|G4A, 0}, {EAST|B3A, 0}, {EAST|G3A, 0}, {EAST|B4A, 0}}, 0};
+Private setup test_setup_8ch  = {s2x4, 0, {0}, {{EAST|B4A, 0}, {WEST|G3A, 0}, {EAST|B3A, 0}, {WEST|G4A, 0}, {WEST|B2A, 0}, {EAST|G1A, 0}, {WEST|B1A, 0}, {EAST|G2A, 0}}, 0};
+Private setup test_setup_tby  = {s2x4, 0, {0}, {{WEST|G3A, 0}, {EAST|B4A, 0}, {WEST|G4A, 0}, {EAST|B3A, 0}, {EAST|G1A, 0}, {WEST|B2A, 0}, {EAST|G2A, 0}, {WEST|B1A, 0}}, 0};
+Private setup test_setup_lin  = {s2x4, 0, {0}, {{SOUT|G3A, 0}, {SOUT|B4A, 0}, {SOUT|G4A, 0}, {SOUT|B3A, 0}, {NORT|G1A, 0}, {NORT|B2A, 0}, {NORT|G2A, 0}, {NORT|B1A, 0}}, 0};
+Private setup test_setup_lout = {s2x4, 0, {0}, {{NORT|B4A, 0}, {NORT|G3A, 0}, {NORT|B3A, 0}, {NORT|G4A, 0}, {SOUT|B2A, 0}, {SOUT|G1A, 0}, {SOUT|B1A, 0}, {SOUT|G2A, 0}}, 0};
+Private setup test_setup_rwv  = {s2x4, 0, {0}, {{NORT|B4A, 0}, {SOUT|G3A, 0}, {NORT|B3A, 0}, {SOUT|G4A, 0}, {SOUT|B2A, 0}, {NORT|G1A, 0}, {SOUT|B1A, 0}, {NORT|G2A, 0}}, 0};
+Private setup test_setup_lwv  = {s2x4, 0, {0}, {{SOUT|B4A, 0}, {NORT|G3A, 0}, {SOUT|B3A, 0}, {NORT|G4A, 0}, {NORT|B2A, 0}, {SOUT|G1A, 0}, {NORT|B1A, 0}, {SOUT|G2A, 0}}, 0};
+Private setup test_setup_r2fl = {s2x4, 0, {0}, {{NORT|B4A, 0}, {NORT|G3A, 0}, {SOUT|G4A, 0}, {SOUT|B3A, 0}, {SOUT|B2A, 0}, {SOUT|G1A, 0}, {NORT|G2A, 0}, {NORT|B1A, 0}}, 0};
+Private setup test_setup_l2fl = {s2x4, 0, {0}, {{SOUT|G3A, 0}, {SOUT|B4A, 0}, {NORT|B3A, 0}, {NORT|G4A, 0}, {NORT|G1A, 0}, {NORT|B2A, 0}, {SOUT|B1A, 0}, {SOUT|G2A, 0}}, 0};
 
 
 
@@ -183,6 +189,14 @@ Private void test_starting_setup(call_list_kind cl, Const setup *test_setup)
             case selector_all:
                selector_for_initialize = selector_none;
                goto try_another_selector;
+            case selector_none:
+               /* When testing columns, we use an additional selector.  The way
+                  the test setups are arranged, these effectively select #1 and #2 in the
+                  column.  They make "<anyone> mark time" work. */
+               if (test_setup == &test_setup_rcol || test_setup == &test_setup_lcol) {
+                  selector_for_initialize = selector_headcorners;
+                  goto try_another_selector;
+               }
          }
       }
 

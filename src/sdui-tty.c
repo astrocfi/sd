@@ -30,11 +30,7 @@
  */
 
 #define UI_VERSION_STRING "1.9"
-
-/* See comments in sdmain.c regarding this string. */
-static char *id="@(#)$He" "ader: Sd: sdui-tty.c "
-   UI_VERSION_STRING
-   "  wba@apollo.hp.com  16 Jun 96 $";
+#define UI_TIME_STAMP "wba@apollo.hp.com  16 Jun 96 $"
 
 /* This file defines the following functions:
    uims_version_string
@@ -103,6 +99,8 @@ and the following data that are used by sdmatch.c :
 #include "sd.h"
 #include "sdmatch.h"
 
+/* See comments in sdmain.c regarding this string. */
+static Const char id[] = "@(#)$He" "ader: Sd: sdui-tty.c " UI_VERSION_STRING "  " UI_TIME_STAMP;
 
 static Const call_conc_option_state null_options = {
    selector_uninitialized,

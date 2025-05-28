@@ -21,9 +21,7 @@ static char *time_stamp = "sdui-x11.c Time-stamp: <96/05/01 12:49:02 gildea>";
  */
 
 #define UI_VERSION_STRING "1.17"
-
-/* See comments in sdmain.c regarding this string. */
-static char *id="@(#)$He" "ader: Sd: sdui-x11.c  " UI_VERSION_STRING "    gildea@lcs.mit.edu  24 Mar 95 $";
+#define UI_TIME_STAMP "gildea@lcs.mit.edu  24 Mar 95 $"
 
 /* This file defines the following functions:
    uims_version_string
@@ -76,22 +74,25 @@ static char *id="@(#)$He" "ader: Sd: sdui-x11.c  " UI_VERSION_STRING "    gildea
 #include <X11/Xaw/Dialog.h>
 #include <X11/Xaw/AsciiText.h>
 
-Private Cstring *tagger_menu_list[4];
-Private Cstring *circcer_menu_list;
-Private Cstring *selector_menu_list;
+/* See comments in sdmain.c regarding this string. */
+static Const char id[] = "@(#)$He" "ader: Sd: sdui-x11.c " UI_VERSION_STRING "  " UI_TIME_STAMP;
 
-Private Widget toplevel, cmdmenu, conceptspecialmenu;
-Private Widget conceptpopup, conceptlist;
-Private Widget lview, callview, conceptmenu, callmenu;
-Private Widget callbox, calltitle;
-Private Widget statuswin, txtwin;
-Private Widget resolvewin, resolvetitle, resolvemenu;
-Private Widget confirmpopup, confirmlabel;
-Private Widget choosepopup, choosebox, chooselabel, chooselist;
-Private Widget commentpopup, commentbox, outfilepopup, outfilebox, titlepopup, titlebox;
-Private Widget getoutpopup, getoutbox;
+static Cstring *tagger_menu_list[4];
+static Cstring *circcer_menu_list;
+static Cstring *selector_menu_list;
+
+static Widget toplevel, cmdmenu, conceptspecialmenu;
+static Widget conceptpopup, conceptlist;
+static Widget lview, callview, conceptmenu, callmenu;
+static Widget callbox, calltitle;
+static Widget statuswin, txtwin;
+static Widget resolvewin, resolvetitle, resolvemenu;
+static Widget confirmpopup, confirmlabel;
+static Widget choosepopup, choosebox, chooselabel, chooselist;
+static Widget commentpopup, commentbox, outfilepopup, outfilebox, titlepopup, titlebox;
+static Widget getoutpopup, getoutbox;
 #ifdef NEGLECT
-Private Widget neglectpopup, neglectbox;
+static Widget neglectpopup, neglectbox;
 #endif
 
 /* This is the order in which command buttons will appear on the screen.

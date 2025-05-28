@@ -5,7 +5,7 @@
 @settitle Sd
 @c @subtitle A Square Dance Caller's Helper
 @c
-@set Time-stamp: December 24, 1996
+@set Time-stamp: January 5, 1997
 @tex
 \global\setfont\smallrm\rmshape{8}{1000}
 \global\font\smallsy=cmsy9
@@ -16,7 +16,7 @@
     \kern-0.4pt\hrule}%
   \kern-.06em\raise0.4pt\hbox{$\rangle$}}}}
 @end tex
-@set sd-version 31.81
+@set sd-version 31.82
 @set full-manual
 @c %**end of header
 @iftex
@@ -48,7 +48,7 @@
 @vskip 0pt plus 1fill
 @end iftex
 
-Copyright @copyright{} 1992-1996 William B. Ackerman and Stephen Gildea
+Copyright @copyright{} 1992-1997 William B. Ackerman and Stephen Gildea
 
 @ignore
 Permission is granted to process this file through TeX and print the
@@ -207,6 +207,7 @@ Concept Notes
 * Assume Waves::                Assume Waves
 * Assuming a Quarter-Tag::      Assuming a Quarter-Tag
 * Designating Certain People::  Designating Certain People
+* Anyone Start::                Anyone Start
 * 12 Matrix and 16 Matrix::     12 Matrix and 16 Matrix
 
 @end menu
@@ -2657,13 +2658,14 @@ swing thru}, you might say @samp{ends divide}, and then have them @samp{star thr
 Note that @samp{ends divide} is the name of the call.  It is not an
 application of the @samp{ends} concept.  You must type it on one line,
 and you may not substitute another designator, such as @samp{sides}, for
-the word @samp{ends}.  So, for example, you might enter:
+the word @samp{ends}.  There is also a call @samp{ends divide and <anything>}.
+This call can have the ``anything'' subcall entered in the usual way, by placing
+it in brackets.  So, for example, you might type:
 @example
 @group
    heads start
    swing thru
-   ends divide
-   ends touch 1/4
+   ends divide and [touch 1/4]
    6x2 acey deucey
 @end group
 @end example
@@ -2825,6 +2827,7 @@ flip back while the others flip back}.
 * Assume Waves::                Assume Waves
 * Assuming a Quarter-Tag::      Assuming a Quarter-Tag
 * Designating Certain People::  Designating Certain People
+* Anyone Start::                Anyone Start
 * 12 Matrix and 16 Matrix::     12 Matrix and 16 Matrix
 @end menu
 
@@ -3741,7 +3744,7 @@ diamonds} concept is used from the kind of setup one obtains after a
 @samp{6x2 acey deucey} from facing diamonds.   The @code{common end lines/waves}
 concept is used from a parallelogram in which the ``wings'' are collided
 ends of the lines.
-@item 1x2/2x1/2x2/1x3/3x1/3x34x4
+@item 1x2/2x1/2x2/1x3/3x1/3x3/4x4
 These are straightforward.
 @item all 4 couples
 @item all 8
@@ -3998,7 +4001,7 @@ Or, from parallel waves, you could select:
    ping-pong circulate
 @end example
 
-@node Designating Certain People, 12 Matrix and 16 Matrix, Assuming a Quarter-Tag, Concept Notes
+@node Designating Certain People, Anyone Start, Assuming a Quarter-Tag, Concept Notes
 @section Designating Certain People
 
 There are six related concepts here.  You must have a clear
@@ -4223,7 +4226,117 @@ result setups are reassembled according to strict matrix positions.  That
 is, instead of a C1 phantom setup, a 4x4 matrix may result.
 This is a recognized C3A concept.
 
-@node 12 Matrix and 16 Matrix, , Designating Certain People, Concept Notes
+@node Anyone Start, 12 Matrix and 16 Matrix, Designating Certain People, Concept Notes
+@section Anyone Start
+
+It is often useful to designate that certain people are to start a call,
+with everyone joining in after the first part.
+There are two general ways to do this:
+@example
+@group
+   @code{<anyone> start}
+         or
+   @code{initially <anyone>}
+@end group
+@end example
+These are very nearly the same, and in many cases may be used
+interchangeably.  However, there are differences that you may
+need to be aware of.  These arise most often when the centers are
+the designated people.
+
+The concept @samp{<anyone> start} means that the designated people do
+their part of the start of the call.  They do this in the entire setup.
+That is, they are aware of the spots occupied by the others.
+
+The concept @samp{initially <anyone>} means that the @samp{<anyone>} concept
+is applied to the first part of the call.  What that means depends on what
+the formation is, and on who are designated.  If the centers are designated, they
+do the first part of the call, working in the center.  They are usually unaware
+of the other people around them.
+
+Suppose we have an hourglass and wish to have the centers start a
+@samp{reverse order alter the wave}.  The parts of @samp{reverse order alter the wave}
+are @samp{flip the diamond}, @samp{diamond circulate twice}, @samp{fan back},
+and @samp{swing}.  We clearly want the centers to work by themselves, flipping the
+center diamond.  The result will be twin diamonds, from which everyone can finish the
+call.
+
+@noindent We could say:
+@example
+@group
+   @code{initially centers reverse order alter the wave}
+@end group
+@end example
+The @samp{centers} concept picks out the center diamond, and tells them to
+work in that diamond.
+
+@noindent If we had said
+@example
+@group
+   @code{centers start reverse order alter the wave}
+@end group
+@end example
+it wouldn't work.  The centers would try to do their part of a @samp{flip the diamond}
+in the entire hourglass, which is impossible.
+
+@noindent A similar thing happens if we have a galaxy and call
+@example
+@group
+   @code{initially centers tally ho}.
+@end group
+@end example
+The centers recognize their 2x2 box, and do a @samp{1/2 circulate}.  If we had said
+@example
+@group
+   @code{centers start tally ho}
+@end group
+@end example
+the centers would have to try to do a @samp{1/2 circulate}
+in the galaxy, which is impossible.
+
+Suppose we have a galaxy and wish to have the centers begin a @samp{with confidence}.
+That is, the centers @samp{hinge} but the ends do @emph{not} do a @samp{1/2 circulate}.
+The first part of @samp{with confidence} is @samp{centers hinge}.  If we say
+@example
+@group
+   @code{centers start with confidence}
+@end group
+@end example
+the centers will do their part of a @samp{centers hinge} in the entire galaxy.
+That means, of course, that they will recognize themselves as centers, and will
+@samp{hinge}, so the call will work.  If we had said
+@example
+@group
+   @code{initially centers with confidence}
+@end group
+@end example
+the centers would recognize only their center box, from which a @samp{centers hinge}
+is impossible because the centers have been designated twice.
+
+In some cases you can do it either way.  From appropriate facing diamonds,
+you can call
+@example
+@group
+   @code{centers start swing the fractions}
+         or
+   @code{initially centers swing the fractions}
+         or just
+   swing the fractions
+@end group
+@end example
+
+@noindent From the setup obtained by having the centers @samp{step and fold} from a
+tidal wave, you can call
+@example
+@group
+   @code{ends start 2/3 recycle}
+         or
+   @code{initially ends 2/3 recycle}
+@end group
+@end example
+The ends know how to do the @samp{centers fold} in either case.
+
+@node 12 Matrix and 16 Matrix, , Anyone Start, Concept Notes
 @section 12 Matrix and 16 Matrix
 
 When the setup in which a call is to be performed is larger than 8 people

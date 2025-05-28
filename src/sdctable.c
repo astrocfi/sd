@@ -664,7 +664,7 @@ concept_descriptor concept_descriptor_table[] = {
 
 /* Miscellaneous concepts */
 
-#define mm__1_size 73
+#define mm__1_size 74
 #define mm__1_left 0
 #define mm__1_cross 2
 #define mm__1_grand 5
@@ -741,6 +741,7 @@ concept_descriptor concept_descriptor_table[] = {
    {"STRETCHED LINE",                        concept_new_stretch,               D, l_c2,         {0, 1}},
    {"STRETCHED WAVE",                        concept_new_stretch,               D, l_c2,         {0, 3}},
    {"STRETCHED COLUMN",                      concept_new_stretch,               D, l_c2,         {0, 4}},
+   {"STRETCHED DIAMOND",                     concept_new_stretch,               D, l_c3a,        {0, 19}},
    {"FERRIS",                                concept_ferris,                    D, l_c3x,        {0, 0}},
    {"RELEASE",                               concept_ferris,                    D, l_c3a,        {0, 1}},
 /* -------- column break -------- */

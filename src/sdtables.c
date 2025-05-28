@@ -55,6 +55,7 @@
    map_intlk_phantom_box
    map_phantom_dmd
    map_intlk_phantom_dmd
+   map_vsplit_f
    map_split_f
    map_intlk_f
    map_full_f
@@ -2352,6 +2353,17 @@ setup_attr setup_attrs[] = {
       (id_bit_table *) 0,
       {  (Cstring) 0,
          (Cstring) 0}},
+   /* sx1x16 */
+      {31,
+      (coordrec *) 0,
+      (coordrec *) 0,
+      (cm_hunk *) 0,
+      {b_nothing,   b_nothing},
+      { 0, 0},
+      FALSE,
+      (id_bit_table *) 0,
+      {  (Cstring) 0,
+         (Cstring) 0}},
    /* sfat2x8 */
       {15,
       (coordrec *) 0,
@@ -2538,6 +2550,7 @@ int begin_sizes[] = {
    12};        /* b_pbigdmd */
 
 
+/* The following 8 definitions are taken verbatim from sdinit.c . */
 #define B1A (0000 | ID1_PERM_NSG|ID1_PERM_NSB|ID1_PERM_NHG|ID1_PERM_HCOR|ID1_PERM_HEAD|ID1_PERM_BOY)
 #define G1A (0100 | ID1_PERM_NSG|ID1_PERM_NSB|ID1_PERM_NHB|ID1_PERM_SCOR|ID1_PERM_HEAD|ID1_PERM_GIRL)
 #define B2A (0200 | ID1_PERM_NSG|ID1_PERM_NHG|ID1_PERM_NHB|ID1_PERM_SCOR|ID1_PERM_SIDE|ID1_PERM_BOY)
@@ -2708,6 +2721,7 @@ Private map_thing map_intlk_phan_grand  = {{0, 1, 3, 2, 12, 13, 15, 14,       4,
 Private map_thing map_conc_phan_grand   = {{0, 1, 3, 2, 8, 9, 11, 10,         4, 5, 7, 6, 12, 13, 15, 14},           MPKIND__CONCPHAN,    0, 2,  s1x16,  s1x8,      0x000, 0};
         map_thing map_hv_2x4_2          = {{0, 1, 2, 3, 12, 13, 14, 15,       4, 5, 6, 7, 8, 9, 10, 11},             MPKIND__SPLIT,       0, 2,  s2x8,   s2x4,      0x000, 0};
         map_thing map_3x4_2x3           = {{1, 11, 8, 9, 10, 0,               3, 4, 6, 7, 5, 2},                     MPKIND__SPLIT,       0, 2,  s3x4,   s2x3,      0x005, 0};
+        map_thing map_vsplit_f          = {{13, 15, 11, 6, 8, 9, 10, 12,      0, 1, 2, 4, 5, 7, 3, 14},              MPKIND__SPLIT,       0, 2,  s4x4,   s2x4,      0x005, 0};
         map_thing map_split_f           = {{9, 11, 7, 2, 4, 5, 6, 8,          12, 13, 14, 0, 1, 3, 15, 10},          MPKIND__SPLIT,       0, 2,  s4x4,   s2x4,      0x000, 1};
         map_thing map_intlk_f           = {{10, 15, 3, 1, 4, 5, 6, 8,         12, 13, 14, 0, 2, 7, 11, 9},           MPKIND__INTLK,       0, 2,  s4x4,   s2x4,      0x000, 1};
         map_thing map_full_f            = {{12, 13, 14, 0, 4, 5, 6, 8,        10, 15, 3, 1, 2, 7, 11, 9},            MPKIND__CONCPHAN,    0, 2,  s4x4,   s2x4,      0x000, 1};

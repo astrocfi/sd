@@ -21,7 +21,7 @@
    database format version. */
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 88
+#define DATABASE_FORMAT_VERSION 89
 
 
 
@@ -172,10 +172,10 @@ typedef enum {
    s_rigger,
    s3x4,
    s2x6,
-   s1p5x8,    /* internal use only */
+   s1p5x8,   /* internal use only */
    s2x8,
    s4x4,
-   sx1x6,  /* Crossed 1x6's -- internal use only. */
+   sx1x6,    /* Crossed 1x6's -- internal use only. */
    s1x10,
    s1x12,
    s1x14,
@@ -198,6 +198,7 @@ typedef enum {
    s_alamo,
    sx4dmd,   /* These are too big to actually represent -- */
    s8x8,     /* we don't let them out of their cage. */
+   sx1x16,
    sfat2x8,  /* Same here.  These are big setups that are the size of 4x8's, */
    swide4x4, /* but only have 16 people.  The reason is to prevent loss of phantoms. */
    sbigh,
@@ -311,23 +312,25 @@ typedef enum {
    There is room for 12 of them. */
 
 /* This one must be 1!!!! */
-#define CAF__ROT 0x1
-#define CAF__FACING_FUNNY 0x2
+#define CAF__ROT                    0x1
+#define CAF__FACING_FUNNY           0x2
 /* Next one says this is concentrically defined --- the "end_setup" slot
    has the centers' end setup, and there is an extra slot with the ends' end setup. */
-#define CAF__CONCEND 0x4
+#define CAF__CONCEND                0x4
 /* Next one meaningful only if previous one is set. */
-#define CAF__ROT_OUT 0x8
+#define CAF__ROT_OUT                0x8
 /* This is a 2 bit field. */
-#define CAF__RESTR_MASK 0x30
+#define CAF__RESTR_MASK            0x30
 /* These next 3 are the nonzero values it can have. */
-#define CAF__RESTR_UNUSUAL 0x10
-#define CAF__RESTR_FORBID 0x20
-#define CAF__RESTR_RESOLVE_OK 0x30
-#define CAF__PREDS 0x40
-#define CAF__NO_CUTTING_THROUGH 0x80
+#define CAF__RESTR_UNUSUAL         0x10
+#define CAF__RESTR_FORBID          0x20
+#define CAF__RESTR_RESOLVE_OK      0x30
+#define CAF__PREDS                 0x40
+#define CAF__NO_CUTTING_THROUGH    0x80
 #define CAF__LATERAL_TO_SELECTEES 0x100
-#define CAF__VACATE_CENTER 0x200
+#define CAF__VACATE_CENTER        0x200
+#define CAF__OTHER_ELONGATE       0x400
+/* spare:                         0x800 */
 
 /* These qualifiers are "overloaded" -- their meaning depends on the starting setup. */
 /* BEWARE!!  This list must track the array "qualtab" in dbcomp.c . */
@@ -358,6 +361,8 @@ typedef enum {
    sq_not_split_dixie,
    sq_8_chain,
    sq_trade_by,
+   sq_facing_in,
+   sq_facing_out,
    sq_dmd_ctrs_rh,
    sq_dmd_ctrs_lh,
    sq_dmd_ctrs_1f,
@@ -368,6 +373,7 @@ typedef enum {
    sq_occupied_as_h,
    sq_occupied_as_qtag,
    sq_occupied_as_3x1tgl,
+   sq_ends_looking_out,
    sq_ripple_one_end,
    sq_ripple_both_ends,
    sq_ripple_centers,
@@ -391,6 +397,7 @@ typedef enum {
    cr_3x3_2fl_only,
    cr_4x4_2fl_only,
    cr_leads_only,
+   cr_trailers_only,
    cr_couples_only,
    cr_3x3couples_only,
    cr_4x4couples_only,
@@ -400,6 +407,8 @@ typedef enum {
    cr_nice_diamonds,
    cr_magic_only,
    cr_miniwaves,
+   cr_explodable,
+   cr_rev_explodable,
    cr_peelable_box,
    cr_ends_are_peelable,
    cr_siamese_in_quad,

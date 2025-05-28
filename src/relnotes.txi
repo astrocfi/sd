@@ -18,36 +18,96 @@
 @evenheading @thispage @| @|
 @end iftex
 @c %**end of header
-Copyright @copyright{} 1996 William B. Ackerman
+Copyright @copyright{} 1996-1997 William B. Ackerman
 @sp 2
 @example
-          RELEASE NOTES FOR SD VERSION 31.81
-         Database version = 31.81 format = 88.
+          RELEASE NOTES FOR SD VERSION 31.82
+         Database version = 31.82 format = 89.
        X11 UI version 1.17, SDTTY UI version 1.9.
 @end example
+
+****** Changes as of version 31.82 ******
+
+There is added detail in the manual describing subtleties of @samp{<anyone> start}
+and @samp{initially <anyone>}.  Please see the section ``Anyone Start'', at
+page 90.
+
+
+A number of minor improvements were made in various calls, such as:
+@example
+@group
+   Load the Boat (can be done from inverted lines)
+   Rip the Line (allow T-boned centers)
+   [Cross] Pair the Line (allow T-boned centers)
+   Explode and Reverse Explode (follow Callerlab definitions better)
+@end group
+@end example
+
+
+The behavior of the "cross concentric" concept has been modified slightly
+to bring it into conformance with modern usage.  When a cross concentric
+call takes a 1x4 to a 2x2 (e.g. recycle), the original center 1x4 will elongate
+their final 2x2 on the outside perpendicular to *THEIR OWN* original 1x4 axis,
+not the elongation of the entire setup.  The difference arises when the setup
+is a wave between two miniwaves (e.g. centers lockit from a tidal wave).
+A cross concentric recycle will have the original centers elongate perpendicular
+to their original center wave.  The resulting setup will be a "split square thru"
+type of setup.  See the excellent article on this topic in the April 1996 issue
+of the Zip Coder magazine.
+
+Some people do not agree with this.  In fact, it is contrary to an example
+diagram in the Callerlab C2 definitions, though the text of those definitions
+is not clear as to whether elongation is being measured relative to the whole
+setup or just the centers or ends.
+
+When this different behavior occurs, the program will print a warning:
+
+@example
+@group
+   "New ends should opt for setup perpendicular to their original (center)
+   line.  Beware:  This may be controversial."
+@end group
+@end example
+
+Proceed with caution in this area.  If you do not agree with this, do not use it.
+If you require the old behavior, enter a "stable concentric quarter right" after
+the cross concentric call to move the outsides to the other position.
 
 ****** Changes as of version 31.81 ******
 
 IMPORTANT NOTICE   IMPORTANT NOTICE   IMPORTANT NOTICE
 
 The word "<concept>" has been removed from the names of the two concepts:
-         do the <Nth> part                and
-         <anyone> work
+@example
+@group
+   do the <Nth> part                @r{and}
+   <anyone> work
+@end group
+@end example
 You just type them that way, as in:
-      centers work tandem acey deucey     or
-      do the 2nd part tandem remake
+@example
+@group
+   centers work tandem acey deucey     @r{or}
+   do the 2nd part tandem remake
+@end group
+@end example
 They will be printed in the transcript the same as before:
-      centers work tandem, acey deucey    or
-      do the 2nd part tandem, remake
-
+@example
+@group
+   centers work tandem, acey deucey    @r{or}
+   do the 2nd part tandem, remake
+@end group
+@end example
 The difference is that you NEVER type the word "<concept>".
 
 
 New designators:
+@example
    lead ends
    lead centers
    trailing ends
    trailing centers
+@end example
 These can be used, for example, to designate people for calls like "ripple".
 
 The program is much better at handling various types of perpendicular 1x2

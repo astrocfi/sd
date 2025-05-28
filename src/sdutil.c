@@ -238,7 +238,7 @@ Cstring warning_strings[] = {
    /*  warn__dmdconc_par         */   "+Ends should opt for setup parallel to their original diamond points -- concentric rule does not apply.",
    /*  warn__xclineconc_perpc    */   "+New ends should opt for setup perpendicular to their original (center) line.",
    /*  warn__xcdmdconc_perpc     */   "+New ends should opt for setup perpendicular to their original (center) diamond points.",
-   /*  warn__xclineconc_perpe    */   "+New ends should opt for setup perpendicular to the original ends' line.",
+   /*  warn__xclineconc_perpe    */   "+New ends should opt for setup perpendicular to their original (center) line.  Beware:  This may be controversial.",
    /*  warn__ctrstand_endscpls   */   " Centers work in tandem, ends as couples.",
    /*  warn__ctrscpls_endstand   */   " Centers work as couples, ends in tandem.",
    /*  warn__each2x2             */   "=Each 2x2.",
@@ -372,6 +372,7 @@ static restriction_thing mnwv_1x8      = {2, {0, 2, 4, 6, 1, 3, 5, 7},          
 
 static restriction_thing box_wave      = {0, {2, 0, 0, 2},                {0, 0, 2, 2},                   {0}, {0}, TRUE,  chk_box};            /* check for a "real" (walk-and-dodge type) box */
 static restriction_thing box_1face     = {0, {2, 2, 2, 2},                {0, 0, 0, 0},                   {0}, {0}, FALSE, chk_box};            /* check for a "one-faced" (reverse-the-pass type) box */
+static restriction_thing box_in_or_out = {0, {0, 0, 2, 2},                {0, 2, 2, 0},                   {0}, {0}, TRUE,  chk_box};            /* check for facing couples or back-to-back couples */
 static restriction_thing box_magic     = {0, {2, 0, 2, 0},                {0, 2, 0, 2},                   {0}, {0}, TRUE,  chk_box};            /* check for a "magic" (split-trade-circulate type) box */
 static restriction_thing s4x4_wave     = {0,   {0, 0, 0, 2, 0, 2, 0, 2, 2, 2, 2, 0, 2, 0, 2, 0},
                                                 {2, 0, 2, 0, 0, 0, 0, 2, 0, 2, 0, 2, 2, 2, 2, 0},          {0}, {0}, FALSE, chk_box};            /* check for 4 waves of consistent handedness and consistent headliner-ness. */
@@ -533,14 +534,22 @@ extern restriction_thing *get_restriction_thing(setup_kind k, assumption_thing t
 
    switch (k) {
       case s2x2:
-         if (t.assumption == cr_wave_only && (t.assump_col & 1) == 0)
-            restr_thing_ptr = &box_wave;
-         else if (t.assumption == cr_all_facing_same && (t.assump_col & 1) == 0)
-            restr_thing_ptr = &box_1face;
-         else if (t.assumption == cr_2fl_only && (t.assump_col & 1) == 0)
-            restr_thing_ptr = &box_1face;
-         else if (t.assumption == cr_magic_only && (t.assump_col & 1) == 0)
-            restr_thing_ptr = &box_magic;
+         if ((t.assump_col & 1) == 0) {
+            switch (t.assumption) {
+               case cr_wave_only:
+                  restr_thing_ptr = &box_wave;
+                  break;
+               case cr_all_facing_same: case cr_2fl_only:
+                  restr_thing_ptr = &box_1face;
+                  break;
+               case cr_trailers_only: case cr_leads_only:
+                  restr_thing_ptr = &box_in_or_out;
+                  break;
+               case cr_magic_only:
+                  restr_thing_ptr = &box_magic;
+                  break;
+            }
+         }
          break;
       case s4x4:
          if (t.assumption == cr_wave_only && (t.assump_col & 1) == 0)
@@ -2220,7 +2229,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
       uint32 i, k, t, u, v, w, mask;
       assumption_thing tt;
       int idx, limit, j;
-      uint32 qa0, qa1;
+      uint32 qa0, qa1, qa2, qa3;
       uint32 qaa[4];
       restriction_thing *rr;
 
@@ -2294,27 +2303,19 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
                default:
                   goto good;                 /* We don't understand the setup -- we'd better accept it. */
             }
+         case sq_facing_in:
+            tt.assump_both = 1;   /* To get facing-in only. */
+            rr = &box_in_or_out;
+            goto check_stuff;
+         case sq_facing_out:
+            tt.assump_both = 2;   /* To get facing-out only. */
+            rr = &box_in_or_out;
+            goto check_stuff;
          case sq_in_or_out:                    /* 2x2 - all facing in or all facing out */
             switch (ss->kind) {
                case s2x2:
-                  u = ss->people[0].id1 | ss->people[1].id1 | ss->people[2].id1 | ss->people[3].id1;
-
-                  if ((u & 1) == 0) {
-                     if ((t = ss->people[0].id1) != 0) { k |=  t; i &=  t; }
-                     if ((t = ss->people[1].id1) != 0) { k |=  t; i &=  t; }
-                     if ((t = ss->people[2].id1) != 0) { k |= ~t; i &= ~t; }
-                     if ((t = ss->people[3].id1) != 0) { k |= ~t; i &= ~t; }
-                     if (!(k & ~i & 2)) goto good;
-                  }
-                  else if ((u & 010) == 0) {
-                     if ((t = ss->people[0].id1) != 0) { k |=  t; i &=  t; }
-                     if ((t = ss->people[1].id1) != 0) { k |= ~t; i &= ~t; }
-                     if ((t = ss->people[2].id1) != 0) { k |= ~t; i &= ~t; }
-                     if ((t = ss->people[3].id1) != 0) { k |=  t; i &=  t; }
-                     if (!(k & ~i & 2)) goto good;
-                  }
-
-                  goto bad;
+                  rr = &box_in_or_out;
+                  goto check_stuff;
                case s1x2:
                   if ((t = ss->people[0].id1) != 0) { k |=  t; i &=  t; }
                   if ((t = ss->people[1].id1) != 0) { k |= ~t; i &= ~t; }
@@ -2692,6 +2693,13 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
                if ((search_qualifier) p->qualifier == kkk) goto good;
             }
             goto bad;
+         case sq_ends_looking_out:
+            if (ss->kind != s2x4) goto bad;
+            if ((t = ss->people[0].id1) && (t & d_mask) != d_north) goto bad;
+            if ((t = ss->people[3].id1) && (t & d_mask) != d_north) goto bad;
+            if ((t = ss->people[4].id1) && (t & d_mask) != d_south) goto bad;
+            if ((t = ss->people[7].id1) && (t & d_mask) != d_south) goto bad;
+            goto good;
          case sq_ripple_centers:
             k ^= (0xA82 ^ 0x144);
             /* FALL THROUGH!!!!!! */
@@ -2841,33 +2849,23 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
 
             goto good;
          case chk_box:
-            qa0 = 0; qa1 = 0;
-            u = 0;
-            for (idx=0 ; idx<=setup_attrs[ss->kind].setup_limits ; idx++)
-               u |= ss->people[idx].id1;
+            qa0 = (tt.assump_both << 1) & 2;
+            qa1 = tt.assump_both & 2;
+            qa2 = qa1;
+            qa3 = qa0;
 
-            if ((u & 1) == 0) {
-               for (idx=0 ; idx<=setup_attrs[ss->kind].setup_limits ; idx++) {
-                  if ((t = ss->people[idx].id1) != 0) {
-                     qa0 |= t^rr->map1[idx]^2;
-                     qa1 |= t^rr->map1[idx]^0;
-                  }
+            for (idx=0 ; idx<=setup_attrs[ss->kind].setup_limits ; idx++) {
+               if ((t = ss->people[idx].id1) != 0) {
+                  qa0 |= t^rr->map1[idx]^0;
+                  qa1 |= t^rr->map1[idx]^2;
+                  qa2 |= t^rr->map2[idx]^1;
+                  qa3 |= t^rr->map2[idx]^3;
                }
             }
-            else if ((u & 010) == 0) {
-               for (idx=0 ; idx<=setup_attrs[ss->kind].setup_limits ; idx++) {
-                  if ((t = ss->people[idx].id1) != 0) {
-                     qa0 |= t^rr->map2[idx]^0;
-                     qa1 |= t^rr->map2[idx]^2;
-                  }
-               }
-            }
-            else
-               goto bad;
 
-            if (((qa0 | tt.assump_both) & (qa1 | (tt.assump_both << 1)) & 2) != 0) goto bad;
+            if (!(qa0 & 3) || !(qa1 & 3) || !(qa2 & 3) || !(qa3 & 3)) goto good;
 
-            goto good;
+            goto bad;
          case chk_groups:
             limit = rr->map2[0];
       

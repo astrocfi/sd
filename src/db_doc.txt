@@ -2155,6 +2155,7 @@ There are a number of internal ones not shown here.  See the file ~/sd/restricti
    3x3_2fl_only,                 /* 1x6/2x6 - "2-faced lines" of 3 facing one way, 3 the other */
    4x4_2fl_only,                 /* 1x8/2x8 - "2-faced lines" of 4 facing one way, 4 the other */
    leads_only,                   /* 2x2 - all people are leads, and not T-boned */
+   trailers_only,                /* 2x2 - all people are trailers, and not T-boned */
    couples_only,                 /* 1x2 or 1x4 or 1x8 or 2x2 or 2x4 lines, or 2x4 columns - people are in genuine couples, not miniwaves */
    miniwaves,                    /* 1x2 or 1x4 or 1x8 or 2x2 or 2x4 lines, or 2x4 columns - people are in miniwaves of various handedness */
    3x3couples_only,              /* 1x3/1x6/2x3/2x6/1x12 lines - each group of 3 people are facing the same way.  UNDEFINED IF T-BONED
@@ -2164,6 +2165,8 @@ There are a number of internal ones not shown here.  See the file ~/sd/restricti
    qtag_like,                    /* dmd, qtag or ptpd - in some kind of single quarter-tag(s), as opposed to diamond(s), i.e. points look in or out */
    nice_diamonds,                /* dmd, qtag or ptpd - diamond(s) have consistent handedness, assuming they are diamonds and not qtags */
    magic_only,                   /* 3x2 or 4x2 - magic column; 2x4 - inverted lines; 1x4 - single inverted line; 2x2 - inverted box */
+   explodable,                   /* 1x4 - centers facing the same way */
+   reverse_explodable,           /* 1x4 - ends facing the same way */
    peelable_box,                 /* 2x2, 3x2, 4x2, 6x2 or 8x2 - all people in each column are facing same way */
    ends_are_peelable,            /* 2x4 - ends are a box with each person in genuine tandem */
    siamese_in_quad               /* Any 2x4 or 4x2 - the people in each quadrant, if they exist, face the same way */
@@ -2225,6 +2228,8 @@ There are a number of internal ones not shown here.  See the file ~/sd/restricti
    not_split_dixie,              /* 2x2 - invoked without "split" for dixie style */
    8_chain,                      /* 4x1/4x2 - setup is (single) 8 chain */
    trade_by,                     /* 4x1/4x2 - setup is (single) trade by */
+   facing_in,                    /* 2x2 - all people are trailers, and not T-boned */
+   facing_out,                   /* 2x2 - all people are leads, and not T-boned */
    dmd_ctrs_rh,                  /* dmd, qtag, ptpd, short6, spindle, 1x4 - the centers (2, 4, or 6 of them)
                                     are consistently in right-handed miniwaves; other people not checked at all */
    dmd_ctrs_lh,                  /* dmd, qtag, ptpd, short6, spindle, 1x4 - the centers (2, 4, or 6 of them)
@@ -2237,6 +2242,8 @@ There are a number of internal ones not shown here.  See the file ~/sd/restricti
    dmd_ctrs_1f,                  /* dmd, 1x4 - the centers (2 of them) are in a couple */
    said_triangle,                /* short6/pshort6 - caller said the word "triangle" */
    didnt_say_triangle            /* short6/pshort6 - caller didn't say the word "triangle" */
+   ends_looking_out              /* 2x4 lines - the ends are leads */
+   ripple stuff .......
    centers_sel                   /* 2x4/qtag - the centers are selected and the ends are not. */
    ends_sel                      /* 2x4/qtag - the ends are selected and the centers are not. */
    all_sel                       /* 1x1/1x2 - everyone in the setup is selected */

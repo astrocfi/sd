@@ -1551,10 +1551,12 @@ Private void do_concept_new_stretch(
       1  : line
       3  : wave
       4  : column
-      18 : box */
+      18 : box
+      19 : diamond */
 
    if (     (linesp == 18 && tempsetup.kind != s2x4) ||
-            ((linesp&16) == 0 && tempsetup.kind != s1x8))
+            (linesp == 19 && tempsetup.kind != s_qtag && tempsetup.kind != s_ptpd) ||
+            (!(linesp&16) && tempsetup.kind != s1x8))
       fail("Not in correct formation for this concept.");
 
    if ((linesp & 16) == 0) {
@@ -1581,8 +1583,16 @@ Private void do_concept_new_stretch(
       swap_people(&tempsetup, 2, 7);
       maps = MAPCODE(s1x4,2,MPKIND__SPLIT,0);
    }
+   else if (tempsetup.kind == s_qtag) {
+      swap_people(&tempsetup, 3, 7);
+      maps = MAPCODE(sdmd,2,MPKIND__SPLIT,1);
+   }
+   else if (tempsetup.kind == s_ptpd) {
+      swap_people(&tempsetup, 2, 6);
+      maps = MAPCODE(sdmd,2,MPKIND__SPLIT,0);
+   }
    else
-      fail("Stretched setup call didn't start in 2x4 or 1x8 setup.");
+      fail("Stretched setup call didn't start in appropriate setup.");
 
    new_divided_setup_move(&tempsetup, maps, phantest_ok, TRUE, result);
 }

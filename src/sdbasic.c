@@ -54,6 +54,19 @@
            11
            10
             9
+
+   sx1x16 =
+                     8
+                     9
+                    ...
+                    14
+                    15
+   0  1  ....  6  7     23 22 ... 17 16
+                    31
+                    30
+                    ...
+                    25
+                    24
 */
 
 
@@ -389,6 +402,14 @@ static int octtranslatev[64] = {
    0,  0,  0,  7,  0,  0,  0,  6,  0,  0,  0,  5,  0,  0,  0,  4,
    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  8,  9, 10, 11};
 
+static int hextranslateh[32] = {
+   0,  1,  2,  3,  4,  5,  6,  7,  0,  0,  0,  0,  0,  0,  0,  0,
+   8,  9, 10, 11, 12, 13, 14, 15,  0,  0,  0,  0,  0,  0,  0,  0};
+
+static int hextranslatev[32] = {
+   0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  2,  3,  4,  5,  6,  7,
+   0,  0,  0,  0,  0,  0,  0,  0,  8,  9, 10, 11, 12, 13, 14, 15};
+
 static int qdmtranslateh[32] = {
    12, 13, 14, 15,  0,  1,  0,  0,  0,   0,  0,  0,  3,  0,  2,  0,
    4,   5,  6,  7,  0,  9,  0,  8,  0,   0,  0,  0, 11,  0, 10,  0};
@@ -529,6 +550,7 @@ extern void do_stability(uint32 *personp, stability stab, int turning)
 extern restriction_thing *check_restriction(setup *ss, assumption_thing restr, uint32 flags)
 {
    uint32 q0, q1, q2, q3, q4, q5, q6, q7;
+   uint32 qa0, qa1, qa2, qa3;
    uint32 qaa[4];
    uint32 i, j, k, z, t;
    int idx, limit;
@@ -540,6 +562,12 @@ extern restriction_thing *check_restriction(setup *ss, assumption_thing restr, u
    if (restr.assumption == cr_nice_diamonds) {
       restr.assumption = cr_jright;
       restr.assump_col = 4;
+   }
+   else if (restr.assumption == cr_leads_only) {
+      restr.assump_both = 2;
+   }
+   else if (restr.assumption == cr_trailers_only) {
+      restr.assump_both = 1;
    }
 
    /* First, check for nice things. */
@@ -676,13 +704,6 @@ extern restriction_thing *check_restriction(setup *ss, assumption_thing restr, u
                case s1x2: mp = mapwkg2; goto check_wk;
             }
             break;
-         case cr_not_tboned:
-            /* check for a box that is not T-boned */
-            if (ss->kind == s2x2) {
-               if (((ss->people[0].id1 | ss->people[1].id1 | ss->people[2].id1 | ss->people[3].id1) & 011) == 011)
-                  goto restr_failed;
-            }
-            break;
          case cr_ends_are_peelable:
             /* check for ends in a "peelable" (everyone in genuine tandem somehow) box */
             if (ss->kind == s2x4) {
@@ -695,59 +716,66 @@ extern restriction_thing *check_restriction(setup *ss, assumption_thing restr, u
                   goto restr_failed;
             }
             break;
-      }
-
-      switch (ss->kind) {
-         case s2x2:
-            switch (restr.assumption) {
-               case cr_couples_only:
-                  /* check for everyone as a couple */
-                  q0 = 0; q1 = 0; q2 = 3; q3 = 3;
-                  q4 = 0; q5 = 0; q7 = 3; q6 = 3;
-                  if ((t = ss->people[0].id1) != 0) { q0 |= t; q2 &= t; q1 |= (t^2); q3 &= (t^2); }
-                  if ((t = ss->people[1].id1) != 0) { q0 |= t; q7 &= t; q1 |= (t^2); q6 &= (t^2); }
-                  if ((t = ss->people[2].id1) != 0) { q5 |= t; q7 &= t; q4 |= (t^2); q6 &= (t^2); }
-                  if ((t = ss->people[3].id1) != 0) { q5 |= t; q2 &= t; q4 |= (t^2); q3 &= (t^2); }
-                  if (((q0&3) && ((~q2)&3) && (q1&3) && ((~q3)&3)) ||
-                      ((q5&3) && ((~q7)&3) && (q4&3) && ((~q6)&3)))
-                     goto restr_failed;
-                  break;
-               case cr_miniwaves:
-                  /* check for everyone in miniwaves */
-                  q0 = 0; q1 = 0; q2 = 3; q3 = 3;
-                  q4 = 0; q5 = 0; q7 = 3; q6 = 3;
-                  if ((t = ss->people[0].id1) != 0) { q0 |= t;     q2 &= t;     q1 |= (t^2); q3 &= (t^2); }
-                  if ((t = ss->people[1].id1) != 0) { q0 |= (t^2); q7 &= t;     q1 |= t;     q6 &= (t^2); }
-                  if ((t = ss->people[2].id1) != 0) { q5 |= t;     q7 &= (t^2); q4 |= (t^2); q6 &= t; }
-                  if ((t = ss->people[3].id1) != 0) { q5 |= (t^2); q2 &= (t^2); q4 |= t;     q3 &= t; }
-                  if (((q0&3) && ((~q2)&3) && (q1&3) && ((~q3)&3)) ||
-                      ((q5&3) && ((~q7)&3) && (q4&3) && ((~q6)&3)))
-                     goto restr_failed;
-                  break;
-               case cr_leads_only:
-                  /* check for everyone a lead, and not T-boned */
-                  q0 = 0; q2 = 3;
-                  if ((t = ss->people[0].id1) != 0) { q0 |= t;     q2 &= t; }
-                  if ((t = ss->people[1].id1) != 0) { q0 |= t;     q2 &= (t^2); }
-                  if ((t = ss->people[2].id1) != 0) { q0 |= (t^2); q2 &= (t^2); }
-                  if ((t = ss->people[3].id1) != 0) { q0 |= (t^2); q2 &= t; }
-                  if ((q0&3) && ((~q2)&3))
-                     goto restr_failed;
-                  break;
-               case cr_peelable_box:
-                  /* check for a "peelable" (everyone in genuine tandem somehow) box */
-                  q0 = 0; q1 = 0; q2 = 3; q3 = 3;
-                  q4 = 0; q5 = 0; q7 = 3; q6 = 3;
-                  if ((t = ss->people[0].id1) != 0) { q0 |= t; q2 &= t; q1 |= (t^2); q3 &= (t^2); }
-                  if ((t = ss->people[1].id1) != 0) { q5 |= t; q2 &= t; q4 |= (t^2); q3 &= (t^2); }
-                  if ((t = ss->people[2].id1) != 0) { q5 |= t; q7 &= t; q4 |= (t^2); q6 &= (t^2); }
-                  if ((t = ss->people[3].id1) != 0) { q0 |= t; q7 &= t; q1 |= (t^2); q6 &= (t^2); }
-                  if (((q0&3) && ((~q2)&3) && (q1&3) && ((~q3)&3)) ||
-                      ((q5&3) && ((~q7)&3) && (q4&3) && ((~q6)&3)))
-                     goto restr_failed;
-                  break;
+         case cr_explodable:
+            if (ss->kind == s1x4) {
+               t = ss->people[1].id1;
+               z = ss->people[3].id1;
+               if ((z & t) && ((z ^ t) & 2)) goto restr_failed;
             }
             break;
+         case cr_rev_explodable:
+            if (ss->kind == s1x4) {
+               t = ss->people[0].id1;
+               z = ss->people[2].id1;
+               if ((z & t) && ((z ^ t) & 2)) goto restr_failed;
+            }
+            break;
+      }
+
+      if (ss->kind == s2x2) {
+         switch (restr.assumption) {
+            case cr_not_tboned:
+               /* check for a box that is not T-boned */
+               if (((ss->people[0].id1 | ss->people[1].id1 | ss->people[2].id1 | ss->people[3].id1) & 011) == 011)
+                  goto restr_failed;
+               break;
+            case cr_couples_only:
+               /* check for everyone as a couple */
+               q0 = 0; q1 = 0; q2 = 3; q3 = 3;
+               q4 = 0; q5 = 0; q7 = 3; q6 = 3;
+               if ((t = ss->people[0].id1) != 0) { q0 |= t; q2 &= t; q1 |= (t^2); q3 &= (t^2); }
+               if ((t = ss->people[1].id1) != 0) { q0 |= t; q7 &= t; q1 |= (t^2); q6 &= (t^2); }
+               if ((t = ss->people[2].id1) != 0) { q5 |= t; q7 &= t; q4 |= (t^2); q6 &= (t^2); }
+               if ((t = ss->people[3].id1) != 0) { q5 |= t; q2 &= t; q4 |= (t^2); q3 &= (t^2); }
+               if (((q0&3) && ((~q2)&3) && (q1&3) && ((~q3)&3)) ||
+                   ((q5&3) && ((~q7)&3) && (q4&3) && ((~q6)&3)))
+                  goto restr_failed;
+               break;
+            case cr_miniwaves:
+               /* check for everyone in miniwaves */
+               q0 = 0; q1 = 0; q2 = 3; q3 = 3;
+               q4 = 0; q5 = 0; q7 = 3; q6 = 3;
+               if ((t = ss->people[0].id1) != 0) { q0 |= t;     q2 &= t;     q1 |= (t^2); q3 &= (t^2); }
+               if ((t = ss->people[1].id1) != 0) { q0 |= (t^2); q7 &= t;     q1 |= t;     q6 &= (t^2); }
+               if ((t = ss->people[2].id1) != 0) { q5 |= t;     q7 &= (t^2); q4 |= (t^2); q6 &= t; }
+               if ((t = ss->people[3].id1) != 0) { q5 |= (t^2); q2 &= (t^2); q4 |= t;     q3 &= t; }
+               if (((q0&3) && ((~q2)&3) && (q1&3) && ((~q3)&3)) ||
+                   ((q5&3) && ((~q7)&3) && (q4&3) && ((~q6)&3)))
+                  goto restr_failed;
+               break;
+            case cr_peelable_box:
+               /* check for a "peelable" (everyone in genuine tandem somehow) box */
+               q0 = 0; q1 = 0; q2 = 3; q3 = 3;
+               q4 = 0; q5 = 0; q7 = 3; q6 = 3;
+               if ((t = ss->people[0].id1) != 0) { q0 |= t; q2 &= t; q1 |= (t^2); q3 &= (t^2); }
+               if ((t = ss->people[1].id1) != 0) { q5 |= t; q2 &= t; q4 |= (t^2); q3 &= (t^2); }
+               if ((t = ss->people[2].id1) != 0) { q5 |= t; q7 &= t; q4 |= (t^2); q6 &= (t^2); }
+               if ((t = ss->people[3].id1) != 0) { q0 |= t; q7 &= t; q1 |= (t^2); q6 &= (t^2); }
+               if (((q0&3) && ((~q2)&3) && (q1&3) && ((~q3)&3)) ||
+                   ((q5&3) && ((~q7)&3) && (q4&3) && ((~q6)&3)))
+                  goto restr_failed;
+               break;
+         }
       }
    }
 
@@ -755,11 +783,11 @@ extern restriction_thing *check_restriction(setup *ss, assumption_thing restr, u
 
    check_wk:   /* check the "awkward_centers" restriction. */
 
-   k = 2;
-   i = 2;
-   if ((t = ss->people[mp[0]].id1) != 0) { k &= ~t; }
-   if ((t = ss->people[mp[1]].id1) != 0) { i &=  t; }
-   if (!((k | i) & 2)) warn(warn__awkward_centers);
+
+
+   t = ss->people[mp[0]].id1;
+   z = ss->people[mp[1]].id1;
+   if ((z&t) && !((z | (~t)) & 2)) warn(warn__awkward_centers);
 
    goto getout;
 
@@ -767,13 +795,14 @@ extern restriction_thing *check_restriction(setup *ss, assumption_thing restr, u
 
    switch (restr_thing_ptr->check) {
       case chk_wave:
-         qaa[0] = 0; qaa[1] = 0;
+         qaa[0] = restr.assump_both;
+         qaa[1] = restr.assump_both << 1;
 
          for (idx=0; idx<restr_thing_ptr->size; idx++) {
             if ((t = ss->people[restr_thing_ptr->map1[idx]].id1) != 0) { qaa[idx&1] |=  t; qaa[(idx&1)^1] |= ~t; }
          }
 
-         if (((qaa[0] | restr.assump_both) & (qaa[1] | (restr.assump_both << 1)) & 2) != 0)
+         if ((qaa[0] & qaa[1] & 2) != 0)
             goto restr_failed;
 
          if (restr_thing_ptr->ok_for_assume) {
@@ -822,19 +851,21 @@ extern restriction_thing *check_restriction(setup *ss, assumption_thing restr, u
          }
          goto getout;
       case chk_box:
-         k = 0; j = 0; i = 0; z = 0;
+         qa0 = (restr.assump_both << 1) & 2;
+         qa1 = restr.assump_both & 2;
+         qa2 = qa1;
+         qa3 = qa0;
 
          for (idx=0 ; idx<=setup_attrs[ss->kind].setup_limits ; idx++) {
             if ((t = ss->people[idx].id1) != 0) {
-               j |= (t^restr_thing_ptr->map1[idx]);
-               k |= (t^restr_thing_ptr->map1[idx]^2);
-               i |= (t^restr_thing_ptr->map2[idx]^3);
-               z |= (t^restr_thing_ptr->map2[idx]^1);
+               qa0 |= (t^restr_thing_ptr->map1[idx]^0);
+               qa1 |= (t^restr_thing_ptr->map1[idx]^2);
+               qa2 |= (t^restr_thing_ptr->map2[idx]^1);
+               qa3 |= (t^restr_thing_ptr->map2[idx]^3);
             }
          }
 
-         if (!(k&3) || !(i&3) || !(j&3) || !(z&3))
-            goto getout;
+         if (!(qa0 & 3) || !(qa1 & 3) || !(qa2 & 3) || !(qa3 & 3)) goto getout;
 
          break;
       case chk_peelable:
@@ -957,9 +988,14 @@ Private void special_4_way_symm(
 
 {
    static int table_2x4[8] = {10, 15, 3, 1, 2, 7, 11, 9};
+
    static int table_2x8[16] = {
       12, 13, 14, 15, 31, 27, 23, 19,
       44, 45, 46, 47, 63, 59, 55, 51};
+
+   static int table_1x16[16] = {
+       0,  1,  2,  3,  4,  5,  6,  7,
+      16, 17, 18, 19, 20, 21, 22, 23};
 
    static int table_4dmd[16] = {
       7, 5, 14, 12, 16, 17, 18, 19,
@@ -998,6 +1034,10 @@ Private void special_4_way_symm(
       case s2x8:
          result->kind = s8x8;
          the_table = table_2x8;
+         break;
+      case s1x16:
+         result->kind = sx1x16;
+         the_table = table_1x16;
          break;
       case s4dmd:
          result->kind = sx4dmd;
@@ -1134,7 +1174,6 @@ Private int divide_the_setup(
    setup *ss,
    uint32 *newtb_p,
    callarray *calldeflist,
-   int orig_elongation,
    int *desired_elongation_p,
    setup *result)
 {
@@ -1152,7 +1191,7 @@ Private int divide_the_setup(
    setup_command conc_cmd;
    uint32 must_do_concentric = ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_KMASK;
    long_boolean matrix_aware =
-         (ss->cmd.callspec->callflags1 & CFLAG1_12_16_MATRIX_MEANS_SPLIT) &&
+         (callflags1 & CFLAG1_12_16_MATRIX_MEANS_SPLIT) &&
          (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX);
 
    /* It will be helpful to have a mask of where the
@@ -1471,8 +1510,6 @@ Private int divide_the_setup(
             We signify that by reverting to the original elongation,
             overriding anything that may have been in the call definition. */
 
-         *desired_elongation_p = orig_elongation;
-
          /* Tentatively choose a map.  We may change it later to "map_2x2v". */
          division_code = MAPCODE(s1x2,2,MPKIND__SPLIT,1);
 
@@ -1760,7 +1797,24 @@ Private int divide_the_setup(
             return 1;
          }
       case s4x4:
-         /* The only way this can be legal is if we can identify
+         /* The call has no applicable 4x4 definition. */
+         /* First, check whether it has 2x4/4x2 definitions, and divide the setup if so,
+            and if the call permits it. */
+
+         if ((callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) || (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX)) {
+            if (        (!(newtb & 010) || assoc(b_4x2, ss, calldeflist)) &&
+                        (!(newtb & 001) || assoc(b_2x4, ss, calldeflist))) {
+               division_maps = &map_vsplit_f;    /* Split to left and right halves. */
+               goto divide_us_no_recompute;
+            }
+            else if (   (!(newtb & 001) || assoc(b_4x2, ss, calldeflist)) &&
+                        (!(newtb & 010) || assoc(b_2x4, ss, calldeflist))) {
+               division_code = MAPCODE(s2x4,2,MPKIND__SPLIT,1);    /* Split to bottom and top halves. */
+               goto divide_us_no_recompute;
+            }
+         }
+
+         /* The only other way this can be legal is if we can identify
             smaller setups of all real people and can do the call on them.  For
             example, if the outside phantom lines are fully occupied and the inside
             ones empty, we could do a swing-thru.  We also identify Z's from which
@@ -2358,7 +2412,7 @@ Private int divide_the_setup(
                had previously set perpendicular to the 1x4 axis, overriding anything that may
                have been in the call definition. */
 
-            *desired_elongation_p = orig_elongation ^ 3;
+            *desired_elongation_p ^= 3;
             /* If the flags were zero and we complemented them so that both are set, that's not good. */
             if (*desired_elongation_p == 3)
                *desired_elongation_p = 0;
@@ -2427,8 +2481,7 @@ Private int divide_the_setup(
       if (!(result->people[2].id1 | result->people[3].id1 | result->people[8].id1 | result->people[9].id1)) {
          /* Inner spots are empty. */
          setup temp = *result;
-         static Const veryshort inner_2x6[8] = {
-            0, 1, 4, 5, 6, 7, 10, 11};
+         static Const veryshort inner_2x6[8] = {0, 1, 4, 5, 6, 7, 10, 11};
 
          gather(result, &temp, inner_2x6, 7, 0);
          result->kind = s2x4;
@@ -2436,8 +2489,7 @@ Private int divide_the_setup(
       else if (!(result->people[0].id1 | result->people[5].id1 | result->people[6].id1 | result->people[11].id1)) {
          /* Outer spots are empty. */
          setup temp = *result;
-         static Const veryshort outer_2x6[8] = {
-            1, 2, 3, 4, 7, 8, 9, 10};
+         static Const veryshort outer_2x6[8] = {1, 2, 3, 4, 7, 8, 9, 10};
 
          gather(result, &temp, outer_2x6, 7, 0);
          result->kind = s2x4;
@@ -2460,8 +2512,7 @@ Private int divide_the_setup(
                   result->people[18].id1 | result->people[23].id1 | result->people[12].id1 | result->people[17].id1)) {
          /* Outer spots are empty. */
          setup temp = *result;
-         static Const veryshort inner_4x6[16] = {
-            4, 7, 22, 8, 13, 14, 15, 21, 16, 19, 10, 20, 1, 2, 3, 9};
+         static Const veryshort inner_4x6[16] = {4, 7, 22, 8, 13, 14, 15, 21, 16, 19, 10, 20, 1, 2, 3, 9};
 
          gather(result, &temp, inner_4x6, 15, 0);
          result->kind = s4x4;
@@ -2501,6 +2552,7 @@ extern void basic_move(
    uint32 matrix_check_flag = 0;
    callarray *goodies;
    uint32 search_concepts;
+   uint32 search_temp;
    int real_index, northified_index;
    int num, halfnum, final_numout;
    uint32 collision_mask;
@@ -2508,13 +2560,14 @@ extern void basic_move(
    uint32 result_mask;
    personrec newpersonlist[24];
    int newplacelist[24];
-   int orig_elongation;
+   int orig_elongation = 0;
    int inconsistent_rotation, inconsistent_setup;
    long_boolean four_way_startsetup;
    uint32 resultflags = 0;
    int desired_elongation = 0;
    long_boolean funny_ok1 = FALSE;
    long_boolean funny_ok2 = FALSE;
+   long_boolean other_elongate = FALSE;
    calldef_block *qq;
    callspec_block *callspec = ss->cmd.callspec;
    uint64 final_concepts = ss->cmd.cmd_final_flags;
@@ -2533,6 +2586,7 @@ extern void basic_move(
       It will only have good stuff if splitting actually occurs. */
 
    if (ss->kind == s_normal_concentric && ss->inner.skind == s1x4 && ss->outer.skind == nothing) {
+      tbonetest = 0;
       for (j=0; j<4; j++) tbonetest |= ss->people[j].id1;
       ss->kind = s1x8;
       ss->rotation = ss->inner.srotation;
@@ -2550,6 +2604,7 @@ extern void basic_move(
          /* Do nothing, which will cause an error. */
       }
       else {
+         tbonetest = 0;
          for (j=0; j<4; j++) tbonetest |= ss->people[j].id1;
          ss->kind = s2x4;
          ss->rotation = ss->inner.srotation;
@@ -2599,75 +2654,66 @@ extern void basic_move(
 
    switch (ss->kind) {
       case s2x2: case s_short6:
-         desired_elongation = ss->cmd.prior_elongation_bits;
+         orig_elongation = ss->cmd.prior_elongation_bits;
          break;
       case s1x2: case s1x4: case sdmd:
-         desired_elongation = 2 - (ss->rotation & 1);
+         orig_elongation = 2 - (ss->rotation & 1);
          break;
    }
 
-   orig_elongation = desired_elongation;   /* We may need this later. */
+   desired_elongation = orig_elongation & 3;
 
-   if (callspec->callflags1 & CFLAG1_PARALLEL_CONC_END) desired_elongation ^= 3;
-   /* If the flags were zero and we complemented them so that both are set, that's not good. */
-   if ((desired_elongation&3) == 3)
-      desired_elongation ^= 3;
+   /* Attend to a few details, but only if there are real people present. */
 
-   if (!(tbonetest & 011)) {
-      result->kind = nothing;
-      result->result_flags = desired_elongation & 3;
-      return;
-   }
+   if (newtb) {
+      switch (ss->kind) {
+         case s2x2:
+            /* Now we do a special check for split-square-thru or split-dixie-style types of things. */
 
-   /* Attend to a few details. */
+            if (final_concepts.final & (FINAL__SPLIT_SQUARE_APPROVED | FINAL__SPLIT_DIXIE_APPROVED)) {
+               uint32 i1, i2, p1, p2;
 
-   switch (ss->kind) {
-      case s2x2:
-         /* Now we do a special check for split-square-thru or split-dixie-style types of things. */
+               ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
 
-         if (final_concepts.final & (FINAL__SPLIT_SQUARE_APPROVED | FINAL__SPLIT_DIXIE_APPROVED)) {
-            uint32 i1, i2, p1, p2;
+               /* Find out who are facing each other directly and will therefore start. */
 
-            ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
+               if (((ss->people[2].id1 & d_mask) == d_west) && ((ss->people[3].id1 & d_mask) == d_east))
+                  i1 = 0;
+               else if (((ss->people[3].id1 & d_mask) == d_north) && ((ss->people[0].id1 & d_mask) == d_south))
+                  i1 = 1;
+               else if (((ss->people[0].id1 & d_mask) == d_east) && ((ss->people[1].id1 & d_mask) == d_west))
+                  i1 = 2;
+               else if (((ss->people[1].id1 & d_mask) == d_south) && ((ss->people[2].id1 & d_mask) == d_north))
+                  i1 = 3;
+               else
+                  fail("People are not in correct position for split call.");
 
-            /* Find out who are facing each other directly and will therefore start. */
+               i2 = (i1 + 1) & 3;
+               p1 = ss->people[i1].id1;
+               p2 = ss->people[i2].id1;
 
-            if (((ss->people[2].id1 & d_mask) == d_west) && ((ss->people[3].id1 & d_mask) == d_east))
-               i1 = 0;
-            else if (((ss->people[3].id1 & d_mask) == d_north) && ((ss->people[0].id1 & d_mask) == d_south))
-               i1 = 1;
-            else if (((ss->people[0].id1 & d_mask) == d_east) && ((ss->people[1].id1 & d_mask) == d_west))
-               i1 = 2;
-            else if (((ss->people[1].id1 & d_mask) == d_south) && ((ss->people[2].id1 & d_mask) == d_north))
-               i1 = 3;
-            else
-               fail("People are not in correct position for split call.");
+               /* Demand that the other people are facing the shoulders of the people who start. */
+               if (((p1 & (BIT_PERSON | 3)) != (i1 ^ (BIT_PERSON | 2))) || ((p2 ^ p1) & d_mask))
+                  fail("People are not in correct position for split call.");
 
-            i2 = (i1 + 1) & 3;
-            p1 = ss->people[i1].id1;
-            p2 = ss->people[i2].id1;
+               /* Now do the required transformation, if it is a "split square thru" type.
+                  For "split dixie style" stuff, do nothing -- the database knows what to do. */
 
-            /* Demand that the other people are facing the shoulders of the people who start. */
-            if (((p1 & (BIT_PERSON | 3)) != (i1 ^ (BIT_PERSON | 2))) || ((p2 ^ p1) & d_mask))
-               fail("People are not in correct position for split call.");
+               if (!(final_concepts.final & FINAL__SPLIT_DIXIE_APPROVED)) {
+                  swap_people(ss, i1, i2);
+                  copy_rot(ss, i1, ss, i1, 033);
+                  copy_rot(ss, i2, ss, i2, 011);
 
-            /* Now do the required transformation, if it is a "split square thru" type.
-               For "split dixie style" stuff, do nothing -- the database knows what to do. */
-
-            if (!(final_concepts.final & FINAL__SPLIT_DIXIE_APPROVED)) {
-               swap_people(ss, i1, i2);
-               copy_rot(ss, i1, ss, i1, 033);
-               copy_rot(ss, i2, ss, i2, 011);
-   
-               /* Repair the damage. */
-               newtb = ss->people[0].id1 | ss->people[1].id1 | ss->people[2].id1 | ss->people[3].id1;
+                  /* Repair the damage. */
+                  newtb = ss->people[0].id1 | ss->people[1].id1 | ss->people[2].id1 | ss->people[3].id1;
+               }
             }
-         }
-         break;
-      case s_qtag:
-         if (fudged && !(callspec->callflags1 & CFLAG1_FUDGE_TO_Q_TAG))
-            fail("Can't do this call from arbitrary 3x4 setup.");
-         break;
+            break;
+         case s_qtag:
+            if (fudged && !(callspec->callflags1 & CFLAG1_FUDGE_TO_Q_TAG))
+               fail("Can't do this call from arbitrary 3x4 setup.");
+            break;
+      }
    }
 
    /* Many of the remaining final concepts (all of the heritable ones
@@ -2675,11 +2721,12 @@ extern void basic_move(
       determine what call definition we will get. */
 
    search_concepts = final_concepts.herit & ~INHERITFLAG_FUNNY;
+   search_temp = search_concepts;
 
-   calldeflist = 0;
+foobar:
 
    for (qq = callspec->stuff.arr.def_list; qq; qq = qq->next) {
-      if (qq->modifier_seth == search_concepts) {
+      if (qq->modifier_seth == search_temp) {
          if (qq->modifier_level > calling_level && !(ss->cmd.cmd_misc_flags & CMD_MISC__NO_CHECK_MOD_LEVEL)) {
             if (allowing_all_concepts)
                warn(warn__bad_modifier_level);
@@ -2687,9 +2734,15 @@ extern void basic_move(
                fail("Use of this modifier on this call is not allowed at this level.");
          }
          calldeflist = qq->callarray_list;
-         break;
+         goto use_this_calldeflist;
       }
    }
+
+   /* We didn't find anything. */
+
+   if (matrix_check_flag != 0) goto need_to_divide;
+
+   calldeflist = 0;
 
    use_this_calldeflist:
 
@@ -2744,7 +2797,7 @@ extern void basic_move(
                      the call definition (the "assoc" stuff), we assume the call wants lines, since
                      it seems that that is true for all calls that have the "12_16_matrix_means_split" property. */
    
-                  if (tbonetest & 1) {
+                  if (newtb & 1) {    /* If the setup is empty and newtb is zero, it doesn't matter what we do. */
                      division_code = ~0;
                      division_maps = &map_4x4v;
                   }
@@ -2800,8 +2853,11 @@ extern void basic_move(
             four_way_startsetup = TRUE;
          }
          else {
-            if (newtb & 010) linedefinition = assoc(key1, ss, calldeflist);
-            if (newtb & 1) coldefinition = assoc(key2, ss, calldeflist);
+            /* If the setup is empty, get whatever definitions we can get, so that
+               we can find the "CFLAG1_PARALLEL_CONC_END" bit,
+               also known as the "other_elongate" bit. */
+            if (!newtb || (newtb & 010)) linedefinition = assoc(key1, ss, calldeflist);
+            if (!newtb || (newtb & 1)) coldefinition = assoc(key2, ss, calldeflist);
          }
       }
    }
@@ -2866,11 +2922,8 @@ extern void basic_move(
          a 2x1 definition, then the splitting from a 2x2 would be ambiguous.)
          So we have to fix that. */
 
-      if (ss->kind == s1x2 && (newtb & 011) == 011 && (!linedefinition || !coldefinition)) {
-         j = divide_the_setup(ss, &newtb, calldeflist, orig_elongation, &desired_elongation, result);
-         if (j == 1) goto un_mirror;
-         else if (j == 2) goto search_for_call_def;        /* Try again. */
-      }
+      if (ss->kind == s1x2 && (newtb & 011) == 011 && (!linedefinition || !coldefinition))
+         goto need_to_divide;
 
       goto do_the_call;
    }
@@ -2917,8 +2970,6 @@ extern void basic_move(
       why there is no definition, and we need to call "divide_the_setup" to fix it. */
 
    if (matrix_check_flag == 0 && !(ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_MASK)) {
-      uint32 search_stuff;
-
       if (ss->kind == s2x6 || ss->kind == s3x4 || ss->kind == s1x12) matrix_check_flag = INHERITFLAG_12_MATRIX;
       else if (ss->kind == s2x8 || ss->kind == s4x4 || ss->kind == s1x16) matrix_check_flag = INHERITFLAG_16_MATRIX;
 
@@ -2960,35 +3011,29 @@ extern void basic_move(
 
          search_concepts &= ~matrix_check_flag;
          ss->cmd.cmd_final_flags.herit &= ~matrix_check_flag;
-         search_stuff = search_concepts;
+         search_temp = search_concepts;
          ss->cmd.cmd_misc_flags |= CMD_MISC__EXPLICIT_MATRIX;
       }
-      else {
-         search_stuff = matrix_check_flag | search_concepts;
-      }
+      else
+         search_temp = matrix_check_flag | search_concepts;
 
-      if ((ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX) && matrix_check_flag != 0) {
-         for (qq = callspec->stuff.arr.def_list; qq; qq = qq->next) {
-            if (qq->modifier_seth == search_stuff) {
-               if (qq->modifier_level > calling_level && !(ss->cmd.cmd_misc_flags & CMD_MISC__NO_CHECK_MOD_LEVEL)) {
-                  if (allowing_all_concepts)
-                     warn(warn__bad_modifier_level);
-                  else
-                     fail("Use of this modifier on this call is not allowed at this level.");
-               }
-               calldeflist = qq->callarray_list;
-               goto use_this_calldeflist;
-            }
-         }
-      }
+      if ((ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX) && matrix_check_flag != 0)
+         goto foobar;
+   }
+
+   /* We need to divide the setup. */
+
+   need_to_divide:
+
+   if (!newtb) {
+      result->kind = nothing;
+      goto un_mirror;
    }
 
    if (!calldeflist)
       fail("Can't do this call with this modifier.");
 
-   /* We need to divide the setup. */
-
-   j = divide_the_setup(ss, &newtb, calldeflist, orig_elongation, &desired_elongation, result);
+   j = divide_the_setup(ss, &newtb, calldeflist, &desired_elongation, result);
    if (j == 1) goto un_mirror;                     /* It divided and did the call.  We are done. */
    else if (j == 2) goto search_for_call_def;      /* It did some necessary expansion or transformation,
                                                       but did not do the call.  Try again. */
@@ -3004,13 +3049,25 @@ extern void basic_move(
       fail("Can't do \"snag/mystic\" with this call.");
 
    ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
-
    funny = final_concepts.herit & INHERITFLAG_FUNNY;
    inconsistent_rotation = 0;
    inconsistent_setup = 0;
 
    if (funny && (!(calldeflist->callarray_flags & CAF__FACING_FUNNY)))
       fail("Can't do this call 'funny'.");
+
+   if (callspec->callflags1 & CFLAG1_PARALLEL_CONC_END) other_elongate = TRUE;
+   if (coldefinition && (coldefinition->callarray_flags & CAF__OTHER_ELONGATE)) other_elongate = TRUE;
+   if (linedefinition && (linedefinition->callarray_flags & CAF__OTHER_ELONGATE)) other_elongate = TRUE;
+
+   if (other_elongate) desired_elongation ^= 3;
+   /* If the flags were zero and we complemented them so that both are set, that's not good. */
+   if (desired_elongation == 3) desired_elongation ^= 3;
+
+   if (!newtb) {
+      result->kind = nothing;   /* Note that we get the benefit of the "CFLAG1_PARALLEL_CONC_END" stuff here.  */
+      goto un_mirror;           /*   This means that a counter rotate in an empty 1x2 will still change shape. */
+   }
 
    /* Check that "linedefinition" has been set up if we will need it. */
 
@@ -3157,10 +3214,11 @@ extern void basic_move(
       outer_inners[0].rotation = (goodies->callarray_flags & CAF__ROT_OUT) ? 1 : 0;
       outer_inners[1].rotation = goodies->callarray_flags & CAF__ROT;
 
-      /* For calls defined by array with concentric end setup, the "parallel_conc_end" flag
+      /* For calls defined by array with concentric end setup, the "other_elongate" flag,
+         which comes from "CFLAG1_PARALLEL_CONC_END" or "CAF__OTHER_ELONGATE",
          turns on the outer elongation. */
       outer_elongation = outer_inners[0].rotation;
-      if (callspec->callflags1 & CFLAG1_PARALLEL_CONC_END) outer_elongation ^= 1;
+      if (other_elongate) outer_elongation ^= 1;
 
       normalize_concentric(schema_concentric, 1, outer_inners, outer_elongation, result);
 
@@ -3472,6 +3530,25 @@ extern void basic_move(
             else if ((lilresult_mask[0] & 0x77770FFFUL) != 0 || (lilresult_mask[1] & 0x77770FFFUL) != 0)
                fail("Call went to improperly-formed setup.");
          }
+
+
+
+
+         else if (result->kind == sx1x16) {
+            /* See if people landed on 1x16 spots. */
+            result->kind = s1x16;
+            permuter = hextranslateh;
+
+            if ((lilresult_mask[0] & 0x00FF00FFUL) == 0) {
+               permuter = hextranslatev;
+               rotator = 1;
+            }
+            else if ((lilresult_mask[0] & 0xFF00FF00UL) != 0)
+               fail("Call went to improperly-formed setup.");
+         }
+
+
+
          else if (result->kind == sx4dmd) {
             /* See if people landed on quad diamond spots. */
 

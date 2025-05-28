@@ -168,10 +168,10 @@ printed from the file @file{sd_doc.ps}.
 If you are on the Internet, you can read Sd documentation using the
 World Wide Web.  Give the locator
 @ifclear html
-@t{http://www.x.org/misc/sd/}
+@t{http://www.gildea.com/sd/}
 @end ifclear
 @ifset html
-@t{<A HREF="http://www.x.org/misc/sd/">http://www.x.org/misc/sd/</A>}
+@t{<A HREF="http://www.gildea.com/sd/">http://www.gildea.com/sd/</A>}
 @end ifset
 to your WWW browser program.
 
@@ -187,7 +187,7 @@ The price is $4 (price valid for 1996).
 If you want a different format instead, please say so.
 
 Sd and Sdtty are also available via anonymous FTP from the directory
-@file{misc/sd/} on host ftp.x.org.
+@file{sd/} on host ftp.gildea.com.
 FTP is the Internet file transfer protocol.
 
 The file
@@ -195,7 +195,7 @@ The file
 @file{install.exe}
 @end ifclear
 @ifset html
-@file{<A HREF="ftp://ftp.x.org/misc/sd/install.exe">install.exe</A>}
+@file{<A HREF="ftp://ftp.gildea.com/sd/install.exe">install.exe</A>}
 @end ifset
 is the Sdtty program for installation on PC's.  It is the same file as
 @samp{INSTALL.EXE} that is furnished on a floppy disk.
@@ -203,10 +203,10 @@ is the Sdtty program for installation on PC's.  It is the same file as
 If you are on the Internet, you can download the program using the
 World Wide Web.  Give the locator
 @ifclear html
-@t{http://www.x.org/misc/sd/}
+@t{http://www.gildea.com/sd/}
 @end ifclear
 @ifset html
-@t{<A HREF="http://www.x.org/misc/sd/">http://www.x.org/misc/sd/</A>}
+@t{<A HREF="http://www.gildea.com/sd/">http://www.gildea.com/sd/</A>}
 @end ifset
 to your WWW browser program.
 
@@ -215,7 +215,7 @@ Pre-built versions for various Unix-style systems are available in the same
 FTP directory;
 @end ifclear
 @ifset html
-<A HREF="ftp://ftp.x.org/misc/sd/">FTP directory</A>;
+<A HREF="ftp://ftp.gildea.com/sd/">FTP directory</A>;
 @end ifset
 check to see if there is a binary for your platform.
 The file
@@ -223,7 +223,7 @@ The file
 @file{Manifest}
 @end ifclear
 @ifset html
-@file{<A HREF="ftp://ftp.x.org/misc/sd/Manifest">Manifest</A>}
+@file{<A HREF="ftp://ftp.gildea.com/sd/Manifest">Manifest</A>}
 @end ifset
 contains a description of all the files in this directory.
 
@@ -356,14 +356,14 @@ but modification of them is forbidden by copyright law.
 @node Author Contact, Acknowledgements, Licensing Terms, Intro
 @unnumberedsec How to Contact the Authors
 
-The Internet mailing list @code{sd}, hosted at @code{x.org}, is for
+The Internet mailing list @code{sd}, hosted at @code{lists.best.com}, is for
 discussion of Sd
 and announcements of new versions.  Send email to
 @ifclear html
-@code{sd-request@@x.org}
+@code{sd-request@@lists.best.com}
 @end ifclear
 @ifset html
-@code{<A HREF="mailto:sd-request@@x.org">sd-request@@x.org</A>}
+@code{<A HREF="mailto:sd-request@@lists.best.com">sd-request@@lists.best.com</A>}
 @end ifset
 to be added.
 
@@ -377,16 +377,16 @@ William Ackerman
 wba@@apollo.hp.com
 @end ifclear
 @ifset html
-<A HREF="mailto:wba@@apollo.hp.com, gildea@@x.org">wba@@apollo.hp.com</A>
+<A HREF="mailto:wba@@apollo.hp.com, stephen@@gildea.com">wba@@apollo.hp.com</A>
 @end ifset
 
 @ifclear html
 Stephen Gildea
-gildea@@x.org
+stephen@@gildea.com
 @end ifclear
 @ifset html
-<A HREF="http://www.x.org/people/gildea.html">Stephen Gildea</A>
-<A HREF="mailto:gildea@@x.org, wba@@apollo.hp.com">gildea@@x.org</A>
+<A HREF="http://www.gildea.com/stephen/">Stephen Gildea</A>
+<A HREF="mailto:stephen@@gildea.com, wba@@apollo.hp.com">stephen@@gildea.com</A>
 @end ifset
 @end display
 

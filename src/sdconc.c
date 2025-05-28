@@ -811,12 +811,17 @@ Private void concentrify(
          in lines or columns and act accordingly.  If they were not in a 2x4, that is,
          the setup was a wing or galaxy, we set the elongation to -1 to indicate an
          error.  In such a case the centers won't be able to decide whether they were
-         in lines or columns.
-      But if the outsides started in a 1x4, they override the centers' own axis. */
+         in lines or columns. */
+
+   /* The following additional comment used to be present, back when we obeyed a misguided
+      notion of what cross concentric means:
+      "But if the outsides started in a 1x4, they override the centers' own axis." */
 
    if (analyzer == schema_cross_concentric || analyzer == schema_cross_concentric_diamonds) {
       *xconc_elongation = lmap_ptr->inner_rot;
+/*  and this line used to implement that misguided notion:
       if (lmap_ptr->outsetup == s1x4) *xconc_elongation = lmap_ptr->outer_rot;
+*/
       switch (ss->kind) {
          case s_galaxy:
          case s_rigger:
@@ -1627,7 +1632,8 @@ extern void concentric_move(
          warning_index *concwarntable;
 
          if (final_outers_start_kind == s1x4) {
-            if (orig_outers_start_kind == s1x4)
+            /* Watch for special case of cross concentric that some people may not agree with. */
+            if (orig_outers_start_kind == s1x4 && ((begin_inner[0].rotation ^ begin_outer.rotation) & 1))
                concwarntable = concwarneeetable;
             else
                concwarntable = concwarn1x4table;
@@ -2494,6 +2500,22 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
    else if (res2->kind == s_galaxy && res1->kind == s2x2) {
       the_map = &map_gal22;
       goto merge_concentric;
+   }
+   else if (res2->kind == s_galaxy && res1->kind == s1x4 && (mask2 & 0xAA) == 0) {
+      res2->rotation -= r;
+      canonicalize_rotation(res2);
+      result->kind = s3x1dmd;
+      (void) copy_person(result, 0, res2, 0);
+      (void) copy_person(result, 3, res2, 2);
+      (void) copy_person(result, 4, res2, 4);
+      (void) copy_person(result, 7, res2, 6);
+      (void) copy_person(result, 1, res1, 0);
+      (void) copy_person(result, 2, res1, 1);
+      (void) copy_person(result, 5, res1, 2);
+      (void) copy_person(result, 6, res1, 3);
+      result->rotation += r;
+      canonicalize_rotation(result);
+      return;
    }
    else if (res2->kind == s_bone && res1->kind == s2x2 && action != merge_strict_matrix && (mask2 & 0xCC) == 0) {
       the_map = &map_bn22;

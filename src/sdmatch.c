@@ -536,7 +536,23 @@ static void match_suffix_2(Cstring user, Cstring pat1, pat2_block *pat2, int pat
          /* we have just reached the end of the user input */
          Cstring p = pat1;
 
-         while (p[0] == '@' && (p[1] == 'M' || p[1] == 'I' || p[1] == 'C')) p += 2;
+         while (p[0] == '@') {
+            switch (p[1]) {
+               case 'M':
+               case 'I':
+               case 'C':
+               case 'r':
+               case 's':
+                  p += 2;
+                  continue;
+               case 'n':
+                  p += 2;
+                  while (*p++ != '@');
+                  p++;
+                  continue;
+            }
+            break;
+         }
 
          if (*p == ' ')
             static_ss.space_ok = TRUE;

@@ -1864,6 +1864,7 @@ extern map_thing map_phantom_box;                                   /* in SDTABL
 extern map_thing map_intlk_phantom_box;                             /* in SDTABLES */
 extern map_thing map_phantom_dmd;                                   /* in SDTABLES */
 extern map_thing map_intlk_phantom_dmd;                             /* in SDTABLES */
+extern map_thing map_vsplit_f;                                      /* in SDTABLES */
 extern map_thing map_split_f;                                       /* in SDTABLES */
 extern map_thing map_intlk_f;                                       /* in SDTABLES */
 extern map_thing map_full_f;                                        /* in SDTABLES */
