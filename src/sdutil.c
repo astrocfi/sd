@@ -228,6 +228,7 @@ Cstring warning_strings[] = {
    /*  warn__to_o_spots          */   " Go back to 'O' spots.",
    /*  warn__to_x_spots          */   " Go back to butterfly spots.",
    /*  warn__check_butterfly     */   " Check a butterfly.",
+   /*  warn__check_galaxy        */   " Check a galaxy.",
    /*  warn__some_rear_back      */   " Some people rear back.",
    /*  warn__not_tbone_person    */   " Work with the person to whom you are not T-boned.",
    /*  warn__check_c1_phan       */   " Check a 'C1 phantom' setup.",
@@ -1479,17 +1480,26 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
          if (k == concept_another_call_next_mod) {
             int first_replace = 0;
 
-            search = save_cptr->next;
-            while (search) {
+            for (search = save_cptr->next ; search ; search = search->next) {
+               callspec_block *cc;
+
                subsidiary_ptr = search->subsidiary_root;
                /* If we have a subsidiary_ptr, handle the replacement that is indicated.
                   BUT:  if the call shown in the subsidiary_ptr is a base tag call, don't
                   do anything -- such substitutions were already taken care of.
                      BUT:  only check if there is actually a call there. */
 
-               if (subsidiary_ptr &&
-                           (!(subsidiary_ptr->call) ||    /* If no call pointer, it isn't a tag base call. */
-                           !(subsidiary_ptr->call->callflags1 & (CFLAG1_BASE_TAG_CALL_MASK | CFLAG1_BASE_CIRC_CALL)))) {
+               if (!subsidiary_ptr) continue;
+               cc = subsidiary_ptr->call;
+
+               if (     !cc ||    /* If no call pointer, it isn't a tag base call. */
+                           (
+                              !(cc->callflags1 & (CFLAG1_BASE_TAG_CALL_MASK)) &&
+                                 (
+                                    !(cc->callflags1 & (CFLAG1_BASE_CIRC_CALL)) ||
+                                    search->call != base_calls[BASE_CALL_CIRCCER]
+                                 )
+                           )) {
                   long_boolean not_turning_star = FALSE;
 
                   switch ((search->number & DFM1_CALL_MOD_MASK) / DFM1_CALL_MOD_BIT) {
@@ -1522,15 +1532,15 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
                            one star turn with another. */
                         localcall = search->call;
                         write_blank_if_needed();
-                        if ((first_replace++ == 0) && subsidiary_ptr &&
+                        if ((first_replace++ == 0) &&
                               (localcall->callflags1 & CFLAG1_IS_STAR_CALL) &&
                                     ((subsidiary_ptr->concept->kind == marker_end_of_list) ||
                                     subsidiary_ptr->concept->kind == concept_another_call_next_mod) &&
-                              subsidiary_ptr->call &&
-                                    ((subsidiary_ptr->call->callflags1 & CFLAG1_IS_STAR_CALL) ||
-                                    subsidiary_ptr->call->schema == schema_nothing)) {
+                                    cc &&
+                                    ((cc->callflags1 & CFLAG1_IS_STAR_CALL) ||
+                                    cc->schema == schema_nothing)) {
 
-                           not_turning_star = subsidiary_ptr->call->schema == schema_nothing;
+                           not_turning_star = cc->schema == schema_nothing;
 
                            if (not_turning_star)
                               writestuff("BUT don't turn the star");
@@ -1553,7 +1563,6 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
                         break;
                   }
                }
-               search = search->next;
             }
          }
 
@@ -2018,12 +2027,16 @@ extern call_list_kind find_proper_call_list(setup *s)
 }
 
 
-static short spindle1[] = {d_east, d_west, 0, 6, 1, 5, 2, 4, -1};
-static short short1[] = {d_north, d_south, 0, 2, 5, 3, -1};
-static short dmd1[] = {d_east, d_west, 1, 3, -1};
-static short qtag1[] = {d_north, d_south, 3, 2, 6, 7, -1};
-static short ptpd1[] = {d_east, d_west, 1, 3, 7, 5, -1};
+static Const short spindle1[] = {d_east, d_west, 0, 6, 1, 5, 2, 4, -1};
+static Const short short1[] = {d_north, d_south, 0, 2, 5, 3, -1};
+static Const short dmd1[] = {d_east, d_west, 1, 3, -1};
+static Const short qtag1[] = {d_north, d_south, 3, 2, 6, 7, -1};
+static Const short ptpd1[] = {d_east, d_west, 1, 3, 7, 5, -1};
 
+
+
+
+static restriction_thing check_4x1_8ch = {2, {0, 3},                      {1, 2},                         {0}, {0}, FALSE, chk_wave};
 
 
 extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
@@ -2083,9 +2096,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
 
             switch (ss->kind) {
                case s1x4: case s2x4:
-                  rr = get_restriction_thing(ss->kind, tt);
-                  if (rr) goto check_stuff;
-                  goto good;
+                  goto check_tt;
                case s2x2:
                   u = ss->people[0].id1 | ss->people[1].id1 | ss->people[2].id1 | ss->people[3].id1;
 
@@ -2120,9 +2131,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
 
             switch (ss->kind) {
                case s1x4: case s2x4:
-                  rr = get_restriction_thing(ss->kind, tt);
-                  if (rr) goto check_stuff;
-                  goto good;
+                  goto check_tt;
                case s2x2:
                   u = ss->people[0].id1 | ss->people[1].id1 | ss->people[2].id1 | ss->people[3].id1;
 
@@ -2185,9 +2194,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
             }
 
             tt.assumption = cr_1fl_only;
-            rr = get_restriction_thing(ss->kind, tt);
-            if (rr) goto check_stuff;
-            goto good;                 /* We don't understand the setup -- we'd better accept it. */
+            goto check_tt;
          case sq_2fl_only:             /* 1x4 or 2x4 - 2FL; 4x1 - single DPT or single CDPT */
             switch (ss->cmd.cmd_assume.assumption) {
                case cr_1fl_only:
@@ -2197,9 +2204,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
             }
 
             tt.assumption = cr_2fl_only;
-            rr = get_restriction_thing(ss->kind, tt);
-            if (rr) goto check_stuff;
-            goto good;                 /* We don't understand the setup -- we'd better accept it. */
+            goto check_tt;
          case sq_couples_only:         /* 1x2/1x4/1x8/2x2/2x4 lines, or 2x4 columns - people are in genuine couples, not miniwaves */
             switch (ss->cmd.cmd_assume.assumption) {
                case cr_1fl_only:
@@ -2210,9 +2215,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
             }
 
             tt.assumption = cr_couples_only;
-            rr = get_restriction_thing(ss->kind, tt);
-            if (rr) goto check_stuff;
-            goto good;                 /* We don't understand the setup -- we'd better accept it. */
+            goto check_tt;
          case sq_3x3couples_only:      /* 1x3/1x6/2x3/2x6/1x12 - each group of 3 people are facing the same way */
             switch (ss->cmd.cmd_assume.assumption) {
                case cr_1fl_only:
@@ -2223,9 +2226,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
             }
 
             tt.assumption = cr_3x3couples_only;
-            rr = get_restriction_thing(ss->kind, tt);
-            if (rr) goto check_stuff;
-            goto good;                 /* We don't understand the setup -- we'd better accept it. */
+            goto check_tt;
          case sq_4x4couples_only:      /* 1x4/1x8/2x4/2x8/1x16 - each group of 4 people are facing the same way */
             switch (ss->cmd.cmd_assume.assumption) {
                case cr_1fl_only:
@@ -2236,9 +2237,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
             }
 
             tt.assumption = cr_4x4couples_only;
-            rr = get_restriction_thing(ss->kind, tt);
-            if (rr) goto check_stuff;
-            goto good;                 /* We don't understand the setup -- we'd better accept it. */
+            goto check_tt;
          case sq_miniwaves:                    /* miniwaves everywhere */
             switch (ss->cmd.cmd_assume.assumption) {
                case cr_1fl_only:
@@ -2602,45 +2601,20 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
                goto good;
             goto bad;
          case sq_8_chain:                   /* 4x1/4x2 - setup is (single) 8-chain */
+         case sq_trade_by:                  /* 4x1/4x2 - setup is (single) trade-by */
+            tt.assumption = cr_li_lo;
+            tt.assump_col = 1;
+            tt.assump_both = (((search_qualifier) p->qualifier) == sq_trade_by) ? 2 : 1;
+
             switch (ss->kind) {
                case s1x4:
-                  if (  !((ss->people[0].id1 | ss->people[3].id1) & 2) &&
-                        (!ss->people[1].id1 || (ss->people[1].id1 & 2)) &&
-                        (!ss->people[2].id1 || (ss->people[2].id1 & 2)))
-                     goto good;
-                  break;
+                  rr = &check_4x1_8ch;
+                  goto check_stuff;
                case s2x4:
-                  if (  !((ss->people[0].id1 | ss->people[2].id1 | ss->people[5].id1 | ss->people[7].id1) & 2) &&
-                        (!ss->people[1].id1 || (ss->people[1].id1 & 2)) &&
-                        (!ss->people[3].id1 || (ss->people[3].id1 & 2)) &&
-                        (!ss->people[4].id1 || (ss->people[4].id1 & 2)) &&
-                        (!ss->people[6].id1 || (ss->people[6].id1 & 2)))
-                     goto good;
-                  break;
+                  goto check_tt;
                default:
                   goto bad;
             }
-            goto bad;
-         case sq_trade_by:                  /* 4x1/4x2 - setup is (single) trade-by */
-            switch (ss->kind) {
-               case s1x4:
-                  if (  !((ss->people[1].id1 | ss->people[2].id1) & 2) &&
-                        (!ss->people[0].id1 || (ss->people[0].id1 & 2)) &&
-                        (!ss->people[3].id1 || (ss->people[3].id1 & 2)))
-                     goto good;
-                  break;
-               case s2x4:
-                  if (  !((ss->people[1].id1 | ss->people[3].id1 | ss->people[4].id1 | ss->people[6].id1) & 2) &&
-                        (!ss->people[0].id1 || (ss->people[0].id1 & 2)) &&
-                        (!ss->people[2].id1 || (ss->people[2].id1 & 2)) &&
-                        (!ss->people[5].id1 || (ss->people[5].id1 & 2)) &&
-                        (!ss->people[7].id1 || (ss->people[7].id1 & 2)))
-                     goto good;
-                  break;
-               default:
-                  break;
-            }
-            goto bad;
          case sq_split_dixie:
             if (ss->cmd.cmd_final_flags & FINAL__SPLIT_DIXIE_APPROVED) goto good;
             goto bad;
@@ -2664,7 +2638,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
          case sq_dmd_ctrs_1f:
             {
                search_qualifier kkk;      /* gets set to the qualifier corresponding to what we have. */
-               short *p1;
+               Const short *p1;
                short d1;
                short d2;
                uint32 z = 0;
@@ -2672,23 +2646,12 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
                long_boolean b2 = TRUE;
             
                switch (ss->kind) {
-                  case s_spindle:
-                     p1 = spindle1;
-                     break;
-                  case s_short6:
-                     p1 = short1;
-                     break;
-                  case sdmd:
-                     p1 = dmd1;
-                     break;
-                  case s_qtag:
-                     p1 = qtag1;
-                     break;
-                  case s_ptpd:
-                     p1 = ptpd1;
-                     break;
-                  default:
-                     goto bad;
+                  case s_spindle: p1 = spindle1; break;
+                  case s_short6:  p1 = short1;   break;
+                  case sdmd:      p1 = dmd1;     break;
+                  case s_qtag:    p1 = qtag1;    break;
+                  case s_ptpd:    p1 = ptpd1;    break;
+                  default:        goto bad;
                }
 
                d1 = *(p1++);
@@ -2771,6 +2734,11 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
 
       goto bad;
 
+      check_tt:
+
+      rr = get_restriction_thing(ss->kind, tt);
+      if (!rr) goto good;                 /* We don't understand the setup -- we'd better accept it. */
+
       check_stuff:
 
       switch (rr->check) {
@@ -2782,7 +2750,8 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
                if ((t = ss->people[rr->map2[idx]].id1) != 0) { qa0 |= ~t; qa1 |=  t; }
             }
 
-            if ((qa0 & qa1 & 2) != 0) goto bad;
+            if (((qa0 | tt.assump_both) & (qa1 | (tt.assump_both << 1)) & 2) != 0)
+               goto bad;
 
             goto good;
          case chk_1_group:
@@ -2805,13 +2774,12 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
 
       for (idx=0; idx<limit; idx++) {
          qa0 = 0; qa1 = 0;
-   
+
          for (i=0,j=idx; i<rr->size; i++,j+=limit) {
             if ((t = ss->people[rr->map1[j]].id1) != 0) { qa0 |= t; qa1 |= ~t; }
          }
-   
-         if (qa0&qa1&2)
-            goto bad;
+
+         if ((qa0 & qa1 & 2) != 0) goto bad;
       }
       goto good;
 

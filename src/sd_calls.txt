@@ -30,7 +30,7 @@
     General Public License if you distribute the file.
 */
 
-version "31.70"
+version "31.71"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve
@@ -2386,8 +2386,18 @@ call "@6 trade" mainstream
          if conc_from_select            [CR2S CR3S AL0S AL1S]
    setup 1x2 1x2
       preds "Can't find anyone to trade with."
+         if unselect               [ZM0N ZM1N]
          if select_near_select     [CR1S AL0S]
-         if unselect_near_unselect [ZM0N ZM1N]
+   setup spindle spindle
+      preds "Can't find anyone to trade with."
+         if unselect                    [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N ZM7N]
+         if select_near_select          [CR1S AL0S    0    0 AL5S CR4S    0    0]
+         if other_spindle_cw_select     [   0 CR2S AL1S    0    0 AL6S CR5S    0]
+   setup pspindle spindle
+      preds "Can't find anyone to trade with."
+         if unselect                    [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N ZM7N]
+         if other_spindle_ckpt_select   [CR6S    0 CR4S    0 AL2S    0 AL0S    0]
+         if grand_conc_from_select      [   0 CR5S    0    0    0 AL1S    0    0]
 
 call "trade and roll" plus tag trade_and_roll
             visible_fractions
@@ -3690,6 +3700,11 @@ call "all 8 recycle" c1
             reverse_means_mirror singlefile_is_inherited cross_is_inherited diamond_is_legal
    crossconc splitrecycle [conc_demand_columns inherit_reverse inherit_singlefile inherit_cross inherit_diamond]
              waverecycle [inherit_cross inherit_diamond suppress_elongation_warnings]
+
+call "all 8 cycle and wheel" c1
+            reverse_means_mirror singlefile_is_inherited cross_is_inherited diamond_is_legal
+   crossconc splitrecycle [conc_demand_columns inherit_reverse inherit_singlefile inherit_cross inherit_diamond]
+             wheelanddeal [suppress_elongation_warnings]
 
 call "2/3 recycle" c1 tag 23recycle
    setup 1x4 2x2 restriction forbidden wave_only
@@ -7561,9 +7576,11 @@ call "_grand chain 8 part 1" dontshow tag gc8p1
 call "_finish grand chain 8" dontshow tag gc8p2
             left_means_mirror
    setup 2x4 2x4 rotate
-      array [AL0E AL1W AL6W AL7E 0 0 0 0]
-   setup 4x2 2x4
-      array [AL1E AL2E AL3E AL4S AL3S AL4W AL5W AL6W]
+      array [L0E L1W L6W L7E 0 0 0 0]
+   setup 4x2 2x4 qualifier 8_chain
+      array [AL1E    0 AL3E    0    0 CAL4W     0 CAL6W]
+   setup 4x2 2x4 qualifier trade_by
+      array [   0 AL2E    0 AL4S AL3S     0 CAL5W     0]
 
 call "grand chain 8" c2
             first_part_visible left_means_mirror
@@ -7572,7 +7589,7 @@ call "grand chain 8" c2
 
 call "_centers finish grand chain 8" dontshow tag ctrfingc8
    setup 2x2 2x2
-      array [AL1N AL0N 0 0]
+      array [L1N L0N 0 0]
 
 call "_centers grand chain 8" dontshow tag ctrgc8
             first_part_visible left_means_mirror
@@ -7581,7 +7598,7 @@ call "_centers grand chain 8" dontshow tag ctrgc8
 
 call "_ends finish grand chain 8" dontshow tag endfingc8
    setup 2x2 2x2
-      array [AL1S AL0S 0 0]
+      array [L1S L0S 0 0]
 
 call "_ends grand chain 8" dontshow tag endgc8
             first_part_visible left_means_mirror
@@ -8302,15 +8319,15 @@ call "with finesse" c4a
 call "polly wally" c3a
             reverse_means_mirror
    setup 4x2 2x4 rotate
-      array [CR5E CAL2W AL7E AL0E AL1E AL6E CAL3W CR4E]
+      array [CR5E CAM2W AM7E AL0E AL1E AM6E CAM3W CR4E]
             alternate_definition [single] c3a
    setup 4x1 2x2
-      array [CR3S CAL2N AL1S AL0S]
+      array [CR3S CAM2N AL1S AM0S]
             alternate_definition [grand single] c4
    setup 8x1 2x4
-      array [CR7S CAL6N CAL5N AL0S AL3S AL2S AL1S CAL4N]
+      array [CR7S CAM6N CAM5N AM0S AL3S AM2S AM1S CAM4N]
    setup 6x1 2x3
-      array [CR5S CAL4N AL0S AL2S AL1S CAL3N]
+      array [CR5S CAM4N AM0S AL2S AM1S CAM3N]
 
 call "_sidetrack part 1" dontshow tag sidetrack1
             reverse_means_mirror
@@ -8681,10 +8698,15 @@ call "@N clear out" c4a
 
 call "lift off" c3
             reverse_means_mirror
+   seq liftoffbut [inherit_reverse]
+   seq circulate [allow_plain_mod]
+
+call "_lift off but" dontshow tag liftoffbut
+            reverse_means_mirror
    setup 2x4 2x4 rotate
-      array [0 3S 5S 0 0 0 0 0]
+      array [0 0N 2S 0 0 0 0 0]
    setup 4x2 2x4 rotate
-      array [0W 0 0 0 0 0 0 2E]
+      array [7W 0 0 0 0 0 0 1W]
 
 call "_start wave the whomever" dontshow tag startwave
    /* This is just a press ahead, but legal only in a "liftoff" setup. */
@@ -9457,13 +9479,14 @@ call "squeeze the O" c1
    setup 4x4 4x4
       array [0 AL15S AL11S 0 0 AL8S CR4S 0 0 CR7S CR3S 0 0 CR0S AL12S 0]
 
-/* Beware!  This call isn't really right. */
+
 call "@6 squeeze" c1
             dont_use_in_resolve
    setup 4x2 4x4
-      preds "???"
-         if select [CR8S CR6S CR5S CR4S AL0S AL14S AL13S AL12S]
-         if always [ZM10N ZM15N ZM3N ZM1N ZM2N ZM7N ZM11N ZM9N]
+      preds "Can't find anyone to squeeze with."
+         if unselect           [ZM10N ZM15N ZM3N ZM1N ZM2N ZM7N ZM11N ZM9N]
+         if pair_person_select [CR8S CR6S CR5S CR4S AL0S AL14S AL13S AL12S]
+   /* Beware!  This probably isn't quite right. */
    setup 4x4 4x4
       preds "???"
          if select [AL13S AL15S AL11S AL10S AL6S AL8S CR4S AL9S CR5S CR7S CR3S CR2S CR14S CR0S AL12S CR1S]

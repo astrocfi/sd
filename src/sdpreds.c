@@ -1848,8 +1848,11 @@ predicate_descriptor pred_table[] = {
       {unselect_near_unselect,          (short *) 0},  /* "unselect_near_unselect" */
       {select_once_rem_from_select,     (short *) 0},  /* "select_once_rem_from_select" */
       {someone_selected,               &iden_tab[2]},  /* "conc_from_select" */
+      {someone_selected,               &iden_tab[3]},  /* "other_spindle_cw_select" */
       {someone_selected,               &iden_tab[4]},  /* "grand_conc_from_select" */
       {someone_selected,               &iden_tab[5]},  /* "other_diamond_point_select" */
+      {someone_selected,               &iden_tab[6]},  /* "other_spindle_ckpt_select" */
+      {someone_selected,               &iden_tab[7]},  /* "pair_person_select" */
       {select_once_rem_from_unselect,   (short *) 0},  /* "select_once_rem_from_unselect" */
       {unselect_once_rem_from_select,   (short *) 0},  /* "unselect_once_rem_from_select" */
       {select_and_roll_is_cw,           (short *) 0},  /* "select_and_roll_is_cw" */

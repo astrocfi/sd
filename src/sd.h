@@ -1072,6 +1072,7 @@ typedef enum {
    warn__to_o_spots,
    warn__to_x_spots,
    warn__check_butterfly,
+   warn__check_galaxy,
    warn__some_rear_back,
    warn__not_tbone_person,
    warn__check_c1_phan,
@@ -1479,6 +1480,7 @@ typedef enum {
 typedef enum {
    chk_none,
    chk_wave,
+   chk_strict,
    chk_1_group,
    chk_2_groups,
    chk_4_groups,

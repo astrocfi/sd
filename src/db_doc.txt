@@ -2136,8 +2136,8 @@ There are a number of internal ones not shown here.  See the file ~/sd/restricti
    ctr2fl_endwv,                 /* crosswave - center line is 2fl, end line is wave */
    split_dixie,                  /* 2x2 - invoked with "split" for dixie style */
    not_split_dixie,              /* 2x2 - invoked without "split" for dixie style */
-   8_chain,                      /* 4x1 - setup is single 8 chain */
-   trade_by,                     /* 4x1 - setup is single trade by */
+   8_chain,                      /* 4x1/4x2 - setup is (single) 8 chain */
+   trade_by,                     /* 4x1/4x2 - setup is (single) trade by */
    dmd_ctrs_rh,                  /* dmd, qtag, ptpd, short6, spindle - the centers (2, 4, or 6 of them)
                                     are consistently in right-handed miniwaves */
    dmd_ctrs_lh,                  /* dmd, qtag, ptpd, short6, spindle - the centers (2, 4, or 6 of them)

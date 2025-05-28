@@ -589,6 +589,23 @@ Private void finish_matrix_call(
       checkptr = setup_attrs[s_galaxy].setup_coords;
       goto doit;
    }
+   else if ((ypar == 0x00840066) && ((signature & (~0x0C000108)) == 0)) {
+      /* Fudge this to a galaxy.  Someone had the center 2 squeeze or spread
+         from a spindle. */
+
+      for (i=0; i<nump; i++) {
+         if      (matrix_info[i].x ==  0 && matrix_info[i].y ==  6) {                        matrix_info[i].y =  7; }
+         else if (matrix_info[i].x ==  0 && matrix_info[i].y == -6) {                        matrix_info[i].y = -7; }
+         else if (matrix_info[i].x ==  8 && matrix_info[i].y ==  0) { matrix_info[i].x =  7;                        }
+         else if (matrix_info[i].x == -8 && matrix_info[i].y ==  0) { matrix_info[i].x = -7;                        }
+         else if (   (matrix_info[i].x == 4 || matrix_info[i].x == -4) &&
+                     (matrix_info[i].y == 2 || matrix_info[i].y == -2)) { matrix_info[i].x >>= 1; }
+      }
+
+      warn(warn__check_galaxy);
+      checkptr = setup_attrs[s_galaxy].setup_coords;
+      goto doit;
+   }
    else if ((ypar == 0x00950062 || ypar == 0x00550062) && ((signature & (~0x091002C0)) == 0)) {
       checkptr = setup_attrs[sbigdmd].setup_coords;
       goto doit;
@@ -669,6 +686,22 @@ Private void finish_matrix_call(
       goto doit;
    }
    else if ((ypar == 0x00550057) && ((signature & (~0x20000620)) == 0)) {
+      checkptr = setup_attrs[s_hrglass].setup_coords;
+      goto doit;
+   }
+   else if ((ypar == 0x00840066) && ((signature & (~0x00202208)) == 0)) {
+      /* Fudge this to an hourglass.  Someone had the checkpointers squeeze or spread
+         from a spindle. */
+
+      for (i=0; i<nump; i++) {
+         if      (matrix_info[i].x == -4 && matrix_info[i].y ==  6) {                        matrix_info[i].y =  5; }
+         else if (matrix_info[i].x ==  4 && matrix_info[i].y ==  6) { matrix_info[i].x =  5; matrix_info[i].y =  5; }
+         else if (matrix_info[i].x ==  4 && matrix_info[i].y == -6) {                        matrix_info[i].y = -5; }
+         else if (matrix_info[i].x == -4 && matrix_info[i].y == -6) { matrix_info[i].x = -5; matrix_info[i].y = -5; }
+         else if (matrix_info[i].x ==  8 && matrix_info[i].y ==  0) { matrix_info[i].x =  5;                        }
+         else if (matrix_info[i].x == -8 && matrix_info[i].y ==  0) { matrix_info[i].x = -5;                        }
+      }
+
       checkptr = setup_attrs[s_hrglass].setup_coords;
       goto doit;
    }
