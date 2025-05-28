@@ -37,6 +37,7 @@
    print_id_error
    init_error
    add_resolve_indices
+   open_session
    final_exit
    open_database
    read_8_from_database
@@ -85,6 +86,7 @@ and the following external variables:
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>
+#include <ctype.h>  /* for tolower */
 #include <time.h>
 
 /* We take pity on those poor souls who are compelled to use XOPEN,
@@ -136,6 +138,9 @@ extern char *strerror(int);
 #endif
 
 /* Despite all our efforts, some systems just can't be bothered ... */
+#ifndef SEEK_SET
+#define SEEK_SET 0
+#endif
 #ifndef SEEK_END
 #define SEEK_END 2
 #endif
@@ -146,6 +151,7 @@ extern char *strerror(int);
 
 #include "sd.h"
 #include "paths.h"
+extern call_list_mode_t call_list_mode;
 
 
 /* These variables are external. */
@@ -221,7 +227,7 @@ extern long_boolean generate_random_concept_p(void)
 }
 
 
-extern void *get_mem(unsigned int siz)
+extern void *get_mem(uint32 siz)
 {
    void *buf;
 
@@ -236,13 +242,13 @@ extern void *get_mem(unsigned int siz)
 
 /* This will not fail catastrophically, but may return nil pointer
    on nonzero request.  Client must check and react accordingly. */
-extern void *get_mem_gracefully(unsigned int siz)
+extern void *get_mem_gracefully(uint32 siz)
 {
    return malloc(siz);
 }
 
 
-extern void *get_more_mem(void *oldp, unsigned int siz)
+extern void *get_more_mem(void *oldp, uint32 siz)
 {
    void *buf;
 
@@ -259,7 +265,7 @@ extern void *get_more_mem(void *oldp, unsigned int siz)
 
 /* This will not fail catastrophically, but may return nil pointer
    on nonzero request.  Client must check and react accordingly. */
-extern void *get_more_mem_gracefully(void *oldp, unsigned int siz)
+extern void *get_more_mem_gracefully(void *oldp, uint32 siz)
 {
    if (!oldp)
       return malloc(siz);	/* SunOS 4 realloc doesn't handle NULL */
@@ -565,7 +571,7 @@ extern void close_file(void)
 }
 
 /* Used only for printing error messages, so writes to stderr */
-extern void print_line(char s[])
+extern void print_line(Cstring s)
 {
    fprintf(stderr, "%s\n", s);
 }
@@ -589,9 +595,307 @@ extern void add_resolve_indices(char junk[], int cur, int max)
 }
 
 
+Private long_boolean parse_level(Cstring s, dance_level *levelp)
+{
+   char first = tolower(s[0]);
+
+   switch (first) {
+      case 'm': *levelp = l_mainstream; break;
+      case 'p': *levelp = l_plus; break;
+      case 'a':
+         if (s[1] == '1' && !s[2]) *levelp = l_a1;
+         else if (s[1] == '2' && !s[2]) *levelp = l_a2;
+         else if (s[1] == 'l' && s[2] == 'l' && !s[3]) *levelp = l_dontshow;
+         else
+            return FALSE;
+         break;
+      case 'c':
+         if (s[1] == '3' && (s[2] == 'a' || s[2] == 'A') && !s[3])
+            *levelp = l_c3a;
+         else if (s[1] == '3' && (s[2] == 'x' || s[2] == 'X') && !s[3])
+            *levelp = l_c3x;
+         else if (s[1] == '4' && (s[2] == 'a' || s[2] == 'A') && !s[3])
+            *levelp = l_c4a;
+         else if (!s[2]) {
+            switch (s[1]) {
+               case '1': *levelp = l_c1; break;
+               case '2': *levelp = l_c2; break;
+               case '3': *levelp = l_c3; break;
+               case '4': *levelp = l_c4; break;
+               default: return FALSE;
+            }
+         }
+         break;
+      default:
+         return FALSE;
+   }
+
+   return TRUE;
+}
+
+
+
+/* Stuff used for controlling the session file.  When index is nonzero,
+   the session file is in use, and the final state should be written back
+   to it at that line. */
+
+static int session_index = 0;        /* If this is nonzero, we have opened a session. */
+
+
+extern long_boolean open_session(int *argcp, char ***argvp)
+{
+   int session_linenum = 0;
+   int session_position;
+   int i, j;
+   int argno;
+   FILE *session;
+   char line[MAX_FILENAME_LENGTH];
+
+
+
+
+
+   /* This lets the X user interface intercept command line arguments that it is
+      interested in.  It also handles the flags "-seq" and "-db". */
+   uims_process_command_line(argcp, argvp);
+
+   call_list_mode = call_list_mode_none;
+
+   calling_level = l_mainstream;    /* The default. */
+   for (argno=1; argno < (*argcp); argno++) {
+      if ((*argvp)[argno][0] == '-') {
+         call_list_mode_t this_mode_maybe = call_list_mode_none;
+
+         /* Special flag: must be one of
+            -write_list <filename>  -- write out the call list for the
+                  indicated level INSTEAD OF running the program
+            -write_full_list <filename>  -- write out the call list for the
+                  indicated level and all lower levels INSTEAD OF running the program
+            -abridge <filename>  -- read in the file, strike all the calls
+                  contained therein off the menus, and proceed.
+            -diagnostic  -- (this is a hidden flag) suppress display of verison info */
+
+         if (strcmp(&(*argvp)[argno][1], "write_list") == 0)
+            this_mode_maybe = call_list_mode_writing;
+         else if (strcmp(&(*argvp)[argno][1], "write_full_list") == 0)
+            this_mode_maybe = call_list_mode_writing_full;
+         else if (strcmp(&(*argvp)[argno][1], "abridge") == 0)
+            this_mode_maybe = call_list_mode_abridging;
+         else if (strcmp(&(*argvp)[argno][1], "diagnostic") == 0)
+            { diagnostic_mode = TRUE; continue; }
+
+	 /*
+	  * These options may be handled by the UI, but if not
+	  * be sure it gets done.
+	  */
+         else if (strcmp(&(*argvp)[argno][1], "sequence") == 0) {
+	     if (argno+1 < (*argcp))
+		 strncpy(outfile_string, (*argvp)[argno+1], MAX_FILENAME_LENGTH);
+	 }
+         else if (strcmp(&(*argvp)[argno][1], "db") == 0) {
+	     if (argno+1 < (*argcp))
+		 database_filename = (*argvp)[argno+1];
+	 }
+         else
+            uims_bad_argument("Unknown flag:", (*argvp)[argno], (char *) 0);
+
+         /* At this point, if "this_mode_maybe" is not null, we have to deal with some
+            kind of "write_list" or "abridge" operation.  If not, we have already processed
+            the file name, and all that remains is to check its existence and then skip it. */
+
+         argno++;
+         if (argno >= (*argcp))
+            uims_bad_argument("This flag must be followed by a file name:", (*argvp)[argno-1], NULL);
+
+         if (this_mode_maybe != call_list_mode_none) {
+            call_list_mode = this_mode_maybe;
+            if (open_call_list_file(call_list_mode, (*argvp)[argno]))
+               exit_program(1);
+         }
+      }
+      else if (!parse_level((*argvp)[argno], &calling_level)) {
+         uims_bad_argument("Unknown calling level argument:", (*argvp)[argno],
+            "Known calling levels: m, p, a1, a2, c1, c2, c3a, c3, c3x, c4a, or c4.");
+      }
+   }
+
+   /* initialize outfile_string to calling-level-specific default outfile */
+
+   (void) strncat(outfile_string, filename_strings[calling_level], MAX_FILENAME_LENGTH);
+
+   /* If we are writing a call list file, that's all we do. */
+   if (call_list_mode == call_list_mode_writing || call_list_mode == call_list_mode_writing_full)
+      goto no_session;
+
+   if (diagnostic_mode) goto no_session;
+
+   if (!(session = fopen(SESSION_FILENAME, "r")))
+      goto no_session_close;
+
+   /* Search for the "[Session]" indicator. */
+
+   for (;;) {
+      if (!fgets(line, MAX_FILENAME_LENGTH, session)) goto no_session_close;
+      if (!strncmp(line, "[Session]", 9)) break;
+   }
+
+   session_position = ftell(session);
+
+   printf("Do you want to use one of the following sessions?\n\n");
+   printf("  0     (no session)\n");
+
+   for (;;) {
+      if (!fgets(line, MAX_FILENAME_LENGTH, session) || line[0] == '\n') break;
+      printf("%3d  %s", ++session_linenum, line);
+   }
+
+   printf("%3d     (create a new session)\n\n", session_linenum+1);
+
+   printf("Enter the number of the desired session:  ");
+   if (!gets(line))
+      goto no_session_close;
+
+   if (!sscanf(line, "%d", &session_index) || session_index == 0)
+      goto no_session_close;
+
+   if (session_index < 0) {
+      (void) fclose(session);
+      return TRUE;    /* Exit the program immediately. */
+   }
+
+   if (session_index <= session_linenum) {
+      if (!fseek(session, session_position, SEEK_SET)) {
+         for (i=0 ; i<session_index ; i++)
+            if (!fgets(line, MAX_FILENAME_LENGTH, session)) break;
+
+         if (i == session_index) {
+            int ccount;
+            char session_levelstring[50];
+
+            if (sscanf(line, "%s %s %d %n", outfile_string, session_levelstring, &sequence_number, &ccount) != 3) {
+               printf("Bad format in session file.\n");
+               goto no_session_close;
+            }
+
+            #if defined(MSDOS)
+               /* What a total crock!!!!!!  The "%n" scan specifier doesn't work. */
+               ccount = strlen(line);
+               if (ccount > 45) ccount = 45;
+            #endif
+
+            if (!parse_level(session_levelstring, &calling_level)) {
+               printf("Bad level given in session file.\n");
+               goto no_session_close;
+            }
+
+            strncpy(header_comment, &line[ccount], MAX_TEXT_LINE_LENGTH);
+            j = strlen(header_comment);
+            if (j>0) header_comment[j-1] = '\0';
+         }
+      }
+   }
+   else
+      sequence_number = 1;       /* We are creating a new session to be appended to the file. */
+
+   (void) fclose(session);
+   goto really_do_it;
+
+   no_session_close:
+
+   if (session) (void) fclose(session);
+
+   no_session:
+
+   session_index = 0;
+
+   really_do_it:
+
+   /* We need to take away the "zig-zag" directions if the pevel is below A2. */
+
+   if (calling_level < zig_zag_level) {
+      last_direction_kind = direction_out;
+      direction_names[direction_out+1] = (Cstring) 0;
+   }
+
+   return FALSE;
+}
+
+
 
 extern void final_exit(int code)
 {
+   if (session_index != 0) {
+      char line[MAX_FILENAME_LENGTH];
+      FILE *rfile;
+      FILE *wfile;
+      int i;
+
+      if (rename(SESSION_FILENAME, SESSION2_FILENAME)) {
+         printf("Failed to save file '" SESSION_FILENAME "' in '" SESSION2_FILENAME "'\n");
+      }
+      else {
+         if (!(rfile = fopen(SESSION2_FILENAME, "r"))) {
+            printf("Failed to open '" SESSION2_FILENAME "'\n");
+         }
+         else {
+            if (!(wfile = fopen(SESSION_FILENAME, "w"))) {
+               printf("Failed to open '" SESSION_FILENAME "'\n");
+            }
+            else {
+               long_boolean more_stuff = FALSE;
+
+               /* Search for the "[Session]" indicator. */
+
+               for (;;) {
+                  if (!fgets(line, MAX_FILENAME_LENGTH, rfile)) goto copy_done;
+                  if (!fputs(line, wfile)) goto copy_failed;
+                  if (!strncmp(line, "[Session]", 9)) break;
+               }
+
+               for (i=0 ; ; i++) {
+                  if (!fgets(line, MAX_FILENAME_LENGTH, rfile)) break;
+                  if (line[0] == '\n') { more_stuff = TRUE; break; }
+
+                  if (i == session_index-1) {
+                     if (fprintf(wfile, "%20-s %11-s %6d      %s\n", outfile_string, getout_strings[calling_level], sequence_number, header_comment) < 0)
+                        goto copy_failed;
+                  }
+                  else if (i == -session_index-1) {
+                  }
+                  else {
+                     if (!fputs(line, wfile)) goto copy_failed;
+                  }
+               }
+
+               if (i < session_index) {
+                  /* User has requested a line number larger than the file.  Append a new line. */
+                  if (fprintf(wfile, "%20-s %11-s %6d      %s\n", outfile_string, getout_strings[calling_level], sequence_number, header_comment) < 0)
+                     goto copy_failed;
+               }
+
+               if (more_stuff) {
+                  if (!fputs("\n", wfile)) goto copy_failed;
+                  for (;;) {
+                     if (!fgets(line, MAX_FILENAME_LENGTH, rfile)) break;
+                     if (!fputs(line, wfile)) goto copy_failed;
+                  }
+               }
+
+               goto copy_done;
+
+               copy_failed:
+
+               printf("Failed to write to '" SESSION_FILENAME "'\n");
+
+               copy_done:
+
+               (void) fclose(wfile);
+            }
+            (void) fclose(rfile);
+         }
+      }
+   }
+
    exit(code);
 }
 
@@ -640,15 +944,15 @@ extern void open_database(void)
 }
 
 
-extern unsigned int read_8_from_database(void)
+extern uint32 read_8_from_database(void)
 {
    return fgetc(fp) & 0xFF;
 }
 
 
-extern unsigned int read_16_from_database(void)
+extern uint32 read_16_from_database(void)
 {
-   unsigned int bar;
+   uint32 bar;
 
    bar = (read_8_from_database() & 0xFF) << 8;
    bar |= read_8_from_database() & 0xFF;

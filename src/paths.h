@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990  William B. Ackerman.
+    Copyright (C) 1990, 1995  William B. Ackerman.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-    This is version 1.22. */
+    This is for version 32. */
 
 /* The Sd program reads this binary file for its calls database */
 #ifndef DATABASE_FILENAME
@@ -31,4 +31,14 @@
 /* The output filename prefix.  ".level" is added to the name. */
 #ifndef SEQUENCE_FILENAME
 #define SEQUENCE_FILENAME "sequence"
+#endif
+
+/* The file containing the user's current working sessions. */
+#ifndef SESSION_FILENAME
+#define SESSION_FILENAME "sd.ini"
+#endif
+
+/* The temporary file used when rewriting the above. */
+#ifndef SESSION2_FILENAME
+#define SESSION2_FILENAME "sd2.ini"
 #endif

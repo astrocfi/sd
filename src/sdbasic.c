@@ -297,6 +297,7 @@ Private int ftl2x4[12] = {6, 11, 15, 13, 14, 3, 7, 5, 6, 11, 15, 13};
 Private int ftcspn[8] = {-1, 5, -1, 6, -1, 11, -1, 0};
 Private int ftlcwv[12] = {9, 10, 1, 2, 3, 4, 7, 8, 9, 10, 1, 2};
 Private int qtlqtg[12] = {5, -1, -1, 0, 1, -1, -1, 4, 5, -1, -1, 0};
+Private int qtlbone[12] = {0, 3, -1, -1, 4, 7, -1, -1, 0, 3, -1, -1};
 Private int galtranslateh[16] = {0, 3, 4, 2, 0, 0, 0, 5, 0, 7, 0, 6, 0, 0, 0, 1};
 Private int galtranslatev[16] = {0, 0, 0, 1, 0, 3, 4, 2, 0, 0, 0, 5, 0, 7, 0, 6};
 Private int s1x6translateh[12] = {0, 1, 2, 0, 0, 0, 3, 4, 5, 0, 0, 0};
@@ -344,9 +345,10 @@ Private int qtbd1[12] = {5, 9, 6, 7, 9, 0, 1, 9, 2, 3, 9, 4};
 Private int qtbd2[12] = {9, 5, 6, 7, 0, 9, 9, 1, 2, 3, 4, 9};
 Private int qtbd3[12] = {9, 5, 6, 7, 9, 0, 9, 1, 2, 3, 9, 4};
 Private int qtbd4[12] = {5, 9, 6, 7, 0, 9, 1, 9, 2, 3, 4, 9};
-
-
-
+Private int q3x4xx1[12] = {9, 5, 0, 9, 9, 1, 9, 2, 3, 9, 9, 4};
+Private int q3x4xx2[12] = {9, 9, 9, 9, 2, 3, 9, 9, 9, 9, 0, 1};
+Private int q3x4xx3[12] = {9, 9, 2, 2, 9, 9, 3, 3, 9, 9, 0, 1};
+Private int q3x4xx4[12] = {3, 3, 9, 9, 0, 1, 9, 9, 2, 2, 9, 9};
 
 
 
@@ -461,6 +463,27 @@ extern restriction_thing *check_restriction(setup *ss, assumption_thing restr, u
 
    /* Now check all the other stuff. */
 
+   /* This next restriction is independent of whether we are line-like or column-like. */
+
+   if (restr.assumption == cr_siamese_in_quad) {
+      q0 = 0; q1 = 0; q2 = 0; q3 = 0;
+      if ((t = ss->people[0].id1) != 0) { q0 |= (t^1); q1 |= (t^3); q2 |= (t^2); q3 |= (t); }
+      if ((t = ss->people[1].id1) != 0) { q0 |= (t^1); q1 |= (t^3); q2 |= (t^2); q3 |= (t); }
+      if ((q0&3) && (q1&3) && (q2&3) && (q3&3)) goto restr_failed;
+      q0 = 0; q1 = 0; q2 = 0; q3 = 0;
+      if ((t = ss->people[7].id1) != 0) { q0 |= (t^1); q1 |= (t^3); q2 |= (t^2); q3 |= (t); }
+      if ((t = ss->people[6].id1) != 0) { q0 |= (t^1); q1 |= (t^3); q2 |= (t^2); q3 |= (t); }
+      if ((q0&3) && (q1&3) && (q2&3) && (q3&3)) goto restr_failed;
+      q0 = 0; q1 = 0; q2 = 0; q3 = 0;
+      if ((t = ss->people[2].id1) != 0) { q0 |= (t^1); q1 |= (t^3); q2 |= (t^2); q3 |= (t); }
+      if ((t = ss->people[3].id1) != 0) { q0 |= (t^1); q1 |= (t^3); q2 |= (t^2); q3 |= (t); }
+      if ((q0&3) && (q1&3) && (q2&3) && (q3&3)) goto restr_failed;
+      q0 = 0; q1 = 0; q2 = 0; q3 = 0;
+      if ((t = ss->people[5].id1) != 0) { q0 |= (t^1); q1 |= (t^3); q2 |= (t^2); q3 |= (t); }
+      if ((t = ss->people[4].id1) != 0) { q0 |= (t^1); q1 |= (t^3); q2 |= (t^2); q3 |= (t); }
+      if ((q0&3) && (q1&3) && (q2&3) && (q3&3)) goto restr_failed;
+   }
+
    if (restr.assump_col & 1) {
       /* Restriction is "column-like". */
 
@@ -470,22 +493,21 @@ extern restriction_thing *check_restriction(setup *ss, assumption_thing restr, u
                case cr_couples_only:
                   /* check for everyone as a couple */
                   q0 = 0; q1 = 0;
-                  q4 = 0; q5 = 0;
-                  q2 = 0; q3 = 0;
-                  q6 = 0; q7 = 0;
                   if ((t = ss->people[0].id1) != 0) { q0 |= (t^1); q1 |= (t^3); }
                   if ((t = ss->people[7].id1) != 0) { q0 |= (t^1); q1 |= (t^3); }
-                  if ((t = ss->people[1].id1) != 0) { q5 |= (t^1); q4 |= (t^3); }
-                  if ((t = ss->people[6].id1) != 0) { q5 |= (t^1); q4 |= (t^3); }
-                  if ((t = ss->people[2].id1) != 0) { q2 |= (t^1); q3 |= (t^3); }
-                  if ((t = ss->people[5].id1) != 0) { q2 |= (t^1); q3 |= (t^3); }
-                  if ((t = ss->people[3].id1) != 0) { q6 |= (t^1); q7 |= (t^3); }
-                  if ((t = ss->people[4].id1) != 0) { q6 |= (t^1); q7 |= (t^3); }
-                  if (((q0&3) && (q1&3)) ||
-                      ((q2&3) && (q3&3)) ||
-                      ((q6&3) && (q7&3)) ||
-                      ((q5&3) && (q4&3)))
-                     goto restr_failed;
+                  if ((q0&3) && (q1&3)) goto restr_failed;
+                  q0 = 0; q1 = 0;
+                  if ((t = ss->people[1].id1) != 0) { q0 |= (t^1); q1 |= (t^3); }
+                  if ((t = ss->people[6].id1) != 0) { q0 |= (t^1); q1 |= (t^3); }
+                  if ((q0&3) && (q1&3)) goto restr_failed;
+                  q0 = 0; q1 = 0;
+                  if ((t = ss->people[2].id1) != 0) { q0 |= (t^1); q1 |= (t^3); }
+                  if ((t = ss->people[5].id1) != 0) { q0 |= (t^1); q1 |= (t^3); }
+                  if ((q0&3) && (q1&3)) goto restr_failed;
+                  q0 = 0; q1 = 0;
+                  if ((t = ss->people[3].id1) != 0) { q0 |= (t^1); q1 |= (t^3); }
+                  if ((t = ss->people[4].id1) != 0) { q0 |= (t^1); q1 |= (t^3); }
+                  if ((q0&3) && (q1&3)) goto restr_failed;
                   break;
                case cr_quarterbox_or_col:
                   k = 0;         /* check for a reasonable "triple cross" setup */
@@ -1136,7 +1158,7 @@ Private int divide_the_setup(
                   (!(newtb & 001) || assoc(b_3x2, ss, calldeflist))) {
                division_maps = (*map_lists[s2x3][1])[MPKIND__SPLIT][0];
                /* See comment above about abomination. */
-               warn(warn__split_to_2x3s);
+               if (!(callflags1 & CFLAG1_SPLIT_LARGE_SETUPS)) warn(warn__split_to_2x3s);  /* If database said to split, don't give warning. */
                goto divide_us_no_recompute;
             }
             else if (
@@ -1144,7 +1166,7 @@ Private int divide_the_setup(
                   (!(newtb & 001) || assoc(b_6x1, ss, calldeflist))) {
                division_maps = (*map_lists[s1x6][1])[MPKIND__SPLIT][1];
                /* See comment above about abomination. */
-               warn(warn__split_to_1x6s);
+               if (!(callflags1 & CFLAG1_SPLIT_LARGE_SETUPS)) warn(warn__split_to_1x6s);  /* If database said to split, don't give warning. */
                goto divide_us_no_recompute;
             }
          }
@@ -1239,6 +1261,38 @@ Private int divide_the_setup(
             do_matrix_expansion(ss, CONCPROP__NEED_1X16, TRUE);
             if (ss->kind != s1x16) fail("Failed to expand to 1X16.");  /* Should never fail, but we don't want a loop. */
             return 2;        /* And try again. */
+         }
+         break;
+      case s4x6:
+         if (callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) {
+            if (
+                  (!(newtb & 010) || assoc(b_2x6, ss, calldeflist)) &&
+                  (!(newtb & 001) || assoc(b_6x2, ss, calldeflist))) {
+               division_maps = (*map_lists[s2x6][1])[MPKIND__SPLIT][1];
+               goto divide_us_no_recompute;
+            }
+            else if (
+                  (!(newtb & 010) || assoc(b_2x3, ss, calldeflist)) &&
+                  (!(newtb & 001) || assoc(b_3x2, ss, calldeflist))) {
+               division_maps = (*map_lists[s3x4][1])[MPKIND__SPLIT][1];
+               goto divide_us_no_recompute;
+            }
+            else if (
+                  (!(newtb & 010) || assoc(b_4x3, ss, calldeflist) || assoc(b_2x3, ss, calldeflist)) &&
+                  (!(newtb & 001) || assoc(b_3x4, ss, calldeflist) || assoc(b_3x2, ss, calldeflist))) {
+               division_maps = (*map_lists[s3x4][1])[MPKIND__SPLIT][1];
+               goto divide_us_no_recompute;
+            }
+         }
+         break;
+      case s3x8:
+         if (callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) {
+            if (
+                  (!(newtb & 010) || assoc(b_3x4, ss, calldeflist) || assoc(b_3x2, ss, calldeflist)) &&
+                  (!(newtb & 001) || assoc(b_4x3, ss, calldeflist) || assoc(b_2x3, ss, calldeflist))) {
+               division_maps = (*map_lists[s3x4][1])[MPKIND__SPLIT][0];
+               goto divide_us_no_recompute;
+            }
          }
          break;
       case s_c1phan:
@@ -1403,6 +1457,11 @@ Private int divide_the_setup(
       case s_rigger:
          if (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT)
             fail("Can't split the setup.");
+
+         if (assoc(b_trngl4, ss, calldeflist) || assoc(b_ptrngl4, ss, calldeflist)) {
+            division_maps = &map_rig_trngl4;
+            goto divide_us_no_recompute;
+         }
 
          {
             int tinytb = ss->people[2].id1 | ss->people[3].id1 | ss->people[6].id1 | ss->people[7].id1;
@@ -1685,6 +1744,11 @@ Private int divide_the_setup(
       case s_bone:
          if (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT)
             fail("Can't split the setup.");
+
+         if (assoc(b_trngl4, ss, calldeflist) || assoc(b_ptrngl4, ss, calldeflist)) {
+            division_maps = &map_bone_trngl4;
+            goto divide_us_no_recompute;
+         }
 
          {
             int tbi = ss->people[2].id1 | ss->people[3].id1 | ss->people[6].id1 | ss->people[7].id1;
@@ -2154,6 +2218,52 @@ Private int divide_the_setup(
          (void) copy_person(result, 5, result, 8);
          (void) copy_person(result, 6, result, 9);
          (void) copy_person(result, 7, result, 10);
+      }
+   }
+   else if ((result->result_flags & RESULTFLAG__EXPAND_TO_2X3) && (result->kind == s4x6)) {
+      /* We do the same for two concatenated 3x4's.  This could happen if the people folding were not the ends. */
+      if (!(      result->people[2].id1 | result->people[3].id1 | result->people[8].id1 | result->people[9].id1 |
+                  result->people[20].id1 | result->people[21].id1 | result->people[14].id1 | result->people[15].id1)) {
+         /* Inner spots are empty. */
+         result->kind = s4x4;
+         (void) copy_person(result,  2, result, 23);            /* careful -- order is important */
+         (void) copy_person(result,  3, result, 7);
+         (void) copy_person(result,  8, result, 17);
+         (void) copy_person(result,  9, result, 18);
+         (void) copy_person(result, 14, result, 4);
+         (void) copy_person(result, 15, result, 10);
+         (void) copy_person(result,  7, result, 22);
+         (void) copy_person(result,  4, result, 12);
+         (void) copy_person(result, 10, result, 11);
+         (void) copy_person(result, 12, result, 0);
+         (void) copy_person(result, 11, result, 19);
+         (void) copy_person(result,  0, result, 5);
+         (void) copy_person(result,  5, result, 13);
+         (void) copy_person(result, 13, result, 1);
+         (void) copy_person(result,  1, result, 6);
+         (void) copy_person(result,  6, result, 16);
+         canonicalize_rotation(result);
+      }
+      else if (!( result->people[0].id1 | result->people[5].id1 | result->people[6].id1 | result->people[11].id1 |
+                  result->people[18].id1 | result->people[23].id1 | result->people[12].id1 | result->people[17].id1)) {
+         /* Outer spots are empty. */
+         result->kind = s4x4;
+         (void) copy_person(result,  0, result, 4);            /* careful -- order is important */
+         (void) copy_person(result,  5, result, 14);
+         (void) copy_person(result,  6, result, 15);
+         (void) copy_person(result, 11, result, 20);
+         (void) copy_person(result, 12, result, 1);
+         (void) copy_person(result,  4, result, 13);
+         (void) copy_person(result, 14, result, 3);
+         (void) copy_person(result, 15, result, 9);
+         (void) copy_person(result,  1, result, 7);
+         (void) copy_person(result, 13, result, 2);
+         (void) copy_person(result,  3, result, 8);
+         (void) copy_person(result,  9, result, 19);
+         (void) copy_person(result,  7, result, 21);
+         (void) copy_person(result,  2, result, 22);
+         (void) copy_person(result,  8, result, 16);
+         canonicalize_rotation(result);
       }
    }
 
@@ -2789,17 +2899,19 @@ extern void basic_move(
       /* Check for people cutting through or working around an elongated 2x2 setup. */
       if (     ss->kind == s2x2 &&
                orig_elongation != 0 &&
-               !(ss->cmd.cmd_misc_flags & CMD_MISC__NO_CHK_ELONG) &&
-               (callspec->callflags1 & (CFLAG1_NO_CUTTING_THROUGH | CFLAG1_NO_ELONGATION_ALLOWED))) {
-
-         if (callspec->callflags1 & CFLAG1_NO_ELONGATION_ALLOWED)
+               !(ss->cmd.cmd_misc_flags & CMD_MISC__NO_CHK_ELONG)) {
+         if (callspec->callflags1 & CFLAG1_NO_ELONGATION_ALLOWED) {
             fail("Call can't be done around the outside of the set.");
+         }
+         else if (goodies->callarray_flags & CAF__NO_CUTTING_THROUGH) {
+            if (result->kind == s1x4)
+               fail("Call can't be done around the outside of the set.");
 
-         /* Must be just "no cutting through". */
-         for (i=0; i<4; i++) {
-            uint32 p = ss->people[i].id1;
-            if (p != 0 && ((p-i-1) & 2) == 0 && ((p ^ orig_elongation) & 1) == 0)
-               fail("Call has outsides cutting through the middle of the set.");
+            for (i=0; i<4; i++) {
+               uint32 p = ss->people[i].id1;
+               if (p != 0 && ((p-i-1) & 2) == 0 && ((p ^ orig_elongation) & 1) == 0)
+                  fail("Call has outsides cutting through the middle of the set.");
+            }
          }
       }
 
@@ -2839,6 +2951,26 @@ extern void basic_move(
 
          numout = setup_attrs[result->kind].setup_limits+1;
          halfnumout = numout >> 1;
+
+
+
+
+
+
+         /* Check for a 1x4 call around the outside that sends people far away without permission. */
+         if (     ss->kind == s1x4 &&
+                  ss->cmd.prior_elongation_bits & 0x40 &&
+                  !(ss->cmd.cmd_misc_flags & CMD_MISC__NO_CHK_ELONG)) {
+            if (goodies->callarray_flags & CAF__NO_CUTTING_THROUGH) {
+               fail("Call has outsides going too far around the set.");
+            }
+         }
+
+
+
+
+
+
 
          if (inconsistent_setup) {
             if (inconsistent_rotation) {
@@ -2890,6 +3022,15 @@ extern void basic_move(
                   }
                   else
                      final_translatel = &ftcphan[0];
+               }
+               else if (result->kind == s2x4 && (setup_kind) linedefinition->end_setup == s_bone) {
+                  if (goodies->callarray_flags & CAF__ROT) {
+                     final_translatel = &qtlbone[4];
+                     rotfudge_line = 2;
+                  }
+                  else {
+                     final_translatel = &qtlbone[0];
+                  }
                }
                else
                   fail("T-bone call went to a weird setup.");
@@ -3123,7 +3264,7 @@ extern void basic_move(
                fail("Call went to improperly-formed setup.");
          }
          else if (result->kind == sbigdmd) {
-            if ((lilresult_mask[0] & 02222) == 0) {   /* All outside */
+            if ((lilresult_mask[0] & 02222) == 0) {        /* All outside */
                result->kind = s_qtag;
                permuter = qtbd1;
                rotator = 1;
@@ -3151,22 +3292,46 @@ extern void basic_move(
                will take place if two of these results are placed end-to-end. */
             resultflags |= RESULTFLAG__EXPAND_TO_2X3;
          }
+         else if (result->kind == s3x4 && ss->kind == s1x4) {
+            /* This could be the even more glorious form of the above, for "fold".
+               If we can strip it down to a 2x3 (because the ends were the ones doing the fold),
+               do so now.  In any case, set the flag so that the 3-to-2 squashing can take place later. */
+            if ((lilresult_mask[0] & 03131) == 0) {
+               result->kind = s2x3;
+               permuter = q3x4xx1;
+               rotator = 1;
+            }
+            else if ((lilresult_mask[0] & 01717) == 0) {
+               result->kind = s1x4;
+               permuter = q3x4xx2;
+               rotator = 0;
+            }
+            else if ((lilresult_mask[0] & 01567) == 0 || (lilresult_mask[0] & 01673) == 0) {
+               result->kind = s_trngl4;
+               permuter = q3x4xx3;
+               rotator = 1;
+            }
+            else if ((lilresult_mask[0] & 06715) == 0 || (lilresult_mask[0] & 07316) == 0) {
+               result->kind = s_trngl4;
+               permuter = q3x4xx4;
+               rotator = 3;
+            }
+
+            resultflags |= RESULTFLAG__EXPAND_TO_2X3;
+         }
 
          if (permuter) {
-            if (rotator) {
-               for (real_index=0; real_index<num; real_index++) {
-                  if (ss->people[real_index].id1) {
-                     newplacelist[real_index] = permuter[newplacelist[real_index]];
-                     newpersonlist[real_index].id1 = rotccw(newpersonlist[real_index].id1);
-                  }
-               }
-               result->rotation++;
-            }
-            else {
-               for (real_index=0; real_index<num; real_index++) {
-                  if (ss->people[real_index].id1) newplacelist[real_index] = permuter[newplacelist[real_index]];
+            uint32 r = 011*((-rotator) & 3);
+
+            for (real_index=0; real_index<num; real_index++) {
+               if (ss->people[real_index].id1) {
+                  newplacelist[real_index] = permuter[newplacelist[real_index]];
+                  if (rotator)
+                     newpersonlist[real_index].id1 = rotperson(newpersonlist[real_index].id1, r);
                }
             }
+
+            result->rotation += rotator;
          }
       }
    }

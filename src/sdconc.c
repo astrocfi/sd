@@ -29,24 +29,6 @@
 
 #include "sd.h"
 
-
-/* BEWARE!!  This list must track the "concthing" arrays . */
-/* BEWARE!!  This list must track the array "conc_error_messages" . */
-typedef enum {
-   analyzer_NORMAL,
-   analyzer_CHECKPT,
-   analyzer_2X6,
-   analyzer_6X2,
-   analyzer_6X2_TGL,
-   analyzer_STAR12,
-   analyzer_STAR16,
-   analyzer_SINGLE,
-   analyzer_TRIPLE_LINE,
-   analyzer_VERTICAL6,
-   analyzer_LATERAL6,
-   analyzer_DIAMOND_LINE } analyzer_kind;
-
-
 /*                                                                                                          mapelong --------|
                                                                                                            outer_rot -----|  |
                                                                                                     inner_rot ---------|  |  |
@@ -151,6 +133,9 @@ Private cm_thing map2x4_2x2v = {{15, 3, 7, 11},
 Private cm_thing oddmap2x4_2x2v = {{11, 15, 3, 7},
                                         {12, 13, 14, 0, 4, 5, 6, 8},     4, 8, s4x4,           s2x2,     s2x4,     16, 1, 0, 9};
 Private cm_thing mapdmd_line = {{1, 2, 5, 6}, {0, 3, 4, 7},              4, 4, s3x1dmd,        s1x4,     sdmd,     8,  0, 0, 0};
+/* This one allows "finish" when the center "line" is actually a diamond whose centers are empty.
+   This can happen because of the preference given for lines over diamonds at the conclusion of certain calls. */
+Private cm_thing mappts_line = {{1, -1, 5, -1}, {0, 2, 4, 6},            4, 4, s_crosswave,    s1x4,     sdmd,     8,  0, 0, 0};
 Private cm_thing map_s_dmd_line = {{1, 2, 5, 6}, {0, 3, 4, 7},           4, 4, s_wingedstar,   s1x4,     sdmd,     8,  0, 0, 0};
 
 Private cm_thing *concmap1x2_1x2[4]       = {&map1x2_1x2,          &oddmap1x2_1x2,       &map1x2_1x2,      &oddmap1x2_1x2};
@@ -802,111 +787,111 @@ gotit:
     |       |       |       |       |       |       |       |       |       |       analyzer_LATERAL6
     |       |       |       |       |       |       |       |       |       |       |       analyzer_DIAMOND_LINE */
 
-cm_hunk concthing_1x4 =
+cm_hunk concthing_1x4 = {0x5, 0, 0,
    {0,      0,      0,      0,      0,      0,      0,      &map1x2_1x2,
-                                                                    0,      0,      0,      0};
+                                                                    0,      0,      0,      0}};
 
-cm_hunk concthing_dmd =
+cm_hunk concthing_dmd = {0x5, 0, 0,
    {0,      0,      0,      0,      0,      0,      0,      &oddmap1x2_1x2,
-                                                                    0,      0,      0,      0};
+                                                                    0,      0,      0,      0}};
 
-cm_hunk concthing_qtag =
+cm_hunk concthing_qtag = {0x33, 0xDD, 0x11,
    {&map2x2_1x4h,
             0,      &oddmapshort6_1x2v,
                             &oddmap1x2_2x3,
                                      &map1x2_intgl,
-                                            0,      0,      0,      0,      0,      0,      0};
+                                            0,      0,      0,      0,      0,      0,      0}};
 
-cm_hunk concthing_bone =
+cm_hunk concthing_bone = {0x33, 0, 0x11,
    {&map2x2_1x4v,
             &map1x2_bone6_rc,
                     &mapbone6_1x2,
-                            0,      0,      0,      0,      0,      0,      0,      0,      0};
+                            0,      0,      0,      0,      0,      0,      0,      0,      0}};
 
-cm_hunk concthing_rigger =
+cm_hunk concthing_rigger = {0xCC, 0xDD, 0,
    {&map1x4_2x2,
             &oddmap1x2_short6_rc,
                     0,      &oddmap1x2_short6,
-                                    0,      0,      0,      0,      0,      0,      0,      0};
+                                    0,      0,      0,      0,      0,      0,      0,      0}};
 
-cm_hunk concthing_spindle =
+cm_hunk concthing_spindle = {0, 0xEE, 0x44,
    {0,      &map2x2_dmd_rc,
                     &mapshort6_1x2h,
                             &map1x2_2x3,
-                                    0,      0,      0,      0,      0,      0,      0,      0};
+                                    0,      0,      0,      0,      0,      0,      0,      0}};
 
-cm_hunk concthing_hrglass =
+cm_hunk concthing_hrglass = {0x33, 0, 0x11,
    {&map2x2_dmd,
             0,      &mapshort6_1x2v,
                             0,      0,      0,      0,      0,      0,      &oddmap1x2_bone6,
                                                                                     0,
-                                                                                            0};
+                                                                                            0}};
 
-cm_hunk concthing_dhrglass =
+cm_hunk concthing_dhrglass = {0x33, 0, 0x11,
    {&map2x2_dmdv,
             &map1x2_2x3_rc,
                     &mapbone6_1x2v,
-                            0,      0,      0,      0,      0,      0,      0,      0,      0};
+                            0,      0,      0,      0,      0,      0,      0,      0,      0}};
 
-cm_hunk concthing_xwave =
+cm_hunk concthing_xwave = {0x33, 0, 0x11,
    {&oddmap1x4_1x4,
             0,      &oddmapminrig_1x2,
-                            0,      0,      0,      0,      0,      0,      0,      0,      0};
+                            0,      0,      0,      0,      0,      0,      0,      0,      &mappts_line}};
 
-cm_hunk concthing_1x8 =
+cm_hunk concthing_1x8 = {0x33, 0x77, 0x22,
    {&map1x4_1x4,
             &map1x4_1x4_rc,
                     &map1x6_1x2,
                             &map1x2_1x6,
-                                    0,      0,      0,      0,      0,      0,      0,      0};
+                                    0,      0,      0,      0,      0,      0,      0,      0}};
 
-cm_hunk concthing_2x4 =
+cm_hunk concthing_2x4 = {0x66, 0, 0,
    {&map2x2_2x2v,
-            0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0};
+            0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0}};
 
-cm_hunk concthing_3x4 =
+cm_hunk concthing_3x4 = {0, 0, 0x041,
    {0,      0,      &oddmap2x3_1x2,
                             0,      0,      &map2x3_2x3,
                                                     0,      0,      &map_3line,
-                                                                            0,      0,      0};
+                                                                            0,      0,      0}};
 
-cm_hunk concthing_4x4 =
+cm_hunk concthing_4x4 = {0, 0, 0,
    {0,      0,      0,      0,      0,      0,      &map2x4_2x4v,
-                                                            0,      0,      0,      0,      0};
+                                                            0,      0,      0,      0,      0}};
 
-cm_hunk concthing_ptpd =
+cm_hunk concthing_ptpd = {0, 0x77, 0x22,
    {0,      &map2x2_1x4_rc,
                     &oddmapshort6_1x2h,
                             &map1x2_bone6,
-                                    0,      0,      0,      0,      0,      0,      0,      0};
+                                    0,      0,      0,      0,      0,      0,      0,      0}};
 
-cm_hunk concthing_3x1dmd =
+cm_hunk concthing_3x1dmd = {0x33, 0, 0,
    {&oddmap1x4_dmd,
             0,      &mapminrig_1x2,
                             &oddmap1x2_1x6,
-                                    0,      0,      0,      0,      0,      0,      0,      &mapdmd_line};
+                                    0,      0,      0,      0,      0,      0,      0,      &mapdmd_line}};
 
-cm_hunk concthing_wstar =
+cm_hunk concthing_wstar = {0x33, 0, 0,
    {&map1x4_star,
-            0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      &map_s_dmd_line};
+            0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      &map_s_dmd_line}};
 
-cm_hunk concthing_wstar12 =
+cm_hunk concthing_wstar12 = {0, 0, 0,
    {0,      0,      0,      0,      0,      &map_spec_star12,
-                                                    0,      0,      0,      0,      0,      &oddmap_s_short_1x6};
+                                                    0,      0,      0,      0,      0,      &oddmap_s_short_1x6}};
 
-cm_hunk concthing_wstar16 =
+cm_hunk concthing_wstar16 = {0, 0, 0,
    {0,      0,      0,      0,      0,      0,      &map_spec_star16,
-                                                            0,      0,      0,      0,      &map_s_spindle_1x8};
+                                                            0,      0,      0,      0,      &map_s_spindle_1x8}};
 
-cm_hunk concthing_gal =
+cm_hunk concthing_gal = {0x55, 0, 0,
    {&mapstar_2x2,
             0,      0,      0,      0,      0,      0,      0,      0,      &map1x2_short6,
                                                                                     &maplatgal,
-                                                                                            0};
+                                                                                            0}};
 
-cm_hunk concthing_thar =
+cm_hunk concthing_thar = {0x55, 0, 0,
    {&mapstar_star,
-            0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0};
+            0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0}};
 
 /* BEWARE!!  This is keyed to the enumeration "analyzer_kind". */
 Private char *conc_error_messages[] = {
@@ -1157,7 +1142,7 @@ Private void concentrify(
 
    chunk = setup_attrs[ss->kind].conctab;
    if (!chunk) fail(conc_error_messages[analyzer_index]);
-   lmap_ptr = (*chunk)[analyzer_index];
+   lmap_ptr = chunk->hunk[analyzer_index];
    if (!lmap_ptr) fail(conc_error_messages[analyzer_index]);
 
    if (lmap_ptr == &map2x4_2x4v) {
@@ -1480,6 +1465,15 @@ extern void concentric_move(
 
          if (((DFM1_CONC_CONCENTRIC_RULES | DFM1_CONC_DEMAND_LINES | DFM1_CONC_DEMAND_COLUMNS | DFM1_CONC_FORCE_OTHERWAY) & modifiersout1) ||
                (analyzer == schema_cross_concentric) || (analyzer == schema_single_cross_concentric))
+            begin_outer.cmd.cmd_misc_flags |= CMD_MISC__NO_CHK_ELONG;
+      }
+      else if (begin_outer.kind == s1x4 && analyzer != schema_rev_checkpoint) {
+         begin_outer.cmd.prior_elongation_bits = 0x40;     /* Indicate that these people are working around the outside. */
+
+         if ((DFM1_CONC_CONCENTRIC_RULES & modifiersout1) ||
+               analyzer == schema_cross_concentric ||
+               analyzer == schema_checkpoint ||
+               analyzer == schema_single_cross_concentric)
             begin_outer.cmd.cmd_misc_flags |= CMD_MISC__NO_CHK_ELONG;
       }
 
@@ -2151,7 +2145,7 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
       }
       return;
    }
-   else if ((res1->kind == s_crosswave) && (res2->kind == s_crosswave) && (r&1)) {
+   else if (res1->kind == s_crosswave && res2->kind == s_crosswave && (r&1)) {
       result->kind = s_crosswave;
 
       if ((res2->people[0].id1 | res2->people[4].id1) == 0) {
@@ -2175,7 +2169,7 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
          return;
       }
    }
-   else if ((res1->kind == s1x4) && (res2->kind == s_crosswave) && (r&1)) {
+   else if (res1->kind == s1x4 && res2->kind == s_crosswave && (r&1)) {
      *result = *res2;
       install_rot(result, 2, res1, 1^r, rot);
       install_rot(result, 3, res1, 0^r, rot);
@@ -2279,6 +2273,17 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
       normalize_concentric(schema_concentric, 1, outer_inners, 0, result);
       return;
    }
+   else if (res2->kind == s3x1dmd && res1->kind == s2x2 &&
+            (!(res2->people[1].id1 | res2->people[2].id1 | res2->people[5].id1 | res2->people[6].id1))) {
+      res2->kind = sdmd;
+      (void) copy_person(res2, 1, res2, 3);
+      (void) copy_person(res2, 2, res2, 4);
+      (void) copy_person(res2, 3, res2, 7);
+      outer_inners[0] = *res2;
+      outer_inners[1] = *res1;
+      normalize_concentric(schema_concentric, 1, outer_inners, 0, result);
+      return;
+   }
    else if (res2->kind == s1x8 && res1->kind == s2x2 &&
             (!(res2->people[0].id1 | res2->people[2].id1 | res2->people[4].id1 | res2->people[6].id1))) {
       res2->kind = s1x4;
@@ -2363,6 +2368,20 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
       outer_inners[0] = *res2;
       outer_inners[1] = *res1;
       normalize_concentric(schema_concentric, 1, outer_inners, outer_elongation, result);
+      return;
+   }
+   else if (res1->kind == s_qtag && res2->kind == s2x4 && (r&1) &&
+            (!(res2->people[1].id1 | res2->people[2].id1 | res2->people[5].id1 | res2->people[6].id1))) {
+      *result = *res1;
+      r = (res2->rotation - res1->rotation) & 3;
+      rot = r * 011;
+
+      offs = r * 2;
+
+      install_rot(result, 0, res2, 5^offs, rot);
+      install_rot(result, 1, res2, 2^offs, rot);
+      install_rot(result, 4, res2, 1^offs, rot);
+      install_rot(result, 5, res2, 6^offs, rot);
       return;
    }
    else if (res2->kind == s_ptpd && res1->kind == s1x8 && r == 0 &&
@@ -2468,6 +2487,14 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
       (void) copy_person(result, 5, res1, 2);
       (void) copy_person(result, 6, res1, 3);
       canonicalize_rotation(result);
+      return;
+   }
+   else if (res2->kind == s_galaxy && res1->kind == s2x2) {
+      *result = *res2;
+      (void) install_person(result, 1, res1, 0);
+      (void) install_person(result, 3, res1, 1);
+      (void) install_person(result, 5, res1, 2);
+      (void) install_person(result, 7, res1, 3);
       return;
    }
    else if (res2->kind == s_bone && res1->kind == s2x2 && action != merge_strict_matrix &&
@@ -2632,6 +2659,8 @@ typedef struct fixerjunk {
    Const struct fixerjunk *next1x2rot;
    Const struct fixerjunk *next1x4;
    Const struct fixerjunk *next1x4rot;
+   Const struct fixerjunk *nextdmd;
+   Const struct fixerjunk *nextdmdrot;
    Const struct fixerjunk *next2x2;
    int nonrot[4][4];
    int yesrot[4][4];
@@ -2665,6 +2694,8 @@ static Const fixer foo33 = {
    (struct fixerjunk *) 0,   /* next1x2rot */
    (struct fixerjunk *) 0,   /* next1x4    */
    (struct fixerjunk *) 0,   /* next1x4rot */
+   (struct fixerjunk *) 0,   /* nextdmd    */
+   (struct fixerjunk *) 0,   /* nextdmdrot */
    (struct fixerjunk *) 0,   /* next2x2    */
    {{0, 1}, {5, 4}},
    {{7, 6}, {2, 3}}};
@@ -2678,6 +2709,8 @@ static Const fixer foocc = {
    (struct fixerjunk *) 0,   /* next1x2rot */
    (struct fixerjunk *) 0,   /* next1x4    */
    (struct fixerjunk *) 0,   /* next1x4rot */
+   (struct fixerjunk *) 0,   /* nextdmd    */
+   (struct fixerjunk *) 0,   /* nextdmdrot */
    (struct fixerjunk *) 0,   /* next2x2    */
    {{2, 3}, {7, 6}},
    {{0, 1}, {5, 4}}};
@@ -2691,6 +2724,8 @@ static Const fixer f1x8aa = {
    &foozz,                   /* next1x2rot */
    (struct fixerjunk *) 0,   /* next1x4    */
    (struct fixerjunk *) 0,   /* next1x4rot */
+   (struct fixerjunk *) 0,   /* nextdmd    */
+   (struct fixerjunk *) 0,   /* nextdmdrot */
    (struct fixerjunk *) 0,   /* next2x2    */
    {{1, 3}, {7, 5}},
    {{-1}}};
@@ -2704,6 +2739,8 @@ static Const fixer foozz = {
    &f1x8aa,                  /* next1x2rot */
    (struct fixerjunk *) 0,   /* next1x4    */
    (struct fixerjunk *) 0,   /* next1x4rot */
+   (struct fixerjunk *) 0,   /* nextdmd    */
+   (struct fixerjunk *) 0,   /* nextdmdrot */
    (struct fixerjunk *) 0,   /* next2x2    */
    {{1, 3}, {7, 5}},
    {{-1}}};
@@ -2717,6 +2754,8 @@ static Const fixer foozzd = {
    (struct fixerjunk *) 0,   /* next1x2rot */
    &f1x8aad,                 /* next1x4    */
    (struct fixerjunk *) 0,   /* next1x4rot */
+   (struct fixerjunk *) 0,   /* nextdmd    */
+   (struct fixerjunk *) 0,   /* nextdmdrot */
    &foozzd,                  /* next2x2    */
    {{1, 7, 5, 3}},
    {{-1}}};
@@ -2730,8 +2769,55 @@ static Const fixer f1x8aad = {
    (struct fixerjunk *) 0,   /* next1x2rot */
    &f1x8aad,                 /* next1x4    */
    (struct fixerjunk *) 0,   /* next1x4rot */
+   (struct fixerjunk *) 0,   /* nextdmd    */
+   (struct fixerjunk *) 0,   /* nextdmdrot */
    &foozzd,                  /* next2x2    */
    {{1, 3, 5, 7}},
+   {{-1}}};
+
+static Const fixer f3x1zzd = {
+   sdmd,
+   s3x1dmd,
+   0,
+   1,
+   (struct fixerjunk *) 0,   /* next1x2    */
+   (struct fixerjunk *) 0,   /* next1x2rot */
+   (struct fixerjunk *) 0,   /* next1x4    */  
+   (struct fixerjunk *) 0,   /* next1x4rot */
+   &f3x1zzd,                 /* nextdmd    */
+   (struct fixerjunk *) 0,   /* nextdmdrot */
+   (struct fixerjunk *) 0,   /* next2x2    */
+   {{0, 3, 4, 7}},
+   {{-1}}};
+
+static Const fixer fspindlc = {
+   s1x2,
+   s_spindle,
+   1,
+   2,
+   &fspindlc,                /* next1x2    */
+   (struct fixerjunk *) 0,   /* next1x2rot */
+   (struct fixerjunk *) 0,   /* next1x4    */
+   (struct fixerjunk *) 0,   /* next1x4rot */
+   (struct fixerjunk *) 0,   /* nextdmd    */
+   (struct fixerjunk *) 0,   /* nextdmdrot */
+   (struct fixerjunk *) 0,   /* next2x2    */
+   {{0, 6}, {2, 4}},
+   {{-1}}};
+
+static Const fixer fspindld = {
+   s2x2,
+   s_spindle,
+   0,
+   1,
+   (struct fixerjunk *) 0,   /* next1x2    */
+   (struct fixerjunk *) 0,   /* next1x2rot */
+   (struct fixerjunk *) 0,   /* next1x4    */  
+   (struct fixerjunk *) 0,   /* next1x4rot */
+   (struct fixerjunk *) 0,   /* nextdmd    */
+   (struct fixerjunk *) 0,   /* nextdmdrot */
+   &fspindld,                /* next2x2    */
+   {{0, 2, 4, 6}},
    {{-1}}};
 
 static Const fixer foo55d = {
@@ -2743,8 +2829,40 @@ static Const fixer foo55d = {
    (struct fixerjunk *) 0,   /* next1x2rot */
    &foo55d,                  /* next1x4    */
    (struct fixerjunk *) 0,   /* next1x4rot */
+   (struct fixerjunk *) 0,   /* nextdmd    */
+   (struct fixerjunk *) 0,   /* nextdmdrot */
    &bar55d,                  /* next2x2    */
    {{0, 2, 4, 6}},
+   {{-1}}};
+
+static Const fixer fgalctb = {
+   s2x2,
+   s_galaxy,
+   0,
+   1,
+   (struct fixerjunk *) 0,   /* next1x2    */
+   (struct fixerjunk *) 0,   /* next1x2rot */
+   (struct fixerjunk *) 0,   /* next1x4    */
+   (struct fixerjunk *) 0,   /* next1x4rot */
+   (struct fixerjunk *) 0,   /* nextdmd    */
+   (struct fixerjunk *) 0,   /* nextdmdrot */
+   &fgalctb,                 /* next2x2    */
+   {{1, 3, 5, 7}},
+   {{-1}}};
+
+static Const fixer f3x1ctl = {
+   s1x4,
+   s3x1dmd,
+   0,
+   1,
+   (struct fixerjunk *) 0,   /* next1x2    */
+   (struct fixerjunk *) 0,   /* next1x2rot */
+   &f3x1ctl,                 /* next1x4    */
+   (struct fixerjunk *) 0,   /* next1x4rot */
+   (struct fixerjunk *) 0,   /* nextdmd    */
+   (struct fixerjunk *) 0,   /* nextdmdrot */
+   &fgalctb,                 /* next2x2    */
+   {{1, 2, 5, 6}},
    {{-1}}};
 
 static Const fixer foo99d = {
@@ -2756,6 +2874,8 @@ static Const fixer foo99d = {
    (struct fixerjunk *) 0,   /* next1x2rot */
    &foo99d,                  /* next1x4    */
    (struct fixerjunk *) 0,   /* next1x4rot */
+   (struct fixerjunk *) 0,   /* nextdmd    */
+   (struct fixerjunk *) 0,   /* nextdmdrot */
    &f2x4endd,                /* next2x2    */
    {{0, 3, 4, 7}},
    {{-1}}};
@@ -2769,6 +2889,8 @@ static Const fixer foo66d = {
    (struct fixerjunk *) 0,   /* next1x2rot */
    &foo66d,                  /* next1x4    */
    (struct fixerjunk *) 0,   /* next1x4rot */
+   (struct fixerjunk *) 0,   /* nextdmd    */
+   (struct fixerjunk *) 0,   /* nextdmdrot */
    &bar55d,                  /* next2x2    */
    {{1, 2, 5, 6}},
    {{-1}}};
@@ -2782,6 +2904,8 @@ static Const fixer f1x8ctr = {
    (struct fixerjunk *) 0,   /* next1x2rot */
    &f1x8ctr,                 /* next1x4    */
    (struct fixerjunk *) 0,   /* next1x4rot */
+   (struct fixerjunk *) 0,   /* nextdmd    */
+   (struct fixerjunk *) 0,   /* nextdmdrot */
    &bar55d,                  /* next2x2    */
    {{3, 2, 7, 6}},
    {{-1}}};
@@ -2795,6 +2919,8 @@ static Const fixer fqtgctr = {
    (struct fixerjunk *) 0,   /* next1x2rot */
    &fqtgctr,                 /* next1x4    */
    (struct fixerjunk *) 0,   /* next1x4rot */
+   (struct fixerjunk *) 0,   /* nextdmd    */
+   (struct fixerjunk *) 0,   /* nextdmdrot */
    &bar55d,                  /* next2x2    */
    {{6, 7, 2, 3}},
    {{-1}}};
@@ -2808,6 +2934,8 @@ static Const fixer f1x8endd = {
    (struct fixerjunk *) 0,   /* next1x2rot */
    &f1x8endd,                /* next1x4    */
    (struct fixerjunk *) 0,   /* next1x4rot */
+   (struct fixerjunk *) 0,   /* nextdmd    */
+   (struct fixerjunk *) 0,   /* nextdmdrot */
    &f2x4endd,                /* next2x2    */
    {{0, 1, 4, 5}},
    {{-1}}};
@@ -2821,6 +2949,8 @@ static Const fixer f1x8endo = {
    &fboneendo,               /* next1x2rot */
    (struct fixerjunk *) 0,   /* next1x4    */
    (struct fixerjunk *) 0,   /* next1x4rot */
+   (struct fixerjunk *) 0,   /* nextdmd    */
+   (struct fixerjunk *) 0,   /* nextdmdrot */
    (struct fixerjunk *) 0,   /* next2x2    */
    {{0, 1}, {5, 4}},
    {{-1}}};
@@ -2834,6 +2964,8 @@ static Const fixer fbonectr = {
    (struct fixerjunk *) 0,   /* next1x2rot */
    &fbonectr,                /* next1x4    */
    (struct fixerjunk *) 0,   /* next1x4rot */
+   (struct fixerjunk *) 0,   /* nextdmd    */
+   (struct fixerjunk *) 0,   /* nextdmdrot */
    &bar55d,                  /* next2x2    */
    {{6, 7, 2, 3}},
    {{-1}}};
@@ -2847,6 +2979,8 @@ static Const fixer fboneendd = {
    (struct fixerjunk *) 0,   /* next1x2rot */
    &f1x8endd,                /* next1x4    */
    (struct fixerjunk *) 0,   /* next1x4rot */
+   (struct fixerjunk *) 0,   /* nextdmd    */
+   (struct fixerjunk *) 0,   /* nextdmdrot */
    &fboneendd,               /* next2x2    */
    {{0, 1, 4, 5}},
    {{-1}}};
@@ -2860,6 +2994,8 @@ static Const fixer fboneendo = {
    &f1x8endo,                /* next1x2rot */
    (struct fixerjunk *) 0,   /* next1x4    */
    (struct fixerjunk *) 0,   /* next1x4rot */
+   (struct fixerjunk *) 0,   /* nextdmd    */
+   (struct fixerjunk *) 0,   /* nextdmdrot */
    (struct fixerjunk *) 0,   /* next2x2    */
    {{0, 5}, {1, 4}},
    {{-1}}};
@@ -2873,13 +3009,11 @@ static Const fixer frigendd = {
    (struct fixerjunk *) 0,   /* next1x2rot */
    &frigendd,                /* next1x4    */
    (struct fixerjunk *) 0,   /* next1x4rot */
+   (struct fixerjunk *) 0,   /* nextdmd    */
+   (struct fixerjunk *) 0,   /* nextdmdrot */
    &f2x4endd,                /* next2x2    */
    {{6, 7, 2, 3}},
    {{-1}}};
-
-
-
-
 
 static Const fixer frigctr = {
    s2x2,
@@ -2890,6 +3024,8 @@ static Const fixer frigctr = {
    (struct fixerjunk *) 0,   /* next1x2rot */
    &f1x8ctr,                 /* next1x4    */
    (struct fixerjunk *) 0,   /* next1x4rot */
+   (struct fixerjunk *) 0,   /* nextdmd    */
+   (struct fixerjunk *) 0,   /* nextdmdrot */
    &frigctr,                 /* next2x2    */
    {{0, 1, 4, 5}},
    {{-1}}};
@@ -2904,6 +3040,8 @@ static Const fixer f2x4ctr = {
    (struct fixerjunk *) 0,   /* next1x2rot */
    &fbonectr,                /* next1x4    */
    (struct fixerjunk *) 0,   /* next1x4rot */
+   (struct fixerjunk *) 0,   /* nextdmd    */
+   (struct fixerjunk *) 0,   /* nextdmdrot */
    &f2x4ctr,                 /* next2x2    */
    {{1, 2, 5, 6}},
    {{-1}}};
@@ -2917,6 +3055,8 @@ static Const fixer f2x4far = {    /* unsymmetrical */
    (struct fixerjunk *) 0,   /* next1x2rot */
    &f2x4far,                 /* next1x4    */
    (struct fixerjunk *) 0,   /* next1x4rot */
+   (struct fixerjunk *) 0,   /* nextdmd    */
+   (struct fixerjunk *) 0,   /* nextdmdrot */
    (struct fixerjunk *) 0,   /* next2x2    */
    {{0, 1, 3, 2}},
    {{-1}}};
@@ -2930,6 +3070,8 @@ static Const fixer f2x4near = {   /* unsymmetrical */
    (struct fixerjunk *) 0,   /* next1x2rot */
    &f2x4near,                /* next1x4    */
    (struct fixerjunk *) 0,   /* next1x4rot */
+   (struct fixerjunk *) 0,   /* nextdmd    */
+   (struct fixerjunk *) 0,   /* nextdmdrot */
    (struct fixerjunk *) 0,   /* next2x2    */
    {{7, 6, 4, 5}},
    {{-1}}};
@@ -2943,6 +3085,8 @@ static Const fixer f2x4left = {   /* unsymmetrical */
    (struct fixerjunk *) 0,   /* next1x2rot */
    (struct fixerjunk *) 0,   /* next1x4    */
    (struct fixerjunk *) 0,   /* next1x4rot */
+   (struct fixerjunk *) 0,   /* nextdmd    */
+   (struct fixerjunk *) 0,   /* nextdmdrot */
    &f2x4left,                /* next2x2    */
    {{0, 1, 6, 7}},
    {{-1}}};
@@ -2956,17 +3100,11 @@ static Const fixer f2x4right = {  /* unsymmetrical */
    (struct fixerjunk *) 0,   /* next1x2rot */
    (struct fixerjunk *) 0,   /* next1x4    */
    (struct fixerjunk *) 0,   /* next1x4rot */
+   (struct fixerjunk *) 0,   /* nextdmd    */
+   (struct fixerjunk *) 0,   /* nextdmdrot */
    &f2x4right,               /* next2x2    */
    {{2, 3, 4, 5}},
    {{-1}}};
-
-
-
-
-
-
-
-
 
 static Const fixer f2x4endd = {
    s2x2,
@@ -2977,6 +3115,8 @@ static Const fixer f2x4endd = {
    (struct fixerjunk *) 0,   /* next1x2rot */
    &frigendd,                /* next1x4    */
    (struct fixerjunk *) 0,   /* next1x4rot */
+   (struct fixerjunk *) 0,   /* nextdmd    */
+   (struct fixerjunk *) 0,   /* nextdmdrot */
    &f2x4endd,                /* next2x2    */
    {{0, 3, 4, 7}},
    {{-1}}};
@@ -2990,6 +3130,8 @@ static Const fixer f2x4endo = {
    &f1x8endo,                /* next1x2rot */
    (struct fixerjunk *) 0,   /* next1x4    */
    (struct fixerjunk *) 0,   /* next1x4rot */
+   (struct fixerjunk *) 0,   /* nextdmd    */
+   (struct fixerjunk *) 0,   /* nextdmdrot */
    (struct fixerjunk *) 0,   /* next2x2    */
    {{0, 7}, {3, 4}},
    {{-1}}};
@@ -3007,6 +3149,8 @@ static Const fixer bar55d = {
    (struct fixerjunk *) 0,   /* next1x2rot */
    (struct fixerjunk *) 0,   /* next1x4    */
    (struct fixerjunk *) 0,   /* next1x4rot */
+   (struct fixerjunk *) 0,   /* nextdmd    */
+   (struct fixerjunk *) 0,   /* nextdmdrot */
    (struct fixerjunk *) 0,   /* next2x2    */
    {{1, 2, 5, 6}},
    {{-1}}};
@@ -3020,6 +3164,8 @@ static Const fixer fppaad = {
    (struct fixerjunk *) 0,   /* next1x2rot */
    (struct fixerjunk *) 0,   /* next1x4    */
    (struct fixerjunk *) 0,   /* next1x4rot */
+   (struct fixerjunk *) 0,   /* nextdmd    */
+   (struct fixerjunk *) 0,   /* nextdmdrot */
    (struct fixerjunk *) 0,   /* next2x2    */
    {{1, 3}, {7, 5}},
    {{-1}}};
@@ -3033,6 +3179,8 @@ static Const fixer fpp55d = {
    (struct fixerjunk *) 0,   /* next1x2rot */
    (struct fixerjunk *) 0,   /* next1x4    */
    (struct fixerjunk *) 0,   /* next1x4rot */
+   (struct fixerjunk *) 0,   /* nextdmd    */
+   (struct fixerjunk *) 0,   /* nextdmdrot */
    (struct fixerjunk *) 0,   /* next2x2    */
    {{0, 2}, {6, 4}},
    {{-1}}};
@@ -3046,16 +3194,17 @@ extern void so_and_so_only_move(
    parse_block *parseptr,
    setup *result)
 {
+   setup_command subsid_cmd;
+   setup_command *subsid_cmd_p;
    selector_kind saved_selector;
    int i, k, setupcount;
    uint32 livemask[2];
    uint32 j;
    warning_info saved_warnings;
+   calldef_schema schema;
    setup the_setups[2], the_results[2];
 
-#ifdef dontneedthisnomore
-   uint32 nonempty_setups = 0;
-#endif
+   uint32 ssmask;
    int indicator = parseptr->concept->value.arg1;
    long_boolean others = indicator & 1;
    indicator &= ~1;
@@ -3076,7 +3225,9 @@ extern void so_and_so_only_move(
    the_setups[1] = *ss;              /* non-designees */
 
    if (setup_attrs[ss->kind].setup_limits < 0) fail("Can't identify people in this setup.");
-   for (i=0; i<setup_attrs[ss->kind].setup_limits+1; i++) {
+
+   for (i=0, ssmask=0; i<setup_attrs[ss->kind].setup_limits+1; i++) {
+      ssmask <<= 1;
       if (ss->people[i].id1) {
          int q = 0;
 
@@ -3095,14 +3246,71 @@ extern void so_and_so_only_move(
          else if (selectp(ss, i))
             q = 1;
 
-#ifdef dontneedthisnomore
-         nonempty_setups |= 2-q;
-#endif
+         ssmask |= q;
          clear_person(&the_setups[q], i);
       }
    }
 
    current_selector = saved_selector;
+
+   /* See if the user requested "centers" (or the equivalent people under some other
+      designation), and just do it with the concentric_move stuff if so.
+      The concentric_move stuff is much more sophisticated about a lot of things than
+      what we would otherwise do. */
+
+   if (indicator == 4) {
+      int sizem1 = setup_attrs[ss->kind].setup_limits;
+      cm_hunk *chunk = setup_attrs[ss->kind].conctab;
+      uint32 mask = ~(~0 << (sizem1+1));
+
+      if (others) {
+         subsid_cmd = ss->cmd;
+         subsid_cmd.parseptr = parseptr->subsidiary_root;
+         subsid_cmd_p = &subsid_cmd;
+      }
+      else {
+         subsid_cmd_p = (setup_command *) 0;
+      }
+
+      if (sizem1 == 3) {
+         schema = schema_single_concentric;
+      }
+      else {
+         schema = schema_concentric_6_2;
+         if (parseptr->selector == selector_center6) goto do_concentric_ctrs;
+         if (parseptr->selector == selector_outer2) goto do_concentric_ends;
+         schema = schema_concentric_2_6;
+         if (parseptr->selector == selector_center2) goto do_concentric_ctrs;
+         if (parseptr->selector == selector_outer6) goto do_concentric_ends;
+         schema = schema_concentric;
+      }
+
+      if (parseptr->selector == selector_centers) goto do_concentric_ctrs;
+      if (parseptr->selector == selector_ends) goto do_concentric_ends;
+
+      if (chunk &&
+                (ss->kind != s3x4 ||
+                      !(ss->people[1].id1 | ss->people[2].id1 | ss->people[7].id1 | ss->people[8].id1) &&
+                        (ss->people[0].id1 & ss->people[3].id1 & ss->people[4].id1 & ss->people[5].id1 &
+                        ss->people[6].id1 & ss->people[9].id1 & ss->people[10].id1 & ss->people[11].id1))) {
+         if (chunk->mask_normal) {
+            if (ssmask == chunk->mask_normal) goto do_concentric_ctrs;
+            else if (ssmask == mask-chunk->mask_normal) goto do_concentric_ends;
+         }
+
+         if (chunk->mask_6_2) {
+            schema = schema_concentric_6_2;
+            if (ssmask == chunk->mask_6_2) goto do_concentric_ctrs;
+            else if (ssmask == mask-chunk->mask_6_2) goto do_concentric_ends;
+         }
+
+         if (chunk->mask_2_6) {
+            schema = schema_concentric_2_6;
+            if (ssmask == chunk->mask_2_6) goto do_concentric_ctrs;
+            else if (ssmask == mask-chunk->mask_2_6) goto do_concentric_ends;
+         }
+      }
+   }
 
    normalize_setup(&the_setups[0], (indicator == 4) ? normalize_before_merge : normalize_before_isolated_call);
    normalize_setup(&the_setups[1], (indicator == 4) ? normalize_before_merge : normalize_before_isolated_call);
@@ -3115,8 +3323,6 @@ extern void so_and_so_only_move(
          if (the_setups[setupcount].people[i].id1) livemask[setupcount] |= j;
       }
    }
-
-
 
    /* Iterate 1 or 2 times, depending on whether the "other" people do a call. */
 
@@ -3145,6 +3351,8 @@ extern void so_and_so_only_move(
             fixp = &fbonectr;
          else if (the_setups[setupcount].kind == s_rigger && thislivemask == 0x33)
             fixp = &frigctr;
+         else if (the_setups[setupcount].kind == s3x1dmd && thislivemask == 0x66)
+            fixp = &f3x1ctl;
          else if (the_setups[setupcount].kind == s2x4 && thislivemask == 0x66)
             fixp = &f2x4ctr;
          else if (the_setups[setupcount].kind == s2x4 && thislivemask == 0x0F)  /* unsymmetrical */
@@ -3181,6 +3389,10 @@ extern void so_and_so_only_move(
                fixp = &f2x4endd;
             else if (the_setups[setupcount].kind == s_ptpd && thislivemask == 0xAA)
                fixp = &foozzd;
+            else if (the_setups[setupcount].kind == s3x1dmd && thislivemask == 0x99)
+               fixp = &f3x1zzd;
+            else if (the_setups[setupcount].kind == s_spindle && thislivemask == 0x55)
+               fixp = &fspindld;
             else
                fail("Can't do this with these people designated.");
          }
@@ -3211,6 +3423,8 @@ extern void so_and_so_only_move(
                fixp = &fboneendo;
             else if (the_setups[setupcount].kind == s_ptpd && thislivemask == 0xAA)
                fixp = &foozz;
+            else if (the_setups[setupcount].kind == s_spindle && thislivemask == 0x55)
+               fixp = &fspindlc;
             else
                fail("Can't do this with these people designated.");
          }
@@ -3268,6 +3482,8 @@ extern void so_and_so_only_move(
                fixp = fixp->next1x2;
             else if (lilresult[0].kind == s1x4)
                fixp = fixp->next1x4;
+            else if (lilresult[0].kind == sdmd)
+               fixp = fixp->nextdmd;
             else if (lilresult[0].kind == s2x2)
                fixp = fixp->next2x2;
             else
@@ -3290,34 +3506,12 @@ extern void so_and_so_only_move(
          move(&the_setups[setupcount], FALSE, &the_results[setupcount]);
    }
 
-#ifdef dontneedthisnomore
-   if (others) {
-      if (the_results[0].kind == nothing) {
-         if (the_results[1].kind == nothing)
-            fail("Can't have 'everyone' or 'no one' do a call.");
-         else
-            the_results[0].result_flags = the_results[1].result_flags;
-      }
-      else if (the_results[1].kind == nothing)
-         the_results[1].result_flags = the_results[0].result_flags;
-   }
-   else {             /* The non-designees did nothing. */
-      if (the_results[0].kind == nothing)
-         fail("Can't have 'everyone' or 'no one' do a call.");
-
-      the_results[1] = the_setups[1];
-       /* Give the people who didn't move the same result flags as those who did.
-         This is important for the "did last part" check. */
-      the_results[1].result_flags = the_results[0].result_flags;
-   }
-#else
    if (!others) {      /* The non-designees did nothing. */
       the_results[1] = the_setups[1];
        /* Give the people who didn't move the same result flags as those who did.
          This is important for the "did last part" check. */
       the_results[1].result_flags = the_results[0].result_flags;
    }
-#endif
 
    /* Shut off "each 1x4" types of warnings -- they will arise spuriously while
       the people do the calls in isolation. */
@@ -3329,7 +3523,7 @@ extern void so_and_so_only_move(
    *result = the_results[1];
    result->result_flags = get_multiple_parallel_resultflags(the_results, 2);
 
-   /* For "own the <anyone>, we use strict matrix spots for the merge.
+   /* For "own the <anyone>", we use strict matrix spots for the merge.
       Otherwise, we allow a little breathing. */
 
    merge_setups(
@@ -3341,4 +3535,17 @@ extern void so_and_so_only_move(
    return;
 
    lose: fail("Can't do this call with these people.");
+
+
+   do_concentric_ctrs:
+
+   concentric_move(ss, &ss->cmd, subsid_cmd_p,
+            schema, 0, 0, result);
+   return;
+
+   do_concentric_ends:
+
+   concentric_move(ss, subsid_cmd_p, &ss->cmd,
+            schema, 0, 0, result);
+   return;
 }

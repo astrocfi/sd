@@ -548,7 +548,7 @@ typedef struct {
          calldef_block *def_list;
       } arr;            /* if schema = schema_by_array */
       struct {
-         int flags;
+         uint32 flags;
          short stuff[8];
       } matrix;         /* if schema = schema_matrix or schema_partner_matrix */
       struct {
@@ -754,7 +754,7 @@ typedef enum {
 typedef struct {
    Cstring name;
    Const concept_kind kind;
-   Const long_boolean dup;
+   Const uint32 miscflags;   /* 1 bit -> this is a duplicate in menu; 2 bit -> yield if ambiguous. */
    Const dance_level level;
    Const struct {
       Const map_thing *maps;
@@ -1122,6 +1122,7 @@ typedef enum {
    command_abort,
    command_create_comment,
    command_change_outfile,
+   command_change_header,
    command_getout,
    command_resolve,
    command_reconcile,
@@ -1211,8 +1212,34 @@ typedef struct flonk {
 
 typedef uint32 defmodset;
 
+
+/* BEWARE!!  This list must track the "concthing" arrays . */
+/* BEWARE!!  This list must track the array "conc_error_messages" . */
+typedef enum {
+   analyzer_NORMAL,
+   analyzer_CHECKPT,
+   analyzer_2X6,
+   analyzer_6X2,
+   analyzer_6X2_TGL,
+   analyzer_STAR12,
+   analyzer_STAR16,
+   analyzer_SINGLE,
+   analyzer_TRIPLE_LINE,
+   analyzer_VERTICAL6,
+   analyzer_LATERAL6,
+   analyzer_DIAMOND_LINE
+} analyzer_kind;
+#define NUM_analyzer_KINDS (((int) analyzer_DIAMOND_LINE)+1)
+
+
 typedef map_thing *map_hunk[][2];
-typedef cm_thing *cm_hunk[];
+
+typedef struct {
+   uint32 mask_normal;
+   uint32 mask_6_2;
+   uint32 mask_2_6;
+   cm_thing *hunk[NUM_analyzer_KINDS];
+} cm_hunk;
 
 
 /* These flags go into the "concept_prop" field of a "concept_table_item".
@@ -1387,6 +1414,7 @@ typedef enum {
    by simple incrementing, so order is important. */
 typedef enum {
    interactivity_database_init,
+   interactivity_verify,
    interactivity_normal,
    interactivity_starting_first_scan,
    interactivity_in_first_scan,
@@ -1648,6 +1676,8 @@ extern callspec_block **base_calls;                                 /* in SDMAIN
 extern int number_of_taggers[4];                                    /* in SDMAIN */
 extern callspec_block **tagger_calls[4];                            /* in SDMAIN */
 extern char outfile_string[];                                       /* in SDMAIN */
+extern char header_comment[];                                       /* in SDMAIN */
+extern int sequence_number;                                         /* in SDMAIN */
 extern int last_file_position;                                      /* in SDMAIN */
 extern int global_age;                                              /* in SDMAIN */
 extern parse_state_type parse_state;                                /* in SDMAIN */
@@ -1724,10 +1754,10 @@ extern void general_initialize(void);
 extern int generate_random_number(int modulus);
 extern void hash_nonrandom_number(int number);
 extern long_boolean generate_random_concept_p(void);
-extern void *get_mem(unsigned int siz);
-extern void *get_mem_gracefully(unsigned int siz);
-extern void *get_more_mem(void *oldp, unsigned int siz);
-extern void *get_more_mem_gracefully(void *oldp, unsigned int siz);
+extern void *get_mem(uint32 siz);
+extern void *get_mem_gracefully(uint32 siz);
+extern void *get_more_mem(void *oldp, uint32 siz);
+extern void *get_more_mem_gracefully(void *oldp, uint32 siz);
 extern void free_mem(void *ptr);
 extern void get_date(char dest[]);
 extern void unparse_number(int arg, char dest[]);
@@ -1735,14 +1765,15 @@ extern void open_file(void);
 extern long_boolean probe_file(char filename[]);
 extern void write_file(char line[]);
 extern void close_file(void);
-extern void print_line(char s[]);
+extern void print_line(Cstring s);
 extern void print_id_error(int n);
 extern void init_error(char s[]);
 extern void add_resolve_indices(char junk[], int cur, int max);
+extern long_boolean open_session(int *argcp, char ***argvp);
 extern void final_exit(int code);
 extern void open_database(void);
-extern unsigned int read_8_from_database(void);
-extern unsigned int read_16_from_database(void);
+extern uint32 read_8_from_database(void);
+extern uint32 read_16_from_database(void);
 extern void close_database(void);
 extern void fill_in_neglect_percentage(char junk[], int n);
 extern int parse_number(char junk[]);
@@ -1758,6 +1789,7 @@ extern void uims_preinitialize(void);
 extern void uims_create_menu(call_list_kind cl, callspec_block *call_name_list[]);
 extern void uims_postinitialize(void);
 extern int uims_do_outfile_popup(char dest[]);
+extern int uims_do_header_popup(char dest[]);
 extern int uims_do_comment_popup(char dest[]);
 extern int uims_do_getout_popup(char dest[]);
 extern int uims_do_abort_popup(void);
@@ -1781,12 +1813,14 @@ extern char *uims_version_string(void);
 extern void uims_database_tick_max(int n);
 extern void uims_database_tick(int n);
 extern void uims_database_tick_end(void);
-extern void uims_database_error(char *message, char *call_name);
-extern void uims_bad_argument(char *s1, char *s2, char *s3);
-extern void uims_debug_print(char *s);		/* Alan's code only */
+extern void uims_database_error(Cstring message, Cstring call_name);
+extern void uims_bad_argument(Cstring s1, Cstring s2, Cstring s3);
+extern void uims_debug_print(Cstring s);		/* Alan's code only */
 
 /* In SDUTIL */
 
+extern void initialize_restr_tables(void);
+extern restriction_thing *get_restriction_thing(setup_kind k, assumption_thing t);
 extern void clear_screen(void);
 extern void writestuff(Const char s[]);
 extern void newline(void);
@@ -1930,8 +1964,6 @@ extern void triangle_move(
    setup *result);
 
 /* In SDCONCPT */
-
-extern restriction_thing *get_restriction_thing(setup_kind k, assumption_thing t);
 
 extern void move_perhaps_with_active_phantoms(
    setup *ss,

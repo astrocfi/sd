@@ -27,7 +27,7 @@
    database format version. */
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 58
+#define DATABASE_FORMAT_VERSION 61
 
 
 
@@ -121,20 +121,20 @@
 /*   spare                                0x00080000UL */
 #define CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK  0x00100000UL
 #define CFLAG1_CAN_BE_FAN                 0x00200000UL
-#define CFLAG1_NO_CUTTING_THROUGH         0x00400000UL
+#define CFLAG1_YIELD_IF_AMBIGUOUS         0x00400000UL
 #define CFLAG1_NO_ELONGATION_ALLOWED      0x00800000UL
 /* This is a 3 bit field -- BASE_TAG_CALL_BIT tells where its low bit lies. */
 #define CFLAG1_BASE_TAG_CALL_MASK         0x07000000UL
 #define CFLAG1_BASE_TAG_CALL_BIT          0x01000000UL
-#define CFLAG1_YIELD_IF_AMBIGUOUS         0x08000000UL
 
 /* Beware!!  This list must track the table "matrixcallflagtab" in dbcomp.c . */
 
-#define MTX_USE_SELECTOR           0001
-#define MTX_STOP_AND_WARN_ON_TBONE 0002
-#define MTX_TBONE_IS_OK            0004
-#define MTX_IGNORE_NONSELECTEES    0010
-#define MTX_MUST_FACE_SAME_WAY     0020
+#define MTX_USE_SELECTOR           0x01
+#define MTX_STOP_AND_WARN_ON_TBONE 0x02
+#define MTX_TBONE_IS_OK            0x04
+#define MTX_IGNORE_NONSELECTEES    0x08
+#define MTX_MUST_FACE_SAME_WAY     0x10
+#define MTX_FIND_JAYWALKERS        0x20
 
 
 /* BEWARE!!  This list must track the table "leveltab" in dbcomp.c . */
@@ -300,7 +300,8 @@ typedef enum {
    b_pbigdmd
 } begin_kind;
 
-/* These bits are used in the "callarray_flags" field of a "callarray". */
+/* These bits are used in the "callarray_flags" field of a "callarray".
+   There is room for 12 of them. */
 
 /* This one must be 1!!!! */
 #define CAF__ROT 0x1
@@ -317,15 +318,18 @@ typedef enum {
 #define CAF__RESTR_FORBID 0x20
 #define CAF__RESTR_RESOLVE_OK 0x30
 #define CAF__PREDS 0x40
+#define CAF__NO_CUTTING_THROUGH 0x80
 
 /* These qualifiers are "overloaded" -- their meaning depends on the starting setup. */
 /* BEWARE!!  This list must track the array "qualtab" in dbcomp.c . */
 
 typedef enum {
-   sq_none,                /* See dbdoc.txt for explanation of these. */
+   sq_none,                /* See db_doc.txt for explanation of these. */
    sq_wave_only,
    sq_1fl_only,
    sq_2fl_only,
+   sq_3x3couples_only,
+   sq_4x4couples_only,
    sq_in_or_out,
    sq_miniwaves,
    sq_rwave_only,
@@ -334,7 +338,9 @@ typedef enum {
    sq_3_4_tag,
    sq_dmd_same_pt,
    sq_dmd_facing,
-   sq_true_Z,
+   sq_true_Z_cw,
+   sq_true_Z_ccw,
+   sq_lateral_cols_empty,
    sq_ctrwv_end2fl,
    sq_ctr2fl_endwv,
    sq_split_dixie,
@@ -352,7 +358,7 @@ typedef enum {
 /* BEWARE!!  This list must track the array "crtab" in dbcomp.c . */
 
 typedef enum {
-   cr_none,                /* See dbdoc.txt for explanation of these. */
+   cr_none,                /* See db_doc.txt for explanation of these. */
    cr_alwaysfail,
    cr_wave_only,
    cr_wave_unless_say_2faced,
@@ -372,6 +378,7 @@ typedef enum {
    cr_magic_only,
    cr_peelable_box,
    cr_ends_are_peelable,
+   cr_siamese_in_quad,
    cr_not_tboned,
    cr_opposite_sex,
    cr_quarterbox_or_col,

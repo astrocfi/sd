@@ -21,7 +21,7 @@
  * Type TAB to complete as much as possible.
  * Type Control-U to clear the line.
  *
- * For use with version 30 of the Sd program.
+ * For use with version 31 of the Sd program.
  * Based on sdui-x11.c 1.10
  *
  * The version of this file is as shown immediately below.  This string
@@ -29,12 +29,12 @@
  * version.
  */
 
-#define UI_VERSION_STRING "1.6"
+#define UI_VERSION_STRING "1.7"
 
 /* See comments in sdmain.c regarding this string. */
 static char *id="@(#)$He" "ader: Sd: sdui-tty.c "
    UI_VERSION_STRING
-   "  wba@apollo.hp.com  10 Nov 94 $";
+   "  wba@apollo.hp.com  28 May 95 $";
 
 /* This file defines the following functions:
    uims_process_command_line
@@ -47,6 +47,7 @@ static char *id="@(#)$He" "ader: Sd: sdui-tty.c "
    uims_get_resolve_command
    uims_do_comment_popup
    uims_do_outfile_popup
+   uims_do_header_popup
    uims_do_getout_popup
    uims_do_abort_popup
    uims_do_neglect_popup
@@ -282,6 +283,8 @@ uims_process_command_line(int *argcp, char ***argvp)
 extern void
 uims_preinitialize(void)
 {
+    current_text_line = 0;
+    ttu_initialize();
 }
 
 /*
@@ -328,8 +331,6 @@ uims_postinitialize(void)
     initialize_signal_handlers();
 #endif
     resolver_is_unwieldy = TRUE;   /* Sorry about that. */
-    ttu_initialize();
-    current_text_line = 0;
 }
 
 Private void
@@ -347,10 +348,11 @@ pack_and_echo_character(char c)
 
 /* This tells how many more lines of matches (the stuff we print in response
    to a question mark) we can print before we have to say "--More--" to
-   get permission from the user to continue.  If it goes negative, the
+   get permission from the user to continue.  If verify_has_stopped goes on, the
    user has given a negative reply to one of our queries, and so we don't
    print any more stuff. */
 Private int match_counter;
+long_boolean verify_has_stopped;
 
 /* This is what we reset the counter to whenever the user confirms.  That
    is, it is the number of lines we print per "screenful".  On a VT-100-like
@@ -375,8 +377,9 @@ start_matches(void)
     * handle what we send to it.
     */
 
-    match_lines = get_lines_for_more();
-    match_counter = match_lines-1; /* last line used for "--More--" prompt */
+   match_lines = get_lines_for_more();
+   match_counter = match_lines-1; /* last line used for "--More--" prompt */
+   verify_has_stopped = FALSE;
 }
 
 Private int
@@ -414,14 +417,15 @@ show_match(char *user_input_str, Const char *extension, Const match_result *mr)
    char *q;
    char *z;
 
-   if (match_counter < 0) return;  /* Showing has been turned off. */
+   if (verify_has_stopped) return;  /* Showing has been turned off. */
 
    if (match_counter <= 0) {
-       match_counter = match_lines - 1;
-       if (!prompt_for_more_output()) {
-           match_counter = -1;   /* Turn it off. */
-           return;
-       }
+      match_counter = match_lines - 1;
+      if (!prompt_for_more_output()) {
+         match_counter = -1;   /* Turn it off. */
+         verify_has_stopped = TRUE;
+         return;
+      }
    }
    match_counter--;
    put_line(user_input_str);
@@ -450,7 +454,7 @@ Private match_result user_match;
 #define SPECIAL_COMMAND_TOGGLE_CONCEPT_LEVELS 2
 #define SPECIAL_COMMAND_TOGGLE_ACTIVE_PHANTOMS 3
 
-int num_command_commands = 18;          /* The number of items in the tables, independent of NUM_COMMAND_KINDS. */
+int num_command_commands = 19;          /* The number of items in the tables, independent of NUM_COMMAND_KINDS. */
 
 Cstring command_commands[] = {
     "simple modifications",
@@ -464,6 +468,7 @@ Cstring command_commands[] = {
     "abort this sequence",
     "insert a comment",
     "change output file",
+    "change header comment",
     "end this sequence",
     "resolve",
     "reconcile",
@@ -485,6 +490,7 @@ static command_kind command_command_values[] = {
    command_abort,
    command_create_comment,
    command_change_outfile,
+   command_change_header,
    command_getout,
    command_resolve,
    command_reconcile,
@@ -534,141 +540,141 @@ static resolve_command_kind resolve_command_values[] = {
 
 Private void get_user_input(char *prompt, int which)
 {
-    char extended_input[200];
-    char *p;
-    char c;
-    int matches;
-    
-    user_match.valid = FALSE;
-    user_input_prompt = prompt;
-    user_input[0] = '\0';
-    user_input_size = 0;
-    function_key_expansion = (char *) 0;
-    put_line(user_input_prompt);
+   char extended_input[200];
+   char *p;
+   char c;
+   int matches;
 
-    for (;;) {
-        /* At this point we always have the concatenation of "user_input_prompt"
-           and "user_input" displayed on the current line. */
+   user_match.valid = FALSE;
+   user_input_prompt = prompt;
+   user_input[0] = '\0';
+   user_input_size = 0;
+   function_key_expansion = (char *) 0;
+   put_line(user_input_prompt);
 
-        c = get_char_input();
+   for (;;) {
+      /* At this point we always have the concatenation of "user_input_prompt"
+         and "user_input" displayed on the current line. */
 
-        if ((c == '\b') || (c == DEL)) {
-            if (user_input_size > 0) {
-                user_input_size--;
-                user_input[user_input_size] = '\0';
-                function_key_expansion = (char *) 0;
-                rubout(); /* Update the display. */
-            }
-            continue;
-        }
-        else if (c == '?') {
-            put_line ("\n");
-            current_text_line++;
-            start_matches();
-            match_user_input(user_input, which, (match_result *) 0, (char *) 0, show_match, FALSE);
-            put_line ("\n");     /* Write a blank line. */
-            current_text_line++;
-            put_line(user_input_prompt);   /* Redisplay the current line. */
-            put_line(user_input);
-            continue;
-        }
+      c = get_char_input();
 
-        if (c == ' ') {
-            /* extend only to one space, inclusive */
-            matches = match_user_input(user_input, which, &user_match, extended_input, (show_function) 0, FALSE);
-            p = extended_input;
-            if (*p) {
-                while (*p) {
-                    if (*p != ' ')
-                        pack_and_echo_character(*p++);
-                    else
-                        goto foobar;
-                }
-                continue;   /* Do *not* pack the character. */
-
-                foobar: ;
-                pack_and_echo_character(c);
-            }
-            else if (user_match.space_ok && matches > 1)
-                pack_and_echo_character(c);
-            else if (diagnostic_mode)
-                goto diagnostic_error;
-            else
-                bell();
-        }
-        else if ((c == '\n') || (c == '\r')) {
-            matches = match_user_input(user_input, which, &user_match, extended_input, (show_function) 0, FALSE);
-
-            /* We forbid a match consisting of two or more "direct parse" concepts, such as "grand cross".
-               Direct parse concepts may only be stacked if they are followed by a call.
-               The "newmodifiers" field indicates that direct parse concepts were stacked. */
-
-            if (  (matches == 1 || matches - user_match.yielding_matches == 1 || user_match.exact)
-                                       &&
-                  (!user_match.newmodifiers || user_match.kind == ui_call_select)) {
-                p = extended_input;
-                while (*p)
-                    pack_and_echo_character(*p++);
-
-                put_line("\n");
-                /* Include the input line in our count, so we will erase it
-                   if we are trying to make the VT-100 screen look nice. */
-                current_text_line++;
-
-                return;
-            }
-
-            if (diagnostic_mode)
-                goto diagnostic_error;
-
-            /* Tell how bad it is, then redisplay current line. */
-	   if (matches > 0) {
-                char tempstuff[200];
-
-                (void) sprintf(tempstuff, "  (%d matches, type ? for list)\n", matches);
-                put_line(tempstuff);
-            }
-            else {
-                put_line("  (no matches)\n");
-            }
-
-            put_line(user_input_prompt);
-            put_line(user_input);
-            current_text_line++;   /* Count that line for erasure. */
-        }
-        else if (c == '\t' || c == '\033') {
-            (void) match_user_input(user_input, which, &user_match, extended_input, (show_function) 0, FALSE);
-            p = extended_input;
-            if (*p) {
-                while (*p)
-                    pack_and_echo_character(*p++);
-            }
-            else if (diagnostic_mode)
-                goto diagnostic_error;
-            else
-                bell();
-        }
-        else if (c == ('U'&'\037')) { /* C-u: kill line */
-            user_input[0] = '\0';
-            user_input_size = 0;
+      if ((c == '\b') || (c == DEL)) {
+         if (user_input_size > 0) {
+            user_input_size--;
+            user_input[user_input_size] = '\0';
             function_key_expansion = (char *) 0;
-            clear_line();           /* Clear the current line */
-            put_line(user_input_prompt);    /* Redisplay the prompt. */
-        }
-        else if (isprint(c))
+            rubout(); /* Update the display. */
+         }
+         continue;
+      }
+      else if (c == '?' || c == '!') {
+         put_line ("\n");
+         current_text_line++;
+         start_matches();
+         (void) match_user_input(user_input, which, (match_result *) 0, (char *) 0, show_match, c == '?');
+         put_line ("\n");     /* Write a blank line. */
+         current_text_line++;
+         put_line(user_input_prompt);   /* Redisplay the current line. */
+         put_line(user_input);
+         continue;
+      }
+
+      if (c == ' ') {
+         /* extend only to one space, inclusive */
+         matches = match_user_input(user_input, which, &user_match, extended_input, (show_function) 0, FALSE);
+         p = extended_input;
+         if (*p) {
+            while (*p) {
+               if (*p != ' ')
+                  pack_and_echo_character(*p++);
+               else
+                  goto foobar;
+            }
+            continue;   /* Do *not* pack the character. */
+
+            foobar: ;
             pack_and_echo_character(c);
-        else if (diagnostic_mode)
+         }
+         else if (user_match.space_ok && matches > 1)
+            pack_and_echo_character(c);
+         else if (diagnostic_mode)
             goto diagnostic_error;
-        else
+         else
             bell();
-    }
+      }
+      else if ((c == '\n') || (c == '\r')) {
+         matches = match_user_input(user_input, which, &user_match, extended_input, (show_function) 0, FALSE);
 
-    diagnostic_error:
+         /* We forbid a match consisting of two or more "direct parse" concepts, such as "grand cross".
+            Direct parse concepts may only be stacked if they are followed by a call.
+            The "newmodifiers" field indicates that direct parse concepts were stacked. */
 
-    uims_terminate();
-    (void) fputs("\nParsing error during diagnostic.\n", stdout);
-    (void) fputs("\nParsing error during diagnostic.\n", stderr);
-    final_exit(1);
+         if (  (matches == 1 || matches - user_match.yielding_matches == 1 || user_match.exact)
+                              &&
+              (!user_match.newmodifiers || user_match.kind == ui_call_select)) {
+            p = extended_input;
+            while (*p)
+               pack_and_echo_character(*p++);
+
+            put_line("\n");
+            /* Include the input line in our count, so we will erase it
+               if we are trying to make the VT-100 screen look nice. */
+            current_text_line++;
+
+            return;
+         }
+
+         if (diagnostic_mode)
+            goto diagnostic_error;
+
+         /* Tell how bad it is, then redisplay current line. */
+	   if (matches > 0) {
+            char tempstuff[200];
+
+            (void) sprintf(tempstuff, "  (%d matches, type ? for list)\n", matches);
+            put_line(tempstuff);
+         }
+         else {
+            put_line("  (no matches)\n");
+         }
+
+         put_line(user_input_prompt);
+         put_line(user_input);
+         current_text_line++;   /* Count that line for erasure. */
+      }
+      else if (c == '\t' || c == '\033') {
+         (void) match_user_input(user_input, which, &user_match, extended_input, (show_function) 0, FALSE);
+         p = extended_input;
+         if (*p) {
+            while (*p)
+               pack_and_echo_character(*p++);
+         }
+         else if (diagnostic_mode)
+            goto diagnostic_error;
+         else
+            bell();
+      }
+      else if (c == ('U'&'\037')) { /* C-u: kill line */
+         user_input[0] = '\0';
+         user_input_size = 0;
+         function_key_expansion = (char *) 0;
+         clear_line();           /* Clear the current line */
+         put_line(user_input_prompt);    /* Redisplay the prompt. */
+      }
+      else if (isprint(c))
+         pack_and_echo_character(c);
+      else if (diagnostic_mode)
+         goto diagnostic_error;
+      else
+         bell();
+   }
+
+   diagnostic_error:
+
+   uims_terminate();
+   (void) fputs("\nParsing error during diagnostic.\n", stdout);
+   (void) fputs("\nParsing error during diagnostic.\n", stderr);
+   final_exit(1);
 }
 
 
@@ -744,7 +750,7 @@ extern long_boolean uims_get_call_command(call_list_kind *call_menu, uims_reply 
          else {   /* Must be SPECIAL_COMMAND_TOGGLE_ACTIVE_PHANTOMS. */
              using_active_phantoms = !using_active_phantoms;
          }
-   
+
          goto check_menu;
       }
 
@@ -797,8 +803,7 @@ extern uims_reply uims_get_resolve_command(void)
 }
 
 
-Private int
-get_popup_string(char prompt[], char dest[])
+Private int get_popup_string(char prompt[], char dest[])
 {
     char buffer[200];
 
@@ -807,16 +812,14 @@ get_popup_string(char prompt[], char dest[])
     return POPUP_ACCEPT_WITH_STRING;
 }
 
-extern int
-uims_do_comment_popup(char dest[])
+extern int uims_do_comment_popup(char dest[])
 {
     return get_popup_string("Enter comment", dest);
 }
 
-extern int
-uims_do_outfile_popup(char dest[])
+extern int uims_do_outfile_popup(char dest[])
 {
-    char buffer[200];
+    char buffer[MAX_TEXT_LINE_LENGTH];
     (void) sprintf(buffer, "Sequence output file is \"%s\".\n", outfile_string);
 
     put_line(buffer);
@@ -824,8 +827,18 @@ uims_do_outfile_popup(char dest[])
     return get_popup_string("Enter new file name", dest);
 }
 
-extern int
-uims_do_getout_popup(char dest[])
+extern int uims_do_header_popup(char dest[])
+{
+   if (header_comment[0]) {
+      char buffer[MAX_TEXT_LINE_LENGTH];
+      (void) sprintf(buffer, "Current header comment is \"%s\".\n", header_comment);
+      put_line(buffer);
+      current_text_line++;
+   }
+   return get_popup_string("Enter new comment", dest);
+}
+
+extern int uims_do_getout_popup(char dest[])
 {
     put_line("Specify text label for sequence.\n");
     current_text_line++;
@@ -833,8 +846,7 @@ uims_do_getout_popup(char dest[])
 }
 
 #ifdef NEGLECT
-extern int
-uims_do_neglect_popup(char dest[])
+extern int uims_do_neglect_popup(char dest[])
 {
     put_line("Specify integer percentage of neglected calls.\n");
     current_text_line++;
@@ -842,8 +854,7 @@ uims_do_neglect_popup(char dest[])
 }
 #endif
 
-Private int
-confirm(char *question)
+Private int confirm(char *question)
 {
     char c;
 
@@ -888,7 +899,7 @@ extern int uims_do_modifier_popup(Cstring callname, modify_popup_kind kind)
 {
     char *line_format = "Internal error: unknown modifier kind.\n";
     char tempstuff[200];
-    
+
     switch (kind) {
         case modify_popup_any:
             line_format = "The \"%s\" can be replaced.\n";
@@ -960,12 +971,19 @@ uims_update_resolve_menu(search_kind goal, int cur, int max, resolver_display_st
 
 extern int uims_do_selector_popup(void)
 {
-   int n;
-
-   if (user_match.valid && (user_match.who > selector_uninitialized)) {
-       n = (int) user_match.who;
-       user_match.who = selector_uninitialized;
-       return n;
+   if (interactivity == interactivity_verify) {
+      if (result_for_verify->who == selector_uninitialized) {
+         verify_used_selector = 1;
+         return (int) selector_for_initialize;
+      }
+      else
+         return result_for_verify->who;
+   }
+   else if (user_match.valid && (user_match.who > selector_uninitialized)) {
+      int retval;
+      retval = (int) user_match.who;
+      user_match.who = selector_uninitialized;
+      return retval;
    }
    else {
       int retval;
@@ -975,7 +993,7 @@ extern int uims_do_selector_popup(void)
       user_match = saved_match;
       return retval;
    }
-}    
+}
 
 extern int uims_do_direction_popup(void)
 {
@@ -1024,20 +1042,39 @@ extern int uims_do_tagger_popup(int tagger_class)
 extern uint32 uims_get_number_fields(int nnumbers)
 {
    int i;
-   char buffer[200];
-   unsigned int number_list = 0;
+   uint32 number_fields;
+   int howmanynumbers;
+   uint32 number_list = 0;
+   long_boolean valid = 1;
+
+   if (interactivity == interactivity_verify) {
+      number_fields = result_for_verify->number_fields;
+      howmanynumbers = result_for_verify->howmanynumbers;
+   }
+   else {
+      number_fields = user_match.number_fields;
+      howmanynumbers = user_match.howmanynumbers;
+      valid = user_match.valid;
+   }
 
    for (i=0 ; i<nnumbers ; i++) {
-      unsigned int this_num;
+      uint32 this_num;
 
-      if (user_match.valid && (user_match.howmanynumbers >= 1)) {
-         this_num = user_match.number_fields & 0xF;
-         user_match.number_fields >>= 4;
-         user_match.howmanynumbers--;
+      if (valid && (howmanynumbers >= 1)) {
+         this_num = number_fields & 0xF;
+         number_fields >>= 4;
+         howmanynumbers--;
       }
       else {
-         get_string_input("How many? ", buffer);
-         this_num = atoi(buffer);
+         if (interactivity == interactivity_verify) {
+            this_num = number_for_initialize;
+            verify_used_number = 1;
+         }
+         else {
+            char buffer[200];
+            get_string_input("How many? ", buffer);
+            this_num = atoi(buffer);
+         }
       }
 
       if (this_num == 0 || this_num > 8) return 0;    /* User gave bad answer. */
@@ -1080,7 +1117,7 @@ uims_terminate(void)
 }
 
 /*
- * The following two functions allow the UI to put up a progress
+ * The following three functions allow the UI to put up a progress
  * indicator while the call database is being read (and processed).
  *
  * uims_database_tick_max is called before reading the database
@@ -1095,8 +1132,7 @@ Private int db_tick_cur;	/* goes from 0 to db_tick_max */
 #define TICK_STEPS 52
 Private int tick_displayed;	/* goes from 0 to TICK_STEPS */
 
-extern void
-uims_database_tick_max(int n)
+extern void uims_database_tick_max(int n)
 {
    db_tick_max = n;
    db_tick_cur = 0;
@@ -1105,8 +1141,7 @@ uims_database_tick_max(int n)
    tick_displayed = 0;
 }
 
-extern void
-uims_database_tick(int n)
+extern void uims_database_tick(int n)
 {
     int tick_new;
 
@@ -1119,14 +1154,12 @@ uims_database_tick(int n)
     fflush(stdout);
 }
 
-extern void
-uims_database_tick_end(void)
+extern void uims_database_tick_end(void)
 {
     printf("done\n");
 }
 
-extern void
-uims_database_error(char *message, char *call_name)
+extern void uims_database_error(Cstring message, Cstring call_name)
 {
    print_line(message);
    if (call_name) {
@@ -1135,8 +1168,7 @@ uims_database_error(char *message, char *call_name)
    }
 }
 
-extern void
-uims_bad_argument(char *s1, char *s2, char *s3)
+extern void uims_bad_argument(Cstring s1, Cstring s2, Cstring s3)
 {
    if (s1) print_line(s1);
    if (s2) print_line(s2);

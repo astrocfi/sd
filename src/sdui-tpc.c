@@ -1,7 +1,7 @@
 /*
  * sdui-tpc.c - helper functions for Mac tty interface for port to DOS.
  * Time-stamp: <93/07/19 19:38:40 wba>
- * Copyright 1993 Stephen Gildea
+ * Copyright (c) 1990-1995 Stephen Gildea and William B. Ackerman
  *
  * Permission to use, copy, modify, and distribute this software for
  * any purpose is hereby granted without fee, provided that the above
@@ -30,11 +30,15 @@ extern void ttu_process_command_line(int *argcp, char ***argvp)
 {
    int i;
    int argno = 1;
+   int triangles = 1;
    char **argv = *argvp;
 
    while (argno < (*argcp)) {
       if (strcmp(argv[argno], "-no_cursor") == 0) {
          no_cursor = 1;
+      }
+      else if (strcmp(argv[argno], "-no_graphics") == 0) {
+         triangles = 0;
       }
       else if (strcmp(argv[argno], "-lines") == 0 && argno+1 < (*argcp)) {
          screen_height = atoi(argv[argno+1]);
@@ -50,6 +54,11 @@ extern void ttu_process_command_line(int *argcp, char ***argvp)
       (*argcp)--;      /* Remove this argument from the list. */
       for (i=argno+1; i<=(*argcp); i++) argv[i-1] = argv[i];
    }
+
+   /* If no "-no_graphics" switch was given, switch over
+      to the "pointy triangles" for drawing pictures. */
+   if (triangles)
+      ui_directions = "?\020?\021????\036?\037?????";
 }
 
 extern void ttu_initialize(void)

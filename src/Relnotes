@@ -1,6 +1,72 @@
-		   RELEASE NOTES FOR SD VERSION 31.01
-		 Database version = 31.01 format = 58.
+		   RELEASE NOTES FOR SD VERSION 31.3
+		 Database version = 31.3 format = 61.
     X11 UI version 1.16, SDTTY UI version 1.6, MAC UI version 2.2.
+
+****** Changes as of version 31.3 ******
+
+There is a new feature for keeping track of which dances you
+might be working on, and putting header comments and sequence
+numbers on the cards.  For details, see the section
+"The Initialization File" in the manual.  You can activate
+an example usage of this feature by copying the file "sample.ini"
+(that comes with the distribution) into the file "sd.ini".
+
+The program is much better about having certain people
+do a call.  For example, from diamonds in which the girls are
+the centers, you can say
+
+   BOYS counter rotate      (use the "BOYS" concept)
+      or
+   GIRLS mix                (use the "GIRLS" concept)
+      or
+   BOYS counter rotate WHILE THE GIRLS mix
+            (use the "BOYS (while the others)" concept)
+
+The "disconnected" concept is improved.  It can recognize diamonds
+around the outside of the set, for example.
+
+Sdtty now uses an "intelligent question mark" mechanism.
+When a question mark is typed, all calls are tested in
+the current setup before being displayed.  So, instead
+of listing all calles that one could possibly type, only calls
+that could be legally executed are listed.   Concepts
+are still listed in full, without regard for whether they could
+be used sensibly in the current setup.
+
+To get the old behavior, type exclamation point instead of
+question mark.
+
+****** Changes as of version 31.2 ******
+
+The PC version of sdtty now draws its pictures of setups with
+special arrow characters.  Many people think that the arrows look
+nicer.  If a picture is drawn on the final transcript file
+(because of the "keep picture" command), people are still shown
+with the old "<", ">", "^", and "V" characters, since the special
+arrows are not in the ASCII character set.
+
+The availability of these special characters on PC-like computers
+is not universal.  If your computer does not have them, you can
+suppress their use by giving the switch "-no_graphics" on the
+command line when sdtty is invoked, as in "sdtty c3 -no_graphics".
+
+There is now a version of the "fold" call that more faithfully
+represents what the call means at levels below challenge.  The
+call "<anyone> fold" still exists, and still does its
+strict-matrix-positioning operation.  Its level has been set to C1.
+It should be used for the somewhat esoteric interpretation of "fold" at
+high challenge levels.  There is a new call "<anyone> fold (and adjust)"
+that is available at mainstream.  The parenthesized phrase "(and adjust)"
+is actually part of the call name.  This call fudges the resulting setup
+into the regular shape that is generally expected below challenge.
+So, for example, after "ends fold (and adjust)" from a wave or two-faced
+line, the result is a regular box or facing couples, respectively.
+Note that, when the level is below C1, only the "fold (and adjust)" call
+is available, and, because of completion, just typing "fold" will get
+this call.
+
+The call "peel the top" can be used after the ends of a wave do either
+kind of fold.
 
 ****** Changes as of version 31.01 ******
 

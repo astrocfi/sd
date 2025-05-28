@@ -27,7 +27,7 @@
     General Public License if you distribute the file.
 */
 
-#define VERSION_STRING "31.01"
+#define VERSION_STRING "31.3"
 
 /* We cause this string (that is, the concatentaion of these strings) to appear
    in the binary image of the program, so that the "what" and "ident" utilities
@@ -72,6 +72,8 @@ and the following external variables:
    number_of_taggers
    tagger_calls
    outfile_string
+   header_comment
+   sequence_number
    last_file_position
    global_age
    parse_state
@@ -132,6 +134,9 @@ callspec_block **base_calls;        /* Gets allocated as array of pointers in sd
 int number_of_taggers[4];
 callspec_block **tagger_calls[4];
 char outfile_string[MAX_FILENAME_LENGTH] = SEQUENCE_FILENAME;
+char header_comment[MAX_TEXT_LINE_LENGTH] = "";
+call_list_mode_t call_list_mode;
+int sequence_number = -1;
 int last_file_position = -1;
 int global_age;
 parse_state_type parse_state;
@@ -171,9 +176,6 @@ static int resolve_scan_current_point;
 static parse_state_type saved_parse_state;
 static parse_block *saved_command_root;
 
-
-
-
 /* This static variable is used by main. */
 
 Private concept_descriptor centers_concept = {"centers????", concept_centers_or_ends, TRUE, l_mainstream, {0, 0}};
@@ -212,7 +214,7 @@ Private void initialize_concept_sublists(void)
    for (       concept_index = 0, concepts_at_level = 0;
                concept_descriptor_table[concept_index].kind != end_marker;
                concept_index++) {
-      if (!concept_descriptor_table[concept_index].dup && concept_descriptor_table[concept_index].level <= calling_level)
+      if (!(concept_descriptor_table[concept_index].miscflags & 1) && concept_descriptor_table[concept_index].level <= calling_level)
          concepts_at_level++;
    }
 
@@ -229,7 +231,7 @@ Private void initialize_concept_sublists(void)
                   concept_index++) {
          concept_descriptor *p = &concept_descriptor_table[concept_index];
 
-         if (!p->dup && p->level <= calling_level && p->kind != concept_assume_waves) {
+         if (!(p->miscflags & 1) && p->level <= calling_level && p->kind != concept_assume_waves) {
             setup_mask = ~0;
             /* This concept is legal at this level.  see if it is appropriate for this setup.
                If we don't know, the default value of setup_mask will make it legal. */
@@ -271,7 +273,7 @@ Private void initialize_concept_sublists(void)
                concept_index++) {
       concept_descriptor *p = &concept_descriptor_table[concept_index];
 
-      if (!p->dup && p->level <= calling_level && p->kind != concept_assume_waves)
+      if (!(p->miscflags & 1) && p->level <= calling_level && p->kind != concept_assume_waves)
          concept_sublists[call_list_any][concepts_at_level++] = concept_index;
    }
 
@@ -483,7 +485,7 @@ extern long_boolean deposit_call(callspec_block *call)
 
       if (number_of_taggers[tagclass] == 0) return TRUE;   /* We can't possibly do this. */
 
-      if (interactivity == interactivity_database_init) {
+      if (interactivity == interactivity_database_init || interactivity == interactivity_verify) {
          tagg = 1;   /* This may not be right. */
          tagg |= tagclass << 5;
       }
@@ -516,7 +518,7 @@ extern long_boolean deposit_call(callspec_block *call)
          sel = selector_centers;
          hash_nonrandom_number(((int) sel) - 1);
       }
-      else if (interactivity != interactivity_normal) {
+      else if (interactivity != interactivity_normal && interactivity != interactivity_verify) {
          sel = (selector_kind) generate_random_number(last_selector_kind)+1;
          hash_nonrandom_number(((int) sel) - 1);
       }
@@ -529,7 +531,7 @@ extern long_boolean deposit_call(callspec_block *call)
    if (call->callflagsh & CFLAGH__REQUIRES_DIRECTION) {
       int j;
 
-      if (interactivity == interactivity_database_init)
+      if (interactivity == interactivity_database_init || interactivity == interactivity_verify)
          dir = direction_right;   /* This may not be right. */
       else if (interactivity == interactivity_starting_first_scan || interactivity == interactivity_in_first_scan) {
          dir = direction_right;
@@ -546,10 +548,10 @@ extern long_boolean deposit_call(callspec_block *call)
    }
 
    if (howmanynums != 0) {
-      if (interactivity != interactivity_normal) {
+      if (interactivity != interactivity_normal && interactivity != interactivity_verify) {
          for (i=0 ; i<howmanynums ; i++) {
             int this_num;
-      
+
             if (interactivity == interactivity_database_init)
                this_num = number_for_initialize;
             else if (interactivity == interactivity_starting_first_scan || interactivity == interactivity_in_first_scan) {
@@ -560,7 +562,7 @@ extern long_boolean deposit_call(callspec_block *call)
                this_num = generate_random_number(4)+1;
                hash_nonrandom_number(this_num-1);
             }
-      
+
             number_list |= (this_num << (i*4));
          }
       }
@@ -719,7 +721,7 @@ extern long_boolean query_for_call(void)
 
    if (allowing_modifications)
       parse_state.call_list_to_use = call_list_any;
-   
+
    redisplay:
 
    if (interactivity == interactivity_normal) {
@@ -750,7 +752,7 @@ extern long_boolean query_for_call(void)
       /* First, update the output area to the current state, with error messages, etc.
          We draw a picture for the last two calls. */
       
-      display_initial_history(history_ptr, 2);
+      display_initial_history(history_ptr, (diagnostic_mode ? 1 : 2));
 
       if (sequence_is_resolved()) {
          newline();
@@ -811,39 +813,30 @@ extern long_boolean query_for_call(void)
 
       /* Display the call index number, and the partially entered call and/or prompt, as appropriate. */
 
-      {
-         char indexbuf[200];
+      /* See if there are partially entered concepts.  If so, print the index number
+         and those concepts on a separate line. */
 
-         /* See if there are partially entered concepts.  If so, print the index number
-            and those concepts on a separate line. */
+      if (parse_state.concept_write_ptr != &history[history_ptr+1].command_root) {
 
-         if (parse_state.concept_write_ptr != &history[history_ptr+1].command_root) {
+         /* This prints the concepts entered so far, with a "header" consisting of the index number.
+            This partial concept tree is incomplete, so write_history_line has to be (and is) very careful. */
 
+         write_history_line(history_ptr+1, (char *) 0, FALSE, file_write_no);
+      }
+      else {
+         /* No partially entered concepts.  Just do the sequence number. */
 
-            if (!diagnostic_mode)    /* For now, don't do this if diagnostic, until we decide whether it is permanent. */
-               sprintf (indexbuf, "%2d: ", history_ptr-whole_sequence_low_lim+2);
-            else
-               sprintf (indexbuf, "%d: ", history_ptr-whole_sequence_low_lim+2);
-
-            /* This prints the concepts entered so far, with a "header" consisting of the index number.
-               This partial concept tree is incomplete, so write_history_line has to be (and is) very careful. */
-            write_history_line(history_ptr+1, indexbuf, FALSE, file_write_no);
-
-            if (parse_state.specialprompt[0] != '\0') {
-               writestuff(parse_state.specialprompt);
-               newline();
-            }
-         }
-         else {
-            /* No partially entered concepts.  Put the sequence number in front of any "specialprompt". */
-            if (!diagnostic_mode)    /* For now, don't do this if diagnostic, until we decide whether it is permanent. */
-               sprintf (indexbuf, "%2d: %s", history_ptr-whole_sequence_low_lim+2, parse_state.specialprompt);
-            else
-               sprintf (indexbuf, "%d: %s", history_ptr-whole_sequence_low_lim+2, parse_state.specialprompt);
-
+         if (!diagnostic_mode) {
+            char indexbuf[200];
+            (void) sprintf (indexbuf, "%2d: ", history_ptr-whole_sequence_low_lim+2);
             writestuff(indexbuf);
             newline();
          }
+      }
+
+      if (parse_state.specialprompt[0] != '\0') {
+         writestuff(parse_state.specialprompt);
+         newline();
       }
 
       /* Returned value of true means that the user waved the mouse away at some point,
@@ -922,7 +915,7 @@ extern long_boolean query_for_call(void)
    }
 
    if (interactivity != interactivity_normal) {
-      if (interactivity == interactivity_database_init)
+      if (interactivity == interactivity_database_init || interactivity == interactivity_verify)
          result = base_calls[1];     /* Get "nothing". */
       else if (interactivity == interactivity_in_first_scan) {
          result = main_call_lists[parse_state.call_list_to_use][resolve_scan_current_point];
@@ -1072,10 +1065,6 @@ Private int mark_aged_calls(
 
 
 
-/* This is not automatic to keep it from being lost by the longjmp.
-   It is also read by "write_header_stuff". */
-static call_list_mode_t call_list_mode;
-
 
 extern void write_header_stuff(long_boolean with_ui_version, uint32 act_phan_flags)
 {
@@ -1111,8 +1100,6 @@ extern void write_header_stuff(long_boolean with_ui_version, uint32 act_phan_fla
 
    if (call_list_mode == call_list_mode_abridging)
       writestuff(" (abridged)");
-
-   newline();
 }
 
 
@@ -1154,113 +1141,26 @@ Private long_boolean backup_one_item(void)
 }
 
 
-
 void main(int argc, char *argv[])
 {
-   int argno, i;
+   int i;
 
    if (argc >= 2 && strcmp(argv[1], "-help") == 0)
        display_help();		/* does not return */
-
-   /* This lets the X user interface intercept command line arguments that it is
-      interested in.  It also handles the flags "-seq" and "-db". */
-   uims_process_command_line(&argc, &argv);
 
    /* Do general initializations, which currently consist only of
       seeding the random number generator. */
    general_initialize();
 
-   calling_level = l_mainstream;    /* The default. */
-   call_list_mode = call_list_mode_none;
+   /* Read the command line arguments and process the initialization file.
+      This will return TRUE if we are to cease execution immediately. */
 
-   for (argno=1; argno<argc; argno++) {
-      if (argv[argno][0] == '-') {
-         call_list_mode_t this_mode_maybe = call_list_mode_none;
+   if (open_session(&argc, &argv)) goto normal_exit;
 
-         /* Special flag: must be one of
-            -write_list <filename>  -- write out the call list for the
-                  indicated level INSTEAD OF running the program
-            -write_full_list <filename>  -- write out the call list for the
-                  indicated level and all lower levels INSTEAD OF running the program
-            -abridge <filename>  -- read in the file, strike all the calls
-                  contained therein off the menus, and proceed.
-            -diagnostic  -- (this is a hidden flag) suppress display of verison info */
+   if (call_list_mode == call_list_mode_none || call_list_mode == call_list_mode_abridging)
+      uims_preinitialize();
 
-         if (strcmp(&argv[argno][1], "write_list") == 0)
-            this_mode_maybe = call_list_mode_writing;
-         else if (strcmp(&argv[argno][1], "write_full_list") == 0)
-            this_mode_maybe = call_list_mode_writing_full;
-         else if (strcmp(&argv[argno][1], "abridge") == 0)
-            this_mode_maybe = call_list_mode_abridging;
-         else if (strcmp(&argv[argno][1], "diagnostic") == 0)
-            { diagnostic_mode = TRUE; continue; }
-
-	 /*
-	  * These options may be handled by the UI, but if not
-	  * be sure it gets done.
-	  */
-         else if (strcmp(&argv[argno][1], "sequence") == 0) {
-	     if (argno+1 < argc)
-		 strncpy(outfile_string, argv[argno+1], MAX_FILENAME_LENGTH);
-	 }
-         else if (strcmp(&argv[argno][1], "db") == 0) {
-	     if (argno+1 < argc)
-		 database_filename = argv[argno+1];
-	 }
-         else
-            uims_bad_argument("Unknown flag:", argv[argno], NULL);
-
-         /* At this point, if "this_mode_maybe" is not null, we have to deal with some
-            kind of "write_list" or "abridge" operation.  If not, we have already processed
-            the file name, and all that remains is to check its existence and then skip it. */
-
-         argno++;
-         if (argno>=argc)
-            uims_bad_argument("This flag must be followed by a file name:", argv[argno-1], NULL);
-
-         if (this_mode_maybe != call_list_mode_none) {
-            call_list_mode = this_mode_maybe;
-            if (open_call_list_file(call_list_mode, argv[argno]))
-               exit_program(1);
-         }
-      }
-      else if (argv[argno][0] == 'm') calling_level = l_mainstream;
-      else if (argv[argno][0] == 'p') calling_level = l_plus;
-      else if (argv[argno][0] == 'a') {
-         if (argv[argno][1] == '1' && !argv[argno][2]) calling_level = l_a1;
-         else if (argv[argno][1] == '2' && !argv[argno][2]) calling_level = l_a2;
-         else if (argv[argno][1] == 'l' && argv[argno][2] == 'l' && !argv[argno][3]) calling_level = l_dontshow;
-         else
-            goto bad_level;
-      }
-      else if (argv[argno][0] == 'c' && argv[argno][1] == '3' && argv[argno][2] == 'a' && !argv[argno][3])
-         calling_level = l_c3a;
-      else if (argv[argno][0] == 'c' && argv[argno][1] == '3' && argv[argno][2] == 'x' && !argv[argno][3])
-         calling_level = l_c3x;
-      else if (argv[argno][0] == 'c' && argv[argno][1] == '4' && argv[argno][2] == 'a' && !argv[argno][3])
-         calling_level = l_c4a;
-      else if (argv[argno][0] == 'c' && !argv[argno][2]) {
-         if (argv[argno][1] == '1') calling_level = l_c1;
-         else if (argv[argno][1] == '2') calling_level = l_c2;
-         else if (argv[argno][1] == '3') calling_level = l_c3;
-         else if (argv[argno][1] == '4') calling_level = l_c4;
-         else
-            goto bad_level;
-      }
-      else
-         goto bad_level;
-   }
-
-   /* We need to take away the "zig-zag" directions if the pevel is below A2. */
-
-   if (calling_level < zig_zag_level) {
-      last_direction_kind = direction_out;
-      direction_names[direction_out+1] = (Cstring) 0;
-   }
-
-   /* initialize outfile_string to calling-level-specific default outfile */
-
-   (void) strncat(outfile_string, filename_strings[calling_level], MAX_FILENAME_LENGTH);
+   enable_file_writing = FALSE;
 
    interactivity = interactivity_database_init;
    testing_fidelity = FALSE;
@@ -1271,6 +1171,12 @@ void main(int argc, char *argv[])
       history_allocation = 15;
       history = (configuration *) get_mem(history_allocation * sizeof(configuration));
    }
+
+   /* A few other modules want to initialize some static tables. */
+
+   initialize_tandem_tables();
+   initialize_getout_tables();
+   initialize_restr_tables();
    
    initialize_menus(call_list_mode);    /* This sets up max_base_calls. */
 
@@ -1302,7 +1208,7 @@ void main(int argc, char *argv[])
 
       /* The call we were trying to do has failed.  Abort it and display the error message. */
    
-      if (interactivity == interactivity_database_init) {
+      if (interactivity == interactivity_database_init || interactivity == interactivity_verify) {
          init_error(error_message1);
          goto normal_exit;
       }
@@ -1338,11 +1244,6 @@ void main(int argc, char *argv[])
       }
       goto start_cycle;      /* Failed, reinitialize the whole line. */
    }
-
-   /* A few other modules want to initialize some static tables. */
-
-   initialize_tandem_tables();
-   initialize_getout_tables();
    
    interactivity = interactivity_normal;
 
@@ -1373,6 +1274,7 @@ void main(int argc, char *argv[])
 
    writestuff("Version ");
    write_header_stuff(TRUE, 0);
+   newline();
    writestuff("Output file is \"");
    writestuff(outfile_string);
    writestuff("\"");
@@ -1542,6 +1444,26 @@ void main(int argc, char *argv[])
                }
                goto start_cycle;
             }
+         case command_change_header:
+            {
+               char newhead_string[MAX_TEXT_LINE_LENGTH];
+         
+               if (uims_do_header_popup(newhead_string)) {
+                  (void) strncpy(header_comment, newhead_string, MAX_TEXT_LINE_LENGTH);
+
+                  if (newhead_string[0]) {
+                     char confirm_message[MAX_TEXT_LINE_LENGTH+25];
+                     (void) strncpy(confirm_message, "Header comment changed to \"", 28);
+                     (void) strncat(confirm_message, header_comment, MAX_TEXT_LINE_LENGTH);
+                     (void) strncat(confirm_message, "\"", 2);
+                     specialfail(confirm_message);
+                  }
+                  else {
+                     specialfail("Header comment deleted");
+                  }
+               }
+               goto start_cycle;
+            }
 #ifdef NEGLECT
          case command_neglect:
             {
@@ -1673,11 +1595,6 @@ void main(int argc, char *argv[])
    }
    else
       goto normal_exit;
-   
-   bad_level:
-
-   uims_bad_argument("Unknown calling level argument:", argv[argno],
-      "Known calling levels: m, p, a1, a2, c1, c2, c3a, c3, c3x, c4a, or c4.");
 
    normal_exit:
    
@@ -1688,19 +1605,11 @@ void main(int argc, char *argv[])
 
 extern long_boolean write_sequence_to_file(void)
 {
-   int getout_ind;
    char date[MAX_TEXT_LINE_LENGTH];
    char header[MAX_TEXT_LINE_LENGTH];
    int j;
 
-   /* Put up the getout popup to see if the user wants to enter a header string. */
-
-   getout_ind = uims_do_getout_popup(header);
-
-   if (getout_ind == POPUP_DECLINE)
-      return FALSE;    /* User didn't want to end this sequence after all. */
-
-   /* User really wants this sequence.  Open the file and write it. */
+   /* Open the file and write it. */
 
    clear_screen();
    open_file();
@@ -1711,14 +1620,26 @@ extern long_boolean write_sequence_to_file(void)
    writestuff(date);
    writestuff("     ");
    write_header_stuff(FALSE, history[history_ptr].state.result_flags);
+   newline();
 
-   if (getout_ind == POPUP_ACCEPT_WITH_STRING) {
+   /* Write header comment, if it exists. */
+
+   if (header_comment[0]) {
       writestuff("             ");
-      writestuff(header);
+      writestuff(header_comment);
+      if (sequence_number < 0) newline();
+   }
+
+   if (sequence_number >= 0) {
+      char seqstring[20];
+      (void) sprintf(seqstring, "   #%d", sequence_number);
+      writestuff(seqstring);
       newline();
    }
 
    newline();
+
+   if (sequence_number >= 0) sequence_number++;
 
    for (j=whole_sequence_low_lim; j<=history_ptr; j++)
       write_history_line(j, (char *) 0, FALSE, file_write_double);
@@ -1851,7 +1772,7 @@ extern void get_real_subcall(
       interactive) for the calls that we randomly choose, but not for the later calls
       that we test for fidelity. */
 
-   if (interactivity == interactivity_database_init | testing_fidelity) return;
+   if (interactivity == interactivity_database_init || interactivity == interactivity_verify || testing_fidelity) return;
 
    /* When we are searching for resolves and the like, the situation is different.  In this case,
       the interactivity state is set for a search.  We do perform mandatory
@@ -1904,7 +1825,7 @@ extern void get_real_subcall(
    else if (interactivity != interactivity_normal)
       ;
    else if (snumber == 2 || snumber == 6) {
-      sprintf (tempstring_text, "SUBSIDIARY CALL");
+      (void) sprintf (tempstring_text, "SUBSIDIARY CALL");
    }
    else {
 
@@ -1919,7 +1840,7 @@ extern void get_real_subcall(
          /* User accepted the modification.
             Set up the prompt and get the concepts and call. */
       
-         sprintf (tempstring_text, "REPLACEMENT FOR THE %s", base_calls[item->call_id]->menu_name);
+         (void) sprintf (tempstring_text, "REPLACEMENT FOR THE %s", base_calls[item->call_id]->menu_name);
       }
       else {
          /* User declined the modification.  Create a null entry so that we don't query again. */

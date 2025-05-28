@@ -14,20 +14,6 @@
  */
 
 
-/* This is provided by sdmatch.c */
-extern call_list_kind *call_menu_ptr;
-
-
-/* The following items are PROVIDED by the main program (that is, the user
-   interface part of it) and IMPORTED by sdmatch.c */
-
-extern int num_command_commands;
-extern Cstring command_commands[];
-
-extern int number_of_resolve_commands;
-extern Cstring resolve_command_strings[];
-
-
 /*
  * A match_result describes the result of matching a string against
  * a set of acceptable commands. A match_result is effectively a
@@ -74,6 +60,27 @@ enum {
     match_directions = -4,
     match_taggers = -8      /* This is the lowest of 4 numbers. */
 };
+
+
+/* These are provided by sdmatch.c */
+extern call_list_kind *call_menu_ptr;
+extern Const match_result *result_for_verify;
+extern long_boolean verify_used_number;
+extern long_boolean verify_used_selector;
+extern long_boolean verify_has_stopped;
+
+
+/* The following items are PROVIDED by the main program (that is, the user
+   interface part of it) and IMPORTED by sdmatch.c */
+
+extern int num_command_commands;
+extern Cstring command_commands[];
+
+extern int number_of_resolve_commands;
+extern Cstring resolve_command_strings[];
+
+
+
 
 extern void
 matcher_initialize(long_boolean show_commands_last);

@@ -1426,6 +1426,13 @@ x22_tandem_with_someone
       Returns FALSE if the vertical partner is a phantom or faces the
       opposite way or is T-boned.
 
+3x2_someone_in_front
+      applies to 3x2 only.  Returns TRUE for any of the four corner people,
+      or for a center person if the spot in front is occupied.  The facing
+      direction of the person in the spot in front of the person under test
+      is not checked, nor is the existence of anyone in back of the person
+      under test.
+
 x14_once_rem_miniwave
       applies to 1x4 only.  Returns TRUE if the person once-removed
       from the person under test is alive and facing the opposite direction.
@@ -1897,15 +1904,15 @@ q_line_back
                                     (use only if center people have no legal move from pqtag, only from qtag); 3x2/4x2/6x2/8x2 - column */
    wave_unless_say_2faced,
    all_facing_same,              /* 2x2/2x3/2x4/1x4/1x6/1x8 - all people in the setup facing the same way */
-   1fl_only,                     /* 1x4/1x6/1x8 - a 1FL; 2x3/2x4 - individual 1FL's */
-   2fl_only,                     /* 1x2 - a couple; 1x4 - a 2FL; 2x4/3x4 - 2FL's; 1x8 - a grand 2FL; 2x2 - "1-faced" box;
-                                    4x4 - consistent 2FL's; 2x4 columns - a DPT or CDPT; qtag - 2FL in center */
+   1fl_only,                     /* 1x4/1x6/1x8 - a 1FL, that is, all 4/6/8 facing same; 2x3/2x4 - individual 1FL's */
+   2fl_only,                     /* 1x2 - a couple; 1x4 - a 2FL; 2x4/3x4 - 2FL's; 1x8 - a grand 2FL; 4x1 - single DPT or single CDPT; qtag - 2FL in center;
+                                    2x2 - "1-faced" box; 4x4 - consistent 2FL's; 2x4 columns - a DPT or CDPT */
    3x3_2fl_only,                 /* 1x6 - 3 facing one way, 3 the other */
    4x4_2fl_only,                 /* 1x8 - 4 facing one way, 4 the other */
    leads_only,                   /* 2x2 - all people are leads, and not T-boned */
    couples_only,                 /* 1x2 or 1x4 or 1x8 or 2x2 or 2x4 lines, or 2x4 columns - people are in genuine couples, not miniwaves */
-   3x3couples_only,              /* 1x6 lines - each group of 3 people are facing the same way */
-   4x4couples_only,              /* 1x8 lines - each group of 4 people are facing the same way */
+   3x3couples_only,              /* 1x3/1x6/2x3/2x6/1x12 lines - each group of 3 people are facing the same way */
+   4x4couples_only,              /* 1x4/1x8/2x4/2x8/1x16 lines - each group of 4 people are facing the same way */
    awkward_centers,              /* 1x2, 1x4, 1x6, or 1x8 - centers must not have left hands with each other */
    diamond_like,                 /* dmd, qtag or ptpd - in some kind of diamond(s), as opposed to single quarter-tag(s), i.e. points look sideways */
    qtag_like,                    /* dmd, qtag or ptpd - in some kind of single quarter-tag(s), as opposed to diamond(s), i.e. points look in or out */
@@ -1913,6 +1920,7 @@ q_line_back
    magic_only,                   /* 2x2 - split-trade-circulate type of box; 3x2 or 4x2 - magic column; 2x4 - inverted lines; 1x4 - single inverted line */
    peelable_box,                 /* 2x2, 3x2, 4x2, 6x2 or 8x2 - all people in each column are facing same way */
    ends_are_peelable,            /* 2x4 - ends are a box with each person in genuine tandem */
+   siamese_in_quad               /* Any 2x4 or 4x2 - the people in each quadrant, if they exist, face the same way */
    not_tboned,                   /* 2x2 - people must not be T-boned */
    opposite_sex,                 /* 2x1 - people must be opposite sexes facing each other */
    quarterbox_or_col,            /* 4x2 - acceptable setup for "triple cross" */
@@ -1928,9 +1936,11 @@ q_line_back
                            APPENDIX C -- QUALIFIERS
 
    wave_only,                    /* 1x4 or 2x4 - waves; 2x2 - real RH or LH box */
-   1fl_only,                     /* ??? */
-   2fl_only,                     /* 1x4 or 2x4 - 2FL; 4x1 - single DPT or single CDPT */
-   in_or_out,                    /* 2x2 - all facing in or all facing out */
+   1fl_only,                     /* 1x4/1x6/1x8 - a 1FL, that is, all 4/6/8 facing same; 2x3/2x4 - individual 1FL's */
+   2fl_only,                     /* 1x2 - a couple; 1x4 - a 2FL; 2x4/3x4 - 2FL's; 1x8 - a grand 2FL; 4x1 - single DPT or single CDPT; qtag - 2FL in center */
+   3x3couples_only,              /* 1x3/1x6/2x3/2x6/1x12 lines - each group of 3 people are facing the same way */
+   4x4couples_only,              /* 1x4/1x8/2x4/2x8/1x16 lines - each group of 4 people are facing the same way */
+   in_or_out,                    /* 1x2/2x2 - all facing in or all facing out */
    miniwaves,                    /* 1x2, 1x4, 1x8, 2x4, 2x2, dmd, qtag, trngl - people
                                     are paired in miniwaves of various handedness.
                                     For diamonds and qtags, this applies just to the centers.
@@ -1943,7 +1953,12 @@ q_line_back
    3_4_tag,                      /* dmd, qtag - this is a 3/4 tag, i.e. points are looking out */
    dmd_same_point,               /* dmd - centers would circulate to same point */
    dmd_facing,                   /* dmd - diamond is fully occupied and fully facing */
-   true_Z,                       /* 2x3, 3x4, 2x6 - setup is a genuine Z */
+   true_Z_cw, true_Z_ccw,        /* 2x3, 3x4, 2x6, 4x6, 3x8 - each 2x3 setup is a genuine Z.  In a 2x3
+                                    setup it also demands that the shear direction be as shown.  In the larger
+                                    setups either qualifier passes the test for any shear direction. */
+   lateral_columns_empty,        /* 3x4, 4x4, 4x6, 3x8 - everyone is oriented consistently, 4 (or 8) wide and however many deep.
+                                    Within each 4-wide and 2-or-3-deep subsetup, either the center two columns, or two
+                                    columns that are once removed from each other, are unoccupied. */
    ctrwv_end2fl,                 /* crosswave - center line is wave, end line is 2fl */
    ctr2fl_endwv,                 /* crosswave - center line is 2fl, end line is wave */
    split_dixie,                  /* 2x2 - invoked with "split" for dixie style */

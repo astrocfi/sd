@@ -423,6 +423,8 @@ char *qualtab[] = {
    "wave_only",
    "1fl_only",
    "2fl_only",
+   "3x3couples_only",
+   "4x4couples_only",
    "in_or_out",
    "miniwaves",
    "right_wave",
@@ -431,7 +433,9 @@ char *qualtab[] = {
    "3_4_tag",
    "dmd_same_point",
    "dmd_facing",
-   "true_Z",
+   "true_Z_cw",
+   "true_Z_ccw",
+   "lateral_columns_empty",
    "ctrwv_end2fl",
    "ctr2fl_endwv",
    "split_dixie",
@@ -467,6 +471,7 @@ char *crtab[] = {
    "magic_only",
    "peelable_box",
    "ends_are_peelable",
+   "siamese_in_quad",
    "not_tboned",
    "opposite_sex",
    "quarterbox_or_col",
@@ -531,12 +536,11 @@ char *flagtab1[] = {
    "???",
    "left_means_touch_or_check",
    "can_be_fan",
-   "no_cutting_through",
+   "yield_if_ambiguous",
    "no_elongation_allowed",
    "base_tag_call_0",
    "base_tag_call_1",      /* The constant "base_tag_call_2" is elsewhere. */
    "base_tag_call_3",
-   "yield_if_ambiguous",
    ""};
 
 /* The next three tables are all in step with each other, and with the "heritable" flags. */
@@ -628,8 +632,8 @@ char *defmodtabh[] = {
    Notice that it looks like flagtabh. */
 char *forcetabh[] = {
    "force_diamond",
-   "???",    /* We don't allow "reverse" or "left" -- the bits move around during inheritance. */
-   "???",
+   "???",    /* We don't allow "reverse" -- the bits move around during inheritance. */
+   "force_left",
    "force_funny",
    "force_intlk",
    "force_magic",
@@ -658,6 +662,7 @@ char *matrixcallflagtab[] = {
    "tbone_is_ok",
    "ignore_nonselectees",
    "must_face_same_way",
+   "find_jaywalkers",
    ""};
 
 /* BEWARE!!  This list must track the array "pred_table" in sdpreds.c . */
@@ -684,6 +689,7 @@ char *predtab[] = {
    "x22_couple",
    "x22_facing_someone",
    "x22_tandem_with_someone",
+   "3x2_someone_in_front",
    "x14_once_rem_miniwave",
    "x14_once_rem_couple",
    "lines_miniwave",
@@ -818,9 +824,9 @@ char *return_ptr;
 int callcount;
 int filecount;
 int dumbflag;
-unsigned int call_flagsh;
-unsigned int call_flags1;
-unsigned int call_tag;
+uint32 call_flagsh;
+uint32 call_flags1;
+uint32 call_tag;
 char call_name[80];
 int call_namelen;
 int call_level;
@@ -1001,7 +1007,7 @@ static int search(char *table[])
 
 
 /* The returned value fits into 13 bits. */
-static unsigned int tagsearch(int def)
+static uint32 tagsearch(int def)
 {
    int i;
 
@@ -1051,7 +1057,7 @@ static int get_num(char s[])
 
 
 
-static void write_halfword(unsigned int n)
+static void write_halfword(uint32 n)
 {
    db_putc((n>>8) & 0xFF);
    db_putc((n) & 0xFF);
@@ -1060,7 +1066,7 @@ static void write_halfword(unsigned int n)
 
 
 
-static void write_fullword(unsigned int n)
+static void write_fullword(uint32 n)
 {
    db_putc((n>>24) & 0xFF);
    db_putc((n>>16) & 0xFF);
@@ -1136,7 +1142,7 @@ static void write_callarray(int num, int doing_matrix)
       errexit("Missing left bracket in callarray list");
 
    for (count=0; ; count++) {
-      unsigned int dat = 0;
+      uint32 dat = 0;
       int p = 0;
       stability stab = stb_none;
 
@@ -1212,7 +1218,7 @@ static void write_callarray(int num, int doing_matrix)
             dat = (dat << 12) | (tok_value << 7);
          }
          else {
-            dat = (dat * DBROLL_BIT) | (tok_value << 4) | (((unsigned int) stab) * DBSTAB_BIT);
+            dat = (dat * DBROLL_BIT) | (tok_value << 4) | (((uint32) stab) * DBSTAB_BIT);
          }
 
          /* We now have roll indicator and position, need to get direction. */
@@ -1249,10 +1255,10 @@ static void write_call_header(calldef_schema schema)
    write_halfword(call_level);
    write_fullword(call_flags1);
    write_fullword(call_flagsh);
-   write_halfword((call_namelen << 8) | (unsigned int) schema);
+   write_halfword((call_namelen << 8) | (uint32) schema);
 
    for (j=0; j<call_namelen; j++)
-      db_putc(((unsigned int) call_name[j]) & 0xFF);
+      db_putc(((uint32) call_name[j]) & 0xFF);
 
    filecount += call_namelen;
    callcount++;
@@ -1288,7 +1294,7 @@ static void write_seq_stuff(void)
 }
 
 
-static void write_level_3_group(unsigned int arrayflags)
+static void write_level_3_group(uint32 arrayflags)
 {
    write_halfword(0x6000 | arrayflags);
    write_halfword(call_startsetup | (call_qualifier << 8));
@@ -1303,10 +1309,10 @@ static void write_level_3_group(unsigned int arrayflags)
 }
 
 
-static void write_array_def(unsigned int funnyflag)
+static void write_array_def(uint32 funnyflag)
 {
    int i, iii, jjj;
-   unsigned int callarray_flags1, callarray_flags2;
+   uint32 callarray_flags1, callarray_flags2;
 
    write_call_header(schema_by_array);
 
@@ -1412,6 +1418,9 @@ def2:
       else if (!strcmp(tok_str, "rotate")) {
          callarray_flags1 |= CAF__ROT;
       }
+      else if (!strcmp(tok_str, "no_cutting_through")) {
+         callarray_flags1 |= CAF__NO_CUTTING_THROUGH;
+      }
       else if ((!(callarray_flags1 & CAF__CONCEND)) && (!strcmp(tok_str, "concendsetup"))) {
          if (call_endsetup != (int)s_normal_concentric)
             errexit("concendsetup with wrong end_setup");
@@ -1444,7 +1453,7 @@ def2:
 
    if (strcmp(tok_str, "setup") != 0) {
       int alt_level;
-      unsigned int rrr = 0;
+      uint32 rrr = 0;
 
       if (strcmp(tok_str, "alternate_definition") != 0) {
          return;       /* Must have seen next 'call' indicator. */
@@ -1500,7 +1509,7 @@ def2:
 extern void dbcompile(void)
 {
    int i, iii;
-   unsigned int funnyflag;
+   uint32 funnyflag;
 
    tagtabmax = 100; /* try to make it reentrant */
    tagtabsize = 3;
@@ -1533,7 +1542,7 @@ extern void dbcompile(void)
    if (tok_kind != tok_string) errexit("Improper version string -- must be in quotes");
    write_halfword(char_ct);
    for (i=0; i<char_ct; i++)
-      db_putc(((unsigned int) tok_str[i]) & 0xFF);
+      db_putc(((uint32) tok_str[i]) & 0xFF);
    filecount += char_ct;
 
    callcount = 0;
@@ -1546,7 +1555,7 @@ extern void dbcompile(void)
       if (tok_kind != tok_symbol) errexit("Missing indicator");
 
       if (!strcmp(tok_str, "call")) {
-         unsigned int matrixflags;
+         uint32 matrixflags;
          int bit;
          calldef_schema ccc;
 
@@ -1610,7 +1619,7 @@ extern void dbcompile(void)
          if (funnyflag != 0 && ccc != schema_by_array)
             errexit("Simple_funny out of place");
 
-         switch(ccc) {
+         switch (ccc) {
             case schema_by_array:
                write_array_def(funnyflag);
                goto startagain;
@@ -1618,28 +1627,21 @@ extern void dbcompile(void)
                write_call_header(ccc);
                break;
             case schema_matrix:
-               matrixflags = 0;
-               write_call_header(ccc);
-               write_halfword(matrixflags >> 8);
-               write_halfword(matrixflags);
-               get_tok();
-               write_callarray(2, 2);
-               break;
             case schema_partner_matrix:
                matrixflags = 0;
 
-               for (;;) {     /* Get partner matrix call options. */
+               for (;;) {     /* Get matrix call options. */
                   get_tok();
                   if (tok_kind != tok_symbol) break;
                   if ((bit = search(matrixcallflagtab)) < 0) errexit("Unknown matrix call flag");
                   matrixflags |= (1 << bit);
                }
-   
+
                if (matrixflags & MTX_USE_SELECTOR) call_flagsh |= CFLAGH__REQUIRES_SELECTOR;
                write_call_header(ccc);
                write_halfword(matrixflags >> 8);
                write_halfword(matrixflags);
-               write_callarray(8, 1);
+               write_callarray((ccc == schema_matrix) ? 2 : 8, 1);
                break;
             case schema_roll:
                write_call_header(ccc);

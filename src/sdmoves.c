@@ -424,6 +424,8 @@ typedef struct gloop {
     int rollinfo;           /* How this person's roll info will be set. */
     struct gloop *nextse;   /* Points to next person south (dir even) or east (dir odd.) */
     struct gloop *nextnw;   /* Points to next person north (dir even) or west (dir odd.) */
+    struct gloop *nextjse;  /* Similar, but makes lateral chains for keeping track of jay walk. */
+    struct gloop *nextjnw;  /* Same. */
     long_boolean tbstopse;  /* True if nextse/nextnw is zero because the next spot */
     long_boolean tbstopnw;  /*   is occupied by a T-boned person (as opposed to being empty.) */
     } matrix_rec;
@@ -437,7 +439,7 @@ Private void start_matrix_call(
    setup *ss,
    int *nump,
    matrix_rec matrix_info[],
-   long_boolean use_selector,
+   uint32 flags,
    setup *people)
 {
    int i;
@@ -446,6 +448,10 @@ Private void start_matrix_call(
    clear_people(people);
    
    thingyptr = setup_attrs[ss->kind].setup_coords;
+
+   if (flags & MTX_FIND_JAYWALKERS)
+      thingyptr = setup_attrs[ss->kind].nice_setup_coords;   /* We want really accurate stuff. */
+
    if (!thingyptr) fail("Can't do this in this setup.");
    
    if (setup_attrs[ss->kind].setup_limits < 0) fail("Can't do this in this setup.");        /* this is actually superfluous */
@@ -461,7 +467,7 @@ Private void start_matrix_call(
          matrix_info[*nump].done = FALSE;
          matrix_info[*nump].realdone = FALSE;
 
-         if (use_selector)
+         if (flags & MTX_USE_SELECTOR)
             matrix_info[*nump].sel = selectp(people, *nump);
          else
             matrix_info[*nump].sel = FALSE;
@@ -472,6 +478,8 @@ Private void start_matrix_call(
          matrix_info[*nump].boybit = (people->people[*nump].id2 & ID2_BOY) ? 1 : 0;
          matrix_info[*nump].nextse = 0;
          matrix_info[*nump].nextnw = 0;
+         matrix_info[*nump].nextjse = 0;
+         matrix_info[*nump].nextjnw = 0;
          matrix_info[*nump].deltax = 0;
          matrix_info[*nump].deltay = 0;
          matrix_info[*nump].deltarot = 0;
@@ -775,7 +783,8 @@ Private void matrixmove(
    callspec_block *callspec,
    setup *result)
 {
-   int datum;
+   uint32 flags;
+   uint32 datum;
    setup people;
    matrix_rec matrix_info[9];
    int i, nump, alldelta;
@@ -783,23 +792,28 @@ Private void matrixmove(
    if (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT)
       fail("Can't split the setup.");
 
+   /* For now, we assume every matrix call uses a selector.
+      Eventually, we will take this from the database the way we should. */
+   flags = callspec->stuff.matrix.flags | MTX_USE_SELECTOR;
    alldelta = 0;
 
-   start_matrix_call(ss, &nump, matrix_info, TRUE, &people);
+   start_matrix_call(ss, &nump, matrix_info, flags, &people);
 
    for (i=0; i<nump; i++) {
-      if (matrix_info[i].sel) {
+      matrix_rec *this = &matrix_info[i];
+
+      if (this->sel) {
          /* This is legal if girlbit or boybit is on (in which case we use the appropriate datum)
             or if the two data are identical so the sex doesn't matter. */
-         if ((matrix_info[i].girlbit | matrix_info[i].boybit) == 0 &&
+         if ((this->girlbit | this->boybit) == 0 &&
                   (callspec->stuff.matrix.stuff[0] != callspec->stuff.matrix.stuff[1]))
             fail("Can't determine sex of this person.");
 
-         datum = callspec->stuff.matrix.stuff[matrix_info[i].girlbit];
-         alldelta |= (  matrix_info[i].deltax = ( ((datum >> 7) & 0x1F) - 16) << 1  );
-         alldelta |= (  matrix_info[i].deltay = ( ((datum >> 2) & 0x1F) - 16) << 1  );
-         matrix_info[i].deltarot = datum & 03;
-         matrix_info[i].rollinfo = (datum >> 12) * ROLLBITR;
+         datum = callspec->stuff.matrix.stuff[this->girlbit];
+         alldelta |= (  this->deltax = ( ((datum >> 7) & 0x1F) - 16) << 1  );
+         alldelta |= (  this->deltay = ( ((datum >> 2) & 0x1F) - 16) << 1  );
+         this->deltarot = datum & 03;
+         this->rollinfo = (datum >> 12) * ROLLBITR;
       }
    }
 
@@ -871,6 +885,50 @@ Private void do_pair(
 }
 
 
+/* Link mj into mi's jaywalk chain. */
+/* We know that mj->nextjse  and mj->nextjnw are both null. */
+Private void lateral_link(int filter, matrix_rec *mj, matrix_rec *mi, int jx)
+{
+   int sx;
+   matrix_rec *ms = mi;
+
+   if (filter) sx = - mi->y;
+   else        sx = mi->x;
+
+   while (jx > sx && ms->nextjse) {
+      ms = mi->nextjse;
+      if (filter) sx = - ms->y;
+      else        sx = ms->x;
+   }
+
+   if (jx > sx) {
+      ms->nextjse = mj;
+      mj->nextjnw = ms;
+   }
+   else {
+      while (jx <= sx && ms->nextjnw) {
+         ms = mi->nextjnw;
+         if (filter) sx = - ms->y;
+         else        sx = ms->x;
+      }
+      if (jx <= sx) {
+         ms->nextjnw = mj;
+         mj->nextjse = ms;
+      }
+      else {
+         ms->nextjse->nextjnw = mj;
+         mj->nextjse = ms->nextjse;
+         ms->nextjse = mj;
+         mj->nextjnw = ms;
+         ms->nextjse = mj;
+         mj->nextjnw = ms;
+      }
+   }
+}
+
+
+
+
 /* This function is internal. */
 
 Private void do_matrix_chains(
@@ -888,40 +946,114 @@ Private void do_matrix_chains(
    /* Find adjacency relationships, and fill in the "se"/"nw" pointers. */
 
    for (i=0; i<nump; i++) {
-      if ((flags & MTX_IGNORE_NONSELECTEES) && (!matrix_info[i].sel)) continue;
+      matrix_rec *mi = &matrix_info[i];
+
+      if ((flags & MTX_IGNORE_NONSELECTEES) && (!mi->sel)) continue;
+
       for (j=0; j<nump; j++) {
-         if ((flags & MTX_IGNORE_NONSELECTEES) && (!matrix_info[j].sel)) continue;
+         matrix_rec *mj = &matrix_info[j];
+         int delx, dely;
+         uint32 dirxor;
+         int ix, jx, iy, jy;
+
+         if ((flags & MTX_IGNORE_NONSELECTEES) && (!mj->sel)) continue;
+
          /* Find out if these people are adjacent in the right way. */
 
-         if (    ( filter && matrix_info[j].x == matrix_info[i].x + 4 && matrix_info[j].y == matrix_info[i].y)
-            ||   (!filter && matrix_info[j].y == matrix_info[i].y - 4 && matrix_info[j].x == matrix_info[i].x)   ) {
+         if (filter) {
+            jx = - mj->y;
+            ix = - mi->y;
+            jy = - mj->x;
+            iy = - mi->x;
+         }
+         else {
+            jx = mj->x;
+            ix = mi->x;
+            jy = mj->y;
+            iy = mi->y;
+         }
+
+         dely = iy - jy;
+         delx = jx - ix;
+
+         dirxor = mi->dir ^ mj->dir;
+
+         /* If this is a "jaywalk" operation, coordinates are only approximate. */
+
+         if (flags & MTX_FIND_JAYWALKERS) {
+fail("You can't do this.");
+            /* Independently of anything else, make chains of all people directly
+               lateral to each other. */
+
+            if (dirxor == 0 && dely == 0) {
+               if ((!mj->nextjse && !mj->nextjnw)) {
+                  /* J is alone, link into I chain. */
+                  lateral_link(filter, mj, mi, jx);
+               }
+               else if ((!mi->nextjse && !mi->nextjnw)) {
+                  /* I is alone, link into J chain. */
+                  lateral_link(filter, mi, mj, ix);
+               }
+            }
+
+            if (dirxor != 2) continue;
+            if (((dely+2) & ~3) != 4) continue;  /* Demand facing distance approximately 4. */
+            if (mj->dir != filter) continue;
+
+
+
+
+
+   if (interactivity != interactivity_database_init) {
+printf("filter/i/ix/iy/id/j/jx/jy/jd = %3d %3d %3d %3d %3d %3d %3d %3d\n",
+filter, i, mi->x, mi->y, mi->dir, j, mj->x, mj->y, mj->dir);
+   }
+
+
+         }
+         else {
+            if (dely != 4 || delx != 0) continue;
 
             /* Now, if filter = 1, person j is just east of person i.
                If filter = 0, person j is just south of person i. */
-
+   
             if (flags & MTX_TBONE_IS_OK) {
-               matrix_info[i].nextse = &matrix_info[j];     /* Make the chain independently of facing direction. */
-               matrix_info[j].nextnw = &matrix_info[i];
+               /* Make the chain independently of facing direction. */
             }
             else {
-               if ((matrix_info[i].dir ^ filter) & 1) {
-                  if ((matrix_info[i].dir ^ matrix_info[j].dir) & 1) {
+               if ((mi->dir ^ filter) & 1) {
+                  if (dirxor & 1) {
                      if (!(flags & MTX_STOP_AND_WARN_ON_TBONE)) fail("People are T-boned.");
-                     matrix_info[i].tbstopse = TRUE;
-                     matrix_info[j].tbstopnw = TRUE;
+                     mi->tbstopse = TRUE;
+                     mj->tbstopnw = TRUE;
+                     break;
                   }
                   else {
-                     if ((flags & MTX_MUST_FACE_SAME_WAY) && (matrix_info[i].dir ^ matrix_info[j].dir))
+                     if ((flags & MTX_MUST_FACE_SAME_WAY) && dirxor)
                         fail("Paired people must face the same way.");
-                     matrix_info[i].nextse = &matrix_info[j];
-                     matrix_info[j].nextnw = &matrix_info[i];
                   }
                }
+               else
+                  break;
             }
-            break;
          }
+
+         if (mj->nextnw) fail("Internal error: adjacent to too many people.");
+
+         mi->nextse = mj;
+         mj->nextnw = mi;
+         break;
       }
    }
+
+
+
+
+   if (flags & MTX_FIND_JAYWALKERS) return;
+
+
+
+
 
    /* Pick out pairs of people and move them. */
 
@@ -1019,7 +1151,7 @@ Private void partner_matrixmove(
 
    flags = callspec->stuff.matrix.flags;
 
-   start_matrix_call(ss, &nump, matrix_info, flags & MTX_USE_SELECTOR, &people);
+   start_matrix_call(ss, &nump, matrix_info, flags, &people);
 
    /* Make the lateral chains first. */
 
@@ -1031,6 +1163,8 @@ Private void partner_matrixmove(
       matrix_info[i].done = FALSE;
       matrix_info[i].nextse = 0;
       matrix_info[i].nextnw = 0;
+      matrix_info[i].nextjse = 0;
+      matrix_info[i].nextjnw = 0;
       matrix_info[i].tbstopse = FALSE;
       matrix_info[i].tbstopnw = FALSE;
    }
@@ -1116,10 +1250,15 @@ Private uint32 get_mods_for_subcall(uint32 new_final_concepts, uint32 this_modh,
 
    retval &= ~(new_final_concepts & HERITABLE_FLAG_MASK & ~this_modh);
    
-   /* Now turn on any "force" flags.  These are indicated by "this_modh" on and "callflagsh" off.
-      We only do this for heritable flags other than left/reverse. */
+   /* Now turn on any "force" flags.  These are indicated by "this_modh" on and "callflagsh" off. */
 
-   retval |= this_modh & (HERITABLE_FLAG_MASK & ~(INHERITFLAG_REVERSE | INHERITFLAG_LEFT)) & ~callflagsh;
+   if (((INHERITFLAG_REVERSE | INHERITFLAG_LEFT) & callflagsh) == 0)
+      /* If neither of the "reverse_means_mirror" or "left_means_mirror" bits is on,
+         we allow forcing of left or reverse. */
+      retval |= this_modh & HERITABLE_FLAG_MASK & ~callflagsh;
+   else
+      /* Otherwise, we only allow the other bits. */
+      retval |= this_modh & (HERITABLE_FLAG_MASK & ~(INHERITFLAG_REVERSE | INHERITFLAG_LEFT)) & ~callflagsh;
 
    return retval;
 }

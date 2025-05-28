@@ -198,7 +198,7 @@ LINT = /usr/lang/alint
 lint:
 	$(LINT) -ux $(SD_SRCS) $(SDX11_SRC)
 
-DISTTXT = README INSTALL Relnotes oldnotes COPYING \
+DISTTXT = README INSTALL Relnotes oldnotes COPYING sample.ini \
             Imakefile Makefile.in configure.in configure Sd.res sd_calls.txt \
             db_doc.txt sd_doc.PS sd_doc.txt
 DISTSRCS = sd.h database.h paths.h sdui-ttu.h sdmatch.h
@@ -228,7 +228,7 @@ ls:
 pcdist: sd@PCVERSION@bn
 
 sd@PCVERSION@bn: sdtty mkcalls sd_calls.dat
-	lha a $@ readme relnotes oldnotes copying
+	lha a $@ readme relnotes oldnotes copying sample.ini
 	lha a $@ sd_calls.txt sd_calls.dat db_doc.txt
 	lha a $@ sdtty.exe mkcalls.exe go32.exe sd_doc.txt sd_doc.ps
 	lha s $@
@@ -238,7 +238,7 @@ BIN_TARFILE = sd-@VERSION@-@SYSTEM@.tar
 @BINDIST_RULE@
 
 $(BIN_TARFILE).Z: Makefile sd sdtty mkcalls sd_calls.dat README sd_doc.txt sd_doc.PS
-	$(TAR) $(TARFLAGS) $(BIN_TARFILE) README Relnotes oldnotes COPYING \
+	$(TAR) $(TARFLAGS) $(BIN_TARFILE) README Relnotes oldnotes COPYING sample.ini \
 	 sd_calls.txt sd_calls.dat db_doc.txt \
 	 sd sdtty mkcalls Sd.res sd_doc.txt sd_doc.PS
 	$(RM) $@

@@ -19,6 +19,8 @@
     This is for version 31. */
 
 /* This defines the following functions:
+   initialize_restr_tables
+   get_restriction_thing
    clear_screen
    writestuff
    newline
@@ -64,17 +66,23 @@ and the following external variables:
    enable_file_writing
    cardinals
    ordinals
+   selector_list
    selector_names
    selector_singular
+   selector_names_uc
+   selector_singular_uc
    direction_names
    last_direction_kind
    warning_strings
+and the following external variable that is declared only in sdui-ttu.h:
+   ui_directions
 */
 
 /* For "sprintf" */
 #include <stdio.h>
 #include <string.h>
 #include "sd.h"
+extern void initialize_restr_tables(void);
 
 
 
@@ -117,7 +125,53 @@ long_boolean enable_file_writing;
 Cstring cardinals[] = {"1", "2", "3", "4", "5", "6", "7", "8", (Cstring) 0};
 Cstring ordinals[] = {"1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th", (Cstring) 0};
 
-/* BEWARE!!  These two lists are keyed to the definition of "selector_kind" in sd.h,
+typedef struct {
+   Cstring name;
+   Cstring sing_name;
+   Cstring name_uc;
+   Cstring sing_name_uc;
+   selector_kind opposite;
+} selector_item;
+
+/* BEWARE!!  This list is keyed to the definition of "selector_kind" in sd.h,
+   and to the necessary stuff in SDUI. */
+selector_item selector_list[] = {
+   {"???",          "???",         "???",          "???",         selector_uninitialized},
+   {"boys",         "boy",         "BOYS",         "BOY",         selector_girls},
+   {"girls",        "girl",        "GIRLS",        "GIRL",        selector_boys},
+   {"heads",        "head",        "HEADS",        "HEAD",        selector_sides},
+   {"sides",        "side",        "SIDES",        "SIDE",        selector_heads},
+   {"head corners", "head corner", "HEAD CORNERS", "HEAD CORNER", selector_sidecorners},
+   {"side corners", "side corner", "SIDE CORNERS", "SIDE CORNER", selector_headcorners},
+   {"head boys",    "head boy",    "HEAD BOYS",    "HEAD BOY",    selector_uninitialized},
+   {"head girls",   "head girl",   "HEAD GIRLS",   "HEAD GIRL",   selector_uninitialized},
+   {"side boys",    "side boy",    "SIDE BOYS",    "SIDE BOY",    selector_uninitialized},
+   {"side girls",   "side girl",   "SIDE GIRLS",   "SIDE GIRL",   selector_uninitialized},
+   {"centers",      "center",      "CENTERS",      "CENTER",      selector_ends},
+   {"ends",         "end",         "ENDS",         "END",         selector_centers},
+   {"leads",        "lead",        "LEADS",        "LEAD",        selector_trailers},
+   {"trailers",     "trailer",     "TRAILERS",     "TRAILER",     selector_leads},
+   {"beaus",        "beau",        "BEAUS",        "BEAU",        selector_belles},
+   {"belles",       "belle",       "BELLES",       "BELLE",       selector_beaus},
+   {"center 2",     "center 2",    "CENTER 2",     "CENTER 2",    selector_outer6},
+   {"center 6",     "center 6",    "CENTER 6",     "CENTER 6",    selector_outer2},
+   {"outer 2",      "outer 2",     "OUTER 2",      "OUTER 2",     selector_center6},
+   {"outer 6",      "outer 6",     "OUTER 6",      "OUTER 6",     selector_center2},
+   {"center 4",     "center 4",    "CENTER 4",     "CENTER 4",    selector_outerpairs},
+   {"outer pairs",  "outer pair",  "OUTER PAIRS",  "OUTER PAIR",  selector_center4},
+   {"headliners",   "headliner",   "HEADLINERS",   "HEADLINER",   selector_sideliners},
+   {"sideliners",   "sideliner",   "SIDELINERS",   "SIDELINER",   selector_headliners},
+   {"near line",    "near line",   "NEAR LINE",    "NEAR LINE",   selector_uninitialized},
+   {"far line",     "far line",    "FAR LINE",     "FAR LINE",    selector_uninitialized},
+   {"near column",  "near column", "NEAR COLUMN",  "NEAR COLUMN", selector_uninitialized},
+   {"far column",   "far column",  "FAR COLUMN",   "FAR COLUMN",  selector_uninitialized},
+   {"near box",     "near box",    "NEAR BOX",     "NEAR BOX",    selector_uninitialized},
+   {"far box",      "far box",     "FAR BOX",      "FAR BOX",     selector_uninitialized},
+   {"everyone",     "everyone",    "EVERYONE",     "EVERYONE",    selector_uninitialized},
+   {"no one",       "no one",      "NO ONE",       "NO ONE",      selector_uninitialized},
+   {(Cstring) 0,    (Cstring) 0,   (Cstring) 0,    (Cstring) 0,   selector_uninitialized}};
+
+/* BEWARE!!  These four lists are keyed to the definition of "selector_kind" in sd.h,
    and to the necessary stuff in SDUI. */
 Cstring selector_names[] = {
    "???",
@@ -189,6 +243,78 @@ Cstring selector_singular[] = {
    "far box",
    "everyone",
    "no one",
+   (Cstring) 0};
+
+Cstring selector_names_uc[] = {
+   "???",
+   "BOYS",
+   "GIRLS",
+   "HEADS",
+   "SIDES",
+   "HEAD CORNERS",
+   "SIDE CORNERS",
+   "HEAD BOYS",
+   "HEAD GIRLS",
+   "SIDE BOYS",
+   "SIDE GIRLS",
+   "CENTERS",
+   "ENDS",
+   "LEADS",
+   "TRAILERS",
+   "BEAUS",
+   "BELLES",
+   "CENTER 2",
+   "CENTER 6",
+   "OUTER 2",
+   "OUTER 6",
+   "CENTER 4",
+   "OUTER PAIRS",
+   "HEADLINERS",
+   "SIDELINERS",
+   "NEAR LINE",
+   "FAR LINE",
+   "NEAR COLUMN",
+   "FAR COLUMN",
+   "NEAR BOX",
+   "FAR BOX",
+   "EVERYONE",
+   "NO ONE",
+   (Cstring) 0};
+
+Cstring selector_singular_uc[] = {
+   "???",
+   "BOY",
+   "GIRL",
+   "HEAD",
+   "SIDE",
+   "HEAD CORNER",
+   "SIDE CORNER",
+   "HEAD BOY",
+   "HEAD GIRL",
+   "SIDE BOY",
+   "SIDE GIRL",
+   "CENTER",
+   "END",
+   "LEAD",
+   "TRAILER",
+   "BEAU",
+   "BELLE",
+   "CENTER 2",
+   "CENTER 6",
+   "OUTER 2",
+   "OUTER 6",
+   "CENTER 4",
+   "OUTER PAIR",
+   "HEADLINER",
+   "SIDELINER",
+   "NEAR LINE",
+   "FAR LINE",
+   "NEAR COLUMN",
+   "FAR COLUMN",
+   "NEAR BOX",
+   "FAR BOX",
+   "EVERYONE",
+   "NO ONE",
    (Cstring) 0};
 
 /* BEWARE!!  This list is keyed to the definition of "direction_kind" in sd.h,
@@ -270,13 +396,306 @@ Cstring warning_strings[] = {
    /*  warn__did_not_interact    */   "*The setups did not interact with each other.",
    /*  warn__opt_for_normal_cast */   "*If in doubt, assume a normal cast."};
 
+
+
+
+Private restriction_thing wave_2x4      = {4, {0, 2, 5, 7},                {1, 3, 4, 6},                   {0}, {0}, TRUE, chk_wave};            /* check for two parallel consistent waves */
+Private restriction_thing jleft_qtag    = {4, {2, 0, 7, 1},                {3, 4, 6, 5},                   {0}, {0}, TRUE, chk_wave};
+Private restriction_thing jright_qtag   = {4, {3, 0, 6, 1},                {2, 4, 7, 5},                   {0}, {0}, TRUE, chk_wave};
+Private restriction_thing ijleft_qtag   = {4, {2, 0, 3, 1},                {6, 4, 7, 5},                   {0}, {0}, TRUE, chk_wave};
+Private restriction_thing ijright_qtag  = {4, {6, 0, 7, 1},                {2, 4, 3, 5},                   {0}, {0}, TRUE, chk_wave};
+Private restriction_thing two_faced_2x4 = {4, {0, 1, 6, 7},                {3, 2, 5, 4},                   {0}, {0}, TRUE, chk_wave};            /* check for two parallel consistent two-faced lines */
+Private restriction_thing wave_3x4      = {6, {0, 2, 5, 7, 9, 10},         {1, 3, 4, 6, 8, 11},            {0}, {0}, TRUE, chk_wave};            /* check for three parallel consistent waves */
+Private restriction_thing two_faced_3x4 = {6, {0, 1, 8, 9, 10, 11},        {2, 3, 4, 5, 6, 7},             {0}, {0}, TRUE, chk_wave};            /* check for three parallel consistent two-faced lines */
+Private restriction_thing wave_1x2      = {1, {0},                         {1},                            {0}, {0}, TRUE, chk_wave};            /* check for a miniwave -- note this is NOT OK for assume */
+Private restriction_thing wave_1x4      = {2, {0, 3},                      {1, 2},                         {0}, {0}, TRUE, chk_wave};            /* check for a wave */
+Private restriction_thing wave_1x6      = {3, {0, 2, 4},                   {1, 3, 5},                      {0}, {0}, TRUE, chk_wave};            /* check for grand wave of 6 */
+Private restriction_thing wave_1x8      = {4, {0, 3, 6, 5},                {1, 2, 7, 4},                   {0}, {0}, TRUE, chk_wave};            /* check for grand wave */
+Private restriction_thing wave_1x10     = {5, {0, 2, 4, 6, 8},             {1, 3, 5, 7, 9},                {0}, {0}, TRUE, chk_wave};            /* check for grand wave of 10 */
+Private restriction_thing wave_1x12     = {6, {0, 2, 4, 7, 9, 11},         {1, 3, 5, 6, 8, 10},            {0}, {0}, TRUE, chk_wave};            /* check for grand wave of 12 */
+Private restriction_thing wave_2x6      = {6, {0, 2, 4, 7, 9, 11},         {1, 3, 5, 6, 8, 10},            {0}, {0}, TRUE, chk_wave};            /* check for parallel consistent 2x6 waves */
+Private restriction_thing wave_1x14     = {7, {0, 2, 4, 6, 8, 10, 12},     {1, 3, 5, 7, 9, 11, 13},        {0}, {0}, TRUE, chk_wave};            /* check for grand wave of 14 */
+Private restriction_thing wave_1x16     = {8, {0, 2, 4, 6, 9, 11, 13, 15}, {1, 3, 5, 7, 8, 10, 12, 14},    {0}, {0}, TRUE, chk_wave};            /* check for grand wave of 16 */
+Private restriction_thing wave_2x8      = {8, {0, 2, 4, 6, 9, 11, 13, 15}, {1, 3, 5, 7, 8, 10, 12, 14},    {0}, {0}, TRUE, chk_wave};            /* check for parallel 2x8 waves */
+
+Private restriction_thing cwave_2x4     = {4, {0, 1, 2, 3},                {4, 5, 6, 7},                   {0}, {0}, TRUE, chk_wave};            /* check for real columns */
+Private restriction_thing cwave_2x3     = {3, {0, 1, 2},                   {3, 4, 5},                      {0}, {0}, TRUE, chk_wave};            /* check for real columns of 6 */
+Private restriction_thing cwave_2x6     = {6, {0, 1, 2, 3, 4, 5},          {6, 7, 8, 9, 10, 11},           {0}, {0}, TRUE, chk_wave};            /* check for real 12-matrix columns */
+Private restriction_thing cwave_2x8     = {8, {0, 1, 2, 3, 4, 5, 6, 7},    {8, 9, 10, 11, 12, 13, 14, 15}, {0}, {0}, TRUE, chk_wave};            /* check for real 16-matrix columns */
+Private restriction_thing cmagic_2x3    = {3, {0, 2, 4},                   {1, 3, 5},                      {0}, {0}, TRUE, chk_wave};            /* check for magic columns */
+Private restriction_thing cmagic_2x4    = {4, {0, 3, 5, 6},                {1, 2, 4, 7},                   {0}, {0}, TRUE, chk_wave};            /* check for magic columns */
+
+Private restriction_thing lio_2x4       = {4, {0, 1, 2, 3},                {4, 5, 6, 7},                   {0}, {0}, TRUE, chk_wave};            /* check for lines in or lines out */
+Private restriction_thing invert_2x4    = {4, {0, 3, 5, 6},                {1, 2, 4, 7},                   {0}, {0}, TRUE, chk_wave};            /* check for inverted lines */
+Private restriction_thing invert_1x4    = {2, {0, 2},                      {1, 3},                         {0}, {0}, TRUE, chk_wave};            /* check for single inverted line */
+
+Private restriction_thing peelable_3x2  = {3, {0, 1, 2},                   {3, 4, 5},                      {0}, {0}, FALSE, chk_peelable};       /* check for a "peelable" 2x3 column */
+Private restriction_thing peelable_4x2  = {4, {0, 1, 2, 3},                {4, 5, 6, 7},                   {0}, {0}, FALSE, chk_peelable};       /* check for a "peelable" 2x4 column */
+Private restriction_thing peelable_6x2  = {6, {0, 1, 2, 3, 4, 5},          {6, 7, 8, 9, 10, 11},           {0}, {0}, FALSE, chk_peelable};       /* check for a "peelable" 2x6 column */
+Private restriction_thing peelable_8x2  = {8, {0, 1, 2, 3, 4, 5, 6, 7},    {8, 9, 10, 11, 12, 13, 14, 15}, {0}, {0}, FALSE, chk_peelable};       /* check for a "peelable" 2x8 column */
+
+Private restriction_thing all_same_2    = {2, {0, 1},                      {0},                            {0}, {0}, FALSE, chk_1_group};        /* check for a couple */
+Private restriction_thing all_same_4    = {4, {0, 1, 2, 3},                {0},                            {0}, {0}, TRUE,  chk_1_group};        /* check for a 1-faced line */
+Private restriction_thing all_same_6    = {6, {0, 1, 2, 3, 4, 5},          {0},                            {0}, {0}, FALSE, chk_1_group};        /* check for a 1-faced line */
+Private restriction_thing all_same_8    = {8, {0, 1, 2, 3, 4, 5, 6, 7},    {0},                            {0}, {0}, FALSE, chk_1_group};        /* check for all 8 people same way in 2x4 *OR* 1x8. */
+
+
+Private restriction_thing two_faced_1x6 = {3, {0, 1, 2},                   {3, 4, 5},                      {0}, {0}, FALSE, chk_wave};           /* check for 3x3 two-faced line -- 3 up and 3 down */
+Private restriction_thing two_faced_1x8 = {4, {0, 1, 6, 7},                {3, 2, 5, 4},                   {0}, {0}, FALSE, chk_wave};           /* check for grand two-faced line */
+Private restriction_thing one_faced_2x3 = {3, {0, 3, 1, 4, 2, 5},                                     {0}, {0}, {0}, FALSE, chk_2_groups};       /* check for parallel one-faced lines of 3 */
+Private restriction_thing one_faced_2x4 = {4, {0, 4, 1, 5, 2, 6, 3, 7},                               {0}, {0}, {0}, FALSE, chk_2_groups};       /* check for parallel one-faced lines */
+Private restriction_thing cpls_2x4      = {2, {0, 2, 4, 6, 1, 3, 5, 7},                               {0}, {0}, {0}, FALSE, chk_4_groups};       /* check for everyone as a couple */
+Private restriction_thing cpls_4x2      = {2, {0, 1, 2, 3, 7, 6, 5, 4},                               {0}, {0}, {0}, FALSE, chk_4_groups};       /* check for everyone as a couple */
+Private restriction_thing cpls_1x4      = {2, {0, 2, 1, 3},                                           {0}, {0}, {0}, FALSE, chk_2_groups};       /* check for everyone as a couple */
+Private restriction_thing cpls_1x8      = {2, {0, 2, 4, 6, 1, 3, 5, 7},                               {0}, {0}, {0}, FALSE, chk_4_groups};       /* check for everyone as a couple */
+Private restriction_thing cpls_2x8      = {2, {0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15}, {0}, {0}, {0}, FALSE, chk_8_groups};       /* check for everyone as a couple */
+Private restriction_thing cpls_1x16     = {2, {0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15}, {0}, {0}, {0}, FALSE, chk_8_groups};       /* check for everyone as a couple */
+Private restriction_thing cpls_2x6      = {3, {0, 3, 6, 9, 1, 4, 7, 10, 2, 5, 8, 11},                 {0}, {0}, {0}, FALSE, chk_4_groups};       /* check for each three people facing same way */
+Private restriction_thing cplsof4_2x8   = {4, {0, 4, 8, 12, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15}, {0}, {0}, {0}, FALSE, chk_4_groups};       /* check for each four people facing same way */
+Private restriction_thing cpls_1x3      = {3, {0, 1, 2},                                              {0}, {0}, {0}, FALSE, chk_1_group};        /* check for three people facing same way */
+Private restriction_thing cpls_3x3_1x6  = {3, {0, 3, 1, 4, 2, 5},                                     {0}, {0}, {0}, FALSE, chk_2_groups};       /* check for each three people facing same way */
+Private restriction_thing cpls_4x4_1x8  = {4, {0, 4, 1, 5, 2, 6, 3, 7},                               {0}, {0}, {0}, FALSE, chk_2_groups};       /* check for each four people facing same way */
+Private restriction_thing two_faced_4x4_1x8 = {4, {0, 1, 2, 3},            {4, 5, 6, 7},                   {0}, {0}, FALSE, chk_wave};           /* check for 4x4 two-faced line -- 4 up and 4 down */
+Private restriction_thing two_faced_1x4 = {2, {0, 1},                      {2, 3},                         {0}, {0}, TRUE,  chk_wave};           /* check for 2-faced lines */
+Private restriction_thing two_faced_2x6 = {6, {0, 1, 2, 9, 10, 11},        {3, 4, 5, 6, 7, 8},             {0}, {0}, FALSE, chk_wave};           /* check for parallel consistent 3x3 two-faced lines */
+Private restriction_thing two_faced_4x4_2x8 = {8, {0, 1, 2, 3, 12, 13, 14, 15}, {4, 5, 6, 7, 8, 9, 10, 11},{0}, {0}, FALSE, chk_wave};           /* check for parallel consistent 4x4 two-faced lines */
+
+Private restriction_thing box_wave      = {0, {2, 0, 0, 2},                {0, 0, 2, 2},                   {0}, {0}, TRUE,  chk_box};            /* check for a "real" (walk-and-dodge type) box */
+Private restriction_thing box_1face     = {0, {2, 2, 2, 2},                {0, 0, 0, 0},                   {0}, {0}, FALSE, chk_box};            /* check for a "one-faced" (reverse-the-pass type) box */
+Private restriction_thing box_magic     = {0, {2, 0, 2, 0},                {0, 2, 0, 2},                   {0}, {0}, TRUE,  chk_box};            /* check for a "magic" (split-trade-circulate type) box */
+Private restriction_thing s4x4_wave     = {0,   {2, 0, 2, 0, 0, 0, 0, 2, 0, 2, 0, 2, 2, 2, 2, 0},
+                                                {0, 0, 0, 2, 0, 2, 0, 2, 2, 2, 2, 0, 2, 0, 2, 0},          {0}, {0}, FALSE, chk_box};            /* check for 4 waves of consistent handedness and consistent headliner-ness. */
+Private restriction_thing s4x4_2fl     = {0,   {2, 2, 0, 2, 0, 0, 0, 0, 0, 0, 2, 0, 2, 2, 2, 2},
+                                                {0, 0, 0, 0, 0, 0, 2, 0, 2, 2, 2, 2, 2, 2, 0, 2},          {0}, {0}, FALSE, chk_box};            /* check for 4 waves of consistent handedness and consistent headliner-ness. */
+
+Private restriction_thing cwave_qtg     = {2, {2, 7},                      {3, 6},                         {0}, {0}, FALSE, chk_wave};           /* check for wave across the center */
+Private restriction_thing wave_qtag     = {2, {2, 7},                      {3, 6},                         {0}, {0}, FALSE, chk_wave};           /* check for wave across the center */
+Private restriction_thing two_faced_qtag= {2, {6, 7},                      {2, 3},                         {0}, {0}, FALSE, chk_wave};           /* check for two-faced line across the center */
+
+Private restriction_thing qtag_1        = {4, {8, 0, 1, 2, 3, 4, 5, 6, 7}, {0},                {2, 4, 5}, {2, 0, 1}, FALSE, chk_dmd_qtag};
+Private restriction_thing dmd_1         = {4, {0}, {4, 0, 1, 2, 3},                            {1, 0},    {1, 2},    FALSE, chk_dmd_qtag};
+Private restriction_thing ptpd_1        = {4, {0}, {8, 0, 1, 2, 3, 4, 5, 6, 7},                {2, 0, 6}, {2, 2, 4}, FALSE, chk_dmd_qtag};
+Private restriction_thing qtag_3        = {4, {8, 0, 1, 2, 3, 4, 5, 6, 7}, {0},                {2, 0, 1}, {2, 4, 5}, FALSE, chk_dmd_qtag};
+Private restriction_thing dmd_3         = {4, {0}, {4, 0, 1, 2, 3},                            {1, 2},    {1, 0},    FALSE, chk_dmd_qtag};
+Private restriction_thing ptpd_3        = {4, {0}, {8, 0, 1, 2, 3, 4, 5, 6, 7},                {2, 2, 4}, {2, 0, 6}, FALSE, chk_dmd_qtag};
+Private restriction_thing qtag_q        = {4, {8, 0, 1, 2, 3, 4, 5, 6, 7}, {0},                {0},       {0},       FALSE, chk_dmd_qtag};
+Private restriction_thing dmd_q         = {4, {0}, {4, 0, 1, 2, 3},                            {0},       {0},       FALSE, chk_dmd_qtag};
+Private restriction_thing ptpd_q        = {4, {0}, {8, 0, 1, 2, 3, 4, 5, 6, 7},                {0},       {0},       FALSE, chk_dmd_qtag};
+Private restriction_thing qtag_d        = {4, {4, 2, 3, 6, 7}, {4, 0, 1, 4, 5},                {0},       {0},       FALSE, chk_dmd_qtag};
+Private restriction_thing dmd_d         = {4, {2, 0, 2}, {2, 1, 3},                            {0},       {0},       FALSE, chk_dmd_qtag};
+Private restriction_thing ptpd_d        = {4, {4, 0, 2, 4, 7}, {4, 1, 3, 5, 6},                {0},       {0},       FALSE, chk_dmd_qtag};
+
+
+
+/* Must be a power of 2. */
+#define NUM_RESTR_HASH_BUCKETS 32
+
+typedef struct zilch {
+   setup_kind k;
+   call_restriction restr;
+   restriction_thing *value;
+   struct zilch *next;
+} restr_initializer;
+
+
+static restr_initializer restr_init_table[] = {
+   {s1x8, cr_wave_only, &wave_1x8},
+   {s1x8, cr_1fl_only, &all_same_8},
+   {s1x8, cr_all_facing_same, &all_same_8},
+   {s1x8, cr_2fl_only, &two_faced_1x8},
+   {s2x4, cr_4x4couples_only, &cpls_4x4_1x8},
+   {s1x8, cr_4x4couples_only, &cpls_4x4_1x8},
+   {s1x8, cr_4x4_2fl_only, &two_faced_4x4_1x8},
+   {s1x8, cr_couples_only, &cpls_1x8},
+   {s1x3, cr_3x3couples_only, &cpls_1x3},
+   {s1x4, cr_wave_only, &wave_1x4},
+   {s1x4, cr_2fl_only, &two_faced_1x4},
+   {s1x4, cr_1fl_only, &all_same_4},
+   {s1x4, cr_4x4couples_only, &all_same_4},
+   {s1x4, cr_all_facing_same, &all_same_4},
+   {s1x4, cr_couples_only, &cpls_1x4},
+   {s1x4, cr_magic_only, &invert_1x4},
+   {s1x6, cr_wave_only, &wave_1x6},
+   {s1x6, cr_1fl_only, &all_same_6},
+   {s1x6, cr_all_facing_same, &all_same_6},
+   {s1x6, cr_3x3_2fl_only, &two_faced_1x6},
+   {s1x6, cr_3x3couples_only, &cpls_3x3_1x6},
+   {s2x3, cr_3x3couples_only, &cpls_3x3_1x6},
+   {s1x10, cr_wave_only, &wave_1x10},
+   {s1x12, cr_wave_only, &wave_1x12},
+   {s1x14, cr_wave_only, &wave_1x14},
+   {s1x16, cr_wave_only, &wave_1x16},
+   {s1x16, cr_couples_only, &cpls_1x16},
+   {s2x3, cr_all_facing_same, &all_same_6},
+   {s2x3, cr_1fl_only, &one_faced_2x3},
+   {s2x4, cr_2fl_only, &two_faced_2x4},
+   {s2x4, cr_wave_only, &wave_2x4},
+   {s2x4, cr_magic_only, &invert_2x4},
+   {s2x4, cr_li_lo, &lio_2x4},
+   {s2x4, cr_all_facing_same, &all_same_8},
+   {s2x4, cr_1fl_only, &one_faced_2x4},
+   {s2x4, cr_couples_only, &cpls_2x4},
+   {s_qtag, cr_wave_only, &wave_qtag},
+   {s_qtag, cr_2fl_only, &two_faced_qtag},
+   {s2x8, cr_wave_only, &wave_2x8},
+   {s2x8, cr_4x4_2fl_only, &two_faced_4x4_2x8},
+   {s1x16, cr_4x4couples_only, &cplsof4_2x8},
+   {s2x8, cr_4x4couples_only, &cplsof4_2x8},
+   {s2x8, cr_couples_only, &cpls_2x8},
+   {s2x6, cr_wave_only, &wave_2x6},
+   {s2x6, cr_3x3_2fl_only, &two_faced_2x6},
+   {s2x6, cr_3x3couples_only, &cpls_2x6},
+   {s1x12, cr_3x3couples_only, &cpls_2x6},
+   {s1x2, cr_2fl_only, &all_same_2},
+   {s1x2, cr_couples_only, &all_same_2},
+   {s3x4, cr_wave_only, &wave_3x4},
+   {s3x4, cr_2fl_only, &two_faced_3x4},
+   {nothing}
+};
+
+
+static restr_initializer *restr_hash_table[NUM_RESTR_HASH_BUCKETS];
+
+
+extern void initialize_restr_tables(void)
+{
+   restr_initializer *tabp;
+   for (tabp = restr_init_table ; tabp->k != nothing ; tabp++) {
+      uint32 hash_num = ((tabp->k + (5*tabp->restr)) * 25) & (NUM_RESTR_HASH_BUCKETS-1);
+      tabp->next = restr_hash_table[hash_num];
+      restr_hash_table[hash_num] = tabp;
+   }
+}
+
+
+extern restriction_thing *get_restriction_thing(setup_kind k, assumption_thing t)
+{
+   restriction_thing *restr_thing_ptr = (restriction_thing *) 0;
+
+   /* First, use the hash table to search for easy cases. */
+
+   if (t.assump_col == 0) {
+      uint32 hash_num = ((k + (5*t.assumption)) * 25) & (NUM_RESTR_HASH_BUCKETS-1);
+      restr_initializer *restr_hash_bucket = restr_hash_table[hash_num];
+      while (restr_hash_bucket) {
+         if (restr_hash_bucket->k == k && restr_hash_bucket->restr == t.assumption)
+            return restr_hash_bucket->value;
+         restr_hash_bucket = restr_hash_bucket->next;
+      }
+   }
+
+   switch (k) {
+      case s2x2:
+         if (t.assumption == cr_wave_only && (t.assump_col & 1) == 0)
+            restr_thing_ptr = &box_wave;
+         else if (t.assumption == cr_all_facing_same && (t.assump_col & 1) == 0)
+            restr_thing_ptr = &box_1face;
+         else if (t.assumption == cr_2fl_only && (t.assump_col & 1) == 0)
+            restr_thing_ptr = &box_1face;
+         else if (t.assumption == cr_magic_only && (t.assump_col & 1) == 0)
+            restr_thing_ptr = &box_magic;
+         break;
+      case s4x4:
+         if (t.assumption == cr_wave_only && (t.assump_col & 1) == 0)
+            restr_thing_ptr = &s4x4_wave;
+         if (t.assumption == cr_2fl_only && (t.assump_col & 1) == 0)
+            restr_thing_ptr = &s4x4_2fl;
+         break;
+      case s2x3:
+         if (t.assumption == cr_wave_only && t.assump_col != 0)
+            restr_thing_ptr = &cwave_2x3;
+         else if (t.assumption == cr_magic_only && t.assump_col != 0)
+            restr_thing_ptr = &cmagic_2x3;
+         else if (t.assumption == cr_peelable_box && t.assump_col != 0)
+            restr_thing_ptr = &peelable_3x2;
+         break;
+      case s1x4:
+         if (t.assumption == cr_2fl_only && t.assump_col != 0)
+            restr_thing_ptr = &two_faced_1x4;
+      case s2x4:
+         if (t.assumption == cr_li_lo && t.assump_col != 0)
+            restr_thing_ptr = &wave_2x4;
+         else if (t.assumption == cr_2fl_only && t.assump_col != 0)
+            restr_thing_ptr = &two_faced_2x4;
+         else if (t.assumption == cr_wave_only && t.assump_col != 0)
+            restr_thing_ptr = &cwave_2x4;
+         else if (t.assumption == cr_magic_only && t.assump_col != 0)
+            restr_thing_ptr = &cmagic_2x4;
+         else if (t.assumption == cr_peelable_box && t.assump_col != 0)
+            restr_thing_ptr = &peelable_4x2;
+         else if (t.assumption == cr_couples_only && t.assump_col == 1)
+            restr_thing_ptr = &cpls_4x2;
+         break;
+      case s1x2:
+         if (t.assumption == cr_wave_only && t.assump_col != 1)
+            restr_thing_ptr = &wave_1x2;
+         break;
+      case s2x6:
+         if (t.assumption == cr_wave_only && t.assump_col != 0)
+            restr_thing_ptr = &cwave_2x6;
+         else if (t.assumption == cr_peelable_box && t.assump_col != 0)
+            restr_thing_ptr = &peelable_6x2;
+         break;
+      case s2x8:
+         if (t.assumption == cr_wave_only && t.assump_col != 0)
+            restr_thing_ptr = &cwave_2x8;
+         else if (t.assumption == cr_peelable_box && t.assump_col != 0)
+            restr_thing_ptr = &peelable_8x2;
+         break;
+      case s_qtag:
+         if (t.assumption == cr_wave_only && t.assump_col == 1)
+            restr_thing_ptr = &cwave_qtg;
+         else if (t.assumption == cr_jleft)
+            restr_thing_ptr = &jleft_qtag;
+         else if (t.assumption == cr_jright)
+            restr_thing_ptr = &jright_qtag;
+         else if (t.assumption == cr_ijleft)
+            restr_thing_ptr = &ijleft_qtag;
+         else if (t.assumption == cr_ijright)
+            restr_thing_ptr = &ijright_qtag;
+         else if (t.assumption == cr_diamond_like)
+            restr_thing_ptr = &qtag_d;
+         else if (t.assumption == cr_qtag_like)
+            restr_thing_ptr = &qtag_q;
+         else if (t.assumption == cr_gen_1_4_tag)
+            restr_thing_ptr = &qtag_1;
+         else if (t.assumption == cr_gen_3_4_tag)
+            restr_thing_ptr = &qtag_3;
+         break;
+      case sdmd:
+         if (t.assumption == cr_diamond_like)
+            restr_thing_ptr = &dmd_d;
+         else if (t.assumption == cr_qtag_like)
+            restr_thing_ptr = &dmd_q;
+         else if (t.assumption == cr_gen_1_4_tag)
+            restr_thing_ptr = &dmd_1;
+         else if (t.assumption == cr_gen_3_4_tag)
+            restr_thing_ptr = &dmd_3;
+         break;
+      case s_ptpd:
+         if (t.assumption == cr_diamond_like)
+            restr_thing_ptr = &ptpd_d;
+         else if (t.assumption == cr_qtag_like)
+            restr_thing_ptr = &ptpd_q;
+         else if (t.assumption == cr_gen_1_4_tag)
+            restr_thing_ptr = &ptpd_1;
+         else if (t.assumption == cr_gen_3_4_tag)
+            restr_thing_ptr = &ptpd_3;
+         break;
+   }
+
+   return restr_thing_ptr;
+}
+
+
+
 /* These variables are used by the text-packing stuff. */
 
-Private char *destcurr;
-Private char lastchar;
-Private char *lastblank;
-Private char current_line[MAX_TEXT_LINE_LENGTH];
-Private int text_line_count = 0;
+static char *destcurr;
+static char lastchar;
+static char *lastblank;
+static char current_line[MAX_TEXT_LINE_LENGTH];
+static int text_line_count = 0;
 
 
 
@@ -436,11 +855,11 @@ Private void writestuff_with_decorations(parse_block *cptr, Const char *s)
                index >>= 4;
                continue;
             case '6':
-               writestuff(selector_names[cptr->selector]);
+               writestuff(selector_list[cptr->selector].name_uc);
                f += 2;
                continue;
             case 'k':
-               writestuff(selector_singular[cptr->selector]);
+               writestuff(selector_list[cptr->selector].sing_name_uc);
                f += 2;
                continue;
          }
@@ -627,7 +1046,7 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
                else if (i == 3)
                   writestuff_with_decorations(local_cptr, "OWN THE @6, ");
                else if (i == 5)
-                  writestuff_with_decorations(local_cptr, "@6, ");
+                  writestuff_with_decorations(local_cptr, "@6 ");
                else
                   writestuff_with_decorations(local_cptr, "@6 DISCONNECTED ");
             }
@@ -658,8 +1077,11 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
 
             if (k == concept_centers_and_ends)
                writestuff(" WHILE THE ENDS");
-            else if (k == concept_some_vs_others && item->value.arg1 != 3)
-               writestuff(" WHILE THE OTHERS");
+            else if (k == concept_some_vs_others && item->value.arg1 != 3) {
+               selector_kind opp = selector_list[local_cptr->selector].opposite;
+               writestuff(" WHILE THE ");
+               writestuff((opp == selector_uninitialized) ? ((Cstring) "OTHERS") : selector_list[opp].name_uc);
+            }
             else if (k == concept_on_your_own)
                writestuff(" AND");
             else if (k == concept_interlace)
@@ -762,7 +1184,7 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
             writestuff_with_decorations(local_cptr, (Const char *) 0);
          }
          else if ((k == concept_meta) && local_cptr->concept->value.arg1 == 3) {
-            writestuff("START");
+            writestuff("INITIALLY");
             request_comma_after_next_concept = TRUE;
             request_final_space = TRUE;
          }
@@ -876,9 +1298,9 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
                      case '6': case 'k':
                         write_blank_if_needed();
                         if (savec == '6')
-                           writestuff(selector_names[i16junk]);
+                           writestuff(selector_list[i16junk].name);
                         else
-                           writestuff(selector_singular[i16junk]);
+                           writestuff(selector_list[i16junk].sing_name);
                         if (np[2] && np[2] != ' ' && np[2] != ']')
                            writestuff(" ");
                         np += 2;       /* skip the indicator */
@@ -1132,20 +1554,29 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
 
 /* These static variables are used by printperson. */
 
-Private char peoplenames[] = "1234";
-Private char directions[] = "B?B>B?B<B?B?B?B?B^B?BVB?B?B?B?B?G?G>G?G<G?G?G?G?G^G?GVG?G?G?G?G?";
-Private char personbuffer[] = " ZZZ";
+static char peoplenames[] = "1234";
+static char directions[] = "?>?<????^?V?????";
+static char personbuffer[] = " ZZZ";
+
+/* This could get changed if a user interface for sdtty wishes to use pretty graphics characters. */
+char *ui_directions = directions;
+
 
 Private void printperson(unsigned int x)
 {
-   int i;
-
    if (x & BIT_PERSON) {
-      i = 2 * (x & 017);
-      if ((x & 0100) != 0) i = i+32;
+      int i = (x & 017);
+
       personbuffer[1] = peoplenames[(x >> 7) & 3];
-      personbuffer[2] = directions[i];
-      personbuffer[3] = directions[i+1];
+      personbuffer[2] = (x & 0100) ? 'G' : 'B';
+
+      if (enable_file_writing) {
+         personbuffer[3] = directions[i];
+      }
+      else {
+         personbuffer[3] = ui_directions[i];
+      }
+
       writestuff(personbuffer);
    }
    else
@@ -1154,8 +1585,8 @@ Private void printperson(unsigned int x)
 
 /* These static variables are used by printsetup/print_4_person_setup/do_write. */
 
-Private int offs, roti, modulus, personstart;
-Private setup *printarg;
+static int offs, roti, modulus, personstart;
+static setup *printarg;
 
 Private void do_write(char s[])
 {
@@ -1378,6 +1809,7 @@ extern void display_initial_history(int upper_limit, int num_pics)
 #ifndef THINK_C			/* Mac interface provides "About Sd" popup instead */
       write_header_stuff(TRUE, 0);
       newline();
+      newline();
 #endif
       startpoint = 1;
    }
@@ -1398,35 +1830,28 @@ extern void display_initial_history(int upper_limit, int num_pics)
 
 extern void write_history_line(int history_index, Const char *header, long_boolean picture, file_write_flag write_to_file)
 {
-   int index, w, i;
+   int centersp, w, i;
    parse_block *thing;
 
    if (write_to_file == file_write_double)
       doublespace_file();
 
-   index = history[history_index].centersp;
+   centersp = history[history_index].centersp;
 
    /* Do not put index numbers into output file -- user may edit it later. */
 
-   if (!enable_file_writing) {
-
-#ifndef OLD_WAY
+   if (!enable_file_writing && !diagnostic_mode) {
       i = history_index-whole_sequence_low_lim+1;
-      if (header) writestuff(header);   /* Be sure we get it for partially entered concepts -- this line will go away. */
-      else if (i > 0 && !diagnostic_mode) {   /* For now, don't do this if diagnostic, until we decide whether it is permanent. */
-         char indexbuf[200];
+      if (i > 0) {
+         char indexbuf[10];
          sprintf(indexbuf, "%2d:   ", i);
          writestuff(indexbuf);
       }
-#else
-      if (header) writestuff(header);
-#endif
-
    }
 
-   if (index != 0) {
-      if (startinfolist[index].into_the_middle) goto morefinal;
-      writestuff(startinfolist[index].name);
+   if (centersp != 0) {
+      if (startinfolist[centersp].into_the_middle) goto morefinal;
+      writestuff(startinfolist[centersp].name);
       goto final;
    }
 
@@ -1437,9 +1862,9 @@ extern void write_history_line(int history_index, Const char *header, long_boole
       change the name of this concept from "centers" to the appropriate thing. */
 
    if (history_index == 2 && thing->concept->kind == concept_centers_or_ends && thing->concept->value.arg1 == 0) {
-      index = history[1].centersp;
-      if (startinfolist[index].into_the_middle) {
-         writestuff(startinfolist[index].name);
+      centersp = history[1].centersp;
+      if (startinfolist[centersp].into_the_middle) {
+         writestuff(startinfolist[centersp].name);
          writestuff(" ");
          thing = thing->next;
       }
@@ -1638,9 +2063,13 @@ static short ptpd1[] = {d_east, d_west, 1, 3, 7, 5, -1};
 extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
 {
    callarray *p;
-   uint32 i, k, t, u, v, w, mask;
 
    for (p = spec; p; p = p->next) {
+      uint32 i, k, t, u, v, w, mask;
+      assumption_thing tt;
+      int idx, limit, j;
+      uint32 qa0, qa1;
+      restriction_thing *rr;
 
       /* First, we demand that the starting setup be correct.  Also, if a qualifier
          number was specified, it must match. */
@@ -1743,9 +2172,34 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
                   }
 
                   goto bad;
+               case s1x2:
+                  if ((t = ss->people[0].id1) != 0) { k |=  t; i &=  t; }
+                  if ((t = ss->people[1].id1) != 0) { k |= ~t; i &= ~t; }
+                  if (!(k & ~i & 2)) goto good;
+
+                  goto bad;
                default:
                   goto good;                 /* We don't understand the setup -- we'd better accept it. */
             }
+         case sq_1fl_only:       /* 1x4/1x6/1x8 - a 1FL, that is, all 4/6/8 facing same; 2x3/2x4 - individual 1FL's */
+            switch (ss->cmd.cmd_assume.assumption) {
+               case cr_1fl_only:
+                  goto good;
+               case cr_wave_only:
+               case cr_magic_only:
+                  goto bad;
+            }
+
+            tt.assump_col = 0;
+            tt.assump_both = 0;
+            tt.assump_cast = 0;
+            tt.assumption = cr_1fl_only;
+
+            rr = get_restriction_thing(ss->kind, tt);
+
+            if (rr) goto check_stuff;
+
+            goto good;                 /* We don't understand the setup -- we'd better accept it. */
          case sq_2fl_only:                     /* 1x4 or 2x4 - 2FL; 4x1 - single DPT or single CDPT */
             switch (ss->cmd.cmd_assume.assumption) {
                case cr_1fl_only:
@@ -1754,28 +2208,48 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
                   goto bad;
             }
 
-            switch (ss->kind) {
-               case s1x4:
-                  if ((t = ss->people[0].id1) != 0) { k |=  t; i &=  t; }
-                  if ((t = ss->people[1].id1) != 0) { k |=  t; i &=  t; }
-                  if ((t = ss->people[2].id1) != 0) { k |= ~t; i &= ~t; }
-                  if ((t = ss->people[3].id1) != 0) { k |= ~t; i &= ~t; }
-                  if (!(k & ~i & 2)) goto good;
+            tt.assump_col = 0;
+            tt.assump_both = 0;
+            tt.assump_cast = 0;
+            tt.assumption = cr_2fl_only;
+            rr = get_restriction_thing(ss->kind, tt);
+            if (rr) goto check_stuff;
+            goto good;                 /* We don't understand the setup -- we'd better accept it. */
+         case sq_3x3couples_only:     /* 1x3/1x6/2x6/1x12 - each group of 3 people are facing the same way */
+            switch (ss->cmd.cmd_assume.assumption) {
+               case cr_1fl_only:
+                  goto good;
+               case cr_wave_only:
+               case cr_magic_only:
                   goto bad;
-               case s2x4:
-                  if ((t = ss->people[0].id1) != 0) { k |=  t; i &=  t; }
-                  if ((t = ss->people[1].id1) != 0) { k |=  t; i &=  t; }
-                  if ((t = ss->people[2].id1) != 0) { k |= ~t; i &= ~t; }
-                  if ((t = ss->people[3].id1) != 0) { k |= ~t; i &= ~t; }
-                  if ((t = ss->people[4].id1) != 0) { k |= ~t; i &= ~t; }
-                  if ((t = ss->people[5].id1) != 0) { k |= ~t; i &= ~t; }
-                  if ((t = ss->people[6].id1) != 0) { k |=  t; i &=  t; }
-                  if ((t = ss->people[7].id1) != 0) { k |=  t; i &=  t; }
-                  if (!(k & ~i & 2)) goto good;
-                  goto bad;
-               default:
-                  goto good;                 /* We don't understand the setup -- we'd better accept it. */
             }
+
+            tt.assump_col = 0;
+            tt.assump_both = 0;
+            tt.assump_cast = 0;
+            tt.assumption = cr_3x3couples_only;
+            rr = get_restriction_thing(ss->kind, tt);
+            if (rr) goto check_stuff;
+            goto good;                 /* We don't understand the setup -- we'd better accept it. */
+         case sq_4x4couples_only:     /* 1x4/1x8/2x4/2x8/1x16 - each group of 4 people are facing the same way */
+            switch (ss->cmd.cmd_assume.assumption) {
+               case cr_1fl_only:
+                  goto good;
+               case cr_wave_only:
+               case cr_magic_only:
+                  goto bad;
+            }
+
+            tt.assump_col = 0;
+            tt.assump_both = 0;
+            tt.assump_cast = 0;
+            tt.assumption = cr_4x4couples_only;
+
+            rr = get_restriction_thing(ss->kind, tt);
+
+            if (rr) goto check_stuff;
+
+            goto good;                 /* We don't understand the setup -- we'd better accept it. */
          case sq_miniwaves:                    /* miniwaves everywhere */
             switch (ss->cmd.cmd_assume.assumption) {
                case cr_1fl_only:
@@ -2040,7 +2514,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
             else {
                goto good;                 /* We don't understand the setup -- we'd better accept it. */
             }
-         case sq_true_Z:                    /* 2x3, 3x4, or 2x6 - real Z spots occupied, so can do Z axle */
+         case sq_true_Z_cw: case sq_true_Z_ccw:
             mask = 0;
 
             for (i=0, k=1; i<=setup_attrs[ss->kind].setup_limits; i++, k<<=1) {
@@ -2048,9 +2522,13 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
             }
 
             if (ss->kind == s2x3) {
-               if (mask == 033 || mask == 066) goto good;
+               /* In this case, we actually check the shear direction of the Z. */
+               if (mask == ((((search_qualifier) p->qualifier) == sq_true_Z_cw) ? 066 : 033)) goto good;
                goto bad;
             }
+
+/*  This stuff taken out -- being fussy about exact occupation of the 2x3's is not a good idea.
+   It could prevent recognition of unsymmetrical setups.  So we just allow any setup that could be divided into 2x3's.
             else if (ss->kind == s3x4) {
                if (mask == 0xEBA || mask == 0xD75) goto good;
                goto bad;
@@ -2059,9 +2537,30 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
                if (mask == 03333 || mask == 06666) goto good;
                goto bad;
             }
-            else {
+*/
+            else
                goto good;                 /* We don't understand the setup -- we'd better accept it. */
+         case sq_lateral_cols_empty:
+            mask = 0;
+            t = 0;
+
+            for (i=0, k=1; i<=setup_attrs[ss->kind].setup_limits; i++, k<<=1) {
+               if (ss->people[i].id1) { mask |= k; t |= ss->people[i].id1; }
             }
+
+            if (        ss->kind == s3x4 && (t & 1) == 0 &&
+                        (  (mask & 04646) == 0 || (mask & 04532) == 0 || (mask & 03245) == 0 ||
+                           (mask & 02525) == 0 || (mask & 03232) == 0 || (mask & 04651) == 0 || (mask & 05146) == 0))
+               goto good;
+            else if (   ss->kind == s4x4 && (t & 1) == 0 &&
+                        ((mask & 0xE8E8) == 0 || (mask & 0xA3A3) == 0 || (mask & 0x5C5C) == 0))
+               goto good;
+            else if (   ss->kind == s4x4 && (t & 010) == 0 &&
+                        ((mask & 0x8E8E) == 0 || (mask & 0x3A3A) == 0 || (mask & 0xC5C5) == 0))
+               goto good;
+            else if (ss->kind == s4x6 && (t & 010) == 0) goto good;
+            else if (ss->kind == s3x8 && (t & 001) == 0) goto good;
+            break;
          case sq_1_4_tag:                      /* dmd or qtag - is a 1/4 tag, i.e. points looking in */
             switch (ss->kind) {
                case sdmd:
@@ -2165,8 +2664,6 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
          case sq_didnt_say_tgl:
             if (ss->cmd.cmd_misc_flags & CMD_MISC__SAID_TRIANGLE) goto bad;
             goto good;
-
-
          case sq_dmd_ctrs_rh:
          case sq_dmd_ctrs_lh:
          case sq_dmd_ctrs_1f:
@@ -2223,6 +2720,52 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
                if ((search_qualifier) p->qualifier == kkk) goto good;
             }
       }
+
+      goto bad;
+
+      check_stuff:
+
+      switch (rr->check) {
+         case chk_wave:
+            qa0 = 0; qa1 = 0;
+
+            for (idx=0; idx<rr->size; idx++) {
+               if ((t = ss->people[rr->map1[idx]].id1) != 0) { qa0 |=  t; qa1 |= ~t; }
+               if ((t = ss->people[rr->map2[idx]].id1) != 0) { qa0 |= ~t; qa1 |=  t; }
+            }
+
+            if ((qa0 & qa1 & 2) != 0) goto bad;
+
+            goto good;
+         case chk_1_group:
+            limit = 1;
+            goto check_groups;
+         case chk_2_groups:
+            limit = 2;
+            goto check_groups;
+         case chk_4_groups:
+            limit = 4;
+            goto check_groups;
+         case chk_8_groups:
+            limit = 8;
+            goto check_groups;
+         default:
+            goto bad;    /* Shouldn't happen. */
+      }
+
+      check_groups:
+
+      for (idx=0; idx<limit; idx++) {
+         qa0 = 0; qa1 = 0;
+   
+         for (i=0,j=idx; i<rr->size; i++,j+=limit) {
+            if ((t = ss->people[rr->map1[j]].id1) != 0) { qa0 |= t; qa1 |= ~t; }
+         }
+   
+         if (qa0&qa1&2)
+            goto bad;
+      }
+      goto good;
 
       bad: ;
    }
@@ -2383,7 +2926,7 @@ extern parse_block *process_final_concepts(
    *final_concepts = 0;
 
    while (tptr) {
-      final_set bit_to_set = 0;
+      final_set bit_to_set;
       final_set bit_to_forbid = 0;
 
       switch (tptr->concept->kind) {

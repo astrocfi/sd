@@ -349,6 +349,18 @@ Private long_boolean x22_tandem_with_someone(setup *real_people, int real_index,
 }
 
 /* ARGSUSED */
+Private long_boolean x32_someone_in_front(setup *real_people, int real_index,
+   int real_direction, int northified_index)
+{
+   if (real_index == 1 || real_index == 4) {
+      if (real_people->people[real_index+((northified_index==1) ? 1 : -1)].id1)
+         return TRUE;
+      else return FALSE;
+   }
+   else return TRUE;
+}
+
+/* ARGSUSED */
 Private long_boolean x14_once_rem_miniwave(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
@@ -1603,6 +1615,7 @@ long_boolean (*pred_table[])(
       x22_couple,                      /* "x22_couple" */
       x22_facing_someone,              /* "x22_facing_someone" */
       x22_tandem_with_someone,         /* "x22_tandem_with_someone" */
+      x32_someone_in_front,            /* "3x2_someone_in_front" */
       x14_once_rem_miniwave,           /* "x14_once_rem_miniwave" */
       x14_once_rem_couple,             /* "x14_once_rem_couple" */
       lines_miniwave,                  /* "lines_miniwave" */

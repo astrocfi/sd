@@ -579,7 +579,7 @@ Private void create_misc_call_lists(void)
 
 /* These are used by the database reading stuff. */
 
-Private unsigned int last_datum, last_12;
+Private uint32 last_datum, last_12;
 Private callspec_block *call_root;
 Private callarray *tp;
 /* This shows the highest index we have seen so far.  It must never exceed max_base_calls-1. */
@@ -595,7 +595,7 @@ Private void read_halfword(void)
 
 Private void read_fullword(void)
 {
-   int t = read_16_from_database();
+   uint32 t = read_16_from_database();
    last_datum = t << 16 | read_16_from_database();
 }
 
@@ -634,7 +634,7 @@ Private void read_level_3_groups(calldef_block *where_to_put)
       setup_kind end_setup;
       setup_kind end_setup_out;
       int this_start_size;
-      unsigned int these_flags;
+      uint32 these_flags;
       int extra;
 
       these_flags = last_12;
@@ -933,7 +933,8 @@ Private void build_database(call_list_mode_t call_list_mode)
    local_callcount = 0;
 
    for (;;) {
-      int savetag, saveflags1, saveflagsh;
+      int savetag;
+      uint32 saveflags1, saveflagsh;
 
       if ((last_datum & 0xE000) == 0) break;
 
@@ -1186,8 +1187,6 @@ extern void initialize_menus(call_list_mode_t call_list_mode)
       The remaining tasks are to make the subcall lists for other setups (e.g.
          those calls legal from columns), and initialize the menus with the
          subsetted text. */
-
-   uims_preinitialize();
 
    /* This is the universal menu. */
    uims_create_menu(call_list_any, main_call_lists[call_list_any]);

@@ -39,6 +39,7 @@
 *command.activephantoms: Toggle active phantoms
 *command.comment: Insert a comment
 *command.outfile: Change output file
+*command.header: Change header comment
 *command.getout: End this sequence
 *command.resolve: Resolve
 *command.reconcile: Reconcile
@@ -75,6 +76,7 @@
 *Dialog.value*Translations: #override <Key>Return: accept_string()
 *comment.label: You can insert a comment:
 *outfilepopup.format: Sequence output file is "%s".  Enter new name:
+*headerpopup.format: Current header comment is "%s".  Enter new comment:
 *getout.label: Text to be placed at the beginning of this sequence:
 *neglect.label: Percentage (integer) of neglected calls:
 *abort.label: Abort

@@ -73,9 +73,8 @@ is to receive instruction from a qualified teacher/coach, and to practice.
 Quality, correctness, and reliability are fundamental and extremely important
 design goals of Sd and Sdtty.  Before any version is released, it must pass
 very rigorous diagnostic tests.  In addition to special diagnostics to test
-the programs' internal functions, it is tested against about 20 tips of material
-transcribed from actual C4 weekends.  The tests currently execute over 12,000
-commands.
+the programs' internal functions, it is tested against a large amount of material
+transcribed from actual challenge dances called by a number of callers.
 
 @unnumberedsec Authenticity of Calls and Concepts
 
@@ -205,7 +204,7 @@ World Wide Web.  Give the locator
 @end ifset
 to your WWW browser program.
 
-Sd and Sdtty are @dfn{free} programs, in that they are licensed under the
+Sd and Sdtty are ``free'' programs, in that they are licensed under the
 GNU General Public License, which is an appendix to this manual.
 In short, this means that it is perfectly legal and ethical to copy
 and redistribute the program and documentation.  For example, you may
@@ -283,5 +282,6 @@ in the @file{INSTALL} file
 was written by Sue Curtis.
 
 We received helpful feedback and testing from Robert French, Judy
-Anderson, Bill van Melle, Lois Lew, Ron Nicholson, and Dave Decot.
+Anderson, Bill van Melle, Lois Lew, Ron Nicholson, Dave Decot,
+and Kristin Jensen.
 @end ifset

@@ -50,18 +50,20 @@ Private int level_concept_list_length;
 
 
 typedef struct {
-   char *full_input;      /* the current user input */
-   char *extended_input;  /* the maximal common extension to the user input */
-   char extension[200];   /* the extension for the current pattern */
-   int match_count;       /* the number of matches so far */
-   modifier_block *newmodifiers;   /* has "left", "magic", etc. modifiers. */
-   int yielding_matches;  /* the number of them that are marked "yield_if_ambiguous". */
-   int exact_match;       /* true if an exact match has been found */
-   int showing;           /* we are only showing the matching patterns */
-   show_function sf;      /* function to call with matching command (if showing) */
-   long_boolean verify;   /* true => verify calls before showing */
-   int space_ok;          /* space is a legitimate next input character */
-   match_result result;   /* value of the first or exact matching pattern */
+   char *full_input;           /* the current user input */
+   char *extended_input;       /* the maximal common extension to the user input */
+   char extension[200];        /* the extension for the current pattern */
+   int match_count;            /* the number of matches so far */
+   int exact_count;            /* the number of exact matches so far */
+   modifier_block *newmodifiers;  /* has "left", "magic", etc. modifiers. */
+   int yielding_matches;       /* the number of them that are marked "yield_if_ambiguous". */
+   int exact_match;            /* true if an exact match has been found */
+   int showing;                /* we are only showing the matching patterns */
+   show_function sf;           /* function to call with matching command (if showing) */
+   long_boolean verify;        /* true => verify calls before showing */
+   int space_ok;               /* space is a legitimate next input character */
+   match_result result;        /* value of the first or exact matching pattern */
+   int call_menu;              /* The call menu (or special negative command) that we are searching */
 } match_state;
 
 typedef struct pat2_blockstruct {
@@ -102,6 +104,9 @@ static void match_grand(Cstring user, concept_descriptor *grand_concept, char *p
 /* This is statically used by the match_wildcard and match_suffix_2 procedures. */
 
 static match_state static_ss;
+Const match_result *result_for_verify;
+long_boolean verify_used_number;
+long_boolean verify_used_selector;
 
 
 /* The following arrays must be coordinated with the Sd program */
@@ -167,7 +172,7 @@ matcher_initialize(long_boolean show_commands_last)
         if (p->kind == end_marker) {
             break;
         }
-        else if (p->kind == concept_comment || p->dup) {
+        else if (p->kind == concept_comment || (p->miscflags & 1)) {
             continue;
         }
 
@@ -189,7 +194,7 @@ matcher_initialize(long_boolean show_commands_last)
         if (p->kind == end_marker) {
             break;
         }
-        if (p->kind == concept_comment || p->dup) {
+        if (p->kind == concept_comment || (p->miscflags & 1)) {
             continue;
         }
 
@@ -219,111 +224,148 @@ matcher_setup_call_menu(call_list_kind cl, callspec_block *call_name_list[])
  * Call Verification
  */
 
-static long_boolean try_call_with_selector(callspec_block *call, selector_kind sel)
-{
-    real_jmp_buf my_longjmp_buffer;
-    
-    /* Create a temporary error handler. */
-
-    longjmp_ptr = &my_longjmp_buffer;          /* point the global pointer at it. */
-    if (setjmp(my_longjmp_buffer.the_buf)) {
-        return FALSE;
-    }
-
-    interactivity = interactivity_database_init;   /* so deposit_call doesn't ask user for info */
-    selector_for_initialize = sel; /* if selector needed, use this one */
-    if (deposit_call(call)) return FALSE;   /* Deposit_call returns true if something goes wrong. */
-    if (parse_state.parse_stack_index != 0) {
-        /* subsidiary calls are wanted: just assume it works */
-        return TRUE;
-    }
-    parse_state.concept_write_ptr = &((*parse_state.concept_write_ptr)->next);
-    toplevelmove(); /* does longjmp if error */
-    return TRUE;
-}
 
 
-static long_boolean verify_call_with_selector(callspec_block *call, selector_kind sel)
-{
-    int bits0, bits1;
-    int old_history_ptr;
-    long_boolean result;
-    parse_block *marker;
-
-    bits0 = history[history_ptr+1].warnings.bits[0];
-    bits1 = history[history_ptr+1].warnings.bits[1];
-    old_history_ptr = history_ptr;
-    marker = mark_parse_blocks();
-    
-    result = try_call_with_selector(call, sel);
-    
-    history_ptr = old_history_ptr;
-    release_parse_blocks_to_mark(marker);
-    history[history_ptr+1].warnings.bits[0] = bits0;
-    history[history_ptr+1].warnings.bits[1] = bits1;
-    longjmp_ptr = &longjmp_buffer;    /* restore the global error handler */
-    interactivity = interactivity_normal;
-    return result;
-}
+/* These variables are actually local to verify_call, but they are
+   expected to be preserved across the longjmp, so they must be static. */
+Private parse_block *parse_mark;
+Private int call_index;
 
 /*
  * Return TRUE if the specified call appears to be legal in the
  * current context.
  */
 
-static long_boolean verify_call(call_list_kind cl, Const match_result *result)
+static long_boolean verify_call(call_list_kind *clp, Const match_result *result)
 {
-   callspec_block *call;
-   selector_kind who;
-
-
-/* ****** All patched out! */
-return TRUE;
-
+   uint32 bits0, bits1;
+   int old_history_ptr;
+   long_boolean resultval;
+   parse_block *parse_mark;
+   modifier_block *foobar;
+   call_list_kind savecl;
+   real_jmp_buf my_longjmp_buffer;
 
    /* If we are not verifying, or the menu we are examining is not the call menu,
       we return TRUE immediately, thereby causing the item to be listed. */
 
    if (!static_ss.verify || (result->kind != ui_call_select)) return TRUE;
 
-   who = result->who;
-   if (who < 0) who = selector_uninitialized;
-    
-    call = main_call_lists[cl][result->index];
-    if ((call->callflagsh & CFLAGH__REQUIRES_SELECTOR) &&
-            (who == selector_uninitialized)) {
+   result_for_verify = result;
 
-        /*
-         * The call requires a selector, but no selector has been
-         * specified.  Try each possible selector (except "no one")
-         * to see if one works.
-         *
-         * The problem with this approach is that often any call
-         * will succeed for some selector that matches zero people.
-         * For example, in the starting state "HEADS...", any call
-         * directed at the sides will succeed (doing nothing).
-         * One could argue this is a bug!
-         */
-        
-        /* sue: new plan: try (beaus, ends, all), just like initialization */
-        
-        if (verify_call_with_selector(call, selector_beaus))
-           return(TRUE);
-        if (verify_call_with_selector(call, selector_ends))
-           return(TRUE);
-        if (verify_call_with_selector(call, selector_all))
-           return(TRUE);
-/* this was the old code...        
-        selector_kind sel;
-        for (sel=1; sel<last_selector_kind; ++sel) {
-            if (verify_call_with_selector(call, sel))
-                return (TRUE);
-        }
-*/
-    }
-    else {
-        return verify_call_with_selector(call, who);
-    }
+   interactivity = interactivity_verify;   /* so deposit_call doesn't ask user for info */
+   bits0 = history[history_ptr+1].warnings.bits[0];
+   bits1 = history[history_ptr+1].warnings.bits[1];
+   old_history_ptr = history_ptr;
+
+   parse_mark = mark_parse_blocks();
+   save_parse_state();
+   savecl = *clp;
+
+   /* Create a temporary error handler. */
+
+   longjmp_ptr = &my_longjmp_buffer;
+   if (setjmp(my_longjmp_buffer.the_buf)) {
+
+      /* A call failed.  A bad choice of selector or number may be the cause.
+         Try different selectors first. */
+
+      if (selector_used && verify_used_selector) {
+
+         /* This call used a selector and didn't like it.  Try again with
+            a different selector, until we run out of ideas. */
+         switch (selector_for_initialize) {
+            case selector_beaus:
+               selector_for_initialize = selector_ends;
+               goto try_another_selector;
+            case selector_ends:
+               selector_for_initialize = selector_all;
+               goto try_another_selector;
+            case selector_all:
+               selector_for_initialize = selector_none;
+               goto try_another_selector;
+         }
+      }
+
+      /* Now try a different number.  Only do this if the call actually
+         consumes numbers, and the wildcard matching has not filled in all
+         required numbers. */
+
+      if (number_used && verify_used_number) {
+
+         /* Try again with a different number, until we run out of ideas. */
+
+         if (number_for_initialize < 4) {
+            /* We try all numbers from 1 to 4.  We need to do this to get
+               "exchange the boxes N/4" on the waves menu". */
+            number_for_initialize++;
+            goto try_another_number;
+         }
+      }
+
+      goto try_again;
+   }
+
+   number_for_initialize = 1;
+
+   try_another_number:
+
+   /* Set the selector to try.  See the code in sdinit.c that chooses selectors
+      when trying calls to make the initial menus for a discussion of how
+      this is done. */
+
+   selector_for_initialize = selector_beaus;
+
+   try_another_selector:
+
+   /* Do the call.  An error will signal and go to try_again. */
+
+   selector_used = FALSE;
+   number_used = FALSE;
+   verify_used_number = FALSE;
+   verify_used_selector = FALSE;
+
+   foobar = static_ss.newmodifiers;
+   while (foobar) {
+      (void) deposit_concept(foobar->this_modifier, 0);
+      foobar = foobar->next;
+   }
+
+#ifdef shouldnt_need
+   *call_menu_ptr = static_ss.call_menu;   /* deposit_concept screwed it up */
+#endif
+
+   if (deposit_call(main_call_lists[*clp][result->index])) goto try_again;     /* Deposit_call returns true if something goes wrong. */
+
+   *clp = savecl;         /* deposit_concept screwed it up */
+
+   /* If the parse stack is nenempty, a subsidiary call is needed and hasn't been filled in.
+      Therefore, the parse tree is incomplete.  We can print such parse trees, but we
+      can't execute them.  So we just assume the call works. */
+
+   if (parse_state.parse_stack_index == 0)
+      toplevelmove(); /* does longjmp if error */
+
+   resultval = TRUE;
+   goto foobar;
+
+   try_again:
+
+   resultval = FALSE;
+
+   foobar:
+
+   longjmp_ptr = &longjmp_buffer;    /* restore the global error handler */
+
+   (void) restore_parse_state();
+   release_parse_blocks_to_mark(parse_mark);
+
+   history_ptr = old_history_ptr;
+   history[history_ptr+1].warnings.bits[0] = bits0;
+   history[history_ptr+1].warnings.bits[1] = bits1;
+   interactivity = interactivity_normal;
+
+   return resultval;
 }
 
 
@@ -361,9 +403,12 @@ static void record_a_match(Const match_result *result)
          strn_gcp(static_ss.extended_input, static_ss.extension);
    }
 
-   /* always copy the first match.  Also, copy any exact match, as long as it isn't yielding */
+   /* Always copy the first match.  Also, copy the first exact match.  Also, copy any exact match that isn't yielding.
+      Also, always copy, and process modifiers, if we are processing the "verify" operation. */
 
    if (     static_ss.match_count == 0 ||
+            static_ss.exact_count == 0 ||
+            static_ss.verify ||
             (*static_ss.extension == '\0' && !(result->callflags1 & CFLAG1_YIELD_IF_AMBIGUOUS))) {
       Const match_result *foobar;
       static_ss.result = *result;
@@ -385,8 +430,10 @@ static void record_a_match(Const match_result *result)
       static_ss.result.current_modifier = (concept_descriptor *) 0;     /* We don't need these any more. */
    }
 
-   if (*static_ss.extension == '\0')
+   if (*static_ss.extension == '\0') {
+      static_ss.exact_count++;
       static_ss.result.exact = TRUE;
+   }
 
    static_ss.match_count++;
 
@@ -394,7 +441,7 @@ static void record_a_match(Const match_result *result)
       static_ss.yielding_matches++;
 
    if (static_ss.showing) {
-      if (verify_call(*call_menu_ptr, result))
+      if (verify_call(call_menu_ptr, result))
          (*static_ss.sf)(static_ss.full_input, static_ss.extension, result);
    }
 }
@@ -845,8 +892,6 @@ static void match_pattern(Cstring pattern, Const match_result *result, concept_d
       return;
    }
 
-   normal:
-
    if (pch == '*') {
       /* a commented out pattern */
       return;
@@ -859,7 +904,7 @@ static void match_pattern(Cstring pattern, Const match_result *result, concept_d
    match_suffix_2(static_ss.full_input, "", &p2b, static_ss.extension, result);
 }
 
-static void search_menu(uims_reply kind, int which_command)
+static void search_menu(uims_reply kind)
 {
    int i;
    Cstring *menu;
@@ -880,17 +925,19 @@ static void search_menu(uims_reply kind, int which_command)
    result.callflags1 = 0;
 
    if (kind == ui_call_select) {
-      menu_length = number_of_calls[*call_menu_ptr];
+      menu_length = number_of_calls[static_ss.call_menu];
 
       for (i = 0; i < menu_length; i++) {
+         if (static_ss.verify && verify_has_stopped) break;  /* Don't waste time after user stops us. */
+         *call_menu_ptr = static_ss.call_menu;
          result.index = i;
-         result.callflags1 = call_menu_lists[*call_menu_ptr][i]->callflags1;
-         match_pattern(call_menu_lists[*call_menu_ptr][i]->name, &result, (concept_descriptor *) 0);
+         result.callflags1 = call_menu_lists[static_ss.call_menu][i]->callflags1;
+         match_pattern(call_menu_lists[static_ss.call_menu][i]->name, &result, (concept_descriptor *) 0);
       }
    }
    else if (kind == ui_concept_select) {
       int *item;
-   
+
       if (allowing_all_concepts) {
          item = concept_list;
          menu_length = concept_list_length;
@@ -903,15 +950,17 @@ static void search_menu(uims_reply kind, int which_command)
       for (i = 0; i < menu_length; i++) {
          concept_descriptor *this_concept = &concept_descriptor_table[*item];
          concept_descriptor *grand_concept = this_concept;
+         *call_menu_ptr = static_ss.call_menu;
          result.index = *item;
+         result.callflags1 = (this_concept->miscflags & 2) ? CFLAG1_YIELD_IF_AMBIGUOUS : 0;
          if (!(concept_table[this_concept->kind].concept_prop & CONCPROP__PARSE_DIRECTLY))
             grand_concept = (concept_descriptor *) 0;
          match_pattern(this_concept->name, &result, grand_concept);
          item++;
       }
    }
-   else if (which_command >= match_taggers && which_command <= match_taggers+3) {
-      int tagclass = which_command - match_taggers;
+   else if (static_ss.call_menu >= match_taggers && static_ss.call_menu <= match_taggers+3) {
+      int tagclass = static_ss.call_menu - match_taggers;
       result.tagger = tagclass << 5;
 
       for (i = 0; i < number_of_taggers[tagclass]; i++) {
@@ -924,20 +973,20 @@ static void search_menu(uims_reply kind, int which_command)
          menu = command_commands;
          menu_length = num_command_commands;
       }
-      else if (which_command == match_directions) {
+      else if (static_ss.call_menu == match_directions) {
          menu = &direction_names[1];
          menu_length = last_direction_kind;
       }
-      else if (which_command == match_selectors) {
+      else if (static_ss.call_menu == match_selectors) {
          menu = &selector_names[1];
          menu_length = last_selector_kind;
       }
-      else if (which_command == match_startup_commands) {
+      else if (static_ss.call_menu == match_startup_commands) {
          kind = ui_start_select;
          menu = startup_commands;
          menu_length = NUM_START_SELECT_KINDS;
       }
-      else if (which_command == match_resolve_commands) {
+      else if (static_ss.call_menu == match_resolve_commands) {
          kind = ui_resolve_select;
          menu = resolve_command_strings;
          menu_length = number_of_resolve_commands;
@@ -1038,10 +1087,10 @@ extern int match_user_input(
       modifier_inactive_list = item;
    }
 
-
     static_ss.full_input = user_input;
     static_ss.extended_input = extension;
     static_ss.match_count = 0;
+    static_ss.exact_count = 0;
     static_ss.yielding_matches = 0;
     static_ss.exact_match = FALSE;
     static_ss.showing = (sf != 0);
@@ -1050,6 +1099,7 @@ extern int match_user_input(
     static_ss.result.exact = FALSE;
     static_ss.space_ok = FALSE;
     static_ss.verify = show_verify;
+    static_ss.call_menu = which_commands;
 
     if (extension) { /* needed if no matches or user input is empty */
         extension[0] = 0;
@@ -1059,24 +1109,22 @@ extern int match_user_input(
     p = user_input;
     while (*p) {*p = tolower(*p); p++;}
 
-    if (which_commands >= 0) {
-       *call_menu_ptr = which_commands;
-
+    if (static_ss.call_menu >= 0) {
        if (!commands_last_option)
-           search_menu(ui_command_select, which_commands);
+           search_menu(ui_command_select);
    
-       search_menu(ui_call_select, which_commands);
-       search_menu(ui_concept_select, which_commands);
+       search_menu(ui_call_select);
+       search_menu(ui_concept_select);
    
        if (commands_last_option)
-           search_menu(ui_command_select, which_commands);
+           search_menu(ui_command_select);
 
       /* ******* This is sleazy!!!!! */
       if (static_ss.result.need_big_menu)
          *call_menu_ptr = call_list_any;
     }
     else
-       search_menu((uims_reply) 0, which_commands);
+       search_menu((uims_reply) 0);
 
    if (mr) {
       *mr = static_ss.result;

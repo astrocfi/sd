@@ -14,6 +14,11 @@
  */
 
 
+/* This is a variable in "sdutil.c" that we can set if we want to
+   draw pretty graphical characters for the arrows that show
+   which way a person is facing.  It must point to a string in stable storage. */
+extern char *ui_directions;
+
 /* Process any command line arguments that we need. */
 extern void ttu_process_command_line(int *argcp, char ***argvp);
 

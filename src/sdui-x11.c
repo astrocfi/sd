@@ -36,6 +36,7 @@ static char *id="@(#)$He" "ader: Sd: sdui-x11.c  " UI_VERSION_STRING "    gildea
    uims_get_resolve_command
    uims_do_comment_popup
    uims_do_outfile_popup
+   uims_do_header_popup
    uims_do_getout_popup
    uims_do_abort_popup
    uims_do_neglect_popup
@@ -82,7 +83,7 @@ Private Widget statuswin, txtwin;
 Private Widget resolvewin, resolvetitle, resolvemenu;
 Private Widget confirmpopup, confirmlabel;
 Private Widget choosepopup, choosebox, chooselabel, chooselist;
-Private Widget commentpopup, commentbox, outfilepopup, outfilebox;
+Private Widget commentpopup, commentbox, outfilepopup, outfilebox, headerpopup, headerbox;
 Private Widget getoutpopup, getoutbox;
 #ifdef NEGLECT
 Private Widget neglectpopup, neglectbox;
@@ -101,6 +102,7 @@ typedef enum {
    cmd_button_active_phantoms,
    cmd_button_create_comment,
    cmd_button_change_outfile,
+   cmd_button_change_header,
    cmd_button_getout,
    cmd_button_resolve,
    cmd_button_reconcile,
@@ -310,6 +312,7 @@ static int button_translations[] = {
    SPECIAL_ALLOW_ACT_PHANTOMS,            /* cmd_button_active_phantoms */
    command_create_comment,                /* cmd_button_create_comment */
    command_change_outfile,                /* cmd_button_change_outfile */
+   command_change_header,                 /* cmd_button_change_header */
    command_getout,                        /* cmd_button_getout */
    command_resolve,                       /* cmd_button_resolve */
    command_reconcile,                     /* cmd_button_reconcile */
@@ -556,6 +559,7 @@ typedef struct _SdResources {
     String modify_scoot_format;
     String modify_line_two;
     String outfile_format;
+    String header_format;
     String modifications_allowed[12];
     String start_list[NUM_START_SELECT_KINDS];
     String cmd_list[NUM_CMD_BUTTON_KINDS];
@@ -593,6 +597,7 @@ Private XtResource command_resources[] = {
     MENU("activephantoms", cmd_list[cmd_button_active_phantoms], "Toggle active phantoms"),
     MENU("comment", cmd_list[cmd_button_create_comment], "Insert a comment"),
     MENU("outfile", cmd_list[cmd_button_change_outfile], "Change output file"),
+    MENU("header", cmd_list[cmd_button_change_header], "Change header comment"),
     MENU("getout", cmd_list[cmd_button_getout], "End this sequence"),
     MENU("resolve", cmd_list[cmd_button_resolve], "Resolve"),
     MENU("reconcile", cmd_list[cmd_button_reconcile], "Reconcile"),
@@ -640,6 +645,11 @@ Private XtResource confirm_resources[] = {
 Private XtResource outfile_resources[] = {
     MENU("format", outfile_format,
 	 "Sequence output file is \"%s\".  Enter new name:"),
+};
+
+Private XtResource header_resources[] = {
+    MENU("format", header_format,
+	 "Current header comment is \"%s\".  Enter new comment:"),
 };
 
 Private XtResource choose_resources[] = {
@@ -694,8 +704,9 @@ CONST static char *fallback_resources[] = {
     "*useDefault.label: Use default",
     NULL};
 
-Private char *program_name = NULL;	/* argv[0]: our name */
-Private int window_is_mapped = FALSE;
+static char *program_name = NULL;	/* argv[0]: our name */
+static long_boolean window_is_mapped = FALSE;
+static long_boolean ui_started = FALSE;
 
 /*
  * The main program calls this before doing anything else, so we can
@@ -942,6 +953,33 @@ uims_preinitialize(void)
     XtRealizeWidget(outfilepopup); /* makes XtPopup faster to do this now */
 
 
+    /* header popup */
+
+    headerpopup = XtVaCreatePopupShell("headerpopup",
+               transientShellWidgetClass, toplevel,
+               XtNallowShellResize, True,
+               NULL);
+    XtGetApplicationResources(headerpopup, (XtPointer) &sd_resources,
+               header_resources, XtNumber(header_resources),
+               NULL, 0);
+    XtOverrideTranslations(headerpopup, unmap_no_trans);
+
+    headerbox = XtVaCreateManagedWidget("header", dialogWidgetClass,
+					 headerpopup,
+					 /* create an empty value area */
+					 XtNvalue, "",
+					 /* to make it wide enough */
+					 XtNlabel, "Sequence output file is 'sequence.PLUS'.  Enter new name:",
+					 NULL);
+
+    XawDialogAddButton(headerbox, "abort", dialog_callback,
+		       (XtPointer)POPUP_DECLINE);
+    XawDialogAddButton(headerbox, "ok", dialog_callback,
+		       (XtPointer)POPUP_ACCEPT_WITH_STRING);
+
+    XtRealizeWidget(headerpopup); /* makes XtPopup faster to do this now */
+
+
     /* getout popup */
 
     getoutpopup = XtVaCreatePopupShell("getoutpopup",
@@ -1003,6 +1041,7 @@ uims_preinitialize(void)
     XtOverrideTranslations(conceptlist, list_trans);
 
     XtRealizeWidget(conceptpopup);
+   ui_started = TRUE;
 }
 
 Private void
@@ -1413,8 +1452,7 @@ extern uims_reply uims_get_resolve_command(void)
 
 
 
-Private int
-get_popup_string(Widget popup, Widget dialog, char dest[])
+Private int get_popup_string(Widget popup, Widget dialog, char dest[])
 {
     int value;
 
@@ -1425,17 +1463,15 @@ get_popup_string(Widget popup, Widget dialog, char dest[])
 }
 
 
-extern int
-uims_do_comment_popup(char dest[])
+extern int uims_do_comment_popup(char dest[])
 {
     return get_popup_string(commentpopup, commentbox, dest);
 }
 
 
-extern int
-uims_do_outfile_popup(char dest[])
+extern int uims_do_outfile_popup(char dest[])
 {
-    char outfile_question[150];
+    char outfile_question[MAX_TEXT_LINE_LENGTH];
 
     (void) sprintf(outfile_question,
 		   sd_resources.outfile_format, outfile_string);
@@ -1444,8 +1480,21 @@ uims_do_outfile_popup(char dest[])
 }
 
 
-extern int
-uims_do_getout_popup(char dest[])
+extern int uims_do_header_popup(char dest[])
+{
+   if (header_comment[0]) {
+       char header_question[MAX_TEXT_LINE_LENGTH];
+
+       (void) sprintf(header_question,
+   		   sd_resources.header_format, header_comment);
+       XtVaSetValues(headerbox, XtNlabel, header_question, NULL);
+   }
+
+   return get_popup_string(headerpopup, headerbox, dest);
+}
+
+
+extern int uims_do_getout_popup(char dest[])
 {
     return get_popup_string(getoutpopup, getoutbox, dest);
 }
@@ -1620,10 +1669,15 @@ choose_popup(String label, Cstring names[])
 extern int
 uims_do_selector_popup(void)
 {
-    /* We skip the zeroth selector, which is selector_uninitialized. */
-    int t = choose_popup(sd_resources.selector_title, &selector_names[1]);
-    if (t==0) return POPUP_DECLINE;
-    return t;
+   if (interactivity == interactivity_verify) {
+      return (int) selector_for_initialize;
+   }
+   else {
+       /* We skip the zeroth selector, which is selector_uninitialized. */
+       int t = choose_popup(sd_resources.selector_title, &selector_names[1]);
+       if (t==0) return POPUP_DECLINE;
+       return t;
+   }
 }    
 
 extern int
@@ -1647,11 +1701,18 @@ extern int uims_do_tagger_popup(int tagger_class)
 extern uint32 uims_get_number_fields(int nnumbers)
 {
    int i;
-   unsigned int number_list = 0;
+   uint32 number_list = 0;
 
    for (i=0 ; i<nnumbers ; i++) {
-      unsigned int this_num = choose_popup(sd_resources.quantifier_title, cardinals);
-      if (this_num == 0) return 0;    /* User waved the mouse away. */
+      unsigned int this_num;
+
+      if (interactivity == interactivity_verify) {
+         this_num = number_for_initialize;
+      }
+      else {
+         this_num = choose_popup(sd_resources.quantifier_title, cardinals);
+         if (this_num == 0) return 0;    /* User waved the mouse away. */
+      }
       number_list |= (this_num << (i*4));
    }
 
@@ -1755,7 +1816,7 @@ extern void
 uims_terminate(void)
 {
     /* if uims_process_command_line was called, close down the window system */
-    if (program_name) {
+    if (ui_started) {
 	if (window_is_mapped)
 	    XtUnmapWidget(toplevel); 	/* make it disappear neatly */
 	XtDestroyWidget(toplevel);
@@ -1791,8 +1852,7 @@ uims_database_tick_end(void)
     /* not implemented yet */
 }
 
-extern void
-uims_database_error(char *message, char *call_name)
+extern void uims_database_error(Cstring message, Cstring call_name)
 {
    print_line(message);
    if (call_name) {
@@ -1801,8 +1861,7 @@ uims_database_error(char *message, char *call_name)
    }
 }
 
-extern void
-uims_bad_argument(char *s1, char *s2, char *s3)
+extern void uims_bad_argument(Cstring s1, Cstring s2, Cstring s3)
 {
    if (s1) print_line(s1);
    if (s2) print_line(s2);

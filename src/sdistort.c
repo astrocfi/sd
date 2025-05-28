@@ -265,12 +265,16 @@ Private void innards(
 
    if (arity == 2) {
       if (z[0].rotation & 2) {
-         if (final_map == &map_s6_trngl) final_map = &map_b6_trngl;
-         else if (final_map != &map_s8_tgl4) final_map = 0;        /* Raise an error. */
+         if      (final_map == &map_s6_trngl) final_map = &map_b6_trngl;
+         else if (final_map == &map_s8_tgl4) {}
+         else if (final_map == &map_rig_trngl4) final_map = &map_bone_trngl4;
+         else final_map = 0;        /* Raise an error. */
       }
       if (z[1].rotation & 2) {
-         if (final_map == &map_s8_tgl4) final_map = &map_p8_tgl4;
-         else if (final_map != &map_s6_trngl) final_map = 0;       /* Raise an error. */
+         if      (final_map == &map_s6_trngl) {}
+         else if (final_map == &map_s8_tgl4) final_map = &map_p8_tgl4;
+         else if (final_map == &map_rig_trngl4) {}
+         else final_map = 0;       /* Raise an error. */
       }
    }
 
@@ -1316,15 +1320,24 @@ extern void do_concept_rigger(
    parse_block *parseptr,
    setup *result)
 {
-   /* First half is for rigger; second half is for 1/4-tag. */
-   /* A huge coincidence is at work here -- the two halves of the maps are the same. */
-   static int map1[16] = {0, 1, 3, 2, 4, 5, 7, 6, 0, 1, 3, 2, 4, 5, 7, 6};
-   static int map2[16] = {6, 7, 0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5};
+   /* First 8 are for rigger; second 8 are for 1/4-tag, final 16 are for crosswave. */
+   /* A huge coincidence is at work here -- the first two parts of the maps are the same. */
+   static int map1[32] = {
+         0, 1, 3, 2, 4, 5, 7, 6,
+         0, 1, 3, 2, 4, 5, 7, 6,
+         13, 15, 1, 3, 5, 7, 9, 11,
+         14, 0, 2, 4, 6, 8, 10, 12};
+   static int map2[32] = {
+         2, 3, 4, 5, 6, 7, 0, 1,
+         2, 3, 4, 5, 6, 7, 0, 1,
+         0, 2, 4, 6, 8, 10, 12, 14,
+         1, 7, 5, 11, 9, 15, 13, 3};
 
    int rstuff, i, indicator, base;
    setup a1;
    setup res1;
    int *map_ptr;
+   setup_kind startkind;
 
    rstuff = parseptr->concept->value.arg1;
    /* rstuff =
@@ -1338,29 +1351,42 @@ extern void do_concept_rigger(
       They differ only in allowable starting setup.  So, after checking the setup, we look
       only at the low 2 bits. */
 
+   clear_people(&a1);
+
    if (ss->kind == s_rigger) {
       if (rstuff >= 16) fail("This variety of 'rigger' not permitted in this setup.");
 
-      if (!(ss->people[2].id1 & ss->people[6].id1 & BIT_PERSON))
-         fail("Can't tell which way 'rigger' people are facing.");
-   
-      if (((ss->people[2].id1 ^ ss->people[6].id1) & 3) != 2)
+      if (!(ss->people[2].id1 & BIT_PERSON) ||
+            ((ss->people[2].id1 ^ ss->people[6].id1) & d_mask) != 2)
          fail("'Rigger' people are not facing consistently!");
 
       indicator = (ss->people[6].id1 ^ rstuff) & 3;
       base = 0;
+      startkind = s2x4;
    }
    else if (ss->kind == s_qtag) {
       if (rstuff < 16 && !(rstuff & 1)) fail("This variety of 'rigger' not permitted in this setup.");
 
       if (!(ss->people[0].id1 & BIT_PERSON) ||
-            (((ss->people[0].id1 ^ ss->people[1].id1) & d_mask) != 0) ||
-            (((ss->people[4].id1 ^ ss->people[5].id1) & d_mask) != 0) ||
-            (((ss->people[0].id1 ^ ss->people[5].id1) & d_mask) != 2))
+            ((ss->people[0].id1 ^ ss->people[1].id1) & d_mask) != 0 ||
+            ((ss->people[4].id1 ^ ss->people[5].id1) & d_mask) != 0 ||
+            ((ss->people[0].id1 ^ ss->people[5].id1) & d_mask) != 2)
          fail("'Rigger' people are not facing consistently!");
 
       indicator = (ss->people[0].id1 ^ rstuff ^ 3) & 3;
       base = 8;
+      startkind = s2x4;
+   }
+   else if (ss->kind == s_crosswave) {
+      if (rstuff >= 16) fail("This variety of 'rigger' not permitted in this setup.");
+
+      if (!(ss->people[4].id1 & BIT_PERSON) ||
+            ((ss->people[4].id1 ^ ss->people[0].id1) & d_mask) != 2)
+         fail("'Rigger' people are not facing consistently!");
+
+      indicator = (ss->people[0].id1 ^ rstuff) & 3;
+      base = 16;
+      startkind = s_c1phan;
    }
    else
       fail("Must have a 'rigger' or quarter-tag setup to do this concept.");
@@ -1369,26 +1395,63 @@ extern void do_concept_rigger(
       fail("'Rigger' direction is inappropriate.");
 
    if (indicator)
-       map_ptr = map1;
+      map_ptr = map1;
    else
-       map_ptr = map2;
+      map_ptr = map2;
 
-   for (i=0; i<8; i++) (void) copy_person(&a1, i, ss, map_ptr[i+base]);
+   for (i=0; i<8; i++) (void) copy_person(&a1, map_ptr[i+base], ss, i);
 
-   a1.kind = s2x4;
+   a1.kind = startkind;
    a1.rotation = 0;
    a1.cmd = ss->cmd;
    a1.cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
    a1.cmd.cmd_assume.assumption = cr_none;
    move(&a1, FALSE, &res1);
 
-   if (res1.kind != s2x4) fail("Can only do 2x4 -> 2x4 calls.");
+   if ((res1.rotation) & 1) base ^= 8;    /* Won't happen in C1 phantom. */
 
-   if ((res1.rotation) & 1) base ^= 8;
+   if (startkind == s_c1phan) {
+      uint32 evens = 0;
+      uint32 odds = 0;
 
-   for (i=0; i<8; i++) (void) copy_person(result, map_ptr[i+base], &res1, i);
+      for (i=0; i<16; i+=2) {
+         evens |= res1.people[i].id1;
+         odds |= res1.people[i+1].id1;
+      }
 
-   result->kind = base ? s_qtag : s_rigger;
+      if (res1.kind == s_c1phan) {
+         if (indicator) {
+            if (evens) {
+               if (odds) fail("Can't do this.");
+               base = 24;
+               result->kind = s2x4;
+            }
+            else
+               result->kind = s_crosswave;
+         }
+         else {
+            if (odds) {
+               if (evens) fail("Can't do this.");
+               base = 24;
+               result->kind = s2x4;
+            }
+            else
+               result->kind = s_crosswave;
+         }
+      }
+      else {
+         base ^= 16;
+         if (res1.kind != s2x4) fail("Can't do this.");
+         result->kind = base ? s_qtag : s_rigger;
+      }
+   }
+   else {
+      if (res1.kind != s2x4) fail("Can't do this.");
+      result->kind = base ? s_qtag : s_rigger;
+   }
+
+   for (i=0; i<8; i++) (void) copy_person(result, i, &res1, map_ptr[i+base]);
+
    result->rotation = res1.rotation;
    result->result_flags = res1.result_flags;
    reinstate_rotation(ss, result);
@@ -1493,8 +1556,8 @@ extern void common_spot_move(
 {
    int rstuff, i, r;
    long_boolean uncommon = FALSE;
-   setup au, a0, a1;
-   setup the_results[3];
+   setup a0, a1;
+   setup the_results[2];
    common_spot_map *map_ptr;
 
    rstuff = parseptr->concept->value.arg1;
@@ -1526,18 +1589,14 @@ extern void common_spot_move(
 
    a0 = *ss;
    a1 = *ss;
-   au = *ss;
 
    clear_people(&a0);
    clear_people(&a1);
-   clear_people(&au);
 
    a0.kind = map_ptr->partial_kind;
    a1.kind = map_ptr->partial_kind;
-   au.kind = map_ptr->partial_kind;
    a0.rotation = map_ptr->rot;
    a1.rotation = map_ptr->rot;
-   au.rotation = map_ptr->rot;
 
    r = 011*((-map_ptr->rot) & 3);
 
@@ -1546,7 +1605,6 @@ extern void common_spot_move(
       if (t >= 0) {
          uncommon = TRUE;
          /* The common folks go into each setup! */
-         (void) copy_rot(&au, i, ss, t, r);
          (void) copy_rot(&a0, i, ss, t, r);
          (void) copy_rot(&a1, i, ss, t, r);
       }
@@ -1560,45 +1618,25 @@ extern void common_spot_move(
    move(&a1, FALSE, &the_results[1]);
 
    if (uncommon) {
-      move(&au, FALSE, &the_results[2]);
+      if (the_results[0].kind != the_results[1].kind || the_results[0].rotation != the_results[1].rotation)
+         fail("This common spot call is very problematical.");
 
       /* Remove the uncommon people from the common results, while checking that
          they wound up in the same position in all 3 results. */
 
-      r = 011*((the_results[2].rotation - the_results[0].rotation) & 3);
-
       for (i=0; i<=setup_attrs[map_ptr->partial_kind].setup_limits; i++) {
          int t = map_ptr->uncommon[i];
          if (t >= 0) {
-            int j, k;
-            uint32 kid;
-
-            /* It may seem sort of stupid to do this test inside the loop, but we do not require
-               equality of the setups if there are no "uncommon" people. */
-
-            if (the_results[0].kind != the_results[1].kind || the_results[0].rotation != the_results[1].rotation)
-               fail("This common spot call is very problematical.");
-
-            for (k=0; k<=setup_attrs[the_results[2].kind].setup_limits; k++) {
-               if (     the_results[2].people[k].id1 &&
-                        ((the_results[2].people[k].id1 ^ ss->people[t].id1) & PID_MASK) == 0) {
-                  kid = the_results[2].people[k].id1;
-                  goto found_k;
-               }
-            }
-            fail("Lost someone during common-spot call.");
-            found_k: ;
+            int j;
 
             for (j=0; j<=setup_attrs[the_results[0].kind].setup_limits; j++) {
                if (     the_results[0].people[j].id1 &&
-                        ((the_results[0].people[j].id1 ^ kid) & PID_MASK) == 0) {
+                        ((the_results[0].people[j].id1 ^ ss->people[t].id1) & PID_MASK) == 0) {
                   if (     the_results[0].people[j].id1 != the_results[1].people[j].id1 ||
-                           the_results[0].people[j].id2 != the_results[1].people[j].id2 ||
-                           rotperson(kid, r) != the_results[0].people[j].id1)
+                           the_results[0].people[j].id2 != the_results[1].people[j].id2)
                      fail("People moved inconsistently during common-spot call.");
 
                   clear_person(&the_results[0], j);
-                  clear_person(&the_results[1], j);
                   goto did_it;
                }
             }
@@ -1607,11 +1645,10 @@ extern void common_spot_move(
          }
       }
 
-      the_results[2].result_flags = get_multiple_parallel_resultflags(the_results, 3);
+      the_results[1].result_flags = get_multiple_parallel_resultflags(the_results, 2);
       merge_setups(&the_results[0], merge_strict_matrix, &the_results[1]);
-      merge_setups(&the_results[1], merge_strict_matrix, &the_results[2]);
-      reinstate_rotation(ss, &the_results[2]);
-      *result = the_results[2];
+      reinstate_rotation(ss, &the_results[1]);
+      *result = the_results[1];
    }
    else {
       /* There were no "uncommon" people.  We simply have two setups that worked

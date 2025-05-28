@@ -183,6 +183,8 @@ Private tm_thing maps_isearch_foursome[] = {
 Private tm_thing maps_isearch_boxsome[] = {
 
 /*   map1              map2              map3              map4               ilatmask olatmask    limit rot            insetup outsetup */
+   {{0},              {1},              {3},              {2},                   1,      0xF,         1, 0,  0,  0, 0,  s1x1,  s2x2},
+   {{3},              {0},              {2},              {1},                   0,        0,         1, 0,  0,  0, 0,  s1x1,  s2x2},
    {{0, 2},           {1, 3},           {7, 5},           {6, 4},              0x5,     0xFF,         2, 0,  0,  0, 0,  s1x2,  s2x4},
    {{7, 5},           {0, 2},           {6, 4},           {1, 3},                0,        0,         2, 0,  0,  0, 0,  s1x2,  s2x4},
    {{0, 2, 6, 4},     {1, 3, 7, 5},     {15, 13, 9, 11},  {14, 12, 8, 10},    0x55,   0xFFFF,         4, 0,  0,  0, 0,  s1x4,  s2x8},
@@ -196,6 +198,8 @@ Private tm_thing maps_isearch_boxsome[] = {
 Private tm_thing maps_isearch_dmdsome[] = {
 
 /*   map1              map2              map3              map4               ilatmask olatmask    limit rot            insetup outsetup */
+   {{0},              {1},              {3},              {2},                   1,      0xF,         1, 0,  0,  0, 0,  s1x1,  sdmd},
+   {{0},              {1},              {3},              {2},                   0,      0xF,         1, 1,  0,  0, 0,  s1x1,  sdmd},
    {{0, 6},           {1, 7},           {3, 5},           {2, 4},              0x5,     0xFF,         2, 0,  0,  0, 0,  s1x2,  s_ptpd},
    {{5, 4},           {6, 3},           {7, 2},           {0, 1},                0,        0,         2, 0,  0,  0, 0,  s1x2,  s_qtag},
    {{11, 10, 8, 9},   {12, 14, 5, 7},   {13, 15, 4, 6},   {0, 1, 3, 2},          0,        0,         4, 0,  0,  0, 0,  s1x4,  s4dmd},
@@ -209,17 +213,11 @@ Private tm_thing maps_isearch_tglsome[] = {
    {{1, 2, 5, 6},     {0, -1, 4, -1},   {3, -1, 7, -1},   {0},                0x31,     0xBB,         4, 0,  0,  0, 0,  s1x4,  s_ptpd},
    {{0, 3, 4, 7},     {-1, 2, -1, 6},   {-1, 1, -1, 5},   {0},                0x4C,     0xEE,         4, 0,  0,  0, 0,  s1x4,  s_ptpd},
 
-
    {{7, 1, 3, 5},     {0, -1, 4, -1},   {6, -1, 2, -1},   {0},                0x20,        0,         4, 0,  0,  0, 0,  s2x2,  s_qtag},
    {{0, 2, 4, 6},     {-1, 1, -1, 5},   {-1, 3, -1, 7},   {0},                0x80,        0,         4, 0,  0,  0, 0,  s2x2,  s_qtag},
 
-
    {{1, 3, 5, 7},     {-1, 4, -1, 0},   {-1, 2, -1, 6},   {0},                0x4C,        0,         4, 1,  0,  0, 0,  s2x2,  s_qtag},
    {{2, 4, 6, 0},     {1, -1, 5, -1},   {3, -1, 7, -1},   {0},                0x31,        0,         4, 1,  0,  0, 0,  s2x2,  s_qtag},
-
-
-
-
 
    {{5, 7, 1, 3},     {6, -1, 2, -1},   {0, -1, 4, -1},   {0},                0x13,     0x77,         4, 0,  0,  0, 0,  s1x4,  s_bone},
    {{0, 1, 4, 5},     {7, -1, 3, -1},   {6, -1, 2, -1},   {0},                0x31,     0xDD,         4, 0,  0,  0, 0,  sdmd,  s_spindle},
@@ -321,9 +319,9 @@ Private void initialize_one_table(tm_thing *map_start, int np)
       map_search->outunusedmask = alloutmask;
 
       /* We can't encode the virtual person number in the required 3-bit field if this is > 8. */
-      if (map_search->limit != setup_attrs[map_search->insetup].setup_limits+1) fail("Tandem table initialization failed: limit wrong.");
-      if (map_search->limit > 8) fail("Tandem table initialization failed: limit too big.");
-      if (map_search->olatmask != osidemask) fail("Tandem table initialization failed: Smask.");
+      if (map_search->limit != setup_attrs[map_search->insetup].setup_limits+1) uims_database_error("Tandem table initialization failed: limit wrong.\n", (Cstring) 0);
+      if (map_search->limit > 8) uims_database_error("Tandem table initialization failed: limit too big.\n", (Cstring) 0);
+      if (map_search->olatmask != osidemask) uims_database_error("Tandem table initialization failed: Smask.\n", (Cstring) 0);
    }
 }
 
@@ -784,7 +782,7 @@ extern void tandem_couples_move(
       nsmask = 0;
    }
    else if (key == 11) {
-      if (ss->kind == s_ptpd) {
+      if (ss->kind == s_ptpd || ss->kind == sdmd) {
          ewmask = allmask;
          nsmask = 0;
       }
