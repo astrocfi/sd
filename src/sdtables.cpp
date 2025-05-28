@@ -4815,6 +4815,8 @@ merge_table::concmerge_thing merge_table::merge_init_table[] = {
    {s1x2,          s1x4, 0,      0xA, 0x0C, 0x0, schema_concentric,     s1x2,        s1x2,     warn__none, 0, 0, {0, 1},                     {0, 2}},
    {s1x2,          s1x2, 0,        0, 0x0D, 0x0, schema_matrix,         s_star,      nothing,  warn__none, 0, 1, {0, 2},                     {3, 1}},
    {sdmd,         s3dmd, 0,        0, 0x0D, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {1, 5, 7, 11},              {0}},
+   {sdmd,       s_3mdmd, 0,    04242, 0x0D, 0x0, schema_matrix,          s3dmd,      nothing,  warn__none, 0, 0, {1, 5, 7, 11},         {0, -1, 2, 3, 4, -1, 6, -1, 8, 9, 10, -1}},
+   {sdmd,         s3dmd, 0,    04242, 0x0E, 0x0, schema_matrix,        s_3mdmd,      nothing,  warn__none, 0, 0, {11, 1, 5, 7},         {0, -1, 2, 3, 4, -1, 6, -1, 8, 9, 10, -1}},
    {s1x2,         s3dmd, 0,    07070, 0x0C, 0x0, schema_concentric,     s1x2,        s2x3,     warn__none, 0, 0, {0, 1},                     {0, 1, 2, 6, 7, 8}},
 
    // Need both of these because they won't canonicalize.
@@ -6961,14 +6963,14 @@ static const id_bit_table id_bit_table_1x10[] = {
    NOBIT(ID2_CTR6 | ID2_CTR1X6 | ID2_CTR1X4  | ID2_CTR4)};
 
 static const id_bit_table id_bit_table_qtag[] = {
-   NOBIT(ID2_END    | ID2_OUTRPAIRS | ID2_NCTR1X4 | ID2_CTR6  | ID2_OUTR6),
-   NOBIT(ID2_END    | ID2_OUTRPAIRS | ID2_NCTR1X4 | ID2_CTR6  | ID2_OUTR6),
-   NOBIT(ID2_CENTER | ID2_CTR4      | ID2_CTR1X4  | ID2_OUTR2 | ID2_OUTR6),
-   NOBIT(ID2_CENTER | ID2_CTR4      | ID2_CTR1X4  | ID2_CTR6  | ID2_CTR2),
-   NOBIT(ID2_END    | ID2_OUTRPAIRS | ID2_NCTR1X4 | ID2_CTR6  | ID2_OUTR6),
-   NOBIT(ID2_END    | ID2_OUTRPAIRS | ID2_NCTR1X4 | ID2_CTR6  | ID2_OUTR6),
-   NOBIT(ID2_CENTER | ID2_CTR4      | ID2_CTR1X4  | ID2_OUTR2 | ID2_OUTR6),
-   NOBIT(ID2_CENTER | ID2_CTR4      | ID2_CTR1X4  | ID2_CTR6  | ID2_CTR2)};
+   WESTBIT(ID2_END    | ID2_OUTRPAIRS | ID2_NCTR1X4 | ID2_CTR6  | ID2_OUTR6),
+   EASTBIT(ID2_END    | ID2_OUTRPAIRS | ID2_NCTR1X4 | ID2_CTR6  | ID2_OUTR6),
+   EASTBIT(ID2_CENTER | ID2_CTR4      | ID2_CTR1X4  | ID2_OUTR2 | ID2_OUTR6),
+   WESTBIT(ID2_CENTER | ID2_CTR4      | ID2_CTR1X4  | ID2_CTR6  | ID2_CTR2),
+   EASTBIT(ID2_END    | ID2_OUTRPAIRS | ID2_NCTR1X4 | ID2_CTR6  | ID2_OUTR6),
+   WESTBIT(ID2_END    | ID2_OUTRPAIRS | ID2_NCTR1X4 | ID2_CTR6  | ID2_OUTR6),
+   WESTBIT(ID2_CENTER | ID2_CTR4      | ID2_CTR1X4  | ID2_OUTR2 | ID2_OUTR6),
+   EASTBIT(ID2_CENTER | ID2_CTR4      | ID2_CTR1X4  | ID2_CTR6  | ID2_CTR2)};
 
 static const id_bit_table id_bit_table_2stars[] = {
    NOBIT(ID2_OUTR6|ID2_CTR6),
@@ -7751,22 +7753,22 @@ static const id_bit_table id_bit_table_3x1dmd[] = {
    NOBIT(  ID2_CTR6|  ID2_OUTR6| ID2_CTR4|   ID2_CENTER| ID2_NCTR1X6| ID2_CTRDMD  | ID2_NCTR1X4)};
 
 
-/* If center diamond is fully occupied and outer diamonds have only points, use this. */
+// If center diamond is fully occupied and outer diamonds have only points, use this.
 static const id_bit_table id_bit_table_3dmd[] = {
-   NOBIT(ID2_OUTR6| ID2_NCTRDMD|ID2_OUTR1X3),
-   NOBIT(ID2_OUTR6| ID2_CTRDMD |ID2_OUTR1X3),
-   NOBIT(ID2_OUTR6| ID2_NCTRDMD|ID2_OUTR1X3),
+   NOBIT(ID2_OUTR6| ID2_NCTRDMD           |ID2_OUTR1X3),
+   NOBIT(ID2_OUTR6| ID2_CTRDMD | ID2_CTR4 |ID2_OUTR1X3),
+   NOBIT(ID2_OUTR6| ID2_NCTRDMD           |ID2_OUTR1X3),
    NOBIT(           ID2_NCTRDMD),
    NOBIT(           ID2_NCTRDMD),
-   NOBIT(ID2_CTR2|  ID2_CTRDMD |ID2_NOUTR1X3),
-   NOBIT(ID2_OUTR6| ID2_NCTRDMD|ID2_OUTR1X3),
-   NOBIT(ID2_OUTR6| ID2_CTRDMD |ID2_OUTR1X3),
-   NOBIT(ID2_OUTR6| ID2_NCTRDMD|ID2_OUTR1X3),
+   NOBIT(ID2_CTR2|  ID2_CTRDMD | ID2_CTR4 |ID2_NOUTR1X3),
+   NOBIT(ID2_OUTR6| ID2_NCTRDMD           |ID2_OUTR1X3),
+   NOBIT(ID2_OUTR6| ID2_CTRDMD | ID2_CTR4 |ID2_OUTR1X3),
+   NOBIT(ID2_OUTR6| ID2_NCTRDMD           |ID2_OUTR1X3),
    NOBIT(           ID2_NCTRDMD),
    NOBIT(           ID2_NCTRDMD),
-   NOBIT(ID2_CTR2|  ID2_CTRDMD |ID2_NOUTR1X3)};
+   NOBIT(ID2_CTR2|  ID2_CTRDMD | ID2_CTR4 |ID2_NOUTR1X3)};
 
-/* If center 1x6 is fully occupied, use this.  It is external. */
+// If center 1x6 is fully occupied, use this.  It is external.
 id_bit_table id_bit_table_3dmd_ctr1x6[] = {
    NOBIT(ID2_NCTR1X6 | ID2_NCTR1X4 | ID2_OUTR6),
    NOBIT(ID2_NCTR1X6 | ID2_NCTR1X4 | ID2_OUTR6),
@@ -7795,6 +7797,20 @@ id_bit_table id_bit_table_3dmd_ctr1x4[] = {
    NOBIT(ID2_NCTR1X4),
    NOBIT(ID2_CTR1X4),
    NOBIT(ID2_CTR1X4)};
+
+static const id_bit_table id_bit_table_3mdmd[] = {
+   NOBIT(           ID2_NCTRDMD),
+   NOBIT(ID2_CTR2|  ID2_CTRDMD | ID2_CTR4),
+   NOBIT(           ID2_NCTRDMD),
+   NOBIT(           ID2_NCTRDMD),
+   NOBIT(           ID2_NCTRDMD),
+   NOBIT(           ID2_CTRDMD | ID2_CTR4),
+   NOBIT(           ID2_NCTRDMD),
+   NOBIT(ID2_CTR2|  ID2_CTRDMD | ID2_CTR4),
+   NOBIT(           ID2_NCTRDMD),
+   NOBIT(           ID2_NCTRDMD),
+   NOBIT(           ID2_NCTRDMD),
+   NOBIT(           ID2_CTRDMD | ID2_CTR4)};
 
 // If center 1x4 is occupied, use this.
 static const id_bit_table id_bit_table_4dmd[] = {
@@ -9337,7 +9353,7 @@ const setup_attr setup_attrs[] = {
     {b_3mdmd, b_p3mdmd},
     {0, 0},
     false, false,
-    (const id_bit_table *) 0,
+    id_bit_table_3mdmd,
     {"5 a6666     c@7666   b@7j k l6  f e d@7666   h@75 i6666     g",
      "6  j@7i6    a@76  k@@6  l@@5  hb@@6  f@@6  e@7g6    c@76  d"}},
    {11,                     // s_3mptpd
@@ -9696,7 +9712,7 @@ const schema_attr schema_attrs[] = {
    {SCA_CENTRALCONC | SCA_SNAGOK | SCA_DETOUR | SCA_INV_SUP_ELWARN,
     schema_nothing},                     // schema_concentric_6p_or_normal
    {SCA_CENTRALCONC | SCA_SNAGOK | SCA_DETOUR | SCA_INV_SUP_ELWARN,
-    schema_nothing},                     // schema_concentric_6p_or_normal_or_2x6
+    schema_nothing},                     // schema_concentric_6p_or_normal_or_2x6_2x3
    {SCA_CENTRALCONC | SCA_SNAGOK,
     schema_nothing},                     // schema_concentric_6p_or_sgltogether
    {SCA_CROSS | SCA_COPY_LYZER | SCA_SNAGOK,

@@ -7498,7 +7498,7 @@ void move(
          case schema_concentric_6p:
          case schema_concentric_6p_or_sgltogether:
          case schema_concentric_6p_or_normal:
-         case schema_concentric_6p_or_normal_or_2x6:
+         case schema_concentric_6p_or_normal_or_2x6_2x3:
          case schema_1221_concentric:
             // If the schema under which we are operating is special (e.g. 6x2),
             // but the call definition has a vanilla schema, we can't just
@@ -7545,7 +7545,7 @@ void move(
             case schema_concentric_6p:
             case schema_concentric_6p_or_sgltogether:
             case schema_concentric_6p_or_normal:
-            case schema_concentric_6p_or_normal_or_2x6:
+            case schema_concentric_6p_or_normal_or_2x6_2x3:
             case schema_1221_concentric:
             case schema_conc_o:
                FuckingThingToTryToKeepTheFuckingStupidMicrosoftCompilerFromScrewingUp();

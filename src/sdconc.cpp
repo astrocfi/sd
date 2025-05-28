@@ -1602,6 +1602,17 @@ static calldef_schema concentrify(
    // It will be helpful to have a mask of where the live people are.
    uint32 livemask = little_endian_live_mask(ss);
 
+   // Need to do this now, so that the "schema_concentric_big2_6" stuff below will be triggered.
+   if (analyzer_result == schema_concentric_6p_or_normal_or_2x6_2x3) {
+      if (ss->cmd.cmd_final_flags.test_heritbits(INHERITFLAG_MXNMASK) == INHERITFLAGMXNK_6X2 ||
+          ss->cmd.cmd_final_flags.test_heritbits(INHERITFLAG_MXNMASK) == INHERITFLAGMXNK_3X2)
+         analyzer_result = schema_concentric_2_6;
+      else if (attr::slimit(ss) == 5)
+         analyzer_result = schema_concentric_6p;
+      else
+         analyzer_result = schema_concentric;
+   }
+
    switch (analyzer_result) {
    case schema_concentric_diamond_line:
       if ((ss->kind == s_crosswave && (livemask & 0x88)) ||
@@ -1773,14 +1784,6 @@ static calldef_schema concentrify(
       break;
    case schema_concentric_6p_or_normal:
       if (attr::slimit(ss) == 5)
-         analyzer_result = schema_concentric_6p;
-      else
-         analyzer_result = schema_concentric;
-      break;
-   case schema_concentric_6p_or_normal_or_2x6:
-      if (ss->cmd.cmd_final_flags.test_heritbits(INHERITFLAG_MXNMASK) == INHERITFLAGMXNK_6X2)
-         analyzer_result = schema_concentric_2_6;
-      else if (attr::slimit(ss) == 5)
          analyzer_result = schema_concentric_6p;
       else
          analyzer_result = schema_concentric;
@@ -2213,7 +2216,7 @@ static calldef_schema concentrify(
       case schema_concentric_diamonds:
       case schema_concentric_zs:   // This may not be right.
       case schema_concentric_6p_or_normal:
-      case schema_concentric_6p_or_normal_or_2x6:
+      case schema_concentric_6p_or_normal_or_2x6_2x3:
          if (crossing) {
             *xconc_elongation = inner_rot+1;
 
@@ -2811,7 +2814,6 @@ static void inherit_conc_assumptions(
 {
    if (analyzer == schema_concentric ||
        analyzer == schema_concentric_6p_or_normal ||
-       analyzer == schema_concentric_6p_or_normal_or_2x6 ||
        analyzer == schema_concentric_4_2_or_normal ||
        analyzer == schema_concentric_2_4_or_normal) {
       if (sskind == s2x4 && beginkind == s2x2) {
@@ -2922,7 +2924,7 @@ static void inherit_conc_assumptions(
          }
       }
    }
-   else if (analyzer == schema_concentric_2_6) {
+   else if (analyzer == schema_concentric_2_6 || analyzer == schema_concentric_6p_or_normal_or_2x6_2x3) {
       if ((sskind == s_qtag || sskind == s_ptpd) &&
           beginkind == s_short6 && really_doing_ends) {
          // We want to preserve "assume diamond" stuff to the outer 6,
@@ -3907,6 +3909,11 @@ extern void concentric_move(
    // cmd_misc_flags during the execution of the call, so we have to pick it up to make sure
    // that the necessary "demand" and "force" bits are honored.
    localmodsout1 |= (begin_outer.cmd.cmd_misc_flags & DFM1_CONCENTRICITY_FLAG_MASK);
+
+   // If doing half of an acey deucey, don't force spots--it messes up short6 orientation.
+   if (analyzer == schema_concentric_6p_or_normal_or_2x6_2x3 &&
+       ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_HALF) != 0)
+      localmodsout1 &= ~DFM1_CONC_FORCE_SPOTS;
 
    // If the outsides did "emulate", they stay on the same spots no matter what
    // anyone says.

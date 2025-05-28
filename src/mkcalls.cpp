@@ -689,7 +689,7 @@ const char *schematab[] = {
    "singlecrossconc_together_if_odd",
    "conc6p",
    "conc6p_or_normal",
-   "conc6p_or_normal_or_2x6",
+   "conc6p_or_normal_or_2x6_2x3",
    "conc6p_or_singletogether",
    "crossconc6p_or_normal",
    "conc_others",

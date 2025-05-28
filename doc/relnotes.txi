@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 38.65
-@set title2 Database version = 38.65 format = 319
+@set title1 RELEASE NOTES FOR VERSION 38.66
+@set title2 Database version = 38.66 format = 320
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 38.66::
 * 38.65::
 * 38.64::
 * 38.63::
@@ -104,7 +105,7 @@ The files @file{relnotes03.txi} and @file{relnotes98.txi} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 38.65, Top, (dir)
+@node Intro, 38.66, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -115,11 +116,29 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2014 William B. Ackerman
 @sp 3
 @menu
-* 38.65::               Changes in the current version
+* 38.66::               Changes in the current version
 @end menu
 
 @c ************
-@node 38.65, 38.64, Intro, Top
+@node 38.66, 38.65, Intro, Top
+@unnumberedsec Version 38.66 changes
+
+@strong{6x2 acey deucey} and @strong{3x2 acey deucey} are now treated as instances of the "6x2" and "3x2" concepts.
+@strong{3x2 reshape} and @strong{3x2 convert} are still calls in their own right.
+
+Fixed identification of @strong{beaus}, @strong{belles}, @strong{leads}, and @strong{trailers} in 1/4 tags or diamonds.
+This applies only to the centers by themselves, and the outsides by themselves.  So, for example, and a normal 1/4 tag,
+there are 6 beaus and 2 belles, but there are no leads or trailers.
+
+@strong{4x4 load the boat} (and 3x3, 3x1, and 1x3) are implemented.  We apologize for not having implemented this
+beautiful and fun call earlier.
+
+@strong{vertical [anything]} now fractionalizes properly.
+
+The @strong{split phantom lines 3x1 as couple split swap} bug, and others of its ilk, were fixed.
+
+@c ************
+@node 38.65, 38.64, 38.66, Top
 @unnumberedsec Version 38.65 changes
 
 Some @strong{generous} and @strong{stingy} improvements were made.

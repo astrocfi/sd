@@ -121,71 +121,69 @@ public:
 
 
 static tm_thing maps_isearch_twosome[] = {
-   //       maps                                                      ilatmaskH/L    olatmask   limit rot insetup outsetup
+   //       maps                                                      ilatmaskH/L   olatmask  limit rot insetup outsetup
 
    // "2x4_4" - see below; this must be before the others.
-   {{7, 6, 4, 5,                     0, 1, 3, 2},                            0,0,     0000,         4, 0,  s1x4,  s2x4},
-   {{0, 2, 5, 7,                     1, 3, 4, 6},                        0,02222,     0xFF,         4, 0,  s2x2,  s2x4},
-   {{2, 5, 7, 0,                     3, 4, 6, 1},                            0,0,     0xFF,         4, 1,  s2x2,  s2x4},
+   {{7, 6, 4, 5,                     0, 1, 3, 2},                          0,0,     0000,         4, 0,  s1x4,  s2x4},
+   {{0, 2, 5, 7,                     1, 3, 4, 6},                      0,02222,     0xFF,         4, 0,  s2x2,  s2x4},
+   {{2, 5, 7, 0,                     3, 4, 6, 1},                          0,0,     0xFF,         4, 1,  s2x2,  s2x4},
 
-   {{0, 2, 4, 7, 10, 12, 14, 15, 17,     1, 3, 5, 6, 9, 11, 13, 16, 8}, 0,0222222222, 0x3FFFF,      9, 0,  s3x3,  s3x6},
-   {{4, 7, 10, 12, 14, 15, 0, 2, 17,     5, 6, 9, 11, 13, 16, 1, 3, 8},      0,0,     0x3FFFF,      9, 1,  s3x3,  s3x6},
+   {{0, 2, 4, 7, 10, 12, 14, 15, 17,     1, 3, 5, 6, 9, 11, 13, 16, 8}, 0,0222222222, 0x3FFFF,    9, 0,  s3x3,  s3x6},
+   {{4, 7, 10, 12, 14, 15, 0, 2, 17,     5, 6, 9, 11, 13, 16, 1, 3, 8},      0,0,     0x3FFFF,    9, 1,  s3x3,  s3x6},
 
    // This one gets h1p, far box star thru, as couples touch
-   {{7, 6, 2, 5,                     0, 1, 3, 4},                        0,00022,     0x3C,         4, 1, s_trngl4, s2x4},
+   {{7, 6, 2, 5,                     0, 1, 3, 4},                      0,00022,     0x3C,         4, 1, s_trngl4, s2x4},
    // This one gets h1p, near box star thru, as couples touch
-   {{4, 5, 7, 0,                     3, 2, 6, 1},                        0,00022,     0xC3,         4, 3, s_trngl4, s2x4},
+   {{4, 5, 7, 0,                     3, 2, 6, 1},                      0,00022,     0xC3,         4, 3, s_trngl4, s2x4},
 
    // This one comes back from far box
-   {{0, 2, 4, 6,                     1, 3, 5, 7},                        0,02200,     0xF0,      4, 0, s_trngl4, s_trngl8},
+   {{0, 2, 4, 6,                     1, 3, 5, 7},                         0,02200,     0xF0,      4, 0, s_trngl4, s_trngl8},
 
    // Special maps for couples 1/8 twosome stuff.
    // These need further work in the table initializer.
-   {{12, 3, 7, 8,                    15, 0, 4, 11},                      0,01313,   0xFFFF,         4, 0,  s2x2,  s4x4},
-   {{10, 14, 5, 9,                   13, 1, 2, 6},                       0,03131,   0xFFFF,         4, 0,  s2x2,  s4x4},
-   {{12, 14, 7, 9,                   15, 1, 4, 6},                       0,03333,   0xFFFF,         4, 0,  s2x2,  s4x4},
-   {{10, 3, 5, 8,                    13, 0, 2, 11},                      0,01111,   0xFFFF,         4, 0,  s2x2,  s4x4},
-   {{15, 13, 9, 11,                  1, 3, 7, 5},                        0,01111,   0xFFFF,         4, 0,  s1x4,  s2x8},
-   {{0, 2, 6, 4,                     14, 12, 8, 10},                     0,03333,   0xFFFF,         4, 0,  s1x4,  s2x8},
-   {{15, 2, 9, 4,                    1, 12, 7, 10},                      0,03131,   0xFFFF,         4, 0,  s1x4,  s2x8},
-   {{0, 13, 6, 11,                   14, 3, 8, 5},                       0,01313,   0xFFFF,         4, 0,  s1x4,  s2x8},
-   {{0, 2,                           6, 4},                              0,033,       0xFF,         2, 0,  s1x2,  s2x4},
-   {{7, 5,                           1, 3},                              0,011,       0xFF,         2, 0,  s1x2,  s2x4},
-   {{7, 2,                           1, 4},                              0,031,       0xFF,         2, 0,  s1x2,  s2x4},
-   {{0, 5,                           6, 3},                              0,013,       0xFF,         2, 0,  s1x2,  s2x4},
+   {{12, 3, 7, 8,                    15, 0, 4, 11},                    0,01313,   0xFFFF,         4, 0,  s2x2,  s4x4},
+   {{10, 14, 5, 9,                   13, 1, 2, 6},                     0,03131,   0xFFFF,         4, 0,  s2x2,  s4x4},
+   {{12, 14, 7, 9,                   15, 1, 4, 6},                     0,03333,   0xFFFF,         4, 0,  s2x2,  s4x4},
+   {{10, 3, 5, 8,                    13, 0, 2, 11},                    0,01111,   0xFFFF,         4, 0,  s2x2,  s4x4},
+   {{15, 13, 9, 11,                  1, 3, 7, 5},                      0,01111,   0xFFFF,         4, 0,  s1x4,  s2x8},
+   {{0, 2, 6, 4,                     14, 12, 8, 10},                   0,03333,   0xFFFF,         4, 0,  s1x4,  s2x8},
+   {{15, 2, 9, 4,                    1, 12, 7, 10},                    0,03131,   0xFFFF,         4, 0,  s1x4,  s2x8},
+   {{0, 13, 6, 11,                   14, 3, 8, 5},                     0,01313,   0xFFFF,         4, 0,  s1x4,  s2x8},
+   {{0, 2,                           6, 4},                            0,033,       0xFF,         2, 0,  s1x2,  s2x4},
+   {{7, 5,                           1, 3},                            0,011,       0xFF,         2, 0,  s1x2,  s2x4},
+   {{7, 2,                           1, 4},                            0,031,       0xFF,         2, 0,  s1x2,  s2x4},
+   {{0, 5,                           6, 3},                            0,013,       0xFF,         2, 0,  s1x2,  s2x4},
 
 
-   {{3, 2,                           0, 1},                                  0,0,     0000,         2, 0,  s1x2,  s2x2},
-   {{0, 3,                           1, 2},                                  0,0,      0xF,         2, 1,  s1x2,  s2x2},
-   {{0, 3,                           1, 2},                                0,022,      0xF,         2, 0,  s1x2,  s1x4},
-   {{0,                              1},                                    0,02,     0003,         1, 0,  s1x1,  s1x2},
-   {{0,                              1},                                     0,0,     0003,         1, 1,  s1x1,  s1x2},
-   {{0, 3, 5, 6,                     1, 2, 4, 7},                        0,02222,     0xFF,         4, 0,  s1x4,  s1x8},
-   {{0, 2, 4, 7, 9, 11,              1, 3, 5, 6, 8, 10},               0,0222222,    0xFFF,         6, 0,  s1x6,  s1x12},
-   {{0, 2, 6, 4, 9, 11, 15, 13,      1, 3, 7, 5, 8, 10, 14, 12},       0,022222222,  0xFFFF,        8, 0,  s1x8,  s1x16},
-   {{15, 14, 12, 13, 8, 9, 11, 10,   0, 1, 3, 2, 7, 6, 4, 5},                0,0,     0000,         8, 0,  s1x8,  s2x8},
-   {{11, 10, 9, 6, 7, 8,             0, 1, 2, 5, 4, 3},                      0,0,     0000,         6, 0,  s1x6,  s2x6},
+   {{3, 2,                           0, 1},                                0,0,     0000,         2, 0,  s1x2,  s2x2},
+   {{0, 3,                           1, 2},                                0,0,      0xF,         2, 1,  s1x2,  s2x2},
+   {{0, 3,                           1, 2},                              0,022,      0xF,         2, 0,  s1x2,  s1x4},
+   {{0,                              1},                                  0,02,     0003,         1, 0,  s1x1,  s1x2},
+   {{0,                              1},                                   0,0,     0003,         1, 1,  s1x1,  s1x2},
+   {{0, 3, 5, 6,                     1, 2, 4, 7},                      0,02222,     0xFF,         4, 0,  s1x4,  s1x8},
+   {{0, 2, 4, 7, 9, 11,              1, 3, 5, 6, 8, 10},             0,0222222,    0xFFF,         6, 0,  s1x6,  s1x12},
+   {{0, 2, 6, 4, 9, 11, 15, 13,      1, 3, 7, 5, 8, 10, 14, 12},     0,022222222,  0xFFFF,        8, 0,  s1x8,  s1x16},
+   {{15, 14, 12, 13, 8, 9, 11, 10,   0, 1, 3, 2, 7, 6, 4, 5},              0,0,     0000,         8, 0,  s1x8,  s2x8},
+   {{11, 10, 9, 6, 7, 8,             0, 1, 2, 5, 4, 3},                    0,0,     0000,         6, 0,  s1x6,  s2x6},
 
-   {{10, 15, 3, 1, 4, 5, 6, 8,       12, 13, 14, 0, 2, 7, 11, 9},            0,0,     0000,         8, 0,  s2x4,  s4x4},
-   {{14, 3, 7, 5, 8, 9, 10, 12,      0, 1, 2, 4, 6, 11, 15, 13},             0,0,   0xFFFF,         8, 1,  s2x4,  s4x4},
-   {{-2, 15, 3, 1, -2, 5, 11, 9,     -1, 13, -1, -1, -1, 7, -1, -1},         0,0,     0000,         8, 0,  s2x4,  s4x4},
-   {{10, 15, 3, -2, 2, 7, 6, -2,     -1, -1, 14, -1, -1, -1, 11, -1},        0,0,     0000,         8, 0,  s2x4,  s4x4},
+   {{10, 15, 3, 1, 4, 5, 6, 8,       12, 13, 14, 0, 2, 7, 11, 9},          0,0,     0000,         8, 0,  s2x4,  s4x4},
+   {{14, 3, 7, 5, 8, 9, 10, 12,      0, 1, 2, 4, 6, 11, 15, 13},           0,0,   0xFFFF,         8, 1,  s2x4,  s4x4},
+   {{-2, 15, 3, 1, -2, 5, 11, 9,     -1, 13, -1, -1, -1, 7, -1, -1},       0,0,     0000,         8, 0,  s2x4,  s4x4},
+   {{10, 15, 3, -2, 2, 7, 6, -2,     -1, -1, 14, -1, -1, -1, 11, -1},      0,0,     0000,         8, 0,  s2x4,  s4x4},
 
    // When analyzing, we prefer the 4x6->3x4 formulation.  But we can synthesize
    // from a qtag.
    {{4, 7, 22, 13, 15, 20, 17, 18, 11, 0, 2, 9,
-     5, 6, 23, 12, 14, 21, 16, 19, 10, 1, 3, 8},                             0,0, 0xFFFFFF,        12, 1,  s3x4,  s4x6},
-   {{7, 22, 15, 20, 18, 11, 2, 9,    6, 23, 14, 21, 19, 10, 3, 8},           0,0, 0xFCCFCC,         8, 1,  s_qtag,s4x6},
+     5, 6, 23, 12, 14, 21, 16, 19, 10, 1, 3, 8},                           0,0, 0xFFFFFF,        12, 1,  s3x4,  s4x6},
+   {{7, 22, 15, 20, 18, 11, 2, 9,    6, 23, 14, 21, 19, 10, 3, 8},         0,0, 0xFCCFCC,         8, 1,  s_qtag,s4x6},
 
    {{11, 10, 9, 8, 7, 6, 12, 13, 14, 15, 16, 17,
-                      0, 1, 2, 3, 4, 5, 23, 22, 21, 20, 19, 18},             0,0,     0000,        12, 0,  s2x6,  s4x6},
+                      0, 1, 2, 3, 4, 5, 23, 22, 21, 20, 19, 18},           0,0,     0000,        12, 0,  s2x6,  s4x6},
    {{0, 2, 4, 6, 8, 10, 13, 15, 17, 19, 21, 23,
-                      1, 3, 5, 7, 9, 11, 12, 14, 16, 18, 20, 22}, 04,022222222222, 0xFFFFFF,       12, 0,  s2x6,  s2x12},
+                      1, 3, 5, 7, 9, 11, 12, 14, 16, 18, 20, 22}, 04,022222222222, 0xFFFFFF,     12, 0,  s2x6,  s2x12},
 
    // This is for everyone as couples in a 3x4, making virtual columns of 6.
-   {{2, 5, 7, 9, 10, 0,              3, 4, 6, 8, 11, 1},                     0,0,   0x0FFF,         6, 1,  s2x3,  s3x4},
-   // This is for various people as couples in a 1/4 tag, making virtual columns of 6.
-   {{1, 3, 4, 5, 6, 0,               -1, 2, -1, -1, 7, -1},                  0,0,     0xCC,         6, 1,  s2x3,  s_qtag},
+   {{2, 5, 7, 9, 10, 0,              3, 4, 6, 8, 11, 1},                   0,0,   0x0FFF,         6, 1,  s2x3,  s3x4},
 
    // There is an issue involving the order of the two pairs of items that follow.
    // In the order shown, (3x4 matrix stuff before c1phan), the program will opt
@@ -216,8 +214,6 @@ static tm_thing maps_isearch_twosome[] = {
    {{0, 2, 3, 5, 6, 7,               1, -1, -1, 4, -1, -1},          0,0002002,     0x33,         6, 0,  s_2x1dmd, s3x1dmd},
    {{0, 1, 3, 4, 6, 7,               -1, 2, -1, -1, 5, -1},          0,0020020,     0x66,         6, 0,  s_2x1dmd, s3x1dmd},
    {{6, 7, 0, 2, 3, 5,               -1, -1, 1, -1, -1, 4},          0,0200200,     0x33,         6, 0,  s_2x1dmd, s_qtag},
-   {{2, 4, 5, 0,                     -1, 3, -1, 1},                        0,0,      033,         4, 1,  sdmd, s_2x1dmd},
-   {{0, 2, 4, 5,                     1, -1, 3, -1},                    0,00202,      033,         4, 0,  sdmd, s_1x2dmd},
    // Next one is for centers in tandem in lines, making a virtual bone6.
    {{0, 3, 5, 4, 7, 6,               -1, -1, 2, -1, -1, 1},                0,0,     0000,         6, 0,  s_bone6, s2x4},
    // Missing left half.
@@ -254,12 +250,12 @@ static tm_thing maps_isearch_twosome[] = {
    // We do not have the 3rd or 4th maps in the class, because they apply only
    // to unwinding, and we never unwind to these setups.  That's why
    // these 2 maps are placed after the 4 preceding ones.
-   {{0, 1, 3, 5,                     -1, 2, -1, 4},                    0,02020,     0066,      4, 0,  s2x2,  s_ntrgl6cw},
-   {{0, 2, 4, 5,                     1, -1, 3, -1},                    0,00202,     0033,      4, 0,  s2x2,  s_ntrgl6ccw},
+   {{0, 1, 3, 5,                     -1, 2, -1, 4},                    0,02020,     0066,         4, 0,  s2x2,  s_ntrgl6cw},
+   {{0, 2, 4, 5,                     1, -1, 3, -1},                    0,00202,     0033,         4, 0,  s2x2,  s_ntrgl6ccw},
 
    // Next 4 are for similar 8-person situations.
-   {{1, 3, 4, 6, 7, 0,               2, -1, -1, 5, -1, -1},             0,0,     0x66,         6, 1,  s_short6,  s_nxtrglcw},
-   {{2, 3, 5, 6, 7, 0,              -1, -1, 4, -1, -1, 1},              0,0,     0x33,         6, 1,  s_short6,  s_nxtrglccw},
+   {{1, 3, 4, 6, 7, 0,               2, -1, -1, 5, -1, -1},             0,0,        0x66,         6, 1,  s_short6,  s_nxtrglcw},
+   {{2, 3, 5, 6, 7, 0,              -1, -1, 4, -1, -1, 1},              0,0,        0x33,         6, 1,  s_short6,  s_nxtrglccw},
    {{0, 2, 5, 4, 7, 1,              -1,  3, -1, -1,  6, -1},         0,0020020,     0xCC,         6, 0,  s_bone6,  s_nptrglcw},
    {{0, 3, 6, 5, 7, 2,               1, -1, -1,  4, -1, -1},         0,0002002,     0x33,         6, 0,  s_bone6,  s_nptrglccw},
 
@@ -285,6 +281,10 @@ static tm_thing maps_isearch_twosome[] = {
    {{0, 1, 3, 4, 5, 6,               -1, -1, 2, -1, -1, 7},          0,0200200,     0xCC,         6, 0,  s_bone6,s_bone},
    {{0, 2, 5, 7, 9, 11, 12, 14,      1, 3, 4, 6, 8, 10, 13, 15},   0,022222222,   0xFFFF,         8, 0,  s_qtag,s4dmd},
    {{0, 3, 5, 6,                     1, 2, 4, 7},                          0,0,     0xFF,         4, 1,  sdmd,  s_qtag},
+   // This is for various people as couples in a 1/4 tag, making virtual columns of 6.
+   // It must be after the map just above.
+   {{1, 3, 4, 5, 6, 0,               -1, 2, -1, -1, 7, -1},                0,0,     0xCC,         6, 1,  s2x3,  s_qtag},
+
    {{0, 7, 2, 4, 5, 6,               -1, 1, -1, -1, 3, -1},                0,0,     0000,         6, 0,  s_2x1dmd, s_galaxy},
    {{2, 1, 4, 6, 7, 0,               -1, 3, -1, -1, 5, -1},                0,0,     0xAA,         6, 1,  s_2x1dmd, s_galaxy},
    {{3, 7, 9, 13,                    1, 5, 11, 15},                    0,02020,   0xA0A0,         4, 0,  s2x2,  s_c1phan},
@@ -313,6 +313,9 @@ static tm_thing maps_isearch_twosome[] = {
    {{0, 3, 5, 6,                     1, 2, 4, 7},                      0,00202,     0x33,      4, 0,  sdmd,  s_crosswave},
    {{0, 3, 5, 6,                     1, 2, 4, 7},                      0,00202,     0x33,         4, 0,  s_star, s_thar},
 
+   {{2, 4, 5, 0,                     -1, 3, -1, 1},                        0,0,      033,         4, 1,  sdmd, s_2x1dmd},
+   {{0, 2, 4, 5,                     1, -1, 3, -1},                    0,00202,      033,         4, 0,  sdmd, s_1x2dmd},
+
    {{0, 3, 5, 6, 9, 10, 12, 15,      1, 2, 4, 7, 8, 11, 13, 14},   0,002020202,   0x3333,         8, 0,  s_ptpd,  sdblxwave},
 
    {{15, 1, 12, 14, 8, 10, 11, 5,    0, 2, 3, 13, 7, 9, 4, 6},     0,020202020,   0x6666,         8, 0,  s_ptpd,  s2x8},
@@ -326,9 +329,6 @@ static tm_thing maps_isearch_twosome[] = {
    // Missing right half.
    {{0, -2, -2, -2, 5, 6,            -1, -2, -2, -2, -1, 7},        0,0200000,     0xC0,       6, 0,  s_bone6,  s_bone},
 
-   {{0, 2, 3, 4, 7, 8, 9, 11,        1, -1, -1, 5, 6, -1, -1, 10},
-    0,020022002,     06363,      8, 0,  s2x4, s2x6},
-
    {{0, 2, 4, 7, 9, 11,              1, 3, 5, 6, 8, 10},
     0,0222222,      0x0FFF,     6, 0,  s2x3,  s2x6},
    // The three maps just below must be after the map just above.
@@ -338,6 +338,10 @@ static tm_thing maps_isearch_twosome[] = {
     0,0002002,      0xC0300,    6, 0,  s2x3,  s4x5},
    {{3, 6, 8, 10, 11, 1,             4, 5, 7, 9, 0, 2},
     0,0020020,      03636,      6, 1,  s_short6,  s2x6},
+
+   // This must be after the 2x3/2x6 map above.
+   {{0, 2, 3, 4, 7, 8, 9, 11,        1, -1, -1, 5, 6, -1, -1, 10},
+    0,020022002,     06363,      8, 0,  s2x4, s2x6},
 
    {{10, 7, 8, 5, 0, 3,              11, 6, 9, 4, 1, 2},
     0,0202202,      00303,      6, 1,  s_short6,  sdeepxwv},
@@ -1857,7 +1861,7 @@ extern void tandem_couples_move(
    while (map_search->outsetup != nothing) {
       if ((map_search->outsetup == ss->kind) &&
           !map_search->map_is_eighth_twosome &&
-          map_search->outsinglemask == tandstuff.single_mask &&
+          (allmask & map_search->outsinglemask) == tandstuff.single_mask &&
           (!(allmask & map_search->outunusedmask)) &&
           (!(ewmask & (~map_search->olatmask))) &&
           (!(nsmask & map_search->olatmask))) {
@@ -2155,8 +2159,8 @@ extern void tandem_couples_move(
       while (map_search->outsetup != nothing) {
          if ((map_search->insetup == tandstuff.virtual_result.kind) &&
              (!map_search->map_is_eighth_twosome || key != tandem_key_box) &&
-             map_search->insinglemaskhigh == sglmaskhigh &&
-             map_search->insinglemasklow == sglmasklow &&
+             (map_search->insinglemaskhigh & livemaskhigh) == sglmaskhigh &&
+             (map_search->insinglemasklow & livemasklow) == sglmasklow &&
              (map_search->ilatmask3high & livemaskhigh) == hmaskhigh &&
              (map_search->ilatmask3low & livemasklow) == hmasklow) {
             break;

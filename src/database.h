@@ -47,7 +47,7 @@
 // database format version.
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 319
+#define DATABASE_FORMAT_VERSION 320
 
 
 // We used to do some stuff to cater to compiler vendors (e.g. Sun
@@ -1116,7 +1116,7 @@ enum calldef_schema {
    schema_single_cross_concentric_together_if_odd,
    schema_concentric_6p,
    schema_concentric_6p_or_normal,
-   schema_concentric_6p_or_normal_or_2x6,
+   schema_concentric_6p_or_normal_or_2x6_2x3,
    schema_concentric_6p_or_sgltogether,
    schema_cross_concentric_6p_or_normal,
    schema_concentric_others,
