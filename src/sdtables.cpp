@@ -1794,6 +1794,16 @@ map::map_thing map::map_init_table[] = {
     s1x8,1,MPKIND__OFFS_R_HALF,1, 2,  s1x8,      0x000, 0},
 
    {{0, 1, 2, 3, 4, 5, 6, 7},
+    s1x8,1,MPKIND__OFFS_L_ONEQ,1, 2,  s1x8,      0x000, 0},
+   {{0, 1, 2, 3, 4, 5, 6, 7},
+    s1x8,1,MPKIND__OFFS_R_ONEQ,1, 2,  s1x8,      0x000, 0},
+
+   {{0, 1, 2, 3, 4, 5, 6, 7},
+    s1x8,1,MPKIND__OFFS_L_THRQ,1, 2,  s1x8,      0x000, 0},
+   {{0, 1, 2, 3, 4, 5, 6, 7},
+    s1x8,1,MPKIND__OFFS_R_THRQ,1, 2,  s1x8,      0x000, 0},
+
+   {{0, 1, 2, 3, 4, 5, 6, 7},
     s1x8,1,MPKIND__OFFS_L_FULL,1, 2,  s1x8,      0x000, 0},
    {{0, 1, 2, 3, 4, 5, 6, 7},
     s1x8,1,MPKIND__OFFS_R_FULL,1, 2,  s1x8,      0x000, 0},
@@ -2953,6 +2963,7 @@ static expand::thing step_qtag_rigstuff = {{6, 7, 1, 0, 2, 3, 5, 4}, s_qtag, s_r
 static expand::thing step_rig_bonestuff = {{7, 2, 4, 1, 3, 6, 0, 5}, s_rigger, s_bone, 0};
 static expand::thing step_rig_stuff = {{2, 7, 4, 5, 6, 3, 0, 1}, s_rigger, s1x8, 0};
 static expand::thing step_2x1d_stuff = {{0, 1, 5, 3, 4, 2}, s_1x2dmd, s1x6, 0};
+static expand::thing step_short6_stuff = {{1, 0, 2, 4, 3, 5}, s_short6, s1x6, 1};
 
 static expand::thing step_phan1_stuff = {{-1, 7, -1, 6, -1, 1, -1, 0, -1, 3, -1, 2, -1, 5, -1, 4},
                                         s_c1phan, s2x4, 1};
@@ -3001,6 +3012,8 @@ full_expand::thing touch_init_table1[] = {
    {warn__rear_back,       8, &step_1x2_stuff,   s1x2,         0xFU,        0x2U, ~0U},
    // Rear back from a 4-person triangle to a "split square thru" setup.
    {warn__some_rear_back,  0, &rear_tgl4a_stuff, s_trngl4,    0xFFU,       0xDAU, ~0U},
+   // Rear back from a 4-person triangle to a normal "square thru" setup.
+   {warn__some_rear_back,  0, &rear_tgl4a_stuff, s_trngl4,    0xFFU,       0xD7U, ~0U},
    // Two similar ones with miniwave base for funny square thru.
    {warn__some_rear_back,  0, &rear_tgl4a_stuff, s_trngl4,    0xFFU,       0xD2U, ~0U},
    // The base couldn't want to rear back -- result would be stupid.)
@@ -3224,8 +3237,11 @@ full_expand::thing touch_init_table3[] = {
    {warn__some_touch, 0, &step_rig_stuff,     s_rigger,   0xF0F0U,     0xA802U, 0xF0F0U},
    {warn__some_touch, 0, &step_rig_stuff,     s_rigger,   0x0F0FU,     0xA802U, 0x0F0FU},
 
-   // Centers touch from a 1x2dmd to a wave of 6.
+   // Center 2 touch from a 1x2dmd to a wave of 6.
    {warn__some_touch, 0, &step_2x1d_stuff,    s_1x2dmd,   0xFFFU,      0x2A0U,  0xFFFU},
+
+   // Center 4 touch from a short6 to a wave of 6.
+   {warn__some_touch, 0, &step_short6_stuff,  s_short6,   0xFFFU,      0x7F5U,  0xFFFU},
 
    // Check for stepping to a miniwave from people facing.
    {warn__none,       0, &step_1x2_stuff,     s1x2,          0xFU,        0x7U, 0xFU},
@@ -4686,7 +4702,7 @@ merge_table::concmerge_thing merge_table::merge_init_table[] = {
    {s_qtag,        s1x8, 0x33,  0xCC, 0x0C, 0x0, schema_concentric,     s1x4,        s1x4,     warn__none, 0, 0, {6, 7, 2, 3},               {0, 1, 4, 5}},
    {s1x4,          s1x8, 0,     0xCC, 0x0C, 0x0, schema_concentric,     s1x4,        s1x4,     warn__none, 0, 0, {0, 1, 2, 3},               {0, 1, 4, 5}},
    {s_qtag,        s1x8, 0x33,  0x55, 0x0C, 0x0, schema_concentric,     s1x4,        s1x4,     warn__none, 0, 0, {6, 7, 2, 3},               {1, 3, 5, 7}},
-   {s1x4,          s1x6, 0,      044, 0x0C, 0x0, schema_concentric,     s1x4,        s1x4,     warn__none, 0, 0, {0, 1, 2, 3},               {0, 1, 3, 4}},
+   {s1x4,          s1x6, 0,      044, 0x2C, 0x0, schema_concentric,     s1x4,        s1x4,     warn__none, 0, 0, {0, 1, 2, 3},               {0, 1, 3, 4}},
    {s1x4,       s1x3dmd, 0,     0xCC, 0x0E, 0x0, schema_matrix,         s1x8,        nothing,  warn__none, 0, 0, {3, 2, 7, 6},               {0, 1, -1, -1, 4, 5, -1, -1}},
    {s1x4,       s1x3dmd, 0,     0xAA, 0x1E, 0x0, schema_matrix,         s1x8,        nothing,  warn__none, 0, 0, {3, 2, 7, 6},               {0, -1, 1, -1, 4, -1, 5, -1}},
    {s1x2,       s1x3dmd, 0,     0x88, 0x0D, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 1, 0, {3, 7},               {0}},
@@ -9587,7 +9603,6 @@ const uint32 meta_key_props[] = {
    MKP_RESTRAIN_1 | MKP_RESTRAIN_2,   // meta_key_random
    MKP_RESTRAIN_1 | MKP_RESTRAIN_2,   // meta_key_rev_random
    MKP_RESTRAIN_1 | MKP_RESTRAIN_2,   // meta_key_piecewise
-   MKP_RESTRAIN_1 | MKP_RESTRAIN_2 | MKP_COMMA_NEXT,   // meta_key_initially
    MKP_RESTRAIN_1,                    // meta_key_finish
    MKP_RESTRAIN_1,                    // meta_key_revorder
    MKP_RESTRAIN_1 | MKP_RESTRAIN_2,   // meta_key_roundtrip

@@ -57,7 +57,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "38.47"
+version "38.48"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve dont_raise_overcast
@@ -1768,12 +1768,28 @@ call "exchange the diamonds, first 1/4" dontshow tag exchd1
             // unless something very strange is going on.
    setup qtag bigdmd rotate qualifier wave_only
       array [   0    0 AL1S AL11S    0    0 CR10N CR0N]
+
+/* old way */
    setup qtag qtag qualifier 2fl_only
       array [   0    0 AL1W AL0W    0    0 CR0E CR1E]
+
+// New way
+//   setup qtag wqtag qualifier 2fl_only
+//      array [   0    0 AL1W AL0W    0    0 CR0E CR1E]
+
+
    setup pqtag bigdmd rotate qualifier wave_only
       array [CR9N CR2N    0     0 AL2S AL9S     0    0]
+/* old way */
    setup pqtag qtag qualifier 2fl_only
       array [CR7E CR2E    0    0 AL2W AL7W    0    0]
+
+// New way
+//   setup pqtag wqtag qualifier 2fl_only
+//      array [CR9E CR3E    0    0 AL3W AL9W    0    0]
+
+
+
    setup ptpd bigptpd qualifier dmd_not_intlk
       array [   CR4E    0 CR6E 0    AL7W    0 AL5W 0]
    setup ptpd ptpd qualifier dmd_intlk
@@ -1820,6 +1836,14 @@ call "continue to exchange the diamonds another 1/4" c2 tag exchd2
       array [   0    0 CR4E CR6E    0    0    0    0 AL7W AL5W    0    0]
    setup pbigptpd bigptpd
       array [AL3W AL3W    0    0 CR3E CR3E CR8E CR8E    0    0 AL8W AL8W]
+
+
+   setup wqtag qtag
+      array [   0    0 AL1W AL1W  0    0    0 CR0E CR0E 0]
+   setup pwqtag qtag
+      array [CR7E CR2E    0    0 0 AL2W AL7W    0    0    0]
+
+
             alternate_definition [interlocked] c2
    setup qtag bigdmd rotate
       array [   0    0 AL1S CR0N    0    0 CR10N AL11S]
@@ -6752,6 +6776,8 @@ call "_quarter in" dontshow tag quarterin
       array [CR0E 0 AL2W 0]
    setup pmd dmd
       array [0 CR1E 0 AL3W]
+   setup star star
+      array [CR0E 0 AL2W 0]
 
 call "_quarter out" dontshow tag quarterout
    /* See above. */
@@ -20948,11 +20974,11 @@ call "hocus pocus" c2
 
 // OK, it now knows the "2 O circs" theorem.  So O / 2Ofrac is first, and the tests
 // pass.  In fact, it's possible that the second clause can be removed completely.
+// Not so!  See t41.
 
             visible_fractions magic_is_inherited yoyo_is_inherited gen_sting_is_inherited funny_is_inherited
    conc_o trade_w_tbone [inherit_yoyo inherit_gensting inherit_funny]
           two_o_circs_for_frac [inherit_magic conc_force_otherway endscando]
-
             visible_fractions magic_is_inherited yoyo_is_inherited gen_sting_is_inherited funny_is_inherited
    conc6p_or_normal trade_w_tbone [inherit_yoyo inherit_gensting inherit_funny]
                     // Setting both "conc_demand_columns" and "conc_demand_lines" makes it forbid doing this
@@ -22866,7 +22892,7 @@ call "squeeze the hourglass" c1
    setup hrglass galaxy
       array [0 0 ZM4N 0 0 0 ZM0N 0]
    setup phrglass galaxy
-      array [CR7S CR5S 0 ZM6S AL3S AL1S 0 ZM2S]
+      array [CR7S CR5S ZM4N CM6S AL3S AL1S ZM0N AM2S]
 
 call "squeeze the diamond" c1
    setup dmd dmd rotate
@@ -24136,7 +24162,7 @@ call "_two o circs, for fractions" dontshow tag two_o_circs_for_frac
             alternate_definition [magic] c2
    simple_funny
    setup 4x4 4x4 restriction wave_only
-      array [0 CR14S ZM13N 0 0 ZM10N ZM1N 0 0 ZM14N AL13S 0 0 CR10S AL1S 0]
+      array [0 CR14S ZM13N 0 0 ZM10N ZM1N 0 0 ZM14N AL13S 0 0 CM10S AM1S 0]
    simple_funny
    setup 2x2 2x2 restriction wave_only
       array [C0S A1S Z0N Z1N]
@@ -26083,20 +26109,36 @@ call "_centers turnstyle" dontshow tag central_turnstyle
          if cast_normal  [CR3W AL3E AL2E CR2W]
          if cast_pushy   [AL0E AL3E CR1W CR2W]
          if always       [0    AL3E 0    CR2W]
+            alternate_definition [fractal] c4
+   setup 2x1 1x2 qualifier in in_or_out
+      array [CR1E 0]
+   setup 1x2 1x2 rotate qualifier miniwaves
+      array [CR0N AL0S]
+            alternate_definition [generous] c3x
+   setup 2x1 1x2 rotate qualifier in in_or_out
+      array [CR0W 0]
+   setup 1x2 1x2        qualifier miniwaves
+      array [CR0N AL1N]
+            alternate_definition [stingy] c3x
+   setup 2x1 1x2 rotate qualifier in in_or_out
+      array [CR1E 0]
+   setup 1x2 1x2        qualifier miniwaves
+      array [CR1S AL0S]
 
 call "turnstyle" c3
-            left_means_mirror
-   conc6p_or_singletogether central_turnstyle [inherit_left] quarter_right [inherit_left conc_force_spots]
+            left_means_mirror fractal_is_inherited gen_sting_is_inherited
+   conc6p_or_singletogether central_turnstyle [inherit_left inherit_fractal inherit_gensting]
+                            quarter_right [inherit_left conc_force_spots]
 
 call "6X2 turnstyle" c3
-            left_means_mirror
-   conc2_6 touch_3_4 [inherit_left] quarter_right [inherit_left conc_force_spots]
+            left_means_mirror fractal_is_inherited gen_sting_is_inherited
+   conc2_6 touch_3_4 [inherit_left inherit_fractal inherit_gensting]
+                     quarter_right [inherit_left conc_force_spots]
 
 call "relocate the diamonds" c2
             funny_is_inherited fractal_is_inherited gen_sting_is_inherited
-   /* No, we don't check whether they are in fact in diamonds.  People
-      similarly abuse terminology in other calls, e.g. "dixie style to
-      a wave" that ends in a column. */
+   // No, we don't check whether they are in fact in diamonds.  People similarly abuse
+   // terminology in other calls, e.g. "dixie style to a wave" that ends in a column.
    conc2_6_or_2_4 armturn_n4 [insert_number 3 inherit_fractal inherit_gensting] ctr_rot [inherit_funny]
 
 call "relocate" c2

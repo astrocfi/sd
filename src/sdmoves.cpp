@@ -1778,7 +1778,7 @@ static void finish_matrix_call(
    matrix_rec matrix_info[],
    int nump,
    bool do_roll_stability,
-   bool allow_collisions,
+   collision_severity allow_collisions,
    bool allow_fudging,
    merge_action action,
    setup *people,
@@ -2032,7 +2032,7 @@ static void matrixmove(
       // This call split the setup in every possible way.
       result->result_flags.maximize_split_info();
 
-   finish_matrix_call(matrix_info, nump, true, false, true, merge_strict_matrix, &people, result);
+   finish_matrix_call(matrix_info, nump, true, collision_severity_no, true, merge_strict_matrix, &people, result);
 
    reinstate_rotation(ss, result);
    clear_result_flags(result);
@@ -2621,7 +2621,7 @@ static void partner_matrixmove(
       }
    }
 
-   finish_matrix_call(matrix_info, nump, true, false, true, merge_strict_matrix, &people, result);
+   finish_matrix_call(matrix_info, nump, true, collision_severity_no, true, merge_strict_matrix, &people, result);
    reinstate_rotation(ss, result);
 
    // Take out any active phantoms that we placed.
@@ -2644,7 +2644,11 @@ extern void brute_force_merge(const setup *res1, const setup *res2,
 {
    int i;
    int r = res1->rotation & 3;
-   bool allow_collisions = action >= merge_strict_matrix_but_colliding_merge;
+   collision_severity allow_collisions = collision_severity_no;
+   if (action > merge_for_own)
+      allow_collisions = collision_severity_ok;
+   else if (action == merge_for_own)
+      allow_collisions = collision_severity_controversial;
 
    // First, check if the setups are nice enough for the matrix stuff,
    // as indicated by having both "setup_coords" and "nice_setup_coords".
@@ -2683,9 +2687,12 @@ extern void brute_force_merge(const setup *res1, const setup *res2,
       // "do_roll_stability" argument here.  It would treat the rotation
       // as though the person had actually done a call.
       finish_matrix_call(matrix_info, nump, false, allow_collisions,
-                         action > merge_strict_matrix_but_colliding_merge, action, &people, result);
+                         action > merge_for_own, action, &people, result);
       return;
    }
+
+   // They really are the same setup.  Just stuff the people on top of each other,
+   // and repair any collisions that occur.
 
    int rot = r * 011;
    int lim1 = attr::slimit(res1)+1;
@@ -2824,7 +2831,7 @@ extern void drag_someone_and_move(setup *ss, parse_block *parseptr, setup *resul
    }
 
    ss->rotation += result->rotation;
-   finish_matrix_call(second_matrix_info, final_2nd_nump, true, false, true, merge_strict_matrix, &second_people, result);
+   finish_matrix_call(second_matrix_info, final_2nd_nump, true, collision_severity_no, true, merge_strict_matrix, &second_people, result);
    reinstate_rotation(ss, result);
    clear_result_flags(result);
 }
@@ -3059,7 +3066,7 @@ extern void anchor_someone_and_move(
       after_matrix_info[i].dir = 0;
    }
 
-   finish_matrix_call(after_matrix_info, nump, false, false, true, merge_strict_matrix, &people, result);
+   finish_matrix_call(after_matrix_info, nump, false, collision_severity_no, true, merge_strict_matrix, &people, result);
    reinstate_rotation(&saved_start_people, result);
    clear_result_flags(result);
 }
@@ -7564,8 +7571,8 @@ void move(
          fooble = ~0U;
 
          if (ddd->kind == concept_meta) {
-             if (ddd->arg1 != meta_key_initially &&
-                 ddd->arg1 != meta_key_finally &&
+             if (ddd->arg1 != meta_key_finally &&
+                 ddd->arg1 != meta_key_nth_part_work &&
                  ddd->arg1 != meta_key_initially_and_finally)
             foobar &= ~(INHERITFLAG_MAGIC | INHERITFLAG_INTLK);
          }

@@ -493,6 +493,10 @@ static collision_map collision_map_table[] = {
    {6, 0x000000, 0xDD, 0x11, {0, 2, 3, 4, 6, 7},   {0, 8, 9, 7, 2, 3},    {1, 8, 9, 6, 2, 3},
     s_bone,      sbigbone,     0, warn__none, 0},
 
+   // Collision at ends of center line during exchange the diamonds.
+   {6, 0x33, 0x77, 0x44, {0, 1, 2, 4, 5, 6},   {0, 1, 3, 5, 6, 7},    {0, 1, 2, 5, 6, 8},
+    s_qtag,      swqtag,     0, warn__none, 0},
+
    // Same spot as points of diamonds.
    {6, 0x022022, 0xEE, 0x22, {1, 2, 3, 5, 6, 7},   {0, 2, 3, 7, 8, 9},    {1, 2, 3, 6, 8, 9},
     s_qtag,      sbigdmd,     1, warn__none, 0x40000000},
@@ -535,7 +539,9 @@ void collision_collector::install_with_collision(
       error_message1[0] = '\0';
       error_message2[0] = '\0';
 
-      if (!allow_collisions ||
+      // ****** but if m_allow_collisions is "collision_severity_controversial", we want to give a fairly serious warning.
+
+      if (m_allow_collisions == collision_severity_no ||
           attr::slimit(result) >= 12 ||
           result->people[destination].id1 != 0)
          throw error_flag_type(error_flag_collision);
@@ -550,7 +556,10 @@ void collision_collector::install_with_collision(
       // we need to keep track of who collides, and set things appropriately.
       // If we have "ends take right hands" and the setup is a 2x2, we consider it
       // to be perfectly legal.  This makes 2/3 recycle work from an inverted line.
-      if ((m_callflags1 & CFLAG1_TAKE_RIGHT_HANDS) ||
+
+      if (m_allow_collisions == collision_severity_controversial)
+         m_collision_appears_illegal |= 0x100;
+      else if ((m_callflags1 & CFLAG1_TAKE_RIGHT_HANDS) ||
           (m_callflags1 & CFLAG1_TAKE_RIGHT_HANDS_AS_COUPLES) ||
           ((m_callflags1 & CFLAG1_ENDS_TAKE_RIGHT_HANDS) &&
            (((result->kind == s1x4 || result->kind == sdmd) && !(resultplace&1)) ||
@@ -653,6 +662,9 @@ void collision_collector::fix_possible_collision(setup *result, merge_action act
    throw error_flag_type(error_flag_collision);
 
  win:
+
+   if (m_collision_appears_illegal & 0x100)
+      warn(warn_bad_collision);
 
    if ((m_collision_appears_illegal & 4) &&
        c_map_ptr->warning == warn_bad_collision)

@@ -2025,12 +2025,6 @@ conzept::concept_descriptor conzept::unsealed_concept_descriptor_table[] = {
     UC_none, meta_key_revorder},
    {"INTERLACE",                             concept_interlace,               0, l_c3x,
     UC_none},
-   {"INITIALLY",                             concept_meta,                  G+D, l_c3a,
-    UC_none, meta_key_initially},
-   {"FINALLY",                               concept_meta,                  G+D, l_c3a,
-    UC_none, meta_key_finally},
-   {"INITIALLY AND FINALLY",                 concept_meta,                  G+D, l_c3a,
-    UC_none, meta_key_initially_and_finally},
    {"ROUNDTRIP",                             concept_meta,                    D, l_c3x,
     UC_none, meta_key_roundtrip},
    {"FINISH",                                concept_meta,                    D, l_c1,
@@ -2063,6 +2057,16 @@ conzept::concept_descriptor conzept::unsealed_concept_descriptor_table[] = {
     UC_none, meta_key_skip_nth_part},
    {"DO THE @u PART",                        concept_meta_one_arg,          L+D, l_c1,
     UC_none, meta_key_nth_part_work},
+
+
+   {"INITIALLY",                             concept_meta,                  G+D, l_c3a,
+    UC_none, meta_key_nth_part_work, 1},
+   {"FINALLY",                               concept_meta,                  G+D, l_c3a,
+    UC_none, meta_key_finally},
+   {"INITIALLY AND FINALLY",                 concept_meta,                  G+D, l_c3a,
+    UC_none, meta_key_initially_and_finally},
+
+
    {"SECONDLY",                              concept_meta,                  L+D, l_c4,
     UC_none, meta_key_nth_part_work, 2},
    {"THIRDLY",                               concept_meta,                  L+D, l_c4,

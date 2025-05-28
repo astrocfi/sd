@@ -4375,7 +4375,7 @@ void merge_table::merge_setups(setup *ss,
    }
    else if (action == merge_c1_phantom_real)
       na = normalize_before_isolate_not_too_strict;
-   else if (action == merge_strict_matrix || action == merge_strict_matrix_but_colliding_merge)
+   else if (action == merge_strict_matrix || action == merge_for_own)
       na = normalize_strict_matrix;
    else if (action == merge_without_gaps)
       na = normalize_after_disconnected;
@@ -4463,7 +4463,7 @@ void merge_table::merge_setups(setup *ss,
    if (res2->kind == s_normal_concentric &&
        res2->inner.skind == nothing &&
        action != merge_strict_matrix &&
-       action != merge_strict_matrix_but_colliding_merge) {
+       action != merge_for_own) {
       res2->kind = res2->outer.skind;
       res2->rotation += res2->outer.srotation;
       canonicalize_rotation(res2);
@@ -4496,7 +4496,7 @@ void merge_table::merge_setups(setup *ss,
       uint32 rotmaskreject = (1<<r);
       if (action != merge_without_gaps) rotmaskreject |= 0x10;
       if (action == merge_without_gaps) rotmaskreject |= 0x400;
-      if (action == merge_strict_matrix || action == merge_strict_matrix_but_colliding_merge) rotmaskreject |= 0x20;
+      if (action == merge_strict_matrix || action == merge_for_own) rotmaskreject |= 0x20;
       if (!perp_2x4_1x8) rotmaskreject |= 0x40;
       if (!perp_2x4_ptp) rotmaskreject |= 0x200;
       if (action == merge_c1_phantom_real) rotmaskreject |= 0x80;
@@ -4564,7 +4564,7 @@ void merge_table::merge_setups(setup *ss,
 
          action_suggests_4x4 =
             action == merge_strict_matrix ||
-            action == merge_strict_matrix_but_colliding_merge ||
+            action == merge_for_own ||
             (action == merge_without_gaps &&
              ((mask1 != 0x33 && mask1 != 0xCC) || (mask2 != 0x33 && mask2 != 0xCC)));
 
@@ -4736,7 +4736,8 @@ void merge_table::merge_setups(setup *ss,
          goto final_getout;
       }
 
-      collision_collector CC(action >= merge_c1_phantom && !(the_map->swap_setups & 4));
+      bool what_do_we_put_in = action >= merge_c1_phantom && !(the_map->swap_setups & 4);
+      collision_collector CC(what_do_we_put_in ? collision_severity_ok : collision_severity_no);
       CC.note_prefilled_result(result);
 
       for (i=0; i<=attr::slimit(res1); i++) {
@@ -6765,7 +6766,7 @@ extern void inner_selective_move(
             ma = merge_strict_matrix;
       }
       else if (indicator == selective_key_own)
-         ma = merge_strict_matrix_but_colliding_merge;
+         ma = merge_for_own;
       else if (indicator == selective_key_mini_but_o)
          ma = merge_strict_matrix;
       else if (indicator == selective_key_dyp ||

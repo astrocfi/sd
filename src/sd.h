@@ -2601,7 +2601,7 @@ struct coordrec {
 // In particular, sdconc (search for "brute_force_merge" has such tests.
 enum merge_action {
    merge_strict_matrix,
-   merge_strict_matrix_but_colliding_merge,
+   merge_for_own,
    merge_c1_phantom,
    merge_c1_phantom_real_couples,
    merge_c1_phantom_real,
@@ -4134,7 +4134,6 @@ enum meta_key_kind {
    meta_key_random,
    meta_key_rev_random,   // Must follow meta_key_random.
    meta_key_piecewise,
-   meta_key_initially,
    meta_key_finish,
    meta_key_revorder,
    meta_key_roundtrip,
@@ -5071,6 +5070,12 @@ extern bool do_subcall_query(
 
 extern call_list_kind find_proper_call_list(setup *s);
 
+enum collision_severity {
+   collision_severity_no,
+   collision_severity_controversial,
+   collision_severity_ok
+};
+
 class fraction_info {
  public:
    // Normal simple constructor.
@@ -5213,8 +5218,8 @@ class collision_collector {
 public:
 
    // Simple constructor, takes argument saying whether collisions will be legal.
-   collision_collector(bool allow):
-      allow_collisions(allow),
+   collision_collector(collision_severity allow):
+      m_allow_collisions(allow),
       collision_mask(0),
       m_callflags1(CFLAG1_TAKE_RIGHT_HANDS),  // Default is that collisions are legal.
       assume_ptr((assumption_thing *) 0),
@@ -5228,7 +5233,7 @@ public:
 
    // Glorious constructor, takes all sorts of stuff.
    collision_collector(bool mirror, setup_command *cmd, const calldefn *callspec):
-      allow_collisions(true),
+      m_allow_collisions(collision_severity_ok),
       collision_mask(0),
       m_callflags1(callspec->callflags1),
       assume_ptr(&cmd->cmd_assume),
@@ -5257,7 +5262,7 @@ public:
    void fix_possible_collision(setup *result, merge_action action = merge_strict_matrix) THROW_DECL;
 
 private:
-   const bool allow_collisions;
+   const collision_severity m_allow_collisions;
    int collision_index;
    uint32 collision_mask;
    uint32 m_callflags1;
@@ -5265,6 +5270,9 @@ private:
    bool m_force_mirror_warn;
    bool m_doing_half_override;
    uint32 cmd_misc_flags;
+   // This is way too hairy.  In addition to its low 3 bits, the 0x100 bit is now in use,
+   // meaning "if a collision occurs, give a warning that it is controversial".  It is
+   // used when a collision occurs between the two groups doing an "own the anyone" operation.
    int m_collision_appears_illegal;
    uint32 result_mask;
 };

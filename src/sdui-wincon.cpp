@@ -647,8 +647,13 @@ extern void get_string(char *dest, int max)
          if (size > 0) {
             size--;
             rubout();
+            continue;
          }
-         continue;
+
+         // Backspace at beginning of line; may have special meaning.
+         dest[size++] = key;
+         dest[size] = '\0';
+         return;;
       }
 
       if (key > 128) continue;   // This was a function key press.

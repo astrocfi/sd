@@ -1,7 +1,7 @@
 
 
 
-Do this
+Do this in makefile, instead of texi2html
 .txi.html
 makeinfo --no_split --html -o $@ $<
 

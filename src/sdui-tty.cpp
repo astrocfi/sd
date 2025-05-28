@@ -187,14 +187,6 @@ static char alt1_names1[] = "        ";
 static char alt1_names2[] = "1P2R3O4C";
 
 
-static void get_string_input(const char prompt[], char dest[], int max)
-{
-   put_line(prompt);
-   get_string(dest, max);
-   current_text_line++;
-}
-
-
 
 /*
  * The main program calls this before doing anything else, so we can
@@ -1073,7 +1065,12 @@ popup_return iofull::get_popup_string(Cstring prompt1, Cstring prompt2, Cstring 
 
    char buffer[MAX_TEXT_LINE_LENGTH];
    sprintf(buffer, "%s ", final_inline_prompt);
-   get_string_input(buffer, dest, MAX_TEXT_LINE_LENGTH);
+   put_line(buffer);
+   get_string(dest, MAX_TEXT_LINE_LENGTH);
+   // Backspace at start of line declines the popup.
+   if (dest[0] == '\b') return POPUP_DECLINE;
+
+   current_text_line++;
    return dest[0] ? POPUP_ACCEPT_WITH_STRING : POPUP_ACCEPT;
 }
 
@@ -1246,7 +1243,9 @@ uint32 iofull::get_number_fields(int nnumbers, bool odd_number_only, bool forbid
       if (!user_match.valid || (howmanynumbers <= 0)) {
          for (;;) {
             char buffer[200];
-            get_string_input("How many? ", buffer, 200);
+            put_line("How many? ");
+            get_string(buffer, 200);
+            current_text_line++;
             if (buffer[0] == '!' || buffer[0] == '?') {
                writestuff("Type a number between 0 and 36");
                newline();

@@ -6229,8 +6229,7 @@ static void do_concept_meta(
    // are to be applied to the first call only.
    yescmd.cmd_misc3_flags |= CMD_MISC3__PUT_FRAC_ON_FIRST;
 
-   if (key != meta_key_initially && key != meta_key_finally &&
-       key != meta_key_initially_and_finally &&
+   if (key != meta_key_finally && key != meta_key_initially_and_finally &&
        key != meta_key_piecewise && key != meta_key_nth_part_work &&
        key != meta_key_first_frac_work &&
        key != meta_key_echo && key != meta_key_rev_echo)
@@ -6784,67 +6783,14 @@ static void do_concept_meta(
          goto final_fixup;
       }
    case meta_key_nth_part_work:
-      {
-         // This is "do the Nth part <concept>".
-         if (!corefracs.is_null()) {
-            fraction_info ff(ss->cmd, 0, true);    // Allow half parts.
-            // For now, we allow only m_do_half_of_last_part = "1/2".
-            if ((ff.m_do_half_of_last_part != 0 && ff.m_do_half_of_last_part != CMD_FRAC_HALF_VALUE) ||
-                ff.m_do_last_half_of_first_part != 0 ||
-                ff.m_instant_stop < 0)  // This is the error indication.
-               fail("Can't stack meta or fractional concepts this way.");
-
-            int S = shiftynum;          // Shift amount.  We defer this many parts of subject call.
-            int N = ff.m_fetch_total;   // Number of parts of call, same as number of things we will do.
-            int A = ff.m_fetch_index;   // Starting point, due to incoming fraction.
-            int Z = ff.m_highlimit;     // Ending point, due to incoming fraction.
-
-            if (S <= A || S > Z) {
-               // The part we are to apply the concept to is outside of the selected range.
-               // Just do whatever fractions were given.
-               result->cmd = nocmd;
-               goto rollover_and_finish_it;
-            }
-            else {
-               // The selected part is in the active region.  It might be the whole thing,
-               // or it might be at the beginning, or at the end, or somewhere else.  That is,
-               // there might or might not be something in the region before the selected part,
-               // then there is the selected part, then there might or might not be something
-               // in the region after the selected part.
-               if (S > A+1) {
-                  // The active region begins with something non-selected.
-                  result->cmd = nocmd;
-                  // Set the fractionalize field to do the first few parts of the call.
-                  result->cmd.cmd_fraction.set_to_null_with_flags(
-                     FRACS(CMD_FRAC_CODE_FROMTO,S-1,A));
-                  do_call_in_series_and_update_bits(result);
-               }
-
-               // Do the selected part, that is, the part that needs the concept.
-               result->cmd = yescmd;
-               result->cmd.cmd_fraction.set_to_null_with_flags(
-                  FRACS(CMD_FRAC_CODE_ONLY,S,0) | CMD_FRAC_BREAKING_UP);
-
-               // See if there is a remaining part.
-               if (S < Z) {
-                  // There is, so do the selected part and then set up the remaining part.
-                  do_call_in_series_and_update_bits(result);
-                  result->cmd = nocmd;
-                  result->cmd.cmd_assume.assumption = cr_none;  // Assumptions don't carry through.
-                  result->cmd.cmd_fraction.set_to_null_with_flags(
-                      FRACS(CMD_FRAC_CODE_FROMTOREV, S+1, N-Z) | CMD_FRAC_BREAKING_UP);
-               }
-
-               if (ff.m_do_half_of_last_part == CMD_FRAC_HALF_VALUE)
-                  result->cmd.cmd_fraction.fraction |= CMD_FRAC_DEFER_HALF_OF_LAST;
-               else if (ff.m_do_half_of_last_part != 0)
-                  fail("Can't stack meta or fractional concepts this way.");  // Needs more thought.
-
-               goto rollover_and_finish_it;
-            }
-         }
-
-         // Normal case; no incoming fractions.
+      if (corefracs.is_null_with_exact_flags(
+         FRACS(CMD_FRAC_CODE_ONLY,shiftynum,0) | CMD_FRAC_BREAKING_UP)) {
+         // We are being asked to do just the selected part, because of another
+         // "initially"/"secondly", etc.  Just pass it through.
+         result->cmd = yescmd;
+      }
+      else if (corefracs.is_null()) {
+         // Simple case; no incoming fractions.
          // Do the initial part, if any, without the concept.
 
          if (shiftynum > 1) {
@@ -6856,126 +6802,37 @@ static void do_concept_meta(
          }
 
          // Do the part of the call that needs the concept.
+
          result->cmd = yescmd;
          result->cmd.cmd_fraction.set_to_null_with_flags(
             FRACS(CMD_FRAC_CODE_ONLY,shiftynum,0) | CMD_FRAC_BREAKING_UP);
+         result->result_flags.misc |= RESULTFLAG__EXPIRATION_ENAB;
+
          do_call_in_series_and_update_bits(result);
 
-         int did_last = 0;
-         if (result->result_flags.misc & RESULTFLAG__PARTS_ARE_KNOWN)
-            did_last = result->result_flags.misc & RESULTFLAG__DID_LAST_PART;
+         // And the rest of the call without it.
+         // Try to figure out whether there is more.
+
+         if (shiftynum != 1 &&   // Not sure why this shiftynum test is required, but it is.
+             (result->result_flags.misc & RESULTFLAG__PARTS_ARE_KNOWN) &&
+             (result->result_flags.misc & RESULTFLAG__DID_LAST_PART))
+            goto get_out;
 
          // If the parts were not known, go ahead anyway, and hope for the best.
          // It is very likely that the code below will respond correctly
          // to being told to do the rest of the call even if there isn't
          // any more.  It's only for really pathological stuff like
-         // "thirdly use hinge, 3/4 crazy mix" which makes no sense anyway,
+         // "thirdly use hinge, 3/4 crazy mix", which makes no sense anyway,
          // that it would lose.
          // We need this for "secondly use acey deucey in swing the fractions".
-
-         // Do the final part, if there is more.
-         if (!did_last) {
-            result->cmd = ss->cmd;
-            result->cmd.parseptr = result_of_skip;      // Skip over the concept.
-            result->cmd.cmd_fraction.set_to_null_with_flags(
-               FRACS(CMD_FRAC_CODE_FROMTOREV,shiftynum+1,0));
-            goto finish_it;
-         }
-
-         goto get_out;
-      }
-   case meta_key_initially:
-
-      // This is "initially": we select the first part with the concept,
-      // and then the rest of the call without the concept.
-
-      if (corefracs.is_null_with_exact_flags(
-             FRACS(CMD_FRAC_CODE_ONLY,1,0) | CMD_FRAC_BREAKING_UP)) {
-         // We are being asked to do just the first part, because of another
-         // "initially".  Just pass it through.
-
-         result->cmd = yescmd;
-      }
-      else if (
-         // Being asked to do all but the first part.
-         corefracs.is_null_with_exact_flags(
-            FRACS(CMD_FRAC_CODE_FROMTOREV,2,0) | CMD_FRAC_BREAKING_UP)
-         ||
-         // Being asked to do some specific part other than the first.
-         (corefracs.is_null_with_masked_flags(
-            ~CMD_FRAC_PART_MASK,
-            CMD_FRAC_BREAKING_UP | CMD_FRAC_CODE_ONLY) &&
-          nfield >= 2)
-         ||
-         // Being asked to do only the last part -- it's a safe bet that
-         // that isn't the first part.
-         corefracs.is_null_with_exact_flags(
-            FRACS(CMD_FRAC_CODE_ONLYREV,1,0) | CMD_FRAC_BREAKING_UP)) {
-
-         // In any case, just pass it through.
-         result->cmd.parseptr = result_of_skip;
-      }
-      else if (corefracs.is_null_with_exact_flags(
-                  FRACS(CMD_FRAC_CODE_FROMTOREV,1,1) | CMD_FRAC_BREAKING_UP)) {
-
-         // We are being asked to do all but the last part.  Do the first part
-         // with the concept, then all but first and last without it.
-
-         result->cmd = yescmd;
-         result->cmd.cmd_fraction.set_to_null_with_flags(
-            FRACS(CMD_FRAC_CODE_ONLY,1,0) | CMD_FRAC_BREAKING_UP);
-
-         do_call_in_series_and_update_bits(result);
-
-         result->cmd = nocmd;
-         // Assumptions don't carry through.
-         result->cmd.cmd_assume.assumption = cr_none;
-         result->cmd.cmd_fraction.set_to_null_with_flags(
-            FRACS(CMD_FRAC_CODE_FROMTOREV,2,1) | CMD_FRAC_BREAKING_UP);
-      }
-      else if (corefracs.is_null_with_exact_flags(
-                  FRACS(CMD_FRAC_CODE_FROMTOREV,2,1) | CMD_FRAC_BREAKING_UP)) {
-
-         // We are being asked to do just the inner parts, presumably because of an
-         // "initially" and "finally".  Just pass it through.
-         result->cmd = nocmd;
-      }
-      else if (corefracs.is_null_with_masked_flags(
-                  ~CMD_FRAC_PART_MASK,
-                  CMD_FRAC_BREAKING_UP | CMD_FRAC_CODE_FROMTO)) {
-
-         // We are being asked to do an initial subset that includes the first part.
-         // Do the first part, then do the rest of the subset.
-
-         result->cmd = yescmd;
-         result->cmd.cmd_fraction.set_to_null_with_flags(
-            FRACS(CMD_FRAC_CODE_ONLY,1,0) | CMD_FRAC_BREAKING_UP);
-
-         // The first part, with the concept.
-         do_call_in_series_and_update_bits(result);
-
-         result->cmd = nocmd;
-         result->cmd.cmd_assume.assumption = cr_none;   // Assumptions don't carry through.
-         // nfield = incoming end point; skip one at start.
-         result->cmd.cmd_fraction.set_to_null_with_flags(
-            FRACS(CMD_FRAC_CODE_FROMTO,nfield,1) | CMD_FRAC_BREAKING_UP);
-      }
-      else if (corefracs.is_null()) {
-         // Do the first part with the concept.
-         result->cmd = yescmd;
-         result->cmd.cmd_fraction.set_to_null_with_flags(
-            FRACS(CMD_FRAC_CODE_ONLY,1,0) | CMD_FRAC_BREAKING_UP);
-         result->result_flags.misc |= RESULTFLAG__EXPIRATION_ENAB;
-         do_call_in_series_and_update_bits(result);
-
-         // And the rest of the call without it.
 
          result->cmd = nocmd;
          result->cmd.cmd_assume.assumption = cr_none;  // Assumptions don't carry through.
          result->cmd.cmd_fraction.set_to_null_with_flags(
-            FRACS(CMD_FRAC_CODE_FROMTOREV,2,0) | CMD_FRAC_BREAKING_UP);
+            FRACS(CMD_FRAC_CODE_FROMTOREV,shiftynum+1,0) | CMD_FRAC_BREAKING_UP);
       }
-      else {
+      else if (shiftynum != 1) {
+         // This is "do the Nth part <concept>".
          fraction_info ff(ss->cmd, 0, true);    // Allow half parts.
          // For now, we allow only m_do_half_of_last_part = "1/2".
          if ((ff.m_do_half_of_last_part != 0 && ff.m_do_half_of_last_part != CMD_FRAC_HALF_VALUE) ||
@@ -6983,38 +6840,149 @@ static void do_concept_meta(
              ff.m_instant_stop < 0)  // This is the error indication.
             fail("Can't stack meta or fractional concepts this way.");
 
+         int S = shiftynum;          // Shift amount.  We defer this many parts of subject call.
          int N = ff.m_fetch_total;   // Number of parts of call, same as number of things we will do.
          int A = ff.m_fetch_index;   // Starting point, due to incoming fraction.
          int Z = ff.m_highlimit;     // Ending point, due to incoming fraction.
 
-         if (A == 0) {   // Does the given fraction include the first part?
+         if (S <= A || S > Z) {
+            // The part we are to apply the concept to is outside of the selected range.
+            // Just do whatever fractions were given.
+            result->cmd = nocmd;
+            goto rollover_and_finish_it;
+         }
+         else {
+            // The selected part is in the active region.  It might be the whole thing,
+            // or it might be at the beginning, or at the end, or somewhere else.  That is,
+            // there might or might not be something in the region before the selected part,
+            // then there is the selected part, then there might or might not be something
+            // in the region after the selected part.
+            if (S > A+1) {
+               // The active region begins with something non-selected.
+               result->cmd = nocmd;
+               // Set the fractionalize field to do the first few parts of the call.
+               result->cmd.cmd_fraction.set_to_null_with_flags(
+                                                               FRACS(CMD_FRAC_CODE_FROMTO,S-1,A));
+               do_call_in_series_and_update_bits(result);
+            }
 
+            // Do the selected part, that is, the part that needs the concept.
+            result->cmd = yescmd;
+            result->cmd.cmd_fraction.set_to_null_with_flags(
+               FRACS(CMD_FRAC_CODE_ONLY,S,0) | CMD_FRAC_BREAKING_UP);
 
-            if (ff.m_do_half_of_last_part != 0)
-               fail("Can't stack meta or fractional concepts this way.");  // Needs more thought.  Probably quite simple.
+            // See if there is a remaining part.
+            if (S < Z) {
+               // There is, so do the selected part and then set up the remaining part.
+               do_call_in_series_and_update_bits(result);
+               result->cmd = nocmd;
+               result->cmd.cmd_assume.assumption = cr_none;  // Assumptions don't carry through.
+               result->cmd.cmd_fraction.set_to_null_with_flags(
+                  FRACS(CMD_FRAC_CODE_FROMTOREV, S+1, N-Z) | CMD_FRAC_BREAKING_UP);
+            }
 
+            if (ff.m_do_half_of_last_part == CMD_FRAC_HALF_VALUE)
+               result->cmd.cmd_fraction.fraction |= CMD_FRAC_DEFER_HALF_OF_LAST;
+            else if (ff.m_do_half_of_last_part != 0)
+               fail("Can't stack meta or fractional concepts this way.");  // Needs more thought.
 
-            // Do the first part, with the concept.
+            goto rollover_and_finish_it;
+         }
+      }
+      else {
+         if (
+            // Being asked to do all but the first part.
+            corefracs.is_null_with_exact_flags(FRACS(CMD_FRAC_CODE_FROMTOREV,2,0) | CMD_FRAC_BREAKING_UP) ||
+            // Being asked to do some specific part other than the first.
+            (corefracs.is_null_with_masked_flags(~CMD_FRAC_PART_MASK, CMD_FRAC_BREAKING_UP | CMD_FRAC_CODE_ONLY) &&
+             nfield >= 2) ||
+            // Being asked to do only the last part -- it's a safe bet that that isn't the first part.
+            corefracs.is_null_with_exact_flags(FRACS(CMD_FRAC_CODE_ONLYREV,1,0) | CMD_FRAC_BREAKING_UP)) {
+
+            // In any case, just pass it through.
+            result->cmd.parseptr = result_of_skip;
+         }
+         else if (corefracs.is_null_with_exact_flags(FRACS(CMD_FRAC_CODE_FROMTOREV,1,1) | CMD_FRAC_BREAKING_UP)) {
+
+            // We are being asked to do all but the last part.  Do the first part
+            // with the concept, then all but first and last without it.
+
             result->cmd = yescmd;
             result->cmd.cmd_fraction.set_to_null_with_flags(
                FRACS(CMD_FRAC_CODE_ONLY,1,0) | CMD_FRAC_BREAKING_UP);
+
             do_call_in_series_and_update_bits(result);
 
-            // Do the curtailed rest of the call, with the concept.
+            result->cmd = nocmd;
+            // Assumptions don't carry through.
+            result->cmd.cmd_assume.assumption = cr_none;
+            result->cmd.cmd_fraction.set_to_null_with_flags(
+               FRACS(CMD_FRAC_CODE_FROMTOREV,2,1) | CMD_FRAC_BREAKING_UP);
+         }
+         else if (corefracs.is_null_with_exact_flags(
+            FRACS(CMD_FRAC_CODE_FROMTOREV,2,1) | CMD_FRAC_BREAKING_UP)) {
+
+            // We are being asked to do just the inner parts, presumably because of an
+            // "initially" and "finally".  Just pass it through.
+            result->cmd = nocmd;
+         }
+         else if (corefracs.is_null_with_masked_flags(~CMD_FRAC_PART_MASK, CMD_FRAC_BREAKING_UP | CMD_FRAC_CODE_FROMTO)) {
+
+            // We are being asked to do an initial subset that includes the first part.
+            // Do the first part, then do the rest of the subset.
+
+            result->cmd = yescmd;
+            result->cmd.cmd_fraction.set_to_null_with_flags(
+               FRACS(CMD_FRAC_CODE_ONLY,1,0) | CMD_FRAC_BREAKING_UP);
+
+            // The first part, with the concept.
+            do_call_in_series_and_update_bits(result);
+
             result->cmd = nocmd;
             result->cmd.cmd_assume.assumption = cr_none;   // Assumptions don't carry through.
+            // nfield = incoming end point; skip one at start.
             result->cmd.cmd_fraction.set_to_null_with_flags(
-               FRACS(CMD_FRAC_CODE_FROMTO, Z, 1) | CMD_FRAC_BREAKING_UP);
+               FRACS(CMD_FRAC_CODE_FROMTO,nfield,1) | CMD_FRAC_BREAKING_UP);
          }
          else {
-            // The fraction excludes the first part, so "initially" doesn't make much sense.  Whatever.
-            result->cmd = nocmd;
-            result->cmd.cmd_assume.assumption = cr_none;  // Assumptions don't carry through.
-            result->cmd.cmd_fraction.set_to_null_with_flags(
-               FRACS(CMD_FRAC_CODE_FROMTOREV, A+1, N-Z) | CMD_FRAC_BREAKING_UP);
+            fraction_info ff(ss->cmd, 0, true);    // Allow half parts.
+            // For now, we allow only m_do_half_of_last_part = "1/2".
+            if ((ff.m_do_half_of_last_part != 0 && ff.m_do_half_of_last_part != CMD_FRAC_HALF_VALUE) ||
+                ff.m_do_last_half_of_first_part != 0 ||
+                ff.m_instant_stop < 0)  // This is the error indication.
+               fail("Can't stack meta or fractional concepts this way.");
 
-            if (ff.m_do_half_of_last_part != 0)
-               result->cmd.cmd_fraction.fraction |= CMD_FRAC_DEFER_HALF_OF_LAST;
+            int N = ff.m_fetch_total;   // Number of parts of call, same as number of things we will do.
+            int A = ff.m_fetch_index;   // Starting point, due to incoming fraction.
+            int Z = ff.m_highlimit;     // Ending point, due to incoming fraction.
+
+            if (A == 0) {   // Does the given fraction include the first part?
+               if (ff.m_do_half_of_last_part != 0)
+                  fail("Can't stack meta or fractional concepts this way.");  // Needs more thought; probably quite simple.
+
+
+               // Do the first part, with the concept.
+               result->cmd = yescmd;
+               result->cmd.cmd_fraction.set_to_null_with_flags(
+                  FRACS(CMD_FRAC_CODE_ONLY,1,0) | CMD_FRAC_BREAKING_UP);
+               do_call_in_series_and_update_bits(result);
+
+               // Do the curtailed rest of the call, with the concept.
+               result->cmd = nocmd;
+               result->cmd.cmd_assume.assumption = cr_none;   // Assumptions don't carry through.
+               result->cmd.cmd_fraction.set_to_null_with_flags(
+                  FRACS(CMD_FRAC_CODE_FROMTO, Z, 1) | CMD_FRAC_BREAKING_UP);
+            }
+            else {
+               // The fraction excludes the first part, so "initially" doesn't make much sense.  Whatever.
+               result->cmd = nocmd;
+               result->cmd.cmd_assume.assumption = cr_none;  // Assumptions don't carry through.
+               result->cmd.cmd_fraction.set_to_null_with_flags(
+                  FRACS(CMD_FRAC_CODE_FROMTOREV, A+1, N-Z) | CMD_FRAC_BREAKING_UP);
+
+               if (ff.m_do_half_of_last_part != 0)
+                  result->cmd.cmd_fraction.fraction |= CMD_FRAC_DEFER_HALF_OF_LAST;
+            }
          }
       }
 
