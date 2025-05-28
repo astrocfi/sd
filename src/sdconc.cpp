@@ -1198,17 +1198,33 @@ extern void normalize_concentric(
    }
 
    if (table_synthesizer == schema_conc_o) {
-      if (outers->kind != s4x4)
-         fail("Outsides are not on 'O' spots.");
+      if (outers->kind == s4x4) {
+         if (!(outers->people[5].id1 | outers->people[6].id1 |
+               outers->people[13].id1 | outers->people[14].id1))
+            outer_elongation = 1;
+         else if (!(outers->people[1].id1 | outers->people[2].id1 |
+                    outers->people[9].id1 | outers->people[10].id1))
+            outer_elongation = 2;
+         else
+            outer_elongation = 3;
+      }
+      else if (outers->kind == s2x4) {
+         if (outers->people[1].id1 | outers->people[2].id1 |
+             outers->people[5].id1 | outers->people[6].id1)
+            fail("Outsides are not on 'O' spots.");
+         static const expand::thing compress_2x4_2x2 = {{0, 3, 4, 7}, s2x2, s2x4, 0};
+         expand::compress_setup(compress_2x4_2x2, outers);
+         outer_elongation = 2 - (outers->rotation & 1);
+         table_synthesizer = schema_concentric;
+         goto compute_rotation_again;
+      }
 
-      if (!(outers->people[5].id1 | outers->people[6].id1 |
-            outers->people[13].id1 | outers->people[14].id1))
-         outer_elongation = 1;
-      else if (!(outers->people[1].id1 | outers->people[2].id1 |
-                 outers->people[9].id1 | outers->people[10].id1))
-         outer_elongation = 2;
-      else
-         outer_elongation = 3;
+      else if (attr::klimit(outers->kind) < 4)
+         table_synthesizer = schema_concentric;  // Probably goofing around with an "as
+                                                 // couples" kind of thing; just let it pass.
+      else {
+         fail("Outsides are not on 'O' spots.");
+      }
    }
 
    switch (synthesizer) {
@@ -2250,11 +2266,13 @@ static calldef_schema concentrify(
    else if (analyzer_result == schema_in_out_triple_zcom || analyzer_result == schema_in_out_center_triple_z) {
       if (impose_z_on_centers)
          analyzer_result = schema_concentric_zs;
-      else if (ss->kind != s3x4 && ss->kind != s4x5/* && ss->kind != s2x5*/ && ss->kind != sd3x4)
+      else if (ss->kind != s3x4 && ss->kind != s4x5 && ss->kind != sd3x4)
          analyzer_result = schema_in_out_triple;
    }
    else if (analyzer_result == schema_checkpoint_spots)
       analyzer_result = schema_checkpoint;
+   else if (analyzer_result == schema_conc_o && attr::slimit(ss) == 3)
+      analyzer_result = schema_single_concentric;
 
    if (ss->kind == s_2x1dmd && analyzer_result == schema_concentric_4_2 && enable_3x1_warn)
       warn(warn__centers_are_diamond);
@@ -4137,6 +4155,7 @@ extern void concentric_move(
        analyzer == schema_concentric_6p_or_normal ||
        analyzer == schema_in_out_triple ||
        analyzer == schema_concentric_zs ||
+       analyzer == schema_conc_o ||
        analyzer == schema_sgl_in_out_triple ||
        analyzer == schema_3x3_in_out_triple ||
        analyzer == schema_4x4_in_out_triple ||

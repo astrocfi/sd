@@ -10767,7 +10767,7 @@ const schema_attr schema_attrs[] = {
     schema_nothing},                     // schema_conc_bar12
    {0,
     schema_nothing},                     // schema_conc_bar16
-   {SCA_SNAGOK | SCA_DETOUR | SCA_INV_SUP_ELWARN,
+   {SCA_CENTRALCONC | SCA_SNAGOK | SCA_DETOUR | SCA_INV_SUP_ELWARN,
     schema_nothing},                     // schema_conc_o
    {0,
     schema_nothing},                     // schema_intermediate_diamond

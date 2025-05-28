@@ -55,7 +55,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "39.51"
+version "39.52"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve dont_raise_overcast
@@ -65,6 +65,7 @@ call "_nothing, and dont roll" dontshow tag nullcall_noroll
             dont_use_in_resolve
    nulldefine_noroll
 
+// No longer used, kept around in case something comes up.
 call "_nothing, other elongation" dontshow tag nullcall_other_elong
             dont_use_in_resolve dont_raise_overcast
    nulldefine_other_elong
@@ -18310,30 +18311,33 @@ call "square the bases plus @9" c4
    seq splitsq2plusn [inherit_left allow_forced_mod]
    seq trade_by [inherit_left allow_forced_mod]
 
-// This is just 1/4 out in the box, hoping that people are leads.
+// This is just 1/4 out restricted to ends of lines.
 call "_ends regroup 1" dontshow tag eregroup1
+   setup 4x4 4x4
+      array [0 CR1E CR2E 0 0 0 0 0 0 AL9W AL10W 0 0 0 0 0]
    setup 1x2 1x2
       array [AL0W CR1E]
-   setup 2x2 2x2 qualifier out in_or_out
-      array [AL0W CR1E 0 0]
-   setup 2x2 2x2 restriction unusual alwaysfail
-      array [AL0W CR1E CR2E AL3W]
+
+// This is just trade along the edge of the 4x4
+call "_ends regroup 2" dontshow tag eregroup2
+   setup 4x4 4x4
+      array [0 0 0 0 0 AL6S CR5S 0 0 0 0 0 0 CR14S AL13S 0]
 
 call "_ends regroup" dontshow tag eregroup
             visible_fractions
    seq eregroup1 []
-   seq trade []
-   seq nullcall_other_elong []
+   seq eregroup2 []
+   seq one_o_circ_for_frac []
 
 call "regroup" c1
             visible_fractions diamond_is_legal funny_is_inherited
-   conc trade_and_roll_w_tbone [inherit_diamond inherit_funny]
-        eregroup [inherit_diamond inherit_funny conc_demand_lines endscando]
+   conc_o trade_and_roll_w_tbone [inherit_diamond inherit_funny]
+          eregroup [inherit_diamond inherit_funny conc_demand_lines endscando]
 
 call "regroup but @m" c3
             visible_fractions diamond_is_legal funny_is_inherited
-   conc trade_w_tbone_but [inherit_diamond inherit_funny]
-        eregroup [inherit_diamond inherit_funny conc_demand_lines endscando]
+   conc_o trade_w_tbone_but [inherit_diamond inherit_funny]
+          eregroup [inherit_diamond inherit_funny conc_demand_lines endscando]
 
 call "_trade, must be leads" dontshow tag trade_demand_leads
    setup 2x2 2x2
@@ -27124,6 +27128,10 @@ call "_one o circ, for fractions" dontshow tag one_o_circ_for_frac
    simple_funny
    setup 4x4 4x4
       array [0 ZM14N ZM1N 0 0 ZM2N ZM9N 0 0 ZM10N ZM13N 0 0 CR14S AL13S 0]
+   setup 2x4 4x4
+      array [ZM13N 0 0 ZM14N ZM1N 0 0 ZM10N]
+   setup 4x2 4x4
+      array [ZM13N 0 0 CR2S AL1S 0 0 ZM6N]
             alternate_definition [half] c2
    setup 4x4 galaxy
       array [0 0 ZM4N 0 0 0 0 0 0 ZM0N 0 0 0 CR2E AL2W 0]
