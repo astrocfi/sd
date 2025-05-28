@@ -1681,7 +1681,7 @@ restriction_tester::restr_initializer restriction_tester::restr_init_table0[] = 
     {0}, {0}, {0}, false, chk_wave},
    {s1x8, cr_couples_only, 2, {0, 2, 4, 6, 1, 3, 5, 7},
     {4}, {0}, {0}, true, chk_groups},
-   {s1x8, cr_miniwaves, 1, {0, 2, 4, 6, 1, 3, 5, 7},
+   {s1x8, cr_miniwaves, 1, {0, 3, 5, 6, 1, 2, 4, 7},
     {4}, {0}, {0}, true, chk_anti_groups},
    {s1x3, cr_1fl_only, 3, {0, 1, 2},
     {1}, {0}, {0}, true, chk_groups},
@@ -1701,7 +1701,7 @@ restriction_tester::restr_initializer restriction_tester::restr_init_table0[] = 
     {1}, {0}, {0}, true, chk_groups},
    {s1x4, cr_couples_only, 2, {0, 2, 1, 3},
     {2}, {0}, {0}, true, chk_groups},
-   {s1x4, cr_miniwaves, 1, {0, 2, 1, 3},
+   {s1x4, cr_miniwaves, 1, {0, 3, 1, 2},
     {2}, {0}, {0}, true, chk_anti_groups},
    {s1x4, cr_magic_only, 4, {0, 1, 2, 3},
     {0}, {0}, {0}, true, chk_wave},
@@ -1745,7 +1745,7 @@ restriction_tester::restr_initializer restriction_tester::restr_init_table0[] = 
     {0}, {0}, {0}, true, chk_wave},
    {s1x16, cr_couples_only, 2, {0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15},
     {8}, {0}, {0}, true, chk_groups},
-   {s1x16, cr_miniwaves, 1, {0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15},
+   {s1x16, cr_miniwaves, 1, {0, 2, 4, 6, 9, 11, 13, 15, 1, 3, 5, 7, 8, 10, 12, 14},
     {8}, {0}, {0}, true, chk_anti_groups},
    {s2x3, cr_all_facing_same, 6, {0, 1, 2, 3, 4, 5},
     {1}, {0}, {0}, true, chk_groups},
@@ -1755,7 +1755,7 @@ restriction_tester::restr_initializer restriction_tester::restr_init_table0[] = 
     {0}, {0}, {0}, true, chk_wave},
    {s2x4, cr_2fl_only, 8, {0, 3, 1, 2, 6, 5, 7, 4},
     {0}, {0}, {0}, true, chk_wave},
-   {s2x4, cr_2fl_per_1x4, 2, {0, 1, 4, 5, 2, 3, 6, 7},
+   {s2x4, cr_2fl_per_1x4, 2, {0, 1, 6, 7, 2, 3, 4, 5},
     {2}, {0}, {0}, false, chk_anti_groups},
    {s3x4, cr_ctr_2fl_only, 4, {10, 4, 11, 5},
     {0}, {0}, {0}, true, chk_wave},
@@ -1783,7 +1783,7 @@ restriction_tester::restr_initializer restriction_tester::restr_init_table0[] = 
     {4}, {0}, {0}, true, chk_groups},
    {s3x4, cr_couples_only, 2, {0, 2, 4, 6, 8, 10, 1, 3, 5, 7, 9, 11},
     {6}, {0}, {0}, true, chk_groups},
-   {s2x4, cr_miniwaves, 1, {0, 2, 4, 6, 1, 3, 5, 7},
+   {s2x4, cr_miniwaves, 1, {0, 2, 5, 7, 1, 3, 4, 6},
     {4}, {0}, {0}, true, chk_anti_groups},
    {s_qtag, cr_wave_only, 4, {6, 7, 3, 2},
     {0}, {0}, {0}, true, chk_wave},
@@ -1797,7 +1797,7 @@ restriction_tester::restr_initializer restriction_tester::restr_init_table0[] = 
     {0}, {0}, {0}, true, chk_wave},
    {s_ptpd, cr_dmd_intlk, 4, {0, 6, 2, 4},
     {0}, {0}, {0}, true, chk_wave},
-   {s_qtag, cr_miniwaves, 1, {6, 2, 7, 3},
+   {s_qtag, cr_miniwaves, 1, {6, 3, 7, 2},
     {2}, {0}, {0}, true, chk_anti_groups},
    {s_qtag, cr_couples_only, 2, {6, 2, 7, 3},
     {2}, {0}, {0}, true, chk_groups},
@@ -1805,7 +1805,7 @@ restriction_tester::restr_initializer restriction_tester::restr_init_table0[] = 
     {8}, {0}, {0}, true, chk_wave},
    {s_galaxy, cr_wave_only, 4, {1, 3, 7, 5},
     {0}, {0}, {0}, true, chk_wave},
-   {s_bone, cr_miniwaves, 1, {6, 2, 7, 3},
+   {s_bone, cr_miniwaves, 1, {6, 3, 7, 2},
     {2}, {0}, {0}, true, chk_anti_groups},
    {s_bone, cr_couples_only, 2, {6, 2, 7, 3},
     {2}, {0}, {0}, true, chk_groups},
@@ -1823,7 +1823,7 @@ restriction_tester::restr_initializer restriction_tester::restr_init_table0[] = 
     {4}, {0}, {0}, false, chk_groups_cpls_in_tbone_either_way},
    {s2x8, cr_couples_only, 2, {0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15},
     {8}, {0}, {0}, true, chk_groups},
-   {s2x8, cr_miniwaves, 1, {0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15},
+   {s2x8, cr_miniwaves, 1, {0, 2, 4, 6, 9, 11, 13, 15, 1, 3, 5, 7, 8, 10, 12, 14},
     {8}, {0}, {0}, false, chk_anti_groups},
    {s2x6, cr_wave_only, 12, {0, 1, 2, 3, 4, 5, 7, 6, 9, 8, 11, 10},
     {0}, {0}, {0}, true, chk_wave},
@@ -1867,7 +1867,7 @@ restriction_tester::restr_initializer restriction_tester::restr_init_table0[] = 
     /* NOTE THE 4 --> */{4}, {0}, {0}, true, chk_wave},
    {s_thar, cr_1fl_only, 8, {0, 3, 1, 2, 6, 5, 7, 4},
     {0}, {0}, {0}, false, chk_wave},
-   {s_thar, cr_miniwaves, 1, {0, 2, 4, 6, 1, 3, 5, 7},
+   {s_thar, cr_miniwaves, 1, {0, 2, 5, 7, 1, 3, 4, 6},
     {4}, {0}, {0}, false,  chk_anti_groups},
    {s_thar, cr_magic_only, 8, {0, 1, 3, 2, 5, 4, 6, 7},
     /* NOTE THE 4 --> */{4}, {0}, {0}, true, chk_wave},
@@ -2631,7 +2631,6 @@ restriction_test_result verify_restriction(
       goto good;
    case restriction_tester::chk_anti_groups:
       limit = rr->map2[0];
-
       map1item = rr->map1;
       szlim = rr->size*limit;
 
@@ -2647,6 +2646,9 @@ restriction_test_result verify_restriction(
          }
 
          if ((qa0 & qa1 & 2) != 0) goto bad;
+
+         if ((((tt.assump_both & qa1) | ((tt.assump_both<<1) & qa0)) & 2) != 0)
+            goto bad;
 
          if (rr->ok_for_assume) {
             if (tt.assump_col == 1) {
@@ -3941,20 +3943,27 @@ extern callarray *assoc(
       case cr_dmd_pts_1f:
          goto check_tt;
       case cr_dmd_ctrs_mwv:
-         switch (ssA) {
-         case cr_dmd_ctrs_mwv:
-            if (((tt.assump_both+1) & 2) && ssB == tt.assump_both)
-               goto good;
-            break;
-         case cr_jleft: case cr_jright: case cr_ijleft: case cr_ijright:
-            if ((tt.assump_both+1) & 2) {
-               if ((ssB ^ tt.assump_both) == 3)
+         if ((tt.assump_both+1) & 2) {
+            switch (ssA) {
+            case cr_dmd_ctrs_mwv:
+               if (ssB == tt.assump_both)
                   goto good;
-               else if ((ssB ^ tt.assump_both) == 0)
+               break;
+            case cr_jright: case cr_ijright:
+               if (ssB == (tt.assump_both ^ 3))
                   goto bad;
+               else if (ssB == tt.assump_both)
+                  goto good;
+               break;
+            case cr_jleft: case cr_ijleft:
+               if (ssB == (tt.assump_both ^ 3))
+                  goto good;
+               else if (ssB == tt.assump_both)
+                  goto bad;
+               break;
             }
-            break;
          }
+
          goto check_tt;
       case cr_qtag_like:
       case cr_qtag_like_anisotropic:

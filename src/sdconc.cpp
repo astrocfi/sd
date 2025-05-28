@@ -1764,7 +1764,7 @@ static calldef_schema concentrify(
       break;
    case schema_concentric_6p_or_sgltogether:
       if (attr::slimit(ss) == 5)
-         analyzer_result = schema_concentric_6p;
+         analyzer_result = schema_concentric_2_4;
       else if (ss->kind == s1x8 || ss->kind == s_ptpd ||
                attr::slimit(ss) == 3)
          analyzer_result = schema_single_concentric;

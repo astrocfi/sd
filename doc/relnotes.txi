@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 38.43
-@set title2 Database version = 38.43 format = 306
+@set title1 RELEASE NOTES FOR VERSION 38.44
+@set title2 Database version = 38.44 format = 306
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 38.44::
 * 38.43::
 * 38.42::
 * 38.41::
@@ -82,7 +83,7 @@ The files @file{relnotes03.txi} and @file{relnotes98.txi} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 38.43, Top, (dir)
+@node Intro, 38.44, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -93,14 +94,22 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2011 William B. Ackerman
 @sp 3
 @menu
-* 38.43::               Changes in the current version
+* 38.44::               Changes in the current version
 @end menu
 
 @c ************
-@node 38.43, 38.42, Intro, Top
+@node 38.44, 38.43, Intro, Top
+@unnumberedsec Version 38.44 changes
+
+A number of bugs were fixed.  These include the "release" bug, the "phantom clean sweep" bug, the
+"phantom single scoot and trade" bug, and the "tandem twosome turnstyle" bug.
+
+@c ************
+@node 38.43, 38.42, 38.44, Top
 @unnumberedsec Version 38.43 changes
 
-A number of bugs were fixed.
+A number of bugs were fixed.  These include the "diamond siamese breakdown" bug and the "phantom long trip" bug.
+Sd handles @strong{stingy} and @strong{generous} better.
 
 @c ************
 @node 38.42, 38.41, 38.43, Top

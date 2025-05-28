@@ -5815,11 +5815,19 @@ static void do_concept_ferris(
 
       static const expand::thing mapr1 = {{10, 2, 3, 5, 4,  8, 9, 11}, s_qtag, s3x4, 0};
       static const expand::thing mapr2 = {{1,  4, 6, 5, 7, 10, 0, 11}, s_qtag, s3x4, 0};
-      static const expand::thing mapr3 = {{1, 10, 0, 5, 7,  4, 6, 11}, s_qtag, s3x4, 0};
-      static const expand::thing mapr4 = {{4,  2, 9, 5,10,  8, 3, 11}, s_qtag, s3x4, 0};
+      static const expand::thing mapr4 = {{1, 10, 0, 5, 7,  4, 6, 11}, s_qtag, s3x4, 0};
+      static const expand::thing mapr8 = {{4,  2, 9, 5,10,  8, 3, 11}, s_qtag, s3x4, 0};
+      static const expand::thing mapr10 = {{10, 1, 0, 11,  4,  7, 6, 5}, s_hrglass, s_hsqtag, 1};
+      static const expand::thing mapr20 = {{2,  4, 9, 11,  8, 10, 3, 5}, s_hrglass, s_hsqtag, 1};
+      static const expand::thing mapr40 = {{2, 10, 3, 11,  8,  4, 9, 5}, s_hrglass, s_hsqtag, 1};
+      static const expand::thing mapr80 = {{4,  1, 6, 11, 10,  7, 0, 5}, s_hrglass, s_hsqtag, 1};
 
-      if ((ss->kind != s_qtag) || ((global_tbonetest & 1) != 0))
-         fail("Must have quarter-tag to do this concept.");
+      uint32 directions;
+      uint32 livemask;
+      big_endian_get_directions(ss, directions, livemask);
+
+      if (((ss->kind != s_qtag) && (ss->kind != s_hrglass)) || ((directions & 0x5454) != 0))
+         fail("Must have quarter-tag or hourglass-like setup to do this concept.");
 
       uint32 whatcanitbe = ~0;
       uint32 t;
@@ -5845,11 +5853,17 @@ static void do_concept_ferris(
          if ((t = ss->people[6].id1) && ((t ^ d_south) & d_mask)) whatcanitbe &= 0x2;
       }
 
+      if (ss->kind == s_hrglass) whatcanitbe <<= 4;
+
       switch (whatcanitbe) {
       case 0x1: map_ptr = &mapr1; break;
       case 0x2: map_ptr = &mapr2; break;
-      case 0x4: map_ptr = &mapr3; break;
-      case 0x8: map_ptr = &mapr4; break;
+      case 0x4: map_ptr = &mapr4; break;
+      case 0x8: map_ptr = &mapr8; break;
+      case 0x10: map_ptr = &mapr10; break;
+      case 0x20: map_ptr = &mapr20; break;
+      case 0x40: map_ptr = &mapr40; break;
+      case 0x80: map_ptr = &mapr80; break;
       }
 
       ss->cmd.cmd_final_flags.clear_heritbit(INHERITFLAG_MAGIC);

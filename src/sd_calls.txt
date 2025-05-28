@@ -44,7 +44,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "38.43"
+version "38.44"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve dont_raise_overcast
@@ -5315,9 +5315,9 @@ call "roll @b times" dontshow tag roll_n
    seq roll [repeat_n]
 
 call "@0 and roll" plus
-            visible_fractions
+            visible_fractions diamond_is_legal
             dont_use_in_resolve
-   seq nullcall [mandatory_anycall]
+   seq nullcall [mandatory_anycall inherit_diamond]
    seq roll []
 
 call "@0 and the @6 roll" plus
@@ -12119,10 +12119,8 @@ call "_couple cross fold" dontshow tag weird_cross_fold
       array [CR14S CR0S AL12S AL13S 0 0 0 0]
 
 call "finish a long trip" c4a tag longtrip2
-   setup 2x6 2x4 rotate
-      preds "Wings must be as a couple looking out."
-         if lines_miniwave [   0    0 0 0    0    0 0 0 ZM1W ZM6W 0 0]
-         if lines_couple   [CR7E CR0E 0 0 AL7E AL0E 0 0 ZM1W ZM6W 0 0]
+   setup 2x6 2x4 rotate restriction couples_only
+      array [CR7E CR0E 0 0 AL7E AL0E 0 0 ZM1W ZM6W 0 0]
    setup 6x2 2x4 rotate
       array [0 0 ZM1W 0 0 0 0 0 0 ZM2W 0 0]
    setup 2x4 2x4 rotate
@@ -18481,7 +18479,7 @@ call "cut across" c4a
 call "_pass and roll 2" dontshow tag passnroll_2
             left_means_mirror
    setup 4x1 1x4
-      array [0 CR1S CR2S 0]
+      array [0 CM1S CR2S 0]
             alternate_definition [grand] c3
    setup 6x1 1x6
       array [0 CR1S 0 CR3S 0 CR5S]
@@ -18497,7 +18495,7 @@ call "_funny pass and roll 1" dontshow tag passnroll_1_funny
 call "_funny pass and roll 2" dontshow tag passnroll_2_funny
             left_means_mirror
    setup 4x1 1x4
-      array [ZM0N CR1S CR2S 0]
+      array [ZM0N CM1S CR2S 0]
 
 call "_pass and roll 4" dontshow tag passnroll_4
             left_means_mirror

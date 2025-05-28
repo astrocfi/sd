@@ -1830,19 +1830,22 @@ extern void tandem_couples_move(
       fail("Couples or tandem concept is inconsistent with phantom facing direction.");
 
    if (key == tandem_key_cpls) {
-      if (ss->cmd.cmd_assume.assumption == cr_wave_only)
+      switch (ss->cmd.cmd_assume.assumption) {
+      case cr_wave_only:
          fail("Couples or tandem concept is inconsistent with phantom facing direction.");
-      else if (ss->cmd.cmd_assume.assumption == cr_li_lo) {
+         break;
+      case cr_li_lo:
          if (ss->kind == s2x2 || ss->kind == s2x4)
             tandstuff.m_virtual_setup.cmd.cmd_assume.assumption = ss->cmd.cmd_assume.assumption;
-      }
-      else if (ss->cmd.cmd_assume.assumption == cr_1fl_only) {
+         break;
+      case cr_1fl_only:
          if (ss->kind == s1x4 || ss->kind == s2x4)
             tandstuff.m_virtual_setup.cmd.cmd_assume.assumption = cr_couples_only;
-      }
-      else if (ss->cmd.cmd_assume.assumption == cr_2fl_only) {
+         break;
+      case cr_2fl_only:
          if (ss->kind == s1x4 || ss->kind == s2x4 || ss->kind == s1x8)
             tandstuff.m_virtual_setup.cmd.cmd_assume.assumption = cr_wave_only;
+         break;
       }
    }
 

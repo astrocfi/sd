@@ -2764,11 +2764,13 @@ struct writechar_block_type {
 };
 
 
+enum {
    // Probability (out of 8) that a concept will be placed on a randomly generated call.
-enum { CONCEPT_PROBABILITY = 2 };
+   CONCEPT_PROBABILITY = 2,
    // We use lots more concepts for "standardize", since it is much less likely (though
    // by no means impossible) that a plain call will do the job.
-enum { STANDARDIZE_CONCEPT_PROBABILITY = 6 };
+   STANDARDIZE_CONCEPT_PROBABILITY = 6
+};
 
 // Actually, we don't make a resolve bigger than 3.  This is how much space
 // we allocate for things.  Just being careful.
@@ -4755,9 +4757,12 @@ enum specmapkind {
    spcmap_328e,
    spcmap_328f,
    spcmap_31x3d,
+   spcmap_33x1d,
    spcmap_34x6a,
    spcmap_34x6b,
    spcmap_3lqtg,
+   spcmap_3spn,
+   spcmap_31x6,
    spcmap_blob_1x4a,
    spcmap_blob_1x4b,
    spcmap_blob_1x4c,
