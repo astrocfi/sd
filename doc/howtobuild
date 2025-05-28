@@ -22,7 +22,6 @@ Doing so would cause it to be included in the "do_pack" script.
 
 Be sure the version numbers and dates are correct in:
     [sd]    sdmain.cpp   (version # and date are visible)
-    [sd]    sdutil.cpp   (Copyright year is shown in run_program)
     [sd]    sd.rc        (SD & UI version #'s are visible in "about" dialog)
     [sd]    sd_calls.txt (version # is visible)
     [sd]       [When rolling the year, fix copyright notices in sd.rc,
@@ -292,8 +291,6 @@ install                                  *
 -----------------------------------------------------------------
         CURRENT METHOD
 -----------------------------------------------------------------
-New way, Dec 10, 2010, uses psftp, no email
-
 Start psftp (under "putty" group.)
 open scotch.ics.uci.edu
 (U=ackerman, P=x464pq)

@@ -57,7 +57,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "38.50"
+version "38.51"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve dont_raise_overcast
@@ -14386,9 +14386,9 @@ call "rotate @b" c2 tag rotn
    setup 2x3 1x6        restriction forbidden 3x3couples_only qualifier num 1 none
       array [AL2S AL1S AL0S CAL3N CAL4N CAL5N]
    setup 2x3 1x6 rotate restriction forbidden 3x3couples_only qualifier num 2 none
-      array [AL5S AL4S AL3S CAL0N CAL1N CAL2N]
+      array [AL5N AL4N AL3N CAL0S CAL1S CAL2S]
    setup 2x3 1x6        restriction forbidden 3x3couples_only qualifier num 3 none
-      array [AL5S AL4S AL3S CAL0N CAL1N CAL2N]
+      array [AL5N AL4N AL3N CAL0S CAL1S CAL2S]
    setup 4x3 1x12        restriction forbidden 3x3couples_only qualifier num 0 none
       array [CR2E CR5E AL11W AL8W AL7W AL10W AL6W AL9W CR3E CR0E CR1E CR4E]
    setup 4x3 1x12 rotate restriction forbidden 3x3couples_only qualifier num 1 none

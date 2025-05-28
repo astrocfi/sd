@@ -2,13 +2,24 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2008  William B. Ackerman.
+//    Copyright (C) 1990-2013  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
+//    ===================================================================
+//
+//    If you received this file with express permission from the licensor
+//    to modify and redistribute it it under the terms of the Creative
+//    Commons CC BY-NC-SA 3.0 license, then that license applies.  See
+//    http://creativecommons.org/licenses/by-nc-sa/3.0/
+//
+//    ===================================================================
+//
+//    Otherwise, the GNU General Public License applies.
+//
 //    Sd is free software; you can redistribute it and/or modify it
 //    under the terms of the GNU General Public License as published by
-//    the Free Software Foundation; either version 2 of the License, or
+//    the Free Software Foundation; either version 3 of the License, or
 //    (at your option) any later version.
 //
 //    Sd is distributed in the hope that it will be useful, but WITHOUT
@@ -16,11 +27,13 @@
 //    or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
 //    License for more details.
 //
-//    You should have received a copy of the GNU General Public License
-//    along with Sd; if not, write to the Free Software Foundation, Inc.,
-//    59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+//    You should have received a copy of the GNU General Public License,
+//    in the file COPYING.txt, along with Sd.  See
+//    http://www.gnu.org/licenses/
 //
-//    This is for version 37.
+//    ===================================================================
+//
+//    This is for version 38.
 
 /* This defines the following functions:
    configuration::null_resolve_thing
@@ -496,6 +509,7 @@ static const resolve_tester test_2x6_stuff[] = {
    // From outer triple boxes.
    {resolve_rlg,            MS, 3,   {7, 6, 4, 5, 1, 0, 10, 11},   0x8A8AA8A8},
    {resolve_la,             MS, 6,   {7, 5, 4, 0, 1, 11, 10, 6},   0xA8AA8A88},
+   {resolve_prom,           MS, 7,   {7, 6, 4, 5, 1, 0, 10, 11},   0x8888AAAA},
    // From parallelogram waves.
    {resolve_rlg,            MS, 3,   {7, 6, 2, 3, 1, 0, 8, 9},     0x8A8AA8A8},
    {resolve_la,             MS, 6,   {7, 3, 2, 0, 1, 9, 8, 6},     0xA8AA8A88},

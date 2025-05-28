@@ -734,6 +734,7 @@ extern bool selectp(const setup *ss, int place, int allow_some /*= 0*/) THROW_DE
          }
          else if (allow_some == 3) {
             switch (ss->kind) {
+            case s_323:
             case s1x3dmd:
                if (A == B && B == C) thing_to_test = 0x7;
                break;

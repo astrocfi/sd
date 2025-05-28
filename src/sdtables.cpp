@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2012  William B. Ackerman.
+//    Copyright (C) 1990-2013  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -4774,9 +4774,10 @@ merge_table::concmerge_thing merge_table::merge_init_table[] = {
    {s1x4,   s_crosswave, 0,        0, 0x0D, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {2, 3, 6, 7},               {0}},
    {s_crosswave,   s2x4, 0xCC,  0x99, 0x0C, 0x1, schema_concentric,     s2x2,        s1x4,     warn__none, 0, 0, {1, 2, 5, 6},               {0, 1, 4, 5}},
    {s2x2,   s_crosswave, 0,     0xCC, 0x0C, 0x0, schema_concentric,     s2x2,        s1x4,     warn__none, 0, 0, {0, 1, 2, 3},               {0, 1, 4, 5}},
+
+   /* This is apparently no longer needed.  Is that really true?
    {s2x5,         s_323, 0x1CE,    0, 0x0D, 0x0, schema_matrix,         s_23232,     nothing,  warn__none, 0, 1, {2, -1, -1, -1, 4, 8, -1, -1, -1, 10},   {7, 11, 0, 3, 1, 5, 6, 9}},
-
-
+   */
 
    // The 80 bit in rotmaskreject causes this map to be rejected
    // if the action is merge_c1_phantom_real.
@@ -4881,6 +4882,12 @@ merge_table::concmerge_thing merge_table::merge_init_table[] = {
    {s1x4,          sdmd, 0xA,    0x5, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {0, -1, 2, -1},             {0}},
    {s_ntrgl6ccw, s_nxtrglccw, 0,   0, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {0, 1, 2, 4, 5, 6},               {0}},
    {s_ntrgl6cw,   s_nxtrglcw, 0,   0, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {0, 1, 2, 4, 5, 6},               {0}},
+
+   {s_ntrglcw,    s_323,  0x33, 0x33, 0x0D, 0x0, schema_matrix,         s_ntrglcw,   nothing,  warn__none, 0, 1, {-1, -1, 2, 3, -1, -1, 6, 7},               {-1, -1, 0, 1, -1, -1, 4, 5}},
+   {s_ntrglccw,   s_323,  0xCC, 0x66, 0x0D, 0x0, schema_matrix,         s_ntrglccw,  nothing,  warn__none, 0, 1, {0, 1, -1, -1, 4, 5, -1, -1},               {7, -1, -1, 2, 3, -1, -1, 6}},
+   {s_ntrglcw,    s_323,  0xCC, 0xCC, 0x0D, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {2, 3, -1, -1, 6, 7, -1, -1},               {0}},
+   {s_ntrglccw,   s_323,  0x33, 0x99, 0x0D, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {-1, -1, 3, 4, -1, -1, 7, 0},               {0}},
+
    {s1x4,      s_short6, 0,      055, 0x2D, 0x0, schema_concentric,     s1x4,        s1x2,     warn__none, 0, 1, {0, 1, 2, 3},            {1, 4}},
    {s1x4,      s_short6, 0xA,      0, 0x0D, 0x0,     schema_matrix,      s_rigger,   nothing,  warn__none, 0, 1, {6, -1, 2, -1},             {5, 7, 0, 1, 3, 4}},
 
@@ -10562,6 +10569,20 @@ select::fixer select::fixer_init_table[] = {
    {fxlinboxb,  s2x2, slinebox,     1, 0, 1, {5, 6, 7, 4},
     fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
 
+   {fx323a,   s1x2, s_323,          0, 0, 2, {0, 1, 5, 4},
+    fx0, fxntrgla,              fx0, fx0,                   fx0, fx0,                   fx0, fx0},
+   {fx323b,   s1x2, s_323,          0, 0, 2, {1, 2, 6, 5},
+    fx0, fxntrglb,              fx0, fx0,                   fx0, fx0,                   fx0, fx0},
+   {fxntrgla, s1x2, s_ntrglcw,      0, 0, 2, {2, 3, 7, 6},
+    fx0, fx323c,                fx0, fx0,                   fx0, fx0,                   fx0, fx0},
+   {fxntrglb, s1x2, s_ntrglccw,     0, 0, 2, {5, 4, 0, 1},
+    fx0, fx323d,                fx0, fx0,                   fx0, fx0,                   fx0, fx0},
+   // For unwinding the above.  That is, need to get out with different maps.
+   {fx323c,   s1x2, s_323,          0, 0, 2, {5, 4, 0, 1},
+    fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
+   {fx323d,   s1x2, s_323,          0, 0, 2, {6, 5, 1, 2},
+    fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
+
    {fx23232a,   s1x2, s_23232,     1, 0, 2, {1, 5, 11, 7},
     fx0, fx_foocc,              fx0, fx0,                   fx0, fx0,                   fx0, fx0},
    {fx23232b,   s1x2, s_23232,     1, 0, 2, {0, 11, 5, 6},
@@ -11056,6 +11077,11 @@ select::sel_item select::sel_init_table[] = {
    {LOOKUP_NONE,                      s_galaxy,    0x0E,   fx_galfrtgl,   fx0, -1},
    {LOOKUP_NONE,                      s_galaxy,    0xF1,   fx_galnrvee,   fx0, -1},
    {LOOKUP_NONE,                      s_galaxy,    0x1F,   fx_galfrvee,   fx0, -1},
+
+   {LOOKUP_NONE,                      s_323,       0x33,   fx323a,        fx0, -1},
+   {LOOKUP_NONE,                      s_323,       0x66,   fx323b,        fx0, -1},
+   {LOOKUP_NONE,                      s_ntrglcw,   0xCC,   fxntrgla,      fx0, -1},
+   {LOOKUP_NONE,                      s_ntrglccw,  0x33,   fxntrglb,      fx0, -1},
 
    {LOOKUP_NONE,                      s_trngl8,    0xF0,   fx_trngl8a,    fx0, -1},
    {LOOKUP_NONE,                      s_trngl8,    0x0F,   fx_trngl8b,    fx0, -1},
