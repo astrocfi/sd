@@ -1,7 +1,7 @@
 \input texinfo @c %**start of header -*-texinfo-*-
 @setfilename relnotes.info
 @settitle Sd Release Notes
-@c Time-stamp: <11 Dec 2021 wba>
+@c Time-stamp: <15 Dec 2022 wba>
 @iftex
 @headings off
 @oddheading @| @| @thispage
@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 39.47
-@set title2 Database version = 39.47 format = 399
+@set title1 RELEASE NOTES FOR VERSION 39.48
+@set title2 Database version = 39.48 format = 399
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 39.48::
 * 39.47::
 * 39.46::
 * 39.45::
@@ -147,7 +148,7 @@ and @file{relnotes98.txi} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 39.47, Top, (dir)
+@node Intro, 39.48, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -158,11 +159,17 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2022 William B. Ackerman
 @sp 3
 @menu
-* 39.47::               Changes in the current version
+* 39.48::               Changes in the current version
 @end menu
 
 @c ************
-@node 39.47, 39.46, Intro, Top
+@node 39.48, 39.47, Intro, Top
+@unnumberedsec Version 39.48 changes
+
+The program does a better job of picking out triangles in diamonds.
+
+@c ************
+@node 39.47, 39.46, 39.48, Top
 @unnumberedsec Version 39.47 changes
 
 New concepts: @strong{Z-SOME}, @strong{Z's ARE SOLID}, @strong{Z-SOME <N>/4 SOLID},

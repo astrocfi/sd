@@ -3105,6 +3105,8 @@ class select {
       fx_f2x2pl,
       fx_f1x4pl,
       fx_fdmdpl,
+      fx_fdmdpb,
+      fx_fdmdpe,
       fx_f1x2pl,
       fx_f3x1d_2,
       fx_f1x8_88,

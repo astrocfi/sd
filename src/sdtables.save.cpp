@@ -12403,8 +12403,6 @@ select::sel_item select::sel_init_table[] = {
    {LOOKUP_DISC|LOOKUP_IGNORE, s1x6,         011,   fx_f1x6ed,     fx0, -1},
    {LOOKUP_DISC|LOOKUP_IGNORE, s2x2,         0xF,   fx_f2x2pl,     fx0, -1},
    {LOOKUP_DISC|LOOKUP_IGNORE, s1x4,         0xF,   fx_f1x4pl,     fx0, -1},
-   {LOOKUP_DISC|LOOKUP_IGNORE, sdmd,         0xB,   fx_fdmdpb,     fx0, -1},
-   {LOOKUP_DISC|LOOKUP_IGNORE, sdmd,         0xE,   fx_fdmdpe,     fx0, -1},
    {LOOKUP_DISC|LOOKUP_IGNORE, sdmd,         0xF,   fx_fdmdpl,     fx0, -1},
    {LOOKUP_DISC|LOOKUP_IGNORE, s1x2,         0x3,   fx_f1x2pl,     fx0, -1},
    {LOOKUP_DISC|LOOKUP_IGNORE, s1x4,         0x5,   fx_f1x4ed,     fx0, -1},
