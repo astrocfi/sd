@@ -60,7 +60,7 @@ SDTTY_OBJ_PC   = sdui-tty.o sdmatch.o sdui-tpc.o
 SDTTY_OBJ = $(SDTTY_OBJ_UNIX)
 SDTTY_OBJS = $(SD_OBJS) $(SDTTY_OBJ_UNIX)
 
-MKCALLS_SRCS = mkcalls.c dbcomp.c
+MKCALLS_SRCS = mkcalls.cpp dbcomp.cpp
 MKCALLS_OBJS = mkcalls.o dbcomp.o
 
 SRCS = $(SD_SRCS) $(SDX11_SRC) $(SDTTY_SRC) $(MKCALLS_SRCS)

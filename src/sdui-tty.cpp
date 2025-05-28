@@ -107,10 +107,13 @@ static Const char id[] = "@(#)$He" "ader: Sd: sdui-tty.c " UI_VERSION_STRING "  
  * We return the "0.6tty" part.
  */
 
-int screen_height = 25;
-int no_cursor = 0;
-int no_console = 0;
-int no_line_delete = 0;
+int sdtty_screen_height = 0;  // The "lines" option may set this to something.
+                              // Otherwise, any subsystem that sees the value zero
+                              // will initialize it to whatever value it thinks best,
+                              // perhaps by interrogating the OS.
+int sdtty_no_cursor = 0;
+int sdtty_no_console = 0;
+int sdtty_no_line_delete = 0;
 
 static char version_mem[12];
 
@@ -217,17 +220,17 @@ extern void uims_process_command_line(int *argcp, char ***argvp)
       int i;
 
       if (strcmp(argv[argno], "-no_line_delete") == 0)
-         no_line_delete = 1;
+         sdtty_no_line_delete = 1;
       else if (strcmp(argv[argno], "-no_cursor") == 0)
-         no_cursor = 1;
+         sdtty_no_cursor = 1;
       else if (strcmp(argv[argno], "-no_console") == 0)
-         no_console = 1;
+         sdtty_no_console = 1;
       else if (strcmp(argv[argno], "-alternate_glyphs_1") == 0) {
          ui_options.pn1 = alt1_names1;
          ui_options.pn2 = alt1_names2;
       }
       else if (strcmp(argv[argno], "-lines") == 0 && argno+1 < (*argcp)) {
-         screen_height = atoi(argv[argno+1]);
+         sdtty_screen_height = atoi(argv[argno+1]);
          goto remove_two;
       }
       else if (strcmp(argv[argno], "-journal") == 0 && argno+1 < (*argcp)) {

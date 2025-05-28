@@ -102,13 +102,23 @@ short int *level_concept_list;  /* indices of concepts valid at current level */
 int level_concept_list_length;
 
 
-typedef struct pat2_blockstruct {
+struct pat2_block {
    Cstring car;
+   pat2_block *cdr;
    concept_descriptor *special_concept;
    match_result *folks_to_restore;
-   struct pat2_blockstruct *cdr;
    long_boolean demand_a_call;
-} pat2_block;
+   long_boolean anythingers;
+
+   pat2_block(Cstring carstuff, pat2_block *cdrstuff = (pat2_block *) 0) :
+      car(carstuff),
+      cdr(cdrstuff),
+      special_concept((concept_descriptor *) 0),
+      folks_to_restore((match_result *) 0),
+      demand_a_call(FALSE),
+      anythingers(FALSE)
+   {}
+};
 
 static modifier_block *modifier_active_list = (modifier_block *) 0;
 static modifier_block *modifier_inactive_list = (modifier_block *) 0;
@@ -680,7 +690,7 @@ SDLIB_API void matcher_initialize()
 
                continue;
             }
-            else if (name[1] == '0' || name[1] == 'm') {
+            else if (name[1] == '0' || name[1] == 'T' || name[1] == 'm') {
                // We act as though any string starting with "[" hashes to BRACKET_HASH.
                hash_me(BRACKET_HASH, i);
                continue;
@@ -1059,6 +1069,18 @@ static void record_a_match(void)
    }
 }
 
+static bool foobar(const char *user)
+{
+   if (!user[0]) return true;
+   if (user[0] != ' ') return false;
+   if (!user[1]) return true;
+   if (user[1] != 'e') return false;
+   if (!user[2]) return true;
+   if (user[2] != 'r') return false;
+   if (!user[3]) return true;
+   if (user[3] != 's' && user[3] != '\'') return false;
+   return true;
+}
 
 /* ************************************************************************
 
@@ -1171,6 +1193,8 @@ static void match_suffix_2(Cstring user, Cstring pat1, pat2_block *pat2, int pat
        !(pat2->special_concept->concparseflags & CONCPARSE_PARSE_DIRECT))
       pat2->special_concept = (concept_descriptor *) 0;
 
+   pat2_block at_t_thing("");
+
    for (;;) {
       if (*pat1 == 0) {
          /* PAT1 has run out, get a string from PAT2 */
@@ -1199,6 +1223,18 @@ static void match_suffix_2(Cstring user, Cstring pat1, pat2_block *pat2, int pat
 
             pat1 = pat2->car;
             pat2_concept = pat2->special_concept;
+
+            if (pat2->anythingers) {
+               if (!user || !user[0]) goto yesyes;
+               if (user[0] != ']') goto nono;
+               if (foobar(&user[1])) goto yesyes;
+               else goto nono;
+
+            yesyes:
+               pat1 = "] er's";
+            nono: ;
+            }
+
             pat2 = pat2->cdr;
             continue;
          }
@@ -1278,7 +1314,8 @@ static void match_suffix_2(Cstring user, Cstring pat1, pat2_block *pat2, int pat
             }
             else {
                char u = *user++;
-               Cstring ep = get_escape_string(*pat1++);
+               char key = *pat1++;
+               Cstring ep = get_escape_string(key);
 
                if (u == '<') {
                   if (ep && *ep) {
@@ -1288,6 +1325,7 @@ static void match_suffix_2(Cstring user, Cstring pat1, pat2_block *pat2, int pat
                         if (!user[i-1]) {
                            while (ep[i]) { GLOB_full_extension[patxi++] = ep[i] ; i++; }
                            user = 0;
+                           if (key == 'T') goto yes;
                            goto cont;
                         }
    
@@ -1295,7 +1333,17 @@ static void match_suffix_2(Cstring user, Cstring pat1, pat2_block *pat2, int pat
                      }
    
                      user += strlen((char *) ep)-1;
-                     cont: ;
+
+                     if (key == 'T' && (!user || foobar(user))) goto yes;
+                     goto cont;
+
+                  yes:
+                     at_t_thing.car = pat1;
+                     pat1 = " er's";
+                     at_t_thing.cdr = pat2;
+                     pat2 = &at_t_thing;
+
+                  cont: ;
                   }
                   else
                      break;
@@ -1359,9 +1407,9 @@ static void match_suffix_2(Cstring user, Cstring pat1, pat2_block *pat2, int pat
 #define SPIFFY_PARSER
 
 #ifdef SPIFFY_PARSER
-static const int spiffy_parser = 1;
+static int spiffy_parser = 1;
 #else
-static const int spiffy_parser = 0;
+static int spiffy_parser = 0;
 #endif
 
 
@@ -1397,11 +1445,6 @@ static void scan_concepts_and_calls(
    local_result.real_next_subcall = (match_result *) 0;
    local_result.real_secondary_subcall = (match_result *) 0;
 
-   pat2_block p2b;
-   p2b.folks_to_restore = (match_result *) 0;
-   p2b.demand_a_call = FALSE;
-   p2b.cdr = pat2;
-
    /* We know that user is never nil when this procedure is called.
       We also know the firstchar is just a single character, and that
       that character is blank or left bracket. */
@@ -1417,6 +1460,8 @@ static void scan_concepts_and_calls(
       (user[1,2,3] are not NUL or blank and don't match call_or_concept_name)
 
       */
+
+   pat2_block p2b("", pat2);
 
    const match_result *save_stuff1 = (const match_result *) 0;
    const match_result *save_stuff2 = (const match_result *) 0;
@@ -1524,7 +1569,8 @@ static void scan_concepts_and_calls(
              new_depth+1 : new_depth);
          local_result.match.call_conc_options = null_options;
 
-         if (spiffy_parser && this_call->name[0] == '@' && this_call->name[1] == '0') {
+         if (spiffy_parser && this_call->name[0] == '@' &&
+             (this_call->name[1] == '0' || this_call->name[1] == 'T')) {
             if (got_aborted_subcall) {
                // We have seen another "@0" call after having seen one whose subcall
                // was incomplete.  There can't possibly be any benefit from parsing
@@ -1548,7 +1594,7 @@ static void scan_concepts_and_calls(
          if (spiffy_parser && GLOB_match_count > matches_as_seen_by_me) {
             if (GLOB_only_extension &&
                 this_call->name[0] == '@' &&
-                this_call->name[1] == '0' &&
+                (this_call->name[1] == '0' || this_call->name[1] == 'T') &&
                 GLOB_user_input[0] == '[') {   // ***** This is probably wrong!!!!
        
                int full_bracket_depth = GLOB_user_bracket_depth + GLOB_extended_bracket_depth;
@@ -1623,7 +1669,6 @@ static void match_wildcard(
    Cstring *number_table;
    int i;
    uint32 iu;
-   pat2_block p2b;
    char crossname[80];
    char *crossptr;
    int save_howmanynumbers;
@@ -1631,11 +1676,8 @@ static void match_wildcard(
    int concidx;
    Cstring pattern;
    char key = *pat++;
-   p2b.car = pat;
+   pat2_block p2b(pat, pat2);
    p2b.special_concept = special;
-   p2b.folks_to_restore = (match_result *) 0;
-   p2b.demand_a_call = FALSE;
-   p2b.cdr = pat2;
 
    /* if we are just listing the matching commands, there
       is no point in expanding wildcards that are past the
@@ -1659,15 +1701,12 @@ static void match_wildcard(
             return;
          }
          break;
-      case '0': case 'm':
+      case '0': case 'T': case 'm':
          if (*user == '[') {
-            pat2_block p3b;
-
-            p3b.car = "]";
-            p3b.special_concept = (concept_descriptor *) 0;
+            pat2_block p3b("]", &p2b);
             p3b.folks_to_restore = current_result;
             p3b.demand_a_call = TRUE;
-            p3b.cdr = &p2b;
+            p3b.anythingers = (key == 'T');
 
             scan_concepts_and_calls(user, "[", &p3b,
                                     ((key == 'm') ?
@@ -1952,14 +1991,7 @@ static void match_wildcard(
  
 static void match_pattern(Cstring pattern)
 {
-   pat2_block p2b;
-
-   p2b.car = pattern;
-   p2b.special_concept = (concept_descriptor *) 0;
-   p2b.folks_to_restore = (match_result *) 0;
-   p2b.demand_a_call = FALSE;
-   p2b.cdr = (pat2_block *) 0;
-
+   pat2_block p2b(pattern);
    match_suffix_2(GLOB_user_input, "", &p2b, 0);
 }
 
@@ -1994,8 +2026,6 @@ static void search_menu(uims_reply kind)
          int my_patxi = 0;
 
          for (i = 0; i < menu_length; i++) {
-            pat2_block p2b;
-
             // Don't waste time after user stops us.
             if (GLOB_showing && showing_has_stopped) break;
 
@@ -2019,7 +2049,7 @@ static void search_menu(uims_reply kind)
                 uch != pch &&
                 (pch > 'Z' || pch < 'A' || uch != pch+'a'-'A') &&
                 ((pch != '@') ||
-                 (this_call->name[1] == '0' && uch != '[' && uch != '<')))
+                 ((this_call->name[1] == '0' || this_call->name[1] == 'T') && uch != '[' && uch != '<')))
                continue;
 
             parse_state.call_list_to_use = (call_list_kind) static_call_menu;
@@ -2028,13 +2058,9 @@ static void search_menu(uims_reply kind)
                (this_call->the_defn.callflags1 & CFLAG1_YIELD_IF_AMBIGUOUS) ? 1 : 0;
             matches_as_seen_by_me = GLOB_match_count;
 
-            p2b.car = this_call->name;
-            p2b.special_concept = (concept_descriptor *) 0;
-            p2b.folks_to_restore = (match_result *) 0;
-            p2b.demand_a_call = FALSE;
-            p2b.cdr = (pat2_block *) 0;
+            pat2_block p2b(this_call->name);
 
-            if (spiffy_parser && this_call->name[0] == '@' && this_call->name[1] == '0') {
+            if (spiffy_parser && this_call->name[0] == '@' && (this_call->name[1] == '0' || this_call->name[1] == 'T')) {
                if (got_aborted_subcall) {
                   // We have seen another "@0" call after having seen one whose subcall
                   // was incomplete.  There can't possibly be any benefit from parsing
@@ -2058,7 +2084,7 @@ static void search_menu(uims_reply kind)
             if (spiffy_parser && GLOB_match_count > matches_as_seen_by_me) {
                if (GLOB_only_extension &&
                    this_call->name[0] == '@' &&
-                   this_call->name[1] == '0' &&
+                   (this_call->name[1] == '0' || this_call->name[1] == 'T') &&
                    uch == '[') {
                   int full_bracket_depth = GLOB_user_bracket_depth + GLOB_extended_bracket_depth;
                   if (0 < full_bracket_depth) {
@@ -2117,8 +2143,6 @@ static void search_menu(uims_reply kind)
          GLOB_match_count += menu_length;
       else {
          for (i = 0; i < menu_length; i++) {
-            pat2_block p2b;
-
             // Don't waste time after user stops us.
             if (GLOB_showing && showing_has_stopped) break;
 
@@ -2138,12 +2162,8 @@ static void search_menu(uims_reply kind)
             active_result.yield_depth =
                (this_concept->concparseflags & CONCPARSE_YIELD_IF_AMB) ? 1 : 0;
 
-            p2b.car = this_concept->name;
+            pat2_block p2b(this_concept->name);
             p2b.special_concept = this_concept;
-            p2b.folks_to_restore = (match_result *) 0;
-            p2b.demand_a_call = FALSE;
-            p2b.cdr = (pat2_block *) 0;
-
             match_suffix_2(GLOB_user_input, "", &p2b, 0);
          }
       }

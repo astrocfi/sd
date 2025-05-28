@@ -47,7 +47,9 @@ long_boolean mandatory_call_used;
 
 #define DIR_MASK (BIT_PERSON | 3)
 
-#define ID1_PERM_ALL_ID (ID1_PERM_HEAD|ID1_PERM_SIDE|ID1_PERM_BOY|ID1_PERM_GIRL)
+enum {
+   ID1_PERM_ALL_ID = ID1_PERM_HEAD|ID1_PERM_SIDE|ID1_PERM_BOY|ID1_PERM_GIRL
+};
 
 
 
@@ -145,20 +147,28 @@ extern long_boolean selectp(setup *ss, int place) THROW_DECL
          else if ((permpid1 & (ID1_PERM_HCOR|ID1_PERM_SCOR)) == ID1_PERM_HCOR) return FALSE;
          break;
       case selector_headboys:
-         if      ((permpid1 & (ID1_PERM_ALL_ID|ID1_PERM_NHB)) == (ID1_PERM_HEAD|ID1_PERM_BOY)) return TRUE;
-         else if ((permpid1 & ID1_PERM_NHB) == ID1_PERM_NHB) return FALSE;
+         if      ((permpid1 & (ID1_PERM_ALL_ID|ID1_PERM_NHB)) == (ID1_PERM_HEAD|ID1_PERM_BOY))
+            return TRUE;
+         else if ((permpid1 & ID1_PERM_NHB) == ID1_PERM_NHB)
+            return FALSE;
          break;
       case selector_headgirls:
-         if      ((permpid1 & (ID1_PERM_ALL_ID|ID1_PERM_NHG)) == (ID1_PERM_HEAD|ID1_PERM_GIRL)) return TRUE;
-         else if ((permpid1 & ID1_PERM_NHG) == ID1_PERM_NHG) return FALSE;
+         if      ((permpid1 & (ID1_PERM_ALL_ID|ID1_PERM_NHG)) == (ID1_PERM_HEAD|ID1_PERM_GIRL))
+            return TRUE;
+         else if ((permpid1 & ID1_PERM_NHG) == ID1_PERM_NHG)
+            return FALSE;
          break;
       case selector_sideboys:
-         if      ((permpid1 & (ID1_PERM_ALL_ID|ID1_PERM_NSB)) == (ID1_PERM_SIDE|ID1_PERM_BOY)) return TRUE;
-         else if ((permpid1 & ID1_PERM_NSB) == ID1_PERM_NSB) return FALSE;
+         if      ((permpid1 & (ID1_PERM_ALL_ID|ID1_PERM_NSB)) == (ID1_PERM_SIDE|ID1_PERM_BOY))
+            return TRUE;
+         else if ((permpid1 & ID1_PERM_NSB) == ID1_PERM_NSB)
+            return FALSE;
          break;
       case selector_sidegirls:
-         if      ((permpid1 & (ID1_PERM_ALL_ID|ID1_PERM_NSG)) == (ID1_PERM_SIDE|ID1_PERM_GIRL)) return TRUE;
-         else if ((permpid1 & ID1_PERM_NSG) == ID1_PERM_NSG) return FALSE;
+         if      ((permpid1 & (ID1_PERM_ALL_ID|ID1_PERM_NSG)) == (ID1_PERM_SIDE|ID1_PERM_GIRL))
+            return TRUE;
+         else if ((permpid1 & ID1_PERM_NSG) == ID1_PERM_NSG)
+            return FALSE;
          break;
       case selector_centers:
       case selector_ends:
@@ -674,14 +684,14 @@ static long_boolean unselect_once_rem_from_select(setup *real_people, int real_i
 static long_boolean select_and_roll_is_cw(setup *real_people, int real_index,
    int real_direction, int northified_index, const long int *extra_stuff) THROW_DECL
 {
-   return selectp(real_people, real_index) && (real_people->people[real_index].id1 & ROLLBITR) != 0;
+   return selectp(real_people, real_index) && (real_people->people[real_index].id1 & ROLL_DIRMASK) == ROLL_IS_R;
 }
 
 /* ARGSUSED */
 static long_boolean select_and_roll_is_ccw(setup *real_people, int real_index,
    int real_direction, int northified_index, const long int *extra_stuff) THROW_DECL
 {
-   return selectp(real_people, real_index) && (real_people->people[real_index].id1 & ROLLBITL) != 0;
+   return selectp(real_people, real_index) && (real_people->people[real_index].id1 & ROLL_DIRMASK) == ROLL_IS_L;
 }
 
 /* ARGSUSED */
@@ -1104,7 +1114,7 @@ static long_boolean once_rem_test(setup *real_people, int real_index,
 {
    int this_person = real_people->people[real_index].id1;
    int other_person = real_people->people[real_index ^ 2].id1;
-   return ((this_person ^ other_person) & DIR_MASK) == (uint32) extra_stuff[0];
+   return ((this_person ^ other_person) & DIR_MASK) == extra_stuff[0];
 }
 
 /* ARGSUSED */
@@ -1884,7 +1894,7 @@ static long_boolean column_double_down(setup *real_people, int real_index,
 static long_boolean apex_test(setup *real_people, int real_index,
    int real_direction, int northified_index, const long int *extra_stuff) THROW_DECL
 {
-   uint32 unmoving_end = (real_people->people[0].id1 & (ROLLBITR|ROLLBITL)) ? 2 : 0;
+   uint32 unmoving_end = ((real_people->people[0].id1+NROLL_BIT) & (NROLL_BIT*2)) ? 2 : 0;
    uint32 status;
 
    if ((real_people->people[0].id1 &
@@ -1918,14 +1928,14 @@ static long_boolean boygirlp(setup *real_people, int real_index,
 static long_boolean roll_is_cw(setup *real_people, int real_index,
    int real_direction, int northified_index, const long int *extra_stuff)
 {
-   return (real_people->people[real_index].id1 & ROLLBITR) != 0;
+   return (real_people->people[real_index].id1 & ROLL_DIRMASK) == ROLL_IS_R;
 }
 
 /* ARGSUSED */
 static long_boolean roll_is_ccw(setup *real_people, int real_index,
    int real_direction, int northified_index, const long int *extra_stuff)
 {
-   return (real_people->people[real_index].id1 & ROLLBITL) != 0;
+   return (real_people->people[real_index].id1 & ROLL_DIRMASK) == ROLL_IS_L;
 }
 
 /* ARGSUSED */

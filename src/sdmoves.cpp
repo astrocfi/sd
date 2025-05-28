@@ -220,46 +220,46 @@ extern long_boolean divide_for_magic(
    uint32 heritflags_to_check,
    setup *result) THROW_DECL
 {
-   static expand_thing exp27  = {{1, 3, 4, 5, 7, 9, 10, 11}, 8, s2x4, s2x6, 0, 0, 02727};
-   static expand_thing exp72  = {{0, 1, 2, 4, 6, 7, 8, 10},  8, s2x4, s2x6, 0, 0, 07272};
-   static expand_thing exp25  = {{1, 3, 5, 7, 9, 11},        6, s2x3, s2x6, 0, 0, 02525};
-   static expand_thing exp52  = {{0, 2, 4, 6, 8, 10},        6, s2x3, s2x6, 0, 0, 05252};
-   static expand_thing exp35  = {{1, 2, 3, 5, 7, 8, 9, 11},  8, s2x4, s2x6, 0, 0, 03535};
-   static expand_thing exp53  = {{0, 2, 4, 5, 6, 8, 10, 11}, 8, s2x4, s2x6, 0, 0, 05353};
-   static expand_thing exp56  = {{0, 2, 3, 4, 6, 8, 9, 10},  8, s2x4, s2x6, 0, 0, 05656};
-   static expand_thing exp65  = {{0, 1, 3, 5, 6, 7, 9, 11},  8, s2x4, s2x6, 0, 0, 06565};
+   static const expand_thing exp27  = {{1, 3, 4, 5, 7, 9, 10, 11}, 8, s2x4, s2x6, 0, 0, 02727};
+   static const expand_thing exp72  = {{0, 1, 2, 4, 6, 7, 8, 10},  8, s2x4, s2x6, 0, 0, 07272};
+   static const expand_thing exp25  = {{1, 3, 5, 7, 9, 11},        6, s2x3, s2x6, 0, 0, 02525};
+   static const expand_thing exp52  = {{0, 2, 4, 6, 8, 10},        6, s2x3, s2x6, 0, 0, 05252};
+   static const expand_thing exp35  = {{1, 2, 3, 5, 7, 8, 9, 11},  8, s2x4, s2x6, 0, 0, 03535};
+   static const expand_thing exp53  = {{0, 2, 4, 5, 6, 8, 10, 11}, 8, s2x4, s2x6, 0, 0, 05353};
+   static const expand_thing exp56  = {{0, 2, 3, 4, 6, 8, 9, 10},  8, s2x4, s2x6, 0, 0, 05656};
+   static const expand_thing exp65  = {{0, 1, 3, 5, 6, 7, 9, 11},  8, s2x4, s2x6, 0, 0, 06565};
 
-   static expand_thing exp31  = {{1, 2, 5, 7, 8, 11},        6, s2x3, s2x6, 0, 0, 03131};
-   static expand_thing exp13  = {{2, 4, 5, 8, 10, 11},       6, s2x3, s2x6, 0, 0, 01313};
-   static expand_thing exp15  = {{2, 3, 5, 8, 9, 11},        6, s2x3, s2x6, 0, 0, 01515};
-   static expand_thing exp51  = {{0, 2, 5, 6, 8, 11},        6, s2x3, s2x6, 0, 0, 05151};
-   static expand_thing exp45  = {{0, 3, 5, 6, 9, 11},        6, s2x3, s2x6, 0, 0, 04545};
-   static expand_thing exp54  = {{0, 2, 3, 6, 8, 9},         6, s2x3, s2x6, 0, 0, 05454};
-   static expand_thing exp46  = {{0, 3, 4, 6, 9, 10},        6, s2x3, s2x6, 0, 0, 04646};
-   static expand_thing exp64  = {{0, 1, 3, 6, 7, 9},         6, s2x3, s2x6, 0, 0, 06464};
+   static const expand_thing exp31  = {{1, 2, 5, 7, 8, 11},        6, s2x3, s2x6, 0, 0, 03131};
+   static const expand_thing exp13  = {{2, 4, 5, 8, 10, 11},       6, s2x3, s2x6, 0, 0, 01313};
+   static const expand_thing exp15  = {{2, 3, 5, 8, 9, 11},        6, s2x3, s2x6, 0, 0, 01515};
+   static const expand_thing exp51  = {{0, 2, 5, 6, 8, 11},        6, s2x3, s2x6, 0, 0, 05151};
+   static const expand_thing exp45  = {{0, 3, 5, 6, 9, 11},        6, s2x3, s2x6, 0, 0, 04545};
+   static const expand_thing exp54  = {{0, 2, 3, 6, 8, 9},         6, s2x3, s2x6, 0, 0, 05454};
+   static const expand_thing exp46  = {{0, 3, 4, 6, 9, 10},        6, s2x3, s2x6, 0, 0, 04646};
+   static const expand_thing exp64  = {{0, 1, 3, 6, 7, 9},         6, s2x3, s2x6, 0, 0, 06464};
 
-   static expand_thing expl13 = {{1, 3, 5, 7, 9, 11},        6, s1x6, s1x12, 0};
-   static expand_thing expl31 = {{0, 2, 4, 6, 8, 10},        6, s1x6, s1x12, 0};
-   static expand_thing expg27 = {{1, 3, 5, 4, 7, 9, 11, 10}, 8, s1x8, s1x12, 0};
-   static expand_thing expg72 = {{0, 1, 4, 2, 6, 7, 10, 8},  8, s1x8, s1x12, 0};
-   static expand_thing expg35 = {{1, 2, 5, 3, 7, 8, 11, 9},  8, s1x8, s1x12, 0};
-   static expand_thing expg56 = {{0, 2, 4, 3, 6, 8, 10, 9},  8, s1x8, s1x12, 0};
+   static const expand_thing expl13 = {{1, 3, 5, 7, 9, 11},        6, s1x6, s1x12, 0};
+   static const expand_thing expl31 = {{0, 2, 4, 6, 8, 10},        6, s1x6, s1x12, 0};
+   static const expand_thing expg27 = {{1, 3, 5, 4, 7, 9, 11, 10}, 8, s1x8, s1x12, 0};
+   static const expand_thing expg72 = {{0, 1, 4, 2, 6, 7, 10, 8},  8, s1x8, s1x12, 0};
+   static const expand_thing expg35 = {{1, 2, 5, 3, 7, 8, 11, 9},  8, s1x8, s1x12, 0};
+   static const expand_thing expg56 = {{0, 2, 4, 3, 6, 8, 10, 9},  8, s1x8, s1x12, 0};
 
-   static expand_thing expsp3 = {{1, 2, 3, 5, 7, 8, 9, 11}, 8, s_spindle, s_d3x4, 0};
-   static expand_thing exp3d3 = {{10, 11, 0, -1, -1, 2, 4, 5, 6, -1, -1, 8},
+   static const expand_thing expsp3 = {{1, 2, 3, 5, 7, 8, 9, 11}, 8, s_spindle, s_d3x4, 0};
+   static const expand_thing exp3d3 = {{10, 11, 0, -1, -1, 2, 4, 5, 6, -1, -1, 8},
                                  12, s3dmd, s_d3x4, 1};
-   static expand_thing exp323 = {{10, 11, 0, 2, 4, 5, 6, 8}, 8, s_323, s_d3x4, 1};
+   static const expand_thing exp323 = {{10, 11, 0, 2, 4, 5, 6, 8}, 8, s_323, s_d3x4, 1};
 
-   static expand_thing expb45 = {{0, 3, 5, 6, 9, 11},        6, s_bone6, s3x4, 0};
-   static expand_thing expb32 = {{8, 10, 1, 2, 4, 7},        6, s_short6, s3x4, 1};
-   static expand_thing expl53 = {{0, 2, 4, 5},               4, s1x4, s1x6, 0};
-   static expand_thing expl35 = {{1, 2, 3, 5},               4, s1x4, s1x6, 0};
-   static expand_thing expl27 = {{1, 5, 3, 4},               4, s1x4, s1x6, 0};
-   static expand_thing expl72 = {{0, 1, 4, 2},               4, s1x4, s1x6, 0};
+   static const expand_thing expb45 = {{0, 3, 5, 6, 9, 11},        6, s_bone6, s3x4, 0};
+   static const expand_thing expb32 = {{8, 10, 1, 2, 4, 7},        6, s_short6, s3x4, 1};
+   static const expand_thing expl53 = {{0, 2, 4, 5},               4, s1x4, s1x6, 0};
+   static const expand_thing expl35 = {{1, 2, 3, 5},               4, s1x4, s1x6, 0};
+   static const expand_thing expl27 = {{1, 5, 3, 4},               4, s1x4, s1x6, 0};
+   static const expand_thing expl72 = {{0, 1, 4, 2},               4, s1x4, s1x6, 0};
 
    warning_info saved_warnings;
    int i;
-   map_thing *division_maps;
+   const map_thing *division_maps;
    uint32 resflags = 0;
    uint32 directions;
    uint32 livemask;
@@ -866,18 +866,21 @@ extern void do_call_in_series(
       that are marked as roll-neutral. */
 
    if (roll_transparent) {
-      /* Can only do this if we understand the setups. */
-      if ((setup_attrs[tempsetup.kind].setup_limits >= 0) && (setup_attrs[sss->kind].setup_limits >= 0)) {
+      // Can only do this if we understand the setups.
+      if ((setup_attrs[tempsetup.kind].setup_limits >= 0) &&
+          (setup_attrs[sss->kind].setup_limits >= 0)) {
          int u, v;
 
          for (u=0; u<=setup_attrs[tempsetup.kind].setup_limits; u++) {
-            if (tempsetup.people[u].id1 & ROLLBITM) {
-               /* This person is roll-neutral.  Reinstate his original roll info, by
-                  searching for him in the starting setup. */
-               tempsetup.people[u].id1 &= ~ROLL_MASK;
+            if ((tempsetup.people[u].id1 & ROLL_DIRMASK) == ROLL_DIRMASK) {
+               // This person is roll-neutral.  Reinstate his original roll info,
+               // by searching for him in the starting setup.
+               // But do *NOT* restore his "this person moved" bit from its
+               // previous state.  Leave it in its current state.
+               tempsetup.people[u].id1 &= ~ROLL_DIRMASK;
                for (v=0; v<=setup_attrs[sss->kind].setup_limits; v++) {
                   if (((tempsetup.people[u].id1 ^ sss->people[v].id1) & XPID_MASK) == 0)
-                     tempsetup.people[u].id1 |= (sss->people[v].id1 & ROLL_MASK);
+                     tempsetup.people[u].id1 |= (sss->people[v].id1 & ROLL_DIRMASK);
                }
             }
          }
@@ -980,32 +983,32 @@ extern void do_call_in_series(
 
 
 
-typedef struct gloop {
-   int x;                  /* This person's coordinates, calibrated so that a matrix */
-   int y;                  /*   position cooresponds to an increase by 4. */
-   int nicex;              /* This person's "nice" coordinates, used for calculating jay walk legality. */
-   int nicey;
-   uint32 id1;             /* The actual person, for error printing. */
-   long_boolean sel;       /* True if this person is selected.  (False if selectors not in use.) */
-   long_boolean done;      /* Used for loop control on each pass */
-   long_boolean realdone;  /* Used for loop control on each pass */
-   uint32 jbits;           /* Bit mask for all possible jaywalkees. */
-   int boybit;             /* 1 if boy, 0 if not (might be neither). */
-   int girlbit;            /* 1 if girl, 0 if not (might be neither). */
-   int dir;                /* This person's initial facing direction, 0 to 3. */
-   int deltax;             /* How this person will move, relative to his own facing */
-   int deltay;             /*   direction, when call is finally executed. */
-   int nearest;            /* Forward distance to nearest jaywalkee. */
-   int leftidx;            /* X-increment of leftmost valid jaywalkee. */
-   int rightidx;           /* X-increment of rightmost valid jaywalkee. */
-   int deltarot;           /* How this person will turn. */
-   int roll_stability_info;/* This person's roll & stability info, from call def'n. */
+struct matrix_rec {
+   int x;                  // This person's coordinates, calibrated so that a matrix
+   int y;                  //   position cooresponds to an increase by 4.
+   int nicex;              // This person's "nice" coordinates, used for
+   int nicey;              //   calculating jay walk legality.
+   uint32 id1;             // The actual person, for error printing.
+   long_boolean sel;       // True if this person is selected.  (False if selectors not in use.)
+   bool done;              // Used for loop control on each pass.
+   bool realdone;          // Used for loop control on each pass.
+   uint32 jbits;           // Bit mask for all possible jaywalkees.
+   int boybit;             // 1 if boy, 0 if not (might be neither).
+   int girlbit;            // 1 if girl, 0 if not (might be neither).
+   int dir;                // This person's initial facing direction, 0 to 3.
+   int deltax;             // How this person will move, relative to his own facing
+   int deltay;             //   direction, when call is finally executed.
+   int nearest;            // Forward distance to nearest jaywalkee.
+   int leftidx;            // X-increment of leftmost valid jaywalkee.
+   int rightidx;           // X-increment of rightmost valid jaywalkee.
+   int deltarot;           // How this person will turn.
+   uint32 roll_stability_info; // This person's roll & stability info, from call def'n.
    int orig_source_idx;
-   struct gloop *nextse;   /* Points to next person south (dir even) or east (dir odd.) */
-   struct gloop *nextnw;   /* Points to next person north (dir even) or west (dir odd.) */
-   long_boolean tbstopse;  /* True if nextse/nextnw is zero because the next spot */
-   long_boolean tbstopnw;  /*   is occupied by a T-boned person (as opposed to being empty.) */
-} matrix_rec;
+   matrix_rec *nextse;     // Points to next person south (dir even) or east (dir odd.)
+   matrix_rec *nextnw;     // Points to next person north (dir even) or west (dir odd.)
+   bool tbstopse;          // True if nextse/nextnw is zero because the next spot
+   bool tbstopnw;          //   is occupied by a T-boned person (as opposed to being empty.)
+};
 
 
 static int start_matrix_call(
@@ -1051,8 +1054,8 @@ static int start_matrix_call(
          matrix_info[nump].x = thingyptr->xca[i];
          matrix_info[nump].y = thingyptr->yca[i];
 
-         matrix_info[nump].done = FALSE;
-         matrix_info[nump].realdone = FALSE;
+         matrix_info[nump].done = false;
+         matrix_info[nump].realdone = false;
 
          if (flags & MTX_USE_SELECTOR)
             matrix_info[nump].sel = selectp(people, nump);
@@ -1065,8 +1068,9 @@ static int start_matrix_call(
          matrix_info[nump].jbits = 0;
 
          if (flags & MTX_USE_VEER_DATA) {
-            matrix_info[nump].girlbit = (people->people[nump].id1 & ROLLBITL) ? 1 : 0;
-            matrix_info[nump].boybit = (people->people[nump].id1 & ROLLBITR) ? 1 : 0;
+            uint32 rollbits = people->people[nump].id1 & ROLL_DIRMASK;
+            matrix_info[nump].girlbit = (rollbits == ROLL_IS_L) ? 1 : 0;
+            matrix_info[nump].boybit = (rollbits == ROLL_IS_R) ? 1 : 0;
          }
          else {
             matrix_info[nump].girlbit = (people->people[nump].id1 & ID1_PERM_GIRL) ? 1 : 0;
@@ -1080,11 +1084,11 @@ static int start_matrix_call(
          matrix_info[nump].nearest = 100000;
          matrix_info[nump].deltarot = 0;
          matrix_info[nump].roll_stability_info =
-            ((ROLLBITM / ROLL_BIT) * DBROLL_BIT) |
+            (NDBROLL_BIT * 3) |
             (((unsigned int) stb_z) * DBSTAB_BIT);
          matrix_info[nump].orig_source_idx = i;
-         matrix_info[nump].tbstopse = FALSE;
-         matrix_info[nump].tbstopnw = FALSE;
+         matrix_info[nump].tbstopse = false;
+         matrix_info[nump].tbstopnw = false;
          nump++;
       }
    }
@@ -1473,9 +1477,10 @@ static void finish_matrix_call(
       CC.install_with_collision(result, place, people, i, rot);
 
       if (do_roll_stability) {
-         result->people[place].id1 &= ~ROLL_MASK;
-         result->people[place].id1 |=
-            ((mp->roll_stability_info * (ROLL_BIT/DBROLL_BIT)) & ROLL_MASK);
+         result->people[place].id1 &= ~NROLL_MASK;
+         uint32 rollstuff = (mp->roll_stability_info * (NROLL_BIT/NDBROLL_BIT)) & NROLL_MASK;
+         if ((rollstuff+NROLL_BIT) & (NROLL_BIT*2)) rollstuff |= PERSON_MOVED;
+         result->people[place].id1 |= rollstuff;
 
          if (result->people[place].id1 & STABLE_ENAB)
             do_stability(
@@ -1580,7 +1585,7 @@ static void do_part_of_pair(matrix_rec *thisrec, int base, Const uint32 *callstu
    thisrec->deltay = (((datum >> 16) & 0x1F) - 16) << 1;
    thisrec->deltarot = datum & 3;
    thisrec->roll_stability_info = datum;
-   thisrec->realdone = TRUE;
+   thisrec->realdone = true;
 }
 
 
@@ -1615,14 +1620,14 @@ static void do_pair(
       // They may contain a dragger and a draggee.
       if (ppp->sel) {
          if (qqq->sel) fail("Two adjacent people being dragged.");
-         ppp->realdone = TRUE;
+         ppp->realdone = true;
          ppp->deltax = qqq->x;
          ppp->deltay = qqq->y;
          ppp->deltarot = qqq->orig_source_idx;
          ppp->nearest = qqq->dir;
       }
       else if (qqq->sel) {
-         qqq->realdone = TRUE;
+         qqq->realdone = true;
          qqq->deltax = ppp->x;
          qqq->deltay = ppp->y;
          qqq->deltarot = ppp->orig_source_idx;
@@ -1630,8 +1635,8 @@ static void do_pair(
       }
    }
 
-   ppp->done = TRUE;
-   qqq->done = TRUE;
+   ppp->done = true;
+   qqq->done = true;
 }
 
 
@@ -1719,8 +1724,8 @@ static void make_matrix_chains(
                if ((mi->dir ^ filter) & 1) {
                   if (dirxor & 1) {
                      if (!(flags & MTX_STOP_AND_WARN_ON_TBONE)) fail("People are T-boned.");
-                     mi->tbstopse = TRUE;
-                     mj->tbstopnw = TRUE;
+                     mi->tbstopse = true;
+                     mj->tbstopnw = true;
                      break;
                   }
                   else {
@@ -1748,31 +1753,30 @@ static void process_matrix_chains(
    int nump,
    const uint32 *callstuff,
    uint32 flags,
-   int filter) THROW_DECL    /* 1 for E/W chains, 0 for N/S chains. */
+   int filter) THROW_DECL    // 1 for E/W chains, 0 for N/S chains.
 {
-   long_boolean another_round = TRUE;
-   long_boolean picking_end_jaywalkers = FALSE;
+   bool another_round = true;
+   bool picking_end_jaywalkers = false;
    int i, j;
 
-   /* Pick out pairs of people and move them. */
+   // Pick out pairs of people and move them.
 
    while (another_round) {
-      another_round = FALSE;
+      another_round = false;
 
       if (flags & MTX_FIND_JAYWALKERS) {
-         /* Clear out any bits that aren't bidirectional. */
+         // Clear out any bits that aren't bidirectional.
 
          for (i=0; i<nump; i++) {
             matrix_rec *mi = &matrix_info[i];
             if ((flags & MTX_IGNORE_NONSELECTEES) && (!mi->sel)) continue;
 
             for (j=0; j<nump; j++) {
-               if (      ((1<<j) & mi->jbits) &&
-                        !((1<<i) & matrix_info[j].jbits))
+               if (((1<<j) & mi->jbits) && !((1<<i) & matrix_info[j].jbits))
                   mi->jbits &= ~(1<<j);
             }
 
-            /* If selected person has no jaywalkee, it is an error. */
+            // If selected person has no jaywalkee, it is an error.
             if (!mi->jbits) failp(mi->id1, "can't find person to jaywalk with.");
          }
       }
@@ -1788,29 +1792,32 @@ static void process_matrix_chains(
                   mi->rightidx = -1;
                }
 
-               if (mi->jbits) {   /* If no jbits, person wasn't selected. */
+               if (mi->jbits) {   // If no jbits, person wasn't selected.
                   for (j=0; j<nump; j++) {
                      matrix_rec *mj = &matrix_info[j];
 
                      if (picking_end_jaywalkers) {
-                        /* Look for people who have been identified as extreme jaywalkers with each other. */
+                        // Look for people who have been identified
+                        // as extreme jaywalkers with each other.
                         if (j == mi->leftidx && i == mj->rightidx) {
-                           mi->jbits = (1<<j);    /* Separate them from the rest. */
+                           mi->jbits = (1<<j);    // Separate them from the rest.
                            mj->jbits = (1<<i);
-                           another_round = TRUE;   /* We will move them on a future iteration. */
+                           another_round = true;  //We will move them on a future iteration.
                         }
                      }
                      else {
                         int jdist;
 
-                        /* Fill in jaywalkee indices with record-holding lateral distance. */
+                        // Fill in jaywalkee indices with record-holding lateral distance.
 
                         if ((1<<j) & mi->jbits) {
                            jdist = (mi->dir & 1) ? mj->nicey : mj->nicex;
                            if ((mi->dir+1) & 2) jdist = -jdist;
 
                            if (mi->leftidx >= 0) {
-                              int temp = (mi->dir & 1) ? matrix_info[mi->leftidx].nicey : matrix_info[mi->leftidx].nicex;
+                              int temp = (mi->dir & 1) ?
+                                 matrix_info[mi->leftidx].nicey :
+                                 matrix_info[mi->leftidx].nicex;
                               if ((mi->dir+1) & 2) temp = -temp;
                               if (jdist < temp) mi->leftidx = j;
                            }
@@ -1818,7 +1825,9 @@ static void process_matrix_chains(
                               mi->leftidx = j;
 
                            if (mi->rightidx >= 0) {
-                              int temp = (mi->dir & 1) ? matrix_info[mi->rightidx].nicey : matrix_info[mi->rightidx].nicex;
+                              int temp = (mi->dir & 1) ?
+                                 matrix_info[mi->rightidx].nicey :
+                                 matrix_info[mi->rightidx].nicex;
                               if ((mi->dir+1) & 2) temp = -temp;
                               if (jdist > temp) mi->rightidx = j;
                            }
@@ -1826,9 +1835,8 @@ static void process_matrix_chains(
                               mi->rightidx = j;
                         }
 
-                        /* Look for special case of two people uniquely selecting each other. */
-                        if (      (1UL<<j) == mi->jbits &&
-                                  (1UL<<i) == mj->jbits) {
+                        // Look for special case of two people uniquely selecting each other.
+                        if ((1UL<<j) == mi->jbits && (1UL<<i) == mj->jbits) {
                            int delx = mj->x - mi->x;
                            int dely = mj->y - mi->y;
                            int deltarot;
@@ -1836,7 +1844,7 @@ static void process_matrix_chains(
                            uint32 datum = callstuff[mi->girlbit];
                            if (datum == 0) failp(mi->id1, "can't do this call.");
 
-                           another_round = TRUE;
+                           another_round = true;
 
                            if (mi->dir & 2) delx = -delx;
                            if ((mi->dir+1) & 2) dely = -dely;
@@ -1845,19 +1853,19 @@ static void process_matrix_chains(
                            mi->deltay = (((datum >> 16) & 0x1F) - 16) << 1;
                            mi->deltarot = datum & 3;
                            mi->roll_stability_info = datum;
-                           mi->realdone = TRUE;
+                           mi->realdone = true;
 
                            deltarot = mj->dir - mi->dir + 2;
 
                            if (deltarot) {
-                              /* This person went "around the corner" due to facing
-                                 direction of other dancer. */
+                              // This person went "around the corner" due to facing
+                              // direction of other dancer.
                               if (mi->deltarot ||
-                                  (stability) ((mi->roll_stability_info/DBSTAB_BIT) & 0xF) != stb_z) {
+                                  (stability) ((mi->roll_stability_info/DBSTAB_BIT) & 0xF) !=
+                                  stb_z) {
 
-
-                                 /* Call definition also had turning, as in "jay slide thru".
-                                    Just erase the stability info. */
+                                 // Call definition also had turning, as in "jay slide thru".
+                                 // Just erase the stability info.
                                  mi->roll_stability_info &= ~(DBSTAB_BIT * 0xF);
                               }
                               else {
@@ -1875,75 +1883,76 @@ static void process_matrix_chains(
                            if (mi->dir & 1) { mi->deltax += dely; mi->deltay = +delx; }
                            else             { mi->deltax += delx; mi->deltay = +dely; }
 
-                           mi->done = TRUE;
+                           mi->done = true;
                         }
-                        /* Take care of anyone who has unambiguous jaywalkee.  Get that
-                           jaywalkee's attention by stripping off all his other bits. */
+                        // Take care of anyone who has unambiguous jaywalkee.  Get that
+                        // jaywalkee's attention by stripping off all his other bits.
                         else if ((1UL<<j) == mi->jbits) {
                            mj->jbits = (1<<i);
-                           another_round = TRUE;   /* We will move them on a future iteration. */
+                           another_round = true;   // We will move them on a future iteration.
                         }
                      }
                   }
                }
             }
             else if (mi->nextse) {
-               /* This person might be ready to be paired up with someone. */
+               // This person might be ready to be paired up with someone.
                if (mi->nextnw)
-                  /* This person has neighbors on both sides.  Can't do anything yet. */
+                  // This person has neighbors on both sides.  Can't do anything yet.
                   ;
                else {
-                  /* This person has a neighbor on south/east side only. */
+                  // This person has a neighbor on south/east side only.
 
                   if (mi->tbstopnw) warn(warn__not_tbone_person);
 
-                  if (   (!(flags & MTX_USE_SELECTOR))  ||  mi->sel   ) {
-                     /* Do this pair.  First, chop the pair off from anyone else. */
+                  if ((!(flags & MTX_USE_SELECTOR)) || mi->sel) {
+                     // Do this pair.  First, chop the pair off from anyone else.
 
                      if (mi->nextse->nextse) mi->nextse->nextse->nextnw = 0;
                      mi->nextse->nextse = 0;
-                     another_round = TRUE;
+                     another_round = true;
                      do_pair(mi, mi->nextse, callstuff, flags, 0, filter);
                   }
                }
             }
             else if (mi->nextnw) {
-               /* This person has a neighbor on north/west side only. */
+               // This person has a neighbor on north/west side only.
 
                if (mi->tbstopse) warn(warn__not_tbone_person);
 
-               if (   (!(flags & MTX_USE_SELECTOR))  ||  mi->sel   ) {
-                  /* Do this pair.  First, chop the pair off from anyone else. */
+               if ((!(flags & MTX_USE_SELECTOR)) || mi->sel) {
+                  // Do this pair.  First, chop the pair off from anyone else.
 
                   if (mi->nextnw->nextnw) mi->nextnw->nextnw->nextse = 0;
                   mi->nextnw->nextnw = 0;
-                  another_round = TRUE;
+                  another_round = true;
                   do_pair(mi, mi->nextnw, callstuff, flags, 2, filter);
                }
             }
             else {
-               /* Person is alone.  If this is his lateral axis, mark him done and don't move him. */
+               // Person is alone.  If this is his lateral axis,
+               // mark him done and don't move him.
 
                if ((mi->dir ^ filter) & 1) {
                   if (mi->tbstopse || mi->tbstopnw) warn(warn__not_tbone_person);
-                  if (   (!(flags & MTX_USE_SELECTOR))  ||  mi->sel   )
+                  if ((!(flags & MTX_USE_SELECTOR)) || mi->sel)
                      failp(mi->id1, "has no one to work with.");
-                  mi->done = TRUE;
+                  mi->done = true;
                }
             }
          }
       }
 
-      /* If anything happened, don't pick jaywalkers next time around. */
+      // If anything happened, don't pick jaywalkers next time around.
 
-      if (another_round) picking_end_jaywalkers = FALSE;
+      if (another_round) picking_end_jaywalkers = false;
 
-      /* If doing a jaywalk, and nothing was processed, the leftest/rightest stuff
-         is filled in, and we should check same. */
+      // If doing a jaywalk, and nothing was processed, the leftest/rightest stuff
+      // is filled in, and we should check same.
 
       if ((flags & MTX_FIND_JAYWALKERS) && !another_round && !picking_end_jaywalkers) {
-         picking_end_jaywalkers = TRUE;
-         another_round = TRUE;     /* Do another round this way. */
+         picking_end_jaywalkers = true;
+         another_round = true;     // Do another round this way.
       }
    }
 }
@@ -1986,11 +1995,11 @@ static void partner_matrixmove(
       /* Now clean off the pointers in preparation for the second pass. */
 
       for (i=0; i<nump; i++) {
-         matrix_info[i].done = FALSE;
+         matrix_info[i].done = false;
          matrix_info[i].nextse = 0;
          matrix_info[i].nextnw = 0;
-         matrix_info[i].tbstopse = FALSE;
-         matrix_info[i].tbstopnw = FALSE;
+         matrix_info[i].tbstopse = false;
+         matrix_info[i].tbstopnw = false;
       }
 
       /* Vertical chains next. */
@@ -2001,7 +2010,7 @@ static void partner_matrixmove(
       process_matrix_chains(matrix_info, nump, callstuff, flags, 0);
    }
 
-   /* Scan for people who ought to have done something but didn't. */
+   // Scan for people who ought to have done something but didn't.
 
    for (i=0; i<nump; i++) {
       if (!matrix_info[i].realdone) {
@@ -2115,19 +2124,19 @@ extern void drag_someone_and_move(setup *ss, parse_block *parseptr, setup *resul
    /* Now clean off the pointers in preparation for the second pass. */
 
    for (i=0; i<nump; i++) {
-      matrix_info[i].done = FALSE;
+      matrix_info[i].done = false;
       matrix_info[i].nextse = 0;
       matrix_info[i].nextnw = 0;
-      matrix_info[i].tbstopse = FALSE;
-      matrix_info[i].tbstopnw = FALSE;
+      matrix_info[i].tbstopse = false;
+      matrix_info[i].tbstopnw = false;
    }
 
-   /* Vertical chains next. */
+   // Vertical chains next.
 
    make_matrix_chains(matrix_info, nump, FALSE, MTX_STOP_AND_WARN_ON_TBONE, 0);
    process_matrix_chains(matrix_info, nump, (uint32 *) 0, flags, 0);
 
-   /* Scan for people who ought to have done something but didn't. */
+   // Scan for people who ought to have done something but didn't.
 
    for (i=0; i<nump; i++) {
       if (matrix_info[i].sel)
@@ -2368,11 +2377,11 @@ static void rollmove(
          uint32 st = ((uint32) stb_z)*DBSTAB_BIT;
 
          if (!(callspec->callflagsf & CFLAGH__REQUIRES_SELECTOR) || selectp(ss, i)) {
-            switch (ss->people[i].id1 & ROLL_MASK) {
-               case ROLLBITL: rot = 033, st = ((uint32) stb_a)*DBSTAB_BIT; break;
-               case ROLLBITM: break;
-               case ROLLBITR: rot = 011; st = ((uint32) stb_c)*DBSTAB_BIT; break;
-               default: fail("Roll not permitted after previous call.");
+            switch (ss->people[i].id1 & ROLL_DIRMASK) {
+            case ROLL_IS_R: rot = 011; st = ((uint32) stb_c)*DBSTAB_BIT; break;
+            case ROLL_IS_L: rot = 033, st = ((uint32) stb_a)*DBSTAB_BIT; break;
+            case ROLL_DIRMASK: break;
+            default: fail("Roll not permitted after previous call.");
             }
          }
          install_rot(result, i, ss, i, rot);
@@ -2462,7 +2471,7 @@ extern void process_number_insertion(uint32 mod_word)
 
 
 
-static long_boolean get_real_subcall(
+extern bool get_real_subcall(
    parse_block *parseptr,
    const by_def_item *item,
    setup_command *cmd_in,
@@ -2616,11 +2625,11 @@ static long_boolean get_real_subcall(
 
  ret_true:
    current_options = save_state;
-   return TRUE;
+   return true;
 
  ret_false:
    current_options = save_state;
-   return FALSE;
+   return false;
 }
 
 
@@ -3975,12 +3984,13 @@ static void do_sequential_call(
       result->cmd.prior_expire_bits |= RESULTFLAG__EXPIRATION_ENAB;
 
       {
-         long_boolean zzy = get_real_subcall(parseptr, this_item, &foobar,
-                                             callspec, extra_heritmask_bits, &foo1);
+         bool zzy = get_real_subcall(parseptr, this_item, &foobar,
+                                     callspec, extra_heritmask_bits, &foo1);
          // Well, not if this is an explicit substitution.
-         if (zzy)
+         if (zzy) {
             result->cmd.prior_expire_bits &= ~RESULTFLAG__EXPIRATION_ENAB;
-         recompute_id |= zzy;
+            recompute_id = TRUE;
+         }
       }
 
       // We allow stepping (or rearing back) again.
@@ -4264,7 +4274,7 @@ static long_boolean do_misc_schema(
       int i, j;
 
       for (i=0,j=1; i<=setup_attrs[ss->kind].setup_limits; i++,j<<=1) {
-         if (ss->people[i].id1 & (ROLLBITL | ROLLBITR)) result_mask |= j;
+         if (ss->people[i].id1 & PERSON_MOVED) result_mask |= j;
       }
 
       inner_selective_move(ss, foo1p, (setup_command *) 0,
@@ -4280,7 +4290,7 @@ static long_boolean do_misc_schema(
       int i, j;
 
       for (i=0,j=1; i<=setup_attrs[ss->kind].setup_limits; i++,j<<=1) {
-         if (ss->people[i].id1 & (ROLLBITL | ROLLBITR)) sourcemask |= j;
+         if (ss->people[i].id1 & PERSON_MOVED) sourcemask |= j;
       }
 
       switch (ss->kind) {
@@ -4328,7 +4338,7 @@ static long_boolean do_misc_schema(
       int i, j;
 
       for (i=0,j=1; i<=setup_attrs[ss->kind].setup_limits; i++,j<<=1) {
-         if (ss->people[i].id1 & (ROLLBITL | ROLLBITR)) result_mask |= j;
+         if (ss->people[i].id1 & PERSON_MOVED) result_mask |= j;
       }
 
       inner_selective_move(ss, foo1p, &foo2,
@@ -5616,8 +5626,8 @@ static void move_with_real_call(
             bool local_4x4_exp = false;
 
             if (the_schema == schema_conc_o) {
-               static expand_thing thing1 = {{10, 1, 2, 9},  4, s2x2, s4x4, 0};
-               static expand_thing thing2 = {{13, 14, 5, 6}, 4, s2x2, s4x4, 0};
+               static const expand_thing thing1 = {{10, 1, 2, 9},  4, s2x2, s4x4, 0};
+               static const expand_thing thing2 = {{13, 14, 5, 6}, 4, s2x2, s4x4, 0};
 
                if (ss->kind != s2x2) fail("Can't find outside 'O' spots.");
 
@@ -5910,7 +5920,10 @@ extern void move(
    if (setup_attrs[ss->kind].four_way_symmetry && ss->rotation != 0)
       fail("There is a bug in 4 way canonicalization -- please report this sequence.");
 
-   /* See if there is a restrained concept that has been released. */
+   // See if there is a restrained concept that has been released.
+   // Tests for this are:
+   //   rg04\3286   t14\702   nf17\1449   t14\739
+   //   ni03\2061  vg03\3285  ci04\3066  yh07\4161
 
    if (ss->cmd.restrained_concept && !(ss->cmd.cmd_misc_flags & CMD_MISC__RESTRAIN_CRAZINESS)) {
       parse_block *t = ss->cmd.restrained_concept;
@@ -5921,7 +5934,7 @@ extern void move(
          fail("Can't nest meta-concepts and supercalls.");
 
       if (t->concept->kind == concept_another_call_next_mod) {
-         /* This is a "supercall". */
+         // This is a "supercall".
          parse_block p1 = *t;
          parse_block p2 = *p1.next;
          parse_block p3 = *(p2.subsidiary_root);
@@ -5945,17 +5958,18 @@ extern void move(
 
          // We need to find the end of the concept chain, and plug in our
          // call, after saving its old contents.
-         call_with_name *saved_new_call;
+         parse_block *saved_old_parseptr = ss->cmd.parseptr;
          call_with_name *saved_old_call = ss->cmd.callspec;
          ss->cmd.callspec = (call_with_name *) 0;
          call_conc_option_state saved_options = ss->cmd.parseptr->options;
          if (saved_old_call) ss->cmd.parseptr->options = current_options;
          bool did_crazy_tag_back = false;
-         parse_block **z0;
          parse_block **doing_crazy_concept = (parse_block **) 0;
          parse_block *saved_crazy_ptr;
+         parse_block **z0 = ss->cmd.restrained_final;
+         parse_block **y0 = z0;
 
-         for (z0=ss->cmd.restrained_final; ; z0=&((*z0)->next)) {
+         for ( ; ; z0=&((*z0)->next)) {
             if ((*z0)->concept->kind == concept_crazy ||
                 (*z0)->concept->kind == concept_frac_crazy) {
                doing_crazy_concept = z0;
@@ -5970,17 +5984,23 @@ extern void move(
             *doing_crazy_concept = ss->cmd.parseptr;
          }
 
-         parse_block *saved_old_parseptr = ss->cmd.parseptr;
+         parse_block *foobar = (parse_block *) 0;
 
          if (saved_old_call != base_calls[base_call_basetag0]) {
             if ((*z0)->concept->kind == concept_another_call_next_mod) {
-               z0 = &((*z0)->next->subsidiary_root);
+               if (saved_old_call) {
+                  z0 = &((*z0)->next->subsidiary_root);
+               }
+               else {
+                  foobar = *y0;
+                  *y0 = (*z0)->next->subsidiary_root;
+               }
             }
 
             did_crazy_tag_back = (saved_old_call != 0);
          }
 
-         saved_new_call = (*z0)->call;
+         call_with_name *saved_new_call = (*z0)->call;
          if (saved_old_call) (*z0)->call = saved_old_call;
          (*z0)->no_check_call_level = 1;
 
@@ -5992,6 +6012,8 @@ extern void move(
          }
 
          (concept_table[t->concept->kind].concept_action)(ss, t, result);
+
+         if (foobar) *y0 = foobar;
 
          if (doing_crazy_concept)
              *doing_crazy_concept = saved_crazy_ptr;

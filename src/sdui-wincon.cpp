@@ -51,10 +51,10 @@ extern void ttu_final_option_setup()
 
    my_directions = ui_options.direc;
 
-   if (!no_console) ui_options.use_escapes_for_drawing_people = 1;
+   if (!sdtty_no_console) ui_options.use_escapes_for_drawing_people = 1;
 }
 
-extern void ttu_display_help(void)
+extern void ttu_display_help()
 {
    printf("-lines <N>                  assume this many lines on the screen\n");
    printf("-no_console                 do not do any fancy screen processing -- use this\n");
@@ -131,14 +131,21 @@ static WORD pastel_person_colors[2] = {
 
 
 
-extern void ttu_initialize(void)
+extern void ttu_initialize()
 {
    DWORD numWrite;
    int i;
+   bool using_default_screen_size = false;
+
+   // Set the default value if the user hasn't explicitly set something.
+   if (sdtty_screen_height <= 0) {
+      sdtty_screen_height = 25;
+      using_default_screen_size = true;
+   }
 
    (void) GetConsoleTitle(SavedWindowTitle, 200);
 
-   if (no_console) return;
+   if (sdtty_no_console) return;
 
    consoleStdin = GetStdHandle(STD_INPUT_HANDLE);
    consoleStdout = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -152,7 +159,7 @@ extern void ttu_initialize(void)
    if (!GetConsoleMode(consoleStdin, &oldMode)) {
       int err = GetLastError();
       if (err == ERROR_INVALID_HANDLE) {
-         no_console = 1;
+         sdtty_no_console = 1;
          return;
       }
       fprintf(stderr, "GetConsoleMode failed: %d.\n", err);
@@ -168,7 +175,7 @@ extern void ttu_initialize(void)
    if (!SetConsoleMode(consoleStdin, newMode)) {
       int err = GetLastError();
       if (err == ERROR_INVALID_HANDLE) {
-         no_console = 1;
+         sdtty_no_console = 1;
          return;
       }
       fprintf(stderr, "SetConsoleMode failed: %d.\n", err);
@@ -182,6 +189,11 @@ extern void ttu_initialize(void)
       it does in any decent operating system (unlike some that I've had to deal with.) */
 
    (void) GetConsoleScreenBufferInfo(consoleStdout, &globalconsoleInfo);
+
+   // If the user hasn't explicitly overridden the screen height, set it to
+   // whatever the system tells us.
+   if (using_default_screen_size)
+      sdtty_screen_height = globalconsoleInfo.srWindow.Bottom-globalconsoleInfo.srWindow.Top+1;
 
    if (ui_options.reverse_video)
       background_color = 0;
@@ -239,9 +251,9 @@ extern void ttu_initialize(void)
 }
 
 
-extern void ttu_terminate(void)
+extern void ttu_terminate()
 {
-   if (!no_console) {
+   if (!sdtty_no_console) {
 
       CONSOLE_SCREEN_BUFFER_INFO finalconsoleInfo;
 
@@ -285,14 +297,14 @@ extern bool uims_help_manual()
 }
 
 
-extern int get_lines_for_more(void)
+extern int get_lines_for_more()
 {
-   return screen_height;
+   return sdtty_screen_height-1;
 }
 
-extern void clear_line(void)
+extern void clear_line()
 {
-   if (!no_console) {
+   if (!sdtty_no_console) {
       DWORD numWrite;
       CONSOLE_SCREEN_BUFFER_INFO myconsoleInfo;
 
@@ -307,9 +319,9 @@ extern void clear_line(void)
       printf(" XXX\n");
 }
 
-extern void rubout(void)
+extern void rubout()
 {
-   if (!no_console) {
+   if (!sdtty_no_console) {
       DWORD numWrite;
       CONSOLE_SCREEN_BUFFER_INFO myconsoleInfo;
 
@@ -326,7 +338,7 @@ extern void rubout(void)
 
 extern void erase_last_n(int n)
 {
-   if (!no_console && !no_cursor) {
+   if (!sdtty_no_console && !sdtty_no_cursor) {
       DWORD numWrite;
       CONSOLE_SCREEN_BUFFER_INFO myconsoleInfo;
       int delta = n;
@@ -348,7 +360,7 @@ extern void erase_last_n(int n)
 
 extern void put_line(const char the_line[])
 {
-   if (!no_console) {
+   if (!sdtty_no_console) {
       char c;
 
       /* We need to watch for escape characters denoting people
@@ -398,7 +410,7 @@ extern void put_char(int c)
    DWORD junk;
    char cc = c;
 
-   if (!no_console) {
+   if (!sdtty_no_console) {
       if (c == '\n') {
          CONSOLE_SCREEN_BUFFER_INFO consoleInfo;
 
@@ -443,12 +455,12 @@ extern void put_char(int c)
 }
 
 
-extern int get_char(void)
+extern int get_char()
 {
    DWORD numRead;
    INPUT_RECORD inputRecord;
 
-   if (no_console)
+   if (sdtty_no_console)
       return getchar();    /* A "stdio" call. */
 
    for ( ;; ) {
@@ -588,12 +600,12 @@ extern void get_string(char *dest, int max)
    put_line("\n");
 }
 
-extern void ttu_bell(void)
+extern void ttu_bell()
 {
    (void) MessageBeep(MB_ICONQUESTION);
 }
 
 
-extern void initialize_signal_handlers(void)
+extern void initialize_signal_handlers()
 {
 }

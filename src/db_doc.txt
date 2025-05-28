@@ -3517,13 +3517,20 @@ inherit_single
                   These are not in any particularly logical order.
 
 @0        - for call with mandatory substitution (e.g. "clover and ...") put
-                      subcall here.
+                      subcall here.  (See @m and @T also).
+@T        - like @0, but put in "er's".
+@m        - put mandatory secondary call substitution here.
+@n ... @o - text to ADD if optional secondary substitution has been made,
+                  as in the "ing" for "fascinating <anything>".
+@p ... @q - text to remove if optional secondary substitution has been made.
+@r ... @s - text to remove and replace with secondary subcall.  Like @p ... @q along with @t.
+@t        - put optional secondary call substitution here.
 @1        - put optional subcall here.
 @2 ... @3 - text to remove and replace with subcall.  Like @4 ... @5 along with @1.
 @4 ... @5 - text to remove if optional substitution has been made.
-@6        - put selector here.
 @7 ... @8 - text to ADD if optional substitution has been made, as in the "ing"
                   for "fascinating <anything>".
+@6        - put selector here.
 @9        - put number here.
 @a        - put number here, expressed as N/4, but say "full" instead of 4/4.
 @b        - put number here, expressed as N/4.
@@ -3541,16 +3548,8 @@ inherit_single
 @E ... @F - text to add if this call has "interlocked" modifier.  Presumably
                   has the word "interlocked" in it.
 @I          equivalent to "@Einterlocked @F".
-@P ... @Q - text to add if this call has "grand" modifier.  Presumably
-                  has the word "grand" in it.
-@G          equivalent to "@Pgrand @Q".
+@G        - put the word "grand" here if this call has "grand" modifier.
 @k        - put selector here, but use singular name, as in "beau tie".
-@m        - put mandatory secondary call substitution here.
-@n ... @o - text to ADD if optional secondary substitution has been made,
-                  as in the "ing" for "fascinating <anything>".
-@p ... @q - text to remove if optional secondary substitution has been made.
-@r ... @s - text to remove and replace with secondary subcall.  Like @p ... @q along with @t.
-@t        - put optional secondary call substitution here.
 @u        - put ordinal number (1st, 2nd, ...) here.
 @v        - put tagging call here.
 @w        - put tagging call here.
@@ -3558,3 +3557,4 @@ inherit_single
 @y        - put tagging call here.
 @N        - put circulate call here.
 @O ... @P - text to remove if invoked as a circulate-type call
+@S        - put star turn modifier here.

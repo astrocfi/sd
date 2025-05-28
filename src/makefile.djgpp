@@ -27,62 +27,37 @@ CDEBUGFLAGS = -O2 -Wall -Wno-switch -Wno-uninitialized -Wno-char-subscripts
 CFLAGS = $(DEFS) $(CDEBUGFLAGS)
 
 # These are the "-I"  and "-D" flags that we must use for the compilation
-# of the X11 user interface (sdui-x11.c).
-X11_FLAGS = 
-
-# These are the "-I"  and "-D" flags that we must use for the compilation
-# of the system-dependent part of the TTY user interface (sdui-ttu.c).
+# of the system-dependent part of the TTY user interface (sdui-ttu.cpp).
 TTY_FLAGS = 
-
-# These are the library flags that we must use for the final bind of
-# the X11 version of "sd".
-X11_LIBS = 
 
 # These are the library flags that we must use for the final bind of
 # "sdtty".
 TTY_LIBS = -lpc
 
-SD_OBJS = sdmain.o sdutil.o sdbasic.o sdinit.o \
-          sdtables.o sdctable.o sdtop.o sdconcpt.o sdpreds.o \
+# Note:  If change this list, make corresponding changes
+# in pcfiles.lst.
+SD_OBJS = sdmain.o sdutil.o sdbasic.o sdinit.o sdtables.o \
+          sdptable.o sdctable.o sdtop.o sdconcpt.o sdpreds.o \
           sdgetout.o sdmoves.o sdtand.o sdconc.o sdistort.o \
           sdpick.o sdsi.o
 
-SDX11_OBJ = sdui-x11.o
-
-# This has all special source files for sdtty,
-# for making the distribution and running lint.
-SDTTY_OBJ_UNIX = sdui-tty.o sdmatch.o sdui-ttu.o
-SDTTY_OBJ_PC   = sdui-tty.o sdmatch.o sdui-tpc.o
-# This has the special object files used for building this version of sdtty.
-SDTTY_OBJ = $(SDTTY_OBJ_PC)
+# Note:  If change this list, make corresponding changes
+# in pcfiles.lst.
+SDTTY_OBJ   = sdui-tty.o sdmatch.o sdui-tpc.o
 
 SDTTY_OBJS = @pcfiles.lst
 
-MKCALLS_SRCS = mkcalls.c dbcomp.c
+MKCALLS_SRCS = mkcalls.cpp dbcomp.cpp
 MKCALLS_OBJS = mkcalls.o dbcomp.o
 
-all: alltty
-allx11: sd sd_calls.dat
-alltty: sdtty.exe sd_calls.dat
-everything: allx11 alltty
-
-LDPRELIBS = 
-LDPOSTLIBS = lib\crt0.o lib\libc.a
-
-sd: $(SD_OBJS) $(SDX11_OBJ)
-	$(CC) $(CFLAGS) -o $@ $(SD_OBJS) $(SDX11_OBJ) $(LDPRELIBS) $(X11_LIBS) $(LDPOSTLIBS)
+# Just "make" will make this, which is in fact everything.
+all: sdtty.exe sd_calls.dat
 
 mkcalls.exe: $(MKCALLS_OBJS)
 	$(CC) $(CFLAGS) -o mkcalls.bin $(MKCALLS_OBJS)
-	strip mkcalls.bin
-	coff2exe mkcalls.bin
-
-# The coff2exe program is for djgpp on DOS
 
 sdtty.exe: $(SD_OBJS) $(SDTTY_OBJ)
 	$(CC) $(CFLAGS) -o sdtty.bin $(SDTTY_OBJS) $(TTY_LIBS)
-	strip sdtty.bin
-	coff2exe sdtty.bin
 
 sd_calls.dat: sd_calls.txt mkcalls.exe
 	./mkcalls $(srcdir)/sd_calls.txt
@@ -93,21 +68,16 @@ sd_calls.dat: sd_calls.txt mkcalls.exe
 .cpp.o:
 	$(CC) $(CFLAGS) -c $<
 
-# sdui-x11.c may need -D_POSIX_SOURCE with gcc 1.40 on Ultrix 4.2
-
-sdui-x11.o: sdui-x11.c
-	$(CC) $(CFLAGS) $(X11_FLAGS) -c $(srcdir)/$*.c
-
 sdui-ttu.o: sdui-ttu.cpp
 	$(CC) $(CFLAGS) $(TTY_FLAGS) -c $(srcdir)/$*.cpp
 
 sdui-tty.o sdui-ttu.o sdui-tpc.o: sd.h
 
-dbcomp.o sdmain.o sdsi.o sdui-x11.o: paths.h
+dbcomp.o sdmain.o sdsi.o: paths.h
 
 dbcomp.o: database.h
 
-$(SD_OBJS) $(SDX11_OBJ) $(SDTTY_OBJ): sd.h database.h
+$(SD_OBJS) $(SDTTY_OBJ): sd.h database.h
 
 
 RM = del
@@ -118,7 +88,7 @@ docclean:
 
 clean:: docclean
 clean::
-	-$(RM) *.o sd sdtty.exe mkcalls.exe sd_calls.dat
+	-$(RM) *.o sdtty.exe mkcalls.exe sd_calls.dat
 	-$(RM) lint.out
 
 distclean: clean

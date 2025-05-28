@@ -204,29 +204,29 @@ static void write_blank_if_needed(void)
    a non-null pointer to a null character.  If it is an escape that is normally
    simply dropped, it returns a null pointer. */
 
-SDLIB_API Const char *get_escape_string(char c)
+SDLIB_API const char *get_escape_string(char c)
 {
    switch (c) {
-      case '0': case 'm':
-         return "<ANYTHING>";
-      case 'N':
-         return "<ANYCIRC>";
-      case '6': case 'k':
-         return "<ANYONE>";
-      case 'h':
-         return "<DIRECTION>";
-      case '9':
-         return "<N>";
-      case 'a': case 'b': case 'B': case 'D':
-         return "<N/4>";
-      case 'u':
-         return "<Nth>";
-      case 'v': case 'w': case 'x': case 'y':
-         return "<ATC>";
-      case '7': case 'n': case 'j': case 'J': case 'E': case 'Q':
-         return "";
-      default:
-         return (char *) 0;
+   case '0': case 'm': case 'T':
+      return "<ANYTHING>";
+   case 'N':
+      return "<ANYCIRC>";
+   case '6': case 'k':
+      return "<ANYONE>";
+   case 'h':
+      return "<DIRECTION>";
+   case '9':
+      return "<N>";
+   case 'a': case 'b': case 'B': case 'D':
+      return "<N/4>";
+   case 'u':
+      return "<Nth>";
+   case 'v': case 'w': case 'x': case 'y':
+      return "<ATC>";
+   case '7': case 'n': case 'j': case 'J': case 'E': case 'Q':
+      return "";
+   default:
+      return (char *) 0;
    }
 }
 
@@ -781,37 +781,12 @@ SDLIB_API void print_recurse(parse_block *thing, int print_recurse_arg)
             else if (k == concept_sequential) {
                writestuff("(");
             }
-
-            else if (k == concept_special_sequential &&
-                     local_cptr->concept->value.arg1 == 4) {
-               if (local_cptr->next && subsidiary_ptr) {
-                  writestuff("USE ");
-               }
-               else {
-                  if (local_cptr->next) {
-                     writestuff_with_decorations(&local_cptr->options,
-                                                 "indicated part will be ");
-                  }
-                  else {
-                     writestuff_with_decorations(&local_cptr->options,
-                                                 "using this call as the indicated part");
-                  }
-               }
-            }
             else if (k == concept_special_sequential_num) {
-               if (local_cptr->next && subsidiary_ptr) {
-                  writestuff("USE ");
-               }
-               else {
-                  if (local_cptr->next) {
-                     writestuff_with_decorations(&local_cptr->options,
-                                                 "@u part will be ");
-                  }
-                  else {
-                     writestuff_with_decorations(&local_cptr->options,
-                                                 "using this call as the @u part");
-                  }
-               }
+               writestuff("USE ");
+
+               // If stuff hasn't been completely entered, show the number.
+               if (!local_cptr->next || !subsidiary_ptr)
+                  writestuff_with_decorations(&local_cptr->options, "(for @u part) ");
             }
             else if (k == concept_replace_nth_part ||
                      k == concept_replace_last_part ||
@@ -872,10 +847,6 @@ SDLIB_API void print_recurse(parse_block *thing, int print_recurse_arg)
                                                     " after @9/@9 with this call:");
                         break;
                      }
-                  }
-                  else if (k == concept_special_sequential &&
-                           local_cptr->concept->value.arg1 == 4) {
-                     writestuff(" in this call:");
                   }
                }
                break;
@@ -1373,7 +1344,7 @@ SDLIB_API void print_recurse(parse_block *thing, int print_recurse_arg)
                         writestuff("[");
                         print_recurse(sub1_ptr, PRINT_RECURSE_STAR);
                         writestuff("]");
-         
+                        if (savec == 'T') writestuff(" er's");
                         pending_subst1 = FALSE;
                      }
          
@@ -2238,6 +2209,8 @@ SDLIB_API void run_program()
       newline();
       writestuff("Copyright (c) 1996, Charles Petzold");
       newline();
+      writestuff("Copyright (c) 2001  Chris \"Fen\" Tamanaha");
+      newline();
       writestuff("SD comes with ABSOLUTELY NO WARRANTY;");
       newline();
       writestuff("   for details see the license.");
@@ -2787,7 +2760,7 @@ SDLIB_API void run_program()
          case command_help:
             {
                char help_string[MAX_ERR_LENGTH];
-               Const char *prefix;
+               const char *prefix;
                int current_length;
 
                switch (parse_state.call_list_to_use) {

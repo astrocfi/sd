@@ -160,8 +160,9 @@ void PrintFile(const char *szFileName, HWND hwnd, char *szMainTitle, HINSTANCE h
    // This is where we choose to stop printing.  It must not be greater than
    // "GetDeviceCaps(hdcPrn, VERTRES)-iPixelLineHeight", that is, we must subtract
    // iPixelLineHeight.  If we set it to exactly that value, we print to the bottom
-   // of the page.  That seems to look right.
-   int iPixelBottomOfPage = GetDeviceCaps(hdcPrn, VERTRES)-iPixelLineHeight;
+   // of the page.  So we subtract twice that value to get a reasonable
+   // bottom margin.
+   int iPixelBottomOfPage = GetDeviceCaps(hdcPrn, VERTRES)-iPixelLineHeight*2;
 
    // Display the printing dialog box
      

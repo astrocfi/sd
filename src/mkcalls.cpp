@@ -1,8 +1,6 @@
-/* -*- mode:C; c-basic-offset:3; indent-tabs-mode:nil; -*- */
-
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-1998  William B. Ackerman.
+    Copyright (C) 1990-2002  William B. Ackerman.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -20,7 +18,6 @@
 
     This is for version 30. */
 
-/* mkcalls.c */
 
 #include "paths.h"
 
@@ -35,13 +32,22 @@
     if defined(__STDC__) && !defined(athena_rt) && !defined(athena_vax)
    We have taken it out and replaced with what you see below.  If this breaks
    anything, let us know. */
-#if defined(__STDC__) || defined(sun)
+
+#if __STDC__ || defined(sun)
 #include <stdlib.h>
 #else
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 extern void free(void *ptr);
 extern char *malloc(unsigned int siz);
 extern char *realloc(char *oldp, unsigned int siz);
 extern void exit(int code);
+#ifdef __cplusplus
+}
+#endif
+
 #endif
 
 #include <stdarg.h>

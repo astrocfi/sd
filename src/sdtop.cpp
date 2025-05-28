@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-2001  William B. Ackerman.
+    Copyright (C) 1990-2002  William B. Ackerman.
 
     This file is unpublished and contains trade secrets.  It is
     to be used by permission only and not to be disclosed to third
@@ -1547,7 +1547,7 @@ static void initialize_concept_sublists(void)
       all_legal_concepts++;
    }
 
-   /* Our friends in the UI will need this. */
+   // Our friends in the UI will need this.
    general_concept_size = concept_index - general_concept_offset;
 
    concept_sublists[call_list_any] =
@@ -1555,10 +1555,10 @@ static void initialize_concept_sublists(void)
    good_concept_sublists[call_list_any] =
       (short int *) (*the_callback_block.get_mem_fn)(all_legal_concepts*sizeof(short int));
 
-   /* Make the concept sublists, one per setup.  We do them in downward order,
-      with "any setup" last.  This is because we put our results into the
-      "any setup" slot while we are working, and then copy them to the
-      correct slot for each setup other than "any". */
+   // Make the concept sublists, one per setup.  We do them in downward order,
+   // with "any setup" last.  This is because we put our results into the
+   // "any setup" slot while we are working, and then copy them to the
+   // correct slot for each setup other than "any".
 
    for (test_call_list_kind = (int) call_list_qtag;
         test_call_list_kind >= (int)call_list_any;
@@ -1575,8 +1575,8 @@ static void initialize_concept_sublists(void)
          if ((p->concparseflags & CONCPARSE_MENU_DUP) || p->level > calling_level)
             continue;
 
-         /* This concept is legal at this level.  See if it is appropriate for this setup.
-            If we don't know, the default value of setup_mask will make it legal. */
+         // This concept is legal at this level.  See if it is appropriate for this setup.
+         // If we don't know, the default value of setup_mask will make it legal.
 
          switch (p->kind) {
          case concept_centers_or_ends:
@@ -1618,8 +1618,8 @@ static void initialize_concept_sublists(void)
             case tandem_key_tand:
                setup_mask = MASK_TAND;
 
-               /* We allow <anyone> tandem, and we allow twosome.  That's all.
-                  We specifically exclude all the "tandem in a 1/4 tag" stuff. */
+               // We allow <anyone> tandem, and we allow twosome.  That's all.
+               // We specifically exclude all the "tandem in a 1/4 tag" stuff.
                if (p->value.arg2 != CONCPROP__NEEDK_TWINQTAG &&
                    ((p->value.arg3 & 0xFF) == 0 || (p->value.arg3 & 0xFF) == 0x10))
                   good_setup_mask = MASK_GOODTAND;
@@ -1628,8 +1628,8 @@ static void initialize_concept_sublists(void)
             case tandem_key_cpls:
                setup_mask = MASK_CPLS;
 
-               /* We allow <anyone> tandem, and we allow twosome.  That's all.
-                  We specifically exclude all the "tandem in a 1/4 tag" stuff. */
+               // We allow <anyone> tandem, and we allow twosome.  That's all.
+               // We specifically exclude all the "tandem in a 1/4 tag" stuff.
                if (p->value.arg2 != CONCPROP__NEEDK_TWINQTAG &&
                    ((p->value.arg3 & 0xFF) == 0 || (p->value.arg3 & 0xFF) == 0x10))
                   good_setup_mask = MASK_GOODCPLS;
@@ -1643,7 +1643,7 @@ static void initialize_concept_sublists(void)
             break;
          case concept_multiple_lines_tog_std:
          case concept_multiple_lines_tog:
-            /* Test for quadruple C/L/W working. */
+            // Test for quadruple C/L/W working.
             if (p->value.arg4 == 4) setup_mask = MASK_2X4;
             break;
          case concept_quad_diamonds:
@@ -1651,25 +1651,28 @@ static void initialize_concept_sublists(void)
          case concept_do_phantom_diamonds:
             setup_mask = MASK_QUAD_D;
             break;
+         case concept_triple_twin_nomystic:
+            // Test for divided C/L/W.
+            if (p->value.arg3 == 10) setup_mask = MASK_2X4;
+            break;
          case concept_do_phantom_2x4:
-         case concept_divided_2x4:
          case concept_quad_lines:
-            setup_mask = MASK_2X4;          /* Can actually improve on this. */
+            setup_mask = MASK_2X4;          // Can actually improve on this.
             break;
          case concept_assume_waves:
-            /* We never allow any "assume_waves" concept.  In the early days,
-               it was actually dangerous.  It isn't dangerous any more,
-               but it's a fairly stupid thing to generate in a search. */
+            // We never allow any "assume_waves" concept.  In the early days,
+            // it was actually dangerous.  It isn't dangerous any more,
+            // but it's a fairly stupid thing to generate in a search.
             setup_mask = 0;
             break;
          }
 
-         /* Now we can determine whether this concept is appropriate for this setup. */
+         // Now we can determine whether this concept is appropriate for this setup.
 
          if ((1 << (test_call_list_kind - ((int) call_list_empty))) & setup_mask)
             concept_sublists[call_list_any][concepts_in_this_setup++] = concept_index;
 
-         /* And we can determine whether this concept is really nice for this setup. */
+         // And we can determine whether this concept is really nice for this setup.
 
          if ((1 << (test_call_list_kind - ((int) call_list_empty))) & good_setup_mask)
             good_concept_sublists[call_list_any][good_concepts_in_this_setup++] = concept_index;
@@ -1704,8 +1707,9 @@ extern void initialize_sdlib(void)
 {
    initialize_tandem_tables();
    initialize_restr_tables();
-   initialize_conc_tables();
    initialize_sel_tables();
+   initialize_fix_tables();
+   initialize_conc_tables();
    initialize_map_tables();
    initialize_touch_tables();
    initialize_concept_sublists();
@@ -4264,6 +4268,7 @@ static resolve_tester test_thar_stuff[] = {
    {resolve_xby_rlg,        cross_by_level,    1, 0,   {4, 3, 2, 1, 0, 7, 6, 5},     0x8138A31A},    /* cross-by-RLG from thar. */
    {resolve_revprom,        l_mainstream,      4, 0,   {2, 3, 0, 1, 6, 7, 4, 5},     0x118833AA},    /* reverse promenade from thar. */
    {resolve_xby_la,         cross_by_level,    4, 0,   {2, 3, 0, 1, 6, 7, 4, 5},     0x138A31A8},    /* cross-by-LA from thar. */
+   {resolve_dixie_grand,    dixie_grand_level, 0, 0,   {4, 1, 2, 7, 0, 5, 6, 3},     0xAA118833},    /* dixie grand from thar. */
    {resolve_none,           l_mainstream,      64}};
 
 static resolve_tester test_4x4_stuff[] = {
@@ -4822,9 +4827,9 @@ static void check_concept_parse_tree(parse_block *conceptptr) THROW_DECL
 }
 
 
-/* Top level move routine. */
+// Top level move routine.
 
-SDLIB_API void toplevelmove(void) THROW_DECL
+SDLIB_API void toplevelmove() THROW_DECL
 {
    int i;
 
@@ -4858,55 +4863,122 @@ SDLIB_API void toplevelmove(void) THROW_DECL
 
    newhist->warnings = warning_info();
 
-   /* If we are starting a sequence with the "so-and-so into the center and do whatever"
-      flag on, and this call is a "sequence starter", take special action. */
+   // If we are starting a sequence with the "so-and-so into the center and do whatever"
+   // flag on, and this call is a "sequence starter", take special action.
 
    if (startinfolist[history[history_ptr].centersp].into_the_middle) {
 
-      /* If the call is a special sequence starter (e.g. spin a pulley) remove the implicit
-         "centers" concept and just do it.  The setup in this case will be a squared set
-         with so-and-so moved into the middle, which is what the encoding of these calls
-         wants.
-      If the call is a "split square thru" or "split dixie style" type of call, and the
-         "split" concept has been given, possibly preceded by "left" we do the same.
-         We leave the "split" concept in place.  Other mechanisms will do the rest. */
+      // If the call is a special sequence starter (e.g. spin a pulley) remove the implicit
+      // "centers" concept and just do it.  The setup in this case will be a squared set
+      // with so-and-so moved into the middle, which is what the encoding of these calls
+      // wants.
+      //
+      // If the call is a "split square thru" or "split dixie style" type of call, and the
+      // "split" concept has been given, possibly preceded by "left" we do the same.
+      // We leave the "split" concept in place.  Other mechanisms will do the rest.
+      //
+      // This is made much more complicated by the fact that we want the examination
+      // of the call to be transparent to modifiers, certain concepts (fractional,
+      // stretch, maybe others will be added to this list in the future) and to
+      // "<anything> and roll" types of suffixes.
 
-      if (parse_state.topcallflags1 & CFLAG1_SEQUENCE_STARTER)
-         conceptptr = conceptptr->next;
-      else if (parse_state.topcallflags1 &
-               (CFLAG1_SPLIT_LIKE_SQUARE_THRU | CFLAG1_SPLIT_LIKE_DIXIE_STYLE)) {
-         uint64 finaljunk;
-         parse_block *concept_scan = conceptptr->next;
+      // There's this weird stuff about using "parse_state.topcallflags1"
+      // instead of the obvious call flags.  I no longer remember what that
+      // is for.  But we do it.  For the first round.
+      uint32 callflags1_to_examine = parse_state.topcallflags1;
+      parse_block *parse_scan = conceptptr->next;
+      uint64 finaljunk;
+      finaljunk.final = 0;
+      bool did_something = true;
 
+      // Here's the loop that strips off the stuff that we need to strip off,
+      // and checks the call.
+      while (did_something) {
+         did_something = false;
+         if (callflags1_to_examine & CFLAG1_SEQUENCE_STARTER) {
+            // The subject call is a sequence starter.
+            // Strip the "centers" concept and exit.
+            conceptptr = conceptptr->next;
+            break;
+         }
+         else if (callflags1_to_examine &
+                  (CFLAG1_SPLIT_LIKE_SQUARE_THRU | CFLAG1_SPLIT_LIKE_DIXIE_STYLE)) {
+            // The subject call is a sequence starter if given the "split" modifier.
+            if (finaljunk.final & FINAL__SPLIT) {
+               conceptptr = conceptptr->next;
+               break;
+            }
+         }
+
+         // Now skip things.
+         // First, skip any fractional concept.  Only simple "M/N".
+         // Also skip "stretch".
+         while ((parse_scan->concept->kind == concept_fractional &&
+                 parse_scan->concept->value.arg1 == 0) ||
+                parse_scan->concept->kind == concept_old_stretch) {
+            parse_scan = parse_scan->next;
+            did_something = true;
+         }
+
+         // Skip all simple modifiers.  If we pass a "split" modifier, remember same.
          finaljunk.her8it = 0;
          finaljunk.final = 0;
+         parse_block *new_parse_scan = process_final_concepts(parse_scan, FALSE, &finaljunk);
+         if (parse_scan != new_parse_scan) {
+            parse_scan = new_parse_scan;
+            callflags1_to_examine = parse_scan->call->the_defn.callflags1;
+            did_something = true;
+         }
 
-         // First, skip the fractional concept.  Only simple "M/N".
-         // Also skip "stretch".
-         while ((concept_scan->concept->kind == concept_fractional &&
-                 concept_scan->concept->value.arg1 == 0) ||
-                concept_scan->concept->kind == concept_old_stretch)
-            concept_scan = concept_scan->next;
+         // If the subject call is something like "<anything> and roll",
+         // look at the <anything> to see whether it is a sequence starter.
+         // The test for this is "heads [split grand chain 8] and roll".
+         // The subcall may have already been filled in (the user typed
+         // "heads [split grand chain 8] and roll"), or it may need to be
+         // filled in (the user typed "heads <anything> and roll".)
+         // The concept kind will be "concept_another_call_next_mod" in the
+         // former case, or "marker_end_of_list" in the latter.
+         // In the latter case, "get_real_subcall" will perform the
+         // query.  Either way, "thingout" will have the subcall.
+         // We do this if the call is something like "<anything> and roll".
+         // The test is that it is sequentially defined, and part 1 is
+         // a mandatory substitution, replacing the call "nothing".
+         if ((parse_scan->concept->kind == concept_another_call_next_mod ||
+              parse_scan->concept->kind == marker_end_of_list) &&
+             parse_scan->call->the_defn.schema == schema_sequential) {
+            calldefn *seqdef = &parse_scan->call->the_defn;
+            by_def_item *part0item = &seqdef->stuff.seq.defarray[0];
+            setup_command thingout;
 
-         (void) process_final_concepts(concept_scan, FALSE, &finaljunk);
-         if (finaljunk.final & FINAL__SPLIT)
-            conceptptr = conceptptr->next;
+            if (part0item->call_id == base_call_null &&
+                (part0item->modifiers1 & DFM1_CALL_MOD_MASK) == DFM1_CALL_MOD_MAND_ANYCALL &&
+                get_real_subcall(parse_scan, 
+                                 part0item,
+                                 &starting_setup.cmd,
+                                 seqdef,
+                                 0,
+                                 &thingout)) {
+               parse_scan = thingout.parseptr;
+               // If there is no call, then process_final_concepts will do something
+               // on the next round, and we will get something on the round after that.
+               callflags1_to_examine = parse_scan->call ?
+                  parse_scan->call->the_defn.callflags1 : 0;
+               did_something = true;
+            }
+         }
       }
    }
 
-   /* Clear a few things.  We do NOT clear the warnings, because some (namely the
-      "concept not allowed at this level" warning) may have already been logged. */
+   // Clear a few things.  We do NOT clear the warnings, because some (namely the
+   // "concept not allowed at this level" warning) may have already been logged.
+   // Set the selectors to "uninitialized", so that, if we do a call like "run", we
+   // will query the user to find out who is selected.
    newhist->centersp = 0;
    newhist->draw_pic = FALSE;
    newhist->resolve_flag.kind = resolve_none;
+   current_options = null_options;
 
-   /* Set the selector to "uninitialized", so that, if we do a call like "run", we
-      will query the user to find out who is selected. */
-
-   current_options.who = selector_uninitialized;
-
-   /* Put in identification bits for global/unsymmetrical stuff, if possible. */
-
+   // Put in identification bits for global/unsymmetrical stuff, if possible.
    for (i=0; i<MAX_PEOPLE; i++) starting_setup.people[i].id2 &= ~GLOB_BITS_TO_CLEAR;
 
    if (!(starting_setup.result_flags & RESULTFLAG__IMPRECISE_ROT)) {
@@ -5050,18 +5122,16 @@ SDLIB_API void toplevelmove(void) THROW_DECL
 }
 
 
-/* Do the extra things that a call requires, that are not required when only testing for legality. */
+// Do the extra things that a call requires, that are not required
+// when only testing for legality.
 
-SDLIB_API void finish_toplevelmove(void) THROW_DECL
+SDLIB_API void finish_toplevelmove() THROW_DECL
 {
-   int i;
-
    configuration *newhist = &history[history_ptr+1];
 
-   /* Remove outboard phantoms from the resulting setup. */
-
+   // Remove outboard phantoms from the resulting setup.
    normalize_setup(&newhist->state, simple_normalize);
-   for (i=0; i<MAX_PEOPLE; i++) newhist->state.people[i].id2 &= ~GLOB_BITS_TO_CLEAR;
+   for (int i=0; i<MAX_PEOPLE; i++) newhist->state.people[i].id2 &= ~GLOB_BITS_TO_CLEAR;
    newhist->resolve_flag = resolve_p(&newhist->state);
 }
 

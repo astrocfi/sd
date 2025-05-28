@@ -1,5 +1,5 @@
 /*
- * sdui-ttu.c - helper functions for sdui-tty interface to use the Unix
+ * sdui-ttu.cpp - helper functions for sdui-tty interface to use the Unix
  * "curses" mechanism.
  * Time-stamp: <93/11/27 11:06:39 gildea>
  * Copyright 1993 Stephen Gildea
@@ -80,7 +80,7 @@ extern void ttu_final_option_setup()
 }
 
 
-extern void ttu_display_help(void)
+extern void ttu_display_help()
 {
    printf("-no_line_delete             do not use the \"line delete\" function for screen management\n");
    printf("-no_cursor                  do not use screen management functions at all\n");
@@ -97,8 +97,11 @@ extern bool uims_help_manual()
 }
 
 
-extern void ttu_initialize(void)
+extern void ttu_initialize()
 {
+   // Set the default value if the user hasn't explicitly set something.
+   if (sdtty_screen_height <= 0) sdtty_screen_height = 25;
+
    /* This code uses "no_cursor" rather than "no_console"
       to direct what it does.  So, if "no_console" is on,
       we take appropriate action. */
@@ -151,7 +154,7 @@ extern void ttu_initialize(void)
 #endif
 }
 
-extern void ttu_terminate(void)
+extern void ttu_terminate()
 {
 #ifndef NO_CURSES
    if (!no_cursor) {
@@ -167,15 +170,15 @@ extern void ttu_terminate(void)
 }
 
 
-extern int get_lines_for_more(void)
+extern int get_lines_for_more()
 {
 #ifndef NO_CURSES
    if (!no_cursor)
       return LINES;
    else
-      return 24;
+      return sdtty_screen_height-1;
 #else
-   return 24;
+   return sdtty_screen_height-1;
 #endif
 }
 
@@ -301,7 +304,7 @@ whereas the correct way to document this would have been
 #endif
 
 
-extern void clear_line(void)
+extern void clear_line()
 {
 #ifndef NO_CURSES
    if (!no_cursor) {
@@ -325,7 +328,7 @@ extern void clear_line(void)
 #endif
 }
 
-extern void rubout(void)
+extern void rubout()
 {
 #ifndef NO_CURSES
    if (!no_cursor) {
@@ -400,7 +403,7 @@ extern void put_char(int c)
 }
 
 
-extern int get_char(void)
+extern int get_char()
 {
    int nc;
 
@@ -456,7 +459,7 @@ extern void get_string(char *dest, int max)
 }
 
 
-extern void ttu_bell(void)
+extern void ttu_bell()
 {
 #ifndef NO_CURSES
    if (!no_cursor) {
@@ -485,7 +488,7 @@ static void cont_handler(int n)
     refresh_input();
 }
 
-void initialize_signal_handlers(void)
+void initialize_signal_handlers()
 {
     signal(SIGTSTP, stop_handler);
     signal(SIGCONT, cont_handler);

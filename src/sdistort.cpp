@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-2001  William B. Ackerman.
+    Copyright (C) 1990-2002  William B. Ackerman.
 
     This file is unpublished and contains trade secrets.  It is
     to be used by permission only and not to be disclosed to third
@@ -2257,7 +2257,7 @@ extern void distorted_move(
    setup res1;
    mpkind mk, mkbox;
 
-   map_thing *map_ptr;
+   const map_thing *map_ptr;
    uint32 mapcode = ~0UL;
    int rotate_back = 0;
    uint32 livemask = global_livemask;
@@ -2392,7 +2392,7 @@ extern void distorted_move(
          if (j < 0) break;
          (void) copy_person(result, j, &ssave, j);
          if (result->people[j].id1)
-            result->people[j].id1 = (result->people[j].id1 & (~ROLL_MASK)) | ROLLBITM;
+            result->people[j].id1 = (result->people[j].id1 & (~NROLL_MASK)) | ROLL_IS_M;
       }
 
       goto getoutnosplit;
@@ -2786,53 +2786,104 @@ extern void triple_twin_move(
 {
    uint32 tbonetest = global_tbonetest;
    uint32 mapcode;
-   phantest_kind phan = phantest_ok;
+   phantest_kind phan = (phantest_kind) parseptr->concept->value.arg4;
 
-   /* Arg1 = 0/1/3 for C/L/W, usual coding. */
-   /* Arg3 =
-      0 : triple twin C/L/W
-     (not used!)      1 : triple C/L/W of 6
-      2 : quadruple C/L/W of 6
-      3 : [split/interlocked] phantom C/L/W of 6, arg4 has map kind
-      4 : triple twin C/L/W of 3 */
+   // Arg1 = 0/1/3 for C/L/W, usual coding.
+   // Arg2 = matrix to expand to.
+   // Arg4 = phantest kind.
+   // Arg3 =
+   // 0 : triple twin C/L/W
+   // 1 : triple C/L/W of 6
+   // 2 : quadruple C/L/W of 6
+   // 3 : [split/interlocked] phantom C/L/W of 6, arg5 has map kind
+   // 4 : triple twin C/L/W of 3
+   // 5 : triple tidal C/L/W
+   // 6 : twin phantom C/L/W of 6
+   // 7 : twin phantom tidal C/L/W
+   // 8 : 12 matrix [split/interlocked] phantom C/L/W, arg5 has map kind
+   // 9 : 12 matrix divided C/L/W
+   // 10 : divided C/L/W
 
-   /* This needs a 3x6 setup -- need to make a NEEDK indicator and use the "ARG2_MATRIX" stuff. */
-   if (parseptr->concept->value.arg3 == 1) fail("Sorry, can't do this.");
-
-   /* The setup has not necessarily been expanded to a 4x6.  It has only been
-      expanded to a 4x4.  Why?  Because the stuff in toplevelmove that does
-      the expansion didn't know which way to orient the 4x6.  (It might have
-      depended on "standard" information.)  So why is the expansion supposed
-      to be done there rather than at the point where the concept is executed?
-      It is to prevent monstrosities like "in your split phantom line you
-      have a split phantom column".  Expansion takes place only at the top
-      level.  When the concept "in your split phantom line" is executed,
-      toplevelmove expands the setup to a 4x4, the concept routine splits
-      it into 2x4's, and then the second concept is applied without further
-      expansion.  Since we now have 2x4's and the "you have a split phantom
-      column" concept requires a 4x4, it will raise an error.  If the
-      expansion were done wherever a concept is performed, this monstrosity
-      would by permitted to occur.  So the remaining question is "What
-      safety are we sacrificing (or what monstrosities are we permitting)
-      by doing the expansion here?"  The answer is that, if there were a
-      concept that divided the setup into 4x4's, we could legally do
-      something like "in your split phantom 4x4's you have triple twin
-      columns".  It would expand each 4x4 into a 4x6 and go the call.
-      Horrors.  Fortunately, there are no such concepts.  Of course
-      the really right way to do this is to have a setupflag called
-      NOEXPAND, and do the expansion when the concept is acted upon.
-      Anyway, here goes. */
+   // The setup has not necessarily been expanded to a 4x6.  It has only been
+   // expanded to a 4x4.  Why?  Because the stuff in toplevelmove that does
+   // the expansion didn't know which way to orient the 4x6.  (It might have
+   // depended on "standard" information.)  So why is the expansion supposed
+   // to be done there rather than at the point where the concept is executed?
+   // It is to prevent monstrosities like "in your split phantom line you
+   // have a split phantom column".  Expansion takes place only at the top
+   // level.  When the concept "in your split phantom line" is executed,
+   // toplevelmove expands the setup to a 4x4, the concept routine splits
+   // it into 2x4's, and then the second concept is applied without further
+   // expansion.  Since we now have 2x4's and the "you have a split phantom
+   // column" concept requires a 4x4, it will raise an error.  If the
+   // expansion were done wherever a concept is performed, this monstrosity
+   // would by permitted to occur.  So the remaining question is "What
+   // safety are we sacrificing (or what monstrosities are we permitting)
+   // by doing the expansion here?"  The answer is that, if there were a
+   // concept that divided the setup into 4x4's, we could legally do
+   // something like "in your split phantom 4x4's you have triple twin
+   // columns".  It would expand each 4x4 into a 4x6 and go the call.
+   // Horrors.  Fortunately, there are no such concepts.  Of course
+   // the really right way to do this is to have a setupflag called
+   // NOEXPAND, and do the expansion when the concept is acted upon.
+   // Anyway, here goes.
 
    if ((tbonetest & 011) == 011) fail("Can't do this from T-bone setup.");
 
    tbonetest ^= parseptr->concept->value.arg1;
 
-   if (parseptr->concept->value.arg3 == 4) {
+   switch (parseptr->concept->value.arg3) {
+   case 10:
+      if (ss->kind != s2x8) fail("Must have a 2x8 setup for this concept.");
+      mapcode = MAPCODE(s2x4,2,MPKIND__SPLIT,0);
+      tbonetest ^= 1;
+      break;
+   case 9:
+      if (ss->kind != s2x6) fail("Must have a 2x6 setup for this concept.");
+      mapcode = MAPCODE(s2x3,2,MPKIND__SPLIT,0);
+      tbonetest ^= 1;
+      break;
+   case 8:
+      if (ss->kind != s3x4) fail("Must have a 3x4 setup for this concept.");
+      mapcode = MAPCODE(s2x3,2,parseptr->concept->value.arg5,1);
+      break;
+   case 7:
+      if (ss->kind == s2x8)
+         mapcode = MAPCODE(s1x8,2,MPKIND__SPLIT,1);
+      else if (ss->kind == s1x16)
+         mapcode = MAPCODE(s1x8,2,MPKIND__SPLIT,0);
+      else
+         fail("Must have a 2x8 or 1x16 setup for this concept.");
+
+      tbonetest ^= 1;
+      ss->cmd.cmd_misc_flags |= CMD_MISC__EXPLICIT_MATRIX;
+      break;
+   case 6:
+      if (ss->kind == s2x6)
+         mapcode = MAPCODE(s1x6,2,MPKIND__SPLIT,1);
+      else if (ss->kind == s1x12)
+         mapcode = MAPCODE(s1x6,2,MPKIND__SPLIT,0);
+      else
+         fail("Must have a 2x6 or 1x12 setup for this concept.");
+
+      tbonetest ^= 1;
+      ss->cmd.cmd_misc_flags |= CMD_MISC__EXPLICIT_MATRIX;
+      break;
+   case 1:
+      if (ss->kind != s3x6) fail("Must have a 3x6 setup for this concept.");
+      tbonetest ^= 1;
+      mapcode = MAPCODE(s1x6,3,MPKIND__SPLIT,1);
+      break;
+   case 4:
       if (ss->kind != s3x6) fail("Must have a 3x6 setup for this concept.");
       mapcode = MAPCODE(s2x3,3,MPKIND__SPLIT,1);
-      phan = phantest_not_just_centers;
-   }
-   else {
+      break;
+   case 5:
+      if (ss->kind != s3x8) fail("Must have a 3x8 setup for this concept.");
+      tbonetest ^= 1;
+      mapcode = MAPCODE(s1x8,3,MPKIND__SPLIT,1);
+      break;
+   default:
       if (parseptr->concept->value.arg3 != 0) tbonetest ^= 1;
 
       if (ss->kind == s4x4) {
@@ -2841,32 +2892,32 @@ extern void triple_twin_move(
       }
 
       if (ss->kind != s4x6) fail("Must have a 4x6 setup for this concept.");
-   
+
       switch (parseptr->concept->value.arg3) {
       case 0:
          mapcode = MAPCODE(s2x4,3,MPKIND__SPLIT,1);
-         phan = phantest_not_just_centers;
          break;
       case 2:
          mapcode = MAPCODE(s1x6,4,MPKIND__SPLIT,1);
          break;
       case 3:
-         mapcode = MAPCODE(s2x6,2,(mpkind)parseptr->concept->value.arg4,1);
+         mapcode = MAPCODE(s2x6,2,(mpkind)parseptr->concept->value.arg5,1);
          break;
       }
 
       if ((ss->cmd.cmd_misc2_flags & CMD_MISC2__MYSTIFY_SPLIT) &&
           parseptr->concept->value.arg3 != 0)
          fail("Mystic not allowed with this concept.");
+      break;
    }
 
-   if (parseptr->concept->value.arg1 == 3)
-      ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
-   
    if (tbonetest & 1) {
       if (parseptr->concept->value.arg1 == 0) fail("Can't find the required columns.");
       else fail("Can't find the required lines.");
    }
+
+   if (parseptr->concept->value.arg3 != 8 && parseptr->concept->value.arg1 == 3)
+      ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
 
    new_divided_setup_move(ss, mapcode, phan, TRUE, result);
 }

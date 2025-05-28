@@ -594,7 +594,7 @@ static void unpack_us(
             /* Unpack single person. */
 
             personrec f = tandstuff->real_saved_people[0][ii];
-            if (f.id1) f.id1 = (f.id1 & ~(ROLL_MASK|STABLE_MASK|077)) | (z & (ROLL_MASK|STABLE_MASK|013));
+            if (f.id1) f.id1 = (f.id1 & ~(NROLL_MASK|STABLE_MASK|077)) | (z & (NROLL_MASK|STABLE_MASK|013));
             result->people[map_ptr->maps[i]] = f;
          }
          else {
@@ -606,8 +606,8 @@ static void unpack_us(
             for (j=0 ; j<tandstuff->np ; j++) {
                fb[j] = tandstuff->real_saved_people[j][ii];
                if (fb[j].id1) fb[j].id1 =
-                                 (fb[j].id1 & ~(ROLL_MASK|STABLE_MASK|077)) |
-                                 (z & (ROLL_MASK|STABLE_MASK|013));
+                                 (fb[j].id1 & ~(NROLL_MASK|STABLE_MASK|077)) |
+                                 (z & (NROLL_MASK|STABLE_MASK|013));
             }
 
             if (map_ptr->maps[i+map_ptr->limit] < 0)
@@ -641,10 +641,10 @@ static void unpack_us(
    Real_saved_people[0] gets person on left (lat=1) near person (lat=0).
    Real_saved_people[last] gets person on right (lat=1) or far person (lat=0). */
 
-// Returns TRUE if it found people facing the wrong way.  This can happen if we are
+// Returns true if it found people facing the wrong way.  This can happen if we are
 // trying siamese and we shouldn't be.
 
-static long_boolean pack_us(
+static bool pack_us(
    personrec *s,
    tm_thing *map_ptr,
    int fraction,
@@ -656,16 +656,22 @@ static long_boolean pack_us(
    uint32 m, sgl;
    int virt_index = -1;
 
+   clear_people(&tandstuff->virtual_setup);
    tandstuff->virtual_setup.rotation = map_ptr->rot & 1;
    tandstuff->virtual_setup.kind = map_ptr->insetup;
 
-   for (i=0, m=map_ptr->ilatmask, sgl=map_ptr->insinglemask; i<map_ptr->limit; i++, m>>=2, sgl>>=2) {
+   for (i=0, m=map_ptr->ilatmask, sgl=map_ptr->insinglemask;
+        i<map_ptr->limit;
+        i++, m>>=2, sgl>>=2) {
       personrec fb[8];
       personrec *ptr = &tandstuff->virtual_setup.people[i];
       uint32 vp1, vp2;
       int vert = (1 + map_ptr->rot + m) & 3;
 
-      fb[0] = s[map_ptr->maps[i]];
+      fb[0].id1 = 0;
+      fb[0].id2 = 0;
+      int thingy = map_ptr->maps[i];
+      if (thingy >= 0) fb[0] = s[thingy];
 
       if (!tandstuff->no_unit_symmetry) vert &= 1;
 
@@ -675,12 +681,14 @@ static long_boolean pack_us(
          fb[1].id1 = ~0UL;
       }
       else {
-         uint32 orpeople = 0;
-         uint32 andpeople = ~0;
+         uint32 orpeople = fb[0].id1;
+         uint32 andpeople = fb[0].id1;
 
-         for (j=1 ; j<tandstuff->np ; j++) fb[j] = s[map_ptr->maps[i+(map_ptr->limit*j)]];
-
-         for (j=0 ; j<tandstuff->np ; j++) {
+         for (j=1 ; j<tandstuff->np ; j++) {
+            fb[j].id1 = 0;
+            fb[j].id2 = 0;
+            int thingy2 = map_ptr->maps[i+(map_ptr->limit*j)];
+            if (thingy2 >= 0) fb[j] = s[thingy2];
             orpeople |= fb[j].id1;
             andpeople &= fb[j].id1;
          }
@@ -727,26 +735,26 @@ static long_boolean pack_us(
             vp1 = ~0UL;
             vp2 = ~0UL;
 
-            /* Create the virtual person.  When both people are present, anding
-               the real peoples' id2 bits gets the right bits.  For example,
-               the virtual person will be a boy and able to do a tandem star thru
-               if both real people were boys.  Remove the identity field (700 bits)
-               from id1 and replace with a virtual person indicator.  Check that
-               direction, roll, and stability parts of id1 are consistent. */
+            // Create the virtual person.  When both people are present, anding
+            // the real peoples' id2 bits gets the right bits.  For example,
+            // the virtual person will be a boy and able to do a tandem star thru
+            // if both real people were boys.  Remove the identity field (700 bits)
+            // from id1 and replace with a virtual person indicator.  Check that
+            // direction, roll, and stability parts of id1 are consistent.
 
             for (j=0 ; j<tandstuff->np ; j++) {
                if (fb[j].id1) {
                   vp1 &= fb[j].id1;
                   vp2 &= fb[j].id2;
 
-                  /* If they have different fractional stability states,
-                     just clear them -- they can't do it. */
+                  // If they have different fractional stability states,
+                  // just clear them -- they can't do it.
                   if ((fb[j].id1 ^ orpeople) & STABLE_MASK) vp1 &= ~STABLE_MASK;
-                  /* If they have different roll states, just clear them -- they can't roll. */
-                  if ((fb[j].id1 ^ orpeople) & ROLL_MASK) vp1 &= ~ROLL_MASK;
-                  /* Check that all real people face the same way. */
+                  // If they have different roll states, just clear them -- they can't roll.
+                  if ((fb[j].id1 ^ orpeople) & NROLL_MASK) vp1 &= ~NROLL_MASK;
+                  // Check that all real people face the same way.
                   if ((fb[j].id1 ^ orpeople) & 077)
-                     return TRUE;
+                     return true;
                }
             }
          }
@@ -788,7 +796,7 @@ static long_boolean pack_us(
       }
    }
 
-   return FALSE;
+   return false;
 }
 
 

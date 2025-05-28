@@ -45,20 +45,23 @@ static call_with_name *empty_menu[] = {(call_with_name *) 0};
 static call_with_name **global_temp_call_list;
 static int global_callcount;     /* Index into the above. */
 
-#define WEST (d_west|ROLLBITL)
-#define EAST (d_east|ROLLBITL)
-#define NORT (d_north|ROLLBITL)
-#define SOUT (d_south|ROLLBITL)
 
-/* The following 8 definitions are taken verbatim from sdtables.c . */
-#define B1A (0000 | ID1_PERM_NSG|ID1_PERM_NSB|ID1_PERM_NHG|ID1_PERM_HCOR|ID1_PERM_HEAD|ID1_PERM_BOY)
-#define G1A (0100 | ID1_PERM_NSG|ID1_PERM_NSB|ID1_PERM_NHB|ID1_PERM_SCOR|ID1_PERM_HEAD|ID1_PERM_GIRL)
-#define B2A (0200 | ID1_PERM_NSG|ID1_PERM_NHG|ID1_PERM_NHB|ID1_PERM_SCOR|ID1_PERM_SIDE|ID1_PERM_BOY)
-#define G2A (0300 | ID1_PERM_NSB|ID1_PERM_NHG|ID1_PERM_NHB|ID1_PERM_HCOR|ID1_PERM_SIDE|ID1_PERM_GIRL)
-#define B3A (0400 | ID1_PERM_NSG|ID1_PERM_NSB|ID1_PERM_NHG|ID1_PERM_HCOR|ID1_PERM_HEAD|ID1_PERM_BOY)
-#define G3A (0500 | ID1_PERM_NSG|ID1_PERM_NSB|ID1_PERM_NHB|ID1_PERM_SCOR|ID1_PERM_HEAD|ID1_PERM_GIRL)
-#define B4A (0600 | ID1_PERM_NSG|ID1_PERM_NHG|ID1_PERM_NHB|ID1_PERM_SCOR|ID1_PERM_SIDE|ID1_PERM_BOY)
-#define G4A (0700 | ID1_PERM_NSB|ID1_PERM_NHG|ID1_PERM_NHB|ID1_PERM_HCOR|ID1_PERM_SIDE|ID1_PERM_GIRL)
+#define WEST (d_west|PERSON_MOVED|ROLL_IS_L)
+#define EAST (d_east|PERSON_MOVED|ROLL_IS_L)
+#define NORT (d_north|PERSON_MOVED|ROLL_IS_L)
+#define SOUT (d_south|PERSON_MOVED|ROLL_IS_L)
+
+// The following 8 definitions are taken verbatim from sdtables.c
+enum {
+   B1A = 0000|ID1_PERM_NSG|ID1_PERM_NSB|ID1_PERM_NHG|ID1_PERM_HCOR|ID1_PERM_HEAD|ID1_PERM_BOY,
+   G1A = 0100|ID1_PERM_NSG|ID1_PERM_NSB|ID1_PERM_NHB|ID1_PERM_SCOR|ID1_PERM_HEAD|ID1_PERM_GIRL,
+   B2A = 0200|ID1_PERM_NSG|ID1_PERM_NHG|ID1_PERM_NHB|ID1_PERM_SCOR|ID1_PERM_SIDE|ID1_PERM_BOY,
+   G2A = 0300|ID1_PERM_NSB|ID1_PERM_NHG|ID1_PERM_NHB|ID1_PERM_HCOR|ID1_PERM_SIDE|ID1_PERM_GIRL,
+   B3A = 0400|ID1_PERM_NSG|ID1_PERM_NSB|ID1_PERM_NHG|ID1_PERM_HCOR|ID1_PERM_HEAD|ID1_PERM_BOY,
+   G3A = 0500|ID1_PERM_NSG|ID1_PERM_NSB|ID1_PERM_NHB|ID1_PERM_SCOR|ID1_PERM_HEAD|ID1_PERM_GIRL,
+   B4A = 0600|ID1_PERM_NSG|ID1_PERM_NHG|ID1_PERM_NHB|ID1_PERM_SCOR|ID1_PERM_SIDE|ID1_PERM_BOY,
+   G4A = 0700|ID1_PERM_NSB|ID1_PERM_NHG|ID1_PERM_NHB|ID1_PERM_HCOR|ID1_PERM_SIDE|ID1_PERM_GIRL
+};
 
 /* In all of these setups in which people are facing, they are normal couples.  This makes initialization of things like star thru,
    ladies chain, and curlique work.  The setup for starting DPT has the appropriate sex for triple star thru. */
@@ -225,22 +228,27 @@ static void test_starting_setup(call_list_kind cl, Const setup *test_setup)
    history[history_ptr].state = *test_setup;
    initialize_parse();
 
-   /* If the call has the "rolldefine" schema, we accept it, since the test setups
-      are all in the "roll unsupported" state. */
-
+   // If the call has the "rolldefine" schema, we accept it, since the test setups
+   // are all in the "roll unsupported" state.
    if (test_call->the_defn.schema == schema_roll) goto accept;
 
-   /* If the call has the "matrix" schema, and it is sex-dependent, we accept it,
-      since the test setups that we use might have people placed in such a way
-      that something like "1/2 truck" is illegal. */
+   // If the call takes 3 or more numeric arguments, accept it.  This makes
+   // "hinge by I x J x K" work from columns.
+   if ((test_call->the_defn.callflags1 & ((uint32) CFLAG1_NUMBER_MASK)) >=
+       3*((uint32) CFLAG1_NUMBER_BIT))
+      goto accept;
 
+   // If the call has the "matrix" schema, and it is sex-dependent, we accept it,
+   // since the test setups that we use might have people placed in such a way
+   // that something like "1/2 truck" is illegal.
    if (test_call->the_defn.schema == schema_matrix &&
        test_call->the_defn.stuff.matrix.stuff[0] != test_call->the_defn.stuff.matrix.stuff[1])
       goto accept;
 
-   /* We also accept "<ATC> your neighbor" and "<ANYTHING> motivate" calls,
-      since we don't know what the tagging call will be. */
-   if (test_call->the_defn.callflagsf & (CFLAGH__TAG_CALL_RQ_MASK | CFLAGH__CIRC_CALL_RQ_BIT)) goto accept;
+   // We also accept "<ATC> your neighbor" and "<ANYTHING> motivate" calls,
+   // since we don't know what the tagging call will be.
+   if (test_call->the_defn.callflagsf & (CFLAGH__TAG_CALL_RQ_MASK | CFLAGH__CIRC_CALL_RQ_BIT))
+      goto accept;
 
    // Do the call.  An error will signal and go to try_again.
 
@@ -387,7 +395,7 @@ static long_boolean callcompare(call_with_name *x, call_with_name *y)
                mc = 500-6; break;
             case 'N':
                mc = 500-5; break;
-            case '0': case 'm':
+            case '0': case 'T': case 'm':
                mc = 500-4; break;
             case '9':
                mc = 500-3; break;
@@ -426,7 +434,7 @@ static long_boolean callcompare(call_with_name *x, call_with_name *y)
                nc = 500-6; break;
             case 'N':
                nc = 500-5; break;
-            case '0': case 'm':
+            case '0': case 'T': case 'm':
                nc = 500-4; break;
             case '9':
                nc = 500-3; break;

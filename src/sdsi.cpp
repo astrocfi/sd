@@ -953,7 +953,7 @@ extern void prepare_to_read_menus(void)
       This is because of expressions "ROLL_BIT/DBROLL_BIT" in sdbasic.cpp to
       align stuff from the binary database into the person record. */
 
-   if (ROLL_BIT < DBROLL_BIT)
+   if (NROLL_BIT < NDBROLL_BIT)
       init_error("constants not consistent -- program has been compiled incorrectly.");
    else if ((508205 << 12) != arithtest)
       init_error("arithmetic is less than 32 bits -- program has been compiled incorrectly.");

@@ -12,31 +12,38 @@
 
     This is for version 34. */
 
-/* dbcomp.c */
-
 #include "database.h"
 
 
 #define DB_FMT_STR(name) DB_FMT_NUM(name)
 #define DB_FMT_NUM(number) #number
-volatile char *id="@(#)$Sd: dbcomp.c for db fmt " DB_FMT_STR(DATABASE_FORMAT_VERSION) "      wba@an.hp.com  1 Jul 1998 $";
+volatile const char * id="@(#)$Sd: dbcomp.c for db fmt " DB_FMT_STR(DATABASE_FORMAT_VERSION) "      wba@alum.mit.edu  16 Feb 2002 $";
 
 #include "paths.h"
 
 /* We take pity on those poor souls who are compelled to use
     troglodyte development environments. */
 
-/* ***  This next test used to be
-    if defined(__STDC__) && !defined(athena_rt) && !defined(athena_vax)
-   We have taken it out and replaced with what you see below.  If this breaks
-   anything, let us know. */
-#if defined(__STDC__) || defined(sun)
+// ***  This next test used to be:
+//    if defined(__STDC__) && !defined(athena_rt) && !defined(athena_vax)
+//   We have taken it out and replaced with what you see below.  If this breaks
+//   anything, let us know. */
+
+#if __STDC__ || defined(sun)
 #include <stdlib.h>
 #else
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 extern void free(void *ptr);
 extern char *malloc(unsigned int siz);
 extern char *realloc(char *oldp, unsigned int siz);
 extern void exit(int code);
+#ifdef __cplusplus
+}
+#endif
+
 #endif
 
 #include <string.h>
@@ -1449,7 +1456,7 @@ static uint32 tagsearch(int def)
 
    if (i >= tagtabmax) {
       tagtabmax <<= 1;
-      tagtab = (tagtabitem *) realloc((void *) tagtab, tagtabmax * sizeof(tagtabitem));
+      tagtab = (tagtabitem *) realloc((char *) tagtab, tagtabmax * sizeof(tagtabitem));
       if (!tagtab) errexit("Out of memory!!!!!!");
    }
 
@@ -1684,18 +1691,16 @@ static void write_callarray(int num, int doing_matrix)
       errexit("Missing left bracket in callarray list");
 
    for (count=0; ; count++) {
-      uint32 dat = 0;
-      int p = 0;
-      stability stab = stb_none;
-
       get_tok();
       if (tok_kind == tok_rbkt) break;
       else if (tok_kind == tok_number && tok_value == 0)
          write_halfword(0);
       else if (tok_kind == tok_symbol) {
+         int p;
+         stability stab = stb_none;
          int repetition = 0;
 
-         for (; letcount-p >= 2; p++) {
+         for (p=0; letcount-p >= 2; p++) {
             switch (tok_str[p]) {
                case 'Z': case 'z':
                   if (stab == stb_none) stab = stb_z;
@@ -1742,13 +1747,15 @@ static void write_callarray(int num, int doing_matrix)
 
          stability_done:
 
+         uint32 dat = 0;
+
          if (repetition != 0) errexit("Improper callarray specifier");
 
          if (letcount-p == 2) {
             switch (tok_str[p]) {
-               case 'L': case 'l': dat = 4; break;
-               case 'M': case 'm': dat = 2; break;
                case 'R': case 'r': dat = 1; break;
+               case 'L': case 'l': dat = 2; break;
+               case 'M': case 'm': dat = 3; break;
                default:
                   errexit("Improper callarray specifier");
             }
@@ -1756,7 +1763,7 @@ static void write_callarray(int num, int doing_matrix)
          else if (letcount-p != 1)
             errexit("Improper callarray specifier");
 
-         dat = (dat * DBROLL_BIT) | (tok_value << 4) | (((uint32) stab) * DBSTAB_BIT);
+         dat = (dat * NDBROLL_BIT) | (tok_value << 4) | (((uint32) stab) * DBSTAB_BIT);
 
          /* We now have roll indicator and position, need to get direction. */
          switch (tok_str[char_ct-1]) {

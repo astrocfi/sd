@@ -82,7 +82,7 @@ typedef const char *Cstring;
    database format version. */
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 193
+#define DATABASE_FORMAT_VERSION 194
 
 /* BEWARE!!  These must track the items in "tagtabinit" in dbcomp.c . */
 typedef enum {
@@ -120,112 +120,114 @@ typedef enum {
 #define num_base_call_indices (((int) base_call_cardinality))
 
 
-/* BEWARE!!  This list must track the tables "flagtabh", "defmodtabh",
-   "forcetabh", and "altdeftabh" in dbcomp.c .  The "K" items also track
-   the tables "mxntabforce", "nxntabforce", "nxntabplain", "mxntabplain",
-   "reverttabplain", and "reverttabforce" in dbcomp.c .
+// BEWARE!!  This list must track the tables "flagtabh", "defmodtabh",
+// "forcetabh", and "altdeftabh" in dbcomp.c .  The "K" items also track
+// the tables "mxntabforce", "nxntabforce", "nxntabplain", "mxntabplain",
+// "reverttabplain", and "reverttabforce" in dbcomp.c .
+//
+// These are the infamous "heritable flags".  They are used in generally
+// corresponding ways in the "callflagsh" word of a top level callspec_block,
+// the "modifiersh" word of a "by_def_item", and the "modifier_seth" word of a
+// "calldef_block", and the "cmd_final_flags.herit" of a setup with its command block.
 
-   These are the infamous "heritable flags".  They are used in generally
-   corresponding ways in the "callflagsh" word of a top level callspec_block,
-   the "modifiersh" word of a "by_def_item", and the "modifier_seth" word of a
-   "calldef_block", and the "cmd_final_flags.herit" of a setup with its command block.
-*/
+enum {
+   INHERITFLAG_DIAMOND    = 0x00000001UL,
+   INHERITFLAG_REVERSE    = 0x00000002UL,
+   INHERITFLAG_LEFT       = 0x00000004UL,
+   INHERITFLAG_FUNNY      = 0x00000008UL,
+   INHERITFLAG_INTLK      = 0x00000010UL,
+   INHERITFLAG_MAGIC      = 0x00000020UL,
+   INHERITFLAG_GRAND      = 0x00000040UL,
+   INHERITFLAG_12_MATRIX  = 0x00000080UL,
+   INHERITFLAG_16_MATRIX  = 0x00000100UL,
+   INHERITFLAG_CROSS      = 0x00000200UL,
+   INHERITFLAG_SINGLE     = 0x00000400UL,
+   INHERITFLAG_SINGLEFILE = 0x00000800UL,
+   INHERITFLAG_HALF       = 0x00001000UL,
+   INHERITFLAG_YOYO       = 0x00002000UL,
+   INHERITFLAG_STRAIGHT   = 0x00004000UL,
+   INHERITFLAG_TWISTED    = 0x00008000UL,
+   INHERITFLAG_LASTHALF   = 0x00010000UL,
+   INHERITFLAG_FRACTAL    = 0x00020000UL,
+   INHERITFLAG_FAST       = 0x00040000UL,
 
-static const uint32 INHERITFLAG_DIAMOND    = 0x00000001UL;
-static const uint32 INHERITFLAG_REVERSE    = 0x00000002UL;
-static const uint32 INHERITFLAG_LEFT       = 0x00000004UL;
-static const uint32 INHERITFLAG_FUNNY      = 0x00000008UL;
-#define             INHERITFLAG_INTLK        0x00000010UL
-static const uint32 INHERITFLAG_MAGIC      = 0x00000020UL;
-static const uint32 INHERITFLAG_GRAND      = 0x00000040UL;
-static const uint32 INHERITFLAG_12_MATRIX  = 0x00000080UL;
-static const uint32 INHERITFLAG_16_MATRIX  = 0x00000100UL;
-static const uint32 INHERITFLAG_CROSS      = 0x00000200UL;
-#define             INHERITFLAG_SINGLE       0x00000400UL
-static const uint32 INHERITFLAG_SINGLEFILE = 0x00000800UL;
-static const uint32 INHERITFLAG_HALF       = 0x00001000UL;
-static const uint32 INHERITFLAG_YOYO       = 0x00002000UL;
-static const uint32 INHERITFLAG_STRAIGHT   = 0x00004000UL;
-static const uint32 INHERITFLAG_TWISTED    = 0x00008000UL;
-static const uint32 INHERITFLAG_LASTHALF   = 0x00010000UL;
-static const uint32 INHERITFLAG_FRACTAL    = 0x00020000UL;
-static const uint32 INHERITFLAG_FAST       = 0x00040000UL;
+   // This is a 3 bit field.
+   INHERITFLAG_MXNMASK    = 0x00380000UL,
+   // This is its low bit.
+   INHERITFLAG_MXNBIT     = 0x00080000UL,
 
-/* This is a 3 bit field. */
-#define             INHERITFLAG_MXNMASK      0x00380000UL
-/* This is its low bit. */
-#define             INHERITFLAG_MXNBIT       0x00080000UL
+   // These 4 things are the choices available inside.
+   INHERITFLAGMXNK_1X2    = 0x00080000UL,
+   INHERITFLAGMXNK_2X1    = 0x00100000UL,
+   INHERITFLAGMXNK_1X3    = 0x00180000UL,
+   INHERITFLAGMXNK_3X1    = 0x00200000UL,
 
-/* These 4 things are the choices available inside. */
-#define             INHERITFLAGMXNK_1X2      0x00080000UL
-#define             INHERITFLAGMXNK_2X1      0x00100000UL
-#define             INHERITFLAGMXNK_1X3      0x00180000UL
-#define             INHERITFLAGMXNK_3X1      0x00200000UL
+   // This is a 3 bit field.
+   INHERITFLAG_NXNMASK    = 0x01C00000UL,
+   // This is its low bit.
+   INHERITFLAG_NXNBIT     = 0x00400000UL,
 
-/* This is a 3 bit field. */
-#define             INHERITFLAG_NXNMASK      0x01C00000UL
-/* This is its low bit. */
-#define             INHERITFLAG_NXNBIT       0x00400000UL
+   // These 7 things are the choices available inside.
+   INHERITFLAGNXNK_2X2    = 0x00400000UL,
+   INHERITFLAGNXNK_3X3    = 0x00800000UL,
+   INHERITFLAGNXNK_4X4    = 0x00C00000UL,
+   INHERITFLAGNXNK_5X5    = 0x01000000UL,
+   INHERITFLAGNXNK_6X6    = 0x01400000UL,
+   INHERITFLAGNXNK_7X7    = 0x01800000UL,
+   INHERITFLAGNXNK_8X8    = 0x01C00000UL,
 
-/* These 7 things are the choices available inside. */
-#define             INHERITFLAGNXNK_2X2      0x00400000UL
-#define             INHERITFLAGNXNK_3X3      0x00800000UL
-#define             INHERITFLAGNXNK_4X4      0x00C00000UL
-#define             INHERITFLAGNXNK_5X5      0x01000000UL
-#define             INHERITFLAGNXNK_6X6      0x01400000UL
-#define             INHERITFLAGNXNK_7X7      0x01800000UL
-#define             INHERITFLAGNXNK_8X8      0x01C00000UL
+   // This is a 3 bit field.
+   INHERITFLAG_REVERTMASK = 0x0E000000UL,
+   // This is its low bit.
+   INHERITFLAG_REVERTBIT  = 0x02000000UL,
 
-/* This is a 3 bit field. */
-#define             INHERITFLAG_REVERTMASK   0x0E000000UL
-/* This is its low bit. */
-#define             INHERITFLAG_REVERTBIT    0x02000000UL
-
-/* These 7 things are the choices available inside. */
-#define             INHERITFLAGRVRTK_REVERT  0x02000000UL
-#define             INHERITFLAGRVRTK_REFLECT 0x04000000UL
-#define             INHERITFLAGRVRTK_RVF     0x06000000UL
-#define             INHERITFLAGRVRTK_RFV     0x08000000UL
-#define             INHERITFLAGRVRTK_RVFV    0x0A000000UL
-#define             INHERITFLAGRVRTK_RFVF    0x0C000000UL
-#define             INHERITFLAGRVRTK_RFF     0x0E000000UL
-
+   // These 7 things are the choices available inside.
+   INHERITFLAGRVRTK_REVERT= 0x02000000UL,
+   INHERITFLAGRVRTK_REFLECT=0x04000000UL,
+   INHERITFLAGRVRTK_RVF   = 0x06000000UL,
+   INHERITFLAGRVRTK_RFV   = 0x08000000UL,
+   INHERITFLAGRVRTK_RVFV  = 0x0A000000UL,
+   INHERITFLAGRVRTK_RFVF  = 0x0C000000UL,
+   INHERITFLAGRVRTK_RFF   = 0x0E000000UL
+};
 
 /* BEWARE!!  This list must track the table "flagtab1" in dbcomp.c .
    These flags go into the "callflags1" word of a callspec_block,
    and the "topcallflags1" word of the parse_state. */
 
-static const uint32 CFLAG1_VISIBLE_FRACTION_MASK     = 0x00000003UL; // 2 bit field
-static const uint32 CFLAG1_VISIBLE_FRACTION_BIT      = 0x00000001UL; // its low bit
-static const uint32 CFLAG1_12_16_MATRIX_MEANS_SPLIT  = 0x00000004UL;
-static const uint32 CFLAG1_PRESERVE_Z_STUFF          = 0x00000008UL;
-static const uint32 CFLAG1_SPLIT_LIKE_DIXIE_STYLE    = 0x00000010UL;
-static const uint32 CFLAG1_PARALLEL_CONC_END         = 0x00000020UL;
-static const uint32 CFLAG1_TAKE_RIGHT_HANDS          = 0x00000040UL;
-static const uint32 CFLAG1_IS_STAR_CALL              = 0x00000080UL;
-static const uint32 CFLAG1_SPLIT_LARGE_SETUPS        = 0x00000100UL;
-static const uint32 CFLAG1_FUDGE_TO_Q_TAG            = 0x00000200UL;
-static const uint32 CFLAG1_STEP_REAR_MASK            = 0x00001C00UL; // 3 bit field
-static const uint32 CFLAG1_STEP_TO_WAVE              = 0x00000400UL; // its low bit
-static const uint32 CFLAG1_REAR_BACK_FROM_R_WAVE     = 0x00000800UL; // its middle bit
-static const uint32 CFLAG1_REAR_BACK_FROM_QTAG       = 0x00001000UL; // its high bit
-static const uint32 CFLAG1_SEQUENCE_STARTER          = 0x00002000UL;
-static const uint32 CFLAG1_NUMBER_MASK               = 0x0001C000UL; // 3 bit field
-static const uint32 CFLAG1_NUMBER_BIT                = 0x00004000UL; // its low bit
-static const uint32 CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK = 0x00020000UL;
-static const uint32 CFLAG1_LEFT_ONLY_IF_HALF         = 0x00040000UL;
-static const uint32 CFLAG1_DISTRIBUTE_REPETITIONS    = 0x00080000UL;
-static const uint32 CFLAG1_DONT_USE_IN_RESOLVE       = 0x00100000UL;
-static const uint32 CFLAG1_DONT_USE_IN_NICE_RESOLVE  = 0x00200000UL;
-static const uint32 CFLAG1_YIELD_IF_AMBIGUOUS        = 0x00400000UL;
-static const uint32 CFLAG1_NO_ELONGATION_ALLOWED     = 0x00800000UL;
-static const uint32 CFLAG1_BASE_TAG_CALL_MASK        = 0x07000000UL; // 3 bit field
-static const uint32 CFLAG1_BASE_TAG_CALL_BIT         = 0x01000000UL; // its low bit
-static const uint32 CFLAG1_BASE_CIRC_CALL            = 0x08000000UL;
-static const uint32 CFLAG1_ENDS_TAKE_RIGHT_HANDS     = 0x10000000UL;
-static const uint32 CFLAG1_FUNNY_MEANS_THOSE_FACING  = 0x20000000UL;
-static const uint32 CFLAG1_SPLIT_LIKE_SQUARE_THRU    = 0x40000000UL;
-static const uint32 CFLAG1_YOYO_FRACTAL_NUM          = 0x80000000UL;
+enum {
+   CFLAG1_VISIBLE_FRACTION_MASK     = 0x00000003UL, // 2 bit field
+   CFLAG1_VISIBLE_FRACTION_BIT      = 0x00000001UL, // its low bit
+   CFLAG1_12_16_MATRIX_MEANS_SPLIT  = 0x00000004UL,
+   CFLAG1_PRESERVE_Z_STUFF          = 0x00000008UL,
+   CFLAG1_SPLIT_LIKE_DIXIE_STYLE    = 0x00000010UL,
+   CFLAG1_PARALLEL_CONC_END         = 0x00000020UL,
+   CFLAG1_TAKE_RIGHT_HANDS          = 0x00000040UL,
+   CFLAG1_IS_STAR_CALL              = 0x00000080UL,
+   CFLAG1_SPLIT_LARGE_SETUPS        = 0x00000100UL,
+   CFLAG1_FUDGE_TO_Q_TAG            = 0x00000200UL,
+   CFLAG1_STEP_REAR_MASK            = 0x00001C00UL, // 3 bit field
+   CFLAG1_STEP_TO_WAVE              = 0x00000400UL, // its low bit
+   CFLAG1_REAR_BACK_FROM_R_WAVE     = 0x00000800UL, // its middle bit
+   CFLAG1_REAR_BACK_FROM_QTAG       = 0x00001000UL, // its high bit
+   CFLAG1_SEQUENCE_STARTER          = 0x00002000UL,
+   CFLAG1_NUMBER_MASK               = 0x0001C000UL, // 3 bit field
+   CFLAG1_NUMBER_BIT                = 0x00004000UL, // its low bit
+   CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK = 0x00020000UL,
+   CFLAG1_LEFT_ONLY_IF_HALF         = 0x00040000UL,
+   CFLAG1_DISTRIBUTE_REPETITIONS    = 0x00080000UL,
+   CFLAG1_DONT_USE_IN_RESOLVE       = 0x00100000UL,
+   CFLAG1_DONT_USE_IN_NICE_RESOLVE  = 0x00200000UL,
+   CFLAG1_YIELD_IF_AMBIGUOUS        = 0x00400000UL,
+   CFLAG1_NO_ELONGATION_ALLOWED     = 0x00800000UL,
+   CFLAG1_BASE_TAG_CALL_MASK        = 0x07000000UL, // 3 bit field
+   CFLAG1_BASE_TAG_CALL_BIT         = 0x01000000UL, // its low bit
+   CFLAG1_BASE_CIRC_CALL            = 0x08000000UL,
+   CFLAG1_ENDS_TAKE_RIGHT_HANDS     = 0x10000000UL,
+   CFLAG1_FUNNY_MEANS_THOSE_FACING  = 0x20000000UL,
+   CFLAG1_SPLIT_LIKE_SQUARE_THRU    = 0x40000000UL,
+   CFLAG1_YOYO_FRACTAL_NUM          = 0x80000000UL
+};
 
 /* These are the continuation of the "CFLAG1" bits, that have to overflow into this word.
    They must lie in the top 8 bits for now. */
@@ -1000,5 +1002,5 @@ typedef enum {
    d_north, d_south, d_east, d_west in sd.h are just these numbers
    with the 1000 (octal) bit, which is BIT_PERSON, added. */
 
-#define DBROLL_BIT 0x200
+#define NDBROLL_BIT 0x200
 #define DBSTAB_BIT 0x1000

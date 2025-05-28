@@ -493,7 +493,7 @@ void collision_collector::fix_possible_collision(setup *result) THROW_DECL
 
 extern void mirror_this(setup *s) THROW_DECL
 {
-   uint32 l, r, z, n, t;
+   uint32 z, n, t;
    int i, x, y, place, limit, doffset;
 
    setup temp = *s;
@@ -594,9 +594,12 @@ extern void mirror_this(setup *s) THROW_DECL
 
          n = temp.people[i].id1;
          t = (0 - (n & (STABLE_VBIT*3))) & (STABLE_VBIT*3);
-         l = (n & ROLLBITL) >> 2;
-         r = (n & ROLLBITR) << 2;
-         z = (n & ~(ROLLBITL | ROLLBITR | (STABLE_VBIT*3))) | l | r | t;
+         z = (n & ~(STABLE_VBIT*3)) | t;
+
+         // Switch the roll bits.
+         z &= ~(3*NROLL_BIT);
+         z |= ((n >> 1) & NROLL_BIT) | ((n & NROLL_BIT) << 1);
+
          s->people[place].id1 = (z & 010) ? (z ^ 2) : z;
          s->people[place].id2 = temp.people[i].id2;
       }
@@ -612,9 +615,12 @@ extern void mirror_this(setup *s) THROW_DECL
 
          n = temp.people[i].id1;
          t = (0 - (n & (STABLE_VBIT*3))) & (STABLE_VBIT*3);
-         l = (n & ROLLBITL) >> 2;
-         r = (n & ROLLBITR) << 2;
-         z = (n & ~(ROLLBITL | ROLLBITR | (STABLE_VBIT*3))) | l | r | t;
+         z = (n & ~(STABLE_VBIT*3)) | t;
+
+         // Switch the roll bits.
+         z &= ~(3*NROLL_BIT);
+         z |= ((n >> 1) & NROLL_BIT) | ((n & NROLL_BIT) << 1);
+
          s->people[place].id1 = (z & 1) ? (z ^ 2) : z;
          s->people[place].id2 = temp.people[i].id2;
       }
@@ -622,110 +628,111 @@ extern void mirror_this(setup *s) THROW_DECL
 }
 
 
-static veryshort identity[24] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
+static const veryshort identity[24] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
                                  12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23};
-static veryshort ftc2x4[8] = {10, 15, 3, 1, 2, 7, 11, 9};
-static veryshort ftc4x4[24] = {10, 15, 3, 1, 2, 7, 11, 9, 2, 7, 11, 9,
+static const veryshort ftc2x4[8] = {10, 15, 3, 1, 2, 7, 11, 9};
+static const veryshort ftc4x4[24] = {10, 15, 3, 1, 2, 7, 11, 9, 2, 7, 11, 9,
                                10, 15, 3, 1, 10, 15, 3, 1, 2, 7, 11, 9};
-static veryshort ftcphan[24] = {0, 2, 7, 5, 8, 10, 15, 13, 8, 10, 15, 13,
+static const veryshort ftcphan[24] = {0, 2, 7, 5, 8, 10, 15, 13, 8, 10, 15, 13,
                                 0, 2, 7, 5, 0, 2, 7, 5, 8, 10, 15, 13};
-static veryshort ftl2x4[12] = {6, 11, 15, 13, 14, 3, 7, 5, 6, 11, 15, 13};
-static veryshort ftcspn[8] = {6, 11, 13, 17, 22, 27, 29, 1};
-static veryshort ftcbone[8] = {6, 13, 18, 19, 22, 29, 2, 3};
+static const veryshort ftl2x4[12] = {6, 11, 15, 13, 14, 3, 7, 5, 6, 11, 15, 13};
+static const veryshort ftcspn[8] = {6, 11, 13, 17, 22, 27, 29, 1};
+static const veryshort ftcbone[8] = {6, 13, 18, 19, 22, 29, 2, 3};
 
-static veryshort foobar[8] = {1, 8, 10, -1, 9, 0, 2, -1};
-static veryshort foobletch[8] = {-1, 3, 7, -1, -1, 11, 15, -1};
+static const veryshort foobar[8] = {1, 8, 10, -1, 9, 0, 2, -1};
+static const veryshort foobletch[8] = {-1, 3, 7, -1, -1, 11, 15, -1};
 
-static veryshort ftequalize[8] = {6, 3, 19, 13, 22, 19, 3, 29};
-static veryshort ftlcwv[12] = {25, 26, 2, 3, 9, 10, 18, 19, 25, 26, 2, 3};
-static veryshort ftlqtg[12] = {29, 6, 10, 11, 13, 22, 26, 27, 29, 6, 10, 11};
-static veryshort qtlqtg[12] = {5, -1, -1, 0, 1, -1, -1, 4, 5, -1, -1, 0};
-static veryshort qtlbone[12] = {0, 3, -1, -1, 4, 7, -1, -1, 0, 3, -1, -1};
-static veryshort qtlxwv[12] = {0, 1, -1, -1, 4, 5, -1, -1, 0, 1, -1, -1};
-static veryshort qtl1x8[12] = {-1, -1, 5, 7, -1, -1, 1, 3, -1, -1, 5, 7};
-static veryshort ft4x4bh[16] = {9, 8, 7, -1, 6, -1, -1, -1, 3, 2, 1, -1, 0, -1, -1, -1};
-static veryshort ftqtgbh[8] = {-1, -1, 10, 11, -1, -1, 4, 5};
-static veryshort ft4x446[16] = {4, 7, 22, 8, 13, 14, 15, 21, 16, 19, 10, 20, 1, 2, 3, 9};
-static veryshort ft2646[12] = {11, 10, 9, 8, 7, 6, 23, 22, 21, 20, 19, 18};
-static veryshort galtranslateh[16]  = {-1,  3,  4,  2, -1, -1, -1,  5,
-                                       -1,  7,  0,  6, -1, -1, -1,  1};
-static veryshort galtranslatev[16]  = {-1, -1, -1,  1, -1,  3,  4,  2,
-                                       -1, -1, -1,  5, -1,  7,  0,  6};
-static veryshort phantranslateh[16] = { 0, -1,  1,  1, -1,  3,  2,  2,
-                                        4, -1,  5,  5, -1,  7,  6,  6};
-static veryshort phantranslatev[16] = {-1,  7,  6,  6,  0, -1,  1,  1,
-                                       -1,  3,  2,  2,  4, -1,  5,  5};
+static const veryshort ftequalize[8] = {6, 3, 19, 13, 22, 19, 3, 29};
+static const veryshort ftlcwv[12] = {25, 26, 2, 3, 9, 10, 18, 19, 25, 26, 2, 3};
+static const veryshort ftlqtg[12] = {29, 6, 10, 11, 13, 22, 26, 27, 29, 6, 10, 11};
+static const veryshort qtlqtg[12] = {5, -1, -1, 0, 1, -1, -1, 4, 5, -1, -1, 0};
+static const veryshort qtlbone[12] = {0, 3, -1, -1, 4, 7, -1, -1, 0, 3, -1, -1};
+static const veryshort qtlxwv[12] = {0, 1, -1, -1, 4, 5, -1, -1, 0, 1, -1, -1};
+static const veryshort qtl1x8[12] = {-1, -1, 5, 7, -1, -1, 1, 3, -1, -1, 5, 7};
+static const veryshort qtlrig[12] = {6, 7, -1, -1, 2, 3, -1, -1, 6, 7, -1, -1};
+static const veryshort ft4x4bh[16] = {9, 8, 7, -1, 6, -1, -1, -1, 3, 2, 1, -1, 0, -1, -1, -1};
+static const veryshort ftqtgbh[8] = {-1, -1, 10, 11, -1, -1, 4, 5};
+static const veryshort ft4x446[16] = {4, 7, 22, 8, 13, 14, 15, 21, 16, 19, 10, 20, 1, 2, 3, 9};
+static const veryshort ft2646[12] = {11, 10, 9, 8, 7, 6, 23, 22, 21, 20, 19, 18};
+static const veryshort galtranslateh[16]  = {-1,  3,  4,  2, -1, -1, -1,  5,
+                                             -1,  7,  0,  6, -1, -1, -1,  1};
+static const veryshort galtranslatev[16]  = {-1, -1, -1,  1, -1,  3,  4,  2,
+                                             -1, -1, -1,  5, -1,  7,  0,  6};
+static const veryshort phantranslateh[16] = { 0, -1,  1,  1, -1,  3,  2,  2,
+                                              4, -1,  5,  5, -1,  7,  6,  6};
+static const veryshort phantranslatev[16] = {-1,  7,  6,  6,  0, -1,  1,  1,
+                                             -1,  3,  2,  2,  4, -1,  5,  5};
 
 #ifdef BREAKS_CAST_BACK
-static veryshort phan4x4xlatea[16] = {-1, -1,  8,  6, -1, -1, 12, 10, -1, -1,  0, 14, -1, -1,  4,  2};
-static veryshort phan4x4xlateb[16] = {-1,  5, -1,  7, -1,  9, -1, 11, -1, 13, -1, 15, -1,  1, -1,  3};
+static const veryshort phan4x4xlatea[16] = {-1, -1,  8,  6, -1, -1, 12, 10, -1, -1,  0, 14, -1, -1,  4,  2};
+static const veryshort phan4x4xlateb[16] = {-1,  5, -1,  7, -1,  9, -1, 11, -1, 13, -1, 15, -1,  1, -1,  3};
 #endif
-static veryshort sdmdtranslateh[8] = {0, 0, 0, 1, 2, 0, 0, 3};
-static veryshort sdmdtranslatev[8] = {0, 3, 0, 0, 0, 1, 2, 0};
+static const veryshort sdmdtranslateh[8] = {0, 0, 0, 1, 2, 0, 0, 3};
+static const veryshort sdmdtranslatev[8] = {0, 3, 0, 0, 0, 1, 2, 0};
 
 
 
-static veryshort octtranslateh[64] = {
+static const veryshort octtranslateh[64] = {
    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  2,  3,
    0,  0,  0,  7,  0,  0,  0,  6,  0,  0,  0,  5,  0,  0,  0,  4,
    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  8,  9, 10, 11,
    0,  0,  0, 15,  0,  0,  0, 14,  0,  0,  0, 13,  0,  0,  0, 12};
 
-static veryshort octtranslatev[64] = {
+static const veryshort octtranslatev[64] = {
    0,  0,  0, 15,  0,  0,  0, 14,  0,  0,  0, 13,  0,  0,  0, 12,
    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  2,  3,
    0,  0,  0,  7,  0,  0,  0,  6,  0,  0,  0,  5,  0,  0,  0,  4,
    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  8,  9, 10, 11};
 
-static veryshort octt4x6lateh[64] = {
+static const veryshort octt4x6lateh[64] = {
    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  2,  0, 11, 10,  9,
    0,  0,  0,  0,  0,  0,  5,  6,  0,  0,  4,  7,  0,  0,  3,  8,
    0,  0,  0,  0,  0,  0,  0,  0,  0, 12, 13, 14,  0, 23, 22, 21,
    0,  0,  0,  0,  0,  0, 17, 18,  0,  0, 16, 19,  0,  0, 15, 20};
 
-static veryshort octt4x6latev[64] = {
+static const veryshort octt4x6latev[64] = {
    0,  0,  0,  0,  0,  0, 17, 18,  0,  0, 16, 19,  0,  0, 15, 20,
    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  2,  0, 11, 10,  9,
    0,  0,  0,  0,  0,  0,  5,  6,  0,  0,  4,  7,  0,  0,  3,  8,
    0,  0,  0,  0,  0,  0,  0,  0,  0, 12, 13, 14,  0, 23, 22, 21};
 
-static veryshort hextranslateh[32] = {
+static const veryshort hextranslateh[32] = {
    0,  1,  2,  3,  4,  5,  6,  7,  0,  0,  0,  0,  0,  0,  0,  0,
    8,  9, 10, 11, 12, 13, 14, 15,  0,  0,  0,  0,  0,  0,  0,  0};
 
-static veryshort hextranslatev[32] = {
+static const veryshort hextranslatev[32] = {
    0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  2,  3,  4,  5,  6,  7,
    0,  0,  0,  0,  0,  0,  0,  0,  8,  9, 10, 11, 12, 13, 14, 15};
 
 
 
 
-static veryshort dmdhyperh[12] = {0, 0, 0, 0, 1, 0, 2, 0, 0, 0, 3, 0};
-static veryshort dmdhyperv[12] = {0, 3, 0, 0, 0, 0, 0, 1, 0, 2, 0, 0};
-static veryshort linehyperh[12] = {0, 1, 0, 0, 0, 0, 2, 3, 0, 0, 0, 0};
-static veryshort linehyperv[12] = {0, 0, 0, 0, 1, 0, 0, 0, 0, 2, 3, 0};
-static veryshort hyperboneh[16] = {-1, -1, -1, -1, 1, 4, 2, 3, -1, -1, -1, -1, 5, 0, 6, 7};
-static veryshort hyperbonev[16] = {5, 0, 6, 7, -1, -1, -1, -1, 1, 4, 2, 3, -1, -1, -1, -1};
-static veryshort galhyperh[12] = {6, 0, 0, 0, 3, 1, 2, 0, 4, 0, 7, 5};
-static veryshort galhyperv[12] = {0, 7, 5, 6, 0, 0, 0, 3, 1, 2, 0, 4};
-static veryshort qtghyperh[12] = {6, 7, 0, 0, 0, 1, 2, 3, 4, 0, 0, 5};
-static veryshort qtghyperv[12] = {0, 0, 5, 6, 7, 0, 0, 0, 1, 2, 3, 4};
-static veryshort starhyperh[12] =  {0, 0, 0, 0, 1, 0, 0, 2, 0, 0, 3, 0};
-static veryshort fstarhyperh[12] = {0, 0, 0, 1, 0, 0, 2, 0, 0, 3, 0, 0};
-static veryshort lilstar1[8] = {0, 2, 0, 0, 3, 0, 0, 1};
-static veryshort lilstar2[8] = {3, 0, 0, 1, 0, 2, 0, 0};
-static veryshort lilstar3[8] = {0, 1, 0, 0, 2, 3, 0, 0};
-static veryshort lilstar4[8] = {0, 0, 2, 3, 0, 0, 0, 1};
+static const veryshort dmdhyperh[12] = {0, 0, 0, 0, 1, 0, 2, 0, 0, 0, 3, 0};
+static const veryshort dmdhyperv[12] = {0, 3, 0, 0, 0, 0, 0, 1, 0, 2, 0, 0};
+static const veryshort linehyperh[12] = {0, 1, 0, 0, 0, 0, 2, 3, 0, 0, 0, 0};
+static const veryshort linehyperv[12] = {0, 0, 0, 0, 1, 0, 0, 0, 0, 2, 3, 0};
+static const veryshort hyperboneh[16] = {-1, -1, -1, -1, 1, 4, 2, 3, -1, -1, -1, -1, 5, 0, 6, 7};
+static const veryshort hyperbonev[16] = {5, 0, 6, 7, -1, -1, -1, -1, 1, 4, 2, 3, -1, -1, -1, -1};
+static const veryshort galhyperh[12] = {6, 0, 0, 0, 3, 1, 2, 0, 4, 0, 7, 5};
+static const veryshort galhyperv[12] = {0, 7, 5, 6, 0, 0, 0, 3, 1, 2, 0, 4};
+static const veryshort qtghyperh[12] = {6, 7, 0, 0, 0, 1, 2, 3, 4, 0, 0, 5};
+static const veryshort qtghyperv[12] = {0, 0, 5, 6, 7, 0, 0, 0, 1, 2, 3, 4};
+static const veryshort starhyperh[12] =  {0, 0, 0, 0, 1, 0, 0, 2, 0, 0, 3, 0};
+static const veryshort fstarhyperh[12] = {0, 0, 0, 1, 0, 0, 2, 0, 0, 3, 0, 0};
+static const veryshort lilstar1[8] = {0, 2, 0, 0, 3, 0, 0, 1};
+static const veryshort lilstar2[8] = {3, 0, 0, 1, 0, 2, 0, 0};
+static const veryshort lilstar3[8] = {0, 1, 0, 0, 2, 3, 0, 0};
+static const veryshort lilstar4[8] = {0, 0, 2, 3, 0, 0, 0, 1};
 
 
-static veryshort qtbd1[12] = {5, 9, 6, 7, 9, 0, 1, 9, 2, 3, 9, 4};
-static veryshort qtbd2[12] = {9, 5, 6, 7, 0, 9, 9, 1, 2, 3, 4, 9};
-static veryshort qtbd3[12] = {9, 5, 6, 7, 9, 0, 9, 1, 2, 3, 9, 4};
-static veryshort qtbd4[12] = {5, 9, 6, 7, 0, 9, 1, 9, 2, 3, 4, 9};
-static veryshort q3x4xx1[12] = {9, 5, 0, 9, 9, 1, 9, 2, 3, 9, 9, 4};
-static veryshort q3x4xx2[12] = {9, 9, 9, 9, 2, 3, 9, 9, 9, 9, 0, 1};
-static veryshort q3x4xx3[12] = {9, 9, 2, 2, 9, 9, 3, 3, 9, 9, 0, 1};
-static veryshort q3x4xx4[12] = {3, 3, 9, 9, 0, 1, 9, 9, 2, 2, 9, 9};
+static const veryshort qtbd1[12] = {5, 9, 6, 7, 9, 0, 1, 9, 2, 3, 9, 4};
+static const veryshort qtbd2[12] = {9, 5, 6, 7, 0, 9, 9, 1, 2, 3, 4, 9};
+static const veryshort qtbd3[12] = {9, 5, 6, 7, 9, 0, 9, 1, 2, 3, 9, 4};
+static const veryshort qtbd4[12] = {5, 9, 6, 7, 0, 9, 1, 9, 2, 3, 4, 9};
+static const veryshort q3x4xx1[12] = {9, 5, 0, 9, 9, 1, 9, 2, 3, 9, 9, 4};
+static const veryshort q3x4xx2[12] = {9, 9, 9, 9, 2, 3, 9, 9, 9, 9, 0, 1};
+static const veryshort q3x4xx3[12] = {9, 9, 2, 2, 9, 9, 3, 3, 9, 9, 0, 1};
+static const veryshort q3x4xx4[12] = {3, 3, 9, 9, 0, 1, 9, 9, 2, 2, 9, 9};
 
 
 
@@ -1137,13 +1144,15 @@ static void special_4_way_symm(
          k = (z >> 4) & 0x1F;
          if (the_table) k = the_table[k];
          k = (k + real_direction*result_quartersize) % result_size;
-         destination->people[real_index].id1 = (this_person.id1 & ~(ROLL_MASK | 077)) |
-               ((z+real_direction*011) & 013) |
-               ((z * (ROLL_BIT/DBROLL_BIT)) & ROLL_MASK);
+         uint32 rollstuff = (z * (NROLL_BIT/NDBROLL_BIT)) & NROLL_MASK;
+         if ((rollstuff+NROLL_BIT) & (NROLL_BIT*2)) rollstuff |= NROLL_BIT*4;
+         destination->people[real_index].id1 = (this_person.id1 & ~(NROLL_MASK | 077)) |
+               ((z+real_direction*011) & 013) | rollstuff;
 
-         if (this_person.id1 & STABLE_ENAB) {
-            do_stability(&destination->people[real_index].id1, (stability) ((z/DBSTAB_BIT) & 0xF), (z + result->rotation));
-         }
+         if (this_person.id1 & STABLE_ENAB)
+            do_stability(&destination->people[real_index].id1,
+                         (stability) ((z/DBSTAB_BIT) & 0xF),
+                         (z + result->rotation));
 
          destination->people[real_index].id2 = this_person.id2;
          newplacelist[real_index] = k;
@@ -1203,12 +1212,15 @@ static void special_triangle(
             }
          }
 
-         destination->people[real_index].id1 = (this_person.id1 & ~(ROLL_MASK | 077)) |
-               ((z + real_direction * 011) & 013) |
-               ((z * (ROLL_BIT/DBROLL_BIT)) & ROLL_MASK);
+         uint32 rollstuff = (z * (NROLL_BIT/NDBROLL_BIT)) & NROLL_MASK;
+         if ((rollstuff+NROLL_BIT) & (NROLL_BIT*2)) rollstuff |= NROLL_BIT*4;
+         destination->people[real_index].id1 = (this_person.id1 & ~(NROLL_MASK | 077)) |
+               ((z + real_direction * 011) & 013) | rollstuff;
 
          if (this_person.id1 & STABLE_ENAB)
-            do_stability(&destination->people[real_index].id1, (stability) ((z/DBSTAB_BIT) & 0xF), (z+result->rotation));
+            do_stability(&destination->people[real_index].id1,
+                         (stability) ((z/DBSTAB_BIT) & 0xF),
+                         (z+result->rotation));
 
          destination->people[real_index].id2 = this_person.id2;
          newplacelist[real_index] = k;
@@ -1244,7 +1256,7 @@ static void special_triangle(
 
 static long_boolean handle_3x4_division(
    setup *ss, uint32 callflags1, uint32 newtb, uint32 livemask,
-   uint32 *division_code_p, map_thing **division_maps_p,
+   uint32 *division_code_p, const map_thing **division_maps_p,
    callarray *calldeflist, long_boolean matrix_aware, setup *result)
 {
    static const veryshort map_3x4_fudge[8] = {1, 2, 4, 5, 7, 8, 10, 11};
@@ -1427,9 +1439,9 @@ static long_boolean handle_3x4_division(
 
 static bool handle_4x4_division(
    setup *ss, uint32 callflags1, uint32 newtb, uint32 livemask,
-   uint32 & division_code,         // We write over this.
-   map_thing * & division_maps,    // We write over this.
-   int & finalrot,                 // We write over this.
+   uint32 & division_code,            // We write over this.
+   const map_thing * & division_maps, // We write over this.
+   int & finalrot,                    // We write over this.
    callarray *calldeflist, long_boolean matrix_aware)
 {
    long_boolean forbid_little_stuff;
@@ -1684,7 +1696,7 @@ static bool handle_4x4_division(
 
 static long_boolean handle_4x6_division(
    setup *ss, uint32 callflags1, uint32 newtb, uint32 livemask,
-   uint32 *division_code_p, map_thing **division_maps_p,
+   uint32 *division_code_p, const map_thing **division_maps_p,
    callarray *calldeflist, long_boolean matrix_aware)
 {
    long_boolean forbid_little_stuff;
@@ -1790,7 +1802,7 @@ static long_boolean handle_4x6_division(
 
 static long_boolean handle_3x8_division(
    setup *ss, uint32 callflags1, uint32 newtb, uint32 livemask,
-   uint32 *division_code_p, map_thing **division_maps_p,
+   uint32 *division_code_p, const map_thing **division_maps_p,
    callarray *calldeflist, long_boolean matrix_aware)
 {
    long_boolean forbid_little_stuff;
@@ -1851,7 +1863,7 @@ static long_boolean handle_3x8_division(
 
 static long_boolean handle_2x12_division(
    setup *ss, uint32 callflags1, uint32 newtb, uint32 livemask,
-   uint32 *division_code_p, map_thing **division_maps_p,
+   uint32 *division_code_p, const map_thing **division_maps_p,
    callarray *calldeflist, long_boolean matrix_aware)
 {
    long_boolean forbid_little_stuff;
@@ -1922,7 +1934,7 @@ static int divide_the_setup(
    callarray *have_1x2, *have_2x1;
    uint32 division_code = ~0UL;
    mpkind map_kind;
-   map_thing *division_maps;
+   const map_thing *division_maps;
    uint32 newtb = *newtb_p;
    uint32 callflags1 = ss->cmd.callspec->the_defn.callflags1;
    uint64 final_concepts = ss->cmd.cmd_final_flags;
@@ -1959,6 +1971,8 @@ static int divide_the_setup(
    }
 
    switch (ss->kind) {
+      int tbi, tbo;
+
    case s_thar:
       if (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK)
          fail("Can't split the setup.");
@@ -1976,7 +1990,7 @@ static int divide_the_setup(
 
       if (temp ||
           (TEST_HERITBITS(ss->cmd.cmd_final_flags,INHERITFLAG_16_MATRIX)) ||
-          (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX)) {
+          (ss->cmd.cmd_misc_flags & (CMD_MISC__EXPLICIT_MATRIX|CMD_MISC__PHANTOMS))) {
          if ((!(newtb & 010) || assoc(b_2x4, ss, calldeflist)) &&
              (!(newtb & 001) || assoc(b_4x2, ss, calldeflist))) {
             division_code = MAPCODE(s2x4,2,MPKIND__SPLIT,0);
@@ -2056,39 +2070,37 @@ static int divide_the_setup(
 
       fail("You must specify a concept.");
    case s2x6:
-      /* The call has no applicable 2x6 or 6x2 definition. */
+      // The call has no applicable 2x6 or 6x2 definition.
 
-      /* See if this call has applicable 2x8 definitions and matrix expansion is permitted.
-         If so, that is what we must do. */
+      // See if this call has applicable 2x8 definitions and matrix expansion is permitted.
+      // If so, that is what we must do.
 
-      if (  !(ss->cmd.cmd_misc_flags & CMD_MISC__NO_EXPAND_MATRIX) &&
-            (!(newtb & 010) || assoc(b_2x8, ss, calldeflist)) &&
-            (!(newtb & 001) || assoc(b_8x2, ss, calldeflist))) {
+      if (!(ss->cmd.cmd_misc_flags & CMD_MISC__NO_EXPAND_MATRIX) &&
+          (!(newtb & 010) || assoc(b_2x8, ss, calldeflist)) &&
+          (!(newtb & 001) || assoc(b_8x2, ss, calldeflist))) {
          do_matrix_expansion(ss, CONCPROP__NEEDK_2X8, TRUE);
-         /* Should never fail, but we don't want a loop. */
+         // Should never fail, but we don't want a loop.
          if (ss->kind != s2x8) fail("Failed to expand to 2X8.");
-         return 2;        /* And try again. */
+         return 2;        // And try again.
       }
 
-      /* Next, check whether it has 1x3/3x1/2x3/3x2/1x6/6x1 definitions,
-         and divide the setup if so, and if the call permits it.  This is important
-         for permitting "Z axle" from a 2x6 but forbidding "circulate".
-         We also enable this if the caller explicitly said "2x6 matrix". */
+      // Next, check whether it has 1x3/3x1/2x3/3x2/1x6/6x1 definitions,
+      // and divide the setup if so, and if the call permits it.  This is important
+      // for permitting "Z axle" from a 2x6 but forbidding "circulate".
+      // We also enable this if the caller explicitly said "2x6 matrix".
 
       temp =
          (callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) &&
          (ss->cmd.cmd_final_flags.her8it & INHERITFLAG_NXNMASK) != INHERITFLAGNXNK_3X3;
 
-      /* NEW STUFF!!!! */
-
       if (temp ||
           (TEST_HERITBITS(ss->cmd.cmd_final_flags,INHERITFLAG_12_MATRIX)) ||
-          (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX)) {
+          (ss->cmd.cmd_misc_flags & (CMD_MISC__EXPLICIT_MATRIX|CMD_MISC__PHANTOMS))) {
          if ((!(newtb & 010) || assoc(b_2x3, ss, calldeflist)) &&
              (!(newtb & 001) || assoc(b_3x2, ss, calldeflist))) {
             division_code = MAPCODE(s2x3,2,MPKIND__SPLIT,0);
-            /* See comment above about abomination. */
-            /* If database said to split, don't give warning, unless said "3x3". */
+            // See comment above about abomination.
+            // If database said to split, don't give warning, unless said "3x3".
             if (!temp) warn(warn__split_to_2x3s);
             goto divide_us_no_recompute;
          }
@@ -2099,16 +2111,16 @@ static int divide_the_setup(
                    assoc(b_3x1, ss, calldeflist) ||
                    assoc(b_6x1, ss, calldeflist))) {
             division_code = MAPCODE(s1x6,2,MPKIND__SPLIT,1);
-            /* See comment above about abomination. */
-            /* If database said to split, don't give warning, unless said "3x3". */
+            // See comment above about abomination.
+            // If database said to split, don't give warning, unless said "3x3".
             if (!temp) warn(warn__split_to_1x6s);
             goto divide_us_no_recompute;
          }
       }
 
-      /* Next, check whether it has 1x2/2x1/2x2/1x1 definitions,
-            and we are doing some phantom concept.
-            Divide the setup into 3 boxes if so. */
+      // Next, check whether it has 1x2/2x1/2x2/1x1 definitions,
+      // and we are doing some phantom concept.
+      // Divide the setup into 3 boxes if so.
 
       if ((ss->cmd.cmd_misc_flags & CMD_MISC__PHANTOMS) ||
           (callflags1 & CFLAG1_SPLIT_LARGE_SETUPS)) {
@@ -2121,27 +2133,27 @@ static int divide_the_setup(
          }
       }
 
-      /* Otherwise, the only way this can be legal is if we can identify
-            smaller setups of all real people and can do the call on them.  For
-            example, we will look for 1x4 setups, so we could do things like
-            swing thru from a parallelogram. */
+      // Otherwise, the only way this can be legal is if we can identify
+      // smaller setups of all real people and can do the call on them.  For
+      // example, we will look for 1x4 setups, so we could do things like
+      // swing thru from a parallelogram.
 
       switch (livemask) {
-      case 07474:    /* a parallelogram */
+      case 07474:    // a parallelogram
          division_code = MAPCODE(s1x4,2,MPKIND__OFFS_R_HALF,1);
          warn(warn__each1x4);
          break;
-      case 01717:    /* a parallelogram */
+      case 01717:    // a parallelogram
          division_code = MAPCODE(s1x4,2,MPKIND__OFFS_L_HALF,1);
          warn(warn__each1x4);
          break;
       case 06060: case 00303:
-      case 06363:    /* the outer triple boxes */
+      case 06363:    // the outer triple boxes
          division_code = MAPCODE(s2x2,3,MPKIND__SPLIT,0);
          warn(warn__each2x2);
          break;
       case 05555: case 04141: case 02222:
-         /* Split into 6 stacked 1x2's. */
+         // Split into 6 stacked 1x2's.
          division_code = MAPCODE(s1x2,6,MPKIND__SPLIT,1);
          warn(warn__each1x2);
          break;
@@ -3173,30 +3185,23 @@ static int divide_the_setup(
       if (((newtb & 1) == 0 && have_1x2 != 0) || ((newtb & 010) == 0 && have_2x1 != 0))
          goto divide_us_no_recompute;
 
-         /* If the splitting is into 4 side-by-side 1x2 setups, just split into 2x2's --
-            that will get the correct RESULTFLAG__SPLIT_AXIS_MASK bits. */
+      // If the splitting is into 4 side-by-side 1x2 setups, just split into 2x2's --
+      // that will get the correct RESULTFLAG__SPLIT_AXIS_MASK bits.
       if (((newtb & 1) == 0 && have_2x1 != 0) || ((newtb & 010) == 0 && have_1x2 != 0))
          goto divide_us_no_recompute;
 
-      /* Also, if some phantom concept has been used and there are 1x2 or 2x1
-         definitions, we also split it into boxes even if people are T-boned.  This is what makes
-         everyone do their part if we say "heads into the middle and heads are standard in split phantom
-         lines, partner trade".  But we don't turn on both splitting bits in this case.  Note that,
-         since the previous test failed, the setup must be T-boned if this test passes. */
-
-      if ((ss->cmd.cmd_misc_flags & CMD_MISC__PHANTOMS) && (have_1x2 != 0 || have_2x1 != 0))
-         goto divide_us_no_recompute;
-
-         /* If we are T-boned and have 1x2 or 2x1 definitions, we need to be careful. */
+      // If we are T-boned and have 1x2 or 2x1 definitions, we need to be careful.
+      tbi = ss->people[1].id1 | ss->people[2].id1 | ss->people[5].id1 | ss->people[6].id1;
+      tbo = ss->people[0].id1 | ss->people[3].id1 | ss->people[4].id1 | ss->people[7].id1;
 
       if ((newtb & 011) == 011) {
-         int tbi = ss->people[1].id1 | ss->people[2].id1 | ss->people[5].id1 | ss->people[6].id1;
-         int tbo = ss->people[0].id1 | ss->people[3].id1 | ss->people[4].id1 | ss->people[7].id1;
-
-         /* If the centers and ends are separately consistent, we can do the call concentrically *IF*
-            the appropriate type of definition exists for the ends to work with the near person rather
-            than the far one.  This is what makes "heads into the middle and everbody partner trade" work,
-            and forbids "heads into the middle and everbody star thru". */
+         // If the centers and ends are separately consistent, we can do the call
+         // concentrically *IF* the appropriate type of definition exists for the ends
+         //  to work with the near person rather than the far one.  This is what makes
+         // "heads into the middle and everbody partner trade" work,
+         // and forbids "heads into the middle and everbody star thru".
+         //
+         // Or if we have a 1x1 definition, we can divide it.  Otherwise, we lose.
 
          if (((tbi & 011) != 011) && ((tbo & 011) != 011)) {
             if ((!(tbo & 010) || have_2x1 != 0) && (!(tbo & 1) || have_1x2 != 0)) {
@@ -3205,22 +3210,32 @@ static int divide_the_setup(
 
                goto do_concentrically;
             }
-
-            /* Or if we have a 1x1 definition, we can divide it.  Otherwise, we lose. */
             else if (assoc(b_1x1, ss, calldeflist))
                goto divide_us_no_recompute;
          }
 
-         /* If the centers and ends are not separately consistent, we should just split it into 2x2's.
-            Perhaps the call has both 1x2 and 2x1 definitions, and will be done sort of siamese in each quadrant.
-            Another possibility is that the call has just (say) 1x2 definitions, but everyone can do their
-            part and miraculously not hit each other. */
+         // If the centers and ends are not separately consistent, we should just
+         // split it into 2x2's.  Perhaps the call has both 1x2 and 2x1 definitions,
+         // and will be done sort of siamese in each quadrant.  Another possibility
+         // is that the call has just (say) 1x2 definitions, but everyone can do their
+         // part and miraculously not hit each other.
 
          else goto divide_us_no_recompute;
       }
 
-      /* We are not T-boned, and there is no 1x2 or 2x1 definition.  The only possibility is that there
-         is a 1x1 definition, in which case splitting into boxes will work. */
+      // If some phantom concept has been used and there are 1x2 or 2x1
+      // definitions, we also split it into boxes even if people are T-boned.
+      // This is what makes everyone do their part if we say "heads into the middle
+      // and heads are standard in split phantom lines, partner trade".
+      // But we don't turn on both splitting bits in this case.  Note that,
+      // since the previous test failed, the setup must be T-boned if this test passes.
+
+      if ((ss->cmd.cmd_misc_flags & CMD_MISC__PHANTOMS) && (have_1x2 != 0 || have_2x1 != 0))
+         goto divide_us_no_recompute;
+
+      // We are not T-boned, and there is no 1x2 or 2x1 definition.
+      // The only possibility is that there is a 1x1 definition,
+      // in which case splitting into boxes will work.
 
       else if (assoc(b_1x1, ss, calldeflist))
          goto divide_us_no_recompute;
@@ -3586,7 +3601,7 @@ extern void basic_move(
    callarray *calldeflist;
    long_boolean funny;
    uint32 division_code;
-   map_thing *division_maps;
+   const map_thing *division_maps;
    callarray *linedefinition;
    callarray *coldefinition;
    uint32 matrix_check_flag = 0;
@@ -4432,8 +4447,12 @@ foobar:
                              ss, real_index, real_direction, northified_index);
             k = ((z >> 4) & 0x1F) ^ (d2 >> 1);
             install_person(&p1, k, ss, real_index);
-            p1.people[k].id1 = (p1.people[k].id1 & ~(ROLL_MASK | 077)) | ((z + real_direction * 011) & 013) | ((z * (ROLL_BIT/DBROLL_BIT)) & ROLL_MASK);
-            p1.people[k].id1 &= ~STABLE_MASK;   /* For now, can't do fractional stable on this kind of call. */
+            uint32 rollstuff = (z * (NROLL_BIT/NDBROLL_BIT)) & NROLL_MASK;
+            if ((rollstuff+NROLL_BIT) & (NROLL_BIT*2)) rollstuff |= NROLL_BIT*4;
+            p1.people[k].id1 = (p1.people[k].id1 & ~(NROLL_MASK | 077)) |
+               ((z + real_direction * 011) & 013) | rollstuff;
+            /* For now, can't do fractional stable on this kind of call. */
+            p1.people[k].id1 &= ~STABLE_MASK;
          }
       }
 
@@ -4670,6 +4689,9 @@ foobar:
                else if (result->kind == s1x8 && other_kind == s_qtag) {
                   final_translatel = qtl1x8;
                }
+               else if (result->kind == s_rigger && other_kind == s1x8) {
+                  final_translatel = qtlrig;
+               }
                else
                   fail("T-bone call went to a weird setup.");
             }
@@ -4726,15 +4748,18 @@ foobar:
 
                final_direction = (final_direction+real_direction) & 3;
 
-               z = find_calldef(the_definition, ss, real_index, real_direction, northified_index);
+               z = find_calldef(the_definition, ss, real_index,
+                                real_direction, northified_index);
                k = (((z >> 4) & 0x1F) + d2out) % thisnumout;
-               newpersonlist.people[real_index].id1 = (this_person.id1 & ~(ROLL_MASK | 077)) |
-                     ((z + final_direction * 011) & 013) |
-                     ((z * (ROLL_BIT/DBROLL_BIT)) & ROLL_MASK);
+               uint32 rollstuff = (z * (NROLL_BIT/NDBROLL_BIT)) & NROLL_MASK;
+               if ((rollstuff+NROLL_BIT) & (NROLL_BIT*2)) rollstuff |= NROLL_BIT*4;
+               newpersonlist.people[real_index].id1 = (this_person.id1 & ~(NROLL_MASK | 077)) |
+                     ((z + final_direction * 011) & 013) | rollstuff;
 
-               if (this_person.id1 & STABLE_ENAB) {
-                  do_stability(&newpersonlist.people[real_index].id1, (stability) ((z/DBSTAB_BIT) & 0xF), (z + final_direction - real_direction + result->rotation));
-               }
+               if (this_person.id1 & STABLE_ENAB)
+                  do_stability(&newpersonlist.people[real_index].id1,
+                               (stability) ((z/DBSTAB_BIT) & 0xF),
+                               (z + final_direction - real_direction + result->rotation));
 
                newpersonlist.people[real_index].id2 = this_person.id2;
                kt = final_translate[k];
@@ -4763,7 +4788,7 @@ foobar:
            result->kind == s_hyperbone ||
            result->kind == shypergal ||
            setup_attrs[ss->kind].setup_limits < setup_attrs[result->kind].setup_limits)) {
-         veryshort *permuter = (veryshort *) 0;
+         const veryshort *permuter = (const veryshort *) 0;
          int rotator = 0;
 
          switch (result->kind) {
@@ -5257,13 +5282,14 @@ foobar:
                      if (k == real_index) goto funny_win;
                   } while (k != j);
 
-                  /* This person can't move, because he moves into a loop not containing his starting point. */
+                  // This person can't move, because he moves into a loop
+                  // not containing his starting point.
                   k = real_index;
-                  newperson.id1 = (ss->people[real_index].id1 & ~ROLL_MASK) | ROLLBITM;
+                  newperson.id1 = (ss->people[real_index].id1 & ~NROLL_MASK) | (3*NROLL_BIT);
                   newperson.id2 = ss->people[real_index].id2;
                   result->people[k] = newperson;
                   newpersonlist.people[k].id1 = ~0UL;
-                  funny_ok1 = TRUE;    /* Someone decided not to move.  Hilarious. */
+                  funny_ok1 = TRUE;    // Someone decided not to move.  Hilarious.
                   goto funny_end;
 
                funny_win:
