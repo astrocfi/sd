@@ -453,21 +453,21 @@ bool conc_tables::synthesize_this(
 
 
 
-/* This overwrites its "outer_inners" argument setups. */
+// This overwrites its "outer_inners" argument setups.
 extern void normalize_concentric(
    setup *ss,              // The "dyp_squash" schemata need to see this; it's allowed to be null.
    calldef_schema synthesizer,
    int center_arity,
-   setup outer_inners[],   /* outers in position 0, inners follow */
+   setup outer_inners[],   // Outers in position 0, inners follow.
    int outer_elongation,
    uint32 matrix_concept,
    setup *result) THROW_DECL
 {
-   /* If "outer_elongation" < 0, the outsides can't deduce their ending spots on
-      the basis of the starting formation.  In this case, it is an error unless
-      they go to some setup for which their elongation is obvious, like a 1x4.
-      The "CONTROVERSIAL_CONC_ELONG" is similar, but says that the low 2 bits
-      are sort of OK, and that a warning needs to be raised. */
+   // If "outer_elongation" < 0, the outsides can't deduce their ending spots on
+   // the basis of the starting formation.  In this case, it is an error unless
+   // they go to some setup for which their elongation is obvious, like a 1x4.
+   // The "CONTROVERSIAL_CONC_ELONG" is similar, but says that the low 2 bits
+   // are sort of OK, and that a warning needs to be raised.
 
    int j;
    setup *inners = &outer_inners[1];
@@ -505,13 +505,19 @@ extern void normalize_concentric(
       setup *i0p = &inners[0];
       setup *i1p = &inners[1];
 
-      if (i0p->kind == s_qtag) {
-         expand::compress_setup(s_qtg_2x4, i0p);
-         expand::compress_setup(s_qtg_2x4, i1p);
-      }
-
       uint32 mask0 = little_endian_live_mask(i0p);
       uint32 mask1 = little_endian_live_mask(i1p);
+
+      // Convert from the outsides of a qtag to the outsides of a 2x4.
+      // The mask check is so that we won't ever get into a situation in which
+      // one of the formations was compressed but the other wasn't.
+      // (Compress_from_hash_table does its own checking.)
+      if (i0p->kind == s_qtag && i1p->kind == s_qtag && ((mask0 | mask1) & 0xCC) == 0) {
+         expand::compress_from_hash_table(i0p, plain_normalize, mask0, false);
+         expand::compress_from_hash_table(i1p, plain_normalize, mask1, false);
+         mask0 = little_endian_live_mask(i0p);
+         mask1 = little_endian_live_mask(i1p);
+      }
 
       bool originals_were_on_left = false;
       bool originals_were_on_right = false;
@@ -537,11 +543,20 @@ extern void normalize_concentric(
 
       bool swap_setups = false;
       bool swap_fix_ptrs = false;
-      enum { fix_none, fix_1x8_to_1x4, fix_2x4_to_1x4, fix_2x4_to_2x2 } todo = fix_none;
+      enum { fix_no_action, fix_bad, fix_1x8_to_1x4, fix_2x4_to_1x4, fix_2x4_to_2x2, fix_qtag_to_gal } todo = fix_bad;
 
       if (outer_elongation == 1) {
          if (i0p->kind == s2x4 && i0p->rotation == 1) {
-            if ((mask0 & 0x0F) == 0 && (mask1 & 0xF0) == 0) {
+            if ((mask0 & 0x6F) == 0 && (mask1 & 0xF6) == 0) {
+               copy_person(i0p, 0, i1p, 0);
+               i1p->clear_person(0);
+               copy_person(i1p, 4, i0p, 4);
+               i0p->clear_person(4);
+               swap_setups = true;
+               outer_elongation = 2;
+               todo = fix_2x4_to_2x2;
+            }
+            else if ((mask0 & 0x0F) == 0 && (mask1 & 0xF0) == 0) {
                todo = fix_2x4_to_1x4;
             }
             else if ((mask0 & 0xC3) == 0 && (mask1 & 0x3C) == 0) {
@@ -568,11 +583,26 @@ extern void normalize_concentric(
                swap_setups = true;
                todo = fix_2x4_to_1x4;
             }
-            else
-               fail("Can't figure out what to do.");
          }
          else if (i0p->kind == s2x4 && i0p->rotation == 0) {
-            if ((mask0 & 0x3C) == 0 && (mask1 & 0xC3) == 0) {
+            if ((mask0 & 0x6F) == 0 && (mask1 & 0xF6) == 0) {
+               copy_person(i0p, 0, i1p, 0);
+               i1p->clear_person(0);
+               copy_person(i1p, 4, i0p, 4);
+               i0p->clear_person(4);
+               swap_fix_ptrs = true;
+               todo = fix_2x4_to_2x2;
+            }
+            else if ((mask0 & 0xF6) == 0 && (mask1 & 0x6F) == 0) {
+               copy_person(i1p, 0, i0p, 0);
+               i0p->clear_person(0);
+               copy_person(i0p, 4, i1p, 4);
+               i1p->clear_person(4);
+               swap_setups = true;
+               swap_fix_ptrs = true;
+               todo = fix_2x4_to_2x2;
+            }
+            else if ((mask0 & 0x3C) == 0 && (mask1 & 0xC3) == 0) {
                swap_fix_ptrs = true;
                todo = fix_2x4_to_2x2;
             }
@@ -597,8 +627,6 @@ extern void normalize_concentric(
                swap_setups = true;
                todo = fix_2x4_to_1x4;
             }
-            else
-               fail("Can't figure out what to do.");
          }
          else if (i0p->kind == s1x8 && i0p->rotation == 0) {
             if ((mask0 & 0xF0) == 0 && (mask1 & 0x0F) == 0) {
@@ -611,8 +639,6 @@ extern void normalize_concentric(
                swap_fix_ptrs = true;
                todo = fix_1x8_to_1x4;
             }
-            else
-               fail("Can't figure out what to do.");
          }
          else if (i0p->kind == s1x8 && i0p->rotation == 1) {
             if ((mask0 & 0x0F) == 0 && (mask1 & 0xF0) == 0) {
@@ -630,16 +656,41 @@ extern void normalize_concentric(
                swap_setups = true;
                todo = fix_1x8_to_1x4;
             }             
-            else
-               fail("Can't figure out what to do.");
          }
-
-         // If get here, there probably were phantoms that got
-         // turned into 2x2's or something.  Take no action, other than setting to schema_in_out_triple_squash.
+         else if (i0p->kind == s_qtag && i0p->rotation == 0) {
+            if (mask0 == 0x41 && mask1 == 0x14) {
+               todo = fix_qtag_to_gal;
+            }
+            else if (mask0 == 0x60 && mask1 == 0x06) {
+               todo = fix_qtag_to_gal;
+            }
+            else if (mask0 == 0x81 && mask1 == 0x18) {
+               warn(warn__this_is_tight);
+               todo = fix_qtag_to_gal;
+            }
+            else if (mask0 == 0xA0 && mask1 == 0x0A) {
+               warn(warn__this_is_tight);
+               todo = fix_qtag_to_gal;
+            }
+         }
+         else {
+            // If get here, there probably were phantoms that got
+            // turned into 2x2's or something.  Take no action, other than setting to schema_in_out_triple_squash.
+            todo = fix_no_action;
+         }
       }
       else if (outer_elongation == 2) {
          if (i0p->kind == s2x4 && i0p->rotation == 0) {
-            if ((mask0 & 0x0F) == 0 && (mask1 & 0xF0) == 0) {
+            if ((mask0 & 0x6F) == 0 && (mask1 & 0xF6) == 0) {
+               copy_person(i0p, 0, i1p, 0);
+               i1p->clear_person(0);
+               copy_person(i1p, 4, i0p, 4);
+               i0p->clear_person(4);
+               outer_elongation = 1;
+               swap_fix_ptrs = true;
+               todo = fix_2x4_to_2x2;
+            }
+            else if ((mask0 & 0x0F) == 0 && (mask1 & 0xF0) == 0) {
                todo = fix_2x4_to_1x4;
             }
             else if ((mask0 & 0xC3) == 0 && (mask1 & 0x3C) == 0) {
@@ -668,11 +719,24 @@ extern void normalize_concentric(
                swap_setups = true;
                todo = fix_2x4_to_1x4;
             }
-            else
-               fail("Can't figure out what to do.");
          }
          else if (i0p->kind == s2x4 && i0p->rotation == 1) {
-            if ((mask0 & 0xC3) == 0 && (mask1 & 0x3C) == 0) {
+            if ((mask0 & 0xF6) == 0 && (mask1 & 0x6F) == 0) {
+               copy_person(i1p, 0, i0p, 0);
+               i0p->clear_person(0);
+               copy_person(i0p, 4, i1p, 4);
+               i1p->clear_person(4);
+               todo = fix_2x4_to_2x2;
+            }
+            else if ((mask0 & 0x6F) == 0 && (mask1 & 0xF6) == 0) {
+               copy_person(i0p, 0, i1p, 0);
+               i1p->clear_person(0);
+               copy_person(i1p, 4, i0p, 4);
+               i0p->clear_person(4);
+               swap_setups = true;
+               todo = fix_2x4_to_2x2;
+            }
+            else if ((mask0 & 0xC3) == 0 && (mask1 & 0x3C) == 0) {
                todo = fix_2x4_to_2x2;
             }
             else if ((mask0 & 0x3C) == 0 && (mask1 & 0xC3) == 0) {
@@ -695,8 +759,6 @@ extern void normalize_concentric(
                }
                todo = fix_2x4_to_1x4;
             }
-            else
-               fail("Can't figure out what to do.");
          }
          else if (i0p->kind == s1x8 && i0p->rotation == 1) {
             if ((mask0 & 0x0F) == 0 && (mask1 & 0xF0) == 0) {
@@ -707,8 +769,6 @@ extern void normalize_concentric(
                swap_setups = true;
                todo = fix_1x8_to_1x4;
             }
-            else
-               fail("Can't figure out what to do.");
          }
          else if (i0p->kind == s1x8 && i0p->rotation == 0) {
             if ((mask0 & 0x0F) == 0 && (mask1 & 0xF0) == 0) {
@@ -728,15 +788,29 @@ extern void normalize_concentric(
                swap_fix_ptrs = true;
                todo = fix_1x8_to_1x4;
             }
-            else
-               fail("Can't figure out what to do.");
          }
-
-         // If get here, there probably were phantoms that got
-         // turned into 2x2's or something.  Take no action, other than setting to schema_in_out_triple_squash.
+         else if (i0p->kind == s_qtag && i0p->rotation == 1) {
+            if (mask0 == 0x14 && mask1 == 0x41) {
+               todo = fix_qtag_to_gal;
+            }
+            else if (mask0 == 0x06 && mask1 == 0x60) {
+               todo = fix_qtag_to_gal;
+            }
+            else if (mask0 == 0x18 && mask1 == 0x81) {
+               warn(warn__this_is_tight);
+               todo = fix_qtag_to_gal;
+            }
+            else if (mask0 == 0x0A && mask1 == 0xA0) {
+               warn(warn__this_is_tight);
+               todo = fix_qtag_to_gal;
+            }
+         }
+         else {
+            // If get here, there probably were phantoms that got
+            // turned into 2x2's or something.  Take no action, other than setting to schema_in_out_triple_squash.
+            todo = fix_no_action;
+         }
       }
-      else
-         fail("Can't figure out what to do.");
 
       if (swap_setups) {
          setup t = *i0p;
@@ -777,6 +851,42 @@ extern void normalize_concentric(
          i1p->swap_people(3, 7);
          i0p->kind = s2x2;
          i1p->kind = s2x2;
+         break;
+      case fix_qtag_to_gal:
+         // Create just one outside setup, which is a diamond.
+         for (j=0 ; j<8 ; j++) install_person(i1p, j, i0p, j);
+
+         install_person(i1p, 2, i1p, 3);
+         install_person(i1p, 6, i1p, 7);
+         install_person(i1p, 1, i1p, 0);
+         install_person(i1p, 4, i1p, 5);
+
+         copy_rot(i0p, 0, i1p, 4, 011);
+         copy_rot(i0p, 1, i1p, 6, 011);
+         copy_rot(i0p, 2, i1p, 1, 011);
+         copy_rot(i0p, 3, i1p, 2, 011);
+
+         i0p->kind = sdmd;
+         i0p->rotation--;
+         canonicalize_rotation(i0p);
+
+         // Change schema to normal, and compensate for the fact that the "triple"
+         // schemata have reversed the centers and ends.
+
+         center_arity = 1;
+         synthesizer = schema_concentric;
+         warn(warn__may_be_fudgy);
+
+         {
+            setup t = *inners;
+            *inners = *outers;
+            *outers = t;
+         }
+
+         goto compute_rotation_again;
+
+      case fix_bad:
+         fail("Can't figure out what to do.");
          break;
       }
 
@@ -1280,6 +1390,8 @@ extern void normalize_concentric(
           table_synthesizer != schema_3x3k_cross_concentric &&
           table_synthesizer != schema_4x4k_concentric &&
           table_synthesizer != schema_4x4k_cross_concentric &&
+          table_synthesizer != schema_intermediate_diamond &&
+          table_synthesizer != schema_outside_diamond &&
           table_synthesizer != schema_conc_o) {
          // Nonexistent center or ends have been taken care of.
          // Now figure out how to put the setups together.
@@ -1339,6 +1451,8 @@ extern void normalize_concentric(
       fail("Can't figure out this single concentric result.");
    case schema_grand_single_concentric:
       fail("Can't figure out this grand single concentric result.");
+   case schema_intermediate_diamond: case schema_outside_diamond:
+      fail("Can't figure out how diamond should be considered to have been oriented.");
    case schema_concentric:
       break;
    default:
@@ -1622,6 +1736,8 @@ static calldef_schema concentrify(
    case schema_intlk_vertical_6:
    case schema_checkpoint:
    case schema_ckpt_star:
+   case schema_intermediate_diamond:
+   case schema_outside_diamond:
    case schema_conc_12:
    case schema_conc_16:
    case schema_conc_star12:
@@ -2354,6 +2470,7 @@ static bool this_call_preserves_shape(const setup *begin,
 static bool fix_empty_inners(
    setup_kind orig_inners_start_kind,
    int center_arity,
+   int begin_outer_elongation,
    calldef_schema analyzer,
    calldef_schema analyzer_result,
    setup *begin_inner,
@@ -2367,20 +2484,40 @@ static bool fix_empty_inners(
       clear_result_flags(&result_inner[i]);
    }
 
-   // If the schema is one of the special ones, we will know what to do.
-   if (analyzer == schema_conc_star ||
-       analyzer == schema_ckpt_star ||
-       analyzer == schema_conc_star12 ||
-       analyzer == schema_conc_star16 ||
-       analyzer == schema_in_out_triple ||
-       analyzer == schema_sgl_in_out_triple_squash ||
-       analyzer == schema_sgl_in_out_triple ||
-       analyzer == schema_3x3_in_out_triple_squash ||
-       analyzer == schema_3x3_in_out_triple ||
-       analyzer == schema_4x4_in_out_triple_squash ||
-       analyzer == schema_4x4_in_out_triple ||
-       analyzer == schema_in_out_quad ||
-       analyzer == schema_in_out_12mquad) {
+   if (analyzer == schema_conc_star &&
+       analyzer_result == schema_concentric &&
+       result_outer->kind == sdmd &&
+       center_arity == 1 && 
+       begin_outer_elongation == 1 &&
+       begin_inner->kind == s2x2 &&
+       begin_inner->cmd.callspec &&
+       begin_inner->cmd.callspec == base_calls[base_call_armturn_n4] &&
+       (call_options.number_fields & 1) != 0) {
+
+      // This is the "centers cast 3/4" as the second part of relay the top.
+      // This isn't really correct, because we don't know that the center phantom 2x2
+      // isn't T-boned to the others except by virtue of the trade that preceded.
+      // But it's good enough--the human outsides will assume that they are facing appropriately.
+
+      // Restore the original bunch of phantoms.
+      *result_inner = *begin_inner;
+      result_inner->kind = s1x4;
+      result_inner->rotation = 1;
+      clear_result_flags(result_inner);
+   }
+   else if (analyzer == schema_conc_star ||   // If the schema is one of the special ones, we will know what to do.
+            analyzer == schema_ckpt_star ||
+            analyzer == schema_conc_star12 ||
+            analyzer == schema_conc_star16 ||
+            analyzer == schema_in_out_triple ||
+            analyzer == schema_sgl_in_out_triple_squash ||
+            analyzer == schema_sgl_in_out_triple ||
+            analyzer == schema_3x3_in_out_triple_squash ||
+            analyzer == schema_3x3_in_out_triple ||
+            analyzer == schema_4x4_in_out_triple_squash ||
+            analyzer == schema_4x4_in_out_triple ||
+            analyzer == schema_in_out_quad ||
+            analyzer == schema_in_out_12mquad) {
       // Take no action.
    }
    else if (analyzer == schema_in_out_triple_squash && center_arity == 2) {
@@ -3663,7 +3800,7 @@ extern void concentric_move(
       }
    }
    else if (outer_inners[1].kind == nothing) {
-      if (fix_empty_inners(orig_inners_start_kind, center_arity,
+      if (fix_empty_inners(orig_inners_start_kind, center_arity, begin_outer_elongation,
                            analyzer, analyzer_result, &begin_inner[0],
                            &outer_inners[0], &outer_inners[1],
                            outer_inner_options[1],
@@ -3717,6 +3854,8 @@ extern void concentric_move(
        analyzer != schema_4x4_in_out_triple &&
        analyzer != schema_in_out_quad &&
        analyzer != schema_in_out_12mquad &&
+       analyzer != schema_intermediate_diamond &&
+       analyzer != schema_outside_diamond &&
        analyzer != schema_conc_o &&
        analyzer != schema_conc_bar12 &&
        analyzer != schema_conc_bar16) {

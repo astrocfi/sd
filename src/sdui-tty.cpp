@@ -84,7 +84,7 @@ int sdtty_screen_height = 0;  // The "lines" option may set this to something.
 bool sdtty_no_console = false;
 bool sdtty_no_line_delete = false;
 
-char *iofull::version_string()
+const char *iofull::version_string()
 {
    return UI_VERSION_STRING "tty";
 }
@@ -111,14 +111,14 @@ int main(int argc, char *argv[])
 // as typed by the user.  GLOB_full_input is converted to all lower case for
 // ease of searching.
 static char user_input[INPUT_TEXTLINE_SIZE+1];
-static char *user_input_prompt;
-static char *function_key_expansion;
+static const char *user_input_prompt;
+static const char *function_key_expansion;
 
 void refresh_input()
 {
    erase_matcher_input();
    user_input[0] = '\0';
-   function_key_expansion = (char *) 0;
+   function_key_expansion = (const char *) 0;
    clear_line();
    put_line(user_input_prompt);
 }
@@ -153,7 +153,7 @@ static char alt1_names1[] = "        ";
 static char alt1_names2[] = "1P2R3O4C";
 
 
-static void get_string_input(char prompt[], char dest[], int max)
+static void get_string_input(const char prompt[], char dest[], int max)
 {
    put_line(prompt);
    get_string(dest, max);
@@ -356,7 +356,7 @@ bool iofull::init_step(init_callback_state s, int n)
 
    case init_database1:
       // The level has been chosen.  We are about to open the database.
-      call_menu_prompts[call_list_empty] = "--> ";   // This prompt should never be used.
+      call_menu_prompts[call_list_empty] = (char *) "--> ";   // This prompt should never be used.
       break;
 
    case init_database2:
@@ -410,7 +410,7 @@ void iofull::create_menu(call_list_kind cl)
       /* The menu name here is "(any setup)".  That may be a sensible
          name for a menu, but it isn't helpful as a prompt.  So we
          just use a vanilla prompt. */
-      call_menu_prompts[cl] = "--> ";
+      call_menu_prompts[cl] = (char *) "--> ";
    else
       sprintf(call_menu_prompts[cl], "(%s)--> ", menu_names[cl]);
 }
@@ -555,7 +555,7 @@ void iofull::prepare_for_listing()
 }
 
 
-static bool get_user_input(char *prompt, int which)
+static bool get_user_input(const char *prompt, int which)
 {
    char *p;
    char c;
@@ -566,7 +566,7 @@ static bool get_user_input(char *prompt, int which)
    user_input_prompt = prompt;
    erase_matcher_input();
    user_input[0] = '\0';
-   function_key_expansion = (char *) 0;
+   function_key_expansion = (const char *) 0;
    put_line(user_input_prompt);
 
    for (;;) {
@@ -578,7 +578,7 @@ static bool get_user_input(char *prompt, int which)
       if (function_key_expansion) {
          c = *function_key_expansion++;
          if (c) goto got_char;
-         else function_key_expansion = (char *) 0;
+         else function_key_expansion = (const char *) 0;
       }
 
       nc = get_char();
@@ -612,7 +612,7 @@ static bool get_user_input(char *prompt, int which)
             case special_index_deleteline:
                erase_matcher_input();
                strcpy(user_input, GLOB_user_input);
-               function_key_expansion = (char *) 0;
+               function_key_expansion = (const char *) 0;
                clear_line();                   // Clear the current line.
                put_line(user_input_prompt);    // Redisplay the prompt.
                continue;
@@ -620,7 +620,7 @@ static bool get_user_input(char *prompt, int which)
                chars_deleted = delete_matcher_word();
                while (chars_deleted-- > 0) rubout();
                strcpy(user_input, GLOB_user_input);
-               function_key_expansion = (char *) 0;
+               function_key_expansion = (const char *) 0;
                continue;
             case special_index_quote_anything:
                function_key_expansion = "<anything>";
@@ -684,7 +684,7 @@ static bool get_user_input(char *prompt, int which)
             GLOB_user_input_size--;
             user_input[GLOB_user_input_size] = '\0';
             GLOB_user_input[GLOB_user_input_size] = '\0';
-            function_key_expansion = (char *) 0;
+            function_key_expansion = (const char *) 0;
             rubout();    // Update the display with the character erased.
          }
          continue;
@@ -845,31 +845,31 @@ static bool get_user_input(char *prompt, int which)
 
 
 
-static char *banner_prompts0[] = {
+static const char *banner_prompts0[] = {
     "",
     "simple modifications",
     "all modifications",
     "??"};
 
-static char *banner_prompts1[] = {
+static const char *banner_prompts1[] = {
     "",
     "all concepts",
     "??",
     "??"};
 
-static char *banner_prompts2[] = {
+static const char *banner_prompts2[] = {
     "",
     "AP",
     "??",
     "??"};
 
-static char *banner_prompts3[] = {
+static const char *banner_prompts3[] = {
     "",
     "SC",
     "RSC",
     "??"};
 
-static char *banner_prompts4[] = {
+static const char *banner_prompts4[] = {
     "",
     "MG",
     "??",
@@ -906,7 +906,7 @@ uims_reply iofull::get_startup_command()
 bool iofull::get_call_command(uims_reply *reply_p)
 {
    char prompt_buffer[200];
-   char *prompt_ptr;
+   const char *prompt_ptr;
    bool retval = false;
 
    if (allowing_modifications != 0)

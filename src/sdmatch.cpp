@@ -674,7 +674,7 @@ void matcher_initialize()
 
       if (name[0] == '@') {
          switch (name[1]) {
-         case '6': case 'k': case 'K':
+         case '6': case 'k': case 'K': case 'V':
             // This is a call like "<anyone> run".  Put it into every bucket
             // that could match a selector.
 
@@ -728,7 +728,7 @@ void matcher_initialize()
       int the_item = new_fangled_concept_list->the_list[i];
       Cstring name = concept_descriptor_table[the_item].name;
 
-      if (name[0] == '@' && (name[1] == '6' || name[1] == 'k' || name[1] == 'K')) {
+      if (name[0] == '@' && (name[1] == '6' || name[1] == 'k' || name[1] == 'K' || name[1] == 'V')) {
          // This is a call like "<anyone> run".  Put it into every bucket
          // that could match a selector.
 
@@ -756,7 +756,7 @@ void matcher_initialize()
       int the_item = new_fangled_level_concept_list->the_list[i];
       Cstring name = concept_descriptor_table[the_item].name;
 
-      if (name[0] == '@' && (name[1] == '6' || name[1] == 'k' || name[1] == 'K')) {
+      if (name[0] == '@' && (name[1] == '6' || name[1] == 'k' || name[1] == 'K' || name[1] == 'V')) {
          // This is a call like "<anyone> run".  Put it into every bucket
          // that could match a selector.
 
@@ -1656,19 +1656,24 @@ static void match_wildcard(
 
    if (user) {
       switch (key) {
-      case '6': case 'k': case 'K':
+      case '6': case 'k': case 'K': case 'V':
          if (current_result->match.call_conc_options.who == selector_uninitialized) {
-            selector_kind save_who = current_result->match.call_conc_options.who;
-
             for (i=1; i<selector_INVISIBLE_START; i++) {
-               if (((selector_kind) i) == selector_some && key != 'K') continue;
+               switch ((selector_kind) i) {
+               case selector_some: if (key != 'K') continue;
+                  break;
+               case selector_centers: case selector_ends:
+               if (key == 'V') continue;
+               break;
+               }
+
                current_result->match.call_conc_options.who = (selector_kind) i;
                match_suffix_2(user,
                               (key == 'k') ? selector_list[i].sing_name : selector_list[i].name,
                               &p2b, patxi);
             }
 
-            current_result->match.call_conc_options.who = save_who;
+            current_result->match.call_conc_options.who = selector_uninitialized;
             return;
          }
          break;

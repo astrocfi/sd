@@ -91,6 +91,17 @@
            10
             9
 
+   sx1x8 =
+               4
+               5
+               6
+               7
+   0  1  2  3    11 10  9  8
+              15
+              14
+              13
+              12
+
    sx1x16 =
                      8
                      9
@@ -186,12 +197,15 @@ static collision_map collision_map_table[] = {
     s_thar, s_thar, 0, warn__none, 0},
 
    // Three collisions after 1/2 circulate from C1 phantoms, going to a collided 1x6 and thence a 1x8 or thar.
+   // ******* These are probably no longer needed, since it goes to an sx1x8.
+   /*
    {6, 0x000000, 00707, 00202, {0, 1, 2, 6, 7, 8}, {0, 1, 2, 4, 7, 6},    {0, 3, 2, 4, 5, 6},
     sx1x6, s1x8, 0, warn__none, 0},
    {6, 020207070, 07070, 02020, {3, 4, 5, 9, 10, 11}, {0, 1, 2, 4, 7, 6},    {0, 3, 2, 4, 5, 6},
     sx1x6, s1x8, 1, warn__none, 0},
    {4, 020202020, 02222, 02222, {1, 4, 7, 10},         {0, 2, 5, 7},          {1, 3, 4, 6},
     sx1x6, s_thar, 0, warn__none, 0},
+   */
 
    // Collision after circulate from lines all facing same way.
    {4, 0x000000, 0x0F, 0x0F,  {0, 1, 2, 3},         {0, 2, 4, 6},          {1, 3, 5, 7},
@@ -893,6 +907,11 @@ static const veryshort h1x6translatev[15] = {
    0,  0,  0,  3, 4, 5,
    0,  0,  0};
 
+static const veryshort h1x8translatev[20] = {
+   0,  0,  0,  0,  0, 1, 3, 2,
+   0,  0,  0,  0,  4, 5, 7, 6,
+   0,  0,  0, 0};
+
 static const veryshort hx1x6translatev[15] = {
    0,  6,  7,  0,  1,  0,
    0,  2,  3,  4,  5,  0,
@@ -901,6 +920,15 @@ static const veryshort hx1x6translatev[15] = {
 static const veryshort h1x6thartranslate[12] = {
    0,  0,  1,  0,  2,  3,
    0,  4,  5,  0,  6,  7};
+
+static const veryshort h1x8thartranslate9999[16] = {
+   0,  0,  1,  0,  0,  2,  3,  0,
+   0,  4,  5,  0,  0,  6,  7,  0};
+
+static const veryshort h1x8thartranslatec3c3[20] = {
+   0,  0,  6,  7,  0,  1,  0,  0,
+   0,  0,  2,  3,  4,  5,  0,  0,
+   0,  0,  6,  7};
 
 static const veryshort dmdhyperv[15] = {0, 3, 0, 0, 0, 0,
                                         0, 1, 0, 2, 0, 0,
@@ -1392,7 +1420,7 @@ static void special_4_way_symm(
        0,  1,  2,  3,  4,  5,  6,  7,
       16, 17, 18, 19, 20, 21, 22, 23};
 
-   static const veryshort table_1x6_from_xwv[8] = {0, 1, 4, 5, 6, 7, 10, 11};
+   static const veryshort table_x1x8_from_xwv[8] = {0, 2, 5, 7, 8, 10, 13, 15};
 
    static const veryshort table_4dmd[16] = {
       7, 5, 14, 12, 16, 17, 18, 19,
@@ -1456,8 +1484,8 @@ static void special_4_way_symm(
       the_table = table_1x16;
       break;
    case s_crosswave:
-      result->kind = sx1x6;
-      the_table = table_1x6_from_xwv;
+      result->kind = sx1x8;
+      the_table = table_x1x8_from_xwv;
       break;
    case s4dmd:
       result->kind = sx4dmd;
@@ -1749,7 +1777,7 @@ static bool handle_3x4_division(
    // But that's a pretty ambitious change.
 
    if (assoc(b_1x1, ss, calldeflist) ||
-       (!forbid_little_stuff &&
+       ((!forbid_little_stuff &&
         (((ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX) ||
           (calldeflist->callarray_flags & CAF__LATERAL_TO_SELECTEES)) &&
          ((!(newtb & 010) ||
@@ -1757,7 +1785,7 @@ static bool handle_3x4_division(
            assoc(b_1x4, ss, calldeflist)) &&
           (!(newtb & 001) ||
            assoc(b_2x1, ss, calldeflist) ||
-           assoc(b_4x1, ss, calldeflist)))) ||
+           assoc(b_4x1, ss, calldeflist))))) ||
         (matrix_aware &&
          (assoc(b_1x2, ss, calldeflist) ||
           assoc(b_2x1, ss, calldeflist))))) {
@@ -5361,6 +5389,7 @@ foobar:
           (result->kind == s_hyperglass ||
            result->kind == s_hyperbone ||
            result->kind == sx1x6 ||
+           result->kind == sx1x8 ||
            result->kind == shypergal ||
            attr::slimit(ss) < attr::slimit(result))) {
          const veryshort *permuter = (const veryshort *) 0;
@@ -5521,6 +5550,7 @@ foobar:
                permuter = h1x6thartranslate;   // thar spots.
                result->kind = s_thar;
             }
+            /*
             else if ((lilresult_mask[0] & 04141UL) == 0) {
                permuter = hx1x6translatev;  // crosswave spots, vertical.
                result->kind = s_crosswave;
@@ -5529,6 +5559,36 @@ foobar:
             else if ((lilresult_mask[0] & 01414UL) == 0) {
                permuter = hx1x6translatev+3;  // crosswave spots, horizontal.
                result->kind = s_crosswave;
+            }
+            */
+            else
+               fail("Call went to improperly-formed setup.");
+            break;
+         case sx1x8:
+            if ((lilresult_mask[0] & 0x0F0FUL) == 0) {
+               warn(warn__4_circ_tracks);
+               permuter = h1x8translatev;    // 1x8 spots, horizontal.
+               result->kind = s1x8;
+               rotator = 1;
+            }
+            else if ((lilresult_mask[0] & 0xF0F0UL) == 0) {
+               warn(warn__4_circ_tracks);
+               permuter = h1x8translatev+4;  // 1x8 spots, vertical.
+               result->kind = s1x8;
+            }
+            else if ((lilresult_mask[0] & 0x9999UL) == 0) {
+               warn(warn__4_circ_tracks);
+               permuter = h1x8thartranslate9999;   // thar spots.
+               result->kind = s_thar;
+            }
+            else if ((lilresult_mask[0] & 0x3C3CUL) == 0) {
+               permuter = h1x8thartranslatec3c3+4;  // crosswave spots, horizontal.
+               result->kind = s_crosswave;
+            }
+            else if ((lilresult_mask[0] & 0xC3C3UL) == 0) {
+               permuter = h1x8thartranslatec3c3;   // crosswave spots, vertical.
+               result->kind = s_crosswave;
+               rotator = 1;
             }
             else
                fail("Call went to improperly-formed setup.");

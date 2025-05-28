@@ -1887,7 +1887,10 @@ extern void distorted_2x2s_move(
    uint32 directions, livemask, misc2_zflag;
    const veryshort *map_ptr = 0;
 
-   const conzept::concept_descriptor *this_concept = parseptr->concept;
+   const conzept::concept_descriptor *this_concept =
+      (ss->cmd.cmd_misc3_flags & CMD_MISC3__IMPOSE_Z_CONCEPT) ? &conzept::special_z : parseptr->concept;
+
+   ss->cmd.cmd_misc3_flags &= ~CMD_MISC3__IMPOSE_Z_CONCEPT;
 
    // Check for special case of "interlocked parallelogram",
    // which doesn't look like the kind of concept we are expecting.
@@ -1935,6 +1938,7 @@ extern void distorted_2x2s_move(
       if (p) livemask |= 1;
    }
 
+   result->clear_people();
    setup_kind inner_kind = s2x2;
 
    switch (misc_indicator) {
@@ -4093,7 +4097,7 @@ void tglmap::do_glorious_triangles(
    }
    else {   // s_qtag
       mapnums = map_ptr->mapqt1;
-      startingrot = 0;
+      startingrot = (map_ptr->randombits & 16) ? 1 : 0;
    }
 
    r = ((-startingrot) & 3) * 011;
@@ -4631,6 +4635,7 @@ extern void triangle_move(
    else {
       // Set this so we can do "peel and trail" without saying "triangle" again.
       ss->cmd.cmd_misc_flags |= CMD_MISC__SAID_TRIANGLE;
+      const tglmap::tglmapkey *map_key_table = (const tglmap::tglmapkey *) 0;
 
       if (indicator_base >= 6) {
          // Indicator = 6 for wave-base, 7 for tandem-base, 20 for <anyone>-base.
@@ -4656,8 +4661,6 @@ extern void triangle_move(
             if ((ss->people[5].id1 & d_mask) == d_west) t |= 2;
          }
 
-         const tglmap::tglmapkey *map_key_table;
-
          if (t == 1)
             map_key_table = tglmap::qttglmap1;
          else if (t == 2)
@@ -4669,14 +4672,11 @@ extern void triangle_move(
          reinstate_rotation(ss, result);
       }
       else {
-
          // Indicator = 2 for inside, 3 for outside.
 
          // Only a few cases allow interlocked.
 
          if (indicator_base == 2 && ss->kind == sbigdmd) {
-            const tglmap::tglmapkey *map_key_table;
-
             if (global_livemask == 07474)
                map_key_table = tglmap::bdtglmap1;
             else if (global_livemask == 01717)
@@ -4686,11 +4686,15 @@ extern void triangle_move(
 
             tglmap::do_glorious_triangles(ss, map_key_table, indicator, result);
             reinstate_rotation(ss, result);
-
             return;
          }
          else if (indicator == 0102 && ss->kind == s_rigger) {
             tglmap::do_glorious_triangles(ss, tglmap::rgtglmap1, indicator, result);
+            reinstate_rotation(ss, result);
+            return;
+         }
+         else if (indicator == 0102 && ss->kind == s_qtag) {
+            tglmap::do_glorious_triangles(ss, tglmap::rgtglmap3, indicator, result);
             reinstate_rotation(ss, result);
             return;
          }
@@ -4710,24 +4714,25 @@ extern void triangle_move(
             case sd2x7:
                if (indicator & 0300) fail("Can't find the indicated triangles.");
 
-               const tglmap::tglmapkey *map_key_table;
-
                if (global_livemask == 0x3C78UL)
                   map_key_table = tglmap::d7tglmap1;
                else if (global_livemask == 0x078FUL)
                   map_key_table = tglmap::d7tglmap2;
                else
                   fail("Can't find the triangle.");
-
-               tglmap::do_glorious_triangles(ss, map_key_table, indicator, result);
-               reinstate_rotation(ss, result);
-               return;
+               break;
             case s_qtag:
                schema = schema_concentric_6_2_tgl;
                break;
             case sbigdmd:
             default:
                fail("There are no 'inside' triangles.");
+            }
+
+            if (map_key_table) {
+               tglmap::do_glorious_triangles(ss, map_key_table, indicator, result);
+               reinstate_rotation(ss, result);
+               return;
             }
 
             concentric_move(ss, &ss->cmd, (setup_command *) 0, schema,

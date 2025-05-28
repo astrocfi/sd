@@ -44,7 +44,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "38.0"
+version "38.1"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve
@@ -2221,12 +2221,13 @@ call "_@0 and circle 1/4" dontshow tag anything_and_circle
    seq andcircle []
 
 call "@2swing @3and circle @a" c1    /* If modified, center 4 do the modification. */
+            neednumber visible_fractions distribute_repetitions
             step_to_qtag left_means_touch_or_check neednumber
             yoyo_is_inherited magic_is_inherited
    seq something_and_circle [repeat_n inherit_yoyo inherit_magic]
 
 call "@0 and circle @a" c2
-            neednumber
+            neednumber visible_fractions distribute_repetitions
    seq anything_and_circle [repeat_n]
 
 call "gravitate" c4 tag gravitate
@@ -5954,6 +5955,106 @@ call "1/4 @h" mainstream tag quarter_dir
 call "quarter @h" mainstream
    alias quarter_dir
 
+call "@V 1/4 in" mainstream tag anyonequarterin
+            dont_use_in_nice_resolve
+   setup 2x2 2x2
+      preds "???"
+         if select   [CR0E AL1W AL2W CR3E]
+         if unselect [ZM0N ZM1N ZM2N ZM3N]
+   setup 1x2 1x2
+      preds "???"
+         if select   [CR0E AL1W]
+         if unselect [ZM0N ZM1N]
+   setup 2x1 1x2
+      preds "???"
+         if select   [0    0]
+         if unselect [ZM0N ZM1N]
+   setup dmd dmd
+      preds "???"
+         if select   [CR0E 0 AL2W 0]
+         if unselect [ZM0N 0 ZM2N 0]
+   setup pmd dmd
+      preds "???"
+         if select   [0 CR1E 0 AL3W]
+         if unselect [0 ZM1N 0 ZM3N]
+   setup star star
+      preds "???"
+         if select   [CR0E    0 AL2W    0]
+         if unselect [ZM0N    0 ZM2N    0]
+   setup galaxy galaxy
+      preds "???"
+         if select   [CR0E CR1E    0 AL3W AL4W AL5W    0 CR7E]
+         if unselect [ZM0N ZM1N    0 ZM3N ZM4N ZM5N    0 ZM7N]
+   setup hrglass hrglass
+      preds "???"
+         if select   [CR0E AL1W AL2W    0 AL4W CR5E CR6E 0]
+         if unselect [ZM0N ZM1N ZM2N    0 ZM4N ZM5N ZM6N 0]
+   setup phrglass hrglass
+      preds "???"
+         if select   [CR0E CR1E    0 CR3E AL4W AL5W    0 AL7W]
+         if unselect [ZM0N ZM1N    0 ZM3N ZM4N ZM5N    0 ZM7N]
+   setup short6 short6
+      preds "???"
+         if select   [CR0E    0 AL2W AL3W    0 CR5E]
+         if unselect [ZM0N    0 ZM2N ZM3N    0 ZM5N]
+   setup pshort6 short6
+      preds "???"
+         if select   [CR0E CR1E CR2E AL3W AL4W AL5W]
+         if unselect [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N]
+
+call "@V quarter in" mainstream
+   alias anyonequarterin
+
+call "@V 1/4 out" mainstream tag anyonequarterout
+            dont_use_in_nice_resolve
+   setup 2x2 2x2
+      preds "???"
+         if select   [AL0W CR1E CR2E AL3W]
+         if unselect [ZM0N ZM1N ZM2N ZM3N]
+   setup 1x2 1x2
+      preds "???"
+         if select   [AL0W CR1E]
+         if unselect [ZM0N ZM1N]
+   setup 2x1 1x2
+      preds "???"
+         if select   [0    0]
+         if unselect [ZM0N ZM1N]
+   setup dmd dmd
+      preds "???"
+         if select   [AL0W 0 CR2E 0]
+         if unselect [ZM0N 0 ZM2N 0]
+   setup pmd dmd
+      preds "???"
+         if select   [0 AL1W 0 CR3E]
+         if unselect [0 ZM1N 0 ZM3N]
+   setup star star
+      preds "???"
+         if select   [AL0W    0 CR2E    0]
+         if unselect [ZM0N    0 ZM2N    0]
+   setup galaxy galaxy
+      preds "???"
+         if select   [AL0W AL1W    0 CR3E CR4E CR5E    0 AL7W]
+         if unselect [ZM0N ZM1N    0 ZM3N ZM4N ZM5N    0 ZM7N]
+   setup hrglass hrglass
+      preds "???"
+         if select   [AL0W CR1E CR2E    0 CR4E AL5W AL6W 0]
+         if unselect [ZM0N ZM1N ZM2N    0 ZM4N ZM5N ZM6N 0]
+   setup phrglass hrglass
+      preds "???"
+         if select   [AL0W AL1W    0 AL3W CR4E CR5E    0 CR7E]
+         if unselect [ZM0N ZM1N    0 ZM3N ZM4N ZM5N    0 ZM7N]
+   setup short6 short6
+      preds "???"
+         if select   [AL0W    0 CR2E CR3E    0 AL5W]
+         if unselect [ZM0N    0 ZM2N ZM3N    0 ZM5N]
+   setup pshort6 short6
+      preds "???"
+         if select   [AL0W AL1W AL2W CR3E CR4E CR5E]
+         if unselect [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N]
+
+call "@V quarter out" mainstream
+   alias anyonequarterout
+
 call "1/8 @h" c1
             dont_use_in_nice_resolve one_person_call
    setup 1x1 1x1 plus_eighth_rotation
@@ -9179,11 +9280,11 @@ call "_trade your neighbor part 1" dontshow tag start_trade_neighbor
    setup 2x4 2x4 rotate restriction forbidden wave_only
       array [ZM7W ZM7W ZM0W ZM0W CR2S AL2N CR5S AL5N]
 
-call "_trade your neighbor part 1" dontshow tag start_trade_neighbor_plain
-   setup 2x4 2x4 rotate restriction forbidden wave_only
+call "_trade your neighbor right part 1" dontshow tag start_trade_neighbor_right
+   setup 2x4 2x4 rotate qualifier wave_only restriction controversial alwaysfail
       array [CR7N AL7S CR0N AL0S AL2N CR2S AL5N CR5S]
             alternate_definition [cross] c3x
-   setup 2x4 2x4 rotate restriction forbidden wave_only
+   setup 2x4 2x4 rotate qualifier wave_only restriction controversial alwaysfail
       array [CR7N AL7S CR0N AL0S CR2S AL2N CR5S AL5N]
 
 call "trade your neighbor @h" c4
@@ -9192,9 +9293,10 @@ call "trade your neighbor @h" c4
    seq set_windmill_direction []
    seq ends_circ []
 
+// With no direction, we go right, but the call is deprecated.
 call "trade your neighbor" c4
             cross_is_inherited
-   seq start_trade_neighbor_plain [inherit_cross]
+   seq start_trade_neighbor_right [inherit_cross]
    seq ends_circ []
 
 call "follow thru" c1 tag followthru
@@ -9305,18 +9407,18 @@ call "pair the line" c4
             alternate_definition [straight] c4
    // "Straight" doesn't mean "go to your opposite's spot".
    // It means "matrix cross over circulate".
-   setup 2x4 2x6 rotate qualifier wave_only   /* Goes to Z's. */
+   setup 2x4 2x6 rotate qualifier wave_only   // Goes to Z's.
       array [CR11E CR10E AL1E AL0E ZM2W AL4E CR7E ZM9W]
-   setup 2x4 2x6 rotate qualifier 2fl_only    /* Goes to Z's. */
+   setup 2x4 2x6 rotate qualifier 2fl_only    // Goes to Z's.
       array [CR11E CR10E AL1E AL0E ZM2W AL4E CR7E ZM9W]
-   setup 2x4 2x4 rotate     /* Intended for lines out or something like that. */
+   setup 2x4 2x4 rotate     // Intended for lines out or something like that.
       array [0 CR7E AL0E 0 ZM1W AL3E CR4E ZM6W]
             alternate_definition [straight cross] c4
-   setup 2x4 2x6 rotate qualifier wave_only   /* Goes to Z's. */
+   setup 2x4 2x6 rotate qualifier wave_only   // Goes to Z's.
       array [CR0E CR1E AL10E AL11E ZM2W AL7E CR4E ZM9W]
-   setup 2x4 2x6 rotate qualifier 2fl_only    /* Goes to Z's. */
+   setup 2x4 2x6 rotate qualifier 2fl_only    // Goes to Z's.
       array [CR0E CR1E AL10E AL11E ZM2W AL7E CR4E ZM9W]
-   setup 2x4 2x4 rotate     /* Intended for lines out or something like that. */
+   setup 2x4 2x4 rotate     // Intended for lines out or something like that.
       array [0 CR0E AL7E 0 ZM1W AL4E CR3E ZM6W]
             alternate_definition [half] c4
    setup 1x4 2x3 rotate
@@ -9973,6 +10075,16 @@ call "veer right" mainstream
       array [ZGM1W 0]
    setup 1x2 1x2 rotate qualifier right miniwaves
       array [ZGM0W 0]
+            alternate_definition [3x3] c4
+   setup 2x3 1x6 qualifier in in_or_out
+      array [0 0 0 ZGM3N ZGM4N ZGM5N]
+   setup 1x6 2x3 qualifier right 3x3_2fl_only
+      array [ZGM0N ZGM1N ZGM2N 0 0 0]
+            alternate_definition [4x4] c4
+   setup 2x4 1x8 qualifier in in_or_out
+      array [0 0 0 0 ZGM4N ZGM5N ZGM7N ZGM6N]
+   setup 1x8 2x4 qualifier right 4x4_2fl_only
+      array [ZGM0N ZGM1N ZGM3N ZGM2N 0 0 0 0]
 
 call "veer left" mainstream
    setup 2x2 1x4 qualifier in in_or_out
@@ -9984,6 +10096,16 @@ call "veer left" mainstream
       array [ZFM0W 0]
    setup 1x2 1x2 rotate qualifier left miniwaves
       array [0 ZFM0W]
+            alternate_definition [3x3] c4
+   setup 2x3 1x6 qualifier in in_or_out
+      array [0 0 0 ZFM2N ZFM1N ZFM0N]
+   setup 1x6 2x3 qualifier left 3x3_2fl_only
+      array [0 0 0 ZFM2N ZFM1N ZFM0N]
+            alternate_definition [4x4] c4
+   setup 2x4 1x8 qualifier in in_or_out
+      array [0 0 0 0 ZFM2N ZFM3N ZFM1N ZFM0N]
+   setup 1x8 2x4 qualifier left 4x4_2fl_only
+      array [0 0 0 0 ZFM3N ZFM2N ZFM0N ZFM1N]
 
 call "leftable veer left" dontshow tag lft_veer_left
             left_means_mirror
@@ -10867,6 +10989,12 @@ call "_half by the left" dontshow tag 1_2_by_left
       array [0 AL0W AL1W 0]
    setup 1x4 dmd qualifier right wave_only
       array [ZM0N 0 0 AL1W]
+   setup qtag hrglass qualifier right dmd_ctrs_mwv
+      array [0 0 0 AL3W 0 0 ZM6N 0]
+   setup qtag 2x4 rotate qualifier left dmd_ctrs_mwv
+      array [0 0 AL1S 0 0 0 0 AL6S]
+   setup pqtag hrglass
+      array [ZM0N ZM1N 0 0 ZM4N ZM5N 0 0]
             alternate_definition [lasthalf] mainstream
    setup dmd 1x4 qualifier left wave_only
       array [ZM0N 0 ZM2N 0]
@@ -13111,9 +13239,9 @@ call "mark time" c4a
 
 call "@6 mark time" c4a
    setup 4x2 2x4 rotate
-      preds "Can't tell who is selected."
-         if select   [    0     0 CCR6N CCR1N AAL2S AAL5S     0     0]
-         if unselect [CAL3S CAL4S  CR3S  CR4S  AL7N  AL0N ACR7N ACR0N]
+      preds "Selected people are improper."
+         if select_near_select_or_phantom [    0     0 CCR6N CCR1N AAL2S AAL5S     0     0]
+         if unselect_near_unselect        [CAL3S CAL4S  CR3S  CR4S  AL7N  AL0N ACR7N ACR0N]
             alternate_definition [single] c4a
    setup 2x2 1x4
       preds "Can't tell who is selected."
@@ -15346,8 +15474,8 @@ call "cross to a wave" c4
 
 call "presto" c4a
             take_right_hands
-      /* The roll info is questionable except for the centers, who clearly
-         can't roll, so it's just not worth putting in. */
+      // The roll info is questionable except for the centers, who clearly
+      // can't roll, so it's just not worth putting in.
    setup 2x4 2x4 rotate restriction 2fl_only
       array [C1E C2E A5E A6E A7E A4E C3E C0E]
    setup 4x2 2x4 restriction unusual alwaysfail
@@ -15364,7 +15492,7 @@ call "presto" c4a
              C0E C1E C2E C6E C3E C4E A11E C5E]
 
 call "_finish follow and cross" dontshow tag rfinfollx
-   /* This is just acey-deucey, but we take no chances with weird setups. */
+   // This is just acey-deucey, but we take no chances with weird setups.
    conc trade [] circulate [conc_demand_lines conc_force_lines]
 
 call "follow the deucey" c4x tag finfollx
@@ -15455,7 +15583,7 @@ call "ferris wheel" mainstream
             alternate_definition [4x4] c4
    setup 2x8 4x4 restriction forbidden 4x4couples_only
       array [CR0S CR14S CR13S CR12S AL0S AL14S AL13S AL12S AL10S AL15S AL3S AL1S CR10S CR15S CR3S CR1S]
-   setup 4x4 2x8 rotate restriction unusual 2fl_only   /* T-bone?  What the heck. */
+   setup 4x4 2x8 rotate restriction unusual 2fl_only   // T-bone?  What the heck.
       array [AL15E AL14E AL13E AL1E AL12E AL3E CR12E AL2E CR3E CR2E CR1E CR13E CR0E CR15E AL0E CR14E]
             alternate_definition [1x2] c4
    setup 2x3 short6
@@ -17582,10 +17710,10 @@ call "_jam thru part 2" dontshow tag jam_thru_2
       array [0 CM2N 0 CR3S AL0N 0 AM1S 0]
 
 call "jam thru" c4a
-   /* "visible_fractions" is of course not really right, becuase the original
-      ends have 4 parts.  We just hope no one calls "invert snag jam thru"
-      until the selective part distribution stuff is finished.  However,
-      "snag jam thru" has been called, so we need this.  Sigh. */
+   // "visible_fractions" is of course not really right, because the original
+   // ends have 4 parts.  We just hope no one calls "invert snag jam thru"
+   // until the selective part distribution stuff is finished.  However,
+   // "snag jam thru" has been called, so we need this.  Sigh.
             visible_fractions twisted_is_inherited
    seq passthru [inherit_twisted]
    seq jam_thru_2 []
@@ -17664,6 +17792,11 @@ call "make magic" c1
    // will be sure the warning is raised.
    setup 2x4 2x4 restriction unusual alwaysfail
       array [ZM0N ZM1N ZM2N ZM3N 0 ZM1N ZM2N 0]
+            alternate_definition [half] c4a
+   setup 4x2 2x3232 restriction unusual quarterbox_or_magic_col
+      preds "Can't figure out what to do."
+         if columns_antitandem       [ZM0N ZM9N ZM1N ZM4N ZM8N ZM5N ZM3N ZM11N]
+         if columns_someone_in_front [ZM2N ZM9N    0 ZM4N ZM8N    0 ZM3N ZM10N]
 
 call "open up the column" c3a tag openup
    setup 4x2 2x4 restriction forbidden wave_only

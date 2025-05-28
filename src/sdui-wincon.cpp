@@ -391,13 +391,23 @@ extern void put_line(const char the_line[])
             int personidx = (*the_line++) & 7;
             int persondir = (*the_line++) & 0xF;
 
+            int randomized_person_color = personidx;
+
+            if (ui_options.color_scheme == color_by_couple_random && ui_options.hide_glyph_numbers) {
+               randomized_person_color = (color_randomizer[personidx>>1] << 1) | (personidx & 1);
+            }
+
             put_char(' ');
 
             if (ui_options.color_scheme != no_color)
                SetConsoleTextAttribute(consoleStdout,
-                                       color_translate[color_index_list[personidx]]);
+                                       color_translate[color_index_list[randomized_person_color]]);
 
-            put_char(my_pn1[personidx]);
+            if (ui_options.hide_glyph_numbers)
+               put_char(' ');
+            else
+               put_char(my_pn1[personidx]);
+
             put_char(my_pn2[personidx]);
             put_char(my_directions[persondir]);
 

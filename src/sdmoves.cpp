@@ -1538,6 +1538,7 @@ static const checkitem checktable[] = {
     {2, 2, 11, 4, -2, -2, -10, -7, 127}},
    {0x00F700E7, 0x25019000, s_c1phan, 0, warn__none, (const coordrec *) 0,
     {-2, 2, -3, 9, 2, -2, 4, -10, 127}},
+   {0x00840046, 0x42021210, s_23232, 0, warn__none, (const coordrec *) 0, {127}},
    {0}};
 
 
@@ -6959,6 +6960,13 @@ extern void move(
             ss->cmd.cmd_final_flags.clear_finalbit(FINAL__SPLIT_SQUARE_APPROVED);
          resultflags_to_put_inmisc |= RESULTFLAG__SPLIT_EXPIRED;
       }
+   }
+
+   if (ss->cmd.cmd_misc3_flags & CMD_MISC3__IMPOSE_Z_CONCEPT) {
+      distorted_2x2s_move(ss, (parse_block *) 0, result);   // It will see the flag, do the right thing, and clear it.
+      canonicalize_rotation(result);
+      saved_magic_diamond = (parse_block *) 0;
+      goto getout;
    }
 
    if (parseptrcopy->concept->kind <= marker_end_of_list) {

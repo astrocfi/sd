@@ -1815,6 +1815,9 @@ static bool inner_active_lines(setup *real_people, int real_index,
    else if (real_people->people[real_index ^ 1].id1)
       return                            // I am a center, with a live partner.
          (uint32) (012 - ((real_index & 4) >> 1)) ==
+         (real_people->people[real_index ^ 1].id1 & 017)
+         ||
+         (uint32) (001 + (((real_index+2) & 4) >> 1)) ==
          (real_people->people[real_index ^ 1].id1 & 017);
    else if (real_people->cmd.cmd_assume.assumption == cr_wave_only)
       return northified_index < 4;

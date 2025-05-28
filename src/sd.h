@@ -247,7 +247,8 @@ enum color_scheme_type {
    color_by_couple,
    color_by_corner,
    color_by_couple_rgyb,
-   color_by_couple_ygrb
+   color_by_couple_ygrb,
+   color_by_couple_random
 };
 
 class ui_option_type {
@@ -267,6 +268,7 @@ class ui_option_type {
    bool nowarn_mode;
    bool keep_all_pictures;
    bool accept_single_click;
+   bool hide_glyph_numbers;
    bool diagnostic_mode;
    bool no_sound;
    bool tab_changes_focus;
@@ -624,6 +626,7 @@ class SDLIB_API conzept {
    static const concept_descriptor marker_concept_comment;
    static const concept_descriptor marker_concept_supercall;
    static const concept_descriptor special_piecewise;
+   static const concept_descriptor special_z;
 
    // We want the concept list, as used by the main program, to be
    // constant.  But we can't literally make it constant, because
@@ -1203,6 +1206,7 @@ enum command_kind {
    command_erase,
    command_abort,
    command_create_comment,
+   command_randomize_couple_colors,
    command_change_outfile,
    command_change_title,
    command_getout,
@@ -1307,6 +1311,7 @@ enum start_select_kind {
    start_select_print_any,
    start_select_init_session_file,
    start_select_change_to_new_style_filename,
+   start_select_randomize_couple_colors,
    start_select_change_outfile,
    start_select_change_title,
 
@@ -2138,6 +2143,15 @@ class select {
       fxboxpdmdc,
       fxlinboxa,
       fxlinboxb,
+      fx23232a,
+      fx23232b,
+      fx23232c,
+      fx23232d,
+      fx23232e,
+      fx23232u,
+      fx23232v,
+      fx23232w,
+      fx23232x,
       fx_f1x8lowf,
       fx_f1x8hif,
       fx_f1x8low6,
@@ -2312,8 +2326,9 @@ class tglmap {
       tglmap2d,
       tglmap1m,
       tglmap2m,
-      tglmap1j,
-      tglmap2j,
+      tglmap1j,   // In/out point interlocked, in qtag.
+      tglmap2j,   // In/out point interlocked, in qtag.
+      tglmap3j,   // Inside interlocked, in qtag.
       tglmap1x,
       tglmap2x,
       tglmap1y,
@@ -2388,13 +2403,14 @@ class tglmap {
    static const tglmapkey bdtglmap1[];
    static const tglmapkey bdtglmap2[];
    static const tglmapkey rgtglmap1[];
+   static const tglmapkey rgtglmap3[];
    static const tglmapkey d7tglmap1[];
    static const tglmapkey d7tglmap2[];
 };
 
 
 struct startinfo {
-   char *name;
+   const char *name;
    bool into_the_middle;
    setup the_setup;
 };
@@ -2460,6 +2476,7 @@ enum warning_index {
    warn__check_2x4,
    warn__check_hokey_2x4,
    warn__check_4x4,
+   warn__check_hokey_4x5,
    warn__check_4x6,
    warn__check_hokey_4x4,
    warn__check_4x4_start,
@@ -2518,6 +2535,7 @@ enum warning_index {
    warn__unusual,
    warn_controversial,
    warn_serious_violation,
+   warn__4_circ_tracks,
    warn__assume_dpt,
    warn_bogus_yoyo_rims_hubs,
    warn__centers_are_diamond,
@@ -3390,7 +3408,7 @@ class configuration {
    int text_line;          // How many lines of text existed after this item was written,
                            // only meaningful if "written_history_items" is >= this index.
 
-   static const resolve_tester *configuration::null_resolve_ptr;    /* in SDTOP */
+   static const resolve_tester *null_resolve_ptr;    /* in SDTOP */
 
  private:
    resolve_indicator resolve_flag;
@@ -3794,7 +3812,8 @@ enum {
                                                       // This is what makes "ends detour" work.
    CMD_MISC3__TWO_FACED_CONCEPT    = 0x00000200UL,
    CMD_MISC3__NO_ANYTHINGERS_SUBST = 0x00000400UL,    // Treat "<anything> motivate" as plain motivate.
-   CMD_MISC3__PARENT_COUNT_IS_ONE  = 0x00000800UL
+   CMD_MISC3__PARENT_COUNT_IS_ONE  = 0x00000800UL,
+   CMD_MISC3__IMPOSE_Z_CONCEPT     = 0x000001000UL
 };
 
 enum normalize_action {
@@ -4088,8 +4107,8 @@ enum split_command_kind {
 extern SDLIB_API int session_index;                           // in SDSI
 extern SDLIB_API bool rewrite_with_new_style_filename;        // in SDSI
 extern int random_number;                                     // in SDSI
-extern SDLIB_API char *database_filename;                     // in SDSI
-extern SDLIB_API char *new_outfile_string;                    // in SDSI
+extern SDLIB_API const char *database_filename;               // in SDSI
+extern SDLIB_API const char *new_outfile_string;              // in SDSI
 extern SDLIB_API char abridge_filename[MAX_TEXT_LINE_LENGTH]; // in SDSI
 
 extern SDLIB_API bool showing_has_stopped;                    // in SDMATCH
@@ -4124,7 +4143,7 @@ extern SDLIB_API command_list_menu_item command_menu[];             /* in SDMAIN
 extern SDLIB_API resolve_list_menu_item resolve_menu[];             /* in SDMAIN */
 extern SDLIB_API startup_list_menu_item startup_menu[];             /* in SDMAIN */
 extern int last_file_position;                                      /* in SDMAIN */
-extern SDLIB_API char *sd_version_string();                         /* In SDMAIN */
+extern SDLIB_API const char *sd_version_string();                   /* In SDMAIN */
 extern SDLIB_API bool query_for_call();                             /* In SDMAIN */
 
 extern int sdtty_screen_height;                                     /* in SDUI-TTY */
@@ -4164,7 +4183,7 @@ class iobase {
    virtual void update_resolve_menu(command_kind goal, int cur, int max,
                                     resolver_display_state state) = 0;
    virtual void show_match(int frequency_to_show) = 0;
-   virtual char *version_string() = 0;
+   virtual const char *version_string() = 0;
    virtual uims_reply get_resolve_command() = 0;
    virtual bool choose_font() = 0;
    virtual bool print_this() = 0;
@@ -4204,7 +4223,7 @@ class iofull : public iobase {
    void update_resolve_menu(command_kind goal, int cur, int max,
                             resolver_display_state state);
    void show_match(int frequency_to_show);
-   char *version_string();
+   const char *version_string();
    uims_reply get_resolve_command();
    bool choose_font();
    bool print_this();
@@ -4303,6 +4322,7 @@ extern selector_kind selector_for_initialize;                       /* in SDINIT
 extern direction_kind direction_for_initialize;                     /* in SDINIT */
 extern int number_for_initialize;                                   /* in SDINIT */
 extern SDLIB_API int *color_index_list;                             /* in SDINIT */
+extern SDLIB_API int color_randomizer[4];                           /* in SDINIT */
 
 extern SDLIB_API error_flag_type global_error_flag;                 /* in SDUTIL */
 extern SDLIB_API bool global_cache_failed_flag;                     /* in SDUTIL */
@@ -4413,6 +4433,8 @@ extern const expand::thing s_4x4_4x6a;
 extern const expand::thing s_4x4_4x6b;
 extern const expand::thing s_4x4_4dma;
 extern const expand::thing s_4x4_4dmb;
+extern const expand::thing s_23232_4x5a;
+extern const expand::thing s_23232_4x5b;
 extern const expand::thing s_c1phan_4x4a;
 extern const expand::thing s_c1phan_4x4b;
 extern const expand::thing s_1x4_dmd;
@@ -5415,20 +5437,21 @@ void write_history_line(int history_index,
 void unparse_call_name(Cstring name, char *s, call_conc_option_state *options);
 void print_recurse(parse_block *thing, int print_recurse_arg);
 void clear_screen();
-extern void writechar(char src);
+SDLIB_API extern void writechar(char src);
 SDLIB_API void newline();
-void doublespace_file();
+SDLIB_API void doublespace_file();
 SDLIB_API void writestuff(const char *s);
-extern parse_block *copy_parse_tree(parse_block *original_tree);
-extern void reset_parse_tree(parse_block *original_tree, parse_block *final_head);
-extern void save_parse_state();
-extern void restore_parse_state();
-void string_copy(char **dest, Cstring src);
-void display_initial_history(int upper_limit, int num_pics);
-extern void initialize_parse();
-extern uint32 translate_selector_fields(parse_block *xx, uint32 mask);
-extern bool fix_up_call_for_fidelity_test(const setup *old, const setup *nuu, uint32 &global_status);
-void run_program();
+SDLIB_API extern parse_block *copy_parse_tree(parse_block *original_tree);
+SDLIB_API extern void reset_parse_tree(parse_block *original_tree, parse_block *final_head);
+SDLIB_API extern void save_parse_state();
+SDLIB_API extern void restore_parse_state();
+SDLIB_API void randomize_couple_colors();
+SDLIB_API void string_copy(char **dest, Cstring src);
+SDLIB_API void display_initial_history(int upper_limit, int num_pics);
+SDLIB_API extern void initialize_parse();
+SDLIB_API extern uint32 translate_selector_fields(parse_block *xx, uint32 mask);
+SDLIB_API extern bool fix_up_call_for_fidelity_test(const setup *old, const setup *nuu, uint32 &global_status);
+SDLIB_API void run_program();
 
 /* In SDINIT */
 
@@ -5556,7 +5579,7 @@ SDLIB_API void get_date(char dest[]);
 extern char *get_errstring();
 SDLIB_API void open_file();
 SDLIB_API void close_file();
-SDLIB_API void write_file(char line[]);
+SDLIB_API void write_file(const char line[]);
 
 /* in SDMAIN */
 

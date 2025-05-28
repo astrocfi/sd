@@ -33,8 +33,8 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-#define VERSION_STRING "38.0"
-#define TIME_STAMP "wba@alum.mit.edu  1 September 2009 $"
+#define VERSION_STRING "38.1"
+#define TIME_STAMP "wba@alum.mit.edu  3 December 2009 $"
 
 /* This defines the following functions:
    sd_version_string
@@ -95,7 +95,7 @@ and the following external variables:
 static const char id[] = "@(#)$He" "ader: Sd: version " VERSION_STRING "  " TIME_STAMP;
 
 
-extern char *sd_version_string()
+extern const char *sd_version_string()
 {
    return VERSION_STRING;
 }
@@ -146,6 +146,7 @@ command_list_menu_item command_menu[] = {
    {"discard entered concepts",       command_erase, ID_COMMAND_DISCARD_CONCEPT},
    {"abort this sequence",            command_abort, ID_COMMAND_ABORTTHISSEQUENCE},
    {"insert a comment",               command_create_comment, ID_COMMAND_COMMENT},
+   {"randomize couple colors",        command_randomize_couple_colors, ID_COMMAND_RANDOMIZE_COLORS},
    {"change output file",             command_change_outfile, ID_COMMAND_CH_OUTFILE},
    {"change title",                   command_change_title, ID_COMMAND_CH_TITLE},
    {"write this sequence",            command_getout, -1},
@@ -246,6 +247,7 @@ startup_list_menu_item startup_menu[] = {
    {"print any file",              start_select_print_any, ID_FILE_PRINTFILE},
    {"initialize session file",     start_select_init_session_file, -1},
    {"change to new style filename",start_select_change_to_new_style_filename, -1},
+   {"randomize couple colors",     start_select_randomize_couple_colors, ID_COMMAND_RANDOMIZE_COLORS},
    {"change output file",          start_select_change_outfile, ID_COMMAND_CH_OUTFILE},
    {"change title",                start_select_change_title, ID_COMMAND_CH_TITLE},
 
@@ -960,6 +962,7 @@ ui_option_type::ui_option_type() :
    nowarn_mode(false),
    keep_all_pictures(false),
    accept_single_click(false),
+   hide_glyph_numbers(false),
    diagnostic_mode(false),
    no_sound(false),
    tab_changes_focus(false),
@@ -998,6 +1001,7 @@ extern int sdmain(int argc, char *argv[])
       printf("-pastel_color               use pastel colors when not coloring by couple or corner\n");
       printf("-use_magenta                use magenta instead of red in all modes\n");
       printf("-use_cyan                   use cyan instead of blue in all modes\n");
+      printf("-hide_couple_numbers        (Sd only) hide couple numbers, for resolving practice\n");
       printf("-color_by_couple            display color according to couple number, rgby\n");
       printf("-color_by_couple_rgyb       similar to color_by_couple, but with rgyb\n");
       printf("-color_by_couple_ygrb       similar to color_by_couple, but with ygrb\n");
@@ -1013,18 +1017,10 @@ extern int sdmain(int argc, char *argv[])
       printf("-no_warnings                do not display or print any warning messages\n");
       printf("-retain_after_error         retain pending concepts after error\n");
       printf("-active_phantoms            use active phantoms for \"assume\" operations\n");
-      printf("-sequence <filename>        base name for sequence output file (def \""
-             SEQUENCE_FILENAME
-             "\")\n");
-      printf("-old_style_filename         use short file name, as in \""
-             SEQUENCE_FILENAME
-             ".MS\"\n");
-      printf("-new_style_filename         use long file name, as in \""
-             SEQUENCE_FILENAME
-             "_MS.txt\"\n");
-      printf("-db <filename>              calls database file (def \""
-             DATABASE_FILENAME
-             "\")\n");
+      printf("-sequence <filename>        base name for sequence output file (def \"" SEQUENCE_FILENAME "\")\n");
+      printf("-old_style_filename         use short file name, as in \"" SEQUENCE_FILENAME ".MS\"\n");
+      printf("-new_style_filename         use long file name, as in \"" SEQUENCE_FILENAME "_MS.txt\"\n");
+      printf("-db <filename>              calls database file (def \"" DATABASE_FILENAME "\")\n");
       printf("-sequence_num <n>           use this initial sequence number\n");
 
       gg->display_help(); // Get any others that the UI wants to tell us about.

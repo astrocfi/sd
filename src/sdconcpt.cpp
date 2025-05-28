@@ -3370,6 +3370,9 @@ static void do_concept_crazy(
    // Lift the craziness restraint from before -- we are about to pull things apart.
    cmd.cmd_misc3_flags &= ~CMD_MISC3__RESTRAIN_CRAZINESS;
 
+   if (parseptr->concept->arg3 == 1)   // Handle "crazy Z's".
+      cmd.cmd_misc3_flags |= CMD_MISC3__IMPOSE_Z_CONCEPT;
+
    for ( ; i<highlimit; i++) {
       tempsetup.cmd = cmd;    // Get a fresh copy of the command.
 
@@ -7636,7 +7639,19 @@ static void do_concept_concentric(
       ss->cmd.parseptr = parseptr;
       divided_setup_move(ss, map_code, phantest_ok, true, result);
       break;
+   case schema_intermediate_diamond: case schema_outside_diamond:
+      ss->cmd.cmd_misc_flags |= CMD_MISC__SAID_DIAMOND;
+      concentric_move(ss, &ss->cmd, (setup_command *) 0, schema, 0,
+                      DFM1_CONC_CONCENTRIC_RULES, true, false, ~0UL, result);
+
+      // 8-person concentric operations do not show the split.
+      result->result_flags.clear_split_info();
+      break;
    default:
+      // Check for "CONCENTRIC, Z".
+      if (ss->cmd.parseptr->concept->kind == concept_misc_distort && ss->cmd.parseptr->concept->arg1 == 0)
+         fail("Use the \"CONCENTRIC Z's\" concept.");
+
       concentric_move(ss, &ss->cmd, &ss->cmd, schema, 0,
                       DFM1_CONC_CONCENTRIC_RULES, true, false, ~0UL, result);
 

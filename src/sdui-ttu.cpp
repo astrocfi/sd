@@ -189,11 +189,17 @@ extern void put_line(const char the_line[])
             int personidx = (*the_line++) & 7;
             int persondir = (*the_line++) & 0xF;
 
+            int randomized_person_color = personidx;
+
+            if (ui_options.color_scheme == color_by_couple_random && ui_options.hide_glyph_numbers) {
+               randomized_person_color = (color_randomizer[personidx>>1] << 1) | (personidx & 1);
+            }
+
             put_char(' ');
 
             if (ui_options.color_scheme != no_color) {
                fputs("\033[1;", stdout);
-               fputs(color_translations[color_index_list[personidx]].vt100_string, stdout);
+               fputs(color_translations[color_index_list[randomized_person_color]].vt100_string, stdout);
 
                if (ui_options.reverse_video)
                   fputs(";40m", stdout);
@@ -201,7 +207,11 @@ extern void put_line(const char the_line[])
                   fputs(";47m", stdout);
             }
 
-            put_char(ui_options.pn1[personidx]);
+            if (ui_options.hide_glyph_numbers)
+               put_char(' ');
+            else
+               put_char(ui_options.pn1[personidx]);
+
             put_char(ui_options.pn2[personidx]);
             put_char(ui_options.direc[persondir]);
 

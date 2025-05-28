@@ -62,7 +62,7 @@ struct pick_type_descriptor {
    bool exhaustive_search;
    bool accept_nice_only;
    bool with_concept;
-   char *display_string;
+   const char *display_string;
 };
 
 

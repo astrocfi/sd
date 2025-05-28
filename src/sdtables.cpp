@@ -36,6 +36,8 @@
    s_4x4_4x6b
    s_4x4_4dma
    s_4x4_4dmb
+   s_23232_4x5a
+   s_23232_4x5b
    s_c1phan_4x4a
    s_c1phan_4x4b
    s_dmd_323
@@ -328,6 +330,7 @@ Cstring warning_strings[] = {
    /*  warn__check_2x4           */   " Check a 2x4 setup.",
    /*  warn__check_hokey_2x4     */   "*Fudge to a 2x4 -- the dancers might not like this.",
    /*  warn__check_4x4           */   "*Check a 4x4 setup.",
+   /*  warn__check_hokey_4x5     */   "*Fudge to a 4x5 -- the dancers might not like this.",
    /*  warn__check_4x6           */   "*Check a 4x6 setup.",
    /*  warn__check_hokey_4x4     */   "*Check a center box and outer lines/columns.",
    /*  warn__check_4x4_start     */   "*Check a 4x4 setup at the start of this call.",
@@ -386,6 +389,7 @@ Cstring warning_strings[] = {
    /*  warn__unusual             */   "*This is an unusual setup for this call.",
    /*  warn_controversial        */   "*This may be controversial.",
    /*  warn_serious_violation    */   "*This appears to be a serious violation of the definition.",
+   /*  warn__4_circ_tracks       */   "*Original ends of lines stay outside of the others.",
    /*  warn__assume_dpt          */   "*Assume a starting DPT.",
    /*  warn_bogus_yoyo_rims_hubs */   "*Using incorrect definition of rims/hubs trade.",
    /*  warn__centers_are_diamond */   "*The centers are the diamond.",
@@ -417,6 +421,12 @@ const expand::thing s_4x4_4dma = {
    {0, 1, 2, -1, 3, -1, -1, -1, 8, 9, 10, -1, 11, -1, -1, -1}, s4x4, s4dmd, 1};
 const expand::thing s_4x4_4dmb = {
    {3, -1, -1, -1, 8, 9, 10, -1, 11, -1, -1, -1, 0, 1, 2, -1}, s4x4, s4dmd, 0};
+
+const expand::thing s_23232_4x5a = {
+   {-1, 3, 9, 7, 5, 6, -1, 13, 19, 17, 15, 16}, s_23232, s4x5, 0};
+const expand::thing s_23232_4x5b = {
+   {1, -1, 9, 7, 5, 18, 11, -1, 19, 17, 15, 8}, s_23232, s4x5, 0};
+
 const expand::thing s_c1phan_4x4a = {
    {-1, 13, -1, 15, -1, 1, -1, 3, -1, 5, -1, 7, -1, 9, -1, 11}, s_c1phan, s4x4, 0};
 const expand::thing s_c1phan_4x4b = {
@@ -2814,6 +2824,8 @@ static expand::thing step_bn_stuff = {{0, 7, 2, 1, 4, 3, 6, 5}, s2x4, s_bone, 0}
 static expand::thing step_bn23_stuff = {{0, 2, 1, 3, 5, 4}, s2x3, s_bone6, 0};
 static expand::thing step_24bn_stuff = {{0, 3, 5, 2, 4, 7, 1, 6}, s_bone, s2x4, 0};
 static expand::thing step_23bn_stuff = {{0, 2, 4, 3, 5, 1}, s_bone6, s2x3, 0};
+static expand::thing step_232a_stuff = {{-1, 0, 7, 6, -1, 1, -1, 4, 3, 2, -1, 5}, s_23232, s2x4, 1};
+static expand::thing step_232b_stuff = {{7, -1, -1, 0, 1, 2, 3, -1, -1, 4, 5, 6}, s_23232, s2x4, 1};
 static expand::thing step_tby_stuff = {{5, 6, 7, 0, 1, 2, 3, 4}, s2x4, s_qtag, 1};
 static expand::thing step_2x4_rig_stuff = {{7, 0, 1, 2, 3, 4, 5, 6}, s2x4, s_rigger, 0};
 static expand::thing step_bone_stuff = {{1, 4, 7, 6, 5, 0, 3, 2}, s_bone, s1x8, 0};
@@ -3011,6 +3023,10 @@ full_expand::thing touch_init_table3[] = {
 
    // Check for centers stepping to a column of 6 from a bone6.
    {warn__none,       0, &step_23bn_stuff,    s_bone6,       07777UL,      02725UL,  02727UL},
+
+   // Check for some people facing after a "1/2 make magic".
+   {warn__may_be_fudgy,0,&step_232a_stuff,    s_23232,       0x003F33F3UL, 0x001733D1UL, 0x003F33F3UL},
+   {warn__may_be_fudgy,0,&step_232b_stuff,    s_23232,       0x00C3FC3FUL, 0x0041DC37UL, 0x00C3FC3FUL},
 
    // Check for stepping to rigger from suitable T-bone.
    {warn__some_touch,16, &step_2x4_rig_stuff, s2x4,       0xFFFFUL,     0x963CUL, ~0UL},
@@ -3214,6 +3230,29 @@ conc_tables::cm_thing conc_tables::conc_init_table[] = {
              s1x4,     sdmd,     0, 1, 1, 2,  0x2F7, schema_in_out_triple},
    {s3x1dmd,        schema_nothing, {-1, -1, 1, 0, 5, 4, -1, -1,         7, 2, 3, 6},
              s1x4,     sdmd,     0, 1, 1, 2,  0x2F7, schema_in_out_triple},
+
+   {s3x1dmd,        schema_intermediate_diamond, {7, 1, 3, 5,         0, 2, 4, 6},
+             sdmd,     s1x4,     1, 0, 1, 1,  0x0FD, schema_intermediate_diamond},
+   {s3x1dmd,        schema_outside_diamond, {7, 0, 3, 4,         1, 2, 5, 6},
+             sdmd,     s1x4,     1, 0, 1, 1,  0x0FD, schema_outside_diamond},
+   // For putting back shape-changers.
+   {s1x3dmd,        schema_intermediate_diamond, {1, 3, 5, 7,         0, 2, 4, 6},
+             sdmd,     s1x4,     0, 0, 1, 1,  0x0FE, schema_intermediate_diamond},
+   {s1x3dmd,        schema_outside_diamond, {0, 3, 4, 7,         1, 2, 5, 6},
+             sdmd,     s1x4,     0, 0, 1, 1,  0x0FE, schema_outside_diamond},
+   {s_crosswave,    schema_nothing, {6, 7, 2, 3,         0, 1, 4, 5},
+             s1x4,     s1x4,     1, 0, 1, 1,  0x0FD, schema_intermediate_diamond},
+   {s_crosswave,    schema_nothing, {6, 7, 2, 3,         0, 1, 4, 5},
+             s1x4,     s1x4,     1, 0, 1, 1,  0x0FD, schema_outside_diamond},
+   {s_ptpd,         schema_nothing, {1, 7, 5, 3,         0, 2, 4, 6},
+             s2x2,     s1x4,     0, 0, 1, 1,  0x2FE, schema_intermediate_diamond},
+   {s_bone,         schema_nothing, {0, 1, 4, 5,         6, 7, 2, 3},
+             s2x2,     s1x4,     0, 0, 1, 1,  0x2FE, schema_outside_diamond},
+   {s1x8,           schema_nothing, {1, 3, 5, 7,         0, 2, 4, 6},
+             s1x4,     s1x4,     0, 0, 1, 1,  0x2FE, schema_intermediate_diamond},
+   {s1x8,           schema_nothing, {0, 1, 4, 5,         3, 2, 7, 6},
+             s1x4,     s1x4,     0, 0, 1, 1,  0x2FE, schema_outside_diamond},
+
    {s3ptpd,         schema_nothing, {9, -1, 10, -1, 4, -1, 3, -1,        11, 1, 5, 7},
              s1x4,     sdmd,     0, 0, 1, 2,  0x2FE, schema_in_out_triple},
    {s3dmd,          schema_in_out_triple, {8, 9, 0, 10, 6, 4, 2, 3,         7, 11, 1, 5},
@@ -4051,54 +4090,40 @@ merge_table::concmerge_thing merge_table::merge_init_table[] = {
    {splinedmd,  slinedmd,  0,   0xF0, 0x0D, 0x0, schema_matrix,       splinedmd,     nothing,  warn__none, 0, 1, {0, 1, 2, 3, 4, 5, 6, 7}, {7, 4, 5, 6, -1, -1, -1, -1}},
    {splinedmd,  sdmdpdmd,  0,   0x0F, 0x07, 0x0, schema_matrix,       splinedmd,     nothing,  warn__none, 0, 3, {0, 1, 2, 3, 4, 5, 6, 7}, {-1, -1, -1, -1, 5, 6, 7, 4}},
    {splinedmd,  sdmdpdmd,  0x0F,   0, 0x07, 0x1, schema_matrix,       sdmdpdmd,      nothing,  warn__none, 0, 1, {0, 1, 2, 3, 4, 5, 6, 7}, {-1, -1, -1, -1, 7, 4, 5, 6}},
-
    {splinedmd,  sdmdpdmd,  0x0F, 0x0F, 0x0D, 0x0, schema_matrix,        s_qtag,      nothing,  warn__none, 0, 1, {-1, -1, -1, -1, 3, 1, 2, 4}, {-1, -1, -1, -1, 5, 6, 0, 7}},
-
-
-
    {splinedmd, splinedmd, 0x0F, 0x0F, 0x0B, 0x0, schema_matrix,         s_qtag,      nothing,  warn__none, 0, 0, {-1, -1, -1, -1, 7, 5, 6, 0}, {-1, -1, -1, -1, 3, 1, 2, 4}},
    {splinedmd, slinepdmd, 0xF0, 0xF0, 0x0D, 0x0, schema_matrix,     splinepdmd,      nothing,  warn__none, 0, 1, {0, 1, 2, 3, -1, -1, -1, -1}, {6, 7, 4, 5, -1, -1, -1, -1}},
    {splinedmd, slinepdmd,   0x0F, 0x0F, 0x0D, 0x0, schema_matrix,       slinedmd,    nothing,  warn__none, 0, 0, {-1, -1, -1, -1, 1, 2, 3, 0}, {-1, -1, -1, -1, 4, 5, 6, 7}},
-
-
-
    {splinepdmd, splinepdmd, 0x0F, 0x0F, 0x0B, 0x0, schema_matrix,       s_ptpd,      nothing,  warn__none, 0, 0, {-1, -1, -1, -1, 2, 3, 0, 1}, {-1, -1, -1, -1, 6, 7, 4, 5}},
    {splinepdmd, splinedmd,  0, 0xF0, 0x0E, 0x0, schema_matrix,        splinepdmd,    nothing,  warn__none, 0, 0, {0, 1, 2, 3, 4, 5, 6, 7}, {0, 1, 2, 3, -1, -1, -1, -1}},
    {splinepdmd, splinedmd,0xF0,  0, 0x0E, 0x0, schema_matrix,         splinedmd,     nothing,  warn__none, 0, 0, {0, 1, 2, 3, -1, -1, -1, -1}, {0, 1, 2, 3, 4, 5, 6, 7}},
-
    {splinepdmd, sdmdpdmd, 0x0F,  0, 0x0D, 0x0, schema_matrix,          sdmdpdmd,     nothing,  warn__none, 0, 0, {-1, -1, -1, -1, 2, 3, 0, 1}, {0, 1, 2, 3, 4, 5, 6, 7}},
    {splinepdmd, sdmdpdmd, 0x0F, 0xF0, 0x07, 0x0, schema_matrix,         s_ptpd,      nothing,  warn__none, 0, 3, {-1, -1, -1, -1, 6, 7, 4, 5}, {0, 1, 2, 3, -1, -1, -1, -1}},
-
    {splinepdmd, slinepdmd,  0, 0xF0, 0x0D, 0x0, schema_matrix,        splinepdmd,    nothing,  warn__none, 0, 1, {0, 1, 2, 3, 4, 5, 6, 7}, {6, 7, 4, 5, -1, -1, -1, -1}},
    {splinepdmd, slinepdmd,  0x0F, 0, 0x0D, 0x0, schema_matrix,          slinepdmd,   nothing,  warn__none, 0, 0, {-1, -1, -1, -1, 2, 3, 0, 1}, {0, 1, 2, 3, 4, 5, 6, 7}},
    {splinepdmd, slinedmd, 0xF0, 0xF0, 0x0D, 0x0, schema_matrix,        splinedmd,    nothing,  warn__none, 0, 1, {0, 1, 2, 3, -1, -1, -1, -1}, {7, 4, 5, 6, -1, -1, -1, -1}},
    {splinepdmd, slinedmd, 0x0F, 0x0F, 0x0D, 0x0, schema_matrix,        slinepdmd,    nothing,  warn__none, 0, 0, {-1, -1, -1, -1, 2, 3, 0, 1}, {-1, -1, -1, -1, 4, 5, 6, 7}},
-
    {splinepdmd,  sboxdmd, 0x0F, 0x0F, 0x0D, 0x0, schema_matrix,         sboxpdmd,    nothing,  warn__none, 0, 0, {-1, -1, -1, -1, 2, 3, 0, 1}, {-1, -1, -1, -1, 4, 5, 6, 7}},
-
    {splinepdmd, sboxpdmd, 0x0F,    0, 0x0D, 0x0, schema_matrix,         sboxpdmd,    nothing,  warn__none, 0, 0, {-1, -1, -1, -1, 2, 3, 0, 1}, {0, 1, 2, 3, 4, 5, 6, 7}},
-
    {splinepdmd, slinebox, 0xF0,    0, 0x0E, 0x0, schema_matrix,         slinebox,    nothing,  warn__none, 0, 0, {0, 1, 2, 3, -1, -1, -1, -1}, {0, 1, 2, 3, 4, 5, 6, 7}},
-
    {slinepdmd,  slinebox, 0x0F, 0x0F, 0x07, 0x0, schema_matrix,             s4x4,    nothing,  warn__none, 0, 3, {-1, -1, -1, -1, 10, 15, 1, 3}, {-1, -1, -1, -1, 7, 5, 6, 11}},
-
    {slinebox,   sdmdpdmd, 0x0F, 0x0F, 0x0D, 0x1, schema_matrix,          sboxdmd,    nothing,  warn__none, 0, 1, {-1, -1, -1, -1, 2, 3, 0, 1}, {-1, -1, -1, -1, 7, 4, 5, 6}},
-
    {slinebox,   sdmdpdmd, 0x0F, 0xF0, 0x07, 0x1, schema_matrix,         sboxpdmd,    nothing,  warn__none, 0, 1, {0, 1, 2, 3, -1, -1, -1, -1}, {-1, -1, -1, -1, 7, 4, 5, 6}},
-
    {slinebox,    sboxdmd, 0x0F, 0x0F, 0x0D, 0x0, schema_matrix,             s2x4,    nothing,  warn__none, 0, 1, {-1, -1, -1, -1, 2, 3, 4, 5}, {-1, -1, -1, -1, 7, 0, 1, 6}},
-
    {slinebox,   sboxpdmd, 0x0F, 0x0F, 0x0D, 0x0, schema_matrix,             s2x4,    nothing,  warn__none, 0, 1, {-1, -1, -1, -1, 2, 3, 4, 5}, {-1, -1, -1, -1, 7, 0, 1, 6}},
-
    {splinedmd,  sboxpdmd, 0x0F, 0x0F, 0x0D, 0x0, schema_matrix,          sboxdmd,    nothing,  warn__none, 0, 0, {-1, -1, -1, -1, 1, 2, 3, 0}, {-1, -1, -1, -1, 4, 5, 6, 7}},
-
    {splinedmd,   sboxdmd, 0x0F,    0, 0x0D, 0x0, schema_matrix,          sboxdmd,    nothing,  warn__none, 0, 0, {-1, -1, -1, -1, 1, 2, 3, 0}, {0, 1, 2, 3, 4, 5, 6, 7}},
 
    {s_trngl8,   sboxpdmd, 0x0F, 0x0F, 0x0B, 0x0, schema_matrix,             s4x4,    nothing,  warn__none, 0, 0, {-1, -1, -1, -1, 2, 7, 11, 9}, {-1, -1, -1, -1, 13, 14, 3, 15}},
-
    {s_trngl8,    sboxdmd, 0x0F, 0x0F, 0x0B, 0x0, schema_matrix,             s4x4,    nothing,  warn__none, 0, 0, {-1, -1, -1, -1, 2, 7, 11, 9}, {-1, -1, -1, -1, 13, 14, 3, 15}},
-
    {s_ptpd,     slinebox, 0xF0, 0x0F, 0x0E, 0x0, schema_matrix,         sboxpdmd,    nothing,  warn__none, 0, 1, {0, 1, 2, 3, -1, -1, -1, -1}, {-1, -1, -1, -1, 7, 4, 5, 6}},
+
+   {s2x4,       s_23232,  0x33, 06363, 0x0E, 0x1, schema_nothing,        nothing,    nothing,  warn__may_be_fudgy, 0, 0, {-1, -1, 0, 1, -1, -1, -1, -1, 4, 5, -1, -1}, {0}},
+   {s2x4,       s_23232,  0xCC, 04747, 0x0E, 0x1, schema_nothing,        nothing,    nothing,  warn__may_be_fudgy, 0, 0, {-1, -1, -1, 2, 3, -1, -1, -1, -1, 6, 7, -1}, {0}},
+   {s2x4,       s_23232,  0xCC, 03535, 0x0E, 0x0, schema_matrix,        s_c1phan,    nothing,  warn__may_be_fudgy, 0, 0, {0, 2, -1, -1, 8, 10, -1, -1}, {-1, 4, -1, -1, -1, 6, -1, 12, -1, -1, -1, 14}},
+   {s2x4,       s_23232,  0x33, 03636, 0x0E, 0x0, schema_matrix,        s_c1phan,    nothing,  warn__may_be_fudgy, 0, 0, {-1, -1, 7, 5, -1, -1, 15, 13}, {1, -1, -1, -1, -1, 11, 9, -1, -1, -1, -1, 3}},
+   {s2x4,       s_23232,  0x33, 03535, 0x0D, 0x0, schema_matrix,        s_c1phan,    nothing,  warn__may_be_fudgy, 0, 0, {-1, -1, 11, 9, -1, -1, 3, 1}, {-1, 4, -1, -1, -1, 6, -1, 12, -1, -1, -1, 14}},
+   {s2x4,       s_23232,  0xCC, 03636, 0x0D, 0x0, schema_matrix,        s_c1phan,    nothing,  warn__may_be_fudgy, 0, 0, {4, 6, -1, -1, 12, 14, -1, -1}, {1, -1, -1, -1, -1, 11, 9, -1, -1, -1, -1, 3}},
 
    {s1x8,        s_ptpd,  0xA0, 0x0A, 0x0E, 0x0, schema_matrix,       splinepdmd,    nothing,  warn__none, 0, 0, {0, 1, 3, 2, 6, -1, 4, -1}, {0, -1, 3, -1, 6, 7, 4, 5}},
    {s1x8,        s_ptpd,  0x0A, 0xA0, 0x0E, 0x0, schema_matrix,       splinepdmd,    nothing,  warn__none, 0, 2, {6, -1, 4, -1, 0, 1, 3, 2}, {6, 7, 4, 5, 0, -1, 3, -1}},
@@ -5891,6 +5916,18 @@ static const coordrec thing4x5 = {s4x5, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
+static const coordrec thing23232 = {s_23232, 3,
+   { -4,   4,  -8,   0,   8,   4,   4,  -4,   8,   0,  -8,  -4},
+   {  4,   4,   2,   2,   2,   0,  -4,  -4,  -2,  -2,  -2,   0}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1,  0, -1,  1, -1, -1,
+      -1, -1,  2, 11,  3,  5,  4, -1,
+      -1, -1, 10,  7,  9,  6,  8, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
 static const coordrec thing4x6 = {s4x6, 3,
    {-10,  -6,  -2,   2,   6,  10,  10,   6,   2,  -2,  -6, -10,  10,   6,   2,  -2,  -6, -10, -10,  -6,  -2,   2,   6,  10},
    {  6,   6,   6,   6,   6,   6,   2,   2,   2,   2,   2,   2,  -6,  -6,  -6,  -6,  -6,  -6,  -2,  -2,  -2,  -2,  -2,  -2}, {
@@ -6570,6 +6607,20 @@ static const id_bit_table id_bit_table_323[] = {
    NOBIT(  ID2_CTRDMD | ID2_OUTR6|ID2_OUTR1X3),
    NOBIT(  ID2_NCTRDMD| ID2_OUTR6|ID2_OUTR1X3),
    WESTBIT(ID2_CTRDMD | ID2_CTR2 |ID2_NOUTR1X3)};
+
+static const id_bit_table id_bit_table_23232[] = {
+   NOBIT(   ID2_NCTRDMD),
+   NOBIT(   ID2_NCTRDMD),
+   NORTHBIT(ID2_NCTRDMD),
+   NORTHBIT(ID2_CTRDMD|ID2_CTR2),
+   NORTHBIT(ID2_NCTRDMD),
+   NOBIT(   ID2_CTRDMD),
+   NOBIT(   ID2_NCTRDMD),
+   NOBIT(   ID2_NCTRDMD),
+   SOUTHBIT(ID2_NCTRDMD),
+   SOUTHBIT(ID2_CTRDMD|ID2_CTR2),
+   SOUTHBIT(ID2_NCTRDMD),
+   NOBIT(   ID2_CTRDMD)};
 
 // If the population is "common spot diamonds", the richer table below is used instead.
 static const id_bit_table id_bit_table_bigdmd[] = {
@@ -8607,6 +8658,16 @@ const setup_attr setup_attrs[] = {
     (const id_bit_table *) 0,
     {(Cstring) 0,
      (Cstring) 0}},
+   {15,                     // sx1x8
+    (const coordrec *) 0,
+    (const coordrec *) 0,
+    {0, 0, 0, 0},
+    {b_nothing, b_nothing},
+    {0, 0},
+    false, false,
+    (const id_bit_table *) 0,
+    {(Cstring) 0,
+     (Cstring) 0}},
    {31,                     // sx1x16
     (const coordrec *) 0,
     (const coordrec *) 0,
@@ -8737,6 +8798,16 @@ const setup_attr setup_attrs[] = {
     (const id_bit_table *) 0,
     {"   a  b  c  d  e@@   m  5 n  g 5  f@@   l  k  j  i  h",
      "lma@@k6b@76n@7j6c@76g@7i6d@@hfe"}},
+   {11,                     // s_23232
+    &thing23232,
+    &thing23232,
+    {0, 0, 00404, 0},
+    {b_23232, b_p23232},
+    {0, 0},
+    false, false,
+    id_bit_table_23232,
+    {"6a6b@7c6d6e@76l6f@7k6j6i@76h6g",
+     "5 k  c@@h  l  a@@5 j  d@@g  f  b@@5 i  e"}},
    {11,                     // s_3mdmd
     &thing3mdmd,
     &thing3mdmd,
@@ -9122,6 +9193,10 @@ const schema_attr schema_attrs[] = {
    {SCA_SNAGOK | SCA_DETOUR | SCA_INV_SUP_ELWARN,
     schema_nothing},                     // schema_conc_o
    {0,
+    schema_nothing},                     // schema_intermediate_diamond
+   {0,
+    schema_nothing},                     // schema_outside_diamond
+   {0,
     schema_nothing},                     // schema_maybe_matrix_conc
    {0,
     schema_nothing},                     // schema_maybe_matrix_conc_star
@@ -9414,6 +9489,8 @@ int begin_sizes[] = {
    14,         /* b_p545 */
    14,         /* bh545 */
    14,         /* bhp545 */
+   12,         /* b_23232 */
+   12,         /* b_p23232 */
    12,         /* b_3mdmd */
    12,         /* b_p3mdmd */
    12,         /* b_3mptpd */
@@ -10228,6 +10305,26 @@ select::fixer select::fixer_init_table[] = {
    {fxlinboxb,  s2x2, slinebox,     1, 0, 1, {5, 6, 7, 4},
     fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
 
+   {fx23232a,   s1x2, s_23232,     1, 0, 2, {1, 5, 11, 7},
+    fx0, fx_foocc,              fx0, fx0,                   fx0, fx0,                   fx0, fx0},
+   {fx23232b,   s1x2, s_23232,     1, 0, 2, {0, 11, 5, 6},
+    fx0, fx_foo33,              fx0, fx0,                   fx0, fx0,                   fx0, fx0},
+   {fx23232c,   s1x2, s_23232,     1, 0, 1, {3, 9},
+    fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
+
+   {fx23232d,   s1x2, s_23232,     0, 0, 2, {2, 3, 9, 8},
+    fx23232u, fx23232w,         fx0, fx0,                   fx0, fx0,                   fx0, fx0},
+   {fx23232e,   s1x2, s_23232,     0, 0, 2, {3, 4, 10, 9},
+    fx23232v, fx23232x,         fx0, fx0,                   fx0, fx0,                   fx0, fx0},
+   // For unwinding the above.
+   {fx23232u,   s1x2, s_c1phan,     0, 0, 2, {0, 2, 10, 8},
+    fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
+   {fx23232v,   s1x2, s_c1phan,     0, 0, 2, {7, 5, 13, 15},
+    fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
+   {fx23232w,   s1x2, s_c1phan,     1, 0, 2, {1, 3, 11, 9},
+    fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
+   {fx23232x,   s1x2, s_c1phan,     1, 0, 2, {4, 6, 14, 12},
+    fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
 
    {fx_f1x8lowf, s1x4, s1x8,        0, 0, 1,  {0, 1, 2, 3},
     fx0, fx0,                   fx0, fx_f2x4far,          fx_1x5p1z,fx_5p1x1z,  fx_f2x4left, fx_f2x4left},
@@ -10673,9 +10770,15 @@ select::sel_item select::sel_init_table[] = {
    {LOOKUP_NONE,                        sboxdmd,   0x0F,   fx_boxdmb,     fx0, -1},
    {LOOKUP_NONE,                      s_trngl8,    0xF0,   fx_trngl8a,    fx0, -1},
    {LOOKUP_NONE,                      s_trngl8,    0x0F,   fx_trngl8b,    fx0, -1},
-
    {LOOKUP_NONE,                      sdmdpdmd,    0xF0,   fxdmdpdmda,    fx0, -1},
    {LOOKUP_NONE,                      sdmdpdmd,    0x0F,   fxdmdpdmdb,    fx0, -1},
+
+   {LOOKUP_NONE,                      s_23232,    04242,   fx23232a,      fx0, -1},
+   {LOOKUP_NONE,                      s_23232,    04141,   fx23232b,      fx0, -1},
+   {LOOKUP_NONE,                      s_23232,    01010,   fx23232c,      fx0, -1},
+
+   {LOOKUP_NONE,                      s_23232,    01414,   fx23232d,      fx0, -1},
+   {LOOKUP_NONE,                      s_23232,    03030,   fx23232e,      fx0, -1},
 
    {LOOKUP_NONE,                      s1x6,         074,   fx_1x6hif,     fx0, -1},
    {LOOKUP_NONE,                      s1x6,         047,   fx_1x6lowf,    fx0, -1},
@@ -10884,15 +10987,22 @@ const tglmap::map tglmap::init_table[] = {
     {1, 2, 3, 7, 8, 9, 0, 6}},
 
    // Interlocked triangles in quarter-tag:
-   {tglmap1j, s_qtag, nothing, tglmap2j, 1, 1,
+   {tglmap1j, s_qtag, nothing, tglmap2j, 1, 1,   // In/out point.
     {4, 7, 2,   0, 3, 6,   1, 5},
     {0, 0, 0,   0, 0, 0,   0, 0},
     {0, 0, 0,   0, 0, 0,   0, 0},
     {0, 0, 0, 0, 0, 0, 0, 0},
     {0, 0, 0, 0, 0, 0, 0, 0}},
 
-   {tglmap2j, s_qtag, nothing, tglmap1j, 1, 1,
+   {tglmap2j, s_qtag, nothing, tglmap1j, 1, 1,   // In/out point.
     {5, 6, 3,   1, 2, 7,   0, 4},
+    {0, 0, 0,   0, 0, 0,   0, 0},
+    {0, 0, 0,   0, 0, 0,   0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0}},
+
+   {tglmap3j, s_qtag, nothing, tglmap3j, 1, 17,   // Inside.
+    {7, 1, 4,   3, 5, 0,   2, 6},
     {0, 0, 0,   0, 0, 0,   0, 0},
     {0, 0, 0,   0, 0, 0,   0, 0},
     {0, 0, 0, 0, 0, 0, 0, 0},
@@ -11038,6 +11148,7 @@ const tglmap::tglmapkey tglmap::qttglmap2[4] = {tglmap2b, tglmap2j, tglmap2x, tg
 const tglmap::tglmapkey tglmap::bdtglmap1[2] = {tglmap1b, tglmap1k};
 const tglmap::tglmapkey tglmap::bdtglmap2[2] = {tglmap2b, tglmap2k};
 const tglmap::tglmapkey tglmap::rgtglmap1[2] = {tglmap2r, tglmap2r};
+const tglmap::tglmapkey tglmap::rgtglmap3[2] = {tglmap3j, tglmap3j};
 
 const tglmap::tglmapkey tglmap::d7tglmap1[4] = {tglmapd71};
 const tglmap::tglmapkey tglmap::d7tglmap2[4] = {tglmapd72};

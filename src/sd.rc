@@ -77,6 +77,7 @@ BEGIN
         MENUITEM "Toggle concept &levels\tF7",  ID_COMMAND_TOGGLE_CONC
         MENUITEM "Toggle active phantoms",      ID_COMMAND_TOGGLE_PHAN
         MENUITEM "Discard entered concepts",    ID_COMMAND_DISCARD_CONCEPT
+        MENUITEM "Randomize couple colors",     ID_COMMAND_RANDOMIZE_COLORS
         MENUITEM "Change output file",          ID_COMMAND_CH_OUTFILE
         MENUITEM "Change title",                ID_COMMAND_CH_TITLE
         MENUITEM "Clipboard cut\ts-F8",         ID_COMMAND_CLIPBOARD_CUT
@@ -189,7 +190,7 @@ BEGIN
                     IDC_STATIC,53,19,144,8
     CTEXT           "conditions; for details see the file COPYING.txt.",
                     IDC_STATIC,53,29,148,8
-    CTEXT           "SD Version 38.0:   Copyright © 1990-2009 All rights reserved.",
+    CTEXT           "SD Version 38.1:   Copyright © 1990-2009 All rights reserved.",
                     IDC_STATIC,13,42,199,8
     CTEXT           "William B. Ackerman and Stephen Gildea",IDC_STATIC,47,
                     52,130,8
@@ -320,6 +321,7 @@ BEGIN
                             "Write this (resolved) sequence to the file, and start the next one."
     ID_COMMAND_RESOLVE      "Search for resolves for the current sequence."
     ID_COMMAND_COMMENT      "This lets you type a ""comment"" that will appear in the transcript."
+    ID_COMMAND_RANDOMIZE_COLORS "When using ""-hide_couple_numbers"", creates new couple colors."
     ID_COMMAND_CH_OUTFILE   "Change the filename for the finished transcript file."
     ID_COMMAND_TOGGLE_CONC  "Toggles (turn on or off) the ability to use concepts that aren't legal at this level."
     ID_COMMAND_TOGGLE_PHAN  "Toggles the presence of ""active phantoms"".  Do you really want to do this?"

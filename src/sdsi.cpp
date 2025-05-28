@@ -113,8 +113,8 @@ bool rewrite_with_new_style_filename = false;   // User gave "change to new file
 
 
 int random_number;
-char *database_filename = DATABASE_FILENAME;
-char *new_outfile_string = (char *) 0;
+const char *database_filename = DATABASE_FILENAME;
+const char *new_outfile_string = (char *) 0;
 char abridge_filename[MAX_TEXT_LINE_LENGTH];
 
 static bool file_error;
@@ -540,7 +540,7 @@ void open_file()
 }
 
 
-extern void write_file(char line[])
+extern void write_file(const char line[])
 {
    uint32 size;
 

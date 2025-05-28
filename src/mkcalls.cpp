@@ -205,6 +205,8 @@ int begin_sizes[] = {
    14,         /* b_p545 */
    14,         /* bh545 */
    14,         /* bhp545 */
+   12,         /* b_23232 */
+   12,         /* b_p23232 */
    12,         /* b_3mdmd */
    12,         /* b_p3mdmd */
    12,         /* b_3mptpd */
@@ -434,14 +436,14 @@ new points can roll.
 
 
 
-typedef struct {
+struct tagtabitem {
    int def;
-   char *s;
-} tagtabitem;
+   const char *s;
+};
 
 
 // This table is keyed to "level".
-char *leveltab[] = {
+const char *leveltab[] = {
    "mainstream",
    "plus",
    "a1",
@@ -458,7 +460,7 @@ char *leveltab[] = {
    ""};
 
 // This table is keyed to "begin_kind".
-char *sstab[] = {
+const char *sstab[] = {
    "??",
    "1x1",
    "1x2",
@@ -601,6 +603,8 @@ char *sstab[] = {
    "p5x45",
    "5h45",
    "p5h45",
+   "2x3232",
+   "p2x3232",
    "3mdmd",
    "p3mdmd",
    "3mptpd",
@@ -652,7 +656,7 @@ char *sstab[] = {
    ""};
 
 // This table is keyed to "setup_kind".
-char *estab[] = {
+const char *estab[] = {
    "nothing",
    "1x1",
    "1x2",
@@ -779,11 +783,13 @@ char *estab[] = {
    "???",
    "???",
    "???",
+   "???",
    "3x23",
    "3x43",
    "5x25",
    "5x45",
    "5h45",
+   "2x3232",
    "3mdmd",
    "3mptpd",
    "4mdmd",
@@ -810,7 +816,7 @@ char *estab[] = {
    ""};
 
 // This table is keyed to "calldef_schema".
-char *schematab[] = {
+const char *schematab[] = {
    "conc",
    "crossconc",
    "3x3kconc",
@@ -886,6 +892,8 @@ char *schematab[] = {
    "conc_bar12",
    "conc_bar16",
    "conc_o",
+   "conc_intermediate_diamond",
+   "conc_outside_diamond",
    "maybematrix_conc",
    "maybematrix_conc_star",
    "maybematrix_conc_bar",
@@ -944,7 +952,7 @@ char *schematab[] = {
    ""};
 
 // This table is keyed to "call_restriction".
-char *qualtab[] = {
+const char *qualtab[] = {
    "none",
    "alwaysfail",
    "give_fudgy_warn",
@@ -1074,7 +1082,7 @@ char *qualtab[] = {
 
 // This table is keyed to the constants "DFM1_***".  These are the general
 // definition-modifier flags.  They go in the "modifiers1" word of a by_def_item.
-char *defmodtab1[] = {
+const char *defmodtab1[] = {
    "conc_demand_lines",
    "conc_demand_columns",
    "conc_force_lines",
@@ -1105,7 +1113,7 @@ char *defmodtab1[] = {
 
 // This table is keyed to the constants "DFM1_SEQ***".  These are the general
 // definition-modifier flags.  They go in the "modifiers1" word of a by_def_item.
-char *seqmodtab1[] = {
+const char *seqmodtab1[] = {
    "seq_re_evaluate",
    "do_half_more",
    "seq_never_re_evaluate",
@@ -1119,7 +1127,7 @@ char *seqmodtab1[] = {
 // These are the general top-level call flags.  They go into the "callflags1" word and
 // part of the "callflagsh" word.
 
-char *flagtab1f[] = {
+const char *flagtab1f[] = {
    "first_part_visible",
    "first_two_parts_visible",
    "12_16_matrix_means_split",
@@ -1170,7 +1178,7 @@ char *flagtab1f[] = {
 
 // This table is keyed to the constants "INHERITFLAG_???".  The bits indicated by it
 // are encoded into the "callflags" word of the top-level call descriptor.
-char *flagtabh[] = {
+const char *flagtabh[] = {
    "diamond_is_legal",
    "reverse_means_mirror",
    "left_means_mirror",
@@ -1195,7 +1203,7 @@ char *flagtabh[] = {
 
 // This table is keyed to the constants "INHERITFLAG_???".
 // Notice that it looks like flagtabh.
-char *altdeftabh[] = {
+const char *altdeftabh[] = {
    "diamond",
    "reverse",
    "left",
@@ -1218,14 +1226,14 @@ char *altdeftabh[] = {
    "rewind",
    ""};
 
-char *mxntabplain[] = {
+const char *mxntabplain[] = {
    "1x2",
    "2x1",
    "1x3",
    "3x1",
    ""};
 
-char *nxntabplain[] = {
+const char *nxntabplain[] = {
    "2x2",
    "3x3",
    "4x4",
@@ -1235,7 +1243,7 @@ char *nxntabplain[] = {
    "8x8",
    ""};
 
-char *reverttabplain[] = {
+const char *reverttabplain[] = {
    "revert",
    "reflect",
    "revertreflect",
@@ -1245,14 +1253,14 @@ char *reverttabplain[] = {
    "reflectreflect",
    ""};
 
-char *mxntabforce[] = {
+const char *mxntabforce[] = {
    "force_1x2",
    "force_2x1",
    "force_1x3",
    "force_3x1",
    ""};
 
-char *nxntabforce[] = {
+const char *nxntabforce[] = {
    "force_2x2",
    "force_3x3",
    "force_4x4",
@@ -1262,7 +1270,7 @@ char *nxntabforce[] = {
    "force_8x8",
    ""};
 
-char *reverttabforce[] = {
+const char *reverttabforce[] = {
    "force_revert",
    "force_reflect",
    "force_revertreflect",
@@ -1275,7 +1283,7 @@ char *reverttabforce[] = {
 // This table is keyed to the constants "dfm_***".  These are the heritable
 // definition-modifier flags.  They go in the "modifiersh" word of a by_def_item.
 // Notice that it looks like flagtabh.
-char *defmodtabh[] = {
+const char *defmodtabh[] = {
    "inherit_diamond",
    "inherit_reverse",
    "inherit_left",
@@ -1304,7 +1312,7 @@ char *defmodtabh[] = {
 // bit in the "modifiersh" is the same in either case -- the different interpretation
 // simply depends on whether the top level bit is on or off.
 // Notice that it looks like flagtabh.
-char *forcetabh[] = {
+const char *forcetabh[] = {
    "force_diamond",
    "???",    // We don't allow "reverse" -- the bits move around during inheritance.
    "force_left",
@@ -1329,7 +1337,7 @@ char *forcetabh[] = {
 
 
 // This table is keyed to the constants "MTX_???".
-char *matrixcallflagtab[] = {
+const char *matrixcallflagtab[] = {
    "use_selector",
    "stop_and_warn_on_tbone",
    "tbone_is_ok",
@@ -1345,7 +1353,7 @@ char *matrixcallflagtab[] = {
    ""};
 
 // BEWARE!!  This list must track the array "pred_table" in sdpreds.cpp .
-char *predtab[] = {
+const char *predtab[] = {
    "select",
    "unselect",
    "select_near_select",
@@ -1653,7 +1661,7 @@ int restrstate;
 
 
 
-static void errexit(char s[])
+static void errexit(const char s[])
 {
    char my_line[1000];
    int i;
@@ -1840,7 +1848,7 @@ static void get_tok_or_eof()
 
 // This returns -1 if the item is not found.
 
-static int search(char *table[])
+static int search(const char *table[])
 {
    int i;
 
@@ -1877,11 +1885,14 @@ static uint32 tagsearch(int def)
       delete [] tempsave;
    }
 
-   tagtab[i].s = new char [strlen(tok_str)+1];
-   strcpy(tagtab[i].s, tok_str);
-   tagtab[i].def = 0;
+   {
+      char *tempstring = new char [strlen(tok_str)+1];
+      strcpy(tempstring, tok_str);
+      tagtab[i].s = tempstring;
+      tagtab[i].def = 0;
+   }
 
-   done:
+ done:
 
    if (def) {
       if (tagtab[i].def) errexit("Multiple definition of a call tag");
@@ -1898,7 +1909,7 @@ static void get_tok(void)
 }
 
 
-static int get_num(char s[])
+static int get_num(const char s[])
 {
    get_tok();
    if ((tok_kind != tok_number)) errexit(s);

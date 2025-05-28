@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2006  William B. Ackerman.
+//    Copyright (C) 1990-2009  William B. Ackerman.
 //    Copyright (C) 1995  Robert E. Cays
 //    Copyright (C) 1996  Charles Petzold
 //
@@ -842,7 +842,7 @@ RGBQUAD icon_color_translate[8];    // Will be filled in during initialization.
 #define THOFFSET 5
 
 // Size of the square pixel array in the bitmap for one person.
-// The bitmap is exactly 8 of these wide and 4 of them high.
+// The bitmap is exactly 8 of these wide and 8 of them (well, 9) high.
 #define BMP_PERSON_SIZE 36
 // This should be even.
 // was 10
@@ -895,12 +895,19 @@ static void Transcript_OnPaint(HWND hwnd)
 
          if (DisplayPtr->in_picture & 1) {
             if (*cp == '\013') {
+               // Display a person glyph.
                int personidx = (*++cp) & 7;
                int persondir = (*++cp) & 0xF;
 
+               int randomized_person_color = personidx;
+
+               if (ui_options.color_scheme == color_by_couple_random && ui_options.hide_glyph_numbers) {
+                  randomized_person_color = (color_randomizer[personidx>>1] << 1) | (personidx & 1);
+               }
+
                if (ui_options.no_graphics == 0) {
-                  xgoodies = personidx*BMP_PERSON_SIZE;
-                  ygoodies = BMP_PERSON_SIZE*(persondir & 3);
+                  xgoodies = randomized_person_color*BMP_PERSON_SIZE;
+                  ygoodies = BMP_PERSON_SIZE*((persondir & 3)+(ui_options.hide_glyph_numbers ? 4 : 0));
                   goto do_DIB_thing;
                }
                else {
@@ -910,7 +917,7 @@ static void Transcript_OnPaint(HWND hwnd)
                   ExtTextOut(PaintDC, x, Y, ETO_CLIPPED, &PaintStruct.rcPaint, cc, 1, 0);
 
                   if (ui_options.color_scheme != no_color)
-                     SetTextColor(PaintDC, text_color_translate[color_index_list[personidx]]);
+                     SetTextColor(PaintDC, text_color_translate[color_index_list[randomized_person_color]]);
 
                   cc[0] = ui_options.pn1[personidx];
                   cc[1] = ui_options.pn2[personidx];
@@ -928,9 +935,10 @@ static void Transcript_OnPaint(HWND hwnd)
                }
             }
             else if (*cp == '\014') {
+               // Display a dot for a phantom.
                if (ui_options.no_graphics == 0) {
                   xgoodies = 0;
-                  ygoodies = BMP_PERSON_SIZE*4;
+                  ygoodies = BMP_PERSON_SIZE*8;
                   goto do_DIB_thing;
                }
                else {
@@ -2430,12 +2438,12 @@ void iofull::final_initialize()
    lpBi = (LPBITMAPINFO) GlobalAlloc(GMEM_FIXED,
                                      lpBitsTemp->bmiHeader.biSize +
                                      16*sizeof(RGBQUAD) +
-                                     BMP_PERSON_SIZE*BMP_PERSON_SIZE*20);
+                                     BMP_PERSON_SIZE*BMP_PERSON_SIZE*4*9);
 
    memcpy(lpBi, lpBitsTemp,
           lpBitsTemp->bmiHeader.biSize +
           16*sizeof(RGBQUAD) +
-          BMP_PERSON_SIZE*BMP_PERSON_SIZE*20);
+          BMP_PERSON_SIZE*BMP_PERSON_SIZE*4*9);
 
    lpBits = ((LPTSTR) lpBi) + lpBi->bmiHeader.biSize + 16*sizeof(RGBQUAD);
 
@@ -2606,7 +2614,7 @@ void iofull::display_help() {}
 
 
 
-char *iofull::version_string ()
+const char *iofull::version_string ()
 {
    return UI_VERSION_STRING "win";
 }

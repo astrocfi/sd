@@ -23,6 +23,7 @@
 //    This is for version 37.
 
 /* This defines the following external variables:
+   centers_concept
    special_magic
    special_interlocked
    mark_end_of_list
@@ -30,6 +31,8 @@
    marker_concept_mod
    marker_concept_comment
    marker_concept_supercall
+   special_piecewise
+   special_z
    main_call_lists
    number_of_calls
    calling_level
@@ -65,6 +68,8 @@
 #define F CONCPARSE_PARSE_F_TYPE
 #define G CONCPARSE_PARSE_G_TYPE
 
+// These are all gathered here so that, if the format of a concept_descriptor changes,
+// it will be easy to fix everything.
 
 const conzept::concept_descriptor conzept::centers_concept = {
    "centers????", concept_centers_or_ends, 1, l_mainstream, UC_none, selector_centers, false};
@@ -84,6 +89,8 @@ const conzept::concept_descriptor conzept::marker_concept_supercall = {
    ">>SUPER<<",            concept_supercall,             0, l_dontshow, UC_none};
 const conzept::concept_descriptor conzept::special_piecewise = {
    ">>SPECIALPIECEWISE<<", concept_meta,                  0, l_dontshow, UC_none, meta_key_piecewise};
+const conzept::concept_descriptor conzept::special_z = {
+   ">>SPECIAL_Z<<", concept_misc_distort,                 1, l_dontshow, UC_none, 0, 0, 0, 1};
 
 
 
@@ -882,13 +889,13 @@ conzept::concept_descriptor conzept::unsealed_concept_descriptor_table[] = {
    {"QUADRUPLE WAVES OF 6",                  concept_triple_twin,             D, l_c3x,
     UC_none, 3, CONCPROP__NEEDK_4X6, 2, phantest_ok},
    {"QUINTUPLE COLUMNS",                     concept_multiple_lines,          D, l_c4a,
-    UC_none, 0, 0, 0, 5, MPKIND__SPLIT},
+    UC_none, 0, CONCPROP__NEEDK_4X5, 0, 5, MPKIND__SPLIT},
    {"QUINTUPLE LINES",                       concept_multiple_lines,          D, l_c4a,
-    UC_none, 1, 0, 0, 5, MPKIND__SPLIT},
+    UC_none, 1, CONCPROP__NEEDK_4X5, 0, 5, MPKIND__SPLIT},
    {"QUINTUPLE WAVES",                       concept_multiple_lines,          D, l_c4a,
-    UC_none, 3, 0, 0, 5, MPKIND__SPLIT},
+    UC_none, 3, CONCPROP__NEEDK_4X5, 0, 5, MPKIND__SPLIT},
    {"QUINTUPLE 1X4s",                        concept_multiple_lines,          D, l_c4a,
-    UC_none, 2, 0, 0, 5, MPKIND__SPLIT},
+    UC_none, 2, CONCPROP__NEEDK_4X5, 0, 5, MPKIND__SPLIT},
    {"QUINTUPLE BOXES",                       concept_multiple_boxes,          D, l_c4a,
     UC_none, 0, CONCPROP__NEEDK_2X10, 0, 5, MPKIND__SPLIT},
    {"SEXTUPLE COLUMNS",                      concept_multiple_lines,          D, l_c4a,
@@ -1249,6 +1256,14 @@ conzept::concept_descriptor conzept::unsealed_concept_descriptor_table[] = {
     UC_none, phantest_impossible, 1, 0, 0},
    {"TWIN PHANTOM RIGGERS",                  concept_do_divided_bones,        D, l_c3x,
     UC_none, phantest_impossible, 1, 0, 0},
+   {"CRAZY Z's",                             concept_crazy,                   D, l_c3,
+    UC_none, 0, 0, 1},
+   {"REVERSE CRAZY Z's",                     concept_crazy,                   D, l_c3,
+    UC_none, 1, 0, 1},
+   {"@a CRAZY Z's",                          concept_frac_crazy,              D, l_c3,
+    UC_none, 0, 1, 1},
+   {"@a REVERSE CRAZY Z's",                  concept_frac_crazy,              D, l_c3,
+    UC_none, 1, 1, 1},
    {"CRAZY PHANTOM COLUMNS",                 concept_phan_crazy,              D, l_c4,
     UC_none, 0, CONCPROP__NEEDK_4X4, CMD_MISC__VERIFY_COLS},
    {"REVERSE CRAZY PHANTOM COLUMNS",         concept_phan_crazy,              D, l_c4,
@@ -1910,17 +1925,17 @@ conzept::concept_descriptor conzept::unsealed_concept_descriptor_table[] = {
    {"USE",                                   concept_special_sequential,      0, l_c2,
     UC_none, 4},
    {"CRAZY",                                 concept_crazy,                   D, l_c2,
-    UC_none, 0, 0},
+    UC_none, 0, 0, 0},
    {"REVERSE CRAZY",                         concept_crazy,                   D, l_c2,
-    UC_none, 1, 0},
+    UC_none, 1, 0, 0},
    {"@a CRAZY",                              concept_frac_crazy,              D, l_c2,
-    UC_none, 0, 1},
+    UC_none, 0, 1, 0},
    {"@a REVERSE CRAZY",                      concept_frac_crazy,              D, l_c2,
-    UC_none, 1, 1},
+    UC_none, 1, 1, 0},
    {"@9/@9 CRAZY",                           concept_dbl_frac_crazy,          D, l_c2,
-    UC_none, 0, 2},
+    UC_none, 0, 2, 0},
    {"@9/@9 REVERSE CRAZY",                   concept_dbl_frac_crazy,          D, l_c2,
-    UC_none, 1, 2},
+    UC_none, 1, 2, 0},
    {"RANDOM",                                concept_meta,                  G+D, l_c3x,
     UC_none, meta_key_random},
    {"REVERSE RANDOM",                        concept_meta,                  G+D, l_c3x,
@@ -2045,8 +2060,12 @@ conzept::concept_descriptor conzept::unsealed_concept_descriptor_table[] = {
     UC_none, 3},
    {"IN POINT TRIANGLES",                    concept_randomtrngl,             D, l_c1,
     UC_none, 5},
+   {"IN POINT INTERLOCKED TRIANGLES",        concept_randomtrngl,             D, l_c1,
+    UC_none, 0105},
    {"OUT POINT TRIANGLES",                   concept_randomtrngl,             D, l_c1,
     UC_none, 4},
+   {"OUT POINT INTERLOCKED TRIANGLES",       concept_randomtrngl,             D, l_c1,
+    UC_none, 0104},
    {"TALL 6",                                concept_randomtrngl,             D, l_c3x,
     UC_none, 0},
    {"SHORT 6",                               concept_randomtrngl,             D, l_c3x,
@@ -2093,6 +2112,10 @@ conzept::concept_descriptor conzept::unsealed_concept_descriptor_table[] = {
     UC_none, schema_concentric_zs, 0, 0},
    {"CROSS CONCENTRIC Z's",                  concept_concentric,              D, l_c3a,
     UC_none, schema_cross_concentric_zs, 0, 0},
+   {"INTERMEDIATE DIAMOND",                  concept_concentric,              D, l_plus,
+    UC_none, schema_intermediate_diamond, 0, 0},
+   {"OUTSIDE DIAMOND",                       concept_concentric,              D, l_plus,
+    UC_none, schema_outside_diamond, 0, 0},
    {"GRAND WORKING FORWARD",                 concept_grand_working,           D, l_c4a,
     UC_none, 0},
    {"GRAND WORKING BACKWARD",                concept_grand_working,           D, l_c4a,

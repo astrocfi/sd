@@ -103,7 +103,7 @@ static Cstring title_string[] = {
 
 
 
-static char *resolve_distances[] = {
+static const char *resolve_distances[] = {
    "0",
    "1/8",
    "1/4",

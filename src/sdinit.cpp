@@ -43,6 +43,7 @@ and the following external variables:
    direction_for_initialize
    number_for_initialize
    color_index_list
+   color_randomizer
 */
 
 #include <stdlib.h>
@@ -61,6 +62,7 @@ selector_kind selector_for_initialize;
 direction_kind direction_for_initialize;
 int number_for_initialize;
 int *color_index_list;
+int color_randomizer[4];
 
 
 // This gets temporarily allocated.  It persists through the entire initialization.
@@ -380,7 +382,7 @@ static int canonicalize(char * & cp)
             return 500;   // <ATC>
          case 'h':
             return 501;   // <DIRECTION>
-         case '6': case 'k': case 'K':
+         case '6': case 'k': case 'K': case 'V':
             return 502;   // <ANYONE>
          case 'N':
             return 503;   // <ANYCIRC>
@@ -605,7 +607,7 @@ static void read_fullword()
 // Should take the call as an argument, but since this entire file uses global variables,
 // we will, too.
 
-static void database_error_exit(char *message)
+static void database_error_exit(const char *message)
 {
    if (call_root)
       gg->fatal_error_exit(1, message, call_root->name);
@@ -795,7 +797,7 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
       while ((c = *np++)) {
          if (c == '@') {
             switch ((c = *np++)) {
-            case '6': case 'k': case 'K':
+            case '6': case 'k': case 'K': case 'V':
                root_to_use->callflagsf |= CFLAGH__REQUIRES_SELECTOR;
                break;
             case 'h':
@@ -1952,7 +1954,7 @@ static int couple_colors_ygrb[8] = {4, 4, 3, 3, 2, 2, 5, 5};
 int useful_concept_indices[UC_extent];
 
 
-extern void start_stats_file_from_GLOB_stats_filename()
+void start_stats_file_from_GLOB_stats_filename()
 {
    GLOB_doing_frequency = true;
    strncpy(GLOB_decorated_stats_filename, GLOB_stats_filename, MAX_TEXT_LINE_LENGTH);
@@ -2103,6 +2105,8 @@ bool open_session(int argc, char **argv)
             { ui_options.use_magenta = true; continue; }
          else if (strcmp(&args[argno][1], "use_cyan") == 0)
             { ui_options.use_cyan = true; continue; }
+         else if (strcmp(&args[argno][1], "hide_couple_numbers") == 0)
+            { ui_options.hide_glyph_numbers = true; ui_options.color_scheme = color_by_couple_random; continue; }
          else if (strcmp(&args[argno][1], "color_by_couple") == 0)
             { ui_options.color_scheme = color_by_couple; continue; }
          else if (strcmp(&args[argno][1], "color_by_couple_rgyb") == 0)
@@ -2285,7 +2289,7 @@ bool open_session(int argc, char **argv)
    // Must do before telling the uims so any open failure messages
    // come out first.
 
-   char *sourcenames[2] = {database_filename, abridge_filename};
+   const char *sourcenames[2] = {database_filename, abridge_filename};
    bool binaryfileflags[2] = {true, false};
    FILE *database_input_files[2];
 
