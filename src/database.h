@@ -27,7 +27,7 @@
    database format version. */
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 61
+#define DATABASE_FORMAT_VERSION 62
 
 
 
@@ -40,6 +40,7 @@
 #define BASE_CALL_TAGGER1    5
 #define BASE_CALL_TAGGER2    6
 #define BASE_CALL_TAGGER3    7
+#define BASE_CALL_CIRCCER    8
 
 
 /* BEWARE!!  This list must track the tables "flagtabh", "defmodtabh",
@@ -88,12 +89,12 @@
 #define CFLAGH__TAG_CALL_RQ_BIT           0x00200000UL
 #define CFLAGH__REQUIRES_SELECTOR         0x01000000UL
 #define CFLAGH__REQUIRES_DIRECTION        0x02000000UL
-#define INHERITSPARE_1                    0x04000000UL
-#define INHERITSPARE_2                    0x08000000UL
-#define INHERITSPARE_3                    0x10000000UL
-#define INHERITSPARE_4                    0x20000000UL
-#define INHERITSPARE_5                    0x40000000UL
-#define INHERITSPARE_6                    0x80000000UL
+#define CFLAGH__CIRC_CALL_RQ_BIT          0x04000000UL
+#define INHERITSPARE_1                    0x08000000UL
+#define INHERITSPARE_2                    0x10000000UL
+#define INHERITSPARE_3                    0x20000000UL
+#define INHERITSPARE_4                    0x40000000UL
+#define INHERITSPARE_5                    0x80000000UL
 
 /* BEWARE!!  This list must track the table "flagtab1" in dbcomp.c .
    These flags go into the "callflags1" word of a callspec_block. */
@@ -118,7 +119,7 @@
 #define CFLAG1_NUMBER_BIT                 0x00004000UL
 #define CFLAG1_SEQUENCE_STARTER           0x00020000UL
 #define CFLAG1_SPLIT_LIKE_SQUARE_THRU     0x00040000UL
-/*   spare                                0x00080000UL */
+#define CFLAG1_DISTRIBUTE_REPETITIONS     0x00080000UL
 #define CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK  0x00100000UL
 #define CFLAG1_CAN_BE_FAN                 0x00200000UL
 #define CFLAG1_YIELD_IF_AMBIGUOUS         0x00400000UL
@@ -126,6 +127,7 @@
 /* This is a 3 bit field -- BASE_TAG_CALL_BIT tells where its low bit lies. */
 #define CFLAG1_BASE_TAG_CALL_MASK         0x07000000UL
 #define CFLAG1_BASE_TAG_CALL_BIT          0x01000000UL
+#define CFLAG1_BASE_CIRC_CALL             0x08000000UL
 
 /* Beware!!  This list must track the table "matrixcallflagtab" in dbcomp.c . */
 
@@ -153,7 +155,6 @@ typedef enum {
 /* BEWARE!!  This list must track the array "estab" in dbcomp.c . */
 /* BEWARE!!  This list must track the array "setup_attrs" in sdtables.c . */
 /* BEWARE!!  This list must track the array "map_lists" in sdtables.c . */
-/* BEWARE!!  This list must track the array "printing_tables" in sdutil.c . */
 /* BEWARE!!  The procedure "merge_setups" canonicalizes pairs of setups by their
    order in this list, and will break if it is re-ordered randomly.  See the comments
    there before changing the order of existing setups. In general, keep small setups
@@ -187,6 +188,7 @@ typedef enum {
    s1x6,
    s3x4,
    s2x6,
+   s1p5x8,    /* internal use only */
    s2x8,
    s4x4,
    sx1x6,  /* Crossed 1x6's -- internal use only. */
@@ -197,6 +199,7 @@ typedef enum {
    s_c1phan,
    s_bigblob,
    s_ptpd,
+   s1x3dmd,
    s3x1dmd,
    s3dmd,
    s4dmd,
@@ -290,6 +293,8 @@ typedef enum {
    b_thar,
    b_ptpd,
    b_pptpd,
+   b_1x3dmd,
+   b_p1x3dmd,
    b_3x1dmd,
    b_p3x1dmd,
    b_3dmd,
@@ -330,6 +335,7 @@ typedef enum {
    sq_2fl_only,
    sq_3x3couples_only,
    sq_4x4couples_only,
+   sq_magic_only,
    sq_in_or_out,
    sq_miniwaves,
    sq_rwave_only,
@@ -402,6 +408,8 @@ typedef enum {
    schema_maybe_single_concentric,
    schema_maybe_single_cross_concentric,
    schema_concentric_diamond_line,
+   schema_concentric_diamonds,
+   schema_cross_concentric_diamonds,
    schema_concentric_6_2,
    schema_concentric_2_6,
    schema_concentric_6_2_tgl,

@@ -132,12 +132,13 @@ typedef struct {
 
 Private collision_map collision_map_table[] = {
    /* These items handle various types of "1/2 circulate" calls from 2x4's. */
-   {4, 0x0CC0CC, 0xCC, 0xCC, {2, 3, 6, 7},         {0, 3, 5, 6},          {1, 2, 4, 7},           s_crosswave, s1x8,        1, warn__none},   /* from lines in */
-   {4, 0x000000, 0x33, 0x33, {0, 1, 4, 5},         {0, 3, 5, 6},          {1, 2, 4, 7},           s_crosswave, s1x8,        0, warn__none},   /* from lines out */
+   {4, 0x0CC0CC, 0xCC, 0xCC, {2, 3, 6, 7},         {0, 3, 5, 6},          {1, 2, 4, 7},           s_crosswave, s1x8,        1, warn__none},   /* from lines out */
+   {4, 0x000000, 0x33, 0x33, {0, 1, 4, 5},         {0, 3, 5, 6},          {1, 2, 4, 7},           s_crosswave, s1x8,        0, warn__none},   /* from lines in */
    {4, 0x022022, 0xAA, 0xAA, {1, 3, 5, 7},         {2, 5, 7, 0},          {3, 4, 6, 1},           s_spindle,   s_crosswave, 0, warn__none},   /* from trade by */
    {6, 0x0880CC, 0xDD, 0x88, {0, 2, 3, 4, 6, 7},   {7, 0, 1, 3, 4, 6},    {7, 0, 2, 3, 4, 5},     s_crosswave, s3x1dmd,     1, warn__none},   /* from 3&1 lines w/ centers in */
    {6, 0x000044, 0x77, 0x22, {0, 1, 2, 4, 5, 6},   {0, 1, 3, 4, 6, 7},    {0, 2, 3, 4, 5, 7},     s_crosswave, s3x1dmd,     0, warn__none},   /* from 3&1 lines w/ centers out */
    {6, 0x0440CC, 0xEE, 0x44, {1, 2, 3, 5, 6, 7},   {7, 0, 2, 3, 5, 6},    {7, 1, 2, 3, 4, 6},     s_crosswave, s3x1dmd,     1, warn__none},   /* from 3&1 lines w/ ends in */
+   {6, 0x000088, 0xBB, 0x11, {0, 1, 3, 4, 5, 7},   {0, 2, 3, 5, 6, 7},    {1, 2, 3, 4, 6, 7},     s_crosswave, s1x3dmd,     0, warn__none},   /* from 3&1 lines w/ ends out */
    {4, 0x088088, 0x99, 0x99, {0, 3, 4, 7},         {0, 2, 5, 7},          {1, 3, 4, 6},           s_crosswave, s_crosswave, 0, warn__none},   /* from inverted lines w/ centers in */
    {4, 0x044044, 0x66, 0x66, {1, 2, 5, 6},         {6, 0, 3, 5},          {7, 1, 2, 4},           s_crosswave, s_crosswave, 1, warn__ctrs_stay_in_ctr}, /* from inverted lines w/ centers out */
    {4, 0x044044, 0x55, 0x55, {0, 2, 4, 6},         {0, 2, 5, 7},          {1, 3, 4, 6},           s_crosswave, s_crosswave, 0, warn__ctrs_stay_in_ctr}, /* from trade-by w/ ctrs 1/4 out */
@@ -1060,8 +1061,7 @@ Private int divide_the_setup(
    callarray *have_1x2, *have_2x1;
    map_thing *division_maps;
    uint32 newtb = *newtb_p;
-   callspec_block *callspec = ss->cmd.callspec;
-   uint32 callflags1 = callspec->callflags1;
+   uint32 callflags1 = ss->cmd.callspec->callflags1;
    final_set final_concepts = ss->cmd.cmd_final_flags;
    uint32 force_result_split_axis = 0;
 
@@ -1188,6 +1188,22 @@ Private int divide_the_setup(
             case 06363: case 06060: case 00303: case 04141: case 02222:    /* the outer triple boxes */
                division_maps = (*map_lists[s2x2][2])[MPKIND__SPLIT][0];
                warn(warn__each2x2);
+               break;
+            default:
+               fail("You must specify a concept.");
+         }
+
+         goto divide_us_no_recompute;
+      case s1p5x8:
+         /* This is a phony setup, allowed only so that we can have people temporarily
+            in 50% offset 1x4's that are offset the impossible way. */
+
+         switch (livemask) {
+            case 0xF0F0:
+               division_maps = (*map_lists[s1x4][1])[MPKIND__OFFS_L_HALF][0];
+               break;
+            case 0x0F0F:
+               division_maps = (*map_lists[s1x4][1])[MPKIND__OFFS_R_HALF][0];
                break;
             default:
                fail("You must specify a concept.");
@@ -1515,11 +1531,6 @@ Private int divide_the_setup(
                2x2 circulate in each box.  So we disallow this if any possibly conflicting definition
                could be seen during the recursion. */
 
-               /* This stuff is not done correctly, since it can't
-                  handle sequential stuff that goes through intermediate setups of different shape.
-                  For example, we can't do a square thru in each clump.  All this should be done
-                  elsewhere, I'm not sure where. */
-
             forbid_little_stuff =
                   assoc(b_2x4, ss, calldeflist) ||
                   assoc(b_4x2, ss, calldeflist) ||
@@ -1540,7 +1551,7 @@ Private int divide_the_setup(
                            !assoc(b_2x1, ss, calldeflist) &&
                            !assoc(b_1x1, ss, calldeflist))) fail("Don't know how to do this call in this setup.");
                   warn(warn__each2x2);
-                  division_maps = (livemask == 0xF3C) ? &map_lof12 : &map_rof12;
+                  division_maps = (*map_lists[s2x2][1])[(livemask == 0xF3C) ? MPKIND__OFFS_L_HALF : MPKIND__OFFS_R_HALF][0];
                   goto divide_us_no_recompute;
                case 0xEBA: case 0xD75:
                   /* We are in "Z"'s.  See if we can do the call in 1x2, 2x1, or 1x1 setups.
@@ -1680,7 +1691,7 @@ Private int divide_the_setup(
             case 0x4B4B: case 0xB4B4:
                /* See comment above, for 3x4.  This stuff is not done correctly, since it can't
                   handle sequential stuff that goes through intermediate setups of different shape.
-                  For example, we can't  do a square thru in each clump.  All this should be done
+                  For example, we can't do a square thru in each clump.  All this should be done
                   elsewhere, I'm not sure where. */
                {
                   long_boolean forbid_little_stuff =
@@ -1701,14 +1712,14 @@ Private int divide_the_setup(
                            !assoc(b_2x1, ss, calldeflist) &&
                            !assoc(b_1x1, ss, calldeflist))) fail("Don't know how to do this call in this setup.");
                   warn(warn__each2x2);
-                  division_maps = (livemask == 0x4B4B) ? &map_lof16 : &map_rof16;
+                  division_maps = (*map_lists[s2x2][1])[(livemask == 0x4B4B) ? MPKIND__OFFS_L_FULL : MPKIND__OFFS_R_FULL][0];
                   goto divide_us_no_recompute;
                }
          }
 
          fail("You must specify a concept.");
       case s_qtag:
-         if (assoc(b_dmd, ss, calldeflist) || assoc(b_pmd, ss, calldeflist) || assoc(b_1x1, ss, calldeflist)) {
+         if (assoc(b_dmd, ss, calldeflist) || assoc(b_pmd, ss, calldeflist) || assoc(b_1x1, ss, calldeflist) || assoc(b_1x4, ss, calldeflist)) {
             division_maps = (*map_lists[sdmd][1])[MPKIND__SPLIT][1];
             goto divide_us_no_recompute;
          }
@@ -2312,6 +2323,39 @@ extern void basic_move(
    result->result_flags = 0;   /* Do this now, in case we bail out.  Note also that
       this means the RESULTFLAG__SPLIT_AXIS_MASK stuff will be clear for the normal case.
       It will only have good stuff if splitting actually occurs. */
+
+   if (ss->kind == s_normal_concentric && ss->inner.skind == s1x4 && ss->outer.skind == nothing) {
+      for (j=0; j<4; j++) tbonetest |= ss->people[j].id1;
+      ss->kind = s1x8;
+      ss->rotation = ss->inner.srotation;
+      clear_person(ss, 4);
+      clear_person(ss, 5);
+      ss->people[6] = ss->people[3];
+      ss->people[7] = ss->people[2];
+      ss->people[2] = ss->people[1];
+      ss->people[3] = ss->people[0];
+      clear_person(ss, 0);
+      clear_person(ss, 1);
+   }
+   else if (ss->kind == s_normal_concentric && ss->inner.skind == s2x2 && ss->outer.skind == nothing) {
+      if (ss->concsetup_outer_elongation) {
+         /* Do nothing, which will cause an error. */
+      }
+      else {
+         for (j=0; j<4; j++) tbonetest |= ss->people[j].id1;
+         ss->kind = s2x4;
+         ss->rotation = ss->inner.srotation;
+         clear_person(ss, 4);
+         clear_person(ss, 7);
+         ss->people[6] = ss->people[3];
+         ss->people[5] = ss->people[2];
+         ss->people[2] = ss->people[1];
+         ss->people[1] = ss->people[0];
+         clear_person(ss, 0);
+         clear_person(ss, 3);
+      }
+   }
+
    newtb = tbonetest;
    if (setup_attrs[ss->kind].setup_limits < 0) fail("Setup is extremely bizarre.");
    resultflags = 0;

@@ -87,176 +87,6 @@ Private void compress_setup(expand_thing *thing, setup *stuff)
 }
 
 
-#define ID2_BOX0 (ID2_LEAD|ID2_BEAU)
-#define ID2_BOX1 (ID2_LEAD|ID2_BELLE)
-#define ID2_BOX2 (ID2_TRAILER|ID2_BELLE)
-#define ID2_BOX3 (ID2_TRAILER|ID2_BEAU)
-
-
-Private uint32 bit_table_2x2[][4] = {
-   {ID2_BOX0, ID2_BOX3, ID2_BOX2, ID2_BOX1},
-   {ID2_BOX1, ID2_BOX0, ID2_BOX3, ID2_BOX2},
-   {ID2_BOX2, ID2_BOX1, ID2_BOX0, ID2_BOX3},
-   {ID2_BOX3, ID2_BOX2, ID2_BOX1, ID2_BOX0}};
-
-Private uint32 bit_table_2x4[][4] = {
-   {ID2_BOX0|ID2_END,        ID2_BOX3|ID2_END,     ID2_BOX2|ID2_END,    ID2_BOX1|ID2_END},
-   {ID2_BOX1|ID2_CENTER,    ID2_BOX0|ID2_CENTER,     ID2_BOX3|ID2_CENTER,  ID2_BOX2|ID2_CENTER},
-   {ID2_BOX0|ID2_CENTER,     ID2_BOX3|ID2_CENTER,  ID2_BOX2|ID2_CENTER, ID2_BOX1|ID2_CENTER},
-   {ID2_BOX1|ID2_END,       ID2_BOX0|ID2_END,        ID2_BOX3|ID2_END,     ID2_BOX2|ID2_END},
-   {ID2_BOX2|ID2_END,    ID2_BOX1|ID2_END,       ID2_BOX0|ID2_END,        ID2_BOX3|ID2_END},
-   {ID2_BOX3|ID2_CENTER,  ID2_BOX2|ID2_CENTER, ID2_BOX1|ID2_CENTER,    ID2_BOX0|ID2_CENTER},
-   {ID2_BOX2|ID2_CENTER, ID2_BOX1|ID2_CENTER,    ID2_BOX0|ID2_CENTER,     ID2_BOX3|ID2_CENTER},
-   {ID2_BOX3|ID2_END,     ID2_BOX2|ID2_END,    ID2_BOX1|ID2_END,       ID2_BOX0|ID2_END}};
-
-Private uint32 bit_table_2x6p[][4] = {
-   {ID2_BOX0|ID2_OUTRPAIRS, ID2_BOX3|ID2_OUTRPAIRS, ID2_BOX2|ID2_OUTRPAIRS, ID2_BOX1|ID2_OUTRPAIRS},
-   {ID2_BOX1|ID2_OUTRPAIRS, ID2_BOX0|ID2_OUTRPAIRS, ID2_BOX3|ID2_OUTRPAIRS, ID2_BOX2|ID2_OUTRPAIRS},
-   {ID2_BOX0|ID2_CTR4,      ID2_BOX3|ID2_CTR4,      ID2_BOX2|ID2_CTR4,      ID2_BOX1|ID2_CTR4},
-   {ID2_BOX1|ID2_CTR4,      ID2_BOX0|ID2_CTR4,      ID2_BOX3|ID2_CTR4,      ID2_BOX2|ID2_CTR4},
-   {ID2_BOX0|ID2_OUTRPAIRS, ID2_BOX3|ID2_OUTRPAIRS, ID2_BOX2|ID2_OUTRPAIRS, ID2_BOX1|ID2_OUTRPAIRS},
-   {ID2_BOX1|ID2_OUTRPAIRS, ID2_BOX0|ID2_OUTRPAIRS, ID2_BOX3|ID2_OUTRPAIRS, ID2_BOX2|ID2_OUTRPAIRS},
-   {ID2_BOX2|ID2_OUTRPAIRS, ID2_BOX1|ID2_OUTRPAIRS, ID2_BOX0|ID2_OUTRPAIRS, ID2_BOX3|ID2_OUTRPAIRS},
-   {ID2_BOX3|ID2_OUTRPAIRS, ID2_BOX2|ID2_OUTRPAIRS, ID2_BOX1|ID2_OUTRPAIRS, ID2_BOX0|ID2_OUTRPAIRS},
-   {ID2_BOX2|ID2_CTR4,      ID2_BOX1|ID2_CTR4,      ID2_BOX0|ID2_CTR4,      ID2_BOX3|ID2_CTR4},
-   {ID2_BOX3|ID2_CTR4,      ID2_BOX2|ID2_CTR4,      ID2_BOX1|ID2_CTR4,      ID2_BOX0|ID2_CTR4},
-   {ID2_BOX2|ID2_OUTRPAIRS, ID2_BOX1|ID2_OUTRPAIRS, ID2_BOX0|ID2_OUTRPAIRS, ID2_BOX3|ID2_OUTRPAIRS},
-   {ID2_BOX3|ID2_OUTRPAIRS, ID2_BOX2|ID2_OUTRPAIRS, ID2_BOX1|ID2_OUTRPAIRS, ID2_BOX0|ID2_OUTRPAIRS}};
-
-Private uint32 bit_table_1x2[][4] = {
-   {ID2_BEAU,              ID2_TRAILER,           ID2_BELLE,             ID2_LEAD},
-   {ID2_BELLE,             ID2_LEAD,              ID2_BEAU,              ID2_TRAILER}};
-
-Private uint32 bit_table_1x4[][4] = {
-   {ID2_BEAU|ID2_END,        ID2_TRAILER|ID2_END,      ID2_BELLE|ID2_END,       ID2_LEAD|ID2_END},
-   {ID2_BELLE|ID2_CENTER,    ID2_LEAD|ID2_CENTER,      ID2_BEAU|ID2_CENTER,     ID2_TRAILER|ID2_CENTER},
-   {ID2_BELLE|ID2_END,       ID2_LEAD|ID2_END,         ID2_BEAU|ID2_END,        ID2_TRAILER|ID2_END},
-   {ID2_BEAU|ID2_CENTER,     ID2_TRAILER|ID2_CENTER,   ID2_BELLE|ID2_CENTER,    ID2_LEAD|ID2_CENTER}};
-
-Private uint32 bit_table_1x8[][4] = {
-   {ID2_BEAU|ID2_OUTR6|ID2_OUTR2,   ID2_TRAILER|ID2_OUTR6|ID2_OUTR2, ID2_BELLE|ID2_OUTR6|ID2_OUTR2,  ID2_LEAD|ID2_OUTR6|ID2_OUTR2},
-   {ID2_BELLE|ID2_OUTR6|ID2_CTR6,   ID2_LEAD|ID2_OUTR6|ID2_CTR6,     ID2_BEAU|ID2_OUTR6|ID2_CTR6,    ID2_TRAILER|ID2_OUTR6|ID2_CTR6},
-   {ID2_BELLE|ID2_CTR2|ID2_CTR6,    ID2_LEAD|ID2_CTR2|ID2_CTR6,      ID2_BEAU|ID2_CTR2|ID2_CTR6,     ID2_TRAILER|ID2_CTR2|ID2_CTR6},
-   {ID2_BEAU|ID2_OUTR6|ID2_CTR6,    ID2_TRAILER|ID2_OUTR6|ID2_CTR6,  ID2_BELLE|ID2_OUTR6|ID2_CTR6,   ID2_LEAD|ID2_OUTR6|ID2_CTR6},
-   {ID2_BELLE|ID2_OUTR6|ID2_OUTR2,  ID2_LEAD|ID2_OUTR6|ID2_OUTR2,    ID2_BEAU|ID2_OUTR6|ID2_OUTR2,   ID2_TRAILER|ID2_OUTR6|ID2_OUTR2},
-   {ID2_BEAU|ID2_OUTR6|ID2_CTR6,    ID2_TRAILER|ID2_OUTR6|ID2_CTR6,  ID2_BELLE|ID2_OUTR6|ID2_CTR6,   ID2_LEAD|ID2_OUTR6|ID2_CTR6},
-   {ID2_BEAU|ID2_CTR2|ID2_CTR6,     ID2_TRAILER|ID2_CTR2|ID2_CTR6,   ID2_BELLE|ID2_CTR2|ID2_CTR6,    ID2_LEAD|ID2_CTR2|ID2_CTR6},
-   {ID2_BELLE|ID2_OUTR6|ID2_CTR6,   ID2_LEAD|ID2_OUTR6|ID2_CTR6,     ID2_BEAU|ID2_OUTR6|ID2_CTR6,    ID2_TRAILER|ID2_OUTR6|ID2_CTR6}};
-
-Private uint32 bit_table_qtag[][4] = {
-   {ID2_END|ID2_OUTRPAIRS|ID2_CTR6|ID2_OUTR6,    ID2_END|ID2_OUTRPAIRS|ID2_CTR6|ID2_OUTR6,    ID2_END|ID2_OUTRPAIRS|ID2_CTR6|ID2_OUTR6,    ID2_END|ID2_OUTRPAIRS|ID2_CTR6|ID2_OUTR6},
-   {ID2_END|ID2_OUTRPAIRS|ID2_CTR6|ID2_OUTR6,    ID2_END|ID2_OUTRPAIRS|ID2_CTR6|ID2_OUTR6,    ID2_END|ID2_OUTRPAIRS|ID2_CTR6|ID2_OUTR6,    ID2_END|ID2_OUTRPAIRS|ID2_CTR6|ID2_OUTR6},
-   {ID2_CENTER|ID2_CTR4|ID2_OUTR2|ID2_OUTR6,     ID2_CENTER|ID2_CTR4|ID2_OUTR2|ID2_OUTR6,     ID2_CENTER|ID2_CTR4|ID2_OUTR2|ID2_OUTR6,     ID2_CENTER|ID2_CTR4|ID2_OUTR2|ID2_OUTR6},
-   {ID2_CENTER|ID2_CTR4|ID2_CTR6|ID2_CTR2,       ID2_CENTER|ID2_CTR4|ID2_CTR6|ID2_CTR2,       ID2_CENTER|ID2_CTR4|ID2_CTR6|ID2_CTR2,       ID2_CENTER|ID2_CTR4|ID2_CTR6|ID2_CTR2},
-   {ID2_END|ID2_OUTRPAIRS|ID2_CTR6|ID2_OUTR6,    ID2_END|ID2_OUTRPAIRS|ID2_CTR6|ID2_OUTR6,    ID2_END|ID2_OUTRPAIRS|ID2_CTR6|ID2_OUTR6,    ID2_END|ID2_OUTRPAIRS|ID2_CTR6|ID2_OUTR6},
-   {ID2_END|ID2_OUTRPAIRS|ID2_CTR6|ID2_OUTR6,    ID2_END|ID2_OUTRPAIRS|ID2_CTR6|ID2_OUTR6,    ID2_END|ID2_OUTRPAIRS|ID2_CTR6|ID2_OUTR6,    ID2_END|ID2_OUTRPAIRS|ID2_CTR6|ID2_OUTR6},
-   {ID2_CENTER|ID2_CTR4|ID2_OUTR2|ID2_OUTR6,     ID2_CENTER|ID2_CTR4|ID2_OUTR2|ID2_OUTR6,     ID2_CENTER|ID2_CTR4|ID2_OUTR2|ID2_OUTR6,     ID2_CENTER|ID2_CTR4|ID2_OUTR2|ID2_OUTR6},
-   {ID2_CENTER|ID2_CTR4|ID2_CTR6|ID2_CTR2,       ID2_CENTER|ID2_CTR4|ID2_CTR6|ID2_CTR2,       ID2_CENTER|ID2_CTR4|ID2_CTR6|ID2_CTR2,       ID2_CENTER|ID2_CTR4|ID2_CTR6|ID2_CTR2}};
-
-Private uint32 bit_table_ptpd[][4] = {
-   {ID2_OUTR6|ID2_OUTR2,            ID2_OUTR6|ID2_OUTR2,           ID2_OUTR6|ID2_OUTR2,            ID2_OUTR6|ID2_OUTR2},
-   {ID2_OUTR6|ID2_CTR6|ID2_LEAD,    ID2_OUTR6|ID2_CTR6|ID2_BEAU,   ID2_OUTR6|ID2_CTR6|ID2_TRAILER, ID2_OUTR6|ID2_CTR6|ID2_BELLE},
-   {ID2_CTR2|ID2_CTR6|ID2_BEAU,     ID2_CTR2|ID2_CTR6|ID2_TRAILER, ID2_CTR2|ID2_CTR6|ID2_BELLE,    ID2_CTR2|ID2_CTR6|ID2_LEAD},
-   {ID2_OUTR6|ID2_CTR6|ID2_TRAILER, ID2_OUTR6|ID2_CTR6|ID2_BELLE,  ID2_OUTR6|ID2_CTR6|ID2_LEAD,    ID2_OUTR6|ID2_CTR6|ID2_BEAU},
-   {ID2_OUTR6|ID2_OUTR2,            ID2_OUTR6|ID2_OUTR2,           ID2_OUTR6|ID2_OUTR2,            ID2_OUTR6|ID2_OUTR2},
-   {ID2_OUTR6|ID2_CTR6|ID2_TRAILER, ID2_OUTR6|ID2_CTR6|ID2_BELLE,  ID2_OUTR6|ID2_CTR6|ID2_LEAD,    ID2_OUTR6|ID2_CTR6|ID2_BEAU},
-   {ID2_CTR2|ID2_CTR6|ID2_BELLE,    ID2_CTR2|ID2_CTR6|ID2_LEAD,    ID2_CTR2|ID2_CTR6|ID2_BEAU,     ID2_CTR2|ID2_CTR6|ID2_TRAILER},
-   {ID2_OUTR6|ID2_CTR6|ID2_LEAD,    ID2_OUTR6|ID2_CTR6|ID2_BEAU,   ID2_OUTR6|ID2_CTR6|ID2_TRAILER, ID2_OUTR6|ID2_CTR6|ID2_BELLE}};
-
-Private uint32 bit_table_crosswave[][4] = {
-   {ID2_END|ID2_OUTRPAIRS|ID2_BEAU|ID2_OUTR6,       ID2_END|ID2_OUTRPAIRS|ID2_TRAILER|ID2_OUTR6,  ID2_END|ID2_OUTRPAIRS|ID2_BELLE|ID2_OUTR6,      ID2_END|ID2_OUTRPAIRS|ID2_LEAD|ID2_OUTR6},
-   {ID2_END|ID2_OUTRPAIRS|ID2_BELLE|ID2_OUTR6,      ID2_END|ID2_OUTRPAIRS|ID2_LEAD|ID2_OUTR6,     ID2_END|ID2_OUTRPAIRS|ID2_BEAU|ID2_OUTR6,       ID2_END|ID2_OUTRPAIRS|ID2_TRAILER|ID2_OUTR6},
-   {ID2_CENTER|ID2_CTR4|ID2_LEAD|ID2_OUTR6,    ID2_CENTER|ID2_CTR4|ID2_BEAU|ID2_OUTR6,  ID2_CENTER|ID2_CTR4|ID2_TRAILER|ID2_OUTR6, ID2_CENTER|ID2_CTR4|ID2_BELLE|ID2_OUTR6},
-   {ID2_CENTER|ID2_CTR4|ID2_TRAILER|ID2_CTR2,  ID2_CENTER|ID2_CTR4|ID2_BELLE|ID2_CTR2,  ID2_CENTER|ID2_CTR4|ID2_LEAD|ID2_CTR2,     ID2_CENTER|ID2_CTR4|ID2_BEAU|ID2_CTR2},
-   {ID2_END|ID2_OUTRPAIRS|ID2_BELLE|ID2_OUTR6,      ID2_END|ID2_OUTRPAIRS|ID2_LEAD|ID2_OUTR6,     ID2_END|ID2_OUTRPAIRS|ID2_BEAU|ID2_OUTR6,       ID2_END|ID2_OUTRPAIRS|ID2_TRAILER|ID2_OUTR6},
-   {ID2_END|ID2_OUTRPAIRS|ID2_BEAU|ID2_OUTR6,       ID2_END|ID2_OUTRPAIRS|ID2_TRAILER|ID2_OUTR6,  ID2_END|ID2_OUTRPAIRS|ID2_BELLE|ID2_OUTR6,      ID2_END|ID2_OUTRPAIRS|ID2_LEAD|ID2_OUTR6},
-   {ID2_CENTER|ID2_CTR4|ID2_TRAILER|ID2_OUTR6, ID2_CENTER|ID2_CTR4|ID2_BELLE|ID2_OUTR6, ID2_CENTER|ID2_CTR4|ID2_LEAD|ID2_OUTR6,    ID2_CENTER|ID2_CTR4|ID2_BEAU|ID2_OUTR6},
-   {ID2_CENTER|ID2_CTR4|ID2_LEAD|ID2_CTR2,     ID2_CENTER|ID2_CTR4|ID2_BEAU|ID2_CTR2,   ID2_CENTER|ID2_CTR4|ID2_TRAILER|ID2_CTR2,  ID2_CENTER|ID2_CTR4|ID2_BELLE|ID2_CTR2}};
-
-Private uint32 bit_table_gal[][4] = {
-   {ID2_END,             ID2_END,             ID2_END,             ID2_END},
-   {ID2_BOX0|ID2_CENTER, ID2_BOX3|ID2_CENTER, ID2_BOX2|ID2_CENTER, ID2_BOX1|ID2_CENTER},
-   {ID2_END,             ID2_END,             ID2_END,             ID2_END},
-   {ID2_BOX1|ID2_CENTER, ID2_BOX0|ID2_CENTER, ID2_BOX3|ID2_CENTER, ID2_BOX2|ID2_CENTER},
-   {ID2_END,             ID2_END,             ID2_END,             ID2_END},
-   {ID2_BOX2|ID2_CENTER, ID2_BOX1|ID2_CENTER, ID2_BOX0|ID2_CENTER, ID2_BOX3|ID2_CENTER},
-   {ID2_END,             ID2_END,             ID2_END,             ID2_END},
-   {ID2_BOX3|ID2_CENTER, ID2_BOX2|ID2_CENTER, ID2_BOX1|ID2_CENTER, ID2_BOX0|ID2_CENTER}};
-
-Private uint32 bit_table_hrglass[][4] = {
-   {ID2_END|ID2_OUTR6,    ID2_END|ID2_OUTR6,    ID2_END|ID2_OUTR6,    ID2_END|ID2_OUTR6},
-   {ID2_END|ID2_OUTR6,    ID2_END|ID2_OUTR6,    ID2_END|ID2_OUTR6,    ID2_END|ID2_OUTR6},
-   {ID2_CENTER|ID2_OUTR6, ID2_CENTER|ID2_OUTR6, ID2_CENTER|ID2_OUTR6, ID2_CENTER|ID2_OUTR6},
-   {ID2_CENTER|ID2_CTR2,  ID2_CENTER|ID2_CTR2,  ID2_CENTER|ID2_CTR2,  ID2_CENTER|ID2_CTR2},
-   {ID2_END|ID2_OUTR6,    ID2_END|ID2_OUTR6,    ID2_END|ID2_OUTR6,    ID2_END|ID2_OUTR6},
-   {ID2_END|ID2_OUTR6,    ID2_END|ID2_OUTR6,    ID2_END|ID2_OUTR6,    ID2_END|ID2_OUTR6},
-   {ID2_CENTER|ID2_OUTR6, ID2_CENTER|ID2_OUTR6, ID2_CENTER|ID2_OUTR6, ID2_CENTER|ID2_OUTR6},
-   {ID2_CENTER|ID2_CTR2,  ID2_CENTER|ID2_CTR2,  ID2_CENTER|ID2_CTR2,  ID2_CENTER|ID2_CTR2}};
-
-Private uint32 bit_table_dhrglass[][4] = {
-   {ID2_END|ID2_OUTR6|ID2_LEAD,    ID2_END|ID2_OUTR6|ID2_BEAU,    ID2_END|ID2_OUTR6|ID2_TRAILER,    ID2_END|ID2_OUTR6|ID2_BELLE},
-   {ID2_END|ID2_OUTR6|ID2_LEAD,    ID2_END|ID2_OUTR6|ID2_BEAU,    ID2_END|ID2_OUTR6|ID2_TRAILER,    ID2_END|ID2_OUTR6|ID2_BELLE},
-   {ID2_CENTER|ID2_OUTR6,          ID2_CENTER|ID2_OUTR6,          ID2_CENTER|ID2_OUTR6,             ID2_CENTER|ID2_OUTR6},
-   {ID2_CENTER|ID2_CTR2|ID2_LEAD,  ID2_CENTER|ID2_CTR2|ID2_BEAU,  ID2_CENTER|ID2_CTR2|ID2_TRAILER,  ID2_CENTER|ID2_CTR2|ID2_BELLE},
-   {ID2_END|ID2_OUTR6|ID2_TRAILER, ID2_END|ID2_OUTR6|ID2_BELLE,   ID2_END|ID2_OUTR6|ID2_LEAD,       ID2_END|ID2_OUTR6|ID2_BEAU},
-   {ID2_END|ID2_OUTR6|ID2_TRAILER, ID2_END|ID2_OUTR6|ID2_BELLE,   ID2_END|ID2_OUTR6|ID2_LEAD,       ID2_END|ID2_OUTR6|ID2_BEAU},
-   {ID2_CENTER|ID2_OUTR6,          ID2_CENTER|ID2_OUTR6,          ID2_CENTER|ID2_OUTR6,             ID2_CENTER|ID2_OUTR6},
-   {ID2_CENTER|ID2_CTR2|ID2_TRAILER,ID2_CENTER|ID2_CTR2|ID2_BELLE,ID2_CENTER|ID2_CTR2|ID2_LEAD,     ID2_CENTER|ID2_CTR2|ID2_BEAU}};
-
-Private uint32 bit_table_bigdmd[][4] = {
-   {ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS},
-   {ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS},
-   {ID2_CTR4,      ID2_CTR4,      ID2_CTR4,      ID2_CTR4},
-   {ID2_CTR4,      ID2_CTR4,      ID2_CTR4,      ID2_CTR4},
-   {ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS},
-   {ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS},
-   {ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS},
-   {ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS},
-   {ID2_CTR4,      ID2_CTR4,      ID2_CTR4,      ID2_CTR4},
-   {ID2_CTR4,      ID2_CTR4,      ID2_CTR4,      ID2_CTR4},
-   {ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS},
-   {ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS}};
-
-Private uint32 bit_table_spindle[][4] = {
-   {ID2_CTR6|ID2_OUTR6,    ID2_CTR6|ID2_OUTR6,    ID2_CTR6|ID2_OUTR6,    ID2_CTR6|ID2_OUTR6},
-   {ID2_CTR6|ID2_CTR2,     ID2_CTR6|ID2_CTR2,     ID2_CTR6|ID2_CTR2,     ID2_CTR6|ID2_CTR2},
-   {ID2_CTR6|ID2_OUTR6,    ID2_CTR6|ID2_OUTR6,    ID2_CTR6|ID2_OUTR6,    ID2_CTR6|ID2_OUTR6},
-   {ID2_OUTR2|ID2_OUTR6,   ID2_OUTR2|ID2_OUTR6,   ID2_OUTR2|ID2_OUTR6,   ID2_OUTR2|ID2_OUTR6},
-   {ID2_CTR6|ID2_OUTR6,    ID2_CTR6|ID2_OUTR6,    ID2_CTR6|ID2_OUTR6,    ID2_CTR6|ID2_OUTR6},
-   {ID2_CTR6|ID2_CTR2,     ID2_CTR6|ID2_CTR2,     ID2_CTR6|ID2_CTR2,     ID2_CTR6|ID2_CTR2},
-   {ID2_CTR6|ID2_OUTR6,    ID2_CTR6|ID2_OUTR6,    ID2_CTR6|ID2_OUTR6,    ID2_CTR6|ID2_OUTR6},
-   {ID2_OUTR2|ID2_OUTR6,   ID2_OUTR2|ID2_OUTR6,   ID2_OUTR2|ID2_OUTR6,   ID2_OUTR2|ID2_OUTR6}};
-
-Private uint32 bit_table_rigger[][4] = {
-   {ID2_CTR6|ID2_CENTER|ID2_CTR4|ID2_BOX0,     ID2_CTR6|ID2_CENTER|ID2_CTR4|ID2_BOX3,  ID2_CTR6|ID2_CENTER|ID2_CTR4|ID2_BOX2, ID2_CTR6|ID2_CENTER|ID2_CTR4|ID2_BOX1},
-   {ID2_CTR6|ID2_CENTER|ID2_CTR4|ID2_BOX1,    ID2_CTR6|ID2_CENTER|ID2_CTR4|ID2_BOX0,     ID2_CTR6|ID2_CENTER|ID2_CTR4|ID2_BOX3,  ID2_CTR6|ID2_CENTER|ID2_CTR4|ID2_BOX2},
-   {ID2_OUTR2|ID2_END|ID2_OUTRPAIRS|ID2_BELLE,          ID2_OUTR2|ID2_END|ID2_OUTRPAIRS|ID2_LEAD,           ID2_OUTR2|ID2_END|ID2_OUTRPAIRS|ID2_BEAU,           ID2_OUTR2|ID2_END|ID2_OUTRPAIRS|ID2_TRAILER},
-   {ID2_CTR6|ID2_END|ID2_OUTRPAIRS|ID2_BEAU,            ID2_CTR6|ID2_END|ID2_OUTRPAIRS|ID2_TRAILER,         ID2_CTR6|ID2_END|ID2_OUTRPAIRS|ID2_BELLE,           ID2_CTR6|ID2_END|ID2_OUTRPAIRS|ID2_LEAD},
-   {ID2_CTR6|ID2_CENTER|ID2_CTR4|ID2_BOX2, ID2_CTR6|ID2_CENTER|ID2_CTR4|ID2_BOX1,    ID2_CTR6|ID2_CENTER|ID2_CTR4|ID2_BOX0,     ID2_CTR6|ID2_CENTER|ID2_CTR4|ID2_BOX3},
-   {ID2_CTR6|ID2_CENTER|ID2_CTR4|ID2_BOX3,  ID2_CTR6|ID2_CENTER|ID2_CTR4|ID2_BOX2, ID2_CTR6|ID2_CENTER|ID2_CTR4|ID2_BOX1,    ID2_CTR6|ID2_CENTER|ID2_CTR4|ID2_BOX0},
-   {ID2_OUTR2|ID2_END|ID2_OUTRPAIRS|ID2_BEAU,           ID2_OUTR2|ID2_END|ID2_OUTRPAIRS|ID2_TRAILER,        ID2_OUTR2|ID2_END|ID2_OUTRPAIRS|ID2_BELLE,          ID2_OUTR2|ID2_END|ID2_OUTRPAIRS|ID2_LEAD},
-   {ID2_CTR6|ID2_END|ID2_OUTRPAIRS|ID2_BELLE,           ID2_CTR6|ID2_END|ID2_OUTRPAIRS|ID2_LEAD,            ID2_CTR6|ID2_END|ID2_OUTRPAIRS|ID2_BEAU,            ID2_CTR6|ID2_END|ID2_OUTRPAIRS|ID2_TRAILER}};
-
-Private uint32 bit_table_3x1dmd[][4] = {
-   {ID2_OUTR2|ID2_OUTR6|ID2_OUTRPAIRS|ID2_END|ID2_BEAU,    ID2_OUTR2|ID2_OUTR6|ID2_OUTRPAIRS|ID2_END|ID2_TRAILER, ID2_OUTR2|ID2_OUTR6|ID2_OUTRPAIRS|ID2_END|ID2_BELLE, ID2_OUTR2|ID2_OUTR6|ID2_OUTRPAIRS|ID2_END|ID2_LEAD},
-   {ID2_CTR6|ID2_OUTR6|ID2_OUTRPAIRS|ID2_END|ID2_BELLE,    ID2_CTR6|ID2_OUTR6|ID2_OUTRPAIRS|ID2_END|ID2_LEAD,     ID2_CTR6|ID2_OUTR6|ID2_OUTRPAIRS|ID2_END|ID2_BEAU,   ID2_CTR6|ID2_OUTR6|ID2_OUTRPAIRS|ID2_END|ID2_TRAILER},
-   {ID2_CTR2|ID2_CTR6|ID2_CTR4|ID2_CENTER|ID2_BEAU,        ID2_CTR2|ID2_CTR6|ID2_CTR4|ID2_CENTER|ID2_TRAILER,     ID2_CTR2|ID2_CTR6|ID2_CTR4|ID2_CENTER|ID2_BELLE,     ID2_CTR2|ID2_CTR6|ID2_CTR4|ID2_CENTER|ID2_LEAD},
-   {ID2_CTR6|ID2_OUTR6|ID2_CTR4|ID2_CENTER,                ID2_CTR6|ID2_OUTR6|ID2_CTR4|ID2_CENTER,                ID2_CTR6|ID2_OUTR6|ID2_CTR4|ID2_CENTER,              ID2_CTR6|ID2_OUTR6|ID2_CTR4|ID2_CENTER},
-   {ID2_OUTR2|ID2_OUTR6|ID2_OUTRPAIRS|ID2_END|ID2_BELLE,   ID2_OUTR2|ID2_OUTR6|ID2_OUTRPAIRS|ID2_END|ID2_LEAD,    ID2_OUTR2|ID2_OUTR6|ID2_OUTRPAIRS|ID2_END|ID2_BEAU,  ID2_OUTR2|ID2_OUTR6|ID2_OUTRPAIRS|ID2_END|ID2_TRAILER},
-   {ID2_CTR6|ID2_OUTR6|ID2_OUTRPAIRS|ID2_END|ID2_BEAU,     ID2_CTR6|ID2_OUTR6|ID2_OUTRPAIRS|ID2_END|ID2_TRAILER,  ID2_CTR6|ID2_OUTR6|ID2_OUTRPAIRS|ID2_END|ID2_BELLE,  ID2_CTR6|ID2_OUTR6|ID2_OUTRPAIRS|ID2_END|ID2_LEAD},
-   {ID2_CTR2|ID2_CTR6|ID2_CTR4|ID2_CENTER|ID2_BELLE,       ID2_CTR2|ID2_CTR6|ID2_CTR4|ID2_CENTER|ID2_LEAD,        ID2_CTR2|ID2_CTR6|ID2_CTR4|ID2_CENTER|ID2_BEAU,      ID2_CTR2|ID2_CTR6|ID2_CTR4|ID2_CENTER|ID2_TRAILER},
-   {ID2_CTR6|ID2_OUTR6|ID2_CTR4|ID2_CENTER,                ID2_CTR6|ID2_OUTR6|ID2_CTR4|ID2_CENTER,                ID2_CTR6|ID2_OUTR6|ID2_CTR4|ID2_CENTER,              ID2_CTR6|ID2_OUTR6|ID2_CTR4|ID2_CENTER}};
-
-Private uint32 bit_table_bone[][4] = {
-   {ID2_END|ID2_OUTRPAIRS|ID2_OUTR6|ID2_LEAD,    ID2_END|ID2_OUTRPAIRS|ID2_OUTR6|ID2_BEAU,  ID2_END|ID2_OUTRPAIRS|ID2_OUTR6|ID2_TRAILER,  ID2_END|ID2_OUTRPAIRS|ID2_OUTR6|ID2_BELLE},
-   {ID2_END|ID2_OUTRPAIRS|ID2_OUTR6|ID2_LEAD,    ID2_END|ID2_OUTRPAIRS|ID2_OUTR6|ID2_BEAU,  ID2_END|ID2_OUTRPAIRS|ID2_OUTR6|ID2_TRAILER,  ID2_END|ID2_OUTRPAIRS|ID2_OUTR6|ID2_BELLE},
-   {ID2_CENTER|ID2_CTR4|ID2_OUTR6|ID2_BELLE,     ID2_CENTER|ID2_CTR4|ID2_OUTR6|ID2_LEAD,    ID2_CENTER|ID2_CTR4|ID2_OUTR6|ID2_BEAU,   ID2_CENTER|ID2_CTR4|ID2_OUTR6|ID2_TRAILER},
-   {ID2_CENTER|ID2_CTR4|ID2_CTR2|ID2_BEAU,       ID2_CENTER|ID2_CTR4|ID2_CTR2|ID2_TRAILER,  ID2_CENTER|ID2_CTR4|ID2_CTR2|ID2_BELLE,   ID2_CENTER|ID2_CTR4|ID2_CTR2|ID2_LEAD},
-   {ID2_END|ID2_OUTRPAIRS|ID2_OUTR6|ID2_TRAILER, ID2_END|ID2_OUTRPAIRS|ID2_OUTR6|ID2_BELLE, ID2_END|ID2_OUTRPAIRS|ID2_OUTR6|ID2_LEAD, ID2_END|ID2_OUTRPAIRS|ID2_OUTR6|ID2_BEAU},
-   {ID2_END|ID2_OUTRPAIRS|ID2_OUTR6|ID2_TRAILER, ID2_END|ID2_OUTRPAIRS|ID2_OUTR6|ID2_BELLE, ID2_END|ID2_OUTRPAIRS|ID2_OUTR6|ID2_LEAD, ID2_END|ID2_OUTRPAIRS|ID2_OUTR6|ID2_BEAU},
-   {ID2_CENTER|ID2_CTR4|ID2_OUTR6|ID2_BEAU,      ID2_CENTER|ID2_CTR4|ID2_OUTR6|ID2_TRAILER, ID2_CENTER|ID2_CTR4|ID2_OUTR6|ID2_BELLE,  ID2_CENTER|ID2_CTR4|ID2_OUTR6|ID2_LEAD},
-   {ID2_CENTER|ID2_CTR4|ID2_CTR2|ID2_BELLE,      ID2_CENTER|ID2_CTR4|ID2_CTR2|ID2_LEAD,     ID2_CENTER|ID2_CTR4|ID2_CTR2|ID2_BEAU,    ID2_CENTER|ID2_CTR4|ID2_CTR2|ID2_TRAILER}};
-
 
 #define BITS_TO_CLEAR (ID2_LEAD|ID2_TRAILER|ID2_BEAU|ID2_BELLE|ID2_CENTER|ID2_END|ID2_CTR2|ID2_CTR6|ID2_OUTR2|ID2_OUTR6|ID2_CTR4|ID2_OUTRPAIRS)
 #define GLOB_BITS_TO_CLEAR (ID2_NEARCOL|ID2_NEARLINE|ID2_NEARBOX|ID2_FARCOL|ID2_FARLINE|ID2_FARBOX|ID2_HEADLINE|ID2_SIDELINE)
@@ -264,13 +94,11 @@ Private uint32 bit_table_bone[][4] = {
 
 
 
-typedef uint32 bit_table[4];
-
 extern void update_id_bits(setup *ss)
 {
    int i;
    uint32 livemask, j;
-   bit_table *ptr;
+   id_bit_table *ptr;
    
    for (i=0,j=1,livemask=0 ; i<=setup_attrs[ss->kind].setup_limits ; i++,j<<=1) {
       if (ss->people[i].id1) livemask |= j;
@@ -278,48 +106,22 @@ extern void update_id_bits(setup *ss)
    }
 
    switch (ss->kind) {
-      case s1x2:
-         ptr = bit_table_1x2; break;
-      case s1x4:
-         ptr = bit_table_1x4; break;
-      case s2x2:
-         ptr = bit_table_2x2; break;
-      case s2x4:
-         ptr = bit_table_2x4; break;
       case s2x6:
          /* **** This isn't really right -- it would allow "outer pairs bingo".
             We really should only allow 2-person calls, unless we say
             "outer triple boxes".  So we're not completely sure what the right thing is. */
-         if (livemask == 0x3CFUL || livemask == 0xF3CUL)
-            { ptr = bit_table_2x6p; break; }
-         return;
-      case s1x8:
-         ptr = bit_table_1x8; break;
-      case s_qtag:
-         ptr = bit_table_qtag; break;
-      case s_ptpd:
-         ptr = bit_table_ptpd; break;
-      case s_crosswave:
-         ptr = bit_table_crosswave; break;
-      case s_hrglass:
-         ptr = bit_table_hrglass; break;
-      case s_dhrglass:
-         ptr = bit_table_dhrglass; break;
-      case s_spindle:
-         ptr = bit_table_spindle; break;
+         if (livemask != 0x3CFUL && livemask != 0xF3CUL) return;
+         break;
       case sbigdmd:
-         ptr = bit_table_bigdmd; break;
-      case s_rigger:
-         ptr = bit_table_rigger; break;
-      case s_galaxy:
-         ptr = bit_table_gal; break;
-      case s3x1dmd:
-         ptr = bit_table_3x1dmd; break;
-      case s_bone:
-         ptr = bit_table_bone; break;
-      default:
-         return;
+         if (livemask != 0xF3CUL && livemask != 0x3CFUL) return;
+         break;
+      case s3x4:
+         if (livemask != 0xF3CUL && livemask != 0xCF3UL) return;
+         break;
    }
+
+   ptr = setup_attrs[ss->kind].id_bit_table_ptr;
+   if (!ptr) return;
 
    for (i=0; i<=setup_attrs[ss->kind].setup_limits; i++) {
       if (ss->people[i].id1 & BIT_PERSON)
@@ -387,11 +189,15 @@ Private expand_thing step_2x2h_stuff = {{0, 1, 2, 3}, 4, nothing, s1x4, 1};
 Private expand_thing step_8ch_stuff = {{7, 6, 0, 1, 3, 2, 4, 5}, 8, nothing, s2x4, 1};
 Private expand_thing step_li_stuff = {{1, 2, 7, 4, 5, 6, 3, 0}, 8, nothing, s1x8, 0};
 Private expand_thing step_tby_stuff = {{5, 6, 7, 0, 1, 2, 3, 4}, 8, nothing, s_qtag, 1};
+Private expand_thing step_2x4_rig_stuff = {{7, 0, 1, 2, 3, 4, 5, 6}, 8, nothing, s_rigger, 0};
 Private expand_thing step_bone_stuff = {{1, 4, 7, 6, 5, 0, 3, 2}, 8, nothing, s1x8, 0};
+Private expand_thing step_bone_rigstuff = {{7, 2, 4, 1, 3, 6, 0, 5}, 8, nothing, s_rigger, 0};
 Private expand_thing step_rig_stuff = {{2, 7, 4, 5, 6, 3, 0, 1}, 8, nothing, s1x8, 0};
 Private expand_thing step_bigd_stuff1 = {{0, 1, 3, 2, -1, -1, 6, 7, 9, 8, -1, -1}, 12, nothing, s2x6, 0};
 Private expand_thing step_bigd_stuff2 = {{-1, -1, 3, 2, 4, 5, -1, -1, 9, 8, 10, 11}, 12, nothing, s2x6, 0};
 Private expand_thing step_tgl4_stuff = {{2, 3, 0, 1}, 4, nothing, s1x4, 1};
+Private expand_thing step_dmd_stuff = {{0, 3, 2, 1}, 4, nothing, s1x4, 0};
+Private expand_thing step_qtgctr_stuff = {{7, 0, 2, 1, 3, 4, 6, 5}, 8, nothing, s2x4, 1};
 
 Private full_expand_thing step_1x8_pair      = {warn__none,       0, &step_1x8_stuff};
 Private full_expand_thing step_1x4_side_pair = {warn__none,       0, &step_1x4_side_stuff};
@@ -401,12 +207,16 @@ Private full_expand_thing step_2x2h_pair     = {warn__none,       1, &step_2x2h_
 Private full_expand_thing step_8ch_pair      = {warn__none,       0, &step_8ch_stuff};
 Private full_expand_thing step_li_pair       = {warn__none,       0, &step_li_stuff};
 Private full_expand_thing step_tby_pair      = {warn__none,       0, &step_tby_stuff};
+Private full_expand_thing step_2x4_rig_pair  = {warn__some_touch, 0, &step_2x4_rig_stuff};
 Private full_expand_thing step_1x2_pair      = {warn__none,       0, &step_1x2_stuff};
 Private full_expand_thing step_bone_pair     = {warn__some_touch, 0, &step_bone_stuff};
+Private full_expand_thing step_bone_rigpair  = {warn__none      , 0, &step_bone_rigstuff};
 Private full_expand_thing step_rig_pair      = {warn__some_touch, 0, &step_rig_stuff};
 Private full_expand_thing step_bigd_pair1    = {warn__some_touch, 0, &step_bigd_stuff1};
 Private full_expand_thing step_bigd_pair2    = {warn__some_touch, 0, &step_bigd_stuff2};
 Private full_expand_thing step_tgl4_pair     = {warn__some_touch, 0, &step_tgl4_stuff};
+Private full_expand_thing step_dmd_pair      = {warn__some_touch, 0, &step_dmd_stuff};
+Private full_expand_thing step_qtgctr_pair   = {warn__some_touch, 0, &step_qtgctr_stuff};
 
 
 
@@ -550,50 +360,70 @@ extern void touch_or_rear_back(
             }
             break;
          case s2x4:
-            if ((livemask == 0xFFFFUL) && (directions == 0x77DDUL)) {
+            if ((livemask == 0xFFFFUL) && (directions == 0x77DDUL))
                tptr = &step_8ch_pair;         /* Check for stepping to parallel waves from an 8 chain. */
-            }
-            else if ((livemask == 0xFFFFUL) && (directions == 0xAA00UL)) {
+            else if ((livemask == 0xFFFFUL) && (directions == 0xAA00UL))
                tptr = &step_li_pair;          /* Check for stepping to a grand wave from lines facing. */
-            }
-            else if ((livemask == 0xFFFFUL) && ((directions == 0xDD77UL) || (directions == 0x5FF5UL))) {
+            else if ((livemask == 0xFFFFUL) && ((directions == 0xDD77UL) || (directions == 0x5FF5UL)))
                tptr = &step_tby_pair;         /* Check for stepping to a 1/4 tag or 3/4 tag from a DPT or trade-by. */
-            }
+            else if ((livemask == 0xFFFFUL) && (directions == 0x963CUL))
+               tptr = &step_2x4_rig_pair;         /* Check for stepping to rigger from suitable T-bone. */
+            else if ((livemask == 0xC3C3UL) && (directions == 0x8200UL))
+               tptr = &step_2x4_rig_pair;        /* Same, with missing people. */
+            else if ((livemask == 0x3C3CUL) && (directions == 0x143CUL))
+               tptr = &step_2x4_rig_pair;        /* Same, with missing people. */
             else if ((callflags1 & CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK) && did_mirror) {
                if ((directions & livemask) != (0x2288UL & livemask) && (directions & livemask) != (0x55FFUL & livemask))
                   fail("Setup is not left-handed.");
             }
             break;
          case s_bone:
-            if (livemask == 0xFFFFUL && (directions == 0xA802UL)) {
-               /* Ends touch from a "bone" to a grand wave. */
-               tptr = &step_bone_pair;
+            if (livemask == 0xFFFFUL && (directions == 0xA802UL))
+               tptr = &step_bone_pair;           /* Ends touch from a "bone" to a grand wave. */
+            else if (livemask == 0xFFFFUL && (directions == 0xAD07UL))
+               tptr = &step_bone_rigpair;        /* All touch from a "bone" to a rigger. */
+            else if (livemask == 0xF0F0UL && (directions == 0xA000UL))
+               tptr = &step_bone_rigpair;        /* Same, with missing people. */
+            else if (livemask == 0x0F0FUL && (directions == 0x0D07UL))
+               tptr = &step_bone_rigpair;        /* Same, with missing people. */
+            else if ((callflags1 & CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK) && did_mirror) {
+               if ((directions & livemask) != (0x58F2UL & livemask))
+                  fail("Setup is not left-handed.");
             }
             break;
          case s_rigger:
-            if (livemask == 0xFFFFUL && (directions == 0xA802UL)) {
-               /* Centers touch from a "rigger" to a grand wave. */
-               tptr = &step_rig_pair;
+            if (livemask == 0xFFFFUL && (directions == 0xA802UL))
+               tptr = &step_rig_pair;          /* Centers touch from a "rigger" to a grand wave. */
+            else if (livemask == 0xF0F0UL && (directions == 0xA000UL))
+               tptr = &step_rig_pair;         /* Same, with missing people. */
+            else if (livemask == 0x0F0FUL && (directions == 0x0802UL))
+               tptr = &step_rig_pair;         /* Same, with missing people. */
+            else if ((callflags1 & CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK) && did_mirror) {
+               if ((directions & livemask) != (0x58F2UL & livemask))
+                  fail("Setup is not left-handed.");
             }
             break;
          case sbigdmd:
             /* Some people touch from horrible "T"'s. */
-            if (livemask == 0xFF0FF0UL && directions == 0x280820UL) {
+            if (livemask == 0xFF0FF0UL && directions == 0x280820UL)
                tptr = &step_bigd_pair1;
-            }
-            else if (livemask == 0x0FF0FFUL && directions == 0x082028UL) {
+            else if (livemask == 0x0FF0FFUL && directions == 0x082028UL)
                tptr = &step_bigd_pair2;
-            }
             break;
          case s_trngl4:
-            if (livemask == 0xFFUL && (directions == 0xD7UL)) {
+            if (livemask == 0xFFUL && (directions == 0xD7UL))
                tptr = &step_tgl4_pair;
-            }
+            break;
+         case sdmd:
+            /* This operation is very peculiar -- we don't allow it for calls like "spin the top". */
+            if (  (livemask & 0x33UL) == 0x33UL &&
+                  ((directions ^ 0xA0UL) & livemask) == 0 &&
+                  !(callflags1 & CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK))
+               tptr = &step_dmd_pair;
             break;
          case s1x2:
-            if ((livemask == 0xFUL) && (directions == 0x7UL)) {
+            if ((livemask == 0xFUL) && (directions == 0x7UL))
                tptr = &step_1x2_pair;         /* Check for stepping to a miniwave from people facing. */
-            }
             else if ((callflags1 & CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK) && did_mirror) {
                if ((directions & livemask) != (0x2UL & livemask))
                   fail("Setup is not left-handed.");
@@ -620,16 +450,24 @@ extern void touch_or_rear_back(
             }
             break;
          case s1x8:
-            if ((livemask == 0xFFFFUL) && (directions == 0x7DD7UL)) {
+            if ((livemask == 0xFFFFUL) && (directions == 0x7DD7UL))
                tptr = &step_1x8_pair;         /* Check for stepping to a column from a 1x8 single 8 chain. */
-            }
+            else if ((livemask == 0xF0F0UL) && (directions == 0x70D0UL))
+               tptr = &step_1x8_pair;         /* Same, with missing people. */
+            else if ((livemask == 0x0F0FUL) && (directions == 0x0D07UL))
+               tptr = &step_1x8_pair;         /* Same, with missing people. */
             else if ((callflags1 & CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK) && did_mirror) {
                if ((directions & livemask) != (0x2882UL & livemask))
                   fail("Setup is not left-handed.");
             }
             break;
          case s_qtag:
-            if ((callflags1 & CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK) && did_mirror) {
+            /* This operation is very peculiar -- we don't allow it for calls like "spin the top". */
+            if (  (livemask & 0x0F0FUL) == 0x0F0FUL &&
+                  ((directions ^ 0xFD57UL) & livemask) == 0 &&
+                  !(callflags1 & CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK))
+               tptr = &step_qtgctr_pair;
+            else if ((callflags1 & CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK) && did_mirror) {
                if ((directions & livemask & 0x0F0F) != (0x0802UL & livemask))
                   fail("Setup is not left-handed.");
             }
@@ -1356,10 +1194,12 @@ extern void toplevelmove(void)
       written_history_items = history_ptr;
 
    starting_setup.cmd.cmd_misc_flags = 0;
+   starting_setup.cmd.cmd_misc2_flags = 0;
    starting_setup.cmd.cmd_frac_flags = 0;
    starting_setup.cmd.cmd_assume.assumption = cr_none;
    starting_setup.cmd.cmd_assume.assump_cast = 0;
    starting_setup.cmd.prior_elongation_bits = 0;
+   starting_setup.cmd.skippable_concept = (parse_block *) 0;
    newhist->warnings.bits[0] = 0;
    newhist->warnings.bits[1] = 0;
 
@@ -1485,6 +1325,8 @@ extern void toplevelmove(void)
    starting_setup.cmd.callspec = NULLCALLSPEC;
    starting_setup.cmd.cmd_final_flags = 0;
    move(&starting_setup, FALSE, &new_setup);
+   if (new_setup.kind == s1p5x8)
+      fail("Can't go into a 50% offset 1x8.");
 
    /* Remove outboard phantoms from the resulting setup. */
 

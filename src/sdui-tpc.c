@@ -26,20 +26,18 @@ static char text_buffer[10000];  /* This is *NOT* normally padded with a null.  
                                              when we need to display it. */
 static int lines_in_buffer;  /* Number of "newline" characters in the buffer. */
 
-extern void ttu_process_command_line(int *argcp, char ***argvp)
+extern void ttu_process_command_line(int *argcp, char **argv)
 {
    int i;
    int argno = 1;
    int triangles = 1;
-   char **argv = *argvp;
 
    while (argno < (*argcp)) {
-      if (strcmp(argv[argno], "-no_cursor") == 0) {
+      if (strcmp(argv[argno], "-no_line_delete") == 0) ;   /* ignore this */
+      else if (strcmp(argv[argno], "-no_cursor") == 0)
          no_cursor = 1;
-      }
-      else if (strcmp(argv[argno], "-no_graphics") == 0) {
+      else if (strcmp(argv[argno], "-no_graphics") == 0)
          triangles = 0;
-      }
       else if (strcmp(argv[argno], "-lines") == 0 && argno+1 < (*argcp)) {
          screen_height = atoi(argv[argno+1]);
          (*argcp) -= 2;      /* Remove two arguments from the list. */
@@ -59,6 +57,13 @@ extern void ttu_process_command_line(int *argcp, char ***argvp)
       to the "pointy triangles" for drawing pictures. */
    if (triangles)
       ui_directions = "?\020?\021????\036?\037?????";
+}
+
+extern void ttu_display_help(void)
+{
+   printf("-lines <N>                  assume this many lines on the screen\n");
+   printf("-no_cursor                  do not use screen management functions\n");
+   printf("-no_graphics                do not use special characters for showing facing directions\n");
 }
 
 extern void ttu_initialize(void)

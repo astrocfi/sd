@@ -317,6 +317,8 @@ char *sstab[] = {
    "thar",
    "ptpd",
    "pptpd",
+   "1x3dmd",
+   "p1x3dmd",
    "3x1dmd",
    "p3x1dmd",
    "3dmd",
@@ -356,6 +358,7 @@ char *estab[] = {
    "1x6",
    "3x4",
    "2x6",
+   "???",
    "2x8",
    "4x4",
    "???",
@@ -366,6 +369,7 @@ char *estab[] = {
    "c1phan",
    "bigblob",
    "ptpd",
+   "1x3dmd",
    "3x1dmd",
    "3dmd",
    "4dmd",
@@ -395,6 +399,8 @@ char *schematab[] = {
    "maybesingleconc",
    "maybesinglecrossconc",
    "conc_diamond_line",
+   "conc_diamonds",
+   "crossconc_diamonds",
    "conc6_2",
    "conc2_6",
    "conc6_2_tgl",
@@ -425,6 +431,7 @@ char *qualtab[] = {
    "2fl_only",
    "3x3couples_only",
    "4x4couples_only",
+   "magic_only",
    "in_or_out",
    "miniwaves",
    "right_wave",
@@ -533,7 +540,7 @@ char *flagtab1[] = {
    "need_four_numbers",
    "sequence_starter",
    "split_like_square_thru",
-   "???",
+   "distribute_repetitions",
    "left_means_touch_or_check",
    "can_be_fan",
    "yield_if_ambiguous",
@@ -541,6 +548,7 @@ char *flagtab1[] = {
    "base_tag_call_0",
    "base_tag_call_1",      /* The constant "base_tag_call_2" is elsewhere. */
    "base_tag_call_3",
+   "base_circ_call",
    ""};
 
 /* The next three tables are all in step with each other, and with the "heritable" flags. */
@@ -772,8 +780,6 @@ char *predtab[] = {
    "q_line_back",
    ""};
 
-#define N_INITIAL_TAGS 7
-
 /* The "tag table" is the table that we use to bind together things like
 
             "seq flipdiamond []"
@@ -788,12 +794,8 @@ char *predtab[] = {
    its own copy of the table, containing pointers to the actual call
    descriptors. */
 
-int tagtabsize = N_INITIAL_TAGS;  /* Number of items we currently have in tagtab -- we initially have 7; see below. */
-int tagtabmax = 100;              /* Amount of space allocated for tagtab; must be >= tagtabsize at all times, obviously. */
-
-tagtabitem *tagtab;      /* The dynamically allocated tag list. */
-
-/* BEWARE!!  These must track the definitions BASE_CALL_??? in database.h . */
+/* BEWARE!!  These must track the definitions of BASE_CALL_??? in database.h ,
+   and constant N_INITIAL_TAGS must be the number of items in this list. */
 tagtabitem tagtabinit[] = {
       {1, "+++"},            /* Must be unused -- call #0 signals end of list in sequential encoding. */
       {0, "nullcall"},       /* Must be #1 -- the database initializer uses call #1 for any mandatory
@@ -804,7 +806,14 @@ tagtabitem tagtabinit[] = {
       {0, "tagnullcall0"},   /* These 4 must be consecutive. */
       {0, "tagnullcall1"},
       {0, "tagnullcall2"},
-      {0, "tagnullcall3"}};
+      {0, "tagnullcall3"},
+      {0, "circnullcall"}};
+#define N_INITIAL_TAGS 9
+
+int tagtabsize = N_INITIAL_TAGS;  /* Number of items we currently have in tagtab -- we initially have 7; see below. */
+int tagtabmax = 100;              /* Amount of space allocated for tagtab; must be >= tagtabsize at all times, obviously. */
+tagtabitem *tagtab;      /* The dynamically allocated tag list. */
+
 
 int eof;
 int chars_left;

@@ -184,7 +184,7 @@ Private void do_c1_phantom_move(
 
       uint32 what_we_need = 0;
 
-      if (junk_concepts != 0)
+      if (junk_concepts)
          fail("Phantom couples/tandem must not have intervening concpets.");
 
       /* "Phantom tandem" has a higher level than either "phantom" or "tandem". */
@@ -1781,11 +1781,13 @@ Private void do_concept_assume_waves(
          switch (ss->kind) {     /* "assume miniwaves" or "assume normal boxes" */
             case s1x2: goto check_it;
             case s2x2: goto check_it;
+            case s2x4: goto check_it;
          }
       }
       else if (t.assumption == cr_magic_only) {
          switch (ss->kind) {     /* "assume inverted boxes" */
             case s2x2: goto check_it;
+            case s2x4: goto check_it;
          }
       }
    }
@@ -1894,17 +1896,17 @@ Private void do_concept_central(
    parse_block *parseptr,
    setup *result)
 {
-   if (ss->cmd.cmd_misc_flags & CMD_MISC__CENTRAL_MASK)
+   if (ss->cmd.cmd_misc2_flags & CMD_MISC2__CENTRAL_MASK)
       fail("Only one of central, snag, and mystic is allowed.");
 
-   if (parseptr->concept->value.arg1 == CMD_MISC__CENTRAL_PLAIN) {
+   if (parseptr->concept->value.arg1 == CMD_MISC2__CENTRAL_PLAIN) {
       if (setup_attrs[ss->kind].setup_limits == 7)
          ss->cmd.cmd_misc_flags |= CMD_MISC__MUST_SPLIT;
       else if (setup_attrs[ss->kind].setup_limits != 3)
          fail("Need a 4 or 8 person setup for this.");
    }
 
-   ss->cmd.cmd_misc_flags |= parseptr->concept->value.arg1;
+   ss->cmd.cmd_misc2_flags |= parseptr->concept->value.arg1;
    move(ss, FALSE, result);
 }
 
@@ -1928,6 +1930,8 @@ Private void do_concept_crazy(
    }
 
    tempsetup.cmd.cmd_final_flags &= ~INHERITFLAG_REVERSE;
+   if (tempsetup.cmd.cmd_final_flags)   /* We don't allow other flags, like "cross". */
+      fail("Illegal modifier before \"crazy\".");
 
    cmd = tempsetup.cmd;    /* We will modify these flags, and, in any case, we need
                               to rematerialize them at each step. */
@@ -2022,7 +2026,7 @@ Private void do_concept_crazy(
 }
 
 
-Private void do_concept_fan_or_yoyo(
+Private void do_concept_fan(
    setup *ss,
    parse_block *parseptr,
    setup *result)
@@ -2271,6 +2275,9 @@ Private void do_concept_checkpoint(
    setup_command subsid_cmd = ss->cmd;
    subsid_cmd.parseptr = parseptr->subsidiary_root;
 
+   if (ss->cmd.cmd_final_flags & ~INHERITFLAG_REVERSE)   /* We don't allow other flags, like "cross". */
+      fail("Illegal modifier before \"checkpoint\".");
+
    if (parseptr->concept->value.arg1 || (ss->cmd.cmd_final_flags & INHERITFLAG_REVERSE)) {   /* 0 for normal, 1 for reverse checkpoint. */
       if (parseptr->concept->value.arg1 && (ss->cmd.cmd_final_flags & INHERITFLAG_REVERSE))
          fail("Redundant 'REVERSE' modifiers.");
@@ -2308,7 +2315,7 @@ Private void do_concept_sequential(
       reverse_order = zzz.reverse_order;
       do_half_of_last_part = zzz.do_half_of_last_part;
       highlimit = zzz.highlimit;
-      if (reverse_order) highlimit = highlimit-1;
+      if (reverse_order) highlimit = 1-highlimit;
       subcall_index = zzz.subcall_index;
       subcall_incr = reverse_order ? -1 : 1;
       instant_stop = zzz.instant_stop ? subcall_index*subcall_incr+1 : 99;
@@ -2446,7 +2453,7 @@ Private void do_concept_twice(
       reverse_order = zzz.reverse_order;
       do_half_of_last_part = zzz.do_half_of_last_part;
       highlimit = zzz.highlimit;
-      if (reverse_order) highlimit = highlimit-1;
+      if (reverse_order) highlimit = repetitions-highlimit-1;
       subcall_index = zzz.subcall_index;
       subcall_incr = reverse_order ? -1 : 1;
       instant_stop = zzz.instant_stop ? subcall_index*subcall_incr+1 : 99;
@@ -2804,7 +2811,7 @@ Private void do_concept_triple_boxes(
 {
    if (ss->kind != s2x6) fail("Must have a 2x6 setup for this concept.");
 
-   if ((ss->cmd.cmd_misc_flags & CMD_MISC__MYSTIFY_SPLIT) && parseptr->concept->value.arg1 != MPKIND__SPLIT)
+   if ((ss->cmd.cmd_misc2_flags & CMD_MISC2__MYSTIFY_SPLIT) && parseptr->concept->value.arg1 != MPKIND__SPLIT)
       fail("Mystic not allowed with this concept.");
 
    divided_setup_move(ss, (*map_lists[s2x2][2])[parseptr->concept->value.arg1][0], phantest_ok, TRUE, result);
@@ -2818,6 +2825,7 @@ Private void do_concept_centers_or_ends(
 {
    calldef_schema schema;
    int k = parseptr->concept->value.arg1;
+   uint32 concbits = 0;
 
    switch (k&6) {
       case 2:
@@ -2825,6 +2833,10 @@ Private void do_concept_centers_or_ends(
          break;
       case 4:
          schema = schema_concentric_2_6;
+         break;
+      case 6:
+         schema = schema_concentric;
+         concbits = DFM1_CONC_CONCENTRIC_RULES;
          break;
       default:
          if (setup_attrs[ss->kind].setup_limits == 3)
@@ -2836,7 +2848,7 @@ Private void do_concept_centers_or_ends(
 
    if (k&1)
       concentric_move(ss, (setup_command *) 0, &ss->cmd,
-               schema, 0, 0, result);
+               schema, 0, concbits, result);
    else
       concentric_move(ss, &ss->cmd, (setup_command *) 0,
                schema, 0, 0, result);
@@ -2850,6 +2862,7 @@ Private void do_concept_centers_and_ends(
 {
    calldef_schema schema;
    setup_command subsid_cmd;
+   uint32 concbits = 0;
 
    switch (parseptr->concept->value.arg1) {
       case 2:
@@ -2857,6 +2870,10 @@ Private void do_concept_centers_and_ends(
          break;
       case 3:
          schema = schema_concentric_2_6;
+         break;
+      case 7:
+         schema = schema_concentric;
+         concbits = DFM1_CONC_CONCENTRIC_RULES;
          break;
       default:
          if (setup_attrs[ss->kind].setup_limits == 3)
@@ -2868,7 +2885,7 @@ Private void do_concept_centers_and_ends(
 
    subsid_cmd = ss->cmd;
    subsid_cmd.parseptr = parseptr->subsidiary_root;
-   concentric_move(ss, &ss->cmd, &subsid_cmd, schema, 0, 0, result);
+   concentric_move(ss, &ss->cmd, &subsid_cmd, schema, 0, concbits, result);
 }
 
 
@@ -3294,32 +3311,52 @@ Private void do_concept_meta(
    parse_block *parseptr,
    setup *result)
 {
-   final_set new_final_concepts;
    parse_block *parseptrcopy;
-   parse_block *parseptrcopycopy;
-   uint32 finalresultflags = 0;
+   parse_block *parseptr_skip;
    uint32 index;
+   setup tttt;
+   concept_kind k;
+   uint32 finalresultflags = 0;
    int key = parseptr->concept->value.arg1;
    uint32 subject_props = 0;
    uint32 craziness_restraint = 0;
 
    /* key =
-      random <concept>         : 0
-      reverse random <concept> : 1
-      piecewise <concept>      : 2
-      start <concept>          : 3
-      finish                   : 4
-      reverse order            : 5
-      like a                   : 6 */
+      random <concept>          : 0
+      reverse random <concept>  : 1
+      piecewise <concept>       : 2
+      initially <concept>       : 3
+      finish                    : 4
+      reverse order             : 5
+      like a                    : 6
+      finally <concept>         : 7
+      do the Nth part <concept> : 8
+      skip the Nth part         : 9
+      shift N                   : 10 */
+
+   if (key == 0 && (ss->cmd.cmd_final_flags & INHERITFLAG_REVERSE)) {
+      key = 1;     /* "reverse" and "random"  ==>  "reverse random" */
+      ss->cmd.cmd_final_flags &= ~INHERITFLAG_REVERSE;
+   }
+
+   if (ss->cmd.cmd_final_flags)   /* Now demand that no flags remain. */
+      fail("Illegal modifier for this concept.");
 
    if (key == 4) {
       /* This is "finish".  Do the call after the first part, with the special indicator
          saying that this was invoked with "finish", so that the flag will be checked. */
 
-      if (ss->cmd.cmd_frac_flags == 0)
-         ss->cmd.cmd_frac_flags = 0x210111;
-      else if ((ss->cmd.cmd_frac_flags & 0xF0FFFF) == 0x200111)
-         ss->cmd.cmd_frac_flags += 0x010000;
+      if (!ss->cmd.cmd_frac_flags)
+         ss->cmd.cmd_frac_flags = 0x000111UL;
+
+      if (ss->cmd.cmd_frac_flags == 0x000111UL)
+         ss->cmd.cmd_frac_flags = 0x810111UL;
+      else if ((ss->cmd.cmd_frac_flags & 0xF0FFFFUL) == 0x800111UL)
+         /* If we are already doing just parts N and later, just bump N. */
+         ss->cmd.cmd_frac_flags += 0x010000UL;
+      else if ((ss->cmd.cmd_frac_flags & 0xF0FFFFUL) == 0x000111UL)
+         /* If we are already doing just parts N only, just bump N. */
+         ss->cmd.cmd_frac_flags += 0x010000UL;
       else
          fail("Can't stack meta or fractional concepts.");
 
@@ -3333,10 +3370,6 @@ Private void do_concept_meta(
       if (!ss->cmd.cmd_frac_flags)
          ss->cmd.cmd_frac_flags = 0x000111UL;
 
-      /* We don't allow the new-fangled stuff. */
-      if ((ss->cmd.cmd_frac_flags & 0xE00000) != 0)
-         fail("Can't stack meta or fractional concepts.");
-
       ss->cmd.cmd_frac_flags ^= 0x100000UL;
       move(ss, FALSE, result);
       return;
@@ -3344,8 +3377,12 @@ Private void do_concept_meta(
    else if (key == 6) {
       /* This is "like a".  Do the last part of the call. */
 
-      if (ss->cmd.cmd_frac_flags)
+      if (!ss->cmd.cmd_frac_flags)
+         ss->cmd.cmd_frac_flags = 0x000111UL;
+
+      if (ss->cmd.cmd_frac_flags != 0x000111UL)
          fail("Can't stack meta or fractional concepts.");
+
       ss->cmd.cmd_frac_flags = 0x110111;
       move(ss, FALSE, result);
       normalize_setup(result, simple_normalize);
@@ -3354,73 +3391,170 @@ Private void do_concept_meta(
 
    *result = *ss;
 
-   /* Scan the modifiers, remembering them and their end point.  The reason for this is to
-      avoid getting screwed up by a comment, which counts as a modifier.  YUK!!!!!!
-      This code used to have the beginnings of stuff to do it really right.  It isn't
-      worth it, and isn't worth holding up "random left" for.  In any case, the stupid
-      handling of comments will go away soon. */
-
-   if (ss->cmd.parseptr->concept->kind == concept_comment)
-      fail("Please don't put a comment after a meta-concept.  Sorry.");
-
-   parseptrcopy = process_final_concepts(ss->cmd.parseptr, FALSE, &new_final_concepts);
-
-   /* Find out whether the next concept (the one that will be "random" or whatever)
-      is a modifier or a "real" concept. */
-
-   if (new_final_concepts != 0) {
-      parseptrcopy = ss->cmd.parseptr; /* Lots of comment-aversion code being punted
-                                          here, but it's just too hairy, and we're
-                                          going to change all that stuff anyway. */
-   }
-   else {
-      concept_kind k = parseptrcopy->concept->kind;
-
-      if (k <= marker_end_of_list)
-         fail("Sorry, can't do this with this concept.");
-
-      /* It seems to be real.  Examine it in more detail. */
-
-      if (concept_table[k].concept_action == 0)
-         fail("Sorry, can't do this with this concept.");
-
+   if (key != 9 && key != 10) {
+      /* Scan the modifiers, remembering them and their end point.  The reason for this is to
+         avoid getting screwed up by a comment, which counts as a modifier.  YUK!!!!!!
+         This code used to have the beginnings of stuff to do it really right.  It isn't
+         worth it, and isn't worth holding up "random left" for.  In any case, the stupid
+         handling of comments will go away soon. */
+   
+      parseptrcopy = skip_one_concept(ss->cmd.parseptr);
+      k = parseptrcopy->concept->kind;
+      parseptr_skip = parseptrcopy->next;
+   
       if (k == concept_crazy || k == concept_frac_crazy || k == concept_twice)
          craziness_restraint = CMD_MISC__RESTRAIN_CRAZINESS;
-
+   
       subject_props = concept_table[k].concept_prop;
    }
 
-   if (key == 3) {
-      /* Key = 3 is special: we select the first part with the concept,
-         and then the rest of the call without the
-         concept, using a fractionalize field of [1 0 1]. */
+   if (key == 9) {
+      if (ss->cmd.cmd_frac_flags)
+         fail("Can't stack meta or fractional concepts.");
+   
+      /* Do the initial part, if any. */
 
-      setup tttt = *result;
+      if (parseptr->number > 1) {
+         tttt = *result;
+         /* Set the fractionalize field to do the first few parts of the call. */
+         tttt.cmd = ss->cmd;
+         tttt.cmd.cmd_frac_flags = ((parseptr->number-1) << 16) | 0x400111;
+         move(&tttt, FALSE, result);
+         finalresultflags |= result->result_flags;
+         normalize_setup(result, simple_normalize);
+      }
 
-      /* See the comment in "do_concept_nth_part". */
+      /* Do the final part. */
+      tttt = *result;
+      tttt.cmd = ss->cmd;
+      tttt.cmd.cmd_frac_flags = 0x800111 | (parseptr->number << 16);
+      move(&tttt, FALSE, result);
+      finalresultflags |= result->result_flags;
+      normalize_setup(result, simple_normalize);
+   }
+   else if (key == 10) {      /* shift <N> */
+      if (ss->cmd.cmd_frac_flags)
+         fail("Can't stack meta or fractional concepts.");
+   
+      /* Do the last (shifted) part. */
 
+      tttt = *result;
+      tttt.cmd = ss->cmd;
+      tttt.cmd.cmd_frac_flags = 0x800111 | (parseptr->number << 16);
+      move(&tttt, FALSE, result);
+      finalresultflags |= result->result_flags;
+      normalize_setup(result, simple_normalize);
+
+      /* Do the initial part up to the shift point. */
+
+      tttt = *result;
+      tttt.cmd = ss->cmd;
+      tttt.cmd.cmd_frac_flags = ((parseptr->number) << 16) | 0x400111;
+      move(&tttt, FALSE, result);
+      finalresultflags |= result->result_flags;
+      normalize_setup(result, simple_normalize);
+   }
+   else if (key == 8) {
       if (ss->cmd.cmd_frac_flags)
          fail("Can't stack meta or fractional concepts.");
 
-      if (subject_props & CONCPROP__SECOND_CALL)
-         fail("Can't use a concept that takes a second call.");
+      /* Do the initial part, if any, without the concept. */
 
+      if (parseptr->number > 1) {
+         tttt = *result;
+
+         /* Set the fractionalize field to do the first few parts of the call. */
+         tttt.cmd = ss->cmd;
+         tttt.cmd.cmd_frac_flags = 0x400111 | ((parseptr->number-1) << 16);
+         tttt.cmd.parseptr = parseptr_skip;
+         move(&tttt, FALSE, result);
+         finalresultflags |= result->result_flags;
+         normalize_setup(result, simple_normalize);
+      }
+
+      /* Do the part of the call that needs the concept. */
+
+      tttt = *result;
       /* Do the call with the concept. */
-      /* Set the fractionalize field to execute the first part of the call. */
+      /* Set the fractionalize field to do the Nth part. */
       tttt.cmd = ss->cmd;
-      tttt.cmd.cmd_frac_flags = 0x410111;
+
+      tttt.cmd.cmd_frac_flags = 0x000111 | (parseptr->number << 16);
       tttt.cmd.cmd_misc_flags |= craziness_restraint;
       tttt.cmd.parseptr = parseptrcopy;
       move(&tttt, FALSE, result);
       finalresultflags |= result->result_flags;
       normalize_setup(result, simple_normalize);
 
+      if (!(result->result_flags & RESULTFLAG__PARTS_ARE_KNOWN))
+         fail("Can't have 'no one' do a call.");
+
+      /* Do the final part, if there is more. */
+   
+      if (!(result->result_flags & RESULTFLAG__DID_LAST_PART)) {
+         tttt = *result;
+         tttt.cmd = ss->cmd;
+         tttt.cmd.cmd_frac_flags = 0x200111 | (parseptr->number << 16);
+         tttt.cmd.parseptr = parseptr_skip;      /* Skip over the concept. */
+         move(&tttt, FALSE, result);
+         finalresultflags |= result->result_flags;
+         normalize_setup(result, simple_normalize);
+      }
+   }
+   else if (key == 3) {
+      /* Key = 3 is special: we select the first part with the concept,
+         and then the rest of the call without the concept. */
+
+      setup tttt = *result;
+
+      if (ss->cmd.cmd_frac_flags)
+         fail("Can't stack meta or fractional concepts.");
+
+      /* Do the call with the concept. */
+      /* Set the fractionalize field to execute the first part of the call. */
+      tttt.cmd = ss->cmd;
+
+      tttt.cmd.cmd_frac_flags = 0x010111;
+      tttt.cmd.cmd_misc_flags |= craziness_restraint;
+      tttt.cmd.parseptr = parseptrcopy;
+      move(&tttt, FALSE, result);
+      finalresultflags |= result->result_flags;
+      normalize_setup(result, simple_normalize);
       tttt = *result;
       /* Do the call without the concept. */
       /* Set the fractionalize field to execute the rest of the call. */
       tttt.cmd = ss->cmd;
-      tttt.cmd.cmd_frac_flags = 0x210111;
-      tttt.cmd.parseptr = parseptrcopy->next;
+      tttt.cmd.cmd_frac_flags = 0x810111;
+      tttt.cmd.parseptr = parseptr_skip;      /* Skip over the concept. */
+      move(&tttt, FALSE, result);
+      finalresultflags |= result->result_flags;
+      normalize_setup(result, simple_normalize);
+   }
+   else if (key == 7) {
+      /* This is "finally": we select all but the last part without the concept,
+         and then the last part with the concept. */
+
+      setup tttt = *result;
+
+      if (ss->cmd.cmd_frac_flags)
+         fail("Can't stack meta or fractional concepts.");
+
+      /* Do the call without the concept. */
+      /* Set the fractionalize field to execute all but the last part of the call. */
+      tttt.cmd = ss->cmd;
+      tttt.cmd.cmd_frac_flags = 0xB10111;
+      tttt.cmd.parseptr = parseptr_skip;
+      move(&tttt, FALSE, result);
+      finalresultflags |= result->result_flags;
+      normalize_setup(result, simple_normalize);
+      tttt = *result;
+
+      /* Do the call with the concept. */
+      /* Set the fractionalize field to execute the last part of the call. */
+      tttt.cmd = ss->cmd;
+      tttt.cmd.cmd_frac_flags = 0x110111;
+      tttt.cmd.cmd_misc_flags |= craziness_restraint;
+      tttt.cmd.parseptr = parseptrcopy;
       move(&tttt, FALSE, result);
       finalresultflags |= result->result_flags;
       normalize_setup(result, simple_normalize);
@@ -3429,10 +3563,7 @@ Private void do_concept_meta(
       /* Otherwise, this is the "random", "reverse random", or "piecewise" concept.
          Repeatedly execute parts of the call, skipping the concept where required. */
 
-      if ((subject_props & CONCPROP__SECOND_CALL) && parseptrcopy->concept->kind != concept_special_sequential)
-         fail("Can't use a concept that takes a second call.");
-
-      /* We don't allow anything, under either the old or the new regime. */
+      /* We don't allow any other fractional stuff. */
 
       if (ss->cmd.cmd_frac_flags)
          fail("Can't stack meta or fractional concepts.");
@@ -3444,10 +3575,10 @@ Private void do_concept_meta(
       index = 0;
 
       do {
+         parse_block *parseptrcopycopy = parseptrcopy;
          setup tttt = *result;
 
          index++;
-         parseptrcopycopy = parseptrcopy;
          tttt.cmd = ss->cmd;
 
          /* If concept is "[reverse] random" and this is an even/odd-numbered part,
@@ -3482,126 +3613,6 @@ Private void do_concept_meta(
             fail("Can't have 'no one' do a call.");
       }
       while (!(result->result_flags & RESULTFLAG__DID_LAST_PART));
-   }
-
-   result->result_flags = finalresultflags & ~3;
-}
-
-
-Private void do_concept_nth_part(
-   setup *ss,
-   parse_block *parseptr,
-   setup *result)
-{
-   final_set new_final_concepts;
-   parse_block *parseptrcopy;
-   setup tttt;
-   uint32 finalresultflags = 0;
-   int key = parseptr->concept->value.arg1;
-
-   /* Where do we draw the line at stacking of fractionalization concepts?
-      We draw it right here.  We do not allow concepts that specifically indicate
-      part numbers to be mixed with other fractional concepts.  There is simply no
-      accepted meaning for things like "do the 3rd part tandem, interlace X with Y"
-      or "skip the 2nd part, do the last 3/4 of X".  So we do not allow any
-      fractionalization bits, and we use the old regime so that no future mixing
-      can take place. */
-
-/* ****** The above is complete bullshit, of course. */
-
-
-   if (ss->cmd.cmd_frac_flags)
-      fail("Can't stack meta or fractional concepts.");
-
-   *result = *ss;
-
-   /* key =
-      do the Nth part <concept> : 0
-      skip the Nth part         : 1 */
-
-   if (key == 1) {
-      /* Do the initial part, if any. */
-   
-      if (parseptr->number > 1) {
-         tttt = *result;
-         /* Set the fractionalize field to do the first few parts of the call. */
-         tttt.cmd = ss->cmd;
-         tttt.cmd.cmd_frac_flags = ((parseptr->number-1) << 16) | 0x400111;
-         move(&tttt, FALSE, result);
-         finalresultflags |= result->result_flags;
-         normalize_setup(result, simple_normalize);
-      }
-
-      /* Do the final part. */
-      tttt = *result;
-      /* Set the fractionalize field to [1 0 parts-to-do-first+1]. */
-      tttt.cmd = ss->cmd;
-      tttt.cmd.cmd_frac_flags = 0x200111 | (parseptr->number << 16);
-      move(&tttt, FALSE, result);
-      finalresultflags |= result->result_flags;
-      normalize_setup(result, simple_normalize);
-   }
-   else {
-      /* Scan the "final" concepts, remembering them and their end point. */
-      parseptrcopy = process_final_concepts(parseptr->next, TRUE, &new_final_concepts);
-   
-      /* These are the concepts that we are interested in. */
-   
-      if (parseptrcopy->concept->kind <= marker_end_of_list)
-         fail("Sorry, can't do this with this concept.");
-   
-      if (new_final_concepts) fail("Sorry, can't do this with this concept.");
-   
-      /* Examine the concept.  It must be a real one. */
-   
-      if (concept_table[parseptrcopy->concept->kind].concept_action == 0)
-         fail("Sorry, can't do this with this concept.");
-   
-      if (concept_table[parseptrcopy->concept->kind].concept_prop & CONCPROP__SECOND_CALL)
-         fail("Can't use a concept that takes a second call.");
-   
-      /* Do the initial part, if any, without the concept. */
-   
-      if (parseptr->number > 1) {
-         tttt = *result;
-
-         /* Set the fractionalize field to do the first few parts of the call. */
-         tttt.cmd = ss->cmd;
-         tttt.cmd.cmd_frac_flags = ((parseptr->number-1) << 16) | 0x400111;
-         tttt.cmd.parseptr = parseptrcopy->next;
-         move(&tttt, FALSE, result);
-         finalresultflags |= result->result_flags;
-         normalize_setup(result, simple_normalize);
-      }
-   
-      /* Do the part of the call that needs the concept. */
-   
-      tttt = *result;
-      /* Do the concept. */
-      /* Set the fractionalize field to do the Nth part, using the new regime. */
-      tttt.cmd = ss->cmd;
-      tttt.cmd.parseptr = parseptrcopy;
-      tttt.cmd.cmd_frac_flags = 0x000111 | (parseptr->number << 16);
-      move(&tttt, FALSE, result);
-      finalresultflags |= result->result_flags;
-      normalize_setup(result, simple_normalize);
-   
-      if (!(result->result_flags & RESULTFLAG__PARTS_ARE_KNOWN))
-         fail("Can't have 'no one' do a call.");
-
-      /* Do the final part, if there is more. */
-   
-      if (!(result->result_flags & RESULTFLAG__DID_LAST_PART)) {
-         tttt = *result;
-         /* Skip over the concept. */
-         /* Set the fractionalize field to [1 0 parts-to-do-normally+1]. */
-         tttt.cmd = ss->cmd;
-         tttt.cmd.parseptr = parseptrcopy->next;
-         tttt.cmd.cmd_frac_flags = 0x200111 | (parseptr->number << 16);
-         move(&tttt, FALSE, result);
-         finalresultflags |= result->result_flags;
-         normalize_setup(result, simple_normalize);
-      }
    }
 
    result->result_flags = finalresultflags & ~3;
@@ -3728,11 +3739,13 @@ Private void do_concept_interlace(
 
 Private int gcd(int a, int b)    /* a <= b */
 {
-   if (a==0) return b;
-   else {
-      int rem = b % a;
+   for (;;) {
+      int rem;
+      if (a==0) return b;
+      rem = b % a;
       if (rem==0) return a;
-      else return gcd(rem, a);
+      b = a;
+      a = rem;
    }
 }
 
@@ -3773,10 +3786,6 @@ Private void do_concept_fractional(
    /* Initialize. */
    if (!ss->cmd.cmd_frac_flags)
       ss->cmd.cmd_frac_flags = 0x000111;
-
-   /* We don't allow the new-fangled stuff. */
-   if ((ss->cmd.cmd_frac_flags & 0xE00000) != 0)
-      fail("Can't stack meta or fractional concepts.");
 
    /* Check that user isn't doing something stupid. */
    if (numer <= 0 || numer >= denom)
@@ -3907,16 +3916,6 @@ Private void do_concept_misc_distort(
 }
 
 
-Private void do_concept_concentric(
-   setup *ss,
-   parse_block *parseptr,
-   setup *result)
-{
-   concentric_move(ss, &ss->cmd, &ss->cmd,
-         (calldef_schema) parseptr->concept->value.arg1, 0, DFM1_CONC_CONCENTRIC_RULES, result);
-}
-
-
 typedef struct {
    setup_kind a;
    int b;
@@ -3930,29 +3929,76 @@ Private map_finder sc_ptp = {sdmd, 0};
 
 
 
-Private void do_concept_single_concentric(
+Private void do_concept_concentric(
    setup *ss,
    parse_block *parseptr,
    setup *result)
 {
    map_finder *mf;
+   calldef_schema schema = (calldef_schema) parseptr->concept->value.arg1;
 
-   switch (ss->kind) {
-      case s2x4:   mf = &sc_2x4; break;
-      case s1x8:   mf = &sc_1x8; break;
-      case s_qtag: mf = &sc_qtg; break;
-      case s_ptpd: mf = &sc_ptp; break;
-      case s1x4: case sdmd:
-         concentric_move(ss, &ss->cmd, &ss->cmd,
-               (calldef_schema) parseptr->concept->value.arg1, 0, DFM1_CONC_CONCENTRIC_RULES, result);
-         return;
-      default:
-         fail("Can't figure out how to do single concentric here.");
+   if (ss->cmd.cmd_final_flags & INHERITFLAG_CROSS) {
+      switch (schema) {
+         case schema_concentric:
+            schema = schema_cross_concentric;
+            break;
+         case schema_single_concentric:
+            schema = schema_single_cross_concentric;
+            break;
+         case schema_concentric_diamonds:
+            schema = schema_cross_concentric_diamonds;
+            break;
+         default:
+            fail("Redundant 'CROSS' modifiers.");
+      }
    }
 
-   ss->cmd.parseptr = parseptr;    /* Reset it to execute this same concept again, until it doesn't have to split any more. */
-   divided_setup_move(ss, (*map_lists[mf->a][1])[MPKIND__SPLIT][mf->b], phantest_ok, TRUE, result);
+   if (ss->cmd.cmd_final_flags & INHERITFLAG_SINGLE) {
+      switch (schema) {
+         case schema_concentric:
+            schema = schema_single_concentric;
+            break;
+         case schema_cross_concentric:
+            schema = schema_single_cross_concentric;
+            break;
+         default:
+            fail("Redundant 'SINGLE' modifiers.");
+      }
+   }
+
+   ss->cmd.cmd_final_flags &= ~(INHERITFLAG_CROSS | INHERITFLAG_SINGLE);
+
+   if (ss->cmd.cmd_final_flags)   /* We don't allow other flags, like "left". */
+      fail("Illegal modifier before \"concentric\".");
+
+   switch (schema) {
+      case schema_single_concentric:
+      case schema_single_cross_concentric:
+         switch (ss->kind) {
+            case s2x4:   mf = &sc_2x4; break;
+            case s1x8:   mf = &sc_1x8; break;
+            case s_qtag: mf = &sc_qtg; break;
+            case s_ptpd: mf = &sc_ptp; break;
+            case s1x4: case sdmd:
+               concentric_move(ss, &ss->cmd, &ss->cmd,
+                     schema, 0, DFM1_CONC_CONCENTRIC_RULES, result);
+               return;
+            default:
+               fail("Can't figure out how to do single concentric here.");
+         }
+      
+         ss->cmd.parseptr = parseptr;    /* Reset it to execute this same concept again, until it doesn't have to split any more. */
+         divided_setup_move(ss, (*map_lists[mf->a][1])[MPKIND__SPLIT][mf->b], phantest_ok, TRUE, result);
+         break;
+      default:
+         concentric_move(ss, &ss->cmd, &ss->cmd,
+               schema, 0, DFM1_CONC_CONCENTRIC_RULES, result);
+         /* 8-person concentric operations do not show the split. */
+         result->result_flags &= ~RESULTFLAG__SPLIT_AXIS_MASK;
+         break;
+   }
 }
+
 
 
 Private void do_concept_tandem(
@@ -4015,28 +4061,36 @@ extern long_boolean do_big_concept(
          have now preserved even those two flags in cmd_final_flags, so things can
          possibly get better. */
 
-   if (ss->cmd.cmd_misc_flags & CMD_MISC__CENTRAL_MASK) {
-      /* We only allow "mystic", not "central" or "snag", and only for certain concepts. */
-      if (     (ss->cmd.cmd_misc_flags & CMD_MISC__CENTRAL_MASK) != CMD_MISC__CENTRAL_MYSTIC ||
-               !(this_table_item->concept_prop & CONCPROP__PERMIT_MYSTIC))
-      fail("Can't do \"central/snag/mystic\" followed by another concept or modifier.");
+   if (ss->cmd.cmd_misc2_flags & CMD_MISC2__CENTRAL_MASK) {
+      if (     (ss->cmd.cmd_misc2_flags & CMD_MISC2__CENTRAL_MASK) == CMD_MISC2__CENTRAL_MYSTIC &&
+               (this_table_item->concept_prop & CONCPROP__PERMIT_MYSTIC)) {
 
-      /* Turn on the good bits. */
+         /* This is "mystic" with something like "triple waves". */
+         /* Turn on the good bits. */
 
-      ss->cmd.cmd_misc_flags |= CMD_MISC__MYSTIFY_SPLIT;
-      if (ss->cmd.cmd_misc_flags & CMD_MISC__INVERT_CENTRAL)
-         ss->cmd.cmd_misc_flags |= CMD_MISC__MYSTIFY_INVERT;
+         ss->cmd.cmd_misc2_flags |= CMD_MISC2__MYSTIFY_SPLIT;
+         if (ss->cmd.cmd_misc2_flags & CMD_MISC2__INVERT_CENTRAL)
+            ss->cmd.cmd_misc2_flags |= CMD_MISC2__MYSTIFY_INVERT;
 
-      /* And turn off the old ones. */
+         /* And turn off the old ones. */
 
-      ss->cmd.cmd_misc_flags &= ~(CMD_MISC__CENTRAL_MASK | CMD_MISC__INVERT_CENTRAL);
+         ss->cmd.cmd_misc2_flags &= ~(CMD_MISC2__CENTRAL_MASK | CMD_MISC2__INVERT_CENTRAL);
+      }
+      else if (   (ss->cmd.cmd_misc2_flags & CMD_MISC2__CENTRAL_MASK) == CMD_MISC2__CENTRAL_PLAIN &&
+                  this_kind == concept_fractional) {
+         /* We *DO* allow central and fractional to be stacked in either order. */
+         ;
+      }
+      else
+         fail("Can't do \"central/snag/mystic\" followed by another concept or modifier.");
    }
 
    if ((ss->cmd.cmd_misc_flags & CMD_MISC__MATRIX_CONCEPT) && !(this_table_item->concept_prop & CONCPROP__PERMIT_MATRIX))
       fail("\"Matrix\" concept must be followed by applicable concept.");
 
-   if ((ss->cmd.cmd_final_flags & INHERITFLAG_REVERSE) && !(this_table_item->concept_prop & CONCPROP__PERMIT_REVERSE))
-      fail("Can't do this concept with REVERSE.");
+   if ((ss->cmd.cmd_final_flags & (INHERITFLAG_REVERSE|INHERITFLAG_LEFT|INHERITFLAG_GRAND|INHERITFLAG_CROSS|INHERITFLAG_SINGLE)) &&
+         !(this_table_item->concept_prop & CONCPROP__PERMIT_REVERSE))
+      fail("Illegal modifier before a concept.");
 
    concept_func = this_table_item->concept_action;
    ss->cmd.parseptr = this_concept_parse_block->next;
@@ -4071,12 +4125,12 @@ extern long_boolean do_big_concept(
    
       /* If we hit "matrix", do a little extra stuff and continue. */
 
-      if (junk_concepts == 0 && substandard_concptptr->concept->kind == concept_matrix) {
+      if (!junk_concepts && substandard_concptptr->concept->kind == concept_matrix) {
          ss->cmd.cmd_misc_flags |= CMD_MISC__MATRIX_CONCEPT;
          substandard_concptptr = process_final_concepts(substandard_concptptr->next, TRUE, &junk_concepts);
       }
 
-      if ((junk_concepts != 0) || (!(concept_table[substandard_concptptr->concept->kind].concept_prop & CONCPROP__STANDARD)))
+      if (junk_concepts || (!(concept_table[substandard_concptptr->concept->kind].concept_prop & CONCPROP__STANDARD)))
          fail("This concept must be used with some offset/distorted/phantom concept.");
 
       /* We don't think stepping to a wave is ever a good idea if standard is used.  Most calls that
@@ -4211,17 +4265,15 @@ concept_table_item concept_table[] = {
    /* concept_mod_declined */             {0,                                                                                      0},
    /* marker_end_of_list */               {0,                                                                                      0},
    /* concept_comment */                  {0,                                                                                      0},
-   /* concept_concentric */               {0,                                                                                      do_concept_concentric},
-   /* concept_single_concentric */        {CONCPROP__SHOW_SPLIT,                                                                   do_concept_single_concentric},
-   /* concept_tandem */                   {CONCPROP__SHOW_SPLIT,                                                                   do_concept_tandem},
-   /* concept_gruesome_tandem */          {CONCPROP__NEED_2X8 | CONCPROP__SET_PHANTOMS | CONCPROP__SHOW_SPLIT,                     do_concept_tandem},
-   /* concept_some_are_tandem */          {CONCPROP__USE_SELECTOR | CONCPROP__SHOW_SPLIT,                                          do_concept_tandem},
-   /* concept_frac_tandem */              {CONCPROP__USE_NUMBER | CONCPROP__SHOW_SPLIT,                                            do_concept_tandem},
-   /* concept_gruesome_frac_tandem */     {CONCPROP__USE_NUMBER | CONCPROP__NEED_2X8 | CONCPROP__SET_PHANTOMS | CONCPROP__SHOW_SPLIT, do_concept_tandem},
-   /* concept_some_are_frac_tandem */     {CONCPROP__USE_NUMBER | CONCPROP__USE_SELECTOR | CONCPROP__SHOW_SPLIT,                   do_concept_tandem},
-   /* concept_checkerboard */             {0,                                                                                      do_concept_checkerboard},
-   /* concept_reverse */                  {0,                                                                                      0},
-   /* concept_left */                     {0,                                                                                      0},
+   /* concept_concentric */               {CONCPROP__SHOW_SPLIT | CONCPROP__PERMIT_REVERSE,                                        do_concept_concentric},
+   /* concept_tandem */                   {CONCPROP__PARSE_DIRECTLY | CONCPROP__SHOW_SPLIT,                                        do_concept_tandem},
+   /* concept_some_are_tandem */          {CONCPROP__PARSE_DIRECTLY | CONCPROP__USE_SELECTOR | CONCPROP__SHOW_SPLIT,               do_concept_tandem},
+   /* concept_frac_tandem */              {CONCPROP__PARSE_DIRECTLY | CONCPROP__USE_NUMBER | CONCPROP__SHOW_SPLIT,                 do_concept_tandem},
+   /* concept_some_are_frac_tandem */     {CONCPROP__PARSE_DIRECTLY | CONCPROP__USE_NUMBER | CONCPROP__USE_SELECTOR | CONCPROP__SHOW_SPLIT, do_concept_tandem},
+   /* concept_gruesome_tandem */          {CONCPROP__PARSE_DIRECTLY | CONCPROP__NEED_2X8 | CONCPROP__SET_PHANTOMS | CONCPROP__SHOW_SPLIT, do_concept_tandem},
+   /* concept_checkerboard */             {CONCPROP__PARSE_DIRECTLY,                                                               do_concept_checkerboard},
+   /* concept_reverse */                  {CONCPROP__PARSE_DIRECTLY,                                                               0},
+   /* concept_left */                     {CONCPROP__PARSE_DIRECTLY,                                                               0},
    /* concept_grand */                    {CONCPROP__PARSE_DIRECTLY,                                                               0},
    /* concept_magic */                    {CONCPROP__PARSE_DIRECTLY,                                                               0},
    /* concept_cross */                    {CONCPROP__PARSE_DIRECTLY,                                                               0},
@@ -4229,8 +4281,8 @@ concept_table_item concept_table[] = {
    /* concept_singlefile */               {CONCPROP__PARSE_DIRECTLY,                                                               0},
    /* concept_interlocked */              {CONCPROP__PARSE_DIRECTLY,                                                               0},
    /* concept_yoyo */                     {CONCPROP__PARSE_DIRECTLY,                                                               0},
-   /* concept_12_matrix */                {0,                                                                                      0},
-   /* concept_16_matrix */                {0,                                                                                      0},
+   /* concept_12_matrix */                {CONCPROP__PARSE_DIRECTLY,                                                               0},
+   /* concept_16_matrix */                {CONCPROP__PARSE_DIRECTLY,                                                               0},
    /* concept_1x2 */                      {CONCPROP__PARSE_DIRECTLY,                                                               0},
    /* concept_2x1 */                      {CONCPROP__PARSE_DIRECTLY,                                                               0},
    /* concept_2x2 */                      {CONCPROP__PARSE_DIRECTLY,                                                               0},
@@ -4247,15 +4299,15 @@ concept_table_item concept_table[] = {
    /* concept_3x8_matrix */               {CONCPROP__NEED_3X8 | CONCPROP__NO_STEP | CONCPROP__SET_PHANTOMS,                        do_concept_expand_3x8_matrix},
    /* concept_4x6_matrix */               {CONCPROP__NEED_4X6 | CONCPROP__NO_STEP | CONCPROP__SET_PHANTOMS,                        do_concept_expand_4x6_matrix},
    /* concept_4dmd_matrix */              {CONCPROP__NEED_4DMD | CONCPROP__NO_STEP | CONCPROP__SET_PHANTOMS,                       do_concept_expand_4dm_matrix},
-   /* concept_funny */                    {0,                                                                                      0},
+   /* concept_funny */                    {CONCPROP__PARSE_DIRECTLY,                                                               0},
    /* concept_randomtrngl */              {CONCPROP__NO_STEP | CONCPROP__GET_MASK,                                                 triangle_move},
    /* concept_selbasedtrngl */            {CONCPROP__NO_STEP | CONCPROP__GET_MASK | CONCPROP__USE_SELECTOR,                        triangle_move},
-   /* concept_split */                    {0,                                                                                      0},
-   /* concept_each_1x4 */                 {CONCPROP__NO_STEP | CONCPROP__PERMIT_MATRIX | CONCPROP__GET_MASK,                       do_concept_do_each_1x4},
+   /* concept_split */                    {CONCPROP__PARSE_DIRECTLY,                                                               0},
+   /* concept_each_1x4 */                 {CONCPROP__PARSE_DIRECTLY | CONCPROP__NO_STEP | CONCPROP__PERMIT_MATRIX | CONCPROP__GET_MASK, do_concept_do_each_1x4},
    /* concept_diamond */                  {0,                                                                                      0},
    /* concept_triangle */                 {0,                                                                                      0},
    /* concept_do_both_boxes */            {CONCPROP__NO_STEP,                                                                      do_concept_do_both_boxes},
-   /* concept_once_removed */             {0,                                                                                      do_concept_once_removed},
+   /* concept_once_removed */             {CONCPROP__PARSE_DIRECTLY,                                                               do_concept_once_removed},
    /* concept_do_phantom_2x2 */           {CONCPROP__NEED_4X4 | CONCPROP__NO_STEP | CONCPROP__SET_PHANTOMS,                        do_concept_do_phantom_2x2},
    /* concept_do_phantom_boxes */         {CONCPROP__NEED_2X8 | CONCPROP__NO_STEP | Nostandard_matrix_phantom,                     do_concept_do_phantom_boxes},
    /* concept_do_phantom_diamonds */      {CONCPROP__NEED_4DMD | CONCPROP__NO_STEP | Nostandard_matrix_phantom,                    do_concept_do_phantom_diamonds},
@@ -4289,18 +4341,18 @@ concept_table_item concept_table[] = {
    /* concept_triple_diag_together */     {CONCPROP__NEED_BLOB | CONCPROP__NO_STEP | CONCPROP__SET_PHANTOMS | CONCPROP__GET_MASK,  do_concept_triple_diag_tog},
    /* concept_triple_twin */              {CONCPROP__NEED_4X6 | CONCPROP__NO_STEP | Standard_matrix_phantom,                       triple_twin_move},
    /* concept_misc_distort */             {CONCPROP__NO_STEP,                                                                      do_concept_misc_distort},
-   /* concept_old_stretch */              {0/*CONCPROP__NO_STEP*/,                                                                 do_concept_old_stretch},
-   /* concept_new_stretch */              {0/*CONCPROP__NO_STEP*/,                                                                 do_concept_new_stretch},
+   /* concept_old_stretch */              {CONCPROP__PARSE_DIRECTLY/*CONCPROP__NO_STEP*/,                                          do_concept_old_stretch},
+   /* concept_new_stretch */              {CONCPROP__PARSE_DIRECTLY/*CONCPROP__NO_STEP*/,                                          do_concept_new_stretch},
    /* concept_assume_waves */             {CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT,                                      do_concept_assume_waves},
    /* concept_active_phantoms */          {0,                                                                                      do_concept_active_phantoms},
-   /* concept_mirror */                   {CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT,                                      do_concept_mirror},
-   /* concept_central */                  {CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT,                                      do_concept_central},
-   /* concept_snag_mystic */              {CONCPROP__MATRIX_OBLIVIOUS,                                                             do_concept_central},
-   /* concept_crazy */                    {CONCPROP__PERMIT_REVERSE,                                                               do_concept_crazy},
-   /* concept_frac_crazy */               {CONCPROP__USE_NUMBER | CONCPROP__PERMIT_REVERSE,                                        do_concept_crazy},
-   /* concept_fan_or_yoyo */              {0,                                                                                      do_concept_fan_or_yoyo},
+   /* concept_mirror */                   {CONCPROP__PARSE_DIRECTLY | CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT,           do_concept_mirror},
+   /* concept_central */                  {CONCPROP__PARSE_DIRECTLY | CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT,           do_concept_central},
+   /* concept_snag_mystic */              {CONCPROP__PARSE_DIRECTLY | CONCPROP__MATRIX_OBLIVIOUS,                                  do_concept_central},
+   /* concept_crazy */                    {CONCPROP__PARSE_DIRECTLY | CONCPROP__PERMIT_REVERSE,                                    do_concept_crazy},
+   /* concept_frac_crazy */               {CONCPROP__PARSE_DIRECTLY | CONCPROP__USE_NUMBER | CONCPROP__PERMIT_REVERSE,             do_concept_crazy},
+   /* concept_fan */                      {CONCPROP__PARSE_DIRECTLY,                                                               do_concept_fan},
    /* concept_c1_phantom */               {CONCPROP__NO_STEP | CONCPROP__GET_MASK,                                                 do_c1_phantom_move},
-   /* concept_grand_working */            {CONCPROP__PERMIT_MATRIX | CONCPROP__SET_PHANTOMS,                                       do_concept_grand_working},
+   /* concept_grand_working */            {CONCPROP__PARSE_DIRECTLY | CONCPROP__PERMIT_MATRIX | CONCPROP__SET_PHANTOMS,            do_concept_grand_working},
    /* concept_centers_or_ends */          {0,                                                                                      do_concept_centers_or_ends},
    /* concept_so_and_so_only */           {CONCPROP__USE_SELECTOR,                                                                 so_and_so_only_move},
    /* concept_some_vs_others */           {CONCPROP__USE_SELECTOR | CONCPROP__SECOND_CALL,                                         so_and_so_only_move},
@@ -4318,13 +4370,13 @@ concept_table_item concept_table[] = {
    /* concept_overlapped_diamond */       {CONCPROP__NO_STEP,                                                                      do_concept_overlapped_diamond},
    /* concept_all_8 */                    {0,                                                                                      do_concept_all_8},
    /* concept_centers_and_ends */         {CONCPROP__SECOND_CALL,                                                                  do_concept_centers_and_ends},
-   /* concept_twice */                    {CONCPROP__SHOW_SPLIT,                                                                   do_concept_twice},
-   /* concept_n_times */                  {CONCPROP__USE_NUMBER | CONCPROP__SHOW_SPLIT,                                            do_concept_twice},
+   /* concept_twice */                    {CONCPROP__PARSE_DIRECTLY | CONCPROP__SHOW_SPLIT,                                        do_concept_twice},
+   /* concept_n_times */                  {CONCPROP__PARSE_DIRECTLY | CONCPROP__USE_NUMBER | CONCPROP__SHOW_SPLIT,                 do_concept_twice},
    /* concept_sequential */               {CONCPROP__SECOND_CALL | CONCPROP__SHOW_SPLIT,                                           do_concept_sequential},
    /* concept_special_sequential */       {CONCPROP__SECOND_CALL | CONCPROP__SHOW_SPLIT,                                           do_concept_special_sequential},
-   /* concept_meta */                     {CONCPROP__SHOW_SPLIT,                                                                   do_concept_meta},
+   /* concept_meta */                     {CONCPROP__PARSE_DIRECTLY | CONCPROP__SHOW_SPLIT | CONCPROP__PERMIT_REVERSE,             do_concept_meta},
    /* concept_so_and_so_begin */          {CONCPROP__USE_SELECTOR | CONCPROP__SHOW_SPLIT,                                          do_concept_so_and_so_begin},
-   /* concept_nth_part */                 {CONCPROP__USE_NUMBER | CONCPROP__SHOW_SPLIT,                                            do_concept_nth_part},
+   /* concept_nth_part */                 {CONCPROP__USE_NUMBER | CONCPROP__SHOW_SPLIT | CONCPROP__PERMIT_REVERSE,                 do_concept_meta},
    /* concept_replace_nth_part */         {CONCPROP__USE_NUMBER | CONCPROP__SECOND_CALL | CONCPROP__SHOW_SPLIT,                    do_concept_replace_nth_part},
    /* concept_interlace */                {CONCPROP__SECOND_CALL | CONCPROP__SHOW_SPLIT,                                           do_concept_interlace},
    /* concept_fractional */               {CONCPROP__USE_NUMBER | CONCPROP__USE_TWO_NUMBERS | CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT, do_concept_fractional},

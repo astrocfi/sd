@@ -20,7 +20,10 @@
 extern char *ui_directions;
 
 /* Process any command line arguments that we need. */
-extern void ttu_process_command_line(int *argcp, char ***argvp);
+extern void ttu_process_command_line(int *argcp, char **argv);
+
+/* Print the help message appropriate for the switches that we support. */
+extern void ttu_display_help(void);
 
 /* Initialize this package. */
 extern void ttu_initialize(void);

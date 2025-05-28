@@ -318,20 +318,6 @@ typedef struct {
 
    CMD_MISC__DO_AS_COUPLES means the obvious thing.
 
-   CMD_MISC__INVERT_CENTRAL is only meaningful if the CMD_MISC__CENTRAL_MASK is
-   in use.  It means that the "inverted" version of the concept is in use, e.g.
-   "invert snag".
-
-   CMD_MISC__CENTRAL_MASK, when nonzero, says that one of the "central", "snag",
-   or "mystic" concepts is in use.  They are all closely related.
-
-   CMD_MISC__MYSTIFY_SPLIT tells "divided_setup_move" to perform selective mirroring
-   of the subsidiary setups because a concept like "mystic triple boxes" is in use.
-   It is removed immediately by "divided_setup_move" after use.
-
-   CMD_MISC__MYSTIFY_INVERT is only meaningful when CMD_MISC__MYSTIFY_SPLIT is on.
-   It says that the concept is actually "invert mystic triple boxes" or whatever.
-
    CMD_MISC__NO_CHK_ELONG means that the elongation of the incoming setup is for
    informational purposes only (to tell where people should finish) and should not
    be used for raising error messages.  It suppresses the error that would be
@@ -363,7 +349,6 @@ typedef struct {
 */
 
 /* Since DFM1_CONCENTRICITY_FLAG_MASK is FF, we start at 100. */
-/* Note that these bits are ALL USED UP!!!!!!! */
 
 #define CMD_MISC__EXPLICIT_MIRROR    0x00000100UL
 #define CMD_MISC__MATRIX_CONCEPT     0x00000200UL
@@ -378,12 +363,12 @@ typedef struct {
 #define CMD_MISC__PUT_FRAC_ON_FIRST  0x00080000UL
 #define CMD_MISC__DO_AS_COUPLES      0x00100000UL
 #define CMD_MISC__RESTRAIN_CRAZINESS 0x00200000UL
-#define CMD_MISC__MYSTIFY_SPLIT      0x00400000UL
-#define CMD_MISC__MYSTIFY_INVERT     0x00800000UL
-#define CMD_MISC__INVERT_CENTRAL     0x01000000UL
+/* available:                        0x00400000UL */
+/* available:                        0x00800000UL */
+/* available:                        0x01000000UL */
 #define CMD_MISC__MUST_SPLIT         0x02000000UL
-/* This is a 2 bit field.  For codes inside same, see "CMD_MISC__CENTRAL_PLAIN" below. */
-#define CMD_MISC__CENTRAL_MASK       0x0C000000UL
+/* available:                        0x04000000UL */
+/* available:                        0x08000000UL */
 #define CMD_MISC__NO_CHK_ELONG       0x10000000UL
 #define CMD_MISC__PHANTOMS           0x20000000UL
 #define CMD_MISC__NO_STEP_TO_WAVE    0x40000000UL
@@ -396,14 +381,55 @@ typedef struct {
 #define CMD_MISC__VERIFY_QTAG_LIKE   0x00000C00UL
 #define CMD_MISC__VERIFY_1_4_TAG     0x00001000UL
 #define CMD_MISC__VERIFY_3_4_TAG     0x00001400UL
-/* available:                        0x00001800UL
-                                     0x00001C00UL */
+/* available:                        0x00001800UL */
+/* available:                        0x00001C00UL */
 
-/* Here are the encodings that can go into the CMD_MISC__CENTRAL_MASK field.
+
+/* Flags that reside in the "cmd_misc2_flags" word of a setup BEFORE a call is executed.
+
+/* The following are used for the "centers/ends work <concept>" mechanism:
+
+   CMD_MISC2__CTR_USE is on if there is such an operation in place.
+   We will make the centers or ends (depending on CMD_MISC2__CTR_USE_INVERT)
+   use the next concept while the others skip that concept.  The schema,
+   which is one of schema_concentric_2_6, schema_concentric_6_2,
+   schema_concentric, or schema_single_concentric, is in the low 16 bits.
+
+   CMD_MISC2__CTR_USE_INVERT is only meaningful if the CMD_MISC2__CTR_USE is on.
+   It says that the ends are doing the concept, instead of the centers.
+
+   CMD_MISC2__INVERT_CENTRAL is only meaningful if the CMD_MISC2__CENTRAL_MASK is
+   in use.  It means that the "inverted" version of the concept is in use, e.g.
+   "invert snag".
+
+   CMD_MISC2__CENTRAL_MASK, when nonzero, says that one of the "central", "snag",
+   or "mystic" concepts is in use.  They are all closely related.
+
+   CMD_MISC2__MYSTIFY_SPLIT tells "divided_setup_move" to perform selective mirroring
+   of the subsidiary setups because a concept like "mystic triple boxes" is in use.
+   It is removed immediately by "divided_setup_move" after use.
+
+   CMD_MISC2__MYSTIFY_INVERT is only meaningful when CMD_MISC2__MYSTIFY_SPLIT is on.
+   It says that the concept is actually "invert mystic triple boxes" or whatever.
+*/
+
+/*     these bits used for encoding the schema
+                                     0x0000FFFFUL */
+#define CMD_MISC2__CTR_USE           0x00010000UL
+#define CMD_MISC2__CTR_USE_INVERT    0x00020000UL
+
+#define CMD_MISC2__MYSTIFY_SPLIT     0x00400000UL
+#define CMD_MISC2__MYSTIFY_INVERT    0x00800000UL
+#define CMD_MISC2__INVERT_CENTRAL    0x01000000UL
+/* This is a 2 bit field.  For codes inside same, see "CMD_MISC2__CENTRAL_PLAIN" below. */
+#define CMD_MISC2__CENTRAL_MASK      0x06000000UL
+
+/* Here are the encodings that can go into the CMD_MISC2__CENTRAL_MASK field.
    Zero means none of these concepts is in use. */
-#define CMD_MISC__CENTRAL_PLAIN      0x04000000UL
-#define CMD_MISC__CENTRAL_SNAG       0x08000000UL
-#define CMD_MISC__CENTRAL_MYSTIC     0x0C000000UL
+#define CMD_MISC2__CENTRAL_PLAIN     0x02000000UL
+#define CMD_MISC2__CENTRAL_SNAG      0x04000000UL
+#define CMD_MISC2__CENTRAL_MYSTIC    0x06000000UL
+
 
 
 /* Flags that reside in the "result_flags" word of a setup AFTER a call is executed.
@@ -630,13 +656,11 @@ typedef enum {
 /* Everything after this is a real concept. */
 
    concept_concentric,
-   concept_single_concentric,
    concept_tandem,
-   concept_gruesome_tandem,
    concept_some_are_tandem,
    concept_frac_tandem,
-   concept_gruesome_frac_tandem,
    concept_some_are_frac_tandem,
+   concept_gruesome_tandem,
    concept_checkerboard,
    concept_reverse,
    concept_left,
@@ -716,7 +740,7 @@ typedef enum {
    concept_snag_mystic,
    concept_crazy,
    concept_frac_crazy,
-   concept_fan_or_yoyo,
+   concept_fan,
    concept_c1_phantom,
    concept_grand_working,
    concept_centers_or_ends,
@@ -832,6 +856,7 @@ typedef struct glock {
    direction_kind direction;      /* direction, if any, used by concept or call */
    uint32 number;                 /* number, if any, used by concept or call */
    int tagger;                    /* tagging call index, if any, used by call */
+   int circcer;                   /* circulating call index, if any, used by call */
 } parse_block;
 
 /* The following items are not actually part of the setup description,
@@ -880,6 +905,10 @@ typedef struct {
    cmd_misc_flags
       Other miscellaneous info controlling the execution of the call,
       with names like CMD_MISC__???.
+
+   cmd_misc2_flags
+      Even more miscellaneous info controlling the execution of the call,
+      with names like CMD_MISC2__???.
 
    cmd_frac_flags
       In nonzero, fractionalization info controlling the execution of the call.
@@ -933,6 +962,9 @@ typedef struct {
    cmd_assume
       Any "assume waves" type command.
 
+   skippable_concept
+      For "<so-and-so> work <concept>", this is the concept to be skipped by some people.
+
    prior_elongation_bits;
       This tells, for a 2x2 setup prior to having a call executed, how that
       2x2 is elongated (due to these people being the outsides) in the east-west
@@ -947,9 +979,11 @@ typedef struct {
    callspec_block *callspec;
    uint32 cmd_final_flags;
    uint32 cmd_misc_flags;
+   uint32 cmd_misc2_flags;
    uint32 cmd_frac_flags;
    assumption_thing cmd_assume;
    uint32 prior_elongation_bits;
+   parse_block *skippable_concept;
 } setup_command;
 
 
@@ -1006,8 +1040,9 @@ typedef enum {
    warn__dmdconc_perp,
    warn__lineconc_par,
    warn__dmdconc_par,
-   warn__xclineconc_perp,
-   warn__xcdmdconc_perp,
+   warn__xclineconc_perpc,
+   warn__xcdmdconc_perpc,
+   warn__xclineconc_perpe,
    warn__ctrstand_endscpls,
    warn__ctrscpls_endstand,
    warn__each2x2,
@@ -1048,16 +1083,25 @@ typedef enum {
 /* BEWARE!!  This list must track the array "resolve_table" in sdgetout.c . */
 typedef enum {
    resolve_none,
-   resolve_rlg, resolve_la,
-   resolve_ext_rlg, resolve_ext_la,
-   resolve_slipclutch_rlg, resolve_slipclutch_la,
-   resolve_circ_rlg, resolve_circ_la,
-   resolve_pth_rlg, resolve_pth_la,
-   resolve_tby_rlg, resolve_tby_la,
-   resolve_xby_rlg, resolve_xby_la,
+   resolve_rlg,
+   resolve_la,
+   resolve_ext_rlg,
+   resolve_ext_la,
+   resolve_slipclutch_rlg,
+   resolve_slipclutch_la,
+   resolve_circ_rlg,
+   resolve_circ_la,
+   resolve_pth_rlg,
+   resolve_pth_la,
+   resolve_tby_rlg,
+   resolve_tby_la,
+   resolve_xby_rlg,
+   resolve_xby_la,
    resolve_dixie_grand,
-   resolve_prom, resolve_revprom,
-   resolve_sglfileprom, resolve_revsglfileprom,
+   resolve_prom,
+   resolve_revprom,
+   resolve_sglfileprom,
+   resolve_revsglfileprom,
    resolve_circle
 } resolve_kind;
 
@@ -1077,7 +1121,7 @@ typedef enum {
 typedef enum {
     modify_popup_any,
     modify_popup_only_tag,
-    modify_popup_only_scoot
+    modify_popup_only_circ
 } modify_popup_kind;
 
 /* These are the values returned by "uims_get_command". */
@@ -1227,6 +1271,7 @@ typedef enum {
    analyzer_TRIPLE_LINE,
    analyzer_VERTICAL6,
    analyzer_LATERAL6,
+   analyzer_CONC_DIAMONDS,
    analyzer_DIAMOND_LINE
 } analyzer_kind;
 #define NUM_analyzer_KINDS (((int) analyzer_DIAMOND_LINE)+1)
@@ -1463,8 +1508,12 @@ typedef struct {
    veryshort diagram[64];
 } coordrec;
 
+typedef uint32 id_bit_table[4];
+
 typedef struct {
+   /* This is the size of the setup MINUS ONE. */
    int setup_limits;
+
    /* These "coordrec" items have the fudged coordinates that are used for doing
       press/truck calls.  For some setups, the coordinates of some people are
       deliberately moved away from the obvious precise matrix spots so that
@@ -1476,16 +1525,22 @@ typedef struct {
       as if the ends of lines of 3, and hence can NOT trade with each other by
       doing a right loop 1. */
    coordrec *setup_coords;
+
    /* The above table is not suitable for performing mirror inversion because,
       for example, the points of diamonds do not reflect onto each other.  This
       table has unfudged coordinates, in which all the symmetries are observed.
       This is the table that is used for mirror reversal.  Most of the items in
       it are the same as those in the table above. */
    coordrec *nice_setup_coords;
+
    /* This gives the table to be used for analyzing this setup under
       concentric-type operations. */
    cm_hunk *conctab;
+
+   /* These show the beginning setups that we look for in a by-array call
+      definition in order to do a call in this setup. */
    begin_kind keytab[2];
+
    /* In the bounding boxes, we do not fill in the "length" of a diamond, nor
       the "height" of a qtag.  Everyone knows that the number must be 3, but it
       is not really accepted that one can use that in instances where precision
@@ -1496,9 +1551,16 @@ typedef struct {
       deep, and that it is generally recognized, by the mathematically erudite,
       that 4 is greater than 3. */
    short int bounding_box[2];
+
    /* This is true if the setup has 4-way symmetry.  Such setups will always be
       canonicalized so that their rotation field will be zero. */
    long_boolean four_way_symmetry;
+
+   /* This is the bit table for filling in the "ID2" bits. */
+   id_bit_table *id_bit_table_ptr;
+
+   /* These are the tables that show how to print out the setup. */
+   Cstring print_strings[2];
 } setup_attr;
 
 #define zig_zag_level l_a2
@@ -1537,6 +1599,7 @@ extern char error_message2[MAX_ERR_LENGTH];                         /* in SDUTIL
 extern uint32 collision_person1;                                    /* in SDUTIL */
 extern uint32 collision_person2;                                    /* in SDUTIL */
 extern long_boolean enable_file_writing;                            /* in SDUTIL */
+extern long_boolean singlespace_mode;                               /* in SDUTIL */
 extern Cstring cardinals[];                                         /* in SDUTIL */
 extern Cstring ordinals[];                                          /* in SDUTIL */
 extern Cstring selector_names[];                                    /* in SDUTIL */
@@ -1646,10 +1709,6 @@ extern map_thing map_rh_s2x3_3;                                     /* in SDTABL
 extern map_thing map_rh_s2x3_2;                                     /* in SDTABLES */
 extern map_thing map_lz12;                                          /* in SDTABLES */
 extern map_thing map_rz12;                                          /* in SDTABLES */
-extern map_thing map_lof12;                                         /* in SDTABLES */
-extern map_thing map_rof12;                                         /* in SDTABLES */
-extern map_thing map_lof16;                                         /* in SDTABLES */
-extern map_thing map_rof16;                                         /* in SDTABLES */
 extern map_thing map_dmd_1x1;                                       /* in SDTABLES */
 extern map_thing map_star_1x1;                                      /* in SDTABLES */
 extern map_thing map_qtag_f0;                                       /* in SDTABLES */
@@ -1675,11 +1734,14 @@ extern int max_base_calls;                                          /* in SDMAIN
 extern callspec_block **base_calls;                                 /* in SDMAIN */
 extern int number_of_taggers[4];                                    /* in SDMAIN */
 extern callspec_block **tagger_calls[4];                            /* in SDMAIN */
+extern int number_of_circcers;                                      /* in SDMAIN */
+extern callspec_block **circcer_calls;                              /* in SDMAIN */
 extern char outfile_string[];                                       /* in SDMAIN */
 extern char header_comment[];                                       /* in SDMAIN */
 extern int sequence_number;                                         /* in SDMAIN */
 extern int last_file_position;                                      /* in SDMAIN */
 extern int global_age;                                              /* in SDMAIN */
+extern long_boolean erase_after_error;                              /* in SDMAIN */
 extern parse_state_type parse_state;                                /* in SDMAIN */
 extern int uims_menu_index;                                         /* in SDMAIN */
 extern long_boolean uims_menu_cross;                                /* in SDMAIN */
@@ -1769,7 +1831,7 @@ extern void print_line(Cstring s);
 extern void print_id_error(int n);
 extern void init_error(char s[]);
 extern void add_resolve_indices(char junk[], int cur, int max);
-extern long_boolean open_session(int *argcp, char ***argvp);
+extern long_boolean open_session(int argc, char **argv);
 extern void final_exit(int code);
 extern void open_database(void);
 extern uint32 read_8_from_database(void);
@@ -1796,6 +1858,7 @@ extern int uims_do_abort_popup(void);
 extern int uims_do_neglect_popup(char dest[]);
 extern int uims_do_selector_popup(void);
 extern int uims_do_direction_popup(void);
+extern int uims_do_circcer_popup(void);
 extern int uims_do_tagger_popup(int tagger_class);
 extern int uims_do_modifier_popup(Cstring callname, modify_popup_kind kind);
 extern uint32 uims_get_number_fields(int nnumbers);
@@ -1856,12 +1919,13 @@ extern parse_block *process_final_concepts(
    parse_block *cptr,
    long_boolean check_errors,
    final_set *final_concepts);
+extern parse_block *skip_one_concept(parse_block *incoming);
 extern long_boolean fix_n_results(int arity, setup z[]);
 
 /* In SDGETOUT */
 
 extern resolve_indicator resolve_p(setup *s);
-extern void write_resolve_text(void);
+extern void write_resolve_text(long_boolean doing_file);
 extern uims_reply full_resolve(search_kind goal);
 extern int concepts_in_place(void);
 extern int reconcile_command_ok(void);
@@ -2015,6 +2079,8 @@ extern void on_your_own_move(
    setup *ss,
    parse_block *parseptr,
    setup *result);
+
+extern void punt_centers_use_concept(setup *ss, setup *result);
 
 extern void so_and_so_only_move(
    setup *ss,

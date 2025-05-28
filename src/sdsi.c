@@ -151,6 +151,7 @@ extern char *strerror(int);
 
 #include "sd.h"
 #include "paths.h"
+extern long_boolean need_new_header_comment;
 extern call_list_mode_t call_list_mode;
 
 
@@ -642,7 +643,7 @@ Private long_boolean parse_level(Cstring s, dance_level *levelp)
 static int session_index = 0;        /* If this is nonzero, we have opened a session. */
 
 
-extern long_boolean open_session(int *argcp, char ***argvp)
+extern long_boolean open_session(int argc, char **argv)
 {
    int session_linenum = 0;
    int session_position;
@@ -650,20 +651,50 @@ extern long_boolean open_session(int *argcp, char ***argvp)
    int argno;
    FILE *session;
    char line[MAX_FILENAME_LENGTH];
+   char **args;
+   int nargs = argc;
 
+   /* Copy the arguments, so that we can use "realloc" to grow the list. */
 
+   args = (char **) get_mem(nargs * sizeof(char *));
 
+   (void) memcpy(args, argv, nargs * sizeof(char *));
 
+   /* Read the initialization file, looking for options. */
 
-   /* This lets the X user interface intercept command line arguments that it is
-      interested in.  It also handles the flags "-seq" and "-db". */
-   uims_process_command_line(argcp, argvp);
+   session = fopen(SESSION_FILENAME, "r");
+
+   if (session) {
+      /* Search for the "[Options]" indicator. */
+
+      for (;;) {
+         if (!fgets(line, MAX_FILENAME_LENGTH, session)) goto no_options;
+         if (!strncmp(line, "[Options]", 9)) break;
+      }
+
+      for (;;) {
+         if (!fgets(line, MAX_FILENAME_LENGTH, session) || line[0] == '\n') break;
+         nargs++;
+         args = (char **) get_more_mem(args, nargs * sizeof(char *));
+         for (i=nargs-1 ; i>1 ; i--) args[i] = args[i-1];
+         j = strlen(line);
+         if (j>0) line[j-1] = '\0';   /* Strip off the <NEWLINE> -- we don't want it. */
+         args[1] = (char *) get_mem(j+2);
+         args[1][0] = '-';    /* Put a '-' in front of it. */
+         (void) memcpy(&args[1][1], line, j+1);
+      }
+
+      no_options: ;
+   }
+
+   /* This lets the user interface intercept command line arguments that it is interested in. */
+   uims_process_command_line(&nargs, &args);
 
    call_list_mode = call_list_mode_none;
-
    calling_level = l_mainstream;    /* The default. */
-   for (argno=1; argno < (*argcp); argno++) {
-      if ((*argvp)[argno][0] == '-') {
+
+   for (argno=1; argno < nargs; argno++) {
+      if (args[argno][0] == '-') {
          call_list_mode_t this_mode_maybe = call_list_mode_none;
 
          /* Special flag: must be one of
@@ -673,48 +704,49 @@ extern long_boolean open_session(int *argcp, char ***argvp)
                   indicated level and all lower levels INSTEAD OF running the program
             -abridge <filename>  -- read in the file, strike all the calls
                   contained therein off the menus, and proceed.
-            -diagnostic  -- (this is a hidden flag) suppress display of verison info */
+            -diagnostic  -- (this is a hidden flag) suppress display of version info */
 
-         if (strcmp(&(*argvp)[argno][1], "write_list") == 0)
+         if (strcmp(&args[argno][1], "write_list") == 0)
             this_mode_maybe = call_list_mode_writing;
-         else if (strcmp(&(*argvp)[argno][1], "write_full_list") == 0)
+         else if (strcmp(&args[argno][1], "write_full_list") == 0)
             this_mode_maybe = call_list_mode_writing_full;
-         else if (strcmp(&(*argvp)[argno][1], "abridge") == 0)
+         else if (strcmp(&args[argno][1], "abridge") == 0)
             this_mode_maybe = call_list_mode_abridging;
-         else if (strcmp(&(*argvp)[argno][1], "diagnostic") == 0)
+         else if (strcmp(&args[argno][1], "diagnostic") == 0)
             { diagnostic_mode = TRUE; continue; }
-
-	 /*
-	  * These options may be handled by the UI, but if not
-	  * be sure it gets done.
-	  */
-         else if (strcmp(&(*argvp)[argno][1], "sequence") == 0) {
-	     if (argno+1 < (*argcp))
-		 strncpy(outfile_string, (*argvp)[argno+1], MAX_FILENAME_LENGTH);
+         else if (strcmp(&args[argno][1], "singlespace") == 0)
+            { singlespace_mode = TRUE; continue; }
+         else if (strcmp(&args[argno][1], "discard_after_error") == 0)
+            { erase_after_error = TRUE; continue; }
+         else if (strcmp(&args[argno][1], "active_phantoms") == 0)
+            { using_active_phantoms = TRUE; continue; }
+         else if (strcmp(&args[argno][1], "sequence") == 0) {
+	     if (argno+1 < nargs)
+		 strncpy(outfile_string, args[argno+1], MAX_FILENAME_LENGTH);
 	 }
-         else if (strcmp(&(*argvp)[argno][1], "db") == 0) {
-	     if (argno+1 < (*argcp))
-		 database_filename = (*argvp)[argno+1];
+         else if (strcmp(&args[argno][1], "db") == 0) {
+	     if (argno+1 < nargs)
+		 database_filename = args[argno+1];
 	 }
          else
-            uims_bad_argument("Unknown flag:", (*argvp)[argno], (char *) 0);
+            uims_bad_argument("Unknown flag:", args[argno], (char *) 0);
 
          /* At this point, if "this_mode_maybe" is not null, we have to deal with some
             kind of "write_list" or "abridge" operation.  If not, we have already processed
             the file name, and all that remains is to check its existence and then skip it. */
 
          argno++;
-         if (argno >= (*argcp))
-            uims_bad_argument("This flag must be followed by a file name:", (*argvp)[argno-1], NULL);
+         if (argno >= nargs)
+            uims_bad_argument("This flag must be followed by a file name:", args[argno-1], NULL);
 
          if (this_mode_maybe != call_list_mode_none) {
             call_list_mode = this_mode_maybe;
-            if (open_call_list_file(call_list_mode, (*argvp)[argno]))
+            if (open_call_list_file(call_list_mode, args[argno]))
                exit_program(1);
          }
       }
-      else if (!parse_level((*argvp)[argno], &calling_level)) {
-         uims_bad_argument("Unknown calling level argument:", (*argvp)[argno],
+      else if (!parse_level(args[argno], &calling_level)) {
+         uims_bad_argument("Unknown calling level argument:", args[argno],
             "Known calling levels: m, p, a1, a2, c1, c2, c3a, c3, c3x, c4a, or c4.");
       }
    }
@@ -727,16 +759,20 @@ extern long_boolean open_session(int *argcp, char ***argvp)
    if (call_list_mode == call_list_mode_writing || call_list_mode == call_list_mode_writing_full)
       goto no_session;
 
-   if (diagnostic_mode) goto no_session;
+   /* Or if the file didn't exist, or we are in diagnostic mode. */
+   if (!session || diagnostic_mode) goto no_session;
+
+   if (fseek(session, 0, SEEK_SET))
+      goto no_session;
 
    if (!(session = fopen(SESSION_FILENAME, "r")))
-      goto no_session_close;
+      goto no_session;
 
-   /* Search for the "[Session]" indicator. */
+   /* Search for the "[Sessions]" indicator. */
 
    for (;;) {
-      if (!fgets(line, MAX_FILENAME_LENGTH, session)) goto no_session_close;
-      if (!strncmp(line, "[Session]", 9)) break;
+      if (!fgets(line, MAX_FILENAME_LENGTH, session)) goto no_session;
+      if (!strncmp(line, "[Sessions]", 10)) break;
    }
 
    session_position = ftell(session);
@@ -753,10 +789,10 @@ extern long_boolean open_session(int *argcp, char ***argvp)
 
    printf("Enter the number of the desired session:  ");
    if (!gets(line))
-      goto no_session_close;
+      goto no_session;
 
    if (!sscanf(line, "%d", &session_index) || session_index == 0)
-      goto no_session_close;
+      goto no_session;
 
    if (session_index < 0) {
       (void) fclose(session);
@@ -774,7 +810,7 @@ extern long_boolean open_session(int *argcp, char ***argvp)
 
             if (sscanf(line, "%s %s %d %n", outfile_string, session_levelstring, &sequence_number, &ccount) != 3) {
                printf("Bad format in session file.\n");
-               goto no_session_close;
+               goto no_session;
             }
 
             #if defined(MSDOS)
@@ -785,24 +821,21 @@ extern long_boolean open_session(int *argcp, char ***argvp)
 
             if (!parse_level(session_levelstring, &calling_level)) {
                printf("Bad level given in session file.\n");
-               goto no_session_close;
+               goto no_session;
             }
 
             strncpy(header_comment, &line[ccount], MAX_TEXT_LINE_LENGTH);
             j = strlen(header_comment);
-            if (j>0) header_comment[j-1] = '\0';
+            if (j>0) header_comment[j-1] = '\0';   /* Strip off the <NEWLINE> -- we don't want it. */
          }
       }
    }
-   else
+   else {
       sequence_number = 1;       /* We are creating a new session to be appended to the file. */
+      need_new_header_comment = TRUE;
+   }
 
-   (void) fclose(session);
    goto really_do_it;
-
-   no_session_close:
-
-   if (session) (void) fclose(session);
 
    no_session:
 
@@ -810,12 +843,7 @@ extern long_boolean open_session(int *argcp, char ***argvp)
 
    really_do_it:
 
-   /* We need to take away the "zig-zag" directions if the pevel is below A2. */
-
-   if (calling_level < zig_zag_level) {
-      last_direction_kind = direction_out;
-      direction_names[direction_out+1] = (Cstring) 0;
-   }
+   if (session) (void) fclose(session);
 
    return FALSE;
 }
@@ -844,12 +872,12 @@ extern void final_exit(int code)
             else {
                long_boolean more_stuff = FALSE;
 
-               /* Search for the "[Session]" indicator. */
+               /* Search for the "[Sessions]" indicator. */
 
                for (;;) {
                   if (!fgets(line, MAX_FILENAME_LENGTH, rfile)) goto copy_done;
                   if (!fputs(line, wfile)) goto copy_failed;
-                  if (!strncmp(line, "[Session]", 9)) break;
+                  if (!strncmp(line, "[Sessions]", 10)) break;
                }
 
                for (i=0 ; ; i++) {

@@ -40,6 +40,7 @@ typedef struct zilch {
    selector_kind who;        /* matches <anyone> */
    direction_kind where;     /* matches <direction> */
    uint32 tagger;            /* matches <atc> */
+   uint32 circcer;           /* matches <anything> as in <anything> motivate */
    Const struct zilch *modifier_parent;
    modifier_block *newmodifiers;   /* has "left", "magic", etc. modifiers. */
    concept_descriptor *current_modifier;
@@ -47,7 +48,7 @@ typedef struct zilch {
    uint32 number_fields;     /* matches all the number fields */
    int howmanynumbers;       /* tells how many there are */
    int space_ok;             /* space is a legitimate next input character */
-   int callflags1;           /* contains the "yield_if_ambiguous" flag */
+   int yield_depth;          /* if nonzero, this yields by that amount */
    int yielding_matches;     /* how many matches have that flag on */
 } match_result;
 
@@ -58,7 +59,8 @@ enum {
     match_resolve_commands = -2,
     match_selectors = -3,
     match_directions = -4,
-    match_taggers = -8      /* This is the lowest of 4 numbers. */
+    match_taggers = -8,      /* This is the lowest of 4 numbers. */
+    match_circcer = -9
 };
 
 

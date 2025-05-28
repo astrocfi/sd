@@ -129,6 +129,8 @@ int begin_sizes[] = {
    8,          /* b_thar */
    8,          /* b_ptpd */
    8,          /* b_pptpd */
+   8,          /* b_1x3dmd */
+   8,          /* b_p1x3dmd */
    8,          /* b_3x1dmd */
    8,          /* b_p3x1dmd */
    12,         /* b_3dmd */

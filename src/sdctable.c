@@ -522,8 +522,9 @@ concept_descriptor concept_descriptor_table[] = {
    {"BACK-TO-FRONT PARALLELOGRAM",           concept_misc_distort,          0, l_c3a,        {0, 4, 8}},
    {"BACK-TO-BACK PARALLELOGRAM",            concept_misc_distort,          0, l_c3a,        {0, 4, 16}},
 /* -------- column break -------- */
-#define d4__4_size 4
-#define d4__4_pibl 1
+#define d4__4_size 5
+#define d4__4_pibl 2
+   {"BLOCKS",                                concept_do_phantom_2x2,        0, l_c1,         {&map_blocks, phantest_2x2_only_two}},
    {"IN YOUR BLOCKS",                        concept_do_phantom_2x2,        0, l_c1,         {&map_blocks, phantest_2x2_only_two}},
    {"4 PHANTOM INTERLOCKED BLOCKS",          concept_do_phantom_2x2,        0, l_c4a,        {&map_blocks, phantest_2x2_both}},
    {"TRIANGULAR BOXES",                      concept_do_phantom_2x2,        0, l_c4,         {&map_trglbox, phantest_2x2_only_two}},
@@ -584,12 +585,12 @@ concept_descriptor concept_descriptor_table[] = {
    {"ASSUME FACING INTERLOCKED DIAMONDS",    concept_assume_waves,          0, l_c3,         {0, cr_ijleft,     4, 0}},
    {"ASSUME NORMAL CASTS",                   concept_assume_waves,          0, l_c3,         {0, cr_alwaysfail, 0, 0}},
    {"WITH ACTIVE PHANTOMS",                  concept_active_phantoms,       0, l_c3},
-   {"CENTRAL",                               concept_central,               0, l_c3,         {0, CMD_MISC__CENTRAL_PLAIN}},
-   {"SNAG",                                  concept_snag_mystic,           0, l_c4,         {0, CMD_MISC__CENTRAL_SNAG}},
-   {"MYSTIC",                                concept_snag_mystic,           0, l_c4,         {0, CMD_MISC__CENTRAL_MYSTIC}},
-   {"INVERT SNAG",                           concept_snag_mystic,           0, l_c4,         {0, CMD_MISC__CENTRAL_SNAG | CMD_MISC__INVERT_CENTRAL}},
-   {"INVERT MYSTIC",                         concept_snag_mystic,           0, l_c4,         {0, CMD_MISC__CENTRAL_MYSTIC | CMD_MISC__INVERT_CENTRAL}},
-   {"FAN",                                   concept_fan_or_yoyo,           0, l_c3},
+   {"CENTRAL",                               concept_central,               0, l_c3,         {0, CMD_MISC2__CENTRAL_PLAIN}},
+   {"SNAG",                                  concept_snag_mystic,           0, l_c4,         {0, CMD_MISC2__CENTRAL_SNAG}},
+   {"MYSTIC",                                concept_snag_mystic,           0, l_c4,         {0, CMD_MISC2__CENTRAL_MYSTIC}},
+   {"INVERT SNAG",                           concept_snag_mystic,           0, l_c4,         {0, CMD_MISC2__CENTRAL_SNAG | CMD_MISC2__INVERT_CENTRAL}},
+   {"INVERT MYSTIC",                         concept_snag_mystic,           0, l_c4,         {0, CMD_MISC2__CENTRAL_MYSTIC | CMD_MISC2__INVERT_CENTRAL}},
+   {"FAN",                                   concept_fan,                   0, l_c3},
    {"YOYO",                                  concept_yoyo,                  0, l_c4},
    {"@6 ARE STANDARD IN",                    concept_standard,              0, l_c4a,        {0, 0}},
    {"STABLE",                                concept_stable,                0, l_c3a,        {0, FALSE, FALSE}},
@@ -602,7 +603,7 @@ concept_descriptor concept_descriptor_table[] = {
    {"FERRIS",                                concept_ferris,                0, l_c3x,        {0, 0}},
    {"RELEASE",                               concept_ferris,                0, l_c3a,        {0, 1}},
 /* -------- column break -------- */
-#define mm__2_size 51
+#define mm__2_size 56
    {"CENTERS",                               concept_centers_or_ends,       0, l_mainstream, {0, 0}},
    {"ENDS",                                  concept_centers_or_ends,       0, l_mainstream, {0, 1}},
    {"CENTERS AND ENDS",                      concept_centers_and_ends,      0, l_mainstream, {0, 0}},
@@ -612,6 +613,8 @@ concept_descriptor concept_descriptor_table[] = {
    {"OUTER 2",                               concept_centers_or_ends,       0, l_mainstream, {0, 3}},
    {"CENTER 6/OUTER 2",                      concept_centers_and_ends,      0, l_mainstream, {0, 2}},
    {"CENTER 2/OUTER 6",                      concept_centers_and_ends,      0, l_mainstream, {0, 3}},
+   {"ENDS CONCENTRIC",                       concept_centers_or_ends,       0, l_c1,         {0, 7}},
+   {"CENTERS AND ENDS CONCENTRIC",           concept_centers_and_ends,      0, l_c1,         {0, 7}},
          {"", concept_comment, 0, l_nonexistent_concept},
    {"CHECKPOINT",                            concept_checkpoint,            0, l_c2,         {0, 0}},
    {"REVERSE CHECKPOINT",                    concept_checkpoint,            0, l_c3,         {0, 1}},
@@ -622,12 +625,13 @@ concept_descriptor concept_descriptor_table[] = {
          {"", concept_comment, 0, l_nonexistent_concept},
    {"@6",                                    concept_so_and_so_only,        2, l_mainstream, {0, 4}},
    {"@6 (while the others)",                 concept_some_vs_others,        0, l_mainstream, {0, 5}},
-   {"@6 DISCONNECTED",                       concept_so_and_so_only,        0, l_c2, {0, 6}},
-   {"@6 DISCONNECTED (while the others)",    concept_some_vs_others,        0, l_c2, {0, 7}},
+   {"@6 DISCONNECTED",                       concept_so_and_so_only,        0, l_c2,         {0, 6}},
+   {"@6 DISCONNECTED (while the others)",    concept_some_vs_others,        0, l_c2,         {0, 7}},
    {"@6 DO YOUR PART",                       concept_so_and_so_only,        0, l_mainstream, {0, 0}},
    {"@6 DO YOUR PART (while the others)",    concept_some_vs_others,        0, l_mainstream, {0, 1}},
    {"ON YOUR OWN",                           concept_on_your_own,           0, l_c4a},
    {"OWN THE @6",                            concept_some_vs_others,        0, l_c3a,        {0, 3}},
+   {"@6 WORK <concept>",                     concept_so_and_so_only,        0, l_c2,         {0, 9}},
          {"", concept_comment, 0, l_nonexistent_concept},
    {"two calls in succession",               concept_sequential,            0, l_mainstream},
    {"FOLLOW IT BY",                          concept_special_sequential,    0, l_c2,         {0, 0}},
@@ -646,18 +650,20 @@ concept_descriptor concept_descriptor_table[] = {
    {"DO THE LAST @9/@9",                     concept_fractional,            0, l_c1,         {0, 1}},
    {"REVERSE ORDER",                         concept_meta,                  0, l_c3,         {0, 5}},
    {"INTERLACE",                             concept_interlace,             0, l_c3x},
-   {"INITIALLY <concept>",                   concept_meta,                  0, l_c2,         {0, 3}},
+   {"INITIALLY <concept>",                   concept_meta,                  0, l_c4,         {0, 3}},
+   {"FINALLY <concept>",                     concept_meta,                  0, l_c4,         {0, 7}},
    {"FINISH",                                concept_meta,                  0, l_c2,         {0, 4}},
    {"LIKE A",                                concept_meta,                  0, l_c2,         {0, 6}},
+   {"SHIFT @9",                              concept_nth_part,              0, l_c4,         {0, 10}},
    {"@6 START",                              concept_so_and_so_begin,       0, l_c2,         {0, 0}},
-   {"SKIP THE @u PART",                      concept_nth_part,              0, l_c2,         {0, 1}},
-   {"DO THE @u PART <concept>",              concept_nth_part,              0, l_c2,         {0, 0}},
+   {"SKIP THE @u PART",                      concept_nth_part,              0, l_c2,         {0, 9}},
+   {"DO THE @u PART <concept>",              concept_nth_part,              0, l_c2,         {0, 8}},
    {"REPLACE THE @u PART",                   concept_replace_nth_part,      0, l_c2,         {0, 0}},
    {"INTERRUPT AFTER THE @u PART",           concept_replace_nth_part,      0, l_c2,         {0, 1}},
 /* -------- column break -------- */
-#define mm__3_size 50
-#define mm__3_3x3 44
-#define mm__3_4x4 45
+#define mm__3_size 52
+#define mm__3_3x3 46
+#define mm__3_4x4 47
    {"INSIDE TRIANGLES",                      concept_randomtrngl,           0, l_c1,         {0, 2}},
    {"OUTSIDE TRIANGLES",                     concept_randomtrngl,           0, l_c1,         {0, 3}},
    {"IN POINT TRIANGLES",                    concept_randomtrngl,           0, l_c1,         {0, 1}},
@@ -670,8 +676,10 @@ concept_descriptor concept_descriptor_table[] = {
          {"", concept_comment, 0, l_nonexistent_concept},
    {"CONCENTRIC",                            concept_concentric,            0, l_c1,         {0, schema_concentric}},
    {"CROSS CONCENTRIC",                      concept_concentric,            0, l_c2,         {0, schema_cross_concentric}},
-   {"SINGLE CONCENTRIC",                     concept_single_concentric,     0, l_c4,         {0, schema_single_concentric}},
-   {"SINGLE CROSS CONCENTRIC",               concept_single_concentric,     0, l_c4,         {0, schema_single_cross_concentric}},
+   {"SINGLE CONCENTRIC",                     concept_concentric,            0, l_c4,         {0, schema_single_concentric}},
+   {"SINGLE CROSS CONCENTRIC",               concept_concentric,            0, l_c4,         {0, schema_single_cross_concentric}},
+   {"CONCENTRIC DIAMONDS",                   concept_concentric,            0, l_c1,         {0, schema_concentric_diamonds}},
+   {"CROSS CONCENTRIC DIAMONDS",             concept_concentric,            0, l_c2,         {0, schema_cross_concentric_diamonds}},
          {"", concept_comment, 0, l_nonexistent_concept},
    {"GRAND WORKING FORWARD",                 concept_grand_working,         0, l_c3x,        {0, 0}},
    {"GRAND WORKING BACKWARD",                concept_grand_working,         0, l_c3x,        {0, 2}},

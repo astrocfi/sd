@@ -72,9 +72,7 @@ is to receive instruction from a qualified teacher/coach, and to practice.
 
 Quality, correctness, and reliability are fundamental and extremely important
 design goals of Sd and Sdtty.  Before any version is released, it must pass
-very rigorous diagnostic tests.  In addition to special diagnostics to test
-the programs' internal functions, it is tested against a large amount of material
-transcribed from actual challenge dances called by a number of callers.
+very rigorous diagnostic tests.
 
 @unnumberedsec Authenticity of Calls and Concepts
 
@@ -113,14 +111,16 @@ notes in other chapters.
 @menu
 * Documentation::               Documentation
 * Getting Sd or Sdtty::         Getting Sd or Sdtty
-* Contact Info::                How to Contact the Authors
+* Licensing Terms::             Licensing Terms
+* Author Contact::              How to Contact the Authors
 * Acknowledgements::            Acknowledgements
 @end menu
 
 @node Documentation, Getting Sd or Sdtty,  , Intro
 @unnumberedsec Documentation
 
-The file @file{INSTALL} contains instructions for building and
+If you received the program in the form of source files,
+the file @file{INSTALL} contains instructions for building and
 installing Sd and for formatting and printing its documentation.
 If you have received the program in pre-built form, you shouldn't
 need to read it.
@@ -136,14 +136,14 @@ release.
 Printed copies of the manual are available from the authors, or may be
 printed from the file @file{sd_doc.ps}.
 
-@node Getting Sd or Sdtty, Contact Info, Documentation, Intro
+@node Getting Sd or Sdtty, Licensing Terms, Documentation, Intro
 @unnumberedsec Getting Sd or Sdtty
 
 You can obtain Sdtty for DOS on PC-compatible computers,
 on a 3.5-inch HD disk, with printed documentation.
 The price is $4 (price valid for 1995).
 @ifset full-manual
-@xref{Contact Info}.
+@xref{Author Contact}.
 @end ifset
 If you want sources, or a different format instead, please say so.
 
@@ -204,22 +204,35 @@ World Wide Web.  Give the locator
 @end ifset
 to your WWW browser program.
 
-Sd and Sdtty are ``free'' programs, in that they are licensed under the
-GNU General Public License, which is an appendix to this manual.
-In short, this means that it is perfectly legal and ethical to copy
-and redistribute the program and documentation.  For example, you may
-obtain the program by having a friend copy the disk and manual for you.
-(Or just copy the disk and print your own manual from the file
-that is on the disk.)
+@node Licensing Terms, Author Contact, Getting Sd or Sdtty, Intro
+@unnumberedsec Licensing Terms
 
-Sd and Sdtty are sometimes also distributed in source form.  The licensing
-terms for distribution of source files, or programs made from modified
+Sd and Sdtty are ``free'' programs.  In short, this means that it is
+perfectly legal and ethical to copy and redistribute the program and
+documentation.  For example, you may obtain the program by having a
+friend copy the disk and manual for you.  (Or just copy the disk and
+print your own manual from the file that is on the disk.)
+
+Sd and Sdtty are sometimes also distributed in source form.  When so
+distributed, they are licensed under the GNU General Public License,
+which is in the file @file{COPYING}.  The terms of this license,
+for distribution of source files or programs made from modified
 source files, are very strict.  Programs constructed from modified source
-files may never be duplicated or redistributed by anyone, even in binary
+files may never be duplicated or redistributed by anyone, even in executable
 form, without obeying the conditions of the license.
 Read the license carefully.
 
-@node Contact Info, Acknowledgements, Getting Sd or Sdtty, Intro
+Note in particular that any modified program based on Sd or Sdtty must
+obey the licensing terms every time it is redistributed by anyone.
+This requires redistribution of all of the source files, or otherwise
+complying with section 3 of the license.
+
+This document is distributed in both formatted and plain-text form, in the
+files @file{sd_doc.ps} and @file{sd_doc.txt}, respectively.  Permission is
+given to distribute verbatim copies, either by photocopier or by computer,
+but modification of the document is forbidden by copyright law.
+
+@node Author Contact, Acknowledgements, Licensing Terms, Intro
 @unnumberedsec How to Contact the Authors
 
 The Internet mailing list @code{sd@@x.org} is for discussion of Sd
@@ -266,7 +279,7 @@ North Billerica MA 01862-2722
 @end display
 
 @ifset full-manual
-@node Acknowledgements, , Contact Info,Intro
+@node Acknowledgements, , Author Contact, Intro
 @unnumberedsec Acknowledgements
 
 Thanks to Kathy Godfrey, Sue Curtis, Chris Stacy, and Lynette Bellini

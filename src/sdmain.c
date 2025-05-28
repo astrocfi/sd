@@ -27,7 +27,7 @@
     General Public License if you distribute the file.
 */
 
-#define VERSION_STRING "31.3"
+#define VERSION_STRING "31.4"
 
 /* We cause this string (that is, the concatentaion of these strings) to appear
    in the binary image of the program, so that the "what" and "ident" utilities
@@ -71,11 +71,15 @@ and the following external variables:
    base_calls
    number_of_taggers
    tagger_calls
+   number_of_circcers
+   circcer_calls
    outfile_string
    header_comment
+   need_new_header_comment
    sequence_number
    last_file_position
    global_age
+   erase_after_error
    parse_state
    uims_menu_index
    database_version
@@ -100,6 +104,8 @@ and the following external variables:
 #include <stdio.h>
 #include <string.h>
 #include "sd.h"
+extern long_boolean need_new_header_comment;
+extern void uims_display_help(void);
 #include "paths.h"
    
 
@@ -110,19 +116,23 @@ extern char *sd_version_string(void)
 
 Private void display_help(void)
 {
-    printf("Sd version %s : ui%s\n",
-	   sd_version_string(), uims_version_string());
-    printf("Usage: sd [flags ...] level\n");
-    printf("  legal flags:\n");
-    printf("-write_list filename        write out list for this level\n");
-    printf("-write_full_list filename   write this list and all lower\n");
-    printf("-abridge filename           do not use calls in this file\n");
-    printf("-sequence filename          base name for sequence output (def \"%s\")\n",
-           SEQUENCE_FILENAME);
-    printf("-db filename                calls database file (def \"%s\")\n",
-           DATABASE_FILENAME);
-    printf("\nIn addition, the usual window system flags are supported.\n");
-    exit_program(0);
+   printf("Sd version %s : ui%s\n",
+   sd_version_string(), uims_version_string());
+   printf("Usage: sd [flags ...] level\n");
+   printf("  legal flags:\n");
+   printf("-write_list filename        write out list for this level\n");
+   printf("-write_full_list filename   write this list and all lower\n");
+   printf("-abridge filename           do not use calls in this file\n");
+   printf("-singlespace                single space the output file\n");
+   printf("-discard_after_error        discard pending concepts after error\n");
+   printf("-active_phantoms            use active phantoms for \"assume\" operations\n");
+   printf("-sequence filename          base name for sequence output (def \"%s\")\n",
+          SEQUENCE_FILENAME);
+   printf("-db filename                calls database file (def \"%s\")\n",
+          DATABASE_FILENAME);
+
+   uims_display_help();          /* Get any others that the UI wants to tell us about. */
+   exit_program(0);
 }
 
 
@@ -133,12 +143,16 @@ int max_base_calls;
 callspec_block **base_calls;        /* Gets allocated as array of pointers in sdinit. */
 int number_of_taggers[4];
 callspec_block **tagger_calls[4];
+int number_of_circcers;
+callspec_block **circcer_calls;
 char outfile_string[MAX_FILENAME_LENGTH] = SEQUENCE_FILENAME;
 char header_comment[MAX_TEXT_LINE_LENGTH] = "";
+long_boolean need_new_header_comment = FALSE;
 call_list_mode_t call_list_mode;
 int sequence_number = -1;
 int last_file_position = -1;
 int global_age;
+long_boolean erase_after_error;
 parse_state_type parse_state;
 int uims_menu_index;
 char database_version[81];
@@ -330,6 +344,7 @@ Private parse_block *get_parse_block(void)
    item->direction = direction_uninitialized;
    item->number = 0;
    item->tagger = -1;
+   item->circcer = -1;
    item->subsidiary_root = (parse_block *) 0;
    item->next = (parse_block *) 0;
 
@@ -379,6 +394,7 @@ extern parse_block *copy_parse_tree(parse_block *original_tree)
       new_item->call = old_item->call;
       new_item->selector = old_item->selector;
       new_item->tagger = old_item->tagger;
+      new_item->circcer = old_item->circcer;
       new_item->direction = old_item->direction;
       new_item->number = old_item->number;
 
@@ -420,6 +436,7 @@ Private void reset_parse_tree(
       new_item->call = old_item->call;
       new_item->selector = old_item->selector;
       new_item->tagger = old_item->tagger;
+      new_item->circcer = old_item->circcer;
       new_item->direction = old_item->direction;
       new_item->number = old_item->number;
 
@@ -475,6 +492,7 @@ extern long_boolean deposit_call(callspec_block *call)
    selector_kind sel = selector_uninitialized;
    direction_kind dir = direction_uninitialized;
    int tagg = -1;
+   int circc = -1;
    int number_list = 0;
    int howmanynums = (call->callflags1 & CFLAG1_NUMBER_MASK) / CFLAG1_NUMBER_BIT;
 
@@ -485,7 +503,7 @@ extern long_boolean deposit_call(callspec_block *call)
 
       if (number_of_taggers[tagclass] == 0) return TRUE;   /* We can't possibly do this. */
 
-      if (interactivity == interactivity_database_init || interactivity == interactivity_verify) {
+      if (interactivity == interactivity_database_init) {
          tagg = 1;   /* This may not be right. */
          tagg |= tagclass << 5;
       }
@@ -494,7 +512,7 @@ extern long_boolean deposit_call(callspec_block *call)
          hash_nonrandom_number(tagg - 1);
          tagg |= tagclass << 5;
       }
-      else if (interactivity != interactivity_normal) {
+      else if (interactivity != interactivity_normal && interactivity != interactivity_verify) {
          tagg = generate_random_number(number_of_taggers[tagclass])+1;
          hash_nonrandom_number(tagg - 1);
          tagg |= tagclass << 5;
@@ -503,9 +521,30 @@ extern long_boolean deposit_call(callspec_block *call)
          return TRUE;
    }
 
+   /* Or circulating call index. */
+
+   if (call->callflagsh & CFLAGH__CIRC_CALL_RQ_BIT) {
+      if (number_of_circcers == 0) return TRUE;   /* We can't possibly do this. */
+
+      if (interactivity == interactivity_database_init) {
+         circc = 1;   /* This may not be right. */
+      }
+      else if (interactivity == interactivity_starting_first_scan || interactivity == interactivity_in_first_scan) {
+         circc = 1;
+         hash_nonrandom_number(circc - 1);
+      }
+      else if (interactivity != interactivity_normal && interactivity != interactivity_verify) {
+         circc = generate_random_number(number_of_circcers)+1;
+         hash_nonrandom_number(circc - 1);
+      }
+      else if ((circc = uims_do_circcer_popup()) == 0)
+         return TRUE;
+   }
+
    /* At this point, tagg contains 8 bits:
          3 bits of tagger list (zero-based - 0/1/2/3)
-         5 bits of tagger within that list (1-based). */
+         5 bits of tagger within that list (1-based).
+      and circc has just the number (1-based). */
 
    /* Put in selector, direction, and/or number as required. */
 
@@ -579,6 +618,7 @@ extern long_boolean deposit_call(callspec_block *call)
    new_block->direction = dir;
    new_block->number = number_list;
    new_block->tagger = -1;
+   new_block->circcer = -1;
 
    /* Filling in the tagger requires recursion! */
 
@@ -600,6 +640,28 @@ extern long_boolean deposit_call(callspec_block *call)
 
       parse_state.concept_write_ptr = &new_block->next->subsidiary_root;
       if (deposit_call(tagger_calls[tagclass][tagg-1]))
+         longjmp(longjmp_ptr->the_buf, 5);     /* User waved the mouse away while getting subcall. */
+      parse_state.concept_write_ptr = savecwp;
+   }
+
+   /* Filling in the circcer does too, but it isn't serious. */
+
+   if (circc > 0) {
+      parse_block **savecwp = parse_state.concept_write_ptr;
+
+      new_block->circcer = circc;
+      new_block->concept = &marker_concept_mod;
+      new_block->next = get_parse_block();
+      new_block->next->concept = &marker_concept_mod;
+
+      /* Deposit the index of the base circcing call.  This will of course be replaced. */
+
+      new_block->next->call = base_calls[BASE_CALL_CIRCCER];
+
+      if (circc > number_of_circcers) fail("bad circcer index???");
+
+      parse_state.concept_write_ptr = &new_block->next->subsidiary_root;
+      if (deposit_call(circcer_calls[circc-1]))
          longjmp(longjmp_ptr->the_buf, 5);     /* User waved the mouse away while getting subcall. */
       parse_state.concept_write_ptr = savecwp;
    }
@@ -758,7 +820,7 @@ extern long_boolean query_for_call(void)
          newline();
          writestuff("     resolve is:");
          newline();
-         write_resolve_text();
+         write_resolve_text(FALSE);
          newline();
       }
       
@@ -1145,6 +1207,14 @@ void main(int argc, char *argv[])
 {
    int i;
 
+   enable_file_writing = FALSE;
+   singlespace_mode = FALSE;
+   erase_after_error = FALSE;
+   interactivity = interactivity_database_init;
+   testing_fidelity = FALSE;
+   parse_active_list = (parse_block *) 0;
+   parse_inactive_list = (parse_block *) 0;
+
    if (argc >= 2 && strcmp(argv[1], "-help") == 0)
        display_help();		/* does not return */
 
@@ -1155,17 +1225,17 @@ void main(int argc, char *argv[])
    /* Read the command line arguments and process the initialization file.
       This will return TRUE if we are to cease execution immediately. */
 
-   if (open_session(&argc, &argv)) goto normal_exit;
+   if (open_session(argc, argv)) goto normal_exit;
+
+   /* We need to take away the "zig-zag" directions if the level is below A2. */
+
+   if (calling_level < zig_zag_level) {
+      last_direction_kind = direction_out;
+      direction_names[direction_out+1] = (Cstring) 0;
+   }
 
    if (call_list_mode == call_list_mode_none || call_list_mode == call_list_mode_abridging)
       uims_preinitialize();
-
-   enable_file_writing = FALSE;
-
-   interactivity = interactivity_database_init;
-   testing_fidelity = FALSE;
-   parse_active_list = (parse_block *) 0;
-   parse_inactive_list = (parse_block *) 0;
 
    if (history == 0) {
       history_allocation = 15;
@@ -1231,10 +1301,12 @@ void main(int argc, char *argv[])
    
       /* Try to remove the call from the current parse tree, but leave everything else
          in place.  This will fail if the parse tree, or our place on it, is too
-         complicated.  Also, we do not do it if in diagnostic mode, or if the special
-         "heads into the middle and ..." operation is in place. */
+         complicated.  Also, we do not do it if in diagnostic mode, or if the user
+         specified "erase_after_error", or if the special "heads into the middle and ..."
+         operation is in place. */
 
       if (     !diagnostic_mode && 
+               !erase_after_error &&
                ((history_ptr != 1) || !startinfolist[history[1].centersp].into_the_middle) &&
                backup_one_item()) {
          reply_pending = FALSE;
@@ -1259,13 +1331,7 @@ void main(int argc, char *argv[])
       newline();
       writestuff("SD comes with ABSOLUTELY NO WARRANTY; for details see the license.");
       newline();
-      writestuff("This is free software, and you are welcome to redistribute it ");
-      writestuff("under certain conditions; for details see the license.");
-      newline();
-      writestuff("You should have received a copy of the GNU General Public License ");
-      writestuff("along with this program, in the file \"COPYING\" or with the manual; if not, write to ");
-      writestuff("the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA ");
-      writestuff("02139, USA.");
+      writestuff("This is free software, and you are welcome to redistribute it.");
       newline();
       newline();
    }
@@ -1294,6 +1360,11 @@ void main(int argc, char *argv[])
 
    if (reply == ui_command_select && uims_menu_index == command_quit) goto normal_exit;
    if (reply != ui_start_select || uims_menu_index == 0) goto normal_exit;           /* Huh? */
+
+   if (need_new_header_comment) {
+      (void) uims_do_header_popup(header_comment);
+      need_new_header_comment = FALSE;
+   }
    
    history_ptr = 1;              /* Clear the position history. */
 
@@ -1575,20 +1646,13 @@ void main(int argc, char *argv[])
                goto start_cycle;
             }
          case command_getout:
-
             /* Check that it is really resolved. */
 
             if (!sequence_is_resolved())
                specialfail("This sequence is not resolved.");
-            if (write_sequence_to_file() == 0)
+            if (!write_sequence_to_file())
                goto start_cycle; /* user cancelled action */
-
-            writestuff("Sequence written to \"");
-            writestuff(outfile_string);
-            writestuff("\".");
-            newline();
             goto new_sequence;
-
          default:
             goto normal_exit;
       }
@@ -1607,6 +1671,7 @@ extern long_boolean write_sequence_to_file(void)
 {
    char date[MAX_TEXT_LINE_LENGTH];
    char header[MAX_TEXT_LINE_LENGTH];
+   char seqstring[20];
    int j;
 
    /* Open the file and write it. */
@@ -1631,8 +1696,8 @@ extern long_boolean write_sequence_to_file(void)
    }
 
    if (sequence_number >= 0) {
-      char seqstring[20];
-      (void) sprintf(seqstring, "   #%d", sequence_number);
+      (void) sprintf(seqstring, "#%d", sequence_number);
+      writestuff("   ");
       writestuff(seqstring);
       newline();
    }
@@ -1650,16 +1715,26 @@ extern long_boolean write_sequence_to_file(void)
       write_history_line(history_ptr+1, (char *) 0, FALSE, file_write_double);
    }
 
-   if (sequence_is_resolved()) {
-      doublespace_file();
-      write_resolve_text();
-   }
+   if (sequence_is_resolved())
+      write_resolve_text(TRUE);
 
    newline();
    enable_file_writing = FALSE;
    newline();
 
    close_file();     /* This will signal a "specialfail" if a file error occurs. */
+
+   writestuff("Sequence");
+
+   if (sequence_number >= 0) {
+      writestuff(" ");
+      writestuff(seqstring);
+   }
+
+   writestuff(" written to \"");
+   writestuff(outfile_string);
+   writestuff("\".");
+   newline();
 
    global_age++;
    return TRUE;
@@ -1683,7 +1758,9 @@ extern void get_real_subcall(
    parse_block *search;
    parse_block **newsearch;
    int number, snumber;
-   long_boolean this_is_tagger = item->call_id >= BASE_CALL_TAGGER0 && item->call_id <= BASE_CALL_TAGGER3;
+   long_boolean this_is_tagger_circcer =
+            (item->call_id >= BASE_CALL_TAGGER0 && item->call_id <= BASE_CALL_TAGGER3) ||
+            item->call_id == BASE_CALL_CIRCCER;
 
    /* Fill in defaults in case we choose not to get a replacement call. */
 
@@ -1709,7 +1786,7 @@ extern void get_real_subcall(
 
    /* But if this is a tagging call substitution, we most definitely do proceed with the search. */
 
-   if (!(item->modifiers1 & DFM1_CALL_MOD_MASK) && !this_is_tagger)
+   if (!(item->modifiers1 & DFM1_CALL_MOD_MASK) && !this_is_tagger_circcer)
       return;
 
    /* See if we had something from before.  This avoids embarassment if a call is actually
@@ -1741,7 +1818,7 @@ extern void get_real_subcall(
 
             *concptrout = subsidiary_ptr;
 
-            if (this_is_tagger) {
+            if (this_is_tagger_circcer) {
                *callout = subsidiary_ptr->call;
             }
             else {
@@ -1816,7 +1893,7 @@ extern void get_real_subcall(
 
    /* If doing a tagger, just get the call. */
 
-   if (snumber == 0 && this_is_tagger)
+   if (snumber == 0 && this_is_tagger_circcer)
       ;
 
    /* If the replacement is mandatory, or we are not interactive,
@@ -1833,7 +1910,8 @@ extern void get_real_subcall(
 
       modify_popup_kind kind;
 
-      if (this_is_tagger) kind = modify_popup_only_tag;
+      if (item->call_id >= BASE_CALL_TAGGER0 && item->call_id <= BASE_CALL_TAGGER3) kind = modify_popup_only_tag;
+      else if (item->call_id == BASE_CALL_CIRCCER) kind = modify_popup_only_circ;
       else kind = modify_popup_any;
 
       if (debug_popup || uims_do_modifier_popup(base_calls[item->call_id]->menu_name, kind)) {
@@ -1872,7 +1950,7 @@ extern void get_real_subcall(
    /* Search for special case of "must_be_tag_call" with no other modification bits.
       That means it is a new-style tagging call. */
 
-   if (snumber == 0 && this_is_tagger) {
+   if (snumber == 0 && this_is_tagger_circcer) {
       longjmp(longjmp_ptr->the_buf, 5);
    }
    else {

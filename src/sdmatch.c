@@ -97,7 +97,7 @@ Private modifier_block *get_modifier_block(void)
 
 
 
-static void match_wildcard(Cstring user, Cstring pat, pat2_block *pat2, char *patxp, Const match_result *result);
+static void match_wildcard(Cstring user, Cstring pat, pat2_block *pat2, char *patxp, concept_descriptor *special, Const match_result *result);
 static void match_grand(Cstring user, concept_descriptor *grand_concept, char *patxp, Const match_result *result);
 
 
@@ -331,10 +331,6 @@ static long_boolean verify_call(call_list_kind *clp, Const match_result *result)
       foobar = foobar->next;
    }
 
-#ifdef shouldnt_need
-   *call_menu_ptr = static_ss.call_menu;   /* deposit_concept screwed it up */
-#endif
-
    if (deposit_call(main_call_lists[*clp][result->index])) goto try_again;     /* Deposit_call returns true if something goes wrong. */
 
    *clp = savecl;         /* deposit_concept screwed it up */
@@ -395,6 +391,8 @@ static void strn_gcp(char *s1, char *s2)
     
 static void record_a_match(Const match_result *result)
 {
+   int old_yield = static_ss.result.yield_depth;
+
    if (static_ss.extended_input) {
       if (static_ss.match_count == 0)
          /* this is the first match */
@@ -403,13 +401,15 @@ static void record_a_match(Const match_result *result)
          strn_gcp(static_ss.extended_input, static_ss.extension);
    }
 
-   /* Always copy the first match.  Also, copy the first exact match.  Also, copy any exact match that isn't yielding.
-      Also, always copy, and process modifiers, if we are processing the "verify" operation. */
+   /* Always copy the first match.
+      Also, always copy, and process modifiers, if we are processing the "verify" operation.
+      Also, copy the first exact match, and any exact match that isn't yielding relative to what we have so far. */
 
    if (     static_ss.match_count == 0 ||
-            static_ss.exact_count == 0 ||
             static_ss.verify ||
-            (*static_ss.extension == '\0' && !(result->callflags1 & CFLAG1_YIELD_IF_AMBIGUOUS))) {
+            (*static_ss.extension == '\0' && (
+                  static_ss.exact_count == 0 || 
+                  result->yield_depth <= old_yield))) {
       Const match_result *foobar;
       static_ss.result = *result;
 
@@ -437,7 +437,7 @@ static void record_a_match(Const match_result *result)
 
    static_ss.match_count++;
 
-   if (result->callflags1 & CFLAG1_YIELD_IF_AMBIGUOUS)
+   if (result->yield_depth > old_yield)
       static_ss.yielding_matches++;
 
    if (static_ss.showing) {
@@ -494,7 +494,7 @@ static void match_suffix_2(Cstring user, Cstring pat1, pat2_block *pat2, char *p
             that are past the part that matches the user input */
 
          if (p == '@') {
-            match_wildcard(user, pat1, pat2, patxp, result);
+            match_wildcard(user, pat1, pat2, patxp, pat2_concept, result);
    
             if (user==0) {
                /* User input has run out, just looking for more wildcards. */
@@ -595,7 +595,7 @@ static void match_suffix_2(Cstring user, Cstring pat1, pat2_block *pat2, char *p
  * room in the Result struct to store the associated value.
  */
 
-static void match_wildcard(Cstring user, Cstring pat, pat2_block *pat2, char *patxp, Const match_result *result)
+static void match_wildcard(Cstring user, Cstring pat, pat2_block *pat2, char *patxp, concept_descriptor *special, Const match_result *result)
 {
    Cstring prefix;
    int i;
@@ -603,7 +603,7 @@ static void match_wildcard(Cstring user, Cstring pat, pat2_block *pat2, char *pa
    pat2_block p2b;
    char key = *pat++;
    p2b.car = pat;
-   p2b.special_concept = (concept_descriptor *) 0;
+   p2b.special_concept = special;
    p2b.next = pat2;
 
    /* if we are just listing the matching commands, there
@@ -657,6 +657,33 @@ static void match_wildcard(Cstring user, Cstring pat, pat2_block *pat2, char *pa
       for (i=0; i<number_of_taggers[tagclass]; ++i) {
          new_result.tagger++;
          match_suffix_2(user, tagger_calls[tagclass][i]->name, &p2b, patxp, &new_result);
+      }
+   }
+   else if ((key == 'N') && result->circcer == 0) {
+      char circname[80];
+
+      if (user == 0) return;
+
+      new_result = *result;
+
+      for (i=0; i<number_of_circcers; ++i) {
+         char *fromptr = circcer_calls[i]->name;
+         char *toptr = circname;
+         char c;
+         do {
+            c = *fromptr++;
+            if (c == '@') {
+               if (*fromptr++ == 'O') {
+                  while (*fromptr++ != '@') ;
+                  fromptr++;
+               }
+            }
+            else
+               *toptr++ = c;
+         } while (c);
+
+         new_result.circcer++;
+         match_suffix_2(user, circname, &p2b, patxp, &new_result);
       }
    }
    else if (key == 'j') {
@@ -826,6 +853,7 @@ static void match_grand(Cstring user, concept_descriptor *grand_concept, char *p
 
       if (concept_table[this_concept->kind].concept_prop & CONCPROP__PARSE_DIRECTLY) {
          new_result.index = *item;
+         new_result.yield_depth = result->yield_depth + 1;
          p2b.car = this_concept->name;
          p2b.special_concept = this_concept;
          match_suffix_2(user, " ", &p2b, patxp, &new_result);
@@ -848,7 +876,7 @@ static void match_grand(Cstring user, concept_descriptor *grand_concept, char *p
          of course, on our belief that the language of square dance calling never contains
          an ambiguous call/concept utterance.  For example, we do not expect anyone to
          invent a call "and turn" that can be used with the "cross" modifier. */
-      new_result.callflags1 = CFLAG1_YIELD_IF_AMBIGUOUS;
+      new_result.yield_depth = result->yield_depth + 1;
       p2b.car = call_menu_lists[call_list_any][i]->name;
       match_suffix_2(user, " ", &p2b, patxp, &new_result);
    }
@@ -917,12 +945,13 @@ static void search_menu(uims_reply kind)
    result.who = selector_uninitialized;
    result.where = direction_uninitialized;
    result.tagger = 0;
+   result.circcer = 0;
    result.current_modifier = (concept_descriptor *) 0;
    result.modifier_parent = (match_result *) 0;
    result.need_big_menu = FALSE;
    result.number_fields = 0;
    result.howmanynumbers = 0;
-   result.callflags1 = 0;
+   result.yield_depth = 0;
 
    if (kind == ui_call_select) {
       menu_length = number_of_calls[static_ss.call_menu];
@@ -931,7 +960,7 @@ static void search_menu(uims_reply kind)
          if (static_ss.verify && verify_has_stopped) break;  /* Don't waste time after user stops us. */
          *call_menu_ptr = static_ss.call_menu;
          result.index = i;
-         result.callflags1 = call_menu_lists[static_ss.call_menu][i]->callflags1;
+         result.yield_depth = (call_menu_lists[static_ss.call_menu][i]->callflags1 & CFLAG1_YIELD_IF_AMBIGUOUS) ? 1 : 0;
          match_pattern(call_menu_lists[static_ss.call_menu][i]->name, &result, (concept_descriptor *) 0);
       }
    }
@@ -952,7 +981,7 @@ static void search_menu(uims_reply kind)
          concept_descriptor *grand_concept = this_concept;
          *call_menu_ptr = static_ss.call_menu;
          result.index = *item;
-         result.callflags1 = (this_concept->miscflags & 2) ? CFLAG1_YIELD_IF_AMBIGUOUS : 0;
+         result.yield_depth = (this_concept->miscflags & 2) ? 1 : 0;
          if (!(concept_table[this_concept->kind].concept_prop & CONCPROP__PARSE_DIRECTLY))
             grand_concept = (concept_descriptor *) 0;
          match_pattern(this_concept->name, &result, grand_concept);
@@ -966,6 +995,14 @@ static void search_menu(uims_reply kind)
       for (i = 0; i < number_of_taggers[tagclass]; i++) {
          result.tagger++;
          match_pattern(tagger_calls[tagclass][i]->name, &result, (concept_descriptor *) 0);
+      }
+   }
+   else if (static_ss.call_menu == match_circcer) {
+      result.circcer = 0;
+
+      for (i = 0; i < number_of_circcers; i++) {
+         result.circcer++;
+         match_pattern(circcer_calls[i]->name, &result, (concept_descriptor *) 0);
       }
    }
    else {

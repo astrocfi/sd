@@ -51,19 +51,19 @@ Private void innards(
    int vert = maps->vert;
    int arity = maps->arity;
    int insize = setup_attrs[maps->inner_kind].setup_limits+1;
-   uint32 mysticflag = ss->cmd.cmd_misc_flags;
+   uint32 mysticflag = ss->cmd.cmd_misc2_flags;
    mpkind map_kind = maps->map_kind;
 
    clear_people(result);
-   ss->cmd.cmd_misc_flags &= ~(CMD_MISC__MYSTIFY_SPLIT | CMD_MISC__MYSTIFY_INVERT);
+   ss->cmd.cmd_misc2_flags &= ~(CMD_MISC2__MYSTIFY_SPLIT | CMD_MISC2__MYSTIFY_INVERT);
 
    for (i=0; i<arity; i++) {
       if (x[i].kind != nothing) {
          long_boolean mirror = FALSE;
 
-         if (mysticflag & CMD_MISC__MYSTIFY_SPLIT) {
+         if (mysticflag & CMD_MISC2__MYSTIFY_SPLIT) {
             mirror = i & 1;
-            if (mysticflag & CMD_MISC__MYSTIFY_INVERT)
+            if (mysticflag & CMD_MISC2__MYSTIFY_INVERT)
                mirror = !mirror;
          }
 
@@ -617,7 +617,7 @@ extern void do_phantom_2x4_concept(
    if (linesp || parseptr->concept->value.arg3 == MPKIND__NONE)
       ss->cmd.cmd_misc_flags |= CMD_MISC__NO_STEP_TO_WAVE;
 
-   if ((ss->cmd.cmd_misc_flags & CMD_MISC__MYSTIFY_SPLIT) && parseptr->concept->value.arg3 != MPKIND__CONCPHAN)
+   if ((ss->cmd.cmd_misc2_flags & CMD_MISC2__MYSTIFY_SPLIT) && parseptr->concept->value.arg3 != MPKIND__CONCPHAN)
       fail("Mystic not allowed with this concept.");
 
    switch (ss->kind) {

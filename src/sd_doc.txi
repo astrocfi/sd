@@ -4,8 +4,8 @@
 @setfilename sd_doc.info
 @settitle Sd
 @c @subtitle A Square Dance Caller's Helper
-@set Time-stamp: Jun 13, 1995
-@set sd-version 31.3
+@set Time-stamp: Jul 28, 1995
+@set sd-version 31.4
 @set full-manual
 @c %**end of header
 @iftex
@@ -93,7 +93,9 @@ This is the summary table of contents:
 * Misc Advice::                 Miscellaneous Advice and Warnings
 * Customization::               Customization with X Resources
 * Versions::                    Version Numbers
+@ifset copyleft
 * Copying::                     The GNU General Public License
+@end ifset
 
 This is the complete table of contents:
 
@@ -101,13 +103,24 @@ Introduction
 
 * Documentation::               Documentation
 * Getting Sd or Sdtty::         Getting Sd or Sdtty
-* Contact Info::                How to Contact the Authors
+* Author Contact::              How to Contact the Authors
 * Acknowledgements::            Acknowledgements
+
+The Completing Reader for Sdtty
+
+* Question Mark::               Question Mark and Exclamation Point
+* Minimizing Typing::           Minimizing the Amount of Typing You Must Do
 
 Invoking Sd via Command Line
 
 * Command-Line Options::        Command-Line Options
-* Abridgement::                 Abridgement
+* Abridgement::                   Abridgement
+
+The Initialization File
+
+* Session Control::             Session Control
+* Option Control::              Option Control
+* Sample Initialization Files:: Sample Initialization Files
 
 Calling
 
@@ -121,7 +134,8 @@ Calling
 * Scrolling::                     the call menu scroll bar
 * Entering Concepts::           Entering Concepts
 * Call Modifications::          Call Modifications
-* Asymmetric Selectors::        How to Write Asymmetric Sequences
+* Discarding Concepts After an Error:: Discarding Concepts After an Error
+* Asymmetric Selectors::        Asymmetric Selectors
 
 Resolving and Searching
 
@@ -169,9 +183,9 @@ Call Notes
 * Face <DIRECTION>::            Face <DIRECTION>
 * Snag Circulate::              Snag Circulate
 * Funny Square Thru::           Funny Square Thru
-* Colliding Recycle::           Colliding Recycle, Ah So, and Cycle and Wheel
 * Rotate from Columns::         Rotate from Columns
 * Recycle::                     Recycle has two forms in the Database
+* Going Through Impossible Situations:: Going Through Impossible Situations
 
 Concept Notes
 
@@ -179,6 +193,7 @@ Concept Notes
 * Concentric::                  Concentric
 * Two Calls::                   Two Calls in Succession
 * Assume Waves::                Assume Waves
+* Phantom Wave Concepts::       Phantom Wave Concepts
 * Diamond::                     Diamond
 * Implied Piecewise::           Implied Piecewise
 * Fractional and N Times::      Fractional and N Times
@@ -244,7 +259,7 @@ no completion is required either.  If you type @samp{sw thru <ENTER>} instead,
 @code{sdtty} will complete both words.  It prints @samp{ing} as soon as you type the
 space, and it prints @samp{ru} as soon as you type the return.  In fact, you
 could just type @samp{sw <ENTER>}.  @code{Sdtty} completes the entire line, if necessary
-and possible, when return is typed. so it will print @samp{ing thru} after
+and possible, when return is typed.  So it will print @samp{ing thru} after
 your @samp{sw}.  In each case, the full phrase @samp{swing thru} will appear
 on the screen, and will be printed in the final sequence.
 
@@ -252,7 +267,7 @@ Because of this completion, you can get into the habit of just typing @samp{sw <
 at mainstream.  However, it will only work if what you type is unambiguous.
 At higher levels, @samp{sw} could also mean @samp{swap around}.  When there is an
 ambiguity, @code{sdtty} will beep at you and complete as much as it can.  You can
-type @kbd{?} (discussed below) to see what the problem is.
+type @kbd{?} or @kbd{!} (discussed below) to see what the problem is.
 
 With practice, you can get a reasonable feel for how much abbreviation you can
 get away with in a given context.
@@ -263,6 +278,18 @@ will not actually process the line.  If you like what you see, you can
 then press @key{<ENTER>} to execute the call.  If the line is ambiguous,
 the program will print as much of the line as it can.  When used effectively,
 this can save you a lot of typing.
+
+@code{Sdtty}'s completing reader is completely indifferent to the capitalization of
+what you type.  It capitalizes its output according to its own notions of
+aesthetics and ambiguity avoidance.
+
+@menu
+* Question Mark::               Question Mark and Exclamation Point
+* Minimizing Typing::           Minimizing the Amount of Typing You Must Do
+@end menu
+
+@node Question Mark, Minimizing Typing,  , The Completing Reader for Sdtty
+@section Question Mark and Exclamation Point
 
 At any time, you can type a question mark or exclamation point.  Either of
 these will make @code{sdtty} print out all legal completions of the line
@@ -295,9 +322,8 @@ to stop.  When the output ends, either because @code{sdtty} printed everything o
 because you typed a backspace, the partially entered line will be redisplayed, just
 as it was before you typed the question mark.
 
-@code{Sdtty}'s completing reader is completely indifferent to the capitalization of
-what you type.  It capitalizes its output according to its own notions of
-aesthetics and ambiguity avoidance.
+@node Minimizing Typing, , Question Mark, The Completing Reader for Sdtty
+@section Minimizing the Amount of Typing You Must Do
 
 The @code{sdtty} completion mechanism, especially the @code{<ESCAPE>}
 (or @code{<ALT MODE>} or @code{<TAB>}) key, can save you a lot of typing.
@@ -391,7 +417,25 @@ from a few seconds to over a minute.
 @node Command-Line Options, Abridgement,  , Invoking Sd
 @section Command-Line Options
 
-Options used by both @code{sd} and @code{sdtty}:
+There are a number of option keywords that can be given to @code{sd} or @code{sdtty}
+when the program is started.  These control various aspects of the program's
+operation.  These keywords are placed on the command line with which the
+program was invoked from the Unix shell or the DOS prompt.  Each keyword
+has a hyphen in front of it.
+
+Examples:
+
+@display
+@t{sd plus -singlespace}
+@t{sdtty c3 -discard_after_error -active_phantoms}
+@end display
+
+These option keywords can also be placed, without the preceding hyphens,
+in the ``options'' section of the initialization file.  @xref{Option Control}.
+When this is done, the options will always be in force, and do not need to
+be specified each time the program is run.
+
+The following options are used by both @code{sd} and @code{sdtty}:
 
 @table @code
 @item -db @var{filename}
@@ -401,6 +445,18 @@ the current directory.
 base name of the file to write sequences to.  The calling level will be
 appended to this name.  The default is @file{sequence}, so a complete
 file name might be @file{sequence.C1}.
+@item -singlespace
+This makes the program write out the output file with single spacing.
+This may be useful for those who use special fonts or special printer
+arrangements.
+@item -discard_after_error
+This makes the program automatically discard all concepts that had
+been typed prior to the current call, whenever an error occurs.
+Some users may find the concept retention behavior objectionable.
+@xref{Discarding Concepts After an Error}.
+@item -active_phantoms
+This turns on the ``active phantoms'' behavior, as though the command
+@code{toggle active phantoms} had been given.
 @end table
 
 There are X resources associated with both options:
@@ -449,8 +505,11 @@ the number of lines on the screen.  Default is 25.
 @item -no_line_delete
 do not use the insert line or delete line cursor control commands.  Use this
 if these commands are not working satisfactorily on your terminal.
+@item -no_graphics
+Suppress the use of special PC graphics characters when drawing pictures
+on the screen.  These characters are not standard on all PC's.  Pictures
+drawn in the output file will never use the special graphics characters.
 @end table
-
 
 @node Abridgement,  , Command-Line Options, Invoking Sd
 @subsection Abridgement
@@ -514,18 +573,36 @@ call in the menu is simply ignored.  The order of the lines is not important.
 
 When @code{sd} or @code{sdtty} starts, it looks for a file @file{sd.ini}.
 This file, if present, contains information about dances
-you might be working on.  Each line describes a possible session
-of using the program, showing the level, output filename, next sequence
-number, and header comment.  Such a file might look like this:
+you might be working on, and about possible individual preferences
+you might have for the way the program runs.
+Such a file might look like this:
 
 @example
-   @code{[Session]}
+   @code{[Options]}
+   @code{discard_after_error}
+   @code{singlespace}
+   @code{}
+   @code{[Sessions]}
    @code{sequence.C3          C3               12     NACC, June 1995}
    @code{sequence.C4          C4               31     NACC, June 1995}
    @code{workshop             C1               75     My wednesday group}
    @code{a2stuff              A2               9      NESRDC/1995}
    @code{a1stuff              A1               2      Lake Shore Farm Weekend}
 @end example
+
+@menu
+* Session Control::             Session Control
+* Option Control::              Option Control
+* Sample Initialization Files:: Sample Initialization Files
+@end menu
+
+@node Session Control, Option Control,  , The Initialization File
+@section Session Control
+
+Each line after the line @code{[Sessions]}, up until a blank line
+or the end of the file, describes a possible session
+of using the program, showing the output filename, level, next sequence
+number, and header comment.
 
 This example file shows 5 possible things you could work on.  You can select
 any one of them during a session.  When the program is started, it will
@@ -582,11 +659,44 @@ By copying that back to @file{sd.ini}, you can restore it.
 
 You can also edit the file with any editor or word processor.
 
-If you no longer want this feature, you can delete the file.
+@node Option Control, Sample Initialization Files, Session Control, The Initialization File
+@section Option Control
 
-When @code{sd} or @code{sdtty} is installed, no such file exists,
-but the file @file{sample.ini} is created in the working directory.
-You can copy that file to @file{sd.ini} and edit it if you wish.
+Each line after the line @code{[Options]}, up until a blank line
+or the end of the file, contains a command line switch.  When the program
+is started, it will behave as though those switches had been given on
+the command line.  This makes it possible to encode your personal
+preferences so that the program will always use them.  Do @i{not}
+place a hyphen in front of an option in the initialization file.
+
+For example, the line
+
+@example
+   @code{singlespace}
+@end example
+
+would be used if you like your output single-spaced.
+
+The line
+
+@example
+   @code{no_graphics}
+@end example
+
+would be used if your computer does not have the special graphics
+characters.
+
+You can edit the file with any editor or word processor.
+
+@node Sample Initialization Files, , Option Control, The Initialization File
+@section Sample Initialization Files
+
+When @code{sd} or @code{sdtty} is installed, no initialization file exists,
+but the files @file{sample1.ini} and @file{sample2.ini} are provided for you
+in the working directory.  @file{Sample1.ini} shows an example of
+the ``session'' mechanism only, and @file{sample2.ini} show both mechanisms.
+@file{Sample2.ini} is in fact the same as the example shown previously.
+You can copy either file to @file{sd.ini} and edit it if you wish.
 
 @node Calling, Resolving and Searching, The Initialization File, Top
 @chapter Calling
@@ -599,7 +709,8 @@ generate a sequence of calls of your choosing.
 * Entering Calls::              Entering Calls
 * Entering Concepts::           Entering Concepts
 * Call Modifications::          Call Modifications
-* Asymmetric Selectors::        How to Write Asymmetric Sequences
+* Discarding Concepts After an Error:: Discarding Concepts After an Error
+* Asymmetric Selectors::        Asymmetric Selectors
 @end menu
 
 @node Startup Screen, Entering Calls,  , Calling
@@ -672,8 +783,8 @@ The usual thing you do when writing a sequence is to select calls from
 the call menu, perhaps preceded by one or more concepts.  (Concepts are
 discussed in the next section.)  In @code{sd}, a call is selected by clicking
 on the desired menu item.  In @code{sdtty}, a call is selected by typing
-its name, followed by a @key{Return}.  The completing reader
-(@xref{The Completing Reader for Sdtty}) lets you abbreviate calls.
+its name, followed by @key{<ENTER>}.  The completing reader
+(@ref{The Completing Reader for Sdtty}) lets you abbreviate calls.
 
 It is important to be aware that a number of @dfn{modifier} words like 
 @code{grand} and @code{cross} are treated as @i{concepts} by @code{sd}
@@ -690,7 +801,7 @@ things were listed separately.
 
 In @code{sdtty}, the equivalent action is to type @code{grand}, press
 @key{<ENTER>}, type @code{swing thru}, and press @key{<ENTER>} again.
-However, for certain modifiers (@code{grand} among them) you can type
+However, for a great many modifiers (@code{grand} among them) you can type
 the whole thing on one line.  This one-line form form of modifier
 entry to the completing reader will be discussed below.
 
@@ -821,6 +932,21 @@ At C3 and above, the tagging calls include the calls @code{revert <ATC>} and
 will be presented with another popup.  In @code{sdtty}, you can type in the
 entire call directly, as in @code{revert cross flip chain thru reactivate}.
 
+@item <ANYTHING> Calls
+Calls that use the ``<ANYTHING>'' mechanism, such as @code{in roll motivate},
+have the keyword @code{<ANYTHING>} in them, as in @code{<ANYTHING> motivate}.
+In @code{sdtty}, you can type in the entire call directly.  In @code{sd},
+click on the call with the word @code{<ANYTHING>} in it.  A popup will appear,
+asking for the replacement for the circulate.
+
+Only bona-fide circulate-type calls, and other well-recognized similar
+things such as @code{split counter percolate} can be obtained by this method.
+You can get more general substitutions by using the @code{simple modifications}
+command.  Type (or click) that command, and then @code{motivate}.  You will
+be asked for a substitute call.  You can enter anything at this point,
+such as @code{swing the fractions}.  The result will appear in the transcript
+with brackets, as in @code{[swing the fractions] motivate}.
+
 @item Subcalls
 Mandatory subcalls appear in the menu as the keyword @code{<ANYTHING>}, as
 in @code{clover and <ANYTHING>}.  The handling of these in @code{sdtty} is not as
@@ -835,7 +961,7 @@ concepts and modifiers.  Whatever you enter will appear in brackets, as in
 These mandatory subcalls, with the keyword @code{<ANYTHING>} in the menu,
 are just one of many types of modifications.  @xref{Call Modifications}.
 
-@item modifiers such as cross, left, magic, and interlocked
+@item Modifiers such as cross, left, split, grand, single, magic, and interlocked
 As discussed above, the program considers these to be actual concepts,
 even though they aren't really.
 
@@ -894,7 +1020,7 @@ will be found near the beginning of the menu.
 If you are using the Macintosh version of @code{sd}, the call menu
 is displayed as a utility window.  Calls are selected by double
 clicking.  In addition, calls can be entered by typing their name,
-as described in the next paragraph.
+as described in @ref{Keyboard Input}.
 
 @node Scrolling,  , Call Menus, Entering Calls
 @subsection Scrolling
@@ -919,9 +1045,40 @@ A call may be preceded by concepts, which modify the action of the call.
 These may be nested (@dfn{stacked}) to any reasonable depth.
 
 In @code{sdtty}, just type the concept you want.  The completing reader will
-operate in the usual way.  @i{You must type a <ENTER> after each concept,}
+operate in the usual way.  Many concepts may be entered in a natural way,
+on the same line as the call that they affect.  As discussed previously,
+modifiers like @code{cross} and @code{left} are all in this category.
+Many other concepts can be typed this way also.  For example, you can
+type @code{random tandem swing thru} all on one line.
+
+For reasons of ambiguity in the language, many concepts may @i{not}
+be entered in this way.  The most notorious of these are the @code{so-and-so}
+concepts, such as @code{boys}.  You must type an <ENTER> after each such concept,
 even though the concept and the call that it modifies will appear
 on the same line in the finished text.
+
+Since it is difficult to remember which concepts must be typed on separate
+lines, @code{sdtty} always permits you to do so.  When in doubt, type concepts
+on separate lines with an <ENTER> after each one.  With practice, you will develop
+a feel for which things you can type naturally and which ones are difficult.
+
+Whether you typed concepts on separate lines or on one line, the result is
+the same, and the output file will look the same.
+For example, the following are all legal and equivalent.
+
+@example
+   @code{reverse random tandem swing thru}
+   @code{}
+   @code{reverse random}
+   @code{tandem swing thru}
+   @code{}
+   @code{reverse}
+   @code{random}
+   @code{tandem}
+   @code{swing thru}
+@end example
+
+In the output file, they will all be shown as @code{reverse random tandem swing thru}.
 
 In @code{sd}, click on the concept from a menu.  In a
 perhaps hopeless attempt to keep the concept menus from becoming too
@@ -990,10 +1147,11 @@ In the Macintosh program, use the @code{Allow Any Concept} command in the
 When off-level concepts are enabled,
 their use will cause a warning to be inserted into the transcript.
 
-@node Call Modifications, Asymmetric Selectors, Entering Concepts, Calling
+@node Call Modifications, Discarding Concepts After an Error, Entering Concepts, Calling
 @section Call Modifications
 
-Some calls can be modified in a natural way, such as @samp{in roll motivate}
+Some calls can be modified in a natural way, such as @samp{catch fan the top 3},
+@samp{busy 1/2 tag},
 and @samp{vertical tag your neighbor}, or in unnatural ways, such as @samp{trade
 the diamond but replace the diamond circulate with explode the diamond}.
 To form such a call, you must first enable call modifications
@@ -1010,6 +1168,15 @@ a potentially large number of modification possibilities, sometimes several
 in the same call.
 
 In most cases, @code{simple modifications} is probably the right thing.
+
+The special ``circulate'' modifications exemplified by @samp{in roll motivate}
+can be entered by this method.  Select @code{simple modifications}, select
+@code{motivate}, and replace the circulate.  The result will show the replacement
+call in brackets and spelled out in full, as in @code{[in roll circulate] motivate}.
+However, there is a better way to get these particular types of modifications---select
+@code{<ANYTHING> motivate} and then select the replacement for the circulate.
+The result will look natural, for example, @code{in roll motivate}.
+In @code{sdtty} you can type in such a call directly.
 
 If you are using the Macintosh version, call modification is enabled
 using the @code{Modify Next Call} submenu of the @code{Sequence} menu.
@@ -1048,7 +1215,27 @@ cases, like @samp{[CHECKPOINT LEFT catch [SINGLE CONCENTRIC snake] 3 BY
 [2/3 recycle] the difference] cover up} things may be quite difficult.
 How (and whether) you choose to read such a card is up to you.
 
-@node Asymmetric Selectors,  , Call Modifications, Calling
+@node Discarding Concepts After an Error, Asymmetric Selectors, Call Modifications, Calling
+@section Discarding Concepts After an Error
+
+When an error occurs in the execution of a call, the program tries
+to leave in place any concepts that were associated with that call.
+That is, after printing the error message, the program will behave
+as though you had once again typed those concepts.  The assumption here
+is that only the call was mistaken, and you really wanted the concepts
+and do not wish to have to enter them again.  If you don't want those
+concepts, you can remove them one by one with the "undo" command.
+Or you can use the command "discard entered concepts" to get rid of
+all of them at once.
+
+Some people may find this behavior objectionable.  You can make the
+program automatically discard all pending concepts whenever an error
+occurs by using the @code{-discard_after_error} command-line switch
+when the program is started.  You can also place the line
+@code{discard_after_error} into the ``Options'' section of the initialization
+file.  @xref{The Initialization File}.
+
+@node Asymmetric Selectors,  , Discarding Concepts After an Error, Calling
 @section Asymmetric Selectors
 
 The people selector popup contains various asymmetric selectors such as
@@ -1464,7 +1651,6 @@ level you select.  Under normal use, @code{sd} runs in a 1Mb partition
 at level @code{c4}.  If you are running System 7, this means you should
 have at least 3Mb of RAM.
 
-
 @node Initial Dialog, Mac Abridgement, Mac Requirements, Macintosh Overview
 @section The Initial Dialog
 
@@ -1486,7 +1672,6 @@ set of call definitions from a call dictionary and then bring up the
 sequence window.  Reading the call dictionary can take a few seconds or
 even minutes, depending up the speed of your machine and the calling
 level you have selected.
-
 
 @node Mac Abridgement, Creating Dictionaries, Initial Dialog, Macintosh Overview
 @section Abridgement
@@ -1878,9 +2063,9 @@ appropriate to get the dancers through the action that you intend.
 * Face <DIRECTION>::            Face <DIRECTION>
 * Snag Circulate::              Snag Circulate
 * Funny Square Thru::           Funny Square Thru
-* Colliding Recycle::           Colliding Recycle, Ah So, and Cycle and Wheel
 * Rotate from Columns::         Rotate from Columns
 * Recycle::                     Recycle has two forms in the Database
+* Going Through Impossible Situations:: Going Through Impossible Situations
 @end menu
 
 @node Sweeping Direction, C1 Single Rotate, , Call Notes
@@ -1936,7 +2121,7 @@ call, does not work with the call @samp{circulate}, because that
 call is not defined in the database as having centers' and ends' parts.
 Hence, the separate call @samp{snag circulate} has been provided.
 
-@node Funny Square Thru, Colliding Recycle, Snag Circulate, Call Notes
+@node Funny Square Thru, Rotate from Columns, Snag Circulate, Call Notes
 @section Funny Square Thru
 
 Because of the peculiarity of this call, this call was not implemented
@@ -1945,14 +2130,7 @@ This means that, in @code{sdtty}, you type @code{funny square thru <n>}
 on one line, rather than pressing @key{<ENTER>} after the word @code{funny}.
 In @code{sd}, the call menu will have @code{funny square thru <n>}.
 
-@node Colliding Recycle, Rotate from Columns, Funny Square Thru, Call Notes
-@section Colliding @i{Recycle}
-
-``Colliding'' @i{recycle}, @i{ah so}, and @i{cycle and wheel} are not implemented.
-Do not call these if the ends of the line are facing the same way.
-@samp{Wheel and deal} from a one-faced line is okay.
-
-@node Rotate from Columns, Recycle, Colliding Recycle, Call Notes
+@node Rotate from Columns, Recycle, Funny Square Thru, Call Notes
 @section Rotate from Columns
 
 Remember that @i{rotate} and @i{single rotate} from columns is legal only
@@ -1960,7 +2138,7 @@ at C3, but from lines it is legal at C2.  Since the program has no
 knowledge of different starting setups implying different levels, the call
 is in the database at C2.  Don't use it from columns at that level.
 
-@node Recycle,  , Rotate from Columns, Call Notes
+@node Recycle, Going Through Impossible Situations, Rotate from Columns, Call Notes
 @section Recycle
 
 There are two @i{Recycle} calls in the database: @samp{recycle} can be done
@@ -1978,6 +2156,35 @@ To permit fractional use of recycle, as with
 @samp{recycle (by parts)}, which can be done only from lines.  Use this call
 (but don't read the ``by parts'' phrase) when fractions are required.
 
+@node Going Through Impossible Situations,  , Recycle, Call Notes
+@section Going Through Impossible Situations
+
+Under certain circumstances, people who collide in the same spot during
+a call will take right hands with each other, according to well-known
+rules governing this type of occurrence.  Other than that, the program does
+not allow ``impossible'' intermediate situations in which multiple people
+occupy the same spot.
+
+In some cases, you may want to call something that sends people through
+a momentary impossible situation, for example calling something like
+@samp{everyone do your part, split trade circulate twice} when people
+are in normal waves.  The first @samp{split trade circulate} is impossible,
+but if you tell the dancers to do their own part and not worry about
+the collision after the first one, they can do it.
+
+The program doesn't like to do this.  Just calling @code{twice split trade
+circulate} won't work, because the program will have multiple dancers on
+the same spot after thie first one.  You can trick the program into doing
+it anyway, by using the @code{so-and-so do your part} concept.  Enter something
+like @code{heads do your part, twice split trade circulate while the
+others twice split trade circulate}.  Exactly who has to be desginated
+depends on the the setup.
+
+You can also use this method to get everyone to do their part of
+calls that are illegal in the existing setup.  For example, flip back
+is illegal from facing lines.  If you really want people to do it anyway,
+with everyone doing their part, you can enter @code{beaus do your part,
+flip back while the others flip back}.
 
 @node Concept Notes, Misc Advice, Call Notes, Top
 @chapter Concept Notes
@@ -1987,6 +2194,7 @@ To permit fractional use of recycle, as with
 * Concentric::                  Concentric
 * Two Calls::                   Two Calls in Succession
 * Assume Waves::                Assume Waves
+* Phantom Wave Concepts::       Phantom Wave Concepts
 * Diamond::                     Diamond
 * Implied Piecewise::           Implied Piecewise
 * Fractional and N Times::      Fractional and N Times
@@ -2049,21 +2257,29 @@ end person's @i{location,} but not that end person's facing direction.
 @item
 If the people who finished on the outside in a 2x2 started
 in a 1x4 or diamond, they use the @dfn{checkpoint rule}---they elongate
-their resulting 2x2 perpendicular to the long axis of @i{their own}
-1x4 or diamond, not the long axis of the set.
+their resulting 2x2 perpendicular to ``the long axis''.  In order to handle
+all cases correctly, it is important to be very careful in choosing what
+that long axis is.  As a good approximation, it is the long axis of
+``the whole set''.
 
 If the concept was @i{concentric}, so these people started on
-the outside in a 1x4 or diamond, their own long axis is presumably
+the outside in a 1x4 or diamond, they use their own long axis, which is
 the same as the long axis of the whole set.
 
 If the concept was @i{cross concentric}, so these people started in
-the center in a 1x4 or diamond, their own long axis might not be the
-long axis of the set.  If we do @i{cross concentric @w{square thru 2}}
-from a center wave perpendicular to outside miniwaves, so everyone
-rears back, the original centers
-finish perpendicular to their own 1x4, not the original ends' 1x4.
-They finish in approximately the places where the ends began.
-If we do it from a 1/4 tag, the centers finish where the ends began.
+the center in a 1x4 or diamond, what they do depends on what setup the
+original ends began in.  If the original ends began in a 1x4 or diamond,
+the axis of that 1x4 or diamond is the same as the axis of the whole set.
+The original centers elongate their 2x2 perpendicular to that.  This rule
+applies, for example, when @samp{centers lockit; cross concentric recyle}
+is called from a tidal wave.
+
+If the concept was @i{cross concentric} and the original ends began in
+a 2x2, the original centers @i{ignore} the elongation of that 2x2.  Instead,
+they elongate their resulting 2x2 perpendicular to @i{their own axis}, that
+is, the axis of the 1x4 or diamond in which they began.  This rule applies,
+for example, when @samp{cross concentric recyle} or @samp{center 2 shazam;
+cross concentric diamond recyle} is called from a quarter-tag.
 @end enumerate
 
 @node Two Calls, Assume Waves, Concentric, Concept Notes
@@ -2077,7 +2293,7 @@ to say the concept when calling is problematical.  Something like @samp{consider
 the following two calls to be one unit, and do a stable swing thru and turn thru}
 might be appropriate.
 
-@node Assume Waves, Diamond, Two Calls, Concept Notes
+@node Assume Waves, Phantom Wave Concepts, Two Calls, Concept Notes
 @section Assume Waves
 
 There are several concepts that you can use to tell the dancers how phantoms
@@ -2238,10 +2454,27 @@ this mode.  @xref{Changing Modes}.
 When in this mode, @code{sd} will not actually insert the text
 @code{with active phantoms} after each @code{assume} concept.
 
-@node Diamond, Implied Piecewise, Assume Waves, Concept Notes
+@node Phantom Wave Concepts, Diamond, Assume Waves, Concept Notes
+@section Phantom Wave Concepts
+
+All of the phantom line concepts (@samp{triple lines}, @samp{split phantom
+lines}, etc.) have a corresponding concept with the word ``waves'' instead
+of ``lines''.  These concepts have an implicit ``assume waves'' in them.
+Under normal circumstances, this means that the live people can make use of
+the assumption of waves in order to decide how to start the call.  For example,
+in normal columns, @code{split phantom waves in roll circulate} is legal,
+since the in-roller's location can be deduced from the wave assumption.
+@code{Split phantom lines in roll circulate} is not legal.
+
+If ``active phantoms'' are used, either because the @code{with active phantoms}
+concept is used after the phantom wave concept or because the @code{toggle
+active phantoms} command was given, the phantoms will work throughout the entire
+call, based on the initial facing direction in waves.
+
+@node Diamond, Implied Piecewise, Phantom Wave Concepts, Concept Notes
 @section Diamond
 
-You should not need to click on @code{diamond} except when you actually
+You should not need to slect @code{diamond} except when you actually
 want the diamond concept, as in @i{diamond single wheel} or @i{diamond swing
 thru}.  There are cases in which it may seem that the word @i{diamond}
 ought to be added after clicking on @code{interlocked} and/or
@@ -2744,7 +2977,12 @@ Sd*frame*Label*Translations: #override <Btn3Down>: undo()
 Sd*frame*List*Translations: #override <Btn3Down>: undo()
 @end example
 
+@ifset copyleft
 @node Versions, Copying, Customization, Top
+@end ifset
+@ifclear copyleft
+@node Versions, , Customization, Top
+@end ifclear
 @chapter Versions
 
 The version is a string consisting of parts separated by colons.
@@ -2759,8 +2997,10 @@ The calls database also has a version.
 If you modify the database, you should
 change the version string at the top of the file.
 
+@ifset copyleft
 @node Copying, , Versions, Top
 @include gpl.txinfo
+@end ifset
 
 @page
 @iftex

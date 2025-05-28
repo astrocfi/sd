@@ -273,9 +273,9 @@ Private void test_starting_setup(call_list_kind cl, Const setup *test_setup)
 
    if (test_call->schema == schema_roll) goto accept;
 
-   /* We also accept "<ATC> your neighbor" calls, since we don't know what the
-      tagging call will be. */
-   if (test_call->callflagsh & CFLAGH__TAG_CALL_RQ_MASK) goto accept;
+   /* We also accept "<ATC> your neighbor" and "<ANYTHING> motivate" calls,
+      since we don't know what the tagging call will be. */
+   if (test_call->callflagsh & (CFLAGH__TAG_CALL_RQ_MASK | CFLAGH__CIRC_CALL_RQ_BIT)) goto accept;
 
    if (crossiness)
       (void) deposit_concept(&concept_descriptor_table[cross_concept_index], 0);
@@ -363,7 +363,9 @@ Private long_boolean callcompare(callspec_block *x, callspec_block *y)
       /* The current order is:
          <ATC>
          <ANYONE>
-         <N> */
+         <ANYTHING>
+         <N>
+         <N/4> */
 
       /* First, skip blanks and hyphens, in both m and n. */
 
@@ -372,63 +374,63 @@ Private long_boolean callcompare(callspec_block *x, callspec_block *y)
 
       /* Next, skip elided stuff in the "m" stream. */
 
-      if (*m == '@' && m[1] != 'v' && m[1] != 'w' && m[1] != 'x' && m[1] != 'y' && m[1] != '6' && m[1] != 'k' && m[1] != '9' && m[1] != '0' && m[1] != 'm' && m[1] != 'a' && m[1] != 'b' && m[1] != 'B') {
-         /* Skip over @7...@8, @n .. @o, and @j...@l stuff. */
-         if (m[1] == '7' || m[1] == 'n' || m[1] == 'j' || m[1] == 'J' || m[1] == 'E') {
-            while (*++m != '@');
-         }
+      if (mc == '@') {
+         mc = *++m;
 
-         m += 2;
-         continue;
+         switch (mc) {
+            case 'v': case 'w': case 'x': case 'y':
+               mc = -6;
+               break;
+            case '6': case 'k':
+               mc = -5;
+               break;
+            case '0': case 'm':
+               mc = -4;
+               break;
+            case '9':
+               mc = -3;
+               break;
+            case 'a': case 'b': case 'B':
+               mc = -2;
+               break;
+            case '7': case 'n': case 'j': case 'J': case 'E':
+               /* Skip over @7...@8, @n .. @o, and @j...@l stuff. */
+               while (*m++ != '@');
+               /* FALL THROUGH!!!!! */
+            default:
+               m++;
+               continue;
+         }
       }
 
       /* And in the "n" stream. */
 
-      if (*n == '@' && n[1] != 'v' && n[1] != 'w' && n[1] != 'x' && n[1] != 'y' && n[1] != '6' && n[1] != 'k' && n[1] != '9' && n[1] != '0' && n[1] != 'm' && n[1] != 'a' && n[1] != 'b' && n[1] != 'B') {
-         if (n[1] == '7' || n[1] == 'n' || n[1] == 'j' || n[1] == 'J' || n[1] == 'E') {
-            while (*++n != '@');
-         }
-         n += 2;
-         continue;
-      }
-
-      if (*n == '@') {
+      if (nc == '@') {
          nc = *++n;
 
-         if (nc == 'v' || nc == 'w' || nc == 'x' || nc == 'y') {
-            nc = -6;
-         }
-         else if (nc == '6' || nc == 'k') {
-            nc = -5;
-         }
-         else if (nc == '0' || nc == 'm') {
-            nc = -4;
-         }
-         else if (nc == '9') {
-            nc = -3;
-         }
-         else /* we know nc == a/b/B) */  {
-            nc = -2;
-         }
-      }
-
-      if (*m == '@') {
-         mc = *++m;
-
-         if (mc == 'v' || mc == 'w' || mc == 'x' || mc == 'y') {
-            mc = -6;
-         }
-         else if (mc == '6' || mc == 'k') {
-            mc = -5;
-         }
-         else if (mc == '0' || mc == 'm') {
-            mc = -4;
-         }
-         else if (mc == '9') {
-            mc = -3;
-         }
-         else /* we know mc == a/b/B) */  {
-            mc = -2;
+         switch (nc) {
+            case 'v': case 'w': case 'x': case 'y':
+               nc = -6;
+               break;
+            case '6': case 'k':
+               nc = -5;
+               break;
+            case '0': case 'm':
+               nc = -4;
+               break;
+            case '9':
+               nc = -3;
+               break;
+            case 'a': case 'b': case 'B':
+               nc = -2;
+               break;
+            case '7': case 'n': case 'j': case 'J': case 'E':
+               /* Skip over @7...@8, @n .. @o, and @j...@l stuff. */
+               while (*n++ != '@');
+               /* FALL THROUGH!!!!! */
+            default:
+               n++;
+               continue;
          }
       }
 
@@ -915,6 +917,9 @@ Private void build_database(call_list_mode_t call_list_mode)
       tagger_calls[i] = (callspec_block **) 0;
    }
 
+   number_of_circcers = 0;
+   circcer_calls = (callspec_block **) 0;
+
    /* This list will be permanent. */
    base_calls = (callspec_block **) get_mem(max_base_calls * sizeof(callspec_block *));
 
@@ -1004,6 +1009,8 @@ Private void build_database(call_list_mode_t call_list_mode)
                call_root->callflagsh |= (CFLAGH__TAG_CALL_RQ_BIT*3);
             else if (c == 'y')
                call_root->callflagsh |= (CFLAGH__TAG_CALL_RQ_BIT*4);
+            else if (c == 'N')
+               call_root->callflagsh |= CFLAGH__CIRC_CALL_RQ_BIT;
          }
       }
 
@@ -1043,6 +1050,12 @@ Private void build_database(call_list_mode_t call_list_mode)
             }
          }
          else {
+            /* But circ calls are treated normally, as well as being put on the special list. */
+            if (call_root->callflags1 & CFLAG1_BASE_CIRC_CALL) {
+               number_of_circcers++;
+               circcer_calls = get_more_mem(circcer_calls, number_of_circcers*sizeof(callspec_block *));
+               circcer_calls[number_of_circcers-1] = call_root;
+            }
             if (local_callcount >= abs_max_calls)
                database_error("Too many base calls -- mkcalls made an error.");
             local_call_list[local_callcount++] = call_root;
@@ -1118,6 +1131,9 @@ extern void initialize_menus(call_list_mode_t call_list_mode)
       for (j=0; j<number_of_taggers[i]; j++)
          tagger_calls[i][j]->menu_name = translate_menu_name(tagger_calls[i][j]->name, &tagger_calls[i][j]->callflagsh);
    }
+
+   for (j=0; j<number_of_circcers; j++)
+      circcer_calls[j]->menu_name = translate_menu_name(circcer_calls[j]->name, &circcer_calls[j]->callflagsh);
 
    /* Do the base calls (calls that are used in definitions of other calls).  These may have
       already been done, if they were on the level. */

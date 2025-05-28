@@ -82,10 +82,6 @@
    map_rh_s2x3_2
    map_lz12
    map_rz12
-   map_lof12
-   map_rof12
-   map_lof16
-   map_rof16
    map_dmd_1x1
    map_star_1x1
    map_qtag_f0
@@ -117,6 +113,7 @@ extern  cm_hunk concthing_2x4;
 extern  cm_hunk concthing_3x4;
 extern  cm_hunk concthing_4x4;
 extern  cm_hunk concthing_ptpd;
+extern  cm_hunk concthing_1x3dmd;
 extern  cm_hunk concthing_3x1dmd;
 extern  cm_hunk concthing_wstar;
 extern  cm_hunk concthing_wstar12;
@@ -357,7 +354,7 @@ Private coordrec thingthar = {s_thar, 3,
 
 Private coordrec thingxwv = {s_crosswave, 3,
    { -9,  -5,   0,   0,   9,   5,   0,   0},
-   {  0,   0,   7,   3,   0,   0,  -7,  -3}, {
+   {  0,   0,   6,   2,   0,   0,  -6,  -2}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1,  2, -1, -1, -1,
@@ -460,6 +457,18 @@ Private coordrec thingbigdmd = {sbigdmd, 3,   /* used for both -- symmetric and 
       -1, -1, -1, -1,  3, -1, -1, -1,
       -1, -1, -1, -1,  9, -1, -1, -1,
       -1, 11, 10, -1,  8,  7,  6, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
+Private coordrec thing1x3dmd = {s1x3dmd, 3,   /* used for both -- symmetric and safe for press/truck */
+   {-13,  -9,  -5,   0,  13,   9,   5,   0},
+   {  0,   0,   0,   2,   0,   0,   0,  -2}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+       0,  1,  2, -1,  3,  6,  5,  4,
+      -1, -1, -1, -1,  7, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
@@ -678,65 +687,831 @@ char *menu_names[] = {
    "diamond/qtag"};
 
 
+#define ID2_BOX0 (ID2_LEAD|ID2_BEAU)
+#define ID2_BOX1 (ID2_LEAD|ID2_BELLE)
+#define ID2_BOX2 (ID2_TRAILER|ID2_BELLE)
+#define ID2_BOX3 (ID2_TRAILER|ID2_BEAU)
+
+
+
+Private id_bit_table id_bit_table_1x2[] = {
+   {ID2_BEAU,              ID2_TRAILER,           ID2_BELLE,             ID2_LEAD},
+   {ID2_BELLE,             ID2_LEAD,              ID2_BEAU,              ID2_TRAILER}};
+
+Private id_bit_table id_bit_table_2x2[] = {
+   {ID2_BOX0, ID2_BOX3, ID2_BOX2, ID2_BOX1},
+   {ID2_BOX1, ID2_BOX0, ID2_BOX3, ID2_BOX2},
+   {ID2_BOX2, ID2_BOX1, ID2_BOX0, ID2_BOX3},
+   {ID2_BOX3, ID2_BOX2, ID2_BOX1, ID2_BOX0}};
+
+Private id_bit_table id_bit_table_2x4[] = {
+   {ID2_BOX0|ID2_END,        ID2_BOX3|ID2_END,     ID2_BOX2|ID2_END,    ID2_BOX1|ID2_END},
+   {ID2_BOX1|ID2_CENTER,    ID2_BOX0|ID2_CENTER,     ID2_BOX3|ID2_CENTER,  ID2_BOX2|ID2_CENTER},
+   {ID2_BOX0|ID2_CENTER,     ID2_BOX3|ID2_CENTER,  ID2_BOX2|ID2_CENTER, ID2_BOX1|ID2_CENTER},
+   {ID2_BOX1|ID2_END,       ID2_BOX0|ID2_END,        ID2_BOX3|ID2_END,     ID2_BOX2|ID2_END},
+   {ID2_BOX2|ID2_END,    ID2_BOX1|ID2_END,       ID2_BOX0|ID2_END,        ID2_BOX3|ID2_END},
+   {ID2_BOX3|ID2_CENTER,  ID2_BOX2|ID2_CENTER, ID2_BOX1|ID2_CENTER,    ID2_BOX0|ID2_CENTER},
+   {ID2_BOX2|ID2_CENTER, ID2_BOX1|ID2_CENTER,    ID2_BOX0|ID2_CENTER,     ID2_BOX3|ID2_CENTER},
+   {ID2_BOX3|ID2_END,     ID2_BOX2|ID2_END,    ID2_BOX1|ID2_END,       ID2_BOX0|ID2_END}};
+
+Private id_bit_table id_bit_table_2x6p[] = {
+   {ID2_BOX0|ID2_OUTRPAIRS, ID2_BOX3|ID2_OUTRPAIRS, ID2_BOX2|ID2_OUTRPAIRS, ID2_BOX1|ID2_OUTRPAIRS},
+   {ID2_BOX1|ID2_OUTRPAIRS, ID2_BOX0|ID2_OUTRPAIRS, ID2_BOX3|ID2_OUTRPAIRS, ID2_BOX2|ID2_OUTRPAIRS},
+   {ID2_BOX0|ID2_CTR4,      ID2_BOX3|ID2_CTR4,      ID2_BOX2|ID2_CTR4,      ID2_BOX1|ID2_CTR4},
+   {ID2_BOX1|ID2_CTR4,      ID2_BOX0|ID2_CTR4,      ID2_BOX3|ID2_CTR4,      ID2_BOX2|ID2_CTR4},
+   {ID2_BOX0|ID2_OUTRPAIRS, ID2_BOX3|ID2_OUTRPAIRS, ID2_BOX2|ID2_OUTRPAIRS, ID2_BOX1|ID2_OUTRPAIRS},
+   {ID2_BOX1|ID2_OUTRPAIRS, ID2_BOX0|ID2_OUTRPAIRS, ID2_BOX3|ID2_OUTRPAIRS, ID2_BOX2|ID2_OUTRPAIRS},
+   {ID2_BOX2|ID2_OUTRPAIRS, ID2_BOX1|ID2_OUTRPAIRS, ID2_BOX0|ID2_OUTRPAIRS, ID2_BOX3|ID2_OUTRPAIRS},
+   {ID2_BOX3|ID2_OUTRPAIRS, ID2_BOX2|ID2_OUTRPAIRS, ID2_BOX1|ID2_OUTRPAIRS, ID2_BOX0|ID2_OUTRPAIRS},
+   {ID2_BOX2|ID2_CTR4,      ID2_BOX1|ID2_CTR4,      ID2_BOX0|ID2_CTR4,      ID2_BOX3|ID2_CTR4},
+   {ID2_BOX3|ID2_CTR4,      ID2_BOX2|ID2_CTR4,      ID2_BOX1|ID2_CTR4,      ID2_BOX0|ID2_CTR4},
+   {ID2_BOX2|ID2_OUTRPAIRS, ID2_BOX1|ID2_OUTRPAIRS, ID2_BOX0|ID2_OUTRPAIRS, ID2_BOX3|ID2_OUTRPAIRS},
+   {ID2_BOX3|ID2_OUTRPAIRS, ID2_BOX2|ID2_OUTRPAIRS, ID2_BOX1|ID2_OUTRPAIRS, ID2_BOX0|ID2_OUTRPAIRS}};
+
+Private id_bit_table id_bit_table_1x4[] = {
+   {ID2_BEAU|ID2_END,        ID2_TRAILER|ID2_END,      ID2_BELLE|ID2_END,       ID2_LEAD|ID2_END},
+   {ID2_BELLE|ID2_CENTER,    ID2_LEAD|ID2_CENTER,      ID2_BEAU|ID2_CENTER,     ID2_TRAILER|ID2_CENTER},
+   {ID2_BELLE|ID2_END,       ID2_LEAD|ID2_END,         ID2_BEAU|ID2_END,        ID2_TRAILER|ID2_END},
+   {ID2_BEAU|ID2_CENTER,     ID2_TRAILER|ID2_CENTER,   ID2_BELLE|ID2_CENTER,    ID2_LEAD|ID2_CENTER}};
+
+Private id_bit_table id_bit_table_dmd[] = {
+   {ID2_END,                  ID2_END,                 ID2_END,                ID2_END},
+   {ID2_LEAD|ID2_CENTER,      ID2_BEAU|ID2_CENTER,     ID2_TRAILER|ID2_CENTER, ID2_BELLE|ID2_CENTER},
+   {ID2_END,                  ID2_END,                 ID2_END,                ID2_END},
+   {ID2_TRAILER|ID2_CENTER,   ID2_BELLE|ID2_CENTER,    ID2_LEAD|ID2_CENTER,    ID2_BEAU|ID2_CENTER}};
+
+Private id_bit_table id_bit_table_1x8[] = {
+   {ID2_BEAU|ID2_OUTR6|ID2_OUTR2,   ID2_TRAILER|ID2_OUTR6|ID2_OUTR2, ID2_BELLE|ID2_OUTR6|ID2_OUTR2,  ID2_LEAD|ID2_OUTR6|ID2_OUTR2},
+   {ID2_BELLE|ID2_OUTR6|ID2_CTR6,   ID2_LEAD|ID2_OUTR6|ID2_CTR6,     ID2_BEAU|ID2_OUTR6|ID2_CTR6,    ID2_TRAILER|ID2_OUTR6|ID2_CTR6},
+   {ID2_BELLE|ID2_CTR2|ID2_CTR6,    ID2_LEAD|ID2_CTR2|ID2_CTR6,      ID2_BEAU|ID2_CTR2|ID2_CTR6,     ID2_TRAILER|ID2_CTR2|ID2_CTR6},
+   {ID2_BEAU|ID2_OUTR6|ID2_CTR6,    ID2_TRAILER|ID2_OUTR6|ID2_CTR6,  ID2_BELLE|ID2_OUTR6|ID2_CTR6,   ID2_LEAD|ID2_OUTR6|ID2_CTR6},
+   {ID2_BELLE|ID2_OUTR6|ID2_OUTR2,  ID2_LEAD|ID2_OUTR6|ID2_OUTR2,    ID2_BEAU|ID2_OUTR6|ID2_OUTR2,   ID2_TRAILER|ID2_OUTR6|ID2_OUTR2},
+   {ID2_BEAU|ID2_OUTR6|ID2_CTR6,    ID2_TRAILER|ID2_OUTR6|ID2_CTR6,  ID2_BELLE|ID2_OUTR6|ID2_CTR6,   ID2_LEAD|ID2_OUTR6|ID2_CTR6},
+   {ID2_BEAU|ID2_CTR2|ID2_CTR6,     ID2_TRAILER|ID2_CTR2|ID2_CTR6,   ID2_BELLE|ID2_CTR2|ID2_CTR6,    ID2_LEAD|ID2_CTR2|ID2_CTR6},
+   {ID2_BELLE|ID2_OUTR6|ID2_CTR6,   ID2_LEAD|ID2_OUTR6|ID2_CTR6,     ID2_BEAU|ID2_OUTR6|ID2_CTR6,    ID2_TRAILER|ID2_OUTR6|ID2_CTR6}};
+
+Private id_bit_table id_bit_table_qtag[] = {
+   {ID2_END|ID2_OUTRPAIRS|ID2_CTR6|ID2_OUTR6,    ID2_END|ID2_OUTRPAIRS|ID2_CTR6|ID2_OUTR6,    ID2_END|ID2_OUTRPAIRS|ID2_CTR6|ID2_OUTR6,    ID2_END|ID2_OUTRPAIRS|ID2_CTR6|ID2_OUTR6},
+   {ID2_END|ID2_OUTRPAIRS|ID2_CTR6|ID2_OUTR6,    ID2_END|ID2_OUTRPAIRS|ID2_CTR6|ID2_OUTR6,    ID2_END|ID2_OUTRPAIRS|ID2_CTR6|ID2_OUTR6,    ID2_END|ID2_OUTRPAIRS|ID2_CTR6|ID2_OUTR6},
+   {ID2_CENTER|ID2_CTR4|ID2_OUTR2|ID2_OUTR6,     ID2_CENTER|ID2_CTR4|ID2_OUTR2|ID2_OUTR6,     ID2_CENTER|ID2_CTR4|ID2_OUTR2|ID2_OUTR6,     ID2_CENTER|ID2_CTR4|ID2_OUTR2|ID2_OUTR6},
+   {ID2_CENTER|ID2_CTR4|ID2_CTR6|ID2_CTR2,       ID2_CENTER|ID2_CTR4|ID2_CTR6|ID2_CTR2,       ID2_CENTER|ID2_CTR4|ID2_CTR6|ID2_CTR2,       ID2_CENTER|ID2_CTR4|ID2_CTR6|ID2_CTR2},
+   {ID2_END|ID2_OUTRPAIRS|ID2_CTR6|ID2_OUTR6,    ID2_END|ID2_OUTRPAIRS|ID2_CTR6|ID2_OUTR6,    ID2_END|ID2_OUTRPAIRS|ID2_CTR6|ID2_OUTR6,    ID2_END|ID2_OUTRPAIRS|ID2_CTR6|ID2_OUTR6},
+   {ID2_END|ID2_OUTRPAIRS|ID2_CTR6|ID2_OUTR6,    ID2_END|ID2_OUTRPAIRS|ID2_CTR6|ID2_OUTR6,    ID2_END|ID2_OUTRPAIRS|ID2_CTR6|ID2_OUTR6,    ID2_END|ID2_OUTRPAIRS|ID2_CTR6|ID2_OUTR6},
+   {ID2_CENTER|ID2_CTR4|ID2_OUTR2|ID2_OUTR6,     ID2_CENTER|ID2_CTR4|ID2_OUTR2|ID2_OUTR6,     ID2_CENTER|ID2_CTR4|ID2_OUTR2|ID2_OUTR6,     ID2_CENTER|ID2_CTR4|ID2_OUTR2|ID2_OUTR6},
+   {ID2_CENTER|ID2_CTR4|ID2_CTR6|ID2_CTR2,       ID2_CENTER|ID2_CTR4|ID2_CTR6|ID2_CTR2,       ID2_CENTER|ID2_CTR4|ID2_CTR6|ID2_CTR2,       ID2_CENTER|ID2_CTR4|ID2_CTR6|ID2_CTR2}};
+
+Private id_bit_table id_bit_table_ptpd[] = {
+   {ID2_OUTR6|ID2_OUTR2,            ID2_OUTR6|ID2_OUTR2,           ID2_OUTR6|ID2_OUTR2,            ID2_OUTR6|ID2_OUTR2},
+   {ID2_OUTR6|ID2_CTR6|ID2_LEAD,    ID2_OUTR6|ID2_CTR6|ID2_BEAU,   ID2_OUTR6|ID2_CTR6|ID2_TRAILER, ID2_OUTR6|ID2_CTR6|ID2_BELLE},
+   {ID2_CTR2|ID2_CTR6|ID2_BEAU,     ID2_CTR2|ID2_CTR6|ID2_TRAILER, ID2_CTR2|ID2_CTR6|ID2_BELLE,    ID2_CTR2|ID2_CTR6|ID2_LEAD},
+   {ID2_OUTR6|ID2_CTR6|ID2_TRAILER, ID2_OUTR6|ID2_CTR6|ID2_BELLE,  ID2_OUTR6|ID2_CTR6|ID2_LEAD,    ID2_OUTR6|ID2_CTR6|ID2_BEAU},
+   {ID2_OUTR6|ID2_OUTR2,            ID2_OUTR6|ID2_OUTR2,           ID2_OUTR6|ID2_OUTR2,            ID2_OUTR6|ID2_OUTR2},
+   {ID2_OUTR6|ID2_CTR6|ID2_TRAILER, ID2_OUTR6|ID2_CTR6|ID2_BELLE,  ID2_OUTR6|ID2_CTR6|ID2_LEAD,    ID2_OUTR6|ID2_CTR6|ID2_BEAU},
+   {ID2_CTR2|ID2_CTR6|ID2_BELLE,    ID2_CTR2|ID2_CTR6|ID2_LEAD,    ID2_CTR2|ID2_CTR6|ID2_BEAU,     ID2_CTR2|ID2_CTR6|ID2_TRAILER},
+   {ID2_OUTR6|ID2_CTR6|ID2_LEAD,    ID2_OUTR6|ID2_CTR6|ID2_BEAU,   ID2_OUTR6|ID2_CTR6|ID2_TRAILER, ID2_OUTR6|ID2_CTR6|ID2_BELLE}};
+
+Private id_bit_table id_bit_table_crosswave[] = {
+   {ID2_END|ID2_OUTRPAIRS|ID2_BEAU|ID2_OUTR6,       ID2_END|ID2_OUTRPAIRS|ID2_TRAILER|ID2_OUTR6,  ID2_END|ID2_OUTRPAIRS|ID2_BELLE|ID2_OUTR6,      ID2_END|ID2_OUTRPAIRS|ID2_LEAD|ID2_OUTR6},
+   {ID2_END|ID2_OUTRPAIRS|ID2_BELLE|ID2_OUTR6,      ID2_END|ID2_OUTRPAIRS|ID2_LEAD|ID2_OUTR6,     ID2_END|ID2_OUTRPAIRS|ID2_BEAU|ID2_OUTR6,       ID2_END|ID2_OUTRPAIRS|ID2_TRAILER|ID2_OUTR6},
+   {ID2_CENTER|ID2_CTR4|ID2_LEAD|ID2_OUTR6,    ID2_CENTER|ID2_CTR4|ID2_BEAU|ID2_OUTR6,  ID2_CENTER|ID2_CTR4|ID2_TRAILER|ID2_OUTR6, ID2_CENTER|ID2_CTR4|ID2_BELLE|ID2_OUTR6},
+   {ID2_CENTER|ID2_CTR4|ID2_TRAILER|ID2_CTR2,  ID2_CENTER|ID2_CTR4|ID2_BELLE|ID2_CTR2,  ID2_CENTER|ID2_CTR4|ID2_LEAD|ID2_CTR2,     ID2_CENTER|ID2_CTR4|ID2_BEAU|ID2_CTR2},
+   {ID2_END|ID2_OUTRPAIRS|ID2_BELLE|ID2_OUTR6,      ID2_END|ID2_OUTRPAIRS|ID2_LEAD|ID2_OUTR6,     ID2_END|ID2_OUTRPAIRS|ID2_BEAU|ID2_OUTR6,       ID2_END|ID2_OUTRPAIRS|ID2_TRAILER|ID2_OUTR6},
+   {ID2_END|ID2_OUTRPAIRS|ID2_BEAU|ID2_OUTR6,       ID2_END|ID2_OUTRPAIRS|ID2_TRAILER|ID2_OUTR6,  ID2_END|ID2_OUTRPAIRS|ID2_BELLE|ID2_OUTR6,      ID2_END|ID2_OUTRPAIRS|ID2_LEAD|ID2_OUTR6},
+   {ID2_CENTER|ID2_CTR4|ID2_TRAILER|ID2_OUTR6, ID2_CENTER|ID2_CTR4|ID2_BELLE|ID2_OUTR6, ID2_CENTER|ID2_CTR4|ID2_LEAD|ID2_OUTR6,    ID2_CENTER|ID2_CTR4|ID2_BEAU|ID2_OUTR6},
+   {ID2_CENTER|ID2_CTR4|ID2_LEAD|ID2_CTR2,     ID2_CENTER|ID2_CTR4|ID2_BEAU|ID2_CTR2,   ID2_CENTER|ID2_CTR4|ID2_TRAILER|ID2_CTR2,  ID2_CENTER|ID2_CTR4|ID2_BELLE|ID2_CTR2}};
+
+Private id_bit_table id_bit_table_gal[] = {
+   {ID2_END,             ID2_END,             ID2_END,             ID2_END},
+   {ID2_BOX0|ID2_CENTER, ID2_BOX3|ID2_CENTER, ID2_BOX2|ID2_CENTER, ID2_BOX1|ID2_CENTER},
+   {ID2_END,             ID2_END,             ID2_END,             ID2_END},
+   {ID2_BOX1|ID2_CENTER, ID2_BOX0|ID2_CENTER, ID2_BOX3|ID2_CENTER, ID2_BOX2|ID2_CENTER},
+   {ID2_END,             ID2_END,             ID2_END,             ID2_END},
+   {ID2_BOX2|ID2_CENTER, ID2_BOX1|ID2_CENTER, ID2_BOX0|ID2_CENTER, ID2_BOX3|ID2_CENTER},
+   {ID2_END,             ID2_END,             ID2_END,             ID2_END},
+   {ID2_BOX3|ID2_CENTER, ID2_BOX2|ID2_CENTER, ID2_BOX1|ID2_CENTER, ID2_BOX0|ID2_CENTER}};
+
+Private id_bit_table id_bit_table_hrglass[] = {
+   {ID2_END|ID2_OUTR6|ID2_CTR6,     ID2_END|ID2_OUTR6|ID2_CTR6,     ID2_END|ID2_OUTR6|ID2_CTR6,     ID2_END|ID2_OUTR6|ID2_CTR6},
+   {ID2_END|ID2_OUTR6|ID2_CTR6,     ID2_END|ID2_OUTR6|ID2_CTR6,     ID2_END|ID2_OUTR6|ID2_CTR6,     ID2_END|ID2_OUTR6|ID2_CTR6},
+   {ID2_CENTER|ID2_OUTR6|ID2_OUTR2, ID2_CENTER|ID2_OUTR6|ID2_OUTR2, ID2_CENTER|ID2_OUTR6|ID2_OUTR2, ID2_CENTER|ID2_OUTR6|ID2_OUTR2},
+   {ID2_CENTER|ID2_CTR2|ID2_CTR6,   ID2_CENTER|ID2_CTR2|ID2_CTR6,   ID2_CENTER|ID2_CTR2|ID2_CTR6,   ID2_CENTER|ID2_CTR2|ID2_CTR6},
+   {ID2_END|ID2_OUTR6|ID2_CTR6,     ID2_END|ID2_OUTR6|ID2_CTR6,     ID2_END|ID2_OUTR6|ID2_CTR6,     ID2_END|ID2_OUTR6|ID2_CTR6},
+   {ID2_END|ID2_OUTR6|ID2_CTR6,     ID2_END|ID2_OUTR6|ID2_CTR6,     ID2_END|ID2_OUTR6|ID2_CTR6,     ID2_END|ID2_OUTR6|ID2_CTR6},
+   {ID2_CENTER|ID2_OUTR6|ID2_OUTR2, ID2_CENTER|ID2_OUTR6|ID2_OUTR2, ID2_CENTER|ID2_OUTR6|ID2_OUTR2, ID2_CENTER|ID2_OUTR6|ID2_OUTR2},
+   {ID2_CENTER|ID2_CTR2|ID2_CTR6,   ID2_CENTER|ID2_CTR2|ID2_CTR6,   ID2_CENTER|ID2_CTR2|ID2_CTR6,   ID2_CENTER|ID2_CTR2|ID2_CTR6}};
+
+Private id_bit_table id_bit_table_dhrglass[] = {
+   {ID2_END|ID2_OUTR6|ID2_LEAD,    ID2_END|ID2_OUTR6|ID2_BEAU,    ID2_END|ID2_OUTR6|ID2_TRAILER,    ID2_END|ID2_OUTR6|ID2_BELLE},
+   {ID2_END|ID2_OUTR6|ID2_LEAD,    ID2_END|ID2_OUTR6|ID2_BEAU,    ID2_END|ID2_OUTR6|ID2_TRAILER,    ID2_END|ID2_OUTR6|ID2_BELLE},
+   {ID2_CENTER|ID2_OUTR6,          ID2_CENTER|ID2_OUTR6,          ID2_CENTER|ID2_OUTR6,             ID2_CENTER|ID2_OUTR6},
+   {ID2_CENTER|ID2_CTR2|ID2_LEAD,  ID2_CENTER|ID2_CTR2|ID2_BEAU,  ID2_CENTER|ID2_CTR2|ID2_TRAILER,  ID2_CENTER|ID2_CTR2|ID2_BELLE},
+   {ID2_END|ID2_OUTR6|ID2_TRAILER, ID2_END|ID2_OUTR6|ID2_BELLE,   ID2_END|ID2_OUTR6|ID2_LEAD,       ID2_END|ID2_OUTR6|ID2_BEAU},
+   {ID2_END|ID2_OUTR6|ID2_TRAILER, ID2_END|ID2_OUTR6|ID2_BELLE,   ID2_END|ID2_OUTR6|ID2_LEAD,       ID2_END|ID2_OUTR6|ID2_BEAU},
+   {ID2_CENTER|ID2_OUTR6,          ID2_CENTER|ID2_OUTR6,          ID2_CENTER|ID2_OUTR6,             ID2_CENTER|ID2_OUTR6},
+   {ID2_CENTER|ID2_CTR2|ID2_TRAILER,ID2_CENTER|ID2_CTR2|ID2_BELLE,ID2_CENTER|ID2_CTR2|ID2_LEAD,     ID2_CENTER|ID2_CTR2|ID2_BEAU}};
+
+Private id_bit_table id_bit_table_bigdmd[] = {
+   {ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS},
+   {ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS},
+   {ID2_CTR4,      ID2_CTR4,      ID2_CTR4,      ID2_CTR4},
+   {ID2_CTR4,      ID2_CTR4,      ID2_CTR4,      ID2_CTR4},
+   {ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS},
+   {ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS},
+   {ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS},
+   {ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS},
+   {ID2_CTR4,      ID2_CTR4,      ID2_CTR4,      ID2_CTR4},
+   {ID2_CTR4,      ID2_CTR4,      ID2_CTR4,      ID2_CTR4},
+   {ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS},
+   {ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS}};
+
+Private id_bit_table id_bit_table_3x4[] = {
+   {ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS},
+   {ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS},
+   {ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS},
+   {ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS},
+   {ID2_CTR4,      ID2_CTR4,      ID2_CTR4,      ID2_CTR4},
+   {ID2_CTR4,      ID2_CTR4,      ID2_CTR4,      ID2_CTR4},
+   {ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS},
+   {ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS},
+   {ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS},
+   {ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS},
+   {ID2_CTR4,      ID2_CTR4,      ID2_CTR4,      ID2_CTR4},
+   {ID2_CTR4,      ID2_CTR4,      ID2_CTR4,      ID2_CTR4}};
+
+Private id_bit_table id_bit_table_spindle[] = {
+   {ID2_CTR6|ID2_OUTR6,    ID2_CTR6|ID2_OUTR6,    ID2_CTR6|ID2_OUTR6,    ID2_CTR6|ID2_OUTR6},
+   {ID2_CTR6|ID2_CTR2,     ID2_CTR6|ID2_CTR2,     ID2_CTR6|ID2_CTR2,     ID2_CTR6|ID2_CTR2},
+   {ID2_CTR6|ID2_OUTR6,    ID2_CTR6|ID2_OUTR6,    ID2_CTR6|ID2_OUTR6,    ID2_CTR6|ID2_OUTR6},
+   {ID2_OUTR2|ID2_OUTR6,   ID2_OUTR2|ID2_OUTR6,   ID2_OUTR2|ID2_OUTR6,   ID2_OUTR2|ID2_OUTR6},
+   {ID2_CTR6|ID2_OUTR6,    ID2_CTR6|ID2_OUTR6,    ID2_CTR6|ID2_OUTR6,    ID2_CTR6|ID2_OUTR6},
+   {ID2_CTR6|ID2_CTR2,     ID2_CTR6|ID2_CTR2,     ID2_CTR6|ID2_CTR2,     ID2_CTR6|ID2_CTR2},
+   {ID2_CTR6|ID2_OUTR6,    ID2_CTR6|ID2_OUTR6,    ID2_CTR6|ID2_OUTR6,    ID2_CTR6|ID2_OUTR6},
+   {ID2_OUTR2|ID2_OUTR6,   ID2_OUTR2|ID2_OUTR6,   ID2_OUTR2|ID2_OUTR6,   ID2_OUTR2|ID2_OUTR6}};
+
+Private id_bit_table id_bit_table_rigger[] = {
+   {ID2_CTR6|ID2_CENTER|ID2_CTR4|ID2_BOX0,     ID2_CTR6|ID2_CENTER|ID2_CTR4|ID2_BOX3,  ID2_CTR6|ID2_CENTER|ID2_CTR4|ID2_BOX2, ID2_CTR6|ID2_CENTER|ID2_CTR4|ID2_BOX1},
+   {ID2_CTR6|ID2_CENTER|ID2_CTR4|ID2_BOX1,    ID2_CTR6|ID2_CENTER|ID2_CTR4|ID2_BOX0,     ID2_CTR6|ID2_CENTER|ID2_CTR4|ID2_BOX3,  ID2_CTR6|ID2_CENTER|ID2_CTR4|ID2_BOX2},
+   {ID2_OUTR2|ID2_END|ID2_OUTRPAIRS|ID2_BELLE,          ID2_OUTR2|ID2_END|ID2_OUTRPAIRS|ID2_LEAD,           ID2_OUTR2|ID2_END|ID2_OUTRPAIRS|ID2_BEAU,           ID2_OUTR2|ID2_END|ID2_OUTRPAIRS|ID2_TRAILER},
+   {ID2_CTR6|ID2_END|ID2_OUTRPAIRS|ID2_BEAU,            ID2_CTR6|ID2_END|ID2_OUTRPAIRS|ID2_TRAILER,         ID2_CTR6|ID2_END|ID2_OUTRPAIRS|ID2_BELLE,           ID2_CTR6|ID2_END|ID2_OUTRPAIRS|ID2_LEAD},
+   {ID2_CTR6|ID2_CENTER|ID2_CTR4|ID2_BOX2, ID2_CTR6|ID2_CENTER|ID2_CTR4|ID2_BOX1,    ID2_CTR6|ID2_CENTER|ID2_CTR4|ID2_BOX0,     ID2_CTR6|ID2_CENTER|ID2_CTR4|ID2_BOX3},
+   {ID2_CTR6|ID2_CENTER|ID2_CTR4|ID2_BOX3,  ID2_CTR6|ID2_CENTER|ID2_CTR4|ID2_BOX2, ID2_CTR6|ID2_CENTER|ID2_CTR4|ID2_BOX1,    ID2_CTR6|ID2_CENTER|ID2_CTR4|ID2_BOX0},
+   {ID2_OUTR2|ID2_END|ID2_OUTRPAIRS|ID2_BEAU,           ID2_OUTR2|ID2_END|ID2_OUTRPAIRS|ID2_TRAILER,        ID2_OUTR2|ID2_END|ID2_OUTRPAIRS|ID2_BELLE,          ID2_OUTR2|ID2_END|ID2_OUTRPAIRS|ID2_LEAD},
+   {ID2_CTR6|ID2_END|ID2_OUTRPAIRS|ID2_BELLE,           ID2_CTR6|ID2_END|ID2_OUTRPAIRS|ID2_LEAD,            ID2_CTR6|ID2_END|ID2_OUTRPAIRS|ID2_BEAU,            ID2_CTR6|ID2_END|ID2_OUTRPAIRS|ID2_TRAILER}};
+
+Private id_bit_table id_bit_table_1x3dmd[] = {
+   {ID2_END|ID2_OUTRPAIRS|ID2_OUTR6|ID2_OUTR2,         ID2_END|ID2_OUTRPAIRS|ID2_OUTR6|ID2_OUTR2,       ID2_END|ID2_OUTRPAIRS|ID2_OUTR6|ID2_OUTR2,         ID2_END|ID2_OUTRPAIRS|ID2_OUTR6|ID2_OUTR2},
+   {ID2_END|ID2_OUTRPAIRS|ID2_OUTR6|ID2_CTR6,          ID2_END|ID2_OUTRPAIRS|ID2_OUTR6|ID2_CTR6,        ID2_END|ID2_OUTRPAIRS|ID2_OUTR6|ID2_CTR6,          ID2_END|ID2_OUTRPAIRS|ID2_OUTR6|ID2_CTR6},
+   {ID2_CENTER|ID2_CTR4|ID2_OUTR6|ID2_CTR6,            ID2_CENTER|ID2_CTR4|ID2_OUTR6|ID2_CTR6,          ID2_CENTER|ID2_CTR4|ID2_OUTR6|ID2_CTR6,            ID2_CENTER|ID2_CTR4|ID2_OUTR6|ID2_CTR6},
+   {ID2_CENTER|ID2_CTR4|ID2_LEAD|ID2_CTR2|ID2_CTR6,    ID2_CENTER|ID2_CTR4|ID2_BEAU|ID2_CTR2|ID2_CTR6,  ID2_CENTER|ID2_CTR4|ID2_TRAILER|ID2_CTR2|ID2_CTR6, ID2_CENTER|ID2_CTR4|ID2_BELLE|ID2_CTR2|ID2_CTR6},
+   {ID2_END|ID2_OUTRPAIRS|ID2_OUTR6|ID2_OUTR2,         ID2_END|ID2_OUTRPAIRS|ID2_OUTR6|ID2_OUTR2,       ID2_END|ID2_OUTRPAIRS|ID2_OUTR6|ID2_OUTR2,         ID2_END|ID2_OUTRPAIRS|ID2_OUTR6|ID2_OUTR2},
+   {ID2_END|ID2_OUTRPAIRS|ID2_OUTR6|ID2_CTR6,          ID2_END|ID2_OUTRPAIRS|ID2_OUTR6|ID2_CTR6,        ID2_END|ID2_OUTRPAIRS|ID2_OUTR6|ID2_CTR6,          ID2_END|ID2_OUTRPAIRS|ID2_OUTR6|ID2_CTR6},
+   {ID2_CENTER|ID2_CTR4|ID2_OUTR6|ID2_CTR6,            ID2_CENTER|ID2_CTR4|ID2_OUTR6|ID2_CTR6,          ID2_CENTER|ID2_CTR4|ID2_OUTR6|ID2_CTR6,            ID2_CENTER|ID2_CTR4|ID2_OUTR6|ID2_CTR6},     
+   {ID2_CENTER|ID2_CTR4|ID2_TRAILER|ID2_CTR2|ID2_CTR6, ID2_CENTER|ID2_CTR4|ID2_BELLE|ID2_CTR2|ID2_CTR6, ID2_CENTER|ID2_CTR4|ID2_LEAD|ID2_CTR2|ID2_CTR6,    ID2_CENTER|ID2_CTR4|ID2_BEAU|ID2_CTR2|ID2_CTR6}};
+
+Private id_bit_table id_bit_table_3x1dmd[] = {
+   {ID2_OUTR2|ID2_OUTR6|ID2_OUTRPAIRS|ID2_END|ID2_BEAU,    ID2_OUTR2|ID2_OUTR6|ID2_OUTRPAIRS|ID2_END|ID2_TRAILER, ID2_OUTR2|ID2_OUTR6|ID2_OUTRPAIRS|ID2_END|ID2_BELLE, ID2_OUTR2|ID2_OUTR6|ID2_OUTRPAIRS|ID2_END|ID2_LEAD},
+   {ID2_CTR6|ID2_OUTR6|ID2_OUTRPAIRS|ID2_END|ID2_BELLE,    ID2_CTR6|ID2_OUTR6|ID2_OUTRPAIRS|ID2_END|ID2_LEAD,     ID2_CTR6|ID2_OUTR6|ID2_OUTRPAIRS|ID2_END|ID2_BEAU,   ID2_CTR6|ID2_OUTR6|ID2_OUTRPAIRS|ID2_END|ID2_TRAILER},
+   {ID2_CTR2|ID2_CTR6|ID2_CTR4|ID2_CENTER|ID2_BEAU,        ID2_CTR2|ID2_CTR6|ID2_CTR4|ID2_CENTER|ID2_TRAILER,     ID2_CTR2|ID2_CTR6|ID2_CTR4|ID2_CENTER|ID2_BELLE,     ID2_CTR2|ID2_CTR6|ID2_CTR4|ID2_CENTER|ID2_LEAD},
+   {ID2_CTR6|ID2_OUTR6|ID2_CTR4|ID2_CENTER,                ID2_CTR6|ID2_OUTR6|ID2_CTR4|ID2_CENTER,                ID2_CTR6|ID2_OUTR6|ID2_CTR4|ID2_CENTER,              ID2_CTR6|ID2_OUTR6|ID2_CTR4|ID2_CENTER},
+   {ID2_OUTR2|ID2_OUTR6|ID2_OUTRPAIRS|ID2_END|ID2_BELLE,   ID2_OUTR2|ID2_OUTR6|ID2_OUTRPAIRS|ID2_END|ID2_LEAD,    ID2_OUTR2|ID2_OUTR6|ID2_OUTRPAIRS|ID2_END|ID2_BEAU,  ID2_OUTR2|ID2_OUTR6|ID2_OUTRPAIRS|ID2_END|ID2_TRAILER},
+   {ID2_CTR6|ID2_OUTR6|ID2_OUTRPAIRS|ID2_END|ID2_BEAU,     ID2_CTR6|ID2_OUTR6|ID2_OUTRPAIRS|ID2_END|ID2_TRAILER,  ID2_CTR6|ID2_OUTR6|ID2_OUTRPAIRS|ID2_END|ID2_BELLE,  ID2_CTR6|ID2_OUTR6|ID2_OUTRPAIRS|ID2_END|ID2_LEAD},
+   {ID2_CTR2|ID2_CTR6|ID2_CTR4|ID2_CENTER|ID2_BELLE,       ID2_CTR2|ID2_CTR6|ID2_CTR4|ID2_CENTER|ID2_LEAD,        ID2_CTR2|ID2_CTR6|ID2_CTR4|ID2_CENTER|ID2_BEAU,      ID2_CTR2|ID2_CTR6|ID2_CTR4|ID2_CENTER|ID2_TRAILER},
+   {ID2_CTR6|ID2_OUTR6|ID2_CTR4|ID2_CENTER,                ID2_CTR6|ID2_OUTR6|ID2_CTR4|ID2_CENTER,                ID2_CTR6|ID2_OUTR6|ID2_CTR4|ID2_CENTER,              ID2_CTR6|ID2_OUTR6|ID2_CTR4|ID2_CENTER}};
+
+Private id_bit_table id_bit_table_bone[] = {
+   {ID2_END|ID2_OUTRPAIRS|ID2_OUTR6|ID2_LEAD,    ID2_END|ID2_OUTRPAIRS|ID2_OUTR6|ID2_BEAU,  ID2_END|ID2_OUTRPAIRS|ID2_OUTR6|ID2_TRAILER,  ID2_END|ID2_OUTRPAIRS|ID2_OUTR6|ID2_BELLE},
+   {ID2_END|ID2_OUTRPAIRS|ID2_OUTR6|ID2_LEAD,    ID2_END|ID2_OUTRPAIRS|ID2_OUTR6|ID2_BEAU,  ID2_END|ID2_OUTRPAIRS|ID2_OUTR6|ID2_TRAILER,  ID2_END|ID2_OUTRPAIRS|ID2_OUTR6|ID2_BELLE},
+   {ID2_CENTER|ID2_CTR4|ID2_OUTR6|ID2_BELLE,     ID2_CENTER|ID2_CTR4|ID2_OUTR6|ID2_LEAD,    ID2_CENTER|ID2_CTR4|ID2_OUTR6|ID2_BEAU,   ID2_CENTER|ID2_CTR4|ID2_OUTR6|ID2_TRAILER},
+   {ID2_CENTER|ID2_CTR4|ID2_CTR2|ID2_BEAU,       ID2_CENTER|ID2_CTR4|ID2_CTR2|ID2_TRAILER,  ID2_CENTER|ID2_CTR4|ID2_CTR2|ID2_BELLE,   ID2_CENTER|ID2_CTR4|ID2_CTR2|ID2_LEAD},
+   {ID2_END|ID2_OUTRPAIRS|ID2_OUTR6|ID2_TRAILER, ID2_END|ID2_OUTRPAIRS|ID2_OUTR6|ID2_BELLE, ID2_END|ID2_OUTRPAIRS|ID2_OUTR6|ID2_LEAD, ID2_END|ID2_OUTRPAIRS|ID2_OUTR6|ID2_BEAU},
+   {ID2_END|ID2_OUTRPAIRS|ID2_OUTR6|ID2_TRAILER, ID2_END|ID2_OUTRPAIRS|ID2_OUTR6|ID2_BELLE, ID2_END|ID2_OUTRPAIRS|ID2_OUTR6|ID2_LEAD, ID2_END|ID2_OUTRPAIRS|ID2_OUTR6|ID2_BEAU},
+   {ID2_CENTER|ID2_CTR4|ID2_OUTR6|ID2_BEAU,      ID2_CENTER|ID2_CTR4|ID2_OUTR6|ID2_TRAILER, ID2_CENTER|ID2_CTR4|ID2_OUTR6|ID2_BELLE,  ID2_CENTER|ID2_CTR4|ID2_OUTR6|ID2_LEAD},
+   {ID2_CENTER|ID2_CTR4|ID2_CTR2|ID2_BELLE,      ID2_CENTER|ID2_CTR4|ID2_CTR2|ID2_LEAD,     ID2_CENTER|ID2_CTR4|ID2_CTR2|ID2_BEAU,    ID2_CENTER|ID2_CTR4|ID2_CTR2|ID2_TRAILER}};
+
+
+
+
+
+
 
 /* BEWARE!!  This list is keyed to the definition of "setup_kind" in database.h . */
 setup_attr setup_attrs[] = {
-   {-1, (coordrec *) 0, (coordrec *) 0,   0,                    {b_nothing,   b_nothing},    { 0, 0}, FALSE},   /* nothing */
-   { 0, &thing1x1,      &thing1x1,        0,                    {b_1x1,       b_1x1},        { 1, 1},  TRUE},   /* s1x1 */
-   { 1, &thing1x2,      &thing1x2,        0,                    {b_1x2,       b_2x1},        { 2, 1}, FALSE},   /* s1x2 */
-   { 2, &thing1x3,      &thing1x3,        0,                    {b_1x3,       b_3x1},        { 3, 1}, FALSE},   /* s1x3 */
-   { 3, &thing2x2,      &thing2x2,        0,                    {b_2x2,       b_2x2},        { 2, 2},  TRUE},   /* s2x2 */
-   { 3, &thing1x4,      &thing1x4,        &concthing_1x4,       {b_1x4,       b_4x1},        { 4, 1}, FALSE},   /* s1x4 */
-   { 3, (coordrec *) 0, &nicethingdmd,    &concthing_dmd,       {b_dmd,       b_pmd},        { 0, 2}, FALSE},   /* sdmd */
-   { 3, (coordrec *) 0, (coordrec *) 0,   0,                    {b_star,      b_star},       { 0, 0},  TRUE},   /* s_star */
-   { 2, (coordrec *) 0, (coordrec *) 0,   0,                    {b_trngl,     b_ptrngl},     { 0, 0}, FALSE},   /* s_trngl */
-   { 3, (coordrec *) 0, (coordrec *) 0,   0,                    {b_trngl4,    b_ptrngl4},    { 0, 0}, FALSE},   /* s_trngl4 */
-   { 5, (coordrec *) 0, (coordrec *) 0,   0,                    {b_bone6,     b_pbone6},     { 0, 0}, FALSE},   /* s_bone6 */
-   { 5, (coordrec *) 0, &nicethingshort6, 0,                    {b_short6,    b_pshort6},    { 0, 0}, FALSE},   /* s_short6 */
-   { 5, (coordrec *) 0, (coordrec *) 0,   0,                    {b_1x2dmd,    b_p1x2dmd},    { 0, 0}, FALSE},   /* s_1x2dmd */
-   { 7, &thingqtag,     &nicethingqtag,   &concthing_qtag,      {b_qtag,      b_pqtag},      { 4, 0}, FALSE},   /* s_qtag */
-   { 7, &thingbone,     &thingbone,       &concthing_bone,      {b_bone,      b_pbone},      { 0, 0}, FALSE},   /* s_bone */
-   { 7, &thingrigger,   &thingrigger,     &concthing_rigger,    {b_rigger,    b_prigger},    { 0, 0}, FALSE},   /* s_rigger */
-   { 7, &thingspindle,  &thingspindle,    &concthing_spindle,   {b_spindle,   b_pspindle},   { 0, 0}, FALSE},   /* s_spindle */
-   { 7, &thingglass,    &nicethingglass,  &concthing_hrglass,   {b_hrglass,   b_phrglass},   { 0, 0}, FALSE},   /* s_hrglass */
-   { 7, &thingdglass,   &thingdglass,     &concthing_dhrglass,  {b_dhrglass,  b_pdhrglass},  { 0, 0}, FALSE},   /* s_dhrglass */
-   {11, (coordrec *) 0, (coordrec *) 0,   0,                    {b_nothing,   b_nothing},    { 0, 0},  TRUE},   /* s_hyperglass */
-   { 7, &thingxwv,      &thingxwv,        &concthing_xwave,     {b_crosswave, b_pcrosswave}, { 0, 0}, FALSE},   /* s_crosswave */
-   { 7, &thing1x8,      &thing1x8,        &concthing_1x8,       {b_1x8,       b_8x1},        { 8, 1}, FALSE},   /* s1x8 */
-   { 7, &thing2x4,      &thing2x4,        &concthing_2x4,       {b_2x4,       b_4x2},        { 4, 2}, FALSE},   /* s2x4 */
-   { 5, &thing2x3,      &thing2x3,        0,                    {b_2x3,       b_3x2},        { 3, 2}, FALSE},   /* s2x3 */
-   { 5, &thing1x6,      &thing1x6,        0,                    {b_1x6,       b_6x1},        { 6, 1}, FALSE},   /* s1x6 */
-   {11, &thing3x4,      &thing3x4,        &concthing_3x4,       {b_3x4,       b_4x3},        { 4, 3}, FALSE},   /* s3x4 */
-   {11, &thing2x6,      &thing2x6,        0,                    {b_2x6,       b_6x2},        { 6, 2}, FALSE},   /* s2x6 */
-   {15, &thing2x8,      &thing2x8,        0,                    {b_2x8,       b_8x2},        { 8, 2}, FALSE},   /* s2x8 */
-   {15, &thing4x4,      &thing4x4,        &concthing_4x4,       {b_4x4,       b_4x4},        { 4, 4},  TRUE},   /* s4x4 */
-   {11, (coordrec *) 0, (coordrec *) 0,   0,                    {b_nothing,   b_nothing},    { 0, 0}, FALSE},   /* sx1x6 */
-   { 9, &thing1x10,     &thing1x10,       0,                    {b_1x10,      b_10x1},       {10, 1}, FALSE},   /* s1x10 */
-   {11, &thing1x12,     &thing1x12,       0,                    {b_1x12,      b_12x1},       {12, 1}, FALSE},   /* s1x12 */
-   {13, &thing1x14,     &thing1x14,       0,                    {b_1x14,      b_14x1},       {14, 1}, FALSE},   /* s1x14 */
-   {15, &thing1x16,     &thing1x16,       0,                    {b_1x16,      b_16x1},       {16, 1}, FALSE},   /* s1x16 */
-   {15, &thingphan,     &nicethingphan,   0,                    {b_c1phan,    b_c1phan},     { 0, 0},  TRUE},   /* s_c1phan */
-   {23, &thingblob,     &thingblob,       0,                    {b_nothing,   b_nothing},    { 0, 0},  TRUE},   /* s_bigblob */
-   { 7, &thingptpd,     &nicethingptpd,   &concthing_ptpd,      {b_ptpd,      b_pptpd},      { 0, 0}, FALSE},   /* s_ptpd */
-   { 7, &thing3x1dmd,   &thing3x1dmd,     &concthing_3x1dmd,    {b_3x1dmd,    b_p3x1dmd},    { 0, 0}, FALSE},   /* s3x1dmd */
-   {11, &thing3dmd,     &thing3dmd,       0,                    {b_3dmd,      b_p3dmd},      { 0, 0}, FALSE},   /* s3dmd */
-   {15, &thing4dmd,     &thing4dmd,       0,                    {b_4dmd,      b_p4dmd},      { 0, 0}, FALSE},   /* s4dmd */
-   { 7, (coordrec *) 0, (coordrec *) 0,   &concthing_wstar,     {b_nothing,   b_nothing},    { 0, 0}, FALSE},   /* s_wingedstar */
-   {11, (coordrec *) 0, (coordrec *) 0,   &concthing_wstar12,   {b_nothing,   b_nothing},    { 0, 0}, FALSE},   /* s_wingedstar12 */
-   {15, (coordrec *) 0, (coordrec *) 0,   &concthing_wstar16,   {b_nothing,   b_nothing},    { 0, 0}, FALSE},   /* s_wingedstar16 */
-   { 7, &thinggal,      &thinggal,        &concthing_gal,       {b_galaxy,    b_galaxy},     { 0, 0},  TRUE},   /* s_galaxy */
-   {23, &thing3x8,      &thing3x8,        0,                    {b_3x8,       b_8x3},        { 8, 3}, FALSE},   /* s3x8 */
-   {23, &thing4x6,      &thing4x6,        0,                    {b_4x6,       b_6x4},        { 6, 4}, FALSE},   /* s4x6 */
-   { 7, &thingthar,     &thingthar,       &concthing_thar,      {b_thar,      b_thar},       { 0, 0},  TRUE},   /* s_thar */
-   {31, (coordrec *) 0, (coordrec *) 0,   0,                    {b_nothing,   b_nothing},    { 0, 0}, FALSE},   /* sx4dmd */
-   {63, (coordrec *) 0, (coordrec *) 0,   0,                    {b_nothing,   b_nothing},    { 0, 0}, FALSE},   /* s8x8 */
-   {15, (coordrec *) 0, (coordrec *) 0,   0,                    {b_nothing,   b_nothing},    { 8, 4}, FALSE},   /* sfat2x8 */
-   {15, (coordrec *) 0, (coordrec *) 0,   0,                    {b_nothing,   b_nothing},    { 8, 4}, FALSE},   /* swide4x4 */
-   {11, &thingbigdmd,   &thingbigdmd,     0,                    {b_bigdmd,    b_pbigdmd},    { 0, 0}, FALSE},   /* sbigdmd */
-   {5,  (coordrec *) 0, (coordrec *) 0,   0,                    {b_nothing,   b_nothing},    { 0, 0}, FALSE},   /* sminirigger */
-   {-1, (coordrec *) 0, (coordrec *) 0,   0,                    {b_nothing,   b_nothing},    { 0, 0}, FALSE}};  /* s_normal_concentric */
-
-
+   /* nothing */
+      {-1,                          /* setup_limits */
+      (coordrec *) 0,               /* setup_coords */
+      (coordrec *) 0,               /* nice_setup_coords */
+      (cm_hunk *) 0,                /* conctab */
+      {b_nothing,   b_nothing},     /* keytab */
+      { 0, 0},                      /* bounding_box */
+      FALSE,                        /* four_way_symmetry */
+      (id_bit_table *) 0,           /* id_bit_table_ptr */
+      {  (Cstring) 0,               /* print_strings */
+         (Cstring) 0}},
+   /* s1x1 */
+      { 0,
+      &thing1x1,
+      &thing1x1,
+      (cm_hunk *) 0,
+      {b_1x1,       b_1x1},
+      { 1, 1},
+      TRUE,
+      (id_bit_table *) 0,
+      {  (Cstring) 0,
+         (Cstring) 0}},
+   /* s1x2 */
+      { 1,
+      &thing1x2,
+      &thing1x2,
+      (cm_hunk *) 0,
+      {b_1x2,       b_2x1},
+      { 2, 1},
+      FALSE,
+      id_bit_table_1x2,
+      {  "a  b@",
+         "a@b@"}},
+   /* s1x3 */
+      { 2,
+      &thing1x3,
+      &thing1x3,
+      (cm_hunk *) 0,
+      {b_1x3,       b_3x1},
+      { 3, 1},
+      FALSE,
+      (id_bit_table *) 0,
+      {  (Cstring) 0,
+         (Cstring) 0}},
+   /* s2x2 */
+      { 3,
+      &thing2x2,
+      &thing2x2,
+      (cm_hunk *) 0,
+      {b_2x2,       b_2x2},
+      { 2, 2},
+      TRUE,
+      id_bit_table_2x2,
+      {  (Cstring) 0,
+         (Cstring) 0}},
+   /* s1x4 */
+      { 3,
+      &thing1x4,
+      &thing1x4,
+      &concthing_1x4,
+      {b_1x4,       b_4x1},
+      { 4, 1},
+      FALSE,
+      id_bit_table_1x4,
+      {  "a  b  d  c@",
+         "a@b@d@c@"}},
+   /* sdmd */
+      { 3,
+      (coordrec *) 0,
+      &nicethingdmd,
+      &concthing_dmd,
+      {b_dmd,       b_pmd},
+      { 0, 2},
+      FALSE,
+      id_bit_table_dmd,
+      {  "     b@a      c@     d@",
+         "   a@@d  b@@   c@"}},
+   /* s_star */
+      { 3,
+      (coordrec *) 0,
+      (coordrec *) 0,
+      (cm_hunk *) 0,
+      {b_star,      b_star},
+      { 0, 0},
+      TRUE,
+      (id_bit_table *) 0,
+      {  (Cstring) 0,
+         (Cstring) 0}},
+   /* s_trngl */
+      { 2,
+      (coordrec *) 0,
+      (coordrec *) 0,
+      (cm_hunk *) 0,
+      {b_trngl,     b_ptrngl},
+      { 0, 0},
+      FALSE,
+      (id_bit_table *) 0,
+      {  (Cstring) 0,
+         (Cstring) 0}},
+   /* s_trngl4 */
+      { 3,
+      (coordrec *) 0,
+      (coordrec *) 0,
+      (cm_hunk *) 0,
+      {b_trngl4,    b_ptrngl4},
+      { 0, 0},
+      FALSE,
+      (id_bit_table *) 0,
+      {  (Cstring) 0,
+         (Cstring) 0}},
+   /* s_bone6 */
+      { 5,
+      (coordrec *) 0,
+      (coordrec *) 0,
+      (cm_hunk *) 0,
+      {b_bone6,     b_pbone6},
+      { 0, 0},
+      FALSE,
+      (id_bit_table *) 0,
+      {  "a        b@    fc@e        d@",
+         "ea@  f@  c@db@"}},
+   /* s_short6 */
+      { 5,
+      (coordrec *) 0,
+      &nicethingshort6,
+      (cm_hunk *) 0,
+      {b_short6,    b_pshort6},
+      { 0, 0},
+      FALSE,
+      (id_bit_table *) 0,
+      {  "   b@a  c@f  d@   e@",
+         "   fa@e      b@   dc@"}},
+   /* s_1x2dmd */
+      { 5,
+      (coordrec *) 0,
+      (coordrec *) 0,
+      (cm_hunk *) 0,
+      {b_1x2dmd,    b_p1x2dmd},
+      { 0, 0},
+      FALSE,
+      (id_bit_table *) 0,
+      {  "           c@a  b      e  d@           f@",
+         "   a@@   b@@f  c@@   e@@   d@"}},
+   /* s_qtag */
+      { 7,
+      &thingqtag,
+      &nicethingqtag,
+      &concthing_qtag,
+      {b_qtag,      b_pqtag},
+      { 4, 0},
+      FALSE,
+      id_bit_table_qtag,
+      {  (Cstring) 0,
+         (Cstring) 0}},
+   /* s_bone */
+      { 7,
+      &thingbone,
+      &thingbone,
+      &concthing_bone,
+      {b_bone,      b_pbone},
+      { 0, 0},
+      FALSE,
+      id_bit_table_bone,
+      {  "a                   b@    g h d c@f                   e",
+         "fa@  g@  h@  d@  c@eb"}},
+   /* s_rigger */
+      { 7,
+      &thingrigger,
+      &thingrigger,
+      &concthing_rigger,
+      {b_rigger,    b_prigger},
+      { 0, 0},
+      FALSE,
+      id_bit_table_rigger,
+      {  "        a b@gh         dc@        f e",
+         "  g@  h@fa@eb@  d@  c"}},
+   /* s_spindle */
+      { 7,
+      &thingspindle,
+      &thingspindle,
+      &concthing_spindle,
+      {b_spindle,   b_pspindle},
+      { 0, 0},
+      FALSE,
+      id_bit_table_spindle,
+      {  "    a b c@h              d@    g f e",
+         "  h@ga@fb@ec@  d"}},
+   /* s_hrglass */
+      { 7,
+      &thingglass,
+      &nicethingglass,
+      &concthing_hrglass,
+      {b_hrglass,   b_phrglass},
+      { 0, 0},
+      FALSE,
+      id_bit_table_hrglass,
+      {  "   a  b@      d@g        c@      h@   f  e",
+         "     g@f      a@   hd@e      b@     c"}},
+   /* s_dhrglass */
+      { 7,
+      &thingdglass,
+      &thingdglass,
+      &concthing_dhrglass,
+      {b_dhrglass,  b_pdhrglass},
+      { 0, 0},
+      FALSE,
+      id_bit_table_dhrglass,
+      {  "a      d      b@     g      c@f      h      e",
+         "f  a@@   g@@h  d@@   c@@e  b"}},
+   /* s_hyperglass */
+      {11,
+      (coordrec *) 0,
+      (coordrec *) 0,
+      (cm_hunk *) 0,
+      {b_nothing,   b_nothing},
+      { 0, 0},
+      TRUE,
+      (id_bit_table *) 0,
+      {  (Cstring) 0,
+         (Cstring) 0}},
+   /* s_crosswave */
+      { 7,
+      &thingxwv,
+      &thingxwv,
+      &concthing_xwave,
+      {b_crosswave, b_pcrosswave},
+      { 0, 0},
+      FALSE,
+      id_bit_table_crosswave,
+      {  "          c@          d@ab        fe@          h@          g",
+         "      a@      b@@ghdc@@      f@      e"}},
+   /* s1x8 */
+      { 7,
+      &thing1x8,
+      &thing1x8,
+      &concthing_1x8,
+      {b_1x8,       b_8x1},
+      { 8, 1},
+      FALSE,
+      id_bit_table_1x8,
+      {  "a b d c g h f e",
+         "a@b@d@c@g@h@f@e"}},
+   /* s2x4 */
+      { 7,
+      &thing2x4,
+      &thing2x4,
+      &concthing_2x4,
+      {b_2x4,       b_4x2},
+      { 4, 2},
+      FALSE,
+      id_bit_table_2x4,
+      {  "a  b  c  d@@h  g  f  e",
+         "h  a@@g  b@@f  c@@e  d"}},
+   /* s2x3 */
+      { 5,
+      &thing2x3,
+      &thing2x3,
+      (cm_hunk *) 0,
+      {b_2x3,       b_3x2},
+      { 3, 2},
+      FALSE,
+      (id_bit_table *) 0,
+      {  "a  b  c@f  e  d@",
+         "f  a@e  b@d  c@"}},
+   /* s1x6 */
+      { 5,
+      &thing1x6,
+      &thing1x6,
+      (cm_hunk *) 0,
+      {b_1x6,       b_6x1},
+      { 6, 1},
+      FALSE,
+      (id_bit_table *) 0,
+      {  "a  b  c  f  e  d@",
+         "a@b@c@f@e@d@"}},
+   /* s3x4 */
+      {11,
+      &thing3x4,
+      &thing3x4,
+      &concthing_3x4,
+      {b_3x4,       b_4x3},
+      { 4, 3},
+      FALSE,
+      id_bit_table_3x4,
+      {  "a  b  c  d@@k  l  f  e@@j  i  h  g",
+         "j  k  a@@i  l  b@@h  f  c@@g  e  d"}},
+   /* s2x6 */
+      {11,
+      &thing2x6,
+      &thing2x6,
+      (cm_hunk *) 0,
+      {b_2x6,       b_6x2},
+      { 6, 2},
+      FALSE,
+      id_bit_table_2x6p,
+      {  "a  b  c  d  e  f@@l  k  j  i  h  g",
+         "l  a@@k  b@@j  c@@i  d@@h  e@@g  f"}},
+   /* s1p5x8 */
+      {15,
+      (coordrec *) 0,
+      (coordrec *) 0,
+      (cm_hunk *) 0,
+      {b_nothing,   b_nothing},
+      { 0, 0},
+      FALSE,
+      (id_bit_table *) 0,
+      {  "a  b  c  d  e  f  g  h@p  o  n  m  l  k  j  i",
+         "pa@@ob@@nc@@md@@le@@kf@@jg@@ih"}},
+   /* s2x8 */
+      {15,
+      &thing2x8,
+      &thing2x8,
+      (cm_hunk *) 0,
+      {b_2x8,       b_8x2},
+      { 8, 2},
+      FALSE,
+      (id_bit_table *) 0,
+      {  "a  b  c  d  e  f  g  h@@p  o  n  m  l  k  j  i",
+         "p  a@@o  b@@n  c@@m  d@@l  e@@k  f@@j  g@@i  h"}},
+   /* s4x4 */
+      {15,
+      &thing4x4,
+      &thing4x4,
+      &concthing_4x4,
+      {b_4x4,       b_4x4},
+      { 4, 4},
+      TRUE,
+      (id_bit_table *) 0,
+      {  "m  n  o  a@@k  p  d  b@@j  l  h  c@@i  g  f  e",
+         (Cstring) 0}},
+   /* sx1x6 */
+      {11,
+      (coordrec *) 0,
+      (coordrec *) 0,
+      (cm_hunk *) 0,
+      {b_nothing,   b_nothing},
+      { 0, 0},
+      FALSE,
+      (id_bit_table *) 0,
+      {  (Cstring) 0,
+         (Cstring) 0}},
+   /* s1x10 */
+      { 9,
+      &thing1x10,
+      &thing1x10,
+      (cm_hunk *) 0,
+      {b_1x10,      b_10x1},
+      {10, 1},
+      FALSE,
+      (id_bit_table *) 0,
+      {  "a b c d e j i h g f",
+         "a@b@c@d@e@j@i@h@g@f"}},
+   /* s1x12 */
+      {11,
+      &thing1x12,
+      &thing1x12,
+      (cm_hunk *) 0,
+      {b_1x12,      b_12x1},
+      {12, 1},
+      FALSE,
+      (id_bit_table *) 0,
+      {  "a b c d e f l k j i h g",
+         "a@b@c@d@e@f@l@k@j@i@h@g"}},
+   /* s1x14 */
+      {13,
+      &thing1x14,
+      &thing1x14,
+      (cm_hunk *) 0,
+      {b_1x14,      b_14x1},
+      {14, 1},
+      FALSE,
+      (id_bit_table *) 0,
+      {  "abcdefgnmlkjih",
+         "a@b@c@d@e@f@g@n@m@l@k@j@i@h"}},
+   /* s1x16 */
+      {15,
+      &thing1x16,
+      &thing1x16,
+      (cm_hunk *) 0,
+      {b_1x16,      b_16x1},
+      {16, 1},
+      FALSE,
+      (id_bit_table *) 0,
+      {  "abcdefghponmlkji",
+         "a@b@c@d@e@f@g@h@p@o@n@m@l@k@j@i"}},
+   /* s_c1phan */
+      {15,
+      &thingphan,
+      &nicethingphan,
+      (cm_hunk *) 0,
+      {b_c1phan,    b_c1phan},
+      { 0, 0},
+      TRUE,
+      (id_bit_table *) 0,
+      {  "   b        e@a  c  h  f@   d        g@@   o        l@n  p  k  i@   m        j",
+         (Cstring) 0}},
+   /* s_bigblob */
+      {23,
+      &thingblob,
+      &thingblob,
+      (cm_hunk *) 0,
+      {b_nothing,   b_nothing},
+      { 0, 0},
+      TRUE,
+      (id_bit_table *) 0,
+      {  "            a  b@@      v  w  c  d@@t  u  x  f  e  g@@s  q  r  l  i  h@@      p  o  k  j@@            n  m",
+         (Cstring) 0}},
+   /* s_ptpd */
+      { 7,
+      &thingptpd,
+      &nicethingptpd,
+      &concthing_ptpd,
+      {b_ptpd,      b_pptpd},
+      { 0, 0},
+      FALSE,
+      id_bit_table_ptpd,
+      {  "    b           h@a    c   g    e@    d           f",
+         "  a@@db@@  c@@  g@@fh@@  e"}},
+   /* s1x3dmd */
+      { 7,
+      &thing1x3dmd,
+      &thing1x3dmd,
+      &concthing_1x3dmd,
+      {b_1x3dmd,    b_p1x3dmd},
+      { 0, 0},
+      FALSE,
+      id_bit_table_1x3dmd,
+      {  "               d@a b c      g f e@               h",
+         "   a@@   b@@   c@h  d@   g@@   f@@   e"}},
+   /* s3x1dmd */
+      { 7,
+      &thing3x1dmd,
+      &thing3x1dmd,
+      &concthing_3x1dmd,
+      {b_3x1dmd,    b_p3x1dmd},
+      { 0, 0},
+      FALSE,
+      id_bit_table_3x1dmd,
+      {  "             d@@a b c g f e@@             h",
+         "      a@@      b@@      c@h        d@      g@@      f@@      e"}},
+   /* s3dmd */
+      {11,
+      &thing3dmd,
+      &thing3dmd,
+      (cm_hunk *) 0,
+      {b_3dmd,      b_p3dmd},
+      { 0, 0},
+      FALSE,
+      (id_bit_table *) 0,
+      {  "   a      b      c@@j k l f e d@@   i      h      g",
+         "      j@i        a@      k@@      l@h        b@      f@@      e@g        c@      d"}},
+   /* s4dmd */
+      {15,
+      &thing4dmd,
+      &thing4dmd,
+      (cm_hunk *) 0,
+      {b_4dmd,      b_p4dmd},
+      { 0, 0},
+      FALSE,
+      (id_bit_table *) 0,
+      {  "   a      b      c      d@@m n o p h g f e@@   l      k      j      i",
+         "      m@l        a@      n@@      o@k        b@      p@@      h@j        c@      g@@      f@i        d@      e"}},
+   /* s_wingedstar */
+      { 7,
+      (coordrec *) 0,
+      (coordrec *) 0,
+      &concthing_wstar,
+      {b_nothing,   b_nothing},
+      { 0, 0},
+      FALSE,
+      (id_bit_table *) 0,
+      {  "             d@a b c  g f e@             h",
+         "   a@@   b@@   c@h  d@   g@@   f@@   e"}},
+   /* s_wingedstar12 */
+      {11,
+      (coordrec *) 0,
+      (coordrec *) 0,
+      &concthing_wstar12,
+      {b_nothing,   b_nothing},
+      { 0, 0},
+      FALSE,
+      (id_bit_table *) 0,
+      {  "             d       f@a b c  e k  i h g@             l       j",
+         "   a@@   b@@   c@l  d@   e@   k@j  f@   i@@   h@@   g"}},
+   /* s_wingedstar16 */
+      {15,
+      (coordrec *) 0,
+      (coordrec *) 0,
+      &concthing_wstar16,
+      {b_nothing,   b_nothing},
+      { 0, 0},
+      FALSE,
+      (id_bit_table *) 0,
+      {  "             d       h       m@a b c  f g  o n  k j i@             e       p       l",
+         "   a@@   b@@   c@e  d@   f@   g@p  h@   o@   n@l  m@   k@@   j@@   i"}},
+   /* s_galaxy */
+      { 7,
+      &thinggal,
+      &thinggal,
+      &concthing_gal,
+      {b_galaxy,    b_galaxy},
+      { 0, 0},
+      TRUE,
+      id_bit_table_gal,
+      {  "     c@   bd@a      e@   hf@     g",
+         (Cstring) 0}},
+   /* s3x8 */
+      {23,
+      &thing3x8,
+      &thing3x8,
+      (cm_hunk *) 0,
+      {b_3x8,       b_8x3},
+      { 8, 3},
+      FALSE,
+      (id_bit_table *) 0,
+      {  "a  b  c  d  e  f  g  h@@u  v  w  x  l  k  j  i@@t  s  r  q  p  o  n  m",
+         "t  u  a@@s  v  b@@r  w  c@@q  x  d@@p  l  e@@o  k  f@@n  j  g@@m  i  h"}},
+   /* s4x6 */
+      {23,
+      &thing4x6,
+      &thing4x6,
+      (cm_hunk *) 0,
+      {b_4x6,       b_6x4},
+      { 6, 4},
+      FALSE,
+      (id_bit_table *) 0,
+      {  "a  b  c  d  e  f@@l  k  j  i  h  g@@s  t  u  v  w  x@@r  q  p  o  n  m",
+         "r  s  l  a@@q  t  k  b@@p  u  j  c@@o  v  i  d@@n  w  h  e@@m  x  g  f"}},
+   /* s_thar */
+      { 7,
+      &thingthar,
+      &thingthar,
+      &concthing_thar,
+      {b_thar,      b_thar},
+      { 0, 0},
+      TRUE,
+      (id_bit_table *) 0,
+      {  "      c@      d@abfe@      h@      g",
+         (Cstring) 0}},
+   /* sx4dmd */
+      {31,
+      (coordrec *) 0,
+      (coordrec *) 0,
+      (cm_hunk *) 0,
+      {b_nothing,   b_nothing},
+      { 0, 0},
+      FALSE,
+      (id_bit_table *) 0,
+      {  (Cstring) 0,
+         (Cstring) 0}},
+   /* s8x8 */
+      {63,
+      (coordrec *) 0,
+      (coordrec *) 0,
+      (cm_hunk *) 0,
+      {b_nothing,   b_nothing},
+      { 0, 0},
+      FALSE,
+      (id_bit_table *) 0,
+      {  (Cstring) 0,
+         (Cstring) 0}},
+   /* sfat2x8 */
+      {15,
+      (coordrec *) 0,
+      (coordrec *) 0,
+      (cm_hunk *) 0,
+      {b_nothing,   b_nothing},
+      { 8, 4},
+      FALSE,
+      (id_bit_table *) 0,
+      {  (Cstring) 0,
+         (Cstring) 0}},
+   /* swide4x4 */
+      {15,
+      (coordrec *) 0,
+      (coordrec *) 0,
+      (cm_hunk *) 0,
+      {b_nothing,   b_nothing},
+      { 8, 4},
+      FALSE,
+      (id_bit_table *) 0,
+      {  (Cstring) 0,
+         (Cstring) 0}},
+   /* sbigdmd */
+      {11,
+      &thingbigdmd,
+      &thingbigdmd,
+      (cm_hunk *) 0,
+      {b_bigdmd,    b_pbigdmd},
+      { 0, 0},
+      FALSE,
+      id_bit_table_bigdmd,
+      {  "          c@a b        e f@          d@@          j@l k        h g@          i",
+         "   l      a@   k      b@i j d c@   h      e@   g      f"}},
+   /* sminirigger */
+      {5,
+      (coordrec *) 0,
+      (coordrec *) 0,
+      (cm_hunk *) 0,
+      {b_nothing,   b_nothing},
+      { 0, 0},
+      FALSE,
+      (id_bit_table *) 0,
+      {  (Cstring) 0,
+         (Cstring) 0}},
+   /* s_normal_concentric */
+      {-1,
+      (coordrec *) 0,
+      (coordrec *) 0,
+      (cm_hunk *) 0,
+      {b_nothing,   b_nothing},
+      { 0, 0},
+      FALSE,
+      (id_bit_table *) 0,
+      {  (Cstring) 0,
+         (Cstring) 0}}};
 
 
 /* BEWARE!!  This list is keyed to the definition of "begin_kind" in database.h . */
@@ -810,6 +1585,8 @@ int begin_sizes[] = {
    8,          /* b_thar */
    8,          /* b_ptpd */
    8,          /* b_pptpd */
+   8,          /* b_1x3dmd */
+   8,          /* b_p1x3dmd */
    8,          /* b_3x1dmd */
    8,          /* b_p3x1dmd */
    12,         /* b_3dmd */
@@ -1070,6 +1847,7 @@ Private map_thing map_ov_qtag_2 = {{0, 1, 15, 14, 10, 11, 12, 13,      1, 2, 6, 
 
 Private map_thing map_lh_s2x4_2         = {{20, 21, 22, 23, 16, 17, 18, 19,    4, 5, 6, 7, 8, 9, 10, 11},            MPKIND__OFFS_L_HALF, 2,  s3x8,   s2x4,      0x000, 0};
 Private map_thing map_lh_s2x4_3         = {{20, 21, 22, 23, 12, 13, 14, 15,    0, 1, 2, 3, 8, 9, 10, 11},            MPKIND__OFFS_L_HALF, 2,  s4x6,   s2x4,      0x000, 1};
+Private map_thing map_lh_s1x4_2         = {{15, 14, 12, 13,                    4, 5, 7, 6},                          MPKIND__OFFS_L_HALF, 2,  s1p5x8, s1x4,      0x000, 0};
 Private map_thing map_lh_s1x4_3         = {{9, 8, 6, 7,                        0, 1, 3, 2},                          MPKIND__OFFS_L_HALF, 2,  s2x6,   s1x4,      0x000, 1};
 Private map_thing map_lh_s2x2_2         = {{10, 11, 8, 9,                      2, 3, 4, 5},                          MPKIND__OFFS_L_HALF, 2,  s3x4,   s2x2,      0x000, 0};
 Private map_thing map_lh_s2x2_3         = {{11, 8, 9, 10,                      3, 4, 5, 2},                          MPKIND__OFFS_L_HALF, 2,  s3x4,   s2x2,      0x005, 0};
@@ -1083,6 +1861,7 @@ Private map_thing map_lh_s1x8_0         = {{0, 1, 2, 3, 4, 5, 6, 7,             
 
 Private map_thing map_rh_s2x4_2         = {{0, 1, 2, 3, 23, 22, 21, 20,        11, 10, 9, 8, 12, 13, 14, 15},        MPKIND__OFFS_R_HALF, 2,  s3x8,   s2x4,      0x000, 0};
 Private map_thing map_rh_s2x4_3         = {{18, 19, 20, 21, 14, 15, 16, 17,    2, 3, 4, 5, 6, 7, 8, 9},              MPKIND__OFFS_R_HALF, 2,  s4x6,   s2x4,      0x000, 1};
+Private map_thing map_rh_s1x4_2         = {{0, 1, 3, 2,                        11, 10, 8, 9},                        MPKIND__OFFS_R_HALF, 2,  s1p5x8, s1x4,      0x000, 0};
 Private map_thing map_rh_s1x4_3         = {{11, 10, 8, 9,                      2, 3, 5, 4},                          MPKIND__OFFS_R_HALF, 2,  s2x6,   s1x4,      0x000, 1};
 Private map_thing map_rh_s2x2_2         = {{0, 1, 11, 10,                      5, 4, 6, 7},                          MPKIND__OFFS_R_HALF, 2,  s3x4,   s2x2,      0x000, 0};
 Private map_thing map_rh_s2x2_3         = {{1, 11, 10, 0,                      4, 6, 7, 5},                          MPKIND__OFFS_R_HALF, 2,  s3x4,   s2x2,      0x005, 0};
@@ -1094,6 +1873,7 @@ Private map_thing map_rh_s1x8_0         = {{0, 1, 2, 3, 4, 5, 6, 7,             
         map_thing map_rh_s2x3_3         = {{15, 11, 6, 8, 9, 10,            0, 1, 2, 7, 3, 14},                      MPKIND__OFFS_R_HALF, 2,  s4x4,   s2x3,      0x005, 1};
         map_thing map_rh_s2x3_2         = {{12, 13, 14, 3, 15, 10,          11, 7, 2, 4, 5, 6},                      MPKIND__OFFS_R_HALF, 2,  s4x4,   s2x3,      0x000, 0};
 
+Private map_thing map_lf_s1x4_2         = {{15, 14, 12, 13,                 4, 5, 7, 6},                             MPKIND__OFFS_L_FULL, 2,  s2x8,   s1x4,      0x000, 0};
 Private map_thing map_lf_s1x4_3         = {{11, 10, 8, 9,                   0, 1, 3, 2},                             MPKIND__OFFS_L_FULL, 2,  s2x8,   s1x4,      0x000, 1};
 Private map_thing map_lf_s2x2_2         = {{9, 11, 6, 8,                    14, 0, 1, 3},                            MPKIND__OFFS_L_FULL, 2,  s4x4,   s2x2,      0x000, 0};
 Private map_thing map_lf_s2x2_3         = {{11, 6, 8, 9,                    0, 1, 3, 14},                            MPKIND__OFFS_L_FULL, 2,  s4x4,   s2x2,      0x005, 0};
@@ -1101,6 +1881,7 @@ Private map_thing map_lf_s2x4_0         = {{0, 1, 2, 3, 8, 9, 10, 11,           
 Private map_thing map_lf_s2x4_1         = {{13, 15, 2, 4, 5, 7, 10, 12,                                          0}, MPKIND__OFFS_L_FULL, 1,  s4x4,   s2x4,      0x001, 0};
 Private map_thing map_lf_s1x8_0         = {{0, 1, 2, 3, 4, 5, 6, 7,                                              2}, MPKIND__OFFS_L_FULL, 1,  s1x8,   s1x8,      0x000, 0};
 
+Private map_thing map_rf_s1x4_2         = {{0, 1, 3, 2,                     11, 10, 8, 9},                           MPKIND__OFFS_R_FULL, 2,  s2x8,   s1x4,      0x000, 0};
 Private map_thing map_rf_s1x4_3         = {{15, 14, 12, 13,                 4, 5, 7, 6},                             MPKIND__OFFS_R_FULL, 2,  s2x8,   s1x4,      0x000, 1};
 Private map_thing map_rf_s2x2_2         = {{12, 13, 15, 10,                 7, 2, 4, 5},                             MPKIND__OFFS_R_FULL, 2,  s4x4,   s2x2,      0x000, 0};
 Private map_thing map_rf_s2x2_3         = {{13, 15, 10, 12,                 2, 4, 5, 7},                             MPKIND__OFFS_R_FULL, 2,  s4x4,   s2x2,      0x005, 0};
@@ -1121,14 +1902,6 @@ Private map_thing map_wblob_1x4d        = {{21, 23, 11, 9, 12, 14, 16, 19,  0, 2
 
         map_thing map_lz12     = {{10, 9,                1, 11,                5, 7,                 3, 4},          MPKIND__NONE,        4,  s3x4,   s1x2,      0x055, 0};
         map_thing map_rz12     = {{0, 10,                11, 8,                2, 5,                 4, 6},          MPKIND__NONE,        4,  s3x4,   s1x2,      0x055, 0};
-        map_thing map_lof12             = {{10, 11, 8, 9,                   2, 3, 4, 5},                             MPKIND__NONE,        2,  s3x4,   s2x2,      0x000, 0};
-        map_thing map_rof12             = {{0, 1, 11, 10,                   5, 4, 6, 7},                             MPKIND__NONE,        2,  s3x4,   s2x2,      0x000, 0};
-        map_thing map_lof16             = {{9, 11, 6, 8,                    14, 0, 1, 3},                            MPKIND__NONE,        2,  s4x4,   s2x2,      0x000, 0};
-        map_thing map_rof16             = {{12, 13, 15, 10,                 7, 2, 4, 5},                             MPKIND__NONE,        2,  s4x4,   s2x2,      0x000, 0};
-
-
-
-
 
         map_thing map_dmd_1x1  = {{0,                    1,                    2,                  3},               MPKIND__NONE,        4,  sdmd,        s1x1, 0x000, 0};
         map_thing map_star_1x1 = {{0,                    1,                    2,                  3},               MPKIND__NONE,        4,  s_star,      s1x1, 0x000, 0};
@@ -1275,10 +2048,10 @@ Private map_hunk mm_1x3_2 = {{0, 0},
 Private map_hunk mm_1x4_2 = {{0, 0},
                     {&map_1x8_1x4, &map_2x4_1x4},
                              {&map_1x4_rmv, &map_1x4_rmvr},
-                                      {0, 0},  {0, 0},  {0, 0},  {0, &map_lh_s1x4_3},
-                                                                          {0, &map_rh_s1x4_3},
-                                                                                   {0, &map_lf_s1x4_3},
-                                                                                            {0, &map_rf_s1x4_3},
+                                      {0, 0},  {0, 0},  {0, 0},  {&map_lh_s1x4_2, &map_lh_s1x4_3},
+                                                                          {&map_rh_s1x4_2, &map_rh_s1x4_3},
+                                                                                   {&map_lf_s1x4_2, &map_lf_s1x4_3},
+                                                                                            {&map_rf_s1x4_2, &map_rf_s1x4_3},
                                                                                                      {0, 0},  {0, 0},  {0, 0},  {0, 0},  {&map_all_8_1, &map_all_8_2},
                                                                                                                                                   {&mapovline1, &mapovline2},
                                                                                                                                                            {0, 0}};
@@ -1422,6 +2195,7 @@ map_hunk *map_lists[][4] = {
    {0,         &mm_1x6_2, 0,         0},          /* s1x6 */
    {0,         &mm_3x4_2, 0,         0},          /* s3x4 */
    {0,         &mm_2x6_2, 0,         0},          /* s2x6 */
+   {0,         0,         0,         0},          /* s1p5x8 */
    {0,         0,         0,         0},          /* s2x8 */
    {0,         0,         0,         0},          /* s4x4 */
    {0,         0,         0,         0},          /* sx1x6 */
@@ -1432,6 +2206,7 @@ map_hunk *map_lists[][4] = {
    {0,         0,         0,         0},          /* s_c1phan */
    {0,         0,         0,         0},          /* s_bigblob */
    {0,         0,         0,         0},          /* s_ptpd */
+   {0,         0,         0,         0},          /* s1x3dmd */
    {0,         0,         0,         0},          /* s3x1dmd */
    {0,         0,         0,         0},          /* s3dmd */
    {0,         0,         0,         0},          /* s4dmd */

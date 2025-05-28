@@ -71,7 +71,7 @@
 *confirmpopup.abort: Do you really want to abort this sequence?
 *confirmpopup.modifyFormat: The "%s" can be replaced.
 *confirmpopup.modifyTagFormat: The "%s" can be replaced with a tagging call.
-*confirmpopup.modifyScootFormat: The "%s" can be replaced with scoot/tag (chain thru) (and scatter).
+*confirmpopup.modifyCircFormat: The "%s" can be replaced with a modified circulate-like call.
 *confirmpopup.modifyLineTwo: Do you want to replace it?
 *Dialog.value*Translations: #override <Key>Return: accept_string()
 *comment.label: You can insert a comment:

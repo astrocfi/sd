@@ -49,7 +49,7 @@ long_boolean number_used;
 
 extern long_boolean selectp(setup *ss, int place)
 {
-   int pid2;
+   uint32 pid2;
 
    selector_used = TRUE;
 
@@ -220,28 +220,44 @@ Private long_boolean unselect(setup *real_people, int real_index,
 Private long_boolean select_near_select(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
-   return(selectp(real_people, real_index) && selectp(real_people, real_index ^ 1));
+   if (!selectp(real_people, real_index)) return FALSE;
+   if (current_selector == selector_all) return TRUE;
+
+   return      (real_people->people[real_index ^ 1].id1 & BIT_PERSON) &&
+               selectp(real_people, real_index ^ 1);
 }
 
 /* ARGSUSED */
 Private long_boolean select_near_unselect(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
-   return(selectp(real_people, real_index) && !selectp(real_people, real_index ^ 1));
+   if (!selectp(real_people, real_index)) return FALSE;
+   if (current_selector == selector_all) return FALSE;
+
+   return      !(real_people->people[real_index ^ 1].id1 & BIT_PERSON) ||
+               !selectp(real_people, real_index ^ 1);
 }
 
 /* ARGSUSED */
 Private long_boolean unselect_near_select(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
-   return(!selectp(real_people, real_index) && selectp(real_people, real_index ^ 1));
+   if (selectp(real_people, real_index)) return FALSE;
+   if (current_selector == selector_none) return FALSE;
+
+   return      (real_people->people[real_index ^ 1].id1 & BIT_PERSON) &&
+               selectp(real_people, real_index ^ 1);
 }
 
 /* ARGSUSED */
 Private long_boolean unselect_near_unselect(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
-   return(!(selectp(real_people, real_index) || selectp(real_people, real_index ^ 1)));
+   if (selectp(real_people, real_index)) return FALSE;
+   if (current_selector == selector_none) return TRUE;
+
+   return      !(real_people->people[real_index ^ 1].id1 & BIT_PERSON) ||
+               !selectp(real_people, real_index ^ 1);
 }
 
 /* ARGSUSED */
@@ -256,21 +272,28 @@ Private long_boolean conc_from_select(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
    return selectp(real_people, real_index ^ 2);
-          
 }
 
 /* ARGSUSED */
 Private long_boolean select_once_rem_from_unselect(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
-   return(selectp(real_people, real_index) && !selectp(real_people, real_index ^ 3));
+   if (!selectp(real_people, real_index)) return FALSE;
+   if (current_selector == selector_all) return FALSE;
+
+   return      !(real_people->people[real_index ^ 3].id1 & BIT_PERSON) ||
+               !selectp(real_people, real_index ^ 3);
 }
 
 /* ARGSUSED */
 Private long_boolean unselect_once_rem_from_select(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
-   return(!selectp(real_people, real_index) && selectp(real_people, real_index ^ 3));
+   if (selectp(real_people, real_index)) return FALSE;
+   if (current_selector == selector_none) return FALSE;
+
+   return      (real_people->people[real_index ^ 3].id1 & BIT_PERSON) &&
+               selectp(real_people, real_index ^ 3);
 }
 
 /* ARGSUSED */
@@ -1133,8 +1156,16 @@ Private long_boolean outroller_is_cw_2x8(setup *real_people, int real_index,
 Private long_boolean outposter_is_cw(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
-   int outroll_direction = 010 + ((real_index & 4) >> 1);
-   unsigned int cw_dir = real_people->people[real_index | 3].id1 & 017;
+   int outroll_direction;
+   uint32 cw_dir;
+
+   if (real_people->cmd.cmd_assume.assumption == cr_wave_only)
+      return ((northified_index ^ (northified_index >> 2)) & 1) != 0;
+   if (real_people->cmd.cmd_assume.assumption == cr_2fl_only)
+      return ((northified_index ^ (northified_index >> 1)) & 2) != 0;
+
+   outroll_direction = 010 + ((real_index & 4) >> 1);
+   cw_dir = real_people->people[real_index | 3].id1 & 017;
 
    /* cw_end exists and is looking out */
    if (cw_dir == outroll_direction) return TRUE;
@@ -1148,14 +1179,21 @@ Private long_boolean outposter_is_cw(setup *real_people, int real_index,
 Private long_boolean outposter_is_ccw(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
-   int inroll_direction = 012 - ((real_index & 4) >> 1);
+   int inroll_direction;
+
+   if (real_people->cmd.cmd_assume.assumption == cr_wave_only)
+      return ((northified_index ^ (northified_index >> 2)) & 1) == 0;
+   if (real_people->cmd.cmd_assume.assumption == cr_2fl_only)
+      return ((northified_index ^ (northified_index >> 1)) & 2) == 0;
+
+   inroll_direction = 012 - ((real_index & 4) >> 1);
 
    /* Demand that cw_end be looking in -- otherwise "outposter_is_cw"
       would have accepted it if it were legal. */
    if ((real_people->people[real_index | 3].id1 & 017) != inroll_direction) return FALSE;
    else {
       /* Now if ccw_end is looking out or is a phantom, it's OK. */
-      unsigned int ccw_dir = real_people->people[real_index & 4].id1 & 017;
+      uint32 ccw_dir = real_people->people[real_index & 4].id1 & 017;
       if (ccw_dir == 0 || ccw_dir == 022-inroll_direction) return TRUE;
       return FALSE;
    }

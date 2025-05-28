@@ -38,6 +38,7 @@ static char *id="@(#)$He" "ader: Sd: sdui-tty.c "
 
 /* This file defines the following functions:
    uims_process_command_line
+   uims_display_help
    uims_version_string
    uims_preinitialize
    uims_create_menu
@@ -54,6 +55,7 @@ static char *id="@(#)$He" "ader: Sd: sdui-tty.c "
    uims_do_selector_popup
    uims_do_direction_popup
    uims_do_tagger_popup
+   uims_do_circcer_popup
    uims_get_number_fields
    uims_do_modifier_popup
    uims_add_new_line
@@ -269,9 +271,18 @@ extern void
 uims_process_command_line(int *argcp, char ***argvp)
 {
 #ifdef UNIX_STYLE
-   ttu_process_command_line(argcp, argvp);
+   ttu_process_command_line(argcp, *argvp);
 #else
    *argcp = ccommand(argvp); /* pop up window to get command line arguments */
+#endif
+}
+
+extern void uims_display_help(void)
+{
+#ifdef UNIX_STYLE
+   ttu_display_help();
+#else
+   printf("\nIn addition, the usual X window system flags are supported.\n");
 #endif
 }
 
@@ -464,7 +475,7 @@ Cstring command_commands[] = {
     "exit the program",
     "quit the program",
     "undo last call",
-    "erase entered concepts",
+    "discard entered concepts",
     "abort this sequence",
     "insert a comment",
     "change output file",
@@ -762,17 +773,32 @@ extern long_boolean uims_get_call_command(call_list_kind *call_menu, uims_reply 
       modifier_block *mods;
       callspec_block *save_call = main_call_lists[parse_state.call_list_to_use][uims_menu_index];
 
-      for (mods = user_match.newmodifiers ; mods ; mods = mods->next)
-         (void) deposit_concept(mods->this_modifier, 0);
+      for (mods = user_match.newmodifiers ; mods ; mods = mods->next) {
+         concept_descriptor *cp = mods->this_modifier;
+         uint32 concept_number_fields = 0;
+         int howmanynumbers = 0;
+         uint32 props = concept_table[cp->kind].concept_prop;
+
+         if (props & CONCPROP__USE_NUMBER)
+            howmanynumbers = 1;
+         if (props & CONCPROP__USE_TWO_NUMBERS)
+            howmanynumbers = 2;
+
+         if (howmanynumbers != 0) {
+            if ((concept_number_fields = uims_get_number_fields(howmanynumbers)) == 0)
+               return TRUE;           /* User waved the mouse away. */
+         }
+
+         if (deposit_concept(cp, concept_number_fields)) return TRUE;
+      }
 
       if (deposit_call(save_call)) return TRUE;
    }
    else if (user_match.kind == ui_concept_select) {
-      /* If user gave a concept, pick up any needed numeric modifiers. */
-
+      concept_descriptor *cp = &concept_descriptor_table[uims_menu_index];
       uint32 concept_number_fields = 0;
       int howmanynumbers = 0;
-      uint32 props = concept_table[concept_descriptor_table[uims_menu_index].kind].concept_prop;
+      uint32 props = concept_table[cp->kind].concept_prop;
 
       if (props & CONCPROP__USE_NUMBER)
          howmanynumbers = 1;
@@ -784,11 +810,7 @@ extern long_boolean uims_get_call_command(call_list_kind *call_menu, uims_reply 
             return TRUE;           /* User waved the mouse away. */
       }
 
-      /* A concept is required.  Its index has been stored in uims_menu_index,
-         and the "concept_number_fields" is ready. */
-
-      if (deposit_concept(&concept_descriptor_table[uims_menu_index], concept_number_fields))
-         return TRUE;
+      if (deposit_concept(cp, concept_number_fields)) return TRUE;
    }
 
    return FALSE;
@@ -907,8 +929,8 @@ extern int uims_do_modifier_popup(Cstring callname, modify_popup_kind kind)
         case modify_popup_only_tag:
             line_format = "The \"%s\" can be replaced with a tagging call.\n";
             break;
-        case modify_popup_only_scoot:
-            line_format = "The \"%s\" can be replaced with a scoot/tag (chain thru) (and scatter).\n";
+        case modify_popup_only_circ:
+            line_format = "The \"%s\" can be replaced with a modified circulate-like call.\n";
             break;
     }
 
@@ -971,6 +993,8 @@ uims_update_resolve_menu(search_kind goal, int cur, int max, resolver_display_st
 
 extern int uims_do_selector_popup(void)
 {
+   uint32 retval;
+
    if (interactivity == interactivity_verify) {
       if (result_for_verify->who == selector_uninitialized) {
          verify_used_selector = 1;
@@ -980,13 +1004,11 @@ extern int uims_do_selector_popup(void)
          return result_for_verify->who;
    }
    else if (user_match.valid && (user_match.who > selector_uninitialized)) {
-      int retval;
       retval = (int) user_match.who;
       user_match.who = selector_uninitialized;
       return retval;
    }
    else {
-      int retval;
       match_result saved_match = user_match;
       get_user_input("Enter who> ", (int) match_selectors);
       retval = user_match.index+1;      /* We skip the zeroth selector, which is selector_uninitialized. */
@@ -1019,12 +1041,15 @@ extern int uims_do_tagger_popup(int tagger_class)
    uint32 retval;
    int j = 0;
 
-   if (!user_match.valid || (user_match.tagger <= 0)) {
+   if (interactivity == interactivity_verify) {
+      user_match.tagger = result_for_verify->tagger;
+      if (user_match.tagger == 0) user_match.tagger = 1;
+   }
+   else if (!user_match.valid || (user_match.tagger <= 0)) {
       match_result saved_match = user_match;
-      get_user_input("Enter tagger> ", ((int) match_taggers) + tagger_class);
-      retval = user_match.tagger;
+      get_user_input("Enter tagging call> ", ((int) match_taggers) + tagger_class);
+      saved_match.tagger = user_match.tagger;
       user_match = saved_match;
-      user_match.tagger = retval;
    }
 
    while ((user_match.tagger & 0xFF000000UL) == 0) {
@@ -1035,6 +1060,29 @@ extern int uims_do_tagger_popup(int tagger_class)
    retval = user_match.tagger >> 24;
    user_match.tagger &= 0x00FFFFFF;
    while (j-- != 0) user_match.tagger >>= 8;   /* Shift it back. */
+   return retval;
+}
+
+
+extern int uims_do_circcer_popup(void)
+{
+   uint32 retval;
+
+   if (interactivity == interactivity_verify) {
+      retval = result_for_verify->circcer;
+      if (retval == 0) retval = 1;
+   }
+   else if (user_match.valid && (user_match.circcer > 0)) {
+      retval = user_match.circcer;
+      user_match.circcer = 0;
+   }
+   else {
+      match_result saved_match = user_match;
+      get_user_input("Enter circulate replacement> ", (int) match_circcer);
+      retval = user_match.circcer;
+      user_match = saved_match;
+   }
+
    return retval;
 }
 

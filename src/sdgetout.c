@@ -101,38 +101,38 @@ typedef struct {
 
 
 
-Private reconcile_descriptor promperm =  {{1, 0, 6, 7, 5, 4, 2, 3}, 0, FALSE};
-Private reconcile_descriptor rpromperm = {{0, 1, 7, 6, 4, 5, 3, 2}, 0, FALSE};
-Private reconcile_descriptor rlgperm =   {{1, 0, 6, 7, 5, 4, 2, 3}, 2, FALSE};
-Private reconcile_descriptor qtagperm =  {{1, 0, 7, 6, 5, 4, 3, 2}, 0, FALSE};
-Private reconcile_descriptor homeperm =  {{6, 5, 4, 3, 2, 1, 0, 7}, 0, TRUE};
-Private reconcile_descriptor sglperm =   {{7, 6, 5, 4, 3, 2, 1, 0}, 0, TRUE};
-Private reconcile_descriptor crossperm = {{5, 4, 3, 2, 1, 0, 7, 6}, 0, FALSE};
-Private reconcile_descriptor crossplus = {{5, 4, 3, 2, 1, 0, 7, 6}, 1, FALSE};
-Private reconcile_descriptor laperm =    {{1, 3, 6, 0, 5, 7, 2, 4}, 2, FALSE};
+static reconcile_descriptor promperm =  {{1, 0, 6, 7, 5, 4, 2, 3}, 0, FALSE};
+static reconcile_descriptor rpromperm = {{0, 1, 7, 6, 4, 5, 3, 2}, 0, FALSE};
+static reconcile_descriptor rlgperm =   {{1, 0, 6, 7, 5, 4, 2, 3}, 2, FALSE};
+static reconcile_descriptor qtagperm =  {{1, 0, 7, 6, 5, 4, 3, 2}, 0, FALSE};
+static reconcile_descriptor homeperm =  {{6, 5, 4, 3, 2, 1, 0, 7}, 0, TRUE};
+static reconcile_descriptor sglperm =   {{7, 6, 5, 4, 3, 2, 1, 0}, 0, TRUE};
+static reconcile_descriptor crossperm = {{5, 4, 3, 2, 1, 0, 7, 6}, 0, FALSE};
+static reconcile_descriptor crossplus = {{5, 4, 3, 2, 1, 0, 7, 6}, 1, FALSE};
+static reconcile_descriptor laperm =    {{1, 3, 6, 0, 5, 7, 2, 4}, 2, FALSE};
 
 
-Private configuration *huge_history_save = (configuration *) 0;
-Private int huge_history_allocation = 0;
-Private int huge_history_ptr;
+static configuration *huge_history_save = (configuration *) 0;
+static int huge_history_allocation = 0;
+static int huge_history_ptr;
 
-Private resolve_rec *all_resolves = (resolve_rec *) 0;
-Private int resolve_allocation = 0;
+static resolve_rec *all_resolves = (resolve_rec *) 0;
+static int resolve_allocation = 0;
 
-Private int avoid_list[AVOID_LIST_MAX];
-Private int avoid_list_size;
-Private int perm_array[8];
-Private setup_kind goal_kind;
-Private int goal_directions[8];
-Private reconcile_descriptor *current_reconciler;
+static int avoid_list[AVOID_LIST_MAX];
+static int avoid_list_size;
+static int perm_array[8];
+static setup_kind goal_kind;
+static int goal_directions[8];
+static reconcile_descriptor *current_reconciler;
 
-Private char *title_string[] = {
+static char *title_string[] = {
    "Anything: ",
    "Normalize: ",
    "Resolve: ",
    "Reconcile: "};
 
-static void display_reconcile_history(int current_depth, int n);
+Private void display_reconcile_history(int current_depth, int n);
 
 
 
@@ -143,48 +143,48 @@ typedef struct {
    int distance;
 } resolve_tester;
 
-Private resolve_tester test_thar_rlg    = {0173, 0702, 0207, 0167, 0702, 0676, l_mainstream,      resolve_rlg, 2};              /* RLG from thar. */
-Private resolve_tester test_thar_la     = {0167, 0076, 0207, 0173, 0076, 0102, l_mainstream,      resolve_la, 5};               /* LA from thar. */
-Private resolve_tester test_thar_xbyla  = {0173, 0102, 0207, 0167, 0102, 0076, cross_by_level,    resolve_xby_la, 5};           /* cross-by-LA from thar. */
-Private resolve_tester test_thar_xbyrlg = {0167, 0676, 0207, 0173, 0676, 0702, cross_by_level,    resolve_xby_rlg, 2};          /* cross-by-RLG from thar. */
-Private resolve_tester test_thar_slc_rg = {0173, 0102, 0207, 0167, 0102, 0076, l_mainstream,      resolve_slipclutch_rlg, 1};   /* slip-the-clutch-RLG from thar. */
-Private resolve_tester test_thar_scl_la = {0167, 0676, 0207, 0173, 0676, 0702, l_mainstream,      resolve_slipclutch_la, 6};    /* slip-the-clutch-LA from thar. */
-Private resolve_tester test_thar_pr     = {0173, 0700, 0207, 0167, 0700, 0700, l_mainstream,      resolve_prom, 6};             /* promenade from thar. */
-Private resolve_tester test_thar_revpr  = {0167, 0100, 0207, 0173, 0100, 0100, l_mainstream,      resolve_revprom, 5};          /* reverse promenade from thar. */
-Private resolve_tester test_2x4_circle  = {0173, 0671, 0207, 0167, 0711, 0671, l_mainstream,      resolve_circle, 7};           /* "circle left/right" from pseudo or real squared-set. */
-Private resolve_tester test_sglfile     = {0202, 0700, 0200, 0176, 0700, 0700, l_mainstream,      resolve_sglfileprom, 7};      /* single file promenade from L columns */
-Private resolve_tester test_revsglfile  = {0176, 0700, 0200, 0202, 0700, 0700, l_mainstream,      resolve_revsglfileprom, 7};   /* reverse single file promenade from R columns */
-Private resolve_tester test_sglfilex    = {0207, 0705, 0173, 0207, 0671, 0711, l_mainstream,      resolve_sglfileprom, 7};      /* single file promenade from T-bone */
-Private resolve_tester test_revsglfilex = {0207, 0711, 0167, 0207, 0671, 0705, l_mainstream,      resolve_revsglfileprom, 7};   /* reverse single file promenade from T-bone */
-Private resolve_tester test_wv_la       = {0076, 0676, 0300, 0102, 0076, 0702, l_mainstream,      resolve_la, 6};               /* LA from waves. */
-Private resolve_tester test_wv_extla    = {0276, 0076, 0100, 0302, 0676, 0102, l_mainstream,      resolve_ext_la, 7};           /* ext-LA from waves. */
-Private resolve_tester test_wv_crcla    = {0476, 0276, 0700, 0502, 0476, 0302, l_mainstream,      resolve_circ_la, 0};          /* circulate-LA from waves. */
-Private resolve_tester test_2x4_xby_la  = {0102, 0702, 0300, 0076, 0102, 0676, cross_by_level,    resolve_xby_la, 6};           /* cross-by-LA from waves. */
-Private resolve_tester test_wv_rg       = {0302, 0102, 0100, 0276, 0702, 0076, l_mainstream,      resolve_rlg, 3};              /* RLG from waves. */
-Private resolve_tester test_wv_extrg    = {0102, 0702, 0300, 0076, 0102, 0676, l_mainstream,      resolve_ext_rlg, 2};          /* extend-RLG from waves. */
-Private resolve_tester test_wv_crcrg    = {0702, 0502, 0500, 0676, 0302, 0476, l_mainstream,      resolve_circ_rlg, 1};         /* circulate-RLG from waves. */
-Private resolve_tester test_wv_xbyrg    = {0276, 0076, 0100, 0302, 0676, 0102, cross_by_level,    resolve_xby_rlg, 3};          /* cross-by-RLG from waves. */
-Private resolve_tester test_2fl_prom    = {0300, 0100, 0102, 0300, 0700, 0100, l_mainstream,      resolve_prom, 7};             /* promenade from 2FL. */
-Private resolve_tester test_2fl_revprom = {0100, 0700, 0276, 0100, 0100, 0700, l_mainstream,      resolve_revprom, 6};          /* reverse promenade from 2FL. */
-Private resolve_tester test_8ch_rg      = {0202, 0702, 0200, 0176, 0702, 0676, l_mainstream,      resolve_rlg, 3};              /* RLG from 8-chain or squared set. */
-Private resolve_tester test_v44_rg      = {0200, 0676, 0202, 0200, 0702, 0702, l_mainstream,      resolve_rlg, 3};              /* RLG from vertical 8-chain-squared set. */
-Private resolve_tester test_8ch_pthrg   = {0202, 0102, 0200, 0176, 0102, 0076, l_mainstream,      resolve_pth_rlg, 2};          /* pass-thru-RLG from 8-chain. */
-Private resolve_tester test_tby_rg      = {0176, 0676, 0200, 0202, 0676, 0702, l_mainstream,      resolve_rlg, 3};              /* RLG from trade-by. */
-Private resolve_tester test_tby_tbyrg   = {0176, 0476, 0200, 0202, 0476, 0502, l_mainstream,      resolve_tby_rlg, 4};          /* trade-by-RLG from trade-by. */
-Private resolve_tester test_tbone_rg    = {0207, 0707, 0167, 0207, 0667, 0707, l_mainstream,      resolve_rlg, 3};              /* RLG from T-bone setup, ends facing. */
-Private resolve_tester test_8ch_la      = {0202, 0702, 0200, 0176, 0702, 0676, l_mainstream,      resolve_la, 7};               /* LA from 8-chain or squared set. */
-Private resolve_tester test_v44_la      = {0200, 0676, 0202, 0200, 0702, 0702, l_mainstream,      resolve_la, 7};               /* LA from vertical 8-chain-squared set. */
-Private resolve_tester test_8ch_pthla   = {0202, 0102, 0200, 0176, 0102, 0076, l_mainstream,      resolve_pth_la, 6};           /* pass-thru-LA from 8-chain. */
-Private resolve_tester test_tby_la      = {0176, 0676, 0200, 0202, 0676, 0702, l_mainstream,      resolve_la, 7};               /* LA from trade-by. */
-Private resolve_tester test_tby_tbyla   = {0176, 0476, 0200, 0202, 0476, 0502, l_mainstream,      resolve_tby_la, 0};           /* trade-by-LA from trade-by. */
-Private resolve_tester test_tbone_la    = {0207, 0707, 0167, 0207, 0667, 0707, l_mainstream,      resolve_la, 7};               /* LA from T-bone setup, ends facing. */
-Private resolve_tester test_sqo_la      = {0207, 0707, 0173, 0207, 0673, 0707, l_mainstream,      resolve_la, 7};               /* LA from squared set, back-to-back. */
-Private resolve_tester test_dpt_dix     = {0700, 0600, 0476, 0700, 0600, 0600, dixie_grand_level, resolve_dixie_grand, 2};      /* dixie grand from DPT. */
-Private resolve_tester test_qtag_dix    = {0700, 0476, 0502, 0700, 0300, 0502, dixie_grand_level, resolve_dixie_grand, 2};      /* dixie grand from 1/4 tag. */
-Private resolve_tester test_3tag_rg     = {0176, 0676, 0200, 0202, 0700, 0702, l_mainstream,      resolve_rlg, 4};              /* RLG from 3/4 tag. */
-Private resolve_tester test_dmd_rg      = {0207, 0676, 0173, 0207, 0702, 0702, l_mainstream,      resolve_rlg, 4};              /* RLG from diamonds with points facing each other. */
-Private resolve_tester test_3tag_la     = {0300, 0102, 0076, 0300, 0700, 0076, l_mainstream,      resolve_la, 0};               /* LA from 3/4 tag. */
-Private resolve_tester test_dmd_la      = {0311, 0102, 0071, 0305, 0702, 0076, l_mainstream,      resolve_la, 0};               /* LA from diamonds with points facing each other. */
+static resolve_tester test_thar_rlg    = {0173, 0702, 0207, 0167, 0702, 0676, l_mainstream,      resolve_rlg, 2};              /* RLG from thar. */
+static resolve_tester test_thar_la     = {0167, 0076, 0207, 0173, 0076, 0102, l_mainstream,      resolve_la, 5};               /* LA from thar. */
+static resolve_tester test_thar_xbyla  = {0173, 0102, 0207, 0167, 0102, 0076, cross_by_level,    resolve_xby_la, 5};           /* cross-by-LA from thar. */
+static resolve_tester test_thar_xbyrlg = {0167, 0676, 0207, 0173, 0676, 0702, cross_by_level,    resolve_xby_rlg, 2};          /* cross-by-RLG from thar. */
+static resolve_tester test_thar_slc_rg = {0173, 0102, 0207, 0167, 0102, 0076, l_mainstream,      resolve_slipclutch_rlg, 1};   /* slip-the-clutch-RLG from thar. */
+static resolve_tester test_thar_scl_la = {0167, 0676, 0207, 0173, 0676, 0702, l_mainstream,      resolve_slipclutch_la, 6};    /* slip-the-clutch-LA from thar. */
+static resolve_tester test_thar_pr     = {0173, 0700, 0207, 0167, 0700, 0700, l_mainstream,      resolve_prom, 6};             /* promenade from thar. */
+static resolve_tester test_thar_revpr  = {0167, 0100, 0207, 0173, 0100, 0100, l_mainstream,      resolve_revprom, 5};          /* reverse promenade from thar. */
+static resolve_tester test_2x4_circle  = {0173, 0671, 0207, 0167, 0711, 0671, l_mainstream,      resolve_circle, 7};           /* "circle left/right" from pseudo or real squared-set. */
+static resolve_tester test_sglfile     = {0202, 0700, 0200, 0176, 0700, 0700, l_mainstream,      resolve_sglfileprom, 7};      /* single file promenade from L columns */
+static resolve_tester test_revsglfile  = {0176, 0700, 0200, 0202, 0700, 0700, l_mainstream,      resolve_revsglfileprom, 7};   /* reverse single file promenade from R columns */
+static resolve_tester test_sglfilex    = {0207, 0705, 0173, 0207, 0671, 0711, l_mainstream,      resolve_sglfileprom, 7};      /* single file promenade from T-bone */
+static resolve_tester test_revsglfilex = {0207, 0711, 0167, 0207, 0671, 0705, l_mainstream,      resolve_revsglfileprom, 7};   /* reverse single file promenade from T-bone */
+static resolve_tester test_wv_la       = {0076, 0676, 0300, 0102, 0076, 0702, l_mainstream,      resolve_la, 6};               /* LA from waves. */
+static resolve_tester test_wv_extla    = {0276, 0076, 0100, 0302, 0676, 0102, l_mainstream,      resolve_ext_la, 7};           /* ext-LA from waves. */
+static resolve_tester test_wv_crcla    = {0476, 0276, 0700, 0502, 0476, 0302, l_mainstream,      resolve_circ_la, 0};          /* circulate-LA from waves. */
+static resolve_tester test_2x4_xby_la  = {0102, 0702, 0300, 0076, 0102, 0676, cross_by_level,    resolve_xby_la, 6};           /* cross-by-LA from waves. */
+static resolve_tester test_wv_rg       = {0302, 0102, 0100, 0276, 0702, 0076, l_mainstream,      resolve_rlg, 3};              /* RLG from waves. */
+static resolve_tester test_wv_extrg    = {0102, 0702, 0300, 0076, 0102, 0676, l_mainstream,      resolve_ext_rlg, 2};          /* extend-RLG from waves. */
+static resolve_tester test_wv_crcrg    = {0702, 0502, 0500, 0676, 0302, 0476, l_mainstream,      resolve_circ_rlg, 1};         /* circulate-RLG from waves. */
+static resolve_tester test_wv_xbyrg    = {0276, 0076, 0100, 0302, 0676, 0102, cross_by_level,    resolve_xby_rlg, 3};          /* cross-by-RLG from waves. */
+static resolve_tester test_2fl_prom    = {0300, 0100, 0102, 0300, 0700, 0100, l_mainstream,      resolve_prom, 7};             /* promenade from 2FL. */
+static resolve_tester test_2fl_revprom = {0100, 0700, 0276, 0100, 0100, 0700, l_mainstream,      resolve_revprom, 6};          /* reverse promenade from 2FL. */
+static resolve_tester test_8ch_rg      = {0202, 0702, 0200, 0176, 0702, 0676, l_mainstream,      resolve_rlg, 3};              /* RLG from 8-chain or squared set. */
+static resolve_tester test_v44_rg      = {0200, 0676, 0202, 0200, 0702, 0702, l_mainstream,      resolve_rlg, 3};              /* RLG from vertical 8-chain-squared set. */
+static resolve_tester test_8ch_pthrg   = {0202, 0102, 0200, 0176, 0102, 0076, l_mainstream,      resolve_pth_rlg, 2};          /* pass-thru-RLG from 8-chain. */
+static resolve_tester test_tby_rg      = {0176, 0676, 0200, 0202, 0676, 0702, l_mainstream,      resolve_rlg, 3};              /* RLG from trade-by. */
+static resolve_tester test_tby_tbyrg   = {0176, 0476, 0200, 0202, 0476, 0502, l_mainstream,      resolve_tby_rlg, 4};          /* trade-by-RLG from trade-by. */
+static resolve_tester test_tbone_rg    = {0207, 0707, 0167, 0207, 0667, 0707, l_mainstream,      resolve_rlg, 3};              /* RLG from T-bone setup, ends facing. */
+static resolve_tester test_8ch_la      = {0202, 0702, 0200, 0176, 0702, 0676, l_mainstream,      resolve_la, 7};               /* LA from 8-chain or squared set. */
+static resolve_tester test_v44_la      = {0200, 0676, 0202, 0200, 0702, 0702, l_mainstream,      resolve_la, 7};               /* LA from vertical 8-chain-squared set. */
+static resolve_tester test_8ch_pthla   = {0202, 0102, 0200, 0176, 0102, 0076, l_mainstream,      resolve_pth_la, 6};           /* pass-thru-LA from 8-chain. */
+static resolve_tester test_tby_la      = {0176, 0676, 0200, 0202, 0676, 0702, l_mainstream,      resolve_la, 7};               /* LA from trade-by. */
+static resolve_tester test_tby_tbyla   = {0176, 0476, 0200, 0202, 0476, 0502, l_mainstream,      resolve_tby_la, 0};           /* trade-by-LA from trade-by. */
+static resolve_tester test_tbone_la    = {0207, 0707, 0167, 0207, 0667, 0707, l_mainstream,      resolve_la, 7};               /* LA from T-bone setup, ends facing. */
+static resolve_tester test_sqo_la      = {0207, 0707, 0173, 0207, 0673, 0707, l_mainstream,      resolve_la, 7};               /* LA from squared set, back-to-back. */
+static resolve_tester test_dpt_dix     = {0700, 0600, 0476, 0700, 0600, 0600, dixie_grand_level, resolve_dixie_grand, 2};      /* dixie grand from DPT. */
+static resolve_tester test_qtag_dix    = {0700, 0476, 0502, 0700, 0300, 0502, dixie_grand_level, resolve_dixie_grand, 2};      /* dixie grand from 1/4 tag. */
+static resolve_tester test_3tag_rg     = {0176, 0676, 0200, 0202, 0700, 0702, l_mainstream,      resolve_rlg, 4};              /* RLG from 3/4 tag. */
+static resolve_tester test_dmd_rg      = {0207, 0676, 0173, 0207, 0702, 0702, l_mainstream,      resolve_rlg, 4};              /* RLG from diamonds with points facing each other. */
+static resolve_tester test_3tag_la     = {0300, 0102, 0076, 0300, 0700, 0076, l_mainstream,      resolve_la, 0};               /* LA from 3/4 tag. */
+static resolve_tester test_dmd_la      = {0311, 0102, 0071, 0305, 0702, 0076, l_mainstream,      resolve_la, 0};               /* LA from diamonds with points facing each other. */
 
 
 
@@ -410,38 +410,50 @@ static char *resolve_distances[] = {
 typedef struct {
    int how_bad;  /* 0 means accept all such resolves.
                   Otherwise, this is (2**N)-1, and accepts only one out of 2**N of them. */
+   int first_part;
    char *name;
 } resolve_descriptor;
 
+static Cstring resolve_first_parts[] = {
+   (Cstring) 0,
+   "extend",
+   "slip the clutch",
+   "circulate",
+   "pass thru",
+   "trade by",
+   "cross by"};
+
 /* BEWARE!!  This list is keyed to the definition of "resolve_kind" in sd.h . */
 static resolve_descriptor resolve_table[] = {
-   {3,  "???"},
-   {0,  "right and left grand"},
-   {0,  "left allemande"},
-   {0,  "extend, right and left grand"},
-   {1,  "extend, left allemande"},
-   {1,  "slip the clutch, right and left grand"},
-   {1,  "slip the clutch, left allemande"},
-   {3,  "circulate, right and left grand"},
-   {3,  "circulate, left allemande"},
-   {3,  "pass thru, right and left grand"},
-   {3,  "pass thru, left allemande"},
-   {3,  "trade by, right and left grand"},
-   {3,  "trade by, left allemande"},
-   {1,  "cross by, right and left grand"},
-   {0,  "cross by, left allemande"},
-   {0,  "dixie grand, left allemande"},
-   {0,  "promenade"},
-   {1,  "reverse promenade"},
-   {15, "single file promenade"},
-   {15, "reverse single file promenade"},
-   {0,  "circle right"}};
+   {3,  0, "???"},                           /* resolve_none */
+   {0,  0, "right and left grand"},          /* resolve_rlg */
+   {0,  0, "left allemande"},                /* resolve_la */
+   {0,  1, "right and left grand"},          /* resolve_ext_rlg */
+   {1,  1, "left allemande"},                /* resolve_ext_la */
+   {1,  2, "right and left grand"},          /* resolve_slipclutch_rlg */
+   {1,  2, "left allemande"},                /* resolve_slipclutch_la */
+   {3,  3, "right and left grand"},          /* resolve_circ_rlg */
+   {3,  3, "left allemande"},                /* resolve_circ_la */
+   {3,  4, "right and left grand"},          /* resolve_pth_rlg */
+   {3,  4, "left allemande"},                /* resolve_pth_la */
+   {3,  5, "right and left grand"},          /* resolve_tby_rlg */
+   {3,  5, "left allemande"},                /* resolve_tby_la */
+   {1,  6, "right and left grand"},          /* resolve_xby_rlg */
+   {0,  6, "left allemande"},                /* resolve_xby_la */
+   {0,  0, "dixie grand, left allemande"},   /* resolve_dixie_grand */
+   {0,  0, "promenade"},                     /* resolve_prom */
+   {1,  0, "reverse promenade"},             /* resolve_revprom */
+   {15, 0, "single file promenade"},         /* resolve_sglfileprom */
+   {15, 0, "reverse single file promenade"}, /* resolve_revsglfileprom */
+   {0,  0, "circle right"}};                 /* resolve_circle */
 
 
 /* This assumes that "sequence_is_resolved" passes. */
-extern void write_resolve_text(void)
+extern void write_resolve_text(long_boolean doing_file)
 {
    resolve_indicator r = history[history_ptr].resolve_flag;
+
+   if (doing_file && !singlespace_mode) doublespace_file();
 
    if (r.kind == resolve_circle) {
       if ((r.distance & 7) == 0) {
@@ -461,8 +473,20 @@ extern void write_resolve_text(void)
       }
    }
    else {
-      writestuff(resolve_table[r.kind].name);
+      int index = (int) r.kind;
+      int first = resolve_table[index].first_part;
 
+      if (first != 0) {
+         writestuff(resolve_first_parts[first]);
+         if (doing_file) {
+            newline();
+            if (!singlespace_mode) doublespace_file();
+         }
+         else
+            writestuff(", ");
+      }
+
+      writestuff(resolve_table[index].name);
       writestuff("  (");
       if (history[history_ptr].state.result_flags & RESULTFLAG__IMPRECISE_ROT)
          writestuff("approximately ");
@@ -900,7 +924,8 @@ extern uims_reply full_resolve(search_kind goal)
 
    if (huge_history_allocation < history_ptr+MAX_RESOLVE_SIZE+2) {
       configuration *t;
-      huge_history_allocation = (history_ptr+MAX_RESOLVE_SIZE+2) << 1;   /* Twice what we actually need now. */
+      huge_history_allocation = history_ptr+MAX_RESOLVE_SIZE+2;
+      huge_history_allocation += huge_history_allocation >> 1;    /* Increase by 50% beyond what we have now. */
       t = (configuration *) get_more_mem_gracefully(huge_history_save, huge_history_allocation * sizeof(configuration));
       if (!t) specialfail("Not enough memory!");
       huge_history_save = t;
@@ -1071,7 +1096,7 @@ extern uims_reply full_resolve(search_kind goal)
          newline();
          writestuff("     resolve is:");
          newline();
-         write_resolve_text();
+         write_resolve_text(FALSE);
          newline();
          newline();
       }
@@ -1147,7 +1172,7 @@ extern uims_reply full_resolve(search_kind goal)
    }
 }
 
-static void display_reconcile_history(int current_depth, int n)
+Private void display_reconcile_history(int current_depth, int n)
 {
    int j;
 

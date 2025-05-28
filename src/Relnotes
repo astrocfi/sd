@@ -1,6 +1,148 @@
-		   RELEASE NOTES FOR SD VERSION 31.3
-		 Database version = 31.3 format = 61.
+		   RELEASE NOTES FOR SD VERSION 31.4
+		 Database version = 31.4 format = 62.
     X11 UI version 1.16, SDTTY UI version 1.6, MAC UI version 2.2.
+
+
+
+It is now has a considerably better understanding of how to have
+specified people do a call.  If you say something like "side girls
+counter rotate", the program is much more likely to know what you mean.
+
+
+
+It is now considerably better about handling fractions.  You can do
+things like "finally stable, eight chain 4" and "interlace turn the key
+with circulate 3 times".
+
+
+
+Sdtty can parse concepts and modifiers much better than before.  You can
+type in things like "left split square thru 2", "funny circulate",
+or "random twice swing thru" all on one line.  You can still enter them
+on multiple lines if you wish.  So the following are all legal and
+equivalent things:
+
+     reverse random tandem swing thru
+
+     reverse random
+     tandem
+     swing thru
+
+     reverse random
+     tandem swing thru
+
+     reverse
+     random
+     tandem
+     swing thru
+
+similarly, things like "single cross concentric" may be entered as
+separate commands.
+
+
+
+Sdtty can directly parse "anything anything" calls, such as "in roll motivate".
+That is, just type it in naturally.  In Sd, the same effect can be found in the
+with the "<ANYTHING> motivate" call.  Click on that, and a popup menu will
+appear listing the possible modifiers.
+
+Only bona-fide circulate-type calls, and other well-recognized similar
+things such as "split counter percolate" can be obtained by this method.
+You can get more general substitutions by using the "simple modifications"
+command.  Type (or click) that command, and then "motivate".  You will
+be asked for a substitute call.  You can enter anything at this point,
+such as "swing the fractions".  The result will appear in the transcript
+with brackets, as in "[swing the fractions] motivate".
+
+
+
+Resolves involving some call before an allemande left or right and left
+grand, such as "extend, right and left grand", will have the extra
+call appear on its own line in the printed sequence.
+
+
+
+The program permits swing thru from the setup obtained by having the
+centers of a left-hand-wave do a single wheel.
+
+
+
+There is a new command-line switch: "-singlespace".  You can use this
+when the program is invoked, as in
+
+         sdtty c1 -singlespace
+
+This will cause the printed sequences to be single spaced, for those
+who wish to print on smaller cards.  You can put this switch in the
+"sd.ini" file (see below).
+
+
+
+There is a new command-line switch: "-discard_after_error".  You can use this
+when the program is invoked, as in
+
+         sdtty c1 -discard_after_error
+
+This will cause all entered concepts to be thrown away when an error
+occurs.  If this switch is not used, entered concepts remain.
+For example, if we enter
+         trapezoid
+         flip the diamond
+an error message will be printed.  Under normal circumstances, the
+"trapezoid" concept will remain in place, that is, the program will
+act as though you had typed "trapezoid" -- it will only throw away
+the "flip the diamond".  If you then type "circulate", the program
+will do a "trapezoid circulate".
+
+But with the "-discard_after_error" switch, the entire operation --
+call and concepts -- will be thrown away when an error occurs.
+
+You can put this switch in the "sd.ini" file (see below).
+
+There is a new command-line switch: "-active_phantoms".  You can use this
+when the program is invoked, as in
+
+         sdtty c1 -active_phantoms
+
+This will cause the program be use active phantoms, just as though you
+had given the "toggle active phantoms" command.
+
+You can put this switch in the "sd.ini" file (see below).
+
+
+
+The initialization file "sd.ini" can take an "[Options]" section.
+Command switches following the line "[Options]" will be treated
+axactly as though they had been given as command line options.
+There are no hyphens in front of switches in this file.
+For example, if the file "sd.ini" contains this:
+
+[Options]
+singlespace
+discard_after_error
+
+then the printed sequences will be single spaced, and entered
+concepts will be discarded whenever an error occurs.
+
+
+
+New concepts:  "ends concentric" and "centers and ends concentric".
+These are analogues of the "ends" and "centers and ends" concepts,
+except that the ends will apply the concentric rule when doing
+their call.
+
+
+
+New concept:  <anyone> work <concept>.  You actually type the word
+"<concept>" (or let the completing reader do it for you), but
+type the people you want for the "anyone".  For example, you
+could type
+  boys work <concept>
+  once removed
+  hocus pocus
+on three separate lines.
+
+
 
 ****** Changes as of version 31.3 ******
 
@@ -8,8 +150,10 @@ There is a new feature for keeping track of which dances you
 might be working on, and putting header comments and sequence
 numbers on the cards.  For details, see the section
 "The Initialization File" in the manual.  You can activate
-an example usage of this feature by copying the file "sample.ini"
+an example usage of this feature by copying the file "sample1.ini"
 (that comes with the distribution) into the file "sd.ini".
+
+
 
 The program is much better about having certain people
 do a call.  For example, from diamonds in which the girls are
@@ -22,8 +166,9 @@ the centers, you can say
    BOYS counter rotate WHILE THE GIRLS mix
             (use the "BOYS (while the others)" concept)
 
-The "disconnected" concept is improved.  It can recognize diamonds
-around the outside of the set, for example.
+The "disconnected" concept is improved.
+
+
 
 Sdtty now uses an "intelligent question mark" mechanism.
 When a question mark is typed, all calls are tested in
@@ -35,6 +180,8 @@ be used sensibly in the current setup.
 
 To get the old behavior, type exclamation point instead of
 question mark.
+
+
 
 ****** Changes as of version 31.2 ******
 
@@ -49,6 +196,8 @@ The availability of these special characters on PC-like computers
 is not universal.  If your computer does not have them, you can
 suppress their use by giving the switch "-no_graphics" on the
 command line when sdtty is invoked, as in "sdtty c3 -no_graphics".
+
+
 
 There is now a version of the "fold" call that more faithfully
 represents what the call means at levels below challenge.  The
@@ -65,8 +214,12 @@ Note that, when the level is below C1, only the "fold (and adjust)" call
 is available, and, because of completion, just typing "fold" will get
 this call.
 
+
+
 The call "peel the top" can be used after the ends of a wave do either
 kind of fold.
+
+
 
 ****** Changes as of version 31.01 ******
 
@@ -77,6 +230,8 @@ So you can type, for example, "grand swing thru".
 You can also type it the old way:
 "grand", <enter>, and "swing thru".  On sd, you still must click on
 the concept "grand" followed by the call "swing thru".
+
+
 
 ****** Changes as of version 31.0 ******
 
@@ -117,7 +272,7 @@ as though you had typed those concepts.  The assumption here is
 that only the call was mistaken, and you really wanted the concepts
 and do not wish to have to enter them again.  If you don't want those
 concepts, you can remove them one by one with the "undo" command.
-Or you can use the newly added command "erase entered concepts"
+Or you can use the newly added command "discard entered concepts"
 to get rid of all of them at once.
 
 The tagging call stuff that was begun in version 30.87(experimental)
@@ -135,17 +290,6 @@ for example, "grand swing thru".  You can also type it the old way:
 the concept "grand" followed by the call "swing thru".
 
 The malfunctions involving "outside triangles circulate" have been fixed.
-
-When an illegal call is issued with concepts, after printing the error
-message, the program usually just erases the call and leaves the
-concepts in place.  This is intended to make mistakenly entered calls,
-after one or more concepts, less frustrating.  However, I have found
-that it makes mistakenly entered concepts more frustrating.  This is
-because whatever mistaken concepts were in place need to be removed
-one at a time with the "undo" command.  So a new command has been added --
-"erase entered concepts" ("erase" for short, below c3x) that removes all
-pending concepts entered so far.  I'm still not completely satisfied
-with the behavior, and I welcome suggestions for making it better.
 
 The "reverse checkpoint" and "reverse crazy" concepts may be entered either
 the old way, as a single concept name, or by entering "reverse" followed by

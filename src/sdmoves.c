@@ -583,7 +583,7 @@ Private void finish_matrix_call(
       checkptr = setup_attrs[s_thar].setup_coords;
       goto doit;
    }
-   else if ((ypar == 0x00950075) && ((signature & (~0x20018000)) == 0)) {
+   else if ((ypar == 0x00950066) && ((signature & (~0x28008200)) == 0)) {
       checkptr = setup_attrs[s_crosswave].setup_coords;
       goto doit;
    }
@@ -606,6 +606,10 @@ Private void finish_matrix_call(
    else if ((ypar == 0x00550067) && ((signature & (~0x08410200)) == 0)) {
       checkptr = setup_attrs[s_qtag].setup_coords;
       goto doitrot;
+   }
+   else if ((ypar == 0x00D50026) && ((signature & (~0x20008202)) == 0)) {
+      checkptr = setup_attrs[s1x3dmd].setup_coords;
+      goto doit;
    }
    else if ((ypar == 0x00A60055) && ((signature & (~0x09000480)) == 0)) {
       checkptr = setup_attrs[s3x1dmd].setup_coords;
@@ -1277,11 +1281,134 @@ Private void divide_diamonds(setup *ss, setup *result)
 }
 
 
+/* The fraction stuff is encoded into 6 hexadecimal digits, which we will call
+   digits 3 through 8:
+
+      digit 3 - the code (3 bits) and the reversal bit (1 bit)
+                  Because of this perhaps unfortunate packing,
+                  we will consider codes to be even numbers 0, 2, 4, .... 14.
+                  If this digit is odd, the reversal bit is on.  The code
+                  indicates what kind of special job we are doing.
+      digit 4 - the selected part, called "N".  Think of this as being 1-based,
+                  even though the part numbering stuff that comes out of this
+                  procedure will be zero-based.  This will always be nonzero
+                  when some nontrivial job is being done.  the meaning of the
+                  codes has been defined so that no job ever requires N to be zero.
+                  The only time N is zero is when we are not doing anything, in
+                  which case the code is zero.  Code = N = 0 means no special
+                  job is being done.  (Though reversal and nontrivial fractions
+                  may still be present.)
+      digits 5 and 6 - the numerator and denominator, respectively, of the
+                  start point of the call, always in reduced-fraction form.
+                  The default is [0,1] meaning to start at 0.0000, that is, the
+                  beginning.
+      digits 7 and 8 - the numerator and denominator, respectively, of the
+                  end point of the call, always in reduced-fraction form.
+                  The default is [1,1] meaning to end at 1.0000, that is, the
+                  end.
+
+   The default configuration is 000111 hex, meaning do not reverse, go from
+   0.0000 to 1.0000, and don't do any special job.  A word of zero means the same
+   thing, and the fraction flag word is initialized to 0 if no fractions are being
+   used.  This makes it easier to tell whether any fractions are being used.
+   The zero is changed to 000111 hex at the start of any fraction-manipulation
+   operation.
+
+   The meaning of all this stuff is as follows:
+
+   First, if the reversal bit is on, the target call (or target random crazy
+   call, or whatever) has its parts reversed.
+
+   Second, the fraction stuff, determined by the low 4 hexadecimal digits, is
+   applied to the possibly reversed call.  This creates the "region".
+
+   Third, the region is manipulated according to the key and the value of N.
+
+   Before describing the key actions, here is how the region is computed.
+
+      Suppose the call has 10 parts: A, B, C, D, E, F, G, H, I, and J, and that
+      the low 4 digits of the fraction word are 1535.  This means that the start
+      point is 1/5 and the end point is 3/5.  So the first 1/5 of the call (2 parts,
+      A and B) are chopped off, and the last 2/5 of the call (4 parts, G, H, I, and J)
+      are also chopped off.  The region is C, D, E, and F.  This effect could be
+      obtained by saying "do the last 2/3, 3/5, <call>" or "1/2, do the last 4/5, <call>".
+
+      Now suppose that the "reverse" bit is also on.  This reverses the parts BEFORE
+      the fractions are computed.  The call is considered to consist of J, I, H, G, F,
+      E, D, C, B, and A.  If the low 4 digits are 1535, this chops off J and I at
+      the beginning, and D, C, B, and A at the end.  The region is thus H, G, F, and E.
+      This could be obtained by saying "do the last 2/3, 3/5, reverse order, <call>",
+      or "reverse order, 2/3, do the last 3/5, <call>", or "1/2, do the last 4/5,
+      reverse order, <call>", etc.
+
+   What happens next depends on the key and the value of "N", but always applies just
+   to the region as though the region were the only thing under consideration.
+
+   If "N" is zero (and the key is zero also, of course), the region is simply
+   executed from beginning to end.
+
+   Otherwise, the parts of the region are considered to be numbered in a 1-based
+   fashion.  In the case above of the "reverse" bit being on, the low 4 digits being
+   1535 hex, and the call having 10 parts, the region was H, G, F, and E.  These
+   are numbered:
+      H = 1
+      G = 2
+      F = 3
+      E = 4
+
+   Let T be the number of parts in the region.  In this example, T is 4.
+
+   The meanings of the key values are as follows:
+
+      key = 0 (but N != 0) - do part N only.
+
+      key = 2 - obsolete -- use 8 instead.
+
+      key = 4 - do parts from the beginning of the region up through N, inclusive,
+                  that is, 1, 2, 3, .... N.
+
+      key = 6 - [PLANNED, NOT IMPLEMENTED] - do parts from N down to 1, inclusive,
+                  that is, N, N-1, ..... 2, 1.
+
+      key = 8 - do parts from N+1 up to the end of the region,
+                  that is, N, N+1, ..... T-1, T.
+
+      key = 10 - do parts from the top of the region down to N+1,
+                  that is, T, T-1, ..... N+2, N+1.  This executes the region
+                  in reverse order.  Of course, if the "reverse" bit is on,
+                  the region represents the call in reverse order, so the parts
+                  of the call will be executed in forward order.
+
+
+   The output of this procedure, after digesting the above, is a "fraction_info"
+   structure, whose important items are:
+
+      subcall_index - the first part of the target call that we are to execute.
+         This is now in ZERO-BASED numbering, as befits the sequential-definition
+         array.
+      highlimit - if going forward, this is the (zero-based) part JUST AFTER the
+         last part that we are to execute.  We will execute (highlimit-subcall_index)
+         parts.  If going backward, this is the (zero-based) LAST PART that we will
+         execute.  We will execute (subcall_index-highlimit+1) parts.  Note the
+         assymetry.  Sorry.
+
+   So, to execute all of a 10 part call in forward order, we will have
+      subcall_index = 0    and    highlimit = 10
+   To execute it in reverse order, we will have
+      subcall_index = 9    and    highlimit = 0
+
+   The "instant_stop" and "do_half_of_last_part" flags do various things.
+*/
+
+
 extern fraction_info get_fraction_info(uint32 frac_flags, uint32 callflags1, int total)
 {
    fraction_info retval;
-   int numer, denom, s_numer, s_denom, this_part, test_size;
+   int e_numer, e_denom, s_numer, s_denom, this_part, test_size;
    int subcall_index, highlimit;
+
+   int available_fractions = (callflags1 & CFLAG1_VISIBLE_FRACTION_MASK) / CFLAG1_VISIBLE_FRACTION_BIT;
+   if (available_fractions == 3) available_fractions = 1000;     /* 3 means all parts. */
 
    retval.reverse_order = 0;
    retval.instant_stop = 0;
@@ -1290,22 +1417,22 @@ extern fraction_info get_fraction_info(uint32 frac_flags, uint32 callflags1, int
    this_part = (frac_flags & 0xF0000) >> 16;
    s_numer = (frac_flags & 0xF000) >> 12;      /* Start point. */
    s_denom = (frac_flags & 0xF00) >> 8;
-   numer = (frac_flags & 0xF0) >> 4;           /* Stop point. */
-   denom = (frac_flags & 0xF);
+   e_numer = (frac_flags & 0xF0) >> 4;         /* End point. */
+   e_denom = (frac_flags & 0xF);
 
    if (s_numer >= s_denom) fail("Fraction must be proper.");
    subcall_index = total * s_numer;
    if ((subcall_index % s_denom) != 0) fail("This call can't be fractionalized with this fraction.");
    subcall_index = subcall_index / s_denom;
 
-   if (numer <= 0) fail("Fraction must be proper.");
-   highlimit = total * numer;
-   test_size = highlimit / denom;
+   if (e_numer <= 0) fail("Fraction must be proper.");
+   highlimit = total * e_numer;
+   test_size = highlimit / e_denom;
 
-   if (test_size*denom == highlimit)
+   if (test_size*e_denom == highlimit)
       highlimit = test_size;
    else {
-      if (2*test_size*denom + denom == 2*highlimit) {
+      if (2*test_size*e_denom + e_denom == 2*highlimit) {
          highlimit = test_size+1;
          retval.do_half_of_last_part = 1;
       }
@@ -1320,8 +1447,9 @@ extern fraction_info get_fraction_info(uint32 frac_flags, uint32 callflags1, int
 
    /* Check for "reverse order" */
    if (frac_flags & 0x100000) {
+      retval.reverse_order = 1;
       subcall_index = total-1-subcall_index;
-      retval.reverse_order = TRUE;
+      highlimit = total-highlimit;
       if (retval.do_half_of_last_part) fail("This call can't be fractionalized with this fraction.");
    }
 
@@ -1330,43 +1458,442 @@ extern fraction_info get_fraction_info(uint32 frac_flags, uint32 callflags1, int
          of whatever series we have decided upon. */
 
       if (retval.do_half_of_last_part) fail("This call can't be fractionalized with this fraction.");
-      subcall_index += (retval.reverse_order) ? (1-this_part) : (this_part-1);
 
-      retval.instant_stop = 1;
+      switch ((frac_flags >> 20) & 0xE) {
+         case 0:
+            retval.instant_stop = 1;
+                     subcall_index += retval.reverse_order ? (1-this_part) : (this_part-1);
+                     /* Be sure that enough parts are visible. */
+                     if (subcall_index+1 > available_fractions)
+                        fail("This call can't be fractionalized.");
+                     if (subcall_index >= total) fail("The indicated part number doesn't exist.");
+            break;
+         case 4:
+            /* We are not just doing part N, we are doing parts up through N. */
 
-      /* Be sure that enough parts are visible. */
-      if (     (callflags1 & CFLAG1_VISIBLE_FRACTION_MASK) != 3*CFLAG1_VISIBLE_FRACTION_BIT &&
-               (subcall_index+1 > (callflags1 & CFLAG1_VISIBLE_FRACTION_MASK) / CFLAG1_VISIBLE_FRACTION_BIT))
-         fail("This call can't be fractionalized.");
+            if (retval.reverse_order) {
+               if (highlimit > subcall_index-this_part+1) fail("This call can't be fractionalized this way.");
+               highlimit = subcall_index-this_part+1;
+               if (subcall_index > available_fractions) fail("This call can't be fractionalized.");
+               if (subcall_index > total) fail("The indicated part number doesn't exist.");
+            }
+            else {
+               if (highlimit < subcall_index+this_part) fail("This call can't be fractionalized this way.");
+               highlimit = subcall_index+this_part;
+               if (highlimit > available_fractions) fail("This call can't be fractionalized.");
+               if (highlimit > total) fail("The indicated part number doesn't exist.");
+            }
 
-      if (subcall_index >= total) fail("The indicated part number doesn't exist.");
+            break;
+         case 2: case 8:
+            /* We are not just doing part N, we are doing parts strictly after N. */
+                     subcall_index += retval.reverse_order ? (-this_part) : (this_part);
+                     /* Be sure that enough parts are visible. */
+                     if (subcall_index > available_fractions)
+                        fail("This call can't be fractionalized.");
+                     if (subcall_index > total) fail("The indicated part number doesn't exist.");
+            break;
+         case 10:
+            if (retval.reverse_order) {
+               int t = subcall_index;
+               subcall_index = highlimit;
+               highlimit = t+1-this_part;
+/* ***** need error checks */
+               retval.reverse_order = 0;
+            }
+            else {
+               int t = subcall_index;
+               subcall_index = highlimit-1;
+               highlimit = t+this_part;
+/* ***** need error checks */
+               retval.reverse_order = 1;
+            }
 
-      if ((frac_flags & 0xE00000) == 0x400000) {
-         /* We are not just doing part N, we are doing parts up through N. */
-         if (retval.reverse_order)
-            fail("Sorry, can't do this with reverse order.");
-         subcall_index = 0;     /* Start at the beginning. */
-         highlimit = this_part;
-         retval.instant_stop = 0;
-      }
-      else if ((frac_flags & 0xE00000) == 0x200000) {
-         /* We are not just doing part N, we are doing parts strictly after N. */
-         if (retval.reverse_order)
-            fail("Sorry, can't do this with reverse order.");
-         subcall_index++;  /* Strictly after. */
-         retval.instant_stop = 0;
+            break;
+         default:
+            fail("Internal error: bad fraction code.");
       }
    }
    else {
       /* Unless all parts are visible, this is illegal. */
-      if ((callflags1 & CFLAG1_VISIBLE_FRACTION_MASK) != 3*CFLAG1_VISIBLE_FRACTION_BIT)
+      if (available_fractions != 1000)
          fail("This call can't be fractionalized.");
    }
 
    retval.subcall_index = subcall_index;
    retval.highlimit = highlimit;
-
    return retval;
+}
+
+
+
+Private void do_sequential_call(
+   setup *ss,
+   callspec_block *callspec,
+   long_boolean qtfudged,
+   uint32 new_final_concepts,
+   long_boolean *mirror_p,
+   setup *result)
+{
+   long_boolean qtf;
+   int fetch_index;
+   int dist_index;
+   int *test_index = &fetch_index;
+   parse_block *parseptr = ss->cmd.parseptr;
+   uint32 callflags1 = callspec->callflags1;
+   int instant_stop = 99;  /* If not 99, says to stop instantly after doing one part, and to report
+                              (in RESULTFLAG__DID_LAST_PART bit) if that part was the last part. */
+   long_boolean reverse_order = FALSE;
+   int subcall_incr = 1;   /* Will be -1 if doing call in reverse order. */
+   long_boolean do_half_of_last_part = FALSE;
+   long_boolean first_call;
+   int realtotal = callspec->stuff.def.howmanyparts;
+   int total = realtotal;
+   int start_point = 0;    /* Where we start, in the absence of special stuff. */
+   int end_point;  /* Where we end, in the absence of special stuff. */
+   int highlimit;
+   long_boolean distribute = FALSE;
+   int subpart_count = 0;
+
+   if (callflags1 & CFLAG1_DISTRIBUTE_REPETITIONS) distribute = TRUE;
+
+   if (distribute) {
+      int ii;
+      total = 0;
+      for (ii=0 ; ii<callspec->stuff.def.howmanyparts ; ii++) {
+         by_def_item *this_item = &callspec->stuff.def.defarray[ii];
+         uint32 this_mod1 = this_item->modifiers1;
+
+         if ((DFM1_REPEAT_N | DFM1_REPEAT_NM1 | DFM1_REPEAT_N_ALTERNATE) & this_mod1) {
+            total += (current_number_fields >> (((DFM1_NUM_SHIFT_MASK & this_mod1) / DFM1_NUM_SHIFT_BIT) * 4)) & 0xF;
+
+            if (DFM1_REPEAT_N_ALTERNATE & this_mod1) ii++;
+            if (DFM1_REPEAT_NM1 & this_mod1) total--;
+         }
+         else
+            total++;
+      }
+      test_index = &dist_index;
+   }
+
+   highlimit = total;
+
+   /* If the "cmd_frac_flags" word is nonzero, we are being asked to do something special. */
+
+   if (ss->cmd.cmd_frac_flags) {
+      fraction_info zzz = get_fraction_info(ss->cmd.cmd_frac_flags, callflags1, total);
+      reverse_order = zzz.reverse_order;
+      do_half_of_last_part = zzz.do_half_of_last_part;
+      highlimit = zzz.highlimit;
+      if (reverse_order) {
+         highlimit = 1-highlimit;
+         subcall_incr = -1;
+      }
+      start_point = zzz.subcall_index;
+      if (zzz.instant_stop) instant_stop = start_point*subcall_incr+1;
+   }
+
+   if (new_final_concepts & FINAL__SPLIT) {
+      if (callflags1 & CFLAG1_SPLIT_LIKE_SQUARE_THRU)
+         new_final_concepts |= FINAL__SPLIT_SQUARE_APPROVED;
+      else if (callflags1 & CFLAG1_SPLIT_LIKE_DIXIE_STYLE)
+         new_final_concepts |= FINAL__SPLIT_DIXIE_APPROVED;
+   }
+
+   qtf = qtfudged;
+
+   first_call = reverse_order ? FALSE : TRUE;
+
+   if (ss->kind != s2x2 && ss->kind != s_short6) ss->cmd.prior_elongation_bits = 0;
+
+   /* Did we neglect to do the touch/rear back stuff because fractionalization was enabled?
+      If so, now is the time to correct that.  We only do it for the first part, and only if
+      doing parts in forward order. */
+
+   /* Test for all this is "random left, swing thru".
+      The test cases for this stuff are such things as "left swing thru". */
+
+   if ((!(ss->cmd.cmd_misc_flags & CMD_MISC__NO_STEP_TO_WAVE)) && (start_point == 0) && !reverse_order &&
+         (callflags1 & (CFLAG1_REAR_BACK_FROM_R_WAVE | CFLAG1_REAR_BACK_FROM_QTAG | CFLAG1_STEP_TO_WAVE))) {
+
+      ss->cmd.cmd_misc_flags |= CMD_MISC__NO_STEP_TO_WAVE;  /* Can only do it once. */
+
+      if (new_final_concepts & INHERITFLAG_LEFT) {
+         if (!*mirror_p) mirror_this(ss);
+         *mirror_p = TRUE;
+      }
+
+      touch_or_rear_back(ss, *mirror_p, callflags1);
+   }
+
+   /* See comment earlier about mirroring.  For sequentially or concentrically defined
+      calls, the "left" flag does not mean mirror; it is simply passed to subcalls.
+      So we must put things into their normal state.  If we did any mirroring, it was
+      only to facilitate the action of "touch_or_rear_back". */
+
+   if (*mirror_p) mirror_this(ss);
+   *mirror_p = FALSE;
+   *result = *ss;
+
+   result->result_flags = RESULTFLAG__SPLIT_AXIS_MASK;   /* Seed the result for the calls to "do_call_in_series". */
+
+   /* Iterate over the parts of the call.
+      We will let "fetch_index" scan the actual call definition:
+         forward - from 0 to realtotal-1 inclusive
+         reverse - from realtotal-1 down to 0 inclusive.
+      While doing this, we will let "test_index" scan the parts of the
+      call as seen by the fracionalization stuff.  If we are not distributing
+      parts, "test_index" will be the same as "fetch_index".  Otherwise,
+      it will show the distributed subparts. */
+
+   if (reverse_order) {
+      fetch_index = distribute ? realtotal-1 : start_point;
+      dist_index = total-1;
+      end_point = -highlimit+1;
+   }
+   else {
+      fetch_index = distribute ? 0 : start_point;
+      dist_index = 0;
+      end_point = highlimit-1;
+   }
+
+   for (;;) {
+      int j;
+#ifdef CLEAN_CALLSPEC
+      parse_block f1;
+#endif
+      by_def_item *this_item;
+      uint32 this_mod1;
+      uint32 remember_elongation;
+      parse_block *cp1, *cp2;
+      callspec_block *call1, *call2;
+      uint32 conc1, conc2;
+      by_def_item *alt_item;
+      int use_alternate;
+      uint32 saved_number_fields = current_number_fields;
+
+      /* Now the "index" values (fetch_index and dist_index) contain the
+         number of parts we have completed.  That is, they point (in 0-based
+         numbering) to what we are about to do.  Also, if "subpart_count" is
+         nonzero, it has the number of extra repetitions of what we just did
+         that we must perform before we can go on to the next thing. */
+
+      if (subpart_count) {
+         subpart_count--;    /* This is now the number of EXTRA repetitions
+                                 of this that we will still have to do after
+                                 we do the repetition that we are about to do. */
+
+         use_alternate ^= 1;
+         dist_index += subcall_incr;
+         goto do_plain_call;
+      }
+
+
+      if (reverse_order) {
+         if (fetch_index < 0) break;
+      }
+      else {
+         if (fetch_index >= realtotal) break;
+      }
+
+      if (fetch_index >= realtotal || fetch_index < 0) fail("The indicated part number doesn't exist.");
+      this_item = &callspec->stuff.def.defarray[fetch_index];
+      this_mod1 = this_item->modifiers1;
+
+      fetch_index += subcall_incr;
+      dist_index += subcall_incr;
+
+      if (reverse_order) {
+         if (fetch_index >= 0 && (DFM1_REPEAT_N_ALTERNATE & callspec->stuff.def.defarray[fetch_index].modifiers1)) {
+            alt_item = this_item;
+            this_item = &callspec->stuff.def.defarray[fetch_index];
+            this_mod1 = this_item->modifiers1;
+            fetch_index--;
+         }
+      }
+      else {
+         if (DFM1_REPEAT_N_ALTERNATE & this_mod1) {
+            alt_item = &callspec->stuff.def.defarray[fetch_index];
+            fetch_index++;
+         }
+      }
+
+      /* If we are not distributing, perform the range test now, so we don't
+         query the user needlessly about parts of calls that we won't do. */
+
+      if (!distribute) {
+         if (reverse_order) {
+            if (*test_index+1 > start_point)
+               continue;
+            if (*test_index+1 < end_point)
+               break;
+         }
+         else {
+            if (*test_index-1 < start_point)
+               continue;
+            if (*test_index-1 > end_point)
+               break;
+         }
+      }
+
+      get_real_subcall(parseptr, this_item, get_mods_for_subcall(new_final_concepts, this_item->modifiersh, callspec->callflagsh), &cp1, &call1, &conc1);
+
+      if (DFM1_REPEAT_N_ALTERNATE & this_mod1)
+         get_real_subcall(parseptr, alt_item, get_mods_for_subcall(new_final_concepts, alt_item->modifiersh, callspec->callflagsh), &cp2, &call2, &conc2);
+
+      /* If this context requires a tagging or scoot call, pass that fact on. */
+      if (this_item->call_id >= BASE_CALL_TAGGER0 && this_item->call_id <= BASE_CALL_TAGGER3) conc1 |= FINAL__MUST_BE_TAG;
+
+      current_number_fields >>= ((DFM1_NUM_SHIFT_MASK & this_mod1) / DFM1_NUM_SHIFT_BIT) * 4;
+
+      remember_elongation = result->cmd.prior_elongation_bits;
+
+      /* Check for special repetition stuff. */
+      if ((DFM1_REPEAT_N | DFM1_REPEAT_NM1 | DFM1_REPEAT_N_ALTERNATE) & this_mod1) {
+         int count_to_use = current_number_fields & 0xF;
+
+         number_used = TRUE;
+         if (DFM1_REPEAT_NM1 & this_mod1) count_to_use--;
+
+         if (do_half_of_last_part && !distribute && fetch_index == highlimit) {
+            if (count_to_use & 1) fail("Can't fractionalize this call this way.");
+            count_to_use >>= 1;
+         }
+
+         use_alternate = reverse_order && !(count_to_use & 1);
+         subpart_count = count_to_use;
+         if (subpart_count == 0) goto done_with_big_cycle;
+         subpart_count--;
+      }
+
+do_plain_call:
+
+      /* The index point AFTER what we are about to do (0-based numbering, of course),
+         so index-1 (or index+1) point to what we are about to do.  Subpart_count has the
+         number of ADDITION repetitions of what we are about to do, after we finish the
+         upcoming one. */
+
+      if (reverse_order) {
+         if (*test_index+1 > start_point)
+            continue;
+         if (*test_index+1 < end_point)
+            break;
+      }
+      else {
+         if (*test_index-1 < start_point)
+            continue;
+         if (*test_index-1 > end_point)
+            break;
+      }
+
+      result->cmd = ss->cmd;
+
+      /* We don't supply these; they get filled in by the call. */
+      result->cmd.cmd_misc_flags &= ~DFM1_CONCENTRICITY_FLAG_MASK;
+
+      if (do_half_of_last_part && *test_index == highlimit)
+         result->cmd.cmd_frac_flags = 0x000112;
+      else
+         result->cmd.cmd_frac_flags = 0;
+
+      if (!first_call) {
+         result->cmd.cmd_misc_flags |= CMD_MISC__NO_CHK_ELONG;
+         result->cmd.cmd_assume.assumption = cr_none;
+      }
+
+      if ((DFM1_REPEAT_N_ALTERNATE & this_mod1) && use_alternate) {
+#ifdef CLEAN_CALLSPEC
+         f1 = *cp2;
+         f1.call = call2;
+#else
+         result->cmd.parseptr = cp2;
+         result->cmd.callspec = call2;
+#endif
+         result->cmd.cmd_final_flags = conc2;
+
+      }
+      else {
+#ifdef CLEAN_CALLSPEC
+         f1 = *cp1;
+         f1.call = call1;
+#else
+         result->cmd.parseptr = cp1;
+         result->cmd.callspec = call1;
+#endif
+         result->cmd.cmd_final_flags = conc1;
+      }
+
+#ifdef CLEAN_CALLSPEC
+      f1.concept = &mark_end_of_list;
+      f1.next = (parse_block *) 0;
+      f1.subsidiary_root = (parse_block *) 0;
+      f1.gc_ptr = (parse_block *) 0;
+      f1.selector = current_selector;
+      f1.direction = current_direction;
+      f1.number = current_number_fields;
+      f1.tagger = -1;
+      f1.circcer = -1;
+      result->cmd.callspec = (callspec_block *) 0;
+      result->cmd.parseptr = &f1;
+#endif
+
+      result->cmd.prior_elongation_bits = remember_elongation;
+
+      if ((DFM1_CPLS_UNLESS_SINGLE & this_mod1) && !(new_final_concepts & INHERITFLAG_SINGLE))
+         result->cmd.cmd_misc_flags |= CMD_MISC__DO_AS_COUPLES;
+
+      do_call_in_series(
+         result,
+         DFM1_ROLL_TRANSPARENT & this_mod1,
+         !(ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX) &&
+            !(new_final_concepts & (INHERITFLAG_12_MATRIX | INHERITFLAG_16_MATRIX)),
+         qtf);
+
+      if (subpart_count && !distribute) continue;
+
+done_with_big_cycle:
+
+      /* We allow expansion on the first part, and then shut it off for later parts.
+         This is required for things like 12 matrix grand swing thru from a 1x8 or 1x10. */
+      ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
+
+      /* This really isn't right.  It is done in order to make "ENDS FINISH set back" work.
+         The flaw is that, if the sequentially defined call "FINISH set back" had more than one
+         part, we would be OR'ing the bits from multiple parts.  What would it mean?  The bits
+         we are interested in are the "demand_lines" and "force_lines" stuff.  I guess we should
+         take the "demand" bits from the first part and the "force" bits from the last part.  Yuck! */
+
+      /* The claim is that the following code removes the above problem.  The test is "ends 2/3 chisel thru".
+         Below, we will pick up the concentricity flags from the last subcall. */
+
+      ss->cmd.cmd_misc_flags |= result->cmd.cmd_misc_flags & ~DFM1_CONCENTRICITY_FLAG_MASK;
+
+      current_number_fields = saved_number_fields;
+
+      qtf = FALSE;
+
+      new_final_concepts &= ~(FINAL__SPLIT | FINAL__SPLIT_SQUARE_APPROVED | FINAL__SPLIT_DIXIE_APPROVED);
+
+      first_call = FALSE;
+
+      /* If we are being asked to do just one part of a call (from cmd_frac_flags),
+         exit now.  Also, see if we just did the last part. */
+
+      if (ss->cmd.cmd_frac_flags && instant_stop != 99) {
+         /* Check whether we honored the last possible request.  That is,
+            whether we did the last part of the call in forward order, or
+            the first part in reverse order. */
+         result->result_flags |= RESULTFLAG__PARTS_ARE_KNOWN;
+         if (instant_stop >= highlimit)
+            result->result_flags |= RESULTFLAG__DID_LAST_PART;
+         break;
+      }
+   }
+
+   /* Pick up the concentricity command stuff from the last thing we did, but take out the effect of "splitseq". */
+
+   ss->cmd.cmd_misc_flags |= result->cmd.cmd_misc_flags;
+   ss->cmd.cmd_misc_flags &= ~CMD_MISC__MUST_SPLIT;
 }
 
 
@@ -1378,20 +1905,16 @@ Private void move_with_real_call(
    long_boolean qtfudged,
    setup *result)
 {
-   long_boolean qtf;
-   parse_block *cp1;
-   parse_block *cp2;
    warning_info saved_warnings;
    uint32 tbonetest;
    uint32 imprecise_rotation_result_flag = 0;
    uint32 unaccepted_flags;
    uint32 new_final_concepts;
-   callspec_block *call1, *call2;
    calldef_schema the_schema;
    long_boolean mirror;
-   parse_block *parseptr = ss->cmd.parseptr;
    callspec_block *callspec = ss->cmd.callspec;
    uint32 final_concepts = ss->cmd.cmd_final_flags;
+   uint32 callflags1 = callspec->callflags1;
 
    clear_people(result);
    result->result_flags = 0;   /* In case we bail out. */
@@ -1415,12 +1938,9 @@ Private void move_with_real_call(
 that probably need to be put in. */
 
 
-
    /* Check for "central" concept and its ilk, and pick up correct definition. */
 
-   if (ss->cmd.cmd_misc_flags & CMD_MISC__CENTRAL_MASK) {
-      uint32 temp_concepts, forcing_concepts;
-
+   if (ss->cmd.cmd_misc2_flags & CMD_MISC2__CENTRAL_MASK) {
       ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX | CMD_MISC__DISTORTED;
       /* We shut off the "doing ends" stuff.  If we say "ends detour" we mean "ends do the ends part of
          detour".  But if we say "ends central detour" we mean "ends do the *centers* part of detour". */
@@ -1431,39 +1951,46 @@ that probably need to be put in. */
    
       if (HERITABLE_FLAG_MASK & final_concepts & (~callspec->callflagsh)) fail("Can't do this call with this concept.");
 
-      switch (ss->cmd.cmd_misc_flags & CMD_MISC__CENTRAL_MASK) {
-         case CMD_MISC__CENTRAL_PLAIN:
-            if (callspec->schema != schema_concentric)
-               fail("Can't do \"central\" with this call.");
+      switch (ss->cmd.cmd_misc2_flags & CMD_MISC2__CENTRAL_MASK) {
+         case CMD_MISC2__CENTRAL_PLAIN:
+            /* If it is sequential, we just pass it through.  Otherwise, we handle it here. */
+            if (callspec->schema != schema_sequential) {
+               uint32 temp_concepts, forcing_concepts;
 
-            if (final_concepts &
-                  ~(FINAL__SPLIT | HERITABLE_FLAG_MASK | FINAL__SPLIT_SQUARE_APPROVED | FINAL__SPLIT_DIXIE_APPROVED))
-               fail("This concept not allowed here.");
+               if (callspec->schema != schema_concentric)
+                  fail("Can't do \"central\" with this call.");
 
-            temp_concepts = final_concepts;
+               if (final_concepts &
+                     ~(FINAL__SPLIT | HERITABLE_FLAG_MASK | FINAL__SPLIT_SQUARE_APPROVED | FINAL__SPLIT_DIXIE_APPROVED))
+                  fail("This concept not allowed here.");
 
-            forcing_concepts = callspec->stuff.conc.innerdef.modifiersh & ~callspec->callflagsh;
+               temp_concepts = final_concepts;
 
-            if (forcing_concepts & (INHERITFLAG_REVERSE | INHERITFLAG_LEFT)) {
-               if (final_concepts & (INHERITFLAG_REVERSE | INHERITFLAG_LEFT))
-                  temp_concepts |= (INHERITFLAG_REVERSE | INHERITFLAG_LEFT);
+               forcing_concepts = callspec->stuff.conc.innerdef.modifiersh & ~callspec->callflagsh;
+
+               if (forcing_concepts & (INHERITFLAG_REVERSE | INHERITFLAG_LEFT)) {
+                  if (final_concepts & (INHERITFLAG_REVERSE | INHERITFLAG_LEFT))
+                     temp_concepts |= (INHERITFLAG_REVERSE | INHERITFLAG_LEFT);
+               }
+
+               temp_concepts &= ~(final_concepts & HERITABLE_FLAG_MASK & ~callspec->stuff.conc.innerdef.modifiersh);
+               temp_concepts |= forcing_concepts & ~(INHERITFLAG_REVERSE | INHERITFLAG_LEFT);
+               callspec = base_calls[callspec->stuff.conc.innerdef.call_id];
+               callflags1 = callspec->callflags1;
+               final_concepts = temp_concepts;
+               ss->cmd.cmd_final_flags = final_concepts;
+               ss->cmd.callspec = callspec;
+               ss->cmd.cmd_misc2_flags &= ~CMD_MISC2__CENTRAL_MASK;   /* We are done. */
             }
 
-            temp_concepts &= ~(final_concepts & HERITABLE_FLAG_MASK & ~callspec->stuff.conc.innerdef.modifiersh);
-            temp_concepts |= forcing_concepts & ~(INHERITFLAG_REVERSE | INHERITFLAG_LEFT);
-            callspec = base_calls[callspec->stuff.conc.innerdef.call_id];
-            final_concepts = temp_concepts;
-            ss->cmd.cmd_final_flags = final_concepts;
-            ss->cmd.callspec = callspec;
-            ss->cmd.cmd_misc_flags &= ~CMD_MISC__CENTRAL_MASK;   /* We are done. */
             break;
-         case CMD_MISC__CENTRAL_SNAG: case CMD_MISC__CENTRAL_MYSTIC:
+         case CMD_MISC2__CENTRAL_SNAG: case CMD_MISC2__CENTRAL_MYSTIC:
             if (final_concepts & ~HERITABLE_FLAG_MASK) fail("This concept not allowed here.");
             break;
       }
    }
 
-   if (callspec->callflags1 & CFLAG1_IMPRECISE_ROTATION)
+   if (callflags1 & CFLAG1_IMPRECISE_ROTATION)
       imprecise_rotation_result_flag = RESULTFLAG__IMPRECISE_ROT;
 
    /* Check for a call whose schema is single (cross) concentric.
@@ -1486,11 +2013,14 @@ that probably need to be put in. */
    /* We of course don't allow "mystic" or "snag" for things that are
       *CROSS* concentrically defined. */
 
-   if (ss->cmd.cmd_misc_flags & CMD_MISC__CENTRAL_MASK) {
+   if (ss->cmd.cmd_misc2_flags & CMD_MISC2__CENTRAL_MASK) {
       switch (the_schema) {
+         case schema_sequential:
          case schema_concentric:
          case schema_single_concentric:
          case schema_single_concentric_together:
+         case schema_cross_concentric:
+         case schema_single_cross_concentric:
             break;
          default:
             fail("Can't do \"central/snag/mystic\" with this call.");
@@ -1513,7 +2043,7 @@ that probably need to be put in. */
             fail("This call can't be fractionalized.");
             break;
          case schema_sequential: case schema_split_sequential:
-            if (!(callspec->callflags1 & CFLAG1_VISIBLE_FRACTION_MASK))
+            if (!(callflags1 & CFLAG1_VISIBLE_FRACTION_MASK))
                fail("This call can't be fractionalized.");
             break;
          default:
@@ -1521,7 +2051,7 @@ that probably need to be put in. */
             /* Must be some form of concentric.  We allow visible fractions, and take no action in that case.
                This means that any fractions will be sent to constituent calls. */
 
-            if (!(callspec->callflags1 & CFLAG1_VISIBLE_FRACTION_MASK)) {
+            if (!(callflags1 & CFLAG1_VISIBLE_FRACTION_MASK)) {
 
                /* Otherwise, we allow the fraction "1/2" to be given, if the top-level heritablilty
                   flag allows it.  We turn the fraction into a "final concept". */
@@ -1600,7 +2130,7 @@ that probably need to be put in. */
 
    if (  !ss->cmd.cmd_frac_flags &&
          (ss->cmd.cmd_misc_flags & (CMD_MISC__NO_STEP_TO_WAVE | CMD_MISC__MUST_SPLIT)) == 0 &&
-         (callspec->callflags1 & (CFLAG1_REAR_BACK_FROM_R_WAVE | CFLAG1_REAR_BACK_FROM_QTAG | CFLAG1_STEP_TO_WAVE))) {
+         (callflags1 & (CFLAG1_REAR_BACK_FROM_R_WAVE | CFLAG1_REAR_BACK_FROM_QTAG | CFLAG1_STEP_TO_WAVE))) {
 
       ss->cmd.cmd_misc_flags |= CMD_MISC__NO_STEP_TO_WAVE;  /* Can only do it once. */
 
@@ -1609,13 +2139,13 @@ that probably need to be put in. */
          mirror = TRUE;
       }
 
-      touch_or_rear_back(ss, mirror, callspec->callflags1);
+      touch_or_rear_back(ss, mirror, callflags1);
 
       /* But, if the "left_means_touch_or_check" flag is set, we only wanted the "left" flag for the
          purpose of what "touch_or_rear_back" just did.  So, in that case, we turn off the "left"
          flag and set things back to normal. */
 
-      if (callspec->callflags1 & CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK) {
+      if (callflags1 & CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK) {
          final_concepts &= ~INHERITFLAG_LEFT;
          if (mirror) mirror_this(ss);
          mirror = FALSE;
@@ -1646,6 +2176,7 @@ that probably need to be put in. */
          ss->cmd.cmd_misc_flags |= (callspec->stuff.conc.outerdef.modifiers1 & DFM1_CONCENTRICITY_FLAG_MASK);
 
          callspec = base_calls[callspec->stuff.conc.outerdef.call_id];
+         callflags1 = callspec->callflags1;
          the_schema = callspec->schema;
          if (the_schema == schema_maybe_single_concentric)
             the_schema = (final_concepts & INHERITFLAG_SINGLE) ? schema_single_concentric : schema_concentric;
@@ -1666,7 +2197,7 @@ that probably need to be put in. */
    /* Enforce the restriction that only tagging calls are allowed in certain contexts. */
 
    if (final_concepts & FINAL__MUST_BE_TAG) {
-      if (!(callspec->callflags1 & CFLAG1_BASE_TAG_CALL_MASK))
+      if (!(callflags1 & CFLAG1_BASE_TAG_CALL_MASK))
          fail("Only a tagging call is allowed here.");
    }
 
@@ -1681,11 +2212,11 @@ that probably need to be put in. */
 
    if (final_concepts & FINAL__SPLIT) {
       ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
-      if (callspec->callflags1 & CFLAG1_SPLIT_LIKE_SQUARE_THRU) {
+      if (callflags1 & CFLAG1_SPLIT_LIKE_SQUARE_THRU) {
          final_concepts = (final_concepts | FINAL__SPLIT_SQUARE_APPROVED) & (~FINAL__SPLIT);
          if ((current_number_fields & 0xF) == 1) fail("Can't split square thru 1.");
       }
-      else if (callspec->callflags1 & CFLAG1_SPLIT_LIKE_DIXIE_STYLE)
+      else if (callflags1 & CFLAG1_SPLIT_LIKE_DIXIE_STYLE)
          final_concepts = (final_concepts | FINAL__SPLIT_DIXIE_APPROVED) & (~FINAL__SPLIT);
    }
 
@@ -1865,266 +2396,14 @@ that probably need to be put in. */
          }
 
          if (the_schema == schema_sequential || the_schema == schema_split_sequential) {
-            int highlimit;
-            int subcall_incr;       /* Will be -1 if doing call in reverse order. */
-            int subcall_index;      /* Where we start, in the absence of special stuff. */
-            int instant_stop;       /* If >= 0, says to stop instantly after doing one part, and to report
-                                       (in RESULTFLAG__DID_LAST_PART bit) if that part was the last part. */
-            long_boolean reverse_order;
-            long_boolean do_half_of_last_part;
-            long_boolean first_call;
-            int total = callspec->stuff.def.howmanyparts;
-
-            qtf = qtfudged;
-
-            if (new_final_concepts & FINAL__SPLIT) {
-               if (callspec->callflags1 & CFLAG1_SPLIT_LIKE_SQUARE_THRU)
-                  new_final_concepts |= FINAL__SPLIT_SQUARE_APPROVED;
-               else if (callspec->callflags1 & CFLAG1_SPLIT_LIKE_DIXIE_STYLE)
-                  new_final_concepts |= FINAL__SPLIT_DIXIE_APPROVED;
-
-            }
-
-            /* If the "cmd_frac_flags" word is nonzero, we are being asked to do something special.
-               See comments in sd.h for "cmd_frac_flags". */
-
-            if (ss->cmd.cmd_frac_flags) {
-               fraction_info zzz = get_fraction_info(ss->cmd.cmd_frac_flags, callspec->callflags1, total);
-               reverse_order = zzz.reverse_order;
-               do_half_of_last_part = zzz.do_half_of_last_part;
-               highlimit = zzz.highlimit;
-               if (reverse_order) highlimit = 1-total+highlimit;
-               subcall_index = zzz.subcall_index;
-               subcall_incr = (reverse_order) ? -1 : 1;
-               instant_stop = zzz.instant_stop ? subcall_index*subcall_incr+1 : 99;
-            }
-            else {     /* No fractions. */
-               reverse_order = FALSE;
-               instant_stop = 99;
-               do_half_of_last_part = FALSE;
-               highlimit = total;
-               subcall_index = 0;
-               subcall_incr = 1;
-            }
-
-            first_call = reverse_order ? FALSE : TRUE;
-
-            if (ss->kind != s2x2 && ss->kind != s_short6) ss->cmd.prior_elongation_bits = 0;
-
-            /* Did we neglect to do the touch/rear back stuff because fractionalization was enabled?
-               If so, now is the time to correct that.  We only do it for the first part, and only if
-               doing parts in forward order. */
-
-            /* Test for all this is "random left, swing thru".
-               The test cases for this stuff are such things as "left swing thru". */
-
-            if ((!(ss->cmd.cmd_misc_flags & CMD_MISC__NO_STEP_TO_WAVE)) && (subcall_index == 0) && !reverse_order &&
-                  (callspec->callflags1 & (CFLAG1_REAR_BACK_FROM_R_WAVE | CFLAG1_REAR_BACK_FROM_QTAG | CFLAG1_STEP_TO_WAVE))) {
-
-               ss->cmd.cmd_misc_flags |= CMD_MISC__NO_STEP_TO_WAVE;  /* Can only do it once. */
-
-               if (new_final_concepts & INHERITFLAG_LEFT) {
-                  if (!mirror) mirror_this(ss);
-                  mirror = TRUE;
-               }
-
-               touch_or_rear_back(ss, mirror, callspec->callflags1);
-            }
-
-            /* See comments above relating to "left_means_touch_or_check".  We are about to
-               un-mirror this in any case. */
-
-            if (callspec->callflags1 & CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK)
-               final_concepts &= ~INHERITFLAG_LEFT;
-
-            /* See comment earlier about mirroring.  For sequentially or concentrically defined
-               calls, the "left" flag does not mean mirror; it is simply passed to subcalls.
-               So we must put things into their normal state.  If we did any mirroring, it was
-               only to facilitate the action of "touch_or_rear_back". */
-
-            if (mirror) mirror_this(ss);
-            mirror = FALSE;
-            *result = *ss;
-
-            result->result_flags = RESULTFLAG__SPLIT_AXIS_MASK;   /* Seed the result for the calls to "do_call_in_series". */
-
-            /* Iterate over the parts of the call. */
-
-            for (;;) {
-               int j;
-               uint32 temp_concepts, conc1, conc2;
-               by_def_item *this_item;
-               uint32 this_mod1, this_modh;
-               uint32 saved_number_fields = current_number_fields;
-               int count_to_use;
-
-               if (subcall_index*subcall_incr >= highlimit) break;
-
-               if (subcall_index >= total) fail("The indicated part number doesn't exist.");
-
-               this_item = &callspec->stuff.def.defarray[subcall_index];
-
-               this_mod1 = this_item->modifiers1;
-               this_modh = this_item->modifiersh;
-
-               temp_concepts = get_mods_for_subcall(new_final_concepts, this_modh, callspec->callflagsh);
-               get_real_subcall(parseptr, this_item, temp_concepts, &cp1, &call1, &conc1);
-
-               /* If this context requires a tagging or scoot call, pass that fact on. */
-               if (this_item->call_id >= BASE_CALL_TAGGER0 && this_item->call_id <= BASE_CALL_TAGGER3) conc1 |= FINAL__MUST_BE_TAG;
-
-               current_number_fields >>= ((DFM1_NUM_SHIFT_MASK & this_mod1) / DFM1_NUM_SHIFT_BIT) * 4;
-               count_to_use = current_number_fields & 0xF;
-
-               if ((DFM1_REPEAT_N | DFM1_REPEAT_NM1) & this_mod1) {
-                  uint32 remember_elongation = result->cmd.prior_elongation_bits;
-
-                  number_used = TRUE;
-                  if (DFM1_REPEAT_NM1 & this_mod1) count_to_use--;
-
-                  for (j = 1; j <= count_to_use; j++) {
-                     result->cmd = ss->cmd;
-                     result->cmd.cmd_frac_flags = 0;
-                     if (!first_call) {
-                        result->cmd.cmd_misc_flags |= CMD_MISC__NO_CHK_ELONG;
-                        result->cmd.cmd_assume.assumption = cr_none;
-                     }
-                     result->cmd.prior_elongation_bits = remember_elongation;
-                     result->cmd.parseptr = cp1;
-                     result->cmd.callspec = call1;
-                     result->cmd.cmd_final_flags = conc1;
-
-                     if ((DFM1_CPLS_UNLESS_SINGLE & this_mod1) && !(new_final_concepts & INHERITFLAG_SINGLE))
-                        result->cmd.cmd_misc_flags |= CMD_MISC__DO_AS_COUPLES;
-
-                     do_call_in_series(
-                        result,
-                        DFM1_ROLL_TRANSPARENT & this_mod1,
-                        !(ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX) &&
-                           !(new_final_concepts & (INHERITFLAG_12_MATRIX | INHERITFLAG_16_MATRIX)),
-                        qtf);
-                  }
-
-               }
-               else if (DFM1_REPEAT_N_ALTERNATE & this_mod1) {
-                  uint32 remember_elongation = result->cmd.prior_elongation_bits;
-                  /* Read the call after this one -- we will alternate between the two. */
-                  by_def_item *alt_item = &callspec->stuff.def.defarray[subcall_index+subcall_incr];
-                  uint32 alt_concepts = get_mods_for_subcall(new_final_concepts, alt_item->modifiersh, callspec->callflagsh);
-                  get_real_subcall(parseptr, alt_item, alt_concepts, &cp2, &call2, &conc2);
-
-                  number_used = TRUE;
-
-                  for (j = 1; j <= count_to_use; j++) {
-                     result->cmd = ss->cmd;
-                     result->cmd.cmd_frac_flags = 0;
-                     if (!first_call) {
-                        result->cmd.cmd_misc_flags |= CMD_MISC__NO_CHK_ELONG;
-                        result->cmd.cmd_assume.assumption = cr_none;
-                     }
-                     result->cmd.prior_elongation_bits = remember_elongation;
-
-                     if (j&1) {
-                        result->cmd.parseptr = cp1;
-                        result->cmd.callspec = call1;
-                        result->cmd.cmd_final_flags = conc1;
-                     }
-                     else {
-                        result->cmd.parseptr = cp2;
-                        result->cmd.callspec = call2;
-                        result->cmd.cmd_final_flags = conc2;
-                     }
-
-                     if ((DFM1_CPLS_UNLESS_SINGLE & this_mod1) && !(new_final_concepts & INHERITFLAG_SINGLE))
-                        result->cmd.cmd_misc_flags |= CMD_MISC__DO_AS_COUPLES;
-
-                     do_call_in_series(
-                        result,
-                        DFM1_ROLL_TRANSPARENT & this_mod1,
-                        !(ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX) &&
-                           !(new_final_concepts & (INHERITFLAG_12_MATRIX | INHERITFLAG_16_MATRIX)),
-                        qtf);
-                  }
-                  subcall_index += subcall_incr;     /* Skip over the second call. */
-               }
-               else {
-                  uint32 remember_elongation = result->cmd.prior_elongation_bits;
-
-                  result->cmd = ss->cmd;
-
-                  if (do_half_of_last_part && subcall_index+1 == highlimit)
-                     result->cmd.cmd_frac_flags = 0x000112;
-                  else
-                     result->cmd.cmd_frac_flags = 0;
-
-                  /* We don't supply these; they get filled in by the call. */
-                  result->cmd.cmd_misc_flags &= ~DFM1_CONCENTRICITY_FLAG_MASK;
-                  if (!first_call) {
-                     result->cmd.cmd_misc_flags |= CMD_MISC__NO_CHK_ELONG;
-                     result->cmd.cmd_assume.assumption = cr_none;
-                  }
-                  result->cmd.parseptr = cp1;
-                  result->cmd.callspec = call1;
-                  result->cmd.cmd_final_flags = conc1;
-                  result->cmd.prior_elongation_bits = remember_elongation;
-
-                  if ((DFM1_CPLS_UNLESS_SINGLE & this_mod1) && !(new_final_concepts & INHERITFLAG_SINGLE))
-                     result->cmd.cmd_misc_flags |= CMD_MISC__DO_AS_COUPLES;
-
-                  do_call_in_series(
-                     result,
-                     DFM1_ROLL_TRANSPARENT & this_mod1,
-                     !(ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX) &&
-                        !(new_final_concepts & (INHERITFLAG_12_MATRIX | INHERITFLAG_16_MATRIX)),
-                     qtf);
-               }
-
-               /* We allow expansion on the first part, and then shut it off for later parts.
-                  This is required for things like 12 matrix grand swing thru from a 1x8 or 1x10. */
-               ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
-
-               /* This really isn't right.  It is done in order to make "ENDS FINISH set back" work.
-                  The flaw is that, if the sequentially defined call "FINISH set back" had more than one
-                  part, we would be OR'ing the bits from multiple parts.  What would it mean?  The bits
-                  we are interested in are the "demand_lines" and "force_lines" stuff.  I guess we should
-                  take the "demand" bits from the first part and the "force" bits from the last part.  Yuck! */
-
-               /* The claim is that the following code removes the above problem.  The test is "ends 2/3 chisel thru".
-                  Below, we will pick up the concentricity flags from the last subcall. */
-
-               ss->cmd.cmd_misc_flags |= result->cmd.cmd_misc_flags & ~DFM1_CONCENTRICITY_FLAG_MASK;
-
-               current_number_fields = saved_number_fields;
-
-               qtf = FALSE;
-
-               new_final_concepts &= ~(FINAL__SPLIT | FINAL__SPLIT_SQUARE_APPROVED | FINAL__SPLIT_DIXIE_APPROVED);
-
-               subcall_index += subcall_incr;
-               first_call = FALSE;
-
-               /* If we are being asked to do just one part of a call (from cmd_frac_flags),
-                  exit now.  Also, see if we just did the last part. */
-
-               if (ss->cmd.cmd_frac_flags && instant_stop != 99) {
-                  /* Check whether we honored the last possible request.  That is,
-                     whether we did the last part of the call in forward order, or
-                     the first part in reverse order. */
-                  result->result_flags |= RESULTFLAG__PARTS_ARE_KNOWN;
-                  if (instant_stop >= highlimit)
-                     result->result_flags |= RESULTFLAG__DID_LAST_PART;
-                  break;
-               }
-            }
-
-            /* Pick up the concentricity command stuff from the last thing we did, but take out the effect of "splitseq". */
-
-            ss->cmd.cmd_misc_flags |= result->cmd.cmd_misc_flags;
-            ss->cmd.cmd_misc_flags &= ~CMD_MISC__MUST_SPLIT;
+            do_sequential_call(ss, callspec, qtfudged, new_final_concepts, &mirror, result);
          }
          else {
             setup_command foo1, foo2;
             uint32 temp_concepts, conc1, conc2;
+            parse_block *cp1, *cp2;
+            callspec_block *call1, *call2;
+            parse_block *parseptr = ss->cmd.parseptr;
 
             /* Must be some form of concentric. */
 
@@ -2144,7 +2423,7 @@ that probably need to be put in. */
 
             /* Fudge a 3x4 into a 1/4-tag if appropriate. */
 
-            if (ss->kind == s3x4 && (callspec->callflags1 & CFLAG1_FUDGE_TO_Q_TAG) &&
+            if (ss->kind == s3x4 && (callflags1 & CFLAG1_FUDGE_TO_Q_TAG) &&
                   (the_schema == schema_concentric || the_schema == schema_cross_concentric)) {
 
                if (ss->people[0].id1) {
@@ -2179,7 +2458,7 @@ that probably need to be put in. */
                ss->kind = s_qtag;
                ss->cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
             }
-            else if (ss->kind == s_qtag && (callspec->callflags1 & CFLAG1_FUDGE_TO_Q_TAG) &&
+            else if (ss->kind == s_qtag && (callflags1 & CFLAG1_FUDGE_TO_Q_TAG) &&
                   the_schema == schema_conc_triple_lines) {
                /* Or change from qtag to 3x4 if schema requires same. */
                (void) copy_person(ss, 11, ss, 7);
@@ -2282,19 +2561,55 @@ extern void move(
       fail("There is a bug in 4 way canonicalization -- please report this sequence.");
 
    if (ss->cmd.cmd_misc_flags & CMD_MISC__DO_AS_COUPLES) {
+      /* If we have a pending "centers/ends work <concept>" concept,
+         we must dispose of it the crude way. */
+
+      if (ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_USE) {
+         punt_centers_use_concept(ss, result);
+         return;
+      }
+
       ss->cmd.cmd_misc_flags &= ~CMD_MISC__DO_AS_COUPLES;
       tandem_couples_move(ss, selector_uninitialized, 0, 0, 0, 1, result);
       return;
    }
 
    if (ss->cmd.callspec) {
+#ifdef CLEAN_CALLSPEC
+      fail("We got a callspec.\n");
+#else
+      /* This next thing shouldn't happen -- we shouldn't have a call in place when
+         there is a pending "centers/ends work <concept>" concept, since that concept should be next. */
+      if (ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_USE) {
+         punt_centers_use_concept(ss, result);
+         return;
+      }
       move_with_real_call(ss, qtfudged, result);
       return;
+#endif
    }
+
+
+
+
+
+
+
 
    /* Scan the "final" concepts, remembering them and their end point. */
    last_magic_diamond = 0;
-   parseptrcopy = process_final_concepts(parseptr, TRUE, &new_final_concepts);
+
+   /* But if we have a pending "centers/ends work <concept>" concept, don't. */
+
+   if (ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_USE) {
+      new_final_concepts = 0;
+      parseptrcopy = skip_one_concept(ss->cmd.parseptr);
+      parseptrcopy = parseptrcopy->next;    /* It is now after the subject concept. */
+      parseptrcopy = process_final_concepts(parseptrcopy, TRUE, &new_final_concepts);
+   }
+   else {
+      parseptrcopy = process_final_concepts(parseptr, TRUE, &new_final_concepts);
+   }
 
    saved_magic_diamond = last_magic_diamond;
 
@@ -2310,13 +2625,31 @@ extern void move(
       /* There are no "non-final" concepts.  The only concepts are the final ones that
          have been encoded into new_final_concepts. */
 
-      /* We must read the selector out of the concept list and use it for this call to "move".
-         We are effectively using it as an argument to "move", with all the care that must go
-         into invocations of recursive procedures.  However, at its point of actual use, it
-         must be in a global variable.  Therefore, we explicitly save and restore that
-         global variable (in a dynamic variable local to this instance) rather than passing
-         it as an explicit argument.  By saving it and restoring it in this way, we make
-         things like "checkpoint bounce the beaus by bounce the belles" work. */
+      /* We must read the selector, direction, and number out of the concept list and use them
+         for this call to "move".  We are effectively using them as arguments to "move",
+         with all the care that must go into invocations of recursive procedures.  However,
+         at their point of actual use, they must be in global variables.  Therefore, we
+         explicitly save and restore those global variables (in dynamic variables local to this
+         instance) rather than passing them as explicit arguments.  By saving them and restoring
+         them in this way, we make things like "checkpoint bounce the beaus by bounce the belles" work. */
+
+
+
+
+
+      if (ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_USE) {
+         if (parseptrcopy->call->schema != schema_concentric) {
+            punt_centers_use_concept(ss, result);
+            return;
+         }
+
+         ss->cmd.skippable_concept = ss->cmd.parseptr;
+      }
+
+
+
+
+
 
       current_selector = parseptrcopy->selector;
       current_direction = parseptrcopy->direction;
@@ -2332,13 +2665,21 @@ extern void move(
    else {
       /* We now know that there are "non-final" (virtual setup) concepts present. */
 
+      /* If we have a pending "centers/ends work <concept>" concept,
+         we must dispose of it the crude way. */
+
+      if (ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_USE) {
+         punt_centers_use_concept(ss, result);
+         return;
+      }
+
       /* These are the concepts that we are interested in. */
 
       check_concepts = new_final_concepts & ~FINAL__MUST_BE_TAG;
 
       result->result_flags = 0;
 
-      if (check_concepts == 0 || check_concepts == INHERITFLAG_REVERSE) {
+      if ((check_concepts & ~(INHERITFLAG_REVERSE|INHERITFLAG_LEFT|INHERITFLAG_GRAND|INHERITFLAG_CROSS|INHERITFLAG_SINGLE)) == 0) {
          /* Look for virtual setup concept that can be done by dispatch from table, with no
             intervening final concepts. */
    
@@ -2346,11 +2687,9 @@ extern void move(
          ss->cmd.cmd_final_flags = new_final_concepts;
 
          /* We know that ss->callspec is null. */
-         /* We do not know that ss->cmd.cmd_final_flags is null.  It may contain
-            FINAL__MUST_BE_TAG and/or INHERITFLAG_REVERSE.  The code for doing hairy
-            concepts used to just ignore those, passing zero for the final commands.
-            This may be a bug.  In any case, we have now preserved even those two flags
-            in the cmd_final_flags, so things can possibly get better. */
+         /* ss->cmd.cmd_final_flags may contain
+            FINAL__MUST_BE_TAG and/or one of the modifiers (reverse/left/grand/cross/single)
+            listed above.  do_big_concept will take care of the latter. */
 
          if (do_big_concept(ss, result)) {
             canonicalize_rotation(result);
@@ -2360,7 +2699,7 @@ extern void move(
 
       clear_people(result);
 
-      if (ss->cmd.cmd_misc_flags & CMD_MISC__CENTRAL_MASK)
+      if (ss->cmd.cmd_misc2_flags & CMD_MISC2__CENTRAL_MASK)
          fail("Can't do \"central/snag/mystic\" followed by another concept or modifier.");
 
       /* Some final concept (e.g. "magic") is present in front of our virtual setup concept.

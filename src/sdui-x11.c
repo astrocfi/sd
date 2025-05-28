@@ -27,6 +27,7 @@ static char *id="@(#)$He" "ader: Sd: sdui-x11.c  " UI_VERSION_STRING "    gildea
 
 /* This file defines the following functions:
    uims_process_command_line
+   uims_display_help
    uims_version_string
    uims_preinitialize
    uims_create_menu
@@ -42,6 +43,7 @@ static char *id="@(#)$He" "ader: Sd: sdui-x11.c  " UI_VERSION_STRING "    gildea
    uims_do_neglect_popup
    uims_do_selector_popup
    uims_do_direction_popup
+   uims_do_circcer_popup
    uims_do_tagger_popup
    uims_get_number_fields
    uims_do_modifier_popup
@@ -74,6 +76,7 @@ static char *id="@(#)$He" "ader: Sd: sdui-x11.c  " UI_VERSION_STRING "    gildea
 #include <X11/Xaw/AsciiText.h>
 
 Private Cstring *tagger_menu_list[4];
+Private Cstring *circcer_menu_list;
 
 Private Widget toplevel, cmdmenu, conceptspecialmenu;
 Private Widget conceptpopup, conceptlist;
@@ -556,7 +559,7 @@ typedef struct _SdResources {
     String abort_query;
     String modify_format;
     String modify_tag_format;
-    String modify_scoot_format;
+    String modify_circ_format;
     String modify_line_two;
     String outfile_format;
     String header_format;
@@ -568,6 +571,7 @@ typedef struct _SdResources {
     String selector_title;
     String direction_title;
     String tagger_title;
+    String circcer_title;
 } SdResources;
 
 Private SdResources sd_resources;
@@ -638,7 +642,7 @@ Private XtResource confirm_resources[] = {
     MENU("abort", abort_query, "Do you really want to abort this sequence?"),
     MENU("modifyFormat", modify_format, "The \"%s\" can be replaced."),
     MENU("modifyTagFormat", modify_tag_format, "The \"%s\" can be replaced with a tagging call."),
-    MENU("modifyScootFormat", modify_scoot_format, "The \"%s\" can be replaced with a scoot/tag (chain thru) (and scatter)."),
+    MENU("modifyCircFormat", modify_circ_format, "The \"%s\" can be replaced with a modified circulate-like call."),
     MENU("modifyLineTwo", modify_line_two, "Do you want to replace it?")
 };
 
@@ -656,6 +660,7 @@ Private XtResource choose_resources[] = {
     MENU("who", selector_title, "  Who?  "),
     MENU("direction", direction_title, "Direction?"),
     MENU("tagger", tagger_title, "Tagging call?"),
+    MENU("circcer", circcer_title, "Circulate replacement?"),
     MENU("howMany", quantifier_title, "How many?")
 };
 
@@ -718,16 +723,44 @@ static long_boolean ui_started = FALSE;
 extern void
 uims_process_command_line(int *argcp, char **argvp[])
 {
-    char **argv = *argvp;
+   int i;
+   int argno = 1;
+   char **argv = *argvp;
 
-    program_name = argv[0];
-    toplevel = XtAppInitialize(&xtcontext, "Sd", NULL, 0, argcp, argv,
+   /* First, ignore any switches that could be relevant to sdtty
+      but meaningless to us. */
+
+   while (argno < (*argcp)) {
+      if (strcmp(argv[argno], "-no_line_delete") == 0) ;
+      else if (strcmp(argv[argno], "-no_cursor") == 0) ;
+      else if (strcmp(argv[argno], "-no_graphics") == 0) ;
+      else if (strcmp(argv[argno], "-lines") == 0 && argno+1 < (*argcp)) {
+         (*argcp) -= 2;      /* Remove two arguments from the list. */
+         for (i=argno+1; i<=(*argcp); i++) argv[i-1] = argv[i+1];
+         continue;
+      }
+      else {
+         argno++;
+         continue;
+      }
+
+      (*argcp)--;      /* Remove this argument from the list. */
+      for (i=argno+1; i<=(*argcp); i++) argv[i-1] = argv[i];
+   }
+
+   program_name = argv[0];
+   toplevel = XtAppInitialize(&xtcontext, "Sd", NULL, 0, argcp, argv,
 			       fallback_resources, NULL, 0);
-    XtGetApplicationResources(toplevel, (XtPointer) &sd_resources,
+   XtGetApplicationResources(toplevel, (XtPointer) &sd_resources,
 			      top_level_resources, XtNumber(top_level_resources),
 			      NULL, 0);
-    (void) strncpy(outfile_string, sd_resources.sequence, MAX_FILENAME_LENGTH);
-    database_filename = sd_resources.database;
+   (void) strncpy(outfile_string, sd_resources.sequence, MAX_FILENAME_LENGTH);
+   database_filename = sd_resources.database;
+}
+
+extern void uims_display_help(void)
+{
+   printf("\nIn addition, the usual X window system flags are supported.\n");
 }
 
 /*
@@ -1161,6 +1194,14 @@ uims_postinitialize(void)
       tagger_menu_list[i][number_of_taggers[i]] = (Cstring) 0;
    }
 
+   /* And the circcer lists. */
+   circcer_menu_list = (Cstring *) get_mem((number_of_circcers+1) * sizeof(char *));
+
+   for (k=0; k<number_of_circcers; k++)
+      circcer_menu_list[k] = tagger_calls[i][k]->menu_name;
+
+   circcer_menu_list[number_of_circcers] = (Cstring) 0;
+
     /* initialize our special empty call menu */
     call_menu_lists[call_list_empty] = empty_menu;
     number_of_calls[call_list_empty] = 0;
@@ -1536,8 +1577,8 @@ extern int uims_do_modifier_popup(Cstring callname, modify_popup_kind kind)
      case modify_popup_only_tag:
        line_format = sd_resources.modify_tag_format;
        break;
-     case modify_popup_only_scoot:
-       line_format = sd_resources.modify_scoot_format;
+     case modify_popup_only_circ:
+       line_format = sd_resources.modify_circ_format;
        break;
    }
    (void) sprintf(modifier_question, line_format, callname);
@@ -1685,6 +1726,14 @@ uims_do_direction_popup(void)
 {
     /* We skip the zeroth direction, which is direction_uninitialized. */
     int t = choose_popup(sd_resources.direction_title, &direction_names[1]);
+    if (t==0) return POPUP_DECLINE;
+    return t;
+}    
+
+
+extern int uims_do_circcer_popup(void)
+{
+    int t = choose_popup(sd_resources.circcer_title, circcer_menu_list);
     if (t==0) return POPUP_DECLINE;
     return t;
 }    
