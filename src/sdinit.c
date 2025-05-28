@@ -47,10 +47,10 @@ Private char **global_main_call_name_list;
 #define SOUT(x) (d_south|(x)<<6)
 
 /* In all of these setups in which people are facing, they are normal couples.  This makes initialization of things like star thru,
-   ladies chain, and curlique work. */
+   ladies chain, and curlique work.  The setup for starting DPT has the appropriate sex for triple star thru. */
 Private setup test_setup_1x8  = {s1x8, 0, {0}, {{NORT(6), SB}, {SOUT(5), HG}, {SOUT(4), HB}, {NORT(7), SG}, {SOUT(2), SB}, {NORT(1), HG}, {NORT(0), HB}, {SOUT(3), SG}}, 0};
 Private setup test_setup_l1x8 = {s1x8, 0, {0}, {{SOUT(6), SB}, {NORT(5), HG}, {NORT(4), HB}, {SOUT(7), SG}, {NORT(2), SB}, {SOUT(1), HG}, {SOUT(0), HB}, {NORT(3), SG}}, 0};
-Private setup test_setup_dpt  = {s2x4, 0, {0}, {{EAST(6), SB}, {EAST(4), HB}, {WEST(5), HG}, {WEST(7), SG}, {WEST(2), SB}, {WEST(0), HB}, {EAST(1), HG}, {EAST(3), SG}}, 0};
+Private setup test_setup_dpt  = {s2x4, 0, {0}, {{EAST(3), SG}, {EAST(4), HB}, {WEST(5), HG}, {WEST(2), SB}, {WEST(7), SG}, {WEST(0), HB}, {EAST(1), HG}, {EAST(6), SB}}, 0};
 Private setup test_setup_cdpt = {s2x4, 0, {0}, {{WEST(7), SG}, {WEST(5), HG}, {EAST(4), HB}, {EAST(6), SB}, {EAST(3), SG}, {EAST(1), HG}, {WEST(0), HB}, {WEST(2), SB}}, 0};
 Private setup test_setup_rcol = {s2x4, 0, {0}, {{EAST(6), SB}, {EAST(5), HG}, {EAST(4), HB}, {EAST(7), SG}, {WEST(2), SB}, {WEST(1), HG}, {WEST(0), HB}, {WEST(3), SG}}, 0};
 Private setup test_setup_lcol = {s2x4, 0, {0}, {{WEST(6), SB}, {WEST(5), HG}, {WEST(4), HB}, {WEST(7), SG}, {EAST(2), SB}, {EAST(1), HG}, {EAST(0), HB}, {EAST(3), SG}}, 0};
@@ -143,6 +143,13 @@ Private void create_call_name_list(void)
 
                   p = temp_ptr+templength;
                   string_copy(&p, "<N/4>");
+                  templength = p - temp_ptr;
+               }
+               else if (c == 'u') {
+                  char *p;
+
+                  p = temp_ptr+templength;
+                  string_copy(&p, "<Nth>");
                   templength = p - temp_ptr;
                }
                else if (c == '7' || c == 'n' || c == 'j') {

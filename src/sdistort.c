@@ -34,13 +34,13 @@
 
 Private void innards(
    setup *ss,
-   map_thing *maps,
+   Const map_thing *maps,
    long_boolean recompute_id,
    setup *x,
    setup *result)
 {
    int i;
-   map_thing *final_map;
+   Const map_thing *final_map;
    map_hunk *hunk;
    setup z[4];
 
@@ -318,7 +318,7 @@ Private void innards(
 
 extern void divided_setup_move(
    setup *ss,
-   map_thing *maps,
+   Const map_thing *maps,
    phantest_kind phancontrol,
    long_boolean recompute_id,
    setup *result)
@@ -452,7 +452,7 @@ extern void divided_setup_move(
 
 
 
-extern void overlapped_setup_move(setup *ss, map_thing *maps,
+extern void overlapped_setup_move(setup *ss, Const map_thing *maps,
    int m1, int m2, int m3, setup *result)
 {
    int i, j;
@@ -522,7 +522,7 @@ extern void do_phantom_2x4_concept(
 
    int linesp = parseptr->concept->value.arg2;
    int rot = (global_tbonetest ^ linesp ^ 1) & 1;
-   map_thing *maps = parseptr->concept->value.maps;
+   Const map_thing *maps = parseptr->concept->value.maps;
 
    /* If this was phantom columns, we allow stepping to a wave.  This makes it
       possible to do interesting cases of turn and weave, when one column
@@ -556,10 +556,8 @@ extern void do_phantom_2x4_concept(
 
          if (maps == &map_stagger && parseptr->concept->value.arg1 == phantest_only_one) {
             if (global_livemask != 0x2D2D && global_livemask != 0xD2D2) {
-               parse_block fakething = *parseptr;
-               fakething.concept->value.arg2 = disttest_any;
                warn(warn__not_on_block_spots);
-               distorted_move(ss, &fakething, result);
+               distorted_move(ss, parseptr, disttest_any, result);
                return;
             }
          }
@@ -609,6 +607,7 @@ extern void do_phantom_2x4_concept(
 
    ss->rotation += rot;   /* Just flip the setup around and recanonicalize. */
    canonicalize_rotation(ss);
+
    divided_setup_move(ss, maps,
          (phantest_kind) parseptr->concept->value.arg1, TRUE, result);
    result->rotation -= rot;   /* Flip the setup back. */
@@ -949,6 +948,7 @@ Private long_boolean search_row(
 extern void distorted_move(
    setup *ss,
    parse_block *parseptr,
+   disttest_kind disttest,
    setup *result)
 {
 
@@ -957,7 +957,8 @@ extern void distorted_move(
    arg1 =
       0 - user claims this is some kind of columns
       1 - user claims this is some kind of lines
-   arg2 =
+   disttest (usually just the arg2 field from the concept,
+            but may get fudged for random bigblock/stagger) =
       disttest_offset - user claims this is offset lines/columns
       disttest_z      - user claims this is Z lines/columns
       disttest_any    - user claims this is distorted lines/columns
@@ -981,7 +982,6 @@ extern void distorted_move(
    int rotate_back = 0;
    int livemask = global_livemask;
    int linesp = parseptr->concept->value.arg1;
-   disttest_kind disttest = (disttest_kind) parseptr->concept->value.arg2;
    long_boolean zlines = TRUE;
 
    if (ss->kind == s4x4) {

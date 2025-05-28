@@ -66,6 +66,8 @@ and the following external variables:
    warning_strings
 */
 
+/* For "sprintf" */
+#include <stdio.h>
 #include <string.h>
 #include "sd.h"
 
@@ -219,7 +221,7 @@ extern void writestuff(Const char s[])
 
 
 
-Private void writestuff_with_decorations(char s[], long_boolean do_number, long_boolean do_selector, int *num_ptr, char *selname)
+Private void writestuff_with_decorations(Const char s[], long_boolean do_number, long_boolean do_selector, int *num_ptr, char *selname)
 {
    Const char *f = s;
 
@@ -456,6 +458,7 @@ char *warning_strings[] = {
    /*  warn__split_phan_in_pgram */   " The split phantom setups are directly adjacent to the real people.",
    /*  warn__bad_interlace_match */   "*The interlaced calls have mismatched lengths.",
    /*  warn__not_on_block_spots  */   " Generalized bigblock/stagger -- people are not on block spots.",
+   /*  warn__canonicalize_bug    */   " There is a bug in 4 way canonicalization -- please report this sequence.",
    /*  warn__did_not_interact    */   "*The setups did not interact with each other."};
 
 /* There are 3 (and only 3) bits that are meaningful in the argument to "print_recurse":
@@ -843,6 +846,12 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
                            writestuff("/4");
                         }
    
+                        number_list >>= 4;    /* Get ready for next number. */
+                        np += 2;              /* skip the indicator */
+                        break;
+                     case 'u':     /* Need to plug in an ordinal number. */
+                        write_blank_if_needed();
+                        writestuff(ordinals[(number_list & 0xF)-1]);
                         number_list >>= 4;    /* Get ready for next number. */
                         np += 2;              /* skip the indicator */
                         break;
@@ -1291,7 +1300,7 @@ extern void display_initial_history(int upper_limit, int num_pics)
 
 extern void write_history_line(int history_index, Const char *header, long_boolean picture, file_write_flag write_to_file)
 {
-   int index, w;
+   int index, w, i;
    parse_block *thing;
 
    if (write_to_file == file_write_double)
@@ -1299,9 +1308,17 @@ extern void write_history_line(int history_index, Const char *header, long_boole
 
    index = history[history_index].centersp;
 
-   if (header) {
-      writestuff(header);
+#ifndef OLD_WAY
+   i = history_index-whole_sequence_low_lim+1;
+   if (header) writestuff(header);   /* Be sure we get it for partially entered concepts -- this line will go away. */
+   else if (i > 0 && !diagnostic_mode) {   /* For now, don't do this if diagnostic, until we decide whether it is permanent. */
+      char indexbuf[200];
+      sprintf(indexbuf, "%d:   ", i);
+      writestuff(indexbuf);
    }
+#else
+   if (header) writestuff(header);
+#endif
 
    if (index != 0) {
       if (startinfolist[index].into_the_middle) goto morefinal;

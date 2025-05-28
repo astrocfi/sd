@@ -1010,6 +1010,8 @@ Private map_thing map_ov_qtag_2 = {{0, 1, 15, 14, 10, 11, 12, 13},    {1, 2, 6, 
         map_thing map_trngl_box1        = {{1, 2, -1, 0},                  {0},                         {0, 1}, {0}, MPKIND__NONE,        1,  s_trngl, s2x2,     0x000, 0};
         map_thing map_trngl_box2        = {{1, 2, 0, -1},                  {0},                         {0, 1}, {0}, MPKIND__NONE,        1,  s_trngl, s2x2,     0x000, 0};
 
+        map_thing map_inner_box         = {{2, 3, 4, 5, 10, 11, 12, 13},   {0},                            {0}, {0}, MPKIND__NONE,        1,  s2x8,   s2x4,      0x000, 0};
+
 /* For maps with arity 1, a nonzero item in map3[0] means that the "offset goes away" warning should be given in certain cases. */
 /* For maps with arity 3, a nonzero item in map4[0] means that the "overlap goes away" warning should be given in certain cases. */
 
@@ -1027,6 +1029,20 @@ Private map_thing map_rh_s2x4_2         = {{0, 1, 2, 3, 8, 9, 10, 11},   {20, 21
 Private map_thing map_rh_s1x4_3         = {{11, 10, 8, 9},                 {2, 3, 5, 4},                   {0}, {0}, MPKIND__OFFS_R_HALF, 2,  s2x6,   s1x4,      0x000, 1};
 Private map_thing map_rh_s2x2_2         = {{0, 1, 11, 10},                 {5, 4, 6, 7},                   {0}, {0}, MPKIND__OFFS_R_HALF, 2,  s3x4,   s2x2,      0x000, 0};
 Private map_thing map_rh_s2x2_3         = {{1, 11, 10, 0},                 {4, 6, 7, 5},                   {0}, {0}, MPKIND__OFFS_R_HALF, 2,  s3x4,   s2x2,      0x005, 0};
+
+
+
+
+        map_thing map_lz12     = {{10, 9},              {1, 11},              {5, 7},               {3, 4},          MPKIND__NONE,        4,  s3x4,   s_1x2,     0x055, 0};
+        map_thing map_rz12     = {{0, 10},              {11, 8},              {2, 5},               {4, 6},          MPKIND__NONE,        4,  s3x4,   s_1x2,     0x055, 0};
+        map_thing map_lof12             = {{10, 11, 8, 9},                 {2, 3, 4, 5},                   {0}, {0}, MPKIND__NONE,        2,  s3x4,   s2x2,      0x000, 0};
+        map_thing map_rof12             = {{0, 1, 11, 10},                 {5, 4, 6, 7},                   {0}, {0}, MPKIND__NONE,        2,  s3x4,   s2x2,      0x000, 0};
+        map_thing map_lof16             = {{9, 11, 6, 8},                  {14, 0, 1, 3},                  {0}, {0}, MPKIND__NONE,        2,  s4x4,   s2x2,      0x000, 0};
+        map_thing map_rof16             = {{12, 13, 15, 10},               {7, 2, 4, 5},                   {0}, {0}, MPKIND__NONE,        2,  s4x4,   s2x2,      0x000, 0};
+
+
+
+
 Private map_thing map_rh_s2x4_0         = {{2, 3, 4, 5, 8, 9, 10, 11},     {0},                            {0}, {0}, MPKIND__OFFS_R_HALF, 1,  s2x6,   s2x4,      0x000, 0};
 Private map_thing map_rh_s2x4_1         = {{0, 1, 5, 4, 6, 7, 11, 10},     {0},                            {0}, {0}, MPKIND__OFFS_R_HALF, 1,  s3x4,   s2x4,      0x000, 1};
 Private map_thing map_rh_s1x8_0         = {{0, 1, 2, 3, 4, 5, 6, 7},       {0},                            {1}, {0}, MPKIND__OFFS_R_HALF, 1,  s1x8,   s1x8,      0x000, 0};

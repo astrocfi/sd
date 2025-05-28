@@ -297,10 +297,68 @@ extern void open_file(void)
 
    file_error = FALSE;
 
+/* If not on a PC, things are fairly simple.  We open the file in "append"
+   mode, thankful that we have escaped one of the most monumentally stupid
+   pieces of OS system design ever to plague the universe, and only need to
+   deal with Un*x, which is merely one of the most monumentally stupid
+   pieces of OS system design ever to plague this galaxy. */
+
+#if !defined(MSDOS)
+
+   if (!(fildes = fopen(outfile_string, "a"))) {
+      (void) strncpy(fail_errstring, get_errstring(), MAX_ERR_LENGTH);
+      (void) strncpy(fail_message, "open", MAX_ERR_LENGTH);
+      file_error = TRUE;
+      return;
+   }
+
+   /* We are positioned at the end, because that's what "a" mode does. */
+
+   this_file_position = ftell(fildes);
+
+   if ((last_file_position != -1) && (last_file_position != this_file_position)) {
+      writestuff("Warning -- file has been modified since last sequence.");
+      newline();
+      newline();
+   }
+
+#else
+
    /* We need to find out whether there are garbage characters (e.g. ^Z)
       near the end of the existing file, and remove same.  Such things
       have been known to be placed in files by some programs running on PC's.
-      So we open in "r+" mode first, and look around. */
+      
+      Furthermore, some PC print software stops printing when it encounters
+      one, so we have to get rid of it.
+
+      But wait!  The OS is so convinced that it knows better than we what
+      should be in a file, that, in addition to silently putting in this
+      character and making the print software silently ignore everything
+      in the file that occurs after it, IT MAKES IT INVISIBLE TO US!!!!!
+      WE CAN'T EVEN SEE THE %$%^#%^@&*$%^#!@ CONTROL Z!!!!!!
+      That is, the system won't let us see it if we open the file in
+      the usual "text" mode.  It knows we couldn't possibly be interested
+      in a character whose meaning is so trivial that it does nothing
+      more than make it impossible to print a file.
+
+      So we thank our lucky stars that the system is watching out for our
+      interests in this way and making life simple and convenient for us,
+      and we open the file in "binary" mode.
+
+      The difference between "text" and "binary" mode for an open file is
+      sometimes obscure.  It's good to know that we have discovered its
+      significance on this system.
+
+      So we open in "rb+" mode, and look around for ^Z characters. */
+
+
+
+
+   /* But first, it is an observed fact that, if we open a file in binary
+      mode, and the file gets created because of that, some garbage header
+      bytes get written to it.  So, we don't open it in binary mode until
+      we have determined that it already exists.  I'm not making this up,
+      you know.  It really behaves that badly. */
 
    if (!(fildes = fopen(outfile_string, "r+"))) {
 
@@ -315,11 +373,30 @@ extern void open_file(void)
          return;
       }
 
+      this_file_position = ftell(fildes);
+   
+      if ((last_file_position != -1) && (last_file_position != this_file_position)) {
+         writestuff("Warning -- file has been modified since last sequence.");
+         newline();
+         newline();
+      }
+
       /* We are positioned at the end, because that's what "a" mode does. */
-      goto just_append;
+      goto really_just_append;
    }
 
-   /* The file exists, and we have opened it in "r+" mode.  Look at its end. */
+   /* Now that we know that the file exists, open it in binary mode. */
+
+   (void) fclose(fildes);
+
+   if (!(fildes = fopen(outfile_string, "rb+"))) {
+      (void) strncpy(fail_errstring, get_errstring(), MAX_ERR_LENGTH);
+      (void) strncpy(fail_message, "open", MAX_ERR_LENGTH);
+      file_error = TRUE;
+      return;
+   }
+
+   /* The file exists, and we have opened it in "rb+" mode.  Look at its end. */
 
    if (fseek(fildes, -4, SEEK_END)) {
       /* It isn't 4 characters long -- forget it.  But first, position at the end. */
@@ -364,6 +441,42 @@ extern void open_file(void)
       newline();
       newline();
    }
+
+   /* But wait!!!!  There's more!!!!  On a PC, we can't write to the stream
+      if it was opened in "binary" mode!  Don't ask me why, the standards
+      documents clearly say that it is legal.  It is simply an observed
+      fact that it doesn't work.
+
+      So we remember our seek position, close the file, reopen it in "text"
+      mode (that is "r+"), and seek back to that spot. */
+
+   (void) fclose(fildes);
+   if (!(fildes = fopen(outfile_string, "r+"))) {
+      (void) strncpy(fail_errstring, get_errstring(), MAX_ERR_LENGTH);
+      (void) strncpy(fail_message, "open", MAX_ERR_LENGTH);
+      file_error = TRUE;
+      return;
+   }
+
+   if (fseek(fildes, i-4, SEEK_END)) {
+      (void) fclose(fildes);     /* What happened????? */
+      (void) strncpy(fail_errstring, get_errstring(), MAX_ERR_LENGTH);
+      (void) strncpy(fail_message, "seek", MAX_ERR_LENGTH);
+      file_error = TRUE;
+      return;
+   }
+
+   /* One remaining question.  Will the system allow us to seek in a
+      text file to a point that we determined while it was opened in
+      binary?  Will it figure out some way to prevent us from backing up
+      over that ^Z?  Will it write a ^Z after the seek point?  Will it
+      find some creative way to screw us?
+
+      No.  It actually seems to work.  Aren't computers wonderful? */
+
+   really_just_append:
+
+#endif
 
    if (this_file_position == 0) {
       writestuff("File does not exist, creating it.");

@@ -87,6 +87,7 @@ static char *id="@(#)$He" "ader: Sd: sdui-tty.c "
 #include "sdui-ttu.h"
 
 #define DEL 0x7F
+#define INPUT_TEXTLINE_SIZE 200
 
 /*
  * The total version string looks something like
@@ -107,13 +108,17 @@ uims_version_string(void)
  */
 
 /* not passed as args so refresh_input can be called from signal handler */
-Private char user_input[200];
+Private char user_input[INPUT_TEXTLINE_SIZE+1];
+Private int user_input_size;
 Private char *user_input_prompt;
+Private char *function_key_expansion;
 
 void
 refresh_input(void)
 {
     user_input[0] = '\0';
+    user_input_size = 0;
+    function_key_expansion = (char *) 0;
     clear_line(); /* clear the current line */
     put_line(user_input_prompt);
 }
@@ -129,15 +134,44 @@ get_string_input(char prompt[], char dest[])
 Private int
 get_char_input(void)
 {
-    int c;
+   int c;
+
+   start_expand:
+
+   if (function_key_expansion) {
+      c = *function_key_expansion++;
+      if (c) return c;
+      else function_key_expansion = (char *) 0;
+   }
+
 #ifdef THINK_C			/* Unix or DOS provides its own cursor */
-    putchar('_'); /* a cursor */
+   putchar('_'); /* a cursor */
+   c = get_char();
+   putchar('\b'); putchar(' '); putchar('\b'); /* erase the cursor */
+#else
+   c = get_char();
 #endif
-    c = get_char();
-#ifdef THINK_C
-    putchar('\b'); putchar(' '); putchar('\b'); /* erase the cursor */
-#endif
-    return c;
+
+   if (c == 129)
+      function_key_expansion = "split phantom lines";
+   else if (c == 130)
+      function_key_expansion = "split phantom columns";
+   else if (c == 161)
+      function_key_expansion = "interlocked phantom lines";
+   else if (c == 162)
+      function_key_expansion = "interlocked phantom columns";
+   else if (c == 193)
+      function_key_expansion = "phantom lines";
+   else if (c == 194)
+      function_key_expansion = "phantom columns";
+   else if (c >= 128)
+      c = ' ';
+
+   if (function_key_expansion)
+      goto start_expand;
+
+   return c;
+
 }
   
 /* This tells how many of the last lines currently on the screen contain
@@ -219,7 +253,7 @@ uims_preinitialize(void)
  */
  
 extern void
-uims_add_call_to_menu(call_list_kind cl, int call_menu_index, char name[])
+uims_add_call_to_menu(call_list_kind cl, int call_menu_index, Const char name[])
 {
     matcher_add_call_to_menu(cl, call_menu_index, name);
 }
@@ -235,7 +269,7 @@ uims_add_call_to_menu(call_list_kind cl, int call_menu_index, char name[])
  */
 
 extern void
-uims_finish_call_menu(call_list_kind cl, char menu_name[])
+uims_finish_call_menu(call_list_kind cl, Const char menu_name[])
 {
     call_menu_prompts[cl] = (char *) get_mem(50);  /* *** Too lazy to compute it. */
 
@@ -276,12 +310,14 @@ uims_postinitialize(void)
 Private void
 pack_and_echo_character(int c)
 {
-    char *p = user_input;
+   /* Really should handle error better -- ring the bell,
+      but this is called inside a loop. */
 
-    while (*p) p++;
-    *p++ = c;
-    *p = 0;
-    put_char(c);
+   if (user_input_size < INPUT_TEXTLINE_SIZE) {
+      user_input[user_input_size++] = c;
+      user_input[user_input_size] = '\0';
+      put_char(c);
+   }
 }
 
 /* This tells how many more lines of matches (the stuff we print in response
@@ -415,11 +451,12 @@ get_user_input(char *prompt, int which)
     char *p;
     int c;
     int matches;
-    int n;
     
     user_match.valid = FALSE;
     user_input_prompt = prompt;
     user_input[0] = '\0';
+    user_input_size = 0;
+    function_key_expansion = (char *) 0;
     put_line(user_input_prompt);
 
     for (;;) {
@@ -429,9 +466,10 @@ get_user_input(char *prompt, int which)
         c = get_char_input();
 
         if ((c == '\b') || (c == DEL)) {
-            n = strlen(user_input);
-            if (n > 0) {
-                user_input[n-1] = '\0';
+            if (user_input_size > 0) {
+                user_input_size--;
+                user_input[user_input_size] = '\0';
+                function_key_expansion = (char *) 0;
                 rubout(); /* Update the display. */
             }
             continue;
@@ -508,6 +546,8 @@ get_user_input(char *prompt, int which)
         }
         else if (c == ('U'&'\037')) { /* C-u: kill line */
             user_input[0] = '\0';
+            user_input_size = 0;
+            function_key_expansion = (char *) 0;
             clear_line();           /* Clear the current line */
             put_line(user_input_prompt);    /* Redisplay the prompt. */
         }

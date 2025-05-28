@@ -51,7 +51,7 @@ extern void
 matcher_initialize(long_boolean show_commands_last);
 
 extern void
-matcher_add_call_to_menu(call_list_kind cl, int call_menu_index, char name[]);
+matcher_add_call_to_menu(call_list_kind cl, int call_menu_index, Const char name[]);
     
 extern int
 match_user_input(

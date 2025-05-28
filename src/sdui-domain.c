@@ -420,7 +420,7 @@ extern void uims_postinitialize(void)
 {
    short junk16;
    int j, k, column, popup;
-   char *p;
+   Const char *p;
    dp_$string_desc_t my_text;
    char my_text_text[200];
 
@@ -440,7 +440,7 @@ extern void uims_postinitialize(void)
       while (p[j]) j++;
       menu_things[k].max_len = j;
       menu_things[k].cur_len = j;
-      menu_things[k].chars_p = p;
+      menu_things[k].chars_p = (char *) p;   /* Sorry, we have to cast to non-constant chars. */
    }
 
    dp_$enum_set_choices(task$special_concept_menu, 1, (short) k, menu_things, dp_$true, &status);
@@ -454,7 +454,7 @@ extern void uims_postinitialize(void)
       while (p[j]) j++;
       menu_things[k].max_len = j;
       menu_things[k].cur_len = j;
-      menu_things[k].chars_p = p;
+      menu_things[k].chars_p = (char *) p;   /* Sorry, we have to cast to non-constant chars. */
    }
 
    dp_$enum_set_choices(task$general_concept_menu, 1, (short) k, menu_things, dp_$true, &status);
@@ -470,7 +470,7 @@ extern void uims_postinitialize(void)
             while (p[j]) j++;
             menu_things[k].max_len = j;
             menu_things[k].cur_len = j;
-            menu_things[k].chars_p = p;
+            menu_things[k].chars_p = (char *) p;   /* Sorry, we have to cast to non-constant chars. */
          }
       
          dp_$enum_set_choices(tasklists[popup][column], 1, (short) k, menu_things, dp_$true, &status);

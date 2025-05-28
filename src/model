@@ -1,0 +1,77 @@
+MODEL sd =
+
+   ENVIRONMENT SYSTYPE = 'sys5.3';
+
+   TITLE 'Callers helper';
+
+   SYSTEM '~/sd/system';
+
+   LIBRARY the_libe = '~/sd/src';
+
+   POOL the_pool = '~/sd/pool';
+
+   DEFAULT FOR ?* =
+      @the_libe;
+      SHELL '/com/sh';
+      USE_POOL the_pool;
+   END;
+
+   DEFAULT FOR ?*.c =
+      DEPENDS_SOURCE
+         sd.h @ the_libe;
+         database.h @ the_libe;
+         '/usr/include/malloc.h';
+      DEPENDS_TOOLS
+         '/usr/apollo/lib/cc.m68k';
+      TRANSLATE
+         /usr/apollo/lib/cc.m68k %SOURCE -b %RESULT -type -systype sys5.3 -natural @
+                               -idir ~/sd/src -def HAVE_SYS5                    @
+                               %CR_OPT(-dba) %CR_OPT(-dbs) %CR_OPT(-ndb)        @
+                               %OPTION(-ninfo) %OPTION(-info)                   @
+                               %OPTION(-config) %OPTION(-nalign)                @
+                               %CR_OPT(-cpu) %OPTION(-nwarn)                    @
+                               %OPTION(-comchk) %OPTION(-cond) %OPTION(-subchk) @
+                               %OPTION(-exp) %CR_OPT(-opt)
+      %DONE;
+   END;
+
+   DEPENDS_TOOLS
+      '/com/bind';
+
+   USE_POOL
+      the_pool;
+
+   DEPENDS_SOURCE
+      'sd_dialog_dpd.bin';
+      'sd_debug_dialog_dpd.bin';
+
+   TRANSLATE
+      /com/bind - <<!
+          %RESULT_OF(?*.c).bin
+          sd_dialog_dpd.bin
+      -b sd
+      !
+      /com/bind - <<!
+          %RESULT_OF(?*.c).bin
+          sd_debug_dialog_dpd.bin
+      -b sdebug
+      !
+   %DONE;
+
+   SHELL '//pooh/com/sh';
+
+   DEPENDS_RESULT
+
+    ELEMENT sdui-domain.c @the_libe =
+         DEPENDS_SOURCE
+                '/usr/apollo/include/base.h';
+                '/usr/apollo/include/error.h';
+                '/usr/apollo/include/gpr.h';
+                '/usr/apollo/include/dialog.h';
+                '/usr/include/string.h';
+                sd_dialog.ins.c @ the_libe;
+    END OF sdui-domain.c;
+
+   %INCLUDE '~/sd/sd.ins.sml';
+
+END OF sd;

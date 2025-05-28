@@ -1275,11 +1275,13 @@ extern void concentric_move(
    }
    else {
       result_outer = begin_outer;
-
       if (!(begin_outer_elongation & ~1))
          result_outer.result_flags = begin_outer_elongation+1;
       else
          result_outer.result_flags = 0;   /* Outer people have unknown elongation and aren't moving.  Not good. */
+
+      /* Grab the "did_last_part" flag from the call that was actually done. */
+      result_outer.result_flags |= result_inner[0].result_flags & RESULTFLAG__DID_LAST_PART;
 
       localmodsout1 |= DFM1_CONC_FORCE_SPOTS;      /* Make sure these people go to the same spots. */
       /* Strip out the roll bits -- people who didn't move can't roll. */
@@ -1288,6 +1290,12 @@ extern void concentric_move(
             if (result_outer.people[i].id1) result_outer.people[i].id1 = (result_outer.people[i].id1 & (~ROLL_MASK)) | ROLLBITM;
          }
       }
+   }
+
+   if (!cmdin) {
+      /* Grab the "did_last_part" flags from the call that was actually done. */
+      for (k=0; k<center_arity; k++)
+         result_inner[k].result_flags |= result_outer.result_flags & RESULTFLAG__DID_LAST_PART;
    }
 
    /* If the call was something like "ends detour", the concentricity info was left in the
@@ -1564,9 +1572,11 @@ extern void concentric_move(
                   elongation perpendicular to the original 1x4 or diamond.
                (3) If the "force_otherway" invocation flag is on, meaning the database
                   really wants us to, we set the elongation perpendicular to the original
-                  1x4 or diamond.  *** Actually, it appears that this flag is meaningless
-                  for 1x4/dmd -> 2x2 calls, and the "par_conc_end" does this function
-               (4) Otherwise, we set the elongation to the natural elongation that the people
+                  1x4 or diamond.
+               (4) If the "force_spots" invocation flag is on, meaning the database
+                  really wants us to, we set the elongation parallel to the original
+                  1x4 or diamond.
+               (5) Otherwise, we set the elongation to the natural elongation that the people
                   went to.  This uses the result of the "par_conc_end" flag for 1x4/dmd -> 2x2
                   calls, or the manner in which the setup was divided for calls that were put
                   together from 2-person calls, or whatever.  (For 1x4->2x2 calls, the "par_conc_end"
@@ -1593,6 +1603,8 @@ extern void concentric_move(
 
                final_elongation ^= 1;
             }
+            else if (DFM1_CONC_FORCE_SPOTS & localmods1)
+               ;           /* It's OK the way it is. */
             else {
                /* Get the elongation from the result setup, if possible. */
                unsigned long int newelong = (result_outer.result_flags & 3) - 1;
@@ -1851,6 +1863,30 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
          }
       }
       return;
+   }
+   else if ((res1->kind == s_crosswave) && (res2->kind == s_crosswave) && (r&1)) {
+      result->kind = s_crosswave;
+
+      if ((res2->people[0].id1 | res2->people[4].id1) == 0) {
+         /* Exchange the setups and try again. */
+         setup *temp = res2;
+         res2 = res1;
+         res1 = temp;
+         result->rotation = res2->rotation;
+         r = (res1->rotation - res2->rotation) & 3;
+         rot = r * 011;
+      }
+
+      offs = r * 2;
+
+      if ((res1->people[0].id1 | res1->people[3].id1 | res1->people[4].id1 | res1->people[7].id1) == 0) {
+         *result = *res2;
+         install_rot(result, 5, res1, 0^offs, rot);
+         install_rot(result, 2, res1, 3^offs, rot);
+         install_rot(result, 1, res1, 4^offs, rot);
+         install_rot(result, 6, res1, 7^offs, rot);
+         return;
+      }
    }
    else if (res2->kind == s_c1phan && res1->kind == s2x4) {
       result->kind = s_c1phan;
@@ -2424,6 +2460,58 @@ static Const fixer f2x4ctr = {
    {{1, 2, 5, 6}},
    {{-1}}};
 
+static Const fixer f2x4far = {    /* unsymmetrical */
+   s1x4,
+   s2x4,
+   0,
+   1,
+   (struct fixerjunk *) 0,   /* next1x2    */
+   (struct fixerjunk *) 0,   /* next1x2rot */
+   &f2x4far,                 /* next1x4    */
+   (struct fixerjunk *) 0,   /* next1x4rot */
+   (struct fixerjunk *) 0,   /* next2x2    */
+   {{0, 1, 3, 2}},
+   {{-1}}};
+
+static Const fixer f2x4near = {   /* unsymmetrical */
+   s1x4,
+   s2x4,
+   0,
+   1,
+   (struct fixerjunk *) 0,   /* next1x2    */
+   (struct fixerjunk *) 0,   /* next1x2rot */
+   &f2x4near,                /* next1x4    */
+   (struct fixerjunk *) 0,   /* next1x4rot */
+   (struct fixerjunk *) 0,   /* next2x2    */
+   {{7, 6, 4, 5}},
+   {{-1}}};
+
+static Const fixer f2x4left = {   /* unsymmetrical */
+   s2x2,
+   s2x4,
+   0,
+   1,
+   (struct fixerjunk *) 0,   /* next1x2    */
+   (struct fixerjunk *) 0,   /* next1x2rot */
+   (struct fixerjunk *) 0,   /* next1x4    */
+   (struct fixerjunk *) 0,   /* next1x4rot */
+   &f2x4left,                /* next2x2    */
+   {{0, 1, 6, 7}},
+   {{-1}}};
+
+static Const fixer f2x4right = {  /* unsymmetrical */
+   s2x2,
+   s2x4,
+   0,
+   1,
+   (struct fixerjunk *) 0,   /* next1x2    */
+   (struct fixerjunk *) 0,   /* next1x2rot */
+   (struct fixerjunk *) 0,   /* next1x4    */
+   (struct fixerjunk *) 0,   /* next1x4rot */
+   &f2x4right,               /* next2x2    */
+   {{2, 3, 4, 5}},
+   {{-1}}};
+
 
 
 
@@ -2596,6 +2684,14 @@ extern void so_and_so_only_move(
             fixp = &frigctr;
          else if (the_setups[setupcount].kind == s2x4 && livemask == 0x66)
             fixp = &f2x4ctr;
+         else if (the_setups[setupcount].kind == s2x4 && livemask == 0x0F)  /* unsymmetrical */
+            fixp = &f2x4far;
+         else if (the_setups[setupcount].kind == s2x4 && livemask == 0xF0)  /* unsymmetrical */
+            fixp = &f2x4near;
+         else if (the_setups[setupcount].kind == s2x4 && livemask == 0xC3)  /* unsymmetrical */
+            fixp = &f2x4left;
+         else if (the_setups[setupcount].kind == s2x4 && livemask == 0x3C)  /* unsymmetrical */
+            fixp = &f2x4right;
          else if (indicator >= 6) {
             /* Search for "disconnected" stuff. */
             if (the_setups[setupcount].kind == s1x8 && livemask == 0xAA)

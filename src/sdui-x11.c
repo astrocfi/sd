@@ -70,6 +70,8 @@ static char *time_stamp = "sdui-x11.c Time-stamp: <93/12/04 18:39:21 gildea>";
 #include <X11/Xaw/Dialog.h>
 #include <X11/Xaw/AsciiText.h>
 
+typedef Const char *Cstring;
+
 Private Widget toplevel, cmdmenu, conceptspecialmenu;
 Private Widget conceptpopup, conceptlist;
 Private Widget lview, callview, conceptmenu, callmenu;
@@ -269,7 +271,7 @@ do_popup(Widget popup_shell)
 }    
 
 Private String empty_string = "";
-Private String *concept_popup_list = NULL;
+Private Cstring *concept_popup_list = NULL;
 
 #define USER_GESTURE_NULL -1
 #define SPECIAL_ALLOW_MODS -2
@@ -353,7 +355,7 @@ command_or_menu_chosen(Widget w, XtPointer client_data, XtPointer call_data)
             }
         
             XtVaSetValues(conceptlist, XtNdefaultColumns, maxcolumn, NULL);
-            XawListChange(conceptlist, concept_popup_list, entries, 0, TRUE);
+            XawListChange(conceptlist, (char **) concept_popup_list, entries, 0, TRUE);
             value = do_popup(conceptpopup);
         
             if (value == 0)
@@ -972,7 +974,7 @@ uims_preinitialize(void)
 }
 
 Private void
-add_call_to_menu(String **menu, int call_menu_index, int menu_size, char callname[])
+add_call_to_menu(Cstring **menu, int call_menu_index, int menu_size, Const char callname[])
 {
     if (call_menu_index == 0) {	/* first item in this menu; set it up */
 	*menu = get_mem((unsigned int)(menu_size+1) * sizeof(String *));
@@ -981,11 +983,11 @@ add_call_to_menu(String **menu, int call_menu_index, int menu_size, char callnam
     (*menu)[call_menu_index] = callname;
 }
 
-Private String *concept_menu_list;
+Private Cstring *concept_menu_list;
 Private int concept_menu_len;
 
-Private String *call_menu_lists[NUM_CALL_LIST_KINDS];
-Private String call_menu_names[NUM_CALL_LIST_KINDS];
+Private Cstring *call_menu_lists[NUM_CALL_LIST_KINDS];
+Private Cstring call_menu_names[NUM_CALL_LIST_KINDS];
 
 /*
  * We have been given the name of one call (call number
@@ -994,7 +996,7 @@ Private String call_menu_names[NUM_CALL_LIST_KINDS];
  * The string is guaranteed to be in stable storage.
  */
 extern void
-uims_add_call_to_menu(call_list_kind cl, int call_menu_index, char name[])
+uims_add_call_to_menu(call_list_kind cl, int call_menu_index, Const char name[])
 {
     int menu_num = (int) cl;
 
@@ -1016,9 +1018,9 @@ Private int longest_title_length = 0;
  */
 /* ARGSUSED */
 extern void
-uims_finish_call_menu(call_list_kind cl, char menu_name[])
+uims_finish_call_menu(call_list_kind cl, Const char menu_name[])
 {
-    int name_len = strlen(menu_name);
+    int name_len = strlen((char *) menu_name);
 
     call_menu_names[cl] = menu_name;
 
@@ -1042,7 +1044,7 @@ set_call_menu(call_list_kind call_menu, call_list_kind title)
     int title_num = (int) title;
 
     XtVaSetValues(calltitle, XtNlabel, call_menu_names[title_num], NULL);
-    XawListChange(callmenu, call_menu_lists[menu_num],
+    XawListChange(callmenu, (char **) call_menu_lists[menu_num],
 		  number_of_calls[menu_num], 0, TRUE);
     visible_call_menu = call_menu==title ? call_menu : call_list_none;
 }
@@ -1074,7 +1076,7 @@ widen_viewport(Widget vw, Widget childw)
     XtVaSetValues(childw, XtNcolumnSpacing, scrollwidth+scrollborder, NULL);
 }
 
-Private String empty_menu[] = {NULL};
+Private Cstring empty_menu[] = {NULL};
 
 /* The main program calls this after all the call menus have been created,
    after all calls to uims_add_call_to_menu and uims_finish_call_menu.
@@ -1110,8 +1112,8 @@ uims_postinitialize(void)
      * so it can be sized correctly.
      */
     XawListChange(cmdmenu, sd_resources.cmd_list, NUM_CMD_BUTTON_KINDS, 0, TRUE);
-    XawListChange(conceptspecialmenu, concept_menu_strings, 0, 0, TRUE);
-    XawListChange(conceptmenu, concept_menu_list, concept_menu_len, 0, TRUE);
+    XawListChange(conceptspecialmenu, (char **) concept_menu_strings, 0, 0, TRUE);
+    XawListChange(conceptmenu, (char **) concept_menu_list, concept_menu_len, 0, TRUE);
     set_call_menu (call_list_any, longest_title);
 
     widen_viewport(lview, conceptmenu);
@@ -1136,8 +1138,8 @@ switch_from_startup_mode(void)
     XtRemoveAllCallbacks(cmdmenu, XtNcallback);
     XtAddCallback(cmdmenu, XtNcallback,
 		  command_or_menu_chosen, (XtPointer)ui_command_select);
-    XawListChange(conceptspecialmenu, concept_menu_strings, 0, 0, TRUE);
-    XawListChange(conceptmenu, concept_menu_list, concept_menu_len, 0, TRUE);
+    XawListChange(conceptspecialmenu, (char **) concept_menu_strings, 0, 0, TRUE);
+    XawListChange(conceptmenu, (char **) concept_menu_list, concept_menu_len, 0, TRUE);
 }
 
 Private void
@@ -1176,8 +1178,8 @@ uims_get_command(mode_kind mode, call_list_kind *call_menu)
 	    XtManageChild(callbox); /* nec if mode_resolve now */
 	    XawListChange(cmdmenu, sd_resources.start_list,
 			  NUM_START_SELECT_KINDS, 0, FALSE);
-	    XawListChange(conceptspecialmenu, empty_menu, 0, 0, FALSE);
-	    XawListChange(conceptmenu, empty_menu, 0, 0, FALSE);
+	    XawListChange(conceptspecialmenu, (char **) empty_menu, 0, 0, FALSE);
+	    XawListChange(conceptmenu, (char **) empty_menu, 0, 0, FALSE);
 	    set_call_menu (call_list_empty, call_list_empty);
 	    XtRemoveAllCallbacks(cmdmenu, XtNcallback);
 	    XtAddCallback(cmdmenu, XtNcallback,

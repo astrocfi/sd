@@ -1093,6 +1093,8 @@ In any case, let's try it without this.
          }
       }
    }
+
+   canonicalize_rotation(ss);
 }
 
 

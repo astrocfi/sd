@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990, 1991, 1992, 1993  William B. Ackerman.
+    Copyright (C) 1990-1994  William B. Ackerman.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@
     General Public License if you distribute the file.
 */
 
-#define VERSION_STRING "30.62"
+#define VERSION_STRING "30.73"
 
 /* We cause this string (that is, the concatentaion of these strings) to appear
    in the binary image of the program, so that the "what" and "ident" utilities
@@ -1171,22 +1171,17 @@ void main(int argc, char *argv[])
    
    clear_screen();
 
-   writestuff("SD -- square dance caller's helper.");
-   newline();
-   writestuff("Copyright (c) 1991-1994 William B. Ackerman and Stephen Gildea.");
-   newline();
-   newline();
-   writestuff("SD comes with ABSOLUTELY NO WARRANTY; for details see the license.");
-   newline();
-   writestuff("This is free software, and you are welcome to redistribute it ");
-   writestuff("under certain conditions; for details see the license.");
-   newline();
-   writestuff("You should have received a copy of the GNU General Public License ");
-   writestuff("along with this program, in the file \"COPYING\" or with the manual; if not, write to ");
-   writestuff("the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA ");
-   writestuff("02139, USA.");
-   newline();
-   newline();
+   if (!diagnostic_mode) {
+      writestuff("SD -- square dance caller's helper.");
+      newline();
+      writestuff("Copyright (c) 1991-1994 William B. Ackerman and Stephen Gildea.");
+      newline();
+      newline();
+      writestuff("SD comes with ABSOLUTELY NO WARRANTY; for details see the license.");
+      newline();
+      writestuff("This is free software, and you are welcome to redistribute it.");
+      newline();
+   }
 
    show_banner:
 

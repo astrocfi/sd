@@ -225,7 +225,7 @@ concept_descriptor concept_descriptor_table[] = {
          {"", concept_comment, l_nonexistent_concept},
          {"", concept_comment, l_nonexistent_concept},
    {"TRIPLE BOXES",                          concept_triple_boxes,          l_c1, {0, MPKIND__SPLIT}},
-   {"CONCENTRIC TRIPLE BOXES",               concept_triple_boxes,          l_c1, {0, MPKIND__CONCPHAN}},
+   {"CONCENTRIC TRIPLE BOXES",               concept_triple_boxes,          l_c4, {0, MPKIND__CONCPHAN}},
    {"TRIPLE BOXES WORKING TOGETHER",         concept_triple_boxes_together, l_c3, {0, 6, 0}},
    {"TRIPLE BOXES WORKING APART",            concept_triple_boxes_together, l_c3, {0, 7, 0}},
    {"TRIPLE BOXES WORKING FORWARD",          concept_triple_boxes_together, l_c3, {0, 0, 0}},
@@ -235,7 +235,7 @@ concept_descriptor concept_descriptor_table[] = {
    {"TRIPLE BOXES WORKING CLOCKWISE",        concept_triple_boxes_together, l_c4, {0, 8, 0}},
    {"TRIPLE BOXES WORKING COUNTERCLOCKWISE", concept_triple_boxes_together, l_c4, {0, 9, 0}},
          {"", concept_comment, l_nonexistent_concept},
-         {"", concept_comment, l_nonexistent_concept},
+   {"INNER DUAL BOXES",                      concept_inner_boxes,           l_c4},
          {"", concept_comment, l_nonexistent_concept},
          {"", concept_comment, l_nonexistent_concept},
          {"", concept_comment, l_nonexistent_concept},
@@ -846,7 +846,7 @@ int *concept_size_tables[] = {
    misc_c_sizes,
    0};
 
-char *concept_menu_strings[] = {
+Const char *concept_menu_strings[] = {
    "PHANTOM SETUP concepts",
    "COUPLES/TANDEM concepts",
    "DISTORTED SETUP concepts",

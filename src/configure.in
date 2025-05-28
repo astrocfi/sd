@@ -74,6 +74,18 @@ AC_TEST_CPP([#include "sd.h"], , DEFS="$DEFS -I$srcdir")
 [#] Begin X11 investigation.
 
 AC_FIND_X
+
+
+
+
+echo " ******* here is the stuff ******* "
+echo " ********************************* "
+echo "  $x_includes"
+echo "  $x_libraries"
+echo " ********************************* "
+
+
+
 if test -n "$x_includes"; then
   X11_FLAGS="-I$x_includes"
 fi

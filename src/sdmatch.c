@@ -63,7 +63,7 @@ typedef struct {
 typedef void input_matcher(match_state *sp);
 
 static void add_call_to_menu(char ***menu, int call_menu_index,
-                             int menu_size, char callname[]);
+                             int menu_size, Const char callname[]);
 static void startup_matcher(match_state *sp);
 static void resolve_matcher(match_state *sp);
 static void call_matcher(match_state *sp);
@@ -84,8 +84,8 @@ static long_boolean verify_call(call_list_kind cl, int call_index, selector_kind
 static long_boolean verify_call_with_selector(callspec_block *call, selector_kind sel);
 static long_boolean try_call_with_selector(callspec_block *call, selector_kind sel);
 
-static char *strdup_lower(char *source);
-static void strcpy_lower(char *dest, char *source);
+static char *strdup_lower(Const char *source);
+static void strcpy_lower(char *dest, Const char *source);
 
 /* the following arrays must be coordinated with the sd program */
 
@@ -225,7 +225,7 @@ matcher_initialize(long_boolean show_commands_last)
  */
  
 extern void
-matcher_add_call_to_menu(call_list_kind cl, int call_menu_index, char name[])
+matcher_add_call_to_menu(call_list_kind cl, int call_menu_index, Const char name[])
 {
     int menu_num = (int) cl;
 
@@ -235,7 +235,7 @@ matcher_add_call_to_menu(call_list_kind cl, int call_menu_index, char name[])
 
 static void
 add_call_to_menu(char ***menu, int call_menu_index, int menu_size,
-                 char callname[])
+                 Const char callname[])
 {
     if (call_menu_index == 0) {
         /* first item in this menu; set it up */
@@ -851,16 +851,18 @@ try_call_with_selector(callspec_block *call, selector_kind sel)
 /* Utility */
 
 static char *
-strdup_lower(char *source)
+strdup_lower(Const char *source)
 {
-    char *dest;
-    dest = get_mem(strlen(source) + 1);
-    strcpy_lower(dest, source);
-    return dest;
+   char *dest;
+   /* Unfortunately, the Bozos defining the AES didn't make the argument
+      to strlen a const. */
+   dest = get_mem(strlen((char *) source) + 1);
+   strcpy_lower(dest, source);
+   return dest;
 }
 
 static void
-strcpy_lower(char *dest, char *source)
+strcpy_lower(char *dest, Const char *source)
 {
     while (*dest++ = tolower(*source++));
 }

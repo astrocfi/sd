@@ -492,16 +492,16 @@ typedef enum {
 } mpkind;
 
 typedef struct {
-   veryshort map1[8];
-   veryshort map2[8];
-   veryshort map3[8];
-   veryshort map4[8];
-   mpkind map_kind;
-   int arity;
-   setup_kind outer_kind;
-   setup_kind inner_kind;
-   int rot;
-   int vert;
+   Const veryshort map1[8];
+   Const veryshort map2[8];
+   Const veryshort map3[8];
+   Const veryshort map4[8];
+   Const mpkind map_kind;
+   Const int arity;
+   Const setup_kind outer_kind;
+   Const setup_kind inner_kind;
+   Const int rot;
+   Const int vert;
 } map_thing;
 
 /* BEWARE!!  This list must track the array "concept_table" in sdconcpt.c . */
@@ -591,6 +591,7 @@ typedef enum {
    concept_triple_diamonds_together,
    concept_quad_diamonds,
    concept_quad_diamonds_together,
+   concept_inner_boxes,
    concept_triple_diag,
    concept_triple_diag_together,
    concept_triple_twin,
@@ -635,16 +636,16 @@ typedef enum {
 } concept_kind;
 
 typedef struct {
-   char *name;
-   concept_kind kind;
-   dance_level level;
-   struct {
-      map_thing *maps;
-      int arg1;
-      int arg2;
-      int arg3;
-      int arg4;
-      int arg5;
+   Const char *name;
+   Const concept_kind kind;
+   Const dance_level level;
+   Const struct {
+      Const map_thing *maps;
+      Const int arg1;
+      Const int arg2;
+      Const int arg3;
+      Const int arg4;
+      Const int arg5;
    } value;
 } concept_descriptor;
 
@@ -837,6 +838,7 @@ typedef enum {
    warn__split_phan_in_pgram,
    warn__bad_interlace_match,
    warn__not_on_block_spots,
+   warn__canonicalize_bug,
    warn__did_not_interact
 } warning_index;
 #define NUM_WARNINGS (((int) warn__did_not_interact)+1)
@@ -1248,10 +1250,10 @@ extern char *selector_names[];                                      /* in SDUTIL
 extern char *direction_names[];                                     /* in SDUTIL */
 extern char *warning_strings[];                                     /* in SDUTIL */
 
-extern int global_tbonetest;                                        /* in SDCONCPT */
-extern int global_livemask;                                         /* in SDCONCPT */
-extern int global_selectmask;                                       /* in SDCONCPT */
-extern int global_tboneselect;                                      /* in SDCONCPT */
+extern unsigned int global_tbonetest;                               /* in SDCONCPT */
+extern unsigned int global_livemask;                                /* in SDCONCPT */
+extern unsigned int global_selectmask;                              /* in SDCONCPT */
+extern unsigned int global_tboneselect;                             /* in SDCONCPT */
 extern concept_table_item concept_table[];                          /* in SDCONCPT */
 
 extern concept_descriptor special_magic;                            /* in SDCTABLE */
@@ -1278,7 +1280,7 @@ extern int general_concept_offset;                                  /* in SDCTAB
 extern int general_concept_size;                                    /* in SDCTABLE */
 extern int *concept_offset_tables[];                                /* in SDCTABLE */
 extern int *concept_size_tables[];                                  /* in SDCTABLE */
-extern char *concept_menu_strings[];                                /* in SDCTABLE */
+extern Const char *concept_menu_strings[];                          /* in SDCTABLE */
 
 extern char *getout_strings[];                                      /* in SDTABLES */
 extern char *filename_strings[];                                    /* in SDTABLES */
@@ -1457,8 +1459,8 @@ extern long_boolean close_call_list_file(void);
 
 extern void uims_process_command_line(int *argcp, char ***argvp);
 extern void uims_preinitialize(void);
-extern void uims_add_call_to_menu(call_list_kind cl, int call_menu_index, char name[]);
-extern void uims_finish_call_menu(call_list_kind cl, char menu_name[]);
+extern void uims_add_call_to_menu(call_list_kind cl, int call_menu_index, Const char name[]);
+extern void uims_finish_call_menu(call_list_kind cl, Const char menu_name[]);
 extern void uims_postinitialize(void);
 extern int uims_do_outfile_popup(char dest[]);
 extern int uims_do_comment_popup(char dest[]);
@@ -1574,12 +1576,12 @@ extern void move(
 
 extern void divided_setup_move(
    setup *ss,
-   map_thing *maps,
+   Const map_thing *maps,
    phantest_kind phancontrol,
    long_boolean recompute_id,
    setup *result);
 
-extern void overlapped_setup_move(setup *ss, map_thing *maps,
+extern void overlapped_setup_move(setup *ss, Const map_thing *maps,
    int m1, int m2, int m3, setup *result);
 
 extern void do_phantom_2x4_concept(
@@ -1591,7 +1593,7 @@ extern void phantom_2x4_move(
    setup *ss,
    int lineflag,
    phantest_kind phantest,
-   map_thing *maps,
+   Const map_thing *maps,
    setup *result);
 
 extern void distorted_2x2s_move(
@@ -1602,6 +1604,7 @@ extern void distorted_2x2s_move(
 extern void distorted_move(
    setup *ss,
    parse_block *parseptr,
+   disttest_kind disttest,
    setup *result);
 
 extern void triple_twin_move(

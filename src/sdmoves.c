@@ -31,8 +31,10 @@
 
 extern void canonicalize_rotation(setup *result)
 {
+   result->rotation &= 3;
+
    if (result->kind == s_1x1) {
-      (void) copy_rot(result, 0, result, 0, (result->rotation & 3) * 011);
+      (void) copy_rot(result, 0, result, 0, (result->rotation) * 011);
       result->rotation = 0;
    }
    else if (setup_attrs[result->kind].four_way_symmetry) {
@@ -41,7 +43,7 @@ extern void canonicalize_rotation(setup *result)
       int i, rot, rot11, delta, bigd, i0, i1, i2, i3, j0, j1, j2, j3;
       personrec x0, x1, x2, x3;
 
-      rot = result->rotation & 3;
+      rot = result->rotation;
       if (rot == 0) return;
       rot11 = rot * 011;
       bigd = setup_limits[result->kind] + 1;
@@ -81,7 +83,6 @@ extern void canonicalize_rotation(setup *result)
       result->rotation = 0;
    }
    else if (result->kind == s_trngl4) {
-      result->rotation &= 3;
    }
    else if (result->kind == s_1x3) {
       if (result->rotation & 2) {
@@ -115,8 +116,6 @@ extern void canonicalize_rotation(setup *result)
       }
       result->rotation &= 1;
    }
-   else
-      result->rotation &= 3;
 }
 
 
@@ -352,6 +351,8 @@ extern void do_call_in_series(
       in the "new_final_concepts" word. */
 
    if (normalize) normalize_setup(sss, simple_normalize);
+
+   canonicalize_rotation(sss);
 
    /* To be safe, we should take away the "did last part" bit for the second call, but we are fairly sure
       it won't be on. */
@@ -726,7 +727,7 @@ Private void matrixmove(
    int i, nump, alldelta;
 
    if (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT)
-      fail("Can't do this call 'central' or 'crazy'.");
+      fail("Can't split the setup.");
 
    alldelta = 0;
 
@@ -956,7 +957,7 @@ Private void partner_matrixmove(
    int i, nump;
 
    if (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT)
-      fail("Can't do this call 'central' or 'crazy'.");
+      fail("Can't split the setup.");
 
    if (ss->cmd.cmd_misc_flags & CMD_MISC__DISTORTED)
       fail("This call not allowed in distorted or virtual setup.");
@@ -1354,9 +1355,10 @@ that probably need to be put in. */
       cause splitting to take place. */
 
    if (the_schema == schema_split_sequential) {
-      if (setup_limits[ss->kind] != 7)
-         fail("Need an 8-person setup for this.");
-      ss->cmd.cmd_misc_flags |= CMD_MISC__MUST_SPLIT;
+      if (setup_limits[ss->kind] == 7)
+         ss->cmd.cmd_misc_flags |= CMD_MISC__MUST_SPLIT;
+      else if (setup_limits[ss->kind] != 3)
+         fail("Need a 4 or 8 person setup for this.");
    }
 
    ss->cmd.cmd_final_flags = final_concepts;
@@ -1436,6 +1438,14 @@ that probably need to be put in. */
          result->result_flags = (ss->cmd.prior_elongation_bits & 3) | RESULTFLAG__SPLIT_AXIS_BIT*3;
          break;
       case schema_matrix:
+         /* The "reverse" concept might mean mirror, as in "reverse truck". */
+
+         if ((final_concepts & INHERITFLAG_REVERSE) && (callspec->callflagsh & INHERITFLAG_REVERSE)) {
+            mirror_this(ss);
+            mirror = TRUE;
+            final_concepts &= ~INHERITFLAG_REVERSE;
+         }
+
          if (final_concepts) fail("Illegal concept for this call.");
          matrixmove(ss, callspec, result);
          reinstate_rotation(ss, result);
@@ -1471,7 +1481,7 @@ that probably need to be put in. */
          if ((final_concepts & INHERITFLAG_REVERSE) && (callspec->callflagsh & INHERITFLAG_REVERSE)) {
             /* This "reverse" just means mirror. */
             if (mirror) fail("Can't do this call 'left' and 'reverse'.");
-            if (!mirror) mirror_this(ss);
+            mirror_this(ss);
             mirror = TRUE;
             final_concepts &= ~INHERITFLAG_REVERSE;
          }
@@ -1830,7 +1840,8 @@ that probably need to be put in. */
                   we are interested in are the "demand_lines" and "force_lines" stuff.  I guess we should
                   take the "demand" bits from the first part and the "force" bits from the last part.  Yuck! */
 
-               /* The claim is that the following code removes the above problem.  The test is "ends 2/3 chisel thru". */
+               /* The claim is that the following code removes the above problem.  The test is "ends 2/3 chisel thru".
+                  Below, we will pick up the concentricity flags from the last subcall. */
 
                ss->cmd.cmd_misc_flags |= result->cmd.cmd_misc_flags & ~DFM1_CONCENTRICITY_FLAG_MASK;
 
@@ -1855,6 +1866,10 @@ that probably need to be put in. */
                   break;
                }
             }
+
+            /* Pick up the concentricity command stuff from the last thing we did. */
+
+            ss->cmd.cmd_misc_flags |= result->cmd.cmd_misc_flags;
          }
          else {
             setup_command foo1, foo2;
@@ -1987,6 +2002,15 @@ extern void move(
    unsigned int check_concepts;
    parse_block *parseptrcopy;
    parse_block *parseptr = ss->cmd.parseptr;
+
+   /* This shouldn't be necessary, but there have been occasional reports of the
+      bigblock and stagger concepts getting confused with each other.  This would happen
+      if the incoming 4x4 did not have its rotation field equal to zero, as is required
+      when in canonical form.  So we do this to be sure it is correct. */
+
+   if (setup_attrs[ss->kind].four_way_symmetry && ss->rotation != 0)
+      warn(warn__canonicalize_bug);
+   canonicalize_rotation(ss);
 
    if (ss->cmd.cmd_misc_flags & CMD_MISC__DO_AS_COUPLES) {
       ss->cmd.cmd_misc_flags &= ~CMD_MISC__DO_AS_COUPLES;

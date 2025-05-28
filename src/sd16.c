@@ -31,7 +31,7 @@ extern void phantom_2x4_move(
    setup *ss,
    int lineflag,
    phantest_kind phantest,
-   map_thing *maps,
+   Const map_thing *maps,
    setup *result)
 {
    setup hpeople, vpeople;

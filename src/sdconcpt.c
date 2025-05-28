@@ -33,11 +33,12 @@ and the following external variables:
 #include <stdio.h>
 
 #include "sd.h"
+extern map_thing map_inner_box;
 
-int global_tbonetest;
-int global_livemask;
-int global_selectmask;
-int global_tboneselect;
+unsigned int global_tbonetest;
+unsigned int global_livemask;
+unsigned int global_selectmask;
+unsigned int global_tboneselect;
 
 
 
@@ -342,8 +343,8 @@ Private void do_concept_single_diagonal(
    parse_block *parseptr,
    setup *result)
 {
-   int i;
-   int rot, tbonetest;
+   int i, rot;
+   unsigned int tbonetest;
    diag_map *map_ptr;
    setup a1;
    setup res1;
@@ -421,7 +422,7 @@ Private void do_concept_double_diagonal(
    than through global_tbonetest. */
 
 {
-   int tbonetest;
+   unsigned int tbonetest;
    map_thing *map_ptr;
 
    tbonetest = global_tbonetest;
@@ -1182,6 +1183,15 @@ Private void do_concept_do_divided_qtags(
 }
 
 
+Private void do_concept_distorted(
+   setup *ss,
+   parse_block *parseptr,
+   setup *result)
+{
+   distorted_move(ss, parseptr, (disttest_kind) parseptr->concept->value.arg2, result);
+}
+
+
 Private void do_concept_do_phantom_2x3(
    setup *ss,
    parse_block *parseptr,
@@ -1393,23 +1403,25 @@ Private void do_concept_new_stretch(
    parse_block *parseptr,
    setup *result)
 {
-   setup tempsetup;
+   map_thing *maps;
+   setup tempsetup = *ss;
 
-   tempsetup = *ss;
+   tempsetup.cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
 
    if (tempsetup.kind == s2x4) {
       swap_people(&tempsetup, 1, 2);
       swap_people(&tempsetup, 5, 6);
+      maps = (*map_lists[s2x2][1])[MPKIND__SPLIT][0];
    }
    else if (tempsetup.kind == s1x8) {
       swap_people(&tempsetup, 3, 6);
       swap_people(&tempsetup, 2, 7);
+      maps = (*map_lists[s1x4][1])[MPKIND__SPLIT][0];
    }
    else
       fail("Stretched setup call didn't start in 2x4 or 1x8 setup.");
 
-   tempsetup.cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
-   move(&tempsetup, FALSE, result);
+   divided_setup_move(&tempsetup, maps, phantest_ok, TRUE, result);
 }
 
 Private void do_concept_mirror(
@@ -1662,7 +1674,7 @@ Private void do_concept_fan_or_yoyo(
       current_direction = parseptrcopy->direction;
       current_number_fields = parseptrcopy->number;
 
-      /* Do "arm turn 3/4". */   
+      /* Do "arm turn 3/4". */
       tempsetup.cmd = ss->cmd;
       tempsetup.cmd.prior_elongation_bits = 0;
       tempsetup.cmd.parseptr = parseptrcopy;
@@ -1900,6 +1912,7 @@ Private void do_concept_sequential(
       }
 
       result->cmd.prior_elongation_bits = save_elongation;
+      update_id_bits(result);
       do_call_in_series(result, FALSE, TRUE, FALSE);
    }
 }
@@ -1924,10 +1937,12 @@ Private void do_concept_special_sequential(
 
    for (call_index=0; call_index<2; call_index++) {
       unsigned int save_elongation = result->cmd.prior_elongation_bits;   /* Save it temporarily. */
+      unsigned int saved_last_flag = 0;
       result->cmd = ss->cmd;      /* The call we wish to execute (we will fix it up shortly). */
 
       if ((call_index ^ parseptr->concept->value.arg1) != 0) {   /* Maybe do them in reverse order. */
          result->cmd.cmd_frac_flags = 0;  /* No fractions to 2nd call. */
+         saved_last_flag = result->result_flags & RESULTFLAG__DID_LAST_PART;
       }
       else {
          result->cmd.parseptr = parseptr->subsidiary_root;
@@ -1935,6 +1950,7 @@ Private void do_concept_special_sequential(
 
       result->cmd.prior_elongation_bits = save_elongation;
       do_call_in_series(result, FALSE, TRUE, FALSE);
+      result->result_flags |= saved_last_flag;
    }
 }
 
@@ -2184,6 +2200,24 @@ Private void do_concept_quad_boxes(
 {
    if (ss->kind != s2x8) fail("Must have a 2x8 setup for this concept.");
    divided_setup_move(ss, (*map_lists[s2x2][3])[parseptr->concept->value.arg1][0], phantest_ok, TRUE, result);
+}
+
+
+Private void do_concept_inner_boxes(
+   setup *ss,
+   parse_block *parseptr,
+   setup *result)
+{
+   if (ss->kind != s2x8) fail("Must have a 2x8 setup for this concept.");
+   divided_setup_move(ss, &map_inner_box, phantest_ok, TRUE, result);
+   install_person(result, 0, ss, 0);
+   install_person(result, 1, ss, 1);
+   install_person(result, 6, ss, 6);
+   install_person(result, 7, ss, 7);
+   install_person(result, 8, ss, 8);
+   install_person(result, 9, ss, 9);
+   install_person(result, 14, ss, 14);
+   install_person(result, 15, ss, 15);
 }
 
 
@@ -2464,15 +2498,149 @@ Private void do_concept_all_8(
       all 8            : 1
       all 8 (diamonds) : 2 */
 
-   if (ss->kind != s_thar)
-      fail("Sorry.");
+   if (key == 0) {
 
-   if (key == 1)
-      divided_setup_move(ss, (*map_lists[s1x4][1])[MPKIND__ALL_8][0], phantest_ok, TRUE, result);
-   else if (key == 2)
-      divided_setup_move(ss, (*map_lists[sdmd][1])[MPKIND__ALL_8][0], phantest_ok, TRUE, result);
-   else
-      fail("Sorry.");
+      /* This is "all 4 couples". */
+
+      if (
+            ss->kind != s4x4 ||
+            (  ss->people[0].id1 | ss->people[3].id1 | ss->people[4].id1 | ss->people[7].id1 |
+               ss->people[8].id1 | ss->people[11].id1 | ss->people[12].id1 | ss->people[15].id1 != 0) ||
+            (ss->people[ 1].id1 != 0 && ((ss->people[ 1].id1 ^ d_west) & d_mask) != 0) ||
+            (ss->people[ 2].id1 != 0 && ((ss->people[ 2].id1 ^ d_west) & d_mask) != 0) ||
+            (ss->people[ 5].id1 != 0 && ((ss->people[ 5].id1 ^ d_north) & d_mask) != 0) ||
+            (ss->people[ 6].id1 != 0 && ((ss->people[ 6].id1 ^ d_north) & d_mask) != 0) ||
+            (ss->people[ 9].id1 != 0 && ((ss->people[ 9].id1 ^ d_east) & d_mask) != 0) ||
+            (ss->people[10].id1 != 0 && ((ss->people[10].id1 ^ d_east) & d_mask) != 0) ||
+            (ss->people[13].id1 != 0 && ((ss->people[13].id1 ^ d_south) & d_mask) != 0) ||
+            (ss->people[14].id1 != 0 && ((ss->people[14].id1 ^ d_south) & d_mask) != 0))
+         fail("Must be in a squared set.");
+
+      divided_setup_move(ss, (*map_lists[s2x2][1])[MPKIND__ALL_8][0], phantest_ok, TRUE, result);
+
+      if (result->kind == s4x4)
+         goto check_col_ending;
+   }
+   else {
+
+      /* This is "all 8" or "all 8 (diamond)". */
+
+      if (ss->kind == s_thar) {
+         /* Either one is legal in a thar. */
+         if (key == 1)
+            divided_setup_move(ss, (*map_lists[s1x4][1])[MPKIND__ALL_8][0], phantest_ok, TRUE, result);
+         else
+            divided_setup_move(ss, (*map_lists[sdmd][1])[MPKIND__ALL_8][0], phantest_ok, TRUE, result);
+
+         /* The above stuff did an "elongate perpendicular to the long axis of the 1x4 or diamond"
+            operation, also known as an "ends' part of concentric" operation.  Some people believe
+            (perhaps as part of a confusion between "all 8" and "all 4 couples", or some other mistaken
+            notion) that they should always end on column spots.  Now it is true that "all 4 couples"
+            always ends on columns spots, but that's because it can only begin on column spots.
+            To avoid undue controversy or bogosity, we only allow the call if both criteria are met.
+            The "opposite elongation" criterion was already met, so we check for the mistaken
+            "end on column spots" criterion.  If someone really wants to hinge from a thar, they can
+            just say "hinge". */
+
+         if (result->kind == s4x4) {
+            if (     ((result->people[1].id1 | result->people[2].id1 | result->people[9].id1 | result->people[10].id1) & 010) ||
+                     ((result->people[14].id1 | result->people[5].id1 | result->people[6].id1 | result->people[13].id1) & 1))
+               fail("Ending position is not defined.");
+         }
+      }
+      else if (key == 2)
+         fail("Must be in a thar.");   /* Can't do "all 8 (diamonds)" from squared-set spots. */
+      else if (ss->kind == s4x4) {
+         unsigned int t1, t2, tl, tc;
+
+         /* This is "all 8" in a squared-set-type of formation.  This concept isn't really formally
+            defined here, except for the well-known cases like "all 8 spin the top", in which they
+            would step to a wave and then proceed from the resulting thar.  That is, it is known
+            to be legal in facing line-like elongation if everyone steps to a wave.  But it is
+            also called from column-like elongation, with everyone facing out, for things like
+            "all 8 shakedown", so we want to allow that.
+
+            Perhaps, if people are in line-like elongation, we should have a cmd_misc bit saying
+            "must step to a wave" along with the bit saying "must not step to a wave".
+            To make matters worse, it might be nice to allow only some people to step to a wave
+            in a suitable rigger setup.
+
+            Basically, no one knows exactly how this concept is supposed to work in all the
+            cases.  This isn't a problem for anyone except those people who have the misfortune
+            to try to write a computer program to do this stuff. */
+
+         /* First, it's clearly only legal if on squared-set spots. */
+
+         if ((    ss->people[0].id1 | ss->people[3].id1 | ss->people[4].id1 | ss->people[7].id1 |
+                  ss->people[8].id1 | ss->people[11].id1 | ss->people[12].id1 | ss->people[15].id1 != 0))
+            fail("Must be on squared-set spots.");
+
+         /* Next, we remember whether people started in line-like or column-like elongation. */
+
+         t1 = ss->people[1].id1 | ss->people[2].id1 | ss->people[9].id1 | ss->people[10].id1;
+         t2 = ss->people[14].id1 | ss->people[5].id1 | ss->people[6].id1 | ss->people[13].id1;
+         tl = t1 | (t2 << 3);         /* If (tl & 010)   then people are in line-like orientation. */
+         tc = t2 | (t1 << 3);         /* If (tc & 010)   then people are in column-like orientation. */
+
+         /* If people started out line-like, we demand that they be facing in.  That is, we do not allow
+            "all quarter away from your partner, then all 8 shakedown", though we do allow "all
+            face your partner and all 8 square chain thru to a wave".  We are just being as conservative
+            as possible while allowing those cases that are commonly used. */
+
+         if (  (tl & 010) &&
+               (  (ss->people[ 1].id1 != 0 && ((ss->people[ 1].id1 ^ d_south) & d_mask) != 0) ||
+                  (ss->people[ 2].id1 != 0 && ((ss->people[ 2].id1 ^ d_north) & d_mask) != 0) ||
+                  (ss->people[ 9].id1 != 0 && ((ss->people[ 9].id1 ^ d_north) & d_mask) != 0) ||
+                  (ss->people[10].id1 != 0 && ((ss->people[10].id1 ^ d_south) & d_mask) != 0) ||
+                  (ss->people[ 5].id1 != 0 && ((ss->people[ 5].id1 ^ d_west) & d_mask) != 0) ||
+                  (ss->people[ 6].id1 != 0 && ((ss->people[ 6].id1 ^ d_east) & d_mask) != 0) ||
+                  (ss->people[13].id1 != 0 && ((ss->people[13].id1 ^ d_east) & d_mask) != 0) ||
+                  (ss->people[14].id1 != 0 && ((ss->people[14].id1 ^ d_west) & d_mask) != 0)))
+            fail("Must not be directly back-to-back.");
+
+         divided_setup_move(ss, (*map_lists[s2x2][1])[MPKIND__ALL_8][0], phantest_ok, TRUE, result);
+
+         /* If this ended in a thar, we accept it.  If not, we have the usual lines-to-lines/
+            columns-to-columns problem.  We don't know whether to enforce column spots, line spots,
+            perpendicular to the lines they had after stepping to a wave (if indeed they did so;
+            we don't know), to footprints from before stepping to a wave, or what.  So the only case
+            we allow is columns-to-columns. */
+
+         if (result->kind == s4x4) {
+            if (tl & 010)
+               fail("Ending position is not defined.");
+            goto check_col_ending;
+         }
+         else if (result->kind != s_thar)
+            fail("Ending position is not defined.");
+      }
+      else
+         fail("Must be in a thar or squared-set spots.");
+   }
+
+   return;
+
+
+   check_col_ending:
+
+   /* Now make sure the "columns-to-columns" rule is applied.  (We know everyone started
+      in columns.) */
+
+   if ((result->people[1].id1 & 010) || (result->people[14].id1 & 1))
+      swap_people(result, 1, 14);
+   if ((result->people[2].id1 & 010) || (result->people[5].id1 & 1))
+      swap_people(result, 2, 5);
+   if ((result->people[9].id1 & 010) || (result->people[6].id1 & 1))
+      swap_people(result, 9, 6);
+   if ((result->people[10].id1 & 010) || (result->people[13].id1 & 1))
+      swap_people(result, 10, 13);
+
+   /* Check that we succeeded.  If the call ended T-boned, our zeal to get people
+      out of each others' way may have left people incorrect. */
+
+   if (     ((result->people[1].id1 | result->people[2].id1 | result->people[9].id1 | result->people[10].id1) & 010) ||
+            ((result->people[14].id1 | result->people[5].id1 | result->people[6].id1 | result->people[13].id1) & 1))
+      fail("People must end as if on column spots.");
 }
 
 Private void do_concept_meta(
@@ -2550,9 +2718,9 @@ Private void do_concept_meta(
 
       if (k <= marker_end_of_list)
          fail("Sorry, can't do this with this concept.");
-   
+
       /* It seems to be real.  Examine it in more detail. */
-   
+
       if (concept_table[k].concept_action == 0)
          fail("Sorry, can't do this with this concept.");
 
@@ -3246,7 +3414,7 @@ extern long_boolean do_big_concept(
 
       ss->cmd.parseptr = substandard_concptptr->next;
       (concept_table[substandard_concptptr->concept->kind].concept_action)(ss, substandard_concptptr, result);
-      canonicalize_rotation(result);
+      /* Beware -- result is not necessarily canonicalized. */
       result->result_flags &= ~RESULTFLAG__SPLIT_AXIS_MASK;  /* **** For now. */
       return TRUE;
    }
@@ -3270,7 +3438,8 @@ extern long_boolean do_big_concept(
       only the standard people. */
 
    if (this_table_item->concept_prop & (CONCPROP__STANDARD | CONCPROP__GET_MASK)) {
-      int i, j;
+      int i;
+      unsigned int j;
       long_boolean doing_select;
       selector_kind saved_selector = current_selector;
 
@@ -3287,7 +3456,7 @@ extern long_boolean do_big_concept(
       }
 
       for (i=0, j=1; i<=setup_limits[ss->kind]; i++, j<<=1) {
-         int p = ss->people[i].id1;
+         unsigned int p = ss->people[i].id1;
          global_tbonetest |= p;
          if (p) {
             global_livemask |= j;
@@ -3307,7 +3476,7 @@ extern long_boolean do_big_concept(
    }
 
    (*concept_func)(ss, this_concept_parse_block, result);
-   canonicalize_rotation(result);
+   /* Beware -- result is not necessarily canonicalized. */
    if (!(this_table_item->concept_prop & CONCPROP__SHOW_SPLIT))
       result->result_flags &= ~RESULTFLAG__SPLIT_AXIS_MASK;
    return TRUE;
@@ -3379,7 +3548,7 @@ concept_table_item concept_table[] = {
    /* concept_divided_2x3 */              {CONCPROP__NEED_2X6 | CONCPROP__NO_STEP | Standard_matrix_phantom,                       do_concept_divided_2x3},
    /* concept_do_divided_diamonds */      {CONCPROP__NEED_4X6 | CONCPROP__NO_STEP | Nostandard_matrix_phantom,                     do_concept_do_divided_diamonds},
    /* concept_do_divided_qtags */         {CONCPROP__NEED_4X6 | CONCPROP__NO_STEP | Standard_matrix_phantom,                       do_concept_do_divided_qtags},
-   /* concept_distorted */                {CONCPROP__NO_STEP | CONCPROP__STANDARD,                                                 distorted_move},
+   /* concept_distorted */                {CONCPROP__NO_STEP | CONCPROP__STANDARD,                                                 do_concept_distorted},
    /* concept_single_diagonal */          {CONCPROP__NO_STEP | CONCPROP__GET_MASK | CONCPROP__USE_SELECTOR,                        do_concept_single_diagonal},
    /* concept_double_diagonal */          {CONCPROP__NO_STEP | CONCPROP__STANDARD,                                                 do_concept_double_diagonal},
    /* concept_parallelogram */            {CONCPROP__NO_STEP | CONCPROP__GET_MASK,                                                 do_concept_parallelogram},
@@ -3397,6 +3566,7 @@ concept_table_item concept_table[] = {
    /* concept_triple_diamonds_together */ {CONCPROP__NEED_3DMD | CONCPROP__NO_STEP | Nostandard_matrix_phantom,                    do_concept_triple_diamonds_tog},
    /* concept_quad_diamonds */            {CONCPROP__NEED_4DMD | CONCPROP__NO_STEP | Nostandard_matrix_phantom,                    do_concept_quad_diamonds},
    /* concept_quad_diamonds_together */   {CONCPROP__NEED_4DMD | CONCPROP__NO_STEP | Nostandard_matrix_phantom,                    do_concept_quad_diamonds_tog},
+   /* concept_inner_boxes */              {CONCPROP__NEED_2X8 | CONCPROP__NO_STEP | CONCPROP__SET_PHANTOMS,                        do_concept_inner_boxes},
    /* concept_triple_diag */              {CONCPROP__NEED_BLOB | CONCPROP__NO_STEP | CONCPROP__SET_PHANTOMS | CONCPROP__STANDARD,  do_concept_triple_diag},
    /* concept_triple_diag_together */     {CONCPROP__NEED_BLOB | CONCPROP__NO_STEP | CONCPROP__SET_PHANTOMS | CONCPROP__GET_MASK,  do_concept_triple_diag_tog},
    /* concept_triple_twin */              {CONCPROP__NEED_4X6 | CONCPROP__NO_STEP | Standard_matrix_phantom,                       triple_twin_move},
@@ -3425,7 +3595,7 @@ concept_table_item concept_table[] = {
    /* concept_on_your_own */              {CONCPROP__SECOND_CALL | CONCPROP__NO_STEP,                                              on_your_own_move},
    /* concept_trace */                    {CONCPROP__SECOND_CALL | CONCPROP__NO_STEP,                                              do_concept_trace},
    /* concept_ferris */                   {CONCPROP__NO_STEP | CONCPROP__GET_MASK,                                                 do_concept_ferris},
-   /* concept_all_8 */                    {CONCPROP__NO_STEP,                                                                      do_concept_all_8},
+   /* concept_all_8 */                    {0,                                                                                      do_concept_all_8},
    /* concept_centers_and_ends */         {CONCPROP__SECOND_CALL,                                                                  do_concept_centers_and_ends},
    /* concept_twice */                    {CONCPROP__SHOW_SPLIT,                                                                   do_concept_twice},
    /* concept_sequential */               {CONCPROP__SECOND_CALL | CONCPROP__SHOW_SPLIT,                                           do_concept_sequential},

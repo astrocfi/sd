@@ -150,20 +150,35 @@ extern void put_char(int c)
 
 extern int get_char(void)
 {
-    int n;
+   int n;
 
-    do {
-        fflush(stdout);
-        n = getch();
-        if (n > 127) {
-    	if (n == 339) /* Delete */
-    	    n = '\177';
-    	else
-    	    n = ' ';
-        }
-    } while (n == EOF);   /* busy wait (EOF means no character yet) */
+   do {
+      fflush(stdout);
+      n = getch();
+   } while (n == EOF);   /* busy wait (EOF means no character yet) */
 
-    return n;
+   if (n == 339) /* Delete */
+      n = '\177';
+   else if (n >= 315 && n <= 324)
+      n += 128+1-315;     /* f1..f10 */
+   else if (n >= 389 && n <= 390)
+      n += 128+11-389;     /* f11..f12 */
+   else if (n >= 340 && n <= 349)
+      n += 160+1-340;     /* shift f1..f10 */
+   else if (n >= 391 && n <= 392)
+      n += 160+11-391;     /* shift f11..f12 */
+   else if (n >= 350 && n <= 359)
+      n += 192+1-350;     /* control f1..f10 */
+   else if (n >= 393 && n <= 394)
+      n += 192+11-393;     /* control f11..f12 */
+   else if (n >= 360 && n <= 369)
+      n += 224+1-360;     /* alt f1..f10 */
+   else if (n >= 395 && n <= 396)
+      n += 224+11-395;     /* alt f11..f12 */
+   else if (n >= 128)
+      n = ' ';
+
+   return n;
 }
 
 extern void get_string(char *dest)

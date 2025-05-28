@@ -1246,8 +1246,8 @@ A restriction consists of the word "restriction", an optional action keyword,
 and the restriction name.  The action keyword tells what is to be done if the
 restriction is violated, as follows:
    no keyword -- the warning "do your part" is given, and the call is not
-               considered acceptable when searching for resolves, "do
-               anythings", etc.
+               considered acceptable when searching for resolves, "pick
+               random call", etc.
    "resolve_ok" -- as above, but the call is still acceptable for resolves.
    "unusual" -- the warning "This is an unusual setup for this call" is given,
                and the call is not considered acceptable when searching for
@@ -2081,3 +2081,4 @@ inherit_single
 @p ... @q - text to remove if optional secondary substitution has been made.
 @r ... @s - text to remove and replace with secondary subcall.  Like @p ... @q along with @t.
 @t        - put optional secondary call substitution here.
+@u        - put ordinal number (1st, 2nd, ...) here.
