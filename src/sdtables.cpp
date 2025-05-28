@@ -2,13 +2,24 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2007  William B. Ackerman.
+//    Copyright (C) 1990-2012  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
+//    ===================================================================
+//
+//    If you received this file with express permission from the licensor
+//    to modify and redistribute it it under the terms of the Creative
+//    Commons CC BY-NC-SA 3.0 license, then that license applies.  See
+//    http://creativecommons.org/licenses/by-nc-sa/3.0/
+//
+//    ===================================================================
+//
+//    Otherwise, the GNU General Public License applies.
+//
 //    Sd is free software; you can redistribute it and/or modify it
 //    under the terms of the GNU General Public License as published by
-//    the Free Software Foundation; either version 2 of the License, or
+//    the Free Software Foundation; either version 3 of the License, or
 //    (at your option) any later version.
 //
 //    Sd is distributed in the hope that it will be useful, but WITHOUT
@@ -16,11 +27,13 @@
 //    or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
 //    License for more details.
 //
-//    You should have received a copy of the GNU General Public License
-//    along with Sd; if not, write to the Free Software Foundation, Inc.,
-//    59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+//    You should have received a copy of the GNU General Public License,
+//    in the file COPYING.txt, along with Sd.  See
+//    http://www.gnu.org/licenses/
 //
-//    This is for version 37.
+//    ===================================================================
+//
+//    This is for version 38.
 
 /* This defines the following external variables:
    direction_names
@@ -362,6 +375,7 @@ Cstring warning_strings[] = {
    /*  warn__split_to_1x8s       */   "=Do the call in each 1x8.",
    /*  warn__split_to_1x6s       */   "=Do the call in each 1x6.",
    /*  warn__split_to_1x3s       */   "=Do the call in each 1x3.",
+   /*  warn__split_to_1x3s_always*/   " Do the call in each 1x3.",
    /*  warn__take_left_hands     */   " Take left hands, since this call is being done mirror.",
    /*  warn__left_half_pass      */   " Take left hands due to left shoulder pass.",
    /*  warn__evil_interlocked    */   " Interlocked phantom shape-changers are very evil.",
@@ -773,15 +787,15 @@ expand::thing expand::init_table[] = {
 
    {{0, 1, 2, 4, 5, 6},
     s2x3, s_spindle, 0, 0U, 0x88, false,
-    warn__none, warn__none, normalize_to_2, 0},
+    warn__none, warn__none, normalize_to_6, 0},
 
    {{0, 1, 2, 4, 5, 6},
     s_ntrgl6cw, s_nxtrglcw, 0, 0U, 0x88, false,
-    warn__none, warn__none, normalize_to_2, 0},
+    warn__none, warn__none, normalize_to_6, 0},
 
    {{0, 1, 2, 4, 5, 6},
     s_ntrgl6ccw, s_nxtrglccw, 0, 0U, 0x88, false,
-    warn__none, warn__none, normalize_to_2, 0},
+    warn__none, warn__none, normalize_to_6, 0},
 
    /* This makes it possible to do "own the <points>, trade by flip the diamond" from
       normal diamonds. */
@@ -2211,9 +2225,10 @@ map::map_thing map::map_init_table[] = {
     s1x8,2,MPKIND__REMOVED,0,     0,  s1x16,      0x000, 0},
    {{15, 14, 12, 13, 8, 9, 11, 10,     0, 1, 3, 2, 7, 6, 4, 5},
     s1x8,2,MPKIND__REMOVED,1,     0,  s2x8,      0x000, 0},
-
-   {{0, 2, 4, 7, 11, 12, 14, 15, 17,     1, 3, 5, 6, 9, 11, 13, 16, 8},
+   {{0, 2, 4, 7, 10, 12, 14, 15, 17,   1, 3, 5, 6, 9, 11, 13, 16, 8},
     s3x3,2,MPKIND__REMOVED,0,     0,  s3x6,      0x000, 0},
+   {{9, 8, 7, 5, 6,                    0, 1, 2, 4, 3},
+    s1x5,2,MPKIND__REMOVED,1,     0,  s2x5,      0x000, 0},
 
    {{0, 5,                  1, 4,                  2, 3},
     s1x2,3,MPKIND__TWICE_REMOVED,0,0,  s1x6,     0x000, 0},
@@ -2278,6 +2293,11 @@ map::map_thing map::map_init_table[] = {
 
    {{2, 4, 0,                          5, 1, 3},
     s_trngl,2,MPKIND__REMOVED,1,  0,  s_bone6,   0x107, 0},
+
+   {{0, 1, 2, 3, 8, 7},
+    s2x3,1,MPKIND__OFFSET_UPWARD_1,0,  0, s3x3,  0x000, 0},
+   {{0, 1, 4, 2},
+    s1x4,1,MPKIND__OFFSET_UPWARD_1,1,  0, s1x5,  0x000, 0},
 
    {{0, 1,     2, 3,        4, 9,      8, 7,       6, 5},
     s1x2,5,MPKIND__SPLIT,0,       0,  s1x10,     0x000, 0},
@@ -4453,6 +4473,7 @@ merge_table::concmerge_thing merge_table::merge_init_table[] = {
    {s2x2,         s4dmd, 0,   0xF0F0, 0x0E, 0x0, schema_matrix,         s4x4,        nothing,  warn__none, 0, 0, {15, 3, 7, 11},             {12, 13, 14, 0, -1, -1, -1, -1, 4, 5, 6, 8, -1, -1, -1, -1}},
    {s_crosswave,s_crosswave, 0x99,0x66,0x0D,0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {-1, 2, 5, -1, -1, 6, 1, -1}, {0}},
    {s_crosswave,s_crosswave, 0x66,0x99,0x0D,0x1, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {-1, 6, 1, -1, -1, 2, 5, -1}, {0}},
+   {s_crosswave,s_crosswave, 0x88,0x11,0x0D,0x0, schema_matrix,         s3x1dmd,     nothing,  warn__none, 0, 1, {0, 1, 3, -1, 4, 5, 7, -1}, {-1, 7, 1, 2, -1, 3, 5, 6}},
    {s1x2,   s_crosswave, 0,        0, 0x0D, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {3, 7},                     {0}},
    {s1x8,   s_crosswave, 0xCC,  0x55, 0x2D, 0x1, schema_concentric,     sdmd,        s1x4,     warn__none, 0, 0, {1, 3, 5, 7},{0, 1, 4, 5}},
    {s1x4,      s_rigger, 0xA,      0, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {7, -1, 3, -1},{0}},
@@ -4466,6 +4487,7 @@ merge_table::concmerge_thing merge_table::merge_init_table[] = {
    {s1x8,       s3x1dmd, 0xAA,  0x66, 0x1E, 0x0, schema_matrix,         s3x1dmd,     nothing,  warn__none, 0, 0, {0, -1, 2, -1, 4, -1, 6, -1},{1, -1, -1, 3, 5, -1, -1, 7}},
    {s1x6,       s1x3dmd, 044,   0x66, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {1, 2, -1, 5, 6, -1},{0}},
    {s1x8,       s1x3dmd, 0x55,  0x66, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {-1, 1, -1, 2, -1, 5, -1, 6},{0}},
+   {s1x3dmd,    s2x4,    0x66,  0x66, 0X1BE,0x0, schema_matrix,       s_spindle,     nothing,  warn__none, 0, 0, {7, -1, -1, 1, 3, -1, -1, 5},{0, -1, -1, 2, 4, -1, -1, 6}},
    {s1x3dmd,  s_spindle, 0x66,  0xAA, 0x0E, 0x0, schema_rev_checkpoint,    sdmd,     s2x2,     warn__none, 0, 0, {0, 3, 4, 7},               {0, 2, 4, 6}},
    {s1x3dmd,     s_ptpd, 0x66,  0x55, 0x0E, 0x0, schema_rev_checkpoint,    sdmd,     s2x2,     warn__none, 0, 0, {0, 3, 4, 7},               {1, 7, 5, 3}},
    {s_1x2dmd, s_2x1dmd, 022,     022, 0x1D, 0x0, schema_matrix,      s_crosswave,    nothing,  warn__none, 0, 1, {0, -1, 3, 4, -1, 7}, {6, -1, 1, 2, -1, 5}},
@@ -4723,6 +4745,7 @@ merge_table::concmerge_thing merge_table::merge_init_table[] = {
    {s1x6,       sbigx,    044,      0, 0x0E, 0x0, schema_nothing,       nothing,     nothing,  warn__none, 0, 0, {2, 3, -1, 8, 9, -1},        {0}},
    {s1x6,      s_1x2dmd, 044,    022, 0x1D, 0x0, schema_matrix,         s3x1dmd,     nothing,  warn__none, 0, 1, {0, 1, -1, 4, 5, -1},        {7, -1, 2, 3, -1, 6}},
    {s1x6,      s_1x2dmd, 044,    022, 0x1E, 0x0, schema_matrix,         s1x3dmd,     nothing,  warn__none, 0, 0, {1, 2, -1, 5, 6, -1},        {0, -1, 3, 4, -1, 7}},
+   {s2x3,      s_1x2dmd, 022,    022, 0xBE, 0x0, schema_matrix,         s_spindle,  nothing,  warn__none, 0, 0, {0, -1, 2, 4, -1, 6},        {7, -1, 1, 3, -1, 5}},
    {s1x6,       s1x3dmd, 022,   0xAA, 0x1E, 0x0, schema_matrix,         s1x8,       nothing,   warn__none, 0, 0, {1, -1, 2, 5, -1, 6},        {0, -1, 3, -1, 4, -1, 7, -1}},
    {s1x4,       s1x3dmd, 0,     0xAA, 0x1D, 0x0, schema_matrix,         s_crosswave, nothing,  warn__none, 0, 0, {2, 3, 6, 7},                {0, -1, 1, -1, 4, -1, 5, -1}},
    {s1x4,       s1x3dmd, 0,     0xCC, 0x0D, 0x0, schema_matrix,         s_crosswave, nothing,  warn__none, 0, 0, {2, 3, 6, 7},                {0, 1, -1, -1, 4, 5, -1, -1}},
@@ -4983,6 +5006,18 @@ static const coordrec thing1x4 = {s1x4, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1,  0,  1,  3,  2, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
+static const coordrec thing1x5 = {s1x5, 3,
+   { -8,  -4,   0,   4,   8},
+   {  0,   0,   0,   0,   0}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1,  0,  1,  2,  4,  3, -1,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -7800,6 +7835,16 @@ const setup_attr setup_attrs[] = {
     id_bit_table_short6,
     {"5 b@a  c@f  d@5 e@",
      "5 fa@e 6 b@5 dc@"}},
+   {4,                      // s1x5
+    &thing1x5,
+    &thing1x5,
+    {0, 0, 0, 0},
+    {b_1x5, b_5x1},
+    {5, 1},
+    false, false,
+    (const id_bit_table *) 0,
+    {"a  b  c  e  d@",
+     "a@b@c@e@d@"}},
    {5,                      // s1x6
     &thing1x6,
     &thing1x6,
@@ -10009,6 +10054,8 @@ select::fixer select::fixer_init_table[] = {
     fx0,          fx0,          fx0,          fx0, fx_f2x166d,   fx0,    fx0,          fx0},
    {fx_f1x3bbd, s1x4, s1x3dmd,   0, 0, 1,  {1, 2, 5, 6},
     fx0,          fx0,          fx_f1x3bbd,   fx0, fx0,          fx0,    fx_fspindld,  fx_fspindld},
+   {fx_f1x3wwd, s1x4, s1x3dmd,   0, 0, 1,  {0, 2, 4, 6},
+    fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx_fspindld,  fx0},
    {fx_fhrglassd, s2x2, s_hrglass,   0, 2, 1,          {0, 1, 4, 5},
     fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0},
    {fx_fspindld, s2x2, s_spindle,   0, 1, 1, {0, 2, 4, 6},
@@ -10755,6 +10802,7 @@ select::sel_item select::sel_init_table[] = {
    {LOOKUP_DISC|LOOKUP_IGNORE, s1x3dmd,     0x99,   fx_f1x3zzd,    fx0, -1},
    {LOOKUP_DISC|LOOKUP_IGNORE, s1x3dmd,     0xAA,   fx_f1x3yyd,    fx0, -1},
    {LOOKUP_DISC|LOOKUP_IGNORE, s1x3dmd,     0x66,   fx_f1x3bbd,    fx0, -1},
+   {LOOKUP_DISC|LOOKUP_IGNORE, s1x3dmd,     0x55,   fx_f1x3wwd,    fx0, -1},
    {LOOKUP_DISC|LOOKUP_IGNORE, s_crosswave, 0x55,   fx_fxwv1d,     fx0, -1},
    {LOOKUP_DISC|LOOKUP_IGNORE, s_crosswave, 0x99,   fx_fxwv2d,     fx0, -1},
    {LOOKUP_DISC|LOOKUP_IGNORE, s_crosswave, 0x66,   fx_fxwv3d,     fx0, -1},

@@ -6,7 +6,7 @@
 CC = g++
 
 # This gives any "-D" switches that we always need to send to the compiler.
-DEFS = -m32 -Wall -Wno-switch -Wno-uninitialized -Wno-char-subscripts
+DEFS = -m64 -Wall -Wno-switch -Wno-uninitialized -Wno-char-subscripts
 
 # This gives the optimization and/or debug info.  These flags presumably
 # don't affect the semantics of the language and run-time environment, so you
@@ -73,6 +73,7 @@ HFILES = sd.h database.h paths.h mapcachefile.h sort.h \
 
 MAKEFILES = makefile.linux32withgpm makefile.linux32withoutgpm \
              makefile.linux64withgpm makefile.linux64withoutgpm \
+             makefile.linux32 makefile.linux64 \
              makefile.cygnus makefile.cygwin makefile.djgpp \
              makefile.mingw makefile.mac makefile.solaris
 

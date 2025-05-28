@@ -76,6 +76,12 @@ shown with a map giving the person numbering:
             |_____|_____|_____|_____|
            Yes, this numbering is stupid by today's standards.
 
+             _____ _____ _____ _____ _____
+            |     |     |     |     |     |
+1x5         |  0  |  1  |  2  |  4  |  3  |
+            |_____|_____|_____|_____|_____|
+
+
              _____ _____ _____ _____ _____ _____
             |     |     |     |     |     |     |
 1x6         |  0  |  1  |  2  |  5  |  4  |  3  |

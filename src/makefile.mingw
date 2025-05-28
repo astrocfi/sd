@@ -40,6 +40,7 @@ SHORTCUTS = "Edit sd.ini.lnk" Faq.lnk "Release Notes.lnk" "SD couple.lnk" "SD hi
 
 MAKEFILES = makefile.linux32withgpm makefile.linux32withoutgpm \
              makefile.linux64withgpm makefile.linux64withoutgpm \
+             makefile.linux32 makefile.linux64 \
              makefile.cygnus makefile.cygwin makefile.djgpp \
              makefile.mingw makefile.mac makefile.solaris
 

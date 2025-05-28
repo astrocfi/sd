@@ -2,13 +2,24 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2011  William B. Ackerman.
+//    Copyright (C) 1990-2012  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
+//    ===================================================================
+//
+//    If you received this file with express permission from the licensor
+//    to modify and redistribute it it under the terms of the Creative
+//    Commons CC BY-NC-SA 3.0 license, then that license applies.  See
+//    http://creativecommons.org/licenses/by-nc-sa/3.0/
+//
+//    ===================================================================
+//
+//    Otherwise, the GNU General Public License applies.
+//
 //    Sd is free software; you can redistribute it and/or modify it
 //    under the terms of the GNU General Public License as published by
-//    the Free Software Foundation; either version 2 of the License, or
+//    the Free Software Foundation; either version 3 of the License, or
 //    (at your option) any later version.
 //
 //    Sd is distributed in the hope that it will be useful, but WITHOUT
@@ -16,11 +27,13 @@
 //    or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
 //    License for more details.
 //
-//    You should have received a copy of the GNU General Public License
-//    along with Sd; if not, write to the Free Software Foundation, Inc.,
-//    59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+//    You should have received a copy of the GNU General Public License,
+//    in the file COPYING.txt, along with Sd.  See
+//    http://www.gnu.org/licenses/
 //
-//    This is for version 37.
+//    ===================================================================
+//
+//    This is for version 38.
 
 /* This defines the following functions:
    do_big_concept
@@ -240,7 +253,7 @@ static void do_c1_phantom_move(
          fail("Phantom couples/tandem must not have intervening concepts.");
 
       // "Phantom tandem" has a higher level than either "phantom" or "tandem".
-      if (phantom_tandem_level > calling_level) warn(warn__bad_concept_level);
+      if (phantom_tandem_level > calling_level) warn_about_concept_level();
 
       switch (next_parseptr->concept->arg4) {
       case tandem_key_siam:
@@ -2712,6 +2725,9 @@ static void do_concept_once_removed(
          break;
       case s1x8:
          map_code = MAPCODE(s1x4,2,MPKIND__REMOVED,0);
+         break;
+      case s3x6:
+         map_code = MAPCODE(s3x3,2,MPKIND__REMOVED,0);
          break;
       case s1x12:
          map_code = MAPCODE(s1x6,2,MPKIND__REMOVED,0);
@@ -6272,8 +6288,21 @@ static void do_concept_meta(
                   CMD_FRAC_BREAKING_UP | FRACS(CMD_FRAC_CODE_FROMTOREV,1,0)))
          // If we are already doing up to some part, just "finish" that.
          ss->cmd.cmd_fraction.flags += CMD_FRAC_PART_BIT;
-      else
-         fail("Can't stack meta or fractional concepts.");
+      else {
+         // If there were incoming fractions (as opposed to incoming parts), this violates the general mechanism
+         // of the program, that says that part concepts must come before fraction concepts.  Here is where we
+         // fix that, so that we can do 3/4 finish swing the fractions as well as finish 3/5 swing the fractions.
+         //
+         // This constructor will only give us an OK indication if we are looking at a naked underlying call,
+         // with no further concepts.  It also requires that there be no incoming parts concepts prior
+         // to this concept.
+         fraction_info ff(ss->cmd, 1);
+         if (ff.m_instant_stop < 0)  // This is the error indication.
+            fail("Can't stack meta or fractional concepts this way.");
+         ss->cmd.cmd_fraction.set_to_null_with_flags(FRACS(CMD_FRAC_CODE_FROMTOREV,
+                                                           ff.m_fetch_index+2,
+                                                           ff.m_fetch_total-ff.m_highlimit));
+      }
 
       // The "CMD_FRAC_THISISLAST" bit, if still set, might not tell the truth at this point.
       ss->cmd.cmd_fraction.flags &= ~CMD_FRAC_THISISLAST;
@@ -6537,8 +6566,48 @@ static void do_concept_meta(
 
             goto rollover_and_finish_it;
          }
-         else
-            fail("Can't stack meta or fractional concepts.");
+         else {
+            fraction_info ff(ss->cmd, 0);
+            if (ff.m_instant_stop < 0)  // This is the error indication.
+               fail("Can't stack meta or fractional concepts this way.");
+
+            int S = shiftynum;          // Shift amount.  We defer this many parts of subject call.
+            int N = ff.m_fetch_total;   // Number of parts of call, same as number of things we will do.
+            int A = ff.m_fetch_index;   // Starting point, due to incoming fraction.
+            int Z = ff.m_highlimit;     // Ending point, due to incoming fraction.
+
+            if (S < 1 || S >= N || A >= N)
+               fail("Can't do this.");
+
+            if (A < N-S) {
+               if (Z > N-S) {
+                  // Do S+A+1 ... N, followed by 1 ... Z+S-N.
+                  result->cmd.cmd_fraction.set_to_null_with_flags(
+                     CMD_FRAC_BREAKING_UP | FRACS(CMD_FRAC_CODE_FROMTOREV,S+A+1,0));
+                  do_call_in_series_and_update_bits(result);
+
+                  result->cmd = ss->cmd;
+                  result->cmd.cmd_fraction.set_to_null_with_flags(
+                     CMD_FRAC_BREAKING_UP | FRACS(CMD_FRAC_CODE_FROMTO,Z+S-N,0));
+
+                  goto rollover_and_finish_it;
+               }
+               else {
+                  // Do S+A+1 ... S+Z
+                  result->cmd.cmd_fraction.set_to_null_with_flags(
+                     CMD_FRAC_BREAKING_UP | FRACS(CMD_FRAC_CODE_FROMTOREV,S+A+1,N-Z-S));
+
+                  goto rollover_and_finish_it;
+               }
+            }
+            else {
+               // Do A+S-N+1 ... Z+S-N.
+               result->cmd.cmd_fraction.set_to_null_with_flags(
+                  CMD_FRAC_BREAKING_UP | FRACS(CMD_FRAC_CODE_FROMTOREV,A+S-N+1,2*N-Z-S));
+
+               goto rollover_and_finish_it;
+            }
+         }
       }
 
       goto finish_it;
@@ -6566,8 +6635,7 @@ static void do_concept_meta(
          else if (corefracs.is_null_with_masked_flags(
                      CMD_FRAC_REVERSE | CMD_FRAC_CODE_MASK | CMD_FRAC_PART_MASK,
                      FRACS(CMD_FRAC_CODE_FROMTOREV,2,0))) {
-            finalresultflagsmisc |= RESULTFLAG__PARTS_ARE_KNOWN;
-            finalresultflagsmisc |= RESULTFLAG__DID_LAST_PART;
+            finalresultflagsmisc |= RESULTFLAG__PARTS_ARE_KNOWN | RESULTFLAG__DID_LAST_PART;
             result->cmd = nocmd;
             result->cmd.cmd_fraction.set_to_null();
             goto finish_it;
@@ -6582,9 +6650,25 @@ static void do_concept_meta(
             result->cmd.cmd_fraction.set_to_null();
             goto finish_it;
          }
-         else if (!result->cmd.cmd_fraction.is_null())
-            fail("Can't stack meta or fractional concepts this way.");
       }
+
+      if (corefracs.is_null_with_masked_flags(
+             CMD_FRAC_CODE_MASK | CMD_FRAC_PART_MASK | CMD_FRAC_PART2_MASK,
+             FRACS(CMD_FRAC_CODE_FROMTOREV,1,1))) {
+         result->cmd = yescmd;
+         result->cmd.cmd_fraction.set_to_null();
+         goto finish_it;
+      }
+      else if (corefracs.is_null_with_masked_flags(
+                  CMD_FRAC_CODE_MASK | CMD_FRAC_PART_MASK,
+                  FRACS(CMD_FRAC_CODE_ONLYREV,1,0))) {
+         result->cmd = nocmd;
+         result->cmd.cmd_fraction.set_to_null();
+         goto finish_it;
+      }
+
+      if (!result->cmd.cmd_fraction.is_null())
+         fail("Can't stack meta or fractional concepts this way.");
 
       // Do the call with the concept.
       result->cmd = yescmd;
@@ -6704,9 +6788,49 @@ static void do_concept_meta(
    case meta_key_nth_part_work:
       {
          // This is "do the Nth part <concept>".
-         if (!corefracs.is_null())
-            fail("Can't stack meta or fractional concepts.");
+         if (!corefracs.is_null()) {
+            fraction_info ff(ss->cmd, 0);
+            if (ff.m_instant_stop < 0)  // This is the error indication.
+               fail("Can't stack meta or fractional concepts this way.");
 
+            int S = shiftynum;          // Shift amount.  We defer this many parts of subject call.
+            int N = ff.m_fetch_total;   // Number of parts of call, same as number of things we will do.
+            int A = ff.m_fetch_index;   // Starting point, due to incoming fraction.
+            int Z = ff.m_highlimit;     // Ending point, due to incoming fraction.
+
+            if (S <= A || S > Z) {
+               // The part we are to apply the concept to is outside of the selected range.
+               // Just do whatever fractions were given.
+               result->cmd = nocmd;
+               goto rollover_and_finish_it;
+            }
+            else {
+               if (S > A+1) {
+                  result->cmd = nocmd;
+                  // Set the fractionalize field to do the first few parts of the call.
+                  result->cmd.cmd_fraction.set_to_null_with_flags(
+                     FRACS(CMD_FRAC_CODE_FROMTO,S-1,A));
+                  do_call_in_series_and_update_bits(result);
+               }
+
+               // Do the part of the call that needs the concept.
+               result->cmd = yescmd;
+               result->cmd.cmd_fraction.set_to_null_with_flags(
+                  FRACS(CMD_FRAC_CODE_ONLY,S,0) | CMD_FRAC_BREAKING_UP);
+
+               // Do the remaining part.
+               if (S < Z) {
+                  do_call_in_series_and_update_bits(result);
+                  result->cmd = nocmd;
+                  result->cmd.cmd_fraction.set_to_null_with_flags(
+                      FRACS(CMD_FRAC_CODE_FROMTOREV,S+1,N-Z));
+               }
+
+               goto rollover_and_finish_it;
+            }
+         }
+
+         // Normal case; no incoming fractions.
          // Do the initial part, if any, without the concept.
 
          if (shiftynum > 1) {
@@ -6718,11 +6842,9 @@ static void do_concept_meta(
          }
 
          // Do the part of the call that needs the concept.
-
          result->cmd = yescmd;
          result->cmd.cmd_fraction.set_to_null_with_flags(
             FRACS(CMD_FRAC_CODE_ONLY,shiftynum,0) | CMD_FRAC_BREAKING_UP);
-
          do_call_in_series_and_update_bits(result);
 
          int did_last = 0;
@@ -6819,8 +6941,7 @@ static void do_concept_meta(
          do_call_in_series_and_update_bits(result);
 
          result->cmd = nocmd;
-         // Assumptions don't carry through.
-         result->cmd.cmd_assume.assumption = cr_none;
+         result->cmd.cmd_assume.assumption = cr_none;   // Assumptions don't carry through.
          // nfield = incoming end point; skip one at start.
          result->cmd.cmd_fraction.set_to_null_with_flags(
             FRACS(CMD_FRAC_CODE_FROMTO,nfield,1) | CMD_FRAC_BREAKING_UP);
@@ -6840,8 +6961,32 @@ static void do_concept_meta(
          result->cmd.cmd_fraction.set_to_null_with_flags(
             FRACS(CMD_FRAC_CODE_FROMTOREV,2,0) | CMD_FRAC_BREAKING_UP);
       }
-      else
-         fail("Can't stack meta or fractional concepts.");
+      else {
+         fraction_info ff(ss->cmd, 0);
+         if (ff.m_instant_stop < 0)  // This is the error indication.
+            fail("Can't stack meta or fractional concepts this way.");
+
+         if (ff.m_fetch_index == 0) {   // Does the given fraction include the first part?
+            // Do the first part, with the concept.
+            result->cmd = yescmd;
+            result->cmd.cmd_fraction.set_to_null_with_flags(
+               FRACS(CMD_FRAC_CODE_ONLY,1,0) | CMD_FRAC_BREAKING_UP);
+            do_call_in_series_and_update_bits(result);
+
+            // Do the curtailed rest of the call, with the concept.
+            result->cmd = nocmd;
+            result->cmd.cmd_assume.assumption = cr_none;   // Assumptions don't carry through.
+            result->cmd.cmd_fraction.set_to_null_with_flags(
+               FRACS(CMD_FRAC_CODE_FROMTO,ff.m_highlimit,1) | CMD_FRAC_BREAKING_UP);
+         }
+         else {
+            // The fraction excludes the first part, so "initially" doesn't make much sense.  Whatever.
+            result->cmd = nocmd;
+            result->cmd.cmd_assume.assumption = cr_none;  // Assumptions don't carry through.
+            result->cmd.cmd_fraction.set_to_null_with_flags(
+               FRACS(CMD_FRAC_CODE_FROMTOREV,ff.m_fetch_index+1,ff.m_fetch_total-ff.m_highlimit) | CMD_FRAC_BREAKING_UP);
+         }
+      }
 
       goto finish_it;
 
@@ -8100,7 +8245,7 @@ extern bool do_big_concept(
 
    if (concept_func == 0) return false;
 
-   if (this_concept->level > calling_level) warn(warn__bad_concept_level);
+   if (this_concept->level > calling_level) warn_about_concept_level();
 
    result->clear_people();
 
@@ -8306,7 +8451,7 @@ enum {
 
 // Beware!!  This table must be keyed to definition of "concept_kind" in sd.h .
 const concept_table_item concept_table[] = {
-   {0, 0},                                                  // concept_another_call_next_mod
+   {CONCPROP__USES_PARTS, 0},                               // concept_another_call_next_mod
    {0, 0},                                                  // concept_mod_declined
    {0, 0},                                                  // marker_end_of_list
    {0, 0},                                                  // concept_comment
@@ -8464,16 +8609,17 @@ const concept_table_item concept_table[] = {
    {CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT,
     do_concept_central},                                    // concept_central
    {CONCPROP__MATRIX_OBLIVIOUS, do_concept_central},        // concept_snag_mystic
-   {CONCPROP__PERMIT_MODIFIERS, do_concept_crazy},          // concept_crazy
-   {CONCPROP__USE_NUMBER | CONCPROP__PERMIT_MODIFIERS,
+   {CONCPROP__PERMIT_MODIFIERS | CONCPROP__USES_PARTS,
+    do_concept_crazy},                                      // concept_crazy
+   {CONCPROP__USE_NUMBER | CONCPROP__PERMIT_MODIFIERS | CONCPROP__USES_PARTS,
     do_concept_crazy},                                      // concept_frac_crazy
-   {CONCPROP__USE_TWO_NUMBERS | CONCPROP__PERMIT_MODIFIERS,
+   {CONCPROP__USE_TWO_NUMBERS | CONCPROP__PERMIT_MODIFIERS | CONCPROP__USES_PARTS,
     do_concept_crazy},                                      // concept_dbl_frac_crazy
    {CONCPROP__PERMIT_MODIFIERS | CONCPROP__NEED_ARG2_MATRIX |
-    CONCPROP__SET_PHANTOMS | CONCPROP__STANDARD,
+    CONCPROP__SET_PHANTOMS | CONCPROP__STANDARD | CONCPROP__USES_PARTS,
     do_concept_phan_crazy},                                 // concept_phan_crazy
    {CONCPROP__PERMIT_MODIFIERS | CONCPROP__NEED_ARG2_MATRIX | CONCPROP__USE_NUMBER |
-    CONCPROP__SET_PHANTOMS | CONCPROP__STANDARD,
+    CONCPROP__SET_PHANTOMS | CONCPROP__STANDARD | CONCPROP__USES_PARTS,
     do_concept_phan_crazy},                                 // concept_frac_phan_crazy
    {0, do_concept_fan},                                     // concept_fan
    {CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__GET_MASK,
@@ -8491,10 +8637,10 @@ const concept_table_item concept_table[] = {
     do_concept_stable},                                     // concept_stable
    {CONCPROP__USE_SELECTOR | CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT,
     do_concept_stable},                                     // concept_so_and_so_stable
-   {CONCPROP__USE_NUMBER | CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT,
+   {CONCPROP__USE_NUMBER | CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT | CONCPROP__USES_PARTS,
     do_concept_stable},                                     // concept_frac_stable
    {CONCPROP__USE_SELECTOR | CONCPROP__USE_NUMBER |
-    CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT,
+    CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT | CONCPROP__USES_PARTS,
     do_concept_stable},                                     // concept_so_and_so_frac_stable
    {CONCPROP__USE_DIRECTION | CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT,
     do_concept_nose},                                       // concept_nose
@@ -8525,41 +8671,44 @@ const concept_table_item concept_table[] = {
    {0, do_concept_all_8},                                   // concept_all_8
    {CONCPROP__SECOND_CALL, do_concept_centers_and_ends},    // concept_centers_and_ends
    {0, do_concept_mini_but_o},                              // concept_mini_but_o
-   {CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT,
+   {CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT | CONCPROP__USES_PARTS,
     do_concept_n_times},                                    // concept_n_times_const
-   {CONCPROP__USE_NUMBER | CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT,
+   {CONCPROP__USE_NUMBER | CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT | CONCPROP__USES_PARTS,
     do_concept_n_times},                                    // concept_n_times
-   {CONCPROP__SECOND_CALL | CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT,
+   {CONCPROP__SECOND_CALL | CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT | CONCPROP__USES_PARTS,
     do_concept_sequential},                                 // concept_sequential
-   {CONCPROP__SECOND_CALL | CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT,
+   {CONCPROP__SECOND_CALL | CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT | CONCPROP__USES_PARTS,
     do_concept_special_sequential},                         // concept_special_sequential
    {CONCPROP__SECOND_CALL | CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT |
-    CONCPROP__USE_NUMBER,
+    CONCPROP__USE_NUMBER | CONCPROP__USES_PARTS,
     do_concept_special_sequential},                         // concept_special_sequential_num
    {CONCPROP__SECOND_CALL | CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT |
-    CONCPROP__USE_FOUR_NUMBERS,
+    CONCPROP__USE_FOUR_NUMBERS | CONCPROP__USES_PARTS,
     do_concept_special_sequential},                         // concept_special_sequential_4num
    {CONCPROP__MATRIX_OBLIVIOUS |
-    CONCPROP__SHOW_SPLIT | CONCPROP__PERMIT_REVERSE | CONCPROP__IS_META,
+    CONCPROP__SHOW_SPLIT | CONCPROP__PERMIT_REVERSE |
+    CONCPROP__IS_META | CONCPROP__USES_PARTS,
     do_concept_meta},                                       // concept_meta
    {CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__USE_NUMBER |
-    CONCPROP__SHOW_SPLIT | CONCPROP__PERMIT_REVERSE | CONCPROP__IS_META,
+    CONCPROP__SHOW_SPLIT | CONCPROP__PERMIT_REVERSE |
+    CONCPROP__IS_META | CONCPROP__USES_PARTS,
     do_concept_meta},                                       // concept_meta_one_arg
    {CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__USE_TWO_NUMBERS |
-    CONCPROP__SHOW_SPLIT | CONCPROP__PERMIT_REVERSE | CONCPROP__IS_META,
+    CONCPROP__SHOW_SPLIT | CONCPROP__PERMIT_REVERSE |
+    CONCPROP__IS_META | CONCPROP__USES_PARTS,
     do_concept_meta},                                       // concept_meta_two_args
-   {CONCPROP__USE_SELECTOR | CONCPROP__SHOW_SPLIT,
+   {CONCPROP__USE_SELECTOR | CONCPROP__SHOW_SPLIT | CONCPROP__USES_PARTS,
     do_concept_so_and_so_begin},                            // concept_so_and_so_begin
-   {CONCPROP__USE_NUMBER | CONCPROP__SECOND_CALL | CONCPROP__SHOW_SPLIT,
+   {CONCPROP__USE_NUMBER | CONCPROP__SECOND_CALL | CONCPROP__SHOW_SPLIT | CONCPROP__USES_PARTS,
     do_concept_replace_nth_part},                           // concept_replace_nth_part
-   {CONCPROP__SECOND_CALL | CONCPROP__SHOW_SPLIT,
+   {CONCPROP__SECOND_CALL | CONCPROP__SHOW_SPLIT | CONCPROP__USES_PARTS,
     do_concept_replace_nth_part},                           // concept_replace_last_part
    {CONCPROP__USE_TWO_NUMBERS |
-    CONCPROP__SECOND_CALL | CONCPROP__SHOW_SPLIT,
+    CONCPROP__SECOND_CALL | CONCPROP__SHOW_SPLIT | CONCPROP__USES_PARTS,
     do_concept_replace_nth_part},                           // concept_interrupt_at_fraction
-   {CONCPROP__SECOND_CALL | CONCPROP__SHOW_SPLIT,
+   {CONCPROP__SECOND_CALL | CONCPROP__SHOW_SPLIT | CONCPROP__USES_PARTS,
     do_concept_replace_nth_part},                           // concept_sandwich
-   {CONCPROP__SECOND_CALL | CONCPROP__SHOW_SPLIT,
+   {CONCPROP__SECOND_CALL | CONCPROP__SHOW_SPLIT | CONCPROP__USES_PARTS,
     do_concept_interlace},                                  // concept_interlace
    {CONCPROP__USE_TWO_NUMBERS |
     CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT,
@@ -8573,6 +8722,6 @@ const concept_table_item concept_table[] = {
     drag_someone_and_move},                                 // concept_drag
    {CONCPROP__NO_STEP | CONCPROP__GET_MASK,
     do_concept_dblbent},                                    // concept_dblbent
-   {0, do_concept_omit},                                    // concept_omit
-   {0, 0},                                                  // concept_supercall
+   {CONCPROP__USES_PARTS, do_concept_omit},                 // concept_omit
+   {CONCPROP__USES_PARTS, 0},                               // concept_supercall
    {0, do_concept_diagnose}};                               // concept_diagnose

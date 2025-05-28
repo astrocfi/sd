@@ -2,13 +2,24 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2007  William B. Ackerman.
+//    Copyright (C) 1990-2012  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
+//    ===================================================================
+//
+//    If you received this file with express permission from the licensor
+//    to modify and redistribute it it under the terms of the Creative
+//    Commons CC BY-NC-SA 3.0 license, then that license applies.  See
+//    http://creativecommons.org/licenses/by-nc-sa/3.0/
+//
+//    ===================================================================
+//
+//    Otherwise, the GNU General Public License applies.
+//
 //    Sd is free software; you can redistribute it and/or modify it
 //    under the terms of the GNU General Public License as published by
-//    the Free Software Foundation; either version 2 of the License, or
+//    the Free Software Foundation; either version 3 of the License, or
 //    (at your option) any later version.
 //
 //    Sd is distributed in the hope that it will be useful, but WITHOUT
@@ -16,11 +27,13 @@
 //    or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
 //    License for more details.
 //
-//    You should have received a copy of the GNU General Public License
-//    along with Sd; if not, write to the Free Software Foundation, Inc.,
-//    59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+//    You should have received a copy of the GNU General Public License,
+//    in the file COPYING.txt, along with Sd.  See
+//    http://www.gnu.org/licenses/
 //
-//    This is for version 37.
+//    ===================================================================
+//
+//    This is for version 38.
 
 /* This defines the following external variables:
    centers_concept
@@ -1410,7 +1423,7 @@ conzept::concept_descriptor conzept::unsealed_concept_descriptor_table[] = {
     UC_none, selective_key_disc_dist, 0, LOOKUP_DIAG_CLW+1},
    {"@6 IN YOUR OFFSET LINE",                concept_so_and_so_only,          D, l_c1,
     UC_none, selective_key_disc_dist, 0, LOOKUP_OFFS_CLW+1},
-   {"@6 IN YOUR STAGGERED LINE",             concept_so_and_so_only,          D, l_c4a,
+   {"@6 IN YOUR STAGGERED LINE",             concept_so_and_so_only,          D, l_c2,
     UC_none, selective_key_disc_dist, 0, LOOKUP_STAG_CLW+1},
    {"DIAGONAL LINES",                        concept_double_diagonal,         D, l_c4a,
     UC_none, 1, 0},
@@ -1508,7 +1521,7 @@ conzept::concept_descriptor conzept::unsealed_concept_descriptor_table[] = {
     UC_none, selective_key_disc_dist, 0, LOOKUP_DIAG_CLW+3},
    {"@6 IN YOUR OFFSET WAVE",                concept_so_and_so_only,          D, l_c1,
     UC_none, selective_key_disc_dist, 0, LOOKUP_OFFS_CLW+3},
-   {"@6 IN YOUR STAGGERED WAVE",             concept_so_and_so_only,          D, l_c4a,
+   {"@6 IN YOUR STAGGERED WAVE",             concept_so_and_so_only,          D, l_c2,
     UC_none, selective_key_disc_dist, 0, LOOKUP_STAG_CLW+3},
    {"DIAGONAL WAVES",                        concept_double_diagonal,         D, l_c4a,
     UC_none, 3, 0},
@@ -1544,7 +1557,7 @@ conzept::concept_descriptor conzept::unsealed_concept_descriptor_table[] = {
     UC_none, selective_key_disc_dist, 0, LOOKUP_DIST_BOX},
    {"@6 IN YOUR DIAGONAL BOX",               concept_so_and_so_only,          D, l_c3,
     UC_none, selective_key_disc_dist, 0, LOOKUP_DIAG_BOX},
-   {"@6 IN YOUR STAGGERED BOX",              concept_so_and_so_only,          D, l_c4a,
+   {"@6 IN YOUR STAGGERED BOX",              concept_so_and_so_only,          D, l_c2,
     UC_none, selective_key_disc_dist, 0, LOOKUP_STAG_BOX},
    {"@6 IN YOUR TRAPEZOID",                  concept_so_and_so_only,          D, l_c3,
     UC_none, selective_key_disc_dist, 0, LOOKUP_TRAPEZOID},
@@ -1572,7 +1585,7 @@ conzept::concept_descriptor conzept::unsealed_concept_descriptor_table[] = {
     UC_none, selective_key_disc_dist, 0, LOOKUP_DIAG_CLW+2},
    {"@6 IN YOUR OFFSET COLUMN",              concept_so_and_so_only,          D, l_c1,
     UC_none, selective_key_disc_dist, 0, LOOKUP_OFFS_CLW+2},
-   {"@6 IN YOUR STAGGERED COLUMN",           concept_so_and_so_only,          D, l_c4a,
+   {"@6 IN YOUR STAGGERED COLUMN",           concept_so_and_so_only,          D, l_c2,
     UC_none, selective_key_disc_dist, 0, LOOKUP_STAG_CLW+2},
    {"DIAGONAL COLUMNS",                      concept_double_diagonal,         D, l_c4a,
     UC_none, 0, 0},

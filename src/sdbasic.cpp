@@ -2,13 +2,24 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2010  William B. Ackerman.
+//    Copyright (C) 1990-2012  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
+//    ===================================================================
+//
+//    If you received this file with express permission from the licensor
+//    to modify and redistribute it it under the terms of the Creative
+//    Commons CC BY-NC-SA 3.0 license, then that license applies.  See
+//    http://creativecommons.org/licenses/by-nc-sa/3.0/
+//
+//    ===================================================================
+//
+//    Otherwise, the GNU General Public License applies.
+//
 //    Sd is free software; you can redistribute it and/or modify it
 //    under the terms of the GNU General Public License as published by
-//    the Free Software Foundation; either version 2 of the License, or
+//    the Free Software Foundation; either version 3 of the License, or
 //    (at your option) any later version.
 //
 //    Sd is distributed in the hope that it will be useful, but WITHOUT
@@ -16,9 +27,11 @@
 //    or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
 //    License for more details.
 //
-//    You should have received a copy of the GNU General Public License
-//    along with Sd; if not, write to the Free Software Foundation, Inc.,
-//    59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+//    You should have received a copy of the GNU General Public License,
+//    in the file COPYING.txt, along with Sd.  See
+//    http://www.gnu.org/licenses/
+//
+//    ===================================================================
 //
 //    This is for version 38.
 
@@ -250,6 +263,11 @@ static collision_map collision_map_table[] = {
     s3dmd,       s3x1dmd,     0, warn__none, 0},                  // from trade by with some outside quartered out
    {6, 0x000088, 0x0DD, 0x044, {3, 4, 6, 7, 0, 2}, {3, 4, 6, 7, 0, 1},    {3, 4, 5, 7, 0, 2},
     s3x1dmd,     s3x1dmd,     0, warn__none, 0},                  // Same.
+   {6, 0x000088, 0x0EE, 0x022, {3, 5, 6, 7, 1, 2}, {3, 5, 6, 7, 0, 2},    {3, 4, 6, 7, 1, 2},
+    s3x1dmd,     s3x1dmd,     0, warn__none, 0},                  // Same.
+   // Phantom 1/2 circulate.
+   {6, 0x000000, 0x077, 0x022, {0, 1, 2, 4, 5, 6}, {0, 1, 2, 4, 7, 6},    {0, 3, 2, 4, 5, 6},
+    s3x1dmd,     s1x8,        0, warn__none, 0},
    {6, 0x088088, 0xBB, 0x88, {0, 1, 3, 4, 5, 7},   {0, 1, 2, 4, 5, 7},    {0, 1, 3, 4, 5, 6},
     s_crosswave, s_crosswave, 0, warn__none, 0},
    {6, 0x0000CC, 0xDD, 0x11, {0, 2, 3, 4, 6, 7},   {0, 2, 3, 5, 6, 7},    {1, 2, 3, 4, 6, 7},
@@ -1269,43 +1287,46 @@ extern bool check_restriction(
    restr_failed:
 
    switch (flags) {
-      case CAF__RESTR_RESOLVE_OK:
-         warn(warn__dyp_resolve_ok);
-         break;
-      case CAF__RESTR_UNUSUAL:
-         // want to suppress the "unusual" if it's already giving the "warn__two_faced".
-         if (only_because_of_2faced)
-            warn(warn__unusual_or_2faced);
-         else
-            warn(warn__unusual);
-         break;
-      case CAF__RESTR_CONTROVERSIAL:
-         warn(warn_controversial);
-         break;
-      case CAF__RESTR_BOGUS:
-         warn(warn_serious_violation);
-         break;
-      case CAF__RESTR_ASSUME_DPT:
-         warn(warn__assume_dpt);
-         break;
-      case CAF__RESTR_FORBID:
-         fail("This call is not legal from this formation.");
-      case 99:
-         if (restr.assumption == cr_qtag_like && restr.assump_both == 1)
-            fail("People are not facing as in 1/4 tags.");
-         else if (restr.assumption == cr_qtag_like && restr.assump_both == 2)
-            fail("People are not facing as in 3/4 tags.");
-         else if (restr.assumption == cr_wave_only && restr.assump_col == 0)
-            fail("People are not in waves.");
-         else if (restr.assumption == cr_all_ns)
-            fail("People are not in lines.");
-         else if (restr.assumption == cr_all_ew)
-            fail("People are not in columns.");
-         else
-            fail("The people do not satisfy the assumption.");
-      default:
-         warn(warn__do_your_part);
-         break;
+   case CAF__RESTR_RESOLVE_OK:
+      warn(warn__dyp_resolve_ok);
+      break;
+   case CAF__RESTR_UNUSUAL:
+      // want to suppress the "unusual" if it's already giving the "warn__two_faced".
+      if (only_because_of_2faced)
+         warn(warn__unusual_or_2faced);
+      else
+         warn(warn__unusual);
+      break;
+   case CAF__RESTR_CONTROVERSIAL:
+      warn(warn_controversial);
+      break;
+   case CAF__RESTR_EACH_1X3:
+      warn(warn__split_to_1x3s_always); // This one is not subject to being suppressed in inner_selective_move.
+      break;
+   case CAF__RESTR_BOGUS:
+      warn(warn_serious_violation);
+      break;
+   case CAF__RESTR_ASSUME_DPT:
+      warn(warn__assume_dpt);
+      break;
+   case CAF__RESTR_FORBID:
+      fail("This call is not legal from this formation.");
+   case 99:
+      if (restr.assumption == cr_qtag_like && restr.assump_both == 1)
+         fail("People are not facing as in 1/4 tags.");
+      else if (restr.assumption == cr_qtag_like && restr.assump_both == 2)
+         fail("People are not facing as in 3/4 tags.");
+      else if (restr.assumption == cr_wave_only && restr.assump_col == 0)
+         fail("People are not in waves.");
+      else if (restr.assumption == cr_all_ns)
+         fail("People are not in lines.");
+      else if (restr.assumption == cr_all_ew)
+         fail("People are not in columns.");
+      else
+         fail("The people do not satisfy the assumption.");
+   default:
+      warn(warn__do_your_part);
+      break;
    }
 
    getout:
@@ -2421,7 +2442,7 @@ static int divide_the_setup(
    bool specialpass;
 
    switch (ss->kind) {
-      int tbi, tbo;
+      uint32 tbi, tbo;    // Many clauses will use these.
       bool temp;
 
    case s_thar:
@@ -3286,9 +3307,9 @@ static int divide_the_setup(
          goto do_mystically;
 
       {
-         uint32 tbi = ss->people[2].id1 | ss->people[3].id1 |
+         tbi = ss->people[2].id1 | ss->people[3].id1 |
             ss->people[6].id1 | ss->people[7].id1;
-         uint32 tbo = ss->people[0].id1 | ss->people[1].id1 |
+         tbo = ss->people[0].id1 | ss->people[1].id1 |
             ss->people[4].id1 | ss->people[5].id1;
 
          // See if this call has applicable 1x2 or 2x1 definitions,
@@ -3324,9 +3345,43 @@ static int divide_the_setup(
       if (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK)
          fail("Can't split the setup.");
       break;
+   case s3x3:
+      // We can offset this to a 2x3 if we can see an unambiguous direction of the offset.
+
+      finalrot = -1;
+
+      if ((livemask & 0x70) == 0) {
+         finalrot = 0;
+      }
+
+      if ((livemask & 0x1C) == 0) {
+         if (finalrot >= 0) break;
+         finalrot = 1;
+      }
+
+      if ((livemask & 0x7) == 0) {
+         if (finalrot >= 0) break;
+         finalrot = 2;
+      }
+
+      if ((livemask & 0xC1) == 0) {
+         if (finalrot >= 0) break;
+         finalrot = 3;
+      }
+
+      if (finalrot < 0) break;
+      if ((newtb & 011) == 011) break;  // Can't allow T-boned people.
+
+      // See if this call has applicable 2x3 or 3x2 definitions.
+      if (assoc(((finalrot ^ newtb) & 1) ? b_3x2 : b_2x3, ss, calldeflist)) {
+         division_code = MAPCODE(s2x3,1,MPKIND__OFFSET_UPWARD_1,0);
+         goto divide_us_no_recompute;
+      }
+
+      break;
    case s2x3:
-      /* See if this call has applicable 1x2 or 2x1 definitions,
-         in which case split it 3 ways. */
+      // See if this call has applicable 1x2 or 2x1 definitions,
+      // in which case split it 3 ways.
       if (((!(newtb & 010) || assoc(b_2x1, ss, calldeflist)) &&
            (!(newtb & 001) || assoc(b_1x2, ss, calldeflist))) ||
           assoc(b_1x1, ss, calldeflist)) {
@@ -3408,9 +3463,8 @@ static int divide_the_setup(
       }
 
       {
-         uint32 tbi = ss->people[2].id1 | ss->people[5].id1;
-         uint32 tbo =
-            ss->people[0].id1 | ss->people[1].id1 |
+         tbi = ss->people[2].id1 | ss->people[5].id1;
+         tbo = ss->people[0].id1 | ss->people[1].id1 |
             ss->people[3].id1 | ss->people[4].id1;
 
          if (assoc(b_1x1, ss, calldeflist) ||
@@ -3424,8 +3478,8 @@ static int divide_the_setup(
       break;
    case s_1x2dmd:
       {
-         uint32 tbi = ss->people[2].id1 | ss->people[5].id1;
-         uint32 tbo = ss->people[0].id1 | ss->people[1].id1 |
+         tbi = ss->people[2].id1 | ss->people[5].id1;
+         tbo = ss->people[0].id1 | ss->people[1].id1 |
             ss->people[3].id1 | ss->people[4].id1;
 
          if (assoc(b_1x1, ss, calldeflist) ||
@@ -3446,12 +3500,8 @@ static int divide_the_setup(
       break;
    case s_trngl:
       if (assoc(b_2x2, ss, calldeflist)) {
-         if (calling_level < triangle_in_box_level) {
-            if (allowing_all_concepts)
-               warn(warn__bad_concept_level);
-            else
-               fail("This concept is not allowed at this level.");
-         }
+         if (calling_level < triangle_in_box_level)
+            warn_about_concept_level();
 
          uint32 leading = final_concepts.final;
 
@@ -3755,22 +3805,37 @@ static int divide_the_setup(
          tbi = ss->people[1].id1 | ss->people[2].id1 | ss->people[5].id1 | ss->people[6].id1;
          tbo = ss->people[0].id1 | ss->people[3].id1 | ss->people[4].id1 | ss->people[7].id1;
 
-         // If the centers and ends are separately consistent, we can do the call
-         // concentrically *IF* the appropriate type of definition exists for the ends
-         //  to work with the near person rather than the far one.  This is what makes
-         // "heads into the middle and everbody partner trade" work,
-         // and forbids "heads into the middle and everbody star thru".
-         //
-         // Or if we have a 1x1 definition, we can divide it.  Otherwise, we lose.
-
          if (((tbi & 011) != 011) && ((tbo & 011) != 011)) {
-            if ((!(tbo & 010) || have_2x1 != 0) && (!(tbo & 1) || have_1x2 != 0)) {
+
+            // The centers and ends are T-boned to each other but each is individually
+            // consistent.  We can do the call concentrically *IF* the appropriate type of
+            // definition exists for the ends to work with the near person rather than the
+            // far one.  This is what makes "heads into the middle and everbody partner
+            // trade" work, and forbids "heads into the middle and everbody star thru".
+            //
+            // Or if we have a 1x1 definition, we can divide it.  Otherwise, we lose.
+
+            static const expand::thing s_1x2_2x4_leftends = {{7, 0}, s1x2, s2x4, 1};
+            static const expand::thing s_1x2_2x4_rightends = {{4, 3}, s1x2, s2x4, 1};
+
+            setup leftends = *ss;
+            setup rightends = *ss;
+            expand::compress_setup(s_1x2_2x4_leftends, &leftends);
+            expand::compress_setup(s_1x2_2x4_rightends, &rightends);
+
+            if (((tbo & 1) != 0 &&      // Handle ends in line-like 1x2's,
+                 assoc(b_1x2, &leftends, calldeflist) != 0 &&
+                 assoc(b_1x2, &rightends, calldeflist) != 0) ||
+                ((tbo & 1) == 0 &&     // or in column-like 1x2's.
+                 assoc(b_2x1, &leftends, calldeflist) != 0 &&
+                 assoc(b_2x1, &rightends, calldeflist) != 0)) {
                if (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK)
                   fail("Can't split the setup.");
 
                goto do_concentrically;
             }
-            else if (assoc(b_1x1, ss, calldeflist))
+
+            if (assoc(b_1x1, ss, calldeflist))
                goto divide_us_no_recompute;
          }
 

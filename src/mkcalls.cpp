@@ -313,6 +313,8 @@ const char *sstab[] = {
    "pdeep2x1dmd",
    "whrglass",
    "pwhrglass",
+   "1x5",
+   "5x1",
    "1x6",
    "6x1",
    "3x4",
@@ -466,6 +468,7 @@ const char *estab[] = {
    "vee",
    "bone6",
    "short6",
+   "1x5",
    "1x6",
    "2x3",
    "1x2dmd",
@@ -1434,6 +1437,8 @@ tagtabitem tagtabinit[num_base_call_indices] = {
    {0, "hinge_then_trade"},
    {0, "hinge_then_trade_for_breaker"},
    {0, "two_o_circs_for_frac"},
+   {0, "cloverleaf"},
+   {0, "clover"},
    // The next "NUM_TAGGER_CLASSES" (that is, 4) must be a consecutive group.
    {0, "tagnullcall0"},
    {0, "tagnullcall1"},
@@ -2334,13 +2339,18 @@ def2:
             get_tok();
             if (tok_kind != tok_symbol) errexit("Improper restriction specifier");
          }
+         else if (!strcmp(tok_str, "serious_violation")) {
+            callarray_flags2 |= CAF__RESTR_BOGUS;
+            get_tok();
+            if (tok_kind != tok_symbol) errexit("Improper restriction specifier");
+         }
          else if (!strcmp(tok_str, "assume_dpt")) {
             callarray_flags2 |= CAF__RESTR_ASSUME_DPT;
             get_tok();
             if (tok_kind != tok_symbol) errexit("Improper restriction specifier");
          }
-         else if (!strcmp(tok_str, "serious_violation")) {
-            callarray_flags2 |= CAF__RESTR_BOGUS;
+         else if (!strcmp(tok_str, "each_1x3")) {
+            callarray_flags2 |= CAF__RESTR_EACH_1X3;
             get_tok();
             if (tok_kind != tok_symbol) errexit("Improper restriction specifier");
          }

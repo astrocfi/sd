@@ -2,13 +2,24 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2011  William B. Ackerman.
+//    Copyright (C) 1990-2012  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
+//    ===================================================================
+//
+//    If you received this file with express permission from the licensor
+//    to modify and redistribute it it under the terms of the Creative
+//    Commons CC BY-NC-SA 3.0 license, then that license applies.  See
+//    http://creativecommons.org/licenses/by-nc-sa/3.0/
+//
+//    ===================================================================
+//
+//    Otherwise, the GNU General Public License applies.
+//
 //    Sd is free software; you can redistribute it and/or modify it
 //    under the terms of the GNU General Public License as published by
-//    the Free Software Foundation; either version 2 of the License, or
+//    the Free Software Foundation; either version 3 of the License, or
 //    (at your option) any later version.
 //
 //    Sd is distributed in the hope that it will be useful, but WITHOUT
@@ -16,11 +27,13 @@
 //    or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
 //    License for more details.
 //
-//    You should have received a copy of the GNU General Public License
-//    along with Sd; if not, write to the Free Software Foundation, Inc.,
-//    59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+//    You should have received a copy of the GNU General Public License,
+//    in the file COPYING.txt, along with Sd.  See
+//    http://www.gnu.org/licenses/
 //
-//    This is for version 37.
+//    ===================================================================
+//
+//    This is for version 38.
 
 /* This defines the following functions:
    canonicalize_rotation
@@ -154,13 +167,20 @@ extern void canonicalize_rotation(setup *result) THROW_DECL
    }
    else if (result->kind == s1x3) {
       if (result->rotation & 2) {
-
          // Must turn this setup upside-down.
-
          result->swap_people(0, 2);
-         result->rotate_person(0, 022);
-         result->rotate_person(1, 022);
-         result->rotate_person(2, 022);
+         for (int i=0; i<3; i++)
+            result->rotate_person(i, 022);
+      }
+      result->rotation &= 1;
+   }
+   else if (result->kind == s1x5) {
+      if (result->rotation & 2) {
+         // Must turn this setup upside-down.
+         result->swap_people(0, 3);
+         result->swap_people(1, 4);
+         for (int i=0; i<5; i++)
+            result->rotate_person(i, 022);
       }
       result->rotation &= 1;
    }
@@ -792,14 +812,9 @@ extern bool divide_for_magic(
       tt.assump_negate = 0;
       tt.assump_live = 0;
       tt.assump_cast = 0;
-      if (ss->kind != s2x4 ||
-          verify_restriction(ss, tt, false, &booljunk) != restriction_passes) {
-         if (calling_level < general_magic_level) {
-            if (allowing_all_concepts)
-               warn(warn__bad_concept_level);
-            else
-               fail("This concept is not allowed at this level.");
-         }
+      if (ss->kind != s2x4 || verify_restriction(ss, tt, false, &booljunk) != restriction_passes) {
+         if (calling_level < general_magic_level)
+            warn_about_concept_level();
       }
    }
 

@@ -166,6 +166,8 @@ int begin_sizes[] = {
   10,          // b_pdeep2x1dmd
   10,          // b_whrglass
   10,          // b_pwhrglass
+   5,          // b_1x5
+   5,          // b_5x1
    6,          // b_1x6
    6,          // b_6x1
    12,         // b_3x4

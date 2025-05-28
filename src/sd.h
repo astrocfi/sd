@@ -1979,6 +1979,7 @@ class select {
       fx_f1x2aad,
       fx_f2x166d,
       fx_f1x3bbd,
+      fx_f1x3wwd,
       fx_fhrglassd,
       fx_fspindld,
       fx_fptpzzd,
@@ -2526,6 +2527,7 @@ enum warning_index {
    warn__split_to_1x8s,
    warn__split_to_1x6s,
    warn__split_to_1x3s,
+   warn__split_to_1x3s_always,
    warn__take_left_hands,
    warn__left_half_pass,
    warn__evil_interlocked,
@@ -3377,7 +3379,7 @@ enum {
    /* spare:                   0x00000800U, */
    /* spare:                   0x00010000U, */
    /* spare:                   0x00020000U, */
-   /* spare:                   0x00040000U, */
+   CONCPROP__USES_PARTS      = 0x00040000U,
    CONCPROP__IS_META         = 0x00080000U,
    CONCPROP__GET_MASK        = 0x00100000U,
    CONCPROP__STANDARD        = 0x00200000U,
@@ -3522,6 +3524,8 @@ class configuration {
       { warnings = warning_info(); }
    inline void clear_one_warning_specific(warning_index i)
       { warnings.clearbit(i); }
+   inline void set_one_warning_specific(warning_index i)
+      { warnings.setbit(i); }
    inline bool test_one_warning_specific(warning_index i) const { return warnings.testbit(i); }
 
    inline bool warnings_are_different(const configuration & rhs) const
@@ -3534,7 +3538,7 @@ class configuration {
    inline static void init_warnings()
       { next_config().warnings = warning_info(); }
    inline static void set_one_warning(warning_index i)
-      { next_config().warnings.setbit(i); }
+      { next_config().set_one_warning_specific(i); }
    inline static void clear_one_warning(warning_index i)
       { next_config().clear_one_warning_specific(i); }
    inline static void set_multiple_warnings(const warning_info & rhs)
@@ -4617,6 +4621,7 @@ enum mpkind {
    MPKIND__SPEC_ONCEREM,
    MPKIND__SPEC_TWICEREM,
    MPKIND__TRIPLETRADEINWINGEDSTAR6,
+   MPKIND__OFFSET_UPWARD_1,
    NUM_PLAINMAP_KINDS   // End mark; not really in the enumeration.
 };
 
@@ -5009,6 +5014,8 @@ extern void gather(setup *resultpeople, const setup *sourcepeople,
 extern void install_scatter(setup *resultpeople, int num, const veryshort *placelist,
                             const setup *sourcepeople, int rot) THROW_DECL;
 
+extern void warn_about_concept_level();
+
 extern void turn_4x4_pinwheel_into_c1_phantom(setup *ss);
 
 extern bool clean_up_unsymmetrical_setup(setup *ss);
@@ -5061,6 +5068,7 @@ extern call_list_kind find_proper_call_list(setup *s);
 
 class fraction_info {
  public:
+   // Normal simple constructor.
    fraction_info(int n) :
       m_reverse_order(false),
       m_instant_stop(99),  // If not 99, says to stop instantly after doing one part,
@@ -5077,6 +5085,47 @@ class fraction_info {
       m_client_total(n),
       m_subcall_incr(1)
       {}
+
+   // Special constructor for grabbing the parts out of a call that we hope is next in the parse tree.
+   // Offset is the number of parts by which we are to shorten the call from what its actual
+   // definition says.  So, for example, for "finish", offset is 1.
+   fraction_info(setup_command & cmd, int offset) :
+      m_reverse_order(false),
+      m_instant_stop(-99),  // Error indication; will change to +99 if OK.
+      m_do_half_of_last_part(0),
+      m_do_last_half_of_first_part(0),
+      m_highlimit(0),
+      m_start_point(0),
+      m_end_point(0),
+      m_fetch_index(0),
+      m_client_index(0),
+      m_fetch_total(0),
+      m_client_total(0),
+      m_subcall_incr(1)
+      {
+         fraction_command corefracs = cmd.cmd_fraction;
+         corefracs.flags &= ~CMD_FRAC_THISISLAST;
+         parse_block *pp = cmd.parseptr;
+
+         if (corefracs.flags == 0 && pp) {
+            while (pp->next &&
+                   (concept_table[pp->concept->kind].concept_prop & (CONCPROP__USES_PARTS|CONCPROP__SECOND_CALL)) == 0)
+               pp = pp->next;
+
+            if (pp->concept->kind <= marker_end_of_list &&
+                pp->call && pp->call->the_defn.schema == schema_sequential) {
+               m_fetch_total = pp->call->the_defn.stuff.seq.howmanyparts-offset;
+               m_highlimit = m_fetch_total;
+               m_client_total = m_fetch_total;
+               m_end_point = m_fetch_total-1;
+               get_fraction_info(corefracs, pp->call->the_defn.callflags1, weirdness_off);
+
+               if (m_fetch_total <= 1 || m_do_half_of_last_part != 0 || m_do_last_half_of_first_part != 0)
+                  m_instant_stop = -99;
+            }
+         }
+      }
+
 
    // This one is in sdmoves.cpp
    void get_fraction_info(fraction_command frac_stuff,

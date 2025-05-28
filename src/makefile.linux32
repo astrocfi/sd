@@ -73,6 +73,7 @@ HFILES = sd.h database.h paths.h mapcachefile.h sort.h \
 
 MAKEFILES = makefile.linux32withgpm makefile.linux32withoutgpm \
              makefile.linux64withgpm makefile.linux64withoutgpm \
+             makefile.linux32 makefile.linux64 \
              makefile.cygnus makefile.cygwin makefile.djgpp \
              makefile.mingw makefile.mac makefile.solaris
 

@@ -1,7 +1,7 @@
 \input texinfo @c %**start of header -*-texinfo-*-
 @setfilename relnotes.info
 @settitle Sd Release Notes
-@c Time-stamp: <5 Nov 2011 wba>
+@c Time-stamp: <16 Jun 2012 wba>
 @iftex
 @headings off
 @oddheading @| @| @thispage
@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 38.45
-@set title2 Database version = 38.45 format = 309
+@set title1 RELEASE NOTES FOR VERSION 38.46
+@set title2 Database version = 38.46 format = 313
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 38.46::
 * 38.45::
 * 38.44::
 * 38.43::
@@ -84,7 +85,7 @@ The files @file{relnotes03.txi} and @file{relnotes98.txi} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 38.45, Top, (dir)
+@node Intro, 38.46, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -95,11 +96,47 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2012 William B. Ackerman
 @sp 3
 @menu
-* 38.45::               Changes in the current version
+* 38.46::               Changes in the current version
 @end menu
 
 @c ************
-@node 38.45, 38.44, Intro, Top
+@node 38.46, 38.45, Intro, Top
+@unnumberedsec Version 38.46 changes
+
+The @strong{<anyone> in your staggered wave} (or line, column, or box)
+concept is allowed, at C2, in the center phantom lines spots of a
+stagger formation, even though it is only allowed at c3a in a general
+2x4.
+
+Sd can handle once-removed 3x1 triangles better in the 3x6 obtained by
+doing a @strong{once removed 1/2 here comes the judge} from a suitable
+tidal line.  This includes @strong{once removed reverse cut the 3x1
+triangle}.
+
+Sd correctly identifies the two parts of @strong{circle by}.
+
+Sd's handling of mixed fractions and parts concepts was improved, as
+in @strong{do the last 3/4 4/5 fourthly 1/2 swing the fractions}.
+
+Sd's interpretation of @strong{center column of 6} has been loosened to
+reflect common usage.  Strictly speaking, and column of N is a 1xN
+formation, so, for example, the setup obtained after @strong{touch 1/4}
+from facing lines is two columns, just as the setup prior to the
+@strong{touch 1/4} was two lines.  Hence, @strong{center column of 6}
+normally refers to a 1x6 column, as in @strong{center column of 6, girls
+are tandem, pass and roll}.  However, it is common to use this phrase
+when referring to the 2x3 obtained after, for example, @strong{1/2
+circulate} or @strong{invert the column 1/4} from normal columns.  Sd
+now accepts that terminology.
+
+The interpretation of certain oddly oriented triangles has been
+tightened.  This would occur on, for example, @strong{ends are tandem
+reshape the triangle} from waves.  Formerly, the triangles overlapped
+somewhat, and left a nice-looking, albeit incorrect, result.  Now the
+result isn't as nice, but the triangles do not overlap.
+
+@c ************
+@node 38.45, 38.44, 38.46, Top
 @unnumberedsec Version 38.45 changes
 
 A number of bugs were fixed.  These include the @strong{generous/stingy

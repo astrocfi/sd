@@ -211,6 +211,44 @@ static tm_thing maps_isearch_twosome[] = {
    // Missing right half.
    {{0, -2, -2, -2, 7, 6,            -1, -2, -2, -2, -1, 1},               0,0,     0000,         6, 0,  s_bone6, s2x4},
 
+   // Must be after "2x4_4".
+   {{7, 1, 4, 6,                     0, 2, 3, 5},                      0,02020,     0146,         4, 0,  sdmd,  s2x4},
+   // Next one is for so-and-so in tandem in a bone6, making a virtual line of 4.
+   {{4, 5, 3, 2,                     0, -1, 1, -1},                        0,0,     0000,         4, 0,  s1x4,  s_bone6},
+   // Next one is for so-and-so in tandem in a short6, making a virtual line of 4.
+   {{1, 0, 4, 5,                     -1, 2, -1, 3},                        0,0,     0055,         4, 1,  s1x4,  s_short6},
+   {{1, 3, 4, 5,                     -1, 2, -1, 0},                    0,02020,     0000,         4, 1,  sdmd,  s_short6},
+   {{5, 1, 3, 4,                     0, -1, 2, -1},                        0,0,     0000,         4, 0,  sdmd,  s2x3},
+
+   // Next three are for so-and-so as couples in a line of 8, making a virtual line of 6.
+   {{0, 1, 3, 4, 5, 6,               -1, -1, 2, -1, -1, 7},          0,0200200,     0xCC,         6, 0,  s1x6,  s1x8},
+   {{0, 1, 2, 4, 7, 6,               -1, 3, -1, -1, 5, -1},          0,0020020,     0xAA,         6, 0,  s1x6,  s1x8},
+   {{0, 3, 2, 5, 7, 6,               1, -1, -1, 4, -1, -1},          0,0002002,     0x33,         6, 0,  s1x6,  s1x8},
+   // Next two are for so-and-so as couples in a line of 6, making a virtual line of 4.
+   {{0, 1, 3, 5,                     -1, 2, -1, 4},                    0,02020,     0066,         4, 0,  s1x4,  s1x6},
+   {{0, 2, 4, 5,                     1, -1, 3, -1},                    0,00202,     0033,         4, 0,  s1x4,  s1x6},
+
+   // Next 4 are for so-and-so in tandem from a column of 6, making a virtual column of
+   // 4.  The first two are the real maps, and the other two take care of the
+   // reorientation that sometimes happens when coming out of a 2x2.
+
+   {{0, 1, 3, 5,                     -1, 2, -1, 4},                    0,02020,     0066,         4, 0,  s2x2,  s2x3},
+   {{0, 2, 4, 5,                     1, -1, 3, -1},                    0,00202,     0033,         4, 0,  s2x2,  s2x3},
+   {{1, 3, 5, 0,                     2, -1, 4, -1},                        0,0,     0066,         4, 1,  s2x2,  s2x3},
+   {{2, 4, 5, 0,                     -1, 3, -1, 1},                        0,0,     0033,         4, 1,  s2x2,  s2x3},
+   // Next 2 are for similar situations, in "nonisotropic triangles".
+   // We do not have the 3rd or 4th maps in the class, because they apply only
+   // to unwinding, and we never unwind to these setups.  That's why
+   // these 2 maps are placed after the 4 preceding ones.
+   {{0, 1, 3, 5,                     -1, 2, -1, 4},                    0,02020,     0066,      4, 0,  s2x2,  s_ntrgl6cw},
+   {{0, 2, 4, 5,                     1, -1, 3, -1},                    0,00202,     0033,      4, 0,  s2x2,  s_ntrgl6ccw},
+
+   // Next 4 are for similar 8-person situations.
+   {{1, 3, 4, 6, 7, 0,               2, -1, -1, 5, -1, -1},             0,0,     0x66,         6, 1,  s_short6,  s_nxtrglcw},
+   {{2, 3, 5, 6, 7, 0,              -1, -1, 4, -1, -1, 1},              0,0,     0x33,         6, 1,  s_short6,  s_nxtrglccw},
+   {{0, 2, 5, 4, 7, 1,              -1,  3, -1, -1,  6, -1},         0,0020020,     0xCC,         6, 0,  s_bone6,  s_nptrglcw},
+   {{0, 3, 6, 5, 7, 2,               1, -1, -1,  4, -1, -1},         0,0002002,     0x33,         6, 0,  s_bone6,  s_nptrglccw},
+
    // Next two are for certain ends in tandem in an H, making a virtual bone6.
    {{10, 3, 5, 6, 9, 11,             0, -1, -1, 4, -1, -1},                0,0,     0000,         6, 0,  s_bone6, s3x4},
    {{0, 4, 5, 6, 9, 11,              -1, 3, -1, -1, 10, -1},               0,0,     0000,         6, 0,  s_bone6, s3x4},
@@ -266,42 +304,6 @@ static tm_thing maps_isearch_twosome[] = {
    {{15, 1, 12, 14, 8, 10, 11, 5,    0, 2, 3, 13, 7, 9, 4, 6},     0,020202020,   0x6666,         8, 0,  s_ptpd,  s2x8},
 
    {{6, 0, 3, 5,                     7, 1, 2, 4},                      0,02020,     0x33,         4, 0,  s_star, s_alamo},
-
-   // Must be after "2x4_4".
-   {{7, 1, 4, 6,                     0, 2, 3, 5},                      0,02020,     0146,         4, 0,  sdmd,  s2x4},
-   // Next one is for so-and-so in tandem in a bone6, making a virtual line of 4.
-   {{4, 5, 3, 2,                     0, -1, 1, -1},                        0,0,     0000,         4, 0,  s1x4,  s_bone6},
-   // Next one is for so-and-so in tandem in a short6, making a virtual line of 4.
-   {{1, 0, 4, 5,                     -1, 2, -1, 3},                        0,0,     0055,         4, 1,  s1x4,  s_short6},
-   {{1, 3, 4, 5,                     -1, 2, -1, 0},                    0,02020,     0000,         4, 1,  sdmd,  s_short6},
-   {{5, 1, 3, 4,                     0, -1, 2, -1},                        0,0,     0000,         4, 0,  sdmd,  s2x3},
-
-   // Next three are for so-and-so as couples in a line of 8, making a virtual line of 6.
-   {{0, 1, 3, 4, 5, 6,               -1, -1, 2, -1, -1, 7},          0,0200200,     0xCC,         6, 0,  s1x6,  s1x8},
-   {{0, 1, 2, 4, 7, 6,               -1, 3, -1, -1, 5, -1},          0,0020020,     0xAA,         6, 0,  s1x6,  s1x8},
-   {{0, 3, 2, 5, 7, 6,               1, -1, -1, 4, -1, -1},          0,0002002,     0x33,         6, 0,  s1x6,  s1x8},
-   // Next two are for so-and-so as couples in a line of 6, making a virtual line of 4.
-   {{0, 1, 3, 5,                     -1, 2, -1, 4},                    0,02020,     0066,         4, 0,  s1x4,  s1x6},
-   {{0, 2, 4, 5,                     1, -1, 3, -1},                    0,00202,     0033,         4, 0,  s1x4,  s1x6},
-
-   // Next 4 are for so-and-so in tandem from a column of 6, making a virtual column of
-   // 4.  The first two are the real maps, and the other two take care of the
-   // reorientation that sometimes happens when coming out of a 2x2.
-
-   {{0, 1, 3, 5,                     -1, 2, -1, 4},                    0,02020,     0066,         4, 0,  s2x2,  s2x3},
-   {{0, 2, 4, 5,                     1, -1, 3, -1},                    0,00202,     0033,         4, 0,  s2x2,  s2x3},
-   {{1, 3, 5, 0,                     2, -1, 4, -1},                        0,0,     0066,         4, 1,  s2x2,  s2x3},
-   {{2, 4, 5, 0,                     -1, 3, -1, 1},                        0,0,     0033,         4, 1,  s2x2,  s2x3},
-   // Next 2 are for similar situations, in "nonisotropic triangles".
-   // We do not have the 3rd or 4th maps in the class, because they apply only
-   // to unwinding, and we never unwind to these setups.  That's why
-   // these 2 maps are placed after the 4 preceding ones.
-   {{0, 1, 3, 5,                     -1, 2, -1, 4},                    0,02020,     0066,      4, 0,  s2x2,  s_ntrgl6cw},
-   {{0, 2, 4, 5,                     1, -1, 3, -1},                    0,00202,     0033,      4, 0,  s2x2,  s_ntrgl6ccw},
-
-   // Next 2 are for similar situations, with all 8 people present.
-   {{1, 3, 4, 6, 7, 0,               2, -1, -1, 5, -1, -1},             0,0,     0x66,         6, 1,  s_short6,  s_nxtrglcw},
-   {{2, 3, 5, 6, 7, 0,              -1, -1, 4, -1, -1, 1},              0,0,     0x33,         6, 1,  s_short6,  s_nxtrglccw},
 
    // Need versions of these with phantoms on each half.
    {{0, 1, 3, 4, 5, 6,               -1, -1, 2, -1, -1, 7},         0,0200200,     0xCC,       6, 0,  s_bone6,  s_bone},

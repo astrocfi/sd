@@ -1,5 +1,9 @@
 // -*- mode:c++; indent-tabs-mode:nil; c-basic-offset:3; fill-column:88 -*-
 
+// SD -- square dance caller's helper.
+//
+//    Copyright (C) 1990-2012  William B. Ackerman.
+
 /*
  * sdui-wincon.cpp
  * Time-stamp: <93/07/19 19:38:40 wba>
@@ -16,6 +20,37 @@
  *
  * Uses "console application" mechanism of Visual C++.
  */
+
+//    This file is part of "Sd".
+//
+//    ===================================================================
+//
+//    If you received this file with express permission from the licensor
+//    to modify and redistribute it it under the terms of the Creative
+//    Commons CC BY-NC-SA 3.0 license, then that license applies.  See
+//    http://creativecommons.org/licenses/by-nc-sa/3.0/
+//
+//    ===================================================================
+//
+//    Otherwise, the GNU General Public License applies.
+//
+//    Sd is free software; you can redistribute it and/or modify it
+//    under the terms of the GNU General Public License as published by
+//    the Free Software Foundation; either version 3 of the License, or
+//    (at your option) any later version.
+//
+//    Sd is distributed in the hope that it will be useful, but WITHOUT
+//    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+//    or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
+//    License for more details.
+//
+//    You should have received a copy of the GNU General Public License,
+//    in the file COPYING.txt, along with Sd.  See
+//    http://www.gnu.org/licenses/
+//
+//    ===================================================================
+//
+//    This is for version 38.
 
 #define STRICT
 #define WIN32_LEAN_AND_MEAN

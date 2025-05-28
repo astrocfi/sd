@@ -6,9 +6,20 @@
 //
 //    This file is part of "Sd".
 //
+//    ===================================================================
+//
+//    If you received this file with express permission from the licensor
+//    to modify and redistribute it it under the terms of the Creative
+//    Commons CC BY-NC-SA 3.0 license, then that license applies.  See
+//    http://creativecommons.org/licenses/by-nc-sa/3.0/
+//
+//    ===================================================================
+//
+//    Otherwise, the GNU General Public License applies.
+//
 //    Sd is free software; you can redistribute it and/or modify it
 //    under the terms of the GNU General Public License as published by
-//    the Free Software Foundation; either version 2 of the License, or
+//    the Free Software Foundation; either version 3 of the License, or
 //    (at your option) any later version.
 //
 //    Sd is distributed in the hope that it will be useful, but WITHOUT
@@ -16,11 +27,13 @@
 //    or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
 //    License for more details.
 //
-//    You should have received a copy of the GNU General Public License
-//    along with Sd; if not, write to the Free Software Foundation, Inc.,
-//    59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+//    You should have received a copy of the GNU General Public License,
+//    in the file COPYING.txt, along with Sd.  See
+//    http://www.gnu.org/licenses/
 //
-//    This is for version 37.
+//    ===================================================================
+//
+//    This is for version 38.
 
 /* This defines the following functions:
    get_escape_string
@@ -901,17 +914,19 @@ void write_history_line(int history_index,
    // Do not double space them, even if writing final output.
 
    // First, don't print both "bad concept level" and "bad modifier level".
-
    if (this_item->test_one_warning_specific(warn__bad_concept_level))
       this_item->clear_one_warning_specific(warn__bad_modifier_level);
 
    // Or "opt for parallelogram" and "each 1x4".
-
    if (this_item->test_one_warning_specific(warn__check_pgram))
       this_item->clear_one_warning_specific(warn__each1x4);
 
-   // Or "each 1x6" and "each 1x3".
+   // Or both varieties of "each 1x3".
+   if (this_item->test_one_warning_specific(warn__split_to_1x3s_always))
+      this_item->set_one_warning_specific(warn__split_to_1x3s);
+   this_item->clear_one_warning_specific(warn__split_to_1x3s_always);
 
+   // Or "each 1x6" and "each 1x3".
    if (this_item->test_one_warning_specific(warn__split_to_1x3s))
       this_item->clear_one_warning_specific(warn__split_to_1x6s);
 
@@ -920,7 +935,6 @@ void write_history_line(int history_index,
 
    // Or "do your part" (that is, the "warn__dyp_or_2faced" version) and "you ought to say 2-faced".
    // And don't say "do your part" twice.
-
    if (this_item->test_one_warning_specific(warn__two_faced))
       this_item->clear_one_warning_specific(warn__unusual_or_2faced);
 

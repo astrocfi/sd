@@ -1,12 +1,25 @@
+// -*- mode:c++; indent-tabs-mode:nil; c-basic-offset:3; fill-column:88 -*-
+
 // SD -- square dance caller's helper.
 //
 //    Copyright (C) 1990-2012  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
+//    ===================================================================
+//
+//    If you received this file with express permission from the licensor
+//    to modify and redistribute it it under the terms of the Creative
+//    Commons CC BY-NC-SA 3.0 license, then that license applies.  See
+//    http://creativecommons.org/licenses/by-nc-sa/3.0/
+//
+//    ===================================================================
+//
+//    Otherwise, the GNU General Public License applies.
+//
 //    Sd is free software; you can redistribute it and/or modify it
 //    under the terms of the GNU General Public License as published by
-//    the Free Software Foundation; either version 2 of the License, or
+//    the Free Software Foundation; either version 3 of the License, or
 //    (at your option) any later version.
 //
 //    Sd is distributed in the hope that it will be useful, but WITHOUT
@@ -14,9 +27,11 @@
 //    or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
 //    License for more details.
 //
-//    You should have received a copy of the GNU General Public License
-//    along with Sd; if not, write to the Free Software Foundation, Inc.,
-//    59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+//    You should have received a copy of the GNU General Public License,
+//    in the file COPYING.txt, along with Sd.  See
+//    http://www.gnu.org/licenses/
+//
+//    ===================================================================
 //
 //    This is for version 38.
 
@@ -29,7 +44,7 @@
 // database format version.
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 309
+#define DATABASE_FORMAT_VERSION 313
 
 
 // We used to do some stuff to cater to compiler vendors (e.g. Sun
@@ -131,6 +146,8 @@ enum base_call_index {
    base_base_hinge_and_then_trade,
    base_base_hinge_and_then_trade_for_breaker,
    base_call_two_o_circs,
+   base_call_cloverleaf,
+   base_call_clover,
    // The next "NUM_TAGGER_CLASSES" (that is, 4) must be a consecutive group.
    base_call_tagger0,
    base_call_tagger1_noref,
@@ -372,6 +389,7 @@ enum dance_level {
    intlk_triangle_level = l_c1,
    magic_triangle_level = l_c2,
    triangle_in_box_level = l_c2,
+   stagger_not_in_2x4_level = l_c3a,
    general_magic_level = l_c3,
    phantom_tandem_level = l_c4a,
    quadruple_CLW_level = l_c4a,
@@ -402,6 +420,7 @@ enum setup_kind {
    svee,
    s_bone6,
    s_short6,
+   s1x5,
    s1x6,
    s2x3,
    s_1x2dmd,
@@ -619,6 +638,8 @@ enum begin_kind {
    b_pdeep2x1dmd,
    b_whrglass,
    b_pwhrglass,
+   b_1x5,
+   b_5x1,
    b_1x6,
    b_6x1,
    b_3x4,
@@ -777,6 +798,7 @@ enum {
    CAF__RESTR_CONTROVERSIAL    = 0x40,
    CAF__RESTR_BOGUS            = 0x50,
    CAF__RESTR_ASSUME_DPT       = 0x60,
+   CAF__RESTR_EACH_1X3         = 0x70,
    CAF__PREDS                  = 0x80,
    CAF__NO_CUTTING_THROUGH    = 0x100,
    CAF__NO_FACING_ENDS        = 0x200,

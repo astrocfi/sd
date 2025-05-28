@@ -56,6 +56,7 @@
    scatter
    gather
    install_scatter
+   warn_about_concept_level
    turn_4x4_pinwheel_into_c1_phantom
    clean_up_unsymmetrical_setup
    process_final_concepts
@@ -1709,6 +1710,10 @@ restriction_tester::restr_initializer restriction_tester::restr_init_table0[] = 
     {0}, {0}, {0}, false, chk_dmd_qtag},
    {s1x4, cr_all_ew, 4, {0},
     {4, 0, 1, 2, 3}, {0}, {0}, false, chk_dmd_qtag},
+   {s2x3, cr_all_ns, 4, {6, 0, 1, 2, 3, 4, 5},
+    {0}, {0}, {0}, false, chk_dmd_qtag},
+   {s2x3, cr_all_ew, 4, {0},
+    {6, 0, 1, 2, 3, 4, 5}, {0}, {0}, false, chk_dmd_qtag},
    {s2x4, cr_all_ns, 4, {8, 0, 1, 2, 3, 4, 5, 6, 7},
     {0}, {0}, {0}, false, chk_dmd_qtag},
    {s2x4, cr_all_ew, 4, {0},
@@ -4563,6 +4568,16 @@ extern void install_scatter(setup *resultpeople, int num, const veryshort *place
    for (int j=0; j<num; j++)
       install_rot(resultpeople, placelist[j], sourcepeople, j, rot);
 }
+
+
+extern void warn_about_concept_level()
+{
+   if (allowing_all_concepts)
+      warn(warn__bad_concept_level);
+   else
+      fail("This concept is not allowed at this level.");
+}
+
 
 extern void turn_4x4_pinwheel_into_c1_phantom(setup *ss)
 {

@@ -2,13 +2,24 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2007  William B. Ackerman.
+//    Copyright (C) 1990-2012  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
+//    ===================================================================
+//
+//    If you received this file with express permission from the licensor
+//    to modify and redistribute it it under the terms of the Creative
+//    Commons CC BY-NC-SA 3.0 license, then that license applies.  See
+//    http://creativecommons.org/licenses/by-nc-sa/3.0/
+//
+//    ===================================================================
+//
+//    Otherwise, the GNU General Public License applies.
+//
 //    Sd is free software; you can redistribute it and/or modify it
 //    under the terms of the GNU General Public License as published by
-//    the Free Software Foundation; either version 2 of the License, or
+//    the Free Software Foundation; either version 3 of the License, or
 //    (at your option) any later version.
 //
 //    Sd is distributed in the hope that it will be useful, but WITHOUT
@@ -16,9 +27,11 @@
 //    or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
 //    License for more details.
 //
-//    You should have received a copy of the GNU General Public License
-//    along with Sd; if not, write to the Free Software Foundation, Inc.,
-//    59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+//    You should have received a copy of the GNU General Public License,
+//    in the file COPYING.txt, along with Sd.  See
+//    http://www.gnu.org/licenses/
+//
+//    ===================================================================
 //
 //    This is for version 38.
 
@@ -3206,6 +3219,10 @@ extern void concentric_move(
    call_conc_option_state outer_inner_options[4];
    for (i=0 ; i<4 ; i++) outer_inner_options[i] = null_options;
 
+   warning_info saved_ctr_warnings = configuration::save_warnings();
+   warning_info saved_end_warnings = configuration::save_warnings();
+   warning_info saved_all_warnings = configuration::save_warnings();
+
    for (; k<klast; k++) {
       int doing_ends = (k<0) || (k==center_arity);
       setup *begin_ptr = doing_ends ? &begin_outer : &begin_inner[k];
@@ -3273,6 +3290,8 @@ extern void concentric_move(
          }
 
          if (doing_ends) {
+            configuration::restore_warnings(saved_end_warnings);
+
             // If the operation isn't being done with "DFM1_CONC_CONCENTRIC_RULES"
             // (that is, this is some implicit operation), we allow the user
             // to give the explicit "concentric" concept.  We respond to that concept
@@ -3283,7 +3302,7 @@ extern void concentric_move(
                 !(localmodsout1 & DFM1_CONC_CONCENTRIC_RULES)) {
                final_and_herit_flags junk_concepts;
                junk_concepts.clear_all_herit_and_final_bits();
-               const parse_block *next_parseptr;
+               parse_block *next_parseptr;
 
                next_parseptr = process_final_concepts(begin_ptr->cmd.parseptr,
                                                       false, &junk_concepts, true, false);
@@ -3292,6 +3311,14 @@ extern void concentric_move(
                    next_parseptr->concept->kind == concept_concentric) {
                   localmodsout1 |= DFM1_CONC_CONCENTRIC_RULES;
                   begin_ptr->cmd.parseptr = next_parseptr->next;
+               }
+
+               if (next_parseptr->concept->kind == marker_end_of_list &&
+                   next_parseptr->call == base_calls[base_call_cloverleaf]) {
+                  next_parseptr->call = base_calls[base_call_clover];
+                  localmodsout1 |= DFM1_CONC_FORCE_COLUMNS;
+                  localmodsout1 |= DFM1_CONC_DEMAND_COLUMNS;
+                  next_parseptr->no_check_call_level = true;
                }
             }
 
@@ -3364,6 +3391,7 @@ extern void concentric_move(
             }
          }
          else {
+            configuration::restore_warnings(saved_ctr_warnings);
             if ((begin_ptr->kind == s2x2 || begin_ptr->kind == s_short6) &&
                 cmdout &&
                 begin_outer_elongation > 0) {
@@ -3636,6 +3664,11 @@ extern void concentric_move(
 
             if (analyzer == schema_in_out_triple_zcom) analyzer = schema_in_out_triple;
          }
+
+         if (doing_ends)
+            saved_end_warnings.setmultiple(configuration::save_warnings());
+         else
+            saved_ctr_warnings.setmultiple(configuration::save_warnings());
       }
       else {
          begin_ptr->cmd.callspec = (call_with_name *) 0;
@@ -3674,6 +3707,26 @@ extern void concentric_move(
       }
    }
 
+   // Put the warnings back.  Watch for some people getting "rear back" and others not; change to "some rear back".
+
+   configuration::restore_warnings(saved_all_warnings);
+
+   // But don't do that if only one group was told to do anything.
+   if (cmdout != 0 && cmdin != 0) {
+      if (saved_ctr_warnings.testbit(warn__rear_back) && !saved_end_warnings.testbit(warn__rear_back)) {
+         saved_ctr_warnings.clearbit(warn__rear_back);
+         saved_ctr_warnings.setbit(warn__some_rear_back);
+      }
+
+      if (saved_end_warnings.testbit(warn__rear_back) && !saved_ctr_warnings.testbit(warn__rear_back)) {
+         saved_end_warnings.clearbit(warn__rear_back);
+         saved_end_warnings.setbit(warn__some_rear_back);
+      }
+   }
+
+   configuration::set_multiple_warnings(saved_ctr_warnings);
+   configuration::set_multiple_warnings(saved_end_warnings);
+
    // Now, if some command (centers or ends) didn't exist, we pick up the needed result flags
    // from the other part.
    // Grab the "did_last_part" flags from the call that was actually done.
@@ -3681,27 +3734,23 @@ extern void concentric_move(
    if (inverting) {
       if (!cmdin)
          outer_inners[0].result_flags.misc |= outer_inners[1].result_flags.misc &
-            (RESULTFLAG__DID_LAST_PART|
-             RESULTFLAG__SECONDARY_DONE|
-             RESULTFLAG__PARTS_ARE_KNOWN);
+            (RESULTFLAG__DID_LAST_PART | RESULTFLAG__SECONDARY_DONE | RESULTFLAG__PARTS_ARE_KNOWN);
 
       if (!cmdout) {
          for (k=0; k<center_arity; k++)
             outer_inners[k+1].result_flags.misc |= outer_inners[0].result_flags.misc &
-               (RESULTFLAG__DID_LAST_PART|
-                RESULTFLAG__SECONDARY_DONE|
-                RESULTFLAG__PARTS_ARE_KNOWN);
+               (RESULTFLAG__DID_LAST_PART | RESULTFLAG__SECONDARY_DONE | RESULTFLAG__PARTS_ARE_KNOWN);
       }
    }
    else {
       if (!cmdout)
          outer_inners[0].result_flags.misc |= outer_inners[1].result_flags.misc &
-            (RESULTFLAG__DID_LAST_PART|RESULTFLAG__SECONDARY_DONE|RESULTFLAG__PARTS_ARE_KNOWN);
+            (RESULTFLAG__DID_LAST_PART | RESULTFLAG__SECONDARY_DONE | RESULTFLAG__PARTS_ARE_KNOWN);
 
       if (!cmdin) {
          for (k=0; k<center_arity; k++)
             outer_inners[k+1].result_flags.misc |= outer_inners[0].result_flags.misc &
-               (RESULTFLAG__DID_LAST_PART|RESULTFLAG__SECONDARY_DONE|RESULTFLAG__PARTS_ARE_KNOWN);
+               (RESULTFLAG__DID_LAST_PART | RESULTFLAG__SECONDARY_DONE | RESULTFLAG__PARTS_ARE_KNOWN);
       }
    }
 
@@ -6225,6 +6274,11 @@ extern void inner_selective_move(
             (ss->cmd.cmd_misc_flags & (CMD_MISC__EXPLICIT_MATRIX|CMD_MISC__PHANTOMS)) ==
             (CMD_MISC__EXPLICIT_MATRIX|CMD_MISC__PHANTOMS);
 
+         if ((key & (LOOKUP_STAG_BOX|LOOKUP_STAG_CLW)) && ss->kind != s4x4) {
+            if (calling_level < stagger_not_in_2x4_level)
+               warn_about_concept_level();
+         }
+
          const select::fixer *fixp =
             select::hash_lookup(kk, thislivemask, allow_phantoms, key, arg2, this_one);
 
@@ -6688,6 +6742,8 @@ extern void inner_selective_move(
    // the people do the calls in isolation.
    // Also, shut off "superfluous phantom setups" warnings if this was "own the
    // <anyone> or <anyone> do your part".
+   // But note that "warn__split_to_1x3s_always" warnings do not get shut off--this means
+   // that "center 1x6 swing thru" in the "1/2 acey deucey" setup will raise the warning.
    configuration::clear_multiple_warnings(dyp_each_warnings);
    if (indicator < selective_key_plain_no_live_subsets)
       configuration::clear_multiple_warnings(useless_phan_clw_warnings);

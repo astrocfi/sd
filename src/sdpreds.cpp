@@ -300,10 +300,21 @@ extern bool selectp(setup *ss, int place, int allow_some /*= 0*/) THROW_DECL
       else if (p2 == ID2_NCTRDMD) s = selector_notctrdmd;
       else break;
       goto eq_return;
+   case selector_center_col_of_6:
+      // In these three setups, "center column of 6" has a different meaning than the 1x6
+      // meaning used in the rest of this program.  It means the same as "center 6".
+      // Of course, in a 3x4, the population will have to be correct.
+      if (ss->kind == s3x4 || ss->kind == s_qtag || ss->kind == s_spindle) {
+         p2 = pid2 & (ID2_CTR6|ID2_OUTR2);
+         if      (p2 == ID2_CTR6)  return true;
+         else if (p2 == ID2_OUTR2) return false;
+         else break;
+      }
+      // FALL THROUGH!!!
    case selector_ctr_1x6:
    case selector_center_wave_of_6:
    case selector_center_line_of_6:
-   case selector_center_col_of_6:
+      // FELL THROUGH!!!
       if      ((pid2 & (ID2_CTR1X6|ID2_NCTR1X6)) == ID2_CTR1X6) return true;
       else if ((pid2 & (ID2_CTR1X6|ID2_NCTR1X6)) == ID2_NCTR1X6) return false;
       break;

@@ -6,9 +6,20 @@
 //
 //    This file is part of "Sd".
 //
+//    ===================================================================
+//
+//    If you received this file with express permission from the licensor
+//    to modify and redistribute it it under the terms of the Creative
+//    Commons CC BY-NC-SA 3.0 license, then that license applies.  See
+//    http://creativecommons.org/licenses/by-nc-sa/3.0/
+//
+//    ===================================================================
+//
+//    Otherwise, the GNU General Public License applies.
+//
 //    Sd is free software; you can redistribute it and/or modify it
 //    under the terms of the GNU General Public License as published by
-//    the Free Software Foundation; either version 2 of the License, or
+//    the Free Software Foundation; either version 3 of the License, or
 //    (at your option) any later version.
 //
 //    Sd is distributed in the hope that it will be useful, but WITHOUT
@@ -16,11 +27,13 @@
 //    or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
 //    License for more details.
 //
-//    You should have received a copy of the GNU General Public License
-//    along with Sd; if not, write to the Free Software Foundation, Inc.,
-//    59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+//    You should have received a copy of the GNU General Public License,
+//    in the file COPYING.txt, along with Sd.  See
+//    http://www.gnu.org/licenses/
 //
-//    This is for version 37.
+//    ===================================================================
+//
+//    This is for version 38.
 
 /* This defines the following functions:
    tglmap::initialize
@@ -4759,10 +4772,8 @@ extern void triangle_move(
    setup *result) THROW_DECL
 {
    ss->clear_all_overcasts();
-   uint32 tbonetest;
    calldef_schema schema;
    int indicator = parseptr->concept->arg1;
-   int indicator_base;
 
 /* indicator = 0 - tall 6
                1 - short 6
@@ -4776,7 +4787,7 @@ extern void triangle_move(
    Add 100 octal if interlocked triangles.
    Add 200 octal if magic triangles. */
 
-   indicator_base = indicator & 077;
+   int indicator_base = indicator & 077;
 
    if (indicator_base >= 2 && indicator_base <= 21 &&
        ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_INTLK)) {
@@ -4795,12 +4806,8 @@ extern void triangle_move(
       fail("Illegal modifier for this concept.");
 
    if (((indicator & 0100) && calling_level < intlk_triangle_level) ||
-       ((indicator & 0200) && calling_level < magic_triangle_level)) {
-      if (allowing_all_concepts)
-         warn(warn__bad_concept_level);
-      else
-         fail("This concept is not allowed at this level.");
-   }
+       ((indicator & 0200) && calling_level < magic_triangle_level))
+      warn_about_concept_level();
 
    warning_info saved_warnings = configuration::save_warnings();
 
@@ -4809,7 +4816,7 @@ extern void triangle_move(
 
       if (ss->kind == s_galaxy) {
          // We know the setup rotation is canonicalized.
-         tbonetest = ss->people[1].id1 | ss->people[3].id1 |
+         uint32 tbonetest = ss->people[1].id1 | ss->people[3].id1 |
             ss->people[5].id1 | ss->people[7].id1;
 
          if ((tbonetest & 011) == 011) fail("Can't find tall/short 6.");
@@ -4902,6 +4909,8 @@ extern void triangle_move(
                break;
             case s_rigger:
             case s_ptpd:
+            case s_nxtrglcw:
+            case s_nxtrglccw:
                schema = schema_concentric_6_2;
                break;
             case sd2x7:
