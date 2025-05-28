@@ -1450,7 +1450,7 @@ extern bool check_restriction(
          }
          break;
       case cr_not_tboned:
-         if ((or_all_people(ss) & 011) == 011) goto restr_failed;
+         if ((ss->or_all_people() & 011) == 011) goto restr_failed;
          break;
       }
    }
@@ -6015,7 +6015,7 @@ static uint32_t do_actual_array_call(
        result->kind == s2x2) {
       // We just did a "dixie 1/2 tag" but will want to back up to the 1/4 position.
       // Need to change handedness.
-      uint32_t newtb99 = or_all_people(result);
+      uint32_t newtb99 = result->or_all_people();
       if (!(newtb99 & 001)) {
          result->swap_people(0, 1);
          result->swap_people(2, 3);
@@ -6031,7 +6031,7 @@ static uint32_t do_actual_array_call(
    // If a star went to a 2x2, set outer_elongation to make people laterally far and vertically close.
    // This is a hack to make Load the Boat work when the outsides are a facing star.
    if (ss->kind == s_star && result->kind == s2x2) {
-      uint32_t newtb99 = or_all_people(result);
+      uint32_t newtb99 = result->or_all_people();
       if (!(newtb99 & 001))
          desired_elongation = 1;
       else if (!(newtb99 & 010))
@@ -6271,6 +6271,18 @@ extern void basic_move(
                copy_rot(ss, i1, ss, i1, 033);
                copy_rot(ss, i2, ss, i2, 011);
 
+               if (ss->people[i1].id1 & STABLE_ENAB) {
+                  if ((ss->people[i1].id1 & (STABLE_VRMASK|STABLE_VLMASK)) != 0)
+                     fail("Sorry, can't do this.");
+                  ss->people[i1].id1 += 2*STABLE_REMBIT;
+               }
+
+               if (ss->people[i2].id1 & STABLE_ENAB) {
+                  if ((ss->people[i2].id1 & (STABLE_VRMASK|STABLE_VLMASK)) != 0)
+                     fail("Sorry, can't do this.");
+                  ss->people[i2].id1 += 2*STABLE_REMBIT;
+               }
+
                // Repair the damage.
                newtb = ss->people[0].id1 | ss->people[1].id1 | ss->people[2].id1 | ss->people[3].id1;
             }
@@ -6297,6 +6309,19 @@ extern void basic_move(
                copy_rot(ss, 1, ss, 1, 011);
                copy_rot(ss, 2, ss, 2, 011);
                copy_rot(ss, 3, ss, 3, 033);
+
+               if (ss->people[2].id1 & STABLE_ENAB) {
+                  if ((ss->people[2].id1 & (STABLE_VRMASK|STABLE_VLMASK)) != 0)
+                     fail("Sorry, can't do this.");
+                  ss->people[2].id1 += 4*STABLE_REMBIT;
+               }
+
+               if (ss->people[3].id1 & STABLE_ENAB) {
+                  if ((ss->people[3].id1 & (STABLE_VRMASK|STABLE_VLMASK)) != 0)
+                     fail("Sorry, can't do this.");
+                  ss->people[3].id1 += 4*STABLE_REMBIT;
+               }
+
                ss->rotation--;
                ss->kind = s1x4;
                canonicalize_rotation(ss);
@@ -6511,13 +6536,13 @@ foobar:
                   *ss = qtagtemp;
                }
             }
-
-            newtb = or_all_people(ss);
          }
          else if (k == s2x2) {
             *ss = linetemp;
-            newtb = or_all_people(ss);
+
          }
+
+         newtb = ss->or_all_people();
       }
 
       begin_kind key1 = setup_attrs[ss->kind].keytab[0];
@@ -6563,7 +6588,7 @@ foobar:
 
                   if (!whuzzis2)
                      result->result_flags.misc |= RESULTFLAG__COMPRESSED_FROM_2X3;
-                  newtb = or_all_people(ss);
+                  newtb = ss->or_all_people();
                   linedefinition = assoc(b_2x2, ss, calldeflist);
                   coldefinition = linedefinition;
                   four_way_startsetup = true;
@@ -6748,7 +6773,7 @@ foobar:
                }
             }
 
-            newtb = or_all_people(ss);
+            newtb = ss->or_all_people();
          }
 
          search_concepts_without_funny &= ~matrix_check_flag;

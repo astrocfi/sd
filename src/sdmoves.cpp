@@ -3730,7 +3730,6 @@ extern void drag_someone_and_move(setup *ss, parse_block *parseptr, setup *resul
    matrix_rec second_matrix_info[matrix_info_capacity+1];
    int i;
    bool fudged_start = false;
-   uint32_t flags = MTX_STOP_AND_WARN_ON_TBONE | MTX_IGNORE_NONSELECTEES;
    who_list saved_selector = current_options.who;
    current_options.who = parseptr->options.who;
 
@@ -3750,7 +3749,8 @@ extern void drag_someone_and_move(setup *ss, parse_block *parseptr, setup *resul
    // Make the lateral chains first.
 
    make_matrix_chains(matrix_info, nump, false, MTX_STOP_AND_WARN_ON_TBONE, 1);
-   process_nonjaywalk_chains(matrix_info, nump, (uint32_t *) 0, flags, 1);
+   process_nonjaywalk_chains(matrix_info, nump, (uint32_t *) 0,
+                             MTX_STOP_AND_WARN_ON_TBONE | MTX_IGNORE_NONSELECTEES, 1);
 
    /* Now clean off the pointers in preparation for the second pass. */
 
@@ -3765,7 +3765,8 @@ extern void drag_someone_and_move(setup *ss, parse_block *parseptr, setup *resul
    // Vertical chains next.
 
    make_matrix_chains(matrix_info, nump, false, MTX_STOP_AND_WARN_ON_TBONE, 0);
-   process_nonjaywalk_chains(matrix_info, nump, (uint32_t *) 0, flags, 0);
+   process_nonjaywalk_chains(matrix_info, nump, (uint32_t *) 0,
+                             MTX_STOP_AND_WARN_ON_TBONE | MTX_IGNORE_NONSELECTEES, 0);
 
    // Scan for people who ought to have done something but didn't.
 
@@ -3796,10 +3797,11 @@ extern void drag_someone_and_move(setup *ss, parse_block *parseptr, setup *resul
 
    for (i=0; i<nump; i++) {
       if (matrix_info[i].sel) {
+         // This person is a draggee.  Find his dragger.
          // Get the actual dragger person id1 word.
          uint32_t dragger_id = scopy.people[matrix_info[i].deltarot].id1;
 
-         // Find the XY coords of the person's dragger.
+         // Find the XY coords of the dragger.
 
          int kk;
          for (kk=0; kk<second_nump; kk++) {
@@ -3807,6 +3809,7 @@ extern void drag_someone_and_move(setup *ss, parse_block *parseptr, setup *resul
                goto found_dragger;
          }
          fail("Internal error: failed to find dragger coords.");
+
       found_dragger:
          // Original offset of draggee relative to dragger.
          int origdx = matrix_info[i].x - matrix_info[i].deltax;
@@ -3826,7 +3829,19 @@ extern void drag_someone_and_move(setup *ss, parse_block *parseptr, setup *resul
          }
          // Now origdx/dy has offset of draggee from dragger in new space.
          // This is new info for draggee.
+
+         // (Second_matrix_info, second_nump) has the location records for the draggers,
+         // that is, the people that actually did the call.  Create new records for the
+         // draggees.
+
          copy_rot(&second_people, final_2nd_nump, &people, i, dragger_turn*011);
+
+         second_people.people[final_2nd_nump].id1 &= ~STABLE_ALL_MASK;
+
+         if (result->people[second_matrix_info[kk].orig_source_idx].id1 & STABLE_ENAB)
+            second_people.people[final_2nd_nump].id1 |=
+               (result->people[second_matrix_info[kk].orig_source_idx].id1 & STABLE_ALL_MASK);
+
          second_matrix_info[final_2nd_nump] = matrix_info[i];
          second_matrix_info[final_2nd_nump].x = second_matrix_info[kk].x + origdx;
          second_matrix_info[final_2nd_nump++].y = second_matrix_info[kk].y + origdy;
@@ -4340,7 +4355,7 @@ extern bool get_real_subcall(
 
    if (current_options.star_turn_option != 0 &&
        (orig_call->the_defn.callflagsf & CFLAG2_IS_STAR_CALL)) {
-      parse_block *xx = get_parse_block();
+      parse_block *xx = parse_block::get_parse_block();
       xx->concept = &concept_marker_concept_mod;
       xx->options = current_options;
       xx->options.star_turn_option = 0;
@@ -7229,7 +7244,7 @@ void really_inner_move(
 
    uint32_t tbonetest = 0;
    if (attr::slimit(ss) >= 0) {
-      tbonetest = or_all_people(ss);
+      tbonetest = ss->or_all_people();
       if (!(tbonetest & 011) && the_schema != schema_by_array) {
          result->kind = nothing;
          result->rotation = 0;
@@ -8176,7 +8191,7 @@ static void move_with_real_call(
             // Basic_move or matrixmove will handle them.
 
             // We skip all of this if the incoming setup is empty.
-            if (attr::slimit(ss) < 0 || or_all_people(ss) != 0) {
+            if (attr::slimit(ss) < 0 || ss->or_all_people() != 0) {
                heritflags bit_to_set = 0ULL;
 
                if ((callflagsf & CFLAG2_FRACTIONAL_NUMBERS) &&

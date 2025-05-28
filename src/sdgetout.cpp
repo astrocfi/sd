@@ -1070,7 +1070,7 @@ static bool inner_search(command_kind goal,
    hashed_random_list[0] = 0;
 
    // Mark the parse block allocation, so that we throw away the garbage created by failing attempts.
-   inner_parse_mark = outer_parse_mark = get_parse_block_mark();
+   inner_parse_mark = outer_parse_mark = parse_block::get_parse_block_mark();
 
    // This loop searches through a group of twenty single-call resolves, then a group
    // of twenty two-call resolves, then a group of twenty three-call resolves,
@@ -1657,7 +1657,7 @@ static bool inner_search(command_kind goal,
          }
 
          history_save = config_history_ptr + 1;
-         inner_parse_mark = get_parse_block_mark();
+         inner_parse_mark = parse_block::get_parse_block_mark();
          hashed_random_list[history_save - history_insertion_point] = hashed_randoms;
       }
    }

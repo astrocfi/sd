@@ -1689,6 +1689,9 @@ public:
                                   // is at the level
    bool say_and;                  // Used by "randomize" -- put "AND" in front of this
 
+   static parse_block *get_parse_block_mark();    // In sdutil.cpp
+   static parse_block *get_parse_block();         // In sdutil.cpp
+
    // We allow static instantiation of these things with just
    // the "concept" field filled in.
    parse_block(const concept_descriptor & ccc) { initialize(&ccc); }
@@ -1700,6 +1703,13 @@ public:
    // In case someone runs a some kind of global memory leak detector, this releases all blocks.
    static void final_cleanup();
 
+   void set_parse_block_next(parse_block *thing) { next = thing; }
+   void set_parse_block_concept(const concept_descriptor *thing) { concept = thing; }
+   void set_parse_block_call(call_with_name *thing) { call = thing; }
+   void set_parse_block_call_to_print(call_with_name *thing) { call_to_print = thing; }
+   void set_parse_block_replacement_key(short int key) { replacement_key = key; }
+   parse_block **get_parse_block_subsidiary_root_addr() { return &subsidiary_root; }
+
    static parse_block *parse_active_list;
 
    // Being "old school", and not fully trusting the de-fragmentation mechanism,
@@ -1709,6 +1719,7 @@ public:
 
    static parse_block *parse_inactive_list;
 };
+
 
 struct setup_command {
    parse_block *parseptr;
@@ -1816,6 +1827,7 @@ struct setup {
    small_setup outer;
    int concsetup_outer_elongation;
 
+   inline uint32_t or_all_people() const;
    inline void clear_people();
    inline void clear_person(int resultplace);
    inline void suppress_roll(int place);
@@ -2112,10 +2124,6 @@ enum resolve_command_kind {
    resolve_command_kind_enum_extent    // Not a resolve kind; indicates extent of the enum.
 };
 
-
-
-parse_block *get_parse_block_mark();
-parse_block *get_parse_block();
 
 /* in SDPREDS */
 extern bool selector_used;
@@ -5339,12 +5347,12 @@ inline uint32_t rotccw(uint32_t n)
 { if (n == 0) return 0; else return (n + 033) & ~064; }
 
 
-inline uint32_t or_all_people(const setup *ss)
+inline uint32_t setup::or_all_people() const
 {
    uint32_t result = 0;
 
-   for (int i=0 ; i<=attr::slimit(ss) ; i++)
-      result |= ss->people[i].id1;
+   for (int i=0 ; i<=attr::slimit(this) ; i++)
+      result |= people[i].id1;
 
    return result;
 }
@@ -6336,13 +6344,6 @@ extern SDLIB_API concept_kind get_concept_kind(const concept_descriptor *foo);
 extern SDLIB_API const concept_descriptor *access_concept_descriptor_table(int i);
 extern SDLIB_API bool get_yield_if_ambiguous_flag(call_with_name *foo);
 extern SDLIB_API call_with_name *access_base_calls(int i);
-
-void set_parse_block_concept(parse_block *p, const concept_descriptor *concept);
-void set_parse_block_next(parse_block *p, parse_block *next);
-void set_parse_block_call(parse_block *p, call_with_name *call);
-void set_parse_block_call_to_print(parse_block *p, call_with_name *call);
-void set_parse_block_replacement_key(parse_block *p, short int key);
-parse_block **get_parse_block_subsidiary_root_addr(parse_block *p);
 
 // Well, these are more than just accessors.
 warning_info config_save_warnings();

@@ -2404,7 +2404,7 @@ extern parse_block *copy_parse_tree(parse_block *original_tree)
 
    if (!original_tree) return NULL;
 
-   new_item = get_parse_block();
+   new_item = parse_block::get_parse_block();
    new_root = new_item;
 
    for (;;) {
@@ -2421,7 +2421,7 @@ extern parse_block *copy_parse_tree(parse_block *original_tree)
 
       if (!original_tree->next) break;
 
-      new_item->next = get_parse_block();
+      new_item->next = parse_block::get_parse_block();
       new_item = new_item->next;
       original_tree = original_tree->next;
    }

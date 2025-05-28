@@ -206,27 +206,7 @@ Copy these 6 into it.
 
 from sd or sddoc to the archive subdirectory.
 
-               PRODUCTION BUILD, TESTING, AND UPLOAD - Linux
-
- RUBBISH copy sd_vnnnn.zip, r_vnnnn.zip, doc_vnnnn.zip and this file onto a thumb drive.
- RUBBISH Simplest way is to copy the entire vnnnn directory from the archive into
- RUBBISH the home directory on Ubuntu.
-
- RUBBISH Copy the vnnnn directory from the thumb drive into the home directory on Ubuntu.
-
- RUBBISH Then, on Ubuntu, in the home directory, do
- RUBBISH ./make_linux.sh nnnn
- RUBBISH as in
- RUBBISH ./make_linux.sh 3906
-
- RUBBISH That will copy the files from the ~/vnnn directory down to the various things
- RUBBISH under ~/sd, compile everything, and make the tarball.
-
- RUBBISH Then, to do regression tests:
-
- RUBBISH cd ~/sd/regress
- RUBBISH chmod 775 *.sh
- RUBBISH ./doit.sh
+               PRODUCTION BUILD, TESTING, AND UPLOAD - Linux: RUBBISH.
 
 -------------------------------------------------------------------------------
              UPLOADING TO LYNETTE'S WEB SITE, ON WINDOWS 10

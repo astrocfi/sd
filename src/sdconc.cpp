@@ -3888,13 +3888,13 @@ extern void concentric_move(
             setup2.cmd.prior_elongation_bits = 2;
 
             if (localmodsout1 & DFM1_CONC_DEMAND_LINES) {
-               if ((or_all_people(&setup1) & 1) ||
-                   (or_all_people(&setup2) & 010))
+               if ((setup1.or_all_people() & 1) ||
+                   (setup2.or_all_people() & 010))
                   fail("Outsides must be as if in lines at start of this call.");
             }
             else if (localmodsout1 & DFM1_CONC_DEMAND_COLUMNS) {
-               if ((or_all_people(&setup1) & 010) ||
-                   (or_all_people(&setup2) & 1))
+               if ((setup1.or_all_people() & 010) ||
+                   (setup2.or_all_people() & 1))
                   fail("Outsides must be as if in columns at start of this call.");
             }
 
@@ -6266,7 +6266,7 @@ extern void inner_selective_move(
                local_selector == selector_anyone_apex_of_wave_tgl) && ss->kind == s2x4) {
 
          ss->cmd.cmd_misc3_flags |= CMD_MISC3__SAID_TRIANGLE;
-         apex_people = or_all_people(&the_setups[0]) & 011;
+         apex_people = the_setups[0].or_all_people() & 011;
 
          if (apex_people == 010) {
             switch (livemask[0]) {

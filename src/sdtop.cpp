@@ -341,19 +341,12 @@ const concept_descriptor *access_concept_descriptor_table(int i) { return &conce
 bool get_yield_if_ambiguous_flag(call_with_name *foo) {return (foo->the_defn.callflagsf & CFLAG2_YIELD_IF_AMBIGUOUS) != 0; }
 call_with_name *access_base_calls(int i) { return base_calls[i]; }
 
-void set_parse_block_concept(parse_block *p, const concept_descriptor *concept) { p->concept = concept; }
-void set_parse_block_next(parse_block *p, parse_block *next) { p->next = next; }
-void set_parse_block_call(parse_block *p, call_with_name *call) { p->call = call; }
-void set_parse_block_call_to_print(parse_block *p, call_with_name *call) { p->call_to_print = call; }
-void set_parse_block_replacement_key(parse_block *p, short int key) { p->replacement_key = key; }
-parse_block **get_parse_block_subsidiary_root_addr(parse_block *p) { return &p->subsidiary_root; }
-
 const concept_kind constant_with_concept_diagnose = concept_diagnose;
 const concept_kind constant_with_marker_end_of_list = marker_end_of_list;
 
 
-parse_block *get_parse_block_mark() { return parse_block::parse_active_list; }
-parse_block *get_parse_block()
+parse_block *parse_block::get_parse_block_mark() { return parse_block::parse_active_list; }
+parse_block *parse_block::get_parse_block()
 {
    parse_block *item;
 
@@ -3947,7 +3940,7 @@ extern callarray *assoc(
             require_explicit = true;
          }
          else {
-            if ((or_all_people(ss) & 011) == 011) {
+            if ((ss->or_all_people() & 011) == 011) {
                // They are T-boned.  The "QUALBIT__NTBONE" bit says to reject.
                if ((p->qualifierstuff & QUALBIT__NTBONE) != 0) continue;
             }
@@ -3998,7 +3991,7 @@ extern callarray *assoc(
       tt.assump_live = (p->qualifierstuff / QUALBIT__LIVE) & 1;
       tt.assump_both = (p->qualifierstuff / QUALBIT__RIGHT) & 3;
 
-      u = or_all_people(ss);
+      u = ss->or_all_people();
 
       switch (this_qualifier) {
       case cr_wave_only:
@@ -4328,7 +4321,7 @@ extern callarray *assoc(
 
          goto bad;   // If it's a 2x4, for example, it can't be a parallelogram.
       case cr_lateral_cols_empty:
-         t = or_all_people(ss);
+         t = ss->or_all_people();
          mask = ss->little_endian_live_mask();
 
          if (ssK == s3x4 && (t & 1) == 0 &&
@@ -5929,7 +5922,7 @@ void normalize_setup(setup *ss, normalize_action action, qtag_compress_choice no
 
  startover:
 
-   tbonetest = or_all_people(ss);
+   tbonetest = ss->or_all_people();
    livemask = ss->little_endian_live_mask();
 
    if (ss->kind == sfat2x8)
@@ -6682,6 +6675,7 @@ void toplevelmove() THROW_DECL
    starting_setup.cmd.restrained_selector_decoder[1] = 0;
    starting_setup.cmd.restrained_fraction.flags = 0;
    starting_setup.cmd.restrained_fraction.fraction = 0;
+   starting_setup.cmd.cmd_final_flags.clear_all_herit_and_final_bits();
 
    newhist.init_warnings_specific();
 
@@ -6787,7 +6781,7 @@ bool deposit_call_tree(modifier_block *anythings, parse_block *save1, int key)
    // concepts or calls for an "anything" subcall.
 
    if (save1) {
-      parse_block *tt = get_parse_block();
+      parse_block *tt = parse_block::get_parse_block();
       // Run to the end of any already-deposited things.  This could happen if the
       // call takes a tagger -- it could have a search chain before we even see it.
       while (save1->next) save1 = save1->next;
@@ -6962,7 +6956,7 @@ bool do_subcall_query(
       else {
          // User declined the modification.  Create a null entry
          // so that we don't query again.
-         *newsearch = get_parse_block();
+         *newsearch = parse_block::get_parse_block();
          (*newsearch)->concept = &concept_marker_concept_mod;
          (*newsearch)->options = current_options;
          (*newsearch)->replacement_key = snumber;
@@ -6972,7 +6966,7 @@ bool do_subcall_query(
       }
    }
 
-   *newsearch = get_parse_block();
+   *newsearch = parse_block::get_parse_block();
    (*newsearch)->concept = &concept_marker_concept_mod;
    (*newsearch)->options = current_options;
    (*newsearch)->replacement_key = snumber;

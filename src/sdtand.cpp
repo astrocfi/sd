@@ -1719,7 +1719,7 @@ extern void tandem_couples_move(
 
          break;
       case s_c1phan:
-         tbonetest = or_all_people(ss);
+         tbonetest = ss->or_all_people();
 
          t = key;
 
@@ -3298,7 +3298,7 @@ void mimic_move(
          if ((MI.setup_hint & MIMIC_SETUP_BOXES) != 0)
             fail("Don't specify this setup.");
 
-         uint32_t tbonetest = or_all_people(ss);
+         uint32_t tbonetest = ss->or_all_people();
          orig_hint = MI.setup_hint;
 
          for (trial_number=0 ; trial_number<2 ; trial_number++) {

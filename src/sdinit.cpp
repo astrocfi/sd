@@ -240,7 +240,7 @@ static void test_starting_setup(call_list_kind cl, const setup & test_setup)
    global_callcount = 0;
    /* Mark the parse block allocation, so that we throw away the garbage
       created by failing attempts. */
-   parse_mark = get_parse_block_mark();
+   parse_mark = parse_block::get_parse_block_mark();
 
  try_again:
 

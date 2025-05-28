@@ -867,7 +867,7 @@ bool matcher_class::verify_call()
    warning_info saved_warnings = config_save_warnings();
    int old_history_ptr = config_history_ptr;
 
-   parse_mark = get_parse_block_mark();
+   parse_mark = parse_block::get_parse_block_mark();
    save_parse_state();
    savecl = parse_state.call_list_to_use;
 
@@ -901,14 +901,14 @@ bool matcher_class::verify_call()
          // concepts or calls for an "anything" subcall.
 
          if (save1) {
-            parse_block *tt = get_parse_block();
-            set_parse_block_concept(save1, &concept_marker_concept_mod);
-            set_parse_block_next(save1, tt);
-            set_parse_block_concept(tt, &concept_marker_concept_mod);
-            set_parse_block_call(tt, access_base_calls(base_call_null));
-            set_parse_block_call_to_print(tt, access_base_calls(base_call_null));
-            set_parse_block_replacement_key(tt, DFM1_CALL_MOD_MAND_ANYCALL/DFM1_CALL_MOD_BIT);
-            parse_state.concept_write_ptr = get_parse_block_subsidiary_root_addr(tt);
+            parse_block *tt = parse_block::get_parse_block();
+            save1->set_parse_block_concept(&concept_marker_concept_mod);
+            save1->set_parse_block_next(tt);
+            tt->set_parse_block_concept(&concept_marker_concept_mod);
+            tt->set_parse_block_call(access_base_calls(base_call_null));
+            tt->set_parse_block_call_to_print(access_base_calls(base_call_null));
+            tt->set_parse_block_replacement_key(DFM1_CALL_MOD_MAND_ANYCALL/DFM1_CALL_MOD_BIT);
+            parse_state.concept_write_ptr = tt->get_parse_block_subsidiary_root_addr();
             save1 = (parse_block *) 0;
          }
 

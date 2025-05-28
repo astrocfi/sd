@@ -1732,6 +1732,8 @@ tagtabitem tagtabinit[num_base_call_indices] = {
    {0, "extend_n"},
    {0, "inrollcirc"},
    {0, "outrollcirc"},
+   {0, "uturnback"},
+   {0, "anyoneuturnback"},
 };
 
 int tagtabsize;          // Number of items we currently have in tagtab.
