@@ -925,7 +925,7 @@ void expand::initialize()
       compress_hash_table[i] = (thing *) 0;
    }
 
-   for (tabp = init_table ; tabp->inner_kind != nothing ; tabp++) {
+   for (tabp = expand_init_table ; tabp->inner_kind != nothing ; tabp++) {
       uint32_t hash_num = (tabp->inner_kind * 25) & (NUM_EXPAND_HASH_BUCKETS-1);
       tabp->next_expand = expand_hash_table[hash_num];
       expand_hash_table[hash_num] = tabp;
@@ -1462,7 +1462,8 @@ bool expand::compress_from_hash_table(setup *ss,
 
 
 bool expand::expand_from_hash_table(setup *ss,
-                                    uint32_t needpropbits,
+                                    uint32_t needpropbitsl,
+                                    uint32_t needpropbitsr,
                                     uint32_t livemask) THROW_DECL
 {
    uint32_t hash_num = (ss->kind * 25) & (NUM_EXPAND_HASH_BUCKETS-1);
@@ -1470,7 +1471,8 @@ bool expand::expand_from_hash_table(setup *ss,
 
    for (eptr=expand_hash_table[hash_num] ; eptr ; eptr=eptr->next_expand) {
       if (eptr->inner_kind == ss->kind &&
-          (eptr->expandconcpropmask & needpropbits) &&
+          ((eptr->expandconcpropmaskl & needpropbitsl) ||
+           (eptr->expandconcpropmaskr & needpropbitsr)) &&
           (livemask & eptr->lillivemask) == 0) {
          warn(eptr->expwarning);
          expand_setup(*eptr, ss);
@@ -1492,19 +1494,20 @@ extern void do_matrix_expansion(
 {
    uint32_t needprops = concprops & CONCPROP__NEED_MASK;
    if (needprops == 0) return;
-   uint32_t needpropbits = NEEDMASK(needprops);
+   uint32_t needpropbitsl = NEEDMASKL(needprops);
+   uint32_t needpropbitsr = NEEDMASKR(needprops);
 
    for (;;) {
       uint32_t livemask = little_endian_live_mask(ss);
 
       // Search for simple things in the hash table.
 
-      if (expand::expand_from_hash_table(ss, needpropbits, livemask))
+      if (expand::expand_from_hash_table(ss, needpropbitsl, needpropbitsr, livemask))
          goto expanded;
 
       if (ss->kind == s4x4) {
-         if (needpropbits &
-             (NEEDMASK(CONCPROP__NEEDK_4D_4PTPD) | NEEDMASK(CONCPROP__NEEDK_4DMD))) {
+         if ((needpropbitsl & (NEEDMASKL(CONCPROP__NEEDK_4D_4PTPD) | NEEDMASKL(CONCPROP__NEEDK_4DMD))) ||
+             (needpropbitsr & (NEEDMASKR(CONCPROP__NEEDK_4D_4PTPD) | NEEDMASKR(CONCPROP__NEEDK_4DMD)))) {
             if (livemask == 0x1717U) {
                expand::expand_setup(s_4x4_4dma, ss);
                goto expanded;
@@ -1514,8 +1517,10 @@ extern void do_matrix_expansion(
                goto expanded;
             }
          }
-         else if (needpropbits &
-                  (NEEDMASK(CONCPROP__NEEDK_TWINDMD) | NEEDMASK(CONCPROP__NEEDK_TWINQTAG))) {
+
+
+         else if ((needpropbitsl & (NEEDMASKL(CONCPROP__NEEDK_TWINDMD) | NEEDMASKL(CONCPROP__NEEDK_TWINQTAG))) ||
+                  (needpropbitsr & (NEEDMASKR(CONCPROP__NEEDK_TWINDMD) | NEEDMASKR(CONCPROP__NEEDK_TWINQTAG)))) {
             // Egads!  It turns out that the "CONCPROP__NEEDK_TWINQTAG"
             // indicator is used not just for "twin phantom 1/4 tags", but for
             // "tandem in a 1/4 tag"!!!!  Both require a 4x6, but with very
@@ -1572,7 +1577,8 @@ extern void do_matrix_expansion(
       }
 
       if (ss->kind == s_23232) {
-         if (needpropbits & NEEDMASK(CONCPROP__NEEDK_4X5)) {
+         if ((needpropbitsl & (NEEDMASKL(CONCPROP__NEEDK_4X5))) ||
+             (needpropbitsr & (NEEDMASKR(CONCPROP__NEEDK_4X5)))) {
             // Have to figure out where to move the people in the lines of 3.
             if ((livemask & 04343) == 04242) {
                warn(warn__check_hokey_4x5);

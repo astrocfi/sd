@@ -46,6 +46,7 @@
    concentric_move
    merge_table::map_tgl4l
    merge_table::map_tgl4b
+   merge_table::map_2x3short
    merge_table::map_2234b
    merge_table::map_24r24a
    merge_table::map_24r24b
@@ -4587,6 +4588,9 @@ const merge_table::concmerge_thing merge_table::map_tgl4l = {
 const merge_table::concmerge_thing merge_table::map_tgl4b = {
    nothing, nothing, 0, 0, 0, 0x0, schema_by_array, s2x2, nothing,
    warn__none, 0, 0, {-1, -1, 2, 3}, {0}};
+const merge_table::concmerge_thing merge_table::map_2x3short = {
+   nothing, nothing, 0, 0, 0, 0x1, schema_concentric, s1x2, s1x2,
+   warn__none, 1, 1, {1, 4}, {1, 4}};
 const merge_table::concmerge_thing merge_table::map_2234b = {
    nothing, nothing, 0, 0, 0, 0x0, schema_matrix, s4x4, nothing,
    warn__none, 0, 0, {15, 3, 7, 11}, {12, 13, 14, 0, -1, -1, 4, 5, 6, 8, -1, -1}};
@@ -4976,6 +4980,10 @@ void merge_table::merge_setups(setup *ss,
          res2->swap_people(1, 3);
          the_map = &merge_table::map_tgl4b;
          r = 0;
+      }
+      else if (res1->kind == s_short6 && res2->kind == s2x3 && two_couple_calling && r == 1 &&
+               (mask1 & 055) == 0 && (mask2 & 055) == 0) {
+         the_map = &merge_table::map_2x3short;
       }
       else if (res2->kind == s3x4 && res1->kind == s2x2 && ((mask2 & 06060) == 0)) {
          the_map = &merge_table::map_2234b;

@@ -1,8 +1,8 @@
 \input texinfo
 @c user documentation for Sd (square dance caller's helper)
 @c
-@set sd-version 39.26
-@set Time-stamp: October 7, 2020
+@set sd-version 39.27
+@set Time-stamp: October 20, 2020
 @c
 @setfilename sd_doc.info
 @c We want the version number to show in the html file.
@@ -5068,6 +5068,8 @@ program will issue a warning.  Using the @code{each wave} concept will prevent
 the warning.  In either case, the exact words you would use whan calling the card
 are up to you.
 
+@item 1x6 matrix
+@item 1x8 matrix
 @item 1x10 matrix
 @item 1x12 matrix
 @item 1x16 matrix

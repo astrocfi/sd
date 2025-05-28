@@ -181,6 +181,31 @@ typedef unsigned char uint8_t;
 #define INT32_C(val) ((uint32_t) + (val##L))
 #define UINT32_C(val) ((uint32_t) + (val##UL))
 
+class my_uint64_t {
+ public:
+
+   // Construct from two 32-bit words.
+   my_uint64_t(uint32_t left = 0, uint32_t right = 0)
+      { l = left; r = right; }
+
+   bool operator != (const my_uint64_t & rhs) const
+      {
+         if ((l != rhs.l)) return true;
+         if ((r != rhs.r)) return true;
+         return false;
+      }
+
+   bool operator == (const my_uint64_t & rhs) const
+      {
+         if ((l != rhs.l)) return false;
+         if ((r != rhs.r)) return false;
+         return true;
+      }
+
+ private:
+   uint32_t l;
+   uint32_t r;
+};
 
 typedef const char *Cstring;
 

@@ -1874,8 +1874,12 @@ struct concept_table_item {
 */
 
 
+#define LB32 (CONCPROP__NEED_LOBIT*32)
 
-#define NEEDMASK(K) ((uint32_t) (1<<(((uint32_t) (K))/((uint32_t) CONCPROP__NEED_LOBIT))))
+#define NEEDMASKL(K) (((K) < LB32) ? ((uint32_t) (1<<(((uint32_t) (K))/((uint32_t) CONCPROP__NEED_LOBIT)))) : 0)
+
+#define NEEDMASKR(K) (((K) >= LB32) ? ((uint32_t) (1<<(((uint32_t) ((K)-LB32))/((uint32_t) CONCPROP__NEED_LOBIT)))) : 0)
+
 
 enum {
    CONCPROP__SECOND_CALL     = 0x00000001U,
@@ -1883,11 +1887,12 @@ enum {
    CONCPROP__SET_PHANTOMS    = 0x00000004U,
    CONCPROP__NO_STEP         = 0x00000008U,
 
-   // This is a five bit field.  CONCPROP__NEED_LOBIT marks its low bit.
+   // This is a six bit field.  CONCPROP__NEED_LOBIT marks its low bit.
    // WARNING!!!  The values in this field are encoded into a bit field
    // for the setup expansion/normalization tables (see the definition
-   // of the macro "NEEDMASK".)  It follows that there can't be more than 32 of them.
-   CONCPROP__NEED_MASK       = 0x000001F0U,
+   // of the macro "NEEDMASK".)  It follows that there can't be more than 64 of them.
+   // There are 34 at present, having recently overflowed from 32.
+   CONCPROP__NEED_MASK       = 0x000003F0U,
    CONCPROP__NEED_LOBIT      = 0x00000010U,
    CONCPROP__NEEDK_4X4       = 0x00000010U,
    CONCPROP__NEEDK_2X8       = 0x00000020U,
@@ -1920,10 +1925,11 @@ enum {
    CONCPROP__NEEDK_DBLX      = 0x000001D0U,
    CONCPROP__NEEDK_DEEPXWV   = 0x000001E0U,
    CONCPROP__NEEDK_QUAD_1X3  = 0x000001F0U,
+   CONCPROP__NEEDK_1X6       = 0x00000200U,
+   CONCPROP__NEEDK_1X8       = 0x00000210U,
 
-   CONCPROP__NEED_ARG2_MATRIX= 0x00000200U,
-   CONCPROP__USE_DIRECTION   = 0x00000400U,
-   /* spare:                   0x00000800U, */
+   CONCPROP__NEED_ARG2_MATRIX= 0x00000400U,
+   CONCPROP__USE_DIRECTION   = 0x00000800U,
    /* spare:                   0x00010000U, */
    /* spare:                   0x00020000U, */
    CONCPROP__USES_PARTS      = 0x00040000U,
@@ -3666,6 +3672,7 @@ class merge_table {
 
    static const concmerge_thing map_tgl4l;
    static const concmerge_thing map_tgl4b;
+   static const concmerge_thing map_2x3short;
    static const concmerge_thing map_2234b;
    static const concmerge_thing map_24r24a;
    static const concmerge_thing map_24r24b;
@@ -4477,7 +4484,8 @@ class expand {
       warning_index expwarning;
       warning_index norwarning;
       normalize_action action_level;
-      uint32_t expandconcpropmask;
+      uint32_t expandconcpropmaskl;
+      uint32_t expandconcpropmaskr;
       thing *next_expand;
       thing *next_compress;
    };
@@ -4496,7 +4504,8 @@ class expand {
                                         bool noqtagcompress) THROW_DECL;
 
    static bool expand_from_hash_table(setup *ss,                               // In sdtop.
-                                      uint32_t needpropbits,
+                                      uint32_t needpropbitsl,
+                                      uint32_t needpropbitsr,
                                       uint32_t livemask) THROW_DECL;
 
  private:
@@ -4507,7 +4516,7 @@ class expand {
    static thing *expand_hash_table[NUM_EXPAND_HASH_BUCKETS];
    static thing *compress_hash_table[NUM_EXPAND_HASH_BUCKETS];
 
-   static thing init_table[];
+   static thing expand_init_table[];
 };
 
 class full_expand {
