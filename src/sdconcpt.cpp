@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-2001  William B. Ackerman.
+    Copyright (C) 1990-2003  William B. Ackerman.
 
     This file is unpublished and contains trade secrets.  It is
     to be used by permission only and not to be disclosed to third
@@ -2930,16 +2930,22 @@ static void do_concept_crazy(
    parse_block *parseptr,
    setup *result) THROW_DECL
 {
-   int i;
-   int craziness, highlimit;
-   setup tempsetup;
-   setup_command cmd;
-
    uint32 finalresultflags = 0;
-   int reverseness = parseptr->concept->arg1;
    int this_part;
 
-   tempsetup = *ss;
+   setup tempsetup = *ss;
+
+   // If we didn't do this check, and we had a 1x4, the "do it on each side"
+   // stuff would just do it without splitting or thinking anything was unusual,
+   // while the "do it in the center" code would catch it at present, but might
+   // not in the future if we add the ability of the concentric schema to mean
+   // pick out the center 2 from a 1x4.  In any case, if we didn't do this
+   // check, "1/4 reverse crazy bingo" would be legal from a 2x2.
+
+   if (attr::klimit(tempsetup.kind) < 7)
+      fail("Need an 8-person setup for this.");
+
+   int reverseness = parseptr->concept->arg1;
 
    if (tempsetup.cmd.cmd_final_flags.test_heritbit(INHERITFLAG_REVERSE)) {
       if (reverseness) fail("Redundant 'REVERSE' modifiers.");
@@ -2949,52 +2955,57 @@ static void do_concept_crazy(
 
    tempsetup.cmd.cmd_final_flags.clear_heritbit(INHERITFLAG_REVERSE);
    // We don't allow other flags, like "cross", but we do allow "MxN".
-   if ((tempsetup.cmd.cmd_final_flags.test_heritbits(~(INHERITFLAG_MXNMASK|INHERITFLAG_NXNMASK))) |
+   if ((tempsetup.cmd.cmd_final_flags.test_heritbits(~(INHERITFLAG_MXNMASK|
+                                                       INHERITFLAG_NXNMASK))) |
        tempsetup.cmd.cmd_final_flags.final)
       fail("Illegal modifier before \"crazy\".");
 
-   cmd = tempsetup.cmd;    /* We will modify these flags, and, in any case, we need
-                              to rematerialize them at each step. */
+   // We will modify these flags, and, in any case,
+   // we need to rematerialize them at each step.
+   setup_command cmd = tempsetup.cmd;
 
-   /* If we didn't do this check, and we had a 1x4, the "do it on each side"
-      stuff would just do it without splitting or thinking anything was unusual,
-      while the "do it in the center" code would catch it at present, but might
-      not in the future if we add the ability of the concentric schema to mean
-      pick out the center 2 from a 1x4.  In any case, if we didn't do this
-      check, "1/4 reverse crazy bingo" would be legal from a 2x2. */
+   int craziness = (parseptr->concept->arg2) ? parseptr->options.number_fields : 4;
+   uint32 incomingfracs = cmd.cmd_frac_flags & ~CMD_FRAC_THISISLAST;
 
-   if (attr::klimit(tempsetup.kind) < 7)
-      fail("Need an 8-person setup for this.");
+   if (incomingfracs & CMD_FRAC_REVERSE)
+      reverseness ^= (craziness ^ 1);    // That's all it takes!
 
-   if (parseptr->concept->arg2)
-      craziness = parseptr->options.number_fields;
-   else
-      craziness = 4;
+   int s_numer = (incomingfracs & 0xF000) >> 12;
+   int s_denom = (incomingfracs & 0xF00) >> 8;
+   int e_numer = (incomingfracs & 0xF0) >> 4;
+   int e_denom = (incomingfracs & 0xF);
 
-   i = 0;   /* The start point. */
-   highlimit = craziness;   /* The end point. */
+   int ttt = craziness * s_numer;
+   int uuu = craziness * e_numer;
+   int i = ttt / s_denom;           // The start point.
+   int highlimit = uuu / e_denom;   // The end point.
 
-   uint32 corefracs = cmd.cmd_frac_flags & ~CMD_FRAC_THISISLAST;
-   this_part = (corefracs & CMD_FRAC_PART_MASK) / CMD_FRAC_PART_BIT;
+   if (i*s_denom != ttt || highlimit*e_denom != uuu || i >= highlimit)
+      fail("Illegal fraction for \"crazy\".");
+
+   // We have *not* checked for highlimit <= 4.  We allow 5/4 crazy.
+   // Use tastefully.
+
+   this_part = (incomingfracs & CMD_FRAC_PART_MASK) / CMD_FRAC_PART_BIT;
 
    if (this_part > 0) {
-      switch (corefracs & (CMD_FRAC_CODE_MASK | CMD_FRAC_PART2_MASK | 0xFFFF)) {
-      case CMD_FRAC_CODE_ONLY | CMD_FRAC_NULL_VALUE:
+      switch (incomingfracs & (CMD_FRAC_CODE_MASK | CMD_FRAC_PART2_MASK)) {
+      case CMD_FRAC_CODE_ONLY:
          // Request is to do just part this_part.
          i = this_part-1;
          highlimit = this_part;
          finalresultflags |= RESULTFLAG__PARTS_ARE_KNOWN;
          if (highlimit == craziness) finalresultflags |= RESULTFLAG__DID_LAST_PART;
          break;
-      case CMD_FRAC_CODE_FROMTO | CMD_FRAC_NULL_VALUE:
+      case CMD_FRAC_CODE_FROMTO:
          // Request is to do everything up through part this_part.
          highlimit = this_part;
          break;
-      case CMD_FRAC_CODE_FROMTOREV | CMD_FRAC_NULL_VALUE:
+      case CMD_FRAC_CODE_FROMTOREV:
          // Request is to do everything strictly after part this_part-1.
          i = this_part-1;
          break;
-      case CMD_FRAC_CODE_ONLYREV | CMD_FRAC_NULL_VALUE:
+      case CMD_FRAC_CODE_ONLYREV:
          // Request is to do just part this_part, counting from the end.
          i = highlimit-this_part;
          highlimit += 1-this_part;
@@ -3003,10 +3014,10 @@ static void do_concept_crazy(
          break;
       default:
          // If the "K" field ("part2") is nonzero, maybe we can still do something.
-         switch (corefracs & (CMD_FRAC_CODE_MASK | 0xFFFF)) {
-         case CMD_FRAC_CODE_FROMTOREV | CMD_FRAC_NULL_VALUE:
+         switch (incomingfracs & CMD_FRAC_CODE_MASK) {
+         case CMD_FRAC_CODE_FROMTOREV:
             i = this_part-1;
-            highlimit -= (corefracs & CMD_FRAC_PART2_MASK) / CMD_FRAC_PART2_BIT;
+            highlimit -= (incomingfracs & CMD_FRAC_PART2_MASK) / CMD_FRAC_PART2_BIT;
             break;
          default:
             fail("\"crazy\" is not allowed after this concept.");
@@ -3015,12 +3026,6 @@ static void do_concept_crazy(
    }
 
    if (highlimit <= i || highlimit > craziness) fail("Illegal fraction for \"crazy\".");
-
-   if ((corefracs & 0xFFFF) != CMD_FRAC_NULL_VALUE)
-      fail("\"crazy\" is not allowed with fractional concepts.");
-
-   if (corefracs & CMD_FRAC_REVERSE)
-      reverseness ^= (craziness ^ 1);    /* That's all it takes! */
 
    // No fractions for subject, we have consumed them.
    cmd.cmd_frac_flags = CMD_FRAC_NULL_VALUE;
@@ -6655,7 +6660,7 @@ extern long_boolean do_big_concept(
    void (*concept_func)(setup *, parse_block *, setup *);
    parse_block *orig_concept_parse_block = ss->cmd.parseptr;
    parse_block *this_concept_parse_block = orig_concept_parse_block;
-   const concept::concept_descriptor *this_concept = this_concept_parse_block->concept;
+   const conzept::concept_descriptor *this_concept = this_concept_parse_block->concept;
    concept_kind this_kind = this_concept->kind;
    concept_table_item *this_table_item = &concept_table[this_kind];
 

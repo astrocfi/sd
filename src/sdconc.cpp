@@ -5153,7 +5153,20 @@ back_here:
                        schema == schema_select_ctr6) && !others)) {
                // Everyone.
                update_id_bits(this_one);
-               move(this_one, FALSE, &the_results[setupcount]);
+               this_one->cmd.cmd_misc_flags &= ~CMD_MISC__VERIFY_MASK;
+               switch (selector_to_use) {
+               case selector_center_wave:
+                  this_one->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
+                  break;
+               case selector_center_line:
+                  this_one->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_LINES;
+                  break;
+               case selector_center_col:
+                  this_one->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_COLS;
+                  break;
+               }
+
+               impose_assumption_and_move(this_one, &the_results[setupcount]);
                goto done_with_this_one;
             }
          }

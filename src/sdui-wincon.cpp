@@ -29,7 +29,10 @@
 
 
 static HANDLE consoleStdout, consoleStdin;
-static char SavedWindowTitle[201];
+// What the OS had right at the start -- we restore it when we exit from the program.
+static char SavedWindowTitle[MAX_TEXT_LINE_LENGTH];
+// Our string without the effect of "pick" stuff.
+static char szMainTitle[MAX_TEXT_LINE_LENGTH];
 static CONSOLE_SCREEN_BUFFER_INFO globalconsoleInfo;
 static DWORD oldMode;
 static DWORD newMode;
@@ -55,6 +58,20 @@ void iofull::final_initialize()
 }
 
 
+extern void ttu_set_window_title(const char *string)
+{
+   lstrcpy(szMainTitle, string);
+   SetConsoleTitle(szMainTitle);
+}
+
+
+void iofull::set_pick_string(const char *string)
+{
+   if (string && *string) SetConsoleTitle(string);
+   else SetConsoleTitle(szMainTitle);    // End of pick, reset to our main title.
+}
+
+
 void iofull::display_help()
 {
    printf("-lines <N>                  assume this many lines on the screen\n");
@@ -62,12 +79,6 @@ void iofull::display_help()
    printf("                                 when input or output is redirected\n");
    printf("-no_cursor                  do not use screen management functions at all\n");
    printf("-journal <filename>         echo input commands to journal file\n");
-}
-
-
-extern void ttu_set_window_title(char s[])
-{
-   (void) SetConsoleTitle(s);
 }
 
 
@@ -149,7 +160,9 @@ extern void ttu_initialize()
       using_default_screen_size = true;
    }
 
-   (void) GetConsoleTitle(SavedWindowTitle, 200);
+   GetConsoleTitle(SavedWindowTitle, MAX_TEXT_LINE_LENGTH-1);
+   SavedWindowTitle[MAX_TEXT_LINE_LENGTH-1] = 0;
+   szMainTitle[0] = 0;   // In case ttu_set_window_title never happens.
 
    if (sdtty_no_console) return;
 
@@ -273,7 +286,7 @@ void ttu_terminate()
       (void) SetConsoleCtrlHandler(&control_c_handler, FALSE);
    }
 
-   (void) SetConsoleTitle(SavedWindowTitle);
+   SetConsoleTitle(SavedWindowTitle);
 }
 
 

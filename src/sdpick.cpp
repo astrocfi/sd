@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-2002  William B. Ackerman.
+    Copyright (C) 1990-2003  William B. Ackerman.
 
     This file is unpublished and contains trade secrets.  It is
     to be used by permission only and not to be disclosed to third
@@ -39,12 +39,6 @@ and the following external variables:
 #define SDLIB_API
 #endif
 
-#define SHOW_PICK_PHASE
-
-#include <string.h>
-#if defined(WIN32) && defined(SHOW_PICK_PHASE)
-#include <windows.h>
-#endif
 #include "sd.h"
 
 
@@ -63,16 +57,18 @@ struct pick_type_descriptor {
    bool exhaustive_search;
    bool accept_nice_only;
    bool with_concept;
+   char *display_string;
 };
 
+
 pick_type_descriptor pick_type_table[] = {
-   { false, false, false },
-   { true,  true,  false },
-   { true,  true,  true },
-   { true,  false, false },
-   { true,  false, true },
-   { false, false, false },
-   { false, false, false },};
+   { false, false, false, "pick start first scan"},  // pick_starting_first_scan
+   { true,  true,  false, "pick plain nice scan"},   // pick_plain_scan_nice_only
+   { true,  true,  true,  "pick concept nice scan"}, // pick_concept_nice_only
+   { true,  false, false, "pick plain any scan"},    // pick_plain_accept_all
+   { true,  false, true,  "pick concept any scan"},  // pick_concept_accept_all
+   { false, false, false, "pick random search"},     // pick_in_random_search
+   { false, false, false, 0}};                       // pick_not_in_any_pick_at_all
 
 command_kind search_goal;
 
@@ -95,20 +91,7 @@ static pick_type current_pick_type = pick_not_in_any_pick_at_all;
 
 static void display_pick()
 {
-#if defined(WIN32) && defined(SHOW_PICK_PHASE)
-   char *bar[] = {
-      "start first scan",
-      "plain nice scan",
-      "concept nice scan",
-      "plain any scan",
-      "concept any scan",
-      "random search",
-      "none"};
-
-   char foo[200];
-   (void) sprintf(foo, "pick %s", bar[current_pick_type]);
-   (void) SetConsoleTitle(foo);
-#endif
+   gg->set_pick_string(pick_type_table[current_pick_type].display_string);
 }
 
 
@@ -186,13 +169,6 @@ selector_kind do_selector_iteration(long_boolean allow_iteration)
 
 direction_kind do_direction_iteration()
 {
-   static direction_kind direction_iterator_table[] = {
-      direction_left,
-      direction_right,
-      direction_in,
-      direction_out,
-      direction_uninitialized};
-
    if (interactivity == interactivity_database_init ||
        interactivity == interactivity_verify) {
       if (verify_options.where == direction_uninitialized) {
@@ -206,6 +182,13 @@ direction_kind do_direction_iteration()
    int j;
 
    if (pick_type_table[current_pick_type].exhaustive_search) {
+      static direction_kind direction_iterator_table[] = {
+         direction_left,
+         direction_right,
+         direction_in,
+         direction_out,
+         direction_uninitialized};
+
       j = (int) direction_iterator_table[direction_iterator];
 
       if (selector_iterator == 0) {
@@ -282,18 +265,24 @@ void do_number_iteration(int howmanynumbers,
    if (pick_type_table[current_pick_type].exhaustive_search &&
        (selector_iterator | direction_iterator) == 0) {
       number_iterator++;
-      /* If the call requires it, or if doing the first scan and the call
-         takes multiple numbers, we iterate over odd numbers only.  The
-         reason for the latter clause is that we don't want to wast a lot of
-         time enumerating 256 combinations of i-j-k-l quarter the deucey.
-         We will get to them on the second scan in any case. */
-      if (odd_number_only ||
-          (howmanynumbers >= 2 && current_pick_type == pick_plain_scan_nice_only)) {
+
+      // If the call requires it, iterate over odd numbers only.
+      if (odd_number_only) {
          while (number_iterator & 0x55555555)
             number_iterator += number_iterator & ~(number_iterator-1);
       }
 
-      /* See if we have exhausted all possible numbers. */
+      // If the call takes 3 or more numbers, we don't iterate in the
+      // "nice" scans.  The reason is that we don't want to wast a lot
+      // of time enumerating lots of combinations of i-j-k-l quarter
+      // the deucey.  We will get to them on the random scan in any
+      // case.
+
+      if (howmanynumbers >= 3) {
+         number_iterator = 0;
+      }
+
+      // See if we have exhausted all possible numbers.
       if (number_iterator >> (howmanynumbers*2)) number_iterator = 0;
    }
 }
@@ -387,12 +376,12 @@ void do_circcer_iteration(uint32 *circcp)
    did.  If the iterators are nonzero, we will just repeat that call.
    Otherwise, we will advance it to the next and use that call. */
 
-const concept::concept_descriptor *pick_concept(long_boolean already_have_concept_in_place)
+const conzept::concept_descriptor *pick_concept(long_boolean already_have_concept_in_place)
 {
    long_boolean do_concept = FALSE;
 
    if (interactivity != interactivity_picking)
-      return (concept::concept_descriptor *) 0;
+      return (conzept::concept_descriptor *) 0;
 
    if (current_pick_type == pick_starting_first_scan) {
 
@@ -417,7 +406,7 @@ const concept::concept_descriptor *pick_concept(long_boolean already_have_concep
    }
    else if (pick_type_table[current_pick_type].exhaustive_search) {
       if (already_have_concept_in_place)
-         return (concept::concept_descriptor *) 0;
+         return (conzept::concept_descriptor *) 0;
 
       if ((selector_iterator | direction_iterator | number_iterator |
            tagger_iterator | circcer_iterator) == 0) {
@@ -514,7 +503,7 @@ const concept::concept_descriptor *pick_concept(long_boolean already_have_concep
       return &concept_descriptor_table[uims_menu_index];
    }
 
-   return (concept::concept_descriptor *) 0;
+   return (conzept::concept_descriptor *) 0;
 }
 
 

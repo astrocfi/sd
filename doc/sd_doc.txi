@@ -1,8 +1,8 @@
 \input texinfo @c %**start of header -*-texinfo-*-
 @c user documentation for Sd (square dance caller's helper)
 @c
-@set sd-version 34.8c
-@set Time-stamp: January 16, 2003
+@set sd-version 34.8e
+@set Time-stamp: January 27, 2003
 @c
 @setfilename sd_doc.info
 @c We want the version number to show in the html file.
@@ -1950,6 +1950,7 @@ Such a file might look like this:
 [Options]
 reverse_video
 no_warnings
+window_size 850x650
 singlespace
 
 [Sessions]
@@ -2143,16 +2144,42 @@ in a menu.  Normally, a double click, or pressing the @samp{Accept} button,
 is required.  This option is meaningless in @code{Sdtty}.
 It is the same as giving the @code{toggle singleclick mode}
 command while the program is running.
+@item maximize
+This tells @code{Sd} to ``maximize'' its window, that is, to use the full
+screen.  It is the same thing that would happen if you clicked the open
+box button in the upper right corner.  This has no effect on @code{Sdtty}.
+@code{Sdtty} runs as a ``command prompt'' program and cannot set its
+window size.
+@item window_size @var{size-designator}
+This argument is followed by a designator like ``750x450''.  It will set
+the window size to the indicated number of pixels.  There is enormous
+variation in the screen size of various displays and graphics cards, and
+in people's preferences, so you may find the standard default size
+(780x560 pixels) not to your liking.  The two size numbers are separated
+by the letter ``x'', with no space.
+
+You can also adjust the screen position by giving 4 numbers, as in
+``window_size 750x450x20x20''.  The arguments are the X and Y size, and the
+X and Y position of the upper left corner, all in pixels.
+
+These options do not affect @code{Sdtty}.  @code{Sdtty} runs as a
+``command prompt'' program and cannot set its own window size.
+However, you can usually control this either by editing the icon that
+starts the program (right click the icon, select ``properties'', and,
+on the ``shortcut'' tab, select ``maximized'') or by changing the general
+layout of command prompt programs (start, control panel, console, and
+use the ``options'' and/or ``layout'' tabs.)
 @item no_checkers
 @code{Sd} normally draws the formation on the screen with icons that are
 intended to look like callers' ``checkers''.  This option disables that,
 and displays dancers by more normal means.  Pictures drawn in the output
 file never use these icons.  This option is meaningless in @code{Sdtty}.
 @item no_graphics
-This suppresses the use of special PC graphics characters (``triangles'') when drawing pictures
-on the screen.  These characters are not standard on all PC's.  Pictures
-drawn in the output file will never use the special graphics characters.
-This is not meaningful in @code{Sd} unless @code{no_checkers} is also given.
+This suppresses the use of special PC graphics characters
+(``triangles'') when drawing pictures on the screen.  These characters
+are not standard on all PC's.  Pictures drawn in the output file will
+never use the special graphics characters.  This is not meaningful in
+@code{Sd} unless @code{no_checkers} is also given.
 @item no_color
 @code{Sdtty} and @code{Sd} normally color-code
 the dancers shown on the screen, according to various color schemes that
@@ -2424,7 +2451,7 @@ Each keyword has a hyphen in front of it when used on the command line.
 Examples:
 
 @display
-@t{sd -singlespace plus}
+@t{sd -singlespace -maximize plus}
 @t{sdtty -no_warnings -active_phantoms}
 @end display
 
@@ -4958,12 +4985,18 @@ means the center @emph{wave}.  If you want the center diamond instead, you
 must say so.
 @sp 1
 @item center 1x4
-This is intended for use in things like 3x1 diamonds.  (This is the setup
-that results from a @code{1/2 acey deucey} from waves.)  In this setup,
-@code{centers} means the center @emph{diamond}.  If you want the center wave
-instead, you must say @code{center 1x4}.  The program uses the designator
-@code{center 1x4} as a catch-all for the center line or the center column.
-When reading the card, you probably ought to be more specific.
+@item center column
+@item center line
+@item center wave
+These are intended for use in things like 3x1 diamonds.  (This is the
+setup that results from a @code{1/2 acey deucey} from waves.)  In this
+setup, @code{centers} means the center @emph{diamond}.  If you want the
+center wave instead, you must say @code{center 1x4}.  These can also be
+used in a tidal setup to disambiguate the ``who are the centers?''
+issue.  The program uses the designator @code{center 1x4} as a catch-all
+term.  In most cases, you can use one of the other designators to be
+more specific.  The program often checks that the more specific designator
+is being used properly, but it doesn't always check.  Use them with care.
 @sp 1
 @item center 1x6
 This is similar, but refers to a line or column of 6.  It is intended

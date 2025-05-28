@@ -83,9 +83,8 @@ void iofull::display_help()
    printf("-journal <filename>         echo input commands to journal file\n");
 }
 
-extern void ttu_set_window_title(char s[])
-{
-}
+extern void ttu_set_window_title(const char *string) {}
+
 
 bool iofull::help_manual() { return false; }
 

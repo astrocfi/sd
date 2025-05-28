@@ -19,26 +19,26 @@
 extern char *ui_directions;
 
 /* Print the help message appropriate for the switches that we support. */
-extern void ttu_display_help(void);
+extern void ttu_display_help();
 
 /* Initialize this package. */
-extern void ttu_initialize(void);
+extern void ttu_initialize();
 
 /* Terminate this package. */
-extern void ttu_terminate(void);
+extern void ttu_terminate();
 
 /* Get number of lines to use for "more" processing.  This number is
    not used for any other purpose -- the rest of the program is not concerned
    with the "screen" size. */
 
-extern int get_lines_for_more(void);
+extern int get_lines_for_more();
 
 /* Clear the current line, leave cursor at left edge. */
-extern void clear_line(void);
+extern void clear_line();
 
 /* Backspace the cursor and clear the rest of the line, presumably
    erasing the last character. */
-extern void rubout(void);
+extern void rubout();
 
 /* Move cursor up "n" lines and then clear rest of screen. */
 extern void erase_last_n(int n);

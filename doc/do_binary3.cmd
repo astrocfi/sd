@@ -11,15 +11,13 @@ REM         CWSDPMI.exe, SDTTY.lnk, SDTTY.pif, sdtty.ico,
 REM         sample1.ini, sample2.ini, sample3.ini
 REM         and the shortcut setup command files.
 REM
-del install3.lzh install3.exe
+del install3.lzh
 lha a install3 ..\sd\sdtty.exe ..\sd\mkcalls.exe
 lha a install3 ..\sd\sd_calls.txt ..\sd\sd_calls.dat
 lha a install3 ..\sd\SDTTY.lnk ..\sd\sdtty.ico
 lha a install3 SDTTY.pif CWSDPMI.exe
 lha a install3 sample1.ini sample2.ini sample3.ini readme
 lha s install3
-ren INSTALL3.EXE install3.exe
-del install3.lzh
 REM del bin3.txt bin3.zip bin3.asc
 REM echo cd sd> bin3.msg
 REM echo uufile>> bin3.msg

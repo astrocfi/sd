@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-2002  William B. Ackerman.
+    Copyright (C) 1990-2003  William B. Ackerman.
 
     This file is unpublished and contains trade secrets.  It is
     to be used by permission only and not to be disclosed to third
@@ -28,7 +28,7 @@
    read_8_from_database
    read_16_from_database
    close_database
-   concept::translate_concept_names
+   conzept::translate_concept_names
    open_session
 and the following external variables:
    selector_for_initialize
@@ -270,7 +270,8 @@ static void test_starting_setup(call_list_kind cl, const setup *test_setup)
    // since the test setups that we use might have people placed in such a way
    // that something like "1/2 truck" is illegal.
    if (test_call->the_defn.schema == schema_matrix &&
-       test_call->the_defn.stuff.matrix.stuff[0] != test_call->the_defn.stuff.matrix.stuff[1])
+       test_call->the_defn.stuff.matrix.matrix_def_list->items[0] !=
+       test_call->the_defn.stuff.matrix.matrix_def_list->items[1])
       goto accept;
 
    // We also accept "<ATC> your neighbor" and "<ANYTHING> motivate" calls,
@@ -868,7 +869,7 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
    }
 
    int j;
-   int lim = 8;
+   int lim = 16;
    uint32 left_half;
 
    read_halfword();
@@ -880,40 +881,61 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
       break;
    case schema_matrix:
       lim = 2;
-      /* !!!! FALL THROUGH !!!! */
+      // !!!! FALL THROUGH !!!!
    case schema_partner_matrix:
-      /* !!!! FELL THROUGH !!!! */
-      left_half = last_datum;
-      read_halfword();
-      root_to_use->stuff.matrix.flags =
-         ((left_half & 0xFFFF) << 16) | (last_datum & 0xFFFF);
+      // !!!! FELL THROUGH !!!!
+      {
+         left_half = last_datum;
+         read_halfword();
+         root_to_use->stuff.matrix.matrix_flags =
+            ((left_half & 0xFFFF) << 16) | (last_datum & 0xFFFF);
 
-      if (root_to_use->stuff.matrix.flags & MTX_USE_SELECTOR)
-         root_to_use->callflagsh |= CFLAGH__REQUIRES_SELECTOR;
-      if (root_to_use->stuff.matrix.flags & MTX_USE_NUMBER)
-         root_to_use->callflags1 |= CFLAG1_NUMBER_BIT;
+         if (root_to_use->stuff.matrix.matrix_flags & MTX_USE_SELECTOR)
+            root_to_use->callflagsh |= CFLAGH__REQUIRES_SELECTOR;
+         if (root_to_use->stuff.matrix.matrix_flags & MTX_USE_NUMBER)
+            root_to_use->callflags1 |= CFLAG1_NUMBER_BIT;
 
-      root_to_use->stuff.matrix.stuff =
-         (uint32 *) get_mem(sizeof(uint32)*8);
+         matrix_def_block *this_matrix_block = 
+            (matrix_def_block *) get_mem(sizeof(matrix_def_block) + sizeof(uint32)*(lim-2));
+         root_to_use->stuff.matrix.matrix_def_list = this_matrix_block;
 
-      for (j=0; j<lim; j++) {
-         uint32 firstpart;
+         this_matrix_block->modifier_level = calling_level;
+         this_matrix_block->alternate_def_flags = 0;
+         this_matrix_block->next = (matrix_def_block *) 0;
+
+      next_matrix_clause:
+
+         for (j=0; j<lim; j++) {
+            uint32 firstpart;
+
+            read_halfword();
+            firstpart = last_datum & 0xFFFF;
+
+            if (firstpart) {
+               read_halfword();
+               this_matrix_block->items[j] =
+                  firstpart | ((last_datum & 0xFFFF) << 16);
+            }
+            else {
+               this_matrix_block->items[j] = 0;
+            }               
+         }
 
          read_halfword();
+         // Check for compound definition.
+         if ((last_datum & 0xE000) == 0x4000) {
+            this_matrix_block->next = (matrix_def_block *)
+               get_mem(sizeof(matrix_def_block) + sizeof(uint32)*(lim-2));
 
-         firstpart = last_datum & 0xFFFF;
-
-         if (firstpart) {
-            read_halfword();
-            root_to_use->stuff.matrix.stuff[j] =
-               firstpart | ((last_datum & 0xFFFF) << 16);
+            this_matrix_block = this_matrix_block->next;
+            this_matrix_block->modifier_level = (dance_level) (last_datum & 0xFFF);
+            read_fullword();
+            this_matrix_block->alternate_def_flags = last_datum;
+            this_matrix_block->next = (matrix_def_block *) 0;
+            goto next_matrix_clause;
          }
-         else {
-            root_to_use->stuff.matrix.stuff[j] = 0;
-         }               
       }
 
-      read_halfword();
       break;
    case schema_by_array:
       {
@@ -1822,21 +1844,21 @@ static const char *translate_menu_name(const char *orig_name, uint32 *escape_bit
 }
 
 
-void concept::translate_concept_names()
+void conzept::translate_concept_names()
 {
    int i;
    uint32 escape_bit_junk;
 
-   for (i=0; concept::unsealed_concept_descriptor_table[i].kind != marker_end_of_list; i++) {
-      concept::unsealed_concept_descriptor_table[i].menu_name =
-         translate_menu_name(concept::unsealed_concept_descriptor_table[i].name,
+   for (i=0; conzept::unsealed_concept_descriptor_table[i].kind != marker_end_of_list; i++) {
+      conzept::unsealed_concept_descriptor_table[i].menu_name =
+         translate_menu_name(conzept::unsealed_concept_descriptor_table[i].name,
                              &escape_bit_junk);
    }
 
    // "Seal" the concept table.  It will be made visible outside og the
    // concept class as a constant array.
 
-   concept_descriptor_table = concept::unsealed_concept_descriptor_table;
+   concept_descriptor_table = conzept::unsealed_concept_descriptor_table;
 }
 
 
@@ -2115,7 +2137,7 @@ extern long_boolean open_session(int argc, char **argv)
 
    // Translate the concept menu names, and then export the sealed
    // concept list for ordinary folks to see in a constant array.
-   concept::translate_concept_names();
+   conzept::translate_concept_names();
 
    // Scan for "useful" concepts, that is, concepts that will help with
    // functions like "normalize".

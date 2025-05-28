@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-2002  William B. Ackerman.
+    Copyright (C) 1990-2003  William B. Ackerman.
 
     This file is unpublished and contains trade secrets.  It is
     to be used by permission only and not to be disclosed to third
@@ -62,13 +62,13 @@ extern void canonicalize_rotation(setup *result) THROW_DECL
 
       result->kind = result->inner.skind;
       result->rotation += result->inner.srotation;
-      canonicalize_rotation(result);    /* Sorry! */
+      canonicalize_rotation(result);    // Sorry!
       result->inner.srotation = result->rotation;
 
       result->kind = result->outer.skind;
       result->rotation = save_rotation + result->outer.srotation;
       for (i=0 ; i<12 ; i++) swap_people(result, i, i+12);
-      canonicalize_rotation(result);    /* Sorrier! */
+      canonicalize_rotation(result);    // Sorrier!
       for (i=0 ; i<12 ; i++) swap_people(result, i, i+12);
       result->outer.srotation = result->rotation;
 
@@ -81,15 +81,15 @@ extern void canonicalize_rotation(setup *result) THROW_DECL
 
       result->kind = result->inner.skind;
       result->rotation += result->inner.srotation;
-      canonicalize_rotation(result);    /* Sorry! */
+      canonicalize_rotation(result);    // Sorry!
       result->inner.srotation = result->rotation;
 
       result->kind = s_dead_concentric;
       result->rotation = 0;
    }
    else if (setup_attrs[result->kind].four_way_symmetry) {
-      /* The setup has 4-way symmetry.  We can canonicalize it so the
-         result rotation is zero. */
+      // The setup has 4-way symmetry.  We can canonicalize it so the
+      // result rotation is zero.
       int i, rot, rot11, delta, bigd, i0, i1, i2, i3, j0, j1, j2, j3;
       personrec x0, x1, x2, x3;
 
@@ -137,7 +137,7 @@ extern void canonicalize_rotation(setup *result) THROW_DECL
    else if (result->kind == s1x3) {
       if (result->rotation & 2) {
 
-         /* Must turn this setup upside-down. */
+         // Must turn this setup upside-down.
 
          swap_people(result, 0, 2);
          (void) copy_rot(result, 0, result, 0, 022);
@@ -147,8 +147,8 @@ extern void canonicalize_rotation(setup *result) THROW_DECL
       result->rotation &= 1;
    }
    else if (((attr::slimit(result) & ~07776) == 1)) {
-      /* We have a setup of an even number of people.  We know how to canonicalize
-         this.  The resulting rotation should be 0 or 1. */
+      // We have a setup of an even number of people.  We know how to canonicalize
+      // this.  The resulting rotation should be 0 or 1.
 
       if (result->rotation & 2) {
 
@@ -199,8 +199,8 @@ extern void reinstate_rotation(setup *ss, setup *result) THROW_DECL
          break;
    }
 
-   /* If we turned by 90 degress, and the "split axis" bits are 01 or 10,
-      we have to to swap those bits. */
+   // If we turned by 90 degress, and the "split axis" bits are 01 or 10,
+   // we have to to swap those bits.
 
    if (globalrotation & 1) {
       uint32 xbits = result->result_flags & RESULTFLAG__SPLIT_AXIS_XMASK;
@@ -363,7 +363,7 @@ extern long_boolean divide_for_magic(
          if (ss->kind == s2x4) {
             if (livemask != 0xFF) return FALSE;
 
-            /* These are independent of whether we said "1x3" or "3x1". */
+            // These are independent of whether we said "1x3" or "3x1".
             if (directions == 0x2A80 || directions == 0x802A ||
                 directions == 0x7FD5 || directions == 0xD57F) {
                expand::expand_setup(&exp27, ss);
@@ -385,22 +385,24 @@ extern long_boolean divide_for_magic(
                goto do_3x3;
             }
 
-            /* These are specific to "1x3" or "3x1". */
+            // These are specific to "1x3" or "3x1".
             if (directions == 0x55FF || directions == 0x00AA) {
-               expand::expand_setup((heritflags_to_check == INHERITFLAGMXNK_3X1) ? &exp27 : &exp72,
-                            ss);
+               expand::expand_setup((heritflags_to_check == INHERITFLAGMXNK_3X1) ?
+                                    &exp27 : &exp72,
+                                    ss);
                goto do_3x3;
             }
             else if (directions == 0xFF55 || directions == 0xAA00) {
-               expand::expand_setup((heritflags_to_check == INHERITFLAGMXNK_3X1) ? &exp72 : &exp27,
-                            ss);
+               expand::expand_setup((heritflags_to_check == INHERITFLAGMXNK_3X1) ?
+                                    &exp72 : &exp27,
+                                    ss);
                goto do_3x3;
             }
          }
          else if (ss->kind == s1x8) {
             if (livemask != 0xFF) return FALSE;
 
-            /* These are independent of whether we said "1x3" or "3x1". */
+            // These are independent of whether we said "1x3" or "3x1".
             if (directions == 0x2A80 || directions == 0x802A ||
                 directions == 0x7FD5 || directions == 0xD57F) {
                expand::expand_setup(&expg27, ss);
@@ -422,15 +424,17 @@ extern long_boolean divide_for_magic(
                goto do_3x3;
             }
 
-            /* These are specific to "1x3" or "3x1". */
+            // These are specific to "1x3" or "3x1".
             if (directions == 0x55FF || directions == 0x00AA) {
-               expand::expand_setup((heritflags_to_check == INHERITFLAGMXNK_3X1) ? &expg27 : &expg72,
-                            ss);
+               expand::expand_setup((heritflags_to_check == INHERITFLAGMXNK_3X1) ?
+                                    &expg27 : &expg72,
+                                    ss);
                goto do_3x3;
             }
             else if (directions == 0xFF55 || directions == 0xAA00) {
-               expand::expand_setup((heritflags_to_check == INHERITFLAGMXNK_3X1) ? &expg72 : &expg27,
-                            ss);
+               expand::expand_setup((heritflags_to_check == INHERITFLAGMXNK_3X1) ?
+                                    &expg72 : &expg27,
+                                    ss);
                goto do_3x3;
             }
          }
@@ -469,7 +473,7 @@ extern long_boolean divide_for_magic(
          if (ss->kind == s2x3) {
             if (livemask != 077) return FALSE;
 
-            /* These are independent of whether we said "1x2" or "2x1". */
+            // These are independent of whether we said "1x2" or "2x1".
             if (directions == 01240 || directions == 04012 ||
                 directions == 03765 || directions == 06537) {
                expand::expand_setup(&exp25, ss);
@@ -480,15 +484,17 @@ extern long_boolean divide_for_magic(
                expand::expand_setup(&exp52, ss);
                goto do_3x3;
             }
-            /* These are specific to "1x2" or "2x1". */
+            // These are specific to "1x2" or "2x1".
             if (directions == 02577 || directions == 00052) {
-               expand::expand_setup((heritflags_to_check == INHERITFLAGMXNK_2X1) ? &exp25 : &exp52,
-                            ss);
+               expand::expand_setup((heritflags_to_check == INHERITFLAGMXNK_2X1) ?
+                                    &exp25 : &exp52,
+                                    ss);
                goto do_3x3;
             }
             else if (directions == 07725 || directions == 05200) {
-               expand::expand_setup((heritflags_to_check == INHERITFLAGMXNK_2X1) ? &exp52 : &exp25,
-                            ss);
+               expand::expand_setup((heritflags_to_check == INHERITFLAGMXNK_2X1) ? 
+                                    &exp52 : &exp25,
+                                    ss);
                goto do_3x3;
             }
          }
@@ -517,7 +523,7 @@ extern long_boolean divide_for_magic(
          else if (ss->kind == s1x6) {
             if (livemask != 077) return FALSE;
 
-            /* These are independent of whether we said "1x2" or "2x1". */
+            // These are independent of whether we said "1x2" or "2x1".
             if (directions == 01240 || directions == 04012 ||
                 directions == 03765 || directions == 06537) {
                expand::expand_setup(&expl13, ss);
@@ -528,15 +534,17 @@ extern long_boolean divide_for_magic(
                expand::expand_setup(&expl31, ss);
                goto do_3x3;
             }
-            /* These are specific to "1x2" or "2x1". */
+            // These are specific to "1x2" or "2x1".
             if (directions == 02577 || directions == 00052) {
-               expand::expand_setup((heritflags_to_check == INHERITFLAGMXNK_2X1) ? &expl13 : &expl31,
-                            ss);
+               expand::expand_setup((heritflags_to_check == INHERITFLAGMXNK_2X1) ?
+                                    &expl13 : &expl31,
+                                    ss);
                goto do_3x3;
             }
             else if (directions == 07725 || directions == 05200) {
-               expand::expand_setup((heritflags_to_check == INHERITFLAGMXNK_2X1) ? &expl31 : &expl13,
-                            ss);
+               expand::expand_setup((heritflags_to_check == INHERITFLAGMXNK_2X1) ?
+                                    &expl31 : &expl13,
+                                    ss);
                goto do_3x3;
             }
          }
@@ -1044,6 +1052,7 @@ static int start_matrix_call(
          matrix_info[nump].orig_source_idx = i;
          matrix_info[nump].tbstopse = false;
          matrix_info[nump].tbstopnw = false;
+         matrix_info[nump].far_squeezer = false;
          nump++;
       }
    }
@@ -1453,15 +1462,14 @@ static void finish_matrix_call(
 
 static void matrixmove(
    setup *ss,
-   const calldefn *callspec,
+   uint32 flags,
+   const uint32 *callstuff,
    setup *result) THROW_DECL
 {
    uint32 datum;
    setup people;
    matrix_rec matrix_info[9];
    int i, nump, alldelta;
-   uint32 flags = callspec->stuff.matrix.flags;
-   const uint32 *callstuff = callspec->stuff.matrix.stuff;
 
    alldelta = 0;
 
@@ -1531,8 +1539,10 @@ static void matrixmove(
 
 static void do_part_of_pair(matrix_rec *thisrec, int base, const uint32 *callstuff) THROW_DECL
 {
-   /* This is legal if girlbit or boybit is on (in which case we use the appropriate datum)
-         or if the two data are identical so the sex doesn't matter. */
+   if (thisrec->far_squeezer) base += 8;
+
+   // This is legal if girlbit or boybit is on (in which case we use the appropriate datum)
+   //   or if the two data are identical so the sex doesn't matter.
    if ((thisrec->girlbit | thisrec->boybit) == 0 && callstuff[base] != callstuff[base+1])
       fail("Can't determine sex of this person.");
    uint32 datum = callstuff[base+thisrec->girlbit];
@@ -1551,13 +1561,13 @@ static void do_pair(
    const uint32 *callstuff,
    uint32 flags,
    int flip,
-   int filter) THROW_DECL             /* 1 to do N/S facers, 0 for E/W facers. */
+   int filter) THROW_DECL             // 1 to do N/S facers, 0 for E/W facers.
 {
    if (callstuff) {     // Doing normal matrix call.
       if ((!(flags & (MTX_IGNORE_NONSELECTEES | MTX_BOTH_SELECTED_OK))) && qqq->sel)
          fail("Two adjacent selected people.");
 
-      /* We know that either ppp is actually selected, or we are not using selectors. */
+      // We know that either ppp is actually selected, or we are not using selectors.
 
       if ((filter ^ ppp->dir) & 1) {
          int base = (ppp->dir & 2) ? 6 : 4;
@@ -1600,13 +1610,13 @@ static void do_pair(
 static void make_matrix_chains(
    matrix_rec matrix_info[],
    int nump,
-   long_boolean finding_far_squeezers,
+   bool finding_far_squeezers,
    uint32 flags,
-   int filter) THROW_DECL       /* 1 for E/W chains, 0 for N/S chains. */
+   int filter) THROW_DECL       // 1 for E/W chains, 0 for N/S chains.
 {
    int i, j;
 
-   /* Find adjacency relationships, and fill in the "se"/"nw" pointers. */
+   // Find adjacency relationships, and fill in the "se"/"nw" pointers.
 
    for (i=0; i<nump; i++) {
       matrix_rec *mi = &matrix_info[i];
@@ -1697,6 +1707,8 @@ static void make_matrix_chains(
 
             mi->nextse = mj;
             mj->nextnw = mi;
+            mi->far_squeezer = finding_far_squeezers;
+            mj->far_squeezer = finding_far_squeezers;
             break;
          }
       }
@@ -1918,11 +1930,10 @@ static void process_matrix_chains(
 
 static void partner_matrixmove(
    setup *ss,
-   const calldefn *callspec,
+   uint32 flags,
+   const uint32 *callstuff,
    setup *result) THROW_DECL
 {
-   uint32 flags = callspec->stuff.matrix.flags;
-   const uint32 *callstuff = callspec->stuff.matrix.stuff;
    setup people;
    matrix_rec matrix_info[9];
    int i, nump;
@@ -1940,15 +1951,15 @@ static void partner_matrixmove(
 
    // Make the lateral chains first.
 
-   make_matrix_chains(matrix_info, nump, FALSE, flags, 1);
+   make_matrix_chains(matrix_info, nump, false, flags, 1);
    if (flags & MTX_FIND_SQUEEZERS)
-      make_matrix_chains(matrix_info, nump, TRUE, flags, 1);
+      make_matrix_chains(matrix_info, nump, true, flags, 1);
    process_matrix_chains(matrix_info, nump, callstuff, flags, 1);
 
-   /* If jaywalking, don't do it again. */
+   // If jaywalking, don't do it again.
 
    if (!(flags & MTX_FIND_JAYWALKERS)){
-      /* Now clean off the pointers in preparation for the second pass. */
+      // Now clean off the pointers in preparation for the second pass.
 
       for (i=0; i<nump; i++) {
          matrix_info[i].done = false;
@@ -1958,11 +1969,11 @@ static void partner_matrixmove(
          matrix_info[i].tbstopnw = false;
       }
 
-      /* Vertical chains next. */
+      // Vertical chains next.
 
-      make_matrix_chains(matrix_info, nump, FALSE, flags, 0);
+      make_matrix_chains(matrix_info, nump, false, flags, 0);
       if (flags & MTX_FIND_SQUEEZERS)
-         make_matrix_chains(matrix_info, nump, TRUE, flags, 0);
+         make_matrix_chains(matrix_info, nump, true, flags, 0);
       process_matrix_chains(matrix_info, nump, callstuff, flags, 0);
    }
 
@@ -2072,9 +2083,9 @@ extern void drag_someone_and_move(setup *ss, parse_block *parseptr, setup *resul
       MTX_USE_SELECTOR | MTX_STOP_AND_WARN_ON_TBONE, &people);
    current_options.who = saved_selector;
 
-   /* Make the lateral chains first. */
+   // Make the lateral chains first.
 
-   make_matrix_chains(matrix_info, nump, FALSE, MTX_STOP_AND_WARN_ON_TBONE, 1);
+   make_matrix_chains(matrix_info, nump, false, MTX_STOP_AND_WARN_ON_TBONE, 1);
    process_matrix_chains(matrix_info, nump, (uint32 *) 0, flags, 1);
 
    /* Now clean off the pointers in preparation for the second pass. */
@@ -2089,7 +2100,7 @@ extern void drag_someone_and_move(setup *ss, parse_block *parseptr, setup *resul
 
    // Vertical chains next.
 
-   make_matrix_chains(matrix_info, nump, FALSE, MTX_STOP_AND_WARN_ON_TBONE, 0);
+   make_matrix_chains(matrix_info, nump, false, MTX_STOP_AND_WARN_ON_TBONE, 0);
    process_matrix_chains(matrix_info, nump, (uint32 *) 0, flags, 0);
 
    // Scan for people who ought to have done something but didn't.
@@ -2471,7 +2482,7 @@ extern bool get_real_subcall(
    if (current_options.star_turn_option != 0 &&
        (orig_call->the_defn.callflags1 & CFLAG1_IS_STAR_CALL)) {
       parse_block *xx = get_parse_block();
-      xx->concept = &concept::marker_concept_mod;
+      xx->concept = &conzept::marker_concept_mod;
       xx->options = current_options;
       xx->options.star_turn_option = 0;
       xx->replacement_key = 0;
@@ -2841,7 +2852,6 @@ void fraction_info::get_fraction_info(
    uint32 callflags1,
    revert_weirdness_type doing_weird_revert) THROW_DECL
 {
-   int e_numer, e_denom, s_numer, s_denom, this_part, divisor, test_num;
    uint32 last_half_stuff = 0;
    uint32 first_half_stuff = 0;
 
@@ -2855,18 +2865,20 @@ void fraction_info::get_fraction_info(
    this->do_half_of_last_part = 0;
    this->do_last_half_of_first_part = 0;
 
-   this_part = (frac_flags & CMD_FRAC_PART_MASK) / CMD_FRAC_PART_BIT;
-   s_numer = (frac_flags & 0xF000) >> 12;      /* Start point. */
-   s_denom = (frac_flags & 0xF00) >> 8;
-   e_numer = (frac_flags & 0xF0) >> 4;         /* End point. */
-   e_denom = (frac_flags & 0xF);
+   int this_part = (frac_flags & CMD_FRAC_PART_MASK) / CMD_FRAC_PART_BIT;
+   int s_numer = (frac_flags & 0xF000) >> 12;      /* Start point. */
+   int s_denom = (frac_flags & 0xF00) >> 8;
+   int e_numer = (frac_flags & 0xF0) >> 4;         /* End point. */
+   int e_denom = (frac_flags & 0xF);
 
    if (s_numer >= s_denom) fail("Fraction must be proper.");
    int my_start_point = this->client_total * s_numer;
-   test_num = my_start_point / s_denom;
+   int test_num = my_start_point / s_denom;
 
    if (test_num*s_denom != my_start_point) {
-      divisor = (test_num == 0) ? gcd(my_start_point, s_denom) : gcd(s_denom, my_start_point);
+      int divisor = (test_num == 0) ?
+         gcd(my_start_point, s_denom) :
+         gcd(s_denom, my_start_point);
       s_denom /= divisor;
       my_start_point /= divisor;
       last_half_stuff = my_start_point - test_num * s_denom;   /* We will need this if we have
@@ -2883,7 +2895,9 @@ void fraction_info::get_fraction_info(
    test_num = this->highlimit / e_denom;
 
    if (test_num*e_denom != this->highlimit) {
-      divisor = (test_num == 0) ? gcd(this->highlimit, e_denom) : gcd(e_denom, this->highlimit);
+      int divisor = (test_num == 0) ?
+         gcd(this->highlimit, e_denom) :
+         gcd(e_denom, this->highlimit);
       this->highlimit /= divisor;
       e_denom /= divisor;
       first_half_stuff = this->highlimit-e_denom*test_num;
@@ -4801,14 +4815,11 @@ static void really_inner_move(setup *ss,
             ss->cmd.cmd_final_flags.clear_heritbit(INHERITFLAG_REVERSE);
          }
 
-         if ((ss->cmd.cmd_final_flags.test_heritbits(~(INHERITFLAG_12_MATRIX |
-                                                       INHERITFLAG_16_MATRIX))) |
-             ss->cmd.cmd_final_flags.final)
-            fail("Illegal concept for this call.");
-
          if (ss->kind == s_qtag &&
-             ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_12_MATRIX))
+             ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_12_MATRIX)) {
             do_matrix_expansion(ss, CONCPROP__NEEDK_3X4, TRUE);
+            ss->cmd.cmd_final_flags.clear_heritbit(INHERITFLAG_12_MATRIX);
+         }
          else if (ss->kind == s2x2 && ss->cmd.prior_elongation_bits != 0) {
             expanded = true;
             if (ss->cmd.prior_elongation_bits == 3)
@@ -4827,10 +4838,28 @@ static void really_inner_move(setup *ss,
 
          remove_z_distortion(ss);
 
+         // Not sure what this is about.  How can these flags appear?
+         ss->cmd.cmd_final_flags.clear_heritbits(INHERITFLAG_16_MATRIX|INHERITFLAG_12_MATRIX);
+
+         if (ss->cmd.cmd_final_flags.final)
+            fail("Illegal concept for this call.");
+
+         uint32 flags = callspec->stuff.matrix.matrix_flags;
+         matrix_def_block *base_block = callspec->stuff.matrix.matrix_def_list;
+
+         for ( ;; ) {
+            if (base_block->alternate_def_flags == (uint32) ss->cmd.cmd_final_flags.herit)
+               break;
+            base_block = base_block->next;
+            if (!base_block) fail("Illegal concept for this call.");
+         }
+
+         const uint32 *callstuff = base_block->items;
+
          if (the_schema == schema_partner_matrix)
-            partner_matrixmove(ss, callspec, result);
+            partner_matrixmove(ss, flags, callstuff, result);
          else
-            matrixmove(ss, callspec, result);
+            matrixmove(ss, flags, callstuff, result);
 
          if (expanded) {
             result->result_flags &= ~3;
@@ -5394,8 +5423,10 @@ static void move_with_real_call(
       if (ss->cmd.cmd_frac_flags != CMD_FRAC_NULL_VALUE) {
          switch (the_schema) {
          case schema_by_array:
+         case schema_matrix:
+         case schema_partner_matrix:
             // We allow the fractions "1/2" and "last 1/2" to be given.
-            // Basic_move will handle them.
+            // Basic_move or matrixmove will handle them.
             // But we skip the test if the incoming setup is empty.
 
             {
@@ -5421,9 +5452,9 @@ static void move_with_real_call(
             }
 
             break;
-         case schema_nothing: case schema_matrix:
+         case schema_nothing:
          case schema_recenter:
-         case schema_partner_matrix: case schema_roll:
+         case schema_roll:
             fail("This call can't be fractionalized.");
             break;
          case schema_sequential:
@@ -5954,13 +5985,13 @@ extern void move(
          parse_block p3 = *(p2.subsidiary_root);
 
          p1.next = &p2;
-         p2.concept = &concept::marker_concept_supercall;
+         p2.concept = &conzept::marker_concept_supercall;
          p2.subsidiary_root = &p3;
          p3.call = ss->cmd.callspec;
          p3.call_to_print = p3.call;
 
          if (p3.concept->kind != concept_another_call_next_mod)
-            p3.concept = &concept::mark_end_of_list;
+            p3.concept = &conzept::mark_end_of_list;
 
          p3.no_check_call_level = 1;
          p3.options = current_options;
@@ -6345,7 +6376,7 @@ extern void move(
       uint32 foobar = 0;
       uint32 fooble = 0;
 
-      const concept::concept_descriptor *ddd = ss->cmd.parseptr->concept;
+      const conzept::concept_descriptor *ddd = ss->cmd.parseptr->concept;
 
       if (!(concept_table[ddd->kind].concept_prop &
           CONCPROP__PERMIT_MODIFIERS)) {
@@ -6453,9 +6484,9 @@ extern void move(
        (result->result_flags & RESULTFLAG__NEED_DIAMOND) &&
        saved_magic_diamond->concept->arg1 == 0) {
       if (saved_magic_diamond->concept->kind == concept_magic)
-         saved_magic_diamond->concept = &concept::special_magic;
+         saved_magic_diamond->concept = &conzept::special_magic;
       else if (saved_magic_diamond->concept->kind == concept_interlocked)
-         saved_magic_diamond->concept = &concept::special_interlocked;
+         saved_magic_diamond->concept = &conzept::special_interlocked;
    }
 
    return;

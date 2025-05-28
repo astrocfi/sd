@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-2002  William B. Ackerman.
+    Copyright (C) 1990-2003  William B. Ackerman.
 
     This file is unpublished and contains trade secrets.  It is
     to be used by permission only and not to be disclosed to third
@@ -1789,9 +1789,9 @@ extern void distorted_2x2s_move(
    setup inputs[4];
    setup results[4];
    uint32 directions, livemask, misc2_zflag;
-   const veryshort *map_ptr;
+   const veryshort *map_ptr = 0;
 
-   const concept::concept_descriptor *this_concept = parseptr->concept;
+   const conzept::concept_descriptor *this_concept = parseptr->concept;
 
    // Check for special case of "interlocked parallelogram",
    // which doesn't look like the kind of concept we are expecting.
@@ -1843,6 +1843,7 @@ extern void distorted_2x2s_move(
 
    switch (misc_indicator) {
    case 7:
+      // The concept is triple staggered boxes.
       if (ss->kind != s2x12)
          fail("Must have a 2x12 for this concept.");
 
@@ -1852,7 +1853,7 @@ extern void distorted_2x2s_move(
       }
       else if ((livemask & 0x555555) == 0) {
          if ((livemask & 0xAAAAAA) == 0)
-            fail("Can't figure thi out.");  // Could only happen if setup is empty.
+            fail("Can't figure this out.");  // Could only happen if setup is empty.
          map_ptr = map3stag2;
       }
 
@@ -1884,7 +1885,6 @@ extern void distorted_2x2s_move(
                misc2_zflag = CMD_MISC2__IN_AZ_CW;
                goto do_real_z_stuff;
             }
-            else goto lose;
          default:
             fail("Must have a 3x6 for this concept.");
          }
@@ -1920,7 +1920,6 @@ extern void distorted_2x2s_move(
                else if ((livemask & 0xD8D8) == 0) map_ptr = map6;
                else if ((livemask & 0x2E2E) == 0) map_ptr = map7;
                else if ((livemask & 0x6C6C) == 0) map_ptr = map8;
-               else goto lose;
             }
             break;
          case s4x6:
@@ -1944,7 +1943,6 @@ extern void distorted_2x2s_move(
                else if ((livemask & 0xF27F27) == 0) map_ptr = map46f;
                else if ((livemask & 0x9FC9FC) == 0) map_ptr = map46g;
                else if ((livemask & 0x3F93F9) == 0) map_ptr = map46h;
-               else goto lose;
             }
             break;
          case s3x4:
@@ -1967,7 +1965,6 @@ extern void distorted_2x2s_move(
                }
                else if ((livemask & 06060) == 0) map_ptr = mapb;
                else if ((livemask & 01414) == 0) map_ptr = mapc;
-               else goto lose;
             }
             break;
          case s2x6:
@@ -1982,7 +1979,6 @@ extern void distorted_2x2s_move(
 
                if (     (livemask & 01111) == 0) map_ptr = mape;
                else if ((livemask & 04444) == 0) map_ptr = mapf;
-               else goto lose;
             }
             break;
          case s3x6:
@@ -2002,7 +1998,6 @@ extern void distorted_2x2s_move(
                else if (livemask == 0216216) map_ptr = maph;
                else if (livemask == 0033033) map_ptr = mapi;
                else if (livemask == 0603603) map_ptr = mapj;
-               else goto lose;
             }
             break;
          case s2x3:
@@ -2014,7 +2009,6 @@ extern void distorted_2x2s_move(
 
                if (     (livemask & 011) == 0) map_ptr = mape1;
                else if ((livemask & 044) == 0) map_ptr = mapf1;
-               else goto lose;
             }
             break;
          default:
@@ -2093,7 +2087,6 @@ extern void distorted_2x2s_move(
             arity = 1;  // Whatever the user called it, we are going to a single setup.
             if (     (livemask & 05050) == 0) map_ptr = mapzda;
             else if ((livemask & 02424) == 0) map_ptr = mapzdb;
-            else goto lose;
          }
          break;
          /*
@@ -2143,7 +2136,6 @@ extern void distorted_2x2s_move(
             inner_kind = sdmd;
             if (     (livemask & 011) == 0) map_ptr = mape1;
             else if ((livemask & 044) == 0) map_ptr = mapf1;
-            else goto lose;
          }
          break;
       default:
@@ -2169,16 +2161,13 @@ extern void distorted_2x2s_move(
          else if (((arg4 ^ 0x0208) & 0x0F0F) == 0) map_ptr = mapj2;
          else if (((arg4 ^ 0x0A00) & 0x0F0F) == 0) map_ptr = mapk1;
          else if (((arg4 ^ 0x000A) & 0x0F0F) == 0) map_ptr = mapk2;
-         else goto lose;
       }
       else if (livemask == 0xFF && (directions & 0xF0F0) == 0x00A0) {
          if (     ((directions ^ 0x0802) & 0x0F0F) == 0) map_ptr = mapj3;
          else if (((directions ^ 0x0208) & 0x0F0F) == 0) map_ptr = mapj4;
          else if (((directions ^ 0x0A00) & 0x0F0F) == 0) map_ptr = mapk3;
          else if (((directions ^ 0x000A) & 0x0F0F) == 0) map_ptr = mapk4;
-         else goto lose;
       }
-      else goto lose;
       break;
    case 2:
       switch (ss->kind) {     // The concept is twin parallelograms.
@@ -2191,7 +2180,6 @@ extern void distorted_2x2s_move(
 
             if (     (livemask & 06060) == 0) map_ptr = map_p1;
             else if ((livemask & 01414) == 0) map_ptr = map_p2;
-            else goto lose;
          }
          break;
       default:
@@ -2209,7 +2197,6 @@ extern void distorted_2x2s_move(
 
             if (     (livemask & 05050) == 0) map_ptr = map_b1;
             else if ((livemask & 02424) == 0) map_ptr = map_b2;
-            else goto lose;
          }
          break;
       default:
@@ -2217,7 +2204,7 @@ extern void distorted_2x2s_move(
       }
       break;
    case 4:
-      /* The concept is facing (or back-to-back, or front-to-back) Pgram */
+      // The concept is facing (or back-to-back, or front-to-back) Pgram.
 
       if (ss->kind != s_qtag) fail("Must have quarter-line setup for this concept.");
 
@@ -2225,14 +2212,11 @@ extern void distorted_2x2s_move(
           (livemask == 0xFF && (directions & 0xF0F0) == 0xA000)) {
          if (     ((directions ^ 0x0A00) & 0x0F0F) == 0) map_ptr = mapk1;
          else if (((directions ^ 0x000A) & 0x0F0F) == 0) map_ptr = mapk2;
-         else goto lose;
       }
       else if (livemask == 0xFF && (directions & 0xF0F0) == 0x00A0) {
          if (     ((directions ^ 0x0A00) & 0x0F0F) == 0) map_ptr = mapk3;
          else if (((directions ^ 0x000A) & 0x0F0F) == 0) map_ptr = mapk4;
-         else goto lose;
       }
-      else goto lose;
       break;
    case 5:
       if (ss->kind != s4x4) fail("Must have 4x4 matrix for this concept.");
@@ -2294,6 +2278,8 @@ extern void distorted_2x2s_move(
          return;
       }
    }
+
+   if (!map_ptr) goto lose;
 
    map_ptr += table_offset;
 

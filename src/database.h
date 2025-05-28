@@ -82,7 +82,7 @@ typedef const char *Cstring;
    database format version. */
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 203
+#define DATABASE_FORMAT_VERSION 204
 
 // BEWARE!!  These must track the items in "tagtabinit" in dbcomp.cpp .
 enum base_call_index {

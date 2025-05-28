@@ -1,7 +1,7 @@
 /*
    sdmatch.cpp - command matching support
 
-    Copyright (C) 1990-2002  William B. Ackerman.
+    Copyright (C) 1990-2003  William B. Ackerman.
 
     This file is unpublished and contains trade secrets.  It is
     to be used by permission only and not to be disclosed to third
@@ -110,7 +110,7 @@ int level_concept_list_length;
 struct pat2_block {
    Cstring car;
    pat2_block *cdr;
-   const concept::concept_descriptor *special_concept;
+   const conzept::concept_descriptor *special_concept;
    match_result *folks_to_restore;
    long_boolean demand_a_call;
    long_boolean anythingers;
@@ -118,7 +118,7 @@ struct pat2_block {
    pat2_block(Cstring carstuff, pat2_block *cdrstuff = (pat2_block *) 0) :
       car(carstuff),
       cdr(cdrstuff),
-      special_concept((concept::concept_descriptor *) 0),
+      special_concept((conzept::concept_descriptor *) 0),
       folks_to_restore((match_result *) 0),
       demand_a_call(FALSE),
       anythingers(FALSE)
@@ -141,7 +141,7 @@ static void scan_concepts_and_calls(
    int patxi);
 
 static void match_wildcard(Cstring user, Cstring pat, pat2_block *pat2,
-                           int patxi, const concept::concept_descriptor *special);
+                           int patxi, const conzept::concept_descriptor *special);
 
 
 /* This is statically used by the match_wildcard and match_suffix_2 procedures. */
@@ -577,7 +577,7 @@ void matcher_initialize()
 {
    int i, j;
    int concept_number;
-   const concept::concept_descriptor *p;
+   const conzept::concept_descriptor *p;
    short int *item, *level_item;
    concept_kind end_marker = concept_diagnose;
 
@@ -931,9 +931,9 @@ static long_boolean verify_call(void)
 
          if (save1) {
             parse_block *tt = get_parse_block();
-            save1->concept = &concept::marker_concept_mod;
+            save1->concept = &conzept::marker_concept_mod;
             save1->next = tt;
-            tt->concept = &concept::marker_concept_mod;
+            tt->concept = &conzept::marker_concept_mod;
             tt->call = base_calls[base_call_null];
             tt->call_to_print = tt->call;
             tt->replacement_key = DFM1_CALL_MOD_MAND_ANYCALL/DFM1_CALL_MOD_BIT;
@@ -1245,11 +1245,11 @@ Theorem B (prefix match):
 
 static void match_suffix_2(Cstring user, Cstring pat1, pat2_block *pat2, int patxi)
 {
-   const concept::concept_descriptor *pat2_concept = (concept::concept_descriptor *) 0;
+   const conzept::concept_descriptor *pat2_concept = (conzept::concept_descriptor *) 0;
 
    if (pat2->special_concept &&
        !(pat2->special_concept->concparseflags & CONCPARSE_PARSE_DIRECT))
-      pat2->special_concept = (concept::concept_descriptor *) 0;
+      pat2->special_concept = (conzept::concept_descriptor *) 0;
 
    pat2_block at_t_thing("");
 
@@ -1264,7 +1264,7 @@ static void match_suffix_2(Cstring user, Cstring pat1, pat2_block *pat2, int pat
                                        &current_result->real_next_subcall, patxi);
             }
             pat2 = (pat2_block *) 0;
-            pat2_concept = (concept::concept_descriptor *) 0;
+            pat2_concept = (conzept::concept_descriptor *) 0;
          }
          else if (pat2) {
             // We don't allow a closing bracket after a concept.  That is,
@@ -1587,7 +1587,7 @@ static void scan_concepts_and_calls(
       // Don't waste time after user stops us.
       if (GLOB_showing && showing_has_stopped) break;
 
-      const concept::concept_descriptor *this_concept = &concept_descriptor_table[item[i]];
+      const conzept::concept_descriptor *this_concept = &concept_descriptor_table[item[i]];
       local_result.match.concept_ptr = this_concept;
       p2b.special_concept = this_concept;
       p2b.car = this_concept->name;
@@ -1604,7 +1604,7 @@ static void scan_concepts_and_calls(
    else
       menu_length = number_of_calls[call_list_any];
 
-   p2b.special_concept = (concept::concept_descriptor *) 0;
+   p2b.special_concept = (conzept::concept_descriptor *) 0;
    local_result.match.kind = ui_call_select;
 
    {
@@ -1722,7 +1722,7 @@ static void match_wildcard(
    Cstring pat,
    pat2_block *pat2,
    int patxi,
-   const concept::concept_descriptor *special)
+   const conzept::concept_descriptor *special)
 {
    Cstring prefix;
    Cstring *number_table;
@@ -2205,7 +2205,7 @@ static void search_menu(uims_reply kind)
             // Don't waste time after user stops us.
             if (GLOB_showing && showing_has_stopped) break;
 
-            const concept::concept_descriptor *this_concept = &concept_descriptor_table[item[i]];
+            const conzept::concept_descriptor *this_concept = &concept_descriptor_table[item[i]];
 
             // Another quick check -- there are hundreds of concepts.
             char pch = this_concept->name[0];

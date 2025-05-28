@@ -21,8 +21,8 @@
     General Public License if you distribute the file.
 */
 
-#define VERSION_STRING "34.8c"
-#define TIME_STAMP "wba@alum.mit.edu  16 January 2003 $"
+#define VERSION_STRING "34.8e"
+#define TIME_STAMP "wba@alum.mit.edu  27 January 2003 $"
 
 /* This defines the following functions:
    sd_version_string
@@ -419,7 +419,7 @@ extern long_boolean deposit_call(call_with_name *call, const call_conc_option_st
       if (find_numbers(howmanynums, FALSE, call->the_defn.callflagsf & CFLAGH__ODD_NUMBER_ONLY, TRUE, &number_list)) return TRUE;
 
    new_block = get_parse_block();
-   new_block->concept = &concept::mark_end_of_list;
+   new_block->concept = &conzept::mark_end_of_list;
    new_block->call = call;
    new_block->call_to_print = call;
    new_block->options = *options;
@@ -436,9 +436,9 @@ extern long_boolean deposit_call(call_with_name *call, const call_conc_option_st
       parse_block **savecwp = parse_state.concept_write_ptr;
 
       new_block->options.tagger = tagg;
-      new_block->concept = &concept::marker_concept_mod;
+      new_block->concept = &conzept::marker_concept_mod;
       new_block->next = get_parse_block();
-      new_block->next->concept = &concept::marker_concept_mod;
+      new_block->next->concept = &conzept::marker_concept_mod;
 
       /* Deposit the index of the base tagging call.  This will of course be replaced. */
 
@@ -457,9 +457,9 @@ extern long_boolean deposit_call(call_with_name *call, const call_conc_option_st
       parse_block **savecwp = parse_state.concept_write_ptr;
 
       new_block->options.circcer = circc;
-      new_block->concept = &concept::marker_concept_mod;
+      new_block->concept = &conzept::marker_concept_mod;
       new_block->next = get_parse_block();
-      new_block->next->concept = &concept::marker_concept_mod;
+      new_block->next->concept = &conzept::marker_concept_mod;
 
       /* Deposit the index of the base circcing call.  This will of course be replaced. */
 
@@ -489,7 +489,7 @@ extern long_boolean deposit_call(call_with_name *call, const call_conc_option_st
    necessary stuff will be chosen by random number.  If it is off, the appropriate
    numbers (as indicated by the "CONCPROP__USE_NUMBER" stuff) must be provided. */
 
-extern long_boolean deposit_concept(const concept::concept_descriptor *conc)
+extern long_boolean deposit_concept(const conzept::concept_descriptor *conc)
 {
    parse_block *new_block;
    selector_kind sel = selector_uninitialized;
@@ -742,7 +742,7 @@ extern long_boolean query_for_call()
                string_copy(&temp_text_ptr, comment);
 
                *parse_state.concept_write_ptr = get_parse_block();
-               (*parse_state.concept_write_ptr)->concept = &concept::marker_concept_comment;
+               (*parse_state.concept_write_ptr)->concept = &conzept::marker_concept_comment;
 
                (*parse_state.concept_write_ptr)->call = (call_with_name *) new_comment_block;
                (*parse_state.concept_write_ptr)->call_to_print =
@@ -792,7 +792,7 @@ extern long_boolean query_for_call()
          We must insert a concept or a call.  Decide which.
          We only insert a concept if in random search, and then only occasionally. */
 
-      const concept::concept_descriptor *concept_to_use = pick_concept(concepts_deposited != 0);
+      const conzept::concept_descriptor *concept_to_use = pick_concept(concepts_deposited != 0);
 
       if (concept_to_use) {
          /* We give 0 for the number fields.  It gets taken care of later,

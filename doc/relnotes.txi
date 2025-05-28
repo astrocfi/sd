@@ -11,7 +11,7 @@
 @c %**end of header
 
 @set title1 RELEASE NOTES FOR SD VERSION 34.8
-@set title2 Database version = 34.8 format = 203
+@set title2 Database version = 34.8 format = 204
 @set title3 parser version 1.12, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -69,8 +69,8 @@ person who pointed it out recently, and apologize to the person who
 pointed it out many months ago, whom we did not believe.
 
 A bug in @kbd{reverse cut/flip the 3x1 triangle} was fixed.  We
-apologize to the dancers at a recent C3 weekend who were inconvenienced
-by this.
+apologize to the dancers at a C4 weekend in March 2002 in northern
+California who were inconvenienced by this.
 
 The resolver now uses the actual clock to determine when to give up
 while searching.  It will give up after 5 seconds.  It used to be
@@ -78,11 +78,15 @@ set to 15000 calls, a number that has crept upward as computers got
 faster.
 
 The program can now handle the setup consisting of a diamond between
-2 lines, as would result from having the center line switch to a diamond
-from triple lines.
+2 lines, as would result from having the center wave switch to a diamond
+from triple waves.
 
 The program is better at figuring out how to do the call @kbd{extend}
 in the presence of phantoms.
+
+The calls @samp{flip back, to a wave} and @samp{<ATC> back to a wave, to
+a wave} have had the word ``centers'' added, as in @samp{vertical tag
+back to a wave, centers to a wave}.
 
 The behavior of Sd when "?" or "!" is typed has been improved.  It used
 to ignore these operations when no characters have been typed in the
@@ -99,12 +103,26 @@ with the ends quartered left.  The centers would step to right hands
 (even though they normally step to left hands on @kbd{fan the top}),
 and do the call in each diamond.
 
+New program-level options have been added for use with @code{Sd}.
+The ``-maximize'' argument will cause the program to set its window
+to the full screen.  The ``-window_size'' argument, followed by something
+like ``750x450'' will set the window size to the indicated number of
+pixels.  These options can be specified in the command line (typically
+by editing the startup icon) or placed in the ``[options]'' section of
+the initialization file.  These options do not affect @code{Sdtty}.
+@code{Sdtty} runs as a ``command prompt'' program and cannot set its
+window size.
+
 New concept: triple staggered boxes.  Used in a 2x12 "zipper" setup.
 
 New concept: stretched, followed by a triangle concept, as in
 @kbd{stretched tandem-based triangles} from an hourglass.
 
 New concepts: clockwise jay, counterclockwise jay.
+
+New selector names: center column, center line, center wave.  These
+are essentially synonyms for ``center 4''.  They sometimes check for
+legality, but not always.  Use with care.
 
 @c ************
 @node 34.7, 34.6, 34.8, Top

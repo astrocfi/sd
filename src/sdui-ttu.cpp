@@ -97,6 +97,9 @@ static void term_handler(int n)
    }
 }
 
+extern void ttu_set_window_title(const char *string) {}
+void iofull::set_pick_string(const char *string) {}
+
 
 void iofull::display_help()
 {
@@ -105,8 +108,6 @@ void iofull::display_help()
    printf("-no_cursor                  do not use screen management functions at all\n");
    printf("-journal <filename>         echo input commands to journal file\n");
 }
-
-extern void ttu_set_window_title(char s[]) {}
 
 bool iofull::help_manual() { return false; }
 

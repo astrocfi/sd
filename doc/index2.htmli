@@ -6,17 +6,8 @@ Sd: a checker-moving program that is <strong>powerful</strong>,
 <strong>sophisticated</strong>, <strong>accurate</strong> and
 <strong>reliable</strong>.
 </p>
-<br>
 <p align="center">
-<strong>The current version of Sd/Sdtty is 34.8c</strong>, released on January 16, 2003.
-<p align="center">
-<strong>COMPILER BUG ALERT!!!!!</strong>
-<p>
-Microsoft Visual C++, professional edition, version 6.0, service pack 5, has a
-bug that renders it unfit for compiling Sd or Sdtty.  See the release notes for
-version 34.7 for details.  This bug does not affect users, because this compiler
-has never been used, and never will be used, for compiling Sd.
-</p>
+<strong>The current version of Sd/Sdtty is 34.8e</strong>, released on January 27, 2003.
 <br>
 <p>
 The program is now able to write the output file with a "new style" name.
@@ -43,7 +34,7 @@ A sample of fun things Sd can do.
 <dt>
 <font size="+1"><a href="intro.html">Background</a></font></dt>
 <dd>
-Background and availability info.
+Background and availability info, and information about Microsoft compiler bugs.
 <br>&nbsp;<!--blank line--><br>
 </dd>
 <dt>

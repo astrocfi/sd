@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-2002  William B. Ackerman.
+    Copyright (C) 1990-2003  William B. Ackerman.
     Copyright (C) 1993  Stephen Gildea
     Copyright (C) 1993  Alan Snyder
 
@@ -416,7 +416,8 @@ enum useful_concept_enum {
   UC_extent    // Not a selector; indicates extent of the enum.
 };
 
-class SDLIB_API concept {
+// Some versions of gcc don't like the class "concept", so we change the spelling.
+class SDLIB_API conzept {
 
  public:
 
@@ -464,7 +465,7 @@ class SDLIB_API concept {
    // This does the translation, writes over the "menu_name" fields,
    // and places a const pointer to the thing in "concept_descriptor_table".
    // This is in sdinit.
-   static void concept::translate_concept_names();
+   static void conzept::translate_concept_names();
 };
 
 // BEWARE!!  This list must track the array "selector_list" in sdtables.cpp
@@ -640,14 +641,21 @@ struct by_def_item {
    uint32 modifiersh;
 };
 
+struct matrix_def_block {
+   matrix_def_block *next;
+   uint32 alternate_def_flags;
+   dance_level modifier_level;
+   uint32 items[2];     // Dynamically allocated to either 2 or 8.
+};
+
 struct calldefn {
-   uint32 callflags1;    /* The CFLAG1_??? flags. */
-   uint32 callflagsh;    /* The mask for the heritable flags. */
-   /* Within the "callflagsh" field, the various grouped fields
-      (e.g. INHERITFLAG_MXNMASK) are uniform -- either all the bits are
-      on or they are all off.  A call can only inherit the entire group,
-      by saying "mxn_is_inherited". */
-   uint32 callflagsf;    /* The ESCAPE_WORD__???  and CFLAGH__??? flags. */
+   uint32 callflags1;    // The CFLAG1_??? flags.
+   uint32 callflagsh;    // The mask for the heritable flags.
+   // Within the "callflagsh" field, the various grouped fields
+   // (e.g. INHERITFLAG_MXNMASK) are uniform -- either all the bits are
+   // on or they are all off.  A call can only inherit the entire group,
+   // by saying "mxn_is_inherited".
+   uint32 callflagsf;    // The ESCAPE_WORD__???  and CFLAGH__??? flags.
    short int age;
    short int level;
    calldef_schema schema;
@@ -655,19 +663,19 @@ struct calldefn {
    union {
       struct {
          calldef_block *def_list;
-      } arr;            /* if schema = schema_by_array */
+      } arr;            // if schema = schema_by_array
       struct {
-         uint32 flags;
-         uint32 *stuff;
-      } matrix;         /* if schema = schema_matrix or schema_partner_matrix */
+         uint32 matrix_flags;
+         matrix_def_block *matrix_def_list;
+      } matrix;         // if schema = schema_matrix or schema_partner_matrix
       struct {
          int howmanyparts;
-         by_def_item *defarray;  /* Dynamically allocated, there are "howmanyparts" of them. */
-      } seq;            /* if schema = schema_sequential or whatever */
+         by_def_item *defarray;  // Dynamically allocated, there are "howmanyparts" of them.
+      } seq;                     // if schema = schema_sequential or whatever
       struct {
          by_def_item innerdef;
          by_def_item outerdef;
-      } conc;           /* if schema = any of the concentric ones. */
+      } conc;           // if schema = any of the concentric ones.
    } stuff;
 };
 
@@ -684,7 +692,7 @@ struct call_with_name {
 };
 
 struct parse_block {
-   const concept::concept_descriptor *concept; // the concept or end marker
+   const conzept::concept_descriptor *concept; // the concept or end marker
    call_with_name *call;          /* if this is end mark, gives the call; otherwise unused */
    call_with_name *call_to_print; /* the original call, for printing (sometimes the field
                                      above gets changed temporarily) */
@@ -1872,6 +1880,7 @@ struct matrix_rec {
    int orig_source_idx;
    matrix_rec *nextse;     // Points to next person south (dir even) or east (dir odd.)
    matrix_rec *nextnw;     // Points to next person north (dir even) or west (dir odd.)
+   bool far_squeezer;      // This person's pairing is due to being far from someone.
    bool tbstopse;          // True if nextse/nextnw is zero because the next spot
    bool tbstopnw;          //   is occupied by a T-boned person (as opposed to being empty.)
 };
@@ -2110,7 +2119,7 @@ struct modifier_block {
    long int index;
    call_conc_option_state call_conc_options;  /* Has numbers, selectors, etc. */
    call_with_name *call_ptr;
-   const concept::concept_descriptor *concept_ptr;
+   const conzept::concept_descriptor *concept_ptr;
    modifier_block *packed_next_conc_or_subcall;  /* next concept, or, if this is end mark, points to substitution list */
    modifier_block *packed_secondary_subcall; // points to substitution list for secondary subcall
    modifier_block *gc_ptr;                /* used for reclaiming dead blocks */
@@ -3499,6 +3508,7 @@ class iobase {
    virtual int do_comment_popup(char dest[]) = 0;
    virtual uint32 get_number_fields(int nnumbers, long_boolean forbid_zero) = 0;
    virtual long_boolean get_call_command(uims_reply *reply_p) = 0;
+   virtual void set_pick_string(const char *string) = 0;
    virtual void display_help() = 0;
    virtual void terminate(int code) = 0;
    virtual void process_command_line(int *argcp, char ***argvp) = 0;
@@ -3536,6 +3546,7 @@ class iofull : public iobase {
    int do_circcer_popup();
    int do_tagger_popup(int tagger_class);
    int do_modifier_popup(Cstring callname, modify_popup_kind kind);
+   void set_pick_string(const char *string);
    int do_comment_popup(char dest[]);
    uint32 get_number_fields(int nnumbers, long_boolean forbid_zero);
    long_boolean get_call_command(uims_reply *reply_p);
@@ -3990,7 +4001,7 @@ struct clw3_thing {
 
 /* in SDCTABLE */
 
-extern SDLIB_API const concept::concept_descriptor *concept_descriptor_table;
+extern SDLIB_API const conzept::concept_descriptor *concept_descriptor_table;
 extern SDLIB_API call_with_name **main_call_lists[call_list_extent];
 extern SDLIB_API int number_of_calls[call_list_extent];
 extern SDLIB_API dance_level calling_level;
@@ -4624,7 +4635,7 @@ bool do_tagger_iteration(uint32 tagclass,
                          uint32 numtaggers,
                          call_with_name **tagtable);
 void do_circcer_iteration(uint32 *circcp);
-const concept::concept_descriptor *pick_concept(long_boolean already_have_concept_in_place);
+const conzept::concept_descriptor *pick_concept(long_boolean already_have_concept_in_place);
 call_with_name *do_pick();
 resolve_goodness_test get_resolve_goodness_info();
 bool pick_allow_multiple_items();
@@ -4635,8 +4646,8 @@ long_boolean allow_random_subcall_pick();
 
 /* In SDUI */
 
-/* Change the title bar (or whatever it's called) on the window. */
-extern void ttu_set_window_title(char s[]);
+// Change the title bar (or whatever it's called) on the window.
+extern void ttu_set_window_title(const char *string);
 
 // Initialize this package.
 extern void ttu_initialize();
@@ -4711,5 +4722,5 @@ SDLIB_API void write_file(char line[]);
 /* in SDMAIN */
 
 SDLIB_API long_boolean deposit_call(call_with_name *call, const call_conc_option_state *options);
-SDLIB_API long_boolean deposit_concept(const concept::concept_descriptor *conc);
+SDLIB_API long_boolean deposit_concept(const conzept::concept_descriptor *conc);
 SDLIB_API int sdmain(int argc, char *argv[]);

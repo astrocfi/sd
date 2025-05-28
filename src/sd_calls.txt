@@ -33,7 +33,7 @@
     General Public License if you distribute the file.
 */
 
-version "34.8c"
+version "34.8e"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve
@@ -2905,11 +2905,6 @@ call "nicely" c4 tag nicely
    seq hinge_for_nicely [allow_forced_mod inherit_left inherit_bigmatrix inherit_nxn]
    seq and_cross [allow_forced_mod inherit_grand inherit_nxn inherit_single]
 
-call "_nicely but @m" dontshow tag nicelybut
-            left_means_mirror visible_fractions
-   seq hinge_for_nicely [allow_forced_mod inherit_left]
-   seq nullsecond [mandatory_secondary_call]
-
 call "connect the diamond" c4a
    setup dmd 2x2 restriction unusual diamond_like qualifier right dmd_ctrs_mwv
       array [CR1S 0 AL1S 0]
@@ -3962,57 +3957,64 @@ call "spin the yoyo" c4x
 
 call "jay walk" c1 tag jaywalk
    partnermatrix find_jaywalkers
-      [ZM16N 16 ZM16N 16 0 0 0 0 0 0]
+      [ZM16N 16 ZM16N 16 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
 
 call "@6 jay walk" c1
    partnermatrix use_selector ignore_nonselectees find_jaywalkers
-      [ZM16N 16 ZM16N 16 0 0 0 0 0 0]
+      [ZM16N 16 ZM16N 16 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
 
 call "jay touch 1/4" c3a
    partnermatrix find_jaywalkers
-      [CR16E 16 CR16E 16 0 0 0 0 0 0]
+      [CR16E 16 CR16E 16 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
 
 call "@6 jay touch 1/4" c3a
    partnermatrix use_selector ignore_nonselectees find_jaywalkers
-      [CR16E 16 CR16E 16 0 0 0 0 0 0]
+      [CR16E 16 CR16E 16 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
 
 call "jay slide thru" c3a
    partnermatrix find_jaywalkers
-      [CR16E 16 AL16W 16 0 0 0 0 0 0]
+      [CR16E 16 AL16W 16 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
 
 call "@6 jay slide thru" c3a
    partnermatrix use_selector ignore_nonselectees find_jaywalkers
-      [CR16E 16 AL16W 16 0 0 0 0 0 0]
+      [CR16E 16 AL16W 16 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
 
 // This will allow nonsensical uses.  That's too bad.  Use of "<so-and-so> spread" to
 // go from columns to blocks (or whatever) violates the definition of the call anyway.
 call "@6 spread" c1
    partnermatrix use_selector tbone_is_ok both_selected_ok
-      [ZM16N 16 ZM16N 16 ZM16N 16 ZM16N 16 ZM14N 16 ZM14N 16 ZM18N 16 ZM18N 16]
+      [ZM16N 16 ZM16N 16 ZM16N 16 ZM16N 16 ZM14N 16 ZM14N 16 ZM18N 16 ZM18N 16
+      0 0 0 0 0 0 0 0]
 
 call "@6 shove off" c3a
    partnermatrix use_selector stop_and_warn_on_tbone
-      [ZM18N 16 ZM18N 16 ZM14N 16 ZM14N 16 AL14S 16 AL14S 16 CR18S 16 CR18S 16]
+      [ZM18N 16 ZM18N 16 ZM14N 16 ZM14N 16 AL14S 16 AL14S 16 CR18S 16 CR18S 16
+      0 0 0 0 0 0 0 0]
 
 call "@6 1/2 shove off" c3a
    partnermatrix use_selector stop_and_warn_on_tbone
-      [ZM17N 16 ZM17N 16 ZM15N 16 ZM15N 16 AL15W 16 AL15W 16 CR17E 16 CR17E 16]
+      [ZM17N 16 ZM17N 16 ZM15N 16 ZM15N 16 AL15W 16 AL15W 16 CR17E 16 CR17E 16
+      0 0 0 0 0 0 0 0]
 
 call "@6 tow truck" c3x
    partnermatrix use_selector stop_and_warn_on_tbone
-      [ZM18N 16 ZM18N 16 ZM14N 16 ZM14N 16 ZM14N 16 0 0 ZM18N 16]
+      [ZM18N 16 ZM18N 16 ZM14N 16 ZM14N 16 ZM14N 16 0 0 ZM18N 16
+      0 0 0 0 0 0 0 0]
 
 call "@6 1/2 tow truck" c3x
    partnermatrix use_selector stop_and_warn_on_tbone
-      [ZM17N 16 ZM17N 16 ZM15N 16 ZM15N 16 ZM15N 16 0 0 ZM17N 16]
+      [ZM17N 16 ZM17N 16 ZM15N 16 ZM15N 16 ZM15N 16 0 0 ZM17N 16
+      0 0 0 0 0 0 0 0]
 
 call "@6 reverse tow truck" c3x
    partnermatrix use_selector stop_and_warn_on_tbone
-      [ZM18N 16 ZM18N 16 ZM14N 16 ZM14N 16 0 ZM14N 16 ZM18N 16 0]
+      [ZM18N 16 ZM18N 16 ZM14N 16 ZM14N 16 0 ZM14N 16 ZM18N 16 0
+      0 0 0 0 0 0 0 0]
 
 call "@6 1/2 reverse tow truck" c3x
    partnermatrix use_selector stop_and_warn_on_tbone
-      [ZM17N 16 ZM17N 16 ZM15N 16 ZM15N 16 0 ZM15N 16 ZM17N 16 0]
+      [ZM17N 16 ZM17N 16 ZM15N 16 ZM15N 16 0 ZM15N 16 ZM17N 16 0
+      0 0 0 0 0 0 0 0]
 
 /* This is somewhat pathetic, but people have used this call with "own the anyone",
    in which the phantoms that remained when the other people left the room were
@@ -4036,7 +4038,8 @@ call "leads run the wheel" c3x
 call "@6 run the wheel" c3x
             yield_if_ambiguous
    partnermatrix use_selector stop_and_warn_on_tbone
-      [CR18W 16 CR18W 16 AL14E 16 AL14E 16 CR16W 14 CR16W 14 AL16E 14 AL16E 14]
+      [CR18W 16 CR18W 16 AL14E 16 AL14E 16 CR16W 14 CR16W 14 AL16E 14 AL16E 14
+      0 0 0 0 0 0 0 0]
             yield_if_ambiguous
    setup 2x2 2x2
       preds "???"
@@ -4045,7 +4048,7 @@ call "@6 run the wheel" c3x
 
 call "bridge the gap" c4a
    partnermatrix tbone_is_ok
-      [ZM14N 18 ZM14N 18 AL14S 18 AL14S 18 0 0 0 0]
+      [ZM14N 18 ZM14N 18 AL14S 18 AL14S 18 0 0 0 0 0 0 0 0 0 0 0 0]
    setup 4x2 2x4 rotate
       array [ZM7W ZM0W 0 0 0 0 AL1E AL6E]
             alternate_definition [yoyo] c4
@@ -4066,27 +4069,27 @@ call "bridge the gap" c4a
 
 call "@6 right anchor 1/4" c4a
    partnermatrix use_selector ignore_nonselectees must_face_same_way
-      [0 0 0 0 CR18E 18 CR18E 18 CR16E 16 CR16E 16]
+      [0 0 0 0 CR18E 18 CR18E 18 CR16E 16 CR16E 16 0 0 0 0 0 0 0 0]
 
 call "@6 left anchor 1/4" c4a
    partnermatrix use_selector ignore_nonselectees must_face_same_way
-      [0 0 0 0 AL16W 16 AL16W 16 AL14W 18 AL14W 18]
+      [0 0 0 0 AL16W 16 AL16W 16 AL14W 18 AL14W 18 0 0 0 0 0 0 0 0]
 
 call "@6 right anchor 1/2" c4a
    partnermatrix use_selector ignore_nonselectees must_face_same_way
-      [0 0 0 0 CR20S 16 CR20S 16 CR16S 16 CR16S 16]
+      [0 0 0 0 CR20S 16 CR20S 16 CR16S 16 CR16S 16 0 0 0 0 0 0 0 0]
 
 call "@6 left anchor 1/2" c4a
    partnermatrix use_selector ignore_nonselectees must_face_same_way
-      [0 0 0 0 AL16S 16 AL16S 16 AL12S 16 AL12S 16]
+      [0 0 0 0 AL16S 16 AL16S 16 AL12S 16 AL12S 16 0 0 0 0 0 0 0 0]
 
 call "@6 right anchor 3/4" c4a
    partnermatrix use_selector ignore_nonselectees must_face_same_way
-      [0 0 0 0 CR18W 14 CR18W 14 CR16W 16 CR16W 16]
+      [0 0 0 0 CR18W 14 CR18W 14 CR16W 16 CR16W 16 0 0 0 0 0 0 0 0]
 
 call "@6 left anchor 3/4" c4a
    partnermatrix use_selector ignore_nonselectees must_face_same_way
-      [0 0 0 0 AL16E 16 AL16E 16 AL14E 14 AL14E 14]
+      [0 0 0 0 AL16E 16 AL16E 16 AL14E 14 AL14E 14 0 0 0 0 0 0 0 0]
 
 call "@eright@f anchor 1/4" c4a
             left_means_mirror
@@ -4095,11 +4098,11 @@ call "@eright@f anchor 1/4" c4a
 
 call "right anchor 1/2" c4a
    partnermatrix must_face_same_way
-      [CR20S 16 CR20S 16 CR16S 16 CR16S 16 0 0 0 0]
+      [CR20S 16 CR20S 16 CR16S 16 CR16S 16 0 0 0 0 0 0 0 0 0 0 0 0]
 
 call "left anchor 1/2" c4a
    partnermatrix must_face_same_way
-      [AL16S 16 AL16S 16 AL12S 16 AL12S 16 0 0 0 0]
+      [AL16S 16 AL16S 16 AL12S 16 AL12S 16 0 0 0 0 0 0 0 0 0 0 0 0]
 
 call "@eright@f anchor 3/4" c4a
             left_means_mirror no_elongation_allowed
@@ -4109,12 +4112,26 @@ call "@eright@f anchor 3/4" c4a
 call "@6 squeeze" c1
             dont_use_in_resolve
    partnermatrix use_selector ignore_nonselectees stop_and_warn_on_tbone find_squeezers
-      [0 0 0 0 CR20S 16 CR20S 16 AL12S 16 AL12S 16]
+      [0 0 0 0 CR20S 16 CR20S 16 AL12S 16 AL12S 16
+       0 0 0 0 CR20S 16 CR20S 16 AL12S 16 AL12S 16]
+            alternate_definition [half] c1
+      [0 0 0 0 CR18S 16 CR18S 16 AL14S 16 AL14S 16  // close: trade but do not slide
+       0 0 0 0 ZM18N 16 ZM18N 16 ZM14N 16 ZM14N 16] // far: slide but do not trade
+            alternate_definition [lasthalf] c1
+      [0 0 0 0 CR18S 16 CR18S 16 AL14S 16 AL14S 16  // close: trade
+       0 0 0 0 0 0 0 0]                             // far: not allowed
 
 call "squeeze" c1
             dont_use_in_resolve
    partnermatrix stop_and_warn_on_tbone find_squeezers
-      [CR20S 16 CR20S 16 AL12S 16 AL12S 16 0 0 0 0]
+      [CR20S 16 CR20S 16 AL12S 16 AL12S 16 0 0 0 0
+       CR20S 16 CR20S 16 AL12S 16 AL12S 16 0 0 0 0]
+            alternate_definition [half] c1
+      [CR18S 16 CR18S 16 AL14S 16 AL14S 16 0 0 0 0  // close: trade but do not slide
+       ZM18N 16 ZM18N 16 ZM14N 16 ZM14N 16 0 0 0 0] // far: slide but do not trade
+            alternate_definition [lasthalf] c1
+      [CR18S 16 CR18S 16 AL14S 16 AL14S 16 0 0 0 0  // close: trade
+       0 0 0 0 0 0 0 0]                             // far: not allowed
 
 call "@6 start a squeeze" c1
             dont_use_in_resolve
@@ -4128,7 +4145,7 @@ call "@6 start a squeeze" c1
 call "@6 like a squeeze" c1    /* Not right!  Testing purposes only! */
             dont_use_in_resolve
    partnermatrix use_selector ignore_nonselectees stop_and_warn_on_tbone find_spreaders
-      [0 0 0 0 ZM14N 16 ZM14N 16 ZM18N 16 ZM18N 16]
+      [0 0 0 0 ZM14N 16 ZM14N 16 ZM18N 16 ZM18N 16 0 0 0 0 0 0 0 0]
 
 call "@6 quarter right" mainstream
             dont_use_in_resolve
@@ -4157,42 +4174,58 @@ call "@6 face left" mainstream
 call "press ahead" mainstream
             dont_use_in_resolve
    matrix [ZM16N 18 ZM16N 18]
-
-call "@6 press ahead" mainstream
-            dont_use_in_resolve
-   matrix use_selector [ZM16N 18 ZM16N 18]
-
-call "press back" mainstream
-            dont_use_in_resolve
-   matrix [ZM16N 14 ZM16N 14]
-
-call "@6 press back" mainstream
-            dont_use_in_resolve
-   matrix use_selector [ZM16N 14 ZM16N 14]
+            alternate_definition [half] mainstream
+          [ZM16N 17 ZM16N 17]
 
 call "1/2 press ahead" mainstream
             dont_use_in_resolve
    matrix [ZM16N 17 ZM16N 17]
 
+call "@6 press ahead" mainstream
+            dont_use_in_resolve
+   matrix use_selector [ZM16N 18 ZM16N 18]
+            alternate_definition [half] mainstream
+                       [ZM16N 17 ZM16N 17]
+
 call "@6 1/2 press ahead" mainstream
             dont_use_in_resolve
    matrix use_selector [ZM16N 17 ZM16N 17]
 
+call "press back" mainstream
+            dont_use_in_resolve
+   matrix [ZM16N 14 ZM16N 14]
+            alternate_definition [half] mainstream
+          [ZM16N 15 ZM16N 15]
+
+call "@6 press back" mainstream
+            dont_use_in_resolve
+   matrix use_selector [ZM16N 14 ZM16N 14]
+            alternate_definition [half] mainstream
+          [ZM16N 15 ZM16N 15]
+
 call "press right" mainstream
             dont_use_in_resolve
    matrix [ZM18N 18 ZM18N 18]
+            alternate_definition [half] mainstream
+          [ZM17N 17 ZM17N 17]
 
 call "@6 press right" mainstream
             dont_use_in_resolve
    matrix use_selector [ZM18N 18 ZM18N 18]
+            alternate_definition [half] mainstream
+          [ZM17N 17 ZM17N 17]
 
 call "press left" mainstream
             dont_use_in_resolve
    matrix [ZM14N 18 ZM14N 18]
+            alternate_definition [half] mainstream
+          [ZM15N 17 ZM15N 17]
 
 call "@6 press left" mainstream
             dont_use_in_resolve
    matrix use_selector [ZM14N 18 ZM14N 18]
+            alternate_definition [half] mainstream
+          [ZM15N 17 ZM15N 17]
 
 call "@6 cast back to the right" c1
             dont_use_in_resolve
@@ -4205,14 +4238,18 @@ call "@6 cast back to the left" c1
 call "truck" c2
             dont_use_in_resolve reverse_means_mirror
    matrix [ZM14N 16 ZM18N 16]
-
-call "@6 truck" c2
-            dont_use_in_resolve reverse_means_mirror
-   matrix use_selector [ZM14N 16 ZM18N 16]
+            alternate_definition [half] c2
+          [ZM15N 16 ZM17N 16]
 
 call "1/2 truck" c2
             dont_use_in_resolve reverse_means_mirror
    matrix [ZM15N 16 ZM17N 16]
+
+call "@6 truck" c2
+            dont_use_in_resolve reverse_means_mirror
+   matrix use_selector [ZM14N 16 ZM18N 16]
+            alternate_definition [half] c2
+                       [ZM15N 16 ZM17N 16]
 
 call "@6 1/2 truck" c2
             dont_use_in_resolve reverse_means_mirror
@@ -4221,14 +4258,16 @@ call "@6 1/2 truck" c2
 call "reverse truck" c2
             dont_use_in_resolve
    matrix [ZM18N 16 ZM14N 16]
-
-call "@6 reverse truck" c2
-            dont_use_in_resolve
-   matrix use_selector [ZM18N 16 ZM14N 16]
+            alternate_definition [half] c2
+          [ZM17N 16 ZM15N 16]
 
 call "1/2 reverse truck" c2
             dont_use_in_resolve
    matrix [ZM17N 16 ZM15N 16]
+
+call "@6 reverse truck" c2
+            dont_use_in_resolve
+   matrix use_selector [ZM18N 16 ZM14N 16]
 
 call "@6 1/2 reverse truck" c2
             dont_use_in_resolve
@@ -4237,14 +4276,16 @@ call "@6 1/2 reverse truck" c2
 call "E.R.A." c4
             dont_use_in_resolve
    matrix [ZM16N 14 ZM16N 18]
-
-call "@6 E.R.A." c4
-            dont_use_in_resolve
-   matrix use_selector [ZM16N 14 ZM16N 18]
+            alternate_definition [half] c4
+          [ZM16N 15 ZM16N 17]
 
 call "1/2 E.R.A." c4
             dont_use_in_resolve
    matrix [ZM16N 15 ZM16N 17]
+
+call "@6 E.R.A." c4
+            dont_use_in_resolve
+   matrix use_selector [ZM16N 14 ZM16N 18]
 
 call "@6 1/2 E.R.A." c4
             dont_use_in_resolve
@@ -4253,14 +4294,16 @@ call "@6 1/2 E.R.A." c4
 call "M.C.P." c4
             dont_use_in_resolve
    matrix [ZM16N 18 ZM16N 14]
-
-call "@6 M.C.P." c4
-            dont_use_in_resolve
-   matrix use_selector [ZM16N 18 ZM16N 14]
+            alternate_definition [half] c4
+          [ZM16N 17 ZM16N 15]
 
 call "1/2 M.C.P." c4
             dont_use_in_resolve
    matrix [ZM16N 17 ZM16N 15]
+
+call "@6 M.C.P." c4
+            dont_use_in_resolve
+   matrix use_selector [ZM16N 18 ZM16N 14]
 
 call "@6 1/2 M.C.P." c4
             dont_use_in_resolve
@@ -4277,6 +4320,8 @@ call "@6 right loop 0" c2
 call "@6 right loop 1" c2
             dont_use_in_resolve
    matrix use_selector [CR20S 16 CR20S 16]
+            alternate_definition [half] c2
+                       [CR18E 18 CR18E 18]
 
 call "@6 right loop 2" c2
             dont_use_in_resolve
@@ -4293,6 +4338,8 @@ call "@6 left loop 0" c2
 call "@6 left loop 1" c2
             dont_use_in_resolve
    matrix use_selector [AL12S 16 AL12S 16]
+            alternate_definition [half] c2
+                       [AL14W 18 AL14W 18]
 
 call "@6 left loop 2" c2
             dont_use_in_resolve
@@ -7816,7 +7863,7 @@ call "@v back to a wave" c1
                            inherit_nxn inherit_bigmatrix inherit_revert]
    seq strictboxyscootback [inherit_single inherit_nxn inherit_fast]
 
-call "@v back to a wave, to a wave" c1
+call "@v back to a wave, centers to a wave" c1
             visible_fractions left_means_mirror
             singlefile_is_inherited
             revert_is_inherited
@@ -7832,7 +7879,7 @@ call "flip back" c1
    seq strictboxyscootback [inherit_fast]
 
 // Be careful!
-call "flip back, to a wave" c1
+call "flip back, centers to a wave" c1
             visible_fractions cross_is_inherited revert_is_inherited
    seq flip_back_1 [inherit_cross inherit_revert]
    seq scootbacktowave []
@@ -10838,9 +10885,9 @@ call "right and left by by by" c4
    seq slither []
 
 call "turn and left thru" c3x
-            visible_fractions yoyo_is_inherited twisted_is_inherited
+            visible_fractions yoyo_is_inherited twisted_is_inherited nxn_is_inherited
    seq turnthru [inherit_yoyo]
-   seq courtesy [inherit_twisted]
+   seq courtesy [inherit_twisted inherit_nxn]
 
 call "flutter wheel" mainstream
             rear_back_from_qtag reverse_means_mirror no_elongation_allowed
@@ -14544,18 +14591,23 @@ call "_outpost part 1" dontshow tag outpost1
          if outposter_is_cw  [CR5N CR7N CR0N AL6S AL1S AL3S AL4S    0]
          if outposter_is_ccw [CR6N AL5S AL7S AL0S    0 CR1N CR3N CR4N]
 
-/*  conc_o lossage
-call "_outpost part 3" dontshow tag outpost3
-   conc_o ahso [] two_o_circs_for_frac [endscando]
-*/
 call "_outpost part 3" dontshow tag outpost3
    conc ahso [] two_o_circs [conc_force_otherway endscando]
 
+call "_outpost part 3 but @0" dontshow tag outpost3but
+   conc nullcall [mandatory_anycall] two_o_circs [conc_force_otherway endscando]
+
 call "outpost" c4
             left_means_mirror visible_fractions yoyo_is_inherited
-   seq outpost1 [inherit_left inherit_yoyo]  /* "yoyo" is illegal, of course. */
+   seq outpost1 [inherit_left inherit_yoyo]  // "yoyo" is illegal, of course.
    seq ctr6trade [inherit_yoyo]
    seq outpost3 [inherit_yoyo]
+
+call "outpost but @0" c4
+            left_means_mirror visible_fractions yoyo_is_inherited
+   seq outpost1 [inherit_left inherit_yoyo]  // "yoyo" is illegal, of course.
+   seq ctr6trade [inherit_yoyo]
+   seq outpost3but [inherit_yoyo]
 
 call "chip off" c4a
             left_means_mirror
@@ -19521,7 +19573,7 @@ call "busy @0" c3
    seq busy_nothing [normalize]
    seq busy_any_part_2 [normalize]
 
-call "link up but @0" c3x
+call "link up but @0" c3a
    seq linking_nothing [normalize]
    seq busy_any_part_2 [normalize]
 
@@ -21858,12 +21910,6 @@ call "_percolate part 3" dontshow tag percolate3
         natturnthru [allow_forced_mod inherit_yoyo endscando
                     conc_force_spots suppress_elongation_warnings]
 
-call "_percolate part 3 but @m" dontshow tag percolate3but
-            yoyo_is_inherited
-   conc nicelybut []
-        natturnthru [allow_forced_mod inherit_yoyo endscando
-                    conc_force_spots suppress_elongation_warnings]
-
 // The real definition -- there is no guarantee
 // that centers stay centers and ends stay ends.
 // Of course, we put the version that allows replacement first.
@@ -21891,24 +21937,6 @@ call "@N percolate" c2
    seq circnullcall [inherit_funny or_anycall]
    seq circulate [inherit_funny force_half]
    seq percolate3 [inherit_funny inherit_yoyo]
-
-call "@1percolate but @m" c3
-            yoyo_is_inherited twisted_is_inherited first_two_parts_visible funny_is_inherited
-   seq circulate [or_anycall inherit_funny inherit_twisted]
-   seq circulate [inherit_funny force_half]
-   seq percolate3but [inherit_yoyo]
-
-call "@T percolate but @m" c3
-            yoyo_is_inherited first_two_parts_visible funny_is_inherited
-   seq nullcall [inherit_funny mandatory_anycall]
-   seq circulate [inherit_funny force_half]
-   seq percolate3but [inherit_yoyo]
-
-call "@N percolate but @m" c3
-            yoyo_is_inherited first_two_parts_visible funny_is_inherited
-   seq circnullcall [inherit_funny or_anycall]
-   seq circulate [inherit_funny force_half]
-   seq percolate3but [inherit_yoyo]
 
 /* *** This isn't right -- the "nicely" people aren't checking that they aren't selected.
    We just can't be bothered to do everything that would be needed to fix this.

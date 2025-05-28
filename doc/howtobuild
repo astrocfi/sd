@@ -285,31 +285,35 @@ cd sddoc
 ftp atlas
             (user=wba)
             (pass=x464pq)
-            (directory should be OK)
    bin
-   # send file to atlas, in /atlas/users/wba/pack.zip
+   # send file from hpaniou to atlas, in /atlas/users/wba/pack.zip
    put pack.zip
-quit
+   quit
 
 telnet atlas
             (user=wba)
             (pass=x464pq)
-            (directory should be OK)
-   # send file to goblin, in /home/wba
+   # send file from atlas to goblin, in /home/wba
    scp pack.zip wba@goblin.jaws.umn.edu:pack.zip
             (pass=wba;sd)
-   # ssh to goblin
+   # ssh from atlas to goblin
    ssh goblin.jaws.umn.edu
             (pass=wba;sd)
-#      sftp slowlaris.tobkin.com
-#            (pass=12b0z0s)
-#      put pack.zip
-
+      # send file from goblin to slowlaris, in /home/lynette/public-html/sd
       scp pack.zip wba@slowlaris.tobkin.com:pack.zip
             (pass=12b0z0s)
-   # ssh to slowlaris
-   ssh slowlaris.tobkin.com
+      # ssh from goblin to slowlaris
+      ssh slowlaris.tobkin.com
             (pass=12b0z0s)
+         rm sd_doc*.html
+         unzip pack
+         rm pack.zip
+         exit
+      rm pack.zip
+      exit
+   rm pack.zip
+   exit
+
 
 OBSOLETE OLD PROCEDURE
 Run the program "winscp2".

@@ -45,7 +45,7 @@
 #include "sd.h"
 #include "paths.h"
 
-static int window_size_args[4] = {10, 20, 780, 560};
+static int window_size_args[4] = {780, 560, 10, 20};
 
 extern void windows_init_printer_font(HWND hwnd, HDC hdc);
 extern void windows_choose_font();
@@ -1770,6 +1770,17 @@ static void SetTitle()
 }
 
 
+void iofull::set_pick_string(const char *string)
+{
+   if (string && *string) {
+      UpdateStatusBar((Cstring) 0);
+      SetWindowText(hwndMain, (LPSTR) string);
+   }
+   else {
+      SetTitle();   // End of pick, reset to our main title.
+   }
+}
+
 void iofull::set_window_title(char s[])
 {
    lstrcpy(szMainTitle, "Sd ");
@@ -2088,10 +2099,10 @@ bool iofull::init_step(init_callback_state s, int n)
       hwndMain = CreateWindow(
          szMainWindowName, "Sd",
          WS_OVERLAPPEDWINDOW,
-         window_size_args[0],
-         window_size_args[1],
          window_size_args[2],
          window_size_args[3],
+         window_size_args[0],
+         window_size_args[1],
          NULL, NULL, GLOBhInstance, NULL);
 
       if (!hwndMain) {
@@ -2378,17 +2389,16 @@ void iofull::process_command_line(int *argcp, char ***argvp)
          GLOBiCmdShow = SW_SHOWMAXIMIZED;
       }
       else if (strcmp(argv[argno], "-window_size") == 0 && argno+1 < (*argcp)) {
-         if (sscanf(argv[argno+1], "%dx%dx%dx%d",
-                    &window_size_args[0],
-                    &window_size_args[1],
-                    &window_size_args[2],
-                    &window_size_args[3]) != 4) {
+         int nn = sscanf(argv[argno+1], "%dx%dx%dx%d",
+                         &window_size_args[0],
+                         &window_size_args[1],
+                         &window_size_args[2],
+                         &window_size_args[3]);
 
-            gg->fatal_error_exit(1,
-                                 "Bad size argument - try 10x20x780x560",
-                                 argv[argno+1]);
+         // We allow the user to give two numbers (size only) or 4 numbers (size and position).
+         if (nn != 2 && nn != 4) {
+            gg->fatal_error_exit(1, "Bad size argument", argv[argno+1]);
          }
-
 
          goto remove_two;
       }

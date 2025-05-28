@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-2002  William B. Ackerman.
+    Copyright (C) 1990-2003  William B. Ackerman.
 
     This file is unpublished and contains trade secrets.  It is
     to be used by permission only and not to be disclosed to third
@@ -2368,7 +2368,7 @@ static void initialize_concept_sublists()
    // First, just count up all the available concepts.
 
    all_legal_concepts = 0;
-   const concept::concept_descriptor *p;
+   const conzept::concept_descriptor *p;
 
    for (p = concept_descriptor_table ; p->kind != end_marker ; p++) {
       if (p->level <= calling_level) all_legal_concepts++;
@@ -2395,7 +2395,7 @@ static void initialize_concept_sublists()
            concept_index++) {
          uint32 setup_mask = ~0;      /* Default is to accept the concept. */
          uint32 good_setup_mask = 0;  /* Default for this is not to. */
-         const concept::concept_descriptor *p = &concept_descriptor_table[concept_index];
+         const conzept::concept_descriptor *p = &concept_descriptor_table[concept_index];
          if (p->kind == end_marker) break;
          if (p->level > calling_level) continue;
 
@@ -5201,9 +5201,13 @@ void toplevelmove() THROW_DECL
 
          // Now skip things.
          // First, skip any fractional concept.  Only simple "M/N".
-         // Also skip "stretch".
+         // Also skip "stretch" and "once removed", and so on.
          while ((parse_scan->concept->kind == concept_fractional &&
                  parse_scan->concept->arg1 == 0) ||
+                parse_scan->concept->kind == concept_once_removed ||
+                parse_scan->concept->kind == concept_stable ||
+                parse_scan->concept->kind == concept_frac_stable ||
+                parse_scan->concept->kind == concept_new_stretch ||
                 parse_scan->concept->kind == concept_old_stretch) {
             parse_scan = parse_scan->next;
             did_something = true;
@@ -5436,8 +5440,8 @@ long_boolean deposit_call_tree(modifier_block *anythings, parse_block *save1, in
          call takes a tagger -- it could have a search chain before we even see it. */
       while (save1->next) save1 = save1->next;
       save1->next = tt;
-      save1->concept = &concept::marker_concept_mod;
-      tt->concept = &concept::marker_concept_mod;
+      save1->concept = &conzept::marker_concept_mod;
+      tt->concept = &conzept::marker_concept_mod;
       tt->call = base_calls[(key == DFM1_CALL_MOD_MAND_SECONDARY/DFM1_CALL_MOD_BIT) ?
                            base_call_null_second: base_call_null];
       tt->call_to_print = tt->call;
@@ -5551,7 +5555,7 @@ extern long_boolean do_subcall_query(
       if necessary.  ***** Someday this null list will always be present. */
 
    if (parseptr->concept->kind == marker_end_of_list)
-      parseptr->concept = &concept::marker_concept_mod;
+      parseptr->concept = &conzept::marker_concept_mod;
 
    /* Create a reference on the list.  "search" points to the null item at the end. */
 
@@ -5598,7 +5602,7 @@ extern long_boolean do_subcall_query(
       else {
          /* User declined the modification.  Create a null entry so that we don't query again. */
          *newsearch = get_parse_block();
-         (*newsearch)->concept = &concept::marker_concept_mod;
+         (*newsearch)->concept = &conzept::marker_concept_mod;
          (*newsearch)->options = current_options;
          (*newsearch)->replacement_key = snumber;
          (*newsearch)->call = orig_call;
@@ -5608,7 +5612,7 @@ extern long_boolean do_subcall_query(
    }
 
    *newsearch = get_parse_block();
-   (*newsearch)->concept = &concept::marker_concept_mod;
+   (*newsearch)->concept = &conzept::marker_concept_mod;
    (*newsearch)->options = current_options;
    (*newsearch)->replacement_key = snumber;
    (*newsearch)->call = orig_call;

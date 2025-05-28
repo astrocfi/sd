@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-2002  William B. Ackerman.
+    Copyright (C) 1990-2003  William B. Ackerman.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -260,11 +260,11 @@ extern int do_printf(char *fmt, ...)
 
 extern void dbcompile();
 
-static void db_input_error();
-static void db_output_error();
+extern void db_input_error();
+extern void db_output_error();
 
-static FILE *db_input = NULL;
-static FILE *db_output = NULL;
+FILE *db_input = NULL;
+FILE *db_output = NULL;
 #define FILENAME_LEN 200
 static char db_input_filename[FILENAME_LEN];
 static char db_output_filename[FILENAME_LEN];
@@ -305,25 +305,6 @@ int main(int argc, char *argv[])
 
    dbcompile();
    return 0;
-}
-
-
-/*
- * db_gets
- *
- *  Read one line (including a terminating newline) into S, stopping
- *  at a maximum of N-1 characters.  Return NULL on end of file.
- *
- */
-
-char *
-db_gets(char *s, int n)
-{
-    s = fgets(s, n, db_input);
-    if ((s == NULL) && (!feof(db_input))) {
-        db_input_error();
-    }
-    return s;
 }
 
 
@@ -405,7 +386,7 @@ db_close_output(void)
  *
  */
 
-static void db_input_error()
+void db_input_error()
 {
     fprintf(stderr, "Error reading input file ");
     perror(db_input_filename);
@@ -418,7 +399,7 @@ static void db_input_error()
  *
  */
 
-static void db_output_error()
+void db_output_error()
 {
     fprintf(stderr, "Error writing output file ");
     perror(db_output_filename);

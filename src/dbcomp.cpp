@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-2002  William B. Ackerman.
+    Copyright (C) 1990-2003  William B. Ackerman.
 
     This file is unpublished and contains trade secrets.  It is
     to be used by permission only and not to be disclosed to third
@@ -12,7 +12,16 @@
 
     This is for version 34. */
 
+#include <stdio.h>
+#include <errno.h>
+#include <string.h>
 #include "database.h"
+
+// Until the mkcalls vs. dbcomp issue is straightened out.
+extern FILE *db_input;
+extern FILE *db_output;
+extern void db_input_error();
+extern void db_output_error();
 
 
 #define DB_FMT_STR(name) DB_FMT_NUM(name)
@@ -65,7 +74,6 @@ extern int begin_sizes[];
 extern void do_exit(void);
 extern void dbcompile_signoff(int bytes, int calls);
 extern int do_printf(char *fmt, ...);
-extern char *db_gets(char *s, int n);
 extern void db_putc(char ch);
 extern void db_rewind_output(int pos);
 extern void db_close_input(void);
@@ -1333,19 +1341,41 @@ static void errexit(char s[])
 }
 
 
-static int get_char(void)
+
+static int get_char()
 {
    if (!chars_left) {
       lineno++;
-      return_ptr = db_gets(line, 199);
-      lineptr = return_ptr;
-      linelen = strlen(line);
-      if (!return_ptr) {
+
+      lineptr = fgets(line, 199, db_input);
+
+      if (!lineptr) {
+         if (!feof(db_input)) {
+            db_input_error();
+         }
+
          eof = 1;
          return 1;
       }
+
+      linelen = strlen(line);
+
+      // Strip off any superfluous "return" or "newline" characters at the end.
+      // If things are going well, there will just be a single '\n', because the
+      // definition of "fgets" says so.  But, if the database text file is in a
+      // non-native format, e.g. a Windows file was sent in binary form to a
+      // Linux system, things could look a little funny.  So we repair the damage.
+
+      while (linelen >= 1 && (lineptr[linelen-1] == '\r' || lineptr[linelen-1] == '\n'))
+         linelen--;
+
+      // Put it back;
+      lineptr[linelen++] = '\n';
+
+      return_ptr = lineptr;
       chars_left = linelen;
    }
+
    ch = *return_ptr++;
    chars_left--;
    return 0;
@@ -1358,7 +1388,7 @@ static int symchar(void)
    else return 1;
 }
 
-static void get_tok_or_eof(void)
+static void get_tok_or_eof()
 {
    int digit;
 
@@ -1387,70 +1417,73 @@ static void get_tok_or_eof(void)
       }
       if (get_char()) return;
    }
-   /* Now have a real character. */
+
+   // Now have a real character.
+
    switch (ch) {
-      case '[': tok_kind = tok_lbkt; ch = ' '; break;
-      case ']': tok_kind = tok_rbkt; ch = ' '; break;
-      case '"':
-         for (;;) {
+   case '[': tok_kind = tok_lbkt; ch = ' '; break;
+   case ']': tok_kind = tok_rbkt; ch = ' '; break;
+   case '"':
+      for (;;) {
+         if (get_char())
+            errexit("End of file inside symbol\n");
+
+         if (ch == '"') break;
+         else if (ch == '\\') {
             if (get_char())
                errexit("End of file inside symbol\n");
-
-            if (ch == '"') break;
-            else if (ch == '\\') {
-               if (get_char())
-                  errexit("End of file inside symbol\n");
-            }
-            if (char_ct > 100)
-               errexit("String too long\n");
-
-            tok_str[char_ct++] = ch;
          }
-
-         ch = ' ';
-         tok_kind = tok_string;
-
-         /* Pack a null. */
 
          if (char_ct > 100)
             errexit("String too long\n");
 
-         tok_str[char_ct] = '\0';
-         break;
-      default:
-         for (;;) {
-            if (char_ct > 100)
-               errexit("Symbol too long\n");
+         tok_str[char_ct++] = ch;
+      }
 
-            tok_str[char_ct++] = ch;
+      ch = ' ';
+      tok_kind = tok_string;
 
-            digit = ch - '0';
-            if (digit < 0 || digit > 9) letcount++;
-            else tok_value = tok_value*10 + digit;
+      // Pack a null.
 
-            if (get_char())
-               errexit("End of file inside symbol\n");
+      if (char_ct > 100)
+         errexit("String too long\n");
 
-            if (!symchar()) break;
-         }
-
-         /* Pack a null. */
-
+      tok_str[char_ct] = '\0';
+      break;
+   default:
+      for ( ;; ) {
          if (char_ct > 100)
             errexit("Symbol too long\n");
 
-         tok_str[char_ct] = '\0';
+         tok_str[char_ct++] = ch;
 
-         if (letcount)
-            tok_kind = tok_symbol;
-         else
-            tok_kind = tok_number;
-         break;
+         digit = ch - '0';
+         if (digit < 0 || digit > 9) letcount++;
+         else tok_value = tok_value*10 + digit;
+
+         if (get_char())
+            errexit("End of file inside symbol\n");
+
+         if (!symchar()) break;
+      }
+
+      // Pack a null.
+
+      if (char_ct > 100)
+         errexit("Symbol too long\n");
+
+      tok_str[char_ct] = '\0';
+
+      if (letcount)
+         tok_kind = tok_symbol;
+      else
+         tok_kind = tok_number;
+      break;
    }
 }
 
 
-/* This returns -1 if the item is not found. */
+// This returns -1 if the item is not found.
 
 static int search(char *table[])
 {
@@ -1458,7 +1491,7 @@ static int search(char *table[])
 
    i = -1;
    while (*table[++i]) {
-      if (strcmp(tok_str, table[i]) == 0)
+      if (!strcmp(tok_str, table[i]))
          return i;
    }
    return -1;
@@ -1625,13 +1658,13 @@ static void write_defmod_flags(int is_seq)
             rr1 |= (1 << i);
          else if (is_seq && (i = search(seqmodtab1)) >= 0)
             rr1 |= (1 << i);
-         else if (strcmp(tok_str, "allow_plain_mod") == 0)
+         else if (!strcmp(tok_str, "allow_plain_mod"))
             rr1 |= (DFM1_CALL_MOD_ALLOW_PLAIN_MOD);
-         else if (strcmp(tok_str, "or_secondary_call") == 0)
+         else if (!strcmp(tok_str, "or_secondary_call"))
             rr1 |= (DFM1_CALL_MOD_OR_SECONDARY);
-         else if (strcmp(tok_str, "mandatory_secondary_call") == 0)
+         else if (!strcmp(tok_str, "mandatory_secondary_call"))
             rr1 |= (DFM1_CALL_MOD_MAND_SECONDARY);
-         else if (strcmp(tok_str, "shift_three_numbers") == 0)
+         else if (!strcmp(tok_str, "shift_three_numbers"))
             rr1 |= (3*DFM1_NUM_SHIFT_BIT);
          else if (!strcmp(tok_str, "insert_number")) {
             int nnn;
@@ -1659,13 +1692,13 @@ static void write_defmod_flags(int is_seq)
 
             rrh |= INHERITFLAG_MXNMASK;
          }
-         else if (strcmp(tok_str, "inherit_bigmatrix") == 0) {
+         else if (!strcmp(tok_str, "inherit_bigmatrix")) {
             if ((INHERITFLAG_12_MATRIX|INHERITFLAG_16_MATRIX) & ~call_flagsh)
                errexit("Can't use an \"inherit\" flag unless corresponding top level flag is on");
 
             rrh |= INHERITFLAG_12_MATRIX|INHERITFLAG_16_MATRIX;
          }
-         else if (strcmp(tok_str, "inherit_revert") == 0) {
+         else if (!strcmp(tok_str, "inherit_revert")) {
             if ((INHERITFLAG_REVERTMASK) & ~call_flagsh)
                errexit("Can't use an \"inherit\" flag unless corresponding top level flag is on");
 
@@ -1729,50 +1762,50 @@ static void write_callarray(int num, int doing_matrix)
 
          for (p=0; letcount-p >= 2; p++) {
             switch (tok_str[p]) {
-               case 'Z': case 'z':
-                  if (stab == stb_none) stab = stb_z;
-                  else errexit("Improper callarray specifier");
+            case 'Z': case 'z':
+               if (stab == stb_none) stab = stb_z;
+               else errexit("Improper callarray specifier");
+               break;
+            case 'A': case 'a':
+               switch (stab) {
+               case stb_none: stab = stb_a; break;
+               case stb_c: stab = stb_ca; break;
+               case stb_a: stab = stb_aa; break;
+               case stb_aa: repetition++; break;
+               case stb_cc:
+                  if (repetition == 0)
+                     stab = stb_cca;
+                  else if (repetition == 1)
+                     { stab = stb_ccca; repetition = 0; }
+                  else if (repetition == 2)
+                     { stab = stb_cccca; repetition = 0; }
                   break;
-               case 'A': case 'a':
-                  switch (stab) {
-                     case stb_none: stab = stb_a; break;
-                     case stb_c: stab = stb_ca; break;
-                     case stb_a: stab = stb_aa; break;
-                     case stb_aa: repetition++; break;
-                     case stb_cc:
-                        if (repetition == 0)
-                           stab = stb_cca;
-                        else if (repetition == 1)
-                           { stab = stb_ccca; repetition = 0; }
-                        else if (repetition == 2)
-                           { stab = stb_cccca; repetition = 0; }
-                        break;
-                     default: errexit("Improper callarray specifier");
-                  }
+               default: errexit("Improper callarray specifier");
+               }
+               break;
+            case 'C': case 'c':
+               switch (stab) {
+               case stb_none: stab = stb_c; break;
+               case stb_a: stab = stb_ac; break;
+               case stb_c: stab = stb_cc; break;
+               case stb_cc: repetition++; break;
+               case stb_aa:
+                  if (repetition == 0)
+                     stab = stb_aac;
+                  else if (repetition == 1)
+                     { stab = stb_aaac; repetition = 0; }
+                  else if (repetition == 2)
+                     { stab = stb_aaaac; repetition = 0; }
                   break;
-               case 'C': case 'c':
-                  switch (stab) {
-                     case stb_none: stab = stb_c; break;
-                     case stb_a: stab = stb_ac; break;
-                     case stb_c: stab = stb_cc; break;
-                     case stb_cc: repetition++; break;
-                     case stb_aa:
-                        if (repetition == 0)
-                           stab = stb_aac;
-                        else if (repetition == 1)
-                           { stab = stb_aaac; repetition = 0; }
-                        else if (repetition == 2)
-                           { stab = stb_aaaac; repetition = 0; }
-                        break;
-                     default: errexit("Improper callarray specifier");
-                  }
-                  break;
-               default:
-                  goto stability_done;
+               default: errexit("Improper callarray specifier");
+               }
+               break;
+            default:
+               goto stability_done;
             }
          }
 
-         stability_done:
+      stability_done:
 
          uint32 dat = 0;
 
@@ -1780,11 +1813,11 @@ static void write_callarray(int num, int doing_matrix)
 
          if (letcount-p == 2) {
             switch (tok_str[p]) {
-               case 'R': case 'r': dat = 1; break;
-               case 'L': case 'l': dat = 2; break;
-               case 'M': case 'm': dat = 3; break;
-               default:
-                  errexit("Improper callarray specifier");
+            case 'R': case 'r': dat = 1; break;
+            case 'L': case 'l': dat = 2; break;
+            case 'M': case 'm': dat = 3; break;
+            default:
+               errexit("Improper callarray specifier");
             }
          }
          else if (letcount-p != 1)
@@ -1792,14 +1825,14 @@ static void write_callarray(int num, int doing_matrix)
 
          dat = (dat * NDBROLL_BIT) | (tok_value << 4) | (((uint32) stab) * DBSTAB_BIT);
 
-         /* We now have roll indicator and position, need to get direction. */
+         // We now have roll indicator and position, need to get direction.
          switch (tok_str[char_ct-1]) {
-            case 'N': case 'n': dat |= 010; break;
-            case 'E': case 'e': dat |= 001; break;
-            case 'S': case 's': dat |= 012; break;
-            case 'W': case 'w': dat |= 003; break;
-            default:
-               errexit("Improper callarray direction specifier");
+         case 'N': case 'n': dat |= 010; break;
+         case 'E': case 'e': dat |= 001; break;
+         case 'S': case 's': dat |= 012; break;
+         case 'W': case 'w': dat |= 003; break;
+         default:
+            errexit("Improper callarray direction specifier");
          }
 
          write_halfword(dat);
@@ -1847,9 +1880,7 @@ static void write_call_header(calldef_schema schema)
 
 static void write_conc_stuff(calldef_schema schema)
 {
-   write_call_header(schema);
-
-   /* Write two level 2 concdefine records. */
+   // Write two level 2 concdefine records.
 
    get_tok();
    if (tok_kind != tok_symbol) errexit("Improper conc symbol");
@@ -1912,13 +1943,52 @@ static int scan_for_per_array_def_flags(void)
    return result;
 }
 
+static void process_alt_def_header()
+{
+   uint32 rrr = 0;
+
+   get_tok();
+   if (tok_kind != tok_lbkt)
+      errexit("Missing left bracket in alternate_definition list");
+
+   get_tok();
+   if (tok_kind != tok_rbkt) {
+      for (;;) {
+         int i;
+         uint32 bit;
+
+         if (tok_kind != tok_symbol)
+            errexit("Improper alternate_definition key");
+
+         if ((i = search(altdeftabh)) >= 0) bit = (1 << i);
+         else if ((i = search(mxntabplain)) >= 0) bit = INHERITFLAG_MXNBIT * (i+1);
+         else if ((i = search(nxntabplain)) >= 0) bit = INHERITFLAG_NXNBIT * (i+1);
+         else if ((i = search(reverttabplain)) >= 0) bit = INHERITFLAG_REVERTBIT * (i+1);
+         else errexit("Unknown alternate_definition key");
+
+         if (do_heritflag_merge(&rrr, bit))
+            errexit("Can't specify this combination of flags");
+
+         get_tok();
+         if (tok_kind == tok_rbkt) break;
+      }
+   }
+
+   get_tok();
+   if (tok_kind != tok_symbol) errexit("Improper alternate_definition level");
+   int alt_level;
+   if ((alt_level = search(leveltab)) < 0) errexit("Unknown alternate_definition level");
+
+   write_halfword(0x4000 | alt_level);
+   write_fullword(rrr);
+}
+
+
 
 static void write_array_def(uint32 incoming)
 {
-   int i, iii, jjj;
+   int iii, jjj;
    uint32 callarray_flags1, callarray_flags2;
-
-   write_call_header(schema_by_array);
 
    callarray_flags1 = incoming;
 
@@ -2115,59 +2185,25 @@ def2:
    if (eof) return;
    if (tok_kind != tok_symbol) errexit("Missing indicator");
 
-   /* If see something other than "setup", it's either an alternate definition
-      to start another group of arrays, or it's the end of the whole call. */
+   // If see something other than "setup", it's either an alternate definition
+   // to start another group of arrays, or it's the end of the whole call.
 
    callarray_flags1 = 0;
 
-   if (strcmp(tok_str, "setup") != 0) {
-      int alt_level;
-      uint32 rrr = 0;
-
-      if (strcmp(tok_str, "alternate_definition") != 0) {
-         return;       /* Must have seen next 'call' indicator. */
+   if (strcmp(tok_str, "setup")) {
+      if (strcmp(tok_str, "alternate_definition")) {
+         return;       // Must have seen next 'call' indicator.
       }
 
-      get_tok();
-      if (tok_kind != tok_lbkt)
-         errexit("Missing left bracket in alternate_definition list");
+      process_alt_def_header();
 
-      get_tok();
-      if (tok_kind != tok_rbkt) {
-         for (;;) {
-            uint32 bit;
-
-            if (tok_kind != tok_symbol)
-               errexit("Improper alternate_definition key");
-
-            if ((i = search(altdeftabh)) >= 0) bit = (1 << i);
-            else if ((i = search(mxntabplain)) >= 0) bit = INHERITFLAG_MXNBIT * (i+1);
-            else if ((i = search(nxntabplain)) >= 0) bit = INHERITFLAG_NXNBIT * (i+1);
-            else if ((i = search(reverttabplain)) >= 0) bit = INHERITFLAG_REVERTBIT * (i+1);
-            else errexit("Unknown alternate_definition key");
-
-            if (do_heritflag_merge(&rrr, bit))
-               errexit("Can't specify this combination of flags");
-
-            get_tok();
-            if (tok_kind == tok_rbkt) break;
-         }
-      }
-
-      get_tok();
-      if (tok_kind != tok_symbol) errexit("Improper alternate_definition level");
-      if ((alt_level = search(leveltab)) < 0) errexit("Unknown alternate_definition level");
-
-      write_halfword(0x4000 | alt_level);
-      write_fullword(rrr);
-
-      /* Now do another group of arrays. */
+      // Now do another group of arrays.
 
       get_tok();
       if (tok_kind != tok_symbol) errexit("Missing indicator");
       callarray_flags1 |= scan_for_per_array_def_flags();
 
-      if (strcmp(tok_str, "setup") != 0)
+      if (strcmp(tok_str, "setup"))
          errexit("Need \"setup\" indicator");
    }
 
@@ -2276,36 +2312,36 @@ extern void dbcompile()
                call_flags1 |= bit;
             }
          }
-         else if (strcmp(tok_str, "step_to_nonphantom_box") == 0) {
+         else if (!strcmp(tok_str, "step_to_nonphantom_box")) {
             if (call_flags1 & CFLAG1_STEP_REAR_MASK)
                errexit("Too many touch/rear flags");
             call_flags1 |= CFLAG1_STEP_TO_NONPHAN_BOX;
          }
-         else if (strcmp(tok_str, "step_to_wave_4_people") == 0) {
+         else if (!strcmp(tok_str, "step_to_wave_4_people")) {
             if (call_flags1 & CFLAG1_STEP_REAR_MASK)
                errexit("Too many touch/rear flags");
             call_flags1 |= CFLAG1_STEP_TO_WAVE_4_PEOPLE;
          }
-         else if (strcmp(tok_str, "rear_back_from_wave_or_qtag") == 0) {
+         else if (!strcmp(tok_str, "rear_back_from_wave_or_qtag")) {
             if (call_flags1 & CFLAG1_STEP_REAR_MASK)
                errexit("Too many touch/rear flags");
             call_flags1 |= CFLAG1_REAR_BACK_FROM_EITHER;
          }
-         else if (strcmp(tok_str, "visible_fractions") == 0)
+         else if (!strcmp(tok_str, "visible_fractions"))
             call_flags1 |= (3*CFLAG1_VISIBLE_FRACTION_BIT);
-         else if (strcmp(tok_str, "last_part_visible") == 0)  // Do this right someday.
+         else if (!strcmp(tok_str, "last_part_visible"))  // Do this right someday.
             call_flags1 |= (3*CFLAG1_VISIBLE_FRACTION_BIT);
-         else if (strcmp(tok_str, "need_three_numbers") == 0)
+         else if (!strcmp(tok_str, "need_three_numbers"))
             call_flags1 |= (3*CFLAG1_NUMBER_BIT);
-         else if (strcmp(tok_str, "base_tag_call_2") == 0)
+         else if (!strcmp(tok_str, "base_tag_call_2"))
             call_flags1 |= (3*CFLAG1_BASE_TAG_CALL_BIT);
-         else if (strcmp(tok_str, "mxn_is_inherited") == 0)
+         else if (!strcmp(tok_str, "mxn_is_inherited"))
             call_flagsh |= INHERITFLAG_MXNMASK;
-         else if (strcmp(tok_str, "nxn_is_inherited") == 0)
+         else if (!strcmp(tok_str, "nxn_is_inherited"))
             call_flagsh |= INHERITFLAG_NXNMASK;
-         else if (strcmp(tok_str, "bigmatrix_is_inherited") == 0)
+         else if (!strcmp(tok_str, "bigmatrix_is_inherited"))
             call_flagsh |= INHERITFLAG_12_MATRIX|INHERITFLAG_16_MATRIX;
-         else if (strcmp(tok_str, "revert_is_inherited") == 0)
+         else if (!strcmp(tok_str, "revert_is_inherited"))
             call_flagsh |= INHERITFLAG_REVERTMASK;
          else if ((iii = search(flagtabh)) >= 0)
             call_flagsh |= (1 << iii);
@@ -2329,6 +2365,8 @@ extern void dbcompile()
       if (funnyflag != 0 && ccc != schema_by_array)
          errexit("Simple_funny or lateral_to_selectees out of place");
 
+      write_call_header(ccc);
+
       switch (ccc) {
       case schema_by_array:
          write_array_def(funnyflag);
@@ -2336,30 +2374,37 @@ extern void dbcompile()
       case schema_nothing:
       case schema_roll:
       case schema_recenter:
-         write_call_header(ccc);
          get_tok_or_eof();
          break;
       case schema_matrix:
       case schema_partner_matrix:
          matrixflags = 0;
 
-         for (;;) {     /* Get matrix call options. */
+         for (;;) {     // Get matrix call options.
             get_tok();
             if (tok_kind != tok_symbol) break;
             if ((bit = search(matrixcallflagtab)) < 0) errexit("Unknown matrix call flag");
             matrixflags |= (1 << bit);
          }
 
-         write_call_header(ccc);
          write_fullword(matrixflags);
-         write_callarray((ccc == schema_matrix) ? 2 : 8, 1);
-         get_tok_or_eof();
+
+         for ( ;; ) {
+            write_callarray((ccc == schema_matrix) ? 2 : 16, 1);
+            get_tok_or_eof();
+
+            if (tok_kind != tok_symbol || strcmp(tok_str, "alternate_definition"))
+               break;
+
+            process_alt_def_header();
+            get_tok();
+         }
+
          break;
       case schema_sequential:
       case schema_sequential_with_fraction:
       case schema_sequential_with_split_1x8_id:
       case schema_split_sequential:
-         write_call_header(ccc);
          write_seq_stuff();
 
          for (;;) {               /* Write a level 2 seqdefine group. */

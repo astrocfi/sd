@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-2002  William B. Ackerman.
+    Copyright (C) 1990-2003  William B. Ackerman.
 
     This file is unpublished and contains trade secrets.  It is
     to be used by permission only and not to be disclosed to third
@@ -61,7 +61,7 @@
 #define G CONCPARSE_PARSE_G_TYPE
 
 
-concept::concept_descriptor concept::centers_concept = {
+conzept::concept_descriptor conzept::centers_concept = {
    "centers????",
    concept_centers_or_ends,
    TRUE,
@@ -69,19 +69,19 @@ concept::concept_descriptor concept::centers_concept = {
    UC_none,
    selector_centers, FALSE};
 
-concept::concept_descriptor concept::special_magic = {
+conzept::concept_descriptor conzept::special_magic = {
    "MAGIC DIAMOND,",       concept_magic,             L+D, l_c1, UC_none, 1};
-concept::concept_descriptor concept::special_interlocked = {
+conzept::concept_descriptor conzept::special_interlocked = {
    "INTERLOCKED DIAMOND,", concept_interlocked,       L+D, l_c1, UC_none, 1};
-concept::concept_descriptor concept::mark_end_of_list = {
+conzept::concept_descriptor conzept::mark_end_of_list = {
    "????",                 marker_end_of_list,            0, l_dontshow, UC_none};
-concept::concept_descriptor concept::marker_decline = {
+conzept::concept_descriptor conzept::marker_decline = {
    "decline???",           concept_mod_declined,          0, l_dontshow, UC_none};
-concept::concept_descriptor concept::marker_concept_mod = {
+conzept::concept_descriptor conzept::marker_concept_mod = {
    ">>MODIFIED BY<<",      concept_another_call_next_mod, 0, l_dontshow, UC_none, 0, 0};
-concept::concept_descriptor concept::marker_concept_comment = {
+conzept::concept_descriptor conzept::marker_concept_comment = {
    ">>COMMENT<<",          concept_comment,               0, l_dontshow, UC_none};
-concept::concept_descriptor concept::marker_concept_supercall = {
+conzept::concept_descriptor conzept::marker_concept_supercall = {
    ">>SUPER<<",          concept_supercall,             0, l_dontshow, UC_none};
 
 
@@ -91,9 +91,9 @@ int number_of_calls[call_list_extent];
 dance_level calling_level;
 
 
-const concept::concept_descriptor *concept_descriptor_table;
+const conzept::concept_descriptor *concept_descriptor_table;
 
-concept::concept_descriptor concept::unsealed_concept_descriptor_table[] = {
+conzept::concept_descriptor conzept::unsealed_concept_descriptor_table[] = {
    {"AS COUPLES",                            concept_tandem,                  D, l_a1,
     UC_cpl, 0, 0,                    0x000, tandem_key_cpls},
    {"TANDEM",                                concept_tandem,                  D, l_c1,

@@ -729,7 +729,7 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
 
    while (local_cptr) {
       concept_kind k;
-      const concept::concept_descriptor *item;
+      const conzept::concept_descriptor *item;
 
       item = local_cptr->concept;
       k = item->kind;
@@ -1715,7 +1715,7 @@ extern void release_parse_blocks_to_mark(parse_block *mark_point)
       parse_inactive_list = item;
 
       /* Clear pointers so we will notice if it gets erroneously re-used. */
-      item->concept = &concept::mark_end_of_list;
+      item->concept = &conzept::mark_end_of_list;
       item->call = base_calls[1];
       item->call_to_print = item->call;
       item->subsidiary_root = (parse_block *) 0;
@@ -1770,7 +1770,7 @@ parse_block *get_parse_block()
    item->gc_ptr = parse_active_list;
    parse_active_list = item;
 
-   item->concept = (concept::concept_descriptor *) 0;
+   item->concept = (conzept::concept_descriptor *) 0;
    item->call = (call_with_name *) 0;
    item->call_to_print = (call_with_name *) 0;
    item->options = null_options;
@@ -2582,7 +2582,7 @@ void run_program()
       /* Check for first call given to heads or sides only. */
    
       if ((configuration::history_ptr == 1) && configuration::history[1].get_startinfo_specific()->into_the_middle)
-         deposit_concept(&concept::centers_concept);
+         deposit_concept(&conzept::centers_concept);
    
       /* Come here to get a concept or call or whatever from the user. */
    
