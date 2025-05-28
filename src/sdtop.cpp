@@ -274,12 +274,15 @@ warning_info conc_elong_warnings;
 warning_info dyp_each_warnings;
 warning_info useless_phan_clw_warnings;
 warning_info suspect_destroyline_warnings;
-bool allowing_all_concepts = false;
 bool allowing_minigrand = false;
 bool allow_bend_home_getout = false;
 bool enforce_overcast_warning = false;
 bool using_active_phantoms = false;
 bool two_couple_calling = false;
+bool allowing_all_concepts = false;
+int which_concept_menu = 0;
+int allowing_modifications = 0;
+
 int last_direction_kind = direction_ENUM_EXTENT-1;
 interactivity_state interactivity = interactivity_normal;
 char database_version[81];
@@ -300,7 +303,6 @@ heritflagsl simple_herit_leftbits_table[] = {
 };
 
 
-int allowing_modifications = 0;
 int hashed_randoms;
 
 
@@ -364,6 +366,13 @@ parse_block *get_parse_block()
    parse_block::parse_active_list = item;
    item->initialize((concept_descriptor *) 0);
    return item;
+}
+
+
+// 0 = only concepts on this level; 1 = same plus "assume" concepts; 2 = all.
+void update_which_concept_menu()
+{
+   which_concept_menu = allowing_all_concepts ? 2 : (two_couple_calling ? 1 : 0);
 }
 
 
@@ -2078,13 +2087,13 @@ restriction_tester::restr_initializer restriction_tester::restr_init_table0[] = 
    {s_2x1dmd, cr_wave_only, 4, {0, 1, 4, 3},
     {0}, {0}, {0}, true, chk_wave},
    {s_qtag, cr_real_1_4_tag, 4, {6, 7, 3, 2},
-    {4, 4, 0, 5, 1}, {0}, {0}, true, chk_qtag},
+    {4, 4, 0, 5, 1}, {01}, {0}, true, chk_qtag},
    {s_qtag, cr_real_3_4_tag, 4, {6, 7, 3, 2},
-    {4, 0, 4, 1, 5}, {0}, {0}, true, chk_qtag},
+    {4, 0, 4, 1, 5}, {01}, {0}, true, chk_qtag},
    {s_qtag, cr_real_1_4_line, 4, {6, 3, 7, 2},
-    {4, 4, 0, 5, 1}, {0}, {0}, true, chk_qtag},
+    {4, 4, 0, 5, 1}, {01}, {0}, true, chk_qtag},
    {s_qtag, cr_real_3_4_line, 4, {6, 3, 7, 2},
-    {4, 0, 4, 1, 5}, {0}, {0}, true, chk_qtag},
+    {4, 0, 4, 1, 5}, {01}, {0}, true, chk_qtag},
    {s_alamo, cr_couples_only, 2, {0, 2, 5, 7, 1, 3, 4, 6},
     {4}, {0}, {0}, false, chk_groups_cpls_in_tbone},
    {s_alamo, cr_magic_only, 8, {0, 1, 3, 2, 5, 4, 6, 7},  // Line-like, miniwaves of alternating handedness.
@@ -2128,6 +2137,10 @@ restriction_tester::restr_initializer restriction_tester::restr_init_table0[] = 
 restriction_tester::restr_initializer restriction_tester::restr_init_table1[] = {
    {s1x2, cr_opposite_sex, 2, {0},
     {0}, {0}, {0}, false, chk_sex},
+   {s2x4, cr_quarterbox, 4, {1, 5, 2, 6},
+    {4, 0, 3, 7, 4}, {010}, {0}, true, chk_qtag},
+   {s2x4, cr_threequarterbox, 4, {1, 5, 2, 6},
+    {4, 3, 0, 4, 7}, {010}, {0}, true, chk_qtag},
    {s2x4, cr_quarterbox_or_col, 0, {3, 0, 1, 2},
     {3, 4, 5, 6}, {3, 1, 2, 3}, {3, 5, 6, 7}, false, chk_qbox},
    {s2x4, cr_quarterbox_or_magic_col, 0, {3, 1, 2, 7},
@@ -3029,7 +3042,8 @@ restriction_test_result verify_restriction(
             goto bad;
       }
 
-      for (idx=0 ; idx<8 ; idx++) { if (ss->people[idx].id1 & 1) goto bad; }
+      // Check all NS for 1/4 tag, all EW for 1/4 box.
+      for (idx=0 ; idx<8 ; idx++) { if (ss->people[idx].id1 & rr->map3[0]) goto bad; }
 
       if (rr->ok_for_assume) {
          uint32_t qab[4];
@@ -3039,28 +3053,30 @@ restriction_test_result verify_restriction(
          for (idx=0; idx<rr->size; idx++)
             qab[idx&2] |= ss->people[rr->map1[idx]].id1;
 
-         if ((qab[0]|qab[2]) & 1) goto bad;
+         if ((qab[0]|qab[2]) & rr->map3[0]) goto bad;
 
          if (instantiate_phantoms) {
             *failed_to_instantiate = false;
 
-            if (qaa[0] == 0) fail("Need live person to determine handedness.");
+            if (qaa[0] == 0)
+               fail("Need live person to determine handedness.");
 
-            else {
-               if ((qaa[0] & 2) == 0) { pdir = d_north; qdir = d_south; }
-               else                   { pdir = d_south; qdir = d_north; }
-               pdirodd = pdir; qdirodd = qdir;
-            }
+            if ((qaa[0] & 2) == 0) { pdir = d_north; qdir = d_south; }
+            else                   { pdir = d_south; qdir = d_north; }
+
+            if (rr->map3[0] & 010) { pdir = rotcw(pdir); qdir = rotcw(qdir); }
 
             for (i=0; i<rr->size; i++) {
-               uint32_t dir = (i&1) ?
-                  ((i&2) ? qdirodd : qdir) :
-                  ((i&2) ? pdirodd : pdir);
+               uint32_t dir = (i&1) ? qdir : pdir;
                create_active_phantom(&ss->people[rr->map1[i]], dir, &phantom_count);
             }
 
+            pdir = d_south; qdir = d_north;
+
+            if (rr->map3[0] & 010) { pdir = rotcw(pdir); qdir = rotcw(qdir); }
+
             for (i=0; i<rr->map2[0]; i++) {
-               uint32_t dir = (i&1) ? d_south : d_north;
+               uint32_t dir = (i&1) ? pdir : qdir;
                create_active_phantom(&ss->people[rr->map2[i+1]], dir, &phantom_count);
             }
          }
@@ -3945,6 +3961,15 @@ extern callarray *assoc(
             break;
          }
 
+         goto fix_col_line_stuff;
+
+      case cr_quarterbox:
+         if (ssA == cr_threequarterbox)
+            goto bad;
+         goto fix_col_line_stuff;
+      case cr_threequarterbox:
+         if (ssA == cr_quarterbox)
+            goto bad;
          goto fix_col_line_stuff;
       case cr_li_lo:
          switch (ssA) {
@@ -4957,7 +4982,7 @@ void warn_about_concept_level()
 {
    if (allowing_all_concepts)
       warn(warn__bad_concept_level);
-   else
+   else if (!two_couple_calling)
       fail("This concept is not allowed at this level.");
 }
 

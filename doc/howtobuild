@@ -232,45 +232,6 @@ sftp USERNAME@www.challengedance.org
 -----------------------------------------------------------------
 
              UPLOADING TO LYNETTE'S WEB SITE
-
-Presumably "new_binary" and "do_pack" have been done at this point,
-so that install.exe and pack.zip exist.
-
-Pack.zip contains all files below except linux.tgz.
-Note that the file linux.tgz is
-produced by other means and must be uploaded separately.
-
-These are the files:
-               html   pdf   ps   txt
-appnote1,2,3    *      *     *    *
-demo            *      *     *    *
-sd_doc          *      *     *    *
-sessions        *      *     *    *
-relnotes        *      *     *    *
-relnotes98      *      *     *    *
-relnotes03      *      *     *    *
-relnotes09      *      *     *    *
-readings        *
-download-pc     *
-index           *
-intro           *
-compilerbugs    *
-faq             *
-sessions_toc    *
-sd_doc*         *
-
-Also:
-                         tar.gz   zip   exe
-linux   (upload separately) *
-pdfdoc                      *      *
-psdoc                       *      *
-textdoc                     *      *
-sd_source                          *
-install                                  *
-
-
------------------------------------------------------------------
-        CURRENT METHOD
              THIS NO LONGER WORKS ON WINDOZE.
     BRING THE FILE (and sd_source too) OVER TO UBUNTU.
 -----------------------------------------------------------------

@@ -1,12 +1,44 @@
 \input texinfo @c %**start of header -*-texinfo-*-
 @setfilename faq.info
 @settitle Sd Frequently Asked Questions
-@c Time-stamp: <2 Apr 2013 wba>
+@c Time-stamp: <17 Jul 2020 wba>
 
 @sp 2
-@noindent Copyright @copyright{} 1996-2013 William B. Ackerman
+@noindent Copyright @copyright{} 1996-2020 William B. Ackerman
 
 @contents
+
+@unnumberedsec How does the stuff for calling just to two couples work?
+
+Give @strong{two couples only} as the starting command, instead of the
+more common things like @strong{heads start}.  You will be given a
+4-dancer setup (facing couples) as though they are the heads of a
+square.  You can call 4-person material at this point.  If you go
+into a wave and call @strong{motivate}, you will be told that it's
+illegal.  You can go into larger setups at any time.  The most common
+way is with an @strong{assume} operation.  The setup will be expanded
+to the eight-person setup that you name, and you can call normally
+that way.  For example, from a single 4-person wave, you can call
+@strong{assume tidal wave relay the shadow}.  The setup will be
+expanded to a 1x8 by placing phantoms outboard, and the call will be
+done in the usual way from there.  You will now be in an eight-person setup.
+You can call @strong{motivate} from there, without saying anything about
+phantoms.  You will now have people as ends of parallel waves.  You can
+then call @strong{switch to a diamond}, also without saying anything about
+phantoms.  Each wave will do the call, and the setup will collapse back
+down to a 4-person wave.
+
+Another way to expand out of a 4-person setup might be, from back-to-back
+couples, @strong{assume eight chain rotary spin}.
+
+You very well may need to say things about working with phantoms when actually
+calling.  The exact words are something you need to figure out.  You might say
+somethng like @strong{with the phantoms in front of you, rotary spin}.  But the
+@strong{assume} commands are generally the preferred way to break out of a 4-person
+setup.  You would type that to the computer; you would presumably not say it
+to the dancers.
+
+There is no @strong{resolve} command.  You need to get the dancers home by calling.
 
 @unnumberedsec The program offered something that I've never heard of, or don't understand, or doesn't seem right.  What should I do?
 

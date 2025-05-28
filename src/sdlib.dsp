@@ -107,19 +107,15 @@ SOURCE=.\paths.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\sdbase.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\sdui.h
 # End Source File
 # Begin Source File
 
 SOURCE=.\sd.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\sdchars.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\sdmatch.h
 # End Source File
 # Begin Source File
 

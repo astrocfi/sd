@@ -47,7 +47,7 @@
 // database format version.
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 366
+#define DATABASE_FORMAT_VERSION 367
 
 
 // We used to do some stuff to cater to compiler vendors (e.g. Sun
@@ -1163,6 +1163,8 @@ enum call_restriction {
    cr_levelc4,
    cr_not_tboned,          // Restriction only.
    cr_opposite_sex,
+   cr_quarterbox,
+   cr_threequarterbox,
    cr_quarterbox_or_col,   // Restriction only.
    cr_quarterbox_or_magic_col, // Restriction only.
    cr_all_ns,              // Restriction only.

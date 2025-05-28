@@ -23,8 +23,8 @@
 #include "keys.h"
 #include "gppconio.h"
 #else
-//#include <termios.h>   /* We use this stuff if "-no_cursor" was specified. */
-//#include <unistd.h>    /* This too. */
+#include <termios.h>   /* We use this stuff if "-no_cursor" was specified. */
+#include <unistd.h>    /* This too. */
 #endif
 #include "sd.h"
 

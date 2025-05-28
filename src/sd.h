@@ -440,7 +440,7 @@ enum useful_concept_enum {
 // fields in this class, and it is never instantiated) so that
 // we can make "unsealed_concept_descriptor_table" be a statically initialized array.
 //
-// But it now has to be free-standing, so that sdui.h can use it.
+// But it now has to be free-standing.
 
 struct concept_descriptor {
    Cstring name;
@@ -2568,9 +2568,11 @@ extern SDLIB_API int number_of_calls[call_list_extent];
 
 extern SDLIB_API bool using_active_phantoms;                        /* in SDTOP */
 extern SDLIB_API bool two_couple_calling;                           /* in SDTOP */
+extern SDLIB_API bool allowing_all_concepts;                        /* in SDTOP */
+// 0 = only concepts on this level; 1 = same plus "assume" concepts; 2 = all.
+extern SDLIB_API int which_concept_menu;                            /* in SDTOP */
 extern SDLIB_API int allowing_modifications;                        /* in SDTOP */
 extern SDLIB_API int config_history_ptr;                            /* in SDTOP */
-extern SDLIB_API bool allowing_all_concepts;                        /* in SDTOP */
 extern SDLIB_API int abs_max_calls;                                 /* in SDTOP */
 extern SDLIB_API int max_base_calls;                                /* in SDTOP */
 extern SDLIB_API Cstring *tagger_menu_list[NUM_TAGGER_CLASSES];     /* in SDTOP */
@@ -4062,7 +4064,7 @@ class configuration {
    inline bool warnings_are_different(const configuration & rhs) const
       { return warnings != rhs.warnings; }
 
-   // This one has a wrapper, accessible in sdui.h, called config_save_warnings.
+   // This one has a wrapper, called config_save_warnings.
    inline static warning_info save_warnings()
       { return next_config().warnings; }
    // This one too.
@@ -6246,6 +6248,8 @@ parse_block **get_parse_block_subsidiary_root_addr(parse_block *p);
 // Well, these are more than just accessors.
 warning_info config_save_warnings();
 void config_restore_warnings(const warning_info & rhs);
+
+void update_which_concept_menu();
 
 
 extern selector_kind selector_for_initialize;                       /* in SDINIT */

@@ -1,7 +1,7 @@
 \input texinfo @c %**start of header -*-texinfo-*-
 @setfilename relnotes.info
 @settitle Sd Release Notes
-@c Time-stamp: <24 Feb 2020 wba>
+@c Time-stamp: <17 Jul 2020 wba>
 @iftex
 @headings off
 @oddheading @| @| @thispage
@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 39.15B
-@set title2 Database version = 39.15A format = 366
+@set title1 RELEASE NOTES FOR VERSION 39.15C
+@set title2 Database version = 39.15C format = 367
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 39.15C::
 * 39.15B::
 * 39.15A::
 * 39.15::
@@ -114,7 +115,7 @@ and @file{relnotes98.txi} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 39.15B, Top, (dir)
+@node Intro, 39.15C, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -125,11 +126,25 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2020 William B. Ackerman
 @sp 3
 @menu
-* 39.15B::               Changes in the current version
+* 39.15C::               Changes in the current version
 @end menu
 
 @c ************
-@node 39.15B, 39.15A, Intro, Top
+@node 39.15C, 39.15B, Intro, Top
+@unnumberedsec Version 39.15C changes
+
+More improvements to two-couple writing.  The goal is to make it almost never necessary
+to type the word @strong{phantom} to the computer (unless you are using the C1 @strong{phantom}
+concept, of course.)  You should be able to get what you want by using the various @strong{assume}
+operatons.  What you say to the dancers is a different matter.
+
+New assumptions:  
+@strong{assume 1/4 box}, @strong{assume right 1/4 box},
+@strong{assume left 1/4 box}, @strong{assume 3/4 box},
+@strong{assume right 3/4 box}, @strong{assume left 3/4 box}.
+
+@c ************
+@node 39.15B, 39.15A, 39.15C, Top
 @unnumberedsec Version 39.15B changes
 
 A minor bug was fixed.  It had been discovered in the two-couple
@@ -151,7 +166,7 @@ initiated by giving the starting setup @strong{two couples only}.
 The exact words you need to use when calling this material is not
 universally agreed upon.  In Sd, you should not need to say
 @strong{phantom}.  Use the @strong{assume} command instead.  For example,
-from two couples back-to-back, you can say @strong{assume trade by
+from two couples back-to-back, you can say @strong{assume eight chain
 rotary spin}  From a 4-person wave, you can say @strong{assume tidal line
 relay the shadow} or @strong{assume 1/4 tags chain reaction}.
 

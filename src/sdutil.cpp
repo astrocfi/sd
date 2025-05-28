@@ -3020,8 +3020,8 @@ void ui_utils::do_freq_reset()
       for (i=0 ; i<number_of_calls[call_list_any] ; i++)
          main_call_lists[call_list_any][i]->the_defn.frequency = 0;
 
-      for (i=0 ; i<matcher_p->m_level_concept_list.the_list_size ; i++)
-         concept_descriptor_table[matcher_p->m_level_concept_list.the_list[i]].frequency = 0;
+      for (i=0 ; i<matcher_p->m_concept_lists[0].the_list_size ; i++)
+         concept_descriptor_table[matcher_p->m_concept_lists[0].the_list[i]].frequency = 0;
    }
 }
 
@@ -3078,7 +3078,7 @@ void ui_utils::do_freq_show(int options)
       // The reason for the complement is so that the sort will appear to be stable --
       // items are in decreasing order, so that they are in listed with calls before concepts,
       // in decreasing frequency, and in the order in the original lists.
-      uint32_t *table = new uint32_t[number_of_calls[call_list_any] + matcher_p->m_level_concept_list.the_list_size];
+      uint32_t *table = new uint32_t[number_of_calls[call_list_any] + matcher_p->m_concept_lists[0].the_list_size];
       int i;
       iob88.prepare_for_listing();
       int how_much_in_table = 0;
@@ -3089,9 +3089,9 @@ void ui_utils::do_freq_show(int options)
          table[how_much_in_table++] = 0x80000000 | (this_call->the_defn.frequency << 16) | (0xFFFF & ~i);
       }
 
-      for (i=0 ; i<matcher_p->m_level_concept_list.the_list_size ; i++) {
+      for (i=0 ; i<matcher_p->m_concept_lists[0].the_list_size ; i++) {
          const concept_descriptor *this_concept =
-            &concept_descriptor_table[matcher_p->m_level_concept_list.the_list[i]];
+            &concept_descriptor_table[matcher_p->m_concept_lists[0].the_list[i]];
          table[how_much_in_table++] = (this_concept->frequency << 16) | (0xFFFF & ~i);
       }
 
@@ -3112,7 +3112,7 @@ void ui_utils::do_freq_show(int options)
          }
          else {
             const concept_descriptor *this_concept =
-               &concept_descriptor_table[matcher_p->m_level_concept_list.the_list[~table_item & 0xFFFF]];
+               &concept_descriptor_table[matcher_p->m_concept_lists[0].the_list[~table_item & 0xFFFF]];
             strncpy(matcher_p->m_full_extension, this_concept->menu_name, INPUT_TEXTLINE_SIZE);
          }
 
@@ -3347,6 +3347,7 @@ void ui_utils::run_program(iobase & ggg)
       switch (global_reply.minorpart) {
       case start_select_toggle_conc:
          allowing_all_concepts = !allowing_all_concepts;
+         update_which_concept_menu();
          goto new_sequence;
       case start_select_toggle_singlespace:
          ui_options.singlespace_mode = !ui_options.singlespace_mode;
@@ -3537,6 +3538,7 @@ void ui_utils::run_program(iobase & ggg)
       // Put the people into their starting position.
       configuration::history[1].state = *configuration::history[1].get_startinfo_specific()->the_setup_p;
       two_couple_calling = (attr::klimit(configuration::history[1].state.kind) < 4);
+      update_which_concept_menu();
       configuration::history[1].state_is_valid = true;
 
       written_history_items = -1;

@@ -57,7 +57,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "39.15A"
+version "39.15C"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve dont_raise_overcast
@@ -20734,7 +20734,15 @@ call "quick @0" c3a
    seq quickany2 []
 
 call "make magic" c1
-   // If anyone is in lines, this restriction will behave improperly.
+   // If anyone is in lines, these restrictions will behave improperly.
+   setup 4x2 2x4 qualifier right quarterbox
+         array [ZM0N ZM5N ZM3N 0 0 0 0 ZM6N]
+   setup 4x2 2x4 qualifier left quarterbox
+         array [ZM1N 0 0 0 0 ZM4N ZM2N ZM7N]
+   setup 4x2 2x4 qualifier right threequarterbox
+         array [0 ZM5N ZM2N ZM3N ZM4N 0 0 0]
+   setup 4x2 2x4 qualifier left threequarterbox
+         array [0 0 0 ZM3N ZM4N ZM5N ZM2N 0]
    setup 4x2 2x4 restriction unusual quarterbox_or_magic_col
       predscantdocallinsetup
          if columns_antitandem       [ZM1N ZM5N ZM3N ZM3N ZM4N ZM4N ZM2N ZM6N]

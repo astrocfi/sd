@@ -2330,7 +2330,7 @@ bool open_session(int argc, char **argv)
          else if (strcmp(&args[argno][1], "no_warnings") == 0)
             { ui_options.nowarn_mode = true; continue; }
          else if (strcmp(&args[argno][1], "concept_levels") == 0)
-            { allowing_all_concepts = true; continue; }
+            { allowing_all_concepts = true; update_which_concept_menu(); continue; }
          else if (strcmp(&args[argno][1], "minigrand_getouts") == 0)
             { allowing_minigrand = true; continue; }
          else if (strcmp(&args[argno][1], "bend_line_home_getouts") == 0)
@@ -3039,6 +3039,7 @@ bool open_session(int argc, char **argv)
    {
       bool save_allow = allowing_all_concepts;
       allowing_all_concepts = true;
+      update_which_concept_menu();
 
       // Process the keybindings for user-definable calls, concepts, and commands.
 
@@ -3062,6 +3063,7 @@ bool open_session(int argc, char **argv)
       }
 
       allowing_all_concepts = save_allow;
+      update_which_concept_menu();
    }
 
    close_init_file();

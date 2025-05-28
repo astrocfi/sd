@@ -3414,7 +3414,9 @@ static void do_concept_assume_waves(
       if (((t.assumption == cr_wave_only ||
             t.assumption == cr_magic_only ||
             t.assumption == cr_2fl_only ||
-            t.assumption == cr_li_lo) &&
+            t.assumption == cr_li_lo ||
+            t.assumption == cr_quarterbox ||
+            t.assumption == cr_threequarterbox) &&
            (ss->kind == s2x2 || ss->kind == s2x4)) ||
           ((t.assumption == cr_couples_only ||
             t.assumption == cr_miniwaves) &&

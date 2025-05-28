@@ -46,8 +46,8 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-#define VERSION_STRING "39.15B"
-#define TIME_STAMP "wba@alum.mit.edu Jun 30 2020 $"
+#define VERSION_STRING "39.15C"
+#define TIME_STAMP "wba@alum.mit.edu Jul 17 2020 $"
 
 /* This defines the following functions:
    sd_version_string
@@ -860,6 +860,7 @@ extern bool query_for_call()
             goto check_menu;
          case command_toggle_conc_levels:
             allowing_all_concepts = !allowing_all_concepts;
+            update_which_concept_menu();
             goto check_menu;
          case command_toggle_minigrand:
             allowing_minigrand = !allowing_minigrand;

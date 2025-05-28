@@ -2659,7 +2659,7 @@ extern void tandem_couples_move(
 
    // Don't raise the "phantom tandem" warning if it's just a 2x4 to a 2x4
    // that splits into 1x2's.  That is, things like tandem hinge from clumps.
-   if (tandstuff.m_maybe_raise_phantom_warning) {
+   if (tandstuff.m_maybe_raise_phantom_warning && !two_couple_calling) {
       if (tandstuff.m_virtual_setup[0].kind != s2x4 ||
           tandstuff.virtual_result.kind != s2x4 ||
           (tandstuff.virtual_result.result_flags.split_info[0] &
