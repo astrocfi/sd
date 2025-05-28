@@ -57,7 +57,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "39.25"
+version "39.26"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve dont_raise_overcast
@@ -8190,10 +8190,14 @@ call "_second star thru" dontshow tag second_star_thru
       preds "Unknown sex."
          if boyp  [0 0 0 0 0    0 AL1W 0]
          if girlp [0 0 0 0 0 CR2E    0 0]
-   setup 2x4 2x4 qualifier ntbone in in_or_out
+   setup 2x4 2x4 qualifier live ntbone in in_or_out
       preds "Unknown sex."
          if boyp  [0 0 0 0    0 AL2W    0 AL0W]
          if girlp [0 0 0 0 CR3E    0 CR1E    0]
+   setup 2x4 2x4 qualifier ntbone in in_or_out
+      preds "Unknown sex."
+         if boyp  [0 0 0 0 0 AL2W AL1W  0]
+         if girlp [0 0 0 0 0 CR2E CR1E 0]
 
 call "_third star thru" dontshow tag third_star_thru
    setup 4x2 2x4 qualifier out in_or_out
@@ -11397,6 +11401,10 @@ call "belle hop the@C top" c3a
 call "derby" c4 tag derby
    setup 1x4 1x4
       array [C1S C2S A3S A0S]
+   setup dmd dmd rotate
+      array [C3E 0   A1E 0]
+   setup pmd dmd rotate
+      array [0   C2E 0   A0E]
             alternate_definition [grand] c3x
    setup 1x6 1x6
       array [C1S C5S A0S A4S A2S C3S]
@@ -11405,12 +11413,24 @@ call "derby" c4 tag derby
             alternate_definition [yoyo] c4
    setup 1x4 dmd rotate
       array [C3E C2S A1E A2N]
+   setup dmd 1x4
+      array [C1S 0   A3S 0]
+   setup pmd 1x4
+      array [0   C0W 0   A0E]
             alternate_definition [generous] c3
    setup 1x4 dmd rotate
       array [C3E C2S A1E A2N]
+   setup dmd 1x4
+      array [C1S 0   A3S 0]
+   setup pmd 1x4
+      array [0   C0W 0   A0E]
             alternate_definition [stingy] c3
    setup 1x4 dmd rotate
       array [C3E C0N A1E A0S]
+   setup dmd 1x4
+      array [C1S 0   A3S 0]
+   setup pmd 1x4
+      array [0   C2E 0   A2W]
             alternate_definition [3x3] c4
    setup 1x6 1x6 restriction forbidden 3x3_2fl_only
       array [C1S C5S C3S A4S A2S A0S]

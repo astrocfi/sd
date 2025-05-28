@@ -1571,7 +1571,8 @@ extern void divided_setup_move(
       }
    }
 
-   switch (phancontrol) {
+   if (!two_couple_calling) {
+      switch (phancontrol) {
       case phantest_both:
          if (!(vflags[0] && vflags[1]))
             warn(warn__stupid_phantom_clw);   // Only one of the two setups is occupied.
@@ -1606,6 +1607,7 @@ extern void divided_setup_move(
          // Test for NOT "C1" blocks.
          if ((vflags[0] | vflags[2]) && (vflags[1] | vflags[3])) fail("Not in blocks.");
          break;
+      }
    }
 
    for (j=0; j<arity; j++)
@@ -2046,6 +2048,9 @@ extern void do_phantom_2x4_concept(
    // The default value.
    unsigned int noexpand_bits_to_set = CMD_MISC__NO_EXPAND_1 | CMD_MISC__NO_EXPAND_2;
 
+   if (two_couple_calling && ss->kind == s2x2 && parseptr->concept->arg3 == MPKIND__CONCPHAN)
+      expand::expand_setup(s_2x2_4x4_ctrs, ss);
+
    switch (ss->kind) {
    case s1x16:
       if ((global_tbonetest & 011) == 011)
@@ -2062,7 +2067,6 @@ extern void do_phantom_2x4_concept(
       map_code = MAPCODE(s1x8,2,parseptr->concept->arg3,0);
       break;
    case s4x4:
-
       if (parseptr->concept->arg3 == MPKIND__NONE)
          map_code = parseptr->concept->arg4;
       else if (parseptr->concept->arg3 == MPKIND__OFFS_BOTH_FULL)

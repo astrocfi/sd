@@ -17,13 +17,16 @@ square.  You can call 4-person material at this point.  If you go
 into a wave and call @strong{motivate}, you will be told that it's
 illegal.
 
-You can go into larger setups at any time.  The most common way is with an
-@strong{assume} operation.  The setup will be expanded to the eight-person setup
-that you name, and you can call normally that way.  For example, from a single
-4-person wave, you can call @strong{assume tidal wave relay the shadow}.  The
-setup will be expanded to a 1x8 by placing phantoms outboard, and the call will
-be done in the usual way from there.  (You can also get into larger setups with
-things like @strong{press} and @strong{truck}.)
+You can go into larger setups at any time.  The most common way is
+with an @strong{assume} operation.  The setup will be expanded to the
+eight-person setup that you name, and you can call normally that way.
+For example, from a single 4-person wave, you can call @strong{assume
+tidal wave relay the shadow}.  The setup will be expanded to a 1x8 by
+placing phantoms outboard, and the call will be done in the usual way
+from there.  You can also use the @strong{phantom lines},
+@strong{phantom waves}, or @strong{phantom columns} concepts.  You can
+also get into larger setups with things like @strong{press} and
+@strong{truck}.
 
 You will now be in an eight-person setup.  You can call
 @strong{motivate} from there, without typing anything about phantoms.

@@ -4795,6 +4795,7 @@ extern const expand::thing s_2x2_2x4_ctrs;
 extern const expand::thing s_2x2_2x4_ctrsb;
 extern const expand::thing s_2x2_2x4_ends;
 extern const expand::thing s_2x2_2x4_endsb;
+extern const expand::thing s_2x2_4x4_ctrs;
 extern const expand::thing s_1x4_bone_ctrs;
 extern const expand::thing s_1x4_1x8_ctrs;
 extern const expand::thing s_1x4_1x8_ends;

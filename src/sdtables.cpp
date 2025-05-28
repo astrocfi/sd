@@ -546,6 +546,7 @@ const expand::thing s_2x2_2x4_ctrs = {{1, 2, 5, 6}, s2x2, s2x4, 0};
 const expand::thing s_2x2_2x4_ctrsb = {{6, 1, 2, 5}, s2x2, s2x4, 1};
 const expand::thing s_2x2_2x4_ends = {{0, 3, 4, 7}, s2x2, s2x4, 0};
 const expand::thing s_2x2_2x4_endsb = {{7, 0, 3, 4}, s2x2, s2x4, 1};
+const expand::thing s_2x2_4x4_ctrs = {{15, 3, 7, 11}, s2x2, s4x4, 0};
 const expand::thing s_1x4_bone_ctrs = {{6, 7, 2, 3}, s1x4, s_bone, 0};
 const expand::thing s_1x4_1x8_ctrs = {{3, 2, 7, 6}, s1x4, s1x8, 0};
 const expand::thing s_1x4_1x8_ends = {{0, 1, 4, 5}, s1x4, s1x8, 0};
