@@ -5,7 +5,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2024  William B. Ackerman.
+//    Copyright (C) 1990-2025  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -45,7 +45,7 @@
 // database format version.
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 412
+#define DATABASE_FORMAT_VERSION 413
 
 
 // We used to do some stuff to cater to compiler vendors (e.g. Sun
@@ -1114,6 +1114,7 @@ enum call_restriction {
    cr_ripple_both_centers, // Qualifier only.
    cr_ripple_any_centers,  // Qualifier only.
    cr_people_1_and_5_real, // Qualifier only.
+   cr_consistent_roll,     // Qualifier only.
    cr_ctrs_sel,
    cr_ends_sel,
    cr_all_sel,

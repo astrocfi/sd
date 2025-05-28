@@ -1380,7 +1380,7 @@ use Gcc.
   development systems   Visual Studio 2019           free with Windows
      and                Mingw64                      free
    (program is tested with both compilers)
-  compress utilities:   Info-Zip and/or 7-Zip                        free
+  compress utilities:   Info-Zip and/or 7-Zip        free
   compress self extractor  Iexpress                  free with Windows
                         gzip 1.2.4                   free
   document preprocessor:texinfo 1999-03-26.17        free
@@ -1388,6 +1388,8 @@ use Gcc.
   PDF formatter:        MiKTeX 2.9                   free
   HTML formatter:       Perl 5.004-02                free
                         Texi2html 1.51               free
+  upload software       WinSCP                       free
+                        PuTTY                        free
 @end example
 
 Microsoft Frontpage is not used at any point in the preparation, so there

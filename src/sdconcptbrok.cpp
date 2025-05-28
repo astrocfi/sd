@@ -2881,16 +2881,13 @@ static void do_concept_once_removed(
    uint32_t map_code = ~0U;
    ss->cmd.cmd_assume.assumption = cr_none;    // Not any more.
 
-   // Look for 3x1, which would not have been handled by the normal mechanism.
-   // In this context, 3x1 is not a concept; it's the name of a triangle.
-   if (ss->cmd.parseptr->concept->kind == concept_3x1) {
-      ss->cmd.parseptr = ss->cmd.parseptr->next;
-      ss->cmd.cmd_final_flags.set_heritbits(INHERITFLAGMXNK_3X1);
-   }
+   setup sscopy = *ss;
+   parse_block *parseptrcopy = process_final_concepts(ss->cmd.parseptr, true, &ss->cmd.cmd_final_flags, true, false);
+   sscopy.cmd.parseptr = parseptrcopy;
 
    // We allow "3x1" and the like only with plain "once removed".
    if (parseptr->concept->arg1 &&
-       ss->cmd.cmd_final_flags.bool_test_heritbits(INHERITFLAG_MXNMASK | INHERITFLAG_NXNMASK))
+       sscopy.cmd.cmd_final_flags.bool_test_heritbits(INHERITFLAG_MXNMASK | INHERITFLAG_NXNMASK))
       fail("Illegal modifier before a concept.");
 
    if (parseptr->concept->arg1 == 2) {
@@ -2936,31 +2933,26 @@ static void do_concept_once_removed(
       // We allow "3x1" or "1x3".  That's all.
       // Well, we also allow "3x3" etc.
 
-      switch (ss->cmd.cmd_final_flags.test_heritbits(INHERITFLAG_MXNMASK | INHERITFLAG_NXNMASK)) {
+      switch (sscopy.cmd.cmd_final_flags.test_heritbits(INHERITFLAG_MXNMASK | INHERITFLAG_NXNMASK)) {
       case 0:
          break;
       case INHERITFLAGMXNK_1X3:
       case INHERITFLAGMXNK_3X1:
+         warn(warn__tasteless_junk);
          // We allow "12 matrix", but do not require it.  We have no
          // idea whether it should be required.
-         ss->cmd.cmd_final_flags.clear_heritbits(INHERITFLAG_12_MATRIX);
-         if (ss->kind == s_qtag) ss->do_matrix_expansion(CONCPROP__NEEDK_3X4, true);
+         sscopy.cmd.cmd_final_flags.clear_heritbits(INHERITFLAG_12_MATRIX);
+         if (ss->kind == s_qtag) sscopy.do_matrix_expansion(CONCPROP__NEEDK_3X4, true);
          switch (ss->kind) {
          case s3x4:
             map_code = MAPCODE(s2x3,2,MPKIND__REMOVED,1);
-            goto doit;
-         case s3x6:
-            map_code = MAPCODE(s3x3,2,MPKIND__REMOVED,0);
-            goto doit;
-         case s2x6:
-            map_code = MAPCODE(s2x3,2,MPKIND__REMOVED,0);
             goto doit;
          default:
             fail("Can't do this concept in this formation.");
          }
          break;
       case INHERITFLAGNXNK_3X3:
-         ss->cmd.cmd_final_flags.clear_heritbits(INHERITFLAG_12_MATRIX);
+         sscopy.cmd.cmd_final_flags.clear_heritbits(INHERITFLAG_12_MATRIX);
          switch (ss->kind) {
          case s1x12:
             map_code = MAPCODE(s1x6,2,MPKIND__REMOVED,0);
@@ -2970,7 +2962,7 @@ static void do_concept_once_removed(
          }
          break;
       case INHERITFLAGNXNK_4X4:
-         ss->cmd.cmd_final_flags.clear_heritbits(INHERITFLAG_16_MATRIX);
+         sscopy.cmd.cmd_final_flags.clear_heritbits(INHERITFLAG_16_MATRIX);
          switch (ss->kind) {
          case s1x16:
             map_code = MAPCODE(s1x8,2,MPKIND__REMOVED,0);
@@ -3059,7 +3051,7 @@ static void do_concept_once_removed(
 
  doit:
 
-   divided_setup_move(ss, map_code, phantest_ok, true, result);
+   divided_setup_move(&sscopy, map_code, phantest_ok, true, result);
 
    result->clear_all_overcasts();
 }

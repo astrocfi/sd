@@ -1,7 +1,7 @@
 \input texinfo @c %**start of header -*-texinfo-*-
 @setfilename relnotes.info
 @settitle Sd Release Notes
-@c Time-stamp: <22 Feb 2025 wba>
+@c Time-stamp: <24 Mar 2025 wba>
 @iftex
 @headings off
 @oddheading @| @| @thispage
@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 39.72
-@set title2 Database version = 39.72 format = 412
+@set title1 RELEASE NOTES FOR VERSION 39.73
+@set title2 Database version = 39.73 format = 413
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 39.73::
 * 39.72::
 * 39.71::
 * 39.70::
@@ -172,7 +173,7 @@ and @file{relnotes98.txi} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 39.72, Top, (dir)
+@node Intro, 39.73, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -183,11 +184,28 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2025 William B. Ackerman
 @sp 3
 @menu
-* 39.72::               Changes in the current version
+* 39.73::               Changes in the current version
 @end menu
 
 @c ************
-@node 39.72, 39.71, Intro, Top
+@node 39.73, 39.72, Intro, Top
+@unnumberedsec Version 39.73 changes
+
+Corrected behavior of @strong{outsides promenade} when they are in a
+tidal column formation.
+@sp 1
+Corrected handling of the @strong{don't turn the star} directive.
+@sp 1
+Corrected handling of @ONCE REMOVED 3x1 triangles}.
+@sp 1
+Fixed @code{MAGIC split coordinate}.
+@sp 1
+@code{star thru} and @code{sweep 1/4} is illegal.
+@sp 1
+Improvements in @code{3x3} etc.
+
+@c ************
+@node 39.72, 39.71, 39.72, Top
 @unnumberedsec Version 39.72 changes
 
 The @strong{roll} behavior after @strong{circle to a line} has been

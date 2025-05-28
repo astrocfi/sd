@@ -925,6 +925,7 @@ const char *qualtab[] = {
    "ripple_both_centers",
    "ripple_any_centers",
    "people_1_and_5_real",
+   "roll_is_consistent",
    "centers_sel",
    "ends_sel",
    "all_sel",

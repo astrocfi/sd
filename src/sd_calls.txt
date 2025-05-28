@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2024  William B. Ackerman.
+//    Copyright (C) 1990-2025  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -55,7 +55,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "39.72"
+version "39.73"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve dont_raise_overcast
@@ -1660,6 +1660,14 @@ call "_plain promenade @b" dontshow tag plainprom
       array [0 0 AL2N AL3N]
    setup 1x4 2x2 qualifier ntbone num 4 couples_only
       array [0 0 AL1W AL2W]
+   setup 4x1 2x2 rotate qualifier ntbone num 1 none restriction unusual couples_only
+      array [CAL1S CAL2S AL3N AL0N]
+   setup 4x1 2x2        qualifier ntbone num 2 none restriction unusual couples_only
+      array [CAL1S CAL2S AL3N AL0N]
+   setup 4x1 2x2 rotate qualifier ntbone num 3 none restriction unusual couples_only
+      array [CAL3N CAL0N AL1S AL2S]
+   setup 4x1 2x2        qualifier ntbone num 4 none restriction unusual couples_only
+      array [CAL3N CAL0N AL1S AL2S]
    setup 2x1 1x2 rotate qualifier num 1 none
       array [CAL1S CAL0N]
    setup 2x1 1x2 qualifier num 2 none
@@ -16575,7 +16583,7 @@ call "circle 4 with bogus flow" dontshow tag circle4flow
    preceding call that are popular.  So we use the roll direction,
    but we mark it not to be used by the resolver, since the resolver
    doesn't know which popular calls happen to work correctly with this. */
-   setup 2x2 2x2
+   setup 2x2 2x2 restriction forbidden roll_is_consistent
       preds "Can't determine sweep direction"
          if slide_or_roll_is_cw  [0 0 CR3E CR0E]
          if slide_or_roll_is_ccw [0 0 AL1W AL2W]
@@ -18643,6 +18651,20 @@ call "_ends regroup" dontshow tag eregroup
    seq one_o_circ_for_frac []
 
 call "regroup" c1
+   setup 1x2 1x2
+      array [0 0]
+            alternate_definition [3x3] c4
+   setup 2x6 2x6 rotate
+      array [6N 1S 8N 3S 10N 5S 0 0 0 0 0 0]
+            alternate_definition [1x3] c4
+   setup 2x4 2x4 rotate
+      array [4N 1S 6N 7N 0 0 0 0]
+            alternate_definition [3x1] c4
+   setup 2x4 2x4 rotate
+      array [0S 1S 6N 3S 0 0 0 0]
+            alternate_definition [4x4] c4
+   setup 2x8 2x8 rotate
+      array [AL8N 1S 10N 3S 12N 5S 14N 7S 0 0 0 0 0 0 0 0]
             visible_fractions diamond_is_legal funny_is_inherited
    conc_o trade_and_roll_w_tbone [inherit_diamond inherit_funny]
           eregroup [inherit_diamond inherit_funny conc_demand_lines endscando]
@@ -18667,6 +18689,20 @@ call "_trip the set part 2 but @m" dontshow tag tripset2but
    conc nullsecond [mandatory_secondary_call] roll [conc_force_spots endscando]
 
 call "trip the set" c3a
+   setup 1x2 1x2
+      array [0 0]
+            alternate_definition [3x3] c4
+   setup 2x6 2x6 rotate
+      array [CR0S AL7N CR2S AL9N CR4S AL11N 0 0 0 0 0 0]
+            alternate_definition [1x3] c4
+   setup 2x4 2x4 rotate
+      array [CR0S AL5N CR2S CR3S 0 0 0 0]
+            alternate_definition [3x1] c4
+   setup 2x4 2x4 rotate
+      array [AL4N AL5N CR2S AL7N 0 0 0 0]
+            alternate_definition [4x4] c4
+   setup 2x8 2x8 rotate
+      array [CR0S AL9N CR2S AL11N CR4S AL13N CR6S AL15N 0 0 0 0 0 0 0 0]
             visible_fractions diamond_is_legal
    seq tripset1 []
    seq tripset2 [inherit_diamond]

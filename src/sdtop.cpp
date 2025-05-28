@@ -2600,11 +2600,10 @@ restriction_test_result verify_restriction(
       t ^= 1;
       // This is independent of whether we are line-like or column-like.
       for (idx=0 ; idx<4 ; idx++) {
-         int ii;
          int perquad = (attr::slimit(ss)+1) >> 2;
          qa0 = 0; qa1 = 0; qa2 = 0; qa3 = 0;
          // Test one quadrant.
-         for (ii=0 ; ii<perquad ; ii++) {
+         for (int ii=0 ; ii<perquad ; ii++) {
             uint32_t tp;
             if ((tp = ss->people[perquad*idx+ii].id1) != 0) {
                qa0 |= (tp^1);
@@ -2615,6 +2614,17 @@ restriction_test_result verify_restriction(
          }
          if ((qa0&t) && (qa1&t) && (qa2&t) && (qa3&t)) goto bad;
       }
+      goto good;
+   case cr_consistent_roll:
+      if (ss->kind == s2x2) {
+         uint32_t tp = ss->or_all_people();
+         if ((tp & ROLL_DIRMASK) == 0 || (tp & ROLL_DIRMASK) == ROLL_DIRMASK) {
+            // No sweep deduced from roll info; maybe there is slide info.
+            if ((tp & NSLIDE_MASK) == 0 || (tp & NSLIDE_MASK) == NSLIDE_MASK)
+               goto bad;
+         }
+      }
+
       goto good;
    }
 
@@ -3919,8 +3929,18 @@ extern callarray *assoc(
          }
 
          // Either way, demand that it be the correct number.
-         if (((unsigned int) (p->qualifierstuff & QUALBIT__NUM_MASK) / QUALBIT__NUM_BIT) !=
-             (current_options.number_fields & NUMBER_FIELD_MASK)+1)
+         int t = (current_options.number_fields & NUMBER_FIELD_MASK);
+         if ((ss->cmd.callspec->the_defn.callflagsf & CFLAG2_IS_STAR_CALL) &&
+             current_options.star_turn_option != 0) {
+            if (current_options.star_turn_option == -1)
+               t = 0;
+            else
+               t = current_options.star_turn_option;   // The star turn number overrides.
+         }
+
+         // The "qualifierstuff" field is one higher than what the database author said.  That is "qualifier num 2"
+         // in the database gets 3 in current_options.number_fields.
+         if (((unsigned int) (p->qualifierstuff & QUALBIT__NUM_MASK) / QUALBIT__NUM_BIT) != t+1)
             continue;
       }
       else {
