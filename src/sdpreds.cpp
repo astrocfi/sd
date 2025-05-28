@@ -891,18 +891,6 @@ static bool sum_mod_selected(setup *real_people, int real_index,
    return selectp(real_people, otherindex);
 }
 
-/* ARGSUSED */
-static bool sum_mod_selected_for_12p(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff) THROW_DECL
-{
-   int otherindex = (*extra_stuff) - real_index;
-   if ((real_index % 6) >= 3) otherindex += 4;
-   int size = attr::slimit(real_people)+1;
-   if (otherindex >= size) otherindex -= size;
-   return selectp(real_people, otherindex);
-}
-
-/* ARGSUSED */
 static bool plus_mod_selected(setup *real_people, int real_index,
    int real_direction, int northified_index, const int32 *extra_stuff) THROW_DECL
 {
@@ -913,6 +901,31 @@ static bool plus_mod_selected(setup *real_people, int real_index,
    if (otherindex >= size) otherindex -= size;
    return selectp(real_people, otherindex);
 }
+
+static bool plus_mod_selected_real(setup *real_people, int real_index,
+   int real_direction, int northified_index, const int32 *extra_stuff) THROW_DECL
+{
+   int size = attr::slimit(real_people)+1;
+   int otherindex = ((real_people->kind == s1x3) && (real_direction & 2)) ?
+      real_index + size - (*extra_stuff) :
+      real_index + (*extra_stuff);
+   if (otherindex >= size) otherindex -= size;
+   return real_people->people[otherindex].id1 && selectp(real_people, otherindex);
+}
+
+static bool plus_mod_selected_nocross(setup *real_people, int real_index,
+   int real_direction, int northified_index, const int32 *extra_stuff) THROW_DECL
+{
+   int size = attr::slimit(real_people)+1;
+   int otherindex = ((real_people->kind == s1x3) && (real_direction & 2)) ?
+      real_index + size - (*extra_stuff) :
+      real_index + (*extra_stuff);
+   if (otherindex >= size) otherindex -= size;
+   // Check whether they are in different halves.
+   if ((((real_index-size/2) | 1) * ((otherindex-size/2) | 1)) < 0) return false;
+   return real_people->people[otherindex].id1 && selectp(real_people, otherindex);
+}
+
 
 static const int32 l_4x3_tab[12] = {
    -99, -99, -99, -99, 3, 2, 4, 5, 11, 10, 0, 1};
@@ -2878,7 +2891,28 @@ predicate_descriptor pred_table[] = {
       {plus_mod_selected,             &iden_tab[10]},            // "person_select_plus10"
       {plus_mod_selected,             &iden_tab[11]},            // "person_select_plus11"
       {plus_mod_selected,             &iden_tab[12]},            // "person_select_plus12"
-      {sum_mod_selected_for_12p,      &iden_tab[15]},            // "person_select12_sum15"
+      {plus_mod_selected_real,        &iden_tab[1]},             // "person_select_real_plus1"
+      {plus_mod_selected_real,        &iden_tab[2]},             // "person_select_real_plus2"
+      {plus_mod_selected_real,        &iden_tab[3]},             // "person_select_real_plus3"
+      {plus_mod_selected_real,        &iden_tab[4]},             // "person_select_real_plus4"
+      {plus_mod_selected_real,        &iden_tab[5]},             // "person_select_real_plus5"
+      {plus_mod_selected_real,        &iden_tab[6]},             // "person_select_real_plus6"
+      {plus_mod_selected_real,        &iden_tab[7]},             // "person_select_real_plus7"
+      {plus_mod_selected_real,        &iden_tab[8]},             // "person_select_real_plus8"
+      {plus_mod_selected_real,        &iden_tab[9]},             // "person_select_real_plus9"
+      {plus_mod_selected_real,        &iden_tab[10]},            // "person_select_real_plus10"
+      {plus_mod_selected_real,        &iden_tab[11]},            // "person_select_real_plus11"
+      {plus_mod_selected_nocross,     &iden_tab[1]},             // "person_select_nocross_plus1"
+      {plus_mod_selected_nocross,     &iden_tab[2]},             // "person_select_nocross_plus2"
+      {plus_mod_selected_nocross,     &iden_tab[3]},             // "person_select_nocross_plus3"
+      {plus_mod_selected_nocross,     &iden_tab[4]},             // "person_select_nocross_plus4"
+      {plus_mod_selected_nocross,     &iden_tab[5]},             // "person_select_nocross_plus5"
+      {plus_mod_selected_nocross,     &iden_tab[6]},             // "person_select_nocross_plus6"
+      {plus_mod_selected_nocross,     &iden_tab[7]},             // "person_select_nocross_plus7"
+      {plus_mod_selected_nocross,     &iden_tab[8]},             // "person_select_nocross_plus8"
+      {plus_mod_selected_nocross,     &iden_tab[9]},             // "person_select_nocross_plus9"
+      {plus_mod_selected_nocross,     &iden_tab[10]},            // "person_select_nocross_plus10"
+      {plus_mod_selected_nocross,     &iden_tab[11]},            // "person_select_nocross_plus11"
       {select_with_special,           l_4x3_tab},                // "select_4x3_on_left"
       {select_with_special,           r_4x3_tab},                // "select_4x3_on_right"
       {select_with_special,           adj_4x4_tab},              // "select_w_adj_4x4"

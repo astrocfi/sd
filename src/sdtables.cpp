@@ -429,6 +429,7 @@ Cstring warning_strings[] = {
    /*  warn__unusual             */   "*This is an unusual setup for this call.",
    /*  warn_controversial        */   "*This may be controversial.",
    /*  warn_verycontroversial    */   "*Change offset to other axis, this may be seriously controversial.",
+   /*  warn_no_internal_phantoms */   "*Removing internal phantoms from result 1x4, this may be controversial.",
    /*  warn_serious_violation    */   "*This appears to be a serious violation of the definition.",
    /*  warn__4_circ_tracks       */   "*Original ends of lines stay outside of the others.",
    /*  warn__assume_dpt          */   "*Assume a starting DPT.",
@@ -9455,7 +9456,7 @@ const setup_attr setup_attrs[] = {
     false, false,
     (const id_bit_table *) 0,
     {"6  a  6  b  6  c@@r  s  t  g  f  e  d@@n  o  p  q  j  i  h@@6  m  6  l  6  k",
-     "6  n  r@@m  o  s  a@@6  p  t@@l  q  b  g@@6  j  f@@k  i  e  c@@6  h  d"}},
+     "6  n  r@@m  o  s  a@@6  p  t@@l  q  g  b@@6  j  f@@k  i  e  c@@6  h  d"}},
    {7,                      // s_thar
     &thingthar,
     &thingthar,
@@ -11501,6 +11502,15 @@ select::fixer select::fixer_init_table[] = {
    {fx_phanignh, s_ntrgl6cw, s_c1phan,  1, 0, 1,      {7, 11, 9, 15, 3, 1},
     fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
 
+   {fx_phantg4a, s_trngl4, s_c1phan, 0x40000003, 0, 1, {8, 10, 12, 14},
+    fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx_phantg4b},
+   {fx_phantg4b, s_trngl4, s_c1phan, 0x40000001, 0, 1, {13, 15, 11, 9},
+    fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx_phantg4a},
+   {fx_phantg4c, s_trngl4, s_c1phan, 0x40000001, 0, 1, {0, 2, 4, 6},
+    fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx_phantg4d},
+   {fx_phantg4d, s_trngl4, s_c1phan, 0x40000003, 0, 1, {5, 7, 3, 1},
+    fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx_phantg4c},
+
    {fx_f2x477, s2x3, s2x4,              0, 1, 1,          {0, 1, 2, 4, 5, 6},
     fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx_f2x477, fx0},
    {fx_f2x4ee, s2x3, s2x4,              0, 1, 1,          {1, 2, 3, 5, 6, 7},
@@ -11877,6 +11887,11 @@ select::sel_item select::sel_init_table[] = {
    {LOOKUP_NONE,                      s_23232,    01414,   fx23232d,      fx0, -1},
    {LOOKUP_NONE,                      s_23232,    03030,   fx23232e,      fx0, -1},
 
+   {LOOKUP_NONE,                      s_c1phan,  0x5500,   fx_phantg4a,   fx0, -1},
+   {LOOKUP_NONE,                      s_c1phan,  0xAA00,   fx_phantg4b,   fx0, -1},
+   {LOOKUP_NONE,                      s_c1phan,  0x0055,   fx_phantg4c,   fx0, -1},
+   {LOOKUP_NONE,                      s_c1phan,  0x00AA,   fx_phantg4d,   fx0, -1},
+
    {LOOKUP_NONE,                      s1x6,         074,   fx_1x6hif,     fx0, -1},
    {LOOKUP_NONE,                      s1x6,         047,   fx_1x6lowf,    fx0, -1},
    {LOOKUP_NONE,                      s1x4,        0x3,    fx_n1x43,      fx0, -1},
@@ -12148,6 +12163,22 @@ const tglmap::map tglmap::init_table[] = {
     {0, 0, 0, 0, 0, 0, 0, 0},
     {0, 0, 0, 0, 0, 0, 0, 0}},
 
+   // In 323: first triangle (inverted),
+   // then second triangle (upright), then idle.
+   {tglmap323_33, s_323, nothing, tglmap323_33, 0, 0,
+    {7, 0, 1,   3, 4, 5,   2, 6},
+    {0},
+    {0},
+    {0},
+    {0}},
+
+   {tglmap323_66, s_323, nothing, tglmap323_66, 0, 0,
+    {3, 1, 2,   7, 5, 6,   0, 4},
+    {0},
+    {0},
+    {0},
+    {0}},
+
    // Interlocked triangles in bigdmd:
    {tglmap1k, nothing, nothing, tglmap2k, 1, 0,
     {0, 0, 0,   0, 0, 0,   0, 0},
@@ -12278,3 +12309,6 @@ const tglmap::tglmapkey tglmap::ritglmap3[2] = {tglmap3t, tglmap3t};
 
 const tglmap::tglmapkey tglmap::d7tglmap1[4] = {tglmapd71};
 const tglmap::tglmapkey tglmap::d7tglmap2[4] = {tglmapd72};
+
+const tglmap::tglmapkey tglmap::s323map33[1] = {tglmap323_33};
+const tglmap::tglmapkey tglmap::s323map66[1] = {tglmap323_66};

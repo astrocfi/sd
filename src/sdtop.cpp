@@ -3489,60 +3489,61 @@ bool check_for_concept_group(
    junk_concepts.clear_all_herit_and_final_bits();
    parse_block *temp = process_final_concepts(parseptrcopy, false, &junk_concepts, false, false);
 
-   if (temp != parseptrcopy &&
-       junk_concepts.test_heritbits(~(INHERITFLAG_GRAND|INHERITFLAG_SINGLE|INHERITFLAG_CROSS)) == 0 &&
-       temp->concept->kind == concept_concentric) {
+   if (temp && temp != parseptrcopy && temp->concept->kind == concept_concentric &&
+       junk_concepts.test_heritbits(~(INHERITFLAG_GRAND|INHERITFLAG_SINGLE|INHERITFLAG_CROSS)) == 0) {
          skip_a_pair = temp;
    }
    else {
       junk_concepts.clear_all_herit_and_final_bits();
       temp = process_final_concepts(parseptr_skip, false, &junk_concepts, false, false);
 
-      if (k == concept_c1_phantom) {
-         // Look for combinations like "phantom tandem".
-         // If skipping "phantom", maybe it's "phantom tandem", so we need to skip both.
-         if ((temp->concept->kind == concept_tandem ||
-              temp->concept->kind == concept_frac_tandem) &&
-             (!junk_concepts.test_for_any_herit_or_final_bit())) {
-            skip_a_pair = temp;
+      if (temp) {
+         if (k == concept_c1_phantom) {
+            // Look for combinations like "phantom tandem".
+            // If skipping "phantom", maybe it's "phantom tandem", so we need to skip both.
+            if ((temp->concept->kind == concept_tandem ||
+                 temp->concept->kind == concept_frac_tandem) &&
+                (!junk_concepts.test_for_any_herit_or_final_bit())) {
+               skip_a_pair = temp;
+            }
          }
-      }
-      else if (k == concept_snag_mystic && (this_concept->arg1 & CMD_MISC2__CENTRAL_MYSTIC)) {
-         // Look for combinations like "mystic triple boxes".
-         if ((temp->concept->kind == concept_multiple_lines ||
-              temp->concept->kind == concept_multiple_diamonds ||
-              temp->concept->kind == concept_multiple_formations ||
-              temp->concept->kind == concept_multiple_boxes) &&
-             temp->concept->arg4 == 3 &&
-             (!junk_concepts.test_for_any_herit_or_final_bit())) {
-            skip_a_pair = temp;
+         else if (k == concept_snag_mystic && (this_concept->arg1 & CMD_MISC2__CENTRAL_MYSTIC)) {
+            // Look for combinations like "mystic triple boxes".
+            if ((temp->concept->kind == concept_multiple_lines ||
+                 temp->concept->kind == concept_multiple_diamonds ||
+                 temp->concept->kind == concept_multiple_formations ||
+                 temp->concept->kind == concept_multiple_boxes) &&
+                temp->concept->arg4 == 3 &&
+                (!junk_concepts.test_for_any_herit_or_final_bit())) {
+               skip_a_pair = temp;
+            }
          }
-      }
-      else if (k == concept_parallelogram ||
-               (k == concept_distorted &&
-                parseptrcopy->concept->arg1 == disttest_offset &&
-                parseptrcopy->concept->arg3 == 0 &&
-                (parseptrcopy->concept->arg4 & ~0xF) == DISTORTKEY_DIST_CLW*16)) {
-         // Look for combinations like "parallelogram split phantom C/L/W/B".
-         // Similarly with "offset C/L/W split phantom C/L/W/B".
-         if ((temp->concept->kind == concept_do_phantom_2x4 ||
-              temp->concept->kind == concept_do_phantom_boxes) &&
-             temp->concept->arg3 == MPKIND__SPLIT &&
-             (!junk_concepts.test_for_any_herit_or_final_bit())) {
-            skip_a_pair = temp;
+         else if (k == concept_parallelogram ||
+                  (k == concept_distorted &&
+                   parseptrcopy->concept->arg1 == disttest_offset &&
+                   parseptrcopy->concept->arg3 == 0 &&
+                   (parseptrcopy->concept->arg4 & ~0xF) == DISTORTKEY_DIST_CLW*16)) {
+            // Look for combinations like "parallelogram split phantom C/L/W/B".
+            // Similarly with "offset C/L/W split phantom C/L/W/B".
+            if ((temp->concept->kind == concept_do_phantom_2x4 ||
+                 temp->concept->kind == concept_do_phantom_boxes) &&
+                temp->concept->arg3 == MPKIND__SPLIT &&
+                (!junk_concepts.test_for_any_herit_or_final_bit())) {
+               skip_a_pair = temp;
+            }
          }
-      }
-      else if (get_meta_key_props(this_concept) & MKP_RESTRAIN_2) {
-         // Look for combinations like "random/initially/echo/nth-part-work <concept>".
-         skip_a_pair = parseptr_skip;
-      }
-      else if (k == concept_so_and_so_only &&
-               ((selective_key) parseptrcopy->concept->arg1) == selective_key_work_concept) {
-         // Look for combinations like "<anyone> work <concept>".
-         skip_a_pair = parseptr_skip;
-      }
-      else if (k == concept_matrix) {
-         skip_a_pair = parseptr_skip;
+         else if (get_meta_key_props(this_concept) & MKP_RESTRAIN_2) {
+            // Look for combinations like "random/initially/echo/nth-part-work <concept>".
+            skip_a_pair = parseptr_skip;
+         }
+         else if (k == concept_so_and_so_only &&
+                  ((selective_key) parseptrcopy->concept->arg1) == selective_key_work_concept) {
+            // Look for combinations like "<anyone> work <concept>".
+            skip_a_pair = parseptr_skip;
+         }
+         else if (k == concept_matrix) {
+            skip_a_pair = parseptr_skip;
+         }
       }
    }
 
@@ -5101,8 +5102,15 @@ parse_block *process_final_concepts(
 
 skipped_concept_info::skipped_concept_info(parse_block *incoming) THROW_DECL
 {
+   if (!incoming)
+      fail("Need a concept.");
+
    while (incoming->concept->kind == concept_comment)
       incoming = incoming->next;
+
+   // Reject "concept_marker_concept_mod" and similar special things.
+   //   if (incoming->concept->kind < marker_end_of_list)
+   //      fail("Need a concept.");
 
    m_nocmd_misc3_bits = 0;
    m_heritflag = 0;
@@ -6712,7 +6720,8 @@ void toplevelmove() THROW_DECL
             else if (!(tbonetest[1] & 010))
                nearbit = ID3_NEARCOL|ID3_NEARFOUR;
          }
-         else if (livemask == 0x5555U || livemask == 0xAAAAU) {
+         else if (livemask == 0x5555U || livemask == 0xAAAAU || livemask == 0xAA55U || livemask == 0x55AAU) {
+            // We don't allow random populations; dancers might find it ambiguous.
             farbit = ID3_FARFOUR;
             nearbit = ID3_NEARFOUR;
          }

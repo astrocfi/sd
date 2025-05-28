@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 38.92
-@set title2 Database version = 38.92 format = 338
+@set title1 RELEASE NOTES FOR VERSION 38.93
+@set title2 Database version = 38.93 format = 341
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 38.93::
 * 38.92::
 * 38.91::
 * 38.90::
@@ -131,7 +132,7 @@ The files @file{relnotes03.txi} and @file{relnotes98.txi} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 38.92, Top, (dir)
+@node Intro, 38.93, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -142,11 +143,25 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2017 William B. Ackerman
 @sp 3
 @menu
-* 38.92::               Changes in the current version
+* 38.93::               Changes in the current version
 @end menu
 
 @c ************
-@node 38.92, 38.91, Intro, Top
+@node 38.93, 38.92, Intro, Top
+@unnumberedsec Version 38.93 changes
+
+A serious bug was fixed, that could cause the program to crash.
+
+The handling of triangles within "323" setups was improved.
+
+The calls @strong{allemande left}, @strong{allemande thar, go right and left and form a star},
+and @strong{shoot the star} were added.  These do not handle any tricky cases, and it is not
+the goal of the program to assist with writing material of this type.
+
+The ability to do @strong{<anyone> trade} was improved in some setups.
+
+@c ************
+@node 38.92, 38.91, 38.93, Top
 @unnumberedsec Version 38.92 changes
 
 The @strong{randomize couple colors} command may only be given at the start of a sequence, that is, just before the @strong{heads starts}, or whatever, command.  You can't change the colors of the icons in the middle of a sequence.  As a reminder, random couple coloring is enabled with the @strong{-hide_couple_numbers} switch at startup.

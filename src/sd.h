@@ -853,6 +853,10 @@ class select {
       fx_1x4p2d,
       fx_1x4p2l,
       fx_4p2x1d,
+      fx_phantg4a,
+      fx_phantg4b,
+      fx_phantg4c,
+      fx_phantg4d,
       fx_1x6lowf,
       fx_1x6hif,
       fx_1x3p1lowf,
@@ -1486,6 +1490,8 @@ class tglmap {
       tg6mapccw,
       tglmaps6,
       tglmapb6,
+      tglmap323_33,
+      tglmap323_66,
       tgl_ENUM_EXTENT   // Not a key; indicates extent of the enum.
    };
 
@@ -1550,6 +1556,8 @@ class tglmap {
    static const tglmapkey ritglmap3[];
    static const tglmapkey d7tglmap1[];
    static const tglmapkey d7tglmap2[];
+   static const tglmapkey s323map33[];
+   static const tglmapkey s323map66[];
 };
 
 

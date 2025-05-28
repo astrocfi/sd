@@ -670,6 +670,9 @@ static const resolve_tester test_2x4_stuff[] = {
    {resolve_pth_la,         MS, 5,   {2, 3, 0, 1, 6, 7, 4, 5},     0x13133131},
    {resolve_bad_dixie_grand,DX, 1,   {4, 1, 2, 7, 0, 5, 6, 3},     0x33111133},
 
+   // "Centers touch 1/4".
+   {resolve_la,             MS, 6,   {4, 3, 2, 1, 0, 7, 6, 5},     0x33A8118A},
+
    // Trade-by.
    {resolve_rlg,            MS, 2,   {4, 3, 2, 1, 0, 7, 6, 5},     0x11313313},
    {resolve_minigrand,      MS, 4,   {4, 7, 2, 5, 0, 3, 6, 1},     0x13333111},

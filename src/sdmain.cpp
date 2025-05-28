@@ -46,8 +46,8 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-#define VERSION_STRING "38.92"
-#define TIME_STAMP "wba@alum.mit.edu March 3 2017 $"
+#define VERSION_STRING "38.93"
+#define TIME_STAMP "wba@alum.mit.edu May 8 2017 $"
 
 /* This defines the following functions:
    sd_version_string

@@ -1358,6 +1358,12 @@ extern void tandem_couples_move(
    bool melded = (key == tandem_key_overlap_siam) || (phantom & 0xC);
    phantom &= 3;    // Get rid of those bits.
 
+   // The prior_elongation_bits come in as absolute.  But everything in this routine is
+   // relative, so it needs to be compensated.
+
+   uint32 prior = ss->cmd.prior_elongation_bits;
+   if (((prior+1) & 2) != 0 && (ss->rotation & 1)) prior ^= 3;
+
    // Look for very special cases of selectors that specify triangles and concepts
    // that work with same.  The triangle designators are:
    //   selector_inside_tgl
@@ -1965,6 +1971,10 @@ extern void tandem_couples_move(
    // Now ewmask and nsmask have the info about who is paired with whom.
    ewmask &= ~tandstuff.single_mask;         // Clear out unpaired people.
    nsmask &= ~tandstuff.single_mask;
+
+   if ((ewmask != 0 && (prior & 1)) ||
+       (nsmask != 0 && (prior & 2)))
+      fail("These people are too far apart to be tandem/couples.");
 
    // Initiate the "fudgy 2x3" or "fudgy 2x6" mechanism.
 

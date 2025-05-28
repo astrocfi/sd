@@ -171,6 +171,8 @@ extern void remove_tgl_distortion(setup *ss) THROW_DECL
    static const expand::thing thing2    = {{2, 3, 1},          s_trngl,  sdmd, 1};
    static const expand::thing thing1x8a = {{1, 3, 2, 5, 7, 6}, s1x6,     s1x8, 0};
    static const expand::thing thing1x8b = {{0, 1, 3, 4, 5, 7}, s1x6,     s1x8, 0};
+   static const expand::thing thing1x8c = {{0, 3, 2, 4, 7, 6}, s1x6,     s1x8, 0};
+   static const expand::thing thing1x8d = {{0, 1, 2, 4, 5, 6}, s1x6,     s1x8, 0};
    static const expand::thing thingptpa = {{1, 7, 6, 5, 3, 2}, s_bone6,  s_ptpd, 0};
    static const expand::thing thingptpb = {{3, 0, 1, 7, 4, 5}, s_short6, s_ptpd, 1};
    static const expand::thing thing2x4a = {{1, 2, 3, 5, 6, 7}, s2x3,     s2x4, 0};
@@ -179,8 +181,14 @@ extern void remove_tgl_distortion(setup *ss) THROW_DECL
    static const expand::thing thing2x4d = {{6, 0, 1, 2, 4, 5}, s_short6, s2x4, 1};
    static const expand::thing thing2x4e = {{0, 3, 5, 4, 7, 1}, s_bone6,  s2x4, 0};
    static const expand::thing thing2x4f = {{6, 7, 1, 2, 3, 5}, s_short6, s2x4, 1};
+   static const expand::thing thing2x4g = {{0, 1, 3, 4, 5, 7}, s2x3,     s2x4, 0};
+   static const expand::thing thing2x4h = {{0, 2, 3, 4, 6, 7}, s2x3,     s2x4, 0};
    static const expand::thing thing1x4a = {{0, 1, 3},          s1x3,     s1x4, 0};
    static const expand::thing thing1x4b = {{1, 3, 2},          s1x3,     s1x4, 0};
+   static const expand::thing thingqtga = {{6, 7, 1, 2, 3, 5}, s_ntrgl6ccw, s_qtag, 0};
+   static const expand::thing thingqtgb = {{0, 3, 2, 4, 7, 6}, s_ntrgl6cw,  s_qtag, 0};
+
+   uint32 where = little_endian_live_mask(ss);
 
    switch (ss->kind) {
    case s2x4:
@@ -194,12 +202,18 @@ extern void remove_tgl_distortion(setup *ss) THROW_DECL
 
       if (rot & 1) {
          // This is actually 1x4's.
-         if (ss->people[3].id1 && ss->people[7].id1 &&
-             !ss->people[0].id1 && !ss->people[4].id1)
+         if (where == 0xEE)
             eptr = &thing2x4a;
-         else if (ss->people[0].id1 && ss->people[4].id1 &&
-                  !ss->people[3].id1 && !ss->people[7].id1)
+         else if (where == 0x77)
             eptr = &thing2x4b;
+         else if (where == 0xBB) {
+            warn(warn_no_internal_phantoms);
+            eptr = &thing2x4g;
+         }
+         else if (where == 0xDD) {
+            warn(warn_no_internal_phantoms);
+            eptr = &thing2x4h;
+         }
       }
       else {
          // This is actually 2x2's.
@@ -235,13 +249,36 @@ extern void remove_tgl_distortion(setup *ss) THROW_DECL
          }
       }
       goto check_and_do;
+   case s_qtag:
+      rot = ss->rotation & 1;
+
+      if (ss->result_flags.split_info[0])
+         rot += 0x1001;
+      if (ss->result_flags.split_info[1])
+         rot += 0x1000;
+      if (rot != 0x1001) goto losing;
+
+      // This is actually parallel diamonds, turn into parallel triangles.
+      if (where == 0xEE)
+         eptr = &thingqtga;
+      else if (where == 0xDD)
+         eptr = &thingqtgb;
+
+      goto check_and_do;
    case s1x8:
-      if (ss->people[2].id1 && ss->people[6].id1 &&
-          !ss->people[0].id1 && !ss->people[4].id1)
+      if (where == 0xEE)
          eptr = &thing1x8a;
-      else if (ss->people[0].id1 && ss->people[4].id1 &&
-               !ss->people[2].id1 && !ss->people[6].id1)
+      else if (where == 0xBB)
          eptr = &thing1x8b;
+      else if (where == 0xDD) {
+         warn(warn_no_internal_phantoms);
+         eptr = &thing1x8c;
+      }
+      else if (where == 0x77) {
+         warn(warn_no_internal_phantoms);
+         eptr = &thing1x8d;
+      }
+
       goto check_and_do;
    case s1x4:
       if (ss->people[0].id1 && !ss->people[2].id1)
@@ -4612,7 +4649,7 @@ void tglmap::do_glorious_triangles(
       mapnums = map_ptr->mapbd1;
       startingrot = 3;
    }
-   else {   // s_qtag or s_ptpd
+   else {   // s_qtag, s_ptpd, or s_323.
       mapnums = map_ptr->mapqt1;
       startingrot = (map_ptr->randombits & 16) ? 1 : 0;
    }
@@ -4688,7 +4725,7 @@ void tglmap::do_glorious_triangles(
 
    if (res[0].kind == s_trngl) {
 
-      if (ss->kind == sdeepbigqtg)
+      if (ss->kind == sdeepbigqtg || ss->kind == s_323)
          fail("Sorry, can't do this.");
 
       // We know that res[0].rotation != startingrot.
@@ -4795,7 +4832,7 @@ void tglmap::do_glorious_triangles(
          goto shapechangeerror;
 
       if (res[0].rotation == 0) {
-         if (ss->kind == sdeepbigqtg)
+         if (ss->kind == sdeepbigqtg || ss->kind == s_323)
             fail("Sorry, can't do this.");
 
          if (startingrot == 1) {
@@ -5052,6 +5089,18 @@ static void wv_tand_base_move(
       }
 
       tglmap::do_glorious_triangles(s, tglmap::t6ccwtglmap1, indicator, result);
+      reinstate_rotation(s, result);
+      return;
+   case s_323:
+      if (indicator != 20)
+         goto losing;
+      if (global_selectmask == (global_livemask & 0x33))
+         tglmap::do_glorious_triangles(s, tglmap::s323map33, indicator, result);
+      else if (global_selectmask == (global_livemask & 0x66))
+         tglmap::do_glorious_triangles(s, tglmap::s323map66, indicator, result);
+      else
+         goto losing;
+
       reinstate_rotation(s, result);
       return;
    case s_c1phan:

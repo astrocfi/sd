@@ -4091,6 +4091,7 @@ void nose_move(
 
    current_options.who = saved_selector;
 
+   update_id_bits(ss);
    move(ss, false, result);
 
    setup_kind kk = result->kind;
@@ -7271,6 +7272,8 @@ static void do_concept_meta(
                   // First concept.
                   {
                      result->cmd = yescmd;
+                     result->cmd.restrained_super8flags = 0;
+
                      // Set the fractionalize field to do the indicated part.
                      result->cmd.cmd_fraction = frac_stuff;
                      result->cmd.cmd_fraction.flags |=
@@ -7286,33 +7289,52 @@ static void do_concept_meta(
                      if (!(result->result_flags.misc & RESULTFLAG__NO_REEVALUATE))
                         update_id_bits(result);
 
-                     // Preserved across a throw; must be volatile.
-                     volatile error_flag_type maybe_throw_this = error_flag_none;
-                     parse_block *save_it = *foo1.m_root_of_result_of_skip;
-                     *foo1.m_root_of_result_of_skip = (concept_option_code == 3) ?
-                        foo3.m_result_of_skip :
-                        foo2.m_result_of_skip;
+                     // Skip the second concept.  If the first is an actual concept,
+                     // it requires careful splicing of pointers.  But for heritflag stuff,
+                     // just leave the restrained_super8flags stuff in place and start at
+                     // the 3rd concept.
 
-                     try {
+                     if (foo1.m_heritflag != 0) {
+                        result->cmd.restrained_super8flags = foo1.m_heritflag;
+                        result->cmd.parseptr = (concept_option_code == 3) ?
+                           foo3.m_result_of_skip :
+                           foo2.m_result_of_skip;
+                        result->cmd.cmd_misc3_flags |= CMD_MISC3__RESTRAIN_MODIFIERS;
+                        result->cmd.restrained_final = 0;
                         do_call_in_series_and_update_bits(result);
                      }
-                     catch(error_flag_type foo) {
-                        // An error occurred.  We need to restore stuff.
-                        maybe_throw_this = foo;
+                     else {
+                        // Do the actual pointer splicing.
+                        // Preserved across a throw; must be volatile.
+                        if (!foo1.m_root_of_result_of_skip)
+                           fail("Need a concept.");
+                        volatile error_flag_type maybe_throw_this = error_flag_none;
+                        parse_block *save_it = *foo1.m_root_of_result_of_skip;
+                        *foo1.m_root_of_result_of_skip = (concept_option_code == 3) ?
+                           foo3.m_result_of_skip :
+                           foo2.m_result_of_skip;
+                        try {
+                           do_call_in_series_and_update_bits(result);
+                        }
+                        catch(error_flag_type foo) {
+                           // An error occurred.  We need to restore stuff.
+                           maybe_throw_this = foo;
+                        }
+
+                        // Restore what was spliced out.
+                        *foo1.m_root_of_result_of_skip = save_it;
+
+                        // If an error occurred, throw it now.
+                        if (maybe_throw_this != error_flag_none)
+                           throw maybe_throw_this;
                      }
-
-                     // Restore what was spliced out.
-                     *foo1.m_root_of_result_of_skip = save_it;
-
-                     // If an error occurred, throw it now.
-                     if (maybe_throw_this != error_flag_none)
-                        throw maybe_throw_this;
                   }
 
                   break;
                case 1:
                   // Second concept.
                   result->cmd = nocmd;
+                  result->cmd.restrained_super8flags = 0;
 
                   // Set the fractionalize field to do the indicated part.
                   result->cmd.cmd_fraction = frac_stuff;
@@ -7328,25 +7350,35 @@ static void do_concept_meta(
 
                   // If there are 3 concepts, this is the middle one, and more splicing is required.
                   if (concept_option_code == 3) {
-                     // Preserved across a throw; must be volatile.
-                     volatile error_flag_type maybe_throw_this = error_flag_none;
-                     parse_block *save_it = *foo2.m_root_of_result_of_skip;
-                     *foo2.m_root_of_result_of_skip = foo3.m_result_of_skip;
-
-                     try {
+                     if (foo2.m_heritflag != 0) {
+                        result->cmd.parseptr = foo3.m_result_of_skip;
+                        result->cmd.cmd_misc3_flags |= CMD_MISC3__RESTRAIN_MODIFIERS;
+                        result->cmd.restrained_final = 0;
+                        result->cmd.restrained_super8flags = foo2.m_heritflag;
                         do_call_in_series_and_update_bits(result);
                      }
-                     catch(error_flag_type foo) {
-                        // An error occurred.  We need to restore stuff.
-                        maybe_throw_this = foo;
+                     else {
+                        // Preserved across a throw; must be volatile.
+                        if (!foo2.m_root_of_result_of_skip)
+                           fail("Need a concept.");
+                        volatile error_flag_type maybe_throw_this = error_flag_none;
+                        parse_block *save_it = *foo2.m_root_of_result_of_skip;
+                        *foo2.m_root_of_result_of_skip = foo3.m_result_of_skip;
+                        try {
+                           do_call_in_series_and_update_bits(result);
+                        }
+                        catch(error_flag_type foo) {
+                           // An error occurred.  We need to restore stuff.
+                           maybe_throw_this = foo;
+                        }
+
+                        // Restore what was spliced out.
+                        *foo2.m_root_of_result_of_skip = save_it;
+
+                        // If an error occurred, throw it now.
+                        if (maybe_throw_this != error_flag_none)
+                           throw maybe_throw_this;
                      }
-
-                     // Restore what was spliced out.
-                     *foo2.m_root_of_result_of_skip = save_it;
-
-                     // If an error occurred, throw it now.
-                     if (maybe_throw_this != error_flag_none)
-                        throw maybe_throw_this;
                   }
                   else {
                      do_call_in_series_and_update_bits(result);
@@ -7357,6 +7389,7 @@ static void do_concept_meta(
                   // Third concept.
                   result->cmd = nocmd;
                   result->cmd.parseptr = foo2.m_result_of_skip;
+                  result->cmd.restrained_super8flags = 0;
 
                   // Set the fractionalize field to do the indicated part.
                   result->cmd.cmd_fraction = frac_stuff;
@@ -7370,8 +7403,15 @@ static void do_concept_meta(
                   if (!(result->result_flags.misc & RESULTFLAG__NO_REEVALUATE))
                      update_id_bits(result);
 
-                  do_call_in_series_and_update_bits(result);
 
+                  if (foo3.m_heritflag != 0) {
+                     result->cmd.parseptr = foo3.m_result_of_skip;
+                     result->cmd.cmd_misc3_flags |= CMD_MISC3__RESTRAIN_MODIFIERS;
+                     result->cmd.restrained_final = 0;
+                     result->cmd.restrained_super8flags = foo3.m_heritflag;
+                  }
+
+                  do_call_in_series_and_update_bits(result);
                   break;
                }
 

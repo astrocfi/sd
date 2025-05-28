@@ -200,6 +200,9 @@ static collision_map collision_map_table[] = {
    {3, 0x000022, 0xA2, 0x80, {1, 5, 7},            {3, 7, 0},             {3, 7, 1},
     s_spindle,   s_crosswave, 0, warn__none, 0},   // from trade by with no right half
 
+   {3, 0x000000, 0x7, 0x2, {0, 1, 2},              {0, 1, 2},             {0, 3, 2},
+    s1x3,   s1x4, 0, warn__none, 0},
+
    {6, 0x0880CC, 0xDD, 0x88, {0, 2, 3, 4, 6, 7},   {7, 0, 1, 3, 4, 6},    {7, 0, 2, 3, 4, 5},
     s_crosswave, s3x1dmd,     1, warn__none, 0},   // from 3&1 lines w/ centers in
    {6, 0x000044, 0x77, 0x22, {0, 1, 2, 4, 5, 6},   {0, 1, 3, 4, 6, 7},    {0, 2, 3, 4, 5, 7},

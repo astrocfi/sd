@@ -576,6 +576,7 @@ enum warning_index {
    warn__unusual,
    warn_controversial,
    warn_verycontroversial,
+   warn_no_internal_phantoms,
    warn_serious_violation,
    warn__4_circ_tracks,
    warn__assume_dpt,

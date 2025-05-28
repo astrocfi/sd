@@ -57,7 +57,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "38.92"
+version "38.93"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve dont_raise_overcast
@@ -779,8 +779,10 @@ call "zoom roll@O circulate@P" c4
 
 call "bias@O circulate@P" c3a
             base_circ_call
-   setup 2x4 2x4 restriction wave_only
+   setup 2x4 2x4 restriction unusual wave_only
       array [CR3S CR2S AL1S AL0S ZM1N ZM0N ZM3N ZM2N]
+   setup 4x2 2x4 restriction unusual alwaysfail
+      array [   0 ZM2N    0 CR4S AL3S    0 ZM5N    0]
 
 call "bias trade@O circulate@P" c4
             base_circ_call
@@ -1545,6 +1547,29 @@ call "allemande left in the alamo style" mainstream
             dont_use_in_resolve imprecise_rotation
    setup 4x4 4x4
       array [0 AL1E 0 0 0 AL5S AL6N 0 0 0 AL10E 0 0 0 0 0]
+
+call "allemande left" mainstream
+            dont_use_in_resolve
+   setup 4x4 4x4
+      array [0 AL1S 0 0 0 AL5W AL6E 0 0 0 AL10S 0 0 0 0 0]
+   setup alamo 4x4
+      array [0 0 AL1S 0 AL5W AL6E 0 AL10S]
+
+call "allemande thar, go right and left and form a star" mainstream
+            dont_use_in_resolve imprecise_rotation
+   setup 4x4 thar qualifier in in_or_out
+      array [0 0 1N 0 0 0 0 0 0 6E 0 0 0 0 0 0]
+   setup 4x4 thar qualifier out in_or_out
+      array [0 1N 0 0 0 0 0 0 0 0 0S 0 0 0 0 0]
+   setup alamo thar qualifier in in_or_out
+      array [0 0 0 1N 0 0 6E 0]
+   setup alamo thar qualifier out in_or_out
+      array [0 0 1N 0 0 0 0 0S]
+
+call "shoot the star" mainstream
+            dont_use_in_resolve
+   setup thar alamo qualifier miniwaves
+      array [CR6S AL6S 0 0 AL3S CR3S 0 0]
 
 call "_plain promenade @b" dontshow tag plainprom
             neednumber
@@ -6308,20 +6333,110 @@ call "@6 trade" mainstream
       preds "Can't find anyone to trade with."
          if unselect                    [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N ZM7N]
          if pair_person_select          [CR7S CR6S CR5S CR4S AL3S AL2S AL1S AL0S]
+   setup 2x5 2x5
+      preds "Can't find anyone to trade with."
+         if unselect                    [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N ZM7N ZM8N ZM9N]
+         if person_select_nocross_plus1 [CR1S CR2S CR3S CR4S    0 AL6S AL7S AL8S AL9S    0]
+         if person_select_nocross_plus9 [   0 AL0S AL1S AL2S AL3S    0 CR5S CR6S CR7S CR8S]
+         if person_select_nocross_plus2 [CR2S CR3S CR4S    0    0 AL7S AL8S AL9S    0    0]
+         if person_select_nocross_plus8 [   0    0 AL0S AL1S AL2S    0    0 CR5S CR6S CR7S]
+         if person_select_nocross_plus3 [CR3S CR4S    0    0    0 AL8S AL9S    0    0    0]
+         if person_select_nocross_plus7 [   0    0    0 AL0S AL1S    0    0    0 CR5S CR6S]
+         if person_select_nocross_plus4 [CR4S    0    0    0    0 AL9S    0    0    0    0]
+         if person_select_nocross_plus6 [   0    0    0    0 AL0S    0    0    0    0 CR5S]
+   setup 5x2 2x5
+      preds "Can't find anyone to trade with."
+         if unselect            [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N ZM7N ZM8N ZM9N]
+         if person_select_plus5 [   0    0 CR7S    0    0    0    0 AL2S    0    0]
    setup 2x6 2x6
       preds "Can't find anyone to trade with."
          if unselect                    [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N
                                          ZM6N ZM7N ZM8N ZM9N ZM10N ZM11N]
-         if select_near_select          [CR1S AL0S CR3S AL2S CR5S AL4S
-                                         AL7S CR6S AL9S CR8S AL11S CR10S]
-         if person_select12_sum15       [   0 CR2S AL1S CR4S AL3S 0
-                                            0 AL8S CR7S AL10S CR9S 0]
+         if person_select_nocross_plus1  [ CR1S  CR2S  CR3S  CR4S  AL5S     0
+                                           AL7S  AL8S  AL9S AL10S AL11S     0]
+         if person_select_nocross_plus11 [    0  AL0S  AL1S  AL2S  AL3S  AL4S
+                                              0  CR6S  CR7S  CR8S  CR9S CR10S]
+         if person_select_nocross_plus2  [ CR2S  CR3S  CR4S  CR5S     0     0
+                                           AL8S  AL9S AL10S AL11S     0     0]
+         if person_select_nocross_plus10 [    0     0  AL0S  AL1S  AL2S  AL3S
+                                              0     0  CR6S  CR7S  CR8S  CR9S]
+         if person_select_nocross_plus3  [ CR3S  CR4S  CR5S     0     0     0
+                                           AL9S AL10S AL11S     0     0     0]
+         if person_select_nocross_plus9  [    0     0     0  AL0S  AL1S  AL2S
+                                              0     0     0  CR6S  CR7S  CR8S]
+         if person_select_nocross_plus4  [ CR4S  CR5S     0     0     0     0
+                                          AL10S AL11S     0     0     0     0]
+         if person_select_nocross_plus8  [    0     0     0     0  AL0S  AL1S
+                                              0     0     0     0  CR6S  CR7S]
+         if person_select_nocross_plus5  [ CR5S     0     0     0     0     0
+                                          AL11S     0     0     0     0     0]
+         if person_select_nocross_plus7  [    0     0     0     0     0  AL0S
+                                              0     0     0     0     0  CR6S]
    setup 6x2 2x6
       preds "Can't find anyone to trade with."
          if unselect                    [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N
                                          ZM6N ZM7N ZM8N ZM9N ZM10N ZM11N]
          if person_select_sum11         [CR11S CR10S CR9S CR8S CR7S CR6S
                                          AL5S AL4S AL3S AL2S  AL1S  AL0S]
+
+   setup 1x10 1x10
+      preds "Can't find anyone to trade with."
+         if unselect                    [ZM0N ZM1N ZM2N ZM3N ZM4N
+                                         ZM5N ZM6N ZM7N ZM8N ZM9N]
+         if person_select_nocross_plus1 [CR1S CR2S CR3S CR4S 0
+                                         AL6S AL7S AL8S AL9S 0]
+         if person_select_nocross_plus9 [0    AL0S AL1S AL2S AL3S
+                                         0    CR5S CR6S CR7S CR8S]
+         if person_select_nocross_plus2 [CR2S CR3S CR4S 0    0
+                                         AL7S AL8S AL9S 0    0]
+         if person_select_nocross_plus8 [0    0    AL0S AL1S AL2S
+                                         0    0    CR5S CR6S CR7S]
+         if person_select_nocross_plus3 [CR3S CR4S 0    0    0
+                                         AL8S AL9S 0    0    0]
+         if person_select_nocross_plus7 [0    0    0    AL0S AL1S
+                                         0    0    0    CR5S CR6S]
+         if person_select_nocross_plus4 [CR4S 0    0    0    0
+                                         AL9S 0    0    0    0]
+         if person_select_nocross_plus6 [0    0    0    0    AL0S
+                                         0    0    0    0    CR5S]
+         if person_select_real_plus4    [CR4S CR5S CR6S CR7S CR8S
+                                         AL9S AL0S AL1S AL2S AL3S]
+         if person_select_real_plus5    [CR5S CR6S CR7S CR8S CR9S
+                                         AL0S AL1S AL2S AL3S AL4S]
+         if person_select_real_plus6    [CR6S CR7S CR8S CR9S AL0S
+                                         AL1S AL2S AL3S AL4S CR5S]
+
+   setup 1x12 1x12
+      preds "Can't find anyone to trade with."
+         if unselect                     [ZM0N ZM1N ZM2N ZM3N  ZM4N ZM5N
+                                          ZM6N ZM7N ZM8N ZM9N  ZM10N ZM11N]
+         if person_select_nocross_plus1  [CR1S CR2S CR3S CR4S  CR5S  0
+                                          AL7S AL8S AL9S AL10S AL11S 0]
+         if person_select_nocross_plus11 [0    AL0S AL1S AL2S  AL3S AL4S
+                                          0    CR6S CR7S CR8S  CR9S CR10S]
+         if person_select_nocross_plus2  [CR2S CR3S CR4S  CR5S  0    0
+                                          AL8S AL9S AL10S AL11S 0    0]
+         if person_select_nocross_plus10 [0    0    AL0S  AL1S AL2S  AL3S
+                                          0    0    CR6S  CR7S CR8S  CR9S]
+         if person_select_nocross_plus3  [CR3S CR4S  CR5S  0    0    0
+                                          AL9S AL10S AL11S 0    0    0]
+         if person_select_nocross_plus9  [0    0     0     AL0S AL1S AL2S
+                                          0    0     0     CR6S CR7S CR8S]
+         if person_select_nocross_plus4  [CR4S  CR5S  0    0    0    0
+                                          AL10S AL11S 0    0    0    0]
+         if person_select_nocross_plus8  [0     0     0    0    AL0S AL1S
+                                          0     0     0    0    CR6S CR7S]
+         if person_select_nocross_plus5  [CR5S  0     0    0    0    0
+                                          AL11S 0     0    0    0    0]
+         if person_select_nocross_plus7  [0     0     0    0    0    AL0S
+                                          0     0     0    0    0    CR6S]
+         if person_select_real_plus6     [CR6S  CR7S  CR8S CR9S CR10S CR11S
+                                          AL0S  AL1S  AL2S AL3S AL4S  AL5S]
+         if person_select_real_plus5     [CR5S CR6S  CR7S  CR8S CR9S CR10S
+                                          AL11S AL0S AL1S AL2S AL3S AL4S]
+         if person_select_real_plus7     [CR7S CR8S CR9S CR10S CR11S AL0S
+                                          AL1S  AL2S AL3S AL4S  AL5S CR6S]
+
    setup 3x4 3x4
       preds "Can't find anyone to trade with."
          if unselect                    [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N
@@ -6364,6 +6479,7 @@ call "@6 trade" mainstream
          if unselect                    [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N ZM7N]
          if other_spindle_ckpt_select   [CR6S    0 CR4S    0 AL2S    0 AL0S    0]
          if grand_conc_from_select      [   0 CR5S    0    0    0 AL1S    0    0]
+
    setup rigger rigger
       preds "Can't find anyone to trade with."
          if unselect                    [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N ZM7N]
@@ -6412,19 +6528,6 @@ call "@6 trade" mainstream
       preds "Can't find anyone to trade with."
          if unselect [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N ZM7N]
          if select   [ZM0N ZM1N ZM2N CR7S ZM4N ZM5N ZM6N AL3S]
-
-/*  Don't need these--the action will be done (and done more accurately)
-    by splitting into a trngl4 and something else.
-   setup linevbox linevbox
-      preds "Can't find anyone to trade with."
-         if unselect               [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N ZM7N]
-         if select_near_select     [CR1S AL0S CR3S AL2S CR5S AL4S    0    0]
-   setup plinevbox linevbox
-      preds "Can't find anyone to trade with."
-         if unselect               [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N ZM7N]
-         if select_near_select     [   0    0    0    0    0    0 CR7S AL6S]
-*/
-
    setup bigdmd bigdmd
       preds "Can't find anyone to trade with."
          if unselect                [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N ZM7N ZM8N ZM9N ZM10N ZM11N]
@@ -6448,6 +6551,8 @@ call "@6 trade" mainstream
    setup 3x23 3x23
       preds "Can't find anyone to trade with."
          if unselect               [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N ZM7N]
+         if person_select_plus1    [CR1S CR2S    0    0 AL5S AL6S    0    0]
+         if person_select_plus7    [   0 AL0S AL1S    0    0 CR4S CR5S    0]
          if grand_conc_from_select [   0    0    0 AL7S    0    0    0 CR3S]
    setup 3dmd 3dmd
       preds "Can't find anyone to trade with."
@@ -18211,22 +18316,22 @@ call "swing back the windmill but @m" dontshow tag swingbackwindmillbut2nd
    seq nullsecond [mandatory_secondary_call]
 
 call "delight" c3a tag delight
-            yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
+            step_to_qtag yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
    conc swingbackwindmill [inherit_yoyo inherit_gensting inherit_fractal allow_forced_mod]
         elight [conc_demand_columns conc_force_spots]
 
 call "delight but @m" c3a tag delightbut
-            yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
+            step_to_qtag yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
    conc swingbackwindmillbut2nd [inherit_yoyo inherit_gensting inherit_fractal]
         elight [conc_demand_columns conc_force_spots]
 
 call "dilemma" c3a tag dilemma
-            yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
+            step_to_qtag yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
    conc swingbackwindmill [inherit_yoyo inherit_gensting inherit_fractal allow_forced_mod]
         elemma [conc_demand_columns conc_force_spots]
 
 call "dilemma but @m" c3a tag dilemmabut
-            yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
+            step_to_qtag yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
    conc swingbackwindmillbut2nd [inherit_yoyo inherit_gensting inherit_fractal]
         elemma [conc_demand_columns conc_force_spots]
 
@@ -21681,8 +21786,8 @@ call "circulate" mainstream tag circulate
       array [ZM0N ZM1N ZM2N CR3E AL3W ZM4N ZM5N ZM6N]
    setup c1phan crosswave rotate
       array [CR0N 0 CR1N 0 0 AL0S 0 AL1S ZM2W 0 ZM3W 0 0 ZM6W 0 ZM7W]
-   setup 2x3 1x6 qualifier in in_or_out
-      array [0 0 0 ZM4N ZM2N ZM0N]
+   setup 2x3 1x3 qualifier in in_or_out
+      array [0 0 0 ZM2N ZM1N ZM0N]
    setup 2x3 1x2dmd rotate qualifier right wave_only
       array [CR0N 0 AL1S 0 ZM5W 0]
    setup 2x3 2x1dmd
@@ -21783,9 +21888,11 @@ call "circulate for tally ho" dontshow tag circulate_for_tally_ho
    // Followed by 1fl_only qualifiers for the colliding behavior.
    setup 2x4 1x8 qualifier in 1fl_only
       array [0 0 0 0 ZM5N ZM6N ZM3N ZM0N]
-   // For tally ho from 5&3 lines.
+   // For tally ho from 5&3 lines.  Or whatever.
    setup 2x6 1x6 qualifier in 1fl_only
       array [0 0 0 0 0 0 ZM3N ZM4N ZM5N ZM2N ZM1N ZM0N]
+   setup 2x6 1x6 rotate qualifier out 1fl_only
+      array [CR0N CR1N CR2N AL2S AL1S AL0S 0 0 0 0 0 0]
    setup 2x4 1x8 rotate qualifier out 1fl_only
       array [CR0N CR3N AL2S AL1S 0 0 0 0]
    // Followed by the usual interpretation.

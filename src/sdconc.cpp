@@ -3776,6 +3776,24 @@ extern void concentric_move(
          if (analyzer == schema_in_out_triple_zcom || analyzer == schema_in_out_center_triple_z) {
             analyzer = schema_in_out_triple;
          }
+         else if (analyzer == schema_in_out_triple_squash && !doing_ends &&
+                  (result_ptr->result_flags.misc & RESULTFLAG__EXPAND_TO_2X3) &&
+                  begin_ptr->kind == s1x4 && begin_ptr->rotation == 0 &&
+                  result_ptr->kind == s2x3 && result_ptr->rotation == 1) {
+            // This handles things like "quick [rip the line]" or
+            // "quick [step and slide]", getting rid of paradoxical phantoms.
+            static const expand::thing fix_2x3_23 = {{0, 1, 4, 5}, s2x2, s2x3, 0};
+            static const expand::thing fix_2x3_05 = {{1, 2, 3, 4}, s2x2, s2x3, 0};
+
+            if (!(result_ptr->people[2].id1 | result_ptr->people[3].id1)) {
+               expand::compress_setup(fix_2x3_23, result_ptr);
+            }
+            else if (!(result_ptr->people[0].id1 | result_ptr->people[5].id1)) {
+               expand::compress_setup(fix_2x3_05, result_ptr);
+            }
+
+            canonicalize_rotation(result_ptr);
+         }
 
          remove_mxn_spreading(result_ptr);
          remove_tgl_distortion(result_ptr);
@@ -6797,7 +6815,7 @@ extern void inner_selective_move(
                      nextfixp = select::fixer_ptr_table[fixp->next1x4rot];
                   else if (lilresult[0].kind == s2x3 && (fixp->rot & 0x40000000))
                      nextfixp = select::fixer_ptr_table[fixp->nextdmdrot];
-                  else if (lilresult[0].kind == s_trngl4 && (fixp->rot & 0x40000000))
+                  else if (lilresult[0].kind == s_trngl4 && lilresult[0].rotation == 2 && (fixp->rot & 0x40000000))
                      nextfixp = select::fixer_ptr_table[fixp->next2x2v];
                   else if (lilresult[0].kind == sdmd && !(fixp->rot & 0x40000000))
                      nextfixp = select::fixer_ptr_table[fixp->nextdmdrot];
