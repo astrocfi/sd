@@ -830,6 +830,11 @@ typedef enum {
    and the following call to be typed on one line.  One needs to be very careful
    about avoiding ambiguity when setting this flag. */
 #define CONCPARSE_PARSE_DIRECT   0x00000004UL
+/* These are used by "print_recurse" in sdutil.c to control the printing.
+   They govern the placement of commas. */
+#define CONCPARSE_PARSE_L_TYPE 0x8
+#define CONCPARSE_PARSE_F_TYPE 0x10
+#define CONCPARSE_PARSE_G_TYPE 0x20
 
 
 typedef struct {
@@ -887,6 +892,22 @@ typedef enum {
    selector_farbox,
    selector_facingfront,
    selector_facingback,
+   selector_boy1,
+   selector_girl1,
+   selector_cpl1,
+   selector_boy2,
+   selector_girl2,
+   selector_cpl2,
+   selector_boy3,
+   selector_girl3,
+   selector_cpl3,
+   selector_boy4,
+   selector_girl4,
+   selector_cpl4,
+   selector_cpls1_2,
+   selector_cpls2_3,
+   selector_cpls3_4,
+   selector_cpls4_1,
    selector_all,
    selector_none
 } selector_kind;
@@ -1059,8 +1080,7 @@ typedef struct predptr_pair_struct {
    unsigned short arr[4];
 } predptr_pair;
 
-/* BEWARE!!  If change these next definitions, be sure to update the definition of
-   "warn__opt_for_normal_cast" in sdutil.c . */
+/* BEWARE!!  This list must track the array "warning_strings" in sdutil.c . */
 typedef enum {
    warn__none,
    warn__do_your_part,
@@ -1104,6 +1124,7 @@ typedef enum {
    warn__dyp_resolve_ok,
    warn__ctrs_stay_in_ctr,
    warn__check_c1_stars,
+   warn__check_gen_c1_stars,
    warn__bigblock_feet,
    warn__adjust_to_feet,
    warn__some_touch,
@@ -1119,7 +1140,7 @@ typedef enum {
    warn__bad_modifier_level,
    warn__did_not_interact,
    warn__opt_for_normal_cast,
-   warn__tasteless_slide_thru
+   warn__tasteless_slide_thru  /* If this ceases to be last, look 2 lines below! */
 } warning_index;
 #define NUM_WARNINGS (((int) warn__tasteless_slide_thru)+1)
 
@@ -2220,8 +2241,8 @@ extern void concentric_move(
    setup_command *cmdin,
    setup_command *cmdout,
    calldef_schema analyzer,
-   defmodset modifiersin1,
-   defmodset modifiersout1,
+   uint32 modifiersin1,
+   uint32 modifiersout1,
    long_boolean recompute_id,
    setup *result);
 
@@ -2253,6 +2274,19 @@ extern void selective_move(
    uint32 override_selector,
    selector_kind selector_to_use,
    long_boolean concentric_rules,
+   setup *result);
+
+extern void inner_selective_move(
+   setup *ss,
+   setup_command *cmd1,
+   setup_command *cmd2,
+   int indicator,
+   long_boolean others,
+   int arg2,
+   uint32 override_selector,
+   selector_kind selector_to_use,
+   uint32 modsa1,
+   uint32 modsb1,
    setup *result);
 
 /* In SDTOP */

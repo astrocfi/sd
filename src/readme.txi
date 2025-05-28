@@ -131,7 +131,7 @@ Apollo systems.  It is not yet available for PC compatibles.
 
 Sdtty is the name of the program that uses a character-oriented keyboard
 interface.  Calls are selected by typing their names.  Sdtty runs on
-Unix-like systems and under DOS, Windows 3.1, and Windows 95 on PC
+Unix-like systems and under DOS, Windows 3.1, Windows 95, and Windows NT on PC
 compatibles.  PC users may take comfort from the fact that most serious
 callers prefer Sdtty rather than Sd.
 
@@ -238,7 +238,7 @@ it includes support for mailing large binary files.
 
 To install the program from a floppy disk to a PC-compatible, you must be
 running in DOS.  There are two ways to go from Windows to DOS.  The simplest
-is to click the @code{MS-DOS prompt} icon.  In Windows 3.1, this is typically
+is to click the @code{MS-DOS prompt} icon.  In Windows 3.1 or Windows NT, this is typically
 in the @code{main} program group.  In Windows 95, this is typically in the
 @code{Programs} sub-menu of the @code{Start} menu.  To return to Windows after
 starting DOS in this way, just type @code{exit} to DOS.
@@ -296,7 +296,7 @@ without repeating this.
 This assumes that Sdtty was installed, as per the instructions above,
 in the directory @code{C:\SD}.  If you installed it elsewhere, you must
 use the @code{Properties} command of the explorer (in Windows 95) or
-the PIF editor (in Windows 3.1) to modify the Command Line or Program Filename
+the PIF editor (in Windows 3.1 or Windows NT) to modify the Command Line or Program Filename
 given in @code{sdtty.pif}.
 
 @unnumberedsubsec Under Windows 95
@@ -309,11 +309,12 @@ example, @code{Desktop}, @code{Start Menu}, or @code{Programs}, and then click
 When it says @code{Select a name}, leave it as @code{SDTTY} and
 click @code{Finish}.  Sdtty will now be in the selected location.
 
-@unnumberedsubsec Under Windows 3.1
+@unnumberedsubsec Under Windows 3.1 or Windows NT
 From the Program Manager, double-click the program group you want to place it in,
 for example, @code{Accessories}.  In the Toolbar of the Program Manager, click
-@code{File}.  Then click @code{new}.  Select @code{Program Item}, and click @code{OK}.
+@code{File}.  Then click @code{New}.  Select @code{Program Item}, and click @code{OK}.
 Type @code{C:\SD\SDTTY.PIF} as the @code{Program Filename} or @code{Command Line}.
+Type @code{SD} (or whatever you wish) as the @code{Description}.
 Choose an icon if you wish.  Then click @code{OK}.
 
 @node Licensing Terms, Author Contact, Making Sdtty Start Under Windows, Intro

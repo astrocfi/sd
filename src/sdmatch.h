@@ -27,52 +27,39 @@
  */
 
 #define CLOVER_AND
-#define INPUT_TEXTLINE_SIZE 200
+#define INPUT_TEXTLINE_SIZE 300
 
 typedef struct glozk {
-   concept_descriptor *this_modifier;
+   uims_reply kind;
+   int index;
    call_conc_option_state call_conc_options;  /* Has numbers, selectors, etc. */
+   callspec_block *call_ptr;
+   concept_descriptor *concept_ptr;
    struct glozk *next;            /* next concept, or, if this is end mark, points to substitution list */
    struct glozk *gc_ptr;          /* used for reclaiming dead blocks */
-
-   int anything_index;
-   long_boolean anything_need_big_menu;
-   struct glozk *anything_next;
-   struct glozk *anything_mods;
 } modifier_block;
 
 typedef struct filch {
    long_boolean valid;       /* set to TRUE if a match was found */
    long_boolean exact;       /* set to TRUE if an exact match was found */
-   uims_reply kind;
-   int index;
-   call_conc_option_state call_conc_options;  /* Has numbers, selectors, etc. */
-   Const struct filch *anything_parent;
-   Const struct filch *modifier_parent;
-   modifier_block *newmodifiers;    /* Has concepts. */
-   modifier_block *anything_calls;  /* Has "<ANYTHING>" calls. */
-   concept_descriptor *current_modifier;
-   long_boolean need_big_menu;
-   int space_ok;             /* space is a legitimate next input character */
+   modifier_block match;
+   Const struct filch *next;
    int yield_depth;          /* if nonzero, this yields by that amount */
-   int yielding_matches;     /* how many matches have that flag on */
 } match_result;
 
-typedef void (*show_function)(char *user_input, Const char *extension, Const match_result *mr);
-
 typedef struct {
-   char full_input[INPUT_TEXTLINE_SIZE+1];   /* the current user input */
-   char extension[INPUT_TEXTLINE_SIZE+1];    /* the extension for the current pattern */
+   char full_input    [INPUT_TEXTLINE_SIZE+1]; /* the current user input */
+   char extension     [INPUT_TEXTLINE_SIZE+1]; /* the extension for the current pattern */
+   char extended_input[INPUT_TEXTLINE_SIZE+1]; /* the maximal common extension to the user input */
    int full_input_size;        /* Number of characters in full_input, not counting null. */
-   char *extended_input;       /* the maximal common extension to the user input */
    int match_count;            /* the number of matches so far */
    int exact_count;            /* the number of exact matches so far */
-   int yielding_matches;       /* the number of them that are marked "yield_if_ambiguous". */
    int exact_match;            /* true if an exact match has been found */
-   int showing;                /* we are only showing the matching patterns */
-   show_function sf;           /* function to call with matching command (if showing) */
+   long_boolean showing;       /* we are only showing the matching patterns */
    long_boolean verify;        /* true => verify calls before showing */
    int space_ok;               /* space is a legitimate next input character */
+   int yielding_matches;       /* how many matches are yielding */
+   int lowest_yield_depth;
    match_result result;        /* value of the first or exact matching pattern */
 } match_state;
 
@@ -89,7 +76,6 @@ enum {
 
 /* These are provided by sdmatch.c */
 extern match_state static_ss;
-extern match_result user_match;
 
 /* This is provided by sdui-XXX.c */
 extern long_boolean verify_has_stopped;
@@ -97,8 +83,8 @@ extern long_boolean verify_has_stopped;
 /* The following items are PROVIDED by the main program (that is, the user
    interface part of it) and IMPORTED by sdmatch.c */
 
-extern int twice_concept_index;
-extern int two_calls_concept_index;
+extern concept_descriptor *twice_concept_ptr;
+extern concept_descriptor *two_calls_concept_ptr;
 extern int num_command_commands;
 extern Cstring command_commands[];
 extern int number_of_resolve_commands;
@@ -107,15 +93,13 @@ extern int num_extra_resolve_commands;
 extern Cstring extra_resolve_commands[];
 
 
-extern void show_match(char *user_input_str, Const char *extension, Const match_result *mr);
+extern void show_match(void);
 
-extern void matcher_initialize(long_boolean show_commands_last);
+extern void matcher_initialize(void);
 
 extern void matcher_setup_call_menu(call_list_kind cl, callspec_block *call_name_list[]);
     
 extern int match_user_input(
-    int which_commands,
-    match_result *mr,
-    char *extension,
-    show_function sf,
-    long_boolean show_verify);
+   int which_commands,
+   long_boolean show,
+   long_boolean show_verify);

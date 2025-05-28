@@ -5,7 +5,7 @@
 @settitle Sd
 @c @subtitle A Square Dance Caller's Helper
 @c
-@set Time-stamp: August 26, 1996
+@set Time-stamp: October 6, 1996
 @tex
 \global\setfont\smallrm\rmshape{8}{1000}
 \global\font\smallsy=cmsy9
@@ -16,7 +16,7 @@
     \kern-0.4pt\hrule}%
   \kern-.06em\raise0.4pt\hbox{$\rangle$}}}}
 @end tex
-@set sd-version 31.76
+@set sd-version 31.77
 @set full-manual
 @c %**end of header
 @iftex
@@ -1197,7 +1197,7 @@ There are a number of issues that make call entry less than completely
 straightforward.  These have to do with variations that calls have---directions
 (as in @code{quarter left}), numbers (as in @code{square thru 3} or @code{three quarter
 thru}), person designators (as in @code{sides kickoff}), subcalls (as in @code{clover
-and quarter thru} or @code{vertical tag your neighbor} or @code{shuttle rally} or
+and [quarter thru]} or @code{vertical tag your neighbor} or @code{shuttle [rally]} or
 @code{in roll motivate}), and modifiers (as in @code{strut left} or @code{trans cross
 chain reaction}).
 
@@ -1218,18 +1218,17 @@ an easier way---you can type what you want directly.  That is, just type
 @code{quarter left} or @code{square thru 3}.  If you want to see the choices,
 type @code{quarter <DIRECTION>} or whatever, and then type a question mark.
 
-
 @subsubheading Directions
 Calls that take a direction have the keyword @code{<DIRECTION>} in them in the
 menus, like @code{pass <DIRECTION>} or @code{spin a windmill, outsides <DIRECTION>}.
 
-When using @code{Sd}, after you click on such a call, a popup will appear listing
-all possible directions.  Click on the one you want.  If you decide you don't
-want that call, just move the mouse away from the popup.
+You can just type the call naturally, for example, @code{pass in} or @code{shuttle left}.
+You can also type such things in a piecemeal fashion, typing the keyword ``@code{<DIRECTION>}''
+literally, and then answering the question that the program will ask.
 
-When using @code{Sdtty}, you can either type @code{pass <DIRECTION>} literally,
-and then answer the question that the program will ask, or just type the actual call,
-for example, @code{pass in}.
+When using @code{Sd}, the second way is the only way---click on the call, and then select the
+direction from the popup that will will appear.  If you decide you don't
+want that call, just move the mouse away from the popup.
 
 The menu lists all possible directions, including some that may not be possible
 in the given context.
@@ -1239,21 +1238,16 @@ Calls that take a number have the keyword @code{<N>}, @code{<N/4>}, or @code{<Nt
 in them, like @code{eight chain <N>}, @code{invert the column <N/4>}, or
 @code{square thru, but on the <Nth> hand <ANYTHING>}.
 
-When using @code{Sd}, a popup will appear listing the numbers from 1 to 8.  Click
-on the one you want.  If the keyword was @code{<N/4>}, click on the value of @code{N}.
-The program will turn it into @code{N/4} (or, if @code{N}=2, into @code{1/2}).
-If you decide you don't
-want that call, just move the mouse away from the popup.
+You can just type the call naturally, for example, @code{invert the column 3/4} or
+@code{square thru 2} or @code{1/4 thru} or @code{square thru but on the 3rd hand}.
+You can also type such things in a piecemeal fashion, typing the keyword ``@code{<N>}''
+or ``@code{<N/4>}'' or ``@code{<Nth>}''
+literally, and then answering the question that the program will ask.
+If the keyword was @code{<N/4>}, click on the value of @code{N}.
 
-When using @code{Sdtty}, you can either type the keyword literally,
-and then answer the question, or just type the number just as you want it to
-appear in the call.  That is, you can type @code{invert the column <N/4>} and then
-@code{3}, or @code{invert the column 3/4}.  You can type @code{1/2} or
-@code{2/4}---the program will print it as @code{1/2} in either case.
-For @code{square
-thru but on the <Nth> hand}, you can type the number in @code{Nth} form,
-as in @code{square thru but on the 3rd hand}.  Of course, if you just type @code{3},
-the completing reader will finish it for you.
+When using @code{Sd}, the second way is the only way---click on the call, and then select the
+number from the popup that will will appear.  If you decide you don't
+want that call, just move the mouse away from the popup.
 
 Not all values of @code{N} will be meaningful for all calls.  For example, you
 can @code{eight chain 5}, but you can't @code{invert the column 5/4}.
@@ -1273,10 +1267,15 @@ enter one of these calls, it will always be printed out in words, as in
 
 @subsubheading Person designators
 These work like the others in a straightforward way.  The calls appear in the menu
-with the @code{<ANYONE>} keyword, as in @code{patch the <ANYONE>}.  In @code{Sd},
-you click on that and then make a selection from a popup menu.  In @code{Sdtty},
-you can either type the @code{<ANYONE>} literally and then answer the question,
-or you can type in the desired call directly, as in @code{patch the sides}.
+with the @code{<ANYONE>} keyword, as in @code{patch the <ANYONE>}.
+
+You can just type the call naturally, for example, @code{patch the sides}.
+You can also type such things in a piecemeal fashion, typing the keyword ``@code{<ANYONE>}''
+literally, and then answering the question that the program will ask.
+
+When using @code{Sd}, the second way is the only way---click on the call, and then select the
+designator from the popup that will will appear.  If you decide you don't
+want that call, just move the mouse away from the popup.
 
 The gender designators are @code{boys} and @code{girls}.  This is the way they
 appear in the Callerlab mainstream list.  The author does not take a position
@@ -1306,42 +1305,110 @@ At C3 and above, the tagging calls include the calls @code{revert <ATC>} and
 will be presented with another popup.  In @code{Sdtty}, you can type in the
 entire call directly, as in @code{revert cross flip chain thru reactivate}.
 
-@subsubheading <ANYTHING> Calls
-Calls that use the ``<ANYTHING>'' mechanism, such as @code{in roll motivate},
-have the keyword @code{<ANYTHING>} in them, as in @code{<ANYTHING> motivate}.
-In @code{Sdtty}, you can type in the entire call directly.  In @code{Sd},
-click on the call with the word @code{<ANYTHING>} in it.  A popup will appear,
-asking for the replacement for the circulate.
+@subsubheading Subcalls
+Some calls have an ``@code{<ANYTHING>}'' in them when they appear in the menu,
+such as @code{clover and <ANYTHING>} or @code{<ANYTHING> and roll}.
+The ``@code{<ANYTHING>}'' is intended to be replaced by a subcall.
+When you type these in, put the subcall in brackets.  That is, you literally type
+something like:
+@example
+@group
+   clover and [tandem shazam]
+   [flip the diamond] and roll
+@end group
+@end example
+@noindent The subcall in brackets may be any combination of concepts and calls,
+and these may be nested.  As an example of this, you can type:
+@example
+clover and [3/4 stable left catch [[reflected flip your neighbor] and spread] 3]
+@end example
+@noindent @strong{The brackets are required.}  Without them, the program couldn't
+tell the difference between
+@example
+   clover and [[swap around] and roll]
+@end example
+and
+@example
+   [clover and [swap around]] and roll
+@end example
+
+You can also type such things in a piecemeal fashion, typing the keyword ``@code{<ANYTHING>}''
+literally, and then typing the subcall when the program asks for it.  For example, you
+could type
+@example
+@iftex
+@kbd{clover and <anything>} @keycap{ENTER}
+@end iftex
+@ifinfo
+@kbd{clover and <anything>} <ENTER>
+@end ifinfo
+@end example
+and then type
+@example
+@iftex
+@kbd{square thru 2} @keycap{ENTER}.
+@end iftex
+@ifinfo
+@kbd{square thru 2} <ENTER>.
+@end ifinfo
+@end example
+
+When using @code{Sd}, the second way is the only way---click on the call, and then select the subcall.
+
+If the call takes two subcalls, as in @code{slant <ANYTHING> and <ANYTHING>}, you
+must type the second ``@code{<ANYTHING>}'' literally and then enter the second
+call.  Only the first ``@code{<ANYTHING>}'' subcall may be typed in directly in
+brackets.
+
+These ``mandatory'' subcalls, with the keyword @code{<ANYTHING>} in the menu,
+are just one of many types of modifications.  @xref{Call Modifications}, for
+some other types of modifications.
+
+@subsubheading Calls with circulate replacements
+A number of calls, all of whose definitions start with a circulate, are subject
+to a special circulate modification mechanism, recognized at C2, and officially
+called the ``(anything)'' concept.  The call name (e.g. ``@code{motivate}'')
+is preceded by a word or phrase such as ``@code{in roll}'' telling how the
+circulate should be modified.  Examples are
+@example
+   in roll motivate
+   bias trade perk up
+   split counter coordinate     @r{(not actually a type of circulate)}
+   counter cover up             @r{(not actually a type of circulate)}
+@end example
+These variations are in the menu as ``@code{<ANYCIRC> motivate}''.
+They are entered in @code{Sdtty} just as shown above.
+You can also type them in a piecemeal fashion, typing the keyword ``@code{<ANYCIRC>}''
+literally, and then typing the circulate replacement as a complete call,
+e.g. ``@code{out roll circulate}''.
+
+When using @code{Sd}, the second way is the only way---click on the call, and then select the
+circulate replacement from the popup that will will appear.  If you decide you don't
+want that call, just move the mouse away from the popup.
 
 Only bona-fide circulate-type calls, and other well-recognized similar
 things such as @code{split counter percolate} can be obtained by this method.
-You can get more general substitutions by using the @code{simple modifications}
-command.  Type (or click) that command, and then @code{motivate}.  You will
-be asked for a substitute call.  You can enter anything at this point,
-such as @code{swing the fractions}.  The result will appear in the transcript
-with brackets, as in @code{[swing the fractions] motivate}.
+You can get more general substitutions by using the ``<ANYTHING>'' (as opposed to
+``<ANYCIRC>'') mechanism.  The more general substitutions are in brackets.
+For example, you can type ``@code{[2/3 recycle] percolate}'', which is of course pronounced
+``2/3 recycler's percolate''.
 
-@subsubheading Subcalls
-Mandatory subcalls appear in the menu as the keyword @code{<ANYTHING>}, as
-in @code{clover and <ANYTHING>}.  The handling of these in @code{Sdtty} is not as
-nice as for the keywords discussed previously.  It is not possible to type in the call
-just the way you want it to appear.  @i{You must literally type the <ANYTHING>}.
-That is, you type @code{clover and <ANYTHING>} or @code{slant <ANYTHING> and <ANYTHING>}.
-Of course, because of the completing reader, you rarely need to type that much.
-Just @code{clover a} is enough, for example.  Furthermore, function key
-@iftex
-@keycap{F8}
-@end iftex
-@ifinfo
-<F8>
-@end ifinfo
-is equivalent to typing @code{<ANYTHING>}.
-In @code{Sd}, click on the menu item in the usual way.  Either way,
-the program will prompt you for a subcall.  This can be any legal call, including
-concepts and modifiers.  Whatever you enter will appear in brackets, as in
-@code{clover and [TANDEM shazam]}.
-These mandatory subcalls, with the keyword @code{<ANYTHING>} in the menu,
-are just one of many types of modifications.  @xref{Call Modifications}.
+Note that
+@example
+   trade motivate          @r{(an instance of @code{<ANYCIRC> motivate})}
+@end example
+and
+@example
+   [trade] motivate        @r{(an instance of @code{<ANYTHING> motivate})}
+@end example
+@noindent are very different.  The latter is of course pronounced ``trader's
+motivate''.
+
+There is a third way to enter such calls.  By giving the @samp{simple modifications}
+or @samp{allow modifications} command and then just entering the call
+(e.g. @samp{motivate}), the program will ask you for replacements.
+These replacements may be anything, and will appear in brackets in the final transcript.
+This is discussed in @ref{Call Modifications}.
 
 @subsubheading Modifiers such as cross, left, split, grand, single, magic, and interlocked
 As discussed above, the program considers these to be actual concepts,
@@ -1652,22 +1719,26 @@ in the same call.
 
 In most cases, @code{simple modifications} is probably the right thing.
 
-The special ``circulate'' modifications exemplified by @samp{in roll motivate}
-can be entered by this method.  Select @code{simple modifications}, select
-@code{motivate}, and replace the circulate.  The result will show the replacement
-call in brackets and spelled out in full, as in @code{[in roll circulate] motivate}.
-However, there is a better way to get these particular types of modifications---select
-@code{<ANYTHING> motivate} and then select the replacement for the circulate.
-The result will look natural, for example, @code{in roll motivate}.
-In @code{Sdtty} you can type in such a call directly.
+For the most common cases of modifications, you don't need to do it this way,
+because the ``@code{<ANYTHING>}'' mechanism can be used instead.  Just type the
+call with the replacement call in brackets, as in
+@example
+@group
+   busy [lockit]
+   catch [erase] 2
+   [[vertical tag your neighbor] and spread] percolate
+   fascinating [ah so]
+@end group
+@end example
+@noindent This is discussed in @ref{Call Variations}.
 
 When either level of modifications is selected, the line at the top of
 the text transcript area indicates this.  Also, the universal call menu
 is chosen whenever modifications are enabled, since the possibilities are
 unpredictable.
 
-When you click on a call for which modifications are possible, a popup
-will appear saying something like @code{The box circulate can be
+When you select a call for which modifications are possible, the program
+will ask a question like @code{The box circulate can be
 replaced.  Do you want to replace it?}  If you want to replace the
 designated call, click in the active area of the popup; otherwise, move
 the mouse away.  If you indicate that you want to
@@ -4046,7 +4117,7 @@ The concept is:
 @end example
 
 This means that the designated people do nothing, while the others do
-the call in the disconnected setup around them.  From the standpoint
+the call in the distorted or disconnected setup that remains.  From the standpoint
 of the non-designated people, the spots occupied by the designated
 people do not exist.
 

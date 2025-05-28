@@ -21,7 +21,7 @@
    database format version. */
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 83
+#define DATABASE_FORMAT_VERSION 84
 
 
 
@@ -360,6 +360,9 @@ typedef enum {
    sq_occupied_as_h,
    sq_occupied_as_qtag,
    sq_occupied_as_3x1tgl,
+   sq_ripple_one_end,
+   sq_ripple_both_ends,
+   sq_ripple_centers,
    sq_all_sel,
    sq_none_sel
 } search_qualifier;
@@ -434,6 +437,7 @@ typedef enum {
    schema_in_out_triple_squash,
    schema_in_out_triple,
    schema_in_out_quad,
+   schema_select_leads,
    schema_lateral_6,             /* Not for public use! */
    schema_vertical_6,            /* Not for public use! */
    schema_intlk_lateral_6,       /* Not for public use! */

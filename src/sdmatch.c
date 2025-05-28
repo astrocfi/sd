@@ -35,6 +35,7 @@
 /* #define TIMING */ /* uncomment to display timing information */
 
 #include "sd.h"
+#define SCREWED_UP_REVERTS
 #include "sdmatch.h"
 #include <string.h> /* for strcpy */
 #include <stdio.h>  /* for sprintf */
@@ -48,8 +49,6 @@ static callspec_block *empty_menu[] = {NULLCALLSPEC};
 static callspec_block **call_menu_lists[NUM_CALL_LIST_KINDS];
 static Cstring *selector_menu_list;
 
-static long_boolean commands_last_option;
-
 static int *concept_list; /* all concepts */
 static int concept_list_length;
 
@@ -60,6 +59,7 @@ static int level_concept_list_length;
 typedef struct pat2_blockstruct {
    Cstring car;
    concept_descriptor *special_concept;
+   match_result *folks_to_restore;
    struct pat2_blockstruct *next;
 } pat2_block;
 
@@ -69,34 +69,17 @@ static modifier_block *modifier_inactive_list = (modifier_block *) 0;
 static int static_call_menu;              /* The call menu (or special negative command) that we are searching */
 
 
-Private modifier_block *get_modifier_block(void)
-{
-   modifier_block *item;
-
-   if (modifier_inactive_list) {
-      item = modifier_inactive_list;
-      modifier_inactive_list = item->gc_ptr;
-   }
-   else
-      item = (modifier_block *) get_mem(sizeof(modifier_block));
-
-   item->gc_ptr = modifier_active_list;
-   modifier_active_list = item;
-   item->next = (modifier_block *) 0;
-   return item;
-}
 
 
-
-
-static void match_wildcard(Cstring user, Cstring pat, pat2_block *pat2, int patxi, concept_descriptor *special, Const match_result *result);
-static void match_grand(Cstring user, concept_descriptor *grand_concept, int patxi, Const match_result *result);
+static void scan_concepts_and_calls(Cstring user, Cstring firstchar, pat2_block *pat2, match_result *saved_result_p, int patxi);
+static void match_wildcard(Cstring user, Cstring pat, pat2_block *pat2, int patxi, concept_descriptor *special);
 
 
 /* This is statically used by the match_wildcard and match_suffix_2 procedures. */
 
 match_state static_ss;
-match_result user_match;
+static match_result *current_result;
+static match_result everyones_real_result;
 
 
 /* The following arrays must be coordinated with the Sd program */
@@ -140,8 +123,7 @@ static Cstring n_4_patterns[] = {
    should display for the user.
 */
 
-extern void
-matcher_initialize(long_boolean show_commands_last)
+extern void matcher_initialize(void)
 {
    int i;
    int concept_number;
@@ -152,8 +134,6 @@ matcher_initialize(long_boolean show_commands_last)
    /* Decide whether we allow the "diagnose" concept, by deciding
       when we will stop the concept list scan. */
    if (diagnostic_mode) end_marker = marker_end_of_list;
-
-   commands_last_option = show_commands_last;
 
    /* initialize our special empty call menu */
 
@@ -174,8 +154,8 @@ matcher_initialize(long_boolean show_commands_last)
       }
 
       /* Pick out concepts that will be produced when certain function keys are pressed. */
-      if (p->kind == concept_twice) twice_concept_index = concept_number;
-      if (p->kind == concept_sequential) two_calls_concept_index = concept_number;
+      if (p->kind == concept_twice) twice_concept_ptr = p;
+      if (p->kind == concept_sequential) two_calls_concept_ptr = p;
 
       concept_list_length++;
 
@@ -218,8 +198,7 @@ matcher_initialize(long_boolean show_commands_last)
 }
 
 
-extern void
-matcher_setup_call_menu(call_list_kind cl, callspec_block *call_name_list[])
+extern void matcher_setup_call_menu(call_list_kind cl, callspec_block *call_name_list[])
 {
    int i;
 
@@ -245,18 +224,17 @@ static call_list_kind savecl;
  * current context.
  */
 
-Private long_boolean verify_call(Const match_result *result)
+Private long_boolean verify_call(void)
 {
    uint32 bits0, bits1;
    int old_history_ptr;
    long_boolean resultval;
-   modifier_block *mods;
    real_jmp_buf my_longjmp_buffer;
 
-   /* If we are not verifying, or the menu we are examining is not the call menu,
-      we return TRUE immediately, thereby causing the item to be listed. */
+   /* If we are not verifying, we return TRUE immediately,
+      thereby causing the item to be listed. */
 
-   if (!static_ss.verify || (result->kind != ui_call_select)) return TRUE;
+   if (!static_ss.verify) return TRUE;
 
    interactivity = interactivity_verify;   /* so deposit_call doesn't ask user for info */
    bits0 = history[history_ptr+1].warnings.bits[0];
@@ -337,22 +315,61 @@ Private long_boolean verify_call(Const match_result *result)
 
    (void) restore_parse_state();
 
-   for (mods = static_ss.result.newmodifiers ; mods ; mods = mods->next) {
-      verify_options = mods->call_conc_options;
-      if (deposit_concept(mods->this_modifier)) goto try_again;
+   {
+      long_boolean theres_a_call_in_here = FALSE;
+      parse_block *save1 = (parse_block *) 0;
+      modifier_block *anythings = &static_ss.result.match;
+
+      /* This stuff is duplicated in uims_get_call_command in sdui-tty.c . */
+
+      while (anythings) {
+         call_conc_option_state save_stuff = static_ss.result.match.call_conc_options;
+
+         /* First, if we have already deposited a call, and we see more stuff, it must be
+            concepts or calls for an "anything" subcall. */
+
+         if (save1) {
+            parse_block *tt = get_parse_block();
+            save1->concept = &marker_concept_mod;
+            save1->next = tt;
+            tt->concept = &marker_concept_mod;
+            tt->call = base_calls[1];   /* "nothing" */
+            tt->options.number_fields = 2*DFM1_CALL_MOD_BIT;  /* "mandatory_anycall" */
+            parse_state.concept_write_ptr = &tt->subsidiary_root;
+            save1 = (parse_block *) 0;
+         }
+
+         static_ss.result.match.call_conc_options = anythings->call_conc_options;
+
+         if (anythings->kind == ui_call_select) {
+            verify_options = anythings->call_conc_options;
+            if (deposit_call(anythings->call_ptr)) goto try_again;
+            save1 = *parse_state.concept_write_ptr;
+            theres_a_call_in_here = TRUE;
+         }
+         else if (anythings->kind == ui_concept_select) {
+            verify_options = anythings->call_conc_options;
+            if (deposit_concept(anythings->concept_ptr)) goto try_again;
+         }
+         else break;   /* Huh? */
+
+         static_ss.result.match.call_conc_options = save_stuff;
+         anythings = anythings->next;
+      }
+
+      parse_state.call_list_to_use = savecl;         /* deposit_concept screwed it up */
+
+      /* If we didn't see a call, the user is just verifying
+         a string of concepts. Accept it. */
+
+      if (!theres_a_call_in_here) goto accept;
+
+      /* If the parse stack is nenempty, a subsidiary call is needed and hasn't been filled in.
+         Therefore, the parse tree is incomplete.  We can print such parse trees, but we
+         can't execute them.  So we just assume the call works. */
+
+      if (parse_state.parse_stack_index != 0) goto accept;
    }
-
-   verify_options = result->call_conc_options;
-
-   if (deposit_call(main_call_lists[parse_state.call_list_to_use][result->index])) goto try_again;     /* Deposit_call returns true if something goes wrong. */
-
-   parse_state.call_list_to_use = savecl;         /* deposit_concept screwed it up */
-
-   /* If the parse stack is nenempty, a subsidiary call is needed and hasn't been filled in.
-      Therefore, the parse tree is incomplete.  We can print such parse trees, but we
-      can't execute them.  So we just assume the call works. */
-
-   if (parse_state.parse_stack_index != 0) goto accept;
 
    toplevelmove(); /* does longjmp if error */
 
@@ -405,11 +422,11 @@ static void strn_gcp(char *s1, char *s2)
  * not set.
  */
     
-static void record_a_match(Const match_result *result)
+static void record_a_match(void)
 {
-   int old_yield = static_ss.result.yield_depth;
+   int old_yield = static_ss.lowest_yield_depth;
 
-   if (static_ss.extended_input) {
+   if (!static_ss.showing) {
       if (static_ss.match_count == 0)
          /* this is the first match */
          strcpy(static_ss.extended_input, static_ss.extension);
@@ -425,27 +442,36 @@ static void record_a_match(Const match_result *result)
             static_ss.verify ||
             (*static_ss.extension == '\0' && (
                   static_ss.exact_count == 0 || 
-                  result->yield_depth <= old_yield))) {
-      Const match_result *foobar;
-      static_ss.result = *result;
+                  current_result->yield_depth <= old_yield))) {
+      Const match_result *outbar;
+      modifier_block **mod_tail = &static_ss.result.match.next;
 
-      /* We need to copy the modifiers to reasonably stable storage. */
+      static_ss.result = everyones_real_result;
+      static_ss.lowest_yield_depth = current_result->yield_depth;
 
-      static_ss.result.newmodifiers = (modifier_block *) 0;
+      outbar = &static_ss.result;
 
-      foobar = result;
+      while (outbar->next) {
+         modifier_block *out;
 
-      while (foobar && foobar->current_modifier) {
-         modifier_block *foo = get_modifier_block();
+         /* We need to copy the modifiers to reasonably stable storage. */
 
-         foo->call_conc_options = foobar->modifier_parent->call_conc_options;
-         foo->this_modifier = foobar->current_modifier;
-         foo->next = static_ss.result.newmodifiers;
-         static_ss.result.newmodifiers = foo;
-         foobar = foobar->modifier_parent;
+         outbar = outbar->next;
+
+         if (modifier_inactive_list) {
+            out = modifier_inactive_list;
+            modifier_inactive_list = out->gc_ptr;
+         }
+         else
+            out = (modifier_block *) get_mem(sizeof(modifier_block));
+
+         *out = outbar->match;
+         out->next = (modifier_block *) 0;
+         out->gc_ptr = modifier_active_list;
+         modifier_active_list = out;
+         *mod_tail = out;
+         mod_tail = &out->next;
       }
-
-      static_ss.result.current_modifier = (concept_descriptor *) 0;     /* We don't need these any more. */
    }
 
    if (*static_ss.extension == '\0') {
@@ -455,12 +481,12 @@ static void record_a_match(Const match_result *result)
 
    static_ss.match_count++;
 
-   if (result->yield_depth > old_yield)
+   if (current_result->yield_depth > old_yield)
       static_ss.yielding_matches++;
 
    if (static_ss.showing) {
-      if (verify_call(result))
-         (*static_ss.sf)(static_ss.full_input, static_ss.extension, result);
+      if (verify_call())
+         show_match();
    }
 }
 
@@ -476,7 +502,7 @@ static Const call_conc_option_state null_options = {
 
 /* Patxp is where the next character of the extension of the user input for the current pattern is to be written. */
 
-static void match_suffix_2(Cstring user, Cstring pat1, pat2_block *pat2, int patxi, Const match_result *result)
+static void match_suffix_2(Cstring user, Cstring pat1, pat2_block *pat2, int patxi)
 {
    concept_descriptor *pat2_concept = (concept_descriptor *) 0;
 
@@ -487,11 +513,21 @@ static void match_suffix_2(Cstring user, Cstring pat1, pat2_block *pat2, int pat
       if (*pat1 == 0) {
          /* PAT1 has run out, get a string from PAT2 */
          if (pat2_concept) {
-            if (user) match_grand(user, pat2_concept, patxi, result);
+            if (user) {
+               /* We have processed a concept.  Scan for concepts and calls after same. */
+               match_result saved_result = *current_result;
+               current_result->match.concept_ptr = pat2_concept;
+               scan_concepts_and_calls(user, " ", pat2, &saved_result, patxi);
+            }
             pat2 = (pat2_block *) 0;
             pat2_concept = (concept_descriptor *) 0;
          }
          else if (pat2) {
+            if (pat2->folks_to_restore) {
+               /* Be sure maximum yield depth gets propagated back. */
+               pat2->folks_to_restore->yield_depth = current_result->yield_depth;
+               current_result = pat2->folks_to_restore;
+            }
             pat1 = pat2->car;
             pat2_concept = pat2->special_concept;
             pat2 = pat2->next;
@@ -499,7 +535,11 @@ static void match_suffix_2(Cstring user, Cstring pat1, pat2_block *pat2, int pat
          }
       }
 
+#ifdef CLOVER_AND
+      if (user && (*user == '\0' || (*user == ']' && *pat1 == '\0'))) {
+#else
       if (user && (*user == '\0')) {
+#endif
          /* we have just reached the end of the user input */
          Cstring p = pat1;
 
@@ -511,7 +551,7 @@ static void match_suffix_2(Cstring user, Cstring pat1, pat2_block *pat2, int pat
          if (!pat2 && *pat1 == '\0') {
             /* exact match */
             static_ss.extension[patxi] = '\0';
-            record_a_match(result);
+            record_a_match();
             break;
          }
 
@@ -527,7 +567,7 @@ static void match_suffix_2(Cstring user, Cstring pat1, pat2_block *pat2, int pat
             that are past the part that matches the user input */
 
          if (p == '@') {
-            match_wildcard(user, pat1, pat2, patxi, pat2_concept, result);
+            match_wildcard(user, pat1, pat2, patxi, pat2_concept);
    
             if (user==0) {
                /* User input has run out, just looking for more wildcards. */
@@ -605,7 +645,7 @@ static void match_suffix_2(Cstring user, Cstring pat1, pat2_block *pat2, int pat
                   static_ss.extension[patxi] = '\0';
    
                   if (!pat2) {
-                     record_a_match(result);
+                     record_a_match();
                      break;
                   }
                }
@@ -629,251 +669,27 @@ static void match_suffix_2(Cstring user, Cstring pat1, pat2_block *pat2, int pat
    }
 }
 
-/*
- * Match_wildcard tests for and handles pattern suffixes that begin with
- * a wildcard such as "<anyone>".  A wildcard is handled only if there is
- * room in the Result struct to store the associated value.
- */
 
-static void match_wildcard(Cstring user, Cstring pat, pat2_block *pat2, int patxi, concept_descriptor *special, Const match_result *result)
+static void scan_concepts_and_calls(Cstring user, Cstring firstchar, pat2_block *pat2, match_result *saved_result_p, int patxi)
 {
-   Cstring prefix;
-   int i;
-   match_result new_result;
-   pat2_block p2b;
-   char key = *pat++;
-   p2b.car = pat;
-   p2b.special_concept = special;
-   p2b.next = pat2;
-
-   /* if we are just listing the matching commands, there
-      is no point in expanding wildcards that are past the
-      part that matches the user input.  That is why we test
-      "(user == 0)". */
-
-   if ((key == '6' || key == 'k') && user && (result->call_conc_options.who == selector_uninitialized)) {
-      new_result = *result;
-      for (i=1; i<=last_selector_kind; ++i) {
-         new_result.call_conc_options.who = (selector_kind) i;
-         match_suffix_2(user, ((key == '6') ? selector_list[i].name : selector_list[i].sing_name), &p2b, patxi, &new_result);
-      }
-   }
-   else if (key == 'h' && user && (result->call_conc_options.where == direction_uninitialized)) {
-      new_result = *result;
-      for (i=1; i<=last_direction_kind; ++i) {
-         new_result.call_conc_options.where = (direction_kind) i;
-         match_suffix_2(user, direction_names[i], &p2b, patxi, &new_result);
-      }
-   }
-   else if ((key == 'v' || key == 'w' || key == 'x' || key == 'y') && user && (result->call_conc_options.tagger & 0xFF000000UL) == 0) {
-      /* We allow recursion 4 levels deep.  In fact, we consider it
-         inappropriate to stack revert/reflect things.  There are special
-         calls "revert, then reflect", etc. for this purpose. */
-      int tagclass;
-      new_result = *result;
-
-      /* If we are already operating under a tagger field, this is a "revert" type of thing.
-         Use the tagger class from above in preference to the one that we deduce from the
-         escape letter, since the escape letters are not always correct for recursive
-         invocations of "revert" things. */
-
-      if (new_result.call_conc_options.tagger & 0xFF) {
-         tagclass = (new_result.call_conc_options.tagger >> 5) & 3;
-      }
-      else {
-         tagclass = 0;
-         if (key == 'w') tagclass = 1;
-         else if (key == 'x') tagclass = 2;
-         else if (key == 'y') tagclass = 3;
-      }
-
-      new_result.call_conc_options.tagger <<= 8;
-      new_result.call_conc_options.tagger |= tagclass << 5;
-
-      for (i=0; i<number_of_taggers[tagclass]; ++i) {
-         new_result.call_conc_options.tagger++;
-         match_suffix_2(user, tagger_calls[tagclass][i]->name, &p2b, patxi, &new_result);
-      }
-   }
-   else if ((key == 'N') && user && result->call_conc_options.circcer == 0) {
-      char circname[80];
-      new_result = *result;
-
-      for (i=0; i<number_of_circcers; ++i) {
-         char *fromptr = circcer_calls[i]->name;
-         char *toptr = circname;
-         char c;
-         do {
-            c = *fromptr++;
-            if (c == '@') {
-               if (*fromptr++ == 'O') {
-                  while (*fromptr++ != '@') ;
-                  fromptr++;
-               }
-            }
-            else
-               *toptr++ = c;
-         } while (c);
-
-         new_result.call_conc_options.circcer++;
-         match_suffix_2(user, circname, &p2b, patxi, &new_result);
-      }
-   }
-   else if (key == 'j') {
-      char crossname[80];
-      char *crossptr = crossname;
-
-      new_result = *result;
-      while ((*crossptr++ = *pat++) != '@');
-      pat++;
-      crossptr--;
-      *crossptr = 0;
-      new_result.modifier_parent = result;
-      new_result.current_modifier = &concept_descriptor_table[cross_concept_index];
-      p2b.car = pat;
-      match_suffix_2(user, crossname, &p2b, patxi, &new_result);
-   }
-   else if (key == 'C') {
-      new_result = *result;
-      new_result.modifier_parent = result;
-      new_result.current_modifier = &concept_descriptor_table[cross_concept_index];
-      p2b.car = pat;
-      match_suffix_2(user, " cross", &p2b, patxi, &new_result);
-   }
-   else if (key == 'J') {
-      char magicname[80];
-      char *magicptr = magicname;
-
-      new_result = *result;
-      while ((*magicptr++ = *pat++) != '@');
-      pat++;
-      magicptr--;
-      *magicptr = 0;
-      new_result.modifier_parent = result;
-      new_result.current_modifier = &concept_descriptor_table[magic_concept_index];
-      p2b.car = pat;
-      match_suffix_2(user, magicname, &p2b, patxi, &new_result);
-   }
-   else if (key == 'M') {
-      new_result = *result;
-      new_result.modifier_parent = result;
-      new_result.current_modifier = &concept_descriptor_table[magic_concept_index];
-      p2b.car = pat;
-      match_suffix_2(user, " magic", &p2b, patxi, &new_result);
-   }
-   else if (key == 'E') {
-      char interlockedname[80];
-      char *interlockedptr = interlockedname;
-
-      new_result = *result;
-      while ((*interlockedptr++ = *pat++) != '@');
-      pat++;
-      interlockedptr--;
-      *interlockedptr = 0;
-      new_result.modifier_parent = result;
-      new_result.current_modifier = &concept_descriptor_table[intlk_concept_index];
-      p2b.car = pat;
-      match_suffix_2(user, interlockedname, &p2b, patxi, &new_result);
-   }
-   else if (key == 'I') {
-      char *p = static_ss.extension;
-      int idx = patxi;
-      long_boolean fixing_an_a = TRUE;
-
-      for (i=0 ; i<2 ; i++) {
-         idx--;
-         if (idx < 0) { idx = static_ss.full_input_size-1 ; p = static_ss.full_input; }
-         if (p[idx] != "a "[i]) { fixing_an_a = FALSE; break; }
-      }
-
-      new_result = *result;
-      new_result.modifier_parent = result;
-      new_result.current_modifier = &concept_descriptor_table[intlk_concept_index];
-      p2b.car = pat;
-
-      if (fixing_an_a ||
-               (user && user[-1] == 'a' && user[-2] == ' '))
-         match_suffix_2(user, "n interlocked", &p2b, patxi, &new_result);
-      else
-         match_suffix_2(user, " interlocked", &p2b, patxi, &new_result);
-   }
-   else if (key == 'e') {
-      new_result = *result;
-      while (*pat++ != '@');
-      pat++;
-      new_result.modifier_parent = result;
-      new_result.current_modifier = &concept_descriptor_table[left_concept_index];
-      p2b.car = pat;
-      match_suffix_2(user, "left", &p2b, patxi, &new_result);
-   }
-   else if (key == '9' && user && *user >= '1' && *user <= '8') {
-      new_result = *result;
-      new_result.call_conc_options.howmanynumbers++;
-
-      for (i=1; (prefix = cardinals[i-1]) ; i++) {
-          new_result.call_conc_options.number_fields += 1 << ((new_result.call_conc_options.howmanynumbers-1)*4);
-          match_suffix_2(user, prefix, &p2b, patxi, &new_result);
-      }
-   }
-   else if (key == 'u' && user && *user >= '1' && *user <= '8') {
-      new_result = *result;
-      new_result.call_conc_options.howmanynumbers++;
-
-      for (i=1; (prefix = ordinals[i-1]) ; i++) {
-          new_result.call_conc_options.number_fields += 1 << ((new_result.call_conc_options.howmanynumbers-1)*4);
-          match_suffix_2(user, prefix, &p2b, patxi, &new_result);
-      }
-   }
-   else if ((key == 'a' || key == 'b' || key == 'B' || key == 'D') &&
-               user && ((*user >= '1' && *user <= '8') || *user == 'q' || *user == 'h' || *user == 't' || *user == 'f')) {
-      new_result = *result;
-
-      new_result.call_conc_options.howmanynumbers++;
-
-      for (i=1 ; (prefix = n_4_patterns[i-1]) ; i++) {
-         new_result.call_conc_options.number_fields += 1 << ((new_result.call_conc_options.howmanynumbers-1)*4);
-         if (key != 'D' || (i&1) != 0)
-            match_suffix_2(user, prefix, &p2b, patxi, &new_result);
-      }
-
-      /* special case: allow "quarter" for 1/4 */
-      new_result.call_conc_options.number_fields = result->call_conc_options.number_fields + (1 << ((new_result.call_conc_options.howmanynumbers-1)*4));
-      match_suffix_2(user, "quarter", &p2b, patxi, &new_result);
-
-      /* special case: allow "half" or "1/2" for 2/4 */
-      if (key != 'D') {
-         new_result.call_conc_options.number_fields = result->call_conc_options.number_fields + (2 << ((new_result.call_conc_options.howmanynumbers-1)*4));
-         match_suffix_2(user, "half", &p2b, patxi, &new_result);
-         match_suffix_2(user, "1/2", &p2b, patxi, &new_result);
-      }
-
-      /* special case: allow "three quarter" for 3/4 */
-      new_result.call_conc_options.number_fields = result->call_conc_options.number_fields + (3 << ((new_result.call_conc_options.howmanynumbers-1)*4));
-      match_suffix_2(user, "three quarter", &p2b, patxi, &new_result);
-
-      /* special case: allow "full" for 4/4 */
-      if (key != 'D') {
-         new_result.call_conc_options.number_fields = result->call_conc_options.number_fields + (4 << ((new_result.call_conc_options.howmanynumbers-1)*4));
-         match_suffix_2(user, "full", &p2b, patxi, &new_result);
-      }
-   }
-}
-
-
-static void match_grand(Cstring user, concept_descriptor *grand_concept, int patxi, Const match_result *result)
-{
-   int i;
-   match_result new_result;
-   pat2_block p2b;
    int *item;
    int menu_length;
+   int i;
+   pat2_block p2b;
+   match_result *saved_folksptr = current_result;
 
-   new_result = *result;
-   new_result.modifier_parent = result;
-   new_result.current_modifier = grand_concept;
-   new_result.need_big_menu = TRUE;
-   new_result.call_conc_options = null_options;
-   new_result.anything_parent = (match_result *) 0;
+   current_result->next = saved_result_p;
+   p2b.folks_to_restore = (match_result *) 0;
+   p2b.next = pat2;
+
+   /* We force any call invoked under a modifier to yield if it is ambiguous.  This way,
+      if the user types "cross roll", preference will be given to the call "cross roll",
+      rather than to the modifier "cross" on the call "roll".  This whole thing depends,
+      of course, on our belief that the language of square dance calling never contains
+      an ambiguous call/concept utterance.  For example, we do not expect anyone to
+      invent a call "and turn" that can be used with the "cross" modifier. */
+   saved_result_p->yield_depth++;
+   saved_result_p->next = (match_result *) 0;
 
    /* scan concepts */
 
@@ -886,39 +702,340 @@ static void match_grand(Cstring user, concept_descriptor *grand_concept, int pat
       menu_length = level_concept_list_length;
    }
 
-   p2b.next = (pat2_block *) 0;
-   new_result.kind = ui_concept_select;
+   saved_result_p->match.kind = ui_concept_select;
 
    for (i = 0; i < menu_length; i++) {
       concept_descriptor *this_concept = &concept_descriptor_table[*item];
 
-      new_result.index = *item;
-      new_result.yield_depth = result->yield_depth + 1;
       p2b.car = this_concept->name;
       p2b.special_concept = this_concept;
-      match_suffix_2(user, " ", &p2b, patxi, &new_result);
+      saved_result_p->match.concept_ptr = this_concept;
+      saved_result_p->match.call_conc_options = null_options;
+      current_result = saved_result_p;
+      match_suffix_2(user, firstchar, &p2b, patxi);
       item++;
    }
 
    /* scan calls */
 
    p2b.special_concept = (concept_descriptor *) 0;
-   p2b.next = (pat2_block *) 0;
-   new_result.kind = ui_call_select;
+   saved_result_p->match.kind = ui_call_select;
 
    for (i = 0; i < number_of_calls[call_list_any]; i++) {
-      new_result.index = i;
-      /* We force any call invoked under a modifier to yield if it is ambiguous.  This way,
-         if the user types "cross roll", preference will be given to the call "cross roll",
-         rather than to the modifier "cross" on the call "roll".  This whole thing depends,
-         of course, on our belief that the language of square dance calling never contains
-         an ambiguous call/concept utterance.  For example, we do not expect anyone to
-         invent a call "and turn" that can be used with the "cross" modifier. */
-      new_result.yield_depth = result->yield_depth + 1;
+      saved_result_p->match.call_ptr = main_call_lists[call_list_any][i];
       p2b.car = call_menu_lists[call_list_any][i]->name;
-      match_suffix_2(user, " ", &p2b, patxi, &new_result);
+      saved_result_p->match.call_conc_options = null_options;
+      current_result = saved_result_p;
+      match_suffix_2(user, firstchar, &p2b, patxi);
+   }
+
+   current_result = saved_folksptr;
+   current_result->next = (match_result *) 0;
+}
+
+
+
+/*
+ * Match_wildcard tests for and handles pattern suffixes that begin with
+ * a wildcard such as "<anyone>".  A wildcard is handled only if there is
+ * room in the Result struct to store the associated value.
+ */
+
+static void match_wildcard(Cstring user, Cstring pat, pat2_block *pat2, int patxi, concept_descriptor *special)
+{
+   Cstring prefix;
+   Cstring *number_table;
+   int i;
+   pat2_block p2b;
+   char crossname[80];
+   char *crossptr;
+   int save_howmanynumbers;
+   uint32 save_number_fields;
+   int concidx;
+   Cstring pattern;
+   char key = *pat++;
+   p2b.car = pat;
+   p2b.special_concept = special;
+   p2b.folks_to_restore = (match_result *) 0;
+   p2b.next = pat2;
+
+   /* if we are just listing the matching commands, there
+      is no point in expanding wildcards that are past the
+      part that matches the user input.  That is why we test
+      "(user == 0)". */
+
+   if (user) {
+      switch (key) {
+         case '6': case 'k':
+            if (current_result->match.call_conc_options.who == selector_uninitialized) {
+               selector_kind save_who = current_result->match.call_conc_options.who;
+
+               for (i=1; i<=last_selector_kind; ++i) {
+                  current_result->match.call_conc_options.who = (selector_kind) i;
+                  match_suffix_2(user, ((key == '6') ? selector_list[i].name : selector_list[i].sing_name), &p2b, patxi);
+               }
+
+               current_result->match.call_conc_options.who = save_who;
+               return;
+            }
+            break;
+         case '0':
+            if (*user == '[') {
+               pat2_block p3b;
+               match_result saved_result = *current_result;
+
+               p3b.car = "]";
+               p3b.special_concept = (concept_descriptor *) 0;
+               p3b.folks_to_restore = current_result;
+               p3b.next = &p2b;
+               scan_concepts_and_calls(user, "[", &p3b, &saved_result, patxi);
+               return;
+            }
+            break;
+         case 'h':
+            if (current_result->match.call_conc_options.where == direction_uninitialized) {
+               direction_kind save_where = current_result->match.call_conc_options.where;
+      
+               for (i=1; i<=last_direction_kind; ++i) {
+                  current_result->match.call_conc_options.where = (direction_kind) i;
+                  match_suffix_2(user, direction_names[i], &p2b, patxi);
+               }
+      
+               current_result->match.call_conc_options.where = save_where;
+               return;
+            }
+            break;
+         case 'v': case 'w': case 'x': case 'y':
+            if ((current_result->match.call_conc_options.tagger & 0xFF000000UL) == 0) {
+               /* We allow recursion 4 levels deep.  In fact, we consider it
+                  inappropriate to stack revert/reflect things.  There are special
+                  calls "revert, then reflect", etc. for this purpose. */
+               int tagclass;
+               uint32 save_tagger = current_result->match.call_conc_options.tagger;
+#ifdef SCREWED_UP_REVERTS
+               uint32 old_low_tagger;
+               uint32 test_mask = 0xFF;
+               old_low_tagger = save_tagger & 0xFF;
+#endif
+         
+               /* If we are already operating under a tagger field, this is a "revert" type of thing.
+                  Use the tagger class from above in preference to the one that we deduce from the
+                  escape letter, since the escape letters are not always correct for recursive
+                  invocations of "revert" things. */
+         
+               if (save_tagger & 0xFF) {
+                  tagclass = (save_tagger >> 5) & 3;
+               }
+               else {
+                  tagclass = 0;
+                  if (key == 'w') tagclass = 1;
+                  else if (key == 'x') tagclass = 2;
+                  else if (key == 'y') tagclass = 3;
+               }
+
+#ifdef SCREWED_UP_REVERTS
+               while ((current_result->match.call_conc_options.tagger & test_mask) != 0) {
+                  test_mask <<= 8;
+                  old_low_tagger <<= 8;
+               }
+
+               current_result->match.call_conc_options.tagger |= old_low_tagger;
+               current_result->match.call_conc_options.tagger &= ~0xFF;
+#else
+               current_result->match.call_conc_options.tagger <<= 8;
+#endif
+               current_result->match.call_conc_options.tagger |= tagclass << 5;
+         
+               for (i=0; i<number_of_taggers[tagclass]; ++i) {
+                  current_result->match.call_conc_options.tagger++;
+                  match_suffix_2(user, tagger_calls[tagclass][i]->name, &p2b, patxi);
+               }
+      
+               current_result->match.call_conc_options.tagger = save_tagger;
+               return;
+            }
+            break;
+         case 'N':
+            if (current_result->match.call_conc_options.circcer == 0) {
+               char circname[80];
+               uint32 save_circcer = current_result->match.call_conc_options.circcer;
+      
+               for (i=0; i<number_of_circcers; ++i) {
+                  char *fromptr = circcer_calls[i]->name;
+                  char *toptr = circname;
+                  char c;
+                  do {
+                     c = *fromptr++;
+                     if (c == '@') {
+                        if (*fromptr++ == 'O') {
+                           while (*fromptr++ != '@') ;
+                           fromptr++;
+                        }
+                     }
+                     else
+                        *toptr++ = c;
+                  } while (c);
+         
+                  current_result->match.call_conc_options.circcer++;
+                  match_suffix_2(user, circname, &p2b, patxi);
+               }
+      
+               current_result->match.call_conc_options.circcer = save_circcer;
+               return;
+            }
+            break;
+         case '9':
+            if (*user < '1' || *user > '8') return;
+            number_table = cardinals;
+            goto do_number_stuff;
+         case 'u':
+            if (*user < '1' || *user > '8') return;
+            number_table = ordinals;
+            goto do_number_stuff;
+         case 'a': case 'b': case 'B': case 'D':
+            if ((*user >= '1' && *user <= '8') || *user == 'q' || *user == 'h' || *user == 't' || *user == 'f') {
+               save_howmanynumbers = current_result->match.call_conc_options.howmanynumbers;
+               save_number_fields = current_result->match.call_conc_options.number_fields;
+      
+               current_result->match.call_conc_options.howmanynumbers++;
+
+               for (i=1 ; (prefix = n_4_patterns[i-1]) ; i++) {
+                  current_result->match.call_conc_options.number_fields += 1 << (save_howmanynumbers*4);
+                  if (key != 'D' || (i&1) != 0)
+                     match_suffix_2(user, prefix, &p2b, patxi);
+               }
+         
+               /* special case: allow "quarter" for 1/4 */
+               current_result->match.call_conc_options.number_fields = save_number_fields + (1 << (save_howmanynumbers*4));
+               match_suffix_2(user, "quarter", &p2b, patxi);
+         
+               /* special case: allow "half" or "1/2" for 2/4 */
+               if (key != 'D') {
+                  current_result->match.call_conc_options.number_fields = save_number_fields + (2 << (save_howmanynumbers*4));
+                  match_suffix_2(user, "half", &p2b, patxi);
+                  match_suffix_2(user, "1/2", &p2b, patxi);
+               }
+         
+               /* special case: allow "three quarter" for 3/4 */
+               current_result->match.call_conc_options.number_fields = save_number_fields + (3 << (save_howmanynumbers*4));
+               match_suffix_2(user, "three quarter", &p2b, patxi);
+         
+               /* special case: allow "full" for 4/4 */
+               if (key != 'D') {
+                  current_result->match.call_conc_options.number_fields = save_number_fields + (4 << (save_howmanynumbers*4));
+                  match_suffix_2(user, "full", &p2b, patxi);
+               }
+      
+               current_result->match.call_conc_options.howmanynumbers = save_howmanynumbers;
+               current_result->match.call_conc_options.number_fields = save_number_fields;
+               return;
+            }
+            break;
+      }
+   }
+
+   switch (key) {
+      case 'j':
+         crossptr = crossname;
+         while ((*crossptr++ = *pat++) != '@');
+         pat++;
+         crossptr--;
+         *crossptr = 0;
+         pattern = crossname;
+         concidx = cross_concept_index;
+         goto do_cross_stuff;
+      case 'C':
+         pattern = " cross";
+         concidx = cross_concept_index;
+         goto do_cross_stuff;
+      case 'J':
+         crossptr = crossname;
+         while ((*crossptr++ = *pat++) != '@');
+         pat++;
+         crossptr--;
+         *crossptr = 0;
+         pattern = crossname;
+         concidx = magic_concept_index;
+         goto do_cross_stuff;
+      case 'M':
+         concidx = magic_concept_index;
+         pattern = " magic";
+         goto do_cross_stuff;
+      case 'E':
+         crossptr = crossname;
+         while ((*crossptr++ = *pat++) != '@');
+         pat++;
+         crossptr--;
+         *crossptr = 0;
+         pattern = crossname;
+         concidx = intlk_concept_index;
+         goto do_cross_stuff;
+      case 'I':
+         {
+            char *p = static_ss.extension;
+            int idx = patxi;
+            long_boolean fixing_an_a = TRUE;
+
+            for (i=0 ; i<2 ; i++) {
+               idx--;
+               if (idx < 0) { idx = static_ss.full_input_size-1 ; p = static_ss.full_input; }
+               if (p[idx] != "a "[i]) { fixing_an_a = FALSE; break; }
+            }
+
+            if (fixing_an_a || (user && user[-1] == 'a' && user[-2] == ' '))
+               pattern = "n interlocked";
+            else
+               pattern = " interlocked";
+
+            concidx = intlk_concept_index;
+         }
+         goto do_cross_stuff;
+      case 'e':
+         while (*pat++ != '@');
+         pat++;
+         pattern = "left";
+         concidx = left_concept_index;
+         goto do_cross_stuff;
+   }
+
+   return;
+
+   do_number_stuff:
+
+   save_howmanynumbers = current_result->match.call_conc_options.howmanynumbers;
+   save_number_fields = current_result->match.call_conc_options.number_fields;
+
+   current_result->match.call_conc_options.howmanynumbers++;
+
+   for (i=1 ; (prefix = number_table[i-1]) ; i++) {
+       current_result->match.call_conc_options.number_fields += 1 << (save_howmanynumbers*4);
+       match_suffix_2(user, prefix, &p2b, patxi);
+   }
+
+   current_result->match.call_conc_options.howmanynumbers = save_howmanynumbers;
+   current_result->match.call_conc_options.number_fields = save_number_fields;
+
+   return;
+
+   do_cross_stuff:
+
+   {
+      match_result *saved_resultptr = current_result;
+      match_result saved_result = *current_result;
+
+      current_result->match.kind = ui_concept_select;
+      current_result->match.call_conc_options = null_options;
+      current_result->match.concept_ptr = &concept_descriptor_table[concidx];
+      current_result->next = &saved_result;
+      p2b.car = pat;
+      current_result = &saved_result;
+      match_suffix_2(user, pattern, &p2b, patxi);
+      current_result = saved_resultptr;
+      *current_result = saved_result;
+      current_result->next = (match_result *) 0;
    }
 }
+
 
 /*
  * Match_pattern tests the user input against a pattern (pattern)
@@ -929,7 +1046,7 @@ static void match_grand(Cstring user, concept_descriptor *grand_concept, int pat
  * a match is recorded in the search state.
  */
  
-static void match_pattern(Cstring pattern, Const match_result *result, concept_descriptor *this_is_grand)
+static void match_pattern(Cstring pattern, concept_descriptor *this_is_grand)
 {
    char pch, uch;
    pat2_block p2b;
@@ -949,16 +1066,23 @@ static void match_pattern(Cstring pattern, Const match_result *result, concept_d
          return;
       }
    }
-   else if (uch != tolower(pch) && pch != '@') {
-      /* fails to match */
-      return;
+   else if (uch != tolower(pch)) {
+      if (pch != '@') {
+         /* fails to match */
+         return;
+      }
+      else if (pattern[1] == '0' && uch != '[' && uch != '<') {
+         /* Call was "<ANYTHING> and ...", but user didn't type "[" or "<". */
+         return;
+      }
    }
 
    p2b.car = pattern;
    p2b.special_concept = this_is_grand;
+   p2b.folks_to_restore = (match_result *) 0;
    p2b.next = (pat2_block *) 0;
 
-   match_suffix_2(static_ss.full_input, "", &p2b, 0, result);
+   match_suffix_2(static_ss.full_input, "", &p2b, 0);
 }
 
 static void search_menu(uims_reply kind)
@@ -966,18 +1090,15 @@ static void search_menu(uims_reply kind)
    int i;
    Cstring *menu;
    int menu_length;
-   match_result result;
 
-   result.valid = TRUE;
-   result.exact = FALSE;
-   result.kind = kind;
-   result.call_conc_options = null_options;
-   result.anything_parent = (match_result *) 0;
-   result.anything_calls = (modifier_block *) 0;
-   result.current_modifier = (concept_descriptor *) 0;
-   result.modifier_parent = (match_result *) 0;
-   result.need_big_menu = FALSE;
-   result.yield_depth = 0;
+   everyones_real_result.valid = TRUE;
+   everyones_real_result.exact = FALSE;
+   everyones_real_result.match.kind = kind;
+   everyones_real_result.match.call_conc_options = null_options;
+   everyones_real_result.next = (match_result *) 0;
+   everyones_real_result.yield_depth = 0;
+
+   current_result = &everyones_real_result;
 
    if (kind == ui_call_select) {
       menu_length = number_of_calls[static_call_menu];
@@ -985,9 +1106,9 @@ static void search_menu(uims_reply kind)
       for (i = 0; i < menu_length; i++) {
          if (static_ss.verify && verify_has_stopped) break;  /* Don't waste time after user stops us. */
          parse_state.call_list_to_use = static_call_menu;
-         result.index = i;
-         result.yield_depth = (call_menu_lists[static_call_menu][i]->callflags1 & CFLAG1_YIELD_IF_AMBIGUOUS) ? 1 : 0;
-         match_pattern(call_menu_lists[static_call_menu][i]->name, &result, (concept_descriptor *) 0);
+         everyones_real_result.match.call_ptr = main_call_lists[static_call_menu][i];
+         everyones_real_result.yield_depth = (call_menu_lists[static_call_menu][i]->callflags1 & CFLAG1_YIELD_IF_AMBIGUOUS) ? 1 : 0;
+         match_pattern(call_menu_lists[static_call_menu][i]->name, (concept_descriptor *) 0);
       }
    }
    else if (kind == ui_concept_select) {
@@ -1005,27 +1126,27 @@ static void search_menu(uims_reply kind)
       for (i = 0; i < menu_length; i++) {
          concept_descriptor *this_concept = &concept_descriptor_table[*item];
          parse_state.call_list_to_use = static_call_menu;
-         result.index = *item;
-         result.yield_depth = (this_concept->concparseflags & CONCPARSE_YIELD_IF_AMB) ? 1 : 0;
-         match_pattern(this_concept->name, &result, this_concept);
+         everyones_real_result.match.concept_ptr = this_concept;
+         everyones_real_result.yield_depth = (this_concept->concparseflags & CONCPARSE_YIELD_IF_AMB) ? 1 : 0;
+         match_pattern(this_concept->name, this_concept);
          item++;
       }
    }
    else if (static_call_menu >= match_taggers && static_call_menu <= match_taggers+3) {
       int tagclass = static_call_menu - match_taggers;
-      result.call_conc_options.tagger = tagclass << 5;
+      everyones_real_result.match.call_conc_options.tagger = tagclass << 5;
 
       for (i = 0; i < number_of_taggers[tagclass]; i++) {
-         result.call_conc_options.tagger++;
-         match_pattern(tagger_calls[tagclass][i]->name, &result, (concept_descriptor *) 0);
+         everyones_real_result.match.call_conc_options.tagger++;
+         match_pattern(tagger_calls[tagclass][i]->name, (concept_descriptor *) 0);
       }
    }
    else if (static_call_menu == match_circcer) {
-      result.call_conc_options.circcer = 0;
+      everyones_real_result.match.call_conc_options.circcer = 0;
 
       for (i = 0; i < number_of_circcers; i++) {
-         result.call_conc_options.circcer++;
-         match_pattern(circcer_calls[i]->name, &result, (concept_descriptor *) 0);
+         everyones_real_result.match.call_conc_options.circcer++;
+         match_pattern(circcer_calls[i]->name, (concept_descriptor *) 0);
       }
    }
    else {
@@ -1058,11 +1179,11 @@ static void search_menu(uims_reply kind)
          menu_length = number_of_resolve_commands;
       }
 
-      result.kind = kind;
+      everyones_real_result.match.kind = kind;
 
       for (i = 0; i < menu_length; i++) {
-         result.index = i;
-         match_pattern(menu[i], &result, (concept_descriptor *) 0);
+         everyones_real_result.match.index = i;
+         match_pattern(menu[i], (concept_descriptor *) 0);
       }
    }
 }
@@ -1128,9 +1249,7 @@ static void search_menu(uims_reply kind)
 
 extern int match_user_input(
     int which_commands,
-    match_result *mr,
-    char *extension,
-    show_function sf,
+    long_boolean show,
     long_boolean show_verify)
 {
 #ifdef TIMING
@@ -1148,36 +1267,22 @@ extern int match_user_input(
       modifier_inactive_list = item;
    }
 
-   static_ss.extended_input = extension;
+   static_ss.extended_input[0] = 0;   /* needed if no matches or user input is empty */
    static_ss.match_count = 0;
    static_ss.exact_count = 0;
    static_ss.yielding_matches = 0;
    static_ss.exact_match = FALSE;
-   static_ss.showing = (sf != 0);
-   static_ss.sf = sf;
+   static_ss.showing = show;
    static_ss.result.valid = FALSE;
    static_ss.result.exact = FALSE;
    static_ss.space_ok = FALSE;
    static_ss.verify = show_verify;
    static_call_menu = which_commands;
 
-   if (extension) { /* needed if no matches or user input is empty */
-       extension[0] = 0;
-   }
-
    if (static_call_menu >= 0) {
-      if (!commands_last_option)
-         search_menu(ui_command_select);
-  
       search_menu(ui_call_select);
       search_menu(ui_concept_select);
-  
-      if (commands_last_option)
-         search_menu(ui_command_select);
-
-      /* ******* This is sleazy!!!!! */
-      if (static_ss.result.need_big_menu)
-         parse_state.call_list_to_use = call_list_any;
+      search_menu(ui_command_select);
    }  
    else {
       search_menu(ui_special_concept);
@@ -1186,13 +1291,6 @@ extern int match_user_input(
          static_call_menu = match_resolve_extra_commands;
          search_menu(ui_command_select);
       }
-   }
-
-   if (mr) {
-      *mr = static_ss.result;
-      mr->newmodifiers = static_ss.result.newmodifiers;
-      mr->space_ok = static_ss.space_ok;
-      mr->yielding_matches = static_ss.yielding_matches;
    }
 
 #ifdef TIMING

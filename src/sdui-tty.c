@@ -75,8 +75,8 @@ static char *id="@(#)$He" "ader: Sd: sdui-tty.c "
 
 and the following data that are used by sdmatch.c :
 
-   twice_concept_index
-   two_calls_concept_index
+   twice_concept_ptr
+   two_calls_concept_ptr
    num_command_commands
    command_commands
    number_of_resolve_commands
@@ -144,19 +144,19 @@ Private char *function_key_expansion;
 void
 refresh_input(void)
 {
-    user_input[0] = '\0';
-    static_ss.full_input[0] = '\0';
-    static_ss.full_input_size = 0;
-    function_key_expansion = (char *) 0;
-    clear_line(); /* clear the current line */
-    put_line(user_input_prompt);
+   user_input[0] = '\0';
+   static_ss.full_input[0] = '\0';
+   static_ss.full_input_size = 0;
+   function_key_expansion = (char *) 0;
+   clear_line(); /* clear the current line */
+   put_line(user_input_prompt);
 }
 
 Private void
 get_string_input(char prompt[], char dest[])
 {
-    put_line(prompt);
-    get_string(dest);
+   put_line(prompt);
+   get_string(dest);
 }
 
 
@@ -288,7 +288,7 @@ extern void
 uims_postinitialize(void)
 {
     call_menu_prompts[call_list_empty] = "--> ";   /* This prompt should never be used. */
-    matcher_initialize(TRUE); /* want commands last in menu */
+    matcher_initialize();
 #if defined(UNIX_STYLE) && !defined(MSDOS)
     initialize_signal_handlers();
 #endif
@@ -371,7 +371,7 @@ prompt_for_more_output(void)
     }
 }
 
-extern void show_match(char *user_input_str, Const char *extension, Const match_result *mr)
+extern void show_match(void)
 {
    if (verify_has_stopped) return;  /* Showing has been turned off. */
 
@@ -384,15 +384,15 @@ extern void show_match(char *user_input_str, Const char *extension, Const match_
       }
    }
    match_counter--;
-   put_line(user_input_str);
-   put_line((char *) extension);
+   put_line(static_ss.full_input);
+   put_line(static_ss.extension);
    put_line("\n");
    current_text_line++;
 }
 
 
-int twice_concept_index = -1;
-int two_calls_concept_index = -1;
+concept_descriptor *twice_concept_ptr = (concept_descriptor *) 0;
+concept_descriptor *two_calls_concept_ptr = (concept_descriptor *) 0;
 
 
 /* BEWARE!!  These two lists must stay in step. */
@@ -566,33 +566,67 @@ typedef struct {
    int which_test;      /* 0 to test for >= 0, negative to test for that value exactly. */
    char *line_to_put;
    uims_reply match_kind;
-   int match_index;
+   long int match_index;
 } fcn_key_thing;
 
 
-#define FCN_KEY_TAB_LOW 131
-#define FCN_KEY_TAB_LAST 140
+#define FCN_KEY_TAB_LOW 129
+#define FCN_KEY_TAB_LAST 172
 
 static fcn_key_thing fcn_key_table[] = {
-   {0,                      "pick random call\n",      ui_command_select, -1-command_random_call},          /*  F3 = 131 = pick random call */
-   {0,                      "resolve\n",               ui_command_select, -1-command_resolve},              /*  F4 = 132 = resolve */
-   {0,                      "refresh display\n",       ui_command_select, -1-command_refresh},              /*  F5 = 133 = refresh display */
-   {0,                      "simple modifications\n",  ui_command_select, -1-command_simple_mods},          /*  F6 = 134 = simple modifications */
-   {99,                      (char *) 0,               ui_command_select, 0},                                     /* 135 */
-   {99,                      (char *) 0,               ui_command_select, 0},                                     /* 136 */
-   {99,                      (char *) 0,               ui_command_select, 0},                                     /* 137 */
-   {99,                      (char *) 0,               ui_command_select, 0},                                     /* 138 */
-   {0,                      "pick level call\n",       ui_command_select, -1-command_level_call},           /* F11 = 139 = pick level call */
-   {match_resolve_commands, "find another\n",          ui_resolve_select, -1-resolve_command_find_another}  /* F12 = 140 = find another */
+   {match_startup_commands,  "heads start\n",              ui_start_select,   start_select_heads_start},         /* F1 = 129 = heads start */
+   {0,                       "two calls in succession\n",  ui_concept_select, (long int) &two_calls_concept_ptr},/* F2 = 130 = two calls in succession */
+   {0,                       "pick random call\n",         ui_command_select, -1-command_random_call},           /* F3 = 131 = pick random call */
+   {0,                       "resolve\n",                  ui_command_select, -1-command_resolve},               /* F4 = 132 = resolve */
+   {0,                       "refresh display\n",          ui_command_select, -1-command_refresh},               /* F5 = 133 = refresh display */
+   {0,                       "simple modifications\n",     ui_command_select, -1-command_simple_mods},           /* F6 = 134 = simple modifications */
+   {99,                      (char *) 0,                   ui_command_select, 0},                                     /* 135 */
+   {99,                      (char *) 0,                   ui_command_select, 0},                                     /* 136 */
+   {99,                      (char *) 0,                   ui_command_select, 0},                                     /* 137 */
+   {99,                      (char *) 0,                   ui_command_select, 0},                                     /* 138 */
+   {0,                       "pick level call\n",          ui_command_select, -1-command_level_call},           /* F11 = 139 = pick level call */
+   {match_resolve_commands,  "find another\n",             ui_resolve_select, -1-resolve_command_find_another}, /* F12 = 140 = find another */
+   {99,                      (char *) 0,                   ui_command_select, 0},                                     /* 141 */
+   {99,                      (char *) 0,                   ui_command_select, 0},                                     /* 142 */
+   {99,                      (char *) 0,                   ui_command_select, 0},                                     /* 143 */
+   {99,                      (char *) 0,                   ui_command_select, 0},                                     /* 144 */
+   {match_startup_commands,  "sides start\n",              ui_start_select,   start_select_sides_start},        /* sF1 = 145 = sides start */
+   {0,                       "twice\n",                    ui_concept_select, (long int) &twice_concept_ptr}, /* sF2 = 146 = twice */
+   {0,                       "pick concept call\n",        ui_command_select, -1-command_concept_call},         /* sF3 = 147 = pick concept call */
+   {0,                       "reconcile\n",                ui_command_select, -1-command_reconcile},            /* sF4 = 148 = reconcile */
+   {0,                       "keep picture\n",             ui_command_select, -1-command_save_pic},             /* sF5 = 149 = keep picture */
+   {0,                       "allow modifications\n",      ui_command_select, -1-command_all_mods},             /* sF6 = 150 = allow modifications */
+   {99,                      (char *) 0,                   ui_command_select, 0},                                     /* 151 */
+   {99,                      (char *) 0,                   ui_command_select, 0},                                     /* 152 */
+   {99,                      (char *) 0,                   ui_command_select, 0},                                     /* 153 */
+   {99,                      (char *) 0,                   ui_command_select, 0},                                     /* 154 */
+   {0,                       "pick 8 person level call\n", ui_command_select, -1-command_8person_level_call},  /* sF11 = 155 = pick 8 person level call */
+   {match_resolve_commands,  "accept current choice\n",    ui_resolve_select, -1-resolve_command_accept},      /* sF12 = 156 = accept current choice */
+   {99,                      (char *) 0,                   ui_command_select, 0},                                     /* 157 */
+   {99,                      (char *) 0,                   ui_command_select, 0},                                     /* 158 */
+   {99,                      (char *) 0,                   ui_command_select, 0},                                     /* 159 */
+   {99,                      (char *) 0,                   ui_command_select, 0},                                     /* 160 */
+   {match_startup_commands,  "just as they are\n",         ui_start_select, start_select_as_they_are},          /* cF1 = 161 = just as they are */
+   {99,                      (char *) 0,                   ui_command_select, 0},                                     /* 162 */
+   {0,                       "pick simple call\n",         ui_command_select, -1-command_simple_call},          /* cF3 = 163 = pick simple call */
+   {0,                       "normalize\n",                ui_command_select, -1-command_normalize},            /* cF4 = 164 = normalize */
+   {0,                       "insert a comment\n",         ui_command_select, -1-command_create_comment},       /* cF5 = 165 = insert a comment */
+   {99,                      (char *) 0,                   ui_command_select, 0},                                     /* 166 */
+   {99,                      (char *) 0,                   ui_command_select, 0},                                     /* 167 */
+   {99,                      (char *) 0,                   ui_command_select, 0},                                     /* 168 */
+   {99,                      (char *) 0,                   ui_command_select, 0},                                     /* 169 */
+   {99,                      (char *) 0,                   ui_command_select, 0},                                     /* 170 */
+   {99,                      (char *) 0,                   ui_command_select, 0},                                     /* 171 */
+   {match_resolve_commands,  "previous\n",                 ui_resolve_select, -1-resolve_command_goto_previous}/* cF12 = 172 = previous */
 };
 
 
+static match_result user_match;
 
-/* result is indicated in user_match */
+
 
 Private void get_user_input(char *prompt, int which)
 {
-   char extended_input[INPUT_TEXTLINE_SIZE+1];
    char *p;
    char c;
    int nc;
@@ -621,210 +655,112 @@ Private void get_user_input(char *prompt, int which)
       nc = get_char();
 
       if (nc >= 128) {
-         if (nc == 129 && which == match_startup_commands) {
-            put_line("heads start\n");                               /* F1 = heads start */
-            current_text_line++;
-            user_match.kind = ui_start_select;
-            user_match.index = (int) start_select_heads_start;
-            return;
-         }
-         else if (nc == 130 && which >= 0) {                         /* F2 = two calls in succession */
-            if (two_calls_concept_index < 0) continue;
-            put_line("two calls in succession\n");
-            current_text_line++;
-            parse_state.call_list_to_use = call_list_any;
-            user_match.kind = ui_concept_select;
-            user_match.index = two_calls_concept_index;
-            user_match.newmodifiers = (modifier_block *) 0;
-            user_match.modifier_parent = (match_result *) 0;
-            user_match.current_modifier = (concept_descriptor *) 0;
-            user_match.call_conc_options = null_options;
-            user_match.anything_parent = (match_result *) 0;
-            return;
-         }
-         else if (nc == 135) {                                       /* F7 = 135 = toggle concept levels */
+         if (nc == 135) {                                       /* F7 = 135 = toggle concept levels */
             if (which >= 0) {
                put_line("toggle concept levels\n");
                current_text_line++;
-               user_match.kind = ui_command_select;
-               user_match.index = -1-command_toggle_conc_levels;
+               user_match.match.kind = ui_command_select;
+               user_match.match.index = -1-command_toggle_conc_levels;
+               user_match.valid = TRUE;
                return;
             }
             else if (which == match_startup_commands) {
                put_line("toggle concept levels\n");
                current_text_line++;
-               user_match.kind = ui_start_select;
-               user_match.index = (int) start_select_toggle_conc;
+               user_match.match.kind = ui_start_select;
+               user_match.match.index = (int) start_select_toggle_conc;
+               user_match.valid = TRUE;
                return;
             }
          }
          else if (nc == 136)
             function_key_expansion = "<anything>";                   /* F8 */
-         else if (nc == 137 || nc == 169) {                          /* F9 or sF9 = undo or abort the search, as appropriate. */
+         else if (nc == 137 || nc == 153) {                          /* F9 or sF9 = undo or abort the search, as appropriate. */
             if (which >= 0) {
                put_line("undo last call\n");
                current_text_line++;
-               user_match.kind = ui_command_select;
-               user_match.index = -1-command_undo;
+               user_match.match.kind = ui_command_select;
+               user_match.match.index = -1-command_undo;
+               user_match.valid = TRUE;
                return;
             }
             else if (which == match_resolve_commands) {
                put_line("abort the search\n");
                current_text_line++;
-               user_match.kind = ui_resolve_select;
-               user_match.index = -1-resolve_command_abort;
+               user_match.match.kind = ui_resolve_select;
+               user_match.match.index = -1-resolve_command_abort;
+               user_match.valid = TRUE;
                return;
             }
             else if (which == match_startup_commands) {
                put_line("exit from the program\n");
                current_text_line++;
-               user_match.kind = ui_start_select;
-               user_match.index = (int) start_select_exit;
+               user_match.match.kind = ui_start_select;
+               user_match.match.index = (int) start_select_exit;
+               user_match.valid = TRUE;
                return;
             }
          }
          else if (nc == 138)
             function_key_expansion = "write this sequence\n";        /* F10 */
+         else if (nc == 151) {                                       /* sF7 = toggle active phantoms */
+            if (which >= 0) {
+               put_line("toggle active phantoms\n");
+               current_text_line++;
+               user_match.match.kind = ui_command_select;
+               user_match.match.index = -1-command_toggle_act_phan;
+               user_match.valid = TRUE;
+               return;
+            }
+            else if (which == match_startup_commands) {
+               put_line("toggle active phantoms\n");
+               current_text_line++;
+               user_match.match.kind = ui_start_select;
+               user_match.match.index = (int) start_select_toggle_act;
+               user_match.valid = TRUE;
+               return;
+            }
+         }
+         else if (nc == 152)
+            function_key_expansion = "<concept>";                    /* sF8 */
+                                                                     /* See above for sF9. */
+         else if (nc == 154) {                                       /* sF10 = change output file */
+            if (which >= 0) {
+               put_line("change output file\n");
+               current_text_line++;
+               user_match.match.kind = ui_command_select;
+               user_match.match.index = -1-command_change_outfile;
+               user_match.valid = TRUE;
+               return;
+            }
+            else if (which == match_startup_commands) {
+               put_line("change output file\n");
+               current_text_line++;
+               user_match.match.kind = ui_start_select;
+               user_match.match.index = (int) start_select_change_outfile;
+               user_match.valid = TRUE;
+               return;
+            }
+         }
          else if (nc >= FCN_KEY_TAB_LOW && nc <= FCN_KEY_TAB_LAST &&
                      ((fcn_key_table[nc-FCN_KEY_TAB_LOW].which_test == 0 && which >= 0) ||
                      (fcn_key_table[nc-FCN_KEY_TAB_LOW].which_test <= 0 && which == fcn_key_table[nc-FCN_KEY_TAB_LOW].which_test))) {
             put_line(fcn_key_table[nc-FCN_KEY_TAB_LOW].line_to_put);
             current_text_line++;
-            user_match.kind = fcn_key_table[nc-FCN_KEY_TAB_LOW].match_kind;
-            user_match.index = fcn_key_table[nc-FCN_KEY_TAB_LOW].match_index;
-            return;
-         }
-         else if (nc == 161 && which == match_startup_commands) {    /* sF1 = sides start */
-            put_line("sides start\n");
-            current_text_line++;
-            user_match.kind = ui_start_select;
-            user_match.index = (int) start_select_sides_start;
-            return;
-         }
-         else if (nc == 162 && which >= 0) {                         /* sF2 = twice */
-            if (twice_concept_index < 0) continue;
-            put_line("twice\n");
-            current_text_line++;
-            parse_state.call_list_to_use = call_list_any;
-            user_match.kind = ui_concept_select;
-            user_match.index = twice_concept_index;
-            user_match.newmodifiers = (modifier_block *) 0;
-            user_match.modifier_parent = (match_result *) 0;
-            user_match.current_modifier = (concept_descriptor *) 0;
-            user_match.call_conc_options = null_options;
-            user_match.anything_parent = (match_result *) 0;
-            return;
-         }
-         else if (nc == 163 && which >= 0) {                         /* sF3 = pick concept call */
-            put_line("pick concept call\n");
-            current_text_line++;
-            user_match.kind = ui_command_select;
-            user_match.index = -1-command_concept_call;
-            return;
-         }
-         else if (nc == 164 && which >= 0) {                         /* sF4 = reconcile */
-            put_line("reconcile\n");
-            current_text_line++;
-            user_match.kind = ui_command_select;
-            user_match.index = -1-command_reconcile;
-            return;
-         }
-         else if (nc == 165 && which >= 0) {                         /* sF5 = keep picture */
-            put_line("keep picture\n");
-            current_text_line++;
-            user_match.kind = ui_command_select;
-            user_match.index = -1-command_save_pic;
-            return;
-         }
-         else if (nc == 166 && which >= 0) {                         /* sF6 = allow modifications */
-            put_line("allow modifications\n");
-            current_text_line++;
-            user_match.kind = ui_command_select;
-            user_match.index = -1-command_all_mods;
-            return;
-         }
-         else if (nc == 167) {                                       /* sF7 = toggle active phantoms */
-            if (which >= 0) {
-               put_line("toggle active phantoms\n");
-               current_text_line++;
-               user_match.kind = ui_command_select;
-               user_match.index = -1-command_toggle_act_phan;
-               return;
+            user_match.match.kind = fcn_key_table[nc-FCN_KEY_TAB_LOW].match_kind;
+            user_match.match.index = fcn_key_table[nc-FCN_KEY_TAB_LOW].match_index;
+
+            if (user_match.match.kind == ui_concept_select) {
+               user_match.match.concept_ptr = *((concept_descriptor **) fcn_key_table[nc-FCN_KEY_TAB_LOW].match_index);
+               if (!user_match.match.concept_ptr) continue;
+               user_match.match.next = (modifier_block *) 0;
+               user_match.match.call_conc_options = null_options;
+               user_match.next = (match_result *) 0;
             }
-            else if (which == match_startup_commands) {
-               put_line("toggle active phantoms\n");
-               current_text_line++;
-               user_match.kind = ui_start_select;
-               user_match.index = (int) start_select_toggle_act;
-               return;
-            }
-         }
-         else if (nc == 168)
-            function_key_expansion = "<concept>";                    /* sF8 */
-                                                                     /* See above for sF9. */
-         else if (nc == 170) {                                       /* sF10 = change output file */
-            if (which >= 0) {
-               put_line("change output file\n");
-               current_text_line++;
-               user_match.kind = ui_command_select;
-               user_match.index = -1-command_change_outfile;
-               return;
-            }
-            else if (which == match_startup_commands) {
-               put_line("change output file\n");
-               current_text_line++;
-               user_match.kind = ui_start_select;
-               user_match.index = (int) start_select_change_outfile;
-               return;
-            }
-         }
-         else if (nc == 171 && which >= 0) {                         /* sF11 = pick 8 person level call */
-            put_line("pick 8 person level call\n");
-            current_text_line++;
-            user_match.kind = ui_command_select;
-            user_match.index = -1-command_8person_level_call;
-            return;
-         }
-         else if (nc == 172 && which == match_resolve_commands) {    /* sF12 = accept current choice */
-            put_line("accept current choice\n");
-            current_text_line++;
-            user_match.kind = ui_resolve_select;
-            user_match.index = -1-resolve_command_accept;
-            return;
-         }
-         else if (nc == 193 && which == match_startup_commands) {    /* cF1 = just as they are */
-            put_line("just as they are\n");
-            current_text_line++;
-            user_match.kind = ui_start_select;
-            user_match.index = (int) start_select_as_they_are;
-            return;
-         }
-         else if (nc == 195 && which >= 0) {                         /* cF3 = pick simple call */
-            put_line("pick simple call\n");
-            current_text_line++;
-            user_match.kind = ui_command_select;
-            user_match.index = -1-command_simple_call;
-            return;
-         }
-         else if (nc == 196 && which >= 0) {                         /* cF4 = normalize */
-            put_line("normalize\n");
-            current_text_line++;
-            user_match.kind = ui_command_select;
-            user_match.index = -1-command_normalize;
-            return;
-         }
-         else if (nc == 197 && which >= 0) {                         /* cF5 = insert a comment */
-            put_line("insert a comment\n");
-            current_text_line++;
-            user_match.kind = ui_command_select;
-            user_match.index = -1-command_create_comment;
-            return;
-         }
-         else if (nc == 204 && which == match_resolve_commands) {    /* cF12 = previous */
-            put_line("previous\n");
-            current_text_line++;
-            user_match.kind = ui_resolve_select;
-            user_match.index = -1-resolve_command_goto_previous;
+            else
+               user_match.match.index = fcn_key_table[nc-FCN_KEY_TAB_LOW].match_index;
+
+            user_match.valid = TRUE;
             return;
          }
          else continue;      /* Ignore the function key. */
@@ -851,7 +787,7 @@ Private void get_user_input(char *prompt, int which)
          put_line ("\n");
          current_text_line++;
          start_matches();
-         (void) match_user_input(which, (match_result *) 0, (char *) 0, show_match, c == '?');
+         (void) match_user_input(which, TRUE, c == '?');
          put_line ("\n");     /* Write a blank line. */
          current_text_line++;
          put_line(user_input_prompt);   /* Redisplay the current line. */
@@ -861,8 +797,10 @@ Private void get_user_input(char *prompt, int which)
 
       if (c == ' ') {
          /* extend only to one space, inclusive */
-         matches = match_user_input(which, &user_match, extended_input, (show_function) 0, FALSE);
-         p = extended_input;
+         matches = match_user_input(which, FALSE, FALSE);
+         user_match = static_ss.result;
+         p = static_ss.extended_input;
+
          if (*p) {
             while (*p) {
                if (*p != ' ')
@@ -875,7 +813,7 @@ Private void get_user_input(char *prompt, int which)
             foobar: ;
             pack_and_echo_character(c);
          }
-         else if (user_match.space_ok && matches > 1)
+         else if (static_ss.space_ok && matches > 1)
             pack_and_echo_character(c);
          else if (diagnostic_mode)
             goto diagnostic_error;
@@ -883,16 +821,18 @@ Private void get_user_input(char *prompt, int which)
             bell();
       }
       else if ((c == '\n') || (c == '\r')) {
-         matches = match_user_input(which, &user_match, extended_input, (show_function) 0, FALSE);
+         matches = match_user_input(which, FALSE, FALSE);
+         user_match = static_ss.result;
 
          /* We forbid a match consisting of two or more "direct parse" concepts, such as "grand cross".
             Direct parse concepts may only be stacked if they are followed by a call.
-            The "newmodifiers" field indicates that direct parse concepts were stacked. */
+            The "match.next" field indicates that direct parse concepts were stacked. */
 
-         if (  (matches == 1 || matches - user_match.yielding_matches == 1 || user_match.exact)
+         if (  (matches == 1 || matches - static_ss.yielding_matches == 1 || user_match.exact)
                               &&
-              (!user_match.newmodifiers || user_match.kind == ui_call_select || user_match.kind == ui_concept_select)) {
-            p = extended_input;
+              (!user_match.match.next || user_match.match.kind == ui_call_select || user_match.match.kind == ui_concept_select)) {
+
+            p = static_ss.extended_input;
             while (*p)
                pack_and_echo_character(*p++);
 
@@ -900,7 +840,6 @@ Private void get_user_input(char *prompt, int which)
             /* Include the input line in our count, so we will erase it
                if we are trying to make the VT-100 screen look nice. */
             current_text_line++;
-
             return;
          }
 
@@ -908,23 +847,24 @@ Private void get_user_input(char *prompt, int which)
             goto diagnostic_error;
 
          /* Tell how bad it is, then redisplay current line. */
-	   if (matches > 0) {
+         if (matches > 0) {
             char tempstuff[200];
 
             (void) sprintf(tempstuff, "  (%d matches, type ! or ? for list)\n", matches);
             put_line(tempstuff);
          }
-         else {
+         else
             put_line("  (no matches)\n");
-         }
 
          put_line(user_input_prompt);
          put_line(user_input);
          current_text_line++;   /* Count that line for erasure. */
       }
       else if (c == '\t' || c == '\033') {
-         (void) match_user_input(which, &user_match, extended_input, (show_function) 0, FALSE);
-         p = extended_input;
+         (void) match_user_input(which, FALSE, FALSE);
+         user_match = static_ss.result;
+         p = static_ss.extended_input;
+
          if (*p) {
             while (*p)
                pack_and_echo_character(*p++);
@@ -991,8 +931,8 @@ static char *banner_prompts3[] = {
 extern uims_reply uims_get_startup_command(void)
 {
    get_user_input("Enter startup command> ", (int) match_startup_commands);
-   uims_menu_index = user_match.index;
-   return user_match.kind;
+   uims_menu_index = user_match.match.index;
+   return user_match.match.kind;
 }
 
 
@@ -1057,45 +997,56 @@ extern long_boolean uims_get_call_command(uims_reply *reply_p)
 
    get_user_input(prompt_ptr, (int) parse_state.call_list_to_use);
 
-   *reply_p = user_match.kind;
+   *reply_p = user_match.match.kind;
 
-   uims_menu_index = user_match.index;
+   uims_menu_index = user_match.match.index;
 
-   if (user_match.kind == ui_command_select) {
+   if (user_match.match.kind == ui_command_select) {
       /* Translate the command. */
 
-      if (user_match.index < 0)
-         uims_menu_index = -1-user_match.index;   /* Special encoding from a function key. */
+      if (user_match.match.index < 0)
+         uims_menu_index = -1-user_match.match.index;   /* Special encoding from a function key. */
       else
-         uims_menu_index = (int) command_command_values[user_match.index];
+         uims_menu_index = (int) command_command_values[user_match.match.index];
    }
-   else if (user_match.kind == ui_call_select) {
-      modifier_block *mods;
-      callspec_block *save_call = main_call_lists[parse_state.call_list_to_use][uims_menu_index];
-      call_conc_option_state save_stuff = user_match.call_conc_options;
+   else {
+      parse_block *save1 = (parse_block *) 0;
+      modifier_block *anythings = &user_match.match;
 
-      for (mods = user_match.newmodifiers ; mods ; mods = mods->next) {
-         user_match.call_conc_options = mods->call_conc_options;
-         if (deposit_concept(mods->this_modifier)) return TRUE;
+      /* This stuff is duplicated in verify_call in sdmatch.c . */
+
+      while (anythings) {
+         call_conc_option_state save_stuff = user_match.match.call_conc_options;
+
+         /* First, if we have already deposited a call, and we see more stuff, it must be
+            concepts or calls for an "anything" subcall. */
+
+         if (save1) {
+            parse_block *tt = get_parse_block();
+            save1->concept = &marker_concept_mod;
+            save1->next = tt;
+            tt->concept = &marker_concept_mod;
+            tt->call = base_calls[1];   /* "nothing" */
+            tt->options.number_fields = 2*DFM1_CALL_MOD_BIT;  /* "mandatory_anycall" */
+            parse_state.concept_write_ptr = &tt->subsidiary_root;
+            save1 = (parse_block *) 0;
+         }
+
+         user_match.match.call_conc_options = anythings->call_conc_options;
+
+         if (anythings->kind == ui_call_select) {
+            if (deposit_call(anythings->call_ptr)) return TRUE;
+            save1 = *parse_state.concept_write_ptr;
+            *reply_p = ui_call_select;
+         }
+         else if (anythings->kind == ui_concept_select) {
+            if (deposit_concept(anythings->concept_ptr)) return TRUE;
+         }
+         else break;   /* Huh? */
+
+         user_match.match.call_conc_options = save_stuff;
+         anythings = anythings->next;
       }
-
-      user_match.call_conc_options = save_stuff;
-
-      if (deposit_call(save_call)) return TRUE;
-   }
-   else if (user_match.kind == ui_concept_select) {
-      modifier_block *mods;
-      concept_descriptor *save_concept = &concept_descriptor_table[uims_menu_index];
-      call_conc_option_state save_stuff = user_match.call_conc_options;
-
-      for (mods = user_match.newmodifiers ; mods ; mods = mods->next) {
-         user_match.call_conc_options = mods->call_conc_options;
-         if (deposit_concept(mods->this_modifier)) return TRUE;
-      }
-
-      user_match.call_conc_options = save_stuff;
-
-      if (deposit_concept(save_concept)) return TRUE;
    }
 
    return FALSE;
@@ -1106,17 +1057,17 @@ extern uims_reply uims_get_resolve_command(void)
 {
    get_user_input("Enter search command> ", (int) match_resolve_commands);
 
-   if (user_match.kind == ui_command_select) {
-      uims_menu_index = extra_resolve_command_values[user_match.index];
+   if (user_match.match.kind == ui_command_select) {
+      uims_menu_index = extra_resolve_command_values[user_match.match.index];
    }
    else {
-      if (user_match.index < 0)
-         uims_menu_index = -1-user_match.index;   /* Special encoding from a function key. */
+      if (user_match.match.index < 0)
+         uims_menu_index = -1-user_match.match.index;   /* Special encoding from a function key. */
       else
-         uims_menu_index = (int) resolve_command_values[user_match.index];
+         uims_menu_index = (int) resolve_command_values[user_match.match.index];
    }
 
-   return user_match.kind;
+   return user_match.match.kind;
 }
 
 
@@ -1288,37 +1239,34 @@ volatile uint32 popup_retval;     /* Just love that HP-UX C compiler!!!!! */
 
 extern int uims_do_selector_popup(void)
 {
-   if (user_match.valid && (user_match.call_conc_options.who > selector_uninitialized)) {
-      popup_retval = (int) user_match.call_conc_options.who;
-      user_match.call_conc_options.who = selector_uninitialized;
-      return popup_retval;
-   }
-   else {
+   if (!user_match.valid || (user_match.match.call_conc_options.who == selector_uninitialized)) {
       match_result saved_match = user_match;
       get_user_input("Enter who> ", (int) match_selectors);
-      popup_retval = user_match.index+1;      /* We skip the zeroth selector, which is selector_uninitialized. */
+      popup_retval = user_match.match.index+1;      /* We skip the zeroth selector, which is selector_uninitialized. */
       user_match = saved_match;
-      return popup_retval;
    }
+   else {
+      popup_retval = (int) user_match.match.call_conc_options.who;
+      user_match.match.call_conc_options.who = selector_uninitialized;
+   }
+   return popup_retval;
 }
 
 extern int uims_do_direction_popup(void)
 {
-   int n;
+   int retval;
 
-   if (user_match.valid && (user_match.call_conc_options.where > direction_uninitialized)) {
-      n = (int) user_match.call_conc_options.where;
-      user_match.call_conc_options.where = direction_uninitialized;
-      return n;
-   }
-   else {
-      int retval;
+   if (!user_match.valid || (user_match.match.call_conc_options.where == direction_uninitialized)) {
       match_result saved_match = user_match;
       get_user_input("Enter direction> ", (int) match_directions);
-      retval = user_match.index+1;      /* We skip the zeroth direction, which is direction_uninitialized. */
+      retval = user_match.match.index+1;      /* We skip the zeroth direction, which is direction_uninitialized. */
       user_match = saved_match;
-      return retval;
    }
+   else {
+      retval = (int) user_match.match.call_conc_options.where;
+      user_match.match.call_conc_options.where = direction_uninitialized;
+   }
+   return retval;
 }
 
 extern int uims_do_tagger_popup(int tagger_class)
@@ -1327,27 +1275,27 @@ extern int uims_do_tagger_popup(int tagger_class)
    int j = 0;
 
    if (interactivity == interactivity_verify) {
-      user_match.call_conc_options.tagger = verify_options.tagger;
-      if (user_match.call_conc_options.tagger == 0) user_match.call_conc_options.tagger = (tagger_class << 5) + 1;
+      user_match.match.call_conc_options.tagger = verify_options.tagger;
+      if (user_match.match.call_conc_options.tagger == 0) user_match.match.call_conc_options.tagger = (tagger_class << 5) + 1;
    }
-   else if (!user_match.valid || (user_match.call_conc_options.tagger <= 0)) {
+   else if (!user_match.valid || (user_match.match.call_conc_options.tagger <= 0)) {
       match_result saved_match = user_match;
       get_user_input("Enter tagging call> ", ((int) match_taggers) + tagger_class);
-      saved_match.call_conc_options.tagger = user_match.call_conc_options.tagger;
+      saved_match.match.call_conc_options.tagger = user_match.match.call_conc_options.tagger;
       user_match = saved_match;
    }
 
-   while ((user_match.call_conc_options.tagger & 0xFF000000UL) == 0) {
-      user_match.call_conc_options.tagger <<= 8;
+   while ((user_match.match.call_conc_options.tagger & 0xFF000000UL) == 0) {
+      user_match.match.call_conc_options.tagger <<= 8;
       j++;
    }
 
-   retval = user_match.call_conc_options.tagger >> 24;
-   user_match.call_conc_options.tagger &= 0x00FFFFFF;
-   while (j-- != 0) user_match.call_conc_options.tagger >>= 8;   /* Shift it back. */
+   retval = user_match.match.call_conc_options.tagger >> 24;
+   user_match.match.call_conc_options.tagger &= 0x00FFFFFF;
+   while (j-- != 0) user_match.match.call_conc_options.tagger >>= 8;   /* Shift it back. */
 
    if (interactivity == interactivity_verify)
-      verify_options.tagger = user_match.call_conc_options.tagger;
+      verify_options.tagger = user_match.match.call_conc_options.tagger;
 
    return retval;
 }
@@ -1361,15 +1309,15 @@ extern int uims_do_circcer_popup(void)
       retval = verify_options.circcer;
       if (retval == 0) retval = 1;
    }
-   else if (user_match.valid && (user_match.call_conc_options.circcer > 0)) {
-      retval = user_match.call_conc_options.circcer;
-      user_match.call_conc_options.circcer = 0;
-   }
-   else {
+   else if (!user_match.valid || (user_match.match.call_conc_options.circcer == 0)) {
       match_result saved_match = user_match;
       get_user_input("Enter circulate replacement> ", (int) match_circcer);
-      retval = user_match.call_conc_options.circcer;
+      retval = user_match.match.call_conc_options.circcer;
       user_match = saved_match;
+   }
+   else {
+      retval = user_match.match.call_conc_options.circcer;
+      user_match.match.call_conc_options.circcer = 0;
    }
 
    return retval;
@@ -1379,19 +1327,14 @@ extern int uims_do_circcer_popup(void)
 extern uint32 uims_get_number_fields(int nnumbers)
 {
    int i;
-   uint32 number_fields = user_match.call_conc_options.number_fields;
-   int howmanynumbers = user_match.call_conc_options.howmanynumbers;
+   uint32 number_fields = user_match.match.call_conc_options.number_fields;
+   int howmanynumbers = user_match.match.call_conc_options.howmanynumbers;
    uint32 number_list = 0;
 
    for (i=0 ; i<nnumbers ; i++) {
       uint32 this_num;
 
-      if (user_match.valid && (howmanynumbers >= 1)) {
-         this_num = number_fields & 0xF;
-         number_fields >>= 4;
-         howmanynumbers--;
-      }
-      else {
+      if (!user_match.valid || (howmanynumbers <= 0)) {
          for (;;) {
             char buffer[200];
             get_string_input("How many? ", buffer);
@@ -1404,6 +1347,11 @@ extern uint32 uims_get_number_fields(int nnumbers)
                break;
             }
          }
+      }
+      else {
+         this_num = number_fields & 0xF;
+         number_fields >>= 4;
+         howmanynumbers--;
       }
 
       if (this_num <= 0 || this_num > 8) return 0;    /* User gave bad answer. */
@@ -1456,10 +1404,10 @@ uims_terminate(void)
  */
 
 Private int db_tick_max;
-Private int db_tick_cur;	/* goes from 0 to db_tick_max */
+Private int db_tick_cur;   /* goes from 0 to db_tick_max */
 
 #define TICK_STEPS 52
-Private int tick_displayed;	/* goes from 0 to TICK_STEPS */
+Private int tick_displayed;   /* goes from 0 to TICK_STEPS */
 
 extern void uims_database_tick_max(int n)
 {
@@ -1472,15 +1420,15 @@ extern void uims_database_tick_max(int n)
 
 extern void uims_database_tick(int n)
 {
-    int tick_new;
+   int tick_new;
 
-    db_tick_cur += n;
-    tick_new = TICK_STEPS*db_tick_cur/db_tick_max;
-    while (tick_displayed < tick_new) {
-	printf(".");
-	tick_displayed++;
-    }
-    fflush(stdout);
+   db_tick_cur += n;
+   tick_new = TICK_STEPS*db_tick_cur/db_tick_max;
+   while (tick_displayed < tick_new) {
+      printf(".");
+      tick_displayed++;
+   }
+   fflush(stdout);
 }
 
 extern void uims_database_tick_end(void)

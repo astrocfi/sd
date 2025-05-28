@@ -56,9 +56,9 @@ extern void put_char(int c);
 /* Get one character from input, no echo, no waiting for <newline>.
    Return large number for function keys:
       128+N for plain key
-      160+N for shifted
-      192+N for control
-      224+N for alt */
+      144+N for shifted
+      160+N for control
+      176+N for alt */
 extern int get_char(void);
 
 /* Get string from input, up to <newline>, with echoing and editing.

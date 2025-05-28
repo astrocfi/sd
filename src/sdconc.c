@@ -21,6 +21,7 @@
    on_your_own_move
    punt_centers_use_concept
    selective_move
+   inner_selective_move
 */
 
 #include "sd.h"
@@ -828,12 +829,12 @@ extern void concentric_move(
    setup_command *cmdin,
    setup_command *cmdout,
    calldef_schema analyzer,
-   defmodset modifiersin1,
-   defmodset modifiersout1,
+   uint32 modifiersin1,
+   uint32 modifiersout1,
    long_boolean recompute_id,
    setup *result)
 {
-   defmodset localmods1, localmodsin1, localmodsout1;
+   uint32 localmods1, localmodsin1, localmodsout1;
    setup begin_inner[3];
    setup begin_outer;
    int begin_outer_elongation;
@@ -1923,32 +1924,38 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
          install_rot(result, 11, res1, 7^offs, rot);
       }
       else {
-         uint32 t1, t2;
+         uint32 t1, t2, t3, t4;
 
          result->kind = s_c1phan;
+
          t1  = copy_person(result, 0,  res2, 0);
          t1 |= copy_person(result, 2,  res2, 1);
-         t2  = copy_person(result, 7,  res2, 2);
-         t2 |= copy_person(result, 5,  res2, 3);
          t1 |= copy_person(result, 8,  res2, 4);
          t1 |= copy_person(result, 10, res2, 5);
+
+         t3  = copy_rot(result, 4,  res1, 2^offs, rot);
+         t3 |= copy_rot(result, 6,  res1, 3^offs, rot);
+         t3 |= copy_rot(result, 12, res1, 6^offs, rot);
+         t3 |= copy_rot(result, 14, res1, 7^offs, rot);
+
+         t2  = copy_person(result, 7,  res2, 2);
+         t2 |= copy_person(result, 5,  res2, 3);
          t2 |= copy_person(result, 15, res2, 6);
          t2 |= copy_person(result, 13, res2, 7);
-         t2 |= copy_rot(result, 11, res1, 0^offs, rot);
-         t2 |= copy_rot(result, 9,  res1, 1^offs, rot);
-         t1 |= copy_rot(result, 4,  res1, 2^offs, rot);
-         t1 |= copy_rot(result, 6,  res1, 3^offs, rot);
-         t2 |= copy_rot(result, 3,  res1, 4^offs, rot);
-         t2 |= copy_rot(result, 1,  res1, 5^offs, rot);
-         t1 |= copy_rot(result, 12, res1, 6^offs, rot);
-         t1 |= copy_rot(result, 14, res1, 7^offs, rot);
+
+         t4  = copy_rot(result, 11, res1, 0^offs, rot);
+         t4 |= copy_rot(result, 9,  res1, 1^offs, rot);
+         t4 |= copy_rot(result, 3,  res1, 4^offs, rot);
+         t4 |= copy_rot(result, 1,  res1, 5^offs, rot);
 
          /* See if we have a "classical" C1 phantom setup, and give the appropriate warning. */
          if (action != merge_c1_phantom_nowarn) {
-            if (t1 == 0 || t2 == 0)
+            if ((t1 | t3) == 0 || (t2 | t4) == 0)
                warn(warn__check_c1_phan);
-            else
+            else if ((t1 | t4) == 0 || (t2 | t3) == 0)
                warn(warn__check_c1_stars);
+            else
+               warn(warn__check_gen_c1_stars);
          }
       }
       return;
@@ -2786,6 +2793,12 @@ static Const fixer d4x4d2    = {sdmd, s4x4,        0, 0, 1,       0,          0,
 static Const fixer d4x4d3    = {sdmd, s4x4,        1, 0, 1,       0,          0,          &d4x4l3, &d4x4l2, &d4x4d3, &d4x4d2, 0,       0,          {{12, 3, 4, 11}},    {{-1}}};
 static Const fixer d4x4d4    = {sdmd, s4x4,        0, 0, 1,       0,          0,          &d4x4l4, &d4x4l1, &d4x4d4, &d4x4d1, 0,       0,          {{12, 3, 4, 11}},    {{-1}}};
 
+
+
+static Const fixer fcpl12    = {s2x2, s4x4,        0, 0, 1,       0,          0,          0,          0, 0,          0,    &fcpl12,    0,          {{1, 2, 5, 6}},     {{-1}}};
+
+
+
 static Const fixer foo55d    = {s1x4, s1x8,        0, 0, 1,       0,          0,          &foo55d,    0, &f1x3zzd,   0,    &bar55d,    &bar55d,    {{0, 2, 4, 6}},     {{-1}}};
 static Const fixer fgalctb   = {s2x2, s_galaxy,    0, 0, 1,       0,          0,          0,          0, 0,          0,    &fgalctb,   &fgalctb,   {{1, 3, 5, 7}},     {{-1}}};
 static Const fixer f3x1ctl   = {s1x4, s3x1dmd,     0, 0, 1,       0,          0,          &f3x1ctl,   0, 0,          0,    &fgalctb,   &fgalctb,   {{1, 2, 5, 6}},     {{-1}}};
@@ -2825,6 +2838,13 @@ static Const fixer f2x4dright= {s2x2, s2x4,        0, 0, 1,       0,          0,
 /*                              ink   outk       rot  el numsetup 1x2         1x2rot      1x4    1x4rot dmd         dmdrot 2x2      2x2v             nonrot            yesrot  */
 
 static Const fixer f2x4endd  = {s2x2, s2x4,        0, 1, 1,       0,          0,          &frigendd,  &frigendd, 0,  0,    &f2x4endd,  &fqtgend,   {{0, 3, 4, 7}},     {{-1}}};
+static Const fixer f2x477    = {s2x3, s2x4,        0, 1, 1,       0,          0,          0,          0, 0,          0,    0,          0,          {{0, 1, 2, 4, 5, 6}}, {{-1}}};
+static Const fixer f2x4ee    = {s2x3, s2x4,        0, 1, 1,       0,          0,          0,          0, 0,          0,    0,          0,          {{1, 2, 3, 5, 6, 7}}, {{-1}}};
+static Const fixer f2x4bb    = {s2x3, s2x4,        0, 1, 1,       0,          0,          0,          0, 0,          0,    0,          0,          {{0, 1, 3, 4, 5, 7}}, {{-1}}};
+static Const fixer f2x4dd    = {s2x3, s2x4,        0, 1, 1,       0,          0,          0,          0, 0,          0,    0,          0,          {{0, 2, 3, 4, 6, 7}}, {{-1}}};
+
+
+
 static Const fixer f2x4endo  = {s1x2, s2x4,        1, 0, 2,       &f2x4endo,  &f1x8endo,  0,          0, 0,          0,    0,          0,          {{0, 7}, {3, 4}},   {{-1}}};
 static Const fixer bar55d    = {s2x2, s2x4,        0, 0, 1,       0,          0,          0,          0, 0,          0,    0,          0,          {{1, 2, 5, 6}},     {{-1}}};
 static Const fixer fppaad    = {s1x2, s2x4,        0, 0, 2,       &fppaad,    0,          0,          0, 0,          0,    0,          0,          {{1, 3}, {7, 5}},   {{-1}}};
@@ -2832,18 +2852,17 @@ static Const fixer fpp55d    = {s1x2, s2x4,        0, 0, 2,       &fpp55d,    0,
 
 
 
-typedef enum {
-   LOOKUP_NONE,
-   LOOKUP_DIST_DMD,
-   LOOKUP_DIST_BOX,
-   LOOKUP_DIST_CLW,
-   LOOKUP_DIAG_CLW,
-   LOOKUP_DISC
-} lookup_key;
+#define LOOKUP_NONE     0x1
+#define LOOKUP_DIST_DMD 0x2
+#define LOOKUP_DIST_BOX 0x4
+#define LOOKUP_DIST_CLW 0x8
+#define LOOKUP_DIAG_CLW 0x10
+#define LOOKUP_DISC     0x20
+#define LOOKUP_IGNORE   0x40
 
 
 typedef struct {
-   Const lookup_key key;
+   Const uint32 key;
    Const setup_kind kk;
    Const uint32 thislivemask;
    Const fixer *fixp;
@@ -2852,110 +2871,109 @@ typedef struct {
 } sel_item;
 
 static Const sel_item sel_table[] = {
-   {LOOKUP_DIST_DMD, s_rigger,    0x99,   &distrig3,   (fixer *) 0, -1},
-   {LOOKUP_DIST_DMD, s_rigger,    0x66,   &distrig4,   (fixer *) 0, -1},
-   {LOOKUP_DIST_DMD, s_rigger,    0x55,   &distrig7,   (fixer *) 0, -1},
-   {LOOKUP_DIST_DMD, s_rigger,    0xAA,   &distrig8,   (fixer *) 0, -1},
-   {LOOKUP_DIST_DMD, s_galaxy,    0x66,   &dgald1,     (fixer *) 0, -1},
-   {LOOKUP_DIST_DMD, s_galaxy,    0xCC,   &dgald2,     (fixer *) 0, -1},
-   {LOOKUP_DIST_DMD, s_galaxy,    0x33,   &dgald3,     (fixer *) 0, -1},
-   {LOOKUP_DIST_DMD, s_galaxy,    0x99,   &dgald4,     (fixer *) 0, -1},
-   {LOOKUP_DIST_DMD, s2x4,        0xAA,   &d2x4d1,     (fixer *) 0, -1},
-   {LOOKUP_DIST_DMD, s2x4,        0x55,   &d2x4d2,     (fixer *) 0, -1},
-   {LOOKUP_DIST_DMD, s4x4,        0x8181, &d4x4d1,     &d4x4d2,     0},
-   {LOOKUP_DIST_DMD, s4x4,        0x1818, &d4x4d3,     &d4x4d4,     4},
-   {LOOKUP_DIST_BOX, s2x4,        0xAA,   &d2x4c1,     (fixer *) 0, -1},
-   {LOOKUP_DIST_BOX, s2x4,        0x55,   &d2x4c2,     (fixer *) 0, -1},
-   {LOOKUP_DIST_BOX, s2x4,        0x33,   &d2x4y1,     (fixer *) 0, -1},
-   {LOOKUP_DIST_BOX, s2x4,        0xCC,   &d2x4y2,     (fixer *) 0, -1},
-   {LOOKUP_DIST_BOX, s_qtag,      0xAA,   &fqtgjj1,    (fixer *) 0, -1},
-   {LOOKUP_DIST_BOX, s_qtag,      0x99,   &fqtgjj2,    (fixer *) 0, -1},
-   {LOOKUP_DIAG_CLW, s4x4,        0x0909, &d4x4l1,     &d4x4l2,     0},
-   {LOOKUP_DIAG_CLW, s4x4,        0x9090, &d4x4l3,     &d4x4l4,     4},
-   {LOOKUP_DIST_CLW, s_rigger,    0x99,   &distrig1,   (fixer *) 0, -1},
-   {LOOKUP_DIST_CLW, s_rigger,    0x66,   &distrig2,   (fixer *) 0, -1},
-   {LOOKUP_DIST_CLW, s_rigger,    0x55,   &distrig5,   (fixer *) 0, -1},
-   {LOOKUP_DIST_CLW, s_rigger,    0xAA,   &distrig6,   (fixer *) 0, -1},
-   {LOOKUP_DIST_CLW, s_bone,      0x55,   &distbone1,  (fixer *) 0, -1},
-   {LOOKUP_DIST_CLW, s_bone,      0x99,   &distbone2,  (fixer *) 0, -1},
-   {LOOKUP_DIST_CLW, s_bone,      0x66,   &distbone5,  (fixer *) 0, -1},
-   {LOOKUP_DIST_CLW, s_bone,      0xAA,   &distbone6,  (fixer *) 0, -1},
-   {LOOKUP_DIST_CLW, s_hrglass,   0xAA,   &disthrg1,   (fixer *) 0, -1},
-   {LOOKUP_DIST_CLW, s_hrglass,   0x99,   &disthrg2,   (fixer *) 0, -1},
-   {LOOKUP_DIST_CLW, s_galaxy,    0x66,   &dgalw1,     (fixer *) 0, -1},
-   {LOOKUP_DIST_CLW, s_galaxy,    0xCC,   &dgalw2,     (fixer *) 0, -1},
-   {LOOKUP_DIST_CLW, s_galaxy,    0x33,   &dgalw3,     (fixer *) 0, -1},
-   {LOOKUP_DIST_CLW, s_galaxy,    0x99,   &dgalw4,     (fixer *) 0, -1},
-   {LOOKUP_DIST_CLW, s2x4,        0x33,   &d2x4w1,     (fixer *) 0, -1},
-   {LOOKUP_DIST_CLW, s2x4,        0xCC,   &d2x4w2,     (fixer *) 0, -1},
-   {LOOKUP_DIST_CLW, s2x4,        0xAA,   &d2x4x1,     (fixer *) 0, -1},
-   {LOOKUP_DIST_CLW, s2x4,        0x55,   &d2x4x2,     (fixer *) 0, -1},
-   {LOOKUP_DISC,     s1x8,        0xAA,   &f1x8aad,    (fixer *) 0, -1},
-   {LOOKUP_DISC,     s1x8,        0x55,   &foo55d,     (fixer *) 0, -1},
-   {LOOKUP_DISC,     s1x8,        0x99,   &foo99d,     (fixer *) 0, -1},
-   {LOOKUP_DISC,     s1x8,        0x66,   &foo66d,     (fixer *) 0, -1},
-   {LOOKUP_DISC,     s1x8,        0x33,   &f1x8endd,   (fixer *) 0, -1},
-   {LOOKUP_DISC,     s1x8,        0x88,   &f1x8_88,    (fixer *) 0, -1},
-   {LOOKUP_DISC,     s1x8,        0x22,   &f1x8_22,    (fixer *) 0, -1},
-   {LOOKUP_DISC,     s1x8,        0x11,   &f1x8_11,    (fixer *) 0, -1},
-   {LOOKUP_DISC,     s_bone,      0x33,   &fboneendd,  (fixer *) 0, -1},
-   {LOOKUP_DISC,     s_bone,      0xBB,   &fbonetgl,   (fixer *) 0, -1},
-   {LOOKUP_DISC,     s_rigger,    0x77,   &frigtgl,    (fixer *) 0, -1},
-   {LOOKUP_DISC,     s_qtag,      0x33,   &fqtgend,    (fixer *) 0, -1},
-   {LOOKUP_DISC,     s_ptpd,      0xAA,   &foozzd,     (fixer *) 0, -1},
-   {LOOKUP_DISC,     s_ptpd,      0x55,   &fptpzzd,    (fixer *) 0, -1},
-   {LOOKUP_DISC,     s_dhrglass,  0x33,   &fdrhgl1,    (fixer *) 0, -1},
-   {LOOKUP_DISC,     s3x1dmd,     0x99,   &f3x1zzd,    (fixer *) 0, -1},
-   {LOOKUP_DISC,     s3x1dmd,     0xAA,   &f3x1yyd,    (fixer *) 0, -1},
-   {LOOKUP_DISC,     s1x3dmd,     0x99,   &f1x3zzd,    (fixer *) 0, -1},
-   {LOOKUP_DISC,     s1x3dmd,     0xAA,   &f1x3yyd,    (fixer *) 0, -1},
-   {LOOKUP_DISC,     s1x3dmd,     0x66,   &f1x3bbd,    (fixer *) 0, -1},
-   {LOOKUP_DISC,     s_crosswave, 0x55,   &fxwv1d,     (fixer *) 0, -1},
-   {LOOKUP_DISC,     s_crosswave, 0x99,   &fxwv2d,     (fixer *) 0, -1},
-   {LOOKUP_DISC,     s_crosswave, 0x66,   &fxwv3d,     (fixer *) 0, -1},
-   {LOOKUP_DISC,     s_crosswave, 0x33,   &fxwve,      (fixer *) 0, -1},
-   {LOOKUP_DISC,     s_spindle,   0x55,   &fspindld,   (fixer *) 0, -1},
-   {LOOKUP_DISC,     s_spindle,   0xAA,   &fspindlbd,  (fixer *) 0, -1},
-   {LOOKUP_DISC,     s2x4,        0xAA,   &fppaad,     (fixer *) 0, -1},
-   {LOOKUP_DISC,     s2x4,        0x55,   &fpp55d,     (fixer *) 0, -1},
-   {LOOKUP_DISC,     s2x4,        0xA5,   &f2x4dleft,  (fixer *) 0, -1},
-   {LOOKUP_DISC,     s2x4,        0x5A,   &f2x4dright, (fixer *) 0, -1},
-   {LOOKUP_DISC,     s2x4,        0x99,   &f2x4endd,   (fixer *) 0, -1},
-   {LOOKUP_NONE,     s2x4,        0x33,   &foo33,      (fixer *) 0, -1},
-   {LOOKUP_NONE,     s2x4,        0xCC,   &foocc,      (fixer *) 0, -1},
-   {LOOKUP_NONE,     s2x4,        0x99,   &f2x4endo,   (fixer *) 0, -1},
-   {LOOKUP_NONE,     s1x8,        0xAA,   &f1x8aa,     (fixer *) 0, -1},
-   {LOOKUP_NONE,     s3x4,        0x0C3,  &f3x4left,   (fixer *) 0, -1},
-   {LOOKUP_NONE,     s3x4,        0x30C,  &f3x4right,  (fixer *) 0, -1},
-   {LOOKUP_NONE,     s2x6,        0x0C3,  &f3x4lzz,    (fixer *) 0, -1},
-   {LOOKUP_NONE,     s2x6,        0xC30,  &f3x4rzz,    (fixer *) 0, -1},
-   {LOOKUP_NONE,     s1x8,        0x33,   &f1x8endo,   (fixer *) 0, -1},
-   {LOOKUP_NONE,     s_bone,      0x33,   &fboneendo,  (fixer *) 0, -1},
-   {LOOKUP_NONE,     s_ptpd,      0xAA,   &foozz,      (fixer *) 0, -1},
-   {LOOKUP_NONE,     s_spindle,   0x55,   &fspindlc,   (fixer *) 0, -1},
-   {LOOKUP_NONE,     s_galaxy,    0x44,   &fgalcv,     (fixer *) 0, -1},
-   {LOOKUP_NONE,     s_galaxy,    0x11,   &fgalch,     (fixer *) 0, -1},
-   {LOOKUP_NONE,     s1x3dmd,     0x66,   &f1x3aad,    (fixer *) 0, -1},
-   {LOOKUP_NONE,     s_1x2dmd,    033,    &f1x2aad,    (fixer *) 0, -1},
-   {LOOKUP_NONE,     s2x3,        055,    &f2x3c,      (fixer *) 0, -1},
-   {LOOKUP_NONE,     s_qtag,      0xAA,   &fqtgj1,     (fixer *) 0, -1},
-   {LOOKUP_NONE,     s_qtag,      0x99,   &fqtgj2,     (fixer *) 0, -1},
-   {LOOKUP_NONE,     nothing}};
+   {LOOKUP_DIST_DMD,           s_rigger,    0x99,   &distrig3,   (fixer *) 0, -1},
+   {LOOKUP_DIST_DMD,           s_rigger,    0x66,   &distrig4,   (fixer *) 0, -1},
+   {LOOKUP_DIST_DMD,           s_rigger,    0x55,   &distrig7,   (fixer *) 0, -1},
+   {LOOKUP_DIST_DMD,           s_rigger,    0xAA,   &distrig8,   (fixer *) 0, -1},
+   {LOOKUP_DIST_DMD,           s_galaxy,    0x66,   &dgald1,     (fixer *) 0, -1},
+   {LOOKUP_DIST_DMD,           s_galaxy,    0xCC,   &dgald2,     (fixer *) 0, -1},
+   {LOOKUP_DIST_DMD,           s_galaxy,    0x33,   &dgald3,     (fixer *) 0, -1},
+   {LOOKUP_DIST_DMD,           s_galaxy,    0x99,   &dgald4,     (fixer *) 0, -1},
+   {LOOKUP_DIST_DMD,           s2x4,        0xAA,   &d2x4d1,     (fixer *) 0, -1},
+   {LOOKUP_DIST_DMD,           s2x4,        0x55,   &d2x4d2,     (fixer *) 0, -1},
+   {LOOKUP_DIST_DMD,           s4x4,        0x8181, &d4x4d1,     &d4x4d2,     0},
+   {LOOKUP_DIST_DMD,           s4x4,        0x1818, &d4x4d3,     &d4x4d4,     4},
+   {LOOKUP_DIST_BOX,           s2x4,        0xAA,   &d2x4c1,     (fixer *) 0, -1},
+   {LOOKUP_DIST_BOX,           s2x4,        0x55,   &d2x4c2,     (fixer *) 0, -1},
+   {LOOKUP_DIST_BOX,           s2x4,        0x33,   &d2x4y1,     (fixer *) 0, -1},
+   {LOOKUP_DIST_BOX,           s2x4,        0xCC,   &d2x4y2,     (fixer *) 0, -1},
+   {LOOKUP_DIST_BOX,           s_qtag,      0xAA,   &fqtgjj1,    (fixer *) 0, -1},
+   {LOOKUP_DIST_BOX,           s_qtag,      0x99,   &fqtgjj2,    (fixer *) 0, -1},
+   {LOOKUP_DIAG_CLW,           s4x4,        0x0909, &d4x4l1,     &d4x4l2,     0},
+   {LOOKUP_DIAG_CLW,           s4x4,        0x9090, &d4x4l3,     &d4x4l4,     4},
+   {LOOKUP_DIST_CLW,           s_rigger,    0x99,   &distrig1,   (fixer *) 0, -1},
+   {LOOKUP_DIST_CLW,           s_rigger,    0x66,   &distrig2,   (fixer *) 0, -1},
+   {LOOKUP_DIST_CLW,           s_rigger,    0x55,   &distrig5,   (fixer *) 0, -1},
+   {LOOKUP_DIST_CLW,           s_rigger,    0xAA,   &distrig6,   (fixer *) 0, -1},
+   {LOOKUP_DIST_CLW,           s_bone,      0x55,   &distbone1,  (fixer *) 0, -1},
+   {LOOKUP_DIST_CLW,           s_bone,      0x99,   &distbone2,  (fixer *) 0, -1},
+   {LOOKUP_DIST_CLW,           s_bone,      0x66,   &distbone5,  (fixer *) 0, -1},
+   {LOOKUP_DIST_CLW,           s_bone,      0xAA,   &distbone6,  (fixer *) 0, -1},
+   {LOOKUP_DIST_CLW,           s_hrglass,   0xAA,   &disthrg1,   (fixer *) 0, -1},
+   {LOOKUP_DIST_CLW,           s_hrglass,   0x99,   &disthrg2,   (fixer *) 0, -1},
+   {LOOKUP_DIST_CLW,           s_galaxy,    0x66,   &dgalw1,     (fixer *) 0, -1},
+   {LOOKUP_DIST_CLW,           s_galaxy,    0xCC,   &dgalw2,     (fixer *) 0, -1},
+   {LOOKUP_DIST_CLW,           s_galaxy,    0x33,   &dgalw3,     (fixer *) 0, -1},
+   {LOOKUP_DIST_CLW,           s_galaxy,    0x99,   &dgalw4,     (fixer *) 0, -1},
+   {LOOKUP_DIST_CLW,           s2x4,        0x33,   &d2x4w1,     (fixer *) 0, -1},
+   {LOOKUP_DIST_CLW,           s2x4,        0xCC,   &d2x4w2,     (fixer *) 0, -1},
+   {LOOKUP_DIST_CLW,           s2x4,        0xAA,   &d2x4x1,     (fixer *) 0, -1},
+   {LOOKUP_DIST_CLW,           s2x4,        0x55,   &d2x4x2,     (fixer *) 0, -1},
+   {LOOKUP_DISC|LOOKUP_IGNORE, s1x8,        0xAA,   &f1x8aad,    (fixer *) 0, -1},
+   {LOOKUP_DISC|LOOKUP_IGNORE, s1x8,        0x55,   &foo55d,     (fixer *) 0, -1},
+   {LOOKUP_DISC|LOOKUP_IGNORE, s1x8,        0x99,   &foo99d,     (fixer *) 0, -1},
+   {LOOKUP_DISC|LOOKUP_IGNORE, s1x8,        0x66,   &foo66d,     (fixer *) 0, -1},
+   {LOOKUP_DISC|LOOKUP_IGNORE, s1x8,        0x33,   &f1x8endd,   (fixer *) 0, -1},
+   {LOOKUP_DISC|LOOKUP_IGNORE, s1x8,        0x88,   &f1x8_88,    (fixer *) 0, -1},
+   {LOOKUP_DISC|LOOKUP_IGNORE, s1x8,        0x22,   &f1x8_22,    (fixer *) 0, -1},
+   {LOOKUP_DISC|LOOKUP_IGNORE, s1x8,        0x11,   &f1x8_11,    (fixer *) 0, -1},
+   {LOOKUP_DISC|LOOKUP_IGNORE, s_bone,      0x33,   &fboneendd,  (fixer *) 0, -1},
+   {LOOKUP_DISC|LOOKUP_IGNORE, s_bone,      0xBB,   &fbonetgl,   (fixer *) 0, -1},
+   {LOOKUP_DISC|LOOKUP_IGNORE, s_rigger,    0x77,   &frigtgl,    (fixer *) 0, -1},
+   {LOOKUP_DISC|LOOKUP_IGNORE, s_qtag,      0x33,   &fqtgend,    (fixer *) 0, -1},
+   {LOOKUP_DISC|LOOKUP_IGNORE, s_ptpd,      0xAA,   &foozzd,     (fixer *) 0, -1},
+   {LOOKUP_DISC|LOOKUP_IGNORE, s_ptpd,      0x55,   &fptpzzd,    (fixer *) 0, -1},
+   {LOOKUP_DISC|LOOKUP_IGNORE, s_dhrglass,  0x33,   &fdrhgl1,    (fixer *) 0, -1},
+   {LOOKUP_DISC|LOOKUP_IGNORE, s3x1dmd,     0x99,   &f3x1zzd,    (fixer *) 0, -1},
+   {LOOKUP_DISC|LOOKUP_IGNORE, s3x1dmd,     0xAA,   &f3x1yyd,    (fixer *) 0, -1},
+   {LOOKUP_DISC|LOOKUP_IGNORE, s1x3dmd,     0x99,   &f1x3zzd,    (fixer *) 0, -1},
+   {LOOKUP_DISC|LOOKUP_IGNORE, s1x3dmd,     0xAA,   &f1x3yyd,    (fixer *) 0, -1},
+   {LOOKUP_DISC|LOOKUP_IGNORE, s1x3dmd,     0x66,   &f1x3bbd,    (fixer *) 0, -1},
+   {LOOKUP_DISC|LOOKUP_IGNORE, s_crosswave, 0x55,   &fxwv1d,     (fixer *) 0, -1},
+   {LOOKUP_DISC|LOOKUP_IGNORE, s_crosswave, 0x99,   &fxwv2d,     (fixer *) 0, -1},
+   {LOOKUP_DISC|LOOKUP_IGNORE, s_crosswave, 0x66,   &fxwv3d,     (fixer *) 0, -1},
+   {LOOKUP_DISC|LOOKUP_IGNORE, s_crosswave, 0x33,   &fxwve,      (fixer *) 0, -1},
+   {LOOKUP_DISC|LOOKUP_IGNORE, s_spindle,   0x55,   &fspindld,   (fixer *) 0, -1},
+   {LOOKUP_DISC|LOOKUP_IGNORE, s_spindle,   0xAA,   &fspindlbd,  (fixer *) 0, -1},
+   {LOOKUP_DISC|LOOKUP_IGNORE, s2x4,        0xAA,   &fppaad,     (fixer *) 0, -1},
+   {LOOKUP_DISC|LOOKUP_IGNORE, s2x4,        0x55,   &fpp55d,     (fixer *) 0, -1},
+   {LOOKUP_DISC|LOOKUP_IGNORE, s2x4,        0xA5,   &f2x4dleft,  (fixer *) 0, -1},
+   {LOOKUP_DISC|LOOKUP_IGNORE, s2x4,        0x5A,   &f2x4dright, (fixer *) 0, -1},
+   {LOOKUP_DISC|LOOKUP_IGNORE, s2x4,        0x99,   &f2x4endd,   (fixer *) 0, -1},
+   {LOOKUP_IGNORE,             s2x4,        0x77,   &f2x477,     (fixer *) 0, -1},  /* 2x4 with 2 corners ignored.  These 2 are *NOT* disconnected. */
+   {LOOKUP_IGNORE,             s2x4,        0xEE,   &f2x4ee,     (fixer *) 0, -1},  /* 2x4 with 2 centers ignored.  These 2 *ARE* disconnected (or ignored). */
+   {LOOKUP_DISC|LOOKUP_IGNORE, s2x4,        0xBB,   &f2x4bb,     (fixer *) 0, -1},
+   {LOOKUP_DISC|LOOKUP_IGNORE, s2x4,        0xDD,   &f2x4dd,     (fixer *) 0, -1},
+
+
+/*
+   {LOOKUP_NONE,               s4x4,        0x0066, &fcpl12,     (fixer *) 0, -1},
+*/
+
+   {LOOKUP_NONE,               s2x4,        0x33,   &foo33,      (fixer *) 0, -1},
+   {LOOKUP_NONE,               s2x4,        0xCC,   &foocc,      (fixer *) 0, -1},
+   {LOOKUP_NONE,               s2x4,        0x99,   &f2x4endo,   (fixer *) 0, -1},
+   {LOOKUP_NONE,               s1x8,        0xAA,   &f1x8aa,     (fixer *) 0, -1},
+   {LOOKUP_NONE,               s3x4,        0x0C3,  &f3x4left,   (fixer *) 0, -1},
+   {LOOKUP_NONE,               s3x4,        0x30C,  &f3x4right,  (fixer *) 0, -1},
+   {LOOKUP_NONE,               s2x6,        0x0C3,  &f3x4lzz,    (fixer *) 0, -1},
+   {LOOKUP_NONE,               s2x6,        0xC30,  &f3x4rzz,    (fixer *) 0, -1},
+   {LOOKUP_NONE,               s1x8,        0x33,   &f1x8endo,   (fixer *) 0, -1},
+   {LOOKUP_NONE,               s_bone,      0x33,   &fboneendo,  (fixer *) 0, -1},
+   {LOOKUP_NONE,               s_ptpd,      0xAA,   &foozz,      (fixer *) 0, -1},
+   {LOOKUP_NONE,               s_spindle,   0x55,   &fspindlc,   (fixer *) 0, -1},
+   {LOOKUP_NONE,               s_galaxy,    0x44,   &fgalcv,     (fixer *) 0, -1},
+   {LOOKUP_NONE,               s_galaxy,    0x11,   &fgalch,     (fixer *) 0, -1},
+   {LOOKUP_NONE,               s1x3dmd,     0x66,   &f1x3aad,    (fixer *) 0, -1},
+   {LOOKUP_NONE,               s_1x2dmd,    033,    &f1x2aad,    (fixer *) 0, -1},
+   {LOOKUP_NONE,               s2x3,        055,    &f2x3c,      (fixer *) 0, -1},
+   {LOOKUP_NONE,               s_qtag,      0xAA,   &fqtgj1,     (fixer *) 0, -1},
+   {LOOKUP_NONE,               s_qtag,      0x99,   &fqtgj2,     (fixer *) 0, -1},
+   {LOOKUP_NONE,               nothing}};
 
 
 
 /* This does the various types of "so-and-so do this, perhaps while the others do that" concepts. */
-
-extern void selective_move(
-   setup *ss,
-   parse_block *parseptr,
-   int indicator,
-   int arg2,
-   uint32 override_selector,
-   selector_kind selector_to_use,
-   long_boolean concentric_rules,
-   setup *result)
-{
 
 /* indicator = 0  - <> do your part
                1  - <> do your part while the others ....
@@ -2979,8 +2997,66 @@ extern void selective_move(
                4       - distorted box -- used only with indicator = 6
                5       - distorted diamond -- used only with indicator = 6 */
 
-   setup_command subsid_cmd;
-   setup_command *subsid_cmd_p = (setup_command *) 0;
+
+extern void selective_move(
+   setup *ss,
+   parse_block *parseptr,
+   int indicator,
+   int arg2,
+   uint32 override_selector,
+   selector_kind selector_to_use,
+   long_boolean concentric_rules,
+   setup *result)
+{
+   setup_command cmd1thing, cmd2thing;
+   setup_command *cmd2ptr;
+   long_boolean others = indicator & 1;
+
+   cmd1thing = ss->cmd;
+   cmd2thing = ss->cmd;
+   indicator &= ~1;
+
+   if (indicator == 10) {
+      parse_block *parseptrcopy = skip_one_concept(parseptr->next);
+      cmd2thing.parseptr = parseptrcopy->next;
+   }
+   else
+      cmd2thing.parseptr = parseptr->subsidiary_root;
+
+   if (others) {
+      cmd2ptr = &cmd2thing;
+   }
+   else
+      cmd2ptr = (setup_command *) 0;
+
+   inner_selective_move(
+      ss,
+      &cmd1thing,
+      cmd2ptr,
+      indicator,
+      others,
+      arg2,
+      override_selector,
+      selector_to_use,
+      0,
+      (concentric_rules ? DFM1_CONC_CONCENTRIC_RULES : 0),
+      result);
+}
+
+
+extern void inner_selective_move(
+   setup *ss,
+   setup_command *cmd1,
+   setup_command *cmd2,
+   int indicator,
+   long_boolean others,
+   int arg2,
+   uint32 override_selector,
+   selector_kind selector_to_use,
+   uint32 modsa1,
+   uint32 modsb1,
+   setup *result)
+{
    selector_kind saved_selector;
    int i, k;
 volatile   int setupcount;    /* ******FUCKING DEBUGGER BUG!!!!!! */
@@ -2992,8 +3068,7 @@ volatile   int setupcount;    /* ******FUCKING DEBUGGER BUG!!!!!! */
    setup the_setups[2], the_results[2];
    uint32 ssmask;
    int sizem1 = setup_attrs[ss->kind].setup_limits;
-   long_boolean others = indicator & 1;
-   indicator &= ~1;
+   int orig_indicator = indicator;
 
    saved_selector = current_options.who;
    current_options.who = selector_to_use;
@@ -3027,7 +3102,7 @@ volatile   int setupcount;    /* ******FUCKING DEBUGGER BUG!!!!!! */
             q = 1;
 
          /* Indicator 8 is "<> ignored" -- like "<> disconnected", but inverted. */
-         if (indicator == 8) q ^= 1;
+         if (orig_indicator == 8) q ^= 1;
 
          ssmask |= q;
          clear_person(&the_setups[q], i);
@@ -3037,10 +3112,12 @@ volatile   int setupcount;    /* ******FUCKING DEBUGGER BUG!!!!!! */
    current_options.who = saved_selector;
 
    /* If this is "ignored", we have to invert the selector. */
-   if (indicator == 8)
+   if (orig_indicator == 8) {
       selector_to_use = selector_list[selector_to_use].opposite;
+      indicator = 6;
+   }
 
-   if (indicator == 12) {
+   if (orig_indicator == 12) {
       /* This is "so-and-so lead for a cast a shadow". */
 
       uint32 dirmask;
@@ -3098,15 +3175,9 @@ volatile   int setupcount;    /* ******FUCKING DEBUGGER BUG!!!!!! */
       The concentric_move stuff is much more sophisticated about a lot of things than
       what we would otherwise do. */
 
-   if (indicator == 4 || indicator == 8 || indicator == 10) {
+   if (orig_indicator == 4 || orig_indicator == 8 || orig_indicator == 10) {
       cm_hunk *chunk = setup_attrs[ss->kind].conctab;
       uint32 mask = ~(~0 << (sizem1+1));
-
-      if (others) {
-         subsid_cmd = ss->cmd;
-         subsid_cmd.parseptr = parseptr->subsidiary_root;
-         subsid_cmd_p = &subsid_cmd;
-      }
 
       if (sizem1 == 3) {
          schema = schema_single_concentric;
@@ -3157,15 +3228,9 @@ volatile   int setupcount;    /* ******FUCKING DEBUGGER BUG!!!!!! */
          if (ss->kind == s_galaxy && ssmask == 0x77) goto do_concentric_ctrs;
       }
    }
-   else if (indicator == 6) {
+   else if (orig_indicator == 6) {
       cm_hunk *chunk = setup_attrs[ss->kind].conctab;
       uint32 mask = ~(~0 << (sizem1+1));
-
-      if (others) {
-         subsid_cmd = ss->cmd;
-         subsid_cmd.parseptr = parseptr->subsidiary_root;
-         subsid_cmd_p = &subsid_cmd;
-      }
 
       if (chunk) {
          if (chunk->mask_ctr_dmd) {
@@ -3180,9 +3245,6 @@ volatile   int setupcount;    /* ******FUCKING DEBUGGER BUG!!!!!! */
    }
 
 back_here:
-
-   /* We are now finished with special properties of "ignored". */
-   if (indicator == 8) indicator = 6;
 
 /*    taken out!!!!!!
    ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
@@ -3206,23 +3268,21 @@ back_here:
       uint32 otherlivemask = livemask[setupcount^1];
       setup *this_one = &the_setups[setupcount];
       setup_kind kk = this_one->kind;
+      setup_command *cmdp = (setupcount == 1) ? cmd2 : cmd1;
 
       this_one->cmd = ss->cmd;
+
+      this_one->cmd.parseptr = cmdp->parseptr;
+      this_one->cmd.callspec = cmdp->callspec;
+      this_one->cmd.cmd_final_flags = cmdp->cmd_final_flags;
+
       this_one->cmd.cmd_misc_flags |= CMD_MISC__PHANTOMS;
-      if (setupcount == 1) {
-         if (indicator == 10) {
-            parse_block *parseptrcopy = skip_one_concept(parseptr->next);
-            this_one->cmd.parseptr = parseptrcopy->next;
-         }
-         else
-            this_one->cmd.parseptr = parseptr->subsidiary_root;
-      }
 
       if (indicator >= 4 && indicator != 10) {
          Const fixer *fixp = (Const fixer *) 0;
          int lilcount;
          int numsetups;
-         lookup_key key;
+         uint32 key;
          setup lilsetup[4], lilresult[4];
          Const sel_item *p;
          long_boolean feet_warning = FALSE;
@@ -3249,13 +3309,15 @@ back_here:
             key = LOOKUP_DIAG_CLW;
          else if (arg2 != 0)
             key = LOOKUP_DIST_CLW;
+         else if (orig_indicator == 8)
+            key = LOOKUP_IGNORE;
          else if (indicator >= 6)
             key = LOOKUP_DISC;
          else
             key = LOOKUP_NONE;
 
          for (p = sel_table ; p->kk != nothing ; p++) {
-            if (p->key == key && p->kk == kk && p->thislivemask == thislivemask) {
+            if ((p->key & key) && p->kk == kk && p->thislivemask == thislivemask) {
                fixp = p->fixp;
 
                /* We make an extremely trivial test here to see which way the distortion goes.
@@ -3497,8 +3559,7 @@ back_here:
 
    ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
 
-   concentric_move(ss, &ss->cmd, subsid_cmd_p, schema,
-            0, (concentric_rules ? DFM1_CONC_CONCENTRIC_RULES : 0), TRUE, result);
+   concentric_move(ss, cmd1, cmd2, schema, modsa1, modsb1, TRUE, result);
    return;
 
    do_concentric_ends:
@@ -3509,8 +3570,7 @@ back_here:
 
    ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
 
-   concentric_move(ss, subsid_cmd_p, &ss->cmd, schema,
-            0, (concentric_rules ? DFM1_CONC_CONCENTRIC_RULES : 0), TRUE, result);
+   concentric_move(ss, cmd2, cmd1, schema, modsa1, modsb1, TRUE, result);
    return;
 
    forward_here:

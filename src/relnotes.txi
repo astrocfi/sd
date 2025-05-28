@@ -21,10 +21,40 @@
 Copyright @copyright{} 1996 William B. Ackerman
 @sp 2
 @example
-          RELEASE NOTES FOR SD VERSION 31.76
-         Database version = 31.76 format = 83.
+          RELEASE NOTES FOR SD VERSION 31.77
+         Database version = 31.77 format = 84.
        X11 UI version 1.17, SDTTY UI version 1.9.
 @end example
+
+****** Changes as of version 31.77 ******
+
+There is a *MAJOR* improvement in the parser.  (That's the part of the
+program that analyzes the line that you type and figures out the logical
+structure of what you are trying to say.)  All the calls that have "<ANYTHING>"
+in them, like "clover and <ANYTHING>", the ones that print out with brackets
+around the "<ANYTHING>" calls, can now be typed in directly.  You just type
+"clover and [swap around]" or "[follow your neighbor] and spread" or
+"catch [2/3 recycle] 3" or "[shakedown] and roll" or
+clover and [3/4 stable left catch [[reflected flip your neighbor] and spread] 3]
+or whatever you have in mind.  (Good luck calling that last one!)
+
+THE BRACKETS ARE NECESSARY!!!  Without them, it would be impossible
+to distinguish between
+         clover and [[swap around] and roll]
+and
+         [clover and [swap around]] and roll
+
+The calls like "trade motivate" (a modified version of the circulate
+for calls that start with a circulate) have had their name changed in the
+menus.  They are now "<ANYCIRC> motivate".  There are also calls
+"<ANYTHING> motivate" (along with their more mundane friends like
+"clover and <ANYTHING>" and "<ANYTHING> and spread".  The former calls
+are entered, as before, without brackets:  Just type "in roll perk up"
+or whatever.  The latter are entered with brackets.  Type "[2/3 recycle]
+motivate" or "clover and [swap around]" or whatever.  Because both types
+of calls can be typed directly, there is hardly ever any need to type words
+like "<ANYTHING>" or "<ANYCIRC>".  However, we thought you'd like to know
+that we have changed the names to avoid any ambiguity.
 
 ****** Changes as of version 31.76 ******
 

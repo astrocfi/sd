@@ -62,9 +62,9 @@
 #define U CONCPARSE_MENU_DUP
 #define Y CONCPARSE_YIELD_IF_AMB
 #define D CONCPARSE_PARSE_DIRECT
-#define L 0x8
-#define F 0x10
-#define G 0x20
+#define L CONCPARSE_PARSE_L_TYPE
+#define F CONCPARSE_PARSE_F_TYPE
+#define G CONCPARSE_PARSE_G_TYPE
 
 concept_descriptor special_magic          = {"MAGIC DIAMOND,",       concept_magic,             L+U+D, l_c1, {0, 1}};
 concept_descriptor special_interlocked    = {"INTERLOCKED DIAMOND,", concept_interlocked,       L+U+D, l_c1, {0, 1}};

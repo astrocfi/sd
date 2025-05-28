@@ -366,11 +366,14 @@ Private long_boolean callcompare(callspec_block *x, callspec_block *y)
       /* And hyphens too, so that "1-3-2 quarter the alter" will be listed under "q" (or whatever) rather than "-". */
 
       /* The current order is:
-         <ATC>
-         <ANYONE>
-         <ANYTHING>
-         <N>
-         <N/4> */
+         <ATC>        (-8)
+         <DIRECTION>  (-7)
+         <ANYONE>     (-6)
+         <ANYCIRC>    (-5)
+         <ANYTHING>   (-4)
+         <N>          (-3)
+         <N/4>        (-2)
+         <Nth>        (-1) */
 
       /* First, skip blanks and hyphens, in both m and n. */
 
@@ -384,20 +387,21 @@ Private long_boolean callcompare(callspec_block *x, callspec_block *y)
 
          switch (mc) {
             case 'v': case 'w': case 'x': case 'y':
-               mc = -6;
-               break;
+               mc = -8; break;
+            case 'h':
+               mc = -7; break;
             case '6': case 'k':
-               mc = -5;
-               break;
+               mc = -6; break;
+            case 'N':
+               mc = -5; break;
             case '0': case 'm':
-               mc = -4;
-               break;
+               mc = -4; break;
             case '9':
-               mc = -3;
-               break;
-            case 'a': case 'b': case 'B':
-               mc = -2;
-               break;
+               mc = -3; break;
+            case 'a': case 'b': case 'B': case 'D':
+               mc = -2; break;
+            case 'u':
+               mc = -1; break;
             case '7': case 'n': case 'j': case 'J': case 'E':
                /* Skip over @7...@8, @n .. @o, and @j...@l stuff. */
                while (*m++ != '@');
@@ -415,20 +419,21 @@ Private long_boolean callcompare(callspec_block *x, callspec_block *y)
 
          switch (nc) {
             case 'v': case 'w': case 'x': case 'y':
-               nc = -6;
-               break;
+               nc = -8; break;
+            case 'h':
+               nc = -7; break;
             case '6': case 'k':
-               nc = -5;
-               break;
+               nc = -6; break;
+            case 'N':
+               nc = -5; break;
             case '0': case 'm':
-               nc = -4;
-               break;
+               nc = -4; break;
             case '9':
-               nc = -3;
-               break;
-            case 'a': case 'b': case 'B':
-               nc = -2;
-               break;
+               nc = -3; break;
+            case 'a': case 'b': case 'B': case 'D':
+               nc = -2; break;
+            case 'u':
+               nc = -1; break;
             case '7': case 'n': case 'j': case 'J': case 'E':
                /* Skip over @7...@8, @n .. @o, and @j...@l stuff. */
                while (*n++ != '@');
@@ -442,8 +447,7 @@ Private long_boolean callcompare(callspec_block *x, callspec_block *y)
       if (!mc) return TRUE;
       else if (!nc) return FALSE;
       else if (mc != nc) return (mc < nc);
-      else
-         { m++; n++; }
+      else { m++; n++; }
    }
 }
 

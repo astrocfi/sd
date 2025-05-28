@@ -199,17 +199,17 @@ extern int get_char(void)
       else if (n >= 133 && n <= 134)
          n += 128+11-133;     /* f11..f12 */
       else if (n >= 84 && n <= 93)
-         n += 160+1-84;     /* shift f1..f10 */
+         n += 144+1-84;     /* shift f1..f10 */
       else if (n >= 135 && n <= 136)
-         n += 160+11-135;     /* shift f11..f12 */
+         n += 144+11-135;     /* shift f11..f12 */
       else if (n >= 94 && n <= 103)
-         n += 192+1-94;     /* control f1..f10 */
+         n += 160+1-94;     /* control f1..f10 */
       else if (n >= 137 && n <= 138)
-         n += 192+11-137;     /* control f11..f12 */
+         n += 160+11-137;     /* control f11..f12 */
       else if (n >= 104 && n <= 113)
-         n += 224+1-104;     /* alt f1..f10 */
+         n += 176+1-104;     /* alt f1..f10 */
       else if (n >= 139 && n <= 140)
-         n += 224+11-139;     /* alt f11..f12 */
+         n += 176+11-139;     /* alt f11..f12 */
       else
          n = ' ';
    }
@@ -220,17 +220,17 @@ extern int get_char(void)
    else if (n >= 389 && n <= 390)
       n += 128+11-389;     /* f11..f12 */
    else if (n >= 340 && n <= 349)
-      n += 160+1-340;     /* shift f1..f10 */
+      n += 144+1-340;     /* shift f1..f10 */
    else if (n >= 391 && n <= 392)
-      n += 160+11-391;     /* shift f11..f12 */
+      n += 144+11-391;     /* shift f11..f12 */
    else if (n >= 350 && n <= 359)
-      n += 192+1-350;     /* control f1..f10 */
+      n += 160+1-350;     /* control f1..f10 */
    else if (n >= 393 && n <= 394)
-      n += 192+11-393;     /* control f11..f12 */
+      n += 160+11-393;     /* control f11..f12 */
    else if (n >= 360 && n <= 369)
-      n += 224+1-360;     /* alt f1..f10 */
+      n += 176+1-360;     /* alt f1..f10 */
    else if (n >= 395 && n <= 396)
-      n += 224+11-395;     /* alt f11..f12 */
+      n += 176+11-395;     /* alt f11..f12 */
    else if (n >= 128)
       n = ' ';
 

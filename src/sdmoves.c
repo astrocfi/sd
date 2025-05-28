@@ -2881,18 +2881,16 @@ that probably need to be put in. */
             do_sequential_call(ss, callspec, qtfudged, &mirror, result);
          }
          else {
-            setup_command foo1, foo2;
+            setup_command foo1;
+            setup_command foo2;
             by_def_item *innerdef = &callspec->stuff.conc.innerdef;
             by_def_item *outerdef = &callspec->stuff.conc.outerdef;
             parse_block *parseptr = ss->cmd.parseptr;
 
-            /* Must be some form of concentric. */
+            /* Must be some form of concentric, or a "sel_XXX" schema. */
 
             if (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT)
                fail("Can't split this call.");
-
-            ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;     /* We think this is the right thing to do. */
-            saved_warnings = history[history_ptr+1].warnings;
 
             (void) get_real_subcall(
                parseptr, innerdef,
@@ -2904,77 +2902,91 @@ that probably need to be put in. */
                ss->cmd.cmd_final_flags, callspec,
                &foo2);
 
-            /* Fudge a 3x4 into a 1/4-tag if appropriate. */
-
-            if (ss->kind == s3x4 && (callflags1 & CFLAG1_FUDGE_TO_Q_TAG) &&
-                  (the_schema == schema_concentric || the_schema == schema_cross_concentric)) {
-
-               if (ss->people[0].id1) {
-                  if (ss->people[1].id1) fail("Can't do this call from arbitrary 3x4 setup.");
-               }
-               else (void) copy_person(ss, 0, ss, 1);
-
-               if (ss->people[3].id1) {
-                  if (ss->people[2].id1) fail("Can't do this call from arbitrary 3x4 setup.");
-                  else (void) copy_person(ss, 1, ss, 3);
-               }
-               else (void) copy_person(ss, 1, ss, 2);
-
-               (void) copy_person(ss, 2, ss, 4);
-               (void) copy_person(ss, 3, ss, 5);
-
-               if (ss->people[6].id1) {
-                  if (ss->people[7].id1) fail("Can't do this call from arbitrary 3x4 setup.");
-                  else (void) copy_person(ss, 4, ss, 6);
-               }
-               else (void) copy_person(ss, 4, ss, 7);
-
-               if (ss->people[9].id1) {
-                  if (ss->people[8].id1) fail("Can't do this call from arbitrary 3x4 setup.");
-                  else (void) copy_person(ss, 5, ss, 9);
-               }
-               else (void) copy_person(ss, 5, ss, 8);
-
-               (void) copy_person(ss, 6, ss, 10);
-               (void) copy_person(ss, 7, ss, 11);
-
-               ss->kind = s_qtag;
-               ss->cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
+            if (the_schema == schema_select_leads) {
+               inner_selective_move(
+                  ss, &foo1, &foo2,
+                  4, 1, 0, 0,
+                  selector_leads,
+                  innerdef->modifiers1,
+                  outerdef->modifiers1,
+                  result);
             }
-            else if (ss->kind == s_qtag &&
-                     (callflags1 & CFLAG1_FUDGE_TO_Q_TAG) &&
-                     (the_schema == schema_in_out_triple || the_schema == schema_in_out_triple_squash)) {
-               /* Or change from qtag to 3x4 if schema requires same. */
-               (void) copy_person(ss, 11, ss, 7);
-               (void) copy_person(ss, 10, ss, 6);
-               (void) copy_person(ss, 8, ss, 5);
-               (void) copy_person(ss, 7, ss, 4);
-               (void) copy_person(ss, 5, ss, 3);
-               (void) copy_person(ss, 4, ss, 2);
-               (void) copy_person(ss, 2, ss, 1);
-               (void) copy_person(ss, 1, ss, 0);
-               clear_person(ss, 0);
-               clear_person(ss, 3);
-               clear_person(ss, 6);
-               clear_person(ss, 9);
-
-               ss->kind = s3x4;
+            else {
+               ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;     /* We think this is the right thing to do. */
+               saved_warnings = history[history_ptr+1].warnings;
+   
+               /* Fudge a 3x4 into a 1/4-tag if appropriate. */
+   
+               if (ss->kind == s3x4 && (callflags1 & CFLAG1_FUDGE_TO_Q_TAG) &&
+                     (the_schema == schema_concentric || the_schema == schema_cross_concentric)) {
+   
+                  if (ss->people[0].id1) {
+                     if (ss->people[1].id1) fail("Can't do this call from arbitrary 3x4 setup.");
+                  }
+                  else (void) copy_person(ss, 0, ss, 1);
+   
+                  if (ss->people[3].id1) {
+                     if (ss->people[2].id1) fail("Can't do this call from arbitrary 3x4 setup.");
+                     else (void) copy_person(ss, 1, ss, 3);
+                  }
+                  else (void) copy_person(ss, 1, ss, 2);
+   
+                  (void) copy_person(ss, 2, ss, 4);
+                  (void) copy_person(ss, 3, ss, 5);
+   
+                  if (ss->people[6].id1) {
+                     if (ss->people[7].id1) fail("Can't do this call from arbitrary 3x4 setup.");
+                     else (void) copy_person(ss, 4, ss, 6);
+                  }
+                  else (void) copy_person(ss, 4, ss, 7);
+   
+                  if (ss->people[9].id1) {
+                     if (ss->people[8].id1) fail("Can't do this call from arbitrary 3x4 setup.");
+                     else (void) copy_person(ss, 5, ss, 9);
+                  }
+                  else (void) copy_person(ss, 5, ss, 8);
+   
+                  (void) copy_person(ss, 6, ss, 10);
+                  (void) copy_person(ss, 7, ss, 11);
+   
+                  ss->kind = s_qtag;
+                  ss->cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
+               }
+               else if (ss->kind == s_qtag &&
+                        (callflags1 & CFLAG1_FUDGE_TO_Q_TAG) &&
+                        (the_schema == schema_in_out_triple || the_schema == schema_in_out_triple_squash)) {
+                  /* Or change from qtag to 3x4 if schema requires same. */
+                  (void) copy_person(ss, 11, ss, 7);
+                  (void) copy_person(ss, 10, ss, 6);
+                  (void) copy_person(ss, 8, ss, 5);
+                  (void) copy_person(ss, 7, ss, 4);
+                  (void) copy_person(ss, 5, ss, 3);
+                  (void) copy_person(ss, 4, ss, 2);
+                  (void) copy_person(ss, 2, ss, 1);
+                  (void) copy_person(ss, 1, ss, 0);
+                  clear_person(ss, 0);
+                  clear_person(ss, 3);
+                  clear_person(ss, 6);
+                  clear_person(ss, 9);
+   
+                  ss->kind = s3x4;
+               }
+   
+               concentric_move(
+                  ss, &foo1, &foo2,
+                  the_schema,
+                  innerdef->modifiers1,
+                  outerdef->modifiers1,
+                  TRUE,
+                  result);
+   
+               if (DFM1_SUPPRESS_ELONGATION_WARNINGS & outerdef->modifiers1) {
+                  history[history_ptr+1].warnings.bits[0] &= ~conc_elong_warnings.bits[0];
+                  history[history_ptr+1].warnings.bits[1] &= ~conc_elong_warnings.bits[1];
+               }
+               history[history_ptr+1].warnings.bits[0] |= saved_warnings.bits[0];
+               history[history_ptr+1].warnings.bits[1] |= saved_warnings.bits[1];
             }
-
-            concentric_move(
-               ss, &foo1, &foo2,
-               the_schema,
-               innerdef->modifiers1,
-               outerdef->modifiers1,
-               TRUE,
-               result);
-
-            if (DFM1_SUPPRESS_ELONGATION_WARNINGS & outerdef->modifiers1) {
-               history[history_ptr+1].warnings.bits[0] &= ~conc_elong_warnings.bits[0];
-               history[history_ptr+1].warnings.bits[1] &= ~conc_elong_warnings.bits[1];
-            }
-            history[history_ptr+1].warnings.bits[0] |= saved_warnings.bits[0];
-            history[history_ptr+1].warnings.bits[1] |= saved_warnings.bits[1];
          }
          break;
    }

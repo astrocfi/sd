@@ -78,6 +78,7 @@ and the following external variable that is declared only in sdui-ttu.h:
 #include <stdio.h>
 #include <string.h>
 #include "sd.h"
+#define SCREWED_UP_REVERTS
 
 
 
@@ -166,6 +167,22 @@ selector_item selector_list[] = {
    "THOSE FACING AWAY FROM THE CALLER", "THOSE FACING AWAY FROM THE CALLER",
                                                                   selector_uninitialized},
 
+   {"#1 boy",       "#1 boy",      "#1 BOY",       "#1 BOY",      selector_uninitialized},
+   {"#1 girl",      "#1 girl",     "#1 GIRL",      "#1 GIRL",     selector_uninitialized},
+   {"#1 couple",    "#1 couple",   "#1 COUPLE",    "#1 COUPLE",   selector_uninitialized},
+   {"#2 boy",       "#2 boy",      "#2 BOY",       "#2 BOY",      selector_uninitialized},
+   {"#2 girl",      "#2 girl",     "#2 GIRL",      "#2 GIRL",     selector_uninitialized},
+   {"#2 couple",    "#2 couple",   "#2 COUPLE",    "#2 COUPLE",   selector_uninitialized},
+   {"#3 boy",       "#3 boy",      "#3 BOY",       "#3 BOY",      selector_uninitialized},
+   {"#3 girl",      "#3 girl",     "#3 GIRL",      "#3 GIRL",     selector_uninitialized},
+   {"#3 couple",    "#3 couple",   "#3 COUPLE",    "#3 COUPLE",   selector_uninitialized},
+   {"#4 boy",       "#4 boy",      "#4 BOY",       "#4 BOY",      selector_uninitialized},
+   {"#4 girl",      "#4 girl",     "#4 GIRL",      "#4 GIRL",     selector_uninitialized},
+   {"#4 couple",    "#4 couple",   "#4 COUPLE",    "#4 COUPLE",   selector_uninitialized},
+   {"couples 1 and 2", "couple 1 and 2", "COUPLES 1 AND 2", "COUPLE 1 AND 2", selector_uninitialized},
+   {"couples 2 and 3", "couple 2 and 3", "COUPLES 2 AND 3", "COUPLE 2 AND 3", selector_uninitialized},
+   {"couples 3 and 4", "couple 3 and 4", "COUPLES 3 AND 4", "COUPLE 3 AND 4", selector_uninitialized},
+   {"couples 1 and 4", "couple 1 and 4", "COUPLES 1 AND 4", "COUPLE 1 AND 4", selector_uninitialized},
    {"everyone",     "everyone",    "EVERYONE",     "EVERYONE",    selector_uninitialized},
    {"no one",       "no one",      "NO ONE",       "NO ONE",      selector_uninitialized},
    {(Cstring) 0,    (Cstring) 0,   (Cstring) 0,    (Cstring) 0,   selector_uninitialized}};
@@ -239,7 +256,8 @@ Cstring warning_strings[] = {
    /*  warn__check_pgram         */   " Opt for a parallelogram.",
    /*  warn__dyp_resolve_ok      */   " Do your part.",
    /*  warn__ctrs_stay_in_ctr    */   " Centers stay in the center.",
-   /*  warn__check_c1_stars      */   " Check a generalized 'star' setup.",
+   /*  warn__check_c1_stars      */   " Check 'stars'.",
+   /*  warn__check_gen_c1_stars  */   " Check a generalized 'star' setup.",
    /*  warn__bigblock_feet       */   " Bigblock/stagger shapechanger -- go to footprints.",
    /*  warn__adjust_to_feet      */   " Adjust back to footprints.",
    /*  warn__some_touch          */   " Some people step to a wave.",
@@ -832,8 +850,10 @@ extern void nonreturning specialfail(Const char s[])
 extern Const char *get_escape_string(char c)
 {
    switch (c) {
-      case '0': case 'm': case 'N':
+      case '0': case 'm':
          return "<ANYTHING>";
+      case 'N':
+         return "<ANYCIRC>";
       case '6': case 'k':
          return "<ANYONE>";
       case 'h':
@@ -927,7 +947,7 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
 
          /* Some concepts look better with a comma after them. */
 
-         if (item->concparseflags & 0x10) {
+         if (item->concparseflags & CONCPARSE_PARSE_F_TYPE) {
             /* This is an "F" type concept. */
             comma_after_next_concept = TRUE;
             last_was_t_type = FALSE;
@@ -935,12 +955,12 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
             last_was_l_type = FALSE;
             did_concept = TRUE;
          }
-         else if (item->concparseflags & 0x8) {
+         else if (item->concparseflags & CONCPARSE_PARSE_L_TYPE) {
             /* This is an "L" type concept. */
             last_was_t_type = FALSE;
             last_was_l_type = TRUE;
          }
-         else if (item->concparseflags & 0x20) {
+         else if (item->concparseflags & CONCPARSE_PARSE_G_TYPE) {
             /* This is a "leading T/trailing L" type concept, also known as a "G" concept. */
             force = last_was_t_type && !last_was_l_type;;
             last_was_t_type = FALSE;
@@ -1163,12 +1183,10 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
          /* This is a "marker", so it has a call, perhaps with a selector and/or number.
             The call may be null if we are printing a partially entered line.  Beware. */
 
-         parse_block *subsidiary_ptr;
          parse_block *sub1_ptr;
          parse_block *sub2_ptr;
          parse_block *search;
-         long_boolean pending_subst1, subst1_in_use, this_is_subst1;
-         long_boolean pending_subst2, subst2_in_use, this_is_subst2;
+         long_boolean pending_subst1, pending_subst2;
 
          selector_kind i16junk = local_cptr->options.who;
          direction_kind idirjunk = local_cptr->options.where;
@@ -1176,17 +1194,17 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
          callspec_block *localcall = local_cptr->call;
          parse_block *save_cptr = local_cptr;
 
-         subst1_in_use = FALSE;
-         subst2_in_use = FALSE;
+         long_boolean subst1_in_use = FALSE;
+         long_boolean subst2_in_use = FALSE;
 
          if (request_final_space) writestuff(" ");
 
          if (k == concept_another_call_next_mod) {
             search = save_cptr->next;
             while (search) {
-               this_is_subst1 = FALSE;
-               this_is_subst2 = FALSE;
-               subsidiary_ptr = search->subsidiary_root;
+               parse_block *subsidiary_ptr = search->subsidiary_root;
+               long_boolean this_is_subst1 = FALSE;
+               long_boolean this_is_subst2 = FALSE;
                if (subsidiary_ptr) {
                   switch ((search->options.number_fields & DFM1_CALL_MOD_MASK) / DFM1_CALL_MOD_BIT) {
                      case 1:
@@ -1247,12 +1265,66 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
                         break;
                      case 'v': case 'w': case 'x': case 'y':
                         write_blank_if_needed();
-
                         /* Find the base tag call that this is invoking. */
-
+#ifdef SCREWED_UP_REVERTS
                         search = save_cptr->next;
                         while (search) {
-                           subsidiary_ptr = search->subsidiary_root;
+                           parse_block *subsidiary_ptr = search->subsidiary_root;
+                           if (subsidiary_ptr && subsidiary_ptr->call && (subsidiary_ptr->call->callflags1 & CFLAG1_BASE_TAG_CALL_MASK)) {
+                              parse_block *search2;
+                              parse_block *subsidiary_ptr2 = subsidiary_ptr;
+
+                              for (;;) {
+                                 parse_block *search3;
+                                 parse_block *subsidiary_ptr3;
+
+                                 for (search3 = subsidiary_ptr2->next ; search3 ; search3 = search3->next) {
+                                    subsidiary_ptr3 = search3->subsidiary_root;
+
+                                    if (subsidiary_ptr3 && subsidiary_ptr3->call && (subsidiary_ptr3->call->callflags1 & CFLAG1_BASE_TAG_CALL_MASK)) {
+                                       if (subsidiary_ptr3->concept->kind == concept_another_call_next_mod)
+                                          goto search_again;
+                                       else if (subsidiary_ptr2 == subsidiary_ptr) {
+                                          print_recurse(subsidiary_ptr, 0);
+                                          goto did_tagger;
+                                       }
+                                       else {
+                                          search2->subsidiary_root = subsidiary_ptr3;
+                                          search3->subsidiary_root = subsidiary_ptr;
+                                          print_recurse(subsidiary_ptr2, 0);
+                                          search2->subsidiary_root = subsidiary_ptr2;
+                                          search3->subsidiary_root = subsidiary_ptr3;
+                                          goto did_tagger;
+                                       }
+                                    }
+                                 }
+
+                                 break;    /* Can't seem to find anything. */
+
+                                 search_again:
+                                 search2 = search3;
+                                 subsidiary_ptr2 = subsidiary_ptr3;
+                              }
+
+                              print_recurse(subsidiary_ptr, 0);
+                              goto did_tagger;
+                           }
+                           search = search->next;
+                        }
+
+                        /* We didn't find the tagger.  It must not have been entered into the parse tree.
+                           See if we can get it from the "tagger" field. */
+
+                        if (save_cptr->options.tagger > 0)
+                           writestuff(tagger_calls[save_cptr->options.tagger >> 5][(save_cptr->options.tagger & 0x1F)-1]->menu_name);
+                        else
+                           writestuff("NO TAGGER???");
+
+                        did_tagger:
+#else
+                        search = save_cptr->next;
+                        while (search) {
+                           parse_block *subsidiary_ptr = search->subsidiary_root;
                            if (subsidiary_ptr && subsidiary_ptr->call && (subsidiary_ptr->call->callflags1 & CFLAG1_BASE_TAG_CALL_MASK)) {
                               print_recurse(subsidiary_ptr, 0);
                               goto did_tagger;
@@ -1269,7 +1341,7 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
                            writestuff("NO TAGGER???");
 
                         did_tagger:
-
+#endif
                         if (np[2] && np[2] != ' ' && np[2] != ']')
                            writestuff(" ");
                         np += 2;       /* skip the indicator */
@@ -1281,7 +1353,7 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
 
                         search = save_cptr->next;
                         while (search) {
-                           subsidiary_ptr = search->subsidiary_root;
+                           parse_block *subsidiary_ptr = search->subsidiary_root;
                            if (subsidiary_ptr && subsidiary_ptr->call && (subsidiary_ptr->call->callflags1 & CFLAG1_BASE_CIRC_CALL)) {
                               print_recurse(subsidiary_ptr, PRINT_RECURSE_CIRC);
                               goto did_circcer;
@@ -1459,8 +1531,8 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
 
             for (search = save_cptr->next ; search ; search = search->next) {
                callspec_block *cc;
+               parse_block *subsidiary_ptr = search->subsidiary_root;
 
-               subsidiary_ptr = search->subsidiary_root;
                /* If we have a subsidiary_ptr, handle the replacement that is indicated.
                   BUT:  if the call shown in the subsidiary_ptr is a base tag call, don't
                   do anything -- such substitutions were already taken care of.
@@ -2511,6 +2583,23 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
                kkk = b1 ? sq_ctr_pts_rh : sq_ctr_pts_lh;
                if ((search_qualifier) p->qualifier == kkk) goto good;
             }
+            goto bad;
+         case sq_ripple_centers:
+            k ^= (0xA82 ^ 0x144);
+            /* FALL THROUGH!!!!!! */
+         case sq_ripple_one_end:
+            k ^= (0x144 ^ 0x555);
+            /* FALL THROUGH!!!!!! */
+         case sq_ripple_both_ends:
+            if (ss->kind != s1x4) goto good;
+            k ^= 0x555;
+            mask = 0;
+
+            for (i=0, w=1; i<=setup_attrs[ss->kind].setup_limits; i++, w<<=1) {
+               if (selectp(ss, i)) mask |= w;
+            }
+
+            if (mask == (k & 0xF) || mask == ((k>>4) & 0xF) || mask == ((k>>8) & 0xF)) goto good;
             goto bad;
          case sq_all_sel:
             k = 1;     /* K was initialized to zero. */
