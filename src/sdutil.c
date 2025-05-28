@@ -197,10 +197,10 @@ Private void writestuff_with_decorations(char s[], long_boolean do_number, long_
       while (*f) {
          if (f[0] == '<') {
             if (do_number && f[1] == 'N' && f[2] == '/' && f[3] == '4' &&f[4] == '>') {
-               if ((num & 0xF) == 2)
+               if ((num & 0xFFFF) == 2)
                   writestuff("1/2");
                else {
-                  writechar('0' + (num & 0xF));
+                  writechar('0' + (num & 0xFFFF));
                   writestuff("/4");
                }
                f += 5;
@@ -665,10 +665,13 @@ Private void print_recurse(int print_recurse_arg)
          parse_block *save_cptr;
          parse_block *subsidiary_ptr;
          parse_block *search;
+         selector_kind i16junk;
+         int i17junk;
          callspec_block *localcall;
          long_boolean pending_subst, subst_in_use;
-         selector_kind i16junk = static_cptr->selector;
-         int i17junk = static_cptr->number;
+
+         i16junk = static_cptr->selector;
+         i17junk = static_cptr->number;
          localcall = static_cptr->call;
 
          save_cptr = static_cptr;
@@ -724,13 +727,13 @@ Private void print_recurse(int print_recurse_arg)
                      char nn[2];
 
                      if (lastchar != ' ' && lastchar != '[') writestuff(" ");
-                     nn[0] = '0' + (i17junk & 0xF);
+                     nn[0] = '0' + i17junk;
                      nn[1] = '\0';
                      if (np[1] == '9')
                         writestuff(nn);
-                     else if ((i17junk & 0xF) == 2)
+                     else if (i17junk == 2)
                         writestuff("1/2");
-                     else if ((i17junk & 0xF) == 4 && np[1] == 'a')
+                     else if ((i17junk == 4) && (np[1] == 'a'))
                         writestuff("full");
                      else {
                         writestuff(nn);
@@ -841,11 +844,11 @@ Private void print_recurse(int print_recurse_arg)
                      localcall = search->call;
 
                      if ((!(first_replace++)) && static_cptr &&
-                           (localcall->callflags1 & CFLAG1_IS_STAR_CALL) &&
+                           (localcall->callflags & cflag__is_star_call) &&
                                  ((static_cptr->concept->kind == marker_end_of_list) ||
                                  (static_cptr->concept->kind == concept_another_call_next_mod)) &&
                            (static_cptr->call) &&
-                           (static_cptr->call->callflags1 & CFLAG1_IS_STAR_CALL)) {
+                           (static_cptr->call->callflags & cflag__is_star_call)) {
                         writestuff(" BUT [");
                      }
                      else {
@@ -1138,7 +1141,7 @@ Private void printsetup(setup *x)
          if (x->rotation & 1)
             do_write("     g@f      a@   hd@e      b@     c");
          else
-            do_write("   a  b@      d@g        c@      h@   f  e");
+            do_write("  a  b@     d@g       c@     h@  f  e");
          break;
       case s_galaxy:
          offs = ((x->rotation & 3) * (modulus / 4)) - modulus;
@@ -2118,47 +2121,42 @@ extern parse_block *process_final_concepts(
             bit_to_set = FINAL__TRIANGLE; break;
          case concept_magic:
             last_magic_diamond = tptr;
-            if (check_errors && (*final_concepts & (INHERITFLAG_SINGLE | INHERITFLAG_DIAMOND)))
+            if (check_errors && (*final_concepts & (FINAL__SINGLE | FINAL__DIAMOND)))
                fail("Modifiers specified in illegal order.");
-            bit_to_set = INHERITFLAG_MAGIC; break;
+            bit_to_set = FINAL__MAGIC; break;
          case concept_grand:
-            if (check_errors && (*final_concepts & INHERITFLAG_SINGLE))
+            if (check_errors && (*final_concepts & FINAL__SINGLE))
                fail("Modifiers specified in illegal order.");
-            bit_to_set = INHERITFLAG_GRAND; break;
-         case concept_cross: bit_to_set = INHERITFLAG_CROSS; break;
-         case concept_single: bit_to_set = INHERITFLAG_SINGLE; break;
-         case concept_1x2: bit_to_set = INHERITFLAG_1X2; break;
-         case concept_2x1: bit_to_set = INHERITFLAG_2X1; break;
-         case concept_2x2: bit_to_set = INHERITFLAG_2X2; break;
-         case concept_1x3: bit_to_set = INHERITFLAG_1X3; break;
-         case concept_3x1: bit_to_set = INHERITFLAG_3X1; break;
-         case concept_3x3: bit_to_set = INHERITFLAG_3X3; break;
-         case concept_4x4: bit_to_set = INHERITFLAG_4X4; break;
+            bit_to_set = FINAL__GRAND; break;
+         case concept_cross:
+            bit_to_set = FINAL__CROSS; break;
+         case concept_single:
+            bit_to_set = FINAL__SINGLE; break;
          case concept_interlocked:
             last_magic_diamond = tptr;
-            if (check_errors && (*final_concepts & (INHERITFLAG_SINGLE | INHERITFLAG_DIAMOND)))
+            if (check_errors && (*final_concepts & (FINAL__SINGLE | FINAL__DIAMOND)))
                fail("Modifiers specified in illegal order.");
-            bit_to_set = INHERITFLAG_INTLK; break;
+            bit_to_set = FINAL__INTERLOCKED; break;
          case concept_split:
             bit_to_set = FINAL__SPLIT; break;
          case concept_reverse:
-            bit_to_set = INHERITFLAG_REVERSE; break;
+            bit_to_set = FINAL__REVERSE; break;
          case concept_left:
-            bit_to_set = INHERITFLAG_LEFT; break;
+            bit_to_set = FINAL__LEFT; break;
          case concept_12_matrix:
             if (check_errors && *final_concepts)
                fail("Matrix modifier must appear first.");
-            bit_to_set = INHERITFLAG_12_MATRIX; break;
+            bit_to_set = FINAL__12_MATRIX; break;
          case concept_16_matrix:
             if (check_errors && *final_concepts)
                fail("Matrix modifier must appear first.");
-            bit_to_set = INHERITFLAG_16_MATRIX; break;
+            bit_to_set = FINAL__16_MATRIX; break;
          case concept_diamond:
-            if (check_errors && (*final_concepts & INHERITFLAG_SINGLE))
+            if (check_errors && (*final_concepts & FINAL__SINGLE))
                fail("Modifiers specified in illegal order.");
-            bit_to_set = INHERITFLAG_DIAMOND; break;
+            bit_to_set = FINAL__DIAMOND; break;
          case concept_funny:
-            bit_to_set = INHERITFLAG_FUNNY; break;
+            bit_to_set = FINAL__FUNNY; break;
          default:
             goto exit5;
       }
