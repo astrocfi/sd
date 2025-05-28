@@ -1275,13 +1275,11 @@ extern void concentric_move(
    }
    else {
       result_outer = begin_outer;
+
       if (!(begin_outer_elongation & ~1))
          result_outer.result_flags = begin_outer_elongation+1;
       else
          result_outer.result_flags = 0;   /* Outer people have unknown elongation and aren't moving.  Not good. */
-
-      /* Grab the "did_last_part" flag from the call that was actually done. */
-      result_outer.result_flags |= result_inner[0].result_flags & RESULTFLAG__DID_LAST_PART;
 
       localmodsout1 |= DFM1_CONC_FORCE_SPOTS;      /* Make sure these people go to the same spots. */
       /* Strip out the roll bits -- people who didn't move can't roll. */
@@ -1290,12 +1288,6 @@ extern void concentric_move(
             if (result_outer.people[i].id1) result_outer.people[i].id1 = (result_outer.people[i].id1 & (~ROLL_MASK)) | ROLLBITM;
          }
       }
-   }
-
-   if (!cmdin) {
-      /* Grab the "did_last_part" flags from the call that was actually done. */
-      for (k=0; k<center_arity; k++)
-         result_inner[k].result_flags |= result_outer.result_flags & RESULTFLAG__DID_LAST_PART;
    }
 
    /* If the call was something like "ends detour", the concentricity info was left in the
@@ -1572,15 +1564,13 @@ extern void concentric_move(
                   elongation perpendicular to the original 1x4 or diamond.
                (3) If the "force_otherway" invocation flag is on, meaning the database
                   really wants us to, we set the elongation perpendicular to the original
-                  1x4 or diamond.
-               (4) If the "force_spots" invocation flag is on, meaning the database
-                  really wants us to, we set the elongation parallel to the original
-                  1x4 or diamond.
-               (5) Otherwise, we set the elongation to the natural elongation that the people
+                  1x4 or diamond.  *** Actually, it appears that this flag is meaningless
+                  for 1x4/dmd -> 2x2 calls, and the "par_conc_end" does this function
+               (4) Otherwise, we set the elongation to the natural elongation that the people
                   went to.  This uses the result of the "par_conc_end" flag for 1x4/dmd -> 2x2
                   calls, or the manner in which the setup was divided for calls that were put
                   together from 2-person calls, or whatever.  (For 1x4->2x2 calls, the "par_conc_end"
-                  flag means the call prefers the SAME elongation in the resulting 2x2.)  The default,
+                  flag means the call prefers the SAME elongation in the resulting 2x2.  The default,
                   absent this flag, is to change the elongation.  In any case, the result of all that
                   has been encoded into the elongation of the 2x2 setup that the people went to;
                   we just have to obey. */
@@ -1603,8 +1593,6 @@ extern void concentric_move(
 
                final_elongation ^= 1;
             }
-            else if (DFM1_CONC_FORCE_SPOTS & localmods1)
-               ;           /* It's OK the way it is. */
             else {
                /* Get the elongation from the result setup, if possible. */
                unsigned long int newelong = (result_outer.result_flags & 3) - 1;
@@ -1855,7 +1843,7 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
          t1 |= copy_rot(result, 14, res1, 7^offs, rot);
 
          /* See if we have a "classical" C1 phantom setup, and give the appropriate warning. */
-         if (action != merge_c1_phantom_nowarn) {
+         if (action == merge_c1_phantom) {
             if (t1 == 0 || t2 == 0)
                warn(warn__check_c1_phan);
             else
@@ -1863,30 +1851,6 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
          }
       }
       return;
-   }
-   else if ((res1->kind == s_crosswave) && (res2->kind == s_crosswave) && (r&1)) {
-      result->kind = s_crosswave;
-
-      if ((res2->people[0].id1 | res2->people[4].id1) == 0) {
-         /* Exchange the setups and try again. */
-         setup *temp = res2;
-         res2 = res1;
-         res1 = temp;
-         result->rotation = res2->rotation;
-         r = (res1->rotation - res2->rotation) & 3;
-         rot = r * 011;
-      }
-
-      offs = r * 2;
-
-      if ((res1->people[0].id1 | res1->people[3].id1 | res1->people[4].id1 | res1->people[7].id1) == 0) {
-         *result = *res2;
-         install_rot(result, 5, res1, 0^offs, rot);
-         install_rot(result, 2, res1, 3^offs, rot);
-         install_rot(result, 1, res1, 4^offs, rot);
-         install_rot(result, 6, res1, 7^offs, rot);
-         return;
-      }
    }
    else if (res2->kind == s_c1phan && res1->kind == s2x4) {
       result->kind = s_c1phan;
@@ -1984,18 +1948,6 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
       normalize_concentric(schema_concentric, 1, outer_inners, 0, result);
       return;
    }
-   else if (res2->kind == s1x8 && res1->kind == s2x2 &&
-            (!(res2->people[0].id1 | res2->people[2].id1 | res2->people[4].id1 | res2->people[6].id1))) {
-      res2->kind = s1x4;
-      (void) copy_person(res2, 0, res2, 1);
-      (void) copy_person(res2, 1, res2, 3);
-      (void) copy_person(res2, 2, res2, 5);
-      (void) copy_person(res2, 3, res2, 7);
-      outer_inners[0] = *res2;
-      outer_inners[1] = *res1;
-      normalize_concentric(schema_concentric, 1, outer_inners, 0, result);
-      return;
-   }
    else if (res1->kind == s_rigger &&
             (!(res1->people[0].id1 | res1->people[1].id1 | res1->people[4].id1 | res1->people[5].id1))) {
       res1->kind = s1x4;
@@ -2039,57 +1991,6 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
       install_person(result, 6, res1, 6);
       return;
    }
-   else if (res2->kind == s1x4 && res1->kind == s_bone && r == 0) {
-      *result = *res1;
-
-      install_person(result, 6, res2, 0);
-      install_person(result, 7, res2, 1);
-      install_person(result, 2, res2, 2);
-      install_person(result, 3, res2, 3);
-      return;
-   }
-   else if (res2->kind == s1x8 && res1->kind == s_bone && r == 0 &&
-            (!(res1->people[0].id1 | res1->people[1].id1 | res1->people[4].id1 | res1->people[5].id1))) {
-      *result = *res2;
-
-      install_person(result, 3, res1, 6);
-      install_person(result, 2, res1, 7);
-      install_person(result, 7, res1, 2);
-      install_person(result, 6, res1, 3);
-      return;
-   }
-   else if (res2->kind == s_ptpd && res1->kind == s2x2 &&
-            (!(res2->people[0].id1 | res2->people[2].id1 | res2->people[4].id1 | res2->people[6].id1))) {
-      result->kind = s2x4;
-      res1->rotation += r;
-      canonicalize_rotation(res1);
-      (void) copy_person(result, 0, res2, 1);
-      (void) copy_person(result, 3, res2, 7);
-      (void) copy_person(result, 4, res2, 5);
-      (void) copy_person(result, 7, res2, 3);
-      (void) copy_person(result, 1, res1, 0);
-      (void) copy_person(result, 2, res1, 1);
-      (void) copy_person(result, 5, res1, 2);
-      (void) copy_person(result, 6, res1, 3);
-      canonicalize_rotation(result);
-      return;
-   }
-   else if (res2->kind == s_bone && res1->kind == s2x2 && action != merge_strict_matrix &&
-            (!(res2->people[3].id1 | res2->people[2].id1 | res2->people[7].id1 | res2->people[6].id1))) {
-      result->kind = s2x4;
-      res1->rotation += r;
-      canonicalize_rotation(res1);
-      (void) copy_person(result, 0, res2, 0);
-      (void) copy_person(result, 3, res2, 1);
-      (void) copy_person(result, 4, res2, 4);
-      (void) copy_person(result, 7, res2, 5);
-      (void) copy_person(result, 1, res1, 0);
-      (void) copy_person(result, 2, res1, 1);
-      (void) copy_person(result, 5, res1, 2);
-      (void) copy_person(result, 6, res1, 3);
-      canonicalize_rotation(result);
-      return;
-   }
    else if (res2->kind == s_ptpd && res1->kind == s1x8 && r == 0 &&
             (!(res2->people[1].id1 | res2->people[3].id1 | res2->people[5].id1 | res2->people[7].id1))) {
       *result = *res1;
@@ -2098,16 +1999,6 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
       install_person(result, 2, res2, 2);
       install_person(result, 4, res2, 4);
       install_person(result, 6, res2, 6);
-      return;
-   }
-   else if (res2->kind == s2x4 && res1->kind == s_bone && r == 0 &&
-            (!(res2->people[1].id1 | res2->people[2].id1 | res2->people[5].id1 | res2->people[6].id1))) {
-      *result = *res1;
-
-      install_person(result, 0, res2, 0);
-      install_person(result, 1, res2, 3);
-      install_person(result, 4, res2, 4);
-      install_person(result, 5, res2, 7);
       return;
    }
    else if (res2->kind == s2x6 && res1->kind == s2x4 && r == 0) {
@@ -2188,410 +2079,6 @@ extern void on_your_own_move(
 }
 
 
-typedef struct fixerjunk {
-   setup_kind ink;
-   setup_kind outk;
-   int rot;
-   int numsetups;
-   Const struct fixerjunk *next1x2;
-   Const struct fixerjunk *next1x2rot;
-   Const struct fixerjunk *next1x4;
-   Const struct fixerjunk *next1x4rot;
-   Const struct fixerjunk *next2x2;
-   int nonrot[4][4];
-   int yesrot[4][4];
-} fixer;
-
-
-static Const fixer foo33;
-static Const fixer foocc;
-static Const fixer f1x8aa;
-static Const fixer foozz;
-static Const fixer foozzd;
-static Const fixer f1x8aad;
-static Const fixer foo55d;
-static Const fixer foo99d;
-static Const fixer foo66d;
-static Const fixer f2x4endd;
-static Const fixer bar55d;
-
-static Const fixer fppaad;
-static Const fixer fpp55d;
-
-static Const fixer fboneendo;
-
-
-static Const fixer foo33 = {
-   s_1x2,
-   s2x4,
-   0,
-   2,
-   &foo33,                   /* next1x2    */
-   (struct fixerjunk *) 0,   /* next1x2rot */
-   (struct fixerjunk *) 0,   /* next1x4    */
-   (struct fixerjunk *) 0,   /* next1x4rot */
-   (struct fixerjunk *) 0,   /* next2x2    */
-   {{0, 1}, {5, 4}},
-   {{7, 6}, {2, 3}}};
-
-static Const fixer foocc = {
-   s_1x2,
-   s2x4,
-   0,
-   2,
-   &foocc,                   /* next1x2    */
-   (struct fixerjunk *) 0,   /* next1x2rot */
-   (struct fixerjunk *) 0,   /* next1x4    */
-   (struct fixerjunk *) 0,   /* next1x4rot */
-   (struct fixerjunk *) 0,   /* next2x2    */
-   {{2, 3}, {7, 6}},
-   {{0, 1}, {5, 4}}};
-
-static Const fixer f1x8aa = {
-   s_1x2,
-   s1x8,
-   0,
-   2,
-   &f1x8aa,                  /* next1x2    */
-   &foozz,                   /* next1x2rot */
-   (struct fixerjunk *) 0,   /* next1x4    */
-   (struct fixerjunk *) 0,   /* next1x4rot */
-   (struct fixerjunk *) 0,   /* next2x2    */
-   {{1, 3}, {7, 5}},
-   {{-1}}};
-
-static Const fixer foozz = {
-   s_1x2,
-   s_ptpd,
-   1,
-   2,
-   &foozz,                   /* next1x2    */
-   &f1x8aa,                  /* next1x2rot */
-   (struct fixerjunk *) 0,   /* next1x4    */
-   (struct fixerjunk *) 0,   /* next1x4rot */
-   (struct fixerjunk *) 0,   /* next2x2    */
-   {{1, 3}, {7, 5}},
-   {{-1}}};
-
-static Const fixer foozzd = {
-   s2x2,
-   s_ptpd,
-   0,
-   1,
-   (struct fixerjunk *) 0,   /* next1x2    */
-   (struct fixerjunk *) 0,   /* next1x2rot */
-   &f1x8aad,                 /* next1x4    */
-   (struct fixerjunk *) 0,   /* next1x4rot */
-   &foozzd,                  /* next2x2    */
-   {{1, 7, 5, 3}},
-   {{-1}}};
-
-static Const fixer f1x8aad = {
-   s1x4,
-   s1x8,
-   0,
-   1,
-   (struct fixerjunk *) 0,   /* next1x2    */
-   (struct fixerjunk *) 0,   /* next1x2rot */
-   &f1x8aad,                 /* next1x4    */
-   (struct fixerjunk *) 0,   /* next1x4rot */
-   &foozzd,                  /* next2x2    */
-   {{1, 3, 5, 7}},
-   {{-1}}};
-
-static Const fixer foo55d = {
-   s1x4,
-   s1x8,
-   0,
-   1,
-   (struct fixerjunk *) 0,   /* next1x2    */
-   (struct fixerjunk *) 0,   /* next1x2rot */
-   &foo55d,                  /* next1x4    */
-   (struct fixerjunk *) 0,   /* next1x4rot */
-   &bar55d,                  /* next2x2    */
-   {{0, 2, 4, 6}},
-   {{-1}}};
-
-static Const fixer foo99d = {
-   s1x4,
-   s1x8,
-   0,
-   1,
-   (struct fixerjunk *) 0,   /* next1x2    */
-   (struct fixerjunk *) 0,   /* next1x2rot */
-   &foo99d,                  /* next1x4    */
-   (struct fixerjunk *) 0,   /* next1x4rot */
-   &f2x4endd,                /* next2x2    */
-   {{0, 3, 4, 7}},
-   {{-1}}};
-
-static Const fixer foo66d = {
-   s1x4,
-   s1x8,
-   0,
-   1,
-   (struct fixerjunk *) 0,   /* next1x2    */
-   (struct fixerjunk *) 0,   /* next1x2rot */
-   &foo66d,                  /* next1x4    */
-   (struct fixerjunk *) 0,   /* next1x4rot */
-   &bar55d,                  /* next2x2    */
-   {{1, 2, 5, 6}},
-   {{-1}}};
-
-static Const fixer f1x8ctr = {
-   s1x4,
-   s1x8,
-   0,
-   1,
-   (struct fixerjunk *) 0,   /* next1x2    */
-   (struct fixerjunk *) 0,   /* next1x2rot */
-   &f1x8ctr,                 /* next1x4    */
-   (struct fixerjunk *) 0,   /* next1x4rot */
-   &bar55d,                  /* next2x2    */
-   {{3, 2, 7, 6}},
-   {{-1}}};
-
-static Const fixer f1x8endd = {
-   s1x4,
-   s1x8,
-   0,
-   1,
-   (struct fixerjunk *) 0,   /* next1x2    */
-   (struct fixerjunk *) 0,   /* next1x2rot */
-   &f1x8endd,                /* next1x4    */
-   (struct fixerjunk *) 0,   /* next1x4rot */
-   &f2x4endd,                /* next2x2    */
-   {{0, 1, 4, 5}},
-   {{-1}}};
-
-static Const fixer f1x8endo = {
-   s_1x2,
-   s1x8,
-   0,
-   2,
-   &f1x8endo,                /* next1x2    */
-   &fboneendo,               /* next1x2rot */
-   (struct fixerjunk *) 0,   /* next1x4    */
-   (struct fixerjunk *) 0,   /* next1x4rot */
-   (struct fixerjunk *) 0,   /* next2x2    */
-   {{0, 1}, {5, 4}},
-   {{-1}}};
-
-static Const fixer fbonectr = {
-   s1x4,
-   s_bone,
-   0,
-   1,
-   (struct fixerjunk *) 0,   /* next1x2    */
-   (struct fixerjunk *) 0,   /* next1x2rot */
-   &fbonectr,                /* next1x4    */
-   (struct fixerjunk *) 0,   /* next1x4rot */
-   &bar55d,                  /* next2x2    */
-   {{6, 7, 2, 3}},
-   {{-1}}};
-
-static Const fixer fboneendd = {
-   s2x2,
-   s_bone,
-   0,
-   1,
-   (struct fixerjunk *) 0,   /* next1x2    */
-   (struct fixerjunk *) 0,   /* next1x2rot */
-   &f1x8endd,                /* next1x4    */
-   (struct fixerjunk *) 0,   /* next1x4rot */
-   &fboneendd,               /* next2x2    */
-   {{0, 1, 4, 5}},
-   {{-1}}};
-
-static Const fixer fboneendo = {
-   s_1x2,
-   s_bone,
-   1,
-   2,
-   &fboneendo,               /* next1x2    */
-   &f1x8endo,                /* next1x2rot */
-   (struct fixerjunk *) 0,   /* next1x4    */
-   (struct fixerjunk *) 0,   /* next1x4rot */
-   (struct fixerjunk *) 0,   /* next2x2    */
-   {{0, 5}, {1, 4}},
-   {{-1}}};
-
-static Const fixer frigendd = {
-   s1x4,
-   s_rigger,
-   0,
-   1,
-   (struct fixerjunk *) 0,   /* next1x2    */
-   (struct fixerjunk *) 0,   /* next1x2rot */
-   &frigendd,                /* next1x4    */
-   (struct fixerjunk *) 0,   /* next1x4rot */
-   &f2x4endd,                /* next2x2    */
-   {{6, 7, 2, 3}},
-   {{-1}}};
-
-
-
-
-
-static Const fixer frigctr = {
-   s2x2,
-   s_rigger,
-   0,
-   1,
-   (struct fixerjunk *) 0,   /* next1x2    */
-   (struct fixerjunk *) 0,   /* next1x2rot */
-   &f1x8ctr,                 /* next1x4    */
-   (struct fixerjunk *) 0,   /* next1x4rot */
-   &frigctr,                 /* next2x2    */
-   {{0, 1, 4, 5}},
-   {{-1}}};
-
-
-static Const fixer f2x4ctr = {
-   s2x2,
-   s2x4,
-   0,
-   1,
-   (struct fixerjunk *) 0,   /* next1x2    */
-   (struct fixerjunk *) 0,   /* next1x2rot */
-   &fbonectr,                /* next1x4    */
-   (struct fixerjunk *) 0,   /* next1x4rot */
-   &f2x4ctr,                 /* next2x2    */
-   {{1, 2, 5, 6}},
-   {{-1}}};
-
-static Const fixer f2x4far = {    /* unsymmetrical */
-   s1x4,
-   s2x4,
-   0,
-   1,
-   (struct fixerjunk *) 0,   /* next1x2    */
-   (struct fixerjunk *) 0,   /* next1x2rot */
-   &f2x4far,                 /* next1x4    */
-   (struct fixerjunk *) 0,   /* next1x4rot */
-   (struct fixerjunk *) 0,   /* next2x2    */
-   {{0, 1, 3, 2}},
-   {{-1}}};
-
-static Const fixer f2x4near = {   /* unsymmetrical */
-   s1x4,
-   s2x4,
-   0,
-   1,
-   (struct fixerjunk *) 0,   /* next1x2    */
-   (struct fixerjunk *) 0,   /* next1x2rot */
-   &f2x4near,                /* next1x4    */
-   (struct fixerjunk *) 0,   /* next1x4rot */
-   (struct fixerjunk *) 0,   /* next2x2    */
-   {{7, 6, 4, 5}},
-   {{-1}}};
-
-static Const fixer f2x4left = {   /* unsymmetrical */
-   s2x2,
-   s2x4,
-   0,
-   1,
-   (struct fixerjunk *) 0,   /* next1x2    */
-   (struct fixerjunk *) 0,   /* next1x2rot */
-   (struct fixerjunk *) 0,   /* next1x4    */
-   (struct fixerjunk *) 0,   /* next1x4rot */
-   &f2x4left,                /* next2x2    */
-   {{0, 1, 6, 7}},
-   {{-1}}};
-
-static Const fixer f2x4right = {  /* unsymmetrical */
-   s2x2,
-   s2x4,
-   0,
-   1,
-   (struct fixerjunk *) 0,   /* next1x2    */
-   (struct fixerjunk *) 0,   /* next1x2rot */
-   (struct fixerjunk *) 0,   /* next1x4    */
-   (struct fixerjunk *) 0,   /* next1x4rot */
-   &f2x4right,               /* next2x2    */
-   {{2, 3, 4, 5}},
-   {{-1}}};
-
-
-
-
-
-
-
-
-
-static Const fixer f2x4endd = {
-   s2x2,
-   s2x4,
-   0,
-   1,
-   (struct fixerjunk *) 0,   /* next1x2    */
-   (struct fixerjunk *) 0,   /* next1x2rot */
-   &frigendd,                /* next1x4    */
-   (struct fixerjunk *) 0,   /* next1x4rot */
-   &f2x4endd,                /* next2x2    */
-   {{0, 3, 4, 7}},
-   {{-1}}};
-
-static Const fixer f2x4endo = {
-   s_1x2,
-   s2x4,
-   1,
-   2,
-   &f2x4endo,                /* next1x2    */
-   &f1x8endo,                /* next1x2rot */
-   (struct fixerjunk *) 0,   /* next1x4    */
-   (struct fixerjunk *) 0,   /* next1x4rot */
-   (struct fixerjunk *) 0,   /* next2x2    */
-   {{0, 7}, {3, 4}},
-   {{-1}}};
-
-
-
-/* This should actually be some special thing that causes
-   the setup not to be translated at all. */
-static Const fixer bar55d = {
-   s2x2,
-   s2x4,
-   0,
-   1,
-   (struct fixerjunk *) 0,   /* next1x2    */
-   (struct fixerjunk *) 0,   /* next1x2rot */
-   (struct fixerjunk *) 0,   /* next1x4    */
-   (struct fixerjunk *) 0,   /* next1x4rot */
-   (struct fixerjunk *) 0,   /* next2x2    */
-   {{1, 2, 5, 6}},
-   {{-1}}};
-
-static Const fixer fppaad = {
-   s_1x2,
-   s2x4,
-   0,
-   2,
-   &fppaad,                  /* next1x2    */
-   (struct fixerjunk *) 0,   /* next1x2rot */
-   (struct fixerjunk *) 0,   /* next1x4    */
-   (struct fixerjunk *) 0,   /* next1x4rot */
-   (struct fixerjunk *) 0,   /* next2x2    */
-   {{1, 3}, {7, 5}},
-   {{-1}}};
-
-static Const fixer fpp55d = {
-   s_1x2,
-   s2x4,
-   0,
-   2,
-   &fpp55d,                  /* next1x2    */
-   (struct fixerjunk *) 0,   /* next1x2rot */
-   (struct fixerjunk *) 0,   /* next1x4    */
-   (struct fixerjunk *) 0,   /* next1x4rot */
-   (struct fixerjunk *) 0,   /* next2x2    */
-   {{0, 2}, {6, 4}},
-   {{-1}}};
-
-
-
-/* This does the various types of "so-and-so do this while the others do that" concepts. */
 
 extern void so_and_so_only_move(
    setup *ss,
@@ -2599,249 +2086,57 @@ extern void so_and_so_only_move(
    setup *result)
 {
    selector_kind saved_selector;
-   int i, k, setupcount;
-   unsigned int livemask, j;
-   setup the_setups[2], the_results[2];
-
-   int indicator = parseptr->concept->value.arg1;
-   long_boolean others = indicator & 1;
-   indicator &= -2;
-
-/* arg1 = 0 - <> do your part
-          1 - <> do your part while the others ....
-          2 - own the <>, with the others not doing any call, which doesn't exist
-          3 - own the <>, .... by ....
-          4 - <> only
-          5 - <> only while the others ....
-          6 - <> disconnected
-          7 - <> disconnected .... while the others .... */
+   int i;
+   long_boolean others;
+   setup setup1, setup2;
+   setup the_setups[2];
 
    saved_selector = current_selector;
+   others = parseptr->concept->value.arg1;
    current_selector = parseptr->selector;
 
    if (current_selector == selector_all || current_selector == selector_none)
       fail("Can't have 'everyone' or 'no one' do a call.");
 
-   the_setups[0] = *ss;              /* designees */
-   the_setups[1] = *ss;              /* non-designees */
+   setup1 = *ss;              /* designees */
+   setup2 = *ss;              /* non-designees */
 
    if (setup_limits[ss->kind] < 0) fail("Can't identify people in this setup.");
    for (i=0; i<setup_limits[ss->kind]+1; i++) {
       if (ss->people[i].id1) {
-         int q = 0;
-
-         /* We allow the designators "centers" and "ends" while in a 1x8, which
-            would otherwise not be allowed.  The reason we don't allow it in
-            general is that people would carelessly say "centers kickoff" in a 1x8
-            when they should realy say "each 1x4, centers kickoff".  But we assume
-            that they will not misuse the term here. */
-
-         if (ss->kind == s1x8 && current_selector == selector_centers) {
-            if (i&2) q = 1;
-         }
-         else if (ss->kind == s1x8 && current_selector == selector_ends) {
-            if (!(i&2)) q = 1;
-         }
-         else if (selectp(ss, i))
-            q = 1;
-
-         clear_person(&the_setups[q], i);
+         if (selectp(ss, i))
+            clear_person(&setup2, i);
+         else
+            clear_person(&setup1, i);
       }
    }
 
    current_selector = saved_selector;
 
-   normalize_setup(&the_setups[0], normalize_before_isolated_call);
-   normalize_setup(&the_setups[1], normalize_before_isolated_call);
+   normalize_setup(&setup1, normalize_before_isolated_call);
+   normalize_setup(&setup2, normalize_before_isolated_call);
+   setup1.cmd = ss->cmd;
+   setup1.cmd.cmd_misc_flags |= CMD_MISC__PHANTOMS;
+   move(&setup1, FALSE, &the_setups[0]);
 
-   /* Iterate 1 or 2 times, depending on whether the "other" people do a call. */
+   if (others) {     /* This is "own the <anyone>". */
+      setup2.cmd = ss->cmd;
+      setup2.cmd.cmd_misc_flags |= CMD_MISC__PHANTOMS;
+      setup2.cmd.parseptr = parseptr->subsidiary_root;
+      move(&setup2, FALSE, &the_setups[1]);
 
-   for (setupcount=0; setupcount<=others; setupcount++) {
-      the_setups[setupcount].cmd = ss->cmd;
-      the_setups[setupcount].cmd.cmd_misc_flags |= CMD_MISC__PHANTOMS;
-      if (setupcount == 1) the_setups[setupcount].cmd.parseptr = parseptr->subsidiary_root;
-
-      if (indicator >= 4) {
-         Const fixer *fixp;
-         int lilcount;
-         int numsetups;
-         setup lilsetup[4], lilresult[4];
-
-         /* It will be helpful to have a mask of where the live people are. */
-      
-         for (i=0, j=1, livemask = 0; i<=setup_limits[the_setups[setupcount].kind]; i++, j<<=1) {
-            if (the_setups[setupcount].people[i].id1) livemask |= j;
-         }
-
-         /* A few operations are independent of whether we said "disconnected",
-            because the people are connected anyway. */
-
-         if (the_setups[setupcount].kind == s1x8 && livemask == 0xCC)
-            fixp = &f1x8ctr;
-         else if (the_setups[setupcount].kind == s_bone && livemask == 0xCC)
-            fixp = &fbonectr;
-         else if (the_setups[setupcount].kind == s_rigger && livemask == 0x33)
-            fixp = &frigctr;
-         else if (the_setups[setupcount].kind == s2x4 && livemask == 0x66)
-            fixp = &f2x4ctr;
-         else if (the_setups[setupcount].kind == s2x4 && livemask == 0x0F)  /* unsymmetrical */
-            fixp = &f2x4far;
-         else if (the_setups[setupcount].kind == s2x4 && livemask == 0xF0)  /* unsymmetrical */
-            fixp = &f2x4near;
-         else if (the_setups[setupcount].kind == s2x4 && livemask == 0xC3)  /* unsymmetrical */
-            fixp = &f2x4left;
-         else if (the_setups[setupcount].kind == s2x4 && livemask == 0x3C)  /* unsymmetrical */
-            fixp = &f2x4right;
-         else if (indicator >= 6) {
-            /* Search for "disconnected" stuff. */
-            if (the_setups[setupcount].kind == s1x8 && livemask == 0xAA)
-               fixp = &f1x8aad;
-            else if (the_setups[setupcount].kind == s1x8 && livemask == 0x55)
-               fixp = &foo55d;
-            else if (the_setups[setupcount].kind == s1x8 && livemask == 0x99)
-               fixp = &foo99d;
-            else if (the_setups[setupcount].kind == s1x8 && livemask == 0x66)
-               fixp = &foo66d;
-            else if (the_setups[setupcount].kind == s1x8 && livemask == 0x33)
-               fixp = &f1x8endd;
-            else if (the_setups[setupcount].kind == s_bone && livemask == 0x33)
-               fixp = &fboneendd;
-            else if (the_setups[setupcount].kind == s2x4 && livemask == 0xAA)
-               fixp = &fppaad;
-            else if (the_setups[setupcount].kind == s2x4 && livemask == 0x55)
-               fixp = &fpp55d;
-            else if (the_setups[setupcount].kind == s2x4 && livemask == 0x99)
-               fixp = &f2x4endd;
-            else if (the_setups[setupcount].kind == s_ptpd && livemask == 0xAA)
-               fixp = &foozzd;
-            else
-               fail("Can't do this with these people designated.");
-         }
-         else {
-            /* Search for "so-and-so only" stuff. */
-            if (livemask == 0) {
-               /* Check for special case of no one. */
-               the_results[setupcount].kind = nothing;
-               the_results[setupcount].result_flags = 0;
-               continue;
-            }
-            else if (livemask == ((1 << (setup_limits[the_setups[setupcount].kind]+1)) - 1)) {
-               /* And special case of everyone. */
-               move(&the_setups[setupcount], FALSE, &the_results[setupcount]);
-               continue;
-            }
-            else if (the_setups[setupcount].kind == s2x4 && livemask == 0x33)
-               fixp = &foo33;
-            else if (the_setups[setupcount].kind == s2x4 && livemask == 0xCC)
-               fixp = &foocc;
-            else if (the_setups[setupcount].kind == s2x4 && livemask == 0x99)
-               fixp = &f2x4endo;
-            else if (the_setups[setupcount].kind == s1x8 && livemask == 0xAA)
-               fixp = &f1x8aa;
-            else if (the_setups[setupcount].kind == s1x8 && livemask == 0x33)
-               fixp = &f1x8endo;
-            else if (the_setups[setupcount].kind == s_bone && livemask == 0x33)
-               fixp = &fboneendo;
-            else if (the_setups[setupcount].kind == s_ptpd && livemask == 0xAA)
-               fixp = &foozz;
-            else
-               fail("Can't do this with these people designated.");
-         }
-
-         numsetups = fixp->numsetups;
-
-         for (lilcount=0; lilcount<numsetups; lilcount++) {
-            lilsetup[lilcount].cmd = the_setups[setupcount].cmd;
-            lilsetup[lilcount].kind = fixp->ink;
-            lilsetup[lilcount].rotation = 0;
-            for (k=0; k<=setup_limits[fixp->ink]; k++)
-               (void) copy_rot(&lilsetup[lilcount], k, &the_setups[setupcount], fixp->nonrot[lilcount][k], 011*((-fixp->rot) & 3));
-            move(&lilsetup[lilcount], FALSE, &lilresult[lilcount]);
-         }
-
-         if (fix_n_results(numsetups, lilresult)) goto lose;
-
-         clear_people(&the_results[setupcount]);
-         the_results[setupcount].result_flags = get_multiple_parallel_resultflags(lilresult, numsetups);
-
-         if (lilresult[0].rotation != 0) {
-            the_results[setupcount].kind = fixp->outk;
-            the_results[setupcount].rotation = 0;
-
-            if (lilresult[0].kind != fixp->ink) goto lose;
-
-            if (fixp->next1x2rot) {
-               fixp = fixp->next1x2rot;
-               the_results[setupcount].kind = fixp->outk;
-
-               if (fixp->rot == 0) {
-                  lilresult[0].rotation += 2;
-                  lilresult[1].rotation += 2;
-                  canonicalize_rotation(&lilresult[0]);
-                  canonicalize_rotation(&lilresult[1]);
-               }
-
-               for (lilcount=0; lilcount<numsetups; lilcount++) {
-                  (void) copy_rot(&the_results[setupcount], fixp->nonrot[lilcount][0], &lilresult[lilcount], 0, 011*fixp->rot);
-                  (void) copy_rot(&the_results[setupcount], fixp->nonrot[lilcount][1], &lilresult[lilcount], 1, 011*fixp->rot);
-               }
-            }
-            else {
-               if (fixp->yesrot[0][0] < 0) fail("Can't do this call with these people.");
-               the_results[setupcount].rotation++;
-               for (lilcount=0; lilcount<numsetups; lilcount++) {
-                  (void) copy_rot(&the_results[setupcount], fixp->yesrot[lilcount][0], &lilresult[lilcount], 0, 011*fixp->rot);
-                  (void) copy_rot(&the_results[setupcount], fixp->yesrot[lilcount][1], &lilresult[lilcount], 1, 011*fixp->rot);
-               }
-            }
-         }                                                
-         else {
-            if (lilresult[0].kind == s_1x2)
-               fixp = fixp->next1x2;
-            else if (lilresult[0].kind == s1x4)
-               fixp = fixp->next1x4;
-            else if (lilresult[0].kind == s2x2)
-               fixp = fixp->next2x2;
-            else
-               fixp = 0;    /* Raise an error. */
-
-            if (!fixp) goto lose;
-
-            the_results[setupcount].kind = fixp->outk;
-            the_results[setupcount].rotation = 0;
-
-            for (lilcount=0; lilcount<numsetups; lilcount++) {
-               for (k=0; k<=setup_limits[fixp->ink]; k++)
-                  (void) copy_rot(&the_results[setupcount], fixp->nonrot[lilcount][k], &lilresult[lilcount], k, 011*fixp->rot);
-            }
-         }
-
-         reinstate_rotation(&the_setups[setupcount], &the_results[setupcount]);
-      }
-      else
-         move(&the_setups[setupcount], FALSE, &the_results[setupcount]);
+      *result = the_setups[1];
+      result->result_flags = get_multiple_parallel_resultflags(the_setups, 2);
+      merge_setups(&the_setups[0], merge_strict_matrix, result);
    }
-
-   if (!others) {      /* The non-designees did nothing. */
-      the_results[1] = the_setups[1];
+   else {            /* This is "<anyone> do your part". */
+      the_setups[1] = setup2;
        /* Give the people who didn't move the same result flags as those who did.
-         This is important for the "did last part" check. */
-      the_results[1].result_flags = the_results[0].result_flags;
+         This is imprtant for the "did last part" check. */
+      the_setups[1].result_flags = the_setups[0].result_flags;
+
+      *result = the_setups[1];
+      result->result_flags = get_multiple_parallel_resultflags(the_setups, 2);
+      merge_setups(&the_setups[0], merge_c1_phantom, result);
    }
-
-   *result = the_results[1];
-   result->result_flags = get_multiple_parallel_resultflags(the_results, 2);
-
-   /* For "own the <anyone>, we use strict matrix spots for the merge.
-      Otherwise, we allow a little breathing. */
-
-   merge_setups(
-      &the_results[0],
-      indicator == 2 ? merge_strict_matrix :
-         (indicator == 6 ? merge_without_gaps : merge_c1_phantom),
-      result);
-
-   return;
-
-   lose: fail("Can't do this call with these people.");
 }

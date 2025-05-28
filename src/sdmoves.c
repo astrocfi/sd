@@ -1436,14 +1436,6 @@ that probably need to be put in. */
          result->result_flags = (ss->cmd.prior_elongation_bits & 3) | RESULTFLAG__SPLIT_AXIS_BIT*3;
          break;
       case schema_matrix:
-         /* The "reverse" concept might mean mirror, as in "reverse truck". */
-
-         if ((final_concepts & INHERITFLAG_REVERSE) && (callspec->callflagsh & INHERITFLAG_REVERSE)) {
-            mirror_this(ss);
-            mirror = TRUE;
-            final_concepts &= ~INHERITFLAG_REVERSE;
-         }
-
          if (final_concepts) fail("Illegal concept for this call.");
          matrixmove(ss, callspec, result);
          reinstate_rotation(ss, result);
@@ -1479,7 +1471,7 @@ that probably need to be put in. */
          if ((final_concepts & INHERITFLAG_REVERSE) && (callspec->callflagsh & INHERITFLAG_REVERSE)) {
             /* This "reverse" just means mirror. */
             if (mirror) fail("Can't do this call 'left' and 'reverse'.");
-            mirror_this(ss);
+            if (!mirror) mirror_this(ss);
             mirror = TRUE;
             final_concepts &= ~INHERITFLAG_REVERSE;
          }
@@ -1809,8 +1801,6 @@ that probably need to be put in. */
 
                   result->cmd = ss->cmd;
                   result->cmd.cmd_frac_flags = 0;
-                  /* We don't supply these; they get filled in by the call. */
-                  result->cmd.cmd_misc_flags &= ~DFM1_CONCENTRICITY_FLAG_MASK;
                   if (!first_call) result->cmd.cmd_misc_flags |= CMD_MISC__NO_CHK_ELONG;
                   result->cmd.parseptr = cp1;
                   result->cmd.callspec = call1;
@@ -1837,11 +1827,7 @@ that probably need to be put in. */
                   part, we would be OR'ing the bits from multiple parts.  What would it mean?  The bits
                   we are interested in are the "demand_lines" and "force_lines" stuff.  I guess we should
                   take the "demand" bits from the first part and the "force" bits from the last part.  Yuck! */
-
-               /* The claim is that the following code removes the above problem.  The test is "ends 2/3 chisel thru".
-                  Below, we will pick up the concentricity flags from the last subcall. */
-
-               ss->cmd.cmd_misc_flags |= result->cmd.cmd_misc_flags & ~DFM1_CONCENTRICITY_FLAG_MASK;
+               ss->cmd.cmd_misc_flags |= result->cmd.cmd_misc_flags;
 
                current_number_fields = saved_number_fields;
 
@@ -1864,10 +1850,6 @@ that probably need to be put in. */
                   break;
                }
             }
-
-            /* Pick up the concentricity command stuff from the last thing we did. */
-
-            ss->cmd.cmd_misc_flags |= result->cmd.cmd_misc_flags;
          }
          else {
             setup_command foo1, foo2;
@@ -2040,7 +2022,7 @@ extern void move(
          must be in a global variable.  Therefore, we explicitly save and restore that
          global variable (in a dynamic variable local to this instance) rather than passing
          it as an explicit argument.  By saving it and restoring it in this way, we make
-         things like "checkpoint bounce the beaus by bounce the belles" work. */
+         things like "checkpoint bounce the beaux by bounce the belles" work. */
 
       current_selector = parseptrcopy->selector;
       current_direction = parseptrcopy->direction;

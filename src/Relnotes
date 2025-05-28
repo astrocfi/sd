@@ -1,5 +1,5 @@
-		   RELEASE NOTES FOR SD VERSION 30.7
-		 Database version = 30.7 format = 44,
+		   RELEASE NOTES FOR SD VERSION 30.01
+		 Database version = 30.02 format = 43,
     X11 UI version 1.15, SDTTY UI version 1.6, MAC UI version 2.2.
 
 Took out the words "end-to-end" for those versions of concepts like
@@ -12,13 +12,6 @@ usual phantom concepts, as well as with "split" and "each 1x4".  It may
 also be used with "standard", as in "heads ARE STANDARD IN MATRIX SPLIT
 PHANTOM LINES slim down".
 
-New calls: [cross] kick by <n>.  Double/triple star thru.  Square thru
-etc. to a wave.  Square thru but on the <Nth> hand (courtesy of Dave
-Decot).  Drop in/out are now legal from facing diamonds.  Many
-minor improvements.
-
-New concepts: all 4 couples and all 8.  Inner dual boxes.
-
 I have yielded to massive pressure and allowed "bigblock" and "stagger" to
 be applicable to any kind of distorted lines or columns respectively.
 So bigblock is legal in a butterfly or "O".
@@ -28,37 +21,8 @@ It now prints the "1/2" correctly in things like "reflected [1/2 tag]" and
 disastrous results, in the mistaken belief that these calls were like
 "[flip] your neighbor".
 
-The plural of "beau" is now spelled "beaus", in accordance with the
-Callerlab C1 list (but not the C1 definitions!)
-
 It now enforces the rules for the "stretch" concept: the call must be a
 4-person call, split along the same axis as the stretching axis.
-
-In general, "stretch", "central", and "crazy" work much better than formerly.
-
-The "so-and-so do something" concepts have been extensively rewritten.
-There are four related concepts:
-    "<so-and-so> only"
-    "<so-and-so> disconnected"
-    "<so-and-so> do your part"
-    "own the <so-and-so>"
-Briefly, they mean the following:
-    "<so-and-so> only" means that the designees work among themselves
-         in whatever undistorted setups they can find.
-    "<so-and-so> disconnected" means that the designees work in whatever
-         setup they find after removing the non-designees.
-    "<so-and-so> do your part" means that the designees work in the
-         original setup, with the non-designees replaced by phantoms.
-    "own the <so-and-so>" is like "do your part", except that strict
-         matrix positioning is used.
-Read the section "so-and-so only" in the manual for details.
-
-Note that the prior inability to have, for example, the girls hinge from
-a BGGBBGGB grand wave to make point-to-point diamonds, is now fixed.
-It can be done in any of the following ways:
-   each 1x4 centers hinge
-   girls only hinge
-   girls disconnected hinge
 
 A warning is printed for non-interacting use of "multiple formations working",
 "interlocked phantom setups", and "phantom setups" concepts.  That is,
@@ -120,15 +84,13 @@ RANDOM, or REVERSE RANDOM meta-concepts.  For example, "PIECEWISE FOLLOW IT
 BY criss cross the deucey, turn the key" will do a criss cross the deucey
 after each of the three parts of turn the key.
 
-These concepts are among the situations in which the program does not attempt
-to print out the exact words that are appropriate to use when calling, but
-instead prints out an unambiguous description of what is supposed to happen.
-The exact words you should use depend on the context and on your judgement.
-You might say "piecewise add a criss cross the deucey, and turn the key",
-or "do a criss cross the deucey after each part, and turn the key", or
-something similar.
-
-Please read the new section "linguistic idiosyncrasies" in the manual.
+ These concepts are among the situations in which the program does not attempt
+ to print out the exact words that are appropriate to use when calling, but
+ instead prints out an unambiguous description of what is supposed to happen.
+ The exact words you should use depend on the context and on your judgement.
+ You might say "piecewise add a criss cross the deucey, and turn the key",
+ or "do a criss cross the deucey after each part, and turn the key", or
+ something similar.
 
 ===============================================================================
 

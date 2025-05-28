@@ -178,7 +178,7 @@ Private void writechar(char src)
    inside of brackets.  This procedure is part of that mechanism. */
 Private void write_blank_if_needed(void)
 {
-   if (lastchar != ' ' && lastchar != '[' && lastchar != '(' && lastchar != '-') writestuff(" ");
+   if (lastchar != ' ' && lastchar != '[' && lastchar != '-') writestuff(" ");
 }
 
 
@@ -338,7 +338,7 @@ char *selector_names[] = {
    "ends",
    "leads",
    "trailers",
-   "beaus",
+   "beaux",
    "belles",
    "center 2",
    "center 6",
@@ -551,14 +551,8 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
                   writestuff("CENTERS ");
             }
             else if (k == concept_some_vs_others) {
-               if ((i = item->value.arg1) == 1)
-                  writestuff_with_decorations("<ANYONE> DO YOUR PART, ", you_owe_me_a_number, you_owe_me_a_selector, &index, selector_names[selector]);
-               else if (i == 3)
-                  writestuff_with_decorations("OWN THE <ANYONE>, ", you_owe_me_a_number, you_owe_me_a_selector, &index, selector_names[selector]);
-               else if (i == 5)
-                  writestuff_with_decorations("<ANYONE> ONLY ", you_owe_me_a_number, you_owe_me_a_selector, &index, selector_names[selector]);
-               else
-                  writestuff_with_decorations("<ANYONE> DISCONNECTED ", you_owe_me_a_number, you_owe_me_a_selector, &index, selector_names[selector]);
+               writestuff_with_decorations(item->name, you_owe_me_a_number, you_owe_me_a_selector, &index, selector_names[selector]);
+               writestuff(", ");
             }
             else if (k == concept_sequential) {
                writestuff("(");
@@ -587,8 +581,6 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
 
             if (k == concept_centers_and_ends)
                writestuff(" WHILE THE ENDS");
-            else if (k == concept_some_vs_others && item->value.arg1 != 3)
-               writestuff(" WHILE THE OTHERS");
             else if (k == concept_on_your_own)
                writestuff(" AND");
             else if (k == concept_interlace)
@@ -843,12 +835,6 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
                            writestuff("/4");
                         }
    
-                        number_list >>= 4;    /* Get ready for next number. */
-                        np += 2;              /* skip the indicator */
-                        break;
-                     case 'u':     /* Need to plug in an ordinal number. */
-                        write_blank_if_needed();
-                        writestuff(ordinals[(number_list & 0xF)-1]);
                         number_list >>= 4;    /* Get ready for next number. */
                         np += 2;              /* skip the indicator */
                         break;
@@ -1943,11 +1929,6 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
                    (ss->people[3].id1 & d_mask) == d_west)
                   goto good;
                goto bad;
-            case sq_n_is_0: if ((current_number_fields & 0xF) == 0) goto good; goto bad;
-            case sq_n_is_1: if ((current_number_fields & 0xF) == 1) goto good; goto bad;
-            case sq_n_is_2: if ((current_number_fields & 0xF) == 2) goto good; goto bad;
-            case sq_n_is_3: if ((current_number_fields & 0xF) == 3) goto good; goto bad;
-            case sq_n_is_4: if ((current_number_fields & 0xF) == 4) goto good; goto bad;
          }
       }
       bad:
