@@ -980,11 +980,12 @@ how we type it, it gets printed out with the correct word order.
 Let's have the column circulate one and a half times.  There is
 a @code{1-1/2} concept (in fact, there is a @code{1-M/N} concept for any
 reasonable value of M and N).  There is actually a hyphen (minus sign)
-in the concept name, to avoid confusion.
+in the concept name, to avoid confusion when looking at the card.
+However, you don't need to type the hyphen.  You can just type @code{1 1/2}.
 
 @example
 @group
---> @kbd{1-1/2 column circulate} @key{ENTER}
+--> @kbd{1 1/2 column circulate} @key{ENTER}
 29:   column circulate 1-1/2
 
    1G<
@@ -1000,7 +1001,7 @@ it displays the line, and it will also do so in the printed card.
 It does the same with the concepts @code{twice} and @code{<n> times}.
 You must still type all concepts before the calls that they modify.
 
-Let's have the boys hinge.
+@noindent Let's have the boys hinge.
 
 @example
 @group

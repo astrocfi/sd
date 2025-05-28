@@ -12,7 +12,7 @@
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-    This is for version 31. */
+    This is for version 32. */
 
 /* This defines the following functions:
    initialize_restr_tables
@@ -29,6 +29,7 @@
    specialfail
    get_escape_string
    string_copy
+   print_recurse
    display_initial_history
    write_history_line
    warn
@@ -149,6 +150,10 @@ selector_item selector_list[] = {
    {"lead centers", "lead center", "LEAD CENTERS", "LEAD CENTER", selector_uninitialized},
    {"trailing ends","trailing end","TRAILING ENDS","TRAILING END",selector_uninitialized},
    {"trailing centers","trailing center","TRAILING CENTERS","TRAILING CENTER",selector_uninitialized},
+   {"end boys",     "end boy",     "END BOYS",     "END BOY",     selector_uninitialized},
+   {"end girls",    "end girl",    "END GIRLS",    "END GIRL",    selector_uninitialized},
+   {"center boys",  "center boy",  "CENTER BOYS",  "CENTER BOY",  selector_uninitialized},
+   {"center girls", "center girl", "CENTER GIRLS", "CENTER GIRL", selector_uninitialized},
    {"beaus",        "beau",        "BEAUS",        "BEAU",        selector_belles},
    {"belles",       "belle",       "BELLES",       "BELLE",       selector_beaus},
    {"center 2",     "center 2",    "CENTER 2",     "CENTER 2",    selector_outer6},
@@ -274,6 +279,8 @@ Cstring warning_strings[] = {
    /*  warn__not_tbone_person    */   " Work with the person to whom you are not T-boned.",
    /*  warn__check_c1_phan       */   " Check a 'C1 phantom' setup.",
    /*  warn__check_dmd_qtag      */   " Fudge to a diamond/quarter-tag setup.",
+   /*  warn__check_quad_dmds     */   " Fudge to quadruple diamonds.",
+   /*  warn__check_3x4           */   " Check a 3x4 setup.",
    /*  warn__check_2x4           */   " Check a 2x4 setup.",
    /*  warn__check_4x4           */   "*Check a 4x4 setup.",
    /*  warn__check_hokey_4x4     */   "*Check a center box and outer lines/columns.",
@@ -303,10 +310,13 @@ Cstring warning_strings[] = {
    /*  warn__opt_for_normal_cast */   "*If in doubt, assume a normal cast.",
    /*  warn__opt_for_normal_hinge*/   "*If in doubt, assume a normal hinge.",
    /*  warn__opt_for_2fl         */   "*If in doubt, assume a two-faced line.",
+   /*  warn_partial_solomon      */   "*For the center line or column, the offset goes away.",
+   /*  warn_same_z_shear         */   "*Make the outside Z's have the same shear as the center one.",
    /*  warn__like_linear_action  */   "*Ends start like a linear action -- this may be controversial.",
    /*  warn__no_z_action         */   "*The 'Z' concept was not actually used.",
    /*  warn__phantoms_thinner    */   "*Phantoms may have gotten thinner -- go to outer triple boxes.",
-   /*  warn__split_1x6           */   "*Do the call in each 1x3 setup.",
+   /*  warn__hokey_jay_shapechanger */"*This shapechanger in a jay may be controversial.",
+   /*  warn__split_1x6           */   "=Do the call in each 1x3 setup.",
    /*  warn_interlocked_to_6     */   "*This went from 4 interlocked groups to 6.",
    /*  warn__colocated_once_rem  */   " The once-removed setups have the same center.",
    /*  warn_big_outer_triangles  */   "*The outside triangles are very large.",
@@ -419,16 +429,16 @@ static restriction_thing mnwv_1x4      = {2, {0, 2, 1, 3},                      
 static restriction_thing mnwv_1x6      = {2, {0, 2, 4, 1, 5, 3},                                     {3}, {0}, {0}, TRUE,  chk_anti_groups};    /* check for everyone in a miniwave */
 static restriction_thing mnwv_1x8      = {2, {0, 2, 4, 6, 1, 3, 5, 7},                               {4}, {0}, {0}, TRUE,  chk_anti_groups};    /* check for everyone in a miniwave */
 
-static restriction_thing box_wave      = {0, {2, 0, 0, 2},                {0, 0, 2, 2},                   {0}, {0}, TRUE,  chk_box};            /* check for a "real" (walk-and-dodge type) box */
-static restriction_thing box_1face     = {0, {2, 2, 2, 2},                {0, 0, 0, 0},                   {0}, {0}, TRUE,  chk_box};            /* check for a "one-faced" (reverse-the-pass type) box */
-static restriction_thing box_in_or_out = {0, {0, 0, 2, 2},                {0, 2, 2, 0},                   {0}, {0}, TRUE,  chk_box};            /* check for facing couples or back-to-back couples */
+static restriction_thing box_wave      = {1, {2, 0, 0, 2},                {0, 0, 2, 2},                   {0}, {0}, TRUE,  chk_box};            /* check for a "real" (walk-and-dodge type) box */
+static restriction_thing box_1face     = {1, {2, 2, 2, 2},                {0, 0, 0, 0},                   {0}, {0}, TRUE,  chk_box};            /* check for a "one-faced" (reverse-the-pass type) box */
+static restriction_thing box_in_or_out = {1, {0, 0, 2, 2},                {0, 2, 2, 0},                   {0}, {0}, TRUE,  chk_box};            /* check for facing couples or back-to-back couples */
 static restriction_thing ind_in_out_2x2= {0, {3, 2, 1, 0},                {0},                            {0}, {0}, FALSE, chk_indep_box};
 static restriction_thing ind_in_out_2x4= {0, {3, 2, 3, 2, 1, 0, 1, 0},    {0},                            {0}, {0}, FALSE, chk_indep_box};
-static restriction_thing box_magic     = {0, {2, 0, 2, 0},                {0, 2, 0, 2},                   {0}, {0}, TRUE,  chk_box};            /* check for a "magic" (split-trade-circulate type) box */
-static restriction_thing s4x4_wave     = {0,   {0, 0, 0, 2, 0, 2, 0, 2, 2, 2, 2, 0, 2, 0, 2, 0},
+static restriction_thing box_magic     = {1, {2, 0, 2, 0},                {0, 2, 0, 2},                   {0}, {0}, TRUE,  chk_box};            /* check for a "magic" (split-trade-circulate type) box */
+static restriction_thing s4x4_wave     = {1,   {0, 0, 0, 2, 0, 2, 0, 2, 2, 2, 2, 0, 2, 0, 2, 0},
                                                {2, 0, 2, 0, 0, 0, 0, 2, 0, 2, 0, 2, 2, 2, 2, 0},          {0}, {0}, TRUE,  chk_box};            /* check for 4 waves of consistent handedness and consistent headliner-ness. */
 
-static restriction_thing s4x4_2fl     = {0,    {0, 0, 0, 0, 0, 0, 2, 0, 2, 2, 2, 2, 2, 2, 0, 2},  
+static restriction_thing s4x4_2fl     = {1,    {0, 0, 0, 0, 0, 0, 2, 0, 2, 2, 2, 2, 2, 2, 0, 2},  
                                                {2, 2, 0, 2, 0, 0, 0, 0, 0, 0, 2, 0, 2, 2, 2, 2},          {0}, {0}, TRUE,  chk_box};            /* check for 4 waves of consistent handedness and consistent headliner-ness. */
 
 static restriction_thing cwave_qtg     = {4, {2, 3, 7, 6},                                           {0}, {0}, {0}, FALSE, chk_wave};           /* check for wave across the center */
@@ -641,12 +651,14 @@ extern restriction_thing *get_restriction_thing(setup_kind k, assumption_thing t
    /* First, use the hash table to search for easy cases. */
 
    if (t.assump_col == 0) {
+      restr_initializer *restr_hash_bucket;
       uint32 hash_num = ((k + (5*t.assumption)) * 25) & (NUM_RESTR_HASH_BUCKETS-1);
-      restr_initializer *restr_hash_bucket = restr_hash_table[hash_num];
-      while (restr_hash_bucket) {
+
+      for (restr_hash_bucket = restr_hash_table[hash_num] ;
+           restr_hash_bucket ;
+           restr_hash_bucket = restr_hash_bucket->next) {
          if (restr_hash_bucket->k == k && restr_hash_bucket->restr == t.assumption)
             return restr_hash_bucket->value;
-         restr_hash_bucket = restr_hash_bucket->next;
       }
    }
    else if (t.assump_col == 1) {
@@ -910,6 +922,8 @@ Private long_boolean check_for_concept_group(Const parse_block *parseptrcopy,
       if (((selective_key) parseptrcopy->concept->value.arg1) == selective_key_work_concept) {
          *next_parseptr_p =
             process_final_concepts(parseptr_skip, FALSE, &junk_concepts);
+         if (junk_concepts.herit != 0 || junk_concepts.final != 0)
+            *next_parseptr_p = parseptr_skip;
          return TRUE;
       }
    }
@@ -1163,7 +1177,7 @@ extern void fail(Const char s[])
    (void) strncpy(error_message1, s, MAX_ERR_LENGTH);
    error_message1[MAX_ERR_LENGTH-1] = '\0';
    error_message2[0] = '\0';
-   longjmp(longjmp_ptr->the_buf, 1);
+   longjmp(longjmp_ptr->the_buf, error_flag_1_line);
 }
 
 
@@ -1173,7 +1187,7 @@ extern void fail2(Const char s1[], Const char s2[])
    error_message1[MAX_ERR_LENGTH-1] = '\0';
    (void) strncpy(error_message2, s2, MAX_ERR_LENGTH);
    error_message2[MAX_ERR_LENGTH-1] = '\0';
-   longjmp(longjmp_ptr->the_buf, 2);
+   longjmp(longjmp_ptr->the_buf, error_flag_2_line);
 }
 
 
@@ -1182,7 +1196,7 @@ extern void failp(uint32 id1, Const char s[])
    collision_person1 = id1;
    (void) strncpy(error_message1, s, MAX_ERR_LENGTH);
    error_message1[MAX_ERR_LENGTH-1] = '\0';
-   longjmp(longjmp_ptr->the_buf, 6);
+   longjmp(longjmp_ptr->the_buf, error_flag_cant_execute);
 }
 
 
@@ -1191,7 +1205,7 @@ extern void specialfail(Const char s[])
    (void) strncpy(error_message1, s, MAX_ERR_LENGTH);
    error_message1[MAX_ERR_LENGTH-1] = '\0';
    error_message2[0] = '\0';
-   longjmp(longjmp_ptr->the_buf, 4);
+   longjmp(longjmp_ptr->the_buf, error_flag_wrong_resolve_command);
 }
 
 
@@ -1250,7 +1264,7 @@ extern void string_copy(char **dest, Cstring src)
 #define PRINT_RECURSE_CIRC 2
 
 
-Private void print_recurse(parse_block *thing, int print_recurse_arg)
+extern void print_recurse(parse_block *thing, int print_recurse_arg)
 {
    parse_block *local_cptr;
    parse_block *next_cptr;
@@ -1517,7 +1531,15 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
                request_final_space = TRUE;
             }
 
-            allow_deferred_concept = FALSE;
+            /* For some concepts, we still permit the "defer" stuff.  But don't do it
+               if others are doing the call, because that would lead to
+               "<anyone> work 1-1/2, swing thru" turning into
+               "<anyone> work swing thru 1-1/2". */
+
+            if ((k != concept_so_and_so_only || item->value.arg2) &&
+                k != concept_c1_phantom &&
+                k != concept_tandem)
+               allow_deferred_concept = FALSE;
          }
 
          if (comma_after_next_concept == 2) {
@@ -2170,11 +2192,9 @@ extern void display_initial_history(int upper_limit, int num_pics)
    else {
       /* We lose, there is nothing we can use. */
       clear_screen();
-#ifndef THINK_C			/* Mac interface provides "About Sd" popup instead */
       write_header_stuff(TRUE, 0);
       newline();
       newline();
-#endif
       startpoint = 1;
    }
 
@@ -2477,111 +2497,116 @@ extern long_boolean verify_restriction(
    *failed_to_instantiate = TRUE;
 
    switch (rr->check) {
-      case chk_spec_directions:
-         qa1 = 0;
-         qa0 = 3 & (~tt.assump_both);
+   case chk_spec_directions:
+      qa1 = 0;
+      qa0 = 3 & (~tt.assump_both);
 
-         p = rr->map1;
-         qa2 = rr->map2[0];
-         qa3 = rr->map2[1];
+      p = rr->map1;
+      qa2 = rr->map2[0];
+      qa3 = rr->map2[1];
             
-         while (*p>=0) {
-            uint32 t1 = ss->people[*(p++)].id1;
-            uint32 t2 = ss->people[*(p++)].id1;
-            qa1 |= t1 | t2;
-            if (t1 && (t1 & 3)!=qa2) qa0 &= ~2;
-            if (t2 && (t2 & 3)!=qa3) qa0 &= ~2;
-            if (t1 && (t1 & 3)!=qa3) qa0 &= ~1;
-            if (t2 && (t2 & 3)!=qa2) qa0 &= ~1;
-         }
+      while (*p>=0) {
+         uint32 t1 = ss->people[*(p++)].id1;
+         uint32 t2 = ss->people[*(p++)].id1;
+         qa1 |= t1 | t2;
+         if (t1 && (t1 & 3)!=qa2) qa0 &= ~2;
+         if (t2 && (t2 & 3)!=qa3) qa0 &= ~2;
+         if (t1 && (t1 & 3)!=qa3) qa0 &= ~1;
+         if (t2 && (t2 & 3)!=qa2) qa0 &= ~1;
+      }
 
-         if (qa1) {
-            if (rr->map2[2]) {
-               if (!qa0) goto good;
-            }
-            else {
-               if (qa0) goto good;
-            }
+      if (qa1) {
+         if (rr->map2[2]) {
+            if (!qa0) goto good;
          }
+         else {
+            if (qa0) goto good;
+         }
+      }
 
+      goto bad;
+   case chk_wave:
+      qaa[0] = tt.assump_both;
+      qaa[1] = tt.assump_both << 1;
+
+      for (idx=0; idx<rr->size; idx++) {
+         if ((t = ss->people[rr->map1[idx]].id1) != 0) {
+            qaa[idx&1] |=  t;
+            qaa[(idx&1)^1] |= t^2;
+         }
+         else if (tt.assump_negate || tt.assump_live) goto bad;    /* All live people
+                                                                      were demanded. */
+      }
+
+      if ((qaa[0] & qaa[1] & 2) != 0)
          goto bad;
-      case chk_wave:
-         qaa[0] = tt.assump_both;
-         qaa[1] = tt.assump_both << 1;
 
-         for (idx=0; idx<rr->size; idx++) {
-            if ((t = ss->people[rr->map1[idx]].id1) != 0) { qaa[idx&1] |=  t; qaa[(idx&1)^1] |= t^2; }
-            else if (tt.assump_negate || tt.assump_live) goto bad;    /* All live people were demanded. */
+      if (rr->ok_for_assume) {
+         uint32 qab[4];
+         qab[0] = 0;
+         qab[2] = 0;
+
+         for (idx=0; idx<rr->size; idx++)
+            qab[idx&2] |= ss->people[rr->map1[idx]].id1;
+
+         if ((tt.assump_col | rr->map2[0]) & 4) {
+            qab[2] >>= 3;
+         }
+         else if (tt.assump_col == 1) {
+            qab[0] >>= 3;
+            qab[2] >>= 3;
          }
 
-         if ((qaa[0] & qaa[1] & 2) != 0)
-            goto bad;
+         if ((qab[0]|qab[2]) & 1) goto bad;
 
-         if (rr->ok_for_assume) {
-            uint32 qab[4];
-            qab[0] = 0;
-            qab[2] = 0;
+         if (instantiate_phantoms) {
+            *failed_to_instantiate = FALSE;
 
-            for (idx=0; idx<rr->size; idx++)
-               qab[idx&2] |= ss->people[rr->map1[idx]].id1;
+            if (qaa[0] == 0) fail("Need live person to determine handedness.");
 
             if ((tt.assump_col | rr->map2[0]) & 4) {
-               qab[2] >>= 3;
+               if ((qaa[0] & 2) == 0) { pdir = d_north; qdir = d_south; }
+               else                   { pdir = d_south; qdir = d_north; }
+               pdirodd = rotcw(pdir); qdirodd = rotcw(qdir);
             }
             else if (tt.assump_col == 1) {
-               qab[0] >>= 3;
-               qab[2] >>= 3;
+               if ((qaa[0] & 2) == 0) { pdir = d_east; qdir = d_west; }
+               else                   { pdir = d_west; qdir = d_east; }
+               pdirodd = pdir; qdirodd = qdir;
+            }
+            else {
+               if ((qaa[0] & 2) == 0) { pdir = d_north; qdir = d_south; }
+               else                   { pdir = d_south; qdir = d_north; }
+               pdirodd = pdir; qdirodd = qdir;
             }
 
-            if ((qab[0]|qab[2]) & 1) goto bad;
-
-            if (instantiate_phantoms) {
-               *failed_to_instantiate = FALSE;
-
-               if (qaa[0] == 0) fail("Need live person to determine handedness.");
-
-               if ((tt.assump_col | rr->map2[0]) & 4) {
-                  if ((qaa[0] & 2) == 0) { pdir = d_north; qdir = d_south; }
-                  else                   { pdir = d_south; qdir = d_north; }
-                  pdirodd = rotcw(pdir); qdirodd = rotcw(qdir);
-               }
-               else if (tt.assump_col == 1) {
-                  if ((qaa[0] & 2) == 0) { pdir = d_east; qdir = d_west; }
-                  else                   { pdir = d_west; qdir = d_east; }
-                  pdirodd = pdir; qdirodd = qdir;
-               }
-               else {
-                  if ((qaa[0] & 2) == 0) { pdir = d_north; qdir = d_south; }
-                  else                   { pdir = d_south; qdir = d_north; }
-                  pdirodd = pdir; qdirodd = qdir;
-               }
-
-               for (i=0; i<rr->size; i++) {
-                  int p = rr->map1[i];
+            for (i=0; i<rr->size; i++) {
+               int p = rr->map1[i];
    
-                  if (!ss->people[p].id1) {
-                     if (phantom_count >= 16) fail("Too many phantoms.");
+               if (!ss->people[p].id1) {
+                  if (phantom_count >= 16) fail("Too many phantoms.");
    
-                     ss->people[p].id1 =           (i&1) ?
-                                          ((i&2) ? qdirodd : qdir) :
-                                          ((i&2) ? pdirodd : pdir);
+                  ss->people[p].id1 =           (i&1) ?
+                     ((i&2) ? qdirodd : qdir) :
+                     ((i&2) ? pdirodd : pdir);
    
-                     ss->people[p].id1 |= BIT_ACT_PHAN | ((phantom_count++) << 6);
-                     ss->people[p].id2 = 0;
-                  }
-                  else if (ss->people[p].id1 & BIT_ACT_PHAN)
-                     fail("Active phantoms may only be used once.");
+                  ss->people[p].id1 |= BIT_ACT_PHAN | ((phantom_count++) << 6);
+                  ss->people[p].id2 = 0;
                }
+               else if (ss->people[p].id1 & BIT_ACT_PHAN)
+                  fail("Active phantoms may only be used once.");
             }
          }
+      }
 
-         goto good;
-      case chk_box:
-         qa0 = (tt.assump_both << 1) & 2;
-         qa1 = tt.assump_both & 2;
-         qa2 = qa1;
-         qa3 = qa0;
+      goto good;
+   case chk_box:
+      qa0 = (tt.assump_both << 1) & 2;
+      qa1 = tt.assump_both & 2;
+      qa2 = qa1;
+      qa3 = qa0;
 
+      for (i=0; i<rr->size; i++) {
          for (idx=0 ; idx<=setup_attrs[ss->kind].setup_limits ; idx++) {
             if ((t = ss->people[idx].id1) != 0) {
                qa0 |= t^rr->map1[idx]^0;
@@ -2591,263 +2616,269 @@ extern long_boolean verify_restriction(
             }
          }
 
-         if ((qa1&3) && (qa0&3) && (qa3&3) && (qa2&3)) goto bad;
+         if ((qa1&3) == 0 || (qa0&3) == 0 || (qa3&3) == 0 || (qa2&3) == 0)
+            goto check_box_assume;
+      }
+
+      goto bad;
+
+   check_box_assume:
+
+      if (rr->ok_for_assume) {    /* Will not be true unless size = 1 */
+         if (instantiate_phantoms) {
+            if (!(qa0 & BIT_PERSON))
+               fail("Need live person to determine handedness.");
+
+            for (i=0 ; i<=setup_attrs[ss->kind].setup_limits ; i++) {
+               if (!ss->people[i].id1) {
+                  if (phantom_count >= 16)
+                     fail("Too many phantoms.");
+      
+                  pdir = (qa0&1) ?
+                     (d_east ^ ((rr->map2[i] ^ qa2) & 2)) :
+                     (d_north ^ ((rr->map1[i] ^ qa0) & 2));
+      
+                  ss->people[i].id1 = pdir | BIT_ACT_PHAN | ((phantom_count++) << 6);
+                  ss->people[i].id2 = 0;
+               }
+               else if (ss->people[i].id1 & BIT_ACT_PHAN)
+                  fail("Active phantoms may only be used once.");
+            }
+
+            *failed_to_instantiate = FALSE;
+         }
+      }
+
+      goto good;
+   case chk_indep_box:
+      qa0 = (tt.assump_both << 1) & 2;
+      qa1 = tt.assump_both & 2;
+      qa2 = 0;
+      qa3 = 0;
+
+      for (idx=0 ; idx<=setup_attrs[ss->kind].setup_limits ; idx++) {
+         if ((t = ss->people[idx].id1) != 0) {
+            qa2 |= t + rr->map1[idx];
+            qa3 |= t + rr->map1[idx] + 2;
+         }
+      }
+
+      if (((qa0 & qa2) | (qa1 & qa3)) != 0) goto bad;
+
+      goto good;
+   case chk_groups:
+      limit = rr->map2[0];
+   
+      for (idx=0; idx<limit; idx++) {
+         qa0 = 0; qa1 = 0;
+
+         for (i=0,j=idx; i<rr->size; i++,j+=limit) {
+            if ((t = ss->people[rr->map1[j]].id1) != 0) { qa0 |= t; qa1 |= t^2; }
+            else if (tt.assump_negate || tt.assump_live) goto bad;    /* All live people were demanded. */
+         }
+
+         if ((qa0 & qa1 & 2) != 0) goto bad;
 
          if (rr->ok_for_assume) {
+            if (tt.assump_col == 1) {
+               if ((qa0 & 2) == 0) { pdir = d_east; }
+               else                { pdir = d_west; }
+
+               qa0 >>= 3;
+               qa1 >>= 3;
+            }
+            else {
+               if ((qa0 & 2) == 0) { pdir = d_north; }
+               else                { pdir = d_south; }
+            }
+
+            if ((qa0|qa1)&1) goto bad;
+
             if (instantiate_phantoms) {
-               if (!(qa0 & BIT_PERSON))
+               if (qa0 == 0) fail("Need live person to determine handedness.");
+
+               for (i=0,k=0 ; k<rr->size ; i+=limit,k++) {
+                  int p = rr->map1[idx+i];
+   
+                  personrec *pq = &ss->people[p];
+                  t = pq->id1;
+      
+                  if (!t) {
+                     if (phantom_count >= 16) fail("Too many phantoms.");
+                     pq->id1 = pdir | BIT_ACT_PHAN | ((phantom_count++) << 6);
+                     pq->id2 = 0UL;
+                  }
+                  else if (t & BIT_ACT_PHAN)
+                     fail("Active phantoms may only be used once.");
+               }
+
+               *failed_to_instantiate = FALSE;
+            }
+         }
+      }
+      goto good;
+   case chk_anti_groups:
+      limit = rr->map2[0];
+
+      for (idx=0; idx<limit; idx++) {
+         qa0 = 0; qa1 = 0;
+
+         if ((t = ss->people[rr->map1[idx]].id1) != 0)       { qa0 |= t;   qa1 |= t^2; }
+         else if (tt.assump_negate) goto bad;    /* All live people were demanded. */
+         if ((t = ss->people[rr->map1[idx+limit]].id1) != 0) { qa0 |= t^2; qa1 |= t;   }
+         else if (tt.assump_negate) goto bad;    /* All live people were demanded. */
+
+         if ((qa0 & qa1 & 2) != 0) goto bad;
+
+         if (rr->ok_for_assume) {
+            if (tt.assump_col == 1) {
+               if ((qa0 & 2) == 0) { pdir = d_east; qdir = d_west; }
+               else                { pdir = d_west; qdir = d_east; }
+
+               qa0 >>= 3;
+               qa1 >>= 3;
+            }
+            else {
+               if ((qa0 & 2) == 0) { pdir = d_north; qdir = d_south; }
+               else                { pdir = d_south; qdir = d_north; }
+            }
+
+            if ((qa0|qa1)&1) goto bad;
+
+            if (instantiate_phantoms) {
+               if (qa0 == 0)
                   fail("Need live person to determine handedness.");
 
-               for (i=0 ; i<=setup_attrs[ss->kind].setup_limits ; i++) {
-                  if (!ss->people[i].id1) {
-                     if (phantom_count >= 16)
-                        fail("Too many phantoms.");
+               for (i=0 ; i<=limit ; i += limit) {
+                  int p = rr->map1[idx+i];
+                  personrec *pq = &ss->people[p];
+                  t = pq->id1;
       
-                     pdir = (qa0&1) ?
-                           (d_east ^ ((rr->map2[i] ^ qa2) & 2)) :
-                           (d_north ^ ((rr->map1[i] ^ qa0) & 2));
-      
-                     ss->people[i].id1 = pdir | BIT_ACT_PHAN | ((phantom_count++) << 6);
-                     ss->people[i].id2 = 0;
+                  if (!t) {
+                     if (phantom_count >= 16) fail("Too many phantoms.");
+                     pq->id1 = (i ? qdir : pdir) | BIT_ACT_PHAN | ((phantom_count++) << 6);
+                     pq->id2 = 0UL;
                   }
-                  else if (ss->people[i].id1 & BIT_ACT_PHAN)
+                  else if (t & BIT_ACT_PHAN)
                      fail("Active phantoms may only be used once.");
                }
 
                *failed_to_instantiate = FALSE;
             }
          }
+      }
+      goto good;
+   case chk_peelable:
+      qa0 = 3; qa1 = 3;
+      qa2 = 3; qa3 = 3;
 
+      for (j=0; j<rr->size; j++) {
+         if ((t = ss->people[rr->map1[j]].id1) != 0)  { qa0 &= t; qa1 &= t^2; }
+         if ((t = ss->people[rr->map2[j]].id1) != 0)  { qa2 &= t; qa3 &= t^2; }
+      }
+
+      if ((((~qa0)&3) == 0 || ((~qa1)&3) == 0) && (((~qa2)&3) == 0 || ((~qa3)&3) == 0))
          goto good;
-      case chk_indep_box:
-         qa0 = (tt.assump_both << 1) & 2;
-         qa1 = tt.assump_both & 2;
-         qa2 = 0;
-         qa3 = 0;
 
-         for (idx=0 ; idx<=setup_attrs[ss->kind].setup_limits ; idx++) {
-            if ((t = ss->people[idx].id1) != 0) {
-               qa2 |= t + rr->map1[idx];
-               qa3 |= t + rr->map1[idx] + 2;
-            }
-         }
+      goto bad;
+   case chk_dmd_qtag:
+      qa1 = 0;
+      qa0 = 0;
 
-         if (((qa0 & qa2) | (qa1 & qa3)) != 0) goto bad;
+      for (idx=0; idx<rr->map1[0]; idx++)
+         qa1 |= ss->people[rr->map1[idx+1]].id1;
 
-         goto good;
-      case chk_groups:
-         limit = rr->map2[0];
-   
-         for (idx=0; idx<limit; idx++) {
-            qa0 = 0; qa1 = 0;
+      for (idx=0; idx<rr->map2[0]; idx++)
+         qa0 |= ss->people[rr->map2[idx+1]].id1;
 
-            for (i=0,j=idx; i<rr->size; i++,j+=limit) {
-               if ((t = ss->people[rr->map1[j]].id1) != 0) { qa0 |= t; qa1 |= t^2; }
-               else if (tt.assump_negate || tt.assump_live) goto bad;    /* All live people were demanded. */
-            }
+      for (idx=0; idx<rr->map3[0]; idx++) {
+         if ((t = ss->people[rr->map3[idx+1]].id1) != 0 && (t & 2) != 0)
+            goto bad;
+      }
 
-            if ((qa0 & qa1 & 2) != 0) goto bad;
+      for (idx=0; idx<rr->map4[0]; idx++) {
+         if ((t = ss->people[rr->map4[idx+1]].id1) != 0 && (t & 2) != 2)
+            goto bad;
+      }
 
-            if (rr->ok_for_assume) {
-               if (tt.assump_col == 1) {
-                  if ((qa0 & 2) == 0) { pdir = d_east; }
-                  else                { pdir = d_west; }
-
-                  qa0 >>= 3;
-                  qa1 >>= 3;
-               }
-               else {
-                  if ((qa0 & 2) == 0) { pdir = d_north; }
-                  else                { pdir = d_south; }
-               }
-
-               if ((qa0|qa1)&1) goto bad;
-
-               if (instantiate_phantoms) {
-                  if (qa0 == 0) fail("Need live person to determine handedness.");
-
-                  for (i=0,k=0 ; k<rr->size ; i+=limit,k++) {
-                     int p = rr->map1[idx+i];
-   
-                     personrec *pq = &ss->people[p];
-                     t = pq->id1;
-      
-                     if (!t) {
-                        if (phantom_count >= 16) fail("Too many phantoms.");
-                        pq->id1 = pdir | BIT_ACT_PHAN | ((phantom_count++) << 6);
-                        pq->id2 = 0UL;
-                     }
-                     else if (t & BIT_ACT_PHAN)
-                        fail("Active phantoms may only be used once.");
-                  }
-
-                  *failed_to_instantiate = FALSE;
-               }
-            }
-         }
-         goto good;
-      case chk_anti_groups:
-         limit = rr->map2[0];
-
-         for (idx=0; idx<limit; idx++) {
-            qa0 = 0; qa1 = 0;
-
-            if ((t = ss->people[rr->map1[idx]].id1) != 0)       { qa0 |= t;   qa1 |= t^2; }
-            else if (tt.assump_negate) goto bad;    /* All live people were demanded. */
-            if ((t = ss->people[rr->map1[idx+limit]].id1) != 0) { qa0 |= t^2; qa1 |= t;   }
-            else if (tt.assump_negate) goto bad;    /* All live people were demanded. */
-
-            if ((qa0 & qa1 & 2) != 0) goto bad;
-
-            if (rr->ok_for_assume) {
-               if (tt.assump_col == 1) {
-                  if ((qa0 & 2) == 0) { pdir = d_east; qdir = d_west; }
-                  else                { pdir = d_west; qdir = d_east; }
-
-                  qa0 >>= 3;
-                  qa1 >>= 3;
-               }
-               else {
-                  if ((qa0 & 2) == 0) { pdir = d_north; qdir = d_south; }
-                  else                { pdir = d_south; qdir = d_north; }
-               }
-
-               if ((qa0|qa1)&1) goto bad;
-
-               if (instantiate_phantoms) {
-                  if (qa0 == 0)
-                     fail("Need live person to determine handedness.");
-
-                  for (i=0 ; i<=limit ; i += limit) {
-                     int p = rr->map1[idx+i];
-                     personrec *pq = &ss->people[p];
-                     t = pq->id1;
-      
-                     if (!t) {
-                        if (phantom_count >= 16) fail("Too many phantoms.");
-                        pq->id1 = (i ? qdir : pdir) | BIT_ACT_PHAN | ((phantom_count++) << 6);
-                        pq->id2 = 0UL;
-                     }
-                     else if (t & BIT_ACT_PHAN)
-                        fail("Active phantoms may only be used once.");
-                  }
-
-                  *failed_to_instantiate = FALSE;
-               }
-            }
-         }
-         goto good;
-      case chk_peelable:
-         qa0 = 3; qa1 = 3;
-         qa2 = 3; qa3 = 3;
-
-         for (j=0; j<rr->size; j++) {
-            if ((t = ss->people[rr->map1[j]].id1) != 0)  { qa0 &= t; qa1 &= t^2; }
-            if ((t = ss->people[rr->map2[j]].id1) != 0)  { qa2 &= t; qa3 &= t^2; }
-         }
-
-         if ((((~qa0)&3) == 0 || ((~qa1)&3) == 0) && (((~qa2)&3) == 0 || ((~qa3)&3) == 0))
-            goto good;
-
+      if ((qa1 & 001) != 0 || (qa0 & 010) != 0)
          goto bad;
-      case chk_dmd_qtag:
-         qa1 = 0;
-         qa0 = 0;
 
-         for (idx=0; idx<rr->map1[0]; idx++)
-            qa1 |= ss->people[rr->map1[idx+1]].id1;
+      goto good;
+   case chk_qtag:
+      qaa[0] = tt.assump_both;
+      qaa[1] = tt.assump_both << 1;
 
-         for (idx=0; idx<rr->map2[0]; idx++)
-            qa0 |= ss->people[rr->map2[idx+1]].id1;
+      for (idx=0; idx<rr->size; idx++) {
+         if ((t = ss->people[rr->map1[idx]].id1) != 0) { qaa[idx&1] |=  t; qaa[(idx&1)^1] |= t^2; }
+      }
 
-         for (idx=0; idx<rr->map3[0]; idx++) {
-            if ((t = ss->people[rr->map3[idx+1]].id1) != 0 && (t & 2) != 0)
-               goto bad;
-         }
+      if ((qaa[0] & qaa[1] & 2) != 0)
+         goto bad;
 
-         for (idx=0; idx<rr->map4[0]; idx++) {
-            if ((t = ss->people[rr->map4[idx+1]].id1) != 0 && (t & 2) != 2)
-               goto bad;
-         }
-
-         if ((qa1 & 001) != 0 || (qa0 & 010) != 0)
+      for (idx=0; idx<rr->map2[0]; idx++) {
+         if ((t = ss->people[rr->map2[idx+1]].id1) != 0 && ((t ^ (idx << 1)) & 2) != 0)
             goto bad;
+      }
 
-         goto good;
-      case chk_qtag:
-         qaa[0] = tt.assump_both;
-         qaa[1] = tt.assump_both << 1;
+      for (idx=0 ; idx<8 ; idx++) { if (ss->people[idx].id1 & 1) goto bad; }
 
-         for (idx=0; idx<rr->size; idx++) {
-            if ((t = ss->people[rr->map1[idx]].id1) != 0) { qaa[idx&1] |=  t; qaa[(idx&1)^1] |= t^2; }
-         }
+      if (rr->ok_for_assume) {
+         uint32 qab[4];
+         qab[0] = 0;
+         qab[2] = 0;
 
-         if ((qaa[0] & qaa[1] & 2) != 0)
-            goto bad;
+         for (idx=0; idx<rr->size; idx++)
+            qab[idx&2] |= ss->people[rr->map1[idx]].id1;
 
-         for (idx=0; idx<rr->map2[0]; idx++) {
-            if ((t = ss->people[rr->map2[idx+1]].id1) != 0 && ((t ^ (idx << 1)) & 2) != 0)
-               goto bad;
-         }
+         if ((qab[0]|qab[2]) & 1) goto bad;
 
-         for (idx=0 ; idx<8 ; idx++) { if (ss->people[idx].id1 & 1) goto bad; }
+         if (instantiate_phantoms) {
+            *failed_to_instantiate = FALSE;
 
-         if (rr->ok_for_assume) {
-            uint32 qab[4];
-            qab[0] = 0;
-            qab[2] = 0;
+            if (qaa[0] == 0) fail("Need live person to determine handedness.");
 
-            for (idx=0; idx<rr->size; idx++)
-               qab[idx&2] |= ss->people[rr->map1[idx]].id1;
+            else {
+               if ((qaa[0] & 2) == 0) { pdir = d_north; qdir = d_south; }
+               else                   { pdir = d_south; qdir = d_north; }
+               pdirodd = pdir; qdirodd = qdir;
+            }
 
-            if ((qab[0]|qab[2]) & 1) goto bad;
-
-            if (instantiate_phantoms) {
-               *failed_to_instantiate = FALSE;
-
-               if (qaa[0] == 0) fail("Need live person to determine handedness.");
-
-               else {
-                  if ((qaa[0] & 2) == 0) { pdir = d_north; qdir = d_south; }
-                  else                   { pdir = d_south; qdir = d_north; }
-                  pdirodd = pdir; qdirodd = qdir;
+            for (i=0; i<rr->size; i++) {
+               int p = rr->map1[i];
+   
+               if (!ss->people[p].id1) {
+                  if (phantom_count >= 16) fail("Too many phantoms.");
+   
+                  ss->people[p].id1 =           (i&1) ?
+                     ((i&2) ? qdirodd : qdir) :
+                     ((i&2) ? pdirodd : pdir);
+   
+                  ss->people[p].id1 |= BIT_ACT_PHAN | ((phantom_count++) << 6);
+                  ss->people[p].id2 = 0;
                }
+               else if (ss->people[p].id1 & BIT_ACT_PHAN)
+                  fail("Active phantoms may only be used once.");
+            }
 
-               for (i=0; i<rr->size; i++) {
-                  int p = rr->map1[i];
+            for (i=0; i<rr->map2[0]; i++) {
+               int p = rr->map2[i+1];
    
-                  if (!ss->people[p].id1) {
-                     if (phantom_count >= 16) fail("Too many phantoms.");
-   
-                     ss->people[p].id1 =           (i&1) ?
-                                          ((i&2) ? qdirodd : qdir) :
-                                          ((i&2) ? pdirodd : pdir);
-   
-                     ss->people[p].id1 |= BIT_ACT_PHAN | ((phantom_count++) << 6);
-                     ss->people[p].id2 = 0;
-                  }
-                  else if (ss->people[p].id1 & BIT_ACT_PHAN)
-                     fail("Active phantoms may only be used once.");
+               if (!ss->people[p].id1) {
+                  if (phantom_count >= 16) fail("Too many phantoms.");
+                  ss->people[p].id1 = (i&1) ? d_south : d_north;
+                  ss->people[p].id1 |= BIT_ACT_PHAN | ((phantom_count++) << 6);
+                  ss->people[p].id2 = 0;
                }
-
-               for (i=0; i<rr->map2[0]; i++) {
-                  int p = rr->map2[i+1];
-   
-                  if (!ss->people[p].id1) {
-                     if (phantom_count >= 16) fail("Too many phantoms.");
-                     ss->people[p].id1 = (i&1) ? d_south : d_north;
-                     ss->people[p].id1 |= BIT_ACT_PHAN | ((phantom_count++) << 6);
-                     ss->people[p].id2 = 0;
-                  }
-                  else if (ss->people[p].id1 & BIT_ACT_PHAN)
-                     fail("Active phantoms may only be used once.");
-               }
+               else if (ss->people[p].id1 & BIT_ACT_PHAN)
+                  fail("Active phantoms may only be used once.");
             }
          }
+      }
 
-         goto good;
-      default:
-         goto bad;    /* Shouldn't happen. */
+      goto good;
+   default:
+      goto bad;    /* Shouldn't happen. */
    }
 
    good: if (tt.assump_negate) return FALSE;
@@ -3015,8 +3046,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
 
          tt.assumption = cr_4x4_2fl_only;
          goto fix_col_line_stuff;
-      case cr_couples_only:         /* 1x2/1x4/1x8/2x2/2x4 lines, or 2x4 columns -
-                                       people are in genuine couples, not miniwaves */
+      case cr_couples_only:
          switch (ss->cmd.cmd_assume.assumption) {
          case cr_1fl_only:
          case cr_2fl_only:
@@ -3027,9 +3057,28 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
             goto bad;
          }
 
-         tt.assumption = cr_couples_only;
+         tt.assumption = cr_couples_only;  /* Don't really need this, unless implement
+                                              "not_couples" (like "cr_not_miniwaves")
+                                              in the future. */
 
-         goto fix_col_line_stuff;
+         switch (ss->kind) {
+         case s1x2: case s1x4: case s1x6: case s1x8: case s1x16: case s2x4:
+         case sdmd: case s_trngl: case s_qtag: case s_ptpd: case s_bone:
+            goto fix_col_line_stuff;
+         case s2x2:
+            if ((t = ss->people[0].id1) & (u = ss->people[1].id1)) { k |= t|u; i &= t^u^2; }
+            if ((t = ss->people[3].id1) & (u = ss->people[2].id1)) { k |= t|u; i &= t^u^2; }
+            if ((i & 2) && !(k & 1)) goto good;
+            k = 1;
+            i = 2;
+            if ((t = ss->people[0].id1) & (u = ss->people[3].id1)) { k &= t&u; i &= t^u^2; }
+            if ((t = ss->people[1].id1) & (u = ss->people[2].id1)) { k &= t&u; i &= t^u^2; }
+            if ((i & 2) && (k & 1)) goto good;
+            goto bad;
+         default:
+            goto good;                 /* We don't understand the setup --
+                                          we'd better accept it. */
+         }
       case cr_3x3couples_only:      /* 1x3/1x6/2x3/2x6/1x12 - each group of 3 people
                                        are facing the same way */
          switch (ss->cmd.cmd_assume.assumption) {
@@ -3061,6 +3110,10 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
          case cr_1fl_only:
          case cr_2fl_only:
             goto bad;
+         case cr_wave_only:
+         case cr_miniwaves:
+         case cr_magic_only:
+            goto good;
          }
 
          tt.assumption = cr_miniwaves;
@@ -3379,6 +3432,10 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
                t1 = ss->people[0].id1;
                t2 = ss->people[3].id1;
                break;
+            case s_bone6:
+               t1 = ss->people[5].id1;
+               t2 = ss->people[2].id1;
+               break;
             default:
                goto bad;
             }
@@ -3456,6 +3513,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
          case s1x4: k ^= 0x5; break;
          case s2x4: k ^= 0x99; break;
          case s_qtag: k ^= 0x33; break;
+         case s_rigger: k ^= 0xCC; break;
          default: k = ~1;  /* Will force an error later, unless splitting. */
          }
          /* FALL THROUGH!!!!!! */
@@ -3497,16 +3555,15 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
    do_2fl_stuff:
 
       switch (ss->cmd.cmd_assume.assumption) {
-      case cr_1fl_only: case cr_wave_only: case cr_magic_only: goto bad;
+      case cr_1fl_only: case cr_wave_only: case cr_miniwaves: case cr_magic_only: goto bad;
       }
 
       tt.assumption = cr_2fl_only;
       goto fix_col_line_stuff;
 
    do_wave_stuff:
-
       switch (ss->cmd.cmd_assume.assumption) {
-      case cr_1fl_only: case cr_2fl_only: case cr_magic_only: goto bad;
+      case cr_1fl_only: case cr_2fl_only: case cr_couples_only: case cr_magic_only: goto bad;
       case cr_ijright: case cr_ijleft: goto bad;
       case cr_wave_only: case cr_jright:
          if (ss->cmd.cmd_assume.assump_both == 2 && tt.assump_both == 1) goto bad;
@@ -3533,6 +3590,12 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
       case s_short6:
          tt.assump_col = 1;
          goto check_tt;
+      case s2x4:
+         /* If the setup is a 2x4, but we are deciding whether
+            to split into 2x2's, let it pass. */
+
+         if (key == b_2x2) goto good;
+         break;
       }
 
    fix_col_line_stuff:
@@ -3690,7 +3753,7 @@ extern void install_person(setup *resultpeople, int resultplace, setup *sourcepe
       collision_person2 = newperson;
       error_message1[0] = '\0';
       error_message2[0] = '\0';
-      longjmp(longjmp_ptr->the_buf, 3);
+      longjmp(longjmp_ptr->the_buf, error_flag_collision);
    }
 }
 
@@ -3711,7 +3774,7 @@ extern void install_rot(setup *resultpeople, int resultplace, setup *sourcepeopl
          collision_person2 = newperson;
          error_message1[0] = '\0';
          error_message2[0] = '\0';
-         longjmp(longjmp_ptr->the_buf, 3);
+         longjmp(longjmp_ptr->the_buf, error_flag_collision);
       }
    }
 }
@@ -3930,6 +3993,8 @@ extern parse_block *really_skip_one_concept(
 
    if (check_for_concept_group(parseptrcopy, k_p, &next_parseptr))
       *parseptr_skip_p = next_parseptr->next;
+   else if (parseptrcopy->concept->kind == concept_special_sequential)
+      *parseptr_skip_p = parseptrcopy->subsidiary_root;
    else
       *parseptr_skip_p = parseptrcopy->next;
 
@@ -4045,7 +4110,13 @@ extern long_boolean fix_n_results(int arity, setup_kind goal, setup z[], uint32 
          else
             rotstates &= 0x033;
 
-         rotstates &= rotstate_table[((i & 3) << 2) | zisrot];
+         {
+            int shit = i;
+
+            if (arity == 4 && (i&2)) shit ^= 1;
+
+            rotstates &= rotstate_table[((shit & 3) << 2) | zisrot];
+         }
       }
    }
 

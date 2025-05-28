@@ -220,6 +220,8 @@ extern long_boolean divide_for_magic(
 {
    static expand_thing exp27  = {{1, 3, 4, 5, 7, 9, 10, 11}, 8, s2x4, s2x6, 0};
    static expand_thing exp72  = {{0, 1, 2, 4, 6, 7, 8, 10},  8, s2x4, s2x6, 0};
+   static expand_thing exp13  = {{1, 3, 5, 7, 9, 11}, 6, s2x3, s2x6, 0};
+   static expand_thing exp31  = {{0, 2, 4, 6, 8, 10},  6, s2x3, s2x6, 0};
    static expand_thing exp35  = {{1, 2, 3, 5, 7, 8, 9, 11},  8, s2x4, s2x6, 0};
    static expand_thing exp56  = {{0, 2, 3, 4, 6, 8, 9, 10},  8, s2x4, s2x6, 0};
    static expand_thing expg27 = {{1, 3, 5, 4, 7, 9, 11, 10},  8, s1x8, s1x12, 0};
@@ -287,9 +289,10 @@ extern long_boolean divide_for_magic(
       break;
    }
 
-   /* Now check for 3x1/1x3 stuff. */
+   /* Now check for 1x3 types of stuff. */
 
-   if (heritflags_to_check == INHERITFLAG_3X1 || heritflags_to_check == INHERITFLAG_1X3) {
+   if (heritflags_to_check == INHERITFLAG_3X1 || heritflags_to_check == INHERITFLAG_1X3 ||
+       heritflags_to_check == INHERITFLAG_2X1 || heritflags_to_check == INHERITFLAG_1X2) {
       directions = 0;
       livemask = 0;
 
@@ -300,78 +303,107 @@ extern long_boolean divide_for_magic(
          directions = (directions<<2) | (p&3);
       }
 
-      if (ss->kind == s2x4) {
-         if (livemask != 0xFF) return FALSE;
+      if (heritflags_to_check == INHERITFLAG_3X1 ||
+          heritflags_to_check == INHERITFLAG_1X3) {
+         if (ss->kind == s2x4) {
+            if (livemask != 0xFF) return FALSE;
 
-         /* These are independent of whether we said "1x3" or "3x1". */
-         if (directions == 0x2A80 || directions == 0x802A || directions == 0x7FD5 || directions == 0xD57F) {
-            expand_setup(&exp27, ss);
-            goto do_3x3;
-         }
-         else if (directions == 0xA802 || directions == 0x02A8 || directions == 0xFD57 || directions == 0x57FD) {
-            expand_setup(&exp72, ss);
-            goto do_3x3;
-         }
-         else if (directions == 0x208A || directions == 0x8A20 || directions == 0x75DF || directions == 0xDF75) {
-            expand_setup(&exp35, ss);
-            goto do_3x3;
-         }
-         else if (directions == 0xA208 || directions == 0x08A2 || directions == 0xF75D || directions == 0x5DF7) {
-            expand_setup(&exp56, ss);
-            goto do_3x3;
-         }
+            /* These are independent of whether we said "1x3" or "3x1". */
+            if (directions == 0x2A80 || directions == 0x802A ||
+                directions == 0x7FD5 || directions == 0xD57F) {
+               expand_setup(&exp27, ss);
+               goto do_3x3;
+            }
+            else if (directions == 0xA802 || directions == 0x02A8 ||
+                     directions == 0xFD57 || directions == 0x57FD) {
+               expand_setup(&exp72, ss);
+               goto do_3x3;
+            }
+            else if (directions == 0x208A || directions == 0x8A20 ||
+                     directions == 0x75DF || directions == 0xDF75) {
+               expand_setup(&exp35, ss);
+               goto do_3x3;
+            }
+            else if (directions == 0xA208 || directions == 0x08A2 ||
+                     directions == 0xF75D || directions == 0x5DF7) {
+               expand_setup(&exp56, ss);
+               goto do_3x3;
+            }
 
-         /* These are specific to "1x3" or "3x1". */
-         if (directions == 0x55FF || directions == 0x00AA) {
-            expand_setup(
-               (heritflags_to_check & INHERITFLAG_3X1) ? &exp27 : &exp72,
-               ss);
-            goto do_3x3;
+            /* These are specific to "1x3" or "3x1". */
+            if (directions == 0x55FF || directions == 0x00AA) {
+               expand_setup(
+                            (heritflags_to_check & INHERITFLAG_3X1) ? &exp27 : &exp72,
+                            ss);
+               goto do_3x3;
+            }
+            else if (directions == 0xFF55 || directions == 0xAA00) {
+               expand_setup(
+                            (heritflags_to_check & INHERITFLAG_3X1) ? &exp72 : &exp27,
+                            ss);
+               goto do_3x3;
+            }
          }
-         else if (directions == 0xFF55 || directions == 0xAA00) {
-            expand_setup(
-               (heritflags_to_check & INHERITFLAG_3X1) ? &exp72 : &exp27,
-               ss);
-            goto do_3x3;
+         else if (ss->kind == s1x8) {
+            if (livemask != 0xFF) return FALSE;
+
+            /* These are independent of whether we said "1x3" or "3x1". */
+            if (directions == 0x2A80 || directions == 0x802A ||
+                directions == 0x7FD5 || directions == 0xD57F) {
+               expand_setup(&expg27, ss);
+               goto do_3x3;
+            }
+            else if (directions == 0xA208 || directions == 0x08A2 ||
+                     directions == 0xF75D || directions == 0x5DF7) {
+               expand_setup(&expg72, ss);
+               goto do_3x3;
+            }
+            else if (directions == 0x208A || directions == 0x8A20 ||
+                     directions == 0x75DF || directions == 0xDF75) {
+               expand_setup(&expg35, ss);
+               goto do_3x3;
+            }
+            else if (directions == 0xA802 || directions == 0x02A8 ||
+                     directions == 0xFD57 || directions == 0x57FD) {
+               expand_setup(&expg56, ss);
+               goto do_3x3;
+            }
+
+            /* These are specific to "1x3" or "3x1". */
+            if (directions == 0x55FF || directions == 0x00AA) {
+               expand_setup(
+                            (heritflags_to_check & INHERITFLAG_3X1) ? &expg27 : &expg72,
+                            ss);
+               goto do_3x3;
+            }
+            else if (directions == 0xFF55 || directions == 0xAA00) {
+               expand_setup(
+                            (heritflags_to_check & INHERITFLAG_3X1) ? &expg72 : &expg27,
+                            ss);
+               goto do_3x3;
+            }
+         }
+         else if (ss->kind == s3x4) {
+            if (livemask == 03333 || livemask == 04747) goto do_3x3;
          }
       }
-      else if (ss->kind == s1x8) {
-         if (livemask != 0xFF) return FALSE;
+      else if (heritflags_to_check == INHERITFLAG_2X1 ||
+               heritflags_to_check == INHERITFLAG_1X2) {
+         if (ss->kind == s2x3) {
+            if (livemask != 077) return FALSE;
 
-         /* These are independent of whether we said "1x3" or "3x1". */
-         if (directions == 0x2A80 || directions == 0x802A || directions == 0x7FD5 || directions == 0xD57F) {
-            expand_setup(&expg27, ss);
-            goto do_3x3;
+            /* These are independent of whether we said "1x2" or "2x1". */
+            if (directions == 01240 || directions == 04012 ||
+                directions == 03765 || directions == 06537) {
+               expand_setup(&exp13, ss);
+               goto do_3x3;
+            }
+            else if (directions == 05002 || directions == 00250 ||
+                     directions == 07527 || directions == 02775) {
+               expand_setup(&exp31, ss);
+               goto do_3x3;
+            }
          }
-         else if (directions == 0xA208 || directions == 0x08A2 || directions == 0xF75D || directions == 0x5DF7) {
-            expand_setup(&expg72, ss);
-            goto do_3x3;
-         }
-         else if (directions == 0x208A || directions == 0x8A20 || directions == 0x75DF || directions == 0xDF75) {
-            expand_setup(&expg35, ss);
-            goto do_3x3;
-         }
-         else if (directions == 0xA802 || directions == 0x02A8 || directions == 0xFD57 || directions == 0x57FD) {
-            expand_setup(&expg56, ss);
-            goto do_3x3;
-         }
-
-         /* These are specific to "1x3" or "3x1". */
-         if (directions == 0x55FF || directions == 0x00AA) {
-            expand_setup(
-               (heritflags_to_check & INHERITFLAG_3X1) ? &expg27 : &expg72,
-               ss);
-            goto do_3x3;
-         }
-         else if (directions == 0xFF55 || directions == 0xAA00) {
-            expand_setup(
-               (heritflags_to_check & INHERITFLAG_3X1) ? &expg72 : &expg27,
-               ss);
-            goto do_3x3;
-         }
-      }
-      else if (ss->kind == s3x4) {
-         if (livemask == 03333 || livemask == 04747) goto do_3x3;
       }
    }
 
@@ -420,6 +452,12 @@ divide_us:
       }
       else if (livemask == 07272) {
          compress_setup(&exp72, result);
+      }
+      else if (livemask == 02525) {
+         compress_setup(&exp13, result);
+      }
+      else if (livemask == 05252) {
+         compress_setup(&exp31, result);
       }
       else if (livemask == 03535) {
          compress_setup(&exp35, result);
@@ -512,6 +550,10 @@ extern void do_call_in_series(
    uint32 current_elongation = 0;
    uint32 saved_result_flags = sss->result_flags;
 
+   qqqq.cmd.prior_expire_bits |= saved_result_flags & (RESULTFLAG__YOYO_FINISHED |
+                                                       RESULTFLAG__TWISTED_FINISHED |
+                                                       RESULTFLAG__SPLIT_FINISHED);
+
    /* If we are forcing a split, and an earlier call in the series has responded to that split
       by returning an unequivocal splitting axis (indicated by one field being zero and the other
       nonzero), we continue to split along the same axis. */
@@ -553,7 +595,6 @@ extern void do_call_in_series(
                "force_lines" type of directive, honor same. */
 
             if (qqqq.cmd.cmd_misc_flags & CMD_MISC__DOING_ENDS) {
-
                if (sss->kind == s2x2 &&
                    (qqqq.cmd.cmd_misc_flags &
                     (DFM1_CONC_DEMAND_LINES | DFM1_CONC_DEMAND_COLUMNS))) {
@@ -691,9 +732,11 @@ extern void do_call_in_series(
       is by initializing it to RESULTFLAG__SPLIT_AXIS_FIELDMASK. */
 
    sss->result_flags = ((
-                  (saved_result_flags & ~(RESULTFLAG__DID_LAST_PART|RESULTFLAG__SECONDARY_DONE|RESULTFLAG__PARTS_ARE_KNOWN)) |
-                  tempsetup.result_flags) & ~(3|RESULTFLAG__SPLIT_AXIS_FIELDMASK)) |
-         current_elongation;
+                  (saved_result_flags &
+                   ~(RESULTFLAG__DID_LAST_PART|RESULTFLAG__SECONDARY_DONE|
+                     RESULTFLAG__PARTS_ARE_KNOWN)) |
+                  tempsetup.result_flags) &
+                        ~(3|RESULTFLAG__SPLIT_AXIS_FIELDMASK)) | current_elongation;
 
    /* We now have all but the SPLIT_AXIS stuff. */
 
@@ -745,6 +788,9 @@ static coordrec squeezethingqtag = {s_qtag, 3,
    { -2,   2,   6,   2,   2,  -2,  -6,  -2},
    {  4,   4,   0,   0,  -4,  -4,   0,   0}, {0}};
 
+static coordrec squeezething4dmd = {s4dmd, 3,
+   {-10,  -5,   5,  10,  14,  10,   6,   2,  10,   5,  -5, -10, -14, -10,  -6,  -2},
+   {  6,   6,   6,   6,   0,   0,   0,   0,  -6,  -6,  -6,  -6,   0,   0,   0,   0}, {0}};
 
 
 Private int start_matrix_call(
@@ -764,10 +810,12 @@ Private int start_matrix_call(
 
    if (flags & (MTX_FIND_SQUEEZERS|MTX_FIND_SPREADERS)) {
       thingyptr = nicethingyptr;
-      /* Fix up a galaxy or hourglass so that points can squeeze.  They have funny coordinates so that they can't truck or loop. */
+      /* Fix up a galaxy or hourglass so that points can squeeze.
+         They have funny coordinates so that they can't truck or loop. */
       if (ss->kind == s_hrglass) thingyptr = &squeezethingglass;
       else if (ss->kind == s_galaxy) thingyptr = &squeezethinggal;
       else if (ss->kind == s_qtag) thingyptr = &squeezethingqtag;
+      else if (ss->kind == s4dmd) thingyptr = &squeezething4dmd;
    }
 
    if (!thingyptr || !nicethingyptr) fail("Can't do this in this setup.");
@@ -847,6 +895,54 @@ static coordrec press_4dmd_4x4 = {s4x4, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
+static coordrec press_4dmd_qtag1 = {s_qtag, 3,
+   { -7,  -1,   6,   2,   7,   1,  -6,  -2},
+   {  5,   5,   0,   0,  -5,  -5,   0,   0}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1,  0,  1, -1, -1, -1, -1,
+      -1, -1,  6,  7,  3,  2, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1,  5,  4, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
+static coordrec press_4dmd_qtag2 = {s_qtag, 3,
+   {  1,   7,   6,   2,  -1,   -7,  -6,  -2},
+   {  5,   5,   0,   0,  -5,  -5,   0,   0}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1,  0,  1, -1, -1,
+      -1, -1,  6,  7,  3,  2, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1,  5,  4, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
+static coordrec press_qtag_4dmd1 = {s4dmd, 3,
+   {-11,  -5,   0,   9,  14,  10,   6,   2,  11,   5,   0,  -9, -14, -10,  -6,  -2},
+   {  5,   5,   5,   5,   0,   0,   0,   0,  -5,  -5,  -5,  -5,   0,   0,   0,   0}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1,  0,  1, -1,  2, -1,  3, -1,
+      12, 13, 14, 15,  7,  6,  5,  4,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, 11, -1, -1, 10,  9,  8, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
+static coordrec press_qtag_4dmd2 = {s4dmd, 3,
+   { -8,   1,   5,  11,  14,  10,   6,   2,   8,  -1,  -5, -11, -14, -10,  -6,  -2},
+   {  5,   5,   5,   5,   0,   0,   0,   0,  -5,  -5,  -5,  -5,   0,   0,   0,   0}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1,  0, -1,  1,  2,  3, -1,
+      12, 13, 14, 15,  7,  6,  5,  4,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, 11, 10,  9, -1, -1,  8, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
 static coordrec acc_crosswave = {s_crosswave, 3,
    { -8,  -4,   0,   0,   8,   4,   0,   0},
    {  0,   0,   6,   2,   0,   0,  -6,  -2}, {
@@ -868,7 +964,7 @@ Private void finish_matrix_call(
    setup *result)
 {
    int i, place;
-   int xmax, xpar, ymax, ypar, x, y, k;
+   int xmax, xpar, ymax, ypar, x, y, k, doffset;
    uint32 signature;
    coordrec *checkptr;
 
@@ -956,6 +1052,79 @@ Private void finish_matrix_call(
 
       warn(warn__check_galaxy);
       checkptr = setup_attrs[s_galaxy].setup_coords;
+      goto doit;
+   }
+   else if (((ypar == 0x00930044) && ((signature & (~0x21018800)) == 0))) {
+      /* Fudge this to a 3x6.  The centers did a 1/2 truck from point-to-point diamonds. */
+
+      for (i=0; i<nump; i++) {
+         if      (matrix_info[i].x == -9)
+            { matrix_info[i].x = -10; }
+         else if (matrix_info[i].x == 9)
+            { matrix_info[i].x = 10; }
+         else if (matrix_info[i].x == -5)
+            { matrix_info[i].x = -6; }
+         else if (matrix_info[i].x == 5)
+            { matrix_info[i].x = 6; }
+      }
+
+      checkptr = setup_attrs[s3x6].setup_coords;
+      goto doit;
+   }
+   else if (((ypar == 0x00A20026) && ((signature & (~0x09080002)) == 0))) {
+      /* Fudge this to point-to-point diamonds.  The centers did a 1/2 truck from a 3x6. */
+
+      for (i=0; i<nump; i++) {
+         if      (matrix_info[i].x == -10)
+            { matrix_info[i].x = -9; }
+         else if (matrix_info[i].x == 10)
+            { matrix_info[i].x = 9; }
+         else if (matrix_info[i].x == -6)
+            { matrix_info[i].x = -5; }
+         else if (matrix_info[i].x == 6)
+            { matrix_info[i].x = 5; }
+      }
+
+      checkptr = setup_attrs[s_ptpd].setup_coords;
+      goto doit;
+   }
+   else if ((ypar == 0x00660066) && ((signature & (~0x08008404)) == 0)) {
+      /* Fudge this to a galaxy.  The points got here by pressing and trucking. */
+
+      for (i=0; i<nump; i++) {
+         if      (matrix_info[i].x ==  0 && matrix_info[i].y ==  6) { matrix_info[i].y =  7; }
+         else if (matrix_info[i].x ==  0 && matrix_info[i].y == -6) { matrix_info[i].y = -7; }
+         else if (matrix_info[i].x ==  6 && matrix_info[i].y ==  0) { matrix_info[i].x =  7; }
+         else if (matrix_info[i].x == -6 && matrix_info[i].y ==  0) { matrix_info[i].x = -7; }
+      }
+
+      /* Don't need to tell them to check a galaxy -- it's pretty obvious. */
+      checkptr = setup_attrs[s_galaxy].setup_coords;
+      goto doit;
+   }
+   else if ((ypar == 0x00730055 || ypar == 0x00710051) && ((signature & (~0x01008420)) == 0)) {
+      /* Fudge this to diamonds.  The trailing points pressed ahead from quadruple diamonds,
+         so that only the centers 2 diamonds are now occupied. */
+      warn(warn__check_dmd_qtag);
+      checkptr = &press_4dmd_qtag1;
+      goto doit;
+   }
+   else if ((ypar == 0x00730055 || ypar == 0x00710051) && ((signature & (~0x21080400)) == 0)) {
+      /* Same, other way. */
+      warn(warn__check_dmd_qtag);
+      checkptr = &press_4dmd_qtag2;
+      goto doit;
+   }
+   else if ((ypar == 0x00970055) && ((signature & (~0x01400480)) == 0)) {
+      /* Fudge this to quadruple diamonds.  The points pressed ahead from normal diamonds. */
+      warn(warn__check_quad_dmds);
+      checkptr = &press_qtag_4dmd1;
+      goto doit;
+   }
+   else if ((ypar == 0x00870055) && ((signature & (~0x09080400)) == 0)) {
+      /* Same, other way. */
+      warn(warn__check_quad_dmds);
+      checkptr = &press_qtag_4dmd2;
       goto doit;
    }
    else if ((ypar == 0x00B10071) && ((signature & (~0x01806000)) == 0)) {
@@ -1082,13 +1251,44 @@ Private void finish_matrix_call(
    }
    /* If certain far out people are missing, xmax will be different, but we will
        still need to go to a 4dmd. */
-   else if (((ypar == 0x00E30055) || (ypar == 0x00B30055) || (ypar == 0x00B10051) || (ypar == 0x00A30055)) && ((signature & (~0x0940A422)) == 0)) {
+   else if (((ypar == 0x00E30055) ||
+             (ypar == 0x00B30055) ||
+             (ypar == 0x00B10051) ||
+             (ypar == 0x00A30055)) &&
+            ((signature & (~0x0940A422)) == 0)) {
       checkptr = setup_attrs[s4dmd].setup_coords;
       goto doit;
    }
    /* Similarly. */
-   else if (((ypar == 0x00D50066) || (ypar == 0x01150066)) && ((signature & (~0x28048202)) == 0)) {
+   else if (((ypar == 0x00D50057) ||
+             (ypar == 0x00B50057)) &&
+            ((signature & (~0x20008202)) == 0)) {
+      checkptr = setup_attrs[s_3mdmd].setup_coords;
+      goto doit;
+   }
+   else if (((ypar == 0x00B70057) ||
+             (ypar == 0x00E70057)) &&
+            ((signature & (~0x41022480)) == 0)) {
+      checkptr = setup_attrs[s_3mptpd].setup_coords;
+      goto doit;
+   }
+   else if (((ypar == 0x00D50066) || (ypar == 0x01150066)) &&
+            ((signature & (~0x28048202)) == 0)) {
       checkptr = setup_attrs[sbigx].setup_coords;
+      goto doit;
+   }
+   else if ((ypar == 0x00B30066) && ((signature & (~0x10508104)) == 0)) {
+      checkptr = setup_attrs[sdeepxwv].setup_coords;
+      goto doit;
+   }
+   else if (((ypar == 0x00F30066) || (ypar == 0x01130066) || (ypar == 0x01330066)) &&
+            ((signature & (~0x12148904)) == 0)) {
+      checkptr = setup_attrs[sbigbigx].setup_coords;
+      goto doit;
+   }
+   else if (((ypar == 0x01130066) || (ypar == 0x01130026)) &&
+            ((signature & (~0x09406600)) == 0)) {
+      checkptr = setup_attrs[sbigbigh].setup_coords;
       goto doit;
    }
    else if ((ypar == 0x00550057) && ((signature & (~0x20000620)) == 0)) {
@@ -1115,7 +1315,7 @@ Private void finish_matrix_call(
       checkptr = setup_attrs[s_dhrglass].setup_coords;
       goto doit;
    }
-   else if ((ypar == 0x00930035) && ((signature & (~0x05200100)) == 0)) {
+   else if ((ypar == 0x00930026) && ((signature & (~0x01108080)) == 0)) {
       checkptr = setup_attrs[s_ptpd].setup_coords;
       goto doit;
    }
@@ -1276,10 +1476,12 @@ Private void finish_matrix_call(
 
    fail("Can't handle this result matrix.");
 
-doit:
+ doit:
+      doffset = 32 - (1 << (checkptr->xfactor-1));
+
       result->kind = checkptr->result_kind;
       for (i=0; i<nump; i++) {
-         place = checkptr->diagram[28 - ((matrix_info[i].y >> 2) << checkptr->xfactor) + (matrix_info[i].x >> 2)];
+         place = checkptr->diagram[doffset - ((matrix_info[i].y >> 2) << checkptr->xfactor) + (matrix_info[i].x >> 2)];
          if (place < 0) fail("Person has moved into a grossly ill-defined location.");
          if ((checkptr->xca[place] != matrix_info[i].x) || (checkptr->yca[place] != matrix_info[i].y))
             fail("Person has moved into a slightly ill-defined location.");
@@ -1289,11 +1491,14 @@ doit:
 
       return;
 
-doitrot:
+ doitrot:
       result->kind = checkptr->result_kind;
       result->rotation = 1;
+
+      doffset = 32 - (1 << (checkptr->xfactor-1));
+
       for (i=0; i<nump; i++) {
-         place = checkptr->diagram[28 - ((matrix_info[i].x >> 2) << checkptr->xfactor) + ((-matrix_info[i].y) >> 2)];
+         place = checkptr->diagram[doffset - ((matrix_info[i].x >> 2) << checkptr->xfactor) + ((-matrix_info[i].y) >> 2)];
          if (place < 0) fail("Person has moved into a grossly ill-defined location.");
          if ((checkptr->xca[place] != -matrix_info[i].y) || (checkptr->yca[place] != matrix_info[i].x))
             fail("Person has moved into a slightly ill-defined location.");
@@ -1365,7 +1570,20 @@ Private void matrixmove(
 
    finish_matrix_call(matrix_info, nump, &people, result);
    reinstate_rotation(ss, result);
-   result->result_flags = 0;
+
+   /* If the call just kept a 2x2 in place, and they were the outsides, make
+      sure that the elongation is preserved. */
+
+   switch (ss->kind) {
+   case s2x2: case s_short6:
+      result->result_flags = ss->cmd.prior_elongation_bits & 3;
+      break;
+   case s1x2: case s1x4: case sdmd:
+      result->result_flags = 2 - (ss->rotation & 1);
+      break;
+   default:
+      result->result_flags = 0;
+   }
 }
 
 
@@ -2145,21 +2363,23 @@ Private long_boolean get_real_subcall(
       (e.g. "wheel and <anything>") is rejected. */
 
    if (snumber == 2 || snumber == 6) {
-      mandatory_call_used = TRUE;
-      if (interactivity == interactivity_in_first_scan || interactivity == interactivity_in_second_scan)
+      if (interactivity == interactivity_in_first_scan ||
+          interactivity == interactivity_in_second_scan)
          fail("Mandatory subcall fail.");
+      mandatory_call_used = TRUE;
    }
 
    /* Now we know that the list doesn't say anything about this call.  Perhaps we should
       query the user for a replacement and add something to the list.  First, decide whether
-      we should consider doing so.  If we are initializing the
-      database, the answer is always "no", even for calls that require a replacement call, such as
+      we should consider doing so.  If we are initializing the database, the answer is
+      always "no", even for calls that require a replacement call, such as
       "clover and anything".  This means that, for the purposes of database initialization,
       "clover and anything" is tested as "clover and nothing", since "nothing" is the subcall
       that appears in the database. */
 
-   /* The same is true when we are doing the special scans in the resolver -- we don't get subcalls -- we just
-      leave the default call in place.  Only when in the random search do we generate random subcalls. */
+   /* The same is true when we are doing the special scans in the resolver -- we don't get
+      subcalls -- we just leave the default call in place.  Only when in the random search
+      do we generate random subcalls. */
 
    /* Of course, if we are testing the fidelity of later calls during a reconcile
       operation, we DO NOT EVER add any modifiers to the list, even if the user
@@ -2831,7 +3051,8 @@ Private void do_sequential_call(
    parse_block *parseptr = ss->cmd.parseptr;
    uint32 callflags1 = callspec->callflags1;
    fraction_info zzz;
-   long_boolean first_call = TRUE;
+   long_boolean first_call = TRUE;    /* First call in logical definition. */
+   long_boolean first_time = TRUE;    /* First thing we are doing, in temporal sequence. */
    call_restriction fix_next_assumption = cr_none;
    int fix_next_assump_col = 0;
    int fix_next_assump_both = 0;
@@ -3010,6 +3231,12 @@ Private void do_sequential_call(
       long_boolean recompute_id;
       uint32 saved_number_fields = current_options.number_fields;
       int saved_num_numbers = current_options.howmanynumbers;
+      uint32 resultflags_to_put_in = 0;
+
+      ss->cmd.prior_expire_bits |=
+         result->result_flags & (RESULTFLAG__YOYO_FINISHED |
+                                 RESULTFLAG__TWISTED_FINISHED |
+                                 RESULTFLAG__SPLIT_FINISHED);
 
       /* Now the "index" values (fetch_index and dist_index) contain the
          number of parts we have completed.  That is, they point (in 0-based
@@ -3077,26 +3304,13 @@ Private void do_sequential_call(
          }
       }
 
-      /* If an explicit substitution was made, we will recompute the ID bits for the setup.  Normally, we don't,
-         which is why "patch the <anyone>" works.  The original evaluation of the designees is retained after
-         the first part of the call.  But if the user does something like "circle by 1/4 x [leads run]", we
+      /* If an explicit substitution was made, we will recompute the ID bits for the setup.
+         Normally, we don't, which is why "patch the <anyone>" works.  The original
+         evaluation of the designees is retained after the first part of the call.
+         But if the user does something like "circle by 1/4 x [leads run]", we
          want to re-evaluate who the leads are. */
 
       recompute_id = get_real_subcall(parseptr, this_item, new_final_concepts, callspec, &foo1);
-
-      if (foo1.cmd_final_flags.herit & INHERITFLAG_TWISTED) {
-         if (result->result_flags & RESULTFLAG__TWISTED_FINISHED)
-            foo1.cmd_final_flags.herit &= ~INHERITFLAG_TWISTED;   /* Already did that. */
-         else
-            result->result_flags |= RESULTFLAG__TWISTED_FINISHED;
-      }
-
-      if (foo1.cmd_final_flags.herit & INHERITFLAG_YOYO) {
-         if (result->result_flags & RESULTFLAG__YOYO_FINISHED)
-            foo1.cmd_final_flags.herit &= ~INHERITFLAG_YOYO;   /* Already did that. */
-         else
-            result->result_flags |= RESULTFLAG__YOYO_FINISHED;
-      }
 
       if (this_mod1 & DFM1_PERMIT_TOUCH_OR_REAR_BACK)
          ss->cmd.cmd_misc_flags &= ~CMD_MISC__ALREADY_STEPPED;   /* We allow stepping (or rearing back) again. */
@@ -3134,7 +3348,7 @@ Private void do_sequential_call(
 
       remember_elongation = result->cmd.prior_elongation_bits;
 
-do_plain_call:
+   do_plain_call:
 
       /* The index point AFTER what we are about to do (0-based numbering, of course),
          so index-1 (or index+1) point to what we are about to do.  Subpart_count has the
@@ -3180,11 +3394,23 @@ do_plain_call:
             result->cmd.cmd_frac_flags = CMD_FRAC_NULL_VALUE;
       }
 
-      if (!first_call) {
-         if (!setup_is_elongated)
-            result->cmd.cmd_misc_flags |= CMD_MISC__NO_CHK_ELONG;  /* Stop checking unless we are really serious. */
+      if (this_mod1 & DFM1_FINISH_THIS) {
+         if (result->cmd.cmd_frac_flags == CMD_FRAC_NULL_VALUE)
+            result->cmd.cmd_frac_flags = 
+               CMD_FRAC_CODE_BEYOND | CMD_FRAC_PART_BIT*1 | CMD_FRAC_NULL_VALUE;
+         else
+            fail("Can't fractionalize this call this way.");
+      }
 
-         result->cmd.cmd_misc2_flags &= ~(CMD_MISC2__IN_Z_CW|CMD_MISC2__IN_Z_CCW);
+      if (!first_call) {    /* Is this right, or should we be using "first_time" here also? */
+         /* Stop checking unless we are really serious. */
+         if (!setup_is_elongated)
+            result->cmd.cmd_misc_flags |= CMD_MISC__NO_CHK_ELONG;
+
+         result->cmd.cmd_misc2_flags &= ~CMD_MISC2__IN_Z_MASK;
+      }
+
+      if (!first_time) {
          result->cmd.cmd_assume.assumption = fix_next_assumption;
 
          if (fix_next_assumption != cr_none) {
@@ -3213,6 +3439,7 @@ do_plain_call:
       }
 
       oldk = result->kind;
+
       if (oldk == s2x2 && result->cmd.prior_elongation_bits != 0)
          remembered_2x2_elongation = result->cmd.prior_elongation_bits & 3;
 
@@ -3277,22 +3504,64 @@ do_plain_call:
          else if (result->cmd.callspec == base_calls[base_call_circulate]) {
 
             /* If we are doing a circulate in columns, and the assumption was
-               "8 chain" or "trade by", change it to the other assumtion.
+               "8 chain" or "trade by", change it to the other assumption.
                Similarly for facing lines and back-to-back lines. */
 
-            if (     result->cmd.cmd_assume.assumption == cr_li_lo &&
-                     (result->cmd.cmd_assume.assump_col & (~1)) == 0 &&
-                     ((result->cmd.cmd_assume.assump_both - 1) & (~1)) == 0) {
+            if (result->cmd.cmd_assume.assumption == cr_li_lo &&
+                (result->cmd.cmd_assume.assump_col & (~1)) == 0 &&
+                ((result->cmd.cmd_assume.assump_both - 1) & (~1)) == 0) {
                fix_next_assumption = cr_li_lo;
                fix_next_assump_col = result->cmd.cmd_assume.assump_col;
                fix_next_assump_both = result->cmd.cmd_assume.assump_both ^ 3;
             }
+         }
+         else if (result->cmd.callspec == base_calls[base_call_slither] &&
+                  result->cmd.cmd_assume.assump_col == 0 &&
+                  result->cmd.cmd_assume.assump_both == 0) {
+            switch (result->cmd.cmd_assume.assumption) {
+            case cr_2fl_only:
+               fix_next_assumption = cr_wave_only;
+               break;
+            case cr_wave_only:
+               fix_next_assumption = cr_2fl_only;
+               break;
+            case cr_miniwaves:
+               fix_next_assumption = cr_couples_only;
+               break;
+            case cr_couples_only:
+               fix_next_assumption = cr_miniwaves;
+               break;
+            }
+         }
+         else if (result->cmd.callspec == base_calls[base_call_check_cross_counter]) {
+            /* Just pass everything directly -- this call does nothing. */
+            fix_next_assumption = result->cmd.cmd_assume.assumption;
+            fix_next_assump_col = result->cmd.cmd_assume.assump_col;
+            fix_next_assump_both = result->cmd.cmd_assume.assump_both;
          }
       }
 
       if (DFM1_CPLS_UNLESS_SINGLE & this_mod1) {
          result->cmd.cmd_misc_flags |= CMD_MISC__DO_AS_COUPLES;
          result->cmd.do_couples_heritflags = new_final_concepts.herit;
+      }
+
+      if (result->cmd.cmd_final_flags.herit & INHERITFLAG_TWISTED) {
+         if (result->cmd.prior_expire_bits & RESULTFLAG__TWISTED_FINISHED)
+            result->cmd.cmd_final_flags.herit &= ~INHERITFLAG_TWISTED;   /* Already did that. */
+         resultflags_to_put_in |= RESULTFLAG__TWISTED_FINISHED;
+      }
+
+      if (result->cmd.cmd_final_flags.herit & INHERITFLAG_YOYO) {
+         if (result->cmd.prior_expire_bits & RESULTFLAG__YOYO_FINISHED)
+            result->cmd.cmd_final_flags.herit &= ~INHERITFLAG_YOYO;   /* Already did that. */
+         resultflags_to_put_in |= RESULTFLAG__YOYO_FINISHED;
+      }
+
+      if (result->cmd.cmd_final_flags.final & FINAL__SPLIT_SQUARE_APPROVED) {
+         if (result->cmd.prior_expire_bits & RESULTFLAG__SPLIT_FINISHED)
+            result->cmd.cmd_final_flags.final &= ~FINAL__SPLIT_SQUARE_APPROVED;
+         resultflags_to_put_in |= RESULTFLAG__SPLIT_FINISHED;
       }
 
       do_call_in_series(
@@ -3302,6 +3571,8 @@ do_plain_call:
          !(ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX) &&
             !(new_final_concepts.herit & (INHERITFLAG_12_MATRIX | INHERITFLAG_16_MATRIX)),
          qtf);
+
+      result->result_flags |= resultflags_to_put_in;
 
       if (oldk != s2x2 && result->kind == s2x2 && remembered_2x2_elongation != 0) {
          result->result_flags = (result->result_flags & ~3) | remembered_2x2_elongation;
@@ -3337,11 +3608,12 @@ done_with_big_cycle:
       new_final_concepts.final &= ~(FINAL__SPLIT | FINAL__SPLIT_SQUARE_APPROVED | FINAL__SPLIT_DIXIE_APPROVED);
 
       first_call = FALSE;
+      first_time = FALSE;
 
       /* If we are being asked to do just one part of a call (from cmd_frac_flags),
          exit now.  Also, see if we just did the last part. */
 
-      if (/*ss->cmd.cmd_frac_flags != CMD_FRAC_NULL_VALUE && */zzz.instant_stop != 99) {
+      if (zzz.instant_stop != 99) {
          /* Check whether we honored the last possible request.  That is,
             whether we did the last part of the call in forward order, or
             the first part in reverse order. */
@@ -3589,7 +3861,10 @@ that probably need to be put in. */
          since "acey deucey" has that flag set for the trade that the centers do. */
 
       if (     (ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_INVERT) &&
-               (the_schema == schema_concentric || the_schema == schema_conc_o) &&
+               (the_schema == schema_concentric ||
+                the_schema == schema_concentric_6p ||
+                the_schema == schema_concentric_6p_or_normal ||
+                the_schema == schema_conc_o) &&
                (DFM1_SUPPRESS_ELONGATION_WARNINGS & callspec->stuff.conc.innerdef.modifiers1))
          ss->cmd.cmd_misc_flags |= CMD_MISC__NO_CHK_ELONG;
 
@@ -4183,7 +4458,7 @@ that probably need to be put in. */
                ss->cmd.cmd_final_flags.final)
          fail("Illegal concept for this call.");
 
-      if (ss->cmd.cmd_misc2_flags & (CMD_MISC2__IN_Z_CW|CMD_MISC2__IN_Z_CCW))
+      if (ss->cmd.cmd_misc2_flags & CMD_MISC2__IN_Z_MASK)
          remove_z_distortion(ss);
 
       matrixmove(ss, callspec, result);
@@ -4196,7 +4471,7 @@ that probably need to be put in. */
           ss->cmd.cmd_final_flags.final)
          fail("Illegal concept for this call.");
 
-      if (ss->cmd.cmd_misc2_flags & (CMD_MISC2__IN_Z_CW|CMD_MISC2__IN_Z_CCW))
+      if (ss->cmd.cmd_misc2_flags & CMD_MISC2__IN_Z_MASK)
          remove_z_distortion(ss);
 
       partner_matrixmove(ss, callspec, result);
@@ -4205,7 +4480,7 @@ that probably need to be put in. */
       if (ss->cmd.cmd_final_flags.herit | ss->cmd.cmd_final_flags.final)
          fail("Illegal concept for this call.");
 
-      if (ss->cmd.cmd_misc2_flags & (CMD_MISC2__IN_Z_CW|CMD_MISC2__IN_Z_CCW))
+      if (ss->cmd.cmd_misc2_flags & CMD_MISC2__IN_Z_MASK)
          remove_z_distortion(ss);
 
       rollmove(ss, callspec, result);
@@ -4406,19 +4681,17 @@ that probably need to be put in. */
             break;
          }
 
-         (void) get_real_subcall(
-                                 parseptr, innerdef,
-                                 ss->cmd.cmd_final_flags, callspec,
-                                 &foo1);
+         (void) get_real_subcall(parseptr, innerdef,
+                                 ss->cmd.cmd_final_flags, callspec, &foo1);
 
-         (void) get_real_subcall(
-                                 parseptr, outerdef,
-                                 ss->cmd.cmd_final_flags, callspec,
-                                 &foo2);
+         (void) get_real_subcall(parseptr, outerdef,
+                                 ss->cmd.cmd_final_flags, callspec, &foo2);
+
+         foo1.cmd_frac_flags = ss->cmd.cmd_frac_flags;
+         foo2.cmd_frac_flags = ss->cmd.cmd_frac_flags;
 
          if (the_schema == schema_select_leads) {
-            inner_selective_move(
-                                 ss, &foo1, &foo2,
+            inner_selective_move(ss, &foo1, &foo2,
                                  selective_key_plain, TRUE, 0, 0,
                                  selector_leads,
                                  innerdef->modifiers1,
@@ -4426,8 +4699,7 @@ that probably need to be put in. */
                                  result);
          }
          else if (the_schema == schema_select_headliners) {
-            inner_selective_move(
-                                 ss, &foo1, &foo2,
+            inner_selective_move(ss, &foo1, &foo2,
                                  selective_key_plain, TRUE, 0, 0x80000008UL,
                                  selector_uninitialized,
                                  innerdef->modifiers1,
@@ -4435,8 +4707,7 @@ that probably need to be put in. */
                                  result);
          }
          else if (the_schema == schema_select_sideliners) {
-            inner_selective_move(
-                                 ss, &foo1, &foo2,
+            inner_selective_move(ss, &foo1, &foo2,
                                  selective_key_plain, TRUE, 0, 0x80000001UL,
                                  selector_uninitialized,
                                  innerdef->modifiers1,
@@ -4738,7 +5009,7 @@ extern void move(
       parse_block *t = ss->cmd.restrained_concept;
       ss->cmd.restrained_concept = (parse_block *) 0;
 
-      if (ss->cmd.cmd_misc2_flags & (CMD_MISC2__IN_Z_CW|CMD_MISC2__IN_Z_CCW))
+      if (ss->cmd.cmd_misc2_flags & CMD_MISC2__IN_Z_MASK)
          remove_z_distortion(ss);
 
       if (
@@ -4754,6 +5025,7 @@ extern void move(
    }
 
    if (ss->cmd.cmd_misc_flags & CMD_MISC__DO_AS_COUPLES) {
+      uint32 mxnflags;
 
       /* If we have a pending "centers/ends work <concept>" concept,
          we must dispose of it the crude way. */
@@ -4764,37 +5036,24 @@ extern void move(
       }
 
       ss->cmd.cmd_misc_flags &= ~CMD_MISC__DO_AS_COUPLES;
+      mxnflags = ss->cmd.do_couples_heritflags & (INHERITFLAG_SINGLE | MXN_BITS);
 
-      switch (ss->cmd.do_couples_heritflags & (INHERITFLAG_SINGLE | MXN_BITS)) {
-         case 0:
-            tandem_couples_move(ss, selector_uninitialized, 0, 0, 0, 1, TRUE, result);
-            return;
-         case INHERITFLAG_3X1:
-            tandem_couples_move(ss, selector_uninitialized, 0, 0, 0, 40, TRUE, result);
-            return;
-         case INHERITFLAG_1X3:
-            tandem_couples_move(ss, selector_uninitialized, 0, 0, 0, 41, TRUE, result);
-            return;
-         case INHERITFLAG_2X1:
-            tandem_couples_move(ss, selector_uninitialized, 0, 0, 0, 42, TRUE, result);
-            return;
-         case INHERITFLAG_1X2:
-            tandem_couples_move(ss, selector_uninitialized, 0, 0, 0, 43, TRUE, result);
-            return;
-         case INHERITFLAG_3X3:
-            tandem_couples_move(ss, selector_uninitialized, 0, 0, 0, 44, TRUE, result);
-            return;
-         case INHERITFLAG_4X4:
-            tandem_couples_move(ss, selector_uninitialized, 0, 0, 0, 45, TRUE, result);
-            return;
-         case INHERITFLAG_SINGLE:
-            break;
+      /* Mxnflags now has the "single" bit, or any "1x3" stuff.  If it is the "single"
+         bit alone, we do the call directly--we don't do "as couples".  Otherwise,
+         we the do call as couples, passing any modifiers. */
+
+      ss->cmd.do_couples_heritflags &= ~mxnflags;
+
+      if (mxnflags != INHERITFLAG_SINGLE) {
+         tandem_couples_move(ss, selector_uninitialized, 0, 0, 0, 1, mxnflags, TRUE, result);
+         return;
       }
    }
 
    if (ss->cmd.callspec) {
-      /* This next thing shouldn't happen -- we shouldn't have a call in place when
-         there is a pending "centers/ends work <concept>" concept, since that concept should be next. */
+      /* This next thing shouldn't happen -- we shouldn't have a call in place
+         when there is a pending "centers/ends work <concept>" concept,
+         since that concept should be next. */
       if (ss->cmd.cmd_misc2_flags & (CMD_MISC2__ANY_WORK | CMD_MISC2__ANY_SNAG)) {
          punt_centers_use_concept(ss, result);
          return;
@@ -4933,7 +5192,7 @@ extern void move(
             FINAL__MUST_BE_TAG and/or one of the modifiers (reverse/left/grand/cross/single)
             listed above.  do_big_concept will take care of the latter. */
 
-         if (ss->cmd.cmd_misc2_flags & (CMD_MISC2__IN_Z_CW|CMD_MISC2__IN_Z_CCW))
+         if (ss->cmd.cmd_misc2_flags & CMD_MISC2__IN_Z_MASK)
             remove_z_distortion(ss);
 
          if (do_big_concept(ss, result)) {

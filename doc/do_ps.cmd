@@ -1,6 +1,13 @@
-REM        This creates the self-extracting archive with
-REM           all ps files, for uploading to the web and
-REM           for distribution on disk.
+REM        This updates all ps files to the web, 3 times over:
+REM           It creates the self-extracting archive
+REM                   "sd/psdoc.exe"
+REM           It creates the gzipped archive
+REM                  "sd/psdoc.tar.gz"
+REM           It creates the individual files for downloading
+REM                   "sd/sd_doc.ps"
+REM                   "sd/demo.ps"
+REM                   "sd/sessions.ps"
+REM                   "sd/relnotes.ps"
 REM
 make ps.all
 del psdoc.lzh psdoc.exe psdoc.tar
@@ -22,13 +29,14 @@ uuencode psdoc.exe|uufix>> ps.msg
 echo uufile>> ps.msg
 uuencode psdoc.gz|uufix>> ps.msg
 echo mv psdoc.gz psdoc.tar.gz>> ps.msg
+call make_text sd_doc.ps ps.msg
+call make_text demo.ps ps.msg
+call make_text sessions.ps ps.msg
+call make_text relnotes.ps ps.msg
 pgp -sta +clearsig=on +armor=on ps.msg -u wba -o ps.txt
 zip ps ps.txt
 REM
 REM         The file "ps.zip" may now be unzipped to "ps.txt",
-REM            which can then be mailed, creating these files:
-REM
-REM                  sd/psdoc.exe
-REM                  sd/psdoc.tar.gz
+REM            which can then be mailed.
 REM
 REM         The file "psdoc.exe" may also be copied to diskettes.

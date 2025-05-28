@@ -23,8 +23,8 @@
     General Public License if you distribute the file.
 */
 
-#define VERSION_STRING "31.98"
-#define TIME_STAMP "wba@an.hp.com  1 July 98 $"
+#define VERSION_STRING "32.0"
+#define TIME_STAMP "wba@an.hp.com  13 September 98 $"
 
 /* This defines the following functions:
    sd_version_string
@@ -201,7 +201,7 @@ warning_info useless_phan_clw_warnings = {{0, 0, 0}};
 
 static uims_reply reply;
 static long_boolean reply_pending;
-static int error_flag;
+static error_flag_type error_flag;
 static parse_block *parse_active_list;
 static parse_block *parse_inactive_list;
 /* These two direct the generation of random concepts when we are searching.
@@ -213,6 +213,9 @@ static short int *concept_sublists[NUM_CALL_LIST_KINDS];
 static int resolve_scan_start_point;
 static int resolve_scan_current_point;
 static command_kind search_goal;
+static configuration *clipboard = (configuration *) 0;
+static int clipboard_allocation = 0;
+static int clipboard_size = 0;
 
 /* Stuff for saving parse state while we resolve. */
 
@@ -437,28 +440,28 @@ extern void initialize_parse(void)
 
 extern parse_block *copy_parse_tree(parse_block *original_tree)
 {
-   parse_block *new_item, *old_item, *new_root;
+   parse_block *new_item, *new_root;
 
-   old_item = original_tree;
-
-   if (!old_item) return NULL;
+   if (!original_tree) return NULL;
 
    new_item = get_parse_block();
    new_root = new_item;
+
    for (;;) {
-      new_item->concept = old_item->concept;
-      new_item->call = old_item->call;
-      new_item->options = old_item->options;
-      new_item->replacement_key = old_item->replacement_key;
+      new_item->concept = original_tree->concept;
+      new_item->call = original_tree->call;
+      new_item->options = original_tree->options;
+      new_item->replacement_key = original_tree->replacement_key;
+      new_item->no_check_call_level = original_tree->no_check_call_level;
 
-      if (old_item->subsidiary_root)
-         new_item->subsidiary_root = copy_parse_tree(old_item->subsidiary_root);
+      if (original_tree->subsidiary_root)
+         new_item->subsidiary_root = copy_parse_tree(original_tree->subsidiary_root);
 
-      if (!old_item->next) break;
+      if (!original_tree->next) break;
 
       new_item->next = get_parse_block();
       new_item = new_item->next;
-      old_item = old_item->next;
+      original_tree = original_tree->next;
    }
 
    return new_root;
@@ -546,7 +549,8 @@ Private long_boolean find_tagger(uint32 tagclass, uint32 *tagg, callspec_block *
          tag = 0;   /* This may not be right. */
       }
       else {
-         if (interactivity == interactivity_in_first_scan || interactivity == interactivity_in_second_scan) {
+         if (interactivity == interactivity_in_first_scan ||
+             interactivity == interactivity_in_second_scan) {
             tag = tagger_iterator;
 
             /* But we don't allow any call that takes a another tag call (e.g. "revert"),
@@ -1025,7 +1029,7 @@ extern long_boolean query_for_call(void)
 {
    uims_reply local_reply;
    callspec_block *result;
-   int old_error_flag;
+   error_flag_type old_error_flag;
    int concepts_deposited = 0;
 
    recurse_entry:
@@ -1041,16 +1045,7 @@ extern long_boolean query_for_call(void)
       /* We are operating in interactive mode.  Update the
          display and query the user. */
 
-      /* Error codes are:
-         1 - 1-line error message, text is in error_message1.
-         2 - 2-line error message, text is in error_message1 and error_message2.
-         3 - collision error, message is that people collided, they are in collision_person1 and collision_person2.
-         4 - "resolve" or similar command was called in inappropriate context, text is in error_message1.
-         5 - clicked on something inappropriate in subcall reader.
-         6 - unable-to-execute error, person is in collision_person1, text is in error_message1.
-         7 - wants to display stale call statistics. */
-
-      if (error_flag == 7) {
+      if (error_flag == error_flag_show_stats) {
          clear_screen();
          writestuff("***** LEAST RECENTLY USED 2% OF THE CALLS ARE:");
          newline();
@@ -1076,14 +1071,15 @@ extern long_boolean query_for_call(void)
       }
       
       if (error_flag) {
-      
-         if (error_flag != 4) {
+         if (error_flag != error_flag_wrong_resolve_command &&
+             error_flag != error_flag_selector_changed &&
+             error_flag != error_flag_formation_changed) {
             writestuff("Can't do this call:");
             newline();
             write_history_line(0, (char *) 0, FALSE, file_write_no);
          }
 
-         if (error_flag == 3) {
+         if (error_flag == error_flag_collision) {
                   /* very special message -- no text here, two people collided
                      and they are stored in collision_person1 and collision_person2. */
    
@@ -1093,18 +1089,24 @@ extern long_boolean query_for_call(void)
             print_error_person(collision_person2, TRUE);
             writestuff(") on same spot.");
          }
-         else if (error_flag == 4) {
+         else if (error_flag == error_flag_wrong_resolve_command) {
             writestuff(error_message1);
          }
-         else if (error_flag <= 2) {
+         else if (error_flag == error_flag_selector_changed) {
+            writestuff("Warning -- person identifiers were changed.");
+         }
+         else if (error_flag == error_flag_formation_changed) {
+            writestuff("Warning -- the formation has changed.");
+         }
+         else if (error_flag <= error_flag_2_line) {
             writestuff(error_message1);
-            if (error_flag == 2) {
+            if (error_flag == error_flag_2_line) {
                newline();
                writestuff("   ");
                writestuff(error_message2);
             }
          }
-         else if (error_flag == 6) {
+         else if (error_flag == error_flag_cant_execute) {
                   /* very special message -- no text here, someone can't execute the
                      call, and he is stored in collision_person1. */
   
@@ -1122,6 +1124,23 @@ extern long_boolean query_for_call(void)
 
       old_error_flag = error_flag; /* save for refresh command */
       error_flag = 0;
+
+      if (clipboard_size != 0) {
+         int j;
+
+         writestuff("............................");
+         newline();
+
+         /* Display at most 3 lines. */
+         for (j = clipboard_size-1 ; j >= 0 && j >= clipboard_size-3 ; j--) {
+            writestuff("      ");
+            print_recurse(clipboard[j].command_root, 0);
+            newline();
+         }
+
+         writestuff("............................");
+         newline();
+      }
 
       try_again:
 
@@ -1510,7 +1529,8 @@ Private long_boolean backup_one_item(void)
 
    parse_block **this_ptr = parse_state.concept_write_base;
 
-   if ((history_ptr == 1) && startinfolist[history[1].centersp].into_the_middle) this_ptr = &((*this_ptr)->next);
+   if ((history_ptr == 1) && startinfolist[history[1].centersp].into_the_middle)
+      this_ptr = &((*this_ptr)->next);
 
    for (;;) {
       parse_block **last_ptr;
@@ -1650,6 +1670,130 @@ Private long_boolean write_sequence_to_file(void)
 }
 
 
+static uint32 id_fixer_array[16] = {
+   07777525252, 07777454545, 07777313131, 07777262626,
+   07777522525, 07777453232, 07777314646, 07777265151,
+   07777255225, 07777324532, 07777463146, 07777512651,
+   07777252552, 07777323245, 07777464631, 07777515126};
+  
+
+Private selector_kind translate_selector_permutation1(uint32 x)
+{
+   switch (x & 077) {
+   case 01: return selector_sidecorners;
+   case 02: return selector_headcorners;
+   case 04: return selector_girls;
+   case 010: return selector_boys;
+   case 020: return selector_sides;
+   case 040: return selector_heads;
+   default: return selector_uninitialized;
+   }
+}
+
+
+Private selector_kind translate_selector_permutation2(uint32 x)
+{
+   switch (x & 07) {
+   case 04: return selector_headboys;
+   case 05: return selector_headgirls;
+   case 06: return selector_sideboys;
+   case 07: return selector_sidegirls;
+   default: return selector_uninitialized;
+   }
+}
+
+
+/* Returned value with "2" bit on means error occurred and counld not translate.
+   Selectors are messed up.  Should only occur if in unsymmetrical formation
+   in which it can't figure out what is going on.
+   Or if we get "end boys" or something like that, that we can't handle yet.
+   Otherwise, "1" bit says at
+   least one selector changed.  Zero means nothing changed. */
+
+Private uint32 translate_selector_fields(parse_block *xx, uint32 mask)
+{
+   selector_kind z;
+   uint32 retval = 0;
+
+   for ( ; xx ; xx=xx->next) {
+      switch (xx->options.who) {
+      case selector_heads:
+         z = translate_selector_permutation1(mask >> 13);
+         break;
+      case selector_sides:
+         z = translate_selector_permutation1(mask >> 13);
+         z = selector_list[z].opposite;
+         break;
+      case selector_boys:
+         z = translate_selector_permutation1(mask >> 7);
+         break;
+      case selector_girls:
+         z = translate_selector_permutation1(mask >> 7);
+         z = selector_list[z].opposite;
+         break;
+      case selector_headcorners:
+         z = translate_selector_permutation1(mask >> 1);
+         break;
+      case selector_sidecorners:
+         z = translate_selector_permutation1(mask >> 1);
+         z = selector_list[z].opposite;
+         break;
+
+      case selector_end_boys:
+         if (((mask >> 7) & 077) == 010) z = selector_end_boys;
+         else if (((mask >> 7) & 077) == 04) z = selector_end_girls;
+         else z = selector_uninitialized;
+         break;
+      case selector_end_girls:
+         if (((mask >> 7) & 077) == 010) z = selector_end_girls;
+         else if (((mask >> 7) & 077) == 04) z = selector_end_boys;
+         else z = selector_uninitialized;
+         break;
+      case selector_center_boys:
+         if (((mask >> 7) & 077) == 010) z = selector_center_boys;
+         else if (((mask >> 7) & 077) == 04) z = selector_center_girls;
+         else z = selector_uninitialized;
+         break;
+      case selector_center_girls:
+         if (((mask >> 7) & 077) == 010) z = selector_center_girls;
+         else if (((mask >> 7) & 077) == 04) z = selector_center_boys;
+         else z = selector_uninitialized;
+         break;
+
+      case selector_headliners:
+         if (mask & 1) z = selector_sideliners;
+         break;
+      case selector_sideliners:
+         if (mask & 1) z = selector_headliners;
+         break;
+      case selector_headboys:
+         z = translate_selector_permutation2(mask >> 19);
+         break;
+      case selector_headgirls:
+         z = translate_selector_permutation2(mask >> 22);
+         break;
+      case selector_sideboys:
+         z = translate_selector_permutation2(mask >> 25);
+         break;
+      case selector_sidegirls:
+         z = translate_selector_permutation2(mask >> 28);
+         break;
+      default: goto nofix;
+      }
+
+      if (z == selector_uninitialized) retval = 2;   /* Raise error. */
+      if (z != xx->options.who) retval |= 1;         /* Note that we changed something. */
+      xx->options.who = z;
+
+   nofix:
+
+      retval |= translate_selector_fields(xx->subsidiary_root, mask);
+   }
+
+   return retval;
+}
+
+
 int main(int argc, char *argv[])
 {
    int i;
@@ -1685,7 +1829,8 @@ int main(int argc, char *argv[])
       direction_names[direction_zigzag] = (Cstring) 0;
    }
 
-   if (glob_call_list_mode == call_list_mode_none || glob_call_list_mode == call_list_mode_abridging)
+   if (glob_call_list_mode == call_list_mode_none ||
+       glob_call_list_mode == call_list_mode_abridging)
       uims_preinitialize();
 
    if (history == 0) {
@@ -1735,21 +1880,28 @@ int main(int argc, char *argv[])
 
       /* The call we were trying to do has failed.  Abort it and display the error message. */
    
-      if (interactivity == interactivity_database_init || interactivity == interactivity_verify) {
+      if (interactivity == interactivity_database_init ||
+          interactivity == interactivity_verify) {
          init_error(error_message1);
          goto normal_exit;
       }
 
       history[0] = history[history_ptr+1];     /* So failing call will get printed. */
-      history[0].command_root = copy_parse_tree(history[0].command_root);  /* But copy the parse tree, since we are going to clip it. */
-      for (i=0 ; i<WARNING_WORDS ; i++)
-         history[0].warnings.bits[i] = 0;         /* But without any warnings we may have collected. */
+      /* But copy the parse tree, since we are going to clip it. */
+      history[0].command_root = copy_parse_tree(history[0].command_root);
+      /* But without any warnings we may have collected. */
+      for (i=0 ; i<WARNING_WORDS ; i++) history[0].warnings.bits[i] = 0;
    
-      if (error_flag == 5) {
+      if (error_flag == error_flag_wrong_command) {
          /* Special signal -- user clicked on special thing while trying to get subcall. */
          if ((reply == ui_command_select) &&
               ((uims_menu_index == command_quit) ||
                (uims_menu_index == command_undo) ||
+               (uims_menu_index == command_cut_to_clipboard) ||
+               (uims_menu_index == command_delete_entire_clipboard) ||
+               (uims_menu_index == command_delete_one_call_from_clipboard) ||
+               (uims_menu_index == command_paste_one_call) ||
+               (uims_menu_index == command_paste_all_calls) ||
                (uims_menu_index == command_erase) ||
                (uims_menu_index == command_abort)))
             reply_pending = TRUE;
@@ -1767,8 +1919,10 @@ int main(int argc, char *argv[])
                ((history_ptr != 1) || !startinfolist[history[1].centersp].into_the_middle) &&
                backup_one_item()) {
          reply_pending = FALSE;
-         for (i=0 ; i<WARNING_WORDS ; i++)                    /* Take out warnings that arose from the failed call, */
-            history[history_ptr+1].warnings.bits[i] = 0;      /* since we aren't going to do that call. */
+         /* Take out warnings that arose from the failed call,
+            since we aren't going to do that call. */
+         for (i=0 ; i<WARNING_WORDS ; i++)
+            history[history_ptr+1].warnings.bits[i] = 0;
          goto simple_restart;
       }
       goto start_cycle;      /* Failed, reinitialize the whole line. */
@@ -1834,8 +1988,9 @@ int main(int argc, char *argv[])
    /* Here to start a fresh sequence.  If first time, or if we got here by clicking on "abort",
       the screen has been cleared.  Otherwise, it shows the last sequence that we wrote. */
 
-   /* Replace all the parse blocks left from the last sequence. */
-   release_parse_blocks_to_mark((parse_block *) 0);
+   /* Replace all the parse blocks left from the last sequence.
+      But if we have stuff in the clipboard, we save everything. */
+   if (clipboard_size == 0) release_parse_blocks_to_mark((parse_block *) 0);
    
    /* Query for the starting setup. */
    
@@ -1845,101 +2000,98 @@ int main(int argc, char *argv[])
    if (reply != ui_start_select || uims_menu_index == 0) goto normal_exit;           /* Huh? */
 
    switch (uims_menu_index) {
-      case start_select_toggle_conc:
-         allowing_all_concepts = !allowing_all_concepts;
-         goto new_sequence;
-      case start_select_toggle_act:
-         using_active_phantoms = !using_active_phantoms;
-         goto new_sequence;
-#ifdef OLD_ELIDE_BLANKS_JUNK
-      case start_select_toggle_ignoreblank:
-         elide_blanks = !elide_blanks;
-         goto new_sequence;
-#endif
-      case start_select_toggle_retain:
-         retain_after_error = !retain_after_error;
-         goto new_sequence;
-      case start_select_toggle_nowarn_mode:
-         nowarn_mode = !nowarn_mode;
-         goto new_sequence;
-      case start_select_toggle_singer:
-         if (singing_call_mode != 0)
-            singing_call_mode = 0;    /* Turn it off. */
-         else
-            singing_call_mode = 1;    /* 1 for forward progression, 2 for backward. */
-         goto new_sequence;
-      case start_select_toggle_singer_backward:
-         if (singing_call_mode != 0)
-            singing_call_mode = 0;    /* Turn it off. */
-         else
-            singing_call_mode = 2;
-         goto new_sequence;
-      case start_select_init_session_file:
-         {
-            FILE *session = fopen(SESSION_FILENAME, "r");
-            if (session) {
-               (void) fclose(session);
-               if (uims_do_session_init_popup() != POPUP_ACCEPT) {
-                  writestuff("No action has been taken.\n");
-                  newline();
-                  goto new_sequence;
-               }
-               else if (!rename(SESSION_FILENAME, SESSION2_FILENAME)) {
-                  writestuff("File '" SESSION_FILENAME "' has been saved as '" SESSION2_FILENAME "'.\n");
-                  newline();
-               }
-            }
-
-            if (!(session = fopen(SESSION_FILENAME, "w"))) {
-               writestuff("Failed to create '" SESSION_FILENAME "'.\n");
+   case start_select_toggle_conc:
+      allowing_all_concepts = !allowing_all_concepts;
+      goto new_sequence;
+   case start_select_toggle_act:
+      using_active_phantoms = !using_active_phantoms;
+      goto new_sequence;
+   case start_select_toggle_retain:
+      retain_after_error = !retain_after_error;
+      goto new_sequence;
+   case start_select_toggle_nowarn_mode:
+      nowarn_mode = !nowarn_mode;
+      goto new_sequence;
+   case start_select_toggle_singer:
+      if (singing_call_mode != 0)
+         singing_call_mode = 0;    /* Turn it off. */
+      else
+         singing_call_mode = 1;    /* 1 for forward progression, 2 for backward. */
+      goto new_sequence;
+   case start_select_toggle_singer_backward:
+      if (singing_call_mode != 0)
+         singing_call_mode = 0;    /* Turn it off. */
+      else
+         singing_call_mode = 2;
+      goto new_sequence;
+   case start_select_init_session_file:
+      {
+         FILE *session = fopen(SESSION_FILENAME, "r");
+         if (session) {
+            (void) fclose(session);
+            if (uims_do_session_init_popup() != POPUP_ACCEPT) {
+               writestuff("No action has been taken.\n");
                newline();
                goto new_sequence;
             }
-
-            if (fputs("[Options]\n", session) == EOF) goto copy_failed;
-            if (fputs("\n", session) == EOF) goto copy_failed;
-            if (fputs("[Sessions]\n", session) == EOF) goto copy_failed;
-            if (fputs("sequence.C1          C1               1      Sample\n", session) == EOF) goto copy_failed;
-            if (fputs("\n", session) == EOF) goto copy_failed;
-            (void) fclose(session);
-            writestuff("The file has been initialized, and will take effect the next time the program is started.");
-            newline();
-            writestuff("Exit and restart the program if you want to use it now.");
-            newline();
-            goto new_sequence;
-
-            copy_failed:
-
-            writestuff("Failed to create '" SESSION_FILENAME "'\n");
-            newline();
-            (void) fclose(session);
-            goto new_sequence;
-         }
-      case start_select_change_outfile:
-         {
-            char newfile_string[MAX_FILENAME_LENGTH];
-
-            if (uims_do_outfile_popup(newfile_string)) {
-               if (newfile_string[0]) {
-                  if (install_outfile_string(newfile_string)) {
-                     char confirm_message[MAX_FILENAME_LENGTH+25];
-                     (void) strncpy(confirm_message, "Output file changed to \"", 25);
-                     (void) strncat(confirm_message, outfile_string, MAX_FILENAME_LENGTH);
-                     (void) strncat(confirm_message, "\"", 2);
-                     writestuff(confirm_message);
-                  }
-                  else
-                     writestuff("No write access to that file, no action taken.");
-
-                  newline();
-               }
+            else if (!rename(SESSION_FILENAME, SESSION2_FILENAME)) {
+               writestuff("File '" SESSION_FILENAME "' has been saved as '"
+                          SESSION2_FILENAME "'.\n");
+               newline();
             }
          }
+
+         if (!(session = fopen(SESSION_FILENAME, "w"))) {
+            writestuff("Failed to create '" SESSION_FILENAME "'.\n");
+            newline();
+            goto new_sequence;
+         }
+
+         if (fputs("[Options]\n", session) == EOF) goto copy_failed;
+         if (fputs("\n", session) == EOF) goto copy_failed;
+         if (fputs("[Sessions]\n", session) == EOF) goto copy_failed;
+         if (fputs("sequence.C1          C1               1      Sample\n",
+                   session) == EOF) goto copy_failed;
+         if (fputs("\n", session) == EOF) goto copy_failed;
+         (void) fclose(session);
+         writestuff("The file has been initialized, and will take effect the next time the program is started.");
+         newline();
+         writestuff("Exit and restart the program if you want to use it now.");
+         newline();
          goto new_sequence;
-      case start_select_change_header_comment:
-         (void) uims_do_header_popup(header_comment);
-         need_new_header_comment = FALSE;
+
+      copy_failed:
+
+         writestuff("Failed to create '" SESSION_FILENAME "'\n");
+         newline();
+         (void) fclose(session);
          goto new_sequence;
+      }
+   case start_select_change_outfile:
+      {
+         char newfile_string[MAX_FILENAME_LENGTH];
+
+         if (uims_do_outfile_popup(newfile_string)) {
+            if (newfile_string[0]) {
+               if (install_outfile_string(newfile_string)) {
+                  char confirm_message[MAX_FILENAME_LENGTH+25];
+                  (void) strncpy(confirm_message, "Output file changed to \"", 25);
+                  (void) strncat(confirm_message, outfile_string, MAX_FILENAME_LENGTH);
+                  (void) strncat(confirm_message, "\"", 2);
+                  writestuff(confirm_message);
+               }
+               else
+                  writestuff("No write access to that file, no action taken.");
+
+               newline();
+            }
+         }
+      }
+      goto new_sequence;
+   case start_select_change_header_comment:
+      (void) uims_do_header_popup(header_comment);
+      need_new_header_comment = FALSE;
+      goto new_sequence;
    }
    
    history_ptr = 1;              /* Clear the position history. */
@@ -1983,7 +2135,8 @@ int main(int argc, char *argv[])
    if (history_allocation < history_ptr+MAX_RESOLVE_SIZE+2) {
       configuration * t;
       history_allocation <<= 1;
-      t = (configuration *) get_more_mem_gracefully(history, history_allocation * sizeof(configuration));
+      t = (configuration *)
+         get_more_mem_gracefully(history, history_allocation * sizeof(configuration));
       if (!t) {
          /* Couldn't get memory; we are in serious trouble. */
          history_allocation >>= 1;
@@ -2032,162 +2185,393 @@ int main(int argc, char *argv[])
 
    if (reply == ui_command_select) {
       switch ((command_kind) uims_menu_index) {
-         case command_quit:
-            if (uims_do_abort_popup() != POPUP_ACCEPT) goto simple_restart;
-            goto normal_exit;
-         case command_abort:
-            if (uims_do_abort_popup() != POPUP_ACCEPT) goto simple_restart;
-            clear_screen();
-            goto show_banner;
-         case command_undo:
-            if (backup_one_item()) {
-               /* We succeeded in backing up by one concept.  Continue from that point. */
-               reply_pending = FALSE;
-               goto simple_restart;
+      case command_quit:
+         if (uims_do_abort_popup() != POPUP_ACCEPT) goto simple_restart;
+         goto normal_exit;
+      case command_abort:
+         if (uims_do_abort_popup() != POPUP_ACCEPT) goto simple_restart;
+         clear_screen();
+         goto show_banner;
+      case command_cut_to_clipboard:
+         while (backup_one_item()) ;   /* Repeatedly remove any parse blocks that we have. */
+         initialize_parse();
+
+         if (history_ptr <= 1 ||
+             (history_ptr == 2 && startinfolist[history[1].centersp].into_the_middle))
+            specialfail("Can't cut past this point.");
+
+         clipboard_size++;
+
+         if (clipboard_allocation < clipboard_size) {
+            configuration *t;
+            clipboard_allocation = clipboard_size;
+            /* Increase by 50% beyond what we have now. */
+            clipboard_allocation += clipboard_allocation >> 1;
+            t = (configuration *)
+               get_more_mem_gracefully(clipboard,
+                                       clipboard_allocation * sizeof(configuration));
+            if (!t) specialfail("Not enough memory!");
+            clipboard = t;
+         }
+
+         clipboard[clipboard_size-1] = history[history_ptr-1];
+         clipboard[clipboard_size-1].command_root = history[history_ptr].command_root;
+         history_ptr--;
+         goto start_cycle;
+      case command_delete_entire_clipboard:
+         if (clipboard_size != 0) {
+            if (uims_do_delete_clipboard_popup() != POPUP_ACCEPT) goto simple_restart;
+         }
+
+         clipboard_size = 0;
+         goto simple_restart;
+      case command_delete_one_call_from_clipboard:
+         if (clipboard_size != 0) clipboard_size--;
+         goto simple_restart;
+      case command_paste_one_call:
+      case command_paste_all_calls:
+         if (clipboard_size == 0) specialfail("The clipboard is empty.");
+
+         while (backup_one_item()) ;   /* Repeatedly remove any parse blocks that we have. */
+         initialize_parse();
+
+         if (history_ptr >= 1 &&
+             (history_ptr >= 2 || !startinfolist[history[1].centersp].into_the_middle)) {
+            uint32 status = 0;
+
+            while (clipboard_size != 0) {
+               real_jmp_buf my_longjmp_buffer;
+               uint32 directions1, directions2, livemask1, livemask2;
+               parse_block *saved_root;
+               setup *old = &history[history_ptr].state;
+               setup *new = &clipboard[clipboard_size-1].state;
+               uint32 mask = 0777777;
+
+               history[history_ptr+1] = clipboard[clipboard_size-1];
+
+               /* Save the entire parse tree, in case it gets damaged
+                  by an aborted selector replacement. */
+
+               saved_root = copy_parse_tree(history[history_ptr+1].command_root);
+
+               /* If the setup, population, and facing directions don't match, the
+                  call execution is problematical.  We don't translate selectors.
+                  The operator is responsible for what happens. */
+
+               if (new->kind != old->kind) {
+                  status |= 4;
+                  goto doitanyway;
+               }
+
+               directions1 = 0;
+               directions2 = 0;
+               livemask1 = 0;
+               livemask2 = 0;
+
+               /* Find out whether the formations agress, and gather the information
+                  that we need to translate the selectors. */
+
+               for (i=0; i<=setup_attrs[old->kind].setup_limits; i++) {
+                  uint32 p = old->people[i].id1;
+                  uint32 q = new->people[i].id1;
+                  uint32 oldmask = mask;
+                  uint32 a = (q >> 6) & 3;
+                  uint32 b = (p >> 6) & 3;
+
+                  livemask1 <<= 1;
+                  livemask2 <<= 1;
+                  if (p) livemask1 |= 1;
+                  if (q) livemask2 |= 1;
+                  directions1 = (directions1<<2) | (p&3);
+                  directions2 = (directions2<<2) | (q&3);
+
+                  mask |= (b|4) << (a*3 + 18);
+                  oldmask ^= mask;     /* The bits that changed. */
+                  /* Demand that, if anything changed at all, some new field got
+                     set.  This has the effect of demanding that existing fields
+                     never change, and that only new fields are created or existing
+                     fields are rewritten with their original data. */
+                  if (oldmask != 0 && (mask & 04444000000) == 0)
+                     mask |= 07777000000;  /* Raise error. */
+                  mask &= id_fixer_array[(a<<2) | b];
+               }
+
+               if (directions1 != directions2 || livemask1 != livemask2) {
+                  status |= 4;
+                  goto doitanyway;
+               }
+
+               /* Everything matches.  Translate the selectors. */
+
+               /* If error happened, be sure everyone knows about it. */
+               if ((mask & 07777000000) == 07777000000) mask &= ~07777000000;
+
+               status |=
+                  translate_selector_fields(history[history_ptr+1].command_root,
+                                            (mask << 1) | ((new->rotation ^ old->rotation) & 1));
+
+               if (status & 2) {
+                  reset_parse_tree(saved_root, history[history_ptr+1].command_root);
+                  specialfail("Sorry, can't fix person identifier.  "
+                              "You can give the command 'delete one call from clipboard' "
+                              "to remove this call.");
+               }
+
+            doitanyway:
+
+               /* Create a temporary error handler. */
+
+               longjmp_ptr = &my_longjmp_buffer;
+               interactivity = interactivity_no_query_at_all;
+               testing_fidelity = TRUE;
+
+               if (setjmp(my_longjmp_buffer.the_buf)) {
+                  /* The call failed. */
+                  longjmp_ptr = &longjmp_buffer;    /* Restore the global error handler */
+                  interactivity = interactivity_normal;
+                  testing_fidelity = FALSE;
+                  reset_parse_tree(saved_root, history[history_ptr+1].command_root);
+                  specialfail("The pasted call has failed.  "
+                              "You can give the command 'delete one call from clipboard' "
+                              "to remove it.");
+               }
+
+               toplevelmove(); /* does longjmp if error */
+               finish_toplevelmove();
+               history_ptr++;
+               longjmp_ptr = &longjmp_buffer;    /* Restore the global error handler */
+               interactivity = interactivity_normal;
+               testing_fidelity = FALSE;
+
+               clipboard_size--;
+               if ((command_kind) uims_menu_index == command_paste_one_call) break;
             }
-            else if (parse_state.concept_write_base != parse_state.concept_write_ptr ||
-                     parse_state.concept_write_base != &history[history_ptr+1].command_root) {
-               /* Failed to back up, but some concept exists.  This must have been inside
+
+            if (status & 4) error_flag = error_flag_formation_changed;
+            else if (status & 1) error_flag = error_flag_selector_changed;
+            else error_flag = 0;
+         }
+
+         goto start_cycle;
+      case command_undo:
+         if (backup_one_item()) {
+            /* We succeeded in backing up by one concept.  Continue from that point. */
+            reply_pending = FALSE;
+            goto simple_restart;
+         }
+         else if (parse_state.concept_write_base != parse_state.concept_write_ptr ||
+                  parse_state.concept_write_base != &history[history_ptr+1].command_root) {
+            /* Failed to back up, but some concept exists.  This must have been inside
                   a "checkpoint" or similar complex thing.  Just throw it all away,
                   but do not delete any completed calls. */
-               reply_pending = FALSE;
-               goto start_cycle;
-            }
-            else {
-               /* There were no concepts entered.  Throw away the entire preceding line. */
-               if (history_ptr > 1) history_ptr--;
-               /* Going to start_cycle will make sure written_history_items does not exceed history_ptr. */
-               goto start_cycle;
-            }
-         case command_erase:
             reply_pending = FALSE;
             goto start_cycle;
-         case command_save_pic:
-            history[history_ptr].draw_pic = TRUE;
-            /* We have to back up to BEFORE the item we just changed. */
-            if (written_history_items > history_ptr-1)
-               written_history_items = history_ptr-1;
-            goto simple_restart;
-         case command_change_outfile:
-            {
-               char newfile_string[MAX_FILENAME_LENGTH];
+         }
+         else {
+            /* There were no concepts entered.  Throw away the entire preceding line. */
+            if (history_ptr > 1) history_ptr--;
+            /* Going to start_cycle will make sure written_history_items
+               does not exceed history_ptr. */
+            goto start_cycle;
+         }
+      case command_erase:
+         reply_pending = FALSE;
+         goto start_cycle;
+      case command_save_pic:
+         history[history_ptr].draw_pic = TRUE;
+         /* We have to back up to BEFORE the item we just changed. */
+         if (written_history_items > history_ptr-1)
+            written_history_items = history_ptr-1;
+         goto simple_restart;
+      case command_help:
+         {
+            char help_string[MAX_ERR_LENGTH];
+            Const char *prefix;
+            int current_length;
 
-               if (uims_do_outfile_popup(newfile_string)) {
-                  if (newfile_string[0]) {
-                     if (install_outfile_string(newfile_string)) {
-                        char confirm_message[MAX_FILENAME_LENGTH+25];
-                        (void) strncpy(confirm_message, "Output file changed to \"", 25);
-                        (void) strncat(confirm_message, outfile_string, MAX_FILENAME_LENGTH);
-                        (void) strncat(confirm_message, "\"", 2);
-                        specialfail(confirm_message);
-                     }
-                     else
-                        specialfail("No write access to that file, no action taken.");
-                  }
-               }
-               goto start_cycle;
+            switch (parse_state.call_list_to_use) {
+            case call_list_lin:
+               prefix = "You are in facing lines."
+                  "  Try typing something like 'pass thru' and pressing Enter.";
+               break;
+            case call_list_lout:
+               prefix = "You are in back-to-back lines."
+                  "  Try typing something like 'wheel and deal' and pressing Enter.";
+               break;
+            case call_list_8ch:
+               prefix = "You are in an 8-chain."
+                           "  Try typing something like 'pass thru' and pressing Enter.";
+               break;
+            case call_list_tby:
+               prefix = "You are in a trade-by."
+                           "  Try typing something like 'trade by' and pressing Enter.";
+               break;
+            case call_list_rcol: case call_list_lcol:
+               prefix = "You are in columns."
+                           "  Try typing something like 'column circulate' and pressing Enter.";
+               break;
+            case call_list_rwv: case call_list_lwv:
+               prefix = "You are in waves."
+                           "  Try typing something like 'swing thru' and pressing Enter.";
+               break;
+            case call_list_r2fl: case call_list_l2fl:
+               prefix = "You are in 2-faced lines."
+                           "  Try typing something like 'ferris wheel' and pressing Enter.";
+               break;
+            case call_list_dpt:
+               prefix = "You are in a starting DPT."
+                           "  Try typing something like 'double pass thru' and pressing Enter.";
+               break;
+            case call_list_cdpt:
+               prefix = "You are in a completed DPT."
+                           "  Try typing something like 'cloverleaf' and pressing Enter.";
+               break;
+            default:
+               prefix = "Type a call and press Enter.";
+               break;
             }
-         case command_change_header:
-            {
-               char newhead_string[MAX_TEXT_LINE_LENGTH];
-         
-               if (uims_do_header_popup(newhead_string)) {
-                  (void) strncpy(header_comment, newhead_string, MAX_TEXT_LINE_LENGTH);
 
-                  if (newhead_string[0]) {
-                     char confirm_message[MAX_TEXT_LINE_LENGTH+25];
-                     (void) strncpy(confirm_message, "Header comment changed to \"", 28);
-                     (void) strncat(confirm_message, header_comment, MAX_TEXT_LINE_LENGTH);
+            (void) strncpy(help_string, prefix, MAX_ERR_LENGTH);
+            help_string[MAX_ERR_LENGTH-1] = '\0';
+            current_length = strlen(help_string);
+
+            if (sequence_is_resolved()) {
+               (void) strncpy(&help_string[current_length],
+                              "  You may also write out this finished sequence "
+                              "by typing 'write this sequence'.",
+                              MAX_ERR_LENGTH-current_length);
+            }
+            else {
+               (void) strncpy(&help_string[current_length],
+                              "  You may also type 'resolve'.",
+                              MAX_ERR_LENGTH-current_length);
+            }
+
+            help_string[MAX_ERR_LENGTH-1] = '\0';
+            specialfail(help_string);
+         }
+      case command_change_outfile:
+         {
+            char newfile_string[MAX_FILENAME_LENGTH];
+
+            if (uims_do_outfile_popup(newfile_string)) {
+               if (newfile_string[0]) {
+                  if (install_outfile_string(newfile_string)) {
+                     char confirm_message[MAX_FILENAME_LENGTH+25];
+                     (void) strncpy(confirm_message, "Output file changed to \"", 25);
+                     (void) strncat(confirm_message, outfile_string, MAX_FILENAME_LENGTH);
                      (void) strncat(confirm_message, "\"", 2);
                      specialfail(confirm_message);
                   }
-                  else {
-                     specialfail("Header comment deleted");
-                  }
+                  else
+                     specialfail("No write access to that file, no action taken.");
                }
-               goto start_cycle;
             }
-#ifdef NEGLECT
-         case command_neglect:
-            {
-               char percentage_string[MAX_TEXT_LINE_LENGTH];
-               uims_reply local_reply;
-               char title[MAX_TEXT_LINE_LENGTH];
-               int percentage, calls_to_mark, i, deficit, final_percent;
-               call_list_kind dummy = call_list_any;
-      
-               if (uims_do_neglect_popup(percentage_string)) {
-                  percentage = parse_number(percentage_string);
-                  if ((percentage < 1) || (percentage > 99)) goto start_cycle;
+            goto start_cycle;
+         }
+      case command_change_header:
+         {
+            char newhead_string[MAX_TEXT_LINE_LENGTH];
+         
+            if (uims_do_header_popup(newhead_string)) {
+               (void) strncpy(header_comment, newhead_string, MAX_TEXT_LINE_LENGTH);
+
+               if (newhead_string[0]) {
+                  char confirm_message[MAX_TEXT_LINE_LENGTH+25];
+                  (void) strncpy(confirm_message, "Header comment changed to \"", 28);
+                  (void) strncat(confirm_message, header_comment, MAX_TEXT_LINE_LENGTH);
+                  (void) strncat(confirm_message, "\"", 2);
+                  specialfail(confirm_message);
                }
                else {
-                  percentage = 25;
+                  specialfail("Header comment deleted");
                }
+            }
+            goto start_cycle;
+         }
+#ifdef NEGLECT
+      case command_neglect:
+         {
+            char percentage_string[MAX_TEXT_LINE_LENGTH];
+            uims_reply local_reply;
+            char title[MAX_TEXT_LINE_LENGTH];
+            int percentage, calls_to_mark, i, deficit, final_percent;
+            call_list_kind dummy = call_list_any;
       
-               calls_to_mark = number_of_calls[call_list_any] * percentage / 100;
-               if (calls_to_mark > number_of_calls[call_list_any])
-                  calls_to_mark = number_of_calls[call_list_any];
+            if (uims_do_neglect_popup(percentage_string)) {
+               percentage = parse_number(percentage_string);
+               if ((percentage < 1) || (percentage > 99)) goto start_cycle;
+            }
+            else {
+               percentage = 25;
+            }
       
-               start_neglect:
+            calls_to_mark = number_of_calls[call_list_any] * percentage / 100;
+            if (calls_to_mark > number_of_calls[call_list_any])
+               calls_to_mark = number_of_calls[call_list_any];
       
-               /* Clear all the marks. */
+         start_neglect:
       
-               for (i=0; i<number_of_calls[call_list_any]; i++) {
-                  BOGUS USE OF CALLFLAGSH! main_call_lists[call_list_any][i]->callflagsh &= ~0x80000000;
-               }
+            /* Clear all the marks. */
       
-               deficit = mark_aged_calls(0, calls_to_mark, 31);
+            for (i=0; i<number_of_calls[call_list_any]; i++) {
+               BOGUS USE OF CALLFLAGSH! main_call_lists[call_list_any][i]->callflagsh &= ~0x80000000;
+            }
+      
+            deficit = mark_aged_calls(0, calls_to_mark, 31);
       
                /* Determine percentage that were actually marked. */
       
-               final_percent = ((calls_to_mark-deficit) * 100) / number_of_calls[call_list_any];
-               if (final_percent > 100) final_percent = 100;
+            final_percent = ((calls_to_mark-deficit) * 100) / number_of_calls[call_list_any];
+            if (final_percent > 100) final_percent = 100;
       
-               fill_in_neglect_percentage(title, final_percent);
-               clear_screen();
-               writestuff(title);
-               newline();
+            fill_in_neglect_percentage(title, final_percent);
+            clear_screen();
+            writestuff(title);
+            newline();
       
                /* Print the marked calls. */
             
-               for (i=0; i<number_of_calls[call_list_any]; i++) {
-                  BOGUS USE OF CALLFLAGSH! if (main_call_lists[call_list_any][i]->callflagsh & 0x80000000) {
-                     writestuff(main_call_lists[call_list_any][i]->name);
-                     writestuff(", ");
-                  }
+            for (i=0; i<number_of_calls[call_list_any]; i++) {
+               BOGUS USE OF CALLFLAGSH! if (main_call_lists[call_list_any][i]->callflagsh & 0x80000000) {
+                  writestuff(main_call_lists[call_list_any][i]->name);
+                  writestuff(", ");
                }
-               newline();
+            }
+            newline();
       
-               error_flag = 0;
+            error_flag = 0;
                
-/* **** this call is no longer in conformance with the procedure's behavior */
-               local_reply = uims_get_call_command(&dummy);
+            /* **** this call is no longer in conformance with the procedure's behavior */
+            local_reply = uims_get_call_command(&dummy);
             
-               if (local_reply == ui_call_select) {
-                  /* Age this call. */
-                  main_call_lists[call_list_any][uims_menu_index]->age = global_age;
-                  goto start_neglect;
-               }
-               else
-                  goto start_cycle;
+            if (local_reply == ui_call_select) {
+               /* Age this call. */
+               main_call_lists[call_list_any][uims_menu_index]->age = global_age;
+               goto start_neglect;
             }
+            else
+               goto start_cycle;
+         }
 #endif
-         case command_getout:
-            /* Check that it is really resolved. */
+      case command_getout:
+         /* Check that it is really resolved. */
 
-            if (!sequence_is_resolved()) {
-               if (uims_do_write_anyway_popup() != POPUP_ACCEPT) specialfail("This sequence is not resolved.");
-            }
+         if (!sequence_is_resolved()) {
+            if (uims_do_write_anyway_popup() != POPUP_ACCEPT)
+               specialfail("This sequence is not resolved.");
+         }
 
-            if (!write_sequence_to_file())
-               goto start_cycle; /* user cancelled action */
-            goto new_sequence;
-         default:     /* Should be some kind of search command. */
-            if (((command_kind) uims_menu_index) < command_resolve) goto normal_exit;   /* It wasn't.  We have a serious problem. */
-            search_goal = (command_kind) uims_menu_index;
-            reply = full_resolve(search_goal);
+         if (!write_sequence_to_file())
+            goto start_cycle; /* user cancelled action */
+         goto new_sequence;
+      default:     /* Should be some kind of search command. */
+         /* If it wasn't, we have a serious problem. */
+         if (((command_kind) uims_menu_index) < command_resolve) goto normal_exit;
+         search_goal = (command_kind) uims_menu_index;
+         reply = full_resolve(search_goal);
 
-            /* If full_resolve refused to operate (for example, we clicked on "reconcile"
+         /* If full_resolve refused to operate (for example, we clicked on "reconcile"
                when in an hourglass), it returned "ui_search_accept", which will cause
                us simply to go to start_cycle. */
 
@@ -2197,29 +2581,28 @@ int main(int argc, char *argv[])
                will cause the last search result to be accepted, and begin another search on top
                of that result. */
 
-            if (reply == ui_command_select) {
-
-               switch ((command_kind) uims_menu_index) {
-                  case command_quit:
-                  case command_abort:
-                  case command_getout:
-                     break;
-                  default:
-                     if (((command_kind) uims_menu_index) < command_resolve) goto start_cycle;
-                     break;
-               }
-
-               allowing_modifications = 0;
-               history[history_ptr+1].draw_pic = FALSE;
-               parse_state.concept_write_base = &history[history_ptr+1].command_root;
-               parse_state.concept_write_ptr = parse_state.concept_write_base;
-               *parse_state.concept_write_ptr = (parse_block *) 0;
-               reply_pending = TRUE;
-               /* Going to start_with_pending_reply will make sure written_history_items does not exceed history_ptr. */
-               goto start_with_pending_reply;
+         if (reply == ui_command_select) {
+            switch ((command_kind) uims_menu_index) {
+            case command_quit:
+            case command_abort:
+            case command_getout:
+               break;
+            default:
+               if (((command_kind) uims_menu_index) < command_resolve) goto start_cycle;
+               break;
             }
 
-            goto start_cycle;
+            allowing_modifications = 0;
+            history[history_ptr+1].draw_pic = FALSE;
+            parse_state.concept_write_base = &history[history_ptr+1].command_root;
+            parse_state.concept_write_ptr = parse_state.concept_write_base;
+            *parse_state.concept_write_ptr = (parse_block *) 0;
+            reply_pending = TRUE;
+            /* Going to start_with_pending_reply will make sure written_history_items does not exceed history_ptr. */
+            goto start_with_pending_reply;
+         }
+
+         goto start_cycle;
       }
    }
    else

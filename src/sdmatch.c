@@ -215,13 +215,15 @@ extern void matcher_initialize(void)
       }
 
       /* Pick out concepts that will be produced when certain function keys are pressed. */
-      if (p->kind == concept_twice) twice_concept_ptr = p;
+
+      if (p->kind == concept_twice && p->value.arg2 == 2)
+         twice_concept_ptr = p;
       if (p->kind == concept_centers_or_ends && p->value.arg1 == selector_centers) centers_concept_ptr = p;
       if (p->kind == concept_sequential) two_calls_concept_ptr = p;
 
       concept_list_length++;
 
-      if (p->level <= calling_level)
+      if (p->level <= higher_acceptable_level[calling_level])
          level_concept_list_length++;
    }
 
@@ -244,7 +246,7 @@ extern void matcher_initialize(void)
       *item = concept_number;
       item++;
 
-      if (p->level <= calling_level) {
+      if (p->level <= higher_acceptable_level[calling_level]) {
          *level_item = concept_number;
          level_item++;
       }
@@ -927,13 +929,17 @@ Private void match_suffix_2(Cstring user, Cstring pat1, pat2_block *pat2, int pa
             pat2_concept = (concept_descriptor *) 0;
          }
          else if (pat2) {
-            /* We don't allow a closing bracket after a concept.  That is, stuff in brackets must be zero or more concepts PLUS A CALL. */
+            /* We don't allow a closing bracket after a concept.  That is,
+               stuff in brackets must be zero or more concepts PLUS A CALL. */
+
             if (current_result->match.kind != ui_call_select && pat2->demand_a_call) return;
+
             if (pat2->folks_to_restore) {
                /* Be sure maximum yield depth gets propagated back. */
                pat2->folks_to_restore->yield_depth = current_result->yield_depth;
                current_result = pat2->folks_to_restore;
             }
+
             pat1 = pat2->car;
             pat2_concept = pat2->special_concept;
             pat2 = pat2->cdr;
@@ -1090,7 +1096,12 @@ Private void match_suffix_2(Cstring user, Cstring pat1, pat2_block *pat2, int pa
 }
 
 
-Private void scan_concepts_and_calls(Cstring user, Cstring firstchar, pat2_block *pat2, match_result *saved_result_p, int patxi)
+Private void scan_concepts_and_calls(
+   Cstring user,
+   Cstring firstchar,
+   pat2_block *pat2,
+   match_result *saved_result_p,
+   int patxi)
 {
    int *item;
    short **concitem;
@@ -1098,19 +1109,22 @@ Private void scan_concepts_and_calls(Cstring user, Cstring firstchar, pat2_block
    int i;
    int bucket;
    pat2_block p2b;
+   Const match_result *save_stuff1 = (Const match_result *) 0;
+   Const match_result *save_stuff2 = (Const match_result *) 0;
    match_result *saved_folksptr = current_result;
+   int new_depth;
 
    p2b.folks_to_restore = (match_result *) 0;
    p2b.demand_a_call = FALSE;
    p2b.cdr = pat2;
 
-   /* We force any call invoked under a modifier to yield if it is ambiguous.  This way,
+   /* We force any call invoked under a concept to yield if it is ambiguous.  This way,
       if the user types "cross roll", preference will be given to the call "cross roll",
       rather than to the modifier "cross" on the call "roll".  This whole thing depends,
       of course, on our belief that the language of square dance calling never contains
       an ambiguous call/concept utterance.  For example, we do not expect anyone to
       invent a call "and turn" that can be used with the "cross" modifier. */
-   saved_result_p->yield_depth++;
+   new_depth = saved_result_p->yield_depth+1;
    saved_result_p->indent = FALSE;
    saved_result_p->real_next_subcall = (match_result *) 0;
    saved_result_p->real_secondary_subcall = (match_result *) 0;
@@ -1131,19 +1145,21 @@ Private void scan_concepts_and_calls(Cstring user, Cstring firstchar, pat2_block
 
       */
 
-   if (!user[0] && static_ss.showing)
-      goto mundane;
-
    if (user[0] && user[0] != firstchar[0])
       goto getout;
 
+   if (saved_folksptr->match.kind == ui_call_select) {
+      save_stuff1 = saved_folksptr->real_next_subcall;
+      save_stuff2 = saved_folksptr->real_secondary_subcall;
+   }
+
+   if (!user[0] && static_ss.showing)
+      goto mundane;
+
    /* We now know that it will do nothing if:
-
-
-   (call_or_concept_name has 1st 3 chars with no comma, quote, atsign, or NUL)
-      AND
-   (user[1,2,3] are not NUL or blank and don't match call_or_concept_name)
-
+      (call_or_concept_name has 1st 3 chars with no comma, quote, atsign, or NUL)
+                               AND
+      (user[1,2,3] are not NUL or blank and don't match call_or_concept_name)
    */
 
    if (user[1] == '[' || get_hash(&user[1], &bucket) == 1) {
@@ -1174,6 +1190,7 @@ Private void scan_concepts_and_calls(Cstring user, Cstring firstchar, pat2_block
          saved_result_p->match.concept_ptr = this_concept;
          saved_result_p->match.call_conc_options = null_options;
          current_result = saved_result_p;
+         saved_result_p->yield_depth = new_depth;
          match_suffix_2(user, firstchar, &p2b, patxi);
       }
 
@@ -1190,6 +1207,7 @@ Private void scan_concepts_and_calls(Cstring user, Cstring firstchar, pat2_block
          p2b.car = cb->name;
          saved_result_p->match.call_conc_options = null_options;
          current_result = saved_result_p;
+         saved_result_p->yield_depth = new_depth;
          match_suffix_2(user, firstchar, &p2b, patxi);
       }
 
@@ -1221,6 +1239,7 @@ Private void scan_concepts_and_calls(Cstring user, Cstring firstchar, pat2_block
       saved_result_p->match.concept_ptr = this_concept;
       saved_result_p->match.call_conc_options = null_options;
       current_result = saved_result_p;
+      saved_result_p->yield_depth = new_depth;
       match_suffix_2(user, firstchar, &p2b, patxi);
       item++;
    }
@@ -1238,15 +1257,17 @@ Private void scan_concepts_and_calls(Cstring user, Cstring firstchar, pat2_block
       p2b.car = cb->name;
       saved_result_p->match.call_conc_options = null_options;
       current_result = saved_result_p;
+      saved_result_p->yield_depth = new_depth;
       match_suffix_2(user, firstchar, &p2b, patxi);
    }
 
-   getout:
+ getout:
 
+   saved_result_p->yield_depth = new_depth-1;
+   saved_folksptr->real_next_subcall = save_stuff1;
+   saved_folksptr->real_secondary_subcall = save_stuff2;
    current_result = saved_folksptr;
    current_result->indent = FALSE;
-   current_result->real_next_subcall = (match_result *) 0;
-   current_result->real_secondary_subcall = (match_result *) 0;
 }
 
 
@@ -1254,10 +1275,15 @@ Private void scan_concepts_and_calls(Cstring user, Cstring firstchar, pat2_block
 /*
  * Match_wildcard tests for and handles pattern suffixes that begin with
  * a wildcard such as "<anyone>".  A wildcard is handled only if there is
- * room in the Result struct to store the associated value.
+ * room in the result struct to store the associated value.
  */
 
-Private void match_wildcard(Cstring user, Cstring pat, pat2_block *pat2, int patxi, concept_descriptor *special)
+Private void match_wildcard(
+   Cstring user,
+   Cstring pat,
+   pat2_block *pat2,
+   int patxi,
+   concept_descriptor *special)
 {
    Cstring prefix;
    Cstring *number_table;
@@ -1307,11 +1333,21 @@ Private void match_wildcard(Cstring user, Cstring pat, pat2_block *pat2, int pat
                p3b.folks_to_restore = current_result;
                p3b.demand_a_call = TRUE;
                p3b.cdr = &p2b;
+
                if (key == '0')
                   current_result->real_next_subcall = &saved_result;
                else
                   current_result->real_secondary_subcall = &saved_result;
+
                scan_concepts_and_calls(user, "[", &p3b, &saved_result, patxi);
+
+               /* Clear this stuff -- it points to a local variable. */
+
+               if (key == '0')
+                  current_result->real_next_subcall = (match_result *) 0;
+               else
+                  current_result->real_secondary_subcall = (match_result *) 0;
+
                return;
             }
             break;
@@ -1740,6 +1776,19 @@ Private void search_menu(uims_reply kind)
 
       for (i = 0; i < menu_length; i++) {
          everyones_real_result.match.index = i;
+
+         if (kind == ui_command_select &&
+             static_call_menu != match_resolve_extra_commands &&
+             command_command_values[i] == command_help)
+            everyones_real_result.yield_depth = 1;
+#ifdef THIS_MESSES_UP_HEADS_START
+         else if (kind == ui_start_select &&
+             i == (int) start_select_help)
+            everyones_real_result.yield_depth = 1;
+#endif
+         else
+            everyones_real_result.yield_depth = 0;
+
          match_pattern(menu[i], (concept_descriptor *) 0);
       }
    }

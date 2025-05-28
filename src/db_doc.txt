@@ -633,6 +633,30 @@ hyperglass  |  0  |  1           7  |  6  |      (4 way symmetry)
                         |_____|
 
 
+                            _____ _____
+                           |     |     |
+                           |  0  |  1  |
+                           |_____|_____|
+                              |     |
+                              |  2  |
+                              |_____|
+                              |     |
+             _____            |  3  |            _____
+            |     |_____ _____|     |_____ _____|     |
+            | 13  |     |      \   /      |     |  4  |
+hyperbone   |_____| 14  | 15           7  |  6  |_____|
+            |     |_____|_____ /   \ _____|_____|     |
+            | 12  |           |     |           |  5  |
+            |_____|           | 11  |           |_____|
+                              |_____|
+                              |     |          (4 way symmetry)
+                              | 10  |        (internal use only!)
+                            __|__ __|__
+                           |     |     |
+                           |  9  |  8  |
+                           |_____|_____|
+
+
 
                    _____ _____ _____ 
                   |     |     |     |
@@ -712,6 +736,24 @@ deepqtg     |_____|_____|_____|_____|
                |     |     |     |
                |  7  |     |  6  |
                |_____|     |_____|
+
+
+
+                         _____ _____
+                        |     |     |
+                        |  2  | 11  |
+                        |_____|_____|
+             _____ _____|     |     |_____ _____
+            |     |     |  3  | 10  |     |     |
+deepxwv     |  0  |  1  |_____|_____|  7  |  6  |
+            |_____|_____|     |     |_____|_____|
+                        |  4  |  9  |
+                        |_____|_____|
+                        |     |     |
+                        |  5  |  8  |
+                        |_____|_____|
+
+
 
 
                    _____       _____       _____
@@ -803,6 +845,22 @@ bigh        |_____|  4  |  5  | 11  | 10  |_____|
 
 
 
+             _____                                                 _____
+            |     |                                               |     |
+            |  0  |                                               | 11  |
+            |_____|                                               |_____|
+            |     |_____ _____ _____ _____ _____ _____ _____ _____|     |
+            |  1  |     |     |     |     |     |     |     |     | 10  |
+bigbigh     |_____|  4  |  5  |  6  |  7  | 15  | 14  | 13  | 12  |_____|
+            |     |_____|_____|_____|_____|_____|_____|_____|_____|     |
+            |  2  |                                               |  9  |
+            |_____|                                               |_____|
+            |     |                                               |     |
+            |  3  |                                               |  8  |
+            |_____|                                               |_____|
+
+
+
 
                                      _____
                                     |     |
@@ -817,6 +875,22 @@ bigx        |  0  |  1  |  2  |  3  |_____|  9  |  8  |  7  |  6  |
                                     |     |
                                     | 10  |
                                     |_____|
+
+
+
+                                     _____ _____
+                                    |     |     |
+                                    |  4  | 15  |
+                                    |_____|_____|
+             _____ ___________ _____|     |     |_____ _____ _____ _____
+            |     |     |     |     |  5  | 14  |     |     |     |     |
+bigbigx     |  0  |  1  |  2  |  3  |_____|_____| 11  | 10  |  9  |  8  |
+            |_____|_____|_____|_____|     |     |_____|_____|_____|_____|
+                                    |  6  | 13  |
+                                    |_____|_____|
+                                    |     |     |
+                                    |  7  | 12  |
+                                    |_____|_____|
 
 
 
@@ -1862,12 +1936,14 @@ x14_once_rem_couple
 
 lines_miniwave
       applies to 1x2, 1x4, 1x6, 1x8, 2x4, 3x4, 2x6, or 2x8 lines only.
+      (Or thar in which only line-like people have legal move.)
       Returns TRUE if the lateral partner of the person under test is alive
       and facing the opposite direction.  Returns FALSE if the partner is
       a phantom or faces the same way or is T-boned.
 
 lines_couple
       applies to 1x2, 1x4, 1x6, 1x8, 2x4, 3x4, 2x6, or 2x8 lines only.
+      (Or thar in which only line-like people have legal move.)
       Returns TRUE if the lateral partner of the person under test is alive
       and facing the same direction.  Returns FALSE if the partner is
       a phantom or faces the opposite way or is T-boned.
@@ -1980,12 +2056,18 @@ columns_tandem
       opposite way or is T-boned.  When interrogating the center of a 3x1 or
       3x2 column, uses the person in front.
 
+      Applies to 1/4 tag also.  Treats the center column of 6 as a 2x3 and
+      handles it as above.  Returns FALSE for the ends of the center line.
+
 columns_antitandem
       applies to 2x1, 3x1, 4x1, 6x1, 3x2, 4x2, 6x2, or 8x2 columns only.  Returns TRUE
       if the tandem partner of the person under test is alive and facing the
       opposite direction.  Returns FALSE if that person is a phantom or faces
       the same way or is T-boned.  When interrogating the center of a 3x1 or
       3x2 column, uses the person in front.
+
+      Applies to 1/4 tag also.  Treats the center column of 6 as a 2x3 and
+      handles it as above.  Returns FALSE for the ends of the center line.
 
 columns_magic_tandem
       applies to 4x2 columns only.  Returns TRUE if the magic tandem
@@ -2468,7 +2550,7 @@ There are a number of internal ones not shown here.  See the file ~/sd/restricti
                                        For qtags, and bones, this applies
                                        just to the centers.  For triangles, it applies
                                        just to the base.
-   miniwaves,                       1x2/1x4/1x6/1x8, 2x4 (lines/cols), 2x2, dmd,
+   miniwaves,                       1x2/1x4/1x6/1x8, 2x4 (lines/cols), dmd, 2x2,
                                        qtag, bone, ptpd, trngl - people are paired
                                        in miniwaves of various handedness.
                                        For diamonds, qtags, and bones, this applies
@@ -2504,7 +2586,7 @@ There are a number of internal ones not shown here.  See the file ~/sd/restricti
                                     column are facing same way
    ends_are_peelable,               2x4 - ends are a box with each person in genuine tandem
    siamese_in_quad                  Any 2x4 or 4x2 - the people in each quadrant, if they
-                                    exist, face the same way
+                                    exist, face the same way.  C1 phantom - the same.
    not_tboned,                      2x2 - people must not be T-boned
    opposite_sex,                    2x1 - people must be opposite sexes facing each other
    quarterbox_or_col,               4x2/3x2 - acceptable setup for "quick step" or
@@ -2625,20 +2707,23 @@ There are a number of internal ones not shown here.  See the file ~/sd/restricti
                      LH versions will pass, so that splitting will take place.
 
 
-   ctr_pts_rh,                   /* qtag, 2x1dmd, hrglass - the "points of the centers" (ends of the center
-                                    line of 4 in qtag or 2x1dmd; points of the center diamond in hrglass)
-                                    are in a right-handed line or diamond, from their own perspective.
-                                    The direction of the center 2 people is immaterial. */
-   ctr_pts_lh,                   /* qtag, 2x1dmd, hrglass - as above, but left-handed. */
-   dmd_ctrs_1f,                  /* dmd, 1x4 - the centers (2 of them) are in a couple */
-   said_triangle,                /* short6/pshort6 - caller said the word "triangle" */
-   didnt_say_triangle            /* short6/pshort6 - caller didn't say the word "triangle" */
-   occupied_as_h                 /* 3x4/4x3 - live bodies are (a subset of) an "H" */
-   occupied_as_qtag              /* 3x4/4x3 - live bodies are (a subset of) a qtag */
-   occupied_as_3x1tgl            /* 3x4/4x3/2x6/6x2/2x3/3x2/qtag - live bodies are 3x1 triangles of some sort.
-                                    Symmetric only. */
-   line_ends_looking_out            2x4 T-bone - the ends must be line-like and must be leads, and at least one center must be column-like.
-   col_ends_looking_in           /* 2x4 columns - the ends are #4 */
+   ctr_pts_rh,                      qtag, 2x1dmd, hrglass, bone6 - the "points of the centers"
+                                    (ends of the center line of 4 in qtag or 2x1dmd;
+                                    points of the center diamond in hrglass) are in a
+                                    right-handed line or diamond, from their own perspective.
+                                    The direction of the center 2 people is immaterial.
+                                    For bone6, it tests the center 2.
+   ctr_pts_lh,                      qtag, 2x1dmd, hrglass, bone6 - as above, but left-handed.
+   dmd_ctrs_1f,                     dmd, 1x4 - the centers (2 of them) are in a couple
+   said_triangle,                   short6/pshort6 - caller said the word "triangle"
+   didnt_say_triangle               short6/pshort6 - caller didn't say the word "triangle"
+   occupied_as_h                    3x4/4x3 - live bodies are (a subset of) an "H"
+   occupied_as_qtag                 3x4/4x3 - live bodies are (a subset of) a qtag
+   occupied_as_3x1tgl               3x4/4x3/2x6/6x2/2x3/3x2/qtag - live bodies are 3x1
+                                    triangles of some sort.  Symmetric only.
+   line_ends_looking_out            2x4 T-bone - the ends must be line-like and must be leads,
+                                    and at least one center must be column-like.
+   col_ends_looking_in              2x4 columns - the ends are #4
    ripple stuff .......
    people_1_and_5_real           /* 1x8 (or any applicable setup) people #1 and #5 are real */
    centers_sel                   /* 1x4/2x4/qtag - the centers are selected and the ends are not. */

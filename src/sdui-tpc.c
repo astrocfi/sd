@@ -18,14 +18,17 @@
  */
 
 #include <stdio.h>
+#include <string.h>
 #include <stdlib.h>
 #ifdef DJGPP
 #include "pc.h"
 #include "keys.h"
 #include "gppconio.h"
 #else
+#ifndef WIN32
 #include <termios.h>   /* We use this stuff if "-no_cursor" was specified. */
 #include <unistd.h>    /* This too. */
+#endif
 #endif
 extern int diagnostic_mode;    /* We need this. */
 #include "sdui-ttu.h"
@@ -39,7 +42,7 @@ static char text_buffer[10000];  /* This is *NOT* normally padded with a null.
                                     It only gets padded when we need to display it. */
 static int lines_in_buffer;  /* Number of "newline" characters in the buffer. */
 
-#ifndef DJGPP
+#if !defined(DJGPP) && !defined(WIN32)
 static int current_tty_mode = 0;
 
 static void csetmode(int mode)             /* 1 means raw, no echo, one character at a time;
@@ -112,9 +115,10 @@ extern int ttu_process_command_line(int *argcp, char **argv)
       continue;
    }
 
-   /* If no "-no_graphics" switch was given, switch over
-      to the "pointy triangles" for drawing pictures. */
-#ifdef DJGPP
+   /* If no "-no_graphics" switch was not given, and our run-time
+      system supports it, switch over to the "pointy triangles"
+      for drawing pictures. */
+#if defined(WIN32) || defined(DJGPP)
    if (triangles)
       ui_directions = "?\020?\021????\036?\037?????";
 #endif
@@ -143,7 +147,7 @@ extern void ttu_initialize(void)
 extern void ttu_terminate(void)
 {
    if (journal_file) (void) fclose(journal_file);
-#ifndef DJGPP
+#if !defined(DJGPP) && !defined(WIN32)
    csetmode(0);   /* Restore normal input mode. */
 #endif
 }
@@ -244,25 +248,18 @@ extern void put_line(char the_line[])
 extern void put_char(int c)
 {
    if (!no_cursor)
-      pack_in_buffer(c);
+      pack_in_buffer((char) c);
 
    (void) putchar(c);
 }
 
 
 extern int get_char(void)
-#ifndef DJGPP
+#if defined(WIN32)
 {
-   int c;
-
-   csetmode(1);         /* Raw, no echo, single-character mode. */
-
-   for ( ;; ) {
-      c = getchar();
-      if (c != '\r') return c;
-   }
+   return getchar();
 }
-#else
+#elif defined(DJGPP)
 {
    int n;
 
@@ -325,12 +322,23 @@ extern int get_char(void)
 
    return n;
 }
+#else
+{
+   int c;
+
+   csetmode(1);         /* Raw, no echo, single-character mode. */
+
+   for ( ;; ) {
+      c = getchar();
+      if (c != '\r') return c;
+   }
+}
 #endif
 
 extern void get_string(char *dest)
 {
    int size;
-#ifndef DJGPP
+#if !defined(DJGPP) && !defined(WIN32)
    csetmode(0);         /* Regular full-line mode with system echo. */
 #endif
    (void) gets(dest);

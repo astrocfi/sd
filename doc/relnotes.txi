@@ -1,7 +1,7 @@
 \input whatever @c %**start of header -*-texinfo-*-
 @setfilename relnotes.info
 @settitle Sd Release Notes
-@c Time-stamp: <1998-06-22 10:20:00 wba>
+@c Time-stamp: <1998-08-15 10:20:00 wba>
 @iftex
 @headings off
 @oddheading @| @| @thispage
@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR SD VERSION 31.98
-@set title2 Database version = 31.98 format = 132
+@set title1 RELEASE NOTES FOR SD VERSION 32.0
+@set title2 Database version = 32.0 format = 135
 @set title3 X11 UI version 1.17, SDTTY UI version 1.9
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 32.0::
 * 31.98::
 * 31.97::
 * 31.96::
@@ -53,7 +54,7 @@ Changes as of the following versions:
 The file @file{oldnotes} has notes relating to still older versions.
 @end menu
 
-@node Intro, 31.98, Top, (dir)
+@node Intro, 32.0, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -64,11 +65,60 @@ The file @file{oldnotes} has notes relating to still older versions.
 @noindent Copyright @copyright{} 1996, 1997, 1998 William B. Ackerman
 @sp 3
 @menu
-* 31.98::               Changes in the current version
+* 32.0::               Changes in the current version
 @end menu
 
 @c ************
-@node 31.98, 31.97, Intro, Top
+@node 32.0, 31.98, Intro, Top
+@unnumberedsec Version 32.0 changes
+
+There is a major new feature.  It is now possible to ``edit'' sequences at any point.
+The way this is accomplished is through a ``clipboard''.  If you want to change your
+sequence at a point 5 calls back from the current point, you can move the last 5 calls
+to the clipboard.  Then you can insert or delete calls in the usual way (by calling, or
+by using the @code{undo last call} command), and then move the clipboard back to the
+main sequence.  See the ``editing'' section (section 7, page 34) of the manual.
+
+You can use modifiers like @samp{1x3} in front of the @samp{as couples}
+or @samp{tandem} concepts, or their twosome or fractional twosome veriants.
+In practice, a common way of expressing this to the dancers is with something
+like ``one by tandems of three'' or ``threesome by one''.
+
+New concepts: @samp{triple twin C/L/W of 3}.  These are done in a 3x6 formation,
+and form three virtual 2x3's.  You can of course use @samp{mystic} and
+@samp{invert mystic} with them.
+
+New concepts: @samp{center/outside triple twin C/L/W}.  These are done in a 4x6 formation,
+and form three virtual 2x4's.  The center formation, or the two end formations,
+do the call.
+
+New concepts: @samp{center/outside triple twin C/L/W of 3}.  These are done in a 3x6 formation,
+and form three virtual 2x3's.  The center formation, or the two end formations,
+do the call.
+
+New concept: @samp{center Z}.
+
+New concepts: @samp{twice removed}, @samp{thrice removed}.
+
+New selectors: @samp{end boys}, @samp{end girls}, @samp{center boys}, and
+@samp{center girls}.  These are intended for use with calls like @samp{ripple}.
+If one of these selectors can identify the desired two people uniquely, it is
+probably preferable to use it instead of something like @code{side girls} or
+@code{lead ends}.
+
+The @samp{[beau hop] an anchor but [[reflected flip your neighbor] and spread]}
+bug was fixed.
+
+The program has a vastly improved ability to handle differently oriented triple
+and quadruple columns, lines, waves, and diamonds.
+
+The program has a vastly improved ability to handle Z's.
+
+Many other minor improvements.  We thank the callers at the
+2nd USA West Convention for bringing up several interesting issues.
+
+@c ************
+@node 31.98, 31.97, 32.0, Top
 @unnumberedsec Version 31.98 changes
 
 Many minor improvements.  We thank the callers in the C2 hall at the

@@ -138,6 +138,8 @@ int begin_sizes[] = {
    24,         /* b_12x2 */
    12,         /* b_deepqtg */
    12,         /* b_pdeepqtg */
+   12,         /* b_deepxwv */
+   12,         /* b_pdeepxwv */
    20,         /* b_3oqtg */
    20,         /* b_p3oqtg */
    8,          /* b_thar */
@@ -170,10 +172,18 @@ int begin_sizes[] = {
    12,         /* b_p3mdmd */
    12,         /* b_3mptpd */
    12,         /* b_p3mptpd */
+   16,         /* b_4mdmd */
+   16,         /* b_p4mdmd */
+   16,         /* b_4mptpd */
+   16,         /* b_p4mptpd */
    12,         /* b_bigh */
    12,         /* b_pbigh */
    12,         /* b_bigx */
    12,         /* b_pbigx */
+   16,         /* b_bigbigh */
+   16,         /* b_pbigbigh */
+   16,         /* b_bigbigx */
+   16,         /* b_pbigbigx */
    12,         /* b_bigrig */
    12,         /* b_pbigrig */
    12,         /* b_bighrgl */

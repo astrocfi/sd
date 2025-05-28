@@ -90,6 +90,7 @@ extern concept_descriptor *centers_concept_ptr;
 extern concept_descriptor *two_calls_concept_ptr;
 extern int num_command_commands;
 extern Cstring command_commands[];
+extern command_kind command_command_values[];
 extern int number_of_resolve_commands;
 extern Cstring resolve_command_strings[];
 extern int num_extra_resolve_commands;

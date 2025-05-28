@@ -45,6 +45,16 @@ all: sessions.all sd_doc.all demo.all relnotes.all sample.html readme install
 
 # Special ones:
 
+sd_doc.pdf: readme.txi
+
+sd_doc.dvi: readme.txi
+
+sd_doc.html: readme.txi
+
+sd_doc.info: readme.txi
+
+sd_doc.txt: readme.txi
+
 sd_toc.pso: sd_doc.dvi
 	$(DVIPS) -t letter -o $@ $<
 

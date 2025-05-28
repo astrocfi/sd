@@ -12,7 +12,7 @@
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-    This is for version 31. */
+    This is for version 32. */
 
 /* We would like to not need to customize things for different "dialects" of
    ANSI C, because we would like to think that there are no "dialects".  But, alas,
@@ -358,45 +358,45 @@ typedef struct {
 
 /* Since DFM1_CONCENTRICITY_FLAG_MASK is FF, we start at 100. */
 
-#define CMD_MISC__EXPLICIT_MIRROR    0x00000100UL
-#define CMD_MISC__MATRIX_CONCEPT     0x00000200UL
+static Const uint32 CMD_MISC__EXPLICIT_MIRROR    = 0x00000100UL;
+static Const uint32 CMD_MISC__MATRIX_CONCEPT     = 0x00000200UL;
 /* This is a 4 bit field.  For codes inside same, see "CMD_MISC__VERIFY_WAVES" below. */
-#define CMD_MISC__VERIFY_MASK        0x00003C00UL
-#define CMD_MISC__EXPLICIT_MATRIX    0x00004000UL
-#define CMD_MISC__NO_EXPAND_MATRIX   0x00008000UL
-#define CMD_MISC__DISTORTED          0x00010000UL
-#define CMD_MISC__OFFSET_Z           0x00020000UL
-#define CMD_MISC__SAID_SPLIT         0x00040000UL
-#define CMD_MISC__SAID_TRIANGLE      0x00080000UL
-#define CMD_MISC__PUT_FRAC_ON_FIRST  0x00100000UL
-#define CMD_MISC__DO_AS_COUPLES      0x00200000UL
-#define CMD_MISC__RESTRAIN_CRAZINESS 0x00400000UL
-#define CMD_MISC__RESTRAIN_MODIFIERS 0x00800000UL
-#define CMD_MISC__NO_CHECK_MOD_LEVEL 0x01000000UL
-#define CMD_MISC__MUST_SPLIT_HORIZ   0x02000000UL
-#define CMD_MISC__MUST_SPLIT_VERT    0x04000000UL
-#define CMD_MISC__NO_CHK_ELONG       0x08000000UL
-#define CMD_MISC__PHANTOMS           0x10000000UL
-#define CMD_MISC__NO_STEP_TO_WAVE    0x20000000UL
-#define CMD_MISC__ALREADY_STEPPED    0x40000000UL
-#define CMD_MISC__DOING_ENDS         0x80000000UL
+static Const uint32 CMD_MISC__VERIFY_MASK        = 0x00003C00UL;
+static Const uint32 CMD_MISC__EXPLICIT_MATRIX    = 0x00004000UL;
+static Const uint32 CMD_MISC__NO_EXPAND_MATRIX   = 0x00008000UL;
+static Const uint32 CMD_MISC__DISTORTED          = 0x00010000UL;
+static Const uint32 CMD_MISC__OFFSET_Z           = 0x00020000UL;
+static Const uint32 CMD_MISC__SAID_SPLIT         = 0x00040000UL;
+static Const uint32 CMD_MISC__SAID_TRIANGLE      = 0x00080000UL;
+static Const uint32 CMD_MISC__PUT_FRAC_ON_FIRST  = 0x00100000UL;
+static Const uint32 CMD_MISC__DO_AS_COUPLES      = 0x00200000UL;
+static Const uint32 CMD_MISC__RESTRAIN_CRAZINESS = 0x00400000UL;
+static Const uint32 CMD_MISC__RESTRAIN_MODIFIERS = 0x00800000UL;
+static Const uint32 CMD_MISC__NO_CHECK_MOD_LEVEL = 0x01000000UL;
+#define             CMD_MISC__MUST_SPLIT_HORIZ     0x02000000UL
+#define             CMD_MISC__MUST_SPLIT_VERT      0x04000000UL
+static Const uint32 CMD_MISC__NO_CHK_ELONG       = 0x08000000UL;
+static Const uint32 CMD_MISC__PHANTOMS           = 0x10000000UL;
+static Const uint32 CMD_MISC__NO_STEP_TO_WAVE    = 0x20000000UL;
+static Const uint32 CMD_MISC__ALREADY_STEPPED    = 0x40000000UL;
+static Const uint32 CMD_MISC__DOING_ENDS         = 0x80000000UL;
 
-#define CMD_MISC__MUST_SPLIT_MASK    (CMD_MISC__MUST_SPLIT_HORIZ|CMD_MISC__MUST_SPLIT_VERT)
+static Const uint32 CMD_MISC__MUST_SPLIT_MASK    = (CMD_MISC__MUST_SPLIT_HORIZ|CMD_MISC__MUST_SPLIT_VERT);
 
 /* Here are the encodings that can go into the CMD_MISC__VERIFY_MASK field.
    Zero means no verification. */
-#define CMD_MISC__VERIFY_WAVES         0x00000400UL
-#define CMD_MISC__VERIFY_2FL           0x00000800UL
-#define CMD_MISC__VERIFY_DMD_LIKE      0x00000C00UL
-#define CMD_MISC__VERIFY_QTAG_LIKE     0x00001000UL
-#define CMD_MISC__VERIFY_1_4_TAG       0x00001400UL
-#define CMD_MISC__VERIFY_3_4_TAG       0x00001800UL
-#define CMD_MISC__VERIFY_REAL_1_4_TAG  0x00001C00UL
-#define CMD_MISC__VERIFY_REAL_3_4_TAG  0x00002000UL
-#define CMD_MISC__VERIFY_REAL_1_4_LINE 0x00002400UL
-#define CMD_MISC__VERIFY_REAL_3_4_LINE 0x00002800UL
-#define CMD_MISC__VERIFY_LINES         0x00002C00UL
-#define CMD_MISC__VERIFY_COLS          0x00003000UL
+#define             CMD_MISC__VERIFY_WAVES         0x00000400UL
+#define             CMD_MISC__VERIFY_2FL           0x00000800UL
+#define             CMD_MISC__VERIFY_DMD_LIKE      0x00000C00UL
+#define             CMD_MISC__VERIFY_QTAG_LIKE     0x00001000UL
+#define             CMD_MISC__VERIFY_1_4_TAG       0x00001400UL
+#define             CMD_MISC__VERIFY_3_4_TAG       0x00001800UL
+#define             CMD_MISC__VERIFY_REAL_1_4_TAG  0x00001C00UL
+#define             CMD_MISC__VERIFY_REAL_3_4_TAG  0x00002000UL
+#define             CMD_MISC__VERIFY_REAL_1_4_LINE 0x00002400UL
+#define             CMD_MISC__VERIFY_REAL_3_4_LINE 0x00002800UL
+#define             CMD_MISC__VERIFY_LINES         0x00002C00UL
+#define             CMD_MISC__VERIFY_COLS          0x00003000UL
 
 
 
@@ -455,29 +455,32 @@ typedef struct {
        CMD_MISC2__ANY_WORK or CMD_MISC2__ANY_SNAG is on
                                      0x0000FFFFUL */
 
-#define CMD_MISC2__IN_Z_CW           0x00010000UL
-#define CMD_MISC2__IN_Z_CCW          0x00020000UL
-#define CMD_MISC2__DID_Z_COMPRESSION 0x00040000UL
+static Const uint32 CMD_MISC2__IN_Z_CW           = 0x00010000UL;
+static Const uint32 CMD_MISC2__IN_Z_CCW          = 0x00020000UL;
+static Const uint32 CMD_MISC2__IN_AZ_CW          = 0x00040000UL;
+static Const uint32 CMD_MISC2__IN_AZ_CCW         = 0x00080000UL;
+static Const uint32 CMD_MISC2__IN_Z_MASK         = 0x000F0000UL;
+static Const uint32 CMD_MISC2__DID_Z_COMPRESSION = 0x00100000UL;
 
-#define CMD_MISC2__MYSTIFY_SPLIT     0x00100000UL
-#define CMD_MISC2__MYSTIFY_INVERT    0x00200000UL
+static Const uint32 CMD_MISC2__MYSTIFY_SPLIT     = 0x00200000UL;
+static Const uint32 CMD_MISC2__MYSTIFY_INVERT    = 0x00400000UL;
 
-#define CMD_MISC2__ANY_WORK          0x10000000UL
-#define CMD_MISC2__ANY_SNAG          0x20000000UL
-#define CMD_MISC2__ANY_WORK_INVERT   0x40000000UL
+static Const uint32 CMD_MISC2__ANY_WORK          = 0x10000000UL;
+static Const uint32 CMD_MISC2__ANY_SNAG          = 0x20000000UL;
+static Const uint32 CMD_MISC2__ANY_WORK_INVERT   = 0x40000000UL;
 
 
-#define CMD_MISC2__CTR_END_INV_CONC  0x01000000UL
+#define             CMD_MISC2__CTR_END_INV_CONC    0x01000000UL
 /* This is a 2 bit field.  For codes inside same, see "CMD_MISC2__CENTRAL_PLAIN" below. */
-#define CMD_MISC2__CTR_END_KMASK     0x06000000UL
-#define CMD_MISC2__CTR_END_INVERT    0x08000000UL
-#define CMD_MISC2__CTR_END_MASK      0x0F000000UL
+#define             CMD_MISC2__CTR_END_KMASK       0x06000000UL
+#define             CMD_MISC2__CTR_END_INVERT      0x08000000UL
+#define             CMD_MISC2__CTR_END_MASK        0x0F000000UL
 
 /* Here are the encodings that can go into the CMD_MISC2__CTR_END_KMASK field.
    Zero means none of these concepts is in use. */
-#define CMD_MISC2__CENTRAL_PLAIN     0x02000000UL
-#define CMD_MISC2__CENTRAL_SNAG      0x04000000UL
-#define CMD_MISC2__CENTRAL_MYSTIC    0x06000000UL
+#define             CMD_MISC2__CENTRAL_PLAIN       0x02000000UL
+#define             CMD_MISC2__CENTRAL_SNAG        0x04000000UL
+#define             CMD_MISC2__CENTRAL_MYSTIC      0x06000000UL
 
 
 
@@ -568,13 +571,16 @@ typedef struct {
 #define RESULTFLAG__SPLIT_AXIS_YBIT      0x00000400UL
 #define RESULTFLAG__SPLIT_AXIS_SEPARATION  3
 
-#define RESULTFLAG__ACTIVE_PHANTOMS_ON   0x00002000UL
-#define RESULTFLAG__ACTIVE_PHANTOMS_OFF  0x00004000UL
-#define RESULTFLAG__SECONDARY_DONE       0x00008000UL
-#define RESULTFLAG__YOYO_FINISHED        0x00010000UL
-#define RESULTFLAG__TWISTED_FINISHED     0x00020000UL
-#define RESULTFLAG__NO_REEVALUATE        0x00040000UL
-#define RESULTFLAG__DID_Z_COMPRESSION    0x00080000UL
+static Const uint32 RESULTFLAG__ACTIVE_PHANTOMS_ON  = 0x00002000UL;
+static Const uint32 RESULTFLAG__ACTIVE_PHANTOMS_OFF = 0x00004000UL;
+static Const uint32 RESULTFLAG__SECONDARY_DONE      = 0x00008000UL;
+static Const uint32 RESULTFLAG__YOYO_FINISHED       = 0x00010000UL;
+static Const uint32 RESULTFLAG__TWISTED_FINISHED    = 0x00020000UL;
+static Const uint32 RESULTFLAG__SPLIT_FINISHED      = 0x00040000UL;
+static Const uint32 RESULTFLAG__NO_REEVALUATE       = 0x00080000UL;
+static Const uint32 RESULTFLAG__DID_Z_COMPRESSION   = 0x00100000UL;
+
+#define EXPIRATION_STATE_BITS (RESULTFLAG__YOYO_FINISHED|RESULTFLAG__TWISTED_FINISHED|RESULTFLAG__SPLIT_FINISHED)
 
 
 /* It should be noted that the CMD_MISC__??? and RESULTFLAG__XXX bits have
@@ -651,8 +657,9 @@ typedef struct {
       } conc;           /* if schema = any of the concentric ones. */
    } stuff;
    /* This is the "pretty" name -- "@" escapes have been changed to things like "<N>".
-      If there are no escapes, this just points to the stuff below.  If escapes are present,
-      it points to allocated storage elsewhere.  Either way, it persists throughout the program. */
+      If there are no escapes, this just points to the stuff below.
+      If escapes are present, it points to allocated storage elsewhere.
+      Either way, it persists throughout the program. */
    Cstring menu_name;
    /* Dynamically allocated to whatever size is required, will have trailing null.
       This is the name as it appeared in the database, with "@" escapes. */
@@ -663,6 +670,8 @@ typedef enum {
    MPKIND__NONE,
    MPKIND__SPLIT,
    MPKIND__REMOVED,
+   MPKIND__TWICE_REMOVED,
+   MPKIND__THRICE_REMOVED,
    MPKIND__OVERLAP,
    MPKIND__INTLK,
    MPKIND__CONCPHAN,
@@ -678,6 +687,8 @@ typedef enum {
    MPKIND__OFFS_R_FULL_SPECIAL,
    MPKIND__LILZCCW,
    MPKIND__LILZCW,
+   MPKIND__LILAZCCW,
+   MPKIND__LILAZCW,
    MPKIND__LILZCOM,
    MPKIND__O_SPOTS,
    MPKIND__X_SPOTS,
@@ -689,7 +700,8 @@ typedef enum {
    MPKIND__DIAGQTAG,
    MPKIND_DBLBENTCW,
    MPKIND_DBLBENTCCW,
-   MPKIND__SPEC_ONCEREM
+   MPKIND__SPEC_ONCEREM,
+   MPKIND__SPEC_TWICEREM
 } mpkind;
 
 #define MAPCODE(setupkind,num,mapkind,rot) ((((int)(setupkind)) << 10) | (((int)(mapkind)) << 4) | (((num)-1) << 1) | (rot))
@@ -711,7 +723,7 @@ typedef struct skrilch {
 typedef struct gfwzqg {
    Const setup_kind bigsetup;
    Const calldef_schema lyzer;
-   Const veryshort maps[20];
+   Const veryshort maps[24];
    Const short inlimit;
    Const short outlimit;
    Const setup_kind insetup;
@@ -723,7 +735,8 @@ typedef struct gfwzqg {
    Const int center_arity;
    Const int elongrotallow;
    Const calldef_schema getout_schema;
-   uint32 used_mask;
+   uint32 used_mask_analyze;
+   uint32 used_mask_synthesize;
    struct gfwzqg *next_analyze;
    struct gfwzqg *next_synthesize;
 } cm_thing;
@@ -804,7 +817,6 @@ typedef enum {
    concept_do_divided_diamonds,
    concept_distorted,
    concept_single_diagonal,
-   concept_single_diagonal_sel,
    concept_double_diagonal,
    concept_parallelogram,
    concept_triple_lines,
@@ -854,6 +866,7 @@ typedef enum {
    concept_checkpoint,
    concept_on_your_own,
    concept_trace,
+   concept_outeracting,
    concept_ferris,
    concept_overlapped_diamond,
    concept_all_8,
@@ -934,6 +947,10 @@ typedef enum {
    selector_lead_ctrs,
    selector_trail_ends,
    selector_trail_ctrs,
+   selector_end_boys,
+   selector_end_girls,
+   selector_center_boys,
+   selector_center_girls,
    selector_beaus,
    selector_belles,
    selector_center2,
@@ -1161,6 +1178,7 @@ typedef struct {
    parse_block *restrained_concept;
    assumption_thing cmd_assume;
    uint32 prior_elongation_bits;
+   uint32 prior_expire_bits;
    parse_block *skippable_concept;
 } setup_command;
 
@@ -1236,6 +1254,8 @@ typedef enum {
    warn__not_tbone_person,
    warn__check_c1_phan,
    warn__check_dmd_qtag,
+   warn__check_quad_dmds,
+   warn__check_3x4,
    warn__check_2x4,
    warn__check_4x4,
    warn__check_hokey_4x4,
@@ -1265,9 +1285,12 @@ typedef enum {
    warn__opt_for_normal_cast,
    warn__opt_for_normal_hinge,
    warn__opt_for_2fl,
+   warn_partial_solomon,
+   warn_same_z_shear,
    warn__like_linear_action,
    warn__no_z_action,
    warn__phantoms_thinner,
+   warn__hokey_jay_shapechanger,
    warn__split_1x6,
    warn_interlocked_to_6,
    warn__colocated_once_rem,
@@ -1363,9 +1386,6 @@ typedef enum {
    start_select_as_they_are,
    start_select_toggle_conc,
    start_select_toggle_act,
-#ifdef OLD_ELIDE_BLANKS_JUNK
-   start_select_toggle_ignoreblank,
-#endif
    start_select_toggle_retain,
    start_select_toggle_nowarn_mode,
    start_select_toggle_singer,
@@ -1378,7 +1398,8 @@ typedef enum {
 
 /* For ui_command_select: */
 /* BEWARE!!  This next definition must be keyed to the array "title_string"
-   in sdgetout.c, and maybe stuff in the UI. */
+   in sdgetout.c, and maybe stuff in the UI.  For example, see "command_commands"
+   in sdui-tty.c. */
 /* BEWARE!!  The order is slightly significant -- all search-type commands
    are >= command_resolve, and all "create some setup" commands
    are >= command_create_any_lines.  Certain tests are made easier by this. */
@@ -1391,17 +1412,20 @@ typedef enum {
    command_change_outfile,
    command_change_header,
    command_getout,
+   command_cut_to_clipboard,
+   command_delete_entire_clipboard,
+   command_delete_one_call_from_clipboard,
+   command_paste_one_call,
+   command_paste_all_calls,
 #ifdef NEGLECT
    command_neglect,
 #endif
    command_save_pic,
+   command_help,
    command_simple_mods,
    command_all_mods,
    command_toggle_conc_levels,
    command_toggle_act_phan,
-#ifdef OLD_ELIDE_BLANKS_JUNK
-   command_toggle_ignoreblanks,
-#endif
    command_toggle_retain_after_error,
    command_toggle_nowarn_mode,
    command_refresh,
@@ -1592,7 +1616,7 @@ typedef uint32 defmodset;
 #define CONCPROP__NEEDK_1X12       0x000000A0UL
 #define CONCPROP__NEEDK_3X4        0x000000B0UL
 #define CONCPROP__NEEDK_1X16       0x000000C0UL
-#define CONCPROP__NEEDK_4X4_1X16   0x000000D0UL
+#define CONCPROP__NEEDK_QUAD_1X4   0x000000D0UL
 #define CONCPROP__NEEDK_TWINDMD    0x000000E0UL
 #define CONCPROP__NEEDK_TWINQTAG   0x000000F0UL
 #define CONCPROP__NEEDK_CTR_DMD    0x00000100UL
@@ -1606,6 +1630,7 @@ typedef uint32 defmodset;
 #define CONCPROP__NEEDK_3X6        0x00000180UL
 #define CONCPROP__NEEDK_4D_4PTPD   0x00000190UL
 #define CONCPROP__NEEDK_4X5        0x000001A0UL
+#define CONCPROP__NEEDK_2X12       0x000001B0UL
 
 #define CONCPROP__NEED_ARG2_MATRIX 0x00000200UL                                   
 /* spare:                          0x00000400UL */
@@ -1684,8 +1709,7 @@ typedef enum {
    merge_strict_matrix,
    merge_c1_phantom,
    merge_c1_phantom_nowarn,
-   merge_without_gaps,
-   merge_allow_rev_ckpt
+   merge_without_gaps
 } merge_action;
 
 typedef enum {
@@ -1734,8 +1758,9 @@ typedef struct fixerjunk {
 #define LOOKUP_DIST_BOX 0x4
 #define LOOKUP_DIST_CLW 0x8
 #define LOOKUP_DIAG_CLW 0x10
-#define LOOKUP_DISC     0x20
-#define LOOKUP_IGNORE   0x40
+#define LOOKUP_OFFS_CLW 0x20
+#define LOOKUP_DISC     0x40
+#define LOOKUP_IGNORE   0x80
 
 
 typedef struct dirbtek {
@@ -1798,6 +1823,9 @@ typedef enum {
    by simple incrementing, so order is important. */
 typedef enum {
    interactivity_database_init,
+   interactivity_no_query_at_all,    /* Used when pasting from clipboard.  All subcalls,
+                                        selectors, numbers, etc. must be filled in already.
+                                        If not, it is a bug. */
    interactivity_verify,
    interactivity_normal,
    interactivity_starting_first_scan,
@@ -1824,6 +1852,23 @@ typedef enum {
    resolver_display_searching,
    resolver_display_failed
 } resolver_display_state;
+
+typedef enum {
+   error_flag_none = 0,          /* Must be zero because setjmp returns this. */
+   error_flag_1_line,            /* 1-line error message, text is in error_message1. */
+   error_flag_2_line,            /* 2-line error message, text is in error_message1 and
+                                    error_message2. */
+   error_flag_collision,         /* collision error, message is that people collided, they are in
+                                    collision_person1 and collision_person2. */
+   error_flag_wrong_resolve_command, /* "resolve" or similar command was called
+                                         in inappropriate context, text is in error_message1. */
+   error_flag_wrong_command,     /* clicked on something inappropriate in subcall reader. */
+   error_flag_cant_execute,      /* unable-to-execute error, person is in collision_person1,
+                                    text is in error_message1. */
+   error_flag_show_stats,        /* wants to display stale call statistics. */
+   error_flag_selector_changed,  /* warn that selector was changed during clipboard paste. */
+   error_flag_formation_changed  /* warn that formation changed during clipboard paste. */
+} error_flag_type;
 
 typedef struct {
    int *full_list;
@@ -2004,6 +2049,7 @@ extern Cstring filename_strings[];                                  /* in SDTABL
 extern dance_level level_threshholds[];                             /* in SDTABLES */
 extern dance_level higher_acceptable_level[];                       /* in SDTABLES */
 extern Cstring menu_names[];                                        /* in SDTABLES */
+extern id_bit_table id_bit_table_2x6_pg[];                          /* in SDTABLES */
 extern id_bit_table id_bit_table_bigdmd_wings[];                    /* in SDTABLES */
 extern id_bit_table id_bit_table_bigbone_wings[];                   /* in SDTABLES */
 extern id_bit_table id_bit_table_bighrgl_wings[];                   /* in SDTABLES */
@@ -2077,6 +2123,8 @@ extern map_thing map_dbgbn1;                                        /* in SDTABL
 extern map_thing map_dbgbn2;                                        /* in SDTABLES */
 extern map_thing map_off1x81;                                       /* in SDTABLES */
 extern map_thing map_off1x82;                                       /* in SDTABLES */
+extern map_thing map_dqtag1;                                        /* in SDTABLES */
+extern map_thing map_dqtag2;                                        /* in SDTABLES */
 extern map_thing map_trngl_box1;                                    /* in SDTABLES */
 extern map_thing map_trngl_box2;                                    /* in SDTABLES */
 extern map_thing map_inner_box;                                     /* in SDTABLES */
@@ -2258,6 +2306,7 @@ extern int uims_do_header_popup(char dest[]);
 extern int uims_do_comment_popup(char dest[]);
 extern int uims_do_getout_popup(char dest[]);
 extern int uims_do_write_anyway_popup(void);
+extern int uims_do_delete_clipboard_popup(void);
 extern int uims_do_abort_popup(void);
 extern int uims_do_session_init_popup(void);
 extern int uims_do_neglect_popup(char dest[]);
@@ -2300,6 +2349,7 @@ extern void failp(uint32 id1, Const char s[]) nonreturning;
 extern void specialfail(Const char s[]) nonreturning;
 extern Const char *get_escape_string(char c);
 extern void string_copy(char **dest, Cstring src);
+extern void print_recurse(parse_block *thing, int print_recurse_arg);
 extern void display_initial_history(int upper_limit, int num_pics);
 extern void write_history_line(int history_index, Const char *header, long_boolean picture, file_write_flag write_to_file);
 extern void warn(warning_index w);
@@ -2361,7 +2411,7 @@ extern void fix_collision(
    uint32 collision_mask,
    int collision_index,
    uint32 result_mask,
-   long_boolean appears_illegal,
+   int appears_illegal,
    long_boolean mirror,
    assumption_thing *assumption,
    setup *result);
@@ -2529,17 +2579,26 @@ extern long_boolean do_big_concept(
 extern void tandem_couples_move(
    setup *ss,
    selector_kind selector,
-   int twosome,               /* solid=0 / twosome=1 / solid-to-twosome=2 / twosome-to-solid=3 */
-   int fraction,              /* number, if doing fractional twosome/solid */
-   int phantom,               /* normal=0 phantom=1 general-gruesome=2 gruesome-with-wave-check=3 */
-   int key,                   /* tandem of 2 = 0 / couples of 2 = 1 / siamese of 2 = 2
-                                 tandem of 3 = 4 / couples of 3 = 5 / siamese of 3 = 6
-                                 tandem of 4 = 8 / couples of 4 = 9 / siamese of 4 = 10
-                                 box = 10 / diamond = 11 / skew = 18
-                                 out point triangles = 20 / in point triangles = 21
-                                 inside triangles = 22 / outside triangles = 23
-                                 wave-based triangles triangles = 26 / tandem-based triangles = 27
-                                 <anyone>-based triangles = 30 / 3x1 triangles = 31 / Y's = 32 */
+   int twosome,           /* solid=0 / twosome=1 / solid-to-twosome=2 / twosome-to-solid=3 */
+   int fraction,          /* number, if doing fractional twosome/solid */
+   int phantom,           /* normal=0 phantom=1 general-gruesome=2 gruesome-with-wave-check=3 */
+   int key,               /* tandem of 2 = 0 / couples of 2 = 1 / siamese of 2 = 2
+                             tandem of 3 = 4 / couples of 3 = 5 / siamese of 3 = 6
+                             tandem of 4 = 8 / couples of 4 = 9 / siamese of 4 = 10
+                             10: box
+                             11: diamond
+                             18: skew
+                             20: out point triangles
+                             21: in point triangles
+                             22: inside triangles
+                             23: outside triangles
+                             26: wave-based triangles triangles
+                             27: tandem-based triangles
+                             30: <anyone>-based triangles
+                             31: 3x1 triangles
+                             32: Y's
+                          */
+   uint32 mxn_bits,
    long_boolean phantom_pairing_ok,
    setup *result);
 

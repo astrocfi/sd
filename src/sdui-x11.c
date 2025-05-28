@@ -41,6 +41,7 @@ static const char time_stamp[] = "sdui-x11.c Time-stamp: <1997-10-14 17:51:42 gi
    uims_do_header_popup
    uims_do_getout_popup
    uims_do_write_anyway_popup
+   uims_do_delete_clipboard_popup
    uims_do_abort_popup
    uims_do_session_init_popup
    uims_do_neglect_popup
@@ -300,8 +301,8 @@ do_popup(Widget popup_shell)
      * (This would be a problem when there are two popups in a row.)
      */
     do {
-	XMaskEvent(display, StructureNotifyMask, &event);
-	XtDispatchEvent(&event);
+        XMaskEvent(display, StructureNotifyMask, &event);
+        XtDispatchEvent(&event);
     } while (event.type != ReparentNotify);
     return value;
 }    
@@ -577,6 +578,7 @@ typedef struct _SdResources {
     String sequence;		/* -sequence */
     String database;		/* -db */
     String write_anyway_query;
+    String delete_clip_query;
     String abort_query;
     String sess_init_query;
     String modify_format;
@@ -616,9 +618,6 @@ Private XtResource startup_resources[] = {
     MENU("asTheyAre", start_list[start_select_as_they_are], "Just as they are"),
     MENU("toggleConceptLevels", start_list[start_select_toggle_conc], "Toggle concept levels"),
     MENU("toggleActivePhantoms", start_list[start_select_toggle_act], "Toggle active phantoms"),
-#ifdef OLD_ELIDE_BLANKS_JUNK
-    MENU("toggleIgnoreBlanks", start_list[start_select_toggle_ignoreblank], "Toggle ignoreblanks"),
-#endif
     MENU("toggleRetain_after_error", start_list[start_select_toggle_retain], "Toggle retain after error"),
     MENU("toggleNowarnMode", start_list[start_select_toggle_nowarn_mode], "Toggle nowarn mode"),
     MENU("toggleSinger", start_list[start_select_toggle_singer], "Toggle singing call"),
@@ -637,9 +636,6 @@ Private XtResource command_resources[] = {
     MENU("allowmods", cmd_list[cmd_button_allow_mods], "Allow modifications"),
     MENU("allowconcepts", cmd_list[cmd_button_allow_concepts], "Toggle concept levels"),
     MENU("activephantoms", cmd_list[cmd_button_active_phantoms], "Toggle active phantoms"),
-#ifdef OLD_ELIDE_BLANKS_JUNK
-    MENU("ignoreblanks", cmd_list[cmd_button_ignoreblanks], "Toggle ignoreblanks"),
-#endif
     MENU("retainaftererror", cmd_list[cmd_button_retain_after_error], "Toggle retain after error"),
     MENU("nowarnmode", cmd_list[cmd_button_nowarn_mode], "Toggle nowarn mode"),
     MENU("comment", cmd_list[cmd_button_create_comment], "Insert a comment"),
@@ -663,7 +659,7 @@ Private XtResource resolve_resources[] = {
     MENU("previous", resolve_list[resolve_command_goto_previous], "go to previous"),
     MENU("accept", resolve_list[resolve_command_accept], "ACCEPT current choice"),
     MENU("raiseRec", resolve_list[resolve_command_raise_rec_point], "raise reconcile point"),
-    MENU("lowerRec", resolve_list[resolve_command_lower_rec_point], "lower reconcile point")
+    MENU("lowerRec", resolve_list[resolve_command_lower_rec_point], "lower reconcile point"),
 };
 
 Private XtResource enabledmods_resources[] = {
@@ -683,6 +679,7 @@ Private XtResource enabledmods_resources[] = {
 
 Private XtResource confirm_resources[] = {
     MENU("writeAnyway", write_anyway_query, "Do you want to write this sequence anyway?"),
+    MENU("deleteClipboard", delete_clip_query, "Do you want to delete the entire clipboard?"),
     MENU("abort", abort_query, "Do you really want to abort this sequence?"),
     MENU("sessInit", sess_init_query, "Do you really want to re-initialize your session file?"),
     MENU("modifyFormat", modify_format, "The \"%s\" can be replaced."),
@@ -1228,8 +1225,7 @@ Private Cstring empty_menu[] = {NULL};
    should display for the user.
 */
 
-extern void
-uims_postinitialize(void)
+extern void uims_postinitialize(void)
 {
    int i, k;
 
@@ -1296,8 +1292,7 @@ uims_postinitialize(void)
 }
 
 
-Private void
-switch_from_startup_mode(void)
+Private void switch_from_startup_mode(void)
 {
     XawListChange(cmdmenu, sd_resources.cmd_list, NUM_CMD_BUTTON_KINDS, 0, FALSE);
     XtRemoveAllCallbacks(cmdmenu, XtNcallback);
@@ -1640,6 +1635,12 @@ Private int confirm(String question)
 extern int uims_do_write_anyway_popup(void)
 {
     return confirm(sd_resources.write_anyway_query);
+}
+
+
+extern int uims_do_delete_clipboard_popup(void)
+{
+    return confirm(sd_resources.delete_clip_query);
 }
 
 

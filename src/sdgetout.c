@@ -1090,8 +1090,11 @@ extern uims_reply full_resolve(command_kind goal)
    if (huge_history_allocation < history_ptr+MAX_RESOLVE_SIZE+2) {
       configuration *t;
       huge_history_allocation = history_ptr+MAX_RESOLVE_SIZE+2;
-      huge_history_allocation += huge_history_allocation >> 1;    /* Increase by 50% beyond what we have now. */
-      t = (configuration *) get_more_mem_gracefully(huge_history_save, huge_history_allocation * sizeof(configuration));
+      /* Increase by 50% beyond what we have now. */
+      huge_history_allocation += huge_history_allocation >> 1;
+      t = (configuration *)
+         get_more_mem_gracefully(huge_history_save,
+                                 huge_history_allocation * sizeof(configuration));
       if (!t) specialfail("Not enough memory!");
       huge_history_save = t;
    }

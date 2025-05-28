@@ -5,8 +5,8 @@
 @settitle Sd
 @c @subtitle A Square Dance Caller's Helper
 @c
-@set Time-stamp: July 18, 1998
-@set sd-version 31.98
+@set Time-stamp: September 27, 1998
+@set sd-version 32.0
 @set full-manual
 @c %**end of header
 @iftex
@@ -84,6 +84,7 @@ This is the summary table of contents:
 * The Initialization File::     The Initialization File
 * Calling::                     Calling
 * Resolving and Searching::     Resolving and Searching
+* Editing::                     Editing
 * Misc Commands::               Miscellaneous Commands
 * Terminal Interface::          Terminal Interface
 * Linguistic Idiosyncrasies::   Linguistic Idiosyncrasies
@@ -144,6 +145,14 @@ Resolving and Searching
 * Pick Random Call::            Letting the program pick a random call
 * Create Setup::                Creating a Specific Setup
 * Reconcile::                   The @code{Reconcile} operation.
+
+Editing
+
+* Cut To Clipboard::            Moving the last call to the Clipboard
+* Paste One Call::              Moving One Call Back From the Clipboard
+* Paste All Calls::             Moving The Whole Clipboard Back
+* Delete One Call From Clipboard:: Throwing Away Just One Call
+* Delete Entire Clipboard::     Throwing Away the Entire Clipboard
 
 Miscellaneous Commands
 
@@ -1578,8 +1587,7 @@ The resolver checks all eight people, so it should work.
 If you have not restored symmetry, resolves may be extraordinarily difficult
 to find.
 
-
-@node Resolving and Searching, Misc Commands, Calling, Top
+@node Resolving and Searching, Editing, Calling, Top
 @chapter Resolving and Searching
 
 This chapter describes how to have the program find calls for you to
@@ -1827,7 +1835,129 @@ before doing the reconcile, you know that any inserted sequence will
 have to be gender-preserving anyway, so calls like @samp{star thru} and
 @samp{boys kickoff} will be okay.
 
-@node Misc Commands, Terminal Interface, Resolving and Searching, Top
+@node Editing, Misc Commands, Resolving and Searching, Top
+@chapter Editing
+
+@noindent This section describes the ``editor''.
+
+@menu
+* Cut To Clipboard::            Moving the last call to the Clipboard
+* Paste One Call::              Moving One Call Back From the Clipboard
+* Paste All Calls::             Moving The Whole Clipboard Back
+* Delete One Call From Clipboard:: Throwing Away Just One Call
+* Delete Entire Clipboard::     Throwing Away the Entire Clipboard
+@end menu
+
+@code{Sd} allows you to edit any part of your sequence while you are
+writing it.  Normally, of course, you are just adding calls to the end,
+or perhaps undoing the last call.  What happens if you decide you
+want to change something farther back?  You could undo all the calls
+back to that point, while remembering them or writing them down,
+make the changes, and then type them in again.  @code{Sd} can remember
+them for you.  It does this with a ``clipboard''.  You move the calls,
+one at a time, from the sequence that you have written, onto the clipboard.
+Then you can ``edit'' the sequence at the chosen point, adding calls,
+undoing calls, or whatever.  When you are done, you can restore the
+later calls by moving them from the clipbaord back to the sequence.
+
+@noindent The commands to manipulate the clipboard are:
+
+@table @code
+@item cut to clipboard
+@item paste one call
+@item paste all calls
+@item delete one call from clipboard
+@item delete entire clipboard
+@end table
+
+@node Cut To Clipboard, Paste One Call,  , Editing
+@section Moving the Last Call to the Clipboard
+
+Normally the clipboard is empty.  To start the editing process, issue the
+@code{cut to clipboard} command, or press function key shift-@key{F8}.
+This will move the last call onto the clipboard, removing it from the
+active sequence.  If this is done repeatedly, the calls will all be stacked
+on the clipboard.  Do this until you reach the point in the sequence that
+you want to change.
+
+While there are calls in the clipboard, they will be displayed (well, the first
+three will be displayed) between two rows of dotted lines.  This way, you can
+see what will be pasted back.
+
+@node Paste One Call, Paste All Calls, Cut To Clipboard, Editing
+@section Moving One Call Back From the Clipboard
+
+After you have finished editing the sequence, you can move the calls back.
+The command @code{paste one call}, or pressing function key control-@key{F8},
+will move the nearest call from the clipboard back to the active sequence.
+
+There are a few tricky issues involved with this process.  @code{Sd} assumes
+that you want the indicated call replaced, even if the formation is different.
+For example, if the call in the clipboard was @samp{swing thru}, and you have
+changed the formation to left-handed waves, it will still do a (right) swing thru.
+If the formation has changed radically, the interpretation may be very different.
+If there are sex-dependent calls and you have rearranged people, things might
+turn into something very different from the original sequence.
+
+There is one case in which @code{Sd} will alter a call while it is being pasted.
+If a call has a designator like @samp{boys} or @samp{heads}, and the formation
+is geometrically the same as before, @code{Sd} will try to change the designator
+to get the equivalent geometrical effect.  For example, if the pasted call had
+been @samp{boys run} from waves in which the boys were looking out, and you
+edit the sequence so that the formation is once again waves, but with some
+other people looking out, the call will be changed to @samp{heads run} or whatever.
+Of course, if you had originally said @samp{leads run} no change would be
+required.
+
+Whenever a designator is changed, or whenever the formation in which the pasted
+call is performed is different from the original formation, @code{Sd} prints a warning.
+You may find a change from @samp{boys run} to @samp{side corners run} to be
+unwelcome.
+
+It may happen that the pasted call is illegal in the new formation.  If that
+happens, the call will not be pasted, @code{Sd} will print an error message,
+and you will have to take further action.
+
+@node Paste All Calls, Delete One Call From Clipboard, Paste One Call, Editing
+@section Moving The Whole Clipboard Back
+
+You can paste all the calls back from the clipboard at once by issuing the
+@code{paste all calls} command.  If any formation changes, or any designator is altered,
+a warning will be printed.  If any call is illegal in its new context, the pasting operation
+will be stopped just before the pasting of that call.  Earlier legal calls
+will have been pasted.
+
+@node Delete One Call From Clipboard, Delete Entire Clipboard, Paste All Calls, Editing
+@section Throwing Away Just One Call
+
+If you are pasting calls back and an illegal one is encountered, you may
+decide that the correct action is to change what is on the clipboard.  You
+can do this by issuing the @code{delete one call from clipboard} command.
+This throws away the offending call and lets you proceed with further editing.
+
+For example, suppose you were writing a sequence in which the formation was diamonds
+at some point, and the next call was @samp{flip the diamond} followed by other
+clever stuff.  You decide that you want to do something interesting with the
+diamonds, followed by the flip the diamond and the other stuff.  So you cut
+the @samp{flip the diamond} and all later stuff onto the clipboard.  Then you
+edit from the diamonds.  While editing, you get into some wonderful situation
+in which you have triple boxes, you want to do a @samp{triple box circulate} to
+get to waves, and then you want to proceed with the rest of the sequence, but
+@emph{without} the @samp{flip the diamond}.  The diamonds are no longer what you
+want at that point.  So you call the @samp{triple box circulate} and want to
+paste the calls back.  Unfortunately, the first call on the clipboard is
+@samp{flip the diamond}.  @code{Sd} refuses to paste it.  You can throw it away
+with the @code{delete one call from clipboard} command.  The rest of the clipboard
+is still there, starting with the waves that were originally created by flipping
+the diamond.  You can now paste them.
+
+@node Delete Entire Clipboard,  , Delete One Call From Clipboard, Editing
+@section Throwing Away the Entire Clipboard
+
+Sometimes you decide that everything you cut to the clipboard was stupid, and
+you just want it to go away.  Issue the @code{delete entire clipboard} command.
+
+@node Misc Commands, Terminal Interface, Editing, Top
 @chapter Miscellaneous Commands
 
 This section describes commands that are not concerned with generating
@@ -1910,7 +2040,8 @@ If you select the @code{abort} command, the program will abort the sequence
 but not exit.  It will go back to the startup menu to allow you to
 start another sequence.  It will ask for confirmation first.
 
-If you select the @code{undo} command while no call is partially entered,
+If you select the @code{undo} command, or press function key @key{F9},
+while no call is partially entered,
 that is, while no concepts have been entered, the program will erase
 the last complete call, with all of its concepts.  If one or more
 concepts have been entered, only the last concept will be erased.
@@ -2078,7 +2209,7 @@ F4   resolve                  reconcile                normalize
 F5   refresh display          keep picture             insert a comment
 F6   simple modifications     allow modifications      centers
 F7   toggle concept levels    toggle active phantoms
-F8   <anything>
+F8   <anything>               cut to clipboard         paste one call
 F9   undo last call           abort the search
 F10  write this sequence      change output file
 F11  pick level call          pick 8 person level call
@@ -2955,6 +3086,9 @@ shape-changers are allowed.
 
 A suitably populated 4x4 matrix can be construed as a center triple box
 surrounded by outside triple lines or columns.
+@item center Z (singular)
+@item outside triple Z's
+These are straightforward.
 @item center phantom C/L/W/B/D/DS/GT
 @item outside phantom C/L/W/B/D/DS/GT
 These are done from a setup that can be construed as having a center
@@ -2965,6 +3099,14 @@ shape-changers are allowed.
 A common case of this is a 4x4.  The center phantom lines or columns
 can do an 8-person call.  The outer phantom lines or columns can do
 independent 4-person calls.
+@item center triple twin C/L/W
+@item outside triple twin C/L/W
+These are done from a 4x6 setup.  The center 2x4, or the outside 2x4's
+independently, do the call.
+@item center triple twin C/L/W of 3
+@item outside triple twin C/L/W of 3
+These are done from a 3x6 setup.  The center 2x3, or the outside 2x3's
+independently, do the call.
 @item crazy phantom C/L/W/B/D/DS/GT
 @item reverse crazy phantom C/L/W/B/D/DS/GT
 @item <N/4> crazy phantom C/L/W/B/D/DS/GT
@@ -2994,6 +3136,11 @@ These concepts are quite obscure.
 @item triple twin C/L/W
 This is done from a 4x6 setup.  Three parallel 2x4 setups are
 formed, and the call is done independently in each of them.
+You can use @samp{mystic} and @samp{invert mystic} with them.
+@item triple twin C/L/W of 3
+This is done from a 3x6 setup.  Three parallel 2x3 setups are
+formed, and the call is done independently in each of them.
+You can use @samp{mystic} and @samp{invert mystic} with them.
 @item concentric triple boxes
 @item concentric quadruple boxes
 These are done from a 2x6 or 2x8 respectively.  The concentric boxes
@@ -3081,11 +3228,30 @@ line, you could say:
 @end group
 @end example
 
-Any of the tandem or couples concepts
-may be used with the @code{phantom} concept in front
-of it.  There are no concepts like @code{phantom tandem} listed
-separately---you must use the @code{phantom} concept followed by the
-concept that you want.  Of course, when using @code{Sdtty}, this issue doesn't make any
+@subsubheading MxN As Couples
+
+The @samp{tandem} or @samp{as couples} concepts, and their twosome
+and fractional twosome/solid variants, may be preceded by a modifier
+such as @samp{4x4} or @samp{2x1}.  These cause people to be grouped
+as indicated.  @samp{4x4 tandem} is equivalent to @samp{tandems of four}.
+@samp{3x1 couples twosome} directs 3 people (determined by the usual
+rules---whichever 3 people face the same way if that determines it,
+otherwise the 3 in front or the 3 on the right) to work as a threesome
+while the other person works alone.  When calling, concepts like this
+are often expressed in the form ``threesome by one'' or ``one by
+tandem of 2''.
+
+When only two people are being grouped, it is also possible to designate
+them explicitly.  @samp{2x1 couples twosome} can often be expressed
+equivalently as something like @samp{girls are couples twosome}.
+
+@subsubheading Phantom As Couples
+
+Any of the tandem or couples concepts may be used with the
+@code{phantom} concept in front of it.  There are no concepts like
+@code{phantom tandem} listed separately---you must use the
+@code{phantom} concept followed by the concept that you want.  Of
+course, when using @code{Sdtty}, this issue doesn't make any
 difference---you can just type
 
 @example
@@ -3093,20 +3259,20 @@ difference---you can just type
 @end example
 
 The @i{phantom tandem} and @i{phantom as couples} concepts expand the
-people into a 4x4
-matrix whenever possible.  When that is not possible, a 2x8 matrix is
-formed.  You can use the @code{2x8 matrix} concept in order to force this.
-For example, from normal columns, @code{phantom tandem} puts all the real
-people in tandem with each other, and makes them the centers of @i{lines}.
-You could call a @code{ferris wheel}, but not a @code{checkmate the column},
-from this setup.  If you wanted the pairs of real people to be centers of
-columns, so that you could call @code{checkmate the column}, use
-@code{2x8 matrix phantom tandem checkmate the column}.
-Concepts with the word ``gruesome'' always form a 2x8, and require that
-the people be paired in a direction parallel to that 2x8.  The @code{gruesome twosome}
-concept is the same as @code{gruesome couples twosome}, with the additional requirement
-that the resulting virtual setup be waves.  It is the only concept in that family that
-is widely accepted.
+people into a 4x4 matrix whenever possible.  When that is not possible,
+a 2x8 matrix is formed.  You can use the @code{2x8 matrix} concept in
+order to force this.  For example, from normal columns, @code{phantom
+tandem} puts all the real people in tandem with each other, and makes
+them the centers of @i{lines}.  You could call a @code{ferris wheel},
+but not a @code{checkmate the column}, from this setup.  If you wanted
+the pairs of real people to be centers of columns, so that you could
+call @code{checkmate the column}, use @code{2x8 matrix phantom tandem
+checkmate the column}.  Concepts with the word ``gruesome'' always form
+a 2x8, and require that the people be paired in a direction parallel to
+that 2x8.  The @code{gruesome twosome} concept is the same as
+@code{gruesome couples twosome}, with the additional requirement that
+the resulting virtual setup be waves.  It appears to be the only concept
+in that family that is widely accepted.
 @end table
 
 @node Distorted Setup Concepts, 4-person distorted concepts, Tandem or Couples Concepts, Concept Notes
@@ -3174,12 +3340,15 @@ These are done from a center diamond with offset pairs of people on the outside.
 @item stagger D/1T/3T/1L/3L/GT
 @item diagonal D/1T/3T/1L/3L/GT
 These are done from ``blocks.''
+@item distorted D/1T/3T/1L/3L/DS/GT
+These are done from triple diamonds in which the points are offset.
 @item double bent tidal C/L/W @r{(singular)}
 These are done from a 1x8 in which the two people at each end are ``bent''
 90 degrees from the center 4.
 @item <ANYONE> in your distorted C/L/W/B/D @r{(singular)}
+@item <ANYONE> in your offset C/L/W @r{(singular)}
 These are done from a variety of setups, in which the designated people
-form a recognizable distorted setup.  Reasonable shape-changers are allowed.
+form a recognizable distorted or offset setup.  Reasonable shape-changers are allowed.
 @item parallelogram
 This includes 100% offset parallelograms in 2x8 matrices.
 @item phantom big block L/W
@@ -3205,6 +3374,8 @@ This divides a 2x4 into two 2x2's.  It also has all the other meanings
 of the word ``split.''  The distinction between this as a concept and
 as a word appearing in a call name is extremely hazy.
 @item once removed
+@item twice removed
+@item thrice removed
 @item once removed diamonds
 The @code{once removed} concept encompasses diamonds. so you can
 say either @code{once removed} or @code{once removed diamonds}.
@@ -3347,6 +3518,7 @@ This is used in front of concepts like @samp{split phantom lines}.
 @item <ANYONE> are <N/4> stable
 @item emulate
 @item trace@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
+@item outeracting
 @item ferris
 @item release
 @item stretch
@@ -3708,6 +3880,7 @@ are up to you.
 @item 2x5 matrix
 @item 2x6 matrix
 @item 2x8 matrix
+@item 2x12 matrix
 @item 3x4 matrix
 @item 4x4 matrix
 @item 3x8 matrix

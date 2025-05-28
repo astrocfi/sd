@@ -53,6 +53,7 @@
    uims_do_header_popup
    uims_do_getout_popup
    uims_do_write_anyway_popup
+   uims_do_delete_clipboard_popup
    uims_do_abort_popup
    uims_do_session_init_popup
    uims_do_neglect_popup
@@ -133,6 +134,8 @@ extern char *uims_version_string(void)
     (void) sprintf(version_mem, "%stty", UI_VERSION_STRING);
     return version_mem;
 }
+
+static resolver_display_state resolver_happiness = resolver_display_failed;
 
 /*
  * User Input functions
@@ -299,8 +302,7 @@ uims_postinitialize(void)
 #endif
 }
 
-Private void
-pack_and_echo_character(char c)
+Private void pack_and_echo_character(char c)
 {
    /* Really should handle error better -- ring the bell,
       but this is called inside a loop. */
@@ -404,8 +406,8 @@ concept_descriptor *two_calls_concept_ptr = (concept_descriptor *) 0;
 
 
 /* BEWARE!!  These two lists must stay in step. */
-
-int num_command_commands = 49;          /* The number of items in the tables, independent of NUM_COMMAND_KINDS. */
+int num_command_commands = 59;          /* The number of items in these 2 tables,
+                                           independent of NUM_COMMAND_KINDS. */
 
 
 Cstring command_commands[] = {
@@ -415,9 +417,6 @@ Cstring command_commands[] = {
    "allow modifications",
    "toggle concept levels",
    "toggle active phantoms",
-#ifdef OLD_ELIDE_BLANKS_JUNK
-   "toggle ignoreblanks",
-#endif
    "toggle retain after error",
    "toggle nowarn mode",
    "undo last call",
@@ -428,6 +427,16 @@ Cstring command_commands[] = {
    "change title",
    "write this sequence",
    "end this sequence",
+   "cut to clipboard",
+   "clipboard cut",
+   "delete entire clipboard",
+   "clipboard delete all",
+   "delete one call from clipboard",
+   "clipboard delete one",
+   "paste one call",
+   "clipboard paste one",
+   "paste all calls",
+   "clipboard paste all",
    "keep picture",
    "refresh display",
    "resolve",
@@ -463,16 +472,13 @@ Cstring command_commands[] = {
    "create tidal wave"
 };
 
-static command_kind command_command_values[] = {
+command_kind command_command_values[] = {
    command_quit,
    command_quit,
    command_simple_mods,
    command_all_mods,
    command_toggle_conc_levels,
    command_toggle_act_phan,
-#ifdef OLD_ELIDE_BLANKS_JUNK
-   command_toggle_ignoreblanks,
-#endif
    command_toggle_retain_after_error,
    command_toggle_nowarn_mode,
    command_undo,
@@ -483,6 +489,16 @@ static command_kind command_command_values[] = {
    command_change_header,
    command_getout,
    command_getout,
+   command_cut_to_clipboard,
+   command_cut_to_clipboard,
+   command_delete_entire_clipboard,
+   command_delete_entire_clipboard,
+   command_delete_one_call_from_clipboard,
+   command_delete_one_call_from_clipboard,
+   command_paste_one_call,
+   command_paste_one_call,
+   command_paste_all_calls,
+   command_paste_all_calls,
    command_save_pic,
    command_refresh,
    command_resolve,
@@ -580,9 +596,17 @@ static fcn_key_thing fcn_key_table[] = {
    {0,                       "two calls in succession\n",  ui_concept_select, (long int) &two_calls_concept_ptr},/* F2 = 130 = two calls in succession */
    {0,                       "pick random call\n",         ui_command_select, -1-command_random_call},           /* F3 = 131 = pick random call */
    {0,                       "resolve\n",                  ui_command_select, -1-command_resolve},               /* F4 = 132 = resolve */
-   {0,                       "refresh display\n",          ui_command_select, -1-command_refresh},               /* F5 = 133 = refresh display */
-   {0,                       "simple modifications\n",     ui_command_select, -1-command_simple_mods},           /* F6 = 134 = simple modifications */
-   {99,                      (char *) 0,                   ui_command_select, 0},                                     /* 135 */
+   {0,                       "refresh display\n",          ui_command_select, -1-command_refresh},               /* F5 */
+   {0,                       "simple modifications\n",     ui_command_select, -1-command_simple_mods},           /* F6 */
+
+
+
+
+
+   {99,                      (char *) 0,                   ui_command_select, 0},                                     /* F7 = 135 */
+
+
+
    {99,                      (char *) 0,                   ui_command_select, 0},                                     /* 136 */
    {99,                      (char *) 0,                   ui_command_select, 0},                                     /* 137 */
    {99,                      (char *) 0,                   ui_command_select, 0},                                     /* 138 */
@@ -597,9 +621,9 @@ static fcn_key_thing fcn_key_table[] = {
    {0,                       "pick concept call\n",        ui_command_select, -1-command_concept_call},         /* sF3 = 147 = pick concept call */
    {0,                       "reconcile\n",                ui_command_select, -1-command_reconcile},            /* sF4 = 148 = reconcile */
    {0,                       "keep picture\n",             ui_command_select, -1-command_save_pic},             /* sF5 = 149 = keep picture */
-   {0,                       "allow modifications\n",      ui_command_select, -1-command_all_mods},             /* sF6 = 150 = allow modifications */
+   {0,                       "allow modifications\n",      ui_command_select, -1-command_all_mods},             /* sF6 = 150 */
    {99,                      (char *) 0,                   ui_command_select, 0},                                     /* 151 */
-   {99,                      (char *) 0,                   ui_command_select, 0},                                     /* 152 */
+   {0,                      "cut to clipboard\n",          ui_command_select, -1-command_cut_to_clipboard},     /* sF8 = 152 */
    {99,                      (char *) 0,                   ui_command_select, 0},                                     /* 153 */
    {99,                      (char *) 0,                   ui_command_select, 0},                                     /* 154 */
    {0,                       "pick 8 person level call\n", ui_command_select, -1-command_8person_level_call},  /* sF11 = 155 = pick 8 person level call */
@@ -615,7 +639,7 @@ static fcn_key_thing fcn_key_table[] = {
    {0,                       "insert a comment\n",         ui_command_select, -1-command_create_comment},       /* cF5 = 165 = insert a comment */
    {0,                       "centers\n",                  ui_concept_select, (long int) &centers_concept_ptr}, /* cF6 = 166 = centers */
    {99,                      (char *) 0,                   ui_command_select, 0},                                     /* 167 */
-   {99,                      (char *) 0,                   ui_command_select, 0},                                     /* 168 */
+   {0,                      "paste one call\n",            ui_command_select, -1-command_paste_one_call},         /* cF8 = 168 */
    {99,                      (char *) 0,                   ui_command_select, 0},                                     /* 169 */
    {99,                      (char *) 0,                   ui_command_select, 0},                                     /* 170 */
    {99,                      (char *) 0,                   ui_command_select, 0},                                     /* 171 */
@@ -627,7 +651,7 @@ static match_result user_match;
 
 
 
-Private void get_user_input(char *prompt, int which)
+Private long_boolean get_user_input(char *prompt, int which)
 {
    char *p;
    char c;
@@ -657,14 +681,14 @@ Private void get_user_input(char *prompt, int which)
       nc = get_char();
 
       if (nc >= 128) {
-         if (nc == 135) {                                       /* F7 = 135 = toggle concept levels */
+         if (nc == 135) {            /* F7 = 135 = toggle concept levels */
             if (which >= 0) {
                put_line("toggle concept levels\n");
                current_text_line++;
                user_match.match.kind = ui_command_select;
                user_match.match.index = -1-command_toggle_conc_levels;
                user_match.valid = TRUE;
-               return;
+               return FALSE;
             }
             else if (which == match_startup_commands) {
                put_line("toggle concept levels\n");
@@ -672,19 +696,20 @@ Private void get_user_input(char *prompt, int which)
                user_match.match.kind = ui_start_select;
                user_match.match.index = (int) start_select_toggle_conc;
                user_match.valid = TRUE;
-               return;
+               return FALSE;
             }
          }
          else if (nc == 136)
-            function_key_expansion = "<anything>";                   /* F8 */
-         else if (nc == 137 || nc == 153) {                          /* F9 or sF9 = undo or abort the search, as appropriate. */
+            function_key_expansion = "<anything>";    /* F8 */
+         else if (nc == 137 || nc == 153) {           /* F9 or sF9 = undo or abort the search,
+                                                         as appropriate. */
             if (which >= 0) {
                put_line("undo last call\n");
                current_text_line++;
                user_match.match.kind = ui_command_select;
                user_match.match.index = -1-command_undo;
                user_match.valid = TRUE;
-               return;
+               return FALSE;
             }
             else if (which == match_resolve_commands) {
                put_line("abort the search\n");
@@ -692,7 +717,7 @@ Private void get_user_input(char *prompt, int which)
                user_match.match.kind = ui_resolve_select;
                user_match.match.index = -1-resolve_command_abort;
                user_match.valid = TRUE;
-               return;
+               return FALSE;
             }
             else if (which == match_startup_commands) {
                put_line("exit from the program\n");
@@ -700,7 +725,7 @@ Private void get_user_input(char *prompt, int which)
                user_match.match.kind = ui_start_select;
                user_match.match.index = (int) start_select_exit;
                user_match.valid = TRUE;
-               return;
+               return FALSE;
             }
          }
          else if (nc == 138)
@@ -712,7 +737,7 @@ Private void get_user_input(char *prompt, int which)
                user_match.match.kind = ui_command_select;
                user_match.match.index = -1-command_toggle_act_phan;
                user_match.valid = TRUE;
-               return;
+               return FALSE;
             }
             else if (which == match_startup_commands) {
                put_line("toggle active phantoms\n");
@@ -720,7 +745,7 @@ Private void get_user_input(char *prompt, int which)
                user_match.match.kind = ui_start_select;
                user_match.match.index = (int) start_select_toggle_act;
                user_match.valid = TRUE;
-               return;
+               return FALSE;
             }
          }
          else if (nc == 154) {                                       /* sF10 = change output file */
@@ -730,7 +755,7 @@ Private void get_user_input(char *prompt, int which)
                user_match.match.kind = ui_command_select;
                user_match.match.index = -1-command_change_outfile;
                user_match.valid = TRUE;
-               return;
+               return FALSE;
             }
             else if (which == match_startup_commands) {
                put_line("change output file\n");
@@ -738,12 +763,12 @@ Private void get_user_input(char *prompt, int which)
                user_match.match.kind = ui_start_select;
                user_match.match.index = (int) start_select_change_outfile;
                user_match.valid = TRUE;
-               return;
+               return FALSE;
             }
          }
          else if (nc >= FCN_KEY_TAB_LOW && nc <= FCN_KEY_TAB_LAST &&
-                     ((fcn_key_table[nc-FCN_KEY_TAB_LOW].which_test == 0 && which >= 0) ||
-                     (fcn_key_table[nc-FCN_KEY_TAB_LOW].which_test <= 0 && which == fcn_key_table[nc-FCN_KEY_TAB_LOW].which_test))) {
+                  ((fcn_key_table[nc-FCN_KEY_TAB_LOW].which_test == 0 && which >= 0) ||
+                   (fcn_key_table[nc-FCN_KEY_TAB_LOW].which_test <= 0 && which == fcn_key_table[nc-FCN_KEY_TAB_LOW].which_test))) {
             put_line(fcn_key_table[nc-FCN_KEY_TAB_LOW].line_to_put);
             current_text_line++;
             user_match.match.kind = fcn_key_table[nc-FCN_KEY_TAB_LOW].match_kind;
@@ -763,7 +788,7 @@ Private void get_user_input(char *prompt, int which)
                user_match.match.index = fcn_key_table[nc-FCN_KEY_TAB_LOW].match_index;
 
             user_match.valid = TRUE;
-            return;
+            return FALSE;
          }
          else continue;      /* Ignore the function key. */
       }
@@ -791,7 +816,7 @@ Private void get_user_input(char *prompt, int which)
          current_text_line++;
          start_matches();
          (void) match_user_input(which, TRUE, c == '?');
-         put_line ("\n");     /* Write a blank line. */
+         put_line("\n");     /* Write a blank line. */
          current_text_line++;
          put_line(user_input_prompt);   /* Redisplay the current line. */
          put_line(user_input);
@@ -827,17 +852,22 @@ Private void get_user_input(char *prompt, int which)
          matches = match_user_input(which, FALSE, FALSE);
          user_match = static_ss.result;
 
-         /* We forbid a match consisting of two or more "direct parse" concepts, such as "grand cross".
-            Direct parse concepts may only be stacked if they are followed by a call.
-            The "match.next" field indicates that direct parse concepts were stacked. */
+         if (!strcmp(static_ss.full_input, "help")) {
+            put_line("\n");
+            current_text_line++;
+            return TRUE;
+         }
 
-         if (  (matches == 1 || matches - static_ss.yielding_matches == 1 || user_match.exact)
-                              &&
-                 (   (!user_match.match.packed_next_conc_or_subcall && !user_match.match.packed_secondary_subcall)
-                                    ||
-                     user_match.match.kind == ui_call_select
-                                    ||
-                     user_match.match.kind == ui_concept_select)) {
+         /* We forbid a match consisting of two or more "direct parse" concepts, such as
+            "grand cross".  Direct parse concepts may only be stacked if they are followed
+            by a call.  The "match.next" field indicates that direct parse concepts
+            were stacked. */
+
+         if ((matches == 1 || matches - static_ss.yielding_matches == 1 || user_match.exact) &&
+             ((!user_match.match.packed_next_conc_or_subcall &&
+               !user_match.match.packed_secondary_subcall) ||
+              user_match.match.kind == ui_call_select ||
+              user_match.match.kind == ui_concept_select)) {
 
             p = static_ss.extended_input;
             while (*p)
@@ -853,7 +883,7 @@ Private void get_user_input(char *prompt, int which)
             /* Include the input line in our count, so we will erase it
                if we are trying to make the VT-100 screen look nice. */
             current_text_line++;
-            return;
+            return FALSE;
          }
 
          if (diagnostic_mode)
@@ -943,7 +973,18 @@ static char *banner_prompts3[] = {
 
 extern uims_reply uims_get_startup_command(void)
 {
-   get_user_input("Enter startup command> ", (int) match_startup_commands);
+   for (;;) {
+      if (!get_user_input("Enter startup command> ", (int) match_startup_commands))
+         break;
+
+      /* ****** remember to remove "start_select_help" in sd.h */
+
+      writestuff("The program wants you to start a sequence.  Type, for example, "
+                 "'heads start', and press Enter.  Then type a call, such as "
+                 "'pass the ocean', and press Enter again.");
+      newline();
+   }
+
    uims_menu_index = user_match.match.index;
    return user_match.match.kind;
 }
@@ -1063,7 +1104,12 @@ extern long_boolean uims_get_call_command(uims_reply *reply_p)
    else
       prompt_ptr = call_menu_prompts[parse_state.call_list_to_use];
 
-   get_user_input(prompt_ptr, (int) parse_state.call_list_to_use);
+   if (get_user_input(prompt_ptr, (int) parse_state.call_list_to_use)) {
+      /* User typed "help". */
+      *reply_p = ui_command_select;
+      uims_menu_index = command_help;
+      return FALSE;
+   }
 
    *reply_p = user_match.match.kind;
 
@@ -1073,7 +1119,8 @@ extern long_boolean uims_get_call_command(uims_reply *reply_p)
       /* Translate the command. */
 
       if (user_match.match.index < 0)
-         uims_menu_index = -1-user_match.match.index;   /* Special encoding from a function key. */
+         /* Special encoding from a function key. */
+         uims_menu_index = -1-user_match.match.index;
       else
          uims_menu_index = (int) command_command_values[user_match.match.index];
    }
@@ -1094,7 +1141,20 @@ extern long_boolean uims_get_call_command(uims_reply *reply_p)
 
 extern uims_reply uims_get_resolve_command(void)
 {
-   get_user_input("Enter search command> ", (int) match_resolve_commands);
+   for (;;) {
+      if (!get_user_input("Enter search command> ", (int) match_resolve_commands))
+         break;
+
+      if (resolver_happiness == resolver_display_failed)
+         writestuff("The program is trying to resolve, but has failed to find anything."
+                    "  You can type 'find another' to keep trying.");
+      else
+         writestuff("The program is searching for resolves.  If you like the currently "
+                    "displayed resolve, you can type 'accept' and press Enter."
+                    "  If not, you can type 'find another'.");
+
+      newline();
+   }
 
    if (user_match.match.kind == ui_command_select) {
       uims_menu_index = extra_resolve_command_values[user_match.match.index];
@@ -1163,37 +1223,37 @@ extern int uims_do_neglect_popup(char dest[])
 
 Private int confirm(char *question)
 {
-    char c;
+   char c;
 
-    for (;;) {
-        put_line(question);
-        c = get_char();
-        if ((c=='n') || (c=='N')) {
-            put_line("no\n");
-            current_text_line++;
-            if (journal_file) fputc('n', journal_file);
-            return POPUP_DECLINE;
-        }
-        if ((c=='y') || (c=='Y')) {
-            put_line("yes\n");
-            current_text_line++;
-            if (journal_file) fputc('y', journal_file);
-            return POPUP_ACCEPT;
-        }
-        put_char(c);
+   for (;;) {
+      put_line(question);
+      c = get_char();
+      if ((c=='n') || (c=='N')) {
+         put_line("no\n");
+         current_text_line++;
+         if (journal_file) fputc('n', journal_file);
+         return POPUP_DECLINE;
+      }
+      if ((c=='y') || (c=='Y')) {
+         put_line("yes\n");
+         current_text_line++;
+         if (journal_file) fputc('y', journal_file);
+         return POPUP_ACCEPT;
+      }
+      put_char(c);
 
-        if (diagnostic_mode) {
-            uims_terminate();
-            (void) fputs("\nParsing error during diagnostic.\n", stdout);
-            (void) fputs("\nParsing error during diagnostic.\n", stderr);
-            final_exit(1);
-        }
+      if (diagnostic_mode) {
+         uims_terminate();
+         (void) fputs("\nParsing error during diagnostic.\n", stdout);
+         (void) fputs("\nParsing error during diagnostic.\n", stderr);
+         final_exit(1);
+      }
 
-        put_line("\n");
-        put_line("Answer y or n\n");
-        current_text_line += 2;
-        bell();
-    }
+      put_line("\n");
+      put_line("Answer y or n\n");
+      current_text_line += 2;
+      bell();
+   }
 }
 
 extern int uims_do_write_anyway_popup(void)
@@ -1201,6 +1261,13 @@ extern int uims_do_write_anyway_popup(void)
     put_line("This sequence is not resolved.\n");
     current_text_line++;
     return confirm("Do you want to write it anyway? ");
+}
+
+extern int uims_do_delete_clipboard_popup(void)
+{
+    put_line("There are calls in the clipboard.\n");
+    current_text_line++;
+    return confirm("Do you want to delete all of them? ");
 }
 
 extern int uims_do_abort_popup(void)
@@ -1283,6 +1350,8 @@ extern void uims_update_resolve_menu(command_kind goal, int cur, int max, resolv
 {
     char title[MAX_TEXT_LINE_LENGTH];
 
+    resolver_happiness = state;
+
     create_resolve_menu_title(goal, cur, max, state, title);
     put_line(title);
     put_line("\n");
@@ -1295,8 +1364,18 @@ extern int uims_do_selector_popup(void)
 {
    if (!user_match.valid || (user_match.match.call_conc_options.who == selector_uninitialized)) {
       match_result saved_match = user_match;
-      get_user_input("Enter who> ", (int) match_selectors);
-      popup_retval = user_match.match.index+1;      /* We skip the zeroth selector, which is selector_uninitialized. */
+
+      for (;;) {
+         if (!get_user_input("Enter who> ", (int) match_selectors))
+            break;
+
+         writestuff("The program wants you to type a person designator.  "
+                    "Try typing something like 'boys' and pressing Enter.");
+         newline();
+      }
+
+      /* We skip the zeroth selector, which is selector_uninitialized. */
+      popup_retval = user_match.match.index+1;
       user_match = saved_match;
    }
    else {
@@ -1312,8 +1391,18 @@ extern int uims_do_direction_popup(void)
 
    if (!user_match.valid || (user_match.match.call_conc_options.where == direction_uninitialized)) {
       match_result saved_match = user_match;
-      get_user_input("Enter direction> ", (int) match_directions);
-      retval = user_match.match.index+1;      /* We skip the zeroth direction, which is direction_uninitialized. */
+
+      for (;;) {
+         if (!get_user_input("Enter direction> ", (int) match_directions))
+            break;
+
+         writestuff("The program wants you to type a direction.  "
+                    "Try typing something like 'right' and pressing Enter.");
+         newline();
+      }
+
+      /* We skip the zeroth direction, which is direction_uninitialized. */
+      retval = user_match.match.index+1;
       user_match = saved_match;
    }
    else {
@@ -1335,7 +1424,16 @@ extern int uims_do_tagger_popup(int tagger_class)
    }
    else if (!user_match.valid || (user_match.match.call_conc_options.tagger == 0)) {
       match_result saved_match = user_match;
-      get_user_input("Enter tagging call> ", ((int) match_taggers) + tagger_class);
+
+      for (;;) {
+         if (!get_user_input("Enter tagging call> ", ((int) match_taggers) + tagger_class))
+            break;
+
+         writestuff("The program wants you to type an 'ATC' (tagging) call.  "
+                    "Try typing something like 'vertical tag' and pressing Enter.");
+         newline();
+      }
+
       saved_match.match.call_conc_options.tagger = user_match.match.call_conc_options.tagger;
       user_match = saved_match;
    }
@@ -1366,7 +1464,17 @@ extern int uims_do_circcer_popup(void)
    }
    else if (!user_match.valid || (user_match.match.call_conc_options.circcer == 0)) {
       match_result saved_match = user_match;
-      get_user_input("Enter circulate replacement> ", (int) match_circcer);
+
+      for (;;) {
+         if (!get_user_input("Enter circulate replacement> ", (int) match_circcer))
+            break;
+
+         writestuff("The program wants you to type a circulating call as part of "
+                    "a call like 'in roll motivate'.  "
+                    "Try typing something like 'in roll circulate' and pressing Enter.");
+         newline();
+      }
+
       retval = user_match.match.call_conc_options.circcer;
       user_match = saved_match;
    }

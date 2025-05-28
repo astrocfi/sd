@@ -611,11 +611,11 @@ but not executable are now not parsable.  So we take it out.
 
 /* These are used by the database reading stuff. */
 
-Private uint32 last_datum, last_12;
-Private callspec_block *call_root;
-Private callarray *tp;
+static uint32 last_datum, last_12;
+static callspec_block *call_root;
+static callarray *tp;
 /* This shows the highest index we have seen so far.  It must never exceed max_base_calls-1. */
-Private int highest_base_call;
+static int highest_base_call;
 
 
 Private void read_halfword(void)
@@ -665,9 +665,9 @@ Private void read_level_3_groups(calldef_block *where_to_put)
       uint32 these_flags;
       int extra;
 
-      these_flags = last_datum & 0x1FFF;    /* We allow 13 callarray_flags. */
-
-      read_halfword();       /* Get start setup. */
+      these_flags = (last_datum & 0x1FFF) << 8;    /* We allow 21 callarray_flags. */
+      read_halfword();       /* Get callaray continuation and start setup. */
+      these_flags |= ((last_datum & 0xFF00) >> 8);
       this_start_setup = (begin_kind) (last_datum & 0xFF);
       this_start_size = begin_sizes[this_start_setup];
 

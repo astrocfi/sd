@@ -1,6 +1,13 @@
-REM        This creates the self-extracting archive with
-REM           all plain files, for uploading to the web and
-REM           for distribution on disk.
+REM        This updates all plain files to the web, 3 times over:
+REM           It creates the self-extracting archive
+REM                   "sd/textdoc.exe"
+REM           It creates the gzipped archive
+REM                  "sd/textdoc.tar.gz"
+REM           It creates the individual files for downloading
+REM                   "sd/sd_doc.txt"
+REM                   "sd/demo.txt"
+REM                   "sd/sessions.txt"
+REM                   "sd/relnotes.txt"
 REM
 make text.all
 del textdoc.lzh textdoc.exe textdoc.tar
@@ -23,13 +30,14 @@ uuencode textdoc.exe|uufix>> plain.msg
 echo uufile>> plain.msg
 uuencode textdoc.gz|uufix>> plain.msg
 echo mv textdoc.gz textdoc.tar.gz>> plain.msg
+call make_text sd_doc.txt plain.msg
+call make_text demo.txt plain.msg
+call make_text sessions.txt plain.msg
+call make_text relnotes.txt plain.msg
 pgp -sta +clearsig=on +armor=on plain.msg -u wba -o plain.txt
 zip plain plain.txt
 REM
 REM         The file "plain.zip" may now be unzipped to "plain.txt",
-REM            which can then be mailed, creating these files:
-REM
-REM                  sd/textdoc.exe
-REM                  sd/textdoc.tar.gz
+REM            which can then be mailed.
 REM
 REM         The file "textdoc.exe" may also be copied to diskettes.

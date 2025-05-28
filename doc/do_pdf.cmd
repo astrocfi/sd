@@ -1,6 +1,13 @@
-REM        This creates the self-extracting archive with
-REM           all pdf files, for uploading to the web and
-REM           for distribution on disk.
+REM        This updates all pdf files to the web, 3 times over:
+REM           It creates the self-extracting archive
+REM                   "sd/pdfdoc.exe"
+REM           It creates the gzipped archive
+REM                 "sd/pdfdoc.tar.gz"
+REM           It creates the individual files for browsing
+REM              "public_html/sd/relnotes.pdf"
+REM              "public_html/sd/demo/demo.pdf"
+REM            "public_html/sd/manual/sd_doc.pdf"
+REM           "public_html/sd/sessions/sessions.pdf"
 REM
 make pdf.all
 del pdfdoc.lzh pdfdoc.exe pdfdoc.tar
@@ -15,13 +22,22 @@ uuencode pdfdoc.exe|uufix>> pdf.msg
 echo uufile>> pdf.msg
 uuencode pdfdoc.gz|uufix>> pdf.msg
 echo mv pdfdoc.gz pdfdoc.tar.gz>> pdf.msg
+echo cd ../public_html/sd>> pdf.msg
+echo uufile>> pdf.msg
+uuencode relnotes.pdf|uufix>> pdf.msg
+echo cd demo>> pdf.msg
+echo uufile>> pdf.msg
+uuencode demo.pdf|uufix>> pdf.msg
+echo cd ../manual>> pdf.msg
+echo uufile>> pdf.msg
+uuencode sd_doc.pdf|uufix>> pdf.msg
+echo cd ../sessions>> pdf.msg
+echo uufile>> pdf.msg
+uuencode sessions.pdf|uufix>> pdf.msg
 pgp -sta +clearsig=on +armor=on pdf.msg -u wba -o pdf.txt
 zip pdf pdf.txt
 REM
 REM         The file "pdf.zip" may now be unzipped to "pdf.txt",
-REM            which can then be mailed, creating these files:
-REM
-REM                  sd/pdfdoc.exe
-REM                  sd/pdfdoc.gz
+REM            which can then be mailed.
 REM
 REM         The file "pdfdoc.exe" may also be copied to diskettes.

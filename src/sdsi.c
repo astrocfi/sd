@@ -133,6 +133,11 @@ extern void srand48(long int);
 extern long int lrand48(void);
 #endif
 
+#if defined(WIN32)
+extern void srand(long int);
+extern long int rand(void);
+#endif
+
 #if !defined(sun) && (!__STDC__ || defined(MSDOS))
 extern char *strerror(int);
 #endif
@@ -485,9 +490,9 @@ extern void open_file(void)
 
       No.  It actually seems to work.  Aren't computers wonderful? */
 
-#endif
-
    really_just_append:
+
+#endif
 
    if (this_file_position == 0) {
       writestuff("File does not exist, creating it.");

@@ -12,9 +12,16 @@
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-    This is for version 31. */
+    This is for version 32. */
 
 /* dbcomp.c */
+
+typedef unsigned long int uint32;
+typedef unsigned short int uint16;
+typedef unsigned char uint8;
+#define Const const
+
+typedef Const char *Cstring;
 
 #include "database.h"
 
@@ -50,8 +57,6 @@ extern void exit(int code);
    will do the right thing with that, but, just in case, we use a typedef.
 
    The type "uint32" must be an unsigned integer of at least 32 bits. */
-
-typedef unsigned long int uint32;
 
 /* These things come from mkcalls.c for the standalone compiler, or from
    sdtables.c or sdui-mac.c for the built-in compiler. */
@@ -333,6 +338,8 @@ char *sstab[] = {
    "12x2",
    "deepqtg",
    "pdeepqtg",
+   "deepxwv",
+   "pdeepxwv",
    "3oqtg",
    "p3oqtg",
    "thar",
@@ -365,10 +372,18 @@ char *sstab[] = {
    "p3mdmd",
    "3mptpd",
    "p3mptpd",
+   "4mdmd",
+   "p4mdmd",
+   "4mptpd",
+   "p4mptpd",
    "bigh",
    "pbigh",
    "bigx",
    "pbigx",
+   "bigbigh",
+   "pbigbigh",
+   "bigbigx",
+   "pbigbigx",
    "bigrig",
    "pbigrig",
    "bighrgl",
@@ -427,6 +442,7 @@ char *estab[] = {
    "1x14",
    "1x16",
    "c1phan",
+   "???",
    "bigblob",
    "ptpd",
    "3dmd",
@@ -447,6 +463,7 @@ char *estab[] = {
    "2x10",
    "2x12",
    "deepqtg",
+   "deepxwv",
    "3oqtg",
    "thar",
    "alamo",
@@ -462,8 +479,12 @@ char *estab[] = {
    "5h45",
    "3mdmd",
    "3mptpd",
+   "4mdmd",
+   "4mptpd",
    "bigh",
    "bigx",
+   "bigbigh",
+   "bigbigx",
    "bigrig",
    "bighrgl",
    "bigdhrgl",
@@ -533,6 +554,7 @@ char *schematab[] = {
    "in_out_triple_squash",
    "in_out_triple",
    "in_out_quad",
+   "???",
    "select_leads",
    "select_headliners",
    "select_sideliners",
@@ -662,7 +684,7 @@ char *defmodtab1[] = {
    "???",
    "???",
    "endscando",
-   "??",
+   "finish_this_part",
    "roll_transparent",
    "permit_touch_or_rear_back",
    "cpls_unless_single",
@@ -898,6 +920,9 @@ char *predtab[] = {
    "person_select_sum8",
    "person_select_sum11",
    "person_select_sum15",
+   "person_select_plus4",
+   "person_select_plus8",
+   "person_select_plus12",
    "semi_squeezer_select",
    "select_once_rem_from_unselect",
    "unselect_once_rem_from_select",
@@ -928,6 +953,7 @@ char *predtab[] = {
    "cast_normal",
    "cast_pushy",
    "cast_normal_or_warn",
+   "intlk_cast_normal_or_warn",
    "lines_magic_miniwave",
    "lines_magic_couple",
    "lines_once_rem_miniwave",
@@ -1058,6 +1084,8 @@ tagtabitem tagtabinit[num_base_call_indices] = {
       {0, "backemup"},       /* This is used for remembering the handedness. */
       {0, "circulate"},
       {0, "trade"},
+      {0, "check_cross_counter"},
+      {0, "slither"},
       /* The next "NUM_TAGGER_CLASSES" (that is, 4) must be a consecutive group. */
       {0, "tagnullcall0"},
       {0, "tagnullcall1"},
@@ -1579,8 +1607,10 @@ static void write_seq_stuff(void)
 
 static void write_array_def_block(uint32 callarrayflags)
 {
-   write_halfword(0x6000 | callarrayflags);
-   write_halfword(call_startsetup);
+   if (callarrayflags & 0xFFE00000) errexit("Internal error -- too many array flags");
+   write_halfword(0x6000 | (callarrayflags>>8));
+   if (call_startsetup >= 256) errexit("Internal error -- too many start setups");
+   write_halfword(call_startsetup | ((callarrayflags & 0xFF) << 8));
    write_halfword(call_qual_stuff);
 
    if (callarrayflags & CAF__CONCEND) {
@@ -1792,6 +1822,9 @@ def2:
       }
       else if (!strcmp(tok_str, "other_elongate")) {
          callarray_flags1 |= CAF__OTHER_ELONGATE;
+      }
+      else if (!strcmp(tok_str, "really_want_diamond")) {
+         callarray_flags1 |= CAF__REALLY_WANT_DIAMOND;
       }
       else if ((!(callarray_flags1 & CAF__CONCEND)) && (!strcmp(tok_str, "concendsetup"))) {
          if (call_endsetup != (int) s_normal_concentric)

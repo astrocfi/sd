@@ -48,7 +48,7 @@ long_boolean mandatory_call_used;
 
 extern long_boolean selectp(setup *ss, int place)
 {
-   uint32 permpid1, pid2, p2;
+   uint32 permpid1, pid2, p1, p2;
    selector_kind s;
 
    selector_used = TRUE;
@@ -137,6 +137,18 @@ extern long_boolean selectp(setup *ss, int place)
          else if (p2 == (ID2_TRAILER|ID2_CENTER)) s = selector_trail_ctrs;
          else break;
          goto eq_return;
+      case selector_end_boys:
+      case selector_end_girls:
+      case selector_center_boys:
+      case selector_center_girls:
+         p1 = permpid1 & (ID1_PERM_BOY|ID1_PERM_GIRL);
+         p2 = pid2 & (ID2_CENTER|ID2_END);
+         if      (p2 == ID2_END && p1 == ID1_PERM_BOY)     s = selector_end_boys;
+         else if (p2 == ID2_END && p1 == ID1_PERM_GIRL)    s = selector_end_girls;
+         else if (p2 == ID2_CENTER && p1 == ID1_PERM_BOY)  s = selector_center_boys;
+         else if (p2 == ID2_CENTER && p1 == ID1_PERM_GIRL) s = selector_center_girls;
+         else break;
+         goto eq_return;
       case selector_beaus:
       case selector_belles:
          p2 = pid2 & (ID2_BEAU|ID2_BELLE);
@@ -223,8 +235,10 @@ extern long_boolean selectp(setup *ss, int place)
          else if ((pid2 & (ID2_CTR4|ID2_NCTR1X4)) == ID2_NCTR1X4) return FALSE;
          break;
       case selector_outerpairs:
-         if      ((pid2 & (ID2_CTR4|ID2_OUTRPAIRS)) == ID2_OUTRPAIRS) return TRUE;
-         else if ((pid2 & (ID2_CTR4|ID2_OUTRPAIRS)) == ID2_CTR4) return FALSE;
+         if      ((pid2 & (ID2_CTR4  |ID2_OUTRPAIRS)) == ID2_OUTRPAIRS) return TRUE;
+         else if ((pid2 & (ID2_CTR4  |ID2_OUTRPAIRS)) == ID2_CTR4) return FALSE;
+         else if ((pid2 & (ID2_CENTER|ID2_OUTRPAIRS)) == ID2_OUTRPAIRS) return TRUE;
+         else if ((pid2 & (ID2_CENTER|ID2_OUTRPAIRS)) == ID2_CENTER) return FALSE;
          break;
       case selector_headliners:
          if      ((pid2 & (ID2_HEADLINE|ID2_SIDELINE)) == ID2_HEADLINE) return TRUE;
@@ -364,6 +378,16 @@ Private long_boolean sum_mod_selected(setup *real_people, int real_index,
    int real_direction, int northified_index, Const long int *extra_stuff)
 {
    int otherindex = (*extra_stuff) - real_index;
+   int size = setup_attrs[real_people->kind].setup_limits+1;
+   if (otherindex >= size) otherindex -= size;
+   return selectp(real_people, otherindex);
+}
+
+/* ARGSUSED */
+Private long_boolean plus_mod_selected(setup *real_people, int real_index,
+   int real_direction, int northified_index, Const long int *extra_stuff)
+{
+   int otherindex = real_index + (*extra_stuff);
    int size = setup_attrs[real_people->kind].setup_limits+1;
    if (otherindex >= size) otherindex -= size;
    return selectp(real_people, otherindex);
@@ -565,18 +589,41 @@ Private long_boolean cols_someone_in_front(setup *real_people, int real_index,
 Private long_boolean x14_once_rem_miniwave(setup *real_people, int real_index,
    int real_direction, int northified_index, Const long int *extra_stuff)
 {
-   int this_person = real_people->people[real_index].id1;
-   int other_person = real_people->people[real_index ^ 3].id1;
-   return(((this_person ^ other_person) & DIR_MASK) == 2);
+   switch (real_people->cmd.cmd_assume.assumption) {
+   case cr_wave_only: case cr_li_lo: case cr_1fl_only: return FALSE;
+   case cr_2fl_only: case cr_magic_only: return TRUE;
+   }
+
+   switch ((real_people->people[real_index].id1 ^
+            real_people->people[real_index ^ 3].id1) & DIR_MASK) {
+   case 0:
+      return FALSE;
+   case 2:
+      return TRUE;
+   default:
+      if (extra_stuff[0] & 2) {
+         /* This is "intlk_cast_normal_or_warn".  Don't give the warning if person
+            would have known what to do anyway. */
+         if (!(real_index & 1))
+            warn(warn__opt_for_normal_cast);
+         return TRUE;
+      }
+      else
+         return FALSE;
+   }
 }
 
 /* ARGSUSED */
 Private long_boolean x14_once_rem_couple(setup *real_people, int real_index,
    int real_direction, int northified_index, Const long int *extra_stuff)
 {
-   int this_person = real_people->people[real_index].id1;
-   int other_person = real_people->people[real_index ^ 3].id1;
-   return(((this_person ^ other_person) & DIR_MASK) == 0);
+   switch (real_people->cmd.cmd_assume.assumption) {
+   case cr_wave_only: case cr_li_lo: case cr_1fl_only: return TRUE;
+   case cr_2fl_only: case cr_magic_only: return FALSE;
+   }
+
+   return ((real_people->people[real_index].id1 ^
+            real_people->people[real_index ^ 3].id1) & DIR_MASK) == 0;
 }
 
 /* ARGSUSED */
@@ -704,22 +751,22 @@ Private long_boolean cast_normal_or_whatever(setup *real_people, int real_index,
          other_person = real_people->people[7 - real_index].id1;
 
       switch (((this_person ^ other_person) & DIR_MASK) ^ ((extra_stuff[0] & 1) << 1)) {
-         case 0:
+      case 0:
+         return TRUE;
+      case 2:
+         return FALSE;
+      default:
+         if (extra_stuff[0] & 2) {
+            /* This is "cast_normal_or_warn".  Don't give the warning if person
+               would have known what to do anyway. */
+            if (     real_people->kind == s1x2
+                     ||
+                     (real_index != 1 && real_index != ((real_people->kind == s1x6) ? 4 : 3)))
+               warn(warn__opt_for_normal_cast);
             return TRUE;
-         case 2:
+         }
+         else
             return FALSE;
-         default:
-            if (extra_stuff[0] & 2) {
-               /* This is "cast_normal_or_warn".  Don't give the warning if person
-                  would have known what to do anyway. */
-               if (     real_people->kind == s1x2
-                                    ||
-                        (real_index != 1 && real_index != ((real_people->kind == s1x6) ? 4 : 3)))
-                  warn(warn__opt_for_normal_cast);
-               return TRUE;
-            }
-            else
-               return FALSE;
       }
    }
 }
@@ -731,10 +778,13 @@ Private long_boolean columns_tandem(setup *real_people, int real_index,
    uint32 this_person;
    int other_index;
 
-   switch (real_people->cmd.cmd_assume.assumption) {
+   if (real_people->kind != s_qtag) {
+      switch (real_people->cmd.cmd_assume.assumption) {
       case cr_wave_only: case cr_2fl_only: return extra_stuff[0] ^ 1;
       case cr_magic_only: case cr_li_lo: return extra_stuff[0];
+      }
    }
+   else if (real_index == 2 || real_index == 6) return FALSE;  /* Wings of qtag always fail. */
 
    this_person = real_people->people[real_index].id1;
    other_index = real_index ^ 1;
@@ -750,8 +800,18 @@ Private long_boolean columns_tandem(setup *real_people, int real_index,
          other_index = 1;
       else if (real_index == 3)
          other_index = 4;
-      else if ((real_index == 1 || real_index == 4) && !(real_direction & 2))
-         other_index = 3 - real_index;
+      else if (!(real_direction & 2)) {
+         if (real_index == 1)
+            other_index = 2;
+         else if (real_index == 4)
+            other_index = 3;
+      }
+   }
+   else if (real_people->kind == s_qtag) {
+      other_index = real_index ^ 2;
+      if ((real_index & 3) == 0 ||
+          (((real_index & 3) == 3) && ((real_direction ^ (real_index >> 1)) & 2)))
+         other_index = real_index ^ 7;
    }
 
    return ((this_person ^ real_people->people[other_index].id1) & DIR_MASK) ==
@@ -1636,7 +1696,7 @@ Private long_boolean x22_facing_other_sex(setup *real_people, int real_index,
 Private long_boolean directionp(setup *real_people, int real_index,
    int real_direction, int northified_index, Const long int *extra_stuff)
 {
-   return current_options.where == (uint32) extra_stuff;
+   return current_options.where == (direction_kind) extra_stuff;
 }
 
 
@@ -1880,6 +1940,9 @@ predicate_descriptor pred_table[] = {
       {sum_mod_selected,               &iden_tab[8]},            /* "person_select_sum8" */
       {sum_mod_selected,              &iden_tab[11]},            /* "person_select_sum11" */
       {sum_mod_selected,              &iden_tab[15]},            /* "person_select_sum15" */
+      {plus_mod_selected,             &iden_tab[4]},            /* "person_select_plus4" */
+      {plus_mod_selected,             &iden_tab[8]},            /* "person_select_plus8" */
+      {plus_mod_selected,             &iden_tab[12]},           /* "person_select_plus12" */
       {semi_squeezer_select,       semi_squeeze_tab},            /* "semi_squeezer_select" */
       {select_once_rem_from_unselect,(Const long int *) 0},      /* "select_once_rem_from_unselect" */
       {unselect_once_rem_from_select,(Const long int *) 0},      /* "unselect_once_rem_from_select" */
@@ -1893,7 +1956,7 @@ predicate_descriptor pred_table[] = {
       {x22_facing_test,                dbl_tab23},               /* "x22_facing_someone" */
       {x22_facing_test,                dbl_tab03},               /* "x22_tandem_with_someone" */
       {cols_someone_in_front,        (Const long int *) 0},      /* "columns_someone_in_front" */
-      {x14_once_rem_miniwave,        (Const long int *) 0},      /* "x14_once_rem_miniwave" */
+      {x14_once_rem_miniwave,         &iden_tab[1]},             /* "x14_once_rem_miniwave" */
       {x14_once_rem_couple,          (Const long int *) 0},      /* "x14_once_rem_couple" */
       {lines_miniwave,               (Const long int *) 0},      /* "lines_miniwave" */
       {lines_couple,                 (Const long int *) 0},      /* "lines_couple" */
@@ -1912,6 +1975,9 @@ predicate_descriptor pred_table[] = {
       {cast_normal_or_whatever,        &iden_tab[1]},            /* "cast_normal" */
       {cast_normal_or_whatever,        &iden_tab[0]},            /* "cast_pushy" */
       {cast_normal_or_whatever,        &iden_tab[3]},            /* "cast_normal_or_warn" */
+
+      {x14_once_rem_miniwave,          &iden_tab[3]},            /* "intlk_cast_normal_or_warn" */
+
       {opp_in_magic,                 (Const long int *) 0},      /* "lines_magic_miniwave" */
       {same_in_magic,                (Const long int *) 0},      /* "lines_magic_couple" */
       {once_rem_test,                  &iden_tab[2]},            /* "lines_once_rem_miniwave" */
