@@ -1785,11 +1785,18 @@ static void special_triangle(
 }
 
 
+static void warn_unless_one_person_call(setup *ss, warning_index w)
+{
+   if ((ss->cmd.callspec->the_defn.callflagsf & CFLAG2_ONE_PERSON_CALL) == 0)
+      warn(w);
+}
+
+
+
 static bool handle_3x4_division(
    setup *ss, uint32 callflags1, uint32 newtb, uint32 livemask,
    uint32 & division_code,            // We write over this.
    callarray *calldeflist, bool matrix_aware, setup *result)
-
 {
    bool forbid_little_stuff;
    uint32 nxnbits =
@@ -1859,7 +1866,7 @@ static bool handle_3x4_division(
            !assoc(b_2x1, ss, calldeflist) &&
            !assoc(b_1x1, ss, calldeflist)))
          fail("Don't know how to do this call in this setup.");
-      if (!matrix_aware) warn(warn__each2x2);
+      if (!matrix_aware) warn_unless_one_person_call(ss, warn__each2x2);
       division_code = (livemask == 07474) ?
          MAPCODE(s2x2,2,MPKIND__OFFS_L_HALF,0) :
             MAPCODE(s2x2,2,MPKIND__OFFS_R_HALF,0);
@@ -1874,7 +1881,7 @@ static bool handle_3x4_division(
           (((!(newtb & 001) || assoc(b_1x2, ss, calldeflist)) &&
             (!(newtb & 010) || assoc(b_2x1, ss, calldeflist))) ||
            assoc(b_1x1, ss, calldeflist))) {
-         warn(warn__each1x2);
+         warn_unless_one_person_call(ss, warn__each1x2);
          division_code = (livemask == 07272) ?
             MAPCODE(s1x2,4,MPKIND__OFFS_L_HALF_STAGGER,1) :
             MAPCODE(s1x2,4,MPKIND__OFFS_R_HALF_STAGGER,1);
@@ -1893,7 +1900,7 @@ static bool handle_3x4_division(
         assoc(b_1x2, ss, calldeflist) ||
         assoc(b_2x1, ss, calldeflist) ||
         assoc(b_1x1, ss, calldeflist))) {
-      if (!matrix_aware) warn(warn__each1x4);
+      if (!matrix_aware) warn_unless_one_person_call(ss, warn__each1x4);
       division_code = MAPCODE(s1x4,3,MPKIND__SPLIT,1);
       return true;
    }
@@ -2131,11 +2138,11 @@ static bool handle_4x4_division(
          return true;
       case 0x7171:
          division_code = spcmap_4x4_ns;
-         warn(warn__each1x4);
+         warn_unless_one_person_call(ss, warn__each1x4);
          return true;
       case 0x1717:
          division_code = spcmap_4x4_ew;
-         warn(warn__each1x4);
+         warn_unless_one_person_call(ss, warn__each1x4);
          return true;
       case 0x4E4E: case 0x8B8B:
          division_code = MAPCODE(s2x3,2,MPKIND__OFFS_L_THIRD,1);
@@ -2164,7 +2171,7 @@ static bool handle_4x4_division(
              !assoc(b_1x1, ss, calldeflist))
             fail("Don't know how to do this call in this setup.");
 
-         if (!matrix_aware) warn(warn__each2x2);
+         if (!matrix_aware) warn_unless_one_person_call(ss, warn__each2x2);
          division_code = MAPCODE(s2x2,2,MPKIND__OFFS_R_FULL,0);
          return true;
       }
@@ -2402,7 +2409,7 @@ static bool handle_3x8_division(
              !assoc(b_2x1, ss, calldeflist) &&
              !assoc(b_1x1, ss, calldeflist))
             fail("Don't know how to do this call in this setup.");
-         if (!matrix_aware) warn(warn__each1x4);
+         if (!matrix_aware) warn_unless_one_person_call(ss, warn__each1x4);
          division_code = MAPCODE(s1x4,6,MPKIND__SPLIT_OTHERWAY_TOO,1);
          return true;
       }
@@ -2611,15 +2618,15 @@ static int divide_the_setup(
       switch (livemask) {
       case 0xF0F0:    // A parallelogram.
          division_code = MAPCODE(s1x4,2,MPKIND__OFFS_R_FULL,1);
-         warn(warn__each1x4);
+         warn_unless_one_person_call(ss, warn__each1x4);
          break;
       case 0x0F0F:    // A parallelogram.
          division_code = MAPCODE(s1x4,2,MPKIND__OFFS_L_FULL,1);
-         warn(warn__each1x4);
+         warn_unless_one_person_call(ss, warn__each1x4);
          break;
       case 0xC3C3:    // The outer quadruple boxes.
          division_code = MAPCODE(s2x2,4,MPKIND__SPLIT,0);
-         warn(warn__each2x2);
+         warn_unless_one_person_call(ss, warn__each2x2);
          break;
       }
 
@@ -2704,21 +2711,21 @@ static int divide_the_setup(
       switch (livemask) {
       case 07474:    // a parallelogram
          division_code = MAPCODE(s1x4,2,MPKIND__OFFS_R_HALF,1);
-         warn(warn__each1x4);
+         warn_unless_one_person_call(ss, warn__each1x4);
          break;
       case 01717:    // a parallelogram
          division_code = MAPCODE(s1x4,2,MPKIND__OFFS_L_HALF,1);
-         warn(warn__each1x4);
+         warn_unless_one_person_call(ss, warn__each1x4);
          break;
       case 06060: case 00303:
       case 06363:    // the outer triple boxes
          division_code = MAPCODE(s2x2,3,MPKIND__SPLIT,0);
-         warn(warn__each2x2);
+         warn_unless_one_person_call(ss, warn__each2x2);
          break;
       case 05555: case 04141: case 02222:
          // Split into 6 stacked 1x2's.
          division_code = MAPCODE(s1x2,6,MPKIND__SPLIT,1);
-         warn(warn__each1x2);
+         warn_unless_one_person_call(ss, warn__each1x2);
          break;
       case 0xDB6: case 0x6DB:
          warn(warn__split_to_2x3s);
@@ -2752,11 +2759,11 @@ static int divide_the_setup(
       goto divide_us_no_recompute;
    case spgdmdcw:
       division_code = MAPCODE(sdmd,2,MPKIND__OFFS_R_HALF,1);
-      warn(warn__eachdmd);
+      warn_unless_one_person_call(ss, warn__eachdmd);
       goto divide_us_no_recompute;
    case spgdmdccw:
       division_code = MAPCODE(sdmd,2,MPKIND__OFFS_L_HALF,1);
-      warn(warn__eachdmd);
+      warn_unless_one_person_call(ss, warn__eachdmd);
       goto divide_us_no_recompute;
    case s2x7:
       // The call has no applicable 2x7 or 7x2 definition.
@@ -2884,11 +2891,11 @@ static int divide_the_setup(
       switch (livemask) {
       case 01717:    /* outer 1x4's */
          division_code = MAPCODE(s1x4,3,MPKIND__SPLIT,0);
-         warn(warn__each1x4);
+         warn_unless_one_person_call(ss, warn__each1x4);
          break;
       case 06363:    /* center 1x4 and outer 1x2's */
          division_code = MAPCODE(s1x2,6,MPKIND__SPLIT,0);
-         warn(warn__each1x2);
+         warn_unless_one_person_call(ss, warn__each1x2);
          break;
       }
 
@@ -2992,7 +2999,7 @@ static int divide_the_setup(
       case 0505505:
       case 0702702:
       case 0207207:
-         warn(warn__each1x2);
+         warn_unless_one_person_call(ss, warn__each1x2);
          // FALL THROUGH!!!!!
       case 0603603:      // WARNING!!  WE FELL THROUGH!!
       case 0306306:
@@ -3001,7 +3008,7 @@ static int divide_the_setup(
       case 0550550:
       case 0720720:
       case 0270270:
-         warn(warn__each1x2);
+         warn_unless_one_person_call(ss, warn__each1x2);
          // FALL THROUGH!!!!!
       case 0660660:      // WARNING!!  WE FELL THROUGH!!
       case 0330330:
@@ -3309,27 +3316,22 @@ static int divide_the_setup(
       break;
    case s3x4:
       if (handle_3x4_division(ss, callflags1, newtb, livemask,
-                              division_code,
-                              calldeflist, matrix_aware, result))
+                              division_code, calldeflist, matrix_aware, result))
          goto divide_us_no_recompute;
       return 1;
    case s4x4:
       if (handle_4x4_division(ss, callflags1, newtb, livemask,
-                              division_code,
-                              finalrot,
-                              calldeflist, matrix_aware))
+                              division_code, finalrot, calldeflist, matrix_aware))
          goto divide_us_no_recompute;
       break;
    case s4x6:
       if (handle_4x6_division(ss, callflags1, newtb, livemask,
-                              division_code,
-                              calldeflist, matrix_aware))
+                              division_code, calldeflist, matrix_aware))
          goto divide_us_no_recompute;
       break;
    case s3x8:
       if (handle_3x8_division(ss, callflags1, newtb, livemask,
-                              division_code,
-                              calldeflist, matrix_aware))
+                              division_code, calldeflist, matrix_aware))
          goto divide_us_no_recompute;
       break;
    case s2x12:

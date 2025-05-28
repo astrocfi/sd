@@ -16,7 +16,7 @@
 This file documents the user-visible changes in the current and recent
 versions of the Sd program.
 
-* Intro::               Information about the current version
+* Intro::               Information about the most recent version shown in this file
 
 Changes as of the following versions:
 * 34.81::

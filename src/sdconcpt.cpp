@@ -3091,8 +3091,18 @@ static void do_concept_old_stretch(
          else if (result->kind == s1x4) {
             result->swap_people(1, 3);
          }
-         else if (result->kind == s3x4 && little_endian_live_mask(result) == 07171) {
-            result->swap_people(5, 11);
+         else if (result->kind == s3x4) {
+            uint32 tt = little_endian_live_mask(result);
+            if (tt == 07171)
+               result->swap_people(5, 11);
+            else if (tt == 06666) {
+               result->swap_people(5, 11);
+               result->swap_people(1, 2);
+               result->swap_people(7, 8);
+               warn(warn__6peoplestretched);
+            }
+            else
+               goto fail1;
          }
          else if (result->kind == s_short6) {
             result->swap_people(5, 0);
@@ -3110,15 +3120,18 @@ static void do_concept_old_stretch(
             result->swap_people(2, 5);
          }
          else
-            fail("Stretch call didn't go to a legal setup.");
+            goto fail1;
       }
    }
 
    result->clear_all_overcasts();
    return;
 
-   this_is_bad:
-      fail("Stretch call was not a 4 person call divided along stretching axis.");
+ fail1:
+   fail("Stretch call didn't go to a legal setup.");
+
+ this_is_bad:
+   fail("Stretch call was not a 4 person call divided along stretching axis.");
 }
 
 

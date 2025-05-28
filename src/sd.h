@@ -581,6 +581,7 @@ enum warning_index {
    warn__brute_force_mxn,
    warn__two_faced,
    warn__cant_track_phantoms,
+   warn__6peoplestretched,
    warn__did_weird_stretch_response,
    warn__crazy_tandem_interaction,
    warn__mimic_ambiguity_checked,

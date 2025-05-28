@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2018  William B. Ackerman.
+//    Copyright (C) 1990-2019  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -57,7 +57,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "39.05"
+version "39.06"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve dont_raise_overcast
@@ -6574,7 +6574,38 @@ call "U-turn back" mainstream tag uturnback
       array [CR0E 0 AL2W 0]
 
 call "@6 U-turn back" mainstream
-            dont_use_in_resolve
+            dont_use_in_resolve one_person_call
+   // This is just the stuff from plain UTB, with predicates.
+   setup 2x2 2x2
+      predscantdo
+         if select [CR0S AL1S AL2S CR3S]
+         if always [ZM0N ZM1N ZM2N ZM3N]
+   setup 1x2 1x2
+      predscantdo
+         if select [CR0S AL1S]
+         if always [ZM0N ZM1N]
+   setup 2x1 1x2
+      predscantdo
+         if select [0S 1S]
+         if always [ZM0N ZM1N]
+   setup 1x1 1x1
+      predscantdo
+         if select [0S]
+         if always [ZM0N]
+   setup c1phan c1phan
+      predscantdo
+         if select [0S 1S 2S 3S 4S 5S 6S 7S 8S 9S 10S 11S 12S 13S 14S 15S]
+         if always [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N ZM7N ZM8N ZM9N ZM10N ZM11N ZM12N ZM13N ZM14N ZM15N]
+   setup 2x2dmd 2x2dmd
+      predscantdo
+         if select [0S 1S 2S 3S 4S 5S 6S 7S 8S 9S 10S 11S 12S 13S 14S 15S]
+         if always [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N ZM7N ZM8N ZM9N ZM10N ZM11N ZM12N ZM13N ZM14N ZM15N]
+   setup p2x2dmd 2x2dmd
+      predscantdo
+         if select [0S 1S 2S 3S 4S 5S 6S 7S 8S 9S 10S 11S 12S 13S 14S 15S]
+         if always [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N ZM7N ZM8N ZM9N ZM10N ZM11N ZM12N ZM13N ZM14N ZM15N]
+
+   // And if we can't find anything in the above, do it the matrix way, with no roll.
    matrix use_selector [16S 16 16S 16]
 
 call "U-turn back in roll direction" mainstream tag uturnflow

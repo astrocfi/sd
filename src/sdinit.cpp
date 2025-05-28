@@ -52,6 +52,9 @@ and the following external variables:
    color_randomizer
 */
 
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#include <windowsx.h>
 #include <stdlib.h>
 #include <algorithm>
 #include <sys/types.h>
@@ -1463,146 +1466,162 @@ static void rewrite_init_file()
          strncpy(errmsg, "Failed to save file '" SESSION_FILENAME
                  "' in '" SESSION2_FILENAME "':\n",
                  MAX_TEXT_LINE_LENGTH);
-         strncat(errmsg, get_errstring(), MAX_FILENAME_LENGTH-141);
-         strncat(errmsg, ".", MAX_FILENAME_LENGTH);
+         strncat(errmsg, get_errstring(), MAX_FILENAME_LENGTH-160);
+         strncat(errmsg, ", not saving backup.",
+                 MAX_TEXT_LINE_LENGTH);
          gg77->iob88.serious_error_print(errmsg);
-      }
-      else {
-         if (!(rfile = fopen(SESSION2_FILENAME, "r"))) {
-            strncpy(errmsg, "Failed to open '" SESSION2_FILENAME "'.",
+
+         char tmpname[_MAX_PATH+1];
+         GetTempFileName(".", "", 0, tmpname);
+
+         if (!CopyFile(SESSION_FILENAME, tmpname, false)) {
+            strncpy(errmsg, "Failed to copy to temp file.", MAX_TEXT_LINE_LENGTH);
+            gg77->iob88.serious_error_print(errmsg);
+            return;
+         }
+
+         if (!(rfile = fopen(tmpname, "r"))) {
+            strncpy(errmsg, "Failed to open '" SESSION_FILENAME "'.",
                     MAX_TEXT_LINE_LENGTH);
             gg77->iob88.serious_error_print(errmsg);
+            return;
          }
-         else {
-            if (!(wfile = fopen(SESSION_FILENAME, "w"))) {
-               strncpy(errmsg, "Failed to open '" SESSION_FILENAME "'.",
-                       MAX_TEXT_LINE_LENGTH);
-               gg77->iob88.serious_error_print(errmsg);
+      }
+      else if (!(rfile = fopen(SESSION2_FILENAME, "r"))) {
+         strncpy(errmsg, "Failed to open '" SESSION2_FILENAME "'.",
+                 MAX_TEXT_LINE_LENGTH);
+         gg77->iob88.serious_error_print(errmsg);
+         return;
+      }
+
+      if (!(wfile = fopen(SESSION_FILENAME, "w"))) {
+         strncpy(errmsg, "Failed to open '" SESSION_FILENAME "'.",
+                 MAX_TEXT_LINE_LENGTH);
+         gg77->iob88.serious_error_print(errmsg);
+         return;
+      }
+      else {
+         bool more_stuff = false;
+
+         if (rewrite_with_new_style_filename) {
+            // Search for the "[Options]" indicator, copying stuff that we skip.
+
+            for (;;) {
+               if (!fgets(line, MAX_FILENAME_LENGTH, rfile)) goto copy_done;
+               if (fputs(line, wfile) == EOF) goto copy_failed;
+               if (!strncmp(line, "[Options]", 9)) break;
+               else if (!strncmp(line, "[Sessions]", 10)) goto got_sessions;
+            }
+
+            bool got_the_command = false;
+
+            for (;;) {
+               if (!fgets(line, MAX_FILENAME_LENGTH, rfile)) goto copy_done;
+
+               if (!strncmp(line, "new_style_filename", 18))
+                  got_the_command = true;
+
+               if (line[0] == '\n' || !strncmp(line, "[Sessions]", 10)) {
+                  // At the end of the section.
+                  if (!got_the_command) {
+                     if (fputs("new_style_filename\n", wfile) == EOF) goto copy_failed;
+                  }
+
+                  if (fputs("\n", wfile) == EOF) goto copy_failed;
+
+                  if (line[0] == '\n')
+                     goto search_for_sessions;
+                  else
+                     goto got_sessions;
+               }
+
+               // Don't copy this line is it is "old_style".
+               if (strncmp(line, "old_style_filename", 18)) {
+                  if (fputs(line, wfile) == EOF) goto copy_failed;
+               }
+            }
+         }
+
+         // Search for the "[Sessions]" indicator, copying stuff that we skip.
+
+      search_for_sessions:
+
+         for (;;) {
+            if (!fgets(line, MAX_FILENAME_LENGTH, rfile)) goto copy_done;
+            if (fputs(line, wfile) == EOF) goto copy_failed;
+            if (!strncmp(line, "[Sessions]", 10)) goto got_sessions;
+         }
+
+      got_sessions:
+
+         for (i=0 ; ; i++) {
+            if (!fgets(line, MAX_FILENAME_LENGTH, rfile)) break;
+            if (line[0] == '\n') { more_stuff = true; break; }
+
+            if (i == session_index-1) {
+               if (write_back_session_line(wfile) < 0)
+                  goto copy_failed;
+            }
+            else if (i == -session_index-1) {
             }
             else {
-               bool more_stuff = false;
+               if (fputs(line, wfile) == EOF) goto copy_failed;
+            }
+         }
 
-               if (rewrite_with_new_style_filename) {
-                  // Search for the "[Options]" indicator, copying stuff that we skip.
+         if (i < session_index) {
+            // User has requested a line number larger than the file.
+            // Append a new line.
+            if (write_back_session_line(wfile) < 0)
+               goto copy_failed;
+         }
 
-                  for (;;) {
-                     if (!fgets(line, MAX_FILENAME_LENGTH, rfile)) goto copy_done;
-                     if (fputs(line, wfile) == EOF) goto copy_failed;
-                     if (!strncmp(line, "[Options]", 9)) break;
-                     else if (!strncmp(line, "[Sessions]", 10)) goto got_sessions;
-                  }
+         if (more_stuff) {
+            if (fputs("\n", wfile) == EOF) goto copy_failed;
+            for (;;) {
+               if (!fgets(line, MAX_FILENAME_LENGTH, rfile)) break;
+               if (fputs(line, wfile) == EOF) goto copy_failed;
+            }
+         }
 
-                  bool got_the_command = false;
+         goto copy_done;
 
-                  for (;;) {
-                     if (!fgets(line, MAX_FILENAME_LENGTH, rfile)) goto copy_done;
+      copy_failed:
 
-                     if (!strncmp(line, "new_style_filename", 18))
-                        got_the_command = true;
+         strncpy(errmsg, "Failed to write to '" SESSION_FILENAME "'.",
+                 MAX_TEXT_LINE_LENGTH);
+         gg77->iob88.serious_error_print(errmsg);
 
-                     if (line[0] == '\n' || !strncmp(line, "[Sessions]", 10)) {
-                        // At the end of the section.
-                        if (!got_the_command) {
-                           if (fputs("new_style_filename\n", wfile) == EOF) goto copy_failed;
-                        }
+      copy_done:
 
-                        if (fputs("\n", wfile) == EOF) goto copy_failed;
+         fclose(wfile);
+      }
 
-                        if (line[0] == '\n')
-                           goto search_for_sessions;
-                        else
-                           goto got_sessions;
-                     }
+      fclose(rfile);
 
-                     // Don't copy this line is it is "old_style".
-                     if (strncmp(line, "old_style_filename", 18)) {
-                        if (fputs(line, wfile) == EOF) goto copy_failed;
-                     }
-                  }
+      // Write out the stats file if there is one.
+
+      if (GLOB_doing_frequency && GLOB_stats_filename[0]) {
+         stats_file = fopen(GLOB_decorated_stats_filename, "w");
+
+         if (stats_file) {     // If it's gone, don't do anything.
+            for (i=0 ; i<number_of_calls[call_list_any] ; i++) {
+               if (main_call_lists[call_list_any][i]->the_defn.frequency > 0) {
+                  fprintf(stats_file, "%-4d %s\n",
+                          main_call_lists[call_list_any][i]->the_defn.frequency,
+                          main_call_lists[call_list_any][i]->menu_name);
                }
-
-               // Search for the "[Sessions]" indicator, copying stuff that we skip.
-
-            search_for_sessions:
-
-               for (;;) {
-                  if (!fgets(line, MAX_FILENAME_LENGTH, rfile)) goto copy_done;
-                  if (fputs(line, wfile) == EOF) goto copy_failed;
-                  if (!strncmp(line, "[Sessions]", 10)) goto got_sessions;
-               }
-
-            got_sessions:
-
-               for (i=0 ; ; i++) {
-                  if (!fgets(line, MAX_FILENAME_LENGTH, rfile)) break;
-                  if (line[0] == '\n') { more_stuff = true; break; }
-
-                  if (i == session_index-1) {
-                     if (write_back_session_line(wfile) < 0)
-                        goto copy_failed;
-                  }
-                  else if (i == -session_index-1) {
-                  }
-                  else {
-                     if (fputs(line, wfile) == EOF) goto copy_failed;
-                  }
-               }
-
-               if (i < session_index) {
-                  // User has requested a line number larger than the file.
-                  // Append a new line.
-                  if (write_back_session_line(wfile) < 0)
-                     goto copy_failed;
-               }
-
-               if (more_stuff) {
-                  if (fputs("\n", wfile) == EOF) goto copy_failed;
-                  for (;;) {
-                     if (!fgets(line, MAX_FILENAME_LENGTH, rfile)) break;
-                     if (fputs(line, wfile) == EOF) goto copy_failed;
-                  }
-               }
-
-               goto copy_done;
-
-            copy_failed:
-
-               strncpy(errmsg, "Failed to write to '" SESSION_FILENAME "'.",
-                       MAX_TEXT_LINE_LENGTH);
-               gg77->iob88.serious_error_print(errmsg);
-
-            copy_done:
-
-               fclose(wfile);
             }
 
-            fclose(rfile);
-
-            // Write out the stats file if there is one.
-
-            if (GLOB_doing_frequency && GLOB_stats_filename[0]) {
-               stats_file = fopen(GLOB_decorated_stats_filename, "w");
-
-               if (stats_file) {     // If it's gone, don't do anything.
-                  for (i=0 ; i<number_of_calls[call_list_any] ; i++) {
-                     if (main_call_lists[call_list_any][i]->the_defn.frequency > 0) {
-                        fprintf(stats_file, "%-4d %s\n",
-                                main_call_lists[call_list_any][i]->the_defn.frequency,
-                                main_call_lists[call_list_any][i]->menu_name);
-                     }
-                  }
-
-                  for (i=0 ; concept_descriptor_table[i].kind != concept_diagnose ; i++) {
-                     if (concept_descriptor_table[i].frequency > 0) {
-                        fprintf(stats_file, "%-4d %s\n",
-                                concept_descriptor_table[i].frequency,
-                                concept_descriptor_table[i].menu_name);
-                     }
-                  }
-
-                  fclose(stats_file);
+            for (i=0 ; concept_descriptor_table[i].kind != concept_diagnose ; i++) {
+               if (concept_descriptor_table[i].frequency > 0) {
+                  fprintf(stats_file, "%-4d %s\n",
+                          concept_descriptor_table[i].frequency,
+                          concept_descriptor_table[i].menu_name);
                }
             }
+
+            fclose(stats_file);
          }
       }
    }
