@@ -16,7 +16,7 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-    This is for version 27 */
+    This is for version 27. */
 
 /* mkcalls.c */
 
@@ -122,7 +122,7 @@ intlk_is_inherited       Has no meaning.  If the "interlocked" The "interlocked"
                                                                Presumably at least one subcall
                                                                has that property set.
 
-twelvematrix_is_inherited  Has no meaning.  If the "12 matrix" The "12 matrix" modifier is legal
+12_matrix_is_inherited   Has no meaning.  If the "12 matrix"   The "12 matrix" modifier is legal
                          modifier is given, its legality       and will be passed on to those
                          and meaning are determined by an      subcalls that have the
                          item in the array list that has the   "inherit_12_matrix" property set in
@@ -383,10 +383,11 @@ char *qualtab[] = {
 
 /* This table is keyed to "call_restriction". */
 char *crtab[] = {
-   "any",
+   "???",
    "alwaysfail",
    "wave_only",
    "wave_unless_say_2faced",
+   "all_facing_same",
    "1fl_only",
    "2fl_only",
    "3x3_2fl_only",
@@ -395,6 +396,7 @@ char *crtab[] = {
    "3x3couples_only",
    "4x4couples_only",
    "awkward_centers",
+   "nice_diamonds",
    "magic_only",
    "peelable_box",
    "ends_are_peelable",
@@ -459,7 +461,7 @@ char *flagtab[] = {
    "fudge_to_q_tag",
    "visible_fractions",
    "first_part_visible",
-   "??",
+   "12_16_matrix_means_split",
    "??",
    "??",
    "??",
@@ -470,7 +472,7 @@ char *flagtab[] = {
    "intlk_is_inherited",
    "magic_is_inherited",
    "grand_is_inherited",
-   "twelvematrix_is_inherited",
+   "12_matrix_is_inherited",
    "cross_is_inherited",
    "single_is_inherited",
    ""};

@@ -743,15 +743,17 @@ static long_boolean inner_search(search_kind goal, resolve_rec *new_resolve, lon
 
 
 static int promperm[8] = {1, 0, 6, 7, 5, 4, 2, 3};
+static int qtagperm[8] = {1, 0, 7, 6, 5, 4, 3, 2};
+static int crossperm[8] = {5, 4, 3, 2, 1, 0, 7, 6};
 static int laperm[8] = {1, 3, 6, 0, 5, 7, 2, 4};
 
 
 extern uims_reply full_resolve(search_kind goal)
 {
-   int j, k;
+   int j, k, dirmask;
    uims_reply reply;
-   char title[80];
-   char junk[80];
+   char title[MAX_TEXT_LINE_LENGTH];
+   char junk[MAX_TEXT_LINE_LENGTH];
    char *titleptr;
    int current_resolve_index, max_resolve_index;
    resolve_rec all_resolves[max_resolves];
@@ -777,47 +779,41 @@ extern uims_reply full_resolve(search_kind goal)
          if (history[history_ptr+1].command_root)
             specialfail("Can't do this when concepts are selected.");
 
-         /* ****** for now we only consider promenade home, LA, & RLG */
+         dirmask = 0;
+         for (k=0; k<8; k++) {
+            dirmask = (dirmask << 2) | (history[history_ptr].state.people[k].id1 & 3);
+         }
 
-         if (history[history_ptr].state.kind == s2x4 &&
-               /* L2FL, looking for promenade. */
-               ((history[history_ptr].state.people[0].id1 & d_mask) == d_south) &&
-               ((history[history_ptr].state.people[1].id1 & d_mask) == d_south) &&
-               ((history[history_ptr].state.people[2].id1 & d_mask) == d_north) &&
-               ((history[history_ptr].state.people[3].id1 & d_mask) == d_north) &&
-               ((history[history_ptr].state.people[4].id1 & d_mask) == d_north) &&
-               ((history[history_ptr].state.people[5].id1 & d_mask) == d_north) &&
-               ((history[history_ptr].state.people[6].id1 & d_mask) == d_south) &&
-               ((history[history_ptr].state.people[7].id1 & d_mask) == d_south)) {
+         if (history[history_ptr].state.kind == s2x4 && dirmask == 0xA00A) {
+            /* L2FL, looking for promenade. */
             for (j=0; j<8; j++)
                perm_array[j] = history[history_ptr].state.people[promperm[j]].id1 & 0700;
          }
-         else if (history[history_ptr].state.kind == s2x4 &&
-               /* Rwave, looking for RLG, we turn on "accept_extend" to tell it
-                  to measure couple number only approximately. */
-               ((history[history_ptr].state.people[0].id1 & d_mask) == d_north) &&
-               ((history[history_ptr].state.people[1].id1 & d_mask) == d_south) &&
-               ((history[history_ptr].state.people[2].id1 & d_mask) == d_north) &&
-               ((history[history_ptr].state.people[3].id1 & d_mask) == d_south) &&
-               ((history[history_ptr].state.people[4].id1 & d_mask) == d_south) &&
-               ((history[history_ptr].state.people[5].id1 & d_mask) == d_north) &&
-               ((history[history_ptr].state.people[6].id1 & d_mask) == d_south) &&
-               ((history[history_ptr].state.people[7].id1 & d_mask) == d_north)) {
+         else if (history[history_ptr].state.kind == s_qtag && dirmask == 0x08A2) {
+            /* RQTAG, looking for RLG. */
+            for (j=0; j<8; j++)
+               perm_array[j] = history[history_ptr].state.people[qtagperm[j]].id1 & 0700;
+         }
+         else if (history[history_ptr].state.kind == s_qtag && dirmask == 0x78D2) {
+            /* diamonds with points facing, looking for RLG. */
+            for (j=0; j<8; j++)
+               perm_array[j] = history[history_ptr].state.people[qtagperm[j]].id1 & 0700;
+         }
+         else if (history[history_ptr].state.kind == s_crosswave && dirmask == 0x278D) {
+            /* crossed waves, looking for RLG. */
+            for (j=0; j<8; j++)
+               perm_array[j] = history[history_ptr].state.people[crossperm[j]].id1 & 0700;
+         }
+         else if (history[history_ptr].state.kind == s2x4 && dirmask == 0x2288) {
+            /* Rwave, looking for RLG, we turn on "accept_extend" to tell it
+               to measure couple number only approximately. */
             accept_extend = TRUE;
             for (j=0; j<8; j++)
                perm_array[j] = history[history_ptr].state.people[promperm[j]].id1 & 0700;
          }
-         else if (history[history_ptr].state.kind == s2x4 &&
-               /* Lwave, looking for LA, we turn on "accept_extend" to tell it
-                  to measure couple number only approximately. */
-               ((history[history_ptr].state.people[0].id1 & d_mask) == d_south) &&
-               ((history[history_ptr].state.people[1].id1 & d_mask) == d_north) &&
-               ((history[history_ptr].state.people[2].id1 & d_mask) == d_south) &&
-               ((history[history_ptr].state.people[3].id1 & d_mask) == d_north) &&
-               ((history[history_ptr].state.people[4].id1 & d_mask) == d_north) &&
-               ((history[history_ptr].state.people[5].id1 & d_mask) == d_south) &&
-               ((history[history_ptr].state.people[6].id1 & d_mask) == d_north) &&
-               ((history[history_ptr].state.people[7].id1 & d_mask) == d_south)) {
+         else if (history[history_ptr].state.kind == s2x4 && dirmask == 0x8822) {
+            /* Lwave, looking for LA, we turn on "accept_extend" to tell it
+               to measure couple number only approximately. */
             accept_extend = TRUE;
             for (j=0; j<8; j++)
                perm_array[j] = history[history_ptr].state.people[laperm[j]].id1 & 0700;

@@ -490,18 +490,18 @@ char *getout_strings[] = {
 
 /* BEWARE!!  This list is keyed to the definition of "level" in sd.h . */
 char *filename_strings[] = {
-   "sequence.MS",
-   "sequence.Plus",
-   "sequence.A1",
-   "sequence.A2",
-   "sequence.C1",
-   "sequence.C2",
-   "sequence.C3A",
-   "sequence.C3",
-   "sequence.C3X",
-   "sequence.C4A",
-   "sequence.C4",
-   "sequence.all",
+   ".MS",
+   ".Plus",
+   ".A1",
+   ".A2",
+   ".C1",
+   ".C2",
+   ".C3A",
+   ".C3",
+   ".C3X",
+   ".C4A",
+   ".C4",
+   ".all",
    ""};
 
 /* BEWARE!!  This list is keyed to the definition of "resolve_kind" in sd.h . */

@@ -1,6 +1,6 @@
 /*
  * Imakefile for Sd (square dance caller's helper)
- * Time-stamp: <92/08/20 11:54:40 gildea>
+ * Time-stamp: <92/11/22 21:53:36 gildea>
  *
  * Run "xmkmf" to generate a Makefile from this description.
  * Then run "make" to build the Sd system.
@@ -35,8 +35,8 @@ clean::
 	$(RM) sd_calls.dat sd.tar
 
 
-DISTFILES = README Relnotes relnotes.archive Imakefile Makefile Sd.ad \
-            sd_calls.txt COPYING database.doc sd_doc.txi
+DISTFILES = README Relnotes relnotes.archive Imakefile Makefile Sd.res \
+            sd_calls.txt COPYING database.doc sd_doc.txinfo
 DISTSRCS = sd.h database.h paths.h
 
 distrib:

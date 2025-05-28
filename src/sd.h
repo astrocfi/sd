@@ -33,7 +33,7 @@ typedef short veryshort;
 #include "database.h"
 
 #define MAX_ERR_LENGTH 200
-#define MAX_FILENAME_LENGTH 80
+#define MAX_FILENAME_LENGTH 260
 #define MAX_PEOPLE 24
 
 /* Probability (out of 8) that a concept will be placed on a randomly generated call. */
@@ -624,7 +624,7 @@ typedef struct {
       } conc;           /* if schema = schema_concentric, schema_concentric_6_2, schema_concentric_2_6, schema_cross_concentric, schema_concentric_diamond_line */
    } stuff;
    /* Dynamically allocated to whatever size is required, will have trailing null. */
-   char real_name[4];
+   char name[4];
 } callspec_block;
 
 /* BEWARE!!  This list must track all the "map_hunk" definitions in sdtables.c . */
@@ -807,7 +807,8 @@ typedef enum {
 #define CONCPROP__USE_TWO_NUMBERS 0x00002000
 #define CONCPROP__NEED_3DMD       0x00004000
 #define CONCPROP__NEED_3X4_1X12   0x00008000
-#define CONCPROP__NEED_4X4_1X16   0x00010000
+#define CONCPROP__NEED_3X4        0x00010000
+#define CONCPROP__NEED_4X4_1X16   0x00020000
 
 typedef enum {    /* These control error messages that arise when we divide a setup
                      into subsetups (e.g. phantom lines) and find that one of
@@ -1063,7 +1064,7 @@ extern comment_block *comment_last;
 extern int abs_max_calls;                                           /* in SDMAIN */
 extern int max_base_calls;                                          /* in SDMAIN */
 extern callspec_block **base_calls;                                 /* in SDMAIN */
-extern char outfile_string[80];                                     /* in SDMAIN */
+extern char outfile_string[];                                       /* in SDMAIN */
 extern int last_file_position;                                      /* in SDMAIN */
 extern int global_age;                                              /* in SDMAIN */
 extern parse_state_type parse_state;                                /* in SDMAIN */
@@ -1078,6 +1079,7 @@ extern selector_kind selector_for_initialize;                       /* in SDMAIN
 
 extern int random_number;                                           /* in SDSI */
 extern int hashed_randoms;                                          /* in SDSI */
+extern char *database_filename;					    /* in SDSI */
 
 extern selector_kind current_selector;                              /* in PREDS */
 extern long_boolean selector_used;                                  /* in PREDS */

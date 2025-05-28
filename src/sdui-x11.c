@@ -1,6 +1,6 @@
 #ifndef lint
-static char *id = "@(#)sdui-x11.c      1.10    gildea@lcs.mit.edu  07 Aug 92";
-static char *time_stamp = "sdui-x11.c Time-stamp: <92/08/18 19:44:34 gildea>";
+static char *id = "@(#)sdui-x11.c      1.11    gildea@lcs.mit.edu  23 Nov 92";
+static char *time_stamp = "sdui-x11.c Time-stamp: <92/11/22 20:51:39 gildea>";
 #endif
 /* 
  * sdui-x11.c - SD User Interface for X11
@@ -16,14 +16,14 @@ static char *time_stamp = "sdui-x11.c Time-stamp: <92/08/18 19:44:34 gildea>";
  * By Stephen Gildea, March 1990.
  * Uses the Athena Widget Set from X11 Release 4 or 5.
  *
- * For use with version 25 of the Sd program.
+ * For use with version 27 of the Sd program.
  *
  *  The version of this file is as shown immediately below.  This
  *  string gets displayed at program startup, as the "ui" part of
  *  the complete version.
  */
 
-static char *sdui_x11_version = "1.10";
+static char *sdui_x11_version = "1.11";
 
 /* This file defines the following functions:
    uims_process_command_line
@@ -49,6 +49,7 @@ static char *sdui_x11_version = "1.10";
 */
 
 #include "sd.h"
+#include "paths.h"
 #include <stdio.h>
 #include <X11/Intrinsic.h>
 #include <X11/StringDefs.h>
@@ -235,7 +236,7 @@ undo_action(Widget w, XEvent *event, String *params, Cardinal *num_params)
     }
 }
 
-    
+
 /* popup actions */
 
 /* ARGSUSED */
@@ -321,6 +322,8 @@ static String message_trans =
     "<ClientMessage>WM_PROTOCOLS: quit()\n";
 
 typedef struct _SdResources {
+    String sequence;		/* -sequence */
+    String database;		/* -db */
     String abort_query;
     String modify_format;
     String modify_tag_format;
@@ -396,11 +399,22 @@ static XtResource choose_resources[] = {
     MENU("howMany", quantifier_title, "How many?")
 };
 
-/* Fallback resources for user customization */
+static XtResource top_level_resources[] = {
+    MENU("sequenceFile", sequence, SEQUENCE_FILENAME),
+    MENU("databaseFile", database, DATABASE_FILENAME),
+};
+
+static XrmOptionDescRec cmd_line_options[] = {
+    {"-sequence", "*sequenceFile", XrmoptionSepArg, NULL},
+    {"-db",       "*databaseFile", XrmoptionSepArg, NULL},
+};
+
+/* Fallback class resources */
 
 static String fallback_resources[] = {
     "*frame.height: 600",
     "*frame.internalBorderWidth: 2", /* clearer which list scrollbar with */
+    "*List.Cursor: left_ptr",	/* so list cursors get colored */
     "*Viewport*font: fixed",	/* keep the call/concept menus narrow */
     "*conceptpopup*font: fixed", /* keep the popup concept menus smaller */
     "*showGrip: False",		/* no grip on Paned widgets */
@@ -411,6 +425,9 @@ static String fallback_resources[] = {
     "*text*wrap: word",
     "*confirmpopup.WinGravity: 10", /* StaticGravity */
     "*confirm*label.borderWidth: 2",
+    "*concept*items.borderWidth: 2",
+    "*concept.hSpace: 10",	/* slack so don't move off accidentally */
+    "*concept.vSpace: 10",
     "*selector.choose*borderWidth: 0", /* prettier this way */
     "*Dialog.value*Translations: #override <Key>Return: accept_string()\n",
     "*comment.label: You can insert a comment:",
@@ -439,8 +456,15 @@ extern void
 uims_process_command_line(int *argcp, char *argv[])
 {
     program_name = argv[0];
-    toplevel = XtAppInitialize(&xtcontext, "Sd", NULL, 0, argcp, argv,
+    toplevel = XtAppInitialize(&xtcontext, "Sd",
+			       cmd_line_options, XtNumber(cmd_line_options),
+			       argcp, argv,
 			       fallback_resources, NULL, 0);
+    XtGetApplicationResources(toplevel, (XtPointer) &sd_resources,
+			      top_level_resources, XtNumber(top_level_resources),
+			      NULL, 0);
+    strncpy(outfile_string, sd_resources.sequence, MAX_FILENAME_LENGTH);
+    database_filename = sd_resources.database;
 }
 
 /*
@@ -452,7 +476,7 @@ extern void
 uims_preinitialize(void)
 {
     Widget box, leftarea, rightarea, startupmenu, infopanes, confirmbox;
-    Widget cmdbox, speconsbox;
+    Widget cmdbox, speconsbox, conceptbox;
     XtTranslations list_trans, unmap_no_trans;
     Arg args[5];
     int n;
@@ -713,9 +737,13 @@ uims_preinitialize(void)
     XtOverrideTranslations(conceptpopup,
 			   XtParseTranslationTable(choose_translations));
 
+    /* this creates a margin which makes it easier to mouse the edge items */
+    conceptbox = XtCreateManagedWidget("concept", boxWidgetClass,
+				       conceptpopup, args, 0);
+
     n = 0;
     conceptlist = XtCreateManagedWidget("items", listWidgetClass,
-					conceptpopup, args, n);
+					conceptbox, args, n);
     XtAddCallback(conceptlist, XtNcallback, choose_pick, (XtPointer)NULL);
     XtOverrideTranslations(conceptlist, list_trans);
 
@@ -824,7 +852,7 @@ uims_postinitialize(void)
     XawListChange(conceptspecialmenu, concept_menu_strings, 0, 0, TRUE);
     XawListChange(conceptmenu, concept_menu_list, concept_menu_len, 0, TRUE);
     set_call_menu (call_list_any, longest_title);
-    
+
     widen_viewport(lview, conceptmenu);
     widen_viewport(callview, callmenu);
 
@@ -868,12 +896,14 @@ uims_add_call_to_menu(call_list_kind cl, int call_menu_index, char name[])
 extern void
 uims_finish_call_menu(call_list_kind cl, char menu_name[])
 {
+    int name_len = strlen(menu_name);
+
     call_menu_names[cl] = menu_name;
 
     /* XXX - counting characters is not correct because the font
        need not be fixed width.  */
-    if (strlen (menu_name) > longest_title_length) {
-	longest_title_length = strlen (menu_name);
+    if (name_len > longest_title_length) {
+	longest_title_length = name_len;
 	longest_title = cl;
     }
 }
@@ -994,11 +1024,11 @@ position_near_mouse(Widget popupshell)
 
     width += 2 * border;
     height += 2 * border;
-    
+
     x -= ( (Position) width/2 );
     if (x < 0) x = 0;
     if (x > max_x) x = max_x;
-    
+
     y -= ( (Position) height/2 );
     if (y < 0) y = 0;
     if ( y > max_y ) y = max_y;
@@ -1016,7 +1046,7 @@ do_popup(Widget popup_shell)
     int value;
     Display *display = XtDisplay(popup_shell);
     XEvent event;
-    
+
     position_near_mouse(popup_shell);
     XtPopup(popup_shell, XtGrabNone);
     inside_what = inside_popup;
@@ -1230,7 +1260,7 @@ uims_do_concept_popup(int kind)
 	if (maxrow < concept_size_tables[kind][i])
 	    maxrow = concept_size_tables[kind][i];
     entries = maxcolumn*maxrow;
-    
+
     concept_popup_list =
 	(String *) XtRealloc((char *)concept_popup_list,
 			     entries*sizeof(String *));

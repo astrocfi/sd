@@ -194,15 +194,14 @@ static void writestuff_with_fraction(char s[], long_boolean do_number, int num)
       char *f = s;
       while (*f) {
          if (f[0] == 'N' && f[1] == '/' && f[2] == '4') {
-            char nn = '0' + (num & 0xFFFF);
-
             if ((num & 0xFFFF) == 2)
                writestuff("1/2");
             else {
-               writechar(nn);
+               writechar('0' + (num & 0xFFFF));
                writestuff("/4");
             }
-            f += 3;
+            writestuff(&f[3]);
+            return;
          }
          else
             writechar(*f++);
@@ -451,29 +450,19 @@ static void print_recurse(int print_recurse_arg)
             }
          }
 
-         if (k == concept_so_and_so_frac_stable || k == concept_some_are_frac_tandem || k == concept_some_are_tandem)
+         /* These concepts are missing the word "are" in the menu, because otherwise the menu would
+            be excessively wide, so we put the word back in. */
+         if (k == concept_some_are_frac_tandem || k == concept_some_are_tandem)
             writestuff("ARE ");
 
          if ((concept_table[k].concept_prop & (CONCPROP__USE_NUMBER | CONCPROP__USE_TWO_NUMBERS)) &&
                      k != concept_nth_part && k != concept_replace_nth_part) {
-            char nn[3];
-
-            if (k == concept_frac_stable || k == concept_so_and_so_frac_stable) {
-               nn[0] = '0' + (index & 0xFFFF);
-               nn[1] = '\0';
-
-               if ((index & 0xFFFF) == 2)
-                  writestuff("1/2 ");
-               else {
-                  writestuff(nn);
-                  writestuff("/4 ");
-               }
-            }
-            else if (k == concept_frac_tandem || k == concept_some_are_frac_tandem ||
-                     k == concept_phantom_frac_tandem || k == concept_gruesome_frac_tandem) {
+            if (k == concept_frac_stable || k == concept_frac_tandem || k == concept_some_are_frac_tandem ||
+                     k == concept_phantom_frac_tandem || k == concept_so_and_so_frac_stable || k == concept_gruesome_frac_tandem) {
                you_owe_me_a_number = TRUE;
             }
             else {
+               char nn[3];
                nn[0] = '0' + (index & 0xFFFF);
                nn[1] = '\0';
                writestuff(nn);
@@ -570,23 +559,14 @@ static void print_recurse(int print_recurse_arg)
             writestuff("ARE STANDARD IN");
             request_final_space = TRUE;
          }
-         else if (k == concept_some_are_tandem || k == concept_so_and_so_stable || k == concept_so_and_so_begin) {
-            writestuff(&item->name[10]);      /* Strip off the "so-and-so ". */
-            writestuff(",");
-            request_final_space = TRUE;
-         }
-         else if (k == concept_some_are_frac_tandem) {
+         else if (k == concept_some_are_frac_tandem || k == concept_so_and_so_frac_stable ||
+                  k == concept_some_are_tandem || k == concept_so_and_so_stable || k == concept_so_and_so_begin) {
             writestuff_with_fraction(&item->name[10], you_owe_me_a_number, index);      /* Strip off the "so-and-so ". */
             writestuff(",");
             request_final_space = TRUE;
          }
          else if (k == concept_frac_stable) {
-            writestuff(&item->name[4]);       /* Strip off the "N/4 ". */
-            request_final_space = TRUE;
-         }
-         else if (k == concept_so_and_so_frac_stable) {
-            writestuff(&item->name[18]);      /* Strip off the "so-and-so are N/4 ". */
-            writestuff(",");
+            writestuff_with_fraction(item->name, you_owe_me_a_number, index);
             request_final_space = TRUE;
          }
          else if (k == concept_double_offset) {
@@ -617,10 +597,10 @@ static void print_recurse(int print_recurse_arg)
             if (tptr) {
                target_call = tptr->call;
    
-               if ((tptr->concept->kind <= marker_end_of_list) && target_call && (target_call->real_name[0] == '@')) {
+               if ((tptr->concept->kind <= marker_end_of_list) && target_call && (target_call->name[0] == '@')) {
                   if (k == concept_left) {
                      /* See if this is a call whose name naturally changes when the "left" concept is used. */
-                     if (target_call->real_name[1] == 'g') {
+                     if (target_call->name[1] == 'g') {
                         use_left_name = TRUE;
                      }
                      else {
@@ -630,7 +610,7 @@ static void print_recurse(int print_recurse_arg)
                   }
                   else if (k == concept_cross) {
                      /* See if this is a call that wants the "cross" modifier to be moved inside its name. */
-                     if (target_call->real_name[1] == 'i') {
+                     if (target_call->name[1] == 'i') {
                         use_cross_name = TRUE;
                      }
                      else {
@@ -640,7 +620,7 @@ static void print_recurse(int print_recurse_arg)
                   }
                   else {
                      /* See if this is a call that wants the "single" concept to be given as "single file" instead. */
-                     if (target_call->real_name[1] == 'h') {
+                     if (target_call->name[1] == 'h') {
                         writestuff("SINGLE FILE");
                         request_final_space = TRUE;
                      }
@@ -742,7 +722,7 @@ static void print_recurse(int print_recurse_arg)
             char *np;
 
             if (enable_file_writing) localcall->age = global_age;
-            np = localcall->real_name;
+            np = localcall->name;
 
             /* Skip any "@g", "@h", or "@i" marker (we already acted on it.) */
             if ((*np == '@') && ((np[1] == 'g') || (np[1] == 'h') || (np[1] == 'i'))) np += 2;
@@ -892,7 +872,7 @@ static void print_recurse(int print_recurse_arg)
                            writestuff(" BUT REPLACE ");
                         else
                            writestuff(" AND REPLACE ");
-                        writestuff(localcall->real_name);
+                        writestuff(localcall->name);
                         writestuff(" WITH [");
                      }
 

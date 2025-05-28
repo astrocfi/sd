@@ -3,7 +3,7 @@
 @settitle Sd
 @c %**end of header
 @ifinfo
-sd_doc.txi time-stamp: @{92/08/29 22:21:26 gildea@}
+sd_doc.txinfo time-stamp: @{92/11/22 21:47:33 gildea@}
 @end ifinfo
 @iftex
 @finalout
@@ -20,11 +20,11 @@ sd_doc.txi time-stamp: @{92/08/29 22:21:26 gildea@}
 @headings off
 @iftex
 @c to make vskip work:
-@center @r{ }
+@hbox{}
 @vskip 0pt plus 1fill
 @end iftex
 
-This manual documents Sd version 25.
+This manual documents Sd version 27.
 
 Copyright @copyright{} 1992 William B. Ackerman and Stephen Gildea
 
@@ -207,11 +207,24 @@ name to look up resources under.  default: program name.
 an X resource manager string.
 @end table
 
-@ignore
-Additional options not implemented yet:
--database (-db) location of the calls database
--out      file name to write sequences to
-@end ignore
+Additional options specific to this program:
+
+@table @code
+@item -db @var{filename}
+location of the calls database.  The default is @file{sd_calls.dat} in
+the current directory.
+@item -sequence @var{filename}
+base name of the file to write sequences to.  The calling level will be
+appended to this name.  The default is @file{sequence}.
+@end table
+
+There are X resources associated with both switches:
+@code{Sd.sequenceFile} is equivalent to @code{-sequence}, and
+@code{Sd.databaseFile} is equivalent to @code{-db}.
+
+If you almost always will be passing the the same value for a
+command-line switch, you may find it more convenient to set the
+corresponding resource.
 
 
 @node Abridgement, Calling , Command Switches, Starting Sd

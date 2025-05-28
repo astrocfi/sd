@@ -19,7 +19,7 @@
     The version of this file is as shown immediately below.  This string
     gets displayed at program startup. */
 
-#define VERSION_STRING "27.1"
+#define VERSION_STRING "27.4"
 
 /* This defines the following functions:
    main
@@ -56,13 +56,31 @@ and the following external variables:
 #include <stdio.h>
 #include <string.h>
 #include "sd.h"
+#include "paths.h"
+   
+
+static void display_help()
+{
+    printf("Usage: sd [flags ...] level\n");
+    printf("  legal flags:\n");
+    printf("-write_list filename        write out list for this level\n");
+    printf("-write_full_list filename   write this list and all lower\n");
+    printf("-abridge filename           do not use calls in this file\n");
+    printf("-sequence filename          base name for sequence output (def \"%s\")\n",
+           SEQUENCE_FILENAME);
+    printf("-db filename                calls database file (def \"%s\")\n",
+           DATABASE_FILENAME);
+    printf("\nIn addition, the usual window system flags are supported.\n");
+    exit_program(0);
+}
+
 
 /* These variables are external. */
 
 int abs_max_calls;
 int max_base_calls;
 callspec_block **base_calls;        /* Gets allocated as array of pointers in sdinit. */
-char outfile_string[80];
+char outfile_string[MAX_FILENAME_LENGTH] = SEQUENCE_FILENAME;
 int last_file_position = -1;
 int global_age;
 parse_state_type parse_state;
@@ -679,7 +697,7 @@ extern long_boolean query_for_call(void)
          goto recurse_entry;
       }
       else if (uims_menu_index == command_create_comment) {
-         char comment[80];
+         char comment[MAX_TEXT_LINE_LENGTH];
    
          if (uims_do_comment_popup(comment)) {
             char *temp_text_ptr;
@@ -864,6 +882,9 @@ void main(int argc, char *argv[])
 {
    int argno;
 
+   if (strcmp(argv[1], "-help") == 0)
+       display_help();		/* does not return */
+
    /* This lets the X user interface intercept command line arguments that it is
       interested in. */
    uims_process_command_line(&argc, argv);
@@ -891,10 +912,18 @@ void main(int argc, char *argv[])
             call_list_mode = call_list_mode_writing_full;
          else if (strcmp(&argv[argno][1], "abridge") == 0)
             call_list_mode = call_list_mode_abridging;
-         else
-            goto bad_flag;
+         else {
+	     /* flags -seq and -db handled by uims_process_command_line */
+	     print_line("Unknown flag:");
+	     print_line(argv[argno]);
+	     goto bad_flag;
+	 }
          argno++;
-         if (argno>=argc) goto bad_flag;
+         if (argno>=argc) {
+	     print_line("This flag must be followed by a file name:");
+	     print_line(argv[argno-1]);
+	     goto bad_flag;
+	 }
          if (open_call_list_file(call_list_mode, argv[argno]))
             exit_program(1);
       }
@@ -927,7 +956,7 @@ void main(int argc, char *argv[])
 
    /* initialize outfile_string to calling-level-specific default outfile */
 
-   (void) strncpy(outfile_string, filename_strings[calling_level], MAX_FILENAME_LENGTH);
+   (void) strncat(outfile_string, filename_strings[calling_level], MAX_FILENAME_LENGTH);
 
    initializing_database = TRUE;
    testing_fidelity = FALSE;
@@ -1000,7 +1029,7 @@ void main(int argc, char *argv[])
    writestuff("under certain conditions; for details see the license.");
    newline();
    writestuff("You should have received a copy of the GNU General Public License ");
-   writestuff("along with this program, in the file 'COPYING'; if not, write to ");
+   writestuff("along with this program, in the file \"COPYING\"; if not, write to ");
    writestuff("the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA ");
    writestuff("02139, USA.");
    newline();
@@ -1017,9 +1046,9 @@ void main(int argc, char *argv[])
    writestuff(" : ui");
    writestuff(uims_version_string());
    newline();
-   writestuff("Output file is '");
+   writestuff("Output file is \"");
    writestuff(outfile_string);
-   writestuff("'");
+   writestuff("\"");
    newline();
    
    new_sequence:
@@ -1157,9 +1186,9 @@ void main(int argc, char *argv[])
       
                      if (probe_file(newfile_string)) {
                         (void) strncpy(outfile_string, newfile_string, MAX_FILENAME_LENGTH);
-                        (void) strncpy(confirm_message, "Output file changed to '", 25);
+                        (void) strncpy(confirm_message, "Output file changed to \"", 25);
                         (void) strncat(confirm_message, outfile_string, MAX_FILENAME_LENGTH);
-                        (void) strncat(confirm_message, "'", 2);
+                        (void) strncat(confirm_message, "\"", 2);
                         last_file_position = -1;
                         specialfail(confirm_message);
                      }
@@ -1172,9 +1201,9 @@ void main(int argc, char *argv[])
             }
          case command_neglect:
             {
-               char percentage_string[80];
+               char percentage_string[MAX_TEXT_LINE_LENGTH];
                uims_reply local_reply;
-               char title[80];
+               char title[MAX_TEXT_LINE_LENGTH];
                int percentage, calls_to_mark, i, deficit, final_percent;
       
                if (uims_do_neglect_popup(percentage_string)) {
@@ -1213,7 +1242,7 @@ void main(int argc, char *argv[])
             
                for (i=0; i<number_of_calls[call_list_any]; i++) {
                   if (main_call_lists[call_list_any][i]->callflags & 0x80000000) {
-                     writestuff(main_call_lists[call_list_any][i]->real_name);
+                     writestuff(main_call_lists[call_list_any][i]->name);
                      writestuff(", ");
                   }
                }
@@ -1281,8 +1310,8 @@ void main(int argc, char *argv[])
          case command_getout:
             {
                int getout_ind;
-               char date[80];
-               char header[80];
+               char date[MAX_TEXT_LINE_LENGTH];
+               char header[MAX_TEXT_LINE_LENGTH];
                int j;
             
                /* Check that it is really resolved. */
@@ -1344,9 +1373,9 @@ void main(int argc, char *argv[])
             
                close_file();     /* This will signal a "specialfail" if a file error occurs. */
       
-               writestuff("Sequence written to '");
+               writestuff("Sequence written to \"");
                writestuff(outfile_string);
-               writestuff("'.");
+               writestuff("\".");
                newline();
          
                global_age++;
@@ -1362,12 +1391,13 @@ void main(int argc, char *argv[])
    
    bad_level:
 
-   print_line("Arg must be calling level: m, p, a1, a2, c1, c2, c3a, c3, c3x, c4a, or c4.");
-   exit_program(1);
-   
+   print_line("Unknown calling level argument:");
+   print_line(argv[argno]);
+   print_line("Known calling levels: m, p, a1, a2, c1, c2, c3a, c3, c3x, c4a, or c4.");
+
    bad_flag:
 
-   print_line("Flag must be one of -write_list <filename>, -write_full_list <filename>, or -abridge <filename>.");
+   print_line("Use the -help flag for help.");
    exit_program(1);
 
    normal_exit:
@@ -1390,7 +1420,7 @@ extern void get_real_subcall(
 /* ****** needs to send out alternate_concept!!! */
 
 {
-   char tempstring_text[80];
+   char tempstring_text[MAX_TEXT_LINE_LENGTH];
    char *tempstringptr;
    parse_block *search;
    parse_block **newsearch;
@@ -1528,12 +1558,12 @@ extern void get_real_subcall(
       else if (item->modifiers & dfm_must_be_scoot_call) kind = modify_popup_only_scoot;
       else kind = modify_popup_any;
 
-      if (debug_popup || uims_do_modifier_popup(base_calls[item->call_id]->real_name, kind)) {
+      if (debug_popup || uims_do_modifier_popup(base_calls[item->call_id]->name, kind)) {
          /* User accepted the modification.
             Set up the prompt and get the concepts and call. */
       
          string_copy(&tempstringptr, "REPLACEMENT FOR THE ");
-         string_copy(&tempstringptr, base_calls[item->call_id]->real_name);
+         string_copy(&tempstringptr, base_calls[item->call_id]->name);
          string_copy(&tempstringptr, " --> ");
       }
       else {

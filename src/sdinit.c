@@ -82,7 +82,7 @@ static void create_call_name_list(void)
    int namelength;
 
    for (i=0; i<number_of_calls[call_list_any]; i++) {
-      name_ptr = main_call_lists[call_list_any][i]->real_name;
+      name_ptr = main_call_lists[call_list_any][i]->name;
       atsign = FALSE;
 
       /* See if the name has an 'at' sign, in which case we have to modify it to
@@ -303,8 +303,8 @@ static long_boolean callcompare(callspec_block *x, callspec_block *y)
 {
    char *m, *n;
 
-   m = x->real_name;
-   n = y->real_name;
+   m = x->name;
+   n = y->name;
    for (;;) {
       if (*m == '@') {
          /* Skip over @7...@8 and @j...@l stuff. */
@@ -501,9 +501,9 @@ static void read_fullword(void)
 static void database_error(char *message)
 {
     print_line(message);
-    if (call_root && call_root->real_name) {
+    if (call_root && call_root->name) {
 	print_line("  While reading this call from the database:");
-	print_line(call_root->real_name);
+	print_line(call_root->name);
     }
     exit_program(1);
 }
@@ -722,7 +722,7 @@ static void build_database(call_list_mode_t call_list_mode)
       /* We subtract 3 because 4 chars are already present, but we need one extra for the pad. */
 
       call_root = (callspec_block *) get_mem(sizeof(callspec_block) + char_count - 3);
-      np = call_root->real_name;
+      np = call_root->name;
 
       if (savetag) {
          check_tag(savetag);
@@ -755,7 +755,7 @@ static void build_database(call_list_mode_t call_list_mode)
       /* Scan the name for "@6" or "@e", fill in "needselector" or
          "left_changes_name" flag if found. */
 
-      np = call_root->real_name;
+      np = call_root->name;
 
       while (c = *np++) {
          if (c == '@') {
@@ -914,7 +914,7 @@ extern void initialize_menus(call_list_mode_t call_list_mode)
          cflag__intlk_is_inherited        != dfm_inherit_intlk ||
          cflag__magic_is_inherited        != dfm_inherit_magic ||
          cflag__grand_is_inherited        != dfm_inherit_grand ||
-         cflag__twelvematrix_is_inherited != dfm_inherit_12_matrix ||
+         cflag__12_matrix_is_inherited    != dfm_inherit_12_matrix ||
          cflag__cross_is_inherited        != dfm_inherit_cross ||
          cflag__single_is_inherited       != dfm_inherit_single ||
          cflag__diamond_is_inherited      != FINAL__DIAMOND ||
@@ -924,7 +924,7 @@ extern void initialize_menus(call_list_mode_t call_list_mode)
          cflag__intlk_is_inherited        != FINAL__INTERLOCKED ||
          cflag__magic_is_inherited        != FINAL__MAGIC ||
          cflag__grand_is_inherited        != FINAL__GRAND ||
-         cflag__twelvematrix_is_inherited != FINAL__12_MATRIX ||
+         cflag__12_matrix_is_inherited    != FINAL__12_MATRIX ||
          cflag__cross_is_inherited        != FINAL__CROSS ||
          cflag__single_is_inherited       != FINAL__SINGLE ||
    

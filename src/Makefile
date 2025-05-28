@@ -8,17 +8,17 @@
 # If you must use this file directly, expect to have to edit it.
 
 CC=gcc
-CFLAGS=$(FLAGS) -traditional
+CFLAGS=$(CDEBUGFLAGS) -traditional
 # Note: the "-traditional" above is needed only if "fixincludes" has
 # not been run on your machine.
 
-# FLAGS is used by both cc and ld.
+# CDEBUGFLAGS is used by both cc and ld.
 # If you want a smaller executable and are willing to lose the ability
 # to debug, use "-O" instead of "-g".
-FLAGS = -O
+CDEBUGFLAGS = -O
 
 # these flags are passed only to ld
-LDFLAGS = $(FLAGS)
+LDFLAGS = $(CDEBUGFLAGS)
 
 # additional flags for gildea's code
 UICFLAGS = -Wswitch
@@ -60,6 +60,14 @@ mkcalls: mkcalls.o
 sd_calls.dat: sd_calls.txt mkcalls
 	./mkcalls
 
+.SUFFIXES: .o .c .PS .dvi .info .txinfo
+
+.txinfo.dvi:
+	tex $?
+
+.txinfo.info:
+	makeinfo $?
+
 # TeX outputs front, body, toc; we want front, toc, body
 
 sd_doc-sorted.dvi: sd_doc.dvi
@@ -76,7 +84,7 @@ sd_doc.PS: sd_doc-sorted.dvi
 sdui-x11.o: sdui-x11.c
 	$(CC) $(CFLAGS) $(UICFLAGS) -c sdui-x11.c
 
-mkcalls.o sdsi.o: paths.h
+mkcalls.o sdmain.o sdsi.o sdui-x11.o: paths.h
 
 mkcalls.o sdmove.o sdbasic.o sd16.o: database.h
 
@@ -89,8 +97,8 @@ clean::
 lint:
 	/usr/lang/alint -ux $(SD_SRCS) $(SDUI_SRC)
 
-DISTFILES = README Relnotes relnotes.archive Imakefile Makefile Sd.ad \
-            sd_calls.txt COPYING database.doc sd_doc.txi
+DISTFILES = README Relnotes relnotes.archive Imakefile Makefile Sd.res \
+            sd_calls.txt COPYING database.doc sd_doc.txinfo
 DISTSRCS = sd.h database.h paths.h mkcalls.c
 
 distrib:

@@ -1,4 +1,4 @@
-		    RELEASE NOTES FOR VERSION 27.1
+		    RELEASE NOTES FOR VERSION 27.3
 
 ========================================================================
 To remove from SRC's database:  3x3/4x4 peel/trail off, peel/trail the deal,
@@ -7,8 +7,12 @@ circle to a wave, follow your leader.  Walk and dodge, bend the line,
 crossfire, shake and/or rattle, wheel thru, wheel the ocean/sea
 ========================================================================
 
-
-
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+You must inspect all uses of couples/tandem, whether or not fractional
+twosome was used.
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+This release should be considered flaky.  It is not suitable for general use.
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 Finally fixed (????) stuff like "centers [2/3 recycle] the difference"
 from a grand wave.  This also makes the evil example in the documentation
@@ -33,9 +37,9 @@ New concepts: Triple/quadruple lines/columns working together/apart.
 These take a 1x12 or 1x16 setup.  Also, plain triple/quadruple
 lines/columns can be done from a 1x12 or 1x16.
 
-More new concepts: Fractional stable.  It can only do these for calls that
-have had stability information encoded into the database, which most calls
-do not yet have.  See below.
+More new concepts: Fractional stable and fractional twosome/solid.  It can
+only do these for calls that have had stability information encoded into the
+database, which most calls do not yet have.  See below.
 
 It can now do "matrix" calls (U-turn back, quarter left/right, press/truck where
 appropriate) in more setups, including triple diamonds, quadruple diamonds,
@@ -48,6 +52,16 @@ Database internal stuff:
    ends are in a peelable 2x2, was removed.  Use "ends_are_peelable" for this.
    Cast a shadow and criss-cross the shadow were modified accordingly.
 
+   A new restriction "all_facing_same" was added, that tests that all 4,
+   6, or 8 people are facing the same way in a 2x2, 2x3, or 2x4.  This was
+   used to make 3x3/4x4 leads wheel the ocean complain if not done from a
+   "couple following a couple".
+
+   A new restriction "nice_diamonds" was added, that tests that parallel
+   or point-to-point diamonds are entirely consistently handed.  This
+   forbids "diamond swing thru" from facing diamonds, which used to be
+   accepted.
+
    The new letters "Z", "C", and "A" are used to indicate stability in a
    by-array call specifier.  They appear just before the roll indicator,
    if any.  For example:
@@ -59,10 +73,43 @@ Database internal stuff:
    stable is not supported for this person.  More complex indicators will
    be provided in the future for calls that have people reverse direction.
 
+   There is a new call flag "12_16_matrix_means_split" which means that,
+   if this call is given with the 12 matrix concept in a 3x4 or 2x6 setup,
+   it will do the call in each of the three 1x4's or 2x2's respectively
+   if that is required.  It used to be that calls would do that in all
+   cases, so that the initial trade in a 12 matrix relay the top
+   would work.  It had the unfortunate consequence that, from triple
+   lines "12 matrix counter rotate" was legal and would do a lockit in
+   each of the 3 waves.  Now the call "trade" has this flag but "counter
+   rotate" does not, so that "12 matrix relay the top" works but "12 matrix
+   counter rotate" is illegal.  You can of course do a plain counter rotate.
+
 A bug in initialization was fixed that made it not think that "ladies chain"
 was legal from facing lines.  What was the problem?  Ladies chain is only
 legal from normal couples.  When setups were being tested at program startup,
 the test setup for lines facing and 8 chain had the couples sashayed.
+
+The file sd_doc.txi was renamed sd_doc.txinfo.
+
+Two new command line arguments:
+
+-sequence filename          sets the base name for sequence output
+-db filename                sets the calls database file
+
+The defaults are as before.  There are X resources associated with both.
+
+
+			User Interface Changes
+
+Safety border around concept popups.
+
+Prettier mouse cursor in some cases.
+
+The file Sd.ad was renamed Sd.res, and the documentation of its use
+has changed.  It is no longer considered an app-defaults file.  Most
+users were unable to install it in /usr/lib anyway.  It is now merely
+a sample of some resources you might want to set in your user
+resources file for Sd.  See README for the new documentation.
 
 ===============================================================================
 

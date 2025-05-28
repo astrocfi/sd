@@ -27,7 +27,7 @@
    database format version. */
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 29
+#define DATABASE_FORMAT_VERSION 31
 
 /* BEWARE!!  This list must track the tables "flagtab" and "nexttab"" in mkcalls.c .
    Because the constants are not defined contiguously, there are spacer items
@@ -58,7 +58,7 @@
 #define cflag__fudge_to_q_tag             0x00008000
 #define cflag__visible_fractions          0x00010000
 #define cflag__first_part_visible         0x00020000
-/* space left for                         0x00040000 */
+#define cflag__12_16_matrix_means_split   0x00040000
 /* space left for                         0x00080000 */
 /* space left for                         0x00100000 */
 /* space left for                         0x00200000 */
@@ -69,7 +69,7 @@
 #define cflag__intlk_is_inherited         0x04000000
 #define cflag__magic_is_inherited         0x08000000
 #define cflag__grand_is_inherited         0x10000000
-#define cflag__twelvematrix_is_inherited  0x20000000
+#define cflag__12_matrix_is_inherited     0x20000000
 #define cflag__cross_is_inherited         0x40000000
 #define cflag__single_is_inherited        0x80000000
 
@@ -270,10 +270,11 @@ typedef enum {
 /* BEWARE!!  This list must track the array "crtab" in mkcalls.c . */
 
 typedef enum {
-   cr_any,
+   cr_none,
    cr_alwaysfail,                   /* any setup - this always fails (presumably to give the "unusual position" warning) */
    cr_wave_only,                    /* 1x2 - a miniwave; 1x4 - a wave; 2x4 - waves; 1x8 - a grand wave; 2x2 - real box; qtag - wave in center; 4x2 or 3x2 - column */
    cr_wave_unless_say_2faced,
+   cr_all_facing_same,              /* 2x2, 2x3, or 2x4 - all people facing the same way. */
    cr_1fl_only,                     /* 1x4 - a 1FL; 2x3 or 2x4 - 1FL's */
    cr_2fl_only,                     /* 1x2 - a couple; 1x4 - a 2FL; 2x4 - 2FL's; 1x8 - a grand 2FL; 2x2 - "1-faced" box; qtag - 2FL in center */
    cr_3x3_2fl_only,                 /* 1x6 - 3 facing one way, 3 the other */
@@ -282,6 +283,7 @@ typedef enum {
    cr_3x3couples_only,              /* 1x6 lines - each group of 3 people are facing the same way */
    cr_4x4couples_only,              /* 1x8 lines - each group of 4 people are facing the same way */
    cr_awkward_centers,              /* 1x4 or 1x2 - centers must not have left hands with each other */
+   cr_nice_diamonds,                /* qtag or ptpd - diamonds have consistent handedness */
    cr_magic_only,                   /* 2x2 - split-trade-circulate type of box; 4x2 - magic column */
    cr_peelable_box,                 /* 2x2 or 3x2 or 4x2 - all people in each column are facing same way */
    cr_ends_are_peelable,            /* 2x4 - ends are a box with each person in genuine tandem */

@@ -1,11 +1,20 @@
-! Sd.ad - sample application defaults for Sd (square dance caller's helper)
-! Time-stamp: <92/08/18 19:29:22 gildea>
+! Sd.res - sample user resource file for Sd (square dance caller's helper)
+! Time-stamp: <92/11/22 19:00:29 gildea>
 
+!
+! colors - suggested color customizations for color monitors
+!
 *Foreground: Wheat
 *BorderColor: Wheat
 *Background: DarkSlateGray
+!
+! Sample resource settings.
+! All of these settings are the defaults, and you need not copy them
+! unless you are going to change them.
+!
 *frame.height: 600
 *frame.internalBorderWidth: 2
+*List.Cursor: left_ptr
 *Viewport*font: -misc-fixed-medium-r-semicondensed--13-*-*-*-c-60-iso8859-1
 *conceptpopup*font: -misc-fixed-medium-r-semicondensed--13-*-*-*-c-60-iso8859-1
 *showGrip: False

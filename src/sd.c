@@ -2489,7 +2489,7 @@ concept_table_item concept_table[] = {
    {CONCPROP__NEED_2X6 | CONCPROP__SET_PHANTOMS | CONCPROP__NO_STEP | CONCPROP__STANDARD,   do_concept_do_phantom_1x6},       /* concept_do_phantom_1x6 */
    {CONCPROP__NEED_2X8 | CONCPROP__SET_PHANTOMS | CONCPROP__NO_STEP | CONCPROP__STANDARD,   do_concept_do_phantom_1x8},       /* concept_do_phantom_1x8 */
    {CONCPROP__NEED_4X4 | CONCPROP__SET_PHANTOMS | CONCPROP__NO_STEP | CONCPROP__STANDARD,   do_concept_do_phantom_2x4},       /* concept_do_phantom_2x4 */
-   {CONCPROP__SET_PHANTOMS | CONCPROP__NO_STEP | CONCPROP__STANDARD,                        do_concept_do_phantom_2x3},       /* concept_do_phantom_2x3 */
+   {CONCPROP__NEED_3X4 | CONCPROP__SET_PHANTOMS | CONCPROP__NO_STEP | CONCPROP__STANDARD,   do_concept_do_phantom_2x3},       /* concept_do_phantom_2x3 */
    {CONCPROP__NEED_2X8 | CONCPROP__SET_PHANTOMS | CONCPROP__NO_STEP | CONCPROP__STANDARD,   do_concept_divided_2x4},          /* concept_divided_2x4 */
    {CONCPROP__NEED_2X6 | CONCPROP__SET_PHANTOMS | CONCPROP__NO_STEP | CONCPROP__STANDARD,   do_concept_divided_2x3},          /* concept_divided_2x3 */
    {CONCPROP__NO_STEP | CONCPROP__STANDARD,                                                 distorted_move},                  /* concept_distorted */

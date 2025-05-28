@@ -480,6 +480,13 @@ extern void do_matrix_expansion(setup *ss, concept_kind ckind)
                eptr = &exp_1x8_1x12_stuff; goto expand_me;
             case s1x10:
                eptr = &exp_1x10_1x12_stuff; goto expand_me;
+            case s_qtag:                 /* Need to expand to a 3x4. */
+               eptr = &exp_qtg_3x4_stuff; goto expand_me;
+         }
+      }
+      else if (concprops & CONCPROP__NEED_3X4) {
+         if (ss->kind == s_qtag) {       /* Need to expand to a 3x4. */
+            eptr = &exp_qtg_3x4_stuff; goto expand_me;
          }
       }
       else if (concprops & CONCPROP__NEED_4X4_1X16) {
@@ -494,15 +501,6 @@ extern void do_matrix_expansion(setup *ss, concept_kind ckind)
                eptr = &exp_1x12_1x14_stuff; goto expand_me;
             case s1x14:
                eptr = &exp_1x14_1x16_stuff; goto expand_me;
-         }
-      }
-      else {
-         switch (ckind) {
-            case concept_triple_lines: case concept_triple_lines_together:
-               if (ss->kind == s_qtag) {         /* Need to expand to a 3x4. */
-                  eptr = &exp_qtg_3x4_stuff; goto expand_me;
-               }
-               break;
          }
       }
    

@@ -118,10 +118,13 @@ static collision_map collision_map_table[] = {
    {2, 0x000000, 0x30, 0x30, {5, 4},               {7, 5},                {6, 4},                 s2x4,        s2x4,        0},
    {2, 0x000000, 0xC0, 0xC0, {7, 6},               {7, 5},                {6, 4},                 s2x4,        s2x4,        0},
    /* These items handle various types of "1/2 circulate" calls from 2x2's. */
-   {2, 0x000000, 0x05, 0x05, {0, 2},               {0, 3},                {1, 2},                 sdmd,        s1x4,        0},   /* from couples out */
-   {2, 0x00A00A, 0x0A, 0x0A, {1, 3},               {0, 3},                {1, 2},                 sdmd,        s1x4,        1},   /* from couples in */
-   {2, 0x000000, 0x05, 0x05, {0, 2},               {0, 3},                {1, 2},                 s1x4,        s1x4,        0},
+   {2, 0x000000, 0x05, 0x05, {0, 2},               {0, 3},                {1, 2},                 sdmd,        s1x4,        0},   /* from couples out if it went to diamond */
+   {2, 0x000000, 0x05, 0x05, {0, 2},               {0, 3},                {1, 2},                 s1x4,        s1x4,        0},   /* from couples out if it went to line */
+   {2, 0x00A00A, 0x0A, 0x0A, {1, 3},               {0, 3},                {1, 2},                 sdmd,        s1x4,        1},   /* from couples in if it went to diamond */
+   {2, 0x000000, 0x0A, 0x0A, {1, 3},               {0, 3},                {1, 2},                 s1x4,        s1x4,        0},   /* from couples in if it went to line */
+/*    What is this????  Isn't it incorrect??
    {2, 0x00A00A, 0x0A, 0x0A, {1, 3},               {0, 3},                {1, 2},                 s1x4,        s1x4,        0},
+*/
    {2, 0x000000, 0x06, 0x06, {1, 2},               {0, 3},                {1, 2},                 s1x4,        s1x4,        0},   /* from "head pass thru, all split circulate" */
    {2, 0x000000, 0x09, 0x09, {0, 3},               {0, 3},                {1, 2},                 s1x4,        s1x4,        0},   /* from "head pass thru, all split circulate" */
    /* These items handle "1/2 split trade circulate" from 2x2's. */
@@ -246,10 +249,582 @@ static void do_stability(unsigned int *personp, unsigned int def_word, int turni
    }
    else {
       *personp =
-         *personp & ~(STABLE_RBIT*7|STABLE_VBIT*3) |
+         (*personp & ~(STABLE_RBIT*7|STABLE_VBIT*3)) |
          ((*personp + (STABLE_VBIT * atr * st)) & (STABLE_VBIT*3));
    }
 }
+
+
+
+static void check_line_restriction(setup *ss, call_restriction restr, unsigned int flags)
+{
+   int q0, q1, q2, q3, q4, q5, q6, q7;
+   int i, j, k, z, t;
+
+   if (restr == cr_alwaysfail) goto ldef_failed;
+
+   switch (ss->kind) {
+      case s2x2:
+         switch (restr) {
+            case cr_wave_only:
+               /* check for a "real" (walk-and-dodge type) box */
+               k = 0; j = 0; i = 3; z = 3;
+               if (t = ss->people[0].id1) { k |= t; i &= t; j |= (t^2); z &= (t^2); }
+               if (t = ss->people[1].id1) { j |= t; i &= t; k |= (t^2); z &= (t^2); }
+               if (t = ss->people[2].id1) { j |= t; z &= t; k |= (t^2); i &= (t^2); }
+               if (t = ss->people[3].id1) { k |= t; z &= t; j |= (t^2); i &= (t^2); }
+               if ((k&3) && ((~i)&3) && (j&3) && ((~z)&3))
+                  goto ldef_failed;
+               break;
+            case cr_2fl_only: case cr_all_facing_same:
+               /* check for a "one-faced" (reverse-the-pass type) box */
+               k = 0; j = 0; i = 3; z = 3;
+               if (t = ss->people[0].id1) { k |= t; i &= t; j |= (t^2); z &= (t^2); }
+               if (t = ss->people[1].id1) { k |= t; i &= t; j |= (t^2); z &= (t^2); }
+               if (t = ss->people[2].id1) { k |= t; i &= t; j |= (t^2); z &= (t^2); }
+               if (t = ss->people[3].id1) { k |= t; i &= t; j |= (t^2); z &= (t^2); }
+               if ((k&3) && ((~i)&3) && (j&3) && ((~z)&3))
+                  goto ldef_failed;
+               break;
+            case cr_magic_only:
+               /* check for a "magic" (split-trade-circulate type) box */
+               k = 0; j = 0; i = 3; z = 3;
+               if (t = ss->people[0].id1) { k |= t; i &= t; j |= (t^2); z &= (t^2); }
+               if (t = ss->people[1].id1) { j |= t; z &= t; k |= (t^2); i &= (t^2); }
+               if (t = ss->people[2].id1) { k |= t; i &= t; j |= (t^2); z &= (t^2); }
+               if (t = ss->people[3].id1) { j |= t; z &= t; k |= (t^2); i &= (t^2); }
+               if ((k&3) && ((~i)&3) && (j&3) && ((~z)&3))
+                  goto ldef_failed;
+               break;
+            case cr_couples_only:
+               /* check for everyone as a couple */
+               q0 = 0; q1 = 0; q2 = 3; q3 = 3;
+               q4 = 0; q5 = 0; q7 = 3; q6 = 3;
+               if (t = ss->people[0].id1) { q0 |= t; q2 &= t; q1 |= (t^2); q3 &= (t^2); }
+               if (t = ss->people[1].id1) { q0 |= t; q7 &= t; q1 |= (t^2); q6 &= (t^2); }
+               if (t = ss->people[2].id1) { q5 |= t; q7 &= t; q4 |= (t^2); q6 &= (t^2); }
+               if (t = ss->people[3].id1) { q5 |= t; q2 &= t; q4 |= (t^2); q3 &= (t^2); }
+               if (((q0&3) && ((~q2)&3) && (q1&3) && ((~q3)&3)) ||
+                   ((q5&3) && ((~q7)&3) && (q4&3) && ((~q6)&3)))
+                  goto ldef_failed;
+               break;
+            case cr_peelable_box:
+               /* check for a "peelable" (everyone in genuine tandem somehow) box */
+               q0 = 0; q1 = 0; q2 = 3; q3 = 3;
+               q4 = 0; q5 = 0; q7 = 3; q6 = 3;
+               if (t = ss->people[0].id1) { q0 |= t; q2 &= t; q1 |= (t^2); q3 &= (t^2); }
+               if (t = ss->people[1].id1) { q5 |= t; q2 &= t; q4 |= (t^2); q3 &= (t^2); }
+               if (t = ss->people[2].id1) { q5 |= t; q7 &= t; q4 |= (t^2); q6 &= (t^2); }
+               if (t = ss->people[3].id1) { q0 |= t; q7 &= t; q1 |= (t^2); q6 &= (t^2); }
+               if (((q0&3) && ((~q2)&3) && (q1&3) && ((~q3)&3)) ||
+                   ((q5&3) && ((~q7)&3) && (q4&3) && ((~q6)&3)))
+                  goto ldef_failed;
+               break;
+            case cr_not_tboned:
+               /* check for a box that is not T-boned */
+               if (((ss->people[0].id1 | ss->people[1].id1 | ss->people[2].id1 | ss->people[3].id1) & 011) == 011)
+                  goto ldef_failed;
+               break;
+         }
+         break;
+      case s2x4:
+         switch (restr) {
+            case cr_wave_only:
+               k = 0;         /* check for parallel waves */
+               i = 2;
+               if (t = ss->people[0].id1) { k |=  t; i &=  t; }
+               if (t = ss->people[1].id1) { k |= ~t; i &= ~t; }
+               if (t = ss->people[2].id1) { k |=  t; i &=  t; }
+               if (t = ss->people[3].id1) { k |= ~t; i &= ~t; }
+               if (t = ss->people[4].id1) { k |= ~t; i &= ~t; }
+               if (t = ss->people[5].id1) { k |=  t; i &=  t; }
+               if (t = ss->people[6].id1) { k |= ~t; i &= ~t; }
+               if (t = ss->people[7].id1) { k |=  t; i &=  t; }
+               if (k & ~i & 2)
+                  goto ldef_failed;
+               break;
+            case cr_all_facing_same:
+               q0 = 0; q1 = 0;  /* check for all 8 people in a "one-faced" setup */
+               if (t = ss->people[0].id1) { q0 |= t; q1 |= ~t; }
+               if (t = ss->people[1].id1) { q0 |= t; q1 |= ~t; }
+               if (t = ss->people[2].id1) { q0 |= t; q1 |= ~t; }
+               if (t = ss->people[3].id1) { q0 |= t; q1 |= ~t; }
+               if (t = ss->people[4].id1) { q0 |= t; q1 |= ~t; }
+               if (t = ss->people[5].id1) { q0 |= t; q1 |= ~t; }
+               if (t = ss->people[6].id1) { q0 |= t; q1 |= ~t; }
+               if (t = ss->people[7].id1) { q0 |= t; q1 |= ~t; }
+               if (q0&q1&2)
+                  goto ldef_failed;
+               break;
+            case cr_1fl_only:
+               q0 = 0; q1 = 0; /* check for parallel one-faced lines */
+               q2 = 0; q3 = 0;
+               if (t = ss->people[0].id1) { q0 |= t; q1 |= ~t; }
+               if (t = ss->people[1].id1) { q0 |= t; q1 |= ~t; }
+               if (t = ss->people[2].id1) { q0 |= t; q1 |= ~t; }
+               if (t = ss->people[3].id1) { q0 |= t; q1 |= ~t; }
+               if (t = ss->people[4].id1) { q2 |= t; q3 |= ~t; }
+               if (t = ss->people[5].id1) { q2 |= t; q3 |= ~t; }
+               if (t = ss->people[6].id1) { q2 |= t; q3 |= ~t; }
+               if (t = ss->people[7].id1) { q2 |= t; q3 |= ~t; }
+               if ((q0&q1&2) || (q2&q3&2))
+                  goto ldef_failed;
+               break;
+            case cr_2fl_only:
+               k = 0;         /* check for parallel two-faced lines */
+               i = 2;
+               if (t = ss->people[0].id1) { k |=  t; i &=  t; }
+               if (t = ss->people[1].id1) { k |=  t; i &=  t; }
+               if (t = ss->people[2].id1) { k |= ~t; i &= ~t; }
+               if (t = ss->people[3].id1) { k |= ~t; i &= ~t; }
+               if (t = ss->people[4].id1) { k |= ~t; i &= ~t; }
+               if (t = ss->people[5].id1) { k |= ~t; i &= ~t; }
+               if (t = ss->people[6].id1) { k |=  t; i &=  t; }
+               if (t = ss->people[7].id1) { k |=  t; i &=  t; }
+               if (k & ~i & 2)
+                  goto ldef_failed;
+               break;
+            case cr_ends_are_peelable:
+               /* check for ends in a "peelable" (everyone in genuine tandem somehow) box */
+               q1 = 0; q0 = 0; q5 = 0; q4 = 0;
+               if (t = ss->people[0].id1) { q1 |= t; q0 |= (t^2); }
+               if (t = ss->people[3].id1) { q5 |= t; q4 |= (t^2); }
+               if (t = ss->people[4].id1) { q5 |= t; q4 |= (t^2); }
+               if (t = ss->people[7].id1) { q1 |= t; q0 |= (t^2); }
+               if (((q1&3) && (q0&3)) || ((q5&3) && (q4&3)))
+                  goto ldef_failed;
+               break;
+            case cr_couples_only:
+               /* check for everyone as a couple */
+               q0 = 0; q1 = 0;
+               q4 = 0; q5 = 0;
+               q2 = 0; q3 = 0;
+               q6 = 0; q7 = 0;
+               if (t = ss->people[0].id1) { q0 |= t; q1 |= (t^2); }
+               if (t = ss->people[1].id1) { q0 |= t; q1 |= (t^2); }
+               if (t = ss->people[2].id1) { q5 |= t; q4 |= (t^2); }
+               if (t = ss->people[3].id1) { q5 |= t; q4 |= (t^2); }
+               if (t = ss->people[4].id1) { q2 |= t; q3 |= (t^2); }
+               if (t = ss->people[5].id1) { q2 |= t; q3 |= (t^2); }
+               if (t = ss->people[6].id1) { q6 |= t; q7 |= (t^2); }
+               if (t = ss->people[7].id1) { q6 |= t; q7 |= (t^2); }
+               if (((q0&3) && (q1&3)) ||
+                   ((q2&3) && (q3&3)) ||
+                   ((q6&3) && (q7&3)) ||
+                   ((q5&3) && (q4&3)))
+                  goto ldef_failed;
+               break;
+         }
+         break;
+      case s_2x3:
+         switch (restr) {
+            case cr_all_facing_same:
+               q0 = 0; q1 = 0;  /* check for all 6 people in a "one-faced" setup */
+               if (t = ss->people[0].id1) { q0 |= t; q1 |= ~t; }
+               if (t = ss->people[1].id1) { q0 |= t; q1 |= ~t; }
+               if (t = ss->people[2].id1) { q0 |= t; q1 |= ~t; }
+               if (t = ss->people[3].id1) { q0 |= t; q1 |= ~t; }
+               if (t = ss->people[4].id1) { q0 |= t; q1 |= ~t; }
+               if (t = ss->people[5].id1) { q0 |= t; q1 |= ~t; }
+               if (q0&q1&2)
+                  goto ldef_failed;
+               break;
+            case cr_1fl_only:
+               q0 = 0; q1 = 0; /* check for parallel one-faced lines of 3 */
+               q2 = 0; q3 = 0;
+               if (t = ss->people[0].id1) { q0 |= t; q1 |= ~t; }
+               if (t = ss->people[1].id1) { q0 |= t; q1 |= ~t; }
+               if (t = ss->people[2].id1) { q0 |= t; q1 |= ~t; }
+               if (t = ss->people[3].id1) { q2 |= t; q3 |= ~t; }
+               if (t = ss->people[4].id1) { q2 |= t; q3 |= ~t; }
+               if (t = ss->people[5].id1) { q2 |= t; q3 |= ~t; }
+               if ((q0&q1&2) || (q2&q3&2))
+                  goto ldef_failed;
+               break;
+         }
+         break;
+      case s_qtag:
+         switch (restr) {
+            case cr_nice_diamonds:
+               k = 0;         /* check for consistent diamonds, so can do "diamond swing thru" */
+               i = 2;
+               if (t = ss->people[0].id1) { k |=  t+1; i &=  t+1; }
+               if (t = ss->people[1].id1) { k |=  t+1; i &=  t+1; }
+               if (t = ss->people[4].id1) { k |=  t-1; i &=  t-1; }
+               if (t = ss->people[5].id1) { k |=  t-1; i &=  t-1; }
+               if (t = ss->people[2].id1) { k |=  t; i &=  t; }
+               if (t = ss->people[3].id1) { k |= ~t; i &= ~t; }
+               if (t = ss->people[6].id1) { k |= ~t; i &= ~t; }
+               if (t = ss->people[7].id1) { k |=  t; i &=  t; }
+               if (k & ~i & 2)
+                  goto ldef_failed;
+               break;
+            case cr_wave_only:
+               k = 0;         /* check for wave across the center */
+               i = 2;
+               if (t = ss->people[2].id1) { k |=  t; i &=  t; }
+               if (t = ss->people[3].id1) { k |= ~t; i &= ~t; }
+               if (t = ss->people[6].id1) { k |= ~t; i &= ~t; }
+               if (t = ss->people[7].id1) { k |=  t; i &=  t; }
+               if (k & ~i & 2)
+                  goto ldef_failed;
+               break;
+            case cr_2fl_only:
+               k = 0;         /* check for two-faced line across the center */
+               i = 2;
+               if (t = ss->people[2].id1) { k |= ~t; i &= ~t; }
+               if (t = ss->people[3].id1) { k |= ~t; i &= ~t; }
+               if (t = ss->people[6].id1) { k |=  t; i &=  t; }
+               if (t = ss->people[7].id1) { k |=  t; i &=  t; }
+               if (k & ~i & 2)
+                  goto ldef_failed;
+               break;
+         }
+         break;
+      case s_ptpd:
+         switch (restr) {
+            case cr_nice_diamonds:
+               k = 0;         /* check for consistent diamonds, so can do "diamond swing thru" */
+               i = 2;
+               if (t = ss->people[1].id1) { k |=  t+1; i &=  t+1; }
+               if (t = ss->people[7].id1) { k |=  t+1; i &=  t+1; }
+               if (t = ss->people[5].id1) { k |=  t-1; i &=  t-1; }
+               if (t = ss->people[3].id1) { k |=  t-1; i &=  t-1; }
+               if (t = ss->people[4].id1) { k |=  t; i &=  t; }
+               if (t = ss->people[6].id1) { k |= ~t; i &= ~t; }
+               if (t = ss->people[0].id1) { k |= ~t; i &= ~t; }
+               if (t = ss->people[2].id1) { k |=  t; i &=  t; }
+               if (k & ~i & 2)
+                  goto ldef_failed;
+               break;
+         }
+         break;
+      case s1x8:
+         switch (restr) {
+            case cr_wave_only:
+               k = 0;         /* check for grand wave */
+               i = 2;
+               if (t = ss->people[0].id1) { k |=  t; i &=  t; }
+               if (t = ss->people[1].id1) { k |= ~t; i &= ~t; }
+               if (t = ss->people[2].id1) { k |= ~t; i &= ~t; }
+               if (t = ss->people[3].id1) { k |=  t; i &=  t; }
+               if (t = ss->people[4].id1) { k |= ~t; i &= ~t; }
+               if (t = ss->people[5].id1) { k |=  t; i &=  t; }
+               if (t = ss->people[6].id1) { k |=  t; i &=  t; }
+               if (t = ss->people[7].id1) { k |= ~t; i &= ~t; }
+               if (k & ~i & 2)
+                  goto ldef_failed;
+               break;
+            case cr_2fl_only:
+               k = 0;         /* check for grand two-faced line */
+               i = 2;
+               if (t = ss->people[0].id1) { k |=  t; i &=  t; }
+               if (t = ss->people[1].id1) { k |=  t; i &=  t; }
+               if (t = ss->people[2].id1) { k |= ~t; i &= ~t; }
+               if (t = ss->people[3].id1) { k |= ~t; i &= ~t; }
+               if (t = ss->people[4].id1) { k |= ~t; i &= ~t; }
+               if (t = ss->people[5].id1) { k |= ~t; i &= ~t; }
+               if (t = ss->people[6].id1) { k |=  t; i &=  t; }
+               if (t = ss->people[7].id1) { k |=  t; i &=  t; }
+               if (k & ~i & 2)
+                  goto ldef_failed;
+               break;
+            case cr_4x4_2fl_only:
+               k = 0;         /* check for 4x4 two-faced line -- 4 up and 4 down */
+               i = 2;
+               if (t = ss->people[0].id1) { k |=  t; i &=  t; }
+               if (t = ss->people[1].id1) { k |=  t; i &=  t; }
+               if (t = ss->people[2].id1) { k |=  t; i &=  t; }
+               if (t = ss->people[3].id1) { k |=  t; i &=  t; }
+               if (t = ss->people[4].id1) { k |= ~t; i &= ~t; }
+               if (t = ss->people[5].id1) { k |= ~t; i &= ~t; }
+               if (t = ss->people[6].id1) { k |= ~t; i &= ~t; }
+               if (t = ss->people[7].id1) { k |= ~t; i &= ~t; }
+               if (k & ~i & 2)
+                  goto ldef_failed;
+               break;
+            case cr_4x4couples_only:
+               /* check for each four people facing same way */
+               q0 = 0; q1 = 0; q2 = 0; q3 = 0;
+               if (t = ss->people[0].id1) { q0 |= t; q1 |= ~t; }
+               if (t = ss->people[1].id1) { q0 |= t; q1 |= ~t; }
+               if (t = ss->people[2].id1) { q0 |= t; q1 |= ~t; }
+               if (t = ss->people[3].id1) { q0 |= t; q1 |= ~t; }
+               if (t = ss->people[4].id1) { q2 |= t; q3 |= ~t; }
+               if (t = ss->people[5].id1) { q2 |= t; q3 |= ~t; }
+               if (t = ss->people[6].id1) { q2 |= t; q3 |= ~t; }
+               if (t = ss->people[7].id1) { q2 |= t; q3 |= ~t; }
+               if (((q0&q1&2)) || ((q2&q3&2)))
+                  goto ldef_failed;
+               break;
+         }
+         break;
+      case s_1x6:
+         switch (restr) {
+            case cr_3x3_2fl_only:
+               k = 0;         /* check for 3x3 two-faced line -- 3 up and 3 down */
+               i = 2;
+               if (t = ss->people[0].id1) { k |=  t; i &=  t; }
+               if (t = ss->people[1].id1) { k |=  t; i &=  t; }
+               if (t = ss->people[2].id1) { k |=  t; i &=  t; }
+               if (t = ss->people[3].id1) { k |= ~t; i &= ~t; }
+               if (t = ss->people[4].id1) { k |= ~t; i &= ~t; }
+               if (t = ss->people[5].id1) { k |= ~t; i &= ~t; }
+               if (k & ~i & 2)
+                  goto ldef_failed;
+               break;
+            case cr_3x3couples_only:
+               /* check for each three people facing same way */
+               /* check for everyone as a couple */
+               q0 = 0; q1 = 0; q2 = 0; q3 = 0;
+               if (t = ss->people[0].id1) { q0 |= t; q1 |= ~t; }
+               if (t = ss->people[1].id1) { q0 |= t; q1 |= ~t; }
+               if (t = ss->people[2].id1) { q0 |= t; q1 |= ~t; }
+               if (t = ss->people[3].id1) { q2 |= t; q3 |= ~t; }
+               if (t = ss->people[4].id1) { q2 |= t; q3 |= ~t; }
+               if (t = ss->people[5].id1) { q2 |= t; q3 |= ~t; }
+               if (((q0&q1&2)) || ((q2&q3&2)))
+                  goto ldef_failed;
+               break;
+         }
+         break;
+      case s1x4:
+         switch (restr) {
+            case cr_wave_only:
+               k = 0;         /* check for a wave */
+               i = 2;
+               if (t = ss->people[0].id1) { k |=  t; i &=  t; }
+               if (t = ss->people[1].id1) { k |= ~t; i &= ~t; }
+               if (t = ss->people[2].id1) { k |= ~t; i &= ~t; }
+               if (t = ss->people[3].id1) { k |=  t; i &=  t; }
+               if (k & ~i & 2)
+                  goto ldef_failed;
+               break;
+            case cr_2fl_only:
+               k = 0;         /* check for a 2-faced line */
+               i = 2;
+               if (t = ss->people[0].id1) { k |=  t; i &=  t; }
+               if (t = ss->people[1].id1) { k |=  t; i &=  t; }
+               if (t = ss->people[2].id1) { k |= ~t; i &= ~t; }
+               if (t = ss->people[3].id1) { k |= ~t; i &= ~t; }
+               if (k & ~i & 2)
+                  goto ldef_failed;
+               break;
+            case cr_1fl_only:
+               k = 0;         /* check for a 1-faced line */
+               i = 0;
+               if (t = ss->people[0].id1) { k |= t; i |= ~t; }
+               if (t = ss->people[1].id1) { k |= t; i |= ~t; }
+               if (t = ss->people[2].id1) { k |= t; i |= ~t; }
+               if (t = ss->people[3].id1) { k |= t; i |= ~t; }
+               if (k & i & 2)
+                  goto ldef_failed;
+               break;
+            case cr_couples_only:
+               /* check for everyone as a couple */
+               q0 = 0; q1 = 0; q2 = 0; q3 = 0;
+               if (t = ss->people[0].id1) { q0 |= t; q1 |= ~t; }
+               if (t = ss->people[1].id1) { q0 |= t; q1 |= ~t; }
+               if (t = ss->people[2].id1) { q2 |= t; q3 |= ~t; }
+               if (t = ss->people[3].id1) { q2 |= t; q3 |= ~t; }
+               if (((q0&q1&2)) || ((q2&q3&2)))
+                  goto ldef_failed;
+               break;
+            case cr_awkward_centers:
+               k = 2;         /* check for centers not having left hands */
+               i = 2;
+               if (t = ss->people[1].id1) k &= ~t;
+               if (t = ss->people[3].id1) i &= t;
+               if (!((k | i) & 2)) warn(warn__awkward_centers);
+               break;
+         }
+         break;
+      case s_1x2:
+         switch (restr) {
+            case cr_wave_only:
+               k = 0;         /* check for a miniwave */
+               i = 2;
+               if (t = ss->people[0].id1) { k |=  t; i &=  t; }
+               if (t = ss->people[1].id1) { k |= ~t; i &= ~t; }
+               if (k & ~i & 2)
+                  goto ldef_failed;
+               break;
+            case cr_2fl_only: case cr_couples_only:
+               k = 0;         /* check for a couple */
+               i = 2;
+               if (t = ss->people[0].id1) { k |=  t; i &=  t; }
+               if (t = ss->people[1].id1) { k |=  t; i &=  t; }
+               if (k & ~i & 2)
+                  goto ldef_failed;
+               break;
+            case cr_awkward_centers:
+               k = 2;         /* check for people not having left hands */
+               i = 2;
+               if (t = ss->people[0].id1) k &= ~t;
+               if (t = ss->people[1].id1) i &= t;
+               if (!((k | i) & 2)) warn(warn__awkward_centers);
+               break;
+         }
+         break;
+   }
+
+   return;
+
+   ldef_failed:
+
+   if (flags & CAF__RESTR_UNUSUAL) warn(warn__unusual);
+   else if (flags & CAF__RESTR_FORBID) fail("This call is not legal from this formation.");
+   else warn(warn__do_your_part);
+}
+
+
+
+
+static void check_column_restriction(setup *ss, call_restriction restr, unsigned int flags)
+{
+   int q0, q1, q2, q3, q4, q5, q6, q7;
+   int i, j, k, z, t;
+
+   if (restr == cr_alwaysfail) goto cdef_failed;
+
+   switch (ss->kind) {
+      case s2x4:
+         switch (restr) {
+            case cr_wave_only:
+               k = 0;         /* check for real columns */
+               i = 2;
+               if (ss->people[0].id1) { k |=  ss->people[0].id1; i &=  ss->people[0].id1; }
+               if (ss->people[1].id1) { k |=  ss->people[1].id1; i &=  ss->people[1].id1; }
+               if (ss->people[2].id1) { k |=  ss->people[2].id1; i &=  ss->people[2].id1; }
+               if (ss->people[3].id1) { k |=  ss->people[3].id1; i &=  ss->people[3].id1; }
+               if (ss->people[4].id1) { k |= ~ss->people[4].id1; i &= ~ss->people[4].id1; }
+               if (ss->people[5].id1) { k |= ~ss->people[5].id1; i &= ~ss->people[5].id1; }
+               if (ss->people[6].id1) { k |= ~ss->people[6].id1; i &= ~ss->people[6].id1; }
+               if (ss->people[7].id1) { k |= ~ss->people[7].id1; i &= ~ss->people[7].id1; }
+               if (k & ~i & 2)
+                  goto cdef_failed;
+               break;
+            case cr_magic_only:
+               k = 0;         /* check for magic columns */
+               i = 2;
+               if (ss->people[0].id1) { k |=  ss->people[0].id1; i &=  ss->people[0].id1; }
+               if (ss->people[1].id1) { k |= ~ss->people[1].id1; i &= ~ss->people[1].id1; }
+               if (ss->people[2].id1) { k |= ~ss->people[2].id1; i &= ~ss->people[2].id1; }
+               if (ss->people[3].id1) { k |=  ss->people[3].id1; i &=  ss->people[3].id1; }
+               if (ss->people[4].id1) { k |= ~ss->people[4].id1; i &= ~ss->people[4].id1; }
+               if (ss->people[5].id1) { k |=  ss->people[5].id1; i &=  ss->people[5].id1; }
+               if (ss->people[6].id1) { k |=  ss->people[6].id1; i &=  ss->people[6].id1; }
+               if (ss->people[7].id1) { k |= ~ss->people[7].id1; i &= ~ss->people[7].id1; }
+               if (k & ~i & 2)
+                  goto cdef_failed;
+               break;
+            case cr_couples_only:
+               /* check for everyone as a couple */
+               q0 = 0; q1 = 0;
+               q4 = 0; q5 = 0;
+               q2 = 0; q3 = 0;
+               q6 = 0; q7 = 0;
+               if (t = ss->people[0].id1) { q0 |= (t^1); q1 |= (t^3); }
+               if (t = ss->people[7].id1) { q0 |= (t^1); q1 |= (t^3); }
+               if (t = ss->people[1].id1) { q5 |= (t^1); q4 |= (t^3); }
+               if (t = ss->people[6].id1) { q5 |= (t^1); q4 |= (t^3); }
+               if (t = ss->people[2].id1) { q2 |= (t^1); q3 |= (t^3); }
+               if (t = ss->people[5].id1) { q2 |= (t^1); q3 |= (t^3); }
+               if (t = ss->people[3].id1) { q6 |= (t^1); q7 |= (t^3); }
+               if (t = ss->people[4].id1) { q6 |= (t^1); q7 |= (t^3); }
+               if (((q0&3) && (q1&3)) ||
+                   ((q2&3) && (q3&3)) ||
+                   ((q6&3) && (q7&3)) ||
+                   ((q5&3) && (q4&3)))
+                  goto cdef_failed;
+               break;
+            case cr_peelable_box:
+               /* check for a "peelable" 2x4 column */
+               q2 = 3; q3 = 3;
+               q7 = 3; q6 = 3;
+               if (t = ss->people[0].id1) { q2 &= t; q3 &= (t^2); }
+               if (t = ss->people[1].id1) { q2 &= t; q3 &= (t^2); }
+               if (t = ss->people[2].id1) { q2 &= t; q3 &= (t^2); }
+               if (t = ss->people[3].id1) { q2 &= t; q3 &= (t^2); }
+               if (t = ss->people[4].id1) { q7 &= t; q6 &= (t^2); }
+               if (t = ss->people[5].id1) { q7 &= t; q6 &= (t^2); }
+               if (t = ss->people[6].id1) { q7 &= t; q6 &= (t^2); }
+               if (t = ss->people[7].id1) { q7 &= t; q6 &= (t^2); }
+               if ((((~q2)&3) && ((~q3)&3)) || (((~q7)&3) && ((~q6)&3)))
+                  goto cdef_failed;
+               break;
+            case cr_quarterbox_or_col:
+               k = 0;         /* check for a reasonable "triple cross" setup */
+               i = 2;
+               if (ss->people[0].id1) { k |=  ss->people[0].id1;                         }
+               if (ss->people[1].id1) { k |=  ss->people[1].id1; i &=  ss->people[1].id1; }
+               if (ss->people[2].id1) { k |=  ss->people[2].id1; i &=  ss->people[2].id1; }
+               if (ss->people[3].id1) {                         i &=  ss->people[3].id1; }
+               if (ss->people[4].id1) { k |= ~ss->people[4].id1;                         }
+               if (ss->people[5].id1) { k |= ~ss->people[5].id1; i &= ~ss->people[5].id1; }
+               if (ss->people[6].id1) { k |= ~ss->people[6].id1; i &= ~ss->people[6].id1; }
+               if (ss->people[7].id1) {                         i &= ~ss->people[7].id1; }
+               if (k & ~i & 2)
+                  goto cdef_failed;
+               break;
+            case cr_quarterbox_or_magic_col:
+               k = 0;         /* check for a reasonable "make magic" setup */
+               i = 2;
+               if (ss->people[0].id1) {                         i &= ~ss->people[0].id1; }
+               if (ss->people[1].id1) { k |=  ss->people[1].id1; i &=  ss->people[1].id1; }
+               if (ss->people[2].id1) { k |=  ss->people[2].id1; i &=  ss->people[2].id1; }
+               if (ss->people[3].id1) { k |= ~ss->people[3].id1;                         }
+               if (ss->people[4].id1) {                         i &=  ss->people[4].id1; }
+               if (ss->people[5].id1) { k |= ~ss->people[5].id1; i &= ~ss->people[5].id1; }
+               if (ss->people[6].id1) { k |= ~ss->people[6].id1; i &= ~ss->people[6].id1; }
+               if (ss->people[7].id1) { k |=  ss->people[7].id1;                         }
+               if (k & ~i & 2)
+                  goto cdef_failed;
+               break;
+         }
+         break;
+      case s_2x3:
+         switch (restr) {
+            case cr_wave_only:
+               k = 0;         /* check for real columns */
+               i = 2;
+               if (ss->people[0].id1) { k |=  ss->people[0].id1; i &=  ss->people[0].id1; }
+               if (ss->people[1].id1) { k |=  ss->people[1].id1; i &=  ss->people[1].id1; }
+               if (ss->people[2].id1) { k |=  ss->people[2].id1; i &=  ss->people[2].id1; }
+               if (ss->people[3].id1) { k |= ~ss->people[3].id1; i &= ~ss->people[3].id1; }
+               if (ss->people[4].id1) { k |= ~ss->people[4].id1; i &= ~ss->people[4].id1; }
+               if (ss->people[5].id1) { k |= ~ss->people[5].id1; i &= ~ss->people[5].id1; }
+               if (k & ~i & 2)
+                  goto cdef_failed;
+               break;
+            case cr_peelable_box:
+               /* check for a "peelable" 2x3 column */
+               q2 = 3; q3 = 3;
+               q7 = 3; q6 = 3;
+               if (t = ss->people[0].id1) { q2 &= t; q3 &= (t^2); }
+               if (t = ss->people[1].id1) { q2 &= t; q3 &= (t^2); }
+               if (t = ss->people[2].id1) { q2 &= t; q3 &= (t^2); }
+               if (t = ss->people[3].id1) { q7 &= t; q6 &= (t^2); }
+               if (t = ss->people[4].id1) { q7 &= t; q6 &= (t^2); }
+               if (t = ss->people[5].id1) { q7 &= t; q6 &= (t^2); }
+               if ((((~q2)&3) && ((~q3)&3)) || (((~q7)&3) && ((~q6)&3)))
+                  goto cdef_failed;
+               break;
+         }
+         break;
+   }
+
+   return;
+
+   cdef_failed:
+
+   if (flags & CAF__RESTR_UNUSUAL) warn(warn__unusual);
+   else if (flags & CAF__RESTR_FORBID) fail("This call is not legal from this formation.");
+   else warn(warn__do_your_part);
+}
+
+
+
 
 
 static void special_4_way_symm(
@@ -469,7 +1044,7 @@ extern void basic_move(
             }
             break;
          case s3x4:
-            if (z == FINAL__12_MATRIX) {
+            if (z == FINAL__12_MATRIX && callspec->callflags & cflag__12_16_matrix_means_split) {
                /* "12 matrix" was specified.  Split it into 1x4's in the appropriate way. */
                division_maps = (*map_lists[s1x4][2])[MPKIND__SPLIT][1];
                final_concepts &= ~z;
@@ -477,7 +1052,7 @@ extern void basic_move(
             }
             break;
          case s2x6:
-            if (z == FINAL__12_MATRIX) {
+            if (z == FINAL__12_MATRIX && callspec->callflags & cflag__12_16_matrix_means_split) {
                /* "12 matrix" was specified.  Split it into 2x2's in the appropriate way. */
                division_maps = (*map_lists[s2x2][2])[MPKIND__SPLIT][0];
                final_concepts &= ~z;
@@ -1354,368 +1929,7 @@ extern void basic_move(
       ldef = linedefinition;
       goodies = ldef;
 
-      if (ldef->restriction == cr_alwaysfail) goto ldef_failed;
-
-      switch (ss->kind) {
-         int t, q0, q1, q2, q3, q4, q5, q6, q7;
-
-         case s2x2:
-            switch (ldef->restriction) {
-               case cr_wave_only:
-                  /* check for a "real" (walk-and-dodge type) box */
-                  k = 0; j = 0; i = 3; z = 3;
-                  if (t = ss->people[0].id1) { k |= t; i &= t; j |= (t^2); z &= (t^2); }
-                  if (t = ss->people[1].id1) { j |= t; i &= t; k |= (t^2); z &= (t^2); }
-                  if (t = ss->people[2].id1) { j |= t; z &= t; k |= (t^2); i &= (t^2); }
-                  if (t = ss->people[3].id1) { k |= t; z &= t; j |= (t^2); i &= (t^2); }
-                  if ((k&3) && ((~i)&3) && (j&3) && ((~z)&3))
-                     goto ldef_failed;
-                  break;
-               case cr_2fl_only:
-                  /* check for a "one-faced" (reverse-the-pass type) box */
-                  k = 0; j = 0; i = 3; z = 3;
-                  if (t = ss->people[0].id1) { k |= t; i &= t; j |= (t^2); z &= (t^2); }
-                  if (t = ss->people[1].id1) { k |= t; i &= t; j |= (t^2); z &= (t^2); }
-                  if (t = ss->people[2].id1) { k |= t; i &= t; j |= (t^2); z &= (t^2); }
-                  if (t = ss->people[3].id1) { k |= t; i &= t; j |= (t^2); z &= (t^2); }
-                  if ((k&3) && ((~i)&3) && (j&3) && ((~z)&3))
-                     goto ldef_failed;
-                  break;
-               case cr_magic_only:
-                  /* check for a "magic" (split-trade-circulate type) box */
-                  k = 0; j = 0; i = 3; z = 3;
-                  if (t = ss->people[0].id1) { k |= t; i &= t; j |= (t^2); z &= (t^2); }
-                  if (t = ss->people[1].id1) { j |= t; z &= t; k |= (t^2); i &= (t^2); }
-                  if (t = ss->people[2].id1) { k |= t; i &= t; j |= (t^2); z &= (t^2); }
-                  if (t = ss->people[3].id1) { j |= t; z &= t; k |= (t^2); i &= (t^2); }
-                  if ((k&3) && ((~i)&3) && (j&3) && ((~z)&3))
-                     goto ldef_failed;
-                  break;
-               case cr_couples_only:
-                  /* check for everyone as a couple */
-                  q0 = 0; q1 = 0; q2 = 3; q3 = 3;
-                  q4 = 0; q5 = 0; q7 = 3; q6 = 3;
-                  if (t = ss->people[0].id1) { q0 |= t; q2 &= t; q1 |= (t^2); q3 &= (t^2); }
-                  if (t = ss->people[1].id1) { q0 |= t; q7 &= t; q1 |= (t^2); q6 &= (t^2); }
-                  if (t = ss->people[2].id1) { q5 |= t; q7 &= t; q4 |= (t^2); q6 &= (t^2); }
-                  if (t = ss->people[3].id1) { q5 |= t; q2 &= t; q4 |= (t^2); q3 &= (t^2); }
-                  if (((q0&3) && ((~q2)&3) && (q1&3) && ((~q3)&3)) ||
-                      ((q5&3) && ((~q7)&3) && (q4&3) && ((~q6)&3)))
-                     goto ldef_failed;
-                  break;
-               case cr_peelable_box:
-                  /* check for a "peelable" (everyone in genuine tandem somehow) box */
-                  q0 = 0; q1 = 0; q2 = 3; q3 = 3;
-                  q4 = 0; q5 = 0; q7 = 3; q6 = 3;
-                  if (t = ss->people[0].id1) { q0 |= t; q2 &= t; q1 |= (t^2); q3 &= (t^2); }
-                  if (t = ss->people[1].id1) { q5 |= t; q2 &= t; q4 |= (t^2); q3 &= (t^2); }
-                  if (t = ss->people[2].id1) { q5 |= t; q7 &= t; q4 |= (t^2); q6 &= (t^2); }
-                  if (t = ss->people[3].id1) { q0 |= t; q7 &= t; q1 |= (t^2); q6 &= (t^2); }
-                  if (((q0&3) && ((~q2)&3) && (q1&3) && ((~q3)&3)) ||
-                      ((q5&3) && ((~q7)&3) && (q4&3) && ((~q6)&3)))
-                     goto ldef_failed;
-                  break;
-               case cr_not_tboned:
-                  /* check for a box that is not T-boned */
-                  if (((ss->people[0].id1 | ss->people[1].id1 | ss->people[2].id1 | ss->people[3].id1) & 011) == 011)
-                     goto ldef_failed;
-                  break;
-            }
-            break;
-         case s2x4:
-            switch (ldef->restriction) {
-               case cr_wave_only:
-                  k = 0;         /* check for parallel waves */
-                  i = 2;
-                  if (t = ss->people[0].id1) { k |=  t; i &=  t; }
-                  if (t = ss->people[1].id1) { k |= ~t; i &= ~t; }
-                  if (t = ss->people[2].id1) { k |=  t; i &=  t; }
-                  if (t = ss->people[3].id1) { k |= ~t; i &= ~t; }
-                  if (t = ss->people[4].id1) { k |= ~t; i &= ~t; }
-                  if (t = ss->people[5].id1) { k |=  t; i &=  t; }
-                  if (t = ss->people[6].id1) { k |= ~t; i &= ~t; }
-                  if (t = ss->people[7].id1) { k |=  t; i &=  t; }
-                  if (k & ~i & 2)
-                     goto ldef_failed;
-                  break;
-               case cr_1fl_only:
-                  q0 = 0; q1 = 0; /* check for parallel one-faced lines */
-                  q2 = 0; q3 = 0;
-                  if (t = ss->people[0].id1) { q0 |= t; q1 |= ~t; }
-                  if (t = ss->people[1].id1) { q0 |= t; q1 |= ~t; }
-                  if (t = ss->people[2].id1) { q0 |= t; q1 |= ~t; }
-                  if (t = ss->people[3].id1) { q0 |= t; q1 |= ~t; }
-                  if (t = ss->people[4].id1) { q2 |= t; q3 |= ~t; }
-                  if (t = ss->people[5].id1) { q2 |= t; q3 |= ~t; }
-                  if (t = ss->people[6].id1) { q2 |= t; q3 |= ~t; }
-                  if (t = ss->people[7].id1) { q2 |= t; q3 |= ~t; }
-                  if (((q0&q1&2)) || ((q2&q3&2)))
-                     goto ldef_failed;
-                  break;
-               case cr_2fl_only:
-                  k = 0;         /* check for parallel two-faced lines */
-                  i = 2;
-                  if (t = ss->people[0].id1) { k |=  t; i &=  t; }
-                  if (t = ss->people[1].id1) { k |=  t; i &=  t; }
-                  if (t = ss->people[2].id1) { k |= ~t; i &= ~t; }
-                  if (t = ss->people[3].id1) { k |= ~t; i &= ~t; }
-                  if (t = ss->people[4].id1) { k |= ~t; i &= ~t; }
-                  if (t = ss->people[5].id1) { k |= ~t; i &= ~t; }
-                  if (t = ss->people[6].id1) { k |=  t; i &=  t; }
-                  if (t = ss->people[7].id1) { k |=  t; i &=  t; }
-                  if (k & ~i & 2)
-                     goto ldef_failed;
-                  break;
-               case cr_ends_are_peelable:
-                  /* check for ends in a "peelable" (everyone in genuine tandem somehow) box */
-                  q1 = 0; q0 = 0; q5 = 0; q4 = 0;
-                  if (t = ss->people[0].id1) { q1 |= t; q0 |= (t^2); }
-                  if (t = ss->people[3].id1) { q5 |= t; q4 |= (t^2); }
-                  if (t = ss->people[4].id1) { q5 |= t; q4 |= (t^2); }
-                  if (t = ss->people[7].id1) { q1 |= t; q0 |= (t^2); }
-                  if (((q1&3) && (q0&3)) || ((q5&3) && (q4&3)))
-                     goto ldef_failed;
-                  break;
-               case cr_couples_only:
-                  /* check for everyone as a couple */
-                  q0 = 0; q1 = 0;
-                  q4 = 0; q5 = 0;
-                  q2 = 0; q3 = 0;
-                  q6 = 0; q7 = 0;
-                  if (t = ss->people[0].id1) { q0 |= t; q1 |= (t^2); }
-                  if (t = ss->people[1].id1) { q0 |= t; q1 |= (t^2); }
-                  if (t = ss->people[2].id1) { q5 |= t; q4 |= (t^2); }
-                  if (t = ss->people[3].id1) { q5 |= t; q4 |= (t^2); }
-                  if (t = ss->people[4].id1) { q2 |= t; q3 |= (t^2); }
-                  if (t = ss->people[5].id1) { q2 |= t; q3 |= (t^2); }
-                  if (t = ss->people[6].id1) { q6 |= t; q7 |= (t^2); }
-                  if (t = ss->people[7].id1) { q6 |= t; q7 |= (t^2); }
-                  if (((q0&3) && (q1&3)) ||
-                      ((q2&3) && (q3&3)) ||
-                      ((q6&3) && (q7&3)) ||
-                      ((q5&3) && (q4&3)))
-                     goto ldef_failed;
-                  break;
-            }
-            break;
-         case s_2x3:
-            switch (ldef->restriction) {
-               case cr_1fl_only:
-                  q0 = 0; q1 = 0; /* check for parallel one-faced lines of 3 */
-                  q2 = 0; q3 = 0;
-                  if (t = ss->people[0].id1) { q0 |= t; q1 |= ~t; }
-                  if (t = ss->people[1].id1) { q0 |= t; q1 |= ~t; }
-                  if (t = ss->people[2].id1) { q0 |= t; q1 |= ~t; }
-                  if (t = ss->people[3].id1) { q2 |= t; q3 |= ~t; }
-                  if (t = ss->people[4].id1) { q2 |= t; q3 |= ~t; }
-                  if (t = ss->people[5].id1) { q2 |= t; q3 |= ~t; }
-                  if (((q0&q1&2)) || ((q2&q3&2)))
-                     goto ldef_failed;
-                  break;
-            }
-            break;
-         case s_qtag:
-            switch (ldef->restriction) {
-               case cr_wave_only:
-                  k = 0;         /* check for wave across the center */
-                  i = 2;
-                  if (t = ss->people[2].id1) { k |=  t; i &=  t; }
-                  if (t = ss->people[3].id1) { k |= ~t; i &= ~t; }
-                  if (t = ss->people[6].id1) { k |= ~t; i &= ~t; }
-                  if (t = ss->people[7].id1) { k |=  t; i &=  t; }
-                  if (k & ~i & 2)
-                     goto ldef_failed;
-                  break;
-               case cr_2fl_only:
-                  k = 0;         /* check for two-faced line across the center */
-                  i = 2;
-                  if (t = ss->people[2].id1) { k |= ~t; i &= ~t; }
-                  if (t = ss->people[3].id1) { k |= ~t; i &= ~t; }
-                  if (t = ss->people[6].id1) { k |=  t; i &=  t; }
-                  if (t = ss->people[7].id1) { k |=  t; i &=  t; }
-                  if (k & ~i & 2)
-                     goto ldef_failed;
-                  break;
-            }
-            break;
-         case s1x8:
-            switch (ldef->restriction) {
-               case cr_wave_only:
-                  k = 0;         /* check for grand wave */
-                  i = 2;
-                  if (t = ss->people[0].id1) { k |=  t; i &=  t; }
-                  if (t = ss->people[1].id1) { k |= ~t; i &= ~t; }
-                  if (t = ss->people[2].id1) { k |= ~t; i &= ~t; }
-                  if (t = ss->people[3].id1) { k |=  t; i &=  t; }
-                  if (t = ss->people[4].id1) { k |= ~t; i &= ~t; }
-                  if (t = ss->people[5].id1) { k |=  t; i &=  t; }
-                  if (t = ss->people[6].id1) { k |=  t; i &=  t; }
-                  if (t = ss->people[7].id1) { k |= ~t; i &= ~t; }
-                  if (k & ~i & 2)
-                     goto ldef_failed;
-                  break;
-               case cr_2fl_only:
-                  k = 0;         /* check for grand two-faced line */
-                  i = 2;
-                  if (t = ss->people[0].id1) { k |=  t; i &=  t; }
-                  if (t = ss->people[1].id1) { k |=  t; i &=  t; }
-                  if (t = ss->people[2].id1) { k |= ~t; i &= ~t; }
-                  if (t = ss->people[3].id1) { k |= ~t; i &= ~t; }
-                  if (t = ss->people[4].id1) { k |= ~t; i &= ~t; }
-                  if (t = ss->people[5].id1) { k |= ~t; i &= ~t; }
-                  if (t = ss->people[6].id1) { k |=  t; i &=  t; }
-                  if (t = ss->people[7].id1) { k |=  t; i &=  t; }
-                  if (k & ~i & 2)
-                     goto ldef_failed;
-                  break;
-               case cr_4x4_2fl_only:
-                  k = 0;         /* check for 4x4 two-faced line -- 4 up and 4 down */
-                  i = 2;
-                  if (t = ss->people[0].id1) { k |=  t; i &=  t; }
-                  if (t = ss->people[1].id1) { k |=  t; i &=  t; }
-                  if (t = ss->people[2].id1) { k |=  t; i &=  t; }
-                  if (t = ss->people[3].id1) { k |=  t; i &=  t; }
-                  if (t = ss->people[4].id1) { k |= ~t; i &= ~t; }
-                  if (t = ss->people[5].id1) { k |= ~t; i &= ~t; }
-                  if (t = ss->people[6].id1) { k |= ~t; i &= ~t; }
-                  if (t = ss->people[7].id1) { k |= ~t; i &= ~t; }
-                  if (k & ~i & 2)
-                     goto ldef_failed;
-                  break;
-               case cr_4x4couples_only:
-                  /* check for each four people facing same way */
-                  q0 = 0; q1 = 0; q2 = 0; q3 = 0;
-                  if (t = ss->people[0].id1) { q0 |= t; q1 |= ~t; }
-                  if (t = ss->people[1].id1) { q0 |= t; q1 |= ~t; }
-                  if (t = ss->people[2].id1) { q0 |= t; q1 |= ~t; }
-                  if (t = ss->people[3].id1) { q0 |= t; q1 |= ~t; }
-                  if (t = ss->people[4].id1) { q2 |= t; q3 |= ~t; }
-                  if (t = ss->people[5].id1) { q2 |= t; q3 |= ~t; }
-                  if (t = ss->people[6].id1) { q2 |= t; q3 |= ~t; }
-                  if (t = ss->people[7].id1) { q2 |= t; q3 |= ~t; }
-                  if (((q0&q1&2)) || ((q2&q3&2)))
-                     goto ldef_failed;
-                  break;
-            }
-            break;
-         case s_1x6:
-            switch (ldef->restriction) {
-               case cr_3x3_2fl_only:
-                  k = 0;         /* check for 3x3 two-faced line -- 3 up and 3 down */
-                  i = 2;
-                  if (t = ss->people[0].id1) { k |=  t; i &=  t; }
-                  if (t = ss->people[1].id1) { k |=  t; i &=  t; }
-                  if (t = ss->people[2].id1) { k |=  t; i &=  t; }
-                  if (t = ss->people[3].id1) { k |= ~t; i &= ~t; }
-                  if (t = ss->people[4].id1) { k |= ~t; i &= ~t; }
-                  if (t = ss->people[5].id1) { k |= ~t; i &= ~t; }
-                  if (k & ~i & 2)
-                     goto ldef_failed;
-                  break;
-               case cr_3x3couples_only:
-                  /* check for each three people facing same way */
-                  /* check for everyone as a couple */
-                  q0 = 0; q1 = 0; q2 = 0; q3 = 0;
-                  if (t = ss->people[0].id1) { q0 |= t; q1 |= ~t; }
-                  if (t = ss->people[1].id1) { q0 |= t; q1 |= ~t; }
-                  if (t = ss->people[2].id1) { q0 |= t; q1 |= ~t; }
-                  if (t = ss->people[3].id1) { q2 |= t; q3 |= ~t; }
-                  if (t = ss->people[4].id1) { q2 |= t; q3 |= ~t; }
-                  if (t = ss->people[5].id1) { q2 |= t; q3 |= ~t; }
-                  if (((q0&q1&2)) || ((q2&q3&2)))
-                     goto ldef_failed;
-                  break;
-            }
-            break;
-         case s1x4:
-            switch (ldef->restriction) {
-               case cr_wave_only:
-                  k = 0;         /* check for a wave */
-                  i = 2;
-                  if (t = ss->people[0].id1) { k |=  t; i &=  t; }
-                  if (t = ss->people[1].id1) { k |= ~t; i &= ~t; }
-                  if (t = ss->people[2].id1) { k |= ~t; i &= ~t; }
-                  if (t = ss->people[3].id1) { k |=  t; i &=  t; }
-                  if (k & ~i & 2)
-                     goto ldef_failed;
-                  break;
-               case cr_2fl_only:
-                  k = 0;         /* check for a 2-faced line */
-                  i = 2;
-                  if (t = ss->people[0].id1) { k |=  t; i &=  t; }
-                  if (t = ss->people[1].id1) { k |=  t; i &=  t; }
-                  if (t = ss->people[2].id1) { k |= ~t; i &= ~t; }
-                  if (t = ss->people[3].id1) { k |= ~t; i &= ~t; }
-                  if (k & ~i & 2)
-                     goto ldef_failed;
-                  break;
-               case cr_1fl_only:
-                  k = 0;         /* check for a 1-faced line */
-                  i = 0;
-                  if (t = ss->people[0].id1) { k |= t; i |= ~t; }
-                  if (t = ss->people[1].id1) { k |= t; i |= ~t; }
-                  if (t = ss->people[2].id1) { k |= t; i |= ~t; }
-                  if (t = ss->people[3].id1) { k |= t; i |= ~t; }
-                  if (k & i & 2)
-                     goto ldef_failed;
-                  break;
-               case cr_couples_only:
-                  /* check for everyone as a couple */
-                  q0 = 0; q1 = 0; q2 = 0; q3 = 0;
-                  if (t = ss->people[0].id1) { q0 |= t; q1 |= ~t; }
-                  if (t = ss->people[1].id1) { q0 |= t; q1 |= ~t; }
-                  if (t = ss->people[2].id1) { q2 |= t; q3 |= ~t; }
-                  if (t = ss->people[3].id1) { q2 |= t; q3 |= ~t; }
-                  if (((q0&q1&2)) || ((q2&q3&2)))
-                     goto ldef_failed;
-                  break;
-               case cr_awkward_centers:
-                  k = 2;         /* check for centers not having left hands */
-                  i = 2;
-                  if (t = ss->people[1].id1) k &= ~t;
-                  if (t = ss->people[3].id1) i &= t;
-                  if (!((k | i) & 2)) warn(warn__awkward_centers);
-                  break;
-            }
-            break;
-         case s_1x2:
-            switch (ldef->restriction) {
-               case cr_wave_only:
-                  k = 0;         /* check for a miniwave */
-                  i = 2;
-                  if (t = ss->people[0].id1) { k |=  t; i &=  t; }
-                  if (t = ss->people[1].id1) { k |= ~t; i &= ~t; }
-                  if (k & ~i & 2)
-                     goto ldef_failed;
-                  break;
-               case cr_2fl_only: case cr_couples_only:
-                  k = 0;         /* check for a couple */
-                  i = 2;
-                  if (t = ss->people[0].id1) { k |=  t; i &=  t; }
-                  if (t = ss->people[1].id1) { k |=  t; i &=  t; }
-                  if (k & ~i & 2)
-                     goto ldef_failed;
-                  break;
-               case cr_awkward_centers:
-                  k = 2;         /* check for people not having left hands */
-                  i = 2;
-                  if (t = ss->people[0].id1) k &= ~t;
-                  if (t = ss->people[1].id1) i &= t;
-                  if (!((k | i) & 2)) warn(warn__awkward_centers);
-                  break;
-            }
-            break;
-      }
-
-      goto ldef_won;
-
-      ldef_failed:
-
-      if (ldef->callarray_flags & CAF__RESTR_UNUSUAL) warn(warn__unusual);
-      else if (ldef->callarray_flags & CAF__RESTR_FORBID) fail("This call is not legal from this formation.");
-      else warn(warn__do_your_part);
-
-      ldef_won: ;
+      if (ldef->restriction != cr_none) check_line_restriction(ss, ldef->restriction, ldef->callarray_flags);
    }
    
    /* Check that "coldefinition" has been set up if we will need it. */
@@ -1750,147 +1964,7 @@ extern void basic_move(
 
       cdef = coldefinition;
 
-      if (cdef->restriction == cr_alwaysfail)
-         goto cdef_failed;
-
-      switch (ss->kind) {
-         int t, q0, q1, q2, q3, q4, q5, q6, q7;
-
-         case s2x4:
-            switch (cdef->restriction) {
-               case cr_wave_only:
-                  k = 0;         /* check for real columns */
-                  i = 2;
-                  if (ss->people[0].id1) { k |=  ss->people[0].id1; i &=  ss->people[0].id1; }
-                  if (ss->people[1].id1) { k |=  ss->people[1].id1; i &=  ss->people[1].id1; }
-                  if (ss->people[2].id1) { k |=  ss->people[2].id1; i &=  ss->people[2].id1; }
-                  if (ss->people[3].id1) { k |=  ss->people[3].id1; i &=  ss->people[3].id1; }
-                  if (ss->people[4].id1) { k |= ~ss->people[4].id1; i &= ~ss->people[4].id1; }
-                  if (ss->people[5].id1) { k |= ~ss->people[5].id1; i &= ~ss->people[5].id1; }
-                  if (ss->people[6].id1) { k |= ~ss->people[6].id1; i &= ~ss->people[6].id1; }
-                  if (ss->people[7].id1) { k |= ~ss->people[7].id1; i &= ~ss->people[7].id1; }
-                  if (k & ~i & 2)
-                     goto cdef_failed;
-                  break;
-               case cr_magic_only:
-                  k = 0;         /* check for magic columns */
-                  i = 2;
-                  if (ss->people[0].id1) { k |=  ss->people[0].id1; i &=  ss->people[0].id1; }
-                  if (ss->people[1].id1) { k |= ~ss->people[1].id1; i &= ~ss->people[1].id1; }
-                  if (ss->people[2].id1) { k |= ~ss->people[2].id1; i &= ~ss->people[2].id1; }
-                  if (ss->people[3].id1) { k |=  ss->people[3].id1; i &=  ss->people[3].id1; }
-                  if (ss->people[4].id1) { k |= ~ss->people[4].id1; i &= ~ss->people[4].id1; }
-                  if (ss->people[5].id1) { k |=  ss->people[5].id1; i &=  ss->people[5].id1; }
-                  if (ss->people[6].id1) { k |=  ss->people[6].id1; i &=  ss->people[6].id1; }
-                  if (ss->people[7].id1) { k |= ~ss->people[7].id1; i &= ~ss->people[7].id1; }
-                  if (k & ~i & 2)
-                     goto cdef_failed;
-                  break;
-               case cr_couples_only:
-                  /* check for everyone as a couple */
-                  q0 = 0; q1 = 0;
-                  q4 = 0; q5 = 0;
-                  q2 = 0; q3 = 0;
-                  q6 = 0; q7 = 0;
-                  if (t = ss->people[0].id1) { q0 |= (t^1); q1 |= (t^3); }
-                  if (t = ss->people[7].id1) { q0 |= (t^1); q1 |= (t^3); }
-                  if (t = ss->people[1].id1) { q5 |= (t^1); q4 |= (t^3); }
-                  if (t = ss->people[6].id1) { q5 |= (t^1); q4 |= (t^3); }
-                  if (t = ss->people[2].id1) { q2 |= (t^1); q3 |= (t^3); }
-                  if (t = ss->people[5].id1) { q2 |= (t^1); q3 |= (t^3); }
-                  if (t = ss->people[3].id1) { q6 |= (t^1); q7 |= (t^3); }
-                  if (t = ss->people[4].id1) { q6 |= (t^1); q7 |= (t^3); }
-                  if (((q0&3) && (q1&3)) ||
-                      ((q2&3) && (q3&3)) ||
-                      ((q6&3) && (q7&3)) ||
-                      ((q5&3) && (q4&3)))
-                     goto cdef_failed;
-                  break;
-               case cr_peelable_box:
-                  /* check for a "peelable" 2x4 column */
-                  q2 = 3; q3 = 3;
-                  q7 = 3; q6 = 3;
-                  if (t = ss->people[0].id1) { q2 &= t; q3 &= (t^2); }
-                  if (t = ss->people[1].id1) { q2 &= t; q3 &= (t^2); }
-                  if (t = ss->people[2].id1) { q2 &= t; q3 &= (t^2); }
-                  if (t = ss->people[3].id1) { q2 &= t; q3 &= (t^2); }
-                  if (t = ss->people[4].id1) { q7 &= t; q6 &= (t^2); }
-                  if (t = ss->people[5].id1) { q7 &= t; q6 &= (t^2); }
-                  if (t = ss->people[6].id1) { q7 &= t; q6 &= (t^2); }
-                  if (t = ss->people[7].id1) { q7 &= t; q6 &= (t^2); }
-                  if ((((~q2)&3) && ((~q3)&3)) || (((~q7)&3) && ((~q6)&3)))
-                     goto cdef_failed;
-                  break;
-               case cr_quarterbox_or_col:
-                  k = 0;         /* check for a reasonable "triple cross" setup */
-                  i = 2;
-                  if (ss->people[0].id1) { k |=  ss->people[0].id1;                         }
-                  if (ss->people[1].id1) { k |=  ss->people[1].id1; i &=  ss->people[1].id1; }
-                  if (ss->people[2].id1) { k |=  ss->people[2].id1; i &=  ss->people[2].id1; }
-                  if (ss->people[3].id1) {                         i &=  ss->people[3].id1; }
-                  if (ss->people[4].id1) { k |= ~ss->people[4].id1;                         }
-                  if (ss->people[5].id1) { k |= ~ss->people[5].id1; i &= ~ss->people[5].id1; }
-                  if (ss->people[6].id1) { k |= ~ss->people[6].id1; i &= ~ss->people[6].id1; }
-                  if (ss->people[7].id1) {                         i &= ~ss->people[7].id1; }
-                  if (k & ~i & 2)
-                     goto cdef_failed;
-                  break;
-               case cr_quarterbox_or_magic_col:
-                  k = 0;         /* check for a reasonable "make magic" setup */
-                  i = 2;
-                  if (ss->people[0].id1) {                         i &= ~ss->people[0].id1; }
-                  if (ss->people[1].id1) { k |=  ss->people[1].id1; i &=  ss->people[1].id1; }
-                  if (ss->people[2].id1) { k |=  ss->people[2].id1; i &=  ss->people[2].id1; }
-                  if (ss->people[3].id1) { k |= ~ss->people[3].id1;                         }
-                  if (ss->people[4].id1) {                         i &=  ss->people[4].id1; }
-                  if (ss->people[5].id1) { k |= ~ss->people[5].id1; i &= ~ss->people[5].id1; }
-                  if (ss->people[6].id1) { k |= ~ss->people[6].id1; i &= ~ss->people[6].id1; }
-                  if (ss->people[7].id1) { k |=  ss->people[7].id1;                         }
-                  if (k & ~i & 2)
-                     goto cdef_failed;
-                  break;
-            }
-            break;
-         case s_2x3:
-            switch (cdef->restriction) {
-               case cr_wave_only:
-                  k = 0;         /* check for real columns */
-                  i = 2;
-                  if (ss->people[0].id1) { k |=  ss->people[0].id1; i &=  ss->people[0].id1; }
-                  if (ss->people[1].id1) { k |=  ss->people[1].id1; i &=  ss->people[1].id1; }
-                  if (ss->people[2].id1) { k |=  ss->people[2].id1; i &=  ss->people[2].id1; }
-                  if (ss->people[3].id1) { k |= ~ss->people[3].id1; i &= ~ss->people[3].id1; }
-                  if (ss->people[4].id1) { k |= ~ss->people[4].id1; i &= ~ss->people[4].id1; }
-                  if (ss->people[5].id1) { k |= ~ss->people[5].id1; i &= ~ss->people[5].id1; }
-                  if (k & ~i & 2)
-                     goto cdef_failed;
-                  break;
-               case cr_peelable_box:
-                  /* check for a "peelable" 2x3 column */
-                  q2 = 3; q3 = 3;
-                  q7 = 3; q6 = 3;
-                  if (t = ss->people[0].id1) { q2 &= t; q3 &= (t^2); }
-                  if (t = ss->people[1].id1) { q2 &= t; q3 &= (t^2); }
-                  if (t = ss->people[2].id1) { q2 &= t; q3 &= (t^2); }
-                  if (t = ss->people[3].id1) { q7 &= t; q6 &= (t^2); }
-                  if (t = ss->people[4].id1) { q7 &= t; q6 &= (t^2); }
-                  if (t = ss->people[5].id1) { q7 &= t; q6 &= (t^2); }
-                  if ((((~q2)&3) && ((~q3)&3)) || (((~q7)&3) && ((~q6)&3)))
-                     goto cdef_failed;
-                  break;
-            }
-            break;
-      }
-
-      goto cdef_won;
-
-      cdef_failed:
-
-      if (cdef->callarray_flags & CAF__RESTR_UNUSUAL) warn(warn__unusual);
-      else if (cdef->callarray_flags & CAF__RESTR_FORBID) fail("This call is not legal from this formation.");
-      else warn(warn__do_your_part);
-   
-      cdef_won:
+      if (cdef->restriction != cr_none) check_column_restriction(ss, cdef->restriction, cdef->callarray_flags);
 
       /* If we have linedefinition also, check for consistency. */
    

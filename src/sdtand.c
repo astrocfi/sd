@@ -44,7 +44,7 @@ typedef struct {
    unsigned int outsidemask;
    int limit;
    int rot;
-   unsigned int insinglemask;       /* relative to insetup numbering, those people that are NOT paired */
+   unsigned int insinglemask;       /* relative to insetup numbering, those people that are NOT paired -- only alternate bits used! */
    unsigned int outsinglemask;      /* relative to outsetup numbering, those people that are NOT paired */
    unsigned int outunusedmask;
    setup_kind insetup;
@@ -89,7 +89,7 @@ static tm_thing maps_isearch[] = {
    {{3, 7, 5, 9, 15, 13},           {1, -1, -1, 11, -1, -1},          0,     0000,         6, 0,  0,  0, 0,  s_2x3, s_c1phan},
    {{1, 3, 4, 5, 6, 0},             {-1, 2, -1, -1, 7, -1},           0,     0314,         6, 1,  0,  0, 0,  s_2x3, s_qtag},
    {{0, 2, 6, 8, 10, 12},           {-1, -1, 4, -1, -1, 14},          0,     0000,         6, 0,  0,  0, 0,  s_2x3, s_c1phan},
-   /* Next three are for various people in tandem in a wing or PTP diamonds, making a virtual line of 6. */
+   /* Next three are for various people in tandem in a rigger or PTP diamonds, making a virtual line of 6. */
    {{6, 7, 5, 2, 3, 4},             {-1, -1, 0, -1, -1, 1},           0,     0000,         6, 0,  0,  0, 0,  s_1x6, s_rigger},
    {{0, 3, 2, 4, 5, 6},             {-1, 1, -1, -1, 7, -1},           0,     0000,         6, 0,  0,  0, 0,  s_1x6, s_ptpd},
    {{5, 6, 7, 4, 2, 3},             {0, -1, -1, 1, -1, -1},           0,     0000,         6, 0,  0,  0, 0,  s_1x6, s_bone},
@@ -140,7 +140,7 @@ extern void initialize_tandem_tables(void)
       /* All 1's for people in outer setup. */
       unsigned int alloutmask = (1 << (setup_limits[map_search->outsetup]+1))-1;
 
-      for (i=0, m=1; i<map_search->limit; i++, m<<=1) {
+      for (i=0, m=1; i<map_search->limit; i++, m<<=2) {
          alloutmask &= ~(1 << map_search->map1[i]);
          if (map_search->map2[i] < 0) {
             imask |= m;
@@ -180,7 +180,7 @@ static void unpack_us(
    result->rotation = tandstuff->virtual_result.rotation - map_ptr->rot;
    result->setupflags = tandstuff->virtual_result.setupflags;
 
-   for (i=0, m=map_ptr->insinglemask, o=orbitmask; i<map_ptr->limit; i++, m>>=1, o>>=2) {
+   for (i=0, m=map_ptr->insinglemask, o=orbitmask; i<map_ptr->limit; i++, m>>=2, o>>=2) {
       int z = tandstuff->virtual_result.people[i].id1;
 
       if (map_ptr->rot) z = rotcw(z);
@@ -253,7 +253,7 @@ static void pack_us(
    tandstuff->virtual_setup.rotation = map_ptr->rot;
    tandstuff->virtual_setup.kind = map_ptr->insetup;
 
-   for (i=0, m=map_ptr->sidewaysmask, sgl=map_ptr->insinglemask; i<map_ptr->limit; i++, m>>=2, sgl>>=1) {
+   for (i=0, m=map_ptr->sidewaysmask, sgl=map_ptr->insinglemask; i<map_ptr->limit; i++, m>>=2, sgl>>=2) {
       personrec f, b;
       personrec *ptr = &tandstuff->virtual_setup.people[i];
 
@@ -261,7 +261,7 @@ static void pack_us(
 
       lat = (m ^ map_ptr->rot) & 1;
 
-      if (sgl&1) {
+      if (sgl & 1) {
          ptr->id1 = (f.id1 & ~0700) | (i << 6) | BIT_VIRTUAL;
          ptr->id2 = f.id2;
          b.id1 = 0xFFFFFFFF;
@@ -351,14 +351,10 @@ extern void tandem_couples_move(
    unsigned int orbitmask;
    unsigned int sglmask;
    unsigned int livemask;
-
    long_boolean fractional = FALSE;
 
    conceptptrcopy = parseptr;
    tandstuff.single_mask = 0;
-   nsmask = 0;
-   ewmask = 0;
-   allmask = 0;
 
    if (setup_limits[ss->kind] < 0) fail("Can't do tandem/couples concept from this position.");
 
@@ -373,6 +369,10 @@ extern void tandem_couples_move(
    saved_selector = current_selector;
    if (selector != selector_uninitialized)
       current_selector = selector;
+
+   nsmask = 0;
+   ewmask = 0;
+   allmask = 0;
 
    for (i=0, jbit=1; i<=setup_limits[ss->kind]; i++, jbit<<=1) {
       unsigned int p = ss->people[i].id1;
@@ -540,14 +540,19 @@ extern void tandem_couples_move(
    if (setup_limits[tandstuff.virtual_result.kind] < 0)
       fail("Don't recognize ending position from this tandem or as couples call.");
 
-   sglmask = 0;
-   livemask = 0;    /* Only alternate bits used! */
+   sglmask = 0;     /* Bits appear here in pairs!  Only low bit of each pair is used. */
+   livemask = 0;    /* Bits appear here in pairs!  Only low bit of each pair is used. */
    orbitmask = 0;   /* Bits appear here in pairs! */
 
-   /* Compute orbitmask, livemask, and sglmask. */
+   /* Compute orbitmask, livemask, and sglmask.
+      Since we are synthesizing bit masks, we scan in reverse order to make things easier. */
 
-   for (i=0; i<=setup_limits[tandstuff.virtual_result.kind]; i++) {
+   for (i=setup_limits[tandstuff.virtual_result.kind]; i>=0; i--) {
       int p = tandstuff.virtual_result.people[i].id1;
+      sglmask <<= 2;
+      livemask <<= 2;
+      orbitmask <<= 2;
+
       if (p) {
          int vpi;
 
@@ -557,9 +562,9 @@ extern void tandem_couples_move(
          }
 
          vpi = (p >> 6) & 7;
-         livemask |= 1 << (2*i);
+         livemask |= 1;
          if (tandstuff.real_back_people[vpi].id1 == 0xFFFFFFFF) {
-            sglmask |= 1 << i;
+            sglmask |= 1;
          }
          else {
             unsigned int orbit;
@@ -577,7 +582,7 @@ extern void tandem_couples_move(
                orbit = 0;
             }
 
-            orbitmask |= ((orbit - tandstuff.virtual_result.rotation - tandstuff.vertical_people[vpi]) & 3) << (2*i);
+            orbitmask |= ((orbit - tandstuff.virtual_result.rotation - tandstuff.vertical_people[vpi]) & 3);
          }
 
          if (fractional)
@@ -585,7 +590,8 @@ extern void tandem_couples_move(
       }
    }
 
-   hmask = (~orbitmask) & livemask & 0x55555555;    /* Pick out only low bits for map search. */
+   hmask = (~orbitmask) & livemask & ~sglmask & 0x55555555;    /* Pick out only low bits for map search,
+                                                               and only bits of live paired people. */
 
    map_search = maps_isearch;
    while (map_search->outsetup != nothing) {

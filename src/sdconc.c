@@ -888,7 +888,6 @@ static void concentrify(
       *xconc_elongation = *outer_elongation;
       switch (ss->kind) {
          case s_galaxy:
-         case s_hrglass:
          case s_rigger:
          case s_3dmd:
          case s_3x1dmd:
@@ -896,6 +895,7 @@ static void concentrify(
             break;
          case s_crosswave:
          case s_qtag:
+         case s_hrglass:
          case s3x4:
             *xconc_elongation ^= 1;
             break;
@@ -1195,7 +1195,14 @@ extern void concentric_move(
             analyzer == schema_ckpt_star ||
             analyzer == schema_conc_star12 ||
             analyzer == schema_conc_star16) {
-                  ;        /* Take no action. */
+
+         /* This is what makes 12 matrix relay the top work when everyone is
+            in the stars. */
+
+         result_outer.kind = s1x4;
+         clear_people(&result_outer);
+         result_outer.setupflags = 0;
+         result_outer.rotation = ss->rotation;
       }
       else if (analyzer == schema_concentric_diamond_line) {
          if (ss->kind == s_wingedstar || ss->kind == s_wingedstar12 || ss->kind == s_wingedstar16) {
@@ -1218,10 +1225,8 @@ extern void concentric_move(
             can convince ourselves that they did the call "nothing".  We make use
             of the fact that "concentrify" did NOT flush them, so we still know
             what their starting setup was.
-         This is what makes spilt phantom diamonds diamond chain through work
-            from columns far apart.
-         It is also needed to make 12 matrix relay the top work when everyone is
-            in the stars.  If the center arity is not 1, we assume things will be OK. */
+         This is what makes split phantom diamonds diamond chain through work
+            from columns far apart. */
    
          result_outer = begin_outer;               /* Restore the original bunch of phantoms. */
          /* Make sure these people go to the same spots, and remove possibly misleading info. */
@@ -1261,7 +1266,7 @@ extern void concentric_move(
          matter to the ends whether the phantoms in the center did something
          that leaves the whole setup as diamonds or as a 2x4.  (Some callers
          might think it matters (Hi, Clark!) but it doesn't matter to this program.)
-         This is what makes spilt phantom diamonds diamond chain through work
+         This is what makes split phantom diamonds diamond chain through work
          from a grand wave. */
       else if (result_outer.kind == s2x2 && center_arity == 1) {
          result_inner[0].kind = s2x2;

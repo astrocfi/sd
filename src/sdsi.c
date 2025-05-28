@@ -47,6 +47,7 @@
 and the following external variables:
    random_number
    hashed_randoms
+   database_filename
 */
 
 
@@ -270,9 +271,9 @@ extern void close_file(void)
 
    (void) strncpy(foo, "WARNING!!!  Sequence has not been written!  File ", MAX_ERR_LENGTH);
    (void) strncat(foo, fail_message, MAX_ERR_LENGTH);
-   (void) strncat(foo, " failure on '", MAX_ERR_LENGTH);
+   (void) strncat(foo, " failure on \"", MAX_ERR_LENGTH);
    (void) strncat(foo, outfile_string, MAX_ERR_LENGTH);
-   (void) strncat(foo, "': ", MAX_ERR_LENGTH);
+   (void) strncat(foo, "\": ", MAX_ERR_LENGTH);
    (void) strncat(foo, fail_errstring, MAX_ERR_LENGTH);
    specialfail(foo);
 }
@@ -308,21 +309,21 @@ extern void final_exit(int code)
    exit(code);
 }
 
-
+char *database_filename = DATABASE_FILENAME;
 
 extern void open_database(void)
 {
    int format_version, n;
 
-   if (!(fp = fopen(DATABASE_FILENAME, "r"))) {
+   if (!(fp = fopen(database_filename, "r"))) {
       fprintf(stderr, "Can't open database file.\n");
-      perror(DATABASE_FILENAME);
+      perror(database_filename);
       exit_program(1);
    }
 
    if (read_from_database() != DATABASE_MAGIC_NUM) {
       fprintf(stderr,
-         "Database file '%s' has improper format.\n", DATABASE_FILENAME);
+         "Database file \"%s\" has improper format.\n", database_filename);
       exit_program(1);
    }
 
