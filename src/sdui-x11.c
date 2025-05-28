@@ -1,5 +1,5 @@
-static char *id="@(#)$Sd: sdui-x11.c  1.14    gildea@lcs.mit.edu  18 Mar 93 $";
-static char *time_stamp = "sdui-x11.c Time-stamp: <93/07/29 19:26:09 wba>";
+static char *id="@(#)$Sd: sdui-x11.c  1.15    gildea@lcs.mit.edu  18 Mar 93 $";
+static char *time_stamp = "sdui-x11.c Time-stamp: <93/09/18 20:03:00 wba>";
 /* 
  * sdui-x11.c - SD User Interface for X11
  * Copyright 1990,1991,1992,1993 Stephen Gildea and William B. Ackerman
@@ -36,7 +36,7 @@ static char *time_stamp = "sdui-x11.c Time-stamp: <93/07/29 19:26:09 wba>";
    uims_do_neglect_popup
    uims_do_selector_popup
    uims_do_direction_popup
-   uims_do_quantifier_popup
+   uims_get_number_fields
    uims_do_modifier_popup
    uims_add_new_line
    uims_reduce_line_count
@@ -1470,13 +1470,23 @@ uims_do_direction_popup(void)
 Private String quantifier_names[] = {
     " 1 ", " 2 ", " 3 ", " 4 ", " 5 ", NULL};
 
-extern int
-uims_do_quantifier_popup(void)
+extern unsigned int uims_get_number_fields(int howmany)
 {
-    int t = choose_popup(sd_resources.quantifier_title, quantifier_names);
-    if (t==0) return POPUP_DECLINE;
-    return t;
+   int i;
+   unsigned int number_list = 0;
+
+   for (i=0 ; i<howmany ; i++) {
+      unsigned int this_num = choose_popup(sd_resources.quantifier_title, quantifier_names);
+      if (this_num == 0) return 0;    /* User waved the mouse away. */
+      number_list |= (this_num << (i*4));
+   }
+
+   return number_list;
 }
+
+
+
+
 
 
 /* variables used by the next two routines */

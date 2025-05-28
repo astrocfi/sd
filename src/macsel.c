@@ -15,97 +15,113 @@
 
 #include "macguts.h"
 
-static DialogPtr    selector_dialog, quantifier_dialog;
-static DialogWindow selectorDW, quantifierDW;
-extern WindowPtr    myWindow;
-static int          quantifier_current;
-static int          selector_current;
+/* sue: rewritten to have a single routine to handle all 3 popups */
 
-#define NUM_SELECTORS 28
-#define QUANTIFIER_MAX 7
+/* these specify how many items in each dialog box */
+/* WARNING: This must match the number of radio buttons in the resource file */
 
+#define NUM_QUANTIFIERS 8
+#define NUM_SELECTORS last_selector_kind
+#define NUM_DIRECTIONS last_direction_kind
+
+/* these specify how the items are arranged visually within the dialog box,
+   specifically the number of items in each column.  This is used only for
+   controlling what happens when a user presses an arrow key. */
+/* WARNING: This must match the actual layout in the resource file or else
+   arrow key behavior will be erratic */
+
+#define SEL_COL_LENGTH 10
+#define QUANT_COL_LENGTH 1
+#define DIR_COL_LENGTH 4
+
+/* items in the popup */
+/* WARNING: Dialog Box items in the Resource File must be numbered in this order! */
 enum {
-    selAccept = 1,
-    selCancel,
-    selText,
-    selUser,
-    selMenu,
-    selFirstButton = selMenu,
-    selLastButton = selFirstButton + NUM_SELECTORS - 1
+    AcceptButton = 1,
+    CancelButton,
+    TextItem,
+    DefaultIndicator,
+    FirstButton
 };
+/* these change with the type of popup */
+static int LastButton;
+static int NumButtons;
+static int ColLength;
 
-enum {
-    manyAccept = 1,
-    manyCancel,
-    many1,
-    many2,
-    many3,
-    many4,
-    many5,
-    many6,
-    many7,
-    manyUser,
-    manyText
-};
-
-static void selector_set(int n);
-static void selector_key(DialogWindow *dwp, short modifiers, char ch);
-static void quantifier_key(DialogWindow *dwp, short modifiers, char ch);
-static void quantifier_set(int n);
+static void use_key(DialogWindow *dwp, short modifiers, char ch);
 static void fixup_window_position(WindowPtr w);
+static int mac_do_any_popup(int type);
+static int current_value;
+static DialogPtr    the_dialog;
+static DialogWindow the_DW;
 
-/*
- *  mac_do_selector_popup
- *
- */
+/* These 3 routines are called from the user interface.  They actually call
+   mac_do_any_popup to do the real work. */
+
+int mac_do_selector_popup(void)
+{
+   NumButtons = NUM_SELECTORS;
+   ColLength = SEL_COL_LENGTH;
+   return(mac_do_any_popup(OldSelectDialog));
+}  
+int mac_do_quantifier_popup(void)
+{
+   NumButtons = NUM_QUANTIFIERS;
+   ColLength = QUANT_COL_LENGTH;
+   return(mac_do_any_popup(QuantifierDialog));
+}  
+int mac_do_direction_popup(void)
+{
+   NumButtons = NUM_DIRECTIONS;
+   ColLength = DIR_COL_LENGTH;
+   return(mac_do_any_popup(DirectionDialog));
+}  
 
 int
-mac_do_selector_popup(void)
+mac_do_any_popup(int DialogID)
 {
     short item;
     int result;
     EventRecord e;
-
-    /*  present dialog  */
+    
+    LastButton = FirstButton + NumButtons - 1;
+    
+    /*  present dialog box */
+    
+    /* sue: this version creates a new dialog box each time it is called, rather
+       than saving them from one time to the next */
         
-    if (selector_dialog == NULL) {
-        selector_dialog = GetNewDialog(
-            popup_control_available ? SelectDialog : OldSelectDialog,
-            0L, (WindowPtr) -1L);
-        if (selector_dialog == NULL) {
-            return POPUP_DECLINE;
-        }
-        dialog_setup(&selectorDW, selector_dialog);
-        selectorDW.base.kind = ModalKind;
-        selectorDW.default_item = selAccept;
-        selectorDW.base.keyMethod = (KeyMethod) selector_key;
-        fixup_window_position((WindowPtr) selector_dialog);
-        setup_dialog_box(selector_dialog, selUser); /* border around default button */
-        selector_current = 1;
-    }
-    selector_set(selector_current);
-    window_select((Window *)&selectorDW);
+    the_dialog = GetNewDialog(DialogID, 0L, (WindowPtr) -1L);
+    if (the_dialog == NULL)
+        return POPUP_DECLINE;
+    dialog_setup(&the_DW, the_dialog);
+    the_DW.base.kind = ModalKind;
+    the_DW.default_item = AcceptButton;
+    the_DW.base.keyMethod = (KeyMethod) use_key;
+    fixup_window_position((WindowPtr) the_dialog);
+    setup_dialog_box(the_dialog, DefaultIndicator); /* border around default button */
+    current_value = 1;
+
+    radio_set(the_dialog, FirstButton, LastButton, FirstButton + current_value - 1);
+    window_select((Window *)&the_DW);
 
     /*  engage in dialog  */
         
     result = -1;
 
     while (result < 0) {
-        movable_modal_dialog(&selectorDW);
-        if (!popup_control_available &&
-              (selectorDW.item >= selFirstButton) &&
-              (selectorDW.item <= selLastButton)) {
-            selector_set(selectorDW.item - selFirstButton + 1);
+        movable_modal_dialog(&the_DW);
+        if ((the_DW.item >= FirstButton) && (the_DW.item <= LastButton)) {
+            current_value = the_DW.item - FirstButton + 1;
+            radio_set(the_dialog, FirstButton, LastButton,
+                       FirstButton + current_value - 1);
             continue;
         }
-        switch (selectorDW.item) {
-            case selAccept:
-                if (popup_control_available) {
-                    selector_set(dialog_get_control_value(selector_dialog, selMenu));
-                }
-                result = selector_current;
+        else switch (the_DW.item) {
+            case AcceptButton:
+                result = current_value;
                 break;
-            case selCancel:
+            case CancelButton:
                 result = POPUP_DECLINE;
                 break;
          }
@@ -113,181 +129,40 @@ mac_do_selector_popup(void)
 
     /* take down dialog */
 
-    window_close((Window *)&selectorDW);
+    window_close((Window *)&the_DW);
+    DisposDialog(the_dialog);
     return(result);
 }
 
 /*
- *  selector_set
+ *  use_key: interprets keys pressed while dialog box is presented
  *
  */
 
 static void
-selector_set(int n)
-{
-    selector_current = n;
-    if (popup_control_available) {
-        dialog_set_control_value(selector_dialog, selMenu, n);
-    }
-    else {
-        radio_set(selector_dialog, selFirstButton, selLastButton,
-            selFirstButton + n - 1);
-    }
-}
-
-/*
- *  selector_key
- *
- */
-
-static void
-selector_key(DialogWindow *dwp, short modifiers, char ch)
+use_key(DialogWindow *dwp, short modifiers, char ch)
 {
     int new_value;
 
-    if (popup_control_available) {
-        if (ch == rightArrowKey) {
-            ch = downArrowKey;
-        }
-        else if (ch == leftArrowKey) {
-            ch = upArrowKey;
-        }
-    }
-    if (ch == '\t') {
-        ch = downArrowKey;
-    }
-
     switch (ch) {
-      case '\t':
       case downArrowKey:
-        new_value = (selector_current == NUM_SELECTORS) ? 1 : selector_current + 1;
-        selector_set(new_value);
+        if (current_value + 1 <= NumButtons) current_value++;
+        radio_set(the_dialog, FirstButton, LastButton, FirstButton + current_value - 1);
+        break;
+      case '\t':
+      case rightArrowKey:
+        if (current_value + ColLength <= NumButtons) current_value += ColLength;
+        radio_set(the_dialog, FirstButton, LastButton, FirstButton + current_value - 1);
         break;
       case upArrowKey:
-        new_value = (selector_current == 1) ? NUM_SELECTORS : selector_current - 1;
-        selector_set(new_value);
+        if (current_value > 1) current_value--;
+        radio_set(the_dialog, FirstButton, LastButton, FirstButton + current_value - 1);
         break;
-     case leftArrowKey:
-        new_value = selector_current - 10;
-        if (new_value < 1) {
-            new_value += 30;
-            if (new_value > NUM_SELECTORS) {
-                new_value -= 10;
-            }
-        }
-        selector_set(new_value);
+      case leftArrowKey:
+        if (current_value - ColLength > 0) current_value -= ColLength;
+        radio_set(the_dialog, FirstButton, LastButton, FirstButton + current_value - 1);
         break;
-     case rightArrowKey:
-        new_value = selector_current + 10;
-        if (new_value > 30) {
-            new_value -= 30;
-        }
-        if (new_value > NUM_SELECTORS) {
-            new_value -= 20;
-        }
-        selector_set(new_value);
-        break;
-     default:
-        dialog_key(dwp, modifiers, ch);
-    }
-}
-
-/*
- *  mac_do_quantifier_popup
- *
- */
-
-int
-mac_do_quantifier_popup(void)
-{
-    int result, i;
-    
-    /*  present dialog  */
-        
-    /* the availability of popup controls corresponds to the availability
-       of the movable modal dialog box definition */
-
-    if (quantifier_dialog == NULL) {
-        quantifier_dialog = GetNewDialog(
-            popup_control_available ? QuantifierDialog : OldQuantifierDialog,
-            0L, (WindowPtr) -1L);
-        if (quantifier_dialog == NULL) {
-            return POPUP_DECLINE;
-        }
-        dialog_setup(&quantifierDW, quantifier_dialog);
-        quantifierDW.base.kind = ModalKind;
-        quantifierDW.default_item = manyAccept;
-        quantifierDW.base.keyMethod = (KeyMethod) quantifier_key;
-        fixup_window_position((WindowPtr) quantifier_dialog);
-        setup_dialog_box(quantifier_dialog, manyUser); /* border around default button */
-        quantifier_set(1);
-    }
-    window_select((Window *)&quantifierDW);
-    
-    /*  engage in dialog  */
-        
-    result = -1;
-    do {
-        movable_modal_dialog(&quantifierDW);
-        switch (quantifierDW.item) {
-            case manyAccept:
-                result = quantifier_current;
-                break;
-            case many1:
-            case many2:
-            case many3:
-            case many4:
-            case many5:
-            case many6:
-            case many7:
-                quantifier_set(quantifierDW.item - many1 + 1);
-                break;
-            case manyCancel:
-                result = POPUP_DECLINE;
-                break;
-        }
-    } while (result == -1);
-
-    /* take down dialog */
-
-    window_close((Window *)&quantifierDW);
-    return(result);
-}
-
-/*
- *  quantifier_set
- *
- */
-
-static void
-quantifier_set(int n)
-{
-    quantifier_current = n;
-    radio_set(quantifier_dialog, many1, many7, many1 + n - 1);
-}
-
-/*
- *  quantifier_key
- *
- */
-
-static void
-quantifier_key(DialogWindow *dwp, short modifiers, char ch)
-{
-    if ((ch >= '1') && (ch <= ('0' + QUANTIFIER_MAX))) {
-        dwp->item = many1 + (ch - '1');
-    }
-    else if ((ch == '\t') || (ch == rightArrowKey)) {
-        int new_value = (quantifier_current == QUANTIFIER_MAX) ? 1
-                          : quantifier_current + 1;
-        dwp->item = many1 + new_value - 1;
-    }
-    else if (ch == leftArrowKey) {
-        int new_value = (quantifier_current == 1) ? QUANTIFIER_MAX
-                           : quantifier_current - 1;
-        dwp->item = many1 + new_value - 1;
-    }
-    else {
+      default:
         dialog_key(dwp, modifiers, ch);
     }
 }

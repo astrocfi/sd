@@ -36,6 +36,31 @@ int global_selectmask;
 
 
 
+
+Private void do_concept_expand_1x12_matrix(
+   setup *ss,
+   parse_block *parseptr,
+   setup *result)
+
+{
+   if (ss->kind != s1x12) fail("Can't make a 1x12 matrix out of this.");
+   ss->setupflags |= SETUPFLAG__EXPLICIT_MATRIX;
+   move(ss, parseptr->next, NULLCALLSPEC, 0, FALSE, result);
+}
+
+
+Private void do_concept_expand_1x16_matrix(
+   setup *ss,
+   parse_block *parseptr,
+   setup *result)
+
+{
+   if (ss->kind != s1x16) fail("Can't make a 1x16 matrix out of this.");
+   ss->setupflags |= SETUPFLAG__EXPLICIT_MATRIX;
+   move(ss, parseptr->next, NULLCALLSPEC, 0, FALSE, result);
+}
+
+
 Private void do_concept_expand_2x6_matrix(
    setup *ss,
    parse_block *parseptr,
@@ -1500,7 +1525,10 @@ Private void do_concept_central(
 
    temp_concepts &= ~(new_final_concepts & HERITABLE_FLAG_MASK & ~callspec->stuff.conc.innerdef.modifiersh);
    
-   if (ss->kind == s2x4) {
+   if (setup_limits[ss->kind] == 3) {    /* If it's a 4-person setup, we do it directly. */
+      move(ss, parseptrcopy, base_calls[callspec->stuff.conc.innerdef.call_id], temp_concepts, FALSE, result);
+   }
+   else if (ss->kind == s2x4) {
       divided_setup_move(ss, parseptrcopy, base_calls[callspec->stuff.conc.innerdef.call_id], temp_concepts,
          (*map_lists[s2x2][1])[MPKIND__SPLIT][0], phantest_ok, TRUE, result);
    }
@@ -1580,7 +1608,7 @@ Private void do_concept_fan_or_yoyo(
    parse_block *parseptr,
    setup *result)
 {
-   setup tempsetup = *ss;
+   setup tempsetup;
    unsigned int finalsetupflags = 0;
    /* This is a huge amount of kludgy stuff shoveled in from a variety of sources.
       It needs to be cleaned up and thought about. */
@@ -1601,6 +1629,17 @@ Private void do_concept_fan_or_yoyo(
 
    if (ss->setupflags & SETUPFLAG__FRACTIONALIZE_MASK)
       fail("This call can't be fractionalized.");
+
+   /* Step to a wave if necessary.  This is actually only needed for the "yoyo" concept.
+      The "fan" concept could take care of itself later.  However, we do them both here. */
+
+   if ((!(ss->setupflags & (SETUPFLAG__NO_STEP_TO_WAVE))) &&
+         (callspec->callflags1 & (CFLAG1_STEP_TO_WAVE))) {
+      ss->setupflags |= SETUPFLAG__NO_STEP_TO_WAVE;  /* Can only do it once. */
+      touch_or_rear_back(ss, FALSE, callspec->callflags1);
+   }
+
+   tempsetup = *ss;
 
    /* If this is "yoyo", do an "arm turn 3/4". */
    if (parseptr->concept->value.arg1 != 0) {
@@ -1959,24 +1998,28 @@ Private void do_concept_trace(
       (void) copy_person(&a1, 2, ss, 7);
       (void) copy_person(&a1, 3, ss, 6);
       a1.setupflags = ss->setupflags | SETUPFLAG__DISTORTED;
+      update_id_bits(&a1);
       move(&a1, parseptr->next, NULLCALLSPEC, 0, FALSE, &res1);
       finalsetupflags |= res1.setupflags;
 
       (void) copy_person(&a2, 2, ss, 4);
       (void) copy_person(&a2, 3, ss, 5);
       a2.setupflags = ss->setupflags | SETUPFLAG__DISTORTED;
+      update_id_bits(&a2);
       move(&a2, parseptr->subsidiary_root, NULLCALLSPEC, 0, FALSE, &res2);
       finalsetupflags |= res2.setupflags;
 
       (void) copy_person(&a3, 0, ss, 3);
       (void) copy_person(&a3, 1, ss, 2);
       a3.setupflags = ss->setupflags | SETUPFLAG__DISTORTED;
+      update_id_bits(&a3);
       move(&a3, parseptr->next, NULLCALLSPEC, 0, FALSE, &res3);
       finalsetupflags |= res3.setupflags;
 
       (void) copy_person(&a4, 0, ss, 0);
       (void) copy_person(&a4, 1, ss, 1);
       a4.setupflags = ss->setupflags | SETUPFLAG__DISTORTED;
+      update_id_bits(&a4);
       move(&a4, parseptr->subsidiary_root, NULLCALLSPEC, 0, FALSE, &res4);
       finalsetupflags |= res4.setupflags;
    }
@@ -1984,24 +2027,28 @@ Private void do_concept_trace(
       (void) copy_person(&a1, 0, ss, 0);
       (void) copy_person(&a1, 1, ss, 1);
       a1.setupflags = ss->setupflags | SETUPFLAG__DISTORTED;
+      update_id_bits(&a1);
       move(&a1, parseptr->subsidiary_root, NULLCALLSPEC, 0, FALSE, &res1);
       finalsetupflags |= res1.setupflags;
 
       (void) copy_person(&a2, 0, ss, 6);
       (void) copy_person(&a2, 1, ss, 7);
       a2.setupflags = ss->setupflags | SETUPFLAG__DISTORTED;
+      update_id_bits(&a2);
       move(&a2, parseptr->next, NULLCALLSPEC, 0, FALSE, &res2);
       finalsetupflags |= res2.setupflags;
 
       (void) copy_person(&a3, 2, ss, 4);
       (void) copy_person(&a3, 3, ss, 5);
       a3.setupflags = ss->setupflags | SETUPFLAG__DISTORTED;
+      update_id_bits(&a3);
       move(&a3, parseptr->subsidiary_root, NULLCALLSPEC, 0, FALSE, &res3);
       finalsetupflags |= res3.setupflags;
 
       (void) copy_person(&a4, 2, ss, 2);
       (void) copy_person(&a4, 3, ss, 3);
       a4.setupflags = ss->setupflags | SETUPFLAG__DISTORTED;
+      update_id_bits(&a4);
       move(&a4, parseptr->next, NULLCALLSPEC, 0, FALSE, &res4);
       finalsetupflags |= res4.setupflags;
    }
@@ -2799,8 +2846,8 @@ Private void do_concept_fractional(
       fail("Can't stack meta or fractional concepts.");
 
    numer = parseptr->number;
-   denom = numer >> 16;
-   numer &= 0xFFFF;
+   denom = numer >> 4;
+   numer &= 0xF;
    key = 0;
 
    /* If this is "do the last M/Nths", fix things up. */
@@ -3173,6 +3220,8 @@ concept_table_item concept_table[] = {
    {0,                                                                                      0},                               /* concept_3x1 */
    {0,                                                                                      0},                               /* concept_3x3 */
    {0,                                                                                      0},                               /* concept_4x4 */
+   {CONCPROP__NEED_1X12 | CONCPROP__SET_PHANTOMS | CONCPROP__NO_STEP,                       do_concept_expand_1x12_matrix},   /* concept_1x12_matrix */
+   {CONCPROP__NEED_1X16 | CONCPROP__SET_PHANTOMS | CONCPROP__NO_STEP,                       do_concept_expand_1x16_matrix},   /* concept_1x16_matrix */
    {CONCPROP__NEED_2X6 | CONCPROP__SET_PHANTOMS | CONCPROP__NO_STEP,                        do_concept_expand_2x6_matrix},    /* concept_2x6_matrix */
    {CONCPROP__NEED_2X8 | CONCPROP__SET_PHANTOMS | CONCPROP__NO_STEP,                        do_concept_expand_2x8_matrix},    /* concept_2x8_matrix */
    {CONCPROP__NEED_3X4 | CONCPROP__SET_PHANTOMS | CONCPROP__NO_STEP,                        do_concept_expand_3x4_matrix},    /* concept_3x4_matrix */

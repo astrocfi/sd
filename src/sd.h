@@ -389,46 +389,52 @@ typedef struct {
 
 /* BEWARE!!  If change these next definitions, be sure to update the definition of
    "warning_strings" in sdutil.c . */
-#define warn__do_your_part        0
-#define warn__tbonephantom        1
-#define warn__ends_work_to_spots  2
-#define warn__awkward_centers     3
-#define warn__bad_concept_level   4
-#define warn__not_funny           5
-#define warn__hard_funny          6
-#define warn__unusual             7
-#define warn__rear_back           8
-#define warn__awful_rear_back     9
-#define warn__excess_split        10
-#define warn__lineconc_perp       11
-#define warn__dmdconc_perp        12
-#define warn__lineconc_par        13
-#define warn__dmdconc_par         14
-#define warn__xclineconc_perp     15
-#define warn__xcdmdconc_perp      16
-#define warn__ctrstand_endscpls   17
-#define warn__ctrscpls_endstand   18
-#define warn__each2x2             19
-#define warn__each1x4             20
-#define warn__each1x2             21
-#define warn__take_right_hands    22
-#define warn__ctrs_are_dmd        23
-#define warn__full_pgram          24
-#define warn__offset_gone         25
-#define warn__overlap_gone        26
-#define warn__to_o_spots          27
-#define warn__to_x_spots          28
-#define warn__some_rear_back      29
-#define warn__not_tbone_person    30
-#define warn__check_c1_phan       31
-#define warn__check_dmd_qtag      32
-#define warn__check_2x4           33
-#define warn__check_pgram         34
-#define warn__dyp_resolve_ok      35
-#define warn__ctrs_stay_in_ctr    36
-#define warn__check_c1_stars      37
-#define warn__bigblock_feet       38
-
+typedef enum {
+   warn__do_your_part,
+   warn__tbonephantom,
+   warn__ends_work_to_spots,
+   warn__awkward_centers,
+   warn__bad_concept_level,
+   warn__not_funny,
+   warn__hard_funny,
+   warn__unusual,
+   warn__rear_back,
+   warn__awful_rear_back,
+   warn__excess_split,
+   warn__lineconc_perp,
+   warn__dmdconc_perp,
+   warn__lineconc_par,
+   warn__dmdconc_par,
+   warn__xclineconc_perp,
+   warn__xcdmdconc_perp,
+   warn__ctrstand_endscpls,
+   warn__ctrscpls_endstand,
+   warn__each2x2,
+   warn__each1x4,
+   warn__each1x2,
+   warn__take_right_hands,
+   warn__ctrs_are_dmd,
+   warn__full_pgram,
+   warn__offset_gone,
+   warn__overlap_gone,
+   warn__to_o_spots,
+   warn__to_x_spots,
+   warn__some_rear_back,
+   warn__not_tbone_person,
+   warn__check_c1_phan,     /* End of the first 31. */
+   warn__check_dmd_qtag,    /* Any below here can't be used in the aggregates below. */
+   warn__check_2x4,
+   warn__check_pgram,
+   warn__dyp_resolve_ok,
+   warn__ctrs_stay_in_ctr,
+   warn__check_c1_stars,
+   warn__bigblock_feet,
+   warn__some_touch,
+   warn__split_to_2x4s,
+   warn__split_to_2x3s,
+   warn__split_to_1x8s,
+   warn__split_to_1x6s
+} warning_index;
 
 /* BEWARE!!  The warning numbers in this set must all be <= 31.  This is a
    mask that is checked against the first word in the warning struct.
@@ -496,8 +502,13 @@ typedef enum {
    into a menu.  For "ui_start_select" it is a start_select_kind.
    For other replies, it is one of the following constants: */
 
-/* BEWARE!!  This list may need to track some stuff in sdui.c and/or sd.dps . */
-/* BEWARE!!  This list must track all the "startinfolist" definitions in sdtables.c . */
+/* BEWARE!!  This list must track the array "startup_commands" in sdmatch.c . */
+/* BEWARE!!  If change this next definition, be sure to update the definition of
+   "startinfolist" in sdtables.c, and also necessary stuff in the user interfaces.
+   The latter includes the definition of "start_choices" in sd.dps
+   in the Domain/Dialog system, and the corresponding CNTLs in *.rsrc
+   in the Macintosh system.  You may also need changes in create_controls() in
+   macstuff.c. */
 typedef enum {
    start_select_exit,        /* Don't start a sequence; exit from the program. */
    start_select_h1p2p,       /* Start with Heads 1P2P. */
@@ -756,6 +767,8 @@ typedef enum {
    concept_3x1,
    concept_3x3,
    concept_4x4,
+   concept_1x12_matrix,
+   concept_1x16_matrix,
    concept_2x6_matrix,
    concept_2x8_matrix,
    concept_3x4_matrix,
@@ -904,7 +917,10 @@ typedef enum {
    disttest_any, disttest_offset, disttest_z} disttest_kind;
 
 /* BEWARE!!  If change this next definition, be sure to update the definition of
-   "selector_names" and "selector_singular" in SDUTIL, and also necessary stuff in SDUI. */
+   "selector_names" and "selector_singular" in sdutil.c, and also necessary stuff in the
+   user interfaces.  The latter includes the definition of "task$selector_menu" in sd.dps
+   in the Domain/Dialog system, and the DITL "Select Dancers" in *.rsrc in
+   the Macintosh system. */
 typedef enum {
    selector_uninitialized,
    selector_boys,
@@ -939,7 +955,10 @@ typedef enum {
 #define last_selector_kind ((int) selector_none)
 
 /* BEWARE!!  If change this next definition, be sure to update the definition of
-   "direction_names" in SDUTIL, and also necessary stuff in SDUI. */
+   "direction_names" in sdutil.c, and also necessary stuff in the user interfaces.
+   The latter includes the definition of "task$direction_menu" in sd.dps in the
+   Domain/Dialog system, and the DITL "which direction" in *.rsrc in the Macintosh
+   system. */
 typedef enum {
    direction_uninitialized,
    direction_left,
@@ -1116,9 +1135,9 @@ extern concept_descriptor marker_concept_modreact;                  /* in SDCTAB
 extern concept_descriptor marker_concept_modtag;                    /* in SDCTABLE */
 extern concept_descriptor marker_concept_force;                     /* in SDCTABLE */
 extern concept_descriptor marker_concept_plain;                     /* in SDCTABLE */
-concept_descriptor marker_concept_second;                           /* in SDCTABLE */
-concept_descriptor marker_concept_secondreact;                      /* in SDCTABLE */
-concept_descriptor marker_concept_secondtag;                        /* in SDCTABLE */
+extern concept_descriptor marker_concept_second;                    /* in SDCTABLE */
+extern concept_descriptor marker_concept_secondreact;               /* in SDCTABLE */
+extern concept_descriptor marker_concept_secondtag;                 /* in SDCTABLE */
 extern concept_descriptor marker_concept_comment;                   /* in SDCTABLE */
 extern callspec_block **main_call_lists[NUM_CALL_LIST_KINDS];       /* in SDCTABLE */
 extern int number_of_calls[NUM_CALL_LIST_KINDS];                    /* in SDCTABLE */
@@ -1255,7 +1274,7 @@ extern parse_block *copy_parse_tree(parse_block *original_tree);
 extern void save_parse_state(void);
 extern long_boolean restore_parse_state(void);
 extern long_boolean deposit_call(callspec_block *call);
-extern long_boolean deposit_concept(concept_descriptor *conc);
+extern long_boolean deposit_concept(concept_descriptor *conc, unsigned int number_fields);
 extern long_boolean query_for_call(void);
 extern void write_header_stuff(void);
 extern void get_real_subcall(
@@ -1322,8 +1341,8 @@ extern int uims_do_abort_popup(void);
 extern int uims_do_neglect_popup(char dest[]);
 extern int uims_do_selector_popup(void);
 extern int uims_do_direction_popup(void);
-extern int uims_do_quantifier_popup(void);
 extern int uims_do_modifier_popup(char callname[], modify_popup_kind kind);
+extern unsigned int uims_get_number_fields(int howmany);
 extern void uims_reduce_line_count(int n);
 extern void uims_add_new_line(char the_line[]);
 extern uims_reply uims_get_command(mode_kind mode, call_list_kind *call_menu);
@@ -1353,7 +1372,7 @@ extern void nonreturning specialfail(Const char s[]);
 extern void string_copy(char **dest, char src[]);
 extern void display_initial_history(int upper_limit, int num_pics);
 extern void write_history_line(int history_index, Const char *header, long_boolean picture, file_write_flag write_to_file);
-extern void warn(int w);
+extern void warn(warning_index w);
 extern call_list_kind find_proper_call_list(setup *s);
 extern callarray *assoc(begin_kind key, setup *ss, callarray *spec);
 extern unsigned int find_calldef(

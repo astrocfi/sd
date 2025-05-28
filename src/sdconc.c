@@ -1091,8 +1091,8 @@ Private void concentrify(
 
 
 
-int concwarn1x4table[] = {warn__xclineconc_perp, warn__lineconc_perp, warn__lineconc_par};
-int concwarndmdtable[] = {warn__xcdmdconc_perp, warn__dmdconc_perp, warn__dmdconc_par};
+warning_index concwarn1x4table[] = {warn__xclineconc_perp, warn__lineconc_perp, warn__lineconc_par};
+warning_index concwarndmdtable[] = {warn__xcdmdconc_perp, warn__dmdconc_perp, warn__dmdconc_par};
 
 
 
@@ -1248,7 +1248,7 @@ extern void concentric_move(
             begin_outer.setupflags |= SETUPFLAG__NO_CHK_ELONG;
       }
 
-      current_number_fields >>= ((DFM1_NUM_SHIFT_MASK & modifiersin1) / DFM1_NUM_SHIFT_BIT) * 4;
+      current_number_fields >>= ((DFM1_NUM_SHIFT_MASK & modifiersout1) / DFM1_NUM_SHIFT_BIT) * 4;
       update_id_bits(&begin_outer);
       /* This call to "move" will fill in good stuff (viz. the DFM1_CONCENTRICITY_FLAG_MASK)
          into begin_outer.setupflags, which we will use below to do various "force_lines",
@@ -1536,7 +1536,7 @@ from a bone (heads left swing thru, side girl turn back).
       "final_elongation". */
 
    if (result_outer.kind == s2x2) {
-      int *concwarntable = (final_outers_start_kind == s1x4) ? concwarn1x4table : concwarndmdtable;
+      warning_index *concwarntable = (final_outers_start_kind == s1x4) ? concwarn1x4table : concwarndmdtable;
 
       switch (final_outers_start_kind) {
          case s1x4: case sdmd:

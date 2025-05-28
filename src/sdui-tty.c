@@ -26,7 +26,7 @@
  *
  * Uses the console interface defined in the Think-C 5.0 ANSI library.
  *
- * For use with version 28 of the Sd program.
+ * For use with version 30 of the Sd program.
  * Based on sdui-x11.c 1.10
  *
  *  The version of this file is as shown immediately below.  This
@@ -34,7 +34,7 @@
  *  the complete version.
  */
 
-static char *sdui_version = "1.5";
+static char *sdui_version = "1.6";
 
 /* This file defines the following functions:
    uims_process_command_line
@@ -51,7 +51,7 @@ static char *sdui_version = "1.5";
    uims_do_neglect_popup
    uims_do_selector_popup
    uims_do_direction_popup
-   uims_do_quantifier_popup
+   uims_get_number_fields
    uims_do_modifier_popup
    uims_add_new_line
    uims_reduce_line_count
@@ -418,7 +418,7 @@ get_user_input(char *prompt, int which)
             continue;
         }
 
-        matches = match_user_input(user_input, which, &user_match, extended_input, (show_function) 0, 0);
+        matches = match_user_input(user_input, which, &user_match, extended_input, (show_function) 0, FALSE);
 
         if (c == ' ') {
             /* extend only to one space, inclusive */
@@ -540,7 +540,7 @@ uims_get_command(mode_kind mode, call_list_kind *call_menu)
         uims_menu_index = user_match.index;
 
         if (user_match.kind == ui_command_select && uims_menu_index >= NUM_COMMAND_KINDS) {
-            if (uims_menu_index == NUM_COMMAND_KINDS+SPECIAL_COMMAND_ALLOW_MODS) {
+            if (uims_menu_index == NUM_COMMAND_KINDS + SPECIAL_COMMAND_ALLOW_MODS) {
                 /* Increment "allowing_modifications" up to a maximum of 2. */
                 if (allowing_modifications != 2) allowing_modifications++;
             }
@@ -741,24 +741,33 @@ uims_do_direction_popup(void)
     }
 }    
 
-extern int
-uims_do_quantifier_popup(void)
-{
-    int n;
-    char buffer[200];
 
-    if (user_match.valid && (user_match.howmanynumbers >= 1)) {
-        n = user_match.number_fields & 0xF;
-        user_match.number_fields >>= 4;
-        user_match.howmanynumbers--;
-        return n;
-    }
-    else {
-        get_string_input("How many? ", buffer);
-        n = atoi(buffer);
-        return n;
-    }
+extern unsigned int uims_get_number_fields(int howmany)
+{
+   int i;
+   char buffer[200];
+   unsigned int number_list = 0;
+
+   for (i=0 ; i<howmany ; i++) {
+      unsigned int this_num;
+
+      if (user_match.valid && (user_match.howmanynumbers >= 1)) {
+         this_num = user_match.number_fields & 0xF;
+         user_match.number_fields >>= 4;
+         user_match.howmanynumbers--;
+      }
+      else {
+         get_string_input("How many? ", buffer);
+         this_num = atoi(buffer);
+      }
+
+      if (this_num == 0 || this_num > 8) return 0;    /* User gave bad answer. */
+      number_list |= (this_num << (i*4));
+   }
+
+   return number_list;
 }
+
 
 /*
  * add a line to the text output area.

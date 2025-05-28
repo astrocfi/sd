@@ -12,7 +12,7 @@
  *  FITNESS FOR A PARTICULAR PURPOSE.  
  *
  */
-
+ 
 #include "macguts.h"
 #include <string.h> /* for strlen, strcpy */
 
@@ -862,7 +862,8 @@ static void
 menu_setup(TextWindow *twp)
 {
     unsigned char buf[100];
-    int *perm_map;
+/* sue: changed int->void to match changes in version 29.43+ */
+    void *perm_map;
     long_boolean accept_extend;
 
     EnableItem(apple_menu, hintsCommand);
@@ -890,10 +891,12 @@ menu_setup(TextWindow *twp)
         GetIndString(buf, MessagesStrings,
             concepts_in_place() ? UndoConceptString : UndoCallString);
         SetItem(edit_menu, undoCommand, buf);
-
+        
         EnableItem(file_menu, saveCommand);
         EnableItem(file_menu, saveasCommand);
         EnableItem(file_menu, appendFileCommand);
+        /* sue: added */
+        EnableItem(file_menu, appendasFileCommand);
 
         EnableItem(sequence_menu, endCommand);
         if (resolve_command_ok()) {

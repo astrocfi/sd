@@ -13,6 +13,8 @@
  *
  */
 
+/* sue: replaced references to "match_all_concepts" with "allowing_all_concepts" */
+
 #include "macguts.h"
 
 MenuHandle          apple_menu;
@@ -30,6 +32,7 @@ static void sd_menu_command(int item);
 static void modify_menu_command(int item);
 static void save_call_list_command(void);
 static void append_file_command(void);
+static void append_as_command(void);
 static void quit_command(void);
 static long_boolean mac_write_sequence_to_file(void);
 static void cant_open_resource_file(void);
@@ -66,7 +69,7 @@ init_menus(void)
     modify_menu = GetMenu(ModifyMenu);
     InsertMenu(modify_menu, -1);
     DrawMenuBar();
-    SetItemMark(sequence_menu, anyConceptCommand, match_all_concepts ? 022 : 0);
+    SetItemMark(sequence_menu, anyConceptCommand, allowing_all_concepts ? 022 : 0);
 }
 
 /*
@@ -110,6 +113,8 @@ adjust_menus(void)
     DisableItem(file_menu, saveCommand);
     DisableItem(file_menu, saveasCommand);
     DisableItem(file_menu, appendFileCommand);
+/* sue: added */
+    DisableItem(file_menu, appendasFileCommand);
 
     DisableItem(sequence_menu, endCommand);
     DisableItem(sequence_menu, resolveCommand);
@@ -209,7 +214,8 @@ update_modification_state(int n)
 void
 save_command(void)
 {
-    if (!output_file_ok) {
+    /* sue: changed to use new variable */
+    if (!output_file_save_ok) {
         save_as_command();
     }
     else {
@@ -245,7 +251,10 @@ save_as_command(void)
     }
     if (result == 0) {
         set_output_file(&output_filespec);
-        output_file_ok = TRUE;
+        /* sue: changed to use new variable */
+        /* setting output_file_append_ok makes it OK to save first, then append next */
+        output_file_save_ok = TRUE;
+        output_file_append_ok = TRUE;
         SetWTitle(myWindow, output_filespec.name);
         mac_write_sequence_to_file(); /* sets file_error */
         if (!file_error) {
@@ -304,6 +313,10 @@ file_menu_command(int item)
         case appendFileCommand:
             append_file_command();
             break;
+/* sue: added */
+        case appendasFileCommand:
+            append_as_command();
+            break;
         case quitCommand:
             quit_command();
             break;
@@ -324,6 +337,8 @@ edit_menu_command(int item)
     }
 }
 
+/* sue: split into 2 commands, Append and Append-As, resembling Save and Save-As */
+
 /*
  *  append_file_command
  *
@@ -331,6 +346,26 @@ edit_menu_command(int item)
 
 static void
 append_file_command(void)
+{
+    int result;
+    
+    if (!output_file_append_ok) {
+        append_as_command();
+    }
+    else {
+        output_append = TRUE;
+        if (mac_write_sequence_to_file()) {
+            dirty = FALSE;
+        }
+    }
+}
+/*
+ *  append_as_command
+ *
+ */
+
+static void
+append_as_command(void)
 {
     int result;
     char buf[200];
@@ -342,7 +377,14 @@ append_file_command(void)
         return;
     }
     set_output_file_append(&output_filespec);
+/* sue: add next 2 lines so Append/AppendAs behave like Save/SaveAs */
+    output_file_append_ok = TRUE;
+    SetWTitle(myWindow, output_filespec.name);
     mac_write_sequence_to_file(); /* reports errors directly */
+/* sue: this prevents popup saying you haven't saved it yet */
+    if (!file_error) {
+       dirty = FALSE;
+    }
 }
 
 /*
@@ -439,8 +481,8 @@ sequence_menu_command(int item)
         stuff_command(ui_command_select, command_save_pic);
         break;
     case anyConceptCommand:
-        match_all_concepts = !match_all_concepts;
-        SetItemMark(sequence_menu, item, match_all_concepts ? 022 : 0);
+        allowing_all_concepts = !allowing_all_concepts;
+        SetItemMark(sequence_menu, item, allowing_all_concepts ? 022 : 0);
         stuff_command(ui_command_select, command_refresh);
         break;
     case showCoupleNumbersCommand:
@@ -448,8 +490,14 @@ sequence_menu_command(int item)
         adjust_menus();
         stuff_command(ui_command_select, command_refresh);
         break;
+/* sue: command_allow_modification not in list any more.  I guess I'll just
+        update the allowing_modifications variable here, and refresh screen. */
     case modifyCommand:
+/*
         stuff_command(ui_command_select, command_allow_modification);
+*/
+        if (allowing_modifications < 2) allowing_modifications++;
+        stuff_command(ui_command_select, command_refresh);
         break;
     case endCommand:
         stuff_command(ui_command_select, command_abort);

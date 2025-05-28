@@ -3,8 +3,8 @@
 @c See the file INSTALL for how to format and view.
 @setfilename sd_doc.info
 @settitle Sd
-@set sd-version 29
-@set Time-stamp: June 30, 1993
+@set sd-version 30
+@set Time-stamp: Oct 13, 1993
 @c %**end of header
 @iftex
 @finalout
@@ -89,7 +89,7 @@ This is the summary table of contents:
 * Customization::               Customization with X Resources
 * Versions::                    Version Numbers
 * Installation::                Building and Installing the Program
-* Copying::     		The GNU General Public License
+* Copying::                     The GNU General Public License
 
 This is the complete table of contents:
 
@@ -142,7 +142,6 @@ Call Notes
 * Spread::                      Spread
 * Colliding Recycle::           Colliding Recycle, Ah So, and Cycle and Wheel
 * Rotate from Columns::         Rotate from Columns
-* Yellow Bricking::             @i{<anything> the Yellow Bricking <anything>}
 * Recycle::                     Recycle has two forms in the Database
 
 Concept Notes
@@ -524,6 +523,12 @@ choosing such a concept, enter the first call, preceded by whatever concepts
 apply to it.  The program will then prompt you for the second call.
 A complex tree of concepts and calls can thus be constructed.
 
+The program recognizes the level at which concepts are legal, but lets you
+override this if you wish.  The "toggle concept levels" command toggles
+(turns on or off) the state of off-level concept permission.  In the menu-based
+program, click on the "toggle concept levels" icon.  In the text-base program,
+type the command "toggle concept levels".  When off-level concepts are enabled,
+their use will cause a warning to be inserted into the transcript.
 
 @node Call Modifications, Tag/Scoot, Entering Concepts, Calling
 @section Call Modifications
@@ -736,7 +741,7 @@ truck, loop, squeeze, "Z axle", and "finish a long trip" that are also useful.
 the @code{nice setup} operation does not search for such things.  It is only
 intended to search for things that might not be obvious.
 
-If you have selected "allow all concepts", the @code{nice setup} command may
+If you have selected "toggle concept levels", the @code{nice setup} command may
 make use of concepts that are not legal at the chosen level.  This is sometimes
 useful in emergencies.
 
@@ -832,7 +837,11 @@ resolving isn't enough.
 @node Change Output File, Abort/Exit/Undo, Save Sequence, Misc Commands
 @section Changing the Output File
 
-TBA
+You can change the name of the file to which the program writes its
+output by clicking on the @code{Change output file} button.  A popup
+will appear, prompting you for a new file name.  This action will become
+effective the next time a sequence is written out.  Sequences previously
+written will stay under their old name.
 
 @node Abort/Exit/Undo, Inserting Comments, Change Output File, Misc Commands
 @section @code{Abort}, @code{Exit}, and @code{Undo}
@@ -873,13 +882,27 @@ box'') click on @code{save picture}.
 @node Terminal Interface, Call Notes, Misc Commands, Top
 @chapter Terminal Interface
 
+@menu
+* Sdtty::                       The @code{sdtty} program
+* The PC version::              The PC version
+* The Unix version::            The Unix version
+@end menu
+
+@node Sdtty, The PC version,  , Terminal Interface
+@section Sdtty
+
 A variation of the program, called @code{sdtty}, provides
 a terminal-oriented interface useful when you don't have access to a
 window system.  In this version, you type the commands, calls, and
-concepts to a completing reader.
+concepts to a "completing" reader.
 
-Where window-based interface prompts in a separate popup for people or
-number designators, you type the designator as part of the call name.
+At present, @code{sdtty} is the only version of the program available for
+PC-compatible computers.  We hope to have the window-based version
+available for the "Windows" (Copyright of Microsoft) operating system
+soon.
+
+Where the window-based interface prompts in a separate popup for people,
+number, or direction designators, you type the designator as part of the call name.
 For example, to call @code{<ANYONE> run} and select @code{centers}, just
 type @code{centers run}.
 Where in the window interface you would select @code{square thru <n>}
@@ -888,15 +911,53 @@ and then select @code{4} in response to the ``How many?'' prompt, with
 
 When typing, press @key{SPC} to complete the current word.
 Type @key{TAB} or @key{ESC} to complete as much as possible.
-Type @kbd{C-u} to clear a partially-typed line.
+Type @kbd{C-u} (that is, control U) to clear a partially-typed line.
 
 Press @kbd{?} to see the possible completions.
 If there are many possibilities, @code{sdtty} will display a page and
 offer a @samp{More} prompt.  Type @key{SPC} to see the next
 page, @key{RET} to see the next line, and @key{DEL} to stop.
 
-Text from a @kbd{%} to the end of line is ignored.  This comment feature
-may be useful when preparing a file to give to @code{sdtty} as input.
+@code{sdtty} has a special command "refresh display", that has no counterpart in
+the window-based version.  It causes a complete clean transcript
+of the current sequence to be printed.  This can be used if the display got
+messed up due to such things as unreliable terminal or modem behavior.
+
+@code{sdtty} tries to keep the screen up-to-date efficiently,
+maintaining a clean transcript of the current sequence on the screen
+at all times, by using whatever Operating System facilities it thinks are
+appropriate.  If, for any reason, this doesn't work properly for you,
+you can give the "-no_cursor" switch at program startup to disable
+that.  This will cause @code{sdtty} to treat the computer's display as
+if it were a "dumb" typewriter.  When started in this way, the part of
+the transcript that has changed with each command is simply redisplayed.
+This will inevitably lead to a choppy appearance on the screen or
+printing device.  The "refresh display" command cleans that up.
+
+@node The PC version, The Unix version, Sdtty, Terminal Interface
+@section The PC version
+
+To deal with different types of display hardware with various screen sizes,
+the "-screensize <n>" switch can be given at program startup, as in
+     sdtty -screensize 36 a2
+The default size is 25.
+
+@node The Unix version,  , The PC version, Terminal Interface
+@section The Unix version
+
+The Unix version normally uses the "curses" display access mechanism.  It
+should make effective use of the screen-editing features of the terminal
+(VT-100 or emulation of same, or whatever) to keep the screen updated.
+However, this requires that all of the system facilities for dealing with
+terminals ("TERM" environment variable, "terminfo" database, "stty"
+behavior, etc.) be working properly.  If, for any reason, this doesn't
+work for you, you can turn the "curses" mechanism off completely by using the
+"-no_cursor" command-line switch at program startup.  This should even
+make it possible to use the program from a printing device.
+
+When using "curses", you can turn off the use of insert/delete line
+capabilities of your terminal device by giving the command-line switch
+"-no_line_delete" at program startup.
 
 @node Call Notes, Concept Notes, Terminal Interface, Top
 @chapter Call Notes
@@ -908,7 +969,6 @@ may be useful when preparing a file to give to @code{sdtty} as input.
 * Spread::                      Spread
 * Colliding Recycle::           Colliding Recycle, Ah So, and Cycle and Wheel
 * Rotate from Columns::         Rotate from Columns
-* Yellow Bricking::             @i{<anything> the Yellow Bricking <anything>}
 * Recycle::                     Recycle has two forms in the Database
 @end menu
 
@@ -949,7 +1009,7 @@ something like @samp{heads star thru}.
 Do not call these if the ends of the line are facing the same way.
 @samp{Wheel and deal} from a one-faced line is okay.
 
-@node Rotate from Columns, Yellow Bricking, Colliding Recycle, Call Notes
+@node Rotate from Columns, Colliding Recycle, Call Notes
 @section Rotate from Columns
 
 Remember that @i{rotate} and @i{single rotate} from columns is legal only
@@ -957,25 +1017,7 @@ at C3, but from lines it is legal at C2.  Since the program has no
 knowledge of different starting setups implying different levels, the call
 is in the database at C2.  Don't use it from columns at that level.
 
-@node Yellow Bricking, Recycle, Rotate from Columns, Call Notes
-@section @i{<anything> the Yellow Bricking <anything>}
-
-To use the second @code{<anything>} in @samp{<anything> the yellow bricking
-<anything>}, as in @i{follow the yellow bricking turn and deal}, enable
-simple modifications and click on @code{follow the yellow brick road}.
-
-To use the first @code{<anything>}, as in @i{revert cross loop and tag
-the yellow brick road}, click on @samp{tag the yellow brick road}.
-If simple modifications are enabled, you will be able to turn
-the @i{1/2 tag} into whatever tagging variation you want.
-The philosophy is the same as for things like @i{tagger's dilemma}.
-
-If you want to modify the call both ways, you must enable all modifications
-(click twice on @samp{allow modifications}), do @samp{tag the yellow brick
-road}, and use the second modification.  It will come out
-looking ugly.  Sorry.
-
-@node Recycle,  , Yellow Bricking, Call Notes
+@node Recycle,  , Call Notes
 @section Recycle
 
 There are two @i{Recycle} calls in the database: @samp{recycle} can be done
@@ -1014,7 +1056,8 @@ In this program, @dfn{gruesome} simply means
 @i{phantom couples or tandem} with the phantoms added to make a 2x8 rather than
 the 4x4 that would normally be created, and with the added requirement that
 the pairing be parallel to the long axis.  @dfn{Gruesome twosome} is just an
-abbreviation for @i{gruesome as couples twosome}.
+abbreviation for @i{gruesome as couples twosome}.  This extension is not
+widely accepted at present.  Be prepared to explain what you mean.
 
 @node Divided, Concentric, Gruesome, Concept Notes
 @section Divided
@@ -1117,9 +1160,16 @@ Some of the replacement/interruption meta-concepts push the
 semantics of the language to the limit.  Whenever a call undergoes an
 interruption or enters or leaves a part with an additional concept on it,
 there is an implicit @i{piecewise} at that instant.  That is, concepts and
-setups are re-evaluated.  Furthermore, replacements and interruptions are
-@i{normal}, that is, they do not carry any concepts that were on the call
-being replaced but not on the entire operation.
+setups are re-evaluated.  This behavior is not always obvious to the dancers.
+Furthermore, in some cases it may be perceived as wrong.  For example, an
+implied @i{piecewise} on a concept such as @i{cross concentric} or
+@i{single cross concentric} is very likely to be considered wrong.
+If you have any doubt about whether some instance of concept stacking is
+correct and will be understood by the dancers, do not use it.
+
+Furthermore, replacements and interruptions are @i{normal}, that is, they
+do not carry any concepts that were on the call being replaced -- only
+those on the entire operation.
 
 Example, from a starting DPT setup:
 
@@ -1141,6 +1191,9 @@ TANDEM TWOSOME DELAY: clean sweep 1/4 BUT REPLACE THE 3rd
 PART WITH A [SINGLE CROSS CONCENTRIC turn thru]
 @end example
 
+If you think that some instance of a replacement or interruption will
+cause confusion on the dance floor because of this sort of issue,
+you should not use it.
 
 @node So-And-So Do Your Part,  , Implied Piecewise, Concept Notes
 @section So-And-So Do Your Part

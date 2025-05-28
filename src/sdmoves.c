@@ -16,7 +16,7 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-    This is for version 29. */
+    This is for version 30. */
 
 /* This defines the following functions:
    canonicalize_rotation
@@ -974,7 +974,7 @@ Private void move_with_real_call(
    /* But, alas, if fractionalization is on, we can't do it yet, because we don't
       know whether we are starting at the beginning.  In the case of fractionalization,
       we will do it later.  In that case, we already know that the call is sequentially
-      defined, and tso we will get to it later. */
+      defined, and so we will get to it later. */
 
    if ((!(ss->setupflags & (SETUPFLAG__NO_STEP_TO_WAVE | SETUPFLAG__FRACTIONALIZE_MASK))) &&
          (callspec->callflags1 & (CFLAG1_REAR_BACK_FROM_R_WAVE | CFLAG1_REAR_BACK_FROM_QTAG | CFLAG1_STEP_TO_WAVE))) {
@@ -986,8 +986,7 @@ Private void move_with_real_call(
          mirror = TRUE;
       }
 
-      if (setup_limits[ss->kind] >= 0)          /* We don't understand absurd setups. */
-         touch_or_rear_back(ss, mirror, callspec->callflags1);
+      touch_or_rear_back(ss, mirror, callspec->callflags1);
 
       /* But, if the "left_means_touch_or_check" flag is set, we only wanted the "left" flag for the
          purpose of what "touch_or_rear_back" just did.  So, in that case, we turn off the "left"
@@ -1173,9 +1172,6 @@ Private void move_with_real_call(
    
          /* Must be sequential or some form of concentric. */
    
-         /* ***** This probably isn't right -- we should allow expansion on the first part, and then
-            shut it off for later parts. */
-         ss->setupflags |= SETUPFLAG__NO_EXPAND_MATRIX;
          new_final_concepts = final_concepts;
    
          /* We demand that the final concepts that remain be only those in the following list,
@@ -1242,7 +1238,7 @@ Private void move_with_real_call(
                if (key == 2) {
                   /* Just do the "numer" part of the call (or that part counting from end), and tell if it was last. */
                   if (numer > total) fail("The indicated part number doesn't exist.");
-                  reverse_order = denom != 0;
+                  reverse_order = (denom != 0);
                   if (reverse_order) first_call = FALSE;
                   subcall_index = reverse_order ? total-numer : numer-1;
                   instant_stop = TRUE;
@@ -1309,8 +1305,7 @@ Private void move_with_real_call(
                   mirror = TRUE;
                }
 
-               if (setup_limits[ss->kind] >= 0)          /* We don't understand absurd setups. */
-                  touch_or_rear_back(ss, mirror, callspec->callflags1);
+               touch_or_rear_back(ss, mirror, callspec->callflags1);
             }
 
             /* See comments above relating to "left_means_touch_or_check".  We are about to
@@ -1496,6 +1491,10 @@ Private void move_with_real_call(
 
                *result = tempsetup;
 
+               /* We allow expansion on the first part, and then shut it off for later parts.
+                  This is required for things like 12 matrix grand swing thru from a 1x8 or 1x10. */
+               ss->setupflags |= SETUPFLAG__NO_EXPAND_MATRIX;
+
                /* Remove outboard phantoms. 
                   It used to be that normalize_setup was not called
                   here.  It was found that we couldn't do things like, from a suitable offset wave,
@@ -1504,7 +1503,22 @@ Private void move_with_real_call(
                   If any problems are found, it may be that a flag needs to be added to seqdef calls
                   saying whether to remove outboard phantoms after each part. */
 
-               normalize_setup(result, simple_normalize);
+               /* But we *DON'T* remove the phantoms if "explicit matrix" is on, as of version 29.45.
+                  This is to make "1x12 matrix grand swing thru" work from a simple grand wave.
+                  The intention is to add outboard phantoms and then do the call in a gigantic way.
+                  We added two outboard phantoms on each end, then did the swing half, resulting
+                  in another 1x12 with only the center 8 spots occupied.  If outboard phantoms are
+                  removed, the effect of the explicit "1x12 matrix" modifier is lost.  The "grand
+                  1/2 by the left" is done on the 1x8.  So we leave the phantoms in.  Actually,
+                  making this call operate properly required a database change as well.  We had to
+                  add 1x12 and 1x16 starting setups for "1/2 by the left or right".  Otherwise,
+                  on "1x12 matrix grand swing thru", it would just do it in each 1x6.  Also, we
+                  don't want the warning "Do the call in each 1x6" to be given, though it is
+                  admittedly better to have the program warn us when it's about to do something
+                  wrong than to do the wrong thing silently. */
+
+               if (!tttt.setupflags & SETUPFLAG__EXPLICIT_MATRIX)
+                  normalize_setup(result, simple_normalize);
 
                qtf = FALSE;
 
@@ -1530,7 +1544,8 @@ Private void move_with_real_call(
          else {
 
             /* Must be some form of concentric. */
-   
+
+            ss->setupflags |= SETUPFLAG__NO_EXPAND_MATRIX;     /* We think this is the right thing to do. */
             saved_warnings = history[history_ptr+1].warnings;
 
             temp_concepts = get_mods_for_subcall(new_final_concepts, callspec->stuff.conc.innerdef.modifiersh, callspec->callflagsh);

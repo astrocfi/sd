@@ -59,4 +59,4 @@ matcher_add_call_to_menu(call_list_kind cl, int call_menu_index, char name[]);
     
 extern int
 match_user_input(char *user_input, int which_commands, match_result *mr,
-                 char *extension, show_function sf, int show_verify);
+                 char *extension, show_function sf, long_boolean show_verify);

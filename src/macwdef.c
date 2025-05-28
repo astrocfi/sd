@@ -1,7 +1,7 @@
 /*
  *  macwdef.c - window definition function for utility windows
  *
- *  Copyright 1993 Alan Snyder
+ *  Copyright (C) 1993 Alan Snyder
  *
  *  Permission to use, copy, modify, and distribute this software for
  *  any purpose is hereby granted without fee, provided that the above

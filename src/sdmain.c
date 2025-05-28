@@ -27,7 +27,7 @@
     General Public License if you distribute the file.
 */
 
-#define VERSION_STRING "29.4"
+#define VERSION_STRING "29.5"
 
 /* This defines the following functions:
    sd_version_string
@@ -459,18 +459,24 @@ extern long_boolean deposit_call(callspec_block *call)
          dir = (direction_kind) j;
    }
 
-   for (i=0 ; i<howmanynums ; i++) {
-      int this_num;
-
-      if (initializing_database)
-         /* If this wants a number, give it 1.  0 won't work for the call 1/4 the alter. */
-         this_num = 1;
-      else if (not_interactive)
-         this_num = generate_random_number(4)+1;
-      else if ((this_num = uims_do_quantifier_popup()) == 0)
-         return(TRUE);     /* User moved the mouse away. */
-
-      number_list |= (this_num << (i*4));
+   if (howmanynums != 0) {
+      if (not_interactive) {
+         for (i=0 ; i<howmanynums ; i++) {
+            int this_num;
+      
+            if (initializing_database)
+               /* If this wants a number, give it 1.  0 won't work for the call 1/4 the alter. */
+               this_num = 1;
+            else
+               this_num = generate_random_number(4)+1;
+      
+            number_list |= (this_num << (i*4));
+         }
+      }
+      else {
+         number_list = uims_get_number_fields(howmanynums);
+         if (number_list == 0) return(TRUE);     /* User waved the mouse away. */
+      }
    }
 
    new_block = get_parse_block();
@@ -487,16 +493,20 @@ extern long_boolean deposit_call(callspec_block *call)
 }
 
 
+
 /* Deposit a concept into the parse state.  A returned value of TRUE
    means that the user refused to click on a required number or selector,
    and so we have taken no action.  This can only occur if interactive.
-   If not interactive, stuff will be chosen by random number. */
+   If "not_interactive" is on, the "number_fields" argument is ignored, and
+   necessary stuff will be chosen by random number.  If it is off, the appropriate
+   numbers (as indicated by the "CONCPROP__USE_NUMBER" stuff) must be provided. */
 
-extern long_boolean deposit_concept(concept_descriptor *conc)
+extern long_boolean deposit_concept(concept_descriptor *conc, unsigned int number_fields)
 {
    parse_block *new_block;
    selector_kind sel = selector_uninitialized;
-   int number = 0;
+   int number_list = number_fields;
+   int howmanynumbers = 0;
 
    if (concept_table[conc->kind].concept_prop & CONCPROP__USE_SELECTOR) {
       int j;
@@ -509,33 +519,22 @@ extern long_boolean deposit_concept(concept_descriptor *conc)
          return(TRUE);
    }
 
-   if (concept_table[conc->kind].concept_prop & CONCPROP__USE_NUMBER) {
+   if (concept_table[conc->kind].concept_prop & CONCPROP__USE_NUMBER)
+      howmanynumbers = 1;
+   if (concept_table[conc->kind].concept_prop & CONCPROP__USE_TWO_NUMBERS)
+      howmanynumbers = 2;
 
-      if (not_interactive)
-         number = generate_random_number(4)+1;
-      else if ((number = uims_do_quantifier_popup()) != 0)
-         ;
-      else
-         return(TRUE);
-
-      if (concept_table[conc->kind].concept_prop & CONCPROP__USE_TWO_NUMBERS) {
-         int second_num;
-         if (not_interactive)
-            second_num = generate_random_number(4)+1;
-         else if ((second_num = uims_do_quantifier_popup()) != 0)
-            ;
-         else {
-            return(TRUE);
-         }
-         number |= second_num << 16;
-      }
+   if (not_interactive && howmanynumbers != 0) {
+      number_list = generate_random_number(4)+1;
+      if (howmanynumbers == 2)
+         number_list |= (generate_random_number(4)+1) << 4;
    }
 
    new_block = get_parse_block();
    new_block->concept = conc;
    new_block->selector = sel;
    new_block->direction = direction_uninitialized;
-   new_block->number = number;
+   new_block->number = number_list;
 
    *parse_state.concept_write_ptr = new_block;
 
@@ -568,6 +567,7 @@ extern long_boolean query_for_call(void)
    uims_reply local_reply;
    callspec_block *result;
    int old_error_flag;
+   unsigned int concept_number_fields;
 
    recurse_entry:
 
@@ -577,6 +577,8 @@ extern long_boolean query_for_call(void)
       parse_state.call_list_to_use = call_list_any;
    
    redisplay:
+
+   concept_number_fields = 0;
 
    if (!not_interactive) {
       /* We are operating in interactive mode.  Update the
@@ -715,6 +717,23 @@ extern long_boolean query_for_call(void)
       }
 
       local_reply = uims_get_command(mode_normal, &parse_state.call_list_to_use);
+
+      /* If user gave a concept, pick up any needed numeric modifiers. */
+
+      if (local_reply == ui_concept_select) {
+         int howmanynumbers = 0;
+         unsigned int props = concept_table[concept_descriptor_table[uims_menu_index].kind].concept_prop;
+
+         if (props & CONCPROP__USE_NUMBER)
+            howmanynumbers = 1;
+         if (props & CONCPROP__USE_TWO_NUMBERS)
+            howmanynumbers = 2;
+
+         if (howmanynumbers != 0) {
+            if ((concept_number_fields = uims_get_number_fields(howmanynumbers)) == 0)
+               goto recurse_entry;    /* User waved the mouse away. */
+         }
+      }
    }
    else {
 
@@ -729,7 +748,7 @@ extern long_boolean query_for_call(void)
          local_reply = ui_call_select;
       }
    }
-   
+
    /* Now see what kind of command we have. */
 
    if (local_reply == ui_command_select) {
@@ -764,8 +783,10 @@ extern long_boolean query_for_call(void)
       }
    }
    else if (local_reply == ui_concept_select) {
-      /* A concept is required.  Its index has been stored in uims_menu_index. */
-      (void) deposit_concept(&concept_descriptor_table[uims_menu_index]);
+      /* A concept is required.  Its index has been stored in uims_menu_index,
+         and the "concept_number_fields" is ready. */
+
+      (void) deposit_concept(&concept_descriptor_table[uims_menu_index], concept_number_fields);
 
       /* We ignore the value returned by deposit_concept.
          If the user refused to enter a selector, no action is taken. */
@@ -841,6 +862,7 @@ extern long_boolean query_for_call(void)
 
 
 
+#ifdef NEGLECT
 Private int age_buckets[33];
 
 Private int mark_aged_calls(
@@ -915,6 +937,7 @@ Private int mark_aged_calls(
 
    return(remainder);
 }
+#endif
 
 
 
@@ -1196,7 +1219,7 @@ void main(int argc, char *argv[])
    /* Check for first call given to heads or sides only. */
    
    if ((history_ptr == 1) && startinfolist[history[1].centersp].into_the_middle)
-      deposit_concept(&centers_concept);
+      deposit_concept(&centers_concept, 0);
    
    /* Come here to get a concept or call or whatever from the user. */
    
@@ -1674,17 +1697,37 @@ extern void get_real_subcall(
          is desired. */
 
       modify_popup_kind kind;
+      char *p;
+      char *q;
+      char nice_call_name[MAX_TEXT_LINE_LENGTH];
+
+      p = base_calls[item->call_id]->name;
+      q = nice_call_name;
+
+      for (;;) {
+         char c = *p++;
+         if (c == '@') {
+            /* Skip over @7...@8, @n .. @o, and @j...@l stuff. */
+            if (*p == '7' || *p == 'n' || *p == 'j') {
+               while (*p++ != '@');
+            }
+
+            p++;
+         }
+         else if ((*q++ = c) == 0)
+            break;
+      }
 
       if (item->modifiers1 & DFM1_MUST_BE_TAG_CALL) kind = modify_popup_only_tag;
       else if (item->modifiers1 & DFM1_MUST_BE_SCOOT_CALL) kind = modify_popup_only_scoot;
       else kind = modify_popup_any;
 
-      if (debug_popup || uims_do_modifier_popup(base_calls[item->call_id]->name, kind)) {
+      if (debug_popup || uims_do_modifier_popup(nice_call_name, kind)) {
          /* User accepted the modification.
             Set up the prompt and get the concepts and call. */
       
          string_copy(&tempstringptr, "REPLACEMENT FOR THE ");
-         string_copy(&tempstringptr, base_calls[item->call_id]->name);
+         string_copy(&tempstringptr, nice_call_name);
       }
       else {
          /* User declined the modification.  Create a null entry so that we don't query again. */

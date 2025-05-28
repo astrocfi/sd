@@ -697,7 +697,7 @@ Private void build_database(call_list_mode_t call_list_mode)
    local_call_list = (callspec_block **) get_mem(abs_max_calls * sizeof(callspec_block *));
 
    /* Clear the tag list.  Calls will fill this in as they announce themselves. */
-   for (i=0; i < max_base_calls; i++) base_calls[i] = 0;
+   for (i=0; i < max_base_calls; i++) base_calls[i] = (callspec_block *) 0;
 
    highest_base_call = 0;
 

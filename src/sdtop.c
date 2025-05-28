@@ -37,7 +37,7 @@ typedef struct {
    } expand_thing;
 
 typedef struct {
-   int warning;
+   warning_index warning;
    int forbidden_elongation;
    expand_thing *expand_lists;
    } full_expand_thing;
@@ -152,6 +152,16 @@ Private int bit_table_rigger[][4] = {
    {ID2_OUTR2|ID2_END|ID2_BEAU,                ID2_OUTR2|ID2_END|ID2_TRAILER,             ID2_OUTR2|ID2_END|ID2_BELLE,               ID2_OUTR2|ID2_END|ID2_LEAD},
    {ID2_CTR6|ID2_END|ID2_BELLE,                ID2_CTR6|ID2_END|ID2_LEAD,                 ID2_CTR6|ID2_END|ID2_BEAU,                 ID2_CTR6|ID2_END|ID2_TRAILER}};
 
+Private int bit_table_bone[][4] = {
+   {ID2_END|ID2_OUTR6|ID2_LEAD,     ID2_END|ID2_OUTR6|ID2_BEAU,       ID2_END|ID2_OUTR6|ID2_TRAILER,  ID2_END|ID2_OUTR6|ID2_BELLE},
+   {ID2_END|ID2_OUTR6|ID2_LEAD,     ID2_END|ID2_OUTR6|ID2_BEAU,       ID2_END|ID2_OUTR6|ID2_TRAILER,  ID2_END|ID2_OUTR6|ID2_BELLE},
+   {ID2_CENTER|ID2_OUTR6|ID2_BELLE, ID2_CENTER|ID2_OUTR6|ID2_LEAD,    ID2_CENTER|ID2_OUTR6|ID2_BEAU,  ID2_CENTER|ID2_OUTR6|ID2_TRAILER},
+   {ID2_CENTER|ID2_CTR2|ID2_BEAU,   ID2_CENTER|ID2_CTR2|ID2_TRAILER,  ID2_CENTER|ID2_CTR2|ID2_BELLE,  ID2_CENTER|ID2_CTR2|ID2_LEAD},
+   {ID2_END|ID2_OUTR6|ID2_TRAILER,  ID2_END|ID2_OUTR6|ID2_BELLE,      ID2_END|ID2_OUTR6|ID2_LEAD,     ID2_END|ID2_OUTR6|ID2_BEAU},
+   {ID2_END|ID2_OUTR6|ID2_TRAILER,  ID2_END|ID2_OUTR6|ID2_BELLE,      ID2_END|ID2_OUTR6|ID2_LEAD,     ID2_END|ID2_OUTR6|ID2_BEAU},
+   {ID2_CENTER|ID2_OUTR6|ID2_BEAU,  ID2_CENTER|ID2_OUTR6|ID2_TRAILER, ID2_CENTER|ID2_OUTR6|ID2_BELLE, ID2_CENTER|ID2_OUTR6|ID2_LEAD},
+   {ID2_CENTER|ID2_CTR2|ID2_BELLE,  ID2_CENTER|ID2_CTR2|ID2_LEAD,     ID2_CENTER|ID2_CTR2|ID2_BEAU,   ID2_CENTER|ID2_CTR2|ID2_TRAILER}};
+
 
 #define BITS_TO_CLEAR (ID2_LEAD|ID2_TRAILER|ID2_BEAU|ID2_BELLE|ID2_CENTER|ID2_END|ID2_CTR2|ID2_CTR6|ID2_OUTR2|ID2_OUTR6)
 #define UNSYM_BITS_TO_CLEAR (ID2_NEARCOL|ID2_NEARLINE|ID2_NEARBOX|ID2_FARCOL|ID2_FARLINE|ID2_FARBOX)
@@ -187,6 +197,8 @@ extern void update_id_bits(setup *ss)
          ptr = bit_table_spindle; break;
       case s_rigger:
          ptr = bit_table_rigger; break;
+      case s_bone:
+         ptr = bit_table_bone; break;
       default:
          return;
    }
@@ -240,16 +252,21 @@ Private expand_thing step_2x2h_stuff = {{0, 1, 2, 3}, 4, nothing, s1x4, 1};
 Private expand_thing step_8ch_stuff = {{7, 6, 0, 1, 3, 2, 4, 5}, 8, nothing, s2x4, 1};
 Private expand_thing step_li_stuff = {{1, 2, 7, 4, 5, 6, 3, 0}, 8, nothing, s1x8, 0};
 Private expand_thing step_tby_stuff = {{5, 6, 7, 0, 1, 2, 3, 4}, 8, nothing, s_qtag, 1};
+Private expand_thing step_bone_stuff = {{1, 4, 7, 6, 5, 0, 3, 2}, 8, nothing, s1x8, 0};
+Private expand_thing step_rig_stuff = {{2, 7, 4, 5, 6, 3, 0, 1}, 8, nothing, s1x8, 0};
 
-Private full_expand_thing step_1x8_pair =      {0, 0, &step_1x8_stuff};
-Private full_expand_thing step_1x4_side_pair = {0, 0, &step_1x4_side_stuff};
-Private full_expand_thing step_1x4_pair =      {0, 0, &step_1x4_stuff};
-Private full_expand_thing step_2x2v_pair =     {0, 2*SETUPFLAG__ELONGATE_BIT, &step_2x2v_stuff};
-Private full_expand_thing step_2x2h_pair =     {0, 1*SETUPFLAG__ELONGATE_BIT, &step_2x2h_stuff};
-Private full_expand_thing step_8ch_pair =      {0, 0, &step_8ch_stuff};
-Private full_expand_thing step_li_pair =       {0, 0, &step_li_stuff};
-Private full_expand_thing step_tby_pair =      {0, 0, &step_tby_stuff};
-Private full_expand_thing step_1x2_pair =      {0, 0, &step_1x2_stuff};
+Private full_expand_thing step_1x8_pair      = {(warning_index) 0, 0, &step_1x8_stuff};
+Private full_expand_thing step_1x4_side_pair = {(warning_index) 0, 0, &step_1x4_side_stuff};
+Private full_expand_thing step_1x4_pair      = {(warning_index) 0, 0, &step_1x4_stuff};
+Private full_expand_thing step_2x2v_pair     = {(warning_index) 0, 2*SETUPFLAG__ELONGATE_BIT, &step_2x2v_stuff};
+Private full_expand_thing step_2x2h_pair     = {(warning_index) 0, 1*SETUPFLAG__ELONGATE_BIT, &step_2x2h_stuff};
+Private full_expand_thing step_8ch_pair      = {(warning_index) 0, 0, &step_8ch_stuff};
+Private full_expand_thing step_li_pair       = {(warning_index) 0, 0, &step_li_stuff};
+Private full_expand_thing step_tby_pair      = {(warning_index) 0, 0, &step_tby_stuff};
+Private full_expand_thing step_1x2_pair      = {(warning_index) 0, 0, &step_1x2_stuff};
+Private full_expand_thing step_bone_pair     = {warn__some_touch,  0, &step_bone_stuff};
+Private full_expand_thing step_rig_pair      = {warn__some_touch,  0, &step_rig_stuff};
+
 
 
 
@@ -263,6 +280,8 @@ extern void touch_or_rear_back(
    full_expand_thing *tptr;
    expand_thing *zptr;
    int directions, livemask;
+
+   if (setup_limits[scopy->kind] < 0) return;          /* We don't understand absurd setups. */
 
    directions = 0;
    livemask = 0;
@@ -363,6 +382,18 @@ extern void touch_or_rear_back(
             else if ((callflags1 & CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK) && did_mirror) {
                if ((directions & livemask) != (0x2288 & livemask) && (directions & livemask) != (0x55FF & livemask))
                   fail("Setup is not left-handed.");
+            }
+            break;
+         case s_bone:
+            if (livemask == 0xFFFF && (directions == 0xA802)) {
+               /* Ends touch from a "bone" to a grand wave. */
+               tptr = &step_bone_pair;
+            }
+            break;
+         case s_rigger:
+            if (livemask == 0xFFFF && (directions == 0xA802)) {
+               /* Centers touch from a "wing" to a grand wave. */
+               tptr = &step_rig_pair;
             }
             break;
          case s_1x2:

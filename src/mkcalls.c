@@ -16,7 +16,7 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-    This is for version 28. */
+    This is for version 30. */
 
 /* mkcalls.c */
 
@@ -25,16 +25,27 @@
 #include <stdio.h>
 #include <errno.h>
 
-#ifdef _POSIX_SOURCE
+/* ***  This next test used to be
+    ifdef _POSIX_SOURCE
+   We have taken it out and replaced with what you see below.  If this breaks
+   anything, let us know. */
+#if defined(_POSIX_SOURCE) || defined(sun)
 #include <unistd.h>
 #endif
 
 /* We take pity on those poor souls who are compelled to use
     troglodyte development environments. */
 
-#if defined(__STDC__) && !defined(athena_rt) && !defined(athena_vax)
+/* ***  This next test used to be
+    if defined(__STDC__) && !defined(athena_rt) && !defined(athena_vax)
+   We have taken it out and replaced with what you see below.  If this breaks
+   anything, let us know. */
+#if defined(__STDC__) || defined(sun)
 #include <stdlib.h>
 #else
+extern void free(void *ptr);
+extern char *malloc(unsigned int siz);
+extern char *realloc(char *oldp, unsigned int siz);
 extern void exit(int code);
 #endif
 

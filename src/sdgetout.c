@@ -536,9 +536,9 @@ Private long_boolean inner_search(search_kind goal, resolve_rec *new_resolve, in
 
       /* If the concept is a tandem or as couples type, we really want "phantom" in front of it. */
       if (concept_descriptor_table[nice_setup_info[k].array_to_use_now[i]].kind == concept_tandem)
-         deposit_concept(&concept_descriptor_table[phantom_concept_index]);
+         deposit_concept(&concept_descriptor_table[phantom_concept_index], 0);
 
-      deposit_concept(&concept_descriptor_table[nice_setup_info[k].array_to_use_now[i]]);
+      deposit_concept(&concept_descriptor_table[nice_setup_info[k].array_to_use_now[i]], 0);
    }
    
    /* Select the call.  Selecting one that says "don't use in resolve" will signal and go to try_again. */
@@ -883,7 +883,7 @@ extern uims_reply full_resolve(search_kind goal)
 
    uims_begin_search(goal);
    if (goal == search_reconcile)
-      show_resolve = TRUE;
+      show_resolve = FALSE;
 
    for (;;) {
       /* We know the history is restored at this point. */

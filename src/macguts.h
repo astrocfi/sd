@@ -63,6 +63,7 @@
 #define ReadingDatabaseDialog 136
 #define SelectDialog          137
 #define QuantifierDialog      138
+#define DirectionDialog       139
 #define PreferencesDialog     140
 #define OldSelectDialog       141
 #define OldQuantifierDialog   142
@@ -116,6 +117,8 @@ enum {
     saveasCommand,
     FILE_MENU_DUMMY_1,
     appendFileCommand,
+/* sue: added */
+    appendasFileCommand,
     FILE_MENU_DUMMY_2,
     quitCommand
 };
@@ -406,7 +409,9 @@ typedef enum {
 extern char *level_name;
 extern OutputMode output_mode;
 extern long_boolean dirty;
-extern long_boolean output_file_ok;
+/* sue: changed to 2 separate variables for append and save */
+extern long_boolean output_file_save_ok;
+extern long_boolean output_file_append_ok;
 extern long_boolean writing_sequence;
 extern ControlHandle output_default_control;
 
@@ -550,6 +555,9 @@ void db_close_output(void);
 void db_cleanup(void);
 void db_input_error(void);
 void db_output_error(void);
+
+/* sue: added */
+extern long_boolean output_append;
 
 /* sdui-mac.c */
 

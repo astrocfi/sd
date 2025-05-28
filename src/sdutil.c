@@ -191,40 +191,45 @@ extern void writestuff(Const char s[])
 
 
 
-Private void writestuff_with_decorations(char s[], long_boolean do_number, long_boolean do_selector, int num, char *selname)
+Private void writestuff_with_decorations(char s[], long_boolean do_number, long_boolean do_selector, int *num_ptr, char *selname)
 {
    if (do_number || do_selector) {
       char *f = s;
       while (*f) {
          if (f[0] == '<') {
-            if (do_number && f[1] == 'N' && f[2] == '/' && f[3] == '4' &&f[4] == '>') {
-               if ((num & 0xF) == 2)
-                  writestuff("1/2");
-               else {
-                  writechar('0' + (num & 0xF));
-                  writestuff("/4");
+            if (do_number && f[1] == 'N') {
+               if (f[2] == '/' && f[3] == '4' && f[4] == '>') {
+                  if ((*num_ptr & 0xF) == 2)
+                     writestuff("1/2");
+                  else {
+                     writechar('0' + (*num_ptr & 0xF));
+                     writestuff("/4");
+                  }
+                  f += 5;
+                  *num_ptr >>= 4;
+                  continue;
                }
-               f += 5;
+               else if (f[2] == '>') {
+                  writechar('0' + (*num_ptr & 0xF));
+                  f += 3;
+                  *num_ptr >>= 4;
+                  continue;
+               }
             }
-            else if (do_selector && f[1] == 'A' && f[2] == 'N' && f[3] == 'Y' && f[4] == 'O' && f[5] == 'N' && f[6] == 'E' &&f[7] == '>') {
+            else if (do_selector && f[1] == 'A' && f[2] == 'N' && f[3] == 'Y' && f[4] == 'O' && f[5] == 'N' && f[6] == 'E' && f[7] == '>') {
                writestuff(selname);
                f += 8;
+               continue;
             }
-            else
-               writechar(*f++);
          }
-         else {
-            writechar(*f++);
-         }
+
+         writechar(*f++);
       }
    }
    else {
       writestuff(s);
    }
 }
-
-
-
 
 
 
@@ -403,7 +408,12 @@ Private char *warning_strings[] = {
    /*  warn__dyp_resolve_ok      */   "Do your part.",
    /*  warn__ctrs_stay_in_ctr    */   "Centers stay in the center.",
    /*  warn__check_c1_stars      */   "Check a generalized 'star' setup.",
-   /*  warn__bigblock_feet       */   "Bigblock/stagger shapechanger -- go to footprints."};
+   /*  warn__bigblock_feet       */   "Bigblock/stagger shapechanger -- go to footprints.",
+   /*  warn__some_touch          */   "Some people step to a wave.",
+   /*  warn__split_to_2x4s       */   "Do the call in each 2x4.",
+   /*  warn__split_to_2x3s       */   "Do the call in each 2x3.",
+   /*  warn__split_to_1x8s       */   "Do the call in each 1x8.",
+   /*  warn__split_to_1x6s       */   "Do the call in each 1x6."};
 
 Private char *ordinals[] = {"1st", "2nd", "3rd", "4th", "5th"};
 
@@ -472,24 +482,8 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
             you_owe_me_a_selector = TRUE;
 
          if (concept_table[k].concept_prop & (CONCPROP__USE_NUMBER | CONCPROP__USE_TWO_NUMBERS)) {
-            if (k == concept_fractional) {
-               char nn[3];
-
-               if (item->value.arg1 != 0) writestuff("DO THE LAST ");
-               nn[0] = '0' + (index & 0xFFFF);
-               nn[1] = '\0';
-               writestuff(nn);
-               nn[0] = '/';
-               nn[1] = '0' + (index >> 16);
-               nn[2] = '\0';
-               writestuff(nn);
-               if (item->value.arg1 != 0) writestuff(",");
-               writestuff(" ");
-            }
-            else if (k == concept_nth_part || k == concept_replace_nth_part) {
-            }
-            else {
-               /* Must be concept_frac_stable, concept_frac_tandem, concept_some_are_frac_tandem,
+            if (k != concept_nth_part && k != concept_replace_nth_part) {
+               /* Must be concept_fractional, concept_frac_stable, concept_frac_tandem, concept_some_are_frac_tandem,
                   concept_so_and_so_frac_stable, or concept_gruesome_frac_tandem. */
                you_owe_me_a_number = TRUE;
             }
@@ -509,7 +503,7 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
                   writestuff("CENTERS ");
             }
             else if (k == concept_some_vs_others) {
-               writestuff_with_decorations(item->name, you_owe_me_a_number, you_owe_me_a_selector, index, selector_names[selector]);
+               writestuff_with_decorations(item->name, you_owe_me_a_number, you_owe_me_a_selector, &index, selector_names[selector]);
                writestuff(", ");
             }
             else if (k == concept_sequential) {
@@ -570,17 +564,17 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
             next_cptr = subsidiary_ptr;
          }
          else if (k == concept_so_and_so_only || k == concept_standard || k == concept_double_offset || k == concept_single_diagonal) {
-            writestuff_with_decorations(item->name, you_owe_me_a_number, you_owe_me_a_selector, index, selector_names[selector]);
+            writestuff_with_decorations(item->name, you_owe_me_a_number, you_owe_me_a_selector, &index, selector_names[selector]);
             request_final_space = TRUE;
          }
          else if (k == concept_selbasedtrngl) {
-            writestuff_with_decorations(item->name, you_owe_me_a_number, you_owe_me_a_selector, index, selector_singular[selector]);
+            writestuff_with_decorations(item->name, you_owe_me_a_number, you_owe_me_a_selector, &index, selector_singular[selector]);
             request_final_space = TRUE;
          }
          else if (k == concept_so_and_so_stable || k == concept_so_and_so_frac_stable ||
                   k == concept_so_and_so_begin || k == concept_some_are_frac_tandem ||
                   k == concept_some_are_tandem) {
-            writestuff_with_decorations(item->name, you_owe_me_a_number, you_owe_me_a_selector, index, selector_names[selector]);
+            writestuff_with_decorations(item->name, you_owe_me_a_number, you_owe_me_a_selector, &index, selector_names[selector]);
             writestuff(",");
             request_final_space = TRUE;
          }
@@ -632,9 +626,6 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
                request_final_space = TRUE;
             }
          }
-         else if (k == concept_fractional)
-            /* Already printed the fraction; that's all we want. */
-            ;
          else if (k == concept_nth_part) {
             if (static_cptr->concept->value.arg1 == 1) {
                writestuff("SKIP THE ");
@@ -663,7 +654,7 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
             request_final_space = TRUE;
          }
          else {
-            writestuff_with_decorations(item->name, you_owe_me_a_number, you_owe_me_a_selector, index, selector_names[selector]);
+            writestuff_with_decorations(item->name, you_owe_me_a_number, you_owe_me_a_selector, &index, selector_names[selector]);
             request_final_space = TRUE;
          }
 
@@ -1041,7 +1032,7 @@ Private void do_write(char s[])
       else if (c == '@') newline();
       else if (c == ' ') writestuff(" ");
       else if (c >= 'a' && c <= 'x')
-         printperson(rotperson(printarg->people[(c-'a'-offs) % modulus].id1, roti));
+         printperson(rotperson(printarg->people[personstart + ((c-'a'-offs) % modulus)].id1, roti));
       else writestuff("?");
    }
 }
@@ -1143,8 +1134,62 @@ Private void print_4_person_setup(int ps, small_setup *s, int elong)
    }
 }
 
+/* BEWARE!!  This list is keyed to the definition of "setup_kind" in database.h . */
+static char *printing_tables[][2] = {
+   {(char *) 0,                                                               (char *) 0},                                                                                                       /* nothing */
+   {(char *) 0,                                                               (char *) 0},                                                                                                       /* s_1x1 */
+   {(char *) 0,                                                               (char *) 0},                                                                                                       /* s_1x2 */
+   {(char *) 0,                                                               (char *) 0},                                                                                                       /* s_1x3 */
+   {(char *) 0,                                                               (char *) 0},                                                                                                       /* s2x2 */
+   {(char *) 0,                                                               (char *) 0},                                                                                                       /* sdmd */
+   {(char *) 0,                                                               (char *) 0},                                                                                                       /* s_star */
+   {(char *) 0,                                                               (char *) 0},                                                                                                       /* s_trngl */
+   {(char *) 0,                                                               (char *) 0},                                                                                                       /* s_bone6 */
+   {(char *) 0,                                                               (char *) 0},                                                                                                       /* s_short6 */
+   {(char *) 0,                                                               (char *) 0},                                                                                                       /* s_qtag */
+   {"a                   b@    g h d c@f                   e",                "fa@  g@  h@  d@  c@eb"},                                                                                          /* s_bone */
+   {"        a b@gh         dc@        f e",                                  "  g@  h@fa@eb@  d@  c"},                                                                                          /* s_rigger */
+   {"    a b c@h              d@    g f e",                                   "  h@ga@fb@ec@  d"},                                                                                               /* s_spindle */
+   {"   a  b@      d@g        c@      h@   f  e",                             "     g@f      a@   hd@e      b@     c"},                                                                          /* s_hrglass */
+   {(char *) 0,                                                               (char *) 0},                                                                                                       /* s_hyperglass */
+   {"          c@          d@ab        fe@          h@          g",           "      a@      b@@ghdc@@      f@      e"},                                                                         /* s_crosswave */
+   {(char *) 0,                                                               (char *) 0},                                                                                                       /* s1x4 */
+   {"a b d c g h f e",                                                        "a@b@d@c@g@h@f@e"},                                                                                                /* s1x8 */
+   {"a  b  c  d@@h  g  f  e",                                                 "h  a@@g  b@@f  c@@e  d"},                                                                                         /* s2x4 */
+   {(char *) 0,                                                               (char *) 0},                                                                                                       /* s_2x3 */
+   {(char *) 0,                                                               (char *) 0},                                                                                                       /* s_1x6 */
+   {"a  b  c  d@@k  l  f  e@@j  i  h  g",                                     "j  k  a@@i  l  b@@h  f  c@@g  e  d"},                                                                             /* s3x4 */
+   {"a  b  c  d  e  f@@l  k  j  i  h  g",                                     "l  a@@k  b@@j  c@@i  d@@h  e@@g  f"},                                                                             /* s2x6 */
+   {"a  b  c  d  e  f  g  h@@p  o  n  m  l  k  j  i",                         "p  a@@o  b@@n  c@@m  d@@l  e@@k  f@@j  g@@i  h"},                                                                 /* s2x8 */
+   {(char *) 0,                                                               (char *) 0},                                                                                                       /* s4x4 */
+   {(char *) 0,                                                               (char *) 0},                                                                                                       /* s_x1x6 */
+   {"a b c d e j i h g f",                                                    "a@b@c@d@e@j@i@h@g@f"},                                                                                            /* s_1x10 */
+   {"a b c d e f l k j i h g",                                                "a@b@c@d@e@f@l@k@j@i@h@g"},                                                                                        /* s_1x12 */
+   {"abcdefgnmlkjih",                                                         "a@b@c@d@e@f@g@n@m@l@k@j@i@h"},                                                                                    /* s_1x14 */
+   {"abcdefghponmlkji",                                                       "a@b@c@d@e@f@g@h@p@o@n@m@l@k@j@i"},                                                                                /* s_1x16 */
+   {(char *) 0,                                                               (char *) 0},                                                                                                       /* s_c1phan */
+   {(char *) 0,                                                               (char *) 0},                                                                                                       /* s_bigblob */
+   {"    b           h@a    c   g    e@    d           f",                    "  a@@db@@  c@@  g@@fh@@  e"},                                                                                     /* s_ptpd */
+   {"             d@@a b c g f e@@             h",                            "      a@@      b@@      c@h        d@      g@@      f@@      e"},                                                 /* s_3x1dmd */
+   {"   a      b      c@@j k l f e d@@   i      h      g",                    "      j@i        a@      k@@      l@h        b@      f@@      e@g        c@      d"},                             /* s_3dmd */
+   {"   a      b      c      d@@m n o p h g f e@@   l      k      j      i",  "      m@l        a@      n@@      o@k        b@      p@@      h@j        c@      g@@      f@i        d@      e"}, /* s_4dmd */
+   {"             d@a b c  g f e@             h",                             "   a@@   b@@   c@h  d@   g@@   f@@   e"},                                                                         /* s_wingedstar */
+   {"             d       f@a b c  e k  i h g@             l       j",        "   a@@   b@@   c@l  d@   e@   k@j  f@   i@@   h@@   g"},                                                          /* s_wingedstar12 */
+   {"             d       h       m@a b c  f g  o n  k j i@             e       p       l",  "   a@@   b@@   c@e  d@   f@   g@p  h@   o@   n@l  m@   k@@   j@@   i"},                            /* s_wingedstar16 */
+   {(char *) 0,                                                               (char *) 0},                                                                                                       /* s_galaxy */
+   {"a  b  c  d  e  f@@l  k  j  i  h  g@@s  t  u  v  w  x@@r  q  p  o  n  m", "r  s  l  a@@q  t  k  b@@p  u  j  c@@o  v  i  d@@n  w  h  e@@m  x  g  f"},                                         /* s4x6 */
+   {(char *) 0,                                                               (char *) 0},                                                                                                       /* s_thar */
+   {(char *) 0,                                                               (char *) 0},                                                                                                       /* s_x4dmd */
+   {(char *) 0,                                                               (char *) 0},                                                                                                       /* s_8x8 */
+   {(char *) 0,                                                               (char *) 0}};                                                                                                      /* s_normal_concentric */
+
+
+
+
 Private void printsetup(setup *x)
 {
+   char *str;
+
    printarg = x;
    modulus = setup_limits[x->kind]+1;
    roti = (x->rotation & 3) * 011;
@@ -1152,190 +1197,64 @@ Private void printsetup(setup *x)
    
    newline();
 
-   switch (x->kind) {
-      case s2x4:
-         if (x->rotation & 1)
-            do_write("h  a@@g  b@@f  c@@e  d");
-         else
-            do_write("a  b  c  d@@h  g  f  e");
-         break;
-      case s1x8:
-         if (x->rotation & 1)
-            do_write("a@b@d@c@g@h@f@e");
-         else
-            do_write("a b d c g h f e");
-         break;
-      case s1x10:
-         if (x->rotation & 1)
-            do_write("a@b@c@d@e@j@i@h@g@f");
-         else
-            do_write("a b c d e j i h g f");
-         break;
-      case s1x12:
-         if (x->rotation & 1)
-            do_write("a@b@c@d@e@f@l@k@j@i@h@g");
-         else
-            do_write("a b c d e f l k j i h g");
-         break;
-      case s1x14:
-         if (x->rotation & 1)
-            do_write("a@b@c@d@e@f@g@n@m@l@k@j@i@h");
-         else
-            /* Sorry, they won't fit unless we run them together like this. */
-            do_write("abcdefgnmlkjih");
-         break;
-      case s1x16:
-         if (x->rotation & 1)
-            do_write("a@b@c@d@e@f@g@h@p@o@n@m@l@k@j@i");
-         else
-            /* Sorry, they won't fit unless we run them together like this. */
-            do_write("abcdefghponmlkji");
-         break;
-      case s_crosswave:
-         if (x->rotation & 1)
-            do_write("      a@      b@@ghdc@@      f@      e");
-         else
-            do_write("          c@          d@ab        fe@          h@          g");
-         break;
-      case s_qtag:
-         if ((x->people[0].id1 & x->people[1].id1 & x->people[4].id1 & x->people[5].id1 & 1) &&
-               (x->people[2].id1 & x->people[3].id1 & x->people[6].id1 & x->people[7].id1 & 010)) {
-            /* People are in diamond-like orientation. */
-            if (x->rotation & 1)
-               do_write("      g@f        a@      h@@      d@e        b@      c");
-            else {
-               do_write("   a     b@@g h d c@@   f     e");
+   str = printing_tables[x->kind][x->rotation & 1];
+   personstart = 0;
+
+   if (str) {
+      do_write(str);
+   }
+   else {
+      switch (x->kind) {
+         case s_qtag:
+            if ((x->people[0].id1 & x->people[1].id1 & x->people[4].id1 & x->people[5].id1 & 1) &&
+                  (x->people[2].id1 & x->people[3].id1 & x->people[6].id1 & x->people[7].id1 & 010)) {
+               /* People are in diamond-like orientation. */
+               if (x->rotation & 1)
+                  do_write("      g@f        a@      h@@      d@e        b@      c");
+               else {
+                  do_write("   a     b@@g h d c@@   f     e");
+               }
             }
-         }
-         else {
-            /* People are not.  Probably 1/4-tag-like orientation. */
-            if (x->rotation & 1)
-               do_write("      g@f  h  a@e  d  b@      c");
             else {
-               do_write("      a  b@@g  h  d  c@@      f  e");
+               /* People are not.  Probably 1/4-tag-like orientation. */
+               if (x->rotation & 1)
+                  do_write("      g@f  h  a@e  d  b@      c");
+               else {
+                  do_write("      a  b@@g  h  d  c@@      f  e");
+               }
             }
-         }
-         break;
-      case s_bone:
-         if (x->rotation & 1)
-            do_write("fa@  g@  h@  d@  c@eb");
-         else
-            do_write("a                   b@    g h d c@f                   e");
-         break;
-      case s_rigger:
-         if (x->rotation & 1)
-            do_write("  g@  h@fa@eb@  d@  c");
-         else
-            do_write("        a b@gh         dc@        f e");
-         break;
-      case s_spindle:
-         if (x->rotation & 1)
-            do_write("  h@ga@fb@ec@  d");
-         else
-            do_write("    a b c@h              d@    g f e");
-         break;
-      case s_ptpd:
-         if (x->rotation & 1)
-            do_write("  a@@db@@  c@@  g@@fh@@  e");
-         else
-            do_write("    b           h@a    c   g    e@    d           f");
-         break;
-      case s_hrglass:
-         if (x->rotation & 1)
-            do_write("     g@f      a@   hd@e      b@     c");
-         else
-            do_write("   a  b@      d@g        c@      h@   f  e");
-         break;
-      case s_galaxy:
-         offs = ((x->rotation & 3) * (modulus / 4)) - modulus;
-         do_write("     c@   bd@a      e@   hf@     g");
-         break;
-      case s2x6:
-         if (x->rotation & 1)
-            do_write("l  a@@k  b@@j  c@@i  d@@h  e@@g  f");
-         else
-            do_write("a  b  c  d  e  f@@l  k  j  i  h  g");
-         break;
-      case s3x4:
-         if (x->rotation & 1)
-            do_write("j  k  a@@i  l  b@@h  f  c@@g  e  d");
-         else
-            do_write("a  b  c  d@@k  l  f  e@@j  i  h  g");
-         break;
-      case s_3x1dmd:
-         if (x->rotation & 1)
-            do_write("      a@@      b@@      c@h        d@      g@@      f@@      e");
-         else
-            do_write("             d@@a b c g f e@@             h");
-         break;
-      case s_3dmd:
-         if (x->rotation & 1)
-            do_write("      j@i        a@      k@@      l@h        b@      f@@      e@g        c@      d");
-         else
-            do_write("   a      b      c@@j k l f e d@@   i      h      g");
-         break;
-      case s_wingedstar:
-         if (x->rotation & 1)
-            do_write("   a@@   b@@   c@h  d@   g@@   f@@   e");
-         else
-            do_write("             d@a b c  g f e@             h");
-         break;
-      case s_wingedstar12:
-         if (x->rotation & 1)
-            do_write("   a@@   b@@   c@l  d@   e@   k@j  f@   i@@   h@@   g");
-         else
-            do_write("             d       f@a b c  e k  i h g@             l       j");
-         break;
-      case s_wingedstar16:
-         if (x->rotation & 1)
-            do_write("   a@@   b@@   c@e  d@   f@   g@p  h@   o@   n@l  m@   k@@   j@@   i");
-         else
-            do_write("             d       h       m@a b c  f g  o n  k j i@             e       p       l");
-         break;
-      case s_4dmd:
-         if (x->rotation & 1)
-            do_write("      m@l        a@      n@@      o@k        b@      p@@      h@j        c@      g@@      f@i        d@      e");
-         else
-            do_write("   a      b      c      d@@m n o p h g f e@@   l      k      j      i");
-         break;
-      case s2x8:
-         if (x->rotation & 1)
-            do_write("p  a@@o  b@@n  c@@m  d@@l  e@@k  f@@j  g@@i  h");
-         else
-            do_write("a  b  c  d  e  f  g  h@@p  o  n  m  l  k  j  i");
-         break;
-      case s4x4:
-         offs = ((x->rotation & 3) * (modulus / 4)) - modulus;
-         do_write("m  n  o  a@@k  p  d  b@@j  l  h  c@@i  g  f  e");
-         break;
-      case s_bigblob:
-         offs = ((x->rotation & 3) * (modulus / 4)) - modulus;
-         do_write("            a  b@@      v  w  c  d@@t  u  x  f  e  g@@s  q  r  l  i  h@@      p  o  k  j@@            n  m");
-         break;
-      case s_c1phan:
-         offs = ((x->rotation & 3) * (modulus / 4)) - modulus;
-         do_write("   b        e@a  c  h  f@   d        g@@   o        l@n  p  k  i@   m        j");
-         break;
-      case s_thar:
-         offs = ((x->rotation & 3) * (modulus / 4)) - modulus;
-         do_write("      c@      d@abfe@      h@      g");
-         break;
-      case s4x6:
-         if (x->rotation & 1)
-            do_write("r  s  l  a@@q  t  k  b@@p  u  j  c@@o  v  i  d@@n  w  h  e@@m  x  g  f");
-         else
-            do_write("a  b  c  d  e  f@@l  k  j  i  h  g@@s  t  u  v  w  x@@r  q  p  o  n  m");
-         break;
-      case s_normal_concentric:
-         writestuff(" centers:");
-         newline();
-         print_4_person_setup(0, &(x->inner), -1);
-         writestuff(" ends:");
-         newline();
-         print_4_person_setup(12, &(x->outer), x->outer_elongation);
-         break;
-      default:
-         writestuff("???? UNKNOWN SETUP ????");
+            break;
+         case s_galaxy:
+            offs = ((x->rotation & 3) * (modulus / 4)) - modulus;
+            do_write("     c@   bd@a      e@   hf@     g");
+            break;
+         case s4x4:
+            offs = ((x->rotation & 3) * (modulus / 4)) - modulus;
+            do_write("m  n  o  a@@k  p  d  b@@j  l  h  c@@i  g  f  e");
+            break;
+         case s_bigblob:
+            offs = ((x->rotation & 3) * (modulus / 4)) - modulus;
+            do_write("            a  b@@      v  w  c  d@@t  u  x  f  e  g@@s  q  r  l  i  h@@      p  o  k  j@@            n  m");
+            break;
+         case s_c1phan:
+            offs = ((x->rotation & 3) * (modulus / 4)) - modulus;
+            do_write("   b        e@a  c  h  f@   d        g@@   o        l@n  p  k  i@   m        j");
+            break;
+         case s_thar:
+            offs = ((x->rotation & 3) * (modulus / 4)) - modulus;
+            do_write("      c@      d@abfe@      h@      g");
+            break;
+         case s_normal_concentric:
+            writestuff(" centers:");
+            newline();
+            print_4_person_setup(0, &(x->inner), -1);
+            writestuff(" ends:");
+            newline();
+            print_4_person_setup(12, &(x->outer), x->outer_elongation);
+            break;
+         default:
+            writestuff("???? UNKNOWN SETUP ????");
+      }
    }
 
    newline();
@@ -1468,9 +1387,9 @@ extern void write_history_line(int history_index, Const char *header, long_boole
 }
 
 
-extern void warn(int w)
+extern void warn(warning_index w)
 {
-   history[history_ptr+1].warnings.bits[w>>5] |= 1 << (w & 0x1f);
+   history[history_ptr+1].warnings.bits[w>>5] |= 1 << (w & 0x1F);
 }
 
 

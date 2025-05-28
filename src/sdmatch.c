@@ -55,7 +55,7 @@ typedef struct {
     int exact_match;       /* true if an exact match has been found */
     int showing;           /* we are only showing the matching patterns */
     show_function sf;      /* function to call with matching command (if showing) */
-    int verify;            /* nonzero => verify calls before showing */
+    long_boolean verify;   /* true => verify calls before showing */
     int space_ok;          /* space is a legitimate next input character */
     match_result result;   /* value of the first or exact matching pattern */
 } match_state;
@@ -108,7 +108,7 @@ static void strcpy_lower(char *dest, char *source);
 
 /* the following arrays must be coordinated with the sd program */
 
-/* startup_commands tracks the start_select_kind enumeration */
+/* BEWARE!!  This list is keyed to the definition of "start_select_kind" in sd.h . */
 static char *startup_commands[] = {
     "exit from the program",
     "heads 1p2p",
@@ -124,7 +124,8 @@ static char *startup_commands[] = {
    are NUM_SPECIAL_COMMANDS of those items. */
 
 static char *command_commands[] = {
-    "exit the program",
+/* sue: changed "exit" to "quit" to match standard mac usage */
+    IFMAC("quit the program","exit the program"),
     "undo last call",
     IFMAC("end this sequence","abort this sequence"),
     "insert a comment ...",
@@ -133,9 +134,12 @@ static char *command_commands[] = {
     "resolve ...",
     "reconcile ...",
     IFMAC("pick random call ...","do anything ..."),
-    IFMAC("normalize setup ...","nice setup ..."),
+/* sue: I prefer "nice setup", even on the mac */
+    "nice setup ...",
     NOMAC "show neglected calls ...",
-    IFMAC("insert picture","save picture"),
+/* sue: "insert picture" isn't great because you must type 2 words to distinguish this
+   from the command "insert a comment".  Changed it to "keep picture" */
+    IFMAC("keep picture","save picture"),
     "refresh display",
 /* The following items are the special ones. */
     IFMAC("modify next call","allow modifications"),
@@ -162,6 +166,8 @@ static char *n_patterns[] = {
     "5",
     "6",
     "7",
+    /* sue: added for consistency with stuff in direction popups */
+    "8",
     0
 };
 
@@ -330,7 +336,7 @@ add_call_to_menu(char ***menu, int call_menu_index, int menu_size,
 
 extern int
 match_user_input(char *user_input, int which_commands, match_result *mr,
-                 char *extension, show_function sf, int show_verify)
+                 char *extension, show_function sf, long_boolean show_verify)
 {
     match_state ss;
     input_matcher *f;
@@ -425,13 +431,13 @@ call_matcher(match_state *sp)
 static void
 selector_matcher(match_state *sp)
 {
-    search_menu(sp, &selector_names[1], last_selector_kind, 0);
+    search_menu(sp, &selector_names[1], last_selector_kind, (uims_reply) 0);
 }
 
 static void
 direction_matcher(match_state *sp)
 {
-    search_menu(sp, &direction_names[1], last_direction_kind, 0);
+    search_menu(sp, &direction_names[1], last_direction_kind, (uims_reply) 0);
 }
 
 static void
@@ -784,10 +790,20 @@ verify_call(call_list_kind cl, int call_index, selector_kind who)
          * One could argue this is a bug!
          */
         
+        /* sue: new plan: try (beaus, ends, all), just like initialization */
+        
+        if (verify_call_with_selector(call, selector_beaux))
+           return(TRUE);
+        if (verify_call_with_selector(call, selector_ends))
+           return(TRUE);
+        if (verify_call_with_selector(call, selector_all))
+           return(TRUE);
+/* this was the old code...        
         for (sel=1; sel<last_selector_kind; ++sel) {
             if (verify_call_with_selector(call, sel))
                 return (TRUE);
         }
+*/
     }
     else {
         return verify_call_with_selector(call, who);
@@ -815,6 +831,7 @@ verify_call_with_selector(callspec_block *call, selector_kind sel)
     history[history_ptr+1].warnings.bits[1] = bits1;
     longjmp_ptr = &longjmp_buffer;    /* restore the global error handler */
     initializing_database = FALSE;
+    not_interactive = FALSE;
     return result;
 }
 
@@ -829,7 +846,9 @@ try_call_with_selector(callspec_block *call, selector_kind sel)
     if (setjmp(my_longjmp_buffer.the_buf)) {
         return FALSE;
     }
+
     initializing_database = TRUE; /* so deposit_call doesn't ask user for info */
+    not_interactive = TRUE;
     selector_for_initialize = sel; /* if selector needed, use this one */
     (void) deposit_call(call);
     if (parse_state.parse_stack_index != 0) {

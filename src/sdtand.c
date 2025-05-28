@@ -16,7 +16,7 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-    This is for version 29. */
+    This is for version 30. */
 
 /* This file contains stuff for tandem and as-couples moves. */
 
@@ -100,8 +100,15 @@ Private tm_thing maps_isearch_twosome[] = {
    {{5, 6, 7, 4, 2, 3},             {0, -1, -1, 1, -1, -1},       {0}, {0},      0,     0000,         6, 0,  0,  0, 0,  s_1x6, s_bone},
 
    {{0, 3, 5, 6},                   {1, 2, 4, 7},                 {0}, {0},      0,     0377,         4, 1,  0,  0, 0,  sdmd,  s_qtag},
-   {{3, 7, 9, 13},                  {1, 5, 11, 15},               {0}, {0},   0x44,   0xA0A0,         4, 0,  0,  0, 0,  s2x2,  s_c1phan},        /* xyz      */  
-   {{0, 6, 10, 12},                 {2, 4, 8, 14},                {0}, {0},   0x11,   0x0505,         4, 0,  0,  0, 0,  s2x2,  s_c1phan},        /* pqr      */  
+
+   {{3, 7, 9, 13},                  {1, 5, 11, 15},               {0}, {0},   0x44,   0xA0A0,         4, 0,  0,  0, 0,  s2x2,  s_c1phan},        /* xyz      */
+   {{0, 6, 10, 12},                 {2, 4, 8, 14},                {0}, {0},   0x11,   0x0505,         4, 0,  0,  0, 0,  s2x2,  s_c1phan},        /* pqr      */
+
+   {{0, 7, 9, 12},                  {2, 5, 11, 14},               {0}, {0},   0x05,   0x00A5,         4, 0,  0,  0, 0,  s2x2,  s_c1phan},        /* these 4 are unsymmetrical */
+   {{3, 6, 10, 13},                 {1, 4, 8, 15},                {0}, {0},   0x50,   0xA500,         4, 0,  0,  0, 0,  s2x2,  s_c1phan},
+   {{3, 7, 10, 12},                 {1, 5, 8, 14},                {0}, {0},   0x14,   0x05A0,         4, 0,  0,  0, 0,  s2x2,  s_c1phan},
+   {{0, 6, 9, 13},                  {2, 4, 11, 15},               {0}, {0},   0x41,   0xA005,         4, 0,  0,  0, 0,  s2x2,  s_c1phan},
+
    {{15, 3, 5, 9},                  {13, 1, 7, 11},               {0}, {0},   0x44,   0x0A0A,         4, 0,  0,  0, 0,  s2x2,  s4x4},      /* These do C1-phantom-like stuff from fudgy 4x4 */
    {{10, 3, 7, 6},                  {15, 14, 2, 11},              {0}, {0},   0x11,   0x8484,         4, 0,  0,  0, 0,  s2x2,  s4x4},      /* They must follow the pair just above. */
    {{6, 0, 3, 5},                   {7, 1, 2, 4},                 {0}, {0},   0x55,     0377,         4, 0,  0,  0, 0,  sdmd,  s_rigger},
@@ -178,35 +185,43 @@ typedef struct {
    setup_kind testkind;
    unsigned int testval;
    unsigned int fixup;
-   int warning;
+   warning_index warning;
 } siamese_item;
 
 siamese_item siamese_table[] = {
-   {s2x4,        0x00FF0000, 0x99, warn__ctrstand_endscpls},
-   {s2x4,        0x00990066, 0x99, warn__ctrstand_endscpls},
-   {s2x4,        0x000000FF, 0x66, warn__ctrscpls_endstand},
-   {s2x4,        0x00660099, 0x66, warn__ctrscpls_endstand},
-   {s2x4,        0x003300CC, 0xCC, -1},
-   {s2x4,        0x00CC0033, 0x33, -1},
-   {s_c1phan,    0x0000AAAA, 0xA0A0, -1},
-   {s_c1phan,    0x00005555, 0x0505, -1},
-   {s_c1phan,    0xAAAA0000, 0x0A0A, -1},
-   {s_c1phan,    0x55550000, 0x5050, -1},
-   {s4x4,        0x0000AAAA, 0x0A0A, -1},
-   {s4x4,        0x0000CCCC, 0x8484, -1},
-   {s4x4,        0xAAAA0000, 0xA0A0, -1},
-   {s4x4,        0xCCCC0000, 0x4848, -1},
-   {s_qtag,      0x003300CC, 0xCC, warn__ctrscpls_endstand},
-   {s_qtag,      0x00CC0033, 0x33, warn__ctrstand_endscpls},
-   {s_rigger,    0x00FF0000, 0x33, warn__ctrscpls_endstand},
-   {s_rigger,    0x00CC0033, 0x33, warn__ctrscpls_endstand},
-   {s_rigger,    0x000000FF, 0xCC, warn__ctrstand_endscpls},
-   {s_rigger,    0x003300CC, 0xCC, warn__ctrstand_endscpls},
-   {s_bone,      0x00FF0000, 0x33, warn__ctrstand_endscpls},
-   {s_bone,      0x000000FF, 0xCC, warn__ctrscpls_endstand},
-   {s_crosswave, 0x00FF0000, 0xCC, warn__ctrscpls_endstand},
-   {s_crosswave, 0x000000FF, 0x33, warn__ctrstand_endscpls},
-   {nothing, 0, 0, -1}};
+   {s2x4,        0x00FF0000, 0x99,   warn__ctrstand_endscpls},
+   {s2x4,        0x00990066, 0x99,   warn__ctrstand_endscpls},
+   {s2x4,        0x000000FF, 0x66,   warn__ctrscpls_endstand},
+   {s2x4,        0x00660099, 0x66,   warn__ctrscpls_endstand},
+   {s2x4,        0x003300CC, 0xCC,   (warning_index) -1},
+   {s2x4,        0x00CC0033, 0x33,   (warning_index) -1},
+   {s_c1phan,    0x0000AAAA, 0xA0A0, (warning_index) -1},
+   {s_c1phan,    0x00005555, 0x0505, (warning_index) -1},
+   {s_c1phan,    0xAAAA0000, 0x0A0A, (warning_index) -1},
+   {s_c1phan,    0x55550000, 0x5050, (warning_index) -1},
+   {s_c1phan,    0x00005AA5, 0x00A5, (warning_index) -1},  /* These 8 are unsymmetrical. */
+   {s_c1phan,    0x0000A55A, 0xA500, (warning_index) -1},
+   {s_c1phan,    0x000055AA, 0x05A0, (warning_index) -1},
+   {s_c1phan,    0x0000AA55, 0xA005, (warning_index) -1},
+   {s_c1phan,    0x5AA50000, 0x5A00, (warning_index) -1},
+   {s_c1phan,    0xA55A0000, 0x005A, (warning_index) -1},
+   {s_c1phan,    0x55AA0000, 0x500A, (warning_index) -1},
+   {s_c1phan,    0xAA550000, 0x0A50, (warning_index) -1},
+   {s4x4,        0x0000AAAA, 0x0A0A, (warning_index) -1},
+   {s4x4,        0x0000CCCC, 0x8484, (warning_index) -1},
+   {s4x4,        0xAAAA0000, 0xA0A0, (warning_index) -1},
+   {s4x4,        0xCCCC0000, 0x4848, (warning_index) -1},
+   {s_qtag,      0x003300CC, 0xCC,   warn__ctrscpls_endstand},
+   {s_qtag,      0x00CC0033, 0x33,   warn__ctrstand_endscpls},
+   {s_rigger,    0x00FF0000, 0x33,   warn__ctrscpls_endstand},
+   {s_rigger,    0x00CC0033, 0x33,   warn__ctrscpls_endstand},
+   {s_rigger,    0x000000FF, 0xCC,   warn__ctrstand_endscpls},
+   {s_rigger,    0x003300CC, 0xCC,   warn__ctrstand_endscpls},
+   {s_bone,      0x00FF0000, 0x33,   warn__ctrstand_endscpls},
+   {s_bone,      0x000000FF, 0xCC,   warn__ctrscpls_endstand},
+   {s_crosswave, 0x00FF0000, 0xCC,   warn__ctrscpls_endstand},
+   {s_crosswave, 0x000000FF, 0x33,   warn__ctrstand_endscpls},
+   {nothing,     0,          0,      (warning_index) -1}};
 
 
 Private void initialize_one_table(tm_thing *map_start, int np)

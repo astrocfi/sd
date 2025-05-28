@@ -56,8 +56,8 @@
 #include "sd.h"
 
 
-concept_descriptor special_magic = {"MAGIC DIAMOND,", concept_magic, l_dontshow, {0, 1}};
-concept_descriptor special_interlocked = {"INTERLOCKED DIAMOND,", concept_interlocked, l_dontshow, {0, 1}};
+concept_descriptor special_magic = {"MAGIC DIAMOND,", concept_magic, l_c1, {0, 1}};
+concept_descriptor special_interlocked = {"INTERLOCKED DIAMOND,", concept_interlocked, l_c1, {0, 1}};
 
 
 concept_descriptor mark_end_of_list = {"????", marker_end_of_list, l_dontshow};
@@ -114,8 +114,8 @@ concept_descriptor concept_descriptor_table[] = {
          {"", concept_comment, l_nonexistent_concept},
    {"DIVIDED LINES",                         concept_divided_2x4,           l_c4, {&map_hv_2x4_2, phantest_impossible, 1}},
    {"12 MATRIX DIVIDED LINES",               concept_divided_2x3,           l_c4, {&map_2x6_2x3, phantest_impossible, 1}},
-   {"PHANTOM TIDAL LINES",                   concept_do_phantom_1x8,        l_c3, {0, phantest_impossible, TRUE, 1}},
-   {"PHANTOM LINES OF 6",                    concept_do_phantom_1x6,        l_c3, {0, phantest_impossible, TRUE, 1}},
+   {"TWO PHANTOM TIDAL LINES",               concept_do_phantom_1x8,        l_c3, {0, phantest_impossible, TRUE, 1}},
+   {"TWO PHANTOM LINES OF 6",                concept_do_phantom_1x6,        l_c3, {0, phantest_impossible, TRUE, 1}},
          {"", concept_comment, l_nonexistent_concept},
    {"TRIPLE LINES",                          concept_triple_lines,          l_c2, {0, 1}},
    {"END-TO-END TRIPLE LINES",               concept_triple_lines_endtoend, l_c2, {0, 1}},
@@ -176,8 +176,8 @@ concept_descriptor concept_descriptor_table[] = {
          {"", concept_comment, l_nonexistent_concept},
    {"DIVIDED COLUMNS",                       concept_divided_2x4,           l_c4, {&map_hv_2x4_2, phantest_impossible, 0}},
    {"12 MATRIX DIVIDED COLUMNS",             concept_divided_2x3,           l_c4, {&map_2x6_2x3, phantest_impossible, 0}},
-   {"PHANTOM TIDAL COLUMNS",                 concept_do_phantom_1x8,        l_c3, {0, phantest_impossible, TRUE, 0}},
-   {"PHANTOM COLUMNS OF 6",                  concept_do_phantom_1x6,        l_c3, {0, phantest_impossible, TRUE, 0}},
+   {"TWO PHANTOM TIDAL COLUMNS",             concept_do_phantom_1x8,        l_c3, {0, phantest_impossible, TRUE, 0}},
+   {"TWO PHANTOM COLUMNS OF 6",              concept_do_phantom_1x6,        l_c3, {0, phantest_impossible, TRUE, 0}},
          {"", concept_comment, l_nonexistent_concept},
    {"TRIPLE COLUMNS",                        concept_triple_lines,          l_c3, {0, 0}},
    {"END-TO-END TRIPLE COLUMNS",             concept_triple_lines_endtoend, l_c3, {0, 0}},
@@ -536,8 +536,8 @@ concept_descriptor concept_descriptor_table[] = {
    {"RANDOM",                                concept_meta,                  l_c3a,        {0, 0}},
    {"REVERSE RANDOM",                        concept_meta,                  l_c3x,        {0, 1}},
    {"PIECEWISE",                             concept_meta,                  l_c3x,        {0, 2}},
-   {"FRACTIONAL",                            concept_fractional,            l_c2,         {0, 0}},
-   {"LAST FRACTION",                         concept_fractional,            l_c2,         {0, 1}},
+   {"<N>/<N> (fractional)",                  concept_fractional,            l_c1,         {0, 0}},
+   {"DO THE LAST <N>/<N>:",                  concept_fractional,            l_c1,         {0, 1}},
    {"REVERSE ORDER",                         concept_meta,                  l_c3x,        {0, 5}},
    {"INTERLACE",                             concept_interlace,             l_c3x},
    {"START <concept>",                       concept_meta,                  l_c2,         {0, 3}},
@@ -604,6 +604,8 @@ concept_descriptor concept_descriptor_table[] = {
    {"INTERLOCKED",                           concept_interlocked,           l_c1},
    {"12 MATRIX",                             concept_12_matrix,             l_c3x},
    {"16 MATRIX",                             concept_16_matrix,             l_c3x},
+   {"1X12 MATRIX",                           concept_1x12_matrix,           l_c3x},
+   {"1X16 MATRIX",                           concept_1x16_matrix,           l_c3x},
    {"2X6 MATRIX",                            concept_2x6_matrix,            l_c3x},
    {"2X8 MATRIX",                            concept_2x8_matrix,            l_c3x},
    {"3X4 MATRIX",                            concept_3x4_matrix,            l_c3x},

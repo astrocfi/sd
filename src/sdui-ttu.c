@@ -21,6 +21,7 @@
 #include <termios.h>   /* We use this stuff if "-no_cursor" was specified. */
 #include <unistd.h>    /* This too. */
 #include <signal.h>
+#include <string.h>
 
 #include "sdui-ttu.h"
 
@@ -30,9 +31,10 @@ static int curses_initialized = 0;
 
 static int nlines, ncols;
 
-static int current_tty_mode = 0;    /* 1 means raw, no echo. */
+static int current_tty_mode = 0;
 
-static void csetmode(int mode)             /* 1 means raw, no echo; 0 means normal. */
+static void csetmode(int mode)             /* 1 means raw, no echo, one character at a time;
+                                                0 means normal. */
 {
     static cc_t orig_eof = '\004';
     struct termios term;
@@ -44,8 +46,7 @@ static void csetmode(int mode)             /* 1 means raw, no echo; 0 means norm
 
     (void) tcgetattr(fd, &term);
     if (mode == 1) {
-	if (current_tty_mode == 0)
-	    orig_eof = term.c_cc[VEOF]; /* VMIN may clobber */
+         orig_eof = term.c_cc[VEOF]; /* VMIN may clobber */
 	term.c_cc[VMIN] = 1;	/* 1 char at a time */
 	term.c_cc[VTIME] = 0;	/* no time limit on input */
 	term.c_lflag &= ~(ICANON|ECHO);
@@ -104,7 +105,7 @@ extern void ttu_initialize(void)
    
       /* Tell the "curses" system whether we desire to use the line insert/delete
          capabilities of the output device.  The documentation says that, under
-         some cicumstances the use of this capability can be annoying to the user.
+         some circumstances the use of this capability can be annoying to the user.
          We let the user decide.
    
          Note that the second argument to "idlok" is defined in the documentation
@@ -135,12 +136,13 @@ extern void ttu_initialize(void)
 
 extern void ttu_terminate(void)
 {
-   if (curses_initialized) {
-      if (!no_cursor)
+   if (!no_cursor) {
+      if (curses_initialized) {
          endwin();
-      else
-         csetmode(0);   /* Restore normal input mode. */
+      }
    }
+   else
+      csetmode(0);   /* Restore normal input mode. */
 }
 
 
@@ -207,14 +209,43 @@ nature of macros, isn't adhered to in this case.
 
 Some operating system vendors' manuals actually describe
 this situation as though they think it is a good thing.
+
 For example, the HP-UX manual says
-     "this is a macro, so no ampersand is necessary"
-instead of the more obvious
-     "this is a macro, so the referential transparency
-     that one expects in a program is violated.  To
-     further confuse you, we have put it in lower case.
-     Please make good use of the time that you will save
-     while not typing those two ampersands."
+
+     "This is a macro, so no ampersand is necessary"
+
+        [What does "not necessary" mean in the context
+        of programming system documentation?  Is it
+        optional?  Is it forbidden?  Furthermore, what
+        is the significance of the "so" conjunction in
+        that sentence?  Does it logically follow from
+        the fact that something is a macro that ampersands
+        are never necessary?  Am I missing something?]
+
+and the AT&T System V Release 4 manual says
+
+     "Note that all of these interfaces [getyx and
+     several others] are macros and that "&" is not
+     necessary before the variables y and x"
+
+and the SunOS 4.1 manual says
+
+     "This is implemented as a macro, so no "&" is
+     necessary before the variables"
+
+whereas the correct way to document this would have been
+
+     "This is a macro, and, to save you the two seconds
+     that it would take to type two ampersands, we have
+     violated referential transparency in it.  To further
+     confuse you, we have put it in lower case.  After
+     you finish rewriting whatever static analysis tools
+     you use at your place of employment so that they
+     won't be fooled by the apparent right-hand-side
+     usage of what might appear to be an uninitialized
+     variable, please make good use of whatever time
+     remains of the two seconds that we have saved you."
+
 *******************************************************/
 
 
@@ -253,13 +284,14 @@ extern void clear_line(void)
       clrtoeol();
       refresh();
    }
-   else
+   else {
       /* We may be on a printing terminal, so we can't erase anything.  Just
          print "XXX" at the end of the line that we want to erase, and start
          a new line.  This will happen if the user types "C-U", or after any
          "--More--" line.  We can't make the "--More--" line go away completely,
          leaving a seamless transcript.  This is the best we can do. */
       printf(" XXX\n");
+   }
 }
 
 extern void rubout(void)
@@ -271,8 +303,9 @@ extern void rubout(void)
       clrtoeol();
       refresh();
    }
-   else
-      printf("\b \b");
+   else {
+      printf("\b \b");    /* We hope that this works. */
+   }
 }
 
 extern void erase_last_n(int n)
@@ -284,7 +317,7 @@ extern void erase_last_n(int n)
       if (y >= n)
          move(y-n, 0);
       else
-         /* Would have to erase more than is on the screen.
+         /* We would have to erase more than is on the screen.
             This normally means that stuff scrolled off the top and
             got lost. Just home the cursor and clear the whole screen.
             User will get updated text only.  If that isn't
@@ -328,7 +361,7 @@ extern int get_char(void)
       return getch();      /* A "curses" call. */
    }
    else {
-      csetmode(1); /* raw input mode, no echo, does not block */
+      csetmode(1);         /* Raw, no echo, single-character mode. */
       return getchar();    /* A "stdio" call. */
    }
 }
@@ -342,7 +375,7 @@ extern void get_string(char *dest)
       noecho();
    }
    else {
-      csetmode(0);
+      csetmode(0);         /* Regular full-line mode with system echo. */
       gets(dest);
 
    }

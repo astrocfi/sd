@@ -439,9 +439,10 @@ Private long_boolean x12_beau_or_miniwave(setup *real_people, int real_index,
       return(TRUE);
    else {
       int other_person = real_people->people[real_index ^ 1].id1;
-      if (!other_person)
-         fail("Need a real person to work with."); 
-      return (((other_person & 2) >> 1) == real_index);
+      int direction_diff = other_person ^ real_direction;
+      if (!other_person || (direction_diff & 1))
+         fail("Need a real, not T-boned, person to work with."); 
+      return ((direction_diff & 2) == 2);
    }
 }
 

@@ -16,7 +16,7 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-    This is for version 29. */
+    This is for version 30. */
 
 /* This defines the following functions:
    general_initialize
@@ -86,7 +86,7 @@ and the following external variables:
 #include <string.h>
 #include <time.h>
 
-/* We take pity on those poor souls who are compelled to XOPEN,
+/* We take pity on those poor souls who are compelled to use XOPEN,
    an otherwise fine standard, that doesn't put prototypes
    into stdlib.h. */
 

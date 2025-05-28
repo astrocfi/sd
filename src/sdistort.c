@@ -392,7 +392,7 @@ extern void divided_setup_move(
             fail("Don't use phantom concept if you don't mean it.");
          break;
       case phantest_not_just_centers:
-         if (!(v1flag && v3flag))
+         if (!(v1flag | v3flag))
             fail("Don't use phantom concept if you don't mean it.");
          break;
       case phantest_2x2_only_two:
