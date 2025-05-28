@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 38.81
-@set title2 Database version = 38.81 format = 327
+@set title1 RELEASE NOTES FOR VERSION 38.82
+@set title2 Database version = 38.82 format = 327
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 38.82::
 * 38.81::
 * 38.80::
 * 38.79::
@@ -120,7 +121,7 @@ The files @file{relnotes03.txi} and @file{relnotes98.txi} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 38.81, Top, (dir)
+@node Intro, 38.82, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -131,12 +132,12 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2015 William B. Ackerman
 @sp 3
 @menu
-* 38.81::               Changes in the current version
+* 38.82::               Changes in the current version
 @end menu
 
 @c ************
-@node 38.81, 38.80, Intro, Top
-@unnumberedsec Version 38.81 changes
+@node 38.82, 38.81, Intro, Top
+@unnumberedsec Version 38.82 changes
 
 In accordance with a vote of the Callerlab Advanced Committee,
 @strong{triple cross} has been moved from C1 to A2.  As of this writing,
@@ -154,6 +155,12 @@ legal to call @strong{crossfire} from a wave.  The result is a 2x4,
 because colliding people always spread outward from the center.  Be
 warned: "The definition allows for this application; however, the ending
 position is extremely unusual and the Committee cautions its use."
+
+@c ************
+@node 38.81, 38.80, 38.82, Top
+@unnumberedsec Version 38.81 changes
+
+This version was withdrawn because of a bug.
 
 @c ************
 @node 38.80, 38.79, 38.81, Top

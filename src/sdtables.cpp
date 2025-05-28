@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2013  William B. Ackerman.
+//    Copyright (C) 1990-2015  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -1713,7 +1713,6 @@ map::map_thing map::map_init_table[] = {
    {{1, 3, 15, 13,                     9, 11, 7, 5},
     s_trngl4,2,MPKIND__HET_SPLIT,0,   warn__none, s_c1phan,   (((veryshort) s_trngl4) << 24) | 0x002, 0},
 
-   // New stuff, detroit.
    {{12, 14, 0, 2,                     9, 11, 7, 5},
     s_trngl4,2,MPKIND__HET_SPLIT,0,   warn__none, s_c1phan,   (((veryshort) s_trngl4) << 24) | 0x000, 0},
    {{1, 3, 15, 13,                     4, 6, 8, 10},

@@ -791,32 +791,34 @@ static void multiple_move_innards(
          }
       }
    }
-   else if (arity == 2) {
+   else if (map_kind != MPKIND__HET_TWICEREM) {
       // Incoming map is hetero.  Need to do a quick check for empty setups and replace
       // same with the other setup.  This is nowhere near as sophisticated as what goes
       // on in "fix_n_results".  That routine does way too much complicated stuff, that
       // would mess up the hetero situation.
       //
-      // Only do this for arity=2; otherwise it gets into twice-removed maps in which
-      // changing the setups is extremely problematical.  This is a quick-and-dirty
-      // transformation.
+      // Don't do this for twice-removed maps: changing the setups is extremely
+      // problematical in that case.  This is a quick-and-dirty transformation.
       //
       // See test t38.
 
-      if (z[0].kind == nothing) {
-         if (z[1].kind == nothing) {
-            result->kind = nothing;
-            clear_result_flags(result);
-            return;
-         }
-         else {
-            z[0] = z[1];
-            z[0].clear_people();
-         }
+      int goodindex = -1;
+
+      for (i=0; i<arity; i++) {
+         if (z[i].kind != nothing && goodindex < 0) goodindex = i;
       }
-      else if (z[1].kind == nothing) {
-         z[1] = z[0];
-         z[1].clear_people();
+
+      if (goodindex < 0) {
+         result->kind = nothing;
+         clear_result_flags(result);
+         return;
+      }
+
+      for (i=0; i<arity; i++) {
+         if (z[i].kind == nothing) {
+            z[i] = z[goodindex];
+            z[i].clear_people();
+         }
       }
    }
 
