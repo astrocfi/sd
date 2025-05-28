@@ -29,6 +29,7 @@
    initialize_tandem_tables
    tandem_couples_move
    mimic_move
+   process_anomalous_mxn
 */
 
 #include <string.h>
@@ -81,13 +82,13 @@ public:
    {}
 
    bool pack_us(personrec *s,
-                tm_thing *map_ptr,
+                const tm_thing *map_ptr,
                 int fraction,    // This is in eighths.
                 bool fraction_in_use,
                 bool dynamic_in_use,
                 int key) THROW_DECL;
 
-   void unpack_us(tm_thing *map_ptr,
+   void unpack_us(const tm_thing *map_ptr,
                   uint32 orbitmask3high,
                   uint32 orbitmask3low,
                   setup *result) THROW_DECL;
@@ -97,7 +98,7 @@ public:
    int saved_originals[MAX_PEOPLE];
    setup m_virtual_setup;
    setup virtual_result;
-   int vertical_people[MAX_PEOPLE];    /* 1 if original people were near/far; 0 if lateral */
+   int vertical_people[MAX_PEOPLE];    // 1 if original people were near/far; 0 if lateral.
    uint32 single_mask;
    bool m_phantom_pairing_ok;
    bool m_no_unit_symmetry;
@@ -109,9 +110,13 @@ public:
 static tm_thing maps_isearch_twosome[] = {
    //       maps                                                      ilatmaskH/L    olatmask   limit rot insetup outsetup
 
-   {{7, 6, 4, 5,                     0, 1, 3, 2},                            0,0,     0000,         4, 0,  s1x4,  s2x4},            /* "2x4_4" - see below */
+   // "2x4_4" - see below; this must be before the others.
+   {{7, 6, 4, 5,                     0, 1, 3, 2},                            0,0,     0000,         4, 0,  s1x4,  s2x4},
    {{0, 2, 5, 7,                     1, 3, 4, 6},                        0,02222,     0xFF,         4, 0,  s2x2,  s2x4},
    {{2, 5, 7, 0,                     3, 4, 6, 1},                            0,0,     0xFF,         4, 1,  s2x2,  s2x4},
+
+   {{0, 2, 4, 7, 10, 12, 14, 15, 17,     1, 3, 5, 6, 9, 11, 13, 16, 8}, 0,0222222222, 0x3FFFF,      9, 0,  s3x3,  s3x6},
+   {{4, 7, 10, 12, 14, 15, 0, 2, 17,     5, 6, 9, 11, 13, 16, 1, 3, 8},      0,0,     0x3FFFF,      9, 1,  s3x3,  s3x6},
 
    // This one gets h1p, far box star thru, as couples touch
    {{7, 6, 2, 5,                     0, 1, 3, 4},                        0,00022,     0x3C,         4, 1, s_trngl4, s2x4},
@@ -120,8 +125,6 @@ static tm_thing maps_isearch_twosome[] = {
 
    // This one comes back from far box
    {{0, 2, 4, 6,                     1, 3, 5, 7},                        0,02200,     0xF0,      4, 0, s_trngl4, s_trngl8},
-
-
 
    // Special maps for couples 1/8 twosome stuff.
    // These need further work in the table initializer.
@@ -209,22 +212,22 @@ static tm_thing maps_isearch_twosome[] = {
    // Missing right half.
    {{0, -2, -2, -2, 7, 6,            -1, -2, -2, -2, -1, 1},               0,0,     0000,         6, 0,  s_bone6, s2x4},
 
-   /* Next two are for certain ends in tandem in an H, making a virtual bone6. */
+   // Next two are for certain ends in tandem in an H, making a virtual bone6.
    {{10, 3, 5, 6, 9, 11,             0, -1, -1, 4, -1, -1},                0,0,     0000,         6, 0,  s_bone6, s3x4},
    {{0, 4, 5, 6, 9, 11,              -1, 3, -1, -1, 10, -1},               0,0,     0000,         6, 0,  s_bone6, s3x4},
-   /* Next one is for ends in tandem in lines, making a virtual short6. */
+   // Next one is for ends in tandem in lines, making a virtual short6.
    {{2, 4, 5, 6, 7, 1,               -1, 3, -1, -1, 0, -1},          0,0020020,     0000,         6, 1,  s_short6, s2x4},
-   /* Next two are for certain center column people in tandem in a 1/4 tag, making a virtual short6. */
+   // Next two are for certain center column people in tandem in a 1/4 tag, making a virtual short6.
    {{3, 2, 4, 5, 6, 0,               1, -1, -1, 7, -1, -1},          0,0002002,     0000,         6, 1,  s_short6, s_qtag},
    {{1, 2, 4, 5, 6, 7,               -1, -1, 3, -1, -1, 0},          0,0200200,     0000,         6, 1,  s_short6, s_qtag},
-   /* Next two are for certain center column people in tandem in a spindle, making a virtual short6. */
+   // Next two are for certain center column people in tandem in a spindle, making a virtual short6.
    {{2, 3, 5, 6, 7, 0,               -1, -1, 4, -1, -1, 1},                0,0,     0x33,      6, 1,  s_short6, s_spindle},
    {{1, 3, 4, 6, 7, 0,               2, -1, -1, 5, -1, -1},                0,0,     0x66,      6, 1,  s_short6, s_spindle},
-   /* Next three are for various people in tandem in columns of 8, making virtual columns of 6. */
+   // Next three are for various people in tandem in columns of 8, making virtual columns of 6.
    {{0, 2, 3, 5, 6, 7,               1, -1, -1, 4, -1, -1},          0,0002002,     0063,         6, 0,  s2x3,  s2x4},
    {{0, 1, 3, 4, 6, 7,               -1, 2, -1, -1, 5, -1},          0,0020020,     0x66,         6, 0,  s2x3,  s2x4},
    {{0, 1, 2, 4, 5, 7,               -1, -1, 3, -1, -1, 6},          0,0200200,     0xCC,         6, 0,  s2x3,  s2x4},
-   /* Next three are for various people in tandem in a rigger/ptpd/bone, making a virtual line of 6. */
+   // Next three are for various people in tandem in a rigger/ptpd/bone, making a virtual line of 6.
    {{6, 7, 5, 2, 3, 4,               -1, -1, 0, -1, -1, 1},                0,0,     0000,         6, 0,  s1x6,  s_rigger},
    {{0, 3, 2, 4, 5, 6,               -1, 1, -1, -1, 7, -1},                0,0,     0000,         6, 0,  s1x6,  s_ptpd},
    {{5, 6, 7, 4, 2, 3,               0, -1, -1, 1, -1, -1},                0,0,     0000,         6, 0,  s1x6,  s_bone},
@@ -236,7 +239,7 @@ static tm_thing maps_isearch_twosome[] = {
    {{3, 7, 9, 13,                    1, 5, 11, 15},                    0,02020,   0xA0A0,         4, 0,  s2x2,  s_c1phan},
    {{0, 6, 10, 12,                   2, 4, 8, 14},                     0,00202,   0x0505,         4, 0,  s2x2,  s_c1phan},
 
-   /* these 4 are unsymmetrical */
+   // These 4 are unsymmetrical.
    {{0, 7, 9, 12,                    2, 5, 11, 14},                    0,00022,   0x00A5,         4, 0,  s2x2,  s_c1phan},
    {{3, 6, 10, 13,                   1, 4, 8, 15},                     0,02200,   0xA500,         4, 0,  s2x2,  s_c1phan},
    {{3, 7, 10, 12,                   1, 5, 8, 14},                     0,00220,   0x05A0,         4, 0,  s2x2,  s_c1phan},
@@ -253,7 +256,7 @@ static tm_thing maps_isearch_twosome[] = {
 
    {{1, 3, 4, 5, 6, 0,               -1, 2, -1, -1, 7, -1},                0,0,     0xCC,      6, 1,  s_short6, s_rigger},
    {{6, 0, 3, 5,                     7, 1, 2, 4},                      0,02222,     0xFF,         4, 0,  sdmd,  s_rigger},
-   /* must be after "2x4_4" */
+   // Must be after "2x4_4".
    {{6, 5, 3, 4,                     7, 0, 2, 1},                      0,00202,     0xCC,         4, 0,  s1x4,  s_rigger},
    {{5, 6, 4, 3,                     0, 7, 1, 2},                      0,02020,     0xCC,         4, 0,  s1x4,  s_bone},
    {{0, 3, 5, 6,                     1, 2, 4, 7},                      0,00202,     0x33,      4, 0,  sdmd,  s_crosswave},
@@ -267,18 +270,18 @@ static tm_thing maps_isearch_twosome[] = {
 
    // Must be after "2x4_4".
    {{7, 1, 4, 6,                     0, 2, 3, 5},                      0,02020,     0146,         4, 0,  sdmd,  s2x4},
-   /* Next one is for so-and-so in tandem in a bone6, making a virtual line of 4. */
+   // Next one is for so-and-so in tandem in a bone6, making a virtual line of 4.
    {{4, 5, 3, 2,                     0, -1, 1, -1},                        0,0,     0000,         4, 0,  s1x4,  s_bone6},
-   /* Next one is for so-and-so in tandem in a short6, making a virtual line of 4. */
+   // Next one is for so-and-so in tandem in a short6, making a virtual line of 4.
    {{1, 0, 4, 5,                     -1, 2, -1, 3},                        0,0,     0055,         4, 1,  s1x4,  s_short6},
    {{1, 3, 4, 5,                     -1, 2, -1, 0},                    0,02020,     0000,         4, 1,  sdmd,  s_short6},
    {{5, 1, 3, 4,                     0, -1, 2, -1},                        0,0,     0000,         4, 0,  sdmd,  s2x3},
 
-   /* Next three are for so-and-so as couples in a line of 8, making a virtual line of 6. */
+   // Next three are for so-and-so as couples in a line of 8, making a virtual line of 6.
    {{0, 1, 3, 4, 5, 6,               -1, -1, 2, -1, -1, 7},          0,0200200,     0xCC,         6, 0,  s1x6,  s1x8},
    {{0, 1, 2, 4, 7, 6,               -1, 3, -1, -1, 5, -1},          0,0020020,     0xAA,         6, 0,  s1x6,  s1x8},
    {{0, 3, 2, 5, 7, 6,               1, -1, -1, 4, -1, -1},          0,0002002,     0x33,         6, 0,  s1x6,  s1x8},
-   /* Next two are for so-and-so as couples in a line of 6, making a virtual line of 4. */
+   // Next two are for so-and-so as couples in a line of 6, making a virtual line of 4.
    {{0, 1, 3, 5,                     -1, 2, -1, 4},                    0,02020,     0066,         4, 0,  s1x4,  s1x6},
    {{0, 2, 4, 5,                     1, -1, 3, -1},                    0,00202,     0033,         4, 0,  s1x4,  s1x6},
 
@@ -415,7 +418,7 @@ static tm_thing maps_isearch_threesome[] = {
 
 static tm_thing maps_isearch_foursome[] = {
 
-/*   map1              map2              map3              map4               ilatmask olatmask    limit rot            insetup outsetup */
+//   map1              map2              map3              map4               ilatmask olatmask    limit rot            insetup outsetup
    {{0, 6,             1, 7,             3, 5,             2, 4},              0,022,    0x0FF,         2, 0,  s1x2,  s1x8},
    {{0, 7,             1, 6,             2, 5,             3, 4},                0,0,    0x0FF,         2, 1,  s1x2,  s2x4},
    {{0, 4, 11, 15,     1, 5, 10, 14,     2, 6, 9, 13,      3, 7, 8, 12},      0,02222,  0x0FFFF,         4, 0,  s2x2,  s2x8},
@@ -429,8 +432,7 @@ static tm_thing maps_isearch_foursome[] = {
    {{0}, 0,0, 0, 0, 0,  nothing, nothing}};
 
 static tm_thing maps_isearch_sixsome[] = {
-/*   maps
-           ilatmask olatmask    limit rot            insetup outsetup */
+//   maps  ilatmask olatmask    limit rot            insetup outsetup
    {{0, 11,   1, 10,   2, 9,    3, 8,    4, 7,    5, 6},
              0,022,    0x0FFF,       2, 0,  s1x2,  s1x12},
    {{0, 11,   1, 10,   2, 9,    3, 8,    4, 7,    5, 6},
@@ -442,8 +444,7 @@ static tm_thing maps_isearch_sixsome[] = {
    {{0}, 0,0, 0, 0, 0,  nothing, nothing}};
 
 static tm_thing maps_isearch_eightsome[] = {
-/*   maps
-           ilatmask olatmask    limit rot            insetup outsetup */
+//   maps  ilatmask olatmask    limit rot            insetup outsetup
    {{0, 15,   1, 14,   2, 13,   3, 12,   4, 11,   5, 10,   6, 9,   7, 8},
              0,022,   0x0FFFF,       2, 0,  s1x2,  s1x16},
    {{0, 15,   1, 14,   2, 13,   3, 12,   4, 11,   5, 10,   6, 9,   7, 8},
@@ -452,7 +453,7 @@ static tm_thing maps_isearch_eightsome[] = {
 
 static tm_thing maps_isearch_boxsome[] = {
 
-/*   map1              map2              map3              map4               ilatmask olatmask    limit rot            insetup outsetup */
+//   map1              map2              map3              map4               ilatmask olatmask    limit rot            insetup outsetup
    {{0,                1,                3,                2},                  0,02,      0xF,       1, 0,  s1x1,  s2x2},
    {{3,                0,                2,                1},                   0,0,        0,       1, 0,  s1x1,  s2x2},
    {{0, 2,             1, 3,             7, 5,             6, 4},              0,022,     0xFF,       2, 0,  s1x2,  s2x4},
@@ -488,7 +489,7 @@ static tm_thing maps_isearch_boxsome[] = {
 
 static tm_thing maps_isearch_dmdsome[] = {
 
-/*   map1              map2              map3              map4               ilatmask olatmask    limit rot            insetup outsetup */
+//   map1              map2              map3              map4               ilatmask olatmask    limit rot            insetup outsetup
    {{0,                1,                3,                2},                   0,02,      0xF,         1, 0,  s1x1,  sdmd},
    {{0,                1,                3,                2},                   0,0,      0xF,         1, 1,  s1x1,  sdmd},
    {{0, 6,             1, 7,             3, 5,             2, 4},              0,022,     0xFF,         2, 0,  s1x2,  s_ptpd},
@@ -501,7 +502,7 @@ static tm_thing maps_isearch_dmdsome[] = {
 
 static tm_thing maps_isearch_tglsome[] = {
 
-/*   map1              map2              map3              map4               ilatmask olatmask    limit rot            insetup outsetup */
+//   map1              map2              map3              map4               ilatmask olatmask    limit rot            insetup outsetup
    {{6, 0, 2, 4,       -1, 7, -1, 3,     -1, 5, -1, 1},                       0,06020,     0xBB,         4, 0,  s1x4,  s_rigger},
    {{1, 2, 5, 6,       0, -1, 4, -1,     3, -1, 7, -1},                       0,00602,     0xBB,         4, 0,  s1x4,  s_ptpd},
    {{0, 3, 4, 7,       -1, 2, -1, 6,     -1, 1, -1, 5},                       0,02060,     0xEE,         4, 0,  s1x4,  s_ptpd},
@@ -522,15 +523,8 @@ static tm_thing maps_isearch_tglsome[] = {
    // Well, the last two are being changed to be not fudgy.
    {{6, 1, 2, 5,       0, -1, 4, -1,     7, -1, 3, -1},                       0,00400,        0,         4, 0,  sdmd,  s2x4},
    {{0, 2, 4, 6,       7, -1, 3, -1,     1, -1, 5, -1},                       0,00004,        0,         4, 0,  sdmd,  s2x4},
-   /*  old stuff
-   {{7, 0, 3, 4,       -1, 6, -1, 2,     -1, 1, -1, 5},                       0x08,        0,         4, 0,  s1x4,  s_spindle},
-   {{7, 5, 3, 1,       -1, 0, -1, 4,     -1, 6, -1, 2},                       0x80,        0,         4, 0,  s1x4,  s_spindle},
-   */
-   // New stuff.
    {{7, 0, 3, 4,       -1, 6, -1, 2,     -1, 1, -1, 5},                       0,00040,        0,         4, 0,  s1x4,  s_nxtrglccw},
    {{7, 5, 3, 1,       -1, 0, -1, 4,     -1, 6, -1, 2},                       0,04000,        0,         4, 0,  s1x4,  s_nxtrglcw},
-
-
 
    {{0, 3, 4, 7,       -1, 2, -1, 6,     -1, 1, -1, 5},                       0,04000,        0,         4, 0,  sdmd,  s_galaxy},
    {{2, 5, 6, 1,       -1, 4, -1, 0,     -1, 3, -1, 7},                       0,00040,     0xBB,         4, 1,  sdmd,  s_galaxy},
@@ -543,7 +537,7 @@ static tm_thing maps_isearch_tglsome[] = {
 
 
 static tm_thing maps_isearch_3x1tglsome[] = {
-/*   map1              map2              map3              map4               ilatmask olatmask    limit rot            insetup outsetup */
+//   map1              map2              map3              map4               ilatmask olatmask    limit rot            insetup outsetup
    {{9, 3,             10, 4,            0, 6,             11, 5},             0,026,    07171,         2, 0,  s1x2,  s3x4},
    {{0, 4,             7, 3,             5, 1,             6, 2},              0,062,     0xFF,         2, 0,  s1x2,  s_qtag},
    {{9, 3,             10, 4,            11, 5,            1, 7},              0,040,     0000,         2, 0,  s1x2,  s2x6},
@@ -561,15 +555,11 @@ static tm_thing maps_isearch_3x1tglsome[] = {
    {{0}, 0,0, 0, 0, 0,  nothing, nothing}};
 
 static tm_thing maps_isearch_ysome[] = {
-/*   map1              map2              map3              map4               ilatmask olatmask    limit rot            insetup outsetup */
+//   map1              map2              map3              map4               ilatmask olatmask    limit rot            insetup outsetup
    {{5, 1,             0, 4,             6, 2,             7, 3},              0,026,     0xFF,         2, 0,  s1x2,  s_bone},
    {{0, 4,             5, 1,             7, 3,             6, 2},              0,062,     0xFF,         2, 0,  s1x2,  s_rigger},
    {{15, 7,            13, 5,            3, 11,            1, 9},              0,040,     0000,         2, 0,  s1x2,  s_c1phan},
    {{0, 8,             2, 10,            14, 6,            12, 4},             0,004,     0000,         2, 0,  s1x2,  s_c1phan},
-/*   Taken out -- we rotate the setup instead.
-   {{3, 11,            1, 9,             7, 15,            5, 13},             0x8,   0xAAAA,         2, 1,  s1x2,  s_c1phan},
-   {{4, 12,            6, 14,            2, 10,            0, 8},              0x2,   0x5555,         2, 1,  s1x2,  s_c1phan},
-*/
    {{0}, 0,0, 0, 0, 0,  nothing, nothing}};
 
 struct siamese_item {
@@ -596,7 +586,7 @@ const siamese_item siamese_table_of_2[] = {
    {s_c1phan,    0x00005555UL, 0x0505UL, warn__none},
    {s_c1phan,    0xAAAA0000UL, 0x0A0AUL, warn__none},
    {s_c1phan,    0x55550000UL, 0x5050UL, warn__none},
-   {s_c1phan,    0x00005AA5UL, 0x00A5UL, warn__none},  /* These 8 are unsymmetrical. */
+   {s_c1phan,    0x00005AA5UL, 0x00A5UL, warn__none},  // These 8 are unsymmetrical.
    {s_c1phan,    0x0000A55AUL, 0xA500UL, warn__none},
    {s_c1phan,    0x000055AAUL, 0x05A0UL, warn__none},
    {s_c1phan,    0x0000AA55UL, 0xA005UL, warn__none},
@@ -746,7 +736,7 @@ extern void initialize_tandem_tables()
 
 
 void tandrec::unpack_us(
-   tm_thing *map_ptr,
+   const tm_thing *map_ptr,
    uint32 orbitmask3high,
    uint32 orbitmask3low,
    setup *result) THROW_DECL
@@ -959,14 +949,14 @@ void tandrec::unpack_us(
 // The canonical storage of the real people, while we are doing the virtual
 // call, is as follows:
 //    m_real_saved_people[0] gets person on left (lat=1) near person (lat=0).
-//    m_real_saved_people[last] gets person on right (lat=1) or far person (lat=0). */
+//    m_real_saved_people[last] gets person on right (lat=1) or far person (lat=0).
 
 // This returns true if it found people facing the wrong way.  This can happen
 // if we are trying siamese and we shouldn't be.
 
 bool tandrec::pack_us(
    personrec *s,
-   tm_thing *map_ptr,
+   const tm_thing *map_ptr,
    int fraction,    // This is in eighths.
    bool fraction_in_use,
    bool dynamic_in_use,
@@ -1053,8 +1043,7 @@ bool tandrec::pack_us(
                   (~(fb[0].id1 ^ fb[1].id1))) & BIT_PERSON))
                fail("Can't find skew people.");
          }
-         else if (!(m_virtual_setup.cmd.cmd_misc_flags & CMD_MISC__PHANTOMS) &&
-                  !m_phantom_pairing_ok) {
+         else if (!(m_virtual_setup.cmd.cmd_misc_flags & CMD_MISC__PHANTOMS) && !m_phantom_pairing_ok) {
 
             // Otherwise, we usually forbid phantoms unless some phantom concept was used
             // (either something like "phantom tandem" or some other phantom concept such
@@ -1110,10 +1099,10 @@ bool tandrec::pack_us(
 
       if (vp1) {
 
-         /* Create a virtual person number.  Only 8 are allowed, because of the tightness
-            in the person representation.  That shouldn't be a problem, since each
-            virtual person came from a group of real people that had at least one
-            live person.  Unless active phantoms have been created, that is. */
+         // Create a virtual person number.  Only 8 are allowed, because of the tightness
+         // in the person representation.  That shouldn't be a problem, since each
+         // virtual person came from a group of real people that had at least one
+         // live person.  Unless active phantoms have been created, that is.
 
          if ((++virt_index) >= 8) fail("Sorry, too many tandem or as couples people.");
 
@@ -1604,9 +1593,9 @@ extern void tandem_couples_move(
    }
    else if (tandstuff.m_no_unit_symmetry) {
       if (key == tandem_key_anyone_tgls) {
-         /* This was <anyone>-based triangles.  The setup must have been a C1-phantom.
-            The current mask shows just the base.  Expand it to include the apex. */
-         ewmask |= nsmask;     /* Get the base bits regardless of facing direction. */
+         // This was <anyone>-based triangles.  The setup must have been a C1-phantom.
+         // The current mask shows just the base.  Expand it to include the apex.
+         ewmask |= nsmask;     // Get the base bits regardless of facing direction.
          if (allmask == 0xAAAA) {
             tandstuff.single_mask &= 0x7777;
             if (ewmask == 0x0A0A) {
@@ -1653,10 +1642,10 @@ extern void tandem_couples_move(
             if (!((ss->people[0].id1 ^ ss->people[1].id1 ^ ss->people[4].id1 ^ ss->people[5].id1) & 2)) {
                ss->rotation++;
                canonicalize_rotation(ss);
-               ss->rotation--;   /* Since we won't look at the ss->rotation again until the end,
-                                    this will have the effect of rotating it back.
-                                    Note that allmask, if it is acceptable at all, is still correct
-                                    for the new rotation. */
+               ss->rotation--;   // Since we won't look at the ss->rotation again until the end,
+                                 // this will have the effect of rotating it back.
+                                 // Note that allmask, if it is acceptable at all, is still correct
+                                 // for the new rotation.
             }
             ewmask = 0;
             nsmask = allmask;
@@ -1808,7 +1797,7 @@ extern void tandem_couples_move(
    tandstuff.m_virtual_setup.cmd = ss->cmd;
    tandstuff.m_virtual_setup.cmd.cmd_assume.assumption = cr_none;
 
-   /* There are a small number of assumptions that we can transform. */
+   // There are a small number of assumptions that we can transform.
 
    if (ss->cmd.cmd_assume.assump_col == 4) {
       if (ss->cmd.cmd_assume.assumption == cr_ijright)
@@ -1846,6 +1835,7 @@ extern void tandem_couples_move(
 
    // Or failure to pack people properly may just be because we are taking
    // "siamese" too seriously.
+
 
    if (!doing_siamese)
       fail("People not facing same way for tandem or as couples.");
@@ -2410,20 +2400,6 @@ void recursively_fix(setup *result, const uint16 split_info[2], const setup *ori
          return;
       }
 
-      /*
-        static expand::thing exp55_rig_dmd = {{6, 0, 2, 4}, sdmd, s_rigger, 0};
-        static expand::thing expAA_rig_dmd = {{7, 1, 3, 5}, sdmd, s_rigger, 0};
-        static expand::thing exp66_rig_dmd = {{6, 1, 2, 5}, sdmd, s_rigger, 0};
-        static expand::thing exp99_rig_dmd = {{7, 0, 3, 4}, sdmd, s_rigger, 0};
-        switch (finals)
-        {
-        case 0x55: compress_map = &exp55_rig_dmd; break;
-        case 0xAA: compress_map = &expAA_rig_dmd; break;
-        case 0x66: compress_map = &exp66_rig_dmd; break;
-        case 0x99: compress_map = &exp99_rig_dmd; break;
-        }
-      */
-
       break;
    case s_qtag:
       switch (finals)
@@ -2437,21 +2413,6 @@ void recursively_fix(setup *result, const uint16 split_info[2], const setup *ori
               result, new_split_info, (const setup *) 0);
       reinstate_rotation(&temp1, result);
       return;
-
-      /*
-        static expand::thing exp55_qtg_dmd = {{4, 6, 0, 2}, sdmd, s_rigger, 1};
-        static expand::thing expAA_qtg_dmd = {{5, 7, 1, 3}, sdmd, s_rigger, 0};
-        static expand::thing exp66_qtg_dmd = {{5, 6, 1, 2}, sdmd, s_rigger, 0};
-        static expand::thing exp99_qtg_dmd = {{4, 7, 0, 3}, sdmd, s_rigger, 0};
-        switch (finals)
-        {
-        case 0x55: compress_map = &exp55_qtg_dmd; break;
-        case 0xAA: compress_map = &expAA_qtg_dmd; break;
-        case 0x66: compress_map = &exp66_qtg_dmd; break;
-        case 0x99: compress_map = &exp99_qtg_dmd; break;
-        }
-      */
-
       break;
    case s_dead_concentric:
       result->kind = result->inner.skind;
@@ -2668,4 +2629,599 @@ void mimic_move(
 
    // Whatever was going on with splitting is no longer relevant.
    result->result_flags.clear_split_info();
+}
+
+bool process_brute_force_mxn(
+   setup *ss,
+   parse_block *parseptr,
+   void (*backstop)(setup *, parse_block *, setup *),
+   setup *result) THROW_DECL
+{
+   if (ss->cmd.cmd_final_flags.test_finalbits(~0) != 0)
+      return false;
+
+   static const tm_thing map_getin_4x4_tidal_wave = {
+      {0, 1, 3, 2, 6, 7, 5, 4},     0,02222,     0xFF,         2, 0,  s1x4,  s1x8};
+   static const tm_thing map_getin_4x4_tidal_1fl = {
+      {0, 6, 1, 7, 3, 5, 2, 4},     0,02222,     0xFF,         2, 0,  s1x4,  s1x8};
+   static const tm_thing map_getin_4x4_2x4 = {
+      {0, 7, 1, 6, 2, 5, 3, 4},     0,02222,     0xFF,         2, 0,  s2x2,  s2x4};
+   static const tm_thing map_getin_4x4_2x8 = {
+      {0, 4, 11, 15, 1, 5, 10, 14, 2, 6, 9, 13, 3, 7, 8, 12}, 0,022222222, 0xFFFF, 4, 0,  s2x4,  s2x8};
+   static const tm_thing map_getin_2x3_2x6 = {
+      {0, 3, 8, 11, 1, 4, 7, 10, 2, 5, 6, 9}, 0,0222222, 0xFFF, 4, 0,  s2x4,  s2x6};
+
+   static const tm_thing map_getin_3x3_tidal_wave = {
+      {0, 1, 2, 5, 4, 3},     0,0222,     0xFF,         2, 0,  s1x4,  s1x6};
+   static const tm_thing map_getin_3x3_tidal_1fl = {
+      {0, 5, 1, 4, 2, 3},     0,0222,     0xFF,         2, 0,  s1x4,  s1x6};
+   static const tm_thing map_getin_3x3_2x4 = {
+      {0, 5, 1, 4, 2, 3},     0,0222,     0xFF,         2, 0,  s2x2,  s2x3};
+
+   static const tm_thing map_getout_2x2_list[2] = {
+      {{3, 2, 4, 1, 5, 0},     0,0222,     0xFF,         2, 3,  s2x2,  s2x3},
+      {{4, 3, 5, 2, 6, 1, 7, 0},     0,02222,     0xFF,         2, 3,  s2x2,  s2x4}};
+
+   static const tm_thing map_getout_1x4_together_list[2] = {
+      {{0, 5, 1, 4, 2, 3},     0,0222,     0xFF,         2, 0,  s1x4,  s1x6},
+      {{0, 6, 1, 7, 3, 5, 2, 4},     0,02222,     0xFF,         2, 0,  s1x4,  s1x8}};
+
+   static const tm_thing map_getout_1x4_apart_list[2] = {
+      {{0, 1, 2, 5, 4, 3},           0,02222, 0xFF, 2, 0,  s1x4,  s1x6},
+      {{0, 1, 3, 2, 6, 7, 5, 4},     0,02222, 0xFF, 2, 0,  s1x4,  s1x8}};
+
+   static const tm_thing map_getout_2x3_together_normal_list[2] = {
+      {{0, 1, 2, 7, 8, 3, 6, 5, 4},             0,0222222, 0xFFF, 3, 0,  s2x3,  s3x3},
+      {{0, 10, 9, 1, 11, 8, 2, 5, 7, 3, 4, 6},  0,0222222, 0xFFF, 3, 1,  s2x3,  s3x4}};
+
+   static const tm_thing map_getout_qtag_list[2] = {
+      {{0, 5, 8, 9, 1, 4, 7, 10, 2, 3, 6, 11},                 0,022222222, 0xFFFF, 4, 0,  s_qtag,  s3dmd},
+      {{0, 7, 11, 12, 1, 6, 10, 13, 2, 5, 9, 14, 3, 4, 8, 15}, 0,022222222, 0xFFFF, 4, 0,  s_qtag,  s4dmd}};
+
+   tandrec ttt(true, false);
+   const tm_thing *map_ptr;
+   uint32 directions;
+   uint32 livemask;
+   big_endian_get_directions(ss, directions, livemask);
+
+   int rotfix = 0;
+   const tm_thing *getout_map;
+   int reversal_bits = 0;
+
+   ttt.m_virtual_setup.cmd = ss->cmd;
+   ttt.m_virtual_setup.cmd.cmd_assume.assumption = cr_none;
+
+   if (ss->cmd.cmd_final_flags.test_heritbits(INHERITFLAG_MXNMASK|INHERITFLAG_NXNMASK) == INHERITFLAGNXNK_4X4) {
+      ttt.m_people_per_group = 4;
+
+      switch (ss->kind) {
+      case s1x8:
+         if (livemask == 0xFFFF && (directions == 0x2882 || directions == 0x8228)) {
+            // Tidal wave.
+            map_ptr = &map_getin_4x4_tidal_wave;
+
+            if (ttt.pack_us(ss->people, map_ptr, 0, false, false, tandem_key_cpls))
+               return false;
+
+            // We now have a 1x4 wave with the first two people in place.  Each of these virtual
+            // people represents 4 real people.  Spread them out to the full 4-person wave.
+
+            ttt.m_virtual_setup.people[3] = ttt.m_virtual_setup.people[0];
+            ttt.m_virtual_setup.people[3].id1 += 0100*map_ptr->limit;    // A new virtual person number.
+            ttt.m_virtual_setup.people[2] = ttt.m_virtual_setup.people[1];
+            ttt.m_virtual_setup.people[2].id1 += 0100*map_ptr->limit;    // A new virtual person number.
+         }
+         else if (livemask == 0xFFFF && (directions == 0xAA00 || directions == 0x00AA)) {
+            // Tidal 1FL.
+            map_ptr = &map_getin_4x4_tidal_1fl;
+
+            if (ttt.pack_us(ss->people, map_ptr, 0, false, false, tandem_key_cpls))
+               return false;
+
+            // We now have a 1x4 2fl with the first two people in place.  Each of these virtual
+            // people represents 4 real people.  Spread them out to the full 4-person 2fl.
+
+            ttt.m_virtual_setup.people[3] = ttt.m_virtual_setup.people[0];
+            ttt.m_virtual_setup.people[3].id1 += 0100*map_ptr->limit;    // A new virtual person number.
+            ttt.m_virtual_setup.people[2] = ttt.m_virtual_setup.people[1];
+            ttt.m_virtual_setup.people[2].id1 += 0100*map_ptr->limit;    // A new virtual person number.
+
+            ttt.m_virtual_setup.swap_people(1, 3);
+         }
+         else
+            return false;
+
+         break;
+      case s2x4:
+         if (livemask == 0xFFFF && (directions == 0x55FF || directions == 0xFF55)) {
+            map_ptr = &map_getin_4x4_2x4;
+
+            if (ttt.pack_us(ss->people, map_ptr, 0, false, false, tandem_key_cpls))
+               return false;
+
+            // We now have a 2x2 box with the first two people in place.  Each of these virtual
+            // people represents 4 real people.  Spread them out to the full 4-person box.
+
+            ttt.m_virtual_setup.people[3] = ttt.m_virtual_setup.people[0];
+            ttt.m_virtual_setup.people[3].id1 += 0100*map_ptr->limit;    // A new virtual person number.
+            ttt.m_virtual_setup.people[2] = ttt.m_virtual_setup.people[1];
+            ttt.m_virtual_setup.people[2].id1 += 0100*map_ptr->limit;    // A new virtual person number.
+
+            ttt.m_virtual_setup.swap_people(1, 3);
+         }
+         else
+            return false;
+
+         break;
+      case s2x8:
+         if (((directions ^ 0x5555FFFF) & livemask) == 0 ||
+             ((directions ^ 0xFFFF5555) & livemask) == 0) {
+            map_ptr = &map_getin_4x4_2x8;
+
+            if (ttt.pack_us(ss->people, map_ptr, 0, false, false, tandem_key_cpls))
+               return false;
+
+            // We now have a 2x4 with two people in place.  Each of these virtual
+            // people represents 4 real people.  Spread them out.
+
+            ttt.m_virtual_setup.swap_people(2, 5);
+            ttt.m_virtual_setup.swap_people(1, 2);
+            ttt.m_virtual_setup.swap_people(3, 7);
+
+            if (ttt.m_virtual_setup.people[0].id1) {
+               ttt.m_virtual_setup.people[1] = ttt.m_virtual_setup.people[0];
+               ttt.m_virtual_setup.people[1].id1 += 0100*map_ptr->limit;    // A new virtual person number.
+            }
+
+            if (ttt.m_virtual_setup.people[2].id1) {
+               ttt.m_virtual_setup.people[3] = ttt.m_virtual_setup.people[2];
+               ttt.m_virtual_setup.people[3].id1 += 0100*map_ptr->limit;    // A new virtual person number.
+            }
+
+            if (ttt.m_virtual_setup.people[5].id1) {
+               ttt.m_virtual_setup.people[4] = ttt.m_virtual_setup.people[5];
+               ttt.m_virtual_setup.people[4].id1 += 0100*map_ptr->limit;    // A new virtual person number.
+            }
+
+            if (ttt.m_virtual_setup.people[7].id1) {
+               ttt.m_virtual_setup.people[6] = ttt.m_virtual_setup.people[7];
+               ttt.m_virtual_setup.people[6].id1 += 0100*map_ptr->limit;    // A new virtual person number.
+            }
+         }
+         else
+            return false;
+
+         break;
+      default:
+         return false;
+      }
+   }
+   else if (ss->cmd.cmd_final_flags.test_heritbits(INHERITFLAG_MXNMASK|INHERITFLAG_NXNMASK) == INHERITFLAGNXNK_3X3) {
+      ttt.m_people_per_group = 3;
+
+      switch (ss->kind) {
+      case s1x6:
+         if (((directions ^ 0x222) & livemask) == 0 || ((directions ^ 0x888) & livemask) == 0) {
+            // Tidal wave.
+            map_ptr = &map_getin_3x3_tidal_wave;
+
+            if (ttt.pack_us(ss->people, map_ptr, 0, false, false, tandem_key_cpls))
+               return false;
+
+            // We now have a 1x4 wave with the first two people in place.  Each of these virtual
+            // people represents 4 real people.  Spread them out to the full 4-person wave.
+
+            ttt.m_virtual_setup.people[3] = ttt.m_virtual_setup.people[0];
+            ttt.m_virtual_setup.people[3].id1 += 0100*map_ptr->limit;    // A new virtual person number.
+            ttt.m_virtual_setup.people[2] = ttt.m_virtual_setup.people[1];
+            ttt.m_virtual_setup.people[2].id1 += 0100*map_ptr->limit;    // A new virtual person number.
+         }
+         else if (((directions ^ 0xA80) & livemask) == 0 || ((directions ^ 0x02A) & livemask) == 0) {
+            // Tidal 1FL.
+            map_ptr = &map_getin_3x3_tidal_1fl;
+
+            if (ttt.pack_us(ss->people, map_ptr, 0, false, false, tandem_key_cpls))
+               return false;
+
+            // We now have a 1x4 2fl with the first two people in place.  Each of these virtual
+            // people represents 4 real people.  Spread them out to the full 4-person 2fl.
+
+            ttt.m_virtual_setup.people[3] = ttt.m_virtual_setup.people[0];
+            ttt.m_virtual_setup.people[3].id1 += 0100*map_ptr->limit;    // A new virtual person number.
+            ttt.m_virtual_setup.people[2] = ttt.m_virtual_setup.people[1];
+            ttt.m_virtual_setup.people[2].id1 += 0100*map_ptr->limit;    // A new virtual person number.
+
+            ttt.m_virtual_setup.swap_people(1, 3);
+         }
+         else
+            return false;
+
+         break;
+      case s2x3:
+         if (((directions ^ 0x57F) & livemask) == 0 || ((directions ^ 0xFD5) & livemask) == 0) {
+            map_ptr = &map_getin_3x3_2x4;
+
+            if (ttt.pack_us(ss->people, map_ptr, 0, false, false, tandem_key_cpls))
+               return false;
+
+            // We now have a 2x2 box with the first two people in place.  Each of these virtual
+            // people represents 4 real people.  Spread them out to the full 4-person box.
+
+            ttt.m_virtual_setup.people[3] = ttt.m_virtual_setup.people[0];
+            ttt.m_virtual_setup.people[3].id1 += 0100*map_ptr->limit;    // A new virtual person number.
+            ttt.m_virtual_setup.people[2] = ttt.m_virtual_setup.people[1];
+            ttt.m_virtual_setup.people[2].id1 += 0100*map_ptr->limit;    // A new virtual person number.
+
+            ttt.m_virtual_setup.swap_people(1, 3);
+         }
+         else
+            return false;
+
+         break;
+      case s2x6:
+         if (((directions ^ 0x555FFF) & livemask) == 0 ||
+             ((directions ^ 0xFFF555) & livemask) == 0) {
+            map_ptr = &map_getin_2x3_2x6;
+
+            if (ttt.pack_us(ss->people, map_ptr, 0, false, false, tandem_key_cpls))
+               return false;
+
+            // We now have a 2x4 with two people in place.  Each of these virtual
+            // people represents 3 real people.  Spread them out.
+
+            ttt.m_virtual_setup.swap_people(2, 5);
+            ttt.m_virtual_setup.swap_people(1, 2);
+            ttt.m_virtual_setup.swap_people(3, 7);
+
+            if (ttt.m_virtual_setup.people[0].id1) {
+               ttt.m_virtual_setup.people[1] = ttt.m_virtual_setup.people[0];
+               ttt.m_virtual_setup.people[1].id1 += 0100*map_ptr->limit;    // A new virtual person number.
+            }
+
+            if (ttt.m_virtual_setup.people[2].id1) {
+               ttt.m_virtual_setup.people[3] = ttt.m_virtual_setup.people[2];
+               ttt.m_virtual_setup.people[3].id1 += 0100*map_ptr->limit;    // A new virtual person number.
+            }
+
+            if (ttt.m_virtual_setup.people[5].id1) {
+               ttt.m_virtual_setup.people[4] = ttt.m_virtual_setup.people[5];
+               ttt.m_virtual_setup.people[4].id1 += 0100*map_ptr->limit;    // A new virtual person number.
+            }
+
+            if (ttt.m_virtual_setup.people[7].id1) {
+               ttt.m_virtual_setup.people[6] = ttt.m_virtual_setup.people[7];
+               ttt.m_virtual_setup.people[6].id1 += 0100*map_ptr->limit;    // A new virtual person number.
+            }
+         }
+         else
+            return false;
+         break;
+      default:
+         return false;
+      }
+   }
+   else
+      return false;
+
+   // Do the call.
+
+   // Clear whatever flag we are preocessing.
+   ttt.m_virtual_setup.cmd.cmd_final_flags.clear_heritbits(
+      ss->cmd.cmd_final_flags.test_heritbits(INHERITFLAG_MXNMASK|INHERITFLAG_NXNMASK));
+
+   update_id_bits(&ttt.m_virtual_setup);
+   backstop(&ttt.m_virtual_setup, parseptr, &ttt.virtual_result);
+   normalize_setup(&ttt.virtual_result, normalize_before_merge, false);
+
+   // Figure out what happened.
+
+   uint32 aaa;
+   uint32 bbb;
+
+   switch (ttt.virtual_result.kind) {
+   case s2x2:
+      {
+         int kid = ttt.virtual_result.people[0].id1 & 0700;
+         bool left_column_reversed = (kid >= 0100*map_ptr->limit);
+         uint32 otherid = left_column_reversed ? kid - 0100*map_ptr->limit : kid + 0100*map_ptr->limit;
+
+         if ((ttt.virtual_result.people[3].id1 & 0700) != otherid) {
+            // Paired people are horizontal.  Just flip the setup around and recanonicalize.
+            rotfix = 1;
+            ttt.virtual_result.rotation += rotfix;
+            canonicalize_rotation(&ttt.virtual_result);
+
+            // And recompute stuff.
+            kid = ttt.virtual_result.people[0].id1 & 0700;
+            left_column_reversed = (kid >= 0100*map_ptr->limit);
+            otherid = left_column_reversed ? kid - 0100*map_ptr->limit : kid + 0100*map_ptr->limit;
+         }
+
+         // Paired people should now be vertical.
+
+         if ((ttt.virtual_result.people[3].id1 & 0700) != otherid)
+            return false;
+
+         // The left column is paired; swap it into position.
+         if (left_column_reversed) {
+            reversal_bits |= 004;
+            ttt.virtual_result.swap_people(0, 3);
+         }
+
+         // Check that the right column is also paired, and swap it into position.
+         kid = ttt.virtual_result.people[1].id1 & 0700;
+         bool right_column_reversed = (kid >= 0100*map_ptr->limit);
+         otherid = right_column_reversed ? kid - 0100*map_ptr->limit : kid + 0100*map_ptr->limit;
+         if ((ttt.virtual_result.people[2].id1 & 0700) != otherid)
+            return false;
+
+         if (right_column_reversed) {
+            reversal_bits |= 040;
+            ttt.virtual_result.swap_people(1, 2);
+         }
+
+         // Check that the people in each column had similar turning motion and direction.
+         aaa = ttt.virtual_result.people[0].id1;
+         bbb = ttt.virtual_result.people[3].id1;
+         if (((aaa ^ bbb) & (STABLE_ALL_MASK | BIT_PERSON | 0x3F)) != 0)
+            return false;
+
+         aaa = ttt.virtual_result.people[1].id1;
+         bbb = ttt.virtual_result.people[2].id1;
+         if (((aaa ^ bbb) & (STABLE_ALL_MASK | BIT_PERSON | 0x3F)) != 0)
+            return false;
+
+         getout_map = &map_getout_2x2_list[ttt.m_people_per_group-3];
+      }
+
+      break;
+
+   case s1x4:
+      {
+         int kid = ttt.virtual_result.people[0].id1 & 0700;
+         bool left_side_reversed = (kid >= 0100*map_ptr->limit);
+         uint32 otherid = left_side_reversed ? kid - 0100*map_ptr->limit : kid + 0100*map_ptr->limit;
+
+         if ((ttt.virtual_result.people[1].id1 & 0700) == otherid) {
+            // Paired people are together.
+
+            // The left side is paired; swap it into position.
+            if (left_side_reversed) {
+               reversal_bits |= 002;
+               ttt.virtual_result.swap_people(0, 1);
+            }
+
+            // Check that the right side is also paired, and swap it into position.
+            kid = ttt.virtual_result.people[3].id1 & 0700;
+            bool right_side_reversed = (kid >= 0100*map_ptr->limit);
+            otherid = right_side_reversed ? kid - 0100*map_ptr->limit : kid + 0100*map_ptr->limit;
+            if ((ttt.virtual_result.people[2].id1 & 0700) != otherid)
+               return false;
+
+            if (right_side_reversed) {
+               reversal_bits |= 020;
+               ttt.virtual_result.swap_people(2, 3);
+            }
+
+            // Check that the people in each side had similar turning motion and direction.
+            aaa = ttt.virtual_result.people[0].id1;
+            bbb = ttt.virtual_result.people[1].id1;
+            if (((aaa ^ bbb) & (STABLE_ALL_MASK | BIT_PERSON | 0x3F)) != 0)
+               return false;
+
+            aaa = ttt.virtual_result.people[2].id1;
+            bbb = ttt.virtual_result.people[3].id1;
+            if (((aaa ^ bbb) & (STABLE_ALL_MASK | BIT_PERSON | 0x3F)) != 0)
+               return false;
+
+            // Put the important people into slots 0 and 1.
+            ttt.virtual_result.swap_people(1, 3);
+
+            getout_map = &map_getout_1x4_together_list[ttt.m_people_per_group-3];
+         }
+         else {
+            // Paired people are not together.
+
+            // The left once-removed side is paired; swap it into position.
+            if (left_side_reversed) {
+               reversal_bits |= 002;
+               ttt.virtual_result.swap_people(0, 3);
+            }
+
+            // Check that the right once-removed side is also paired, and swap it into position.
+            kid = ttt.virtual_result.people[1].id1 & 0700;
+            bool right_side_reversed = (kid >= 0100*map_ptr->limit);
+            otherid = right_side_reversed ? kid - 0100*map_ptr->limit : kid + 0100*map_ptr->limit;
+            if ((ttt.virtual_result.people[2].id1 & 0700) != otherid)
+               return false;
+
+            if (right_side_reversed) {
+               reversal_bits |= 020;
+               ttt.virtual_result.swap_people(1, 2);
+            }
+
+            // Check that the people in each side had similar turning motion and direction.
+            aaa = ttt.virtual_result.people[0].id1;
+            bbb = ttt.virtual_result.people[3].id1;
+            if (((aaa ^ bbb) & (STABLE_ALL_MASK | BIT_PERSON | 0x3F)) != 0)
+               return false;
+
+            aaa = ttt.virtual_result.people[2].id1;
+            bbb = ttt.virtual_result.people[1].id1;
+            if (((aaa ^ bbb) & (STABLE_ALL_MASK | BIT_PERSON | 0x3F)) != 0)
+               return false;
+
+            getout_map = &map_getout_1x4_apart_list[ttt.m_people_per_group-3];
+         }
+      }
+
+      break;
+
+   case s2x3:
+      {
+         int kid = ttt.virtual_result.people[0].id1 & 0700;
+         bool left_side_reversed = (kid >= 0100*map_ptr->limit);
+         uint32 otherid = left_side_reversed ? kid - 0100*map_ptr->limit : kid + 0100*map_ptr->limit;
+
+         if (!ttt.virtual_result.people[0].id1 || (ttt.virtual_result.people[5].id1 & 0700) == otherid) {
+            // This is the only way people can be paired.
+
+            // The left side is paired; swap it into position.
+            if (ttt.virtual_result.people[0].id1 && left_side_reversed) {
+               reversal_bits |= 004;
+               ttt.virtual_result.swap_people(0, 5);
+            }
+
+            // Check that the middle group side is also paired, and swap it into position.
+            if (ttt.virtual_result.people[1].id1) {
+               kid = ttt.virtual_result.people[1].id1 & 0700;
+               bool middle_group_reversed = (kid >= 0100*map_ptr->limit);
+               otherid = middle_group_reversed ? kid - 0100*map_ptr->limit : kid + 0100*map_ptr->limit;
+               if ((ttt.virtual_result.people[4].id1 & 0700) != otherid)
+                  return false;
+
+               if (middle_group_reversed) {
+                  reversal_bits |= 040;
+                  ttt.virtual_result.swap_people(1, 4);
+               }
+            }
+
+            // Check that the right side is also paired, and swap it into position.
+            if (ttt.virtual_result.people[2].id1) {
+               kid = ttt.virtual_result.people[2].id1 & 0700;
+               bool right_side_reversed = (kid >= 0100*map_ptr->limit);
+               otherid = right_side_reversed ? kid - 0100*map_ptr->limit : kid + 0100*map_ptr->limit;
+               if ((ttt.virtual_result.people[3].id1 & 0700) != otherid)
+                  return false;
+
+               if (right_side_reversed) {
+                  reversal_bits |= 0400;
+                  ttt.virtual_result.swap_people(2, 3);
+               }
+            }
+
+            // Check that the people in each side had similar turning motion and direction.
+            aaa = ttt.virtual_result.people[0].id1;
+            bbb = ttt.virtual_result.people[5].id1;
+            if (((aaa ^ bbb) & (STABLE_ALL_MASK | BIT_PERSON | 0x3F)) != 0)
+               return false;
+
+            aaa = ttt.virtual_result.people[1].id1;
+            bbb = ttt.virtual_result.people[4].id1;
+            if (((aaa ^ bbb) & (STABLE_ALL_MASK | BIT_PERSON | 0x3F)) != 0)
+               return false;
+
+            aaa = ttt.virtual_result.people[2].id1;
+            bbb = ttt.virtual_result.people[3].id1;
+            if (((aaa ^ bbb) & (STABLE_ALL_MASK | BIT_PERSON | 0x3F)) != 0)
+               return false;
+
+            getout_map = &map_getout_2x3_together_normal_list[ttt.m_people_per_group-3];
+         }
+         else
+            return false;
+      }
+
+      break;
+
+   case s_qtag:
+      {
+         int kid = ttt.virtual_result.people[0].id1 & 0700;
+         bool top_group_reversed = (kid >= 0100*map_ptr->limit);
+         uint32 otherid = top_group_reversed ? kid - 0100*map_ptr->limit : kid + 0100*map_ptr->limit;
+
+         if (!ttt.virtual_result.people[0].id1 || (ttt.virtual_result.people[1].id1 & 0700) == otherid) {
+            // This is the only way people can be paired.
+
+            // The top group is paired; swap it into position.
+            if (ttt.virtual_result.people[0].id1 && top_group_reversed) {
+               reversal_bits |= 00002;
+               ttt.virtual_result.swap_people(0, 1);
+            }
+
+            // Check that the right side is also paired, and swap it into position.
+            if (ttt.virtual_result.people[3].id1) {
+               kid = ttt.virtual_result.people[3].id1 & 0700;
+               bool right_side_reversed = (kid >= 0100*map_ptr->limit);
+               otherid = right_side_reversed ? kid - 0100*map_ptr->limit : kid + 0100*map_ptr->limit;
+               if ((ttt.virtual_result.people[2].id1 & 0700) != otherid)
+                  return false;
+
+               if (right_side_reversed) {
+                  reversal_bits |= 00020;
+                  ttt.virtual_result.swap_people(3, 2);
+               }
+            }
+
+            // Check that the bottom group is also paired, and swap it into position.
+            if (ttt.virtual_result.people[5].id1) {
+               kid = ttt.virtual_result.people[5].id1 & 0700;
+               bool bottom_group_reversed = (kid >= 0100*map_ptr->limit);
+               otherid = bottom_group_reversed ? kid - 0100*map_ptr->limit : kid + 0100*map_ptr->limit;
+               if ((ttt.virtual_result.people[4].id1 & 0700) != otherid)
+                  return false;
+
+               if (bottom_group_reversed) {
+                  reversal_bits |= 00200;
+                  ttt.virtual_result.swap_people(5, 4);
+               }
+            }
+
+            // Check that the left side is also paired, and swap it into position.
+            if (ttt.virtual_result.people[6].id1) {
+               kid = ttt.virtual_result.people[6].id1 & 0700;
+               bool left_side_reversed = (kid >= 0100*map_ptr->limit);
+               otherid = left_side_reversed ? kid - 0100*map_ptr->limit : kid + 0100*map_ptr->limit;
+               if ((ttt.virtual_result.people[7].id1 & 0700) != otherid)
+                  return false;
+
+               if (left_side_reversed) {
+                  reversal_bits |= 02000;
+                  ttt.virtual_result.swap_people(6, 7);
+               }
+            }
+
+            // Check that the people in each side had similar turning motion and direction.
+            aaa = ttt.virtual_result.people[0].id1;
+            bbb = ttt.virtual_result.people[1].id1;
+            if (((aaa ^ bbb) & (STABLE_ALL_MASK | BIT_PERSON | 0x3F)) != 0)
+               return false;
+
+            aaa = ttt.virtual_result.people[3].id1;
+            bbb = ttt.virtual_result.people[2].id1;
+            if (((aaa ^ bbb) & (STABLE_ALL_MASK | BIT_PERSON | 0x3F)) != 0)
+               return false;
+
+            aaa = ttt.virtual_result.people[5].id1;
+            bbb = ttt.virtual_result.people[4].id1;
+            if (((aaa ^ bbb) & (STABLE_ALL_MASK | BIT_PERSON | 0x3F)) != 0)
+               return false;
+
+            aaa = ttt.virtual_result.people[6].id1;
+            bbb = ttt.virtual_result.people[7].id1;
+            if (((aaa ^ bbb) & (STABLE_ALL_MASK | BIT_PERSON | 0x3F)) != 0)
+               return false;
+
+            // Put the important people into slots 0 through 3.
+            ttt.virtual_result.swap_people(1, 3);
+            ttt.virtual_result.swap_people(2, 5);
+            ttt.virtual_result.swap_people(3, 6);
+
+            getout_map = &map_getout_qtag_list[ttt.m_people_per_group-3];
+         }
+         else
+            return false;
+      }
+
+      break;
+
+   default:
+      return false;
+   }
+
+   ttt.unpack_us(getout_map, 0, reversal_bits, result);
+   warn(warn__brute_force_mxn);
+   result->rotation -= rotfix;   // Flip the setup back.
+   reinstate_rotation(ss, result);
+   return true;
 }

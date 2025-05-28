@@ -32,10 +32,12 @@
    newline
    doublespace_file
    writestuff
-   mark_parse_blocks
-   release_parse_blocks_to_mark
+   parse_block::clear
+   parse_block::get_block
+   parse_block::get_parse_block_mark
+   parse_block::release_parse_blocks_to_mark
+   parse_block::final_cleanup
    copy_parse_tree
-   get_parse_block
    reset_parse_tree
    save_parse_state
    restore_parse_state
@@ -1998,16 +2000,49 @@ void writestuff(const char *s)
 
 
 
-static parse_block *parse_active_list = (parse_block *) 0;
-static parse_block *parse_inactive_list = (parse_block *) 0;
+parse_block *parse_block::parse_active_list = (parse_block *) 0;
+parse_block *parse_block::parse_inactive_list = (parse_block *) 0;
 
-extern parse_block *mark_parse_blocks()
+void parse_block::initialize(const conzept::concept_descriptor *cc)
+{
+   more_finalherit_flags.clear_all_herit_and_final_bits();
+   concept = cc;
+   call = (call_with_name *) 0;
+   call_to_print = (call_with_name *) 0;
+   options = null_options;
+   replacement_key = 0;
+   no_check_call_level = false;
+   subsidiary_root = (parse_block *) 0;
+   next = (parse_block *) 0;
+}
+
+
+parse_block *parse_block::get_block()
+{
+   parse_block *item;
+
+   if (parse_inactive_list) {
+      item = parse_inactive_list;
+      parse_inactive_list = item->gc_ptr;
+   }
+   else {
+      item = new parse_block;
+   }
+
+   item->gc_ptr = parse_active_list;
+   parse_active_list = item;
+   item->initialize((conzept::concept_descriptor *) 0);
+   return item;
+}
+
+
+parse_block *parse_block::get_parse_block_mark()
 {
    return parse_active_list;
 }
 
 
-extern void release_parse_blocks_to_mark(parse_block *mark_point)
+void parse_block::release_parse_blocks_to_mark(parse_block *mark_point)
 {
    while (parse_active_list && parse_active_list != mark_point) {
       parse_block *item = parse_active_list;
@@ -2016,12 +2051,24 @@ extern void release_parse_blocks_to_mark(parse_block *mark_point)
       item->gc_ptr = parse_inactive_list;
       parse_inactive_list = item;
 
-      /* Clear pointers so we will notice if it gets erroneously re-used. */
-      item->concept = &conzept::mark_end_of_list;
-      item->call = base_calls[1];
-      item->call_to_print = item->call;
-      item->subsidiary_root = (parse_block *) 0;
-      item->next = (parse_block *) 0;
+      // Clear pointers so we will notice if it gets erroneously re-used.
+      item->initialize((conzept::concept_descriptor *) 0);
+   }
+}
+
+
+void parse_block::final_cleanup()
+{
+   parse_block *item;
+
+   while ((item = parse_active_list)) {
+      parse_active_list = item->gc_ptr;
+      delete item;
+   }
+
+   while ((item = parse_inactive_list)) {
+      parse_inactive_list = item->gc_ptr;
+      delete item;
    }
 }
 
@@ -2032,7 +2079,7 @@ extern parse_block *copy_parse_tree(parse_block *original_tree)
 
    if (!original_tree) return NULL;
 
-   new_item = get_parse_block();
+   new_item = parse_block::get_block();
    new_root = new_item;
 
    for (;;) {
@@ -2048,40 +2095,12 @@ extern parse_block *copy_parse_tree(parse_block *original_tree)
 
       if (!original_tree->next) break;
 
-      new_item->next = get_parse_block();
+      new_item->next = parse_block::get_block();
       new_item = new_item->next;
       original_tree = original_tree->next;
    }
 
    return new_root;
-}
-
-
-parse_block *get_parse_block()
-{
-   parse_block *item;
-
-   if (parse_inactive_list) {
-      item = parse_inactive_list;
-      parse_inactive_list = item->gc_ptr;
-   }
-   else {
-      item = (parse_block *) get_mem(sizeof(parse_block));
-   }
-
-   item->gc_ptr = parse_active_list;
-   parse_active_list = item;
-
-   item->concept = (conzept::concept_descriptor *) 0;
-   item->call = (call_with_name *) 0;
-   item->call_to_print = (call_with_name *) 0;
-   item->options = null_options;
-   item->replacement_key = 0;
-   item->no_check_call_level = false;
-   item->subsidiary_root = (parse_block *) 0;
-   item->next = (parse_block *) 0;
-
-   return item;
 }
 
 
@@ -2651,8 +2670,8 @@ static void do_freq_reset()
       for (i=0 ; i<number_of_calls[call_list_any] ; i++)
          main_call_lists[call_list_any][i]->the_defn.frequency = 0;
 
-      for (i=0 ; i<level_concept_list_length ; i++)
-         concept_descriptor_table[level_concept_list[i]].frequency = 0;
+      for (i=0 ; i<new_fangled_level_concept_list->the_list_size ; i++)
+         concept_descriptor_table[new_fangled_level_concept_list->the_list[i]].frequency = 0;
    }
 }
 
@@ -2709,7 +2728,7 @@ static void do_freq_show(int options)
       // The reason for the complement is so that the sort will appear to be stable --
       // items are in decreasing order, so that they are in listed with calls before concepts,
       // in decreasing frequency, and in the order in the original lists.
-      uint32 *table = new uint32[number_of_calls[call_list_any] + level_concept_list_length];
+      uint32 *table = new uint32[number_of_calls[call_list_any] + new_fangled_level_concept_list->the_list_size];
       int i;
       gg->prepare_for_listing();
       int how_much_in_table = 0;
@@ -2720,8 +2739,8 @@ static void do_freq_show(int options)
          table[how_much_in_table++] = 0x80000000 | (this_call->the_defn.frequency << 16) | (0xFFFF & ~i);
       }
 
-      for (i=0 ; i<level_concept_list_length ; i++) {
-         const conzept::concept_descriptor *this_concept = &concept_descriptor_table[level_concept_list[i]];
+      for (i=0 ; i<new_fangled_level_concept_list->the_list_size ; i++) {
+         const conzept::concept_descriptor *this_concept = &concept_descriptor_table[new_fangled_level_concept_list->the_list[i]];
          table[how_much_in_table++] = (this_concept->frequency << 16) | (0xFFFF & ~i);
       }
 
@@ -2742,7 +2761,7 @@ static void do_freq_show(int options)
          }
          else {
             const conzept::concept_descriptor *this_concept =
-               &concept_descriptor_table[level_concept_list[~table_item & 0xFFFF]];
+               &concept_descriptor_table[new_fangled_level_concept_list->the_list[~table_item & 0xFFFF]];
             strncpy(GLOB_full_extension, this_concept->menu_name, INPUT_TEXTLINE_SIZE);
          }
          gg->show_match((table_item >> 16) & 0x7FFF);
@@ -2935,7 +2954,7 @@ void run_program()
       // Replace all the parse blocks left from the last sequence.
       // But if we have stuff in the clipboard, we save everything.
 
-      if (clipboard_size == 0) release_parse_blocks_to_mark((parse_block *) 0);
+      if (clipboard_size == 0) parse_block::release_parse_blocks_to_mark((parse_block *) 0);
 
       // Update the console window title.
 
@@ -3176,19 +3195,12 @@ void run_program()
       // which destroys any lingering pointers into the history array.
 
       if (history_allocation < configuration::history_ptr+MAX_RESOLVE_SIZE+2) {
-         configuration * t;
-         history_allocation <<= 1;
-         t = (configuration *)
-            realloc(configuration::history, history_allocation * sizeof(configuration));
-         if (!t) {
-            // Couldn't get memory; we are in serious trouble.
-            history_allocation >>= 1;
-            // Bring history_ptr down to safe size.  This will have the effect of
-            // throwing away the last call, or part or all of the last resolve.
-            configuration::history_ptr = history_allocation-MAX_RESOLVE_SIZE-2;
-            specialfail("Not enough memory!");
-         }
-         configuration::history = t;
+         int new_history_allocation = history_allocation * 2 + 5;
+         configuration *new_history = new configuration[new_history_allocation];
+         memcpy(new_history, configuration::history, history_allocation * sizeof(configuration));
+         delete [] configuration::history;
+         history_allocation = new_history_allocation;
+         configuration::history = new_history;
       }
 
       initialize_parse();
@@ -3242,20 +3254,18 @@ void run_program()
                 (configuration::history_ptr == 2 && configuration::history[1].get_startinfo_specific()->into_the_middle))
                specialfail("Can't cut past this point.");
 
-            clipboard_size++;
-
-            if (clipboard_allocation < clipboard_size) {
-               configuration *t;
-               clipboard_allocation = clipboard_size;
+            if (clipboard_allocation <= clipboard_size) {
+               int new_allocation = clipboard_size+1;
                // Increase by 50% beyond what we have now.
-               clipboard_allocation += clipboard_allocation >> 1;
-               t = (configuration *)
-                  realloc(clipboard, clipboard_allocation * sizeof(configuration));
-               if (!t) specialfail("Not enough memory!");
-               clipboard = t;
+               new_allocation += new_allocation >> 1;
+               clipboard_allocation = new_allocation;
+               configuration *new_clipboard = new configuration[new_allocation];
+               memcpy(new_clipboard, clipboard, clipboard_size * sizeof(configuration));
+               delete [] clipboard;
+               clipboard = new_clipboard;
             }
 
-            clipboard[clipboard_size-1] = configuration::history[configuration::history_ptr-1];
+            clipboard[clipboard_size++] = configuration::history[configuration::history_ptr-1];
             clipboard[clipboard_size-1].command_root = configuration::current_config().command_root;
             configuration::history_ptr--;
             goto start_cycle;

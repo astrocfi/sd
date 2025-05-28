@@ -2936,7 +2936,7 @@ extern void distorted_move(
 
    if (ss->kind == s3x8) {
       if (next_parseptr->concept->kind == concept_do_phantom_boxes &&
-          junk_concepts.test_herit_and_final_bits() == 0 &&
+          !junk_concepts.test_for_any_herit_or_final_bit() &&
           next_parseptr->concept->arg3 == MPKIND__SPLIT) {
          ss->cmd.cmd_misc_flags |= CMD_MISC__PHANTOMS;
          ss->cmd.parseptr = next_parseptr->next;
@@ -2947,7 +2947,7 @@ extern void distorted_move(
          fail("Can't do this concept in this setup.");
    }
    else if (next_parseptr->concept->kind == concept_do_phantom_2x4 &&
-            junk_concepts.test_herit_and_final_bits() == 0 &&
+            !junk_concepts.test_for_any_herit_or_final_bit() &&
             linesp == (next_parseptr->concept->arg2 & 7) &&  // Demand same "CLW" as original.
             next_parseptr->concept->arg3 == MPKIND__SPLIT) {
       if (ss->kind == s3x4) {
@@ -2970,7 +2970,7 @@ extern void distorted_move(
    }
    else if (next_parseptr->concept->kind == concept_do_phantom_boxes &&
             ss->kind == s3x4 &&     // Only allow 50% offset.
-            junk_concepts.test_herit_and_final_bits() == 0 &&
+            !junk_concepts.test_for_any_herit_or_final_bit() &&
             next_parseptr->concept->arg3 == MPKIND__SPLIT) {
       ss->cmd.cmd_misc_flags |= CMD_MISC__PHANTOMS;
       do_matrix_expansion(ss, CONCPROP__NEEDK_3X8, false);
@@ -4594,7 +4594,7 @@ extern void triangle_move(
    }
 
    // Now demand that no flags remain.
-   if (ss->cmd.cmd_final_flags.test_herit_and_final_bits())
+   if (ss->cmd.cmd_final_flags.test_for_any_herit_or_final_bit())
       fail("Illegal modifier for this concept.");
 
    if (((indicator & 0100) && calling_level < intlk_triangle_level) ||

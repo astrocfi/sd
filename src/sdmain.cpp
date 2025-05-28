@@ -20,7 +20,7 @@
 //    along with Sd; if not, write to the Free Software Foundation, Inc.,
 //    59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 //
-//    This is for version 37.
+//    This is for version 38.
 
 
 //    The version of this file is as shown immediately below.  This string
@@ -33,8 +33,8 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-#define VERSION_STRING "37.84"
-#define TIME_STAMP "wba@alum.mit.edu  20 July 2009 $"
+#define VERSION_STRING "38.0"
+#define TIME_STAMP "wba@alum.mit.edu  1 September 2009 $"
 
 /* This defines the following functions:
    sd_version_string
@@ -470,7 +470,7 @@ extern bool deposit_call(call_with_name *call, const call_conc_option_state *opt
                        &number_list))
          return true;
 
-   new_block = get_parse_block();
+   new_block = parse_block::get_block();
    new_block->concept = &conzept::mark_end_of_list;
    new_block->call = call;
    new_block->call_to_print = call;
@@ -489,7 +489,7 @@ extern bool deposit_call(call_with_name *call, const call_conc_option_state *opt
 
       new_block->options.tagger = tagg;
       new_block->concept = &conzept::marker_concept_mod;
-      new_block->next = get_parse_block();
+      new_block->next = parse_block::get_block();
       new_block->next->concept = &conzept::marker_concept_mod;
 
       /* Deposit the index of the base tagging call.  This will of course be replaced. */
@@ -510,7 +510,7 @@ extern bool deposit_call(call_with_name *call, const call_conc_option_state *opt
 
       new_block->options.circcer = circc;
       new_block->concept = &conzept::marker_concept_mod;
-      new_block->next = get_parse_block();
+      new_block->next = parse_block::get_block();
       new_block->next->concept = &conzept::marker_concept_mod;
 
       /* Deposit the index of the base circcing call.  This will of course be replaced. */
@@ -571,7 +571,7 @@ extern bool deposit_concept(const conzept::concept_descriptor *conc)
       if (find_numbers(howmanynumbers, true, 0, false, &number_list)) return true;
    }
 
-   new_block = get_parse_block();
+   new_block = parse_block::get_block();
    new_block->concept = conc;
    new_block->options.who = sel;
    new_block->options.where = dir;
@@ -800,11 +800,11 @@ extern bool query_for_call()
             {
                if (gg->get_popup_string("*Enter comment:", "", "Enter comment:", "", comment) ==
                    POPUP_ACCEPT_WITH_STRING) {
-                  comment_block *new_comment_block = (comment_block *) get_mem(sizeof(comment_block));
+                  comment_block *new_comment_block = new comment_block;
                   char *temp_text_ptr = new_comment_block->txt;
                   string_copy(&temp_text_ptr, comment);
 
-                  *parse_state.concept_write_ptr = get_parse_block();
+                  *parse_state.concept_write_ptr = parse_block::get_block();
                   (*parse_state.concept_write_ptr)->concept = &conzept::marker_concept_comment;
 
                   (*parse_state.concept_write_ptr)->call = (call_with_name *) new_comment_block;
@@ -1041,7 +1041,7 @@ extern int sdmain(int argc, char *argv[])
    verify_options.howmanynumbers = 0;
    GLOB_doing_frequency = false;
    history_allocation = 15;
-   configuration::history = (configuration *) get_mem(history_allocation * sizeof(configuration));
+   configuration::history = new configuration[history_allocation];
 
    // Read the command line arguments and process the initialization file.
    // This will return TRUE if we are to cease execution immediately.
@@ -1054,8 +1054,10 @@ extern int sdmain(int argc, char *argv[])
 
    global_cache_failed_flag = false;
 
-   if (!open_session(argc, argv))
+   if (!open_session(argc, argv)) {
       run_program();
+      close_session();
+   }
 
    // This does a lot more than just exit.  It updates the init file.
    // If deletion of an item in the init file was called for, "open_session"

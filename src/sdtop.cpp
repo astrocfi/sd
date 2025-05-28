@@ -23,8 +23,8 @@
 //    This is for version 37.
 
 /* This defines the following functions:
-   compress_setup
-   expand_setup
+   expand::compress_setup
+   expand::expand_setup
    update_id_bits
    big_endian_get_directions
    touch_or_rear_back
@@ -113,7 +113,9 @@ and the following external variables:
    tagger_calls
    circcer_calls
    number_of_taggers
+   number_of_taggers_allocated
    number_of_circcers
+   number_of_circcers_allocated
    parse_state
    current_options
    uims_menu_index
@@ -257,7 +259,9 @@ Cstring *circcer_menu_list;
 call_with_name **tagger_calls[NUM_TAGGER_CLASSES];
 call_with_name **circcer_calls;
 uint32 number_of_taggers[NUM_TAGGER_CLASSES];
+uint32 number_of_taggers_allocated[NUM_TAGGER_CLASSES];
 uint32 number_of_circcers;
+uint32 number_of_circcers_allocated;
 parse_state_type parse_state;
 call_conc_option_state current_options;
 int uims_menu_index;
@@ -2961,10 +2965,8 @@ static void initialize_concept_sublists()
       if (p->level <= calling_level) all_legal_concepts++;
    }
 
-   concept_sublists[call_list_any] =
-      (short int *) get_mem(all_legal_concepts*sizeof(short int));
-   good_concept_sublists[call_list_any] =
-      (short int *) get_mem(all_legal_concepts*sizeof(short int));
+   concept_sublists[call_list_any] = new short int[all_legal_concepts];
+   good_concept_sublists[call_list_any] = new short int[all_legal_concepts];
 
    // Make the concept sublists, one per setup.  We do them in downward order,
    // with "any setup" last.  This is because we put our results into the
@@ -3100,15 +3102,13 @@ static void initialize_concept_sublists()
 
       if (test_call_list_kind != (int) call_list_any) {
          if (concepts_in_this_setup != 0) {
-            concept_sublists[test_call_list_kind] =
-               (short int *) get_mem(concepts_in_this_setup*sizeof(short int));
+            concept_sublists[test_call_list_kind] = new short int[concepts_in_this_setup];
             memcpy(concept_sublists[test_call_list_kind],
                    concept_sublists[call_list_any],
                    concepts_in_this_setup*sizeof(short int));
          }
          if (good_concepts_in_this_setup != 0) {
-            good_concept_sublists[test_call_list_kind] =
-               (short int *) get_mem(good_concepts_in_this_setup*sizeof(short int));
+            good_concept_sublists[test_call_list_kind] = new short int[good_concepts_in_this_setup];
             memcpy(good_concept_sublists[test_call_list_kind],
                    good_concept_sublists[call_list_any],
                    good_concepts_in_this_setup*sizeof(short int));
@@ -3120,7 +3120,7 @@ static void initialize_concept_sublists()
    good_concept_sublist_sizes[call_list_any] = 0;
 }
 
-extern void initialize_sdlib()
+void initialize_sdlib()
 {
    configuration::initialize();
    initialize_tandem_tables();
@@ -3153,49 +3153,23 @@ extern void initialize_sdlib()
          dyp_each_warnings.setbit((warning_index) i); break;
       }
    }
-
-   // Create the tagger menu lists.
-
-   uint32 ui;
-
-   for (i=0 ; i<NUM_TAGGER_CLASSES ; i++) {
-      tagger_menu_list[i] = (Cstring *) get_mem((number_of_taggers[i]+1) * sizeof(char *));
-
-      for (ui=0; ui<number_of_taggers[i]; ui++)
-         tagger_menu_list[i][ui] = tagger_calls[i][ui]->menu_name;
-
-      tagger_menu_list[i][number_of_taggers[i]] = (Cstring) 0;
-   }
-
-   // Create the selector menu list.  It is one item shorter than the enumeration,
-   // because we skip the first item in the enumeration.
-
-   selector_menu_list = (Cstring *) get_mem((selector_INVISIBLE_START) * sizeof(char *));
-
-   for (i=0; i<selector_INVISIBLE_START-1; i++)
-      selector_menu_list[i] = selector_list[i+1].name;
-
-   selector_menu_list[selector_INVISIBLE_START-1] = (Cstring) 0;
-
-   // Create the direction menu list.  Do one more than the extent, to get the null string at the end.
-
-   direction_menu_list = (Cstring *) get_mem((direction_ENUM_EXTENT+1) * sizeof(char *));
-
-   for (i=0; i<direction_ENUM_EXTENT+1; i++)
-      direction_menu_list[i] = direction_names[i].name;
-
-   // Create the circcer list.
-
-   circcer_menu_list = (Cstring *) get_mem((number_of_circcers+1) * sizeof(char *));
-
-   for (ui=0; ui<number_of_circcers; ui++)
-      circcer_menu_list[ui] = circcer_calls[ui]->menu_name;
-
-   circcer_menu_list[number_of_circcers] = (Cstring) 0;
-
-   initialize_getout_tables();
 }
 
+void finalize_sdlib()
+{
+   // In case someone runs a some kind of global memory leak detector, this releases memory.
+
+   int i;
+
+   delete [] base_calls;
+
+   for (i=0 ; i<NUM_TAGGER_CLASSES ; i++)
+      delete [] tagger_menu_list[i];
+
+   delete [] selector_menu_list;
+   delete [] direction_menu_list;
+   delete [] circcer_menu_list;
+}
 
 static bool check_for_supercall(parse_block *parseptrcopy)
 {
@@ -3313,7 +3287,7 @@ bool check_for_concept_group(
 
       if ((temp->concept->kind == concept_tandem ||
            temp->concept->kind == concept_frac_tandem) &&
-          (junk_concepts.test_herit_and_final_bits()) == 0) {
+          (!junk_concepts.test_for_any_herit_or_final_bit())) {
          skip_a_pair = temp;
       }
    }
@@ -3326,7 +3300,7 @@ bool check_for_concept_group(
            temp->concept->kind == concept_multiple_formations ||
            temp->concept->kind == concept_multiple_boxes) &&
           temp->concept->arg4 == 3 &&
-          (junk_concepts.test_herit_and_final_bits()) == 0) {
+          (!junk_concepts.test_for_any_herit_or_final_bit())) {
          skip_a_pair = temp;
       }
    }
@@ -3341,7 +3315,7 @@ bool check_for_concept_group(
       if ((temp->concept->kind == concept_do_phantom_2x4 ||
            temp->concept->kind == concept_do_phantom_boxes) &&
           temp->concept->arg3 == MPKIND__SPLIT &&
-          (junk_concepts.test_herit_and_final_bits()) == 0) {
+          (!junk_concepts.test_for_any_herit_or_final_bit())) {
          skip_a_pair = temp;
       }
    }
@@ -4820,12 +4794,12 @@ extern parse_block *process_final_concepts(
          the_final_bit = FINAL__SPLIT;
          goto new_final;
       case concept_12_matrix:
-         if (check_errors && (final_concepts->test_herit_and_final_bits()))
+         if (check_errors && final_concepts->test_for_any_herit_or_final_bit())
             fail("Matrix modifier must appear first.");
          heritsetbit = INHERITFLAG_12_MATRIX;
          break;
       case concept_16_matrix:
-         if (check_errors && (final_concepts->test_herit_and_final_bits()))
+         if (check_errors && final_concepts->test_for_any_herit_or_final_bit())
             fail("Matrix modifier must appear first.");
          heritsetbit = INHERITFLAG_16_MATRIX;
          break;
@@ -4920,7 +4894,7 @@ skipped_concept_info::skipped_concept_info(parse_block *incoming) THROW_DECL
       m_heritflag = junk_concepts.herit;
       return;
    }
-   else if (junk_concepts.test_herit_and_final_bits() != 0) {
+   else if (junk_concepts.test_for_any_herit_or_final_bit()) {
       parseptrcopy = incoming;
    }
    else if (parseptrcopy->concept) {
@@ -6155,7 +6129,7 @@ bool deposit_call_tree(modifier_block *anythings, parse_block *save1, int key)
       concepts or calls for an "anything" subcall. */
 
    if (save1) {
-      parse_block *tt = get_parse_block();
+      parse_block *tt = parse_block::get_block();
       /* Run to the end of any already-deposited things.  This could happen if the
          call takes a tagger -- it could have a search chain before we even see it. */
       while (save1->next) save1 = save1->next;
@@ -6330,7 +6304,7 @@ extern bool do_subcall_query(
       else {
          // User declined the modification.  Create a null entry
          // so that we don't query again.
-         *newsearch = get_parse_block();
+         *newsearch = parse_block::get_block();
          (*newsearch)->concept = &conzept::marker_concept_mod;
          (*newsearch)->options = current_options;
          (*newsearch)->replacement_key = snumber;
@@ -6340,7 +6314,7 @@ extern bool do_subcall_query(
       }
    }
 
-   *newsearch = get_parse_block();
+   *newsearch = parse_block::get_block();
    (*newsearch)->concept = &conzept::marker_concept_mod;
    (*newsearch)->options = current_options;
    (*newsearch)->replacement_key = snumber;

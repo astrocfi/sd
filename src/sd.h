@@ -20,7 +20,7 @@
 //    along with Sd; if not, write to the Free Software Foundation, Inc.,
 //    59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 //
-//    This is for version 37.
+//    This is for version 38.
 
 #include <stdio.h>
 #include <string.h>
@@ -1045,10 +1045,8 @@ class final_and_herit_flags {
    inline void clear_all_herit_and_final_bits()
       { herit = (heritflags) 0; final = (finalflags) 0; }
 
-   // Test both fields, presumably for both equal to zero.  This just
-   // returns the bitwise OR of both.  The expectation is that the
-   // resulting integer will simply be tested for zero/nonzero.
-   inline uint32 test_herit_and_final_bits() { return herit | final; }
+   // Test both fields, to see whether any bits, in either field, are on.
+   inline bool test_for_any_herit_or_final_bit() { return (herit | final) != 0; }
 };
 
 
@@ -1142,7 +1140,10 @@ struct fraction_command {
    { return (flags & testmask) == testflags && fraction == CMD_FRAC_NULL_VALUE; }
 };
 
-struct parse_block {
+class parse_block {
+
+public:
+
    const conzept::concept_descriptor *concept; // the concept or end marker
    call_with_name *call;          // if this is end mark, gives the call; otherwise unused
    call_with_name *call_to_print; // the original call, for printing (sometimes the field
@@ -1154,20 +1155,37 @@ struct parse_block {
 
    final_and_herit_flags more_finalherit_flags;
 
-   parse_block *gc_ptr;           // used for reclaiming dead blocks
    call_conc_option_state options;// number, selector, direction, etc.
    short replacement_key;         // this is the "DFM1_CALL_MOD_MASK" stuff
                                   // (shifted down) for a modification block
    bool no_check_call_level;      // if true, don't check whether this call
                                   // is at the level
 
+   static parse_block *get_block();      // The main allocator.
+
    // We allow static instantiation of these things with just
    // the "concept" field filled in.
-   parse_block(const conzept::concept_descriptor & ccc) : concept(&ccc)
-   { more_finalherit_flags.clear_all_herit_and_final_bits(); }
+   parse_block(const conzept::concept_descriptor & ccc) { initialize(&ccc); }
    // Which of course means we need to provide the default constructor too.
-   parse_block()
-   { more_finalherit_flags.clear_all_herit_and_final_bits(); }
+   parse_block() { initialize((conzept::concept_descriptor *) 0); }
+
+   void initialize(const conzept::concept_descriptor *cc);
+   static parse_block *get_parse_block_mark();
+   static void release_parse_blocks_to_mark(parse_block *mark_point);
+
+   // In case someone runs a some kind of global memory leak detector, this releases all blocks.
+   static void final_cleanup();
+
+private:
+
+   static parse_block *parse_active_list;
+
+   // Being "old school", and not fully trusting the de-fragmentation mechanism,
+   // we try to do our own memory management.  So we keep an "inactive list".
+
+   parse_block *gc_ptr;           // used for reclaiming dead blocks
+
+   static parse_block *parse_inactive_list;
 };
 
 // For ui_command_select:
@@ -2508,7 +2526,10 @@ enum warning_index {
    warn__tasteless_com_spot,
    warn__tasteless_junk,
    warn__tasteless_slide_thru,
+   warn__went_to_other_side,
+   warn__this_is_tight,
    warn__compress_carefully,
+   warn__brute_force_mxn,
    warn__two_faced,
    warn__cant_track_phantoms,
    warn__diagnostic,
@@ -3827,9 +3848,9 @@ class expand {
 
    static void initialize();
 
-   static void compress_setup(const thing & thing, setup *stuff) THROW_DECL;
+   static void compress_setup(const thing & thing, setup *stuff) THROW_DECL;   // In sdtop.
 
-   static void expand_setup(const thing & thing, setup *stuff) THROW_DECL;
+   static void expand_setup(const thing & thing, setup *stuff) THROW_DECL;     // In sdtop.
 
    static bool compress_from_hash_table(setup *ss,
                                         normalize_action action,
@@ -3898,6 +3919,36 @@ class full_expand {
    static thing *touch_hash_table1[NUM_TOUCH_HASH_BUCKETS];
    static thing *touch_hash_table2[NUM_TOUCH_HASH_BUCKETS];
    static thing *touch_hash_table3[NUM_TOUCH_HASH_BUCKETS];
+};
+
+
+class index_list {
+public:
+   short int *the_list;
+   int the_list_allocation;
+   int the_list_size;
+
+   index_list() : the_list((short int *) 0),
+                  the_list_allocation(0),
+                  the_list_size(0) {}
+   index_list(int preallocated_size) : the_list(new short int[preallocated_size]),
+                                       the_list_allocation(preallocated_size),
+                                       the_list_size(0) {}
+
+   void add_one(int datum)
+   {
+      if (the_list_size >= the_list_allocation) {
+         the_list_allocation = the_list_allocation*2 + 5;
+         short int *new_list = new short int[the_list_allocation];
+         if (the_list) {
+            memcpy(new_list, the_list, the_list_size*sizeof(short int));
+            delete [] the_list;
+         }
+         the_list = new_list;
+      }
+
+      the_list[the_list_size++] = datum;
+   }
 };
 
 
@@ -4053,10 +4104,8 @@ extern SDLIB_API char GLOB_full_extension[];                  // in SDMATCH
 extern SDLIB_API char GLOB_echo_stuff[];                      // in SDMATCH
 extern SDLIB_API int GLOB_user_input_size;                    // in SDMATCH
 
-extern SDLIB_API short int *concept_list;        /* indices of all concepts */
-extern SDLIB_API int concept_list_length;
-extern SDLIB_API short int *level_concept_list; /* indices of concepts valid at current level */
-extern SDLIB_API int level_concept_list_length;
+extern SDLIB_API index_list *new_fangled_concept_list;        /* indices of all concepts */
+extern SDLIB_API index_list *new_fangled_level_concept_list;  /* indices of concepts valid at current level */
 
 extern SDLIB_API modifier_block *fcn_key_table_normal[FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1];
 extern SDLIB_API modifier_block *fcn_key_table_start[FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1];
@@ -4227,7 +4276,9 @@ extern SDLIB_API Cstring *circcer_menu_list;                        /* in SDTOP 
 extern SDLIB_API call_with_name **tagger_calls[NUM_TAGGER_CLASSES]; /* in SDTOP */
 extern SDLIB_API call_with_name **circcer_calls;                    /* in SDTOP */
 extern SDLIB_API uint32 number_of_taggers[NUM_TAGGER_CLASSES];      /* in SDTOP */
+extern SDLIB_API uint32 number_of_taggers_allocated[NUM_TAGGER_CLASSES]; /* in SDTOP */
 extern SDLIB_API uint32 number_of_circcers;                         /* in SDTOP */
+extern SDLIB_API uint32 number_of_circcers_allocated;               /* in SDTOP */
 extern SDLIB_API parse_state_type parse_state;                      /* in SDTOP */
 extern SDLIB_API call_conc_option_state current_options;            /* in SDTOP */
 extern SDLIB_API bool allowing_all_concepts;                        /* in SDTOP */
@@ -4723,6 +4774,7 @@ extern void do_matrix_expansion(
    bool recompute_id) THROW_DECL;
 
 void initialize_sdlib();
+void finalize_sdlib();
 
 extern void crash_print(const char *filename, int linenum) THROW_DECL;
 
@@ -5279,6 +5331,12 @@ extern void mimic_move(
    parse_block *parseptr,
    setup *result) THROW_DECL;
 
+extern bool process_brute_force_mxn(
+   setup *ss,
+   parse_block *parseptr,
+   void (*backstop)(setup *, parse_block *, setup *),
+   setup *result) THROW_DECL;
+
 /* In SDCONC */
 
 extern void concentric_move(
@@ -5298,9 +5356,10 @@ extern resultflag_rec get_multiple_parallel_resultflags(setup outer_inners[], in
 extern void initialize_fix_tables();
 
 extern void normalize_concentric(
+   setup *ss,              // The "dyp_squash" schemata need to see this; it's allowed to be null.
    calldef_schema synthesizer,
    int center_arity,
-   setup outer_inners[],   /* outers in position 0, inners follow */
+   setup outer_inners[],   // Outers in position 0, inners follow.
    int outer_elongation,
    uint32 matrix_concept,
    setup *result) THROW_DECL;
@@ -5360,10 +5419,7 @@ extern void writechar(char src);
 SDLIB_API void newline();
 void doublespace_file();
 SDLIB_API void writestuff(const char *s);
-extern parse_block *mark_parse_blocks();
-extern void release_parse_blocks_to_mark(parse_block *mark_point);
 extern parse_block *copy_parse_tree(parse_block *original_tree);
-parse_block *get_parse_block();
 extern void reset_parse_tree(parse_block *original_tree, parse_block *final_head);
 extern void save_parse_state();
 extern void restore_parse_state();
@@ -5391,7 +5447,8 @@ SDLIB_API int process_session_info(Cstring *error_msg);
 void close_init_file();
 SDLIB_API void general_final_exit(int code);
 SDLIB_API void start_stats_file_from_GLOB_stats_filename();
-extern bool open_session(int argc, char **argv);
+bool open_session(int argc, char **argv);
+void close_session();
 
 /* In SDMATCH */
 
@@ -5495,8 +5552,6 @@ extern void refresh_input();
 extern void general_initialize();
 SDLIB_API int generate_random_number(int modulus);
 SDLIB_API void hash_nonrandom_number(int number);
-SDLIB_API void *get_mem(uint32 siz);
-SDLIB_API void *get_more_mem(void *oldp, uint32 siz);
 SDLIB_API void get_date(char dest[]);
 extern char *get_errstring();
 SDLIB_API void open_file();

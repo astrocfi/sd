@@ -29,7 +29,7 @@
 // database format version.
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 283
+#define DATABASE_FORMAT_VERSION 285
 
 // BEWARE!!  These must track the items in "tagtabinit" in mkcalls.cpp .
 enum base_call_index {
@@ -419,6 +419,7 @@ enum setup_kind {
    sx4dmd,    // These are too big to actually represent --
    sx4dmdbone,// we don't let them out of their cage.
    s_hyperbone, // Ditto.
+   s_hyper3x4,  // Ditto.
    s_tinyhyperbone, // Ditto.
    s8x8,      // Ditto.
    sxequlize, // Ditto.
@@ -925,6 +926,8 @@ enum calldef_schema {
    schema_rev_checkpoint,
    schema_rev_checkpoint_concept,
    schema_ckpt_star,
+   schema_maybe_in_out_triple_dyp_squash,
+   schema_in_out_triple_dyp_squash,
    schema_maybe_in_out_triple_squash,
    schema_in_out_triple_squash,
    schema_sgl_in_out_triple_squash,

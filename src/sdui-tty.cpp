@@ -403,7 +403,7 @@ bool iofull::init_step(init_callback_state s, int n)
 
 void iofull::create_menu(call_list_kind cl)
 {
-   call_menu_prompts[cl] = (char *) get_mem(50);  /* *** Too lazy to compute it. */
+   call_menu_prompts[cl] = new char[50];  /* *** Too lazy to compute it. */
    matcher_setup_call_menu(cl);
 
    if (cl == call_list_any)

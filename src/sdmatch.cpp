@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2007  William B. Ackerman.
+//    Copyright (C) 1990-2009  William B. Ackerman.
 //    Copyright (C) 1993 Alan Snyder
 //
 //    This file is part of "Sd".
@@ -42,10 +42,8 @@ and the following external variables:
    GLOB_full_extension
    GLOB_echo_stuff
    GLOB_user_input_size
-   concept_list
-   concept_list_length
-   level_concept_list
-   level_concept_list_length
+   new_fangled_concept_list
+   new_fangled_level_concept_list
 */
 
 /* #define TIMING */ /* uncomment to display timing information */
@@ -80,36 +78,26 @@ char GLOB_stats_filename[MAX_TEXT_LINE_LENGTH];
 char GLOB_decorated_stats_filename[MAX_TEXT_LINE_LENGTH];
 int GLOB_yielding_matches;
 char GLOB_user_input[INPUT_TEXTLINE_SIZE+1];     // the current user input
-char GLOB_full_extension[INPUT_TEXTLINE_SIZE+1];      // the extension for the current pattern
-char GLOB_echo_stuff[INPUT_TEXTLINE_SIZE+1]; // the maximal common extension
-int GLOB_user_input_size;        // This is always equal to strlen(GLOB_user_input).
+char GLOB_full_extension[INPUT_TEXTLINE_SIZE+1]; // the extension for the current pattern
+char GLOB_echo_stuff[INPUT_TEXTLINE_SIZE+1];     // the maximal common extension
+int GLOB_user_input_size;                        // This is always equal to strlen(GLOB_user_input).
 
 /* Must be a power of 2. */
 #define NUM_NAME_HASH_BUCKETS 128
 #define BRACKET_HASH (NUM_NAME_HASH_BUCKETS+1)
 
-/* These lists have two extra item at the end:
-    The first is for calls whose names can't be hashed.
-    The second is the bucket that any string starting with left bracket hashes to. */
-static short *call_hash_lists[NUM_NAME_HASH_BUCKETS+2];
-static short call_hash_list_sizes[NUM_NAME_HASH_BUCKETS+2];
-static short *conc_hash_lists[NUM_NAME_HASH_BUCKETS+2];
-static short conc_hash_list_sizes[NUM_NAME_HASH_BUCKETS+2];
-static short *conclvl_hash_lists[NUM_NAME_HASH_BUCKETS+2];
-static short conclvl_hash_list_sizes[NUM_NAME_HASH_BUCKETS+2];
 
-/* These list all the buckets that selectors can go to. */
-static short *selector_hash_list;
-static short selector_hash_list_size;
+// These lists will be allocated to size NUM_NAME_HASH_BUCKETS+2.
+// So they will have two extra items at the end:
+//   The first is for calls whose names can't be hashed.
+//   The second is the bucket that any string starting with left bracket hashes to.
 
-/* These list all the buckets that taggers can go to. */
-static short *tagger_hash_list;
-static short tagger_hash_list_size;
+index_list *call_hashers;
+index_list *conc_hashers;
+index_list *conclvl_hashers;
+index_list *new_fangled_concept_list;
+index_list *new_fangled_level_concept_list;
 
-short int *concept_list;        /* indices of all concepts */
-int concept_list_length;
-short int *level_concept_list;  /* indices of concepts valid at current level */
-int level_concept_list_length;
 
 
 struct pat2_block {
@@ -406,7 +394,7 @@ void do_accelerator_spec(Cstring inputline, bool is_accelerator)
       else
          gg->fatal_error_exit(1, "Anomalous accelerator", inputline);
 
-      modifier_block *newthing = (modifier_block *) get_mem(sizeof(modifier_block));
+      modifier_block *newthing = new modifier_block;
       *newthing = user_match.match;
 
       if (*table_thing)
@@ -431,8 +419,8 @@ void do_accelerator_spec(Cstring inputline, bool is_accelerator)
       else
          gg->fatal_error_exit(1, "Anomalous abbreviation", inputline);
 
-      abbrev_block *newthing = (abbrev_block *) get_mem(sizeof(abbrev_block));
-      newthing->key = (char *) get_mem(strlen(key_org)+1);
+      abbrev_block *newthing = new abbrev_block;
+      newthing->key = new char[strlen(key_org)+1];
       strcpy((char *) newthing->key, key_org);
       newthing->value = user_match.match;
       newthing->next = *table_thing;
@@ -477,13 +465,9 @@ static int get_hash(Cstring string, int *bucket_p)
 }
 
 
-static void hash_me(int bucket, int i)
+void hash_me(int bucket, int i)
 {
-   call_hash_list_sizes[bucket]++;
-   call_hash_lists[bucket] = (short *)
-      get_more_mem(call_hash_lists[bucket],
-                   call_hash_list_sizes[bucket] * sizeof(short));
-   call_hash_lists[bucket][call_hash_list_sizes[bucket]-1] = i;
+   call_hashers[bucket].add_one(i);
 }
 
 
@@ -572,7 +556,6 @@ void matcher_initialize()
    int i, j;
    int concept_number;
    const conzept::concept_descriptor *p;
-   short int *item, *level_item;
    concept_kind end_marker = concept_diagnose;
 
    // Decide whether we allow the "diagnose" concept, by deciding
@@ -586,276 +569,212 @@ void matcher_initialize()
    memset(fcn_key_table_resolve, 0,
           sizeof(modifier_block *) * (FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1));
 
-   // Count the number of concepts to put in the lists.
+   // Create the concept lists, both universal and level-restricted.
 
-   concept_list_length = 0;
-   level_concept_list_length = 0;
+   new_fangled_concept_list = new index_list;
+   new_fangled_level_concept_list = new index_list;
 
-   for (p=concept_descriptor_table ; p->kind != end_marker ; p++) {
-      concept_list_length++;
-      if (p->level <= calling_level)
-         level_concept_list_length++;
-   }
-
-   // Create the concept lists.
-
-   concept_list = (short int *)
-      get_mem(sizeof(short int) * concept_list_length);
-   level_concept_list = (short int *)
-      get_mem(sizeof(short int) * level_concept_list_length);
-
-   item = concept_list;
-   level_item = level_concept_list;
    for (concept_number=0 ; ; concept_number++) {
       p = &concept_descriptor_table[concept_number];
       if (p->kind == end_marker) break;
-      *item = concept_number;
-      item++;
-
-      if (p->level <= calling_level) {
-         *level_item = concept_number;
-         level_item++;
-      }
+      new_fangled_concept_list->add_one(concept_number);
+      if (p->level <= calling_level)
+         new_fangled_level_concept_list->add_one(concept_number);
    }
 
    // Initialize the hash buckets for call names.
 
-   {
-      int bucket;
-      uint32 ku;
+   int bucket;
+   uint32 ku;
 
-      /* First, do the selectors.  Before that, be sure "<anyone>" is hashed. */
+   // First, do the selectors.  Before that, be sure "<anyone>" is hashed.
+   // These list all the buckets that selectors can go to.
 
-      selector_hash_list = (short *) get_mem(sizeof(short));
-      selector_hash_list_size = 1;
+   if (!get_hash("<an", &bucket))
+      gg->fatal_error_exit(2, "Can't hash selector base");
 
-      if (!get_hash("<an", &bucket))
-         gg->fatal_error_exit(2, "Can't hash selector base");
+   index_list selector_hasher;
+   selector_hasher.add_one(bucket);
 
-      selector_hash_list[0] = bucket;
-
-      for (i=1; i<selector_INVISIBLE_START; i++) {
-         if (!get_hash(selector_list[i].name, &bucket)) {
-            char errbuf[255];
-            sprintf(errbuf, "Can't hash selector %d - 1!", i);
-            gg->fatal_error_exit(2, errbuf);
-         }
-
-         /* See if this bucket is already accounted for. */
-
-         for (j=0; j<selector_hash_list_size; j++) {
-            if (selector_hash_list[j] == bucket) goto already_in1;
-         }
-
-         selector_hash_list_size++;
-         selector_hash_list = (short *)
-            get_more_mem(selector_hash_list, selector_hash_list_size * sizeof(short));
-         selector_hash_list[selector_hash_list_size-1] = bucket;
-
-         /* Now do it again for the singular names. */
-
-         already_in1:
-
-         if (!get_hash(selector_list[i].sing_name, &bucket)) {
-            char errbuf[255];
-            sprintf(errbuf, "Can't hash selector %d - 2!", i);
-            gg->fatal_error_exit(2, errbuf);
-         }
-
-         for (j=0; j<selector_hash_list_size; j++) {
-            if (selector_hash_list[j] == bucket) goto already_in2;
-         }
-
-         selector_hash_list_size++;
-         selector_hash_list = (short *)
-            get_more_mem(selector_hash_list, selector_hash_list_size * sizeof(short));
-         selector_hash_list[selector_hash_list_size-1] = bucket;
-
-         already_in2: ;
+   for (i=1; i<selector_INVISIBLE_START; i++) {
+      if (!get_hash(selector_list[i].name, &bucket)) {
+         char errbuf[255];
+         sprintf(errbuf, "Can't hash selector %d - 1!", i);
+         gg->fatal_error_exit(2, errbuf);
       }
 
-      /* Next, do the taggers.  Before that, be sure "<atc>" is hashed. */
+      /* See if this bucket is already accounted for. */
 
-      tagger_hash_list = (short *) get_mem(sizeof(short));
-      tagger_hash_list_size = 1;
+      for (j=0; j<selector_hasher.the_list_size; j++) {
+         if (selector_hasher.the_list[j] == bucket) goto already_in1;
+      }
 
-      if (!get_hash("<at", &bucket))
-         gg->fatal_error_exit(2, "Can't hash tagger base!");
+      selector_hasher.add_one(bucket);
 
-      tagger_hash_list[0] = bucket;
+      // Now do it again for the singular names.
 
-      for (i=0; i<NUM_TAGGER_CLASSES; i++) {
-         for (ku=0; ku<number_of_taggers[i]; ku++) {
-            // Some taggers ("@6 start vertical tag") can't be hashed because
-            // of the at sign.  That's OK.
-            if (tagger_calls[i][ku]->name[0] != '@') {
-               if (!get_hash(tagger_calls[i][ku]->name, &bucket)) {
-                  char errbuf[255];
-                  sprintf(errbuf, "Can't hash tagger %d %d!", i, (int) ku);
-                  gg->fatal_error_exit(2, errbuf);
-               }
+   already_in1:
+
+      if (!get_hash(selector_list[i].sing_name, &bucket)) {
+         char errbuf[255];
+         sprintf(errbuf, "Can't hash selector %d - 2!", i);
+         gg->fatal_error_exit(2, errbuf);
+      }
+
+      for (j=0; j<selector_hasher.the_list_size; j++) {
+         if (selector_hasher.the_list[j] == bucket) goto already_in2;
+      }
+
+      selector_hasher.add_one(bucket);
+
+   already_in2: ;
+   }
+
+   // Next, do the taggers.  Before that, be sure "<atc>" is hashed.
+   // These list all the buckets that taggers can go to.
+
+   if (!get_hash("<at", &bucket))
+      gg->fatal_error_exit(2, "Can't hash tagger base!");
+
+   index_list tagger_hasher;
+   tagger_hasher.add_one(bucket);
+
+   for (i=0; i<NUM_TAGGER_CLASSES; i++) {
+      for (ku=0; ku<number_of_taggers[i]; ku++) {
+         // Some taggers ("@6 start vertical tag") can't be hashed because
+         // of the at sign.  That's OK.
+         if (tagger_calls[i][ku]->name[0] != '@') {
+            if (!get_hash(tagger_calls[i][ku]->name, &bucket)) {
+               char errbuf[255];
+               sprintf(errbuf, "Can't hash tagger %d %d!", i, (int) ku);
+               gg->fatal_error_exit(2, errbuf);
             }
-
-            for (j=0; j<tagger_hash_list_size; j++) {
-               if (tagger_hash_list[j] == bucket) goto already_in3;
-            }
-
-            tagger_hash_list_size++;
-            tagger_hash_list = (short *)
-               get_more_mem(tagger_hash_list,
-                            tagger_hash_list_size * sizeof(short));
-            tagger_hash_list[tagger_hash_list_size-1] = bucket;
-
-            already_in3: ;
          }
+
+         for (j=0; j<tagger_hasher.the_list_size; j++) {
+            if (tagger_hasher.the_list[j] == bucket) goto already_in3;
+         }
+
+         tagger_hasher.add_one(bucket);
+
+      already_in3: ;
       }
+   }
 
-      /* Now do the calls. */
+   /* Now do the calls. */
 
-      for (i=0 ; i<NUM_NAME_HASH_BUCKETS+2 ; i++) {
-         call_hash_lists[i] = (short *) 0;
-         conc_hash_lists[i] = (short *) 0;
-         conclvl_hash_lists[i] = (short *) 0;
-         call_hash_list_sizes[i] = 0;
-         conc_hash_list_sizes[i] = 0;
-         conclvl_hash_list_sizes[i] = 0;
-      }
+   call_hashers = new index_list[NUM_NAME_HASH_BUCKETS+2];
+   conc_hashers = new index_list[NUM_NAME_HASH_BUCKETS+2];
+   conclvl_hashers = new index_list[NUM_NAME_HASH_BUCKETS+2];
 
-      for (i=0; i<number_of_calls[call_list_any]; i++) {
-         Cstring name = main_call_lists[call_list_any][i]->name;
+   for (i=0; i<number_of_calls[call_list_any]; i++) {
+      Cstring name = main_call_lists[call_list_any][i]->name;
 
-         doitagain:
+   doitagain:
 
-         if (name[0] == '@') {
-            switch (name[1]) {
-            case '6': case 'k': case 'K':
-               // This is a call like "<anyone> run".  Put it into every bucket
-               // that could match a selector.
+      if (name[0] == '@') {
+         switch (name[1]) {
+         case '6': case 'k': case 'K':
+            // This is a call like "<anyone> run".  Put it into every bucket
+            // that could match a selector.
 
-               for (j=0 ; j<selector_hash_list_size ; j++)
-                  hash_me(selector_hash_list[j], i);
+            for (j=0 ; j<selector_hasher.the_list_size ; j++)
+               hash_me(selector_hasher.the_list[j], i);
 
-               continue;
-            case 'v': case 'w': case 'x': case 'y':
-               // This is a call like "<atc> your neighbor".
-               // Put it into every bucket that could match a tagger.
+            continue;
+         case 'v': case 'w': case 'x': case 'y':
+            // This is a call like "<atc> your neighbor".
+            // Put it into every bucket that could match a tagger.
 
-               for (j=0 ; j<tagger_hash_list_size ; j++)
-                  hash_me(tagger_hash_list[j], i);
+            for (j=0 ; j<tagger_hasher.the_list_size ; j++)
+               hash_me(tagger_hasher.the_list[j], i);
 
-               continue;
-            case '0': case 'T': case 'm':
-               // We act as though any string starting with "[" hashes to BRACKET_HASH.
-               hash_me(BRACKET_HASH, i);
-               continue;
-            case 'e':
-               // If this is "@e", hash it to both "left" and to whatever naturally follows.
-               (void) get_hash("left", &bucket);
-               hash_me(bucket, i);
+            continue;
+         case '0': case 'T': case 'm':
+            // We act as though any string starting with "[" hashes to BRACKET_HASH.
+            hash_me(BRACKET_HASH, i);
+            continue;
+         case 'e':
+            // If this is "@e", hash it to both "left" and to whatever naturally follows.
+            (void) get_hash("left", &bucket);
+            hash_me(bucket, i);
+            name += 2;
+            goto doitagain;
+         default:
+            if (!get_escape_string(name[1])) {
+               // If this escape is something like "@2", as in "@2scoot and plenty",
+               // ignore it.  Hash it under "scoot and plenty".
                name += 2;
                goto doitagain;
-            default:
-               if (!get_escape_string(name[1])) {
-                  // If this escape is something like "@2", as in "@2scoot and plenty",
-                  // ignore it.  Hash it under "scoot and plenty".
-                  name += 2;
-                  goto doitagain;
-               }
-               break;
             }
-         }
-
-         if (get_hash(name, &bucket)) {
-            hash_me(bucket, i);
-            continue;
-         }
-
-         // If we get here, this call needs to be put into the extra bucket at the end,
-         // and also into EVERY OTHER BUCKET!!!!
-         for (bucket=0 ; bucket < NUM_NAME_HASH_BUCKETS+1 ; bucket++)
-            hash_me(bucket, i);
-      }
-
-      // Now do the concepts from the big list.
-
-      item = concept_list;
-
-      for (i=0; i<concept_list_length; i++,item++) {
-         Cstring name = concept_descriptor_table[*item].name;
-
-         if (name[0] == '@' && (name[1] == '6' || name[1] == 'k' || name[1] == 'K')) {
-            // This is a call like "<anyone> run".  Put it into every bucket
-            // that could match a selector.
-
-            for (j=0 ; j<selector_hash_list_size ; j++) {
-               bucket = selector_hash_list[j];
-               conc_hash_list_sizes[bucket]++;
-               conc_hash_lists[bucket] = (short *)
-                  get_more_mem(conc_hash_lists[bucket],
-                               conc_hash_list_sizes[bucket] * sizeof(short));
-               conc_hash_lists[bucket][conc_hash_list_sizes[bucket]-1] = *item;
-            }
-            continue;
-         }
-         else if (get_hash(name, &bucket)) {
-            conc_hash_list_sizes[bucket]++;
-            conc_hash_lists[bucket] = (short *)
-               get_more_mem(conc_hash_lists[bucket],
-                            conc_hash_list_sizes[bucket] * sizeof(short));
-            conc_hash_lists[bucket][conc_hash_list_sizes[bucket]-1] = *item;
-            continue;
-         }
-
-         // If we get here, this concept needs to be put into the extra bucket at the end,
-         // and also into EVERY OTHER BUCKET!!!!
-         for (bucket=0 ; bucket < NUM_NAME_HASH_BUCKETS+1 ; bucket++) {
-            conc_hash_list_sizes[bucket]++;
-            conc_hash_lists[bucket] = (short *)
-               get_more_mem(conc_hash_lists[bucket],
-                            conc_hash_list_sizes[bucket] * sizeof(short));
-            conc_hash_lists[bucket][conc_hash_list_sizes[bucket]-1] = *item;
+            break;
          }
       }
 
-      // Now do the "level concepts".
+      if (get_hash(name, &bucket)) {
+         hash_me(bucket, i);
+         continue;
+      }
 
-      item = level_concept_list;
+      // If we get here, this call needs to be put into the extra bucket at the end,
+      // and also into EVERY OTHER BUCKET!!!!
+      for (bucket=0 ; bucket < NUM_NAME_HASH_BUCKETS+1 ; bucket++)
+         hash_me(bucket, i);
+   }
 
-      for (i=0; i<level_concept_list_length; i++,item++) {
-         Cstring name = concept_descriptor_table[*item].name;
+   // Now do the concepts from the full concept list.
 
-         if (name[0] == '@' && (name[1] == '6' || name[1] == 'k' || name[1] == 'K')) {
-            // This is a call like "<anyone> run".  Put it into every bucket
-            // that could match a selector.
+   for (i=0; i<new_fangled_concept_list->the_list_size; i++) {
+      int the_item = new_fangled_concept_list->the_list[i];
+      Cstring name = concept_descriptor_table[the_item].name;
 
-            for (j=0 ; j<selector_hash_list_size ; j++) {
-               bucket = selector_hash_list[j];
-               conclvl_hash_list_sizes[bucket]++;
-               conclvl_hash_lists[bucket] = (short *)
-                  get_more_mem(conclvl_hash_lists[bucket],
-                               conclvl_hash_list_sizes[bucket] * sizeof(short));
-               conclvl_hash_lists[bucket][conclvl_hash_list_sizes[bucket]-1] = *item;
-            }
-            continue;
+      if (name[0] == '@' && (name[1] == '6' || name[1] == 'k' || name[1] == 'K')) {
+         // This is a call like "<anyone> run".  Put it into every bucket
+         // that could match a selector.
+
+         for (j=0 ; j<selector_hasher.the_list_size ; j++) {
+            bucket = selector_hasher.the_list[j];
+            conc_hashers[bucket].add_one(the_item);
          }
-         else if (get_hash(name, &bucket)) {
-            conclvl_hash_list_sizes[bucket]++;
-            conclvl_hash_lists[bucket] = (short *)
-               get_more_mem(conclvl_hash_lists[bucket],
-                            conclvl_hash_list_sizes[bucket] * sizeof(short));
-            conclvl_hash_lists[bucket][conclvl_hash_list_sizes[bucket]-1] = *item;
-            continue;
-         }
+         continue;
+      }
+      else if (get_hash(name, &bucket)) {
+         conc_hashers[bucket].add_one(the_item);
+         continue;
+      }
 
-         // If we get here, this concept needs to be put into the extra bucket at the end,
-         // and also into EVERY OTHER BUCKET!!!!
-         for (bucket=0 ; bucket < NUM_NAME_HASH_BUCKETS+1 ; bucket++) {
-            conclvl_hash_list_sizes[bucket]++;
-            conclvl_hash_lists[bucket] = (short *)
-               get_more_mem(conclvl_hash_lists[bucket],
-                            conclvl_hash_list_sizes[bucket] * sizeof(short));
-            conclvl_hash_lists[bucket][conclvl_hash_list_sizes[bucket]-1] = *item;
+      // If we get here, this concept needs to be put into the extra bucket at the end,
+      // and also into EVERY OTHER BUCKET!!!!
+      for (bucket=0 ; bucket < NUM_NAME_HASH_BUCKETS+1 ; bucket++) {
+         conc_hashers[bucket].add_one(the_item);
+      }
+   }
+
+   // Now do the "level concepts".
+
+   for (i=0; i<new_fangled_level_concept_list->the_list_size; i++) {
+      int the_item = new_fangled_level_concept_list->the_list[i];
+      Cstring name = concept_descriptor_table[the_item].name;
+
+      if (name[0] == '@' && (name[1] == '6' || name[1] == 'k' || name[1] == 'K')) {
+         // This is a call like "<anyone> run".  Put it into every bucket
+         // that could match a selector.
+
+         for (j=0 ; j<selector_hasher.the_list_size ; j++) {
+            bucket = selector_hasher.the_list[j];
+            conclvl_hashers[bucket].add_one(the_item);
          }
+         continue;
+      }
+      else if (get_hash(name, &bucket)) {
+         conclvl_hashers[bucket].add_one(the_item);
+         continue;
+      }
+
+      // If we get here, this concept needs to be put into the extra bucket at the end,
+      // and also into EVERY OTHER BUCKET!!!!
+      for (bucket=0 ; bucket < NUM_NAME_HASH_BUCKETS+1 ; bucket++) {
+         conclvl_hashers[bucket].add_one(the_item);
       }
    }
 }
@@ -894,7 +813,7 @@ static bool verify_call()
    warning_info saved_warnings = configuration::save_warnings();
    int old_history_ptr = configuration::history_ptr;
 
-   parse_mark = mark_parse_blocks();
+   parse_mark = parse_block::get_parse_block_mark();
    save_parse_state();
    savecl = parse_state.call_list_to_use;
 
@@ -928,7 +847,7 @@ static bool verify_call()
          // concepts or calls for an "anything" subcall.
 
          if (save1) {
-            parse_block *tt = get_parse_block();
+            parse_block *tt = parse_block::get_block();
             save1->concept = &conzept::marker_concept_mod;
             save1->next = tt;
             tt->concept = &conzept::marker_concept_mod;
@@ -1005,7 +924,7 @@ static bool verify_call()
    accept:
 
    restore_parse_state();
-   release_parse_blocks_to_mark(parse_mark);
+   parse_block::release_parse_blocks_to_mark(parse_mark);
 
    configuration::history_ptr = old_history_ptr;
    configuration::restore_warnings(saved_warnings);
@@ -1026,7 +945,7 @@ static void copy_sublist(const match_result *outbar, modifier_block *tails)
          modifier_inactive_list = out->gc_ptr;
       }
       else
-         out = (modifier_block *) get_mem(sizeof(modifier_block));
+         out = new modifier_block;
 
       *out = newoutbar->match;
       out->packed_next_conc_or_subcall = (modifier_block *) 0;
@@ -1046,7 +965,7 @@ static void copy_sublist(const match_result *outbar, modifier_block *tails)
          modifier_inactive_list = out->gc_ptr;
       }
       else
-         out = (modifier_block *) get_mem(sizeof(modifier_block));
+         out = new modifier_block;
 
       *out = newoutbar->match;
       out->packed_next_conc_or_subcall = (modifier_block *) 0;
@@ -1565,37 +1484,20 @@ static void scan_concepts_and_calls(
 
    // Now figure out how to scan the concepts.
 
-   short int *item;
-   int menu_length;
+   index_list *list_to_use;
 
-   if (using_hash) {
-      if (allowing_all_concepts) {
-         item = conc_hash_lists[bucket];
-         menu_length = conc_hash_list_sizes[bucket];
-      }
-      else {
-         item = conclvl_hash_lists[bucket];
-         menu_length = conclvl_hash_list_sizes[bucket];
-      }
-   }
-   else {
-      if (allowing_all_concepts) {
-         item = concept_list;
-         menu_length = concept_list_length;
-      }
-      else {
-         item = level_concept_list;
-         menu_length = level_concept_list_length;
-      }
-   }
+   if (using_hash)
+      list_to_use = allowing_all_concepts ? &conc_hashers[bucket] : &conclvl_hashers[bucket];
+   else
+      list_to_use = allowing_all_concepts ? new_fangled_concept_list : new_fangled_level_concept_list;
 
    local_result.match.kind = ui_concept_select;
 
-   for (i = 0; i < menu_length; i++) {
+   for (i = 0; i < list_to_use->the_list_size; i++) {
       // Don't waste time after user stops us.
       if (GLOB_showing && showing_has_stopped) break;
 
-      const conzept::concept_descriptor *this_concept = &concept_descriptor_table[item[i]];
+      const conzept::concept_descriptor *this_concept = &concept_descriptor_table[list_to_use->the_list[i]];
       local_result.match.concept_ptr = this_concept;
       p2b.special_concept = this_concept;
       p2b.car = this_concept->name;
@@ -1607,8 +1509,10 @@ static void scan_concepts_and_calls(
 
    // And the calls.
 
+   int menu_length;
+
    if (using_hash)
-      menu_length = call_hash_list_sizes[bucket];
+      menu_length = call_hashers[bucket].the_list_size;
    else
       menu_length = number_of_calls[call_list_any];
 
@@ -1625,7 +1529,7 @@ static void scan_concepts_and_calls(
          if (GLOB_showing && showing_has_stopped) break;
 
          call_with_name *this_call =
-            main_call_lists[call_list_any][using_hash ? call_hash_lists[bucket][i] : i];
+            main_call_lists[call_list_any][using_hash ? call_hashers[bucket].the_list[i] : i];
          current_result = &local_result;
          current_result->match.call_ptr = this_call;
          matches_as_seen_by_me = GLOB_match_count;
@@ -2196,16 +2100,9 @@ static void search_menu(uims_reply kind)
       }
    }
    else if (kind == ui_concept_select) {
-      short int *item;
-
-      if (allowing_all_concepts) {
-         item = concept_list;
-         menu_length = concept_list_length;
-      }
-      else {
-         item = level_concept_list;
-         menu_length = level_concept_list_length;
-      }
+      index_list *list_to_use = allowing_all_concepts ? new_fangled_concept_list : new_fangled_level_concept_list;
+      menu_length = list_to_use->the_list_size;
+      short int *item = list_to_use->the_list;
 
       if (input_is_null)
          GLOB_match_count += menu_length;

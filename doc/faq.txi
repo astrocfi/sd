@@ -517,7 +517,7 @@ There is also a meta-concept @strong{<anyone> work <concept>} that you can
 use.  It has the designated people do the call with the concept while
 the others do it normally.  However, it is a much more problematical and
 difficult meta-concept.  When the concept is a couples/tandem-type
-concept, ``are'' is much better than ``work''.
+concept, ``are'' is usually better than ``work''.
 
 @unnumberedsec How can I do things like Centers Work Stable, all Here Comes the Judge?
 

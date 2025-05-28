@@ -2562,7 +2562,7 @@ void iofull::final_initialize()
 
    // Initialize the display window linked list.
 
-   DisplayRoot = (DisplayType *) get_mem(sizeof(DisplayType));
+   DisplayRoot = new DisplayType;
    DisplayRoot->Line[0] = -1;
    DisplayRoot->Next = NULL;
    DisplayRoot->Prev = NULL;
@@ -2760,14 +2760,9 @@ void ShowListBox(int nWhichOne)
          short int *item;
          int menu_length;
 
-         if (allowing_all_concepts) {
-            item = concept_list;
-            menu_length = concept_list_length;
-         }
-         else {
-            item = level_concept_list;
-            menu_length = level_concept_list_length;
-         }
+         index_list *list_to_use = allowing_all_concepts ? new_fangled_concept_list : new_fangled_level_concept_list;
+         item = list_to_use->the_list;
+         menu_length = list_to_use->the_list_size;
 
          for (i=0 ; i<menu_length ; i++)
             scan_menu(concept_descriptor_table[item[i]].menu_name,
@@ -3069,7 +3064,7 @@ void iofull::add_new_line(const char the_line[], uint32 drawing_picture)
    }
 
    if (!CurDisplay->Next) {
-      CurDisplay->Next = (DisplayType *) get_mem(sizeof(DisplayType));
+      CurDisplay->Next = new DisplayType;
       CurDisplay->Next->Prev = CurDisplay;
       CurDisplay = CurDisplay->Next;
       CurDisplay->Next = NULL;

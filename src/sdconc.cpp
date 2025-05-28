@@ -20,7 +20,7 @@
 //    along with Sd; if not, write to the Free Software Foundation, Inc.,
 //    59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 //
-//    This is for version 37.
+//    This is for version 38.
 
 /* This defines the following functions:
    get_multiple_parallel_resultflags
@@ -455,6 +455,7 @@ bool conc_tables::synthesize_this(
 
 /* This overwrites its "outer_inners" argument setups. */
 extern void normalize_concentric(
+   setup *ss,              // The "dyp_squash" schemata need to see this; it's allowed to be null.
    calldef_schema synthesizer,
    int center_arity,
    setup outer_inners[],   /* outers in position 0, inners follow */
@@ -497,8 +498,295 @@ extern void normalize_concentric(
 
    int relative_rotation = (inners[0].rotation - outers->rotation) & 3;
 
-   if (synthesizer == schema_in_out_triple_squash) {
+   // Handle the special "do your part" mechanism for "slant [] and []".
+   // Then do the normal squash processing.
 
+   if (synthesizer == schema_in_out_triple_dyp_squash) {
+      setup *i0p = &inners[0];
+      setup *i1p = &inners[1];
+
+      if (i0p->kind == s_qtag) {
+         expand::compress_setup(s_qtg_2x4, i0p);
+         expand::compress_setup(s_qtg_2x4, i1p);
+      }
+
+      uint32 mask0 = little_endian_live_mask(i0p);
+      uint32 mask1 = little_endian_live_mask(i1p);
+
+      bool originals_were_on_left = false;
+      bool originals_were_on_right = false;
+
+      // Find out whether the active dancers were on the left side or the right side,
+      // in order to check for moving to the far side.
+
+      if (ss) {
+         uint32 ssmask = little_endian_live_mask(ss);
+         if (ss->kind == s3x4) {
+            if ((ssmask & 0x30C) == 0) originals_were_on_left = true;
+            else if ((ssmask & 0x0C3) == 0) originals_were_on_right = true;
+         }
+         else if (ss->kind == sbigh) {
+            if ((ssmask & 0x0C3) == 0) originals_were_on_left = true;
+            else if ((ssmask & 0x30C) == 0) originals_were_on_right = true;
+         }
+         else if (ss->kind == sbigdmd || ss->kind == sbigbone) {
+            if ((ssmask & 0x0C3) == 0) originals_were_on_left = true;
+            else if ((ssmask & 0xC30) == 0) originals_were_on_right = true;
+         }
+      }
+
+      bool swap_setups = false;
+      bool swap_fix_ptrs = false;
+      enum { fix_none, fix_1x8_to_1x4, fix_2x4_to_1x4, fix_2x4_to_2x2 } todo = fix_none;
+
+      if (outer_elongation == 1) {
+         if (i0p->kind == s2x4 && i0p->rotation == 1) {
+            if ((mask0 & 0x0F) == 0 && (mask1 & 0xF0) == 0) {
+               todo = fix_2x4_to_1x4;
+            }
+            else if ((mask0 & 0xC3) == 0 && (mask1 & 0x3C) == 0) {
+               if (originals_were_on_right) {
+                  warn(warn__went_to_other_side);
+               }
+               if ((mask0 & 0x24) != 0 || (mask1 & 0x42) != 0)
+                  warn(warn__this_is_tight);
+               outer_elongation = 2;
+               todo = fix_2x4_to_2x2;
+            }
+            else if ((mask0 & 0x3C) == 0 && (mask1 & 0xC3) == 0) {
+               if (originals_were_on_left) {
+                  warn(warn__went_to_other_side);
+               }
+               if ((mask0 & 0x42) != 0 || (mask1 & 0x24) != 0)
+                  warn(warn__this_is_tight);
+               swap_setups = true;
+               outer_elongation = 2;
+               todo = fix_2x4_to_2x2;
+            }
+            else if ((mask0 & 0xF0) == 0 && (mask1 & 0x0F) == 0) {
+               warn(warn__went_to_other_side);
+               swap_setups = true;
+               todo = fix_2x4_to_1x4;
+            }
+            else
+               fail("Can't figure out what to do.");
+         }
+         else if (i0p->kind == s2x4 && i0p->rotation == 0) {
+            if ((mask0 & 0x3C) == 0 && (mask1 & 0xC3) == 0) {
+               swap_fix_ptrs = true;
+               todo = fix_2x4_to_2x2;
+            }
+            else if ((mask0 & 0xC3) == 0 && (mask1 & 0x3C) == 0) {
+               warn(warn__went_to_other_side);
+               swap_setups = true;
+               swap_fix_ptrs = true;
+               todo = fix_2x4_to_2x2;
+            }
+            else if ((mask0 & 0x0F) == 0 && (mask1 & 0xF0) == 0) {
+               if (originals_were_on_right) {
+                  warn(warn__went_to_other_side);
+               }
+               outer_elongation = 2;
+               todo = fix_2x4_to_1x4;
+            }
+            else if ((mask0 & 0xF0) == 0 && (mask1 & 0x0F) == 0) {
+               outer_elongation = 2;
+               if (originals_were_on_left) {
+                  warn(warn__went_to_other_side);
+               }
+               swap_setups = true;
+               todo = fix_2x4_to_1x4;
+            }
+            else
+               fail("Can't figure out what to do.");
+         }
+         else if (i0p->kind == s1x8 && i0p->rotation == 0) {
+            if ((mask0 & 0xF0) == 0 && (mask1 & 0x0F) == 0) {
+               swap_fix_ptrs = true;
+               todo = fix_1x8_to_1x4;
+            }
+            else if ((mask0 & 0x0F) == 0 && (mask1 & 0xF0) == 0) {
+               warn(warn__went_to_other_side);
+               swap_setups = true;
+               swap_fix_ptrs = true;
+               todo = fix_1x8_to_1x4;
+            }
+            else
+               fail("Can't figure out what to do.");
+         }
+         else if (i0p->kind == s1x8 && i0p->rotation == 1) {
+            if ((mask0 & 0x0F) == 0 && (mask1 & 0xF0) == 0) {
+               if (originals_were_on_right) {
+                  warn(warn__went_to_other_side);
+               }
+               outer_elongation = 2;
+               todo = fix_1x8_to_1x4;
+            }
+            else if ((mask0 & 0xF0) == 0 && (mask1 & 0x0F) == 0) {
+               if (originals_were_on_left) {
+                  warn(warn__went_to_other_side);
+               }
+               outer_elongation = 2;
+               swap_setups = true;
+               todo = fix_1x8_to_1x4;
+            }             
+            else
+               fail("Can't figure out what to do.");
+         }
+
+         // If get here, there probably were phantoms that got
+         // turned into 2x2's or something.  Take no action, other than setting to schema_in_out_triple_squash.
+      }
+      else if (outer_elongation == 2) {
+         if (i0p->kind == s2x4 && i0p->rotation == 0) {
+            if ((mask0 & 0x0F) == 0 && (mask1 & 0xF0) == 0) {
+               todo = fix_2x4_to_1x4;
+            }
+            else if ((mask0 & 0xC3) == 0 && (mask1 & 0x3C) == 0) {
+               if (originals_were_on_right) {
+                  warn(warn__went_to_other_side);
+               }
+               if ((mask0 & 0x24) != 0 || (mask1 & 0x42) != 0)
+                  warn(warn__this_is_tight);
+               swap_setups = true;
+               outer_elongation = 1;
+               swap_fix_ptrs = true;
+               todo = fix_2x4_to_2x2;
+            }
+            else if ((mask0 & 0x3C) == 0 && (mask1 & 0xC3) == 0) {
+               if (originals_were_on_left) {
+                  warn(warn__went_to_other_side);
+               }
+               if ((mask0 & 0x42) != 0 || (mask1 & 0x24) != 0)
+                  warn(warn__this_is_tight);
+               outer_elongation = 1;
+               swap_fix_ptrs = true;
+               todo = fix_2x4_to_2x2;
+            }
+            else if ((mask0 & 0xF0) == 0 && (mask1 & 0x0F) == 0) {
+               warn(warn__went_to_other_side);
+               swap_setups = true;
+               todo = fix_2x4_to_1x4;
+            }
+            else
+               fail("Can't figure out what to do.");
+         }
+         else if (i0p->kind == s2x4 && i0p->rotation == 1) {
+            if ((mask0 & 0xC3) == 0 && (mask1 & 0x3C) == 0) {
+               todo = fix_2x4_to_2x2;
+            }
+            else if ((mask0 & 0x3C) == 0 && (mask1 & 0xC3) == 0) {
+               warn(warn__went_to_other_side);
+               swap_setups = true;
+               todo = fix_2x4_to_2x2;
+            }
+            else if ((mask0 & 0xF0) == 0 && (mask1 & 0x0F) == 0) {
+               outer_elongation = 1;
+               swap_setups = true;
+               if (originals_were_on_right) {
+                  warn(warn__went_to_other_side);
+               }
+               todo = fix_2x4_to_1x4;
+            }
+            else if ((mask0 & 0x0F) == 0 && (mask1 & 0xF0) == 0) {
+               outer_elongation = 1;
+               if (originals_were_on_left) {
+                  warn(warn__went_to_other_side);
+               }
+               todo = fix_2x4_to_1x4;
+            }
+            else
+               fail("Can't figure out what to do.");
+         }
+         else if (i0p->kind == s1x8 && i0p->rotation == 1) {
+            if ((mask0 & 0x0F) == 0 && (mask1 & 0xF0) == 0) {
+               todo = fix_1x8_to_1x4;
+            }
+            else if ((mask0 & 0xF0) == 0 && (mask1 & 0x0F) == 0) {
+               warn(warn__went_to_other_side);
+               swap_setups = true;
+               todo = fix_1x8_to_1x4;
+            }
+            else
+               fail("Can't figure out what to do.");
+         }
+         else if (i0p->kind == s1x8 && i0p->rotation == 0) {
+            if ((mask0 & 0x0F) == 0 && (mask1 & 0xF0) == 0) {
+               if (originals_were_on_right) {
+                  warn(warn__went_to_other_side);
+               }
+               outer_elongation = 1;
+               swap_setups = true;
+               swap_fix_ptrs = true;
+               todo = fix_1x8_to_1x4;
+            }
+            else if ((mask0 & 0xF0) == 0 && (mask1 & 0x0F) == 0) {
+               if (originals_were_on_left) {
+                  warn(warn__went_to_other_side);
+               }
+               outer_elongation = 1;
+               swap_fix_ptrs = true;
+               todo = fix_1x8_to_1x4;
+            }
+            else
+               fail("Can't figure out what to do.");
+         }
+
+         // If get here, there probably were phantoms that got
+         // turned into 2x2's or something.  Take no action, other than setting to schema_in_out_triple_squash.
+      }
+      else
+         fail("Can't figure out what to do.");
+
+      if (swap_setups) {
+         setup t = *i0p;
+         *i0p = *i1p;
+         *i1p = t;
+      }
+
+      if (swap_fix_ptrs) {
+         setup *t = i0p;
+         i0p = i1p;
+         i1p = t;
+      }
+
+      switch (todo) {
+      case fix_1x8_to_1x4:
+         i0p->swap_people(0, 6);
+         i0p->swap_people(1, 7);
+         i0p->swap_people(3, 5);
+         i0p->swap_people(2, 4);
+         i0p->kind = s1x4;
+         i1p->kind = s1x4;
+         break;
+      case fix_2x4_to_1x4:
+         i0p->swap_people(0, 7);
+         i0p->swap_people(1, 6);
+         i0p->swap_people(3, 5);
+         i0p->swap_people(2, 4);
+         i1p->swap_people(2, 3);
+         i0p->kind = s1x4;
+         i1p->kind = s1x4;
+         break;
+      case fix_2x4_to_2x2:
+         i0p->swap_people(0, 2);
+         i0p->swap_people(1, 3);
+         i0p->swap_people(2, 4);
+         i0p->swap_people(3, 5);
+         i1p->swap_people(2, 6);
+         i1p->swap_people(3, 7);
+         i0p->kind = s2x2;
+         i1p->kind = s2x2;
+         break;
+      }
+
+      canonicalize_rotation(i0p);
+      canonicalize_rotation(i1p);
+      synthesizer = schema_in_out_triple_squash;
+      goto compute_rotation_again;
+   }
+
+   if (synthesizer == schema_in_out_triple_squash) {
       // Do special stuff to put setups back properly for squashed schema.
 
       setup *i0p = &inners[0];
@@ -1032,7 +1320,9 @@ extern void normalize_concentric(
          result))
       goto anomalize_it;
 
-   if (table_synthesizer == schema_conc_o || synthesizer == schema_in_out_triple_squash)
+   if (table_synthesizer == schema_conc_o ||
+       synthesizer == schema_in_out_triple_squash ||
+       synthesizer == schema_in_out_triple_dyp_squash)
       normalize_setup(result, simple_normalize, false);
    if (table_synthesizer == schema_sgl_in_out_triple)
       normalize_setup(result, normalize_to_4, false);
@@ -1343,13 +1633,14 @@ static calldef_schema concentrify(
    case schema_4x4_lines_concentric:
    case schema_4x4_cols_concentric:
    case schema_in_out_triple:
-   case schema_in_out_triple_squash:
-   case schema_4x4_in_out_triple:
-   case schema_4x4_in_out_triple_squash:
    case schema_3x3_in_out_triple:
-   case schema_3x3_in_out_triple_squash:
+   case schema_4x4_in_out_triple:
    case schema_sgl_in_out_triple:
+   case schema_in_out_triple_squash:
+   case schema_in_out_triple_dyp_squash:
    case schema_sgl_in_out_triple_squash:
+   case schema_3x3_in_out_triple_squash:
+   case schema_4x4_in_out_triple_squash:
    case schema_in_out_triple_zcom:
    case schema_in_out_quad:
    case schema_in_out_12mquad:
@@ -1652,6 +1943,7 @@ static calldef_schema concentrify(
          case schema_grand_single_concentric:
             fail("Can't do grand single concentric in this formation.");
          case schema_in_out_triple:
+         case schema_in_out_triple_dyp_squash:
          case schema_sgl_in_out_triple:
          case schema_3x3_in_out_triple:
          case schema_4x4_in_out_triple:
@@ -1714,13 +2006,14 @@ static calldef_schema concentrify(
          break;
 
       case schema_in_out_triple:
-      case schema_in_out_triple_squash:
-      case schema_sgl_in_out_triple_squash:
-      case schema_3x3_in_out_triple_squash:
-      case schema_4x4_in_out_triple_squash:
       case schema_sgl_in_out_triple:
       case schema_3x3_in_out_triple:
       case schema_4x4_in_out_triple:
+      case schema_in_out_triple_squash:
+      case schema_in_out_triple_dyp_squash:
+      case schema_sgl_in_out_triple_squash:
+      case schema_3x3_in_out_triple_squash:
+      case schema_4x4_in_out_triple_squash:
       case schema_in_out_quad:
       case schema_in_out_12mquad:
       case schema_in_out_triple_zcom:
@@ -1813,6 +2106,12 @@ static bool fix_empty_outers(
       result_outer->rotation = result_inner->rotation;
    }
    else if (analyzer == schema_in_out_triple_squash) {
+      result_outer->kind = s2x2;
+      result_outer->clear_people();
+      clear_result_flags(result_outer);
+      result_outer->rotation = 0;
+   }
+   else if (analyzer == schema_in_out_triple_dyp_squash) {
       result_outer->kind = s2x2;
       result_outer->clear_people();
       clear_result_flags(result_outer);
@@ -2085,6 +2384,12 @@ static bool fix_empty_inners(
       // Take no action.
    }
    else if (analyzer == schema_in_out_triple_squash && center_arity == 2) {
+      result_inner[0].kind = s2x2;
+      result_inner[0].rotation = 0;
+      result_inner[1].kind = s2x2;
+      result_inner[1].rotation = 0;
+   }
+   else if (analyzer == schema_in_out_triple_dyp_squash && center_arity == 2) {
       result_inner[0].kind = s2x2;
       result_inner[0].rotation = 0;
       result_inner[1].kind = s2x2;
@@ -2732,7 +3037,7 @@ extern void concentric_move(
                next_parseptr = process_final_concepts(begin_ptr->cmd.parseptr,
                                                       false, &junk_concepts, true, false);
 
-               if (junk_concepts.test_herit_and_final_bits() == 0 &&
+               if (!junk_concepts.test_for_any_herit_or_final_bit() &&
                    next_parseptr->concept->kind == concept_concentric) {
                   localmodsout1 |= DFM1_CONC_CONCENTRIC_RULES;
                   begin_ptr->cmd.parseptr = next_parseptr->next;
@@ -2755,15 +3060,16 @@ extern void concentric_move(
             // what makes "reverse checkpoint recycle by star thru" work
             // from a DPT setup.
 
-            if (analyzer != schema_in_out_triple_squash &&
-                analyzer != schema_in_out_triple &&
-                analyzer != schema_in_out_triple_zcom &&
-                analyzer != schema_sgl_in_out_triple_squash &&
-                analyzer != schema_3x3_in_out_triple_squash &&
-                analyzer != schema_4x4_in_out_triple_squash &&
+            if (analyzer != schema_in_out_triple &&
                 analyzer != schema_sgl_in_out_triple &&
                 analyzer != schema_3x3_in_out_triple &&
                 analyzer != schema_4x4_in_out_triple &&
+                analyzer != schema_in_out_triple_zcom &&
+                analyzer != schema_in_out_triple_squash &&
+                analyzer != schema_in_out_triple_dyp_squash &&
+                analyzer != schema_sgl_in_out_triple_squash &&
+                analyzer != schema_3x3_in_out_triple_squash &&
+                analyzer != schema_4x4_in_out_triple_squash &&
                 analyzer != schema_in_out_quad &&
                 analyzer != schema_in_out_12mquad &&
                 analyzer != schema_conc_o &&
@@ -3158,14 +3464,15 @@ extern void concentric_move(
    // based on the call they did, how it got divided up, whether it had the "parallel_conc_end"
    // flag on, etc.
 
-   if (analyzer == schema_in_out_triple_squash ||
-       analyzer == schema_in_out_triple ||
-       analyzer == schema_sgl_in_out_triple_squash ||
-       analyzer == schema_3x3_in_out_triple_squash ||
-       analyzer == schema_4x4_in_out_triple_squash ||
+   if (analyzer == schema_in_out_triple ||
        analyzer == schema_sgl_in_out_triple ||
        analyzer == schema_3x3_in_out_triple ||
        analyzer == schema_4x4_in_out_triple ||
+       analyzer == schema_in_out_triple_squash ||
+       analyzer == schema_in_out_triple_dyp_squash ||
+       analyzer == schema_sgl_in_out_triple_squash ||
+       analyzer == schema_3x3_in_out_triple_squash ||
+       analyzer == schema_4x4_in_out_triple_squash ||
        analyzer == schema_in_out_quad ||
        analyzer == schema_in_out_12mquad ||
        analyzer == schema_concentric_others) {
@@ -3400,6 +3707,7 @@ extern void concentric_move(
    // "final_elongation".
 
    if (analyzer != schema_in_out_triple &&
+       analyzer != schema_in_out_triple_dyp_squash &&
        analyzer != schema_in_out_triple_squash &&
        analyzer != schema_sgl_in_out_triple_squash &&
        analyzer != schema_3x3_in_out_triple_squash &&
@@ -3654,7 +3962,7 @@ extern void concentric_move(
    // Now lossage in "final_elongation" may have been repaired.  If it is still
    // negative, there may be trouble ahead.
 
-   normalize_concentric(analyzer, center_arity, outer_inners,
+   normalize_concentric(ss, analyzer, center_arity, outer_inners,
                         final_elongation, matrix_concept, result);
 
    getout:
@@ -3831,7 +4139,7 @@ extern void merge_setups(setup *ss, merge_action action, setup *result) THROW_DE
       int outer_elong = res2->concsetup_outer_elongation;
       outer_inners[0] = *res2;
       outer_inners[1] = *res1;
-      normalize_concentric(schema_concentric, 1, outer_inners, outer_elong, 0, result);
+      normalize_concentric(ss, schema_concentric, 1, outer_inners, outer_elong, 0, result);
    }
    else {
       reinstatement_rotation = res2->rotation;
@@ -4053,7 +4361,7 @@ extern void merge_setups(setup *ss, merge_action action, setup *result) THROW_DE
          outer_inners[1].clear_people();
          gather(&outer_inners[1], res1, the_map->innermap, attr::slimit(res1), rot);
          canonicalize_rotation(&outer_inners[1]);
-         normalize_concentric(the_map->conc_type, 1, outer_inners, outer_elongation, 0, result);
+         normalize_concentric(ss, the_map->conc_type, 1, outer_inners, outer_elongation, 0, result);
          goto final_getout;
       }
 

@@ -34,8 +34,7 @@ It is important that this be done before "new_binary" is run, because
 the manual and faq files are now wrapped into the binary distribution file.
 
 WARNING!!!!!  These scripts require "tar".  I have put tar.exe and
-cygwinB19.dll into the \bin directory.  It would probably be good to
-put a better (i.e. real cygwin) version in there.
+cygwinB19.dll into the \bin directory.
 
 
 Go to sddoc directory and do:
@@ -80,7 +79,8 @@ Go to sddoc directory and do:
 30 Mar 08  -  10 Mar 09  #32
 10 Mar 09  -   9 May 09  #34
  9 May 09  -   6 Jun 09  #35
- 6 Jun 09  -             #37
+ 6 Jun 09  -   1 Sep 09  #37
+ 1 Sep 09  -             #38
 (#25, #26, #29, #30, #36 are also available.)
 -----------------------------------------------------------------
 

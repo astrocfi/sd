@@ -938,7 +938,7 @@ static bool inner_search(command_kind goal,
    hashed_random_list[0] = 0;
 
    // Mark the parse block allocation, so that we throw away the garbage created by failing attempts.
-   inner_parse_mark = outer_parse_mark = mark_parse_blocks();
+   inner_parse_mark = outer_parse_mark = parse_block::get_parse_block_mark();
 
    // This loop searches through a group of twenty single-call resolves, then a group
    // of twenty two-call resolves, then a group of twenty three-call resolves,
@@ -959,7 +959,7 @@ static bool inner_search(command_kind goal,
 
    try {
       // Throw away garbage from last attempt.
-      release_parse_blocks_to_mark(inner_parse_mark);
+      parse_block::release_parse_blocks_to_mark(inner_parse_mark);
       testing_fidelity = false;
       configuration::history_ptr = history_save;
       attempt_count++;
@@ -1476,14 +1476,16 @@ static bool inner_search(command_kind goal,
 
       // Grow the "avoid_list" array as needed.
 
-      avoid_list_size++;
-
       if (avoid_list_allocation <= avoid_list_size) {
-         avoid_list_allocation = avoid_list_size+100;
-         avoid_list = (int *) get_more_mem(avoid_list, avoid_list_allocation * sizeof(int));
+         int new_allocation = avoid_list_size*2+5;
+         int *new_list = new int[new_allocation];
+         memcpy(new_list, avoid_list, avoid_list_allocation * sizeof(int));
+         delete [] avoid_list;
+         avoid_list = new_list;
+         avoid_list_allocation = new_allocation;
       }
 
-      avoid_list[avoid_list_size-1] = hashed_randoms;   // It's now safe to do this.
+      avoid_list[avoid_list_size++] = hashed_randoms;   // It's now safe to do this.
 
       return true;
 
@@ -1522,7 +1524,7 @@ static bool inner_search(command_kind goal,
          }
 
          history_save = configuration::history_ptr + 1;
-         inner_parse_mark = mark_parse_blocks();
+         inner_parse_mark = parse_block::get_parse_block_mark();
          hashed_random_list[history_save - history_insertion_point] = hashed_randoms;
       }
    }
@@ -1639,18 +1641,21 @@ uims_reply full_resolve()
    // Allocate or reallocate the huge_history_save save array if needed.
 
    if (huge_history_allocation < configuration::history_ptr+MAX_RESOLVE_SIZE+2) {
-      huge_history_allocation = configuration::history_ptr+MAX_RESOLVE_SIZE+2;
+      int new_history_allocation = configuration::history_ptr+MAX_RESOLVE_SIZE+2;
       // Increase by 50% beyond what we have now.
-      huge_history_allocation += huge_history_allocation >> 1;
-      huge_history_save = (configuration *) get_more_mem(huge_history_save,
-         huge_history_allocation * sizeof(configuration));
+      new_history_allocation += new_history_allocation >> 1;
+      configuration *new_history_save = new configuration[new_history_allocation];
+      memcpy(new_history_save, huge_history_save, huge_history_allocation);
+      delete [] huge_history_save;
+      huge_history_save = new_history_save;
+      huge_history_allocation = new_history_allocation;
    }
 
    // Do the resolve array.
 
    if (all_resolves == 0) {
       resolve_allocation = 10;
-      all_resolves = (resolve_rec *) get_mem(resolve_allocation * sizeof(resolve_rec));
+      all_resolves = new resolve_rec[resolve_allocation];
    }
 
    // Be sure the extra 5 slots in the history array are clean.
@@ -1881,11 +1886,14 @@ uims_reply full_resolve()
       if (reply == ui_resolve_select) {
          switch ((resolve_command_kind) uims_menu_index) {
          case resolve_command_find_another:
-            if (resolve_allocation <= max_resolve_index) {
-               // Increase allocation if necessary.
-               resolve_allocation = resolve_allocation << 1;
-               all_resolves = (resolve_rec *)
-                  get_more_mem(all_resolves, resolve_allocation * sizeof(resolve_rec));
+            // Increase allocation if necessary.
+            if (max_resolve_index >= resolve_allocation) {
+               int new_allocation = resolve_allocation*2+5;
+               resolve_rec *new_list = new resolve_rec[new_allocation];
+               memcpy(new_list, all_resolves, resolve_allocation * sizeof(resolve_rec));
+               delete [] all_resolves;
+               all_resolves = new_list;
+               resolve_allocation = new_allocation;
             }
 
             find_another_resolve = true;             // Will get it next time around.
@@ -2011,7 +2019,7 @@ void initialize_getout_tables()
       // the 1x12 things), it might not be necessary.
 
       if (!nice->zzzon_level_list) {
-         nice->zzzon_level_list = (useful_concept_enum *) get_mem(nice->full_list_size);
+         nice->zzzon_level_list = (useful_concept_enum *) ::operator new(nice->full_list_size);
 
          // Copy those concepts that are on the level.
          for (i=0,j=0 ; ; i++) {

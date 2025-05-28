@@ -394,7 +394,10 @@ Cstring warning_strings[] = {
    /*  warn__tasteless_com_spot  */   "*Not all common-spot people had right hands.",
    /*  warn__tasteless_junk      */   "*The algorithmic nondeterminism of this usage is truly extraordinary.",
    /*  warn__tasteless_slide_thru*/   "*Slide thru from left-handed miniwave may be controversial.",
+   /*  warn__went_to_other_side  */   "*People went to the other side; is this really what you want?",
+   /*  warn__this_is_tight       */   "*This is tight; it may not be a good combination.",
    /*  warn__compress_carefully  */   "*Preserve the phantom spots internal to the outer setups.",
+   /*  warn__brute_force_mxn     */   "*Check that you are satisfied, and that the dancers will be satisfied, that this usage is correct, effective, and unambiguous.",
    /*  warn__two_faced           */   "*Not a wave -- maybe should say 'two-faced'.",
    /*  warn__cant_track_phantoms */   "*The phantoms may not have been tracked correctly.",
    /*  warn__diagnostic          */   "*This is a diagnostic warning and should never arise."};
@@ -3546,6 +3549,27 @@ conc_tables::cm_thing conc_tables::conc_init_table[] = {
              s2x2,     sdmd,     1, 0, 1, 2,  0x100, schema_nothing},
    {s3x4,           schema_in_out_triple, {9, 8, 6, 7, 0, 1, 3, 2,    10, 11, 4, 5},
              s1x4,     s1x4,     0, 0, 2, 2,  0x0FB, schema_in_out_triple},
+
+
+   {s3x4,           schema_in_out_triple_dyp_squash, {-1, -1, -1, -1, 6, 7, 8, 9,    0, 1, 2, 3, -1, -1, -1, -1,
+                                                      10, 11, 4, 5},
+             s2x4,     s1x4,     0, 0, 2, 2,  0x100, schema_nothing},
+
+
+   {sbigh,          schema_in_out_triple_dyp_squash, {3, 2, 1, 0, -1, -1, -1, -1,    -1, -1, -1, -1, 9, 8, 7, 6,
+                                                      4, 5, 10, 11},
+             s2x4,     s1x4,     1, 0, 1, 2,  0x100, schema_nothing},
+
+   {s_crosswave,    schema_in_out_triple_dyp_squash, {0, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 4, 5, -1, -1,
+                                                      6, 7, 2, 3},
+             s1x8,     s1x4,     0, 1, 1, 2,  0x100, schema_nothing},
+
+   {sbigbone,       schema_in_out_triple_dyp_squash, {0, 1, -1, -1, -1, -1, 10, 11,    -1, -1, 4, 5, 6, 7, -1, -1,
+                                                      2, 3, 8, 9},
+             s2x4,     s1x4,     0, 0, 1, 2,  0x100, schema_nothing},
+
+
+
    {s_hsqtag,       schema_in_out_triple, {3, 2, 0, 1, 6, 7, 9, 8,         10, 11, 4, 5},
              s1x4,     sdmd,     1, 1, 1, 2,  0x0FB, schema_in_out_triple},
    {s_dmdlndmd,     schema_in_out_triple, {9, 10, 0, 11, 6, 5, 3, 4,         7, 8, 1, 2},
@@ -3626,6 +3650,14 @@ conc_tables::cm_thing conc_tables::conc_init_table[] = {
              s1x4,     sdmd,     0, 0, 1, 2,  0x0FE, schema_in_out_triple},
    {sbigdmd,        schema_in_out_triple, {11, 0, 1, 10, 7, 4, 5, 6,       8, 9, 2, 3},
              s2x2,     s1x4,     1, 1, 1, 2,  0x0FB, schema_in_out_triple},
+
+
+   {sbigdmd,        schema_in_out_triple_dyp_squash, {0, 1, -1, -1, -1, -1, 10, 11,    -1, -1, 4, 5, 6, 7, -1, -1,
+                                                      8, 9, 2, 3},
+             s2x4,     s1x4,     0, 1, 1, 2,  0x100, schema_nothing},
+
+
+
    {sbighrgl,       schema_in_out_triple, {0, 1, 10, 11, 4, 5, 6, 7,       8, 9, 2, 3},
              s2x2,     sdmd,     0, 1, 1, 2,  0x0F7, schema_in_out_triple},
    {sbigdhrgl,      schema_in_out_triple, {0, 1, 10, 11, 4, 5, 6, 7,       9, 2, 3, 8},
@@ -8525,6 +8557,16 @@ const setup_attr setup_attrs[] = {
     (const id_bit_table *) 0,
     {(Cstring) 0,
      (Cstring) 0}},
+   {23,                     // s_hyper3x4
+    (const coordrec *) 0,
+    (const coordrec *) 0,
+    {0, 0, 0, 0},
+    {b_nothing, b_nothing},
+    {0, 0},
+    false, false,
+    (const id_bit_table *) 0,
+    {(Cstring) 0,
+     (Cstring) 0}},
    {15,                     // s_tinyhyperbone
     (const coordrec *) 0,
     (const coordrec *) 0,
@@ -9097,6 +9139,10 @@ const schema_attr schema_attrs[] = {
     schema_nothing},                     // schema_rev_checkpoint_concept
    {0,
     schema_checkpoint},                  // schema_ckpt_star
+   {0,
+    schema_in_out_triple_dyp_squash},    // schema_maybe_in_out_triple_dyp_squash
+   {SCA_CONC_REV_ORDER,
+    schema_in_out_triple_dyp_squash},    // schema_in_out_triple_dyp_squash
    {0,
     schema_nothing},                     // schema_maybe_in_out_triple_squash
    {SCA_CONC_REV_ORDER,

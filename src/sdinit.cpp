@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2007  William B. Ackerman.
+//    Copyright (C) 1990-2009  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -62,12 +62,10 @@ direction_kind direction_for_initialize;
 int number_for_initialize;
 int *color_index_list;
 
-// Global to this file.
-
-static call_with_name *empty_menu[] = {(call_with_name *) 0};
 
 // This gets temporarily allocated.  It persists through the entire initialization.
-static int *global_temp_call_indices;
+//
+static uint32 *global_temp_call_indices;
 static int global_callcount;     /* Index into the above. */
 
 
@@ -225,21 +223,21 @@ static void test_starting_setup(call_list_kind cl, const setup & test_setup)
    global_callcount = 0;
    /* Mark the parse block allocation, so that we throw away the garbage
       created by failing attempts. */
-   parse_mark = mark_parse_blocks();
+   parse_mark = parse_block::get_parse_block_mark();
 
  try_again:
 
    // Throw away garbage.
-   release_parse_blocks_to_mark(parse_mark);
+   parse_block::release_parse_blocks_to_mark(parse_mark);
    call_index++;
    if (call_index >= number_of_calls[call_list_any]) goto finished;
    test_call = main_call_lists[call_list_any][call_index];
 
-   /* Set the selector (for "so-and-so advance to a column", etc) to "beaus".
-      This seems to make most calls work -- note that "everyone run" and
-      "no one advance to a column" are illegal.  If "beaus" doesn't work, we will
-      try "ends" (for the call "fold"), "all", and finally "none" (for the call
-      "run"), before giving up. */
+   // Set the selector (for "so-and-so advance to a column", etc) to "beaus".
+   // This seems to make most calls work -- note that "everyone run" and
+   // "no one advance to a column" are illegal.  If "beaus" doesn't work, we will
+   // try "ends" (for the call "fold"), "all", and finally "none" (for the call "run"),
+   // before giving up.
 
    intlkness = false;
  try_another_intlk:
@@ -357,11 +355,11 @@ static void test_starting_setup(call_list_kind cl, const setup & test_setup)
    // We will turn them into pointers later.
 
    number_of_calls[cl] = global_callcount;
-   main_call_lists[cl] = (call_with_name **) get_mem(global_callcount * sizeof(call_with_name *));
+   main_call_lists[cl] = new call_with_name *[global_callcount];
 
    memcpy(main_call_lists[cl],
           global_temp_call_indices,
-          global_callcount*sizeof(call_with_name *));
+          global_callcount*sizeof(uint32));
 }
 
 
@@ -506,11 +504,11 @@ static void create_misc_call_lists(call_list_kind cl)
    // Create the call list itself.
 
    number_of_calls[cl] = callcount;
-   main_call_lists[cl] = (call_with_name **) get_mem(callcount * sizeof(call_with_name *));
+   main_call_lists[cl] = new call_with_name *[callcount];
 
    memcpy(main_call_lists[cl],
           global_temp_call_indices,
-          callcount*sizeof(call_with_name *));
+          callcount*sizeof(uint32));
 }
 
 
@@ -667,7 +665,7 @@ static void read_level_3_groups(calldef_block *where_to_put)
          extra = (this_start_size-4) * sizeof(unsigned short int);
       }
 
-      tp = (callarray *) get_mem(sizeof(callarray) + extra);
+      tp = (callarray *) ::operator new(sizeof(callarray) + extra);
       tp->next = 0;
 
       if (!current_call_block)
@@ -717,7 +715,7 @@ static void read_level_3_groups(calldef_block *where_to_put)
             read_halfword();       /* Read predicate indicator. */
             // "predptr_pair" will get us 4 items in the "arr" field;
             // we are responsible all for the others.
-            temp_predlist = (predptr_pair *) get_mem(sizeof(predptr_pair) +
+            temp_predlist = (predptr_pair *) ::operator new(sizeof(predptr_pair) +
                     (this_start_size-4) * sizeof(unsigned short));
             temp_predlist->pred = &pred_table[last_datum];
             // If this call uses a predicate that takes a selector, flag the call so that
@@ -869,7 +867,7 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
             root_to_use->callflags1 |= CFLAG1_NUMBER_BIT;
 
          matrix_def_block *this_matrix_block = 
-            (matrix_def_block *) get_mem(sizeof(matrix_def_block) + sizeof(uint32)*(lim-2));
+            (matrix_def_block *) ::operator new(sizeof(matrix_def_block) + sizeof(uint32)*(lim-2));
          root_to_use->stuff.matrix.matrix_def_list = this_matrix_block;
 
          this_matrix_block->modifier_level = calling_level;
@@ -898,7 +896,7 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
          // Check for compound definition.
          if ((last_datum & 0xE000) == 0x4000) {
             this_matrix_block->next = (matrix_def_block *)
-               get_mem(sizeof(matrix_def_block) + sizeof(uint32)*(lim-2));
+               ::operator new(sizeof(matrix_def_block) + sizeof(uint32)*(lim-2));
 
             this_matrix_block = this_matrix_block->next;
             this_matrix_block->modifier_level = (dance_level) (last_datum & 0xFFF);
@@ -914,7 +912,7 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
       {
          calldef_block *zz, *yy;
 
-         zz = (calldef_block *) get_mem(sizeof(calldef_block));
+         zz = new calldef_block;
          zz->next = 0;
          zz->modifier_seth = 0;
          zz->modifier_level = l_mainstream;
@@ -923,7 +921,7 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
          read_level_3_groups(zz);    /* The first group. */
 
          while ((last_datum & 0xE000) == 0x4000) {
-            yy = (calldef_block *) get_mem(sizeof(calldef_block));
+            yy = new calldef_block;
             zz->next = yy;
             zz = yy;
             zz->modifier_level = (dance_level) (last_datum & 0xFF);
@@ -960,8 +958,7 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
          }
 
          root_to_use->stuff.seq.howmanyparts = next_definition_index;
-         root_to_use->stuff.seq.defarray = (by_def_item *)
-            get_mem((next_definition_index) * sizeof(by_def_item));
+         root_to_use->stuff.seq.defarray = new by_def_item [next_definition_index];
 
          while (--next_definition_index >= 0)
             root_to_use->stuff.seq.defarray[next_definition_index] =
@@ -997,8 +994,7 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
    if (last_datum == 0x3FFF) {
       calldef_schema call_schema;
 
-      calldefn *recursed_call_root = (calldefn *)
-         get_mem(sizeof(calldefn));
+      calldefn *recursed_call_root = new calldefn;
 
       read_halfword();       // Get level (not really) and 16 bits of "callflags2" stuff.
       uint32 saveflags1overflow = last_datum;
@@ -1175,20 +1171,17 @@ extern void prepare_to_read_menus()
    // align stuff from the binary database into the person record.
 
    if ((int) NROLL_BIT < (int) DBSLIDEROLL_BIT)
-      gg->fatal_error_exit(1, "Constants not consistent",
-                           "program has been compiled incorrectly.");
+      gg->fatal_error_exit(1, "Constants not consistent", "program has been compiled incorrectly.");
    else if ((508205 << 12) != arithtest)
-      gg->fatal_error_exit(1, "Arithmetic is less than 32 bits",
-                           "program has been compiled incorrectly.");
+      gg->fatal_error_exit(1, "Arithmetic is less than 32 bits", "program has been compiled incorrectly.");
    else if (l_nonexistent_concept > 15)
-      gg->fatal_error_exit(1, "Too many levels",
-                           "program has been compiled incorrectly.");
+      gg->fatal_error_exit(1, "Too many levels", "program has been compiled incorrectly.");
    else if (NUM_QUALIFIERS > 125)
-      gg->fatal_error_exit(1, "Insufficient qualifier space",
-                           "program has been compiled incorrectly.");
+      gg->fatal_error_exit(1, "Insufficient qualifier space", "program has been compiled incorrectly.");
    else if (NUM_PLAINMAP_KINDS > 252)
-      gg->fatal_error_exit(1, "Insufficient mapkind space",
-                           "program has been compiled incorrectly.");
+      gg->fatal_error_exit(1, "Insufficient mapkind space", "program has been compiled incorrectly.");
+   else if (sizeof(uint32) > sizeof(void *))    // Need this because of horrible cheating we do with main_call_lists.
+      gg->fatal_error_exit(1, "Incorrect pointer size", "program has been compiled incorrectly.");
 
    // We need to take away the "zig-zag" directions if the level is below A2.
 
@@ -1207,9 +1200,8 @@ extern void prepare_to_read_menus()
            command_menu[num_command_commands].command_name ;
            num_command_commands++) ;
 
-      command_commands = (Cstring *) get_mem(sizeof(Cstring) * num_command_commands);
-      command_command_values =
-         (command_kind *) get_mem(sizeof(command_kind) * num_command_commands);
+      command_commands = new Cstring[num_command_commands];
+      command_command_values = new command_kind[num_command_commands];
 
       for (i = 0 ; i < num_command_commands; i++) {
          command_commands[i] = command_menu[i].command_name;
@@ -1222,9 +1214,8 @@ extern void prepare_to_read_menus()
            startup_menu[num_startup_commands].startup_name ;
            num_startup_commands++) ;
 
-      startup_commands = (Cstring *) get_mem(sizeof(Cstring) * num_startup_commands);
-      startup_command_values =
-         (start_select_kind *) get_mem(sizeof(start_select_kind) * num_startup_commands);
+      startup_commands = new Cstring[num_startup_commands];
+      startup_command_values = new start_select_kind[num_startup_commands];
 
       for (i = 0 ; i < num_startup_commands; i++) {
          startup_commands[i] = startup_menu[i].startup_name;
@@ -1237,9 +1228,8 @@ extern void prepare_to_read_menus()
            resolve_menu[number_of_resolve_commands].command_name ;
            number_of_resolve_commands++) ;
 
-      resolve_command_strings = (Cstring *) get_mem(sizeof(Cstring) * number_of_resolve_commands);
-      resolve_command_values = (resolve_command_kind *)
-         get_mem(sizeof(resolve_command_kind) * number_of_resolve_commands);
+      resolve_command_strings = new Cstring[number_of_resolve_commands];
+      resolve_command_values = new resolve_command_kind[number_of_resolve_commands];
 
       for (i = 0 ; i < number_of_resolve_commands; i++) {
          resolve_command_strings[i] = resolve_menu[i].command_name;
@@ -1601,27 +1591,49 @@ extern void general_final_exit(int code)
          "write_full_list" we do the usual action.
    It also fills in the "base_calls" array with tagged calls, independent of level. */
 
-static void build_database(abridge_mode_t abridge_mode)
+static int local_callcount;
+static call_with_name **local_call_list;
+
+
+static void create_new_tagger(int tagclass, call_with_name *new_tagger)
+{
+   if (number_of_taggers[tagclass] >= number_of_taggers_allocated[tagclass]) {
+      number_of_taggers_allocated[tagclass] = number_of_taggers_allocated[tagclass]*2 + 5;
+      call_with_name **new_taggers = new call_with_name *[number_of_taggers_allocated[tagclass]];
+      if (tagger_calls[tagclass]) {
+         memcpy(new_taggers, tagger_calls[tagclass], number_of_taggers[tagclass]*sizeof(call_with_name *));
+         delete [] tagger_calls[tagclass];
+      }
+      tagger_calls[tagclass] = new_taggers;
+   }
+   tagger_calls[tagclass][number_of_taggers[tagclass]++] = new_tagger;
+}
+
+
+static void build_database_1(abridge_mode_t abridge_mode)
 {
    int i, char_count;
-   int local_callcount;
 
    for (i=0 ; i<NUM_TAGGER_CLASSES ; i++) {
       number_of_taggers[i] = 0;
+      number_of_taggers_allocated[i] = 0;
       tagger_calls[i] = (call_with_name **) 0;
    }
 
    number_of_circcers = 0;
+   number_of_circcers_allocated = 0;
    circcer_calls = (call_with_name **) 0;
 
    // This list will be permanent.
-   base_calls = (call_with_name **) get_mem(max_base_calls * sizeof(call_with_name *));
+   base_calls = new call_with_name *[max_base_calls];
 
-   // These two will be temporary.  The first lasts through the entire initialization
-   // process.  The second one only in this procedure.
-   global_temp_call_indices = (int *) get_mem(abs_max_calls * sizeof(call_with_name *));
-   call_with_name **local_call_list =
-      (call_with_name **) get_mem(abs_max_calls * sizeof(call_with_name *));
+   // This one is temporary.  It lasts through the entire initialization process.
+   // It has the indices, packed as uint32 (which we know is <= the size of a pointer)
+   // which we will, in a shameless case of misusing the type system, copy onto some of
+   // the main_call_lists arrays.  Those arrays are supposed to contain "call_with_name *" items.
+   global_temp_call_indices = new uint32[abs_max_calls];
+   // This one is also temporary to the initialization.
+   local_call_list = new call_with_name *[abs_max_calls];
 
    // Clear the tag list.  Calls will fill this in as they announce themselves.
    for (i=0; i < max_base_calls; i++) base_calls[i] = (call_with_name *) 0;
@@ -1667,7 +1679,7 @@ static void build_database(abridge_mode_t abridge_mode)
       // Now that we know how long the name is, create the block and fill in the saved stuff.
       // We subtract 3 because 4 chars are already present, but we need one extra for the pad.
 
-      call_root = (call_with_name *) get_mem(sizeof(call_with_name) + char_count - 3);
+      call_root = (call_with_name *) ::operator new(sizeof(call_with_name) + char_count - 3);
       call_root->menu_name = (Cstring) 0;
 
       if (savetag) {
@@ -1704,17 +1716,11 @@ static void build_database(abridge_mode_t abridge_mode)
 
             // All classes go into list 0.  Additionally, the other classes
             // go into their own list.
-            number_of_taggers[tagclass]++;
-            tagger_calls[tagclass] = (call_with_name **)
-               get_more_mem(tagger_calls[tagclass],
-                            number_of_taggers[tagclass]*sizeof(call_with_name *));
-            tagger_calls[tagclass][number_of_taggers[tagclass]-1] = call_root;
+
+            create_new_tagger(tagclass, call_root);
+
             if (tagclass != 0) {
-               number_of_taggers[0]++;
-               tagger_calls[0] = (call_with_name **)
-                  get_more_mem(tagger_calls[0],
-                               number_of_taggers[0]*sizeof(call_with_name *));
-               tagger_calls[0][number_of_taggers[0]-1] = call_root;
+               create_new_tagger(0, call_root);
             }
             else if (call_root->the_defn.callflagsf & CFLAGH__TAG_CALL_RQ_MASK) {
                // But anything that invokes a tagging call goes into each list,
@@ -1723,17 +1729,13 @@ static void build_database(abridge_mode_t abridge_mode)
                // Iterate over all tag classes except class 0.
                for (int xxx=1 ; xxx<NUM_TAGGER_CLASSES ; xxx++) {
                   call_with_name *new_call =
-                     (call_with_name *) get_mem(sizeof(call_with_name) + char_count - 3);
+                     (call_with_name *) ::operator new(sizeof(call_with_name) + char_count - 3);
                   memcpy(new_call, call_root, sizeof(call_with_name) + char_count - 3);
                   /* Fix it up. */
                   new_call->the_defn.callflagsf =
                      (new_call->the_defn.callflagsf & !CFLAGH__TAG_CALL_RQ_MASK) |
                      CFLAGH__TAG_CALL_RQ_BIT*(xxx+1);
-                  number_of_taggers[xxx]++;
-                  tagger_calls[xxx] = (call_with_name **)
-                     get_more_mem(tagger_calls[xxx],
-                                  number_of_taggers[xxx]*sizeof(call_with_name *));
-                  tagger_calls[xxx][number_of_taggers[xxx]-1] = new_call;
+                  create_new_tagger(xxx, new_call);
                }
             }
          }
@@ -1763,30 +1765,6 @@ static void build_database(abridge_mode_t abridge_mode)
             base_calls[local_call_list[i]->the_defn.stuff.conc.innerdef.call_id]->the_defn;
       }
    }
-
-   // Process the circulate calls.
-
-   for (i=0 ; i<local_callcount ; i++) {
-      call_with_name *t = local_call_list[i];
-      if (t->the_defn.callflags1 & CFLAG1_BASE_CIRC_CALL) {
-         number_of_circcers++;
-         circcer_calls = (call_with_name **)
-            get_more_mem(circcer_calls, number_of_circcers*sizeof(call_with_name *));
-         circcer_calls[number_of_circcers-1] = t;
-      }
-   }
-
-   number_of_calls[call_list_any] = local_callcount;
-   main_call_lists[call_list_any] =
-      (call_with_name **) get_mem(local_callcount * sizeof(call_with_name *));
-
-   memcpy(main_call_lists[call_list_any],
-          local_call_list,
-          local_callcount*sizeof(call_with_name *));
-
-   free(local_call_list);
-
-   fclose(database_file);
 }
 
 
@@ -1864,7 +1842,7 @@ static const char *translate_menu_name(const char *orig_name, uint32 *escape_bit
 
       tempname[templength] = '\0';
       // Must copy the text into some fresh memory, being careful about overflow.
-      new_ptr = (char *) get_mem(templength+1);
+      new_ptr = new char[templength+1];
       for (j=0; j<=templength; j++) new_ptr[j] = tempname[j];
       return new_ptr;
    }
@@ -1983,24 +1961,23 @@ extern void start_stats_file_from_GLOB_stats_filename()
 }
 
 
-extern bool open_session(int argc, char **argv)
+bool open_session(int argc, char **argv)
 {
    int i, j;
    uint32 uj;
    int argno;
    char line[MAX_FILENAME_LENGTH];
-   char **args;
-   int nargs = argc;
 
    GLOB_stats_filename[0] = 0;
 
-   /* Copy the arguments, so that we can use "realloc" to grow the list. */
+   // Copy the arguments, so that we can grow the list if we see options in the init file.
 
-   args = (char **) get_mem(nargs * sizeof(char *));
-
+   int nargs = argc;
+   int args_allocation = nargs;
+   char **args = new char *[args_allocation];
    memcpy(args, argv, nargs * sizeof(char *));
 
-   /* Read the initialization file, looking for options. */
+   // Read the initialization file, looking for options.
 
    init_file = fopen(SESSION_FILENAME, "r");
    int insert_pos = 1;
@@ -2022,9 +1999,9 @@ extern bool open_session(int argc, char **argv)
             char token[MAX_FILENAME_LENGTH];
             int newpos;
 
-            /* Break the line into tokens, and insert each as a command-line argument. */
+            // Break the line into tokens, and insert each as a command-line argument.
 
-            /* We need to put a blank at the end, so that the "%s %n" spec won't get confused. */
+            // We need to put a blank at the end, so that the "%s %n" spec won't get confused.
 
             j = strlen(lineptr);
             if (j > 0 && lineptr[j-1] != ' ') {
@@ -2034,10 +2011,20 @@ extern bool open_session(int argc, char **argv)
             if (sscanf(lineptr, "%s%n ", token, &newpos) != 1) break;
 
             j = strlen(token)+1;
+
+            if (nargs >= args_allocation) {
+               args_allocation = args_allocation*2 + 5;
+               char **new_args = new char *[args_allocation];
+               if (args) {
+                  memcpy(new_args, args, nargs*sizeof(char *));
+                  delete [] args;
+               }
+               args = new_args;
+            }
+
+            for (i=nargs ; i>insert_pos ; i--) args[i] = args[i-1];
+            args[insert_pos] = new char[j];
             nargs++;
-            args = (char **) get_more_mem(args, nargs * sizeof(char *));
-            for (i=nargs-1 ; i>insert_pos ; i--) args[i] = args[i-1];
-            args[insert_pos] = (char *) get_mem(j);
             memcpy(args[insert_pos], token, j);
             insert_pos++;
             lineptr += newpos;
@@ -2170,7 +2157,8 @@ extern bool open_session(int argc, char **argv)
       }
    }
 
-   free(args);
+   delete [] args;
+
    general_initialize();
 
    /* If we have a calling level at this point, fill in the output file name.
@@ -2290,7 +2278,6 @@ extern bool open_session(int argc, char **argv)
 
    gg->init_step(init_database1, 0);
 
-   initialize_sdlib();
    prepare_to_read_menus();
 
    // Opening the database sets up the values of
@@ -2339,11 +2326,8 @@ extern bool open_session(int argc, char **argv)
       // This actually reads the calls database file and creates the
       // "any" menu.  It calls init_step(init_calibrate_tick), which calibrates
       // the progress bar.
-      build_database(glob_abridge_mode);
-
-      gg->init_step(init_database2, 0);
-      gg->init_step(calibrate_tick, TICK_TOTAL);
-      gg->init_step(do_tick, 2);
+      build_database_1(glob_abridge_mode);
+      fclose(database_file);
 
       // Make the cardinal/ordinal tables.
 
@@ -2385,10 +2369,14 @@ extern bool open_session(int argc, char **argv)
       cardinals[NUM_CARDINALS] = (Cstring) 0;
       ordinals[NUM_CARDINALS] = (Cstring) 0;
 
+      number_of_calls[call_list_any] = local_callcount;
+      main_call_lists[call_list_any] = new call_with_name *[local_callcount];
+      memcpy(main_call_lists[call_list_any], local_call_list, local_callcount*sizeof(call_with_name *));
+
       // Make the translated names for all calls and concepts.  These have the "<...>"
       // phrases, suitable for external display on menus, instead of "@" escapes.
 
-      for (i=0; i<number_of_calls[call_list_any]; i++)
+      for (i=0; i<local_callcount; i++)
          main_call_lists[call_list_any][i]->menu_name =
             translate_menu_name(main_call_lists[call_list_any][i]->name,
                                 &main_call_lists[call_list_any][i]->the_defn.callflagsf);
@@ -2400,10 +2388,6 @@ extern bool open_session(int argc, char **argv)
                                    &tagger_calls[i][uj]->the_defn.callflagsf);
       }
 
-      for (uj=0; uj<number_of_circcers; uj++)
-         circcer_calls[uj]->menu_name =
-            translate_menu_name(circcer_calls[uj]->name, &circcer_calls[uj]->the_defn.callflagsf);
-
       // Do the base calls (calls that are used in definitions of other calls).
       // These may have already been done, if they were on the level.
       for (i=1; i <= highest_base_call; i++) {
@@ -2412,8 +2396,75 @@ extern bool open_session(int argc, char **argv)
                translate_menu_name(base_calls[i]->name, &base_calls[i]->the_defn.callflagsf);
       }
 
-      SORT<call_with_name *, DBCOMPARE>::heapsort(main_call_lists[call_list_any],
-                                                  number_of_calls[call_list_any]);
+      // Process the circulate calls.
+
+      for (i=0 ; i<local_callcount ; i++) {
+         call_with_name *t = local_call_list[i];
+         if (t->the_defn.callflags1 & CFLAG1_BASE_CIRC_CALL) {
+            if (number_of_circcers >= number_of_circcers_allocated) {
+               number_of_circcers_allocated = number_of_circcers_allocated*2 + 5;
+               call_with_name **new_circcers = new call_with_name *[number_of_circcers_allocated];
+               if (circcer_calls) {
+                  memcpy(new_circcers, circcer_calls, number_of_circcers*sizeof(call_with_name *));
+                  delete [] circcer_calls;
+               }
+               circcer_calls = new_circcers;
+            }
+            circcer_calls[number_of_circcers++] = t;
+            t->menu_name = translate_menu_name(t->name, &t->the_defn.callflagsf);
+         }
+      }
+
+      delete [] local_call_list;
+
+      // Create the tagger menu lists.
+
+      uint32 ui;
+
+      for (i=0 ; i<NUM_TAGGER_CLASSES ; i++) {
+         tagger_menu_list[i] = new Cstring [number_of_taggers[i]+1];
+
+         for (ui=0; ui<number_of_taggers[i]; ui++)
+            tagger_menu_list[i][ui] = tagger_calls[i][ui]->menu_name;
+
+         tagger_menu_list[i][number_of_taggers[i]] = (Cstring) 0;
+      }
+
+      // Create the selector menu list.  It is one item shorter than the enumeration,
+      // because we skip the first item in the enumeration.  But it still needs the null string at the end.
+
+      selector_menu_list = new Cstring [selector_INVISIBLE_START];
+
+      for (i=0; i<selector_INVISIBLE_START-1; i++)
+         selector_menu_list[i] = selector_list[i+1].name;
+
+      selector_menu_list[selector_INVISIBLE_START-1] = (Cstring) 0;
+
+      // Create the direction menu list.  Do one more than the extent, to get the null string at the end.
+
+      direction_menu_list = new Cstring[direction_ENUM_EXTENT+1];
+
+      for (i=0; i<direction_ENUM_EXTENT+1; i++)
+         direction_menu_list[i] = direction_names[i].name;
+
+      // Create the circcer menu list.
+
+      circcer_menu_list = new Cstring[number_of_circcers+1];
+
+      for (ui=0; ui<number_of_circcers; ui++)
+         circcer_menu_list[ui] = circcer_calls[ui]->menu_name;
+
+      circcer_menu_list[number_of_circcers] = (Cstring) 0;
+
+      initialize_getout_tables();
+
+      initialize_sdlib();
+
+      gg->init_step(init_database2, 0);
+      gg->init_step(calibrate_tick, TICK_TOTAL);
+      gg->init_step(do_tick, 2);
+
+      SORT<call_with_name *, DBCOMPARE>::heapsort(main_call_lists[call_list_any], local_callcount);
 
       // Now the permanent array "main_call_lists[call_list_any]" has all the legal calls,
       //    including name pointer fields containing the original text with "@" escapes,
@@ -2551,9 +2602,9 @@ extern bool open_session(int argc, char **argv)
          for (cl = call_list_1x8; cl < call_list_extent ; cl = (call_list_kind) (cl+1)) {
             // Read the menu length.
             number_of_calls[cl] = mapped_cache[cache_menu_words++];
-            main_call_lists[cl] =
-               (call_with_name **) get_mem(number_of_calls[cl] * sizeof(call_with_name *));
-            // Read the menu itself.
+            main_call_lists[cl] = new call_with_name *[number_of_calls[cl]];
+            // Read the menu itself.  Just copy the integers into main_call_lists[cl],
+            // even if they are smaller than pointers.
             memcpy(main_call_lists[cl],
                    mapped_cache+cache_menu_words,
                    number_of_calls[cl]*sizeof(int));
@@ -2572,10 +2623,12 @@ extern bool open_session(int argc, char **argv)
          //
          // But the setup for starting DPT has the appropriate sex for triple star thru.
 
-#define WEST (d_west|PERSON_MOVED|ROLL_IS_L)
-#define EAST (d_east|PERSON_MOVED|ROLL_IS_L)
-#define NORT (d_north|PERSON_MOVED|ROLL_IS_L)
-#define SOUT (d_south|PERSON_MOVED|ROLL_IS_L)
+         enum {
+            WEST = (d_west|PERSON_MOVED|ROLL_IS_L),
+            EAST = (d_east|PERSON_MOVED|ROLL_IS_L),
+            NORT = (d_north|PERSON_MOVED|ROLL_IS_L),
+            SOUT = (d_south|PERSON_MOVED|ROLL_IS_L)
+         };
 
          // RH tidal wave
          test_starting_setup(call_list_1x8,
@@ -2708,17 +2761,19 @@ extern bool open_session(int argc, char **argv)
       // indices into pointers.  Then create the menus.
 
       for (cl = call_list_1x8; cl < call_list_extent ; cl = (call_list_kind) (cl+1)) {
-         for (i=0; i < number_of_calls[cl]; i++)
-            main_call_lists[cl][i] = main_call_lists[call_list_any][(int) main_call_lists[cl][i]];
+         // We have to do this downward, in case the pointers are bigger than uint32.
+         for (i=number_of_calls[cl]-1; i >= 0 ; i--)
+            main_call_lists[cl][i] = main_call_lists[call_list_any][((uint32 *) main_call_lists[cl])[i]];
          gg->create_menu(cl);
       }
    }
 
    // This was global to the initialization, but it goes away also.
-   free(global_temp_call_indices);
+   delete [] global_temp_call_indices;
 
    // Initialize the special empty call menu.
 
+   static call_with_name *empty_menu[] = {(call_with_name *) 0};
    main_call_lists[call_list_empty] = empty_menu;
    number_of_calls[call_list_empty] = 0;
 
@@ -2809,4 +2864,10 @@ extern bool open_session(int argc, char **argv)
    close_init_file();
    gg->final_initialize();
    return false;
+}
+
+void close_session()
+{
+   finalize_sdlib();
+   parse_block::final_cleanup();
 }

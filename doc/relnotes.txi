@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 37.83
-@set title2 Database version = 37.83 format = 280
+@set title1 RELEASE NOTES FOR VERSION 38.0
+@set title2 Database version = 38.0 format = 285
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,8 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 38.0::
+* 37.84::
 * 37.83::
 * 37.82::
 * 37.81::
@@ -63,7 +65,7 @@ The files @file{relnotes03.txi} and @file{relnotes98.txi} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 37.83, Top, (dir)
+@node Intro, 38.0, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -74,12 +76,41 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2009 William B. Ackerman
 @sp 3
 @menu
-* 37.83::               Changes in the current version
+* 38.0::               Changes in the current version
 @end menu
 
 @c ************
-@node 37.83, 37.82, Intro, Top
-@unnumberedsec Version 37.82 changes
+@node 38.0, 37.84, Intro, Top
+@unnumberedsec Version 38.0 changes
+
+The handling of @strong{slant <anything> and <anything>} is more powerful, and follows the
+current Callerlab definition more closely.  The people doing the second call do not simply move forward
+and do the call in their triple line.  They do their part of the call in an 8-person setup that
+includes the phantoms behind them.  They then reassemble around the centers as best they can.
+An example of this different treatment may be seen in calls like @strong{slant pass the ocean and link up}.
+The call may be expressed with either "and" or "by".
+
+@c ************
+@node 37.84, 37.83, 38.0, Top
+@unnumberedsec Version 37.84 changes
+
+The program does @strong{swing thru} in a wave of 6 as two 3-person calls, since the
+definition of this call allows for 3-person waves.  To get the more common 6-person
+version, you must say @strong{grand swing thru}.
+
+The meaning of @strong{<anyone> work tandem} was improved, so that those people still
+occupy two spots in the formation.  That is, the tandem people and the normal people just
+do their part.  This makes certain type of @strong{circulate} calls,
+for example, work naturally.
+
+Calls like @strong{dixie style to a wave} allow some people to be single file while others
+are not.  Do not say @strong{single file} in this case.
+
+"Sweep" and "flow" operations were improved further.
+
+@c ************
+@node 37.83, 37.82, 37.84, Top
+@unnumberedsec Version 37.83 changes
 
 The @strong{ends fold} bug, in a parallelogram, was fixed.  The centers do not move.
 

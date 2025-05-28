@@ -27,7 +27,6 @@
    generate_random_number
    hash_nonrandom_number
    get_mem
-   get_more_mem
    get_date
    open_file
    write_file
@@ -150,44 +149,47 @@ extern void hash_nonrandom_number(int number)
 }
 
 
-extern void *get_mem(uint32 siz)
-{
-   // Using "calloc" instead of "malloc" clears the memory.
-   // We claim this isn't necessary; our code, being correctly written,
-   // is insensitive to the initial contents of allocated memory.
-   // But someone is a wuss, and thinks we need this.
-   void *buf = calloc(siz, 1);
-
-   if (!buf && siz != 0) {
-      char msg [50];
-      sprintf(msg, "Can't allocate %d bytes of memory.", (int) siz);
-      gg->fatal_error_exit(2, msg);
-   }
-
-   return buf;
-}
-
-
-// An older version of this actually called "malloc" or "realloc"
-// depending on whether the incoming pointer was nil.  There was a
-// comment pointing out that this was because "SunOS 4 realloc doesn't
-// handle NULL".  Isn't that funny?
-
-// Of course, we no longer take pity on broken compilers or operating systems.
-
-extern void *get_more_mem(void *oldp, uint32 siz)
-{
-   void *buf;
-
-   buf = realloc(oldp, siz);
-   if (!buf && siz != 0) {
-      char msg [50];
-      sprintf(msg, "Can't allocate %d bytes of memory.", (int) siz);
-      gg->fatal_error_exit(2, msg);
-   }
-   return buf;
-}
-
+//   // This is obsolete; we now use the built-in memory management operations
+//   // of the C++ language, of course.  It is left here as a memorial to the types
+//   // of things people had to do when dealing with buggy compilers or libraries.
+//   
+//   extern void *get_mem(uint32 siz)
+//   {
+//      // Using "calloc" instead of "malloc" clears the memory.
+//      // We claim this isn't necessary; our code, being correctly written,
+//      // is insensitive to the initial contents of allocated memory.
+//      // But someone is a wuss, and thinks we need this.
+//      void *buf = calloc(siz, 1);
+//   
+//      if (!buf && siz != 0) {
+//         char msg [50];
+//         sprintf(msg, "Can't allocate %d bytes of memory.", (int) siz);
+//         gg->fatal_error_exit(2, msg);
+//      }
+//   
+//      return buf;
+//   }
+//   
+//   
+//   // An older version of this actually called "malloc" or "realloc"
+//   // depending on whether the incoming pointer was nil.  There was a
+//   // comment pointing out that this was because "SunOS 4 realloc doesn't
+//   // handle NULL".  Isn't that funny?
+//
+//   // Of course, we no longer take pity on broken compilers or operating systems.
+//
+//   extern void *get_more_mem(void *oldp, uint32 siz)
+//   {
+//      void *buf;
+//
+//      buf = realloc(oldp, siz);
+//      if (!buf && siz != 0) {
+//         char msg [50];
+//         sprintf(msg, "Can't allocate %d bytes of memory.", (int) siz);
+//         gg->fatal_error_exit(2, msg);
+//      }
+//      return buf;
+//   }
 
 
 

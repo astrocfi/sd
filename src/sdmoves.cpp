@@ -2971,7 +2971,7 @@ extern bool get_real_subcall(
 
    if (current_options.star_turn_option != 0 &&
        (orig_call->the_defn.callflags1 & CFLAG1_IS_STAR_CALL)) {
-      parse_block *xx = get_parse_block();
+      parse_block *xx = parse_block::get_block();
       xx->concept = &conzept::marker_concept_mod;
       xx->options = current_options;
       xx->options.star_turn_option = 0;
@@ -5076,7 +5076,8 @@ static bool do_misc_schema(
       else if (ss->kind == s_qtag &&
                (callflags1 & CFLAG1_FUDGE_TO_Q_TAG) &&
                (the_schema == schema_in_out_triple ||
-                the_schema == schema_in_out_triple_squash)) {
+                the_schema == schema_in_out_triple_squash ||
+                the_schema == schema_in_out_triple_dyp_squash)) {
          // Or change from qtag to 3x4 if schema requires same.
          copy_person(ss, 11, ss, 7);
          copy_person(ss, 10, ss, 6);
@@ -5096,6 +5097,7 @@ static bool do_misc_schema(
 
       switch (the_schema) {
       case schema_in_out_triple_squash:
+      case schema_in_out_triple_dyp_squash:
       case schema_in_out_triple:
       case schema_in_out_quad:
          normalize_strongly = true;
@@ -5393,6 +5395,17 @@ static calldef_schema get_real_callspec_and_schema(setup *ss,
       case 0:
          return schema_in_out_triple_squash;
       }
+   case schema_maybe_in_out_triple_dyp_squash:
+      switch (herit_concepts & (INHERITFLAG_SINGLE | INHERITFLAG_NXNMASK)) {
+      case INHERITFLAG_SINGLE:
+         return schema_sgl_in_out_triple_squash;
+      case INHERITFLAGNXNK_3X3:
+         return schema_3x3_in_out_triple_squash;
+      case INHERITFLAGNXNK_4X4:
+         return schema_4x4_in_out_triple_squash;
+      case 0:
+         return schema_in_out_triple_dyp_squash;
+      }
    default:
       return the_schema;
    }
@@ -5595,7 +5608,7 @@ static void really_inner_move(setup *ss,
       }
       break;
    case schema_roll:
-      if (ss->cmd.cmd_final_flags.test_herit_and_final_bits())
+      if (ss->cmd.cmd_final_flags.test_for_any_herit_or_final_bit())
          fail("Illegal concept for this call.");
       remove_z_distortion(ss);
       rollmove(ss, callspec, result);
@@ -5880,7 +5893,7 @@ static void really_inner_move(setup *ss,
       outer_inners[0] = *result;
       outer_inners[1].kind = nothing;
       clear_result_flags(&outer_inners[1]);
-      normalize_concentric(schema_conc_o, 1, outer_inners, 1, 0, result);
+      normalize_concentric(ss, schema_conc_o, 1, outer_inners, 1, 0, result);
       normalize_setup(result, simple_normalize, false);
       if (result->kind == s2x4) {
          if (result->people[1].id1 | result->people[2].id1 |
