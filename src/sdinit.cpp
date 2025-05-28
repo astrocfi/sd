@@ -297,6 +297,10 @@ static void test_starting_setup(call_list_kind cl, const setup & test_setup)
        test_call->the_defn.stuff.matrix.matrix_def_list->matrix_def_items[1])
       goto accept;
 
+   // Accept counter rotate.
+   if (test_call->the_defn.schema == schema_global_matrix)
+      goto accept;
+
    // We also accept "<ATC> your neighbor" and "<ANYTHING> motivate" calls,
    // since we don't know what the tagging call will be.
    if (test_call->the_defn.callflagsf &
@@ -906,6 +910,7 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
    case schema_recenter:
       break;
    case schema_matrix:
+   case schema_global_matrix:
       lim = 2;
       // !!!! FALL THROUGH !!!!
    case schema_partner_matrix:

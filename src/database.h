@@ -5,7 +5,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2020  William B. Ackerman.
+//    Copyright (C) 1990-2021  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -47,7 +47,7 @@
 // database format version.
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 382
+#define DATABASE_FORMAT_VERSION 390
 
 
 // We used to do some stuff to cater to compiler vendors (e.g. Sun
@@ -663,9 +663,12 @@ enum setup_kind {
    s_tinyhyperbone, // Ditto.
    s8x8,      // Ditto.
    sxequlize, // Ditto.
-   sx1x6,     // Ditto.
-   sx1x8,     // This one is now real!
-   sx1x16,    // Ditto.
+   sx1x6,   
+   s1x4_1x6,
+   s1x4_1x8,
+   s1x6_1x8,
+   sx1x8,   
+   sx1x16,    // As above.
    shypergal, // Ditto.
    shyper4x8a,// Ditto.
    shyper4x8b,// Ditto.
@@ -1301,6 +1304,7 @@ enum calldef_schema {
    schema_matrix,
    schema_partner_matrix,
    schema_partner_partial_matrix,
+   schema_global_matrix,
    schema_roll,
    schema_recenter,
    schema_sequential,            // All after this point are sequential.

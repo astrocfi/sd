@@ -167,10 +167,10 @@ DO A VIRUS SCAN ON SD.EXE, SDTTY.EXE, SDLIB.DLL, MKCALLS.EXE and DEPLOY.EXE!
 
 Stress tests to try:
 
-   sdtty c4 -resolve_test 240 <today's date>+100     two-couple, girls UTB, resolve
-   sdtty c4 -resolve_test 240 <today's date>+101     two-couple, girls UTB, pick random call
-   sdtty c4 -resolve_test 240 <today's date>+126     S 1P, 1/2 tag, resolve
-   sdtty c4 -resolve_test 240 <today's date>+127     H start, pick random call
+   sdtty c4 -resolve_test 240 <today's ddmm date>*10     two-couple, girls UTB, resolve
+   sdtty c4 -resolve_test 240 <today's ddmm date>*100    two-couple, girls UTB, pick random call
+   sdtty c4 -resolve_test 240 <today's ddmm date>*1000   S 1P, 1/2 tag, resolve
+   sdtty c4 -resolve_test 240 <today's ddmm date>+10000  H start, pick random call
 
 -----------------------------------------------------------------
 

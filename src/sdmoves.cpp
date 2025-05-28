@@ -1782,7 +1782,7 @@ static const coordrec s4x4toqtg = {s_qtag, 0x23,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec deepxwvtoxwv = {s_crosswave, 0x23,
+static const coordrec fudgyxwvthing = {s_crosswave, 0x23,
    {-10,  -6,   0,   0,  10,   6,   0,   0},
    {  0,   0,   6,   2,   0,   0,  -6,  -2}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -1911,9 +1911,30 @@ static const coordrec x343toglass = {s_hrglass, 0x23,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec x1x8tox1x8 = {sx1x8, 0x123,
+
+static const coordrec x1x4thing = {s_thar, 0x123,  // Of course there's no such thing as a sx1x4.  It's a thar.
+   { -6,  -2,   0,   0,   6,   2,   0,   0},
+   {  0,   0,   6,   2,   0,   0,  -6,  -2}};
+
+static const coordrec x1x6thing = {sx1x6, 0x123,
+   {-10,  -6,  -2,   0,   0,   0,  10,   6,   2,   0,   0,   0},
+   {  0,   0,   0,  10,   6,   2,   0,   0,   0, -10,  -6,  -2}};
+
+static const coordrec x1x8thing = {sx1x8, 0x123,
    {-14, -10,  -6,  -2,   0,   0,   0,   0,  14,  10,   6,   2,   0,   0,   0,   0},
    {  0,   0,   0,   0,  14,  10,   6,   2,   0,   0,   0,   0, -14, -10,  -6,  -2}};
+
+static const coordrec x1x4_1x6 = {s1x4_1x6, 0x123,
+   {-10,  -6,  -2,   0,   0,  10,   6,   2,   0,   0},
+   {  0,   0,   0,   6,   2,   0,   0,   0,  -6,  -2}};
+
+static const coordrec x1x4_1x8 = {s1x4_1x8, 0x123,
+   {-14, -10,  -6,  -2,   0,   0,  14,  10,   6,   2,   0,   0},
+   {  0,   0,   0,   0,   6,   2,   0,   0,   0,   0,  -6,  -2}};
+
+static const coordrec x1x6_1x8 = {s1x6_1x8, 0x123,
+   {-14, -10,  -6,  -2,   0,   0,   0,  14,  10,   6,   2,   0,   0,   0},
+   {  0,   0,   0,   0,  10,   6,   2,   0,   0,   0,   0, -10,  -6,  -2}};
 
 // Magnification turned on.          That's what   V   this "1" is about.
 static const coordrec galtospindle = {s_spindle, 0x13,
@@ -2094,9 +2115,9 @@ static const checkitem checktable[] = {
    {0x00660066, 0x09202400, nothing, 0, warn__none, &spec_343, (const int8_t *) 0},
    {0x00660066, 0x18800600, nothing, 1, warn__none, &spec_343, (const int8_t *) 0},
 
-   // Inner people moved in from a deepxwv.
-   {0x00A60066, 0x08000600, nothing, 0, warn__none, &deepxwvtoxwv, (const int8_t *) 0},
-
+   // Inner people moved in from a deepxwv, or we otherwise want a crosswave.
+   {0x00A60066, 0x08000600, nothing, 0, warn__none, &fudgyxwvthing, (const int8_t *) 0},
+   {0x006600A6, 0x09004400, nothing, 1, warn__none, &fudgyxwvthing, (const int8_t *) 0},
    // Inner wing did a 1/2 tow truck from a crosswave.  We want a thar.
    {0x00750066, 0x08400220, nothing, 0, warn__none, &xwvtothar, (const int8_t *) 0},
 
@@ -2269,13 +2290,13 @@ static const checkitem checktable[] = {
    {0x00860044, 0x41250018, sh545, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    {0x00840004, 0x00000008, sh545, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
 
-   {0x00A600A6, 0x09006602, nothing,  0, warn__none, &x1x8tox1x8, (const int8_t *) 0},
-   {0x00A600E6, 0x09006602, nothing,  0, warn__none, &x1x8tox1x8, (const int8_t *) 0},
-   {0x00E600A6, 0x09006602, nothing,  0, warn__none, &x1x8tox1x8, (const int8_t *) 0},
-   {0x00E600E6, 0x09006602, nothing,  0, warn__none, &x1x8tox1x8, (const int8_t *) 0},
-   {0x006600A6, 0x09004400, nothing,  0, warn__none, &x1x8tox1x8, (const int8_t *) 0},
-   {0x006600E6, 0x09006602, nothing,  0, warn__none, &x1x8tox1x8, (const int8_t *) 0},
-   {0x00E60066, 0x09006602, nothing,  0, warn__none, &x1x8tox1x8, (const int8_t *) 0},
+   {0x00A600A6, 0x09006602, nothing,  0, warn__none, &x1x6thing, (const int8_t *) 0},
+   {0x00A600E6, 0x09006602, nothing,  1, warn__none, &x1x6_1x8,  (const int8_t *) 0},
+   {0x00E600A6, 0x09006602, nothing,  0, warn__none, &x1x6_1x8,  (const int8_t *) 0},
+   {0x00E600E6, 0x09006602, nothing,  0, warn__none, &x1x8thing, (const int8_t *) 0},
+   {0x00E60066, 0x09006602, nothing,  0, warn__none, &x1x4_1x8,  (const int8_t *) 0},
+   {0x006600A6, 0x09004600, nothing,  1, warn__none, &x1x4_1x6,  (const int8_t *) 0},
+   {0x00660066, 0x09000600, nothing,  0, warn__none, &x1x4thing, (const int8_t *) 0},
 
    {0x00860022, 0x02080300, s_ntrglccw, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    {0x00860022, 0x04001202, s_ntrglcw, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
@@ -6921,6 +6942,8 @@ void really_inner_move(
       if (ss->kind == result->kind)
          fail("This setup can't be recentered.");
       break;
+   case schema_global_matrix:
+      fail("Sorry.");
    case schema_matrix:
    case schema_partner_matrix:
    case schema_partner_partial_matrix:
@@ -7704,6 +7727,7 @@ static void move_with_real_call(
          case schema_matrix:
          case schema_partner_matrix:
          case schema_partner_partial_matrix:
+         case schema_global_matrix:
             // We allow the fractions "1/2" and "last 1/2" to be given.
             // Basic_move or matrixmove will handle them.
 

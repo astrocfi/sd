@@ -664,6 +664,22 @@ expand::thing expand::expand_init_table[] = {
     s1x8, s1x12, 0, 0U, 0x00F, false,
     warn__none, warn__none, normalize_recenter, 0},
 
+   {{0, 1, 3, 2, 13, 6, 4, 5},
+    s1x8, s1x14, 0, 0U, 0x1F80, false,
+    warn__none, warn__none, normalize_recenter, 0},
+
+   {{6, 13, 11, 12, 7, 8, 10, 9},
+    s1x8, s1x14, 0, 0U, 0x003F, false,
+    warn__none, warn__none, normalize_recenter, 0},
+
+   {{0, 1, 2, 3, 4, 8, 9, 10, 11, 5},
+    s1x10, s1x12, 0, 0U, 0x0C0, false,
+    warn__none, warn__none, normalize_recenter, 0},
+
+   {{2, 3, 4, 5, 11, 6, 7, 8, 9, 10},
+    s1x10, s1x12, 0, 0U, 0x003, false,
+    warn__none, warn__none, normalize_recenter, 0},
+
    {{1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
     s2x5, s2x6, 0, 0U, 0x801, false,
     warn__none, warn__none, normalize_recenter, 0},
@@ -2265,7 +2281,6 @@ map::map_thing map::map_init_table[] = {
     s1x2,2,MPKIND__OFFS_L_HALF,0, warn__none,  s1p5x4,    0x000, 0},
    {{0, 1,                             5, 4},
     s1x2,2,MPKIND__OFFS_R_HALF,0, warn__none,  s1p5x4,    0x000, 0},
-
 
    {{15, 14, 12, 13,                   4, 5, 7, 6},
     s1x4,2,MPKIND__OFFS_L_FULL,0, warn__none,  s2x8,      0x000, 0},
@@ -5130,9 +5145,12 @@ merge_table::concmerge_thing merge_table::merge_init_table[] = {
    {s1x4,          s2x4, 0,     0x33, 0x0C, 0x0, schema_concentric,     s1x4,        s2x4,     warn__none, 0, 0, {0, 1, 2, 3},               {0, 1, 2, 3, 4, 5, 6, 7}},
    {s1x8,          s2x4, 0x33,  0x66, 0x0C, 0x0, schema_concentric,     s1x4,        s2x2,     warn__none, 0, 0, {3, 2, 7, 6},               {0, 3, 4, 7}},
 
-   {s1x8,          s2x4, 0x0F,  0xF0, 0xAD, 0x0, schema_matrix,         s_trngl8, nothing,     warn__none, 0, 0, {-1, -1, -1, -1, 0, 1, 3, 2}, {4, 5, 6, 7, -1, -1, -1, -1}},
-   {s1x8,          s2x4, 0xF0,  0x0F, 0xAD, 0x0, schema_matrix,         s_trngl8, nothing,     warn__none, 0, 2, {0, 1, 3, 2, -1, -1, -1, -1}, {-1, -1, -1, -1, 4, 5, 6, 7}},
-   {s2x4,      s_trngl8, 0x0F,  0x0F, 0x0E, 0x0, schema_matrix,         s2x4,     nothing,     warn__none, 0, 0, {-1, -1, -1, -1, 4, 5, 6, 7}, {-1, -1, -1, -1, 0, 1, 2, 3}},
+   {s1x8,          s2x4, 0x0F,  0xF0, 0xAD, 0x0, schema_matrix,         s_trngl8, nothing,     warn__none, 0, 0,
+    {-1, -1, -1, -1, 0, 1, 3, 2}, {4, 5, 6, 7, -1, -1, -1, -1}},
+   {s1x8,          s2x4, 0xF0,  0x0F, 0xAD, 0x0, schema_matrix,         s_trngl8, nothing,     warn__none, 0, 2,
+    {0, 1, 3, 2, -1, -1, -1, -1}, {-1, -1, -1, -1, 4, 5, 6, 7}},
+   {s2x4,      s_trngl8, 0x0F,  0x0F, 0x0E, 0x0, schema_matrix,         s2x4,     nothing,     warn__none, 0, 0,
+    {-1, -1, -1, -1, 4, 5, 6, 7}, {-1, -1, -1, -1, 0, 1, 2, 3}},
    {s1x8,      s_trngl8, 0xF0,  0xF0, 0x0D, 0x0, schema_matrix,         s1x8,     nothing,     warn__none, 0, 1,
     {0, 1, 2, 3, -1, -1, -1, -1}, {4, 5, 7, 6, -1, -1, -1, -1}},
    {s1x4,      s_trngl4, 0x0C,  0x0C, 0x0D, 0x1, schema_nothing,     nothing,     nothing,     warn__none, 0, 0,
@@ -5143,51 +5161,60 @@ merge_table::concmerge_thing merge_table::merge_init_table[] = {
     {-1, -1, -1, 1}, {0}},
    {s2x4,      s_trngl8, 0xC3,  0x0F, 0x0D, 0x0, schema_matrix,     s_c1phan,     nothing,     warn__none, 0, 0,
     {-1, -1, 11, 9, 12, 14, -1, -1}, {-1, -1, -1, -1, 0, 2, 7, 5}},
-   {s_trngl8,  splinepdmd,   0, 0xF0, 0x0D, 0x0, schema_matrix,      s_trngl8,    nothing,     warn__none, 0, 1, {0, 1, 2, 3, 4, 5, 6, 7}, {0, 1, 2, 3, -1, -1, -1, -1}},
-   {s_trngl8,  splinepdmd,   0xF0, 0, 0x0D, 0x0, schema_matrix,    splinepdmd,    nothing,     warn__none, 0, 0, {0, 1, 2, 3, -1, -1, -1, -1}, {0, 1, 2, 3, 4, 5, 6, 7}},
+   {s_trngl8,  splinepdmd,   0, 0xF0, 0x0D, 0x0, schema_matrix,      s_trngl8,    nothing,     warn__none, 0, 1,
+    {0, 1, 2, 3, 4, 5, 6, 7}, {0, 1, 2, 3, -1, -1, -1, -1}},
+   {s_trngl8,  splinepdmd,   0xF0, 0, 0x0D, 0x0, schema_matrix,    splinepdmd,    nothing,     warn__none, 0, 0,
+    {0, 1, 2, 3, -1, -1, -1, -1}, {0, 1, 2, 3, 4, 5, 6, 7}},
+   {s_trngl8,  splinedmd, 0xF0, 0xF0, 0x07, 0x0, schema_matrix,          s1x8,    nothing,     warn__none, 0, 0,
+    {4, 5, 7, 6, -1, -1, -1, -1}, {0, 1, 3, 2, -1, -1, -1, -1}},
+   {s_trngl8,  slinepdmd, 0x0F, 0x0F, 0x0B, 0x0, schema_matrix,          s2x4,    nothing,     warn__none, 0, 0,
+    {-1, -1, -1, -1, 4, 5, 6, 7}, {-1, -1, -1, -1, 0, 1, 3, 2}},
+   {s_trngl8,  sdmdpdmd,  0xF0, 0xF0, 0x0B, 0x0, schema_matrix,    splinepdmd,    nothing,     warn__none, 0, 1,
+    {0, 1, 2, 3, -1, -1, -1, -1}, {6, 7, 4, 5, -1, -1, -1, -1}},
+   {s_trngl8,  sdmdpdmd,  0x0F, 0x0F, 0x0B, 0x0, schema_matrix,      slinedmd,    nothing,     warn__none, 0, 2,
+    {-1, -1, -1, -1, 4, 5, 7, 6}, {-1, -1, -1, -1, 2, 3, 0, 1}},
+   {s_trngl8,  sdmdpdmd,  0x0F, 0xF0, 0x0E, 0x0, schema_matrix,     slinepdmd,    nothing,     warn__none, 0, 0,
+    {-1, -1, -1, -1, 4, 5, 7, 6}, {0, 1, 2, 3, -1, -1, -1, -1}},
+   {s2x4,      splinedmd, 0xF0, 0xF0, 0x0D, 0x0, schema_matrix,      s_trngl8,    nothing,     warn__none, 0, 1,
+    {4, 5, 6, 7, -1, -1, -1, -1}, {0, 1, 2, 3, -1, -1, -1, -1}},
+   {s2x4,      sdmdpdmd, 0x0F, 0x0F, 0x0E, 0x0, schema_matrix,      slinedmd,    nothing,      warn__none, 0, 2,
+    {-1, -1, -1, -1, 4, 5, 7, 6}, {-1, -1, -1, -1, 2, 3, 0, 1}},
+   {s_qtag,    s2x4,      0xF0, 0xF0, 0x0D, 0x0, schema_matrix,      s_trngl8,    nothing,     warn__none, 0, 1,
+    {4, 5, 6, 7, -1, -1, -1, -1}, {0, 1, 2, 3, -1, -1, -1, -1}},
+   {s_qtag,    s2x4,      0x1E, 0x0F, 0x0D, 0x0, schema_matrix,      slinedmd,    nothing,     warn__none, 0, 2,
+    {0, -1, -1, -1, -1, 2, 3, 1}, {-1, -1, -1, -1, 4, 5, 7, 6}},
+   {s_trngl8,  slinedmd,  0x0F, 0,    0x07, 0x0, schema_matrix,      slinedmd,    nothing,     warn__none, 0, 0,
+    {-1, -1, -1, -1, 3, 2, 1, 0}, {0, 1, 2, 3, 4, 5, 6, 7}},
+   {s_trngl8,  slinedmd,     0, 0x0F, 0x0E, 0x0, schema_matrix,      s_trngl8,    nothing,     warn__none, 0, 0,
+    {0, 1, 2, 3, 4, 5, 6, 7}, {-1, -1, -1, -1, 4, 5, 7, 6}},
+   {s_trngl8,  slinedmd,  0x0F, 0x0F, 0x0B, 0x0, schema_matrix,          s2x4,    nothing,     warn__none, 0, 0,
+    {-1, -1, -1, -1, 4, 5, 6, 7}, {-1, -1, -1, -1, 0, 1, 3, 2}},
+   {s2x4,      slinedmd,     0xF0, 0, 0x0E, 0x0, schema_matrix,      slinedmd,    nothing,     warn__none, 0, 0,
+    {4, 5, 7, 6, -1, -1, -1, -1}, {0, 1, 2, 3, 4, 5, 6, 7}},
+   {s2x4,      slinedmd,     0, 0x0F, 0x0E, 0x0, schema_matrix,      s2x4,        nothing,     warn__none, 0, 0,
+    {0, 1, 2, 3, 4, 5, 6, 7}, {-1, -1, -1, -1, 0, 1, 3, 2}},
+   {s2x4,      slinepdmd,    0xF0, 0, 0x0E, 0x0, schema_matrix,     slinepdmd,    nothing,     warn__none, 0, 0,
+    {4, 5, 7, 6, -1, -1, -1, -1}, {0, 1, 2, 3, 4, 5, 6, 7}},
+   {s2x4,      slinepdmd,     0, 0x0F, 0x0E, 0x0, schema_matrix,     s2x4,        nothing,     warn__none, 0, 0,
+    {0, 1, 2, 3, 4, 5, 6, 7}, {-1, -1, -1, -1, 0, 1, 3, 2}},
+   {s1x8,      slinepdmd,  0x0F, 0x0F, 0x0D, 0x0, schema_matrix,    s_trngl8,     nothing,     warn__none, 0, 0,
+    {-1, -1, -1, -1, 0, 1, 3, 2}, {-1, -1, -1, -1, 4, 5, 7, 6}},
+   {s1x8,      slinedmd,   0x0F, 0x0F, 0x0D, 0x0, schema_matrix,    s_trngl8,     nothing,     warn__none, 0, 0,
+    {-1, -1, -1, -1, 0, 1, 3, 2}, {-1, -1, -1, -1, 4, 5, 7, 6}},
+   {s1x8,      sdmdpdmd,   0x0F, 0x0F, 0x0D, 0x0, schema_matrix,   splinedmd,     nothing,     warn__none, 0, 3,
+    {-1, -1, -1, -1, 0, 1, 3, 2}, {-1, -1, -1, -1, 5, 6, 7, 4}},
+   {s1x8,      sdmdpdmd,   0xF0, 0xF0, 0x0D, 0x0, schema_matrix,  splinepdmd,     nothing,     warn__none, 0, 1,
+    {0, 1, 3, 2, -1, -1, -1, -1}, {6, 7, 4, 5, -1, -1, -1, -1}},
+   {s_trngl8,  slinepdmd,    0x0F, 0, 0x0E, 0x0, schema_matrix,    slinepdmd,     nothing,     warn__none, 0, 0,
+    {-1, -1, -1, -1, 4, 5, 7, 6}, {0, 1, 2, 3, 4, 5, 6, 7}},
+   {s_trngl8,  splinedmd,    0, 0xF0, 0x0D, 0x0, schema_matrix,     s_trngl8,     nothing,     warn__none, 0, 1,
+    {0, 1, 2, 3, 4, 5, 6, 7}, {0, 1, 2, 3, -1, -1, -1, -1}},
+   {s_trngl8,  splinedmd,    0xF0, 0, 0x0D, 0x0, schema_matrix,    splinedmd,     nothing,     warn__none, 0, 0,
+    {0, 1, 2, 3, -1, -1, -1, -1}, {0, 1, 2, 3, 4, 5, 6, 7}},
 
-   {s_trngl8,  splinedmd, 0xF0, 0xF0, 0x07, 0x0, schema_matrix,          s1x8,    nothing,     warn__none, 0, 0, {4, 5, 7, 6, -1, -1, -1, -1}, {0, 1, 3, 2, -1, -1, -1, -1}},
-
-   {s_trngl8,  slinepdmd, 0x0F, 0x0F, 0x0B, 0x0, schema_matrix,          s2x4,    nothing,     warn__none, 0, 0, {-1, -1, -1, -1, 4, 5, 6, 7}, {-1, -1, -1, -1, 0, 1, 3, 2}},
-
-   {s_trngl8,  sdmdpdmd,  0xF0, 0xF0, 0x0B, 0x0, schema_matrix,    splinepdmd,    nothing,     warn__none, 0, 1, {0, 1, 2, 3, -1, -1, -1, -1}, {6, 7, 4, 5, -1, -1, -1, -1}},
-   {s_trngl8,  sdmdpdmd,  0x0F, 0x0F, 0x0B, 0x0, schema_matrix,      slinedmd,    nothing,     warn__none, 0, 2, {-1, -1, -1, -1, 4, 5, 7, 6}, {-1, -1, -1, -1, 2, 3, 0, 1}},
-   {s_trngl8,  sdmdpdmd,  0x0F, 0xF0, 0x0E, 0x0, schema_matrix,     slinepdmd,    nothing,  warn__none, 0, 0, {-1, -1, -1, -1, 4, 5, 7, 6}, {0, 1, 2, 3, -1, -1, -1, -1}},
-
-
-   {s2x4,      splinedmd, 0xF0, 0xF0, 0x0D, 0x0, schema_matrix,      s_trngl8,    nothing,     warn__none, 0, 1, {4, 5, 6, 7, -1, -1, -1, -1}, {0, 1, 2, 3, -1, -1, -1, -1}},
-
-   {s2x4,      sdmdpdmd, 0x0F, 0x0F, 0x0E, 0x0, schema_matrix,      slinedmd,    nothing,     warn__none, 0, 2, {-1, -1, -1, -1, 4, 5, 7, 6}, {-1, -1, -1, -1, 2, 3, 0, 1}},
-
-   {s_qtag,    s2x4,      0xF0, 0xF0, 0x0D, 0x0, schema_matrix,      s_trngl8,    nothing,     warn__none, 0, 1, {4, 5, 6, 7, -1, -1, -1, -1}, {0, 1, 2, 3, -1, -1, -1, -1}},
-
-   {s_qtag,    s2x4,      0x1E, 0x0F, 0x0D, 0x0, schema_matrix,      slinedmd,    nothing,     warn__none, 0, 2, {0, -1, -1, -1, -1, 2, 3, 1}, {-1, -1, -1, -1, 4, 5, 7, 6}},
-
-   {s_trngl8,  slinedmd,  0x0F, 0,    0x07, 0x0, schema_matrix,      slinedmd,    nothing,     warn__none, 0, 0, {-1, -1, -1, -1, 3, 2, 1, 0}, {0, 1, 2, 3, 4, 5, 6, 7}},
-   {s_trngl8,  slinedmd,     0, 0x0F, 0x0E, 0x0, schema_matrix,      s_trngl8,    nothing,     warn__none, 0, 0, {0, 1, 2, 3, 4, 5, 6, 7}, {-1, -1, -1, -1, 4, 5, 7, 6}},
-
-   {s_trngl8,  slinedmd,  0x0F, 0x0F, 0x0B, 0x0, schema_matrix,          s2x4,    nothing,     warn__none, 0, 0, {-1, -1, -1, -1, 4, 5, 6, 7}, {-1, -1, -1, -1, 0, 1, 3, 2}},
-
-   {s2x4,      slinedmd,     0xF0, 0, 0x0E, 0x0, schema_matrix,      slinedmd,    nothing,     warn__none, 0, 0, {4, 5, 7, 6, -1, -1, -1, -1}, {0, 1, 2, 3, 4, 5, 6, 7}},
-   {s2x4,      slinedmd,     0, 0x0F, 0x0E, 0x0, schema_matrix,      s2x4,        nothing,     warn__none, 0, 0, {0, 1, 2, 3, 4, 5, 6, 7}, {-1, -1, -1, -1, 0, 1, 3, 2}},
-   {s2x4,      slinepdmd,    0xF0, 0, 0x0E, 0x0, schema_matrix,     slinepdmd,    nothing,     warn__none, 0, 0, {4, 5, 7, 6, -1, -1, -1, -1}, {0, 1, 2, 3, 4, 5, 6, 7}},
-
-   {s2x4,      slinepdmd,     0, 0x0F, 0x0E, 0x0, schema_matrix,     s2x4,        nothing,     warn__none, 0, 0, {0, 1, 2, 3, 4, 5, 6, 7}, {-1, -1, -1, -1, 0, 1, 3, 2}},
-
-   {s1x8,      slinepdmd,  0x0F, 0x0F, 0x0D, 0x0, schema_matrix,    s_trngl8,     nothing,     warn__none, 0, 0, {-1, -1, -1, -1, 0, 1, 3, 2}, {-1, -1, -1, -1, 4, 5, 7, 6}},
-   {s1x8,      slinedmd,   0x0F, 0x0F, 0x0D, 0x0, schema_matrix,    s_trngl8,     nothing,     warn__none, 0, 0, {-1, -1, -1, -1, 0, 1, 3, 2}, {-1, -1, -1, -1, 4, 5, 7, 6}},
-
-   {s1x8,      sdmdpdmd,   0x0F, 0x0F, 0x0D, 0x0, schema_matrix,   splinedmd,     nothing,     warn__none, 0, 3, {-1, -1, -1, -1, 0, 1, 3, 2}, {-1, -1, -1, -1, 5, 6, 7, 4}},
-   {s1x8,      sdmdpdmd,   0xF0, 0xF0, 0x0D, 0x0, schema_matrix,  splinepdmd,     nothing,     warn__none, 0, 1, {0, 1, 3, 2, -1, -1, -1, -1}, {6, 7, 4, 5, -1, -1, -1, -1}},
-
-   {s_trngl8,  slinepdmd,    0x0F, 0, 0x0E, 0x0, schema_matrix,    slinepdmd,     nothing,     warn__none, 0, 0, {-1, -1, -1, -1, 4, 5, 7, 6}, {0, 1, 2, 3, 4, 5, 6, 7}},
-   {s_trngl8,  splinedmd,    0, 0xF0, 0x0D, 0x0, schema_matrix,     s_trngl8,     nothing,     warn__none, 0, 1, {0, 1, 2, 3, 4, 5, 6, 7}, {0, 1, 2, 3, -1, -1, -1, -1}},
-   {s_trngl8,  splinedmd,    0xF0, 0, 0x0D, 0x0, schema_matrix,    splinedmd,     nothing,     warn__none, 0, 0, {0, 1, 2, 3, -1, -1, -1, -1}, {0, 1, 2, 3, 4, 5, 6, 7}},
-
-   // When all else fails, go to a sx1x8 (gigantic thar).
-   {s1x8,          s1x8,        0, 0, 0x0D, 0x0, schema_matrix,        sx1x8,     nothing,     warn__none, 0, 1, {0, 1, 3, 2, 8, 9, 11, 10},      {12, 13, 15, 14, 4, 5, 7, 6}},
    // Go to a thar.
-   {s1x8,          s1x8, 0x33,  0x33, 0x0D, 0x0, schema_matrix,       s_thar,     nothing,     warn__none, 0, 1, {-1, -1, 1, 0, -1, -1, 5, 4},               {-1, -1, 7, 6, -1, -1, 3, 2}},
+   {s1x8,          s1x8, 0x33,  0x33, 0x0D, 0x0, schema_matrix,       s_thar,     nothing,     warn__none, 0, 1,
+    {-1, -1, 1, 0, -1, -1, 5, 4}, {-1, -1, 7, 6, -1, -1, 3, 2}},
 
    // Need both of these because they won't canonicalize.
    {s1x8,          s1x8, 0xCC,  0x33, 0x0D, 0x1, schema_concentric,     s1x4,        s1x4,     warn__none, 0, 0, {3, 2, 7, 6},               {0, 1, 4, 5}},
@@ -6171,6 +6198,54 @@ static const coordrec thingalamo = {s_alamo, 0x23,
       -1, -1,  6, -1, -1,  3, -1, -1,
       -1, -1, -1,  5,  4, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
+static const coordrec thingx1x6 = {sx1x6, 0x23,
+   {-10,  -6,  -2,   0,   0,   0,  10,   6,   2,   0,   0,   0},
+   {  0,   0,   0,  10,   6,   2,   0,   0,   0, -10,  -6,  -2}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1,  3, -1, -1, -1,
+      -1, -1, -1, -1,  4,  8, -1, -1,   // Note funny placement of 8.
+      -1,  0,  1,  2,  5,  7,  6, -1,
+      -1, -1, -1, -1, 11, -1, -1, -1,
+      -1, -1, -1, -1, 10, -1, -1, -1,
+      -1, -1, -1, -1,  9, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
+static const coordrec things1x4_1x6 = {s1x4_1x6, 0x23,
+   {-10,  -6,  -2,   0,   0,  10,   6,   2,   0,   0},
+   {  0,   0,   0,   6,   2,   0,   0,   0,  -6,  -2}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1,  3,  7, -1, -1,   // Note funny placement of 7.
+      -1,  0,  1,  2,  4,  6,  5, -1,
+      -1, -1, -1, -1,  9, -1, -1, -1,
+      -1, -1, -1, -1,  8, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
+static const coordrec things1x4_1x8 = {s1x4_1x8, 0x23,
+   {-14, -10,  -6,  -2,   0,   0,  14,  10,   6,   2,   0,   0},
+   {  0,   0,   0,   0,   6,   2,   0,   0,   0,   0,  -6,  -2}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1,  4,  9, -1, -1,   // Note funny placement of 9.
+       0,  1,  2,  3,  5,  8,  7,  6,
+      -1, -1, -1, -1, 11, -1, -1, -1,
+      -1, -1, -1, -1, 10, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
+static const coordrec things1x6_1x8 = {s1x6_1x8, 0x23,
+   {-14, -10,  -6,  -2,   0,   0,   0,  14,  10,   6,   2,   0,   0,   0},
+   {  0,   0,   0,   0,  10,   6,   2,   0,   0,   0,   0, -10,  -6,  -2}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1,  4, -1, -1, -1,
+      -1, -1, -1, -1,  5, 10, -1, -1,   // Note funny placement of 10.
+       0,  1,  2,  3,  6,  9,  8,  7,
+      -1, -1, -1, -1, 13, -1, -1, -1,
+      -1, -1, -1, -1, 12, -1, -1, -1,
+      -1, -1, -1, -1, 11, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
 static const coordrec thingx1x8 = {sx1x8, 0x23,
@@ -10032,15 +10107,45 @@ const setup_attr setup_attrs[] = {
     {(Cstring) 0,
      (Cstring) 0}},
    {11,                     // sx1x6
-    (const coordrec *) 0,
-    (const coordrec *) 0,
+    &thingx1x6,
+    &thingx1x6,
+    {0, 0, 0, 0},
+    {b_nothing, b_nothing},
+    {0, 0},
+    SPROP_4_WAY_SYMMETRY,
+    (const id_bit_table *) 0,
+    {"666d@666e@666f@abc6ihg@666l@666k@666j",
+     (Cstring) 0}},
+   {9,                      // s1x4_1x6
+    &things1x4_1x6,
+    &things1x4_1x6,
     {0, 0, 0, 0},
     {b_nothing, b_nothing},
     {0, 0},
     0U,
     (const id_bit_table *) 0,
-    {(Cstring) 0,
-     (Cstring) 0}},
+    {"6666d@6666e@abc6hgf@6666j@6666i",
+     "66a@66b@66c@ij6ed@66h@66g@66f"}},
+   {11,                     // s1x4_1x8
+    &things1x4_1x8,
+    &things1x4_1x8,
+    {0, 0, 0, 0},
+    {b_nothing, b_nothing},
+    {0, 0},
+    0U,
+    (const id_bit_table *) 0,
+    {"6666e@6666f@abcd6jihg@6666l@6666k",
+     "66a@66b@66c@66d@kl6fe@66j@66i@66h@66g"}},
+   {13,                     // s1x6_1x8
+    &things1x6_1x8,
+    &things1x6_1x8,
+    {0, 0, 0, 0},
+    {b_nothing, b_nothing},
+    {0, 0},
+    0U,
+    (const id_bit_table *) 0,
+    {"6666e@6666f@6666g@abcd6kjih@6666n@6666m@6666l",
+     "666a@666b@666c@666d@lmn6gfe@666k@666j@666i@666h"}},
    {15,                     // sx1x8
     &thingx1x8,
     &thingx1x8,
@@ -10724,6 +10829,8 @@ const schema_attr schema_attrs[] = {
     schema_nothing},                     // schema_partner_matrix
    {SCA_SNAGOK,
     schema_nothing},                     // schema_partner_partial_matrix
+   {0,
+    schema_nothing},                     // schema_global_matrix
    {0,
     schema_nothing},                     // schema_roll
    {0,

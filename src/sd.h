@@ -1033,7 +1033,8 @@ struct calldefn {
       struct {
          uint32_t matrix_flags;
          matrix_def_block *matrix_def_list;
-      } matrix;         // if schema = schema_matrix, schema_partner_matrix, or schema_partner_partial_matrix
+      } matrix;         // if schema = schema_matrix, schema_partner_matrix,
+                        // schema_partner_partial_matrix, or schema_global_matrix
       struct {
          int howmanyparts;
          by_def_item *defarray;  // Dynamically allocated, there are "howmanyparts" of them.

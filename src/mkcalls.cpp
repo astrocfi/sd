@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2020  William B. Ackerman.
+//    Copyright (C) 1990-2021  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -622,7 +622,10 @@ const char *estab[] = {
    "???",
    "???",
    "???",
-   "???",
+   "x1x6",
+   "s1x4_1x6",
+   "s1x4_1x8",
+   "s1x6_1x8",
    "x1x8",
    "???",
    "???",
@@ -810,6 +813,7 @@ const char *schematab[] = {
    "matrix",
    "partnermatrix",
    "partnerpartialmatrix",
+   "globalmatrix",
    "rolldefine",
    "recenter",
    "seq",
@@ -2956,6 +2960,7 @@ int main(int argc, char *argv[])
       case schema_matrix:
       case schema_partner_matrix:
       case schema_partner_partial_matrix:
+      case schema_global_matrix:
          matrixflags = 0;
 
          for (;;) {     // Get matrix call options.
@@ -2968,7 +2973,7 @@ int main(int argc, char *argv[])
          write_fullword(matrixflags);
 
          for ( ;; ) {
-            write_callarray((ccc == schema_matrix) ? 2 : 16, true);
+            write_callarray((ccc == schema_matrix || ccc == schema_global_matrix) ? 2 : 16, true);
             get_tok_or_eof();
 
             if (tok_kind != tok_symbol || strcmp(tok_str, "alternate_definition"))

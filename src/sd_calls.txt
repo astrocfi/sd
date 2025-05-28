@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2020  William B. Ackerman.
+//    Copyright (C) 1990-2021  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -57,7 +57,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "39.30"
+version "39.31"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve dont_raise_overcast
@@ -1398,6 +1398,12 @@ call "counter rotate for detour" dontshow tag ctrsdetour
    setup star star
       array [CR1E 0 AL1W 0]
 
+/*
+call "new counter rotate" mainstream
+   // This should work with a shorter list.  See sdinit at 909 and mkcalls at 2976.
+   globalmatrix lateral_mirror_if_right_of_center [CR20E 20 CR20E 20]
+*/
+     
 call "counter rotate @b" c1
             neednumber visible_fractions distribute_repetitions
             magic_is_inherited single_is_inherited nxn_is_inherited dont_raise_overcast
@@ -7850,8 +7856,8 @@ call "_soft @0 part 2.2" dontshow tag soft_touch2_any2
    singleconc_together nullcall [mandatory_anycall] nullcall [conc_force_spots]
 
 call "_soft touch @b part 2" dontshow tag soft_touch2_n_4
-            neednumber
-   singlecrossconc touch_n_4 [] uturnaway []
+            neednumber gen_sting_is_inherited
+   singlecrossconc touch_n_4 [inherit_gensting] uturnaway []
 
 call "soft @2touch@3" c4a
             visible_fractions gen_sting_is_inherited
@@ -7866,7 +7872,7 @@ call "soft @0" c4a
 call "soft touch @b" c4a
             visible_fractions neednumber gen_sting_is_inherited
    seq soft_touch1 [inherit_gensting]
-   seq soft_touch2_n_4 []
+   seq soft_touch2_n_4 [inherit_gensting]
 
 // Beware!!!  This is a problematical and easily abused call.
 call "box the gnat" mainstream
@@ -10648,9 +10654,13 @@ call "trail the top" c4
 call "follow your neighbor" plus tag neighbor
    setup 2x2 1x4 rotate restriction wave_only
       array [CR0S AL0N AL3N CR3S]
-   setup pmd 1x4 qualifier right wave_only restriction unusual alwaysfail
+   // When deciding whether to divide an 8-person qtag pair into two single qtags,
+   // the left-right indicators won't be used, because the "miniwaves" qualifier
+   // just demands miniwaves in the center line, which could be one right and one left.
+   // But once it's been divided, "miniwaves" on a single 1/4 tag understands "left" and "right".
+   setup pmd 1x4 qualifier right miniwaves restriction unusual alwaysfail
       array [CR0W CR3W 0 0]
-   setup pmd 1x4 qualifier left wave_only restriction unusual alwaysfail
+   setup pmd 1x4 qualifier left miniwaves restriction unusual alwaysfail
       array [AL0E 0 0 AL3E]
             alternate_definition [grand] a1
    setup 3x2 1x6 restriction wave_only

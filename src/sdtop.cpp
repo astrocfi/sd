@@ -2005,7 +2005,7 @@ restriction_tester::restr_initializer restriction_tester::restr_init_table0[] = 
    {s_ptpd, cr_dmd_intlk, 4, {0, 6, 2, 4},
     {0}, {0}, {0}, true, chk_wave},
    {s_qtag, cr_miniwaves, 1, {6, 3, 7, 2},
-    {2}, {0}, {0}, true, chk_anti_groups},
+    {2, 1}, {0}, {0}, true, chk_anti_groups},
    {s_qtag, cr_couples_only, 2, {6, 2, 7, 3},
     {2}, {0}, {0}, true, chk_groups},
    {sbigdmd, cr_2fl_only, 4, {3, 9, 2, 8},
@@ -2895,6 +2895,9 @@ restriction_test_result verify_restriction(
       goto good;
    case restriction_tester::chk_anti_groups:
       limit = rr->map2[0];
+      // Under certain circumstances (dividing a qtag made of different-handedness single qtags)
+      // cr_miniwaves has no handedness.  (Though after division, in the qingle qtags, it will.)
+      if (rr->map2[1] != 0) tt.assump_both = 0;
       map1item = rr->map1;
       szlim = rr->size*limit;
 

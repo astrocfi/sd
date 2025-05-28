@@ -189,10 +189,89 @@ static collision_map collision_map_table[] = {
    {4, 0x000000, 0x0F, 0x0F, {0, 1, 2, 3},         {0, 3, 5, 6},          {1, 2, 4, 7},
     s1x4,        s1x8,        0, warn__really_no_collision, 0},   // more of same
 
-   {6, 0x000000, 0xFC, 0x30, {2, 3, 4, 5, 6, 7},   {5, 4, 7, 9, 11, 10},  {5, 4, 6, 8, 11, 10},
+   // Counter rotates from 1x8's in various unsymmetrical onfigurations.
+#if defined(OLDWAY)
+   // 2
+   {7, 0x000000, 0xF7, 0x80, {7, 0, 1, 2, 6, 5, 4},   {8, 0, 1, 4, 9, 6, 5},  {7, 0, 1, 4, 9, 6, 5},
+    s1x8,        s1x10,       0, warn__really_no_collision, 0},
+   {7, 0x000000, 0x7F, 0x08, {3, 0, 1, 2, 6, 5, 4},   {2, 0, 1, 4, 9, 6, 5},  {3, 0, 1, 4, 9, 6, 5},
+    s1x8,        s1x10,       0, warn__really_no_collision, 0},
+   // 4
+   {7, 0x000000, 0xFD, 0x20, {5, 0, 3, 2, 6, 7, 4},   {7, 0, 3, 4, 9, 8, 5},  {6, 0, 3, 4, 9, 8, 5},
+    s1x8,        s1x10,       0, warn__really_no_collision, 0},
+   {7, 0x000000, 0xDF, 0x02, {1, 0, 3, 2, 6, 7, 4},   {1, 0, 3, 4, 9, 8, 5},  {2, 0, 3, 4, 9, 8, 5},
+    s1x8,        s1x10,       0, warn__really_no_collision, 0},
+   // 6
+   {6, 0x000000, 0xF5, 0xA0, {7, 5, 0, 2, 6, 4},   {10, 8, 0, 5, 11, 6},  {9, 7, 0, 5, 11, 6},
     s1x8,        s1x12,       0, warn__really_no_collision, 0},
-   {6, 0x000000, 0xCF, 0x03, {0, 1, 2, 3, 6, 7},   {0, 2, 5, 4, 11, 10},  {1, 3, 5, 4, 11, 10},
+   {6, 0x000000, 0x5F, 0x0A, {1, 3, 0, 2, 6, 4},   {1, 3, 0, 5, 11, 6},  {2, 4, 0, 5, 11, 6},
     s1x8,        s1x12,       0, warn__really_no_collision, 0},
+   // 8
+   {7, 0x000000, 0xFE, 0x10, {4, 1, 3, 2, 6, 7, 5},   {6, 2, 3, 4, 9, 8, 7},  {5, 2, 3, 4, 9, 8, 7},
+    s1x8,        s1x10,       0, warn__really_no_collision, 0},
+   {7, 0x000000, 0xEF, 0x01, {0, 1, 3, 2, 6, 7, 5},   {0, 2, 3, 4, 9, 8, 7},  {1, 2, 3, 4, 9, 8, 7},
+    s1x8,        s1x10,       0, warn__really_no_collision, 0},
+   // A
+   {6, 0x000000, 0xF6, 0x90, {7, 4, 1, 2, 6, 5},   {10, 7, 2, 5, 11, 8},  {9, 6, 2, 5, 11, 8},
+    s1x8,        s1x12,       0, warn__really_no_collision, 0},
+   {6, 0x000000, 0x6F, 0x09, {0, 3, 1, 2, 6, 5},   {0, 3, 2, 5, 11, 8},  {1, 4, 2, 5, 11, 8},
+    s1x8,        s1x12,       0, warn__really_no_collision, 0},
+   // C
+   {6, 0x000000, 0xFC, 0x30, {5, 4, 3, 2, 6, 7},   {9, 7, 4, 5, 11, 10},  {8, 6, 4, 5, 11, 10},
+    s1x8,        s1x12,       0, warn__really_no_collision, 0},
+   {6, 0x000000, 0xCF, 0x03, {0, 1, 3, 2, 6, 7},   {0, 2, 4, 5, 11, 10},  {1, 3, 4, 5, 11, 10},
+    s1x8,        s1x12,       0, warn__really_no_collision, 0},
+   // E
+   {5, 0x000000, 0xF4, 0xB0, {7, 5, 4, 2, 6},   {12, 10, 8, 6, 13},  {11, 9, 7, 6, 13},
+    s1x8,        s1x14,       0, warn__really_no_collision, 0},
+   {5, 0x000000, 0x4F, 0x0B, {0, 1, 3, 2, 6},   {0, 2, 4, 6, 13},  {1, 3, 5, 6, 13},
+    s1x8,        s1x14,       0, warn__really_no_collision, 0},
+#else
+   // New way, follow your arc.
+   // 2
+   {7, 0x000000, 0xF7, 0x80, {7, 0, 1, 2, 6, 5, 4},   {8, 1, 2, 4, 9, 6, 5},  {7, 1, 2, 4, 9, 6, 5},
+    s1x8,        s1x10,       0, warn__really_no_collision, 0},
+   {7, 0x000000, 0x7F, 0x08, {3, 0, 1, 2, 6, 5, 4},   {2, 0, 1, 4, 9, 7, 6},  {3, 0, 1, 4, 9, 7, 6},
+    s1x8,        s1x10,       0, warn__really_no_collision, 0},
+   // 4
+   {7, 0x000000, 0xFD, 0x20, {0, 5, 4, 3, 2, 6, 7},   {1, 7, 5, 3, 4, 9, 8},  {1, 6, 5, 3, 4, 9, 8},
+    s1x8,        s1x10,       0, warn__really_no_collision, 0},
+   {7, 0x000000, 0xDF, 0x02, {0, 1, 4, 3, 2, 6, 7},   {0, 1, 6, 3, 4, 9, 8},  {0, 2, 6, 3, 4, 9, 8},
+    s1x8,        s1x10,       0, warn__really_no_collision, 0},
+   // 6
+   {6, 0x000000, 0xF5, 0xA0, {7, 5, 0, 2, 6, 4},   {10, 8, 2, 5, 11, 6},  {9, 7, 2, 5, 11, 6},
+    s1x8,        s1x12,       0, warn__really_no_collision, 0},
+   {6, 0x000000, 0x5F, 0x0A, {1, 3, 0, 2, 6, 4},   {1, 3, 0, 5, 11, 8},  {2, 4, 0, 5, 11, 8},
+    s1x8,        s1x12,       0, warn__really_no_collision, 0},
+   // 8
+   {7, 0x000000, 0xFE, 0x10, {4, 1, 3, 2, 6, 7, 5},   {6, 2, 3, 4, 9, 8, 7},  {5, 2, 3, 4, 9, 8, 7},
+    s1x8,        s1x10,       0, warn__really_no_collision, 0},
+   {7, 0x000000, 0xEF, 0x01, {0, 1, 3, 2, 6, 7, 5},   {0, 2, 3, 4, 9, 8, 7},  {1, 2, 3, 4, 9, 8, 7},
+    s1x8,        s1x10,       0, warn__really_no_collision, 0},
+   // A   (fixed)
+   {6, 0x000000, 0xF6, 0x90, {7, 4, 1, 2, 6, 5},   {10, 7, 3, 5, 11, 8},  {9, 6, 3, 5, 11, 8},
+    s1x8,        s1x12,       0, warn__really_no_collision, 0},
+   {6, 0x000000, 0x6F, 0x09, {0, 3, 1, 2, 6, 5},   {0, 3, 2, 5, 11, 9},  {1, 4, 2, 5, 11, 9},
+    s1x8,        s1x12,       0, warn__really_no_collision, 0},
+   // C
+   {6, 0x000000, 0xFC, 0x30, {5, 4, 3, 2, 6, 7},   {9, 7, 4, 5, 11, 10},  {8, 6, 4, 5, 11, 10},
+    s1x8,        s1x12,       0, warn__really_no_collision, 0},
+   {6, 0x000000, 0xCF, 0x03, {0, 1, 3, 2, 6, 7},   {0, 2, 4, 5, 11, 10},  {1, 3, 4, 5, 11, 10},
+    s1x8,        s1x12,       0, warn__really_no_collision, 0},
+   // E
+   {5, 0x000000, 0xF4, 0xB0, {7, 5, 4, 2, 6},   {12, 10, 8, 6, 13},  {11, 9, 7, 6, 13},
+    s1x8,        s1x14,       0, warn__really_no_collision, 0},
+   {5, 0x000000, 0x4F, 0x0B, {0, 1, 3, 2, 6},   {0, 2, 4, 6, 13},  {1, 3, 5, 6, 13},
+    s1x8,        s1x14,       0, warn__really_no_collision, 0},
+
+   // F
+   {4, 0x000000, 0xF0, 0xF0, {6, 7, 5, 4},   {15, 13, 11, 9},  {14, 12, 10, 8},
+    s1x8,        s1x16,       0, warn_bad_collision, 0},
+   {4, 0x000000, 0x0F, 0x0F, {0, 1, 3, 2},   {0, 2, 4, 6},  {1, 3, 5, 7},
+    s1x8,        s1x16,       0, warn_bad_collision, 0},
+
+
+#endif
 
    {4, 0x022022, 0xAA, 0xAA, {1, 3, 5, 7},         {2, 5, 7, 0},          {3, 4, 6, 1},
     s_spindle,   s_crosswave, 0, warn__none, 0},   // from trade by
@@ -623,7 +702,8 @@ void collision_collector::install_with_collision(
           ((m_callflags1 & CFLAG1_ENDS_TAKE_RIGHT_HANDS) &&
            (((result->kind == s1x4 || result->kind == sdmd) && !(resultplace&1)) ||
             (result->kind == s2x4 && !((resultplace+1)&2)) ||
-            ((result->kind == s_qtag || result->kind == s1x8) && !(resultplace&2)) ||
+            ((result->kind == s_qtag) && !(resultplace&2)) ||
+            ((result->kind == s1x8) && ((resultplace+2) & 3) != 0) ||
             result->kind == s2x2))) {
          // Collisions are legal.
       }
