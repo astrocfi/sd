@@ -103,6 +103,9 @@
                     ...
                     25
                     24
+
+s_tinyhyperbone -- like s_hyperbone, but all 4 trngl4's are on top of each other.
+
 */
 
 
@@ -898,14 +901,30 @@ static const veryshort h1x6thartranslate[12] = {
    0,  0,  1,  0,  2,  3,
    0,  4,  5,  0,  6,  7};
 
-static const veryshort dmdhyperh[12] = {0, 0, 0, 0, 1, 0, 2, 0, 0, 0, 3, 0};
-static const veryshort dmdhyperv[12] = {0, 3, 0, 0, 0, 0, 0, 1, 0, 2, 0, 0};
+static const veryshort dmdhyperv[15] = {0, 3, 0, 0, 0, 0,
+                                        0, 1, 0, 2, 0, 0,
+                                        0, 3, 0};
+
 static const veryshort linehyperh[12] = {0, 1, 0, 0, 0, 0, 2, 3, 0, 0, 0, 0};
 static const veryshort linehyperv[12] = {0, 0, 0, 0, 1, 0, 0, 0, 0, 2, 3, 0};
-static const veryshort hyperboneh[16] = {-1, -1, -1, -1, 1, 4, 2, 3, -1, -1, -1, -1, 5, 0, 6, 7};
-static const veryshort hyperbonev[16] = {5, 0, 6, 7, -1, -1, -1, -1, 1, 4, 2, 3, -1, -1, -1, -1};
-static const veryshort galhyperh[12] = {6, 0, 0, 0, 3, 1, 2, 0, 4, 0, 7, 5};
-static const veryshort galhyperv[12] = {0, 7, 5, 6, 0, 0, 0, 3, 1, 2, 0, 4};
+
+static const veryshort hyperbonev[20] = {5, 0, 6, 7, -1, -1, -1, -1,
+                                         1, 4, 2, 3, -1, -1, -1, -1,
+                                         5, 0, 6, 7};
+
+static const veryshort tinyhyperbonet[20] = {-1, -1, -1, -1, -1, -1, -1, -1, 
+                                             -1, -1, -1, -1,  2,  3,  1,  0,
+                                             -1, -1, -1, -1};
+
+static const veryshort tinyhyperbonel[20] = {-1, -1,  3,  2, -1, -1, -1, -1, 
+                                             -1, -1,  1,  0, -1, -1, -1, -1, 
+                                             -1, -1,  3,  2};
+
+static const veryshort tinyhyperboneb[20] = { 3,  0, -1, -1, -1, -1, -1, -1,
+                                              1,  2, -1, -1, -1, -1, -1, -1,
+                                              3,  0, -1, -1};
+
+static const veryshort galhyperv[15] = {0, 7, 5, 6, 0, 0, 0, 3, 1, 2, 0, 4, 0, 7, 5};
 static const veryshort qtghyperh[12] = {6, 7, 0, 0, 0, 1, 2, 3, 4, 0, 0, 5};
 static const veryshort qtghyperv[12] = {0, 0, 5, 6, 7, 0, 0, 0, 1, 2, 3, 4};
 static const veryshort starhyperh[12] =  {0, 0, 0, 0, 1, 0, 0, 2, 0, 0, 3, 0};
@@ -1085,13 +1104,14 @@ extern bool check_restriction(
          }
       }
    case restriction_bad_level:
-      if (ss->cmd.cmd_misc3_flags & CMD_MISC3__NO_CHECK_LEVEL)
-         goto getout;
-
       if (allowing_all_concepts) {
          warn(warn__bad_call_level);
          goto getout;
       }
+      else if (flags == CAF__RESTR_UNUSUAL) 
+         // If it has been marked unusual below some level, just give that warning;
+         // don't complain about the level itself.
+         goto restr_failed;
       else
          fail("This call is not legal from this formation at this level.");
    case restriction_fails:
@@ -1313,6 +1333,9 @@ static void special_4_way_symm(
    static const veryshort table_hyperbone[8] = {
       13, 4, 6, 7, 5, 12, 14, 15};
 
+   static const veryshort table_tinyhyperbone[8] = {
+      3, 2, 0, 1, 11, 10, 8, 9};
+
    static const veryshort table_2x3_4dmd[6] = {
       6, 11, 13, 22, 27, 29};
 
@@ -1374,6 +1397,10 @@ static void special_4_way_symm(
    case s_bone:
       result->kind = s_hyperbone;
       the_table = table_hyperbone;
+      break;
+   case s_trngl4:
+      result->kind = s_tinyhyperbone;
+      the_table = table_tinyhyperbone;
       break;
    case s2x3:
       result->kind = sx4dmd;
@@ -2254,7 +2281,12 @@ static int divide_the_setup(
    case s_thar:
       if (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK)
          fail("Can't split the setup.");
-      division_code = MAPCODE(s1x2,4,MPKIND__4_EDGES,1);
+      division_code = MAPCODE(s1x2,4,MPKIND__4_EDGES_ALAMO,1);
+      goto divide_us_no_recompute;
+   case s_alamo:
+      if (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK)
+         fail("Can't split the setup.");
+      division_code = MAPCODE(s1x2,4,MPKIND__4_EDGES_ALAMO,0);
       goto divide_us_no_recompute;
    case s2x8:
       // The call has no applicable 2x8 or 8x2 definition.
@@ -2385,16 +2417,20 @@ static int divide_the_setup(
             if (!temp) warn(warn__split_to_2x3s);
             goto divide_us_no_recompute;
          }
-         else if ((!(newtb & 010) ||
-                   assoc(b_1x3, ss, calldeflist) ||
-                   assoc(b_1x6, ss, calldeflist)) &&
-                  (!(newtb & 001) ||
-                   assoc(b_3x1, ss, calldeflist) ||
-                   assoc(b_6x1, ss, calldeflist))) {
+         else if ((!(newtb & 010) || assoc(b_1x6, ss, calldeflist)) &&
+                  (!(newtb & 001) || assoc(b_6x1, ss, calldeflist))) {
             division_code = MAPCODE(s1x6,2,MPKIND__SPLIT,1);
             // See comment above about abomination.
             // If database said to split, don't give warning, unless said "3x3".
             if (!temp) warn(warn__split_to_1x6s);
+            goto divide_us_no_recompute;
+         }
+         else if ((!(newtb & 010) || assoc(b_1x3, ss, calldeflist)) &&
+                  (!(newtb & 001) || assoc(b_3x1, ss, calldeflist))) {
+            division_code = MAPCODE(s1x3,4,MPKIND__SPLIT_OTHERWAY_TOO,0);
+            // See comment above about abomination.
+            // If database said to split, don't give warning, unless said "3x3".
+            if (!temp) warn(warn__split_to_1x3s);
             goto divide_us_no_recompute;
          }
       }
@@ -2410,6 +2446,8 @@ static int divide_the_setup(
              assoc(b_2x1, ss, calldeflist) ||
              assoc(b_1x1, ss, calldeflist)) {
             division_code = MAPCODE(s2x2,3,MPKIND__SPLIT,0);
+            if (matrix_aware)                     // ***** Maybe this should be done more generally.
+               warn(warn__really_no_eachsetup);
             goto divide_us_no_recompute;
          }
       }
@@ -2439,6 +2477,7 @@ static int divide_the_setup(
          warn(warn__each1x2);
          break;
       case 0xDB6: case 0x6DB:
+         warn(warn__split_to_2x3s);
          division_code = MAPCODE(s2x3,2,MPKIND__SPLIT,0);
          break;
       }
@@ -2554,7 +2593,7 @@ static int divide_the_setup(
                   (!(newtb & 001) || assoc(b_3x1, ss, calldeflist))) {
             division_code = MAPCODE(s1x3,4,MPKIND__SPLIT,0);
             // See comment above about abomination.
-            warn(warn__split_1x6);
+            warn(warn__split_to_1x3s);
             goto divide_us_no_recompute;
          }
       }
@@ -3246,6 +3285,13 @@ static int divide_the_setup(
       break;
    case s_trngl:
       if (assoc(b_2x2, ss, calldeflist)) {
+         if (calling_level < triangle_in_box_level) {
+            if (allowing_all_concepts)
+               warn(warn__bad_concept_level);
+            else
+               fail("This concept is not allowed at this level.");
+         }
+
          uint32 leading = final_concepts.final;
 
          if (ss->cmd.cmd_misc_flags & CMD_MISC__SAID_TRIANGLE) {
@@ -3287,7 +3333,7 @@ static int divide_the_setup(
          // if we divide a 1x6 into 1x3's.  We allow "swing thru" in a wave of
          // 3 or 4 people.  If the operator wants to do a swing thru with
          // all 6 people, use "grand swing thru".
-         warn(warn__split_1x6);
+         warn(warn__split_to_1x3s);
          goto divide_us_no_recompute;
       }
       break;
@@ -3693,6 +3739,10 @@ static int divide_the_setup(
       }
 
       break;
+   case sdmdpdmd:
+      // This is the only way we can divide it.
+      division_code = MAPCODE(sdmd,2,MPKIND__NONISOTROP2,0);
+      goto divide_us_no_recompute;
    case s_trngl8:
       // This is the only way we can divide it.
       division_code = MAPCODE(s1x4,2,MPKIND__NONISOTROP2,0);
@@ -4006,7 +4056,7 @@ extern void basic_move(
    int j, k;
    callarray *calldeflist;
    uint32 funny;
-   uint32 division_code;
+   uint32 division_code = ~0UL;
    callarray *linedefinition;
    callarray *coldefinition;
    uint32 matrix_check_flag = 0;
@@ -4234,7 +4284,6 @@ foobar:
              (z == 0 && (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX))) {
             // "12 matrix" was specified.  Split it into 1x4's in the appropriate way.
             division_code = MAPCODE(s1x4,3,MPKIND__SPLIT,1);
-            goto divide_us;
          }
          break;
       case s1x12:
@@ -4242,7 +4291,6 @@ foobar:
              (z == 0 && (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX))) {
             // "12 matrix" was specified.  Split it into 1x4's in the appropriate way.
             division_code = MAPCODE(s1x4,3,MPKIND__SPLIT,0);
-            goto divide_us;
          }
          break;
       case s3dmd:
@@ -4250,7 +4298,7 @@ foobar:
              (z == 0 && (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX))) {
             // "12 matrix" was specified.  Split it into diamonds in the appropriate way.
             division_code = MAPCODE(sdmd,3,MPKIND__SPLIT,1);
-            goto divide_us;
+
          }
          break;
       case s4dmd:
@@ -4258,7 +4306,6 @@ foobar:
              (z == 0 && (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX))) {
             // "16 matrix" was specified.  Split it into diamonds in the appropriate way.
             division_code = MAPCODE(sdmd,4,MPKIND__SPLIT,1);
-            goto divide_us;
          }
          break;
       case s2x6:
@@ -4266,7 +4313,6 @@ foobar:
              (z == 0 && (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX))) {
             // "12 matrix" was specified.  Split it into 2x2's in the appropriate way.
             division_code = MAPCODE(s2x2,3,MPKIND__SPLIT,0);
-            goto divide_us;
          }
          break;
       case s2x8:
@@ -4274,7 +4320,6 @@ foobar:
              (z == 0 && (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX))) {
             // "16 matrix" was specified.  Split it into 2x2's in the appropriate way.
             division_code = MAPCODE(s2x2,4,MPKIND__SPLIT,0);
-            goto divide_us;
          }
          break;
       case s4x4:
@@ -4294,10 +4339,13 @@ foobar:
             }
             else
                division_code = MAPCODE(s1x4,4,MPKIND__SPLIT,1);
-   
-            goto divide_us;
          }
          break;
+      }
+
+      if (division_code != ~0UL) {
+         warn(warn__really_no_eachsetup);   // This will shut off all future "do it in each XYZ" warnings.
+         goto divide_us;
       }
    }
 
@@ -5613,7 +5661,7 @@ foobar:
 
             if ((lilresult_mask[0] & 05757) == 0 && tempkind == sdmd) {
                result->kind = sdmd;     /* Only centers present, and call wanted diamonds. */
-               permuter = dmdhyperh;
+               permuter = dmdhyperv+3;
             }
             else if ((lilresult_mask[0] & 07575) == 0 && tempkind == sdmd) {
                result->kind = sdmd;     /* Only centers present, and call wanted diamonds. */
@@ -5625,7 +5673,7 @@ foobar:
                result->kind = sdmd;     /* Setup is consistent with diamonds,
                                            though maybe centers are absent,
                                            but user specifically requested diamonds. */
-               permuter = dmdhyperh;
+               permuter = dmdhyperv+3;
             }
             else if ((lilresult_mask[0] & 06565) == 0 &&
                      (goodies->callarray_flags & CAF__REALLY_WANT_DIAMOND)) {
@@ -5649,7 +5697,7 @@ foobar:
             else if ((lilresult_mask[0] & 05656) == 0) {
                result->kind = sdmd;     /* Setup is consistent with diamonds,
                                            though maybe centers are absent. */
-               permuter = dmdhyperh;
+               permuter = dmdhyperv+3;
             }
             else if ((lilresult_mask[0] & 06565) == 0) {
                result->kind = sdmd;     /* Setup is consistent with diamonds,
@@ -5659,7 +5707,7 @@ foobar:
             }
             else if ((lilresult_mask[0] & 01212) == 0) {
                result->kind = s_hrglass;    /* Setup is an hourglass. */
-               permuter = galhyperh;
+               permuter = galhyperv+3;
             }
             else if ((lilresult_mask[0] & 02121) == 0) {
                result->kind = s_hrglass;    /* Setup is an hourglass. */
@@ -5691,11 +5739,52 @@ foobar:
          case s_hyperbone:
             if ((lilresult_mask[0] & 0x0F0F) == 0) {
                result->kind = s_bone;
-               permuter = hyperboneh;
+               permuter = hyperbonev+4;
             }
             else if ((lilresult_mask[0] & 0xF0F0) == 0) {
                result->kind = s_bone;
                permuter = hyperbonev;
+               rotator = 1;
+            }
+            else
+               fail("Call went to improperly-formed setup.");
+            break;
+         case s_tinyhyperbone:
+            if ((lilresult_mask[0] & 0x0FFF) == 0) {       // These 4 go to a trngl4
+               result->kind = s_trngl4;
+               permuter = tinyhyperbonet;
+               rotator = 3;
+            }
+            else if ((lilresult_mask[0] & 0xF0FF) == 0) {
+               result->kind = s_trngl4;
+               permuter = tinyhyperbonet+4;
+               rotator = 2;
+            }
+            else if ((lilresult_mask[0] & 0xFF0F) == 0) {
+               result->kind = s_trngl4;
+               permuter = tinyhyperbonet+8;
+               rotator = 1;
+            }
+            else if ((lilresult_mask[0] & 0xFFF0) == 0) {
+               result->kind = s_trngl4;
+               permuter = tinyhyperbonet+12;
+            }
+            else if ((lilresult_mask[0] & 0xF3F3) == 0) {  // Next 2 go to a 1x4!
+               result->kind = s1x4;
+               permuter = tinyhyperbonel;
+               rotator = 1;
+            }
+            else if ((lilresult_mask[0] & 0x3F3F) == 0) {
+               result->kind = s1x4;
+               permuter = tinyhyperbonel+4;
+            }
+            else if ((lilresult_mask[0] & 0xCFCF) == 0) {  // Next 2 go to a 2x2!
+               result->kind = s2x2;
+               permuter = tinyhyperboneb+4;
+            }
+            else if ((lilresult_mask[0] & 0xFCFC) == 0) {
+               result->kind = s2x2;
+               permuter = tinyhyperboneb;
                rotator = 1;
             }
             else

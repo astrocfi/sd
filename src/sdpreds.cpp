@@ -386,6 +386,8 @@ extern bool selectp(setup *ss, int place, int allow_some /*= 0*/) THROW_DECL
          break;
       case slinepdmd:
       case slinedmd:
+      case sboxpdmd:
+      case sboxdmd:
          selected_person_mask = 0x0F;
          break;
       }
@@ -405,6 +407,7 @@ extern bool selectp(setup *ss, int place, int allow_some /*= 0*/) THROW_DECL
          break;
       case splinepdmd:
       case splinedmd:
+      case slinebox:
          if ((directions & livemask & 0x5500) == 0)
             selected_person_mask = 0x0F;
          break;
@@ -430,6 +433,7 @@ extern bool selectp(setup *ss, int place, int allow_some /*= 0*/) THROW_DECL
          break;
       case splinepdmd:
       case splinedmd:
+      case slinebox:
          if (((directions ^ 0x5500) & livemask & 0x5500) == 0)
             selected_person_mask = 0x0F;
          break;
@@ -1097,6 +1101,9 @@ static bool cols_someone_in_front(setup *real_people, int real_index,
    }
 }
 
+// the "extra_stuff" argument is:
+//   1 for "x14_once_rem_miniwave"
+//   3 for "intlk_cast_normal_or_warn"
 /* ARGSUSED */
 static bool x14_once_rem_miniwave(setup *real_people, int real_index,
    int real_direction, int northified_index, const long int *extra_stuff)
@@ -1243,10 +1250,11 @@ static bool some_side_of_2n1_line(setup *real_people, int real_index,
       ((real_people->people[2].id1 ^ real_people->people[4-k].id1) & DIR_MASK) == 0;
 }
 
-/* the "extra_stuff" argument is:
-     0 for "cast_pushy"
-     1 for "cast_normal"
-     3 for "cast_normal_or_warn" */
+// the "extra_stuff" argument is:
+//   0 for "cast_pushy"
+//   1 for "cast_normal"
+//   3 for "cast_normal_or_warn"
+//   7 for "cast_normal_or_nowarn"
 /* ARGSUSED */
 static bool cast_normal_or_whatever(setup *real_people, int real_index,
    int real_direction, int northified_index, const long int *extra_stuff)

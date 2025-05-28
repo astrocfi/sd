@@ -7274,7 +7274,7 @@ static void do_concept_fractional(
 
          // First, we do the full call, skipping the initial parts that need to be skipped.
 
-         prepare_for_call_in_series(result, ss);
+         prepare_for_call_in_series(result, ss, true);   // Preserve the "NO_REEVALUATE" flag.
 
          result->cmd.cmd_fraction.set_to_null_with_flags(
             FRACS(CMD_FRAC_CODE_FROMTOREV,ss->cmd.cmd_fraction.flags & CMD_FRAC_PART_MASK,0) | CMD_FRAC_BREAKING_UP);
@@ -7312,7 +7312,7 @@ static void do_concept_fractional(
          // lie only in the final "3/5".
          // Actually, we take no chances.  If it isn't the very last part, we don't allow it.
 
-         prepare_for_call_in_series(result, ss);
+         prepare_for_call_in_series(result, ss, true);   // Preserve the "NO_REEVALUATE" flag.
          result->cmd.cmd_fraction.flags = ss->cmd.cmd_fraction.flags;
          result->cmd.cmd_fraction.fraction = new_fracs;
          do_call_in_series(result, false, 0,
@@ -7320,7 +7320,7 @@ static void do_concept_fractional(
             false);
       }
       else {
-         prepare_for_call_in_series(result, ss);
+         prepare_for_call_in_series(result, ss, true);   // Preserve the "NO_REEVALUATE" flag.
          result->cmd.cmd_fraction.set_to_null_with_flags(ss->cmd.cmd_fraction.flags);
          do_call_in_series(result, false, 0,
             !(ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX),
@@ -7679,9 +7679,9 @@ extern bool do_big_concept(
                goto this_is_bad;
          }
 
-         // But if "snag" is selected, we lose.
+         // But if "snag" or "invert" is selected, we lose.
 
-         if (ss->cmd.cmd_misc2_flags & CMD_MISC2__CENTRAL_SNAG)
+         if (ss->cmd.cmd_misc2_flags & (CMD_MISC2__CENTRAL_SNAG|CMD_MISC2__SAID_INVERT))
             goto this_is_bad;
 
          goto this_is_ok;

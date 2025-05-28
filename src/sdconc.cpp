@@ -349,6 +349,8 @@ bool conc_tables::synthesize_this(
 
          if (q & 1) fail("Sorry, bug 1 in normalize_concentric.");
 
+         reverse_centers_order = false;
+
          if (synthesizer != schema_concentric_others &&
              synthesizer != schema_3x3k_concentric &&
              synthesizer != schema_3x3k_cross_concentric &&
@@ -3224,17 +3226,22 @@ extern void concentric_move(
    uint32 localmods1 = crossing ? localmodsin1 : localmodsout1;
 
    if (orig_outers_start_kind == s2x2) {
-      if (localmods1 & DFM1_CONC_DEMAND_LINES) {
+      switch (localmods1 & (DFM1_CONC_DEMAND_LINES | DFM1_CONC_DEMAND_COLUMNS)) {
+      case DFM1_CONC_DEMAND_LINES:
          // We make use of the fact that the setup, being a 2x2, is canonicalized.
          if (begin_outer_elongation <= 0 || begin_outer_elongation > 2 ||
              (orig_outers_start_dirs & (1 << 3*(begin_outer_elongation - 1))))
             fail("Outsides must be as if in lines at start of this call.");
-      }
-
-      if (localmods1 & DFM1_CONC_DEMAND_COLUMNS) {
+         break;
+      case DFM1_CONC_DEMAND_COLUMNS:
          if (begin_outer_elongation <= 0 || begin_outer_elongation > 2 ||
              (orig_outers_start_dirs & (8 >> 3*(begin_outer_elongation - 1))))
             fail("Outsides must be as if in columns at start of this call.");
+         break;
+      case DFM1_CONC_DEMAND_LINES | DFM1_CONC_DEMAND_COLUMNS:
+         if (begin_outer_elongation > 2)
+            fail("Can't do this.");
+         break;
       }
    }
 
@@ -3253,16 +3260,21 @@ extern void concentric_move(
       uint32 mymods = crossing ? localmodsout1 : localmodsin1;
 
       if (orig_inners_start_kind == s2x2) {
-         if (mymods & DFM1_CONC_DEMAND_LINES) {
+         switch (mymods & (DFM1_CONC_DEMAND_LINES | DFM1_CONC_DEMAND_COLUMNS)) {
+         case DFM1_CONC_DEMAND_LINES:
             if (begin_outer_elongation <= 0 || begin_outer_elongation > 2 ||
                 (orig_inners_start_dirs & (1 << 3*(begin_outer_elongation - 1))))
                fail("Centers must be as if in lines at start of this call.");
-         }
-
-         if (mymods & DFM1_CONC_DEMAND_COLUMNS) {
+            break;
+         case DFM1_CONC_DEMAND_COLUMNS:
             if (begin_outer_elongation <= 0 || begin_outer_elongation > 2 ||
                 (orig_inners_start_dirs & (8 >> 3*(begin_outer_elongation - 1))))
                fail("Centers must be as if in columns at start of this call.");
+            break;
+         case DFM1_CONC_DEMAND_LINES | DFM1_CONC_DEMAND_COLUMNS:
+            if (begin_outer_elongation > 2)
+               fail("Can't do this.");
+            break;
          }
       }
    }
@@ -5279,8 +5291,7 @@ back_here:
             else if (thislivemask == (uint32) ((1 << (attr::klimit(kk)+1)) - 1) ||
                      otherlivemask == 0 ||
                      orig_indicator == selective_key_plain_from_id_bits ||
-                     (orig_indicator == selective_key_ignore &&
-                      attr::klimit(kk) > 7) ||
+                     (orig_indicator == selective_key_ignore && kk != s_c1phan && attr::klimit(kk) > 7) ||
                      ((schema == schema_select_ctr2 ||
                        schema == schema_select_ctr4 ||
                        schema == schema_select_ctr6) && others <= 0)) {
@@ -5536,7 +5547,8 @@ back_here:
                if (((nextfixp->rot - fixp->rot) & 3) == 0) {
                   this_result->rotation--;
 
-                  if (fixp->numsetups & 0x100) {
+                  // Not happy about having to do this.  Gotta straighten this stuff out someday.
+                  if ((fixp->numsetups & 0x100) || (nextfixp->numsetups & 0x200)) {
                      this_result->rotation += 2;
 
                      for (lilcount=0; lilcount<numsetups; lilcount++) {

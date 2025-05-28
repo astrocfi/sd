@@ -1,8 +1,8 @@
 \input texinfo
 @c user documentation for Sd (square dance caller's helper)
 @c
-@set sd-version 37.6
-@set Time-stamp: March 30, 2008
+@set sd-version 37.7
+@set Time-stamp: August 10, 2008
 @c
 @setfilename sd_doc.info
 @c We want the version number to show in the html file.
@@ -4904,6 +4904,8 @@ See @ref{Concentric}.
 These are straightforward.  ``Mystic wing'' is right wing for the outer 4 and
 left wing for the center 4.  ``Other wing'' is right wing for the belles and
 left wing for the beaus.
+@item mimic
+This is experimental.
 @item common point galaxy
 @item common spot/point diamonds
 @item common spot/point hourglass

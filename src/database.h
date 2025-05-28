@@ -1,6 +1,6 @@
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2007  William B. Ackerman.
+//    Copyright (C) 1990-2008  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -29,7 +29,7 @@
 // database format version.
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 273
+#define DATABASE_FORMAT_VERSION 278
 
 // BEWARE!!  These must track the items in "tagtabinit" in mkcalls.cpp .
 enum base_call_index {
@@ -204,19 +204,21 @@ enum {
    CFLAG1_SPLIT_LIKE_SQUARE_THRU    = 0x80000000UL
 };
 
-// These are the continuation of the "CFLAG1" bits, that have to overflow into this word.
-// They must lie in the top 12 bits for now.
+// These are the logical continuation of the "CFLAG1" bits, that have to overflow
+// into the "flagsf" word.  They must lie in the top 16 bits.
 enum {
-   CFLAG2_CAN_BE_ONE_SIDE_LATERAL   = 0x00100000UL,
-   CFLAG2_NO_ELONGATION_ALLOWED     = 0x00200000UL,
-   CFLAG2_IMPRECISE_ROTATION        = 0x00400000UL,
-   CFLAG2_CAN_BE_FAN                = 0x00800000UL,
-   CFLAG2_EQUALIZE                  = 0x01000000UL,
-   CFLAG2_ONE_PERSON_CALL           = 0x02000000UL,
-   CFLAG2_YIELD_IF_AMBIGUOUS        = 0x04000000UL,
-   CFLAG2_DO_EXCHANGE_COMPRESS      = 0x08000000UL,
-   CFLAG2_IF_MOVE_CANT_ROLL         = 0x10000000UL,
-   CFLAG2_FRACTIONAL_NUMBERS        = 0x20000000UL
+   CFLAG2_NO_SEQ_IF_NO_FRAC         = 0x00010000UL,
+   CFLAG2_CAN_BE_ONE_SIDE_LATERAL   = 0x00020000UL,
+   CFLAG2_NO_ELONGATION_ALLOWED     = 0x00040000UL,
+   CFLAG2_IMPRECISE_ROTATION        = 0x00080000UL,
+   CFLAG2_CAN_BE_FAN                = 0x00100000UL,
+   CFLAG2_EQUALIZE                  = 0x00200000UL,
+   CFLAG2_ONE_PERSON_CALL           = 0x00400000UL,
+   CFLAG2_YIELD_IF_AMBIGUOUS        = 0x00800000UL,
+   CFLAG2_DO_EXCHANGE_COMPRESS      = 0x01000000UL,
+   CFLAG2_IF_MOVE_CANT_ROLL         = 0x02000000UL,
+   CFLAG2_FRACTIONAL_NUMBERS        = 0x04000000UL,
+   // 5 spares.
 };
 
 // Beware!!  This list must track the table "matrixcallflagtab" in mkcalls.cpp .
@@ -285,9 +287,12 @@ enum dance_level {
    zig_zag_level = l_a2,
    beau_belle_level = l_a2,
    cross_by_level = l_c1,
-   intlk_triangle_level = l_c2,
+   intlk_triangle_level = l_c1,
+   magic_triangle_level = l_c2,
+   triangle_in_box_level = l_c2,
    general_magic_level = l_c3,
    phantom_tandem_level = l_c4a,
+   quadruple_CLW_level = l_c4a,
    Z_CLW_level = l_c4a
 };
 
@@ -380,6 +385,10 @@ enum setup_kind {
    splinedmd,
    slinepdmd,
    slinedmd,
+   slinebox,
+   sboxdmd,
+   sboxpdmd,
+   sdmdpdmd,
    s_hsqtag,
    s_dmdlndmd,
    s_hqtag,
@@ -409,6 +418,7 @@ enum setup_kind {
    sx4dmd,    // These are too big to actually represent --
    sx4dmdbone,// we don't let them out of their cage.
    s_hyperbone, // Ditto.
+   s_tinyhyperbone, // Ditto.
    s8x8,      // Ditto.
    sxequlize, // Ditto.
    sx1x6,     // Ditto.
@@ -680,6 +690,8 @@ enum {
 };
 
 // BEWARE!!  This list must track the array "qualtab" in mkcalls.cpp
+// There is room for 127 of them, because they have to fit into a 7 bit field
+// in the "qualifierstuff" field of a callarray.  This is checked at startup.
 enum call_restriction {
    cr_none,                // Qualifier only.
    cr_alwaysfail,          // Restriction only.
@@ -964,10 +976,13 @@ enum calldef_schema {
    the latter flags are defined at the high end of the word, and the concentricity
    flags shown here are at the low end.
    The last bunch of flags are pushed up against the high end of the word, so that
-   they can exactly match some other flags.  The constant HERITABLE_FLAG_MASK
-   embraces them.  The flags that must stay in step are in the "FINAL__XXX" group
+   they can exactly match some other flags.
+
+   The constant HERITABLE_FLAG_MASK embraces them.     **** NOT SO!!!!!  NO SUCH THING!!!!
+
+   The flags that must stay in step are in the "FINAL__XXX" group
    in sd.h, the "cflag__xxx" group in database.h, and the "dfm_xxx" group in
-   database.h . There is compile-time code in sdinit.c to check that these
+   database.h . There is compile-time code in sdinit.cpp to check that these
    constants are all in step.
 
    dfm_conc_demand_lines             --  concdefine outers: must be ends of lines at start

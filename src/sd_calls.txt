@@ -44,7 +44,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "37.6"
+version "37.7"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve
@@ -1376,16 +1376,8 @@ call "@6 break the alamo" c4
 
 call "adjust alamo to other pairing" mainstream
             dont_use_in_resolve
-/* taken out in favor of thing just below
-   setup 4x4 4x4 plus_eighth_rotation
-      array [0 14W 1N 0 0 2W 5N 0 0 6W 9N 0 0 10W 13N 0]
-*/
-
    setup 4x4 alamo plus_eighth_rotation
       array [0 1W 2N 0 0 3W 4N 0 0 5W 6N 0 0 7W 0N 0]
-
-
-
    setup alamo alamo plus_eighth_rotation
       array [7W 0N 1W 2N 3W 4N 5W 6N]
    setup c1phan alamo plus_eighth_rotation
@@ -4323,6 +4315,9 @@ call "fan the top" plus tag fanthetop
       array [CR9N CR7S CR5S AL7N AL0S AL2N AL5N CR2S]
    setup 3x4 1x8 rotate
       array [CR0N CR3S AL3N AL0S 0 AL6N 0 AL5N CR5S 0 0 CR6S]
+   // To allow the centers to do only part of the cast off 3/4.
+            step_to_wave left_means_touch_or_check visible_fractions
+   singleconc cast_off_n4_with_warn [insert_number 3] hinge []
 
 call "_fan the top (maybe cross)" dontshow tag fanthetop_maybe_cross
             step_to_wave left_means_touch_or_check ends_take_right_hands
@@ -8245,13 +8240,12 @@ call "split recycle" c1 tag splitrecycle
          if 2x2_couple   [0    0    ZM0N CR1E]
          if always       [CR2S 0    0    CR1E]
 
-call "centers fold" dontshow tag ctrsfold
+call "centers fold" dontshow tag ctrsfoldforrecycle
             parallel_conc_end
-   setup 1x4 2x2 qualifier live 1fl_only // Only for weird constructions, demand live to be sure that's what is wanted.
+   // Only for weird constructions, demand live to be sure that's what is wanted.
+   setup 1x4 2x2 qualifier live 1fl_only restriction forbidden levelc1
       array [ZM3N AL0S ZM2N CR1S]
-   setup 1x4 2x2 restriction wave_only
-      array [ZM0N AL0S ZM1N CR1S]
-   setup 1x4 2x2 qualifier miniwaves restriction wave_only
+   setup 1x4 2x2 qualifier levelc1 restriction wave_only
       array [ZM0N AL0S ZM1N CR1S]
             alternate_definition [cross] c3
    setup 1x4 2x2 restriction 2fl_only
@@ -8274,8 +8268,12 @@ call "recycle" mainstream tag recycle
             diamond_is_legal
    setup 1x4 2x2 no_cutting_through qualifier wave_only
       array [CR1S AL3N AL0S CR2N]
-   setup 1x4 2x2 no_cutting_through qualifier magic_only
-      array [CR1S AL0N AL3S CR2N]
+
+//   This clause taken out.  It is now illegal from an inverted line below C1
+//   and will get DYP and TRH warnings (due to the definition by parts) at C1 and higher.
+//   setup 1x4 2x2 no_cutting_through qualifier magic_only
+//      array [CR1S AL0N AL3S CR2N]
+
    setup 2x2 1x4 no_cutting_through qualifier in in_or_out restriction forbidden levela2
       array [0 0 ZM0N CR1S]
    setup 2x2 1x4 no_cutting_through restriction forbidden levelc1
@@ -8324,8 +8322,10 @@ call "recycle" mainstream tag recycle
       array [0 0 AL2E CR3W 0 0 CR1W AL0E]
    setup pqtag 2x4
       array [ZM2N CR4S 0 0 AL3S ZM5N 0 0]
-            visible_fractions cross_is_inherited
-   seq ctrsfold [inherit_cross]
+            visible_fractions cross_is_inherited no_seq_if_no_frac
+   // This doesn't get used unless some fractionalizing concept is in use.
+   // Otherwise it could do recycle from lines facing out (centers fold, counter rotate, roll!)
+   seq ctrsfoldforrecycle [inherit_cross]
    seq splitctrrot []
    seq roll []
 
@@ -8341,7 +8341,7 @@ call "less or more recycle" c4
 // The parser will prefer this one, of course.
 call "2/3 recycle" c1 tag 23recycle
             visible_fractions cross_is_inherited
-   seq ctrsfold [inherit_cross]
+   seq ctrsfoldforrecycle [inherit_cross]
    seq splitctrrot []
 
 call "all 8 recycle" c1
@@ -8486,13 +8486,13 @@ call "cross cycle" c3
          if 2x2_couple   [0    0    ZM0N CR3S]
          if always       [CR2S 0    0    CR3S]
             visible_fractions
-   seq ctrsfold [force_cross]
+   seq ctrsfoldforrecycle [force_cross]
    seq splitctrrot []
    seq roll []
 
 call "2/3 cross cycle" c3
             visible_fractions
-   seq ctrsfold [force_cross]
+   seq ctrsfoldforrecycle [force_cross]
    seq splitctrrot []
 
 call "explode" plus tag explode
@@ -9568,7 +9568,7 @@ call "pass the ocean" mainstream tag pass_ocean
             rear_back_from_r_wave visible_fractions twisted_is_inherited funny_is_inherited
    seq passthru [inherit_twisted inherit_funny]
    seq quarterin []
-   /* Of course, "twisted" won't normally apply here. */
+   // Of course, "twisted" won't normally apply here.
    seq touch [inherit_twisted]
 
 call "cross the ocean" c4
@@ -9582,8 +9582,13 @@ call "@6 walk others dodge" mainstream
             yield_if_ambiguous
    setup 2x2 2x2
       preds "Can't tell who is designated."
-         if select [0 0 ZM1N ZM0N]
+         if select   [0    0    ZM1N ZM0N]
          if unselect [ZM1N ZM0N ZM3N ZM2N]
+            alternate_definition [half] mainstream
+   setup 2x2 dmd rotate no_cutting_through restriction wave_only
+      preds "Can't tell who is designated."
+         if select   [0    0    ZM1W ZM3W]
+         if unselect [ZM0W ZM0W ZM2W ZM2W]
 
 call "_start @6 hop" dontshow tag starthopping
             yield_if_ambiguous
@@ -9618,6 +9623,9 @@ call "beaus walk others dodge" mainstream tag startbeauhopping
       array [0 ZM0N 0 ZM2N ZM5N ZM2N ZM7N ZM0N]
    setup 2x2 2x2
       array [0 0 ZM3N ZM0N]
+            alternate_definition [half] mainstream
+   setup 2x2 dmd rotate no_cutting_through restriction wave_only
+      array [0    0    ZM2W ZM3W]
             alternate_definition [singlefile] c4
    setup 4x1 2x2
       array [ZM0N ZM1N 0 0]
@@ -9645,6 +9653,9 @@ call "belles walk others dodge" mainstream tag startbellhopping
       array [ZM1N 0 ZM3N 0 ZM3N ZM4N ZM1N ZM6N]
    setup 2x2 2x2
       array [0 0 ZM1N ZM2N]
+            alternate_definition [half] mainstream
+   setup 2x2 dmd rotate no_cutting_through restriction wave_only
+      array [0    0    ZM1W ZM2W]
             alternate_definition [singlefile] c4
    setup 4x1 2x2
       array [ZM3N ZM2N 0 0]
@@ -9896,21 +9907,23 @@ call "dixie daisy to a wave" c4
 
 call "dixie grand" plus
             rear_back_from_wave_or_qtag left_means_mirror
-   setup 4x2 4x4 qualifier 2fl_only
-      array [14N  2E 2E 6S 13S 1W 1W 5N]
-   setup 4x2 4x4 qualifier magic_only
-      array [ 1E  1E  5S  5S 14S 14S 2W 2W]
-   setup 4x2 4x4 qualifier ntbone in in_or_out
-      array [ 1E   0  5S   0   0 14S  0 2W]
+   setup 4x2 alamo plus_eighth_rotation qualifier 2fl_only
+      array [0N 2E 2E 4S 7E 1S 1S 3W]
+   setup 4x2 alamo qualifier magic_only
+      array [2E 2E 4S 4S 1S 1S 3W 3W]
+   setup 4x2 alamo qualifier ntbone in in_or_out
+      array [2E 0 4S 0 0 1S 0 3W]
    // The people doing the initial pull-by must be facing, so this isn't really right.
-   setup 4x2 4x4 qualifier ntbone out in_or_out restriction controversial alwaysfail
-      array [ 0   2E  0   6S   13S 0  1W 0]
-   setup 4x2 4x4 qualifier tbone none
-      array [ 0   2E  2E   0   0  1W  1W 0]
-   setup 2x4 4x4 qualifier tbone none
-      array [ 0    0   0   0 13W   0  0 14E]
-   setup 4x4 4x4
-      array [0 0 13W 0 0 0 0 0 0 14E 0 0 0 0 0 0]
+   setup 4x2 alamo plus_eighth_rotation qualifier ntbone out in_or_out restriction controversial alwaysfail
+      array [0 2E 0 4S 7E 0 1S 0]
+   setup 4x2 alamo plus_eighth_rotation qualifier tbone none
+      array [0 2E 2E 0 0 1S 1S 0]
+   setup 2x4 alamo plus_eighth_rotation qualifier tbone none
+      array [0 0 0 0 7S 0 0 0E]
+   setup alamo alamo plus_eighth_rotation
+      array [0 0 6S 7S 0 0 0E 1E]
+   setup 4x4 alamo plus_eighth_rotation
+      array [0 6S 7S 0 0 0 0 0 0 0E 1E 0 0 0 0 0]
             alternate_definition [twisted] c4
    setup thar 4x4
       array [0 0 0 2S 0 0 1N 0]
@@ -12344,9 +12357,9 @@ call "reverse the pass 2/3" c3
    setup 2x2 2x2 restriction all_facing_same
       array [CM2S AM3S ZM1N ZM0N]
 
-//call "5/6 reverse the pass" c3
-//   setup 2x2 trngl4 restriction all_facing_same
-//      array [CM6S AM7S AL5W CR4E]
+call "5/6 reverse the pass" c3
+   setup 2x2 trngl4 restriction all_facing_same
+      array [CM6S AM7S AL5W CR4E]
 
 call "zoom" mainstream tag zoom
             can_be_one_side_lateral
@@ -14624,46 +14637,46 @@ call "_gamut part 2" dontshow tag gamut2
    conc gamutinner2 [] circulate [conc_demand_lines conc_force_spots]
 
 call "gamut" c3a
-            dont_use_in_resolve first_part_visible
+            dont_use_in_resolve last_part_visible
    seq gamut1 []
    seq gamut2 []
    seq cutdiamond [allow_forced_mod]
 
 call "the gamut" c3a
-            first_part_visible
+            last_part_visible
    seq gamut1 []
    seq gamut2 []
    seq cutdiamond [allow_forced_mod]
 
 call "the gamut but @m" c3a
-            dont_use_in_resolve first_part_visible
+            dont_use_in_resolve last_part_visible
    seq gamut1 []
    seq gamut2 []
    seq nullsecond [mandatory_secondary_call]
 
 call "swing the gamut" c3a
-            step_to_wave first_two_parts_visible
+            step_to_wave first_part_visible   // Should be first_and_last_parts_visible
    seq swing []
    seq gamut1 []
    seq gamut2 []
    seq cutdiamond [allow_forced_mod]
 
 call "swing the gamut but @m" c3a
-            dont_use_in_resolve step_to_wave first_two_parts_visible
+            dont_use_in_resolve step_to_wave first_part_visible   // Should be first_and_last_parts_visible
    seq swing []
    seq gamut1 []
    seq gamut2 []
    seq nullsecond [mandatory_secondary_call]
 
 call "@0 the gamut" c3a
-            dont_use_in_resolve first_two_parts_visible
+            dont_use_in_resolve first_part_visible   // Should be first_and_last_parts_visible
    seq nullcall [mandatory_anycall]
    seq gamut1 []
    seq gamut2 []
    seq cutdiamond [allow_forced_mod]
 
 call "@0 the gamut but @m" c3a
-            dont_use_in_resolve first_two_parts_visible
+            dont_use_in_resolve first_part_visible   // Should be first_and_last_parts_visible
    seq nullcall [mandatory_anycall]
    seq gamut1 []
    seq gamut2 []
@@ -19664,7 +19677,10 @@ call "hocus pocus" c2
 
             visible_fractions magic_is_inherited yoyo_is_inherited funny_is_inherited
    conc6p_or_normal trade_w_tbone [inherit_yoyo inherit_funny]
-                    two_o_circs [inherit_magic conc_force_otherway endscando]
+                    // Setting both "conc_demand_columns" and "conc_demand_lines" makes it forbid doing this
+                    // in a butterfly.  It would go to an outer 2x2 elongated in both directions, which
+                    // is forbidden when both of these flags are present together.
+                    two_o_circs [inherit_magic conc_force_otherway conc_demand_columns conc_demand_lines endscando]
 
 call "_wheel and" dontshow tag wheel
             reverse_means_mirror
@@ -20307,8 +20323,8 @@ call "_trade and check line, unusual" dontshow tag tradencheckline_unusual
    seq checkline_unusual [roll_transparent inherit_diamond inherit_bigmatrix]
 
 call "_trade and check line or thar, unusual" dontshow tag tradenchecklineorthar_unusual
-            yoyo_is_inherited bigmatrix_is_inherited
-   seq trade [inherit_yoyo inherit_bigmatrix]
+            yoyo_is_inherited bigmatrix_is_inherited half_is_inherited
+   seq trade [inherit_yoyo inherit_half inherit_bigmatrix]
    seq checklineorthar_unusual [roll_transparent inherit_bigmatrix]
 
 call "_trade and check line, illegal" dontshow tag tradencheckline_illegal
@@ -20734,9 +20750,9 @@ call "scoot back" mainstream tag scootback
             alternate_definition [half] mainstream
    setup 2x2 1x4 no_cutting_through rotate qualifier wave_only
       array [CR0N AL0S AL1S CR1N]
-   setup pmd 1x4 qualifier right dmd_ctrs_mwv restriction unusual alwaysfail
+   setup pmd 1x4 qualifier right dmd_ctrs_mwv restriction unusual levelc1
       array [CR1E CR2E 0 0]
-   setup pmd 1x4 qualifier left dmd_ctrs_mwv restriction unusual alwaysfail
+   setup pmd 1x4 qualifier left dmd_ctrs_mwv restriction unusual levelc1
       array [AL1W 0 0 AL2W]
             alternate_definition [interlocked half] c3a
    setup qtag 2x4 rotate qualifier right 2fl_only
@@ -23266,6 +23282,26 @@ call "_check ctrs cross counter" dontshow tag check_cross_counter
    setup 1x4 1x4 restriction forbidden wave_only
       array [CR3S CR2S AL1S AL0S]
 
+/*     Taken out.  It's very complicated to do this in a way that is completely faithful to the true 1x8 definition.
+// This is here principally for things like "chain reaction but [once removed cast off 3/4].
+// We are aware that the "pushy" versions of this, in a 1x4, are not legal
+// by the strict definition of what "once removed" means.
+call "once removed cast off @b" c2
+            neednumber fractional_numbers parallel_conc_end
+   setup 1x4 2x2 qualifier num 1 none
+      preds "?"
+         if intlk_cast_normal_or_warn [CR0E CR1E AL1W AL0W]
+         if always                    [AL3W CR1E CR2E AL0W]
+   setup 1x4 1x4 qualifier num 2 none
+      preds "?"
+         if intlk_cast_normal_or_warn [CR3S CR2S AL1S AL0S]
+         if always                    [AL3S CR2S CR1S AL0S]
+   setup 1x4 2x2 qualifier num 3 none
+      preds "?"
+         if intlk_cast_normal_or_warn [CR3W CR2W AL2E AL3E]
+         if always                    [AL0E CR2W CR1W AL3E]
+*/
+
 /* We have to split this up this way so that the checking won't count as a visible fraction. */
 call "_ctrs counter part 1" dontshow tag ctr_counter_1
             cross_is_inherited intlk_is_inherited nxn_is_inherited fractal_is_inherited
@@ -24991,6 +25027,7 @@ call "tickle" c4 tag tickle
    seq hinge_for_nicely [inherit_mxn inherit_nxn inherit_bigmatrix]
    seq splitctrrot [inherit_single inherit_mxn inherit_nxn]
 
+/*  This never caught on.
 call "_shake it part 1" dontshow tag shake_it_1
             left_means_mirror
    setup 2x2 2x2 restriction forbidden all_facing_same
@@ -25011,6 +25048,7 @@ call "shake it and @0" c4x
             dont_use_in_resolve left_means_mirror
    seq shake_it_1 [inherit_left]
    seq shake_it_2 []
+*/
 
 call "_maybe extend for walk the clover" dontshow tag maybe_extend
    setup qtag qtag qualifier miniwaves

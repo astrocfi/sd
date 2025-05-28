@@ -918,9 +918,10 @@ struct call_with_name {
 };
 
 
-/* These bits are used to allocate flag bits
-   that appear in the "callflagsf" word of a top level calldefn block
-   and the "cmd_final_flags.final" of a setup with its command block. */
+// These bits are used to allocate flag bits
+// that appear in the "callflagsf" word of a top level calldefn block
+// and the "cmd_final_flags.final" of a setup with its command block.
+// We need to leave the top 16 bits free in order to accomodate the "CFLAG2" bits.
 
 enum {
    // A 3-bit field.
@@ -937,8 +938,8 @@ enum {
    CFLAGHSPARE_3                   = 0x00000800UL,
    CFLAGHSPARE_4                   = 0x00001000UL,
    CFLAGHSPARE_5                   = 0x00002000UL,
-   CFLAGHSPARE_6                   = 0x00004000UL
-   // We need to leave the top 12 bits free in order to accomodate the "CFLAG2" bits.
+   CFLAGHSPARE_6                   = 0x00004000UL,
+   CFLAGHSPARE_7                   = 0x00008000UL
 };
 
 /* These flags, and "CFLAGH__???" flags, go along for the ride, in the callflagsf
@@ -960,7 +961,7 @@ enum {
 /* These flags go along for the ride, in some parts of the code (BUT NOT
    THE CALLFLAGSF WORD OF A CALLSPEC!), in the same word as the heritable flags,
    but are not part of the inheritance mechanism.  We use symbols that have been
-   graciously provided for us from database.h to tell us what bits may be safely
+   graciously provided for us from above to tell us what bits may be safely
    used next to the heritable flags. */
 
 enum finalflags {
@@ -1842,6 +1843,8 @@ class select {
       fx_fqtgns,
       fx_ftharns,
       fx_ftharew,
+      fx_falamons,
+      fx_falamoew,
       fx_fqtgj1,
       fx_fqtgj2,
       fx_f2x3j1,
@@ -2055,8 +2058,24 @@ class select {
       fx_lndmd9,
       fx_linpdm8,
       fx_lndmd8,
+      fx_boxdma,
+      fx_boxdmb,
+      fx_boxdmc,
+      fx_boxdmd,
       fx_trngl8a,
       fx_trngl8b,
+      fxdmdpdmda,
+      fxdmdpdmdb,
+      fxdmdpdmdc,
+      // ***** New ones go here!
+      fxboxdmda,
+      fxboxdmdb,
+      fxboxdmdc,
+      fxboxpdmda,
+      fxboxpdmdb,
+      fxboxpdmdc,
+      fxlinboxa,
+      fxlinboxb,
       fx_f1x8lowf,
       fx_f1x8hif,
       fx_f1x8low6,
@@ -2131,6 +2150,14 @@ class select {
       fx_fhrgl2,
       fx_fhrgle,
       fx_fptpdid,
+      fx_phanigna,
+      fx_phanignb,
+      fx_phanignc,
+      fx_phanignd,
+      fx_phanigne,
+      fx_phanignf,
+      fx_phanigng,
+      fx_phanignh,
       fx_f2x477,
       fx_f2x4ee,
       fx_f2x4bb,
@@ -2234,6 +2261,12 @@ class tglmap {
       tglmap2r,
       tglmapd71,
       tglmapd72,
+      tglmap1cw,
+      tglmap1ccw,
+      tg8map1cw,
+      tg8map1ccw,
+      tglmaps6,
+      tglmapb6,
       tgl_ENUM_EXTENT   // Not a key; indicates extent of the enum.
    };
 
@@ -2249,7 +2282,7 @@ class tglmap {
       setup_kind kind1x3;
       tglmapkey otherkey;
       veryshort nointlkshapechange;
-      veryshort switchtgls;
+      veryshort randombits;
       veryshort mapqt1[8];   // In quarter-tag: first triangle (upright),
                              // then second triangle (inverted), then idle.
       veryshort mapcp1[8];   // In C1 phantom: first triangle (inverted),
@@ -2278,6 +2311,12 @@ class tglmap {
       setup *result) THROW_DECL;
 
    // In sdtables.
+   static const tglmapkey t6cwtglmap1[];
+   static const tglmapkey t6ccwtglmap1[];
+   static const tglmapkey t8cwtglmap1[];
+   static const tglmapkey t8ccwtglmap1[];
+   static const tglmapkey s6tglmap1[];
+   static const tglmapkey b6tglmap1[];
    static const tglmapkey c1tglmap1[];
    static const tglmapkey c1tglmap2[];
    static const tglmapkey dbqtglmap1[];
@@ -2313,6 +2352,7 @@ struct ctr_end_mask_rec {
 enum warning_index {
    warn__none,
    warn__really_no_collision,
+   warn__really_no_eachsetup,
    warn__do_your_part,
    warn__unusual_or_2faced,
    warn__tbonephantom,
@@ -2377,6 +2417,7 @@ enum warning_index {
    warn__split_to_2x3s,
    warn__split_to_1x8s,
    warn__split_to_1x6s,
+   warn__split_to_1x3s,
    warn__take_left_hands,
    warn__left_half_pass,
    warn__evil_interlocked,
@@ -2388,6 +2429,7 @@ enum warning_index {
    warn__bad_modifier_level,
    warn__bad_call_level,
    warn__did_not_interact,
+   warn__use_quadruple_setup_instead,
    warn__opt_for_normal_cast,
    warn__opt_for_normal_hinge,
    warn__opt_for_2fl,
@@ -2398,7 +2440,6 @@ enum warning_index {
    warn__like_linear_action,
    warn__phantoms_thinner,
    warn__hokey_jay_shapechanger,
-   warn__split_1x6,
    warn_interlocked_to_6,
    warn__offset_hard_to_see,
    warn__pg_hard_to_see,
@@ -3604,7 +3645,7 @@ enum {
    CMD_MISC3__RESTRAIN_CRAZINESS   = 0x00000004UL,
    CMD_MISC3__RESTRAIN_MODIFIERS   = 0x00000008UL,
    CMD_MISC3__META_NOCMD           = 0x00000010UL,
-   CMD_MISC3__NO_CHECK_LEVEL       = 0x00000020UL,
+   //    unused                    = 0x00000020UL,
    CMD_MISC3__DOING_YOUR_PART      = 0x00000040UL,    // Some kind of "DYP" has happened, setups may be bizarre.
    CMD_MISC3__NEED_DIAMOND         = 0x00000080UL,
    CMD_MISC3__DOING_ENDS           = 0x00000100UL,
@@ -4372,6 +4413,7 @@ enum mpkind {
    MPKIND__X_SPOTS,
    MPKIND__4_QUADRANTS,
    MPKIND__4_EDGES,
+   MPKIND__4_EDGES_ALAMO,
    MPKIND__ALL_8,
    MPKIND__DMD_STUFF,
    MPKIND__STAG,
@@ -5074,7 +5116,7 @@ extern void move(
 
 /* In SDISTORT */
 
-extern void prepare_for_call_in_series(setup *result, setup *ss);
+extern void prepare_for_call_in_series(setup *result, setup *ss, bool dont_clear__no_reeval = false);
 
 extern void minimize_splitting_info(setup *ss, const resultflag_rec & other_split_info);
 
@@ -5113,11 +5155,6 @@ extern void do_phantom_diag_qtg_concept(
    setup *result) THROW_DECL;
 
 extern void distorted_2x2s_move(
-   setup *ss,
-   parse_block *parseptr,
-   setup *result) THROW_DECL;
-
-extern void mimic_move(
    setup *ss,
    parse_block *parseptr,
    setup *result) THROW_DECL;
@@ -5186,6 +5223,8 @@ void stable_move(
 
 /* In SDTAND */
 
+extern void initialize_tandem_tables();
+
 extern void tandem_couples_move(
    setup *ss,
    selector_kind selector,
@@ -5197,7 +5236,10 @@ extern void tandem_couples_move(
    bool phantom_pairing_ok,
    setup *result) THROW_DECL;
 
-extern void initialize_tandem_tables();
+extern void mimic_move(
+   setup *ss,
+   parse_block *parseptr,
+   setup *result) THROW_DECL;
 
 /* In SDCONC */
 

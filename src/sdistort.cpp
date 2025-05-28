@@ -70,10 +70,11 @@ void tglmap::initialize()
 
 
 
-extern void prepare_for_call_in_series(setup *result, setup *ss)
+extern void prepare_for_call_in_series(setup *result, setup *ss, bool dont_clear__no_reeval /* = false */)
 {
    *result = *ss;
-   result->result_flags.misc = 0;
+   result->result_flags.misc &= RESULTFLAG__NO_REEVALUATE;     // Clear all except this bit.
+   if (!dont_clear__no_reeval) result->result_flags.misc = 0;  // Or clear them all.
    result->result_flags.maximize_split_info();
 }
 
@@ -623,11 +624,13 @@ static void innards(
       goto getout;
    }
 
-   if (map_kind == MPKIND__OVERLAP ||
-       map_kind == MPKIND__INTLK ||
-       map_kind == MPKIND__CONCPHAN) {
-      if (result->result_flags.split_info[vert])
-         warn(warn__did_not_interact);
+   if ((map_kind == MPKIND__OVERLAP ||
+        map_kind == MPKIND__INTLK ||
+        map_kind == MPKIND__CONCPHAN) && result->result_flags.split_info[vert]) {
+      if (calling_level >= quadruple_CLW_level && map_kind != MPKIND__OVERLAP)
+         warn(warn__use_quadruple_setup_instead);
+      else
+         warn(warn__did_not_interact);   // The best we can do; quadruple formation isn't legal.
    }
 
    // Triangles are extremely complicated.  Past attempts to handle them "elegantly"
@@ -3113,9 +3116,11 @@ extern void triple_twin_move(
          break;
       case 2:
          mapcode = MAPCODE(s1x6,4,MPKIND__SPLIT,1);
+         ss->cmd.cmd_misc_flags |= CMD_MISC__EXPLICIT_MATRIX;
          break;
       case 3:
          mapcode = MAPCODE(s2x6,2,(mpkind)parseptr->concept->arg5,1);
+         ss->cmd.cmd_misc_flags |= CMD_MISC__EXPLICIT_MATRIX;
          break;
       }
 
@@ -4027,6 +4032,24 @@ extern void common_spot_move(
 }
 
 
+static void reassemble_triangles(const veryshort *mapnums,
+                                 uint32 ri,
+                                 uint32 r,
+                                 int swap_res,
+                                 const setup res[2],
+                                 const setup idle,
+                                 setup *result) THROW_DECL
+{
+   // Restore the two people who don't move.
+   if (mapnums[6] >= 0) copy_rot(result, mapnums[6], &idle, 0, ri);
+   if (mapnums[7] >= 0) copy_rot(result, mapnums[7], &idle, 1, ri);
+
+   // Copy the triangles.
+   scatter(result, &res[swap_res], mapnums, 2, r^022);
+   scatter(result, &res[swap_res^1], &mapnums[3], 2, r);
+}
+
+
 void tglmap::do_glorious_triangles(
    setup *ss,
    const tglmapkey *map_ptr_table,
@@ -4040,14 +4063,23 @@ void tglmap::do_glorious_triangles(
    setup res[2];
    const veryshort *mapnums;
    const map *map_ptr = ptrtable[map_ptr_table[(indicator >> 6) & 3]];
+   bool specttgls = (map_ptr->randombits & 4) != 0;
 
-   if (ss->kind == s_c1phan || ss->kind == sdeepbigqtg) {
+   if (ss->kind == s_c1phan || ss->kind == sdeepbigqtg || specttgls) {
       mapnums = map_ptr->mapcp1;
       startingrot = 2;
    }
    else if (ss->kind == sbigdmd || ss->kind == s_rigger || ss->kind == sd2x7) {
       mapnums = map_ptr->mapbd1;
       startingrot = 1;
+   }
+   else if (ss->kind == s_short6) {
+      mapnums = map_ptr->mapbd1;
+      startingrot = 2;
+   }
+   else if (ss->kind == s_bone6) {
+      mapnums = map_ptr->mapbd1;
+      startingrot = 3;
    }
    else {   // s_qtag
       mapnums = map_ptr->mapqt1;
@@ -4059,8 +4091,8 @@ void tglmap::do_glorious_triangles(
    gather(&a2, ss, &mapnums[3], 2, r^022);
 
    // Save the two people who don't move.
-   copy_person(&idle, 0, ss, mapnums[6]);
-   copy_person(&idle, 1, ss, mapnums[7]);
+   if (mapnums[6] >= 0) copy_person(&idle, 0, ss, mapnums[6]);
+   if (mapnums[7] >= 0) copy_person(&idle, 1, ss, mapnums[7]);
 
    a1.cmd = ss->cmd;
    a2.cmd = ss->cmd;
@@ -4097,12 +4129,7 @@ void tglmap::do_glorious_triangles(
    if (res[0].kind == s_trngl && res[0].rotation == 0) {
       result->kind = ss->kind;
       result->rotation = 0;
-      // Restore the two people who don't move.
-      copy_person(result, mapnums[6], &idle, 0);
-      copy_person(result, mapnums[7], &idle, 1);
-      r = startingrot * 011;
-      scatter(result, &res[0], mapnums, 2, r);
-      scatter(result, &res[1], &mapnums[3], 2, r^022);
+      reassemble_triangles(mapnums, 0, (startingrot^2) * 011, 0, res, idle, result);
       return;
    }
 
@@ -4128,18 +4155,23 @@ void tglmap::do_glorious_triangles(
       // We know that res[0].rotation != startingrot.
       if (startingrot == 1) fail("Sorry, can't do this.");
 
-      if (res[0].rotation == 0) {
-         if (result->kind == nothing) goto noshapechange;
-         result->kind = s_qtag;
-         // Restore the two people who don't move.
-         copy_person(result, map_ptr->mapqt1[6], &idle, 0);
-         copy_person(result, map_ptr->mapqt1[7], &idle, 1);
-         scatter(result, &res[0], map_ptr->mapqt1, 2, 0);
-         scatter(result, &res[1], &map_ptr->mapqt1[3], 2, 022);
+      if (res[0].rotation == 0 && ss->kind != s_bone6) {
+         uint32 r = 022;
+         if (result->kind == nothing) goto shapechangeerror;
+
+         if (!specttgls && ss->kind != s_short6)
+            result->kind = s_qtag;
+
+         if (ss->kind == s_short6) {
+            result->rotation++;
+            r = 011;
+         }
+
+         reassemble_triangles(map_ptr->mapqt1, 0, r, 0, res, idle, result);
       }
-      else if (res[0].rotation == 2) {
+      else if (res[0].rotation == 2 && ss->kind != s_bone6) {
          if (map_ptr->nointlkshapechange)
-            goto noshapechange;
+            goto shapechangeerror;
 
          result->kind = s_c1phan;
          // Restore the two people who don't move.
@@ -4150,18 +4182,62 @@ void tglmap::do_glorious_triangles(
       }
       else {
          if (result->kind == nothing || map_ptr->nointlkshapechange)
-            goto noshapechange;
+            goto shapechangeerror;
 
          map_ptr = ptrtable[map_ptr->otherkey];
 
-         if (result->kind == s_c1phan) {
-            // Restore the two people who don't move.
-            copy_rot(result, map_ptr->mapcp1[6], &idle, 0, r);
-            copy_rot(result, map_ptr->mapcp1[7], &idle, 1, r);
+         if (specttgls) {
+            uint32 ri = 0;
+            uint32 r = 0;
 
-            // Copy the triangles.
-            scatter(result, &res[1], map_ptr->mapcp1, 2, 022);
-            scatter(result, &res[0], &map_ptr->mapcp1[3], 2, 0);
+            if (!((map_ptr->randombits ^ res[0].rotation) & 2)) {
+               if (map_ptr->randombits & 8) {
+                  result->kind = s_ptpd;
+                  result->rotation += 3;
+                  if (map_ptr->randombits & 2) ri = 022;
+               }
+               else {
+                  result->kind = s_bone6;
+                  result->rotation += 3;
+               }
+
+               reassemble_triangles(map_ptr->map241, ri, 011, 1, res, idle, result);
+            }
+            else {
+               if (map_ptr->randombits & 8) {
+                  result->kind = s_rigger;
+                  r = 011;
+                  if (!(map_ptr->randombits & 2)) ri = 022;
+                  result->rotation += 3;
+               }
+               else {
+                  result->kind = s_short6;
+               }
+
+               reassemble_triangles(map_ptr->map261, ri, r, 1, res, idle, result);
+            }
+         }
+         else if (ss->kind == s_short6) {
+            if (res[0].rotation & 2)
+               map_ptr = ptrtable[map_ptr->otherkey];
+
+            result->kind = map_ptr->kind;
+            result->rotation += 2;
+            reassemble_triangles(map_ptr->mapqt1, 0, 022, 1, res, idle, result);
+         }
+         else if (ss->kind == s_bone6) {
+            if (res[0].rotation & 1) {
+               reassemble_triangles(map_ptr->map261, 0, 0, 1, res, idle, result);
+            }
+            else {
+               if (!(res[0].rotation & 2))
+                  map_ptr = ptrtable[map_ptr->otherkey];
+               result->kind = map_ptr->kind;
+               reassemble_triangles(map_ptr->mapqt1, 0, 022, 0, res, idle, result);
+            }
+         }
+         else if (result->kind == s_c1phan) {
+            reassemble_triangles(map_ptr->mapcp1, r, 0, 1, res, idle, result);
          }
          else {
             // Restore the two people who don't move.
@@ -4177,7 +4253,7 @@ void tglmap::do_glorious_triangles(
    else if (res[0].kind == s1x3) {
 
       if (result->kind == nothing || map_ptr->nointlkshapechange)
-         goto noshapechange;
+         goto shapechangeerror;
 
       if (res[0].rotation == 0) {
          if (ss->kind == sdeepbigqtg)
@@ -4193,10 +4269,7 @@ void tglmap::do_glorious_triangles(
             result->kind = map_ptr->kind1x3;
          }
 
-         copy_person(result, mapnums[6], &idle, 0);
-         copy_person(result, mapnums[7], &idle, 1);
-         scatter(result, &res[0], mapnums, 2, 0);
-         scatter(result, &res[1], &mapnums[3], 2, 022);
+         reassemble_triangles(mapnums, 0, 022, 0, res, idle, result);
       }
       else {
          if (startingrot == 1)
@@ -4206,7 +4279,7 @@ void tglmap::do_glorious_triangles(
 
          result->kind = map_ptr->kind1x3;
 
-         if (map_ptr->switchtgls) {    // What a crock!
+         if (map_ptr->randombits & 1) {    // What a crock!
             copy_rot(result, map_ptr->map241[6], &idle, 0, r);
             copy_rot(result, map_ptr->map241[7], &idle, 1, r);
 
@@ -4216,10 +4289,11 @@ void tglmap::do_glorious_triangles(
             }
          }
          else {
-            copy_rot(result, map_ptr->map241[7], &idle, 0, r);
-            copy_rot(result, map_ptr->map241[6], &idle, 1, r);
-            scatter(result, &res[0], map_ptr->map241, 2, 0);
-            scatter(result, &res[1], &map_ptr->map241[3], 2, 022);
+            mapnums = map_ptr->map241;
+            copy_rot(result, mapnums[7], &idle, 0, r);
+            copy_rot(result, mapnums[6], &idle, 1, r);
+            scatter(result, &res[0], mapnums, 2, 0);
+            scatter(result, &res[1], &mapnums[3], 2, 022);
          }
       }
    }
@@ -4241,7 +4315,7 @@ void tglmap::do_glorious_triangles(
 
    return;
 
- noshapechange:
+ shapechangeerror:
    fail("Can't do shape-changer in interlocked or magic triangles.");
 }
 
@@ -4262,10 +4336,16 @@ static void wv_tand_base_move(
    switch (s->kind) {
    case s_bone:
    case s_rigger:
-      tbonetest = s->people[0].id1 | s->people[1].id1 | s->people[4].id1 | s->people[5].id1;
+      if ((indicator & 076) == 20) {
+         if (global_selectmask != (global_livemask & 0x33))
+            goto losing;
+      }
+      else {
+         tbonetest = s->people[0].id1 | s->people[1].id1 | s->people[4].id1 | s->people[5].id1;
 
-      if ((indicator & 076) != 6 || (tbonetest & 011) == 011 || !((indicator ^ tbonetest) & 1))
-         goto losing;
+         if ((indicator & 076) != 6 || (tbonetest & 011) == 011 || !((indicator ^ tbonetest) & 1))
+            goto losing;
+      }
 
       if (s->kind == s_bone) {
          if (indicator & 0100) fail("Can't do this concept in this setup.");
@@ -4286,6 +4366,36 @@ static void wv_tand_base_move(
       }
 
       break;
+   case s_bone6:
+      if (indicator == 20) {
+         if (global_selectmask != (global_livemask & 033))
+            goto losing;
+      }
+      else {
+         tbonetest = s->people[0].id1 | s->people[1].id1 | s->people[3].id1 | s->people[4].id1;
+
+         if ((indicator & ~1) != 6 || (tbonetest & 011) == 011 || !((indicator ^ tbonetest) & 1))
+            goto losing;
+      }
+
+      tglmap::do_glorious_triangles(s, tglmap::b6tglmap1, indicator, result);
+      reinstate_rotation(s, result);
+      return;
+   case s_short6:
+      if (indicator == 20) {
+         if (global_selectmask != (global_livemask & 055))
+            goto losing;
+      }
+      else {
+         tbonetest = s->people[0].id1 | s->people[2].id1 | s->people[3].id1 | s->people[5].id1;
+
+         if ((indicator & ~1) != 6 || (tbonetest & 011) == 011 || ((indicator ^ tbonetest) & 1))
+            goto losing;
+      }
+
+      tglmap::do_glorious_triangles(s, tglmap::s6tglmap1, indicator, result);
+      reinstate_rotation(s, result);
+      return;
    case s_galaxy:
       if ((indicator & 076) != 6)   // Only "tandem-base" and "wave-base" are allowed here.
          goto losing;
@@ -4313,6 +4423,66 @@ static void wv_tand_base_move(
 
       schema = (indicator & 0100) ? schema_intlk_vertical_6 : schema_vertical_6;
       break;
+   case s_nxtrglcw:
+      if (indicator == 20) {
+         if (global_selectmask != (global_livemask & 0x66))
+            goto losing;
+      }
+      else {
+         tbonetest = s->people[1].id1 | s->people[2].id1 | s->people[5].id1 | s->people[6].id1;
+
+         if ((indicator & ~1) != 6 || (tbonetest & 011) == 011 || ((indicator ^ tbonetest) & 1))
+            goto losing;
+      }
+
+      tglmap::do_glorious_triangles(s, tglmap::t8cwtglmap1, indicator, result);
+      reinstate_rotation(s, result);
+      return;
+   case s_nxtrglccw:
+      if (indicator == 20) {
+         if (global_selectmask != (global_livemask & 0x33))
+            goto losing;
+      }
+      else {
+         tbonetest = s->people[0].id1 | s->people[1].id1 | s->people[4].id1 | s->people[5].id1;
+
+         if ((indicator & ~1) != 6 || (tbonetest & 011) == 011 || ((indicator ^ tbonetest) & 1))
+            goto losing;
+      }
+
+      tglmap::do_glorious_triangles(s, tglmap::t8ccwtglmap1, indicator, result);
+      reinstate_rotation(s, result);
+      return;
+   case s_ntrgl6cw:
+      if (indicator == 20) {
+         if (global_selectmask != (global_livemask & 066))
+            goto losing;
+      }
+      else {
+         tbonetest = s->people[1].id1 | s->people[2].id1 | s->people[4].id1 | s->people[5].id1;
+
+         if ((indicator & ~1) != 6 || (tbonetest & 011) == 011 || ((indicator ^ tbonetest) & 1))
+            goto losing;
+      }
+
+      tglmap::do_glorious_triangles(s, tglmap::t6cwtglmap1, indicator, result);
+      reinstate_rotation(s, result);
+      return;
+   case s_ntrgl6ccw:
+      if (indicator == 20) {
+         if (global_selectmask != (global_livemask & 033))
+            goto losing;
+      }
+      else {
+         tbonetest = s->people[0].id1 | s->people[1].id1 | s->people[3].id1 | s->people[4].id1;
+
+         if ((indicator & ~1) != 6 || (tbonetest & 011) == 011 || ((indicator ^ tbonetest) & 1))
+            goto losing;
+      }
+
+      tglmap::do_glorious_triangles(s, tglmap::t6ccwtglmap1, indicator, result);
+      reinstate_rotation(s, result);
+      return;
    case s_c1phan:
       if ((indicator & 077) == 20) {
          t = 0;
@@ -4417,8 +4587,8 @@ extern void triangle_move(
    if (ss->cmd.cmd_final_flags.test_herit_and_final_bits())
       fail("Illegal modifier for this concept.");
 
-   // Same level (C2) for interlocked or magic.  OK?
-   if ((indicator & 0300) && calling_level < intlk_triangle_level) {
+   if (((indicator & 0100) && calling_level < intlk_triangle_level) ||
+       ((indicator & 0200) && calling_level < magic_triangle_level)) {
       if (allowing_all_concepts)
          warn(warn__bad_concept_level);
       else
@@ -4579,6 +4749,6 @@ extern void triangle_move(
 
    // Don't give the "do the call in each 1x3" warning
    // if it arose during a triangle call.
-   configuration::clear_one_warning(warn__split_1x6);
+   configuration::clear_one_warning(warn__split_to_1x3s);
    configuration::set_multiple_warnings(saved_warnings);
 }

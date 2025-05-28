@@ -728,6 +728,10 @@ char *estab[] = {
    "plinedmd",
    "linepdmd",
    "linedmd",
+   "linebox",
+   "boxdmd",
+   "boxpdmd",
+   "dmdpdmd",
    "hsqtag",
    "dmdlndmd",
    "hqtag",
@@ -754,6 +758,7 @@ char *estab[] = {
    "thar",
    "alamo",
    "confused_dmd",
+   "???",
    "???",
    "???",
    "???",
@@ -1104,7 +1109,7 @@ char *seqmodtab1[] = {
 // These are the general top-level call flags.  They go into the "callflags1" word and
 // part of the "callflagsh" word.
 
-char *flagtab1[] = {
+char *flagtab1f[] = {
    "first_part_visible",
    "first_two_parts_visible",
    "12_16_matrix_means_split",
@@ -1137,8 +1142,10 @@ char *flagtab1[] = {
    "ends_take_right_hands",
    "funny_means_those_facing",
    "split_like_square_thru",
-   "can_be_one_side_lateral",  // The overflow (into CFLAG2_) items start here.
-   "no_elongation_allowed",    //    There is space for 12 of them.
+
+   "no_seq_if_no_frac",        // The overflow (into CFLAG2_) items start here.
+   "can_be_one_side_lateral",  //    There is space for 16 of them.
+   "no_elongation_allowed",
    "imprecise_rotation",
    "can_be_fan",
    "equalize",
@@ -1602,9 +1609,9 @@ char *return_ptr;
 int callcount;
 int filecount;
 int dumbflag;
-uint32 call_flagsh;
 uint32 call_flags1;
-uint32 call_flags2;
+uint32 call_flagsh;
+uint32 call_flags1overflow;
 uint32 call_tag;
 char call_name[100];
 int call_namelen;
@@ -1894,6 +1901,11 @@ void db_putc(char ch)
       db_output_error();
 }
 
+static void write_byte(uint32 n)
+{
+   db_putc((char) ((n) & 0xFF));
+   filecount += 1;
+}
 
 static void write_halfword(uint32 n)
 {
@@ -1901,8 +1913,6 @@ static void write_halfword(uint32 n)
    db_putc((char) ((n) & 0xFF));
    filecount += 2;
 }
-
-
 
 static void write_fullword(uint32 n)
 {
@@ -2201,23 +2211,22 @@ static void write_call_header(calldef_schema schema)
 {
    int j;
 
-   if (!call_namelen) {
+   if (call_namelen == 0) {
       write_halfword(0x3FFF);
-      write_halfword((call_flags2 << 4));
    }
    else {
       write_halfword(0x2000 | call_tag );
-      write_halfword(call_level | (call_flags2 << 4));
+      write_byte(call_level);
    }
 
+   write_halfword(call_flags1overflow);
    write_fullword(call_flags1);
    write_fullword(call_flagsh);
    write_halfword((call_namelen << 8) | (uint32) schema);
 
    for (j=0; j<call_namelen; j++)
-      db_putc((char) (((uint32) call_name[j]) & 0xFF));
+      write_byte((uint32) call_name[j]);
 
-   filecount += call_namelen;
    callcount++;
 }
 
@@ -2676,17 +2685,17 @@ int main(int argc, char *argv[])
 
       call_flagsh = 0;
       call_flags1 = 0;
-      call_flags2 = 0;
+      call_flags1overflow = 0;
 
       for (;;) {
          uint32 flagh_to_set = 0;
          uint32 flag1_to_set = 0;
 
-         if ((iii = search(flagtab1)) >= 0) {
+         if ((iii = search(flagtab1f)) >= 0) {
             if (iii >= 32) {
-               call_flags2 |= (1 << (iii-32));
-               // We only have room for 12 overflow call flags.
-               if (call_flags2 & ~0xFFF)
+               call_flags1overflow |= (1 << (iii-32));
+               // We only have room for 16 overflow call flags.
+               if (call_flags1overflow & ~0xFFFF)
                   errexit("Too many secondary flags");
             }
             else {
@@ -2819,7 +2828,7 @@ int main(int argc, char *argv[])
 
          break;
       case schema_alias:
-         if (call_flagsh|call_flags1|call_flags2|call_tag)
+         if (call_flagsh|call_flags1|call_flags1overflow|call_tag)
             errexit("Flags not allowed with alias");
          get_tok();
          if (tok_kind != tok_symbol) errexit("Improper alias symbol");

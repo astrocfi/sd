@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2007  William B. Ackerman.
+//    Copyright (C) 1990-2008  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -725,6 +725,86 @@ static void printsetup(setup *x)
 
          do_write(str);
          break;
+      case slinebox:
+         offs = 0;
+
+         switch (roti) {
+         case 0:
+            str = "6 6 6 6 e f@7a b c d@76 6 6 6 h g";
+            break;
+         case 1:
+            str = " 5a@@ 5b@@ 5c@@ 5d@@ he@@ gf@";
+            break;
+         case 2:
+            str = "g h@76 6 d c b a@7f e";
+            break;
+         default:
+            str = " fg@@ eh@@ 5d@@ 5c@@ 5b@@ 5a@";
+            break;
+         }
+
+         do_write(str);
+         break;
+      case sboxdmd:
+         offs = 0;
+
+         switch (roti) {
+         case 0:
+            str = "6e f@@6h g@@6  8b@78a  6  c@76  8d";
+            break;
+         case 1:
+            str = "9a@969h e@7d b@7969g f@9c";
+            break;
+         case 2:
+            str = "6  8d@78c  6  a@76  8b@@6g h@@6f e";
+            break;
+         default:
+            str = "696 c@f g@76 6 b d@7e h@696 a";
+            break;
+         }
+
+         do_write(str);
+         break;
+      case sboxpdmd:
+         offs = 0;
+
+         switch (roti) {
+         case 0:
+            str = "6 e f@@6 h g@@6 5c@@6 b d@@6 5a";
+            break;
+         case 1:
+            str = "6 b 6 h e@7a 6 c@76 d 6 g f";
+            break;
+         case 2:
+            str = "6 5a@@6 d b@@6 5c@@6 g h@@6 f e";
+            break;
+         default:
+            str = "f g 6 d@76 6 c 6 a@7e h 6 b";
+            break;
+         }
+
+         do_write(str);
+         break;
+      case sdmdpdmd:
+         offs = 0;
+
+         switch (roti) {
+         case 0:
+            str = "65f@7e  6  g@765h@@65c@@6b d@@65a";
+            break;
+         case 1:
+            str = "6 6 6 5 e@76 b@7a 6 c h f@76 d@76 6 6 5 g";
+            break;
+         case 2:
+            str = "65a@@6d b@@65c@@65h@7g  6  e@765f";
+            break;
+         default:
+            str = "5g@76 6 6 d@7f h c 6 a@76 6 6 b@75e";
+            break;
+         }
+
+         do_write(str);
+         break;
       case s_dead_concentric:
          ui_options.drawing_picture = 0;
          writestuff(" centers only:");
@@ -831,8 +911,11 @@ void write_history_line(int history_index,
 
    // Or "each 1x6" and "each 1x3".
 
-   if (this_item->test_one_warning_specific(warn__split_1x6))
+   if (this_item->test_one_warning_specific(warn__split_to_1x3s))
       this_item->clear_one_warning_specific(warn__split_to_1x6s);
+
+   // Or "really_no_eachsetup".
+   this_item->clear_one_warning_specific(warn__really_no_eachsetup);
 
    // Or "do your part" (that is, the "warn__dyp_or_2faced" version) and "you ought to say 2-faced".
    // And don't say "do your part" twice.
@@ -2694,7 +2777,7 @@ void run_program()
       writestuff("SD -- square dance caller's helper.");
       newline();
       newline();
-      writestuff("Copyright (c) 1990-2007 William B. Ackerman");
+      writestuff("Copyright (c) 1990-2008 William B. Ackerman");
       newline();
       writestuff("   and Stephen Gildea.");
       newline();

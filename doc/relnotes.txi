@@ -1,7 +1,7 @@
 \input texinfo @c %**start of header -*-texinfo-*-
 @setfilename relnotes.info
 @settitle Sd Release Notes
-@c Time-stamp: <30 Mar 2008 wba>
+@c Time-stamp: <10 Aug 2008 wba>
 @iftex
 @headings off
 @oddheading @| @| @thispage
@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 37.6
-@set title2 Database version = 37.6 format = 272
+@set title1 RELEASE NOTES FOR VERSION 37.7
+@set title2 Database version = 37.7 format = 278
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 37.7::
 * 37.6::
 * 37.5::
 * 37.4::
@@ -58,7 +59,7 @@ The files @file{relnotes03.txi} and @file{relnotes98.txi} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 37.6, Top, (dir)
+@node Intro, 37.7, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -69,11 +70,42 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2008 William B. Ackerman
 @sp 3
 @menu
-* 37.6::               Changes in the current version
+* 37.7::               Changes in the current version
 @end menu
 
 @c ************
-@node 37.6, 37.5, Intro, Top
+@node 37.7, 37.6, Intro, Top
+@unnumberedsec Version 37.7 changes
+
+Box-like calls, such as @strong{peel and trail}, are not allowed from triangles at levels below C2.
+We apologize to the C1 dancers at Tech Squares who were inconvenienced by this.
+
+The triple column/line/wave concepts, and the interlocked triangle concept, were moved from C2 to C1.
+
+The @strong{mimic} concept was improved somewhat.  It now uses a
+reassembly algorithm that is consistent with the paper at
+@uref{http://www.lynette.org/mimic.pdf}.  It still handles only belles,
+beaus, leads, and trailers.
+
+The handling of alamo vs. "O" spots is better.  It uses the alamo setup more often.
+The call @strong{adjust alamo to other pairing} is needed much less often.
+There is better handling of dixie grand -- one can go directly to fractional tops, etc.
+
+There is better handling of inhomogeneous unsymmetrical setups: box and diamond, etc.
+
+The call @strong{recycle} was fixed to make it illegal from, for example, back-to-back lines.  It was taking
+too literally the "fold/counter rotate/roll" definition.  That definition is now only used if
+an actual concept that requires it is used.
+
+The notion that @strong{the gamut} has a distinct first part and can therefore be "finished" was removed.
+That is obsolete.
+
+A bug in @strong{initially 1-1/2 rims trade back} was fixed.
+
+A bug that wrongly allowed @strong{hocus pocus} from a butterfly was fixed.
+
+@c ************
+@node 37.6, 37.5, 37.7, Top
 @unnumberedsec Version 37.6 changes
 
 New concept: @strong{mimic}.  This is less complete than the full version in Sue Curtis's paper

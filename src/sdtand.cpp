@@ -26,8 +26,9 @@
 // This file contains stuff for tandem and as-couples moves.
 
 /* This defines the following functions:
-   tandem_couples_move
    initialize_tandem_tables
+   tandem_couples_move
+   mimic_move
 */
 
 #include <string.h>
@@ -944,6 +945,8 @@ void tandrec::unpack_us(
          result->people[i] = hyperarray[my_huge_map[i]];
          result->people[i].id1 = rotperson(hyperarray[my_huge_map[i]].id1, rot);
    }
+
+   canonicalize_rotation(result);
 }
 
 
@@ -2017,7 +2020,6 @@ extern void tandem_couples_move(
           (map_search->ilatmask3high & livemaskhigh) == hmaskhigh &&
           (map_search->ilatmask3low & livemasklow) == hmasklow) {
          tandstuff.unpack_us(map_search, orbitmask3high, orbitmask3low, result);
-         canonicalize_rotation(result);
          reinstate_rotation(ss, result);
 
          // When we fudge wrongly-oriented triangles to a 2x4, we need
@@ -2054,36 +2056,354 @@ extern void tandem_couples_move(
 }
 
 
+// Forward decl!
+void recursively_fix(setup *result, const uint16 split_info[2], const setup *orig_before_press) THROW_DECL;
+
+
+void recurse(uint32 code, setup *result, const uint16 split_info[2], 
+             const setup *orig_before_press)
+{
+   int s, i;
+   setup aa[4];
+
+   const map::map_thing *splitme = map::get_map_from_code(code);
+
+   if (!splitme)
+      fail("Sorry, can't handle this result setup.");
+
+   int vert = (splitme->rot ^ splitme->vert) & 1;
+
+   uint32 frot = splitme->rot;
+
+   int ssize = attr::klimit(splitme->inner_kind)+1;
+   for (s=0 ; s<splitme->arity ; s++,frot>>=2) {
+      aa[s].clear_people();
+      for (i=0 ; i<ssize ; i++)
+         copy_rot(&aa[s], i, result, splitme->maps[i+ssize*s], 011*((0-frot) & 3));
+
+      aa[s].kind = splitme->inner_kind;
+      aa[s].rotation = frot & 3;
+      recursively_fix(&aa[s], split_info, orig_before_press);
+   }
+
+   for (s=1 ; s<splitme->arity ; s++) {
+      if (aa[0].kind != aa[s].kind || aa[0].rotation != aa[s].rotation)
+         fail("Sorry, can't handle this result setup.");
+   }
+
+   // Now reassemble them.
+   uint32 mapcode = MAPCODE(aa[0].kind,splitme->arity,splitme->map_kind,(aa[0].rotation^vert)&1);
+
+   const map::map_thing *final_map = map::get_map_from_code(mapcode);
+   if (!final_map)
+      fail("Sorry, can't handle this result setup.");
+
+   result->rotation = (aa[0].rotation & 1) - (final_map->rot & 1);
+   result->clear_people();
+   ssize = attr::klimit(final_map->inner_kind)+1;
+
+   if (vert && (aa[0].rotation & 1)) {
+      if (((final_map->rot+1) & 2) == 0) {
+         for (i=0; i<splitme->arity; i++) {
+            aa[i].rotation += 2;
+            canonicalize_rotation(&aa[i]);
+         }
+      }
+
+      if ((final_map->rot & 1) == 0)
+         result->rotation += 2;
+   }
+
+   const veryshort *getptr;
+   uint32 vrot;
+   getptr = final_map->maps;
+   vrot = final_map->per_person_rot;
+   uint32 rot;
+   int j;
+
+   for (j=0,rot=final_map->rot ; j<final_map->arity ; j++,rot>>=2) {
+      for (i=0 ; i<ssize ; i++) {
+         install_rot(result, *getptr++, &aa[j], i, 011*((rot+vrot) & 3));
+         vrot >>= 2;
+      }
+   }
+
+   result->kind = final_map->outer_kind;
+}
+
+
+
+void recursively_fix(setup *result, const uint16 split_info[2], const setup *orig_before_press) THROW_DECL
+{
+   const expand::thing *compress_map = (const expand::thing *) 0;
+   const veryshort *srclist = (veryshort *) 0;
+   const veryshort *dstlist;
+
+   static veryshort listfor1x1[] = {(veryshort) s1x1, 1, 0};
+   static veryshort listfor1x2[] = {(veryshort) s1x2, 2, 0, 1};
+   static veryshort listfor1x4[] = {(veryshort) s1x4, 4, 0, 1, 3, 2};
+   static veryshort listfor1x8[] = {(veryshort) s1x8, 8, 0, 1, 3, 2, 6, 7, 5, 4};
+
+   static expand::thing exp09_2x2_1x2 = {{3, 0}, 2, s1x2, s2x2, 1};
+   static expand::thing exp03_2x2_1x2 = {{0, 1}, 2, s1x2, s2x2, 0};
+   static expand::thing exp0C_2x2_1x2 = {{3, 2}, 2, s1x2, s2x2, 0};
+   static expand::thing exp06_2x2_1x2 = {{2, 1}, 2, s1x2, s2x2, 1};
+
+   static expand::thing exp33_2x4_2x2 = {{0, 1, 4, 5}, 4, s2x2, s2x4, 0};
+   static expand::thing expCC_2x4_2x2 = {{2, 3, 6, 7}, 4, s2x2, s2x4, 0};
+   static expand::thing exp33_2x4_1x4 = {{0, 1, 4, 5}, 4, s1x4, s2x4, 0};
+   static expand::thing expCC_2x4_1x4 = {{7, 6, 3, 2}, 4, s1x4, s2x4, 0};
+   static expand::thing exp55_2x4_dmd = {{0, 2, 4, 6}, 4, sdmd, s2x4, 0};
+   static expand::thing expAA_2x4_dmd = {{7, 1, 3, 5}, 4, sdmd, s2x4, 0};
+   static expand::thing exp55_2x4_2x2 = {{0, 2, 4, 6}, 4, s2x2, s2x4, 0};
+   static expand::thing expAA_2x4_2x2 = {{1, 3, 5, 7}, 4, s2x2, s2x4, 0};
+   static expand::thing exp55_2x4_1x4 = {{0, 6, 4, 2}, 4, s1x4, s2x4, 0};
+   static expand::thing expAA_2x4_1x4 = {{7, 1, 3, 5}, 4, s1x4, s2x4, 0};
+   static expand::thing exp66_2x4_2x2 = {{1, 2, 5, 6}, 4, s2x2, s2x4, 0};
+   static expand::thing exp99_2x4_2x2 = {{0, 3, 4, 7}, 4, s2x2, s2x4, 0};
+   static expand::thing expC3_2x4_2x2 = {{0, 1, 6, 7}, 4, s2x2, s2x4, 0};
+   static expand::thing exp3C_2x4_2x2 = {{2, 3, 4, 5}, 4, s2x2, s2x4, 0};
+   static expand::thing exp0F_2x4_1x4 = {{0, 1, 3, 2}, 4, s1x4, s2x4, 0};
+   static expand::thing expF0_2x4_1x4 = {{7, 6, 4, 5}, 4, s1x4, s2x4, 0};
+
+   static expand::thing expCC_qtg_line = {{6, 7, 2, 3}, 4, s1x4, s_qtag, 0};
+
+   static expand::thing exp55_xwv_dmd = {{0, 2, 4, 6}, 4, sdmd, s_crosswave, 0};
+   static expand::thing expAA_xwv_dmd = {{1, 3, 5, 7}, 4, sdmd, s_crosswave, 0};
+   static expand::thing exp99_xwv_dmd = {{0, 3, 4, 7}, 4, sdmd, s_crosswave, 0};
+   static expand::thing exp66_xwv_dmd = {{1, 2, 5, 6}, 4, sdmd, s_crosswave, 0};
+
+   uint32 finals = little_endian_live_mask(result);
+   setup temp1 = *result;
+   uint16 new_split_info[2];
+   new_split_info[0] = 0;
+   new_split_info[1] = 0;
+
+   switch (result->kind) {
+   case s1x2:
+      dstlist = listfor1x1;
+      srclist = listfor1x2;
+      break;
+   case s1x4:
+      dstlist = listfor1x2;
+      srclist = listfor1x4;
+      break;
+   case s1x8:
+      dstlist = listfor1x4;
+      srclist = listfor1x8;
+      break;
+   case s2x4:
+      if ((split_info[0] == 1 && split_info[1] == 0) ||
+          (split_info[0] >= 3 && split_info[1] >= 1)) {
+         // Split it into 2 2x2's.  This includes the case of a 1-person call.  The latter ought to
+         // split into 8 1x1's, but we do this and hope for the best.
+         if (orig_before_press->kind == s2x2)
+            new_split_info[1] = 1;
+         else if (orig_before_press->kind == s1x4)
+            new_split_info[0] = 1;
+
+         recurse(MAPCODE(s2x2,2,MPKIND__SPLIT,0),
+                 result, new_split_info, (const setup *) 0);
+         reinstate_rotation(&temp1, result);
+         return;
+      }
+      else if (split_info[0] == 1 && split_info[1] == 1) {
+         // Split it into 4 1x2's in quadrants.
+         recurse(MAPCODE(s1x2,4,MPKIND__SPLIT_OTHERWAY_TOO,0),
+                 result, split_info, (const setup *) 0);
+         reinstate_rotation(&temp1, result);
+         return;
+      }
+      else if (split_info[0] == 3 && split_info[1] == 0) {
+         // Split it into 4 1x2's arrayed left-to-right.
+         recurse(MAPCODE(s1x2,4,MPKIND__SPLIT,1),
+                 result, split_info, (const setup *) 0);
+         reinstate_rotation(&temp1, result);
+         return;
+      }
+      else if (split_info[0] >= 3 && split_info[1] >= 1) {
+         // Split it 8 ways.
+         recurse(MAPCODE(s1x1,8,MPKIND__SPLIT_OTHERWAY_TOO,0),
+                 result, split_info, (const setup *) 0);
+         reinstate_rotation(&temp1, result);
+         return;
+      }
+      else {
+         if (orig_before_press &&
+             ((orig_before_press->rotation ^ result->rotation) & 1) == 0) {
+            if (orig_before_press->kind == s1x4)
+               finals += 0x100;
+            else if (orig_before_press->kind == sdmd)
+               finals += 0x200;
+         }
+
+         switch (finals)
+         {
+         case 0x033: compress_map = &exp33_2x4_2x2; break;
+         case 0x133: compress_map = &exp33_2x4_1x4; break;
+         case 0x0CC: compress_map = &expCC_2x4_2x2; break;
+         case 0x1CC: compress_map = &expCC_2x4_1x4; break;
+
+         case 0x055: compress_map = &exp55_2x4_2x2; break;
+         case 0x155: compress_map = &exp55_2x4_1x4; break;
+         case 0x255: compress_map = &exp55_2x4_dmd; break;
+
+         case 0x0AA: compress_map = &expAA_2x4_2x2; break;
+         case 0x1AA: compress_map = &expAA_2x4_1x4; break;
+         case 0x2AA: compress_map = &expAA_2x4_dmd; break;
+
+         case 0x066: case 0x166: compress_map = &exp66_2x4_2x2; break;
+         case 0x099: case 0x199: compress_map = &exp99_2x4_2x2; break;
+         case 0x0C3: case 0x1C3: compress_map = &expC3_2x4_2x2; break;
+         case 0x03C: case 0x13C: compress_map = &exp3C_2x4_2x2; break;
+         case 0x00F: case 0x10F: compress_map = &exp0F_2x4_1x4; break;
+         case 0x0F0: case 0x1F0: compress_map = &expF0_2x4_1x4; break;
+         }
+      }
+
+      break;
+
+   case s2x2:
+      // If it is unambiguous, just do it.
+
+      switch (finals)
+      {
+      case 0x9: compress_map = &exp09_2x2_1x2; break;
+      case 0x3: compress_map = &exp03_2x2_1x2; break;
+      case 0xC: compress_map = &exp0C_2x2_1x2; break;
+      case 0x6: compress_map = &exp06_2x2_1x2; break;
+      }
+
+      if (compress_map) break;
+
+      // If we are being told to compress in a certain way, do so.
+      if (split_info[0] == 0 && split_info[1] == 1) {
+         // Split it vertically into lateral 1x2's
+         recurse(MAPCODE(s1x2,2,MPKIND__SPLIT,1),
+                 result, new_split_info, (const setup *) 0);
+         reinstate_rotation(&temp1, result);
+         return;
+      }
+      else if (split_info[0] == 1 && split_info[1] == 0) {
+         // Split it horizontally into vertical 1x2's
+         recurse(spcmap_2x2v,
+                 result, new_split_info, (const setup *) 0);
+         reinstate_rotation(&temp1, result);
+         return;
+      }
+
+      // If no splitting info, but original was a 1x2, prefer that.
+      if (orig_before_press && orig_before_press->kind == s1x2 && (orig_before_press->rotation & 1) == 1) {
+         // Split it vertically into lateral 1x2's
+         recurse(MAPCODE(s1x2,2,MPKIND__SPLIT,1),
+                 result, new_split_info, (const setup *) 0);
+         reinstate_rotation(&temp1, result);
+         return;
+      }
+      else if (orig_before_press && orig_before_press->kind == s1x2 && (orig_before_press->rotation & 1) == 0) {
+         // Split it horizontally into vertical 1x2's
+         recurse(spcmap_2x2v,
+                 result, new_split_info, (const setup *) 0);
+         reinstate_rotation(&temp1, result);
+         return;
+      }
+
+      break;    // This will make it fail.
+
+   case s_crosswave:
+      switch (finals)
+      {
+      case 0x55: compress_map = &exp55_xwv_dmd; break;
+      case 0xAA: compress_map = &expAA_xwv_dmd; break;
+      case 0x66: compress_map = &exp66_xwv_dmd; break;
+      case 0x99: compress_map = &exp99_xwv_dmd; break;
+      }
+      break;
+   case s_rigger:
+      {
+         recurse(MAPCODE(s1x2,4,MPKIND__SPLIT_WITH_45_ROTATION_OTHERWAY_TOO,0),
+                 result, new_split_info, (const setup *) 0);
+         reinstate_rotation(&temp1, result);
+         return;
+      }
+
+      /*
+        static expand::thing exp55_rig_dmd = {{6, 0, 2, 4}, 4, sdmd, s_rigger, 0};
+        static expand::thing expAA_rig_dmd = {{7, 1, 3, 5}, 4, sdmd, s_rigger, 0};
+        static expand::thing exp66_rig_dmd = {{6, 1, 2, 5}, 4, sdmd, s_rigger, 0};
+        static expand::thing exp99_rig_dmd = {{7, 0, 3, 4}, 4, sdmd, s_rigger, 0};
+        switch (finals)
+        {
+        case 0x55: compress_map = &exp55_rig_dmd; break;
+        case 0xAA: compress_map = &expAA_rig_dmd; break;
+        case 0x66: compress_map = &exp66_rig_dmd; break;
+        case 0x99: compress_map = &exp99_rig_dmd; break;
+        }
+      */
+
+      break;
+   case s_qtag:
+      switch (finals)
+      {
+      case 0xCC: compress_map = &expCC_qtg_line; break;
+      }
+
+      if (compress_map) break;
+
+      recurse(MAPCODE(s1x2,4,MPKIND__SPLIT_WITH_45_ROTATION_OTHERWAY_TOO,1),
+              result, new_split_info, (const setup *) 0);
+      reinstate_rotation(&temp1, result);
+      return;
+
+      /*
+        static expand::thing exp55_qtg_dmd = {{4, 6, 0, 2}, 4, sdmd, s_rigger, 1};
+        static expand::thing expAA_qtg_dmd = {{5, 7, 1, 3}, 4, sdmd, s_rigger, 0};
+        static expand::thing exp66_qtg_dmd = {{5, 6, 1, 2}, 4, sdmd, s_rigger, 0};
+        static expand::thing exp99_qtg_dmd = {{4, 7, 0, 3}, 4, sdmd, s_rigger, 0};
+        switch (finals)
+        {
+        case 0x55: compress_map = &exp55_qtg_dmd; break;
+        case 0xAA: compress_map = &expAA_qtg_dmd; break;
+        case 0x66: compress_map = &exp66_qtg_dmd; break;
+        case 0x99: compress_map = &exp99_qtg_dmd; break;
+        }
+      */
+
+      break;
+   default:
+      fail("Sorry, can't handle this result setup.");
+   }
+
+   if (compress_map)
+      expand::compress_setup(*compress_map, result);
+   else if (srclist) {
+      result->kind = (setup_kind) dstlist[0];
+      result->clear_people();
+      int wp = 0;
+      for (int rp = 0 ; rp < srclist[1] ; rp++) {
+         if (temp1.people[srclist[rp+2]].id1) {
+            if (wp == dstlist[1])
+               fail("Sorry, can't recompress.");
+            copy_person(result, dstlist[wp+2], &temp1, srclist[rp+2]);
+            wp++;
+         }
+      }
+
+      if (wp != dstlist[1])
+         fail("Can't recompress.");
+   }
+   else
+      fail("Can't recompress.");
+
+   canonicalize_rotation(result);
+}
+
+
 void mimic_move(
    setup *ss,
    parse_block *parseptr,
    setup *result) THROW_DECL
 {
-   static expand::thing exp55_2x4_1x4 = {{0, 6, 4, 2}, 4, s1x4, s2x4, 0};
-   static expand::thing expAA_2x4_1x4 = {{7, 1, 3, 5}, 4, s1x4, s2x4, 0};
-   static expand::thing exp0F_2x4_1x4 = {{0, 1, 3, 2}, 4, s1x4, s2x4, 0};
-   static expand::thing expF0_2x4_1x4 = {{7, 6, 4, 5}, 4, s1x4, s2x4, 0};
-   static expand::thing exp33_2x4_2x2 = {{0, 1, 4, 5}, 4, s2x2, s2x4, 0};
-   static expand::thing expCC_2x4_2x2 = {{2, 3, 6, 7}, 4, s2x2, s2x4, 0};
-   static expand::thing exp55_2x4_2x2 = {{0, 2, 4, 6}, 4, s2x2, s2x4, 0};
-   static expand::thing expAA_2x4_2x2 = {{1, 3, 5, 7}, 4, s2x2, s2x4, 0};
-   static expand::thing exp66_2x4_2x2 = {{1, 2, 5, 6}, 4, s2x2, s2x4, 0};
-   static expand::thing exp99_2x4_2x2 = {{0, 3, 4, 7}, 4, s2x2, s2x4, 0};
-   static expand::thing expC3_2x4_2x2 = {{0, 1, 6, 7}, 4, s2x2, s2x4, 0};
-   static expand::thing exp3C_2x4_2x2 = {{2, 3, 4, 5}, 4, s2x2, s2x4, 0};
-   static expand::thing exp55_xwv_dmd = {{0, 2, 4, 6}, 4, sdmd, s_crosswave, 0};
-   static expand::thing expAA_xwv_dmd = {{1, 3, 5, 7}, 4, sdmd, s_crosswave, 0};
-   static expand::thing exp99_xwv_dmd = {{0, 3, 4, 7}, 4, sdmd, s_crosswave, 0};
-   static expand::thing exp66_xwv_dmd = {{1, 2, 5, 6}, 4, sdmd, s_crosswave, 0};
-   static expand::thing exp55_rig_dmd = {{6, 0, 2, 4}, 4, sdmd, s_rigger, 0};
-   static expand::thing expAA_rig_dmd = {{7, 1, 3, 5}, 4, sdmd, s_rigger, 0};
-   static expand::thing exp66_rig_dmd = {{6, 1, 2, 5}, 4, sdmd, s_rigger, 0};
-   static expand::thing exp99_rig_dmd = {{7, 0, 3, 4}, 4, sdmd, s_rigger, 0};
-   static expand::thing exp55_qtg_dmd = {{4, 6, 0, 2}, 4, sdmd, s_rigger, 1};
-   static expand::thing expAA_qtg_dmd = {{5, 7, 1, 3}, 4, sdmd, s_rigger, 0};
-   static expand::thing exp66_qtg_dmd = {{5, 6, 1, 2}, 4, sdmd, s_rigger, 0};
-   static expand::thing exp99_qtg_dmd = {{4, 7, 0, 3}, 4, sdmd, s_rigger, 0};
-
    if (attr::slimit(ss) > 3) {
       // We need to divide the setup.  Stuff our concept block back into the parse tree.
       // Based on what we know "do_big_concept" does, the following will always be OK,
@@ -2095,35 +2415,49 @@ void mimic_move(
 
       try {
          if (do_simple_split(&aa, split_command_none, result))
-            fail_no_retry("Sorry, can't split this.");
+            fail("Can't split this.");
+         return;
       }
       catch(error_flag_type e) {
-         // Try a 2x4 -> 1x4 split.
-         if (e != error_flag_no_retry && ss->kind == s2x4) {
-            aa = *ss;
-            aa.cmd.parseptr = parseptr;
-            if (do_simple_split(&aa, split_command_1x4, result))
-               fail_no_retry("Sorry, can't split this.");
-            warn(warn__each1x4);
-         }
-         else
+         if (e == error_flag_no_retry)
             throw e;
       }
 
-      return;
+      aa = *ss;
+      aa.cmd.parseptr = parseptr;
+
+      // Try a 2x4 -> 1x4 split.
+      if (ss->kind == s2x4) {
+         try {
+            if (do_simple_split(&aa, split_command_1x4, result))
+               fail("Can't split this.");
+            warn(warn__each1x4);
+            return;
+         }
+         catch(error_flag_type e) {
+            if (e == error_flag_no_retry)
+               throw e;
+         }
+      }
+
+      // Try more esoteric splits.
+      if (ss->kind == s_qtag || ss->kind == s_rigger || ss->kind == s_crosswave || ss->kind == s2x4) {
+         concentric_move(&aa, &aa.cmd, &aa.cmd, schema_in_out_triple, 0, 0, false, false, ~0UL, result);
+         return;
+      }
+
+      fail("Can't do this.");
    }
 
    if (little_endian_live_mask(ss) != (uint32) (1 << (attr::slimit(ss)+1)) - 1)
       fail_no_retry("Phantoms not allowed.");
 
    setup temp1 = *ss;
-   temp1.rotation = 0;
    uint32 ilatmask3low = 0;
 
    tandrec ttt(false, true);
    ttt.m_people_per_group = 2;
    ttt.virtual_result = temp1;
-   ttt.virtual_result.rotation = 0;
 
    for (int k=attr::slimit(ss); k>=0; k--) {
       ilatmask3low <<= 3;
@@ -2177,74 +2511,11 @@ void mimic_move(
 
    move(&temp1, false, result);
 
-   uint32 finals = little_endian_live_mask(result);
+   if (result->rotation & 1)
+      result->result_flags.swap_split_info_fields();
 
-   const expand::thing *compress_map = (const expand::thing *) 0;
+   recursively_fix(result, result->result_flags.split_info, ss);
 
-   // If the call started in a 1x4 and resulted in a 2x4 oriented the same way
-   // opt for a 1x4 result.
-
-   if (ss->kind == s1x4 && result->kind == s2x4 && result->rotation == 0) {
-      switch (finals)
-      {
-      case 0x55: compress_map = &exp55_2x4_1x4; break;
-      case 0xAA: compress_map = &expAA_2x4_1x4; break;
-      }
-   }
-
-   if (!compress_map) {
-      switch (result->kind) {
-      case s2x4:
-         switch (finals)
-         {
-         case 0x33: compress_map = &exp33_2x4_2x2; break;
-         case 0xCC: compress_map = &expCC_2x4_2x2; break;
-         case 0x55: compress_map = &exp55_2x4_2x2; break;
-         case 0xAA: compress_map = &expAA_2x4_2x2; break;
-         case 0x66: compress_map = &exp66_2x4_2x2; break;
-         case 0x99: compress_map = &exp99_2x4_2x2; break;
-         case 0xC3: compress_map = &expC3_2x4_2x2; break;
-         case 0x3C: compress_map = &exp3C_2x4_2x2; break;
-         case 0x0F: compress_map = &exp0F_2x4_1x4; break;
-         case 0xF0: compress_map = &expF0_2x4_1x4; break;
-         }
-         break;
-      case s_crosswave:
-         switch (finals)
-         {
-         case 0x55: compress_map = &exp55_xwv_dmd; break;
-         case 0xAA: compress_map = &expAA_xwv_dmd; break;
-         case 0x66: compress_map = &exp66_xwv_dmd; break;
-         case 0x99: compress_map = &exp99_xwv_dmd; break;
-         }
-         break;
-      case s_rigger:
-         switch (finals)
-         {
-         case 0x55: compress_map = &exp55_rig_dmd; break;
-         case 0xAA: compress_map = &expAA_rig_dmd; break;
-         case 0x66: compress_map = &exp66_rig_dmd; break;
-         case 0x99: compress_map = &exp99_rig_dmd; break;
-         }
-         break;
-      case s_qtag:
-         switch (finals)
-         {
-         case 0x55: compress_map = &exp55_qtg_dmd; break;
-         case 0xAA: compress_map = &expAA_qtg_dmd; break;
-         case 0x66: compress_map = &exp66_qtg_dmd; break;
-         case 0x99: compress_map = &exp99_qtg_dmd; break;
-         }
-         break;
-      default:
-         fail("Sorry, can't handle this result setup.");
-      }
-   }
-
-   if (compress_map)
-      expand::compress_setup(*compress_map, result);
-   else
-      fail("Sorry, can't recompress.");
-
-   reinstate_rotation(ss, result);
+   // Whatever was going on with splitting is no longer relevant.
+   result->result_flags.clear_split_info();
 }

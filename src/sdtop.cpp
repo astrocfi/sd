@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2007  William B. Ackerman.
+//    Copyright (C) 1990-2008  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -5886,7 +5886,8 @@ void toplevelmove() THROW_DECL
                     (ID3_NOTNEAREST1|ID3_NOTFARTHEST1)));
          }
       }
-      else if ((starting_setup.kind == splinepdmd || starting_setup.kind == splinedmd) && starting_setup.rotation & 1) {
+      else if ((starting_setup.kind == splinepdmd || starting_setup.kind == splinedmd || starting_setup.kind == slinebox) &&
+               starting_setup.rotation & 1) {
          uint32 nearbit = ID3_NEARFOUR;
          uint32 farbit = ID3_FARFOUR;
          uint32 waynearbit = ID3_NEAREST1|ID3_NOTFARTHEST1;
@@ -5943,6 +5944,21 @@ void toplevelmove() THROW_DECL
                farbit |= ID3_FARLINE;
             else if (!(hipeople & 010))
                farbit |= ID3_FARCOL;
+         }
+
+         for (i=0; i<8; i++) {
+            if (starting_setup.people[i].id1 & BIT_PERSON)
+               starting_setup.people[i].id3 |= ((i & 4) ? farbit : nearbit);
+         }
+      }
+      else if ((starting_setup.kind == sdmdpdmd || starting_setup.kind == sboxdmd || starting_setup.kind == sboxpdmd) &&
+               !(starting_setup.rotation & 1)) {
+         uint32 nearbit = ID3_NEARFOUR;
+         uint32 farbit = ID3_FARFOUR;
+
+         if (starting_setup.rotation & 2) {
+            nearbit = ID3_FARFOUR;
+            farbit = ID3_NEARFOUR;
          }
 
          for (i=0; i<8; i++) {

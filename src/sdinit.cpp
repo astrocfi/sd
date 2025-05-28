@@ -1000,8 +1000,8 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
       calldefn *recursed_call_root = (calldefn *)
          get_mem(sizeof(calldefn));
 
-      read_halfword();       // Get level (not really) and 12 bits of "callflags2" stuff.
-      uint32 saveflags2 = last_datum >> 4;
+      read_halfword();       // Get level (not really) and 16 bits of "callflags2" stuff.
+      uint32 saveflags1overflow = last_datum;
       read_fullword();       // Get top level flags, first word.
                              // This is the "callflags1" stuff.
       uint32 saveflags1 = last_datum;
@@ -1014,8 +1014,8 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
       recursed_call_root->level = 0;
       recursed_call_root->schema = call_schema;
       recursed_call_root->callflags1 = saveflags1;
+      recursed_call_root->callflagsf = saveflags1overflow << 16;
       // Will get "CFLAGH" and "ESCAPE_WORD" bits later.
-      recursed_call_root->callflagsf = saveflags2 << 20;
       recursed_call_root->callflagsh = saveflagsh;
       read_in_call_definition(recursed_call_root, 0);    // Recurse.
       root_to_use->compound_part = recursed_call_root;
@@ -1644,9 +1644,10 @@ static void build_database(abridge_mode_t abridge_mode)
 
       savetag = last_12;     // Get tag, if any.
 
-      read_halfword();       // Get level and 12 bits of "callflags2" stuff.
-      dance_level this_level = (dance_level) (last_datum & 0xF);
-      uint32 saveflags2 = last_datum >> 4;
+      dance_level this_level = (dance_level) (read_8_from_database() & 0xFF);
+
+      read_halfword();       // Get 16 bits of "callflags1"  overflow stuff.
+      uint32 saveflags1overflow = last_datum;
 
       read_fullword();       // Get top level flags, first word.
                              // This is the "callflags1" stuff.
@@ -1678,7 +1679,7 @@ static void build_database(abridge_mode_t abridge_mode)
       call_root->the_defn.level = (int) this_level;
       call_root->the_defn.schema = call_schema;
       call_root->the_defn.callflags1 = saveflags1;
-      call_root->the_defn.callflagsf = saveflags2 << 20;
+      call_root->the_defn.callflagsf = saveflags1overflow << 16;
       // Will get "CFLAGH" and "ESCAPE_WORD" bits later.
       call_root->the_defn.callflagsh = saveflagsh;
       read_in_call_definition(&call_root->the_defn, char_count);

@@ -382,9 +382,10 @@ void do_accelerator_spec(Cstring inputline, bool is_accelerator)
 
       if (user_match.match.packed_next_conc_or_subcall ||
           user_match.match.packed_secondary_subcall) {
-         gg->fatal_error_exit(1,
-                              "Target of accelerator or abbreviation is too complicated",
-                              inputline);
+         if (calling_level >= l_c4x)
+            gg->fatal_error_exit(1, "Target of accelerator or abbreviation is too complicated", inputline);
+
+         return;
       }
    }
 

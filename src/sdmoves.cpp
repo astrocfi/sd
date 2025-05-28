@@ -1334,6 +1334,7 @@ static const checkitem checktable[] = {
    {0x00A60055, 0x09000400, splinedmd, 0, warn__none, (const coordrec *) 0, {127}},
    {0x00670046, 0x109408C1, slinedmd, 0, warn__none, (const coordrec *) 0, {127}},
    {0x00660062, 0x1810C244, slinepdmd, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00460086, 0x00242861, sdmdpdmd, 0, warn__none, (const coordrec *) 0, {127}},
    {0x00660095, 0x40050031, s_trngl8,  0, warn__none, (const coordrec *) 0, {127}},
 
    {0x00950062, 0x091002C0, sbigdmd, 0, warn__none, (const coordrec *) 0, {127}},
@@ -1475,6 +1476,12 @@ static const checkitem checktable[] = {
      10, 6, 9, 6, 10, 2, 9, 2, 10, -6, 9, -6, 10, -2, 9, -2}},
    {0x00E20026, 0x01440430, sbigbone, 0, warn__none, (const coordrec *) 0, {127}},
    {0x01620026, 0x4A00A484, sdblbone, 0, warn__none, (const coordrec *) 0, {127}},
+
+   // Next 3 must follow the "bigbone" entry above.
+   {0x00A20026, 0x090C0422, slinebox, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00570066, 0x18118A04, sboxdmd, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00260084, 0x20080861, sboxpdmd, 0, warn__none, (const coordrec *) 0, {127}},
+
    {0x01620026, 0x41450430, sdblrig, 0, warn__none, (const coordrec *) 0, {127}},
    {0x01220026, 0x41450430, sdblrig, 0, warn__none, (const coordrec *) 0, {127}},
    {0x00E20026, 0x0800A404, sbigrig, 0, warn__none, (const coordrec *) 0, {127}},
@@ -1519,9 +1526,18 @@ static const checkitem checktable[] = {
    {0x00930057, 0x01080C60, s_hqtag, 0, warn__none, (const coordrec *) 0, {127}},
    {0x00970055, 0x114008A0, sbighrgl,  0, warn__none, (const coordrec *) 0, {127}},
    {0x00E70026, 0x20440230, sbigdhrgl, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00A60026, 0x03080020, s_nptrglcw, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00A60026, 0x01041002, s_nptrglccw, 0, warn__none, (const coordrec *) 0, {127}},
    {0x00510062, 0x02000004, s2x4, 1, warn__none, (const coordrec *) 0,
     {-5, 6, -2, 6, 5, 6, 2, 6, -5, -6, -2, -6, 5, -6, 2, -6, 127}},
-
+   {0x00770077, 0x22808044, s_c1phan, 0, warn__none, (const coordrec *) 0,
+    {2, 2, 4, 3, -2, -2, -5, -2, 127}},
+   {0x00770077, 0x02808084, s_c1phan, 0, warn__none, (const coordrec *) 0,
+    {-2, 2, -2, 4, 2, -2, 3, -5, 127}},
+   {0x00F700E7, 0x2101180C, s_c1phan, 0, warn__none, (const coordrec *) 0,
+    {2, 2, 11, 4, -2, -2, -10, -7, 127}},
+   {0x00F700E7, 0x25019000, s_c1phan, 0, warn__none, (const coordrec *) 0,
+    {-2, 2, -3, 9, 2, -2, 4, -10, 127}},
    {0}};
 
 
@@ -4484,9 +4500,9 @@ static void do_sequential_call(
    int subpart_count = 0;
 
    for (;;) {
-      by_def_item *this_item;
-      uint32 this_mod1;
-      by_def_item *alt_item;
+      by_def_item *this_item = &callspec->stuff.seq.defarray[0];
+      uint32 this_mod1 = this_item->modifiers1;
+      by_def_item *alt_item = this_item;
       bool recompute_id = false;
       uint32 saved_number_fields = current_options.number_fields;
       int saved_num_numbers = current_options.howmanynumbers;
@@ -4528,76 +4544,78 @@ static void do_sequential_call(
 
       zzz.demand_this_part_exists();
 
-      this_item = &callspec->stuff.seq.defarray[zzz.m_fetch_index];
-      this_mod1 = this_item->modifiers1;
-      setup_command foobar = ss->cmd;
-      foobar.cmd_final_flags = new_final_concepts;
-
-      // The no_anythingers_subst flag only applies to the first subcall.  This check shouldn't
-      // be needed, but we want to be protected against an improperly formed database.
-      if (zzz.m_fetch_index != 0)
-         foobar.cmd_misc3_flags &= ~CMD_MISC3__NO_ANYTHINGERS_SUBST;
-
-      result->result_flags.misc &= ~RESULTFLAG__NO_REEVALUATE;
-      if ((this_mod1 & DFM1_SEQ_NO_RE_EVALUATE) &&
-          !(result->cmd.cmd_misc2_flags & CMD_MISC2_RESTRAINED_SUPER))
-         result->result_flags.misc |= RESULTFLAG__NO_REEVALUATE;
-
-      if (zzz.m_reverse_order) {
-         if (this_schema_is_rem_or_alt && zzz.m_fetch_index >= 1) {
-            alt_item = this_item;
-            this_item = &callspec->stuff.seq.defarray[zzz.m_fetch_index-1];
-            zzz.m_fetch_index--;     // BTW, we require (in the database) that "distribute" be on.
-            this_mod1 = this_item->modifiers1;
-         }
-      }
-      else {
-         if (this_schema_is_rem_or_alt) {
-            alt_item = &callspec->stuff.seq.defarray[zzz.m_fetch_index+1];
-            zzz.m_fetch_index++;     // BTW, we require (in the database) that "distribute" be on.
-         }
-      }
-
-      // If we are not distributing, perform the range test now, so we don't
-      // query the user needlessly about parts of calls that we won't do.
-
-      if (!distribute) {
-         if (zzz.not_yet_in_active_section()) {
-            if (doing_weird_revert == weirdness_otherstuff && zzz.m_client_index == 0)
-               zzz.m_fetch_index--;
-
-            goto go_to_next_cycle;
-         }
-         if (zzz.ran_off_active_section()) break;
-      }
-
-      // If an explicit substitution was made, we will recompute the ID bits for the setup.
-      // Normally, we don't, which is why "patch the <anyone>" works.  The original
-      // evaluation of the designees is retained after the first part of the call.
-      // But if the user does something like "circle by 1/4 x [leads run]", we
-      // want to re-evaluate who the leads are.
-
-      // Turn on the expiration mechanism.
-      result->cmd.prior_expire_bits |= RESULTFLAG__EXPIRATION_ENAB;
-
       setup_command foo1, foo2;
 
       {
-         bool zzy = get_real_subcall(parseptr, this_item, &foobar,
-                                     callspec, forbid_flip, extra_heritmask_bits, &foo1);
-         if (zzy) {
-            result->cmd.prior_expire_bits &= ~RESULTFLAG__EXPIRATION_ENAB;
-            recompute_id = true;
+         setup_command foobar = ss->cmd;
+         this_item = &callspec->stuff.seq.defarray[zzz.m_fetch_index];
+         this_mod1 = this_item->modifiers1;
+         foobar.cmd_final_flags = new_final_concepts;
+
+         // The no_anythingers_subst flag only applies to the first subcall.  This check shouldn't
+         // be needed, but we want to be protected against an improperly formed database.
+         if (zzz.m_fetch_index != 0)
+            foobar.cmd_misc3_flags &= ~CMD_MISC3__NO_ANYTHINGERS_SUBST;
+
+         result->result_flags.misc &= ~RESULTFLAG__NO_REEVALUATE;
+         if ((this_mod1 & DFM1_SEQ_NO_RE_EVALUATE) &&
+             !(result->cmd.cmd_misc2_flags & CMD_MISC2_RESTRAINED_SUPER))
+            result->result_flags.misc |= RESULTFLAG__NO_REEVALUATE;
+
+         if (zzz.m_reverse_order) {
+            if (this_schema_is_rem_or_alt && zzz.m_fetch_index >= 1) {
+               alt_item = this_item;
+               this_item = &callspec->stuff.seq.defarray[zzz.m_fetch_index-1];
+               zzz.m_fetch_index--;     // BTW, we require (in the database) that "distribute" be on.
+               this_mod1 = this_item->modifiers1;
+            }
          }
+         else {
+            if (this_schema_is_rem_or_alt) {
+               alt_item = &callspec->stuff.seq.defarray[zzz.m_fetch_index+1];
+               zzz.m_fetch_index++;     // BTW, we require (in the database) that "distribute" be on.
+            }
+         }
+
+         // If we are not distributing, perform the range test now, so we don't
+         // query the user needlessly about parts of calls that we won't do.
+
+         if (!distribute) {
+            if (zzz.not_yet_in_active_section()) {
+               if (doing_weird_revert == weirdness_otherstuff && zzz.m_client_index == 0)
+                  zzz.m_fetch_index--;
+
+               goto go_to_next_cycle;
+            }
+            if (zzz.ran_off_active_section()) break;
+         }
+
+         // If an explicit substitution was made, we will recompute the ID bits for the setup.
+         // Normally, we don't, which is why "patch the <anyone>" works.  The original
+         // evaluation of the designees is retained after the first part of the call.
+         // But if the user does something like "circle by 1/4 x [leads run]", we
+         // want to re-evaluate who the leads are.
+
+         // Turn on the expiration mechanism.
+         result->cmd.prior_expire_bits |= RESULTFLAG__EXPIRATION_ENAB;
+
+         {
+            bool zzy = get_real_subcall(parseptr, this_item, &foobar,
+                                        callspec, forbid_flip, extra_heritmask_bits, &foo1);
+            if (zzy) {
+               result->cmd.prior_expire_bits &= ~RESULTFLAG__EXPIRATION_ENAB;
+               recompute_id = true;
+            }
+         }
+
+         // We allow stepping (or rearing back) again.
+         if (this_mod1 & DFM1_PERMIT_TOUCH_OR_REAR_BACK)
+            ss->cmd.cmd_misc_flags &= ~CMD_MISC__ALREADY_STEPPED;
+
+         if (this_schema_is_rem_or_alt)
+            get_real_subcall(parseptr, alt_item, &foobar,
+                             callspec, false, extra_heritmask_bits, &foo2);
       }
-
-      // We allow stepping (or rearing back) again.
-      if (this_mod1 & DFM1_PERMIT_TOUCH_OR_REAR_BACK)
-         ss->cmd.cmd_misc_flags &= ~CMD_MISC__ALREADY_STEPPED;
-
-      if (this_schema_is_rem_or_alt)
-         get_real_subcall(parseptr, alt_item, &foobar,
-                          callspec, false, extra_heritmask_bits, &foo2);
 
       // We also re-evaluate if the invocation flag "seq_re_evaluate" is on.
 
@@ -4682,7 +4700,6 @@ static void do_sequential_call(
          result->cmd.cmd_misc3_flags &= ~CMD_MISC3__META_NOCMD;
       }
 
-      result->cmd.cmd_misc3_flags |= CMD_MISC3__NO_CHECK_LEVEL;
       result->cmd.prior_elongation_bits = remember_elongation;
 
       // If we are feeding fractions through, either "inherit_half" or "inherit_lasthalf"
@@ -4821,7 +4838,7 @@ static bool do_misc_schema(
 
    foo1p->cmd_fraction = ss->cmd.cmd_fraction;
    foo2.cmd_fraction = ss->cmd.cmd_fraction;
-   ss->cmd.cmd_misc3_flags |= CMD_MISC3__NO_CHECK_LEVEL|CMD_MISC3__DOING_YOUR_PART;
+   ss->cmd.cmd_misc3_flags |= CMD_MISC3__DOING_YOUR_PART;
 
    if (the_schema == schema_select_leads) {
       inner_selective_move(ss, foo1p, &foo2,
@@ -6606,8 +6623,14 @@ static void move_with_real_call(
    catch(error_flag_type foo) {
       if (foo < error_flag_no_retry && this_defn != deferred_array_defn) {
          if (this_defn->compound_part) {
-            this_defn = this_defn->compound_part;
-            goto try_next_callspec;
+            // Don't take a sequential definition if there are no fractions or parts
+            // specified and the call has the special flag.  This is for recycle.
+            if (this_defn->compound_part->schema != schema_sequential ||
+                !(this_defn->compound_part->callflagsf & CFLAG2_NO_SEQ_IF_NO_FRAC) ||
+                !ss->cmd.cmd_fraction.is_null()) {
+               this_defn = this_defn->compound_part;
+               goto try_next_callspec;
+            }
          }
          else if (deferred_array_defn) {
             this_defn = deferred_array_defn;
@@ -6731,9 +6754,16 @@ extern void move(
          // Find the end of the restraint chain, then splice that call in at the restraint tail.
          // The end of the restraint chain may be past the tail point.
          parse_block *z0 = t;
+         bool fixme = true;
 
          for ( ; ; ) {
+            // Clear "fixme" if we pass a meta-concept like "initially".
+            if (get_meta_key_props(z0->concept) & MKP_RESTRAIN_2) fixme = false;
+
             if (z0->concept->kind == marker_end_of_list)
+               break;
+
+            if (z0->concept->kind < marker_end_of_list && fixme)
                break;
 
             if (z0->concept->kind < marker_end_of_list &&
