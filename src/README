@@ -1,4 +1,4 @@
-This is Sd for POSIX.1/X11 systems.  Time-stamp: <92/08/27 19:41:36 gildea>
+This is Sd for POSIX.1/X11 systems.  Time-stamp: <92/09/09 15:55:00 wba>
 
 ABOUT SD:
 
@@ -134,8 +134,8 @@ The mailing list sd@mc.lcs.mit.edu is for discussion of Sd and
 announcements of new versions.  Send to sd-request@mc.lcs.mit.edu
 to be added.
 
-Sd is available for anonymous FTP in the file pub/c4/sd-nn.tar.Z
-(where "nn" changes with the version) on thumper.bellcore.com.
+Sd is available for anonymous FTP in the file contrib/c4/sd/sd-nn.tar.Z
+(where "nn" changes with the version) on export.lcs.mit.edu.
 
 Please send bug reports and other comments on Sd to the authors at the
 addresses given below.

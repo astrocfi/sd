@@ -60,6 +60,18 @@ mkcalls: mkcalls.o
 sd_calls.dat: sd_calls.txt mkcalls
 	./mkcalls
 
+# TeX outputs front, body, toc; we want front, toc, body
+
+sd_doc-sorted.dvi: sd_doc.dvi
+	dviselect -i sd_doc.dvi =1:2 > tempa.dvi
+	dviselect -i sd_doc.dvi :_1 > tempb.dvi
+	(dviselect -i sd_doc.dvi -s 1: | dviselect =3:) > tempc.dvi
+	dviconcat -o sd_doc-sorted.dvi tempa.dvi tempb.dvi tempc.dvi
+	rm -f tempa.dvi tempb.dvi tempc.dvi
+
+sd_doc.PS: sd_doc-sorted.dvi
+	dvips -U -o sd_doc.PS sd_doc-sorted.dvi
+
 
 sdui-x11.o: sdui-x11.c
 	$(CC) $(CFLAGS) $(UICFLAGS) -c sdui-x11.c
@@ -69,6 +81,7 @@ mkcalls.o sdsi.o: paths.h
 mkcalls.o sdmove.o sdbasic.o sd16.o: database.h
 
 $(SD_OBJS): sd.h database.h
+
 
 clean::
 	rm -f *~ core *.o sd mkcalls sd_calls.dat sd.tar

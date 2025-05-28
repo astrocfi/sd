@@ -1,10 +1,10 @@
 \input texinfo @c %**start of header -*-texinfo-*-
 @setfilename sd_doc.info
-@ifinfo
-sd_doc.txi time-stamp: @{92/08/27 19:15:52 gildea@}
-@end ifinfo
 @settitle Sd
 @c %**end of header
+@ifinfo
+sd_doc.txi time-stamp: @{92/08/29 22:21:26 gildea@}
+@end ifinfo
 @iftex
 @finalout
 @end iftex
@@ -1035,7 +1035,7 @@ PART WITH A [SINGLE CROSS CONCENTRIC turn thru]
 @section So-And-So Only
 
 This concept means that the designees do their part of the call in the
-compete setup, as if it were @samp{own the @i{so-and-so} for @i{call} by
+complete setup, as if it were @samp{own the @i{so-and-so} for @i{call} by
 nothing}.  It does not do the call in their disconnected setup, even
 though that is a common interpretation.
 

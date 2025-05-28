@@ -16,7 +16,7 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-    This is for version 25. */
+    This is for version 26. */
 
 /* This defines the following functions:
    initialize_menus
@@ -789,6 +789,7 @@ static void build_database(call_list_mode_t call_list_mode)
       zz = (calldef_block*) get_mem(sizeof(calldef_block));
       zz->next = 0;
       zz->modifier_set = 0;
+      zz->modifier_level = l_mainstream;
       zz->callarray_list = tp;
       call_root->stuff.arr.def_list = zz;
 
