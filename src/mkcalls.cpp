@@ -2674,10 +2674,10 @@ def2:
          callarray_flags1 |= CAF__NO_COMPRESS;
       else if (!strcmp(tok_str, "plus_eighth_rotation"))
          callarray_flags1 |= CAF__PLUSEIGHTH_ROTATION;
-      else if (!strcmp(tok_str, "plus_eighth_rotation"))
-         callarray_flags1 |= CAF__PLUSEIGHTH_ROTATION;
       else if (!strcmp(tok_str, "roll_transparent"))
          callarray_flags1 |= CAF__ROLL_TRANSPARENT;
+      else if (!strcmp(tok_str, "is_space_invader"))
+         callarray_flags1 |= CAF__IS_SPACE_INVADER;
       else if ((!(callarray_flags1 & CAF__CONCEND)) && (!strcmp(tok_str, "concendsetup"))) {
          if (call_endsetup != (int) s_normal_concentric)
             errexit("concendsetup with wrong end_setup");

@@ -47,7 +47,7 @@
 // database format version.
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 392
+#define DATABASE_FORMAT_VERSION 393
 
 
 // We used to do some stuff to cater to compiler vendors (e.g. Sun
@@ -960,35 +960,36 @@ enum begin_kind {
 
 enum {
    // This one must be 1!!!!
-   CAF__ROT                     = 0x1,
-   CAF__FACING_FUNNY            = 0x2,
+   CAF__ROT                  = 0x00000001,
+   CAF__FACING_FUNNY         = 0x00000002,
    // Next one says this is concentrically defined --- the "end_setup" slot
    // has the centers' final setup, and there is an extra slot with the ends' final setup.
-   CAF__CONCEND                 = 0x4,
+   CAF__CONCEND              = 0x00000004,
    // Next one meaningful only if previous one is set.
-   CAF__ROT_OUT                 = 0x8,
+   CAF__ROT_OUT              = 0x00000008,
 
    // This is a 3 bit field.
-   CAF__RESTR_MASK             = 0x70,
+   CAF__RESTR_MASK           = 0x00000070,
    // These next 7 are the nonzero values it can have.
-   CAF__RESTR_UNUSUAL          = 0x10,
-   CAF__RESTR_FORBID           = 0x20,
-   CAF__RESTR_RESOLVE_OK       = 0x30,
-   CAF__RESTR_CONTROVERSIAL    = 0x40,
-   CAF__RESTR_BOGUS            = 0x50,
-   CAF__RESTR_ASSUME_DPT       = 0x60,
-   CAF__RESTR_EACH_1X3         = 0x70,
+   CAF__RESTR_UNUSUAL        = 0x00000010,
+   CAF__RESTR_FORBID         = 0x00000020,
+   CAF__RESTR_RESOLVE_OK     = 0x00000030,
+   CAF__RESTR_CONTROVERSIAL  = 0x00000040,
+   CAF__RESTR_BOGUS          = 0x00000050,
+   CAF__RESTR_ASSUME_DPT     = 0x00000060,
+   CAF__RESTR_EACH_1X3       = 0x00000070,
 
-   CAF__PREDS                  = 0x80,
-   CAF__NO_CUTTING_THROUGH    = 0x100,
-   CAF__NO_FACING_ENDS        = 0x200,
-   CAF__LATERAL_TO_SELECTEES  = 0x400,
-   CAF__OTHER_ELONGATE        = 0x800,
-   CAF__SPLIT_TO_BOX         = 0x1000,
-   CAF__REALLY_WANT_DIAMOND  = 0x2000,
-   CAF__NO_COMPRESS          = 0x4000,
-   CAF__PLUSEIGHTH_ROTATION  = 0x8000,
-   CAF__ROLL_TRANSPARENT    = 0x10000
+   CAF__PREDS                = 0x00000080,
+   CAF__NO_CUTTING_THROUGH   = 0x00000100,
+   CAF__NO_FACING_ENDS       = 0x00000200,
+   CAF__LATERAL_TO_SELECTEES = 0x00000400,
+   CAF__OTHER_ELONGATE       = 0x00000800,
+   CAF__SPLIT_TO_BOX         = 0x00001000,
+   CAF__REALLY_WANT_DIAMOND  = 0x00002000,
+   CAF__NO_COMPRESS          = 0x00004000,
+   CAF__PLUSEIGHTH_ROTATION  = 0x00008000,
+   CAF__ROLL_TRANSPARENT     = 0x00010000,
+   CAF__IS_SPACE_INVADER     = 0x00020000
 };
 
 // BEWARE!!  This list must track the array "qualtab" in mkcalls.cpp

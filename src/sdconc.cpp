@@ -5940,89 +5940,120 @@ extern void inner_selective_move(
       // But that's where the girls are.  We need to know where the girl-based triangles are.
       // That requires moving some bits between the two masks, to bring in the apex.
       uint32_t bothlivemask = livemask[0] << 16 | livemask[1];
-      uint32_t delta = 0;
+      uint32_t LEdelta = 0;
+      uint32_t BEdelta = 0;
       uint32_t apex_people = 0;
       if (local_selector == selector_anyone_base_tgl) {
          // Anyone-based triangle, not interlocked.
          switch (ss->kind) {
          case s_c1phan:
             switch (bothlivemask) {
-            case 0xA0A00A0A: delta = 0x0808; break;
-            case 0x0A0AA0A0: delta = 0x8080; break;
-            case 0x50500505: delta = 0x0404; break;
-            case 0x05055050: delta = 0x4040; break;
+            case 0xA0A00A0A: LEdelta = 0x0808; break;
+            case 0x0A0AA0A0: LEdelta = 0x8080; break;
+            case 0x50500505: LEdelta = 0x0404; break;
+            case 0x05055050: LEdelta = 0x4040; break;
             }
             break;
          case s_323:
             switch (bothlivemask) {
-            case 0x003300CC: case 0x00660099: delta = 0x88; break;
+            case 0x003300CC: case 0x00660099: LEdelta = 0x88; break;
             default:
                fail("Can't find the indicated triangles.");
             }
             break;
          case s_343:
             switch (bothlivemask) {
-            case 0x031800C6: delta = 0x84; break;
-            case 0x03180063: delta = 0x21; break;
+            case 0x031800C6: LEdelta = 0x84; break;
+            case 0x03180063: LEdelta = 0x21; break;
             }
-            break;
-         case s_bone:
-            if ((livemask[0] & ~0x33) == 0)
-               delta = 0x44;
-            break;
-         case s_rigger:
-            if ((livemask[0] & ~0x33) == 0)
-               delta = 0x88;
             break;
          case sd2x5:
-            if ((bothlivemask & ~0x41) == 0x01980022) {
-               delta = 0x22;
+            if ((bothlivemask & ~0x294) == 0x00630108) {
+               LEdelta = 0x108; BEdelta = 0x042;
+            }
+            else if ((bothlivemask & ~0x252) == 0x018c0021) {
+               LEdelta = 0x021; BEdelta = 0x210;
+            }
+            else if ((bothlivemask & ~0xA5) == 0x03180042) {
+               LEdelta = 0x042; BEdelta = 0x108;
+            }
+            else if ((bothlivemask & ~0x41) == 0x01980022) {
+               LEdelta = 0x022; BEdelta = 0x110;
             }
             else if ((bothlivemask & ~0x22) == 0x030C0041) {
-               delta = 0x41;
+               LEdelta = 0x041; BEdelta = 0x208;
+            }
+            break;
+         case s_3223:
+            if ((bothlivemask & ~0x14A) == 0x00A50210) {
+               LEdelta = 0x210; BEdelta = 0x021;
+            }
+            else if ((bothlivemask & ~0x231) == 0x00C60108) {
+               LEdelta = 0x108; BEdelta = 0x042;
+            }
+            else if ((bothlivemask & ~0x360) == 0x00870018) {
+               LEdelta = 0x018; BEdelta = 0x060;
+            }
+            else if ((bothlivemask & ~0x01B) == 0x00E40300) {
+               LEdelta = 0x300; BEdelta = 0x003;
+            }
+            else if ((bothlivemask & ~0x063) == 0x03180084) {
+               LEdelta = 0x084; BEdelta = 0x084;
+            }
+            break;
+         case s_rigger:
+            if ((livemask[0] & ~0x33) == 0) {
+               LEdelta = 0x88; BEdelta = 0x11;
             }
             break;
          case s_short6:
-            if ((livemask[0] & ~055) == 0)
-               delta = 022;
+            if ((livemask[0] & ~055) == 0) {
+               LEdelta = 022; BEdelta = 022;
+            }
             break;
          case s_bone6:
-            if ((livemask[0] & ~033) == 0)
-               delta = 044;
+            if ((livemask[0] & ~033) == 0) {
+               LEdelta = 044; BEdelta = 011;
+            }
+            break;
+         case s_bone:
+            if ((livemask[0] & ~0x33) == 0) {
+               LEdelta = 0x44; BEdelta = 0x22;
+            }
             break;
          case s_ntrgl6cw:
             if ((livemask[0] & ~066) == 0)
-               delta = 011;
+               LEdelta = 011;
             break;
          case s_ntrgl6ccw:
             if ((livemask[0] & ~033) == 0)
-               delta = 044;
+               LEdelta = 044;
             break;
          case s_spindle:
             if ((livemask[0] & ~0x55) == 0)
-               delta = 0x88;
+               LEdelta = 0x88;
             break;
          case s_ntrglcw: case s_nptrglcw:
             if ((livemask[0] & ~0xCC) == 0)
-               delta = 0x11;
+               LEdelta = 0x11;
             break;
          case s_ntrglccw: case s_nptrglccw:
             if ((livemask[0] & ~0x33) == 0)
-               delta = 0x88;
+               LEdelta = 0x88;
             break;
          case s_nxtrglcw:
             if ((livemask[0] & ~0x66) == 0)
-               delta = 0x11;
+               LEdelta = 0x11;
             break;
          case s_nxtrglccw:
             if ((livemask[0] & ~0x33) == 0)
-               delta = 0x44;
+               LEdelta = 0x44;
             break;
          case sdeepbigqtg:
             if (livemask[0] == 0x3030)
-               delta = 0x0808;
+               LEdelta = 0x0808;
             else if (livemask[0] == 0xC0C0)
-               delta = 0x0404;
+               LEdelta = 0x0404;
             break;
          default:
             fail("Can't find the indicated triangles.");
@@ -6037,19 +6068,19 @@ extern void inner_selective_move(
          if (apex_people == 010) {
             switch (livemask[0]) {
             case 0x88:
-               delta = 0x66;
+               LEdelta = 0x66;
                tglindicator = tglmap::TGL_GROUP_400;
                break;
             case 0x11:
-               delta = 0x66;
+               LEdelta = 0x66;
                tglindicator = tglmap::TGL_GROUP_400+1;
                break;
             case 0x44:
-               delta = 0x99;
+               LEdelta = 0x99;
                tglindicator = tglmap::TGL_GROUP_400+2;
                break;
             case 0x22:
-               delta = 0x99;
+               LEdelta = 0x99;
                tglindicator = tglmap::TGL_GROUP_400+3;
                break;
             }
@@ -6057,19 +6088,19 @@ extern void inner_selective_move(
          else if (apex_people == 001) {
             switch (livemask[0]) {
             case 0x88: 
-               delta = 0x33;
+               LEdelta = 0x33;
                tglindicator = tglmap::TGL_GROUP_500;
                break;
             case 0x44: 
-               delta = 0x33;
+               LEdelta = 0x33;
                tglindicator = tglmap::TGL_GROUP_500+1;
                break;
             case 0x22:
-               delta = 0xCC;
+               LEdelta = 0xCC;
                tglindicator = tglmap::TGL_GROUP_500+2;
                break;
             case 0x11:
-               delta = 0xCC;
+               LEdelta = 0xCC;
                tglindicator = tglmap::TGL_GROUP_500+3;
                break;
             }
@@ -6080,28 +6111,58 @@ extern void inner_selective_move(
          switch (ss->kind) {
          case s_c1phan:
             switch (bothlivemask) {
-            case 0x0A0AA0A0: delta = 0x2020; break;
-            case 0xA0A00A0A: delta = 0x0202; break;
-            case 0x50500505: delta = 0x0101; break;
-            case 0x05055050: delta = 0x1010; break;
+            case 0x0A0AA0A0: LEdelta = 0x2020; BEdelta = 0x0404; break;
+            case 0xA0A00A0A: LEdelta = 0x0202; BEdelta = 0x4040; break;
+            case 0x50500505: LEdelta = 0x0101; BEdelta = 0x8080; break;
+            case 0x05055050: LEdelta = 0x1010; BEdelta = 0x0808; break;
             default:
                fail("Can't find the indicated triangles.");
             }
             break;
+         case sd2x5:
+            if ((bothlivemask & ~0x294) == 0x00630108) {
+               LEdelta = 0x108; BEdelta = 0x042;
+            }
+            else if ((bothlivemask & ~0x41) == 0x01980022) {
+               LEdelta = 0x022; BEdelta = 0x110;
+            }
+            else if ((bothlivemask & ~0x22) == 0x030C0041) {
+               LEdelta = 0x041; BEdelta = 0x208;
+            }
+            break;
+         case s_3223:
+            if ((bothlivemask & ~0x252) == 0x00A50108) {
+               LEdelta = 0x108; BEdelta = 0x042;
+            }
+            else if ((bothlivemask & ~0x129) == 0x00C60210) {
+               LEdelta = 0x210; BEdelta = 0x021;
+            }
+            else if ((bothlivemask & ~0x360) == 0x00870018) {
+               LEdelta = 0x018; BEdelta = 0x060;
+            }
+            else if ((bothlivemask & ~0x01B) == 0x00E40300) {
+               LEdelta = 0x300; BEdelta = 0x003;
+            }
+            else if ((bothlivemask & ~0x063) == 0x03180084) {
+               LEdelta = 0x084; BEdelta = 0x084;
+            }
+            break;
          case s_rigger:
-            if ((livemask[0] & ~0x33) == 0)
-               delta = 0x88;
+            if ((livemask[0] & ~0x33) == 0) {
+               LEdelta = 0x88; BEdelta = 0x11;
+            }
             break;
          default:
             fail("Can't find the indicated triangles.");
          }
       }
 
-      if (delta == 0)
+      if (LEdelta == 0)
          fail("Can't find the indicated triangles.");
 
-      livemask[0] ^= delta;
-      livemask[1] ^= delta;
+      livemask[0] ^= LEdelta;
+      livemask[1] ^= LEdelta;
+      bigend_ssmask ^= BEdelta;
 
       // Now go through the setup again, separating it into the new designees and non-designees.
       // The designees (the_setups[0]) are the entire triangle, including the apex,
@@ -6117,7 +6178,7 @@ extern void inner_selective_move(
                the_setups[1].clear_person(i);
             if (livemask[1] & j)
                the_setups[0].clear_person(i);
-            if (delta & j)
+            if (LEdelta & j)
                base_people |= ss->people[i].id1;
          }
       }
@@ -6736,7 +6797,7 @@ extern void inner_selective_move(
             }
          }
          else if (ss->kind == sd2x5) {
-            if (bigend_llmask == 0x37B || bigend_llmask == 0x3DE) {
+            if (local_selector < selector_RECURSIVE_START && (bigend_llmask == 0x37B || bigend_llmask == 0x3DE)) {
                schema = schema_concentric;
                if (bigend_ssmask == 0x063 || bigend_ssmask == 0x0C6)
                   goto do_concentric_ctrs;
@@ -7393,6 +7454,60 @@ extern void inner_selective_move(
                }
                else if (thislivemask == 0x1BA) {
                   map_key_table = tglmap::sd25map66;
+               }
+               else if (thislivemask == 0x16B) {
+                  map_key_table = tglmap::sd25map16b;
+               }
+               else if (thislivemask == 0x1AD) {
+                  map_key_table = tglmap::sd25map1ad;
+               }
+               else if (thislivemask == 0x35A) {
+                  map_key_table = tglmap::sd25map35a;
+               }
+            }
+            else if (kk == sd2x5 && tglindicator == (tglmap::TGL_CLASS_INTERLOCKED | tglmap::TGL_TYPE_ANYBASE)) {
+               if (thislivemask == 0x34D) {
+                  map_key_table = tglmap::sd25map33;
+               }
+               else if (thislivemask == 0x1BA) {
+                  map_key_table = tglmap::sd25map66;
+               }
+               else if (thislivemask == 0x16B) {
+                  map_key_table = tglmap::sd25map16b;
+               }
+            }
+            else if (kk == s_3223 && tglindicator == (tglmap::TGL_TYPE_ANYBASE)) {
+               if (thislivemask == 0x2B5) {
+                  map_key_table = tglmap::s3223map2b;
+               }
+               else if (thislivemask == 0x1CE) {
+                  map_key_table = tglmap::s3223map1c;
+               }
+               else if (thislivemask == 0x3E4) {
+                  map_key_table = tglmap::s3223map3e;
+               }
+               else if (thislivemask == 0x09F) {
+                  map_key_table = tglmap::s3223map09;
+               }
+               else if (thislivemask == 0x39C) {
+                  map_key_table = tglmap::s3223map39;
+               }
+            }
+            else if (kk == s_3223 && tglindicator == (tglmap::TGL_CLASS_INTERLOCKED | tglmap::TGL_TYPE_ANYBASE)) {
+               if (thislivemask == 0x1AD) {
+                  map_key_table = tglmap::s3223map2b;
+               }
+               else if (thislivemask == 0x2D6) {
+                  map_key_table = tglmap::s3223map1c;
+               }
+               else if (thislivemask == 0x3E4) {
+                  map_key_table = tglmap::s3223map3e;
+               }
+               else if (thislivemask == 0x09F) {
+                  map_key_table = tglmap::s3223map09;
+               }
+               else if (thislivemask == 0x39C) {
+                  map_key_table = tglmap::s3223map39;
                }
             }
             else if (kk == s_343 && tglindicator == tglmap::TGL_TYPE_ANYBASE) {

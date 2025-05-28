@@ -5038,9 +5038,8 @@ static void do_concept_sequential(
 
    prepare_for_call_in_series(result, ss);
 
-   call_restriction fix_next_assumption = cr_none;
-   int fix_next_assump_col = 0;
-   int fix_next_assump_both = 0;
+   assumption_thing fix_next_assumption;
+
    int remembered_2x2_elongation = 0;
    bool use_incoming_assumption = true;  // Normally turned off after first round; only 1st call get the assumption.
 
@@ -5052,49 +5051,10 @@ static void do_concept_sequential(
       if (zzz.ran_off_active_section()) break;
 
       if (!use_incoming_assumption) {
-         result->cmd.cmd_assume.assumption = fix_next_assumption;
-
-         if (fix_next_assumption != cr_none) {
-            result->cmd.cmd_assume.assump_col = fix_next_assump_col;
-            result->cmd.cmd_assume.assump_both = fix_next_assump_both;
-            result->cmd.cmd_assume.assump_cast = 0;
-            result->cmd.cmd_assume.assump_live = 0;
-            result->cmd.cmd_assume.assump_negate = 0;
-
-            // If we just put in an "assume 1/4 tag" type of thing, we presumably
-            // did a "scoot back to a wave" as part of a "scoot reaction".  Now, if
-            // there were phantoms in the center after the call, the result could
-            // have gotten changed (by the normalization stuff deep within
-            // "fix_n_results" or whatever) to a 2x4.  However, if we are doing a
-            // scoot reaction, we really want the 1/4 tag.  So change it back.
-            // It happens that code in "divide_the_setup" would do this anyway,
-            // but we don't like assumptions in place on setups for which they
-            // are meaningless.
-
-            if (fix_next_assumption == cr_jleft || fix_next_assumption == cr_jright ||
-                fix_next_assumption == cr_real_1_4_tag || fix_next_assumption == cr_real_3_4_tag ||
-                fix_next_assumption == cr_real_1_4_line || fix_next_assumption == cr_real_3_4_line) {
-               if (result->kind == s2x4 &&
-                   (result->people[1].id1 | result->people[2].id1 |
-                    result->people[5].id1 | result->people[6].id1) == 0) {
-                  expand::expand_setup(s_qtg_2x4, result);
-               }
-               else if (result->kind == s2x3 &&
-                   (result->people[1].id1 | result->people[4].id1) == 0) {
-                  expand::expand_setup(s_qtg_2x3, result);
-               }
-               else if (result->kind == s3x4 &&
-                        (result->people[0].id1 | result->people[3].id1 |
-                         result->people[6].id1 | result->people[9].id1) == 0) {
-                  expand::compress_setup(s_qtg_3x4, result);
-               }
-            }
-         }
+         pre_process_seq_assumptions(result, &fix_next_assumption);
       }
 
-      fix_next_assumption = cr_none;
-      fix_next_assump_col = 0;
-      fix_next_assump_both = 0;
+      fix_next_assumption.clean();
 
       final_and_herit_flags finalheritzero;
       finalheritzero.herit = 0ULL;
@@ -5112,8 +5072,8 @@ static void do_concept_sequential(
          current_options = result->cmd.parseptr->options;
 
          do_stuff_inside_sequential_call(result, 0,
-                                         &fix_next_assumption, &fix_next_assump_col,
-                                         &fix_next_assump_both, &remembered_2x2_elongation,
+                                         &fix_next_assumption,
+                                         &remembered_2x2_elongation,
                                          finalheritzero, 0, false, true, false, false);
 
          current_options = saved_options;

@@ -1017,7 +1017,7 @@ static void multiple_move_innards(
       break;
    }
 
-   // The used to be some involvement of RESULTFLAG__INVADED_SPACE here,
+   // There used to be some involvement of RESULTFLAG__INVADED_SPACE here,
    // but it turns out that the situation is more complicated than that.  See t18.
    if ((sscmd->cmd_misc_flags & CMD_MISC__MATRIX_CONCEPT)) {
       int after_distance;
@@ -1484,35 +1484,40 @@ static void multiple_move_innards(
    result->kind = final_map->outer_kind;
 
    if (fix_pgram && result->kind == s1p5x8) {
-#ifdef Z_AXLE_GOES_TO_2X8
-      static const expand::thing thingyF0F0 = {
-         {-1, -1, -1, -1, 4, 5, 6, 7, -1, -1, -1, -1, 12, 13, 14, 15}, s2x8, s1p5x8, 0};
-      static const expand::thing thingy0F0F = {
-         {0, 1, 2, 3, -1, -1, -1, -1, 8, 9, 10, 11, -1, -1, -1, -1}, s2x8, s1p5x8, 0};
-#else
-      static const expand::thing thingyF0F0 = {
+      static const expand::thing thingyF0F0goto2x6 = {
          {-1, -1, 4, 5, 6, 7, -1, -1, 12, 13, 14, 15}, s2x6, s1p5x8, 0};
-      static const expand::thing thingy0F0F = {
+      static const expand::thing thingyF0F0goto2x8 = {
+         {-1, -1, -1, -1, 4, 5, 6, 7, -1, -1, -1, -1, 12, 13, 14, 15}, s2x8, s1p5x8, 0};
+      static const expand::thing thingy0F0Fgoto2x6 = {
          {0, 1, 2, 3, -1, -1, 8, 9, 10, 11, -1, -1}, s2x6, s1p5x8, 0};
-#endif
+      static const expand::thing thingy0F0Fgoto2x8 = {
+         {0, 1, 2, 3, -1, -1, -1, -1, 8, 9, 10, 11, -1, -1, -1, -1}, s2x8, s1p5x8, 0};
 
       switch (little_endian_live_mask(result)) {
       case 0xF0F0:
-         expand::compress_setup(thingyF0F0, result);
-#ifndef Z_AXLE_GOES_TO_2X8
-         warn(warn__check_pgram);
-#endif
+         if (result->result_flags.misc & RESULTFLAG__INVADED_SPACE) {
+            expand::compress_setup(thingyF0F0goto2x6, result);
+            warn(warn__check_pgram);
+         }
+         else {
+            expand::compress_setup(thingyF0F0goto2x8, result);
+         }
+
          break;
       case 0x0F0F:
-         expand::compress_setup(thingy0F0F, result);
-#ifndef Z_AXLE_GOES_TO_2X8
-         warn(warn__check_pgram);
-#endif
+         if (result->result_flags.misc & RESULTFLAG__INVADED_SPACE) {
+            expand::compress_setup(thingy0F0Fgoto2x6, result);
+            warn(warn__check_pgram);
+         }
+         else {
+            expand::compress_setup(thingy0F0Fgoto2x8, result);
+         }
+
          break;
       }
    }
 
-   getout:
+ getout:
 
    canonicalize_rotation(result);
    return;

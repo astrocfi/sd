@@ -12888,12 +12888,96 @@ const tglmap::map tglmap::init_table[] = {
     {0},
     {0}},
 
+   {tglmapd25_33i, sd2x5, s2x4, tglmapd25_33i, 0, 0x10,
+    {0, 9, 8,   6, 3, 2},
+    {0},
+    {0},
+    {0},
+    {0}},
+
    {tglmapd25_66, sd2x5, s2x4, tglmapd25_66, 0, 0x10,
     {1, 3, 4,   5, 7, 8},
     {0},
     {0},
     {0},
     {0}},
+
+   {tglmapd25_66i, sd2x5, s2x4, tglmapd25_66i, 0, 0x10,
+    {1, 8, 7,   5, 4, 3},
+    {0},
+    {0},
+    {0},
+    {0}},
+
+   {tglmapd25_16b, sd2x5, s2x4, tglmapd25_16b, 0, 0x10,
+    {8, 6, 5,   3, 1, 0},
+    {0},
+    {0},
+    {0},
+    {0}},
+
+   {tglmapd25_16bi, sd2x5, s2x4, tglmapd25_16bi, 0, 0x10,
+    {3, 6, 5,   8, 1, 0},
+    {0},
+    {0},
+    {0},
+    {0}},
+
+   {tglmapd25_1ad, sd2x5, s2x4, tglmapd25_1ad, 0, 0x10,
+    {0, 2, 3,   5, 7, 8},
+    {0},
+    {0},
+    {0},
+    {0}},
+
+   {tglmapd25_35a, sd2x5, s2x4, tglmapd25_35a, 0, 0x10,
+    {1, 3, 4,   6, 8, 9},
+    {0},
+    {0},
+    {0},
+    {0}},
+
+   // Things in 3223
+
+   {tglmap3223_2b, s_3223, nothing, tglmap3223_2b, 0, 0x10,
+    {9, 2, 5,   4, 7, 0},
+    {0}, {0}, {0}, {0}},
+
+   {tglmap3223_1c, s_3223, nothing, tglmap3223_1c, 0, 0x10,
+    {3, 1, 2,   8, 6, 7},
+    {0}, {0}, {0}, {0}},
+
+   {tglmap3223_3e, s_3223, nothing, tglmap3223_3e, 0, 0x10,
+    {9, 2, 5,   8, 6, 7},
+    {0}, {0}, {0}, {0}},
+
+   {tglmap3223_09, s_3223, nothing, tglmap3223_09, 0, 0x10,
+    {3, 1, 2,   4, 7, 0},
+    {0}, {0}, {0}, {0}},
+
+   {tglmap3223_39, s_3223, nothing, tglmap3223_39, 0, 0x10,
+    {7, 4, 8,   2, 9, 3},
+    {0}, {0}, {0}, {0}},
+
+   {tglmap3223_2bi, s_3223, nothing, tglmap3223_2bi, 0, 0x10,
+    {8, 2, 5,   3, 7, 0},
+    {0}, {0}, {0}, {0}},
+
+   {tglmap3223_1ci, s_3223, nothing, tglmap3223_1ci, 0, 0x10,
+    {4, 1, 2,   9, 6, 7},
+    {0}, {0}, {0}, {0}},
+
+   {tglmap3223_3ei, s_3223, nothing, tglmap3223_3ei, 0, 0x10,
+    {8, 2, 5,   9, 6, 7},
+    {0}, {0}, {0}, {0}},
+
+   {tglmap3223_09i, s_3223, nothing, tglmap3223_09i, 0, 0x10,
+    {4, 1, 2,   3, 7, 0},
+    {0}, {0}, {0}, {0}},
+
+   {tglmap3223_39i, s_3223, nothing, tglmap3223_39i, 0, 0x10,
+    {7, 3, 9,   2, 8, 4},
+    {0}, {0}, {0}, {0}},
 
    // Interlocked triangles in bigdmd:
    {tglmap1k, nothing, nothing, tglmap2k, 1, 0,
@@ -13041,5 +13125,14 @@ const tglmap::tglmapkey tglmap::s323map66[1] = {tglmap323_66};
 const tglmap::tglmapkey tglmap::s343map33[1] = {tglmap343_33};
 const tglmap::tglmapkey tglmap::s343map66[1] = {tglmap343_66};
 
-const tglmap::tglmapkey tglmap::sd25map33[1] = {tglmapd25_33};
-const tglmap::tglmapkey tglmap::sd25map66[1] = {tglmapd25_66};
+const tglmap::tglmapkey tglmap::sd25map33[2] = {tglmapd25_33, tglmapd25_33i};
+const tglmap::tglmapkey tglmap::sd25map66[2] = {tglmapd25_66, tglmapd25_66i};
+const tglmap::tglmapkey tglmap::sd25map16b[2] = {tglmapd25_16b, tglmapd25_16bi};
+const tglmap::tglmapkey tglmap::sd25map1ad[1] = {tglmapd25_1ad};
+const tglmap::tglmapkey tglmap::sd25map35a[1] = {tglmapd25_35a};
+
+const tglmap::tglmapkey tglmap::s3223map2b[2] = {tglmap3223_2b, tglmap3223_2bi};
+const tglmap::tglmapkey tglmap::s3223map1c[2] = {tglmap3223_1c, tglmap3223_1ci};
+const tglmap::tglmapkey tglmap::s3223map3e[2] = {tglmap3223_3e, tglmap3223_3ei};
+const tglmap::tglmapkey tglmap::s3223map09[2] = {tglmap3223_09, tglmap3223_09i};
+const tglmap::tglmapkey tglmap::s3223map39[2] = {tglmap3223_39, tglmap3223_39i};

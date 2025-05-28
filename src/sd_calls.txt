@@ -57,7 +57,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "39.33"
+version "39.34"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve dont_raise_overcast
@@ -10178,11 +10178,15 @@ call "cross and divide" c4
 
 call "_Z axle part 1" dontshow tag zaxle1
             split_large_setups
-   setup 3x2 1x4 rotate qualifier true_Z_cw
+            // Almost all calls marked "space invader" are that way because they are
+            // matrix calls.  Z Axle needs to be that way because it is defined in terms
+            // of Cross Cast Back, which is a matrix call.  But we're actually defining it
+            // here as an array definition, so we need this flag.
+   setup 3x2 1x4 rotate is_space_invader qualifier true_Z_cw
       array [0 ZM1W CR2E  0 ZM3W 0]
-   setup 3x2 1x4 rotate qualifier true_Z_ccw
+   setup 3x2 1x4 rotate is_space_invader qualifier true_Z_ccw
       array [0 ZM1W  0 AL0E ZM3W 0]
-   setup 3x2 1x4 rotate
+   setup 3x2 1x4 rotate is_space_invader
       array [0 ZM1W  0    0 ZM3W 0]
    setup qtag 1x4 qualifier true_Z_cw
       array [CR2S 0 0 ZM3N 0 0 0 ZM1N]
@@ -11992,7 +11996,7 @@ call "trail to a@I diamond" c2
    seq sglctrtogetherhinge [inherit_intlk inherit_gensting roll_transparent]
 
 call "peel off" plus tag peeloff
-            can_be_one_side_lateral split_if_z
+            can_be_one_side_lateral split_if_z split_large_setups
    setup 2x2 1x4 no_cutting_through restriction peelable_box
       array [AL0S CR2S CR3S AL1S]
    setup 3x2 1x4 rotate qualifier true_Z_cw
@@ -12019,7 +12023,7 @@ call "peel off" plus tag peeloff
       array [CR7E CR6E CR4E CR5E AL0E AL1E AL3E AL2E]
 
 call "trail off" a2 tag trailoff
-            split_if_z
+            split_if_z split_large_setups
    setup 2x2 1x4 no_cutting_through restriction peelable_box
       array [CR2S AL0S AL1S CR3S]
    setup 3x2 1x4 rotate qualifier true_Z_cw
@@ -12078,7 +12082,7 @@ call "_crossable peel off" dontshow tag crossable_peeloff
       array [CR6E CR7E CR5E CR4E AL0E AL1E AL3E AL2E]
 
 call "peel and trail" a2 tag peelntrail
-            split_if_z
+            split_if_z split_large_setups
    setup 2x2 1x4 no_cutting_through restriction peelable_box
       array [AL0S CR2S AL1S CR3S]
    setup 3x2 1x4 rotate qualifier true_Z_cw
@@ -12105,6 +12109,7 @@ call "peel and trail" a2 tag peelntrail
       array [CR0S CR2S AL1S AL3S]
 
 call "trail and peel" c4 tag trailnpeel
+            split_if_z split_large_setups
    setup 2x2 1x4 no_cutting_through restriction peelable_box
       array [CR2S AL0S CR3S AL1S]
             alternate_definition [rewind] c4

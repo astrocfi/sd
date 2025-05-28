@@ -1366,6 +1366,28 @@ class final_and_herit_flags {
 // in a history array, this stuff is meaningless.
 
 struct assumption_thing {
+   assumption_thing() :
+      assump_col(0), assump_both(0), assump_cast(0),
+      assump_live(0), assump_negate(0), assumption(cr_none)
+   {}
+
+   void clean() {
+      assump_col = 0; assump_both = 0; assump_cast = 0;
+      assump_live = 0; assump_negate = 0; assumption = cr_none;
+   }
+
+   uint16_t assump_col;    // Stuff to go with assumption -- col vs. line.
+   uint8_t  assump_both;   // Stuff to go with assumption -- "handedness" enforcement
+                           // 0/1/2 = either/right or in/left or out.
+   uint8_t  assump_cast;   // Nonzero means there is an "assume normal casts" assumption.
+   uint8_t  assump_live;   // One means to accept only if everyone is live.
+   uint8_t  assump_negate; // One means to invert the sense of everything.
+   call_restriction assumption;   // Any "assume waves" type command.
+};
+
+
+/*
+struct assumption_thing {
    unsigned int assump_col:  16;  // Stuff to go with assumption -- col vs. line.
    unsigned int assump_both:  8;  // Stuff to go with assumption -- "handedness" enforcement
                                   // 0/1/2 = either/right or in/left or out.
@@ -1375,6 +1397,7 @@ struct assumption_thing {
    unsigned int assump_negate:1;  // One means to invert the sense of everything.
    call_restriction assumption;   // Any "assume waves" type command.
 };
+*/
 
 
 // BEWARE!!  This list must track the array "selector_list" in sdtables.cpp
@@ -3477,6 +3500,22 @@ class tglmap {
       tglmap343_66,
       tglmapd25_33,
       tglmapd25_66,
+      tglmapd25_16b,
+      tglmapd25_33i,
+      tglmapd25_66i,
+      tglmapd25_16bi,
+      tglmapd25_1ad,
+      tglmapd25_35a,
+      tglmap3223_2b,
+      tglmap3223_1c,
+      tglmap3223_3e,
+      tglmap3223_09,
+      tglmap3223_39,
+      tglmap3223_2bi,
+      tglmap3223_1ci,
+      tglmap3223_3ei,
+      tglmap3223_09i,
+      tglmap3223_39i,
       tgl_ENUM_EXTENT   // Not a key; indicates extent of the enum.
    };
 
@@ -3520,7 +3559,7 @@ class tglmap {
       TGL_CLASS_INTERLOCKED = 0x00000040U,
       TGL_CLASS_MAGIC       = 0x00000080U,
 
-      // These groups use a differnet mechanism, with the low 2 bits active.
+      // These groups use a different mechanism, with the low 2 bits active.
       TGL_GROUP_400         = 0x00000400U,
       TGL_GROUP_500         = 0x00000500U,
 
@@ -3579,6 +3618,17 @@ class tglmap {
    static const tglmapkey s343map66[];
    static const tglmapkey sd25map33[];
    static const tglmapkey sd25map66[];
+   static const tglmapkey sd25map16b[];
+   static const tglmapkey sd25map33i[];
+   static const tglmapkey sd25map66i[];
+   static const tglmapkey sd25map16bi[];
+   static const tglmapkey sd25map1ad[];
+   static const tglmapkey sd25map35a[];
+   static const tglmapkey s3223map2b[];
+   static const tglmapkey s3223map1c[];
+   static const tglmapkey s3223map3e[];
+   static const tglmapkey s3223map09[];
+   static const tglmapkey s3223map39[];
 };
 
 
@@ -5716,9 +5766,11 @@ void move_perhaps_with_active_phantoms(setup *ss, setup *result, bool suppress_f
 
 void impose_assumption_and_move(setup *ss, setup *result, bool suppress_fudgy_2x3_2x6_fixup = false) THROW_DECL;
 
+void pre_process_seq_assumptions(setup *result, const assumption_thing *fix_next_assumption_p);
+
 void do_stuff_inside_sequential_call(setup *result, uint32_t this_mod1,
-                                     call_restriction *fix_next_assumption_p, int *fix_next_assump_col_p,
-                                     int *fix_next_assump_both_p, int *remembered_2x2_elongation_p,
+                                     assumption_thing *fix_next_assumption_p,
+                                     int *remembered_2x2_elongation_p,
                                      final_and_herit_flags new_final_concepts, uint32_t cmd_misc_flags,
                                      bool reverse_order, bool recompute_id, bool qtfudged,
                                      bool setup_is_elongated) THROW_DECL;

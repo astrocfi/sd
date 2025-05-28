@@ -5352,12 +5352,325 @@ void impose_assumption_and_move(setup *ss, setup *result, bool suppress_fudgy_2x
 }
 
 
+void pre_process_seq_assumptions(setup *result, const assumption_thing *fix_next_assumption_p)
+{
+   result->cmd.cmd_assume.assumption = fix_next_assumption_p->assumption;
+
+   if (fix_next_assumption_p->assumption != cr_none) {
+      result->cmd.cmd_assume.assump_col = fix_next_assumption_p->assump_col;
+      result->cmd.cmd_assume.assump_both = fix_next_assumption_p->assump_both;
+      result->cmd.cmd_assume.assump_cast = 0;
+      result->cmd.cmd_assume.assump_live = 0;
+      result->cmd.cmd_assume.assump_negate = 0;
+
+      // If we just put in an "assume 1/4 tag" type of thing, we presumably
+      // did a "scoot back to a wave" as part of a "scoot reaction".  Now, if
+      // there were phantoms in the center after the call, the result could
+      // have gotten changed (by the normalization stuff deep within
+      // "fix_n_results" or whatever) to a 2x4.  However, if we are doing a
+      // scoot reaction, we really want the 1/4 tag.  So change it back.
+      // It happens that code in "divide_the_setup" would do this anyway,
+      // but we don't like assumptions in place on setups for which they
+      // are meaningless.
+
+      if (fix_next_assumption_p->assumption == cr_jleft ||
+          fix_next_assumption_p->assumption == cr_jright ||
+          fix_next_assumption_p->assumption == cr_real_1_4_tag ||
+          fix_next_assumption_p->assumption == cr_real_3_4_tag ||
+          fix_next_assumption_p->assumption == cr_real_1_4_line ||
+          fix_next_assumption_p->assumption == cr_real_3_4_line) {
+         if (result->kind == s2x4 &&
+             (result->people[1].id1 | result->people[2].id1 |
+              result->people[5].id1 | result->people[6].id1) == 0) {
+            expand::expand_setup(s_qtg_2x4, result);
+         }
+         else if (result->kind == s2x3 &&
+                  (result->people[1].id1 | result->people[4].id1) == 0) {
+            expand::expand_setup(s_qtg_2x3, result);
+         }
+         else if (result->kind == s3x4 &&
+                  (result->people[0].id1 | result->people[3].id1 |
+                   result->people[6].id1 | result->people[9].id1) == 0) {
+            expand::compress_setup(s_qtg_3x4, result);
+         }
+      }
+   }
+}
+
+
+
+static void propagate_seq_assumptions(const assumption_thing incoming_assumption,
+                                      const setup *result,
+                                      assumption_thing *fix_next_assumption_p)
+{
+   call_restriction old_assumption = incoming_assumption.assumption;
+   int old_assump_col = incoming_assumption.assump_col;
+   int old_assump_both = incoming_assumption.assump_both;
+
+   call_with_name *this_call = result->cmd.callspec;
+   if (!this_call) this_call = result->cmd.parseptr->call;
+   if (!result->cmd.cmd_final_flags.bool_test_heritbits(INHERITFLAG_HALF |
+                                                        INHERITFLAG_LASTHALF |
+                                                        INHERITFLAG_QUARTER)) {
+      if (this_call == base_calls[base_call_chreact_1]) {
+
+         // If we are starting a chain reaction, and the assumption was some form
+         // of 1/4 tag or 1/4 line (all of the above indicate such a thing --
+         // the outsides are a couple looking in), then, whether it was a plain
+         // chain reaction or a cross chain reaction, the result will have the
+         // checkpointers in miniwaves.  Pass that assumption on, so that they can hinge.
+
+         if (((old_assumption == cr_jleft ||
+               old_assumption == cr_ijleft ||
+               old_assumption == cr_jright ||
+               old_assumption == cr_ijright) && old_assump_both == 2) ||
+             (old_assumption == cr_qtag_like && old_assump_both == 1) ||
+             old_assumption == cr_real_1_4_tag ||
+             old_assumption == cr_real_1_4_line)
+            fix_next_assumption_p->assumption = cr_ckpt_miniwaves;
+      }
+      else if (this_call == base_calls[base_call_inrollcirc] ||
+               this_call == base_calls[base_call_outrollcirc]) {
+         if (old_assumption == cr_2fl_only) {
+            fix_next_assumption_p->assumption = cr_magic_only;
+         }
+         else if (old_assumption == cr_wave_only) {
+            fix_next_assumption_p->assumption = cr_wave_only;
+            fix_next_assumption_p->assump_both = old_assump_both;
+         }
+      }
+      else if (this_call == base_calls[base_call_jaywalk] && result->kind == s_qtag) {
+         if (old_assumption == cr_real_1_4_tag) {
+            fix_next_assumption_p->assumption = cr_real_3_4_tag;
+         }
+         else if (old_assumption == cr_real_1_4_line) {
+            fix_next_assumption_p->assumption = cr_real_3_4_line;
+         }
+         else if (old_assumption == cr_jright && old_assump_both == 2) {
+            fix_next_assumption_p->assumption = cr_jright;
+            fix_next_assumption_p->assump_both = 1;
+         }
+         else if (old_assumption == cr_jleft && old_assump_both == 2) {
+            fix_next_assumption_p->assumption = cr_jleft;
+            fix_next_assumption_p->assump_both = 1;
+         }
+      }
+      else if (this_call == base_calls[base_call_tradethewave]) {
+         if (old_assumption == cr_wave_only)
+            fix_next_assumption_p->assumption = cr_wave_only;
+      }
+      else if (this_call == base_calls[base_call_scootback] ||
+               this_call == base_calls[base_call_qtagscootback]) {
+         if (result->kind == s_qtag) {
+            if (old_assumption == cr_jright && old_assump_both == 2) {
+               // Jright:2 is left 1/4 tag, change to left 3/4 tag.
+               fix_next_assumption_p->assumption = cr_jleft;
+               fix_next_assumption_p->assump_both = 1;
+            }
+            else if (old_assumption == cr_jleft && old_assump_both == 2) {
+               // Jleft:2 is right 1/4 tag, change to right 3/4 tag.
+               fix_next_assumption_p->assumption = cr_jright;
+               fix_next_assumption_p->assump_both = 1;
+            }
+         }
+      }
+      else if (this_call == base_calls[base_call_scoottowave]) {
+         if (result->kind == s2x4 &&
+             !result->cmd.cmd_final_flags.bool_test_heritbits(INHERITFLAG_YOYOETCMASK)) {
+            if ((result->people[0].id1 & d_mask) == d_north ||
+                (result->people[1].id1 & d_mask) == d_south ||
+                (result->people[2].id1 & d_mask) == d_north ||
+                (result->people[3].id1 & d_mask) == d_south ||
+                (result->people[4].id1 & d_mask) == d_south ||
+                (result->people[5].id1 & d_mask) == d_north ||
+                (result->people[6].id1 & d_mask) == d_south ||
+                (result->people[7].id1 & d_mask) == d_north) {
+               fix_next_assumption_p->assumption = cr_jleft;
+               fix_next_assumption_p->assump_both = 2;
+            }
+            else if ((result->people[0].id1 & d_mask) == d_south ||
+                     (result->people[1].id1 & d_mask) == d_north ||
+                     (result->people[2].id1 & d_mask) == d_south ||
+                     (result->people[3].id1 & d_mask) == d_north ||
+                     (result->people[4].id1 & d_mask) == d_north ||
+                     (result->people[5].id1 & d_mask) == d_south ||
+                     (result->people[6].id1 & d_mask) == d_north ||
+                     (result->people[7].id1 & d_mask) == d_south) {
+               fix_next_assumption_p->assumption = cr_jright;
+               fix_next_assumption_p->assump_both = 2;
+            }
+         }
+      }
+      else if (this_call == base_calls[base_call_makepass_1] ||
+               this_call == base_calls[base_call_nuclear_1]) {
+
+         // If we are starting a "make a pass", and the assumption was some form
+         // of 1/4 tag, then we will have a 2-faced line in the center.  Pass that
+         // assumption on, so that they can cast off 3/4.  If it was a 1/4 line,
+         // the result will be a wave in the center.
+
+         if (((old_assumption == cr_jleft || old_assumption == cr_jright) &&
+              old_assump_both == 2) ||
+             old_assumption == cr_real_1_4_tag)
+            fix_next_assumption_p->assumption = cr_ctr_couples;
+         else if (((old_assumption == cr_ijleft || old_assumption == cr_ijright) &&
+                   old_assump_both == 2) ||
+                  old_assumption == cr_real_1_4_line)
+            fix_next_assumption_p->assumption = cr_ctr_miniwaves;
+         else if (old_assumption == cr_qtag_like &&
+                  old_assump_both == 1 &&
+                  result->kind == s_qtag &&
+                  (result->people[2].id1 & d_mask & ~2) == d_north &&
+                  ((result->people[2].id1 ^ result->people[6].id1) & d_mask) == 2 &&
+                  ((result->people[3].id1 ^ result->people[7].id1) & d_mask) == 2) {
+            if (((result->people[2].id1 ^ result->people[3].id1) & d_mask) == 0)
+               fix_next_assumption_p->assumption = cr_ctr_miniwaves;
+            else if (((result->people[2].id1 ^ result->people[3].id1) & d_mask) == 2)
+               fix_next_assumption_p->assumption = cr_ctr_couples;
+         }
+      }
+      else if (this_call == base_calls[base_call_circulate]) {
+         // If we are doing a circulate in columns, and the assumption was
+         // "8 chain" or "trade by", change it to the other assumption.
+         // Similarly for facing lines and back-to-back lines.
+
+         if (old_assumption == cr_li_lo &&
+             (old_assump_col & (~1)) == 0 &&
+             ((old_assump_both - 1) & (~1)) == 0) {
+            fix_next_assumption_p->assumption = cr_li_lo;
+            fix_next_assumption_p->assump_col = old_assump_col;
+            fix_next_assumption_p->assump_both = old_assump_both ^ 3;
+         }
+      }
+      else if ((this_call == base_calls[base_call_slither] ||
+                (this_call == base_calls[base_call_maybegrandslither] &&
+                 !result->cmd.cmd_final_flags.bool_test_heritbits(INHERITFLAG_GRAND))) &&
+               old_assump_col == 0 &&
+               old_assump_both == 0) {
+         switch (old_assumption) {
+         case cr_2fl_only:
+            fix_next_assumption_p->assumption = cr_wave_only;
+            break;
+         case cr_wave_only:
+            fix_next_assumption_p->assumption = cr_2fl_only;
+            break;
+         case cr_miniwaves:
+            fix_next_assumption_p->assumption = cr_couples_only;
+            break;
+         case cr_couples_only:
+            fix_next_assumption_p->assumption = cr_miniwaves;
+            break;
+         }
+      }
+      else if (this_call == base_calls[base_base_prepare_to_drop]) {
+         if (result->kind == sdmd && old_assump_col == 4) {
+            if ((result->people[0].id1 & d_mask) == d_north ||
+                (result->people[2].id1 & d_mask) == d_south) {
+               if (old_assumption == cr_jright) {
+                  fix_next_assumption_p->assumption = cr_dmd_ctrs_mwv;
+                  fix_next_assumption_p->assump_col = 0;
+                  fix_next_assumption_p->assump_both = 1;
+               }
+               else if (old_assumption == cr_jleft) {
+                  fix_next_assumption_p->assumption = cr_dmd_ctrs_mwv;
+                  fix_next_assumption_p->assump_col = 0;
+                  fix_next_assumption_p->assump_both = 2;
+               }
+            }
+            else if ((result->people[0].id1 & d_mask) == d_south ||
+                     (result->people[2].id1 & d_mask) == d_north) {
+               if (old_assumption == cr_jright) {
+                  fix_next_assumption_p->assumption = cr_dmd_ctrs_mwv;
+                  fix_next_assumption_p->assump_col = 0;
+                  fix_next_assumption_p->assump_both = 2;
+               }
+               else if (old_assumption == cr_jleft) {
+                  fix_next_assumption_p->assumption = cr_dmd_ctrs_mwv;
+                  fix_next_assumption_p->assump_col = 0;
+                  fix_next_assumption_p->assump_both = 1;
+               }
+            }
+         }
+      }
+      else if (this_call == base_calls[base_call_lockit] &&
+               old_assump_col == 0 &&
+               old_assump_both == 0) {
+         switch (old_assumption) {
+         case cr_2fl_only:
+         case cr_wave_only:
+            fix_next_assumption_p->assumption = old_assumption;
+            break;
+         }
+      }
+      else if (this_call == base_calls[base_call_disband1] &&
+               result->kind == s2x4 &&
+               old_assump_col == 1 &&
+               old_assump_both == 0) {
+         switch (old_assumption) {
+         case cr_wave_only:
+            fix_next_assumption_p->assumption = cr_magic_only;
+            fix_next_assumption_p->assump_col = 1;
+            break;
+         case cr_magic_only:
+            fix_next_assumption_p->assumption = cr_wave_only;
+            fix_next_assumption_p->assump_col = 1;
+            break;
+         }
+      }
+      else if (this_call == base_calls[base_call_trade] &&
+               (result->kind == s2x4 || result->kind == s1x8 || result->kind == s1x4) &&
+               old_assumption == cr_wave_only &&
+               old_assump_col == 0) {
+         fix_next_assumption_p->assumption = cr_wave_only;
+         fix_next_assumption_p->assump_col = 0;
+      }
+      else if (this_call == base_calls[base_call_trade] &&
+               (result->kind == s_qtag) &&
+               old_assumption == cr_qtag_like &&
+               old_assump_col == 0 &&
+               ((old_assump_both + 1) & 2) != 0) {
+         fix_next_assumption_p->assumption = cr_qtag_like;
+         fix_next_assumption_p->assump_col = 0;
+         fix_next_assumption_p->assump_both = old_assump_both ^ 3;
+      }
+      else if (this_call == base_calls[base_call_check_cross_counter]) {
+         // Just pass everything directly -- this call does nothing.
+         fix_next_assumption_p->assumption = old_assumption;
+         fix_next_assumption_p->assump_col = old_assump_col;
+         fix_next_assumption_p->assump_both = old_assump_both;
+      }
+      else if (this_call == base_calls[base_call_armturn_n4] && result->kind == s2x4) {
+         if (old_assumption == cr_wave_only)
+            fix_next_assumption_p->assumption = old_assumption;
+      }
+      else if (this_call == base_calls[base_call_ctrarmturn_n4_utb] &&
+               result->kind == s2x4 &&
+               (result->cmd.parseptr->options.number_fields & 1) != 0 &&
+               (result->people[1].id1 | result->people[2].id1 |
+                result->people[5].id1 | result->people[6].id1) == 0) {
+         if (old_assumption == cr_wave_only)
+            fix_next_assumption_p->assumption = cr_diamond_like;
+      }
+   }
+   else if ((result->cmd.cmd_final_flags.bool_test_heritbits(INHERITFLAG_HALF))) {
+      if (this_call == base_calls[base_call_circulate]) {
+         // If we are doing a 1/2 circulate in a 2x2 that assumes lines facing in or out,
+         // result is a wave.
+
+         if (old_assumption == cr_li_lo && result->kind == s2x2 && old_assump_col == 0) {
+            fix_next_assumption_p->assumption = cr_wave_only;
+            fix_next_assumption_p->assump_col = 0;
+            fix_next_assumption_p->assump_both = 2;   // Left-handed.  *******
+         }
+      }
+   }
+}
+
+
 void do_stuff_inside_sequential_call(
    setup *result,
    uint32_t this_mod1,
-   call_restriction *fix_next_assumption_p,
-   int *fix_next_assump_col_p,
-   int *fix_next_assump_both_p,
+   assumption_thing *fix_next_assumption_p,
    int *remembered_2x2_elongation_p,
    final_and_herit_flags new_final_concepts,
    uint32_t cmd_misc_flags,
@@ -5366,9 +5679,7 @@ void do_stuff_inside_sequential_call(
    bool qtfudged,
    bool setup_is_elongated) THROW_DECL
 {
-   call_restriction old_assumption = result->cmd.cmd_assume.assumption;
-   int old_assump_col = result->cmd.cmd_assume.assump_col;
-   int old_assump_both = result->cmd.cmd_assume.assump_both;
+   assumption_thing incoming_assumption = result->cmd.cmd_assume;
 
    setup_kind oldk = result->kind;
 
@@ -5379,264 +5690,7 @@ void do_stuff_inside_sequential_call(
    // dancers really do track an awareness of the formation.
 
    if (result->cmd.cmd_fraction.is_null()) {
-         call_with_name *this_call = result->cmd.callspec;
-         if (!this_call) this_call = result->cmd.parseptr->call;
-      if (!result->cmd.cmd_final_flags.bool_test_heritbits(INHERITFLAG_HALF |
-                                                           INHERITFLAG_LASTHALF |
-                                                           INHERITFLAG_QUARTER)) {
-         if (this_call == base_calls[base_call_chreact_1]) {
-
-            /* If we are starting a chain reaction, and the assumption was some form
-               of 1/4 tag or 1/4 line (all of the above indicate such a thing --
-               the outsides are a couple looking in), then, whether it was a plain
-               chain reaction or a cross chain reaction, the result will have the
-               checkpointers in miniwaves.  Pass that assumption on, so that they can hinge. */
-
-            if (((old_assumption == cr_jleft ||
-                  old_assumption == cr_ijleft ||
-                  old_assumption == cr_jright ||
-                  old_assumption == cr_ijright) && old_assump_both == 2) ||
-                (old_assumption == cr_qtag_like && old_assump_both == 1) ||
-                old_assumption == cr_real_1_4_tag ||
-                old_assumption == cr_real_1_4_line)
-               *fix_next_assumption_p = cr_ckpt_miniwaves;
-         }
-         else if (this_call == base_calls[base_call_inrollcirc] ||
-                  this_call == base_calls[base_call_outrollcirc]) {
-            if (old_assumption == cr_2fl_only) {
-               *fix_next_assumption_p = cr_magic_only;
-            }
-            else if (old_assumption == cr_wave_only) {
-               *fix_next_assumption_p = cr_wave_only;
-               *fix_next_assump_both_p = old_assump_both;
-            }
-         }
-         else if (this_call == base_calls[base_call_jaywalk] && result->kind == s_qtag) {
-            if (old_assumption == cr_real_1_4_tag) {
-               *fix_next_assumption_p = cr_real_3_4_tag;
-            }
-            else if (old_assumption == cr_real_1_4_line) {
-               *fix_next_assumption_p = cr_real_3_4_line;
-            }
-            else if (old_assumption == cr_jright && old_assump_both == 2) {
-               *fix_next_assumption_p = cr_jright;
-               *fix_next_assump_both_p = 1;
-            }
-            else if (old_assumption == cr_jleft && old_assump_both == 2) {
-               *fix_next_assumption_p = cr_jleft;
-               *fix_next_assump_both_p = 1;
-            }
-         }
-         else if (this_call == base_calls[base_call_tradethewave]) {
-            if (old_assumption == cr_wave_only)
-               *fix_next_assumption_p = cr_wave_only;
-         }
-         else if (this_call == base_calls[base_call_scootback] ||
-                  this_call == base_calls[base_call_qtagscootback]) {
-            if (result->kind == s_qtag) {
-               if (old_assumption == cr_jright && old_assump_both == 2) {
-                  // Jright:2 is left 1/4 tag, change to left 3/4 tag.
-                  *fix_next_assumption_p = cr_jleft;
-                  *fix_next_assump_both_p = 1;
-               }
-               else if (old_assumption == cr_jleft && old_assump_both == 2) {
-                  // Jleft:2 is right 1/4 tag, change to right 3/4 tag.
-                  *fix_next_assumption_p = cr_jright;
-                  *fix_next_assump_both_p = 1;
-               }
-            }
-         }
-         else if (this_call == base_calls[base_call_scoottowave]) {
-            if (result->kind == s2x4 &&
-                !result->cmd.cmd_final_flags.bool_test_heritbits(INHERITFLAG_YOYOETCMASK)) {
-               if ((result->people[0].id1 & d_mask) == d_north ||
-                   (result->people[1].id1 & d_mask) == d_south ||
-                   (result->people[2].id1 & d_mask) == d_north ||
-                   (result->people[3].id1 & d_mask) == d_south ||
-                   (result->people[4].id1 & d_mask) == d_south ||
-                   (result->people[5].id1 & d_mask) == d_north ||
-                   (result->people[6].id1 & d_mask) == d_south ||
-                   (result->people[7].id1 & d_mask) == d_north) {
-                  *fix_next_assumption_p = cr_jleft;
-                  *fix_next_assump_both_p = 2;
-               }
-               else if ((result->people[0].id1 & d_mask) == d_south ||
-                        (result->people[1].id1 & d_mask) == d_north ||
-                        (result->people[2].id1 & d_mask) == d_south ||
-                        (result->people[3].id1 & d_mask) == d_north ||
-                        (result->people[4].id1 & d_mask) == d_north ||
-                        (result->people[5].id1 & d_mask) == d_south ||
-                        (result->people[6].id1 & d_mask) == d_north ||
-                        (result->people[7].id1 & d_mask) == d_south) {
-                  *fix_next_assumption_p = cr_jright;
-                  *fix_next_assump_both_p = 2;
-               }
-            }
-         }
-         else if (this_call == base_calls[base_call_makepass_1] ||
-                  this_call == base_calls[base_call_nuclear_1]) {
-
-            // If we are starting a "make a pass", and the assumption was some form
-            // of 1/4 tag, then we will have a 2-faced line in the center.  Pass that
-            // assumption on, so that they can cast off 3/4.  If it was a 1/4 line,
-            // the result will be a wave in the center.
-
-            if (((old_assumption == cr_jleft || old_assumption == cr_jright) &&
-                 old_assump_both == 2) ||
-                old_assumption == cr_real_1_4_tag)
-               *fix_next_assumption_p = cr_ctr_couples;
-            else if (((old_assumption == cr_ijleft || old_assumption == cr_ijright) &&
-                      old_assump_both == 2) ||
-                     old_assumption == cr_real_1_4_line)
-               *fix_next_assumption_p = cr_ctr_miniwaves;
-            else if (old_assumption == cr_qtag_like &&
-                     old_assump_both == 1 &&
-                     oldk == s_qtag &&
-                     (result->people[2].id1 & d_mask & ~2) == d_north &&
-                     ((result->people[2].id1 ^ result->people[6].id1) & d_mask) == 2 &&
-                     ((result->people[3].id1 ^ result->people[7].id1) & d_mask) == 2) {
-               if (((result->people[2].id1 ^ result->people[3].id1) & d_mask) == 0)
-                  *fix_next_assumption_p = cr_ctr_miniwaves;
-               else if (((result->people[2].id1 ^ result->people[3].id1) & d_mask) == 2)
-                  *fix_next_assumption_p = cr_ctr_couples;
-            }
-         }
-         else if (this_call == base_calls[base_call_circulate]) {
-            // If we are doing a circulate in columns, and the assumption was
-            // "8 chain" or "trade by", change it to the other assumption.
-            // Similarly for facing lines and back-to-back lines.
-
-            if (old_assumption == cr_li_lo &&
-                (old_assump_col & (~1)) == 0 &&
-                ((old_assump_both - 1) & (~1)) == 0) {
-               *fix_next_assumption_p = cr_li_lo;
-               *fix_next_assump_col_p = old_assump_col;
-               *fix_next_assump_both_p = old_assump_both ^ 3;
-            }
-         }
-         else if ((this_call == base_calls[base_call_slither] ||
-                   (this_call == base_calls[base_call_maybegrandslither] &&
-                    !result->cmd.cmd_final_flags.bool_test_heritbits(INHERITFLAG_GRAND))) &&
-                  old_assump_col == 0 &&
-                  old_assump_both == 0) {
-            switch (old_assumption) {
-            case cr_2fl_only:
-               *fix_next_assumption_p = cr_wave_only;
-               break;
-            case cr_wave_only:
-               *fix_next_assumption_p = cr_2fl_only;
-               break;
-            case cr_miniwaves:
-               *fix_next_assumption_p = cr_couples_only;
-               break;
-            case cr_couples_only:
-               *fix_next_assumption_p = cr_miniwaves;
-               break;
-            }
-         }
-         else if (this_call == base_calls[base_base_prepare_to_drop]) {
-            if (result->kind == sdmd && old_assump_col == 4) {
-               if ((result->people[0].id1 & d_mask) == d_north ||
-                   (result->people[2].id1 & d_mask) == d_south) {
-                  if (old_assumption == cr_jright) {
-                     *fix_next_assumption_p = cr_dmd_ctrs_mwv;
-                     *fix_next_assump_col_p = 0;
-                     *fix_next_assump_both_p = 1;
-                  }
-                  else if (old_assumption == cr_jleft) {
-                     *fix_next_assumption_p = cr_dmd_ctrs_mwv;
-                     *fix_next_assump_col_p = 0;
-                     *fix_next_assump_both_p = 2;
-                  }
-               }
-               else if ((result->people[0].id1 & d_mask) == d_south ||
-                        (result->people[2].id1 & d_mask) == d_north) {
-                  if (old_assumption == cr_jright) {
-                     *fix_next_assumption_p = cr_dmd_ctrs_mwv;
-                     *fix_next_assump_col_p = 0;
-                     *fix_next_assump_both_p = 2;
-                  }
-                  else if (old_assumption == cr_jleft) {
-                     *fix_next_assumption_p = cr_dmd_ctrs_mwv;
-                     *fix_next_assump_col_p = 0;
-                     *fix_next_assump_both_p = 1;
-                  }
-               }
-            }
-         }
-         else if (this_call == base_calls[base_call_lockit] &&
-                  old_assump_col == 0 &&
-                  old_assump_both == 0) {
-            switch (old_assumption) {
-            case cr_2fl_only:
-            case cr_wave_only:
-               *fix_next_assumption_p = old_assumption;
-               break;
-            }
-         }
-         else if (this_call == base_calls[base_call_disband1] &&
-                  result->kind == s2x4 &&
-                  old_assump_col == 1 &&
-                  old_assump_both == 0) {
-            switch (old_assumption) {
-            case cr_wave_only:
-               *fix_next_assumption_p = cr_magic_only;
-               *fix_next_assump_col_p = 1;
-               break;
-            case cr_magic_only:
-               *fix_next_assumption_p = cr_wave_only;
-               *fix_next_assump_col_p = 1;
-               break;
-            }
-         }
-         else if (this_call == base_calls[base_call_trade] &&
-                  (result->kind == s2x4 || result->kind == s1x8 || result->kind == s1x4) &&
-                  old_assumption == cr_wave_only &&
-                  old_assump_col == 0) {
-            *fix_next_assumption_p = cr_wave_only;
-            *fix_next_assump_col_p = 0;
-         }
-         else if (this_call == base_calls[base_call_trade] &&
-                  (result->kind == s_qtag) &&
-                  old_assumption == cr_qtag_like &&
-                  old_assump_col == 0 &&
-                  ((old_assump_both + 1) & 2) != 0) {
-            *fix_next_assumption_p = cr_qtag_like;
-            *fix_next_assump_col_p = 0;
-            *fix_next_assump_both_p = old_assump_both ^ 3;
-         }
-         else if (this_call == base_calls[base_call_check_cross_counter]) {
-            // Just pass everything directly -- this call does nothing.
-            *fix_next_assumption_p = old_assumption;
-            *fix_next_assump_col_p = old_assump_col;
-            *fix_next_assump_both_p = old_assump_both;
-         }
-         else if (this_call == base_calls[base_call_armturn_n4] && result->kind == s2x4) {
-            if (old_assumption == cr_wave_only)
-               *fix_next_assumption_p = old_assumption;
-         }
-         else if (this_call == base_calls[base_call_ctrarmturn_n4_utb] &&
-                  result->kind == s2x4 &&
-                  (result->cmd.parseptr->options.number_fields & 1) != 0 &&
-                  (result->people[1].id1 | result->people[2].id1 |
-                   result->people[5].id1 | result->people[6].id1) == 0) {
-            if (old_assumption == cr_wave_only)
-               *fix_next_assumption_p = cr_diamond_like;
-         }
-      }
-      else if ((result->cmd.cmd_final_flags.bool_test_heritbits(INHERITFLAG_HALF))) {
-         if (this_call == base_calls[base_call_circulate]) {
-            // If we are doing a 1/2 circulate in a 2x2 that assumes lines facing in or out,
-            // result is a wave.
-
-            if (old_assumption == cr_li_lo && result->kind == s2x2 && old_assump_col == 0) {
-               *fix_next_assumption_p = cr_wave_only;
-               *fix_next_assump_col_p = 0;
-               //               *fix_next_assump_both_p = 1;   // Right-handed.
-               *fix_next_assump_both_p = 2;   // Left-handed.  *******
-            }
-         }
-      }
+      propagate_seq_assumptions(incoming_assumption, result, fix_next_assumption_p);
    }
 
    if (DFM1_CPLS_UNLESS_SINGLE & this_mod1) {
@@ -5705,9 +5759,8 @@ static void do_sequential_call(
    bool first_call = true;    // First call in logical definition.
    bool first_time = true;    // First thing we are doing, in temporal sequence.
    bool use_incoming_assumption = true;  // Normally turned off after first round; only 1st call get the assumption.
-   call_restriction fix_next_assumption = cr_none;
-   int fix_next_assump_col = 0;
-   int fix_next_assump_both = 0;
+   assumption_thing fix_next_assumption;
+
    // This tells whether the setup was genuinely elongated when it came in.
    // We keep track of pseudo-elongation during the call even when it wasn't,
    // but sometimes we really need to know.
@@ -6234,45 +6287,10 @@ static void do_sequential_call(
       }
 
       if (!use_incoming_assumption) {
-         result->cmd.cmd_assume.assumption = fix_next_assumption;
-
-         if (fix_next_assumption != cr_none) {
-            result->cmd.cmd_assume.assump_col = fix_next_assump_col;
-            result->cmd.cmd_assume.assump_both = fix_next_assump_both;
-            result->cmd.cmd_assume.assump_cast = 0;
-            result->cmd.cmd_assume.assump_live = 0;
-            result->cmd.cmd_assume.assump_negate = 0;
-
-            // If we just put in an "assume 1/4 tag" type of thing, we presumably
-            // did a "scoot back to a wave" as part of a "scoot reaction".  Now, if
-            // there were phantoms in the center after the call, the result could
-            // have gotten changed (by the normalization stuff deep within
-            // "fix_n_results" or whatever) to a 2x4.  However, if we are doing a
-            // scoot reaction, we really want the 1/4 tag.  So change it back.
-            // It happens that code in "divide_the_setup" would do this anyway,
-            // but we don't like assumptions in place on setups for which they
-            // are meaningless.
-
-            if (fix_next_assumption == cr_jleft || fix_next_assumption == cr_jright ||
-                fix_next_assumption == cr_real_1_4_tag || fix_next_assumption == cr_real_3_4_tag ||
-                fix_next_assumption == cr_real_1_4_line || fix_next_assumption == cr_real_3_4_line) {
-               if (result->kind == s2x4 &&
-                   (result->people[1].id1 | result->people[2].id1 |
-                    result->people[5].id1 | result->people[6].id1) == 0) {
-                  expand::expand_setup(s_qtg_2x4, result);
-               }
-               else if (result->kind == s3x4 &&
-                        (result->people[0].id1 | result->people[3].id1 |
-                         result->people[6].id1 | result->people[9].id1) == 0) {
-                  expand::compress_setup(s_qtg_3x4, result);
-               }
-            }
-         }
+         pre_process_seq_assumptions(result, &fix_next_assumption);
       }
 
-      fix_next_assumption = cr_none;
-      fix_next_assump_col = 0;
-      fix_next_assump_both = 0;
+      fix_next_assumption.clean();
 
       if (this_schema == schema_split_sequential &&
           (result->cmd.cmd_final_flags.herit & (INHERITFLAG_MXNMASK|INHERITFLAG_NXNMASK)) == 0ULL) {
@@ -6306,8 +6324,6 @@ static void do_sequential_call(
       do_stuff_inside_sequential_call(
          result, this_mod1,
          &fix_next_assumption,
-         &fix_next_assump_col,
-         &fix_next_assump_both,
          &remembered_2x2_elongation,
          new_final_concepts,
          ss->cmd.cmd_misc_flags,

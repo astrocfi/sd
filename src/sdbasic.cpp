@@ -4756,6 +4756,11 @@ static uint32_t do_actual_array_call(
 
    result->kind = goodies->get_end_setup();
 
+   // Normally, only matrix calls, not array calls, are space invaders.  This database
+   // flag says to treat this as a space invader anyway.
+   if (goodies->callarray_flags & CAF__IS_SPACE_INVADER)
+      result->result_flags.misc |= RESULTFLAG__INVADED_SPACE;  // This bit applies to all schemata.
+
    if (result->kind == s_normal_concentric) {
       // ***** this requires an 8-person call definition
       setup outer_inners[2];

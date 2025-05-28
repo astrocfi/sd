@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 39.33
-@set title2 Database version = 39.33 format = 392
+@set title1 RELEASE NOTES FOR VERSION 39.34
+@set title2 Database version = 39.34 format = 393
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 39.34::
 * 39.33::
 * 39.32::
 * 39.31::
@@ -133,7 +134,7 @@ and @file{relnotes98.txi} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 39.33, Top, (dir)
+@node Intro, 39.34, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -144,13 +145,22 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2021 William B. Ackerman
 @sp 3
 @menu
-* 39.33::               Changes in the current version
+* 39.34::               Changes in the current version
 @end menu
 
 @c ************
-@node 39.33, 39.32, Intro, Top
-@unnumberedsec Version 39.33 changes
+@node 39.34, 39.33, Intro, Top
+@unnumberedsec Version 39.34 changes
 
+The program can handle many triangles.
+
+The program has a better understanding of why @strong{Z axle} behaves
+the way it does and why some other similar calls must behave
+differently.
+
+@c ************
+@node 39.33, 39.32, 39.34, Top
+@unnumberedsec Version 39.33 changes
 
 The @strong{offset column/line/wave} concepts have their same meaning
 as before; they operate on a single distorted 1x4 setup within a 2x4,
