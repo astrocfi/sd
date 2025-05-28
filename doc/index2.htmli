@@ -7,12 +7,12 @@ Sd: a checker-moving program that is <strong>powerful</strong>,
 <strong>reliable</strong>.
 </p>
 <p align="center">
-<strong>The current version of Sd/Sdtty is 36.52</strong>, released on December 23, 2004.
+<strong>The current version of Sd/Sdtty is 36.53</strong>, released on December 25, 2004.
 <br>
 <p align="center">
 <strong>This fixes some serious bugs in versions 36.5 and 36.51.</strong>
 <p align="center">
-<strong>If you have either of those installed, you should update to this version.</strong>
+<strong>If you have either of those installed, you should update to the present version.</strong>
 <p align="center">
 The Windows versions of Sd and Sdtty are now compiled with MinGW/Gcc.
 <p align="center">

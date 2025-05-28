@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR SD VERSION 36.52
-@set title2 Database version = 36.52 format = 227
+@set title1 RELEASE NOTES FOR SD VERSION 36.53
+@set title2 Database version = 36.53 format = 227
 @set title3 parser version 1.12, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 36.53::
 * 36.52::
 * 36.5::
 * 36.4::
@@ -55,7 +56,7 @@ The files @file{relnotes98.txi} and @file{oldnotes} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 36.52, Top, (dir)
+@node Intro, 36.53, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -66,11 +67,22 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2004 William B. Ackerman
 @sp 3
 @menu
-* 36.52::               Changes in the current version
+* 36.53::               Changes in the current version
 @end menu
 
 @c ************
-@node 36.52, 36.5, Intro, Top
+@node 36.53, 36.52, Intro, Top
+@unnumberedsec Version 36.53 changes
+
+New designators: @strong{center column/line/wave of 6}.  These are
+used in a general 3x1 diamond (or a tidal setup.)  You can also use
+the designator @strong{center 1x6}.
+
+New concept:  @strong{same sex disconnected}.  This is used with a single call.
+Each disconnected sex does that call.
+
+@c ************
+@node 36.52, 36.5, 36.53, Top
 @unnumberedsec Version 36.52 changes
 
 A bug in @strong{cross cycle} was fixed.  The last part is @strong{roll},

@@ -112,6 +112,9 @@ extern bool selectp(setup *ss, int place) THROW_DECL
             case selector_center_wave:
             case selector_center_line:
             case selector_center_col:
+            case selector_center_wave_of_6:
+            case selector_center_line_of_6:
+            case selector_center_col_of_6:
             case selector_center_box:
             case selector_outerpairs:
                pid2 = ptr[place][0] &
@@ -322,6 +325,9 @@ extern bool selectp(setup *ss, int place) THROW_DECL
       else if ((pid2 & (ID2_CTR1X4|ID2_NCTR1X4)) == ID2_NCTR1X4) return false;
       break;
    case selector_ctr_1x6:
+   case selector_center_wave_of_6:
+   case selector_center_line_of_6:
+   case selector_center_col_of_6:
       if      ((pid2 & (ID2_CTR1X6|ID2_NCTR1X6)) == ID2_CTR1X6) return true;
       else if ((pid2 & (ID2_CTR1X6|ID2_NCTR1X6)) == ID2_NCTR1X6) return false;
       break;
@@ -329,11 +335,19 @@ extern bool selectp(setup *ss, int place) THROW_DECL
       if      ((pid2 & (ID2_OUTR1X3|ID2_NOUTR1X3)) == ID2_OUTR1X3) return true;
       else if ((pid2 & (ID2_OUTR1X3|ID2_NOUTR1X3)) == ID2_NOUTR1X3) return false;
       break;
-   case selector_center4:
+
    case selector_center_wave:
    case selector_center_line:
    case selector_center_col:
+      if (ss->kind == s3x1dmd) {
+         if ((pid2 & (ID2_CTR1X4|ID2_NCTR1X4)) == ID2_CTR1X4) return true;
+         else if ((pid2 & (ID2_CTR1X4|ID2_NCTR1X4)) == ID2_NCTR1X4) return false;
+         break;
+      }
+      // Warning!  Fall through!
+   case selector_center4:
    case selector_center_box:
+      // Warning!  Fell through!
       if      ((pid2 & (ID2_CTR4|ID2_OUTRPAIRS)) == ID2_CTR4) return true;
       else if ((pid2 & (ID2_CTR4|ID2_OUTRPAIRS)) == ID2_OUTRPAIRS) return false;
       else if ((pid2 & (ID2_CTR4|ID2_END)) == ID2_CTR4) return true;

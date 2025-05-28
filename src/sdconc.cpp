@@ -4754,6 +4754,9 @@ extern void inner_selective_move(
             goto back_here;
          case selector_center6:
          case selector_ctr_1x6:
+         case selector_center_wave_of_6:
+         case selector_center_line_of_6:
+         case selector_center_col_of_6:
             schema = schema_select_ctr6;
             action = normalize_to_6;
             goto back_here;
@@ -4904,13 +4907,13 @@ back_here:
                update_id_bits(this_one);
                this_one->cmd.cmd_misc_flags &= ~CMD_MISC__VERIFY_MASK;
                switch (selector_to_use) {
-               case selector_center_wave:
+               case selector_center_wave: case selector_center_wave_of_6:
                   this_one->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
                   break;
-               case selector_center_line:
+               case selector_center_line: case selector_center_line_of_6:
                   this_one->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_LINES;
                   break;
-               case selector_center_col:
+               case selector_center_col: case selector_center_col_of_6:
                   this_one->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_COLS;
                   break;
                }

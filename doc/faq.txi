@@ -204,17 +204,22 @@ The program only recognizes the designators @strong{boys} and @strong{girls}.
 The only exception is the call @strong{ladies chain}.  Of course, you can
 use whatever designation you want when calling.
 
-@unnumberedsec How do I have the center wave of 6 do something from a 3x1 diamond?
+@unnumberedsec How can I identify the center wave of 6 in a 3x1 diamond?
 
 This is the setup that you would get after, for example, @strong{1/2
 acey deucey} from waves.  There will be a center wave of 6.  To
-designate those people, say @strong{center 1x6}.  @strong{Center 6}
+designate those people, say @strong{center 1x6}, or the more specific
+designators @strong{center wave of 6}, @strong{center line of 6}, or
+@strong{center column of 6}.  The designator @strong{center 6}
 designates different people---all but the two people at the very ends of
-that wave.  So you can say things like @strong{center 1x6 grand swing
+that wave.  So you can say things like @strong{center wave of 6 grand swing
 thru}.  You probably don't need to call it that way---the dancers will
 know what you mean if you say @strong{center 6 grand swing thru}.
 
-@unnumberedsec How do I do @strong{plenty} from diamonds?
+The same situation occurs after @strong{sets in motion but hold the column}.
+Use the designator @strong{center column of 6}.
+
+@unnumberedsec How can I do @strong{plenty} from diamonds?
 
 Notwithstanding the Callerlab definitions, the program considers @strong{plenty}
 @emph{always} to have the outsides quarter right.  There is a call @strong{plenty,
@@ -389,8 +394,13 @@ allow the people trading to be nonadjacent.  This means that
 concept applied to the call @strong{trade}.  @code{Sd} tries to allow you
 to type everything all on one line.  It sometimes fails in this case.
 If something like @strong{boys trade} doesn't work when typed together, try
-typing the @strong{boys} selector, pressing @strong{<ENTER>}, and then typing
+typing the @strong{boys} designator, pressing @strong{<ENTER>}, and then typing
 the @strong{trade} call.
+
+@unnumberedsec How can I do @strong{same sex disconnected}?
+
+Just like that.  Type, for example, @strong{same sex disconnected swing thru}.
+Each sex does that call in their disconnected setup.
 
 @unnumberedsec How can I type @strong{all 8 recycle and circle 1/4}?
 
@@ -521,13 +531,14 @@ designated as the @strong{outer pairs}, and the others as the @strong{center
 You can also use designators like @strong{center line}, @strong{center box},
 @strong{center diamond}, and so on.
 
-@unnumberedsec Why is the Roll direction wrong after Spin Chain and Exchange the Gears?
+@unnumberedsec Why is the Roll direction wrong after @strong{spin chain and exchange the gears}?
 
-@code{Sd} defines this call in terms of @strong{3/4 Exchange the Diamonds} and @strong{Interlocked
-Flip the Diamond}, and sets the Roll direction accordingly.  We consider the
-Callerlab definition to be a pathetic attempt to give precision to a definition
-that was never intended to be precise.  Accordingly, we consider attempts to
-deduce Roll direction from the Callerlab definition to be misguided.
+@code{Sd} defines this call in terms of @strong{3/4 exchange the
+diamonds} and @strong{interlocked flip the diamond}, and sets the roll
+direction accordingly.  We consider the Callerlab definition to be a
+pathetic attempt to give precision to a definition that was never
+intended to be precise.  Accordingly, we consider attempts to deduce
+roll direction from the Callerlab definition to be misguided.
 
 @unnumberedsec How does @strong{common spot} work?
 

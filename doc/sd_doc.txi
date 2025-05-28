@@ -1,8 +1,8 @@
 \input texinfo
 @c user documentation for Sd (square dance caller's helper)
 @c
-@set sd-version 36.52
-@set Time-stamp: December 23, 2004
+@set sd-version 36.53
+@set Time-stamp: December 25, 2004
 @c
 @setfilename sd_doc.info
 @c We want the version number to show in the html file.
@@ -5645,12 +5645,15 @@ more specific.  The program often checks that the more specific designator
 is being used properly, but it doesn't always check.  Use them with care.
 @sp 1
 @item center 1x6
-This is similar, but refers to a line or column of 6.  It is intended
+@item center column of 6
+@item center line of 6
+@item center wave of 6
+These are similar, but refer to a line or column of 6.  It is intended
 for use in things like 3x1 diamonds, when you want the center wave of 6
 to do, for example, a @code{grand swing thru}.  Another situation in which
 this is necessary arises after a @code{sets in motion but hold the column}.
 If you get a column of 6 and you want them to do something, you must identify
-them as the @code{center 1x6}.  The designation @code{center 6} is not
+them as the @code{center column of 6}.  The designation @code{center 6} is not
 correct for this---it would include the person not in the column, and
 exclude the ends of the column.
 @sp 1
