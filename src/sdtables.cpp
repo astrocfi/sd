@@ -1242,6 +1242,10 @@ expand::thing expand::init_table[] = {
     s2x4, s4x4, 1, 0U, 0x1717, false,
     warn__none, warn__none, simple_normalize, 0},
 
+   {{8, 11, 1, 2, 5, 7},
+    s2x3, s3x4, 1, 0U, 03131, false,
+    warn__none, warn__none, simple_normalize, NEEDMASK(CONCPROP__NEEDK_TRIPLE_1X4)},
+
    {{10, 15, 3, 1, 2, 7, 11, 9},
     s2x4, s4x4, 0, 0U, 0x7171, false,
     warn__none, warn__none, simple_normalize, NEEDMASK(CONCPROP__NEEDK_4X4) |

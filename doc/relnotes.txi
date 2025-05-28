@@ -10,7 +10,7 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 39.15A
+@set title1 RELEASE NOTES FOR VERSION 39.15B
 @set title2 Database version = 39.15A format = 366
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 39.15B::
 * 39.15A::
 * 39.15::
 * 39.14::
@@ -113,7 +114,7 @@ and @file{relnotes98.txi} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 39.15A, Top, (dir)
+@node Intro, 39.15B, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -124,29 +125,42 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2020 William B. Ackerman
 @sp 3
 @menu
-* 39.15A::               Changes in the current version
+* 39.15B::               Changes in the current version
 @end menu
 
 @c ************
-@node 39.15A, 39.15, Intro, Top
+@node 39.15B, 39.15A, Intro, Top
+@unnumberedsec Version 39.15B changes
+
+A minor bug was fixed.  It had been discovered in the two-couple
+version, but it applied in general.
+
+Remember that, when calling two-couple material, you should not need
+to type the word @strong{phantom} to the computer.  The
+@strong{assume} concept, naming the setup that the dancers should
+mentally form, should do the trick.  But you very well may need to say
+the word @strong{phantom} to the dancers when calling.
+
+@c ************
+@node 39.15A, 39.15, 39.15B, Top
 @unnumberedsec Version 39.15A changes
 
 There is a rudimentary ability to write 2-couple material.  This is
-initiated by giving the starting setup @code{two couples only}.
+initiated by giving the starting setup @strong{two couples only}.
 
 The exact words you need to use when calling this material is not
 universally agreed upon.  In Sd, you should not need to say
-code{phantom}.  Use the code{assume} command instead.  For example,
-from two couples back-to-back, you can say @code{assume trade by
-rotary spin}  From a 4-person wave, you can say @code{assume tidal line
-relay the shadow} or @code{assume 1/4 tags chain reaction}.
+@strong{phantom}.  Use the @strong{assume} command instead.  For example,
+from two couples back-to-back, you can say @strong{assume trade by
+rotary spin}  From a 4-person wave, you can say @strong{assume tidal line
+relay the shadow} or @strong{assume 1/4 tags chain reaction}.
 
 Whenever you have an 8-person setup, you can issue 8-person calls,
-without saying the word @code{phantom}, and the calls will take on
+without saying the word @strong{phantom}, and the calls will take on
 their full 8-person meaning.  When the setup goes back down to 4 people,
 the calls become natural 4-person calls again.
 
-Do not attempt to use the @code{resolve} or @code{reconcile} commands.
+Do not attempt to use the @strong{resolve} or @strong{reconcile} commands.
 You should be able to work out at-home getouts.  Sd will announce when
 you have an at-home position.
 
@@ -159,8 +173,8 @@ This version is experimental.
 A number of bug fixes.
 
 A number of formerly ad-hoc attributes were changed into actual
-heritable modifiers.  This make it possible to do things like @code{echo
-bias circulate} or @code{reverse echo scatter reach out}.
+heritable modifiers.  This make it possible to do things like @strong{echo
+bias circulate} or @strong{reverse echo scatter reach out}.
 
 @c ************
 @node 39.14, 39.13, 39.15, Top

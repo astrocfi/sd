@@ -214,31 +214,6 @@ as in
 That will copy the files from the ~/vnnn directory down to the various things
 under ~/sd, compile everything, and make the tarball.
 
-/*
-Copy the above files into ~.
-
-cd ~
-cp sd/sd.ini .
-cd sd
-rm -rf *
-mkdir regress
-cd ~
-rm sddoc/*
-rm staging/*
-cd staging
-unzip -a ../sd_vnnnn
-mv * ../sd
-unzip -a ../r_vnnnn
-mv * ../sd/regress
-unzip -a ../doc_vnnnn
-mv * ../sddoc
-cd ~/sd
-cp ../sd.ini .
-make -f makefile.linux64 clean
-make -f makefile.linux64 all
-make -f makefile.linux64 tarball
-*/
-
 Then, to do regression tests:
 
 cd ~/sd/regress
@@ -246,7 +221,7 @@ chmod 775 *.sh
 ./doit.sh
 
 
-Now, in directory ~/sd, do:
+Now, in directory ~/sd, do this to upload the Linux version:
 
 sftp USERNAME@www.challengedance.org
   challengedance.org> (P=PASSWORD)
