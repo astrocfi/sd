@@ -648,20 +648,28 @@ expand::thing expand::init_table[] = {
     s1x8, s1x12, 0, 0U, 0x00F, false,
     warn__none, warn__none, normalize_recenter, 0},
 
-   {{2, 3, 4, 5, 6, 7, 8, 9},
-    s2x4, s2x6, 0, 0U, 0xC03, false,
-    warn__none, warn__none, normalize_recenter, 0},
-
    {{1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
     s2x5, s2x6, 0, 0U, 0x801, false,
+    warn__none, warn__none, normalize_recenter, 0},
+
+   {{0, 1, 2, 3, 4, 7, 8, 9, 10, 11},
+    s2x5, s2x6, 0, 0U, 0x060, false,
+    warn__none, warn__none, normalize_recenter, 0},
+
+   {{2, 3, 4, 5, 6, 7, 8, 9},
+    s2x4, s2x6, 0, 0U, 0xC03, false,
     warn__none, warn__none, normalize_recenter, 0},
 
    {{0, 1, 2, 3, 8, 9, 10, 11},
     s2x4, s2x6, 0, 0U, 0x0F0, false,
     warn__none, warn__none, normalize_recenter, 0},
 
-   {{0, 1, 2, 3, 4, 7, 8, 9, 10, 11},
-    s2x5, s2x6, 0, 0U, 0x060, false,
+   {{1, 2, 3, 4, 5, 6, 7, 8},
+    s2x4, s2x5, 0, 0U, 0x201, false,
+    warn__none, warn__none, normalize_recenter, 0},
+
+   {{0, 1, 2, 3, 6, 7, 8, 9},
+    s2x4, s2x5, 0, 0U, 0x030, false,
     warn__none, warn__none, normalize_recenter, 0},
 
    {{2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13},
