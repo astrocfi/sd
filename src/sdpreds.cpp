@@ -10,7 +10,7 @@
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-    This is for version 33. */
+    This is for version 34. */
 
 /* This defines the following function:
    selectp
@@ -457,6 +457,17 @@ static long_boolean sum_mod_selected(setup *real_people, int real_index,
    int real_direction, int northified_index, Const long int *extra_stuff) THROW_DECL
 {
    int otherindex = (*extra_stuff) - real_index;
+   int size = setup_attrs[real_people->kind].setup_limits+1;
+   if (otherindex >= size) otherindex -= size;
+   return selectp(real_people, otherindex);
+}
+
+/* ARGSUSED */
+static long_boolean sum_mod_selected_for_12p(setup *real_people, int real_index,
+   int real_direction, int northified_index, Const long int *extra_stuff) THROW_DECL
+{
+   int otherindex = (*extra_stuff) - real_index;
+   if ((real_index % 6) >= 3) otherindex += 4;
    int size = setup_attrs[real_people->kind].setup_limits+1;
    if (otherindex >= size) otherindex -= size;
    return selectp(real_people, otherindex);
@@ -1089,21 +1100,38 @@ static long_boolean x12_beau_or_miniwave(setup *real_people, int real_index,
    }
 }
 
-static Const long int swingleft_3x1dmd[8] = {-1, 0, 1, -1, 5, 6, -1, 3};
+static const long int swingleft_1x3dmd[8] = {-1, 0, 1, -1, 5, 6, -1, 3};
+static const long int swingleft_deep2x1dmd[10] = {-1, 0, -1, 1, 3, 6, 8, -1, 9, -1};
+static const long int swingleft_wqtag[10] = {-1, -1, 3, 4, 9, -1, -1, -1, 7, 8};
 
 static long_boolean can_swing_left(setup *real_people, int real_index,
    int real_direction, int northified_index, Const long int *extra_stuff)
 {
+   int t;
+
    switch (real_people->kind) {
-      case s1x3dmd:
-         {
-            int t = swingleft_3x1dmd[northified_index];
-            if (t < 0) return FALSE;
-            t ^= northified_index ^ real_index;
-            return ((real_people->people[real_index].id1 ^ real_people->people[t].id1) & DIR_MASK) == 2;
-         }
-      default: return FALSE;
+   case s1x3dmd:
+      t = swingleft_1x3dmd[northified_index];
+      break;
+   case swqtag:
+      t = swingleft_wqtag[northified_index];
+      break;
+   case sdeep2x1dmd:
+      t = swingleft_deep2x1dmd[northified_index];
+      break;
+   default:
+      return FALSE;
    }
+
+   if (t < 0) return FALSE;
+   if (northified_index != real_index) {
+      int size = setup_attrs[real_people->kind].setup_limits+1;
+      t -= size >> 1;
+      if (t < 0) t += size;
+   }
+
+   return ((real_people->people[real_index].id1 ^ real_people->people[t].id1) &
+           DIR_MASK) == 2;
 }
 
 
@@ -2106,11 +2134,13 @@ predicate_descriptor pred_table[] = {
       {sum_mod_selected,               &iden_tab[5]},            /* "person_select_sum5" */
       {sum_mod_selected,               &iden_tab[8]},            /* "person_select_sum8" */
       {sum_mod_selected,              &iden_tab[11]},            /* "person_select_sum11" */
+      {sum_mod_selected,              &iden_tab[13]},            /* "person_select_sum13" */
       {sum_mod_selected,              &iden_tab[15]},            /* "person_select_sum15" */
       {plus_mod_selected,             &iden_tab[4]},             /* "person_select_plus4" */
       {plus_mod_selected,             &iden_tab[6]},             /* "person_select_plus6" */
       {plus_mod_selected,             &iden_tab[8]},             /* "person_select_plus8" */
       {plus_mod_selected,             &iden_tab[12]},            /* "person_select_plus12" */
+      {sum_mod_selected_for_12p,      &iden_tab[15]},            /* "person_select12_sum15" */
       {semi_squeezer_select,       semi_squeeze_tab},            /* "semi_squeezer_select" */
       {select_once_rem_from_unselect,(Const long int *) 0},      /* "select_once_rem_from_unselect" */
       {unselect_once_rem_from_select,(Const long int *) 0},      /* "unselect_once_rem_from_select" */

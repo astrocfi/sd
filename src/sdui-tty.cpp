@@ -135,6 +135,7 @@ int main(int argc, char *argv[])
    ui_options.pastel_color = 1;
    ui_options.no_color = 0;
    ui_options.no_sound = 0;
+   ui_options.sequence_num_override = -1;
 
    return sdmain(argc, argv);
 }
@@ -327,6 +328,9 @@ extern long_boolean uims_open_session(int argc, char **argv)
    sequence_number = -1;
 
    really_do_it:
+
+   if (ui_options.sequence_num_override > 0)
+      sequence_number = ui_options.sequence_num_override;
 
    if (calling_level == l_nonexistent_concept) {
 
@@ -581,7 +585,7 @@ extern void show_match(void)
 }
 
 
-Private long_boolean get_user_input(char *prompt, int which)
+static long_boolean get_user_input(char *prompt, int which)
 {
    char *p;
    char c;
@@ -795,6 +799,7 @@ Private long_boolean get_user_input(char *prompt, int which)
 
          if (!strcmp(static_ss.full_input, "help")) {
             put_line("\n");
+            user_match.match.kind = ui_help_simple;
             current_text_line++;
             return TRUE;
          }
@@ -990,7 +995,7 @@ extern long_boolean uims_get_call_command(uims_reply *reply_p)
       prompt_ptr = call_menu_prompts[parse_state.call_list_to_use];
 
    if (get_user_input(prompt_ptr, (int) parse_state.call_list_to_use)) {
-      /* User typed "help". */
+      // User typed "help".
       *reply_p = ui_command_select;
       uims_menu_index = command_help;
       return FALSE;
@@ -1386,37 +1391,16 @@ extern void uims_reduce_line_count(int n)
 }
 
 
-extern void uims_choose_font(long_boolean in_startup) /* THROW_DECL */
-{
-   if (in_startup) {
-      writestuff("Printing is not supported in Sdtty.");
-      newline();
-   }
-   else
-      specialfail("Printing is not supported in Sdtty.");
-}
+extern long_boolean uims_choose_font()
+{ return FALSE; }
 
 
-extern void uims_print_this(long_boolean in_startup) /* THROW_DECL */
-{
-   if (in_startup) {
-      writestuff("Printing is not supported in Sdtty.");
-      newline();
-   }
-   else
-      specialfail("Printing is not supported in Sdtty.");
-}
+extern long_boolean uims_print_this()
+{ return FALSE; }
 
 
-extern void uims_print_any(long_boolean in_startup)
-{
-   if (in_startup) {
-      writestuff("Printing is not supported in Sdtty.");
-      newline();
-   }
-   else
-      specialfail("Printing is not supported in Sdtty.");
-}
+extern long_boolean uims_print_any()
+{ return FALSE; }
 
 
 extern void uims_terminate(void)

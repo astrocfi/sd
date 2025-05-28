@@ -10,7 +10,7 @@
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-    This is for version 33. */
+    This is for version 34. */
 
 /* This defines the following external variables:
    selector_list
@@ -33,6 +33,8 @@
    step_2x2v_pair
    step_spindle_pair
    step_dmd_pair
+   step_tgl_pair
+   step_ptpd_pair
    step_qtgctr_pair
    exp_dmd_323_stuff
    exp_1x2_dmd_stuff
@@ -53,6 +55,8 @@
    squeezethingqtag
    squeezething4dmd
    squeezefinalglass
+   truck_to_ptpd
+   truck_to_deepxwv
    press_4dmd_4x4
    press_4dmd_qtag1
    press_4dmd_qtag2
@@ -130,6 +134,8 @@
    map_4x4v
    map_blocks
    map_trglbox
+   map_trglbox12a
+   map_trglbox12b
    map_2x3_0134
    map_2x3_1245
    map_1x8_1x6
@@ -206,7 +212,7 @@
 #include "sd.h"
 
 
-/* BEWARE!!  This list is keyed to the definition of "selector_kind" in sd.h . */
+// BEWARE!!  This list is keyed to the definition of "selector_kind" in basetype.h .
 selector_item selector_list[] = {
    {"???",          "???",         "???",          "???",         selector_uninitialized},
    {"boys",         "boy",         "BOYS",         "BOY",         selector_girls},
@@ -294,10 +300,10 @@ selector_item selector_list[] = {
 
 /* BEWARE!!  These strings are keyed to the definition of "warning_index" in sdui.h . */
 /* A "*" as the first character means that this warning precludes acceptance while searching. */
-/* A "+" as the first character means that this warning is cleared if a concentric call was done
-   and the "suppress_elongation_warnings" flag was on. */
-/* A "=" as the first character means that this warning is cleared if it arises during some kind of
-   "do your part" call. */
+/* A "+" as the first character means that this warning is cleared if a
+   concentric call was done and the "suppress_elongation_warnings" flag was on. */
+/* A "=" as the first character means that this warning is cleared if it arises
+   during some kind of "do your part" call. */
 Cstring warning_strings[] = {
    /*  warn__none                */   " Unknown warning????",
    /*  warn__do_your_part        */   "*Do your part.",
@@ -339,6 +345,7 @@ Cstring warning_strings[] = {
    /*  warn__check_quad_dmds     */   " Fudge to quadruple diamonds.",
    /*  warn__check_3x4           */   " Check a 3x4 setup.",
    /*  warn__check_2x4           */   " Check a 2x4 setup.",
+   /*  warn__check_hokey_2x4     */   "*Fudge to a 2x4 -- the dancers might not like this.",
    /*  warn__check_4x4           */   "*Check a 4x4 setup.",
    /*  warn__check_hokey_4x4     */   "*Check a center box and outer lines/columns.",
    /*  warn__check_4x4_start     */   "*Check a 4x4 setup at the start of this call.",
@@ -377,6 +384,8 @@ Cstring warning_strings[] = {
    /*  warn__hokey_jay_shapechanger */"*This shapechanger in a jay may be controversial.",
    /*  warn__split_1x6           */   "=Do the call in each 1x3 setup.",
    /*  warn_interlocked_to_6     */   "*This went from 4 interlocked groups to 6.",
+   /*  warn__offset_hard_to_see  */   "*The offset setup is hard to see.",
+   /*  warn__pg_hard_to_see      */   "*The parallelogram setup is hard to see.",
    /*  warn__colocated_once_rem  */   " The once-removed setups have the same center.",
    /*  warn_big_outer_triangles  */   "*The outside triangles are very large.",
    /*  warn_hairy_fraction       */   " Fraction is very complicated.",
@@ -454,7 +463,8 @@ static expand_thing rear_ptpd_stuff = {{0, 1, 2, 3, 4, 5, 6, 7}, 8, nothing, s1x
 static expand_thing rear_sqtag_stuff = {{0, 1, 2, 3}, 4, nothing, s1x4, 0};
 static expand_thing rear_twistqtag_stuff = {{0, 3, 2, 1}, 4, nothing, sdmd, 0};
 static expand_thing rear_twist2x4c_stuff = {{5, 7, 6, 0, 1, 3, 2, 4}, 8, nothing, s_qtag, 1};
-
+static expand_thing rear_3x1qtag_stuff = {{4, 5, 3, 6, 0, 1, 7, 2}, 8, nothing, s_qtag, 1};
+static expand_thing rear_1x3qtag_stuff = {{9, 10, 0, 11, 3, 4, 6, 5}, 8, nothing, s3x4, 1};
 
 static expand_thing step_8by_stuff = {{6, 7, 0, 1, 2, 3, 4, 5}, 8, s_thar, s_qtag, 0};
 static expand_thing step_sqs_stuff = {{7, 0, 1, 2, 3, 4, 5, 6}, 8, s_thar, s2x4, 0};
@@ -462,6 +472,8 @@ static expand_thing step_1x8_stuff = {{0, 7, 6, 1, 4, 3, 2, 5}, 8, s1x8, s2x4, 0
 static expand_thing step_qbox_stuff = {{0, 3, 5, 2, 4, 7, 1, 6}, 8, s_bone, s2x4, 0};
 static expand_thing rear_3n1a_stuff = {{3, 1, 7, 5, 11, 9, 15, 13}, 8, s2x4, s_c1phan, 0};
 static expand_thing rear_3n1b_stuff = {{0, 2, 6, 4, 8, 10, 14, 12}, 8, s2x4, s_c1phan, 0};
+static expand_thing rear_3n1c_stuff = {{6, 0, 1, 3, 2, 4, 5, 7}, 8, s2x4, s_rigger, 0};
+
 static expand_thing step_1x4_side_stuff = {{0, 1, 2, 3}, 4, nothing, sdmd, 0};
 static expand_thing step_1x4_stuff = {{0, 3, 2, 1}, 4, nothing, s2x2, 0};
 static expand_thing step_1x2_stuff = {{0, 1}, 2, s1x2, s1x2, 1};
@@ -497,21 +509,26 @@ static expand_thing step_bigd_stuff2 = {{-1, -1, 3, 2, 4, 5, -1, -1, 9, 8, 10, 1
                                         12, nothing, s2x6, 0};
 static expand_thing step_tgl4_stuffa = {{2, 3, 0, 1}, 4, nothing, s1x4, 1};
 static expand_thing step_tgl4_stuffb = {{3, 2, 0, 1}, 4, nothing, s2x2, 0};
-static expand_thing step_dmd_stuff = {{0, 3, 2, 1}, 4, nothing, s1x4, 0};
+static expand_thing step_dmd_stuff   = {{0, 3, 2, 1}, 4, nothing, s1x4, 0};
+static expand_thing step_tgl_stuff   = {{2, 0, 1}, 3, nothing, s1x3, 1};
+static expand_thing step_ptpd_stuff  = {{0, 3, 2, 1, 4, 7, 6, 5}, 8, nothing, s1x8, 0};
 static expand_thing step_qtgctr_stuff = {{7, 0, 2, 1, 3, 4, 6, 5}, 8, nothing, s2x4, 1};
 
-       full_expand_thing rear_1x2_pair      = {warn__rear_back,  8, &step_1x2_stuff};
-       full_expand_thing rear_2x2_pair      = {warn__rear_back,  8, &step_2x2v_stuff};
-       full_expand_thing rear_bone_pair     = {warn__some_rear_back, 0, &rear_bone_stuffb};
-       full_expand_thing step_8ch_pair      = {warn__none,       0, &step_8ch_stuff};
-       full_expand_thing step_qtag_pair     = {warn__none,       0, &step_tby_stuff};
-       full_expand_thing step_2x2h_pair     = {warn__none,    16+1, &step_2x2h_stuff};
-       full_expand_thing step_2x2v_pair     = {warn__none,    16+2, &step_2x2v_stuff};
-       full_expand_thing step_spindle_pair  = {warn__some_touch, 0, &step_spindle_stuff};
-       full_expand_thing step_dmd_pair      = {warn__some_touch, 0, &step_dmd_stuff};
-       full_expand_thing step_qtgctr_pair   = {warn__some_touch, 0, &step_qtgctr_stuff};
+full_expand_thing rear_1x2_pair      = {warn__rear_back,  8, &step_1x2_stuff};
+full_expand_thing rear_2x2_pair      = {warn__rear_back,  8, &step_2x2v_stuff};
+full_expand_thing rear_bone_pair     = {warn__some_rear_back, 0, &rear_bone_stuffb};
+full_expand_thing step_8ch_pair      = {warn__none,       0, &step_8ch_stuff};
+full_expand_thing step_qtag_pair     = {warn__none,       0, &step_tby_stuff};
+full_expand_thing step_2x2h_pair     = {warn__none,    16+1, &step_2x2h_stuff};
+full_expand_thing step_2x2v_pair     = {warn__none,    16+2, &step_2x2v_stuff};
+full_expand_thing step_spindle_pair  = {warn__some_touch, 0, &step_spindle_stuff};
+full_expand_thing step_dmd_pair      = {warn__some_touch, 0, &step_dmd_stuff};
+full_expand_thing step_tgl_pair      = {warn__some_touch, 0, &step_tgl_stuff};
+full_expand_thing step_ptpd_pair     = {warn__some_touch, 0, &step_ptpd_stuff};
 
-       full_expand_thing touch_init_table1[] = {
+full_expand_thing step_qtgctr_pair   = {warn__some_touch, 0, &step_qtgctr_stuff};
+
+full_expand_thing touch_init_table1[] = {
    {warn__rear_back,       8, &step_1x2_stuff,   s1x2,         0xFUL,        0x2UL, ~0UL},      /* Rear back from a miniwave to facing people. */
    {warn__some_rear_back,  0, &rear_tgl4a_stuff, s_trngl4,    0xFFUL,       0xDAUL, ~0UL},      /* Rear back from a 4-person triangle to a "split square thru" setup. */
    {warn__some_rear_back,  0, &rear_tgl4a_stuff, s_trngl4,    0xFFUL,       0xD2UL, ~0UL},      /* Two similar ones with miniwave base for funny square thru. */
@@ -525,9 +542,13 @@ static expand_thing step_qtgctr_stuff = {{7, 0, 2, 1, 3, 4, 6, 5}, 8, nothing, s
    {warn__rear_back,       8, &step_8ch_stuff, s2x4,        0xFFFFUL,     0x2288UL, ~0UL},      /* Rear back from parallel waves to an 8 chain. */
    {warn__awful_rear_back, 8, &step_1x8_stuff, s2x4,        0xFFFFUL,     0x55FFUL, ~0UL},      /* Rear back from columns to end-to-end single 8-chains. */
    {warn__some_rear_back,  8, &step_qbox_stuff, s2x4,       0xFFFFUL,     0x57FDUL, ~0UL},      /* Centers rear back from 1/4-box to triangles. */
-   /* Some people rear back from 3&1 line to triangles. */
+
+   // Some people rear back from 3&1 column to rigger.
+   {warn__some_rear_back,  0, &rear_3n1c_stuff, s2x4,       0xFFFFUL,     0x5DF7UL, ~0UL},
+
+   // Some people rear back from 3&1 line to triangles.
    {warn__some_rear_back,  0, &rear_3n1a_stuff, s2x4,       0xFFFFUL,     0x2A80UL, ~0UL},
-   /* Some people rear back from 3&1 line to triangles. */
+   // Some people rear back from 3&1 line to triangles.
    {warn__some_rear_back,  0, &rear_3n1b_stuff, s2x4,       0xFFFFUL,     0xA208UL, ~0UL},
    /* Rear back from a right-hand box to a single 8 chain. */
    {warn__awful_rear_back, 0, &rear_vrbox_stuff, s2x2,        0xFFUL,       0x28UL, ~0UL},
@@ -572,7 +593,7 @@ static expand_thing step_qtgctr_stuff = {{7, 0, 2, 1, 3, 4, 6, 5}, 8, nothing, s
    {warn__none,            0, (expand_thing *) 0, nothing}
 };
 
-       full_expand_thing touch_init_table2[] = {
+full_expand_thing touch_init_table2[] = {
    /* Have the centers rear back from a 1/4 tag or 3/4 tag. */
    {warn__rear_back,       0, &rear_qtag_stuff, s_qtag,     0xFFFFUL,     0x08A2UL, ~0UL},
    {warn__rear_back,       0, &rear_qtag_stuff, s_qtag,     0xFFFFUL,     0xA802UL, ~0UL},
@@ -584,13 +605,14 @@ static expand_thing step_qtgctr_stuff = {{7, 0, 2, 1, 3, 4, 6, 5}, 8, nothing, s
    {warn__awful_rear_back, 0, &rear_sqtag_stuff, sdmd,        0xFFUL,       0xD7UL, ~0UL},
    /* As above, but centers are "twisted". */
    {warn__awful_rear_back, 0, &rear_twistqtag_stuff, s1x4,    0xFFUL,       0x4EUL, ~0UL},
-
    {warn__awful_rear_back, 0, &rear_twist2x4c_stuff, s2x4,  0xFFFFUL,     0x0820UL, 0x3C3CUL},
+   {warn__rear_back,       0, &rear_3x1qtag_stuff, s3x1dmd, 0xFFFFUL,     0x2088UL, 0xFCFCUL},
+   {warn__rear_back,       0, &rear_1x3qtag_stuff,   s_323, 0xFFFFUL,     0x0200UL, 0x0303UL},
 
    {warn__none,            0, (expand_thing *) 0, nothing}
 };
 
-       full_expand_thing touch_init_table3[] = {
+full_expand_thing touch_init_table3[] = {
    {warn__some_touch, 0, &step_phan1_stuff,   s_c1phan, 0x33333333UL, 0x13313113UL, ~0UL},
    {warn__some_touch, 0, &step_phan2_stuff,   s_c1phan, 0xCCCCCCCCUL, 0x4C4CC4C4UL, ~0UL},
    {warn__some_touch, 0, &step_phan3_stuff,   s_c1phan, 0xCCCCCCCCUL, 0x08808008UL, ~0UL},
@@ -1155,14 +1177,28 @@ expand_thing expand_init_table[] = {
     12, s3x4, s3x6, 0, 0UL, 0141141,
     warn__none, warn__none, simple_normalize, NEEDMASK(CONCPROP__NEEDK_3X6)},
 
-   {{1, 2, 6, 7, 9, 10, 14, 15},
-    8, s_qtag, s4dmd, 0, 0UL, 0x3939,
-    warn__none, warn__none, simple_normalize, NEEDMASK(CONCPROP__NEEDK_4D_4PTPD) |
-                                              NEEDMASK(CONCPROP__NEEDK_4DMD)},
    {{12, 13, 15, 14, 4, 5, 7, 6},
     8, s1x8, s4dmd, 0, 0UL, 0x0F0F,
     warn__none, warn__none, simple_normalize, NEEDMASK(CONCPROP__NEEDK_4D_4PTPD) |
                                               NEEDMASK(CONCPROP__NEEDK_4DMD)},
+   {{1, 2, 5, 6, 7, 9, 10, 13, 14, 15},
+    10, swqtag, s4dmd, 0, 0UL, 0x1919,
+    warn__none, warn__none, simple_normalize, NEEDMASK(CONCPROP__NEEDK_4D_4PTPD) |
+                                              NEEDMASK(CONCPROP__NEEDK_4DMD)},
+   {{1, 2, 6, 7, 9, 10, 14, 15},
+    8, s_qtag, s4dmd, 0, 0UL, 0x3939,
+    warn__none, warn__none, simple_normalize, NEEDMASK(CONCPROP__NEEDK_4D_4PTPD) |
+                                              NEEDMASK(CONCPROP__NEEDK_4DMD)},
+   {{0, 1, 3, 4, 5, 6, 8, 9},
+    8, s_qtag, swqtag, 0, 0UL, 0x084,
+    warn__none, warn__none, simple_normalize, 0},
+
+   {{0, 1, 3, 4, 5, 6, 8, 9},
+    8, s2x4, sdeep2x1dmd, 0, 0UL, 0x084,
+    warn__none, warn__none, simple_normalize, 0},
+   {{5, 4, 1, 3, 2, 11, 10, 7, 9, 8},
+    10, sdeep2x1dmd, sdeepxwv, 1, 0UL, 00101,
+    warn__none, warn__none, simple_normalize, 0},
 
    {{11, 10, 9, 8, 7, 6, 23, 22, 21, 20, 19, 18},
     12, s2x6, s4x6, 0, 0UL, 0x03F03F,
@@ -1218,6 +1254,7 @@ expand_thing expand_init_table[] = {
     warn__none, warn__none, simple_normalize, NEEDMASK(CONCPROP__NEEDK_CTR_1X4) |
                                               NEEDMASK(CONCPROP__NEEDK_TRIPLE_1X4) |
                                               NEEDMASK(CONCPROP__NEEDK_END_1X4) |
+                                              NEEDMASK(CONCPROP__NEEDK_QUAD_1X3) |
                                               NEEDMASK(CONCPROP__NEEDK_1X12) |
                                               NEEDMASK(CONCPROP__NEEDK_1X16)},
    {{2, 3, 5, 4, 8, 9, 11, 10},
@@ -1226,6 +1263,7 @@ expand_thing expand_init_table[] = {
                                               NEEDMASK(CONCPROP__NEEDK_TRIPLE_1X4) |
                                               NEEDMASK(CONCPROP__NEEDK_END_1X4) |
                                               NEEDMASK(CONCPROP__NEEDK_1X12) |
+                                              NEEDMASK(CONCPROP__NEEDK_QUAD_1X3) |
                                               NEEDMASK(CONCPROP__NEEDK_QUAD_1X4) |
                                               NEEDMASK(CONCPROP__NEEDK_1X16)},
    {{1, 4, 3, 2, 7, 10, 9, 8},
@@ -1344,23 +1382,23 @@ Const coordrec tgl4_1 = {s_trngl4, 3,
 
 /* These are used in sdmoves to fudge matrix calls. */
 
-Const coordrec squeezethingglass = {s_hrglass, 3,
+const coordrec squeezethingglass = {s_hrglass, 3,
    { -4,   4,   8,   0,   4,  -4,  -8,   0},
    {  6,   6,   0,   2,  -6,  -6,   0,  -2}, {0}};
 
-Const coordrec squeezethinggal = {s_galaxy, 3,
+const coordrec squeezethinggal = {s_galaxy, 3,
    { -6,  -2,   0,   2,   6,   2,   0,  -2},
    {  0,   2,   6,   2,   0,  -2,  -6,  -2}, {0}};
 
-Const coordrec squeezethingqtag = {s_qtag, 3,
+const coordrec squeezethingqtag = {s_qtag, 3,
    { -2,   2,   6,   2,   2,  -2,  -6,  -2},
    {  4,   4,   0,   0,  -4,  -4,   0,   0}, {0}};
 
-Const coordrec squeezething4dmd = {s4dmd, 3,
+const coordrec squeezething4dmd = {s4dmd, 3,
    {-10,  -5,   5,  10,  14,  10,   6,   2,  10,   5,  -5, -10, -14, -10,  -6,  -2},
    {  6,   6,   6,   6,   0,   0,   0,   0,  -6,  -6,  -6,  -6,   0,   0,   0,   0}, {0}};
 
-Const coordrec squeezefinalglass = {s_hrglass, 3,
+const coordrec squeezefinalglass = {s_hrglass, 3,
    { -2,   2,   6,   0,   2,  -2,  -6,   0},
    {  6,   6,   0,   2,  -6,  -6,   0,  -2}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -1372,7 +1410,27 @@ Const coordrec squeezefinalglass = {s_hrglass, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-Const coordrec press_4dmd_4x4 = {s4x4, 3,
+const coordrec truck_to_ptpd = {s_ptpd, 3,
+   {-10,  -6,  -2,  -6,  10,   6,   2,   6},
+   {  0,   2,   0,  -2,   0,  -2,   0,   2}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1,  0,  1,  2,  6,  7,  4, -1,
+      -1, -1,  3, -1, -1,  5, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
+const coordrec truck_to_deepxwv = {sdeepxwv, 4,
+   {-11,  -7,  -2,  -2,  -2,  -2,  11,   7,   2,   2,   2,   2},
+   {  0,   0,   6,   2,  -2,  -6,   0,   0,  -6,  -2,   2,   6}, {
+      -1, -1, -1, -1, -1, -1, -1,  2, 11, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1,  0,  1,  3, 10,  7,  6, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1,  4,  9, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1,  5,  8, -1, -1, -1, -1, -1, -1, -1}};
+
+const coordrec press_4dmd_4x4 = {s4x4, 3,
    { 11,   9,   9,   1,  11,   5,  -5,   1, -11,  -9,  -9,  -1, -11,  -5,   5,  -1},
    {  7,   1,  -1,   1,  -7,  -7,  -7,  -1,  -7,  -1,   1,  -1,   7,   7,   7,   1}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -1384,7 +1442,7 @@ Const coordrec press_4dmd_4x4 = {s4x4, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-Const coordrec press_4dmd_qtag1 = {s_qtag, 3,
+const coordrec press_4dmd_qtag1 = {s_qtag, 3,
    { -7,  -1,   6,   2,   7,   1,  -6,  -2},
    {  5,   5,   0,   0,  -5,  -5,   0,   0}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -1396,7 +1454,7 @@ Const coordrec press_4dmd_qtag1 = {s_qtag, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-Const coordrec press_4dmd_qtag2 = {s_qtag, 3,
+const coordrec press_4dmd_qtag2 = {s_qtag, 3,
    {  1,   7,   6,   2,  -1,   -7,  -6,  -2},
    {  5,   5,   0,   0,  -5,  -5,   0,   0}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -1408,7 +1466,7 @@ Const coordrec press_4dmd_qtag2 = {s_qtag, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-Const coordrec press_qtag_4dmd1 = {s4dmd, 3,
+const coordrec press_qtag_4dmd1 = {s4dmd, 3,
    {-11,  -5,   0,   9,  14,  10,   6,   2,  11,   5,   0,  -9, -14, -10,  -6,  -2},
    {  5,   5,   5,   5,   0,   0,   0,   0,  -5,  -5,  -5,  -5,   0,   0,   0,   0}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -1420,7 +1478,7 @@ Const coordrec press_qtag_4dmd1 = {s4dmd, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-Const coordrec press_qtag_4dmd2 = {s4dmd, 3,
+const coordrec press_qtag_4dmd2 = {s4dmd, 3,
    { -8,   1,   5,  11,  14,  10,   6,   2,   8,  -1,  -5, -11, -14, -10,  -6,  -2},
    {  5,   5,   5,   5,   0,   0,   0,   0,  -5,  -5,  -5,  -5,   0,   0,   0,   0}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -1432,7 +1490,7 @@ Const coordrec press_qtag_4dmd2 = {s4dmd, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-Const coordrec acc_crosswave = {s_crosswave, 3,
+const coordrec acc_crosswave = {s_crosswave, 3,
    { -8,  -4,   0,   0,   8,   4,   0,   0},
    {  0,   0,   6,   2,   0,   0,  -6,  -2}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -1822,6 +1880,18 @@ static coordrec thingrigger = {s_rigger, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
+static coordrec thingd2x5 = {sd2x5, 3,
+   { -6,  -6,  -2,  -2,  -2,   6,   6,   2,   2,   2},
+   {  2,  -2,   4,   0,  -4,  -2,   2,  -4,   0,   4}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1,  2,  9, -1, -1, -1,
+      -1, -1,  0,  3,  8,  6, -1, -1,
+      -1, -1,  1,  4,  7,  5, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
 static coordrec thingspindle = {s_spindle, 3,
    { -4,   0,   4,   8,   4,   0,  -4,  -8},
    {  2,   2,   2,   0,  -2,  -2,  -2,   0}, {
@@ -1879,6 +1949,30 @@ static coordrec nicethingqtag = {s_qtag, 3,   /* "true" coordinates */
       -1, -1,  6,  7,  3,  2, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1,  5, -1, -1,  4, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
+static coordrec thingwqtag = {swqtag, 3,       // "fudged" coordinates
+   { -4,   5,  10,   6,   2,   4,  -5, -10,  -6,  -2},
+   {  5,   5,   0,   0,   0,  -5,  -5,   0,   0,   0}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1,  0, -1,  1, -1, -1,
+      -1,  7,  8,  9,  4,  3,  2, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1,  6, -1, -1,  5, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
+static coordrec nicethingwqtag = {swqtag, 3,   // "true" coordinates
+   { -5,   5,  10,   6,   2,   5,  -5, -10,  -6,  -2},
+   {  5,   5,   0,   0,   0,  -5,  -5,   0,   0,   0}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1,  0, -1, -1,  1, -1, -1,
+      -1,  7,  8,  9,  4,  3,  2, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1,  6, -1, -1,  5, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
@@ -1969,8 +2063,8 @@ static coordrec thing3x1dmd = {s3x1dmd, 3,   /* used for both --
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static coordrec thing2x1dmd = {s_2x1dmd, 3,   /* used for both --
-                                                symmetric and safe for press/truck */
+static coordrec thing2x1dmd = {s_2x1dmd, 3,   // used for both --
+                                              // symmetric and safe for press/truck
    { -6,  -2,   0,   6,   2,   0},
    {  0,   0,   5,   0,   0,  -5}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -1979,6 +2073,19 @@ static coordrec thing2x1dmd = {s_2x1dmd, 3,   /* used for both --
       -1, -1,  0,  1,  4,  3, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1,  5, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
+static coordrec thingdeep2x1dmd = {sdeep2x1dmd, 3,   // used for both --
+                                                     // symmetric and safe for press/truck
+   { -6,  -2,   0,   2,   6,   6,   2,   0,  -2,  -6},
+   {  2,   2,   7,   2,   2,  -2,  -2,  -7,  -2,  -2}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1,  2, -1, -1, -1,
+      -1, -1,  0,  1,  3,  4, -1, -1,
+      -1, -1,  9,  8,  6,  5, -1, -1,
+      -1, -1, -1, -1,  7, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
@@ -2207,7 +2314,7 @@ static coordrec thingbigx = {sbigx, 4,
       -1, -1, -1, -1, -1, -1, -1, -1, 10, -1, -1, -1, -1, -1, -1, -1}};
 
 static coordrec thingdeepxwv = {sdeepxwv, 4,
-   {-11,  -7,  -2,  -2,  -2,  -2,  11,   7,   2,   2,   2,   2},
+   {-10,  -6,  -2,  -2,  -2,  -2,  10,   6,   2,   2,   2,   2},
    {  0,   0,   6,   2,  -2,  -6,   0,   0,  -6,  -2,   2,   6}, {
       -1, -1, -1, -1, -1, -1, -1,  2, 11, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1,  0,  1,  3, 10,  7,  6, -1, -1, -1, -1, -1,
@@ -3415,6 +3522,10 @@ cm_thing conc_init_table[] = {
              4, 8, sdmd,     s2x4,     16, 1, 1, 1, 2,  0x2FB, QL},
    {s4dmd,          Z, {11, -1, 0, -1, 8, -1, 3, -1,    1, 2, 6, 7, 9, 10, 14, 15},
              4, 8, s1x4,     s_qtag,   16, 1, 0, 1, 2,  0x2FD, QL},
+   {swqtag,         Z, {9, 4,     0, 1, 2, 3, 5, 6, 7, 8},
+             2, 8, s1x2, s_rigger,    16,  0, 0, 1, 1,  0x2FB, schema_concentric},
+   {sd2x5,          Z, {4, 3, 2, 9, 8, 7,     0, 6, 5, 1},
+    6, 4, s2x3, s2x2,                 10,  1, 0, 1, 1,  0x2FD, schema_concentric},
 
    {s1x16,         QL, {0, 1, 3, 2, 11, 10, 8, 9,         4, 5, 7, 6, 12, 13, 15, 14},
              4, 8, s1x4,     s1x8,     16, 0, 0, 1, 2,  0x0FE, QL},
@@ -3686,6 +3797,15 @@ static Const fixer fdrhgl_bb;
 static Const fixer frigctr;
 static Const fixer f2x4right;
 static Const fixer f2x4left;
+static Const fixer d3x4ub1;
+static Const fixer d3x4ub2;
+static Const fixer d3x4ub3;
+static Const fixer d3x4ub4;
+static Const fixer d3x4vb1;
+static Const fixer d3x4vb2;
+static Const fixer d3x4vb3;
+static Const fixer d3x4vb4;
+
 
 /*                              ink   outk       rot  el numsetup 1x2         1x2rot      1x4    1x4rot dmd         dmdrot 2x2         2x2v             nonrot  */
 
@@ -3801,6 +3921,8 @@ static Const fixer box55     = {s1x1, s2x2,        0, 0, 2,       0,          0,
 static Const fixer boxaa     = {s1x1, s2x2,        0, 0, 2,       0,          0,          0,          0, 0,          0,    0,          0,          {1, 3}};
 static Const fixer f2x5c     = {s1x2, s2x5,        0, 0, 2,       0,          0,          0,          0, 0,          0,    0,          0,          {3, 4, 9, 8}};
 static Const fixer f2x5d     = {s1x2, s2x5,        0, 0, 2,       0,          0,          0,          0, 0,          0,    0,          0,          {0, 1, 6, 5}};
+static Const fixer fd2x5d    = {s2x3, sd2x5,        1, 0, 1,       0,          0,          0,          0, 0,          0,    0,          0,          {9, 8, 7, 4, 3, 2}};
+
 static Const fixer f4x6a     = {s1x2, s4x6,        0, 0, 2,       0,          0,          0,          0, 0,          0,    0,          0,          {13, 12, 0, 1}};
 static Const fixer f4x6b     = {s1x2, s4x6,        0, 0, 2,       0,          0,          0,          0, 0,          0,    0,          0,          {22, 23, 11, 10}};
 static Const fixer f4x6c     = {s1x2, s4x6,        0, 0, 2,       0,          0,          0,          0, 0,          0,    0,          0,          {7, 6, 18, 19}};
@@ -3830,6 +3952,9 @@ static Const fixer d2x4b1    = {s2x2, s4x4,        0, 0, 1,       0,          0,
 static Const fixer d2x4b2    = {s2x2, s4x4,        0, 0, 1,       0,          0,          0,          0, 0,          0,    0,          0,          {11, 14, 3, 6}};
 static Const fixer d2x4w1    = {s1x4, s2x4,        0, 0, 1,       0,          0,          &d2x4w1,    0, 0,          0,    &d2x4b1,    &d2x4b1,    {0, 1, 4, 5}};
 static Const fixer d2x4w2    = {s1x4, s2x4,        0, 0, 1,       0,          0,          &d2x4w2,    0, 0,          0,    &d2x4b2,    &d2x4b2,    {7, 6, 3, 2}};
+
+/*                              ink   outk       rot  el numsetup 1x2         1x2rot      1x4    1x4rot dmd         dmdrot 2x2         2x2v             nonrot  */
+
 static Const fixer d2x4d1    = {sdmd, s2x4,        0, 0, 1,       0,          0,          &d2x4x1,    0, &d2x4d1,    0,    &d2x4c1,    &d2x4c1,    {7, 1, 3, 5}};
 static Const fixer d2x4d2    = {sdmd, s2x4,        0, 0, 1,       0,          0,          &d2x4x2,    0, &d2x4d2,    0,    &d2x4c2,    &d2x4c2,    {0, 2, 4, 6}};
 static Const fixer d2x4c1    = {s2x2, s2x4,        0, 0, 1,       0,          0,          &d2x4x1,    0, &d2x4d1,    0,    &d2x4c1,    &d2x4c1,    {1, 3, 5, 7}};
@@ -3837,7 +3962,29 @@ static Const fixer d2x4c2    = {s2x2, s2x4,        0, 0, 1,       0,          0,
 static Const fixer d2x4z1    = {s2x2, s4x4,        0, 0, 1,       0,          0,          0,          0, 0,          0,    0,          0,          {9, 11, 1, 3}};
 static Const fixer d2x4z2    = {s2x2, s4x4,        0, 0, 1,       0,          0,          0,          0, 0,          0,    0,          0,          {10, 15, 2, 7}};
 static Const fixer d2x4y1    = {s2x2, s2x4,        0, 0, 1,       0,          0,          &d2x4w1,    &d2x4z1, 0,    0,    &d2x4y1,    &d2x4y1,    {0, 1, 4, 5}};
-static Const fixer d2x4y2    = {s2x2, s2x4,        0, 0, 1,       0,          0,          &d2x4w2,    &d2x4z2, 0,    0,    &d2x4y2,    &d2x4y2,    {2, 3, 6, 7}};
+static Const fixer d2x4y2    = {s2x2, s2x4,        0, 0, 1,       0,          0,          &d2x4w2,    &d2x4z2, 0,    0,    0,          0,          {2, 3, 6, 7}};
+
+
+static Const fixer d3x4ul1   = {s1x4, s3x4,        0, 0, 1,       0,          0,          0,           0,      0,    0,    &d3x4ub1,   0,          {10, 8, 6, 5}};
+static Const fixer d3x4ul2   = {s1x4, s3x4,        0, 0, 1,       0,          0,          0,           0,      0,    0,    &d3x4ub2,   0,          {9, 11, 4, 7}};
+static Const fixer d3x4ul3   = {s1x4, s3x4,        0, 0, 1,       0,          0,          0,           0,      0,    0,    &d3x4ub3,   0,          {10, 1, 3, 5}};
+static Const fixer d3x4ul4   = {s1x4, s3x4,        0, 0, 1,       0,          0,          0,           0,      0,    0,    &d3x4ub4,   0,          {0, 11, 4, 2}};
+
+static Const fixer d3x4ub1   = {s2x2, s3x4,        0, 0, 1,       0,          0,          &d3x4ul1,    0,      0,    0,    0,          0,          {10, 5, 6, 8}};
+static Const fixer d3x4ub2   = {s2x2, s3x4,        0, 0, 1,       0,          0,          &d3x4ul2,    0,      0,    0,    0,          0,          {11, 4, 7, 9}};
+static Const fixer d3x4ub3   = {s2x2, s3x4,        0, 0, 1,       0,          0,          &d3x4ul3,    0,      0,    0,    0,          0,          {1, 3, 5, 10}};
+static Const fixer d3x4ub4   = {s2x2, s3x4,        0, 0, 1,       0,          0,          &d3x4ul4,    0,      0,    0,    0,          0,          {0, 2, 4, 11}};
+
+static Const fixer d3x4vl1   = {s1x4, s3x4,        0, 0, 1,       0,          0,          0,           0,      0,    0,    &d3x4vb1,   0,          {10, 11, 6, 7}};
+static Const fixer d3x4vl2   = {s1x4, s3x4,        0, 0, 1,       0,          0,          0,           0,      0,    0,    &d3x4vb2,   0,          {9, 8, 4, 5}};
+static Const fixer d3x4vl3   = {s1x4, s3x4,        0, 0, 1,       0,          0,          0,           0,      0,    0,    &d3x4vb3,   0,          {10, 11, 3, 2}};
+static Const fixer d3x4vl4   = {s1x4, s3x4,        0, 0, 1,       0,          0,          0,           0,      0,    0,    &d3x4vb4,   0,          {0, 1, 4, 5}};
+
+static Const fixer d3x4vb1   = {s2x2, s3x4,        0, 0, 1,       0,          0,          &d3x4vl1,    0,      0,    0,    0,          0,          {10, 11, 6, 7}};
+static Const fixer d3x4vb2   = {s2x2, s3x4,        0, 0, 1,       0,          0,          &d3x4vl2,    0,      0,    0,    0,          0,          {5, 4, 8, 9}};
+static Const fixer d3x4vb3   = {s2x2, s3x4,        0, 0, 1,       0,          0,          &d3x4vl3,    0,      0,    0,    0,          0,          {2, 3, 11, 10}};
+static Const fixer d3x4vb4   = {s2x2, s3x4,        0, 0, 1,       0,          0,          &d3x4vl4,    0,      0,    0,    0,          0,          {0, 1, 4, 5}};
+
 static Const fixer d2x4x1    = {s1x4, s2x4,        0, 0, 1,       0,          0,          &d2x4x1,    0, &d2x4d1,    0,    &d2x4c1,    &d2x4c1,    {7, 1, 3, 5}};
 static Const fixer d2x4x2    = {s1x4, s2x4,        0, 0, 1,       0,          0,          &d2x4x2,    0, &d2x4d2,    0,    &d2x4c2,    &d2x4c2,    {0, 6, 4, 2}};
 static Const fixer dgalw1    = {s1x4, s_galaxy,    1, 0, 1,       0,          0,          &dgalw1,    0, &dgald1,    0,    0,          0,          {2, 1, 6, 5}};
@@ -3997,6 +4144,10 @@ static Const fixer f2qt2dsc =  {s_qtag,s3x8,       0, 0, 1,       0,          0,
 
 static const fixer f2x6ndsc =  {s2x4, s2x6,        0, 0, 1,       0,          0,          0,      &f2yyrdsc,&f2qt1dsc,0,   0,          &f2zzrdsc,  {0, 2, 3, 5, 6, 8, 9, 11}};
 static const fixer f2x6ndsd =  {s2x4, s2x6,        0, 0, 1,       0,          0,          &f288rdsd,   0, &f2qt1dsd,  0,   0,          &f2zzrdsd,  {0, 1, 4, 5, 6, 7, 10, 11}};
+
+static const fixer fdmdndx = {s3x4, s3x6,          0, 0, 1,       0,          0,          0,           0, 0,          0,   0,               0,     {0, -1, -1, 5, 6, 8, 9, -1, -1, 14, 15, 17}};
+static const fixer fdmdnd =  {s3x4, s4dmd,         0, 0, 1,       0,          0,          0,           0, 0,          0,   &fdmdndx,        0,     {0, -1, -1, 3, 5, 7, 8, -1, -1, 11, 13, 15}};
+
 static const fixer f3x4ndsd =  {s2x4, s3x4,        0, 0, 1,       0,          0,          0,           0, 0,          0,   0,          &f2x5rdsd,  {0, 1, 2, 3, 6, 7, 8, 9}};
 static const fixer f2x8ndsc =  {s2x4, s2x8,        0, 0, 1,       0,          0,          0,      &f2yyrdsc,&f2qt2dsc,0,   0,          &f2zzrdsc,  {0, 3, 4, 7, 8, 11, 12, 15}};
 
@@ -4068,8 +4219,16 @@ sel_item sel_init_table[] = {
    {LOOKUP_DIST_DMD,           s_qtag,      0x55,   &ddmd2,      (fixer *) 0, -1},
    {LOOKUP_DIST_BOX,           s2x4,        0xAA,   &d2x4c1,     (fixer *) 0, -1},
    {LOOKUP_DIST_BOX,           s2x4,        0x55,   &d2x4c2,     (fixer *) 0, -1},
-   {LOOKUP_DIST_BOX,           s2x4,        0x33,   &d2x4y1,     (fixer *) 0, -1},
-   {LOOKUP_DIST_BOX,           s2x4,        0xCC,   &d2x4y2,     (fixer *) 0, -1},
+   {LOOKUP_DIST_BOX|LOOKUP_DIAG_BOX, s2x4,  0x33,   &d2x4y1,     (fixer *) 0, -1},
+   {LOOKUP_DIST_BOX|LOOKUP_DIAG_BOX, s2x4,  0xCC,   &d2x4y2,     (fixer *) 0, -1},
+   {LOOKUP_DIST_BOX,           s3x4,       0x560,   &d3x4ub1,    (fixer *) 0, -1},
+   {LOOKUP_DIST_BOX,           s3x4,       0xA90,   &d3x4ub2,    (fixer *) 0, -1},
+   {LOOKUP_DIST_BOX,           s3x4,       0x42A,   &d3x4ub3,    (fixer *) 0, -1},
+   {LOOKUP_DIST_BOX,           s3x4,       0x815,   &d3x4ub4,    (fixer *) 0, -1},
+   {LOOKUP_DIST_BOX,           s3x4,       0xCC0,   &d3x4vb1,    (fixer *) 0, -1},
+   {LOOKUP_DIST_BOX,           s3x4,       0x330,   &d3x4vb2,    (fixer *) 0, -1},
+   {LOOKUP_DIST_BOX,           s3x4,       0xC0C,   &d3x4vb3,    (fixer *) 0, -1},
+   {LOOKUP_DIST_BOX,           s3x4,       0x033,   &d3x4vb4,    (fixer *) 0, -1},
    {LOOKUP_DIST_BOX,           s_qtag,      0xAA,   &fqtgjj1,    (fixer *) 0, -1},
    {LOOKUP_DIST_BOX,           s_qtag,      0x99,   &fqtgjj2,    (fixer *) 0, -1},
    {LOOKUP_DIST_BOX,           s_spindle,   0x66,   &fspindlfd,  (fixer *) 0, -1},
@@ -4098,6 +4257,14 @@ sel_item sel_init_table[] = {
    {LOOKUP_OFFS_CLW|LOOKUP_DIST_CLW, s2x4,  0xCC,   &d2x4w2,     (fixer *) 0, -1},
    {LOOKUP_DIST_CLW,           s2x4,        0xAA,   &d2x4x1,     (fixer *) 0, -1},
    {LOOKUP_DIST_CLW,           s2x4,        0x55,   &d2x4x2,     (fixer *) 0, -1},
+   {LOOKUP_DIST_CLW,           s3x4,       0x560,   &d3x4ul1,    (fixer *) 0, -1},
+   {LOOKUP_DIST_CLW,           s3x4,       0xA90,   &d3x4ul2,    (fixer *) 0, -1},
+   {LOOKUP_DIST_CLW,           s3x4,       0x42A,   &d3x4ul3,    (fixer *) 0, -1},
+   {LOOKUP_DIST_CLW,           s3x4,       0x815,   &d3x4ul4,    (fixer *) 0, -1},
+   {LOOKUP_OFFS_CLW|LOOKUP_DIST_CLW, s3x4, 0xCC0,   &d3x4vl1,    (fixer *) 0, -1},
+   {LOOKUP_OFFS_CLW|LOOKUP_DIST_CLW, s3x4, 0x330,   &d3x4vl2,    (fixer *) 0, -1},
+   {LOOKUP_OFFS_CLW|LOOKUP_DIST_CLW, s3x4, 0xC0C,   &d3x4vl3,    (fixer *) 0, -1},
+   {LOOKUP_OFFS_CLW|LOOKUP_DIST_CLW, s3x4, 0x033,   &d3x4vl4,    (fixer *) 0, -1},
    {LOOKUP_DISC|LOOKUP_IGNORE, s1x6,         033,   &f1x6aad,    (fixer *) 0, -1},
    {LOOKUP_DISC|LOOKUP_IGNORE, s1x8,        0xAA,   &f1x8aad,    (fixer *) 0, -1},
    {LOOKUP_DISC|LOOKUP_IGNORE, s1x8,        0x55,   &foo55d,     (fixer *) 0, -1},
@@ -4195,22 +4362,23 @@ sel_item sel_init_table[] = {
    {LOOKUP_DISC,                          s1x10,    0x37B, &f1x10ndsc, (fixer *) 0, -1},
    {LOOKUP_DISC,                          s1x10,    0x3BD, &f1x10ndsd, (fixer *) 0, -1},
    {LOOKUP_DISC,                          s1x10,    0x2F7, &f1x10ndse, (fixer *) 0, -1},
-
-   {LOOKUP_NONE,               s4x4,        0x0066, &fcpl12,     (fixer *) 0, -1},
-   {LOOKUP_NONE,               s4x4,        0x6006, &fcpl23,     (fixer *) 0, -1},
-   {LOOKUP_NONE,               s4x4,        0x6600, &fcpl34,     (fixer *) 0, -1},
-   {LOOKUP_NONE,               s4x4,        0x0660, &fcpl41,     (fixer *) 0, -1},
-   {LOOKUP_NONE,               s_thar,      0x00CC, &ftharns,    (fixer *) 0, -1},
-   {LOOKUP_NONE,               s_thar,      0x0033, &ftharew,    (fixer *) 0, -1},
-   {LOOKUP_NONE,               s2x4,        0x33,   &foo33,      (fixer *) 0, -1},
-   {LOOKUP_NONE,               s2x4,        0x5A,   &foo5a,      (fixer *) 0, -1},
-   {LOOKUP_NONE,               s2x4,        0xA5,   &fooa5,      (fixer *) 0, -1},
-   {LOOKUP_NONE,               s2x4,        0x55,   &foo55,      (fixer *) 0, -1},
-   {LOOKUP_NONE,               s2x4,        0xAA,   &fooaa,      (fixer *) 0, -1},
-   {LOOKUP_NONE,               s2x4,        0x88,   &foo88,      (fixer *) 0, -1},
-   {LOOKUP_NONE,               s2x4,        0x44,   &foo44,      (fixer *) 0, -1},
-   {LOOKUP_NONE,               s2x4,        0x22,   &foo22,      (fixer *) 0, -1},
-   {LOOKUP_NONE,               s2x4,        0x11,   &foo11,      (fixer *) 0, -1},
+   {LOOKUP_DISC,                          s4dmd,   0xA9A9, &fdmdnd,    (fixer *) 0, -1},
+   {LOOKUP_DISC,                           s3x6,  0x2C361, &fdmdndx,   (fixer *) 0, -1},
+   {LOOKUP_NONE,                           s4x4,   0x0066, &fcpl12,     (fixer *) 0, -1},
+   {LOOKUP_NONE,                           s4x4,   0x6006, &fcpl23,     (fixer *) 0, -1},
+   {LOOKUP_NONE,                           s4x4,   0x6600, &fcpl34,     (fixer *) 0, -1},
+   {LOOKUP_NONE,                           s4x4,   0x0660, &fcpl41,     (fixer *) 0, -1},
+   {LOOKUP_NONE,                           s_thar, 0x00CC, &ftharns,    (fixer *) 0, -1},
+   {LOOKUP_NONE,                           s_thar, 0x0033, &ftharew,    (fixer *) 0, -1},
+   {LOOKUP_NONE,                           s2x4,   0x33,   &foo33,      (fixer *) 0, -1},
+   {LOOKUP_NONE,                           s2x4,   0x5A,   &foo5a,      (fixer *) 0, -1},
+   {LOOKUP_NONE,                           s2x4,   0xA5,   &fooa5,      (fixer *) 0, -1},
+   {LOOKUP_NONE,                           s2x4,   0x55,   &foo55,      (fixer *) 0, -1},
+   {LOOKUP_NONE,                           s2x4,   0xAA,   &fooaa,      (fixer *) 0, -1},
+   {LOOKUP_NONE,                           s2x4,   0x88,   &foo88,      (fixer *) 0, -1},
+   {LOOKUP_NONE,                           s2x4,   0x44,   &foo44,      (fixer *) 0, -1},
+   {LOOKUP_NONE,                           s2x4,   0x22,   &foo22,      (fixer *) 0, -1},
+   {LOOKUP_NONE,                           s2x4,   0x11,   &foo11,      (fixer *) 0, -1},
    {LOOKUP_NONE,               s1x4,        0x3,    &n1x43,      (fixer *) 0, -1},
    {LOOKUP_NONE,               s1x4,        0xC,    &n1x4c,      (fixer *) 0, -1},
    {LOOKUP_NONE,               s1x4,        0x5,    &n1x45,      (fixer *) 0, -1},
@@ -4242,11 +4410,9 @@ sel_item sel_init_table[] = {
    {LOOKUP_NONE,               s2x8,       0x0303,  &f4x4lzz,    (fixer *) 0, -1},
    {LOOKUP_NONE,               s2x8,       0xC0C0,  &f4x4rzz,    (fixer *) 0, -1},
    {LOOKUP_NONE,               s1x8,        0x33,   &f1x8endo,   (fixer *) 0, -1},
-
    {LOOKUP_NONE,               s1x8,        0x77,   &f1x8_77_3,  (fixer *) 0, -1},
-   {LOOKUP_NONE,               s1x8,        0x0F,   &f1x8lowf,   (fixer *) 0, -1},   /* Unsymm */
-   {LOOKUP_NONE,               s1x8,        0xF0,   &f1x8hif,    (fixer *) 0, -1},   /* Unsymm */
-
+   {LOOKUP_NONE,               s1x8,        0x0F,   &f1x8lowf,   (fixer *) 0, -1},
+   {LOOKUP_NONE,               s1x8,        0xF0,   &f1x8hif,    (fixer *) 0, -1},
    {LOOKUP_NONE,               s_bone,      0x33,   &fboneendo,  (fixer *) 0, -1},
    {LOOKUP_NONE,               s_ptpd,      0xAA,   &foozz,      (fixer *) 0, -1},
    {LOOKUP_NONE,               s_spindle,   0x55,   &fspindlc,   (fixer *) 0, -1},
@@ -4263,6 +4429,11 @@ sel_item sel_init_table[] = {
    {LOOKUP_NONE,               s2x3,        014,    &f2x3a14,    (fixer *) 0, -1},
    {LOOKUP_NONE,               s2x5,        0x318,  &f2x5c,      (fixer *) 0, -1},
    {LOOKUP_NONE,               s2x5,        0x063,  &f2x5d,      (fixer *) 0, -1},
+   {LOOKUP_NONE,               sd2x5,       0x18C,  &fd2x5d,     (fixer *) 0, -1},
+   {LOOKUP_NONE,               sd2x5,       0x318,  &fd2x5d,     (fixer *) 0, -1},
+   {LOOKUP_NONE,               sd2x5,       0x198,  &fd2x5d,     (fixer *) 0, -1},
+   {LOOKUP_NONE,               sd2x5,       0x30C,  &fd2x5d,     (fixer *) 0, -1},
+   {LOOKUP_NONE,               sd2x5,       0x294,  &fd2x5d,     (fixer *) 0, -1},
 
    // Of course, we need lots more entries for 4x6!
    {LOOKUP_NONE,               s4x6,      0x003003,  &f4x6a,      (fixer *) 0, -1},
@@ -4793,6 +4964,53 @@ setup_attr setup_attrs[] = {
       id_bit_table_2x5,
       {  "a  b  c  d  e@@j  i  h  g  f",
          "j  a@@i  b@@h  c@@g  d@@f  e"}},
+   //========================================
+   /* sd2x5 */
+      {9,
+      &thingd2x5,
+      &thingd2x5,
+      0, 0, 0, 0,
+      {b_d2x5,       b_5x2},
+      { 4, 3},
+      FALSE,
+      (id_bit_table *) 0,
+      {  "58c  j@7a6 6g@758d  i@7b6 6f@758e  h",
+         "6  b  a@@5 e  d  c@@5 h  i  j@@6  f  g"}},
+   /* swqtag */
+      {9,
+      &thingwqtag,
+      &nicethingwqtag,
+      0, 0, 0, 0,
+      {b_wqtag,       b_pwqtag},
+      { 6, 0},
+      FALSE,
+      (id_bit_table *) 0,
+      {  "6 5 a6 b@@h i j e d c@@6 5 g6 f",
+         "6  h@@6  i@7g  6  a@76  j@@6  e@7f  6  b@76  d@@6  c"}},
+   /* sdeep2x1dmd */
+      {9,
+      &thingdeep2x1dmd,
+      &thingdeep2x1dmd,
+      0, 0, 0, 0,
+      {b_deep2x1dmd,       b_pdeep2x1dmd},
+      { 0, 0},
+      FALSE,
+      (id_bit_table *) 0,
+      {  "6  5 c@@a  b  d  e@@j  i  g  f@@6  5 h",
+         "6  j a@@6  i b@7h  6 6  c@76  g d@@6  f e"}},
+   /* swhrglass */
+      {9,
+      (coordrec *) 0,
+      (coordrec *) 0,
+      0, 0, 0, 0,
+      {b_whrglass,       b_pwhrglass},
+      { 0, 0},
+      FALSE,
+      (id_bit_table *) 0,
+      {  "9a5b@56d@7g66c@756h@9f5e",
+         "6 g@7f 6 a@5 hd@e 6 b@76 c"}},
+
+   //========================================
    /* s_rigger */
       { 7,
       &thingrigger,
@@ -5578,6 +5796,14 @@ int begin_sizes[] = {
    6,          /* b_3x2 */
   10,          /* b_2x5 */
   10,          /* b_5x2 */
+  10,          /* b_d2x5 */
+  10,          /* b_d5x2 */
+  10,          /* b_wqtag */
+  10,          /* b_pwqtag */
+  10,          /* b_deep2x1dmd */
+  10,          /* b_pdeep2x1dmd */
+  10,          /* b_whrglass */
+  10,          /* b_pwhrglass */
    6,          /* b_1x6 */
    6,          /* b_6x1 */
    12,         /* b_3x4 */
@@ -5815,7 +6041,10 @@ Private map_thing map_phan_trngl4b      = {{12, 14, 0, 2,                     4,
         map_thing map_but_o             = {{10, 13, 14, 1, 2, 5, 6, 9,        12, 15, 3, 0, 4, 7, 11, 8},            MPKIND__NONE,        0, 2,  s4x4,   s2x4,      0x000, 1};
         map_thing map_4x4v     = {{12, 10, 8, 9,         13, 15, 6, 11,       14, 3, 5, 7,      0, 1, 4, 2},         MPKIND__SPLIT,       0, 4,  s4x4,   s1x4,      0x055, 0};
         map_thing map_blocks   = {{12, 14, 7, 9,         13, 0, 2, 11,        15, 1, 4, 6,      10, 3, 5, 8},        MPKIND__NONE,        0, 4,  s4x4,   s2x2,      0x000, 0};
+
         map_thing map_trglbox  = {{12, 14, 15, 9,        13, 0, 2, 3,         7, 1, 4, 6,       10, 11, 5, 8},       MPKIND__NONE,        0, 4,  s4x4,   s2x2,      0x000, 0};
+        map_thing map_trglbox12a = {{0, 2, 7, 11,        1, 5, 6, 8},                                                MPKIND__NONE,        0, 2,  s3x4,   s2x2,      0x000, 0};
+        map_thing map_trglbox12b = {{11, 2, 7, 9,        1, 3, 5, 8},                                                MPKIND__NONE,        0, 2,  s3x4,   s2x2,      0x000, 0};
 
         map_thing map_2x3_0134  = {{4, 3,                0, 1},                                                      MPKIND__NONE,        0, 2,  s2x3,   s1x2,      0x000, 1};
         map_thing map_2x3_1245  = {{5, 4,                1, 2},                                                      MPKIND__NONE,        0, 2,  s2x3,   s1x2,      0x000, 1};
@@ -5946,6 +6175,8 @@ static map_thing map328d           = {{4, 5, 6, 14, 13, 12},                    
 static map_thing map328e           = {{2, 3, 4, 12, 11, 10},                                                    MPKIND__NONE,        0, 2,  s2x8,   s1x3,   0x000, 0};
 static map_thing map328f           = {{3, 4, 5, 13, 12, 11},                                                    MPKIND__NONE,        0, 2,  s2x8,   s1x3,   0x000, 0};
 static map_thing map31x3d          = {{0, 1, 2, 6, 5, 4},                                                       MPKIND__NONE,        0, 2, s1x3dmd, s1x3,   0x000, 0};
+static map_thing map3lqtg          = {{1, 3, 4, 0, 7, 5},                                                       MPKIND__NONE,        0, 2,  s_qtag, s1x3,   0x005, 0};
+
 
 
        clw3_thing clw3_table[] = {
@@ -5964,7 +6195,8 @@ static map_thing map31x3d          = {{0, 1, 2, 6, 5, 4},                       
          {s2x8, 0x3E3E, 0x1C1C, &map328e, 0, {0, 6, 7, 8, 14, 15, -1}},
          {s2x8, 0x7C7C, 0x3838, &map328f, 0, {0, 1, 7, 8, 9, 15, -1}},
          {s1x3dmd, 0x77,  0x77, &map31x3d,0, {3, 7, -1}},
-         {0}};
+         {s_qtag, 0xBB,   0xBB, &map3lqtg,0, {2, 6, -1}},
+         {0, 0}};
 
 // Maps for turning triangles into boxes for the "triangle" concept.
 
@@ -6296,7 +6528,7 @@ map_thing map_init_table2[] = {
    {{0, 3, 8, 11,           1, 4, 7, 10,           2, 5, 6, 9},               MPKIND__TWICE_REMOVED,0,3,  s2x6,   s2x2,      0x000, 0, MAPCODE(s2x2,3,MPKIND__TWICE_REMOVED,0)},
    {{0, 4, 11, 15,      1, 5, 10, 14,      2, 6, 9, 13,     3, 7, 8, 12},     MPKIND__THRICE_REMOVED,0,4, s2x8,   s2x2,      0x000, 0, MAPCODE(s2x2,4,MPKIND__THRICE_REMOVED,0)},
 
-   {{0, 2, 4,                          1, 5, 3},                              MPKIND__REMOVED,     0, 2,  s1x6,   s1x3,      0x000, 0, MAPCODE(s1x3,2,MPKIND__REMOVED,     0)},
+   {{0, 2, 4,                          1, 5, 3},                              MPKIND__REMOVED,     0, 2,  s1x6,   s1x3,      0x000, 0, MAPCODE(s1x3,2,MPKIND__REMOVED,0)},
    {{5, 4, 3,                          0, 1, 2},                              MPKIND__REMOVED,     0, 2,  s2x3,   s1x3,      0x000, 1, MAPCODE(s1x3,2,MPKIND__REMOVED,1)},
    {{0, 2, 4, 7, 9, 11,                1, 3, 5, 6, 8, 10},                    MPKIND__REMOVED,     0, 2,  s2x6,   s2x3,      0x000, 0, MAPCODE(s2x3,2,MPKIND__REMOVED,0)},
 
@@ -6334,6 +6566,8 @@ map_thing map_init_table2[] = {
    {{6, 7, 2, 3,                 (veryshort) s1x2, 5, 4, 0, 1},               MPKIND__SPEC_TWICEREM,0,3,  s_qtag, s1x4,      0x000, 1, MAPCODE(s1x4,3,MPKIND__SPEC_TWICEREM,1)},
 
    {{2, 7, 5, 0,                       6, 3, 1, 4},                           MPKIND__REMOVED,     0, 2,  s_bone, s_trngl4,  0x207, 0, MAPCODE(s_trngl4,2,MPKIND__REMOVED, 1)},
+   {{2, 4, 0,                          5, 1, 3},                              MPKIND__REMOVED,     0, 2,  s_bone6, s_trngl,  0x207, 0, MAPCODE(s_trngl,2,MPKIND__REMOVED, 1)},
+
    {{0, 1,     2, 3,        4, 9,      8, 7,       6, 5},                     MPKIND__SPLIT,       0, 5,  s1x10,  s1x2,      0x000, 0, MAPCODE(s1x2,5,MPKIND__SPLIT,       0)},
    {{0, 1,     2, 3,        4, 5,      11, 10,     9, 8,     7, 6},           MPKIND__SPLIT,       0, 6,  s1x12,  s1x2,      0x000, 0, MAPCODE(s1x2,6,MPKIND__SPLIT,       0)},
    {{0, 9,     1, 8,        2, 7,      3, 6,       4, 5},                     MPKIND__SPLIT,       0, 5,  s2x5,   s1x2,      0x155, 0, MAPCODE(s1x2,5,MPKIND__SPLIT,       1)},
@@ -6377,6 +6611,10 @@ map_thing *split_lists[][6] = {
    {&map_xwv_bone, 0,             0,             0,             0,             0},          /* s_crosswave */
    {&map_hv_2x4_2, &map_split_f,  &map_2x12_2x4, &map_4x6_2x4,  0,             0},          /* s2x4 */
    {0,             0,             0,             0,             0,             0},          /* s2x5 */
+   {0,             0,             0,             0,             0,             0},          /* sd2x5 */
+   {0,             0,             0,             0,             0,             0},          /* swqtag */
+   {0,             0,             0,             0,             0,             0},          /* sdeep2x1dmd */
+   {0,             0,             0,             0,             0,             0},          /* swhrglass */
    {0,             &map_par_rig,  0,             0,             0,             0},          /* s_rigger */
    {&map_3x8_3x4,  &map_4x6_3x4,  0,             0,             0,             0},          /* s3x4 */
    {&map_2x12_2x6, &map_4x6_2x6,  0,             0,             0,             0}};         /* s2x6 */

@@ -1168,6 +1168,7 @@ Private void match_suffix_2(Cstring user, Cstring pat1, pat2_block *pat2, int pa
                case 'M':
                case 'I':
                case 'C':
+               case 'G':
                case 'r':
                case 's':
                   /* FELL THROUGH! */
@@ -1727,9 +1728,22 @@ Private void match_wildcard(
          pattern = crossname;
          concidx = magic_concept_index;
          goto do_cross_stuff;
+      case 'Q':
+         crossptr = crossname;
+         while ((*crossptr++ = *pat++) != '@');
+         pat++;
+         crossptr--;
+         *crossptr = 0;
+         pattern = crossname;
+         concidx = grand_concept_index;
+         goto do_cross_stuff;
       case 'M':
          concidx = magic_concept_index;
          pattern = " magic";
+         goto do_cross_stuff;
+      case 'G':
+         concidx = grand_concept_index;
+         pattern = " grand";
          goto do_cross_stuff;
       case 'E':
          crossptr = crossname;

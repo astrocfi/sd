@@ -43,9 +43,25 @@
 #define THROW_DECL
 #endif
 
+
+// The Intel compiler gets upset when it sees structure definitions
+// with "const" fields, that are not actually class definitions that
+// have constructors for those fields.  It quite rightly recognizes
+// that you can't have a class member be "const" if there isn't some
+// way to initialize instances, and that this is done in C++ with
+// class constructors.  I don't agree with the compiler extending
+// this reasoning to plain vanilla structs.  In any case, we
+// statically initialize the various structs in the plain C files
+// sdtables.c and sdctable.c, to get around the C++ initialization
+// restriction.  The Intel compiler doesn't know that we are going
+// to do that, so it doesn't understand how these struct definitions
+// with "const" fields are going to work.  So we shut off the warning.
+#if defined(WIN32) && defined(__ICL) && defined(__cplusplus)
+#pragma warning(disable: 411)
+#endif
+
+
 #include "database.h"
-
-
 
 #define MAX_PEOPLE 24
 
@@ -66,6 +82,7 @@ typedef struct {
    int no_color;          // 0 = default (by gender); 1 = none at all;
                           // 2 = by_couple; 3 = by_corner
    int no_sound;
+   int sequence_num_override;
    long_boolean singlespace_mode;
    long_boolean nowarn_mode;
    long_boolean accept_single_click;
@@ -185,6 +202,7 @@ typedef enum {
    concept_multiple_lines_tog_std,
    concept_triple_1x8_tog,
    concept_quad_lines,
+   concept_quad_lines_of_3,
    concept_quad_boxes,
    concept_quad_boxes_together,
    concept_triple_boxes,
@@ -193,6 +211,7 @@ typedef enum {
    concept_triple_diamonds_together,
    concept_quad_diamonds,
    concept_quad_diamonds_together,
+   concept_triangular_boxes,
    concept_in_out_std,
    concept_in_out_nostd,
    concept_triple_diag,
@@ -505,7 +524,7 @@ typedef struct {
    uint32 modifiersh;
 } by_def_item;
 
-typedef struct structcalldefn{
+typedef struct structcalldefn {
    uint32 callflags1;    /* The CFLAG1_??? flags. */
    uint32 callflagsh;    /* The mask for the heritable flags. */
    /* Within the "callflagsh" field, the various grouped fields
@@ -565,10 +584,12 @@ typedef struct glock {
                                      is at the level. */
 } parse_block;
 
-/* For ui_command_select: */
-/* BEWARE!!  This next definition must be keyed to the array "title_string"
-   in sdgetout.cpp, and maybe stuff in the UI.  For example, see "command_menu"
-   in sdutil.cpp. */
+// For ui_command_select:
+
+// BEWARE!!  The resolve part of this next definition must be keyed
+// to the array "title_string" in sdgetout.cpp, and maybe stuff in the UI.
+// For example, see "command_menu" in sdmain.cpp.
+
 /* BEWARE!!  The order is slightly significant -- all search-type commands
    are >= command_resolve, and all "create some setup" commands
    are >= command_create_any_lines.  Certain tests are made easier by this. */
@@ -591,6 +612,7 @@ typedef enum {
 #endif
    command_save_pic,
    command_help,
+   command_help_manual,
    command_simple_mods,
    command_all_mods,
    command_toggle_conc_levels,
@@ -932,10 +954,11 @@ typedef struct predptr_pair_struct {
 #define LOOKUP_DIST_BOX 0x4
 #define LOOKUP_DIST_CLW 0x8
 #define LOOKUP_DIAG_CLW 0x10
-#define LOOKUP_OFFS_CLW 0x20
-#define LOOKUP_DISC     0x40
-#define LOOKUP_IGNORE   0x80
-#define LOOKUP_Z        0x100
+#define LOOKUP_DIAG_BOX 0x20
+#define LOOKUP_OFFS_CLW 0x40
+#define LOOKUP_DISC     0x80
+#define LOOKUP_IGNORE   0x100
+#define LOOKUP_Z        0x200
 
 
 typedef struct fixerjunk {

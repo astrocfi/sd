@@ -828,11 +828,14 @@ static void innards(
       }
    }
 
-   if (arity == 2 && map_kind == MPKIND__REMOVED && z[0].kind == s_trngl4 && (z[0].rotation & 1) == 1) {
+   if (arity == 2 &&
+       map_kind == MPKIND__REMOVED &&
+       (z[0].rotation & 1) &&
+       (z[0].kind == s_trngl4 ||z[0].kind == s_trngl) == 1) {
       if (z[0].rotation & 2) {
          goto get_coded_map;
       }
-      if (z[1].rotation & 2) {
+      if ((z[1].rotation & 2) && z[0].kind == s_trngl4) {
          final_map = &map_p8_tgl4;
          goto got_map;
       }
@@ -2264,6 +2267,14 @@ extern void distorted_move(
 
             zlines = full_search(4, 3, FALSE, 2, the_map, list_3x4_in, list_3x4_out, ss);
          }
+         else if (ss->kind == s3x8 && livemask == 0x3C03C0) {
+            mk = MPKIND__OFFS_L_HALF;
+            goto do_offset_call;
+         }
+         else if (ss->kind == s3x8 && livemask == 0x303303) {
+            mk = MPKIND__OFFS_R_HALF;
+            goto do_offset_call;
+         }
          else if (ss->kind == s2x5) {
             (void) full_search(2, 5, FALSE, 4, the_map, list_2x4_in, list_2x5_out, ss);
             warn(warn_real_people_spots);
@@ -2343,7 +2354,19 @@ extern void distorted_move(
 
    next_parseptr = process_final_concepts(parseptr->next, FALSE, &junk_concepts);
 
-   if (next_parseptr->concept->kind == concept_do_phantom_2x4 &&
+   if (ss->kind == s3x8) {
+      if (next_parseptr->concept->kind == concept_do_phantom_boxes &&
+          (junk_concepts.her8it | junk_concepts.final) == 0 &&
+          next_parseptr->concept->value.arg3 == MPKIND__SPLIT) {
+         ss->cmd.cmd_misc_flags |= CMD_MISC__PHANTOMS;
+         ss->cmd.parseptr = next_parseptr->next;
+         mapcode = MAPCODE(s2x4,2,mk,0);
+         warn(warn__offset_hard_to_see);
+      }
+      else
+         fail("Can't do this concept in this setup.");
+   }
+   else if (next_parseptr->concept->kind == concept_do_phantom_2x4 &&
        ss->kind == s3x4 &&     /* Only allow 50% offset. */
        (junk_concepts.her8it | junk_concepts.final) == 0 &&
        linesp == (next_parseptr->concept->value.arg2 & 7) &&  /* Demand same "CLW" as original. */

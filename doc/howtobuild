@@ -2,7 +2,7 @@
           HOW TO RELEASE A NEW VERSION OF SD
 
      This file is \wba\sddoc\howtobuild.
-        Last modified 17 March 2000.
+        Last modified 21 August 2000.
 
 -----------------------------------------------------------------
 
@@ -19,7 +19,8 @@ Be sure the version numbers and dates are correct in:
                                UI version #, and date are visible.
                                Also, check its claimed database format
                                version against database.h)
-    [sddoc] download-pc.html   (version # and date are visible)
+    [sddoc] index2.htmli       (version # and date are visible)
+             ==> Be sure to run do_index <num> after editing this!!!
     [sddoc] download-unix.html (version # of HP-UX release is visible)
 
 -----------------------------------------------------------------
@@ -29,6 +30,27 @@ Be sure the version numbers and dates are correct in:
 Do "clean clean" in sddoc.  This deletes all the derived documentation
 files, the self-extracting .exe files, and the ".zip" and ".msg"
 files used for uploading to the web.
+
+Then choose the poster child.  Do "do_index <number>".
+
+-----------------------------------------------------------------
+
+               BUILDING THE DOCUMENTATION
+
+It is important that this be done before "new_binary" is run, because
+the manual is now wrapped into the binary distribution file.
+
+Go to sddoc directory and do:
+
+    do_plain
+    do_ps
+    do_pdf
+    do_index <poster-child number>
+            (It is important that a poster child number
+             always be loaded before running "do_html")
+    do_html
+    do_download-unix   (at MPG, if HP-UX release is desired, see below)
+    do_hpux            (at MPG, if HP-UX release is desired, see below)
 
 -----------------------------------------------------------------
 
@@ -67,8 +89,8 @@ EXIT FROM THIS SHELL!!!!!  The environment from "setdjgpp" must be destroyed.
     from DJGPP, so that MSVC++ will create them in lower case.
     This also prevents distribution of the wrong stuff.
 
-    Set project configuration to "sdtty release", "sd release", and
-    "mkcalls release", issuing "build / rebuild all" in each case.
+    Set project configuration to "sdtty release", "sd release", "deploy release",
+    and "mkcalls release", issuing "build / rebuild all" in each case.
 
 BE SURE THAT MKCALLS GOT BUILT BY MSVC++!!
 
@@ -84,8 +106,9 @@ Then do the usual:
     del *.tmp
     doit
 
-Give the command "new_binary" (in sddoc) to save the MSVC++
-builds of Sdtty and Sd.
+After the documentation has been created (since it is now part of the
+binary program distribution), give the command "new_binary" (in sddoc)
+to save the MSVC++ builds of Sdtty and Sd.
 
 -----------------------------------------------------------------
 
@@ -116,10 +139,13 @@ In sd, do
    cp makefile.linux makefile
    make
    cd regress
-   .\doit
+   chmod 777 *.sh
+   ./doit.sh         [Note the forward slash]
 
 FTP back (in binary mode) the files "sdtty" and "mkcalls" to sd.
 Get sd_calls.dat also, just to check it.
+
+Now get out of Linux.
 
 Once working \wba\sd\sdtty and \wba\sd\mkcalls files are in the
 sd directory, and working sd_calls.txt and sd_calls.dat files are
@@ -136,22 +162,7 @@ at this point, so that these files exist:
       install.exe,   bin.txt     (VC++ build of sdtty and sd)
                      binu.txt    (Linux build of sdtty)
 
-THE ABOVE IS NO LONGER TRUE!!!!!!!!!!!
-DON'T RUN "NEW_BINARY" UNTIL AFTER DOCUMENTATION HAS BEEN MADE!
-
-Go to sddoc directory and do:
-
-    do_plain
-    do_ps
-    do_pdf
-    do_html
-    do_download-unix   (at MPG, if HP-UX release is desired, see below)
-    do_hpux            (at MPG, if HP-UX release is desired, see below)
-
-
-****NOW**** RUN "NEW_BINARY" !!!!!!!!!!!!!
-
-This creates these files, all in the sddoc directory:
+These files should exist, all in the sddoc directory:
 
     bin.txt       \
     bin3.txt      |
@@ -172,6 +183,13 @@ This creates these files, all in the sddoc directory:
 Bring the "*.txt" files and the "install*.exe" files on a zip disk.
 Use the "install*.exe" files for testing the binaries on Windows.
 Then mail the "*.txt" files.
+
+-----------------------------------------------------------------
+
+To update the poster child:
+
+   run "do_index <poster-child number>"
+   Then mail the file index.txt
 
 -----------------------------------------------------------------
 

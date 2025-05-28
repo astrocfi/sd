@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-1999  William B. Ackerman.
+    Copyright (C) 1990-2000  William B. Ackerman.
 
     This file is unpublished and contains trade secrets.  It is
     to be used by permission only and not to be disclosed to third
@@ -10,7 +10,7 @@
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-    This is for version 32. */
+    This is for version 34. */
 
 /* This defines the following functions:
    get_multiple_parallel_resultflags
@@ -818,6 +818,12 @@ THROW_DECL
    case schema_concentric_or_diamond_line:
       if (ss->kind == s3x1dmd)
          analyzer_result = schema_concentric_diamond_line;
+      else
+         analyzer_result = schema_concentric;
+      break;
+   case schema_concentric_or_6_2:
+      if (ss->kind == s3x1dmd)
+         analyzer_result = schema_concentric_6_2;
       else
          analyzer_result = schema_concentric;
       break;
@@ -2742,10 +2748,15 @@ static concmerge_thing merge_maps[] = {
    {s1x6,        s_d3x4, 0,    01616, 0x0C, 0x0, schema_concentric,     s1x6,        s2x3,     warn__none, 0, 1, {0, 1, 2, 3, 4, 5},      {4, 5, 6, 10, 11, 0}},
    {s2x2,         s3dmd, 0,    07272, 0x0C, 0x0, schema_matrix,         s4x4,        nothing,  warn__check_butterfly, 0, 0, {15, 3, 7, 11},             {12, -1, 0, -1, -1, -1, 4, -1, 8, -1, -1, -1}},
    {s1x8,          s2x4, 0xAA,  0x66, 0x1D, 0x0, schema_concentric,     s1x4,        s2x2,     warn__none, 0, 0, {0, 2, 4, 6},            {0, 3, 4, 7}},
+
+   // These 3 need to be in this order.
    {s1x6,          s2x4, 022,   0x66, 0x1E, 0x0, schema_matrix,         s_ptpd,      nothing,  warn__none, 0, 0, {0, -1, 2, 4, -1, 6},{1, -1, -1, 7, 5, -1, -1, 3}},
+   {s1x6,          s2x4, 044,   0x66, 0x0D, 0x0, schema_matrix,         sdeepxwv,    nothing,  warn__none, 0, 1, {0, 1, -1, 6, 7, -1},{5, -1, -1, 2, 11, -1, -1, 8}},
    {s1x6,          s2x4, 0,     0x66, 0x0D, 0x0, schema_concentric,     s1x6,        s2x6,     warn__none, 0, 1, {0, 1, 2, 3, 4, 5},{-1, -1, 3, 4, -1, -1, -1, -1, 7, 0, -1, -1}},
+
    {s1x8,          s2x4, 0x99,  0x66, 0x1E, 0x0, schema_matrix,         s_ptpd,      nothing,  warn__none, 0, 0, {-1, 0, 2, -1, -1, 4, 6, -1},{1, -1, -1, 7, 5, -1, -1, 3}},
    {s1x8,          s2x4, 0xAA,  0x66, 0x0E, 0x0, schema_matrix,         s_ptpd,      nothing,  warn__none, 0, 0, {0, -1, 2, -1, 4, -1, 6, -1},{1, -1, -1, 7, 5, -1, -1, 3}},
+   {s1x8,          s2x4, 0xCC,     0, 0x2D, 0x0, schema_matrix,         sdeepxwv,    nothing,  warn__none, 0, 1, {0, 1, -1, -1, 6, 7, -1, -1},{5, 4, 3, 2, 11, 10, 9, 8}},
 
    {s1x2,          s2x7, 0,    0x408, 0x0D, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 1, 0, {3, 10},{0}},
 
@@ -3188,6 +3199,7 @@ extern void merge_setups(setup *ss, merge_action action, setup *result) THROW_DE
       long_boolean going_to_o;
       long_boolean go_to_4x4_anyway;
       long_boolean conflict_at_4x4;
+      long_boolean action_suggests_4x4;
 
       conflict_at_4x4 = (
          (res2->people[1].id1 & res1->people[6].id1) |
@@ -3201,9 +3213,22 @@ extern void merge_setups(setup *ss, merge_action action, setup *result) THROW_DE
       going_to_o = ((mask1 | mask2) & 0x66) == 0;
       go_to_4x4_anyway = (mask1 == 0x99) || (mask2 == 0x99);
 
-      if ((action == merge_strict_matrix && !going_to_stars && !conflict_at_4x4) ||
-          go_to_4x4_anyway ||
-          going_to_o) {
+      // This stuff affects tests t33, t35, and vg06.  The point is that,
+      // if we have two groups do calls in distorted setups out of a 4x4,
+      // and each group goes to what amounts to a 1x4 with a shear in the
+      // middle, then we want either stars or a C1 phantom, as needed.
+      // but if the two sets of people are more random (e.g. the messy
+      // couple up in vg06), we want a pinwheel (or whatever) on a 4x4.
+      // Of course, if the action is merge_strict_matrix, we always go to
+      // a 4x4 if possible.
+
+      action_suggests_4x4 =
+         action == merge_strict_matrix ||
+         (action == merge_without_gaps &&
+          ((mask1 != 0x33 && mask1 != 0xCC) || (mask2 != 0x33 && mask2 != 0xCC)));
+
+      if ((action_suggests_4x4 && !going_to_stars && !conflict_at_4x4) ||
+          go_to_4x4_anyway || going_to_o) {
          result->kind = s4x4;
          clear_people(result);
          scatter(result, res1, matrixmap1, 7, 011);
@@ -4390,6 +4415,8 @@ back_here:
             key = LOOKUP_DIST_DMD;
          else if (arg2 == 4)
             key = LOOKUP_DIST_BOX;
+         else if (arg2 == 7)
+            key = LOOKUP_DIAG_BOX;
          else if (arg2 & 16)
             key = LOOKUP_DIAG_CLW;
          else if (arg2 & 32)
@@ -4578,6 +4605,11 @@ back_here:
                   nextfixp = fixp->nextdmdrot;
                else if (lilresult[0].kind == s_bone6)
                   nextfixp = fixp->next1x2rot;
+               /*
+               else if (lilresult[0].kind == s1x4 &&    // For stuff like Peel Off
+                        setup_attrs[fixp->outk].setup_limits == 5)
+                  nextfixp = fixp->next1x2rot;
+               */
             }
             else if (setup_attrs[fixp->ink].setup_limits == 7) {
                if (lilresult[0].kind == s1x8)
@@ -4590,6 +4622,10 @@ back_here:
                   nextfixp = fixp->next1x2rot;
                else if (lilresult[0].kind == s_trngl)
                   nextfixp = fixp->nextdmdrot;
+            }
+            else if (setup_attrs[fixp->ink].setup_limits == 11) {
+               if (lilresult[0].kind == s3x4)
+                  nextfixp = fixp->next2x2v;
             }
             else {
                if (lilresult[0].kind == s1x2)
@@ -4632,6 +4668,11 @@ back_here:
                   nextfixp = fixp->nextdmd;
                else if (lilresult[0].kind == s_bone6)
                   nextfixp = fixp->next1x2;
+               /*
+               else if (lilresult[0].kind == s1x4 &&    // For stuff like Peel Off
+                        setup_attrs[fixp->outk].setup_limits == 5)
+                  nextfixp = fixp->next1x2;
+               */
             }
             else if (setup_attrs[fixp->ink].setup_limits == 7) {
                if (lilresult[0].kind == s1x8)
@@ -4646,6 +4687,10 @@ back_here:
                   nextfixp = fixp->next1x2;
                else if (lilresult[0].kind == s_trngl)
                   nextfixp = fixp->nextdmd;
+            }
+            else if (setup_attrs[fixp->ink].setup_limits == 11) {
+               if (lilresult[0].kind == s3x4)
+                  nextfixp = fixp->next2x2;
             }
             else {
                if (lilresult[0].kind == s1x2)
@@ -4877,12 +4922,19 @@ back_here:
       restr.assump_col = 0;
       restr.assump_both = 0;
       restr.assump_negate = 0;
-      restr.assump_live = 1;    /* Only do this if all are live -- otherwise
-                                   we would be imposing a stronger restriction
-                                   on the whole setup than we ought to. */
+      // Only do this if all are live -- otherwise we would be imposing
+      // a stronger restriction on the whole setup than we ought to.
+      restr.assump_live = 1;
 
       if (verify_restriction(ss, restr, FALSE, &junk) == restriction_passes)
          ss->cmd.cmd_assume = restr;
+      else {
+         restr.assumption = cr_li_lo;
+         restr.assump_col = 1;
+         restr.assump_both = 1;
+         if (verify_restriction(ss, restr, FALSE, &junk) == restriction_passes)
+         ss->cmd.cmd_assume = restr;
+      }
    }
 
    move(ss, FALSE, result);

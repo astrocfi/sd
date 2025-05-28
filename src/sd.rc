@@ -125,7 +125,7 @@ BEGIN
     END
     POPUP "&Help"
     BEGIN
-        MENUITEM "Sd &Help",                    ID_HELP_SDHELP
+        MENUITEM "Help &Manual",                ID_HELP_SDHELP
         MENUITEM "&About Sd",                   ID_FILE_ABOUTSD
     END
 END
@@ -172,7 +172,7 @@ BEGIN
                     IDC_STATIC,43,9,159,8
     CTEXT           "This program may be freely distributed.",IDC_STATIC,43,
                     19,159,8
-    CTEXT           "SD Version 34.0:   Copyright © 1990-2000 All rights reserved.",
+    CTEXT           "SD Version 34.2:   Copyright © 1990-2000 All rights reserved.",
                     IDC_STATIC,13,32,199,8
     CTEXT           "William B. Ackerman and Stephen Gildea",IDC_STATIC,47,
                     42,130,8
@@ -196,6 +196,13 @@ BEGIN
     GROUPBOX        "Choose a session",IDC_START_CAPTION,6,1,360,157,
                     WS_TABSTOP
     LISTBOX         IDC_START_LIST,6,14,360,144,WS_VSCROLL
+    GROUPBOX        "Starting sequence number",IDC_STATIC,17,173,102,25,
+                    BS_CENTER
+    EDITTEXT        IDC_SEQ_NUM_OVERRIDE,17,184,102,14,ES_AUTOHSCROLL | 
+                    ES_NUMBER
+    CONTROL         "Spin1",IDC_SEQ_NUM_OVERRIDE_SPIN,"msctls_updown32",
+                    UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | 
+                    UDS_ARROWKEYS | UDS_NOTHOUSANDS,119,184,8,14
     DEFPUSHBUTTON   "Accept",IDC_START_ACCEPT,17,222,50,14,WS_GROUP
     PUSHBUTTON      "Cancel",IDC_START_CANCEL,69,222,50,14
     GROUPBOX        "Output file name",IDC_STATIC,17,255,102,23,BS_CENTER
@@ -223,7 +230,6 @@ BEGIN
                     WS_DISABLED
     CONTROL         "Delete this session",IDC_START_DELETE_SESSION_CHECKED,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,143,183,92,10
-    LTEXT           "",IDC_START_COMMENTARY,12,180,115,8,NOT WS_GROUP
 END
 
 IDD_TEXT_ENTRY_DIALOG DIALOG DISCARDABLE  86, 105, 208, 83
@@ -263,6 +269,7 @@ IDI_ICON4               ICON    DISCARDABLE     "sdby.ico"
 IDI_ICON5               ICON    DISCARDABLE     "sdbg.ico"
 IDI_ICON6               ICON    DISCARDABLE     "sdgy.ico"
 IDI_ICON7               ICON    DISCARDABLE     "sdcpl.ico"
+IDI_ICON8               ICON    DISCARDABLE     "sdbw.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //

@@ -1,5 +1,4 @@
-# Makefile for Sd (square dance caller's helper)
-# Time-stamp: <2000/03/17 10:50:56 wba>
+# Makefile for Sd/Sdtty for Linux
 
 srcdir = .
 
@@ -28,8 +27,8 @@ CFLAGS =$(CDEBUGFLAGS) $(DEFS)
 X11_FLAGS = 
 
 # These are the "-I"  and "-D" flags that we must use for the compilation
-# of the system-dependent part of the TTY user interface (sdui-ttu.c).
-TTY_FLAGS = 
+# of the system-dependent part of the TTY user interface (sdui-ttu.cpp).
+TTY_FLAGS = -DNO_CURSES
 
 # These are the library flags that we must use for the final bind of
 # the X11 version of "sd".
@@ -58,8 +57,8 @@ SDTTY_SRC = sdui-tty.cpp sdmatch.cpp sdui-ttu.cpp sdui-tpc.cpp
 SDTTY_OBJ_UNIX = sdui-tty.o sdmatch.o sdui-ttu.o
 SDTTY_OBJ_PC   = sdui-tty.o sdmatch.o sdui-tpc.o
 # This has the special object files used for building this version of sdtty.
-SDTTY_OBJ = $(SDTTY_OBJ_PC)
-SDTTY_OBJS = $(SD_OBJS) $(SDTTY_OBJ_PC)
+SDTTY_OBJ = $(SDTTY_OBJ_UNIX)
+SDTTY_OBJS = $(SD_OBJS) $(SDTTY_OBJ_UNIX)
 
 MKCALLS_SRCS = mkcalls.c dbcomp.c
 MKCALLS_OBJS = mkcalls.o dbcomp.o
@@ -96,8 +95,8 @@ sd_calls.dat: sd_calls.txt mkcalls
 sdui-x11.o: sdui-x11.c
 	$(CC) $(CFLAGS) $(X11_FLAGS) -c $(srcdir)/$*.c
 
-sdui-ttu.o: sdui-ttu.c
-	$(CC) $(CFLAGS) $(TTY_FLAGS) -c $(srcdir)/$*.c
+sdui-ttu.o: sdui-ttu.cpp
+	$(CC) $(CFLAGS) $(TTY_FLAGS) -c $(srcdir)/$*.cpp
 
 sdui-tty.o sdui-ttu.o sdui-tpc.o: sdui.h
 
@@ -181,26 +180,3 @@ distclean: clean
 
 realclean: distclean
 	-$(RM) *.info *.PS *.html sd_doc.txt sd_doc.ps
-
-DISTTXT = README INSTALL oldnotes COPYING sample1.ini sample2.ini demo.ps demo.txt sessions.ps sessions.txt \
-            relnotes.ps relnotes.txt \
-            Imakefile Makefile.in Sd.res sd_calls.txt \
-            sd_doc.PS sd_doc.txt db_doc.txt
-DISTSRCS = sd.h database.h paths.h sdui-ttu.h sdmatch.h
-DISTFILES = $(DISTTXT) $(DOCSRCS) $(SRCS) $(DISTSRCS) $(PCFILES)
-
-TAR = tar
-TARFLAGS = 
-DIST_TARFILE = sd-31.79.tar
-COMPRESS = compress
-
-dist: dist-files
-	$(TAR) $(TARFLAGS) $(DIST_TARFILE) $(DISTFILES)
-	$(RM) $(DIST_TARFILE).Z
-	$(COMPRESS) $(DIST_TARFILE)
-
-dist-files: Makefile INSTALL README sd_doc.txt sd_doc.PS \
-            demo.ps demo.txt sessions.ps sessions.txt relnotes.ps relnotes.txt pc-files
-
-ls:
-	@echo $(DISTFILES)

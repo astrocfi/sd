@@ -1,0 +1,33 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>Sd - A Square Dance Caller's Helper</title>
+<link rev="made" href="mailto:wba@alum.mit.edu">
+<meta name="description"
+content="Sd is a square dance caller's helper.&nbsp
+This computer program does the checker pushing for callers
+writing sequences for modern square dancing.">
+<meta name="keywords"
+content="challenge western modern square dance dancing calls caller calling
+helper computer program simulator checker, sdtty">
+</head>
+
+<body bgcolor="#ccccff">
+<!-- This look and the implementation invented by Stephen Gildea.
+     Credit me if you copy it! -->
+<table cellspacing="0" cellpadding="4" border="0" width="100%">
+<tr><!-- top border -->
+<td bgcolor="#9999ff" colspan="5"><font size="-5">&nbsp;</font></td></tr>
+<tr>
+<td bgcolor="#9999ff"><font size="-5">&nbsp;</font></td>
+<td bgcolor="#ff9900" colspan="3"><font size="-5">&nbsp;</font></td>
+<td bgcolor="#9999ff"><font size="-5">&nbsp;</font></td></tr>
+<tr>
+<td bgcolor="#9999ff">&nbsp;</td>
+<td bgcolor="#ff9900">&nbsp;</td>
+<td bgcolor="#ffffdd">
+<!-- start of body text -->
+<h1 align="center">Sd - A Square Dance Caller's Helper</h1>
+<table align="center"><tr><td>
+<!--Begin poster-child. -->
+<!--VVVVVVVVVVVVVVVVVVV -->

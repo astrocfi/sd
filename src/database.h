@@ -82,7 +82,7 @@ typedef Const char *Cstring;
    database format version. */
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 160
+#define DATABASE_FORMAT_VERSION 165
 
 /* BEWARE!!  These must track the items in "tagtabinit" in dbcomp.c . */
 typedef enum {
@@ -110,9 +110,12 @@ typedef enum {
    base_call_tagger2_noref,
    base_call_tagger3_noref,
    base_call_circcer,
-   base_call_turnstar_n
+   base_call_turnstar_n,
+   base_call_revert_if_needed,
+   base_call_extend_n,
+   base_call_cardinality    // Not an actual enumeration item.
 } base_call_index;
-#define num_base_call_indices (((int) base_call_turnstar_n)+1)
+#define num_base_call_indices (((int) base_call_cardinality))
 
 
 /* BEWARE!!  This list must track the tables "flagtabh", "defmodtabh",
@@ -337,6 +340,10 @@ typedef enum {
    s_crosswave,
    s2x4,
    s2x5,
+   sd2x5,
+   swqtag,
+   sdeep2x1dmd,
+   swhrglass,
    s_rigger,
    s3x4,
    s2x6,
@@ -459,6 +466,14 @@ typedef enum {
    b_3x2,
    b_2x5,
    b_5x2,
+   b_d2x5,
+   b_d5x2,
+   b_wqtag,
+   b_pwqtag,
+   b_deep2x1dmd,
+   b_pdeep2x1dmd,
+   b_whrglass,
+   b_pwhrglass,
    b_1x6,
    b_6x1,
    b_3x4,
@@ -663,7 +678,14 @@ typedef enum {
    cr_rev_explodable,      /* Restriction only. */
    cr_peelable_box,        /* Restriction only. */
    cr_ends_are_peelable,   /* Restriction only. */
-   cr_siamese_in_quad,     /* Restriction only. */
+   cr_siamese_in_quad,
+   cr_not_tboned_in_quad,
+   cr_levela1,
+   cr_levela2,
+   cr_levelc1,
+   cr_levelc2,
+   cr_levelc3,
+   cr_levelc4,
    cr_not_tboned,          /* Restriction only. */
    cr_opposite_sex,        /* Restriction only. */
    cr_quarterbox_or_col,   /* Restriction only. */
@@ -710,6 +732,7 @@ typedef enum {
    schema_concentric_diamonds,
    schema_cross_concentric_diamonds,
    schema_concentric_or_diamond_line,
+   schema_concentric_or_6_2,
    schema_concentric_6_2,
    schema_concentric_2_6,
    schema_concentric_2_4,

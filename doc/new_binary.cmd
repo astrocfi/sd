@@ -5,9 +5,15 @@ REM
 REM        You must first do an appropriate MSVC++ build
 REM           in directory \wba\sd .
 REM
-REM This uses the files sd.exe, sdtty.exe, mkcalls.exe, sdlib.dll,
+REM        You must also build the html version of the manual,
+REM           presumably by doing "do_html".
+REM
+REM This uses the files sd.exe, sdtty.exe, mkcalls.exe, sdlib.dll, deploy.exe,
 REM         sd_calls.txt, and sd_calls.dat, readme,
-REM         SD.lnk, SDTTY.lnk, SD nocheckers.lnk, SD couple.lnk, edit sd.ini.lnk,
+REM         SD.lnk, SD plain.lnk, SDTTY.lnk, SDTTY plain.lnk, SD nocheckers.lnk,
+REM         SD couple.lnk, edit sd.ini.lnk,
+REM         sd manual.lnk, Release Notes.lnk, sd_doc.html,
+REM         relnotes.html, relnotes98.html
 REM         sample1.ini, sample2.ini, sample3.ini.
 REM
 del install.exe

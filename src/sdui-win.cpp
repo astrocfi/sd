@@ -64,6 +64,8 @@ static char *sdui_version = "4.10";
 #define WIN32_LEAN_AND_MEAN
 #include <stdio.h>
 #include <windows.h>
+// This would have come in automatically if we hadn't specified WIN32_LEAN_AND_MEAN
+#include <shellapi.h>
 #include <windowsx.h>
 #include <commctrl.h>
 #include <commdlg.h>
@@ -500,7 +502,7 @@ static void check_text_change(HWND hListbox, HWND hEditbox, long_boolean doing_e
 
 /* Look for special programmed keystroke.  Act on it, and return 2 if it finds one.
    Return 1 if we did not recognize it, but we don't want to shift
-   focus autimatically to the edit window.
+   focus automatically to the edit window.
    Return 0 if it is not a recognized defined keystroke, but we think the
    edit window ought to handle it. */
 static int LookupKeystrokeBinding(
@@ -535,9 +537,8 @@ static int LookupKeystrokeBinding(
          return 2;    // We have handled it.
       }
       else if (wParam == 0x0C) {
-         if (!(HIWORD(lParam) & KF_EXTENDED)) {
-            if (wParam = 0x0C) newparm = 5-200;
-         }
+         if (!(HIWORD(lParam) & KF_EXTENDED))
+            newparm = 5-200;
       }
       else if (wParam >= VK_PRIOR && wParam <= VK_DELETE) {
          if (HIWORD(lParam) & KF_EXTENDED) {
@@ -1002,7 +1003,7 @@ static void Transcript_OnPaint(HWND hwnd)
          ExtTextOut(PaintDC, x, Y, ETO_CLIPPED, &PaintStruct.rcPaint, the_string, the_count, 0);
          continue;
 
-           do_DIB_thing:
+      do_DIB_thing:
 
          // Clip this stuff -- be sure we don't go into the top or bottom margin.
 
@@ -1186,6 +1187,7 @@ int WINAPI WinMain(
    ui_options.pastel_color = 0;
    ui_options.no_color = 0;
    ui_options.no_sound = 0;
+   ui_options.sequence_num_override = -1;
 
    /* Run the Sd program.  The system-supplied variables "__argc"
       and "__argv" provide the predigested-as-in-traditional-C-programs
@@ -1395,6 +1397,13 @@ void MainWindow_OnSize(HWND hwnd, UINT state, int cx, int cy)
 }
 
 
+extern long_boolean uims_help_manual()
+{
+   (void) ShellExecute(NULL, "open", "c:\\sd\\sd_doc.html", NULL, NULL, SW_SHOWNORMAL);
+   return TRUE;
+}
+
+
 void MainWindow_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 {
    int i;
@@ -1406,59 +1415,10 @@ void MainWindow_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
       DialogBox(GLOBhInstance, MAKEINTRESOURCE(IDD_ABOUTBOX), hwnd, (DLGPROC) AboutWndProc);
       break;
    case ID_HELP_SDHELP:
-      {
-         char szSecondBuf[200];
-         STARTUPINFO si;
-         PROCESS_INFORMATION pi;
-
-         (void) memset(&si, 0, sizeof(STARTUPINFO));
-         (void) memset(&pi, 0, sizeof(PROCESS_INFORMATION));
-         GetStartupInfo(&si);
-
-
-         // Try this, first with Netscape, and then with that criminal thing from Redmond.
-
-         lstrcpy(szSecondBuf,
-"""C:\\program files\\netscape\\communicator\\program\\netscape.exe"" c:\\sd\\sd_doc.html");
-         if (!CreateProcess(0, szSecondBuf, 0, 0, false, 0, 0, 0, &si, &pi)) {
-            lstrcpy(szSecondBuf,
-"""c:\\program files\\plus!\\microsoft internet\\iexplore.exe"" c:\\sd\\sd_doc.html");
-            (void) CreateProcess(0, szSecondBuf, 0, 0, false, 0, 0, 0, &si, &pi);
-         }
-
-         // Now try this:
-         // Unfortunately, it just brings up another copy of Sd,
-         // even though it does the right thing from the command line
-         /*
-         lstrcpy(szSecondBuf, """C:\\sd\\sd manual.lnk""");
-         (void) CreateProcess(0, szSecondBuf, 0, 0, false, 0, 0, 0, &si, &pi);
-         */
-
-         // Now try this:
-         // Unfortunately, it doesn't bring up anything,
-         // even though it does the right thing from the command line
-         /*
-         lstrcpy(szSecondBuf, """C:\\sd\\sd_doc.html""");
-         (void) CreateProcess(0, szSecondBuf, 0, 0, false, 0, 0, 0, &si, &pi);
-         */
-
-         /*
-args to CreateProcess
-    LPCSTR lpApplicationName,
-    LPSTR lpCommandLine,
-    LPSECURITY_ATTRIBUTES lpProcessAttributes,
-    LPSECURITY_ATTRIBUTES lpThreadAttributes,
-    BOOL bInheritHandles,
-    DWORD dwCreationFlags,
-    LPVOID lpEnvironment,
-    LPCSTR lpCurrentDirectory,
-    LPSTARTUPINFOA lpStartupInfo,
-    LPPROCESS_INFORMATION lpProcessInformation
-         */
-
-
-         // Now pi has pi.hProcess, pi.hThread, dwProcessId, dwThreadId
-      }
+      // The claim is that we can take this clause out, and the normal
+      // program mechanism will do the same thing.  That claim isn't yet
+      // completely true, so we leave this in for now.
+      (void) uims_help_manual();
       break;
    case ID_FILE_EXIT:
       SendMessage(hwndMain, WM_CLOSE, 0, 0L);
@@ -1871,7 +1831,7 @@ static void Startup_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
       // the cursor arrow keys.
 
       if (codeNotify == (UINT) LBN_DBLCLK)
-            goto accept_listbox;
+         goto accept_listbox;
 
       break;
    case IDC_WRITE_LIST:
@@ -2011,22 +1971,35 @@ static void Startup_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
          database_filename = szDatabaseFilename;
       }
 
+      ui_options.sequence_num_override =
+         SendMessage(GetDlgItem(hwnd, IDC_SEQ_NUM_OVERRIDE_SPIN), UDM_GETPOS, 0, 0L);
+
    getoutahere:
 
       EndDialog(hwnd, TRUE);
-      return;
    }
 }
 
 
 static BOOL Startup_OnInitDialog(HWND hwnd, HWND hwndFocus, LPARAM lParam)
 {
-   /* Select the default radio buttons. */
+   // Set up the sequence number override.  Its text is the null string
+   // unless a command line value was given.
+
+   SetDlgItemText(hwnd, IDC_SEQ_NUM_OVERRIDE, "");
+
+   HWND hb = GetDlgItem(hwnd, IDC_SEQ_NUM_OVERRIDE_SPIN);
+   SendMessage(hb, UDM_SETRANGE, 0, (LPARAM) MAKELONG(32000, 0));
+
+   if (ui_options.sequence_num_override > 0)
+      SendMessage(hb, UDM_SETPOS, 0, (LPARAM) MAKELONG(ui_options.sequence_num_override, 0));
+
+   // Select the default radio buttons.
 
    CheckRadioButton(hwnd, IDC_NORMAL, IDC_ABRIDGED, IDC_NORMAL);
    CheckRadioButton(hwnd, IDC_DEFAULT, IDC_USERDEFINED, IDC_DEFAULT);
 
-   /* Seed the various file names with the null string. */
+   // Seed the various file names with the null string.
 
    SetDlgItemText(hwnd, IDC_OUTPUT_NAME, "");
    SetDlgItemText(hwnd, IDC_CALL_LIST_NAME, "");
@@ -2135,6 +2108,9 @@ extern long_boolean uims_open_session(int argc, char **argv)
 
    DialogBox(GLOBhInstance, MAKEINTRESOURCE(IDD_START_DIALOG),
              hwndMain, (DLGPROC) Startup_Dialog_WndProc);
+
+   if (ui_options.sequence_num_override > 0)
+      sequence_number = ui_options.sequence_num_override;
 
    if (calling_level == l_nonexistent_concept)
       calling_level = l_mainstream;   /* User really doesn't want to tell us the level. */
@@ -2978,14 +2954,16 @@ extern void uims_update_resolve_menu(command_kind goal, int cur, int max,
 }
 
 
-extern void uims_print_this(long_boolean in_startup)
+extern long_boolean uims_print_this()
 {
    windows_print_this(hwndMain, szMainTitle, GLOBhInstance);
+   return TRUE;
 }
 
-extern void uims_print_any(long_boolean in_startup)
+extern long_boolean uims_print_any()
 {
    windows_print_any(hwndMain, szMainTitle, GLOBhInstance);
+   return TRUE;
 }
 
 

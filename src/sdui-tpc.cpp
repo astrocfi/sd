@@ -88,6 +88,11 @@ extern void ttu_set_window_title(char s[])
 {
 }
 
+extern long_boolean uims_help_manual()
+{
+   return FALSE;
+}
+
 
 extern void ttu_initialize(void)
 {

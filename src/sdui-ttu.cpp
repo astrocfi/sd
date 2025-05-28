@@ -90,6 +90,11 @@ extern void ttu_set_window_title(char s[])
 {
 }
 
+extern long_boolean uims_help_manual()
+{
+   return FALSE;
+}
+
 
 extern void ttu_initialize(void)
 {
@@ -437,8 +442,17 @@ extern void get_string(char *dest, int max)
                               and see if end-of-line decorations are the same. */
    }
 #else
+   int size;
+
    csetmode(0);         /* Regular full-line mode with system echo. */
-   gets(dest);
+   (void) fgets(dest, max, stdin);
+   size = strlen(dest);
+
+   while (size > 0 && (dest[size-1] == '\n' || dest[size-1] == '\r'))
+      dest[--size] = '\000';
+
+   (void) fputs(dest, stdout);
+   (void) putchar('\n');
 #endif
 }
 
@@ -464,26 +478,12 @@ extern void ttu_bell(void)
 /* ARGSUSED */
 static void stop_handler(int n)
 {
-/*
-    if (current_tty_mode != 0) {
-	csetmode(0);
-	current_tty_mode = 1;
-    }
-    signal(SIGTSTP, SIG_DFL);
-    kill(0, SIGTSTP);
-*/
 }
 
 /* ARGSUSED */
 static void cont_handler(int n)
 {
     refresh_input();
-/*
-    if (current_tty_mode != 0) {
-	csetmode(current_tty_mode);
-    }
-    initialize_signal_handlers();
-*/
 }
 
 void initialize_signal_handlers(void)

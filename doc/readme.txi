@@ -139,6 +139,21 @@ When you run at C4, C4X calls may be used.  Whenever such a call is
 used, a warning is printed.  (If you explicitly run the program at
 C3X or C4X, you may use the calls without getting a warning.)
 
+@unnumberedsec Misuse of Computers 
+
+The phenomenon of ``clueless clicking'', that is, using a computer to generate
+challenge choreography that one doesn't really understand, is by now well-known.
+There are very few more effective ways to exhibit your ignorance
+and incompetence as a caller.  High level challenge dancers are extremely
+sophisticated in their ability to detect this.
+
+If dancers didn't understand what you meant by something that you called,
+they may ask you about it after the tip is over.  The answer ``I meant whatever
+the computer did'' is @emph{never} an acceptable answer to such a question.
+If you can't give an answer in terms of your understanding of how the calls
+and concepts really work, or if you don't agree with the program's interpretation,
+you shouldn't be calling that material.
+
 @unnumberedsec Judgement, Controversy, and Warning Messages
 
 Not all callers exercise good judgement in their calling, and occasionally

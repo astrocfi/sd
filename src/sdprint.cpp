@@ -329,7 +329,7 @@ void PrintFile(char *szFileName, HWND hwnd, char *szMainTitle, HINSTANCE hInstan
 
 
 
-extern void uims_choose_font(long_boolean in_startup)
+extern long_boolean uims_choose_font()
 {
    // This operation will take place in the context of the display
    // rather than the printer, but we have to do it that way, because
@@ -350,6 +350,7 @@ extern void uims_choose_font(long_boolean in_startup)
    // Now "lf" has all the info, though it is, unfortunately, calibrated
    // for the display.  Also, "cf.iPointSize" has the point size times 10,
    // which is, fortunately, invariant.
+   return TRUE;
 }
 
 

@@ -1167,6 +1167,12 @@ extern long_boolean open_session(int argc, char **argv)
          else if (strcmp(&args[argno][1], "db") == 0) {
             if (argno+1 < nargs) database_filename = args[argno+1];
          }
+         else if (strcmp(&args[argno][1], "sequence_num") == 0) {
+            if (argno+1 < nargs) {
+               if (sscanf(args[argno+1], "%d", &ui_options.sequence_num_override) != 1)
+                  uims_bad_argument("Bad number:", args[argno+1], (char *) 0);
+            }
+         }
          else if (strcmp(&args[argno][1], "no_intensify") == 0)
             { ui_options.no_intensify = 1; continue; }
          else if (strcmp(&args[argno][1], "reverse_video") == 0)

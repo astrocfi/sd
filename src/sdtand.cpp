@@ -42,7 +42,7 @@ typedef struct {
 
 
 typedef struct {
-   int maps[24];
+   veryshort maps[24];
    uint32 ilatmask;           /* lateral pairs in inside numbering --
                                  only "1" bits used! (except triangles) */
    uint32 olatmask;
@@ -330,6 +330,10 @@ static tm_thing maps_isearch_tglsome[] = {
    {{5, 3, 1, 7,       6, -1, 2, -1,     0, -1, 4, -1},                       0x13,     0x77,         4, 0,  0,  0, 0,  sdmd,  s_dhrglass},
    {{6, 0, 2, 4,       -1, 3, -1, 7,     -1, 1, -1, 5},                       0x08,        0,         4, 0,  0,  0, 0,  sdmd,  s_hrglass},
    {{0, 3, 4, 7,       6, -1, 2, -1,     5, -1, 1, -1},                       0x31,     0x77,         4, 0,  0,  0, 0,  sdmd,  s_hrglass},
+
+   // These two need to show a "fudgy" warning"
+   {{6, 1, 2, 5,       0, -1, 4, -1,     7, -1, 3, -1},                       0x20,        0,         4, 0,  0,  0, 0,  sdmd,  s2x4},
+   {{0, 2, 4, 6,       7, -1, 3, -1,     1, -1, 5, -1},                       0x02,        0,         4, 0,  0,  0, 0,  sdmd,  s2x4},
 
    {{0, 3, 4, 7,       -1, 2, -1, 6,     -1, 1, -1, 5},                       0x80,        0,         4, 0,  0,  0, 0,  sdmd,  s_galaxy},
    {{2, 5, 6, 1,       -1, 4, -1, 0,     -1, 3, -1, 7},                       0x08,     0xBB,         4, 1,  0,  0, 0,  sdmd,  s_galaxy},
@@ -1489,6 +1493,11 @@ extern void tandem_couples_move(
             ((map_search->ilatmask & livemask) == hmask)) {
          unpack_us(map_search, orbitmask, &tandstuff, result);
          reinstate_rotation(ss, result);
+
+         // When we fudge wrongly-oriented triangles to a 2x4, we need
+         // to say something.
+         if (our_map_table == maps_isearch_tglsome && result->kind == s2x4)
+            warn(warn__check_hokey_2x4);
 
          if (dead_conc) {
             result->inner.skind = result->kind;

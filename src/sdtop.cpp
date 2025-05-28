@@ -882,11 +882,27 @@ extern void touch_or_rear_back(
             goto found_tptr;
          }
          break;
+      case s_trngl:
+         if ((0x0FUL & ~livemask) == 0 &&
+             ((directions ^ 0x17UL) & livemask) == 0 &&
+             !(callflags1 & CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK)) {
+            tptr = &step_tgl_pair;
+            goto found_tptr;
+         }
+         break;
       case sdmd:
          if ((0x33UL & ~livemask) == 0 &&
              ((directions ^ 0xA0UL) & livemask) == 0 &&
              !(callflags1 & CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK)) {
             tptr = &step_dmd_pair;
+            goto found_tptr;
+         }
+         break;
+      case s_ptpd:
+         if ((0x3333UL & ~livemask) == 0 &&
+             ((directions ^ 0xA00AUL) & livemask) == 0 &&
+             !(callflags1 & CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK)) {
+            tptr = &step_ptpd_pair;
             goto found_tptr;
          }
          break;
@@ -1081,6 +1097,10 @@ static restr_initializer restr_init_table0[] = {
    {s2x4,      cr_dmd_ctrs_mwv, 4, {1, 2, 6, 5, -1},          {0, 2, 0},          {0}, {0}, FALSE, chk_spec_directions},
    {s2x3,      cr_dmd_ctrs_mwv, 2, {1, 4, -1},                {1, 3, 0},          {0}, {0}, FALSE, chk_spec_directions},
    {s_qtag,    cr_dmd_ctrs_mwv, 4, {3, 2, 6, 7, -1},          {0, 2, 0},          {0}, {0}, FALSE, chk_spec_directions},
+   {s3dmd,     cr_dmd_ctrs_mwv, 6, {4, 3, 11, 5, 9, 10, -1},  {0, 2, 0},          {0}, {0}, FALSE, chk_spec_directions},
+   {s4dmd,     cr_dmd_ctrs_mwv, 8, {5, 4, 7, 6, 14, 15, 12, 13, -1}, {0, 2, 0},   {0}, {0}, FALSE, chk_spec_directions},
+   {swqtag,    cr_dmd_ctrs_mwv, 6, {3, 2, 9, 4, 7, 8, -1},    {0, 2, 0},          {0}, {0}, FALSE, chk_spec_directions},
+   {sdeep2x1dmd, cr_dmd_ctrs_mwv, 8, {0, 1, 3, 4, 6, 5, 9, 8, -1}, {0, 2, 0},     {0}, {0}, FALSE, chk_spec_directions},
    {s_ptpd,    cr_dmd_ctrs_mwv, 4, {1, 3, 7, 5, -1},          {1, 3, 0},          {0}, {0}, FALSE, chk_spec_directions},
    {sdmd,      cr_dmd_ctrs_1f, 2, {1, 3, -1},                 {1, 3, 1},          {0}, {0}, FALSE, chk_spec_directions},
    {s1x4,      cr_dmd_ctrs_1f, 2, {1, 3, -1},                 {0, 2, 1},          {0}, {0}, FALSE, chk_spec_directions},
@@ -1713,7 +1733,9 @@ extern long_boolean check_for_concept_group(
    }
 
 
-   /* If skipping "phantom", maybe it's "phantom tandem", so we need to skip both. */
+   // If skipping "phantom", maybe it's "phantom tandem", so we need to skip both.
+   // Similarly with "parallelogram split phantom C/L/W/B" or
+   // "offset C/L/W split phantom C/L/W/B".     <-- this one not done.
 
    if (k == concept_c1_phantom) {
       uint64 junk_concepts;
@@ -1726,6 +1748,28 @@ extern long_boolean check_for_concept_group(
 
       if ((next_parseptr->concept->kind == concept_tandem ||
            next_parseptr->concept->kind == concept_frac_tandem) &&
+          (junk_concepts.her8it | junk_concepts.final) == 0) {
+         parseptrcopy = next_parseptr;
+         retval = TRUE;
+         goto try_again;
+      }
+   }
+   else if (k == concept_parallelogram ||
+            (k == concept_distorted &&
+             parseptrcopy->concept->value.arg1 == disttest_offset &&
+             parseptrcopy->concept->value.arg3 == 0 &&
+             parseptrcopy->concept->value.arg4 == 0)) {
+      uint64 junk_concepts;
+
+      junk_concepts.her8it = 0;
+      junk_concepts.final = 0;
+
+      next_parseptr =
+         process_final_concepts(parseptr_skip, FALSE, &junk_concepts);
+
+      if ((next_parseptr->concept->kind == concept_do_phantom_2x4 ||
+           next_parseptr->concept->kind == concept_do_phantom_boxes) &&
+          next_parseptr->concept->value.arg3 == MPKIND__SPLIT &&
           (junk_concepts.her8it | junk_concepts.final) == 0) {
          parseptrcopy = next_parseptr;
          retval = TRUE;
@@ -1842,13 +1886,14 @@ extern restriction_test_result verify_restriction(
    long_boolean *failed_to_instantiate) THROW_DECL
 {
    int idx, limit, i, j, k;
-   uint32 t;
+   uint32 t = 0;
    uint32 qa0, qa1, qa2, qa3;
    uint32 qaa[4];
    uint32 pdir, qdir, pdirodd, qdirodd;
    uint32 dirtest[2];
    const veryshort *p, *q;
    int phantom_count = 0;
+   restr_initializer *rr;
 
    switch (tt.assumption) {
    case cr_alwaysfail:
@@ -1872,9 +1917,50 @@ extern restriction_test_result verify_restriction(
    case cr_trailers_only:
       tt.assump_both = 1;
       break;
+   case cr_levela1:
+      if (calling_level < l_a1) return restriction_bad_level;
+      goto good;
+   case cr_levela2:
+      if (calling_level < l_a2) return restriction_bad_level;
+      goto good;
+   case cr_levelc1:
+      if (calling_level < l_c1) return restriction_bad_level;
+      goto good;
+   case cr_levelc2:
+      if (calling_level < l_c2) return restriction_bad_level;
+      goto good;
+   case cr_levelc3:
+      if (calling_level < l_c3) return restriction_bad_level;
+      goto good;
+   case cr_levelc4:
+      if (calling_level < l_c4) return restriction_bad_level;
+      goto good;
+   case cr_siamese_in_quad:
+      t ^= 2;
+      // FALL THROUGH!!!!!
+   case cr_not_tboned_in_quad:      // WARNING!!  WE FELL THROUGH!!
+      t ^= 1;
+      // This is independent of whether we are line-like or column-like.
+      for (idx=0 ; idx<4 ; idx++) {
+         int ii;
+         int perquad = (setup_attrs[ss->kind].setup_limits+1) >> 2;
+         qa0 = 0; qa1 = 0; qa2 = 0; qa3 = 0;
+         // Test one quadrant.
+         for (ii=0 ; ii<perquad ; ii++) {
+            uint32 tp;
+            if ((tp = ss->people[perquad*idx+ii].id1) != 0) {
+               qa0 |= (tp^1);
+               qa1 |= (tp^3);
+               qa2 |= (tp^2);
+               qa3 |= (tp);
+            }
+         }
+         if ((qa0&t) && (qa1&t) && (qa2&t) && (qa3&t)) goto bad;
+      }
+      goto good;
    }
 
-   restr_initializer *rr = get_restriction_thing(ss->kind, tt);
+   rr = get_restriction_thing(ss->kind, tt);
    if (!rr) return restriction_no_item;
 
    dirtest[0] = 0;
@@ -2019,7 +2105,6 @@ extern restriction_test_result verify_restriction(
       goto bad;
 
    check_box_assume:
-
       if (rr->ok_for_assume) {    /* Will not be true unless size = 1 */
          if (instantiate_phantoms) {
             if (!(qa0 & BIT_PERSON))
@@ -2364,11 +2449,13 @@ extern restriction_test_result verify_restriction(
       goto bad;    /* Shouldn't happen. */
    }
 
-   good: if (tt.assump_negate) return restriction_fails;
-         else return restriction_passes;
+ good:
+   if (tt.assump_negate) return restriction_fails;
+   else return restriction_passes;
 
-   bad: if (tt.assump_negate) return restriction_passes;
-        else return restriction_fails;
+ bad:
+   if (tt.assump_negate) return restriction_passes;
+   else return restriction_fails;
 }
 
 
@@ -2675,6 +2762,9 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
          }
          else
             goto good;         /* We don't understand the setup -- we'd better accept it. */
+      case cr_siamese_in_quad:
+      case cr_not_tboned_in_quad:
+         goto check_tt;
       case cr_true_Z_cw:
          k ^= 033U ^ 066U;
          mask ^= CMD_MISC2__IN_Z_CCW ^ CMD_MISC2__IN_Z_CW;
@@ -2926,16 +3016,23 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
          /* **** FALL THROUGH!!!! */
       case cr_ripple_both_ends:
          /* **** FELL THROUGH!!!!!! */
-         if (ss->kind != s1x4) goto good;
-         k ^= 0x555;
+         k ^= 0x090555;
          mask = 0;
 
          for (plaini=0, w=1; plaini<=setup_attrs[ss->kind].setup_limits; plaini++, w<<=1) {
             if (selectp(ss, plaini)) mask |= w;
          }
 
-         if (mask == (k & 0xF) || mask == ((k>>4) & 0xF) || mask == ((k>>8) & 0xF)) goto good;
-         goto bad;
+         if (ss->kind == s1x4) {
+            if (mask == (k & 0xF) || mask == ((k>>4) & 0xF) || mask == ((k>>8) & 0xF)) goto good;
+            goto bad;
+         }
+         else if (ss->kind == s1x6) {
+            if (mask == ((k>>16) & 0x3F)) goto good;
+            goto bad;
+         }
+
+         goto good;     // Huh?
       case cr_people_1_and_5_real:
          if (ss->people[1].id1 & ss->people[5].id1) goto good;
          goto bad;
@@ -3011,7 +3108,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
    do_wave_stuff:
       switch (ss->cmd.cmd_assume.assumption) {
       case cr_1fl_only: case cr_2fl_only: case cr_couples_only: case cr_magic_only: goto bad;
-      case cr_ijright: case cr_ijleft: goto bad;
+      case cr_ijright: case cr_ijleft: case cr_real_1_4_line: case cr_real_3_4_line: goto bad;
       case cr_wave_only: case cr_jright:
          if (ss->cmd.cmd_assume.assump_both == 2 && tt.assump_both == 1) goto bad;
          if (ss->cmd.cmd_assume.assump_both == 1 && tt.assump_both == 2) goto bad;
@@ -3856,14 +3953,21 @@ static resolve_tester test_thar_stuff[] = {
 static resolve_tester test_4x4_stuff[] = {
    {resolve_circle,         l_mainstream,      6, 0,   {2, 1, 14, 13, 10, 9, 6, 5},  0x33AA1188},    /* "circle left/right" from squared-set, normal. */
    {resolve_circle,         l_mainstream,      7, 0,   {5, 2, 1, 14, 13, 10, 9, 6},  0x833AA118},    /* "circle left/right" from squared-set, sashayed. */
+
    {resolve_rlg,            l_mainstream,      3, 0,   {5, 2, 1, 14, 13, 10, 9, 6},  0x8A8AA8A8},    /* RLG from vertical 8-chain in "O". */
    {resolve_rlg,            l_mainstream,      3, 0,   {5, 2, 1, 14, 13, 10, 9, 6},  0x13313113},    /* RLG from horizontal 8-chain in "O". */
+   {resolve_rlg,            l_mainstream,      3, 0,   {5, 2, 1, 14, 13, 10, 9, 6},  0x8A31A813},    /* RLG from squared set, weird 1. */
+   {resolve_rlg,            l_mainstream,      3, 0,   {5, 2, 1, 14, 13, 10, 9, 6},  0x138A31A8},    /* RLG from squared set, weird 2. */
+   {resolve_rlg,            l_mainstream,      3, 0,   {5, 2, 1, 14, 13, 10, 9, 6},  0x1A8138A3},    /* RLG from squared set, around the corner. */
+
    {resolve_la,             l_mainstream,      6, 0,   {2, 1, 14, 13, 10, 9, 6, 5},  0x33131131},    /* LA from horizontal 8-chain in "O". */
    {resolve_la,             l_mainstream,      6, 0,   {2, 1, 14, 13, 10, 9, 6, 5},  0xA8AA8A88},    /* LA from vertical 8-chain in "O". */
+   {resolve_la,             l_mainstream,      6, 0,   {2, 1, 14, 13, 10, 9, 6, 5},  0x38A31A81},    /* LA from squared set, weird 1. */
+   {resolve_la,             l_mainstream,      6, 0,   {2, 1, 14, 13, 10, 9, 6, 5},  0xA31A8138},    /* LA from squared set, weird 2. */
+   {resolve_la,             l_mainstream,      6, 0,   {2, 1, 14, 13, 10, 9, 6, 5},  0xA8138A31},    /* LA from squared set, around the corner. */
+
    {resolve_rlg,            l_mainstream,      2, 0,   {2, 1, 14, 13, 10, 9, 6, 5},  0x8A31A813},    /* RLG from squared set, facing directly. */
    {resolve_la,             l_mainstream,      7, 0,   {5, 2, 1, 14, 13, 10, 9, 6},  0x38A31A81},    /* LA from squared set, facing directly. */
-   {resolve_rlg,            l_mainstream,      3, 0,   {5, 2, 1, 14, 13, 10, 9, 6},  0x1A8138A3},    /* RLG from squared set, around the corner. */
-   {resolve_la,             l_mainstream,      6, 0,   {2, 1, 14, 13, 10, 9, 6, 5},  0xA8138A31},    /* LA from squared set, around the corner. */
    {resolve_rlg,            l_mainstream,      3, 0,   {7, 2, 3, 14, 15, 10, 11, 6}, 0x138A31A8},    /* RLG from pinwheel, all facing. */
    {resolve_rlg,            l_mainstream,      3, 0,   {5, 7, 1, 3, 13, 15, 9, 11},  0x8A31A813},    /* RLG from pinwheel, all facing. */
    {resolve_rlg,            l_mainstream,      3, 0,   {7, 5, 3, 1, 15, 13, 11, 9},  0x138A31A8},    /* RLG from pinwheel, all in miniwaves. */
@@ -3981,10 +4085,22 @@ static resolve_tester test_deepqtg_stuff[] = {
    {resolve_circle,         l_mainstream, 7, 0,   {6, 11, 2, 1, 0, 5, 8, 7},  0x833AA118},
    {resolve_none,           l_mainstream, 64}};
 
+static resolve_tester test_deepxwv_stuff[] = {
+   {resolve_rlg,            l_mainstream, 4, 0,   {5, 8, 7, 6, 11, 2, 1, 0},  0x138A31A8},
+   {resolve_la,             l_mainstream, 7, 0,   {8, 6, 7, 11, 2, 0, 1, 5},  0x38A31A81},
+   {resolve_none,           l_mainstream, 64}};
+
+static resolve_tester test_3x6_stuff[] = {
+   {resolve_rlg,            l_mainstream, 4, 0,   {12, 11, 7, 6, 3, 2, 16, 15},  0x138A31A8},
+   {resolve_la,             l_mainstream, 7, 0,   {11, 6, 7, 3, 2, 15, 16, 12},  0x38A31A81},
+   {resolve_none,           l_mainstream, 64}};
+
 static resolve_tester test_spindle_stuff[] = {
    /* These test for people looking around the corner. */
    {resolve_rlg,            l_mainstream, 3, 0,   {4, 3, 2, 1, 0, 7, 6, 5},     0x13313113},
+   {resolve_rlg,            l_mainstream, 3, 0,   {4, 3, 2, 1, 0, 7, 6, 5},     0x1A313813},
    {resolve_la,             l_mainstream, 7, 0,   {4, 3, 2, 1, 0, 7, 6, 5},     0x33131131},
+   {resolve_la,             l_mainstream, 7, 0,   {4, 3, 2, 1, 0, 7, 6, 5},     0x38131A31},
    {resolve_none,           l_mainstream, 64}};
 
 static resolve_tester test_2x4_stuff[] = {
@@ -4023,10 +4139,13 @@ static resolve_tester test_2x4_stuff[] = {
 
    {resolve_dixie_grand,    dixie_grand_level, 2, 0,   {5, 2, 4, 7, 1, 6, 0, 3},     0x33311113},    /* dixie grand from DPT. */
 #ifdef BOGUSDIXIEGRAND
+   // These are bogus because the first move is a direct pull by.  It doesn't
+   // distort to a circle until the second hand.
    {resolve_dixie_grand,    dixie_grand_level, 2, 0,   {6, 1, 3, 0, 2, 5, 7, 4},     0x33131131},    /* dixie grand from CDPT. */
    {resolve_dixie_grand,    dixie_grand_level, 2, 0,   {5, 2, 3, 0, 1, 6, 7, 4},     0x33131131},    /* dixie grand from trade-by. */
 #endif
    {resolve_dixie_grand,    dixie_grand_level, 1, 0,   {4, 1, 2, 7, 0, 5, 6, 3},     0x33111133},    /* dixie grand from 8-chain. */
+   {resolve_dixie_grand,    dixie_grand_level, 7, 1,   {3, 6, 0, 5, 7, 2, 4, 1},     0xAA8888AA},    /* dixie grand from waves. */
    {resolve_dixie_grand,    dixie_grand_level, 3, 0,   {6, 3, 5, 0, 2, 7, 1, 4},     0x33331111},    /* dixie grand from magic column. */
    {resolve_dixie_grand,    dixie_grand_level, 1, 0,   {4, 1, 3, 6, 0, 5, 7, 2},     0x33111133},    /* dixie grand from other magic column. */
 
@@ -4053,6 +4172,12 @@ static resolve_tester test_2x4_stuff[] = {
    {resolve_rlg,            l_mainstream,   64+4, 0,   {6, 5, 3, 4, 2, 1, 7, 0},     0x13113133},    /* trade-by, centers sashayed. */
    {resolve_none,           l_mainstream,      64}};
 
+static resolve_tester test_hrgl_stuff[] = {
+   {resolve_rlg,            l_mainstream,      5, 0,   {6, 5, 7, 4, 2, 1, 3, 0},     0xA3138131},
+   {resolve_la,             l_mainstream,      1, 0,   {6, 5, 7, 4, 2, 1, 3, 0},     0x8131A313},
+   {resolve_none,           l_mainstream,      64}};
+
+
 
 extern resolve_indicator resolve_p(setup *s)
 {
@@ -4073,12 +4198,18 @@ extern resolve_indicator resolve_p(setup *s)
       testptr = test_2x6_stuff; break;
    case s_qtag:
       testptr = test_qtag_stuff; break;
+   case s_hrglass:
+      testptr = test_hrgl_stuff; break;
    case s4dmd:
       testptr = test_4dmd_stuff; break;
    case sbigdmd:
       testptr = test_bigdmd_stuff; break;
    case sdeepqtg:
       testptr = test_deepqtg_stuff; break;
+   case sdeepxwv:
+      testptr = test_deepxwv_stuff; break;
+   case s3x6:
+      testptr = test_3x6_stuff; break;
    case s4x4:
       testptr = test_4x4_stuff; break;
    case s_c1phan:

@@ -12,6 +12,7 @@
 @sp 1
 @end ifclear
 Copyright @copyright{} 2000 William B. Ackerman
+
 @sp 1
 @center DISCONNECTED
 @center and
@@ -19,9 +20,15 @@ Copyright @copyright{} 2000 William B. Ackerman
 @sp 1
 The @samp{disconnected} concept has not enjoyed a lot of popularity
 over the last several years.  An article in the Zip Coder magazine
-described it as the ``lost concept'' @footnote{Choreo Corner,
-@i{Zip Coder XXVII}, 2(June 1998), 23-28}.  This may be, in part, because
-people don't always perceive it as having a sound logical basis.
+described it as the ``lost concept''
+@iftex
+@footnote{Choreo Corner, @i{Zip Coder XXVII}, 2(June 1998), 23-28}
+@end iftex
+@ifset html
+@footnote{Choreo Corner, @i{Zip Coder XXVII}, 2(June 1998), 23-28}
+@end ifset
+.  This may be, in part, because people don't always perceive it as
+having a sound logical basis.
 
 In recent years there has been increased interest in ``theoretical'' or
 ``computational'' approaches to calls and concepts.  Calls and concepts
@@ -212,9 +219,16 @@ occupy the center stripe.
 What happens if we do a @samp{disconnected flip the diamond} from here?
 The centers of the resulting wave want to occupy the center stripe.
 But that stripe is only one person wide.  We can't have just one of them
-occupy the center, and the Solomon rule @footnote{The Solomon rule
-(I Kings 3:16-28) says that cutting people in half is generally not
-a good way to solve a problem.} says we can't put half of each
+occupy the center, and the Solomon rule
+@iftex
+@footnote{The Solomon rule(I Kings 3:16-28) says that cutting
+people in half is generally not a good way to solve a problem.}
+@end iftex
+@ifset html
+@footnote{The Solomon rule(I Kings 3:16-28) says that cutting
+people in half is generally not a good way to solve a problem.}
+@end ifset
+says we can't put half of each
 in the center.  We either put in zero people or two.  The rule is that
 we always put someone in, unless we have run out of people.  So, in
 this case, the two centers go into the center stripe, widening it slightly.

@@ -130,16 +130,22 @@
 #define NUM_TAGGER_CLASSES 4
 
 
-/* These are the values returned by "uims_get_command". */
+// These are the values returned in user_match.match.kind
+// by "uims_get_call_command" and similar functions.
 
 typedef enum {
-   ui_special_concept,  /* Not a real return; used only for fictional purposes
-                              in the user interface; never appears in the rest of the program. */
-   ui_command_select,   /* (normal/resolve) User chose one of the special buttons like "resolve" or "quit". */
-   ui_resolve_select,   /* (resolve only) User chose one of the various actions peculiar to resolving. */
-   ui_start_select,     /* (startup only) User chose something. This is the only outcome in startup mode. */
-   ui_concept_select,   /* (normal only) User selected a concept. */
-   ui_call_select       /* (normal only) User selected a call from the current call menu. */
+   ui_special_concept,  // Not a real return; used only for fictional purposes
+                        //    in the user interface; never appears in the rest of the program.
+   ui_command_select,   // (normal/resolve) User chose one of the special buttons
+                        //    like "resolve" or "quit".
+   ui_resolve_select,   // (resolve only) User chose one of the various actions
+                        //    peculiar to resolving.
+   ui_start_select,     // (startup only) User chose something.
+                        //    This is the only outcome in startup mode.
+   ui_concept_select,   // (normal only) User selected a concept.
+   ui_call_select,      // (normal only) User selected a call from the current call menu.
+   ui_help_simple,      // (any) user selected "help"
+   ui_help_manual       // (any) user selected "help manual"
 } uims_reply;
 
 
@@ -443,9 +449,10 @@ extern long_boolean uims_open_session(int argc, char **argv);
 extern void uims_set_window_title(char s[]);
 extern void uims_bell(void);
 extern int uims_do_comment_popup(char dest[]);
-extern void uims_choose_font(long_boolean in_startup) /* THROW_DECL */;
-extern void uims_print_this(long_boolean in_startup) /* THROW_DECL */;
-extern void uims_print_any(long_boolean in_startup);
+extern long_boolean uims_choose_font();
+extern long_boolean uims_print_this();
+extern long_boolean uims_print_any();
+extern long_boolean uims_help_manual();
 extern int uims_do_outfile_popup(char dest[]);
 extern int uims_do_header_popup(char dest[]);
 extern int uims_do_getout_popup(char dest[]);
@@ -511,7 +518,7 @@ extern SDLIB_API int cross_concept_index;                           /* in SDCTAB
 extern SDLIB_API int magic_concept_index;                           /* in SDCTABLE */
 extern SDLIB_API int intlk_concept_index;                           /* in SDCTABLE */
 extern SDLIB_API int left_concept_index;                            /* in SDCTABLE */
-extern int grand_concept_index;                                     /* in SDCTABLE */
+extern SDLIB_API int grand_concept_index;                           /* in SDCTABLE */
 extern SDLIB_API int general_concept_offset;                        /* in SDCTABLE */
 extern SDLIB_API int general_concept_size;                          /* in SDCTABLE */
 
@@ -643,11 +650,16 @@ ID2_OUTR1X3|ID2_NOUTR1X3|ID2_CTR4|ID2_OUTRPAIRS)
 */
 
 // The two low bits are used for result elongation, so we start with 0x00000004.
+
+// Next 4 are a logical group.
 static const uint32 RESULTFLAG__DID_LAST_PART        = 0x00000004UL;
-static const uint32 RESULTFLAG__PARTS_ARE_KNOWN      = 0x00000008UL;
-static const uint32 RESULTFLAG__EXPAND_TO_2X3        = 0x00000010UL;
-static const uint32 RESULTFLAG__NEED_DIAMOND         = 0x00000020UL;
-static const uint32 RESULTFLAG__IMPRECISE_ROT        = 0x00000040UL;
+static const uint32 RESULTFLAG__DID_NEXTTOLAST_PART  = 0x00000008UL;
+static const uint32 RESULTFLAG__SECONDARY_DONE       = 0x00000010UL;
+static const uint32 RESULTFLAG__PARTS_ARE_KNOWN      = 0x00000020UL;
+static const uint32 RESULTFLAG__PART_COMPLETION_BITS = 0x0000003CUL;
+
+static const uint32 RESULTFLAG__NEED_DIAMOND         = 0x00000040UL;
+
 // This is a six bit field.
 static const uint32 RESULTFLAG__SPLIT_AXIS_FIELDMASK = 0x00001F80UL;
 static const uint32 RESULTFLAG__SPLIT_AXIS_XMASK     = 0x00000380UL;
@@ -658,15 +670,21 @@ static const uint32 RESULTFLAG__SPLIT_AXIS_SEPARATION= 3;
 
 static const uint32 RESULTFLAG__ACTIVE_PHANTOMS_ON   = 0x00002000UL;
 static const uint32 RESULTFLAG__ACTIVE_PHANTOMS_OFF  = 0x00004000UL;
-static const uint32 RESULTFLAG__SECONDARY_DONE       = 0x00008000UL;
-static const uint32 RESULTFLAG__YOYO_FINISHED        = 0x00010000UL;
-static const uint32 RESULTFLAG__TWISTED_FINISHED     = 0x00020000UL;
-static const uint32 RESULTFLAG__SPLIT_FINISHED       = 0x00040000UL;
-static const uint32 RESULTFLAG__NO_REEVALUATE        = 0x00080000UL;
+static const uint32 RESULTFLAG__EXPAND_TO_2X3        = 0x00008000UL;
+
+// Next 4 are a logical group.
+static const uint32 RESULTFLAG__YOYO_EXPIRED         = 0x00010000UL;
+static const uint32 RESULTFLAG__TWISTED_EXPIRED      = 0x00020000UL;
+static const uint32 RESULTFLAG__SPLIT_EXPIRED        = 0x00040000UL;
+static const uint32 RESULTFLAG__EXPIRATION_ENAB      = 0x00080000UL;
+static const uint32 RESULTFLAG__EXPIRATION_BITS      = 0x000F0000UL;
+
 static const uint32 RESULTFLAG__DID_Z_COMPRESSION    = 0x00100000UL;
 static const uint32 RESULTFLAG__VERY_ENDS_ODD        = 0x00200000UL;
 static const uint32 RESULTFLAG__VERY_CTRS_ODD        = 0x00400000UL;
 static const uint32 RESULTFLAG__DID_TGL_EXPANSION    = 0x00800000UL;
+static const uint32 RESULTFLAG__IMPRECISE_ROT        = 0x01000000UL;
+static const uint32 RESULTFLAG__NO_REEVALUATE        = 0x02000000UL;
 
 typedef struct glonk {
    char txt[MAX_TEXT_LINE_LENGTH];
@@ -734,6 +752,7 @@ typedef enum {
    warn__check_quad_dmds,
    warn__check_3x4,
    warn__check_2x4,
+   warn__check_hokey_2x4,
    warn__check_4x4,
    warn__check_hokey_4x4,
    warn__check_4x4_start,
@@ -772,6 +791,8 @@ typedef enum {
    warn__hokey_jay_shapechanger,
    warn__split_1x6,
    warn_interlocked_to_6,
+   warn__offset_hard_to_see,
+   warn__pg_hard_to_see,
    warn__colocated_once_rem,
    warn_big_outer_triangles,
    warn_hairy_fraction,
@@ -850,6 +871,7 @@ typedef struct {
 #define ESCAPE_WORD__CROSS                CFLAGHSPARE_2
 #define ESCAPE_WORD__MAGIC                CFLAGHSPARE_3
 #define ESCAPE_WORD__INTLK                CFLAGHSPARE_4
+#define ESCAPE_WORD__GRAND                CFLAGHSPARE_5
 
 /* These flags go into the "concept_prop" field of a "concept_table_item".
 
@@ -932,6 +954,7 @@ typedef struct {
 #define CONCPROP__NEEDK_2X12       0x000001B0UL
 #define CONCPROP__NEEDK_DBLX       0x000001C0UL
 #define CONCPROP__NEEDK_DEEPXWV    0x000001D0UL
+#define CONCPROP__NEEDK_QUAD_1X3   0x000001E0UL
 
 #define CONCPROP__NEED_ARG2_MATRIX 0x00000200UL                                   
 /* spare:                          0x00000400UL */
@@ -1037,9 +1060,10 @@ typedef struct {
    char * (*sd_version_string_fn)(void);
    uims_reply (*uims_get_resolve_command_fn)(void);
    long_boolean (*query_for_call_fn)(void);
-   void (*uims_choose_font_fn)(long_boolean in_startup) /* THROW_DECL */;
-   void (*uims_print_this_fn)(long_boolean in_startup) /* THROW_DECL */;
-   void (*uims_print_any_fn)(long_boolean in_startup);
+   long_boolean (*uims_choose_font_fn)();
+   long_boolean (*uims_print_this_fn)();
+   long_boolean (*uims_print_any_fn)();
+   long_boolean (*uims_help_manual_fn)();
    int (*uims_do_outfile_popup_fn)(char dest[]);
    int (*uims_do_header_popup_fn)(char dest[]);
    int (*uims_do_getout_popup_fn)(char dest[]);
@@ -1182,10 +1206,6 @@ extern long_boolean get_accelerator_line(char line[]);
 extern void close_init_file(void);
 NORETURN1 extern void final_exit(int code) NORETURN2;
 
-/* in SDUTIL */
-
-SDLIB_API void run_program();
-
 
 /* in SDMAIN */
 
@@ -1269,6 +1289,10 @@ extern long_boolean warnings_are_unacceptable(long_boolean strict);
 SDLIB_API void toplevelmove(void) THROW_DECL;
 SDLIB_API void finish_toplevelmove(void) THROW_DECL;
 SDLIB_API long_boolean deposit_call_tree(modifier_block *anythings, parse_block *save1, int key);
+SDLIB_API void print_id_error(int n);
+
+/* in SDUTIL */
+
 SDLIB_API Const char *get_escape_string(char c);
 SDLIB_API void write_history_line(int history_index, const char *header,
                                   long_boolean picture, file_write_flag write_to_file);
@@ -1276,15 +1300,14 @@ SDLIB_API void unparse_call_name(Cstring name, char *s, call_conc_option_state *
 SDLIB_API void print_recurse(parse_block *thing, int print_recurse_arg);
 SDLIB_API void clear_screen(void);
 SDLIB_API void write_header_stuff(long_boolean with_ui_version, uint32 act_phan_flags);
-SDLIB_API parse_block *get_parse_block(void);
 extern void writechar(char src);
 SDLIB_API void newline(void);
-SDLIB_API void writestuff(const char *s);
 SDLIB_API void doublespace_file(void);
+SDLIB_API void writestuff(const char *s);
+SDLIB_API parse_block *get_parse_block(void);
 SDLIB_API void string_copy(char **dest, Cstring src);
 SDLIB_API void display_initial_history(int upper_limit, int num_pics);
-SDLIB_API void print_id_error(int n);
-
+SDLIB_API void run_program();
 
 
 // More stuff!

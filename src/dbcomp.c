@@ -10,7 +10,7 @@
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-    This is for version 32. */
+    This is for version 34. */
 
 /* dbcomp.c */
 
@@ -295,6 +295,14 @@ char *sstab[] = {
    "3x2",
    "2x5",
    "5x2",
+   "d2x5",
+   "d5x2",
+   "wqtag",
+   "pwqtag",
+   "deep2x1dmd",
+   "pdeep2x1dmd",
+   "whrglass",
+   "pwhrglass",
    "1x6",
    "6x1",
    "3x4",
@@ -430,6 +438,10 @@ char *estab[] = {
    "crosswave",
    "2x4",
    "2x5",
+   "d2x5",
+   "wqtag",
+   "deep2x1dmd",
+   "whrglass",
    "rigger",
    "3x4",
    "2x6",
@@ -526,6 +538,7 @@ char *schematab[] = {
    "conc_diamonds",
    "crossconc_diamonds",
    "conc_or_diamond_line",
+   "conc_or_6_2",
    "conc6_2",
    "conc2_6",
    "conc2_4",
@@ -663,6 +676,13 @@ char *qualtab[] = {
    "peelable_box",
    "ends_are_peelable",
    "siamese_in_quad",
+   "not_tboned_in_quad",
+   "levela1",
+   "levela2",
+   "levelc1",
+   "levelc2",
+   "levelc3",
+   "levelc4",
    "not_tboned",
    "opposite_sex",
    "quarterbox_or_col",
@@ -955,11 +975,13 @@ char *predtab[] = {
    "person_select_sum5",
    "person_select_sum8",
    "person_select_sum11",
+   "person_select_sum13",
    "person_select_sum15",
    "person_select_plus4",
    "person_select_plus6",
    "person_select_plus8",
    "person_select_plus12",
+   "person_select12_sum15",
    "semi_squeezer_select",
    "select_once_rem_from_unselect",
    "unselect_once_rem_from_select",
@@ -1135,7 +1157,9 @@ tagtabitem tagtabinit[num_base_call_indices] = {
       {0, "tagnullcall2"},
       {0, "tagnullcall3"},
       {0, "circnullcall"},
-      {0, "turnstarn"}};
+      {0, "turnstarn"},
+      {0, "revert_if_needed"},
+      {0, "extend_n"}};
 
 int tagtabsize = num_base_call_indices;  /* Number of items we currently have in tagtab. */
 int tagtabmax = 100;              /* Amount of space allocated for tagtab; must be >= tagtabsize at all times, obviously. */

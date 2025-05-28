@@ -162,6 +162,15 @@ Cstring concept_key_table[] = {
    (char *) 0};
 
 
+static Cstring sessions_init_table[] = {
+   "[Options]",
+   "",
+   "[Sessions]",
+   "+                    C1               1      Sample",
+   "",
+   "[Accelerators]",
+   (char *) 0};
+
 
 
 
@@ -180,7 +189,10 @@ static int clipboard_allocation = 0;
    inside of brackets.  This procedure is part of that mechanism. */
 static void write_blank_if_needed(void)
 {
-   if (writechar_block.lastchar != ' ' && writechar_block.lastchar != '[' && writechar_block.lastchar != '(' && writechar_block.lastchar != '-') writestuff(" ");
+   if (writechar_block.lastchar != ' ' &&
+       writechar_block.lastchar != '[' &&
+       writechar_block.lastchar != '(' &&
+       writechar_block.lastchar != '-') writechar(' ');
 }
 
 /* This examines the indicator character after an "@" escape.  If the escape
@@ -209,7 +221,7 @@ SDLIB_API Const char *get_escape_string(char c)
          return "<Nth>";
       case 'v': case 'w': case 'x': case 'y':
          return "<ATC>";
-      case '7': case 'n': case 'j': case 'J': case 'E':
+      case '7': case 'n': case 'j': case 'J': case 'E': case 'Q':
          return "";
       default:
          return (char *) 0;
@@ -444,67 +456,83 @@ static void printsetup(setup *x)
       do_write(str);
    else {
       switch (x->kind) {
-         case s_qtag:
-            if ((x->people[0].id1 & x->people[1].id1 &
-                 x->people[4].id1 & x->people[5].id1 & 1) &&
-                (x->people[2].id1 & x->people[3].id1 &
-                 x->people[6].id1 & x->people[7].id1 & 010)) {
-               /* People are in diamond-like orientation. */
-               if (x->rotation & 1)
-                  do_write("6  g@7f  6  a@76  h@@6  d@7e  6  b@76  c");
-               else
-                  do_write("5 a6 b@@g h d c@@5 f6 e");
-            }
-            else {
-               /* People are not.  Probably 1/4-tag-like orientation. */
-               if (x->rotation & 1)
-                  do_write("6  g@f  h  a@e  d  b@6  c");
-               else
-                  do_write("6  a  b@@g  h  d  c@@6  f  e");
-            }
-            break;
-         case s_c1phan:
-            /* Look for nice "classic C1 phantom" occupations, and  draw
-               tighter diagram, if using checkers, if so. */
-            if (!(x->people[0].id1 | x->people[2].id1 |
-                  x->people[4].id1 | x->people[6].id1 |
-                  x->people[8].id1 | x->people[10].id1 |
-                  x->people[12].id1 | x->people[14].id1))
-               str = "8  b@786       h  f@78  d@7@868         l@7n  p@7868         j";
-            else if (!(x->people[1].id1 | x->people[3].id1 |
-                       x->people[5].id1 | x->people[7].id1 |
-                       x->people[9].id1 | x->people[11].id1 |
-                       x->people[13].id1 | x->people[15].id1))
-               str = "868         e@7a  c@7868         g@7@8  o@786       k  i@78  m";
-            else
-               str = "58b66e@a88c  h88f@58d66g@@58o66l@n88p  k88i@58m66j";
+         /* For a while, we took out the table entry, and used this.
+            This was done so that the dots wouldn't be printed
+            in a squared set.  We have changed it back.
+      case s4x4:
+         // Look for squared-set formation, and, if so, don't draw
+         // the dots for the phantoms.
+         if (!(x->people[0].id1 | x->people[3].id1 |
+               x->people[4].id1 | x->people[7].id1 |
+               x->people[8].id1 | x->people[11].id1 |
+               x->people[12].id1 | x->people[15].id1))
+            do_write("6  n  o@@k  6  6  b@@j  6  6  c@@6  g  f");
+         else
+            do_write("m  n  o  a@@k  p  d  b@@j  l  h  c@@i  g  f  e");
 
-            do_write(str);
-            break;
-         case s_dead_concentric:
-            ui_options.drawing_picture = 0;
-            writestuff(" centers only:");
-            (*the_callback_block.newline_fn)();
-            ui_options.drawing_picture = 1;
-            print_4_person_setup(0, &(x->inner), -1);
-            break;
-         case s_normal_concentric:
-            ui_options.drawing_picture = 0;
-            writestuff(" centers:");
-            (*the_callback_block.newline_fn)();
-            ui_options.drawing_picture = 1;
-            print_4_person_setup(0, &(x->inner), -1);
-            ui_options.drawing_picture = 0;
-            writestuff(" ends:");
-            (*the_callback_block.newline_fn)();
-            ui_options.drawing_picture = 1;
-            print_4_person_setup(12, &(x->outer), x->concsetup_outer_elongation);
-            break;
-         default:
-            ui_options.drawing_picture = 0;
-            writestuff("???? UNKNOWN SETUP ????");
-            (*the_callback_block.newline_fn)();
-            ui_options.drawing_picture = 1;
+         break;
+         */
+      case s_qtag:
+         if ((x->people[0].id1 & x->people[1].id1 &
+              x->people[4].id1 & x->people[5].id1 & 1) &&
+             (x->people[2].id1 & x->people[3].id1 &
+              x->people[6].id1 & x->people[7].id1 & 010)) {
+            // People are in diamond-like orientation.
+            if (x->rotation & 1)
+               do_write("6  g@7f  6  a@76  h@@6  d@7e  6  b@76  c");
+            else
+               do_write("5 a6 b@@g h d c@@5 f6 e");
+         }
+         else {
+            // People are not.  Probably 1/4-tag-like orientation.
+            if (x->rotation & 1)
+               do_write("6  g@f  h  a@e  d  b@6  c");
+            else
+               do_write("6  a  b@@g  h  d  c@@6  f  e");
+         }
+         break;
+      case s_c1phan:
+         // Look for nice "classic C1 phantom" occupations, and,
+         // if so, draw tighter diagram.
+         if (!(x->people[0].id1 | x->people[2].id1 |
+               x->people[4].id1 | x->people[6].id1 |
+               x->people[8].id1 | x->people[10].id1 |
+               x->people[12].id1 | x->people[14].id1))
+            str = "8  b@786       h  f@78  d@7@868         l@7n  p@7868         j";
+         else if (!(x->people[1].id1 | x->people[3].id1 |
+                    x->people[5].id1 | x->people[7].id1 |
+                    x->people[9].id1 | x->people[11].id1 |
+                    x->people[13].id1 | x->people[15].id1))
+            str = "868         e@7a  c@7868         g@7@8  o@786       k  i@78  m";
+         else
+            str = "58b66e@a88c  h88f@58d66g@@58o66l@n88p  k88i@58m66j";
+
+         do_write(str);
+         break;
+      case s_dead_concentric:
+         ui_options.drawing_picture = 0;
+         writestuff(" centers only:");
+         (*the_callback_block.newline_fn)();
+         ui_options.drawing_picture = 1;
+         print_4_person_setup(0, &(x->inner), -1);
+         break;
+      case s_normal_concentric:
+         ui_options.drawing_picture = 0;
+         writestuff(" centers:");
+         (*the_callback_block.newline_fn)();
+         ui_options.drawing_picture = 1;
+         print_4_person_setup(0, &(x->inner), -1);
+         ui_options.drawing_picture = 0;
+         writestuff(" ends:");
+         (*the_callback_block.newline_fn)();
+         ui_options.drawing_picture = 1;
+         print_4_person_setup(12, &(x->outer), x->concsetup_outer_elongation);
+         break;
+      default:
+         ui_options.drawing_picture = 0;
+         writestuff("???? UNKNOWN SETUP ????");
+         (*the_callback_block.newline_fn)();
+         ui_options.drawing_picture = 1;
       }
    }
 
@@ -638,6 +666,7 @@ SDLIB_API void print_recurse(parse_block *thing, int print_recurse_arg)
    long_boolean use_left_name = FALSE;
    long_boolean use_cross_name = FALSE;
    long_boolean use_magic_name = FALSE;
+   long_boolean use_grand_name = FALSE;
    long_boolean use_intlk_name = FALSE;
    long_boolean allow_deferred_concept = TRUE;
    parse_block *deferred_concept = (parse_block *) 0;
@@ -840,10 +869,14 @@ SDLIB_API void print_recurse(parse_block *thing, int print_recurse_arg)
             const call_with_name *target_call = (call_with_name *) 0;
             const parse_block *tptr;
 
-            /* Look for special concepts that, in conjunction with calls that have certain escape codes
-               in them, get deferred and inserted into the call name. */
+            // Look for special concepts that, in conjunction with calls that have
+            // certain escape codes in them, get deferred and inserted into the call name.
 
-            if (local_cptr && (k == concept_left || k == concept_cross || k == concept_magic || k == concept_interlocked)) {
+            if (local_cptr && (k == concept_left ||
+                               k == concept_cross ||
+                               k == concept_magic ||
+                               k == concept_grand ||
+                               k == concept_interlocked)) {
    
                /* These concepts want to take special action if there are no following
                   concepts and certain escape characters are found in the name of
@@ -871,6 +904,11 @@ SDLIB_API void print_recurse(parse_block *thing, int print_recurse_arg)
                      k == concept_magic &&
                      (target_call->the_defn.callflagsf & ESCAPE_WORD__MAGIC)) {
                use_magic_name = TRUE;
+            }
+            else if (target_call &&
+                     k == concept_grand &&
+                     (target_call->the_defn.callflagsf & ESCAPE_WORD__GRAND)) {
+               use_grand_name = TRUE;
             }
             else if (target_call &&
                      k == concept_interlocked &&
@@ -1160,6 +1198,19 @@ SDLIB_API void print_recurse(parse_block *thing, int print_recurse_arg)
                         write_nice_number('b', save_cptr->options.star_turn_option & 0xF);
                      }
                      break;
+                  case 'Q':
+                     if (!use_grand_name) {
+                        while (*np != '@') np++;
+                        np += 2;
+                     }
+                     break;
+                  case 'G':
+                     if (use_grand_name) {
+                        if (writechar_block.lastchar != ' ' &&
+                            writechar_block.lastchar != '[') writechar(' ');
+                        writestuff("grand");
+                     }
+                     break;
                   case 'J':
                      if (!use_magic_name) {
                         while (*np != '@') np++;
@@ -1168,7 +1219,8 @@ SDLIB_API void print_recurse(parse_block *thing, int print_recurse_arg)
                      break;
                   case 'M':
                      if (use_magic_name) {
-                        if (writechar_block.lastchar != ' ' && writechar_block.lastchar != '[') writechar(' ');
+                        if (writechar_block.lastchar != ' ' &&
+                            writechar_block.lastchar != '[') writechar(' ');
                         writestuff("magic");
                      }
                      break;
@@ -1180,14 +1232,16 @@ SDLIB_API void print_recurse(parse_block *thing, int print_recurse_arg)
                      break;
                   case 'I':
                      if (use_intlk_name) {
-                        if (writechar_block.lastchar == 'a' && writechar_block.lastlastchar == ' ')
+                        if (writechar_block.lastchar == 'a' &&
+                            writechar_block.lastlastchar == ' ')
                            writestuff("n ");
-                        else if (writechar_block.lastchar != ' ' && writechar_block.lastchar != '[')
+                        else if (writechar_block.lastchar != ' ' &&
+                                 writechar_block.lastchar != '[')
                            writechar(' ');
                         writestuff("interlocked");
                      }
                      break;
-                  case 'l': case 'L': case 'F': case '8': case 'o':
+                  case 'l': case 'L': case 'R': case 'F': case '8': case 'o':
                      /* Just skip these -- they end stuff that we could have
                         elided but didn't. */
                      break;
@@ -2276,13 +2330,22 @@ SDLIB_API void run_program()
             singing_call_mode = 2;
          goto new_sequence;
       case start_select_select_print_font:
-         (*the_callback_block.uims_choose_font_fn)(TRUE);
+         if (!(*the_callback_block.uims_choose_font_fn)()) {
+            writestuff("Printing is not supported in this program.");
+            newline();
+         }
          goto new_sequence;
       case start_select_print_current:
-         (*the_callback_block.uims_print_this_fn)(TRUE);
+         if (!(*the_callback_block.uims_print_this_fn)()) {
+            writestuff("Printing is not supported in this program.");
+            newline();
+         }
          goto new_sequence;
       case start_select_print_any:
-         (*the_callback_block.uims_print_any_fn)(TRUE);
+         if (!(*the_callback_block.uims_print_any_fn)()) {
+            writestuff("Printing is not supported in this program.");
+            newline();
+         }
          goto new_sequence;
       case start_select_init_session_file:
          {
@@ -2309,13 +2372,10 @@ SDLIB_API void run_program()
                goto new_sequence;
             }
 
-            if (fputs("[Options]\n", session) == EOF) goto copy_failed;
-            if (fputs("\n", session) == EOF) goto copy_failed;
-            if (fputs("[Sessions]\n", session) == EOF) goto copy_failed;
-            if (fputs("sequence.C1          C1               1      Sample\n",
-                      session) == EOF) goto copy_failed;
-            if (fputs("\n", session) == EOF) goto copy_failed;
-            if (fputs("[Accelerators]\n", session) == EOF) goto copy_failed;
+            for (q = sessions_init_table ; *q ; q++) {
+               if (fputs(*q, session) == EOF) goto copy_failed;
+               if (fputs("\n", session) == EOF) goto copy_failed;
+            }
 
             for (q = concept_key_table ; *q ; q++) {
                if (fputs(*q, session) == EOF) goto copy_failed;
@@ -2743,13 +2803,20 @@ SDLIB_API void run_program()
                goto start_cycle; /* user cancelled action */
             goto new_sequence;
          case command_select_print_font:
-            (*the_callback_block.uims_choose_font_fn)(FALSE);
+            if (!(*the_callback_block.uims_choose_font_fn)())
+               specialfail("Printing is not supported in this program.");
             goto start_cycle;
          case command_print_current:
-            (*the_callback_block.uims_print_this_fn)(FALSE);
+            if (!(*the_callback_block.uims_print_this_fn)())
+               specialfail("Printing is not supported in this program.");
             goto start_cycle;
          case command_print_any:
-            (*the_callback_block.uims_print_any_fn)(FALSE);
+            if (!(*the_callback_block.uims_print_any_fn)())
+               specialfail("Printing is not supported in this program.");
+            goto start_cycle;
+         case command_help_manual:
+            if (!(*the_callback_block.uims_help_manual_fn)())
+               specialfail("Manual browsing is not supported in this program.");
             goto start_cycle;
          default:     /* Should be some kind of search command. */
             /* If it wasn't, we have a serious problem. */

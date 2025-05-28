@@ -21,8 +21,8 @@
     General Public License if you distribute the file.
 */
 
-#define VERSION_STRING "34.0"
-#define TIME_STAMP "wba@alum.mit.edu  29 May 00 $"
+#define VERSION_STRING "34.2"
+#define TIME_STAMP "wba@alum.mit.edu  6 July 00 $"
 
 /* This defines the following functions:
    sd_version_string
@@ -106,6 +106,7 @@ Private void display_help(void)
           SEQUENCE_FILENAME);
    printf("-db filename                calls database file (def \"%s\")\n",
           DATABASE_FILENAME);
+   printf("-sequence_num n             use this initial sequence number\n");
 
    uims_display_help();          /* Get any others that the UI wants to tell us about. */
    exit_program(0);
@@ -202,6 +203,7 @@ command_list_menu_item command_menu[] = {
    {"create 1/4 line",                command_create_qline, ID_COMMAND_CREATE_QLINE},
    {"create 3/4 line",                command_create_3qline, ID_COMMAND_CREATE_3QLINE},
    {"create any 1/4 tag",             command_create_any_qtag, ID_COMMAND_CREATE_ANY_QTAG},
+   {"help manual",                    command_help_manual, ID_HELP_SDHELP},
    {(Cstring) 0}};
 
 resolve_list_menu_item resolve_menu[] = {
@@ -981,6 +983,7 @@ extern int sdmain(int argc, char *argv[])
    the_callback_block.uims_choose_font_fn = &uims_choose_font;
    the_callback_block.uims_print_this_fn = &uims_print_this;
    the_callback_block.uims_print_any_fn = &uims_print_any;
+   the_callback_block.uims_help_manual_fn = &uims_help_manual;
    the_callback_block.uims_do_outfile_popup_fn = &uims_do_outfile_popup;
    the_callback_block.uims_do_header_popup_fn = &uims_do_header_popup;
    the_callback_block.uims_do_getout_popup_fn = &uims_do_getout_popup;

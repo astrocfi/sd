@@ -1,9 +1,6 @@
-# Generated automatically from Makefile.in by configure.
-# Makefile for Sd (square dance caller's helper)
-# Time-stamp: <96/05/05 10:50:56 gildea>
+# Makefile for Sd/Sdtty for Cygnus gcc.
 
 srcdir = .
-# VPATH is for GNU make
 
 # This gives the compiler name and any switches that it needs to make
 # it operate the way we want (ANSI language, standards conformance,
@@ -30,7 +27,7 @@ CFLAGS =$(CDEBUGFLAGS) $(DEFS)
 X11_FLAGS = 
 
 # These are the "-I"  and "-D" flags that we must use for the compilation
-# of the system-dependent part of the TTY user interface (sdui-ttu.c).
+# of the system-dependent part of the TTY user interface (sdui-ttu.cpp).
 TTY_FLAGS = 
 
 # These are the library flags that we must use for the final bind of
@@ -95,13 +92,11 @@ sd_calls.dat: sd_calls.txt mkcalls.exe
 .cpp.o:
 	$(CC) $(CFLAGS) -c $<
 
-# sdui-x11.c may need -D_POSIX_SOURCE with gcc 1.40 on Ultrix 4.2
-
 sdui-x11.o: sdui-x11.c
 	$(CC) $(CFLAGS) $(X11_FLAGS) -c $(srcdir)/$*.c
 
-sdui-ttu.o: sdui-ttu.c
-	$(CC) $(CFLAGS) $(TTY_FLAGS) -c $(srcdir)/$*.c
+sdui-ttu.o: sdui-ttu.cpp
+	$(CC) $(CFLAGS) $(TTY_FLAGS) -c $(srcdir)/$*.cpp
 
 sdui-tty.o sdui-ttu.o sdui-tpc.o: sdui.h
 
@@ -110,15 +105,6 @@ dbcomp.o sdmain.o sdsi.o sdui-x11.o: paths.h
 dbcomp.o: database.h
 
 $(SD_OBJS) $(SDX11_OBJ) $(SDTTY_OBJ): sdui.h basetype.h sd.h database.h
-
-configure: configure.in
-	-cd "$(srcdir)" && autoconf
-
-config.status: configure sdmain.cpp
-	./config.status --recheck
-
-Makefile: Makefile.in config.status
-	./config.status
 
 info: sd_doc.info
 dvi: sd_doc.dvi
@@ -194,68 +180,3 @@ distclean: clean
 
 realclean: distclean
 	-$(RM) *.info *.PS *.html sd_doc.txt sd_doc.ps
-
-DISTTXT = README INSTALL oldnotes COPYING sample1.ini sample2.ini demo.ps demo.txt sessions.ps sessions.txt \
-            relnotes.ps relnotes.txt \
-            Imakefile Makefile.in configure.in configure Sd.res sd_calls.txt \
-            sd_doc.PS sd_doc.txt db_doc.txt
-DISTSRCS = sd.h database.h paths.h sdui-ttu.h sdmatch.h
-MACFILES = MacSd.p.Hqx MacSd.p.rsrc.Hqx Macwdef.p.Hqx \
-            macalert.c maccomp.c macdlog.c macevent.c macguts.h maclabel.c \
-            macmatch.c macmenu.c macpref.c macrec.c macsel.c macstart.c \
-            macstuff.c mactext.c macutil.c macwdef.c macwin.c macwmgr.c \
-            sdsi-mac.c sdui-mac.c
-DISTFILES = $(DISTTXT) $(DOCSRCS) $(SRCS) $(DISTSRCS) $(PCFILES)
-
-TAR = tar
-TARFLAGS = 
-DIST_TARFILE = sd-31.79.tar
-COMPRESS = compress
-
-dist: dist-files
-	$(TAR) $(TARFLAGS) $(DIST_TARFILE) $(DISTFILES)
-	$(RM) $(DIST_TARFILE).Z
-	$(COMPRESS) $(DIST_TARFILE)
-
-dist-files: configure Makefile INSTALL README sd_doc.txt sd_doc.PS \
-            demo.ps demo.txt sessions.ps sessions.txt relnotes.ps relnotes.txt pc-files
-
-ls:
-	@echo $(DISTFILES)
-
-pcdist: install.exe
-
-install.exe: sdtty.exe mkcalls.exe sd_calls.dat
-	lha a $* sdtty.exe mkcalls.exe cwsdpmi.exe sdtty.pif
-	lha a $* sd_calls.txt sd_calls.dat
-	lha a $* readme oldnotes
-	lha a $* sample1.ini sample2.ini
-	lha s $*
-
-BIN_TARFILE = sd-31.79-.tar
-
-
-
-TARFILES1 = README oldnotes
-TARFILES2 = sd sdtty mkcalls \
-	 sample1.ini sample2.ini demo.ps demo.txt sessions.ps sessions.txt \
-          relnotes.ps relnotes.txt \
-	 sd_calls.txt sd_calls.dat \
-	 Sd.res sd_doc.txt sd_doc.PS
-
-$(BIN_TARFILE).Z: Makefile $(TARFILES2) $(TARFILES1)
-	$(TAR) $(TARFLAGS) $(BIN_TARFILE) $(TARFILES1) $(TARFILES2)
-	$(RM) $@
-	-$(COMPRESS) < $(BIN_TARFILE) > $@
-
-pc-files: $(PCFILES)
-
-LN = ln -s
-
-makefile.pc: configure Makefile.in
-	-rm -f config.cache
-	-mv config.status config.status.save
-	-$(LN) Makefile.in makefile.pc.in
-	$(srcdir)/configure --with-pc
-	-mv config.status.save config.status
-	-rm makefile.pc.in

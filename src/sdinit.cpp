@@ -107,6 +107,8 @@ Private Const char *translate_menu_name(Const char *orig_name, uint32 *escape_bi
          else if (c == 'j' || c == 'C') *escape_bits_p |= ESCAPE_WORD__CROSS;
          else if (c == 'J' || c == 'M') *escape_bits_p |= ESCAPE_WORD__MAGIC;
          else if (c == 'E' || c == 'I') *escape_bits_p |= ESCAPE_WORD__INTLK;
+         else if (c == 'G' || c == 'Q')
+            *escape_bits_p |= ESCAPE_WORD__GRAND;
       }
    }
 
@@ -467,7 +469,7 @@ Private long_boolean callcompare(call_with_name *x, call_with_name *y)
                mc = 500-2; break;
             case 'u':
                mc = 500-1; break;
-            case '7': case 'n': case 'j': case 'J': case 'E':
+            case '7': case 'n': case 'j': case 'J': case 'E': case 'Q':
                /* Skip over @7...@8, @n .. @o, and @j...@l stuff. */
                while (*m++ != '@');
                /* FALL THROUGH!!!!! */
@@ -506,7 +508,7 @@ Private long_boolean callcompare(call_with_name *x, call_with_name *y)
                nc = 500-2; break;
             case 'u':
                nc = 500-1; break;
-            case '7': case 'n': case 'j': case 'J': case 'E':
+            case '7': case 'n': case 'j': case 'J': case 'E': case 'Q':
                /* Skip over @7...@8, @n .. @o, and @j...@l stuff. */
                while (*n++ != '@');
                /* FALL THROUGH!!!!! */
@@ -588,7 +590,7 @@ Private void create_misc_call_lists(call_list_kind cl)
       call_with_name *callp = main_call_lists[call_list_any][j];
 
       if (cl == call_list_gcol) {     /* GCOL */
-         if (callp->the_defn.schema != schema_by_array)
+         if (callp->the_defn.schema != schema_by_array || callp->the_defn.compound_part)
             goto accept;    // We don't understand it.
 
          callarray *deflist = callp->the_defn.stuff.arr.def_list->callarray_list;
@@ -611,7 +613,7 @@ Private void create_misc_call_lists(call_list_kind cl)
       else {      /* QTAG */
          call_with_name *callq = callp;
 
-         if (callq->the_defn.schema != schema_by_array)
+         if (callq->the_defn.schema != schema_by_array || callq->the_defn.compound_part)
             goto accept;    // We don't understand it.
 
          callarray *deflist = callq->the_defn.stuff.arr.def_list->callarray_list;

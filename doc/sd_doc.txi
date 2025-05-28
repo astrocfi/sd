@@ -1,12 +1,18 @@
 \input texinfo @c %**start of header -*-texinfo-*-
 @c user documentation for Sd (square dance caller's helper)
-@c See the file INSTALL for how to format and view.
-@setfilename sd_doc.info
-@settitle Sd
-@c @subtitle A Square Dance Caller's Helper
 @c
-@set Time-stamp: June 10, 2000
-@set sd-version 34.0
+@set sd-version 34.2
+@set Time-stamp: August 21, 2000
+@c
+@setfilename sd_doc.info
+@c We want the version number to show in the html file.
+@ifset html
+@settitle Sd (version @value{sd-version})
+@end ifset
+@ifclear html
+@settitle Sd
+@end ifclear
+@c @subtitle A Square Dance Caller's Helper
 @set full-manual
 @c %**end of header
 @iftex
@@ -212,7 +218,6 @@ Call Notes
 * Little/Little More/Plenty::   Little/Little More/Plenty
 * Flip Back::                   Flip Back
 * Face <DIRECTION>::            Face <DIRECTION>
-* Rotate from Columns::         Rotate from Columns
 * Adjust Alamo to Other Pairing:: Adjust Alamo to Other Pairing
 * Going Through Impossible Situations:: Going Through Impossible Situations
 * Changing between a 4x4 matrix and a Phantom Setup:: Changing between a 4x4 matrix and a Phantom Setup
@@ -2159,6 +2164,9 @@ base name of the file to write sequences to.  The calling level will be
 used as the extension of the file name.
 The default base name is @file{sequence}, so a complete
 file name might be @file{sequence.C1}.
+@item sequence_num @var{number}
+Initial sequence number.  This overrides any sequence number given in a
+session from the initialization file.
 @item no_cursor
 Dumb terminal mode: do not use cursor motion commands to keep the screen
 up-to-date efficiently.  Use this if the cursor motion and screen manipulation
@@ -2741,7 +2749,6 @@ This section documents these calls.
 * Little/Little More/Plenty::   Little/Little More/Plenty
 * Flip Back::                   Flip Back
 * Face <DIRECTION>::            Face <DIRECTION>
-* Rotate from Columns::         Rotate from Columns
 * Adjust Alamo to Other Pairing:: Adjust Alamo to Other Pairing
 * Going Through Impossible Situations:: Going Through Impossible Situations
 * Changing between a 4x4 matrix and a Phantom Setup:: Changing between a 4x4 matrix and a Phantom Setup
@@ -3013,7 +3020,7 @@ This call is a special case of the @samp{<ATC> back to a wave} class
 of calls, and is a recognized C1 call.  You should use this name rather
 than the potentially misleading @samp{flip back to a wave}.
 
-@node Face <DIRECTION>, Rotate from Columns, Flip Back, Call Notes
+@node Face <DIRECTION>, Adjust Alamo to Other Pairing, Flip Back, Call Notes
 @section Face DIRECTION
 
 The call @samp{face <DIRECTION>} does not appear to be a genuine
@@ -3025,15 +3032,7 @@ that is commonly expressed as ``tag the line, in.''  Note that
 the A2 designators @samp{zig-zag}, etc., are among the permissible
 directions.
 
-@node Rotate from Columns, Adjust Alamo to Other Pairing, Face <DIRECTION>, Call Notes
-@section Rotate from Columns
-
-Remember that @i{rotate} and @i{single rotate} from columns are legal only
-at C3, but from lines they are legal at C2.  Since the program has no
-knowledge of different starting setups implying different levels, the call
-is in the database at C2.  Don't use it from columns at that level.
-
-@node Adjust Alamo to Other Pairing, Going Through Impossible Situations, Rotate from Columns, Call Notes
+@node Adjust Alamo to Other Pairing, Going Through Impossible Situations, Face <DIRECTION>, Call Notes
 @section Adjust Alamo to Other Pairing
 
 The program's notion of where people are in an alamo ring is rather imprecise.
@@ -3301,6 +3300,7 @@ The program uses the term ``tidal'' to mean a 1x8.  You may prefer to
 use the word @code{grand}.
 @item twin phantom C/L/W of 6
 @item triple C/L/W of 6
+@item quadruple C/L/W of 3
 @item quadruple C/L/W of 6
 These are done from a 2x6, 3x6 or 4x6, respectively, and form two, three,
 or four parallel 1x6's with phantoms,
@@ -3603,6 +3603,7 @@ These are done from triple diamonds in which the points are offset.
 These are done from a 1x8 in which the two people at each end are ``bent''
 90 degrees from the center 4.
 @item <ANYONE> in your distorted C/L/W/B/D @r{(singular)}
+@item <ANYONE> in your diagonal box
 @item <ANYONE> in your offset C/L/W @r{(singular)}
 @item <ANYONE> in your Z @r{(singular)}
 These are done from a variety of setups, in which the designated people
@@ -3887,30 +3888,37 @@ These are straightforward.
 The @code{M/N} concept, where @code{M} and @code{N} are numbers, causes that
 fraction of the subject call to be executed, as in @samp{3/5 swing the fractions}.
 In @code{Sdtty}, just type in the numbers directly, as in @code{3/5}.
-In @code{Sd}, the concept is listed as @code{<M/N>}.  A popup will appear asking
+In @code{Sd}, the concept is listed as @code{<N>/<N>}.  A popup will appear asking
 for the numbers.  Enter two of them.
 
-The @code{1-M/N} concept causes the subject call to be executed once and the indicated
+The @code{1-<N>/<N>} concept causes the subject call to be executed once and the indicated
 fraction of a second time, as in @samp{1-1/2 split circulate}.
 
-Not all calls are fractionalizable in this way.  Also, the exact way you should
+The exact way you should
 say the fraction might vary according to the call or your individual taste.
-It will always appear before the call in the transcript, but you might want to
-say the fraction after the call, as in @samp{swing the fractions four fifths} or
-@samp{split circulate once and a half}.
+Proper fractions always appear before the call in the transcript, but you might want to
+say the fraction after the call, as in @samp{swing the fractions four fifths}.
+
+The program will place improper fractions after the call, as in
+@samp{split circulate 1-1/2}.  You still specify the concept first when entering
+it into the program.  That is, you type @code{1-1/2 split circulate}.
+In any case, you must use your judgement when choosing what to say when calling.
 
 In extremely tricky cases, such as @samp{1/2, mix}, @samp{3/4, mix}, @samp{3/4 mix},
 and @samp{2/3, 3/4 mix}, these concepts can lead to ambiguity.  It may
 be necessary to type the concept by itself, that is, to press
 @key{ENTER}
-at the appropriate moment, to get what you want.  If you really want 3/4 of the
-call @samp{mix}, type
+at the appropriate moment, to get what you want.  (If using the menu in @code{Sd},
+select just the concept, and then select the call.)  For example, if you really want
+3/4 of the call @samp{mix}, type
 @example
 @group
    @kbd{3/4 @key{ENTER}
    mix @key{ENTER}}
 @end group
 @end example
+
+If using the menu in @code{Sd}, select @code{<N>/<N>}, and then select @code{mix}.
 
 In the finished transcript, a comma will appear after fractionalizing concepts,
 but not in the call @code{3/4 mix}.  You of course never type in any of the
@@ -3928,7 +3936,7 @@ asking for the number.
 
 No universally recognized words for these exist, so the program uses the generic
 phrases noted above.  When calling, use whatever words you think are appropriate,
-such as ``twice,'' ``thrice,'' ``circulate two positions,'' or whatever.
+such as ``twice,'' ``circulate two positions,'' or whatever.
 @item initially
 @item finally
 @item piecewise
@@ -5179,13 +5187,6 @@ If a call that you believe is legal does not appear on the menu,
 click on @code{allow modifications}.  This will bring up the universal call
 menu.  You can then thrash out which of you or the computer is correct.
 
-If you use a call with fractions or with some modifier such as @samp{3x3},
-and the program doesn't allow it, check for a special version of the
-call.  These versions are followed by parenthesized words such as
-``(matrix)'' or ``(parts)''.  To find out whether such a special version
-exists for the call you are interested in, type the name of the call
-followed by a question mark.
-
 The program sometimes gives non-fatal @i{warnings} about calls.
 These are intended
 principally as advice to you, the user of the program, that the call
@@ -5218,9 +5219,8 @@ Warning:  The program's notion of levels is only keyed to concepts and
 calls, not to concept/call combinations, and not to calls in the context
 of certain setups.  For example, since @i{split} and @i{square thru} are
 both Mainstream, it thinks that @i{split square thru} is Mainstream, even
-though it is A1.  Also, @i{chain reaction} should only be used from the
-simple @samp{heads pass the ocean} setup at A1, but the program doesn't
-know this.
+though it is A1.  Also, @i{chain reaction} should only be used from a
+normal 1/4-tag setup at A1, but the program doesn't know this.
 
 For debugging, there is a hidden level called @code{all}, which is above
 C4.  At this level, even the invisible calls that are used in the

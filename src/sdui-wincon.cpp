@@ -17,10 +17,12 @@
 
 #define STRICT
 #define WIN32_LEAN_AND_MEAN
-#include <windows.h>
 #include <stdio.h>
-#include <string.h>
+#include <windows.h>
+// This would have come in automatically if we hadn't specified WIN32_LEAN_AND_MEAN
+#include <shellapi.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "basetype.h"
 #include "sdui.h"
@@ -259,6 +261,14 @@ extern void ttu_terminate(void)
 
    (void) SetConsoleTitle(SavedWindowTitle);
 }
+
+
+extern long_boolean uims_help_manual()
+{
+   (void) ShellExecute(NULL, "open", "c:\\sd\\sd_doc.html", NULL, NULL, SW_SHOWNORMAL);
+   return TRUE;
+}
+
 
 extern int get_lines_for_more(void)
 {

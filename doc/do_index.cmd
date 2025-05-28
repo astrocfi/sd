@@ -1,6 +1,10 @@
-REM This uses index.html as a source file.
-del idx.msg idx.txt idx.zip
-echo cd public_html/sd> idx.msg
-call make_text index.html idx.msg
-pgp -sta +clearsig=on +armor=on idx.msg -u wba -o idx.txt
-zip idx idx.txt
+REM This uses index1.htmli, index2.htmli, and the poster as source files.
+del index.msg index.txt index.zip index.asc
+copy index1.htmli index.html
+type poster%1.htmli >> index.html
+type index2.htmli >> index.html
+echo cd public_html/sd> index.msg
+call make_text index.html index.msg
+pgp -sta +clearsig=on +armor=on index.msg -u wba -o index.asc
+ren index.asc index.txt
+REM zip index index.txt

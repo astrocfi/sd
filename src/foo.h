@@ -36,9 +36,8 @@
 #define IDC_ABRIDGED                    1022
 #define IDC_CALL_LIST_NAME              1024
 #define IDC_START_DELETE_SESSION_CHECKED 1025
-#define IDC_SEQ_NUM_OVERRIDE            1026
-#define IDC_SEQ_NUM_OVERRIDE_SPIN       1027
-#define IDC_START_PROGRESS              1039
+#define IDC_START_COMMENTARY            1026
+#define IDC_START_PROGRESS              1027
 #define ID_FILE_CHOOSE_FONT             40001
 #define ID_FILE_PRINTTHIS               40002
 #define ID_FILE_PRINTFILE               40003
@@ -102,7 +101,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        117
 #define _APS_NEXT_COMMAND_VALUE         40057
-#define _APS_NEXT_CONTROL_VALUE         1040
+#define _APS_NEXT_CONTROL_VALUE         1039
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

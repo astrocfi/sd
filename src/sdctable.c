@@ -104,7 +104,7 @@ concept_descriptor concept_descriptor_table[] = {
 
 /* phantom concepts */
 
-#define pl__1_size 71
+#define pl__1_size 72
 #define pl__1_spl 0
 #define pl__1_ipl 1
 #define pl__1_pl 2
@@ -116,10 +116,10 @@ concept_descriptor concept_descriptor_table[] = {
 #define pl__1_tlwf 36
 #define pl__1_tlwb 37
 #define pl__1_trtl 47
-#define pl__1_qlwt 55
-#define pl__1_qlwa 56
-#define pl__1_qlwf 57
-#define pl__1_qlwb 58
+#define pl__1_qlwt 56
+#define pl__1_qlwa 57
+#define pl__1_qlwf 58
+#define pl__1_qlwb 59
    {"SPLIT PHANTOM LINES",                   concept_do_phantom_2x4,            D, l_c3a, {0, phantest_impossible,    1, MPKIND__SPLIT, 0}},
    {"INTERLOCKED PHANTOM LINES",             concept_do_phantom_2x4,            D, l_c4a, {0, phantest_impossible,    1, MPKIND__INTLK, 0}},
    {"PHANTOM LINES",                         concept_do_phantom_2x4,            D, l_c3,  {0, phantest_first_or_both, 1, MPKIND__CONCPHAN, 0}},
@@ -169,7 +169,8 @@ concept_descriptor concept_descriptor_table[] = {
          {"", concept_comment, 0, l_nonexistent_concept},
    {"TRIPLE TWIN LINES",                     concept_triple_twin,               D, l_c4a, {0, 1, CONCPROP__NEEDK_4X6, 0}},
    {"TRIPLE TWIN LINES OF 3",                concept_triple_twin,               D, l_c4a, {0, 1, CONCPROP__NEEDK_3X6, 4}},
-   {"QUADRUPLE LINES",                       concept_quad_lines,                D, l_c4a, {0, 1}},
+   {"QUADRUPLE LINES",                       concept_quad_lines,                D, l_c4a, {0, 1, 0}},
+   {"QUADRUPLE LINES OF 3",                  concept_quad_lines_of_3,           D, l_c4a, {0, 1, 1}},
    {"QUADRUPLE LINES OF 6",                  concept_triple_twin,               D, l_c3x, {0, 1, CONCPROP__NEEDK_4X6, 2}},
    {"CENTER PHANTOM LINES",                  concept_in_out_std,                D, l_c3,  {0, 16+1, CONCPROP__NEEDK_QUAD_1X4, 0}},
    {"OUTSIDE PHANTOM LINES",                 concept_in_out_std,                D, l_c3,  {0, 16+8+1, CONCPROP__NEEDK_QUAD_1X4, 0}},
@@ -192,7 +193,7 @@ concept_descriptor concept_descriptor_table[] = {
    {"SEXTUPLE LINES WORKING CLOCKWISE",      concept_multiple_lines_tog_std,    D, l_c4,  {0, 8,  CONCPROP__NEEDK_4X6,      1, 6}},
    {"SEXTUPLE LINES WORKING COUNTERCLOCKWISE",concept_multiple_lines_tog_std,   D, l_c4,  {0, 9,  CONCPROP__NEEDK_4X6,      1, 6}},
 /* -------- column break -------- */
-#define pl__2_size 71
+#define pl__2_size 72
 #define pl__2_spw 0
 #define pl__2_ipw 1
 #define pl__2_pw 2
@@ -245,7 +246,8 @@ concept_descriptor concept_descriptor_table[] = {
          {"", concept_comment, 0, l_nonexistent_concept},
    {"TRIPLE TWIN WAVES",                     concept_triple_twin,               D, l_c4a, {0, 3, CONCPROP__NEEDK_4X6, 0}},
    {"TRIPLE TWIN WAVES OF 3",                concept_triple_twin,               D, l_c4a, {0, 3, CONCPROP__NEEDK_3X6, 4}},
-   {"QUADRUPLE WAVES",                       concept_quad_lines,                D, l_c4a, {0, 3}},
+   {"QUADRUPLE WAVES",                       concept_quad_lines,                D, l_c4a, {0, 3, 0}},
+   {"QUADRUPLE WAVES OF 3",                  concept_quad_lines_of_3,           D, l_c4a, {0, 3, 1}},
    {"QUADRUPLE WAVES OF 6",                  concept_triple_twin,               D, l_c3x, {0, 3, CONCPROP__NEEDK_4X6, 2}},
    {"CENTER PHANTOM WAVES",                  concept_in_out_std,                D, l_c3,  {0, 16+3, CONCPROP__NEEDK_QUAD_1X4, 0}},
    {"OUTSIDE PHANTOM WAVES",                 concept_in_out_std,                D, l_c3,  {0, 16+8+3, CONCPROP__NEEDK_QUAD_1X4, 0}},
@@ -268,7 +270,7 @@ concept_descriptor concept_descriptor_table[] = {
    {"SEXTUPLE WAVES WORKING CLOCKWISE",      concept_multiple_lines_tog_std,    D, l_c4,  {0, 8,  CONCPROP__NEEDK_4X6,      3, 6}},
    {"SEXTUPLE WAVES WORKING COUNTERCLOCKWISE",concept_multiple_lines_tog_std,   D, l_c4,  {0, 9,  CONCPROP__NEEDK_4X6,      3, 6}},
 /* -------- column break -------- */
-#define pl__3_size 71
+#define pl__3_size 72
 #define pl__3_spc 0
 #define pl__3_ipc 1
 #define pl__3_pc 2
@@ -280,10 +282,10 @@ concept_descriptor concept_descriptor_table[] = {
 #define pl__3_tcwr 36
 #define pl__3_tcwl 37
 #define pl__3_trtc 47
-#define pl__3_qcwt 55
-#define pl__3_qcwa 56
-#define pl__3_qcwr 57
-#define pl__3_qcwl 58
+#define pl__3_qcwt 56
+#define pl__3_qcwa 57
+#define pl__3_qcwr 58
+#define pl__3_qcwl 59
    {"SPLIT PHANTOM COLUMNS",                 concept_do_phantom_2x4,            D, l_c3a, {0, phantest_impossible,    0, MPKIND__SPLIT, 0}},
    {"INTERLOCKED PHANTOM COLUMNS",           concept_do_phantom_2x4,            D, l_c4a, {0, phantest_impossible,    0, MPKIND__INTLK, 0}},
    {"PHANTOM COLUMNS",                       concept_do_phantom_2x4,            D, l_c3,  {0, phantest_first_or_both, 0, MPKIND__CONCPHAN, 0}},
@@ -333,7 +335,8 @@ concept_descriptor concept_descriptor_table[] = {
          {"", concept_comment, 0, l_nonexistent_concept},
    {"TRIPLE TWIN COLUMNS",                   concept_triple_twin,               D, l_c4a, {0, 0, CONCPROP__NEEDK_4X6, 0}},
    {"TRIPLE TWIN COLUMNS OF 3",              concept_triple_twin,               D, l_c4a, {0, 0, CONCPROP__NEEDK_3X6, 4}},
-   {"QUADRUPLE COLUMNS",                     concept_quad_lines,                D, l_c4a, {0, 0}},
+   {"QUADRUPLE COLUMNS",                     concept_quad_lines,                D, l_c4a, {0, 0, 0}},
+   {"QUADRUPLE COLUMNS OF 3",                concept_quad_lines_of_3,           D, l_c4a, {0, 0, 1}},
    {"QUADRUPLE COLUMNS OF 6",                concept_triple_twin,               D, l_c3x, {0, 0, CONCPROP__NEEDK_4X6, 2}},
    {"CENTER PHANTOM COLUMNS",                concept_in_out_std,                D, l_c3a, {0, 16+0,   CONCPROP__NEEDK_QUAD_1X4, 0}},
    {"OUTSIDE PHANTOM COLUMNS",               concept_in_out_std,                D, l_c3a, {0, 16+8+0, CONCPROP__NEEDK_QUAD_1X4, 0}},
@@ -428,11 +431,11 @@ concept_descriptor concept_descriptor_table[] = {
 #define pb__2_tdwt 24
 #define pb__2_qd 33
 #define pb__2_qdwt 39
-   {"SPLIT PHANTOM DIAMONDS",                concept_do_phantom_diamonds,       D, l_c3x, {0, phantest_impossible,   CMD_MISC__VERIFY_DMD_LIKE, MPKIND__SPLIT}},
+   {"SPLIT PHANTOM DIAMONDS",                concept_do_phantom_diamonds,       D, l_c3, {0, phantest_impossible,    CMD_MISC__VERIFY_DMD_LIKE, MPKIND__SPLIT}},
    {"INTERLOCKED PHANTOM DIAMONDS",          concept_do_phantom_diamonds,       D, l_c4, {0, phantest_impossible,    CMD_MISC__VERIFY_DMD_LIKE, MPKIND__INTLK}},
    {"PHANTOM DIAMONDS",                      concept_do_phantom_diamonds,       D, l_c4, {0, phantest_first_or_both, CMD_MISC__VERIFY_DMD_LIKE, MPKIND__CONCPHAN}},
          {"", concept_comment, 0, l_nonexistent_concept},
-   {"SPLIT PHANTOM DIAMOND SPOTS",           concept_do_phantom_diamonds,       D, l_c3x, {0, phantest_impossible,   0, MPKIND__SPLIT}},
+   {"SPLIT PHANTOM DIAMOND SPOTS",           concept_do_phantom_diamonds,       D, l_c3, {0, phantest_impossible,    0, MPKIND__SPLIT}},
    {"INTERLOCKED PHANTOM DIAMOND SPOTS",     concept_do_phantom_diamonds,       D, l_c4, {0, phantest_impossible,    0, MPKIND__INTLK}},
    {"PHANTOM DIAMOND SPOTS",                 concept_do_phantom_diamonds,       D, l_c4, {0, phantest_first_or_both, 0, MPKIND__CONCPHAN}},
          {"", concept_comment, 0, l_nonexistent_concept},
@@ -481,23 +484,23 @@ concept_descriptor concept_descriptor_table[] = {
 #define pb__3_spgt 8
 #define pb__3_ipgt 9
 #define pb__3_pgt 10
-   {"SPLIT PHANTOM 1/4 TAGS",                concept_do_phantom_diamonds,       D, l_c3x, {0, phantest_impossible,   CMD_MISC__VERIFY_1_4_TAG, MPKIND__SPLIT}},
+   {"SPLIT PHANTOM 1/4 TAGS",                concept_do_phantom_diamonds,       D, l_c3, {0, phantest_impossible,    CMD_MISC__VERIFY_1_4_TAG, MPKIND__SPLIT}},
    {"INTERLOCKED PHANTOM 1/4 TAGS",          concept_do_phantom_diamonds,       D, l_c4, {0, phantest_impossible,    CMD_MISC__VERIFY_1_4_TAG, MPKIND__INTLK}},
    {"PHANTOM 1/4 TAGS",                      concept_do_phantom_diamonds,       D, l_c4, {0, phantest_first_or_both, CMD_MISC__VERIFY_1_4_TAG, MPKIND__CONCPHAN}},
          {"", concept_comment, 0, l_nonexistent_concept},
-   {"SPLIT PHANTOM 3/4 TAGS",                concept_do_phantom_diamonds,       D, l_c3x, {0, phantest_impossible,   CMD_MISC__VERIFY_3_4_TAG, MPKIND__SPLIT}},
+   {"SPLIT PHANTOM 3/4 TAGS",                concept_do_phantom_diamonds,       D, l_c3, {0, phantest_impossible,    CMD_MISC__VERIFY_3_4_TAG, MPKIND__SPLIT}},
    {"INTERLOCKED PHANTOM 3/4 TAGS",          concept_do_phantom_diamonds,       D, l_c4, {0, phantest_impossible,    CMD_MISC__VERIFY_3_4_TAG, MPKIND__INTLK}},
    {"PHANTOM 3/4 TAGS",                      concept_do_phantom_diamonds,       D, l_c4, {0, phantest_first_or_both, CMD_MISC__VERIFY_3_4_TAG, MPKIND__CONCPHAN}},
          {"", concept_comment, 0, l_nonexistent_concept},
-   {"SPLIT PHANTOM GENERAL 1/4 TAGS",        concept_do_phantom_diamonds,       D, l_c3x, {0, phantest_impossible,   CMD_MISC__VERIFY_QTAG_LIKE, MPKIND__SPLIT}},
+   {"SPLIT PHANTOM GENERAL 1/4 TAGS",        concept_do_phantom_diamonds,       D, l_c3, {0, phantest_impossible,    CMD_MISC__VERIFY_QTAG_LIKE, MPKIND__SPLIT}},
    {"INTERLOCKED PHANTOM GENERAL 1/4 TAGS",  concept_do_phantom_diamonds,       D, l_c4, {0, phantest_impossible,    CMD_MISC__VERIFY_QTAG_LIKE, MPKIND__INTLK}},
    {"PHANTOM GENERAL 1/4 TAGS",              concept_do_phantom_diamonds,       D, l_c4, {0, phantest_first_or_both, CMD_MISC__VERIFY_QTAG_LIKE, MPKIND__CONCPHAN}},
          {"", concept_comment, 0, l_nonexistent_concept},
-   {"SPLIT PHANTOM 1/4 LINES",               concept_do_phantom_diamonds,       D, l_c3x, {0, phantest_impossible,   CMD_MISC__VERIFY_REAL_1_4_LINE, MPKIND__SPLIT}},
+   {"SPLIT PHANTOM 1/4 LINES",               concept_do_phantom_diamonds,       D, l_c3, {0, phantest_impossible,    CMD_MISC__VERIFY_REAL_1_4_LINE, MPKIND__SPLIT}},
    {"INTERLOCKED PHANTOM 1/4 LINES",         concept_do_phantom_diamonds,       D, l_c4, {0, phantest_impossible,    CMD_MISC__VERIFY_REAL_1_4_LINE, MPKIND__INTLK}},
    {"PHANTOM 1/4 LINES",                     concept_do_phantom_diamonds,       D, l_c4, {0, phantest_first_or_both, CMD_MISC__VERIFY_REAL_1_4_LINE, MPKIND__CONCPHAN}},
          {"", concept_comment, 0, l_nonexistent_concept},
-   {"SPLIT PHANTOM 3/4 LINES",               concept_do_phantom_diamonds,       D, l_c3x, {0, phantest_impossible,   CMD_MISC__VERIFY_REAL_3_4_LINE, MPKIND__SPLIT}},
+   {"SPLIT PHANTOM 3/4 LINES",               concept_do_phantom_diamonds,       D, l_c3, {0, phantest_impossible,    CMD_MISC__VERIFY_REAL_3_4_LINE, MPKIND__SPLIT}},
    {"INTERLOCKED PHANTOM 3/4 LINES",         concept_do_phantom_diamonds,       D, l_c4, {0, phantest_impossible,    CMD_MISC__VERIFY_REAL_3_4_LINE, MPKIND__INTLK}},
    {"PHANTOM 3/4 LINES",                     concept_do_phantom_diamonds,       D, l_c4, {0, phantest_first_or_both, CMD_MISC__VERIFY_REAL_3_4_LINE, MPKIND__CONCPHAN}},
    {"CRAZY PHANTOM GENERAL 1/4 TAGS",        concept_phan_crazy,                D, l_c4, {0, 5, CONCPROP__NEEDK_4D_4PTPD, CMD_MISC__VERIFY_QTAG_LIKE}},
@@ -718,7 +721,7 @@ concept_descriptor concept_descriptor_table[] = {
    {"DISTORTED GENERAL 1/4 TAG",             concept_distorted,                 D, l_c3x, {0, disttest_any, 16, CMD_MISC__VERIFY_QTAG_LIKE}},
    {"DISTORTED DIAMOND SPOTS",               concept_distorted,                 D, l_c3x, {0, disttest_any, 16, 0}},
 /* -------- column break -------- */
-#define dd__2_size 27
+#define dd__2_size 28
    {"BIG BLOCK WAVES",                       concept_do_phantom_2x4,            D, l_c3a,        {0, phantest_only_one, 3, MPKIND__STAG, 0}},
    {"STAIRSTEP WAVES",                       concept_do_phantom_2x4,            D, l_c4,         {&map_ladder, phantest_only_one, 3, MPKIND__NONE, 0}},
    {"LADDER WAVES",                          concept_do_phantom_2x4,            D, l_c4,         {&map_stairst, phantest_only_one, 3, MPKIND__NONE, 0}},
@@ -739,6 +742,7 @@ concept_descriptor concept_descriptor_table[] = {
    {"@6 IN YOUR DISTORTED WAVE",             concept_so_and_so_only,            D, l_c1,         {0, selective_key_disc_dist, 0, 3}},
          {"", concept_comment, 0, l_nonexistent_concept},
    {"@6 IN YOUR DISTORTED BOX",              concept_so_and_so_only,            D, l_c1,         {0, selective_key_disc_dist, 0, 4}},
+   {"@6 IN YOUR DIAGONAL BOX",               concept_so_and_so_only,            D, l_c3,         {0, selective_key_disc_dist, 0, 7}},
    {"@6 IN YOUR DISTORTED DIAMOND",          concept_so_and_so_only,            D, l_c1,         {0, selective_key_disc_dist, 0, 5}},
    {"@6 IN YOUR Z",                          concept_so_and_so_only,            D, l_c3,         {0, selective_key_disc_dist, 0, 6}},
          {"", concept_comment, 0, l_nonexistent_concept},
@@ -820,8 +824,8 @@ concept_descriptor concept_descriptor_table[] = {
    {"BLOCKS",                                concept_do_phantom_2x2,            D, l_c1,         {&map_blocks, phantest_2x2_only_two}},
    {"IN YOUR BLOCKS",                        concept_do_phantom_2x2,            D, l_c1,         {&map_blocks, phantest_2x2_only_two}},
    {"4 PHANTOM INTERLOCKED BLOCKS",          concept_do_phantom_2x2,            D, l_c4a,        {&map_blocks, phantest_2x2_both}},
-   {"TRIANGULAR BOXES",                      concept_do_phantom_2x2,            D, l_c4,         {&map_trglbox, phantest_2x2_only_two}},
-   {"4 PHANTOM TRIANGULAR BOXES",            concept_do_phantom_2x2,            D, l_c4,         {&map_trglbox, phantest_2x2_both}},
+   {"TRIANGULAR BOXES",                      concept_triangular_boxes,          D, l_c4,         {0, phantest_2x2_only_two, 0}},
+   {"4 PHANTOM TRIANGULAR BOXES",            concept_triangular_boxes,          D, l_c4,         {0, phantest_2x2_both, CONCPROP__NEEDK_4X4}},
          {"", concept_comment, 0, l_nonexistent_concept},
    {"DISTORTED BLOCKS",                      concept_misc_distort,              D, l_c4a,        {0, 5, 0, 0}},
 
@@ -971,7 +975,7 @@ concept_descriptor concept_descriptor_table[] = {
    {"TWICE",                                 concept_twice,                   F+D, l_mainstream, {0, 0, 2}},
    {"THRICE",                                concept_twice,                   F+D, l_mainstream, {0, 0, 3}},
    {"@9 TIMES",                              concept_n_times,                 F+D, l_mainstream, {0, 1}},
-   {"DO THE LAST @9/@9",                     concept_fractional,              F+D, l_c1,         {0, 1}},
+   {"DO THE LAST @9/@9",                     concept_fractional,              F+D, l_mainstream, {0, 1}},
    {"REVERSE ORDER",      concept_meta,       D, l_mainstream, {0, meta_key_revorder}},
    {"INTERLACE",          concept_interlace,  0, l_c3x},
    {"INITIALLY",          concept_meta,     G+D, l_c3a,     {0, meta_key_initially}},
@@ -1079,13 +1083,13 @@ concept_descriptor concept_descriptor_table[] = {
    {"ALL 4 COUPLES",                         concept_all_8,                     D, l_a2,         {0, 0}},
    {"ALL 8",                                 concept_all_8,                     D, l_a2,         {0, 1}},
    {"ALL 8 (diamonds)",                      concept_all_8,                     D, l_a2,         {0, 2}},
-   {"REVERT",                                concept_revert,                  L+D, l_c3,         {0, INHERITFLAGRVRTK_REVERT}},
+   {"REVERT",                                concept_revert,                  L+D, l_c3x,        {0, INHERITFLAGRVRTK_REVERT}},
    {"REFLECTED",                             concept_revert,                  L+D, l_c3,         {0, INHERITFLAGRVRTK_REFLECT}},
-   {"REVERT AND THEN REFLECT",               concept_revert,                  L+D, l_c3,         {0, INHERITFLAGRVRTK_RVF}},
-   {"REFLECT AND THEN REVERT",               concept_revert,                  L+D, l_c3,         {0, INHERITFLAGRVRTK_RFV}},
-   {"REVERT, THEN REFLECT, THEN REVERT",     concept_revert,                  L+D, l_c3,         {0, INHERITFLAGRVRTK_RVFV}},
-   {"REFLECT, THEN REVERT, THEN REFLECT",    concept_revert,                  L+D, l_c3,         {0, INHERITFLAGRVRTK_RFVF}},
-   {"FAST",                                  concept_fast  ,                  L+D, l_c4,         {0}},
+   {"REVERT AND THEN REFLECT",               concept_revert,                  L+D, l_c3x,        {0, INHERITFLAGRVRTK_RVF}},
+   {"REFLECT AND THEN REVERT",               concept_revert,                  L+D, l_c3x,        {0, INHERITFLAGRVRTK_RFV}},
+   {"REVERT, THEN REFLECT, THEN REVERT",     concept_revert,                  L+D, l_c3x,        {0, INHERITFLAGRVRTK_RVFV}},
+   {"REFLECT, THEN REVERT, THEN REFLECT",    concept_revert,                  L+D, l_c3x,        {0, INHERITFLAGRVRTK_RFVF}},
+   {"FAST",                                  concept_fast,                    L+D, l_c4,         {0}},
 
 /* general concepts */
 

@@ -5,12 +5,16 @@
 ..\sd\sd_calls.txt
 ..\sd\sd_calls.dat
 ..\sd\SD.lnk
+..\sd\SD plain.lnk
 ..\sd\SDTTY.lnk
+..\sd\SDTTY plain.lnk
 "..\sd\SD nocheckers.lnk"
 "..\sd\SD couple.lnk"
 "..\sd\Edit sd.ini.lnk"
 "..\sd\Sd manual.lnk"
+"..\sd\Release Notes.lnk"
 sd_doc.html
+relnotes.html
 sample1.ini
 sample2.ini
 sample3.ini

@@ -103,6 +103,14 @@ int begin_sizes[] = {
    6,          /* b_3x2 */
   10,          /* b_2x5 */
   10,          /* b_5x2 */
+  10,          /* b_d2x5 */
+  10,          /* b_d5x2 */
+  10,          /* b_wqtag */
+  10,          /* b_pwqtag */
+  10,          /* b_deep2x1dmd */
+  10,          /* b_pdeep2x1dmd */
+  10,          /* b_whrglass */
+  10,          /* b_pwhrglass */
    6,          /* b_1x6 */
    6,          /* b_6x1 */
    12,         /* b_3x4 */

@@ -56,12 +56,16 @@ char *file_list[] = {
    "sd_calls.txt",
    "sd_calls.dat",
    "SD.lnk",
+   "SD plain.lnk",
    "SDTTY.lnk",
+   "SDTTY plain.lnk",
    "SD nocheckers.lnk",
    "SD couple.lnk",
    "Edit sd.ini.lnk",
    "Sd manual.lnk",
+   "Release Notes.lnk",
    "sd_doc.html",
+   "relnotes.html",
    "sample1.ini",
    "sample2.ini",
    "sample3.ini",
@@ -79,11 +83,14 @@ char *save_list[] = {
 
 char *shortcut_list[] = {
    "SD.lnk",
+   "SD plain.lnk",
    "SDTTY.lnk",
+   "SDTTY plain.lnk",
    "SD nocheckers.lnk",
    "SD couple.lnk",
    "Edit sd.ini.lnk",
    "Sd manual.lnk",
+   "Release Notes.lnk",
    (char *) 0};
 
 void do_install(HWND hwnd)

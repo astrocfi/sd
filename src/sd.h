@@ -19,8 +19,6 @@
 
 
 
-#define EXPIRATION_STATE_BITS (RESULTFLAG__YOYO_FINISHED|RESULTFLAG__TWISTED_FINISHED|RESULTFLAG__SPLIT_FINISHED)
-
 
 /* It should be noted that the CMD_MISC__??? and RESULTFLAG__XXX bits have
    nothing to do with each other.  It is not intended that
@@ -103,7 +101,8 @@ static const uint32 CMD_FRAC_HALF_VALUE      = 0x00000112UL;
 static const uint32 CMD_FRAC_LASTHALF_VALUE  = 0x00001211UL;
 
 static const uint32 CMD_FRAC_PART_BIT        = 0x00010000UL;
-static const uint32 CMD_FRAC_PART_MASK       = 0x000F0000UL;
+static const uint32 CMD_FRAC_PART_MASK       = 0x00070000UL;
+static const uint32 CMD_FRAC_THISISLAST      = 0x00080000UL;
 static const uint32 CMD_FRAC_REVERSE         = 0x00100000UL;
 static const uint32 CMD_FRAC_CODE_MASK       = 0x00E00000UL;    // This is a 3 bit field.
 
@@ -480,6 +479,7 @@ typedef enum {
 typedef enum {
    restriction_passes,
    restriction_fails,
+   restriction_bad_level,
    restriction_no_item
 } restriction_test_result;
 
@@ -622,6 +622,8 @@ extern full_expand_thing step_2x2h_pair;
 extern full_expand_thing step_2x2v_pair;
 extern full_expand_thing step_spindle_pair;
 extern full_expand_thing step_dmd_pair;
+extern full_expand_thing step_tgl_pair;
+extern full_expand_thing step_ptpd_pair;
 extern full_expand_thing step_qtgctr_pair;
 
 extern full_expand_thing touch_init_table1[];
@@ -648,6 +650,8 @@ extern const coordrec squeezethinggal;                              /* in SDTABL
 extern const coordrec squeezethingqtag;                             /* in SDTABLES */
 extern const coordrec squeezething4dmd;                             /* in SDTABLES */
 extern const coordrec squeezefinalglass;                            /* in SDTABLES */
+extern const coordrec truck_to_ptpd;                                /* in SDTABLES */
+extern const coordrec truck_to_deepxwv;                             /* in SDTABLES */
 extern const coordrec press_4dmd_4x4;                               /* in SDTABLES */
 extern const coordrec press_4dmd_qtag1;                             /* in SDTABLES */
 extern const coordrec press_4dmd_qtag2;                             /* in SDTABLES */
@@ -691,6 +695,8 @@ extern map_thing map_but_o;                                         /* in SDTABL
 extern map_thing map_4x4v;                                          /* in SDTABLES */
 extern map_thing map_blocks;                                        /* in SDTABLES */
 extern map_thing map_trglbox;                                       /* in SDTABLES */
+extern map_thing map_trglbox12a;                                    /* in SDTABLES */
+extern map_thing map_trglbox12b;                                    /* in SDTABLES */
 extern map_thing map_2x3_0134;                                      /* in SDTABLES */
 extern map_thing map_2x3_1245;                                      /* in SDTABLES */
 extern map_thing map_1x8_1x6;                                       /* in SDTABLES */
@@ -869,10 +875,11 @@ extern uint32 process_new_fractions(
    long_boolean allow_improper,
    long_boolean *improper_p) THROW_DECL;
 
-extern void get_fraction_info(
+extern long_boolean get_fraction_info(
    uint32 frac_flags,
    uint32 callflags1,
    int total,
+   long_boolean doing_weird_revert,
    fraction_info *zzz) THROW_DECL;
 
 extern long_boolean fill_active_phantoms_and_move(setup *ss, setup *result) THROW_DECL;
@@ -1138,16 +1145,18 @@ extern long_boolean do_subcall_query(
    long_boolean this_is_tagger,
    long_boolean this_is_tagger_circcer,
    call_with_name *orig_call);
+extern call_list_kind find_proper_call_list(setup *s);
+
+/* In SDUTIL */
 
 extern void open_text_line(void);
 extern parse_block *mark_parse_blocks(void);
 extern void release_parse_blocks_to_mark(parse_block *mark_point);
 extern parse_block *copy_parse_tree(parse_block *original_tree);
-extern void initialize_parse(void);
 extern void reset_parse_tree(parse_block *original_tree, parse_block *final_head);
 extern void save_parse_state(void);
 extern long_boolean restore_parse_state(void);
-extern call_list_kind find_proper_call_list(setup *s);
+extern void initialize_parse(void);
 
 
 #endif

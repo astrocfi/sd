@@ -1,7 +1,3 @@
-# Generated automatically from Makefile.in by configure.
-# Makefile for Sd (square dance caller's helper)
-# Time-stamp: <96/05/05 10:50:56 gildea>
-
 srcdir = .
 
 RM = del
@@ -16,7 +12,7 @@ TOCFRONT = perl tocfront
 
 .SUFFIXES: .dvi .info .txt .txi .pdf .html .ps .pso .all
 
-all: sessions.all sd_doc.all demo.all relnotes.all sample.html readme install
+all: sessions.all sd_doc.all demo.all relnotes.all relnotes98.all sample.html readme install
 
 .txi.dvi:
 	$(TXI2DVI) $<
@@ -74,23 +70,24 @@ sessions.all: sessions.ps sessions.pdf sessions.txt sessions.html sessions_toc.h
 sd_doc.all: sd_doc.ps sd_doc.pdf sd_doc.txt sd_doc.html sd_doc_toc.html
 
 relnotes.all: relnotes.ps relnotes.pdf relnotes.txt relnotes.html
+relnotes98.all: relnotes98.ps relnotes98.pdf relnotes98.txt relnotes98.html
 
 
 
-ps.all: demo.ps sessions.ps sd_doc.ps relnotes.ps \
+ps.all: demo.ps sessions.ps sd_doc.ps relnotes.ps relnotes98.ps \
         appnote1.ps appnote2.ps appnote3.ps
 
-pdf.all: demo.pdf sessions.pdf sd_doc.pdf relnotes.pdf \
+pdf.all: demo.pdf sessions.pdf sd_doc.pdf relnotes.pdf relnotes98.pdf \
          appnote1.pdf appnote2.pdf appnote3.pdf
 
-info.all: demo.info sessions.info sd_doc.info relnotes.info \
+info.all: demo.info sessions.info sd_doc.info relnotes.info relnotes98.info \
           appnote1.info appnote2.info appnote3.info
 
-text.all: demo.txt sessions.txt sd_doc.txt relnotes.txt \
+text.all: demo.txt sessions.txt sd_doc.txt relnotes.txt relnotes98.txt \
           appnote1.txt appnote2.txt appnote3.txt
 
-html.all: demo.html sessions.html sessions_toc.html sd_doc.html sd_doc_toc.html relnotes.html \
-          appnote1.html appnote2.html appnote3.html
+html.all: demo.html sessions.html sessions_toc.html sd_doc.html sd_doc_toc.html \
+          relnotes.html relnotes98.html appnote1.html appnote2.html appnote3.html
 
 clean::
 	-$(RM) *.aux *.log *.toc *.dvi *.ps *.pso *.pdf *.info *.msg
@@ -100,6 +97,7 @@ clean::
 	-$(RM) sd_doc*.html sd_doc.txt
 	-$(RM) sessions*.html sessions.txt
 	-$(RM) relnotes*.html relnotes.txt
+	-$(RM) relnotes98*.html relnotes98.txt
 	-$(RM) demo*.html demo.txt
 	-$(RM) sample*.html
 
@@ -114,6 +112,7 @@ realclean: distclean
 DOCSRCS = sd_doc.txi readme.txi install.txi gpl.txi
 DISTTXT = readme install oldnotes COPYING sample1.ini sample2.ini demo.ps demo.txt sessions.ps sessions.txt \
             relnotes.ps relnotes.txt \
+            relnotes98.ps relnotes98.txt \
             Imakefile Makefile.in configure.in configure Sd.res sd_calls.txt \
             sd_doc.PS sd_doc.txt db_doc.txt
 DISTSRCS = sd.h database.h paths.h sdui-ttu.h sdmatch.h
@@ -130,12 +129,12 @@ dist: dist-files
 	$(COMPRESS) $(DIST_TARFILE)
 
 dist-files: configure Makefile install readme sd_doc.txt sd_doc.PS \
-            demo.ps demo.txt sessions.ps sessions.txt relnotes.ps relnotes.txt pc-files
+            demo.ps demo.txt sessions.ps sessions.txt relnotes.ps relnotes98.ps relnotes.txt relnotes98.txt pc-files
 
 pcdist: sdtty.exe mkcalls.exe sd_calls.dat
 	lha a $@ readme oldnotes
 	lha a $@ sdtty.exe mkcalls.exe cwsdpmi.exe sdtty.pif
-	lha a $@ sample1.ini sample2.ini demo.txt demo.ps sessions.txt sessions.ps relnotes.txt relnotes.ps
+	lha a $@ sample1.ini sample2.ini demo.txt demo.ps sessions.txt sessions.ps relnotes.txt relnotes98.txt relnotes.ps relnotes98.ps
 	lha a $@ sd_calls.txt sd_calls.dat
 	lha a $@ sd_doc.txt sd_doc.ps
 	lha s $@
@@ -147,7 +146,8 @@ BIN_TARFILE = sd-31.79-.tar
 TARFILES1 = readme oldnotes
 TARFILES2 = sd sdtty mkcalls \
 	 sample1.ini sample2.ini demo.ps demo.txt sessions.ps sessions.txt \
-          relnotes.ps relnotes.txt \
+         relnotes.ps relnotes.txt \
+         relnotes98.ps relnotes98.txt \
 	 sd_calls.txt sd_calls.dat \
 	 Sd.res sd_doc.txt sd_doc.PS
 
